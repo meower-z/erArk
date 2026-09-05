@@ -362,7 +362,7 @@ def add_favorability(
     增加目标角色对当前角色的好感
     Keyword arguments:
     character_id -- 当前角色id
-    target_id -- 目标角色id
+    target_id -- 目标角色id，写入方向以此参数为准
     now_add_favorability -- 增加的好感
     change_data -- 当前角色这一侧的状态变更记录对象，不需要记录时传None
     target_change -- 目标角色这一侧的状态变更记录对象，不需要记录时传None
@@ -399,7 +399,7 @@ def add_favorability(
     # else:
 
     # NPC对玩家
-    if (character_id != 0) and (character_data.target_character_id == 0):
+    if (character_id != 0) and (target_id == 0):
         character_data.favorability[target_id] += now_add_favorability
         character_data.favorability[target_id] = min(100000, character_data.favorability[target_id])
         # print(f"debug change_data = {change_data}")
@@ -407,7 +407,7 @@ def add_favorability(
             change_data.favorability += now_add_favorability
 
     # 对NPC
-    if character_data.target_character_id != 0:
+    if target_id != 0:
         target_data.favorability[character_id] += now_add_favorability
         target_data.favorability[character_id] = min(100000, target_data.favorability[character_id])
         if target_change is not None:
@@ -417,7 +417,7 @@ def add_favorability(
     #     add_favorability(target_id, character_id, old_add_favorability, None, None, now_time)
 
     # 记录好感度增加
-    if character_id == 0 or character_data.target_character_id == 0:
+    if character_id == 0 or target_id == 0:
         cache.rhodes_island.total_favorability_increased += now_add_favorability
 
 

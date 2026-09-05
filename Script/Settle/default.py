@@ -7093,7 +7093,6 @@ def handle_group_sex_fail_add_just(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    original_target_character_id = character_data.target_character_id
     scene_path_str = map_handle.get_map_system_path_str_for_list(character_data.position)
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     # 遍历场景内所有角色
@@ -7105,9 +7104,7 @@ def handle_group_sex_fail_add_just(
             continue
         # 如果是拒绝者，则进行邀请H失败结算
         if handle_premise.handle_group_sex_fail_and_self_refuse(chara_id):
-            character_data.target_character_id = chara_id
-            handle_do_h_failed_adjust(0, add_time, change_data, now_time)
-    character_data.target_character_id = original_target_character_id
+            settle_do_h_failed_adjust(0, chara_id, add_time, change_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.BOARD_GAME_WIN_ADD_ADJUST)
@@ -9643,11 +9640,27 @@ def handle_do_h_failed_adjust(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.target_character_id:
-        target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    settle_do_h_failed_adjust(character_id, character_data.target_character_id, add_time, change_data)
+
+
+def settle_do_h_failed_adjust(character_id: int, target_character_id: int, add_time: int, change_data: game_type.CharacterStatusChange) -> None:
+    """
+    对指定交互对象结算邀请H失败的反感、愤怒、好感与信赖变化。
+    参数:
+        character_id (int): 发起邀请的角色id。
+        target_character_id (int): 拒绝邀请的角色id，0时不结算。
+        add_time (int): 结算时长，0时不结算。
+        change_data (CharacterStatusChange): 发起者的变化记录，目标变化记入对应target_change。
+    返回:
+        None: 直接更新角色数值与变化记录，不修改交互对象。
+    """
+    if not add_time:
+        return
+    if target_character_id:
+        target_data: game_type.Character = cache.character_data[target_character_id]
 
         # 高陷落不进行该判断
-        chara_fall = attr_calculation.get_character_fall_level(character_data.target_character_id)
+        chara_fall = attr_calculation.get_character_fall_level(target_character_id)
         if chara_fall >= 4:
             return
 
@@ -9671,7 +9684,7 @@ def handle_do_h_failed_adjust(
         target_data.angry_point += 100
         target_data.sp_flag.angry_with_player = True
         # 降好感
-        base_chara_favorability_and_trust_common_settle(character_id, add_time, True, 0, -15, change_data)
+        base_chara_favorability_and_trust_common_settle(character_id, add_time, True, 0, -15, change_data, target_character_id=target_character_id)
         # 降信赖
         now_lust_multiple = target_data.trust * 0.4 + 5
         if now_lust_multiple < 0:
