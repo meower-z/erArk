@@ -21,6 +21,20 @@ cache: game_type.Cache = cache_control.cache
 width = normal_config.config_normal.text_width
 """ 屏幕宽度 """
 
+def set_body_item_active(character_id: int, item_id: int, active: bool) -> None:
+    """
+    设置指定角色的身体道具装备状态。
+    参数:
+        character_id (int): 佩戴道具的角色id。
+        item_id (int): 身体道具槽位id。
+        active (bool): True为装备，False为取下。
+    返回:
+        None: 只更新装备开关，保留槽位中的其他数据和角色交互对象。
+    """
+    character_data: game_type.Character = cache.character_data[character_id]
+    character_data.h_state.body_item[item_id][1] = active
+
+
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ITEM_OFF)
 def handle_item_off(
         character_id: int,
@@ -178,8 +192,7 @@ def handle_target_vibrator_on(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
-    target_data.h_state.body_item[2][1] = True
+    set_body_item_active(character_data.target_character_id, 2, True)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_VIBRATOR_OFF)
@@ -200,8 +213,7 @@ def handle_target_vibrator_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
-    target_data.h_state.body_item[2][1] = False
+    set_body_item_active(character_data.target_character_id, 2, False)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_ANAL_VIBRATOR_ON)
@@ -222,8 +234,7 @@ def handle_target_anal_vibrator_on(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
-    target_data.h_state.body_item[3][1] = True
+    set_body_item_active(character_data.target_character_id, 3, True)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_ANAL_VIBRATOR_OFF)
@@ -244,8 +255,7 @@ def handle_target_anal_vibrator_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
-    target_data.h_state.body_item[3][1] = False
+    set_body_item_active(character_data.target_character_id, 3, False)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_NIPPLE_CLAMP_ON)
@@ -266,8 +276,7 @@ def handle_target_nipple_clamp_on(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
-    target_data.h_state.body_item[0][1] = True
+    set_body_item_active(character_data.target_character_id, 0, True)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_NIPPLE_CLAMP_OFF)
@@ -288,8 +297,7 @@ def handle_target_nipple_clamp_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
-    target_data.h_state.body_item[0][1] = False
+    set_body_item_active(character_data.target_character_id, 0, False)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_CLIT_CLAMP_ON)
@@ -310,8 +318,7 @@ def handle_target_clit_clamp_on(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
-    target_data.h_state.body_item[1][1] = True
+    set_body_item_active(character_data.target_character_id, 1, True)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_CLIT_CLAMP_OFF)
@@ -332,8 +339,7 @@ def handle_target_clit_clamp_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
-    target_data.h_state.body_item[1][1] = False
+    set_body_item_active(character_data.target_character_id, 1, False)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_ANAL_BEADS_ON)
 def handle_target_anal_beads_on(
@@ -572,29 +578,26 @@ def handle_adjust_body_manage_day_item(
         return
     if character_id == 0:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    # 这里把交互对象设为自己是因为下面的装备/取下道具函数都是让交互对象结算的
-    character_data.target_character_id = character_id
     # 身体管理_乳头夹
     if handle_premise.handle_ask_equp_nipple_clamp_in_day(character_id) and not handle_premise.handle_self_now_nipple_clamp(character_id):
-        handle_target_nipple_clamp_on(character_id, add_time, change_data, now_time)
+        set_body_item_active(character_id, 0, True)
     elif not handle_premise.handle_ask_equp_nipple_clamp_in_day(character_id) and handle_premise.handle_self_now_nipple_clamp(character_id):
-        handle_target_nipple_clamp_off(character_id, add_time, change_data, now_time)
+        set_body_item_active(character_id, 0, False)
     # 身体管理_阴蒂夹
     if handle_premise.handle_ask_equp_clit_clamp_in_day(character_id) and not handle_premise.handle_self_now_clit_clamp(character_id):
-        handle_target_clit_clamp_on(character_id, add_time, change_data, now_time)
+        set_body_item_active(character_id, 1, True)
     elif not handle_premise.handle_ask_equp_clit_clamp_in_day(character_id) and handle_premise.handle_self_now_clit_clamp(character_id):
-        handle_target_clit_clamp_off(character_id, add_time, change_data, now_time)
+        set_body_item_active(character_id, 1, False)
     # 身体管理_V振动棒
     if handle_premise.handle_ask_equp_v_bibrator_in_day(character_id) and not handle_premise.handle_self_now_vibrator_insertion(character_id):
-        handle_target_vibrator_on(character_id, add_time, change_data, now_time)
+        set_body_item_active(character_id, 2, True)
     elif not handle_premise.handle_ask_equp_v_bibrator_in_day(character_id) and handle_premise.handle_self_now_vibrator_insertion(character_id):
-        handle_target_vibrator_off(character_id, add_time, change_data, now_time)
+        set_body_item_active(character_id, 2, False)
     # 身体管理_A振动棒
     if handle_premise.handle_ask_equp_a_bibrator_in_day(character_id) and not handle_premise.handle_self_now_vibrator_insertion_anal(character_id):
-        handle_target_anal_vibrator_on(character_id, add_time, change_data, now_time)
+        set_body_item_active(character_id, 3, True)
     elif not handle_premise.handle_ask_equp_a_bibrator_in_day(character_id) and handle_premise.handle_self_now_vibrator_insertion_anal(character_id):
-        handle_target_anal_vibrator_off(character_id, add_time, change_data, now_time)
+        set_body_item_active(character_id, 3, False)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADJUST_BODY_MANAGE_SLEEP_ITEM)
@@ -616,29 +619,26 @@ def handle_adjust_body_manage_sleep_item(
         return
     if character_id == 0:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    # 这里把交互对象设为自己是因为下面的装备/取下道具函数都是让交互对象结算的
-    character_data.target_character_id = character_id
     # 身体管理_乳头夹
     if handle_premise.handle_ask_equp_nipple_clamp_in_sleep(character_id) and not handle_premise.handle_self_now_nipple_clamp(character_id):
-        handle_target_nipple_clamp_on(character_id, add_time, change_data, now_time)
+        set_body_item_active(character_id, 0, True)
     elif not handle_premise.handle_ask_equp_nipple_clamp_in_sleep(character_id) and handle_premise.handle_self_now_nipple_clamp(character_id):
-        handle_target_nipple_clamp_off(character_id, add_time, change_data, now_time)
+        set_body_item_active(character_id, 0, False)
     # 身体管理_阴蒂夹
     if handle_premise.handle_ask_equp_clit_clamp_in_sleep(character_id) and not handle_premise.handle_self_now_clit_clamp(character_id):
-        handle_target_clit_clamp_on(character_id, add_time, change_data, now_time)
+        set_body_item_active(character_id, 1, True)
     elif not handle_premise.handle_ask_equp_clit_clamp_in_sleep(character_id) and handle_premise.handle_self_now_clit_clamp(character_id):
-        handle_target_clit_clamp_off(character_id, add_time, change_data, now_time)
+        set_body_item_active(character_id, 1, False)
     # 身体管理_V振动棒
     if handle_premise.handle_ask_equp_v_bibrator_in_sleep(character_id) and not handle_premise.handle_self_now_vibrator_insertion(character_id):
-        handle_target_vibrator_on(character_id, add_time, change_data, now_time)
+        set_body_item_active(character_id, 2, True)
     elif not handle_premise.handle_ask_equp_v_bibrator_in_sleep(character_id) and handle_premise.handle_self_now_vibrator_insertion(character_id):
-        handle_target_vibrator_off(character_id, add_time, change_data, now_time)
+        set_body_item_active(character_id, 2, False)
     # 身体管理_A振动棒
     if handle_premise.handle_ask_equp_a_bibrator_in_sleep(character_id) and not handle_premise.handle_self_now_vibrator_insertion_anal(character_id):
-        handle_target_anal_vibrator_on(character_id, add_time, change_data, now_time)
+        set_body_item_active(character_id, 3, True)
     elif not handle_premise.handle_ask_equp_a_bibrator_in_sleep(character_id) and handle_premise.handle_self_now_vibrator_insertion_anal(character_id):
-        handle_target_anal_vibrator_off(character_id, add_time, change_data, now_time)
+        set_body_item_active(character_id, 3, False)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.USE_BODY_LUBRICANT)
