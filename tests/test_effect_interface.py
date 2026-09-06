@@ -152,7 +152,7 @@ class EffectInterfaceTest(unittest.TestCase):
     def test_self_effect_does_not_need_target_state(self):
         """自身效果可以忽略目标参数，不访问目标角色；无返回值。"""
         self.cache.character_data[1].angry_point = 50
-        self.ns["handle_mood_to_good"](1, 9999, 1, game_type.CharacterStatusChange(), self.now)
+        self.ns["handle_mood_to_good"](1, None, 1, game_type.CharacterStatusChange(), self.now)
         self.assertEqual(self.cache.character_data[1].angry_point, 0)
 
 
@@ -305,12 +305,12 @@ class EffectInterfaceTest(unittest.TestCase):
                 with self.subTest(path=str(path), line=node.lineno):
                     self.assertEqual(len(node.args) + len(node.keywords), 5)
                     target = node.args[1] if len(node.args) > 1 else next(k.value for k in node.keywords if k.arg == "target_character_id")
-                    self.assertFalse(isinstance(target, ast.Constant) and target.value is None)
+                    self.assertFalse(isinstance(target, ast.Constant) and isinstance(target.value, str))
                 checked += 1
         self.assertGreater(checked, 100)
 
     def test_helper_targets_are_required_at_every_call(self):
-        """辅助函数要求显式目标或None，生产调用不能省略参数；无返回值。"""
+        """辅助函数的目标参数必须显式传入，生产调用不能省略参数；无返回值。"""
         helper_names = {
             "base_chara_hp_mp_common_settle", "base_chara_experience_common_settle",
             "base_chara_climix_common_settle", "base_chara_favorability_and_trust_common_settle",
@@ -353,7 +353,7 @@ class EffectInterfaceTest(unittest.TestCase):
         self.assertNotIn(1, changes.target_change)
 
     def test_helper_zero_target_is_player(self):
-        """通用体力计算以0指定玩家，以显式None读取角色选择；无返回值。"""
+        """通用体力计算以0指定玩家，以CURRENT_TARGET读取角色选择；无返回值。"""
         self.test_paired_hp_helper_uses_explicit_target()
         settle = self.ns["base_chara_hp_mp_common_settle"]
         changes = game_type.CharacterStatusChange()
@@ -363,8 +363,33 @@ class EffectInterfaceTest(unittest.TestCase):
         changes = game_type.CharacterStatusChange()
         with self.assertRaises(TypeError):
             settle(1, hp_value=-5, target_flag=True, change_data=changes)
-        settle(1, hp_value=-5, target_flag=True, change_data=changes, target_character_id=None)
+        settle(1, hp_value=-5, target_flag=True, change_data=changes, target_character_id="CURRENT_TARGET")
         self.assertEqual(changes.target_change[2].hit_point, -5)
+
+    def test_self_hp_effect_accepts_none_without_interaction_target(self):
+        """自身体力效果传None时无需交互对象，仍正确记录体力变化；无返回值。"""
+        self.test_paired_hp_helper_uses_explicit_target()
+        actor = self.cache.character_data[1]
+        del actor.target_character_id
+        changes = game_type.CharacterStatusChange()
+        self.ns["handle_sub_self_small_hit_point"](1, None, 5, changes, self.now)
+        self.assertEqual(actor.hit_point, 45)
+        self.assertEqual(changes.hit_point, -5)
+        self.assertEqual(changes.target_change, {})
+
+    def test_self_experience_accepts_none_without_interaction_target(self):
+        """自身经验传None时不读取交互对象，经验及记录归属自身；无返回值。"""
+        load_functions("Script/Settle/common_default.py", self.ns, lambda node: node.name == "base_chara_experience_common_settle")
+        self.ns["handle_premise"] = SimpleNamespace(handle_unconscious_flag_ge_1=lambda cid: False, handle_self_time_stop_orgasm_relase=lambda cid: False)
+        self.config.config_experience = {35: SimpleNamespace(type=0)}
+        actor = self.cache.character_data[1]
+        del actor.target_character_id
+        actor.experience = {}
+        changes = game_type.CharacterStatusChange()
+        self.ns["base_chara_experience_common_settle"](1, 35, change_data=changes, target_character_id=None)
+        self.assertEqual(actor.experience[35], 1)
+        self.assertEqual(changes.experience[35], 1)
+        self.assertEqual(changes.target_change, {})
 
     def test_extra_experience_keeps_explicit_target_after_second_effect(self):
         """二段结算未改目标时沿用传入值，改目标时额外经验使用新值；无返回值。"""
@@ -379,12 +404,12 @@ class EffectInterfaceTest(unittest.TestCase):
                 self.ns["handle_instruct_data"](1, 2, "example", self.now, 1, changes)
                 self.ns["extra_exp_settle"].assert_called_once_with(1, 3 if changed else 2, changes)
 
-    def test_experience_helper_distinguishes_explicit_target_and_none(self):
-        """经验归属和变更记录使用明确目标；只有显式None读取交互对象，无返回值。"""
+    def test_experience_helper_distinguishes_explicit_target_and_current_target(self):
+        """经验归属和变更记录使用明确目标；只有CURRENT_TARGET读取交互对象，无返回值。"""
         load_functions("Script/Settle/common_default.py", self.ns, lambda node: node.name == "base_chara_experience_common_settle")
         self.ns["handle_premise"] = SimpleNamespace(handle_unconscious_flag_ge_1=lambda cid: False, handle_self_time_stop_orgasm_relase=lambda cid: False)
         self.config.config_experience = {35: SimpleNamespace(type=0)}
-        for target, recipient in ((0, 0), (3, 3), (None, 2)):
+        for target, recipient in ((0, 0), (3, 3), ("CURRENT_TARGET", 2)):
             with self.subTest(target=target):
                 for character in self.cache.character_data.values():
                     character.experience = {}

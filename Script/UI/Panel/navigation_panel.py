@@ -47,7 +47,7 @@ def judge_arrive():
                 if now_diplomat_chara_id != 0:
                     default.handle_chara_off_line(
                         now_diplomat_chara_id,
-                        now_diplomat_chara_id,
+                        None,
                         1,
                         change_data=game_type.CharacterStatusChange(),
                         now_time=cache.game_time,
@@ -57,7 +57,7 @@ def judge_arrive():
                 if target_diplomat_chara_id != 0:
                     default.handle_chara_on_line(
                         target_diplomat_chara_id,
-                        target_diplomat_chara_id,
+                        None,
                         1,
                         change_data=game_type.CharacterStatusChange(),
                         now_time=cache.game_time,

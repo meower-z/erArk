@@ -254,8 +254,8 @@ def settle_drink(target_character_id: int, condom_index_list: List[int]):
         if stomach_count:
             ejaculation_panel.update_semen_dirty(target_character_id, 15, 0, stomach_count, update_shoot_position_flag=False)
         # 每喝一个加一次精液经验和饮精经验
-        base_chara_experience_common_settle(target_character_id, 24, target_character_id=None)
-        base_chara_experience_common_settle(target_character_id, 25, target_character_id=None)
+        base_chara_experience_common_settle(target_character_id, 24, target_character_id="CURRENT_TARGET")
+        base_chara_experience_common_settle(target_character_id, 25, target_character_id="CURRENT_TARGET")
     cache.shoot_position = temp_position
     # 记录精液射入位置为胃部，以联动饮精绝顶二段行为
     target_data.h_state.shoot_position_body = 15

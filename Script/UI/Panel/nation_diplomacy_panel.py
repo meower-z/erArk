@@ -65,8 +65,8 @@ def judge_diplomatic_policy():
 
         # 外交官增加对话经验和学识经验
         for i in range(diplomatic_policy_data.difficulty):
-            common_default.base_chara_experience_common_settle(diplomat_chara_id, 80, target_character_id=None)
-            common_default.base_chara_experience_common_settle(diplomat_chara_id, 82, target_character_id=None)
+            common_default.base_chara_experience_common_settle(diplomat_chara_id, 80, target_character_id="CURRENT_TARGET")
+            common_default.base_chara_experience_common_settle(diplomat_chara_id, 82, target_character_id="CURRENT_TARGET")
 
         # 能力修正
         ability_adjust = handle_ability.get_ability_adjust(diplomat_chara_data.ability[40])
@@ -592,7 +592,7 @@ class Nation_Diplomacy_Panel:
             cache.rhodes_island.diplomat_of_country[country_id][0] = 0
             # 如果是离线状态，则上线
             if not handle_premise.handle_normal_7(old_diplomat_id):
-                default.handle_chara_on_line(old_diplomat_id, old_diplomat_id, 1, change_data = game_type.CharacterStatusChange(), now_time = cache.game_time)
+                default.handle_chara_on_line(old_diplomat_id, None, 1, change_data = game_type.CharacterStatusChange(), now_time = cache.game_time)
             # 根据是本地还是外派，赋予对应的二段行为结算
             if cache.rhodes_island.current_location[0] == country_id:
                 second_behavior.character_get_second_behavior(old_diplomat_id, "relieved_of_diplomat_local")
@@ -617,7 +617,7 @@ class Nation_Diplomacy_Panel:
             else:
                 second_behavior.character_get_second_behavior(character_id, "appoinnted_as_diplomat_out")
                 talk.must_show_talk_check(character_id)
-                default.handle_chara_off_line(character_id, character_id, 1, change_data = game_type.CharacterStatusChange(), now_time = cache.game_time)
+                default.handle_chara_off_line(character_id, None, 1, change_data = game_type.CharacterStatusChange(), now_time = cache.game_time)
                 # 输出外派提示
                 info_text = _("\n{0}被派遣到{1}作为外交官，将会长期停留在那里，直到被召回或罗德岛抵达该国家。\n").format(new_diplomat_chara_data.name, game_config.config_birthplace[country_id].name)
             info_draw = draw.WaitDraw()
