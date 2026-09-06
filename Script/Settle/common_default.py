@@ -40,12 +40,12 @@ def base_chara_hp_mp_common_settle(
     基础角色体力与气力通用结算函数\n
     Keyword arguments:\n
     character_id -- 角色id\n
-    target_character_id -- 第二个必填参数；"CURRENT_TARGET"读取角色的交互对象，0表示玩家；无需目标时传None
+    target_character_id -- 一同结算体力气力的目标角色id，仅在target_flag为True时使用；"CURRENT_TARGET"表示读取character_id的交互对象，0为玩家；默认只结算character_id自身，此时传None\n
     add_time -- 结算时间\n
     hp_value -- 体力值，-1为按程度减少，1为按程度增加，其他值则为具体值\n
     mp_value -- 气力值，-1为按程度减少，1为按程度增加，其他值则为具体值\n
     dregree -- 程度系数，0少，1中，2大\n
-    target_flag -- 是否对交互对象也进行结算，默认为否，不可与change_data_to_target_change同时使用\n
+    target_flag -- 是否对目标也做同样结算，目标与character_id相同时不重复结算；默认为否，不可与change_data_to_target_change同时使用\n
     change_data -- 结算信息记录对象\n
     change_data_to_target_change -- 交互对象的结算信息记录对象\n
     """
@@ -547,7 +547,7 @@ def base_chara_favorability_and_trust_common_settle(
     基础角色好感与信赖通用结算函数\n
     Keyword arguments:\n
     character_id -- 角色id\n
-    target_character_id -- 第二个必填参数；"CURRENT_TARGET"读取角色的交互对象，0表示玩家；本函数需要目标，不能传None
+    target_character_id -- 关系另一方的角色id，好感与信赖在character_id与该角色之间结算，函数始终读取该角色的数据，不能传None；"CURRENT_TARGET"表示读取character_id的交互对象，0为玩家\n
     add_time -- 结算时间\n
     favorability_flag -- true为好感,false为信赖\n
     base_value -- 基础固定值\n
@@ -846,7 +846,7 @@ def base_chara_climix_common_settle(
     基础角色绝顶通用结算函数\n
     Keyword arguments:\n
     character_id -- 角色id\n
-    target_character_id -- 第二个必填参数；"CURRENT_TARGET"读取角色的交互对象，0表示玩家；无需目标时传None
+    target_character_id -- 部位快感承受方的角色id；part_id非3的绝顶需要目标，部位快感加给该角色，而绝顶二段行为与绝顶次数记录记在character_id上；part_id为3(P部位，仅玩家)时不需要目标，可传None；"CURRENT_TARGET"表示读取character_id的交互对象，0为玩家\n
     part_id -- 部位id，即性器官id\n
     base_value -- 基础固定值\n
     adjust -- 系数\n
@@ -917,10 +917,10 @@ def base_chara_experience_common_settle(
     基础角色经验通用结算函数\n
     Keyword arguments:\n
     character_id -- 角色id\n
-    target_character_id -- 第二个必填参数；"CURRENT_TARGET"读取角色的交互对象，0表示玩家；无需目标时传None
+    target_character_id -- target_flag为True时experience_id所指经验的承受方角色id，该经验加给该角色；默认target_flag为False时该经验加给character_id，此时传None；"CURRENT_TARGET"表示读取character_id的交互对象，0为玩家\n
     experience_id -- 经验id\n
     base_value -- 基础固定值\n
-    target_flag -- 是否加到交互对象身上\n
+    target_flag -- 是否将experience_id所指经验改加给target_character_id，默认为否\n
     change_data -- 状态变更信息记录对象\n
     change_data_to_target_change -- 交互对象结算信息记录对象
     """
