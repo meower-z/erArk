@@ -34,10 +34,12 @@ def base_chara_hp_mp_common_settle(
         target_flag: bool = False,
         change_data: Optional[game_type.CharacterStatusChange] = None,
         change_data_to_target_change: Optional[game_type.CharacterStatusChange] = None,
+        target_character_id: Optional[int] = None,
         ):
     """
     基础角色体力与气力通用结算函数\n
     Keyword arguments:\n
+    target_character_id -- 交互对象id，None时读取角色的交互对象，0表示玩家
     character_id -- 角色id\n
     add_time -- 结算时间\n
     hp_value -- 体力值，-1为按程度减少，1为按程度增加，其他值则为具体值\n
@@ -53,7 +55,8 @@ def base_chara_hp_mp_common_settle(
     if handle_premise.handle_time_stop_on(character_id):
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_character_id = character_data.target_character_id
+    if target_character_id is None:
+        target_character_id = character_data.target_character_id
     target_character_data: game_type.Character = cache.character_data[target_character_id]
     if character_data.dead:
         return
@@ -537,7 +540,7 @@ def base_chara_favorability_and_trust_common_settle(
         base_value: int = 0,
         extra_adjust: float = 0,
         change_data: Optional[Union[game_type.CharacterStatusChange, game_type.TargetChange]] = None,
-        target_character_id: int = 0,
+        target_character_id: Optional[int] = None,
         ):
     """
     基础角色好感与信赖通用结算函数\n
@@ -548,13 +551,13 @@ def base_chara_favorability_and_trust_common_settle(
     base_value -- 基础固定值\n
     extra_adjust -- 额外系数\n
     change_data -- 结算信息记录对象\n
-    target_character_id -- 交互对象id，默认为0。在为0时会自动获取角色的交互对象id。若角色没有交互对象，则不会进行结算
+    target_character_id -- 交互对象id，None时读取角色的交互对象，0表示玩家
     """
     character_data: game_type.Character = cache.character_data[character_id]
     pl_character_data: game_type.Character = cache.character_data[0]
 
     # 判断交互对象
-    if target_character_id == 0:
+    if target_character_id is None:
         target_character_id = character_data.target_character_id
     target_data: game_type.Character = cache.character_data[target_character_id]
 
@@ -836,10 +839,12 @@ def base_chara_climix_common_settle(
         degree: int = -1,
         change_data: Optional[game_type.CharacterStatusChange] = None,
         change_data_to_target_change: Optional[game_type.CharacterStatusChange] = None,
+        target_character_id: Optional[int] = None,
         ):
     """
     基础角色绝顶通用结算函数\n
     Keyword arguments:\n
+    target_character_id -- 交互对象id，None时读取角色的交互对象，0表示玩家
     character_id -- 角色id\n
     part_id -- 部位id，即性器官id\n
     base_value -- 基础固定值\n
@@ -850,6 +855,8 @@ def base_chara_climix_common_settle(
     """
     from Script.Design import second_behavior
     character_data: game_type.Character = cache.character_data[character_id]
+    if target_character_id is None:
+        target_character_id = character_data.target_character_id
     if character_data.dead:
         return
     # 只能选择正确部位
@@ -867,7 +874,7 @@ def base_chara_climix_common_settle(
             adjust *= random_adjust
         else:
             adjust = random_adjust
-        base_chara_state_common_settle(character_data.target_character_id, base_value, part_id, extra_adjust = adjust, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
+        base_chara_state_common_settle(target_character_id, base_value, part_id, extra_adjust = adjust, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
 
         # 触发绝顶
         degree_dict = {0 : "small", 1 : "normal", 2 : "strong", 3 : "super"}
@@ -903,10 +910,12 @@ def base_chara_experience_common_settle(
         target_flag: bool = False,
         change_data: Optional[Union[game_type.CharacterStatusChange, game_type.TargetChange]] = None,
         change_data_to_target_change: Optional[Union[game_type.CharacterStatusChange, game_type.TargetChange]] = None,
+        target_character_id: Optional[int] = None,
         ):
     """
     基础角色经验通用结算函数\n
     Keyword arguments:\n
+    target_character_id -- 交互对象id，None时读取角色的交互对象，0表示玩家
     character_id -- 角色id\n
     experience_id -- 经验id\n
     base_value -- 基础固定值\n
@@ -915,13 +924,15 @@ def base_chara_experience_common_settle(
     change_data_to_target_change -- 交互对象结算信息记录对象
     """
     character_data: game_type.Character = cache.character_data[character_id]
+    if target_character_id is None:
+        target_character_id = character_data.target_character_id
     experience_type = game_config.config_experience[experience_id].type
     final_character_id = character_id
     if character_data.dead:
         return
     # 改为加到交互对象身上
     if target_flag:
-        final_character_id = character_data.target_character_id
+        final_character_id = target_character_id
         character_data = cache.character_data[final_character_id]
 
     # 深度无意识下心理经验不结算

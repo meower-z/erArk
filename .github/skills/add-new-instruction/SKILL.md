@@ -51,7 +51,7 @@ description: 为 erArk 新增一个玩家指令及其行为、前提、结算、
 ### 第五步：结算
 
 二选一：
-- **行为结算器**：`constant_effect.py` 加常量 → `Script/Settle/` 对应文件加 `@settle_behavior.add_settle_behavior_effect` 函数（首行 `if not add_time: return`）→ `Behavior_Effect.csv` 挂接 → 同步 `tools/ArkEditor/csv/Effect.csv`（四列 `cid,effect_name,effect_type,effect`，`effect_type` 填与常量 docstring 首词一致的分类词）。
+- **行为结算器**：`constant_effect.py` 加常量 → `Script/Settle/` 对应文件加 `@settle_behavior.add_settle_behavior_effect` 函数（接口为 `(character_id, target_character_id, add_time, change_data, now_time)`，目标必填；首行 `if not add_time: return`）→ `Behavior_Effect.csv` 挂接 → 同步 `tools/ArkEditor/csv/Effect.csv`（四列 `cid,effect_name,effect_type,effect`，`effect_type` 填与常量 docstring 首词一致的分类词）。
 - **面板直接结算**：结算函数写在子系统 handle 模块中（如 `condom_handle.settle_*`），面板确认时直接调用；`Behavior_Effect.csv` 挂 `9999`。副作用：数值变化不进入行动结算展示。
 
 **效果 id 选号与分类**（`BehaviorEffect` 按数字分段，docstring 格式 `""" 分类 说明 """`，新 id 必须插进对应分类段内相邻位置，勿追加到文件末尾）：

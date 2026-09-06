@@ -2479,8 +2479,8 @@ def character_eat_rand_food(character_id: int):
     # 如果没有食物则直接清空饥饿值和进食状态，然后切换至无行动状态并返回，以防止进食失败的死循环
     if not len(now_food_list):
         from Script.Settle.default import handle_hunger_point_zero, handle_eat_food_flag_to_0
-        handle_hunger_point_zero(character_id,add_time=1,change_data=game_type.CharacterStatusChange(),now_time=cache.game_time)
-        handle_eat_food_flag_to_0(character_id,add_time=1,change_data=game_type.CharacterStatusChange(),now_time=cache.game_time)
+        handle_hunger_point_zero(character_id, cache.character_data[character_id].target_character_id,add_time=1,change_data=game_type.CharacterStatusChange(),now_time=cache.game_time)
+        handle_eat_food_flag_to_0(character_id, cache.character_data[character_id].target_character_id,add_time=1,change_data=game_type.CharacterStatusChange(),now_time=cache.game_time)
         character_data.target_character_id = character_id
         character_data.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
         character_data.behavior.duration = 1

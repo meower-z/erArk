@@ -310,7 +310,7 @@ def get_new_character(character_id: int, visitor_flag: bool = False):
     from Script.System.Dormitory_System import common as dormitory_common
 
     # 角色上线
-    default.handle_chara_on_line(character_id, 1, change_data = game_type.CharacterStatusChange(), now_time = cache.game_time)
+    default.handle_chara_on_line(character_id, cache.character_data[character_id].target_character_id, 1, change_data = game_type.CharacterStatusChange(), now_time = cache.game_time)
 
     character_data = cache.character_data[character_id]
     # 清零全特殊状态flag

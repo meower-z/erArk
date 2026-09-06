@@ -91,7 +91,7 @@ def get_commission_demand_and_reward(commission_id: int, send_npc_list = [], dem
                 character_data: game_type.Character = cache.character_data[fugitive_id]
                 character_data.position = ["关押", f"{empty_room}"]
                 confinement_and_training.chara_become_prisoner(fugitive_id)
-                default.handle_chara_on_line(fugitive_id, 1, change_data = game_type.CharacterStatusChange(), now_time = cache.game_time)
+                default.handle_chara_on_line(fugitive_id, cache.character_data[fugitive_id].target_character_id, 1, change_data = game_type.CharacterStatusChange(), now_time = cache.game_time)
 
     return_list = [satify_flag, type_text, full_text]
     return return_list
@@ -410,7 +410,7 @@ def judge_field_commission_finish():
                 cache.character_data[character_id].sp_flag.field_commission = 0
                 handle_premise.settle_chara_unnormal_flag(character_id, 7)
                 # 派遣人员上线
-                default.handle_chara_on_line(character_id, 1, change_data = game_type.CharacterStatusChange(), now_time = cache.game_time)
+                default.handle_chara_on_line(character_id, cache.character_data[character_id].target_character_id, 1, change_data = game_type.CharacterStatusChange(), now_time = cache.game_time)
                 draw_text += f"{cache.character_data[character_id].name} "
             # 载具损坏与回收
             vehicle_text = manage_vehicle_panel.settle_vehicle(commision_id)

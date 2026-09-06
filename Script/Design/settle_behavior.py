@@ -18,11 +18,12 @@ _: FunctionType = get_text._
 """ 翻译api """
 
 
-def handle_settle_behavior(character_id: int, now_time: datetime.datetime, event_flag = 1):
+def handle_settle_behavior(character_id: int, target_character_id: int, now_time: datetime.datetime, event_flag = 1):
     """
     处理结算角色行为并输出对应文本
     Keyword arguments:
-    character_id -- 角色id
+    character_id -- 行为执行者id，int
+    target_character_id -- 本次结算的初始交互目标id，int
     now_time -- 结算时间
     event_flag -- 事件结算变量，0只事件不指令，1只指令不事件，2均结算
     """
@@ -36,8 +37,8 @@ def handle_settle_behavior(character_id: int, now_time: datetime.datetime, event
 
     # ——履历记录：H模式初体验中心判定（自己与交互对象各判一次，行为结算必经处，dict去重使重复判定零成本）——
     first_record_handle.check_first_h_mode(character_id)
-    if now_character_data.target_character_id != character_id:
-        first_record_handle.check_first_h_mode(now_character_data.target_character_id)
+    if target_character_id != character_id:
+        first_record_handle.check_first_h_mode(target_character_id)
 
     behavior_id = now_character_data.behavior.behavior_id
     if event_flag > 0:
@@ -55,10 +56,10 @@ def handle_settle_behavior(character_id: int, now_time: datetime.datetime, event
             # 判定是否要进行当前行为的结算
             # 当前行为不在群P行为列表中，且不是等待行为时结算
             if behavior_id not in group_sex_instruct_list and behavior_id != constant.Behavior.WAIT:
-                change_data = handle_instruct_data(character_id, behavior_id, now_time, add_time, change_data)
+                change_data, target_character_id = handle_instruct_data(character_id, target_character_id, behavior_id, now_time, add_time, change_data)
             # 不满足上述条件且也没有群P行为时也结算
             elif len(group_sex_instruct_list) == 0:
-                change_data = handle_instruct_data(character_id, behavior_id, now_time, add_time, change_data)
+                change_data, target_character_id = handle_instruct_data(character_id, target_character_id, behavior_id, now_time, add_time, change_data)
             # 进行群P行为的计算
             if len(group_sex_instruct_list):
                 for now_behavior_list in full_list_of_target_id_and_state_id:
@@ -71,9 +72,10 @@ def handle_settle_behavior(character_id: int, now_time: datetime.datetime, event
                         # 更改玩家的当前行为id
                         now_character_data.behavior.behavior_id = state_id
                         # 进行指令相关数据的结算
-                        change_data = handle_instruct_data(character_id, state_id, now_time, add_time, change_data)
+                        change_data, group_target_character_id = handle_instruct_data(character_id, target_chara_id, state_id, now_time, add_time, change_data)
             # 回到初始的交互对象id
             now_character_data.target_character_id = first_target_character_id
+            target_character_id = first_target_character_id
             # 监狱长的性爱助手开启中，且当前交互目标不是监狱长
             if handle_premise.handle_sex_assistant_on(character_id) and handle_premise.handle_t_work_is_not_warden(character_id):
                 from Script.UI.Panel import confinement_and_training
@@ -91,12 +93,12 @@ def handle_settle_behavior(character_id: int, now_time: datetime.datetime, event
         # 正常情况下则直接执行结算
         else:
             # 进行指令相关数据的结算
-            change_data = handle_instruct_data(character_id, behavior_id, now_time, add_time, change_data)
+            change_data, target_character_id = handle_instruct_data(character_id, target_character_id, behavior_id, now_time, add_time, change_data)
 
     if event_flag != 1:
         # 主事件
         event_id = now_character_data.event.event_id
-        change_data = handle_event_data(event_id, character_id, add_time, change_data, now_time)
+        change_data, target_character_id = handle_event_data(event_id, character_id, target_character_id, add_time, change_data, now_time)
 
         # 子事件
         son_event_id = now_character_data.event.son_event_id
@@ -108,9 +110,12 @@ def handle_settle_behavior(character_id: int, now_time: datetime.datetime, event
             # 绘制子事件文本
             event_config = game_config.config_event[son_event_id]
             son_event_draw = draw_event_text_panel.DrawEventTextPanel(son_event_id,character_id, event_config.type)
+            previous_target_character_id = now_character_data.target_character_id
             son_event_draw.draw()
+            if now_character_data.target_character_id != previous_target_character_id:
+                target_character_id = now_character_data.target_character_id
             # 进行子事件结算
-            change_data = handle_event_data(son_event_id, character_id, add_time, change_data, now_time)
+            change_data, target_character_id = handle_event_data(son_event_id, character_id, target_character_id, add_time, change_data, now_time)
 
     # target_data = game_type.Character = cache.character_data[player_character_data.target_character_id]
     # print("target_data.name :",target_data.name)
@@ -125,7 +130,7 @@ def handle_settle_behavior(character_id: int, now_time: datetime.datetime, event
     if character_id != 0 and now_character_data.position != player_character_data.position:
         return
     # 当NPC对玩家交互时，互相替换双方的输出内容
-    if character_id != 0 and now_character_data.target_character_id == 0:
+    if character_id != 0 and target_character_id == 0:
         exchange_flag = True
         change_data.target_change.setdefault(0, game_type.TargetChange())
         target_change: game_type.TargetChange = change_data.target_change[0]
@@ -385,6 +390,7 @@ def handle_settle_behavior(character_id: int, now_time: datetime.datetime, event
 
 def handle_instruct_data(
         character_id: int,
+        target_character_id: int,
         behavior_id: str,
         now_time: datetime.datetime,
         add_time: int,
@@ -393,94 +399,121 @@ def handle_instruct_data(
     """
     处理指令数据
     Keyword arguments:
-    character_id -- 角色id
+    character_id -- 行为执行者id，int
+    target_character_id -- 初始交互目标id，int
     behavior_id -- 行动id
     now_time -- 结算时间
     add_time -- 行动已经过时间
     change_data -- 状态变更信息记录对象
+    Return arguments:
+    tuple -- 变化记录与结算后的交互目标id
     """
     now_character_data: game_type.Character = cache.character_data[character_id]
     # 进行一段结算
     if behavior_id in game_config.config_behavior_effect_data:
         # 先结算口上，并判断是否需要跳过，跳过来源于事件的特殊结算
+        previous_target_character_id = now_character_data.target_character_id
         if now_character_data.event.skip_instruct_talk == False:
             talk.handle_talk(character_id)
         else:
             now_character_data.event.skip_instruct_talk = False
-        for effect_id in game_config.config_behavior_effect_data[behavior_id]:
-            # 综合数值结算判定
-            # 如果effect_id是str类型，则说明是综合数值结算
-            if isinstance(effect_id, str) and "CVE" in effect_id:
-                effect_all_value_list = effect_id.split("_")[1:]
-                handle_comprehensive_value_effect(character_id, effect_all_value_list, change_data)
-            else:
-                if effect_id not in constant.settle_behavior_effect_data:
-                    print(f"error 不存在的结算 = {effect_id}")
-                    continue
-                constant.settle_behavior_effect_data[effect_id](character_id, add_time, change_data, now_time)
+        if now_character_data.target_character_id != previous_target_character_id:
+            target_character_id = now_character_data.target_character_id
+        target_character_id = settle_effect_list(character_id, target_character_id, game_config.config_behavior_effect_data[behavior_id], add_time, change_data, now_time)
         # 如果是对他人的行为，则将自己的id与行动结束时间记录到对方的数据中
-        if now_character_data.target_character_id != character_id:
+        if target_character_id != character_id:
             end_time = game_time.get_sub_date(minute=now_character_data.behavior.duration, old_date=now_character_data.behavior.start_time)
-            target_character_data: game_type.Character = cache.character_data[now_character_data.target_character_id]
+            target_character_data: game_type.Character = cache.character_data[target_character_id]
             target_character_data.action_info.interacting_character_end_info = [character_id, end_time]
         # 娱乐和工作类的指令则进行一次设施损坏检测
         if behavior_id in game_config.config_behavior:
             behavior_data = game_config.config_behavior[behavior_id]
             if _('娱乐') in behavior_data.tag or _('工作') in behavior_data.tag:
-                constant.settle_behavior_effect_data[1751](character_id, add_time, change_data, now_time)
+                target_character_id = settle_effect_list(character_id, target_character_id, [1751], add_time, change_data, now_time)
     # 进行二段结算
+    previous_target_character_id = now_character_data.target_character_id
     second_behavior.check_second_effect(character_id, change_data)
     # 进行额外经验结算
     extra_exp_settle(character_id, change_data)
     second_behavior_effect_target_id_set = set()
     # 如果是玩家对NPC的行为，则额外进行对方的二段结算
-    if character_id == 0 and now_character_data.target_character_id != 0:
-        second_behavior_effect_target_id_set.add(now_character_data.target_character_id)
+    if now_character_data.target_character_id != previous_target_character_id:
+        target_character_id = now_character_data.target_character_id
+    if character_id == 0 and target_character_id != 0:
+        second_behavior_effect_target_id_set.add(target_character_id)
     # 如果是玩家的解除时停，则进行所有NPC的二段结算
     if character_id == 0 and behavior_id == constant.Behavior.TIME_STOP_OFF:
         second_behavior_effect_target_id_set = cache.npc_id_got
     # 进行所有人的二段结算
+    previous_target_character_id = now_character_data.target_character_id
     for target_chara_id in second_behavior_effect_target_id_set:
         change_data.target_change.setdefault(target_chara_id, game_type.TargetChange())
         target_change: game_type.TargetChange = change_data.target_change[target_chara_id]
         second_behavior.check_second_effect(target_chara_id, target_change, pl_to_npc = True)
         # 进行额外经验结算
         extra_exp_settle(target_chara_id, target_change)
-    return change_data
+    if now_character_data.target_character_id != previous_target_character_id:
+        target_character_id = now_character_data.target_character_id
+    return change_data, target_character_id
 
 
-def handle_event_data(event_id, character_id, add_time, change_data, now_time):
+def handle_event_data(event_id, character_id, target_character_id, add_time, change_data, now_time):
     """
     处理事件数据
     Keyword arguments:
-    event_id -- 事件id
-    character_id -- 角色id
-    add_time -- 行动已经过时间
+    event_id -- 事件id，str
+    character_id -- 行为执行者id，int
+    target_character_id -- 初始交互目标id，int
+    add_time -- 行动已经过时间，int
     change_data -- 状态变更信息记录对象
-    now_time -- 结算时间
+    now_time -- 结算时间，datetime.datetime
+    Return arguments:
+    tuple -- 变化记录与结算后的交互目标id
     """
     if event_id != "":
-        # 进行事件结算
-        # print(f"debug handle_settle_behavior event_id = {event_id}")
         event_data: game_type.Event = game_config.config_event[event_id]
-        for effect in event_data.effect:
-            # 综合数值结算判定
-            if "CVE" in effect:
-                effect_all_value_list = effect.split("_")[1:]
-                handle_comprehensive_value_effect(character_id, effect_all_value_list, change_data)
-            # 综合指令状态结算判定
-            elif "CSE" in effect:
-                effect_all_value_str = effect.split("_", 1)[1]
-                A = effect_all_value_str.split("_", 1)[0]
-                behavior_id = effect_all_value_str.split("_", 1)[1]
-                effect_all_value_list = [A, behavior_id]
-                handle_instruct.handle_comprehensive_state_effect(effect_all_value_list, character_id, add_time, change_data, now_time)
-            # 其他结算判定
-            else:
-                constant.settle_behavior_effect_data[int(effect)](
-                    character_id, add_time, change_data, now_time
-                )
-    return change_data
+        target_character_id = settle_effect_list(character_id, target_character_id, event_data.effect, add_time, change_data, now_time, event_flag=True)
+    return change_data, target_character_id
+
+
+def settle_effect_list(character_id, target_character_id, effects, add_time, change_data, now_time, event_flag=False):
+    """
+    按配置顺序执行效果，并将目标切换传给后续效果。
+    参数:
+    character_id -- 行为执行者id，int
+    target_character_id -- 初始交互目标id，int
+    event_flag -- 是否为事件效果列表，bool
+    effects -- 效果id列表，list
+    add_time -- 结算时长，int
+    change_data -- 状态变更信息记录对象
+    now_time -- 结算时间，datetime.datetime
+    返回:
+    int -- 执行后的交互目标id
+    """
+    character_data = cache.character_data[character_id]
+    for effect in effects:
+        previous_target_character_id = character_data.target_character_id
+        if isinstance(effect, str) and "CVE" in effect:
+            effect_all_value_list = effect.split("_")[1:]
+            settled = handle_comprehensive_value_effect(character_id, effect_all_value_list, change_data, target_character_id=target_character_id)
+            if settled and effect_all_value_list[1].split("|")[0] == "ChangeTargetId":
+                target_character_id = character_data.target_character_id
+        elif event_flag and isinstance(effect, str) and "CSE" in effect:
+            effect_all_value_list = effect.split("_", 1)[1].split("_", 1)
+            handle_instruct.handle_comprehensive_state_effect(effect_all_value_list, character_id, target_character_id, add_time, change_data, now_time)
+        else:
+            effect_id = int(effect) if event_flag else effect
+            if not event_flag and effect_id not in constant.settle_behavior_effect_data:
+                print(f"error 不存在的结算 = {effect_id}")
+                continue
+            selected_target = constant.settle_behavior_effect_data[effect_id](character_id, target_character_id, add_time, change_data, now_time)
+            # 选目标效果返回选中的id，包括再次选择同一持久目标。
+            if selected_target is not None:
+                target_character_id = selected_target
+        # 普通效果、综合结算及其嵌套行为也可能修改持久交互目标。
+        if character_data.target_character_id != previous_target_character_id:
+            target_character_id = character_data.target_character_id
+    return target_character_id
 
 
 def add_settle_behavior_effect(behavior_effect_id: int):
@@ -488,6 +521,8 @@ def add_settle_behavior_effect(behavior_effect_id: int):
     添加行为结算处理
     Keyword arguments:
     behavior_id -- 行为id
+    效果参数依次为执行者id、交互目标id、时长、变化记录、时间。
+    选目标效果返回目标id，其他效果返回None。
     """
 
     def decorator(func):
@@ -707,11 +742,12 @@ def extra_exp_settle(
             base_chara_experience_common_settle(character_id, 35, target_flag=True, change_data=change_data)
 
 
-def handle_comprehensive_value_effect(character_id: int, effect_all_value_list: list, change_data: game_type.CharacterStatusChange = game_type.CharacterStatusChange()) -> int:
+def handle_comprehensive_value_effect(character_id: int, effect_all_value_list: list, change_data: game_type.CharacterStatusChange = game_type.CharacterStatusChange(), target_character_id: int = None) -> int:
     """
     综合型基础数值结算
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 交互目标id，int；None时读取执行者的交互目标
     effect_all_value_list -- 结算的各项数值
     change_data -- 结算信息记录对象
     Return arguments:
@@ -723,6 +759,8 @@ def handle_comprehensive_value_effect(character_id: int, effect_all_value_list: 
     from Script.Design import character
 
     character_data: game_type.Character = cache.character_data[character_id]
+    if target_character_id is None:
+        target_character_id = character_data.target_character_id
     # print(f"debug character_id = {character_id}, effect_all_value_list = {effect_all_value_list}")
 
     # 进行主体A的判别，A1为自己，A2为交互对象，A3为指定id角色(格式为A3|15)
@@ -732,13 +770,13 @@ def handle_comprehensive_value_effect(character_id: int, effect_all_value_list: 
         final_character_id = character_id
     elif effect_all_value_list[0] == "A2":
         # # 如果没有交互对象，则返回0
-        # if character_data.target_character_id == character_id:
+        # if target_character_id == character_id:
         #     return 0
-        final_character_data = cache.character_data[character_data.target_character_id]
-        change_data.target_change.setdefault(character_data.target_character_id, game_type.TargetChange())
-        target_change: game_type.TargetChange = change_data.target_change[character_data.target_character_id]
+        final_character_data = cache.character_data[target_character_id]
+        change_data.target_change.setdefault(target_character_id, game_type.TargetChange())
+        target_change: game_type.TargetChange = change_data.target_change[target_character_id]
         final_change_data = target_change
-        final_character_id = character_data.target_character_id
+        final_character_id = target_character_id
     elif effect_all_value_list[0][:2] == "A3":
         final_character_adv = int(effect_all_value_list[0][3:])
         final_character_id = character.get_character_id_from_adv(final_character_adv)

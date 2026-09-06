@@ -397,6 +397,7 @@ def chara_handle_instruct_common_settle(
 def handle_comprehensive_state_effect(
         effect_all_value_list: list,
         character_id: int,
+        target_character_id: int,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -406,6 +407,7 @@ def handle_comprehensive_state_effect(
     Keyword arguments:
     effect_all_value_list -- 结算的各项数值
     character_id -- 角色id
+    target_character_id -- 本次结算的交互目标id，int
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -421,10 +423,11 @@ def handle_comprehensive_state_effect(
         # 如果是NPC触发且该NPC不是玩家当前的交互对象，则将其设为交互对象
         if character_id != 0 and character_id != character_data.target_character_id:
             character_data.target_character_id = character_id
+        if character_id != 0:
+            target_character_id = character_data.target_character_id
         # 如果没有交互对象，则返回0
-        if character_data.target_character_id == 0:
+        if target_character_id == 0:
             return 0
-        target_character_id = character_data.target_character_id
     elif effect_all_value_list[0][:2] == "A3":
         target_character_id = int(effect_all_value_list[0][3:])
         # 如果还没拥有该角色，则返回0
@@ -1322,7 +1325,7 @@ def handle_stop_sleep_obscenity():
     now_draw.width = width
     now_draw.text = _("\n退出睡眠猥亵模式\n")
     now_draw.draw()
-    default.handle_door_close_reset(0,1,game_type.CharacterStatusChange(),datetime.datetime(1, 1, 1))
+    default.handle_door_close_reset(0, cache.character_data[0].target_character_id,1,game_type.CharacterStatusChange(),datetime.datetime(1, 1, 1))
 
 @add_instruct(constant.Instruct.IMPRISONMENT_H)
 def handle_imprisonment_h():
@@ -1351,11 +1354,23 @@ def handle_unconscious_h(type_name:str = ""):
     now_draw.width = width
     if type_name == "sleep":
         now_draw.text = _("\n进入睡奸模式\n")
-        default.handle_unconscious_flag_to_1(character_data.target_character_id, 1, game_type.CharacterStatusChange(), cache.game_time)
+        default.handle_unconscious_flag_to_1(
+            character_data.target_character_id,
+            cache.character_data[character_data.target_character_id].target_character_id,
+            1,
+            game_type.CharacterStatusChange(),
+            cache.game_time,
+        )
         cache.achievement.sleep_sex_record = {1: 0, 2: 0, 3: 0}
     elif type_name == "drunk":
         now_draw.text = _("\n进入醉奸模式\n")
-        default.handle_unconscious_flag_to_2(character_data.target_character_id, 1, game_type.CharacterStatusChange(), cache.game_time)
+        default.handle_unconscious_flag_to_2(
+            character_data.target_character_id,
+            cache.character_data[character_data.target_character_id].target_character_id,
+            1,
+            game_type.CharacterStatusChange(),
+            cache.game_time,
+        )
         cache.achievement.drunk_sex_record = {1: 0, 2: 0, 3: 0}
     elif type_name == "time_stop":
         now_draw.text = _("\n进入时停奸模式\n")

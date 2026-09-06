@@ -77,7 +77,7 @@ def judge_character_h_obscenity_unconscious(character_id: int, pl_start_time: da
         # 二次确认H意外结束的归零结算
         special_end_list = constant.special_end_H_list
         if len(cache.pl_pre_behavior_instruce) and cache.pl_pre_behavior_instruce[-1] in special_end_list and character_data.behavior.behavior_id not in special_end_list:
-            default.handle_both_h_state_reset(0, 1, change_data=game_type.CharacterStatusChange(), now_time=datetime.datetime(1, 1, 1))
+            default.handle_both_h_state_reset(0, cache.character_data[0].target_character_id, 1, change_data=game_type.CharacterStatusChange(), now_time=datetime.datetime(1, 1, 1))
         # 如果在搬运角色，则直接移动到玩家同一地点
         if (
             handle_premise.handle_carry_somebody(0)
@@ -93,7 +93,7 @@ def judge_character_h_obscenity_unconscious(character_id: int, pl_start_time: da
 
     # 将绝顶解放状态改为关闭绝顶寸止
     if handle_premise.handle_self_orgasm_edge_relase(character_id):
-        default.handle_self_orgasm_edge_off(character_id, 1, change_data=game_type.CharacterStatusChange(), now_time=datetime.datetime(1, 1, 1))
+        default.handle_self_orgasm_edge_off(character_id, cache.character_data[character_id].target_character_id, 1, change_data=game_type.CharacterStatusChange(), now_time=datetime.datetime(1, 1, 1))
     # 将时停解放状态改为False
     if handle_premise.handle_self_time_stop_orgasm_relase(character_id):
         character_data.h_state.time_stop_release = False
@@ -215,9 +215,9 @@ def recover_from_unconscious_h(character_id: int, info_text: str = ""):
     # 如果在群交中
     if handle_premise.handle_group_sex_mode_on(character_id):
         # 清空玩家的群交模板数据
-        default.handle_clear_group_sex_template(character_id, 1, game_type.CharacterStatusChange(), datetime.datetime(1, 1, 1))
+        default.handle_clear_group_sex_template(character_id, cache.character_data[character_id].target_character_id, 1, game_type.CharacterStatusChange(), datetime.datetime(1, 1, 1))
         # 关闭群交状态
-        default.handle_group_sex_mode_off(character_id, 1, game_type.CharacterStatusChange(), datetime.datetime(1, 1, 1))
+        default.handle_group_sex_mode_off(character_id, cache.character_data[character_id].target_character_id, 1, game_type.CharacterStatusChange(), datetime.datetime(1, 1, 1))
         # 暂存玩家的行为
         tem_behavior_id = character_data.behavior.behavior_id
         tem_state = character_data.state
@@ -245,7 +245,7 @@ def recover_from_unconscious_h(character_id: int, info_text: str = ""):
 
     # 如果继续H
     if response == UnconsciousHResponse.CONTINUE_H:
-        default.handle_h_flag_to_1(target_data.cid, 1, game_type.CharacterStatusChange(), cache.game_time)
+        default.handle_h_flag_to_1(target_data.cid, cache.character_data[target_data.cid].target_character_id, 1, game_type.CharacterStatusChange(), cache.game_time)
         character_data.behavior.behavior_id = constant.Behavior.WAIT
         character_data.state = constant.CharacterStatus.STATUS_WAIT
         # 对方的行为时间设为10分钟
@@ -263,7 +263,7 @@ def recover_from_unconscious_h(character_id: int, info_text: str = ""):
         # 对象行为时间改为1分钟
         target_data.behavior.duration = 1
         # 重置双方H结构体和相关数据
-        default.handle_both_h_state_reset(0, 1, game_type.CharacterStatusChange(), datetime.datetime(1, 1, 1))
+        default.handle_both_h_state_reset(0, cache.character_data[0].target_character_id, 1, game_type.CharacterStatusChange(), datetime.datetime(1, 1, 1))
         # 地点开门
         scene_data.close_flag = 0
 
@@ -362,11 +362,11 @@ def handle_unconscious_h_response(character_id: int, target_character_id: int, c
     elif not can_continue:
         # 先解放目标角色累积的寸止计数；该结算作用于调用者的交互对象、且须在H状态归零前进行，故以自己为调用者、交互对象指向目标角色
         character_data.target_character_id = target_character_id
-        default.handle_orgasm_edge_release(character_id, 1, game_type.CharacterStatusChange(), cache.game_time)
+        default.handle_orgasm_edge_release(character_id, cache.character_data[character_id].target_character_id, 1, game_type.CharacterStatusChange(), cache.game_time)
         target_data.target_character_id = target_character_id
-        default.handle_end_h_add_hpmp_max(target_character_id, 1, game_type.CharacterStatusChange(), cache.game_time)
-        default.handle_self_h_state_reset(target_character_id, 1, game_type.CharacterStatusChange(), cache.game_time)
-        default_cloth.handle_self_cloth_back(target_character_id, 1, game_type.CharacterStatusChange(), cache.game_time)
+        default.handle_end_h_add_hpmp_max(target_character_id, cache.character_data[target_character_id].target_character_id, 1, game_type.CharacterStatusChange(), cache.game_time)
+        default.handle_self_h_state_reset(target_character_id, cache.character_data[target_character_id].target_character_id, 1, game_type.CharacterStatusChange(), cache.game_time)
+        default_cloth.handle_self_cloth_back(target_character_id, cache.character_data[target_character_id].target_character_id, 1, game_type.CharacterStatusChange(), cache.game_time)
 
     # 返回裁决结果
     return response

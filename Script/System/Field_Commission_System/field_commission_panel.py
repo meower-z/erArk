@@ -986,7 +986,7 @@ class CommissionDraw:
         for character_id in self.send_npc_list:
             cache.character_data[character_id].sp_flag.field_commission = commision_id
             handle_premise.settle_chara_unnormal_flag(character_id, 7)
-            default.handle_chara_off_line(character_id, 1, change_data = game_type.CharacterStatusChange(), now_time = cache.game_time)
+            default.handle_chara_off_line(character_id, cache.character_data[character_id].target_character_id, 1, change_data = game_type.CharacterStatusChange(), now_time = cache.game_time)
         # 结算派遣的载具
         now_vehicle_list = []
         for vehicle_id in self.send_vehicle_dict:

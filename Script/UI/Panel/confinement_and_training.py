@@ -158,7 +158,7 @@ def escape_success(character_id: int):
     # 移除囚犯信息
     cache.rhodes_island.current_prisoners.pop(character_id)
     # 囚犯离线
-    default.handle_chara_off_line(character_id, 1, change_data = game_type.CharacterStatusChange(), now_time = cache.game_time)
+    default.handle_chara_off_line(character_id, cache.character_data[character_id].target_character_id, 1, change_data = game_type.CharacterStatusChange(), now_time = cache.game_time)
     field_commission_function.create_capture_fugitive_commission(character_id)
 
 def escape_fail(character_id: int):
@@ -287,8 +287,8 @@ def prepare_training():
         target_character_data.dirty = attr_calculation.get_dirty_reset(target_character_data.dirty)
     # 润滑
     if cache.rhodes_island.pre_training_lubrication and handle_premise.handle_have_body_lubricant(0):
-        default.handle_use_body_lubricant(0, add_time=1, change_data=game_type.CharacterStatusChange(), now_time=cache.game_time)
-        default.handle_target_add_huge_lubrication(warden_id, add_time=1, change_data=game_type.CharacterStatusChange(), now_time=cache.game_time)
+        default.handle_use_body_lubricant(0, cache.character_data[0].target_character_id, add_time=1, change_data=game_type.CharacterStatusChange(), now_time=cache.game_time)
+        default.handle_target_add_huge_lubrication(warden_id, cache.character_data[warden_id].target_character_id, add_time=1, change_data=game_type.CharacterStatusChange(), now_time=cache.game_time)
     # 道具使用
     body_item_list = h_item_shop_panel.body_item_list
     for i in range(len(body_item_list)):
@@ -303,7 +303,7 @@ def prepare_training():
             # 使用道具
             # 避孕套
             if i == 13:
-                default.handle_wear_condom(0, add_time=1, change_data=game_type.CharacterStatusChange(), now_time=cache.game_time)
+                default.handle_wear_condom(0, cache.character_data[0].target_character_id, add_time=1, change_data=game_type.CharacterStatusChange(), now_time=cache.game_time)
                 cache.character_data[0].item[item_id] -= 1
             # 其他道具
             else:
@@ -314,19 +314,49 @@ def prepare_training():
                     cache.character_data[0].item[item_id] -= 1
                     # 利尿剂
                     if i == 8:
-                        default.handle_target_diuretics_on(warden_id, add_time=1, change_data=game_type.CharacterStatusChange(), now_time=cache.game_time)
+                        default.handle_target_diuretics_on(
+                            warden_id,
+                            cache.character_data[warden_id].target_character_id,
+                            add_time=1,
+                            change_data=game_type.CharacterStatusChange(),
+                            now_time=cache.game_time,
+                        )
                     # 安眠药
                     elif i == 9:
-                        default.handle_target_add_tired_tosleep(warden_id, add_time=1, change_data=game_type.CharacterStatusChange(), now_time=cache.game_time)
+                        default.handle_target_add_tired_tosleep(
+                            warden_id,
+                            cache.character_data[warden_id].target_character_id,
+                            add_time=1,
+                            change_data=game_type.CharacterStatusChange(),
+                            now_time=cache.game_time,
+                        )
                     # 排卵促进药
                     elif i == 10:
-                        default.handle_target_add_pregnancy_chance(warden_id, add_time=1, change_data=game_type.CharacterStatusChange(), now_time=cache.game_time)
+                        default.handle_target_add_pregnancy_chance(
+                            warden_id,
+                            cache.character_data[warden_id].target_character_id,
+                            add_time=1,
+                            change_data=game_type.CharacterStatusChange(),
+                            now_time=cache.game_time,
+                        )
                     # 事前避孕药
                     elif i == 11:
-                        default.handle_target_no_pregnancy_next_day(warden_id, add_time=1, change_data=game_type.CharacterStatusChange(), now_time=cache.game_time)
+                        default.handle_target_no_pregnancy_next_day(
+                            warden_id,
+                            cache.character_data[warden_id].target_character_id,
+                            add_time=1,
+                            change_data=game_type.CharacterStatusChange(),
+                            now_time=cache.game_time,
+                        )
                     # 事后避孕药
                     elif i == 12:
-                        default.handle_target_no_pregnancy_from_last_h(warden_id, add_time=1, change_data=game_type.CharacterStatusChange(), now_time=cache.game_time)
+                        default.handle_target_no_pregnancy_from_last_h(
+                            warden_id,
+                            cache.character_data[warden_id].target_character_id,
+                            add_time=1,
+                            change_data=game_type.CharacterStatusChange(),
+                            now_time=cache.game_time,
+                        )
     # 全员等待10分钟
     target_character_data.behavior.behavior_id = constant.Behavior.WAIT
     target_character_data.behavior.duration = 10
