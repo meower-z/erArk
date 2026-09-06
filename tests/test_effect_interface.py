@@ -117,7 +117,7 @@ class EffectInterfaceTest(unittest.TestCase):
         changes = game_type.CharacterStatusChange()
         if event:
             self.config.config_event["example"] = SimpleNamespace(effect=[str(item) for item in sequence])
-            self.ns["handle_event_data"]("example", 1, 2, 1, changes, self.now)
+            self.ns["handle_event_data"](1, 2, "example", 1, changes, self.now)
         else:
             self.config.config_behavior_effect_data["example"] = sequence
             if facility:
@@ -309,17 +309,20 @@ class EffectInterfaceTest(unittest.TestCase):
                 checked += 1
         self.assertGreater(checked, 100)
 
-    def test_helper_targets_are_required_at_every_call(self):
-        """辅助函数的目标参数必须显式传入，生产调用不能省略参数；无返回值。"""
+    def test_settlement_targets_are_second_and_required_at_every_call(self):
+        """结算接口以第二个必填参数接收目标，所有生产调用匹配签名；无返回值。"""
         helper_names = {
             "base_chara_hp_mp_common_settle", "base_chara_experience_common_settle",
             "base_chara_climix_common_settle", "base_chara_favorability_and_trust_common_settle",
             "handle_comprehensive_value_effect", "extra_exp_settle",
+            "handle_settle_behavior", "handle_instruct_data", "handle_event_data",
+            "settle_effect_list", "handle_comprehensive_state_effect",
         }
-        for path in ("Script/Settle/common_default.py", "Script/Design/settle_behavior.py"):
+        for path in ("Script/Settle/common_default.py", "Script/Design/settle_behavior.py", "Script/System/Instruct_System/handle_instruct.py"):
             load_functions(path, self.ns, lambda node: node.name in helper_names)
         signatures = {name: inspect.signature(self.ns[name]) for name in helper_names}
         for name, signature in signatures.items():
+            self.assertEqual(list(signature.parameters)[:2], ["character_id", "target_character_id"], name)
             self.assertIs(signature.parameters["target_character_id"].default, inspect.Parameter.empty, name)
         checked = 0
         for path in (ROOT / "Script").rglob("*.py"):
@@ -357,13 +360,13 @@ class EffectInterfaceTest(unittest.TestCase):
         self.test_paired_hp_helper_uses_explicit_target()
         settle = self.ns["base_chara_hp_mp_common_settle"]
         changes = game_type.CharacterStatusChange()
-        settle(1, hp_value=-5, target_flag=True, change_data=changes, target_character_id=0)
+        settle(1, 0, hp_value=-5, target_flag=True, change_data=changes)
         self.assertEqual(changes.target_change[0].hit_point, -5)
         self.assertNotIn(2, changes.target_change)
         changes = game_type.CharacterStatusChange()
         with self.assertRaises(TypeError):
             settle(1, hp_value=-5, target_flag=True, change_data=changes)
-        settle(1, hp_value=-5, target_flag=True, change_data=changes, target_character_id="CURRENT_TARGET")
+        settle(1, "CURRENT_TARGET", hp_value=-5, target_flag=True, change_data=changes)
         self.assertEqual(changes.target_change[2].hit_point, -5)
 
     def test_self_hp_effect_accepts_none_without_interaction_target(self):
@@ -386,7 +389,7 @@ class EffectInterfaceTest(unittest.TestCase):
         del actor.target_character_id
         actor.experience = {}
         changes = game_type.CharacterStatusChange()
-        self.ns["base_chara_experience_common_settle"](1, 35, change_data=changes, target_character_id=None)
+        self.ns["base_chara_experience_common_settle"](1, None, 35, change_data=changes)
         self.assertEqual(actor.experience[35], 1)
         self.assertEqual(changes.experience[35], 1)
         self.assertEqual(changes.target_change, {})
@@ -414,7 +417,7 @@ class EffectInterfaceTest(unittest.TestCase):
                 for character in self.cache.character_data.values():
                     character.experience = {}
                 changes = game_type.CharacterStatusChange()
-                self.ns["base_chara_experience_common_settle"](1, 35, target_flag=True, change_data=changes, target_character_id=target)
+                self.ns["base_chara_experience_common_settle"](1, target, 35, target_flag=True, change_data=changes)
                 for cid, character in self.cache.character_data.items():
                     self.assertEqual(character.experience.get(35, 0), int(cid == recipient))
                 self.assertEqual(set(changes.target_change), {recipient})

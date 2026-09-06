@@ -1126,7 +1126,7 @@ def handle_make_food(
         make_food_time = 0
         food_name = cache.recipe_data[food.recipe].name
         make_food_time = cache.recipe_data[food.recipe].time
-        base_chara_favorability_and_trust_common_settle(character_id, add_time, True, 0, 0, change_data, target_character_id=target_character_id)
+        base_chara_favorability_and_trust_common_settle(character_id, target_character_id, add_time, True, 0, 0, change_data)
 
 
 

@@ -512,7 +512,7 @@ def judge_accept_special_seasoning_food(character_id: int):
                 # 精爱味觉触发一次绝顶
                 if target_data.talent[31]:
                     from Script.Settle.default import base_chara_climix_common_settle
-                    base_chara_climix_common_settle(character_id, 0, target_character_id="CURRENT_TARGET")
+                    base_chara_climix_common_settle(character_id, "CURRENT_TARGET", 0)
                 return 1
             # 性无知会直接接受精液食物
             if target_data.talent[222]:

@@ -27,6 +27,7 @@ width = normal_config.config_normal.text_width
 
 def base_chara_hp_mp_common_settle(
         character_id: int,
+        target_character_id,
         add_time: int = 0,
         hp_value: int = 0,
         mp_value: int = 0,
@@ -34,14 +35,12 @@ def base_chara_hp_mp_common_settle(
         target_flag: bool = False,
         change_data: Optional[game_type.CharacterStatusChange] = None,
         change_data_to_target_change: Optional[game_type.CharacterStatusChange] = None,
-        *,
-        target_character_id,
         ):
     """
     基础角色体力与气力通用结算函数\n
     Keyword arguments:\n
-    target_character_id -- 必填关键字参数；"CURRENT_TARGET"读取角色的交互对象，0表示玩家；无需目标时传None
     character_id -- 角色id\n
+    target_character_id -- 第二个必填参数；"CURRENT_TARGET"读取角色的交互对象，0表示玩家；无需目标时传None
     add_time -- 结算时间\n
     hp_value -- 体力值，-1为按程度减少，1为按程度增加，其他值则为具体值\n
     mp_value -- 气力值，-1为按程度减少，1为按程度增加，其他值则为具体值\n
@@ -520,41 +519,40 @@ def extra_feel_settle(character_id: int, state_id: int, final_value: float, chan
     # 顺从对恭顺
     if state_id == 10 and character_data.ability[31] >= 5:
         base_chara_state_common_settle(character_id, final_value, 23, 0, ability_level = character_data.ability[31], tenths_add = False, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
-        base_chara_experience_common_settle(character_id, 155, change_data = change_data, change_data_to_target_change = change_data_to_target_change, target_character_id="CURRENT_TARGET")
+        base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 155, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
     # 施虐对先导
     elif state_id == 14 and character_data.ability[35] >= 5:
         base_chara_state_common_settle(character_id, final_value, 23, 0, ability_level = character_data.ability[35], tenths_add = False, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
-        base_chara_experience_common_settle(character_id, 155, change_data = change_data, change_data_to_target_change = change_data_to_target_change, target_character_id="CURRENT_TARGET")
+        base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 155, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
     # 露出对羞耻
     elif state_id == 16 and character_data.ability[34] >= 5:
         base_chara_state_common_settle(character_id, final_value, 23, 0, ability_level = character_data.ability[34], tenths_add = False, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
-        base_chara_experience_common_settle(character_id, 155, change_data = change_data, change_data_to_target_change = change_data_to_target_change, target_character_id="CURRENT_TARGET")
+        base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 155, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
     # 受虐对苦痛
     elif state_id == 17 and character_data.ability[36] >= 5:
         base_chara_state_common_settle(character_id, final_value, 23, 0, ability_level = character_data.ability[36], tenths_add = False, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
-        base_chara_experience_common_settle(character_id, 155, change_data = change_data, change_data_to_target_change = change_data_to_target_change, target_character_id="CURRENT_TARGET")
+        base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 155, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
 
 
 def base_chara_favorability_and_trust_common_settle(
         character_id: int,
+        target_character_id,
         add_time: int,
         favorability_flag: bool,
         base_value: int = 0,
         extra_adjust: float = 0,
         change_data: Optional[Union[game_type.CharacterStatusChange, game_type.TargetChange]] = None,
-        *,
-        target_character_id,
         ):
     """
     基础角色好感与信赖通用结算函数\n
     Keyword arguments:\n
     character_id -- 角色id\n
+    target_character_id -- 第二个必填参数；"CURRENT_TARGET"读取角色的交互对象，0表示玩家；本函数需要目标，不能传None
     add_time -- 结算时间\n
     favorability_flag -- true为好感,false为信赖\n
     base_value -- 基础固定值\n
     extra_adjust -- 额外系数\n
     change_data -- 结算信息记录对象\n
-    target_character_id -- 必填关键字参数；"CURRENT_TARGET"读取角色的交互对象，0表示玩家；本函数需要目标，不能传None
     """
     character_data: game_type.Character = cache.character_data[character_id]
     pl_character_data: game_type.Character = cache.character_data[0]
@@ -836,20 +834,19 @@ def calculation_trust(character_id: int, target_character_id: int, add_time: int
 
 def base_chara_climix_common_settle(
         character_id: int,
+        target_character_id,
         part_id: int = 0,
         base_value: int = 500,
         adjust: float = -1,
         degree: int = -1,
         change_data: Optional[game_type.CharacterStatusChange] = None,
         change_data_to_target_change: Optional[game_type.CharacterStatusChange] = None,
-        *,
-        target_character_id,
         ):
     """
     基础角色绝顶通用结算函数\n
     Keyword arguments:\n
-    target_character_id -- 必填关键字参数；"CURRENT_TARGET"读取角色的交互对象，0表示玩家；无需目标时传None
     character_id -- 角色id\n
+    target_character_id -- 第二个必填参数；"CURRENT_TARGET"读取角色的交互对象，0表示玩家；无需目标时传None
     part_id -- 部位id，即性器官id\n
     base_value -- 基础固定值\n
     adjust -- 系数\n
@@ -909,19 +906,18 @@ def base_chara_climix_common_settle(
 
 def base_chara_experience_common_settle(
         character_id: int,
+        target_character_id,
         experience_id: int,
         base_value: int = 1,
         target_flag: bool = False,
         change_data: Optional[Union[game_type.CharacterStatusChange, game_type.TargetChange]] = None,
         change_data_to_target_change: Optional[Union[game_type.CharacterStatusChange, game_type.TargetChange]] = None,
-        *,
-        target_character_id,
         ):
     """
     基础角色经验通用结算函数\n
     Keyword arguments:\n
-    target_character_id -- 必填关键字参数；"CURRENT_TARGET"读取角色的交互对象，0表示玩家；无需目标时传None
     character_id -- 角色id\n
+    target_character_id -- 第二个必填参数；"CURRENT_TARGET"读取角色的交互对象，0表示玩家；无需目标时传None
     experience_id -- 经验id\n
     base_value -- 基础固定值\n
     target_flag -- 是否加到交互对象身上\n
@@ -953,25 +949,25 @@ def base_chara_experience_common_settle(
         if experience_type == 1:
             # 根据经验序号转化为对应的经验id
             new_exp_id = game_config.config_experience_relations[experience_id].unconscious_exp_id
-            base_chara_experience_common_settle(final_character_id, new_exp_id, change_data = change_data, target_character_id=target_character_id)
+            base_chara_experience_common_settle(final_character_id, target_character_id, new_exp_id, change_data = change_data)
         # 绝顶经验
         elif experience_type == 2:
-            base_chara_experience_common_settle(final_character_id, 78, change_data = change_data, target_character_id=target_character_id)
+            base_chara_experience_common_settle(final_character_id, target_character_id, 78, change_data = change_data)
         # 性交经验
         elif experience_type == 3:
-            base_chara_experience_common_settle(final_character_id, 79, change_data = change_data, target_character_id=target_character_id)
+            base_chara_experience_common_settle(final_character_id, target_character_id, 79, change_data = change_data)
             # 睡姦经验与被睡姦经验
             if handle_premise.handle_unconscious_flag_1(final_character_id):
-                base_chara_experience_common_settle(0, 120, change_data = change_data, target_character_id="CURRENT_TARGET")
-                base_chara_experience_common_settle(final_character_id, 121, change_data = change_data, target_character_id=target_character_id)
+                base_chara_experience_common_settle(0, "CURRENT_TARGET", 120, change_data = change_data)
+                base_chara_experience_common_settle(final_character_id, target_character_id, 121, change_data = change_data)
             # 催眠姦经验与被催眠姦经验
             elif handle_premise.handle_unconscious_hypnosis_flag(final_character_id):
-                base_chara_experience_common_settle(0, 126, change_data = change_data, target_character_id="CURRENT_TARGET")
-                base_chara_experience_common_settle(final_character_id, 127, change_data = change_data, target_character_id=target_character_id)
+                base_chara_experience_common_settle(0, "CURRENT_TARGET", 126, change_data = change_data)
+                base_chara_experience_common_settle(final_character_id, target_character_id, 127, change_data = change_data)
             # 时姦经验与被时姦经验
             elif handle_premise.handle_unconscious_flag_3(final_character_id) or handle_premise.handle_self_time_stop_orgasm_relase(final_character_id):
-                base_chara_experience_common_settle(0, 124, change_data = change_data, target_character_id="CURRENT_TARGET")
-                base_chara_experience_common_settle(final_character_id, 125, change_data = change_data, target_character_id=target_character_id)
+                base_chara_experience_common_settle(0, "CURRENT_TARGET", 124, change_data = change_data)
+                base_chara_experience_common_settle(final_character_id, target_character_id, 125, change_data = change_data)
 
     # 结算最终值
     character_data.experience.setdefault(experience_id, 0)

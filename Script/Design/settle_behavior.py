@@ -98,7 +98,7 @@ def handle_settle_behavior(character_id: int, target_character_id: int, now_time
     if event_flag != 1:
         # 主事件
         event_id = now_character_data.event.event_id
-        change_data, target_character_id = handle_event_data(event_id, character_id, target_character_id, add_time, change_data, now_time)
+        change_data, target_character_id = handle_event_data(character_id, target_character_id, event_id, add_time, change_data, now_time)
 
         # 子事件
         son_event_id = now_character_data.event.son_event_id
@@ -115,7 +115,7 @@ def handle_settle_behavior(character_id: int, target_character_id: int, now_time
             if now_character_data.target_character_id != previous_target_character_id:
                 target_character_id = now_character_data.target_character_id
             # 进行子事件结算
-            change_data, target_character_id = handle_event_data(son_event_id, character_id, target_character_id, add_time, change_data, now_time)
+            change_data, target_character_id = handle_event_data(character_id, target_character_id, son_event_id, add_time, change_data, now_time)
 
     # target_data = game_type.Character = cache.character_data[player_character_data.target_character_id]
     # print("target_data.name :",target_data.name)
@@ -457,13 +457,13 @@ def handle_instruct_data(
     return change_data, target_character_id
 
 
-def handle_event_data(event_id, character_id, target_character_id, add_time, change_data, now_time):
+def handle_event_data(character_id, target_character_id, event_id, add_time, change_data, now_time):
     """
     处理事件数据
     Keyword arguments:
-    event_id -- 事件id，str
     character_id -- 行为执行者id，int
     target_character_id -- 初始交互目标id，int
+    event_id -- 事件id，str
     add_time -- 行动已经过时间，int
     change_data -- 状态变更信息记录对象
     now_time -- 结算时间，datetime.datetime
@@ -495,12 +495,12 @@ def settle_effect_list(character_id, target_character_id, effects, add_time, cha
         previous_target_character_id = character_data.target_character_id
         if isinstance(effect, str) and "CVE" in effect:
             effect_all_value_list = effect.split("_")[1:]
-            settled = handle_comprehensive_value_effect(character_id, effect_all_value_list, change_data, target_character_id=target_character_id)
+            settled = handle_comprehensive_value_effect(character_id, target_character_id, effect_all_value_list, change_data)
             if settled and effect_all_value_list[1].split("|")[0] == "ChangeTargetId":
                 target_character_id = character_data.target_character_id
         elif event_flag and isinstance(effect, str) and "CSE" in effect:
             effect_all_value_list = effect.split("_", 1)[1].split("_", 1)
-            handle_instruct.handle_comprehensive_state_effect(effect_all_value_list, character_id, target_character_id, add_time, change_data, now_time)
+            handle_instruct.handle_comprehensive_state_effect(character_id, target_character_id, effect_all_value_list, add_time, change_data, now_time)
         else:
             effect_id = int(effect) if event_flag else effect
             if not event_flag and effect_id not in constant.settle_behavior_effect_data:
@@ -710,19 +710,19 @@ def extra_exp_settle(
 
     # 自己在H中且群交已开启，则群交经验+1
     if handle_premise.handle_self_is_h(character_id) and handle_premise.handle_group_sex_mode_on(character_id):
-        base_chara_experience_common_settle(character_id, 56, change_data=change_data, target_character_id=target_character_id)
+        base_chara_experience_common_settle(character_id, target_character_id, 56, change_data=change_data)
 
     # 自己正在露出中，则露出经验+1
     if handle_premise.handle_exhibitionism_sex_mode_ge_1(character_id):
-        base_chara_experience_common_settle(character_id, 34, change_data=change_data, target_character_id=target_character_id)
+        base_chara_experience_common_settle(character_id, target_character_id, 34, change_data=change_data)
 
     # 自己正在逆推中，则逆推经验+1
     if handle_premise.handle_npc_active_h(character_id):
-        base_chara_experience_common_settle(character_id, 36, change_data=change_data, target_character_id=target_character_id)
+        base_chara_experience_common_settle(character_id, target_character_id, 36, change_data=change_data)
 
     # 交互对象正在逆推自己，则自己的被逆推经验+1
     if handle_premise.handle_t_npc_active_h(character_id):
-        base_chara_experience_common_settle(character_id, 37, change_data=change_data, target_character_id=target_character_id)
+        base_chara_experience_common_settle(character_id, target_character_id, 37, change_data=change_data)
 
     # 玩家隐奸中，猥亵或性爱指令，且非等待，则隐奸经验+1
     if character_id == 0 and handle_premise.handle_hidden_sex_mode_ge_1(character_id):
@@ -740,16 +740,16 @@ def extra_exp_settle(
             add_flag = False
         # 增加隐奸经验
         if add_flag:
-            base_chara_experience_common_settle(character_id, 35, change_data=change_data, target_character_id=target_character_id)
-            base_chara_experience_common_settle(character_id, 35, target_flag=True, change_data=change_data, target_character_id=target_character_id)
+            base_chara_experience_common_settle(character_id, target_character_id, 35, change_data=change_data)
+            base_chara_experience_common_settle(character_id, target_character_id, 35, target_flag=True, change_data=change_data)
 
 
-def handle_comprehensive_value_effect(character_id: int, effect_all_value_list: list, change_data: game_type.CharacterStatusChange = game_type.CharacterStatusChange(), *, target_character_id) -> int:
+def handle_comprehensive_value_effect(character_id: int, target_character_id, effect_all_value_list: list, change_data: game_type.CharacterStatusChange = game_type.CharacterStatusChange()) -> int:
     """
     综合型基础数值结算
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 必填关键字参数；具体角色id、无目标时的None，或读取执行者交互目标的"CURRENT_TARGET"
+    target_character_id -- 第二个必填参数；具体角色id、无目标时的None，或读取执行者交互目标的"CURRENT_TARGET"
     effect_all_value_list -- 结算的各项数值
     change_data -- 结算信息记录对象
     Return arguments:
@@ -842,7 +842,7 @@ def handle_comprehensive_value_effect(character_id: int, effect_all_value_list: 
             exp_value = int(effect_all_value_list[3])
             if operation == "L":
                 exp_value = -int(effect_all_value_list[3])
-            base_chara_experience_common_settle(final_character_id, type_son_id, base_value = exp_value, change_data = final_change_data, target_character_id=target_character_id if final_character_id == character_id else "CURRENT_TARGET")
+            base_chara_experience_common_settle(final_character_id, target_character_id if final_character_id == character_id else "CURRENT_TARGET", type_son_id, base_value = exp_value, change_data = final_change_data)
         # 角色口上flag
         elif attribute_name == "flag":
             final_character_data.author_flag.chara_int_flag_dict.setdefault(type_son_id, 0)
@@ -850,10 +850,10 @@ def handle_comprehensive_value_effect(character_id: int, effect_all_value_list: 
         # 绝顶
         elif attribute_name == "climax":
             if operation == "E":
-                base_chara_climix_common_settle(final_character_id, type_son_id, degree = int(effect_all_value_list[3]), target_character_id=target_character_id if final_character_id == character_id else "CURRENT_TARGET")
+                base_chara_climix_common_settle(final_character_id, target_character_id if final_character_id == character_id else "CURRENT_TARGET", type_son_id, degree = int(effect_all_value_list[3]))
             elif operation == "G":
                 for i in range(int(effect_all_value_list[3]) + 1):
-                    base_chara_climix_common_settle(final_character_id, type_son_id, degree = i, target_character_id=target_character_id if final_character_id == character_id else "CURRENT_TARGET")
+                    base_chara_climix_common_settle(final_character_id, target_character_id if final_character_id == character_id else "CURRENT_TARGET", type_son_id, degree = i)
         # 父子嵌套事件
         elif attribute_name == "father":
             # print(f"debug effect_all_value_list = {effect_all_value_list}")

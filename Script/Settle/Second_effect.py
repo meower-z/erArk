@@ -94,8 +94,8 @@ def handle_add_1_nclimax_experience(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    base_chara_experience_common_settle(character_id, 10, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
-    base_chara_experience_common_settle(character_id, 20, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 10, 1, change_data=change_data)
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 20, 1, change_data=change_data)
     if character_data.sp_flag.is_h == 1:
         character_data.h_state.orgasm_count[0][0] += 1
         character_data.h_state.orgasm_count[0][1] += 1
@@ -115,8 +115,8 @@ def handle_add_1_bclimax_experience(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    base_chara_experience_common_settle(character_id, 11, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
-    base_chara_experience_common_settle(character_id, 20, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 11, 1, change_data=change_data)
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 20, 1, change_data=change_data)
     if character_data.sp_flag.is_h == 1:
         character_data.h_state.orgasm_count[1][0] += 1
         character_data.h_state.orgasm_count[1][1] += 1
@@ -135,8 +135,8 @@ def handle_add_1_cclimax_experience(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    base_chara_experience_common_settle(character_id, 12, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
-    base_chara_experience_common_settle(character_id, 20, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 12, 1, change_data=change_data)
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 20, 1, change_data=change_data)
     if character_data.sp_flag.is_h == 1:
         character_data.h_state.orgasm_count[2][0] += 1
         character_data.h_state.orgasm_count[2][1] += 1
@@ -180,8 +180,8 @@ def handle_add_1_vclimax_experience(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    base_chara_experience_common_settle(character_id, 14, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
-    base_chara_experience_common_settle(character_id, 20, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 14, 1, change_data=change_data)
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 20, 1, change_data=change_data)
     if character_data.sp_flag.is_h == 1:
         character_data.h_state.orgasm_count[4][0] += 1
         character_data.h_state.orgasm_count[4][1] += 1
@@ -200,8 +200,8 @@ def handle_add_1_aclimax_experience(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    base_chara_experience_common_settle(character_id, 15, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
-    base_chara_experience_common_settle(character_id, 20, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 15, 1, change_data=change_data)
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 20, 1, change_data=change_data)
     if character_data.sp_flag.is_h == 1:
         character_data.h_state.orgasm_count[5][0] += 1
         character_data.h_state.orgasm_count[5][1] += 1
@@ -220,8 +220,8 @@ def handle_add_1_uclimax_experience(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    base_chara_experience_common_settle(character_id, 16, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
-    base_chara_experience_common_settle(character_id, 20, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 16, 1, change_data=change_data)
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 20, 1, change_data=change_data)
     if character_data.sp_flag.is_h == 1:
         character_data.h_state.orgasm_count[6][0] += 1
         character_data.h_state.orgasm_count[6][1] += 1
@@ -240,8 +240,8 @@ def handle_add_1_wclimax_experience(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    base_chara_experience_common_settle(character_id, 17, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
-    base_chara_experience_common_settle(character_id, 20, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 17, 1, change_data=change_data)
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 20, 1, change_data=change_data)
     if character_data.sp_flag.is_h == 1:
         character_data.h_state.orgasm_count[7][0] += 1
         character_data.h_state.orgasm_count[7][1] += 1
@@ -285,7 +285,7 @@ def handle_add_1_cumming_experience(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    base_chara_experience_common_settle(character_id, 21, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 21, 1, change_data=change_data)
     character_data.h_state.orgasm_count[3][0] += 1
     character_data.h_state.orgasm_count[3][1] += 1
 
@@ -303,7 +303,7 @@ def handle_add_1_milking_experience(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    base_chara_experience_common_settle(character_id, 22, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 22, 1, change_data=change_data)
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_1_Peeing_EXPERIENCE)
 def handle_add_1_peeing_experience(
@@ -319,7 +319,7 @@ def handle_add_1_peeing_experience(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    base_chara_experience_common_settle(character_id, 23, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 23, 1, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.TARGET_ADD_1_Cums_EXPERIENCE)
@@ -336,7 +336,7 @@ def handle_target_add_1_cums_experience(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    base_chara_experience_common_settle(character_data.target_character_id, 24, 1, target_flag=False, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_data.target_character_id, "CURRENT_TARGET", 24, 1, target_flag=False, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.TARGET_ADD_SMALL_LUBRICATION)
@@ -435,7 +435,7 @@ def handle_down_small_hit_point(
     change_data -- 状态变更信息记录对象
     """
 
-    base_chara_hp_mp_common_settle(character_id, 10, -1, degree=0, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_hp_mp_common_settle(character_id, "CURRENT_TARGET", 10, -1, degree=0, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.DOWN_SMALL_MANA_POINT)
@@ -450,7 +450,7 @@ def handle_down_small_mana_point(
     change_data -- 状态变更信息记录对象
     """
 
-    base_chara_hp_mp_common_settle(character_id, 20, mp_value=-1, degree=0, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_hp_mp_common_settle(character_id, "CURRENT_TARGET", 20, mp_value=-1, degree=0, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.DOWN_MIDDLE_HIT_POINT)
@@ -465,7 +465,7 @@ def handle_down_middle_hit_point(
     change_data -- 状态变更信息记录对象
     """
 
-    base_chara_hp_mp_common_settle(character_id, 20, -1, degree=1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_hp_mp_common_settle(character_id, "CURRENT_TARGET", 20, -1, degree=1, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.DOWN_MIDDLE_MANA_POINT)
@@ -480,7 +480,7 @@ def handle_down_middle_mana_point(
     change_data -- 状态变更信息记录对象
     """
 
-    base_chara_hp_mp_common_settle(character_id, 25, mp_value=-1, degree=1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_hp_mp_common_settle(character_id, "CURRENT_TARGET", 25, mp_value=-1, degree=1, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.DOWN_LARGE_HIT_POINT)
@@ -495,7 +495,7 @@ def handle_down_large_hit_point(
     change_data -- 状态变更信息记录对象
     """
 
-    base_chara_hp_mp_common_settle(character_id, 30, -1, degree=2, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_hp_mp_common_settle(character_id, "CURRENT_TARGET", 30, -1, degree=2, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.LAY_SOFT_EGG)
@@ -526,7 +526,7 @@ def handle_down_large_mana_point(
     change_data -- 状态变更信息记录对象
     """
 
-    base_chara_hp_mp_common_settle(character_id, 30, mp_value=-1, degree=2, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_hp_mp_common_settle(character_id, "CURRENT_TARGET", 30, mp_value=-1, degree=2, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_SMALL_S_FEEL)
@@ -2651,7 +2651,7 @@ def handle_add_1_sex_v_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    base_chara_experience_common_settle(character_id, 61, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 61, 1, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_1_SEX_A_EXPERIENCE)
@@ -2665,7 +2665,7 @@ def handle_add_1_sex_a_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    base_chara_experience_common_settle(character_id, 62, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 62, 1, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_1_SEX_U_EXPERIENCE)
@@ -2679,7 +2679,7 @@ def handle_add_1_sex_u_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    base_chara_experience_common_settle(character_id, 63, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 63, 1, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_1_SEX_W_EXPERIENCE)
@@ -2693,7 +2693,7 @@ def handle_add_1_sex_w_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    base_chara_experience_common_settle(character_id, 64, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 64, 1, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_1_EXPAND_V_EXPERIENCE)
@@ -2707,7 +2707,7 @@ def handle_add_1_expand_v_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    base_chara_experience_common_settle(character_id, 65, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 65, 1, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_1_EXPAND_A_EXPERIENCE)
@@ -2721,7 +2721,7 @@ def handle_add_1_expand_a_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    base_chara_experience_common_settle(character_id, 66, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 66, 1, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_1_EXPAND_U_EXPERIENCE)
@@ -2735,7 +2735,7 @@ def handle_add_1_expand_u_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    base_chara_experience_common_settle(character_id, 67, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 67, 1, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_1_EXPAND_W_EXPERIENCE)
@@ -2749,7 +2749,7 @@ def handle_add_1_expand_w_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    base_chara_experience_common_settle(character_id, 68, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 68, 1, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_1_N_EXPERIENCE)
@@ -2763,7 +2763,7 @@ def handle_add_1_n_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    base_chara_experience_common_settle(character_id, 0, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 0, 1, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_1_B_EXPERIENCE)
@@ -2777,7 +2777,7 @@ def handle_add_1_b_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    base_chara_experience_common_settle(character_id, 1, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 1, 1, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_1_C_EXPERIENCE)
@@ -2791,7 +2791,7 @@ def handle_add_1_c_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    base_chara_experience_common_settle(character_id, 2, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 2, 1, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_1_P_EXPERIENCE)
@@ -2805,7 +2805,7 @@ def handle_add_1_p_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    base_chara_experience_common_settle(character_id, 3, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 3, 1, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_1_V_EXPERIENCE)
@@ -2819,7 +2819,7 @@ def handle_add_1_v_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    base_chara_experience_common_settle(character_id, 4, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 4, 1, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_1_A_EXPERIENCE)
@@ -2833,7 +2833,7 @@ def handle_add_1_a_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    base_chara_experience_common_settle(character_id, 5, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 5, 1, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_1_U_EXPERIENCE)
@@ -2847,7 +2847,7 @@ def handle_add_1_u_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    base_chara_experience_common_settle(character_id, 6, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 6, 1, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_1_W_EXPERIENCE)
@@ -2861,7 +2861,7 @@ def handle_add_1_w_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    base_chara_experience_common_settle(character_id, 7, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 7, 1, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_1_MClimax_EXPERIENCE)
@@ -2878,8 +2878,8 @@ def handle_add_1_mclimax_experience(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    base_chara_experience_common_settle(character_id, 156, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
-    base_chara_experience_common_settle(character_id, 20, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 156, 1, change_data=change_data)
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 20, 1, change_data=change_data)
     if character_data.sp_flag.is_h == 1:
         character_data.h_state.orgasm_count[21][0] += 1
         character_data.h_state.orgasm_count[21][1] += 1
@@ -2899,8 +2899,8 @@ def handle_add_1_fclimax_experience(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    base_chara_experience_common_settle(character_id, 157, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
-    base_chara_experience_common_settle(character_id, 20, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 157, 1, change_data=change_data)
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 20, 1, change_data=change_data)
     if character_data.sp_flag.is_h == 1:
         character_data.h_state.orgasm_count[22][0] += 1
         character_data.h_state.orgasm_count[22][1] += 1
@@ -2920,8 +2920,8 @@ def handle_add_1_hclimax_experience(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    base_chara_experience_common_settle(character_id, 158, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
-    base_chara_experience_common_settle(character_id, 20, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 158, 1, change_data=change_data)
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 20, 1, change_data=change_data)
     if character_data.sp_flag.is_h == 1:
         character_data.h_state.orgasm_count[23][0] += 1
         character_data.h_state.orgasm_count[23][1] += 1
@@ -2938,7 +2938,7 @@ def handle_add_1_m_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    base_chara_experience_common_settle(character_id, 153, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 153, 1, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_1_F_EXPERIENCE)
@@ -2952,7 +2952,7 @@ def handle_add_1_f_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    base_chara_experience_common_settle(character_id, 154, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 154, 1, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_1_H_EXPERIENCE)
@@ -2966,5 +2966,5 @@ def handle_add_1_h_experience(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
-    base_chara_experience_common_settle(character_id, 155, 1, change_data=change_data, target_character_id="CURRENT_TARGET")
+    base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 155, 1, change_data=change_data)
 

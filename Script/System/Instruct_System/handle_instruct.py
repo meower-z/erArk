@@ -395,9 +395,9 @@ def chara_handle_instruct_common_settle(
 
 
 def handle_comprehensive_state_effect(
-        effect_all_value_list: list,
         character_id: int,
         target_character_id: int,
+        effect_all_value_list: list,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -405,9 +405,9 @@ def handle_comprehensive_state_effect(
     """
     综合指令行为结算
     Keyword arguments:
-    effect_all_value_list -- 结算的各项数值
     character_id -- 角色id
     target_character_id -- 本次结算的交互目标id，int
+    effect_all_value_list -- 结算的各项数值
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
