@@ -234,7 +234,9 @@ def handle_sub_both_small_hit_point(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    base_chara_hp_mp_common_settle(character_id, target_character_id, add_time, hp_value=-1, target_flag=True, change_data=change_data)
+    base_chara_hp_mp_common_settle(character_id, add_time, hp_value=-1, change_data=change_data)
+    if target_character_id != character_id:
+        base_chara_hp_mp_common_settle(target_character_id, add_time, hp_value=-1, change_data_to_target_change=change_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DOWN_BOTH_SMALL_MANA_POINT)
@@ -254,7 +256,9 @@ def handle_sub_both_small_mana_point(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    base_chara_hp_mp_common_settle(character_id, target_character_id, add_time, mp_value=-1, target_flag=True, change_data=change_data)
+    base_chara_hp_mp_common_settle(character_id, add_time, mp_value=-1, change_data=change_data)
+    if target_character_id != character_id:
+        base_chara_hp_mp_common_settle(target_character_id, add_time, mp_value=-1, change_data_to_target_change=change_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DOWN_BOTH_MEDIUM_HIT_POINT)
@@ -274,7 +278,9 @@ def handle_sub_both_medium_hit_point(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    base_chara_hp_mp_common_settle(character_id, target_character_id, add_time, hp_value=-1, degree=1, target_flag=True, change_data=change_data)
+    base_chara_hp_mp_common_settle(character_id, add_time, hp_value=-1, degree=1, change_data=change_data)
+    if target_character_id != character_id:
+        base_chara_hp_mp_common_settle(target_character_id, add_time, hp_value=-1, degree=1, change_data_to_target_change=change_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DOWN_BOTH_MEDIUM_MANA_POINT)
@@ -294,7 +300,9 @@ def handle_sub_both_medium_mana_point(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    base_chara_hp_mp_common_settle(character_id, target_character_id, add_time, mp_value=-1, degree=1, target_flag=True, change_data=change_data)
+    base_chara_hp_mp_common_settle(character_id, add_time, mp_value=-1, degree=1, change_data=change_data)
+    if target_character_id != character_id:
+        base_chara_hp_mp_common_settle(target_character_id, add_time, mp_value=-1, degree=1, change_data_to_target_change=change_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DOWN_BOTH_LARGE_HIT_POINT)
@@ -314,7 +322,9 @@ def handle_sub_both_large_hit_point(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    base_chara_hp_mp_common_settle(character_id, target_character_id, add_time, hp_value=-1, degree=2, target_flag=True, change_data=change_data)
+    base_chara_hp_mp_common_settle(character_id, add_time, hp_value=-1, degree=2, change_data=change_data)
+    if target_character_id != character_id:
+        base_chara_hp_mp_common_settle(target_character_id, add_time, hp_value=-1, degree=2, change_data_to_target_change=change_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DOWN_BOTH_LARGE_MANA_POINT)
@@ -334,7 +344,9 @@ def handle_sub_both_large_mana_point(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    base_chara_hp_mp_common_settle(character_id, target_character_id, add_time, mp_value=-1, degree=2, target_flag=True, change_data=change_data)
+    base_chara_hp_mp_common_settle(character_id, add_time, mp_value=-1, degree=2, change_data=change_data)
+    if target_character_id != character_id:
+        base_chara_hp_mp_common_settle(target_character_id, add_time, mp_value=-1, degree=2, change_data_to_target_change=change_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DOWN_SELF_SMALL_HIT_POINT)
@@ -354,7 +366,7 @@ def handle_sub_self_small_hit_point(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    base_chara_hp_mp_common_settle(character_id, target_character_id, add_time, hp_value=-1, change_data=change_data)
+    base_chara_hp_mp_common_settle(character_id, add_time, hp_value=-1, change_data=change_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DOWN_SELF_SMALL_MANA_POINT)
@@ -374,7 +386,7 @@ def handle_sub_self_small_mana_point(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    base_chara_hp_mp_common_settle(character_id, target_character_id, add_time, mp_value=-1, change_data=change_data)
+    base_chara_hp_mp_common_settle(character_id, add_time, mp_value=-1, change_data=change_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DOWN_SELF_MEDIUM_HIT_POINT)
@@ -394,7 +406,7 @@ def handle_sub_self_medium_hit_point(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    base_chara_hp_mp_common_settle(character_id, target_character_id, add_time, hp_value=-1, degree=1, change_data=change_data)
+    base_chara_hp_mp_common_settle(character_id, add_time, hp_value=-1, degree=1, change_data=change_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DOWN_SELF_MEDIUM_MANA_POINT)
@@ -414,7 +426,7 @@ def handle_sub_self_medium_mana_point(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    base_chara_hp_mp_common_settle(character_id, target_character_id, add_time, mp_value=-1, degree=1, change_data=change_data)
+    base_chara_hp_mp_common_settle(character_id, add_time, mp_value=-1, degree=1, change_data=change_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DOWN_SELF_LARGE_HIT_POINT)
@@ -434,7 +446,7 @@ def handle_sub_self_large_hit_point(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    base_chara_hp_mp_common_settle(character_id, target_character_id, add_time, hp_value=-1, degree=2, change_data=change_data)
+    base_chara_hp_mp_common_settle(character_id, add_time, hp_value=-1, degree=2, change_data=change_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DOWN_SELF_LARGE_MANA_POINT)
@@ -454,7 +466,7 @@ def handle_sub_self_large_mana_point(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    base_chara_hp_mp_common_settle(character_id, target_character_id, add_time, mp_value=-1, degree=2, change_data=change_data)
+    base_chara_hp_mp_common_settle(character_id, add_time, mp_value=-1, degree=2, change_data=change_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DOWN_TARGET_MEDIUM_HIT_POINT)
@@ -475,7 +487,7 @@ def handle_sub_target_medium_hit_point(
     now_time -- 结算的时间
     """
     character_data = cache.character_data[character_id]
-    base_chara_hp_mp_common_settle(target_character_id, "CURRENT_TARGET", add_time, hp_value=-1, degree=1, change_data=change_data)
+    base_chara_hp_mp_common_settle(target_character_id, add_time, hp_value=-1, degree=1, change_data=change_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DOWN_TARGET_MEDIUM_MANA_POINT)
@@ -496,7 +508,7 @@ def handle_sub_target_medium_mana_point(
     now_time -- 结算的时间
     """
     character_data = cache.character_data[character_id]
-    base_chara_hp_mp_common_settle(target_character_id, "CURRENT_TARGET", add_time, mp_value=-1, degree=1, change_data=change_data)
+    base_chara_hp_mp_common_settle(target_character_id, add_time, mp_value=-1, degree=1, change_data=change_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DOWN_TARGET_LARGE_HIT_POINT)
@@ -517,7 +529,7 @@ def handle_sub_target_large_hit_point(
     now_time -- 结算的时间
     """
     character_data = cache.character_data[character_id]
-    base_chara_hp_mp_common_settle(target_character_id, "CURRENT_TARGET", add_time, hp_value=-1, degree=2, change_data=change_data)
+    base_chara_hp_mp_common_settle(target_character_id, add_time, hp_value=-1, degree=2, change_data=change_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DOWN_TARGET_LARGE_MANA_POINT)
@@ -538,7 +550,7 @@ def handle_sub_target_large_mana_point(
     now_time -- 结算的时间
     """
     character_data = cache.character_data[character_id]
-    base_chara_hp_mp_common_settle(target_character_id, "CURRENT_TARGET", add_time, mp_value=-1, degree=2, change_data=change_data)
+    base_chara_hp_mp_common_settle(target_character_id, add_time, mp_value=-1, degree=2, change_data=change_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.MOOD_TO_GOOD)
@@ -1774,7 +1786,7 @@ def handle_target_hypnosis_force_climax(
     change_data.sanity_point -= 50
     character_data.pl_ability.today_sanity_point_cost += 50
 
-    base_chara_climix_common_settle(target_character_id, "CURRENT_TARGET", 4, change_data_to_target_change = change_data)
+    base_chara_climix_common_settle(target_character_id, character_id, 4, change_data_to_target_change = change_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_HYPNOSIS_FORCE_OVULATION_ON)
@@ -2421,7 +2433,7 @@ def handle_scene_all_characters_condom_info_show_flag_on(
     for chara_id in scene_data.character_list:
         # 遍历非玩家的角色
         if chara_id:
-            handle_target_condom_info_show_flag_on(chara_id, cache.character_data[chara_id].target_character_id, add_time, change_data, now_time)
+            handle_target_condom_info_show_flag_on(chara_id, None, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SELF_ORGASM_EDGE_ON)
@@ -2761,7 +2773,7 @@ def handle_wait_unitl_traget_action_end(
         return
     from Script.Design import update
     character_data: game_type.Character = cache.character_data[character_id]
-    target_character_data = cache.character_data[character_data.target_character_id]
+    target_character_data = cache.character_data[target_character_id]
     if character_data.dead:
         return
     target_start_time = target_character_data.behavior.start_time
@@ -2902,7 +2914,7 @@ def handle_stop_endurance_shoot(
         return
     from Script.Settle import orgasm_settle
     orgasm_settle.orgasm_judge(character_id, change_data, skip_undure = True)
-    second_behavior.second_behavior_effect(character_id, change_data)
+    second_behavior.second_behavior_effect(character_id, target_character_id, change_data)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_BE_CARRIED)
 def handle_target_be_carried(
@@ -4987,7 +4999,7 @@ def handle_place_all_chara_add_1_been_hypnosis_experience(
     if character_id in scene_character_list:
         scene_character_list.remove(character_id)
     for target_id in scene_character_list:
-        base_chara_experience_common_settle(target_id, "CURRENT_TARGET", 123, change_data_to_target_change = change_data)
+        base_chara_experience_common_settle(target_id, 123, change_data_to_target_change = change_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SHOWER_FLAG_TO_0)
@@ -6564,7 +6576,7 @@ def handle_make_food_add_adjust(
     if now_food is not None and now_food.recipe in game_config.config_recipes:
         cook_difficulty = max(1, game_config.config_recipes[now_food.recipe].difficulty)
     # 料理经验：随菜谱难度等级提升而增加（难度即为基础获得值）
-    base_chara_experience_common_settle(character_id, target_character_id, 83, base_value = cook_difficulty, change_data = change_data)
+    base_chara_experience_common_settle(character_id, 83, base_value = cook_difficulty, change_data = change_data)
     # 习得：随菜谱难度等级提升而增加（独立于制作数量与总耗时，仅按单份结算）
     character_data.ability.setdefault(30, 0)
     base_chara_state_common_settle(
@@ -6604,7 +6616,7 @@ def handle_taste_wine_add_adjust(
     # 删除该食物
     handle_delete_food(character_id, target_character_id, add_time=add_time, change_data=change_data, now_time=now_time)
     # 增加饮酒经验
-    base_chara_experience_common_settle(character_id, target_character_id, 94, change_data=change_data)
+    base_chara_experience_common_settle(character_id, 94, change_data=change_data)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.OFFICIAL_WORK_ADD_ADJUST)
 def handle_official_work_add_adjust(
@@ -6707,7 +6719,7 @@ def handle_cure_patient_add_just(
             # 病人的检查次数
             exam_count = patient_obj.player_used_checks
             # 根据检查次数计算医疗经验
-            base_chara_experience_common_settle(character_id, target_character_id, 88, base_value = exam_count, change_data = change_data)
+            base_chara_experience_common_settle(character_id, 88, base_value = exam_count, change_data = change_data)
         # 清空本次被诊疗的病人列表
         rhodes_island.player_examined_patient_ids.clear()
         return
@@ -6743,7 +6755,7 @@ def handle_cure_patient_add_just(
 
     # 根据病情等级获取额外习得和医疗经验
     base_chara_state_common_settle(character_id, add_time, 9, ability_level = character_data.ability[46], extra_adjust = (severity_level + 1) / 2,  change_data = change_data)
-    base_chara_experience_common_settle(character_id, target_character_id, 88, base_value = severity_level, change_data = change_data)
+    base_chara_experience_common_settle(character_id, 88, base_value = severity_level, change_data = change_data)
 
     # 仅在玩家场景输出
     if character_data.position != cache.character_data[0].position:
@@ -7266,13 +7278,13 @@ def handle_masturebate_add_adjust(
     # 增加快感
     base_chara_state_common_settle(character_id, add_time, part_id, 50, ability_level = character_data.ability[30], change_data = change_data)
     # 增加部位经验
-    base_chara_experience_common_settle(character_id, target_character_id, part_id, 1, change_data = change_data)
+    base_chara_experience_common_settle(character_id, part_id, 1, change_data = change_data)
     # 如果已持有玩家的阴茎倒模
     if handle_premise.handle_have_penis_mold(character_id):
         # 额外增加一次快感
         base_chara_state_common_settle(character_id, add_time, part_id, 50, ability_level = character_data.ability[30], change_data = change_data)
         # 增加1道具使用经验
-        base_chara_experience_common_settle(character_id, target_character_id, 51, 1, change_data = change_data)
+        base_chara_experience_common_settle(character_id, 51, 1, change_data = change_data)
         # 增加对玩家好感
         handle_add_interaction_favoravility(character_id, target_character_id, add_time, change_data, now_time)
 
@@ -7366,7 +7378,7 @@ def handle_orgasm_edge_release(
         return
     # 仅在交互对象确有寸止累计时才建立其TargetChange并解放，避免空条目影响显示判定
     if cache.character_data[target_id].h_state.orgasm_edge != 0:
-        orgasm_settle.release_orgasm_edge_now(target_id, change_data.target_change.setdefault(target_id, game_type.TargetChange()))
+        orgasm_settle.release_orgasm_edge_now(target_id, character_id, change_data.target_change.setdefault(target_id, game_type.TargetChange()))
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TIME_STOP_ORGASM_RELEASE)
@@ -7428,7 +7440,7 @@ def handle_end_h_add_hpmp_max(
     from Script.Design import handle_ability
     from Script.Settle import orgasm_settle
     # 计奖前先释放行为者憋住的累计寸止绝顶，使其计入下方奖励统计（无累计时空转）
-    orgasm_settle.release_orgasm_edge_now(character_id, change_data)
+    orgasm_settle.release_orgasm_edge_now(character_id, target_character_id, change_data)
     character_data: game_type.Character = cache.character_data[character_id]
     id_list = [character_id]
     if target_character_id != character_id:
@@ -7505,7 +7517,7 @@ def handle_group_sex_end_h_add_hpmp_max(
         now_character_data: game_type.Character = cache.character_data[chara_id]
         # 统计绝顶奖励前，先为该在场参与者解放并结算其累计的寸止绝顶，使其计入退出奖励；无累计者不建立空TargetChange条目
         if now_character_data.h_state.orgasm_edge != 0:
-            orgasm_settle.release_orgasm_edge_now(chara_id, change_data.target_change.setdefault(chara_id, game_type.TargetChange()))
+            orgasm_settle.release_orgasm_edge_now(chara_id, character_id, change_data.target_change.setdefault(chara_id, game_type.TargetChange()))
         orgasm_count = 0
         info_text = now_character_data.name
         for state_id in game_config.config_character_state:
@@ -7578,7 +7590,7 @@ def handle_group_sex_fail_add_just(
         # 如果是拒绝者，则进行邀请H失败结算
         if handle_premise.handle_group_sex_fail_and_self_refuse(chara_id):
             character_data.target_character_id = chara_id
-            handle_do_h_failed_adjust(0, cache.character_data[0].target_character_id, add_time, change_data, now_time)
+            handle_do_h_failed_adjust(0, chara_id, add_time, change_data, now_time)
     character_data.target_character_id = original_target_character_id
 
 
@@ -7608,9 +7620,9 @@ def handle_board_game_win_add_adjust(
 
     ai_level = character_data.behavior.board_game_ai_difficulty
     # 好感
-    base_chara_favorability_and_trust_common_settle(target_character_id, "CURRENT_TARGET", add_time * 2, True, 0, ai_level, target_change)
+    base_chara_favorability_and_trust_common_settle(target_character_id, character_id, add_time * 2, True, 0, ai_level, target_change)
     # 信赖
-    base_chara_favorability_and_trust_common_settle(target_character_id, "CURRENT_TARGET", add_time * 2, False, 0, ai_level, target_change)
+    base_chara_favorability_and_trust_common_settle(target_character_id, character_id, add_time * 2, False, 0, ai_level, target_change)
     # 习得
     base_chara_state_common_settle(character_id, add_time, 9, ability_level = character_data.ability[45], extra_adjust = ai_level, change_data = change_data)
     base_chara_state_common_settle(target_character_id, add_time, 9, ability_level = character_data.ability[45], extra_adjust = ai_level, change_data = target_change)
@@ -7651,7 +7663,7 @@ def handle_board_game_lose_add_adjust(
 
     ai_level = character_data.behavior.board_game_ai_difficulty
     # 好感
-    base_chara_favorability_and_trust_common_settle(target_character_id, "CURRENT_TARGET", add_time * 2, True, 0, ai_level, target_change)
+    base_chara_favorability_and_trust_common_settle(target_character_id, character_id, add_time * 2, True, 0, ai_level, target_change)
     # 习得
     base_chara_state_common_settle(character_id, add_time, 9, ability_level = character_data.ability[45], extra_adjust = ai_level, change_data = change_data)
     base_chara_state_common_settle(target_character_id, add_time, 9, ability_level = character_data.ability[45], extra_adjust = ai_level, change_data = target_change)
@@ -7734,7 +7746,7 @@ def handle_train_prisoners_add_adjust(
         def now_tarin(now_prisoner_cid):
             base_chara_state_common_settle(now_prisoner_cid, add_time, target_part_id, 0, ability_level = character_data.ability[30], change_data_to_target_change = change_data)
             exp_id = target_part_id
-            base_chara_experience_common_settle(now_prisoner_cid, "CURRENT_TARGET", exp_id, change_data_to_target_change = change_data)
+            base_chara_experience_common_settle(now_prisoner_cid, exp_id, change_data_to_target_change = change_data)
     # 部位扩张训练
     elif now_train_id == 2:
         # 根据部位扩张等级进行加权选择目标部位
@@ -7747,14 +7759,14 @@ def handle_train_prisoners_add_adjust(
         def now_tarin(now_prisoner_cid):
             base_chara_state_common_settle(now_prisoner_cid, add_time, target_part_id - 5, 0, ability_level = character_data.ability[target_part_id], change_data_to_target_change = change_data)
             exp_id = target_part_id + 56
-            base_chara_experience_common_settle(now_prisoner_cid, "CURRENT_TARGET", exp_id, change_data_to_target_change = change_data)
+            base_chara_experience_common_settle(now_prisoner_cid, exp_id, change_data_to_target_change = change_data)
     # 苦痛快感训练
     elif now_train_id == 3:
         def now_tarin(now_prisoner_cid):
             base_chara_state_common_settle(now_prisoner_cid, add_time, 0, 0, ability_level = character_data.ability[36], change_data_to_target_change = change_data)
             base_chara_state_common_settle(now_prisoner_cid, add_time, 17, 0, change_data_to_target_change = change_data)
             exp_id = 32
-            base_chara_experience_common_settle(now_prisoner_cid, "CURRENT_TARGET", exp_id, change_data_to_target_change = change_data)
+            base_chara_experience_common_settle(now_prisoner_cid, exp_id, change_data_to_target_change = change_data)
     # 性爱技巧训练
     elif now_train_id == 4:
         # 根据性爱技巧等级进行加权选择目标部位
@@ -7770,7 +7782,7 @@ def handle_train_prisoners_add_adjust(
     # 身体锻炼训练
     elif now_train_id == 5:
         def now_tarin(now_prisoner_cid):
-            handle_add_hpmp_max(now_prisoner_cid, cache.character_data[now_prisoner_cid].target_character_id, add_time, change_data, now_time)
+            handle_add_hpmp_max(now_prisoner_cid, None, add_time, change_data, now_time)
     # 心理服从训练
     elif now_train_id == 6:
         def now_tarin(now_prisoner_cid):
@@ -7784,7 +7796,7 @@ def handle_train_prisoners_add_adjust(
         if not handle_premise.handle_normal_1(now_prisoner_cid) or handle_premise.handle_action_sleep(now_prisoner_cid):
             continue
         now_tarin(now_prisoner_cid)
-        base_chara_hp_mp_common_settle(now_prisoner_cid, "CURRENT_TARGET", add_time, hp_value=-1, mp_value=-1, degree=1, change_data_to_target_change=change_data)
+        base_chara_hp_mp_common_settle(now_prisoner_cid, add_time, hp_value=-1, mp_value=-1, degree=1, change_data_to_target_change=change_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.RECOVER_FROM_UNCONSCIOUS_ADD_ADJUST)
@@ -7887,7 +7899,7 @@ def handle_give_gift_add_adjust(
             base_chara_favorability_and_trust_common_settle(character_id, target_character_id, 60, True, 0, talk_adjust * 3, change_data)
             base_chara_favorability_and_trust_common_settle(character_id, target_character_id, 30, False, 0, talk_adjust * 3, change_data)
             base_chara_state_common_settle(target_character_id, 120, 11, ability_level = target_data.ability[32], change_data_to_target_change = change_data)
-            base_chara_experience_common_settle(target_character_id, "CURRENT_TARGET", 40, change_data_to_target_change = change_data)
+            base_chara_experience_common_settle(target_character_id, 40, change_data_to_target_change = change_data)
     # 道歉礼物
     elif gift_data.type == 2:
         # 降低反发刻印
@@ -7995,10 +8007,10 @@ def handle_read_add_adjust(
 
     # 遍历集合增加对应经验
     for experience_index in experience_index_list:
-        base_chara_experience_common_settle(character_id, target_character_id, experience_index, 1, change_data = change_data)
+        base_chara_experience_common_settle(character_id, experience_index, 1, change_data = change_data)
         # 如果有交互对象，则交互对象也加
         if target_character_id != character_id:
-            base_chara_experience_common_settle(character_id, target_character_id, experience_index, 1, target_flag = True, change_data = change_data)
+            base_chara_experience_common_settle(target_character_id, experience_index, 1, change_data_to_target_change = change_data)
 
     # 结算书籍的阅读进度
     character_data.entertainment.read_book_progress.setdefault(book_id, 0)
@@ -8037,7 +8049,7 @@ def handle_read_add_adjust(
                     add_value = 20
                 elif book_difficulty == 3:
                     add_value = 40
-                base_chara_experience_common_settle(character_id, target_character_id, exp_id, add_value, change_data = change_data)
+                base_chara_experience_common_settle(character_id, exp_id, add_value, change_data = change_data)
             # 结算习得
             extra_adjust = book_difficulty * book_difficulty
             base_chara_state_common_settle(character_id, add_time, 9, ability_level = character_data.ability[45], extra_adjust = extra_adjust, change_data = change_data)
@@ -8088,7 +8100,7 @@ def handle_teach_add_just(
 
     # 增加自己的习得和学识经验
     base_chara_state_common_settle(character_id, add_time, 9, ability_level = character_data.ability[45], change_data = change_data)
-    base_chara_experience_common_settle(character_id, target_character_id, 82)
+    base_chara_experience_common_settle(character_id, 82)
 
     # 遍历当前场景的其他角色
     scene_path_str = map_handle.get_map_system_path_str_for_list(character_data.position)
@@ -8107,14 +8119,14 @@ def handle_teach_add_just(
 
                     # 增加习得和学识经验
                     base_chara_state_common_settle(chara_id, add_time, 9, ability_level = character_data.ability[45], change_data_to_target_change = change_data)
-                    base_chara_experience_common_settle(chara_id, "CURRENT_TARGET", 82)
+                    base_chara_experience_common_settle(chara_id, 82)
 
                     # 如果老师是玩家
                     if character_id == 0:
                         # 加好感
-                        base_chara_favorability_and_trust_common_settle(character_id, other_character_data.cid or "CURRENT_TARGET", add_time, True, 0, other_character_data.ability[32], change_data)
+                        base_chara_favorability_and_trust_common_settle(character_id, chara_id, add_time, True, 0, other_character_data.ability[32], change_data)
                         # 加信赖
-                        base_chara_favorability_and_trust_common_settle(character_id, other_character_data.cid or "CURRENT_TARGET", add_time, False, 0, other_character_data.ability[32], change_data)
+                        base_chara_favorability_and_trust_common_settle(character_id, chara_id, add_time, False, 0, other_character_data.ability[32], change_data)
 
                     # 手动结算该状态
                     character_behavior.judge_character_status(chara_id)
@@ -8221,7 +8233,7 @@ def handle_put_into_prison_add_just(
     # 如果当时是时间停止H中，则刷新时停状态
     if handle_premise.handle_time_stop_on(character_id):
         target_data.sp_flag.unconscious_h = 3
-    handle_premise.settle_chara_unnormal_flag(character_data.target_character_id, 6)
+    handle_premise.settle_chara_unnormal_flag(target_id, 6)
     # 囚犯成就
     achievement_panel.achievement_flow(_("囚犯"))
 
@@ -8325,12 +8337,12 @@ def handle_eat_add_just(
         # NPC吃的时候
         if chara_id:
             # 加好感
-            base_chara_favorability_and_trust_common_settle(character_id, chara_id or "CURRENT_TARGET", state_add, True, 0, 0, change_data)
+            base_chara_favorability_and_trust_common_settle(character_id, chara_id, state_add, True, 0, 0, change_data)
             # 加好意
             base_chara_state_common_settle(chara_id, state_add * 4, 11, 0, change_data_to_target_change = change_data)
             # 玩家做的饭的情况下，额外加信赖
             if pl_make_flag:
-                base_chara_favorability_and_trust_common_settle(character_id, chara_id or "CURRENT_TARGET", state_add, False, 0, 0, change_data)
+                base_chara_favorability_and_trust_common_settle(character_id, chara_id, state_add, False, 0, 0, change_data)
             # 高品质食物
             if food_quality >= 7:
                 # 变为好心情
@@ -8358,13 +8370,13 @@ def handle_eat_add_just(
             # 增加醉酒值
             add_drunk_point(chara_id, food=now_food)
             # 增加饮酒经验
-            base_chara_experience_common_settle(chara_id, "CURRENT_TARGET", 94, change_data=target_change)
+            base_chara_experience_common_settle(chara_id, 94, change_data=target_change)
 
         # 精液食物则将精液加到口腔污浊，并加精液经验
         if food_seasoning in {11,12}:
             # 加精液经验和饮精经验
-            base_chara_experience_common_settle(chara_id, "CURRENT_TARGET", 24, change_data=target_change)
-            base_chara_experience_common_settle(chara_id, "CURRENT_TARGET", 25, change_data=target_change)
+            base_chara_experience_common_settle(chara_id, 24, change_data=target_change)
+            base_chara_experience_common_settle(chara_id, 25, change_data=target_change)
             # 获取精液量
             semen_ml = now_food.special_seasoning_amount if now_food is not None else 0
             # 加精液到口腔
@@ -8376,19 +8388,19 @@ def handle_eat_add_just(
             # 由二段绝顶结算联动饮精绝顶（素质31）与饮精绝顶经验（111）
             if semen_ml > 0:
                 target_data.h_state.shoot_position_body = 2
-        # 药物食物则获得对应药物效果
+        # 药物食物则获得对应药物效果，玩家进食时药效作用于交互目标
         elif food_seasoning == 102: # 事后避孕药
-            handle_target_no_pregnancy_from_last_h(0, cache.character_data[0].target_character_id,add_time=add_time,change_data=change_data,now_time=now_time)
+            handle_target_no_pregnancy_from_last_h(character_id, chara_id or target_character_id, add_time=add_time, change_data=change_data, now_time=now_time)
         elif food_seasoning == 103: # 媚药
-            handle_target_add_huge_desire_and_submit(0, cache.character_data[0].target_character_id,add_time=add_time,change_data=change_data,now_time=now_time)
+            handle_target_add_huge_desire_and_submit(character_id, chara_id or target_character_id, add_time=add_time, change_data=change_data, now_time=now_time)
         elif food_seasoning == 105: # 一次性利尿剂
-            handle_target_add_urinate(0, cache.character_data[0].target_character_id,add_time=add_time,change_data=change_data,now_time=now_time)
+            handle_target_add_urinate(character_id, chara_id or target_character_id, add_time=add_time, change_data=change_data, now_time=now_time)
         elif food_seasoning == 106: # 持续性利尿剂
-            handle_target_diuretics_on(0, cache.character_data[0].target_character_id,add_time=add_time,change_data=change_data,now_time=now_time)
+            handle_target_diuretics_on(character_id, chara_id or target_character_id, add_time=add_time, change_data=change_data, now_time=now_time)
         elif food_seasoning == 107: # 安眠药
-            handle_target_add_tired_tosleep(0, cache.character_data[0].target_character_id,add_time=add_time,change_data=change_data,now_time=now_time)
+            handle_target_add_tired_tosleep(character_id, chara_id or target_character_id, add_time=add_time, change_data=change_data, now_time=now_time)
         elif food_seasoning == 108: # 排卵促进药
-            handle_target_add_pregnancy_chance(0, cache.character_data[0].target_character_id,add_time=add_time,change_data=change_data,now_time=now_time)
+            handle_target_add_pregnancy_chance(character_id, chara_id or target_character_id, add_time=add_time, change_data=change_data, now_time=now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_HPMP_MAX)
@@ -8513,11 +8525,11 @@ def handle_sing_add_adjust(
             target_change: game_type.TargetChange = change_data.target_change[target_data.cid]
             # 好感与信赖变化#
             if good_flag:
-                base_chara_favorability_and_trust_common_settle(character_id, chara_id or "CURRENT_TARGET", add_time, True, 0, adjust, change_data)
-                base_chara_favorability_and_trust_common_settle(character_id, chara_id or "CURRENT_TARGET", add_time, False, 0, adjust, change_data)
+                base_chara_favorability_and_trust_common_settle(character_id, chara_id, add_time, True, 0, adjust, change_data)
+                base_chara_favorability_and_trust_common_settle(character_id, chara_id, add_time, False, 0, adjust, change_data)
             else:
-                base_chara_favorability_and_trust_common_settle(character_id, chara_id or "CURRENT_TARGET", add_time, True, 0, adjust - 1.3, change_data)
-                base_chara_favorability_and_trust_common_settle(character_id, chara_id or "CURRENT_TARGET", add_time, False, 0, adjust - 1.3, change_data)
+                base_chara_favorability_and_trust_common_settle(character_id, chara_id, add_time, True, 0, adjust - 1.3, change_data)
+                base_chara_favorability_and_trust_common_settle(character_id, chara_id, add_time, False, 0, adjust - 1.3, change_data)
 
             # 好意变化#
             target_data.status_data.setdefault(11, 0)
@@ -8617,11 +8629,11 @@ def handle_play_instrument_add_adjust(
 
             # 好感与信赖变化#
             if good_flag:
-                base_chara_favorability_and_trust_common_settle(character_id, chara_id or "CURRENT_TARGET", add_time, True, 0, adjust * 2, change_data)
-                base_chara_favorability_and_trust_common_settle(character_id, chara_id or "CURRENT_TARGET", add_time, False, 0, adjust * 2, change_data)
+                base_chara_favorability_and_trust_common_settle(character_id, chara_id, add_time, True, 0, adjust * 2, change_data)
+                base_chara_favorability_and_trust_common_settle(character_id, chara_id, add_time, False, 0, adjust * 2, change_data)
             else:
-                base_chara_favorability_and_trust_common_settle(character_id, chara_id or "CURRENT_TARGET", add_time, True, 0, (adjust - 1.3) * 2, change_data)
-                base_chara_favorability_and_trust_common_settle(character_id, chara_id or "CURRENT_TARGET", add_time, False, 0, (adjust - 1.3) * 2, change_data)
+                base_chara_favorability_and_trust_common_settle(character_id, chara_id, add_time, True, 0, (adjust - 1.3) * 2, change_data)
+                base_chara_favorability_and_trust_common_settle(character_id, chara_id, add_time, False, 0, (adjust - 1.3) * 2, change_data)
 
             # 好意变化#
             target_data.status_data.setdefault(11, 0)

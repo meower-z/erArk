@@ -323,7 +323,7 @@ def orgasm_settle_in_second_behavior(
     if part_count >= 1:
         # 饮精绝顶经验
         if character_data.h_state.shoot_position_body in [2, 15]:
-            base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 111, change_data=change_data)
+            base_chara_experience_common_settle(character_id, 111, change_data=change_data)
     # 如果部位高潮计数大于等于2，则结算多重绝顶
     if part_count >= 2:
         second_behavior_id = f"plural_orgasm_{part_count}"
@@ -349,11 +349,12 @@ def orgasm_settle_in_second_behavior(
             store_power_by_human_power(part_count + 3, character_id, draw_flag)
 
 
-def release_orgasm_edge_now(character_id: int, change_data) -> None:
+def release_orgasm_edge_now(character_id: int, target_character_id: int, change_data) -> None:
     """
     将该角色累计的寸止计数解放为绝顶，清零寸止计数后，在当前H阶段内立即结算本次新增绝顶的口上与数值
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 交互目标id
     change_data -- 状态变更信息记录对象（自身结算传根对象，交互对象或群交成员传其TargetChange）
     """
     character_data: game_type.Character = cache.character_data[character_id]
@@ -369,7 +370,7 @@ def release_orgasm_edge_now(character_id: int, change_data) -> None:
         if game_config.config_character_state[state_id].type == 0:
             character_data.h_state.orgasm_edge_count[state_id] = 0
     # 立即结算刚解放绝顶的口上与数值，使其落在退出重置与退出奖励之前，同样按部位仅取最高绝顶程度触发口上
-    second_behavior.second_behavior_effect(character_id, change_data, orgasm_settle_flag=True)
+    second_behavior.second_behavior_effect(character_id, target_character_id, change_data, orgasm_settle_flag=True)
 
 
 def judge_orgasm_degree(level_count: int) -> int:

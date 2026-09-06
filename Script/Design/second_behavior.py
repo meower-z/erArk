@@ -80,6 +80,7 @@ def character_get_second_behavior(character_id: int, second_behavior_id: str, re
 
 def check_second_effect(
         character_id: int,
+        target_character_id: int,
         change_data: game_type.CharacterStatusChange,
         pl_to_npc: bool = False,
 ):
@@ -87,6 +88,7 @@ def check_second_effect(
     处理第二结算
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 交互目标id
     change_data -- 状态变更信息记录对象
     pl_to_npc -- 玩家对NPC的行为结算
     """
@@ -119,13 +121,13 @@ def check_second_effect(
         # 道具结算
         item_effect(character_id)
         # 进行结算
-        second_behavior_effect(character_id, change_data)
+        second_behavior_effect(character_id, target_character_id, change_data)
         # NPC的刻印结算
-        change_data.target_change.setdefault(character_data.target_character_id, game_type.TargetChange())
-        target_change: game_type.TargetChange = change_data.target_change[character_data.target_character_id]
-        mark_effect(character_data.target_character_id, target_change)
+        change_data.target_change.setdefault(target_character_id, game_type.TargetChange())
+        target_change: game_type.TargetChange = change_data.target_change[target_character_id]
+        mark_effect(target_character_id, target_change)
         # 单独遍历结算刻印
-        second_behavior_effect(character_data.target_character_id, target_change, mark_list)
+        second_behavior_effect(target_character_id, character_id, target_change, mark_list)
 
     # NPC自己检测自己
     if character_id != 0:
@@ -136,24 +138,25 @@ def check_second_effect(
         # 道具结算
         item_effect(character_id)
         # 进行结算
-        second_behavior_effect(character_id, change_data)
+        second_behavior_effect(character_id, target_character_id, change_data)
         # 高潮结算
         orgasm_settle.orgasm_judge(character_id, change_data)
         # 单独遍历结算高潮，按部位仅取最高绝顶程度触发口上
-        second_behavior_effect(character_id, change_data, orgasm_list, orgasm_settle_flag=True)
+        second_behavior_effect(character_id, target_character_id, change_data, orgasm_list, orgasm_settle_flag=True)
         # 无壳卵生的体外排卵二段行为在高潮结算中才被赋予（不在进入本函数时构建的列表内），此处显式结算使其与本轮绝顶同步生效
         from Script.System.Pregnancy_System import pregnancy_constant
         if character_data.second_behavior.get(pregnancy_constant.LAY_SOFT_EGG_SECOND_BEHAVIOR, 0):
-            second_behavior_effect(character_id, change_data, [pregnancy_constant.LAY_SOFT_EGG_SECOND_BEHAVIOR])
+            second_behavior_effect(character_id, target_character_id, change_data, [pregnancy_constant.LAY_SOFT_EGG_SECOND_BEHAVIOR])
 
         # 刻印结算
         mark_effect(character_id, change_data)
         # 单独遍历结算刻印
-        second_behavior_effect(character_id, change_data, mark_list)
+        second_behavior_effect(character_id, target_character_id, change_data, mark_list)
 
 
 def second_behavior_effect(
         character_id: int,
+        target_character_id: int,
         change_data: game_type.CharacterStatusChange,
         second_behavior_list: list = [],
         orgasm_settle_flag: bool = False,
@@ -162,6 +165,7 @@ def second_behavior_effect(
     触发二段行为的口上与效果
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 交互目标id
     change_data -- 状态变更信息记录对象
     second_behavior_list -- 仅计算该范围内的二段行为id列表，默认为[]
     orgasm_settle_flag -- 是否为高潮结算调用，为True时按部位统计部位绝顶行为，每个部位仅程度最高的触发口上，其余仅结算效果，默认为False
@@ -181,7 +185,7 @@ def second_behavior_effect(
             and character_data.behavior.move_src != cache.character_data[0].position
     ):
         talk.must_show_talk_check(character_id)
-        must_settle_check(character_id)
+        must_settle_check(character_id, target_character_id)
         return
 
     # 在处理后，如果没有任何二段行为，则再次直接返回
@@ -227,21 +231,22 @@ def second_behavior_effect(
                 # 如果effect_id是str类型，则说明是综合数值结算
                 if isinstance(effect_id, str) and "CVE" in effect_id:
                     effect_all_value_list = effect_id.split("_")[1:]
-                    settle_behavior.handle_comprehensive_value_effect(character_id, "CURRENT_TARGET", effect_all_value_list, change_data)
+                    settle_behavior.handle_comprehensive_value_effect(character_id, target_character_id, effect_all_value_list, change_data)
                 else:
                     if effect_id not in constant.settle_second_behavior_effect_data:
                         print(f"debug second_behavior_id = {second_behavior_id}，effect_id = {effect_id}没有找到对应的结算效果")
                         continue
-                    constant.settle_second_behavior_effect_data[effect_id](character_id, change_data)
+                    constant.settle_second_behavior_effect_data[effect_id](character_id, target_character_id, change_data)
             # print(f"debug {character_data.name}触发二段行为效果，behavior_id = {behavior_id}")
             # 触发后该行为值归零
             character_data.second_behavior[second_behavior_id] = 0
 
-def must_settle_check(character_id: int):
+def must_settle_check(character_id: int, target_character_id: int):
     """
     检查是否有必须计算但不必须显示的空白结算
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 交互目标id
     """
     character_data: game_type.Character = cache.character_data[character_id]
     # 遍历所有必须计算的二段行为
@@ -256,9 +261,9 @@ def must_settle_check(character_id: int):
             # 如果effect_id是str类型，则说明是综合数值结算
             if isinstance(effect_id, str) and "CVE" in effect_id:
                 effect_all_value_list = effect_id.split("_")[1:]
-                settle_behavior.handle_comprehensive_value_effect(character_id, "CURRENT_TARGET", effect_all_value_list, change_data)
+                settle_behavior.handle_comprehensive_value_effect(character_id, target_character_id, effect_all_value_list, change_data)
             else:
-                constant.settle_second_behavior_effect_data[effect_id](character_id, change_data)
+                constant.settle_second_behavior_effect_data[effect_id](character_id, target_character_id, change_data)
         # 触发后该行为值归零
         character_data.second_behavior[behavior_id] = 0
     character_data.must_settle_second_behavior_id_list = []
@@ -343,9 +348,9 @@ def insert_position_effect(character_id: int, change_data: game_type.CharacterSt
         if pl_character_data.h_state.current_sex_position != -1:
             # 自己增加对应姿势的经验
             exp_id = 140 + pl_character_data.h_state.current_sex_position
-            base_chara_experience_common_settle(character_id, "CURRENT_TARGET", exp_id, change_data = change_data)
+            base_chara_experience_common_settle(character_id, exp_id, change_data = change_data)
             # 玩家增加对应姿势的经验
-            base_chara_experience_common_settle(0, "CURRENT_TARGET", exp_id, change_data_to_target_change = change_data)
+            base_chara_experience_common_settle(0, exp_id, change_data_to_target_change = change_data)
 
 
 def get_now_state_all_value_and_text_from_mark_up_data(mark_up_id: int, character_id: int) -> tuple:

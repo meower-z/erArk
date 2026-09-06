@@ -27,12 +27,10 @@ width = normal_config.config_normal.text_width
 
 def base_chara_hp_mp_common_settle(
         character_id: int,
-        target_character_id,
         add_time: int = 0,
         hp_value: int = 0,
         mp_value: int = 0,
         degree: int = 0,
-        target_flag: bool = False,
         change_data: Optional[game_type.CharacterStatusChange] = None,
         change_data_to_target_change: Optional[game_type.CharacterStatusChange] = None,
         ):
@@ -40,12 +38,10 @@ def base_chara_hp_mp_common_settle(
     基础角色体力与气力通用结算函数\n
     Keyword arguments:\n
     character_id -- 角色id\n
-    target_character_id -- 一同结算体力气力的目标角色id，仅在target_flag为True时使用；"CURRENT_TARGET"表示读取character_id的交互对象，0为玩家；默认只结算character_id自身，此时传None\n
     add_time -- 结算时间\n
     hp_value -- 体力值，-1为按程度减少，1为按程度增加，其他值则为具体值\n
     mp_value -- 气力值，-1为按程度减少，1为按程度增加，其他值则为具体值\n
     dregree -- 程度系数，0少，1中，2大\n
-    target_flag -- 是否对目标也做同样结算，目标与character_id相同时不重复结算；默认为否，不可与change_data_to_target_change同时使用\n
     change_data -- 结算信息记录对象\n
     change_data_to_target_change -- 交互对象的结算信息记录对象\n
     """
@@ -55,10 +51,6 @@ def base_chara_hp_mp_common_settle(
     if handle_premise.handle_time_stop_on(character_id):
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    if target_character_id == "CURRENT_TARGET":
-        target_character_id = character_data.target_character_id
-    if target_flag:
-        target_character_data: game_type.Character = cache.character_data[target_character_id]
     if character_data.dead:
         return
     # 程度定义
@@ -116,16 +108,6 @@ def base_chara_hp_mp_common_settle(
                 target_change.hit_point += mp_value
             character_data.hit_point = max(1, character_data.hit_point)
             handle_npc_ai.judge_character_tired_sleep(character_id)
-        # 交互对象也同样
-        if target_flag and target_character_id != character_id:
-            # 结算信息记录
-            change_data.target_change.setdefault(target_character_id, game_type.TargetChange())
-            target_change: game_type.TargetChange = change_data.target_change[target_character_id]
-            # 进行结算
-            target_character_data.mana_point += mp_value
-            target_change.mana_point += mp_value
-            target_character_data.mana_point = max(0, target_character_data.mana_point)
-            target_character_data.mana_point = min(target_character_data.mana_point_max, target_character_data.mana_point)
     # 体力结算
     if hp_value in [-1, 1]:
         hp_value = int(add_time * hp_adjust * hp_value)
@@ -149,21 +131,6 @@ def base_chara_hp_mp_common_settle(
         character_data.hit_point = min(character_data.hit_point_max, character_data.hit_point)
         # 检测hp1导致的疲劳
         handle_npc_ai.judge_character_tired_sleep(character_id)
-        # 交互对象也同样
-        if target_flag and target_character_id != character_id:
-            if target_character_data.mana_point == 0 and hp_value < 0:
-                hp_value_last = hp_value * 3
-            else:
-                hp_value_last = hp_value
-            # 结算信息记录
-            change_data.target_change.setdefault(target_character_id, game_type.TargetChange())
-            target_change: game_type.TargetChange = change_data.target_change[target_character_id]
-            # 进行结算
-            target_character_data.hit_point += hp_value_last
-            target_change.hit_point += hp_value_last
-            target_character_data.hit_point = max(1, target_character_data.hit_point)
-            target_character_data.hit_point = min(target_character_data.hit_point_max, target_character_data.hit_point)
-            handle_npc_ai.judge_character_tired_sleep(target_character_id)
 
 
 def base_chara_state_common_settle(
@@ -519,19 +486,19 @@ def extra_feel_settle(character_id: int, state_id: int, final_value: float, chan
     # 顺从对恭顺
     if state_id == 10 and character_data.ability[31] >= 5:
         base_chara_state_common_settle(character_id, final_value, 23, 0, ability_level = character_data.ability[31], tenths_add = False, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
-        base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 155, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
+        base_chara_experience_common_settle(character_id, 155, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
     # 施虐对先导
     elif state_id == 14 and character_data.ability[35] >= 5:
         base_chara_state_common_settle(character_id, final_value, 23, 0, ability_level = character_data.ability[35], tenths_add = False, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
-        base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 155, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
+        base_chara_experience_common_settle(character_id, 155, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
     # 露出对羞耻
     elif state_id == 16 and character_data.ability[34] >= 5:
         base_chara_state_common_settle(character_id, final_value, 23, 0, ability_level = character_data.ability[34], tenths_add = False, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
-        base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 155, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
+        base_chara_experience_common_settle(character_id, 155, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
     # 受虐对苦痛
     elif state_id == 17 and character_data.ability[36] >= 5:
         base_chara_state_common_settle(character_id, final_value, 23, 0, ability_level = character_data.ability[36], tenths_add = False, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
-        base_chara_experience_common_settle(character_id, "CURRENT_TARGET", 155, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
+        base_chara_experience_common_settle(character_id, 155, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
 
 
 def base_chara_favorability_and_trust_common_settle(
@@ -547,7 +514,7 @@ def base_chara_favorability_and_trust_common_settle(
     基础角色好感与信赖通用结算函数\n
     Keyword arguments:\n
     character_id -- 角色id\n
-    target_character_id -- 关系另一方的角色id，好感与信赖在character_id与该角色之间结算，函数始终读取该角色的数据，不能传None；"CURRENT_TARGET"表示读取character_id的交互对象，0为玩家\n
+    target_character_id -- 关系另一方的角色id，好感与信赖在character_id与该角色之间结算\n
     add_time -- 结算时间\n
     favorability_flag -- true为好感,false为信赖\n
     base_value -- 基础固定值\n
@@ -558,8 +525,6 @@ def base_chara_favorability_and_trust_common_settle(
     pl_character_data: game_type.Character = cache.character_data[0]
 
     # 判断交互对象
-    if target_character_id == "CURRENT_TARGET":
-        target_character_id = character_data.target_character_id
     target_data: game_type.Character = cache.character_data[target_character_id]
 
     # 防止重复结算
@@ -646,7 +611,7 @@ def base_chara_favorability_and_trust_common_settle(
 
         # 信赖
         else:
-            if character_id == 0 and character_data.target_character_id != 0:
+            if character_id == 0 and target_character_id != 0:
                 add_trust = base_value + calculation_trust(character_id, target_character_id, add_time)
             else:
                 add_trust = base_value + calculation_trust(target_character_id, character_id, add_time)
@@ -677,7 +642,7 @@ def base_chara_favorability_and_trust_common_settle(
 
             # 结算最终值
             add_trust *= final_adjust
-            if character_id == 0 and character_data.target_character_id != 0:
+            if character_id == 0 and target_character_id != 0:
                 target_data.trust += add_trust
                 target_data.trust = min(300, target_data.trust)
                 target_change.trust += add_trust
@@ -846,7 +811,7 @@ def base_chara_climix_common_settle(
     基础角色绝顶通用结算函数\n
     Keyword arguments:\n
     character_id -- 角色id\n
-    target_character_id -- 部位快感承受方的角色id；part_id非3的绝顶需要目标，部位快感加给该角色，而绝顶二段行为与绝顶次数记录记在character_id上；part_id为3(P部位，仅玩家)时不需要目标，可传None；"CURRENT_TARGET"表示读取character_id的交互对象，0为玩家\n
+    target_character_id -- 部位快感承受方的角色id；part_id非3时部位快感加给该角色，绝顶二段行为与绝顶次数记在character_id上；part_id为3(P部位，仅玩家)时不使用，可传None\n
     part_id -- 部位id，即性器官id\n
     base_value -- 基础固定值\n
     adjust -- 系数\n
@@ -856,8 +821,6 @@ def base_chara_climix_common_settle(
     """
     from Script.Design import second_behavior
     character_data: game_type.Character = cache.character_data[character_id]
-    if target_character_id == "CURRENT_TARGET":
-        target_character_id = character_data.target_character_id
     if character_data.dead:
         return
     # 只能选择正确部位
@@ -906,68 +869,57 @@ def base_chara_climix_common_settle(
 
 def base_chara_experience_common_settle(
         character_id: int,
-        target_character_id,
         experience_id: int,
         base_value: int = 1,
-        target_flag: bool = False,
         change_data: Optional[Union[game_type.CharacterStatusChange, game_type.TargetChange]] = None,
         change_data_to_target_change: Optional[Union[game_type.CharacterStatusChange, game_type.TargetChange]] = None,
         ):
     """
     基础角色经验通用结算函数\n
     Keyword arguments:\n
-    character_id -- 角色id\n
-    target_character_id -- target_flag为True时experience_id所指经验的承受方角色id，该经验加给该角色；默认target_flag为False时该经验加给character_id，此时传None；"CURRENT_TARGET"表示读取character_id的交互对象，0为玩家\n
+    character_id -- 获得经验的角色id\n
     experience_id -- 经验id\n
     base_value -- 基础固定值\n
-    target_flag -- 是否将experience_id所指经验改加给target_character_id，默认为否\n
     change_data -- 状态变更信息记录对象\n
     change_data_to_target_change -- 交互对象结算信息记录对象
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    if target_character_id == "CURRENT_TARGET":
-        target_character_id = character_data.target_character_id
     experience_type = game_config.config_experience[experience_id].type
-    final_character_id = character_id
     if character_data.dead:
         return
-    # 改为加到交互对象身上
-    if target_flag:
-        final_character_id = target_character_id
-        character_data = cache.character_data[final_character_id]
 
     # 深度无意识下心理经验不结算
-    if experience_type == 7 and not handle_premise.handle_normal_6(final_character_id):
+    if experience_type == 7 and not handle_premise.handle_normal_6(character_id):
         return
 
     # 结算无意识经验
     if (
-        final_character_id != 0 and
-        handle_premise.handle_unconscious_flag_ge_1(final_character_id) or handle_premise.handle_self_time_stop_orgasm_relase(final_character_id)
+        character_id != 0 and
+        handle_premise.handle_unconscious_flag_ge_1(character_id) or handle_premise.handle_self_time_stop_orgasm_relase(character_id)
         ):
         # 普通部位
         if experience_type == 1:
             # 根据经验序号转化为对应的经验id
             new_exp_id = game_config.config_experience_relations[experience_id].unconscious_exp_id
-            base_chara_experience_common_settle(final_character_id, target_character_id, new_exp_id, change_data = change_data)
+            base_chara_experience_common_settle(character_id, new_exp_id, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
         # 绝顶经验
         elif experience_type == 2:
-            base_chara_experience_common_settle(final_character_id, target_character_id, 78, change_data = change_data)
+            base_chara_experience_common_settle(character_id, 78, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
         # 性交经验
         elif experience_type == 3:
-            base_chara_experience_common_settle(final_character_id, target_character_id, 79, change_data = change_data)
+            base_chara_experience_common_settle(character_id, 79, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
             # 睡姦经验与被睡姦经验
-            if handle_premise.handle_unconscious_flag_1(final_character_id):
-                base_chara_experience_common_settle(0, "CURRENT_TARGET", 120, change_data = change_data)
-                base_chara_experience_common_settle(final_character_id, target_character_id, 121, change_data = change_data)
+            if handle_premise.handle_unconscious_flag_1(character_id):
+                base_chara_experience_common_settle(0, 120, change_data = change_data)
+                base_chara_experience_common_settle(character_id, 121, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
             # 催眠姦经验与被催眠姦经验
-            elif handle_premise.handle_unconscious_hypnosis_flag(final_character_id):
-                base_chara_experience_common_settle(0, "CURRENT_TARGET", 126, change_data = change_data)
-                base_chara_experience_common_settle(final_character_id, target_character_id, 127, change_data = change_data)
+            elif handle_premise.handle_unconscious_hypnosis_flag(character_id):
+                base_chara_experience_common_settle(0, 126, change_data = change_data)
+                base_chara_experience_common_settle(character_id, 127, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
             # 时姦经验与被时姦经验
-            elif handle_premise.handle_unconscious_flag_3(final_character_id) or handle_premise.handle_self_time_stop_orgasm_relase(final_character_id):
-                base_chara_experience_common_settle(0, "CURRENT_TARGET", 124, change_data = change_data)
-                base_chara_experience_common_settle(final_character_id, target_character_id, 125, change_data = change_data)
+            elif handle_premise.handle_unconscious_flag_3(character_id) or handle_premise.handle_self_time_stop_orgasm_relase(character_id):
+                base_chara_experience_common_settle(0, 124, change_data = change_data)
+                base_chara_experience_common_settle(character_id, 125, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
 
     # 结算最终值
     character_data.experience.setdefault(experience_id, 0)
@@ -976,7 +928,7 @@ def base_chara_experience_common_settle(
 
     # 口交经验结算时补记口交初体验（覆盖早安咬/晚安咬、测试口腔吮吸、AI文本等不经阴茎位置效果的口交来源）
     # 判定只用"dict无键2"而不用exp42==0——多周目下经验按比例继承，exp42非0不代表本周目发生过口交
-    if experience_id == 42 and final_character_id != 0 and 2 not in character_data.first_record.first_part_sex_dict:
+    if experience_id == 42 and character_id != 0 and 2 not in character_data.first_record.first_part_sex_dict:
         character_data.first_record.first_part_sex_dict[2] = {
             "id": 0,
             "time": cache.game_time,
@@ -986,16 +938,13 @@ def base_chara_experience_common_settle(
         }
     # 饮精绝顶经验结算时记录特殊履历：第一次饮精绝顶（附记精液来源：H中记当时的H模式，精液食物记食物名称）
     elif experience_id == 111 and 7 not in character_data.first_record.first_special_record_dict:
-        first_record_handle.record_first_special_record(final_character_id, 7, first_record_handle.get_semen_source_text(final_character_id))
+        first_record_handle.record_first_special_record(character_id, 7, first_record_handle.get_semen_source_text(character_id))
 
     # 确认结算信息记录对象
     final_change_data = change_data
-    if change_data != None and target_flag:
-        change_data.target_change.setdefault(final_character_id, game_type.TargetChange())
-        final_change_data: game_type.TargetChange = change_data.target_change[final_character_id]
-    elif change_data_to_target_change != None:
-        change_data_to_target_change.target_change.setdefault(final_character_id, game_type.TargetChange())
-        final_change_data: game_type.TargetChange = change_data_to_target_change.target_change[final_character_id]
+    if change_data_to_target_change != None:
+        change_data_to_target_change.target_change.setdefault(character_id, game_type.TargetChange())
+        final_change_data: game_type.TargetChange = change_data_to_target_change.target_change[character_id]
 
     # 结算信息记录对象增加经验
     if final_change_data != None:

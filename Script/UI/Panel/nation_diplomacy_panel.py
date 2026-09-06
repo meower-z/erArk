@@ -65,8 +65,8 @@ def judge_diplomatic_policy():
 
         # 外交官增加对话经验和学识经验
         for i in range(diplomatic_policy_data.difficulty):
-            common_default.base_chara_experience_common_settle(diplomat_chara_id, "CURRENT_TARGET", 80)
-            common_default.base_chara_experience_common_settle(diplomat_chara_id, "CURRENT_TARGET", 82)
+            common_default.base_chara_experience_common_settle(diplomat_chara_id, 80)
+            common_default.base_chara_experience_common_settle(diplomat_chara_id, 82)
 
         # 能力修正
         ability_adjust = handle_ability.get_ability_adjust(diplomat_chara_data.ability[40])

@@ -288,7 +288,7 @@ def prepare_training():
     # 润滑
     if cache.rhodes_island.pre_training_lubrication and handle_premise.handle_have_body_lubricant(0):
         default.handle_use_body_lubricant(0, None, add_time=1, change_data=game_type.CharacterStatusChange(), now_time=cache.game_time)
-        default.handle_target_add_huge_lubrication(warden_id, cache.character_data[warden_id].target_character_id, add_time=1, change_data=game_type.CharacterStatusChange(), now_time=cache.game_time)
+        default.handle_target_add_huge_lubrication(warden_id, target_character_id, add_time=1, change_data=game_type.CharacterStatusChange(), now_time=cache.game_time)
     # 道具使用
     body_item_list = h_item_shop_panel.body_item_list
     for i in range(len(body_item_list)):
@@ -316,7 +316,7 @@ def prepare_training():
                     if i == 8:
                         default.handle_target_diuretics_on(
                             warden_id,
-                            cache.character_data[warden_id].target_character_id,
+                            target_character_id,
                             add_time=1,
                             change_data=game_type.CharacterStatusChange(),
                             now_time=cache.game_time,
@@ -325,7 +325,7 @@ def prepare_training():
                     elif i == 9:
                         default.handle_target_add_tired_tosleep(
                             warden_id,
-                            cache.character_data[warden_id].target_character_id,
+                            target_character_id,
                             add_time=1,
                             change_data=game_type.CharacterStatusChange(),
                             now_time=cache.game_time,
@@ -334,7 +334,7 @@ def prepare_training():
                     elif i == 10:
                         default.handle_target_add_pregnancy_chance(
                             warden_id,
-                            cache.character_data[warden_id].target_character_id,
+                            target_character_id,
                             add_time=1,
                             change_data=game_type.CharacterStatusChange(),
                             now_time=cache.game_time,
@@ -343,7 +343,7 @@ def prepare_training():
                     elif i == 11:
                         default.handle_target_no_pregnancy_next_day(
                             warden_id,
-                            cache.character_data[warden_id].target_character_id,
+                            target_character_id,
                             add_time=1,
                             change_data=game_type.CharacterStatusChange(),
                             now_time=cache.game_time,
@@ -352,7 +352,7 @@ def prepare_training():
                     elif i == 12:
                         default.handle_target_no_pregnancy_from_last_h(
                             warden_id,
-                            cache.character_data[warden_id].target_character_id,
+                            target_character_id,
                             add_time=1,
                             change_data=game_type.CharacterStatusChange(),
                             now_time=cache.game_time,
