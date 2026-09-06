@@ -323,7 +323,7 @@ def orgasm_settle_in_second_behavior(
     if part_count >= 1:
         # 饮精绝顶经验
         if character_data.h_state.shoot_position_body in [2, 15]:
-            base_chara_experience_common_settle(character_id, 111, change_data=change_data)
+            base_chara_experience_common_settle(character_id, 111, change_data=change_data, target_character_id=None)
     # 如果部位高潮计数大于等于2，则结算多重绝顶
     if part_count >= 2:
         second_behavior_id = f"plural_orgasm_{part_count}"

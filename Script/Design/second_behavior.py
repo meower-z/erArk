@@ -227,7 +227,7 @@ def second_behavior_effect(
                 # 如果effect_id是str类型，则说明是综合数值结算
                 if isinstance(effect_id, str) and "CVE" in effect_id:
                     effect_all_value_list = effect_id.split("_")[1:]
-                    settle_behavior.handle_comprehensive_value_effect(character_id, effect_all_value_list, change_data)
+                    settle_behavior.handle_comprehensive_value_effect(character_id, effect_all_value_list, change_data, target_character_id=None)
                 else:
                     if effect_id not in constant.settle_second_behavior_effect_data:
                         print(f"debug second_behavior_id = {second_behavior_id}，effect_id = {effect_id}没有找到对应的结算效果")
@@ -256,7 +256,7 @@ def must_settle_check(character_id: int):
             # 如果effect_id是str类型，则说明是综合数值结算
             if isinstance(effect_id, str) and "CVE" in effect_id:
                 effect_all_value_list = effect_id.split("_")[1:]
-                settle_behavior.handle_comprehensive_value_effect(character_id, effect_all_value_list, change_data)
+                settle_behavior.handle_comprehensive_value_effect(character_id, effect_all_value_list, change_data, target_character_id=None)
             else:
                 constant.settle_second_behavior_effect_data[effect_id](character_id, change_data)
         # 触发后该行为值归零
@@ -343,9 +343,9 @@ def insert_position_effect(character_id: int, change_data: game_type.CharacterSt
         if pl_character_data.h_state.current_sex_position != -1:
             # 自己增加对应姿势的经验
             exp_id = 140 + pl_character_data.h_state.current_sex_position
-            base_chara_experience_common_settle(character_id, exp_id, change_data = change_data)
+            base_chara_experience_common_settle(character_id, exp_id, change_data = change_data, target_character_id=None)
             # 玩家增加对应姿势的经验
-            base_chara_experience_common_settle(0, exp_id, change_data_to_target_change = change_data)
+            base_chara_experience_common_settle(0, exp_id, change_data_to_target_change = change_data, target_character_id=None)
 
 
 def get_now_state_all_value_and_text_from_mark_up_data(mark_up_id: int, character_id: int) -> tuple:

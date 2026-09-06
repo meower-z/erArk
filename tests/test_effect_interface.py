@@ -8,6 +8,7 @@ import unittest
 from functools import wraps
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Optional, Union
 from unittest.mock import Mock
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -52,6 +53,8 @@ class EffectInterfaceTest(unittest.TestCase):
             "constant_effect": constant_effect,
             "game_type": game_type,
             "datetime": datetime,
+            "Optional": Optional,
+            "Union": Union,
             "wraps": wraps,
             "game_config": self.config,
             "talk": SimpleNamespace(handle_talk=Mock()),
@@ -139,14 +142,11 @@ class EffectInterfaceTest(unittest.TestCase):
         """额外设施效果也接收调用时的目标；无返回值。"""
         self.run_target_switch(facility=True)
 
-    def test_nested_call_uses_new_actors_target(self):
-        """效果委派给另一执行者时，传入该执行者的目标；无返回值。"""
-        self.cache.character_data[1].angry_point = 50
-        effect = Mock(wraps=self.ns["handle_mood_to_good"])
-        self.ns["handle_mood_to_good"] = effect
+    def test_nested_self_effect_does_not_read_interaction_target(self):
+        """对目标执行自身效果时，无需读取该角色的交互对象；无返回值。"""
+        self.cache.character_data[1] = SimpleNamespace(angry_point=50)
         changes = game_type.CharacterStatusChange()
         self.ns["handle_target_mood_to_good"](0, 1, 1, changes, self.now)
-        effect.assert_called_once_with(1, 2, 1, changes, self.now)
         self.assertEqual(self.cache.character_data[1].angry_point, 0)
 
     def test_self_effect_does_not_need_target_state(self):
@@ -304,6 +304,33 @@ class EffectInterfaceTest(unittest.TestCase):
                     continue
                 with self.subTest(path=str(path), line=node.lineno):
                     self.assertEqual(len(node.args) + len(node.keywords), 5)
+                    target = node.args[1] if len(node.args) > 1 else next(k.value for k in node.keywords if k.arg == "target_character_id")
+                    self.assertFalse(isinstance(target, ast.Constant) and target.value is None)
+                checked += 1
+        self.assertGreater(checked, 100)
+
+    def test_helper_targets_are_required_at_every_call(self):
+        """辅助函数要求显式目标或None，生产调用不能省略参数；无返回值。"""
+        helper_names = {
+            "base_chara_hp_mp_common_settle", "base_chara_experience_common_settle",
+            "base_chara_climix_common_settle", "base_chara_favorability_and_trust_common_settle",
+            "handle_comprehensive_value_effect", "extra_exp_settle",
+        }
+        for path in ("Script/Settle/common_default.py", "Script/Design/settle_behavior.py"):
+            load_functions(path, self.ns, lambda node: node.name in helper_names)
+        signatures = {name: inspect.signature(self.ns[name]) for name in helper_names}
+        for name, signature in signatures.items():
+            self.assertIs(signature.parameters["target_character_id"].default, inspect.Parameter.empty, name)
+        checked = 0
+        for path in (ROOT / "Script").rglob("*.py"):
+            for node in ast.walk(ast.parse(path.read_text(encoding="utf-8-sig"))):
+                if not isinstance(node, ast.Call):
+                    continue
+                name = node.func.id if isinstance(node.func, ast.Name) else node.func.attr if isinstance(node.func, ast.Attribute) else None
+                if name not in signatures:
+                    continue
+                with self.subTest(path=str(path), line=node.lineno):
+                    signatures[name].bind(*[object() for _ in node.args], **{k.arg: object() for k in node.keywords})
                 checked += 1
         self.assertGreater(checked, 100)
 
@@ -326,7 +353,7 @@ class EffectInterfaceTest(unittest.TestCase):
         self.assertNotIn(1, changes.target_change)
 
     def test_helper_zero_target_is_player(self):
-        """通用体力计算把明确目标0当玩家，默认目标仍沿用角色选择；无返回值。"""
+        """通用体力计算以0指定玩家，以显式None读取角色选择；无返回值。"""
         self.test_paired_hp_helper_uses_explicit_target()
         settle = self.ns["base_chara_hp_mp_common_settle"]
         changes = game_type.CharacterStatusChange()
@@ -334,8 +361,39 @@ class EffectInterfaceTest(unittest.TestCase):
         self.assertEqual(changes.target_change[0].hit_point, -5)
         self.assertNotIn(2, changes.target_change)
         changes = game_type.CharacterStatusChange()
-        settle(1, hp_value=-5, target_flag=True, change_data=changes)
+        with self.assertRaises(TypeError):
+            settle(1, hp_value=-5, target_flag=True, change_data=changes)
+        settle(1, hp_value=-5, target_flag=True, change_data=changes, target_character_id=None)
         self.assertEqual(changes.target_change[2].hit_point, -5)
+
+    def test_extra_experience_keeps_explicit_target_after_second_effect(self):
+        """二段结算未改目标时沿用传入值，改目标时额外经验使用新值；无返回值。"""
+        for changed in (False, True):
+            with self.subTest(changed=changed):
+                self.cache.character_data[1].target_character_id = 0
+                self.ns["extra_exp_settle"].reset_mock()
+                self.ns["second_behavior"].check_second_effect.side_effect = (
+                    (lambda *args: setattr(self.cache.character_data[1], "target_character_id", 3)) if changed else None
+                )
+                changes = game_type.CharacterStatusChange()
+                self.ns["handle_instruct_data"](1, 2, "example", self.now, 1, changes)
+                self.ns["extra_exp_settle"].assert_called_once_with(1, 3 if changed else 2, changes)
+
+    def test_experience_helper_distinguishes_explicit_target_and_none(self):
+        """经验归属和变更记录使用明确目标；只有显式None读取交互对象，无返回值。"""
+        load_functions("Script/Settle/common_default.py", self.ns, lambda node: node.name == "base_chara_experience_common_settle")
+        self.ns["handle_premise"] = SimpleNamespace(handle_unconscious_flag_ge_1=lambda cid: False, handle_self_time_stop_orgasm_relase=lambda cid: False)
+        self.config.config_experience = {35: SimpleNamespace(type=0)}
+        for target, recipient in ((0, 0), (3, 3), (None, 2)):
+            with self.subTest(target=target):
+                for character in self.cache.character_data.values():
+                    character.experience = {}
+                changes = game_type.CharacterStatusChange()
+                self.ns["base_chara_experience_common_settle"](1, 35, target_flag=True, change_data=changes, target_character_id=target)
+                for cid, character in self.cache.character_data.items():
+                    self.assertEqual(character.experience.get(35, 0), int(cid == recipient))
+                self.assertEqual(set(changes.target_change), {recipient})
+                self.assertEqual(changes.target_change[recipient].experience[35], 1)
 
     def test_cve_a2_and_target_switch(self):
         """综合数值A2使用明确目标，ChangeTargetId更新后续目标；无返回值。"""

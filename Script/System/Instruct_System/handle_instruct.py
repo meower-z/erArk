@@ -1325,7 +1325,7 @@ def handle_stop_sleep_obscenity():
     now_draw.width = width
     now_draw.text = _("\n退出睡眠猥亵模式\n")
     now_draw.draw()
-    default.handle_door_close_reset(0, cache.character_data[0].target_character_id,1,game_type.CharacterStatusChange(),datetime.datetime(1, 1, 1))
+    default.handle_door_close_reset(0, 0,1,game_type.CharacterStatusChange(),datetime.datetime(1, 1, 1))
 
 @add_instruct(constant.Instruct.IMPRISONMENT_H)
 def handle_imprisonment_h():
@@ -1356,7 +1356,7 @@ def handle_unconscious_h(type_name:str = ""):
         now_draw.text = _("\n进入睡奸模式\n")
         default.handle_unconscious_flag_to_1(
             character_data.target_character_id,
-            cache.character_data[character_data.target_character_id].target_character_id,
+            character_data.target_character_id,
             1,
             game_type.CharacterStatusChange(),
             cache.game_time,
@@ -1366,7 +1366,7 @@ def handle_unconscious_h(type_name:str = ""):
         now_draw.text = _("\n进入醉奸模式\n")
         default.handle_unconscious_flag_to_2(
             character_data.target_character_id,
-            cache.character_data[character_data.target_character_id].target_character_id,
+            character_data.target_character_id,
             1,
             game_type.CharacterStatusChange(),
             cache.game_time,

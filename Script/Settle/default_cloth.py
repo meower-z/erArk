@@ -90,7 +90,7 @@ def handle_target_bra_see(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_bra_see(target_character_id, cache.character_data[target_character_id].target_character_id, add_time, change_data, now_time)
+    handle_bra_see(target_character_id, target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.PAN_SEE)
@@ -136,7 +136,7 @@ def handle_target_pan_see(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_pan_see(target_character_id, cache.character_data[target_character_id].target_character_id, add_time, change_data, now_time)
+    handle_pan_see(target_character_id, target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.CLOTH_SEE_ZERO)
@@ -211,8 +211,8 @@ def handle_scene_all_characters_bra_pan_see(
     for chara_id in scene_data.character_list:
         if chara_id == 0:
             continue
-        handle_bra_see(chara_id, cache.character_data[chara_id].target_character_id, add_time, change_data, now_time)
-        handle_pan_see(chara_id, cache.character_data[chara_id].target_character_id, add_time, change_data, now_time)
+        handle_bra_see(chara_id, chara_id, add_time, change_data, now_time)
+        handle_pan_see(chara_id, chara_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.GET_T_PAN)
@@ -394,7 +394,7 @@ def handle_t_cloth_back(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_self_cloth_back(target_character_id, cache.character_data[target_character_id].target_character_id, add_time, change_data, now_time)
+    handle_self_cloth_back(target_character_id, target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SCENE_ALL_CHARACTERS_CLOTH_BACK)
@@ -423,7 +423,7 @@ def handle_scene_all_characters_cloth_back(
     for chara_id in scene_data.character_list:
         if chara_id == 0:
             continue
-        handle_self_cloth_back(chara_id, cache.character_data[chara_id].target_character_id, add_time, change_data, now_time)
+        handle_self_cloth_back(chara_id, chara_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.WEAR_CLOTH_OFF)

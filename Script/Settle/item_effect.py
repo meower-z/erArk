@@ -66,7 +66,7 @@ def handle_target_item_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_item_off(target_character_id, cache.character_data[target_character_id].target_character_id, add_time, change_data, now_time)
+    handle_item_off(target_character_id, target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ITEM_OFF_EXCEPT_PILL)
@@ -116,7 +116,7 @@ def handle_target_item_off_except_pill(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_item_off_except_pill(target_character_id, cache.character_data[target_character_id].target_character_id, add_time, change_data, now_time)
+    handle_item_off_except_pill(target_character_id, target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_B_ITEM_OFF)
@@ -1805,7 +1805,7 @@ def handle_target_remote_toy_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_self_remote_toy_off(target_character_id, cache.character_data[target_character_id].target_character_id, add_time, change_data, now_time)
+    handle_self_remote_toy_off(target_character_id, target_character_id, add_time, change_data, now_time)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_REMOTE_TOY_SET_WEAK)
 def handle_target_remote_toy_set_weak(
@@ -1830,7 +1830,7 @@ def handle_target_remote_toy_set_weak(
     # 如果对方没有情趣玩具则跳过
     if handle_premise.handle_self_no_sex_toy(target_character_id):
         return
-    handle_self_remote_toy_set_weak(target_character_id, cache.character_data[target_character_id].target_character_id, add_time, change_data, now_time)
+    handle_self_remote_toy_set_weak(target_character_id, target_character_id, add_time, change_data, now_time)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_REMOTE_TOY_SET_MEDIUM)
 def handle_target_remote_toy_set_medium(
@@ -1855,7 +1855,7 @@ def handle_target_remote_toy_set_medium(
     # 如果对方没有情趣玩具则跳过
     if handle_premise.handle_self_no_sex_toy(target_character_id):
         return
-    handle_self_remote_toy_set_medium(target_character_id, cache.character_data[target_character_id].target_character_id, add_time, change_data, now_time)
+    handle_self_remote_toy_set_medium(target_character_id, target_character_id, add_time, change_data, now_time)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_REMOTE_TOY_SET_STRONG)
 def handle_target_remote_toy_set_strong(
@@ -1880,7 +1880,7 @@ def handle_target_remote_toy_set_strong(
     # 如果对方没有情趣玩具则跳过
     if handle_premise.handle_self_no_sex_toy(target_character_id):
         return
-    handle_self_remote_toy_set_strong(target_character_id, cache.character_data[target_character_id].target_character_id, add_time, change_data, now_time)
+    handle_self_remote_toy_set_strong(target_character_id, target_character_id, add_time, change_data, now_time)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ALL_REMOTE_TOY_OFF)
 def handle_all_remote_toy_off(
@@ -1909,7 +1909,7 @@ def handle_all_remote_toy_off(
         # 跳过没有情趣玩具的人
         if handle_premise.handle_self_no_sex_toy(now_character_id):
             continue
-        handle_self_remote_toy_off(now_character_id, cache.character_data[now_character_id].target_character_id, add_time, change_data, now_time)
+        handle_self_remote_toy_off(now_character_id, now_character_id, add_time, change_data, now_time)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ALL_REMOTE_TOY_SET_WEAK)
 def handle_all_remote_toy_set_weak(
@@ -1936,7 +1936,7 @@ def handle_all_remote_toy_set_weak(
             continue
         if handle_premise.handle_self_no_sex_toy(now_character_id):
             continue
-        handle_self_remote_toy_set_weak(now_character_id, cache.character_data[now_character_id].target_character_id, add_time, change_data, now_time)
+        handle_self_remote_toy_set_weak(now_character_id, now_character_id, add_time, change_data, now_time)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ALL_REMOTE_TOY_SET_MEDIUM)
 def handle_all_remote_toy_set_medium(
@@ -1963,7 +1963,7 @@ def handle_all_remote_toy_set_medium(
             continue
         if handle_premise.handle_self_no_sex_toy(now_character_id):
             continue
-        handle_self_remote_toy_set_medium(now_character_id, cache.character_data[now_character_id].target_character_id, add_time, change_data, now_time)
+        handle_self_remote_toy_set_medium(now_character_id, now_character_id, add_time, change_data, now_time)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ALL_REMOTE_TOY_SET_STRONG)
 def handle_all_remote_toy_set_strong(
@@ -1990,7 +1990,7 @@ def handle_all_remote_toy_set_strong(
             continue
         if handle_premise.handle_self_no_sex_toy(now_character_id):
             continue
-        handle_self_remote_toy_set_strong(now_character_id, cache.character_data[now_character_id].target_character_id, add_time, change_data, now_time)
+        handle_self_remote_toy_set_strong(now_character_id, now_character_id, add_time, change_data, now_time)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_REMOTE_TOY_USE_OR_SET_WEAK)
 def handle_target_remote_toy_use_or_set_weak(
@@ -2019,4 +2019,4 @@ def handle_target_remote_toy_use_or_set_weak(
     if handle_premise.handle_self_now_sex_toy_on(target_character_id):
         return
     # 否则开启到弱档
-    handle_self_remote_toy_set_weak(target_character_id, cache.character_data[target_character_id].target_character_id, add_time, change_data, now_time)
+    handle_self_remote_toy_set_weak(target_character_id, target_character_id, add_time, change_data, now_time)

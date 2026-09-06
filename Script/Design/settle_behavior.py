@@ -2,6 +2,7 @@ import datetime
 import random
 from functools import wraps
 from types import FunctionType
+from typing import Optional
 from Script.Core import cache_control, constant, game_type, get_text, text_handle, rich_text
 from Script.Core.web_server import emit_realtime_text
 from Script.Design import attr_text, attr_calculation, handle_premise, talk, game_time, second_behavior
@@ -433,12 +434,12 @@ def handle_instruct_data(
     # 进行二段结算
     previous_target_character_id = now_character_data.target_character_id
     second_behavior.check_second_effect(character_id, change_data)
-    # 进行额外经验结算
-    extra_exp_settle(character_id, change_data)
-    second_behavior_effect_target_id_set = set()
-    # 如果是玩家对NPC的行为，则额外进行对方的二段结算
     if now_character_data.target_character_id != previous_target_character_id:
         target_character_id = now_character_data.target_character_id
+    # 进行额外经验结算
+    extra_exp_settle(character_id, target_character_id, change_data)
+    second_behavior_effect_target_id_set = set()
+    # 如果是玩家对NPC的行为，则额外进行对方的二段结算
     if character_id == 0 and target_character_id != 0:
         second_behavior_effect_target_id_set.add(target_character_id)
     # 如果是玩家的解除时停，则进行所有NPC的二段结算
@@ -451,7 +452,7 @@ def handle_instruct_data(
         target_change: game_type.TargetChange = change_data.target_change[target_chara_id]
         second_behavior.check_second_effect(target_chara_id, target_change, pl_to_npc = True)
         # 进行额外经验结算
-        extra_exp_settle(target_chara_id, target_change)
+        extra_exp_settle(target_chara_id, None, target_change)
     if now_character_data.target_character_id != previous_target_character_id:
         target_character_id = now_character_data.target_character_id
     return change_data, target_character_id
@@ -693,12 +694,14 @@ def get_favorability_social(favorability: int) -> int:
 
 def extra_exp_settle(
         character_id: int,
+        target_character_id: Optional[int],
         change_data: game_type.CharacterStatusChange,
 ):
     """
     处理额外经验结算
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 交互目标id，int或None；None时由辅助结算读取角色的交互对象
     change_data -- 状态变更信息记录对象
     """
     # 导入常用结算函数，避免循环导入
@@ -708,19 +711,19 @@ def extra_exp_settle(
 
     # 自己在H中且群交已开启，则群交经验+1
     if handle_premise.handle_self_is_h(character_id) and handle_premise.handle_group_sex_mode_on(character_id):
-        base_chara_experience_common_settle(character_id, 56, change_data=change_data)
+        base_chara_experience_common_settle(character_id, 56, change_data=change_data, target_character_id=target_character_id)
 
     # 自己正在露出中，则露出经验+1
     if handle_premise.handle_exhibitionism_sex_mode_ge_1(character_id):
-        base_chara_experience_common_settle(character_id, 34, change_data=change_data)
+        base_chara_experience_common_settle(character_id, 34, change_data=change_data, target_character_id=target_character_id)
 
     # 自己正在逆推中，则逆推经验+1
     if handle_premise.handle_npc_active_h(character_id):
-        base_chara_experience_common_settle(character_id, 36, change_data=change_data)
+        base_chara_experience_common_settle(character_id, 36, change_data=change_data, target_character_id=target_character_id)
 
     # 交互对象正在逆推自己，则自己的被逆推经验+1
     if handle_premise.handle_t_npc_active_h(character_id):
-        base_chara_experience_common_settle(character_id, 37, change_data=change_data)
+        base_chara_experience_common_settle(character_id, 37, change_data=change_data, target_character_id=target_character_id)
 
     # 玩家隐奸中，猥亵或性爱指令，且非等待，则隐奸经验+1
     if character_id == 0 and handle_premise.handle_hidden_sex_mode_ge_1(character_id):
@@ -738,16 +741,16 @@ def extra_exp_settle(
             add_flag = False
         # 增加隐奸经验
         if add_flag:
-            base_chara_experience_common_settle(character_id, 35, change_data=change_data)
-            base_chara_experience_common_settle(character_id, 35, target_flag=True, change_data=change_data)
+            base_chara_experience_common_settle(character_id, 35, change_data=change_data, target_character_id=target_character_id)
+            base_chara_experience_common_settle(character_id, 35, target_flag=True, change_data=change_data, target_character_id=target_character_id)
 
 
-def handle_comprehensive_value_effect(character_id: int, effect_all_value_list: list, change_data: game_type.CharacterStatusChange = game_type.CharacterStatusChange(), target_character_id: int = None) -> int:
+def handle_comprehensive_value_effect(character_id: int, effect_all_value_list: list, change_data: game_type.CharacterStatusChange = game_type.CharacterStatusChange(), *, target_character_id: Optional[int]) -> int:
     """
     综合型基础数值结算
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 交互目标id，int；None时读取执行者的交互目标
+    target_character_id -- 必填关键字参数，int或None；None时读取执行者的交互目标
     effect_all_value_list -- 结算的各项数值
     change_data -- 结算信息记录对象
     Return arguments:
@@ -840,7 +843,7 @@ def handle_comprehensive_value_effect(character_id: int, effect_all_value_list: 
             exp_value = int(effect_all_value_list[3])
             if operation == "L":
                 exp_value = -int(effect_all_value_list[3])
-            base_chara_experience_common_settle(final_character_id, type_son_id, base_value = exp_value, change_data = final_change_data)
+            base_chara_experience_common_settle(final_character_id, type_son_id, base_value = exp_value, change_data = final_change_data, target_character_id=target_character_id if final_character_id == character_id else None)
         # 角色口上flag
         elif attribute_name == "flag":
             final_character_data.author_flag.chara_int_flag_dict.setdefault(type_son_id, 0)
@@ -848,10 +851,10 @@ def handle_comprehensive_value_effect(character_id: int, effect_all_value_list: 
         # 绝顶
         elif attribute_name == "climax":
             if operation == "E":
-                base_chara_climix_common_settle(final_character_id, type_son_id, degree = int(effect_all_value_list[3]))
+                base_chara_climix_common_settle(final_character_id, type_son_id, degree = int(effect_all_value_list[3]), target_character_id=target_character_id if final_character_id == character_id else None)
             elif operation == "G":
                 for i in range(int(effect_all_value_list[3]) + 1):
-                    base_chara_climix_common_settle(final_character_id, type_son_id, degree = i)
+                    base_chara_climix_common_settle(final_character_id, type_son_id, degree = i, target_character_id=target_character_id if final_character_id == character_id else None)
         # 父子嵌套事件
         elif attribute_name == "father":
             # print(f"debug effect_all_value_list = {effect_all_value_list}")
