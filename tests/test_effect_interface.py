@@ -65,6 +65,7 @@ class EffectInterfaceTest(unittest.TestCase):
             "Optional": Optional,
             "Union": Union,
             "wraps": wraps,
+            "signature": inspect.signature,
             "game_config": self.config,
             "talk": SimpleNamespace(handle_talk=Mock()),
             "second_behavior": SimpleNamespace(check_second_effect=Mock()),
@@ -79,17 +80,63 @@ class EffectInterfaceTest(unittest.TestCase):
             self.effect_names.extend(load_functions("Script/Settle/" + filename, self.ns, ordinary_effect))
         self.effects = self.constants.settle_behavior_effect_data
 
-    def test_registry_requires_explicit_target(self):
-        """所有注册效果接受五个必填参数，且注册表保留原函数；无返回值。"""
+    def test_registry_adapts_effects_with_and_without_target(self):
+        """注册入口统一接受五参数，原效果按是否需要目标保留四或五参数；无返回值。"""
         expected = ["character_id", "target_character_id", "add_time", "change_data", "now_time"]
         self.assertEqual(len(self.effects), len(self.effect_names))
         for effect in self.effects.values():
             with self.subTest(effect=effect.__name__):
-                signature = inspect.signature(effect)
+                signature = inspect.signature(effect, follow_wrapped=False)
                 self.assertEqual(list(signature.parameters), expected)
                 self.assertTrue(all(param.default is inspect.Parameter.empty for param in signature.parameters.values()))
                 with self.assertRaises(TypeError):
                     signature.bind(1, 1, game_type.CharacterStatusChange(), self.now)
+        parameter_lists = [list(inspect.signature(self.ns[name]).parameters) for name in self.effect_names]
+        self.assertIn(expected, parameter_lists)
+        self.assertIn([name for name in expected if name != "target_character_id"], parameter_lists)
+
+    def test_registration_preserves_direct_calls_and_return_values(self):
+        """四参数效果可直接调用；注册入口接收并忽略目标，同时保留参数、记录对象与返回值；无返回值。"""
+        calls = []
+
+        def effect(character_id, add_time, change_data, now_time):
+            """输入执行者、时长、变更记录和时间，记录实参并返回玩家id零。"""
+            calls.append((character_id, add_time, change_data, now_time))
+            return 0
+
+        decorated = self.ns["add_settle_behavior_effect"](-2)(effect)
+        self.assertIs(decorated, effect)
+        changes = game_type.CharacterStatusChange()
+        self.assertEqual(decorated(1, 3, changes, self.now), 0)
+        self.assertEqual(self.effects[-2](1, 99, 3, changes, self.now), 0)
+        self.assertEqual(self.effects[-2](character_id=1, target_character_id=None, add_time=3, change_data=changes, now_time=self.now), 0)
+        self.assertEqual(calls, [(1, 3, changes, self.now)] * 3)
+
+    def test_registration_rejects_invalid_signature(self):
+        """效果参数不符合四或五个位置参数的约定时，注册立即报错；无返回值。"""
+        for effect in (
+            lambda character_id, add_time: None,
+            lambda character_id, *, add_time, change_data, now_time: None,
+        ):
+            with self.assertRaises(TypeError):
+                self.ns["add_settle_behavior_effect"](-2)(effect)
+        self.assertNotIn(-2, self.effects)
+
+    def test_mixed_effect_list_preserves_target_and_changes(self):
+        """真实效果列表混合恢复本人、选目标和目标装备；数值、记录、目标顺序保持正确；无返回值。"""
+        ids = constant_effect.BehaviorEffect
+        actor = self.cache.character_data[1]
+        actor.hit_point, actor.hit_point_max, actor.mana_point = 10, 100, 10
+        for character in self.cache.character_data.values():
+            character.h_state.body_item = {2: [0, False]}
+        changes = game_type.CharacterStatusChange()
+        sequence = [ids.ADD_SMALL_HIT_POINT, ids.TARGET_TO_PLAYER, ids.TARGET_VIBRATOR_ON]
+        target = self.ns["settle_effect_list"](1, 2, sequence, 1, changes, self.now)
+        self.assertEqual(actor.hit_point, 20)
+        self.assertEqual(changes.hit_point, 10)
+        self.assertEqual(target, 0)
+        self.assertTrue(self.cache.character_data[0].h_state.body_item[2][1])
+        self.assertFalse(self.cache.character_data[2].h_state.body_item[2][1])
 
     def test_second_effects_receive_explicit_target(self):
         """所有二段效果接受角色、目标、变化记录三个必填参数；无返回值。"""
@@ -149,8 +196,8 @@ class EffectInterfaceTest(unittest.TestCase):
                 checked += 1
         self.assertGreater(checked, 150)
 
-    def test_direct_effect_calls_pass_five_arguments(self):
-        """生产代码内直接调用普通效果时传递完整的五个参数；无返回值。"""
+    def test_direct_effect_calls_match_function_signatures(self):
+        """生产代码直接调用效果时匹配其原参数，注册表调用仍使用五参数；无返回值。"""
         names = set(self.effect_names)
         checked = 0
         for path in (ROOT / "Script").rglob("*.py"):
@@ -177,7 +224,10 @@ class EffectInterfaceTest(unittest.TestCase):
                 if name not in names and not registry:
                     continue
                 with self.subTest(path=str(path), line=node.lineno):
-                    self.assertEqual(len(node.args) + len(node.keywords), 5)
+                    if registry:
+                        self.assertEqual(len(node.args) + len(node.keywords), 5)
+                    else:
+                        inspect.signature(self.ns[name]).bind(*[object() for _ in node.args], **{k.arg: object() for k in node.keywords})
                 checked += 1
         self.assertGreater(checked, 100)
 
@@ -383,7 +433,8 @@ class EffectInterfaceTest(unittest.TestCase):
                     for index, item in enumerate(("nipple_clamp", "clit_clamp", "vibrator_insertion", "vibrator_insertion_anal")):
                         setattr(premise, f"handle_self_now_{item}", lambda cid, i=index: self.cache.character_data[cid].h_state.body_item[i][1])
                     self.ns["handle_premise"] = premise
-                    self.ns[f"handle_adjust_body_manage_{period}_item"](1, 3, 1, game_type.CharacterStatusChange(), self.now)
+                    effect_id = getattr(constant_effect.BehaviorEffect, f"ADJUST_BODY_MANAGE_{period.upper()}_ITEM")
+                    self.effects[effect_id](1, 3, 1, game_type.CharacterStatusChange(), self.now)
                     for cid, character in self.cache.character_data.items():
                         self.assertEqual([character.h_state.body_item[i][1] for i in range(4)], [enabled if cid == 1 else not enabled] * 4)
                         self.assertEqual(character.target_character_id, (cid + 1) % 4)
@@ -418,7 +469,7 @@ class EffectInterfaceTest(unittest.TestCase):
             character.ability[18] = 0
             character.favorability = {}
         changes = game_type.CharacterStatusChange()
-        self.ns["handle_group_sex_fail_add_just"](0, 3, 1, changes, self.now)
+        self.ns["handle_group_sex_fail_add_just"](0, 1, changes, self.now)
         self.assertEqual(seen_targets, [0, 0, 0])
         self.assertEqual(self.cache.character_data[0].target_character_id, 0)
         for cid in (1, 2):
@@ -479,7 +530,7 @@ class EffectInterfaceTest(unittest.TestCase):
                 if response_value == 1:
                     self.assertTrue(self.cache.character_data[2].h_state.pretend_sleep)
                     self.assertTrue(all(call.args == (2, 5) for call in abnormal.call_args_list))
-                    self.assertEqual(effects.handle_h_flag_to_1.call_args.args[:2], (2, None))
+                    self.assertEqual(effects.handle_h_flag_to_1.call_args.args[:2], (2, 1))
                     effects.handle_both_h_state_reset.assert_not_called()
                 else:
                     self.assertEqual(effects.handle_both_h_state_reset.call_args.args[:2], (0, 2))

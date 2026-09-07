@@ -1,6 +1,7 @@
 import datetime
 import random
 from functools import wraps
+from inspect import signature
 from types import FunctionType
 from Script.Core import cache_control, constant, game_type, get_text, text_handle, rich_text
 from Script.Core.web_server import emit_realtime_text
@@ -497,18 +498,33 @@ def add_settle_behavior_effect(behavior_effect_id: int):
     """
     添加行为结算处理
     Keyword arguments:
-    behavior_id -- 行为id
-    效果参数依次为执行者id、交互目标id、时长、变化记录、时间。
+    behavior_effect_id -- 效果id，int
+    效果参数依次为执行者id、时长、变化记录、时间；需要交互目标时，在执行者id后声明target_character_id。
+    注册表统一接收五个参数；直接调用效果函数时使用其原有参数。
     选目标效果返回目标id，其他效果返回None。
+    Return arguments:
+    decorator -- 注册效果并返回原函数的装饰器
     """
 
     def decorator(func):
-        @wraps(func)
-        def return_wrapper(*args, **kwargs):
-            return func(*args, **kwargs)
+        """输入四参数或五参数效果函数，注册统一调用入口并返回原函数。"""
+        effect_signature = signature(func)
+        parameters = tuple(effect_signature.parameters)
+        self_parameters = ("character_id", "add_time", "change_data", "now_time")
+        target_parameters = ("character_id", "target_character_id", "add_time", "change_data", "now_time")
+        if parameters == target_parameters:
+            registered_func = func
+        elif parameters == self_parameters:
+            @wraps(func)
+            def registered_func(character_id, target_character_id, add_time, change_data, now_time):
+                """输入统一的五个效果参数，忽略交互目标，返回原效果的结果。"""
+                return func(character_id, add_time, change_data, now_time)
+        else:
+            raise TypeError(f"结算效果 {func.__name__} 的参数应为 {self_parameters} 或 {target_parameters}")
 
-        constant.settle_behavior_effect_data[behavior_effect_id] = return_wrapper
-        return return_wrapper
+        effect_signature.bind(*[None] * len(parameters))
+        constant.settle_behavior_effect_data[behavior_effect_id] = registered_func
+        return func
 
     return decorator
 

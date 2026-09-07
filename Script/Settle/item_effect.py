@@ -24,7 +24,6 @@ width = normal_config.config_normal.text_width
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ITEM_OFF)
 def handle_item_off(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -33,7 +32,6 @@ def handle_item_off(
     去掉身上所有的道具（含药品）
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -66,13 +64,12 @@ def handle_target_item_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_item_off(target_character_id, None, add_time, change_data, now_time)
+    handle_item_off(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ITEM_OFF_EXCEPT_PILL)
 def handle_item_off_except_pill(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -81,7 +78,6 @@ def handle_item_off_except_pill(
     去掉身上所有的H道具（不含药品）
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -116,7 +112,7 @@ def handle_target_item_off_except_pill(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_item_off_except_pill(target_character_id, None, add_time, change_data, now_time)
+    handle_item_off_except_pill(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_B_ITEM_OFF)
@@ -596,7 +592,6 @@ def handle_target_gag_off(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADJUST_BODY_MANAGE_DAY_ITEM)
 def handle_adjust_body_manage_day_item(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -605,7 +600,6 @@ def handle_adjust_body_manage_day_item(
     调整自己的身体管理_白天道具
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -640,7 +634,6 @@ def handle_adjust_body_manage_day_item(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADJUST_BODY_MANAGE_SLEEP_ITEM)
 def handle_adjust_body_manage_sleep_item(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -649,7 +642,6 @@ def handle_adjust_body_manage_sleep_item(
     调整自己的身体管理_睡觉道具
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -684,7 +676,6 @@ def handle_adjust_body_manage_sleep_item(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.USE_BODY_LUBRICANT)
 def handle_use_body_lubricant(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -693,7 +684,6 @@ def handle_use_body_lubricant(
     使用了一个润滑液
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -710,7 +700,6 @@ def handle_use_body_lubricant(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.USE_PHILTER)
 def handle_use_philter(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -719,7 +708,6 @@ def handle_use_philter(
     使用了一个媚药
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -736,7 +724,6 @@ def handle_use_philter(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.USE_ENEMAS)
 def handle_use_enemas(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -745,7 +732,6 @@ def handle_use_enemas(
     使用了一个灌肠液
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -762,7 +748,6 @@ def handle_use_enemas(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.USE_DIURETICS_ONCE)
 def handle_use_diuretics_once(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -771,7 +756,6 @@ def handle_use_diuretics_once(
     使用了一个一次性利尿剂
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -788,7 +772,6 @@ def handle_use_diuretics_once(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.USE_DIURETICS_PERSISTENT)
 def handle_use_diuretics_persistent(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -797,7 +780,6 @@ def handle_use_diuretics_persistent(
     使用了一个持续性利尿剂
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -814,7 +796,6 @@ def handle_use_diuretics_persistent(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.USE_SLEEPING_PILLS)
 def handle_use_sleeping_pills(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -823,7 +804,6 @@ def handle_use_sleeping_pills(
     使用了一个安眠药
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -840,7 +820,6 @@ def handle_use_sleeping_pills(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.USE_OVULATION_PROMOTING_DRUGS)
 def handle_use_ovulation_promoting_drugs(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -849,7 +828,6 @@ def handle_use_ovulation_promoting_drugs(
     使用了一个排卵促进药
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -866,7 +844,6 @@ def handle_use_ovulation_promoting_drugs(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.USE_CONTRACEPTIVE_BEFORE)
 def handle_use_contraceptive_before(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -875,7 +852,6 @@ def handle_use_contraceptive_before(
     使用了一个事前避孕药
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -892,7 +868,6 @@ def handle_use_contraceptive_before(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.USE_CONTRACEPTIVE_AFTER)
 def handle_use_contraceptive_after(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -901,7 +876,6 @@ def handle_use_contraceptive_after(
     使用了一个事后避孕药
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -918,7 +892,6 @@ def handle_use_contraceptive_after(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.USE_RING)
 def handle_use_ring(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -927,7 +900,6 @@ def handle_use_ring(
     使用了一个戒指
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -941,7 +913,6 @@ def handle_use_ring(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.USE_COLLAR)
 def handle_use_collar(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -950,7 +921,6 @@ def handle_use_collar(
     使用了一个项圈
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -964,7 +934,6 @@ def handle_use_collar(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.USE_BAG)
 def handle_use_bag(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -973,7 +942,6 @@ def handle_use_bag(
     使用了一个干员携袋
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -987,7 +955,6 @@ def handle_use_bag(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.USE_CONDOM)
 def handle_use_condom(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -996,7 +963,6 @@ def handle_use_condom(
     使用了一个避孕套
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1013,7 +979,6 @@ def handle_use_condom(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.USE_URETHRAL_SWAB)
 def handle_use_urethral_swab(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1022,7 +987,6 @@ def handle_use_urethral_swab(
     使用了一个尿道棉棒
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1039,7 +1003,6 @@ def handle_use_urethral_swab(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.USE_SAFE_CANDLES)
 def handle_use_safe_candles(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1048,7 +1011,6 @@ def handle_use_safe_candles(
     使用了一个低温蜡烛
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1065,7 +1027,6 @@ def handle_use_safe_candles(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DELETE_FOOD)
 def handle_delete_food(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1074,7 +1035,6 @@ def handle_delete_food(
     删除当前行动中的对象食物
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1127,7 +1087,6 @@ def handle_make_food(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.NPC_MAKE_FOOD_TO_SHOP)
 def handle_npc_make_food_to_shop(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1136,7 +1095,6 @@ def handle_npc_make_food_to_shop(
     NPC随机制作一个食物，并补充到当前所在食物商店中
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1173,7 +1131,6 @@ def handle_npc_make_food_to_shop(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.NPC_MAKE_FOOD_TO_BAG)
 def handle_npc_make_food_to_bag(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1182,7 +1139,6 @@ def handle_npc_make_food_to_bag(
     NPC随机制作一个食物，并补充到自己背包中
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1203,7 +1159,6 @@ def handle_npc_make_food_to_bag(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ASSISTANT_MAKE_FOOD_TO_BAG)
 def handle_assistant_make_food_to_bag(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1212,7 +1167,6 @@ def handle_assistant_make_food_to_bag(
     助理制作两个食物，并补充到自己背包中
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1249,7 +1203,6 @@ def handle_assistant_make_food_to_bag(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DELETE_ALL_FOOD)
 def handle_delete_all_food(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1258,7 +1211,6 @@ def handle_delete_all_food(
     删除背包内所有食物
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1275,7 +1227,6 @@ def handle_delete_all_food(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DELETE_LAST_FOOD)
 def handle_delete_last_food(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1284,7 +1235,6 @@ def handle_delete_last_food(
     删除背包内最后一个食物
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1648,7 +1598,6 @@ def handle_target_no_pregnancy_from_last_h(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.WEAR_CONDOM)
 def handle_wear_condom(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1657,7 +1606,6 @@ def handle_wear_condom(
     自己获得戴上避孕套状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1671,7 +1619,6 @@ def handle_wear_condom(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TAKE_CONDOM_OFF)
 def handle_take_condom_off(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1680,7 +1627,6 @@ def handle_take_condom_off(
     自己去掉戴上避孕套状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1694,7 +1640,6 @@ def handle_take_condom_off(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SELF_REMOTE_TOY_OFF)
 def handle_self_remote_toy_off(
     character_id: int,
-    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -1703,7 +1648,6 @@ def handle_self_remote_toy_off(
     关闭自己身上的情趣玩具
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1716,7 +1660,6 @@ def handle_self_remote_toy_off(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SELF_REMOTE_TOY_SET_WEAK)
 def handle_self_remote_toy_set_weak(
     character_id: int,
-    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -1725,7 +1668,6 @@ def handle_self_remote_toy_set_weak(
     将自己身上的情趣玩具调到弱档
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1738,7 +1680,6 @@ def handle_self_remote_toy_set_weak(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SELF_REMOTE_TOY_SET_MEDIUM)
 def handle_self_remote_toy_set_medium(
     character_id: int,
-    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -1747,7 +1688,6 @@ def handle_self_remote_toy_set_medium(
     将自己身上的情趣玩具调到中档
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1760,7 +1700,6 @@ def handle_self_remote_toy_set_medium(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SELF_REMOTE_TOY_SET_STRONG)
 def handle_self_remote_toy_set_strong(
     character_id: int,
-    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -1769,7 +1708,6 @@ def handle_self_remote_toy_set_strong(
     将自己身上的情趣玩具调到强档
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1799,7 +1737,7 @@ def handle_target_remote_toy_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_self_remote_toy_off(target_character_id, None, add_time, change_data, now_time)
+    handle_self_remote_toy_off(target_character_id, add_time, change_data, now_time)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_REMOTE_TOY_SET_WEAK)
 def handle_target_remote_toy_set_weak(
@@ -1824,7 +1762,7 @@ def handle_target_remote_toy_set_weak(
     # 如果对方没有情趣玩具则跳过
     if handle_premise.handle_self_no_sex_toy(target_character_id):
         return
-    handle_self_remote_toy_set_weak(target_character_id, None, add_time, change_data, now_time)
+    handle_self_remote_toy_set_weak(target_character_id, add_time, change_data, now_time)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_REMOTE_TOY_SET_MEDIUM)
 def handle_target_remote_toy_set_medium(
@@ -1849,7 +1787,7 @@ def handle_target_remote_toy_set_medium(
     # 如果对方没有情趣玩具则跳过
     if handle_premise.handle_self_no_sex_toy(target_character_id):
         return
-    handle_self_remote_toy_set_medium(target_character_id, None, add_time, change_data, now_time)
+    handle_self_remote_toy_set_medium(target_character_id, add_time, change_data, now_time)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_REMOTE_TOY_SET_STRONG)
 def handle_target_remote_toy_set_strong(
@@ -1874,12 +1812,11 @@ def handle_target_remote_toy_set_strong(
     # 如果对方没有情趣玩具则跳过
     if handle_premise.handle_self_no_sex_toy(target_character_id):
         return
-    handle_self_remote_toy_set_strong(target_character_id, None, add_time, change_data, now_time)
+    handle_self_remote_toy_set_strong(target_character_id, add_time, change_data, now_time)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ALL_REMOTE_TOY_OFF)
 def handle_all_remote_toy_off(
     character_id: int,
-    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -1888,7 +1825,6 @@ def handle_all_remote_toy_off(
     关闭在场所有人身上的情趣玩具
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1903,12 +1839,11 @@ def handle_all_remote_toy_off(
         # 跳过没有情趣玩具的人
         if handle_premise.handle_self_no_sex_toy(now_character_id):
             continue
-        handle_self_remote_toy_off(now_character_id, None, add_time, change_data, now_time)
+        handle_self_remote_toy_off(now_character_id, add_time, change_data, now_time)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ALL_REMOTE_TOY_SET_WEAK)
 def handle_all_remote_toy_set_weak(
     character_id: int,
-    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -1917,7 +1852,6 @@ def handle_all_remote_toy_set_weak(
     将在场所有人身上的情趣玩具调到弱档
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1930,12 +1864,11 @@ def handle_all_remote_toy_set_weak(
             continue
         if handle_premise.handle_self_no_sex_toy(now_character_id):
             continue
-        handle_self_remote_toy_set_weak(now_character_id, None, add_time, change_data, now_time)
+        handle_self_remote_toy_set_weak(now_character_id, add_time, change_data, now_time)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ALL_REMOTE_TOY_SET_MEDIUM)
 def handle_all_remote_toy_set_medium(
     character_id: int,
-    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -1944,7 +1877,6 @@ def handle_all_remote_toy_set_medium(
     将在场所有人身上的情趣玩具调到中档
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1957,12 +1889,11 @@ def handle_all_remote_toy_set_medium(
             continue
         if handle_premise.handle_self_no_sex_toy(now_character_id):
             continue
-        handle_self_remote_toy_set_medium(now_character_id, None, add_time, change_data, now_time)
+        handle_self_remote_toy_set_medium(now_character_id, add_time, change_data, now_time)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ALL_REMOTE_TOY_SET_STRONG)
 def handle_all_remote_toy_set_strong(
     character_id: int,
-    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -1971,7 +1902,6 @@ def handle_all_remote_toy_set_strong(
     将在场所有人身上的情趣玩具调到强档
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1984,7 +1914,7 @@ def handle_all_remote_toy_set_strong(
             continue
         if handle_premise.handle_self_no_sex_toy(now_character_id):
             continue
-        handle_self_remote_toy_set_strong(now_character_id, None, add_time, change_data, now_time)
+        handle_self_remote_toy_set_strong(now_character_id, add_time, change_data, now_time)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_REMOTE_TOY_USE_OR_SET_WEAK)
 def handle_target_remote_toy_use_or_set_weak(
@@ -2013,4 +1943,4 @@ def handle_target_remote_toy_use_or_set_weak(
     if handle_premise.handle_self_now_sex_toy_on(target_character_id):
         return
     # 否则开启到弱档
-    handle_self_remote_toy_set_weak(target_character_id, None, add_time, change_data, now_time)
+    handle_self_remote_toy_set_weak(target_character_id, add_time, change_data, now_time)

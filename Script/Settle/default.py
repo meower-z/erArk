@@ -47,7 +47,6 @@ width = normal_config.config_normal.text_width
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.NOTHING)
 def handle_nothing(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -56,7 +55,6 @@ def handle_nothing(
     空结算
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -67,7 +65,6 @@ def handle_nothing(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_SMALL_HIT_POINT)
 def handle_add_small_hit_point(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -76,7 +73,6 @@ def handle_add_small_hit_point(
     增加少量体力
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -102,7 +98,6 @@ def handle_add_small_hit_point(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_SMALL_MANA_POINT)
 def handle_add_small_mana_point(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -111,7 +106,6 @@ def handle_add_small_mana_point(
     增加少量气力
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -352,7 +346,6 @@ def handle_sub_both_large_mana_point(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DOWN_SELF_SMALL_HIT_POINT)
 def handle_sub_self_small_hit_point(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -361,7 +354,6 @@ def handle_sub_self_small_hit_point(
     减少自己少量体力
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -372,7 +364,6 @@ def handle_sub_self_small_hit_point(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DOWN_SELF_SMALL_MANA_POINT)
 def handle_sub_self_small_mana_point(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -381,7 +372,6 @@ def handle_sub_self_small_mana_point(
     减少自己少量气力
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -392,7 +382,6 @@ def handle_sub_self_small_mana_point(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DOWN_SELF_MEDIUM_HIT_POINT)
 def handle_sub_self_medium_hit_point(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -401,7 +390,6 @@ def handle_sub_self_medium_hit_point(
     减少自己中量体力
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -412,7 +400,6 @@ def handle_sub_self_medium_hit_point(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DOWN_SELF_MEDIUM_MANA_POINT)
 def handle_sub_self_medium_mana_point(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -421,7 +408,6 @@ def handle_sub_self_medium_mana_point(
     减少自己中量气力
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -432,7 +418,6 @@ def handle_sub_self_medium_mana_point(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DOWN_SELF_LARGE_HIT_POINT)
 def handle_sub_self_large_hit_point(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -441,7 +426,6 @@ def handle_sub_self_large_hit_point(
     减少自己大量体力
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -452,7 +436,6 @@ def handle_sub_self_large_hit_point(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DOWN_SELF_LARGE_MANA_POINT)
 def handle_sub_self_large_mana_point(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -461,7 +444,6 @@ def handle_sub_self_large_mana_point(
     减少自己大量气力
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -556,7 +538,6 @@ def handle_sub_target_large_mana_point(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.MOOD_TO_GOOD)
 def handle_mood_to_good(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -565,7 +546,6 @@ def handle_mood_to_good(
     自己心情变为好
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -577,7 +557,6 @@ def handle_mood_to_good(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.MOOD_TO_NORMAL)
 def handle_mood_to_normal(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -586,7 +565,6 @@ def handle_mood_to_normal(
     自己心情变为普通
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -598,7 +576,6 @@ def handle_mood_to_normal(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.MOOD_TO_BAD)
 def handle_mood_to_bad(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -607,7 +584,6 @@ def handle_mood_to_bad(
     自己心情变为不好
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -619,7 +595,6 @@ def handle_mood_to_bad(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.MOOD_TO_ANGRY)
 def handle_mood_to_angry(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -628,7 +603,6 @@ def handle_mood_to_angry(
     自己心情变为愤怒
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -655,7 +629,7 @@ def handle_target_mood_to_good(
     now_time -- 结算的时间
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_mood_to_good(target_character_id, None, add_time, change_data, now_time)
+    handle_mood_to_good(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_MOOD_TO_NORMAL)
@@ -676,7 +650,7 @@ def handle_target_mood_to_normal(
     now_time -- 结算的时间
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_mood_to_normal(target_character_id, None, add_time, change_data, now_time)
+    handle_mood_to_normal(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_MOOD_TO_BAD)
@@ -697,7 +671,7 @@ def handle_target_mood_to_bad(
     now_time -- 结算的时间
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_mood_to_bad(target_character_id, None, add_time, change_data, now_time)
+    handle_mood_to_bad(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_MOOD_TO_ANGRY)
@@ -718,13 +692,12 @@ def handle_target_mood_to_angry(
     now_time -- 结算的时间
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_mood_to_angry(target_character_id, None, add_time, change_data, now_time)
+    handle_mood_to_angry(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SCENE_ALL_CHARACTERS_DESIRE_POINT_ZERO)
 def handle_scene_all_characters_desire_point_zero(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -733,7 +706,6 @@ def handle_scene_all_characters_desire_point_zero(
     场景内所有角色欲望值归零
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -843,7 +815,6 @@ def handle_add_both_small_mana_point(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.MOVE_TO_TARGET_SCENE)
 def handle_move_to_target_scene(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -852,7 +823,6 @@ def handle_move_to_target_scene(
     移动至目标场景
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1344,7 +1314,6 @@ def handle_first_w_sex(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DAY_FIRST_MEET_0)
 def handle_day_first_meet_0(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1353,7 +1322,6 @@ def handle_day_first_meet_0(
     自己变为今天已见过面
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1369,7 +1337,6 @@ def handle_day_first_meet_0(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DAY_FIRST_MEET_1)
 def handle_day_first_meet_1(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1378,7 +1345,6 @@ def handle_day_first_meet_1(
     自己变为今天未见过面
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1429,7 +1395,6 @@ def handle_first_kiss_to_penis(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.PENETRATING_VISION_ON)
 def handle_penetrating_vision_on(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1438,7 +1403,6 @@ def handle_penetrating_vision_on(
     开启透视（含理智消耗）
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1457,7 +1421,6 @@ def handle_penetrating_vision_on(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.PENETRATING_VISION_OFF)
 def handle_penetrating_vision_off(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1466,7 +1429,6 @@ def handle_penetrating_vision_off(
     关闭透视
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1482,7 +1444,6 @@ def handle_penetrating_vision_off(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.HORMONE_ON)
 def handle_hormone_on(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1491,7 +1452,6 @@ def handle_hormone_on(
     开启信息素
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1507,7 +1467,6 @@ def handle_hormone_on(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.HORMONE_OFF)
 def handle_hormone_off(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1516,7 +1475,6 @@ def handle_hormone_off(
     关闭信息素
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1586,7 +1544,6 @@ def handle_hypnosis_one(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.HYPNOSIS_ALL)
 def handle_hypnosis_all(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1595,7 +1552,6 @@ def handle_hypnosis_all(
     集体催眠（含理智消耗）
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2041,7 +1997,6 @@ def handle_target_hypnosis_pain_as_pleasure_off(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TIME_STOP_ON)
 def handle_time_stop_on(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2050,7 +2005,6 @@ def handle_time_stop_on(
     开启时停
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2071,7 +2025,6 @@ def handle_time_stop_on(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TIME_STOP_OFF)
 def handle_time_stop_off(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2080,7 +2033,6 @@ def handle_time_stop_off(
     关闭时停
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2122,7 +2074,6 @@ def handle_target_be_carried_in_time_stop(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_NOT_BE_CARRIED_IN_TIME_STOP)
 def handle_target_not_be_carried_in_time_stop(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2131,7 +2082,6 @@ def handle_target_not_be_carried_in_time_stop(
     清零自己的当前时停搬运对象
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2171,7 +2121,6 @@ def handle_target_be_free_in_time_stop(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_NOT_BE_FREE_IN_TIME_STOP)
 def handle_target_not_be_free_in_time_stop(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2180,7 +2129,6 @@ def handle_target_not_be_free_in_time_stop(
     清零自己的让某人时停中自由状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2194,7 +2142,6 @@ def handle_target_not_be_free_in_time_stop(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.NPC_ACTIVE_H_ON)
 def handle_npc_active_h_on(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2203,7 +2150,6 @@ def handle_npc_active_h_on(
     自己开启主动H
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2219,7 +2165,6 @@ def handle_npc_active_h_on(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.NPC_ACTIVE_H_OFF)
 def handle_npc_active_h_off(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2228,7 +2173,6 @@ def handle_npc_active_h_off(
     自己关闭主动H
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2296,7 +2240,6 @@ def handle_target_npc_active_h_off(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.PL_JUST_SHOOT_ON)
 def handle_pl_just_shoot_on(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2305,7 +2248,6 @@ def handle_pl_just_shoot_on(
     玩家变为前指令刚刚射精状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2319,7 +2261,6 @@ def handle_pl_just_shoot_on(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.PL_JUST_SHOOT_OFF)
 def handle_pl_just_shoot_off(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2328,7 +2269,6 @@ def handle_pl_just_shoot_off(
     玩家清零前指令刚刚射精状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2342,7 +2282,6 @@ def handle_pl_just_shoot_off(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.PL_CONDOM_USE_RESET)
 def handle_pl_condom_use_reset(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2351,7 +2290,6 @@ def handle_pl_condom_use_reset(
     重置玩家的避孕套使用状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2365,7 +2303,6 @@ def handle_pl_condom_use_reset(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SELF_CONDOM_INFO_SHOW_FLAG_ON)
 def handle_self_condom_info_show_flag_on(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2374,7 +2311,6 @@ def handle_self_condom_info_show_flag_on(
     自己开启避孕套信息显示
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2405,13 +2341,12 @@ def handle_target_condom_info_show_flag_on(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_self_condom_info_show_flag_on(target_character_id, None, add_time, change_data, now_time)
+    handle_self_condom_info_show_flag_on(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SCENE_ALL_CHARACTERS_CONDOM_INFO_SHOW_FLAG_ON)
 def handle_scene_all_characters_condom_info_show_flag_on(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2420,7 +2355,6 @@ def handle_scene_all_characters_condom_info_show_flag_on(
     场景内所有角色开启避孕套信息显示
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2433,13 +2367,12 @@ def handle_scene_all_characters_condom_info_show_flag_on(
     for chara_id in scene_data.character_list:
         # 遍历非玩家的角色
         if chara_id:
-            handle_self_condom_info_show_flag_on(chara_id, None, add_time, change_data, now_time)
+            handle_self_condom_info_show_flag_on(chara_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SELF_ORGASM_EDGE_ON)
 def handle_self_orgasm_edge_on(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2448,7 +2381,6 @@ def handle_self_orgasm_edge_on(
     自己开启绝顶寸止
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2465,7 +2397,6 @@ def handle_self_orgasm_edge_on(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SELF_ORGASM_EDGE_OFF)
 def handle_self_orgasm_edge_off(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2474,7 +2405,6 @@ def handle_self_orgasm_edge_off(
     自己关闭绝顶寸止
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2505,7 +2435,7 @@ def handle_target_orgasm_edge_on(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_self_orgasm_edge_on(target_character_id, None, add_time, change_data, now_time)
+    handle_self_orgasm_edge_on(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_ORGASM_EDGE_OFF)
@@ -2528,13 +2458,12 @@ def handle_target_orgasm_edge_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_self_orgasm_edge_off(target_character_id, None, add_time, change_data, now_time)
+    handle_self_orgasm_edge_off(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ALL_GROUP_SEX_TEMPLE_ON)
 def handle_all_group_sex_temple_run_on(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2543,7 +2472,6 @@ def handle_all_group_sex_temple_run_on(
     开启全群交模板，进行轮流群交
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2557,7 +2485,6 @@ def handle_all_group_sex_temple_run_on(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ALL_GROUP_SEX_TEMPLE_OFF)
 def handle_all_group_sex_temple_run_off(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2566,7 +2493,6 @@ def handle_all_group_sex_temple_run_off(
     关闭全群交模板，进行单轮群交
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2580,7 +2506,6 @@ def handle_all_group_sex_temple_run_off(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SELF_JOIN_GROUP_SEX_ON)
 def handle_self_join_group_sex_on(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2589,7 +2514,6 @@ def handle_self_join_group_sex_on(
     自己开始加入群交
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2603,7 +2527,6 @@ def handle_self_join_group_sex_on(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SELF_JOIN_GROUP_SEX_OFF)
 def handle_self_join_group_sex_off(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2612,7 +2535,6 @@ def handle_self_join_group_sex_off(
     自己停止加入群交
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2626,7 +2548,6 @@ def handle_self_join_group_sex_off(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.CLEAR_GROUP_SEX_TEMPLATE)
 def handle_clear_group_sex_template(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2635,7 +2556,6 @@ def handle_clear_group_sex_template(
     清空自己的群交模板
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2678,7 +2598,6 @@ def handle_target_get_weeknesss_by_dr(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SELF_GET_WEEKNESSS_TO_DR)
 def handle_self_get_weeknesss_to_dr(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2687,7 +2606,6 @@ def handle_self_get_weeknesss_to_dr(
     自己获得[持有博士把柄]
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2707,7 +2625,6 @@ def handle_self_get_weeknesss_to_dr(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ENTER_WAITING_FOR_PHYSICAL_EXAM)
 def handle_enter_waiting_for_physical_exam(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2716,7 +2633,6 @@ def handle_enter_waiting_for_physical_exam(
     自己进入等待体检状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2731,7 +2647,6 @@ def handle_enter_waiting_for_physical_exam(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.EXIT_WAITING_FOR_PHYSICAL_EXAM)
 def handle_exit_waiting_for_physical_exam(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2740,7 +2655,6 @@ def handle_exit_waiting_for_physical_exam(
     自己退出等待体检状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2790,7 +2704,6 @@ def handle_wait_unitl_traget_action_end(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.WAIT_UNITL_PLAYER_ACTION_END)
 def handle_wait_unitl_player_action_end(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2799,7 +2712,6 @@ def handle_wait_unitl_player_action_end(
     自己等待至玩家行动结束
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2822,7 +2734,6 @@ def handle_wait_unitl_player_action_end(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SET_TARGET_FOOD_FROM_BAG_LAST)
 def handle_set_target_food_from_bag_last(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2831,7 +2742,6 @@ def handle_set_target_food_from_bag_last(
     将自己行为目标食物指定为背包里的最后一个食物
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2849,7 +2759,6 @@ def handle_set_target_food_from_bag_last(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.CLEAR_TARGET_TOILET_PATH)
 def handle_clear_target_toilet_path(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2858,7 +2767,6 @@ def handle_clear_target_toilet_path(
     清空自己记录的目标厕所位置路径
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2872,7 +2780,6 @@ def handle_clear_target_toilet_path(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.MOVE_TO_OWN_DORMITORY)
 def handle_move_to_own_dormitory(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2881,7 +2788,6 @@ def handle_move_to_own_dormitory(
     自己前往自己的宿舍
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2969,7 +2875,6 @@ def handle_target_not_be_carried(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.GET_SLEEP_DISTURBED_STATE)
 def handle_get_sleep_disturbed_state(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2978,7 +2883,6 @@ def handle_get_sleep_disturbed_state(
     自身获得睡觉中被吵醒状态，一小时内不会再产生睡觉需求
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2992,7 +2896,6 @@ def handle_get_sleep_disturbed_state(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.FACILITY_DAMAGE_CHECK)
 def handle_facility_damage_check(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -3001,7 +2904,6 @@ def handle_facility_damage_check(
     几率判定自己所在地点是否造成损坏
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -3028,7 +2930,6 @@ def handle_facility_damage_check(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_MEDIUM_HIT_POINT)
 def handle_add_medium_hit_point(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -3037,7 +2938,6 @@ def handle_add_medium_hit_point(
     增加中量体力
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -3059,7 +2959,6 @@ def handle_add_medium_hit_point(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_MEDIUM_MANA_POINT)
 def handle_add_medium_mana_point(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -3068,7 +2967,6 @@ def handle_add_medium_mana_point(
     增加中量气力
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -3135,7 +3033,6 @@ def handle_interrupt_target_activity(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.OPTION_FATER)
 def handle_option_fater(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -3144,7 +3041,6 @@ def handle_option_fater(
     开启子选项面板
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -3186,7 +3082,6 @@ def handle_target_to_player(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.OPEN_INSTRUCT_FILTER_H)
 def handle_open_instruct_filter_h(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -3195,7 +3090,6 @@ def handle_open_instruct_filter_h(
     开启H面板过滤器（已弃用）
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -3206,7 +3100,6 @@ def handle_open_instruct_filter_h(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.CLOSE_INSTRUCT_FILTER_H)
 def handle_close_instruct_filter_h(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -3215,7 +3108,6 @@ def handle_close_instruct_filter_h(
     关闭H面板过滤器（已弃用）
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -3226,7 +3118,6 @@ def handle_close_instruct_filter_h(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_THIS_EVENT_TO_TRIGGERED_RECORD)
 def handle_add_this_event_to_already_triggered(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -3235,7 +3126,6 @@ def handle_add_this_event_to_already_triggered(
     将玩家当前触发的事件加入总次数已触发记录
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -3250,7 +3140,6 @@ def handle_add_this_event_to_already_triggered(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_THIS_EVENT_TO_TODAY_TRIGGERED_RECORD)
 def handle_add_this_event_to_today_already_triggered(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -3259,7 +3148,6 @@ def handle_add_this_event_to_today_already_triggered(
     将玩家当前触发的事件加入今日已触发记录
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -3274,7 +3162,6 @@ def handle_add_this_event_to_today_already_triggered(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.GROUP_SEX_MODE_ON)
 def handle_group_sex_mode_on(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -3283,7 +3170,6 @@ def handle_group_sex_mode_on(
     开启群交模式
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -3300,7 +3186,6 @@ def handle_group_sex_mode_on(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.GROUP_SEX_MODE_OFF)
 def handle_group_sex_mode_off(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -3309,7 +3194,6 @@ def handle_group_sex_mode_off(
     关闭群交模式
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -3320,7 +3204,6 @@ def handle_group_sex_mode_off(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.RETAIN_COMMAND_WITH_EVENT_TEXT)
 def handle_retain_command_with_event_text(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -3329,7 +3212,6 @@ def handle_retain_command_with_event_text(
     用事件文本代替指令文本，限指令后置
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -3340,7 +3222,6 @@ def handle_retain_command_with_event_text(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.PL_TARGET_TO_ME)
 def handle_pl_target_to_me(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -3349,7 +3230,6 @@ def handle_pl_target_to_me(
     将玩家的交互对象设为自己
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -3474,7 +3354,6 @@ def handle_target_to_masturebate(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.NOT_TIRED)
 def handle_not_tired(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -3483,7 +3362,6 @@ def handle_not_tired(
     从疲劳中恢复
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4031,7 +3909,6 @@ def handle_target_add_small_disgust(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_SMALL_P_FEEL)
 def handle_add_small_p_feel(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4040,7 +3917,6 @@ def handle_add_small_p_feel(
     自身增加少量Ｐ快
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4089,7 +3965,6 @@ def handle_both_add_small_learn(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_SMALL_LEARN_OLD)
 def handle_add_small_learn_old(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4098,18 +3973,16 @@ def handle_add_small_learn_old(
     自己增加少量习得
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    handle_add_small_learn(character_id, target_character_id, add_time, change_data, now_time)
+    handle_add_small_learn(character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_SMALL_LUBRICATION)
 def handle_add_small_lubrication(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4118,7 +3991,6 @@ def handle_add_small_lubrication(
     自己增加少量润滑（欲望补正）
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4134,7 +4006,6 @@ def handle_add_small_lubrication(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_SMALL_LEARN)
 def handle_add_small_learn(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4143,7 +4014,6 @@ def handle_add_small_learn(
     自己增加少量习得（技巧补正）
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4159,7 +4029,6 @@ def handle_add_small_learn(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_SMALL_RESPECT)
 def handle_add_small_respect(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4168,7 +4037,6 @@ def handle_add_small_respect(
     自己增加少量恭顺（顺从补正）
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4184,7 +4052,6 @@ def handle_add_small_respect(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_SMALL_FRIENDLY)
 def handle_add_small_friendly(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4193,7 +4060,6 @@ def handle_add_small_friendly(
     自己增加少量好意（亲密补正）
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4209,7 +4075,6 @@ def handle_add_small_friendly(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_SMALL_DESIRE)
 def handle_add_small_desire(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4218,7 +4083,6 @@ def handle_add_small_desire(
     自己增加少量欲情（欲望补正）
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4234,7 +4098,6 @@ def handle_add_small_desire(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_SMALL_HAPPY)
 def handle_add_small_happy(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4243,7 +4106,6 @@ def handle_add_small_happy(
     自己增加少量快乐（快乐刻印补正）
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4259,7 +4121,6 @@ def handle_add_small_happy(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_SMALL_LEAD)
 def handle_add_small_lead(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4268,7 +4129,6 @@ def handle_add_small_lead(
     自己增加少量先导（施虐补正）
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4284,7 +4144,6 @@ def handle_add_small_lead(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_SMALL_SUBMIT)
 def handle_add_small_submit(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4293,7 +4152,6 @@ def handle_add_small_submit(
     自己增加少量屈服（屈服刻印补正）
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4309,7 +4167,6 @@ def handle_add_small_submit(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_SMALL_SHY)
 def handle_add_small_shy(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4318,7 +4175,6 @@ def handle_add_small_shy(
     自己增加少量羞耻（露出补正）
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4334,7 +4190,6 @@ def handle_add_small_shy(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SELF_ADD_MIDDLE_DISGUST)
 def handle_self_add_middle_disgust(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4343,7 +4198,6 @@ def handle_self_add_middle_disgust(
     自己增加中量反感（反发刻印补正）
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4357,7 +4211,6 @@ def handle_self_add_middle_disgust(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DIRTY_RESET)
 def handle_dirty_reset(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4366,7 +4219,6 @@ def handle_dirty_reset(
     污浊情况(身体+衣服)归零
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4380,7 +4232,6 @@ def handle_dirty_reset(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ASSISTANT_RESET)
 def handle_assistant_reset(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4389,7 +4240,6 @@ def handle_assistant_reset(
     助理数据归零
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4406,7 +4256,6 @@ def handle_assistant_reset(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DOOR_CLOSE)
 def handle_door_close(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4415,7 +4264,6 @@ def handle_door_close(
     当前场景进入关门状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4432,7 +4280,6 @@ def handle_door_close(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DOOR_CLOSE_RESET)
 def handle_door_close_reset(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4441,7 +4288,6 @@ def handle_door_close_reset(
     当前场景取消关门状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4458,7 +4304,6 @@ def handle_door_close_reset(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.MOVE_TO_PRE_SCENE)
 def handle_move_to_pre_scene(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4467,7 +4312,6 @@ def handle_move_to_pre_scene(
     角色移动至前一场景
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4483,7 +4327,7 @@ def handle_move_to_pre_scene(
     # 然后再判断是否还有前一场景的移动数据，如果有则移动至前一场景
     if len(character_data.action_info.past_move_position_list):
         character_data.behavior.move_target = character_data.action_info.past_move_position_list[-1]
-        handle_move_to_target_scene(character_id, target_character_id, add_time, change_data, now_time)
+        handle_move_to_target_scene(character_id, add_time, change_data, now_time)
         # 删除掉前一场景的移动数据
         character_data.action_info.past_move_position_list.pop(-1)
 
@@ -4508,7 +4352,7 @@ def handle_target_move_to_pre_scene(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_move_to_pre_scene(target_character_id, None, add_time, change_data, now_time)
+    handle_move_to_pre_scene(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SCENE_OTHERS_MOVE_TO_PRE_SCENE)
@@ -4538,13 +4382,12 @@ def handle_scene_others_move_to_pre_scene(
         # 跳过自己和交互对象
         if chara_id == character_id or chara_id == target_character_id:
             continue
-        handle_move_to_pre_scene(chara_id, None, add_time, change_data, now_time)
+        handle_move_to_pre_scene(chara_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SCENE_ALL_CHARA_MOVE_TO_PRE_SCENE)
 def handle_scene_all_chara_move_to_pre_scene(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4553,7 +4396,6 @@ def handle_scene_all_chara_move_to_pre_scene(
     场景除自己以外的全部角色移动至前一场景
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4568,13 +4410,12 @@ def handle_scene_all_chara_move_to_pre_scene(
         # 跳过自己
         if chara_id == character_id:
             continue
-        handle_move_to_pre_scene(chara_id, None, add_time, change_data, now_time)
+        handle_move_to_pre_scene(chara_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SCENE_ALL_CHARA_EXCEPT_MASTUREBATE_TO_PL_MOVE_TO_PRE_SCENE)
 def handle_scene_all_chara_except_masturebate_to_pl_move_to_pre_scene(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4583,7 +4424,6 @@ def handle_scene_all_chara_except_masturebate_to_pl_move_to_pre_scene(
     场景内不逆推自己的角色移动至前一场景
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4601,13 +4441,12 @@ def handle_scene_all_chara_except_masturebate_to_pl_move_to_pre_scene(
         # 跳过逆推自己的角色
         if handle_premise.handle_masturebate_to_pl_flag_1(chara_id):
             continue
-        handle_move_to_pre_scene(chara_id, None, add_time, change_data, now_time)
+        handle_move_to_pre_scene(chara_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SELF_H_STATE_RESET)
 def handle_self_h_state_reset(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4616,7 +4455,6 @@ def handle_self_h_state_reset(
     自己H状态结构体归零，同步高潮程度记录，清零H相关二段状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4684,8 +4522,8 @@ def handle_both_h_state_reset(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_self_h_state_reset(character_id, target_character_id, add_time, change_data, now_time)
-    handle_self_h_state_reset(target_character_id, None, add_time, change_data, now_time)
+    handle_self_h_state_reset(character_id, add_time, change_data, now_time)
+    handle_self_h_state_reset(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.UPDATE_ORGASM_LEVEL)
@@ -4720,7 +4558,6 @@ def handle_update_orgasm_level(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SCENE_ALL_CHARACTERS_UPDATE_ORGASM_LEVEL)
 def handle_scene_all_characters_update_orgasm_level(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4729,7 +4566,6 @@ def handle_scene_all_characters_update_orgasm_level(
     场景内所有角色同步高潮程度记录
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4750,7 +4586,6 @@ def handle_scene_all_characters_update_orgasm_level(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SCENE_ALL_CHARACTERS_H_STATE_RESET)
 def handle_scene_all_characters_h_state_reset(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4759,7 +4594,6 @@ def handle_scene_all_characters_h_state_reset(
     场景内所有角色H状态结构体归零，同步高潮程度记录，清零H相关二段状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4770,13 +4604,12 @@ def handle_scene_all_characters_h_state_reset(
     scene_path_str = map_handle.get_map_system_path_str_for_list(character_data.position)
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     for chara_id in scene_data.character_list.copy():
-        handle_self_h_state_reset(chara_id, None, add_time, change_data, now_time)
+        handle_self_h_state_reset(chara_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ALL_CHARACTERS_UNCONSCIOUS_SEMEN_RESET)
 def handle_all_character_unconscious_semen_reset(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4785,7 +4618,6 @@ def handle_all_character_unconscious_semen_reset(
     清零所有角色的无意识精液情况
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4800,7 +4632,6 @@ def handle_all_character_unconscious_semen_reset(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.CHARA_OFF_LINE)
 def handle_chara_off_line(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4809,7 +4640,6 @@ def handle_chara_off_line(
     角色离线，归零若干数据结构体，从当前干员列表中移除，离开地图
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4819,8 +4649,8 @@ def handle_chara_off_line(
     character_data: game_type.Character = cache.character_data[character_id]
     character_data.behavior = game_type.Behavior() # 行动数据归零
     character_data.event = game_type.Chara_Event() # 事件数据归零
-    handle_assistant_reset(character_id, target_character_id, add_time, change_data, now_time) # 助理数据归零
-    handle_dirty_reset(character_id, target_character_id, add_time, change_data, now_time) # 污浊情况归零
+    handle_assistant_reset(character_id, add_time, change_data, now_time) # 助理数据归零
+    handle_dirty_reset(character_id, add_time, change_data, now_time) # 污浊情况归零
     character_data.h_state = attr_calculation.get_h_state_reset(character_data.h_state) # H状态数据归零
     # 归零快感状态
     for state_id in game_config.config_character_state:
@@ -4844,7 +4674,6 @@ def handle_chara_off_line(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.CHARA_ON_LINE)
 def handle_chara_on_line(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4853,7 +4682,6 @@ def handle_chara_on_line(
     角色上线，加入当前干员列表，进入地图
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4948,7 +4776,6 @@ def handle_t_be_imprisonment(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SHOWER_FLAG_TO_1)
 def handle_shower_flag_to_1(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4957,7 +4784,6 @@ def handle_shower_flag_to_1(
     自身变成要脱衣服（洗澡）状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -4972,7 +4798,6 @@ def handle_shower_flag_to_1(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.PLACE_ALL_CHARA_ADD_1_BEEN_Hypnosis_EXPERIENCE)
 def handle_place_all_chara_add_1_been_hypnosis_experience(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -4981,7 +4806,6 @@ def handle_place_all_chara_add_1_been_hypnosis_experience(
     场景内所有其他角色均增加1被催眠经验
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5005,7 +4829,6 @@ def handle_place_all_chara_add_1_been_hypnosis_experience(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SHOWER_FLAG_TO_0)
 def handle_shower_flag_to_0(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5014,7 +4837,6 @@ def handle_shower_flag_to_0(
     自身清零洗澡状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5029,7 +4851,6 @@ def handle_shower_flag_to_0(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SHOWER_FLAG_TO_2)
 def handle_shower_flag_to_2(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5038,7 +4859,6 @@ def handle_shower_flag_to_2(
     自身变成要洗澡状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5053,7 +4873,6 @@ def handle_shower_flag_to_2(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SHOWER_FLAG_TO_3)
 def handle_shower_flag_to_3(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5062,7 +4881,6 @@ def handle_shower_flag_to_3(
     自身变成要披浴巾状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5077,7 +4895,6 @@ def handle_shower_flag_to_3(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SHOWER_FLAG_TO_4)
 def handle_shower_flag_to_4(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5086,7 +4903,6 @@ def handle_shower_flag_to_4(
     自身变成洗完澡状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5101,7 +4917,6 @@ def handle_shower_flag_to_4(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.EAT_FOOD_FLAG_TO_0)
 def handle_eat_food_flag_to_0(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5110,7 +4925,6 @@ def handle_eat_food_flag_to_0(
     自身清零吃饭状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5125,7 +4939,6 @@ def handle_eat_food_flag_to_0(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.EAT_FOOD_FLAG_TO_1)
 def handle_eat_food_flag_to_1(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5134,7 +4947,6 @@ def handle_eat_food_flag_to_1(
     自身变成要取餐状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5149,7 +4961,6 @@ def handle_eat_food_flag_to_1(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.EAT_FOOD_FLAG_TO_2)
 def handle_eat_food_flag_to_2(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5158,7 +4969,6 @@ def handle_eat_food_flag_to_2(
     自身变成要进食状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5172,7 +4982,6 @@ def handle_eat_food_flag_to_2(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SLEEP_FLAG_TO_0)
 def handle_sleep_flag_to_0(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5181,7 +4990,6 @@ def handle_sleep_flag_to_0(
     自身清零要睡眠状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5196,7 +5004,6 @@ def handle_sleep_flag_to_0(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SLEEP_FLAG_TO_1)
 def handle_sleep_flag_to_1(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5205,7 +5012,6 @@ def handle_sleep_flag_to_1(
     自身变成要睡眠状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5219,7 +5025,6 @@ def handle_sleep_flag_to_1(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.REST_FLAG_TO_0)
 def handle_rest_flag_to_0(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5228,7 +5033,6 @@ def handle_rest_flag_to_0(
     自身清零要休息状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5243,7 +5047,6 @@ def handle_rest_flag_to_0(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.REST_FLAG_TO_1)
 def handle_rest_flag_to_1(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5252,7 +5055,6 @@ def handle_rest_flag_to_1(
     自身变成要休息状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5266,7 +5068,6 @@ def handle_rest_flag_to_1(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.PEE_FLAG_TO_0)
 def handle_pee_flag_to_0(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5275,7 +5076,6 @@ def handle_pee_flag_to_0(
     自身清零要撒尿状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5290,7 +5090,6 @@ def handle_pee_flag_to_0(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.PEE_FLAG_TO_1)
 def handle_pee_flag_to_1(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5299,7 +5098,6 @@ def handle_pee_flag_to_1(
     自身变成要撒尿状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5313,7 +5111,6 @@ def handle_pee_flag_to_1(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SWIM_FLAG_TO_1)
 def handle_swim_flag_to_1(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5322,7 +5119,6 @@ def handle_swim_flag_to_1(
     自身变成要换泳衣状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5336,7 +5132,6 @@ def handle_swim_flag_to_1(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SWIM_FLAG_TO_2)
 def handle_swim_flag_to_2(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5345,7 +5140,6 @@ def handle_swim_flag_to_2(
     自身变成要游泳状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5359,7 +5153,6 @@ def handle_swim_flag_to_2(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.MAINTENANCE_FLAG_TO_0)
 def handle_maintenance_flag_to_0(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5368,7 +5161,6 @@ def handle_maintenance_flag_to_0(
     自身清零要检修状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5381,7 +5173,6 @@ def handle_maintenance_flag_to_0(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.MORNING_SALUTATION_FLAG_TO_0)
 def handle_morning_salutation_flag_to_0(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5390,7 +5181,6 @@ def handle_morning_salutation_flag_to_0(
     将自身早安问候设为未问候
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5404,7 +5194,6 @@ def handle_morning_salutation_flag_to_0(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DORMITORY_ADMIN_PHASE_TO_0)
 def handle_dormitory_admin_phase_to_0(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5413,7 +5202,6 @@ def handle_dormitory_admin_phase_to_0(
     自身宿舍管理员阶段设为0（到岗整理）
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5427,7 +5215,6 @@ def handle_dormitory_admin_phase_to_0(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DORMITORY_ADMIN_PHASE_TO_1)
 def handle_dormitory_admin_phase_to_1(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5436,7 +5223,6 @@ def handle_dormitory_admin_phase_to_1(
     自身宿舍管理员阶段设为1（移动处理）
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5449,7 +5235,6 @@ def handle_dormitory_admin_phase_to_1(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.CANCEL_ALL_WORK_AND_ENTERTAINMENT_FLAG)
 def handle_cancel_all_work_and_entertainment_flag(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5458,7 +5243,6 @@ def handle_cancel_all_work_and_entertainment_flag(
     自身取消所有工作和娱乐状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5474,7 +5258,6 @@ def handle_cancel_all_work_and_entertainment_flag(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SELF_INTELLIGENT_FOLLOW_ON)
 def handle_self_intelligent_follow_on(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5483,7 +5266,6 @@ def handle_self_intelligent_follow_on(
     自身进入智能跟随状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5515,13 +5297,12 @@ def handle_target_intelligent_follow_on(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_self_intelligent_follow_on(target_character_id, None, add_time, change_data, now_time)
+    handle_self_intelligent_follow_on(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SELF_INTELLIGENT_FOLLOW_OFF)
 def handle_self_intelligent_follow_off(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5530,7 +5311,6 @@ def handle_self_intelligent_follow_off(
     自身退出智能跟随状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5562,13 +5342,12 @@ def handle_target_intelligent_follow_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_self_intelligent_follow_off(target_character_id, None, add_time, change_data, now_time)
+    handle_self_intelligent_follow_off(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SELF_INTELLIGENT_FOLLOW_ON_IF_ASSISTANT)
 def handle_self_intelligent_follow_on_if_assistant(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5577,7 +5356,6 @@ def handle_self_intelligent_follow_on_if_assistant(
     如果自己是助理且打开了跟随服务，则自己进入智能跟随状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5585,13 +5363,12 @@ def handle_self_intelligent_follow_on_if_assistant(
     if not add_time:
         return
     if handle_premise.handle_is_assistant(character_id) and handle_premise.handle_assistant_follow_1(character_id):
-        handle_self_intelligent_follow_on(character_id, target_character_id, add_time, change_data, now_time)
+        handle_self_intelligent_follow_on(character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SELF_STOP_MOVE)
 def handle_self_stop_move(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5600,7 +5377,6 @@ def handle_self_stop_move(
     自己停止移动
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5614,7 +5390,6 @@ def handle_self_stop_move(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.H_FLAG_TO_0)
 def handle_h_flag_to_0(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5623,7 +5398,6 @@ def handle_h_flag_to_0(
     自身清零H状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5637,7 +5411,6 @@ def handle_h_flag_to_0(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.H_FLAG_TO_1)
 def handle_h_flag_to_1(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5646,7 +5419,6 @@ def handle_h_flag_to_1(
     自身变成H状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5686,7 +5458,7 @@ def handle_t_h_flag_to_0(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_h_flag_to_0(target_character_id, None, add_time, change_data, now_time)
+    handle_h_flag_to_0(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.T_H_FLAG_TO_1)
@@ -5709,13 +5481,12 @@ def handle_t_h_flag_to_1(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_h_flag_to_1(target_character_id, None, add_time, change_data, now_time)
+    handle_h_flag_to_1(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SCENE_ALL_CHARACTERS_H_FLAG_TO_1)
 def handle_scene_all_characters_h_flag_to_1(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5724,7 +5495,6 @@ def handle_scene_all_characters_h_flag_to_1(
     场景内所有角色变成H状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5737,13 +5507,12 @@ def handle_scene_all_characters_h_flag_to_1(
     for chara_id in scene_data.character_list:
         if chara_id == 0:
             continue
-        handle_h_flag_to_1(chara_id, None, add_time, change_data, now_time)
+        handle_h_flag_to_1(chara_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SELF_HIDDEN_SEX_FLAG_TO_0)
 def handle_self_hidden_sex_flag_to_0(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5752,7 +5521,6 @@ def handle_self_hidden_sex_flag_to_0(
     自己清零隐奸状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5783,7 +5551,7 @@ def handle_target_hidden_sex_flag_to_0(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_self_hidden_sex_flag_to_0(target_character_id, None, add_time, change_data, now_time)
+    handle_self_hidden_sex_flag_to_0(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.BOTH_HIDDEN_SEX_FLAG_TO_0)
@@ -5806,14 +5574,13 @@ def handle_both_hidden_sex_flag_to_0(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_self_hidden_sex_flag_to_0(character_id, target_character_id, add_time, change_data, now_time)
-    handle_self_hidden_sex_flag_to_0(target_character_id, None, add_time, change_data, now_time)
+    handle_self_hidden_sex_flag_to_0(character_id, add_time, change_data, now_time)
+    handle_self_hidden_sex_flag_to_0(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SELF_EXHIBITIONISM_SEX_FLAG_TO_0)
 def handle_self_exhibitionism_sex_flag_to_0(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5822,7 +5589,6 @@ def handle_self_exhibitionism_sex_flag_to_0(
     自己清零露出H状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5853,7 +5619,7 @@ def handle_target_exhibitionism_sex_flag_to_0(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_self_exhibitionism_sex_flag_to_0(target_character_id, None, add_time, change_data, now_time)
+    handle_self_exhibitionism_sex_flag_to_0(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.BOTH_EXHIBITIONISM_SEX_FLAG_TO_0)
@@ -5876,14 +5642,13 @@ def handle_both_exhibitionism_sex_flag_to_0(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_self_exhibitionism_sex_flag_to_0(character_id, target_character_id, add_time, change_data, now_time)
-    handle_self_exhibitionism_sex_flag_to_0(target_character_id, None, add_time, change_data, now_time)
+    handle_self_exhibitionism_sex_flag_to_0(character_id, add_time, change_data, now_time)
+    handle_self_exhibitionism_sex_flag_to_0(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.UNCONSCIOUS_FLAG_TO_0)
 def handle_unconscious_flag_to_0(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5892,7 +5657,6 @@ def handle_unconscious_flag_to_0(
     自身清零无意识状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5908,7 +5672,6 @@ def handle_unconscious_flag_to_0(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.UNCONSCIOUS_FLAG_TO_1)
 def handle_unconscious_flag_to_1(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5917,7 +5680,6 @@ def handle_unconscious_flag_to_1(
     自身变成无意识_睡眠状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5932,7 +5694,6 @@ def handle_unconscious_flag_to_1(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.UNCONSCIOUS_FLAG_TO_2)
 def handle_unconscious_flag_to_2(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5941,7 +5702,6 @@ def handle_unconscious_flag_to_2(
     自身变成无意识_醉酒状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5957,7 +5717,6 @@ def handle_unconscious_flag_to_2(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.UNCONSCIOUS_FLAG_TO_3)
 def handle_unconscious_flag_to_3(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5966,7 +5725,6 @@ def handle_unconscious_flag_to_3(
     自身变成无意识_时停状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -5981,7 +5739,6 @@ def handle_unconscious_flag_to_3(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.UNCONSCIOUS_FLAG_TO_4)
 def handle_unconscious_flag_to_4(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -5990,7 +5747,6 @@ def handle_unconscious_flag_to_4(
     自身变成无意识_平然状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -6005,7 +5761,6 @@ def handle_unconscious_flag_to_4(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.UNCONSCIOUS_FLAG_TO_5)
 def handle_unconscious_flag_to_5(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -6014,7 +5769,6 @@ def handle_unconscious_flag_to_5(
     自身变成无意识_空气状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -6029,7 +5783,6 @@ def handle_unconscious_flag_to_5(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.UNCONSCIOUS_FLAG_TO_6)
 def handle_unconscious_flag_to_6(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -6038,7 +5791,6 @@ def handle_unconscious_flag_to_6(
     自身变成无意识_心控状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -6053,7 +5805,6 @@ def handle_unconscious_flag_to_6(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.UNCONSCIOUS_FLAG_TO_7)
 def handle_unconscious_flag_to_7(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -6062,7 +5813,6 @@ def handle_unconscious_flag_to_7(
     自身变成无意识_体控状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -6077,7 +5827,6 @@ def handle_unconscious_flag_to_7(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.HELP_BUY_FOOD_FLAG_TO_0)
 def handle_help_buy_food_flag_to_0(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -6086,7 +5835,6 @@ def handle_help_buy_food_flag_to_0(
     自身清零要帮忙买午饭状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -6101,7 +5849,6 @@ def handle_help_buy_food_flag_to_0(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.BATHHOUSE_ENTERTAINMENT_FLAG_TO_0)
 def handle_bathhouse_entertainment_flag_to_0(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -6110,7 +5857,6 @@ def handle_bathhouse_entertainment_flag_to_0(
     自身清零大浴场娱乐状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -6124,7 +5870,6 @@ def handle_bathhouse_entertainment_flag_to_0(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.BATHHOUSE_ENTERTAINMENT_FLAG_TO_1)
 def handle_bathhouse_entertainment_flag_to_1(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -6133,7 +5878,6 @@ def handle_bathhouse_entertainment_flag_to_1(
     自身变成大浴场娱乐_要更衣状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -6147,7 +5891,6 @@ def handle_bathhouse_entertainment_flag_to_1(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.BATHHOUSE_ENTERTAINMENT_FLAG_TO_2)
 def handle_bathhouse_entertainment_flag_to_2(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -6156,7 +5899,6 @@ def handle_bathhouse_entertainment_flag_to_2(
     自身变成大浴场娱乐_要娱乐状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -6170,7 +5912,6 @@ def handle_bathhouse_entertainment_flag_to_2(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.MILK_FLAG_TO_0)
 def handle_milk_flag_to_0(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime, ):
@@ -6178,7 +5919,6 @@ def handle_milk_flag_to_0(
     自身清零要挤奶状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息
     now_time -- 结算的时间
@@ -6193,7 +5933,6 @@ def handle_milk_flag_to_0(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.HYPNOSIS_FLAG_TO_0)
 def handle_hypnosis_flag_to_0(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime, ):
@@ -6201,7 +5940,6 @@ def handle_hypnosis_flag_to_0(
     自身清零催眠系的flag与催眠子项
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息
     now_time -- 结算的时间
@@ -6242,7 +5980,6 @@ def handle_target_angry_with_player_flag_to_0(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SEE_PL_H)
 def handle_see_pl_h(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -6251,7 +5988,6 @@ def handle_see_pl_h(
     自身进入目击H状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -6264,7 +6000,6 @@ def handle_see_pl_h(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.CANCEL_SEE_PL_H)
 def handle_cancel_see_pl_h(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -6273,7 +6008,6 @@ def handle_cancel_see_pl_h(
     自身退出目击H状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -6286,7 +6020,6 @@ def handle_cancel_see_pl_h(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.MASTUREBATE_FLAG_TO_0)
 def handle_masturebate_flag_to_0(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -6295,7 +6028,6 @@ def handle_masturebate_flag_to_0(
     自身清零要自慰状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息
     now_time -- 结算的时间
@@ -6310,7 +6042,6 @@ def handle_masturebate_flag_to_0(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.MASTUREBATE_BEFORE_SLEEP_FLAG_TO_0)
 def handle_masturebate_before_flag_to_0(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -6319,7 +6050,6 @@ def handle_masturebate_before_flag_to_0(
     自身清零要睡前自慰状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息
     now_time -- 结算的时间
@@ -6333,7 +6063,6 @@ def handle_masturebate_before_flag_to_0(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.MASTUREBATE_BEFORE_SLEEP_FLAG_TO_2)
 def handle_masturebate_before_flag_to_2(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -6342,7 +6071,6 @@ def handle_masturebate_before_flag_to_2(
     自身变为已睡前自慰状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息
     now_time -- 结算的时间
@@ -6356,7 +6084,6 @@ def handle_masturebate_before_flag_to_2(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.MASTUREBATE_TO_PL_FLAG_0)
 def handle_masturebate_to_pl_flag_0(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -6365,7 +6092,6 @@ def handle_masturebate_to_pl_flag_0(
     自身清零要找玩家逆推来自慰状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息
     now_time -- 结算的时间
@@ -6380,7 +6106,6 @@ def handle_masturebate_to_pl_flag_0(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ALL_CHARA_MASTUREBATE_IN_GROUP_SEX_FLAG_0)
 def handle_all_chara_masturebate_in_group_sex_flag_0(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -6389,7 +6114,6 @@ def handle_all_chara_masturebate_in_group_sex_flag_0(
     全角色清零群交中自慰状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息
     now_time -- 结算的时间
@@ -6406,7 +6130,6 @@ def handle_all_chara_masturebate_in_group_sex_flag_0(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.HELP_MAKE_FOOD_FLAG_TO_0)
 def handle_help_make_food_flag_to_0(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -6415,7 +6138,6 @@ def handle_help_make_food_flag_to_0(
     自身清零做午饭状态
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -6550,7 +6272,6 @@ def handle_target_coffee_add_adjust(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.MAKE_FOOD_ADD_ADJUST)
 def handle_make_food_add_adjust(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -6560,7 +6281,6 @@ def handle_make_food_add_adjust(
     收益仅按单份结算，不随制作数量变化。
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -6591,7 +6311,6 @@ def handle_make_food_add_adjust(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TASTE_WINE_ADD_ADJUST)
 def handle_taste_wine_add_adjust(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -6600,7 +6319,6 @@ def handle_taste_wine_add_adjust(
     （品酒用）根据酒量随机选一个酒，并结算部分饮用效果
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -6614,7 +6332,7 @@ def handle_taste_wine_add_adjust(
     # 根据酒量随机选一个酒，并结算部分饮用效果
     taste_wine(character_id)
     # 删除该食物
-    handle_delete_food(character_id, target_character_id, add_time=add_time, change_data=change_data, now_time=now_time)
+    handle_delete_food(character_id, add_time=add_time, change_data=change_data, now_time=now_time)
     # 增加饮酒经验
     base_chara_experience_common_settle(character_id, 94, change_data=change_data)
 
@@ -6679,7 +6397,6 @@ def handle_official_work_add_adjust(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.CURE_PATIENT_ADD_ADJUST)
 def handle_cure_patient_add_just(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -6688,7 +6405,6 @@ def handle_cure_patient_add_just(
     （诊疗病人用）根据发起者(如果有的话再加上交互对象)的医疗技能治愈了一名病人，并获得一定的龙门币
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -6785,7 +6501,6 @@ def handle_cure_patient_add_just(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.PERFORM_SURGERY)
 def handle_perform_surgery(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -6816,7 +6531,6 @@ def handle_perform_surgery(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.WARD_ROUND_PROCESS)
 def handle_ward_round_process(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -6903,7 +6617,6 @@ def handle_ward_round_process(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ASK_COPY_KEY)
 def handle_ask_copy_key(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -6912,7 +6625,6 @@ def handle_ask_copy_key(
     （要求复制钥匙用）获取交互对象的所在楼层的钥匙
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -7118,7 +6830,6 @@ def handle_milk_add_adjust(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SALUTATION_3_ADD_ADJUST)
 def handle_salutation_3_add_adjust(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -7127,7 +6838,6 @@ def handle_salutation_3_add_adjust(
     （早安咬与晚安咬）触发交互对象一次射精，射到发起者嘴里
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -7292,7 +7002,6 @@ def handle_masturebate_add_adjust(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DIRTY_RESET_IN_SHOWER)
 def handle_dirty_reset_in_shower(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -7301,7 +7010,6 @@ def handle_dirty_reset_in_shower(
     自身部分部位污浊保留一定比例，其他污浊体归零
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -7384,7 +7092,6 @@ def handle_orgasm_edge_release(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TIME_STOP_ORGASM_RELEASE)
 def handle_time_stop_orgasm_release(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -7393,7 +7100,6 @@ def handle_time_stop_orgasm_release(
     （解除时停）交互对象变为时停解放状态，结算时停绝顶和时停精液
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -7492,7 +7198,6 @@ def handle_end_h_add_hpmp_max(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.GROUP_SEX_END_H_ADD_HPMP_MAX)
 def handle_group_sex_end_h_add_hpmp_max(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -7501,7 +7206,6 @@ def handle_group_sex_end_h_add_hpmp_max(
     （群交结束H）在场全部角色根据本次H中的绝顶次数增加体力气力上限
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -7560,7 +7264,6 @@ def handle_group_sex_end_h_add_hpmp_max(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.GROUP_SEX_FAIL_ADD_JUST)
 def handle_group_sex_fail_add_just(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -7569,7 +7272,6 @@ def handle_group_sex_fail_add_just(
     （群交失败）在场全部角色减体力气力，拒绝者进行邀请H失败结算
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -7581,8 +7283,8 @@ def handle_group_sex_fail_add_just(
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     # 遍历场景内所有角色
     for chara_id in scene_data.character_list:
-        handle_sub_self_small_mana_point(chara_id, None, add_time, change_data, now_time)
-        handle_sub_self_small_hit_point(chara_id, None, add_time, change_data, now_time)
+        handle_sub_self_small_mana_point(chara_id, add_time, change_data, now_time)
+        handle_sub_self_small_hit_point(chara_id, add_time, change_data, now_time)
         # 跳过玩家
         if chara_id == 0:
             continue
@@ -7669,7 +7371,6 @@ def handle_board_game_lose_add_adjust(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.MAINTENANCE_ADD_ADJUST)
 def handle_maintenance_add_adjust(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -7678,7 +7379,6 @@ def handle_maintenance_add_adjust(
     （维护设施用）修复当前地点的损坏设施
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -7700,7 +7400,6 @@ def handle_maintenance_add_adjust(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TRAIN_PRISONERS_ADD_ADJUST)
 def handle_train_prisoners_add_adjust(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -7709,7 +7408,6 @@ def handle_train_prisoners_add_adjust(
     （训练囚犯用）对所有被关押的囚犯进行日常训练
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -7839,7 +7537,7 @@ def handle_target_dirty_reset_in_shower(
     now_time -- 结算的时间
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_dirty_reset_in_shower(target_character_id, None, add_time, change_data, now_time)
+    handle_dirty_reset_in_shower(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.GIVE_GIFT_ADD_ADJUST)
@@ -7931,7 +7629,6 @@ def handle_give_gift_add_adjust(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.MAINTAIN_EQUIPMENT_ADD_ADJUST)
 def handle_maintain_equipment_add_adjust(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -7940,7 +7637,6 @@ def handle_maintain_equipment_add_adjust(
     （维护装备用）进行一次装备的维修保养
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -8072,7 +7768,6 @@ def handle_read_add_adjust(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TEACH_ADD_ADJUST)
 def handle_teach_add_just(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -8081,7 +7776,6 @@ def handle_teach_add_just(
     （教学用）自己增加习得和学识经验，所有当前场景里状态是上课的角色增加习得和学识经验，如果玩家是老师则再加好感和信赖，最后结束
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -8157,7 +7851,7 @@ def handle_bagging_and_moving_add_just(
     # 对方数据结算
     target_data.sp_flag.be_bagged = True
     handle_premise.settle_chara_unnormal_flag(target_character_id, 7)
-    handle_chara_off_line(target_character_id, None, add_time, change_data, now_time)
+    handle_chara_off_line(target_character_id, add_time, change_data, now_time)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.RELEASE_FROM_BAG_ADD_ADJUST)
 def handle_release_from_bag_add_just(
@@ -8186,7 +7880,7 @@ def handle_release_from_bag_add_just(
     # 对方数据结算
     target_data.sp_flag.be_bagged = False
     handle_premise.settle_chara_unnormal_flag(target_character_id, 7)
-    handle_chara_on_line(target_character_id, None, add_time, change_data, now_time)
+    handle_chara_on_line(target_character_id, add_time, change_data, now_time)
     # 如果当时是时间停止H中，则刷新时停状态
     if handle_premise.handle_time_stop_on(character_id):
         target_data.sp_flag.unconscious_h = 3
@@ -8196,7 +7890,6 @@ def handle_release_from_bag_add_just(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.PUT_INTO_PRISON_ADD_ADJUST)
 def handle_put_into_prison_add_just(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -8205,7 +7898,6 @@ def handle_put_into_prison_add_just(
     （投入监牢用）被搬运对象上线，成为囚犯并结算，玩家失去搬运人id
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -8226,7 +7918,7 @@ def handle_put_into_prison_add_just(
     # 对方数据结算
     confinement_and_training.chara_become_prisoner(target_id)
     # 角色上线
-    handle_chara_on_line(target_id, None, add_time, change_data, now_time)
+    handle_chara_on_line(target_id, add_time, change_data, now_time)
     # 如果当时是时间停止H中，则刷新时停状态
     if handle_premise.handle_time_stop_on(character_id):
         target_data.sp_flag.unconscious_h = 3
@@ -8324,7 +8016,7 @@ def handle_eat_add_just(
     state_add, hpmp_add = calculate_food_effects(character_id, add_time)
 
     # 删除该食物
-    handle_delete_food(character_id, target_character_id,add_time=add_time,change_data=change_data,now_time=now_time)
+    handle_delete_food(character_id, add_time=add_time,change_data=change_data,now_time=now_time)
     # 对要吃食物的人进行结算
     for chara_id in eat_food_chara_id_list:
         target_data: game_type.Character = cache.character_data[chara_id]
@@ -8343,7 +8035,7 @@ def handle_eat_add_just(
             # 高品质食物
             if food_quality >= 7:
                 # 变为好心情
-                handle_mood_to_good(chara_id, None, add_time, change_data, now_time)
+                handle_mood_to_good(chara_id, add_time, change_data, now_time)
                 # 增加口喉快感
                 base_chara_state_common_settle(chara_id, state_add * 3, 21, 0, change_data_to_target_change = change_data)
                 # 增加心理快感
@@ -8351,16 +8043,16 @@ def handle_eat_add_just(
 
         # 仅食物加体力
         if eat_flag:
-            handle_add_small_hit_point(chara_id, None,add_time=hpmp_add,change_data=target_change,now_time=now_time)
+            handle_add_small_hit_point(chara_id, add_time=hpmp_add,change_data=target_change,now_time=now_time)
         # 都加气力
-        handle_add_small_mana_point(chara_id, None,add_time=hpmp_add,change_data=target_change,now_time=now_time)
+        handle_add_small_mana_point(chara_id, add_time=hpmp_add,change_data=target_change,now_time=now_time)
         # 食物结算饥饿值，饮品结算尿意值
         if eat_flag:
-            handle_hunger_point_zero(chara_id, None,add_time=add_time,change_data=target_change,now_time=now_time)
+            handle_hunger_point_zero(chara_id, add_time=add_time,change_data=target_change,now_time=now_time)
         else:
-            handle_add_small_urinate_point(chara_id, None,add_time=add_time,change_data=target_change,now_time=now_time)
+            handle_add_small_urinate_point(chara_id, add_time=add_time,change_data=target_change,now_time=now_time)
         # 清除进食状态
-        handle_eat_food_flag_to_0(chara_id, None,add_time=add_time,change_data=target_change,now_time=now_time)
+        handle_eat_food_flag_to_0(chara_id, add_time=add_time,change_data=target_change,now_time=now_time)
 
         # 酒类食物
         if recipe_data.type == 3:
@@ -9962,7 +9654,6 @@ def handle_do_h_failed_adjust(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SLEEP_ADD_ADJUST)
 def handle_sleep_add_adjust(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -9971,7 +9662,6 @@ def handle_sleep_add_adjust(
     （睡觉用）如果在自己宿舍，则换睡衣并有一定几率关门
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -9986,7 +9676,7 @@ def handle_sleep_add_adjust(
             pass
         # 否则判定是否关门
         elif random.random() < 0.5:
-            handle_door_close(character_id, target_character_id, add_time, change_data, now_time)
+            handle_door_close(character_id, add_time, change_data, now_time)
             # print(F"debug : {cache.character_data[character_id].name} 在{cache.character_data[character_id].dormitory}关门睡觉")
         # else:
             # print(F"debug : {cache.character_data[character_id].name} 在{cache.character_data[character_id].dormitory}不关门睡觉")
@@ -9995,7 +9685,6 @@ def handle_sleep_add_adjust(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.URINATE_POINT_ZERO)
 def handle_urinate_point_zero(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -10004,7 +9693,6 @@ def handle_urinate_point_zero(
     尿意值归零
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -10038,13 +9726,12 @@ def handle_target_urinate_point_zero(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_urinate_point_zero(target_character_id, None, add_time, change_data, now_time)
+    handle_urinate_point_zero(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.HUNGER_POINT_ZERO)
 def handle_hunger_point_zero(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -10053,7 +9740,6 @@ def handle_hunger_point_zero(
     饥饿值归零
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -10091,7 +9777,6 @@ def handle_target_hunger_point_zero(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SLEEP_POINT_ZERO)
 def handle_sleep_point_zero(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -10100,7 +9785,6 @@ def handle_sleep_point_zero(
     熟睡值归零
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -10138,7 +9822,6 @@ def handle_target_sleep_point_zero(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_SMALL_URINATE_POINT)
 def handle_add_small_urinate_point(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -10147,7 +9830,6 @@ def handle_add_small_urinate_point(
     自己增加少量尿意值
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -10209,7 +9891,6 @@ def handle_target_desire_point_zero(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DESIRE_POINT_TO_79)
 def handle_desire_point_to_79(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -10218,7 +9899,6 @@ def handle_desire_point_to_79(
     自己欲望值调为79
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -10256,7 +9936,6 @@ def handle_target_desire_point_to_79(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DESIRE_POINT_TO_0)
 def handle_desire_point_to_0(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -10265,7 +9944,6 @@ def handle_desire_point_to_0(
     自己欲望值归零
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -10279,7 +9957,6 @@ def handle_desire_point_to_0(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_SMALL_SANITY_POINT)
 def handle_add_small_sanity_point(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -10288,7 +9965,6 @@ def handle_add_small_sanity_point(
     增加少量理智值(15%/h)
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -10306,7 +9982,6 @@ def handle_add_small_sanity_point(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_SMALL_SEMEN_POINT)
 def handle_add_small_semen_point(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -10315,7 +9990,6 @@ def handle_add_small_semen_point(
     增加少量精液值(15%/h)
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -10335,7 +10009,6 @@ def handle_add_small_semen_point(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.RECORD_TRAINING_TIME)
 def handle_record_training_time(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -10344,7 +10017,6 @@ def handle_record_training_time(
     记录当前训练时间
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -10358,7 +10030,6 @@ def handle_record_training_time(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.RECORD_SHOWER_TIME)
 def handle_record_shower_time(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -10367,7 +10038,6 @@ def handle_record_shower_time(
     记录当前淋浴时间
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -10381,7 +10051,6 @@ def handle_record_shower_time(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.RECORD_WAKE_TIME)
 def handle_record_wake_time(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -10390,7 +10059,6 @@ def handle_record_wake_time(
     角色记录并刷新起床时间
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -10404,7 +10072,6 @@ def handle_record_wake_time(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.RECORD_CONSCIOUS_H_TIME)
 def handle_record_conscious_h_time(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -10413,7 +10080,6 @@ def handle_record_conscious_h_time(
     角色记录并刷新有意识H时间
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -10427,7 +10093,6 @@ def handle_record_conscious_h_time(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.RECORD_UNCONSCIOUS_H_TIME)
 def handle_record_unconscious_h_time(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -10436,7 +10101,6 @@ def handle_record_unconscious_h_time(
     角色记录并刷新无意识H时间
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -10475,7 +10139,6 @@ def handle_penis_in_t_reset(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SCENE_ALL_CHARACTERS_PENIS_IN_RESET)
 def handle_scene_all_characters_penis_in_reset(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -10484,7 +10147,6 @@ def handle_scene_all_characters_penis_in_reset(
     场景内所有角色的当前阴茎位置归零
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -11292,7 +10954,6 @@ def handle_cancel_penis_in_face_or_mouse(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DR_POSITION_NULL)
 def handle_dr_position_null(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -11301,7 +10962,6 @@ def handle_dr_position_null(
     博士体位数据变成无
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -11314,7 +10974,6 @@ def handle_dr_position_null(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DR_POSITION_NORMAL)
 def handle_dr_position_normal(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -11323,7 +10982,6 @@ def handle_dr_position_normal(
     博士体位数据变成正常体位
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -11337,7 +10995,6 @@ def handle_dr_position_normal(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DR_POSITION_BACK)
 def handle_dr_position_back(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -11346,7 +11003,6 @@ def handle_dr_position_back(
     博士体位数据变成后背体位
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -11360,7 +11016,6 @@ def handle_dr_position_back(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DR_POSITION_FACE_RIDE)
 def handle_dr_position_face_ride(
     character_id: int,
-    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -11369,7 +11024,6 @@ def handle_dr_position_face_ride(
     博士体位数据变成对面骑乘体位
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -11383,7 +11037,6 @@ def handle_dr_position_face_ride(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DR_POSITION_BACK_RIDE)
 def handle_dr_position_back_ride(
     character_id: int,
-    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -11392,7 +11045,6 @@ def handle_dr_position_back_ride(
     博士体位数据变成背面骑乘体位
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -11406,7 +11058,6 @@ def handle_dr_position_back_ride(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DR_POSITION_FACE_SEAT)
 def handle_dr_position_face_seat(
     character_id: int,
-    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -11415,7 +11066,6 @@ def handle_dr_position_face_seat(
     博士体位数据变成对面座体位
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -11429,7 +11079,6 @@ def handle_dr_position_face_seat(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DR_POSITION_BACK_SEAT)
 def handle_dr_position_back_seat(
     character_id: int,
-    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -11438,7 +11087,6 @@ def handle_dr_position_back_seat(
     博士体位数据变成背面座体位
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -11452,7 +11100,6 @@ def handle_dr_position_back_seat(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DR_POSITION_FACE_STAND)
 def handle_dr_position_face_stand(
     character_id: int,
-    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -11461,7 +11108,6 @@ def handle_dr_position_face_stand(
     博士体位数据变成对面立体位
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -11475,7 +11121,6 @@ def handle_dr_position_face_stand(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DR_POSITION_BACK_STAND)
 def handle_dr_position_back_stand(
     character_id: int,
-    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -11484,7 +11129,6 @@ def handle_dr_position_back_stand(
     博士体位数据变成背面立体位
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -11498,7 +11142,6 @@ def handle_dr_position_back_stand(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DR_POSITION_FACE_HUG)
 def handle_dr_position_face_hug(
     character_id: int,
-    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -11507,7 +11150,6 @@ def handle_dr_position_face_hug(
     博士体位数据变成对面抱体位
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -11521,7 +11163,6 @@ def handle_dr_position_face_hug(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DR_POSITION_BACK_HUG)
 def handle_dr_position_back_hug(
     character_id: int,
-    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -11530,7 +11171,6 @@ def handle_dr_position_back_hug(
     博士体位数据变成背面抱体位
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -11544,7 +11184,6 @@ def handle_dr_position_back_hug(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DR_POSITION_FACE_LIE)
 def handle_dr_position_face_lie(
     character_id: int,
-    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -11553,7 +11192,6 @@ def handle_dr_position_face_lie(
     博士体位数据变成对面卧体位
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -11567,7 +11205,6 @@ def handle_dr_position_face_lie(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DR_POSITION_BACK_LIE)
 def handle_dr_position_back_lie(
     character_id: int,
-    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -11576,7 +11213,6 @@ def handle_dr_position_back_lie(
     博士体位数据变成背面卧体位
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -11590,7 +11226,6 @@ def handle_dr_position_back_lie(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DR_POSITION_WOMB_NULL)
 def handle_dr_position_womb_null(
     character_id: int,
-    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -11599,7 +11234,6 @@ def handle_dr_position_womb_null(
     博士子宫性交位置变成无
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -11613,7 +11247,6 @@ def handle_dr_position_womb_null(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DR_POSITION_WOMB_INSERT)
 def handle_dr_position_womb_insert(
     character_id: int,
-    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -11622,7 +11255,6 @@ def handle_dr_position_womb_insert(
     博士子宫性交位置变成子宫口插入
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -11636,7 +11268,6 @@ def handle_dr_position_womb_insert(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DR_POSITION_WOMB_SEX)
 def handle_dr_position_womb_sex(
     character_id: int,
-    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -11645,7 +11276,6 @@ def handle_dr_position_womb_sex(
     博士子宫性交位置变成子宫奸
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -11711,7 +11341,6 @@ def handle_take_chara_eggs_settle(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.IDENTIFY_HELD_EGGS_SETTLE)
 def handle_identify_held_eggs_settle(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -11720,7 +11349,6 @@ def handle_identify_held_eggs_settle(
     （鉴定持有的卵用）鉴定玩家临时持有的全部卵并经索引回写原角色卵数据，无精删卵、受精进入孵化
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -11754,6 +11382,6 @@ def handle_eat_last_two_food(
     if not add_time:
         return
     for i in range(2):
-        handle_set_target_food_from_bag_last(character_id, target_character_id, add_time, change_data, now_time)
+        handle_set_target_food_from_bag_last(character_id, add_time, change_data, now_time)
         handle_eat_add_just(character_id, target_character_id, add_time, change_data, now_time)
-        handle_delete_last_food(character_id, target_character_id, add_time, change_data, now_time)
+        handle_delete_last_food(character_id, add_time, change_data, now_time)
