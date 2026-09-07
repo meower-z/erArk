@@ -825,10 +825,10 @@ def handle_comprehensive_value_effect(character_id: int, target_character_id, ef
         # 绝顶
         elif attribute_name == "climax":
             if operation == "E":
-                base_chara_climix_common_settle(final_character_id, final_character_data.target_character_id, type_son_id, degree = int(effect_all_value_list[3]))
+                base_chara_climix_common_settle(final_character_id, type_son_id, degree = int(effect_all_value_list[3]))
             elif operation == "G":
                 for i in range(int(effect_all_value_list[3]) + 1):
-                    base_chara_climix_common_settle(final_character_id, final_character_data.target_character_id, type_son_id, degree = i)
+                    base_chara_climix_common_settle(final_character_id, type_son_id, degree = i)
         # 父子嵌套事件
         elif attribute_name == "father":
             # print(f"debug effect_all_value_list = {effect_all_value_list}")

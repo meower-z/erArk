@@ -799,7 +799,6 @@ def calculation_trust(character_id: int, target_character_id: int, add_time: int
 
 def base_chara_climix_common_settle(
         character_id: int,
-        target_character_id,
         part_id: int = 0,
         base_value: int = 500,
         adjust: float = -1,
@@ -810,8 +809,7 @@ def base_chara_climix_common_settle(
     """
     基础角色绝顶通用结算函数\n
     Keyword arguments:\n
-    character_id -- 角色id\n
-    target_character_id -- 部位快感承受方的角色id；part_id非3时部位快感加给该角色，绝顶二段行为与绝顶次数记在character_id上；part_id为3(P部位，仅玩家)时不使用，可传None\n
+    character_id -- 绝顶角色id\n
     part_id -- 部位id，即性器官id\n
     base_value -- 基础固定值\n
     adjust -- 系数\n
@@ -838,7 +836,7 @@ def base_chara_climix_common_settle(
             adjust *= random_adjust
         else:
             adjust = random_adjust
-        base_chara_state_common_settle(target_character_id, base_value, part_id, extra_adjust = adjust, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
+        base_chara_state_common_settle(character_id, base_value, part_id, extra_adjust = adjust, change_data = change_data, change_data_to_target_change = change_data_to_target_change)
 
         # 触发绝顶
         degree_dict = {0 : "small", 1 : "normal", 2 : "strong", 3 : "super"}

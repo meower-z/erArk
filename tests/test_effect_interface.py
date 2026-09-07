@@ -113,9 +113,9 @@ class EffectInterfaceTest(unittest.TestCase):
 
     def test_helper_signatures_and_all_calls_bind(self):
         """辅助函数按受体或目标定义参数，所有生产调用与签名匹配；无返回值。"""
-        recipient_only = {"base_chara_hp_mp_common_settle": "add_time", "base_chara_experience_common_settle": "experience_id"}
+        recipient_only = {"base_chara_hp_mp_common_settle": "add_time", "base_chara_experience_common_settle": "experience_id", "base_chara_climix_common_settle": "part_id"}
         with_target = {
-            "base_chara_climix_common_settle", "base_chara_favorability_and_trust_common_settle",
+            "base_chara_favorability_and_trust_common_settle",
             "handle_comprehensive_value_effect", "extra_exp_settle",
             "handle_settle_behavior", "handle_instruct_data", "handle_event_data",
             "settle_effect_list", "handle_comprehensive_state_effect",
@@ -325,6 +325,23 @@ class EffectInterfaceTest(unittest.TestCase):
         self.assertEqual(changes.target_change[2].status_data[8], 5)
         self.assertNotIn(1, changes.target_change)
         self.assertEqual(seen, [3])
+
+    def test_climax_pleasure_goes_to_climaxer(self):
+        """绝顶辅助函数把部位快感和绝顶记录都加给绝顶者本人，不读其交互对象；无返回值。"""
+        load_functions("Script/Settle/common_default.py", self.ns, lambda node: node.name == "base_chara_climix_common_settle")
+        self.ns["random"] = SimpleNamespace(uniform=lambda low, high: 1.0)
+        state_calls = []
+        self.ns["base_chara_state_common_settle"] = lambda cid, *args, **kwargs: state_calls.append(cid)
+        second = SimpleNamespace(character_get_second_behavior=Mock())
+        for character in self.cache.character_data.values():
+            character.h_state.orgasm_level[4] = 0
+        changes = game_type.CharacterStatusChange()
+        with patch.dict(sys.modules, {"Script.Design": SimpleNamespace(second_behavior=second)}):
+            self.ns["handle_target_hypnosis_force_climax"](0, 2, 5, changes, self.now)
+        self.assertEqual(state_calls, [2])
+        self.assertEqual(second.character_get_second_behavior.call_args.args, (2, "v_orgasm_small"))
+        self.assertEqual(self.cache.character_data[2].h_state.orgasm_level[4], 1)
+        self.assertEqual(self.cache.character_data[3].h_state.orgasm_level[4], 0)
 
 
 if __name__ == "__main__":
