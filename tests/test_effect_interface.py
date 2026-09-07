@@ -120,9 +120,17 @@ class EffectInterfaceTest(unittest.TestCase):
             "handle_settle_behavior", "handle_instruct_data", "handle_event_data",
             "settle_effect_list", "handle_comprehensive_state_effect",
             "check_second_effect", "second_behavior_effect", "must_settle_check", "release_orgasm_edge_now",
+            "recover_from_unconscious_h",
         }
         helper_names = set(recipient_only) | with_target
-        for path in ("Script/Settle/common_default.py", "Script/Design/settle_behavior.py", "Script/System/Instruct_System/handle_instruct.py", "Script/Design/second_behavior.py", "Script/Settle/orgasm_settle.py"):
+        for path in (
+            "Script/Settle/common_default.py",
+            "Script/Design/settle_behavior.py",
+            "Script/System/Instruct_System/handle_instruct.py",
+            "Script/Design/second_behavior.py",
+            "Script/Settle/orgasm_settle.py",
+            "Script/Design/handle_npc_ai_in_h.py",
+        ):
             load_functions(path, self.ns, lambda node: node.name in helper_names)
         signatures = {name: inspect.signature(self.ns[name]) for name in helper_names}
         for name, second in recipient_only.items():
@@ -342,6 +350,140 @@ class EffectInterfaceTest(unittest.TestCase):
         self.assertEqual(second.character_get_second_behavior.call_args.args, (2, "v_orgasm_small"))
         self.assertEqual(self.cache.character_data[2].h_state.orgasm_level[4], 1)
         self.assertEqual(self.cache.character_data[3].h_state.orgasm_level[4], 0)
+
+    def test_favorability_direction_uses_explicit_pair(self):
+        """输入双方与持久目标不同的组合；验证好感方向、记录和累计值，无返回值。"""
+        load_functions("Script/Design/character_handle.py", self.ns, lambda node: node.name == "add_favorability")
+        for actor, target, saved, recipient, other in [(0, 2, 0, 2, 0), (1, 0, 3, 1, 0), (1, 2, 0, 2, 1)]:
+            with self.subTest(actor=actor, target=target):
+                for character in self.cache.character_data.values():
+                    character.favorability = {}
+                self.cache.character_data[actor].target_character_id = saved
+                self.cache.rhodes_island = SimpleNamespace(total_favorability_increased=0)
+                changes, target_changes = game_type.CharacterStatusChange(), game_type.TargetChange()
+                self.ns["add_favorability"](actor, target, 10, changes, target_changes)
+                self.assertEqual(self.cache.character_data[recipient].favorability[other], 10)
+                self.assertEqual(self.cache.character_data[other].favorability[recipient], 0)
+                self.assertEqual(changes.favorability, 10 if target == 0 else 0)
+                self.assertEqual(target_changes.favorability, 0 if target == 0 else 10)
+                self.assertEqual(self.cache.rhodes_island.total_favorability_increased, 10 if 0 in (actor, target) else 0)
+                self.assertEqual(self.cache.character_data[actor].target_character_id, saved)
+
+    def test_body_management_changes_self_without_retargeting(self):
+        """分别执行日间与睡眠道具管理；只改变本人的装备并保留交互对象，无返回值。"""
+        for period in ("day", "sleep"):
+            for enabled in (True, False):
+                with self.subTest(period=period, enabled=enabled):
+                    for cid, character in self.cache.character_data.items():
+                        character.h_state.body_item = {i: [0, not enabled, None] for i in range(4)}
+                        character.target_character_id = (cid + 1) % 4
+                    premise = SimpleNamespace()
+                    for item in ("nipple_clamp", "clit_clamp", "v_bibrator", "a_bibrator"):
+                        setattr(premise, f"handle_ask_equp_{item}_in_{period}", lambda cid: enabled)
+                    for index, item in enumerate(("nipple_clamp", "clit_clamp", "vibrator_insertion", "vibrator_insertion_anal")):
+                        setattr(premise, f"handle_self_now_{item}", lambda cid, i=index: self.cache.character_data[cid].h_state.body_item[i][1])
+                    self.ns["handle_premise"] = premise
+                    self.ns[f"handle_adjust_body_manage_{period}_item"](1, 3, 1, game_type.CharacterStatusChange(), self.now)
+                    for cid, character in self.cache.character_data.items():
+                        self.assertEqual([character.h_state.body_item[i][1] for i in range(4)], [enabled if cid == 1 else not enabled] * 4)
+                        self.assertEqual(character.target_character_id, (cid + 1) % 4)
+
+    def test_group_refusal_preserves_target_and_reduces_favorability(self):
+        """群交失败逐人结算拒绝者；保留博士交互对象并正确降低好感，无返回值。"""
+        self.load_hp_helper()
+        load_functions("Script/Design/character_handle.py", self.ns, lambda node: node.name == "add_favorability")
+        load_functions("Script/Settle/common_default.py", self.ns, lambda node: node.name == "base_chara_favorability_and_trust_common_settle")
+        self.ns["character_handle"] = SimpleNamespace(add_favorability=self.ns["add_favorability"])
+        self.ns["calculation_favorability"] = lambda actor, target, value: value
+        self.ns["attr_calculation"] = SimpleNamespace(get_character_fall_level=lambda cid: 0)
+        self.ns["handle_ability"] = SimpleNamespace(get_ability_adjust=lambda value: 1)
+        self.ns["map_handle"] = SimpleNamespace(get_map_system_path_str_for_list=lambda position: "room")
+        self.cache.scene_data = {"room": SimpleNamespace(character_list=[0, 1, 2, 3])}
+        self.cache.rhodes_island = SimpleNamespace(total_favorability_increased=0)
+        self.cache.pl_pre_behavior_instruce = []
+        self.cache.all_system_setting = SimpleNamespace(difficulty_setting={1: 1})
+        self.ns["system_setting"] = SimpleNamespace(get_difficulty_coefficient=lambda difficulty: 1)
+        self.cache.character_data[0].pl_collection.eqip_token = {1: []}
+        self.cache.character_data[0].target_character_id = 0
+        seen_targets = []
+
+        def is_refuser(cid):
+            """输入角色id并记录此时博士的交互对象；返回该角色是否拒绝，bool。"""
+            seen_targets.append(self.cache.character_data[0].target_character_id)
+            return cid in (1, 2)
+
+        self.ns["handle_premise"].handle_group_sex_fail_and_self_refuse = is_refuser
+        self.ns["handle_premise"].handle_unconscious_flag_ge_1 = lambda cid: False
+        for character in self.cache.character_data.values():
+            character.ability[18] = 0
+            character.favorability = {}
+        changes = game_type.CharacterStatusChange()
+        self.ns["handle_group_sex_fail_add_just"](0, 3, 1, changes, self.now)
+        self.assertEqual(seen_targets, [0, 0, 0])
+        self.assertEqual(self.cache.character_data[0].target_character_id, 0)
+        for cid in (1, 2):
+            self.assertEqual(self.cache.character_data[cid].favorability[0], -15)
+            self.assertEqual(changes.target_change[cid].favorability, -15)
+        self.assertEqual(self.cache.character_data[3].favorability, {})
+        self.assertEqual(self.cache.rhodes_island.total_favorability_increased, -30)
+
+    def test_recovery_keeps_explicit_target_through_response(self):
+        """恢复流程使用指定角色；中途改变交互对象也不影响装睡或双方重置，无返回值。"""
+        load_functions("Script/Design/handle_npc_ai_in_h.py", self.ns, lambda node: node.name == "recover_from_unconscious_h")
+        self.ns["handle_npc_ai_in_h"] = SimpleNamespace(recover_from_unconscious_h=self.ns["recover_from_unconscious_h"])
+        self.ns["UnconsciousHResponse"] = SimpleNamespace(CONTINUE_H=1)
+        self.constants.Behavior.WAIT = "wait"
+        self.constants.CharacterStatus = SimpleNamespace(STATUS_WAIT="wait")
+        self.ns["window_width"] = 80
+        self.ns["map_handle"] = SimpleNamespace(get_map_system_path_str_for_list=lambda position: "room")
+        self.cache.scene_data = {"room": SimpleNamespace(character_list=[0, 1, 2, 3], close_flag=1)}
+        self.cache.game_time = self.now
+        self.cache.achievement = SimpleNamespace(sleep_sex_record={1: 0})
+        for response_value in (1, 5):
+            with self.subTest(response=response_value):
+                self.cache.character_data[0].target_character_id = 1
+                for cid, character in self.cache.character_data.items():
+                    character.sp_flag.unconscious_h = 1
+                    character.sp_flag.is_h = cid == 2
+                    character.h_state.pretend_sleep = False
+                    character.behavior.duration = 99
+                effects = Mock()
+                stop, sleep, abnormal, settle, update = Mock(), Mock(return_value=True), Mock(), Mock(), Mock()
+                self.ns["character_behavior"] = SimpleNamespace(judge_character_status_time_over=stop)
+                self.ns["instuct_judege"] = SimpleNamespace(init_character_behavior_start_time=Mock())
+                self.ns["handle_premise"] = SimpleNamespace(
+                    handle_self_is_h=lambda cid: self.cache.character_data[cid].sp_flag.is_h,
+                    handle_group_sex_mode_on=lambda cid: False,
+                    handle_action_sleep=sleep,
+                    settle_chara_unnormal_flag=abnormal,
+                )
+                self.ns["draw"] = SimpleNamespace(WaitDraw=Mock())
+                self.ns["settle_unconscious_semen_and_cloth"] = settle
+                self.ns["update"] = SimpleNamespace(game_update_flow=update)
+
+                def respond(actor, target):
+                    """输入执行者与目标id；模拟响应中切换交互对象，返回裁决int。"""
+                    self.cache.character_data[actor].target_character_id = 3
+                    return response_value
+
+                response = Mock(side_effect=respond)
+                self.ns["handle_unconscious_h_response"] = response
+                with patch.dict(sys.modules, {"Script.Settle": SimpleNamespace(default=effects)}):
+                    self.ns["handle_recover_from_unconscious_add_adjust"](0, 2, 1, game_type.CharacterStatusChange(), self.now)
+                stop.assert_called_once_with(2, self.now, end_now=2)
+                settle.assert_called_once_with(2)
+                response.assert_called_once_with(0, 2)
+                self.assertTrue(all(call.args == (2,) for call in sleep.call_args_list))
+                self.assertEqual(self.cache.character_data[1].behavior.duration, 99)
+                self.assertEqual(self.cache.character_data[3].behavior.duration, 99)
+                if response_value == 1:
+                    self.assertTrue(self.cache.character_data[2].h_state.pretend_sleep)
+                    self.assertTrue(all(call.args == (2, 5) for call in abnormal.call_args_list))
+                    self.assertEqual(effects.handle_h_flag_to_1.call_args.args[:2], (2, None))
+                    effects.handle_both_h_state_reset.assert_not_called()
+                else:
+                    self.assertEqual(effects.handle_both_h_state_reset.call_args.args[:2], (0, 2))
+                update.assert_called_once_with(5)
 
 
 if __name__ == "__main__":

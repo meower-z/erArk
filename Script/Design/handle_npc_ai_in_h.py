@@ -170,15 +170,19 @@ def judge_character_h_obscenity_unconscious(character_id: int, pl_start_time: da
     return 1
 
 
-def recover_from_unconscious_h(character_id: int, info_text: str = ""):
+def recover_from_unconscious_h(character_id: int, target_character_id: int, info_text: str = ""):
     """
     交互对象从无意识H中恢复意识的结算\n
     Keyword arguments:\n
-    character_id -- 角色id\n
+    character_id -- 执行者角色id，int\n
+    target_character_id -- 恢复意识的目标角色id，int\n
+    info_text -- 提示文本，str；空字符串时根据目标生成\n
+    Return arguments:\n
+    None -- 无返回值\n
     """
     from Script.Settle import default
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     scene_path_str = map_handle.get_map_system_path_str_for_list(character_data.position)
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
 
@@ -200,9 +204,9 @@ def recover_from_unconscious_h(character_id: int, info_text: str = ""):
     now_draw.draw()
 
     # 终止对方的行动
-    character_behavior.judge_character_status_time_over(character_data.target_character_id, cache.game_time, end_now = 2)
+    character_behavior.judge_character_status_time_over(target_character_id, cache.game_time, end_now = 2)
     # 睡眠中，则对方获得睡奸醒来状态
-    if handle_premise.handle_action_sleep(character_data.target_character_id):
+    if handle_premise.handle_action_sleep(target_character_id):
         target_data.sp_flag.sleep_h_awake = True
     # 同步玩家的行动开始时间
     instuct_judege.init_character_behavior_start_time(character_id, cache.game_time)
@@ -237,7 +241,7 @@ def recover_from_unconscious_h(character_id: int, info_text: str = ""):
         character_data.state = tem_state
 
     # 结算交互对象的响应
-    response = handle_unconscious_h_response(character_id, character_data.target_character_id)
+    response = handle_unconscious_h_response(character_id, target_character_id)
 
     # 对方的行为改为等待
     target_data.behavior.behavior_id = constant.Behavior.WAIT
@@ -251,11 +255,11 @@ def recover_from_unconscious_h(character_id: int, info_text: str = ""):
         # 对方的行为时间设为10分钟
         target_data.behavior.duration = 10
         # 睡眠中，则对方获得装睡状态，仍继续无意识H
-        if handle_premise.handle_action_sleep(character_data.target_character_id):
+        if handle_premise.handle_action_sleep(target_character_id):
             target_data.h_state.pretend_sleep = True
             target_data.sp_flag.unconscious_h = 1
-            handle_premise.settle_chara_unnormal_flag(character_data.target_character_id, 5)
-            handle_premise.settle_chara_unnormal_flag(character_data.target_character_id, 5)
+            handle_premise.settle_chara_unnormal_flag(target_character_id, 5)
+            handle_premise.settle_chara_unnormal_flag(target_character_id, 5)
             # 成就刷新
             cache.achievement.sleep_sex_record[1] = 1
     # 否则
@@ -263,7 +267,7 @@ def recover_from_unconscious_h(character_id: int, info_text: str = ""):
         # 对象行为时间改为1分钟
         target_data.behavior.duration = 1
         # 重置双方H结构体和相关数据
-        default.handle_both_h_state_reset(0, cache.character_data[0].target_character_id, 1, game_type.CharacterStatusChange(), datetime.datetime(1, 1, 1))
+        default.handle_both_h_state_reset(character_id, target_character_id, 1, game_type.CharacterStatusChange(), datetime.datetime(1, 1, 1))
         # 地点开门
         scene_data.close_flag = 0
 
@@ -395,7 +399,7 @@ def judge_weak_up_in_sleep_h(character_id: int, target_character_id: int):
             handle_premise.settle_chara_unnormal_flag(target_character_id, 5)
             handle_premise.settle_chara_unnormal_flag(target_character_id, 6)
             info_text = _("\n因为{0}的动作，{1}从梦中惊醒过来\n").format(now_character_data.name, target_data.name)
-            recover_from_unconscious_h(character_id, info_text)
+            recover_from_unconscious_h(character_id, target_character_id, info_text)
         elif target_data.sp_flag.unconscious_h == 0:
             # 普通睡眠角色：先结束睡眠行为，再执行“睡觉中被吵醒”行为
             # 注意顺序：judge_character_status_time_over()内部会用game_type.Behavior()整体重置行动数据，

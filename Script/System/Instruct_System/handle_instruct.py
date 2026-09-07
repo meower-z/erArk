@@ -424,7 +424,7 @@ def handle_comprehensive_state_effect(
         if character_id != 0 and character_id != character_data.target_character_id:
             character_data.target_character_id = character_id
         if character_id != 0:
-            target_character_id = character_data.target_character_id
+            target_character_id = character_id
         # 如果没有交互对象，则返回0
         if target_character_id == 0:
             return 0

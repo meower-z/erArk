@@ -7577,7 +7577,6 @@ def handle_group_sex_fail_add_just(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    original_target_character_id = character_data.target_character_id
     scene_path_str = map_handle.get_map_system_path_str_for_list(character_data.position)
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     # 遍历场景内所有角色
@@ -7589,9 +7588,7 @@ def handle_group_sex_fail_add_just(
             continue
         # 如果是拒绝者，则进行邀请H失败结算
         if handle_premise.handle_group_sex_fail_and_self_refuse(chara_id):
-            character_data.target_character_id = chara_id
             handle_do_h_failed_adjust(0, chara_id, add_time, change_data, now_time)
-    character_data.target_character_id = original_target_character_id
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.BOARD_GAME_WIN_ADD_ADJUST)
@@ -7821,7 +7818,7 @@ def handle_recover_from_unconscious_add_adjust(
     # 如果交互对象是在H中，则进行恢复意识结算
     character_data: game_type.Character = cache.character_data[character_id]
     if handle_premise.handle_self_is_h(target_character_id):
-        handle_npc_ai_in_h.recover_from_unconscious_h(character_id)
+        handle_npc_ai_in_h.recover_from_unconscious_h(character_id, target_character_id)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_DIRTY_RESET_IN_SHOWER)
@@ -8388,19 +8385,19 @@ def handle_eat_add_just(
             # 由二段绝顶结算联动饮精绝顶（素质31）与饮精绝顶经验（111）
             if semen_ml > 0:
                 target_data.h_state.shoot_position_body = 2
-        # 药物食物则获得对应药物效果，玩家进食时药效作用于交互目标
+        # 药物食物的药效作用于食用者
         elif food_seasoning == 102: # 事后避孕药
-            handle_target_no_pregnancy_from_last_h(character_id, chara_id or target_character_id, add_time=add_time, change_data=change_data, now_time=now_time)
+            handle_target_no_pregnancy_from_last_h(character_id, chara_id, add_time=add_time, change_data=change_data, now_time=now_time)
         elif food_seasoning == 103: # 媚药
-            handle_target_add_huge_desire_and_submit(character_id, chara_id or target_character_id, add_time=add_time, change_data=change_data, now_time=now_time)
+            handle_target_add_huge_desire_and_submit(character_id, chara_id, add_time=add_time, change_data=change_data, now_time=now_time)
         elif food_seasoning == 105: # 一次性利尿剂
-            handle_target_add_urinate(character_id, chara_id or target_character_id, add_time=add_time, change_data=change_data, now_time=now_time)
+            handle_target_add_urinate(character_id, chara_id, add_time=add_time, change_data=change_data, now_time=now_time)
         elif food_seasoning == 106: # 持续性利尿剂
-            handle_target_diuretics_on(character_id, chara_id or target_character_id, add_time=add_time, change_data=change_data, now_time=now_time)
+            handle_target_diuretics_on(character_id, chara_id, add_time=add_time, change_data=change_data, now_time=now_time)
         elif food_seasoning == 107: # 安眠药
-            handle_target_add_tired_tosleep(character_id, chara_id or target_character_id, add_time=add_time, change_data=change_data, now_time=now_time)
+            handle_target_add_tired_tosleep(character_id, chara_id, add_time=add_time, change_data=change_data, now_time=now_time)
         elif food_seasoning == 108: # 排卵促进药
-            handle_target_add_pregnancy_chance(character_id, chara_id or target_character_id, add_time=add_time, change_data=change_data, now_time=now_time)
+            handle_target_add_pregnancy_chance(character_id, chara_id, add_time=add_time, change_data=change_data, now_time=now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_HPMP_MAX)
