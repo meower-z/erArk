@@ -1786,7 +1786,7 @@ def handle_target_hypnosis_force_climax(
     change_data.sanity_point -= 50
     character_data.pl_ability.today_sanity_point_cost += 50
 
-    base_chara_climix_common_settle(target_character_id, character_id, 4, change_data_to_target_change = change_data)
+    base_chara_climix_common_settle(target_character_id, target_character_data.target_character_id, 4, change_data_to_target_change = change_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_HYPNOSIS_FORCE_OVULATION_ON)
@@ -2433,7 +2433,7 @@ def handle_scene_all_characters_condom_info_show_flag_on(
     for chara_id in scene_data.character_list:
         # 遍历非玩家的角色
         if chara_id:
-            handle_target_condom_info_show_flag_on(chara_id, None, add_time, change_data, now_time)
+            handle_target_condom_info_show_flag_on(character_id, chara_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SELF_ORGASM_EDGE_ON)
@@ -7450,7 +7450,7 @@ def handle_end_h_add_hpmp_max(
         info_text = now_character_data.name
         # 如果玩家有忍耐的射精次数，则射出
         if chara_id == 0 and handle_premise.handle_pl_endure_orgasm_count_ge_1(chara_id):
-            handle_stop_endurance_shoot(chara_id, None, add_time, change_data, now_time)
+            handle_stop_endurance_shoot(chara_id, target_character_id if character_id == 0 else character_id, add_time, change_data, now_time)
         # 统计绝顶次数
         orgasm_count = 0
         for state_id in game_config.config_character_state:
@@ -7782,7 +7782,7 @@ def handle_train_prisoners_add_adjust(
     # 身体锻炼训练
     elif now_train_id == 5:
         def now_tarin(now_prisoner_cid):
-            handle_add_hpmp_max(now_prisoner_cid, None, add_time, change_data, now_time)
+            handle_add_hpmp_max(now_prisoner_cid, now_prisoner_cid, add_time, change_data, now_time)
     # 心理服从训练
     elif now_train_id == 6:
         def now_tarin(now_prisoner_cid):
