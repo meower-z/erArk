@@ -2433,7 +2433,7 @@ def handle_scene_all_characters_condom_info_show_flag_on(
     for chara_id in scene_data.character_list:
         # 遍历非玩家的角色
         if chara_id:
-            handle_target_condom_info_show_flag_on(character_id, chara_id, add_time, change_data, now_time)
+            handle_self_condom_info_show_flag_on(chara_id, None, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SELF_ORGASM_EDGE_ON)
