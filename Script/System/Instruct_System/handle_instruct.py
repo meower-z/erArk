@@ -1354,23 +1354,11 @@ def handle_unconscious_h(type_name:str = ""):
     now_draw.width = width
     if type_name == "sleep":
         now_draw.text = _("\n进入睡奸模式\n")
-        default.handle_unconscious_flag_to_1(
-            character_data.target_character_id,
-            None,
-            1,
-            game_type.CharacterStatusChange(),
-            cache.game_time,
-        )
+        default.handle_unconscious_flag_to_1(character_data.target_character_id, None, 1, game_type.CharacterStatusChange(), cache.game_time)
         cache.achievement.sleep_sex_record = {1: 0, 2: 0, 3: 0}
     elif type_name == "drunk":
         now_draw.text = _("\n进入醉奸模式\n")
-        default.handle_unconscious_flag_to_2(
-            character_data.target_character_id,
-            None,
-            1,
-            game_type.CharacterStatusChange(),
-            cache.game_time,
-        )
+        default.handle_unconscious_flag_to_2(character_data.target_character_id, None, 1, game_type.CharacterStatusChange(), cache.game_time)
         cache.achievement.drunk_sex_record = {1: 0, 2: 0, 3: 0}
     elif type_name == "time_stop":
         now_draw.text = _("\n进入时停奸模式\n")
