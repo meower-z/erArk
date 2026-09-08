@@ -532,15 +532,29 @@ def add_settle_second_behavior_effect(second_behavior_effect_id: int):
     添加二段行为结算处理
     Keyword arguments:
     second_behavior_effect_id -- 二段行为id
+    效果参数为角色id、变化记录；需要交互目标时，在角色id后声明target_character_id。
+    注册表统一接收三个参数；直接调用效果函数时使用其原有参数。
     """
 
     def decorator(func):
-        @wraps(func)
-        def return_wrapper(*args, **kwargs):
-            return func(*args, **kwargs)
+        """输入两参数或三参数效果函数，注册统一调用入口并返回原函数。"""
+        effect_signature = signature(func)
+        parameters = tuple(effect_signature.parameters)
+        self_parameters = ("character_id", "change_data")
+        target_parameters = ("character_id", "target_character_id", "change_data")
+        if parameters == target_parameters:
+            registered_func = func
+        elif parameters == self_parameters:
+            @wraps(func)
+            def registered_func(character_id, target_character_id, change_data):
+                """输入统一的三个效果参数，忽略交互目标，返回原效果的结果。"""
+                return func(character_id, change_data)
+        else:
+            raise TypeError(f"二段结算效果 {func.__name__} 的参数应为 {self_parameters} 或 {target_parameters}")
 
-        constant.settle_second_behavior_effect_data[second_behavior_effect_id] = return_wrapper
-        return return_wrapper
+        effect_signature.bind(*[None] * len(parameters))
+        constant.settle_second_behavior_effect_data[second_behavior_effect_id] = registered_func
+        return func
 
     return decorator
 
@@ -1071,5 +1085,4 @@ def collect_web_value_changes(change_data, character_id: int):
                     'color': 'medium_spring_green',
                     'timestamp': timestamp
                 })
-
 
