@@ -185,7 +185,7 @@ def second_behavior_effect(
             and character_data.behavior.move_src != cache.character_data[0].position
     ):
         talk.must_show_talk_check(character_id)
-        must_settle_check(character_id, target_character_id)
+        must_settle_check(character_id)
         return
 
     # 在处理后，如果没有任何二段行为，则再次直接返回
@@ -241,12 +241,11 @@ def second_behavior_effect(
             # 触发后该行为值归零
             character_data.second_behavior[second_behavior_id] = 0
 
-def must_settle_check(character_id: int, target_character_id: int):
+def must_settle_check(character_id: int):
     """
     检查是否有必须计算但不必须显示的空白结算
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 交互目标id
     """
     character_data: game_type.Character = cache.character_data[character_id]
     # 遍历所有必须计算的二段行为
@@ -261,9 +260,9 @@ def must_settle_check(character_id: int, target_character_id: int):
             # 如果effect_id是str类型，则说明是综合数值结算
             if isinstance(effect_id, str) and "CVE" in effect_id:
                 effect_all_value_list = effect_id.split("_")[1:]
-                settle_behavior.handle_comprehensive_value_effect(character_id, target_character_id, effect_all_value_list, change_data)
+                settle_behavior.handle_comprehensive_value_effect(character_id, character_data.target_character_id, effect_all_value_list, change_data)
             else:
-                constant.settle_second_behavior_effect_data[effect_id](character_id, target_character_id, change_data)
+                constant.settle_second_behavior_effect_data[effect_id](character_id, character_data.target_character_id, change_data)
         # 触发后该行为值归零
         character_data.second_behavior[behavior_id] = 0
     character_data.must_settle_second_behavior_id_list = []
