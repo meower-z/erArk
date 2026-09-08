@@ -4,7 +4,7 @@ from types import FunctionType
 from Script.Core import cache_control, constant, game_type, get_text, text_handle, rich_text
 from Script.Core.web_server import emit_realtime_text
 from Script.Design import attr_text, attr_calculation, handle_premise, talk, game_time, second_behavior
-from Script.Design.effect_dispatch import add_settle_behavior_effect, add_settle_second_behavior_effect
+from Script.Design.effect_registration import add_settle_behavior_effect, add_settle_second_behavior_effect
 from Script.Config import game_config, normal_config
 from Script.System.First_Record_System import first_record_handle
 from Script.System.Instruct_System import handle_instruct
