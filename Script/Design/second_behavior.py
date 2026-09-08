@@ -184,7 +184,7 @@ def second_behavior_effect(
             character_data.position != cache.character_data[0].position
             and character_data.behavior.move_src != cache.character_data[0].position
     ):
-        talk.must_show_talk_check(character_id, target_character_id)
+        talk.must_show_talk_check(character_id)
         must_settle_check(character_id, target_character_id)
         return
 
