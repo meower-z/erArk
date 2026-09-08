@@ -82,7 +82,6 @@ def check_second_effect(
         character_id: int,
         change_data: game_type.CharacterStatusChange,
         pl_to_npc: bool = False,
-        *, target_id=None, root_change=None, change_owner_id=None,
 ):
     """
     处理第二结算
@@ -90,14 +89,7 @@ def check_second_effect(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     pl_to_npc -- 玩家对NPC的行为结算
-    target_id -- 本次交互目标id，省略时使用角色的交互对象
-    root_change、change_owner_id -- 本轮根记录及其所属角色，省略时使用change_data和character_id
     """
-    # 二段效果沿用本轮根记录，受体变化可记回执行者或其他参与者。
-    if root_change is None:
-        root_change = change_data
-    if change_owner_id is None:
-        change_owner_id = character_id
     # 延迟导入，避免与Script.Settle包的循环导入
     orgasm_settle = _get_orgasm_settle()
 
@@ -127,13 +119,13 @@ def check_second_effect(
         # 道具结算
         item_effect(character_id)
         # 进行结算
-        second_behavior_effect(character_id, change_data, target_id=target_id, root_change=root_change, change_owner_id=change_owner_id)
+        second_behavior_effect(character_id, change_data)
         # NPC的刻印结算
         change_data.target_change.setdefault(character_data.target_character_id, game_type.TargetChange())
         target_change: game_type.TargetChange = change_data.target_change[character_data.target_character_id]
         mark_effect(character_data.target_character_id, target_change)
         # 单独遍历结算刻印
-        second_behavior_effect(character_data.target_character_id, target_change, mark_list, target_id=character_id, root_change=root_change, change_owner_id=change_owner_id)
+        second_behavior_effect(character_data.target_character_id, target_change, mark_list)
 
     # NPC自己检测自己
     if character_id != 0:
@@ -144,20 +136,20 @@ def check_second_effect(
         # 道具结算
         item_effect(character_id)
         # 进行结算
-        second_behavior_effect(character_id, change_data, target_id=target_id, root_change=root_change, change_owner_id=change_owner_id)
+        second_behavior_effect(character_id, change_data)
         # 高潮结算
         orgasm_settle.orgasm_judge(character_id, change_data)
         # 单独遍历结算高潮，按部位仅取最高绝顶程度触发口上
-        second_behavior_effect(character_id, change_data, orgasm_list, orgasm_settle_flag=True, target_id=target_id, root_change=root_change, change_owner_id=change_owner_id)
+        second_behavior_effect(character_id, change_data, orgasm_list, orgasm_settle_flag=True)
         # 无壳卵生的体外排卵二段行为在高潮结算中才被赋予（不在进入本函数时构建的列表内），此处显式结算使其与本轮绝顶同步生效
         from Script.System.Pregnancy_System import pregnancy_constant
         if character_data.second_behavior.get(pregnancy_constant.LAY_SOFT_EGG_SECOND_BEHAVIOR, 0):
-            second_behavior_effect(character_id, change_data, [pregnancy_constant.LAY_SOFT_EGG_SECOND_BEHAVIOR], target_id=target_id, root_change=root_change, change_owner_id=change_owner_id)
+            second_behavior_effect(character_id, change_data, [pregnancy_constant.LAY_SOFT_EGG_SECOND_BEHAVIOR])
 
         # 刻印结算
         mark_effect(character_id, change_data)
         # 单独遍历结算刻印
-        second_behavior_effect(character_id, change_data, mark_list, target_id=target_id, root_change=root_change, change_owner_id=change_owner_id)
+        second_behavior_effect(character_id, change_data, mark_list)
 
 
 def second_behavior_effect(
@@ -165,7 +157,6 @@ def second_behavior_effect(
         change_data: game_type.CharacterStatusChange,
         second_behavior_list: list = [],
         orgasm_settle_flag: bool = False,
-        *, target_id=None, root_change=None, change_owner_id=None,
         ):
     """
     触发二段行为的口上与效果
@@ -174,14 +165,7 @@ def second_behavior_effect(
     change_data -- 状态变更信息记录对象
     second_behavior_list -- 仅计算该范围内的二段行为id列表，默认为[]
     orgasm_settle_flag -- 是否为高潮结算调用，为True时按部位统计部位绝顶行为，每个部位仅程度最高的触发口上，其余仅结算效果，默认为False
-    target_id -- 本次交互目标id，省略时使用角色的交互对象
-    root_change、change_owner_id -- 本轮根记录及其所属角色，省略时使用change_data和character_id
     """
-    # 二段效果沿用本轮根记录，受体变化可记回执行者或其他参与者。
-    if root_change is None:
-        root_change = change_data
-    if change_owner_id is None:
-        change_owner_id = character_id
     # 延迟导入，避免与Script.Settle包的循环导入
     orgasm_settle = _get_orgasm_settle()
 
@@ -248,10 +232,7 @@ def second_behavior_effect(
                     if effect_id not in constant.settle_second_behavior_effect_data:
                         print(f"debug second_behavior_id = {second_behavior_id}，effect_id = {effect_id}没有找到对应的结算效果")
                         continue
-                    settle_behavior.invoke_second_effect(
-                        effect_id, character_id, character_data.target_character_id if target_id is None else target_id,
-                        change_data, root_change=root_change, change_owner_id=change_owner_id,
-                    )
+                    constant.settle_second_behavior_effect_data[effect_id](character_id, character_data.target_character_id, change_data)
             # print(f"debug {character_data.name}触发二段行为效果，behavior_id = {behavior_id}")
             # 触发后该行为值归零
             character_data.second_behavior[second_behavior_id] = 0
@@ -277,7 +258,7 @@ def must_settle_check(character_id: int):
                 effect_all_value_list = effect_id.split("_")[1:]
                 settle_behavior.handle_comprehensive_value_effect(character_id, effect_all_value_list, change_data)
             else:
-                settle_behavior.invoke_second_effect(effect_id, character_id, character_data.target_character_id, change_data)
+                constant.settle_second_behavior_effect_data[effect_id](character_id, character_data.target_character_id, change_data)
         # 触发后该行为值归零
         character_data.second_behavior[behavior_id] = 0
     character_data.must_settle_second_behavior_id_list = []
