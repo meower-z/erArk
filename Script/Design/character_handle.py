@@ -358,7 +358,7 @@ def add_favorability(
     target_change: game_type.TargetChange,
 ):
     """
-    按传入的双方角色增加好感；目标为玩家时增加当前NPC对玩家的好感，否则增加目标对当前角色的好感
+    增加 NPC 对交互对象的好感，并记录变更
     Keyword arguments:
     character_id -- 当前角色id，int
     target_id -- 目标角色id，int
