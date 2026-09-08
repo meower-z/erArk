@@ -4,7 +4,7 @@ from types import FunctionType
 
 from Script.Core import cache_control, game_type, value_handle, get_text, constant, rich_text
 from Script.Core.web_server import emit_realtime_text
-from Script.Design import map_handle, handle_premise, talk_image
+from Script.Design import map_handle, handle_premise, talk_image, effect_dispatch
 from Script.UI.Moudle import draw
 from Script.Config import normal_config, game_config
 
@@ -422,7 +422,7 @@ def must_show_talk_check(character_id: int):
         # 遍历该二段行为的所有结算效果，挨个触发，但因为不在结算阶段，所以不会显示具体的结算数据
         change_data = game_type.CharacterStatusChange()
         for effect_id in game_config.config_behavior_effect_data[behavior_id]:
-            constant.settle_second_behavior_effect_data[effect_id](character_id, change_data)
+            effect_dispatch.invoke_second_effect(effect_id, character_id, character_data.target_character_id, change_data)
         # 触发后该行为值归零
         character_data.second_behavior[behavior_id] = 0
     character_data.must_show_second_behavior_id_list = []

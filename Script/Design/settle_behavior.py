@@ -1,10 +1,14 @@
 import datetime
 import random
-from functools import wraps
 from types import FunctionType
 from Script.Core import cache_control, constant, game_type, get_text, text_handle, rich_text
 from Script.Core.web_server import emit_realtime_text
 from Script.Design import attr_text, attr_calculation, handle_premise, talk, game_time, second_behavior
+from Script.Design.effect_dispatch import (
+    EffectRole, add_settle_behavior_effect, add_settle_second_behavior_effect,
+    add_behavior_operation, add_interaction_target_selector,
+    invoke_behavior_effect, invoke_second_effect,
+)
 from Script.Config import game_config, normal_config
 from Script.System.First_Record_System import first_record_handle
 from Script.System.Instruct_System import handle_instruct
@@ -407,17 +411,7 @@ def handle_instruct_data(
             talk.handle_talk(character_id)
         else:
             now_character_data.event.skip_instruct_talk = False
-        for effect_id in game_config.config_behavior_effect_data[behavior_id]:
-            # 综合数值结算判定
-            # 如果effect_id是str类型，则说明是综合数值结算
-            if isinstance(effect_id, str) and "CVE" in effect_id:
-                effect_all_value_list = effect_id.split("_")[1:]
-                handle_comprehensive_value_effect(character_id, effect_all_value_list, change_data)
-            else:
-                if effect_id not in constant.settle_behavior_effect_data:
-                    print(f"error 不存在的结算 = {effect_id}")
-                    continue
-                constant.settle_behavior_effect_data[effect_id](character_id, add_time, change_data, now_time)
+        settle_effect_list(character_id, now_character_data.target_character_id, game_config.config_behavior_effect_data[behavior_id], add_time, change_data, now_time)
         # 如果是对他人的行为，则将自己的id与行动结束时间记录到对方的数据中
         if now_character_data.target_character_id != character_id:
             end_time = game_time.get_sub_date(minute=now_character_data.behavior.duration, old_date=now_character_data.behavior.start_time)
@@ -427,7 +421,7 @@ def handle_instruct_data(
         if behavior_id in game_config.config_behavior:
             behavior_data = game_config.config_behavior[behavior_id]
             if _('娱乐') in behavior_data.tag or _('工作') in behavior_data.tag:
-                constant.settle_behavior_effect_data[1751](character_id, add_time, change_data, now_time)
+                invoke_behavior_effect(1751, character_id, now_character_data.target_character_id, add_time, change_data, now_time)
     # 进行二段结算
     second_behavior.check_second_effect(character_id, change_data)
     # 进行额外经验结算
@@ -443,7 +437,7 @@ def handle_instruct_data(
     for target_chara_id in second_behavior_effect_target_id_set:
         change_data.target_change.setdefault(target_chara_id, game_type.TargetChange())
         target_change: game_type.TargetChange = change_data.target_change[target_chara_id]
-        second_behavior.check_second_effect(target_chara_id, target_change, pl_to_npc = True)
+        second_behavior.check_second_effect(target_chara_id, target_change, pl_to_npc = True, target_id=character_id, root_change=change_data, change_owner_id=character_id)
         # 进行额外经验结算
         extra_exp_settle(target_chara_id, target_change)
     return change_data
@@ -463,60 +457,38 @@ def handle_event_data(event_id, character_id, add_time, change_data, now_time):
         # 进行事件结算
         # print(f"debug handle_settle_behavior event_id = {event_id}")
         event_data: game_type.Event = game_config.config_event[event_id]
-        for effect in event_data.effect:
-            # 综合数值结算判定
-            if "CVE" in effect:
-                effect_all_value_list = effect.split("_")[1:]
-                handle_comprehensive_value_effect(character_id, effect_all_value_list, change_data)
-            # 综合指令状态结算判定
-            elif "CSE" in effect:
-                effect_all_value_str = effect.split("_", 1)[1]
-                A = effect_all_value_str.split("_", 1)[0]
-                behavior_id = effect_all_value_str.split("_", 1)[1]
-                effect_all_value_list = [A, behavior_id]
-                handle_instruct.handle_comprehensive_state_effect(effect_all_value_list, character_id, add_time, change_data, now_time)
-            # 其他结算判定
-            else:
-                constant.settle_behavior_effect_data[int(effect)](
-                    character_id, add_time, change_data, now_time
-                )
+        settle_effect_list(character_id, cache.character_data[character_id].target_character_id, event_data.effect, add_time, change_data, now_time, event_flag=True)
     return change_data
 
 
-def add_settle_behavior_effect(behavior_effect_id: int):
+def settle_effect_list(actor_id, target_id, effects, add_time, change_data, now_time, event_flag=False):
     """
-    添加行为结算处理
-    Keyword arguments:
-    behavior_id -- 行为id
+    按配置顺序结算效果，返回后续效果使用的目标id。
+    actor_id、target_id -- 行为执行者和目标id，int
+    effects -- 效果列表，list；add_time -- 经过时间，int；now_time -- 结算时间
+    change_data -- 执行者的变化记录；event_flag -- 是否为事件列表，bool
+    返回 -- 结算后的目标id，int
     """
-
-    def decorator(func):
-        @wraps(func)
-        def return_wrapper(*args, **kwargs):
-            return func(*args, **kwargs)
-
-        constant.settle_behavior_effect_data[behavior_effect_id] = return_wrapper
-        return return_wrapper
-
-    return decorator
-
-
-def add_settle_second_behavior_effect(second_behavior_effect_id: int):
-    """
-    添加二段行为结算处理
-    Keyword arguments:
-    second_behavior_effect_id -- 二段行为id
-    """
-
-    def decorator(func):
-        @wraps(func)
-        def return_wrapper(*args, **kwargs):
-            return func(*args, **kwargs)
-
-        constant.settle_second_behavior_effect_data[second_behavior_effect_id] = return_wrapper
-        return return_wrapper
-
-    return decorator
+    actor_data = cache.character_data[actor_id]
+    for effect in effects:
+        stored_target_id = actor_data.target_character_id
+        if isinstance(effect, str) and "CVE" in effect:
+            effect_values = effect.split("_")[1:]
+            settled = handle_comprehensive_value_effect(actor_id, effect_values, change_data, target_id=target_id)
+            if actor_data.target_character_id != stored_target_id or (settled and effect_values[1].split("|")[0] == "ChangeTargetId"):
+                target_id = actor_data.target_character_id
+        elif event_flag and isinstance(effect, str) and "CSE" in effect:
+            effect_values = effect.split("_", 1)[1].split("_", 1)
+            handle_instruct.handle_comprehensive_state_effect(effect_values, actor_id, add_time, change_data, now_time)
+            if actor_data.target_character_id != stored_target_id:
+                target_id = actor_data.target_character_id
+        else:
+            effect_id = int(effect) if event_flag else effect
+            if not event_flag and effect_id not in constant.settle_behavior_effect_data:
+                print(f"error 不存在的结算 = {effect_id}")
+                continue
+            target_id = invoke_behavior_effect(effect_id, actor_id, target_id, add_time, change_data, now_time)
+    return target_id
 
 
 def get_cut_down_favorability_for_consume_time(consume_time: int):
@@ -707,12 +679,13 @@ def extra_exp_settle(
             base_chara_experience_common_settle(character_id, 35, target_flag=True, change_data=change_data)
 
 
-def handle_comprehensive_value_effect(character_id: int, effect_all_value_list: list, change_data: game_type.CharacterStatusChange = game_type.CharacterStatusChange()) -> int:
+def handle_comprehensive_value_effect(character_id: int, effect_all_value_list: list, change_data: game_type.CharacterStatusChange = game_type.CharacterStatusChange(), *, target_id=None) -> int:
     """
     综合型基础数值结算
     Keyword arguments:
     character_id -- 角色id
     effect_all_value_list -- 结算的各项数值
+    target_id -- 本次目标id；省略时使用角色的交互对象
     change_data -- 结算信息记录对象
     Return arguments:
     bool -- 是否结算成功
@@ -723,6 +696,8 @@ def handle_comprehensive_value_effect(character_id: int, effect_all_value_list: 
     from Script.Design import character
 
     character_data: game_type.Character = cache.character_data[character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
     # print(f"debug character_id = {character_id}, effect_all_value_list = {effect_all_value_list}")
 
     # 进行主体A的判别，A1为自己，A2为交互对象，A3为指定id角色(格式为A3|15)
@@ -734,11 +709,11 @@ def handle_comprehensive_value_effect(character_id: int, effect_all_value_list: 
         # # 如果没有交互对象，则返回0
         # if character_data.target_character_id == character_id:
         #     return 0
-        final_character_data = cache.character_data[character_data.target_character_id]
-        change_data.target_change.setdefault(character_data.target_character_id, game_type.TargetChange())
-        target_change: game_type.TargetChange = change_data.target_change[character_data.target_character_id]
+        final_character_data = cache.character_data[target_id]
+        change_data.target_change.setdefault(target_id, game_type.TargetChange())
+        target_change: game_type.TargetChange = change_data.target_change[target_id]
         final_change_data = target_change
-        final_character_id = character_data.target_character_id
+        final_character_id = target_id
     elif effect_all_value_list[0][:2] == "A3":
         final_character_adv = int(effect_all_value_list[0][3:])
         final_character_id = character.get_character_id_from_adv(final_character_adv)
