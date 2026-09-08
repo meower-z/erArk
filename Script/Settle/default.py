@@ -2802,7 +2802,6 @@ def handle_move_to_own_dormitory(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.STOP_ENDURANCE_SHOOT)
 def handle_stop_endurance_shoot(
         character_id: int,
-        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -2811,7 +2810,6 @@ def handle_stop_endurance_shoot(
     射出忍耐的射精次数
     Keyword arguments:
     character_id -- 角色id
-    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -2820,7 +2818,7 @@ def handle_stop_endurance_shoot(
         return
     from Script.Settle import orgasm_settle
     orgasm_settle.orgasm_judge(character_id, change_data, skip_undure = True)
-    second_behavior.second_behavior_effect(character_id, target_character_id, change_data)
+    second_behavior.second_behavior_effect(character_id, cache.character_data[character_id].target_character_id, change_data)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_BE_CARRIED)
 def handle_target_be_carried(
@@ -7080,7 +7078,7 @@ def handle_orgasm_edge_release(
         return
     # 仅在交互对象确有寸止累计时才建立其TargetChange并解放，避免空条目影响显示判定
     if cache.character_data[target_id].h_state.orgasm_edge != 0:
-        orgasm_settle.release_orgasm_edge_now(target_id, character_id, change_data.target_change.setdefault(target_id, game_type.TargetChange()))
+        orgasm_settle.release_orgasm_edge_now(target_id, change_data.target_change.setdefault(target_id, game_type.TargetChange()))
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TIME_STOP_ORGASM_RELEASE)
@@ -7140,7 +7138,7 @@ def handle_end_h_add_hpmp_max(
     from Script.Design import handle_ability
     from Script.Settle import orgasm_settle
     # 计奖前先释放行为者憋住的累计寸止绝顶，使其计入下方奖励统计（无累计时空转）
-    orgasm_settle.release_orgasm_edge_now(character_id, target_character_id, change_data)
+    orgasm_settle.release_orgasm_edge_now(character_id, change_data)
     character_data: game_type.Character = cache.character_data[character_id]
     id_list = [character_id]
     if target_character_id != character_id:
@@ -7150,7 +7148,7 @@ def handle_end_h_add_hpmp_max(
         info_text = now_character_data.name
         # 如果玩家有忍耐的射精次数，则射出
         if chara_id == 0 and handle_premise.handle_pl_endure_orgasm_count_ge_1(chara_id):
-            handle_stop_endurance_shoot(chara_id, target_character_id if character_id == 0 else character_id, add_time, change_data, now_time)
+            handle_stop_endurance_shoot(chara_id, add_time, change_data, now_time)
         # 统计绝顶次数
         orgasm_count = 0
         for state_id in game_config.config_character_state:
@@ -7215,7 +7213,7 @@ def handle_group_sex_end_h_add_hpmp_max(
         now_character_data: game_type.Character = cache.character_data[chara_id]
         # 统计绝顶奖励前，先为该在场参与者解放并结算其累计的寸止绝顶，使其计入退出奖励；无累计者不建立空TargetChange条目
         if now_character_data.h_state.orgasm_edge != 0:
-            orgasm_settle.release_orgasm_edge_now(chara_id, character_id, change_data.target_change.setdefault(chara_id, game_type.TargetChange()))
+            orgasm_settle.release_orgasm_edge_now(chara_id, change_data.target_change.setdefault(chara_id, game_type.TargetChange()))
         orgasm_count = 0
         info_text = now_character_data.name
         for state_id in game_config.config_character_state:
