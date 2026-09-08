@@ -32,15 +32,16 @@ def _register(effect_id, *, second=False, kind="effect", recipient=None, source=
     bindings = _second_bindings if second else _behavior_bindings
     if kind == "effect" and recipient is None:
         kind = "legacy"
-    argument_count = (2 if second else 4) + (source is not None or kind in {"operation", "selector"})
+    base_count = 2 if second else 4
+    argument_counts = (base_count, base_count + 1) if kind == "operation" else (base_count + (source is not None or kind == "selector"),)
 
     def decorator(func):
         """检查函数的参数数量和位置，注册后返回原函数，保留直接调用方式。"""
         parameters = tuple(signature(func).parameters.values())
-        if len(parameters) != argument_count or any(p.kind not in {Parameter.POSITIONAL_ONLY, Parameter.POSITIONAL_OR_KEYWORD} for p in parameters):
-            raise TypeError(f"结算函数 {func.__name__} 应接收 {argument_count} 个位置参数")
+        if len(parameters) not in argument_counts or any(p.kind not in {Parameter.POSITIONAL_ONLY, Parameter.POSITIONAL_OR_KEYWORD} for p in parameters):
+            raise TypeError(f"结算函数 {func.__name__} 的位置参数数量应为 {argument_counts}")
         table[effect_id] = func
-        bindings[effect_id] = (kind, recipient, source)
+        bindings[effect_id] = (kind, recipient, source, len(parameters) == base_count + 1)
         return func
 
     return decorator
@@ -68,9 +69,10 @@ def add_settle_second_behavior_effect(second_behavior_effect_id: int, *, recipie
 
 def add_behavior_operation(behavior_effect_id: int, *, second=False):
     """
-    注册场景、调度或多人操作，返回保留原函数的装饰器。
+    注册行为结算，返回保留原函数的装饰器。
     behavior_effect_id -- 效果id；second -- 是否为二段操作，bool
-    普通操作接收actor_id、target_id、add_time、change_data、now_time；二段操作接收actor_id、target_id、change_data。
+    普通行为接收actor_id、add_time、change_data、now_time；二段行为接收actor_id、change_data。
+    需要目标时在actor_id后增加target_id，注册时按参数数量确定调用方式。
     change_data属于actor，操作自行安排各角色的结算。
     """
     return _register(behavior_effect_id, second=second, kind="operation")
@@ -126,7 +128,7 @@ def _invoke(effect_id, actor_id, target_id, change_data, add_time=None, now_time
     """
     table = constant.settle_second_behavior_effect_data if second else constant.settle_behavior_effect_data
     bindings = _second_bindings if second else _behavior_bindings
-    kind, recipient, source = bindings[effect_id]
+    kind, recipient, source, two_roles = bindings[effect_id]
     if root_change is None:
         root_change = change_data
     if change_owner_id is None:
@@ -138,7 +140,7 @@ def _invoke(effect_id, actor_id, target_id, change_data, add_time=None, now_time
             role_ids.append(_resolve_role(source, actor_id, target_id, recipient_id))
         effect_change = get_recipient_change(change_owner_id, recipient_id, root_change)
     else:
-        role_ids = [actor_id] if kind == "legacy" else [actor_id, target_id]
+        role_ids = [actor_id, target_id] if two_roles else [actor_id]
         effect_change = change_data
     args = [effect_change] if second else [add_time, effect_change, now_time]
     result = table[effect_id](*role_ids, *args)
