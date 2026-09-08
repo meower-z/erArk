@@ -153,12 +153,19 @@ def commit_group_sex_tired_exit(character_id: int):
     """
     from Script.System.Instruct_System import handle_instruct
 
-    character_data: game_type.Character = cache.character_data[character_id]
     # 目标指向自己并配置退出行为
-    character_data.target_character_id = character_id
-    handle_instruct.chara_handle_instruct_common_settle(constant.Behavior.GROUP_SEX_NPC_HP_0_END, character_id)
+    handle_instruct.chara_handle_instruct_common_settle(constant.Behavior.GROUP_SEX_NPC_HP_0_END, character_id, target_character_id=character_id)
     # 恰好结算一次，执行退出行为的清理效果链（1503欲望清零/528补HPMP上限/403重置H状态/635穿回衣服）
-    character_behavior.judge_character_status(character_id)
+    from Script.Modules.game_actions import submit_current
+
+    submit_current(character_id, after="group_exit")
+
+
+def finish_group_sex_tired_exit(character_id: int):
+    """退出行动完成后按剩余成员决定收尾；输入角色编号，返回 None。"""
+    from Script.Modules.game_actions import submit_current
+    from Script.System.Instruct_System import handle_instruct
+
     # 退出者is_h已被403清零；统计玩家所在场景仍在H的群交成员（不再误算非群交旁观者）
     pl_character_data: game_type.Character = cache.character_data[0]
     scene_path_str = map_handle.get_map_system_path_str_for_list(pl_character_data.position)
@@ -173,7 +180,7 @@ def commit_group_sex_tired_exit(character_id: int):
         pl_character_data.target_character_id = new_target_id
         pl_character_data.behavior.behavior_id = constant.Behavior.GROUP_SEX_TO_H
         pl_character_data.state = constant.CharacterStatus.STATUS_GROUP_SEX_TO_H
-        character_behavior.judge_character_status(0)
+        submit_current(0)
     # 已无仍在H的成员，由结束群交指令收尾
     elif len(remaining_ids) == 0:
         handle_instruct.handle_group_sex_end()
@@ -755,6 +762,8 @@ def judge_same_position_npc_follow():
     Keyword arguments:\n
     无
     """
+    from Script.Modules.game_actions import submit_current
+
     pl_character_data: game_type.Character = cache.character_data[0]
     for character_id in cache.npc_id_got:
         character_data: game_type.Character = cache.character_data[character_id]
@@ -772,6 +781,7 @@ def judge_same_position_npc_follow():
             move_flag, wait_flag = character_move.judge_character_move_to_private(character_id, move_path)
             if move_flag:
                 character_data.behavior.behavior_id = constant.Behavior.MOVE
+                character_data.state = constant.CharacterStatus.STATUS_MOVE
                 character_data.behavior.move_target = move_path
                 character_data.behavior.move_final_target = pl_character_data.behavior.move_final_target
                 character_data.behavior.duration = move_time
@@ -780,8 +790,12 @@ def judge_same_position_npc_follow():
                 character_data.action_info.follow_wait_time = 0
             elif wait_flag:
                 character_data.behavior.behavior_id = constant.Behavior.WAIT
+                character_data.state = constant.CharacterStatus.STATUS_WAIT
                 character_data.behavior.duration = 5
                 character_data.action_info.follow_wait_time += 5
+            # 仅为本次确实生成的跟随行动替换待办。
+            if move_flag or wait_flag:
+                submit_current(character_id)
             # print(f"debug {character_data.name}跟随玩家，当前位置为{character_data.position}，当前目标位置为{move_path}，最终目标位置为{pl_character_data.behavior.move_final_target}，行动时间为{move_time}分钟, start_time = {character_data.behavior.start_time}")
         # 隐奸携带模式中被携带的角色，直接同步移动到玩家本段移动的目的地（不使用移动行为，仅搬运位置）
         elif character_data.sp_flag.hidden_sex_mode == 5:

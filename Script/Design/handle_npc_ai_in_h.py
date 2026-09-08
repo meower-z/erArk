@@ -154,7 +154,9 @@ def judge_character_h_obscenity_unconscious(character_id: int, pl_start_time: da
             # 如果已经获得性爱助手行为，则结算助手行动
             elif character_data.h_state.sex_assist:
                 # 手动结算性爱助手行动
-                character_behavior.judge_character_status(character_id)
+                from Script.Modules.game_actions import submit_current
+
+                submit_current(character_id)
                 character_data.h_state.sex_assist = False
         character_data.behavior.behavior_id = constant.Behavior.WAIT
         character_data.state = constant.CharacterStatus.STATUS_WAIT
@@ -239,6 +241,26 @@ def recover_from_unconscious_h(character_id: int, info_text: str = ""):
     # 结算交互对象的响应
     response = handle_unconscious_h_response(character_id, character_data.target_character_id)
 
+    # 各响应动作完成后再恢复双方状态，避免排队后提前清理其结算输入。
+    from Script.Modules.game_actions import submit_current
+
+    character_data.target_character_id = target_data.cid
+    character_data.behavior.behavior_id = constant.Behavior.WAIT
+    character_data.state = constant.CharacterStatus.STATUS_WAIT
+    character_data.behavior.duration = 5
+    submit_current(character_id, after=("unconscious_recovery", target_data.cid, response))
+
+
+def finish_unconscious_h_recovery(character_id: int, target_character_id: int, response: int):
+    """响应链完成后恢复双方状态；输入发起者、对象编号与裁决，返回 None。"""
+    from Script.Settle import default
+    from Script.Modules.game_actions import wait_on
+
+    character_data: game_type.Character = cache.character_data[character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
+    scene_path_str = map_handle.get_map_system_path_str_for_list(character_data.position)
+    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
+
     # 对方的行为改为等待
     target_data.behavior.behavior_id = constant.Behavior.WAIT
     target_data.state = constant.CharacterStatus.STATUS_WAIT
@@ -248,8 +270,6 @@ def recover_from_unconscious_h(character_id: int, info_text: str = ""):
         default.handle_h_flag_to_1(target_data.cid, 1, game_type.CharacterStatusChange(), cache.game_time)
         character_data.behavior.behavior_id = constant.Behavior.WAIT
         character_data.state = constant.CharacterStatus.STATUS_WAIT
-        # 对方的行为时间设为10分钟
-        target_data.behavior.duration = 10
         # 睡眠中，则对方获得装睡状态，仍继续无意识H
         if handle_premise.handle_action_sleep(character_data.target_character_id):
             target_data.h_state.pretend_sleep = True
@@ -260,15 +280,13 @@ def recover_from_unconscious_h(character_id: int, info_text: str = ""):
             cache.achievement.sleep_sex_record[1] = 1
     # 否则
     else:
-        # 对象行为时间改为1分钟
-        target_data.behavior.duration = 1
         # 重置双方H结构体和相关数据
         default.handle_both_h_state_reset(0, 1, game_type.CharacterStatusChange(), datetime.datetime(1, 1, 1))
         # 地点开门
         scene_data.close_flag = 0
 
-    # 时间推进5分钟
-    update.game_update_flow(5)
+    wait_on(target_character_id, character_id, constant.Behavior.WAIT)
+
 
 class UnconsciousHResponse:
     """无意识H被打断后的裁决结果"""
@@ -301,8 +319,7 @@ def handle_unconscious_h_response(character_id: int, target_character_id: int, c
         并按裁决结果改写玩家的行为与状态。
         裁决为继续H以外的结果时，借玩家的状态机成对结算这场H的收尾；
         裁决为继续H而can_continue为False时，改为直接对目标角色本人做退出结算。
-        因此返回后，除〈裁决为CONTINUE_H且can_continue为True〉这一种情况外，
-        目标角色的收尾都已经在本函数内完成。
+        非继续分支提交两步响应，返回后由调度器依次执行；调用方的收尾也须排在响应之后。
     """
     from Script.Settle import default, default_cloth
 
@@ -337,6 +354,9 @@ def handle_unconscious_h_response(character_id: int, target_character_id: int, c
             response = UnconsciousHResponse.ANGRY
             target_data.angry_point += 100
             target_data.sp_flag.angry_with_player = True
+            # 明确排入失败反应，避免沿用并再次执行刚才的行动。
+            character_data.behavior.behavior_id = constant.Behavior.DO_H_FAIL
+            character_data.state = constant.CharacterStatus.STATUS_DO_H_FAIL
         # 如果没有陷落状态，则设置为高级性骚扰状态
         else:
             response = UnconsciousHResponse.HIGH_OBSCENITY
@@ -348,14 +368,18 @@ def handle_unconscious_h_response(character_id: int, target_character_id: int, c
         character_data.behavior.behavior_id = constant.Behavior.DO_H_FAIL
         character_data.state = constant.CharacterStatus.STATUS_DO_H_FAIL
 
-    # 不继续H，当场借玩家的状态机成对结算
+    # 不继续H，提交玩家的两步响应，当前动作返回后依次结算。
     if response != UnconsciousHResponse.CONTINUE_H:
         character_data.behavior.duration = 5
         character_data.target_character_id = target_character_id
-        character_behavior.judge_character_status(character_id)
+        from Script.Modules.game_actions import submit_current
+
+        submit_current(character_id)
         character_data.behavior.behavior_id = constant.Behavior.NO_CONSCIOUS_H_END
         character_data.state = constant.CharacterStatus.STATUS_NO_CONSCIOUS_H_END
-        character_behavior.judge_character_status(character_id)
+        character_data.behavior.duration = 5
+        character_data.target_character_id = target_character_id
+        submit_current(character_id)
     # 裁决为继续H但本次不允许继续，对目标角色本人做退出奖励、H状态归位与穿回衣物。
     # 退出奖励会连同角色的交互对象一起结算，而目标角色身上的交互对象可能是没有清理过的旧值，
     # 因此先把目标指向自己再发奖
@@ -414,7 +438,9 @@ def judge_weak_up_in_sleep_h(character_id: int, target_character_id: int):
             # 该分支会跳过sp_flag.bagging_chara_id等于交互对象id的情况，而玩家id与其默认值同为0，
             # 因此玩家被762推走后本行为不会被判定为已结束。改动bagging_chara_id的默认值时需同步复核此处。
             target_data.target_character_id = character_id
-            character_behavior.judge_character_status(target_character_id)
+            from Script.Modules.game_actions import submit_current
+
+            submit_current(target_character_id)
         else:
             # 醉酒、时停、平然、空气、体控、心控等其他无意识状态：沿用旧的提示与结束流程
             info_text = _("\n{0}被{1}的动静吵醒了\n").format(target_data.name, now_character_data.name)

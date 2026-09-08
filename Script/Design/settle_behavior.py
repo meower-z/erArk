@@ -87,7 +87,11 @@ def handle_settle_behavior(character_id: int, now_time: datetime.datetime, event
                     warden_character_data.behavior.duration = now_character_data.behavior.duration
                     warden_character_data.behavior.start_time = now_character_data.behavior.start_time
                     warden_character_data.target_character_id = now_character_data.target_character_id
-                    warden_character_data.h_state.sex_assist = True
+                    from Script.Modules.game_actions import submit_current
+
+                    # 已提交助手行动，不再等待 NPC 的下一次自主检查。
+                    warden_character_data.h_state.sex_assist = False
+                    submit_current(warden_character_id)
         # 正常情况下则直接执行结算
         else:
             # 进行指令相关数据的结算

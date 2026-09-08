@@ -380,13 +380,10 @@ def chara_handle_instruct_common_settle(
         if duration <= 0:
             duration = 1
     character_data.behavior.duration = duration
-    # 如果强制目标等待，则将目标角色状态设置为等待
+    # 双人行动由主体结算，参与者只检查主体是否仍在执行该行为。
     if target_character_id != character_id and force_taget_wait:
-        instuct_judege.init_character_behavior_start_time(target_character_id, cache.game_time)
-        target_character_data: game_type.Character = cache.character_data[target_character_id]
-        target_character_data.state = constant.CharacterStatus.STATUS_WAIT
-        target_character_data.behavior.behavior_id = constant.Behavior.WAIT
-        target_character_data.behavior.duration = duration
+        from Script.Modules import game_actions
+        game_actions.wait_on(target_character_id, character_id, behavior_id)
     # 群交结算
     group_sex_panel.group_sex_settle(character_id, target_character_id, behavior_id)
     # 仅在玩家指令时更新游戏流程
@@ -1472,7 +1469,8 @@ def handle_ask_group_sex():
                 continue
             chara_handle_instruct_common_settle(constant.Behavior.JOIN_GROUP_SEX, character_id=chara_id, target_character_id=0)
             # 手动结算该状态
-            character_behavior.judge_character_status(chara_id)
+            from Script.Modules import game_actions
+            game_actions.submit_current(chara_id)
     else:
         now_draw.text = _("\n进入群交模式失败\n")
         for chara_id in refuse_chara_list:
@@ -1501,6 +1499,20 @@ def handle_wait_5_min_in_h():
     else:
         chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration = 5)
 
+def _schedule_h_end_wait(character_id: int) -> None:
+    """将已配置的结束后等待排入队列；输入角色编号 int，返回 None。"""
+    from Script.Modules.action import Action
+    from Script.Modules.game_actions import get_runtime
+    from Script.Modules.scheduler import Task
+
+    runtime = get_runtime()
+    action = Action.from_character(cache.character_data[character_id])
+    # 普通待办排在玩家的立即结束行动之后，等待只结算经过时间。
+    action.continued = True
+    runtime.plans.pop(character_id, None)
+    runtime.scheduler.replace(Task(character_id, runtime.scheduler.now, action))
+
+
 @add_instruct(constant.Instruct.H_END)
 def handle_h_end():
     """处理H结束指令"""
@@ -1528,6 +1540,7 @@ def handle_h_end():
         target_data.behavior.duration = 10
         target_data.behavior.start_time = character_data.behavior.start_time
         target_data.state = constant.CharacterStatus.STATUS_WAIT
+        _schedule_h_end_wait(target_data.cid)
 
     # H结束时的其他处理完毕
     now_draw = draw.WaitDraw()
@@ -1594,6 +1607,7 @@ def handle_hidden_sex_end():
     target_data.behavior.duration = 10
     target_data.behavior.start_time = character_data.behavior.start_time
     target_data.state = constant.CharacterStatus.STATUS_WAIT
+    _schedule_h_end_wait(target_data.cid)
 
     # H结束时的其他处理完毕
     now_draw = draw.WaitDraw()
@@ -1628,6 +1642,7 @@ def handle_exhibitionism_sex_end():
     target_data.behavior.duration = 10
     target_data.behavior.start_time = character_data.behavior.start_time
     target_data.state = constant.CharacterStatus.STATUS_WAIT
+    _schedule_h_end_wait(target_data.cid)
 
     # H结束时的其他处理完毕
     now_draw = draw.WaitDraw()
@@ -1732,6 +1747,7 @@ def handle_end_sex_class():
         target_data.behavior.duration = 10
         target_data.behavior.start_time = character_data.behavior.start_time
         target_data.state = constant.CharacterStatus.STATUS_WAIT
+        _schedule_h_end_wait(target_data.cid)
 
     now_draw = draw.WaitDraw()
     now_draw.width = width
@@ -1764,6 +1780,7 @@ def handle_group_sex_end():
         target_data.behavior.duration = 10
         target_data.behavior.start_time = character_data.behavior.start_time
         target_data.state = constant.CharacterStatus.STATUS_WAIT
+        _schedule_h_end_wait(target_data.cid)
 
     # H结束时的其他处理完毕
     now_draw = draw.WaitDraw()

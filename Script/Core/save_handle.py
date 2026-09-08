@@ -642,6 +642,10 @@ def input_load_save(save_id: str):
     # 使用 update() 方法来更新 cache 的字典
     cache.__dict__.update(loaded_dict)
 
+    # 恢复存档的行动队列；旧存档没有队列时清除本局残留，首次推进时再初始化。
+    from Script.Modules import game_actions
+    game_actions.restore(None if need_migration else loaded_dict.get("action_scheduler"))
+
     # 鼠标状态属于临时界面状态，不该随存档带入：旧版存档可能把“正在按任意键继续”的0值一起存了进来，
     # 载入后 w_frame_up 残留为0，之后第一次左键会被 mouse_left_check 误判为“推进等待”，
     # 消耗掉一次性的输入许可却不产生任何指令，askfor_all 从此收不到输入，游戏静默卡死

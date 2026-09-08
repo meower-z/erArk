@@ -2577,7 +2577,7 @@ def handle_wait_unitl_traget_action_end(
     """
     if not add_time:
         return
-    from Script.Design import update
+    from Script.Modules.game_actions import submit_current
     character_data: game_type.Character = cache.character_data[character_id]
     target_character_data = cache.character_data[character_data.target_character_id]
     if character_data.dead:
@@ -2585,12 +2585,12 @@ def handle_wait_unitl_traget_action_end(
     target_start_time = target_character_data.behavior.start_time
     target_end_time = game_time.get_sub_date(target_character_data.behavior.duration, old_date=target_start_time)
     # 到结束时间还有多少分钟
-    add_time = int((target_end_time.timestamp() - now_time.timestamp()) / 60)
+    add_time = int(game_time.elapsed_minutes(cache.game_time, target_end_time))
     character_data: game_type.Character = cache.character_data[0]
     character_data.behavior.behavior_id = constant.Behavior.WAIT
     character_data.state = constant.CharacterStatus.STATUS_WAIT
-    character_data.behavior.duration = add_time
-    update.game_update_flow(add_time)
+    character_data.behavior.duration = max(add_time, 1)
+    submit_current(0)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.WAIT_UNITL_PLAYER_ACTION_END)
@@ -2908,10 +2908,10 @@ def handle_interrupt_target_activity(
                     instuct_judege.init_character_behavior_start_time(
                         target_data.cid, character_data.behavior.start_time
                     )
-                else:
-                    settle_behavior.handle_settle_behavior(
-                        target_data.cid, character_data.behavior.start_time
-                    )
+                # 原子行动已在开始时结算，打断时不再补发旧行动的效果。
+                from Script.Modules.game_actions import wait_on
+
+                wait_on(target_data.cid, character_id, character_data.behavior.behavior_id)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.OPTION_FATER)
@@ -4539,6 +4539,9 @@ def handle_chara_off_line(
     character_data.position = ["0", "0"]
     # 重新结算离线异常标记，避免位掩码停留在离线前的旧值
     handle_premise.settle_chara_unnormal_flag(character_id, 7)
+    # 离队后撤销未执行的旧行动，保留不产生效果的调度席位。
+    from Script.Modules.game_actions import reset_character
+    reset_character(character_id)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.CHARA_ON_LINE)
@@ -4591,6 +4594,10 @@ def handle_chara_on_line(
     now_scene_path_str = map_handle.get_map_system_path_str_for_list(character_data.position)
     if character_id not in cache.scene_data[now_scene_path_str].character_list:
         cache.scene_data[now_scene_path_str].character_list.add(character_id)
+
+    # 上线从当前时刻重新选择行动，不继承离队前的任务或睡眠计划。
+    from Script.Modules.game_actions import reset_character
+    reset_character(character_id)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.T_BE_BAGGED)
@@ -7643,9 +7650,10 @@ def handle_teach_add_just(
                         # 加信赖
                         base_chara_favorability_and_trust_common_settle(character_id, add_time, False, 0, other_character_data.ability[32], change_data, other_character_data.cid)
 
-                    # 手动结算该状态
-                    character_behavior.judge_character_status(chara_id)
-                    # other_character_data.state = constant.CharacterStatus.STATUS_ARDER
+                    # 教师的结算完成后，再执行学生的听课行动并替换其旧待办。
+                    from Script.Modules.game_actions import submit_current
+
+                    submit_current(chara_id)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SELF_STUDY_ADD_ADJUST)
