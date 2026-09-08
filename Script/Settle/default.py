@@ -6505,10 +6505,7 @@ def handle_perform_surgery(
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
 ):
-    """执行手术治疗并根据结果输出提示
-    参数: character_id为执行者id，target_character_id为本次目标id，add_time为时长，change_data为变化记录，now_time为结算时间。
-    返回: None。
-    """
+    """执行手术治疗并根据结果输出提示"""
     from Script.System.Medical_System import medical_service
 
     if not add_time:
@@ -6535,10 +6532,7 @@ def handle_ward_round_process(
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
 ):
-    """病房查房：推进住院病人治疗进度并输出提示
-    参数: character_id为执行者id，target_character_id为本次目标id，add_time为时长，change_data为变化记录，now_time为结算时间。
-    返回: None。
-    """
+    """病房查房：推进住院病人治疗进度并输出提示"""
     from Script.System.Medical_System import medical_service
 
     if not add_time:
@@ -8077,7 +8071,7 @@ def handle_eat_add_just(
             # 由二段绝顶结算联动饮精绝顶（素质31）与饮精绝顶经验（111）
             if semen_ml > 0:
                 target_data.h_state.shoot_position_body = 2
-        # 药物食物的药效作用于食用者
+        # 药物食物则获得对应药物效果
         elif food_seasoning == 102: # 事后避孕药
             handle_target_no_pregnancy_from_last_h(character_id, chara_id, add_time=add_time, change_data=change_data, now_time=now_time)
         elif food_seasoning == 103: # 媚药

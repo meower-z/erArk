@@ -358,15 +358,12 @@ def add_favorability(
     target_change: game_type.TargetChange,
 ):
     """
-    增加 NPC 对交互对象的好感，并记录变更
+    增加目标角色对当前角色的好感
     Keyword arguments:
-    character_id -- 当前角色id，int
-    target_id -- 目标角色id，int
-    now_add_favorability -- 增加的好感，int
-    change_data -- 当前角色的变更记录，CharacterStatusChange或TargetChange；可为None
-    target_change -- 目标角色的变更记录，TargetChange；可为None
-    Return arguments:
-    None -- 无返回值
+    character_id -- 当前角色id
+    target_id -- 目标角色id
+    now_add_favorability -- 增加的好感
+    target_change -- 角色状态改变对象
     """
     target_data: game_type.Character = cache.character_data[target_id]
     target_data.favorability.setdefault(character_id, 0)

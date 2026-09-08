@@ -23,8 +23,8 @@ def handle_settle_behavior(character_id: int, target_character_id: int, now_time
     """
     处理结算角色行为并输出对应文本
     Keyword arguments:
-    character_id -- 行为执行者id，int
-    target_character_id -- 本次结算的初始交互目标id，int
+    character_id -- 角色id
+    target_character_id -- 初始交互目标id
     now_time -- 结算时间
     event_flag -- 事件结算变量，0只事件不指令，1只指令不事件，2均结算
     """
@@ -396,8 +396,8 @@ def handle_instruct_data(
     """
     处理指令数据
     Keyword arguments:
-    character_id -- 行为执行者id，int
-    target_character_id -- 初始交互目标id，int
+    character_id -- 角色id
+    target_character_id -- 初始交互目标id
     behavior_id -- 行动id
     now_time -- 结算时间
     add_time -- 行动已经过时间
@@ -446,12 +446,12 @@ def handle_event_data(character_id, target_character_id, event_id, add_time, cha
     """
     处理事件数据
     Keyword arguments:
-    character_id -- 行为执行者id，int
-    target_character_id -- 初始交互目标id，int
-    event_id -- 事件id，str
-    add_time -- 行动已经过时间，int
+    character_id -- 角色id
+    target_character_id -- 初始交互目标id
+    event_id -- 事件id
+    add_time -- 行动已经过时间
     change_data -- 状态变更信息记录对象
-    now_time -- 结算时间，datetime.datetime
+    now_time -- 结算时间
     """
     if event_id != "":
         event_data: game_type.Event = game_config.config_event[event_id]
@@ -498,12 +498,10 @@ def add_settle_behavior_effect(behavior_effect_id: int):
     """
     添加行为结算处理
     Keyword arguments:
-    behavior_effect_id -- 效果id，int
+    behavior_effect_id -- 效果id
     效果参数依次为执行者id、时长、变化记录、时间；需要交互目标时，在执行者id后声明target_character_id。
     注册表统一接收五个参数；直接调用效果函数时使用其原有参数。
     选目标效果返回目标id，其他效果返回None。
-    Return arguments:
-    decorator -- 注册效果并返回原函数的装饰器
     """
 
     def decorator(func):
@@ -763,7 +761,7 @@ def handle_comprehensive_value_effect(character_id: int, target_character_id, ef
         final_character_id = character_id
     elif effect_all_value_list[0] == "A2":
         # # 如果没有交互对象，则返回0
-        # if target_character_id == character_id:
+        # if character_data.target_character_id == character_id:
         #     return 0
         final_character_data = cache.character_data[target_character_id]
         change_data.target_change.setdefault(target_character_id, game_type.TargetChange())

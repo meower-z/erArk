@@ -514,7 +514,7 @@ def base_chara_favorability_and_trust_common_settle(
     基础角色好感与信赖通用结算函数\n
     Keyword arguments:\n
     character_id -- 角色id\n
-    target_character_id -- 关系另一方的角色id，好感与信赖在character_id与该角色之间结算\n
+    target_character_id -- 交互对象id\n
     add_time -- 结算时间\n
     favorability_flag -- true为好感,false为信赖\n
     base_value -- 基础固定值\n
@@ -809,7 +809,7 @@ def base_chara_climix_common_settle(
     """
     基础角色绝顶通用结算函数\n
     Keyword arguments:\n
-    character_id -- 绝顶角色id\n
+    character_id -- 角色id\n
     part_id -- 部位id，即性器官id\n
     base_value -- 基础固定值\n
     adjust -- 系数\n
@@ -875,7 +875,7 @@ def base_chara_experience_common_settle(
     """
     基础角色经验通用结算函数\n
     Keyword arguments:\n
-    character_id -- 获得经验的角色id\n
+    character_id -- 角色id\n
     experience_id -- 经验id\n
     base_value -- 基础固定值\n
     change_data -- 状态变更信息记录对象\n

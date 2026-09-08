@@ -174,11 +174,8 @@ def recover_from_unconscious_h(character_id: int, target_character_id: int, info
     """
     交互对象从无意识H中恢复意识的结算\n
     Keyword arguments:\n
-    character_id -- 执行者角色id，int\n
-    target_character_id -- 恢复意识的目标角色id，int\n
-    info_text -- 提示文本，str；空字符串时根据目标生成\n
-    Return arguments:\n
-    None -- 无返回值\n
+    character_id -- 角色id\n
+    target_character_id -- 目标角色id\n
     """
     from Script.Settle import default
     character_data: game_type.Character = cache.character_data[character_id]
@@ -361,10 +358,9 @@ def handle_unconscious_h_response(character_id: int, target_character_id: int, c
         character_data.state = constant.CharacterStatus.STATUS_NO_CONSCIOUS_H_END
         character_behavior.judge_character_status(character_id)
     # 裁决为继续H但本次不允许继续，对目标角色本人做退出奖励、H状态归位与穿回衣物。
-    # 退出奖励会连同角色的交互对象一起结算，而目标角色身上的交互对象可能是没有清理过的旧值，
-    # 因此先把目标指向自己再发奖
+    # 结算目标角色的退出奖励
     elif not can_continue:
-        # 先解放目标角色累积的寸止计数；该结算作用于调用者的交互对象、且须在H状态归零前进行，故以自己为调用者、交互对象指向目标角色
+        # 在H状态归零前解放目标角色累积的寸止计数
         character_data.target_character_id = target_character_id
         default.handle_orgasm_edge_release(character_id, target_character_id, 1, game_type.CharacterStatusChange(), cache.game_time)
         target_data.target_character_id = target_character_id
