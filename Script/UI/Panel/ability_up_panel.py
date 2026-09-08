@@ -409,7 +409,7 @@ class Characterabi_show_Text:
         second_behavior_id = mark_up_data.second_behavior
         second_behavior.character_get_second_behavior(self.character_id, second_behavior_id)
         # 结算二段行为
-        second_behavior.second_behavior_effect(self.character_id, game_type.CharacterStatusChange(), [second_behavior_id])
+        second_behavior.second_behavior_effect(self.character_id, self.character_data.target_character_id, game_type.CharacterStatusChange(), [second_behavior_id])
 
     def mark_down(self, ability_id: int):
         """降级刻印"""

@@ -93,7 +93,7 @@ class Sex_Be_Discovered_Panel:
         # 重置发现者的逆推状态
         default.handle_masturebate_to_pl_flag_0(self.character_id, 1, game_type.CharacterStatusChange(), cache.game_time)
         # 发现者的目标对象转为玩家
-        default.handle_target_to_player(self.character_id, 1, game_type.CharacterStatusChange(), cache.game_time)
+        default.handle_target_to_player(self.character_id, 0, 1, game_type.CharacterStatusChange(), cache.game_time)
         # 发现者获得目击H的flag
         default.handle_see_pl_h(self.character_id, 1, game_type.CharacterStatusChange(), cache.game_time)
         # 发现者的行为持续时间设为保底1分钟

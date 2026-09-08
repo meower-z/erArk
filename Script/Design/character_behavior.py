@@ -227,7 +227,7 @@ def judge_character_status(character_id: int) -> int:
     # if not character_id:
     #     print(f"debug 1 move_src = {character_data.behavior.move_src},position = {character_data.position}")
     # 指令与指令前事件的数值结算
-    first_settle_panel = settle_behavior.handle_settle_behavior(character_id, end_time, event_type_now)
+    first_settle_panel = settle_behavior.handle_settle_behavior(character_id, cache.character_data[character_id].target_character_id, end_time, event_type_now)
     second_settle_panel = None
     # if not character_id:
     #     print(f"debug 2 move_src = {character_data.behavior.move_src},position = {character_data.position}")
@@ -244,7 +244,7 @@ def judge_character_status(character_id: int) -> int:
             # 事件绘制
             end_event_draw.draw()
             # 事件的数值结算
-            second_settle_panel = settle_behavior.handle_settle_behavior(character_id, end_time, 0)
+            second_settle_panel = settle_behavior.handle_settle_behavior(character_id, cache.character_data[character_id].target_character_id, end_time, 0)
 
     # if not character_id:
     #     print(f"debug 3 move_src = {character_data.behavior.move_src},position = {character_data.position}")

@@ -47,6 +47,7 @@ def handle_item_off(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_ITEM_OFF)
 def handle_target_item_off(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -55,6 +56,7 @@ def handle_target_item_off(
     交互对象去掉身上所有的道具（含药品）
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -62,7 +64,7 @@ def handle_target_item_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_item_off(character_data.target_character_id, add_time, change_data, now_time)
+    handle_item_off(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ITEM_OFF_EXCEPT_PILL)
@@ -93,6 +95,7 @@ def handle_item_off_except_pill(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_ITEM_OFF_EXCEPT_PILL)
 def handle_target_item_off_except_pill(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -101,6 +104,7 @@ def handle_target_item_off_except_pill(
     交互对象去掉身上所有的道具（不含药品）
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -108,12 +112,13 @@ def handle_target_item_off_except_pill(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_item_off_except_pill(character_data.target_character_id, add_time, change_data, now_time)
+    handle_item_off_except_pill(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_B_ITEM_OFF)
 def handle_target_b_item_off(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -122,6 +127,7 @@ def handle_target_b_item_off(
     交互对象去掉B部位的道具
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -129,7 +135,7 @@ def handle_target_b_item_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     for i in [0, 4]:
         target_data.h_state.body_item[i][1] = False
         target_data.h_state.body_item[i][2] = None
@@ -138,6 +144,7 @@ def handle_target_b_item_off(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_A_ITEM_OFF)
 def handle_target_a_item_off(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -146,6 +153,7 @@ def handle_target_a_item_off(
     交互对象去掉A部位的道具
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -153,7 +161,7 @@ def handle_target_a_item_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     for i in [3, 7]:
         target_data.h_state.body_item[i][1] = False
         target_data.h_state.body_item[i][2] = None
@@ -163,6 +171,7 @@ def handle_target_a_item_off(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_VIBRATOR_ON)
 def handle_target_vibrator_on(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -171,20 +180,21 @@ def handle_target_vibrator_on(
     交互对象插入V震动棒
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.h_state.body_item[2][1] = True
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_VIBRATOR_OFF)
 def handle_target_vibrator_off(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -193,20 +203,21 @@ def handle_target_vibrator_off(
     交互对象拔出V震动棒
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.h_state.body_item[2][1] = False
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_ANAL_VIBRATOR_ON)
 def handle_target_anal_vibrator_on(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -215,20 +226,21 @@ def handle_target_anal_vibrator_on(
     交互对象插入A震动棒
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.h_state.body_item[3][1] = True
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_ANAL_VIBRATOR_OFF)
 def handle_target_anal_vibrator_off(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -237,20 +249,21 @@ def handle_target_anal_vibrator_off(
     交互对象拔出A震动棒
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.h_state.body_item[3][1] = False
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_NIPPLE_CLAMP_ON)
 def handle_target_nipple_clamp_on(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -259,20 +272,21 @@ def handle_target_nipple_clamp_on(
     交互对象戴上乳头夹
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.h_state.body_item[0][1] = True
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_NIPPLE_CLAMP_OFF)
 def handle_target_nipple_clamp_off(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -281,20 +295,21 @@ def handle_target_nipple_clamp_off(
     交互对象取下乳头夹
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.h_state.body_item[0][1] = False
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_CLIT_CLAMP_ON)
 def handle_target_clit_clamp_on(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -303,20 +318,21 @@ def handle_target_clit_clamp_on(
     交互对象戴上阴蒂夹
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.h_state.body_item[1][1] = True
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_CLIT_CLAMP_OFF)
 def handle_target_clit_clamp_off(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -325,19 +341,20 @@ def handle_target_clit_clamp_off(
     交互对象取下阴蒂夹
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.h_state.body_item[1][1] = False
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_ANAL_BEADS_ON)
 def handle_target_anal_beads_on(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -346,6 +363,7 @@ def handle_target_anal_beads_on(
     交互对象塞入肛门拉珠
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -353,13 +371,14 @@ def handle_target_anal_beads_on(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.h_state.body_item[7][1] = True
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_ANAL_BEADS_OFF)
 def handle_target_anal_beads_off(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -368,6 +387,7 @@ def handle_target_anal_beads_off(
     交互对象拔出肛门拉珠
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -375,13 +395,14 @@ def handle_target_anal_beads_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.h_state.body_item[7][1] = False
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_MILKING_MACHINE_ON)
 def handle_target_milking_machine_on(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -390,6 +411,7 @@ def handle_target_milking_machine_on(
     交互对象戴上搾乳机
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -397,13 +419,14 @@ def handle_target_milking_machine_on(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.h_state.body_item[4][1] = True
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_MILKING_MACHINE_OFF)
 def handle_target_milking_machine_off(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -412,6 +435,7 @@ def handle_target_milking_machine_off(
     交互对象取下搾乳机
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -419,13 +443,14 @@ def handle_target_milking_machine_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.h_state.body_item[4][1] = False
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_URINE_COLLECTOR_ON)
 def handle_target_urine_collector_on(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -434,6 +459,7 @@ def handle_target_urine_collector_on(
     交互对象戴上采尿器
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -441,13 +467,14 @@ def handle_target_urine_collector_on(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.h_state.body_item[5][1] = True
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_URINE_COLLECTOR_OFF)
 def handle_target_urine_collector_off(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -456,6 +483,7 @@ def handle_target_urine_collector_off(
     交互对象取下采尿器
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -463,13 +491,14 @@ def handle_target_urine_collector_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.h_state.body_item[5][1] = False
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_PATCH_ON)
 def handle_target_patch_on(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -478,6 +507,7 @@ def handle_target_patch_on(
     交互对象戴上眼罩
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -485,13 +515,14 @@ def handle_target_patch_on(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.h_state.body_item[6][1] = True
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_PATCH_OFF)
 def handle_target_patch_off(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -500,6 +531,7 @@ def handle_target_patch_off(
     交互对象取下眼罩
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -507,13 +539,14 @@ def handle_target_patch_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.h_state.body_item[6][1] = False
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_GAG_ON)
 def handle_target_gag_on(
     character_id: int,
+    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -522,6 +555,7 @@ def handle_target_gag_on(
     交互对象戴上口球
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -529,12 +563,13 @@ def handle_target_gag_on(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.h_state.body_item[14][1] = True
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_GAG_OFF)
 def handle_target_gag_off(
     character_id: int,
+    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -543,6 +578,7 @@ def handle_target_gag_off(
     交互对象取下口球
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -550,7 +586,7 @@ def handle_target_gag_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.h_state.body_item[14][1] = False
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADJUST_BODY_MANAGE_DAY_ITEM)
@@ -572,29 +608,27 @@ def handle_adjust_body_manage_day_item(
         return
     if character_id == 0:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    # 这里把交互对象设为自己是因为下面的装备/取下道具函数都是让交互对象结算的
-    character_data.target_character_id = character_id
+    # 按身体管理设置给本人装备或取下道具
     # 身体管理_乳头夹
     if handle_premise.handle_ask_equp_nipple_clamp_in_day(character_id) and not handle_premise.handle_self_now_nipple_clamp(character_id):
-        handle_target_nipple_clamp_on(character_id, add_time, change_data, now_time)
+        handle_target_nipple_clamp_on(character_id, character_id, add_time, change_data, now_time)
     elif not handle_premise.handle_ask_equp_nipple_clamp_in_day(character_id) and handle_premise.handle_self_now_nipple_clamp(character_id):
-        handle_target_nipple_clamp_off(character_id, add_time, change_data, now_time)
+        handle_target_nipple_clamp_off(character_id, character_id, add_time, change_data, now_time)
     # 身体管理_阴蒂夹
     if handle_premise.handle_ask_equp_clit_clamp_in_day(character_id) and not handle_premise.handle_self_now_clit_clamp(character_id):
-        handle_target_clit_clamp_on(character_id, add_time, change_data, now_time)
+        handle_target_clit_clamp_on(character_id, character_id, add_time, change_data, now_time)
     elif not handle_premise.handle_ask_equp_clit_clamp_in_day(character_id) and handle_premise.handle_self_now_clit_clamp(character_id):
-        handle_target_clit_clamp_off(character_id, add_time, change_data, now_time)
+        handle_target_clit_clamp_off(character_id, character_id, add_time, change_data, now_time)
     # 身体管理_V振动棒
     if handle_premise.handle_ask_equp_v_bibrator_in_day(character_id) and not handle_premise.handle_self_now_vibrator_insertion(character_id):
-        handle_target_vibrator_on(character_id, add_time, change_data, now_time)
+        handle_target_vibrator_on(character_id, character_id, add_time, change_data, now_time)
     elif not handle_premise.handle_ask_equp_v_bibrator_in_day(character_id) and handle_premise.handle_self_now_vibrator_insertion(character_id):
-        handle_target_vibrator_off(character_id, add_time, change_data, now_time)
+        handle_target_vibrator_off(character_id, character_id, add_time, change_data, now_time)
     # 身体管理_A振动棒
     if handle_premise.handle_ask_equp_a_bibrator_in_day(character_id) and not handle_premise.handle_self_now_vibrator_insertion_anal(character_id):
-        handle_target_anal_vibrator_on(character_id, add_time, change_data, now_time)
+        handle_target_anal_vibrator_on(character_id, character_id, add_time, change_data, now_time)
     elif not handle_premise.handle_ask_equp_a_bibrator_in_day(character_id) and handle_premise.handle_self_now_vibrator_insertion_anal(character_id):
-        handle_target_anal_vibrator_off(character_id, add_time, change_data, now_time)
+        handle_target_anal_vibrator_off(character_id, character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADJUST_BODY_MANAGE_SLEEP_ITEM)
@@ -616,29 +650,27 @@ def handle_adjust_body_manage_sleep_item(
         return
     if character_id == 0:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    # 这里把交互对象设为自己是因为下面的装备/取下道具函数都是让交互对象结算的
-    character_data.target_character_id = character_id
+    # 按身体管理设置给本人装备或取下道具
     # 身体管理_乳头夹
     if handle_premise.handle_ask_equp_nipple_clamp_in_sleep(character_id) and not handle_premise.handle_self_now_nipple_clamp(character_id):
-        handle_target_nipple_clamp_on(character_id, add_time, change_data, now_time)
+        handle_target_nipple_clamp_on(character_id, character_id, add_time, change_data, now_time)
     elif not handle_premise.handle_ask_equp_nipple_clamp_in_sleep(character_id) and handle_premise.handle_self_now_nipple_clamp(character_id):
-        handle_target_nipple_clamp_off(character_id, add_time, change_data, now_time)
+        handle_target_nipple_clamp_off(character_id, character_id, add_time, change_data, now_time)
     # 身体管理_阴蒂夹
     if handle_premise.handle_ask_equp_clit_clamp_in_sleep(character_id) and not handle_premise.handle_self_now_clit_clamp(character_id):
-        handle_target_clit_clamp_on(character_id, add_time, change_data, now_time)
+        handle_target_clit_clamp_on(character_id, character_id, add_time, change_data, now_time)
     elif not handle_premise.handle_ask_equp_clit_clamp_in_sleep(character_id) and handle_premise.handle_self_now_clit_clamp(character_id):
-        handle_target_clit_clamp_off(character_id, add_time, change_data, now_time)
+        handle_target_clit_clamp_off(character_id, character_id, add_time, change_data, now_time)
     # 身体管理_V振动棒
     if handle_premise.handle_ask_equp_v_bibrator_in_sleep(character_id) and not handle_premise.handle_self_now_vibrator_insertion(character_id):
-        handle_target_vibrator_on(character_id, add_time, change_data, now_time)
+        handle_target_vibrator_on(character_id, character_id, add_time, change_data, now_time)
     elif not handle_premise.handle_ask_equp_v_bibrator_in_sleep(character_id) and handle_premise.handle_self_now_vibrator_insertion(character_id):
-        handle_target_vibrator_off(character_id, add_time, change_data, now_time)
+        handle_target_vibrator_off(character_id, character_id, add_time, change_data, now_time)
     # 身体管理_A振动棒
     if handle_premise.handle_ask_equp_a_bibrator_in_sleep(character_id) and not handle_premise.handle_self_now_vibrator_insertion_anal(character_id):
-        handle_target_anal_vibrator_on(character_id, add_time, change_data, now_time)
+        handle_target_anal_vibrator_on(character_id, character_id, add_time, change_data, now_time)
     elif not handle_premise.handle_ask_equp_a_bibrator_in_sleep(character_id) and handle_premise.handle_self_now_vibrator_insertion_anal(character_id):
-        handle_target_anal_vibrator_off(character_id, add_time, change_data, now_time)
+        handle_target_anal_vibrator_off(character_id, character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.USE_BODY_LUBRICANT)
@@ -1021,6 +1053,7 @@ def handle_delete_food(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.MAKE_FOOD)
 def handle_make_food(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1029,6 +1062,7 @@ def handle_make_food(
     结算因为制作食物而加好感
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1046,7 +1080,7 @@ def handle_make_food(
         make_food_time = 0
         food_name = cache.recipe_data[food.recipe].name
         make_food_time = cache.recipe_data[food.recipe].time
-        base_chara_favorability_and_trust_common_settle(character_id, add_time, True, 0, 0, change_data)
+        base_chara_favorability_and_trust_common_settle(character_id, target_character_id, add_time, True, 0, 0, change_data)
 
 
 
@@ -1217,6 +1251,7 @@ def handle_delete_last_food(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_ADD_HUGE_LUBRICATION)
 def handle_target_add_huge_lubrication(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1225,6 +1260,7 @@ def handle_target_add_huge_lubrication(
     交互对象增加大量润滑（润滑液）
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1232,7 +1268,7 @@ def handle_target_add_huge_lubrication(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     if target_data.dead:
         return
     target_data.status_data.setdefault(8, 0)
@@ -1250,6 +1286,7 @@ def handle_target_add_huge_lubrication(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_ADD_HUGE_DESIRE_AND_SUBMIT)
 def handle_target_add_huge_desire_and_submit(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1258,6 +1295,7 @@ def handle_target_add_huge_desire_and_submit(
     交互对象增加大量欲情和屈服和欲望值（媚药）
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1265,7 +1303,7 @@ def handle_target_add_huge_desire_and_submit(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     if target_data.dead:
         return
 
@@ -1299,6 +1337,7 @@ def handle_target_add_huge_desire_and_submit(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_ENEMA)
 def handle_target_enema(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1307,6 +1346,7 @@ def handle_target_enema(
     交互对象A灌肠并增加中量润滑
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1317,7 +1357,7 @@ def handle_target_enema(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     if target_data.dead:
         return
 
@@ -1339,7 +1379,7 @@ def handle_target_enema(
     enema_capacity = target_data.dirty.enema_capacity
     enema_capacity_adjust = 2 ** (enema_capacity + 1)
     extra_adjust = enema_capacity_adjust / ability_adjust
-    base_chara_state_common_settle(character_data.target_character_id, add_time, 17, base_value = 1000, ability_level = target_data.ability[15], extra_adjust = extra_adjust, change_data_to_target_change = change_data)
+    base_chara_state_common_settle(target_character_id, add_time, 17, base_value = 1000, ability_level = target_data.ability[15], extra_adjust = extra_adjust, change_data_to_target_change = change_data)
 
     # A灌肠
     target_data.dirty.a_clean = 1
@@ -1350,6 +1390,7 @@ def handle_target_enema(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_ENEMA_END)
 def handle_target_enema_end(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1358,6 +1399,7 @@ def handle_target_enema_end(
     交互对象结束A灌肠并增加中量润滑
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1365,7 +1407,7 @@ def handle_target_enema_end(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     if target_data.dead:
         return
 
@@ -1405,6 +1447,7 @@ def handle_target_enema_end(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_ADD_URINATE)
 def handle_target_add_urinate(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1413,6 +1456,7 @@ def handle_target_add_urinate(
     交互对象尿意值全满
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1420,13 +1464,14 @@ def handle_target_add_urinate(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.urinate_point = 240
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_DIURETICS_ON)
 def handle_target_diuretics_on(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1435,6 +1480,7 @@ def handle_target_diuretics_on(
     交互对象获得利尿剂状态
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1442,7 +1488,7 @@ def handle_target_diuretics_on(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     end_time = now_time + datetime.timedelta(hours=4)
     target_data.h_state.body_item[8][1] = True
     target_data.h_state.body_item[8][2] = end_time
@@ -1451,6 +1497,7 @@ def handle_target_diuretics_on(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_ADD_TIRED_TO_SLEEP)
 def handle_target_add_tired_tosleep(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1459,6 +1506,7 @@ def handle_target_add_tired_tosleep(
     交互对象疲劳值全满，进入8h的睡眠
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1466,17 +1514,18 @@ def handle_target_add_tired_tosleep(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.tired_point = 160
     target_data.sleep_point = 100
     target_data.h_state.body_item[9][1] = True
     target_data.h_state.body_item[9][2] = now_time + datetime.timedelta(hours=8)
-    handle_premise.settle_chara_unnormal_flag(character_data.target_character_id, 6)
+    handle_premise.settle_chara_unnormal_flag(target_character_id, 6)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_ADD_PREGNANCY_CHANCE)
 def handle_target_add_pregnancy_chance(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1485,6 +1534,7 @@ def handle_target_add_pregnancy_chance(
     道具_使用效果 交互对象获得排卵促进药状态
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1492,13 +1542,14 @@ def handle_target_add_pregnancy_chance(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.h_state.body_item[10][1] = True
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_NO_PREGNANCY_NEXT_DAY)
 def handle_target_no_pregnancy_next_day(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1507,6 +1558,7 @@ def handle_target_no_pregnancy_next_day(
     交互对象获得事前避孕药状态
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1514,7 +1566,7 @@ def handle_target_no_pregnancy_next_day(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.h_state.body_item[11][1] = True
     target_data.h_state.body_item[11][2] = now_time + datetime.timedelta(days=30)
 
@@ -1522,6 +1574,7 @@ def handle_target_no_pregnancy_next_day(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_NO_PREGNANCY_FROM_LAST_H)
 def handle_target_no_pregnancy_from_last_h(
         character_id: int,
+        target_character_id,
         add_time: int,
         change_data: game_type.CharacterStatusChange,
         now_time: datetime.datetime,
@@ -1530,6 +1583,7 @@ def handle_target_no_pregnancy_from_last_h(
     交互对象获得事后避孕药状态
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1537,7 +1591,7 @@ def handle_target_no_pregnancy_from_last_h(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.h_state.body_item[12][1] = True
 
 
@@ -1666,6 +1720,7 @@ def handle_self_remote_toy_set_strong(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_REMOTE_TOY_OFF)
 def handle_target_remote_toy_off(
     character_id: int,
+    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -1674,6 +1729,7 @@ def handle_target_remote_toy_off(
     关闭交互对象身上的情趣玩具
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1681,11 +1737,12 @@ def handle_target_remote_toy_off(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_self_remote_toy_off(character_data.target_character_id, add_time, change_data, now_time)
+    handle_self_remote_toy_off(target_character_id, add_time, change_data, now_time)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_REMOTE_TOY_SET_WEAK)
 def handle_target_remote_toy_set_weak(
     character_id: int,
+    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -1694,6 +1751,7 @@ def handle_target_remote_toy_set_weak(
     将交互对象身上的情趣玩具调到弱档
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1702,13 +1760,14 @@ def handle_target_remote_toy_set_weak(
         return
     character_data: game_type.Character = cache.character_data[character_id]
     # 如果对方没有情趣玩具则跳过
-    if handle_premise.handle_self_no_sex_toy(character_data.target_character_id):
+    if handle_premise.handle_self_no_sex_toy(target_character_id):
         return
-    handle_self_remote_toy_set_weak(character_data.target_character_id, add_time, change_data, now_time)
+    handle_self_remote_toy_set_weak(target_character_id, add_time, change_data, now_time)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_REMOTE_TOY_SET_MEDIUM)
 def handle_target_remote_toy_set_medium(
     character_id: int,
+    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -1717,6 +1776,7 @@ def handle_target_remote_toy_set_medium(
     将交互对象身上的情趣玩具调到中档
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1725,13 +1785,14 @@ def handle_target_remote_toy_set_medium(
         return
     character_data: game_type.Character = cache.character_data[character_id]
     # 如果对方没有情趣玩具则跳过
-    if handle_premise.handle_self_no_sex_toy(character_data.target_character_id):
+    if handle_premise.handle_self_no_sex_toy(target_character_id):
         return
-    handle_self_remote_toy_set_medium(character_data.target_character_id, add_time, change_data, now_time)
+    handle_self_remote_toy_set_medium(target_character_id, add_time, change_data, now_time)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_REMOTE_TOY_SET_STRONG)
 def handle_target_remote_toy_set_strong(
     character_id: int,
+    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -1740,6 +1801,7 @@ def handle_target_remote_toy_set_strong(
     将交互对象身上的情趣玩具调到强档
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1748,9 +1810,9 @@ def handle_target_remote_toy_set_strong(
         return
     character_data: game_type.Character = cache.character_data[character_id]
     # 如果对方没有情趣玩具则跳过
-    if handle_premise.handle_self_no_sex_toy(character_data.target_character_id):
+    if handle_premise.handle_self_no_sex_toy(target_character_id):
         return
-    handle_self_remote_toy_set_strong(character_data.target_character_id, add_time, change_data, now_time)
+    handle_self_remote_toy_set_strong(target_character_id, add_time, change_data, now_time)
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ALL_REMOTE_TOY_OFF)
 def handle_all_remote_toy_off(
@@ -1857,6 +1919,7 @@ def handle_all_remote_toy_set_strong(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_REMOTE_TOY_USE_OR_SET_WEAK)
 def handle_target_remote_toy_use_or_set_weak(
     character_id: int,
+    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -1865,6 +1928,7 @@ def handle_target_remote_toy_use_or_set_weak(
     如果交互对象已有强度设定则继续使用，否则开启到弱档
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -1873,10 +1937,10 @@ def handle_target_remote_toy_use_or_set_weak(
         return
     character_data: game_type.Character = cache.character_data[character_id]
     # 如果对方没有情趣玩具则跳过
-    if handle_premise.handle_self_no_sex_toy(character_data.target_character_id):
+    if handle_premise.handle_self_no_sex_toy(target_character_id):
         return
     # 交互对象已有强度设定则继续使用
-    if handle_premise.handle_self_now_sex_toy_on(character_data.target_character_id):
+    if handle_premise.handle_self_now_sex_toy_on(target_character_id):
         return
     # 否则开启到弱档
-    handle_self_remote_toy_set_weak(character_data.target_character_id, add_time, change_data, now_time)
+    handle_self_remote_toy_set_weak(target_character_id, add_time, change_data, now_time)

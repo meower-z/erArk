@@ -69,6 +69,7 @@ def handle_bra_see(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_BRA_SEE)
 def handle_target_bra_see(
     character_id: int,
+    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -77,6 +78,7 @@ def handle_target_bra_see(
     交互对象胸罩可视
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -84,7 +86,7 @@ def handle_target_bra_see(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_bra_see(character_data.target_character_id, add_time, change_data, now_time)
+    handle_bra_see(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.PAN_SEE)
@@ -111,6 +113,7 @@ def handle_pan_see(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_PAN_SEE)
 def handle_target_pan_see(
     character_id: int,
+    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -119,6 +122,7 @@ def handle_target_pan_see(
     交互对象内裤可视
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -126,7 +130,7 @@ def handle_target_pan_see(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_pan_see(character_data.target_character_id, add_time, change_data, now_time)
+    handle_pan_see(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.CLOTH_SEE_ZERO)
@@ -202,6 +206,7 @@ def handle_scene_all_characters_bra_pan_see(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.GET_T_PAN)
 def handle_get_t_pan(
     character_id: int,
+    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -210,6 +215,7 @@ def handle_get_t_pan(
     获得交互对象的内裤
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -217,7 +223,7 @@ def handle_get_t_pan(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    clothing.pl_get_chara_pan(character_data.target_character_id)
+    clothing.pl_get_chara_pan(target_character_id)
     # 绘制一个空白的等待信息
     now_draw = draw.WaitDraw()
     now_draw.width = window_width
@@ -227,6 +233,7 @@ def handle_get_t_pan(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.GET_T_SOCKS)
 def handle_get_t_sock(
     character_id: int,
+    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -235,6 +242,7 @@ def handle_get_t_sock(
     获得交互对象的袜子
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -242,7 +250,7 @@ def handle_get_t_sock(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    clothing.pl_get_chara_socks(character_data.target_character_id)
+    clothing.pl_get_chara_socks(target_character_id)
     # 绘制一个空白的等待信息
     now_draw = draw.WaitDraw()
     now_draw.width = window_width
@@ -351,6 +359,7 @@ def handle_self_cloth_back(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.T_CLOTH_BACK)
 def handle_t_cloth_back(
     character_id: int,
+    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -359,6 +368,7 @@ def handle_t_cloth_back(
     交互对象穿回H时脱掉的衣服
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -366,7 +376,7 @@ def handle_t_cloth_back(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    handle_self_cloth_back(character_data.target_character_id, add_time, change_data, now_time)
+    handle_self_cloth_back(target_character_id, add_time, change_data, now_time)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SCENE_ALL_CHARACTERS_CLOTH_BACK)
@@ -858,6 +868,7 @@ def handle_down_and_pan_to_tem(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_UP_AND_BRA_TO_TEM)
 def handle_target_up_and_bra_to_tem(
     character_id: int,
+    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -866,6 +877,7 @@ def handle_target_up_and_bra_to_tem(
     交互对象的上衣和胸罩转移到临时脱下
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -873,7 +885,7 @@ def handle_target_up_and_bra_to_tem(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
 
     for i in [5,6]:
         if len(target_data.cloth.cloth_wear[i]):
@@ -883,6 +895,7 @@ def handle_target_up_and_bra_to_tem(
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_DOWN_AND_PAN_TO_TEM)
 def handle_target_down_and_pan_to_tem(
     character_id: int,
+    target_character_id,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
@@ -891,6 +904,7 @@ def handle_target_down_and_pan_to_tem(
     交互对象的下衣和内裤转移到临时脱下
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 本次调用的目标角色id；无需目标时传None
     add_time -- 结算时间
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
@@ -898,7 +912,7 @@ def handle_target_down_and_pan_to_tem(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
 
     for i in [8,9]:
         if len(target_data.cloth.cloth_wear[i]):

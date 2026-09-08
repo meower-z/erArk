@@ -369,7 +369,7 @@ def release_orgasm_edge_now(character_id: int, change_data) -> None:
         if game_config.config_character_state[state_id].type == 0:
             character_data.h_state.orgasm_edge_count[state_id] = 0
     # 立即结算刚解放绝顶的口上与数值，使其落在退出重置与退出奖励之前，同样按部位仅取最高绝顶程度触发口上
-    second_behavior.second_behavior_effect(character_id, change_data, orgasm_settle_flag=True)
+    second_behavior.second_behavior_effect(character_id, character_data.target_character_id, change_data, orgasm_settle_flag=True)
 
 
 def judge_orgasm_degree(level_count: int) -> int:

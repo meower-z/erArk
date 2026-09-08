@@ -436,7 +436,7 @@ def settle_sleep(character_id: int, true_add_time: int) -> None:
                 now_char.sp_flag.unconscious_h == 1
             ):
                 info_text = _("\n{0}已经睡饱了，从睡梦中自然苏醒过来\n").format(now_char.name)
-                handle_npc_ai_in_h.recover_from_unconscious_h(0, info_text)
+                handle_npc_ai_in_h.recover_from_unconscious_h(0, character_id, info_text)
             # 否则直接结束睡眠行为，转为空闲状态交由AI选择新行动
             else:
                 # 延迟导入并缓存，避免循环导入（导入放在罕见分支内，不增加热路径开销）
