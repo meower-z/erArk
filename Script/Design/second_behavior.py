@@ -232,7 +232,7 @@ def second_behavior_effect(
                     if effect_id not in constant.settle_second_behavior_effect_data:
                         print(f"debug second_behavior_id = {second_behavior_id}，effect_id = {effect_id}没有找到对应的结算效果")
                         continue
-                    constant.settle_second_behavior_effect_data[effect_id](character_id, change_data)
+                    constant.settle_second_behavior_effect_data[effect_id](character_id, character_data.target_character_id, change_data)
             # print(f"debug {character_data.name}触发二段行为效果，behavior_id = {behavior_id}")
             # 触发后该行为值归零
             character_data.second_behavior[second_behavior_id] = 0
@@ -258,7 +258,7 @@ def must_settle_check(character_id: int):
                 effect_all_value_list = effect_id.split("_")[1:]
                 settle_behavior.handle_comprehensive_value_effect(character_id, effect_all_value_list, change_data)
             else:
-                constant.settle_second_behavior_effect_data[effect_id](character_id, change_data)
+                constant.settle_second_behavior_effect_data[effect_id](character_id, character_data.target_character_id, change_data)
         # 触发后该行为值归零
         character_data.second_behavior[behavior_id] = 0
     character_data.must_settle_second_behavior_id_list = []
