@@ -417,6 +417,7 @@ class GameActionsTests(unittest.TestCase):
             runtime.scheduler.advance_until_input()
         self.assertIs(runtime.scheduler.pending(1).item, AI)
         self.assertEqual([event for event in self.events if event[:2] == ("realtime", 1)], [("realtime", 1, 10)])
+        self.assertNotIn(1, runtime.current)
         self.cache.npc_id_got.add(1)
         self.game.reset_character(1)
         self.assertNotIn(1, runtime.current)

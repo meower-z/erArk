@@ -222,7 +222,8 @@ class Runtime:
             handle_talent.gain_talent(actor, now_gain_type=0)
         finally:
             self.active.pop(actor, None)
-        self.current[actor] = (deepcopy(character.behavior), character.target_character_id, character.state)
+        if actor == 0 or (actor in cache.npc_id_got and not character.dead):
+            self.current[actor] = (deepcopy(character.behavior), character.target_character_id, character.state)
         if action.after == "group_exit":
             handle_npc_ai.finish_group_sex_tired_exit(actor)
         elif isinstance(action.after, tuple):
