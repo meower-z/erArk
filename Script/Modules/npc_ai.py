@@ -1,4 +1,4 @@
-"""NPC 自主行动入口；旧需求链和状态机继续负责具体选择。"""
+"""NPC 自主行动入口；需求链和状态机负责具体选择。"""
 
 from dataclasses import replace
 from datetime import datetime
@@ -11,7 +11,7 @@ from Script.Modules.action import Action
 def _continue_recovery(actor: int, plan: Action) -> bool:
     """输入 NPC 编号及剩余恢复计划，返回当前状态是否允许继续休息或睡眠。"""
     character = cache_control.cache.character_data[actor]
-    # 被叫醒、被迫换行动或改换目标后，不再延续原恢复计划。
+    # 恢复计划通过剩余时长、行为类型和目标判断是否继续。
     if plan.duration <= 0 or character.behavior.behavior_id != plan.behavior_id or character.target_character_id != plan.target:
         return False
     recovered = handle_premise.handle_tired_le_0(actor) and handle_premise.handle_hp_max(actor) and handle_premise.handle_mp_max(actor)
@@ -39,7 +39,7 @@ def choose_next(actor: int, now: datetime) -> Action | None:
     character = cache_control.cache.character_data[actor]
     plan = runtime.plans.get(actor)
     if plan is not None:
-        # 睡眠与休息期间仍维护强制位置和助理问候标志。
+        # 睡眠与休息期间维护强制位置和助理问候标志。
         handle_npc_ai.judge_character_cant_move(actor)
         handle_npc_ai.judge_assistant_character(actor)
     # 每个片段边界重新判断是否继续，保留睡眠状态直到真正结束。
@@ -48,12 +48,12 @@ def choose_next(actor: int, now: datetime) -> Action | None:
     runtime.plans.pop(actor, None)
     runtime.finish_current(actor, now)
 
-    # 旧检查可能强制移动、等待或提交后续；自主选择不得覆盖这些结果。
+    # 行为前置检查优先确定强制移动、等待及后续。
     handle_npc_ai.run_npc_pre_behavior_checks(actor, now)
     if runtime.scheduler.pending(actor) is not None:
         return None
 
-    # H 或木头人状态下的等待只检查状态、结算时间，不重复等待口上与事件。
+    # H 或木头人状态下通过静默等待片段检查状态并结算时间。
     if character.behavior.behavior_id == constant.Behavior.WAIT and (character.sp_flag.is_h or character.hypnosis.blockhead):
         return Action(constant.Behavior.WAIT, 5, character.target_character_id, state=constant.CharacterStatus.STATUS_WAIT, continued=True)
     if character.behavior.behavior_id == constant.Behavior.SHARE_BLANKLY:
@@ -61,7 +61,7 @@ def choose_next(actor: int, now: datetime) -> Action | None:
     if runtime.scheduler.pending(actor) is not None:
         return None
 
-    # 旧 AI 无可用目标时等待五分钟，避免在同一时刻不断重新选择。
+    # AI 无可用目标时等待五分钟，再次选择。
     if character.behavior.behavior_id == constant.Behavior.SHARE_BLANKLY:
         return Action(constant.Behavior.WAIT, 5, actor, state=constant.CharacterStatus.STATUS_WAIT)
     return Action.from_character(character)

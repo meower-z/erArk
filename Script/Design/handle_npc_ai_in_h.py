@@ -241,7 +241,7 @@ def recover_from_unconscious_h(character_id: int, info_text: str = ""):
     # 结算交互对象的响应
     response = handle_unconscious_h_response(character_id, character_data.target_character_id)
 
-    # 各响应动作完成后再恢复双方状态，避免排队后提前清理其结算输入。
+    # 各响应动作完成后恢复双方状态。
     from Script.Modules.game_actions import submit_current
 
     character_data.target_character_id = target_data.cid
@@ -354,7 +354,7 @@ def handle_unconscious_h_response(character_id: int, target_character_id: int, c
             response = UnconsciousHResponse.ANGRY
             target_data.angry_point += 100
             target_data.sp_flag.angry_with_player = True
-            # 明确排入失败反应，避免沿用并再次执行刚才的行动。
+            # 将失败反应排为立即后续。
             character_data.behavior.behavior_id = constant.Behavior.DO_H_FAIL
             character_data.state = constant.CharacterStatus.STATUS_DO_H_FAIL
         # 如果没有陷落状态，则设置为高级性骚扰状态

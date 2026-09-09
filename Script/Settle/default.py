@@ -2908,7 +2908,7 @@ def handle_interrupt_target_activity(
                     instuct_judege.init_character_behavior_start_time(
                         target_data.cid, character_data.behavior.start_time
                     )
-                # 原子行动已在开始时结算，打断时不再补发旧行动的效果。
+                # 原子行动的效果在开始时结算。
                 from Script.Modules.game_actions import wait_on
 
                 wait_on(target_data.cid, character_id, character_data.behavior.behavior_id)
@@ -4539,7 +4539,7 @@ def handle_chara_off_line(
     character_data.position = ["0", "0"]
     # 重新结算离线异常标记，避免位掩码停留在离线前的旧值
     handle_premise.settle_chara_unnormal_flag(character_id, 7)
-    # 离队后撤销未执行的旧行动，保留不产生效果的调度席位。
+    # 离队时重置行动计划，进入等待席位。
     from Script.Modules.game_actions import reset_character
     reset_character(character_id)
 
@@ -4595,7 +4595,7 @@ def handle_chara_on_line(
     if character_id not in cache.scene_data[now_scene_path_str].character_list:
         cache.scene_data[now_scene_path_str].character_list.add(character_id)
 
-    # 上线从当前时刻重新选择行动，不继承离队前的任务或睡眠计划。
+    # 上线时重置行动计划，从当前时刻自主选择。
     from Script.Modules.game_actions import reset_character
     reset_character(character_id)
 

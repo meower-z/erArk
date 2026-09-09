@@ -1,4 +1,4 @@
-"""把旧行动实现接入调度器；界面继续负责获取玩家输入。"""
+"""将游戏行动接入调度器；界面负责获取玩家输入。"""
 
 from copy import deepcopy
 from dataclasses import replace
@@ -9,12 +9,12 @@ from Script.Modules.scheduler import AI, INPUT, Scheduler, Task
 
 
 def reset():
-    """新游戏清除旧调度状态，无参数，返回 None。"""
+    """开始游戏时清空调度状态，无参数，返回 None。"""
     cache_control.cache.action_scheduler = None
 
 
 def restore(saved_runtime):
-    """读档安装保存的调度状态；旧档传 None，返回 None。"""
+    """读档安装保存的调度状态；存档未保存队列时传 None，返回 None。"""
     cache_control.cache.action_scheduler = saved_runtime
     if saved_runtime is not None:
         saved_runtime.scheduler._running = False
@@ -44,7 +44,7 @@ def submit_current(actor, *, after=None):
 
 
 def reset_character(actor):
-    """角色上下线时清除旧行动计划与待办；输入角色编号，返回 None。"""
+    """角色上下线时重置行动计划与待办；输入角色编号，返回 None。"""
     runtime = getattr(cache_control.cache, "action_scheduler", None)
     if runtime is None:
         return
@@ -65,7 +65,7 @@ def wait_on(actor, owner, behavior_id):
 
 
 class Runtime:
-    """持久保存行动计划和待办，旧实现仅通过此处执行。"""
+    """保存行动计划和待办，调用游戏行动的结算与收尾。"""
 
     def __init__(self):
         """从当前游戏时刻建立空调度器，无参数，返回 None。"""
@@ -79,13 +79,13 @@ class Runtime:
 
     @staticmethod
     def advance_time(at, minutes):
-        """输入开始时刻和分钟数，返回保留旧季月规则的结束时刻。"""
+        """输入开始时刻和分钟数，按游戏季月历法返回结束时刻。"""
         from Script.Design import game_time
 
         return game_time.get_sub_date(minute=minutes, old_date=at)
 
     def sync_characters(self):
-        """为新参与角色建立一个待办，旧进行中行为不重放主效果；返回 None。"""
+        """为加入调度的角色建立待办，进行中的行为接续剩余时间；返回 None。"""
         from Script.Design import game_time
 
         cache = cache_control.cache
@@ -100,7 +100,7 @@ class Runtime:
             if behavior.behavior_id != constant.Behavior.SHARE_BLANKLY and behavior.start_time.year > 1:
                 end = self.advance_time(behavior.start_time, max(behavior.duration, 0))
                 self.current[actor] = (deepcopy(behavior), character.target_character_id, character.state)
-                # 旧档已结算主效果，仅将尚未结算的时间恢复转换为一个延续片段。
+                # 存档中进行中行为的剩余恢复时间构成延续片段。
                 if end > at:
                     at = max(at, behavior.start_time)
                     item = replace(Action.from_character(character), duration=game_time.elapsed_minutes(at, end), continued=True)
@@ -122,7 +122,7 @@ class Runtime:
             self.finish_current(task.actor, task.at)
 
     def finish_current(self, actor, now):
-        """在行动到期或被替换时调用原有收尾，保留 Behavior 字段；返回 None。"""
+        """输入角色编号和时刻，在行动到期或被替换时收尾当前行为；返回 None。"""
         from Script.Design import character_behavior
 
         character = cache_control.cache.character_data[actor]
@@ -137,7 +137,7 @@ class Runtime:
 
         cache = cache_control.cache
         if actor not in cache.npc_id_got or cache.character_data[actor].dead:
-            # 离队者不调用 AI；保留一个不会产出效果的等待席位。
+            # 离队角色通过等待席位保留下一次检查时刻。
             return Action(constant.Behavior.WAIT, 60, actor, continued=True)
         return npc_ai.choose_next(actor, now)
 
@@ -151,7 +151,7 @@ class Runtime:
             self.scheduler.replace(Task(actor, self.scheduler.now, action, immediate=True))
 
     def execute(self, actor, action):
-        """执行一个原子行动，保留旧效果公式并提交后续；输入角色和 Action，返回 None。"""
+        """输入角色和 Action，结算原子行动的效果并提交后续；返回 None。"""
         from Script.Design import character_behavior, handle_npc_ai, handle_npc_ai_in_h, handle_talent, handle_premise
         from Script.Settle import realtime_settle, sleep_settle, default
 
@@ -180,9 +180,9 @@ class Runtime:
         if recovery and not action.continued:
             self.plans[actor] = deepcopy(action)
         try:
-            # 首次玩家准备读取完整睡眠计划，保留六小时阈值效果。
+            # 首次入睡准备读取完整睡眠计划，判定六小时阈值效果。
             if actor == 0 and not action.continued:
-                # 保留旧工作/娱乐的洗澡打断条件；已支付的原子效果不回滚。
+                # 玩家行动开始时检查工作、娱乐角色的洗澡条件。
                 if not cache.time_stop_mode:
                     for npc_id in cache.npc_id_got:
                         pending = self.scheduler.pending(npc_id)
@@ -243,13 +243,13 @@ class Runtime:
             self.scheduler.submit(Task(actor, end, replace(plan, duration=min(plan.duration, 30), continued=True)))
         if recovery and character.behavior.behavior_id != action.behavior_id:
             self.plans.pop(actor, None)
-        # 时停操作的占用时间为零，已计算的体力消耗仍保留。
+        # 时停操作占用零分钟，体力消耗按行动时长结算。
         if actor == 0 and cache.time_stop_mode:
             cache.achievement.time_stop_duration += action.duration
             action.duration = 0
 
     def advance(self, minutes):
-        """提交旧 UI 准备的玩家行动并运行至输入；minutes 为声明时长，返回 None。"""
+        """提交界面准备的玩家行动并运行至输入；minutes 为声明时长，返回 None。"""
         from Script.Core import py_cmd
         from Script.Settle import sleep_settle
         from Script.System.Field_Commission_System import field_commission_function

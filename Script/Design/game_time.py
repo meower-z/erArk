@@ -61,7 +61,7 @@ def get_season_month(month: int) -> int:
 def elapsed_minutes(start: datetime.datetime, end: datetime.datetime) -> float:
     """输入起止日期，返回游戏内经过分钟数；跳过未使用的月份，可返回负数。"""
     offsets = {3: 0, 6: 31, 9: 61, 12: 91}
-    # 四个季月一年共 122 天，时分秒仍使用真实日期中的值。
+    # 四个季月一年共 122 天，时分秒取日期对象中的值。
     start_day = start.year * 122 + offsets[get_season_month(start.month)] + start.day
     end_day = end.year * 122 + offsets[get_season_month(end.month)] + end.day
     clock_delta = (end - end.replace(hour=0, minute=0, second=0, microsecond=0)) - (start - start.replace(hour=0, minute=0, second=0, microsecond=0))

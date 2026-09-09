@@ -58,7 +58,7 @@ class Scheduler:
 
     @property
     def running(self) -> bool:
-        """无需参数，返回当前是否正在执行任务；外部不可修改。"""
+        """无需参数，以只读属性返回当前是否正在执行任务。"""
         return self._running
 
     def contains(self, actor: int) -> bool:
@@ -96,11 +96,11 @@ class Scheduler:
     def _put(self, task: Task) -> None:
         """输入已验证待办，以新序号使同角色旧条目失效；无返回值。"""
         self._serial += 1
-        # 立即任务单独排序，真实时刻仍保留；普通任务同刻由玩家输入优先。
+        # 立即任务优先；普通任务按真实时刻排序，同刻玩家输入优先。
         key = (0 if task.immediate else 1, task.at, 0 if task.item is INPUT else 1, self._serial)
         heapq.heappush(self._queue, (*key, task))
         self._pending[task.actor] = (self._serial, task)
-        # 长时间替换远期任务时清理失效条目，避免堆持续增长。
+        # 失效条目累积到阈值时压缩堆。
         if len(self._queue) > max(64, 2 * len(self._pending)):
             self._queue = [entry for entry in self._queue if self._pending.get(entry[4].actor, (None,))[0] == entry[3]]
             heapq.heapify(self._queue)
@@ -113,7 +113,7 @@ class Scheduler:
         try:
             while self._queue:
                 _, _, _, serial, task = heapq.heappop(self._queue)
-                # 替换过的条目只负责出堆，不影响角色的新待办。
+                # 序号匹配的条目代表角色当前待办。
                 entry = self._pending.get(task.actor)
                 if entry is None or entry[0] != serial:
                     continue

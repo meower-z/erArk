@@ -43,7 +43,7 @@ def init_character_behavior():
 
 
 def character_behavior(character_id: int, now_time: datetime.datetime, pl_start_time: datetime.datetime):
-    """兼容旧角色入口，提交当前行动；参数为角色及旧时间区间，返回 None。"""
+    """提交角色当前行动；输入角色编号及起止时间，返回 None。"""
     from Script.Modules import game_actions
 
     game_actions.submit_current(character_id)

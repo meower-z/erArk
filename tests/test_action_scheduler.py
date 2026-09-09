@@ -16,10 +16,10 @@ class SchedulerTests(unittest.TestCase):
         seen = []
         action = SimpleNamespace(duration=5)
         scheduler = Scheduler(now, choose_next=lambda actor, at: action, execute=lambda actor, action: seen.append((actor, scheduler.now)))
-        scheduler.submit(Task(1, now, action))
-        scheduler.submit(Task(2, now + timedelta(minutes=2), action))
         scheduler.submit(Task(3, now + timedelta(minutes=5), action))
+        scheduler.submit(Task(2, now + timedelta(minutes=2), action))
         scheduler.submit(Task(0, now + timedelta(minutes=5), INPUT))
+        scheduler.submit(Task(1, now, action))
         result = scheduler.advance_until_input()
         self.assertEqual(seen, [(1, now), (2, now + timedelta(minutes=2))])
         self.assertIs(result.item, INPUT)

@@ -84,6 +84,7 @@ class GameActionsTests(unittest.TestCase):
             judge_assistant_character=lambda actor: None,
             judge_character_tired_sleep=lambda actor: None,
             finish_group_sex_tired_exit=lambda actor: self.events.append(("group_exit", actor)),
+            judge_interrupt_character_behavior=lambda actor: False,
             run_npc_pre_behavior_checks=lambda actor, now: None,
             find_character_target=lambda actor, now: None,
         )
@@ -365,6 +366,74 @@ class GameActionsTests(unittest.TestCase):
         runtime.scheduler.submit(Task(0, self.now, INPUT))
         runtime.scheduler.advance_until_input()
         self.assertFalse(any(event[:2] == ("realtime", 1) for event in self.events))
+
+    def test_time_stop_does_not_interrupt_working_npc(self):
+        """无需参数；时停期间工作 NPC 的待办保持原定安排；无返回值。"""
+        runtime = self.game.get_runtime()
+        self.characters[1].behavior.behavior_id = "office"
+        self.characters[1].behavior.duration = 60
+        original = runtime.scheduler.pending(1)
+        with patch.object(sys.modules["Script.Design.handle_premise"], "handle_action_work_or_entertainment", return_value=True), patch.object(
+            sys.modules["Script.Design.handle_npc_ai"], "judge_interrupt_character_behavior", return_value=True
+        ):
+            self.cache.time_stop_mode = True
+            runtime.scheduler.submit(Task(0, self.now, Action("office", 10, 0), immediate=True))
+            runtime.scheduler.advance_until_input()
+        self.assertIs(runtime.scheduler.pending(1), original)
+
+    def test_wait_on_rejects_changed_owner_target(self):
+        """无需参数；等待主体改换目标后，参与者恢复自主选择；无返回值。"""
+        runtime = self.game.get_runtime()
+        self.characters[0].behavior.behavior_id = "office"
+        self.characters[0].target_character_id = 1
+        self.game.wait_on(1, 0, "office")
+        self.characters[0].target_character_id = 99
+        runtime.scheduler.submit(Task(0, self.now, INPUT))
+        runtime.scheduler.advance_until_input()
+        self.assertIs(runtime.scheduler.pending(1).item, AI)
+
+    def test_recovery_plan_rejects_changed_target(self):
+        """无需参数；恢复计划目标改变后重新选择行动；无返回值。"""
+        sys.modules.pop("Script.Modules.npc_ai", None)
+        npc_ai = importlib.import_module("Script.Modules.npc_ai")
+        import Script.Modules
+
+        with patch.object(Script.Modules, "npc_ai", npc_ai):
+            self.cache.npc_id_got.clear()
+            runtime = self.game.get_runtime()
+            self.cache.npc_id_got.add(1)
+            self.characters[1].behavior.behavior_id = "rest"
+            self.characters[1].target_character_id = 99
+            runtime.plans[1] = Action("rest", 30, 1)
+            action = npc_ai.choose_next(1, self.now)
+        self.assertFalse(action.continued)
+
+    def test_recovery_ai_returns_one_chunk(self):
+        """无需参数；恢复计划的下一行动占用一个三十分钟片段；无返回值。"""
+        sys.modules.pop("Script.Modules.npc_ai", None)
+        npc_ai = importlib.import_module("Script.Modules.npc_ai")
+        self.cache.npc_id_got.clear()
+        runtime = self.game.get_runtime()
+        self.characters[1].behavior.behavior_id = "rest"
+        runtime.plans[1] = Action("rest", 65, 1)
+
+        action = npc_ai.choose_next(1, self.now)
+
+        self.assertEqual((action.behavior_id, action.duration, action.target), ("rest", 30, 1))
+        self.assertTrue(action.continued)
+
+    def test_fallback_wait_keeps_five_minute_interval(self):
+        """无需参数；空闲 NPC 的回退等待保持五分钟；无返回值。"""
+        sys.modules.pop("Script.Modules.npc_ai", None)
+        npc_ai = importlib.import_module("Script.Modules.npc_ai")
+        import Script.Modules
+
+        with patch.object(Script.Modules, "npc_ai", npc_ai):
+            self.cache.npc_id_got.clear()
+            self.game.get_runtime()
+            self.characters[1].behavior.behavior_id = "idle"
+            action = npc_ai.choose_next(1, self.now)
+        self.assertEqual(action.duration, 5)
 
     def test_player_wait_end_returns_input_without_npc_ai(self):
         """无需参数；玩家等待的主体已停止时直接返回输入；无返回值。"""
