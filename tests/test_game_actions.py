@@ -103,7 +103,13 @@ class GameActionsTests(unittest.TestCase):
             handle_morning_salutation_flag_0=lambda actor: True,
             handle_action_work_or_entertainment=lambda actor: False,
         )
-        module("Script.Design.handle_npc_ai_in_h", judge_character_h_obscenity_unconscious=lambda actor, now: None)
+        module(
+            "Script.Design.handle_npc_ai_in_h",
+            judge_character_h_obscenity_unconscious=lambda actor, now: None,
+            prepare_group_options=lambda actor: None,
+            choose_group_action=lambda actor, options: None,
+            execute_group_action=lambda actor, action: None,
+        )
         module("Script.Design.handle_talent", gain_talent=lambda *args, **kwargs: None)
         module(
             "Script.Settle.realtime_settle",
@@ -116,12 +122,6 @@ class GameActionsTests(unittest.TestCase):
         module("Script.Settle.past_day_settle", update_new_day=self.new_day)
         module("Script.System.Field_Commission_System.field_commission_function", update_field_commission=lambda: None)
         module("Script.UI.Panel.achievement_panel", achievement_flow=lambda text: None)
-        module(
-            "Script.Modules.group_intent",
-            prepare_group_options=lambda actor: None,
-            choose_group_action=lambda actor, options: None,
-            execute_group_action=lambda actor, intent: None,
-        )
         module("Script.Modules.npc_ai", choose_next=lambda actor, now: Action("wait", 60, actor))
         self.patches = patch.dict(sys.modules, modules)
         self.patches.start()
@@ -219,13 +219,19 @@ class GameActionsTests(unittest.TestCase):
 
     def test_generic_execution_resolves_group_actions_before_installing_behavior(self):
         """输入真实群体选择，统一执行入口才改模板并安装等待行为；无返回值。"""
-        import importlib.util
+        from dataclasses import dataclass
+        import random
 
-        name = "_game_group_action_subject"
-        spec = importlib.util.spec_from_file_location(name, Path(__file__).resolve().parents[1] / "Script/Modules/group_intent.py")
-        group = importlib.util.module_from_spec(spec)
-        with patch.dict(sys.modules, {name: group}):
-            spec.loader.exec_module(group)
+        source = Path(__file__).resolve().parents[1] / "Script/Design/handle_npc_ai_in_h.py"
+        tree = ast.parse(source.read_text())
+        names = {"GroupOptions", "prepare_group_options", "choose_group_action", "execute_group_action"}
+        tree.body = [node for node in tree.body if getattr(node, "name", None) in names]
+        group = ModuleType("_game_group_action_subject")
+        group.__dict__.update(
+            Action=Action, dataclass=dataclass, random=random, cache_control=SimpleNamespace(cache=self.cache), constant=sys.modules["Script.Core.constant"], _=lambda text: text
+        )
+        with patch.dict(sys.modules, {group.__name__: group}):
+            exec(compile(tree, str(source), "exec"), group.__dict__)
         sys.modules.pop("Script.Modules.npc_ai", None)
         npc_ai = importlib.import_module("Script.Modules.npc_ai")
         self.characters[0].h_state = SimpleNamespace(group_sex_body_template_dict={"A": [{"mouth": [-1, -1]}, [[], -1]]})
@@ -233,7 +239,7 @@ class GameActionsTests(unittest.TestCase):
         for part, statuses, kind in (("mouth", (12,), "group_fill"), ("加入侍奉", (), "group_join")):
             with self.subTest(part=part):
                 before = pickle.dumps(self.cache.character_data)
-                with patch.dict(sys.modules, {"Script.Modules.group_intent": group}), patch.object(
+                with patch.dict(sys.modules, {"Script.Design.handle_npc_ai_in_h": group}), patch.object(
                     group, "prepare_group_options", return_value=group.GroupOptions((part,), {part: statuses})
                 ), patch.object(group.random, "choice", side_effect=[part, 12] if statuses else [part]):
                     choice = npc_ai.choose_next(1, self.now)
@@ -241,7 +247,7 @@ class GameActionsTests(unittest.TestCase):
                 self.assertIs(type(choice), Action)
                 self.assertEqual(choice.behavior_id, kind)
                 self.assertEqual(pickle.dumps(self.cache.character_data), before)
-                with patch.dict(sys.modules, {"Script.Modules.group_intent": group}):
+                with patch.dict(sys.modules, {"Script.Design.handle_npc_ai_in_h": group}):
                     duration = runtime.execute(1, pickle.loads(pickle.dumps(choice)))
                 self.assertEqual(duration, 5)
                 self.assertEqual(self.characters[1].behavior.behavior_id, "wait")

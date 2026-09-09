@@ -2,7 +2,9 @@
 
 from copy import deepcopy
 from datetime import datetime
-import importlib.util
+import ast
+from dataclasses import dataclass
+import random
 import pickle
 from pathlib import Path
 import sys
@@ -71,12 +73,16 @@ class GroupIntentTests(unittest.TestCase):
         environment = patch.dict(sys.modules, modules)
         environment.start()
         self.addCleanup(environment.stop)
-        name = "_group_intent_test_subject"
-        spec = importlib.util.spec_from_file_location(name, Path(__file__).resolve().parents[1] / "Script/Modules/group_intent.py")
-        self.group = importlib.util.module_from_spec(spec)
-        sys.modules[name] = self.group
-        self.addCleanup(sys.modules.pop, name, None)
-        spec.loader.exec_module(self.group)
+        # 原文件还包含界面与结算入口；只加载受测函数及其真实源码依赖。
+        source = Path(__file__).resolve().parents[1] / "Script/Design/handle_npc_ai_in_h.py"
+        tree = ast.parse(source.read_text())
+        names = {"GroupOptions", "prepare_group_options", "choose_group_action", "execute_group_action"}
+        tree.body = [node for node in tree.body if getattr(node, "name", None) in names]
+        self.group = ModuleType("_group_action_test_subject")
+        self.group.__dict__.update(vars(modules["Script.Core"]), Action=Action, dataclass=dataclass, random=random, handle_premise=self.premise, _=lambda text: text)
+        sys.modules[self.group.__name__] = self.group
+        self.addCleanup(sys.modules.pop, self.group.__name__, None)
+        exec(compile(tree, str(source), "exec"), self.group.__dict__)
 
     def test_prepare_preserves_player_target_on_failure(self):
         """候选查询失败也不写玩家目标；返回 None。"""

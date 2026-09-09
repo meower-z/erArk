@@ -25,7 +25,7 @@ def _prepare_group_action(runtime, actor: int, action):
     """输入执行器、角色编号和 Action，落实群交操作；返回实际 Action。"""
     from Script.Core import cache_control
     from Script.Modules.action import Action
-    from Script.Modules.group_intent import execute_group_action
+    from Script.Design.handle_npc_ai_in_h import execute_group_action
 
     execute_group_action(actor, action)
     return Action.from_character(cache_control.cache.character_data[actor])

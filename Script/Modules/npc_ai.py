@@ -59,7 +59,7 @@ def choose_next(actor: int, now: datetime) -> Action:
             return replace(plan, duration=min(30, plan.duration), continued=True)
         # 执行侧先完成醒来收尾；下一次选择读取收尾后的状态。
         return Action("finish_current", 0, actor)
-    from Script.Modules.group_intent import prepare_group_options, choose_group_action
+    from Script.Design.handle_npc_ai_in_h import prepare_group_options, choose_group_action
 
     options = prepare_group_options(actor)
     if options is not None:
