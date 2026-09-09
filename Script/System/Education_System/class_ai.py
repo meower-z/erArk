@@ -17,6 +17,8 @@
 import random
 from typing import Optional
 from Script.Core import cache_control, game_type, constant
+from Script.Modules.action import Action
+from Script.Modules.npc_actions import state_machine_action
 from Script.Design import attr_calculation, game_time, map_handle
 from Script.System.Education_System import education_constant, schedule_handle, growth_handle
 
@@ -206,18 +208,18 @@ def get_next_sex_class(character_id: int, now_time) -> tuple:
     return None, ""
 
 
-def judge_class_state_machine(character_id: int) -> int:
+def choose_class_intent(character_id: int) -> Optional[Action]:
     """
-    上课时段的行为决策总入口，返回本节该执行的状态机id
+    输入角色编号 int，返回本节上课意图及执行时需要记录的缺课标记
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
-    int -- 状态机id，0表示本函数不接管、交回既有AI链
+    Optional[Action] -- 上课意图，None 表示继续选择工作或娱乐
     """
     now_course = schedule_handle.get_now_course(character_id)
     # 不在节次内、或本节没排课 —— 自由行动
     if now_course is None:
-        return 0
+        return None
     character_data: game_type.Character = cache.character_data[character_id]
     # 上课接管即离开见学状态。⚠️ 这里不能省：本函数排在见学判定之前，
     #    幼女从见学转去上课时走不到 judge_follow_mother_state_machine，标记会一直挂着
@@ -231,38 +233,37 @@ def judge_class_state_machine(character_id: int) -> int:
         # 必修的实操课例外：人照常到场、不计缺课，只是到了教室也不进H模板，站在一边旁观（口径65）。
         # 体力不足是"做不动"而不是"不想来"，缺席的板子不该打在被玩家点名的学生头上
         if not must_attend_flag:
-            settle_absent(character_id)
-            return constant.StateMachine.REST
+            return state_machine_action(character_id, constant.StateMachine.REST, record_absence=True)
 
     # 第二道闸：心情。今日已经翘了就翘到底，否则按四个负面状态的等级和掷一次
     # ⚠️ 必修的实操课整道闸都跳过——玩家点了名就不许翘（口径60）
-    growth_data = growth_handle.get_child_growth(character_id)
+    growth_data = character_data.child_growth
     if not must_attend_flag:
-        if growth_data.skip_class_flag:
-            return constant.StateMachine.EDUCATION_SKIP_CLASS
+        if growth_data is not None and growth_data.skip_class_flag:
+            return state_machine_action(character_id, constant.StateMachine.EDUCATION_SKIP_CLASS)
         skip_rate = get_skip_class_rate(character_id)
         if skip_rate and random.random() < skip_rate:
-            return constant.StateMachine.EDUCATION_SKIP_CLASS
+            return state_machine_action(character_id, constant.StateMachine.EDUCATION_SKIP_CLASS)
 
     # 派课：班级式的教室课
     if now_course["course_type"] in education_constant.CLASSROOM_COURSE_TYPE_SET:
         classroom = now_course["classroom"]
         # 人还没到教室，先走既有的移动状态机（它会按课表挑对教室，见 StateMachine/default.py:434）
         if not judge_in_scene(character_id, classroom):
-            return constant.StateMachine.MOVE_TO_CLASS_ROOM
+            return state_machine_action(character_id, constant.StateMachine.MOVE_TO_CLASS_ROOM)
         # 到了教室，看本节有没有能讲课的老师；没有则降级自习
         if judge_teacher_available(now_course["teacher_id"]):
-            return constant.StateMachine.WORK_ATTENT_CLASS
-        return constant.StateMachine.EDUCATION_SELF_STUDY
+            return state_machine_action(character_id, constant.StateMachine.WORK_ATTENT_CLASS)
+        return state_machine_action(character_id, constant.StateMachine.EDUCATION_SELF_STUDY)
 
     # 派课：个人式的体育/兴趣/实习课——人到地点，然后执行该课对应的既有行为
     to_place = schedule_handle.get_course_place(now_course)
     # 地点解析不出来（娱乐没配地点标签、岗位场景未解锁、体育课地点写错）就交回既有AI，不留死分支
     if not to_place:
-        return 0
+        return None
     if map_handle.get_map_system_path_str_for_list(character_data.position) !=             map_handle.get_map_system_path_str_for_list(to_place):
-        return constant.StateMachine.EDUCATION_MOVE_TO_COURSE_PLACE
-    return constant.StateMachine.EDUCATION_DO_COURSE
+        return state_machine_action(character_id, constant.StateMachine.EDUCATION_MOVE_TO_COURSE_PLACE)
+    return state_machine_action(character_id, constant.StateMachine.EDUCATION_DO_COURSE)
 
 
 # ---------------------------------------------------------------------------

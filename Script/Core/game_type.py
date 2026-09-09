@@ -1716,6 +1716,10 @@ class Character:
         # """ 角色的三围数据 """
         self.cloth: CLOTH = CLOTH()
         """ 角色的衣服数据 """
+        self.action_progress = None
+        """ 执行层记录的行动请求和已结算时长 """
+        self.npc_ai_state = None
+        """ NPC AI 管理的自身决策记录 """
         self.behavior: Behavior = Behavior()
         """ 角色当前行为状态数据 """
         self.second_behavior: Dict[str, int] = {}

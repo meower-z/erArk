@@ -121,7 +121,7 @@ def character_move_to_dormitory(character_id: int):
     # 增加一个对宿舍是否为无的判定
     if character_data.dormitory == _("无"):
         dormitory_common.new_character_get_dormitory(character_id)
-    target_scene = map_handle.get_map_system_path_for_str(character_data.dormitory)
+    target_scene = map_handle.get_map_system_path_for_str(handle_premise.get_character_dormitory_path(character_id))
     general_movement_module(character_id, target_scene)
 
 

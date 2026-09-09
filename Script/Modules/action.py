@@ -5,6 +5,14 @@ from dataclasses import dataclass, field
 
 
 @dataclass
+class ActionProgress:
+    """执行记录：完整的行动请求，以及已经结算的分钟数。"""
+
+    action: "Action"
+    elapsed: float = 0
+
+
+@dataclass
 class Action:
     """动作编号、分钟数、目标和行为参数；延续段结算经过时间。"""
 

@@ -1,4 +1,5 @@
 from functools import wraps
+from inspect import signature
 from types import FunctionType
 from typing import Callable, Iterable, Optional
 from Script.Core import cache_control, constant, game_type, get_text
@@ -138,12 +139,15 @@ def _ensure_known_unnormal_bits(character_id: int, indexes: Iterable[int]) -> ga
     return unnormal_flag
 
 
-def _check_normal_combo(character_id: int, indexes: Iterable[int]) -> int:
-    """判定指定多异常组合是否均为正常状态。"""
+def _check_normal_combo(character_id: int, indexes: Iterable[int], *, read_only: bool = False) -> int:
+    """输入角色编号、异常编号序列及只读开关，返回 int 正常判定；只读时不回填缓存。"""
     # 玩家直接反馈正常
     if character_id == 0:
         return 1
     index_tuple = tuple(indexes)
+    if read_only:
+        handlers = _get_unnormal_flag_handlers()
+        return int(all(handlers[index](character_id, read_only=True) for index in index_tuple))
     unnormal_flag = _ensure_known_unnormal_bits(character_id, index_tuple)
     return 1 if not unnormal_flag.any(_combine_unnormal_mask(index_tuple)) else 0
 
@@ -175,21 +179,28 @@ def add_premise(premise: str) -> FunctionType:
     return decoraror
 
 
-def handle_premise(premise: str, character_id: int) -> int:
+def handle_premise(premise: str, character_id: int, *, target_id: int | None = None) -> int:
     """
-    调用前提id对应的前提处理函数
-    Keyword arguments:
-    premise -- 前提id
-    character_id -- 角色id
-    Return arguments:
-    int -- 前提权重加成
+    调用前提处理函数，返回 int 权重。
+    premise -- str 前提名
+    character_id -- int 角色编号
+    target_id -- 可选 int 目标编号；指定时群交候选只读查询，不回填异常缓存
     """
     handler = constant.handle_premise_data.get(premise)
     if handler is not None:
-        return handler(character_id)
+        if target_id is None:
+            return handler(character_id)
+        # 旧前提仍接收角色编号；目标前提及缓存前提显式声明查询参数。
+        parameters = signature(handler).parameters
+        query_arguments = {}
+        if "target_id" in parameters:
+            query_arguments["target_id"] = target_id
+        if "read_only" in parameters:
+            query_arguments["read_only"] = True
+        return handler(character_id, **query_arguments)
     if "CVP" in premise:
         premise_all_value_list = premise.split("_")[1:]
-        return handle_comprehensive_value_premise(character_id, premise_all_value_list)
+        return handle_comprehensive_value_premise(character_id, premise_all_value_list, target_id=target_id)
     return 0
 
 
@@ -374,18 +385,20 @@ def judge_value_by_operator(final_value: float, operator_text: str, judge_text: 
     return 0
 
 
-def handle_comprehensive_value_premise(character_id: int, premise_all_value_list: list) -> int:
+def handle_comprehensive_value_premise(character_id: int, premise_all_value_list: list, *, target_id: int | None = None) -> int:
     """
     综合型基础数值前提
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     premise_all_value_list -- 前提的各项数值
     Return arguments:
     int -- 前提权重加成
     """
     character_data: game_type.Character = cache.character_data[character_id]
     pl_character_data = cache.character_data[0]
-    pl_target_character_id = pl_character_data.target_character_id
+    query_target_id = character_data.target_character_id if target_id is None else target_id
+    pl_target_character_id = query_target_id if character_id == 0 else pl_character_data.target_character_id
     pl_target_character_data = cache.character_data[pl_target_character_id]
     # print(f"debug character_id = {character_id}, premise_all_value_list = {premise_all_value_list}")
 
@@ -405,8 +418,8 @@ def handle_comprehensive_value_premise(character_id: int, premise_all_value_list
         # （已废弃）如果没有交互对象，则返回0
         # if character_data.target_character_id == character_id:
         #     return 0
-        final_character_id = character_data.target_character_id
-        final_character_data = cache.character_data[character_data.target_character_id]
+        final_character_id = query_target_id
+        final_character_data = cache.character_data[query_target_id]
     elif premise_all_value_list[0][:2] == "A3":
         final_character_adv = int(premise_all_value_list[0][3:])
         final_character_id = character.get_character_id_from_adv(final_character_adv)
@@ -456,8 +469,7 @@ def handle_comprehensive_value_premise(character_id: int, premise_all_value_list
             final_value = final_character_data.status_data.get(type_son_id, 0)
     elif premise_all_value_list[1][0] == "F":
         if "Flag" in premise_all_value_list[1]:
-            final_character_data.author_flag.chara_int_flag_dict.setdefault(type_son_id, 0)
-            final_value = final_character_data.author_flag.chara_int_flag_dict[type_son_id]
+            final_value = final_character_data.author_flag.chara_int_flag_dict.get(type_son_id, 0)
         else:
             final_value = final_character_data.favorability[0]
     elif premise_all_value_list[1][0] == "X":
@@ -525,7 +537,8 @@ def handle_comprehensive_value_premise(character_id: int, premise_all_value_list
             elif target_character_type == "是自己的":
                 target_character_data = final_character_data
             elif target_character_type == "是交互对象的":
-                target_character_data = cache.character_data[final_character_data.target_character_id]
+                relation_target_id = query_target_id if final_character_id == character_id else final_character_data.target_character_id
+                target_character_data = cache.character_data[relation_target_id]
             elif target_character_type == "是指定id角色的":
                 target_character_adv = int(premise_all_value_list[3])
                 target_character_id = character.get_character_id_from_adv(target_character_adv)
@@ -743,7 +756,7 @@ def handle_instruct_judge_low_obscenity(character_id: int) -> int:
     """
     if character_id == 0:
         return 0
-    if instuct_judege.calculation_instuct_judege(0, character_id, _("初级骚扰"), not_draw_flag = True)[0]:
+    if instuct_judege.calculation_instuct_judege(0, character_id, _("初级骚扰"), not_draw_flag=True, settle_cost=False)[0]:
         return 1
     return 0
 
@@ -761,7 +774,7 @@ def handle_target_instruct_judge_low_obscenity(character_id: int) -> int:
     if character_id == target_character_id:
         return 0
     # 判断交互对象是否满足低级骚扰条件（调用计算函数判断低级骚扰）
-    if instuct_judege.calculation_instuct_judege(character_id, target_character_id, _("初级骚扰"), not_draw_flag=True)[0]:
+    if instuct_judege.calculation_instuct_judege(character_id, target_character_id, _("初级骚扰"), not_draw_flag=True, settle_cost=False)[0]:
         return 1
     return 0
 
@@ -787,7 +800,7 @@ def handle_instruct_judge_high_obscenity(character_id: int) -> int:
     """
     if character_id == 0:
         return 0
-    if instuct_judege.calculation_instuct_judege(0, character_id, _("严重骚扰"), not_draw_flag = True)[0]:
+    if instuct_judege.calculation_instuct_judege(0, character_id, _("严重骚扰"), not_draw_flag=True, settle_cost=False)[0]:
         return 1
     return 0
 
@@ -809,7 +822,7 @@ def handle_target_instruct_judge_high_obscenity(character_id: int) -> int:
     if character_id == target_character_id:
         return 0
     # 调用评价函数判断交互对象是否满足“严重骚扰”条件
-    if instuct_judege.calculation_instuct_judege(character_id, target_character_id, _("严重骚扰"), not_draw_flag=True)[0]:
+    if instuct_judege.calculation_instuct_judege(character_id, target_character_id, _("严重骚扰"), not_draw_flag=True, settle_cost=False)[0]:
         return 1
     return 0
 
@@ -837,7 +850,7 @@ def handle_instruct_judge_h(character_id: int) -> int:
     """
     if character_id == 0:
         return 0
-    if instuct_judege.calculation_instuct_judege(0, character_id, _("H模式"), not_draw_flag = True)[0]:
+    if instuct_judege.calculation_instuct_judege(0, character_id, _("H模式"), not_draw_flag=True, settle_cost=False)[0]:
         return 1
     return 0
 
@@ -855,7 +868,7 @@ def handle_target_instruct_judge_h(character_id: int) -> int:
     target_character_id = character_data.target_character_id
     if character_id == target_character_id:
         return 0
-    if instuct_judege.calculation_instuct_judege(character_id, target_character_id, _("H模式"), not_draw_flag = True)[0]:
+    if instuct_judege.calculation_instuct_judege(character_id, target_character_id, _("H模式"), not_draw_flag=True, settle_cost=False)[0]:
         return 1
     return 0
 
@@ -883,7 +896,7 @@ def handle_instruct_judge_group_sex(character_id: int) -> int:
     """
     if character_id == 0:
         return 0
-    if instuct_judege.calculation_instuct_judege(0, character_id, _("群交"), not_draw_flag = True)[0]:
+    if instuct_judege.calculation_instuct_judege(0, character_id, _("群交"), not_draw_flag=True, settle_cost=False)[0]:
         return 1
     return 0
 
@@ -1013,12 +1026,13 @@ def handle_normal_2_5_6(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.NORMAL_1)
-def handle_normal_1(character_id: int) -> int:
+def handle_normal_1(character_id: int, *, read_only: bool = False) -> int:
     """
     1正常的普通状态
     \n1:基础生理需求：休息、睡觉、解手、吃饭、沐浴（不含已洗澡）、挤奶、自慰
     Keyword arguments:
     character_id -- 角色id
+    read_only -- bool，是否只查询而不回填异常缓存
     Return arguments:
     int -- 权重
     """
@@ -1037,17 +1051,19 @@ def handle_normal_1(character_id: int) -> int:
         result = 0
     else:
         result = 1
-    _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(1, not bool(result))
+    if not read_only:
+        _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(1, not bool(result))
     return result
 
 
 @add_premise(constant_promise.Premise.NORMAL_2)
-def handle_normal_2(character_id: int) -> int:
+def handle_normal_2(character_id: int, *, read_only: bool = False) -> int:
     """
     \n2:AI行动基本停止：临盆、产后、监禁
     \n包括2:临盆、产后、监禁
     Keyword arguments:
     character_id -- 角色id
+    read_only -- bool，是否只查询而不回填异常缓存
     Return arguments:
     int -- 权重
     """
@@ -1062,17 +1078,19 @@ def handle_normal_2(character_id: int) -> int:
         result = 0
     else:
         result = 1
-    _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(2, not bool(result))
+    if not read_only:
+        _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(2, not bool(result))
     return result
 
 
 @add_premise(constant_promise.Premise.NORMAL_3)
-def handle_normal_3(character_id: int) -> int:
+def handle_normal_3(character_id: int, *, read_only: bool = False) -> int:
     """
     3正常的普通状态
     \n3:高优先级AI：助理、跟随、体检
     Keyword arguments:
     character_id -- 角色id
+    read_only -- bool，是否只查询而不回填异常缓存
     Return arguments:
     int -- 权重
     """
@@ -1087,17 +1105,19 @@ def handle_normal_3(character_id: int) -> int:
         result = 0
     else:
         result = 1
-    _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(3, not bool(result))
+    if not read_only:
+        _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(3, not bool(result))
     return result
 
 
 @add_premise(constant_promise.Premise.NORMAL_4)
-def handle_normal_4(character_id: int) -> int:
+def handle_normal_4(character_id: int, *, read_only: bool = False) -> int:
     """
     4正常的普通状态
     \n4:服装异常：大致全裸、全裸
     Keyword arguments:
     character_id -- 角色id
+    read_only -- bool，是否只查询而不回填异常缓存
     Return arguments:
     int -- 权重
     """
@@ -1111,12 +1131,13 @@ def handle_normal_4(character_id: int) -> int:
         result = 0
     else:
         result = 1
-    _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(4, not bool(result))
+    if not read_only:
+        _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(4, not bool(result))
     return result
 
 
 @add_premise(constant_promise.Premise.NORMAL_5)
-def handle_normal_5(character_id: int) -> int:
+def handle_normal_5(character_id: int, *, read_only: bool = False) -> int:
     """
     5正常的普通状态
     \n5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
@@ -1124,6 +1145,7 @@ def handle_normal_5(character_id: int) -> int:
     character_id -- 角色id
     Return arguments:
     int -- 权重
+    read_only -- bool，是否只查询而不回填异常缓存
     """
     quick_result = _quick_check_normal_by_mask(character_id, 5)
     if quick_result is not None:
@@ -1136,12 +1158,13 @@ def handle_normal_5(character_id: int) -> int:
         result = 0
     else:
         result = 1
-    _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(5, not bool(result))
+    if not read_only:
+        _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(5, not bool(result))
     return result
 
 
 @add_premise(constant_promise.Premise.NORMAL_6)
-def handle_normal_6(character_id: int) -> int:
+def handle_normal_6(character_id: int, *, read_only: bool = False) -> int:
     """
     6正常的普通状态
     \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），烂醉，时停，空气
@@ -1149,6 +1172,7 @@ def handle_normal_6(character_id: int) -> int:
     character_id -- 角色id
     Return arguments:
     int -- 权重
+    read_only -- bool，是否只查询而不回填异常缓存
     """
     quick_result = _quick_check_normal_by_mask(character_id, 6)
     if quick_result is not None:
@@ -1162,17 +1186,19 @@ def handle_normal_6(character_id: int) -> int:
         result = 0
     else:
         result = 1
-    _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(6, not bool(result))
+    if not read_only:
+        _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(6, not bool(result))
     return result
 
 
 @add_premise(constant_promise.Premise.NORMAL_7)
-def handle_normal_7(character_id: int) -> int:
+def handle_normal_7(character_id: int, *, read_only: bool = False) -> int:
     """
     7正常的普通状态
     \n7:角色离线：装袋搬走、外勤、婴儿、他国外交访问、逃跑中
     Keyword arguments:
     character_id -- 角色id
+    read_only -- bool，是否只查询而不回填异常缓存
     Return arguments:
     int -- 权重
     """
@@ -1189,7 +1215,8 @@ def handle_normal_7(character_id: int) -> int:
         result = 0
     else:
         result = 1
-    _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(7, not bool(result))
+    if not read_only:
+        _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(7, not bool(result))
     return result
 
 
@@ -1462,33 +1489,39 @@ def handle_unnormal_27(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.T_NORMAL_5_6)
-def handle_t_normal_5_6(character_id: int) -> int:
+def handle_t_normal_5_6(character_id: int, *, target_id: int | None = None, read_only: bool = False) -> int:
     """
     交互对象56正常
     \n包括5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
     \n包括6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
+    read_only -- bool，是否只查询而不回填异常缓存
     """
     character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
-    return _check_normal_combo(target_chara_id, (5, 6))
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_chara_id = target_id
+    return _check_normal_combo(target_chara_id, (5, 6), read_only=read_only)
 
 
 @add_premise(constant_promise.Premise.T_NORMAL_5_6_OR_UNCONSCIOUS_FLAG_4_7)
-def handle_t_normal_5_6_or_unconscious_flag_4_7(character_id: int) -> int:
+def handle_t_normal_5_6_or_unconscious_flag_4_7(character_id: int, *, target_id: int | None = None, read_only: bool = False) -> int:
     """
     交互对象56正常或平然或心控
     \n包括5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
     \n包括6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
+    read_only -- bool，是否只查询而不回填异常缓存
     """
-    if handle_t_normal_5_6(character_id) or handle_t_unconscious_flag_4(character_id) or handle_t_unconscious_flag_7(character_id):
+    if handle_t_normal_5_6(character_id, target_id=target_id, read_only=read_only) or handle_t_unconscious_flag_4(character_id, target_id=target_id) or handle_t_unconscious_flag_7(character_id, target_id=target_id):
         return 1
     else:
         return 0

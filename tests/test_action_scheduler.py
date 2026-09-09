@@ -15,7 +15,7 @@ class SchedulerTests(unittest.TestCase):
         now = datetime(2026, 1, 1)
         seen = []
         action = SimpleNamespace(duration=5)
-        scheduler = Scheduler(now, choose_next=lambda actor, at: action, execute=lambda actor, action: seen.append((actor, scheduler.now)))
+        scheduler = Scheduler(now, choose_next=lambda actor, at: action, execute=lambda actor, action: seen.append((actor, scheduler.now)) or action.duration)
         scheduler.submit(Task(3, now + timedelta(minutes=5), action))
         scheduler.submit(Task(2, now + timedelta(minutes=2), action))
         scheduler.submit(Task(0, now + timedelta(minutes=5), INPUT))
@@ -39,6 +39,7 @@ class SchedulerTests(unittest.TestCase):
             if action is first:
                 scheduler.submit(Task(actor, now, second, immediate=True))
                 seen.append("返回前")
+            return action.duration
 
         scheduler = Scheduler(now, choose_next=lambda actor, at: first, execute=execute)
         scheduler.submit(Task(1, now, first, immediate=True))
@@ -52,7 +53,8 @@ class SchedulerTests(unittest.TestCase):
         seen = []
         old = SimpleNamespace(name="old", duration=10)
         new = SimpleNamespace(name="new", duration=10)
-        scheduler = Scheduler(now, choose_next=lambda actor, at: old, execute=lambda actor, action: seen.append(action))
+        hooks = []
+        scheduler = Scheduler(now, choose_next=lambda actor, at: old, execute=lambda actor, action: seen.append(action) or action.duration, before_task=lambda task: hooks.append(task.item))
         scheduler.submit(Task(1, now, old))
         with self.assertRaises(ValueError):
             scheduler.replace(Task(1, now - timedelta(minutes=1), new))
@@ -62,6 +64,7 @@ class SchedulerTests(unittest.TestCase):
         scheduler.submit(Task(0, now + timedelta(minutes=2), INPUT))
         scheduler.advance_until_input()
         self.assertEqual(seen, [new])
+        self.assertEqual(hooks, [new, INPUT])
 
     def test_ai_choice_and_player_duration(self):
         """无输入参数；验证选择时刻和玩家时长生成输入占位符；无返回值。"""
@@ -74,7 +77,7 @@ class SchedulerTests(unittest.TestCase):
             decisions.append((actor, at))
             return action
 
-        scheduler = Scheduler(now, choose_next=choose, execute=lambda actor, action: None)
+        scheduler = Scheduler(now, choose_next=choose, execute=lambda actor, action: action.duration)
         scheduler.submit(Task(1, now, AI))
         scheduler.submit(Task(0, now, action))
         result = scheduler.advance_until_input()
@@ -94,7 +97,7 @@ class SchedulerTests(unittest.TestCase):
     def test_validation_and_conflicting_submission(self):
         """无输入参数；验证占位符归属、立即时刻和重复提交约束；无返回值。"""
         now = datetime(2026, 1, 1)
-        scheduler = Scheduler(now, choose_next=lambda actor, at: None, execute=lambda actor, action: None)
+        scheduler = Scheduler(now, choose_next=lambda actor, at: None, execute=lambda actor, action: action.duration)
         for task in (Task(1, now, INPUT), Task(0, now, AI), Task(1, now + timedelta(minutes=1), AI, True)):
             with self.assertRaises(ValueError):
                 scheduler.submit(task)
@@ -102,8 +105,8 @@ class SchedulerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             scheduler.submit(Task(1, now, AI))
 
-    def test_ai_can_submit_forced_action_without_returning_action(self):
-        """无输入参数；AI 已提交强制后续时允许返回 None；无返回值。"""
+    def test_none_is_rejected_even_if_ai_submitted_a_task(self):
+        """无输入参数；AI 即使已提交后续也必须返回意图；无返回值。"""
         now = datetime(2026, 1, 1)
         seen = []
         action = SimpleNamespace(duration=10)
@@ -112,16 +115,61 @@ class SchedulerTests(unittest.TestCase):
             """输入角色与时刻，提交强制行动并返回 None。"""
             scheduler.submit(Task(actor, at, action, immediate=True))
 
-        scheduler = Scheduler(now, choose_next=choose, execute=lambda actor, action: seen.append(action))
+        scheduler = Scheduler(now, choose_next=choose, execute=lambda actor, action: seen.append(action) or action.duration)
+        scheduler.submit(Task(1, now, AI))
+        scheduler.submit(Task(0, now + timedelta(minutes=1), INPUT))
+        with self.assertRaisesRegex(RuntimeError, "未返回行动"):
+            scheduler.advance_until_input()
+        self.assertEqual(seen, [])
+        self.assertFalse(scheduler.running)
+
+    def test_before_task_replacement_skips_old_ai(self):
+        """无需参数；维护钩子替换待办后只执行新行动；无返回值。"""
+        now = datetime(2026, 1, 1)
+        seen = []
+        forced = SimpleNamespace(duration=10)
+
+        def before(task):
+            """输入待办，将 NPC 选择替换为强制动作；返回 None。"""
+            if task.item is AI:
+                self.assertIs(scheduler.pending(task.actor), task)
+                scheduler.replace(Task(task.actor, now, forced, immediate=True))
+
+        scheduler = Scheduler(now, choose_next=lambda *args: self.fail("旧 AI 待办被执行"), execute=lambda actor, action: seen.append(action) or action.duration, before_task=before)
         scheduler.submit(Task(1, now, AI))
         scheduler.submit(Task(0, now + timedelta(minutes=1), INPUT))
         scheduler.advance_until_input()
-        self.assertEqual(seen, [action])
+        self.assertEqual(seen, [forced])
+
+    def test_hook_failure_removes_old_task_and_keeps_replacement(self):
+        """无需参数；钩子异常清除原待办或保留新待办，释放运行锁；无返回值。"""
+        now = datetime(2026, 1, 1)
+        for replace_task in (False, True):
+            with self.subTest(replace_task=replace_task):
+                seen = []
+                action = SimpleNamespace(duration=5)
+
+                def before(task):
+                    """输入待办，可先替换再抛出异常；无返回值。"""
+                    if task.item is AI:
+                        if replace_task:
+                            scheduler.replace(Task(task.actor, now, action, immediate=True))
+                        raise ValueError("维护失败")
+
+                scheduler = Scheduler(now, choose_next=lambda *args: self.fail("不应选择"), execute=lambda actor, action: seen.append(action) or action.duration, before_task=before)
+                scheduler.submit(Task(1, now, AI))
+                with self.assertRaisesRegex(ValueError, "维护失败"):
+                    scheduler.advance_until_input()
+                self.assertFalse(scheduler.running)
+                self.assertEqual(scheduler.contains(1), replace_task)
+                scheduler.submit(Task(0, now + timedelta(minutes=1), INPUT))
+                scheduler.advance_until_input()
+                self.assertEqual(seen, [action] if replace_task else [])
 
     def test_missing_ai_action_is_an_error(self):
         """无输入参数；AI 未提供行动或后续必须报错；无返回值。"""
         now = datetime(2026, 1, 1)
-        scheduler = Scheduler(now, choose_next=lambda actor, at: None, execute=lambda actor, action: None)
+        scheduler = Scheduler(now, choose_next=lambda actor, at: None, execute=lambda actor, action: action.duration)
         scheduler.submit(Task(1, now, AI))
         with self.assertRaisesRegex(RuntimeError, "未返回行动"):
             scheduler.advance_until_input()
@@ -136,7 +184,7 @@ class SchedulerTests(unittest.TestCase):
         scheduler = Scheduler(
             now,
             choose_next=lambda actor, at: None,
-            execute=lambda actor, action: None,
+            execute=lambda actor, action: action.duration,
             before_task=lambda task: seen.append((task.item, scheduler.now)),
             advance_time=lambda at, minutes: calendar_calls.append((at, minutes)) or next_at,
         )
@@ -146,11 +194,11 @@ class SchedulerTests(unittest.TestCase):
         self.assertEqual(calendar_calls, [(now, 10)])
         self.assertEqual(seen, [(action, now), (INPUT, next_at)])
 
-    def test_duration_is_read_after_execution(self):
+    def test_duration_is_returned_by_execution(self):
         """无输入参数；执行时缩短片段或冻结时间后使用最终时长；无返回值。"""
         now = datetime(2026, 1, 1)
         for duration in (30, 0):
-            scheduler = Scheduler(now, choose_next=lambda actor, at: None, execute=lambda actor, action: setattr(action, "duration", duration))
+            scheduler = Scheduler(now, choose_next=lambda actor, at: None, execute=lambda actor, action: duration)
             scheduler.submit(Task(0, now, SimpleNamespace(duration=480)))
             self.assertFalse(scheduler.running)
             result = scheduler.advance_until_input()
@@ -163,11 +211,11 @@ class SchedulerTests(unittest.TestCase):
         for duration in (-1, float("inf"), float("nan")):
             with self.subTest(duration=duration):
                 action = SimpleNamespace(duration=5)
-                scheduler = Scheduler(now, choose_next=lambda actor, at: None, execute=lambda actor, current: setattr(current, "duration", duration))
+                scheduler = Scheduler(now, choose_next=lambda actor, at: None, execute=lambda actor, current: duration)
                 scheduler.submit(Task(0, now, action))
                 with self.assertRaisesRegex(ValueError, "有限非负"):
                     scheduler.advance_until_input()
-                self.assertIs(action.duration, duration)
+                self.assertEqual(action.duration, 5)
 
 
 if __name__ == "__main__":

@@ -479,16 +479,19 @@ def handle_target_have_no_eras(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_EARS)
-def handle_target_have_eras(character_id: int) -> int:
+def handle_target_have_eras(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象有兽耳
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data: game_type.Character = cache.character_data[target_id]
     return target_data.talent[111]
 
 
@@ -507,16 +510,19 @@ def handle_target_have_no_horn(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_HORN)
-def handle_target_have_horn(character_id: int) -> int:
+def handle_target_have_horn(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象有兽角
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data: game_type.Character = cache.character_data[target_id]
     return target_data.talent[112]
 
 
@@ -535,16 +541,19 @@ def handle_target_have_no_tail(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_TAIL)
-def handle_target_have_tail(character_id: int) -> int:
+def handle_target_have_tail(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象有兽尾
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data: game_type.Character = cache.character_data[target_id]
     return target_data.talent[113]
 
 

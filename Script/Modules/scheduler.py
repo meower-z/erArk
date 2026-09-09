@@ -39,7 +39,7 @@ class Scheduler:
         initial_tasks: Iterable[Task] = (),
         *,
         choose_next: Callable[[int, datetime], Any],
-        execute: Callable[[int, Any], None],
+        execute: Callable[[int, Any], float],
         before_task: Callable[[Task], None] | None = None,
         advance_time: Callable[[datetime, float], datetime] | None = None,
     ) -> None:
@@ -117,22 +117,30 @@ class Scheduler:
                 entry = self._pending.get(task.actor)
                 if entry is None or entry[0] != serial:
                     continue
-                del self._pending[task.actor]
                 self.now = task.at
                 if self._before_task is not None:
-                    self._before_task(task)
+                    try:
+                        self._before_task(task)
+                    except Exception:
+                        # 失败的原待办已出队；保留回调中另行提交的替代待办。
+                        if self._pending.get(task.actor, (None,))[0] == serial:
+                            del self._pending[task.actor]
+                        raise
+                # 执行前的状态维护可以替换待办；仅执行仍有效的条目。
+                entry = self._pending.get(task.actor)
+                if entry is None or entry[0] != serial:
+                    continue
+                del self._pending[task.actor]
                 if task.item is INPUT:
                     return task
                 action = self._choose_next(task.actor, self.now) if task.item is AI else task.item
                 if action is None:
-                    if task.item is AI and self.contains(task.actor):
-                        continue
-                    raise RuntimeError("AI 未返回行动，也未提交后续")
-                self._execute(task.actor, action)
-                if not math.isfinite(action.duration) or action.duration < 0:
+                    raise RuntimeError("AI 未返回行动")
+                duration = self._execute(task.actor, action)
+                if not math.isfinite(duration) or duration < 0:
                     raise ValueError("行动时长必须为有限非负数")
                 if not self.contains(task.actor):
-                    next_at = self._advance_time(task.at, action.duration) if self._advance_time is not None else task.at + timedelta(minutes=action.duration)
+                    next_at = self._advance_time(task.at, duration) if self._advance_time is not None else task.at + timedelta(minutes=duration)
                     if next_at < task.at:
                         raise ValueError("行动结束时间不能早于开始时间")
                     item = INPUT if task.actor == PLAYER else AI

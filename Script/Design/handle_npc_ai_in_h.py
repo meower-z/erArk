@@ -149,7 +149,7 @@ def judge_character_h_obscenity_unconscious(character_id: int, pl_start_time: da
             if(
                 handle_premise.handle_npc_ai_type_1_in_group_sex(character_id) or handle_premise.handle_npc_ai_type_2_in_group_sex(character_id)
             ):
-                npc_ai_in_group_sex(character_id)
+                # 补位与自慰由 NPC AI 返回意图，执行阶段更新群交状态。
                 return 1
             # 如果已经获得性爱助手行为，则结算助手行动
             elif character_data.h_state.sex_assist:
@@ -656,81 +656,6 @@ def npc_active_h():
     pl_character_data.behavior.duration = 10
     update.game_update_flow(10)
 
-
-def npc_ai_in_group_sex(character_id: int):
-    """
-    NPC在群交中的AI，不含抢占\n
-    Keyword arguments:\n
-    character_id -- 角色id\n
-    """
-    from Script.System.Sex_System import group_sex_panel
-
-    # 玩家则返回
-    if character_id == 0:
-        return
-    # 如果自己已在群交模板中，则返回
-    group_sex_chara_id_list = group_sex_panel.count_group_sex_character_list()
-    if character_id in group_sex_chara_id_list:
-        return
-
-    character_data: game_type.Character = cache.character_data[character_id]
-    pl_character_data: game_type.Character = cache.character_data[0]
-    A_template_data = pl_character_data.h_state.group_sex_body_template_dict["A"]
-
-    # 如果不是H状态+群交，则返回
-    if character_data.sp_flag.is_h == False or handle_premise.handle_group_sex_mode_off(character_id):
-        return
-
-    # 被绳子捆绑则返回
-    if handle_premise.handle_self_now_bondage(character_id):
-        return
-
-    # 如果设定NPC为仅自慰，则进入要自慰后返回
-    if handle_premise.handle_npc_ai_type_1_in_group_sex(character_id):
-        character_data.sp_flag.masturebate = 3
-        handle_premise.settle_chara_unnormal_flag(character_id, 1)
-        character_data.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-        character_data.state = constant.CharacterStatus.STATUS_ARDER
-        # print(f"debug {character_data.name}进入了要自慰状态")
-        return
-
-    # 获取当前模板的空缺部位和非空缺部位
-    now_template_empty_part_list, now_template_not_empty_part_list = group_sex_panel.get_now_template_part_list()
-
-    # 如果有空缺，则随机选择一个部位
-    if len(now_template_empty_part_list):
-        body_part = random.choice(now_template_empty_part_list)
-        # 如果是加入侍奉，则直接加入
-        if body_part == _("加入侍奉"):
-            A_template_data[1][0].append(character_id)
-            # print(f"debug {character_data.name}加入侍奉{game_config.config_status[ A_template_data[1][1]].name}")
-        else:
-            # 获取该部位的状态id列表
-            old_target_character_id = pl_character_data.target_character_id
-            pl_character_data.target_character_id = character_id
-            try:
-                new_status_id_list = group_sex_panel.get_status_id_list_from_group_sex_body_part(body_part)
-            finally:
-                pl_character_data.target_character_id = old_target_character_id
-            # 如果没有可用的状态，则返回
-            if len(new_status_id_list) == 0:
-                return
-            # 随机选择一个状态
-            status_id = random.choice(new_status_id_list)
-            # 如果是侍奉
-            if body_part == _("侍奉"):
-                A_template_data[1] = [[character_id], status_id]
-            # 如果是对单
-            else:
-                A_template_data[0][body_part] = [character_id, status_id]
-            # print(f"debug {character_data.name}对{body_part}选择了{game_config.config_status[status_id].name}")
-    # 否则，自己进入要自慰状态
-    else:
-        character_data.sp_flag.masturebate = 3
-        handle_premise.settle_chara_unnormal_flag(character_id, 1)
-        character_data.state = constant.CharacterStatus.STATUS_ARDER
-        character_data.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-        # print(f"debug {character_data.name}进入了要自慰状态")
 
 def npc_ai_in_group_sex_type_3():
     """

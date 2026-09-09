@@ -48,7 +48,7 @@ def init_character_behavior_start_time(character_id: int, now_time: datetime.dat
     character_data.behavior.start_time = start_time
 
 
-def calculation_instuct_judege(character_id: int, target_character_id: int, instruct_name: str, not_draw_flag = False):
+def calculation_instuct_judege(character_id: int, target_character_id: int, instruct_name: str, not_draw_flag=False, *, settle_cost: bool = True):
     """
     根据角色和目标角色的各属性来计算总实行值\n
     Keyword arguments:\n
@@ -56,6 +56,7 @@ def calculation_instuct_judege(character_id: int, target_character_id: int, inst
     target_character_id -- 目标角色id\n
     instruct_name -- 指令名字\n
     not_draw_flag -- 是否不输出文本\n
+    settle_cost -- bool，是否落实理智消耗和催眠解除；前提查询传 False\n
     Return arguments:\n
     int -- 1成功,0失败,-1无副作用返回\n
     int -- 实行值\n
@@ -386,13 +387,15 @@ def calculation_instuct_judege(character_id: int, target_character_id: int, inst
                 if sanity_point_cost <= character_data.sanity_point:
                     judge += judge_hypnosis
                     calculation_text += _("+催眠(+{0},消耗{1}理智)").format(judge_hypnosis, sanity_point_cost)
-                    character_data.sanity_point -= sanity_point_cost
-                    character_data.pl_ability.today_sanity_point_cost += sanity_point_cost
+                    if settle_cost:
+                        character_data.sanity_point -= sanity_point_cost
+                        character_data.pl_ability.today_sanity_point_cost += sanity_point_cost
                 else:
                     calculation_text += _("+催眠(+0,理智不足,催眠解除)")
-                    target_data.sp_flag.unconscious_h = 0
-                    handle_premise.settle_chara_unnormal_flag(character_data.target_character_id, 5)
-                    handle_premise.settle_chara_unnormal_flag(character_data.target_character_id, 6)
+                    if settle_cost:
+                        target_data.sp_flag.unconscious_h = 0
+                        handle_premise.settle_chara_unnormal_flag(character_data.target_character_id, 5)
+                        handle_premise.settle_chara_unnormal_flag(character_data.target_character_id, 6)
 
     # debug模式修正
     if cache.debug_mode == True:

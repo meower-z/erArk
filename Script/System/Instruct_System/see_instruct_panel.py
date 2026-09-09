@@ -24,7 +24,7 @@ line_feed = draw.NormalDraw()
 line_feed.text = "\n"
 line_feed.width = 1
 
-def judge_single_instruct_filter(instruct_id: str, now_premise_data: dict, now_type: int, use_type_filter_flag: bool = True, skip_h_judge: bool = False, skip_not_h_judge: bool = False) -> tuple:
+def judge_single_instruct_filter(instruct_id: str, now_premise_data: dict, now_type: int, use_type_filter_flag: bool = True, skip_h_judge: bool = False, skip_not_h_judge: bool = False, *, target_id: int | None = None) -> tuple:
     """
     判断单个指令是否通过过滤\n
     Keyword arguments：\n
@@ -34,16 +34,14 @@ def judge_single_instruct_filter(instruct_id: str, now_premise_data: dict, now_t
     use_type_filter_flag -- 是否使用类型过滤\n
     skip_h_judge -- 是否跳过H类指令判断\n
     skip_not_h_judge -- 是否跳过非H类指令判断\n
+    target_id -- 可选目标编号；指定时使用只读前提查询\n
     Returns：\n
     bool -- 是否通过过滤\n
     now_premise_data -- 当前记录的前提数据\n
     """
     filter_judge = True
-    # 如果该指令不存在，则置为存在
-    if instruct_id not in cache.instruct_index_filter:
-        cache.instruct_index_filter[instruct_id] = True
-    # 如果在过滤列表里，则过滤
-    if not cache.instruct_index_filter[instruct_id]:
+    # 未设置的指令默认可用，查询不补写过滤表。
+    if not cache.instruct_index_filter.get(instruct_id, True):
         filter_judge = False
     # H子类指令过滤
     if use_type_filter_flag and handle_premise.handle_now_show_h_instruct(0) and now_type == constant.InstructType.SEX:
@@ -56,7 +54,7 @@ def judge_single_instruct_filter(instruct_id: str, now_premise_data: dict, now_t
         if instruct_id in constant.instruct_premise_data:
             for premise in constant.instruct_premise_data[instruct_id]:
                 # 忽略子类时（即非主界面），NPC逆推模式下则忽略NPC逆推的相关前提
-                if use_type_filter_flag == False and handle_premise.handle_t_npc_active_h(0) and premise == 't_npc_not_active_h':
+                if use_type_filter_flag == False and handle_premise.handle_t_npc_active_h(0, target_id=target_id) and premise == 't_npc_not_active_h':
                     continue
                 if premise in now_premise_data:
                     if now_premise_data[premise]:
@@ -70,7 +68,7 @@ def judge_single_instruct_filter(instruct_id: str, now_premise_data: dict, now_t
                 elif skip_not_h_judge and premise == 'not_h':
                     now_premise_data[premise] = 1
                 else:
-                    now_premise_value = handle_premise.handle_premise(premise, 0)
+                    now_premise_value = handle_premise.handle_premise(premise, 0, target_id=target_id)
                     now_premise_data[premise] = now_premise_value
                     if not now_premise_value:
                         premise_judge = False

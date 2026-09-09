@@ -19,6 +19,8 @@ from Script.Design import (
     attr_calculation,
     map_handle,
 )
+from Script.Modules.action import Action
+from Script.Modules.npc_actions import state_machine_action
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 
@@ -281,14 +283,13 @@ def judge_character_cant_move(character_id: int) -> int:
     return cant_move_flag
 
 
-def find_character_target(character_id: int, now_time: datetime.datetime):
+def choose_character_target(character_id: int, now_time: datetime.datetime) -> Action:
     """
-    查询角色可用目标活动并赋给角色
+    输入角色编号 int 与当前时间 datetime，返回所选状态机意图 Action
     Keyword arguments:
     character_id -- 角色id
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    start_time = character_data.behavior.start_time
     all_target_list = list(game_config.config_target.keys())
     premise_data = {}
     target_weight_data = {}
@@ -299,10 +300,9 @@ def find_character_target(character_id: int, now_time: datetime.datetime):
         # 群交中+要群交自慰时，才能继续下去
         if handle_premise.handle_group_sex_mode_on(character_id) and handle_premise.handle_masturebate_flag_3(character_id):
             pass
-        # 否则不赋予新活动，且直接加入结束列表
+        # 其他 H 状态选择等待片段
         else:
-            cache.over_behavior_character.add(character_id)
-            return
+            return state_machine_action(character_id, constant.StateMachine.WAIT_5_MIN)
 
     # 如果玩家在对该NPC交互，则等待flag=1，此操作暂时不进行
     # safe_instruct = [constant.CharacterStatus.STATUS_WAIT,constant.CharacterStatus.STATUS_REST,constant.CharacterStatus.STATUS_SLEEP]
@@ -367,7 +367,9 @@ def find_character_target(character_id: int, now_time: datetime.datetime):
     if judge == 0:
         from Script.System.Education_System import class_ai
 
-        judge = class_ai.judge_class_state_machine(character_id)
+        class_intent = class_ai.choose_class_intent(character_id)
+        if class_intent is not None:
+            return class_intent
     # 然后判断幼女见学，需要是幼女、本节没排课（或日程排了跟随母亲）、且母亲有效（Plan 22 二期 §3.24）
     # ⚠️ 排在上课之后、工作之前：有课就上课，没课才跟母亲；幼女本就没有工作，走到工作链也是空转
     if judge == 0:
@@ -450,23 +452,9 @@ def find_character_target(character_id: int, now_time: datetime.datetime):
 
     # 如果以上都没有，则开始遍历各大类的目标行动
     if judge == 0:
-        now_target_list = []
-        target_type_list = []
-
-        # 如果已经有now_target_list了，则直接使用
-        if len(now_target_list):
-            now_target_list = now_target_list
-        # 或者有target_type_list，则遍历后加入now_target_list
-        elif len(target_type_list):
-            for target_type in target_type_list:
-                now_target_list.extend(game_config.config_target_type_index[target_type])
-        # 如果还是没有，则遍历所有大类
-        else:
-            now_target_list = all_target_list
-
         target, weight, judge, new_premise_data = search_target(
             character_id,
-            now_target_list,
+            all_target_list,
             null_target_set,
             premise_data,
             target_weight_data,
@@ -488,24 +476,8 @@ def find_character_target(character_id: int, now_time: datetime.datetime):
         # ai自动补完的工作或娱乐行动
         else:
             state_machine_id = judge
-        #如果上个AI行动是普通交互指令，则将等待flag设为1
-        # if state_machine_id >= 100:
-        #     character_data.sp_flag.wait_flag = 1
-            # print(f"debug 前一个状态机id = ",state_machine_id,",flag变为1,character_name =",character_data.name)
-        constant.handle_state_machine_data[state_machine_id](character_id)
-        # 保证AI选出的行动至少消耗1分钟：时长为0或负数的行动会在时间结算中被直接抹除且效果全部跳过，
-        # 若前提未变化则AI下一轮会重复选择同一行动，导致NPC行为循环永不收敛（死循环）
-        if character_data.behavior.duration <= 0:
-            character_data.behavior.duration = 1
-        # if character_data.name == "阿米娅":
-        #     print(f"debug 中：{character_data.name}，behavior_id = {game_config.config_status[character_data.state].name}，start_time = {character_data.behavior.start_time}, game_time = {now_time}")
-    else:
-        now_judge = game_time.judge_date_big_or_small(start_time, now_time)
-        if now_judge:
-            cache.over_behavior_character.add(character_id)
-        else:
-            next_time = game_time.get_sub_date(minute=1, old_date=start_time)
-            cache.character_data[character_id].behavior.start_time = next_time
+        return state_machine_action(character_id, state_machine_id)
+    return state_machine_action(character_id, constant.StateMachine.WAIT_5_MIN)
 
 
 def search_target(

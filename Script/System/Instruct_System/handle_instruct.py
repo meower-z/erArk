@@ -1509,7 +1509,9 @@ def _schedule_h_end_wait(character_id: int) -> None:
     action = Action.from_character(cache.character_data[character_id])
     # 普通待办排在玩家的立即结束行动之后，等待只结算经过时间。
     action.continued = True
-    runtime.plans.pop(character_id, None)
+    cache.character_data[character_id].action_progress = None
+    if character_id == 0:
+        runtime.player_plan = None
     runtime.scheduler.replace(Task(character_id, runtime.scheduler.now, action))
 
 

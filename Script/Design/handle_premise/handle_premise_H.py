@@ -201,43 +201,50 @@ def handle_penis_in_t_face(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.PENIS_IN_T_MOUSE)
-def handle_penis_in_t_mouse(character_id: int) -> int:
+def handle_penis_in_t_mouse(character_id: int, *, target_id: int | None = None) -> int:
     """
     当前阴茎位置为交互对象_口交中
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data = cache.character_data[target_id]
     if target_data.h_state.insert_position == 2:
         return 1
     return 0
 
 
 @add_premise(constant_promise.Premise.PENIS_NOT_IN_T_MOUSE)
-def handle_penis_not_in_t_mouse(character_id: int) -> int:
+def handle_penis_not_in_t_mouse(character_id: int, *, target_id: int | None = None) -> int:
     """
     当前阴茎位置不为交互对象_口交中
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
-    return not handle_penis_in_t_mouse(character_id)
+    return not handle_penis_in_t_mouse(character_id, target_id=target_id)
 
 @add_premise(constant_promise.Premise.PENIS_IN_T_DEEP_THROAT)
-def handle_penis_in_t_deep_throat(character_id: int) -> int:
+def handle_penis_in_t_deep_throat(character_id: int, *, target_id: int | None = None) -> int:
     """
     当前阴茎位置为交互对象_深喉中
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data = cache.character_data[target_id]
     if target_data.h_state.insert_position == 15:
         return 1
     return 0
@@ -254,16 +261,19 @@ def handle_penis_not_in_t_deep_throat(character_id: int) -> int:
     return not handle_penis_in_t_deep_throat(character_id)
 
 @add_premise(constant_promise.Premise.PENIS_IN_T_BREAST)
-def handle_penis_in_t_breast(character_id: int) -> int:
+def handle_penis_in_t_breast(character_id: int, *, target_id: int | None = None) -> int:
     """
     当前阴茎位置为交互对象_乳交中
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data = cache.character_data[target_id]
     if target_data.h_state.insert_position == 3:
         return 1
     return 0
@@ -286,64 +296,76 @@ def handle_penis_in_t_axilla(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.PENIS_IN_T_HAND)
-def handle_penis_in_t_hand(character_id: int) -> int:
+def handle_penis_in_t_hand(character_id: int, *, target_id: int | None = None) -> int:
     """
     当前阴茎位置为交互对象_手交中
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data = cache.character_data[target_id]
     if target_data.h_state.insert_position == 5:
         return 1
     return 0
 
 
 @add_premise(constant_promise.Premise.PENIS_IN_T_VAGINA)
-def handle_penis_in_t_vagina(character_id: int) -> int:
+def handle_penis_in_t_vagina(character_id: int, *, target_id: int | None = None) -> int:
     """
     当前阴茎位置为交互对象_V插入中
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data = cache.character_data[target_id]
     if target_data.h_state.insert_position == 6:
         return 1
     return 0
 
 
 @add_premise(constant_promise.Premise.PENIS_IN_T_WOMB)
-def handle_penis_in_t_womb(character_id: int) -> int:
+def handle_penis_in_t_womb(character_id: int, *, target_id: int | None = None) -> int:
     """
     当前阴茎位置为交互对象_W插入中
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data = cache.character_data[target_id]
     if target_data.h_state.insert_position == 7:
         return 1
     return 0
 
 
 @add_premise(constant_promise.Premise.PENIS_IN_T_ANAL)
-def handle_penis_in_t_anal(character_id: int) -> int:
+def handle_penis_in_t_anal(character_id: int, *, target_id: int | None = None) -> int:
     """
     当前阴茎位置为交互对象_A插入中
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data = cache.character_data[target_id]
     if target_data.h_state.insert_position == 8:
         return 1
     return 0
@@ -362,16 +384,19 @@ def handle_penis_not_in_t_anal(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.PENIS_IN_T_URETHRAL)
-def handle_penis_in_t_nrethral(character_id: int) -> int:
+def handle_penis_in_t_nrethral(character_id: int, *, target_id: int | None = None) -> int:
     """
     当前阴茎位置为交互对象_U插入中
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data = cache.character_data[target_id]
     if target_data.h_state.insert_position == 9:
         return 1
     return 0
@@ -470,55 +495,59 @@ def handle_penis_in_t_ears(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.PENIS_IN_T_MOUSE_OR_BREAST)
-def handle_penis_in_t_mouse_or_breast(character_id: int) -> int:
+def handle_penis_in_t_mouse_or_breast(character_id: int, *, target_id: int | None = None) -> int:
     """
     当前阴茎位置为交互对象_口交中或乳交中
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
-    if handle_penis_in_t_mouse(character_id) or handle_penis_in_t_breast(character_id):
+    if handle_penis_in_t_mouse(character_id, target_id=target_id) or handle_penis_in_t_breast(character_id, target_id=target_id):
         return 1
     return 0
 
 
 @add_premise(constant_promise.Premise.PENIS_IN_T_MOUSE_OR_HAND)
-def handle_penis_in_t_mouse_or_hand(character_id: int) -> int:
+def handle_penis_in_t_mouse_or_hand(character_id: int, *, target_id: int | None = None) -> int:
     """
     当前阴茎位置为交互对象_口交中或手交中
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
-    if handle_penis_in_t_mouse(character_id) or handle_penis_in_t_hand(character_id):
+    if handle_penis_in_t_mouse(character_id, target_id=target_id) or handle_penis_in_t_hand(character_id, target_id=target_id):
         return 1
     return 0
 
 @add_premise(constant_promise.Premise.PENIS_IN_T_MOUSE_OR_DEEP_THROAT)
-def handle_penis_in_t_mouse_or_deep_throat(character_id: int) -> int:
+def handle_penis_in_t_mouse_or_deep_throat(character_id: int, *, target_id: int | None = None) -> int:
     """
     当前阴茎位置为交互对象_口交中或深喉中
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
-    if handle_penis_in_t_mouse(character_id) or handle_penis_in_t_deep_throat(character_id):
+    if handle_penis_in_t_mouse(character_id, target_id=target_id) or handle_penis_in_t_deep_throat(character_id, target_id=target_id):
         return 1
     return 0
 
 @add_premise(constant_promise.Premise.PENIS_IN_T_VAGINA_OR_WOMB)
-def handle_penis_in_t_vagina_or_womb(character_id: int) -> int:
+def handle_penis_in_t_vagina_or_womb(character_id: int, *, target_id: int | None = None) -> int:
     """
     当前阴茎位置为交互对象_V插入中或W插入中
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
-    if handle_penis_in_t_vagina(character_id) or handle_penis_in_t_womb(character_id):
+    if handle_penis_in_t_vagina(character_id, target_id=target_id) or handle_penis_in_t_womb(character_id, target_id=target_id):
         return 1
     return 0
 
@@ -2011,32 +2040,38 @@ def handle_npc_not_active_h(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.T_NPC_ACTIVE_H)
-def handle_t_npc_active_h(character_id: int) -> int:
+def handle_t_npc_active_h(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象正在主动H
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data = cache.character_data[target_id]
     if target_data.h_state.npc_active_h:
         return 1
     return 0
 
 
 @add_premise(constant_promise.Premise.T_NPC_NOT_ACTIVE_H)
-def handle_t_npc_not_active_h(character_id: int) -> int:
+def handle_t_npc_not_active_h(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象没有在主动H
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data = cache.character_data[target_id]
     if target_data.h_state.npc_active_h:
         return 0
     return 1
@@ -2739,16 +2774,19 @@ def handle_target_now_vibrator_insertion(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_VIBRATOR_INSERTION)
-def handle_target_not_vibrator_insertion(character_id: int) -> int:
+def handle_target_not_vibrator_insertion(character_id: int, *, target_id: int | None = None) -> int:
     """
     校验交互对象V没有在插入震动棒
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    return not handle_self_now_vibrator_insertion(character_data.target_character_id)
+    if target_id is None:
+        target_id = character_data.target_character_id
+    return not handle_self_now_vibrator_insertion(target_id)
 
 
 @add_premise(constant_promise.Premise.SELF_NOW_VIBRATOR_INSERTION_ANAL)
@@ -2815,16 +2853,19 @@ def handle_self_a_empty(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.TARGET_A_EMPTY)
-def handle_target_a_empty(character_id: int) -> int:
+def handle_target_a_empty(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象A无任何道具
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    return handle_self_a_empty(character_data.target_character_id)
+    if target_id is None:
+        target_id = character_data.target_character_id
+    return handle_self_a_empty(target_id)
 
 
 @add_premise(constant_promise.Premise.TARGET_NOW_MILKING_MACHINE)
@@ -2876,16 +2917,19 @@ def handle_target_now_urine_collector(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_URINE_COLLECTOR)
-def handle_target_not_urine_collector(character_id: int) -> int:
+def handle_target_not_urine_collector(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象没有在采尿器
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data: game_type.Character = cache.character_data[target_id]
     if target_data.h_state.body_item[5][1]:
         return 0
     return 1
@@ -2981,16 +3025,19 @@ def handle_target_now_gag(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_GAG)
-def handle_target_not_gag(character_id: int) -> int:
+def handle_target_not_gag(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象没有戴着口球
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    return not handle_self_now_gag(character_data.target_character_id)
+    if target_id is None:
+        target_id = character_data.target_character_id
+    return not handle_self_now_gag(target_id)
 
 
 @add_premise(constant_promise.Premise.SELF_SEELP_PIILS)
@@ -3323,28 +3370,32 @@ def handle_self_not_bondage(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.TARGET_NOW_BONDAGE)
-def handle_target_now_bondage(character_id: int) -> int:
+def handle_target_now_bondage(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象正在被绳子捆绑
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    return handle_self_now_bondage(character_data.target_character_id)
+    if target_id is None:
+        target_id = character_data.target_character_id
+    return handle_self_now_bondage(target_id)
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_BONDAGE)
-def handle_target_not_bondage(character_id: int) -> int:
+def handle_target_not_bondage(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象没有被绳子捆绑
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
-    return not handle_target_now_bondage(character_id)
+    return not handle_target_now_bondage(character_id, target_id=target_id)
 
 
 @add_premise(constant_promise.Premise.SELF_NOW_SEX_TOY_OFF)

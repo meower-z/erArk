@@ -4,8 +4,27 @@ from copy import deepcopy
 from dataclasses import replace
 
 from Script.Core import cache_control, constant, game_type
-from Script.Modules.action import Action
+from Script.Modules.action import Action, ActionProgress
 from Script.Modules.scheduler import AI, INPUT, Scheduler, Task
+
+
+def settle_sleep(actor: int, duration: float, continued: bool, now):
+    """输入角色编号、分钟数、延续标志及开始时刻 datetime；结算一段睡眠，返回 None。"""
+    from Script.Design import character_behavior, game_time
+    from Script.Settle import default, realtime_settle, sleep_settle
+
+    end = game_time.get_sub_date(minute=duration, old_date=now)
+    if continued:
+        # 延续片段补充睡眠恢复，入睡事件和口上由首次片段处理。
+        changes = game_type.CharacterStatusChange()
+        default.handle_add_small_sanity_point(actor, duration, changes, end)
+        default.handle_add_small_semen_point(actor, duration, changes, end)
+    else:
+        character_behavior.judge_character_status(actor)
+    # 每段睡眠都按实际时长结算体力等随时间变化的数值。
+    realtime_settle.character_aotu_change_value(actor, end, now)
+    if actor == 0 and not continued:
+        sleep_settle.update_sleep()
 
 
 def reset():
@@ -19,6 +38,13 @@ def restore(saved_runtime):
     if saved_runtime is not None:
         saved_runtime.scheduler._running = False
         saved_runtime.active = {}
+        # 旧队列把剩余恢复行动放在执行器中；读档时转换为未结算的行动记录。
+        old_plans = getattr(saved_runtime, "plans", None)
+        if old_plans is not None:
+            saved_runtime.player_plan = old_plans.pop(0, None)
+            for actor, action in old_plans.items():
+                cache_control.cache.character_data[actor].action_progress = ActionProgress(deepcopy(action))
+            del saved_runtime.plans
 
 
 def get_runtime():
@@ -45,10 +71,12 @@ def submit_current(actor, *, after=None):
 
 def reset_character(actor):
     """角色上下线时重置行动计划与待办；输入角色编号，返回 None。"""
+    cache_control.cache.character_data[actor].action_progress = None
     runtime = getattr(cache_control.cache, "action_scheduler", None)
     if runtime is None:
         return
-    runtime.plans.pop(actor, None)
+    if actor == 0:
+        runtime.player_plan = None
     runtime.current.pop(actor, None)
     runtime.known.add(actor)
     runtime.scheduler.replace(Task(actor, runtime.scheduler.now, INPUT if actor == 0 else AI))
@@ -60,17 +88,19 @@ def wait_on(actor, owner, behavior_id):
         return
     runtime = get_runtime()
     action = Action(constant.Behavior.WAIT, 5, owner, state=constant.CharacterStatus.STATUS_WAIT, wait_on=(owner, behavior_id))
-    runtime.plans.pop(actor, None)
+    cache_control.cache.character_data[actor].action_progress = None
+    if actor == 0:
+        runtime.player_plan = None
     runtime.scheduler.replace(Task(actor, runtime.scheduler.now, action, immediate=True))
 
 
 class Runtime:
-    """保存行动计划和待办，调用游戏行动的结算与收尾。"""
+    """保存玩家行动计划和待办，记录执行进度并调用结算与收尾。"""
 
     def __init__(self):
         """从当前游戏时刻建立空调度器，无参数，返回 None。"""
         cache = cache_control.cache
-        self.plans = {}
+        self.player_plan = None
         self.active = {}
         self.current = {}
         self.scheduler = Scheduler(cache.game_time, choose_next=self.choose_next, execute=self.execute, before_task=self.before_task, advance_time=self.advance_time)
@@ -104,8 +134,7 @@ class Runtime:
                 if end > at:
                     at = max(at, behavior.start_time)
                     item = replace(Action.from_character(character), duration=game_time.elapsed_minutes(at, end), continued=True)
-                    if behavior.behavior_id in {constant.Behavior.SLEEP, constant.Behavior.REST}:
-                        self.plans[actor] = deepcopy(item)
+
             self.scheduler.submit(Task(actor, at, item))
             self.known.add(actor)
 
@@ -120,6 +149,18 @@ class Runtime:
             self.sync_characters()
         if task.item == INPUT:
             self.finish_current(task.actor, task.at)
+        elif task.item is AI and task.actor in cache.npc_id_got and not cache.character_data[task.actor].dead:
+            from Script.Design import handle_npc_ai
+
+            character = cache.character_data[task.actor]
+            progress = getattr(character, "action_progress", None)
+            if progress is not None and progress.action.behavior_id == constant.Behavior.SLEEP:
+                handle_npc_ai.judge_character_cant_move(task.actor)
+                handle_npc_ai.judge_assistant_character(task.actor)
+                return
+            self.finish_current(task.actor, task.at)
+            cache.character_data[task.actor].behavior.start_time = task.at
+            handle_npc_ai.run_npc_pre_behavior_checks(task.actor, task.at)
 
     def finish_current(self, actor, now):
         """输入角色编号和时刻，在行动到期或被替换时收尾当前行为；返回 None。"""
@@ -127,12 +168,13 @@ class Runtime:
 
         character = cache_control.cache.character_data[actor]
         previous = self.current.pop(actor, None)
+        character.action_progress = None
         if previous is not None:
             character.behavior = previous[0]
             character_behavior.judge_character_status_time_over(actor, now, end_now=2)
 
     def choose_next(self, actor, now):
-        """输入 NPC 编号和时刻，委托 AI 模块返回 Action 或已提交的 None。"""
+        """输入 NPC 编号和时刻，返回 AI 选定的行动意图。"""
         from Script.Modules import npc_ai
 
         cache = cache_control.cache
@@ -147,19 +189,42 @@ class Runtime:
         if pending is not None and pending.immediate and isinstance(pending.item, Action):
             pending.item.followups += (action,)
         else:
-            self.plans.pop(actor, None)
+            cache_control.cache.character_data[actor].action_progress = None
+            if actor == 0:
+                self.player_plan = None
             self.scheduler.replace(Task(actor, self.scheduler.now, action, immediate=True))
 
-    def execute(self, actor, action):
-        """输入角色和 Action，结算原子行动的效果并提交后续；返回 None。"""
+    def finish_action(self, actor: int, after):
+        """输入角色编号及 str、tuple 或 None 收尾标记，执行行动回调；返回 None。"""
+        from Script.Design import handle_npc_ai, handle_npc_ai_in_h
+
+        if after == "group_exit":
+            handle_npc_ai.finish_group_sex_tired_exit(actor)
+        elif isinstance(after, tuple):
+            kind, *arguments = after
+            if kind == "unconscious_recovery":
+                handle_npc_ai_in_h.finish_unconscious_h_recovery(actor, *arguments)
+            elif kind in {"discoverer_join", "discoverer_end"}:
+                from Script.System.Sex_System import sex_be_discovered_panel
+
+                callback = sex_be_discovered_panel.finish_discovered_join if kind == "discoverer_join" else sex_be_discovered_panel.finish_discovered_end
+                callback(actor)
+
+    def execute(self, actor, action) -> float:
+        """输入角色和行动意图，结算效果并提交后续；返回占用的分钟数 float。"""
         from Script.Design import character_behavior, handle_npc_ai, handle_npc_ai_in_h, handle_talent, handle_premise
-        from Script.Settle import realtime_settle, sleep_settle, default
+        from Script.Settle import realtime_settle
 
         cache = cache_control.cache
         character = cache.character_data[actor]
         if character.dead or (actor and actor not in cache.npc_id_got):
-            return
+            return action.duration
         now = self.scheduler.now
+        from Script.Modules.action_execution import prepare_action
+
+        action = prepare_action(self, actor, action)
+        if action is None:
+            return 0
         # 已提交的同角色后续先占位，本次新产生的后续按提交顺序排在它们之后。
         for following in action.followups:
             self.enqueue(actor, following)
@@ -171,14 +236,17 @@ class Runtime:
                 self.finish_current(actor, now)
                 if not self.scheduler.contains(actor):
                     self.scheduler.submit(Task(actor, now, INPUT if actor == 0 else AI))
-                return
+                return 0
         if not action.continued:
             self.finish_current(actor, now)
         action.apply(character, now)
         self.active[actor] = (deepcopy(character.behavior), character.target_character_id, character.state)
-        recovery = action.behavior_id in {constant.Behavior.REST, constant.Behavior.SLEEP}
-        if recovery and not action.continued:
-            self.plans[actor] = deepcopy(action)
+        recovery = action.behavior_id == constant.Behavior.SLEEP
+        if not action.continued or getattr(character, "action_progress", None) is None:
+            character.action_progress = ActionProgress(deepcopy(action))
+        progress = character.action_progress
+        if actor == 0 and recovery and not action.continued:
+            self.player_plan = deepcopy(action)
         try:
             # 首次入睡准备读取完整睡眠计划，判定六小时阈值效果。
             if actor == 0 and not action.continued:
@@ -200,20 +268,17 @@ class Runtime:
             if recovery:
                 action.duration = min(action.duration, 30)
                 character.behavior.duration = action.duration
-                plan = self.plans.get(actor)
-                if plan is not None:
-                    plan.duration = max(plan.duration - action.duration, 0)
+                if actor == 0 and self.player_plan is not None:
+                    self.player_plan.duration = max(self.player_plan.duration - action.duration, 0)
                 self.active[actor][0].duration = action.duration
+            progress.elapsed += action.duration
             end = self.advance_time(now, action.duration)
-            if not action.continued and action.wait_on is None:
-                character_behavior.judge_character_status(actor)
-            elif action.continued and action.behavior_id == constant.Behavior.SLEEP:
-                changes = game_type.CharacterStatusChange()
-                default.handle_add_small_sanity_point(actor, action.duration, changes, end)
-                default.handle_add_small_semen_point(actor, action.duration, changes, end)
-            realtime_settle.character_aotu_change_value(actor, end, now)
-            if actor == 0 and action.behavior_id == constant.Behavior.SLEEP and not action.continued:
-                sleep_settle.update_sleep()
+            if action.behavior_id == constant.Behavior.SLEEP:
+                settle_sleep(actor, action.duration, action.continued, now)
+            else:
+                if not action.continued and action.wait_on is None:
+                    character_behavior.judge_character_status(actor)
+                realtime_settle.character_aotu_change_value(actor, end, now)
             realtime_settle.change_character_persistent_state(actor)
             if actor == 0:
                 handle_npc_ai.judge_character_tired_sleep(actor)
@@ -224,29 +289,22 @@ class Runtime:
             self.active.pop(actor, None)
         if actor == 0 or (actor in cache.npc_id_got and not character.dead):
             self.current[actor] = (deepcopy(character.behavior), character.target_character_id, character.state)
-        if action.after == "group_exit":
-            handle_npc_ai.finish_group_sex_tired_exit(actor)
-        elif isinstance(action.after, tuple):
-            kind, *arguments = action.after
-            if kind == "unconscious_recovery":
-                handle_npc_ai_in_h.finish_unconscious_h_recovery(actor, *arguments)
-            elif kind in {"discoverer_join", "discoverer_end"}:
-                from Script.System.Sex_System import sex_be_discovered_panel
-
-                callback = sex_be_discovered_panel.finish_discovered_join if kind == "discoverer_join" else sex_be_discovered_panel.finish_discovered_end
-                callback(actor)
+        self.finish_action(actor, action.after)
         if action.wait_on is not None and self.scheduler.pending(actor) is None:
             self.scheduler.submit(Task(actor, end, replace(action, continued=True)))
         # 玩家睡眠按本人计划延续；NPC 在下一次 AI 选择时检查计划。
-        plan = self.plans.get(actor)
+        plan = self.player_plan
         if actor == 0 and plan is not None and plan.duration > 0 and character.behavior.behavior_id == action.behavior_id and not cache.time_stop_mode and self.scheduler.pending(actor) is None:
             self.scheduler.submit(Task(actor, end, replace(plan, duration=min(plan.duration, 30), continued=True)))
         if recovery and character.behavior.behavior_id != action.behavior_id:
-            self.plans.pop(actor, None)
+            character.action_progress = None
+            if actor == 0:
+                self.player_plan = None
         # 时停操作占用零分钟，体力消耗按行动时长结算。
         if actor == 0 and cache.time_stop_mode:
             cache.achievement.time_stop_duration += action.duration
-            action.duration = 0
+            return 0
+        return action.duration
 
     def advance(self, minutes):
         """提交界面准备的玩家行动并运行至输入；minutes 为声明时长，返回 None。"""

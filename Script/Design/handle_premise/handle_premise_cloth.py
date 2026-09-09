@@ -25,16 +25,19 @@ def add_premise(premise: str) -> FunctionType:
 
 
 @add_premise(constant_promise.Premise.TARGET_WEAR_HAT)
-def handle_t_wear_hat(character_id: int) -> int:
+def handle_t_wear_hat(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象穿着帽子
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data: game_type.Character = cache.character_data[target_id]
     if len(target_data.cloth.cloth_wear[0]):
         return 1
     return 0
@@ -51,16 +54,19 @@ def handle_t_not_wear_hat(character_id: int) -> int:
     return not handle_t_not_wear_hat(character_id)
 
 @add_premise(constant_promise.Premise.TARGET_WEAR_GLASS)
-def handle_t_wear_glass(character_id: int) -> int:
+def handle_t_wear_glass(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象戴着眼镜
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data: game_type.Character = cache.character_data[target_id]
     if len(target_data.cloth.cloth_wear[1]):
         return 1
     return 0
@@ -77,16 +83,19 @@ def handle_t_not_wear_glass(character_id: int) -> int:
     return not handle_t_wear_glass(character_id)
 
 @add_premise(constant_promise.Premise.TARGET_WEAR_IN_EAR)
-def handle_t_wear_in_ear(character_id: int) -> int:
+def handle_t_wear_in_ear(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象戴耳饰
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data: game_type.Character = cache.character_data[target_id]
     if len(target_data.cloth.cloth_wear[2]):
         return 1
     return 0
@@ -103,16 +112,19 @@ def handle_t_not_wear_in_ear(character_id: int) -> int:
     return not handle_t_wear_in_ear(character_id)
 
 @add_premise(constant_promise.Premise.TARGET_WEAR_IN_NECK)
-def handle_t_wear_in_neck(character_id: int) -> int:
+def handle_t_wear_in_neck(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象戴脖饰
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data: game_type.Character = cache.character_data[target_id]
     if len(target_data.cloth.cloth_wear[3]):
         return 1
     return 0
@@ -129,16 +141,19 @@ def handle_t_not_wear_in_neck(character_id: int) -> int:
     return not handle_t_wear_in_neck(character_id)
 
 @add_premise(constant_promise.Premise.TARGET_WEAR_IN_MOUSE)
-def handle_t_wear_in_mouse(character_id: int) -> int:
+def handle_t_wear_in_mouse(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象戴口饰
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data: game_type.Character = cache.character_data[target_id]
     if len(target_data.cloth.cloth_wear[4]):
         return 1
     return 0
@@ -182,16 +197,19 @@ def handle_not_wear_in_up(character_id: int) -> int:
     return 1
 
 @add_premise(constant_promise.Premise.TARGET_WEAR_IN_UP)
-def handle_t_wear_in_up(character_id: int) -> int:
+def handle_t_wear_in_up(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象穿着上衣
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if handle_wear_in_up(character_data.target_character_id):
+    if target_id is None:
+        target_id = character_data.target_character_id
+    if handle_wear_in_up(target_id):
         return 1
     return 0
 
@@ -236,16 +254,19 @@ def handle_not_wear_bra(character_id: int) -> int:
     return not handle_wear_bra(character_id)
 
 @add_premise(constant_promise.Premise.TARGET_WEAR_BRA)
-def handle_t_wear_bra(character_id: int) -> int:
+def handle_t_wear_bra(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象穿着胸衣
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    return handle_wear_bra(character_data.target_character_id)
+    if target_id is None:
+        target_id = character_data.target_character_id
+    return handle_wear_bra(target_id)
 
 @add_premise(constant_promise.Premise.TARGET_NOT_WEAR_BRA)
 def handle_t_not_wear_bra(character_id: int) -> int:
@@ -260,16 +281,19 @@ def handle_t_not_wear_bra(character_id: int) -> int:
     return not handle_wear_bra(character_data.target_character_id)
 
 @add_premise(constant_promise.Premise.TARGET_WEAR_GLOVES)
-def handle_t_wear_gloves(character_id: int) -> int:
+def handle_t_wear_gloves(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象戴着手套
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data: game_type.Character = cache.character_data[target_id]
     if len(target_data.cloth.cloth_wear[7]):
         return 1
     return 0
@@ -328,16 +352,19 @@ def handle_wear_skirt(character_id: int) -> int:
     return 0
 
 @add_premise(constant_promise.Premise.TARGET_WEAR_SKIRT)
-def handle_t_wear_skirt(character_id: int) -> int:
+def handle_t_wear_skirt(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象穿着裙子
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data: game_type.Character = cache.character_data[target_id]
     if len(target_data.cloth.cloth_wear[8]):
         cloth_id = target_data.cloth.cloth_wear[8][0]
         if game_config.config_clothing_tem[cloth_id].tag == 5:
@@ -345,16 +372,19 @@ def handle_t_wear_skirt(character_id: int) -> int:
     return 0
 
 @add_premise(constant_promise.Premise.TARGET_WEAR_TROUSERS)
-def handle_t_wear_trousers(character_id: int) -> int:
+def handle_t_wear_trousers(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象穿着裤子
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data: game_type.Character = cache.character_data[target_id]
     if len(target_data.cloth.cloth_wear[8]):
         cloth_id = target_data.cloth.cloth_wear[8][0]
         if game_config.config_clothing_tem[cloth_id].tag == 4:
@@ -388,16 +418,19 @@ def handle_not_wear_pan(character_id: int) -> int:
     return not handle_wear_pan(character_id)
 
 @add_premise(constant_promise.Premise.TARGET_WEAR_PAN)
-def handle_t_wear_pan(character_id: int) -> int:
+def handle_t_wear_pan(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象穿着内裤
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data: game_type.Character = cache.character_data[target_id]
     if len(target_data.cloth.cloth_wear[9]):
         return 1
     return 0
@@ -442,16 +475,19 @@ def handle_wear_socks(character_id: int) -> int:
         return 0
 
 @add_premise(constant_promise.Premise.TARGET_WEAR_SOCKS)
-def handle_t_wear_socks(character_id: int) -> int:
+def handle_t_wear_socks(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象穿着袜子
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    return handle_wear_socks(character_data.target_character_id)
+    if target_id is None:
+        target_id = character_data.target_character_id
+    return handle_wear_socks(target_id)
 
 @add_premise(constant_promise.Premise.TARGET_NOT_WEAR_SOCKS)
 def handle_t_not_wear_socks(character_id: int) -> int:
@@ -481,16 +517,19 @@ def handle_not_wear_shoes(character_id: int) -> int:
         return 1
 
 @add_premise(constant_promise.Premise.TARGET_WEAR_SHOES)
-def handle_t_wear_shoes(character_id: int) -> int:
+def handle_t_wear_shoes(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象穿着鞋子
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data: game_type.Character = cache.character_data[target_id]
     if len(target_data.cloth.cloth_wear[11]):
         return 1
     return 0
@@ -507,16 +546,19 @@ def handle_t_not_wear_shoes(character_id: int) -> int:
     return not handle_t_wear_shoes(character_id)
 
 @add_premise(constant_promise.Premise.TARGET_TAKE_WEAPON)
-def handle_t_take_weapon(character_id: int) -> int:
+def handle_t_take_weapon(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象拿着武器
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    if target_id is None:
+        target_id = character_data.target_character_id
+    target_data: game_type.Character = cache.character_data[target_id]
     if len(target_data.cloth.cloth_wear[12]):
         return 1
     return 0
