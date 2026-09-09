@@ -35,12 +35,6 @@ UI 获取玩家指令后提交行动，调用 advance_until_input；取出玩家
 
 新建或读档时必须正确建立队列，不能重复执行已结算的行动。所有原有递归路径需逐项确认强制后续和后续依赖的先后顺序。
 
-## 修改与验收约束
-
-修改集中在公共入口、递归调用点及持续动作适配，避免逐个重写普通动作。Behavior 收尾接入位置以实际代码审查为准。
-
-实现以最新 upstream 主分支为基线，使用 meower-z 账号，向 meower-z/erArk-fork 的 main 提交内部 PR。多名 Astra、Fable 对整体进行批判性审查；每个变动函数分别由 Sonnet、Luna 提出简化建议，实施者判断采纳。验收覆盖时序交错、强制后续、占位符替换、输入优先、休息睡眠延续、双人等待、跨日、时停和读档。
-
 ## 实现入口
 
 - `scheduler.py`：`Task(actor, at, item, immediate=False)`；`submit(task)` 新增，`replace(task)` 替换，`pending(actor)` 查询；`advance_until_input()` 返回玩家输入待办。内部使被替换的旧堆条目失效。
