@@ -1,0 +1,24 @@
+{
+    "mod_id": "local_orgasm_batch_talk_fix",
+    "name": "本地绝顶口上批次合并显示",
+    "version": "1.0.0",
+    "author": "local",
+    "description": "NPC 同一次结算中多部位同时绝顶时，合并显示绝顶口上：前3个部位出完整口上，其余汇总成一行，多部位寸止合并成一行标题加一条正文，不再逐部位刷屏。对应上游已拒绝的 PR #253。",
+    "game_version": "2026.05.22",
+    "dependencies": [],
+    "incompatible": [],
+    "load_priority": 10,
+    "scripts": [
+        {
+            "file": "scripts/local_orgasm_batch_talk_fix.py",
+            "functions": [
+                {
+                    "name": "patched_second_behavior_effect",
+                    "type": "replace",
+                    "target_module": "Script.Design.second_behavior",
+                    "target_function": "second_behavior_effect"
+                }
+            ]
+        }
+    ]
+}

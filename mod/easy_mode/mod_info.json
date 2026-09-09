@@ -1,0 +1,41 @@
+{
+    "mod_id": "easy_mode",
+    "name": "简单模式",
+    "version": "1.0.0",
+    "author": "Manifold Paradox",
+    "description": "",
+    "game_version": "2026.01.07",
+    "dependencies": [],
+    "incompatible": [],
+    "load_priority": 100,
+    "scripts": [
+        {
+            "file": "scripts/easy_mode.py",
+            "functions": [
+                {
+                    "name": "modded_hypnosis",
+                    "type": "replace",
+                    "target_module": "Script.UI.Panel.hypnosis_panel",
+                    "target_function": "hypnosis_degree_calculation"
+                },
+                {
+                    "name": "modded_sanity_grow",
+                    "type": "replace",
+                    "target_module": "Script.Settle.sleep_settle",
+                    "target_function": "sanity_point_grow"
+                },
+                {
+                    "name": "handle_order_hotel_room",
+                    "type": "replace",
+                    "target_module": "Script.UI.Flow.normal_flow",
+                    "target_function": "order_hotel_room_flow"
+                },
+                {
+                    "name": "cheaper_room",
+                    "type": "new",
+                    "register_to": "Script.UI.Flow.normal_flow"
+                }
+            ]
+        }
+    ]
+}

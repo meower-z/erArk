@@ -1,0 +1,42 @@
+{
+    "mod_id": "local_orgasm_chain_gate_fix",
+    "name": "本地绝顶链式门禁修复",
+    "version": "1.0.0",
+    "author": "local",
+    "description": "NPC 多重绝顶后在同一次玩家点击内不再生成新的自主行为，避免同一次点击反复主动、反复绝顶、堆叠大量口上。对应上游已拒绝的 PR #226。",
+    "game_version": "2026.05.22",
+    "dependencies": [],
+    "incompatible": [],
+    "load_priority": 10,
+    "scripts": [
+        {
+            "file": "scripts/local_orgasm_chain_gate_fix.py",
+            "functions": [
+                {
+                    "name": "patched_find_character_target",
+                    "type": "replace",
+                    "target_module": "Script.Design.handle_npc_ai",
+                    "target_function": "find_character_target"
+                },
+                {
+                    "name": "patched_npc_ai_in_group_sex",
+                    "type": "replace",
+                    "target_module": "Script.Design.handle_npc_ai_in_h",
+                    "target_function": "npc_ai_in_group_sex"
+                },
+                {
+                    "name": "patched_character_get_second_behavior",
+                    "type": "replace",
+                    "target_module": "Script.Design.second_behavior",
+                    "target_function": "character_get_second_behavior"
+                },
+                {
+                    "name": "patched_game_update_flow",
+                    "type": "replace",
+                    "target_module": "Script.Design.update",
+                    "target_function": "game_update_flow"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,94 @@
+{
+    "mod_id": "local_bugfix",
+    "name": "本地Bug修复",
+    "version": "1.0.0",
+    "author": "local",
+    "description": "将本地移动/H相关修复以Mod形式加载，避免每次更新后手动apply patch。",
+    "game_version": "2026.05.22",
+    "dependencies": [],
+    "incompatible": [],
+    "load_priority": 10,
+    "scripts": [
+        {
+            "file": "scripts/local_bugfix.py",
+            "functions": [
+                {
+                    "name": "patched_judge_character_tired_sleep",
+                    "type": "replace",
+                    "target_module": "Script.Design.handle_npc_ai",
+                    "target_function": "judge_character_tired_sleep"
+                },
+                {
+                    "name": "patched_find_character_target",
+                    "type": "replace",
+                    "target_module": "Script.Design.handle_npc_ai",
+                    "target_function": "find_character_target"
+                },
+                {
+                    "name": "patched_own_charcter_move",
+                    "type": "replace",
+                    "target_module": "Script.Design.character_move",
+                    "target_function": "own_charcter_move"
+                },
+                {
+                    "name": "patched_judge_character_h_obscenity_unconscious",
+                    "type": "replace",
+                    "target_module": "Script.Design.handle_npc_ai_in_h",
+                    "target_function": "judge_character_h_obscenity_unconscious"
+                },
+                {
+                    "name": "patched_npc_active_h",
+                    "type": "replace",
+                    "target_module": "Script.Design.handle_npc_ai_in_h",
+                    "target_function": "npc_active_h"
+                },
+                {
+                    "name": "patched_npc_ai_in_group_sex",
+                    "type": "replace",
+                    "target_module": "Script.Design.handle_npc_ai_in_h",
+                    "target_function": "npc_ai_in_group_sex"
+                },
+                {
+                    "name": "patched_npc_ai_in_group_sex_type_3",
+                    "type": "replace",
+                    "target_module": "Script.Design.handle_npc_ai_in_h",
+                    "target_function": "npc_ai_in_group_sex_type_3"
+                },
+                {
+                    "name": "patched_recover_from_unconscious_h",
+                    "type": "replace",
+                    "target_module": "Script.Design.handle_npc_ai_in_h",
+                    "target_function": "recover_from_unconscious_h"
+                }
+            ]
+        },
+        {
+            "file": "scripts/h_orgasm_batch.py",
+            "functions": [
+                {
+                    "name": "patched_check_second_effect",
+                    "type": "replace",
+                    "target_module": "Script.Design.second_behavior",
+                    "target_function": "check_second_effect"
+                },
+                {
+                    "name": "patched_orgasm_settle",
+                    "type": "replace",
+                    "target_module": "Script.Design.second_behavior",
+                    "target_function": "orgasm_settle"
+                },
+                {
+                    "name": "patched_store_power_by_human_power",
+                    "type": "replace",
+                    "target_module": "Script.UI.Panel.manage_power_system_panel",
+                    "target_function": "store_power_by_human_power"
+                },
+                {
+                    "name": "local_bugfix_is_orgasm_batch_settling",
+                    "type": "new",
+                    "register_to": "Script.Design.second_behavior"
+                }
+            ]
+        }
+    ]
+}

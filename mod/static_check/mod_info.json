@@ -1,0 +1,24 @@
+{
+  "mod_id": "static_check",
+  "name": "游戏状态自检",
+  "version": "1.0.0",
+  "author": "meowerz",
+  "description": "每回合执行游戏状态不变式检查，载入存档时保守修复已知异常，并提供系统设置开关。",
+  "game_version": "2026.8.21",
+  "dependencies": [],
+  "incompatible": [],
+  "load_priority": 10,
+  "scripts": [
+    {
+      "file": "scripts/static_check_mod.py",
+      "functions": [
+        {
+          "name": "patched_input_load_save",
+          "type": "replace",
+          "target_module": "Script.Core.save_handle",
+          "target_function": "input_load_save"
+        }
+      ]
+    }
+  ]
+}

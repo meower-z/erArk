@@ -1,0 +1,17 @@
+{
+    "mod_id": "group_sex_extension",
+    "name": "群交功能扩展",
+    "version": "1.1.0",
+    "author": "local",
+    "description": "在群交模式的“技艺”类别中增加“全员寸止”、“全员戴上玩具”和“全员催眠增强”快捷指令。",
+    "game_version": "2026.06.30",
+    "dependencies": [],
+    "incompatible": [],
+    "load_priority": 30,
+    "scripts": [
+        {
+            "file": "scripts/group_sex_extension.py",
+            "functions": []
+        }
+    ]
+}

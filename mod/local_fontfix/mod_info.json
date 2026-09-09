@@ -1,0 +1,17 @@
+{
+  "mod_id": "local_fontfix",
+  "name": "本地字体修复",
+  "version": "1.0.0",
+  "author": "local",
+  "description": "在 Tk 窗口初始化前把 static/fonts 下的字体注册为当前进程私有字体，避免桌面端回退到宋体。",
+  "game_version": "2026.06.25",
+  "dependencies": [],
+  "incompatible": [],
+  "load_priority": 5,
+  "scripts": [
+    {
+      "file": "scripts/local_fontfix.py",
+      "functions": []
+    }
+  ]
+}

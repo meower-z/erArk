@@ -66,3 +66,17 @@ mod/mod_config.json
 
 # 错误log
 error.log
+
+# 本机开发资料与运行环境
+/.agents/
+/.worktrees/
+/.venv/
+/.codex/
+/.claude/
+/.scratch/
+/notes/
+/save.bak/
+/tk_gate_debug.log*
+/AGENTS.md
+/CONTEXT.md
+/skills-lock.json

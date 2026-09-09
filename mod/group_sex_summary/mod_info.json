@@ -1,0 +1,78 @@
+{
+    "mod_id": "group_sex_summary",
+    "name": "群交摘要视图",
+    "version": "2.1.0",
+    "author": "local",
+    "description": "群交模式下：同一turn内NPC一旦高潮，本turn不再对其重复结算群交模板动作；turn结束用一页摘要（右对齐姓名+状态栏口径寸止标记+绝顶/寸止说明）替代逐动作口上与面板刷屏，点击后按发生顺序回放成就、刻印、素质取得等保留信息。寸止成功与普通高潮的过程信息隐去，寸止失败导致的绝顶从判定提示到二段标题/口上/发电提示原样实时显示。",
+    "game_version": "2026.05.22",
+    "dependencies": [],
+    "incompatible": [],
+    "load_priority": 10,
+    "scripts": [
+        {
+            "file": "scripts/group_sex_summary.py",
+            "functions": [
+                {
+                    "name": "modded_init_character_behavior",
+                    "type": "replace",
+                    "target_module": "Script.Design.character_behavior",
+                    "target_function": "init_character_behavior"
+                },
+                {
+                    "name": "modded_handle_talk_draw",
+                    "type": "replace",
+                    "target_module": "Script.Design.talk",
+                    "target_function": "handle_talk_draw"
+                },
+                {
+                    "name": "modded_handle_settle_behavior",
+                    "type": "replace",
+                    "target_module": "Script.Design.settle_behavior",
+                    "target_function": "handle_settle_behavior"
+                },
+                {
+                    "name": "modded_handle_instruct_data",
+                    "type": "replace",
+                    "target_module": "Script.Design.settle_behavior",
+                    "target_function": "handle_instruct_data"
+                },
+                {
+                    "name": "modded_orgasm_settle_in_second_behavior",
+                    "type": "replace",
+                    "target_module": "Script.Settle.orgasm_settle",
+                    "target_function": "orgasm_settle_in_second_behavior"
+                },
+                {
+                    "name": "modded_draw_achievement_notice",
+                    "type": "replace",
+                    "target_module": "Script.UI.Panel.achievement_panel",
+                    "target_function": "draw_achievement_notice"
+                },
+                {
+                    "name": "modded_mark_effect",
+                    "type": "replace",
+                    "target_module": "Script.Design.second_behavior",
+                    "target_function": "mark_effect"
+                },
+                {
+                    "name": "modded_gain_talent",
+                    "type": "replace",
+                    "target_module": "Script.Design.handle_talent",
+                    "target_function": "gain_talent"
+                },
+                {
+                    "name": "modded_judge_orgasm_edge_success",
+                    "type": "replace",
+                    "target_module": "Script.Settle.orgasm_settle",
+                    "target_function": "judge_orgasm_edge_success"
+                },
+                {
+                    "name": "modded_check_second_effect",
+                    "type": "replace",
+                    "target_module": "Script.Design.second_behavior",
+                    "target_function": "check_second_effect"
+                }
+            ]
+        }
+    ]
+}

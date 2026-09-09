@@ -1,4 +1,18 @@
 {
-  "enabled_mods": [],
-  "load_order": []
+  "enabled_mods": [
+    "local_fontfix",
+    "local_orgasm_batch_talk_fix",
+    "group_sex_extension",
+    "easy_mode",
+    "group_sex_summary",
+    "static_check"
+  ],
+  "load_order": [
+    "local_fontfix",
+    "local_orgasm_batch_talk_fix",
+    "group_sex_extension",
+    "easy_mode",
+    "group_sex_summary",
+    "static_check"
+  ]
 }
