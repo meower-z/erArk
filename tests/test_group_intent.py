@@ -149,14 +149,13 @@ class GroupIntentTests(unittest.TestCase):
         self.panel.get_status_id_list_from_group_sex_body_part.assert_not_called()
         self.assertEqual(self.target_selector.call_args_list, [call(1, self.cache.game_time)] * 2)
 
-    def test_execute_fills_template_and_preserves_existing_behavior(self):
-        """补位更新模板，保留原非闲置行动；返回 None。"""
-        self.characters[1].behavior.behavior_id = "existing"
-        self.characters[1].behavior.duration = 9
+    def test_execute_fills_template_and_installs_wait(self):
+        """补位更新模板并让 NPC 原地等待五分钟；返回 None。"""
         self.group.execute_group_action(1, Action("group_fill", 0, 0, params={"body_part": "mouth", "status_id": 12}))
         self.assertEqual(self.characters[0].h_state.group_sex_body_template_dict["A"][0]["mouth"], [1, 12])
-        self.assertEqual(self.characters[1].behavior.behavior_id, "existing")
-        self.assertEqual(self.characters[1].behavior.duration, 9)
+        self.assertEqual(self.characters[1].behavior.behavior_id, "wait")
+        self.assertEqual(self.characters[1].behavior.duration, 5)
+        self.assertEqual(self.characters[1].target_character_id, 1)
 
     def test_execute_join_prepares_idle_wait(self):
         """加入侍奉后闲置 NPC 等待五分钟；返回 None。"""

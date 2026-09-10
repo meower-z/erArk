@@ -719,7 +719,7 @@ def npc_ai_in_group_sex(character_id: int) -> Action | None:
 
 
 def execute_group_action(character_id: int, action: Action) -> None:
-    """输入角色编号及 Action，落实群交模板修改并为闲置角色准备等待；返回 None。"""
+    """输入角色编号及 Action，落实群交模板修改并让角色原地等待；返回 None。"""
     character_data: game_type.Character = cache.character_data[character_id]
     pl_character_data: game_type.Character = cache.character_data[0]
     A_template_data = pl_character_data.h_state.group_sex_body_template_dict["A"]
@@ -733,12 +733,11 @@ def execute_group_action(character_id: int, action: Action) -> None:
         # 如果是对单
         else:
             A_template_data[0][body_part] = [character_id, status_id]
-    # 原有非闲置行为继续执行；刚选完补位的闲置 NPC 等待五分钟。
-    if character_data.behavior.behavior_id == constant.Behavior.SHARE_BLANKLY:
-        character_data.behavior.behavior_id = constant.Behavior.WAIT
-        character_data.behavior.duration = 5
-        character_data.target_character_id = character_id
-        character_data.state = constant.CharacterStatus.STATUS_WAIT
+    # 刚选完补位的 NPC 原地等待五分钟。
+    character_data.behavior.behavior_id = constant.Behavior.WAIT
+    character_data.behavior.duration = 5
+    character_data.target_character_id = character_id
+    character_data.state = constant.CharacterStatus.STATUS_WAIT
 
 
 def npc_ai_in_group_sex_type_3():
