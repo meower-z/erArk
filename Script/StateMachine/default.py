@@ -2,7 +2,7 @@ import os
 import random
 from types import FunctionType
 from Script.Config import game_config
-from Script.Design import handle_state_machine, character_move, map_handle, clothing, handle_premise, handle_npc_ai, basement
+from Script.Design import handle_state_machine, character_move, map_handle, clothing, handle_premise, handle_npc_ai, basement, game_time
 from Script.Core import get_text, cache_control, game_type, constant
 from Script.UI.Moudle import draw
 
@@ -150,6 +150,10 @@ def character_sleep(character_id: int):
         # 否则睡到和玩家同时醒来
         else:
             character_data.behavior.duration = max(min_to_wake_time, 1)
+    # 记录整段睡眠计划，每次最多睡 30 分钟，段间由 AI 决定是否继续。
+    character_data.behavior.plan_start_time = character_data.behavior.start_time
+    character_data.behavior.plan_end_time = game_time.get_sub_date(minute=character_data.behavior.duration, old_date=character_data.behavior.start_time)
+    character_data.behavior.duration = min(character_data.behavior.duration, 30)
 
 
 # @handle_state_machine.add_state_machine(constant.StateMachine.FOLLOW)

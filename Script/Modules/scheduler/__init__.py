@@ -31,7 +31,7 @@ class Task:
 
 
 class Scheduler:
-    """每个角色最多保留一条待办，直至玩家再次需要输入。"""
+    """每个角色最多保留一条待办，直至玩家再次需要输入；撤销后不再自动安排。"""
 
     def __init__(
         self,
@@ -78,6 +78,10 @@ class Scheduler:
         """验证后替换角色待办；无旧待办时直接提交，无返回值。"""
         self._validate(task)
         self._put(task)
+
+    def cancel(self, actor: int) -> None:
+        """输入角色编号，撤销其待办；没有待办时不做任何事，无返回值。"""
+        self._pending.pop(actor, None)
 
     def _validate(self, task: Task) -> None:
         """输入待办，检查时间和占位符归属；无效时抛出 ValueError。"""

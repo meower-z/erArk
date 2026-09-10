@@ -1,11 +1,14 @@
 """将游戏行动接入调度器；界面负责获取玩家输入。"""
 
-from copy import deepcopy
-from dataclasses import replace
+from collections import deque
+from functools import partial
 
 from Script.Core import cache_control, constant, game_type
-from Script.Modules.scheduler.action import Action, ActionProgress
+from Script.Modules.scheduler.action import Action, CONTINUED, STATE
 from Script.Modules.scheduler import AI, INPUT, Scheduler, Task
+
+_runtime = None
+""" 本局的行动执行器；不随存档保存，读档或新开局后重建 """
 
 
 def settle_sleep(actor: int, duration: float, continued: bool, now):
@@ -28,71 +31,63 @@ def settle_sleep(actor: int, duration: float, continued: bool, now):
 
 
 def reset():
-    """开始游戏时清空调度状态，无参数，返回 None。"""
-    cache_control.cache.action_scheduler = None
-
-
-def restore(saved_runtime):
-    """读档安装保存的调度状态；存档未保存队列时传 None，返回 None。"""
-    cache_control.cache.action_scheduler = saved_runtime
-    if saved_runtime is not None:
-        saved_runtime.scheduler._running = False
-        saved_runtime.active = {}
+    """新开局或读档后丢弃执行器，队列从角色当前行为重建；无参数，返回 None。"""
+    global _runtime
+    _runtime = None
 
 
 def get_runtime():
     """返回当前游戏的行动执行器，首次使用时从角色状态建立队列。"""
+    global _runtime
+    if _runtime is None:
+        _runtime = Runtime()
+    return _runtime
+
+
+def submit_current(actor: int, after=None):
+    """把角色已写好的行为作为强制后续立即安排；after 为完成后的收尾标记，返回 None。"""
+    runtime = get_runtime()
+    runtime.force(actor, Action.from_character(cache_control.cache.character_data[actor]))
+    if after is not None:
+        runtime.force(actor, partial(runtime.finish_action, actor, after))
+
+
+def reset_character(actor: int):
+    """角色上下线时重排待办：在队者从现在起自主选择，离队者撤销；输入角色编号，返回 None。"""
+    if _runtime is None:
+        return
+    if actor in cache_control.cache.npc_id_got:
+        _runtime.scheduler.replace(Task(actor, _runtime.scheduler.now, AI))
+    else:
+        _runtime.scheduler.cancel(actor)
+
+
+def wait_on(actor: int, owner: int, behavior_id: str):
+    """让参与者等待主体的双人行为；NPC 每五分钟复查一次，玩家等完全程。参数均为编号，返回 None。"""
     cache = cache_control.cache
-    runtime = getattr(cache, "action_scheduler", None)
-    if runtime is None:
-        runtime = Runtime()
-        cache.action_scheduler = runtime
-    return runtime
-
-
-def submit_current(actor, *, after=None):
-    """将角色已选行为作为立即后续提交；actor 为角色编号，返回 None。"""
-    runtime = get_runtime()
-    action = Action.from_character(cache_control.cache.character_data[actor])
-    action.after = after
-    runtime.enqueue(actor, action)
-    # 后续意图已独立保存，当前动作的剩余效果继续读取当前动作。
-    if actor in runtime.active:
-        character = cache_control.cache.character_data[actor]
-        character.behavior, character.target_character_id, character.state = deepcopy(runtime.active[actor])
-
-
-def reset_character(actor):
-    """角色上下线时重置行动计划与待办；输入角色编号，返回 None。"""
-    cache_control.cache.character_data[actor].action_progress = None
-    runtime = getattr(cache_control.cache, "action_scheduler", None)
-    if runtime is None:
-        return
-    runtime.current.pop(actor, None)
-    runtime.known.add(actor)
-    runtime.scheduler.replace(Task(actor, runtime.scheduler.now, INPUT if actor == 0 else AI))
-
-
-def wait_on(actor, owner, behavior_id):
-    """替换参与者的待办，等待主体的指定双人行为；参数均为编号，返回 None。"""
-    if cache_control.cache.time_stop_mode:
+    if cache.time_stop_mode:
         return
     runtime = get_runtime()
-    action = Action(constant.Behavior.WAIT, 5, owner, state=constant.CharacterStatus.STATUS_WAIT, wait_on=(owner, behavior_id))
-    cache_control.cache.character_data[actor].action_progress = None
-    runtime.scheduler.replace(Task(actor, runtime.scheduler.now, action, immediate=True))
+    params = {STATE: constant.CharacterStatus.STATUS_WAIT}
+    if actor:
+        params["wait_on_behavior_id"] = behavior_id
+        duration = 5
+    else:
+        from Script.Design import game_time
+
+        source = cache.character_data[owner].behavior
+        end = game_time.get_sub_date(minute=source.duration, old_date=source.start_time)
+        duration = max(game_time.elapsed_minutes(runtime.scheduler.now, end), 1)
+    runtime.force(actor, Action(constant.Behavior.WAIT, duration, owner, params))
 
 
 class Runtime:
-    """保存行动待办，记录执行进度并调用结算与收尾。"""
+    """保存行动待办，按时刻执行行动并调用结算。"""
 
     def __init__(self):
         """从当前游戏时刻建立空调度器，无参数，返回 None。"""
-        cache = cache_control.cache
-        self.active = {}
-        self.current = {}
-        self.scheduler = Scheduler(cache.game_time, choose_next=self.choose_next, execute=self.execute, before_task=self.before_task, advance_time=self.advance_time)
-        self.known = set()
+        self.scheduler = Scheduler(cache_control.cache.game_time, choose_next=self.choose_next, execute=self.execute, before_task=self.before_task, advance_time=self.advance_time)
+        self._forced: dict[int, deque] = {}
         self.sync_characters()
 
     @staticmethod
@@ -103,31 +98,28 @@ class Runtime:
         return game_time.get_sub_date(minute=minutes, old_date=at)
 
     def sync_characters(self):
-        """为加入调度的角色建立待办，进行中的行为接续剩余时间；返回 None。"""
+        """为没有待办的在队 NPC 建立待办，进行中的行为接续剩余时间；返回 None。"""
         from Script.Design import game_time
 
         cache = cache_control.cache
-        for actor in sorted(set(cache.npc_id_got) - {0} - self.known):
-            if self.scheduler.contains(actor):
-                self.known.add(actor)
-                continue
+        for actor in sorted(set(cache.npc_id_got) - {0}):
             character = cache.character_data[actor]
+            if self.scheduler.contains(actor) or character.dead:
+                continue
             at = cache.game_time
             item = AI
             behavior = character.behavior
             if behavior.behavior_id != constant.Behavior.SHARE_BLANKLY and behavior.start_time.year > 1:
                 end = self.advance_time(behavior.start_time, max(behavior.duration, 0))
-                self.current[actor] = (deepcopy(behavior), character.target_character_id, character.state)
-                # 存档中进行中行为的剩余恢复时间构成延续片段。
+                # 进行中行为的剩余时间作为延续片段，只结算经过时间。
                 if end > at:
                     at = max(at, behavior.start_time)
-                    item = replace(Action.from_character(character), duration=game_time.elapsed_minutes(at, end), continued=True)
-
+                    item = Action.from_character(character, continued=True)
+                    item.duration = game_time.elapsed_minutes(at, end)
             self.scheduler.submit(Task(actor, at, item))
-            self.known.add(actor)
 
     def before_task(self, task):
-        """按待办时刻同步世界，进入新日期时先日结；输入 Task，返回 None。"""
+        """按待办时刻同步世界；新日期先日结，玩家输入前收尾其行为，NPC 选择前做行动前检查。输入 Task，返回 None。"""
         from Script.Settle import past_day_settle
 
         cache = cache_control.cache
@@ -135,53 +127,46 @@ class Runtime:
         if cache.pre_game_time.date() != task.at.date():
             past_day_settle.update_new_day()
             self.sync_characters()
-        if task.item == INPUT:
-            self.finish_current(task.actor, task.at)
-        elif task.item is AI and task.actor in cache.npc_id_got and not cache.character_data[task.actor].dead:
+        if task.item is INPUT:
+            from Script.Design import character_behavior
+
+            if cache.character_data[0].behavior.behavior_id != constant.Behavior.SHARE_BLANKLY:
+                character_behavior.judge_character_status_time_over(0, task.at, end_now=2)
+        elif task.item is AI:
+            if task.actor not in cache.npc_id_got or cache.character_data[task.actor].dead:
+                # 离队或死亡的角色退出队列，归队时由同步重新加入。
+                self.scheduler.cancel(task.actor)
+                return
             from Script.Design import handle_npc_ai
 
-            character = cache.character_data[task.actor]
-            progress = getattr(character, "action_progress", None)
-            if progress is not None and progress.action.behavior_id == constant.Behavior.SLEEP:
-                handle_npc_ai.judge_character_cant_move(task.actor)
-                handle_npc_ai.judge_assistant_character(task.actor)
-                return
-            self.finish_current(task.actor, task.at)
-            cache.character_data[task.actor].behavior.start_time = task.at
             handle_npc_ai.run_npc_pre_behavior_checks(task.actor, task.at)
-
-    def finish_current(self, actor, now):
-        """输入角色编号和时刻，在行动到期或被替换时收尾当前行为；返回 None。"""
-        from Script.Design import character_behavior
-
-        character = cache_control.cache.character_data[actor]
-        previous = self.current.pop(actor, None)
-        character.action_progress = None
-        if previous is not None:
-            character.behavior = previous[0]
-            character_behavior.judge_character_status_time_over(actor, now, end_now=2)
 
     def choose_next(self, actor, now):
         """输入 NPC 编号和时刻，返回 AI 选定的行动意图。"""
         from Script.Modules import npc_ai
 
-        cache = cache_control.cache
-        if actor not in cache.npc_id_got or cache.character_data[actor].dead:
-            # 离队角色通过等待席位保留下一次检查时刻。
-            return Action(constant.Behavior.WAIT, 60, actor, continued=True)
         return npc_ai.choose_next(actor, now)
 
-    def enqueue(self, actor, action):
-        """输入角色和强制行动，串接同角色立即后续，替换其普通待办；返回 None。"""
-        pending = self.scheduler.pending(actor)
-        if pending is not None and pending.immediate and isinstance(pending.item, Action):
-            pending.item.followups += (action,)
-        else:
-            cache_control.cache.character_data[actor].action_progress = None
-            self.scheduler.replace(Task(actor, self.scheduler.now, action, immediate=True))
+    def force(self, actor, item):
+        """输入角色编号及强制后续（Action 或无参回调），排在该角色已有的强制后续之后；返回 None。"""
+        self._forced.setdefault(actor, deque()).append(item)
+        self._dispatch(actor)
+
+    def _dispatch(self, actor):
+        """输入角色编号，在其没有立即待办时派发下一条强制后续；回调立即执行，Action 替换其待办。返回 None。"""
+        queue = self._forced.get(actor)
+        while queue:
+            pending = self.scheduler.pending(actor)
+            if pending is not None and pending.immediate:
+                return
+            item = queue.popleft()
+            if callable(item):
+                item()
+            else:
+                self.scheduler.replace(Task(actor, self.scheduler.now, item, immediate=True))
 
     def finish_action(self, actor: int, after):
-        """输入角色编号及 str、tuple 或 None 收尾标记，执行行动回调；返回 None。"""
+        """输入角色编号及 str 或 tuple 收尾标记，执行行动完成后的回调；返回 None。"""
         from Script.Design import handle_npc_ai, handle_npc_ai_in_h
 
         if after == "group_exit":
@@ -197,91 +182,49 @@ class Runtime:
                 callback(actor)
 
     def execute(self, actor, action) -> float:
-        """输入角色和行动意图，结算效果并提交后续；返回占用的分钟数 float。"""
+        """输入角色和行动意图，安装行为并结算效果；返回占用的分钟数 float。"""
         from Script.Design import character_behavior, handle_npc_ai, handle_npc_ai_in_h, handle_talent, handle_premise
         from Script.Settle import realtime_settle
+        from Script.Modules.scheduler.action_execution import prepare_action
 
         cache = cache_control.cache
         character = cache.character_data[actor]
         if character.dead or (actor and actor not in cache.npc_id_got):
             return action.duration
         now = self.scheduler.now
-        from Script.Modules.scheduler.action_execution import prepare_action
-
         action = prepare_action(self, actor, action)
-        if action is None:
-            return 0
-        # 已提交的同角色后续先占位，本次新产生的后续按提交顺序排在它们之后。
-        for following in action.followups:
-            self.enqueue(actor, following)
-        action.followups = ()
-        if action.wait_on is not None:
-            owner, behavior_id = action.wait_on
-            source = cache.character_data.get(owner)
-            if source is None or source.behavior.behavior_id != behavior_id or source.target_character_id != actor:
-                self.finish_current(actor, now)
-                if not self.scheduler.contains(actor):
-                    self.scheduler.submit(Task(actor, now, INPUT if actor == 0 else AI))
-                return 0
-        if not action.continued:
-            self.finish_current(actor, now)
         action.apply(character, now)
-        self.active[actor] = (deepcopy(character.behavior), character.target_character_id, character.state)
-        recovery = action.behavior_id == constant.Behavior.SLEEP
-        if not action.continued or getattr(character, "action_progress", None) is None:
-            character.action_progress = ActionProgress(deepcopy(action))
-        progress = character.action_progress
-        try:
-            # 首次入睡准备读取完整睡眠计划，判定六小时阈值效果。
-            if actor == 0 and not action.continued:
-                # 玩家行动开始时检查工作、娱乐角色的洗澡条件。
-                if not cache.time_stop_mode:
-                    for npc_id in cache.npc_id_got:
-                        pending = self.scheduler.pending(npc_id)
-                        if pending is not None and not pending.immediate and handle_premise.handle_action_work_or_entertainment(npc_id) and handle_npc_ai.judge_interrupt_character_behavior(npc_id):
-                            self.current.pop(npc_id, None)
-                            self.scheduler.replace(Task(npc_id, now, AI))
-                cache.daily_intsruce += character_behavior.character_instruct_record(actor)
-                cache.pl_pre_behavior_instruce.append(action.behavior_id)
-                cache.pl_pre_behavior_instruce[:] = cache.pl_pre_behavior_instruce[-10:]
-                if action.behavior_id in {constant.Behavior.MOVE, constant.Behavior.CARRY_MOVE}:
-                    handle_npc_ai.judge_same_position_npc_follow()
-                    for npc_id in cache.npc_id_got:
-                        cache.character_data[npc_id].sp_flag.see_pl_h = False
-                character_behavior.judge_before_pl_behavior()
-            if recovery:
-                action.duration = min(action.duration, 30)
-                character.behavior.duration = action.duration
-                self.active[actor][0].duration = action.duration
-            progress.elapsed += action.duration
-            end = self.advance_time(now, action.duration)
-            if action.behavior_id == constant.Behavior.SLEEP:
-                settle_sleep(actor, action.duration, action.continued, now)
-            else:
-                if not action.continued and action.wait_on is None:
-                    character_behavior.judge_character_status(actor)
-                realtime_settle.character_aotu_change_value(actor, end, now)
-            realtime_settle.change_character_persistent_state(actor)
-            if actor == 0:
-                handle_npc_ai.judge_character_tired_sleep(actor)
-                handle_npc_ai_in_h.judge_character_h_obscenity_unconscious(actor, now)
-                realtime_settle.judge_pl_real_time_data()
-            handle_talent.gain_talent(actor, now_gain_type=0)
-        finally:
-            self.active.pop(actor, None)
-        if actor == 0 or (actor in cache.npc_id_got and not character.dead):
-            self.current[actor] = (deepcopy(character.behavior), character.target_character_id, character.state)
-        self.finish_action(actor, action.after)
-        if action.wait_on is not None and self.scheduler.pending(actor) is None:
-            self.scheduler.submit(Task(actor, end, replace(action, continued=True)))
-        # 玩家睡眠按当前执行记录延续；强制替换清空记录后不再续睡。
-        progress = character.action_progress
-        if actor == 0 and recovery and progress is not None and character.behavior.behavior_id == action.behavior_id and not cache.time_stop_mode and self.scheduler.pending(actor) is None:
-            remaining = progress.action.duration - progress.elapsed
-            if remaining > 0:
-                self.scheduler.submit(Task(actor, end, replace(progress.action, duration=min(remaining, 30), continued=True)))
-        if recovery and character.behavior.behavior_id != action.behavior_id:
-            character.action_progress = None
+        if actor == 0 and not action.continued:
+            # 玩家行动开始时检查工作、娱乐角色的洗澡条件。
+            if not cache.time_stop_mode:
+                for npc_id in cache.npc_id_got:
+                    pending = self.scheduler.pending(npc_id)
+                    if pending is not None and not pending.immediate and handle_premise.handle_action_work_or_entertainment(npc_id) and handle_npc_ai.judge_interrupt_character_behavior(npc_id):
+                        self.scheduler.replace(Task(npc_id, now, AI))
+            cache.daily_intsruce += character_behavior.character_instruct_record(actor)
+            cache.pl_pre_behavior_instruce.append(action.behavior_id)
+            cache.pl_pre_behavior_instruce[:] = cache.pl_pre_behavior_instruce[-10:]
+            if action.behavior_id in {constant.Behavior.MOVE, constant.Behavior.CARRY_MOVE}:
+                handle_npc_ai.judge_same_position_npc_follow()
+                for npc_id in cache.npc_id_got:
+                    cache.character_data[npc_id].sp_flag.see_pl_h = False
+            character_behavior.judge_before_pl_behavior()
+        end = self.advance_time(now, action.duration)
+        if action.behavior_id == constant.Behavior.SLEEP:
+            settle_sleep(actor, action.duration, action.continued, now)
+        else:
+            # 延续片段只结算经过时间，一次性效果由首段结算。
+            if not action.continued:
+                character_behavior.judge_character_status(actor)
+            realtime_settle.character_aotu_change_value(actor, end, now)
+        realtime_settle.change_character_persistent_state(actor)
+        if actor == 0:
+            handle_npc_ai.judge_character_tired_sleep(actor)
+            handle_npc_ai_in_h.judge_character_h_obscenity_unconscious(actor, now)
+            realtime_settle.judge_pl_real_time_data()
+        handle_talent.gain_talent(actor, now_gain_type=0)
+        # 结算中登记的强制后续先于调度器的自动安排。
+        self._dispatch(actor)
         # 时停操作占用零分钟，体力消耗按行动时长结算。
         if actor == 0 and cache.time_stop_mode:
             cache.achievement.time_stop_duration += action.duration
@@ -300,10 +243,7 @@ class Runtime:
         action = Action.from_character(cache.character_data[0])
         action.duration = max(minutes, 1)
         if self.scheduler.running:
-            self.enqueue(0, action)
-            if 0 in self.active:
-                character = cache.character_data[0]
-                character.behavior, character.target_character_id, character.state = deepcopy(self.active[0])
+            self.force(0, action)
             return
         self.sync_characters()
         self.scheduler.replace(Task(0, self.scheduler.now, action, immediate=True))
