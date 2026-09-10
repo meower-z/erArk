@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import ast
 import importlib
 import pickle
+import re
 from pathlib import Path
 import sys
 from types import ModuleType, SimpleNamespace
@@ -301,10 +302,11 @@ class GameActionsTests(unittest.TestCase):
         ):
             with self.subTest(initial=initial, part=part):
                 self.characters[0].h_state.group_sex_body_template_dict["A"] = [{"mouth": [-1, -1]}, [[], -1]]
-                # 等待中的角色已经等了四分钟，只剩五分钟；直接写入的行为从现在开始。
-                self.write_behavior(1, initial, 9 if initial != "idle" else 0, start=self.now - timedelta(minutes=4) if initial == "wait" else None)
+                # 等待中的角色刚等满四分钟，先收尾再参与群交选择；他人此刻写入的非移动行为只占用时间。
+                self.write_behavior(1, initial, {"idle": 0, "wait": 4, "existing": 9}[initial], start=self.now - timedelta(minutes=4) if initial == "wait" else None)
                 self.events.clear()
-                before = pickle.dumps(self.cache.character_data)
+                player_before = pickle.dumps(self.characters[0])
+                npc_before = pickle.dumps(self.characters[1])
                 panel.get_now_template_part_list = lambda: ([part], [])
                 panel.get_status_id_list_from_group_sex_body_part = lambda body_part, **kw: statuses
                 with patch.dict(sys.modules, {"Script.Design.handle_npc_ai_in_h": group, "Script.System.Sex_System": sex_system}), patch.object(
@@ -317,13 +319,17 @@ class GameActionsTests(unittest.TestCase):
                     choose_need.assert_not_called()
                 self.assertIs(type(choice), Action)
                 self.assertEqual(choice.behavior_id, kind)
-                self.assertEqual(pickle.dumps(self.cache.character_data), before)
+                self.assertEqual(pickle.dumps(self.characters[0]), player_before)
+                # 选择阶段只收尾自己到期的等待，不改动其他数据。
+                self.assertEqual(self.finished(1), [self.now] if initial == "wait" else [])
+                if initial != "wait":
+                    self.assertEqual(pickle.dumps(self.characters[1]), npc_before)
                 with patch.dict(sys.modules, {"Script.Design.handle_npc_ai_in_h": group}):
                     self.assertEqual(runtime.execute(1, pickle.loads(pickle.dumps(choice))), duration)
                 behavior = kind if kind in {"existing", "need"} else "wait"
                 self.assertEqual(self.characters[1].behavior.behavior_id, behavior)
-                # 已在等待或执行中的角色延续原行为，不再次触发一次性结算。
-                self.assertEqual(self.settled(1), [] if initial != "idle" else [behavior])
+                # 延续的等待和他人写入的行为不触发一次性结算，群交安排的等待和自选的新行为结算一次。
+                self.assertEqual(self.settled(1), [] if kind in {"wait", "existing"} else [behavior])
                 template = self.characters[0].h_state.group_sex_body_template_dict["A"]
                 if kind == "group_fill":
                     self.assertEqual(template[0]["mouth"], [1, 12])
@@ -435,8 +441,10 @@ class GameActionsTests(unittest.TestCase):
         runtime = self.game.get_runtime()
         self.write_behavior(0, "h_act", 30, target=1)
         self.game.wait_on(1, 0, "h_act")
+        pending = runtime.scheduler.pending(1)
+        self.assertEqual((pending.at, pending.item.behavior_id, pending.item.duration, pending.item.continued, pending.immediate), (self.now, "wait", 5, True, False))
         runtime.advance(30)
-        self.assertEqual(self.settled(1), ["wait"])
+        self.assertEqual(self.settled(1), [])
         self.assertEqual(self.realtime(1), [5] * 6)
         self.assertEqual(self.characters[1].behavior.wait_on_behavior_id, "h_act")
         self.assertEqual(self.finished(1), [])
@@ -539,15 +547,18 @@ class GameActionsTests(unittest.TestCase):
         self.assertEqual(runtime.scheduler.pending(1).at, self.now + timedelta(minutes=7))
 
     def test_saved_behavior_resumes_remaining_time_without_replaying(self):
-        """无需参数；读档后进行中的行为只结算剩余时间，不重复一次性效果；无返回值。"""
+        """无需参数；读档后进行中的行为不再结算，到期后才由 NPC 自己收尾并选择；无返回值。"""
+        self.use_real_ai()
         self.write_behavior(1, "work", 60, start=self.now - timedelta(minutes=30))
         runtime = self.game.get_runtime()
-        pending = runtime.scheduler.pending(1)
-        self.assertEqual((pending.at, pending.item.behavior_id, pending.item.duration, pending.item.continued), (self.now, "work", 30, True))
-        self.advance("wait", 5)
+        self.assertEqual(runtime.scheduler.pending(1), Task(1, self.now + timedelta(minutes=30), AI))
+        self.advance("wait", 30)
         self.assertEqual(self.settled(1), [])
-        self.assertEqual(self.realtime(1), [30])
-        self.assertEqual(runtime.scheduler.pending(1).at, self.now + timedelta(minutes=30))
+        self.assertEqual(self.realtime(1), [])
+        self.assertEqual(self.finished(1), [])
+        self.advance("wait", 1)
+        self.assertEqual(self.finished(1), [self.now + timedelta(minutes=30)])
+        self.assertEqual(self.settled(1), ["wait"])
 
     def test_finished_saved_behavior_starts_with_ai(self):
         """无需参数；读档时已到期的行为直接进入自主选择；无返回值。"""
@@ -564,7 +575,7 @@ class GameActionsTests(unittest.TestCase):
         self.write_behavior(1, "work", 20)
         rebuilt = self.game.get_runtime()
         self.assertIsNot(rebuilt, runtime)
-        self.assertEqual(rebuilt.scheduler.pending(1).item.behavior_id, "work")
+        self.assertEqual(rebuilt.scheduler.pending(1), Task(1, self.now + timedelta(minutes=20), AI))
 
     def test_time_stop_keeps_npc_pending_and_world_time(self):
         """无需参数；时停中玩家行动不推进时间，NPC 待办保持原样；无返回值。"""
@@ -603,7 +614,7 @@ class GameActionsTests(unittest.TestCase):
                 self.assertEqual(self.settled(1), [] if time_stop else ["bath"])
                 pending = runtime.scheduler.pending(1)
                 if time_stop:
-                    self.assertEqual((pending.at, pending.item.behavior_id, pending.item.continued), (self.now, "work", True))
+                    self.assertEqual(pending, Task(1, self.now + timedelta(minutes=60), AI))
                 else:
                     self.assertEqual(pending, Task(1, self.now + timedelta(minutes=15), AI))
 
@@ -668,23 +679,124 @@ class GameActionsTests(unittest.TestCase):
         self.assertEqual(self.realtime(1), [5] * 8)
 
     def test_locked_wait_is_silent_and_checks_every_five_minutes(self):
-        """无需参数；H 或木头人状态的等待每五分钟静默复查，不重复结算；无返回值。"""
+        """无需参数；H 或木头人状态的等待每五分钟收尾后静默续等，不重复结算；无返回值。"""
         self.use_real_ai()
         self.characters[1].sp_flag.is_h = True
         self.write_behavior(1, "wait", 5, target=0, start=self.now - timedelta(minutes=5))
         self.advance("wait", 15)
         self.assertEqual(self.settled(1), [])
         self.assertEqual(self.realtime(1), [5, 5, 5])
-        self.assertEqual(self.finished(1), [])
+        self.assertEqual(self.finished(1), [self.now + timedelta(minutes=step) for step in (0, 5, 10)])
 
     def test_directly_written_behavior_runs_to_its_end_before_closing(self):
-        """无需参数；他人直接写入的未完成行为先延续到结束，再由 NPC 自己收尾并重新选择；无返回值。"""
+        """无需参数；他人此刻写入的非移动行为不结算效果，只执行到结束，再由 NPC 自己收尾并重新选择；无返回值。"""
         self.use_real_ai()
+        self.game.get_runtime()
         self.write_behavior(1, "wait", 10, target=0)
         self.advance("wait", 15)
         self.assertEqual(self.settled(1), ["wait"])
         self.assertEqual(self.realtime(1), [10, 5])
         self.assertEqual(self.finished(1), [self.now + timedelta(minutes=10)])
+
+    def test_written_wait_with_replan_finishes_at_its_own_end(self):
+        """无需参数；NPC 待办尚在远处时被写入等待并重排，等待不结算效果，到其自身结束时刻收尾；无返回值。"""
+        self.use_real_ai()
+        self.write_behavior(1, "work", 60)
+        runtime = self.game.get_runtime()
+        self.write_behavior(1, "wait", 10, target=0, start=self.now)
+        self.game.replan(1)
+        self.assertEqual(runtime.scheduler.pending(1), Task(1, self.now, AI))
+        self.advance("end_h", 5)
+        self.advance("wait", 10)
+        self.assertEqual(self.realtime(1)[0], 10)
+        self.assertEqual(self.finished(1), [self.now + timedelta(minutes=10)])
+        self.assertEqual(self.settled(1), ["wait"])
+
+    def test_h_end_replans_every_directly_written_wait(self):
+        """无需参数；指令处理里每处直接写给对方的十分钟等待都紧跟重排；无返回值。"""
+        source = Path(__file__).resolve().parents[1] / "Script/System/Instruct_System/handle_instruct.py"
+        text = source.read_text()
+        writes = re.findall(r"^( +)target_data\.behavior\.duration = 10\n(?:\1.*\n){2}((?:\1.*\n){0,2})", text, re.M)
+        self.assertEqual(len(writes), 5)
+        for _, follow in writes:
+            self.assertIn("game_actions.replan(target_data.cid)", follow)
+
+    def test_behavior_written_while_pending_continues_its_remaining_time(self):
+        """无需参数；NPC 待办尚在未来时已在别处结算过的移动，到期时只延续剩余时间；无返回值。"""
+        self.use_real_ai()
+        self.write_behavior(1, "work", 10)
+        runtime = self.game.get_runtime()
+        self.advance("wait", 4)
+        self.write_behavior(1, "move", 10, target=1, start=self.now + timedelta(minutes=4))
+        self.events.clear()
+        self.advance("wait", 10)
+        self.assertEqual(self.settled(1), [])
+        self.assertEqual(self.realtime(1), [4])
+        self.assertEqual(runtime.scheduler.pending(1), Task(1, self.now + timedelta(minutes=14), AI))
+
+    def test_precheck_written_behavior_is_settled_once(self):
+        """无需参数；行动前检查在待办时刻写入的行为按新行为结算一次；无返回值。"""
+        self.use_real_ai()
+        written = []
+
+        def precheck(actor, now):
+            """输入角色与时刻，首次检查时写入三分钟移动；返回 None。"""
+            if not written:
+                written.append(now)
+                self.write_behavior(1, "move", 3, start=now)
+
+        with patch.object(sys.modules["Script.Design.handle_npc_ai"], "run_npc_pre_behavior_checks", side_effect=precheck):
+            self.advance("wait", 3)
+        self.assertEqual(self.settled(1), ["move"])
+        self.assertEqual(self.realtime(1), [3])
+        self.assertEqual(self.finished(1), [])
+
+    def test_state_machine_forced_follow_up_settles_once(self):
+        """无需参数；状态机在准备阶段安排强制后续时，本次行动让位且只结算一次，收尾回调照常执行；无返回值。"""
+        runtime = self.game.get_runtime()
+
+        def machine(actor):
+            """输入角色编号，写入反应行为并安排强制后续；返回 None。"""
+            self.write_behavior(actor, "react", 10, start=self.cache.game_time)
+            self.game.submit_current(actor, after="group_exit")
+
+        sys.modules["Script.Core.constant"].handle_state_machine_data = {5: machine}
+        with patch.object(sys.modules["Script.Modules.npc_ai"], "choose_next", return_value=state_machine_action(1, 5)):
+            self.advance("wait", 10)
+        self.assertEqual(self.settled(1), ["react"])
+        self.assertEqual(self.realtime(1), [10])
+        self.assertIn(("group_exit", 1), self.events)
+        self.assertEqual(runtime.scheduler.pending(1), Task(1, self.now + timedelta(minutes=10), AI))
+
+    def test_player_action_replaced_during_preparation_is_not_settled(self):
+        """无需参数；行动前置面板改写玩家行动并推进时，只有新行动结算一次；无返回值。"""
+        runtime = self.game.get_runtime()
+        calls = []
+
+        def prepare():
+            """无需参数，首次调用时改写玩家行动并再次推进；返回 None。"""
+            if not calls:
+                calls.append(True)
+                self.write_behavior(0, "action2", 20)
+                runtime.advance(20)
+
+        with patch.object(sys.modules["Script.Design.character_behavior"], "judge_before_pl_behavior", side_effect=prepare):
+            self.advance("action1", 10)
+        self.assertEqual(self.settled(0), ["action2"])
+        self.assertEqual(self.realtime(0), [20])
+        self.assertEqual(self.cache.game_time, self.now + timedelta(minutes=20))
+
+    def test_replan_is_ordinary_and_yields_to_time_stop_input(self):
+        """无需参数；改写行为后的重排是普通待办，时停中玩家输入先于它，NPC 不动；无返回值。"""
+        self.write_behavior(1, "work", 60)
+        runtime = self.game.get_runtime()
+        self.game.replan(1)
+        self.assertEqual(runtime.scheduler.pending(1), Task(1, self.now, AI))
+        self.cache.time_stop_mode = True
+        with patch.object(sys.modules["Script.Modules.npc_ai"], "choose_next", return_value=Action("wait", 5, 1)) as choose:
+            self.advance("touch", 10)
+        choose.assert_not_called()
+        self.assertEqual(runtime.scheduler.pending(1), Task(1, self.now, AI))
 
     def test_npc_closes_each_finished_action_before_next_choice(self):
         """无需参数；NPC 每个行动到期后先收尾再选择下一个，选择时行为已闲置；无返回值。"""
@@ -735,7 +847,7 @@ class GameActionsTests(unittest.TestCase):
         self.assertEqual(self.settled(1), ["wait"])
 
     def test_reset_character_cancels_offline_and_restarts_online(self):
-        """无需参数；下线撤销待办，上线从当前时刻自主选择；无返回值。"""
+        """无需参数；下线撤销待办，上线后进行中的行为到期时再自主选择；无返回值。"""
         self.assertIsNone(self.game.reset_character(1))
         runtime = self.advance("wait", 5)
         self.assertEqual(runtime.scheduler.pending(1).at, self.now + timedelta(minutes=60))
@@ -744,7 +856,7 @@ class GameActionsTests(unittest.TestCase):
         self.assertIsNone(runtime.scheduler.pending(1))
         self.cache.npc_id_got.add(1)
         self.game.reset_character(1)
-        self.assertEqual(runtime.scheduler.pending(1), Task(1, self.now + timedelta(minutes=5), AI))
+        self.assertEqual(runtime.scheduler.pending(1), Task(1, self.now + timedelta(minutes=60), AI))
 
     def test_departing_during_own_action_leaves_no_successor(self):
         """无需参数；NPC 在自己的行动结算中离队时不再安排后续；无返回值。"""

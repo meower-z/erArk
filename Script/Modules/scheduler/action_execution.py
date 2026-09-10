@@ -1,4 +1,7 @@
-"""按行动编号准备实际行为；准备操作不进入角色的 Behavior。"""
+"""按行动编号准备实际行为；准备操作不进入角色的 Behavior。
+
+状态机可以在准备阶段为本角色提交强制后续；此时执行器放弃本次行动，由该待办结算一次。
+"""
 
 
 def _prepare_npc_action(runtime, actor: int, action):
@@ -20,21 +23,13 @@ def _prepare_npc_action(runtime, actor: int, action):
 
 def _prepare_group_action(runtime, actor: int, action):
     """输入执行器、角色编号和 Action，落实群交操作；返回实际 Action。"""
-    from Script.Core import cache_control, constant
-    from Script.Design import game_time
+    from Script.Core import cache_control
     from Script.Modules.scheduler.action import Action
     from Script.Design.handle_npc_ai_in_h import execute_group_action
 
-    character = cache_control.cache.character_data[actor]
-    # 闲置角色由群交操作安排等待；已有行为的角色延续剩余时间，不重复结算。
-    idle = character.behavior.behavior_id == constant.Behavior.SHARE_BLANKLY
+    # 群交选择只在闲置时发生，操作落实后按安排的等待行为结算一次。
     execute_group_action(actor, action)
-    if idle:
-        return Action.from_character(character)
-    result = Action.from_character(character, continued=True)
-    end = game_time.get_sub_date(minute=character.behavior.duration, old_date=character.behavior.start_time)
-    result.duration = max(game_time.elapsed_minutes(runtime.scheduler.now, end), 1)
-    return result
+    return Action.from_character(cache_control.cache.character_data[actor])
 
 
 # 准备动作按编号注册，调度器只传递统一的 Action。

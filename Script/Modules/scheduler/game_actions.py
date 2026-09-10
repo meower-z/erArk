@@ -53,13 +53,18 @@ def submit_current(actor: int, after=None):
 
 
 def reset_character(actor: int):
-    """角色上下线时重排待办：在队者从现在起自主选择，离队者撤销；输入角色编号，返回 None。"""
+    """角色上下线时重排待办：离队者撤销，在队者按当前行为重新入队；输入角色编号，返回 None。"""
     if _runtime is None:
         return
+    _runtime.scheduler.cancel(actor)
     if actor in cache_control.cache.npc_id_got:
-        _runtime.scheduler.replace(Task(actor, _runtime.scheduler.now, AI))
-    else:
-        _runtime.scheduler.cancel(actor)
+        _runtime.sync_characters()
+
+
+def replan(actor: int):
+    """他人改写了 NPC 的行为后，让其从现在起按新行为执行；这是普通待办，不打断当前时刻的其他行动。输入角色编号，返回 None。"""
+    runtime = get_runtime()
+    runtime.scheduler.replace(Task(actor, runtime.scheduler.now, AI))
 
 
 def wait_on(actor: int, owner: int, behavior_id: str):
@@ -70,14 +75,16 @@ def wait_on(actor: int, owner: int, behavior_id: str):
     runtime = get_runtime()
     params = {STATE: constant.CharacterStatus.STATUS_WAIT}
     if actor:
+        # NPC 的等待只是替换其待办，不算强制打断；和旧代码的直接写入一样不结算一次性效果。
         params["wait_on_behavior_id"] = behavior_id
-        duration = 5
-    else:
-        from Script.Design import game_time
+        params[CONTINUED] = True
+        runtime.scheduler.replace(Task(actor, runtime.scheduler.now, Action(constant.Behavior.WAIT, 5, owner, params)))
+        return
+    from Script.Design import game_time
 
-        source = cache.character_data[owner].behavior
-        end = game_time.get_sub_date(minute=source.duration, old_date=source.start_time)
-        duration = max(game_time.elapsed_minutes(runtime.scheduler.now, end), 1)
+    source = cache.character_data[owner].behavior
+    end = game_time.get_sub_date(minute=source.duration, old_date=source.start_time)
+    duration = max(game_time.elapsed_minutes(runtime.scheduler.now, end), 1)
     runtime.force(actor, Action(constant.Behavior.WAIT, duration, owner, params))
 
 
@@ -98,25 +105,17 @@ class Runtime:
         return game_time.get_sub_date(minute=minutes, old_date=at)
 
     def sync_characters(self):
-        """为没有待办的在队 NPC 建立待办，进行中的行为接续剩余时间；返回 None。"""
-        from Script.Design import game_time
-
+        """为没有待办的在队 NPC 建立待办：进行中的行为效果已在开始时结算，到期后再自主选择；返回 None。"""
         cache = cache_control.cache
         for actor in sorted(set(cache.npc_id_got) - {0}):
             character = cache.character_data[actor]
             if self.scheduler.contains(actor) or character.dead:
                 continue
             at = cache.game_time
-            item = AI
             behavior = character.behavior
             if behavior.behavior_id != constant.Behavior.SHARE_BLANKLY and behavior.start_time.year > 1:
-                end = self.advance_time(behavior.start_time, max(behavior.duration, 0))
-                # 进行中行为的剩余时间作为延续片段，只结算经过时间。
-                if end > at:
-                    at = max(at, behavior.start_time)
-                    item = Action.from_character(character, continued=True)
-                    item.duration = game_time.elapsed_minutes(at, end)
-            self.scheduler.submit(Task(actor, at, item))
+                at = max(at, self.advance_time(behavior.start_time, max(behavior.duration, 0)))
+            self.scheduler.submit(Task(actor, at, AI))
 
     def before_task(self, task):
         """按待办时刻同步世界；新日期先日结，玩家输入前收尾其行为，NPC 选择前做行动前检查。输入 Task，返回 None。"""
@@ -209,6 +208,10 @@ class Runtime:
                 for npc_id in cache.npc_id_got:
                     cache.character_data[npc_id].sp_flag.see_pl_h = False
             character_behavior.judge_before_pl_behavior()
+        # 准备阶段（状态机、行动前置面板）为本角色排入了立即待办时，本次行动让位，由该待办结算一次。
+        replaced = self.scheduler.pending(actor)
+        if replaced is not None and replaced.immediate:
+            return 0
         end = self.advance_time(now, action.duration)
         if action.behavior_id == constant.Behavior.SLEEP:
             settle_sleep(actor, action.duration, action.continued, now)

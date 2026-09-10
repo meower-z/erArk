@@ -52,17 +52,21 @@ def choose_next(actor: int, now: datetime) -> Action:
         owner = cache_control.cache.character_data.get(character.target_character_id)
         if owner is not None and owner.behavior.behavior_id == behavior.wait_on_behavior_id and owner.target_character_id == actor:
             return _continue_current(character, 5)
+    finished_id = behavior.behavior_id
+    if behavior.behavior_id != constant.Behavior.SHARE_BLANKLY:
+        remaining = game_time.elapsed_minutes(now, game_time.get_sub_date(minute=behavior.duration, old_date=behavior.start_time))
+        if remaining > 0:
+            # 他人此刻写入的移动要靠结算才真正走动；其余写入或已开始的行为只走完剩余时间，与旧主循环一致。
+            if behavior.behavior_id == constant.Behavior.MOVE and behavior.start_time >= now:
+                return Action.from_character(character)
+            return _continue_current(character, remaining)
+        # 已到期的行为由自己收尾，再从闲置状态选择。
+        character_behavior.judge_character_status_time_over(actor, now, end_now=2)
     action = npc_ai_in_group_sex(actor)
     if action is not None:
         return action
-    # 受限状态通过等待行动定期重新检查。
-    if behavior.behavior_id == constant.Behavior.WAIT and (character.sp_flag.is_h or character.hypnosis.blockhead):
+    # 受限状态下等待到期后继续等待，定期重新检查。
+    if finished_id == constant.Behavior.WAIT and (character.sp_flag.is_h or character.hypnosis.blockhead):
         return Action(constant.Behavior.WAIT, 5, character.target_character_id, params={STATE: constant.CharacterStatus.STATUS_WAIT, CONTINUED: True})
-    if behavior.behavior_id != constant.Behavior.SHARE_BLANKLY:
-        # 他人直接写入的未完成行为先执行到结束；已到期的行为由自己收尾后再选择。
-        remaining = game_time.elapsed_minutes(now, game_time.get_sub_date(minute=behavior.duration, old_date=behavior.start_time))
-        if remaining > 0:
-            return _continue_current(character, remaining)
-        character_behavior.judge_character_status_time_over(actor, now, end_now=2)
     character.behavior.start_time = now
     return handle_npc_ai.choose_character_target(actor, now)

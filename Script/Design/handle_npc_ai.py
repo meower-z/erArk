@@ -734,7 +734,7 @@ def judge_same_position_npc_follow():
     Keyword arguments:\n
     无
     """
-    from Script.Modules.scheduler.game_actions import submit_current
+    from Script.Modules.scheduler.game_actions import replan
 
     pl_character_data: game_type.Character = cache.character_data[0]
     for character_id in cache.npc_id_got:
@@ -765,9 +765,9 @@ def judge_same_position_npc_follow():
                 character_data.state = constant.CharacterStatus.STATUS_WAIT
                 character_data.behavior.duration = 5
                 character_data.action_info.follow_wait_time += 5
-            # 仅为本次确实生成的跟随行动替换待办。
+            # 跟随行动只是改写了该 NPC 的行为，让其从现在起按新行为执行。
             if move_flag or wait_flag:
-                submit_current(character_id)
+                replan(character_id)
             # print(f"debug {character_data.name}跟随玩家，当前位置为{character_data.position}，当前目标位置为{move_path}，最终目标位置为{pl_character_data.behavior.move_final_target}，行动时间为{move_time}分钟, start_time = {character_data.behavior.start_time}")
         # 隐奸携带模式中被携带的角色，直接同步移动到玩家本段移动的目的地（不使用移动行为，仅搬运位置）
         elif character_data.sp_flag.hidden_sex_mode == 5:
