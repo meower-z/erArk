@@ -721,6 +721,18 @@ class GameActionsTests(unittest.TestCase):
         for _, follow in writes:
             self.assertIn("game_actions.replan(target_data.cid)", follow)
 
+    def test_unconscious_recovery_writes_wait_and_replans(self):
+        """无需参数；无意识恢复回调直接写入对方的十分钟或一分钟等待并重排，不再让对方等待玩家的等待；无返回值。"""
+        source = Path(__file__).resolve().parents[1] / "Script/Design/handle_npc_ai_in_h.py"
+        text = source.read_text()
+        start = text.index("def finish_unconscious_h_recovery(")
+        body = text[start : start + re.search(r"\n(?:def|class) ", text[start + 1 :]).start()]
+        self.assertNotIn("wait_on", body)
+        self.assertIn("target_data.behavior.duration = 10\n", body)
+        self.assertIn("target_data.behavior.duration = 1\n", body)
+        self.assertIn("target_data.behavior.start_time = cache.game_time\n", body)
+        self.assertIn("replan(target_character_id)\n", body)
+
     def test_behavior_written_while_pending_continues_its_remaining_time(self):
         """无需参数；NPC 待办尚在未来时已在别处结算过的移动，到期时只延续剩余时间；无返回值。"""
         self.use_real_ai()

@@ -248,7 +248,7 @@ def recover_from_unconscious_h(character_id: int, info_text: str = ""):
 def finish_unconscious_h_recovery(character_id: int, target_character_id: int, response: int):
     """响应链完成后恢复双方状态；输入发起者、对象编号与裁决，返回 None。"""
     from Script.Settle import default
-    from Script.Modules.scheduler.game_actions import wait_on
+    from Script.Modules.scheduler.game_actions import replan
 
     character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[target_character_id]
@@ -264,6 +264,8 @@ def finish_unconscious_h_recovery(character_id: int, target_character_id: int, r
         default.handle_h_flag_to_1(target_data.cid, 1, game_type.CharacterStatusChange(), cache.game_time)
         character_data.behavior.behavior_id = constant.Behavior.WAIT
         character_data.state = constant.CharacterStatus.STATUS_WAIT
+        # 对方的行为时间设为10分钟
+        target_data.behavior.duration = 10
         # 睡眠中，则对方获得装睡状态，仍继续无意识H
         if handle_premise.handle_action_sleep(character_data.target_character_id):
             target_data.h_state.pretend_sleep = True
@@ -274,12 +276,16 @@ def finish_unconscious_h_recovery(character_id: int, target_character_id: int, r
             cache.achievement.sleep_sex_record[1] = 1
     # 否则
     else:
+        # 对象行为时间改为1分钟
+        target_data.behavior.duration = 1
         # 重置双方H结构体和相关数据
         default.handle_both_h_state_reset(0, 1, game_type.CharacterStatusChange(), datetime.datetime(1, 1, 1))
         # 地点开门
         scene_data.close_flag = 0
 
-    wait_on(target_character_id, character_id, constant.Behavior.WAIT)
+    # 对方从现在起按写入的等待行事，到期后再自主选择。
+    target_data.behavior.start_time = cache.game_time
+    replan(target_character_id)
 
 
 class UnconsciousHResponse:
