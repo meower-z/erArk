@@ -35,9 +35,7 @@ def handle_t_wear_hat(character_id: int, *, target_id: int | None = None) -> int
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data: game_type.Character = cache.character_data[target_id]
+    target_data: game_type.Character = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if len(target_data.cloth.cloth_wear[0]):
         return 1
     return 0
@@ -64,9 +62,7 @@ def handle_t_wear_glass(character_id: int, *, target_id: int | None = None) -> i
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data: game_type.Character = cache.character_data[target_id]
+    target_data: game_type.Character = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if len(target_data.cloth.cloth_wear[1]):
         return 1
     return 0
@@ -93,9 +89,7 @@ def handle_t_wear_in_ear(character_id: int, *, target_id: int | None = None) -> 
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data: game_type.Character = cache.character_data[target_id]
+    target_data: game_type.Character = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if len(target_data.cloth.cloth_wear[2]):
         return 1
     return 0
@@ -122,9 +116,7 @@ def handle_t_wear_in_neck(character_id: int, *, target_id: int | None = None) ->
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data: game_type.Character = cache.character_data[target_id]
+    target_data: game_type.Character = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if len(target_data.cloth.cloth_wear[3]):
         return 1
     return 0
@@ -151,9 +143,7 @@ def handle_t_wear_in_mouse(character_id: int, *, target_id: int | None = None) -
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data: game_type.Character = cache.character_data[target_id]
+    target_data: game_type.Character = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if len(target_data.cloth.cloth_wear[4]):
         return 1
     return 0
@@ -207,8 +197,7 @@ def handle_t_wear_in_up(character_id: int, *, target_id: int | None = None) -> i
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
+    target_id = character_data.target_character_id if target_id is None else target_id
     if handle_wear_in_up(target_id):
         return 1
     return 0
@@ -264,8 +253,7 @@ def handle_t_wear_bra(character_id: int, *, target_id: int | None = None) -> int
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
+    target_id = character_data.target_character_id if target_id is None else target_id
     return handle_wear_bra(target_id)
 
 @add_premise(constant_promise.Premise.TARGET_NOT_WEAR_BRA)
@@ -291,9 +279,7 @@ def handle_t_wear_gloves(character_id: int, *, target_id: int | None = None) -> 
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data: game_type.Character = cache.character_data[target_id]
+    target_data: game_type.Character = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if len(target_data.cloth.cloth_wear[7]):
         return 1
     return 0
@@ -362,9 +348,7 @@ def handle_t_wear_skirt(character_id: int, *, target_id: int | None = None) -> i
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data: game_type.Character = cache.character_data[target_id]
+    target_data: game_type.Character = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if len(target_data.cloth.cloth_wear[8]):
         cloth_id = target_data.cloth.cloth_wear[8][0]
         if game_config.config_clothing_tem[cloth_id].tag == 5:
@@ -382,9 +366,7 @@ def handle_t_wear_trousers(character_id: int, *, target_id: int | None = None) -
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data: game_type.Character = cache.character_data[target_id]
+    target_data: game_type.Character = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if len(target_data.cloth.cloth_wear[8]):
         cloth_id = target_data.cloth.cloth_wear[8][0]
         if game_config.config_clothing_tem[cloth_id].tag == 4:
@@ -428,9 +410,7 @@ def handle_t_wear_pan(character_id: int, *, target_id: int | None = None) -> int
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data: game_type.Character = cache.character_data[target_id]
+    target_data: game_type.Character = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if len(target_data.cloth.cloth_wear[9]):
         return 1
     return 0
@@ -485,8 +465,7 @@ def handle_t_wear_socks(character_id: int, *, target_id: int | None = None) -> i
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
+    target_id = character_data.target_character_id if target_id is None else target_id
     return handle_wear_socks(target_id)
 
 @add_premise(constant_promise.Premise.TARGET_NOT_WEAR_SOCKS)
@@ -527,9 +506,7 @@ def handle_t_wear_shoes(character_id: int, *, target_id: int | None = None) -> i
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data: game_type.Character = cache.character_data[target_id]
+    target_data: game_type.Character = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if len(target_data.cloth.cloth_wear[11]):
         return 1
     return 0
@@ -556,9 +533,7 @@ def handle_t_take_weapon(character_id: int, *, target_id: int | None = None) -> 
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data: game_type.Character = cache.character_data[target_id]
+    target_data: game_type.Character = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if len(target_data.cloth.cloth_wear[12]):
         return 1
     return 0

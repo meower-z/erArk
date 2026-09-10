@@ -1619,9 +1619,7 @@ def handle_is_unconscious_h(character_id: int, *, target_id: int | None = None) 
     int -- 权重
     """
     character_data: game_type.Character = cache.character_data[0]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data = cache.character_data[target_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.sp_flag.unconscious_h or character_data.sp_flag.unconscious_h:
         return 1
     return 0
@@ -1930,9 +1928,7 @@ def handle_t_unconscious_flag_4(character_id: int, *, target_id: int | None = No
     int -- 权重
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data = cache.character_data[target_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.sp_flag.unconscious_h == 4:
         return 1
     else:
@@ -2035,9 +2031,7 @@ def handle_t_unconscious_flag_7(character_id: int, *, target_id: int | None = No
     int -- 权重
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data = cache.character_data[target_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.sp_flag.unconscious_h == 7:
         return 1
     else:

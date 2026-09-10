@@ -942,9 +942,7 @@ def handle_t_u_dilate_ge_2(character_id: int, *, target_id: int | None = None) -
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data = cache.character_data[target_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.ability[11] >= 2:
         return 1
     return 0
@@ -977,9 +975,7 @@ def handle_t_u_dilate_ge_5(character_id: int, *, target_id: int | None = None) -
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data = cache.character_data[target_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.ability[11] >= 5:
         return 1
     return 0
@@ -996,9 +992,7 @@ def handle_t_w_dilate_ge_3(character_id: int, *, target_id: int | None = None) -
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data = cache.character_data[target_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.ability[12] >= 3:
         return 1
     return 0
@@ -1015,9 +1009,7 @@ def handle_t_w_dilate_ge_5(character_id: int, *, target_id: int | None = None) -
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data = cache.character_data[target_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.ability[12] >= 5:
         return 1
     return 0
@@ -1147,9 +1139,7 @@ def handle_t_technique_ge_3(character_id: int, *, target_id: int | None = None) 
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data = cache.character_data[target_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.ability[30] >= 3:
         return 1
     return 0
@@ -1166,9 +1156,7 @@ def handle_t_technique_ge_5(character_id: int, *, target_id: int | None = None) 
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data = cache.character_data[target_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.ability[30] >= 5:
         return 1
     return 0

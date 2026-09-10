@@ -1,34 +1,23 @@
 """NPC 自主行动入口；需求链和状态机负责具体选择。"""
 
 from copy import deepcopy
-from dataclasses import dataclass, replace
+from dataclasses import replace
 from datetime import datetime
 
 from Script.Core import cache_control, constant
 from Script.Design import game_time, handle_npc_ai, handle_premise
-from Script.Modules.action import Action, ActionProgress
-
-
-@dataclass
-class DecisionState:
-    """NPC 自己维护的决策记录：已读取的执行记录及剩余睡眠计划。"""
-
-    progress: ActionProgress | None = None
-    plan: Action | None = None
+from Script.Modules.action import Action
 
 
 def _sleep_plan(actor: int) -> Action | None:
-    """输入角色编号，读取执行进度并更新自身计划，返回剩余睡眠行动或 None。"""
+    """输入角色编号 int，只读执行进度，返回独立的剩余睡眠 Action 或 None。"""
     character = cache_control.cache.character_data[actor]
     progress = getattr(character, "action_progress", None)
-    state = getattr(character, "npc_ai_state", None)
-    if state is None or state.progress is not progress:
-        plan = deepcopy(progress.action) if progress is not None and progress.action.behavior_id == constant.Behavior.SLEEP else None
-        state = character.npc_ai_state = DecisionState(progress, plan)
-    if state.plan is not None:
-        # 依据累计执行量计算，重复查询同一记录也得到相同的剩余时长。
-        state.plan.duration = max(progress.action.duration - progress.elapsed, 0)
-    return state.plan
+    if progress is None or progress.action.behavior_id != constant.Behavior.SLEEP:
+        return None
+    plan = deepcopy(progress.action)
+    plan.duration = max(progress.action.duration - progress.elapsed, 0)
+    return plan
 
 
 def _can_continue(actor: int, plan: Action) -> bool:
@@ -38,8 +27,13 @@ def _can_continue(actor: int, plan: Action) -> bool:
     if plan.duration <= 0 or character.behavior.behavior_id != plan.behavior_id or character.target_character_id != plan.target:
         return False
     recovered = handle_premise.handle_tired_le_0(actor) and handle_premise.handle_hp_max(actor) and handle_premise.handle_mp_max(actor)
-    # 助理在睡眠片段跨过约定问候时刻后醒来。
-    if handle_premise.handle_self_not_sleep_pills(actor) and handle_premise.handle_assistant_morning_salutation_on(actor) and handle_premise.handle_morning_salutation_flag_0(actor):
+    # 仅原定八小时的整夜睡眠响应早安问候，普通小睡不受影响。
+    if (
+        character.action_progress.action.duration == 480
+        and handle_premise.handle_self_not_sleep_pills(actor)
+        and handle_premise.handle_assistant_morning_salutation_on(actor)
+        and handle_premise.handle_morning_salutation_flag_0(actor)
+    ):
         hour, minute = cache_control.cache.character_data[0].action_info.plan_to_wake_time
         start = character.behavior.start_time
         wake = start.replace(hour=hour, minute=minute, second=0, microsecond=0)
@@ -59,11 +53,11 @@ def choose_next(actor: int, now: datetime) -> Action:
             return replace(plan, duration=min(30, plan.duration), continued=True)
         # 执行侧先完成醒来收尾；下一次选择读取收尾后的状态。
         return Action("finish_current", 0, actor)
-    from Script.Design.handle_npc_ai_in_h import prepare_group_options, choose_group_action
+    from Script.Design.handle_npc_ai_in_h import npc_ai_in_group_sex
 
-    options = prepare_group_options(actor)
-    if options is not None:
-        return choose_group_action(actor, options)
+    action = npc_ai_in_group_sex(actor)
+    if action is not None:
+        return action
     # 受限状态通过等待行动定期重新检查。
     if character.behavior.behavior_id == constant.Behavior.WAIT and (character.sp_flag.is_h or character.hypnosis.blockhead):
         return Action(constant.Behavior.WAIT, 5, character.target_character_id, state=constant.CharacterStatus.STATUS_WAIT, continued=True)

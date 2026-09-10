@@ -211,9 +211,7 @@ def handle_penis_in_t_mouse(character_id: int, *, target_id: int | None = None) 
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data = cache.character_data[target_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.h_state.insert_position == 2:
         return 1
     return 0
@@ -242,9 +240,7 @@ def handle_penis_in_t_deep_throat(character_id: int, *, target_id: int | None = 
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data = cache.character_data[target_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.h_state.insert_position == 15:
         return 1
     return 0
@@ -271,9 +267,7 @@ def handle_penis_in_t_breast(character_id: int, *, target_id: int | None = None)
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data = cache.character_data[target_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.h_state.insert_position == 3:
         return 1
     return 0
@@ -306,9 +300,7 @@ def handle_penis_in_t_hand(character_id: int, *, target_id: int | None = None) -
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data = cache.character_data[target_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.h_state.insert_position == 5:
         return 1
     return 0
@@ -325,9 +317,7 @@ def handle_penis_in_t_vagina(character_id: int, *, target_id: int | None = None)
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data = cache.character_data[target_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.h_state.insert_position == 6:
         return 1
     return 0
@@ -344,9 +334,7 @@ def handle_penis_in_t_womb(character_id: int, *, target_id: int | None = None) -
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data = cache.character_data[target_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.h_state.insert_position == 7:
         return 1
     return 0
@@ -363,9 +351,7 @@ def handle_penis_in_t_anal(character_id: int, *, target_id: int | None = None) -
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data = cache.character_data[target_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.h_state.insert_position == 8:
         return 1
     return 0
@@ -394,9 +380,7 @@ def handle_penis_in_t_nrethral(character_id: int, *, target_id: int | None = Non
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data = cache.character_data[target_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.h_state.insert_position == 9:
         return 1
     return 0
@@ -2050,9 +2034,7 @@ def handle_t_npc_active_h(character_id: int, *, target_id: int | None = None) ->
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data = cache.character_data[target_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.h_state.npc_active_h:
         return 1
     return 0
@@ -2069,9 +2051,7 @@ def handle_t_npc_not_active_h(character_id: int, *, target_id: int | None = None
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data = cache.character_data[target_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.h_state.npc_active_h:
         return 0
     return 1
@@ -2784,8 +2764,7 @@ def handle_target_not_vibrator_insertion(character_id: int, *, target_id: int | 
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
+    target_id = character_data.target_character_id if target_id is None else target_id
     return not handle_self_now_vibrator_insertion(target_id)
 
 
@@ -2863,8 +2842,7 @@ def handle_target_a_empty(character_id: int, *, target_id: int | None = None) ->
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
+    target_id = character_data.target_character_id if target_id is None else target_id
     return handle_self_a_empty(target_id)
 
 
@@ -2927,9 +2905,7 @@ def handle_target_not_urine_collector(character_id: int, *, target_id: int | Non
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data: game_type.Character = cache.character_data[target_id]
+    target_data: game_type.Character = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.h_state.body_item[5][1]:
         return 0
     return 1
@@ -3035,8 +3011,7 @@ def handle_target_not_gag(character_id: int, *, target_id: int | None = None) ->
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
+    target_id = character_data.target_character_id if target_id is None else target_id
     return not handle_self_now_gag(target_id)
 
 
@@ -3380,8 +3355,7 @@ def handle_target_now_bondage(character_id: int, *, target_id: int | None = None
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
+    target_id = character_data.target_character_id if target_id is None else target_id
     return handle_self_now_bondage(target_id)
 
 

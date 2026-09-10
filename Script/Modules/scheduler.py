@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from enum import Enum, auto
 import heapq
 import math
-from typing import Any, Callable, Iterable
+from typing import Any, Callable
 
 
 class Placeholder(Enum):
@@ -36,14 +36,13 @@ class Scheduler:
     def __init__(
         self,
         now: datetime,
-        initial_tasks: Iterable[Task] = (),
         *,
         choose_next: Callable[[int, datetime], Any],
         execute: Callable[[int, Any], float],
         before_task: Callable[[Task], None] | None = None,
         advance_time: Callable[[datetime, float], datetime] | None = None,
     ) -> None:
-        """输入初始时间、待办及选择/执行/执行前回调，建立调度器；无返回值。"""
+        """输入初始时间及选择/执行/执行前回调，建立调度器；无返回值。"""
         self.now = now
         self._choose_next = choose_next
         self._execute = execute
@@ -53,8 +52,6 @@ class Scheduler:
         self._serial = 0
         self._queue: list[tuple] = []
         self._pending: dict[int, tuple[int, Task]] = {}
-        for task in initial_tasks:
-            self.submit(task)
 
     @property
     def running(self) -> bool:

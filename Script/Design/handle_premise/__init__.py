@@ -139,15 +139,12 @@ def _ensure_known_unnormal_bits(character_id: int, indexes: Iterable[int]) -> ga
     return unnormal_flag
 
 
-def _check_normal_combo(character_id: int, indexes: Iterable[int], *, read_only: bool = False) -> int:
-    """输入角色编号、异常编号序列及只读开关，返回 int 正常判定；只读时不回填缓存。"""
+def _check_normal_combo(character_id: int, indexes: Iterable[int]) -> int:
+    """判定指定多异常组合是否均为正常状态。"""
     # 玩家直接反馈正常
     if character_id == 0:
         return 1
     index_tuple = tuple(indexes)
-    if read_only:
-        handlers = _get_unnormal_flag_handlers()
-        return int(all(handlers[index](character_id, read_only=True) for index in index_tuple))
     unnormal_flag = _ensure_known_unnormal_bits(character_id, index_tuple)
     return 1 if not unnormal_flag.any(_combine_unnormal_mask(index_tuple)) else 0
 
@@ -184,20 +181,16 @@ def handle_premise(premise: str, character_id: int, *, target_id: int | None = N
     调用前提处理函数，返回 int 权重。
     premise -- str 前提名
     character_id -- int 角色编号
-    target_id -- 可选 int 目标编号；指定时群交候选只读查询，不回填异常缓存
+    target_id -- 可选 int 目标编号；None 时读取角色当前目标
     """
     handler = constant.handle_premise_data.get(premise)
     if handler is not None:
         if target_id is None:
             return handler(character_id)
-        # 旧前提仍接收角色编号；目标前提及缓存前提显式声明查询参数。
-        parameters = signature(handler).parameters
-        query_arguments = {}
-        if "target_id" in parameters:
-            query_arguments["target_id"] = target_id
-        if "read_only" in parameters:
-            query_arguments["read_only"] = True
-        return handler(character_id, **query_arguments)
+        # 目标前提显式接收查询目标，其他前提沿用角色编号。
+        if "target_id" in signature(handler).parameters:
+            return handler(character_id, target_id=target_id)
+        return handler(character_id)
     if "CVP" in premise:
         premise_all_value_list = premise.split("_")[1:]
         return handle_comprehensive_value_premise(character_id, premise_all_value_list, target_id=target_id)
@@ -1026,13 +1019,12 @@ def handle_normal_2_5_6(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.NORMAL_1)
-def handle_normal_1(character_id: int, *, read_only: bool = False) -> int:
+def handle_normal_1(character_id: int) -> int:
     """
     1正常的普通状态
     \n1:基础生理需求：休息、睡觉、解手、吃饭、沐浴（不含已洗澡）、挤奶、自慰
     Keyword arguments:
     character_id -- 角色id
-    read_only -- bool，是否只查询而不回填异常缓存
     Return arguments:
     int -- 权重
     """
@@ -1051,19 +1043,17 @@ def handle_normal_1(character_id: int, *, read_only: bool = False) -> int:
         result = 0
     else:
         result = 1
-    if not read_only:
-        _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(1, not bool(result))
+    _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(1, not bool(result))
     return result
 
 
 @add_premise(constant_promise.Premise.NORMAL_2)
-def handle_normal_2(character_id: int, *, read_only: bool = False) -> int:
+def handle_normal_2(character_id: int) -> int:
     """
     \n2:AI行动基本停止：临盆、产后、监禁
     \n包括2:临盆、产后、监禁
     Keyword arguments:
     character_id -- 角色id
-    read_only -- bool，是否只查询而不回填异常缓存
     Return arguments:
     int -- 权重
     """
@@ -1078,19 +1068,17 @@ def handle_normal_2(character_id: int, *, read_only: bool = False) -> int:
         result = 0
     else:
         result = 1
-    if not read_only:
-        _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(2, not bool(result))
+    _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(2, not bool(result))
     return result
 
 
 @add_premise(constant_promise.Premise.NORMAL_3)
-def handle_normal_3(character_id: int, *, read_only: bool = False) -> int:
+def handle_normal_3(character_id: int) -> int:
     """
     3正常的普通状态
     \n3:高优先级AI：助理、跟随、体检
     Keyword arguments:
     character_id -- 角色id
-    read_only -- bool，是否只查询而不回填异常缓存
     Return arguments:
     int -- 权重
     """
@@ -1105,19 +1093,17 @@ def handle_normal_3(character_id: int, *, read_only: bool = False) -> int:
         result = 0
     else:
         result = 1
-    if not read_only:
-        _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(3, not bool(result))
+    _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(3, not bool(result))
     return result
 
 
 @add_premise(constant_promise.Premise.NORMAL_4)
-def handle_normal_4(character_id: int, *, read_only: bool = False) -> int:
+def handle_normal_4(character_id: int) -> int:
     """
     4正常的普通状态
     \n4:服装异常：大致全裸、全裸
     Keyword arguments:
     character_id -- 角色id
-    read_only -- bool，是否只查询而不回填异常缓存
     Return arguments:
     int -- 权重
     """
@@ -1131,13 +1117,12 @@ def handle_normal_4(character_id: int, *, read_only: bool = False) -> int:
         result = 0
     else:
         result = 1
-    if not read_only:
-        _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(4, not bool(result))
+    _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(4, not bool(result))
     return result
 
 
 @add_premise(constant_promise.Premise.NORMAL_5)
-def handle_normal_5(character_id: int, *, read_only: bool = False) -> int:
+def handle_normal_5(character_id: int) -> int:
     """
     5正常的普通状态
     \n5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
@@ -1145,7 +1130,6 @@ def handle_normal_5(character_id: int, *, read_only: bool = False) -> int:
     character_id -- 角色id
     Return arguments:
     int -- 权重
-    read_only -- bool，是否只查询而不回填异常缓存
     """
     quick_result = _quick_check_normal_by_mask(character_id, 5)
     if quick_result is not None:
@@ -1158,13 +1142,12 @@ def handle_normal_5(character_id: int, *, read_only: bool = False) -> int:
         result = 0
     else:
         result = 1
-    if not read_only:
-        _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(5, not bool(result))
+    _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(5, not bool(result))
     return result
 
 
 @add_premise(constant_promise.Premise.NORMAL_6)
-def handle_normal_6(character_id: int, *, read_only: bool = False) -> int:
+def handle_normal_6(character_id: int) -> int:
     """
     6正常的普通状态
     \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），烂醉，时停，空气
@@ -1172,7 +1155,6 @@ def handle_normal_6(character_id: int, *, read_only: bool = False) -> int:
     character_id -- 角色id
     Return arguments:
     int -- 权重
-    read_only -- bool，是否只查询而不回填异常缓存
     """
     quick_result = _quick_check_normal_by_mask(character_id, 6)
     if quick_result is not None:
@@ -1186,19 +1168,17 @@ def handle_normal_6(character_id: int, *, read_only: bool = False) -> int:
         result = 0
     else:
         result = 1
-    if not read_only:
-        _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(6, not bool(result))
+    _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(6, not bool(result))
     return result
 
 
 @add_premise(constant_promise.Premise.NORMAL_7)
-def handle_normal_7(character_id: int, *, read_only: bool = False) -> int:
+def handle_normal_7(character_id: int) -> int:
     """
     7正常的普通状态
     \n7:角色离线：装袋搬走、外勤、婴儿、他国外交访问、逃跑中
     Keyword arguments:
     character_id -- 角色id
-    read_only -- bool，是否只查询而不回填异常缓存
     Return arguments:
     int -- 权重
     """
@@ -1215,8 +1195,7 @@ def handle_normal_7(character_id: int, *, read_only: bool = False) -> int:
         result = 0
     else:
         result = 1
-    if not read_only:
-        _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(7, not bool(result))
+    _ensure_unnormal_flag_storage(cache.character_data[character_id]).update(7, not bool(result))
     return result
 
 
@@ -1489,7 +1468,7 @@ def handle_unnormal_27(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.T_NORMAL_5_6)
-def handle_t_normal_5_6(character_id: int, *, target_id: int | None = None, read_only: bool = False) -> int:
+def handle_t_normal_5_6(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象56正常
     \n包括5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
@@ -1499,17 +1478,14 @@ def handle_t_normal_5_6(character_id: int, *, target_id: int | None = None, read
     target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
-    read_only -- bool，是否只查询而不回填异常缓存
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_chara_id = target_id
-    return _check_normal_combo(target_chara_id, (5, 6), read_only=read_only)
+    target_chara_id = character_data.target_character_id if target_id is None else target_id
+    return _check_normal_combo(target_chara_id, (5, 6))
 
 
 @add_premise(constant_promise.Premise.T_NORMAL_5_6_OR_UNCONSCIOUS_FLAG_4_7)
-def handle_t_normal_5_6_or_unconscious_flag_4_7(character_id: int, *, target_id: int | None = None, read_only: bool = False) -> int:
+def handle_t_normal_5_6_or_unconscious_flag_4_7(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象56正常或平然或心控
     \n包括5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
@@ -1519,9 +1495,8 @@ def handle_t_normal_5_6_or_unconscious_flag_4_7(character_id: int, *, target_id:
     target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
-    read_only -- bool，是否只查询而不回填异常缓存
     """
-    if handle_t_normal_5_6(character_id, target_id=target_id, read_only=read_only) or handle_t_unconscious_flag_4(character_id, target_id=target_id) or handle_t_unconscious_flag_7(character_id, target_id=target_id):
+    if handle_t_normal_5_6(character_id, target_id=target_id) or handle_t_unconscious_flag_4(character_id, target_id=target_id) or handle_t_unconscious_flag_7(character_id, target_id=target_id):
         return 1
     else:
         return 0

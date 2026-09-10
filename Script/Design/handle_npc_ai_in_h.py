@@ -1,7 +1,6 @@
 import random
 import datetime
 from types import FunctionType
-from dataclasses import dataclass
 from Script.Modules.action import Action
 from Script.Core import (
     cache_control,
@@ -153,13 +152,6 @@ def judge_character_h_obscenity_unconscious(character_id: int, pl_start_time: da
             ):
                 # 补位与自慰由 NPC AI 返回意图，执行阶段更新群交状态。
                 return 1
-            # 如果已经获得性爱助手行为，则结算助手行动
-            elif character_data.h_state.sex_assist:
-                # 手动结算性爱助手行动
-                from Script.Modules.game_actions import submit_current
-
-                submit_current(character_id)
-                character_data.h_state.sex_assist = False
         character_data.behavior.behavior_id = constant.Behavior.WAIT
         character_data.state = constant.CharacterStatus.STATUS_WAIT
         character_data.behavior.start_time = pl_start_time
@@ -659,84 +651,94 @@ def npc_active_h():
     update.game_update_flow(10)
 
 
-@dataclass(frozen=True)
-class GroupOptions:
-    """可补位的部位、各部位可用动作，以及仅自慰设置。"""
-
-    empty_parts: tuple[str, ...]
-    statuses: dict[str, tuple[int, ...]]
-    masturbate_only: bool = False
-
-
-def prepare_group_options(actor: int) -> GroupOptions | None:
-    """输入 NPC 编号，准备候选部位和动作；返回候选，非适用角色返回 None。"""
-    character = cache_control.cache.character_data[actor]
-    # 睡眠和异常状态沿用行为前置检查的处理顺序。
-    if actor == 0 or not character.sp_flag.is_h or handle_premise.handle_group_sex_mode_off(actor):
-        return None
-    if character.behavior.behavior_id == constant.Behavior.SLEEP or not handle_premise.handle_normal_6(actor, read_only=True):
-        return None
-    if not (handle_premise.handle_npc_ai_type_1_in_group_sex(actor) or handle_premise.handle_npc_ai_type_2_in_group_sex(actor)):
-        return None
+def npc_ai_in_group_sex(character_id: int) -> Action | None:
+    """
+    NPC在群交中的AI，不含抢占\n
+    Keyword arguments:\n
+    character_id -- 角色id\n
+    返回 Action 表示所选行动，None 表示继续常规行动选择\n
+    """
     from Script.System.Sex_System import group_sex_panel
+    from Script.Design import handle_npc_ai
 
-    if actor in group_sex_panel.count_group_sex_character_list() or handle_premise.handle_self_now_bondage(actor):
-        return None
-    if handle_premise.handle_npc_ai_type_1_in_group_sex(actor):
-        return GroupOptions((), {}, True)
+    # 玩家则返回
+    if character_id == 0:
+        return
+    character_data: game_type.Character = cache.character_data[character_id]
 
-    empty_parts, _occupied_parts = group_sex_panel.get_now_template_part_list()
-    statuses = {}
-    # 显式查询候选 NPC，不改变玩家目标或角色缓存。
-    for body_part in empty_parts:
-        if body_part != _("加入侍奉"):
-            statuses[body_part] = tuple(group_sex_panel.get_status_id_list_from_group_sex_body_part(body_part, target_id=actor))
-    return GroupOptions(tuple(empty_parts), statuses)
+    # 如果不是H状态+群交，则返回
+    if character_data.sp_flag.is_h == False or handle_premise.handle_group_sex_mode_off(character_id):
+        return
+    # 如果自己已在群交模板中，则返回
+    group_sex_chara_id_list = group_sex_panel.count_group_sex_character_list()
+    if character_id in group_sex_chara_id_list:
+        return
 
+    # 沿用行为前置检查：睡眠、异常状态和抢占模式由其他分支处理。
+    if character_data.behavior.behavior_id == constant.Behavior.SLEEP or not handle_premise.handle_normal_6(character_id):
+        return
+    masturbate_only = handle_premise.handle_npc_ai_type_1_in_group_sex(character_id)
+    if not (masturbate_only or handle_premise.handle_npc_ai_type_2_in_group_sex(character_id)):
+        return
 
-def choose_group_action(actor: int, options: GroupOptions) -> Action:
-    """输入 NPC 编号和已准备候选，记录自身自慰需求并返回选定的 Action。"""
-    if options.masturbate_only or not options.empty_parts:
-        from Script.Design import handle_npc_ai
+    # 被绳子捆绑则返回
+    if handle_premise.handle_self_now_bondage(character_id):
+        return
 
-        character = cache_control.cache.character_data[actor]
-        character.sp_flag.masturebate = 3
-        # 自慰需求属于自身决策记录；同步该需求所属的缓存位。
-        if not isinstance(character.sp_flag.unnormal_flag, game_type.UnnormalFlagMask):
-            character.sp_flag.unnormal_flag = game_type.UnnormalFlagMask(character.sp_flag.unnormal_flag)
-        character.sp_flag.unnormal_flag.update(1, True)
-        return handle_npc_ai.choose_character_target(actor, cache_control.cache.game_time)
-    # 保留先选部位、再选动作的概率；无可用动作时维持当前行为。
-    body_part = random.choice(options.empty_parts)
-    if body_part == _("加入侍奉"):
-        return Action("group_join", 0, 0)
-    statuses = options.statuses[body_part]
-    if not statuses:
-        character = cache_control.cache.character_data[actor]
-        if character.behavior.behavior_id == constant.Behavior.SHARE_BLANKLY:
-            return Action(constant.Behavior.WAIT, 5, actor, state=constant.CharacterStatus.STATUS_WAIT)
-        return Action.from_character(character)
-    return Action("group_fill", 0, 0, params={"body_part": body_part, "status_id": random.choice(statuses)})
+    # 如果设定NPC为仅自慰，则进入要自慰后返回
+    if masturbate_only:
+        character_data.sp_flag.masturebate = 3
+        handle_premise.settle_chara_unnormal_flag(character_id, 1)
+        # print(f"debug {character_data.name}进入了要自慰状态")
+        return handle_npc_ai.choose_character_target(character_id, cache.game_time)
 
+    # 获取当前模板的空缺部位和非空缺部位
+    now_template_empty_part_list, now_template_not_empty_part_list = group_sex_panel.get_now_template_part_list()
 
-def execute_group_action(actor: int, action: Action) -> None:
-    """输入 NPC 编号及行动，更新模板并为闲置角色准备等待；返回 None。"""
-    character = cache_control.cache.character_data[actor]
-    template = cache_control.cache.character_data[0].h_state.group_sex_body_template_dict["A"]
-    if action.behavior_id == "group_join":
-        template[1][0].append(actor)
-    elif action.behavior_id == "group_fill":
-        body_part, status_id = action.params["body_part"], action.params["status_id"]
-        if body_part == _("侍奉"):
-            template[1] = [[actor], status_id]
+    # 如果有空缺，则随机选择一个部位
+    if len(now_template_empty_part_list):
+        body_part = random.choice(now_template_empty_part_list)
+        # 如果是加入侍奉，则直接加入
+        if body_part == _("加入侍奉"):
+            return Action("group_join", 0, 0)
         else:
-            template[0][body_part] = [actor, status_id]
+            # 获取该部位的状态id列表
+            new_status_id_list = group_sex_panel.get_status_id_list_from_group_sex_body_part(body_part, target_id=character_id)
+            # 如果没有可用的状态，则返回
+            if len(new_status_id_list) == 0:
+                return None
+            # 随机选择一个状态
+            status_id = random.choice(new_status_id_list)
+            return Action("group_fill", 0, 0, params={"body_part": body_part, "status_id": status_id})
+    # 否则，自己进入要自慰状态
+    else:
+        character_data.sp_flag.masturebate = 3
+        handle_premise.settle_chara_unnormal_flag(character_id, 1)
+        # print(f"debug {character_data.name}进入了要自慰状态")
+        return handle_npc_ai.choose_character_target(character_id, cache.game_time)
+
+
+def execute_group_action(character_id: int, action: Action) -> None:
+    """输入角色编号及 Action，落实群交模板修改并为闲置角色准备等待；返回 None。"""
+    character_data: game_type.Character = cache.character_data[character_id]
+    pl_character_data: game_type.Character = cache.character_data[0]
+    A_template_data = pl_character_data.h_state.group_sex_body_template_dict["A"]
+    if action.behavior_id == "group_join":
+        A_template_data[1][0].append(character_id)
+    else:
+        body_part, status_id = action.params["body_part"], action.params["status_id"]
+        # 如果是侍奉
+        if body_part == _("侍奉"):
+            A_template_data[1] = [[character_id], status_id]
+        # 如果是对单
+        else:
+            A_template_data[0][body_part] = [character_id, status_id]
     # 原有非闲置行为继续执行；刚选完补位的闲置 NPC 等待五分钟。
-    if character.behavior.behavior_id == constant.Behavior.SHARE_BLANKLY:
-        character.behavior.behavior_id = constant.Behavior.WAIT
-        character.behavior.duration = 5
-        character.target_character_id = actor
-        character.state = constant.CharacterStatus.STATUS_WAIT
+    if character_data.behavior.behavior_id == constant.Behavior.SHARE_BLANKLY:
+        character_data.behavior.behavior_id = constant.Behavior.WAIT
+        character_data.behavior.duration = 5
+        character_data.target_character_id = character_id
+        character_data.state = constant.CharacterStatus.STATUS_WAIT
 
 
 def npc_ai_in_group_sex_type_3():

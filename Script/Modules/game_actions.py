@@ -38,13 +38,6 @@ def restore(saved_runtime):
     if saved_runtime is not None:
         saved_runtime.scheduler._running = False
         saved_runtime.active = {}
-        # 旧队列把剩余恢复行动放在执行器中；读档时转换为未结算的行动记录。
-        old_plans = getattr(saved_runtime, "plans", None)
-        if old_plans is not None:
-            saved_runtime.player_plan = old_plans.pop(0, None)
-            for actor, action in old_plans.items():
-                cache_control.cache.character_data[actor].action_progress = ActionProgress(deepcopy(action))
-            del saved_runtime.plans
 
 
 def get_runtime():
@@ -75,8 +68,6 @@ def reset_character(actor):
     runtime = getattr(cache_control.cache, "action_scheduler", None)
     if runtime is None:
         return
-    if actor == 0:
-        runtime.player_plan = None
     runtime.current.pop(actor, None)
     runtime.known.add(actor)
     runtime.scheduler.replace(Task(actor, runtime.scheduler.now, INPUT if actor == 0 else AI))
@@ -89,18 +80,15 @@ def wait_on(actor, owner, behavior_id):
     runtime = get_runtime()
     action = Action(constant.Behavior.WAIT, 5, owner, state=constant.CharacterStatus.STATUS_WAIT, wait_on=(owner, behavior_id))
     cache_control.cache.character_data[actor].action_progress = None
-    if actor == 0:
-        runtime.player_plan = None
     runtime.scheduler.replace(Task(actor, runtime.scheduler.now, action, immediate=True))
 
 
 class Runtime:
-    """保存玩家行动计划和待办，记录执行进度并调用结算与收尾。"""
+    """保存行动待办，记录执行进度并调用结算与收尾。"""
 
     def __init__(self):
         """从当前游戏时刻建立空调度器，无参数，返回 None。"""
         cache = cache_control.cache
-        self.player_plan = None
         self.active = {}
         self.current = {}
         self.scheduler = Scheduler(cache.game_time, choose_next=self.choose_next, execute=self.execute, before_task=self.before_task, advance_time=self.advance_time)
@@ -190,8 +178,6 @@ class Runtime:
             pending.item.followups += (action,)
         else:
             cache_control.cache.character_data[actor].action_progress = None
-            if actor == 0:
-                self.player_plan = None
             self.scheduler.replace(Task(actor, self.scheduler.now, action, immediate=True))
 
     def finish_action(self, actor: int, after):
@@ -245,8 +231,6 @@ class Runtime:
         if not action.continued or getattr(character, "action_progress", None) is None:
             character.action_progress = ActionProgress(deepcopy(action))
         progress = character.action_progress
-        if actor == 0 and recovery and not action.continued:
-            self.player_plan = deepcopy(action)
         try:
             # 首次入睡准备读取完整睡眠计划，判定六小时阈值效果。
             if actor == 0 and not action.continued:
@@ -268,8 +252,6 @@ class Runtime:
             if recovery:
                 action.duration = min(action.duration, 30)
                 character.behavior.duration = action.duration
-                if actor == 0 and self.player_plan is not None:
-                    self.player_plan.duration = max(self.player_plan.duration - action.duration, 0)
                 self.active[actor][0].duration = action.duration
             progress.elapsed += action.duration
             end = self.advance_time(now, action.duration)
@@ -292,14 +274,14 @@ class Runtime:
         self.finish_action(actor, action.after)
         if action.wait_on is not None and self.scheduler.pending(actor) is None:
             self.scheduler.submit(Task(actor, end, replace(action, continued=True)))
-        # 玩家睡眠按本人计划延续；NPC 在下一次 AI 选择时检查计划。
-        plan = self.player_plan
-        if actor == 0 and plan is not None and plan.duration > 0 and character.behavior.behavior_id == action.behavior_id and not cache.time_stop_mode and self.scheduler.pending(actor) is None:
-            self.scheduler.submit(Task(actor, end, replace(plan, duration=min(plan.duration, 30), continued=True)))
+        # 玩家睡眠按当前执行记录延续；强制替换清空记录后不再续睡。
+        progress = character.action_progress
+        if actor == 0 and recovery and progress is not None and character.behavior.behavior_id == action.behavior_id and not cache.time_stop_mode and self.scheduler.pending(actor) is None:
+            remaining = progress.action.duration - progress.elapsed
+            if remaining > 0:
+                self.scheduler.submit(Task(actor, end, replace(progress.action, duration=min(remaining, 30), continued=True)))
         if recovery and character.behavior.behavior_id != action.behavior_id:
             character.action_progress = None
-            if actor == 0:
-                self.player_plan = None
         # 时停操作占用零分钟，体力消耗按行动时长结算。
         if actor == 0 and cache.time_stop_mode:
             cache.achievement.time_stop_duration += action.duration

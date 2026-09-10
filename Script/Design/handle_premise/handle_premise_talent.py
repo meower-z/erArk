@@ -489,9 +489,7 @@ def handle_target_have_eras(character_id: int, *, target_id: int | None = None) 
     int -- 权重
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data: game_type.Character = cache.character_data[target_id]
+    target_data: game_type.Character = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     return target_data.talent[111]
 
 
@@ -520,9 +518,7 @@ def handle_target_have_horn(character_id: int, *, target_id: int | None = None) 
     int -- 权重
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data: game_type.Character = cache.character_data[target_id]
+    target_data: game_type.Character = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     return target_data.talent[112]
 
 
@@ -551,9 +547,7 @@ def handle_target_have_tail(character_id: int, *, target_id: int | None = None) 
     int -- 权重
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
-    target_data: game_type.Character = cache.character_data[target_id]
+    target_data: game_type.Character = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     return target_data.talent[113]
 
 

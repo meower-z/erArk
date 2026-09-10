@@ -106,8 +106,7 @@ class GameActionsTests(unittest.TestCase):
         module(
             "Script.Design.handle_npc_ai_in_h",
             judge_character_h_obscenity_unconscious=lambda actor, now: None,
-            prepare_group_options=lambda actor: None,
-            choose_group_action=lambda actor, options: None,
+            npc_ai_in_group_sex=lambda actor: None,
             execute_group_action=lambda actor, action: None,
         )
         module("Script.Design.handle_talent", gain_talent=lambda *args, **kwargs: None)
@@ -191,7 +190,6 @@ class GameActionsTests(unittest.TestCase):
         self.assertIs(type(intent), Action)
         self.assertEqual(intent, state_machine_action(1, 77))
         self.assertEqual(pickle.loads(pickle.dumps(intent)), intent)
-        self.characters[1].__dict__.pop("npc_ai_state", None)
         self.assertEqual(pickle.dumps(self.cache), before)
         self.assertEqual(self.events, [])
         self.assertIs(npc_ai.handle_npc_ai, selector)
@@ -219,58 +217,68 @@ class GameActionsTests(unittest.TestCase):
 
     def test_generic_execution_resolves_group_actions_before_installing_behavior(self):
         """输入真实群体选择，统一执行入口才改模板并安装等待行为；无返回值。"""
-        from dataclasses import dataclass
         import random
 
         source = Path(__file__).resolve().parents[1] / "Script/Design/handle_npc_ai_in_h.py"
         tree = ast.parse(source.read_text())
-        names = {"GroupOptions", "prepare_group_options", "choose_group_action", "execute_group_action"}
+        names = {"npc_ai_in_group_sex", "execute_group_action"}
         tree.body = [node for node in tree.body if getattr(node, "name", None) in names]
         group = ModuleType("_game_group_action_subject")
         group.__dict__.update(
-            Action=Action, dataclass=dataclass, random=random, cache_control=SimpleNamespace(cache=self.cache), constant=sys.modules["Script.Core.constant"], _=lambda text: text
+            Action=Action, random=random, cache=self.cache, cache_control=SimpleNamespace(cache=self.cache), constant=sys.modules["Script.Core.constant"], _=lambda text: text,
+            handle_premise=SimpleNamespace(
+                handle_group_sex_mode_off=lambda actor: False, handle_normal_6=lambda actor, **kw: True,
+                handle_npc_ai_type_1_in_group_sex=lambda actor: False, handle_npc_ai_type_2_in_group_sex=lambda actor: True, handle_self_now_bondage=lambda actor: False,
+            ),
         )
         with patch.dict(sys.modules, {group.__name__: group}):
             exec(compile(tree, str(source), "exec"), group.__dict__)
         sys.modules.pop("Script.Modules.npc_ai", None)
         npc_ai = importlib.import_module("Script.Modules.npc_ai")
         self.characters[0].h_state = SimpleNamespace(group_sex_body_template_dict={"A": [{"mouth": [-1, -1]}, [[], -1]]})
+        self.characters[1].sp_flag.is_h = True
+        self.characters[1].sp_flag.masturebate = 3
+        panel = SimpleNamespace(count_group_sex_character_list=lambda: [])
+        sex_system = ModuleType("Script.System.Sex_System")
+        sex_system.group_sex_panel = panel
         runtime = self.game.get_runtime()
-        for part, statuses, kind in (("mouth", (12,), "group_fill"), ("加入侍奉", (), "group_join")):
-            with self.subTest(part=part):
+        for initial, part, statuses, kind in (
+            ("idle", "mouth", (12,), "group_fill"), ("idle", "加入侍奉", (), "group_join"),
+            ("wait", "mouth", (12,), "group_fill"), ("wait", "加入侍奉", (), "group_join"),
+            ("idle", "mouth", (), "need"), ("wait", "mouth", (), "wait"), ("existing", "mouth", (), "existing"),
+        ):
+            with self.subTest(initial=initial, part=part):
+                self.characters[0].h_state.group_sex_body_template_dict["A"] = [{"mouth": [-1, -1]}, [[], -1]]
+                Action(initial, 9, 1).apply(self.characters[1], self.now)
+                self.characters[1].action_progress = None
+                self.events.clear()
                 before = pickle.dumps(self.cache.character_data)
-                with patch.dict(sys.modules, {"Script.Design.handle_npc_ai_in_h": group}), patch.object(
-                    group, "prepare_group_options", return_value=group.GroupOptions((part,), {part: statuses})
-                ), patch.object(group.random, "choice", side_effect=[part, 12] if statuses else [part]):
+                panel.get_now_template_part_list = lambda: ([part], [])
+                panel.get_status_id_list_from_group_sex_body_part = lambda body_part, **kw: statuses
+                with patch.dict(sys.modules, {"Script.Design.handle_npc_ai_in_h": group, "Script.System.Sex_System": sex_system}), patch.object(
+                    group.random, "choice", side_effect=[part, 12] if statuses else [part]
+                ), patch.object(sys.modules["Script.Design.handle_npc_ai"], "choose_character_target", return_value=Action("need", 7, 1)) as choose_need:
                     choice = npc_ai.choose_next(1, self.now)
-                self.characters[1].__dict__.pop("npc_ai_state", None)
+                if kind == "need":
+                    choose_need.assert_called_once_with(1, self.now)
+                else:
+                    choose_need.assert_not_called()
                 self.assertIs(type(choice), Action)
                 self.assertEqual(choice.behavior_id, kind)
                 self.assertEqual(pickle.dumps(self.cache.character_data), before)
                 with patch.dict(sys.modules, {"Script.Design.handle_npc_ai_in_h": group}):
                     duration = runtime.execute(1, pickle.loads(pickle.dumps(choice)))
-                self.assertEqual(duration, 5)
-                self.assertEqual(self.characters[1].behavior.behavior_id, "wait")
-                self.assertNotIn(kind, [event[2] for event in self.events if event[0] == "settle"])
-        template = self.characters[0].h_state.group_sex_body_template_dict["A"]
-        self.assertEqual(template, [{"mouth": [1, 12]}, [[1], -1]])
-
-    def test_prepared_action_preserves_followups_and_after(self):
-        """输入带后续的准备行动，实际执行保留后续及完成策略；无返回值。"""
-        from Script.Modules.action_execution import prepare_action
-
-        self.cache.npc_id_got.clear()
-        runtime = self.game.get_runtime()
-        self.cache.npc_id_got.add(1)
-        sys.modules["Script.Core.constant"].handle_state_machine_data = {77: lambda actor: Action("work", 3, actor).apply(self.characters[actor], self.now)}
-        request = state_machine_action(1, 77)
-        request.followups = (Action("next", 2, 1),)
-        request.after = "input"
-        result = prepare_action(runtime, 1, pickle.loads(pickle.dumps(request)))
-        self.assertIs(type(result), Action)
-        self.assertEqual(result.followups, request.followups)
-        self.assertEqual(result.after, request.after)
-        self.assertEqual(result.behavior_id, "work")
+                behavior = kind if kind in {"existing", "need"} else "wait"
+                self.assertEqual(duration, {"existing": 9, "need": 7}.get(behavior, 5))
+                self.assertEqual(self.characters[1].behavior.behavior_id, behavior)
+                self.assertEqual([event for event in self.events if event[0] == "settle"], [] if initial == "wait" else [("settle", 1, behavior)])
+                template = self.characters[0].h_state.group_sex_body_template_dict["A"]
+                if kind == "group_fill":
+                    self.assertEqual(template[0]["mouth"], [1, 12])
+                elif kind == "group_join":
+                    self.assertEqual(template[1][0], [1])
+                else:
+                    self.assertEqual(template, [{"mouth": [-1, -1]}, [[], -1]])
 
     def test_absence_is_settled_only_when_intent_executes(self):
         """无需参数；缺课意图到执行时才结算缺课且先于状态机；无返回值。"""
@@ -338,37 +346,6 @@ class GameActionsTests(unittest.TestCase):
         runtime.scheduler.advance_until_input()
         self.assertEqual(self.events.count(("settle", 1, "response")), 1)
         self.assertEqual(self.events.count(("realtime", 1, 5)), 1)
-
-    def test_consumed_state_machine_transfers_metadata_to_response(self):
-        """输入提交响应的准备行动，保留原响应后续顺序并在响应结算后回调一次；无返回值。"""
-        runtime = self.game.get_runtime()
-
-        def handler(actor):
-            """输入角色，提交自带后续的响应；返回 None。"""
-            runtime.enqueue(actor, Action("response", 5, actor, followups=(Action("existing", 2, actor),)))
-
-        sys.modules["Script.Core.constant"].handle_state_machine_data = {77: handler}
-        request = state_machine_action(1, 77)
-        request.followups = (Action("requested_first", 2, 1), Action("requested_second", 2, 1))
-        request.after = "group_exit"
-        runtime.scheduler.replace(Task(1, self.now, request, immediate=True))
-        runtime.scheduler.submit(Task(0, self.now, INPUT))
-        runtime.scheduler.advance_until_input()
-        relevant = [event for event in self.events if event[0] in {"settle", "group_exit"}]
-        self.assertEqual(relevant, [
-            ("settle", 1, "response"), ("group_exit", 1), ("settle", 1, "existing"),
-            ("settle", 1, "requested_first"), ("settle", 1, "requested_second"),
-        ])
-
-    def test_consumed_finish_runs_followups_and_callback_once(self):
-        """输入带后续及回调的收尾行动，统一执行入口保留二者且不结算收尾编号；无返回值。"""
-        runtime = self.game.get_runtime()
-        request = Action("finish_current", 0, 1, followups=(Action("first", 2, 1), Action("second", 2, 1)), after="group_exit")
-        runtime.scheduler.replace(Task(1, self.now, request, immediate=True))
-        runtime.scheduler.submit(Task(0, self.now, INPUT))
-        runtime.scheduler.advance_until_input()
-        relevant = [event for event in self.events if event[0] in {"settle", "group_exit"}]
-        self.assertEqual(relevant, [("group_exit", 1), ("settle", 1, "first"), ("settle", 1, "second")])
 
     def test_idle_choice_reads_current_task_time(self):
         """无需参数；闲置角色首次选择时读取当前待办时刻；无返回值。"""
@@ -506,22 +483,6 @@ class GameActionsTests(unittest.TestCase):
         restored.scheduler.advance_until_input()
         self.assertIn(("settle", 1, "forced"), self.events)
 
-    def test_legacy_runtime_restores_remaining_recovery(self):
-        """无需参数；旧队列的恢复余量迁为执行记录，玩家计划独立保存；无返回值。"""
-        sys.modules.pop("Script.Modules.npc_ai", None)
-        npc_ai = importlib.import_module("Script.Modules.npc_ai")
-        runtime = self.game.get_runtime()
-        runtime.plans = {0: Action("sleep", 40, 0), 1: Action("sleep", 35, 1)}
-        del runtime.player_plan
-        Action("sleep", 30, 1).apply(self.characters[1], self.now)
-        restored = pickle.loads(pickle.dumps(runtime))
-        self.game.restore(restored)
-        self.assertFalse(hasattr(restored, "plans"))
-        self.assertEqual(restored.player_plan.duration, 40)
-        self.assertEqual(npc_ai.choose_next(1, self.now).duration, 30)
-        self.characters[1].action_progress.elapsed = 30
-        self.assertEqual(npc_ai.choose_next(1, self.now).duration, 5)
-
     def test_time_stop_keeps_npc_pending_and_world_time(self):
         """无需参数；时停玩家行动不消耗世界时间也不推进 NPC；无返回值。"""
         self.cache.time_stop_mode = True
@@ -599,7 +560,7 @@ class GameActionsTests(unittest.TestCase):
             runtime.scheduler.advance_until_input()
         self.assertEqual(self.events.count(("settle", 1, "rest")), 2)
         self.assertEqual(self.events.count(("finish", 1)), 1)
-        self.assertIsNone(self.characters[1].npc_ai_state.plan)
+        self.assertFalse(npc_ai.choose_next(1, self.now).continued)
 
     def test_wake_prechecks_preserve_forced_followup(self):
         """无需参数；醒来检查提交的强制行动优先执行，AI 不覆盖它；无返回值。"""
@@ -640,18 +601,24 @@ class GameActionsTests(unittest.TestCase):
         self.assertEqual(self.events.count(("realtime", 1, 5)), 2)
 
     def test_assistant_wakes_when_chunk_crosses_greeting_time(self):
-        """无需参数；助理睡眠跨过问候时刻后不再延续；无返回值。"""
+        """无需参数；助理整夜睡眠跨问候时刻醒来，小睡继续；无返回值。"""
         sys.modules.pop("Script.Modules.npc_ai", None)
         npc_ai = importlib.import_module("Script.Modules.npc_ai")
         self.characters[0].action_info = SimpleNamespace(plan_to_wake_time=(7, 0))
         start = self.now.replace(hour=6, minute=40)
         Action("sleep", 30, 1).apply(self.characters[1], start)
-        self.cache.game_time = start + timedelta(minutes=10)
-        self.characters[1].action_progress = ActionProgress(Action("sleep", 300, 1), 30)
         with patch.object(sys.modules["Script.Design.handle_premise"], "handle_assistant_morning_salutation_on", lambda actor: True):
-            self.assertTrue(npc_ai.choose_next(1, self.cache.game_time).continued)
-            self.cache.game_time = start + timedelta(minutes=30)
-            self.assertEqual(npc_ai.choose_next(1, self.cache.game_time), Action("finish_current", 0, 1))
+            for duration in (480, 300, 65):
+                with self.subTest(duration=duration):
+                    self.cache.game_time = start + timedelta(minutes=10)
+                    self.characters[1].action_progress = ActionProgress(Action("sleep", duration, 1), 30)
+                    self.assertTrue(npc_ai.choose_next(1, self.cache.game_time).continued)
+                    self.cache.game_time = start + timedelta(minutes=30)
+                    choice = npc_ai.choose_next(1, self.cache.game_time)
+                    if duration == 480:
+                        self.assertEqual(choice, Action("finish_current", 0, 1))
+                    else:
+                        self.assertEqual((choice.behavior_id, choice.duration, choice.continued), ("sleep", 30, True))
 
     def test_daily_new_character_receives_pending_before_input(self):
         """无需参数；日结招募新角色后，返回输入时该角色已有待办；无返回值。"""
@@ -791,7 +758,6 @@ class GameActionsTests(unittest.TestCase):
         self.assertIs(character.action_progress, progress)
         self.assertEqual(request.duration, 65)
         progress.elapsed = 30
-        character.__dict__.pop("npc_ai_state", None)
         self.assertEqual(pickle.dumps(character), before)
         self.assertEqual(self.events, [])
 
@@ -845,21 +811,18 @@ class GameActionsTests(unittest.TestCase):
         character.action_progress = ActionProgress(choice, 10)
         self.assertEqual(npc_ai.choose_next(1, self.now).duration, 2)
 
-    def test_execution_updates_progress_without_writing_ai_state(self):
-        """无需参数；执行记录保存原请求及累计时间，执行层不写 AI 私有记录；无返回值。"""
+    def test_execution_records_original_duration_and_elapsed(self):
+        """无需参数；执行记录保存原请求时长及累计时间；无返回值。"""
         character = self.characters[1]
-        character.npc_ai_state = SimpleNamespace(private_plan="untouched")
-        before = pickle.dumps(character.npc_ai_state)
         runtime = self.game.get_runtime()
         runtime.scheduler.replace(Task(1, self.now, Action("sleep", 65, 1), immediate=True))
         runtime.scheduler.submit(Task(0, self.now + timedelta(minutes=1), INPUT))
         runtime.scheduler.advance_until_input()
-        self.assertEqual(pickle.dumps(character.npc_ai_state), before)
         self.assertEqual(character.action_progress.action.duration, 65)
         self.assertEqual(character.action_progress.elapsed, 30)
 
-    def test_continued_execution_keeps_ai_plan_until_next_choice(self):
-        """无需参数；续段只累计执行进度，下一次 AI 查询才更新剩余计划；无返回值。"""
+    def test_continued_execution_accumulates_progress(self):
+        """无需参数；续段累计执行进度，下一次 AI 查询据此计算剩余时长；无返回值。"""
         sys.modules.pop("Script.Modules.npc_ai", None)
         npc_ai = importlib.import_module("Script.Modules.npc_ai")
         character = self.characters[1]
@@ -867,12 +830,9 @@ class GameActionsTests(unittest.TestCase):
         request.apply(character, self.now)
         progress = character.action_progress = ActionProgress(request, 30)
         choice = npc_ai.choose_next(1, self.now)
-        state = character.npc_ai_state
-        plan_before = pickle.dumps(state.plan)
         runtime = self.game.get_runtime()
         runtime.execute(1, choice)
-        self.assertIs(character.npc_ai_state, state)
-        self.assertEqual(pickle.dumps(state.plan), plan_before)
+        self.assertEqual(request.duration, 65)
         self.assertIs(character.action_progress, progress)
         self.assertEqual(progress.elapsed, 60)
         self.assertEqual(npc_ai.choose_next(1, self.now).duration, 5)
@@ -910,7 +870,7 @@ class GameActionsTests(unittest.TestCase):
         namespace = {"cache": self.cache}
         exec(compile(ast.Module(body=[function], type_ignores=[]), str(source), "exec"), namespace)
         runtime = self.game.get_runtime()
-        player_plan = runtime.player_plan = Action("sleep", 65, 0)
+        player_progress = self.characters[0].action_progress = ActionProgress(Action("sleep", 65, 0), 30)
         for actor in (1, 0):
             with self.subTest(actor=actor):
                 character = self.characters[actor]
@@ -923,9 +883,7 @@ class GameActionsTests(unittest.TestCase):
                 self.assertTrue(pending.item.continued)
                 self.assertFalse(pending.immediate)
                 if actor == 1:
-                    self.assertIs(runtime.player_plan, player_plan)
-                else:
-                    self.assertIsNone(runtime.player_plan)
+                    self.assertIs(self.characters[0].action_progress, player_progress)
 
     def test_offline_online_drops_old_action_and_recovery_plan(self):
         """无需参数；离队期间无效果，上线立即自主选择且不恢复旧睡眠；无返回值。"""

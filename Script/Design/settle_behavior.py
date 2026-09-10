@@ -90,7 +90,6 @@ def handle_settle_behavior(character_id: int, now_time: datetime.datetime, event
                     from Script.Modules.game_actions import submit_current
 
                     # 助手行动通过立即后续执行。
-                    warden_character_data.h_state.sex_assist = False
                     submit_current(warden_character_id)
         # 正常情况下则直接执行结算
         else:

@@ -40,8 +40,7 @@ def handle_have_target(character_id: int, *, target_id: int | None = None) -> in
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
+    target_id = character_data.target_character_id if target_id is None else target_id
     if target_id == character_id:
         return 0
     return 1
@@ -1817,8 +1816,7 @@ def handle_t_is_h(character_id: int, *, target_id: int | None = None) -> int:
     int -- 权重
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    if target_id is None:
-        target_id = character_data.target_character_id
+    target_id = character_data.target_character_id if target_id is None else target_id
     return handle_self_is_h(target_id)
 
 

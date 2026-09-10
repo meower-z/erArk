@@ -23,12 +23,17 @@ def _prepare_npc_action(runtime, actor: int, action):
 
 def _prepare_group_action(runtime, actor: int, action):
     """输入执行器、角色编号和 Action，落实群交操作；返回实际 Action。"""
-    from Script.Core import cache_control
+    from Script.Core import cache_control, constant
     from Script.Modules.action import Action
     from Script.Design.handle_npc_ai_in_h import execute_group_action
 
+    character = cache_control.cache.character_data[actor]
+    continued = character.behavior.behavior_id == constant.Behavior.WAIT
     execute_group_action(actor, action)
-    return Action.from_character(cache_control.cache.character_data[actor])
+    # 已有等待沿用原先的继续语义，跳过一次性的行为结算。
+    if continued:
+        return Action(constant.Behavior.WAIT, 5, character.target_character_id, state=constant.CharacterStatus.STATUS_WAIT, continued=True)
+    return Action.from_character(character)
 
 
 def _finish_current(runtime, actor: int, action):
@@ -48,27 +53,5 @@ _PREPARERS = {
 
 def prepare_action(runtime, actor: int, action):
     """输入执行器、角色编号和 Action，返回可结算的 Action；操作已完成时返回 None。"""
-    from Script.Modules.action import Action
-
     prepare = _PREPARERS.get(action.behavior_id)
-    if prepare is None:
-        return action
-    prepared = prepare(runtime, actor, action)
-    if prepared is not None:
-        prepared.followups = action.followups + prepared.followups
-        if action.after is not None:
-            prepared.after = action.after
-    else:
-        pending = runtime.scheduler.pending(actor)
-        if pending is not None and isinstance(pending.item, Action):
-            # 响应先执行，再执行准备请求附带的后续；回调交给响应负责。
-            pending.item.followups += action.followups
-            if action.after is not None:
-                pending.item.after = action.after
-        else:
-            # 无响应时准备操作已经完成，后续进入队列，收尾回调执行一次。
-            for following in action.followups:
-                runtime.enqueue(actor, following)
-            if action.after is not None:
-                runtime.finish_action(actor, action.after)
-    return prepared
+    return action if prepare is None else prepare(runtime, actor, action)
