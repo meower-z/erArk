@@ -467,6 +467,30 @@ class GameActionsTests(unittest.TestCase):
         self.assertEqual(self.realtime(1), [5] * 6)
         self.assertEqual(self.finished(1)[0], self.now + timedelta(minutes=5))
 
+    def test_wait_on_waiting_owner_lasts_for_owner_duration(self):
+        """无需参数；主体只是在等待时 NPC 不带复查标记，陪等主体时长后收尾，玩家随后继续等待也不再延续；无返回值。"""
+        self.use_real_ai()
+        runtime = self.game.get_runtime()
+        self.write_behavior(0, "wait", 1, target=1)
+        self.game.wait_on(1, 0, "wait")
+        pending = runtime.scheduler.pending(1)
+        self.assertEqual((pending.at, pending.item.behavior_id, pending.item.duration, pending.item.continued, pending.immediate), (self.now, "wait", 1, True, False))
+        self.assertNotIn("wait_on_behavior_id", pending.item.params)
+        self.write_behavior(0, "wait", 60, target=1)
+        runtime.advance(60)
+        self.assertEqual(self.finished(1)[0], self.now + timedelta(minutes=1))
+        self.assertEqual(self.realtime(1)[:2], [1, 5])
+        self.assertEqual(self.characters[1].behavior.wait_on_behavior_id, "")
+
+    def test_precheck_uses_player_start_time(self):
+        """无需参数；NPC 行动前检查收到的是玩家本次行动的开始时刻，而非待办时刻；无返回值。"""
+        runtime = self.game.get_runtime()
+        seen = []
+        runtime.scheduler.replace(Task(1, self.now + timedelta(minutes=5), AI))
+        with patch.object(sys.modules["Script.Design.handle_npc_ai"], "run_npc_pre_behavior_checks", side_effect=lambda actor, start: seen.append((runtime.scheduler.now, start))):
+            self.advance("wait", 10)
+        self.assertEqual(seen, [(self.now + timedelta(minutes=5), self.now)])
+
     def test_player_wait_on_lasts_for_owner_remaining_time(self):
         """无需参数；玩家成为第二主体时等完主体行为全程，期间不需要 AI；无返回值。"""
         chosen = []
