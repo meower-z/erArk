@@ -1,5 +1,6 @@
 """以真实 Action 和 Scheduler 检查游戏接入的执行顺序。"""
 
+from collections import deque
 from datetime import datetime, timedelta
 import ast
 import importlib
@@ -10,7 +11,7 @@ from types import ModuleType, SimpleNamespace
 import unittest
 from unittest.mock import patch
 
-from Script.Modules.scheduler.action import Action, ActionProgress
+from Script.Modules.scheduler.action import Action, CONTINUED, STATE
 from Script.Modules.scheduler import AI, INPUT, Task
 from Script.Modules.scheduler.npc_actions import state_machine_action
 
@@ -23,6 +24,9 @@ class Behavior:
         self.behavior_id = "idle"
         self.duration = 0
         self.start_time = datetime.min
+        self.plan_start_time = datetime.min
+        self.plan_end_time = datetime.min
+        self.wait_on_behavior_id = ""
 
 
 class GameActionsTests(unittest.TestCase):
@@ -34,7 +38,13 @@ class GameActionsTests(unittest.TestCase):
         self.events = []
         self.characters = {
             actor: SimpleNamespace(
-                behavior=Behavior(), target_character_id=actor, state="idle", dead=False, sp_flag=SimpleNamespace(see_pl_h=False, is_h=False), hypnosis=SimpleNamespace(blockhead=False)
+                behavior=Behavior(),
+                target_character_id=actor,
+                state="idle",
+                dead=False,
+                sp_flag=SimpleNamespace(see_pl_h=False, is_h=False),
+                hypnosis=SimpleNamespace(blockhead=False),
+                action_info=SimpleNamespace(plan_to_wake_time=(10, 40)),
             )
             for actor in (0, 1)
         }
@@ -43,7 +53,6 @@ class GameActionsTests(unittest.TestCase):
             pre_game_time=self.now,
             character_data=self.characters,
             npc_id_got={1},
-            action_scheduler=None,
             daily_intsruce=0,
             pl_pre_behavior_instruce=[],
             time_stop_mode=False,
@@ -135,9 +144,51 @@ class GameActionsTests(unittest.TestCase):
 
     def finish(self, actor, now, end_now=2):
         """输入角色与收尾时刻，记录收尾并清空旧行为；返回 True。"""
-        self.events.append(("finish", actor))
+        self.events.append(("finish", actor, now))
         self.characters[actor].behavior = Behavior()
+        self.characters[actor].state = "idle"
         return True
+
+    def use_real_ai(self):
+        """无需参数，改用真实的 NPC 自主行动模块；返回该模块。"""
+        sys.modules.pop("Script.Modules.npc_ai", None)
+        npc_ai = importlib.import_module("Script.Modules.npc_ai")
+        import Script.Modules
+
+        patcher = patch.object(Script.Modules, "npc_ai", npc_ai, create=True)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        return npc_ai
+
+    def write_behavior(self, actor, behavior_id, duration, target=None, start=None, **fields):
+        """输入角色、行为编号、时长、对象、开始时刻及附加字段，直接写入角色行为；返回 None。"""
+        character = self.characters[actor]
+        character.behavior = Behavior()
+        character.behavior.behavior_id = behavior_id
+        character.behavior.duration = duration
+        character.behavior.start_time = self.now if start is None else start
+        character.behavior.__dict__.update(fields)
+        character.target_character_id = actor if target is None else target
+        character.state = behavior_id
+
+    def advance(self, behavior_id, duration):
+        """输入玩家行为编号与时长，提交玩家行动并运行至下一次输入；返回执行器。"""
+        self.write_behavior(0, behavior_id, duration)
+        runtime = self.game.get_runtime()
+        runtime.advance(duration)
+        return runtime
+
+    def realtime(self, actor):
+        """输入角色编号，返回其按时间结算的分钟数列表。"""
+        return [event[2] for event in self.events if event[0] == "realtime" and event[1] == actor]
+
+    def settled(self, actor):
+        """输入角色编号，返回其一次性结算的行为编号列表。"""
+        return [event[2] for event in self.events if event[0] == "settle" and event[1] == actor]
+
+    def finished(self, actor):
+        """输入角色编号，返回其行为被收尾的时刻列表。"""
+        return [event[2] for event in self.events if event[0] == "finish" and event[1] == actor]
 
     def new_day(self):
         """无需参数，记录日结并更新旧时间；无返回值。"""
@@ -179,12 +230,12 @@ class GameActionsTests(unittest.TestCase):
         return selector
 
     def test_real_target_search_returns_intent_without_effects(self):
-        """无需参数；真实目标搜索仅返回意图，选择时保持角色和世界状态；无返回值。"""
+        """无需参数；真实目标搜索仅返回意图，选择时不触碰状态机与世界；无返回值。"""
         selector = self.load_real_target_selector()
-        sys.modules.pop("Script.Modules.npc_ai", None)
-        npc_ai = importlib.import_module("Script.Modules.npc_ai")
+        npc_ai = self.use_real_ai()
         constant = sys.modules["Script.Core.constant"]
         constant.handle_state_machine_data = {77: lambda actor: self.fail("选择阶段调用了状态机")}
+        self.characters[1].behavior.start_time = self.now
         before = pickle.dumps(self.cache)
         intent = npc_ai.choose_next(1, self.now)
         self.assertIs(type(intent), Action)
@@ -197,9 +248,7 @@ class GameActionsTests(unittest.TestCase):
     def test_action_intent_executes_handler_and_propagates_duration(self):
         """无需参数；选择返回状态机，执行时才写入行动并结算一次；无返回值。"""
         selector = self.load_real_target_selector()
-        self.cache.npc_id_got.clear()
         runtime = self.game.get_runtime()
-        self.cache.npc_id_got.add(1)
         constant = sys.modules["Script.Core.constant"]
 
         def handler(actor):
@@ -212,7 +261,7 @@ class GameActionsTests(unittest.TestCase):
         self.assertEqual(self.events, [])
         duration = runtime.execute(1, intent)
         self.assertEqual(self.events.count(("handler", 1)), 1)
-        self.assertEqual(self.events.count(("settle", 1, "work")), 1)
+        self.assertEqual(self.settled(1), ["work"])
         self.assertEqual(duration, 17)
 
     def test_generic_execution_resolves_group_actions_before_installing_behavior(self):
@@ -233,8 +282,7 @@ class GameActionsTests(unittest.TestCase):
         )
         with patch.dict(sys.modules, {group.__name__: group}):
             exec(compile(tree, str(source), "exec"), group.__dict__)
-        sys.modules.pop("Script.Modules.npc_ai", None)
-        npc_ai = importlib.import_module("Script.Modules.npc_ai")
+        npc_ai = self.use_real_ai()
         self.characters[0].h_state = SimpleNamespace(group_sex_body_template_dict={"A": [{"mouth": [-1, -1]}, [[], -1]]})
         self.characters[1].sp_flag.is_h = True
         self.characters[1].sp_flag.masturebate = 3
@@ -242,15 +290,19 @@ class GameActionsTests(unittest.TestCase):
         sex_system = ModuleType("Script.System.Sex_System")
         sex_system.group_sex_panel = panel
         runtime = self.game.get_runtime()
-        for initial, part, statuses, kind in (
-            ("idle", "mouth", (12,), "group_fill"), ("idle", "加入侍奉", (), "group_join"),
-            ("wait", "mouth", (12,), "group_fill"), ("wait", "加入侍奉", (), "group_join"),
-            ("idle", "mouth", (), "need"), ("wait", "mouth", (), "wait"), ("existing", "mouth", (), "existing"),
+        for initial, part, statuses, kind, duration in (
+            ("idle", "mouth", (12,), "group_fill", 5),
+            ("idle", "加入侍奉", (), "group_join", 5),
+            ("wait", "mouth", (12,), "group_fill", 5),
+            ("wait", "加入侍奉", (), "group_join", 5),
+            ("idle", "mouth", (), "need", 7),
+            ("wait", "mouth", (), "wait", 5),
+            ("existing", "mouth", (), "existing", 9),
         ):
             with self.subTest(initial=initial, part=part):
                 self.characters[0].h_state.group_sex_body_template_dict["A"] = [{"mouth": [-1, -1]}, [[], -1]]
-                Action(initial, 9, 1).apply(self.characters[1], self.now)
-                self.characters[1].action_progress = None
+                # 等待中的角色已经等了四分钟，只剩五分钟；直接写入的行为从现在开始。
+                self.write_behavior(1, initial, 9 if initial != "idle" else 0, start=self.now - timedelta(minutes=4) if initial == "wait" else None)
                 self.events.clear()
                 before = pickle.dumps(self.cache.character_data)
                 panel.get_now_template_part_list = lambda: ([part], [])
@@ -267,11 +319,11 @@ class GameActionsTests(unittest.TestCase):
                 self.assertEqual(choice.behavior_id, kind)
                 self.assertEqual(pickle.dumps(self.cache.character_data), before)
                 with patch.dict(sys.modules, {"Script.Design.handle_npc_ai_in_h": group}):
-                    duration = runtime.execute(1, pickle.loads(pickle.dumps(choice)))
+                    self.assertEqual(runtime.execute(1, pickle.loads(pickle.dumps(choice))), duration)
                 behavior = kind if kind in {"existing", "need"} else "wait"
-                self.assertEqual(duration, {"existing": 9, "need": 7}.get(behavior, 5))
                 self.assertEqual(self.characters[1].behavior.behavior_id, behavior)
-                self.assertEqual([event for event in self.events if event[0] == "settle"], [] if initial == "wait" else [("settle", 1, behavior)])
+                # 已在等待或执行中的角色延续原行为，不再次触发一次性结算。
+                self.assertEqual(self.settled(1), [] if initial != "idle" else [behavior])
                 template = self.characters[0].h_state.group_sex_body_template_dict["A"]
                 if kind == "group_fill":
                     self.assertEqual(template[0]["mouth"], [1, 12])
@@ -308,7 +360,6 @@ class GameActionsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "状态机失败"):
             runtime.scheduler.advance_until_input()
         self.assertFalse(runtime.scheduler.running)
-        self.assertEqual(runtime.active, {})
         runtime.scheduler.submit(Task(0, self.now, INPUT))
         self.assertIs(runtime.scheduler.advance_until_input().item, INPUT)
 
@@ -327,610 +378,421 @@ class GameActionsTests(unittest.TestCase):
         runtime.scheduler.advance_until_input()
         self.assertEqual(self.characters[1].need, "milk")
         self.assertEqual(runtime.scheduler.pending(1).at, self.now + timedelta(minutes=5))
-        self.assertEqual(self.events.count(("settle", 1, "wait")), 1)
-        self.assertEqual(self.events.count(("realtime", 1, 5)), 1)
-        self.assertNotIn(("settle", 1, "idle"), self.events)
-
-    def test_state_machine_submitted_response_executes_once(self):
-        """无需参数；状态机提交的响应只由待办执行一次；无返回值。"""
-        runtime = self.game.get_runtime()
-
-        def handler(actor):
-            """输入角色，准备并提交响应行动；返回 None。"""
-            Action("response", 5, actor).apply(self.characters[actor], self.now)
-            self.game.submit_current(actor)
-
-        sys.modules["Script.Core.constant"].handle_state_machine_data = {77: handler}
-        runtime.scheduler.replace(Task(1, self.now, state_machine_action(1, 77)))
-        runtime.scheduler.submit(Task(0, self.now + timedelta(minutes=1), INPUT))
-        runtime.scheduler.advance_until_input()
-        self.assertEqual(self.events.count(("settle", 1, "response")), 1)
-        self.assertEqual(self.events.count(("realtime", 1, 5)), 1)
+        self.assertEqual(self.settled(1), ["wait"])
 
     def test_idle_choice_reads_current_task_time(self):
-        """无需参数；闲置角色首次选择时读取当前待办时刻；无返回值。"""
-        runtime = self.game.get_runtime()
+        """无需参数；闲置 NPC 选择时行为开始时刻已是当前待办时刻；无返回值。"""
+        self.use_real_ai()
         seen = []
-
-        def choose(actor, now):
-            """输入角色和候选，记录行为时刻并返回等待；返回 Action。"""
-            seen.append(self.characters[actor].behavior.start_time)
-            return Action("wait", 5, actor)
-
-        with patch.object(sys.modules["Script.Modules.npc_ai"], "choose_next", choose):
-            runtime.scheduler.submit(Task(0, self.now + timedelta(minutes=1), INPUT))
-            runtime.scheduler.advance_until_input()
-        self.assertEqual(seen, [self.now])
+        with patch.object(sys.modules["Script.Design.handle_npc_ai"], "choose_character_target", side_effect=lambda actor, now: (seen.append((now, self.characters[actor].behavior.start_time)), Action("rest", 20, actor))[1]):
+            self.advance("wait", 30)
+        self.assertEqual(seen, [(self.now, self.now), (self.now + timedelta(minutes=20), self.now + timedelta(minutes=20))])
 
     def test_precheck_replacement_skips_choice(self):
-        """无需参数；维护阶段提交强制动作后跳过该次自主选择；无返回值。"""
+        """无需参数；行动前检查替换待办后不再调用选择，直接执行替代行动；无返回值。"""
         runtime = self.game.get_runtime()
 
-        def prepare(actor, now):
-            """输入角色与时刻，提交强制退出；返回 None。"""
-            runtime.enqueue(actor, Action("forced_exit", 5, actor))
+        def precheck(actor, now):
+            """输入角色与时刻，模拟行动前检查改写行为并强制安排；返回 None。"""
+            self.write_behavior(actor, "tired_sleep", 15)
+            self.game.submit_current(actor)
 
-        with patch.object(sys.modules["Script.Design.handle_npc_ai"], "run_npc_pre_behavior_checks", prepare), patch.object(
-            runtime.scheduler, "_choose_next", side_effect=AssertionError("不应调用 AI")
+        with patch.object(sys.modules["Script.Design.handle_npc_ai"], "run_npc_pre_behavior_checks", side_effect=precheck), patch.object(
+            sys.modules["Script.Modules.npc_ai"], "choose_next", side_effect=AssertionError("替换后不应再选择")
         ):
             runtime.scheduler.submit(Task(0, self.now + timedelta(minutes=1), INPUT))
             runtime.scheduler.advance_until_input()
-        self.assertEqual(self.events.count(("settle", 1, "forced_exit")), 1)
+        self.assertEqual(self.settled(1), ["tired_sleep"])
+        self.assertEqual(runtime.scheduler.pending(1).at, self.now + timedelta(minutes=15))
 
-    def test_player_sleep_chunks_once_effect_and_total_time(self):
-        """无需参数；睡眠拆段但入睡效果一次、总占用不变；无返回值。"""
-        runtime = self.game.get_runtime()
-        Action("sleep", 65, 0).apply(self.characters[0], self.now)
-        default = sys.modules["Script.Settle.default"]
-        with patch.object(default, "handle_add_small_sanity_point") as sanity, patch.object(default, "handle_add_small_semen_point") as semen:
-            runtime.advance(65)
-        self.assertEqual([call.args[1] for call in sanity.call_args_list], [30, 5])
-        self.assertEqual([call.args[1] for call in semen.call_args_list], [30, 5])
+    def test_player_sleep_is_one_whole_action(self):
+        """无需参数；玩家睡眠不切段，一次性效果、时间结算和睡眠收尾各一次；无返回值。"""
+        self.advance("sleep", 65)
+        self.assertEqual(self.settled(0), ["sleep"])
+        self.assertEqual(self.realtime(0), [65])
+        self.assertEqual(self.events.count(("sleep_once", 65)), 1)
+        self.assertEqual(self.finished(0), [self.now + timedelta(minutes=65)])
         self.assertEqual(self.cache.game_time, self.now + timedelta(minutes=65))
-        self.assertEqual([event for event in self.events if event[:2] == ("realtime", 0)], [("realtime", 0, 30), ("realtime", 0, 30), ("realtime", 0, 5)])
-        self.assertEqual(len([event for event in self.events if event[0] == "sleep_once"]), 1)
-        self.assertEqual(len([event for event in self.events if event == ("settle", 0, "sleep")]), 1)
 
     def test_rest_executes_as_one_atomic_action(self):
-        """无需参数；休息按指定时长完整执行一次；无返回值。"""
-        runtime = self.game.get_runtime()
-        runtime.scheduler.replace(Task(0, self.now, Action("rest", 45, 0), immediate=True))
-        self.assertEqual(runtime.scheduler.advance_until_input().at, self.now + timedelta(minutes=45))
-        self.assertEqual([event for event in self.events if event[:2] == ("realtime", 0)], [("realtime", 0, 45)])
-        self.assertEqual(self.events.count(("settle", 0, "rest")), 1)
+        """无需参数；玩家休息作为一个整体结算并在输入前收尾；无返回值。"""
+        self.advance("rest", 40)
+        self.assertEqual(self.settled(0), ["rest"])
+        self.assertEqual(self.realtime(0), [40])
+        self.assertEqual(self.finished(0), [self.now + timedelta(minutes=40)])
+        self.assertEqual(self.characters[0].behavior.behavior_id, "idle")
 
-    def test_wait_on_checks_owner_before_restoring_ai(self):
-        """无需参数；主人行为停止后等待者恢复 AI；无返回值。"""
+    def test_idle_player_is_not_closed_at_input(self):
+        """无需参数；玩家行为已被他人收尾时输入前不再重复收尾；无返回值。"""
         runtime = self.game.get_runtime()
-        self.characters[0].behavior.behavior_id = "office"
-        self.characters[0].target_character_id = 1
-        self.game.wait_on(1, 0, "office")
-        runtime.scheduler.submit(Task(0, self.now + timedelta(minutes=3), INPUT))
-        runtime.scheduler.advance_until_input()
-        self.assertEqual(runtime.scheduler.pending(1).at, self.now + timedelta(minutes=5))
-        self.characters[0].behavior.behavior_id = "idle"
-        runtime.scheduler.submit(Task(0, self.now + timedelta(minutes=6), INPUT))
-        runtime.scheduler.advance_until_input()
-        self.assertEqual(runtime.scheduler.pending(1).item, AI)
-        self.assertEqual(runtime.scheduler.pending(1).at, self.now + timedelta(minutes=65))
-
-    def test_forced_chain_preserves_submission_order(self):
-        """无需参数；同角色多个强制后续按提交顺序执行；无返回值。"""
-        runtime = self.game.get_runtime()
-        runtime.enqueue(1, Action("first", 5, 1))
-        runtime.enqueue(1, Action("second", 5, 1))
-        runtime.enqueue(1, Action("third", 5, 1))
         runtime.scheduler.submit(Task(0, self.now, INPUT))
         runtime.scheduler.advance_until_input()
-        self.assertEqual([event[2] for event in self.events if event[:2] == ("settle", 1)], ["first", "second", "third"])
+        self.assertEqual(self.finished(0), [])
 
-    def test_new_followup_keeps_previously_submitted_order(self):
-        """无需参数；A 中提交 D 时，先前提交的 B、C 仍先执行；无返回值。"""
+    def test_wait_on_npc_rechecks_owner_every_five_minutes(self):
+        """无需参数；NPC 等待玩家的双人行为时每五分钟复查，主体换目标后收尾并重新选择；无返回值。"""
+        self.use_real_ai()
         runtime = self.game.get_runtime()
-        for name in ("A", "B", "C"):
-            runtime.enqueue(1, Action(name, 5, 1))
-        original = sys.modules["Script.Design.character_behavior"].judge_character_status
+        self.write_behavior(0, "h_act", 30, target=1)
+        self.game.wait_on(1, 0, "h_act")
+        runtime.advance(30)
+        self.assertEqual(self.settled(1), ["wait"])
+        self.assertEqual(self.realtime(1), [5] * 6)
+        self.assertEqual(self.characters[1].behavior.wait_on_behavior_id, "h_act")
+        self.assertEqual(self.finished(1), [])
+        self.events.clear()
+        self.write_behavior(0, "wait", 1, target=1)
+        runtime.advance(1)
+        self.assertEqual(self.finished(1), [self.now + timedelta(minutes=30)])
+        self.assertEqual(self.settled(1), ["wait"])
+        self.assertEqual(self.characters[1].behavior.wait_on_behavior_id, "")
 
-        def settle(actor):
-            """记录结算，并让 A 额外提交 D；参数为角色编号，返回 None。"""
-            original(actor)
-            if self.characters[actor].behavior.behavior_id == "A":
-                runtime.enqueue(actor, Action("D", 5, actor))
-
-        with patch.object(sys.modules["Script.Design.character_behavior"], "judge_character_status", settle):
-            runtime.scheduler.submit(Task(0, self.now, INPUT))
-            runtime.scheduler.advance_until_input()
-        self.assertEqual([event[2] for event in self.events if event[:2] == ("settle", 1)], ["A", "B", "C", "D"])
-
-    def test_cleanup_keeps_target_changed_by_another_actor(self):
-        """无需参数；NPC 改变玩家目标后，输入前收尾保留该目标；无返回值。"""
+    def test_wait_on_npc_stops_when_owner_targets_someone_else(self):
+        """无需参数；主体行为相同但对象换人时 NPC 不再延续等待；无返回值。"""
+        self.use_real_ai()
+        self.write_behavior(0, "h_act", 30, target=1)
+        self.characters[2] = SimpleNamespace(behavior=Behavior(), target_character_id=2, state="idle", dead=False, sp_flag=SimpleNamespace(see_pl_h=False, is_h=False), hypnosis=SimpleNamespace(blockhead=False))
         runtime = self.game.get_runtime()
-        runtime.current[0] = (Behavior(), 0, "idle")
-        self.characters[0].target_character_id = 1
-        runtime.finish_current(0, self.now)
-        self.assertEqual(self.characters[0].target_character_id, 1)
+        self.game.wait_on(1, 0, "h_act")
+        with patch.object(sys.modules["Script.Design.character_behavior"], "judge_character_status", side_effect=lambda actor: self.characters[0].__setattr__("target_character_id", 2) if actor == 0 else None):
+            runtime.advance(30)
+        self.assertEqual(self.realtime(1), [5] * 6)
+        self.assertEqual(self.finished(1)[0], self.now + timedelta(minutes=5))
 
-    def test_old_save_resumes_at_behavior_end_without_replaying(self):
-        """无需参数；旧档补算剩余时间效果，到期再选行动；无返回值。"""
-        self.characters[1].behavior.behavior_id = "office"
-        self.characters[1].behavior.start_time = self.now - timedelta(minutes=10)
-        self.characters[1].behavior.duration = 60
-        self.game.restore(None)
-        runtime = self.game.get_runtime()
-        self.assertEqual(runtime.scheduler.pending(1).at, self.now)
-        self.assertTrue(runtime.scheduler.pending(1).item.continued)
-        self.assertEqual(runtime.scheduler.pending(1).item.duration, 50)
-        runtime.scheduler.submit(Task(0, self.now + timedelta(minutes=51), INPUT))
-        runtime.scheduler.advance_until_input()
-        self.assertNotIn(("settle", 1, "office"), self.events)
-        self.assertEqual(self.events.count(("realtime", 1, 50)), 1)
-        self.assertEqual(runtime.scheduler.pending(1).at, self.now + timedelta(minutes=110))
-
-    def test_pickle_rebinds_callbacks_to_restored_runtime(self):
-        """无需参数；存档往返后回调属于新执行器且强制链保留；无返回值。"""
-        runtime = self.game.get_runtime()
-        runtime.enqueue(1, Action("forced", 5, 0))
-        runtime.scheduler._running = True
-        runtime.active[0] = "stale"
-        restored = pickle.loads(pickle.dumps(runtime))
-        self.game.restore(restored)
-        self.assertIs(self.game.get_runtime(), restored)
-        self.assertFalse(restored.scheduler.running)
-        self.assertEqual(restored.active, {})
-        self.assertIs(restored.scheduler._execute.__self__, restored)
-        self.assertIs(restored.scheduler._choose_next.__self__, restored)
-        restored.scheduler.submit(Task(0, self.now, INPUT))
-        restored.scheduler.advance_until_input()
-        self.assertIn(("settle", 1, "forced"), self.events)
-
-    def test_time_stop_keeps_npc_pending_and_world_time(self):
-        """无需参数；时停玩家行动不消耗世界时间也不推进 NPC；无返回值。"""
-        self.cache.time_stop_mode = True
-        runtime = self.game.get_runtime()
-        npc_task = runtime.scheduler.pending(1)
-        runtime.scheduler.submit(Task(0, self.now, Action("office", 60, 0), immediate=True))
-        self.assertEqual(runtime.scheduler.advance_until_input().at, self.now)
-        self.assertEqual(self.cache.game_time, self.now)
-        self.assertIs(runtime.scheduler.pending(1), npc_task)
-        self.assertEqual(self.cache.achievement.time_stop_duration, 60)
-
-    def test_time_stop_sleep_must_not_advance_npcs(self):
-        """无需参数；时停中的睡眠续段也不能推进 NPC 或世界时间；无返回值。"""
-        self.cache.time_stop_mode = True
-        runtime = self.game.get_runtime()
-        npc_task = runtime.scheduler.pending(1)
-        runtime.scheduler.submit(Task(0, self.now, Action("sleep", 60, 0), immediate=True))
-        self.assertEqual(runtime.scheduler.advance_until_input().at, self.now)
-        self.assertEqual(self.cache.game_time, self.now)
-        self.assertIs(runtime.scheduler.pending(1), npc_task)
-
-    def test_npc_recovery_uses_real_ai_to_continue(self):
-        """无需参数；真实 AI 在片段边界延续未恢复的计划；无返回值。"""
-        sys.modules.pop("Script.Modules.npc_ai", None)
-        npc_ai = importlib.import_module("Script.Modules.npc_ai")
-        import Script.Modules
-
-        with patch.object(Script.Modules, "npc_ai", npc_ai):
-            runtime = self.game.get_runtime()
-            runtime.scheduler.replace(Task(1, self.now, Action("sleep", 65, 1), immediate=True))
-            runtime.scheduler.submit(Task(0, self.now + timedelta(minutes=61), INPUT))
-            runtime.scheduler.advance_until_input()
-        self.assertEqual([event for event in self.events if event[:2] == ("realtime", 1)], [("realtime", 1, 30), ("realtime", 1, 30), ("realtime", 1, 5)])
-        self.assertEqual(self.events.count(("settle", 1, "sleep")), 1)
-
-    def test_npc_sleep_finishes_before_new_choice(self):
-        """无需参数；睡眠到期先收尾和维护状态，再选择新动作；无返回值。"""
-        sys.modules.pop("Script.Modules.npc_ai", None)
-        npc_ai = importlib.import_module("Script.Modules.npc_ai")
-        import Script.Modules
-
-        def prepare(actor, now):
-            """输入角色和时刻，记录收尾后的维护；返回 None。"""
-            self.assertEqual(self.characters[actor].behavior.behavior_id, "idle")
-            self.events.append(("prepare", actor))
+    def test_player_wait_on_lasts_for_owner_remaining_time(self):
+        """无需参数；玩家成为第二主体时等完主体行为全程，期间不需要 AI；无返回值。"""
+        chosen = []
 
         def choose(actor, now):
-            """输入角色和时刻，确认选择读取完整收尾结果；返回等待动作。"""
-            self.assertEqual(self.characters[actor].behavior.behavior_id, "idle")
-            self.assertIsNone(self.characters[actor].action_progress)
-            self.events.append(("choose", actor))
-            return Action("wait", 5, actor)
+            """输入角色与时刻，记录选择并对玩家发起三十分钟双人行为；返回 Action。"""
+            chosen.append(now)
+            return Action("h_act", 30, 0)
 
-        legacy = sys.modules["Script.Design.handle_npc_ai"]
-        with patch.object(Script.Modules, "npc_ai", npc_ai), patch.object(legacy, "run_npc_pre_behavior_checks", prepare), patch.object(legacy, "choose_character_target", choose):
-            runtime = self.game.get_runtime()
-            runtime.scheduler.replace(Task(1, self.now, Action("sleep", 30, 1), immediate=True))
-            runtime.scheduler.submit(Task(0, self.now + timedelta(minutes=31), INPUT))
-            runtime.scheduler.advance_until_input()
-        relevant = [event for event in self.events if event[0] in {"finish", "prepare", "choose"}]
-        self.assertEqual(relevant, [("finish", 1), ("prepare", 1), ("choose", 1)])
-        self.assertEqual(self.events.count(("settle", 1, "sleep")), 1)
-        self.assertEqual(self.events.count(("settle", 1, "wait")), 1)
+        def settle(actor):
+            """输入角色，模拟主体行为的结算让玩家等待；返回 None。"""
+            self.events.append(("settle", actor, self.characters[actor].behavior.behavior_id))
+            if actor == 1:
+                self.game.wait_on(0, 1, "h_act")
 
-    def test_npc_rest_is_selected_again_after_each_complete_action(self):
-        """无需参数；两次三十分钟休息各自收尾并结算，不产生续段；无返回值。"""
-        sys.modules.pop("Script.Modules.npc_ai", None)
-        npc_ai = importlib.import_module("Script.Modules.npc_ai")
-        import Script.Modules
+        with patch.object(sys.modules["Script.Modules.npc_ai"], "choose_next", side_effect=choose), patch.object(sys.modules["Script.Design.character_behavior"], "judge_character_status", side_effect=settle):
+            self.advance("wait", 1)
+        self.assertEqual(chosen, [self.now])
+        self.assertEqual(self.settled(0), ["wait", "wait"])
+        self.assertEqual(self.realtime(0), [1, 30])
+        self.assertEqual(self.characters[0].target_character_id, 1)
+        self.assertEqual(self.cache.game_time, self.now + timedelta(minutes=30))
 
-        legacy = sys.modules["Script.Design.handle_npc_ai"]
-        with patch.object(Script.Modules, "npc_ai", npc_ai), patch.object(legacy, "choose_character_target", lambda actor, now: Action("rest", 30, actor)):
-            runtime = self.game.get_runtime()
-            runtime.scheduler.submit(Task(0, self.now + timedelta(minutes=31), INPUT))
-            runtime.scheduler.advance_until_input()
-        self.assertEqual(self.events.count(("settle", 1, "rest")), 2)
-        self.assertEqual(self.events.count(("finish", 1)), 1)
-        self.assertFalse(npc_ai.choose_next(1, self.now).continued)
-
-    def test_wake_prechecks_preserve_forced_followup(self):
-        """无需参数；醒来检查提交的强制行动优先执行，AI 不覆盖它；无返回值。"""
-        sys.modules.pop("Script.Modules.npc_ai", None)
-        npc_ai = importlib.import_module("Script.Modules.npc_ai")
-        import Script.Modules
-
-        runtime = self.game.get_runtime()
-        def prepare(actor, now):
-            """输入角色和时刻，提交一次强制响应；返回 None。"""
-            runtime.enqueue(actor, Action("forced", 5, actor))
-
-        legacy = sys.modules["Script.Design.handle_npc_ai"]
-        with patch.object(Script.Modules, "npc_ai", npc_ai), patch.object(legacy, "run_npc_pre_behavior_checks", prepare), patch.object(legacy, "choose_character_target", side_effect=AssertionError("强制响应应先执行")):
-            runtime.scheduler.replace(Task(1, self.now, Action("sleep", 30, 1), immediate=True))
-            runtime.scheduler.submit(Task(0, self.now + timedelta(minutes=31), INPUT))
-            runtime.scheduler.advance_until_input()
-        self.assertEqual(self.events.count(("finish", 1)), 1)
-        self.assertEqual(self.events.count(("settle", 1, "forced")), 1)
-
-    def test_locked_wait_is_silent_and_checks_every_five_minutes(self):
-        """无需参数；H 中等待每五分钟检查，跳过普通动作口上；无返回值。"""
-        sys.modules.pop("Script.Modules.npc_ai", None)
-        npc_ai = importlib.import_module("Script.Modules.npc_ai")
-        import Script.Modules
-
-        self.characters[1].sp_flag.is_h = True
-
-        def prepare(actor, now):
-            """输入角色与时间，模拟旧检查生成被动等待；返回 None。"""
-            Action("wait", 60, actor).apply(self.characters[actor], now)
-
-        with patch.object(Script.Modules, "npc_ai", npc_ai), patch.object(sys.modules["Script.Design.handle_npc_ai"], "run_npc_pre_behavior_checks", prepare):
-            runtime = self.game.get_runtime()
-            runtime.scheduler.submit(Task(0, self.now + timedelta(minutes=10), INPUT))
-            runtime.scheduler.advance_until_input()
-        self.assertNotIn(("settle", 1, "wait"), self.events)
-        self.assertEqual(self.events.count(("realtime", 1, 5)), 2)
-
-    def test_assistant_wakes_when_chunk_crosses_greeting_time(self):
-        """无需参数；助理整夜睡眠跨问候时刻醒来，小睡继续；无返回值。"""
-        sys.modules.pop("Script.Modules.npc_ai", None)
-        npc_ai = importlib.import_module("Script.Modules.npc_ai")
-        self.characters[0].action_info = SimpleNamespace(plan_to_wake_time=(7, 0))
-        start = self.now.replace(hour=6, minute=40)
-        Action("sleep", 30, 1).apply(self.characters[1], start)
-        with patch.object(sys.modules["Script.Design.handle_premise"], "handle_assistant_morning_salutation_on", lambda actor: True):
-            for duration in (480, 300, 65):
-                with self.subTest(duration=duration):
-                    self.cache.game_time = start + timedelta(minutes=10)
-                    self.characters[1].action_progress = ActionProgress(Action("sleep", duration, 1), 30)
-                    self.assertTrue(npc_ai.choose_next(1, self.cache.game_time).continued)
-                    self.cache.game_time = start + timedelta(minutes=30)
-                    choice = npc_ai.choose_next(1, self.cache.game_time)
-                    if duration == 480:
-                        self.assertEqual(choice, Action("finish_current", 0, 1))
-                    else:
-                        self.assertEqual((choice.behavior_id, choice.duration, choice.continued), ("sleep", 30, True))
-
-    def test_daily_new_character_receives_pending_before_input(self):
-        """无需参数；日结招募新角色后，返回输入时该角色已有待办；无返回值。"""
-        self.cache.npc_id_got.remove(1)
+    def test_forced_chain_preserves_submission_order(self):
+        """无需参数；同一角色的多个强制后续按提交顺序依次执行，之后才恢复自主选择；无返回值。"""
         runtime = self.game.get_runtime()
 
-        def recruit():
-            """无需参数，在日结中加入测试角色；无返回值。"""
-            self.new_day()
-            self.cache.npc_id_got.add(1)
+        def settle(actor):
+            """输入角色，玩家结算时为 NPC 连续安排两个后续；返回 None。"""
+            self.events.append(("settle", actor, self.characters[actor].behavior.behavior_id))
+            if actor == 0 and self.characters[0].behavior.behavior_id == "order":
+                self.write_behavior(1, "first", 3)
+                self.game.submit_current(1)
+                self.write_behavior(1, "second", 4)
+                self.game.submit_current(1)
+                self.write_behavior(1, "third", 2)
+                self.game.submit_current(1)
 
-        with patch.object(sys.modules["Script.Settle.past_day_settle"], "update_new_day", recruit):
-            runtime.scheduler.submit(Task(0, self.now + timedelta(days=1), INPUT))
-            runtime.scheduler.advance_until_input()
-        self.assertIs(runtime.scheduler.pending(1).item, AI)
+        with patch.object(sys.modules["Script.Design.character_behavior"], "judge_character_status", side_effect=settle):
+            self.write_behavior(0, "order", 10)
+            runtime.advance(10)
+        self.assertEqual(self.settled(1), ["first", "second", "third", "wait"])
+        self.assertEqual(self.realtime(1), [3, 4, 2, 60])
+        self.assertEqual(runtime._forced[1], deque())
 
-    def test_new_day_settles_before_first_new_day_action(self):
-        """无需参数；日期结算早于新日期第一个行动；无返回值。"""
-        runtime = self.game.get_runtime()
-        tomorrow = self.now + timedelta(days=1)
-        runtime.scheduler.replace(Task(1, tomorrow, Action("office", 60, 1)))
-        runtime.scheduler.submit(Task(0, tomorrow + timedelta(minutes=1), INPUT))
-        runtime.scheduler.advance_until_input()
-        day_index = self.events.index(("day", tomorrow))
-        settle_index = self.events.index(("settle", 1, "office"))
-        self.assertLess(day_index, settle_index)
-        self.assertEqual(len([event for event in self.events if event[0] == "day"]), 1)
-
-    def test_prepared_action_is_not_finished_before_execution(self):
-        """无需参数；UI 刚准备的动作只在实际结算之后收尾；无返回值。"""
-        runtime = self.game.get_runtime()
-        Action("office", 10, 0).apply(self.characters[0], self.now)
-        runtime.advance(10)
-        self.assertEqual(self.events.count(("finish", 0)), 1)
-        self.assertLess(self.events.index(("settle", 0, "office")), self.events.index(("finish", 0)))
-
-    def test_before_hook_submits_successor_without_overwriting_current(self):
-        """无需参数；前置钩子提交 B 后，A 仍先完整结算一次；无返回值。"""
+    def test_after_callback_runs_when_forced_action_completes(self):
+        """无需参数；收尾回调在强制行动结算后执行，回调可以继续安排后续；无返回值。"""
         runtime = self.game.get_runtime()
 
-        def before():
-            """无需参数，A 的前置钩子准备并提交 B；无返回值。"""
-            if self.characters[0].behavior.behavior_id == "first":
-                Action("second", 5, 0).apply(self.characters[0], self.now)
-                self.game.submit_current(0)
+        def exit_done(actor):
+            """输入角色，记录退出完成并为玩家安排立即后续；返回 None。"""
+            self.events.append(("group_exit", actor))
+            self.write_behavior(0, "reaction", 2)
+            self.game.submit_current(0)
 
-        with patch.object(sys.modules["Script.Design.character_behavior"], "judge_before_pl_behavior", before):
-            runtime.scheduler.submit(Task(0, self.now, Action("first", 5, 0), immediate=True))
-            runtime.scheduler.advance_until_input()
-        self.assertEqual([event[2] for event in self.events if event[:2] == ("settle", 0)], ["first", "second"])
-        self.assertEqual(self.events.count(("realtime", 0, 5)), 2)
+        def settle(actor):
+            """输入角色，玩家结算时安排 NPC 的退出行动；返回 None。"""
+            self.events.append(("settle", actor, self.characters[actor].behavior.behavior_id))
+            if actor == 0 and self.characters[0].behavior.behavior_id == "order":
+                self.write_behavior(1, "exit", 5)
+                self.game.submit_current(1, after="group_exit")
 
-    def test_time_stop_wait_on_preserves_npc_task_without_recovery(self):
-        """无需参数；时停中的双人等待不替换 NPC 待办或增加恢复；无返回值。"""
+        with patch.object(sys.modules["Script.Design.handle_npc_ai"], "finish_group_sex_tired_exit", side_effect=exit_done), patch.object(sys.modules["Script.Design.character_behavior"], "judge_character_status", side_effect=settle):
+            self.write_behavior(0, "order", 10)
+            runtime.advance(10)
+        kinds = [(event[0], event[1]) + ((event[2],) if event[0] == "settle" else ()) for event in self.events if event[0] in {"settle", "group_exit"}]
+        self.assertEqual(kinds, [("settle", 0, "order"), ("settle", 1, "exit"), ("group_exit", 1), ("settle", 0, "reaction")])
+        self.assertEqual(self.cache.game_time, self.now + timedelta(minutes=2))
+
+    def test_forced_action_replaces_pending_without_repeating_it(self):
+        """无需参数；强制后续替换角色原待办，原待办不再执行；无返回值。"""
         runtime = self.game.get_runtime()
+        self.write_behavior(1, "forced", 7)
+        self.game.submit_current(1)
+        self.assertTrue(runtime.scheduler.pending(1).immediate)
+        self.advance("wait", 7)
+        self.assertEqual(self.settled(1), ["forced"])
+        self.assertEqual(runtime.scheduler.pending(1).at, self.now + timedelta(minutes=7))
+
+    def test_saved_behavior_resumes_remaining_time_without_replaying(self):
+        """无需参数；读档后进行中的行为只结算剩余时间，不重复一次性效果；无返回值。"""
+        self.write_behavior(1, "work", 60, start=self.now - timedelta(minutes=30))
+        runtime = self.game.get_runtime()
+        pending = runtime.scheduler.pending(1)
+        self.assertEqual((pending.at, pending.item.behavior_id, pending.item.duration, pending.item.continued), (self.now, "work", 30, True))
+        self.advance("wait", 5)
+        self.assertEqual(self.settled(1), [])
+        self.assertEqual(self.realtime(1), [30])
+        self.assertEqual(runtime.scheduler.pending(1).at, self.now + timedelta(minutes=30))
+
+    def test_finished_saved_behavior_starts_with_ai(self):
+        """无需参数；读档时已到期的行为直接进入自主选择；无返回值。"""
+        self.write_behavior(1, "work", 60, start=self.now - timedelta(minutes=60))
+        runtime = self.game.get_runtime()
+        self.assertEqual(runtime.scheduler.pending(1), Task(1, self.now, AI))
+
+    def test_runtime_is_not_part_of_the_save(self):
+        """无需参数；缓存不携带执行器，读档重置后按角色状态重新建队；无返回值。"""
+        runtime = self.game.get_runtime()
+        self.advance("wait", 10)
+        self.assertNotIn("runtime", pickle.dumps(self.cache).decode("latin-1"))
+        self.game.reset()
+        self.write_behavior(1, "work", 20)
+        rebuilt = self.game.get_runtime()
+        self.assertIsNot(rebuilt, runtime)
+        self.assertEqual(rebuilt.scheduler.pending(1).item.behavior_id, "work")
+
+    def test_time_stop_keeps_npc_pending_and_world_time(self):
+        """无需参数；时停中玩家行动不推进时间，NPC 待办保持原样；无返回值。"""
         self.cache.time_stop_mode = True
-        original = runtime.scheduler.pending(1)
-        self.game.wait_on(1, 0, "office")
-        self.assertIs(runtime.scheduler.pending(1), original)
-        runtime.scheduler.submit(Task(0, self.now, INPUT))
-        runtime.scheduler.advance_until_input()
-        self.assertFalse(any(event[:2] == ("realtime", 1) for event in self.events))
+        runtime = self.advance("touch", 10)
+        self.assertEqual(self.cache.game_time, self.now)
+        self.assertEqual(runtime.scheduler.pending(1), Task(1, self.now, AI))
+        self.assertEqual(self.realtime(1), [])
+        self.assertEqual(self.cache.achievement.time_stop_duration, 10)
+        self.assertEqual(self.finished(0), [self.now])
+
+    def test_time_stop_wait_on_does_nothing(self):
+        """无需参数；时停中的等待请求不改变任何待办；无返回值。"""
+        self.cache.time_stop_mode = True
+        runtime = self.game.get_runtime()
+        self.write_behavior(0, "h_act", 10, target=1)
+        self.game.wait_on(1, 0, "h_act")
+        self.assertEqual(runtime.scheduler.pending(1), Task(1, self.now, AI))
 
     def test_time_stop_does_not_interrupt_working_npc(self):
-        """无需参数；时停期间工作 NPC 的待办保持原定安排；无返回值。"""
+        """无需参数；玩家行动开始时打断工作 NPC，时停中不打断；无返回值。"""
+        for time_stop in (False, True):
+            with self.subTest(time_stop=time_stop):
+                self.game.reset()
+                self.events.clear()
+                self.cache.game_time = self.cache.pre_game_time = self.now
+                self.cache.time_stop_mode = time_stop
+                self.write_behavior(1, "work", 60)
+                runtime = self.game.get_runtime()
+                with patch.object(sys.modules["Script.Design.handle_premise"], "handle_action_work_or_entertainment", return_value=True), patch.object(
+                    sys.modules["Script.Design.handle_npc_ai"], "judge_interrupt_character_behavior", return_value=True
+                ), patch.object(sys.modules["Script.Modules.npc_ai"], "choose_next", return_value=Action("bath", 15, 1)) as choose:
+                    self.write_behavior(0, "wait", 1)
+                    runtime.advance(1)
+                self.assertEqual(choose.call_count, 0 if time_stop else 1)
+                self.assertEqual(self.settled(1), [] if time_stop else ["bath"])
+                pending = runtime.scheduler.pending(1)
+                if time_stop:
+                    self.assertEqual((pending.at, pending.item.behavior_id, pending.item.continued), (self.now, "work", True))
+                else:
+                    self.assertEqual(pending, Task(1, self.now + timedelta(minutes=15), AI))
+
+    def test_npc_sleep_plan_is_chunked_and_closed_once(self):
+        """无需参数；NPC 睡眠按计划切成最多三十分钟的片段，只结算一次入睡并在计划结束后收尾；无返回值。"""
+        self.use_real_ai()
+        installed = []
+
+        def sleep_plan(actor):
+            """输入角色，模拟睡眠状态机写入六十五分钟计划；返回 None。"""
+            installed.append(actor)
+            self.write_behavior(actor, "sleep", 30, plan_start_time=self.cache.game_time, plan_end_time=self.cache.game_time + timedelta(minutes=65))
+
+        sys.modules["Script.Core.constant"].handle_state_machine_data = {77: sleep_plan}
+        choices = [state_machine_action(1, 77), Action("wait", 5, 1)]
+        with patch.object(sys.modules["Script.Design.handle_npc_ai"], "choose_character_target", side_effect=lambda actor, now: choices.pop(0) if choices else Action("wait", 5, actor)):
+            self.advance("wait", 70)
+        self.assertEqual(installed, [1])
+        self.assertEqual(self.realtime(1), [30, 30, 5, 5])
+        self.assertEqual(self.settled(1), ["sleep", "wait"])
+        self.assertEqual(self.finished(1), [self.now + timedelta(minutes=65)])
+
+    def test_npc_wakes_when_recovered_outside_sleep_time(self):
+        """无需参数；恢复完毕且不在睡眠时段时 NPC 在片段之间醒来；无返回值。"""
+        self.use_real_ai()
+        self.write_behavior(1, "sleep", 30, start=self.now - timedelta(minutes=30), plan_start_time=self.now - timedelta(minutes=30), plan_end_time=self.now + timedelta(minutes=90))
+        premise = sys.modules["Script.Design.handle_premise"]
+        with patch.object(premise, "handle_tired_le_0", return_value=True), patch.object(premise, "handle_hp_max", return_value=True), patch.object(premise, "handle_mp_max", return_value=True):
+            self.advance("wait", 10)
+        self.assertEqual(self.finished(1), [self.now, self.now + timedelta(minutes=5)])
+        self.assertEqual(self.settled(1), ["wait", "wait"])
+
+    def test_assistant_wakes_when_chunk_crosses_greeting_time(self):
+        """无需参数；整夜睡眠在片段末越过早安问候时刻时醒来，短睡不受影响；无返回值。"""
+        self.use_real_ai()
+        premise = sys.modules["Script.Design.handle_premise"]
+        for total, woke in ((480, self.now + timedelta(minutes=60)), (120, self.now + timedelta(minutes=90))):
+            with self.subTest(total=total):
+                self.game.reset()
+                self.events.clear()
+                self.cache.game_time = self.cache.pre_game_time = self.now
+                self.write_behavior(1, "sleep", 30, start=self.now - timedelta(minutes=30), plan_start_time=self.now - timedelta(minutes=30), plan_end_time=self.now - timedelta(minutes=30) + timedelta(minutes=total))
+                with patch.object(premise, "handle_assistant_morning_salutation_on", return_value=True):
+                    self.advance("wait", 120)
+                self.assertEqual(self.finished(1)[0], woke)
+
+    def test_forced_action_interrupts_sleep_plan(self):
+        """无需参数；睡眠中被强制安排其他行为后不再回到原睡眠计划；无返回值。"""
+        self.use_real_ai()
+        self.write_behavior(1, "sleep", 30, start=self.now - timedelta(minutes=30), plan_start_time=self.now - timedelta(minutes=30), plan_end_time=self.now + timedelta(minutes=450))
+
+        def settle(actor):
+            """输入角色，玩家结算时叫醒 NPC；返回 None。"""
+            self.events.append(("settle", actor, self.characters[actor].behavior.behavior_id))
+            if actor == 0 and self.characters[0].behavior.behavior_id == "shout":
+                self.write_behavior(1, "wake", 5)
+                self.game.submit_current(1)
+
+        with patch.object(sys.modules["Script.Design.character_behavior"], "judge_character_status", side_effect=settle):
+            self.advance("shout", 40)
+        self.assertEqual(self.settled(1), ["wake", "wait"] + ["wait"] * 6)
+        self.assertEqual(self.realtime(1), [5] * 8)
+
+    def test_locked_wait_is_silent_and_checks_every_five_minutes(self):
+        """无需参数；H 或木头人状态的等待每五分钟静默复查，不重复结算；无返回值。"""
+        self.use_real_ai()
+        self.characters[1].sp_flag.is_h = True
+        self.write_behavior(1, "wait", 5, target=0, start=self.now - timedelta(minutes=5))
+        self.advance("wait", 15)
+        self.assertEqual(self.settled(1), [])
+        self.assertEqual(self.realtime(1), [5, 5, 5])
+        self.assertEqual(self.finished(1), [])
+
+    def test_directly_written_behavior_runs_to_its_end_before_closing(self):
+        """无需参数；他人直接写入的未完成行为先延续到结束，再由 NPC 自己收尾并重新选择；无返回值。"""
+        self.use_real_ai()
+        self.write_behavior(1, "wait", 10, target=0)
+        self.advance("wait", 15)
+        self.assertEqual(self.settled(1), ["wait"])
+        self.assertEqual(self.realtime(1), [10, 5])
+        self.assertEqual(self.finished(1), [self.now + timedelta(minutes=10)])
+
+    def test_npc_closes_each_finished_action_before_next_choice(self):
+        """无需参数；NPC 每个行动到期后先收尾再选择下一个，选择时行为已闲置；无返回值。"""
+        self.use_real_ai()
+        seen = []
+        with patch.object(sys.modules["Script.Design.handle_npc_ai"], "choose_character_target", side_effect=lambda actor, now: (seen.append(self.characters[actor].behavior.behavior_id), Action("rest", 20, actor))[1]):
+            self.advance("wait", 60)
+        self.assertEqual(seen, ["idle"] * 3)
+        self.assertEqual(self.settled(1), ["rest"] * 3)
+        self.assertEqual(self.finished(1), [self.now + timedelta(minutes=20), self.now + timedelta(minutes=40)])
+
+    def test_new_day_settles_before_first_new_day_action_and_syncs_newcomers(self):
+        """无需参数；跨日时先日结再执行当天首个行动，日结新增的角色在输入前进入队列；无返回值。"""
+        midnight = datetime(2026, 3, 2)
+
+        def new_day():
+            """无需参数，日结时登记新角色；返回 None。"""
+            self.new_day()
+            self.characters[2] = SimpleNamespace(behavior=Behavior(), target_character_id=2, state="idle", dead=False, sp_flag=SimpleNamespace(see_pl_h=False, is_h=False), hypnosis=SimpleNamespace(blockhead=False))
+            self.cache.npc_id_got.add(2)
+
+        with patch.object(sys.modules["Script.Settle.past_day_settle"], "update_new_day", side_effect=new_day):
+            runtime = self.advance("sleep", 15 * 60)
+        days = [index for index, event in enumerate(self.events) if event[0] == "day"]
+        self.assertEqual([self.events[index][1] for index in days], [midnight])
+        first_new_day_settle = next(index for index, event in enumerate(self.events) if event[0] == "settle" and self.cache.game_time >= midnight and index > days[0])
+        self.assertLess(days[0], first_new_day_settle)
+        self.assertEqual(self.settled(2), ["wait"])
+        self.assertEqual(runtime.scheduler.pending(2).at, datetime(2026, 3, 2, 1))
+
+    def test_departed_npc_is_dropped_before_choice_and_returns_by_sync(self):
+        """无需参数；离队 NPC 在选择前撤销待办，归队时重新加入；无返回值。"""
         runtime = self.game.get_runtime()
-        self.characters[1].behavior.behavior_id = "office"
-        self.characters[1].behavior.duration = 60
-        original = runtime.scheduler.pending(1)
-        with patch.object(sys.modules["Script.Design.handle_premise"], "handle_action_work_or_entertainment", return_value=True), patch.object(
-            sys.modules["Script.Design.handle_npc_ai"], "judge_interrupt_character_behavior", return_value=True
-        ):
-            self.cache.time_stop_mode = True
-            runtime.scheduler.submit(Task(0, self.now, Action("office", 10, 0), immediate=True))
-            runtime.scheduler.advance_until_input()
-        self.assertIs(runtime.scheduler.pending(1), original)
 
-    def test_wait_on_rejects_changed_owner_target(self):
-        """无需参数；等待主体改换目标后，参与者恢复自主选择；无返回值。"""
+        def settle(actor):
+            """输入角色，玩家结算时让 NPC 离队；返回 None。"""
+            self.events.append(("settle", actor, self.characters[actor].behavior.behavior_id))
+            if actor == 0:
+                self.cache.npc_id_got.discard(1)
+
+        with patch.object(sys.modules["Script.Design.character_behavior"], "judge_character_status", side_effect=settle):
+            self.write_behavior(0, "send", 10)
+            runtime.advance(10)
+        self.assertIsNone(runtime.scheduler.pending(1))
+        self.assertEqual(self.settled(1), [])
+        self.cache.npc_id_got.add(1)
+        self.advance("wait", 5)
+        self.assertEqual(self.settled(1), ["wait"])
+
+    def test_reset_character_cancels_offline_and_restarts_online(self):
+        """无需参数；下线撤销待办，上线从当前时刻自主选择；无返回值。"""
+        self.assertIsNone(self.game.reset_character(1))
+        runtime = self.advance("wait", 5)
+        self.assertEqual(runtime.scheduler.pending(1).at, self.now + timedelta(minutes=60))
+        self.cache.npc_id_got.discard(1)
+        self.game.reset_character(1)
+        self.assertIsNone(runtime.scheduler.pending(1))
+        self.cache.npc_id_got.add(1)
+        self.game.reset_character(1)
+        self.assertEqual(runtime.scheduler.pending(1), Task(1, self.now + timedelta(minutes=5), AI))
+
+    def test_departing_during_own_action_leaves_no_successor(self):
+        """无需参数；NPC 在自己的行动结算中离队时不再安排后续；无返回值。"""
         runtime = self.game.get_runtime()
-        self.characters[0].behavior.behavior_id = "office"
-        self.characters[0].target_character_id = 1
-        self.game.wait_on(1, 0, "office")
-        self.characters[0].target_character_id = 99
-        runtime.scheduler.submit(Task(0, self.now, INPUT))
-        runtime.scheduler.advance_until_input()
-        self.assertIs(runtime.scheduler.pending(1).item, AI)
 
-    def test_recovery_plan_rejects_changed_target(self):
-        """无需参数；恢复计划目标改变后重新选择行动；无返回值。"""
-        sys.modules.pop("Script.Modules.npc_ai", None)
-        npc_ai = importlib.import_module("Script.Modules.npc_ai")
-        import Script.Modules
+        def settle(actor):
+            """输入角色，NPC 结算时离队；返回 None。"""
+            self.events.append(("settle", actor, self.characters[actor].behavior.behavior_id))
+            if actor == 1:
+                self.cache.npc_id_got.discard(1)
 
-        with patch.object(Script.Modules, "npc_ai", npc_ai):
-            self.cache.npc_id_got.clear()
-            runtime = self.game.get_runtime()
-            self.cache.npc_id_got.add(1)
-            self.characters[1].behavior.behavior_id = "sleep"
-            self.characters[1].target_character_id = 99
-            self.characters[1].action_progress = ActionProgress(Action("sleep", 60, 1), 30)
-            action = npc_ai.choose_next(1, self.now)
-        self.assertIs(type(action), Action)
-        self.assertEqual(action, Action("finish_current", 0, 1))
-        self.assertEqual(pickle.loads(pickle.dumps(action)), action)
+        with patch.object(sys.modules["Script.Design.character_behavior"], "judge_character_status", side_effect=settle):
+            self.write_behavior(0, "wait", 120)
+            runtime.advance(120)
+        self.assertEqual(self.settled(1), ["wait"])
+        self.assertIsNone(runtime.scheduler.pending(1))
 
-    def test_recovery_ai_returns_one_chunk(self):
-        """无需参数；恢复计划的下一行动占用一个三十分钟片段；无返回值。"""
-        sys.modules.pop("Script.Modules.npc_ai", None)
-        npc_ai = importlib.import_module("Script.Modules.npc_ai")
-        self.cache.npc_id_got.clear()
+    def test_dead_npc_is_skipped(self):
+        """无需参数；死亡角色不建队，执行时不结算；无返回值。"""
+        self.characters[1].dead = True
         runtime = self.game.get_runtime()
-        self.characters[1].behavior.behavior_id = "sleep"
-        self.characters[1].action_progress = ActionProgress(Action("sleep", 95, 1), 30)
-
-        action = npc_ai.choose_next(1, self.now)
-
-        self.assertEqual((action.behavior_id, action.duration, action.target), ("sleep", 30, 1))
-        self.assertTrue(action.continued)
-
-    def test_repeated_choice_consumes_each_progress_only_once(self):
-        """无需参数；同一累计进度重复选择不重复扣减剩余时间；无返回值。"""
-        sys.modules.pop("Script.Modules.npc_ai", None)
-        npc_ai = importlib.import_module("Script.Modules.npc_ai")
-        character = self.characters[1]
-        request = Action("sleep", 65, 1)
-        request.apply(character, self.now)
-        progress = character.action_progress = ActionProgress(request, 30)
-        before = pickle.dumps(character)
-        for elapsed, duration in ((30, 30), (30, 30), (60, 5), (60, 5)):
-            progress.elapsed = elapsed
-            choice = npc_ai.choose_next(1, self.now)
-            self.assertIs(type(choice), Action)
-            self.assertEqual(pickle.loads(pickle.dumps(choice)), choice)
-            self.assertEqual(choice.duration, duration)
-            self.assertTrue(choice.continued)
-        self.assertIs(character.action_progress, progress)
-        self.assertEqual(request.duration, 65)
-        progress.elapsed = 30
-        self.assertEqual(pickle.dumps(character), before)
+        self.assertIsNone(runtime.scheduler.pending(1))
+        self.assertEqual(runtime.execute(1, Action("wait", 5, 1)), 5)
         self.assertEqual(self.events, [])
 
-    def test_restored_ai_resumes_from_saved_progress(self):
-        """无需参数；存档恢复后按累计执行时间继续，重复选择保持剩余时长；无返回值。"""
-        sys.modules.pop("Script.Modules.npc_ai", None)
-        npc_ai = importlib.import_module("Script.Modules.npc_ai")
-        request = Action("sleep", 65, 1)
-        request.apply(self.characters[1], self.now)
-        self.characters[1].action_progress = ActionProgress(request, 30)
-        self.assertEqual(npc_ai.choose_next(1, self.now).duration, 30)
-        self.characters[1] = pickle.loads(pickle.dumps(self.characters[1]))
-        self.assertEqual(npc_ai.choose_next(1, self.now).duration, 30)
-        self.characters[1].action_progress.elapsed = 60
-        self.assertEqual(npc_ai.choose_next(1, self.now).duration, 5)
-
-    def test_legacy_character_without_ai_records_can_choose(self):
-        """无需参数；旧档没有执行和决策记录时仍能选择，首次执行后正常续段；无返回值。"""
-        sys.modules.pop("Script.Modules.npc_ai", None)
-        npc_ai = importlib.import_module("Script.Modules.npc_ai")
-        character = self.characters[1]
-        Action("sleep", 65, 1).apply(character, self.now)
-        first = npc_ai.choose_next(1, self.now)
-        self.assertFalse(first.continued)
-        character.action_progress = ActionProgress(first, 30)
-        self.assertEqual(npc_ai.choose_next(1, self.now).duration, 30)
-
-    def test_reset_clears_progress_before_runtime_exists(self):
-        """无需参数；执行器尚未创建时，角色重置仍清空存档中的旧进度；无返回值。"""
-        self.characters[1].action_progress = ActionProgress(Action("sleep", 65, 1), 30)
-        self.assertIsNone(self.cache.action_scheduler)
-        self.game.reset_character(1)
-        self.assertIsNone(self.characters[1].action_progress)
-        self.assertIsNone(self.cache.action_scheduler)
-
-    def test_cancelled_sleep_does_not_resume_old_plan(self):
-        """无需参数；取消后的同类型新行动使用新时长，不沿用旧恢复计划；无返回值。"""
-        sys.modules.pop("Script.Modules.npc_ai", None)
-        npc_ai = importlib.import_module("Script.Modules.npc_ai")
-        character = self.characters[1]
-        Action("sleep", 65, 1).apply(character, self.now)
-        character.action_progress = ActionProgress(Action("sleep", 65, 1), 30)
-        npc_ai.choose_next(1, self.now)
-        self.game.get_runtime()
-        self.game.reset_character(1)
-        self.assertIsNone(character.action_progress)
-        Action("sleep", 12, 1).apply(character, self.now)
-        choice = npc_ai.choose_next(1, self.now)
-        self.assertEqual(choice.duration, 12)
-        self.assertFalse(choice.continued)
-        character.action_progress = ActionProgress(choice, 10)
-        self.assertEqual(npc_ai.choose_next(1, self.now).duration, 2)
-
-    def test_execution_records_original_duration_and_elapsed(self):
-        """无需参数；执行记录保存原请求时长及累计时间；无返回值。"""
-        character = self.characters[1]
-        runtime = self.game.get_runtime()
-        runtime.scheduler.replace(Task(1, self.now, Action("sleep", 65, 1), immediate=True))
-        runtime.scheduler.submit(Task(0, self.now + timedelta(minutes=1), INPUT))
-        runtime.scheduler.advance_until_input()
-        self.assertEqual(character.action_progress.action.duration, 65)
-        self.assertEqual(character.action_progress.elapsed, 30)
-
-    def test_continued_execution_accumulates_progress(self):
-        """无需参数；续段累计执行进度，下一次 AI 查询据此计算剩余时长；无返回值。"""
-        sys.modules.pop("Script.Modules.npc_ai", None)
-        npc_ai = importlib.import_module("Script.Modules.npc_ai")
-        character = self.characters[1]
-        request = Action("sleep", 65, 1)
-        request.apply(character, self.now)
-        progress = character.action_progress = ActionProgress(request, 30)
-        choice = npc_ai.choose_next(1, self.now)
-        runtime = self.game.get_runtime()
-        runtime.execute(1, choice)
-        self.assertEqual(request.duration, 65)
-        self.assertIs(character.action_progress, progress)
-        self.assertEqual(progress.elapsed, 60)
-        self.assertEqual(npc_ai.choose_next(1, self.now).duration, 5)
-
-    def test_fallback_wait_keeps_five_minute_interval(self):
-        """无需参数；空闲 NPC 的回退等待保持五分钟；无返回值。"""
-        sys.modules.pop("Script.Modules.npc_ai", None)
-        npc_ai = importlib.import_module("Script.Modules.npc_ai")
-        import Script.Modules
-
-        with patch.object(Script.Modules, "npc_ai", npc_ai):
-            self.cache.npc_id_got.clear()
-            self.game.get_runtime()
-            self.characters[1].behavior.behavior_id = "idle"
-            action = npc_ai.choose_next(1, self.now)
-        self.assertIs(type(action), Action)
-        self.assertEqual(pickle.loads(pickle.dumps(action)), action)
-        self.assertEqual(action.duration, 5)
-
-    def test_player_wait_end_returns_input_without_npc_ai(self):
-        """无需参数；玩家等待的主体已停止时直接返回输入；无返回值。"""
-        runtime = self.game.get_runtime()
-        self.game.wait_on(0, 1, "office")
-        result = runtime.scheduler.advance_until_input()
-        self.assertEqual(result.actor, 0)
-        self.assertIs(result.item, INPUT)
-        self.assertEqual(result.at, self.now)
-        self.assertFalse(any(event[:2] == ("realtime", 0) for event in self.events))
-
-    def test_end_wait_cancels_recovery_and_uses_normal_pending(self):
-        """无需参数；真实结束等待函数清空旧进度，并排普通续段而非立即行动；无返回值。"""
-        source = Path(__file__).resolve().parents[1] / "Script/System/Instruct_System/handle_instruct.py"
-        tree = ast.parse(source.read_text())
-        function = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "_schedule_h_end_wait")
-        namespace = {"cache": self.cache}
-        exec(compile(ast.Module(body=[function], type_ignores=[]), str(source), "exec"), namespace)
-        runtime = self.game.get_runtime()
-        player_progress = self.characters[0].action_progress = ActionProgress(Action("sleep", 65, 0), 30)
-        for actor in (1, 0):
-            with self.subTest(actor=actor):
-                character = self.characters[actor]
-                character.action_progress = ActionProgress(Action("sleep", 65, actor), 30)
-                Action("wait", 5, actor).apply(character, self.now)
-                namespace["_schedule_h_end_wait"](actor)
-                self.assertIsNone(character.action_progress)
-                pending = runtime.scheduler.pending(actor)
-                self.assertEqual((pending.at, pending.item.behavior_id, pending.item.duration), (self.now, "wait", 5))
-                self.assertTrue(pending.item.continued)
-                self.assertFalse(pending.immediate)
-                if actor == 1:
-                    self.assertIs(self.characters[0].action_progress, player_progress)
-
-    def test_offline_online_drops_old_action_and_recovery_plan(self):
-        """无需参数；离队期间无效果，上线立即自主选择且不恢复旧睡眠；无返回值。"""
-        runtime = self.game.get_runtime()
-        old = Action("sleep", 30, 1, continued=True)
-        old.apply(self.characters[1], self.now)
-        runtime.current[1] = (self.characters[1].behavior, 1, "sleep")
-        self.characters[1].action_progress = ActionProgress(old, 0)
-        runtime.scheduler.replace(Task(1, self.now + timedelta(minutes=30), old))
-        self.cache.npc_id_got.remove(1)
-        self.game.reset_character(1)
-        runtime.scheduler.submit(Task(0, self.now + timedelta(minutes=5), INPUT))
-        runtime.scheduler.advance_until_input()
-        self.assertFalse(any(event[:2] == ("realtime", 1) for event in self.events))
-        self.assertNotIn(1, runtime.current)
-        self.assertIsNone(self.characters[1].action_progress)
-
-        self.cache.npc_id_got.add(1)
-        self.characters[1].behavior = Behavior()
-        self.game.reset_character(1)
-        runtime.scheduler.submit(Task(0, runtime.scheduler.now + timedelta(minutes=31), INPUT))
-        with patch.object(runtime.scheduler, "_choose_next", return_value=Action("office", 60, 1)):
-            runtime.scheduler.advance_until_input()
-        self.assertEqual([event for event in self.events if event[:2] == ("settle", 1)], [("settle", 1, "office")])
-        self.assertNotIn(("realtime", 1, 30), self.events)
-
-    def test_actor_going_offline_during_action_has_no_old_successor(self):
-        """无需参数；结算中离队撤销已排后续，之后上线重新选择；无返回值。"""
+    def test_advance_while_running_forces_player_action(self):
+        """无需参数；执行中再次提交玩家行动时作为立即后续替换输入；无返回值。"""
         runtime = self.game.get_runtime()
 
-        def leave(actor):
-            """输入当前执行者，模拟离队效果并清理调度计划；返回 None。"""
-            runtime.enqueue(actor, Action("must_not_run", 10, actor))
-            self.cache.npc_id_got.remove(actor)
-            self.game.reset_character(actor)
+        def settle(actor):
+            """输入角色，NPC 结算时为玩家追加反应行动；返回 None。"""
+            self.events.append(("settle", actor, self.characters[actor].behavior.behavior_id))
+            if actor == 1:
+                self.write_behavior(0, "reaction", 3)
+                runtime.advance(3)
 
-        runtime.scheduler.replace(Task(1, self.now, Action("leave", 10, 1)))
-        runtime.scheduler.submit(Task(0, self.now + timedelta(minutes=5), INPUT))
-        with patch.object(sys.modules["Script.Design.character_behavior"], "judge_character_status", leave):
-            runtime.scheduler.advance_until_input()
-        self.assertIs(runtime.scheduler.pending(1).item, AI)
-        self.assertEqual([event for event in self.events if event[:2] == ("realtime", 1)], [("realtime", 1, 10)])
-        self.assertNotIn(1, runtime.current)
-        self.cache.npc_id_got.add(1)
-        self.game.reset_character(1)
-        self.assertNotIn(1, runtime.current)
-        self.assertEqual(runtime.scheduler.pending(1).at, runtime.scheduler.now)
+        with patch.object(sys.modules["Script.Design.character_behavior"], "judge_character_status", side_effect=settle):
+            self.advance("wait", 1)
+        self.assertEqual(self.settled(0), ["wait", "reaction"])
+        self.assertEqual(self.cache.game_time, self.now + timedelta(minutes=3))
+
+    def test_player_move_resets_h_sight_and_records_instruction(self):
+        """无需参数；玩家移动时清除 NPC 的目击标记并记录指令；无返回值。"""
+        self.characters[1].sp_flag.see_pl_h = True
+        self.advance("move", 5)
+        self.assertFalse(self.characters[1].sp_flag.see_pl_h)
+        self.assertEqual(self.cache.pl_pre_behavior_instruce, ["move"])
+        self.assertEqual(self.cache.daily_intsruce, 1)
 
 
 if __name__ == "__main__":

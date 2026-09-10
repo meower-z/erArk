@@ -1118,6 +1118,12 @@ class Behavior:
         """ 行为持续时间(单位分钟) """
         self.behavior_id: str = "share_blankly"
         """ 行为id """
+        self.plan_start_time: datetime.datetime = datetime.datetime(1, 1, 1)
+        """ 分段执行的行为的计划开始时间 """
+        self.plan_end_time: datetime.datetime = datetime.datetime(1, 1, 1)
+        """ 分段执行的行为的计划结束时间 """
+        self.wait_on_behavior_id: str = ""
+        """ 等待行为所等待的主体行为id """
         self.move_target: List[str] = []
         """ 移动行为的目标坐标 """
         self.move_src: List[str] = []
@@ -1716,8 +1722,6 @@ class Character:
         # """ 角色的三围数据 """
         self.cloth: CLOTH = CLOTH()
         """ 角色的衣服数据 """
-        self.action_progress = None
-        """ 执行层记录的行动请求和已结算时长 """
         self.behavior: Behavior = Behavior()
         """ 角色当前行为状态数据 """
         self.second_behavior: Dict[str, int] = {}

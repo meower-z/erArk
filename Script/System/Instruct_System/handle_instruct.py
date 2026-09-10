@@ -1499,20 +1499,6 @@ def handle_wait_5_min_in_h():
     else:
         chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration = 5)
 
-def _schedule_h_end_wait(character_id: int) -> None:
-    """将已配置的结束后等待排入队列；输入角色编号 int，返回 None。"""
-    from Script.Modules.scheduler.action import Action
-    from Script.Modules.scheduler.game_actions import get_runtime
-    from Script.Modules.scheduler import Task
-
-    runtime = get_runtime()
-    action = Action.from_character(cache.character_data[character_id])
-    # 普通待办排在玩家的立即结束行动之后，等待只结算经过时间。
-    action.continued = True
-    cache.character_data[character_id].action_progress = None
-    runtime.scheduler.replace(Task(character_id, runtime.scheduler.now, action))
-
-
 @add_instruct(constant.Instruct.H_END)
 def handle_h_end():
     """处理H结束指令"""
@@ -1540,7 +1526,6 @@ def handle_h_end():
         target_data.behavior.duration = 10
         target_data.behavior.start_time = character_data.behavior.start_time
         target_data.state = constant.CharacterStatus.STATUS_WAIT
-        _schedule_h_end_wait(target_data.cid)
 
     # H结束时的其他处理完毕
     now_draw = draw.WaitDraw()
@@ -1607,7 +1592,6 @@ def handle_hidden_sex_end():
     target_data.behavior.duration = 10
     target_data.behavior.start_time = character_data.behavior.start_time
     target_data.state = constant.CharacterStatus.STATUS_WAIT
-    _schedule_h_end_wait(target_data.cid)
 
     # H结束时的其他处理完毕
     now_draw = draw.WaitDraw()
@@ -1642,7 +1626,6 @@ def handle_exhibitionism_sex_end():
     target_data.behavior.duration = 10
     target_data.behavior.start_time = character_data.behavior.start_time
     target_data.state = constant.CharacterStatus.STATUS_WAIT
-    _schedule_h_end_wait(target_data.cid)
 
     # H结束时的其他处理完毕
     now_draw = draw.WaitDraw()
@@ -1747,7 +1730,6 @@ def handle_end_sex_class():
         target_data.behavior.duration = 10
         target_data.behavior.start_time = character_data.behavior.start_time
         target_data.state = constant.CharacterStatus.STATUS_WAIT
-        _schedule_h_end_wait(target_data.cid)
 
     now_draw = draw.WaitDraw()
     now_draw.width = width
@@ -1780,7 +1762,6 @@ def handle_group_sex_end():
         target_data.behavior.duration = 10
         target_data.behavior.start_time = character_data.behavior.start_time
         target_data.state = constant.CharacterStatus.STATUS_WAIT
-        _schedule_h_end_wait(target_data.cid)
 
     # H结束时的其他处理完毕
     now_draw = draw.WaitDraw()
