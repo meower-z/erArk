@@ -2,6 +2,7 @@
 
 from collections import deque
 from datetime import datetime, timedelta
+from functools import partial
 import ast
 import importlib
 import pickle
@@ -933,6 +934,33 @@ class GameActionsTests(unittest.TestCase):
             self.advance("wait", 1)
         self.assertEqual(self.settled(0), ["wait", "reaction"])
         self.assertEqual(self.cache.game_time, self.now + timedelta(minutes=3))
+
+    def test_continuation_runs_after_player_action_ends_and_chains(self):
+        """无需参数；结算中登记的接续在玩家行动收尾后、回到输入前执行，接续提交的行动从该时刻立即开始，接续中再登记的接续留到下一段结束；无返回值。"""
+        runtime = self.game.get_runtime()
+
+        def walk(step):
+            """输入段号，记录接续时刻与玩家行为，写入下一段并在其结束后继续；返回 None。"""
+            self.events.append(("continue", step, self.cache.game_time, self.characters[0].behavior.behavior_id))
+            if step > 3:
+                return
+            self.write_behavior(0, "leg%d" % step, step)
+            runtime.advance(step)
+            self.game.continue_after(partial(walk, step + 1))
+
+        def settle(actor):
+            """输入角色，玩家的指令结算中开始分段行走；返回 None。"""
+            self.events.append(("settle", actor, self.characters[actor].behavior.behavior_id, self.cache.game_time))
+            if actor == 0 and self.characters[0].behavior.behavior_id == "order":
+                walk(1)
+
+        with patch.object(sys.modules["Script.Design.character_behavior"], "judge_character_status", side_effect=settle):
+            self.advance("order", 10)
+        minute = lambda n: self.now + timedelta(minutes=n)
+        self.assertEqual([event[1:] for event in self.events if event[0] == "settle" and event[1] == 0], [(0, "order", minute(0)), (0, "leg1", minute(0)), (0, "leg2", minute(1)), (0, "leg3", minute(3))])
+        self.assertEqual([event[1:] for event in self.events if event[0] == "continue"], [(1, minute(0), "order"), (2, minute(1), "idle"), (3, minute(3), "idle"), (4, minute(6), "idle")])
+        self.assertEqual(self.finished(0), [minute(1), minute(3), minute(6)])
+        self.assertEqual(self.cache.game_time, minute(6))
 
     def test_player_move_resets_h_sight_and_records_instruction(self):
         """无需参数；玩家移动时清除 NPC 的目击标记并记录指令；无返回值。"""

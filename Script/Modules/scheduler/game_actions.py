@@ -52,6 +52,11 @@ def submit_current(actor: int, after=None):
         runtime.force(actor, partial(runtime.finish_action, actor, after))
 
 
+def continue_after(callback):
+    """输入无参回调，登记为玩家本次行动结束、回到输入之前执行的接续；接续提交了新行动时本次输入让位。返回 None。"""
+    get_runtime()._continuations.append(callback)
+
+
 def reset_character(actor: int):
     """角色上下线时重排待办：离队者撤销，在队者按当前行为重新入队；输入角色编号，返回 None。"""
     if _runtime is None:
@@ -100,6 +105,7 @@ class Runtime:
         """从当前游戏时刻建立空调度器，无参数，返回 None。"""
         self.scheduler = Scheduler(cache_control.cache.game_time, choose_next=self.choose_next, execute=self.execute, before_task=self.before_task, advance_time=self.advance_time)
         self._forced: dict[int, deque] = {}
+        self._continuations: deque = deque()
         self.sync_characters()
 
     @staticmethod
@@ -136,6 +142,10 @@ class Runtime:
 
             if cache.character_data[0].behavior.behavior_id != constant.Behavior.SHARE_BLANKLY:
                 character_behavior.judge_character_status_time_over(0, task.at, end_now=2)
+            # 结算中登记的接续在玩家行动结束后执行；接续再登记的接续留到下一次行动结束。
+            continuations, self._continuations = self._continuations, deque()
+            for callback in continuations:
+                callback()
         elif task.item is AI:
             if task.actor not in cache.npc_id_got or cache.character_data[task.actor].dead:
                 # 离队或死亡的角色退出队列，归队时由同步重新加入。
