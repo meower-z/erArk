@@ -382,7 +382,7 @@ def chara_handle_instruct_common_settle(
     character_data.behavior.duration = duration
     # 双人行动由主体结算，参与者只检查主体是否仍在执行该行为。
     if target_character_id != character_id and force_taget_wait:
-        from Script.Modules import game_actions
+        from Script.Modules.scheduler import game_actions
         game_actions.wait_on(target_character_id, character_id, behavior_id)
     # 群交结算
     group_sex_panel.group_sex_settle(character_id, target_character_id, behavior_id)
@@ -1469,7 +1469,7 @@ def handle_ask_group_sex():
                 continue
             chara_handle_instruct_common_settle(constant.Behavior.JOIN_GROUP_SEX, character_id=chara_id, target_character_id=0)
             # 手动结算该状态
-            from Script.Modules import game_actions
+            from Script.Modules.scheduler import game_actions
             game_actions.submit_current(chara_id)
     else:
         now_draw.text = _("\n进入群交模式失败\n")
@@ -1501,8 +1501,8 @@ def handle_wait_5_min_in_h():
 
 def _schedule_h_end_wait(character_id: int) -> None:
     """将已配置的结束后等待排入队列；输入角色编号 int，返回 None。"""
-    from Script.Modules.action import Action
-    from Script.Modules.game_actions import get_runtime
+    from Script.Modules.scheduler.action import Action
+    from Script.Modules.scheduler.game_actions import get_runtime
     from Script.Modules.scheduler import Task
 
     runtime = get_runtime()

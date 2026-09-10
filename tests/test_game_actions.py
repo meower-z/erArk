@@ -10,9 +10,9 @@ from types import ModuleType, SimpleNamespace
 import unittest
 from unittest.mock import patch
 
-from Script.Modules.action import Action, ActionProgress
+from Script.Modules.scheduler.action import Action, ActionProgress
 from Script.Modules.scheduler import AI, INPUT, Task
-from Script.Modules.npc_actions import state_machine_action
+from Script.Modules.scheduler.npc_actions import state_machine_action
 
 
 class Behavior:
@@ -130,8 +130,8 @@ class GameActionsTests(unittest.TestCase):
         npc_patch = patch.object(Script.Modules, "npc_ai", modules["Script.Modules.npc_ai"], create=True)
         npc_patch.start()
         self.addCleanup(npc_patch.stop)
-        sys.modules.pop("Script.Modules.game_actions", None)
-        self.game = importlib.import_module("Script.Modules.game_actions")
+        sys.modules.pop("Script.Modules.scheduler.game_actions", None)
+        self.game = importlib.import_module("Script.Modules.scheduler.game_actions")
 
     def finish(self, actor, now, end_now=2):
         """输入角色与收尾时刻，记录收尾并清空旧行为；返回 True。"""

@@ -4,7 +4,7 @@ from copy import deepcopy
 from dataclasses import replace
 
 from Script.Core import cache_control, constant, game_type
-from Script.Modules.action import Action, ActionProgress
+from Script.Modules.scheduler.action import Action, ActionProgress
 from Script.Modules.scheduler import AI, INPUT, Scheduler, Task
 
 
@@ -206,7 +206,7 @@ class Runtime:
         if character.dead or (actor and actor not in cache.npc_id_got):
             return action.duration
         now = self.scheduler.now
-        from Script.Modules.action_execution import prepare_action
+        from Script.Modules.scheduler.action_execution import prepare_action
 
         action = prepare_action(self, actor, action)
         if action is None:

@@ -180,7 +180,7 @@ class Sex_Be_Discovered_Panel:
 
     def _let_find_chara_away(self) -> None:
         """选择用花言巧语支开对方"""
-        from Script.Modules.game_actions import submit_current
+        from Script.Modules.scheduler.game_actions import submit_current
         pass_flag = False
         now_draw_text = ""
         if self.find_chara_data.talent[222]:
@@ -217,7 +217,7 @@ class Sex_Be_Discovered_Panel:
 
     def _continue_exhibitionism_sex(self) -> None:
         """选择转为露出"""
-        from Script.Modules.game_actions import submit_current
+        from Script.Modules.scheduler.game_actions import submit_current
         # 如果当前已经是露出模式
         if handle_premise.handle_exhibitionism_sex_mode_ge_1(0):
             # 判断对方的实行值
@@ -249,7 +249,7 @@ class Sex_Be_Discovered_Panel:
 
     def _invite_find_char_to_join(self) -> None:
         """选择邀请对方加入群交"""
-        from Script.Modules.game_actions import submit_current
+        from Script.Modules.scheduler.game_actions import submit_current
         # 判断是否满足加入群交条件（意愿达标且未力竭/疲劳/重度困倦）
         if handle_premise.handle_instruct_judge_group_sex(self.character_id) and not handle_premise.handle_self_exhausted(self.character_id):
             # 如果当前在群交中，则直接加入
@@ -277,7 +277,7 @@ class Sex_Be_Discovered_Panel:
 
     def _end_current_h(self) -> None:
         """选择结束当前H"""
-        from Script.Modules.game_actions import submit_current
+        from Script.Modules.scheduler.game_actions import submit_current
         # 交互对象进入被打断状态
         self.target_chara_data.action_info.h_interrupt = 1
         # 发现者变为打断行为

@@ -1,4 +1,4 @@
-from Script.Modules import game_actions
+from Script.Modules.scheduler import game_actions
 
 
 def game_update_flow(add_time: int):

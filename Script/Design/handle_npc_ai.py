@@ -19,8 +19,8 @@ from Script.Design import (
     attr_calculation,
     map_handle,
 )
-from Script.Modules.action import Action
-from Script.Modules.npc_actions import state_machine_action
+from Script.Modules.scheduler.action import Action
+from Script.Modules.scheduler.npc_actions import state_machine_action
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 
@@ -158,14 +158,14 @@ def commit_group_sex_tired_exit(character_id: int):
     # 目标指向自己并配置退出行为
     handle_instruct.chara_handle_instruct_common_settle(constant.Behavior.GROUP_SEX_NPC_HP_0_END, character_id, target_character_id=character_id)
     # 恰好结算一次，执行退出行为的清理效果链（1503欲望清零/528补HPMP上限/403重置H状态/635穿回衣服）
-    from Script.Modules.game_actions import submit_current
+    from Script.Modules.scheduler.game_actions import submit_current
 
     submit_current(character_id, after="group_exit")
 
 
 def finish_group_sex_tired_exit(character_id: int):
     """退出行动完成后按剩余成员决定收尾；输入角色编号，返回 None。"""
-    from Script.Modules.game_actions import submit_current
+    from Script.Modules.scheduler.game_actions import submit_current
     from Script.System.Instruct_System import handle_instruct
 
     # 退出者is_h已被403清零；统计玩家所在场景仍在H的群交成员（不再误算非群交旁观者）
@@ -734,7 +734,7 @@ def judge_same_position_npc_follow():
     Keyword arguments:\n
     无
     """
-    from Script.Modules.game_actions import submit_current
+    from Script.Modules.scheduler.game_actions import submit_current
 
     pl_character_data: game_type.Character = cache.character_data[0]
     for character_id in cache.npc_id_got:

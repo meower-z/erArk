@@ -1,6 +1,6 @@
 """将 NPC 选定的行动准备工作表示为普通 Action。"""
 
-from Script.Modules.action import Action
+from Script.Modules.scheduler.action import Action
 
 
 def state_machine_action(actor: int, state_machine_id: int, record_absence: bool = False) -> Action:

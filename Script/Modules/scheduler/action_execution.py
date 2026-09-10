@@ -4,7 +4,7 @@
 def _prepare_npc_action(runtime, actor: int, action):
     """输入执行器、角色编号和 Action，落实状态机；返回实际 Action 或已消费的 None。"""
     from Script.Core import cache_control, constant
-    from Script.Modules.action import Action
+    from Script.Modules.scheduler.action import Action
 
     if action.params.get("record_absence", False):
         from Script.System.Education_System import class_ai
@@ -24,7 +24,7 @@ def _prepare_npc_action(runtime, actor: int, action):
 def _prepare_group_action(runtime, actor: int, action):
     """输入执行器、角色编号和 Action，落实群交操作；返回实际 Action。"""
     from Script.Core import cache_control, constant
-    from Script.Modules.action import Action
+    from Script.Modules.scheduler.action import Action
     from Script.Design.handle_npc_ai_in_h import execute_group_action
 
     character = cache_control.cache.character_data[actor]
