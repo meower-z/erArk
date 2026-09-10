@@ -68,7 +68,7 @@ def replan(actor: int):
 
 
 def wait_on(actor: int, owner: int, behavior_id: str):
-    """让参与者等待主体的双人行为；NPC 每五分钟复查一次，玩家等完全程。参数均为编号，返回 None。"""
+    """让参与者等待主体的双人行为；NPC 每五分钟复查一次，主体只是在等待时陪等其时长，玩家等完全程。参数均为编号，返回 None。"""
     cache = cache_control.cache
     if cache.time_stop_mode:
         return
@@ -76,9 +76,14 @@ def wait_on(actor: int, owner: int, behavior_id: str):
     params = {STATE: constant.CharacterStatus.STATUS_WAIT}
     if actor:
         # NPC 的等待只是替换其待办，不算强制打断；和旧代码的直接写入一样不结算一次性效果。
-        params["wait_on_behavior_id"] = behavior_id
         params[CONTINUED] = True
-        runtime.scheduler.replace(Task(actor, runtime.scheduler.now, Action(constant.Behavior.WAIT, 5, owner, params)))
+        if behavior_id == constant.Behavior.WAIT:
+            # 主体只是在等待，没有可复查的行为，和旧代码一样陪等主体的时长。
+            duration = cache.character_data[owner].behavior.duration
+        else:
+            params["wait_on_behavior_id"] = behavior_id
+            duration = 5
+        runtime.scheduler.replace(Task(actor, runtime.scheduler.now, Action(constant.Behavior.WAIT, duration, owner, params)))
         return
     from Script.Design import game_time
 
@@ -138,7 +143,8 @@ class Runtime:
                 return
             from Script.Design import handle_npc_ai
 
-            handle_npc_ai.run_npc_pre_behavior_checks(task.actor, task.at)
+            # 行动前检查以玩家本次行动的开始时刻为基准，与旧主循环一致。
+            handle_npc_ai.run_npc_pre_behavior_checks(task.actor, cache.character_data[0].behavior.start_time)
 
     def choose_next(self, actor, now):
         """输入 NPC 编号和时刻，返回 AI 选定的行动意图。"""
