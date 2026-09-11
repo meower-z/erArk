@@ -1,4 +1,12 @@
-"""一次行动的意图；Behavior 保存执行中的状态。"""
+"""Action：一个准备执行、尚未开始的行动。
+
+游戏用角色身上的 Behavior 对象记录"正在做什么"（行动编号、开始时刻、时长、目标等）。
+Action 是同一件事在开始之前的写法：行动编号、占用分钟数、目标角色编号，以及要写进 Behavior 的其他字段（params）。
+调度器（scheduler 包，负责按时间执行行动）与 NPC AI 之间传递的是 Action；执行时用 apply() 把它写成角色的 Behavior。
+
+params 里还可以带两个不写进 Behavior 的执行参数：state 是执行时写进角色 state 字段的值（不给则用行动编号）；
+continued 表示本段延续上一段的同一行动（例如睡觉的第二个 30 分钟），不重复施加只在开始时发生一次的效果。
+"""
 
 from copy import deepcopy
 from dataclasses import dataclass, field
@@ -13,7 +21,7 @@ EXECUTION_PARAMS = {STATE, CONTINUED}
 
 @dataclass
 class Action:
-    """动作编号、分钟数、目标和参数；参数为 Behavior 字段加执行参数 state、continued。"""
+    """一个准备执行、尚未开始的行动；各字段的含义见本文件开头的说明。"""
 
     behavior_id: str
     duration: float
