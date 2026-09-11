@@ -4,7 +4,7 @@ from datetime import datetime
 import unittest
 from types import SimpleNamespace
 
-from Script.Modules.action import Action, CONTINUED, STATE
+from Script.Modules.scheduler.action import Action, CONTINUED, STATE
 
 
 class ActionContractTests(unittest.TestCase):

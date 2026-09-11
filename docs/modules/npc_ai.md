@@ -2,7 +2,7 @@
 
 [npc_ai](../../Script/Modules/npc_ai.py) 读取游戏状态，选择 NPC 接下来要做的事。如有必要，该模块也会记录和管理 NPC 自己的需求、计划和目标，用来保持意图的连贯性。
 
-调用方通过 `choose_next(actor, now)` 传入角色编号和当前时刻，每次取得一个 [Action](../../Script/Modules/action.py)，其中包含行动编号、目标和执行所需的参数。
+调用方通过 `choose_next(actor, now)` 传入角色编号和当前时刻，每次取得一个 [Action](../../Script/Modules/scheduler/action.py)，其中包含行动编号、目标和执行所需的参数。
 
 这些行动由 [game_actions](../../Script/Design/game_actions.py) 接收，按行动编号完成准备、数值结算及后续行动；AI 选择时可以更新该 NPC 自己的数据，结算由执行模块负责。
 

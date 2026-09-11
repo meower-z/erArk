@@ -8,7 +8,7 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
-from Script.Modules.action import Action
+from Script.Modules.scheduler.action import Action
 from Script.Design.action_execution import state_machine_action
 
 ROOT = Path(__file__).resolve().parents[1]
