@@ -1,4 +1,8 @@
-"""将 NPC 选定的行动准备工作表示为普通 Action。"""
+"""把 NPC AI 的选择结果包装成 Action。
+
+NPC AI 选中的是一个"状态机"编号（一段会替 NPC 决定并写入行动的原有代码），运行后才会写出实际行动。本模块把这个编号装进行动编号为 prepare_npc_action 的 Action 交给调度器；
+执行时由 action_execution 运行状态机，再换成实际行动。
+"""
 
 from Script.Modules.scheduler.action import Action
 
