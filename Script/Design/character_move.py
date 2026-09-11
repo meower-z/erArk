@@ -35,7 +35,7 @@ def own_charcter_move(target_scene: list, continued: bool = False):
     target_scene -- 寻路目标场景(在地图系统下的绝对坐标)
     continued -- 是否为上一段走完后的接续
     """
-    from Script.Modules.scheduler import game_actions
+    from Script.Design import game_actions
 
     while 1:
         character_data: game_type.Character = cache.character_data[0]

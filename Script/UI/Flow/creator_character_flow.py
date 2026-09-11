@@ -88,7 +88,7 @@ def game_start():
     medical_service.init_medical_department_data(reset_runtime=True)
     achievement_panel.achievement_flow(_("周目"))
     # 新游戏和新周目共用此入口，清除上一局待办，首次推进时建立新队列。
-    from Script.Modules.scheduler import game_actions
+    from Script.Design import game_actions
     game_actions.reset()
     # print(f"debug 2facility_open = {cache.base_resouce.facility_open}")
 

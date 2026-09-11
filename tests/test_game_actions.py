@@ -13,9 +13,9 @@ from types import ModuleType, SimpleNamespace
 import unittest
 from unittest.mock import patch
 
-from Script.Modules.scheduler.action import Action, CONTINUED, STATE
+from Script.Modules.action import Action, CONTINUED, STATE
 from Script.Modules.scheduler import AI, INPUT, Task
-from Script.Modules.scheduler.npc_actions import state_machine_action
+from Script.Design.action_execution import state_machine_action
 
 
 class Behavior:
@@ -65,6 +65,8 @@ class GameActionsTests(unittest.TestCase):
         for name in ("Script.Core", "Script.Design", "Script.Settle", "Script.System", "Script.System.Field_Commission_System", "Script.UI", "Script.UI.Panel"):
             modules[name] = ModuleType(name)
             modules[name].__path__ = []
+        # 游戏接入代码本身从真实目录导入，其余 Script.Design 模块仍用上面的替身。
+        modules["Script.Design"].__path__ = [str(Path(__file__).resolve().parents[1] / "Script/Design")]
 
         def module(name, **values):
             """输入模块名与公开属性，创建外围替身并返回模块。"""
@@ -141,8 +143,8 @@ class GameActionsTests(unittest.TestCase):
         npc_patch = patch.object(Script.Modules, "npc_ai", modules["Script.Modules.npc_ai"], create=True)
         npc_patch.start()
         self.addCleanup(npc_patch.stop)
-        sys.modules.pop("Script.Modules.scheduler.game_actions", None)
-        self.game = importlib.import_module("Script.Modules.scheduler.game_actions")
+        sys.modules.pop("Script.Design.game_actions", None)
+        self.game = importlib.import_module("Script.Design.game_actions")
 
     def finish(self, actor, now, end_now=2):
         """输入角色与收尾时刻，记录收尾并清空旧行为；返回 True。"""

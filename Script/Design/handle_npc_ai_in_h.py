@@ -1,7 +1,7 @@
 import random
 import datetime
 from types import FunctionType
-from Script.Modules.scheduler.action import Action
+from Script.Modules.action import Action
 from Script.Core import (
     cache_control,
     game_path_config,
@@ -236,7 +236,7 @@ def recover_from_unconscious_h(character_id: int, info_text: str = ""):
     response = handle_unconscious_h_response(character_id, character_data.target_character_id)
 
     # 各响应动作完成后恢复双方状态。
-    from Script.Modules.scheduler.game_actions import submit_current
+    from Script.Design.game_actions import submit_current
 
     character_data.target_character_id = target_data.cid
     character_data.behavior.behavior_id = constant.Behavior.WAIT
@@ -248,7 +248,7 @@ def recover_from_unconscious_h(character_id: int, info_text: str = ""):
 def finish_unconscious_h_recovery(character_id: int, target_character_id: int, response: int):
     """响应链完成后恢复双方状态；输入发起者、对象编号与裁决，返回 None。"""
     from Script.Settle import default
-    from Script.Modules.scheduler.game_actions import replan
+    from Script.Design.game_actions import replan
 
     character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[target_character_id]
@@ -372,7 +372,7 @@ def handle_unconscious_h_response(character_id: int, target_character_id: int, c
     if response != UnconsciousHResponse.CONTINUE_H:
         character_data.behavior.duration = 5
         character_data.target_character_id = target_character_id
-        from Script.Modules.scheduler.game_actions import submit_current
+        from Script.Design.game_actions import submit_current
 
         submit_current(character_id)
         character_data.behavior.behavior_id = constant.Behavior.NO_CONSCIOUS_H_END
@@ -438,7 +438,7 @@ def judge_weak_up_in_sleep_h(character_id: int, target_character_id: int):
             # 该分支会跳过sp_flag.bagging_chara_id等于交互对象id的情况，而玩家id与其默认值同为0，
             # 因此玩家被762推走后本行为不会被判定为已结束。改动bagging_chara_id的默认值时需同步复核此处。
             target_data.target_character_id = character_id
-            from Script.Modules.scheduler.game_actions import submit_current
+            from Script.Design.game_actions import submit_current
 
             submit_current(target_character_id)
         else:

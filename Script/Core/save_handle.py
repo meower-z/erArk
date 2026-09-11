@@ -643,7 +643,7 @@ def input_load_save(save_id: str):
     cache.__dict__.update(loaded_dict)
 
     # 行动队列不随存档保存；丢弃本局残留，首次推进时按角色当前行为重建。
-    from Script.Modules.scheduler import game_actions
+    from Script.Design import game_actions
     game_actions.reset()
 
     # 鼠标状态属于临时界面状态，不该随存档带入：旧版存档可能把“正在按任意键继续”的0值一起存了进来，

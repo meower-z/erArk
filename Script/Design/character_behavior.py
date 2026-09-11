@@ -37,14 +37,14 @@ line_feed.width = 1
 
 def init_character_behavior():
     """提交玩家当前行动并推进到下次输入，无参数，返回 None。"""
-    from Script.Modules.scheduler import game_actions
+    from Script.Design import game_actions
 
     game_actions.get_runtime().advance(cache.character_data[0].behavior.duration)
 
 
 def character_behavior(character_id: int, now_time: datetime.datetime, pl_start_time: datetime.datetime):
     """提交角色当前行动；输入角色编号及起止时间，返回 None。"""
-    from Script.Modules.scheduler import game_actions
+    from Script.Design import game_actions
 
     game_actions.submit_current(character_id)
 

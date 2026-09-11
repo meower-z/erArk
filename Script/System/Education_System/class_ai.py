@@ -17,8 +17,8 @@
 import random
 from typing import Optional
 from Script.Core import cache_control, game_type, constant
-from Script.Modules.scheduler.action import Action
-from Script.Modules.scheduler.npc_actions import state_machine_action
+from Script.Modules.action import Action
+from Script.Design.action_execution import state_machine_action
 from Script.Design import attr_calculation, game_time, map_handle
 from Script.System.Education_System import education_constant, schedule_handle, growth_handle
 

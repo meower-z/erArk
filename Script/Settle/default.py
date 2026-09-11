@@ -2577,7 +2577,7 @@ def handle_wait_unitl_traget_action_end(
     """
     if not add_time:
         return
-    from Script.Modules.scheduler.game_actions import submit_current
+    from Script.Design.game_actions import submit_current
     character_data: game_type.Character = cache.character_data[character_id]
     target_character_data = cache.character_data[character_data.target_character_id]
     if character_data.dead:
@@ -2909,7 +2909,7 @@ def handle_interrupt_target_activity(
                         target_data.cid, character_data.behavior.start_time
                     )
                 # 原子行动的效果在开始时结算。
-                from Script.Modules.scheduler.game_actions import wait_on
+                from Script.Design.game_actions import wait_on
 
                 wait_on(target_data.cid, character_id, character_data.behavior.behavior_id)
 
@@ -4540,7 +4540,7 @@ def handle_chara_off_line(
     # 重新结算离线异常标记，避免位掩码停留在离线前的旧值
     handle_premise.settle_chara_unnormal_flag(character_id, 7)
     # 离队时重置行动计划，进入等待席位。
-    from Script.Modules.scheduler.game_actions import reset_character
+    from Script.Design.game_actions import reset_character
     reset_character(character_id)
 
 
@@ -4596,7 +4596,7 @@ def handle_chara_on_line(
         cache.scene_data[now_scene_path_str].character_list.add(character_id)
 
     # 上线时重置行动计划，从当前时刻自主选择。
-    from Script.Modules.scheduler.game_actions import reset_character
+    from Script.Design.game_actions import reset_character
     reset_character(character_id)
 
 
@@ -7651,7 +7651,7 @@ def handle_teach_add_just(
                         base_chara_favorability_and_trust_common_settle(character_id, add_time, False, 0, other_character_data.ability[32], change_data, other_character_data.cid)
 
                     # 教师的结算完成后，再执行学生的听课行动并替换其旧待办。
-                    from Script.Modules.scheduler.game_actions import submit_current
+                    from Script.Design.game_actions import submit_current
 
                     submit_current(chara_id)
 

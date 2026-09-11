@@ -10,7 +10,7 @@ from Script.Design import handle_ability, update, map_handle, character_behavior
 from Script.UI.Panel import achievement_panel, normal_panel
 from Script.Config import normal_config, game_config
 from Script.UI.Moudle import draw
-from Script.Modules.scheduler import game_actions
+from Script.Design import game_actions
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """

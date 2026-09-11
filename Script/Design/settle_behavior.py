@@ -87,7 +87,7 @@ def handle_settle_behavior(character_id: int, now_time: datetime.datetime, event
                     warden_character_data.behavior.duration = now_character_data.behavior.duration
                     warden_character_data.behavior.start_time = now_character_data.behavior.start_time
                     warden_character_data.target_character_id = now_character_data.target_character_id
-                    from Script.Modules.scheduler.game_actions import submit_current
+                    from Script.Design.game_actions import submit_current
 
                     # 助手行动通过立即后续执行。
                     submit_current(warden_character_id)
