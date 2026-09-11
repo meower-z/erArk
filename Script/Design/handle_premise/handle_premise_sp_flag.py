@@ -1609,16 +1609,17 @@ def handle_masturebate_to_pl_flag_0(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.IS_UNCONSCIOUS_H)
-def handle_is_unconscious_h(character_id: int) -> int:
+def handle_is_unconscious_h(character_id: int, *, target_id: int | None = None) -> int:
     """
     当前为无意识奸模式
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data: game_type.Character = cache.character_data[0]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.sp_flag.unconscious_h or character_data.sp_flag.unconscious_h:
         return 1
     return 0
@@ -1917,16 +1918,17 @@ def handle_t_unconscious_flag_3(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.T_UNCONSCIOUS_FLAG_4)
-def handle_t_unconscious_flag_4(character_id: int) -> int:
+def handle_t_unconscious_flag_4(character_id: int, *, target_id: int | None = None) -> int:
     """
     对方有无意识_平然状态
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.sp_flag.unconscious_h == 4:
         return 1
     else:
@@ -2019,16 +2021,17 @@ def handle_t_not_unconscious_flag_6(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.T_UNCONSCIOUS_FLAG_7)
-def handle_t_unconscious_flag_7(character_id: int) -> int:
+def handle_t_unconscious_flag_7(character_id: int, *, target_id: int | None = None) -> int:
     """
     对方有无意识_心控状态
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.sp_flag.unconscious_h == 7:
         return 1
     else:

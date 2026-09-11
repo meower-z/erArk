@@ -932,16 +932,17 @@ def handle_t_u_dilate_ge_1(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.T_U_DILATE_GE_2)
-def handle_t_u_dilate_ge_2(character_id: int) -> int:
+def handle_t_u_dilate_ge_2(character_id: int, *, target_id: int | None = None) -> int:
     """
     校验交互对象是否交互对象Ｕ扩张>=2
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.ability[11] >= 2:
         return 1
     return 0
@@ -964,48 +965,51 @@ def handle_t_u_dilate_ge_3(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.T_U_DILATE_GE_5)
-def handle_t_u_dilate_ge_5(character_id: int) -> int:
+def handle_t_u_dilate_ge_5(character_id: int, *, target_id: int | None = None) -> int:
     """
     校验交互对象是否交互对象Ｕ扩张>=5
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.ability[11] >= 5:
         return 1
     return 0
 
 
 @add_premise(constant_promise.Premise.T_W_DILATE_GE_3)
-def handle_t_w_dilate_ge_3(character_id: int) -> int:
+def handle_t_w_dilate_ge_3(character_id: int, *, target_id: int | None = None) -> int:
     """
     校验交互对象是否交互对象Ｗ扩张>=3
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.ability[12] >= 3:
         return 1
     return 0
 
 
 @add_premise(constant_promise.Premise.T_W_DILATE_GE_5)
-def handle_t_w_dilate_ge_5(character_id: int) -> int:
+def handle_t_w_dilate_ge_5(character_id: int, *, target_id: int | None = None) -> int:
     """
     校验交互对象是否交互对象Ｗ扩张>=5
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.ability[12] >= 5:
         return 1
     return 0
@@ -1125,50 +1129,53 @@ def handle_waist_technique_ge_7(character_id: int) -> int:
     return 0
 
 @add_premise(constant_promise.Premise.TARGET_TECHNIQUE_GE_3)
-def handle_t_technique_ge_3(character_id: int) -> int:
+def handle_t_technique_ge_3(character_id: int, *, target_id: int | None = None) -> int:
     """
     校验交互对象是否技巧技能>=3
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.ability[30] >= 3:
         return 1
     return 0
 
 
 @add_premise(constant_promise.Premise.TARGET_TECHNIQUE_GE_5)
-def handle_t_technique_ge_5(character_id: int) -> int:
+def handle_t_technique_ge_5(character_id: int, *, target_id: int | None = None) -> int:
     """
     校验交互对象是否技巧技能>=5
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
+    target_data = cache.character_data[character_data.target_character_id if target_id is None else target_id]
     if target_data.ability[30] >= 5:
         return 1
     return 0
 
 
 @add_premise(constant_promise.Premise.TARGET_TECHNIQUE_GE_5_OR_IS_UNCONSCIOUS_H)
-def handle_t_technique_ge_5_or_is_unconscious_h(character_id: int) -> int:
+def handle_t_technique_ge_5_or_is_unconscious_h(character_id: int, *, target_id: int | None = None) -> int:
     """
     校验交互对象是否技巧技能>=5或处于无意识状态
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     from Script.Design.handle_premise import (
         handle_is_unconscious_h,
     )
-    if handle_t_technique_ge_3(character_id) or handle_is_unconscious_h(character_id):
+    if handle_t_technique_ge_3(character_id, target_id=target_id) or handle_is_unconscious_h(character_id, target_id=target_id):
         return 1
     return 0
 

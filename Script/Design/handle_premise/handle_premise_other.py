@@ -30,16 +30,18 @@ def add_premise(premise: str) -> FunctionType:
 
 
 @add_premise(constant_promise.Premise.HAVE_TARGET)
-def handle_have_target(character_id: int) -> int:
+def handle_have_target(character_id: int, *, target_id: int | None = None) -> int:
     """
     校验角色是否有交互对象
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    if character_data.target_character_id == character_id:
+    target_id = character_data.target_character_id if target_id is None else target_id
+    if target_id == character_id:
         return 0
     return 1
 
@@ -1804,16 +1806,18 @@ def handle_self_not_h(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.TARGET_IS_H)
-def handle_t_is_h(character_id: int) -> int:
+def handle_t_is_h(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象在H模式
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    return handle_self_is_h(character_data.target_character_id)
+    target_id = character_data.target_character_id if target_id is None else target_id
+    return handle_self_is_h(target_id)
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_H)
@@ -2084,8 +2088,7 @@ def handle_ai_chat_on(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    cache.ai_setting.ai_chat_setting.setdefault(1, 0)
-    return cache.ai_setting.ai_chat_setting[1]
+    return cache.ai_setting.ai_chat_setting.get(1, 0)
 
 
 @add_premise(constant_promise.Premise.SELF_WAITING_FOR_HEALTH_CHECK)

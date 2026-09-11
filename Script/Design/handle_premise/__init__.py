@@ -1,4 +1,5 @@
 from functools import wraps
+from inspect import signature
 from types import FunctionType
 from typing import Callable, Iterable, Optional
 from Script.Core import cache_control, constant, game_type, get_text
@@ -175,21 +176,24 @@ def add_premise(premise: str) -> FunctionType:
     return decoraror
 
 
-def handle_premise(premise: str, character_id: int) -> int:
+def handle_premise(premise: str, character_id: int, *, target_id: int | None = None) -> int:
     """
-    调用前提id对应的前提处理函数
-    Keyword arguments:
-    premise -- 前提id
-    character_id -- 角色id
-    Return arguments:
-    int -- 前提权重加成
+    调用前提处理函数，返回 int 权重。
+    premise -- str 前提名
+    character_id -- int 角色编号
+    target_id -- 可选 int 目标编号；None 时读取角色当前目标
     """
     handler = constant.handle_premise_data.get(premise)
     if handler is not None:
+        if target_id is None:
+            return handler(character_id)
+        # 目标前提显式接收查询目标，其他前提沿用角色编号。
+        if "target_id" in signature(handler).parameters:
+            return handler(character_id, target_id=target_id)
         return handler(character_id)
     if "CVP" in premise:
         premise_all_value_list = premise.split("_")[1:]
-        return handle_comprehensive_value_premise(character_id, premise_all_value_list)
+        return handle_comprehensive_value_premise(character_id, premise_all_value_list, target_id=target_id)
     return 0
 
 
@@ -381,18 +385,20 @@ def judge_value_by_operator(final_value: float, operator_text: str, judge_text: 
     return 0
 
 
-def handle_comprehensive_value_premise(character_id: int, premise_all_value_list: list) -> int:
+def handle_comprehensive_value_premise(character_id: int, premise_all_value_list: list, *, target_id: int | None = None) -> int:
     """
     综合型基础数值前提
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     premise_all_value_list -- 前提的各项数值
     Return arguments:
     int -- 前提权重加成
     """
     character_data: game_type.Character = cache.character_data[character_id]
     pl_character_data = cache.character_data[0]
-    pl_target_character_id = pl_character_data.target_character_id
+    query_target_id = character_data.target_character_id if target_id is None else target_id
+    pl_target_character_id = query_target_id if character_id == 0 else pl_character_data.target_character_id
     pl_target_character_data = cache.character_data[pl_target_character_id]
     # print(f"debug character_id = {character_id}, premise_all_value_list = {premise_all_value_list}")
 
@@ -412,8 +418,8 @@ def handle_comprehensive_value_premise(character_id: int, premise_all_value_list
         # （已废弃）如果没有交互对象，则返回0
         # if character_data.target_character_id == character_id:
         #     return 0
-        final_character_id = character_data.target_character_id
-        final_character_data = cache.character_data[character_data.target_character_id]
+        final_character_id = query_target_id
+        final_character_data = cache.character_data[query_target_id]
     elif premise_all_value_list[0][:2] == "A3":
         final_character_adv = int(premise_all_value_list[0][3:])
         final_character_id = character.get_character_id_from_adv(final_character_adv)
@@ -463,8 +469,7 @@ def handle_comprehensive_value_premise(character_id: int, premise_all_value_list
             final_value = final_character_data.status_data.get(type_son_id, 0)
     elif premise_all_value_list[1][0] == "F":
         if "Flag" in premise_all_value_list[1]:
-            final_character_data.author_flag.chara_int_flag_dict.setdefault(type_son_id, 0)
-            final_value = final_character_data.author_flag.chara_int_flag_dict[type_son_id]
+            final_value = final_character_data.author_flag.chara_int_flag_dict.get(type_son_id, 0)
         else:
             final_value = final_character_data.favorability[0]
     elif premise_all_value_list[1][0] == "X":
@@ -532,7 +537,8 @@ def handle_comprehensive_value_premise(character_id: int, premise_all_value_list
             elif target_character_type == "是自己的":
                 target_character_data = final_character_data
             elif target_character_type == "是交互对象的":
-                target_character_data = cache.character_data[final_character_data.target_character_id]
+                relation_target_id = query_target_id if final_character_id == character_id else final_character_data.target_character_id
+                target_character_data = cache.character_data[relation_target_id]
             elif target_character_type == "是指定id角色的":
                 target_character_adv = int(premise_all_value_list[3])
                 target_character_id = character.get_character_id_from_adv(target_character_adv)
@@ -750,7 +756,7 @@ def handle_instruct_judge_low_obscenity(character_id: int) -> int:
     """
     if character_id == 0:
         return 0
-    if instuct_judege.calculation_instuct_judege(0, character_id, _("初级骚扰"), not_draw_flag = True)[0]:
+    if instuct_judege.calculation_instuct_judege(0, character_id, _("初级骚扰"), not_draw_flag=True, settle_cost=False)[0]:
         return 1
     return 0
 
@@ -768,7 +774,7 @@ def handle_target_instruct_judge_low_obscenity(character_id: int) -> int:
     if character_id == target_character_id:
         return 0
     # 判断交互对象是否满足低级骚扰条件（调用计算函数判断低级骚扰）
-    if instuct_judege.calculation_instuct_judege(character_id, target_character_id, _("初级骚扰"), not_draw_flag=True)[0]:
+    if instuct_judege.calculation_instuct_judege(character_id, target_character_id, _("初级骚扰"), not_draw_flag=True, settle_cost=False)[0]:
         return 1
     return 0
 
@@ -794,7 +800,7 @@ def handle_instruct_judge_high_obscenity(character_id: int) -> int:
     """
     if character_id == 0:
         return 0
-    if instuct_judege.calculation_instuct_judege(0, character_id, _("严重骚扰"), not_draw_flag = True)[0]:
+    if instuct_judege.calculation_instuct_judege(0, character_id, _("严重骚扰"), not_draw_flag=True, settle_cost=False)[0]:
         return 1
     return 0
 
@@ -816,7 +822,7 @@ def handle_target_instruct_judge_high_obscenity(character_id: int) -> int:
     if character_id == target_character_id:
         return 0
     # 调用评价函数判断交互对象是否满足“严重骚扰”条件
-    if instuct_judege.calculation_instuct_judege(character_id, target_character_id, _("严重骚扰"), not_draw_flag=True)[0]:
+    if instuct_judege.calculation_instuct_judege(character_id, target_character_id, _("严重骚扰"), not_draw_flag=True, settle_cost=False)[0]:
         return 1
     return 0
 
@@ -844,7 +850,7 @@ def handle_instruct_judge_h(character_id: int) -> int:
     """
     if character_id == 0:
         return 0
-    if instuct_judege.calculation_instuct_judege(0, character_id, _("H模式"), not_draw_flag = True)[0]:
+    if instuct_judege.calculation_instuct_judege(0, character_id, _("H模式"), not_draw_flag=True, settle_cost=False)[0]:
         return 1
     return 0
 
@@ -862,7 +868,7 @@ def handle_target_instruct_judge_h(character_id: int) -> int:
     target_character_id = character_data.target_character_id
     if character_id == target_character_id:
         return 0
-    if instuct_judege.calculation_instuct_judege(character_id, target_character_id, _("H模式"), not_draw_flag = True)[0]:
+    if instuct_judege.calculation_instuct_judege(character_id, target_character_id, _("H模式"), not_draw_flag=True, settle_cost=False)[0]:
         return 1
     return 0
 
@@ -890,7 +896,7 @@ def handle_instruct_judge_group_sex(character_id: int) -> int:
     """
     if character_id == 0:
         return 0
-    if instuct_judege.calculation_instuct_judege(0, character_id, _("群交"), not_draw_flag = True)[0]:
+    if instuct_judege.calculation_instuct_judege(0, character_id, _("群交"), not_draw_flag=True, settle_cost=False)[0]:
         return 1
     return 0
 
@@ -1469,33 +1475,35 @@ def handle_unnormal_27(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.T_NORMAL_5_6)
-def handle_t_normal_5_6(character_id: int) -> int:
+def handle_t_normal_5_6(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象56正常
     \n包括5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
     \n包括6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
+    target_chara_id = character_data.target_character_id if target_id is None else target_id
     return _check_normal_combo(target_chara_id, (5, 6))
 
 
 @add_premise(constant_promise.Premise.T_NORMAL_5_6_OR_UNCONSCIOUS_FLAG_4_7)
-def handle_t_normal_5_6_or_unconscious_flag_4_7(character_id: int) -> int:
+def handle_t_normal_5_6_or_unconscious_flag_4_7(character_id: int, *, target_id: int | None = None) -> int:
     """
     交互对象56正常或平然或心控
     \n包括5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
     \n包括6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
     Keyword arguments:
     character_id -- 角色id
+    target_id -- 可选目标编号；None 时读取角色当前目标
     Return arguments:
     int -- 权重
     """
-    if handle_t_normal_5_6(character_id) or handle_t_unconscious_flag_4(character_id) or handle_t_unconscious_flag_7(character_id):
+    if handle_t_normal_5_6(character_id, target_id=target_id) or handle_t_unconscious_flag_4(character_id, target_id=target_id) or handle_t_unconscious_flag_7(character_id, target_id=target_id):
         return 1
     else:
         return 0

@@ -1,6 +1,7 @@
 from Script.Core import cache_control, constant, game_type, get_text
 from Script.Design import map_handle, update
 from Script.UI.Moudle import draw
+from functools import partial
 from types import FunctionType
 
 cache: game_type.Cache = cache_control.cache
@@ -27,15 +28,22 @@ def cancel_movement_plan(character_id: int):
     character_data.behavior.move_final_target = []
 
 
-def own_charcter_move(target_scene: list):
+def own_charcter_move(target_scene: list, continued: bool = False):
     """
     主角寻路至目标场景
     Keyword arguments:
     target_scene -- 寻路目标场景(在地图系统下的绝对坐标)
+    continued -- 是否为上一段走完后的接续
     """
+    from Script.Design import game_actions
+
     while 1:
         character_data: game_type.Character = cache.character_data[0]
         move_now = "end"
+        # 若上一段结算过程中移动计划被撤销（move_final_target 已不再指向 target_scene）
+        # 且尚未抵达目标，则停止寻路，不再走下一段
+        if continued and character_data.position != target_scene and character_data.behavior.move_final_target != target_scene:
+            break
         if character_data.sp_flag.move_stop:
             character_data.sp_flag.move_stop = False
             break
@@ -66,11 +74,11 @@ def own_charcter_move(target_scene: list):
             character_data.action_info.ask_close_door_flag = False
             # print(f"debug pl start_time = {character_data.behavior.start_time}")
             update.game_update_flow(now_need_time)
-            # 若本段结算过程中移动计划被撤销（move_final_target 已不再指向 target_scene）
-            # 且尚未抵达目标，则停止寻路，不再走下一段
-            character_data = cache.character_data[0]
-            if character_data.position != target_scene and character_data.behavior.move_final_target != target_scene:
-                break
+            # 结算中触发的寻路：本段已作为立即行动排入，余下各段在本段走完后接续，不在此处等待
+            if game_actions.get_runtime().scheduler.running:
+                game_actions.continue_after(partial(own_charcter_move, target_scene, True))
+                return
+            continued = True
         else:
             break
     cache.character_data[0].target_character_id = 0
