@@ -962,6 +962,58 @@ class GameActionsTests(unittest.TestCase):
         self.assertEqual(self.finished(0), [minute(1), minute(3), minute(6)])
         self.assertEqual(self.cache.game_time, minute(6))
 
+    def test_pathing_started_in_settlement_walks_leg_by_leg_to_the_target(self):
+        """无需参数；结算中调用真实的玩家寻路时只排入当前一段，余下各段在每段走完后接续，直到抵达目标才回到输入；无返回值。"""
+        runtime = self.game.get_runtime()
+        constant = sys.modules["Script.Core.constant"]
+        constant.CharacterStatus.STATUS_MOVE = "move"
+        constant.Panel = SimpleNamespace(SEE_MAP="map", IN_SCENE="scene")
+        player = self.characters[0]
+        player.position = ["start"]
+        player.sp_flag.move_stop = False
+        player.sp_flag.hidden_sex_mode = 0
+        path = [["start"], ["a"], ["b"], ["end"]]
+        stubs = {name: ModuleType(name) for name in ("Script.Design.map_handle", "Script.Design.update", "Script.UI.Moudle", "Script.UI.Moudle.draw")}
+        stubs["Script.Design.update"].game_update_flow = runtime.advance
+        stubs["Script.UI.Moudle.draw"].NormalDraw = SimpleNamespace
+        patcher = patch.dict(sys.modules, stubs)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        sys.modules["Script.Design"].__path__ = [str(Path(__file__).resolve().parents[1] / "Script/Design")]
+        sys.modules.pop("Script.Design.character_move", None)
+        move = importlib.import_module("Script.Design.character_move")
+        queries = []
+
+        def next_leg(actor, target):
+            """输入角色与目标，记录查询时刻并给出通往下一场景的一段路；返回 (通行状态, 路径, 下一场景, 耗时)。"""
+            queries.append(self.cache.game_time)
+            return "open", path, path[path.index(player.position) + 1], 1
+
+        def finish(actor, now, end_now=2):
+            """输入角色与收尾时刻，照游戏本体的做法在收尾后保留移动的最终目标；返回 True。"""
+            final_target = getattr(self.characters[actor].behavior, "move_final_target", [])
+            result = self.finish(actor, now, end_now)
+            self.characters[actor].behavior.move_final_target = final_target
+            return result
+
+        def settle(actor):
+            """输入角色，玩家的指令结算触发寻路，移动段结算时把玩家挪到该段终点；返回 None。"""
+            self.events.append(("settle", actor, self.characters[actor].behavior.behavior_id))
+            if actor == 0 and player.behavior.behavior_id == "order":
+                move.own_charcter_move(["end"])
+            elif actor == 0 and player.behavior.behavior_id == "move":
+                player.position = player.behavior.move_target
+
+        behavior_module = sys.modules["Script.Design.character_behavior"]
+        with patch.object(move, "character_move", side_effect=next_leg), patch.object(behavior_module, "judge_character_status", side_effect=settle), patch.object(behavior_module, "judge_character_status_time_over", side_effect=finish):
+            self.advance("order", 10)
+        self.assertEqual(player.position, ["end"])
+        self.assertEqual(self.settled(0), ["order", "move", "move", "move"])
+        self.assertEqual(queries, [self.now + timedelta(minutes=n) for n in (0, 1, 2)])
+        self.assertEqual(self.cache.game_time, self.now + timedelta(minutes=3))
+        self.assertEqual(self.cache.now_panel_id, "scene")
+        self.assertEqual(list(runtime._continuations), [])
+
     def test_player_move_resets_h_sight_and_records_instruction(self):
         """无需参数；玩家移动时清除 NPC 的目击标记并记录指令；无返回值。"""
         self.characters[1].sp_flag.see_pl_h = True
