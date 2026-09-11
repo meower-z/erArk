@@ -13,7 +13,7 @@ from types import ModuleType, SimpleNamespace
 import unittest
 from unittest.mock import patch
 
-from Script.Modules.action import Action, CONTINUED, STATE
+from Script.Modules.scheduler.action import Action, CONTINUED, STATE
 from Script.Modules.scheduler import AI, INPUT, Task
 from Script.Design.action_execution import state_machine_action
 

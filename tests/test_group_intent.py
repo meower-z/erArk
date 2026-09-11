@@ -12,7 +12,7 @@ import unittest
 from unittest.mock import Mock, call, patch
 
 
-from Script.Modules.action import Action
+from Script.Modules.scheduler.action import Action
 from Script.Core.game_type import UnnormalFlagMask
 
 

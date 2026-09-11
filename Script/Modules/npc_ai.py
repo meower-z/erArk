@@ -13,7 +13,7 @@ from datetime import datetime
 
 from Script.Core import cache_control, constant
 from Script.Design import game_time, handle_npc_ai, handle_premise
-from Script.Modules.action import Action, CONTINUED, STATE
+from Script.Modules.scheduler.action import Action, CONTINUED, STATE
 
 
 def _can_continue_sleep(actor: int, now: datetime) -> bool:

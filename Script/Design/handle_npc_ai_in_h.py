@@ -1,7 +1,7 @@
 import random
 import datetime
 from types import FunctionType
-from Script.Modules.action import Action
+from Script.Modules.scheduler.action import Action
 from Script.Core import (
     cache_control,
     game_path_config,

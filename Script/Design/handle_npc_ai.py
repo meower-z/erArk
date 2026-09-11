@@ -19,7 +19,7 @@ from Script.Design import (
     attr_calculation,
     map_handle,
 )
-from Script.Modules.action import Action
+from Script.Modules.scheduler.action import Action
 from Script.Design.action_execution import state_machine_action
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config

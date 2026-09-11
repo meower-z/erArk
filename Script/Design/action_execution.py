@@ -1,7 +1,7 @@
 """执行行动之前的准备步骤。
 
 有些行动在执行前要先跑一段游戏逻辑才知道实际要做什么：NPC AI 选中的不是行动本身，而是一个"状态机"编号
-（一段会替 NPC 决定并写入行动的原有代码）；要先运行它，实际行动才会写在角色的 Behavior（记录"正在做什么"的对象，见 Script/Modules/action.py）上。
+（一段会替 NPC 决定并写入行动的原有代码）；要先运行它，实际行动才会写在角色的 Behavior（记录"正在做什么"的对象，见 Script/Modules/scheduler/action.py）上。
 加入群交（多人 H）的操作同样要先执行，才知道该角色实际做什么。
 
 本模块两端各提供一个函数：state_machine_action 把状态机编号装进行动编号为 prepare_npc_action 的 Action，供 NPC AI 返回给调度器；
@@ -11,7 +11,7 @@ prepare_action 在执行时按行动编号找到对应的准备函数，运行�
 此时 game_actions.Runtime.execute 放弃本次行动（返回 0 分钟），改为执行那条待办。
 """
 
-from Script.Modules.action import Action
+from Script.Modules.scheduler.action import Action
 
 
 def state_machine_action(actor: int, state_machine_id: int, record_absence: bool = False) -> Action:
@@ -22,7 +22,7 @@ def state_machine_action(actor: int, state_machine_id: int, record_absence: bool
 def _prepare_npc_action(runtime, actor: int, action):
     """输入执行器、角色编号和 Action，落实状态机；返回实际 Action。"""
     from Script.Core import cache_control, constant
-    from Script.Modules.action import STATE
+    from Script.Modules.scheduler.action import STATE
 
     if action.params.get("record_absence", False):
         from Script.System.Education_System import class_ai

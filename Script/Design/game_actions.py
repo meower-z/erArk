@@ -1,6 +1,6 @@
 """把游戏的行动结算接到调度器上。
 
-"结算"指原有代码里按行动改动角色数值、触发事件的部分。"行为"指角色身上已写好的 Behavior（记录"正在做什么"的对象，见 Script/Modules/action.py），
+"结算"指原有代码里按行动改动角色数值、触发事件的部分。"行为"指角色身上已写好的 Behavior（记录"正在做什么"的对象，见 Script/Modules/scheduler/action.py），
 "行动"指尚未开始的 Action。scheduler 只负责按时刻执行"待办"，不知道游戏规则。本模块提供它需要的游戏侧函数，并提供界面和结算代码调用的入口：
 
 - Runtime：本局的执行器。持有一个 Scheduler，为它提供三个回调：轮到 NPC 时调用 npc_ai 选择行动（choose_next）；
@@ -19,7 +19,7 @@ from collections import deque
 from functools import partial
 
 from Script.Core import cache_control, constant, game_type
-from Script.Modules.action import Action, CONTINUED, STATE
+from Script.Modules.scheduler.action import Action, CONTINUED, STATE
 from Script.Modules.scheduler import AI, INPUT, Scheduler, Task
 
 _runtime = None
