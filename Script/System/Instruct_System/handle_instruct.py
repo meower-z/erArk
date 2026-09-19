@@ -548,12 +548,14 @@ def handle_chat_with_ai():
 @add_instruct(constant.Instruct.TEACH)
 def handle_teach():
     """处理授课指令"""
+    from Script.System.Education_System import class_ai, schedule_handle
+
     instuct_judege.init_character_behavior_start_time(0, cache.game_time)
     character_data: game_type.Character = cache.character_data[0]
     character_data.behavior.behavior_id = constant.Behavior.TEACH
     character_data.behavior.duration = 45
     character_data.state = constant.CharacterStatus.STATUS_TEACH
-    # 将当前场景里所有工作是上学的角色变为学习状态
+    # 将当前场景里的学生变为听课状态
     # 遍历当前场景的其他角色
     scene_path_str = map_handle.get_map_system_path_str_for_list(character_data.position)
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
@@ -566,10 +568,15 @@ def handle_teach():
                 continue
             else:
                 other_character_data: game_type.Character = cache.character_data[chara_id]
-                # 让对方变成听课状态
-                if other_character_data.work.work_type == 152:
+                # 只拉学生岗、不在 H / 睡觉 / 翘课 / 休息中的人，已经在听别的教师讲课的不抢（Plan 25 §3.4）。
+                #    开始时刻对齐到玩家，节次判定与课后结算才对得上
+                if class_ai.judge_student_pullable(chara_id) and other_character_data.behavior.behavior_id != constant.Behavior.ATTENT_CLASS:
                     other_character_data.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
-                    other_character_data.behavior.duration = 45
+                    other_character_data.behavior.start_time = character_data.behavior.start_time
+                    # 学生听到本节下课为止（Plan 27 §3.5），与 NPC 教师的 303 / 304 同口径：节次首尾相接，照满 45 分钟会压进下一节，
+                    #    下一节在别处有课的学生迟到半节；节次外（午休等）仍是 45 分钟。剩余分钟按行为开始时刻算，必须在对齐开始时刻之后取。
+                    #    玩家自己的授课仍是 45 分钟：收益在开讲这一刻已按全场结算，学生先走不影响收益与出勤
+                    other_character_data.behavior.duration = schedule_handle.get_period_left_minute(chara_id)
                     other_character_data.state = constant.CharacterStatus.STATUS_ATTENT_CLASS
     update.game_update_flow(45)
 
@@ -1651,10 +1658,9 @@ def handle_start_sex_class():
         now_draw.text = _("\n这里没有可以上课的学生。\n")
         now_draw.draw()
         return
-    # 选主修科目：预约的那节课已经定好了，当场开课则现选一门
-    today = cache.game_time.date().toordinal()
-    period = game_time.get_class_period_by_time(cache.game_time)
-    temp_class = sex_class_handle.get_temp_class(today, period)
+    # 选主修科目：预约的那节课已经定好了（提前几分钟开讲的也算，Plan 26 §3.5），当场开课则现选一门
+    classroom = sex_class_handle.get_scene_name(character_data.position)
+    temp_class = sex_class_handle.find_class_to_start(classroom, cache.game_time)[1]
     ability_id = -1
     if temp_class is not None:
         ability_id = temp_class.get("ability_id", -1)
@@ -1673,7 +1679,7 @@ def ask_for_sex_class_ability() -> int:
     """
     让玩家选一门本节课的主修性技科目
 
-    ⚠️ 只列女学生学得了的七门。76腰技的 sex_need 为0（男性专属，data/csv/Ability.csv:76），
+    只列女学生学得了的七门。76腰技的 sex_need 为0（男性专属，data/csv/Ability.csv:76），
        选了它全场学生一节课都吃不到加成，还不会报错，所以在源头就不列出来。
     Keyword arguments:
     无
@@ -1974,7 +1980,7 @@ def handle_official_work():
     from Script.System.Official_Event_System import official_event_panel
 
     # 先把待决断的公务事件（养成与各部门）逐条处理掉，再办公务本身（Plan 23）
-    # ⚠️ 放在通用结算之前：通用结算末尾会推进游戏流程并重绘主面板，放在其后弹出的事件会被盖掉
+    # 放在通用结算之前：通用结算末尾会推进游戏流程并重绘主面板，放在其后弹出的事件会被盖掉
     official_event_panel.handle_official_event_queue(width)
     chara_handle_instruct_common_settle(constant.Behavior.OFFICIAL_WORK, force_taget_wait = True)
 
