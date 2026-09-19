@@ -77,7 +77,7 @@ def judge_character_h_obscenity_unconscious(character_id: int, pl_start_time: da
         # 二次确认H意外结束的归零结算
         special_end_list = constant.special_end_H_list
         if len(cache.pl_pre_behavior_instruce) and cache.pl_pre_behavior_instruce[-1] in special_end_list and character_data.behavior.behavior_id not in special_end_list:
-            default.handle_both_h_state_reset(0, 1, change_data=game_type.CharacterStatusChange(), now_time=datetime.datetime(1, 1, 1))
+            default.handle_both_h_state_reset(0, cache.character_data[0].target_character_id, 1, change_data=game_type.CharacterStatusChange(), now_time=datetime.datetime(1, 1, 1))
         # 如果在搬运角色，则直接移动到玩家同一地点
         if (
             handle_premise.handle_carry_somebody(0)
@@ -170,15 +170,16 @@ def judge_character_h_obscenity_unconscious(character_id: int, pl_start_time: da
     return 1
 
 
-def recover_from_unconscious_h(character_id: int, info_text: str = ""):
+def recover_from_unconscious_h(character_id: int, target_character_id: int, info_text: str = ""):
     """
     交互对象从无意识H中恢复意识的结算\n
     Keyword arguments:\n
     character_id -- 角色id\n
+    target_character_id -- 目标角色id\n
     """
     from Script.Settle import default
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     scene_path_str = map_handle.get_map_system_path_str_for_list(character_data.position)
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
 
@@ -200,9 +201,9 @@ def recover_from_unconscious_h(character_id: int, info_text: str = ""):
     now_draw.draw()
 
     # 终止对方的行动
-    character_behavior.judge_character_status_time_over(character_data.target_character_id, cache.game_time, end_now = 2)
+    character_behavior.judge_character_status_time_over(target_character_id, cache.game_time, end_now = 2)
     # 睡眠中，则对方获得睡奸醒来状态
-    if handle_premise.handle_action_sleep(character_data.target_character_id):
+    if handle_premise.handle_action_sleep(target_character_id):
         target_data.sp_flag.sleep_h_awake = True
     # 同步玩家的行动开始时间
     instuct_judege.init_character_behavior_start_time(character_id, cache.game_time)
@@ -237,7 +238,7 @@ def recover_from_unconscious_h(character_id: int, info_text: str = ""):
         character_data.state = tem_state
 
     # 结算交互对象的响应
-    response = handle_unconscious_h_response(character_id, character_data.target_character_id)
+    response = handle_unconscious_h_response(character_id, target_character_id)
 
     # 对方的行为改为等待
     target_data.behavior.behavior_id = constant.Behavior.WAIT
@@ -251,11 +252,11 @@ def recover_from_unconscious_h(character_id: int, info_text: str = ""):
         # 对方的行为时间设为10分钟
         target_data.behavior.duration = 10
         # 睡眠中，则对方获得装睡状态，仍继续无意识H
-        if handle_premise.handle_action_sleep(character_data.target_character_id):
+        if handle_premise.handle_action_sleep(target_character_id):
             target_data.h_state.pretend_sleep = True
             target_data.sp_flag.unconscious_h = 1
-            handle_premise.settle_chara_unnormal_flag(character_data.target_character_id, 5)
-            handle_premise.settle_chara_unnormal_flag(character_data.target_character_id, 5)
+            handle_premise.settle_chara_unnormal_flag(target_character_id, 5)
+            handle_premise.settle_chara_unnormal_flag(target_character_id, 5)
             # 成就刷新
             cache.achievement.sleep_sex_record[1] = 1
     # 否则
@@ -263,7 +264,7 @@ def recover_from_unconscious_h(character_id: int, info_text: str = ""):
         # 对象行为时间改为1分钟
         target_data.behavior.duration = 1
         # 重置双方H结构体和相关数据
-        default.handle_both_h_state_reset(0, 1, game_type.CharacterStatusChange(), datetime.datetime(1, 1, 1))
+        default.handle_both_h_state_reset(character_id, target_character_id, 1, game_type.CharacterStatusChange(), datetime.datetime(1, 1, 1))
         # 地点开门
         scene_data.close_flag = 0
 
@@ -357,14 +358,13 @@ def handle_unconscious_h_response(character_id: int, target_character_id: int, c
         character_data.state = constant.CharacterStatus.STATUS_NO_CONSCIOUS_H_END
         character_behavior.judge_character_status(character_id)
     # 裁决为继续H但本次不允许继续，对目标角色本人做退出奖励、H状态归位与穿回衣物。
-    # 退出奖励会连同角色的交互对象一起结算，而目标角色身上的交互对象可能是没有清理过的旧值，
-    # 因此先把目标指向自己再发奖
+    # 结算目标角色的退出奖励
     elif not can_continue:
-        # 先解放目标角色累积的寸止计数；该结算作用于调用者的交互对象、且须在H状态归零前进行，故以自己为调用者、交互对象指向目标角色
+        # 在H状态归零前解放目标角色累积的寸止计数
         character_data.target_character_id = target_character_id
-        default.handle_orgasm_edge_release(character_id, 1, game_type.CharacterStatusChange(), cache.game_time)
+        default.handle_orgasm_edge_release(character_id, target_character_id, 1, game_type.CharacterStatusChange(), cache.game_time)
         target_data.target_character_id = target_character_id
-        default.handle_end_h_add_hpmp_max(target_character_id, 1, game_type.CharacterStatusChange(), cache.game_time)
+        default.handle_end_h_add_hpmp_max(target_character_id, target_character_id, 1, game_type.CharacterStatusChange(), cache.game_time)
         default.handle_self_h_state_reset(target_character_id, 1, game_type.CharacterStatusChange(), cache.game_time)
         default_cloth.handle_self_cloth_back(target_character_id, 1, game_type.CharacterStatusChange(), cache.game_time)
 
@@ -395,7 +395,7 @@ def judge_weak_up_in_sleep_h(character_id: int, target_character_id: int):
             handle_premise.settle_chara_unnormal_flag(target_character_id, 5)
             handle_premise.settle_chara_unnormal_flag(target_character_id, 6)
             info_text = _("\n因为{0}的动作，{1}从梦中惊醒过来\n").format(now_character_data.name, target_data.name)
-            recover_from_unconscious_h(character_id, info_text)
+            recover_from_unconscious_h(character_id, target_character_id, info_text)
         elif target_data.sp_flag.unconscious_h == 0:
             # 普通睡眠角色：先结束睡眠行为，再执行“睡觉中被吵醒”行为
             # 注意顺序：judge_character_status_time_over()内部会用game_type.Behavior()整体重置行动数据，

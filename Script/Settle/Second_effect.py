@@ -325,61 +325,69 @@ def handle_add_1_peeing_experience(
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.TARGET_ADD_1_Cums_EXPERIENCE)
 def handle_target_add_1_cums_experience(
     character_id: int,
+    target_character_id: int,
     change_data: game_type.CharacterStatusChange,
 ):
     """
     交互对象增加1精液经验
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 交互目标id
     change_data -- 状态变更信息记录对象
     """
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    base_chara_experience_common_settle(character_data.target_character_id, 24, 1, target_flag=False, change_data=change_data)
+    base_chara_experience_common_settle(target_character_id, 24, 1, change_data=change_data)
 
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.TARGET_ADD_SMALL_LUBRICATION)
 def handle_target_add_small_lubrication(
     character_id: int,
+    target_character_id: int,
     change_data: game_type.CharacterStatusChange,
 ):
     """
     交互对象增加少量润滑
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 交互目标id
     change_data -- 状态变更信息记录对象
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    base_chara_state_common_settle(character_data.target_character_id, 0, 8, 300, tenths_add = False, change_data_to_target_change = change_data)
+    base_chara_state_common_settle(target_character_id, 0, 8, 300, tenths_add = False, change_data_to_target_change = change_data)
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.TARGET_ADD_MIDDLE_LUBRICATION)
 def handle_target_add_middle_lubrication(
     character_id: int,
+    target_character_id: int,
     change_data: game_type.CharacterStatusChange,
 ):
     """
     交互对象增加中量润滑
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 交互目标id
     change_data -- 状态变更信息记录对象
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    base_chara_state_common_settle(character_data.target_character_id, 0, 8, 900, tenths_add = False, change_data_to_target_change = change_data)
+    base_chara_state_common_settle(target_character_id, 0, 8, 900, tenths_add = False, change_data_to_target_change = change_data)
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.TARGET_ADD_LARGE_LUBRICATION)
 def handle_target_add_large_lubrication(
     character_id: int,
+    target_character_id: int,
     change_data: game_type.CharacterStatusChange,
 ):
     """
     交互对象增加大量润滑
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 交互目标id
     change_data -- 状态变更信息记录对象
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    base_chara_state_common_settle(character_data.target_character_id, 0, 8, 3000, tenths_add = False, change_data_to_target_change = change_data)
+    base_chara_state_common_settle(target_character_id, 0, 8, 3000, tenths_add = False, change_data_to_target_change = change_data)
 
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.ADD_SMALL_LUBRICATION)
 def handle_add_small_lubrication(
@@ -2591,19 +2599,21 @@ def handle_store_super_orgasm_charge(
 @settle_behavior.add_settle_second_behavior_effect(constant_effect.SecondEffect.PENIS_IN_T_RESET)
 def handle_penis_in_t_reset(
     character_id: int,
+    target_character_id: int,
     change_data: game_type.CharacterStatusChange,
 ):
     """
     当前阴茎位置为交互对象_双方归零
     Keyword arguments:
     character_id -- 角色id
+    target_character_id -- 交互目标id
     change_data -- 状态变更信息记录对象
     """
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
 
-    target_data: game_type.Character = cache.character_data[character_data.target_character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
     target_data.h_state.insert_position = -1
     character_data.h_state.insert_position = -1
 

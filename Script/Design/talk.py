@@ -422,7 +422,7 @@ def must_show_talk_check(character_id: int):
         # 遍历该二段行为的所有结算效果，挨个触发，但因为不在结算阶段，所以不会显示具体的结算数据
         change_data = game_type.CharacterStatusChange()
         for effect_id in game_config.config_behavior_effect_data[behavior_id]:
-            constant.settle_second_behavior_effect_data[effect_id](character_id, change_data)
+            constant.settle_second_behavior_effect_data[effect_id](character_id, character_data.target_character_id, change_data)
         # 触发后该行为值归零
         character_data.second_behavior[behavior_id] = 0
     character_data.must_show_second_behavior_id_list = []
