@@ -216,6 +216,7 @@ class Runtime:
         from Script.Design import character_behavior, handle_npc_ai, handle_npc_ai_in_h, handle_talent, handle_premise
         from Script.Settle import realtime_settle
         from Script.Design.action_execution import prepare_action
+        from Script.System.Education_System import class_ai
 
         cache = cache_control.cache
         character = cache.character_data[actor]
@@ -243,6 +244,12 @@ class Runtime:
         replaced = self.scheduler.pending(actor)
         if replaced is not None and replaced.immediate:
             return 0
+        if actor:
+            # 学生岗赶去上课：把工作 / 娱乐行为截到应离开的时刻（判据见 class_ai.get_student_leave_time）。
+            #    上游在行为进行中的每一轮调 handle_npc_ai.judge_student_leave_truncate 截短；这里整段行动在开始时一次结算，故在结算前截。
+            leave_time = class_ai.get_student_leave_time(actor)
+            if leave_time is not None:
+                action.duration = character.behavior.duration = max(1, int((leave_time - now).total_seconds() // 60))
         end = self.advance_time(now, action.duration)
         if action.behavior_id == constant.Behavior.SLEEP:
             settle_sleep(actor, action.duration, action.continued, now)
