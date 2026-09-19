@@ -87,6 +87,9 @@ def game_start():
     character_handle.init_character_entertainment() # 需要设施开放的属性，所以放在设施后面
     medical_service.init_medical_department_data(reset_runtime=True)
     achievement_panel.achievement_flow(_("周目"))
+    # 新游戏和新周目共用此入口，清除上一局待办，首次推进时建立新队列。
+    from Script.Design import game_actions
+    game_actions.reset()
     # print(f"debug 2facility_open = {cache.base_resouce.facility_open}")
 
 def confirm_game_info_panel():

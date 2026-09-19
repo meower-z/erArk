@@ -66,3 +66,6 @@ mod/mod_config.json
 
 # 错误log
 error.log
+
+# 本地代理知识与任务记录
+/.agents/

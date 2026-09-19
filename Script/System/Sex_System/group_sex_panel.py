@@ -168,11 +168,12 @@ def count_group_sex_character_list():
     return group_sex_chara_id_list
 
 
-def get_status_id_list_from_group_sex_body_part(body_part: str):
+def get_status_id_list_from_group_sex_body_part(body_part: str, *, target_id: int | None = None):
     """
     从群交部位获取状态id列表\n
     Keyword arguments:\n
     body_part -- 群交部位\n
+    target_id -- 可选目标编号；指定时只读查询该角色\n
     Return arguments:\n
     [] -- 状态id列表
     """
@@ -198,15 +199,16 @@ def get_status_id_list_from_group_sex_body_part(body_part: str):
             # 获取指令id
             instruct_id = constant.behavior_id_to_instruct_id[status_id]
             # 检查指令是否可用
-            filter_judge, now_premise_data = see_instruct_panel.judge_single_instruct_filter(instruct_id, now_premise_data, constant.InstructType.SEX, use_type_filter_flag=False)
+            filter_judge, now_premise_data = see_instruct_panel.judge_single_instruct_filter(instruct_id, now_premise_data, constant.InstructType.SEX, use_type_filter_flag=False, target_id=target_id)
             # 去掉有破处判定且当前为处的
             if filter_judge:
                 status_data = game_config.config_behavior[status_id]
                 status_tag_list = status_data.tag
                 status_tag_list = status_data.tag.split("|")
                 pl_character_data = cache.character_data[0]
-                if pl_character_data.target_character_id == 0:
-                    target_character_data = cache.character_data[pl_character_data.target_character_id]
+                query_target_id = pl_character_data.target_character_id if target_id is None else target_id
+                if query_target_id == 0:
+                    target_character_data = cache.character_data[query_target_id]
                     # 如果NPC为处，则跳过破处类
                     if target_character_data.talent[0] and _("V") in status_tag_list and _("破处") in status_tag_list:
                         continue

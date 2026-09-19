@@ -1,6 +1,7 @@
 import random
 import datetime
 from types import FunctionType
+from Script.Modules.scheduler.action import Action
 from Script.Core import (
     cache_control,
     game_path_config,
@@ -149,13 +150,8 @@ def judge_character_h_obscenity_unconscious(character_id: int, pl_start_time: da
             if(
                 handle_premise.handle_npc_ai_type_1_in_group_sex(character_id) or handle_premise.handle_npc_ai_type_2_in_group_sex(character_id)
             ):
-                npc_ai_in_group_sex(character_id)
+                # 补位与自慰由 NPC AI 返回意图，执行阶段更新群交状态。
                 return 1
-            # 如果已经获得性爱助手行为，则结算助手行动
-            elif character_data.h_state.sex_assist:
-                # 手动结算性爱助手行动
-                character_behavior.judge_character_status(character_id)
-                character_data.h_state.sex_assist = False
         character_data.behavior.behavior_id = constant.Behavior.WAIT
         character_data.state = constant.CharacterStatus.STATUS_WAIT
         character_data.behavior.start_time = pl_start_time
@@ -239,6 +235,26 @@ def recover_from_unconscious_h(character_id: int, info_text: str = ""):
     # 结算交互对象的响应
     response = handle_unconscious_h_response(character_id, character_data.target_character_id)
 
+    # 各响应动作完成后恢复双方状态。
+    from Script.Design.game_actions import submit_current
+
+    character_data.target_character_id = target_data.cid
+    character_data.behavior.behavior_id = constant.Behavior.WAIT
+    character_data.state = constant.CharacterStatus.STATUS_WAIT
+    character_data.behavior.duration = 5
+    submit_current(character_id, after=("unconscious_recovery", target_data.cid, response))
+
+
+def finish_unconscious_h_recovery(character_id: int, target_character_id: int, response: int):
+    """响应链完成后恢复双方状态；输入发起者、对象编号与裁决，返回 None。"""
+    from Script.Settle import default
+    from Script.Design.game_actions import replan
+
+    character_data: game_type.Character = cache.character_data[character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
+    scene_path_str = map_handle.get_map_system_path_str_for_list(character_data.position)
+    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
+
     # 对方的行为改为等待
     target_data.behavior.behavior_id = constant.Behavior.WAIT
     target_data.state = constant.CharacterStatus.STATUS_WAIT
@@ -267,8 +283,10 @@ def recover_from_unconscious_h(character_id: int, info_text: str = ""):
         # 地点开门
         scene_data.close_flag = 0
 
-    # 时间推进5分钟
-    update.game_update_flow(5)
+    # 对方从现在起按写入的等待行事，到期后再自主选择。
+    target_data.behavior.start_time = cache.game_time
+    replan(target_character_id)
+
 
 class UnconsciousHResponse:
     """无意识H被打断后的裁决结果"""
@@ -301,8 +319,7 @@ def handle_unconscious_h_response(character_id: int, target_character_id: int, c
         并按裁决结果改写玩家的行为与状态。
         裁决为继续H以外的结果时，借玩家的状态机成对结算这场H的收尾；
         裁决为继续H而can_continue为False时，改为直接对目标角色本人做退出结算。
-        因此返回后，除〈裁决为CONTINUE_H且can_continue为True〉这一种情况外，
-        目标角色的收尾都已经在本函数内完成。
+        非继续分支提交两步响应，返回后由调度器依次执行；调用方的收尾也须排在响应之后。
     """
     from Script.Settle import default, default_cloth
 
@@ -337,6 +354,9 @@ def handle_unconscious_h_response(character_id: int, target_character_id: int, c
             response = UnconsciousHResponse.ANGRY
             target_data.angry_point += 100
             target_data.sp_flag.angry_with_player = True
+            # 将失败反应排为立即后续。
+            character_data.behavior.behavior_id = constant.Behavior.DO_H_FAIL
+            character_data.state = constant.CharacterStatus.STATUS_DO_H_FAIL
         # 如果没有陷落状态，则设置为高级性骚扰状态
         else:
             response = UnconsciousHResponse.HIGH_OBSCENITY
@@ -348,14 +368,18 @@ def handle_unconscious_h_response(character_id: int, target_character_id: int, c
         character_data.behavior.behavior_id = constant.Behavior.DO_H_FAIL
         character_data.state = constant.CharacterStatus.STATUS_DO_H_FAIL
 
-    # 不继续H，当场借玩家的状态机成对结算
+    # 不继续H，提交玩家的两步响应，当前动作返回后依次结算。
     if response != UnconsciousHResponse.CONTINUE_H:
         character_data.behavior.duration = 5
         character_data.target_character_id = target_character_id
-        character_behavior.judge_character_status(character_id)
+        from Script.Design.game_actions import submit_current
+
+        submit_current(character_id)
         character_data.behavior.behavior_id = constant.Behavior.NO_CONSCIOUS_H_END
         character_data.state = constant.CharacterStatus.STATUS_NO_CONSCIOUS_H_END
-        character_behavior.judge_character_status(character_id)
+        character_data.behavior.duration = 5
+        character_data.target_character_id = target_character_id
+        submit_current(character_id)
     # 裁决为继续H但本次不允许继续，对目标角色本人做退出奖励、H状态归位与穿回衣物。
     # 退出奖励会连同角色的交互对象一起结算，而目标角色身上的交互对象可能是没有清理过的旧值，
     # 因此先把目标指向自己再发奖
@@ -414,7 +438,9 @@ def judge_weak_up_in_sleep_h(character_id: int, target_character_id: int):
             # 该分支会跳过sp_flag.bagging_chara_id等于交互对象id的情况，而玩家id与其默认值同为0，
             # 因此玩家被762推走后本行为不会被判定为已结束。改动bagging_chara_id的默认值时需同步复核此处。
             target_data.target_character_id = character_id
-            character_behavior.judge_character_status(target_character_id)
+            from Script.Design.game_actions import submit_current
+
+            submit_current(target_character_id)
         else:
             # 醉酒、时停、平然、空气、体控、心控等其他无意识状态：沿用旧的提示与结束流程
             info_text = _("\n{0}被{1}的动静吵醒了\n").format(target_data.name, now_character_data.name)
@@ -631,28 +657,34 @@ def npc_active_h():
     update.game_update_flow(10)
 
 
-def npc_ai_in_group_sex(character_id: int):
+def npc_ai_in_group_sex(character_id: int) -> Action | None:
     """
     NPC在群交中的AI，不含抢占\n
     Keyword arguments:\n
     character_id -- 角色id\n
+    返回 Action 表示所选行动，None 表示继续常规行动选择\n
     """
     from Script.System.Sex_System import group_sex_panel
+    from Script.Design import handle_npc_ai
 
     # 玩家则返回
     if character_id == 0:
+        return
+    character_data: game_type.Character = cache.character_data[character_id]
+
+    # 如果不是H状态+群交，则返回
+    if character_data.sp_flag.is_h == False or handle_premise.handle_group_sex_mode_off(character_id):
         return
     # 如果自己已在群交模板中，则返回
     group_sex_chara_id_list = group_sex_panel.count_group_sex_character_list()
     if character_id in group_sex_chara_id_list:
         return
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    pl_character_data: game_type.Character = cache.character_data[0]
-    A_template_data = pl_character_data.h_state.group_sex_body_template_dict["A"]
-
-    # 如果不是H状态+群交，则返回
-    if character_data.sp_flag.is_h == False or handle_premise.handle_group_sex_mode_off(character_id):
+    # 沿用行为前置检查：睡眠、异常状态和抢占模式由其他分支处理。
+    if character_data.behavior.behavior_id == constant.Behavior.SLEEP or not handle_premise.handle_normal_6(character_id):
+        return
+    masturbate_only = handle_premise.handle_npc_ai_type_1_in_group_sex(character_id)
+    if not (masturbate_only or handle_premise.handle_npc_ai_type_2_in_group_sex(character_id)):
         return
 
     # 被绳子捆绑则返回
@@ -660,13 +692,11 @@ def npc_ai_in_group_sex(character_id: int):
         return
 
     # 如果设定NPC为仅自慰，则进入要自慰后返回
-    if handle_premise.handle_npc_ai_type_1_in_group_sex(character_id):
+    if masturbate_only:
         character_data.sp_flag.masturebate = 3
         handle_premise.settle_chara_unnormal_flag(character_id, 1)
-        character_data.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-        character_data.state = constant.CharacterStatus.STATUS_ARDER
         # print(f"debug {character_data.name}进入了要自慰状态")
-        return
+        return handle_npc_ai.choose_character_target(character_id, cache.game_time)
 
     # 获取当前模板的空缺部位和非空缺部位
     now_template_empty_part_list, now_template_not_empty_part_list = group_sex_panel.get_now_template_part_list()
@@ -676,35 +706,45 @@ def npc_ai_in_group_sex(character_id: int):
         body_part = random.choice(now_template_empty_part_list)
         # 如果是加入侍奉，则直接加入
         if body_part == _("加入侍奉"):
-            A_template_data[1][0].append(character_id)
-            # print(f"debug {character_data.name}加入侍奉{game_config.config_status[ A_template_data[1][1]].name}")
+            return Action("group_join", 0, 0)
         else:
             # 获取该部位的状态id列表
-            old_target_character_id = pl_character_data.target_character_id
-            pl_character_data.target_character_id = character_id
-            try:
-                new_status_id_list = group_sex_panel.get_status_id_list_from_group_sex_body_part(body_part)
-            finally:
-                pl_character_data.target_character_id = old_target_character_id
+            new_status_id_list = group_sex_panel.get_status_id_list_from_group_sex_body_part(body_part, target_id=character_id)
             # 如果没有可用的状态，则返回
             if len(new_status_id_list) == 0:
-                return
+                return None
             # 随机选择一个状态
             status_id = random.choice(new_status_id_list)
-            # 如果是侍奉
-            if body_part == _("侍奉"):
-                A_template_data[1] = [[character_id], status_id]
-            # 如果是对单
-            else:
-                A_template_data[0][body_part] = [character_id, status_id]
-            # print(f"debug {character_data.name}对{body_part}选择了{game_config.config_status[status_id].name}")
+            return Action("group_fill", 0, 0, params={"body_part": body_part, "status_id": status_id})
     # 否则，自己进入要自慰状态
     else:
         character_data.sp_flag.masturebate = 3
         handle_premise.settle_chara_unnormal_flag(character_id, 1)
-        character_data.state = constant.CharacterStatus.STATUS_ARDER
-        character_data.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
         # print(f"debug {character_data.name}进入了要自慰状态")
+        return handle_npc_ai.choose_character_target(character_id, cache.game_time)
+
+
+def execute_group_action(character_id: int, action: Action) -> None:
+    """输入角色编号及 Action，落实群交模板修改并让角色原地等待；返回 None。"""
+    character_data: game_type.Character = cache.character_data[character_id]
+    pl_character_data: game_type.Character = cache.character_data[0]
+    A_template_data = pl_character_data.h_state.group_sex_body_template_dict["A"]
+    if action.behavior_id == "group_join":
+        A_template_data[1][0].append(character_id)
+    else:
+        body_part, status_id = action.params["body_part"], action.params["status_id"]
+        # 如果是侍奉
+        if body_part == _("侍奉"):
+            A_template_data[1] = [[character_id], status_id]
+        # 如果是对单
+        else:
+            A_template_data[0][body_part] = [character_id, status_id]
+    # 刚选完补位的 NPC 原地等待五分钟。
+    character_data.behavior.behavior_id = constant.Behavior.WAIT
+    character_data.behavior.duration = 5
+    character_data.target_character_id = character_id
+    character_data.state = constant.CharacterStatus.STATUS_WAIT
+
 
 def npc_ai_in_group_sex_type_3():
     """
