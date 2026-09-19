@@ -299,6 +299,159 @@ def get_weight_from_premise_dict(talk_premise_dict: set, character_id: int, calc
     return now_weight, now_premise_data
 
 
+def get_player_manual_teach_course(character_id: int) -> Optional[tuple]:
+    """
+    取玩家手动授课这一节的课型与科目（Plan 31 §3.13：CVP Course / CourseType 对玩家手动授课的回落）
+    Keyword arguments:
+    character_id -- 角色id
+    Return arguments:
+    Optional[tuple] -- (课型编号int, 科目能力id int)；不是玩家、或此刻的行为不是授课时为None
+    功能: 玩家手动发起的授课不在课表上（他从不出现在全局课表的教师位上），教师反查只取得到他人就在那间教室里的当天临时实操课。
+             此前 CVP 两项都读成 -1，授课口上全判不过，只剩开发占位地文。
+          与结算 512（Settle/default.py 的授课结算）共用同两处定义：课型 schedule_handle.get_course_type_by_position（理论 / 实践教室、大礼堂，
+             不在这三类教室里按理论课），科目 education_constant.FALLBACK_SUBJECT_ABILITY（学识）。调用方只在 get_now_teaching 取不到时才问它。只读
+    """
+    from Script.System.Education_System import education_constant, schedule_handle
+
+    if character_id != 0:
+        return None
+    character_data: game_type.Character = cache.character_data[character_id]
+    if character_data.behavior.behavior_id != constant.Behavior.TEACH:
+        return None
+    return schedule_handle.get_course_type_by_position(character_data.position), education_constant.FALLBACK_SUBJECT_ABILITY
+
+
+def get_listen_manual_teach_course(character_id: int) -> Optional[tuple]:
+    """
+    取正在听玩家手动授课的学生这一节的课型与科目（Plan 32 §3.9 / §3.10 L13：学生侧与 512 同口径）
+    Keyword arguments:
+    character_id -- 角色id
+    Return arguments:
+    Optional[tuple] -- (课型编号int, 科目能力id int)；她此刻不是在听玩家的手动授课时为None
+    功能: 玩家「授课」把在场的学生拉成听课、开始时刻对齐到玩家（handle_instruct.handle_teach），512 按学识与所在教室给她们结算；
+             此前学生侧的 CVP 与 <课> 仍按她自己的课表取，节次外一句听课口上都不出，节次内写的是课表上的另一门课。
+          判据：不是玩家、行为是听课、与玩家同场景、玩家此刻在授课且不是课表上的课（get_now_teaching(0) 取不到）、两人的行为开始时刻对齐。只读
+    """
+    from Script.System.Education_System import schedule_handle
+
+    if character_id == 0 or character_id not in cache.character_data:
+        return None
+    character_data: game_type.Character = cache.character_data[character_id]
+    if character_data.behavior.behavior_id != constant.Behavior.ATTENT_CLASS:
+        return None
+    pl_character_data: game_type.Character = cache.character_data[0]
+    if pl_character_data.behavior.behavior_id != constant.Behavior.TEACH:
+        return None
+    if character_data.position != pl_character_data.position or character_data.behavior.start_time != pl_character_data.behavior.start_time:
+        return None
+    if schedule_handle.get_now_teaching(0) is not None:
+        return None
+    return get_player_manual_teach_course(0)
+
+
+def get_now_course_type(character_id: int) -> int:
+    """
+    取角色当前这一节在上（或在教）的课型，供 CourseType 型 CVP token 使用
+    Keyword arguments:
+    character_id -- 角色id
+    Return arguments:
+    int -- 课型编号0~5，不在上课则为-1
+    功能: 教师反查优先，其次是玩家手动授课的回落（按所在教室判，Plan 31 §3.13），
+          再是被玩家「授课」拉来听课的学生（同样按所在教室判，Plan 32 §3.10 L13），最后查学生自己的课表
+    """
+    from Script.System.Education_System import schedule_handle
+
+    # 教师优先：同一个人不可能既在授课又在听课
+    teaching = schedule_handle.get_now_teaching(character_id)
+    if teaching is not None:
+        return teaching["course_type"]
+    # 玩家手动授课不在课表上，教师反查取不到：课型按所在教室判（Plan 31 §3.13，与 512 同口径）
+    manual_course = get_player_manual_teach_course(character_id)
+    if manual_course is not None:
+        return manual_course[0]
+    # 在听玩家手动授课的学生：课型同样按教室判，与 512 给她的结算同口径（Plan 32 §3.10 L13）。
+    #    此前读她自己的课表：节次外恒为 -1，听课口上一句不出；节次内读的是课表上的另一门课
+    listen_course = get_listen_manual_teach_course(character_id)
+    if listen_course is not None:
+        return listen_course[0]
+    now_course = schedule_handle.get_now_course(character_id)
+    if now_course is not None:
+        return now_course["course_type"]
+    return -1
+
+
+def get_now_course_ability(character_id: int) -> int:
+    """
+    取角色当前这一节课的科目能力id，供 Course 型 CVP token 使用
+    体育课与兴趣课没有"科目"这个概念（学的是该活动自带的东西），恒返回-1不成立；
+       实习课的科目取该岗位 WorkType.csv 的 ability_id 列
+    正在进行的性技实操课优先于课表（Plan 22 四期）：当场开课与拖堂都可能发生在节次之外，
+       此时下面那两条课表链一律取不到东西，所以先问 judge_in_running_class()。
+       （教师反查 get_teacher_cell() 自 2026-09-09 起也并入了临时课覆盖层，节次内查玩家同样取得到）
+    玩家手动授课不在课表上，教师反查取不到时科目回落学识（Plan 31 §3.13，与 512 同口径，见 get_player_manual_teach_course）；
+       被玩家「授课」拉来听课的学生同样回落学识，先于她自己的课表（Plan 32 §3.10 L13，见 get_listen_manual_teach_course）
+    Keyword arguments:
+    character_id -- 角色id
+    Return arguments:
+    int -- 科目能力id，取不到则为-1
+    """
+    from Script.System.Education_System import education_constant, schedule_handle, sex_class_handle
+
+    if sex_class_handle.judge_in_running_class(character_id):
+        now_class_ability = sex_class_handle.get_now_class_ability()
+        if now_class_ability != -1:
+            return now_class_ability
+    teaching = schedule_handle.get_now_teaching(character_id)
+    if teaching is not None:
+        return teaching["ability_id"]
+    # 玩家手动授课：科目回落学识（Plan 31 §3.13）
+    manual_course = get_player_manual_teach_course(character_id)
+    if manual_course is not None:
+        return manual_course[1]
+    # 在听玩家手动授课的学生：512 给她发的是学识，口上也按学识取（Plan 32 §3.10 L13），不读课表上的那门课
+    listen_course = get_listen_manual_teach_course(character_id)
+    if listen_course is not None:
+        return listen_course[1]
+    now_course = schedule_handle.get_now_course(character_id)
+    if now_course is None:
+        return -1
+    if now_course["course_type"] in education_constant.CLASSROOM_COURSE_TYPE_SET:
+        return now_course["ability_id"]
+    if now_course["course_type"] == education_constant.COURSE_TYPE_INTERN:
+        if now_course["target"] in game_config.config_work_type:
+            return game_config.config_work_type[now_course["target"]].ability_id
+    return -1
+
+
+def judge_value_by_operator(final_value: float, operator_text: str, judge_text: str) -> int:
+    """
+    按运算符比较两个数值，供不需要角色主体的前提复用（如 Plan 23 的 CVP_RI_ 全局数值）
+    Keyword arguments:
+    final_value -- 当前值
+    operator_text -- 运算符（G大于/L小于/E等于/GE大于等于/LE小于等于/NE不等于）
+    judge_text -- 判定值文本
+    Return arguments:
+    int -- 成立为1，不成立为0
+    """
+    try:
+        judge_value = float(judge_text)
+    except (TypeError, ValueError):
+        return 0
+    if operator_text == "G":
+        return 1 if final_value > judge_value else 0
+    if operator_text == "L":
+        return 1 if final_value < judge_value else 0
+    if operator_text == "E":
+        return 1 if final_value == judge_value else 0
+    if operator_text == "GE":
+        return 1 if final_value >= judge_value else 0
+    if operator_text == "LE":
+        return 1 if final_value <= judge_value else 0
+    if operator_text == "NE":
+        return 1 if final_value != judge_value else 0
+    return 0
+
+
 def handle_comprehensive_value_premise(character_id: int, premise_all_value_list: list) -> int:
     """
     综合型基础数值前提
@@ -313,6 +466,14 @@ def handle_comprehensive_value_premise(character_id: int, premise_all_value_list
     pl_target_character_id = pl_character_data.target_character_id
     pl_target_character_data = cache.character_data[pl_target_character_id]
     # print(f"debug character_id = {character_id}, premise_all_value_list = {premise_all_value_list}")
+
+    # 罗德岛全局数值的主体RI（Plan 23）：资源、声望、公务量这类不属于任何角色的数值
+    # 必须在角色主体的判别之前提前返回：下面那段数值B的判别是按「类型|子id」拆的，
+    #    而 RI 的类型可以不带子id（如 CVE_RI_Work_G_20），落进去会直接 IndexError
+    if premise_all_value_list[0] == "RI":
+        from Script.System.Official_Event_System import ri_value
+
+        return judge_value_by_operator(ri_value.get_ri_value(premise_all_value_list[1]), premise_all_value_list[2], premise_all_value_list[3])
 
     # 进行主体A的判别，A1为自己，A2为交互对象，A3为指定id角色(格式为A3|15)
     if premise_all_value_list[0] == "A1":
@@ -332,7 +493,7 @@ def handle_comprehensive_value_premise(character_id: int, premise_all_value_list
         if final_character_id not in cache.npc_id_got:
             return 0
 
-    # 进行数值B的判别,A能力,T素质,Time时间,J宝珠,E经验,S状态,F好感度,Flag作者用flag,X信赖,G攻略程度,Instruct指令,Son子嵌套事件,OtherChara其他角色在场,Dirty污浊,Bondage绳子捆绑,Roleplay角色扮演,PenisPos阴茎位置,ShootPos射精位置,Relationship身份关系
+    # 进行数值B的判别,A能力,T素质,Time时间,J宝珠,E经验,S状态,F好感度,Flag作者用flag,X信赖,G攻略程度,Instruct指令,Son子嵌套事件,OtherChara其他角色在场,Dirty污浊,Bondage绳子捆绑,Roleplay角色扮演,PenisPos阴茎位置,ShootPos射精位置,Relationship身份关系,Course当前课程科目,CourseType当前课型,CourseShowOff待炫耀的已升级科目,Growth养成数值
     if (
         len(premise_all_value_list[1]) > 1 and
         "Time" not in premise_all_value_list[1] and
@@ -390,19 +551,45 @@ def handle_comprehensive_value_premise(character_id: int, premise_all_value_list
             else:
                 final_value = final_character_data.dirty.cloth_semen[part_cid][1]
     elif premise_all_value_list[1][0] == "G":
+        # 养成数值前提（Plan 22 三期）：出勤、性格倾向、照料值等，编号见 education_constant.GROWTH_VALUE_*
+        # 必须排在攻略程度之前——"Growth" 与 "Gift" 的首字母都是 G，落到默认分支会被当成攻略程度
+        if "Growth" in premise_all_value_list[1]:
+            from Script.System.Education_System import growth_handle
+
+            final_value = growth_handle.get_growth_value(final_character_id, type_son_id)
         # 礼物前提
-        if "Gift" in premise_all_value_list[1]:
+        elif "Gift" in premise_all_value_list[1]:
             if final_character_data.behavior.gift_id == type_son_id:
                 return 1
             else:
                 return 0
-        final_value = attr_calculation.get_character_fall_level(final_character_id, minus_flag=True)
+        # 攻略程度
+        else:
+            final_value = attr_calculation.get_character_fall_level(final_character_id, minus_flag=True)
     elif premise_all_value_list[1][0] == "B":
         if "Bondage" in premise_all_value_list[1]:
             if final_character_data.h_state.bondage == type_son_id:
                 final_value = 1
             else:
                 final_value = 0
+    elif premise_all_value_list[1][0] == "C":
+        # 上课前提（Plan 22 §3.17）：一条分支覆盖全部18门科目与6种课型，日后加科目零改动
+        # 不新增字段，当前课程由课表现算——教师侧查全局课表、学生侧查个人课表，
+        #    与 <课> 状态标识、上课结算读的是同一个入口，三处不会各说各话
+        # 三者判序不能改：CourseShowOff 与 CourseType 的字符串里都含有 "Course"，
+        #    长的必须先判，否则会被 Course 分支抢先吃掉（而且不报错，只是永远不成立）
+        if "CourseShowOff" in premise_all_value_list[1]:
+            growth_data = final_character_data.child_growth
+            if growth_data is None:
+                return 0
+            return 1 if type_son_id in growth_data.show_off_ability else 0
+        if "CourseType" in premise_all_value_list[1]:
+            now_type = get_now_course_type(final_character_id)
+            return 1 if now_type == type_son_id else 0
+        if "Course" in premise_all_value_list[1]:
+            now_ability_id = get_now_course_ability(final_character_id)
+            return 1 if now_ability_id == type_son_id else 0
+        return 0
     elif premise_all_value_list[1][0] == "R":
         if "Roleplay" in premise_all_value_list[1]:
             if type_son_id in final_character_data.hypnosis.roleplay:
@@ -476,8 +663,8 @@ def handle_comprehensive_value_premise(character_id: int, premise_all_value_list
     judge_value = int(premise_all_value_list[3])
     # print(f"debug final_value = {final_value}, judge_value = {judge_value}")
 
-    # 攻略程度的不过0处理
-    if premise_all_value_list[1][0] == "G":
+    # 攻略程度的不过0处理。养成数值同样以G开头，但它是可正可负的普通数值，不能套这套夹逼
+    if premise_all_value_list[1][0] == "G" and "Growth" not in premise_all_value_list[1]:
         # 如果当前值与判定值的正负号不同，则直接返回0
         if (final_value > 0 and judge_value < 0) or (final_value < 0 and judge_value > 0):
             return 0

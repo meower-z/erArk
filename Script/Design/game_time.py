@@ -287,6 +287,41 @@ def count_day_for_datetime(
     return (end_date - start_date).days
 
 
+def count_play_day(
+        start_date: datetime.datetime,
+        end_date: datetime.datetime,
+) -> int:
+    """
+    计算两个时间之间经过的可游玩天数（Plan 32 §3.2）
+    Keyword arguments:
+    start_date -- 开始时间
+    end_date -- 结束时间
+    Return arguments:
+    int -- 经过的可游玩天数，结束早于开始时为0
+    功能: 游戏时钟只有 3 / 6 / 9 / 12 四个季月，季月最后一天的下一天直接跳到下一个季月的 1 日（sub_time_now / get_sub_date），
+          日历天数（count_day_for_datetime）会把被跳过的非季月也算进去，一次换季就多出约 60 天。
+          这里从日历上的经过时长里减去 [开始, 结束) 与各个非季月重叠的时长，再取整天；按月累加，不逐日遍历
+    """
+    total_second = (end_date - start_date).total_seconds()
+    if total_second <= 0:
+        return 0
+    skip_second = 0.0
+    month_start = datetime.datetime(start_date.year, start_date.month, 1)
+    while month_start < end_date:
+        if month_start.month == 12:
+            next_month_start = datetime.datetime(month_start.year + 1, 1, 1)
+        else:
+            next_month_start = datetime.datetime(month_start.year, month_start.month + 1, 1)
+        # 非季月整段被时钟跳过：与 [开始, 结束) 重叠的那一截不算可游玩的时间
+        if get_season_month(month_start.month) != month_start.month:
+            overlap_start = max(month_start, start_date)
+            overlap_end = min(next_month_start, end_date)
+            if overlap_end > overlap_start:
+                skip_second += (overlap_end - overlap_start).total_seconds()
+        month_start = next_month_start
+    return max(0, int((total_second - skip_second) // 86400))
+
+
 def judge_date_big_or_small(time_a: datetime.datetime, time_b: datetime.datetime) -> int:
     """
     比较a时间是否大于或等于b时间\n
@@ -516,32 +551,53 @@ def judge_entertainment_time(character_id: int) -> int:
     return 0
 
 
-# def judge_attend_class_today(character_id: int) -> bool:
-#     """
-#     校验角色今日是否需要上课
-#     Keyword arguments:
-#     character_id -- 角色id
-#     Return arguments:
-#     int -- 权重
-#     """
-#     character_data: game_type.Character = cache.character_data[character_id]
-#     now_time: datetime.datetime = character_data.behavior.start_time
-#     if now_time is None:
-#         now_time = cache.game_time
-#     now_week = now_time.weekday()
-#     now_month = now_time.month
-#     if now_month not in {3, 4, 5, 6, 8, 9, 10, 11, 12}:
-#         return 0
-#     if character_data.age <= 18:
-#         if character_data.age > 15:
-#             return 1
-#         if character_data.age > 13 and now_week < 6:
-#             return 1
-#         if now_week < 5:
-#             return 1
-#     elif (
-#         character_id in cache.teacher_phase_table
-#         and now_week in cache.teacher_class_week_day_data[character_id]
-#     ):
-#         return 1
-#     return 0
+CLASS_PERIOD_START = [(9, 0), (9, 45), (10, 30), (11, 15), (14, 0), (14, 45), (15, 30), (16, 15), (17, 0)]
+""" 上课节次的起始时间（Plan 22）：上午4节 + 下午5节，每节45分钟，与既有 teach / attent_class 行为的时长一致。
+    晚上时段（19~22）不排课，留给日程活动 """
+
+CLASS_PERIOD_MINUTE = 45
+""" 每节课的时长（分钟） """
+
+
+def get_class_period_by_time(now_time: datetime.datetime) -> int:
+    """
+    把一个时间点换算为上课节次编号（Plan 22）
+    Keyword arguments:
+    now_time -- 要换算的时间
+    Return arguments:
+    int -- 节次编号0~8，不在任何节次内则为-1
+    """
+    now_minute = now_time.hour * 60 + now_time.minute
+    for period, (hour, minute) in enumerate(CLASS_PERIOD_START):
+        start = hour * 60 + minute
+        if start <= now_minute < start + CLASS_PERIOD_MINUTE:
+            return period
+    return -1
+
+
+def get_class_period(character_id: int) -> int:
+    """
+    校验角色当前处于第几节课（Plan 22）
+    Keyword arguments:
+    character_id -- 角色id
+    Return arguments:
+    int -- 节次编号0~8，不在任何节次内则为-1
+    """
+    character_data: game_type.Character = cache.character_data[character_id]
+    now_time: datetime.datetime = character_data.behavior.start_time
+    if now_time is None:
+        now_time = cache.game_time
+    return get_class_period_by_time(now_time)
+
+
+def get_now_semester() -> tuple:
+    """
+    取当前学期（Plan 22）。游戏一年只有3/6/9/12四个季月，一个季月即一个学期，不另造时间周期
+    Keyword arguments:
+    无
+    Return arguments:
+    tuple -- (年int, 季月int)，季月取值为3/6/9/12
+    """
+    now_time: datetime.datetime = cache.game_time
+    return now_time.year, get_season_month(now_time.month)
+

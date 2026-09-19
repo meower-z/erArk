@@ -12,7 +12,7 @@ from Script.Core import (
     old_chara_to_new
 )
 from Script.Config import normal_config, game_config, character_config
-from Script.Design import attr_calculation, character_handle
+from Script.Design import attr_calculation, character_handle, map_handle
 from Script.UI.Moudle import draw
 import json
 
@@ -116,6 +116,82 @@ def write_save_data(save_id: str, data_id: str, write_data: dict):
         os.makedirs(save_path)
     with open(file_path, "wb+") as f:
         pickle.dump(write_data, f)
+
+
+_ENTERTAINMENT_CID_MIGRATE = {175: 152, 176: 153, 177: 154, 178: 155}
+""" 教育区娱乐改编号（2026-09-09）：旧编号 → 新编号。
+    照料卵 / 跟随母亲 / 自由玩耍 / 上课（无课时自习）原来排在大浴场段（17x），改到教育区段（15x）紧接 151 过家家。
+    存档里存娱乐编号的三处（日程模板的时段、单孩覆盖、当天的三个娱乐槽位）读档时都过一遍 _migrate_entertainment_cid """
+
+
+def _migrate_entertainment_cid(value):
+    """
+    把存档里的旧娱乐编号换成新编号
+    Keyword arguments:
+    value -- 存档里的娱乐cid（也可能是别的类型，原样返回）
+    Return arguments:
+    value -- 换算后的娱乐cid
+    功能: 只在旧编号已经不在 Entertainment.csv 里时才换：日后大浴场段真的用上 175 时，
+          新档里的 175 就是那项浴场娱乐，不该被当成旧编号改掉
+    """
+    from Script.Config import game_config
+
+    if isinstance(value, int) and not isinstance(value, bool) and value in _ENTERTAINMENT_CID_MIGRATE and value not in game_config.config_entertainment:
+        return _ENTERTAINMENT_CID_MIGRATE[value]
+    return value
+
+
+def _migrate_child_schedule_template(rhodes_island_data) -> int:
+    """
+    把罗德岛数据里日程模板各时段存的旧娱乐编号换成新编号
+    Keyword arguments:
+    rhodes_island_data -- 存档里的 Rhodes_Island 对象（须已有 child_schedule_template 字段）
+    Return arguments:
+    int -- 换掉的时段数
+    """
+    count = 0
+    for template_data in getattr(rhodes_island_data, "child_schedule_template", {}).values():
+        slot_data = template_data.get("slot", {}) if isinstance(template_data, dict) else {}
+        for slot in list(slot_data):
+            new_cid = _migrate_entertainment_cid(slot_data[slot])
+            if new_cid != slot_data[slot]:
+                slot_data[slot] = new_cid
+                count += 1
+    return count
+
+
+_OFFICIAL_EVENT_UID_MIGRATE = {"萝莉1": "期末17", "萝莉20": "期末18", "萝莉26": "期末19"}
+""" 挪了桶的养成事件（Plan 32 L22）：旧uid → 新uid。
+    写成绩单的萝莉 1 / 20 / 26 挪进期末桶后换了uid，而事件按uid逐角色去重（official_event_handle.judge_event_done）：
+    旧档履历里记的是旧uid，不改名的话，经历过它们的孩子会在学期切换时再遇到一次同文同选项的期末 17 / 18 / 19，
+    养成总览的履历也会因查不到配置而漏掉这几条 """
+
+
+def _migrate_official_event_history(history_data: dict) -> int:
+    """
+    把事件履历里挪了桶的事件的旧uid改成新uid
+    Keyword arguments:
+    history_data -- 事件履历：CHILD_GROWTH.event_history 以uid为键，罗德岛的 official_event_history 以「uid@角色id」为键（无主体时就是uid）
+    Return arguments:
+    int -- 改了名的条数
+    功能: 只在旧uid已不在配置里、且新键还没有记录时才改（与 _migrate_entertainment_cid 同样的保护），重复读档是幂等的；
+          新键已有记录时旧键原样留着，履历面板查不到配置会跳过它
+    """
+    from Script.Config import game_config
+
+    count = 0
+    for key in list(history_data):
+        if not isinstance(key, str):
+            continue
+        uid, sep, suffix = key.partition("@")
+        if uid not in _OFFICIAL_EVENT_UID_MIGRATE or uid in game_config.config_official_event:
+            continue
+        new_key = _OFFICIAL_EVENT_UID_MIGRATE[uid] + sep + suffix
+        if new_key in history_data:
+            continue
+        history_data[new_key] = history_data.pop(key)
+        count += 1
+    return count
 
 
 def _normalize_save_path(path_text):
@@ -231,17 +307,22 @@ def _migrate_first_record_flat_fields(character) -> None:
             delattr(first_record, old_attr)
 
 
-def _clear_soft_egg_race_pregnancy(character: game_type.Character) -> None:
+def _clear_soft_egg_race_pregnancy(character: game_type.Character, soft_egg_enabled: bool = True) -> None:
     """
     清除无壳卵生种族角色正在进行的胎生孕程（旧存档兼容，方案 plan_19 §11-6 确认口径）
     \n无壳卵生（birth_type=12）实装前被归一化为单胎胎生，旧存档中该种族角色可能持有受精/妊娠/临盆素质；
     \n读档时一次性清除 20受精/21妊娠/22临盆/26孕肚/35无意识妊娠 及本次胎数/同卵双胞胎/妊娠加速累计，
     \n23产后/24育儿/27泌乳与已出生的孩子不受影响；非无壳卵生或未在孕程中的角色不做任何改动
+    \n※本函数每次读档都会执行：无壳卵生开关关闭时该种族按单胎胎生运行，其孕程是正常妊娠，必须整体跳过，
+    \n否则玩家每读一次档就会被清空一次孕程（plan_21）
     Keyword arguments:
     character -- 角色数据
+    soft_egg_enabled -- 无壳卵生开关是否开启（关闭时不做任何处理）
     Return arguments:
     无
     """
+    if not soft_egg_enabled:
+        return
     talent_data = getattr(character, "talent", None)
     pregnancy_data = getattr(character, "pregnancy", None)
     if not isinstance(talent_data, dict) or pregnancy_data is None:
@@ -279,6 +360,16 @@ def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
         for map_data_value in loaded_cache.map_data.values():
             if hasattr(map_data_value, "map_path"):
                 map_data_value.map_path = _normalize_save_path(map_data_value.map_path)
+
+    # 无壳卵生开关：本函数早于 update_settings 执行，且此时全局cache尚未被替换，只能从存档自身的设置对象里读
+    # 旧存档没有该设置项，.get兜底为开启，正是旧存档迁移应有的行为
+    from Script.System.Pregnancy_System import pregnancy_constant
+
+    loaded_setting = getattr(loaded_cache, "all_system_setting", None)
+    loaded_birth_setting = getattr(loaded_setting, "birth_type_setting", None) if loaded_setting is not None else None
+    soft_egg_enabled = True
+    if isinstance(loaded_birth_setting, dict):
+        soft_egg_enabled = bool(loaded_birth_setting.get(pregnancy_constant.BIRTH_TYPE_EGG_SOFT, 1))
 
     character_data = getattr(loaded_cache, "character_data", None)
     if isinstance(character_data, dict):
@@ -325,8 +416,41 @@ def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
             # 无壳卵生旧存档兼容：补全体外排卵机会标记
             if pregnancy_data is not None and not hasattr(pregnancy_data, "external_ovulation_chance"):
                 pregnancy_data.external_ovulation_chance = False
+            # 胎教旧存档兼容：补全妊娠期胎教累积值（Plan 22 四期）
+            if pregnancy_data is not None and not hasattr(pregnancy_data, "prenatal_point"):
+                pregnancy_data.prenatal_point = 0.0
+            # 生长养成系统旧存档兼容：补全养成数据结构体的挂载位（Plan 22）
+            # 默认None，由 growth_handle.get_child_growth() 惰性创建，此处只保证属性存在
+            if not hasattr(character, "child_growth"):
+                character.child_growth = None
+            # 生长养成系统旧存档兼容：补全养成数据结构体在后续各期新增的字段
+            # 用属性表整体回填而不是逐字段 hasattr：CHILD_GROWTH 在二期（日程模板）、
+            #    四期（胎教）、学期制各加过字段，逐个写漏一个就是一次读档崩溃
+            # 每个角色各 new 一个默认体：dict/list 这类可变默认值不能被多个角色共享
+            elif character.child_growth is not None:
+                default_growth_data = game_type.CHILD_GROWTH()
+                for growth_attr_name in vars(default_growth_data):
+                    if not hasattr(character.child_growth, growth_attr_name):
+                        setattr(character.child_growth, growth_attr_name,
+                                getattr(default_growth_data, growth_attr_name))
+                # 成绩单由「只存最近一份」改为「存历年列表」：把早先那份并进列表头，别让它凭空消失
+                old_report_card = getattr(character.child_growth, "last_report_card", None)
+                if old_report_card and not character.child_growth.report_card_history:
+                    character.child_growth.report_card_history = [old_report_card]
+                if hasattr(character.child_growth, "last_report_card"):
+                    del character.child_growth.last_report_card
+                # 教育区娱乐改编号（2026-09-09）：单孩日程覆盖里存的旧编号换成新编号
+                for slot in list(character.child_growth.schedule_override):
+                    character.child_growth.schedule_override[slot] = _migrate_entertainment_cid(character.child_growth.schedule_override[slot])
+                # 挪了桶的养成事件（Plan 32 L22）：履历里的旧uid改成新uid，按uid去重与养成总览的履历才对得上
+                _migrate_official_event_history(character.child_growth.event_history)
+            # 教育区娱乐改编号（2026-09-09）：当天三个娱乐槽位里的旧编号也换掉，
+            # 免得读档当天照料卵 / 见学 / 自习的判定对不上号
+            entertainment_data = getattr(character, "entertainment", None)
+            if entertainment_data is not None and isinstance(getattr(entertainment_data, "entertainment_type", None), list):
+                entertainment_data.entertainment_type = [_migrate_entertainment_cid(one) for one in entertainment_data.entertainment_type]
             # 无壳卵生旧存档兼容：无壳卵生种族此前按单胎胎生运行，读档时一次性清除其正在进行的胎生孕程（受精/妊娠/临盆及伴生状态），产后/育儿/泌乳与已出生的孩子保留
-            _clear_soft_egg_race_pregnancy(character)
+            _clear_soft_egg_race_pregnancy(character, soft_egg_enabled)
             if pl_collection is not None and not hasattr(pl_collection, "held_eggs"):
                 pl_collection.held_eggs = {}
             if pl_collection is not None and not hasattr(pl_collection, "next_held_egg_id"):
@@ -530,6 +654,37 @@ def input_load_save(save_id: str):
         if all_cid not in loaded_dict["rhodes_island"].materials_resouce:
             loaded_dict["rhodes_island"].materials_resouce[all_cid] = 0
             update_count += 1
+    # 生长养成系统旧存档兼容：补全全局课表与孩子日程模板（Plan 22）
+    if not hasattr(loaded_dict["rhodes_island"], "class_schedule"):
+        loaded_dict["rhodes_island"].class_schedule = {}
+        update_count += 1
+    if not hasattr(loaded_dict["rhodes_island"], "child_schedule_template"):
+        loaded_dict["rhodes_island"].child_schedule_template = {}
+        update_count += 1
+    # 教育区娱乐改编号（2026-09-09）：日程模板各时段里存的旧编号换成新编号
+    update_count += _migrate_child_schedule_template(loaded_dict["rhodes_island"])
+    # 临时性技实操课（Plan 22 四期）
+    if not hasattr(loaded_dict["rhodes_island"], "temp_sex_class"):
+        loaded_dict["rhodes_island"].temp_sex_class = {}
+        update_count += 1
+    # 公务事件待处理队列与全局履历（Plan 23，由 Plan 22 三期的养成事件队列升格而来）
+    if not hasattr(loaded_dict["rhodes_island"], "official_event_queue"):
+        old_queue = getattr(loaded_dict["rhodes_island"], "growth_event_queue", [])
+        new_queue = []
+        # 旧档的队列元素没有 department，按 uid 回查配置补上；事件已被删掉的直接丢弃，
+        #    留着会在出队时查不到配置而被清理，不如在载入时就清干净
+        for one in old_queue:
+            if not isinstance(one, dict) or one.get("uid") not in game_config.config_official_event:
+                continue
+            one["department"] = game_config.config_official_event[one["uid"]].get("department", 0)
+            new_queue.append(one)
+        loaded_dict["rhodes_island"].official_event_queue = new_queue
+        update_count += 1
+    if not hasattr(loaded_dict["rhodes_island"], "official_event_history"):
+        loaded_dict["rhodes_island"].official_event_history = {}
+        update_count += 1
+    # 挪了桶的养成事件（Plan 32 L22）：没有养成数据的主体记在罗德岛的全局履历里（键为「uid@角色id」），旧uid同样改成新uid
+    update_count += _migrate_official_event_history(loaded_dict["rhodes_island"].official_event_history)
     # 更新罗德岛的设施等级
     for all_cid in game_config.config_facility:
         # 没有记录的设施改为初始等级0
@@ -684,6 +839,35 @@ def update_map(loaded_dict):
         now_draw.text = draw_text
         now_draw.draw()
 
+    # 把站在已被删除的场景里的角色挪回来
+    # 地图改建会删掉旧场景（如教育区改建把原本的单间「教室」拆成了6间理论教室、3间实践教室与大礼堂），
+    # 但站在里面的角色，position 不会跟着改，此后每一次 cache.scene_data[该路径] 都会直接 KeyError
+    # 必须放在 change_map_flag 之外无条件执行：上面那个删除循环只在地图有变动的那一次读取里跑，
+    #    它把死场景删掉了却没管站在里面的人，之后每次读取 change_map_flag 都是假，
+    #    坏位置于是永远留在存档里，再也没有代码会去碰它
+    move_back_count = 0
+    for character_id, character_data in loaded_dict["character_data"].items():
+        old_position_str = map_handle.get_map_system_path_str_for_list(character_data.position)
+        if old_position_str in cache.scene_data:
+            continue
+        # 回落到同一区块的入口——每个区块都有一个"0"号入口场景；整个区块都没了才回落到地图原点
+        new_position = [character_data.position[0], "0"] if character_data.position else ["0", "0"]
+        if map_handle.get_map_system_path_str_for_list(new_position) not in cache.scene_data:
+            new_position = ["0", "0"]
+        new_position_str = map_handle.get_map_system_path_str_for_list(new_position)
+        # 死场景可能还留在存档里（本次读取没触发上面的删除），要先把人从它的名单里摘掉
+        if old_position_str in loaded_dict["scene_data"]:
+            loaded_dict["scene_data"][old_position_str].character_list.discard(character_id)
+        loaded_dict["scene_data"][new_position_str].character_list.add(character_id)
+        character_data.position = new_position
+        update_count += 1
+        move_back_count += 1
+    if move_back_count:
+        now_draw = draw.LeftDraw()
+        now_draw.text = _("\n有{0}名角色所在的房间已不存在（地图改建），已将她们移动到所属区块的入口\n").format(move_back_count)
+        now_draw.style = "gold_enrod"
+        now_draw.draw()
+
     return update_count
 
 def update_settings(loaded_dict):
@@ -727,6 +911,20 @@ def update_settings(loaded_dict):
         now_difficulty.style = "gold_enrod"
         now_difficulty.text = draw_text
         now_difficulty.draw()
+    # 生殖方式设置（旧存档的设置对象里没有该属性，需先补空字典再逐项补默认值）
+    birth_type_setting = zero_system_setting.birth_type_setting
+    if not hasattr(loaded_dict["all_system_setting"], "birth_type_setting"):
+        loaded_dict["all_system_setting"].birth_type_setting = {}
+    if len(loaded_dict["all_system_setting"].birth_type_setting) != len(birth_type_setting):
+        for key in birth_type_setting:
+            if key not in loaded_dict["all_system_setting"].birth_type_setting:
+                loaded_dict["all_system_setting"].birth_type_setting[key] = birth_type_setting[key]
+                update_count += 1
+        now_birth_type = draw.NormalDraw()
+        draw_text = _("\n生殖方式设置已更新，如有需要请手动修改\n")
+        now_birth_type.style = "gold_enrod"
+        now_birth_type.text = draw_text
+        now_birth_type.draw()
     # 角色口上选择设置
     character_text_version = zero_system_setting.character_text_version
     # 获取玩家的女儿角色列表

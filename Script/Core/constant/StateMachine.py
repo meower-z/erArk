@@ -369,6 +369,27 @@ class StateMachine:
     NIGHT_SALUTATION_FLAG_2 = 712
     """ 进入已晚安问候状态 """
 
+    EDUCATION_SELF_STUDY = 713
+    """ 上课：本节无可用教师，降级为自习 """
+    EDUCATION_SKIP_CLASS = 714
+    """ 上课：翘课，先离开教室再摸鱼 """
+    EDUCATION_MOVE_TO_COURSE_PLACE = 715
+    """ 上课：移动到个人式课型（体育/兴趣/实习）的上课地点 """
+    EDUCATION_DO_COURSE = 716
+    """ 上课：在个人式课型的地点执行该课对应的既有行为 """
+    EDUCATION_MOVE_TO_MOTHER = 717
+    """ 见学：移动到母亲当前所在的场景 """
+    EDUCATION_FOLLOW_MOTHER = 718
+    """ 见学：与母亲同场景，跟着她见学 """
+    ENTERTAIN_FREE_PLAY = 719
+    """ 娱乐：在育儿室自由玩耍（母亲无效时的见学回落） """
+    EDUCATION_WAIT_NEXT_PERIOD = 720
+    """ 教育：原地等到下一节课开始（最多30分钟）——教师没课时在办公室待命、提前到教室的师生等开课 """
+    EDUCATION_ABSENT_REST = 721
+    """ 上课：体力不足缺课，记一节缺课后休息 """
+    EDUCATION_JOIN_SEX_CLASS = 722
+    """ 上课：走进正在上性技实操课的教室，加入课堂 H 并记出勤 """
+
     SELF_NIPPLE_CLAMP_SWITCH_CHANEG = 751
     """ 切换自己是否装备道具_乳头夹 """
     SELF_CLIT_CLAMP_SWITCH_CHANEG = 752

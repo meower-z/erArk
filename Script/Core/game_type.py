@@ -356,6 +356,94 @@ class PREGNANCY:
         """ 本次怀孕是否为单胎胎生种族的同卵双胞胎（受精成功时按概率置位，生产结算后清除；与多胎胎生的一次多卵区分显示） """
         self.external_ovulation_chance: bool = False
         """ 无壳卵生：本排卵日的体外排卵机会是否可用（周期推进到排卵日时置True，体外排卵触发或离开排卵日时置False） """
+        self.prenatal_point: float = 0.0
+        """ 妊娠期胎教累积值（Plan 22 四期 §3.27）：每次胎教 +0.5，上限见 education_constant.PRENATAL_POINT_MAX；
+            生产时逐个转写到每个新生儿的 child_growth.prenatal_point（多胎各自全额、不平分）后清零 """
+
+
+class CHILD_GROWTH:
+    """生长养成数据结构体（Plan 22）
+
+    主要挂在孩子身上，成年后保留供查阅。出生时不一定创建：母亲胎教值大于 0 时由胎教折算（baby_growth_handle.settle_prenatal_to_child）创建，
+       否则等照料、选课、事件结算等第一次写入时才惰性创建。
+    普通干员也可以选课学技能（已确认口径 24），此时同样会被惰性创建出本结构体：学生岗的出勤、缺课、翘课、实操课次数与翘课 flag 都记在这里，
+       性格倾向、照料、胎教、成绩单等其余养成字段保持初值。
+    创建入口统一为 Script/System/Education_System/growth_handle.get_child_growth()，
+    不要在别处直接 new，以免出现"有的角色有、有的角色没有"的不一致。
+    """
+
+    def __init__(self):
+
+        self.personality_point: dict = {}
+        """ 四对性格倾向的累积值 键int:性格对编号(0勤劳/懒散 1坚强/脆弱 2热情/孤僻 3开放/羞耻)
+            值float:倾向值，正数偏前者、负数偏后者，成年时按符号选边（对照表见 education_constant.PERSONALITY_PAIR_TALENT）。写入方在三期与四期 """
+        self.prenatal_point: float = 0.0
+        """ 出生时由母亲侧转写来的胎教值（写入方在四期）；出生当时已按它折成习得珠（Plan 26），之后只作记录与养成数值 21 的读数 """
+        self.care_point: float = 0.0
+        """ 婴儿期早教与幼女期跟随的照料累积，影响性格倾向与身体发育判定。写入方在二期与四期 """
+        self.selected_course: dict = {}
+        """ 本角色的个人课表 键int:星期(0~6) 值dict:{节次int(0~8): [课型int, 目标]}
+            课型 0理论课 / 1实践课 / 2公开课 → 目标为教室场景名str，实际科目与教师查全局课表
+            课型 3体育课 → 目标为训练场场景名str
+            课型 4兴趣课 → 目标为 Entertainment.csv 的 cid int
+            课型 5实习课 → 目标为 WorkType.csv 的 cid int
+            未填的节次自由行动（幼女期回落为跟随母亲） """
+        self.attend_class_count: int = 0
+        """ 累计听课节数，用于面板显示与养成事件前提 """
+        self.absent_count: int = 0
+        """ 累计缺课节数（体力不足的被动缺课与翘课，Plan 30 起翘课也记），计入学期成绩单 """
+        self.last_absent_period: list = []
+        """ 上一次已计入缺课的 [日期序数int, 节次int]，防止同一节课被反复计数
+            （休息行为只有30分钟，一节课45分钟，不做这层去重会重复累加）。
+            体力缺课与翘课共用这一个标记，同一节只落一次缺课；三个出勤写入点也读它，这一节已缺课的不再记出勤（Plan 30） """
+        self.last_attend_period: list = []
+        """ 上一次已结算过课堂收益与出勤的 [日期序数int, 节次int]，同一节课只结算一次（Plan 22 第五轮）。
+            学生坐下听课时自己这一侧的结算（557，本节教师判能到岗即结算，Plan 31）与教师开讲时的广播（512）都会走到，靠它去重；
+            实操课记出勤时也写它（Plan 32），同一节不再另记缺课 """
+        self.skip_count: int = 0
+        """ 累计翘课节数（终身累计，只增不减，Plan 30）。翘掉的那一节同时记一节缺课（absent_count），同一节只记一次，与体力缺课共用 last_absent_period """
+        self.skip_caught_day: int = 0
+        """ 最近一次翘课被博士撞见那天的日期序数（date.toordinal()），0 为没有（Plan 30）。当天剩余节次不再掷翘课，次日自然失效 """
+        self.sex_class_count: int = 0
+        """ 累计上过的实操课次数（终身累计，Plan 31）。与 attend_class_count 在同一处 +1（sex_class_handle.settle_attend），这一节已缺课的也不记 """
+        self.event_history: dict = {}
+        """ 已触发的养成事件记录 键str:事件uid 值dict:{"time": datetime, "choice": 玩家选项index int}
+            写入方在三期 """
+        self.show_off_ability: dict = {}
+        """ 待向玩家炫耀的能力升级 键int:能力id 值int:升级后的等级；触发炫耀后清空 """
+        self.report_card_flag: bool = False
+        """ 学期成绩单是否待查看，学期结算时置True，玩家使用「检查成绩单」后置False """
+        self.skip_class_flag: bool = False
+        """ 今日是否翘课，翘课行为触发时置True，被玩家撞见或次日刷新时置False。
+            只在 skip_class_day 那一天有效，读的时候一律走 class_ai.judge_skip_class_today（Plan 31） """
+        self.skip_class_day: int = 0
+        """ 翘课 flag 挂上那天的日期序数（date.toordinal()），0 为没有（Plan 31）。
+            跨天结算在 NPC 阶段之后才清 flag、离线的人跨天不清，靠它不把翘课带进另一天 """
+        self.schedule_template_id: int = 0
+        """ 本孩子套用的日程模板编号，0为未套用。写入方在二期 """
+        self.schedule_override: dict = {}
+        """ 本孩子对日程模板的单项覆盖 键int:时段(0~2) 值int:活动id。写入方在二期 """
+        self.follow_mother_flag: bool = False
+        """ 当前是否正在跟随母亲见学（不复用 sp_flag.is_follow）。写入方在二期 """
+        self.semester_id: list = []
+        """ 本孩子当前记账中的学期 [年int, 季月int]，季月取值3/6/9/12（§3.13）。
+            空列表表示还没记过账（刚出生 / 旧存档），此时只立基线不出成绩单 """
+        self.semester_base_attend: int = 0
+        """ 本学期开始时的累计听课节数，本学期听课数 = attend_class_count - 本字段。
+            attend_class_count 与 absent_count 的语义不变，仍是**终身累计**，
+               本学期的数一律由「累计 - 基线」得出，上课结算那三个写入点因此一行都不用改 """
+        self.semester_base_absent: int = 0
+        """ 本学期开始时的累计缺课节数 """
+        self.semester_base_ability: dict = {}
+        """ 本学期开始时的18门科目等级 键int:能力id 值int:等级，用来算本学期的等级增量 """
+        self.semester_base_work_type: int = -1
+        """ 本学期开始时的岗位（WorkType cid），-1 为未知：旧档、或还没在新学期立过基线（Plan 30）。成绩单按它与结算时的岗位写不全的理由 """
+        self.report_card_history: list = []
+        """ 历年成绩单的**冻结快照**列表，学期切换时追加，最新的一份在末尾。
+            单份结构见 semester_handle.build_report_card，条数上限见 REPORT_CARD_HISTORY_MAX。
+            必须冻结而不是查看时现算：新学期一开课，现算出来的数就变了，
+               玩家隔两天再看同一份成绩单会得到不一样的内容
+            有上限：一个孩子养到成年约十几个学期，多孩存档不设上限会让存档持续变大 """
 
 
 class RELATIONSHIP:
@@ -1210,6 +1298,35 @@ class Rhodes_Island:
         """ 今日全部门总收入 """
         self.party_day_of_week: Dict[int, int] = {}
         """ 一周内的派对计划，周一0~周日6:娱乐id """
+        self.class_schedule: Dict[str, Dict[int, Dict[int, list]]] = {}
+        """ 全局课表（Plan 22） 键str:教室场景名(如"理论教室一") 值dict:{星期int(0~6): {节次int(0~8): [科目能力id int, 授课教师id int]}}
+            未排的格子表示该教室该节次空闲；教师id为-1表示排了课但未指派教师（本节降级为自习）
+            只存班级式的教室课；体育/兴趣/实习课存在各角色的 child_growth.selected_course 里 """
+        self.temp_sex_class: Dict[str, dict] = {}
+        """ 临时性技实操课（Plan 22 四期 §4.3.2）
+            键str:"日期序数-节次"(如"739510-3")  值dict:
+            {"classroom": 教室场景名str, "ability_id": 性技科目能力id int(只填70~75、77，76腰技男性专属),
+             "must_attend": 必修学生角色id列表 list,
+             "notified": [起床提醒已发bool, 半小时提醒已发bool, 下课时刻提醒已发bool],
+             "running": 本节课是否正在进行中 bool,
+             "reserved": 开课时是否复用了预约条目 bool（开课口上按「预约 / 当场」分档用）,
+             "ended": 预约的课下课后打的标记 bool（2026-09-12 第五轮：条目留到跨天清理，覆盖层与必修判定不再认它）}
+            一次性课程，键含具体日期序数——不能并进 class_schedule（那里键是星期0~6，会每周重复上演）
+            过期条目在跨天结算时清理，但 running 为真的那条要跳过（拖堂可跨天） """
+        self.child_schedule_template: Dict[int, dict] = {}
+        """ 孩子日程模板（Plan 22） 键int:模板编号 值dict:{"name": 模板名str, "slot": {时段int(0~2): 活动id int}}
+            活动id 复用 Entertainment 配置 id。本期只建字段，写入方在二期 """
+        self.official_event_queue: list = []
+        """ 待玩家在处理公务中决断的公务事件队列（Plan 23）
+            元素dict:{"uid": 事件uid str, "department": 部门id int,
+                      "chara_id": 主体角色id int（无主体的部门事务为0）,
+                      "partner_id": 互动对象角色id int（无则0）, "add_time": datetime}
+            由 Plan 22 三期的 growth_event_queue 改名而来，旧档在 save_handle 里逐项搬运 """
+        self.official_event_history: dict = {}
+        """ 无主体（部门）公务事件的全局履历（Plan 23）
+            键str:事件uid（有主体但没有养成数据的角色为「uid@角色id」）
+            值dict:{"time": datetime, "choice": 玩家选项index int}
+            有主体且有养成数据的事件记在角色自己的 CHILD_GROWTH.event_history 里，两者语义一致 """
         self.total_favorability_increased: int = 0
         """ 每日总好感度提升 """
         self.total_semen_count: int = 0
@@ -1302,6 +1419,10 @@ class Rhodes_Island:
         """ 做饭排序：排序维度（0无，1难度，2时间，3类型） """
         self.makefood_sort_order: int = 0
         """ 做饭排序：排序顺序（0升序，1降序） """
+        self.makefood_cook_mode: Dict[int, int] = {0: 0, 1: 0, 2: 0}
+        """ 做饭记忆：烹饪模式（0标准模式，1精细模式），键为做饭类型（0普通做饭/1泡咖啡/2调酒） """
+        self.makefood_make_count: Dict[int, int] = {0: 1, 1: 1, 2: 1}
+        """ 做饭记忆：制作数量，键为做饭类型（0普通做饭/1泡咖啡/2调酒） """
 
         # 医疗部
         self.medical_patients_today: Dict[int, Any] = {}
@@ -1516,6 +1637,8 @@ class System_Setting:
         """ 绘制设定，即draw类 """
         self.difficulty_setting: Dict[int, int] = {}
         """ 难度设定，即difficulty类 """
+        self.birth_type_setting: Dict[int, int] = {}
+        """ 生殖方式设定，即birth类，键为生育方式编号（2多胎胎生/11带壳卵生/12无壳卵生），值为0关闭/1开启，关闭的生育方式一律按单胎胎生处理 """
         self.line_before_main_update: int = 3
         """ 主界面刷新前的行数 """
         self.value_draw: Dict[str, bool] = {"pl": False, "npc": False}
@@ -1709,6 +1832,9 @@ class Character:
         """ 角色的娱乐与兴趣情况 """
         self.pregnancy: PREGNANCY = PREGNANCY()
         """ 角色的怀孕情况 """
+        self.child_growth: Optional[CHILD_GROWTH] = None
+        """ 角色的生长养成数据（Plan 22）。默认None，由 growth_handle.get_child_growth() 惰性创建，
+            只有孩子与选了课的干员才会有，避免给全部干员的存档都塞一份空结构体 """
         self.relationship: RELATIONSHIP = RELATIONSHIP()
         """ 角色的社会关系 """
         self.hypnosis: HYPNOSIS = HYPNOSIS()
@@ -1893,6 +2019,10 @@ class Cache:
         """ 时间停止模式 """
         self.group_sex_mode: bool = False
         """ 群交模式 """
+        self.sex_class_mode: bool = False
+        """ 性技实操课（课堂H）模式（Plan 22 四期 §3.28）
+            开启时须同时置 group_sex_mode = True，群交模板与其全部读取点才生效；
+               本标志只用于口上差分、前提区分与结算差分（主修加成、旁观收益、出勤） """
         self.game_round: int = 1
         """ 当前周目数 """
         self.all_npc_position_panel_select_type: int = 0

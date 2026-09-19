@@ -2203,6 +2203,203 @@ def handle_npc_ai_type_3_in_group_sex(character_id: int) -> int:
     return pl_character_data.h_state.npc_ai_type_in_group_sex == 3
 
 
+@add_premise(constant_promise.Premise.SEX_CLASS_MODE_ON)
+def handle_sex_class_mode_on(character_id: int) -> int:
+    """
+    性技实操课（课堂H）模式开启中
+    Keyword arguments:
+    character_id -- 角色id
+    Return arguments:
+    int -- 权重
+    """
+    return cache.sex_class_mode
+
+
+@add_premise(constant_promise.Premise.SEX_CLASS_MODE_OFF)
+def handle_sex_class_mode_off(character_id: int) -> int:
+    """
+    性技实操课（课堂H）模式未开启
+    Keyword arguments:
+    character_id -- 角色id
+    Return arguments:
+    int -- 权重
+    """
+    return not cache.sex_class_mode
+
+
+@add_premise(constant_promise.Premise.SEX_CLASS_END_EARLY)
+def handle_sex_class_end_early(character_id: int) -> int:
+    """
+    性技实操课提前下课
+
+    口上在效果结算之前就输出了（settle_behavior.handle_instruct_data 里先出口上、后跑效果循环），
+       所以这三条前提判定时 running 还没被清，judge_end_type() 拿得到正确的档位。
+    Keyword arguments:
+    character_id -- 角色id
+    Return arguments:
+    int -- 权重
+    """
+    from Script.System.Education_System import sex_class_handle
+
+    return sex_class_handle.judge_end_type() == 0
+
+
+@add_premise(constant_promise.Premise.SEX_CLASS_END_ON_TIME)
+def handle_sex_class_end_on_time(character_id: int) -> int:
+    """
+    性技实操课按时下课
+    Keyword arguments:
+    character_id -- 角色id
+    Return arguments:
+    int -- 权重
+    """
+    from Script.System.Education_System import sex_class_handle
+
+    return sex_class_handle.judge_end_type() == 1
+
+
+@add_premise(constant_promise.Premise.SEX_CLASS_END_LATE)
+def handle_sex_class_end_late(character_id: int) -> int:
+    """
+    性技实操课拖堂
+    Keyword arguments:
+    character_id -- 角色id
+    Return arguments:
+    int -- 权重
+    """
+    from Script.System.Education_System import sex_class_handle
+
+    return sex_class_handle.judge_end_type() == 2
+
+
+@add_premise(constant_promise.Premise.IN_SEX_CLASS_PLACE)
+def handle_in_sex_class_place(character_id: int) -> int:
+    """
+    自己在可上性技实操课的场所（实践教室或大礼堂）
+    Keyword arguments:
+    character_id -- 角色id
+    Return arguments:
+    int -- 权重
+    """
+    from Script.System.Education_System import sex_class_handle
+
+    return sex_class_handle.judge_in_sex_class_place(character_id)
+
+
+@add_premise(constant_promise.Premise.SCENE_HAVE_SEX_CLASS_STUDENT)
+def handle_scene_have_sex_class_student(character_id: int) -> int:
+    """
+    该地点有至少一名可参加性技实操课的学生
+
+    孩子零门槛，成年干员仍需满足既有的H模式实行值——这条无实行值要求的入口不能成为
+    绕过全部既有H前提的旁路（方案 §3.28.7）。
+    Keyword arguments:
+    character_id -- 角色id
+    Return arguments:
+    int -- 权重
+    """
+    from Script.System.Education_System import sex_class_handle
+
+    character_data: game_type.Character = cache.character_data[character_id]
+    return len(sex_class_handle.get_scene_student_list(character_data.position))
+
+
+@add_premise(constant_promise.Premise.SELF_IN_SEX_CLASS)
+def handle_self_in_sex_class(character_id: int) -> int:
+    """
+    自己正在参加性技实操课
+    Keyword arguments:
+    character_id -- 角色id
+    Return arguments:
+    int -- 权重
+    功能: 按身份认已被拉进这节课的人（sex_class_handle.get_class_member_list：课堂模式下与玩家同场景、已在 H 中、学生岗或女儿），
+          不再重算入课门槛（Plan 32 §3.8 L9）：成年学生的实行值随苦痛、露出、玩家理智在课中变化，一跌破门槛，
+          她人还在课堂 H 里，在课的口上前提却判不过
+    """
+    from Script.System.Education_System import sex_class_handle
+
+    if not cache.sex_class_mode:
+        return 0
+    character_data: game_type.Character = cache.character_data[character_id]
+    if not character_data.sp_flag.is_h:
+        return 0
+    return character_id in sex_class_handle.get_class_member_list()
+
+
+@add_premise(constant_promise.Premise.SEX_CLASS_RESERVED)
+def handle_sex_class_reserved(character_id: int) -> int:
+    """
+    正在进行的性技实操课是预约排进课表的那节（Plan 22 四期 §3.28.10 开课口上分档）
+
+    开课口上在 start_sex_class() 把课标记为 running 之后才输出，所以这里读得到 reserved 标志；
+       旧档里开课前就存在的条目没有这个键，按当场开课处理。
+    Keyword arguments:
+    character_id -- 角色id
+    Return arguments:
+    int -- 权重
+    """
+    from Script.System.Education_System import sex_class_handle
+
+    now_class = sex_class_handle.get_running_class()
+    if now_class is None:
+        return 0
+    return bool(now_class.get("reserved", False))
+
+
+@add_premise(constant_promise.Premise.SEX_CLASS_IMPROMPTU)
+def handle_sex_class_impromptu(character_id: int) -> int:
+    """
+    正在进行的性技实操课是当场开的、不在课表上（Plan 22 四期 §3.28.10 开课口上分档）
+    Keyword arguments:
+    character_id -- 角色id
+    Return arguments:
+    int -- 权重
+    """
+    from Script.System.Education_System import sex_class_handle
+
+    now_class = sex_class_handle.get_running_class()
+    if now_class is None:
+        return 0
+    return not now_class.get("reserved", False)
+
+
+@add_premise(constant_promise.Premise.SELF_SEX_CLASS_MUST_ATTEND)
+def handle_self_sex_class_must_attend(character_id: int) -> int:
+    """
+    自己是本节性技实操课被点名的必修学生（Plan 22 四期 §3.28.10 到场口上分档）
+
+    到场（join_sex_class）与旁观（watch_sex_class）都是课已 running 之后由结算器派发的二段行为，
+    所以直接读进行中那节课的必修名单即可。
+    Keyword arguments:
+    character_id -- 角色id
+    Return arguments:
+    int -- 权重
+    """
+    from Script.System.Education_System import sex_class_handle
+
+    now_class = sex_class_handle.get_running_class()
+    if now_class is None:
+        return 0
+    return character_id in now_class.get("must_attend", [])
+
+
+@add_premise(constant_promise.Premise.SELF_SEX_CLASS_ELECTIVE)
+def handle_self_sex_class_elective(character_id: int) -> int:
+    """
+    自己是本节性技实操课的选修学生，不在必修名单上（Plan 22 四期 §3.28.10 到场口上分档）
+    Keyword arguments:
+    character_id -- 角色id
+    Return arguments:
+    int -- 权重
+    """
+    from Script.System.Education_System import sex_class_handle
+
+    now_class = sex_class_handle.get_running_class()
+    if now_class is None:
+        return 0
+    return character_id not in now_class.get("must_attend", [])
+
+
 @add_premise(constant_promise.Premise.SLEF_NOW_GO_TO_JOIN_GROUP_SEX)
 def handle_self_now_go_to_join_group_sex(character_id: int) -> int:
     """

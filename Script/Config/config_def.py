@@ -570,6 +570,8 @@ class Entertainment:
     """ 自动ai工作数据 """
     describe: str
     """ 描述 """
+    class_ok: int
+    """ 是否可排为兴趣课(1可0否) """
 
 
 class Equipment_Condition:
@@ -1772,6 +1774,65 @@ class Cook_Question:
     wrong_answer_3: str
     """ 错误答案3 """
 
+class Official_Event:
+    """ 婴儿期养成事件 """
+
+    cid: str
+    """ 事件uid（文件名自动加前缀） """
+    department: int
+    """ 部门id（Facility.csv中type为-1的区块cid，15为教育区） """
+    subject: int
+    """ 事件主体（0无主体的部门事务/1角色） """
+    sub_key: int
+    """ 分类内子桶键（养成填成长阶段素质id：0全成长阶段/101婴儿/102幼女/103萝莉/104少女） """
+    once: int
+    """ 是否里程碑（仅作者标注，不影响触发） """
+    weight: int
+    """ 入队权重 """
+    premise: str
+    """ 触发前提，&连接 """
+    text: str
+    """ 事件正文 """
+    option_1: str
+    """ 选项1文本，空则该选项不存在 """
+    option_1_premise: str
+    """ 选项1前提，&连接，不满足则置灰 """
+    option_1_reason: str
+    """ 选项1前提不满足时显示的原因 """
+    option_1_tip: str
+    """ 选项1的后果提示（只写方向不写数值） """
+    option_1_effect: str
+    """ 选项1结算，&连接，复用CVE token """
+    option_2: str
+    """ 选项2文本，空则该选项不存在 """
+    option_2_premise: str
+    """ 选项2前提，&连接，不满足则置灰 """
+    option_2_reason: str
+    """ 选项2前提不满足时显示的原因 """
+    option_2_tip: str
+    """ 选项2的后果提示（只写方向不写数值） """
+    option_2_effect: str
+    """ 选项2结算，&连接，复用CVE token """
+    option_3: str
+    """ 选项3文本，空则该选项不存在 """
+    option_3_premise: str
+    """ 选项3前提，&连接，不满足则置灰 """
+    option_3_reason: str
+    """ 选项3前提不满足时显示的原因 """
+    option_3_tip: str
+    """ 选项3的后果提示（只写方向不写数值） """
+    option_3_effect: str
+    """ 选项3结算，&连接，复用CVE token """
+    option_4: str
+    """ 选项4文本，空则该选项不存在 """
+    option_4_premise: str
+    """ 选项4前提，&连接，不满足则置灰 """
+    option_4_reason: str
+    """ 选项4前提不满足时显示的原因 """
+    option_4_tip: str
+    """ 选项4的后果提示（只写方向不写数值） """
+    option_4_effect: str
+    """ 选项4结算，&连接，复用CVE token """
 
 
 class Talk:
@@ -1787,6 +1848,7 @@ class Talk:
     """ 前提id """
     context: str
     """ 口上内容 """
+
 class Talk_Common:
     """ 组件配置数据 """
 

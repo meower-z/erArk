@@ -47,8 +47,10 @@ GROW_TO_GIRL_DAY = 450
 # ==== 4. 卵生 ====
 HATCH_TOTAL_DAY = 265
 """ 孵化总天数（与胎生受精→标准生产时长一致，基准为卵的排出时间） """
-TEND_EGGS_ENTERTAINMENT_ID = 175
-""" 照料卵娱乐的模板id（Entertainment.csv） """
+TEND_EGGS_ENTERTAINMENT_ID = 152
+""" 照料卵娱乐的模板id（Entertainment.csv）。
+    2026-09-09 由 175 改为 152：娱乐编号按「区块id×10+序号」分段，照料卵的地点是教育区（15）的育儿室，
+       原编号却排在大浴场段（17x）；旧存档里的 175 由 save_handle 读档时换成新编号 """
 NURSERY_WORKER_WORK_ID = 153
 """ 保育员工作的模板id（WorkType.csv） """
 
@@ -90,7 +92,9 @@ BIRTH_TYPE_MULTIPLE = 2
 BIRTH_TYPE_EGG = 11
 """ 生育方式：带壳卵生 """
 BIRTH_TYPE_EGG_SOFT = 12
-""" 生育方式：无壳卵生（未实装，get_birth_type 归一化为单胎胎生） """
+""" 生育方式：无壳卵生（体外排卵、体外受精，之后复用带壳卵生的孵化破壳链） """
+BIRTH_TYPE_SETTING_LIST = [BIRTH_TYPE_MULTIPLE, BIRTH_TYPE_EGG, BIRTH_TYPE_EGG_SOFT]
+""" 可在系统设置中开关的生育方式（单胎胎生是关闭后的兜底形态，不提供开关）；开关值存于 all_system_setting.birth_type_setting，键即生育方式编号 """
 MULTIPLE_BIRTH_SEMEN_DECAY = 0.3
 """ 多胎受精判定中，每轮判定后临时精液量的衰减比例 """
 IDENTICAL_TWINS_RATE = 1

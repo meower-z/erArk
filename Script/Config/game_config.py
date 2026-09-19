@@ -19,6 +19,8 @@ ui_text_path = os.path.join("data", "ui_text.json")
 """ 原始ui文本数据文件路径 """
 cook_question_path = os.path.join("data", "Cook_Question.json")
 """ 原始烹饪问题库数据文件路径 """
+official_event_path = os.path.join("data", "Official_Event.json")
+""" 原始养成事件数据文件路径（Plan 22 三期） """
 config_data = {}
 """ 原始json数据 """
 character_data = {}
@@ -31,6 +33,8 @@ ui_text_data = {}
 """ 原始ui文本数据 """
 cook_question_data = {}
 """ 原始烹饪问题库数据 """
+official_event_data = {}
+""" 原始养成事件数据（Plan 22 三期） """
 config_bar: Dict[int, config_def.BarConfig] = {}
 """ 比例条配置数据 """
 config_bar_data: Dict[str, int] = {}
@@ -355,6 +359,14 @@ config_food_quality: Dict[int, config_def.Food_Quality] = {}
 """ 食物质量数据 """
 config_cook_question: Dict[int, Dict[str, list]] = {}
 """ 烹饪问题库 食物id:烹饪阶段:[问题dict列表] """
+config_official_event: Dict[str, dict] = {}
+""" 公务事件（Plan 23） 事件uid:事件原始dict。
+    存的是原始dict不是config_def对象：CSV里空着的选项列在构建时会被整列删掉，
+       用对象取属性会 AttributeError，用dict.get()才能安全地表达「这个选项不存在」 """
+config_official_event_by_department: Dict[int, list] = {}
+""" 公务事件按部门分桶 部门id(Facility.csv中type为-1的区块cid):[事件uid列表] """
+config_official_event_by_sub_key: Dict[tuple, list] = {}
+""" 公务事件按 (部门id, 分类内子桶键) 分桶。养成事件的子桶键是成长阶段素质id(0通用/101~104) """
 config_prts_data: Dict[int, Dict[int, Dict[int, config_def.Prts]]] = {}
 """ 教程数据的具体整理 父id:子id:0问1答:内容 """
 config_productformula: Dict[int, config_def.ProductFormula] = {}
@@ -383,6 +395,10 @@ config_difficulty_setting: Dict[int, config_def.System_Setting] = {}
 """ 难度设置数据 设置id:详细内容 """
 config_difficulty_setting_option: Dict[int, List] = {}
 """ 难度设置数据的选项数据 设置id:选项序号:选项内容 """
+config_birth_type_setting: Dict[int, config_def.System_Setting] = {}
+""" 生殖方式设置数据 生育方式id:详细内容（设置id直接取生育方式编号，2多胎胎生/11带壳卵生/12无壳卵生） """
+config_birth_type_setting_option: Dict[int, List] = {}
+""" 生殖方式设置数据的选项数据 生育方式id:选项序号:选项内容 """
 config_ai_chat_setting: Dict[int, config_def.Ai_Chat_Setting] = {}
 """ 文本生成AI设置数据 设置id:详细内容 """
 config_ai_chat_setting_option: Dict[int, List] = {}
@@ -478,7 +494,7 @@ config_instruct_by_id: Dict[str, int] = {}
 
 def load_data_json():
     """载入data.json、character.json与ui_text.json内配置数据"""
-    global config_data, character_data, ui_text_data, character_talk_data, character_event_data, talk_common_data, cook_question_data
+    global config_data, character_data, ui_text_data, character_talk_data, character_event_data, talk_common_data, cook_question_data, official_event_data
     config_data = json_handle.load_json(data_path)
     character_data = json_handle.load_json(character_path)
     ui_text_data = json_handle.load_json(ui_text_path)
@@ -490,6 +506,11 @@ def load_data_json():
         cook_question_data = json_handle.load_json(cook_question_path)
     else:
         cook_question_data = {}
+    # 兼容旧构建产物：若养成事件文件缺失，则按空事件表处理（Plan 22 三期）
+    if os.path.exists(official_event_path):
+        official_event_data = json_handle.load_json(official_event_path)
+    else:
+        official_event_data = {}
 
 def reload_talk_data():
     """重新载入口上配置数据"""
@@ -1643,6 +1664,26 @@ def load_cook_question():
         config_cook_question.setdefault(food_id, {}).setdefault(stage, []).append(tem_data)
 
 
+def load_official_event():
+    """载入公务事件数据（Plan 23，按 部门 与 (部门, 子桶键) 两级建索引）"""
+    # 若尚未生成事件表，则该表不存在，直接返回
+    if "Official_Event" not in official_event_data:
+        return
+    now_data = official_event_data["Official_Event"]
+    translate_data(now_data)
+    config_official_event.clear()
+    config_official_event_by_department.clear()
+    config_official_event_by_sub_key.clear()
+    for tem_data in now_data["data"]:
+        # 直接存原始dict：CSV里空着的选项列在构建时已被删掉，用get()判断选项是否存在
+        uid = tem_data["cid"]
+        config_official_event[uid] = tem_data
+        department = tem_data.get("department", 0)
+        sub_key = tem_data.get("sub_key", 0)
+        config_official_event_by_department.setdefault(department, []).append(uid)
+        config_official_event_by_sub_key.setdefault((department, sub_key), []).append(uid)
+
+
 def load_favorability_level():
     """载入好感度等级数据"""
     now_data = config_data["Favorability_Level"]
@@ -1875,6 +1916,14 @@ def load_system_setting():
                 config_draw_setting_option[new_cid].append(option_text)
             else:
                 config_draw_setting_option[new_cid] = option_text.split('|')
+        # 生殖方式设置（不在系统设置主列表中显示，由基础设置的生殖方式开关入口跳转到子面板修改，cid直接为生育方式编号）
+        elif option_type == "birth":
+            config_birth_type_setting[now_tem.cid] = now_tem
+            if "|" not in option_text:
+                config_birth_type_setting_option[now_tem.cid] = []
+                config_birth_type_setting_option[now_tem.cid].append(option_text)
+            else:
+                config_birth_type_setting_option[now_tem.cid] = option_text.split('|')
 
 
 def load_ai_chat_setting():
@@ -2289,6 +2338,7 @@ def init():
     load_hidden_level()
     load_food_quality()
     load_cook_question()
+    load_official_event()
     load_favorability_level()
     load_trust_level()
     load_seasoning()
