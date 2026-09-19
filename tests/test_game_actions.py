@@ -133,6 +133,7 @@ class GameActionsTests(unittest.TestCase):
         module("Script.Settle.default", handle_add_small_sanity_point=lambda *args: None, handle_add_small_semen_point=lambda *args: None)
         module("Script.Settle.past_day_settle", update_new_day=self.new_day)
         module("Script.System.Field_Commission_System.field_commission_function", update_field_commission=lambda: None)
+        module("Script.System.Education_System", class_ai=SimpleNamespace(get_student_leave_time=lambda actor: None, settle_absent=lambda actor: None))
         module("Script.UI.Panel.achievement_panel", achievement_flow=lambda text: None)
         module("Script.Modules.npc_ai", choose_next=lambda actor, now: Action("wait", 60, actor))
         self.patches = patch.dict(sys.modules, modules)
@@ -341,19 +342,15 @@ class GameActionsTests(unittest.TestCase):
                 else:
                     self.assertEqual(template, [{"mouth": [-1, -1]}, [[], -1]])
 
-    def test_absence_is_settled_only_when_intent_executes(self):
-        """无需参数；缺课意图到执行时才结算缺课且先于状态机；无返回值。"""
-        education = ModuleType("Script.System.Education_System")
-        education.class_ai = SimpleNamespace(settle_absent=lambda actor: self.events.append(("absent", actor)))
+    def test_student_leave_truncates_npc_action_before_settle(self):
+        """无需参数；学生应离开时刻早于行为结束时，NPC 行动在结算前截到该时刻；无返回值。"""
         runtime = self.game.get_runtime()
-        constant = sys.modules["Script.Core.constant"]
-        constant.handle_state_machine_data = {77: lambda actor: Action("rest", 10, actor).apply(self.characters[actor], self.now)}
-        intent = state_machine_action(1, 77, record_absence=True)
-        self.assertEqual(self.events, [])
-        with patch.dict(sys.modules, {education.__name__: education}):
-            runtime.execute(1, intent)
-        self.assertEqual(self.events[0], ("absent", 1))
-        self.assertEqual(self.events.count(("absent", 1)), 1)
+        leave = self.now + timedelta(minutes=15)
+        with patch.object(sys.modules["Script.System.Education_System"].class_ai, "get_student_leave_time", side_effect=lambda actor: leave if actor == 1 else None):
+            used = runtime.execute(1, Action("rest", 60, 1))
+        self.assertEqual(used, 15)
+        self.assertEqual(self.characters[1].behavior.duration, 15)
+        self.assertIn(("realtime", 1, 15.0), self.events)
 
     def test_handler_exception_releases_scheduler_guard(self):
         """无需参数；状态机失败向上传播，调度器释放运行锁；无返回值。"""

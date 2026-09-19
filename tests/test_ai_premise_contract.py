@@ -1,15 +1,12 @@
 """隔离外围依赖，运行真实前提与课堂选择函数检查只读契约。"""
 
 import ast
-import pickle
 from collections import defaultdict
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
-from Script.Modules.scheduler.action import Action
-from Script.Design.action_execution import state_machine_action
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -116,37 +113,13 @@ class AiPremiseContractTests(unittest.TestCase):
         calculate = namespace["calculation_instuct_judege"]
         fake_package = SimpleNamespace(drunk_sex_common=SimpleNamespace(get_drunk_level=lambda actor: (0, "")))
         with patch.dict("sys.modules", {"Script.System.Sex_System": fake_package}):
-            self.assertEqual(calculate(0, 1, "初级骚扰", not_draw_flag=True, settle_cost=False)[0], 1)
+            self.assertEqual(calculate(0, 1, "初级骚扰", not_draw_flag=True, settle_hypnosis=False)[0], 1)
             self.assertEqual((actor.sanity_point, actor.pl_ability.today_sanity_point_cost, target.sp_flag.unconscious_h), (10, 0, 4))
             calculate(0, 1, "初级骚扰", not_draw_flag=True)
             self.assertEqual((actor.sanity_point, actor.pl_ability.today_sanity_point_cost), (5, 5))
             actor.sanity_point = 0
-            calculate(0, 1, "初级骚扰", not_draw_flag=True, settle_cost=False)
+            calculate(0, 1, "初级骚扰", not_draw_flag=True, settle_hypnosis=False)
             self.assertEqual(target.sp_flag.unconscious_h, 4)
             calculate(0, 1, "初级骚扰", not_draw_flag=True)
             self.assertEqual(target.sp_flag.unconscious_h, 0)
 
-    def test_exhausted_student_returns_absence_intent_without_settlement(self):
-        """输入上课时体力不足的角色，返回缺课意图并保留统计；无返回值。"""
-        character = SimpleNamespace(hit_point=1, hit_point_max=100, child_growth=None)
-        namespace = load_functions(
-            "Script/System/Education_System/class_ai.py",
-            {"choose_class_intent"},
-            Optional=__import__("typing").Optional,
-            Action=Action,
-            state_machine_action=state_machine_action,
-            cache=SimpleNamespace(character_data={1: character}),
-            schedule_handle=SimpleNamespace(get_now_course=lambda actor: {}),
-            clear_follow_mother_flag=lambda actor: None,
-            judge_must_attend_sex_class=lambda *args: False,
-            education_constant=SimpleNamespace(ABSENT_HP_RATE=0.3),
-            constant=SimpleNamespace(StateMachine=SimpleNamespace(REST=17)),
-        )
-        before = pickle.dumps(character)
-        intent = namespace["choose_class_intent"](1)
-        self.assertIs(type(intent), Action)
-        self.assertEqual(pickle.loads(pickle.dumps(intent)), intent)
-        self.assertEqual(pickle.dumps(character), before)
-        self.assertEqual(intent.params["state_machine_id"], 17)
-        self.assertTrue(intent.params["record_absence"])
-        self.assertIsNone(character.child_growth)
