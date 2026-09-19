@@ -14,9 +14,9 @@ prepare_action 在执行时按行动编号找到对应的准备函数，运行�
 from Script.Modules.scheduler.action import Action
 
 
-def state_machine_action(actor: int, state_machine_id: int, record_absence: bool = False) -> Action:
-    """输入角色、状态机编号及缺课记录要求，返回交给执行侧准备的 Action。"""
-    return Action("prepare_npc_action", 0, actor, params={"state_machine_id": state_machine_id, "record_absence": record_absence})
+def state_machine_action(actor: int, state_machine_id: int) -> Action:
+    """输入角色和状态机编号，返回交给执行侧准备的 Action。"""
+    return Action("prepare_npc_action", 0, actor, params={"state_machine_id": state_machine_id})
 
 
 def _prepare_npc_action(runtime, actor: int, action):
@@ -24,10 +24,6 @@ def _prepare_npc_action(runtime, actor: int, action):
     from Script.Core import cache_control, constant
     from Script.Modules.scheduler.action import STATE
 
-    if action.params.get("record_absence", False):
-        from Script.System.Education_System import class_ai
-
-        class_ai.settle_absent(actor)
     constant.handle_state_machine_data[action.params["state_machine_id"]](actor)
     character = cache_control.cache.character_data[actor]
     # 仅更新需求的状态机仍保持闲置，按原节奏等待后再选择。
