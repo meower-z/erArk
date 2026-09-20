@@ -80,3 +80,8 @@ error.log
 /AGENTS.md
 /CONTEXT.md
 /skills-lock.json
+
+# 游戏状态自检日志
+static_check_error.log
+static_check_error.log.old
+static_check_seen.json
