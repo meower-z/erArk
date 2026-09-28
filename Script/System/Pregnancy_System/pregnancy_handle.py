@@ -872,3 +872,81 @@ def body_part_grow(character_id: int,print_flag = False):
 
     # 返回成长情况的文本
     return now_text
+
+
+def judge_suspected_abnormal_daughter(character_id: int) -> bool:
+    """
+    判定一个角色是否是因旧版本存档BUG误入本存档的女儿
+
+    识别依据：born_new_character 生下每个女儿时都会把她的id登记进博士（0号）的 child_id_list；
+       旧版本BUG把上一局的女儿凭空实例化进本局时只建了角色、没做这道登记。
+       于是「标记为博士女儿（father_id==0）却不在博士孩子名单里」的，即为误入本存档的女儿
+    Keyword arguments:
+    character_id -- 角色id
+    Return arguments:
+    bool -- 是否为疑似误入的女儿
+    """
+    if character_id == 0 or character_id not in cache.character_data:
+        return False
+    if cache.character_data[character_id].relationship.father_id != 0:
+        return False
+    return character_id not in cache.character_data[0].relationship.child_id_list
+
+
+def get_all_player_daughter_id_list() -> list:
+    """
+    取本存档全部博士女儿（father_id==0）的id列表
+    Keyword arguments:
+    无
+    Return arguments:
+    list -- 女儿id列表，按id升序
+    """
+    return [cid for cid in sorted(cache.character_data) if cid != 0 and cache.character_data[cid].relationship.father_id == 0]
+
+
+def get_suspected_abnormal_daughter_list() -> list:
+    """
+    取全部疑似因旧版本存档BUG误入本存档的女儿id列表
+    Keyword arguments:
+    无
+    Return arguments:
+    list -- 疑似误入的女儿id列表，按id升序
+    """
+    child_id_set = set(cache.character_data[0].relationship.child_id_list)
+    return [cid for cid in get_all_player_daughter_id_list() if cid not in child_id_set]
+
+
+def remove_abnormal_daughter(character_id: int) -> bool:
+    """
+    把一名疑似误入本存档的女儿彻底移除，并清掉她在各处的引用
+
+    只对 judge_suspected_abnormal_daughter 判定为真的角色生效，绝不会误删博士在册的亲生女儿
+    Keyword arguments:
+    character_id -- 要移除的角色id
+    Return arguments:
+    bool -- 是否成功移除
+    """
+    from Script.Design import map_handle
+    from Script.System.Official_Event_System import official_event_handle
+
+    # 安全护栏：只移除疑似误入的女儿，绝不动在册的亲生女儿
+    if not judge_suspected_abnormal_daughter(character_id):
+        return False
+    character_data: game_type.Character = cache.character_data[character_id]
+    # 从所在场景的角色列表里移除
+    scene_path_str = map_handle.get_map_system_path_str_for_list(character_data.position)
+    if scene_path_str in cache.scene_data and character_id in cache.scene_data[scene_path_str].character_list:
+        cache.scene_data[scene_path_str].character_list.remove(character_id)
+    # 删掉角色数据、已获得集合与角色模板（模板一并删掉，免得再被实例化）
+    cache.npc_id_got.discard(character_id)
+    cache.character_data.pop(character_id, None)
+    cache.npc_tem_data.pop(character_id, None)
+    # 清掉其他角色对她的引用：血缘子女名单与当前交互对象
+    for other_data in cache.character_data.values():
+        if character_id in other_data.relationship.child_id_list:
+            other_data.relationship.child_id_list.remove(character_id)
+        if other_data.target_character_id == character_id:
+            other_data.target_character_id = other_data.cid
+    # 清掉公务事件队列里指向她的项（clean 会丢弃主体已不在角色表里的项）
+    official_event_handle.clean_official_event_queue()
+    return True

@@ -30,6 +30,13 @@ line = draw.LineDraw("=", width)
 @handle_panel.add_panel(constant.Panel.CREATOR_CHARACTER)
 def creator_character_panel():
     """创建角色面板"""
+    # 清掉同一进程里上一局残留的角色与已获得集合，并从干净的全局配置池重新拷贝一份角色模板：
+    #    上一局生的女儿，其模板会随 born_new_character 留在运行时的 npc_tem_data 里、角色也留在
+    #    character_data 里，而标题画面开新游戏并不重置这些运行时数据。不清的话 init_character_list
+    #    会把上一局的女儿一并实例化进这一局，从而触发本局并不存在的女儿的相关事件（跨存档 / 跨局泄漏）
+    cache.character_data.clear()
+    cache.npc_id_got.clear()
+    character_handle.init_character_tem()
     cache.character_data[0] = game_type.Character()
     character_handle.init_character_list()
     while 1:

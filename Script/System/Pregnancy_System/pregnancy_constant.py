@@ -107,7 +107,7 @@ EXTERNAL_OVULATION_V_MULT = 2
 """ 阴道绝顶的体外排卵概率倍率 """
 EXTERNAL_OVULATION_W_MULT = 4
 """ 子宫绝顶的体外排卵概率倍率（子宫超强绝顶固定100%） """
-EXTERNAL_OVULATION_DRUG_MULT = 2
+EXTERNAL_OVULATION_DRUG_MULT = 5
 """ 排卵促进药 / 催眠强制排卵各自对体外排卵概率的倍率（保留到当日排卵机会结束） """
 SOFT_EGG_SEMEN_TRANSFER_RATE = 0.8
 """ 体外排卵时，子宫与小穴中转移到卵上的精液比例 """
