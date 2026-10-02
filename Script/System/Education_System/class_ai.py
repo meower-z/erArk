@@ -6,7 +6,7 @@
     get_teacher_duty  —— 教师此刻的课表职责：本节有课 / 20 分钟内有下一节 / 都没有
     get_course_stage  —— 学生此刻的上课状态：待赴实操课 / 体力缺课 / 翘课 / 照常上课 / 加入正在进行的实操课 / 马上开课 / 与课表无关
 
-另有行为循环截短点用的 get_student_leave_time（Plan 25；Plan 32 起由 handle_npc_ai.judge_student_leave_truncate 在实时结算之前调用）：
+另有行为循环截短点用的 get_student_leave_time（Plan 25；由 game_actions.Runtime.execute 在 NPC 行动开始结算之前调用）：
 把学生当前的工作 / 娱乐行为截到应离开的时刻（待赴实操课开课前 10 分钟提前退场、没课的节次在下一节开课前 20 分钟收手、
 人已在上课地点或今天已翘课的截到开课那一刻）；以及拉学生进听课的
 judge_student_pullable（玩家授课与教师 303 共用）/ judge_student_join_class（303 另加课表、两道闸、normal 门槛与时间线）。
@@ -623,7 +623,7 @@ def judge_student_join_class(student_id: int, classroom: str, now_time) -> bool:
 
 def get_student_leave_time(character_id: int):
     """
-    取学生当前行为应当提前结束的时刻（handle_npc_ai.judge_student_leave_truncate 调用，Plan 25 §3.1；Plan 32 §3.7 L4 起排在实时结算之前）
+    取学生当前行为应当提前结束的时刻（game_actions.Runtime.execute 在 NPC 行动开始结算之前调用，Plan 25 §3.1）
     Keyword arguments:
     character_id -- 角色id
     Return arguments:

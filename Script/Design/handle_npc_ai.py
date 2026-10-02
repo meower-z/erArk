@@ -673,7 +673,7 @@ def judge_interrupt_character_behavior(character_id: int) -> int:
     int -- 是否打断，1为打断
     功能: 休息、睡觉与工作 / 娱乐中到了淋浴时间的打断（都用 end_now=2 立即结束，下一个行为从 cache.game_time 开始）。
           学生岗赶去上课的截短不在这里：它会把时间线落回玩家这一步之内，要排在实时结算之前，
-          由 character_behavior 的 NPC 分支先调 judge_student_leave_truncate（Plan 32 §3.7 L4）
+          由 game_actions.Runtime.execute 在 NPC 行动开始结算之前按 class_ai.get_student_leave_time 截短
     """
     character_data: game_type.Character = cache.character_data[character_id]
 
