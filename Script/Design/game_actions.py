@@ -88,29 +88,29 @@ def replan(actor: int):
 
 
 def wait_on(actor: int, owner: int, behavior_id: str):
-    """让参与者等待主体的双人行为；NPC 每五分钟复查一次，主体只是在等待时陪等其时长，玩家等完全程。参数均为编号，返回 None。"""
+    """让参与者等待主体的双人行为；NPC 按 npc_ai.wait_slice 分段复查，主体只是在等待时陪等其时长，玩家等完全程。参数均为编号，返回 None。"""
+    from Script.Design import game_time
+    from Script.Modules import npc_ai
+
     cache = cache_control.cache
     if cache.time_stop_mode:
         return
     runtime = get_runtime()
+    source = cache.character_data[owner].behavior
+    remaining = game_time.elapsed_minutes(runtime.scheduler.now, game_time.get_sub_date(minute=source.duration, old_date=source.start_time))
     params = {STATE: constant.CharacterStatus.STATUS_WAIT}
     if actor:
         # NPC 的等待只是替换其待办，不算强制打断；和旧代码的直接写入一样不结算一次性效果。
         params[CONTINUED] = True
         if behavior_id == constant.Behavior.WAIT:
             # 主体只是在等待，没有可复查的行为，和旧代码一样陪等主体的时长。
-            duration = cache.character_data[owner].behavior.duration
+            duration = source.duration
         else:
             params["wait_on_behavior_id"] = behavior_id
-            duration = 5
+            duration = npc_ai.wait_slice(remaining)
         runtime.scheduler.replace(Task(actor, runtime.scheduler.now, Action(constant.Behavior.WAIT, duration, owner, params)))
         return
-    from Script.Design import game_time
-
-    source = cache.character_data[owner].behavior
-    end = game_time.get_sub_date(minute=source.duration, old_date=source.start_time)
-    duration = max(game_time.elapsed_minutes(runtime.scheduler.now, end), 1)
-    runtime.force(actor, Action(constant.Behavior.WAIT, duration, owner, params))
+    runtime.force(actor, Action(constant.Behavior.WAIT, max(remaining, 1), owner, params))
 
 
 class Runtime:

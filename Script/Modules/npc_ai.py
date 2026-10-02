@@ -3,10 +3,14 @@
 轮到某个 NPC 选行动时（通常是它上一个行动到期），调度器调用 choose_next(actor, now)。
 本模块读取游戏状态和该 NPC 自己的行为（角色身上已写好的 Behavior），返回一个 Action（尚未开始的行动）；不执行它。
 
-选择顺序：睡觉未到计划醒来的时刻就再睡一段（最多 30 分钟）；正在等待别人对自己做的双人行动且对方还在做，就再等 5 分钟；
-已写好但没做完的行为先做完剩余时间（别人刚写入、尚未开始的移动例外，按新行动完整执行）；
+等待别人的行动时按同一条复查规则分段（wait_slice）：每段取 5 分钟与对方行动剩余分钟数中较小的一个（至少 1 分钟），
+每段结束时复查一次，对方行动结束时恰好放开。
+
+选择顺序：睡觉未到计划醒来的时刻就再睡一段（最多 30 分钟）；正在等待别人对自己做的双人行动且对方还在做，就按复查规则再等一段；
+已写好但没做完的行为先做完剩余时间（别人刚写入、尚未开始的移动例外，按新行动完整执行）。其中性行为（H）中或被催眠得无法行动的
+NPC 的等待由行动前检查（handle_npc_ai_in_h.judge_character_h_obscenity_unconscious）写成"等到玩家本次行动结束"，同样按复查规则分段；
 已到期的行为先结束掉（施加其结束时的效果），然后正在多人 H（群交）中的 NPC 由群交专用的选择函数决定，
-刚做完的是"等待"且仍在性行为（H）中或被催眠得无法行动的 NPC 再等 5 分钟，其余交给原有的 NPC AI（handle_npc_ai）选择新目标。
+刚做完的是"等待"且仍在 H 中或被催眠得无法行动的 NPC 再等 5 分钟，其余交给原有的 NPC AI（handle_npc_ai）选择新目标。
 """
 
 from datetime import datetime
@@ -39,6 +43,15 @@ def _can_continue_sleep(actor: int, now: datetime) -> bool:
     return not (recovered and not handle_premise.handle_game_time_is_sleep_time(actor) and handle_premise.handle_self_not_sleep_pills(actor) and handle_premise.handle_drunk_level_0(actor))
 
 
+WAIT_RECHECK_MINUTES = 5
+""" 等待别人的行动时，相邻两次复查至多相隔的分钟数 """
+
+
+def wait_slice(remaining: float) -> float:
+    """输入对方行动的剩余分钟数，返回本段等待的分钟数：至多五分钟、至少一分钟，对方行动结束时恰好放开。"""
+    return max(1, min(WAIT_RECHECK_MINUTES, remaining))
+
+
 def _continue_current(character, minutes: float) -> Action:
     """输入角色对象和分钟数，返回延续当前行为的片段。"""
     action = Action.from_character(character, continued=True)
@@ -56,11 +69,12 @@ def choose_next(actor: int, now: datetime) -> Action:
     # 睡眠按计划分段，每段最多 30 分钟，段间重新检查是否醒来。
     if behavior.behavior_id == constant.Behavior.SLEEP and _can_continue_sleep(actor, now):
         return _continue_current(character, min(30, game_time.elapsed_minutes(now, behavior.plan_end_time)))
-    # 等待主体的双人行为：主体仍在对自己执行该行为时再等五分钟。
+    # 等待主体的双人行为：主体仍在对自己执行该行为时，按复查规则等到主体行为结束。
     if behavior.behavior_id == constant.Behavior.WAIT and behavior.wait_on_behavior_id:
         owner = cache_control.cache.character_data.get(character.target_character_id)
         if owner is not None and owner.behavior.behavior_id == behavior.wait_on_behavior_id and owner.target_character_id == actor:
-            return _continue_current(character, 5)
+            owner_end = game_time.get_sub_date(minute=owner.behavior.duration, old_date=owner.behavior.start_time)
+            return _continue_current(character, wait_slice(game_time.elapsed_minutes(now, owner_end)))
     finished_id = behavior.behavior_id
     if behavior.behavior_id != constant.Behavior.SHARE_BLANKLY:
         remaining = game_time.elapsed_minutes(now, game_time.get_sub_date(minute=behavior.duration, old_date=behavior.start_time))
@@ -68,6 +82,9 @@ def choose_next(actor: int, now: datetime) -> Action:
             # 他人此刻写入的移动要靠结算才真正走动；其余写入或已开始的行为只走完剩余时间，与旧主循环一致。
             if behavior.behavior_id == constant.Behavior.MOVE and behavior.start_time >= now:
                 return Action.from_character(character)
+            # H 中或木头人的等待由行动前检查写成"等到玩家本次行动结束"，按复查规则分段。
+            if behavior.behavior_id == constant.Behavior.WAIT and (character.sp_flag.is_h or character.hypnosis.blockhead):
+                return _continue_current(character, wait_slice(remaining))
             return _continue_current(character, remaining)
         # 已到期的行为由自己收尾，再从闲置状态选择。
         character_behavior.judge_character_status_time_over(actor, now, end_now=2)
@@ -76,6 +93,6 @@ def choose_next(actor: int, now: datetime) -> Action:
         return action
     # 受限状态下等待到期后继续等待，定期重新检查。
     if finished_id == constant.Behavior.WAIT and (character.sp_flag.is_h or character.hypnosis.blockhead):
-        return Action(constant.Behavior.WAIT, 5, character.target_character_id, params={STATE: constant.CharacterStatus.STATUS_WAIT, CONTINUED: True})
+        return Action(constant.Behavior.WAIT, WAIT_RECHECK_MINUTES, character.target_character_id, params={STATE: constant.CharacterStatus.STATUS_WAIT, CONTINUED: True})
     character.behavior.start_time = now
     return handle_npc_ai.choose_character_target(actor, now)
