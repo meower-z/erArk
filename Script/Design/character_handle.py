@@ -135,7 +135,11 @@ def init_character_tem():
     #npc_data = cache.random_npc_list
     #numpy.random.shuffle(npc_data)
     # print("初始化角色模板数据")
-    cache.npc_tem_data = character_config.character_tem_list
+    # 必须浅拷贝而非直接引用 character_config.character_tem_list：后者是模块级全局配置池，
+    #    进程内持久且跨存档 / 跨周目共享，而 born_new_character 会往 cache.npc_tem_data 写运行时
+    #    生成的女儿模板（adv 9000~9999）。直接共享引用会把某一局的女儿写进全局池，使别的存档 /
+    #    新开的周目也能看到，进而触发本存档并不存在的女儿的相关事件（跨存档泄漏）
+    cache.npc_tem_data = dict(character_config.character_tem_list)
 
 
 def create_empty_character_tem():
