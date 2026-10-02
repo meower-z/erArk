@@ -920,7 +920,7 @@ def pull_student_into_class(student_id: int) -> None:
         character_move.cancel_movement_plan(student_id)
     student_data.sp_flag.is_h = True
     student_data.sp_flag.see_pl_h = True
-    # 到场的口上走二段行为：一段行为得靠NPC AI派发，而H中的NPC完全不进AI链（handle_npc_ai.find_character_target 开头）
+    # 到场的口上走二段行为：一段行为得靠NPC AI派发，而H中的NPC完全不进AI链（handle_npc_ai.choose_character_target 开头）
     second_behavior.character_get_second_behavior(student_id, constant.Behavior.JOIN_SEX_CLASS)
 
 
