@@ -145,18 +145,23 @@ class Runtime:
 
     def before_task(self, task):
         """按待办时刻同步世界；新日期先日结，玩家输入前收尾其行为，NPC 选择前做行动前检查。输入 Task，返回 None。"""
-        from Script.Settle import past_day_settle
+        from Script.Settle import past_day_settle, realtime_settle
 
         cache = cache_control.cache
         cache.game_time = task.at
         if cache.pre_game_time.date() != task.at.date():
             past_day_settle.update_new_day()
             self.sync_characters()
+        # 随时间到期的状态（药效等）按待办时刻结算：回到玩家输入前结算全员，其余待办结算本人。
+        for actor in ({0} | cache.npc_id_got) if task.item is INPUT else (task.actor,):
+            realtime_settle.change_character_persistent_state(actor)
         if task.item is INPUT:
             from Script.Design import character_behavior
 
             if cache.character_data[0].behavior.behavior_id != constant.Behavior.SHARE_BLANKLY:
                 character_behavior.judge_character_status_time_over(0, task.at, end_now=2)
+            # 退房等玩家实时数据按回到输入的时刻再结算一次。
+            realtime_settle.judge_pl_real_time_data()
             # 结算中登记的接续在玩家行动结束后执行；接续再登记的接续留到下一次行动结束。
             continuations, self._continuations = self._continuations, deque()
             for callback in continuations:
@@ -258,7 +263,6 @@ class Runtime:
             if not action.continued:
                 character_behavior.judge_character_status(actor)
             realtime_settle.character_aotu_change_value(actor, end, now)
-        realtime_settle.change_character_persistent_state(actor)
         if actor == 0:
             handle_npc_ai.judge_character_tired_sleep(actor)
             handle_npc_ai_in_h.judge_character_h_obscenity_unconscious(actor, now)
@@ -266,6 +270,9 @@ class Runtime:
         handle_talent.gain_talent(actor, now_gain_type=0)
         # 结算中登记的强制后续先于调度器的自动安排。
         self._dispatch(actor)
+        # NPC 自己的结算把行为改写成此刻开始的移动（如撞见 H 后离开）且没有安排后续时，此刻重新选择，由 npc_ai 按新移动结算。
+        if actor and not self.scheduler.contains(actor) and action.behavior_id != constant.Behavior.MOVE and character.behavior.behavior_id == constant.Behavior.MOVE and character.behavior.start_time >= now:
+            self.scheduler.submit(Task(actor, now, AI))
         # 时停操作占用零分钟，体力消耗按行动时长结算。
         if actor == 0 and cache.time_stop_mode:
             cache.achievement.time_stop_duration += action.duration

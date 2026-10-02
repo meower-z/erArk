@@ -827,6 +827,35 @@ class GameActionsTests(unittest.TestCase):
         self.assertEqual(self.realtime(1), [3])
         self.assertEqual(self.finished(1), [])
 
+    def test_expired_states_are_checked_at_task_boundaries(self):
+        """无需参数；到期状态在 NPC 待办时刻结算本人，回到玩家输入前结算全员并检查玩家实时数据；无返回值。"""
+        realtime = sys.modules["Script.Settle.realtime_settle"]
+        checks = []
+        with patch.object(realtime, "change_character_persistent_state", side_effect=lambda actor: checks.append((actor, self.cache.game_time))), patch.object(
+            realtime, "judge_pl_real_time_data", side_effect=lambda: checks.append(("player_data", self.cache.game_time))
+        ):
+            self.advance("wait", 10)
+        end = self.now + timedelta(minutes=10)
+        self.assertIn((1, self.now), checks)
+        self.assertEqual(checks[-3:], [(0, end), (1, end), ("player_data", end)])
+
+    def test_move_written_in_own_settlement_is_settled_at_once(self):
+        """无需参数；NPC 自己的结算把行为改写成此刻开始的移动时，同一时刻按移动结算一次；无返回值。"""
+        self.use_real_ai()
+
+        def settle(actor):
+            """输入角色，记录结算；NPC 结算离开反应时写入一分钟移动。返回 None。"""
+            self.events.append(("settle", actor, self.characters[actor].behavior.behavior_id))
+            if actor == 1 and self.characters[1].behavior.behavior_id == "leave":
+                self.write_behavior(1, "move", 1, start=self.cache.game_time)
+
+        choices = [Action("leave", 5, 1)]
+        with patch.object(sys.modules["Script.Design.character_behavior"], "judge_character_status", side_effect=settle), patch.object(
+            sys.modules["Script.Design.handle_npc_ai"], "choose_character_target", side_effect=lambda actor, now: choices.pop(0) if choices else Action("wait", 5, actor)
+        ):
+            self.advance("wait", 5)
+        self.assertEqual(self.settled(1), ["leave", "move", "wait"])
+
     def test_state_machine_forced_follow_up_settles_once(self):
         """无需参数；状态机在准备阶段安排强制后续时，本次行动让位且只结算一次，收尾回调照常执行；无返回值。"""
         runtime = self.game.get_runtime()
