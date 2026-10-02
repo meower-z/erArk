@@ -455,6 +455,46 @@ class GameActionsTests(unittest.TestCase):
         self.assertEqual(self.settled(1), ["wait"])
         self.assertEqual(self.characters[1].behavior.wait_on_behavior_id, "")
 
+    def test_wait_on_npc_released_when_owner_ends(self):
+        """无需参数；主体行为时长不是五的倍数时，最后一段只等到主体结束，NPC 随即收尾；无返回值。"""
+        self.use_real_ai()
+        runtime = self.game.get_runtime()
+        self.write_behavior(0, "h_act", 12, target=1)
+        self.game.wait_on(1, 0, "h_act")
+        runtime.advance(12)
+        self.assertEqual(self.realtime(1), [5, 5, 2])
+        self.events.clear()
+        self.write_behavior(0, "wait", 1, target=1)
+        runtime.advance(1)
+        self.assertEqual(self.finished(1), [self.now + timedelta(minutes=12)])
+
+    def test_wait_on_first_slice_is_owner_remaining_when_shorter(self):
+        """无需参数；主体剩余不足五分钟时首段只等剩余分钟数，至少一分钟；无返回值。"""
+        self.use_real_ai()
+        runtime = self.game.get_runtime()
+        for duration, expected in ((3, 3), (0, 1)):
+            with self.subTest(duration=duration):
+                self.write_behavior(0, "h_act", duration, target=1)
+                self.game.wait_on(1, 0, "h_act")
+                self.assertEqual(runtime.scheduler.pending(1).item.duration, expected)
+
+    def test_h_locked_wait_rechecks_until_player_end(self):
+        """无需参数；H 中行动前检查把等待锁到玩家行动结束，等待仍按至多五分钟一段复查，玩家结束时恰好放开；无返回值。"""
+        self.use_real_ai()
+        self.characters[1].sp_flag.is_h = True
+        checks = []
+
+        def lock(actor, start):
+            """输入角色与玩家行动开始时刻，仿照 H 中的行动前检查写入等到玩家结束的等待；返回 None。"""
+            checks.append(self.cache.game_time)
+            self.write_behavior(actor, "wait", self.characters[0].behavior.duration, start=start)
+
+        with patch.object(sys.modules["Script.Design.handle_npc_ai"], "run_npc_pre_behavior_checks", side_effect=lock):
+            self.advance("h_act", 12)
+        self.assertEqual(self.realtime(1), [5, 5, 2])
+        self.assertEqual(checks, [self.now + timedelta(minutes=step) for step in (0, 5, 10)])
+        self.assertEqual(self.settled(1), [])
+
     def test_wait_on_npc_stops_when_owner_targets_someone_else(self):
         """无需参数；主体行为相同但对象换人时 NPC 不再延续等待；无返回值。"""
         self.use_real_ai()
