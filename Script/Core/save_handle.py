@@ -288,7 +288,7 @@ def _migrate_first_record_flat_fields(character) -> None:
             "item": -1,
         }
     # M处女时间转入键2（旧档只有时间，无对象/姿势/道具信息）
-    if getattr(first_record, "first_m_sex_time", default_time) != default_time:
+    if getattr(first_record, "first_m_sex_time", default_time).year > 1:
         first_record.first_part_sex_dict[2] = {
             "id": -1,
             "time": first_record.first_m_sex_time,
@@ -478,6 +478,37 @@ def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
                 maintenance_place[character_id] = _normalize_save_path(place)
 
 
+def _load_save_datetime(*args) -> datetime.datetime:
+    """
+    读存档时还原存档里的普通 datetime：旧版本存的游戏时间都是普通 datetime，按游戏日历规整成 GameTime（不在游戏日历上的时间按下一个季月的1日0时算）
+    公元1年的缺省占位时间规整后仍在公元1年，各处按 year <= 1 判断未设置
+    Keyword arguments:
+    args -- pickle 记录的 datetime 构造参数
+    Return arguments:
+    GameTime -- 规整后的游戏时间
+    """
+    from Script.Design import game_time
+
+    return game_time.to_game_time(datetime.datetime(*args))
+
+
+class SaveUnpickler(pickle.Unpickler):
+    """读存档用的 Unpickler：把存档里的普通 datetime 换成游戏时间 GameTime，兼容旧存档"""
+
+    def find_class(self, module: str, name: str):
+        """
+        按模块名与类名取类，普通 datetime 换成 _load_save_datetime
+        Keyword arguments:
+        module -- 模块名
+        name -- 类名
+        Return arguments:
+        任意 -- 类或构造函数
+        """
+        if module == "datetime" and name == "datetime":
+            return _load_save_datetime
+        return super().find_class(module, name)
+
+
 def load_save(save_id: str) -> game_type.Cache:
     """
     按存档id读取存档数据
@@ -489,7 +520,7 @@ def load_save(save_id: str) -> game_type.Cache:
     save_path = get_save_dir_path(save_id)
     file_path = os.path.join(save_path, "1")
     with open(file_path, "rb") as f:
-        loaded_cache = pickle.load(f)
+        loaded_cache = SaveUnpickler(f).load()
     _normalize_loaded_save_paths(loaded_cache)
     return loaded_cache
 
@@ -764,6 +795,9 @@ def update_dict_with_default(loaded_dict, default_dict):
             update_count += update_dict_with_default(loaded_dict[key].__dict__, value.__dict__)
         elif hasattr(value, '__dict__'):  # 检查 value 是否是一个类的实例
             update_count += update_dict_with_default(loaded_dict[key].__dict__, value.__dict__)
+        # 存档里的游戏时间是 GameTime（datetime 的子类），默认值是普通 datetime，两者都是时间就保留存档值
+        elif isinstance(value, datetime.datetime) and isinstance(loaded_dict[key], datetime.datetime):
+            continue
         # 如果key的类型不同，且value不为None，类型也不为int或float时，将其设为默认值
         elif type(loaded_dict[key]) != type(default_dict[key]) and value != None and type(value) != int and type(value) != float:
             loaded_dict[key] = value

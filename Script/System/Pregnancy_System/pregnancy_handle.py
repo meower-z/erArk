@@ -76,7 +76,7 @@ def get_pregnancy_acceleration_amount(character_id: int) -> float:
 
 def get_child_grow_day(child_id: int) -> int:
     """
-    计算孩子的有效成长天数（自出生起的自然天数+成长加速药累计的成长天数）
+    计算孩子的有效成长天数（自出生起的游戏天数+成长加速药累计的成长天数）
     Keyword arguments:
     child_id -- 孩子角色id
     Return arguments:

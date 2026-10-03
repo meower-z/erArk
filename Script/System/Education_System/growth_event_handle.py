@@ -291,7 +291,7 @@ def get_growth_event_title(queue_data: dict) -> str:
     stage_name = education_constant.STAGE_TALENT_NAME.get(stage, education_constant.STAGE_TALENT_NAME[104])
     # 写的是**本阶段**的第几天，进入该阶段当天为第 1 天（Plan 29 §3.3）：
     #    此前取出生以来的总天数，出生 300 天的萝莉会写成「萝莉期第 300 天」，而萝莉期一共才 180 天。
-    #    数的是可游玩天（Plan 32 §3.2）：婴儿期约 30 天、幼女 / 萝莉期约 60 天，季月交替那一夜只走一天，不再一夜跳六十天
+    #    天数按游戏日历数，季月交替那一夜只走一天
     stage_day = growth_handle.get_stage_day(character_id) + 1
     return _("{0} · {1}期第 {2} 天").format(character_data.name, stage_name, stage_day)
 
