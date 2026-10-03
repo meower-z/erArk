@@ -14,6 +14,7 @@ from Script.Core import (
 from Script.Config import normal_config, game_config, character_config
 from Script.Design import attr_calculation, character_handle, map_handle
 from Script.UI.Moudle import draw
+from Script.System.Pregnancy_System import pregnancy_constant
 import json
 
 game_path = game_path_config.game_path
@@ -408,6 +409,13 @@ def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
             # 养成药物旧存档兼容：补全成长加速药的累计成长天数
             if pregnancy_data is not None and not hasattr(pregnancy_data, "growth_acceleration_days"):
                 pregnancy_data.growth_acceleration_days = 0.0
+            # 孕程/成长天数缩短后的旧存档兼容：加速药累计天数截到新上限
+            if pregnancy_data is not None:
+                pregnancy_data.acceleration_days = min(pregnancy_data.acceleration_days, pregnancy_constant.ACCELERATION_MAX_DAY)
+                pregnancy_data.growth_acceleration_days = min(pregnancy_data.growth_acceleration_days, pregnancy_constant.GROW_TO_GIRL_DAY - 1)
+                for egg_data in pregnancy_data.eggs.values():
+                    if "acceleration_days" in egg_data:
+                        egg_data["acceleration_days"] = min(egg_data["acceleration_days"], pregnancy_constant.ACCELERATION_MAX_DAY)
             # 多胞胎旧存档兼容：补全本次胎数与同卵双胞胎标记
             if pregnancy_data is not None and not hasattr(pregnancy_data, "fetus_count"):
                 pregnancy_data.fetus_count = 0

@@ -113,7 +113,7 @@ class Growth_Panel:
         绘制母亲、当前成长阶段与距下一阶段的天数和预计日期
         输入类型: character_id(int)
         输出类型: 无
-        功能: 一行「母亲：X｜当前阶段：幼女｜距成长为萝莉还有 N 天，预计 2026年秋月12日」。
+        功能: 一行「母亲：X｜当前阶段：幼女｜距成长为萝莉还有 1季月5天，预计 2026年秋月12日」（时长满一个季月写成「X季月Y天」）。
               已成年不写天数；持成长停滞素质时写明阶段不会推进。
               天数按游戏日历计（get_child_grow_day），预计日期走 game_time.get_predict_date
         """
@@ -139,12 +139,12 @@ class Growth_Panel:
             next_stage_name = pregnancy_handle.get_child_next_stage_name(character_id)
             if character_data.talent.get(education_constant.GROWTH_STOP_TALENT_ID, 0):
                 # 成长停滞期间 check_grow_to_* 不会推进阶段，写预计日期只会误导
-                text += _("｜成长停滞中，阶段不会推进（解除后距成长为{0}还需 {1} 天）\n").format(next_stage_name, left_day)
+                text += _("｜成长停滞中，阶段不会推进（解除后距成长为{0}还需 {1}）\n").format(next_stage_name, game_time.get_duration_text(left_day))
             else:
                 # 预计日期从今天往后按游戏日历数
                 predict_time = max(game_time.get_predict_date(left_day, cache.game_time), cache.game_time)
-                text += _("｜距成长为{0}还有 {1} 天，预计在 {2}年{3}\n").format(
-                    next_stage_name, left_day, predict_time.year, pregnancy_panel.get_date_text(predict_time))
+                text += _("｜距成长为{0}还有 {1}，预计在 {2}年{3}\n").format(
+                    next_stage_name, game_time.get_duration_text(left_day), predict_time.year, pregnancy_panel.get_date_text(predict_time))
         info_draw = draw.NormalDraw()
         info_draw.width = self.width
         info_draw.text = text

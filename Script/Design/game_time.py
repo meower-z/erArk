@@ -398,6 +398,22 @@ def count_play_day(
     return max(0, count_day_for_datetime(start_date, end_date))
 
 
+def get_duration_text(day: int) -> str:
+    """
+    把一段天数换成玩家看的时长文本：满一个季月（30天）的写成「X季月Y天」（Y为0时只写「X季月」），不满一个季月的写成「Y天」
+    Keyword arguments:
+    day -- 天数（负数按0处理，小数向下取整）
+    Return arguments:
+    str -- 时长文本，如「2季月5天」「1季月」「12天」
+    """
+    season_count, rest_day = divmod(max(0, int(day)), SEASON_DAY)
+    if season_count == 0:
+        return _("{0}天").format(rest_day)
+    if rest_day == 0:
+        return _("{0}季月").format(season_count)
+    return _("{0}季月{1}天").format(season_count, rest_day)
+
+
 def judge_date_big_or_small(time_a: datetime.datetime, time_b: datetime.datetime) -> int:
     """
     比较a时间是否大于或等于b时间\n
