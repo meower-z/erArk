@@ -1,6 +1,7 @@
 import random
 import datetime
 from types import FunctionType
+from functools import partial
 from typing import Dict
 from Script.Core import (
     cache_control,
@@ -157,8 +158,21 @@ def commit_group_sex_tired_exit(character_id: int):
     # 目标指向自己并配置退出行为
     character_data.target_character_id = character_id
     handle_instruct.chara_handle_instruct_common_settle(constant.Behavior.GROUP_SEX_NPC_HP_0_END, character_id)
-    # 恰好结算一次，执行退出行为的清理效果链（1503欲望清零/528补HPMP上限/403重置H状态/635穿回衣服）
-    character_behavior.judge_character_status(character_id)
+    # 恰好结算一次，执行退出行为的清理效果链（1503欲望清零/528补HPMP上限/403重置H状态/635穿回衣服），完成后再收尾
+    from Script.Design import action_scheduler
+
+    action_scheduler.submit_current(character_id, after=partial(finish_group_sex_tired_exit, character_id))
+
+
+def finish_group_sex_tired_exit(character_id: int):
+    """
+    群交力竭退出行动结算完成后，按玩家所在场景仍在H的群交成员数收尾\n
+    Keyword arguments:\n
+    character_id -- 力竭退出的NPC角色id\n
+    """
+    from Script.Design import action_scheduler
+    from Script.System.Instruct_System import handle_instruct
+
     # 退出者is_h已被403清零；统计玩家所在场景仍在H的群交成员（不再误算非群交旁观者）
     pl_character_data: game_type.Character = cache.character_data[0]
     scene_path_str = map_handle.get_map_system_path_str_for_list(pl_character_data.position)
@@ -173,7 +187,7 @@ def commit_group_sex_tired_exit(character_id: int):
         pl_character_data.target_character_id = new_target_id
         pl_character_data.behavior.behavior_id = constant.Behavior.GROUP_SEX_TO_H
         pl_character_data.state = constant.CharacterStatus.STATUS_GROUP_SEX_TO_H
-        character_behavior.judge_character_status(0)
+        action_scheduler.submit_current(0)
     # 已无仍在H的成员，由结束群交指令收尾
     elif len(remaining_ids) == 0:
         handle_instruct.handle_group_sex_end()
@@ -281,7 +295,6 @@ def find_character_target(character_id: int, now_time: datetime.datetime):
     character_id -- 角色id
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    start_time = character_data.behavior.start_time
     all_target_list = list(game_config.config_target.keys())
     premise_data = {}
     target_weight_data = {}
@@ -292,9 +305,8 @@ def find_character_target(character_id: int, now_time: datetime.datetime):
         # 群交中+要群交自慰时，才能继续下去
         if handle_premise.handle_group_sex_mode_on(character_id) and handle_premise.handle_masturebate_flag_3(character_id):
             pass
-        # 否则不赋予新活动，且直接加入结束列表
+        # 否则不赋予新活动，由调度器安排原地等待
         else:
-            cache.over_behavior_character.add(character_id)
             return
 
     # 如果玩家在对该NPC交互，则等待flag=1，此操作暂时不进行
@@ -482,13 +494,6 @@ def find_character_target(character_id: int, now_time: datetime.datetime):
             character_data.behavior.duration = 1
         # if character_data.name == "阿米娅":
         #     print(f"debug 中：{character_data.name}，behavior_id = {game_config.config_status[character_data.state].name}，start_time = {character_data.behavior.start_time}, game_time = {now_time}")
-    else:
-        now_judge = game_time.judge_date_big_or_small(start_time, now_time)
-        if now_judge:
-            cache.over_behavior_character.add(character_id)
-        else:
-            next_time = game_time.get_sub_date(minute=1, old_date=start_time)
-            cache.character_data[character_id].behavior.start_time = next_time
 
 
 def search_target(
@@ -695,8 +700,7 @@ def judge_interrupt_character_behavior(character_id: int) -> int:
     Return arguments:
     int -- 是否打断，1为打断
     功能: 休息、睡觉与工作 / 娱乐中到了淋浴时间的打断（都用 end_now=2 立即结束，下一个行为从 cache.game_time 开始）。
-          学生岗赶去上课的截短不在这里：它会把时间线落回玩家这一步之内，要排在实时结算之前，
-          由 character_behavior 的 NPC 分支先调 judge_student_leave_truncate（Plan 32 §3.7 L4）
+          学生岗赶去上课的截短不在这里：由 action_scheduler 在 NPC 行动开始结算之前按 class_ai.get_student_leave_time 截短
     """
     character_data: game_type.Character = cache.character_data[character_id]
 
@@ -793,6 +797,7 @@ def judge_same_position_npc_follow():
             move_flag, wait_flag = character_move.judge_character_move_to_private(character_id, move_path)
             if move_flag:
                 character_data.behavior.behavior_id = constant.Behavior.MOVE
+                character_data.state = constant.CharacterStatus.STATUS_MOVE
                 character_data.behavior.move_target = move_path
                 character_data.behavior.move_final_target = pl_character_data.behavior.move_final_target
                 character_data.behavior.duration = move_time
@@ -801,8 +806,14 @@ def judge_same_position_npc_follow():
                 character_data.action_info.follow_wait_time = 0
             elif wait_flag:
                 character_data.behavior.behavior_id = constant.Behavior.WAIT
+                character_data.state = constant.CharacterStatus.STATUS_WAIT
                 character_data.behavior.duration = 5
                 character_data.action_info.follow_wait_time += 5
+            # 跟随只改写了该 NPC 的行为，让它从此刻起按新行为执行
+            if move_flag or wait_flag:
+                from Script.Design import action_scheduler
+
+                action_scheduler.replan(character_id)
             # print(f"debug {character_data.name}跟随玩家，当前位置为{character_data.position}，当前目标位置为{move_path}，最终目标位置为{pl_character_data.behavior.move_final_target}，行动时间为{move_time}分钟, start_time = {character_data.behavior.start_time}")
         # 隐奸携带模式中被携带的角色，直接同步移动到玩家本段移动的目的地（不使用移动行为，仅搬运位置）
         elif character_data.sp_flag.hidden_sex_mode == 5:

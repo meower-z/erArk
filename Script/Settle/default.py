@@ -2908,10 +2908,10 @@ def handle_interrupt_target_activity(
                     instuct_judege.init_character_behavior_start_time(
                         target_data.cid, character_data.behavior.start_time
                     )
-                else:
-                    settle_behavior.handle_settle_behavior(
-                        target_data.cid, character_data.behavior.start_time
-                    )
+                # 对方被打断的行为已在其开始时结算，改为等待本行为结束
+                from Script.Design import action_scheduler
+
+                action_scheduler.wait_on(target_data.cid, character_id, character_data.behavior.behavior_id)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.OPTION_FATER)
@@ -4540,6 +4540,10 @@ def handle_chara_off_line(
     character_data.position = ["0", "0"]
     # 重新结算离线异常标记，避免位掩码停留在离线前的旧值
     handle_premise.settle_chara_unnormal_flag(character_id, 7)
+    # 离队时撤销其待办
+    from Script.Design import action_scheduler
+
+    action_scheduler.reset_character(character_id)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.CHARA_ON_LINE)
@@ -4592,6 +4596,10 @@ def handle_chara_on_line(
     now_scene_path_str = map_handle.get_map_system_path_str_for_list(character_data.position)
     if character_id not in cache.scene_data[now_scene_path_str].character_list:
         cache.scene_data[now_scene_path_str].character_list.add(character_id)
+    # 上线时按当前行为重新入队
+    from Script.Design import action_scheduler
+
+    action_scheduler.reset_character(character_id)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.T_BE_BAGGED)
@@ -7656,9 +7664,10 @@ def handle_teach_add_just(
                         # 加信赖
                         base_chara_favorability_and_trust_common_settle(character_id, add_time, False, 0, other_character_data.ability[32], change_data, other_character_data.cid)
 
-                    # 手动结算该状态
-                    character_behavior.judge_character_status(chara_id)
-                    # other_character_data.state = constant.CharacterStatus.STATUS_ARDER
+                    # 学生的听课行动作为立即待办执行
+                    from Script.Design import action_scheduler
+
+                    action_scheduler.submit_current(chara_id)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.SELF_STUDY_ADD_ADJUST)
