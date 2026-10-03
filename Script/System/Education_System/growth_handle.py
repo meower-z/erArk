@@ -348,6 +348,29 @@ def judge_absent_this_period(character_id: int, now_time) -> bool:
     return growth_data.last_absent_period == [now_time.toordinal(), period]
 
 
+def judge_attended_this_period(character_id: int, now_time) -> bool:
+    """
+    校验这一节是不是已经结算过听课收益（settle_student_class_gain 写下的 last_attend_period）
+    Keyword arguments:
+    character_id -- 角色id
+    now_time -- 参照时刻，取它的日期与节次
+    Return arguments:
+    bool -- 这一节已结算过为True；角色不存在、没有养成数据、不在节次内为False
+    功能: 只读不写，不惰性创建养成数据
+    """
+    from Script.Design import game_time
+
+    if character_id not in cache.character_data:
+        return False
+    growth_data = cache.character_data[character_id].child_growth
+    if growth_data is None:
+        return False
+    period = game_time.get_class_period_by_time(now_time)
+    if period == -1:
+        return False
+    return growth_data.last_attend_period == [now_time.toordinal(), period]
+
+
 def judge_selected_cell_real(character_id: int, week_day: int, period: int) -> bool:
     """
     校验个人课表上的一格是不是每周确有的一节课（Plan 30 §3.6：「有课」「同班同学」的判据）

@@ -941,6 +941,9 @@ def teach_pull(cid: int) -> bool:
 
 
 check("正常学生被拉进听课", teach_pull(201))
+growth_handle.get_child_growth(201).last_attend_period = [period_time(0).toordinal(), 0]
+check("本节已结算过听课收益的学生不拉（玩家授课与 303 共用）", not class_ai.judge_student_pullable(201) and not teach_pull(201))
+growth_handle.get_child_growth(201).last_attend_period = []
 student.hit_point = 10
 check("体力 < 30% 的学生不拉（她自己决策时走 721 缺课）", not teach_pull(201))
 student.hit_point = 100
@@ -1608,39 +1611,53 @@ def clear_need(cid: int) -> None:
     handle_premise.refresh_unnormal_flag(cid)
 
 
+class StepGuard(Exception):
+    """调度器执行步数超过护栏"""
+
+
 def run_loop_round(minute: int, npc_order: list) -> tuple:
     """
-    复刻一次「玩家等待 minute 分钟」的行为循环（照 test_behavior_loop.run_one_round：先玩家阶段，再 NPC 阶段每一遍每人推进一个行为，护栏 60 遍）
+    复刻一次「玩家等待 minute 分钟」：只让 npc_order 里的 NPC 参加调度（夹具里别的角色与本题无关），玩家行动作为立即待办写入，跑到再次轮到玩家输入
     Keyword arguments:
     minute -- 玩家这一步的分钟数
-    npc_order -- 参加循环的 NPC 与处理顺序：只让师生两人参加（夹具里别的角色与本题无关），处理顺序两种都验
+    npc_order -- 参加调度的 NPC；同一时刻的待办按写入先后执行，处理顺序两种都验
     Return arguments:
-    tuple -- (玩家阶段轮数, NPC 阶段遍数, 没收敛的角色列表)
+    tuple -- (玩家阶段轮数（恒为 1）, 执行步数, 没收敛（撞护栏）的角色列表)
     """
+    from Script.Design import action_scheduler
+
     instuct_judege.init_character_behavior_start_time(0, cache.game_time)
     pl.state = constant.CharacterStatus.STATUS_WAIT
     pl.behavior.behavior_id = constant.Behavior.WAIT
     pl.behavior.duration = minute
-    game_time.sub_time_now(minute)
-    cache.over_behavior_character = set()
-    pl_round = 0
-    pl_start = pl.behavior.start_time
-    while 0 not in cache.over_behavior_character:
-        pl_round += 1
-        if pl_round > 30:
-            break
-        character_behavior.character_behavior(0, cache.game_time, pl_start)
-    npc_pass = 0
-    while any(cid not in cache.over_behavior_character for cid in npc_order):
-        npc_pass += 1
-        if npc_pass > 60:
-            break
-        for cid in npc_order:
-            if cid in cache.over_behavior_character:
-                continue
-            clear_need(cid)
-            character_behavior.character_behavior(cid, cache.game_time, pl_start)
-    return pl_round, npc_pass, [cid for cid in npc_order if cid not in cache.over_behavior_character]
+    sch = action_scheduler.get_scheduler()
+    for cid, entry in sch.timeline.items():
+        if cid not in npc_order:
+            sch.timeline.drop(cid)
+    for cid in npc_order:
+        if cid not in sch.timeline:
+            sch.timeline.put(cid, action_scheduler.Entry(cache.game_time))
+    sch.timeline.put(0, action_scheduler.Entry(cache.game_time, action_scheduler.Action.of(pl), True))
+    count = [0]
+    orig_execute = sch.execute
+
+    def guarded(character_id, action):
+        count[0] += 1
+        if count[0] > 60 * len(npc_order) + 30:
+            raise StepGuard(count[0])
+        if character_id:
+            clear_need(character_id)
+        return orig_execute(character_id, action)
+
+    sch.execute = guarded
+    stuck = []
+    try:
+        sch.run_until_input()
+    except StepGuard:
+        stuck = list(npc_order)
+    finally:
+        del sch.execute
+    return 1, 0, stuck
 
 
 def run_h1(minute_list: tuple, npc_order: list) -> list:
@@ -1656,6 +1673,10 @@ def run_h1(minute_list: tuple, npc_order: list) -> list:
     for sid, func in origin.items():
         constant.handle_state_machine_data[sid] = h1_wrap_sm(sid, func)
     growth_handle.settle_student_class_gain = h1_gain_spy
+    # 每次 run_h1 是一个新现场：丢掉前一个现场留在调度器里的待办（它们的时刻属于另一条时间线）
+    from Script.Design import action_scheduler
+
+    action_scheduler.get_scheduler().timeline = action_scheduler.Timeline()
     result = []
     try:
         for minute in minute_list:
@@ -1775,7 +1796,7 @@ rounds = run_h1((10, 10, 10, 10, 10, 10), [101, 201])
 teach = h1_teach_in_room2()
 check("H1 对照：玩家每步 10 分钟，第 2 节照常只结算一次（学生坐下时 557 先结算，教师到场开讲的 512 去重）",
       all(not one[2] for one in rounds) and len(h1_gains(1)) == 1, H1_GAIN_LOG)
-check("H1 对照：教师开讲时 303 照拉在座等她的学生，开始时刻对齐到开讲时刻", bool(teach) and rounds[0][3] == teach[0][2],
+check("H1 对照：学生 9:45 坐下时本节已结算，教师晚到开讲时 303 不再拉她，她的开始时刻仍是 9:45", bool(teach) and rounds[0][3] == period_time(1) < teach[0][2],
       (rounds[0][3], [(one[2], one[3]) for one in teach]))
 for cid in (101, 201):
     cd = cache.character_data[cid]
@@ -1974,8 +1995,12 @@ schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
 rounds, rt = run_rt32(60, constant.Behavior.FREE_PLAY, T830, SCENE_NURSERY)
 check("L4 第 1 节有课：自由玩耍在实时结算之前就截到 8:40（开课前 20 分钟），这一段只结算 10 分钟（此前先按 60 分钟结算、再截短）",
       bool(rt) and rt[0][1] == constant.Behavior.FREE_PLAY and rt[0][3] == 10 and rt[0][4] == 10, rt32_text(rt))
-check("L4 这一步收敛，她的实时结算合计 60 分钟、与玩家这一步等长（此前 110：8:40~9:30 那一段饥饿、尿意、疲劳算了两遍）",
-      not rounds[0][2] and sum(one[4] for one in rt) == 60, (rounds, rt32_text(rt)))
+# 调度器在行动开始时一次结算整段行动，她最后一段（9:00 起自习 45 分钟）跨过这一步的结尾；不重算的不变量改为：合计 = 她下一个待办距 8:30 的分钟数
+from Script.Design import action_scheduler  # noqa: E402
+
+_l4_next = action_scheduler.get_scheduler().timeline.get(201)
+check("L4 这一步收敛，她的实时结算合计与她下一个待办无缝衔接（截掉的那一段没有再算一遍；此前 110：8:40~9:30 那一段算了两遍）",
+      not rounds[0][2] and _l4_next is not None and sum(one[4] for one in rt) == action_scheduler.minutes_between(T830, _l4_next.at), (rounds, rt32_text(rt), _l4_next and _l4_next.at))
 # 循环跑完她已在理论教室一（第 1 节的上课地点），按 L3 会截到开课那一刻；挪回育儿室再验「截到开课前 20 分钟」
 move_to(201, SCENE_NURSERY)
 begin(201, constant.Behavior.FREE_PLAY, T830, T930, 60)
@@ -2166,7 +2191,9 @@ GHOST_PROBE = []
 """ NPC 阶段第一次处理 NPC 时（玩家阶段刚走完）的现场：(课堂模式是否开着, 是否还有 running 的实操课) """
 GHOST_FLOW_CALL = []
 """ 行为循环里嵌套调到 update.game_update_flow 的记录：(步进分钟数, 当时玩家的行为id) """
-_orig_character_behavior = character_behavior.character_behavior
+from Script.Design import action_scheduler  # noqa: E402
+
+_orig_character_behavior = action_scheduler.Scheduler.execute
 _orig_game_update_flow = update.game_update_flow
 _ghost_pl_point = (pl.hit_point_max, pl.hit_point, pl.mana_point_max, pl.mana_point)
 """ 玩家原来的体力 / 气力（上限与当前值），本段跑完还原 """
@@ -2185,7 +2212,7 @@ def ghost_flow_stub(add_time: int):
     GHOST_FLOW_CALL.append((add_time, pl.behavior.behavior_id))
 
 
-def ghost_probe_spy(character_id: int, now_time: datetime.datetime, pl_start_time: datetime.datetime):
+def ghost_probe_spy(self, character_id: int, action):
     """
     行为循环里 character_behavior 的记录包装：NPC 阶段第一次处理 NPC 时记下课堂模式与实操课的状态，再照常执行
     Keyword arguments:
@@ -2198,7 +2225,7 @@ def ghost_probe_spy(character_id: int, now_time: datetime.datetime, pl_start_tim
     """
     if character_id and not GHOST_PROBE:
         GHOST_PROBE.append((cache.sex_class_mode, sex_class_handle.get_running_class() is not None))
-    return _orig_character_behavior(character_id, now_time, pl_start_time)
+    return _orig_character_behavior(self, character_id, action)
 
 
 def setup_ghost() -> dict:
@@ -2275,12 +2302,12 @@ check("H1 前提（幽灵课堂）：课堂模式与群交模式开着、实践�
       and pl.position == SCENE_DORM and class_ai.judge_in_scene(201, ROOM_P) and sex_class_handle.judge_has_sex_skill_course(201)
       and sex_class_handle.judge_can_join_sex_class(201))
 _ghost_attend, _ghost_sex = g32.attend_class_count, g32.sex_class_count
-character_behavior.character_behavior = ghost_probe_spy
+action_scheduler.Scheduler.execute = ghost_probe_spy
 update.game_update_flow = ghost_flow_stub
 try:
     rounds = run_h1((60,), [201])
 finally:
-    character_behavior.character_behavior = _orig_character_behavior
+    action_scheduler.Scheduler.execute = _orig_character_behavior
     update.game_update_flow = _orig_game_update_flow
 _ghost_sm = [(one[1], one[2].strftime("%H:%M"), one[3]) for one in H1_SM_LOG if one[0] == 201]
 check("H1 真实循环（玩家一步 60 分钟）：玩家这一步走完时就下了课——NPC 阶段第一次处理 NPC 时课堂模式已关、没有 running 的实操课（此前一直开着）；"

@@ -536,10 +536,35 @@ def fake_game_update_flow(add_time: int):
     realtime_settle.judge_pl_real_time_data()
 
 
+def drain_forced_npc():
+    """
+    执行调度器里 NPC 的立即待办（submit_current 写入的、本由主循环在下一步执行的那些），连同它们的收尾回调
+    Return arguments:
+    无
+    功能: 旧代码在调用处同步结算（judge_character_status / game_update_flow），调度器改为下一步执行；单元夹具没有主循环，在这里代为执行
+    """
+    from Script.Design import action_scheduler
+
+    sch = action_scheduler.get_scheduler()
+    for _ in range(50):
+        item = next(((cid, entry) for cid, entry in sch.timeline.items() if entry.immediate and cid != 0), None)
+        if item is None:
+            return
+        cid, entry = item
+        sch.timeline.claim(cid, entry)
+        minutes = sch.execute(cid, entry.action)
+        if minutes is None:
+            action_scheduler.chain_after(sch.timeline.get(cid), entry.after)
+            continue
+        if entry.after is not None:
+            entry.after()
+
+
 _saved_game_update_flow = update.game_update_flow
 update.game_update_flow = fake_game_update_flow
 try:
     handle_npc_ai.commit_group_sex_tired_exit(201)
+    drain_forced_npc()
 finally:
     update.game_update_flow = _saved_game_update_flow
 check("H1 复审补：最后一名学生力竭退出（commit_group_sex_tired_exit 的真实调用链）→ 结束群交 → 同一步里下课：课堂模式已关、那节课打上 ended、学生已不在 H",

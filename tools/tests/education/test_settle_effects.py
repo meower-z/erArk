@@ -621,6 +621,30 @@ def l13_game_update_flow(add_time: int):
     EFFECT[512](0, add_time, game_type.CharacterStatusChange(), cache.game_time)
 
 
+def drain_forced_npc():
+    """
+    执行调度器里 NPC 的立即待办（submit_current 写入的、本由主循环在下一步执行的那些），连同它们的收尾回调
+    Return arguments:
+    无
+    功能: 旧代码在调用处同步结算（judge_character_status / game_update_flow），调度器改为下一步执行；单元夹具没有主循环，在这里代为执行
+    """
+    from Script.Design import action_scheduler
+
+    sch = action_scheduler.get_scheduler()
+    for _ in range(50):
+        item = next(((cid, entry) for cid, entry in sch.timeline.items() if entry.immediate and cid != 0), None)
+        if item is None:
+            return
+        cid, entry = item
+        sch.timeline.claim(cid, entry)
+        minutes = sch.execute(cid, entry.action)
+        if minutes is None:
+            action_scheduler.chain_after(sch.timeline.get(cid), entry.after)
+            continue
+        if entry.after is not None:
+            entry.after()
+
+
 for _l13_room, _l13_type in ((ROOM1, E.COURSE_TYPE_THEORY), (ROOM_P, E.COURSE_TYPE_PRACTICE)):
     clear_schedules()
     move_to(0, classroom_path(_l13_room))
@@ -639,8 +663,13 @@ for _l13_room, _l13_type in ((ROOM1, E.COURSE_TYPE_THEORY), (ROOM_P, E.COURSE_TY
     handle_instruct.update.game_update_flow = l13_game_update_flow
     settle_default.character_behavior.judge_character_status = l13_judge_spy
     settle_default.base_chara_favorability_and_trust_common_settle = lambda *a, **k: None
+    # 前面各段的 submit_current 没人执行，会在调度器里排成链；本段只看 handle_teach 这一次写入的
+    from Script.Design import action_scheduler
+
+    action_scheduler.get_scheduler().timeline = action_scheduler.Timeline()
     try:
         handle_instruct.handle_teach()
+        drain_forced_npc()
     finally:
         handle_instruct.update.game_update_flow = _saved_flow
         settle_default.character_behavior.judge_character_status = _saved_judge

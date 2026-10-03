@@ -5,7 +5,7 @@
    不 inline 调用 init_character_behavior()（其结尾的成就结算可能写文件）。
 """
 from _bootstrap import *  # noqa: F401,F403
-from Script.Design import character_behavior, instuct_judege, handle_npc_ai
+from Script.Design import character_behavior, instuct_judege, handle_npc_ai, action_scheduler
 from Script.Settle import past_day_settle, realtime_settle
 from Script.UI.Panel import character_info_head
 
@@ -99,40 +99,57 @@ class_ai.get_skip_class_rate = lambda cid: 0.0
 section("带护栏的行为循环")
 
 
+class StepGuard(Exception):
+    """调度器执行步数超过护栏"""
+
+
+def run_scheduler(sch, limit: int, before_execute=None) -> int:
+    """
+    带护栏地跑调度器直到轮到玩家输入（替代旧主循环的玩家阶段 + NPC 阶段）
+    Keyword arguments:
+    sch -- 调度器
+    limit -- 执行步数上限
+    before_execute -- 每次执行前的夹具回调（参数为角色id），可为 None
+    Return arguments:
+    int -- 执行的步数
+    """
+    count = [0]
+    orig_execute = sch.execute
+
+    def guarded(character_id, action):
+        count[0] += 1
+        if count[0] > limit:
+            raise StepGuard(count[0])
+        if before_execute is not None:
+            before_execute(character_id)
+        return orig_execute(character_id, action)
+
+    sch.execute = guarded
+    try:
+        sch.run_until_input()
+    finally:
+        del sch.execute
+    return count[0]
+
+
 def run_one_round(minute: int) -> tuple:
     """
-    复刻一次「玩家等待 minute 分钟」后的完整行为循环
+    复刻一次「玩家等待 minute 分钟」：玩家行动作为立即待办写入调度器，跑到再次轮到玩家输入
     Return arguments:
-    tuple -- (玩家阶段轮数, NPC 阶段轮数, 未收敛的角色列表)
+    tuple -- (玩家阶段轮数（恒为 1）, 调度器执行步数, 待办时刻落后于时钟的角色列表)
     """
+    pl_data = cache.character_data[0]
     instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    pl.state = constant.CharacterStatus.STATUS_WAIT
-    pl.behavior.behavior_id = constant.Behavior.WAIT
-    pl.behavior.duration = minute
-    game_time.sub_time_now(minute)
-    cache.over_behavior_character = set()
-    pl_round = 0
-    pl_start = pl.behavior.start_time
-    while 0 not in cache.over_behavior_character:
-        pl_round += 1
-        if pl_round > 30:
-            break
-        character_behavior.character_behavior(0, cache.game_time, pl_start)
-    id_list = cache.npc_id_got.copy()
-    id_list.discard(0)
-    npc_pass = 0
-    # 上限 60 而不是 skill 里的 25：真实存档里总有几个没事可做的干员在「空闲 1 分钟」里一分钟一分钟地挪，
-    #    45 分钟的一轮要挪 45 步才追平时钟，那不是卡死（清空课表的基线跑出来一模一样）；卡死是 60 步还追不上
-    while len(cache.over_behavior_character) <= len(id_list):
-        npc_pass += 1
-        if npc_pass > 60:
-            break
-        for cid in id_list:
-            if cid in cache.over_behavior_character:
-                continue
-            character_behavior.character_behavior(cid, cache.game_time, pl_start)
-    stuck = [cid for cid in id_list if cid not in cache.over_behavior_character]
-    return pl_round, npc_pass, stuck
+    pl_data.state = constant.CharacterStatus.STATUS_WAIT
+    pl_data.behavior.behavior_id = constant.Behavior.WAIT
+    pl_data.behavior.duration = minute
+    sch = action_scheduler.get_scheduler()
+    sch.sync_characters()
+    sch.timeline.put(0, action_scheduler.Entry(cache.game_time, action_scheduler.Action.of(pl_data), True))
+    # 护栏：每个在队 NPC 平均 60 步（没事可做的干员按 5 分钟复查，45 分钟一轮约 9 步）
+    steps = run_scheduler(sch, 60 * max(1, len(cache.npc_id_got)))
+    stuck = [cid for cid, entry in sch.timeline.items() if cid and entry.at < cache.game_time]
+    return 1, 0, stuck
 
 
 error_list = []
@@ -290,15 +307,13 @@ def l4_true_add_spy(character_id: int, now_time: datetime.datetime, pl_start_tim
 
 def run_l4_step(minute: int, class_period: int) -> tuple:
     """
-    让挑出的女儿从此刻起在宿舍自由玩耍 minute 分钟，跑一步「玩家走 minute 分钟」的真实行为循环，记下她的实时结算
+    让挑出的女儿从此刻起在宿舍自由玩耍 minute 分钟，用一个只含她和玩家的调度器跑一步「玩家走 minute 分钟」，记下她的实时结算
     Keyword arguments:
     minute -- 玩家这一步的分钟数，也是她这段自由玩耍的时长
     class_period -- 今天给她排一节理论课的节次（那一格在全局课表上排成没有教师、到了教室自习），-1 为一节课都不排
     Return arguments:
-    tuple -- (NPC 阶段遍数, 是否收敛, 她的实时结算记录)
-    功能: 照 init_character_behavior 的顺序先玩家、后 NPC；玩家置为空闲，只推进时钟，这一步的起点显式传进去。
-          交互对象设回自己，否则 judge_character_status_time_over 按「交互对象不在场」把行为的结束改写为这一步的结束；
-          护栏 120 遍：没事可做时会一分钟一分钟地挪（README 夹具陷阱），60 分钟一步最多 60 遍
+    tuple -- (执行步数, 是否收敛, 她的实时结算记录, 她下一个待办的时刻)
+    功能: 她的自由玩耍作为立即待办写入（与 AI 刚选出时同样按首段结算、先截短再结算）；玩家的输入待办排在这一步结束；护栏 120 步
     """
     cd = cache.character_data[l4_id]
     growth_data = growth_handle.get_child_growth(l4_id)
@@ -323,22 +338,24 @@ def run_l4_step(minute: int, class_period: int) -> tuple:
     pl_data = cache.character_data[0]
     pl_data.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
     pl_data.behavior.start_time = step_start
-    game_time.sub_time_now(minute)
-    cache.over_behavior_character = set()
+    sch = action_scheduler.get_scheduler()
+    sch.timeline = action_scheduler.Timeline()
+    sch.timeline.put(l4_id, action_scheduler.Entry(step_start, action_scheduler.Action.of(cd), True))
+    sch.timeline.put(0, action_scheduler.Entry(game_time.get_sub_date(minute=minute, old_date=step_start)))
     L4_RT_LOG.clear()
-    npc_pass = 0
     realtime_settle.get_true_add_time = l4_true_add_spy
+    over = True
+    steps = 0
     try:
-        character_behavior.character_behavior(0, cache.game_time, step_start)
-        while l4_id not in cache.over_behavior_character:
-            npc_pass += 1
-            if npc_pass > 120:
-                break
-            l4_clear_need(l4_id)
-            character_behavior.character_behavior(l4_id, cache.game_time, step_start)
+        steps = run_scheduler(sch, 120, lambda cid: l4_clear_need(cid) if cid == l4_id else None)
+    except StepGuard:
+        over = False
     finally:
         realtime_settle.get_true_add_time = _orig_true_add
-    return npc_pass, l4_id in cache.over_behavior_character, list(L4_RT_LOG)
+    next_entry = sch.timeline.get(l4_id)
+    next_at = next_entry.at if next_entry is not None else None
+    sch.timeline = action_scheduler.Timeline()
+    return steps, over, list(L4_RT_LOG), next_at, step_start
 
 
 def l4_log_text(log: list) -> list:
@@ -363,14 +380,15 @@ if l4_id != -1 and l4_room:
     l4_home = map_handle.get_map_system_path_for_str(l4_dorm) if l4_dorm in cache.scene_data else list(SCENE_EDU_ENTRY)
     # 14:45 起连跑两步：第一步没课作对照；第二步 16:15 有课，开课前 20 分钟（15:55）落在没课的第 7 节里，截短规则 B 截得到
     set_time(cache.game_time.replace(hour=14, minute=45, second=0, microsecond=0))
-    pass0, over0, log0 = run_l4_step(60, -1)
-    check("L4 对照：这一步没课、14:45 起自由玩耍 60 分钟、玩家一步 60 分钟 → 不截，实时结算合计 60 分钟",
-          over0 and bool(log0) and log0[0][2] == 60 and sum(one[3] for one in log0) == 60, (pass0, l4_log_text(log0)))
-    pass1, over1, log1 = run_l4_step(60, 7)
+    pass0, over0, log0, next0, start0 = run_l4_step(60, -1)
+    # 调度器在行动开始时一次结算整段行动，她最后一段行动可能跨过这一步的结尾；不重算的不变量是：实时结算合计 = 她下一个待办距这一步开始的分钟数
+    check("L4 对照：这一步没课、14:45 起自由玩耍 60 分钟 → 不截，首段按 60 分钟结算，合计与她下一个待办无缝衔接",
+          over0 and bool(log0) and log0[0][2] == 60 and log0[0][3] == 60 and sum(one[3] for one in log0) == action_scheduler.minutes_between(start0, next0), (pass0, l4_log_text(log0), next0))
+    pass1, over1, log1, next1, start1 = run_l4_step(60, 7)
     check("L4 16:15 有课、15:45 起自由玩耍：在实时结算之前就截到 15:55（开课前 20 分钟），这一段只结算 10 分钟（此前先按 60 分钟结算、再截短）",
           bool(log1) and log1[0][0] == constant.Behavior.FREE_PLAY and log1[0][2] == 10 and log1[0][3] == 10, l4_log_text(log1))
-    check("L4 这一步收敛，她的实时结算合计 60 分钟、与玩家这一步等长（此前 110：15:55~16:45 那一段饥饿、尿意、疲劳算了两遍）",
-          over1 and sum(one[3] for one in log1) == 60, (pass1, l4_log_text(log1)))
+    check("L4 这一步收敛，她的实时结算合计与她下一个待办无缝衔接（截掉的那一段没有再算一遍）",
+          over1 and sum(one[3] for one in log1) == action_scheduler.minutes_between(start1, next1), (pass1, l4_log_text(log1), next1))
 class_ai.get_skip_class_rate = _orig_rate
 
 section("跨天结算")
