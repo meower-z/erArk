@@ -1631,11 +1631,13 @@ def run_loop_round(minute: int, npc_order: list) -> tuple:
     pl.behavior.behavior_id = constant.Behavior.WAIT
     pl.behavior.duration = minute
     sch = action_scheduler.get_scheduler()
-    sch.pending = {cid: entry for cid, entry in sch.pending.items() if cid in npc_order}
+    for cid, entry in sch.timeline.items():
+        if cid not in npc_order:
+            sch.timeline.drop(cid)
     for cid in npc_order:
-        if cid not in sch.pending:
-            sch.put(cid, action_scheduler.Entry(cache.game_time))
-    sch.put(0, action_scheduler.Entry(cache.game_time, action_scheduler.Action.of(pl), True))
+        if cid not in sch.timeline:
+            sch.timeline.put(cid, action_scheduler.Entry(cache.game_time))
+    sch.timeline.put(0, action_scheduler.Entry(cache.game_time, action_scheduler.Action.of(pl), True))
     count = [0]
     orig_execute = sch.execute
 
@@ -1674,7 +1676,7 @@ def run_h1(minute_list: tuple, npc_order: list) -> list:
     # 每次 run_h1 是一个新现场：丢掉前一个现场留在调度器里的待办（它们的时刻属于另一条时间线）
     from Script.Design import action_scheduler
 
-    action_scheduler.get_scheduler().pending = {}
+    action_scheduler.get_scheduler().timeline = action_scheduler.Timeline()
     result = []
     try:
         for minute in minute_list:
@@ -1996,7 +1998,7 @@ check("L4 第 1 节有课：自由玩耍在实时结算之前就截到 8:40（�
 # 调度器在行动开始时一次结算整段行动，她最后一段（9:00 起自习 45 分钟）跨过这一步的结尾；不重算的不变量改为：合计 = 她下一个待办距 8:30 的分钟数
 from Script.Design import action_scheduler  # noqa: E402
 
-_l4_next = action_scheduler.get_scheduler().pending.get(201)
+_l4_next = action_scheduler.get_scheduler().timeline.get(201)
 check("L4 这一步收敛，她的实时结算合计与她下一个待办无缝衔接（截掉的那一段没有再算一遍；此前 110：8:40~9:30 那一段算了两遍）",
       not rounds[0][2] and _l4_next is not None and sum(one[4] for one in rt) == action_scheduler.minutes_between(T830, _l4_next.at), (rounds, rt32_text(rt), _l4_next and _l4_next.at))
 # 循环跑完她已在理论教室一（第 1 节的上课地点），按 L3 会截到开课那一刻；挪回育儿室再验「截到开课前 20 分钟」

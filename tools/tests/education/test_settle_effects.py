@@ -632,14 +632,14 @@ def drain_forced_npc():
 
     sch = action_scheduler.get_scheduler()
     for _ in range(50):
-        item = next(((cid, entry) for cid, entry in sch.pending.items() if entry.immediate and cid != 0), None)
+        item = next(((cid, entry) for cid, entry in sch.timeline.items() if entry.immediate and cid != 0), None)
         if item is None:
             return
         cid, entry = item
-        del sch.pending[cid]
+        sch.timeline.claim(cid, entry)
         minutes = sch.execute(cid, entry.action)
         if minutes is None:
-            action_scheduler.chain_after(sch.pending[cid], entry.after)
+            action_scheduler.chain_after(sch.timeline.get(cid), entry.after)
             continue
         if entry.after is not None:
             entry.after()
@@ -666,7 +666,7 @@ for _l13_room, _l13_type in ((ROOM1, E.COURSE_TYPE_THEORY), (ROOM_P, E.COURSE_TY
     # 前面各段的 submit_current 没人执行，会在调度器里排成链；本段只看 handle_teach 这一次写入的
     from Script.Design import action_scheduler
 
-    action_scheduler.get_scheduler().pending = {}
+    action_scheduler.get_scheduler().timeline = action_scheduler.Timeline()
     try:
         handle_instruct.handle_teach()
         drain_forced_npc()

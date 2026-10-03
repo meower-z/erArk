@@ -547,14 +547,14 @@ def drain_forced_npc():
 
     sch = action_scheduler.get_scheduler()
     for _ in range(50):
-        item = next(((cid, entry) for cid, entry in sch.pending.items() if entry.immediate and cid != 0), None)
+        item = next(((cid, entry) for cid, entry in sch.timeline.items() if entry.immediate and cid != 0), None)
         if item is None:
             return
         cid, entry = item
-        del sch.pending[cid]
+        sch.timeline.claim(cid, entry)
         minutes = sch.execute(cid, entry.action)
         if minutes is None:
-            action_scheduler.chain_after(sch.pending[cid], entry.after)
+            action_scheduler.chain_after(sch.timeline.get(cid), entry.after)
             continue
         if entry.after is not None:
             entry.after()

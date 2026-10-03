@@ -75,7 +75,7 @@ def own_charcter_move(target_scene: list, continued: bool = False):
             # print(f"debug pl start_time = {character_data.behavior.start_time}")
             update.game_update_flow(now_need_time)
             # 结算中触发的寻路：本段已排为立即行动，余下各段在本段走完、回到玩家输入前接续
-            if action_scheduler.get_scheduler().running:
+            if action_scheduler.is_running():
                 action_scheduler.continue_after_input(partial(own_charcter_move, target_scene, True))
                 return
             continued = True

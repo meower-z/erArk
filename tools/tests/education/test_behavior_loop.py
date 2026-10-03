@@ -145,10 +145,10 @@ def run_one_round(minute: int) -> tuple:
     pl_data.behavior.duration = minute
     sch = action_scheduler.get_scheduler()
     sch.sync_characters()
-    sch.put(0, action_scheduler.Entry(cache.game_time, action_scheduler.Action.of(pl_data), True))
+    sch.timeline.put(0, action_scheduler.Entry(cache.game_time, action_scheduler.Action.of(pl_data), True))
     # 护栏：每个在队 NPC 平均 60 步（没事可做的干员按 5 分钟复查，45 分钟一轮约 9 步）
     steps = run_scheduler(sch, 60 * max(1, len(cache.npc_id_got)))
-    stuck = [cid for cid, entry in sch.pending.items() if cid and entry.at < cache.game_time]
+    stuck = [cid for cid, entry in sch.timeline.items() if cid and entry.at < cache.game_time]
     return 1, 0, stuck
 
 
@@ -339,9 +339,9 @@ def run_l4_step(minute: int, class_period: int) -> tuple:
     pl_data.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
     pl_data.behavior.start_time = step_start
     sch = action_scheduler.get_scheduler()
-    sch.pending = {}
-    sch.put(l4_id, action_scheduler.Entry(step_start, action_scheduler.Action.of(cd), True))
-    sch.put(0, action_scheduler.Entry(game_time.get_sub_date(minute=minute, old_date=step_start)))
+    sch.timeline = action_scheduler.Timeline()
+    sch.timeline.put(l4_id, action_scheduler.Entry(step_start, action_scheduler.Action.of(cd), True))
+    sch.timeline.put(0, action_scheduler.Entry(game_time.get_sub_date(minute=minute, old_date=step_start)))
     L4_RT_LOG.clear()
     realtime_settle.get_true_add_time = l4_true_add_spy
     over = True
@@ -352,9 +352,9 @@ def run_l4_step(minute: int, class_period: int) -> tuple:
         over = False
     finally:
         realtime_settle.get_true_add_time = _orig_true_add
-    next_entry = sch.pending.get(l4_id)
+    next_entry = sch.timeline.get(l4_id)
     next_at = next_entry.at if next_entry is not None else None
-    sch.pending = {}
+    sch.timeline = action_scheduler.Timeline()
     return steps, over, list(L4_RT_LOG), next_at, step_start
 
 

@@ -7,4 +7,4 @@ def game_update_flow(add_time: int):
     Keyword arguments:
     add_time -- 玩家行动的分钟数
     """
-    action_scheduler.get_scheduler().advance(add_time)
+    action_scheduler.advance(add_time)
