@@ -568,6 +568,7 @@ def judge_student_pullable(student_id: int) -> bool:
           睡觉看两样（Plan 27 §3.7，写法同 judge_mother_followable）：要睡觉标记，或行为就是睡觉——
              当场爆睡（疲劳满、安眠药、烂醉 → 状态机 44）只改行为、不置标记，只判标记会把她拉起来听课
           今天翘没翘课走 judge_skip_class_today（Plan 31 §3.6）：flag 认日期，前一天挂上、跨天没清掉的不挡
+          本节已结算过听课收益的不拉：她这一节的收益已在坐下时一次结算完，再改写她的行为只会让她留在原地
     """
     if student_id not in cache.character_data:
         return False
@@ -577,6 +578,8 @@ def judge_student_pullable(student_id: int) -> bool:
     if character_data.sp_flag.is_h or character_data.sp_flag.sleep or character_data.behavior.behavior_id == constant.Behavior.SLEEP:
         return False
     if judge_skip_class_today(student_id):
+        return False
+    if growth_handle.judge_attended_this_period(student_id, cache.game_time):
         return False
     return character_data.behavior.behavior_id != constant.Behavior.REST
 

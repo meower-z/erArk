@@ -941,6 +941,9 @@ def teach_pull(cid: int) -> bool:
 
 
 check("正常学生被拉进听课", teach_pull(201))
+growth_handle.get_child_growth(201).last_attend_period = [period_time(0).toordinal(), 0]
+check("本节已结算过听课收益的学生不拉（玩家授课与 303 共用）", not class_ai.judge_student_pullable(201) and not teach_pull(201))
+growth_handle.get_child_growth(201).last_attend_period = []
 student.hit_point = 10
 check("体力 < 30% 的学生不拉（她自己决策时走 721 缺课）", not teach_pull(201))
 student.hit_point = 100
@@ -1791,7 +1794,7 @@ rounds = run_h1((10, 10, 10, 10, 10, 10), [101, 201])
 teach = h1_teach_in_room2()
 check("H1 对照：玩家每步 10 分钟，第 2 节照常只结算一次（学生坐下时 557 先结算，教师到场开讲的 512 去重）",
       all(not one[2] for one in rounds) and len(h1_gains(1)) == 1, H1_GAIN_LOG)
-check("H1 对照：教师开讲时 303 照拉在座等她的学生，开始时刻对齐到开讲时刻", bool(teach) and rounds[0][3] == teach[0][2],
+check("H1 对照：学生 9:45 坐下时本节已结算，教师晚到开讲时 303 不再拉她，她的开始时刻仍是 9:45", bool(teach) and rounds[0][3] == period_time(1) < teach[0][2],
       (rounds[0][3], [(one[2], one[3]) for one in teach]))
 for cid in (101, 201):
     cd = cache.character_data[cid]
