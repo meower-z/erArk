@@ -10,6 +10,7 @@ from Script.Design import handle_ability, update, map_handle, character_behavior
 from Script.UI.Panel import achievement_panel, normal_panel
 from Script.Config import normal_config, game_config
 from Script.UI.Moudle import draw
+from Script.Design import action_scheduler
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -380,13 +381,9 @@ def chara_handle_instruct_common_settle(
         if duration <= 0:
             duration = 1
     character_data.behavior.duration = duration
-    # 如果强制目标等待，则将目标角色状态设置为等待
+    # 如果强制目标等待，则由调度器安排目标等待主体的行为结束
     if target_character_id != character_id and force_taget_wait:
-        instuct_judege.init_character_behavior_start_time(target_character_id, cache.game_time)
-        target_character_data: game_type.Character = cache.character_data[target_character_id]
-        target_character_data.state = constant.CharacterStatus.STATUS_WAIT
-        target_character_data.behavior.behavior_id = constant.Behavior.WAIT
-        target_character_data.behavior.duration = duration
+        action_scheduler.wait_on(target_character_id, character_id, behavior_id)
     # 群交结算
     group_sex_panel.group_sex_settle(character_id, target_character_id, behavior_id)
     # 仅在玩家指令时更新游戏流程
@@ -1478,8 +1475,8 @@ def handle_ask_group_sex():
             if chara_id == 0:
                 continue
             chara_handle_instruct_common_settle(constant.Behavior.JOIN_GROUP_SEX, character_id=chara_id, target_character_id=0)
-            # 手动结算该状态
-            character_behavior.judge_character_status(chara_id)
+            # 立即执行该状态
+            action_scheduler.submit_current(chara_id)
     else:
         now_draw.text = _("\n进入群交模式失败\n")
         for chara_id in refuse_chara_list:
@@ -1535,6 +1532,8 @@ def handle_h_end():
         target_data.behavior.duration = 10
         target_data.behavior.start_time = character_data.behavior.start_time
         target_data.state = constant.CharacterStatus.STATUS_WAIT
+        # 对方从此刻起按写入的等待行事，到期后再自主选择
+        action_scheduler.replan(target_data.cid)
 
     # H结束时的其他处理完毕
     now_draw = draw.WaitDraw()
@@ -1601,6 +1600,8 @@ def handle_hidden_sex_end():
     target_data.behavior.duration = 10
     target_data.behavior.start_time = character_data.behavior.start_time
     target_data.state = constant.CharacterStatus.STATUS_WAIT
+    # 对方从此刻起按写入的等待行事，到期后再自主选择
+    action_scheduler.replan(target_data.cid)
 
     # H结束时的其他处理完毕
     now_draw = draw.WaitDraw()
@@ -1635,6 +1636,8 @@ def handle_exhibitionism_sex_end():
     target_data.behavior.duration = 10
     target_data.behavior.start_time = character_data.behavior.start_time
     target_data.state = constant.CharacterStatus.STATUS_WAIT
+    # 对方从此刻起按写入的等待行事，到期后再自主选择
+    action_scheduler.replan(target_data.cid)
 
     # H结束时的其他处理完毕
     now_draw = draw.WaitDraw()
@@ -1738,6 +1741,8 @@ def handle_end_sex_class():
         target_data.behavior.duration = 10
         target_data.behavior.start_time = character_data.behavior.start_time
         target_data.state = constant.CharacterStatus.STATUS_WAIT
+        # 对方从此刻起按写入的等待行事，到期后再自主选择
+        action_scheduler.replan(target_data.cid)
 
     now_draw = draw.WaitDraw()
     now_draw.width = width
@@ -1770,6 +1775,8 @@ def handle_group_sex_end():
         target_data.behavior.duration = 10
         target_data.behavior.start_time = character_data.behavior.start_time
         target_data.state = constant.CharacterStatus.STATUS_WAIT
+        # 对方从此刻起按写入的等待行事，到期后再自主选择
+        action_scheduler.replan(target_data.cid)
 
     # H结束时的其他处理完毕
     now_draw = draw.WaitDraw()

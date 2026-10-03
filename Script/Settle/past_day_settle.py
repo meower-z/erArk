@@ -71,7 +71,7 @@ def update_new_day():
         if character_data.child_growth is not None:
             growth_data = character_data.child_growth
             # 清翘课flag：翘课只翘一天，次日重新按课表走（Plan 22 §3.19）。
-            # 只清过期的（skip_class_day 早于今天，Plan 32 §3.7 L5）：跨天结算排在 NPC 阶段之后（character_behavior.init_character_behavior），
+            # 只清过期的（skip_class_day 早于今天，Plan 32 §3.7 L5）：旧主循环把跨天结算排在 NPC 阶段之后（现由 action_scheduler 在首个跨天待办前日结，此守卫仍成立），
             #    玩家一步跨过午夜走到次日上课时间时，NPC 已先跑完新一天的早上、549 挂上了新一天的 flag，
             #    无条件清掉的话当天余下节次会重新掷翘课，<翘>、翘课被抓、截短规则的翘课日分支都失效
             if growth_data.skip_class_flag and growth_data.skip_class_day < cache.game_time.toordinal():
