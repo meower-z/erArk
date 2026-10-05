@@ -8,7 +8,7 @@ from Script.Design import (
     attr_calculation,
     handle_premise,
 )
-from Script.Core import cache_control, constant_effect, game_type, get_text
+from Script.Core import cache_control, constant_effect, game_type, get_text, mod_hook
 from Script.Config import normal_config
 from Script.UI.Moudle import draw
 
@@ -1305,12 +1305,14 @@ def handle_target_add_huge_desire_and_submit(
     now_lust = target_data.status_data[12]
     now_lust_multiple = 10000 - int(now_lust *0.016) 
     now_add_lust = now_lust_multiple
-    target_data.status_data[12] += now_add_lust
-    target_data.status_data[12] = min(99999, target_data.status_data[12])
-    change_data.target_change.setdefault(target_data.cid, game_type.TargetChange())
-    target_change: game_type.TargetChange = change_data.target_change[target_data.cid]
-    target_change.status_data.setdefault(12, 0)
-    target_change.status_data[12] += now_add_lust
+    now_add_lust = mod_hook.state_gain(now_add_lust, target_data.cid, 12, None, change_data)
+    if now_add_lust is not None:
+        target_data.status_data[12] += now_add_lust
+        target_data.status_data[12] = min(99999, target_data.status_data[12])
+        change_data.target_change.setdefault(target_data.cid, game_type.TargetChange())
+        target_change: game_type.TargetChange = change_data.target_change[target_data.cid]
+        target_change.status_data.setdefault(12, 0)
+        target_change.status_data[12] += now_add_lust
 
     # 屈服
     target_data.status_data.setdefault(15, 0)

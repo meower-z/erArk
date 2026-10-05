@@ -1,6 +1,6 @@
 import random
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text
+from Script.Core import cache_control, game_type, get_text, mod_hook
 from Script.Design import attr_calculation, handle_premise, second_behavior
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
@@ -450,6 +450,8 @@ def judge_orgasm_edge_success(character_id: int, orgasm_edge_count: dict = dict(
         else:
             orgasm_edge_success_flag = True
             info_draw_text += _("成功寸止了{0}的绝顶，但已经超过了能控制住的极限，随时都可能释放出来\n").format(character_data.name)
+    # mod 钩子：mod 可改写寸止判定结果与判定提示行
+    orgasm_edge_success_flag, info_draw_text = mod_hook.edge_judged((orgasm_edge_success_flag, info_draw_text), character_id, over_count)
     # 绘制提示信息
     info_draw = draw.NormalDraw()
     info_draw.text = info_draw_text

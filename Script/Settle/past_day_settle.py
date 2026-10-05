@@ -5,6 +5,7 @@ from Script.Core import (
     game_path_config,
     game_type,
     get_text,
+    mod_hook,
 )
 from Script.Design import (
     game_time,
@@ -105,7 +106,7 @@ def update_new_day():
             # 清零食物不对劲的flag
             character_data.sp_flag.find_food_weird = False
             # 根据欲望等级增加欲望值
-            character_data.desire_point += random.randint(character_data.ability[33], character_data.ability[33] * 2)
+            character_data.desire_point += mod_hook.daily_desire_growth(random.randint(character_data.ability[33], character_data.ability[33] * 2), character_id)
             # 每周一次，如果已陷落则提供粉红凭证
             if cache.game_time.weekday() == 6:
                 fall_chara_give_pink_voucher(character_id)

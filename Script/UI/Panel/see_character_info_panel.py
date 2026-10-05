@@ -10,6 +10,7 @@ from Script.Core import (
     py_cmd,
     flow_handle,
     constant,
+    mod_hook,
 )
 from Script.Config import game_config, normal_config
 from Script.Design import attr_text, map_handle, attr_calculation, game_time, instuct_judege, character_image
@@ -213,6 +214,8 @@ class SeeCharacterThirdPanel:
                 body_draw,
             ]
         """ 绘制的面板列表 """
+        # mod 钩子：mod 可在肉体情况页追加绘制对象
+        self.draw_list = mod_hook.character_info_draw_list(self.draw_list, character_id, width)
         self.return_list: List[str] = []
         """ 当前面板监听的按钮列表 """
 
