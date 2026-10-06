@@ -187,7 +187,8 @@ def on_edge_judged(value: Tuple[bool, str], character_id: int, over_count: int) 
     keys = store.active_keys(character_id)
     if keys is None or not effects.compile_profile(keys).edge_suppress:
         return value
-    if random.random() >= effects.edge_rescue_chance(over_count):
+    allowance = cache_control.cache.character_data[0].ability[30] * 3
+    if random.random() >= effects.edge_rescue_chance(over_count, allowance):
         return value
     name = cache_control.cache.character_data[character_id].name
     return True, "\n" + _(random.choice(effects.EDGE_RESCUE_TEXTS)).format(NPCName=name) + "\n"

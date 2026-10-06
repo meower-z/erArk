@@ -66,9 +66,11 @@ check("无媚药式：原增量", effects.daily_growth(none, 10, 5) == 5)
 check("媚药式欲望下限 60", aph.desire_floor == 60 and none.desire_floor == 0)
 
 print("==== 寸止压制概率 ====")
-check("k<=2 必成功", effects.edge_rescue_chance(-1) == 1.0 and effects.edge_rescue_chance(-2) == 1.0)
-check("k=3 → 0.85", abs(effects.edge_rescue_chance(-3) - 0.85) < 1e-12)
-check("k=12 → 0.85^10", abs(effects.edge_rescue_chance(-12) - 0.85**10) < 1e-12)
+# 技巧 8：上限 24，k = Σ/2 - 24
+check("Σ=36、Σ=49（k<=2）必成功", effects.edge_rescue_chance(24 - 36, 24) == 1.0 and effects.edge_rescue_chance(24 - 49, 24) == 1.0)
+check("Σ=54（k=3）→ 0.85", abs(effects.edge_rescue_chance(24 - 54, 24) - 0.85) < 1e-12)
+check("Σ=64（k=8）→ 0.85^6", abs(effects.edge_rescue_chance(24 - 64, 24) - 0.85**6) < 1e-12)
+check("Σ=81（k=16.5）→ 0.85^14.5", abs(effects.edge_rescue_chance(24 - 81, 24) - 0.85**14.5) < 1e-12)
 check("寸止压制标志", effects.compile_profile(frozenset({"edge_suppress"})).edge_suppress and not none.edge_suppress)
 
 print("==== 槽位与确认 ====")

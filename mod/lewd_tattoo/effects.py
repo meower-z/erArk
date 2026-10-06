@@ -229,15 +229,17 @@ def plan_gain(profile: Profile, state_id: int, value: int) -> GainPlan:
     return GainPlan(main, False, side)
 
 
-def edge_rescue_chance(over_count: int) -> float:
+def edge_rescue_chance(over_count: int, allowance: int) -> float:
     """
-    寸止失败后淫纹追加成功的概率：k = -over_count，p = 0.85 ** max(k - 2, 0)
+    寸止失败后淫纹追加成功的概率：寸止次数减半后再算超出量，k = Σ寸止次数² / 2 - 技巧*3，p = 0.85 ** max(k - 2, 0)
     Keyword arguments:
     over_count -- 本体算出的 技巧*3 - Σ寸止次数²（失败时必为负）
+    allowance -- 本体的寸止上限 技巧*3
     Return arguments:
     float -- 追加成功概率，k<=2 时为 1.0
     """
-    return 0.85 ** max(-over_count - 2, 0)
+    edge_sum = allowance - over_count
+    return 0.85 ** max(edge_sum / 2 - allowance - 2, 0)
 
 
 def daily_growth(profile: Profile, desire_point: int, growth: int) -> int:
