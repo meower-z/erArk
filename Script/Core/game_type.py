@@ -1841,6 +1841,8 @@ class Character:
         """ 角色的催眠情况 """
         self.author_flag: AUTHOR_FLAG = AUTHOR_FLAG()
         """ 角色口上作者变量 """
+        self.mod_data: Dict[str, dict] = {}
+        """ mod 数据：mod_id -> 该 mod 的存档数据（只许内建类型、字符串键） """
 
 
 class Cache:

@@ -1,0 +1,21 @@
+{
+    "mod_id": "lewd_tattoo",
+    "name": "淫纹",
+    "version": "0.1.0",
+    "author": "",
+    "description": "为陷落等级4或被监禁的干员刻印/调整小腹淫纹（非H时可用，每次消耗理智100，不消耗时间），在10格槽位内组合效果：单部位快感强化、全部位快感强化、苦痛快感化、负面情感快感化、媚药式、快感联结I/II、寸止压制。\n\n只通过本体 Script/Core/mod_hook.py 的钩子点生效；关闭本 mod 后存档照常读取，淫纹数据原样保留但不生效。",
+    "game_version": "",
+    "dependencies": [],
+    "incompatible": [],
+    "load_priority": 100,
+    "scripts": [
+        {
+            "file": "entry.py",
+            "functions": []
+        }
+    ],
+    "assets": {
+        "data": [],
+        "image": []
+    }
+}

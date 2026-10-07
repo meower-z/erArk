@@ -18,7 +18,7 @@ from Script.Design import (
     second_behavior,
     character_move,
 )
-from Script.Core import cache_control, constant, constant_effect, game_type, get_text
+from Script.Core import cache_control, constant, constant_effect, game_type, get_text, mod_hook
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from Script.System.Instruct_System import handle_instruct
@@ -669,6 +669,7 @@ def handle_scene_all_characters_desire_point_zero(
         if chara_id == 0:
             continue
         character_data.desire_point = 0
+        mod_hook.desire_written(character_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_BOTH_SMALL_HIT_POINT)
@@ -6993,6 +6994,7 @@ def handle_end_h_add_hpmp_max(
             info_text += _("在激烈的H之后，{0}的体力上限增加了{1}，气力上限增加了{2}").format(now_character_data.name, orgasm_count * 2, orgasm_count * 3)
             # 减少欲望值
             now_character_data.desire_point  = max(int(now_character_data.desire_point - orgasm_count * 20), 0)
+            mod_hook.desire_written(now_character_data)
             # 玩家则额外增加精液量上限
             if chara_id == 0 and now_character_data.semen_point_max < 999:
                 now_character_data.semen_point_max += orgasm_count
@@ -7058,6 +7060,7 @@ def handle_group_sex_end_h_add_hpmp_max(
             info_text += _("在激烈的H之后，{0}的体力上限增加了{1}，气力上限增加了{2}").format(now_character_data.name, orgasm_count * 2, orgasm_count * 3)
             # 减少欲望值
             now_character_data.desire_point  = max(now_character_data.desire_point - orgasm_count * 20, 0)
+            mod_hook.desire_written(now_character_data)
             # 玩家则额外增加精液量上限
             if chara_id == 0 and now_character_data.semen_point_max < 999:
                 now_character_data.semen_point_max += orgasm_count
@@ -8342,12 +8345,14 @@ def handle_sing_add_adjust(
                         now_add_lust *= (5 - adjust)
                         now_add_lust += now_lust / 10
                     now_add_lust = int(now_add_lust)
-                    target_data.status_data[i] += now_add_lust
-                    target_data.status_data[i] = min(99999, target_data.status_data[i])
-                    change_data.target_change.setdefault(target_data.cid, game_type.TargetChange())
-                    target_change: game_type.TargetChange = change_data.target_change[target_data.cid]
-                    target_change.status_data.setdefault(i, 0)
-                    target_change.status_data[i] += now_add_lust
+                    now_add_lust = mod_hook.state_gain(now_add_lust, target_data.cid, i, None, change_data)
+                    if now_add_lust is not None:
+                        target_data.status_data[i] += now_add_lust
+                        target_data.status_data[i] = min(99999, target_data.status_data[i])
+                        change_data.target_change.setdefault(target_data.cid, game_type.TargetChange())
+                        target_change: game_type.TargetChange = change_data.target_change[target_data.cid]
+                        target_change.status_data.setdefault(i, 0)
+                        target_change.status_data[i] += now_add_lust
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.PLAY_INSTRUMENT_ADD_ADJUST)
@@ -8444,12 +8449,14 @@ def handle_play_instrument_add_adjust(
                         now_add_lust *= (5 - adjust)
                         now_add_lust += now_lust / 8
                     now_add_lust = int(now_add_lust)
-                    target_data.status_data[i] += now_add_lust
-                    target_data.status_data[i] = min(99999, target_data.status_data[i])
-                    change_data.target_change.setdefault(target_data.cid, game_type.TargetChange())
-                    target_change: game_type.TargetChange = change_data.target_change[target_data.cid]
-                    target_change.status_data.setdefault(i, 0)
-                    target_change.status_data[i] += now_add_lust
+                    now_add_lust = mod_hook.state_gain(now_add_lust, target_data.cid, i, None, change_data)
+                    if now_add_lust is not None:
+                        target_data.status_data[i] += now_add_lust
+                        target_data.status_data[i] = min(99999, target_data.status_data[i])
+                        change_data.target_change.setdefault(target_data.cid, game_type.TargetChange())
+                        target_change: game_type.TargetChange = change_data.target_change[target_data.cid]
+                        target_change.status_data.setdefault(i, 0)
+                        target_change.status_data[i] += now_add_lust
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TECH_ADD_S_ADJUST)
@@ -9604,11 +9611,13 @@ def handle_high_obscenity_failed_adjust(
         now_add_lust *= adjust
         now_add_lust += now_lust / 2
         now_add_lust = int(now_add_lust)
-        target_data.status_data[20] += now_add_lust
-        target_data.status_data[20] = min(99999, target_data.status_data[20])
-        change_data.target_change.setdefault(target_data.cid, game_type.TargetChange())
-        target_change.status_data.setdefault(20, 0)
-        target_change.status_data[20] = now_add_lust
+        now_add_lust = mod_hook.state_gain(now_add_lust, target_data.cid, 20, None, change_data)
+        if now_add_lust is not None:
+            target_data.status_data[20] += now_add_lust
+            target_data.status_data[20] = min(99999, target_data.status_data[20])
+            change_data.target_change.setdefault(target_data.cid, game_type.TargetChange())
+            target_change.status_data.setdefault(20, 0)
+            target_change.status_data[20] = now_add_lust
         # 加愤怒
         target_data.angry_point += 100
         target_data.sp_flag.angry_with_player = True
@@ -9661,11 +9670,13 @@ def handle_do_h_failed_adjust(
         now_add_lust *= adjust
         now_add_lust += now_lust / 2
         now_add_lust = int(now_add_lust)
-        target_data.status_data[20] += now_add_lust
-        target_data.status_data[20] = min(99999, target_data.status_data[20])
-        change_data.target_change.setdefault(target_data.cid, game_type.TargetChange())
-        target_change.status_data.setdefault(20, 0)
-        target_change.status_data[20] = now_add_lust
+        now_add_lust = mod_hook.state_gain(now_add_lust, target_data.cid, 20, None, change_data)
+        if now_add_lust is not None:
+            target_data.status_data[20] += now_add_lust
+            target_data.status_data[20] = min(99999, target_data.status_data[20])
+            change_data.target_change.setdefault(target_data.cid, game_type.TargetChange())
+            target_change.status_data.setdefault(20, 0)
+            target_change.status_data[20] = now_add_lust
         # 加愤怒
         target_data.angry_point += 100
         target_data.sp_flag.angry_with_player = True
@@ -9906,6 +9917,7 @@ def handle_target_desire_point_zero(
     character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[character_data.target_character_id]
     target_data.desire_point = 0
+    mod_hook.desire_written(target_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.DESIRE_POINT_TO_79)
@@ -9970,6 +9982,7 @@ def handle_desire_point_to_0(
         return
     character_data: game_type.Character = cache.character_data[character_id]
     character_data.desire_point = 0
+    mod_hook.desire_written(character_data)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_SMALL_SANITY_POINT)
