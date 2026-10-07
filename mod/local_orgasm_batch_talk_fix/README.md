@@ -36,60 +36,47 @@ NPC 在一次结算中多个部位同时绝顶时，每个部位都会被逐条�
 行为本来就在本 mod 的接管集合里，不会重复出口上。玩家不进批次，其部位去重完全由
 上游过滤负责。
 
-## 实现方式（wrapper，不复制上游函数体）
+## 实现方式（钩子 + 薄包装，不复制上游函数体）
 
-只替换一个函数：`Script.Design.second_behavior.second_behavior_effect`。
+本体只有一行切口：`second_behavior_effect` 的逐条结算循环在决定"这一条画不画口上"之后，
+调用 `talk_flag = mod_hook.second_behavior_talk(talk_flag, character_id, second_behavior_id)`。
+这一行位于离屏早退之后、任何二段效果之前。
 
-`patched_second_behavior_effect` 的做法：
+mod 分两块：
 
-1. 玩家、以及同角色重入（外层已经在批次中）直接 `call_original` 走上游原逻辑。
-2. 离屏守卫：角色位置与玩家不同、且 `behavior.move_src` 也不是玩家位置时，直接
-   `call_original`，不绘制批次。
-3. NPC：先快照本次待结算的非零二段行为 id（趁上游还没把行为值归零）。
-4. **在 `call_original` 之前**把合并批次整块绘制完。
-5. 随后临时把 `Script.Design.talk.handle_second_talk` 换成"只吞不画"的接管版本，
-   再 `call_original` 调用上游原函数，`try/finally` 保证恢复。接管版本吞掉已被批次
-   接管的行为口上，未接管的行为原样透传。
+1. `patched_second_behavior_effect` 包装 `Script.Design.second_behavior.second_behavior_effect`
+   （`mod_info.json` 声明）。对 NPC 的这次调用，先快照本次待结算的非零二段行为 id，
+   开一个"批次"，再 `call_original`；`try/finally` 保证结束后关闭批次。
+   玩家、以及同角色重入（外层批次还开着）直接 `call_original`。
+2. `filter_second_talk` 挂在 `mod_hook.second_behavior_talk` 上。批次第一次被问到时整块
+   绘制，之后对被批次接管的行为回答"不画"，其余行为保持本体的判定。
 
-批次必须画在原函数之前：上游对同部位非最高程度的绝顶行为是**跳过口上但照常执行效果**
-（`second_behavior.py` 的结算循环 + `Script/Settle/Second_effect.py`）。一次结算里可以
-同时出现 `c_orgasm_small` 与 `c_orgasm_strong`，小绝顶排在前面、效果先落地，就会改掉
-"初次高潮"一类前提（如歌蕾蒂娅 `c_orgasm_strong` 的专属口上要求
-`CVP_A1_E|12_E_0`）。若把批次推迟到口上时点绘制，取到的就是效果之后的状态，专属口上会
-被漏掉。
+这样有两点自然成立，不需要 mod 自己去复制本体条件：
 
-上游 `handle_second_talk` 没有"只绘正文不绘标题"的开关（PR #253 曾为它加 `draw_title`
-参数）。本 mod 不改 `Script/`，改用等价路径实现：
+- **离屏角色不画批次**：本体离屏早退时根本不进循环，钩子不会被调用。
+- **批次取到的是效果之前的状态**：第一次被问到时循环还没执行任何效果。
+  这一点很重要：本体对同部位非最高程度的绝顶行为是**跳过口上但照常执行效果**。
+  一次结算里可以同时出现 `c_orgasm_small` 与 `c_orgasm_strong`，小绝顶排在前面、
+  效果先落地，会改掉"初次高潮"一类前提（如歌蕾蒂娅 `c_orgasm_strong` 的专属口上要求
+  `CVP_A1_E|12_E_0`）。批次在第一条之前画完，专属口上不会漏掉。
+
+本体 `handle_second_talk` 没有"只绘正文不绘标题"的开关（PR #253 曾为它加 `draw_title`
+参数）。本 mod 改用等价路径：
 `talk.handle_talk_sub` → `talk.choice_talk_from_talk_data` → `talk.handle_talk_draw(..., second_behavior_id="", ...)`。
 标题地文由 `handle_talk_draw` 的 `second_behavior_id` 参数触发，置空即只绘正文。
 
-部位与程度的解析直接复用上游 `Script.Settle.orgasm_settle.get_orgasm_part_and_degree`，
-不在 mod 内另写一套规则。
+部位与程度的解析直接复用本体 `Script.Settle.orgasm_settle.get_orgasm_part_and_degree`。
 
 脚本顶层有一句 `from Script.Design import handle_npc_ai` 的预导入：mod 加载时
 `Script.Design.second_behavior` 还没被导入过，若由 mod 管理器直接以它为根导入，会撞上
 `settle_behavior` → `handle_instruct` → `update` → `character_behavior` → `Script.Settle`
-→ `item_effect` 的循环导入而加载失败。先以 `handle_npc_ai` 为根把依赖链完整导入一遍即可
-（`local_orgasm_chain_gate_fix` 因为函数列表第一项就是 `handle_npc_ai`，等价地绕开了同一个坑）。
-
-## 上游漂移风险
-
-- **离屏守卫必须与上游 `second_behavior_effect` 的位置早退条件保持一致。** 上游在
-  `角色位置 != 玩家位置 and behavior.move_src != 玩家位置` 时走 `must_show_talk_check`
-  分支直接返回、不显示口上；本 mod 因为改在原函数之前绘制，必须自己复制这一条件。
-  上游一旦改这个条件，本 mod 的守卫要同步改，否则会把离屏角色的绝顶口上画上屏。
-  代码里该守卫处有同样的注释。
-- 接管钩子是改写 `talk` 模块的全局属性。已加同角色重入守卫
-  （`_BATCH_ACTIVE_CHARACTER_IDS`），避免同一角色的内外层批次互相串扰；当前基线里不
-  存在这种调用链，属于结构性防御。跨角色嵌套本来就各管各的接管集合，不受影响。
+→ `item_effect` 的循环导入而加载失败。先以 `handle_npc_ai` 为根把依赖链完整导入一遍即可。
 
 ## 边界
 
 - 只改口上显示，不改任何数值结算。
-- 上游函数体怎么改都不影响本 mod，只要 `second_behavior_effect` 仍通过
-  `talk.handle_second_talk` 输出二段口上、且位置早退条件不变（见"上游漂移风险"）。
-- 若上游改名或不再走 `talk.handle_second_talk`，本 mod 会退化为"批次不绘制、
-  全部按上游原样逐条显示"，不会报错也不会丢结算。
+- 本体函数体怎么改都不影响本 mod，只要钩子那一行仍在循环里、位于效果之前。
+- 同角色嵌套调用 `second_behavior_effect` 在正常游玩中不会发生；若发生，内层沿用外层批次。
 
 ## 上游状态
 

@@ -1,5 +1,5 @@
 from types import FunctionType
-from Script.Core import cache_control, constant, game_type, get_text
+from Script.Core import cache_control, constant, game_type, get_text, mod_hook
 from Script.Design import handle_premise, talk, settle_behavior
 from Script.System.First_Record_System import first_record_handle
 from Script.UI.Moudle import draw
@@ -216,6 +216,7 @@ def second_behavior_effect(
                 orgasm_part, orgasm_degree = orgasm_settle.get_orgasm_part_and_degree(second_behavior_id)
                 if orgasm_part is not None and orgasm_degree < part_max_degree_dict.get(orgasm_part, -1):
                     talk_flag = False
+            talk_flag = mod_hook.second_behavior_talk(talk_flag, character_id, second_behavior_id)
             # 触发二段行为的口上
             if talk_flag:
                 talk.handle_second_talk(character_id, second_behavior_id)

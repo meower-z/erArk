@@ -131,6 +131,10 @@ hotel_room_price = FoldHook("hotel_room_price")
 """ 预订酒店房间的价格表：值=[标间, 情趣主题房, 顶级套房] 的粉红凭证价格(list)；无上下文；返回新价格表。
     调用点 normal_panel.Order_Hotel_Room_Panel.order_room """
 
+second_behavior_talk = FoldHook("second_behavior_talk")
+""" 二段行为是否绘制口上：值=本体的判定(bool)；上下文=(character_id, second_behavior_id)；返回新判定。
+    调用点 second_behavior.second_behavior_effect 的逐条结算循环（已过离屏早退，结算效果之前） """
+
 # ========== mod_data 形状约定（本体拥有这条约定，所以校验器也放在本体）==========
 
 
