@@ -51,8 +51,8 @@ check("心理快感也吃全部位", p.main == 15, p)
 
 print("==== 转化与欲情 ====")
 check("苦痛快感化：17 转心理", plan(["pain_to_mind"], 17, 30).to_mind)
-check("无苦痛快感化时 17 原样", plan(["negative_to_mind"], 17, 30) == effects.GainPlan(30, False, ()))
-check("负面情感快感化：18/19/20 转心理", all(plan(["negative_to_mind"], sid, 30).to_mind for sid in (18, 19, 20)))
+check("苦痛快感化不管 18/19/20", not any(plan(["pain_to_mind"], sid, 30).to_mind for sid in (18, 19, 20)))
+check("负面情感快感化：17/18/19/20 都转心理", all(plan(["negative_to_mind"], sid, 30).to_mind for sid in (17, 18, 19, 20)))
 check("媚药式：欲情 ×1.5 取整", plan(["aphrodisiac"], 12, 33).main == 49)
 check("无媚药式：欲情原样", plan(["all_boost"], 12, 33).main == 33)
 check("非快感非转化状态原样", plan(["all_boost", "link1"], 15, 40) == effects.GainPlan(40, False, ()))
@@ -65,12 +65,24 @@ check("dp=90,g=5：增量 10", effects.daily_growth(aph, 90, 5) == 10)
 check("无媚药式：原增量", effects.daily_growth(none, 10, 5) == 5)
 check("媚药式欲望下限 60", aph.desire_floor == 60 and none.desire_floor == 0)
 
-print("==== 寸止压制概率 ====")
-# 技巧 8：上限 24，k = Σ/2 - 24
-check("Σ=36、Σ=49（k<=2）必成功", effects.edge_rescue_chance(24 - 36, 24) == 1.0 and effects.edge_rescue_chance(24 - 49, 24) == 1.0)
-check("Σ=54（k=3）→ 0.85", abs(effects.edge_rescue_chance(24 - 54, 24) - 0.85) < 1e-12)
-check("Σ=64（k=8）→ 0.85^6", abs(effects.edge_rescue_chance(24 - 64, 24) - 0.85**6) < 1e-12)
-check("Σ=81（k=16.5）→ 0.85^14.5", abs(effects.edge_rescue_chance(24 - 81, 24) - 0.85**14.5) < 1e-12)
+print("==== 寸止压制判定 ====")
+
+
+def rolls(*values):
+    """ 按顺序给出随机数；用完再调用就报错，用来确认不该掷骰时没掷 """
+    it = iter(values)
+    return lambda: next(it)
+
+
+judge = effects.judge_edge_suppress
+check("强度 1、耐久上限 10", effects.EDGE_POWER == 1 and effects.EDGE_DURABILITY == 10)
+check("超出 <=1 必成功，耐久不变", judge(1, 10, rolls(0.999)) == ("rescue", 10) and judge(-5, 10, rolls(0.999)) == ("rescue", 10))
+check("超出 3：首判成功率 0.85^2", judge(3, 10, rolls(0.72)) == ("rescue", 10) and judge(3, 10, rolls(0.73, 0.84)) == ("rescue", 9))
+check("每失败一次耐久 -1、阈值临时 +1", judge(3, 10, rolls(0.99, 0.99, 0.999)) == ("rescue", 8))
+check("一次判定里耐久从 10 掉到 0：勉强成功，耐久置 -1", judge(30, 10, rolls(*[0.99] * 10)) == ("exhaust", -1))
+check("耐久 1 掉到 0 也算勉强成功", judge(30, 1, rolls(0.99)) == ("exhaust", -1))
+check("耐久 -1：直接失败，不掷骰", judge(30, -1, rolls()) == ("fail", -1) and judge(0, -1, rolls()) == ("fail", -1))
+check("勉强成功提示带名字占位", "{NPCName}" in effects.EDGE_EXHAUST_TEXT)
 check("寸止压制标志", effects.compile_profile(frozenset({"edge_suppress"})).edge_suppress and not none.edge_suppress)
 
 print("==== 槽位与确认 ====")

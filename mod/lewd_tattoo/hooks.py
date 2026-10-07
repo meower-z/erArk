@@ -6,7 +6,7 @@
 异常一律直接传播（mod_hook 约定），不吞错后用原值继续。
 """
 import random
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from Script.Core import cache_control, game_type, get_text, mod_hook
 
@@ -15,6 +15,8 @@ from . import MOD_ID, effects, store
 _ = get_text._
 """ 翻译api """
 
+_durability: Dict[int, int] = {}
+""" 寸止压制的淫纹耐久 {角色id: 耐久}；只在一轮寸止内有意义（H 中不能存档），所以放模块变量，不进存档 """
 BEAST_TALENTS = (111, 112, 113)
 """ 兽耳/兽角/兽尾：有任一素质才有兽部快感 """
 
@@ -177,21 +179,25 @@ def on_edge_judged(value: Tuple[bool, str], character_id: int, over_count: int) 
     Keyword arguments:
     value -- (本体判定是否成功, 本体提示文本)
     character_id -- 被寸止的角色id
-    over_count -- 本体的 over_count
+    over_count -- 本体的 over_count（技巧*3 - Σ寸止次数²）
     Return arguments:
     Tuple[bool, str] -- 新的 (是否成功, 提示文本)
     """
-    success, _text = value
-    if success:
-        return value
     keys = store.active_keys(character_id)
     if keys is None or not effects.compile_profile(keys).edge_suppress:
         return value
-    allowance = cache_control.cache.character_data[0].ability[30] * 3
-    if random.random() >= effects.edge_rescue_chance(over_count, allowance):
+    character_data = cache_control.cache.character_data[character_id]
+    # 本次之前的寸止计数全为 0 = 新一轮寸止开始（绝顶释放、H 结束、重新开启寸止都会清零），耐久回满；本体成功时也要检查，否则旧耐久会带进新一轮
+    if not any(character_data.h_state.orgasm_edge_count.values()):
+        _durability[character_id] = effects.EDGE_DURABILITY
+    success, _text = value
+    if success:
         return value
-    name = cache_control.cache.character_data[character_id].name
-    return True, "\n" + _(random.choice(effects.EDGE_RESCUE_TEXTS)).format(NPCName=name) + "\n"
+    outcome, _durability[character_id] = effects.judge_edge_suppress(-over_count, _durability.get(character_id, effects.EDGE_DURABILITY), random.random)
+    if outcome == "fail":
+        return value
+    text = effects.EDGE_EXHAUST_TEXT if outcome == "exhaust" else random.choice(effects.EDGE_RESCUE_TEXTS)
+    return True, "\n" + _(text).format(NPCName=character_data.name) + "\n"
 
 
 def on_daily_desire_growth(growth: int, character_id: int) -> int:

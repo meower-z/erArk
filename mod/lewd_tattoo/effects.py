@@ -7,7 +7,7 @@
 """
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Dict, FrozenSet, Iterable, NamedTuple, Optional, Tuple
+from typing import Callable, Dict, FrozenSet, Iterable, NamedTuple, Optional, Tuple
 
 SLOT_CAP = 10
 """ 槽位上限（spec：以后可能调整，只改这里） """
@@ -72,7 +72,7 @@ def _build_effects() -> Tuple[EffectDef, ...]:
     others = (
         EffectDef("all_boost", "全部位快感强化", 4, "all_boost", "所有部位快感获得×1.5"),
         EffectDef("pain_to_mind", "苦痛快感化", 2, "pain_to_mind", "苦痛增加时改为获得心理快感"),
-        EffectDef("negative_to_mind", "负面情感快感化", 3, "negative_to_mind", "恐怖、抑郁、反感增加时改为获得心理快感"),
+        EffectDef("negative_to_mind", "负面情感快感化", 3, "negative_to_mind", "苦痛、恐怖、抑郁、反感增加时改为获得心理快感"),
         EffectDef("aphrodisiac", "媚药式", 2, "aphrodisiac", f"欲望值不低于{DESIRE_FLOOR}，每日欲望增长×2，欲情获得×1.5"),
         EffectDef("link1", "快感联结I", 4, "link1", "某部位获得快感时，其余部位各获得其0.1倍"),
         EffectDef("link2", "快感联结II", 6, "link2", "某部位获得快感时，本部位只得0.8倍，其余部位各获得其0.2倍"),
@@ -95,7 +95,7 @@ class Profile:
     part_mult -- 快感状态id -> 增量倍率（单部位×全部位已相乘）
     own_scale -- 本部位最终保留比例（联结II 为 0.8，否则 1.0）
     spread -- 每个其他快感部位获得的裸增量比例（联结I 0.1 + 联结II 0.2，同带为 0.3）
-    to_mind -- 需要转成心理快感的状态id集合（苦痛 17；负面 18/19/20）
+    to_mind -- 需要转成心理快感的状态id集合（苦痛快感化 17；负面情感快感化 17/18/19/20）
     desire_mult -- 欲情(12)增量倍率
     desire_floor -- 欲望值下限（媚药式为 60，否则 0）
     daily_growth_mult -- 每日欲望增长倍率
@@ -145,6 +145,8 @@ def compile_profile(keys: FrozenSet[str]) -> Profile:
     if "pain_to_mind" in kinds:
         to_mind.add(PAIN)
     if "negative_to_mind" in kinds:
+        # 负面情感快感化包含苦痛：苦痛快感化是只管苦痛的便宜版
+        to_mind.add(PAIN)
         to_mind.update(NEGATIVE)
     aphrodisiac = "aphrodisiac" in kinds
     return Profile(
@@ -229,17 +231,33 @@ def plan_gain(profile: Profile, state_id: int, value: int) -> GainPlan:
     return GainPlan(main, False, side)
 
 
-def edge_rescue_chance(over_count: int, allowance: int) -> float:
+EDGE_POWER = 1
+""" 淫纹强度：寸止压制的阈值 = 技巧*3 + 强度 """
+EDGE_DURABILITY = 10
+""" 淫纹耐久上限：寸止计数清零（绝顶释放、H 结束、重新开启寸止）时恢复到此值 """
+
+
+def judge_edge_suppress(excess: int, durability: int, roll: Callable[[], float]) -> Tuple[str, int]:
     """
-    寸止失败后淫纹追加成功的概率：寸止次数减半后再算超出量，k = Σ寸止次数² / 2 - 技巧*3，p = 0.85 ** max(k - 2, 0)
+    本体寸止失败后的淫纹判定（纯函数）
+    第 i 次判定（i 从 0 起）成功率 = 0.85 ** max(excess - 强度 - i, 0)；每失败一次耐久 -1，下一次阈值临时 +1 作补偿。
+    耐久在这次判定中降到 0 时"勉强成功"，耐久置 -1；耐久 <= -1 时直接失败，不再判定
     Keyword arguments:
-    over_count -- 本体算出的 技巧*3 - Σ寸止次数²（失败时必为负）
-    allowance -- 本体的寸止上限 技巧*3
+    excess -- 超出本体上限的量：Σ寸止次数² - 技巧*3（即 -over_count，本体失败时 > 0）
+    durability -- 判定前的耐久
+    roll -- 随机数函数，返回 [0, 1)
     Return arguments:
-    float -- 追加成功概率，k<=2 时为 1.0
+    Tuple[str, int] -- (结果 "rescue" 压制成功 / "exhaust" 勉强成功 / "fail" 失败, 判定后的耐久)
     """
-    edge_sum = allowance - over_count
-    return 0.85 ** max(edge_sum / 2 - allowance - 2, 0)
+    if durability <= -1:
+        return "fail", durability
+    tries = 0
+    while durability > 0:
+        if roll() < 0.85 ** max(excess - EDGE_POWER - tries, 0):
+            return "rescue", durability
+        durability -= 1
+        tries += 1
+    return "exhaust", -1
 
 
 def daily_growth(profile: Profile, desire_point: int, growth: int) -> int:
@@ -261,3 +279,5 @@ EDGE_RESCUE_TEXTS: Tuple[str, str] = (
     "{NPCName}的大量快感被淫纹抑制，浑身剧烈颤抖却无法高潮",
 )
 """ 寸止压制成功时二选一（各 50%）的提示，替换本体"尝试寸止…但失败了"那一行 """
+EDGE_EXHAUST_TEXT = "{NPCName}体内积蓄的快感已经超过淫纹能够压制的极限，淫纹耗尽能量才勉强压制住这一次绝顶爆发"
+""" 淫纹耐久耗尽、勉强成功时的提示 """

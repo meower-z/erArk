@@ -159,7 +159,7 @@ status, _c = settle(17, ["pain_to_mind", "link1"])
 link_side = effects.plan_gain(effects.compile_profile(frozenset({"link1"})), 23, m_from_pain).side
 check("转出的心理快感也带联结", status[4] == dict(link_side).get(4, 0) and status[4] > 0, status[4])
 status, _c = settle(17, ["negative_to_mind"])
-check("只有负面情感快感化时苦痛照常", status[17] == pain_raw)
+check("负面情感快感化也转苦痛", status[17] == 0 and status[23] == m_from_pain, (status[17], status[23]))
 check("没有转化时心理快感参照值为正", m_ref > 0)
 
 # 直写点：直写点的调用形状是 state_gain(v, cid, sid, None, change_data)；先按这个形状直接调钩子，再跑一个真实直写函数（item_effect 媚药）
@@ -204,16 +204,25 @@ check("没淫纹原样", mod_hook.daily_desire_growth(5, NPC_ID) == 5)
 # ==== 寸止压制 ====
 section("寸止压制")
 fail_text = "\n尝试寸止测试干员的绝顶，但失败了\n"
+rescue_texts = {_(t).format(NPCName="测试干员") for t in effects.EDGE_RESCUE_TEXTS}
+exhaust_text = _(effects.EDGE_EXHAUST_TEXT).format(NPCName="测试干员")
 set_tattoo(["edge_suppress"])
-PL.ability[30] = 8  # 上限 24，k = Σ/2 - 24
-random.seed(1)
-flag, text = mod_hook.edge_judged((False, fail_text), NPC_ID, 24 - 49)
-check("Σ=49（k<=2）必定压制成功", flag is True)
-check("提示替换为 spec 两条之一并带名字", text.strip() in {_(t).format(NPCName="测试干员") for t in effects.EDGE_RESCUE_TEXTS}, text)
+PL.ability[30] = 8  # 阈值 = 24 + 强度 1；over_count = 24 - Σ寸止次数²
+npc.h_state.orgasm_edge_count = {}
 check("本体成功时原样", mod_hook.edge_judged((True, "x"), NPC_ID, 5) == (True, "x"))
-random.seed(2)
-hits = sum(mod_hook.edge_judged((False, fail_text), NPC_ID, 24 - 54)[0] for _i in range(2000))
-check("Σ=54（k=3）成功率约 0.85", 1600 < hits < 1800, hits)
+flag, text = mod_hook.edge_judged((False, fail_text), NPC_ID, 24 - 25)
+check("超出 1 必定压制成功", flag is True)
+check("提示替换为两条之一并带名字", text.strip() in rescue_texts, text)
+# 计数非零 = 同一轮寸止里，耐久不回满
+npc.h_state.orgasm_edge_count = {"v": 8}
+random.seed(3)
+flag, text = mod_hook.edge_judged((False, fail_text), NPC_ID, 24 - 100)
+check("超出很多：耐久耗尽，勉强成功", flag is True and text.strip() == exhaust_text, text)
+check("耗尽后直接失败", mod_hook.edge_judged((False, fail_text), NPC_ID, 24 - 25) == (False, fail_text))
+check("本体成功不让耐久回满", mod_hook.edge_judged((True, "x"), NPC_ID, 5) == (True, "x") and mod_hook.edge_judged((False, fail_text), NPC_ID, 24 - 25) == (False, fail_text))
+npc.h_state.orgasm_edge_count = {"v": 0}
+check("寸止计数清零后耐久回满", mod_hook.edge_judged((False, fail_text), NPC_ID, 24 - 25)[0] is True)
+npc.h_state.orgasm_edge_count = {}
 set_tattoo(["link1"])
 check("无寸止压制原样", mod_hook.edge_judged((False, fail_text), NPC_ID, -2) == (False, fail_text))
 
