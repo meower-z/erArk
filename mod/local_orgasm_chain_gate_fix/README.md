@@ -15,28 +15,28 @@ NPC 的实际高潮释放统一在 `Script/Settle/orgasm_settle.py` 的 `orgasm_
 
 ## 修复范围
 
-新增角色临时结算标记 `sp_flag.multi_orgasm_this_player_action`（读写走 getattr/直接赋值，
-不依赖 SPECIAL_FLAG 预声明该字段）：
+mod 模块里维护一个门禁名单 `_gated_ids`（本次点击内已多重绝顶的 NPC id），不写进角色数据。
+四个 `call_original` 薄包装：
 
 - 替换 `Script.Design.second_behavior.character_get_second_behavior`：多重绝顶会触发唯一的
   `plural_orgasm_{part_count}` 二段行为（`orgasm_settle` 内 `part_count >= 2` 才调用；时停蓄积
-  与成功寸止都在循环内提前 `continue`、`part_count` 保持 0，不会走到该调用）。wrapper 检测到
-  `plural_orgasm_*` 且 `character_id` 非 0（排除玩家）时为该 NPC 置位标记。
-- 替换 `Script.Design.update.game_update_flow`：进入前深度为 0（最外层点击）时重置全体 NPC 的
-  标记；嵌套更新（深度 >0）复用同一标记，不重置。
-- 替换 `Script.Design.handle_npc_ai.find_character_target`：已置位的 NPC 直接加入
+  与成功寸止都在循环内提前 `continue`、`part_count` 保持 0，不会走到该调用）。包装检测到
+  `plural_orgasm_*` 且 `character_id` 非 0（排除玩家）时把该 NPC 记入门禁名单。
+- 替换 `Script.Design.update.game_update_flow`：进入前深度为 0（最外层点击）时清空门禁名单；
+  嵌套更新（深度 >0）沿用同一名单。
+- 替换 `Script.Design.handle_npc_ai.find_character_target`：门禁中的 NPC 直接加入
   `over_behavior_character` 并返回，由 `character_behavior()` 继续走 `judge_character_status()`
   等被动结算尾部，不生成新目标。
-- 替换 `Script.Design.handle_npc_ai_in_h.npc_ai_in_group_sex`：已置位的 NPC 早退，不写入自慰
+- 替换 `Script.Design.handle_npc_ai_in_h.npc_ai_in_group_sex`：门禁中的 NPC 早退，不写入自慰
   意图或群交模板占位；保留其现有群交参与关系，随后同一角色仍会到普通入口完成被动结算尾部。
 
 ## 边界
 
-- 仅拦截**多重绝顶**后的再调度：单部位高潮不置位、不受影响。
-- 玩家（`character_id == 0`）、成功寸止、时停蓄积均不置位。
+- 仅拦截**多重绝顶**后的再调度：单部位高潮不进门禁、不受影响。
+- 玩家（`character_id == 0`）、成功寸止、时停蓄积均不进门禁。
 - 被门禁的 NPC 仍接受刺激、累计快感、结算二段效果与被动高潮，并最终进入完成集合，无循环挂起。
 - 按**玩家点击**恢复，不建立按游戏分钟倒计时的恢复状态；下一次最外层点击开始即解除。
-- 标记随角色存档，但每次最外层点击开始必重置，不产生跨点击/跨存档效果；旧档缺省视为 `False`。
+- 门禁名单只在内存里，不进存档；每次最外层点击开始必清空，不产生跨点击效果。
 
 ## 上游状态
 

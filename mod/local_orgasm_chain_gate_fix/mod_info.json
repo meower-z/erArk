@@ -1,7 +1,7 @@
 {
     "mod_id": "local_orgasm_chain_gate_fix",
     "name": "本地绝顶链式门禁修复",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "author": "local",
     "description": "NPC 多重绝顶后在同一次玩家点击内不再生成新的自主行为，避免同一次点击反复主动、反复绝顶、堆叠大量口上。对应上游已拒绝的 PR #226。",
     "game_version": "2026.05.22",
