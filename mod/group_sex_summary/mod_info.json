@@ -10,7 +10,7 @@
     "load_priority": 10,
     "scripts": [
         {
-            "file": "scripts/group_sex_summary.py",
+            "file": "entry.py",
             "functions": [
                 {
                     "name": "modded_init_character_behavior",
