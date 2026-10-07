@@ -1,381 +1,193 @@
-from collections import defaultdict
-from pathlib import Path
+# -*- coding: UTF-8 -*-
+"""
+群交功能扩展 mod 无头测试：经 ModManager 加载（不改 mod/mod_config.json），用真实本体表与 fixture 角色验证
+覆盖：注册表逐项核对（类型/子类型/名字/大类/web 大小类/身体部位/前提/行为映射）、cid 分配与淫纹 mod 不撞、
+重复 install 无副作用、参与者收集（模板 ∪ 场景、滤掉非 H 与失效id）、三个指令的效果与提示、前提与 web 可见性
+用法：python3 -u mod/group_sex_extension/tests/test_group_sex_extension_mod.py
+"""
+
+import os
 import sys
-from types import ModuleType, SimpleNamespace
+
+TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(TESTS_DIR, "..", "..", "..", "tools", "tests", "education"))
+from _bootstrap import *  # noqa: F401,F403,E402  复用生长养成测试的无头引导（初始化配置、屏蔽绘制、make_character）
+from _bootstrap import SCENE_DORM, SCENE_NURSERY, cache, check, drawn_text, finish, make_character, pl, section  # noqa: E402
+
+from Script.Core import constant, constant_promise, mod_manager  # noqa: E402
+from Script.Design import handle_premise, web_interaction_manager  # noqa: E402
+
+SHARE_BLANKLY_BEFORE = constant.behavior_id_to_instruct_id.get("share_blankly")
+""" 加载 mod 前 share_blankly 对应的指令（mod 不得覆盖） """
+
+# ==== 加载 mod（淫纹 mod 在则先加载，验证两者 cid 不撞） ====
+section("加载")
+manager = mod_manager.ModManager()
+infos = {info.mod_id: info for info in manager.scan_mods()}
+LOADED = [mod_id for mod_id in ("lewd_tattoo", "group_sex_extension") if mod_id in infos]
+for mod_id in LOADED:
+    manager._load_single_mod(infos[mod_id])
+check("淫纹 mod 已加载（不在则只测本 mod）", "lewd_tattoo" not in LOADED or "_erark_mod_lewd_tattoo" in sys.modules)
+check("本 mod 已安装", getattr(sys.modules.get("_erark_mod_group_sex_extension"), "_installed", False))
+import _erark_mod_group_sex_extension as package  # noqa: E402
+from _erark_mod_group_sex_extension import actions, instruct, members  # noqa: E402
+
+IDS = (instruct.EDGE_ALL_ID, instruct.EQUIP_TOYS_ALL_ID, instruct.HYPNOSIS_BOOST_ALL_ID)
+NAMES = {instruct.EDGE_ALL_ID: "全员寸止", instruct.EQUIP_TOYS_ALL_ID: "全员戴上玩具", instruct.HYPNOSIS_BOOST_ALL_ID: "全员催眠增强"}
 
 
-class Hypnosis:
-    def __init__(self):
-        self.hypnosis_degree = 0
-        self.increase_body_sensitivity = False
-        self.pain_as_pleasure = False
+def table(instruct_id: str) -> dict:
+    """
+    取一个指令在本体各张注册表里的值（cid 单独核对）
+    Keyword arguments:
+    instruct_id -- 指令id
+    Return arguments:
+    dict -- 表名 → 值
+    """
+    return {
+        "handler": instruct_id in constant.handle_instruct_data,
+        "premises": set(constant.instruct_premise_data.get(instruct_id, ())),
+        "types": {t for t, ids in constant.instruct_type_data.items() if instruct_id in ids},
+        "sub_type": constant.instruct_sub_type_data.get(instruct_id),
+        "name": constant.handle_instruct_name_data.get(instruct_id),
+        "category": constant.instruct_category_data.get(instruct_id),
+        "panel_id": constant.instruct_panel_id_data.get(instruct_id),
+        "major": constant.instruct_major_type_data.get(instruct_id),
+        "minor": constant.instruct_minor_type_data.get(instruct_id),
+        "body_parts": constant.instruct_body_parts_data.get(instruct_id),
+        "behaviors": {b for b, i in constant.behavior_id_to_instruct_id.items() if i == instruct_id},
+    }
 
 
-class SpFlag:
-    def __init__(self):
-        self.unconscious_h = 0
-        self.is_h = True
+def expected(instruct_id: str) -> dict:
+    """
+    重构前（scripts/group_sex_extension.py 1.1.0）实测的注册值
+    Keyword arguments:
+    instruct_id -- 指令id
+    Return arguments:
+    dict -- 表名 → 值
+    """
+    premises = {constant_promise.Premise.GROUP_SEX_MODE_ON}
+    if instruct_id == instruct.HYPNOSIS_BOOST_ALL_ID:
+        premises.add(instruct.P_COMPLETE_HYPNOSIS_GE_2)
+    return {
+        "handler": True,
+        "premises": premises,
+        "types": {constant.InstructType.ARTS},
+        "sub_type": constant.SexInstructSubType.ARTS,
+        "name": _(NAMES[instruct_id]),
+        "category": constant.InstructCategory.CHARACTER,
+        "panel_id": None,
+        "major": "arts",
+        "minor": "arts_hypnosis",
+        "body_parts": ["head"],
+        "behaviors": {instruct_id},
+    }
 
 
-class Character:
-    def __init__(self):
-        self.talent = defaultdict(int)
-        self.hypnosis = Hypnosis()
-        self.sp_flag = SpFlag()
+# ==== 注册表 ====
+section("注册表")
+for instruct_id in IDS:
+    actual, want = table(instruct_id), expected(instruct_id)
+    for key in want:
+        check(f"{instruct_id}.{key}", actual[key] == want[key], f"实际={actual[key]!r} 期望={want[key]!r}")
+    cid = constant.instruct_id_to_cid.get(instruct_id)
+    check(f"{instruct_id} cid≥{instruct.CID_SEARCH_START} 且双向映射", cid is not None and cid >= instruct.CID_SEARCH_START and constant.cid_to_instruct_id.get(cid) == instruct_id, cid)
+check("前提已登记", constant.handle_premise_data.get(instruct.P_COMPLETE_HYPNOSIS_GE_2) is instruct.premise_complete_hypnosis_ge_2)
+check("share_blankly 映射未被覆盖", constant.behavior_id_to_instruct_id.get("share_blankly") == SHARE_BLANKLY_BEFORE)
+all_cids = list(constant.instruct_id_to_cid.values())
+check(f"全部 cid 不重复（已加载 {LOADED}）", len(all_cids) == len(set(all_cids)))
+check("全部 cid 双向一致", all(constant.cid_to_instruct_id.get(c) == i for i, c in constant.instruct_id_to_cid.items()))
+cids_before = {i: constant.instruct_id_to_cid[i] for i in IDS}
+package.install()
+check("重复 install 不再注册", {i: constant.instruct_id_to_cid[i] for i in IDS} == cids_before and len(constant.instruct_id_to_cid) == len(all_cids))
+
+# ==== 参与者 ====
+section("参与者")
+TEMPLATE_ONLY, SCENE_H, SCENE_NOT_H, STALE = 9101, 9102, 9103, 9104
+pl.position = list(SCENE_DORM)
+in_template = make_character(TEMPLATE_ONLY, "模板干员", position=SCENE_NURSERY)
+in_scene = make_character(SCENE_H, "场景干员")
+bystander = make_character(SCENE_NOT_H, "旁观干员")
+in_template.sp_flag.is_h = True
+in_scene.sp_flag.is_h = True
+template_a = pl.h_state.group_sex_body_template_dict["A"]
+template_a[0]["mouth"][0] = TEMPLATE_ONLY
+template_a[1][0] = [STALE]
+check("模板 ∪ 场景，只留 H 中且存在的 NPC", members.member_ids() == [TEMPLATE_ONLY, SCENE_H], members.member_ids())
+
+# ==== 全员寸止 ====
+section("全员寸止")
+feel_ids = [state_id for state_id, state_config in game_config.config_character_state.items() if state_config.type == 0]
+for character_data in (in_template, in_scene, bystander):
+    for state_id in feel_ids:
+        character_data.h_state.orgasm_edge_count[state_id] = 3
+in_scene.h_state.orgasm_edge = 1
+drawn_text.clear()
+constant.handle_instruct_data[instruct.EDGE_ALL_ID]()
+check("提示 1/2", drawn_text == [_("\n已为{0}/{1}名干员开启寸止模式\n").format(1, 2)], drawn_text)
+check("新开启者寸止且次数清零", in_template.h_state.orgasm_edge == 1 and all(in_template.h_state.orgasm_edge_count[s] == 0 for s in feel_ids))
+check("已在寸止者不动次数", all(in_scene.h_state.orgasm_edge_count[s] == 3 for s in feel_ids))
+check("非参与者不动", bystander.h_state.orgasm_edge == 0 and all(bystander.h_state.orgasm_edge_count[s] == 3 for s in feel_ids))
+drawn_text.clear()
+constant.handle_instruct_data[instruct.EDGE_ALL_ID]()
+check("再按一次提示 0/2", drawn_text == [_("\n已为{0}/{1}名干员开启寸止模式\n").format(0, 2)], drawn_text)
+
+# ==== 全员戴上玩具 ====
+section("全员戴上玩具")
+in_template.h_state.body_item[0][1] = True
+in_template.h_state.body_item[0][2] = "keep"
+drawn_text.clear()
+constant.handle_instruct_data[instruct.EQUIP_TOYS_ALL_ID]()
+check("提示 2/2 新增 7 件", drawn_text == [_("\n已为{0}/{1}名干员戴上玩具，共新增{2}件\n").format(2, 2, 7)], drawn_text)
+check("参与者四件全戴上", all(cd.h_state.body_item[i][1] for cd in (in_template, in_scene) for i in actions.TOY_BODY_ITEM_IDS))
+check("已戴的不重置", in_template.h_state.body_item[0][2] == "keep")
+check("新戴的清空附带数据", all(in_scene.h_state.body_item[i][2] is None for i in actions.TOY_BODY_ITEM_IDS))
+check("非参与者不动", not any(bystander.h_state.body_item[i][1] for i in actions.TOY_BODY_ITEM_IDS))
+drawn_text.clear()
+constant.handle_instruct_data[instruct.EQUIP_TOYS_ALL_ID]()
+check("再按一次提示 0/2 新增 0 件", drawn_text == [_("\n已为{0}/{1}名干员戴上玩具，共新增{2}件\n").format(0, 2, 0)], drawn_text)
+
+# ==== 全员催眠增强：前提与可见性 ====
+section("全员催眠增强")
+cache.group_sex_mode = 1
 
 
-class Cache:
-    def __init__(self):
-        self.character_data = {}
+def visible_ids() -> set:
+    """
+    web 面板按小类与身体部位能看到的本 mod 指令
+    Keyword arguments:
+    无
+    Return arguments:
+    set -- 指令id集合（两种查法取交集）
+    """
+    by_minor = set(web_interaction_manager.get_instructs_by_minor_type("arts_hypnosis"))
+    by_head = set(web_interaction_manager.get_instructs_by_body_part("head"))
+    return by_minor & by_head & set(IDS)
 
 
-def load_group_sex_extension():
-    mod_root = Path(__file__).resolve().parents[1]
-    script_path = mod_root / "scripts" / "group_sex_extension.py"
-    namespace = {"__name__": "mod_group_sex_extension_test"}
-    source = script_path.read_text(encoding="utf-8").replace("\n_install_patch()\n", "\n")
-    exec(compile(source, str(script_path), "exec"), namespace)
-    return namespace
+in_template.talent[members.COMPLETE_HYPNOSIS_TALENT] = 1
+bystander.hypnosis.hypnosis_degree = members.COMPLETE_HYPNOSIS_DEGREE
+check("只有一名完全催眠参与者：前提不满足", handle_premise.handle_premise(instruct.P_COMPLETE_HYPNOSIS_GE_2, 0) == 0)
+check("只有一名：增强按钮不显示", visible_ids() == {instruct.EDGE_ALL_ID, instruct.EQUIP_TOYS_ALL_ID}, visible_ids())
+drawn_text.clear()
+constant.handle_instruct_data[instruct.HYPNOSIS_BOOST_ALL_ID]()
+check("直接调用：只画拒绝提示", drawn_text == [_("\n当前完全催眠的群交干员不足{0}人，无法执行全员催眠增强\n").format(2)], drawn_text)
+check("直接调用：不改任何人", not any(cd.hypnosis.increase_body_sensitivity or cd.hypnosis.pain_as_pleasure for cd in (in_template, in_scene, bystander)))
 
+in_scene.hypnosis.hypnosis_degree = members.COMPLETE_HYPNOSIS_DEGREE
+in_scene.hypnosis.pain_as_pleasure = True
+unconscious_before = {cd.cid: cd.sp_flag.unconscious_h for cd in (in_template, in_scene)}
+check("两名（素质 + 催眠度）：前提满足", handle_premise.handle_premise(instruct.P_COMPLETE_HYPNOSIS_GE_2, 0) == 1)
+check("两名：三个按钮都显示", visible_ids() == set(IDS), visible_ids())
+drawn_text.clear()
+constant.handle_instruct_data[instruct.HYPNOSIS_BOOST_ALL_ID]()
+check("提示 2 名，新增敏感 2 苦痛 1", drawn_text == [_("\n已为{0}名完全催眠干员设置敏感度上升与苦痛快感化（新增敏感度上升{1}人，新增苦痛快感化{2}人）\n").format(2, 2, 1)], drawn_text)
+check("参与者两项都开", all(cd.hypnosis.increase_body_sensitivity and cd.hypnosis.pain_as_pleasure for cd in (in_template, in_scene)))
+check("不改催眠状态", {cd.cid: cd.sp_flag.unconscious_h for cd in (in_template, in_scene)} == unconscious_before)
+check("完全催眠的非参与者不动", not bystander.hypnosis.increase_body_sensitivity and not bystander.hypnosis.pain_as_pleasure)
 
-def install_fake_modules(module_map):
-    """参数：module_map(dict)为要安装的模块；返回：callable为恢复函数；用途：为注册和场景收集测试安装伪模块。"""
-    missing = object()
-    old_modules = {name: sys.modules.get(name, missing) for name in module_map}
-    sys.modules.update(module_map)
+cache.group_sex_mode = 0
+check("群交模式关闭：三个按钮都不显示", visible_ids() == set(), visible_ids())
 
-    def restore():
-        """参数：无；返回：None；用途：恢复测试前模块表。"""
-        for name, old_module in old_modules.items():
-            if old_module is missing:
-                sys.modules.pop(name, None)
-            else:
-                sys.modules[name] = old_module
-
-    return restore
-
-
-def install_group_context_modules(cache, template_character_ids, scene_character_ids):
-    """参数：cache(Cache)为缓存；template_character_ids(list)为模板角色；scene_character_ids(list)为场景角色；返回：callable为恢复函数；用途：安装近真实群交上下文伪模块。"""
-    script_module = ModuleType("Script")
-    core_module = ModuleType("Script.Core")
-    cache_control = ModuleType("Script.Core.cache_control")
-    design_module = ModuleType("Script.Design")
-    map_handle = ModuleType("Script.Design.map_handle")
-    system_module = ModuleType("Script.System")
-    sex_system_module = ModuleType("Script.System.Sex_System")
-    group_sex_panel = ModuleType("Script.System.Sex_System.group_sex_panel")
-    cache_control.cache = cache
-    map_handle.get_map_system_path_str_for_list = lambda position: "/".join(position)
-    group_sex_panel.count_group_sex_character_list = lambda: list(template_character_ids)
-    core_module.cache_control = cache_control
-    design_module.map_handle = map_handle
-    sex_system_module.group_sex_panel = group_sex_panel
-    system_module.Sex_System = sex_system_module
-    script_module.Core = core_module
-    script_module.Design = design_module
-    script_module.System = system_module
-    return install_fake_modules(
-        {
-            "Script": script_module,
-            "Script.Core": core_module,
-            "Script.Core.cache_control": cache_control,
-            "Script.Design": design_module,
-            "Script.Design.map_handle": map_handle,
-            "Script.System": system_module,
-            "Script.System.Sex_System": sex_system_module,
-            "Script.System.Sex_System.group_sex_panel": group_sex_panel,
-        }
-    )
-
-
-def test_install_registers_all_commands_and_custom_premise():
-    """参数：无；返回：None；用途：验证三个群交扩展指令和自定义前提都会注册。"""
-    namespace = load_group_sex_extension()
-    script_module = ModuleType("Script")
-    core_module = ModuleType("Script.Core")
-    constant = SimpleNamespace(
-        _group_sex_extension_installed=False,
-        handle_premise_data={},
-        handle_instruct_data={},
-        instruct_premise_data={},
-        instruct_type_data={},
-        instruct_sub_type_data={},
-        handle_instruct_name_data={},
-        instruct_id_to_cid={},
-        cid_to_instruct_id={},
-        behavior_id_to_instruct_id={},
-        instruct_category_data={},
-        instruct_major_type_data={},
-        instruct_minor_type_data={},
-        instruct_body_parts_data={},
-        InstructType=SimpleNamespace(ARTS="arts"),
-        SexInstructSubType=SimpleNamespace(ARTS="sex_arts"),
-        InstructCategory=SimpleNamespace(CHARACTER="character"),
-    )
-    constant_promise = SimpleNamespace(Premise=SimpleNamespace(GROUP_SEX_MODE_ON="group_sex_mode_on"))
-    core_module.constant = constant
-    core_module.constant_promise = constant_promise
-    script_module.Core = core_module
-    restore = install_fake_modules({"Script": script_module, "Script.Core": core_module})
-
-    try:
-        namespace["_install_patch"]()
-
-        command_ids = {
-            namespace["INSTRUCT_EDGE_ALL_ID"],
-            namespace["INSTRUCT_EQUIP_TOYS_ALL_ID"],
-            namespace["INSTRUCT_HYPNOSIS_BOOST_ALL_ID"],
-        }
-        assert namespace["PREMISE_GROUP_SEX_COMPLETE_HYPNOSIS_GE_2"] in constant.handle_premise_data
-        assert command_ids <= set(constant.handle_instruct_data)
-        assert command_ids <= constant.instruct_type_data["arts"]
-        for command_id in command_ids:
-            assert "group_sex_mode_on" in constant.instruct_premise_data[command_id]
-        assert namespace["PREMISE_GROUP_SEX_COMPLETE_HYPNOSIS_GE_2"] in constant.instruct_premise_data[namespace["INSTRUCT_HYPNOSIS_BOOST_ALL_ID"]]
-        assert constant.instruct_id_to_cid[namespace["INSTRUCT_EDGE_ALL_ID"]] == namespace["INSTRUCT_EDGE_ALL_CID"]
-        assert constant.cid_to_instruct_id[namespace["INSTRUCT_HYPNOSIS_BOOST_ALL_CID"]] == namespace["INSTRUCT_HYPNOSIS_BOOST_ALL_ID"]
-    finally:
-        restore()
-
-
-def test_group_character_ids_merge_template_and_scene_h_characters():
-    """参数：无；返回：None；用途：验证群交参与者来自群交模板和当前场景H状态角色。"""
-    namespace = load_group_sex_extension()
-    cache = Cache()
-    cache.character_data = {0: Character(), 1: Character(), 2: Character(), 3: Character(), 5: Character()}
-    cache.character_data[0].position = ["room"]
-    cache.character_data[2].sp_flag.is_h = True
-    cache.character_data[3].sp_flag.is_h = False
-    cache.character_data[5].sp_flag.is_h = True
-    cache.scene_data = {"room": SimpleNamespace(character_list={2, 3, 4, 5})}
-
-    script_module = ModuleType("Script")
-    core_module = ModuleType("Script.Core")
-    cache_control = ModuleType("Script.Core.cache_control")
-    design_module = ModuleType("Script.Design")
-    map_handle = ModuleType("Script.Design.map_handle")
-    system_module = ModuleType("Script.System")
-    sex_system_module = ModuleType("Script.System.Sex_System")
-    group_sex_panel = ModuleType("Script.System.Sex_System.group_sex_panel")
-    cache_control.cache = cache
-    map_handle.get_map_system_path_str_for_list = lambda position: "/".join(position)
-    group_sex_panel.count_group_sex_character_list = lambda: [1, 2, 3, 9, 0]
-    core_module.cache_control = cache_control
-    design_module.map_handle = map_handle
-    sex_system_module.group_sex_panel = group_sex_panel
-    system_module.Sex_System = sex_system_module
-    script_module.Core = core_module
-    script_module.Design = design_module
-    script_module.System = system_module
-    restore = install_fake_modules(
-        {
-            "Script": script_module,
-            "Script.Core": core_module,
-            "Script.Core.cache_control": cache_control,
-            "Script.Design": design_module,
-            "Script.Design.map_handle": map_handle,
-            "Script.System": system_module,
-            "Script.System.Sex_System": sex_system_module,
-            "Script.System.Sex_System.group_sex_panel": group_sex_panel,
-        }
-    )
-
-    try:
-        assert namespace["_get_group_sex_character_ids"]() == [1, 2, 5]
-    finally:
-        restore()
-
-
-def test_group_character_ids_filter_stale_template_ids_before_hypnosis_lookup():
-    """参数：无；返回：None；用途：验证模板中不存在或非H角色不会进入后续群交参与者列表。"""
-    namespace = load_group_sex_extension()
-    cache = Cache()
-    cache.character_data = {0: Character(), 1: Character(), 2: Character()}
-    cache.character_data[0].position = ["room"]
-    cache.character_data[1].hypnosis.hypnosis_degree = 200
-    cache.character_data[1].sp_flag.unconscious_h = 7
-    cache.character_data[2].sp_flag.is_h = False
-    cache.character_data[2].hypnosis.hypnosis_degree = 200
-    cache.scene_data = {"room": SimpleNamespace(character_list=set())}
-
-    script_module = ModuleType("Script")
-    core_module = ModuleType("Script.Core")
-    cache_control = ModuleType("Script.Core.cache_control")
-    design_module = ModuleType("Script.Design")
-    map_handle = ModuleType("Script.Design.map_handle")
-    system_module = ModuleType("Script.System")
-    sex_system_module = ModuleType("Script.System.Sex_System")
-    group_sex_panel = ModuleType("Script.System.Sex_System.group_sex_panel")
-    cache_control.cache = cache
-    map_handle.get_map_system_path_str_for_list = lambda position: "/".join(position)
-    group_sex_panel.count_group_sex_character_list = lambda: [1, 2, 9]
-    core_module.cache_control = cache_control
-    design_module.map_handle = map_handle
-    sex_system_module.group_sex_panel = group_sex_panel
-    system_module.Sex_System = sex_system_module
-    script_module.Core = core_module
-    script_module.Design = design_module
-    script_module.System = system_module
-    restore = install_fake_modules(
-        {
-            "Script": script_module,
-            "Script.Core": core_module,
-            "Script.Core.cache_control": cache_control,
-            "Script.Design": design_module,
-            "Script.Design.map_handle": map_handle,
-            "Script.System": system_module,
-            "Script.System.Sex_System": sex_system_module,
-            "Script.System.Sex_System.group_sex_panel": group_sex_panel,
-        }
-    )
-
-    try:
-        assert namespace["_get_group_sex_character_ids"]() == [1]
-        assert namespace["_get_complete_hypnosis_character_ids"]() == [1]
-    finally:
-        restore()
-
-
-def test_hypnosis_boost_visibility_requires_two_complete_hypnosis_characters():
-    """参数：无；返回：None；用途：验证全员催眠增强统计完全催眠角色且不要求当前催眠态。"""
-    namespace = load_group_sex_extension()
-    cache = Cache()
-    cache.character_data = {1: Character(), 2: Character(), 3: Character()}
-    cache.character_data[1].talent[73] = 1
-    cache.character_data[1].sp_flag.unconscious_h = 6
-    cache.character_data[2].hypnosis.hypnosis_degree = 200
-    cache.character_data[2].sp_flag.unconscious_h = 0
-    cache.character_data[3].hypnosis.hypnosis_degree = 199
-    cache.character_data[3].sp_flag.unconscious_h = 7
-
-    namespace["_get_cache"] = lambda: cache
-    namespace["_get_group_sex_character_ids"] = lambda: [1, 2, 3]
-
-    assert namespace["_handle_complete_hypnosis_ge_2"](0) == 1
-
-    cache.character_data[2].sp_flag.unconscious_h = 7
-
-    assert namespace["_handle_complete_hypnosis_ge_2"](0) == 1
-
-    cache.character_data[2].hypnosis.hypnosis_degree = 199
-
-    assert namespace["_handle_complete_hypnosis_ge_2"](0) == 0
-
-
-def test_direct_invited_complete_hypnosis_counts_without_active_state():
-    """参数：无；返回：None；用途：验证直接邀请加入的完全催眠角色即使未处于催眠态也计入按钮前提。"""
-    namespace = load_group_sex_extension()
-    cache = Cache()
-    cache.character_data = {0: Character(), 1: Character(), 2: Character()}
-    cache.character_data[0].position = ["room"]
-    cache.character_data[1].hypnosis.hypnosis_degree = 200
-    cache.character_data[1].sp_flag.unconscious_h = 7
-    cache.character_data[2].hypnosis.hypnosis_degree = 200
-    cache.character_data[2].sp_flag.unconscious_h = 0
-    cache.scene_data = {"room": SimpleNamespace(character_list={2})}
-    restore = install_group_context_modules(cache, [1], {2})
-
-    try:
-        assert namespace["_get_group_sex_character_ids"]() == [1, 2]
-        assert namespace["_handle_complete_hypnosis_ge_2"](0) == 1
-    finally:
-        restore()
-
-
-def test_hypnosis_boost_sets_flags_without_changing_hypnosis_state():
-    """参数：无；返回：None；用途：验证催眠增强不会给非生效催眠角色写入短期催眠子状态。"""
-    namespace = load_group_sex_extension()
-    cache = Cache()
-    cache.character_data = {1: Character(), 2: Character(), 3: Character()}
-    cache.character_data[1].talent[73] = 1
-    cache.character_data[1].sp_flag.unconscious_h = 6
-    cache.character_data[2].hypnosis.hypnosis_degree = 200
-    cache.character_data[2].sp_flag.unconscious_h = 7
-    cache.character_data[3].hypnosis.hypnosis_degree = 199
-    draw_texts = []
-
-    namespace["_get_cache"] = lambda: cache
-    namespace["_get_group_sex_character_ids"] = lambda: [1, 2, 3]
-    namespace["_draw_result"] = draw_texts.append
-
-    namespace["group_sex_extension_hypnosis_boost_all"]()
-
-    assert cache.character_data[1].hypnosis.increase_body_sensitivity is True
-    assert cache.character_data[1].hypnosis.pain_as_pleasure is True
-    assert cache.character_data[1].sp_flag.unconscious_h == 6
-    assert cache.character_data[2].hypnosis.increase_body_sensitivity is True
-    assert cache.character_data[2].hypnosis.pain_as_pleasure is True
-    assert cache.character_data[2].sp_flag.unconscious_h == 7
-    assert cache.character_data[3].hypnosis.increase_body_sensitivity is False
-    assert cache.character_data[3].hypnosis.pain_as_pleasure is False
-    assert "2名完全催眠干员" in draw_texts[0]
-
-
-def test_direct_invited_inactive_complete_hypnosis_gets_boost_without_state_change():
-    """参数：无；返回：None；用途：验证未激活催眠态的直接受邀完全催眠角色会获得强化且不改变催眠态。"""
-    namespace = load_group_sex_extension()
-    cache = Cache()
-    cache.character_data = {0: Character(), 1: Character(), 2: Character(), 3: Character()}
-    cache.character_data[0].position = ["room"]
-    cache.character_data[1].talent[73] = 1
-    cache.character_data[1].sp_flag.unconscious_h = 6
-    cache.character_data[2].hypnosis.hypnosis_degree = 200
-    cache.character_data[2].sp_flag.unconscious_h = 0
-    cache.character_data[3].hypnosis.hypnosis_degree = 199
-    cache.character_data[3].sp_flag.unconscious_h = 7
-    cache.scene_data = {"room": SimpleNamespace(character_list={2, 3})}
-    draw_texts = []
-    restore = install_group_context_modules(cache, [1], {2, 3})
-
-    try:
-        namespace["_draw_result"] = draw_texts.append
-        namespace["group_sex_extension_hypnosis_boost_all"]()
-
-        assert cache.character_data[1].hypnosis.increase_body_sensitivity is True
-        assert cache.character_data[1].hypnosis.pain_as_pleasure is True
-        assert cache.character_data[1].sp_flag.unconscious_h == 6
-        assert cache.character_data[2].hypnosis.increase_body_sensitivity is True
-        assert cache.character_data[2].hypnosis.pain_as_pleasure is True
-        assert cache.character_data[2].sp_flag.unconscious_h == 0
-        assert cache.character_data[3].hypnosis.increase_body_sensitivity is False
-        assert cache.character_data[3].hypnosis.pain_as_pleasure is False
-        assert "2名完全催眠干员" in draw_texts[0]
-    finally:
-        restore()
-
-
-def test_hypnosis_boost_requires_two_complete_hypnosis_characters():
-    """参数：无；返回：None；用途：验证直接调用指令时仍要求至少两名完全催眠角色。"""
-    namespace = load_group_sex_extension()
-    cache = Cache()
-    cache.character_data = {1: Character(), 2: Character()}
-    cache.character_data[1].talent[73] = 1
-    cache.character_data[1].sp_flag.unconscious_h = 0
-    cache.character_data[2].hypnosis.hypnosis_degree = 199
-    cache.character_data[2].sp_flag.unconscious_h = 7
-    draw_texts = []
-
-    namespace["_get_cache"] = lambda: cache
-    namespace["_get_group_sex_character_ids"] = lambda: [1, 2]
-    namespace["_draw_result"] = draw_texts.append
-
-    namespace["group_sex_extension_hypnosis_boost_all"]()
-
-    assert cache.character_data[1].hypnosis.increase_body_sensitivity is False
-    assert cache.character_data[1].hypnosis.pain_as_pleasure is False
-    assert cache.character_data[2].hypnosis.increase_body_sensitivity is False
-    assert cache.character_data[2].hypnosis.pain_as_pleasure is False
-    assert "不足2人" in draw_texts[0]
-
-
-if __name__ == "__main__":
-    test_install_registers_all_commands_and_custom_premise()
-    test_group_character_ids_merge_template_and_scene_h_characters()
-    test_group_character_ids_filter_stale_template_ids_before_hypnosis_lookup()
-    test_hypnosis_boost_visibility_requires_two_complete_hypnosis_characters()
-    test_direct_invited_complete_hypnosis_counts_without_active_state()
-    test_hypnosis_boost_sets_flags_without_changing_hypnosis_state()
-    test_direct_invited_inactive_complete_hypnosis_gets_boost_without_state_change()
-    test_hypnosis_boost_requires_two_complete_hypnosis_characters()
-    print("group_sex_extension mod tests passed", flush=True)
+finish()

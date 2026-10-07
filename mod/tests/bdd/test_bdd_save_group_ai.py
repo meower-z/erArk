@@ -164,8 +164,8 @@ def test_invited_complete_hypnosis_participants_enter_one_five_minute_masturbati
     save_paths = [Path("save/99/0"), Path("save/99/1")]
     save_digests = {path: file_digest(path) for path in save_paths}
     premise = constant.handle_premise_data["group_sex_extension_complete_hypnosis_ge_2"]
-    group_context_func = premise.__globals__["_get_group_sex_character_ids"]
-    complete_ids_func = premise.__globals__["_get_complete_hypnosis_character_ids"]
+    group_context_func = premise.__globals__["members"].member_ids
+    complete_ids_func = premise.__globals__["members"].complete_hypnosis_member_ids
     initial_group_ids = group_context_func()
     player_position = list(ctx.cache.character_data[0].position)
     assistant_id = ctx.cache.character_data[0].assistant_character_id
