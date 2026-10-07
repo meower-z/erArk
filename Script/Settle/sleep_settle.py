@@ -5,6 +5,7 @@ from Script.Core import (
     game_path_config,
     game_type,
     get_text,
+    mod_hook,
 )
 from Script.Design import (
     handle_premise,
@@ -195,6 +196,7 @@ def sanity_point_grow():
     if today_cost >= 50 and character_data.sanity_point_max < 9999:
         # 成长值为消耗值的1/50，四舍五入取整
         grow_value = round(today_cost / 50)
+        grow_value = mod_hook.sanity_point_growth(grow_value, today_cost)
         character_data.sanity_point_max += grow_value
         character_data.sanity_point_max = min(character_data.sanity_point_max,9999)
         # 绘制说明信息

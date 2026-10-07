@@ -1,9 +1,9 @@
 {
     "mod_id": "easy_mode",
     "name": "简单模式",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "author": "Manifold Paradox",
-    "description": "",
+    "description": "催眠增长随机系数 0.5~1.5 改为 5~10；睡眠时理智上限成长量改为当日消耗的全部；酒店房间价格改为 1/2/3 粉红凭证（按钮上的价格文字不变）。只通过本体 mod_hook 钩子点生效。",
     "game_version": "2026.01.07",
     "dependencies": [],
     "incompatible": [],
@@ -11,31 +11,7 @@
     "scripts": [
         {
             "file": "scripts/easy_mode.py",
-            "functions": [
-                {
-                    "name": "modded_hypnosis",
-                    "type": "replace",
-                    "target_module": "Script.UI.Panel.hypnosis_panel",
-                    "target_function": "hypnosis_degree_calculation"
-                },
-                {
-                    "name": "modded_sanity_grow",
-                    "type": "replace",
-                    "target_module": "Script.Settle.sleep_settle",
-                    "target_function": "sanity_point_grow"
-                },
-                {
-                    "name": "handle_order_hotel_room",
-                    "type": "replace",
-                    "target_module": "Script.UI.Flow.normal_flow",
-                    "target_function": "order_hotel_room_flow"
-                },
-                {
-                    "name": "cheaper_room",
-                    "type": "new",
-                    "register_to": "Script.UI.Flow.normal_flow"
-                }
-            ]
+            "functions": []
         }
     ]
 }

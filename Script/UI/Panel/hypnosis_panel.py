@@ -1,7 +1,7 @@
 from typing import List
 from types import FunctionType
 import random
-from Script.Core import cache_control, game_type, get_text, flow_handle, constant
+from Script.Core import cache_control, game_type, get_text, flow_handle, constant, mod_hook
 from Script.Design import handle_premise, handle_talent, map_handle, handle_ability, hypnosis_state
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
@@ -75,7 +75,7 @@ def hypnosis_degree_calculation(target_character_id: int) -> float:
     hypnosis_degree_adjust *= handle_ability.get_ability_adjust(target_character_data.ability[19])
 
     # 乘以0.5~1.5的随机系数
-    hypnosis_degree_adjust *= random.uniform(0.5, 1.5)
+    hypnosis_degree_adjust *= mod_hook.hypnosis_random_factor(random.uniform(0.5, 1.5), target_character_id)
 
     # 最后计算
     final_addition = base_addition * hypnosis_degree_adjust

@@ -120,6 +120,17 @@ desire_written = FoldHook("desire_written")
     调用点 default.py / handle_npc_ai.py 的 6 处降欲望写入 """
 
 
+hypnosis_random_factor = FoldHook("hypnosis_random_factor")
+""" 催眠增长的随机系数：值=本体抽到的系数(float，0.5~1.5)；上下文=(target_character_id,)；返回新系数。
+    调用点 hypnosis_panel.hypnosis_degree_calculation """
+
+sanity_point_growth = FoldHook("sanity_point_growth")
+""" 睡眠时玩家理智上限成长量：值=本体算出的成长量(int)；上下文=(today_cost,)；返回新的成长量。调用点 sleep_settle.sanity_point_grow """
+
+hotel_room_price = FoldHook("hotel_room_price")
+""" 预订酒店房间的价格表：值=[标间, 情趣主题房, 顶级套房] 的粉红凭证价格(list)；无上下文；返回新价格表。
+    调用点 normal_panel.Order_Hotel_Room_Panel.order_room """
+
 # ========== mod_data 形状约定（本体拥有这条约定，所以校验器也放在本体）==========
 
 

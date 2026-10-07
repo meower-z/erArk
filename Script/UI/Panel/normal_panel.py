@@ -7,6 +7,7 @@ from Script.Core import (
     game_type,
     flow_handle,
     constant,
+    mod_hook,
 )
 from Script.Config import game_config, normal_config
 from Script.Design import update, map_handle, instuct_judege, game_time
@@ -478,6 +479,7 @@ class Order_Hotel_Room_Panel:
     def order_room(self, room_id):
         """预订房间"""
         room_price = [2, 10, 100]
+        room_price = mod_hook.hotel_room_price(room_price)
         room_name = [_("标间"),_("情趣主题房"),_("顶级套房")]
         # 判断粉红凭证是否足够
         if cache.rhodes_island.materials_resouce[4] < room_price[room_id]:
