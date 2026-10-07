@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 """
-本轮绝顶/寸止记录的纯函数：合并、断因、寸止余量、标记、摘要文本
+本轮绝顶/寸止记录的纯函数：合并、断因、寸止余量、标记、部位名
 
 本模块不 import 任何 Script 模块，可以脱离游戏单测（tests/test_records.py）。
 记录的形状：
@@ -22,9 +22,9 @@ PLURAL_COUNT_NAME = ["双重", "三重", "四重", "五重", "六重", "七重",
 BREAK_PRIORITY = {"tired": 3, "release": 2, "fail": 1}
 """ 寸止断因优先级：太累退出 > 主动释放 > 判定失败；同一角色一轮内只升不降 """
 BREAK_TAG = {
-    "tired": (" <累>", "little_dark_slate_blue"),
-    "release": (" <寸止释放>", "gold_enrod"),
-    "fail": (" <寸止失败>", "gold_enrod"),
+    "tired": ("<累>", "little_dark_slate_blue"),
+    "release": ("<寸止释放>", "gold_enrod"),
+    "fail": ("<寸止失败>", "gold_enrod"),
 }
 """ 断因 -> (摘要标记, 样式)；<累> 与状态栏的体力耗尽标记同色 """
 
@@ -107,10 +107,10 @@ def holding_edge_tag(margin: int) -> Tuple[str, str]:
     Tuple[str, str] -- (标记文本, 样式)
     """
     if margin >= 3:
-        return " <寸止>", "hot_pink"
+        return "<寸止>", "hot_pink"
     if margin >= 0:
-        return " <寸止!>", "red"
-    return " <寸止!!>", "levelex"
+        return "<寸止!>", "red"
+    return "<寸止!!>", "levelex"
 
 
 def split_edge_parts(edge_counts: dict, orgasm_parts: dict, broken: bool) -> Tuple[dict, dict]:
@@ -154,7 +154,7 @@ def edge_status_tag(reason: Optional[str], edge_counts: dict, orgasm_parts: dict
     return holding_edge_tag(read_margin())
 
 
-def _ordered_part_names(parts: List[str], joiner: str) -> str:
+def part_names(parts: List[str], joiner: str = "、") -> str:
     """
     按 PART_ORDER 排序并连接部位名；不在排序表里的部位（如玩家的 p）排到末尾，不丢弃，否则"N重"的数字会对不上
     Keyword arguments:
@@ -168,7 +168,7 @@ def _ordered_part_names(parts: List[str], joiner: str) -> str:
     return joiner.join(PART_NAME.get(part, part) for part in known + unknown)
 
 
-def _group_by_value(part_map: dict) -> Dict[int, List[str]]:
+def group_by_value(part_map: dict) -> Dict[int, List[str]]:
     """
     把 {部位: 值} 按值分组
     Keyword arguments:
@@ -182,44 +182,17 @@ def _group_by_value(part_map: dict) -> Dict[int, List[str]]:
     return groups
 
 
-def orgasm_desc(part_degree: dict) -> str:
+def orgasm_kind(part_count: int) -> str:
     """
-    绝顶描述：按档位从高到低分组，组内"・"连接、组间"、"连接，前缀"绝顶："或"N重绝顶："
-    例：{"v": 2, "c": 1} -> "双重绝顶：阴道强绝顶、阴蒂绝顶"
+    按同时绝顶的部位数给出"绝顶"或"N重绝顶"，超过十重时封顶为十重
     Keyword arguments:
-    part_degree -- 该角色本轮 {部位: 最高档位序号}
+    part_count -- 部位数（>=1）
     Return arguments:
-    str -- 描述文本，无记录时为空串
+    str -- 类别文本
     """
-    if not part_degree:
-        return ""
-    groups = _group_by_value(part_degree)
-    group_texts = [_ordered_part_names(groups[rank], "・") + DEGREE_TEXT.get(rank, "") for rank in sorted(groups, reverse=True)]
-    part_count = len(part_degree)
-    if part_count == 1:
-        header = "绝顶："
-    else:
-        header = PLURAL_COUNT_NAME[min(part_count, len(PLURAL_COUNT_NAME) + 1) - 2] + "绝顶："
-    return header + "、".join(group_texts)
-
-
-def edge_token(part_count: dict) -> str:
-    """
-    寸止说明：按次数从多到少分组，组内与组间都用"、"连接，组末"绝顶寸止"，次数>1 时加"×N"
-    例：{"c": 1, "h": 1} -> "阴蒂、心理绝顶寸止"；{"v": 2} -> "阴道绝顶寸止×2"
-    Keyword arguments:
-    part_count -- 仍憋着的 {部位: 寸止次数}
-    Return arguments:
-    str -- 说明文本，无记录时为空串
-    """
-    if not part_count:
-        return ""
-    groups = _group_by_value(part_count)
-    group_texts = []
-    for count in sorted(groups, reverse=True):
-        suffix = "绝顶寸止" if count <= 1 else f"绝顶寸止×{count}"
-        group_texts.append(_ordered_part_names(groups[count], "、") + suffix)
-    return "、".join(group_texts)
+    if part_count <= 1:
+        return "绝顶"
+    return PLURAL_COUNT_NAME[min(part_count, len(PLURAL_COUNT_NAME) + 1) - 2] + "绝顶"
 
 
 def summary_row_ids(orgasm_record: dict, edge_record: dict, break_reason: dict) -> List[int]:

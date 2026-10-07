@@ -56,9 +56,9 @@ for lv, counts in ((2, {"v": 1}), (1, {"v": 1, "c": 1}), (0, {"v": 2}), (1, {"v"
     check(f"感叹号档位与实时显示门一致 lv={lv} {counts}", ("!" in records.holding_edge_tag(margin)[0]) == records.is_near_limit(margin))
 
 # 标记
-check("标记：<寸止>", records.holding_edge_tag(5) == (" <寸止>", "hot_pink"))
-check("标记：<寸止!>", records.holding_edge_tag(2) == (" <寸止!>", "red"))
-check("标记：<寸止!!>", records.holding_edge_tag(-4) == (" <寸止!!>", "levelex"))
+check("标记：<寸止>", records.holding_edge_tag(5) == ("<寸止>", "hot_pink"))
+check("标记：<寸止!>", records.holding_edge_tag(2) == ("<寸止!>", "red"))
+check("标记：<寸止!!>", records.holding_edge_tag(-4) == ("<寸止!!>", "levelex"))
 
 
 def never():
@@ -66,12 +66,12 @@ def never():
 
 
 check("状态标记：没寸止过不显示", records.edge_status_tag(None, {}, {"v": 1}, never) == ("", ""))
-check("状态标记：tired", records.edge_status_tag("tired", {}, {}, never) == (" <累>", "little_dark_slate_blue"))
-check("状态标记：fail 即使无寸止记录", records.edge_status_tag("fail", {}, {"v": 2}, never) == (" <寸止失败>", "gold_enrod"))
-check("状态标记：release", records.edge_status_tag("release", {"v": 1}, {"v": 1}, never) == (" <寸止释放>", "gold_enrod"))
-check("状态标记：憋住后兑现显示 <寸止释放>", records.edge_status_tag(None, {"c": 1, "v": 1}, {"m": 2, "c": 1, "v": 1}, never) == (" <寸止释放>", "gold_enrod"))
-check("状态标记：仍憋着按实时余量", records.edge_status_tag(None, {"v": 1}, {}, lambda: 5) == (" <寸止>", "hot_pink"))
-check("状态标记：仍憋着 余量<0", records.edge_status_tag(None, {"v": 1}, {}, lambda: -1) == (" <寸止!!>", "levelex"))
+check("状态标记：tired", records.edge_status_tag("tired", {}, {}, never) == ("<累>", "little_dark_slate_blue"))
+check("状态标记：fail 即使无寸止记录", records.edge_status_tag("fail", {}, {"v": 2}, never) == ("<寸止失败>", "gold_enrod"))
+check("状态标记：release", records.edge_status_tag("release", {"v": 1}, {"v": 1}, never) == ("<寸止释放>", "gold_enrod"))
+check("状态标记：憋住后兑现显示 <寸止释放>", records.edge_status_tag(None, {"c": 1, "v": 1}, {"m": 2, "c": 1, "v": 1}, never) == ("<寸止释放>", "gold_enrod"))
+check("状态标记：仍憋着按实时余量", records.edge_status_tag(None, {"v": 1}, {}, lambda: 5) == ("<寸止>", "hot_pink"))
+check("状态标记：仍憋着 余量<0", records.edge_status_tag(None, {"v": 1}, {}, lambda: -1) == ("<寸止!!>", "levelex"))
 
 # 拆分
 check("拆分：兑现部位归绝顶侧", records.split_edge_parts({"c": 1, "v": 1}, {"m": 2, "c": 1, "v": 1}, False) == ({"c": 1, "v": 1}, {}))
@@ -79,20 +79,13 @@ check("拆分：没绝顶的部位仍憋着", records.split_edge_parts({"v": 1},
 check("拆分：断过的角色全部算已兑现", records.split_edge_parts({"v": 1}, {}, True) == ({"v": 1}, {}))
 check("拆分：空记录", records.split_edge_parts({}, {}, True) == ({}, {}))
 
-# 摘要文本
-check("寸止说明：空", records.edge_token({}) == "")
-check("寸止说明：同次数合组", records.edge_token({"h": 1, "c": 1}) == "阴蒂、心理绝顶寸止")
-check("寸止说明：×N", records.edge_token({"v": 2}) == "阴道绝顶寸止×2")
-check("寸止说明：多组按次数降序", records.edge_token({"c": 1, "v": 2}) == "阴道绝顶寸止×2、阴蒂绝顶寸止")
-check("绝顶描述：空", records.orgasm_desc({}) == "")
-check("绝顶描述：单部位", records.orgasm_desc({"v": 1}) == "绝顶：阴道绝顶")
-check("绝顶描述：按档位分组", records.orgasm_desc({"c": 1, "v": 2}) == "双重绝顶：阴道强绝顶、阴蒂绝顶")
-check("绝顶描述：同档组内用・", records.orgasm_desc({"v": 2, "c": 2}) == "双重绝顶：阴蒂・阴道强绝顶")
-desc = records.orgasm_desc({"v": 2, "p": 2})
-check("绝顶描述：未知部位排末尾不丢", desc == "双重绝顶：阴道・p强绝顶", desc)
-many = {part: 0 for part in records.PART_ORDER}
-many.update({"x": 0, "y": 0})
-check("绝顶描述：超过十重时封顶为十重", records.orgasm_desc(many).startswith("十重绝顶："))
+# 部位名与类别
+check("部位名：按固定顺序", records.part_names(["h", "c"]) == "阴蒂、心理")
+check("部位名：未知部位排末尾不丢", records.part_names(["p", "v"], "・") == "阴道・p")
+check("按值分组", records.group_by_value({"c": 1, "v": 2, "a": 1}) == {1: ["c", "a"], 2: ["v"]})
+check("类别：单部位", records.orgasm_kind(1) == "绝顶")
+check("类别：三部位", records.orgasm_kind(3) == "三重绝顶")
+check("类别：超过十重时封顶为十重", records.orgasm_kind(12) == "十重绝顶")
 
 # 摘要行
 check("摘要行：有记录的 NPC，玩家不列", records.summary_row_ids({11: {"v": 1}, 0: {"v": 1}}, {12: {"c": 1}}, {}) == [11, 12])
