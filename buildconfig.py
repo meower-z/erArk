@@ -732,6 +732,8 @@ if BUILD_UI_TEXT:
     with open(ui_text_data_path, "w", encoding="utf-8") as ui_text_data_file:
         json.dump(ui_text_data, ui_text_data_file, ensure_ascii=False)
 
+# 中文po不纳入版本管理，新检出的仓库里没有该目录
+os.makedirs(os.path.dirname(po_csv_path), exist_ok=True)
 if BUILD_CONFIG:  # 与po输出相关的配置
     with open(po_csv_path, "w", encoding="utf-8") as po_file:
         po_file.write(''.join(config_po_lines))

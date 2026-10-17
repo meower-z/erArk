@@ -71,3 +71,6 @@ error.log
 static_check_error.log
 static_check_error.log.old
 static_check_seen.json
+
+# 中文 PO 由 buildconfig / auto_build_config / buildpo 生成，只作 Crowdin 原文
+data/po/zh_CN/
