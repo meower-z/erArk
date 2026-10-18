@@ -2,6 +2,8 @@
 
 覆盖 `Script/System/Education_System/` 及其全部外部挂接点（结算器、状态机、前提、面板、存档、口上与事件数据）的无头回归套件。系统说明见 `.github/prompts/数据处理工作流/生长养成系统.md` §16。
 
+本套件用自己的公共引导 `_bootstrap.py`。其他系统的新无头测试用通用引导 `tools/tests/headless_boot.py`，不用 `_bootstrap.py`。
+
 ## 怎么跑
 
 ```bash
