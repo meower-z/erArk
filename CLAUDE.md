@@ -32,7 +32,7 @@ Key dependencies: `PySide6` (ArkEditor GUI), `flask` + `flask-socketio` + `pytho
 ### Testing Individual Components
 The game uses a debug mode (configured in config.ini) for testing. Set `debug = 1` to enable debug features.
 
-Headless regression tests live under `tools/tests/` (currently `tools/tests/education/` for the child-raising system: `.conda\python.exe tools/tests/education/run_all.py`, each `test_*.py` runs in its own process). Writing new ones: see the `headless-game-test` skill and `tools/tests/education/README.md`.
+Headless regression tests live under `tools/tests/` (currently `tools/tests/education/` for the child-raising system: `.conda\python.exe tools/tests/education/run_all.py`, each `test_*.py` runs in its own process). New headless scripts and tests import the general setup `tools/tests/headless_boot.py`: run them from the repo root and call `sys.path.insert(0, "tools/tests")` before the import. The child-raising suite keeps its own `tools/tests/education/_bootstrap.py`; new code does not use it.
 
 ## High-Level Architecture
 
