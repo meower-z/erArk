@@ -152,7 +152,6 @@ def judge_character_move_to_private(character_id: int, move_path: list) -> tuple
     move_flag -- true的话就是移动\n
     wait_flag -- true的话就是等待\n
     """
-    from Script.Design import handle_premise
     character_data: game_type.Character = cache.character_data[character_id]
     move_flag = True # true的话就是移动
     wait_flag = False # true的话就是等待
@@ -171,7 +170,6 @@ def judge_character_move_to_private(character_id: int, move_path: list) -> tuple
                 # 如果是因为等待
                 if character_data.sp_flag.is_follow > 0:
                     character_data.sp_flag.is_follow = 0
-                    handle_premise.settle_chara_unnormal_flag(character_id, 3)
                     now_draw.text = _("因为等待时间过长，所以{0}不再继续跟随\n").format(character_data.name)
                 # 如果是因为想逆推
                 elif character_data.sp_flag.npc_masturebate_for_player:
@@ -184,7 +182,6 @@ def judge_character_move_to_private(character_id: int, move_path: list) -> tuple
                     # 如果超过了一个小时，则不再逆推
                     elif character_data.action_info.follow_wait_time >= 60:
                         character_data.sp_flag.npc_masturebate_for_player = False
-                        handle_premise.settle_chara_unnormal_flag(character_id, 1)
                         now_draw.text = _("因为等待时间过长，所以{0}放弃了有些私密的打算\n").format(character_data.name)
                     # 否则则门外等待
                     else:

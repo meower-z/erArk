@@ -495,13 +495,11 @@ def settle_sleep(character_id: int, true_add_time: int) -> None:
                     from Script.Design import character_behavior as _character_behavior_module
                     _character_behavior = _character_behavior_module
                 _character_behavior.judge_character_status_time_over(character_id, cache.game_time, end_now=2)
-            # 已醒来（行为终止时会刷新异常位掩码5/6），跳过后续的睡眠回复结算
+            # 已醒来，跳过后续的睡眠回复结算
             return
     # 其他情况下正常增加熟睡值
     else:
         now_char.sleep_point = min(max(now_char.sleep_point + add_sleep, 0), 100)
-    handle_premise.settle_chara_unnormal_flag(character_id, 5)
-    handle_premise.settle_chara_unnormal_flag(character_id, 6)
     # 回复体力和气力
     final_adjust = 1
     if now_char.talent[351]:

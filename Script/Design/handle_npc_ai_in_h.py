@@ -101,8 +101,6 @@ def judge_character_h_obscenity_unconscious(character_id: int, pl_start_time: da
     # 如果不在同一位置
     # 隐奸携带模式中被携带的角色由跟随结算直接搬运位置，与玩家移动结算的先后可能产生短暂的场景分离，不做重置
     if handle_premise.handle_not_in_player_scene(character_id) and character_data.sp_flag.hidden_sex_mode != 5:
-        # 本分支内是否发生了实际的状态重置（未重置时无需刷新异常位掩码）
-        state_reset_flag = False
         # 结束H状态
         if handle_premise.handle_self_is_h(character_id):
             character_data.sp_flag.is_h = False
@@ -112,28 +110,18 @@ def judge_character_h_obscenity_unconscious(character_id: int, pl_start_time: da
             character_data.behavior.start_time = pl_start_time
             character_data.behavior.duration = 1
             character_data.target_character_id = character_id
-            state_reset_flag = True
         # 结束睡眠猥亵状态
         if handle_premise.handle_unconscious_flag_1(character_id):
             character_data.sp_flag.unconscious_h = 0
-            state_reset_flag = True
         # 结束空气催眠
         if handle_premise.handle_unconscious_flag_5(character_id) and character_data.position != pl_character_data.pl_ability.air_hypnosis_position:
             character_data.sp_flag.unconscious_h = 0
-            state_reset_flag = True
         # 结束隐奸状态
         if handle_premise.handle_hidden_sex_mode_ge_1(character_id):
             character_data.sp_flag.hidden_sex_mode = 0
-            state_reset_flag = True
         # 结束露出状态
         if handle_premise.handle_exhibitionism_sex_mode_ge_1(character_id):
             character_data.sp_flag.exhibitionism_sex_mode = 0
-            state_reset_flag = True
-        # 仅在本分支实际重置过状态时刷新异常位掩码（5/6位的重算链较昂贵，
-        # 未发生变化时刷新结果不变，其他修改点各自负责调用刷新）
-        if state_reset_flag:
-            handle_premise.settle_chara_unnormal_flag(character_id, 5)
-            handle_premise.settle_chara_unnormal_flag(character_id, 6)
 
     # H状态或木头人时，行动锁死为等待不动
     if character_data.sp_flag.is_h or character_data.hypnosis.blockhead:
@@ -254,8 +242,6 @@ def recover_from_unconscious_h(character_id: int, info_text: str = ""):
         if handle_premise.handle_action_sleep(character_data.target_character_id):
             target_data.h_state.pretend_sleep = True
             target_data.sp_flag.unconscious_h = 1
-            handle_premise.settle_chara_unnormal_flag(character_data.target_character_id, 5)
-            handle_premise.settle_chara_unnormal_flag(character_data.target_character_id, 5)
             # 成就刷新
             cache.achievement.sleep_sex_record[1] = 1
     # 否则
@@ -313,8 +299,6 @@ def handle_unconscious_h_response(character_id: int, target_character_id: int, c
     # 停止对方的无意识状态与H状态
     target_data.sp_flag.unconscious_h = 0
     target_data.sp_flag.is_h = False
-    handle_premise.settle_chara_unnormal_flag(target_character_id, 5)
-    handle_premise.settle_chara_unnormal_flag(target_character_id, 6)
 
     # 如果目标对象处于监禁状态，则直接满足条件
     if handle_premise.handle_imprisonment_1(target_character_id):
@@ -392,18 +376,13 @@ def judge_weak_up_in_sleep_h(character_id: int, target_character_id: int):
         target_data.sleep_point = 0
         if target_data.sp_flag.unconscious_h == 1:
             # 睡奸目标：走现有无意识H恢复流程
-            handle_premise.settle_chara_unnormal_flag(target_character_id, 5)
-            handle_premise.settle_chara_unnormal_flag(target_character_id, 6)
             info_text = _("\n因为{0}的动作，{1}从梦中惊醒过来\n").format(now_character_data.name, target_data.name)
             recover_from_unconscious_h(character_id, info_text)
         elif target_data.sp_flag.unconscious_h == 0:
             # 普通睡眠角色：先结束睡眠行为，再执行“睡觉中被吵醒”行为
             # 注意顺序：judge_character_status_time_over()内部会用game_type.Behavior()整体重置行动数据，
-            # 因此必须先结束睡眠、再刷新异常位、最后才赋予新行为，否则新行为会被覆盖，
-            # 且异常位若在behavior_id还是SLEEP时刷新会被判成意识模糊，导致反感结算被静默跳过
+            # 因此必须先结束睡眠、再赋予新行为，否则新行为会被覆盖
             character_behavior.judge_character_status_time_over(target_character_id, cache.game_time, end_now=2)
-            handle_premise.settle_chara_unnormal_flag(target_character_id, 5)
-            handle_premise.settle_chara_unnormal_flag(target_character_id, 6)
             # 冗余但便宜的保险：行动起始时间若残留睡眠时的旧值，结算时的add_time会算出天文数字
             instuct_judege.init_character_behavior_start_time(target_character_id, cache.game_time)
             target_data.behavior.duration = 1
@@ -422,8 +401,6 @@ def judge_weak_up_in_sleep_h(character_id: int, target_character_id: int):
             now_draw.width = window_width
             now_draw.text = info_text
             now_draw.draw()
-            handle_premise.settle_chara_unnormal_flag(target_character_id, 5)
-            handle_premise.settle_chara_unnormal_flag(target_character_id, 6)
             character_behavior.judge_character_status_time_over(target_character_id, cache.game_time, end_now=2)
 
 
@@ -662,7 +639,6 @@ def npc_ai_in_group_sex(character_id: int):
     # 如果设定NPC为仅自慰，则进入要自慰后返回
     if handle_premise.handle_npc_ai_type_1_in_group_sex(character_id):
         character_data.sp_flag.masturebate = 3
-        handle_premise.settle_chara_unnormal_flag(character_id, 1)
         character_data.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
         character_data.state = constant.CharacterStatus.STATUS_ARDER
         # print(f"debug {character_data.name}进入了要自慰状态")
@@ -701,7 +677,6 @@ def npc_ai_in_group_sex(character_id: int):
     # 否则，自己进入要自慰状态
     else:
         character_data.sp_flag.masturebate = 3
-        handle_premise.settle_chara_unnormal_flag(character_id, 1)
         character_data.state = constant.CharacterStatus.STATUS_ARDER
         character_data.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
         # print(f"debug {character_data.name}进入了要自慰状态")
@@ -791,7 +766,6 @@ def npc_ai_in_group_sex_type_3():
     for character_id in new_chara_id_list:
         character_data = cache.character_data[character_id]
         character_data.sp_flag.masturebate = 3
-        handle_premise.settle_chara_unnormal_flag(character_id, 1)
         character_data.state = constant.CharacterStatus.STATUS_ARDER
         character_data.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
         # print(f"debug {character_data.name}进入了要自慰状态")

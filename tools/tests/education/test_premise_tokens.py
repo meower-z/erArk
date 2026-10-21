@@ -357,13 +357,12 @@ move_to(101, classroom_path(ROOM1))
 
 def teacher_premise_pair() -> tuple:
     """
-    刷新教师 101 的异常位掩码后，取学生 201 的「教师能到岗 / 来不了」两个前提
+    取学生 201 的「教师能到岗 / 来不了」两个前提
     Keyword arguments:
     无
     Return arguments:
     tuple -- (self_course_teacher_available, self_course_teacher_unavailable)
     """
-    handle_premise.refresh_unnormal_flag(101)
     return HP("self_course_teacher_available", 201), HP("self_course_teacher_unavailable", 201)
 
 

@@ -408,7 +408,6 @@ def judge_field_commission_finish():
             # 遍历派遣人员
             for character_id in send_npc_list:
                 cache.character_data[character_id].sp_flag.field_commission = 0
-                handle_premise.settle_chara_unnormal_flag(character_id, 7)
                 # 派遣人员上线
                 default.handle_chara_on_line(character_id, 1, change_data = game_type.CharacterStatusChange(), now_time = cache.game_time)
                 draw_text += f"{cache.character_data[character_id].name} "

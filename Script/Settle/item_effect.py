@@ -1502,7 +1502,6 @@ def handle_target_add_tired_tosleep(
     target_data.sleep_point = 100
     target_data.h_state.body_item[9][1] = True
     target_data.h_state.body_item[9][2] = now_time + datetime.timedelta(hours=8)
-    handle_premise.settle_chara_unnormal_flag(character_data.target_character_id, 6)
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.TARGET_ADD_PREGNANCY_CHANCE)

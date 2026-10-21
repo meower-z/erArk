@@ -1,8 +1,8 @@
 # -*- coding: UTF-8 -*-
 """
 静态检查系统 - 监禁调教/访客/招募名册/外勤委托相关检查
-本模块实现 ROSTER-01..ROSTER-33 全部33条不变式，覆盖在编名册、场景成员关系、监禁与逃跑、
-监狱长、访客、邀请、招募、外勤委托、载具、外交官、异常位掩码、助理、装袋等子系统的状态自洽性。
+本模块实现 ROSTER 组的32条不变式（ROSTER-01..ROSTER-30、ROSTER-32、ROSTER-33），覆盖在编名册、场景成员关系、监禁与逃跑、
+监狱长、访客、邀请、招募、外勤委托、载具、外交官、助理、装袋等子系统的状态自洽性。
 
 设计基准: Linux(os.sep == "/")。全部涉及路径拼接的比较一律通过 os.sep.join 或场景标签集合完成，
 不写死"\\"分隔符(详见各检查函数内注释)。全部离线判定一律用来源flag(field_commission/escaping/be_bagged)，
@@ -16,7 +16,7 @@ import os
 from typing import Dict, List, Set
 
 from Script.Config import game_config
-from Script.Core import cache_control, game_type
+from Script.Core import cache_control
 from ..check_registry import CheckFailure, register_check, make_failure
 
 
@@ -251,9 +251,8 @@ def check_offline_source_flag_matches_real_offline_state() -> List[CheckFailure]
     """
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
-    功能: 装袋/外勤/越狱三条路径都是"置来源flag→重算异常位→handle_chara_off_line"的原子写法。
+    功能: 装袋/外勤/越狱三条路径都是"置来源flag→handle_chara_off_line"的原子写法。
     任一来源flag为真而角色仍在编、仍在某场景、或position未归零，即为半离线的幽灵。
-    不用unnormal_flag.check(7)作判据 —— 该位是懒缓存，未知位读作False，且交互对象素质会给在线角色合法置位
     """
     cache = cache_control.cache
     cd = cache.character_data
@@ -488,7 +487,7 @@ def check_escapee_full_offline_state() -> List[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
-    功能: escape_success依次置escaping→重算异常位→pop囚犯名册→handle_chara_off_line→创建追捕委托，
+    功能: escape_success依次置escaping→pop囚犯名册→handle_chara_off_line→创建追捕委托，
     并保留imprisonment。任一环缺失即为半态。position == ["0","0"]在此是离线的结果而非判据
     """
     cache = cache_control.cache
@@ -1629,51 +1628,6 @@ def check_diplomat_registry_and_flag_consistency() -> List[CheckFailure]:
             )
     return failures
 
-
-@register_check("ROSTER-31", "异常位掩码与其来源状态一致(第2、7位)")
-def check_unnormal_flag_mask_consistency() -> List[CheckFailure]:
-    """
-    参数: 无
-    返回值: List[CheckFailure]: 失败记录列表
-    功能: sp_flag.unnormal_flag是带"已知/未知"两层的位掩码缓存，第2位=AI停止(临盆/产后/监禁)，
-    第7位=离线(装袋/外勤/婴儿/异国外派/逃跑)。定为warning是因为这是懒缓存：check()不看known位，未知即读作False，
-    且只覆盖在线角色的每日重算；只做单向蕴含(有离线来源⟹该位为真)，并跳过临盆/产后(talent[22]/[23]，属素质域)
-    """
-    cache = cache_control.cache
-    cd = cache.character_data
-    warn = _sev(cache, True)
-    failures: List[CheckFailure] = []
-    for cid, c in cd.items():
-        if cid == 0:
-            continue
-        m = c.sp_flag.unnormal_flag
-        if not isinstance(m, game_type.UnnormalFlagMask):
-            continue
-        if m.is_known(2) and not (c.talent.get(22) or c.talent.get(23)):
-            if m.check(2) != bool(c.sp_flag.imprisonment):
-                failures.append(
-                    make_failure(
-                        "ROSTER-31",
-                        "异常位掩码与其来源状态一致(第2、7位)",
-                        f"{warn}角色cid={cid} name={c.name!r} 异常位2(AI停止)缓存check(2)={m.check(2)}与来源imprisonment={c.sp_flag.imprisonment}不符；"
-                        f"talent[22]={c.talent.get(22)}，talent[23]={c.talent.get(23)}，cid in npc_id_got={cid in cache.npc_id_got}",
-                        [cid],
-                    )
-                )
-        if m.is_known(7) and (c.sp_flag.be_bagged or c.sp_flag.field_commission or c.sp_flag.escaping):
-            if not m.check(7):
-                failures.append(
-                    make_failure(
-                        "ROSTER-31",
-                        "异常位掩码与其来源状态一致(第2、7位)",
-                        f"{warn}角色cid={cid} name={c.name!r} 有离线来源(be_bagged={c.sp_flag.be_bagged}, "
-                        f"field_commission={c.sp_flag.field_commission}, escaping={c.sp_flag.escaping})，但异常位7(离线)缓存"
-                        f"check(7)={m.check(7)}为False；in_diplomatic_visit={c.sp_flag.in_diplomatic_visit}，"
-                        f"cid in npc_id_got={cid in cache.npc_id_got}",
-                        [cid],
-                    )
-                )
-    return failures
 
 
 @register_check("ROSTER-32", "助理身份互斥")

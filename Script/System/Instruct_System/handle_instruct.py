@@ -923,7 +923,6 @@ def handle_followed():
                 other_character_data = cache.character_data[npc_id]
                 if other_character_data.sp_flag.is_follow:
                     other_character_data.sp_flag.is_follow = 0
-                    handle_premise.settle_chara_unnormal_flag(npc_id, 3)
                     now_draw.text += _("当前最大跟随数量：1人，{0}退出跟随模式\n").format(other_character_data.name)
     # now_draw.width = 1
     now_draw.draw()
@@ -943,7 +942,6 @@ def handle_ask_target_rest():
     character_data: game_type.Character = cache.character_data[0]
     target_character_data: game_type.Character = cache.character_data[character_data.target_character_id]
     target_character_data.sp_flag.rest = True
-    handle_premise.settle_chara_unnormal_flag(character_data.target_character_id, 1)
     chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration = 1)
 
 
@@ -1271,7 +1269,6 @@ def handle_do_h():
             now_draw_text += _("已自动关门\n")
         target_data.sp_flag.is_follow = 0
         target_data.action_info.last_conscious_h_time = cache.game_time
-        handle_premise.settle_chara_unnormal_flag(character_data.target_character_id, 3)
         now_draw_text += _("进入H模式\n\n")
         now_draw.text = now_draw_text
         now_draw.style = 'gold_enrod'
@@ -1335,8 +1332,6 @@ def handle_sleep_obscenity():
         if door_return == -1:
             return
     target_data.sp_flag.unconscious_h = 1
-    handle_premise.settle_chara_unnormal_flag(character_data.target_character_id, 5)
-    handle_premise.settle_chara_unnormal_flag(character_data.target_character_id, 6)
     now_draw = draw.WaitDraw()
     now_draw.width = width
     now_draw.text = _("\n进入睡眠猥亵模式\n")
@@ -1353,8 +1348,6 @@ def handle_stop_sleep_obscenity():
     character_data: game_type.Character = cache.character_data[0]
     target_data = cache.character_data[character_data.target_character_id]
     target_data.sp_flag.unconscious_h = 0
-    handle_premise.settle_chara_unnormal_flag(character_data.target_character_id, 5)
-    handle_premise.settle_chara_unnormal_flag(character_data.target_character_id, 6)
     now_draw = draw.WaitDraw()
     now_draw.width = width
     now_draw.text = _("\n退出睡眠猥亵模式\n")
@@ -1383,7 +1376,6 @@ def handle_unconscious_h(type_name:str = ""):
             return
     target_data.action_info.last_unconscious_h_time = cache.game_time
     target_data.sp_flag.is_follow = 0
-    handle_premise.settle_chara_unnormal_flag(character_data.target_character_id, 3)
     now_draw = draw.WaitDraw()
     now_draw.width = width
     if type_name == "sleep":
@@ -1527,7 +1519,6 @@ def handle_h_end():
             handle_premise.handle_normal_6(character_data.target_character_id)
             ):
             target_data.sp_flag.is_follow = 1
-            handle_premise.settle_chara_unnormal_flag(character_data.target_character_id, 3)
 
     # 对方原地待机10分钟
     if character_data.target_character_id != 0:
@@ -1592,7 +1583,6 @@ def handle_hidden_sex_end():
         handle_premise.handle_normal_6(character_data.target_character_id)
         ):
         target_data.sp_flag.is_follow = 1
-        handle_premise.settle_chara_unnormal_flag(character_data.target_character_id, 3)
     # 结算成就
     achievement_panel.achievement_flow(_("隐奸"))
 
@@ -1626,7 +1616,6 @@ def handle_exhibitionism_sex_end():
         handle_premise.handle_normal_6(character_data.target_character_id)
         ):
         target_data.sp_flag.is_follow = 1
-        handle_premise.settle_chara_unnormal_flag(character_data.target_character_id, 3)
     # 结算成就
     achievement_panel.achievement_flow(_("露出"))
 

@@ -46,7 +46,6 @@ def get_npc_cloth(character_id: int):
                 character_data.cloth.cloth_wear[type].append(cloth_id)
             get_underwear(character_id)
             chara_special_wear_cloth(character_id)
-        handle_premise.settle_chara_unnormal_flag(character_id, 4)
 
 
 CLOTH_LOCKER_TYPE_SHOWER = 2
@@ -194,8 +193,6 @@ def get_cloth_from_dormitory_locker(character_id: int):
 
     # 穿特殊服装
     chara_special_wear_cloth(character_id)
-    # 结算异常状态flag
-    handle_premise.settle_chara_unnormal_flag(character_id, 4)
 
 def handle_prisoner_clothing(character_id: int):
     """
@@ -234,7 +231,6 @@ def handle_prisoner_clothing(character_id: int):
             get_underwear(character_id)
             get_socks(character_id)
         chara_special_wear_cloth(character_id)
-        handle_premise.settle_chara_unnormal_flag(character_id, 4)
 
 def get_random_underwear():
     """
@@ -437,7 +433,6 @@ def pl_get_chara_pan(character_id: int):
             now_draw.width = window_width
             now_draw.text = _("\n获得了{0}的{1}，可在藏品馆里纳入收藏\n").format(character_data.name, TPanName)
             now_draw.draw()
-        handle_premise.settle_chara_unnormal_flag(character_id, 4)
 
 def pl_get_chara_socks(character_id: int):
     """
@@ -470,7 +465,6 @@ def pl_get_chara_socks(character_id: int):
             now_draw.width = window_width
             now_draw.text = _("\n获得了{0}的{1}，可在藏品馆里纳入收藏\n").format(character_data.name, TSocName)
             now_draw.draw()
-        handle_premise.settle_chara_unnormal_flag(character_id, 4)
 
 def get_all_cloth_off(character_id: int):
     """
@@ -487,7 +481,6 @@ def get_all_cloth_off(character_id: int):
         from Script.System.Item_System import condom_handle
         condom_handle.remove_cloth_decoration(character_id)
         chara_special_wear_cloth(character_id)
-        handle_premise.settle_chara_unnormal_flag(character_id, 4)
 
 def get_shower_cloth(character_id: int):
     """
@@ -504,7 +497,6 @@ def get_shower_cloth(character_id: int):
         character_data.cloth.cloth_wear[5].append(551)
         character_data.cloth.cloth_wear[8].append(851)
         chara_special_wear_cloth(character_id)
-        handle_premise.settle_chara_unnormal_flag(character_id, 4)
 
 def get_sleep_cloth(character_id: int):
     """
@@ -522,7 +514,6 @@ def get_sleep_cloth(character_id: int):
             (552 in character_data.cloth.cloth_wear[5] or 553 in character_data.cloth.cloth_wear[5])
             and (852 in character_data.cloth.cloth_wear[8] or 853 in character_data.cloth.cloth_wear[8])
         ):
-            handle_premise.settle_chara_unnormal_flag(character_id, 4)
             return
         get_cloth_wear_zero_except_need(character_id)
         choic_flag = random.randint(0,1)
@@ -534,7 +525,6 @@ def get_sleep_cloth(character_id: int):
             character_data.cloth.cloth_wear[8].append(853)
         get_underwear(character_id, part_flag = 2)
         chara_special_wear_cloth(character_id)
-        handle_premise.settle_chara_unnormal_flag(character_id, 4)
 
 def get_swim_cloth(character_id: int):
     """
@@ -551,7 +541,6 @@ def get_swim_cloth(character_id: int):
         character_data.cloth.cloth_wear[6].append(choic_type + 680)
         character_data.cloth.cloth_wear[9].append(choic_type + 980)
         chara_special_wear_cloth(character_id)
-        handle_premise.settle_chara_unnormal_flag(character_id, 4)
 
 def get_prison_cloth(character_id: int):
     """
@@ -670,7 +659,6 @@ def get_cloth_wear_zero_except_need(character_id: int):
             result = [item for item in  character_data.cloth.cloth_wear[clothing_type] if item not in remove_tem_list]
             character_data.cloth.cloth_wear[clothing_type] = result
     chara_special_wear_cloth(character_id)
-    handle_premise.settle_chara_unnormal_flag(character_id, 4)
     # 衣物离开身体时去除服装部位上的避孕套装饰
     from Script.System.Item_System import condom_handle
     condom_handle.remove_cloth_decoration(character_id)

@@ -686,16 +686,11 @@ check("L9 她仍在旁观名单里（此前按门槛重算，跌破门槛就拿�
 check("L9 在课前提 self_in_sex_class 对她成立、对与课无关的成年干员不成立",
       bool(handle_premise.handle_premise("self_in_sex_class", 303)) and not handle_premise.handle_premise("self_in_sex_class", 301))
 # 课堂 H 中玩家开时停（U1 单元复审补）：成员名单按身份认，旁观名单另判状态那一层（judge_sex_class_state_ok）。
-#    时停开启的效果（default.py 的时停结算）会逐个刷新异常位 6，这里照做
 cache.time_stop_mode = True
-for _cid in (201, 303):
-    handle_premise.settle_chara_unnormal_flag(_cid, 6)
 check("L9 复审补：时停中（全体 NPC 判意识不清）旁观名单为空：被冻结的学生不拿观摩收益、不派旁观口上（L9 按身份认之后此前照拿）",
       sex_class_handle.get_watcher_list() == [], sex_class_handle.get_watcher_list())
 check("L9 复审补：时停中课堂成员名单照旧按身份认（群交模板选人、在课前提不受影响）", 303 in sex_class_handle.get_class_member_list(), sex_class_handle.get_class_member_list())
 cache.time_stop_mode = False
-for _cid in (201, 303):
-    handle_premise.settle_chara_unnormal_flag(_cid, 6)
 check("L9 复审补：关掉时停后旁观名单恢复", 303 in sex_class_handle.get_watcher_list(), sex_class_handle.get_watcher_list())
 
 section("Plan 32 L11：课堂模式下群交模板的选人只列课堂成员")

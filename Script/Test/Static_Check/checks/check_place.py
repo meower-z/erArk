@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """
 静态检查系统 - 位置/场景/跟随/助理/交互对象领域检查
-本模块实现 PLACE-01 ~ PLACE-31 全部不变量检查，覆盖角色位置、场景名册、门锁状态、移动路径、
+本模块实现 PLACE 组的30条不变量检查（PLACE-01 ~ PLACE-25、PLACE-27 ~ PLACE-31），覆盖角色位置、场景名册、门锁状态、移动路径、
 收藏地点、宿舍、交互对象、助理、跟随、装袋搬运等状态的一致性约束。
 
 约定与踩坑说明（写在此处，避免散落在各检查函数注释里重复）：
@@ -388,7 +388,6 @@ def check_scene_roster_only_registered_and_offline_must_exit() -> List[CheckFail
         if cid != 0 and cid not in npc_id_got:
             c = character_data.get(cid)
             sp_flag = getattr(c, "sp_flag", None) if c else None
-            unnormal_flag = getattr(sp_flag, "unnormal_flag", None)
             failures.append(
                 make_failure(
                     "PLACE-08",
@@ -396,7 +395,7 @@ def check_scene_roster_only_registered_and_offline_must_exit() -> List[CheckFail
                     f"角色id={cid} name={getattr(c, 'name', '') if c else '?'}出现在场景名册{paths}中，但既非玩家也不在npc_id_got中；"
                     f"position={getattr(c, 'position', None) if c else None}，be_bagged={getattr(sp_flag, 'be_bagged', None)}，"
                     f"field_commission={getattr(sp_flag, 'field_commission', None)}，escaping={getattr(sp_flag, 'escaping', None)}，"
-                    f"vistor={getattr(sp_flag, 'vistor', None)}，unnormal_flag.mask={getattr(unnormal_flag, 'mask', None)}",
+                    f"vistor={getattr(sp_flag, 'vistor', None)}",
                     [cid],
                 )
             )
@@ -1005,47 +1004,6 @@ def check_follower_must_be_registered_alive_online() -> List[CheckFailure]:
         )
     return failures
 
-
-@register_check("PLACE-26", "跟随/助理身份必须反映在异常位缓存中")
-def check_follow_assistant_reflected_in_unnormal_flag() -> List[CheckFailure]:
-    """
-    参数: 无
-    返回值: List[CheckFailure]: 失败记录列表
-    功能:
-        校验sp_flag.unnormal_flag第3位（高优先级AI：助理、跟随、体检）缓存：若角色正在跟随或就是助理，
-        而该位已被标记为"已知"却是"正常"，说明缓存过期。单向检查，只查"该异常却标了正常"，
-        不加反向断言（体检也会置位，属额外置位原因，不构成反向误报）
-    """
-    cache = cache_control.cache
-    failures = []
-    character_data = getattr(cache, "character_data", {}) or {}
-    pl = character_data.get(0)
-    pl_aid = getattr(pl, "assistant_character_id", 0) if pl is not None else 0
-    for cid in _live_ids(cache):
-        c = character_data.get(cid)
-        if c is None:
-            continue
-        sp_flag = getattr(c, "sp_flag", None)
-        is_follow = getattr(sp_flag, "is_follow", 0)
-        if not (bool(is_follow) or cid == pl_aid):
-            continue
-        unnormal_flag = getattr(sp_flag, "unnormal_flag", None)
-        if unnormal_flag is None:
-            continue
-        is_known = unnormal_flag.is_known(3)
-        checked = unnormal_flag.check(3)
-        if is_known and not checked:
-            failures.append(
-                make_failure(
-                    "PLACE-26",
-                    "跟随/助理身份必须反映在异常位缓存中",
-                    f"角色id={cid} name={getattr(c, 'name', '')}正在跟随(is_follow={is_follow})或是当前助理({cid == pl_aid})，"
-                    f"但sp_flag.unnormal_flag第3位已知却标记为正常(mask={getattr(unnormal_flag, 'mask', None)}，"
-                    f"known_bits={getattr(unnormal_flag, 'known_bits', None)})，AI可能用旧结论调度该角色",
-                    [cid],
-                )
-            )
-    return failures
 
 
 @register_check("PLACE-27", "装袋搬运双向一致")

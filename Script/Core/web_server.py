@@ -514,9 +514,6 @@ def toggle_cloth():
                 target_data.cloth.cloth_off[cloth_type].remove(cloth_id)
                 target_data.cloth.cloth_wear[cloth_type].append(cloth_id)
         
-        # 更新异常标记
-        handle_premise.settle_chara_unnormal_flag(target_id, 4)
-        
         # 获取更新后的附加信息
         from Script.System.Web_Draw_System.status_panel import StatusPanel
         status_panel = StatusPanel()

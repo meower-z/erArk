@@ -104,7 +104,6 @@ def assistant_replace(new_assistant_id: int):
         # 去掉旧助理的跟随状态
         old_assistant_data: game_type.Character = cache.character_data[character_data.assistant_character_id]
         old_assistant_data.sp_flag.is_follow = 0
-        handle_premise.settle_chara_unnormal_flag(character_data.assistant_character_id, 3)
         # 去掉旧助理的同居状态
         if character_data.assistant_character_id != 0 and old_assistant_data.dormitory == map_handle.get_map_system_path_str_for_list(["中枢", "博士房间"]):
             from Script.System.Dormitory_System import common as dormitory_common
@@ -131,10 +130,8 @@ def assistant_replace(new_assistant_id: int):
     # 正常情况下，设置新助理
     else:
         character_data.assistant_character_id = new_assistant_id
-        handle_premise.settle_chara_unnormal_flag(new_assistant_id, 3)
         new_assistant_data: game_type.Character = cache.character_data[character_data.assistant_character_id]
         new_assistant_data.sp_flag.is_follow = 1
-        handle_premise.settle_chara_unnormal_flag(character_data.assistant_character_id, 3)
         new_assistant_data.assistant_services[2] = 1
         second_behavior.character_get_second_behavior(new_assistant_id, "not_as_assistant", reset=True)
         second_behavior.character_get_second_behavior(new_assistant_id, "chosen_as_assistant")
@@ -147,7 +144,6 @@ def assistant_replace(new_assistant_id: int):
     if old_assistant_flag:
         second_behavior.character_get_second_behavior(new_assistant_id, "chosen_as_assistant", reset=True)
         second_behavior.character_get_second_behavior(old_assistant_data.cid, "not_as_assistant")
-        handle_premise.settle_chara_unnormal_flag(old_assistant_data.cid, 3)
         info_text += _("\n\n{0}不再是助理干员了，已清零助理服务相关的设置\n\n").format(old_assistant_data.name)
     info_draw.text = info_text
     info_draw.width = window_width
@@ -202,7 +198,6 @@ class Assistant_Panel:
                 # 如果数值超限则归零
                 if assistant_data.sp_flag.is_follow > 4:
                     assistant_data.sp_flag.is_follow = 0
-                    handle_premise.settle_chara_unnormal_flag(character_data.assistant_character_id, 3)
 
                 # 开始遍历全部助理服务
                 for cid in game_config.config_assistant_services:
@@ -267,7 +262,6 @@ class Assistant_Panel:
                 assistant_data.sp_flag.is_follow = 0
             else:
                 assistant_data.sp_flag.is_follow += 1
-            handle_premise.settle_chara_unnormal_flag(character_data.assistant_character_id, 3)
         # 其他服务
         else:
             assistant_data.assistant_services.setdefault(service_cid, 0)

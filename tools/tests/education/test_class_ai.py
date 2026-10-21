@@ -25,7 +25,7 @@ _orig_rate = class_ai.get_skip_class_rate
 
 def prepare_ai(cid: int) -> None:
     """
-    把最小 fixture 补成能跑通完整 AI 链的样子：已起床、穿好衣服、异常位刷新
+    把最小 fixture 补成能跑通完整 AI 链的样子：已起床、穿好衣服
     Keyword arguments:
     cid -- 角色id
     Return arguments:
@@ -35,7 +35,6 @@ def prepare_ai(cid: int) -> None:
     cd = cache.character_data[cid]
     cd.action_info.wake_time = cache.game_time
     clothing.get_npc_cloth(cid)
-    handle_premise.refresh_unnormal_flag(cid)
 
 
 def dispatch(cid: int, now_time: datetime.datetime = None) -> int:
@@ -47,7 +46,7 @@ def dispatch(cid: int, now_time: datetime.datetime = None) -> int:
     Return arguments:
     int -- 派发的状态机id，没派发则为 0
     功能: 每次先把上一轮留下的移动 / 行为清掉，否则会被「继续移动」目标接管；
-          起床时间拨到当前、全部 NPC 的异常位刷新——测试直接改状态位，不经过游戏里会同步异常位的结算点
+          起床时间拨到当前
     """
     cd = cache.character_data[cid]
     cd.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
@@ -57,8 +56,6 @@ def dispatch(cid: int, now_time: datetime.datetime = None) -> int:
     cd.state = constant.CharacterStatus.STATUS_ARDER
     set_time(now_time if now_time is not None else period_time(0))
     cd.action_info.wake_time = cache.game_time
-    for other_id in list(cache.npc_id_got):
-        handle_premise.refresh_unnormal_flag(other_id)
     hit = []
     origin = dict(constant.handle_state_machine_data)
     for sid, func in origin.items():
@@ -111,11 +108,10 @@ set_time(period_time(0))
 
 def teacher_available() -> bool:
     """
-    刷新教师的异常位后判一次可用性（测试直接改状态位，不经过游戏里会同步异常位的结算点）
+    判一次教师101的可用性
     Return arguments:
     bool -- 教师101是否可授课
     """
-    handle_premise.refresh_unnormal_flag(101)
     return class_ai.judge_teacher_available(101)
 
 
@@ -760,7 +756,6 @@ teacher.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
 teacher.sp_flag.sleep = False
 teacher.sp_flag.unconscious_h = 5
 move_to(101, classroom_path(ROOM1))
-handle_premise.refresh_unnormal_flag(101)
 # Plan 31 §3.4 改写：原先断言「空气催眠中的教师仍可用」。空气催眠只在人已在本节教室时豁免（授课行 220700 照样成立），
 #    去教室的移动行 210700 挂的是 normal_all、人不在教室就走不过去；不知道本节在哪间教室（classroom 为空）时按来不了判
 check("M3 空气催眠、不知道本节在哪间教室 → 按来不了判（此前一律可用）", not class_ai.judge_teacher_available(101))
@@ -792,7 +787,6 @@ def begin(cid: int, behavior_id: str, start: datetime.datetime, now: datetime.da
     cd.behavior.move_final_target = []
     cd.action_info.wake_time = start
     cache.game_time = now
-    handle_premise.refresh_unnormal_flag(cid)
 
 
 section("Plan 25 §3.1：学生赶去上课——把当前行为截到应离开的时刻（A 待赴实操课 / B 马上开课）")
@@ -832,10 +826,8 @@ begin(201, constant.Behavior.WAIT, period_time(0), _round_end)
 check("A 在做日常类行为（等待）→ 不截：只截工作 / 娱乐类", handle_npc_ai.judge_student_leave_truncate(201) == 0)
 begin(201, constant.Behavior.FREE_PLAY, period_time(0), _round_end)
 student.sp_flag.is_follow = 1
-handle_premise.refresh_unnormal_flag(201)
 check("A 跟随玩家中（normal_all 不成立）→ 不截，截了 AI 也派不出上课行", handle_npc_ai.judge_student_leave_truncate(201) == 0)
 student.sp_flag.is_follow = 0
-handle_premise.refresh_unnormal_flag(201)
 begin(101, constant.Behavior.FREE_PLAY, period_time(0), _round_end)
 check("非学生岗不截", handle_npc_ai.judge_student_leave_truncate(101) == 0)
 begin(201, constant.Behavior.FREE_PLAY, _round_end, _round_end)
@@ -931,11 +923,10 @@ def teach_pull(cid: int) -> bool:
     cid -- 角色id
     Return arguments:
     bool -- 是否被拉成听课
-    功能: 303 拉人要过听课行的 normal 门槛（Plan 31 §3.9），测试直接改状态位，先刷新她的异常位
+    功能: 303 拉人要过听课行的 normal 门槛
     """
     set_time(period_time(0))
     cache.character_data[cid].behavior.behavior_id = constant.Behavior.WAIT
-    handle_premise.refresh_unnormal_flag(cid)
     constant.handle_state_machine_data[SM.WORK_TEACH](101)
     return cache.character_data[cid].behavior.behavior_id == constant.Behavior.ATTENT_CLASS
 
@@ -1386,7 +1377,6 @@ prepare_ai(201)
 teacher.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
 teacher.sp_flag.unconscious_h = 5
 move_to(101, SCENE_EDU_ENTRY)
-handle_premise.refresh_unnormal_flag(101)
 check("M3 空气催眠、人在教育区入口（不在本节教室）→ 来不了：去教室的移动行 210700 挂的是 normal_all，她走不过去（此前判能到岗）",
       not class_ai.judge_teacher_available(101, ROOM1))
 move_to(101, classroom_path(ROOM1))
@@ -1394,14 +1384,12 @@ check("M3 空气催眠、人已在本节教室 → 能到岗（授课行 220700 
 check("M3 空气催眠、人在教室但不是本节那间 → 来不了", not class_ai.judge_teacher_available(101, ROOM2))
 teacher.sp_flag.unconscious_h = 6
 teacher.hypnosis.blockhead = True
-handle_premise.refresh_unnormal_flag(101)
 check("M3 体控-木头人、人就在本节教室 → 也来不了（每轮被锁成原地等待，玩家离开也不解除；此前判能到岗）", not class_ai.judge_teacher_available(101, ROOM1))
 move_to(201, classroom_path(ROOM1))
 sm = dispatch(201)
 check("M3 木头人教师：学生在教室派 713 自习（此前按「能到岗」坐下听课、零收益）", sm == SM.EDUCATION_SELF_STUDY, sm)
 teacher.hypnosis.blockhead = False
 teacher.sp_flag.unconscious_h = 0
-handle_premise.refresh_unnormal_flag(101)
 check("M3 催眠解除后恢复能到岗", class_ai.judge_teacher_available(101, ROOM1))
 clear_schedules()
 
@@ -1492,7 +1480,6 @@ move_to(101, classroom_path(ROOM1))
 move_to(201, classroom_path(ROOM1))
 t_open = period_time(1) + datetime.timedelta(minutes=2)
 set_time(t_open)
-handle_premise.refresh_unnormal_flag(201)
 student.behavior.behavior_id = constant.Behavior.SELF_STUDY
 student.behavior.start_time = period_time(2)
 check("H1 学生的当前行为开始于 10:30（已在这间教室上起第 3 节）、教师 9:47 才开讲 → 不拉（此前拉回 9:47，第 3 节从头再走、再结算一次）",
@@ -1516,18 +1503,14 @@ check("H1 303 开讲：时间线在前的学生不被改动（行为与开始时
 student.behavior.behavior_id = constant.Behavior.WAIT
 student.behavior.start_time = t_open
 student.sp_flag.is_follow = 1
-handle_premise.refresh_unnormal_flag(201)
 check("L5 跟随玩家中的学生（normal_3 不成立）：303 不拉（她自己决策时也不命中听课行，此前被拉成听课）", not class_ai.judge_student_join_class(201, ROOM1, t_open))
 student.sp_flag.is_follow = 0
 student.sp_flag.eat_food = 1
-handle_premise.refresh_unnormal_flag(201)
 check("L5 有吃饭需求的学生（normal_1 不成立）：303 不拉（需求链排在工作链之前）", not class_ai.judge_student_join_class(201, ROOM1, t_open))
 student.sp_flag.eat_food = 0
 student.sp_flag.unconscious_h = 5
-handle_premise.refresh_unnormal_flag(201)
 check("L5 空气催眠中的学生照拉（与听课行 220815 的 normal_all_except_special_hypnosis 同口径）", class_ai.judge_student_join_class(201, ROOM1, t_open))
 student.sp_flag.unconscious_h = 0
-handle_premise.refresh_unnormal_flag(201)
 check("L5 对照：状态解除后照拉", class_ai.judge_student_join_class(201, ROOM1, t_open))
 g31.selected_course = {}
 clear_schedules()
@@ -1592,7 +1575,7 @@ def clear_need(cid: int) -> None:
     cid -- 角色id
     Return arguments:
     无
-    功能: 夹具环境没有食谱数据，饿了去买饭会抛异常；改了需求标记要同步异常位掩码，否则 normal_1 按旧掩码判
+    功能: 夹具环境没有食谱数据，饿了去买饭会抛异常
     """
     cd = cache.character_data[cid]
     for name in ("hunger_point", "urinate_point", "tired_point", "sleep_point"):
@@ -1605,7 +1588,6 @@ def clear_need(cid: int) -> None:
     cd.sp_flag.tired = False
     cd.hit_point = cd.hit_point_max
     cd.mana_point = cd.mana_point_max
-    handle_premise.refresh_unnormal_flag(cid)
 
 
 def run_loop_round(minute: int, npc_order: list) -> tuple:

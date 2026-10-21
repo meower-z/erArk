@@ -512,7 +512,7 @@ init_character_behavior()
   - `get_weight_from_premise_dict()` 批量计算权重（含缓存、目标角色处理、无意识跳过）
   - `handle_comprehensive_value_premise()` 处理 `CVP_` 综合前提
 - **主题模块**：`handle_premise_H.py`（H 相关，4084 行）、`handle_premise_other.py`、`handle_premise_place.py`、`handle_premise_ability.py`、`handle_premise_arts.py`、`handle_premise_assistant.py`、`handle_premise_base_value.py`、`handle_premise_body_manage.py`、`handle_premise_cloth.py`、`handle_premise_dirty.py`、`handle_premise_entertainment.py`、`handle_premise_fall.py`、`handle_premise_first.py`、`handle_premise_food.py`、`handle_premise_last_cmd.py`、`handle_premise_sp_flag.py`、`handle_premise_talent.py`、`handle_premise_time.py`、`handle_premise_work.py`
-- **特殊优化**：`UnnormalFlagMask` 位掩码缓存（`_ensure_unnormal_flag_storage`、`_calculate_unnormal_flag_mask`）减少异常状态前提重复计算；`premise_profiler_patch.py` 性能分析补丁
+- **特殊优化**：`premise_profiler_patch.py` 性能分析补丁
 
 ### 11.2 命名约定
 

@@ -24,7 +24,7 @@ def check_group_sex_member_count() -> List[CheckFailure]:
 2. 禁止模块级 `cache = cache_control.cache` 别名。全局 cache 在 `game.py` 启动时才赋值，模块级别名在导入时固定，一旦与全局引用分离就永久持有旧对象。
 3. `make_failure` 的前两个参数与 `@register_check(check_id, check_name)` 逐字一致，以装饰器为准。
 4. `check_id` 全局唯一。重复 id 会在该模块导入时抛 `ValueError`，该模块剩余检查不会注册；其他模块不受影响。
-5. 检查不得修改状态，也不得调用会写状态的前提函数（`Script/Design/handle_premise`）。已知的写路径包括异常位掩码升级、指令过滤缺键补值、助理跟随 `setdefault`。
+5. 检查不得修改状态，也不得调用会写状态的前提函数（`Script/Design/handle_premise`）。已知的写路径包括指令过滤缺键补值、助理跟随 `setdefault`。
 6. 每条检查的文档字符串须说明健康存档为何恒不命中。说不清就不注册。
 7. 只读现有数据，不调用会惰性创建数据的 getter（例如养成数据的 `child_growth`）。
 8. 注册表、配置表、时钟和静态集合直接读取；它们各自只有一种实现，不必加注入层。
