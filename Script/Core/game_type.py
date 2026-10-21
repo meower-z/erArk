@@ -616,6 +616,8 @@ class BODY_H_STATE:
         """ 隐奸中被发现的程度，int，初始为0，100时被发现 """
         self.shoot_semen_amount: int = 0
         """ H中射精的精液量，int，单位ml """
+        self.door_locked_by_h: str = ""
+        """ 本次H锁上的门所在的场景路径，str，空字符串为本次H没有锁门（只记在玩家身上） """
 
 
 class FIRST_RECORD:

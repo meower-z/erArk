@@ -105,6 +105,9 @@ def character_move_scene(old_scene_path: list, new_scene_path: list, character_i
     # 如果旧场景上锁了，且玩家不在其中，则将其解锁（玩家在屋内时，其他角色离开不解锁）
     if cache.scene_data[old_scene_path_str].close_flag >= 1 and 0 not in cache.scene_data[old_scene_path_str].character_list:
         cache.scene_data[old_scene_path_str].close_flag = 0
+    # 玩家离开本次H锁门的场景时作废该记录：门已随玩家离开解锁，之后再锁上的门不是H锁的
+    if character_id == 0 and old_scene_path_str != new_scene_path_str and character_data.h_state.door_locked_by_h == old_scene_path_str:
+        character_data.h_state.door_locked_by_h = ""
     # 在新场景添加角色
     if character_id not in cache.scene_data[new_scene_path_str].character_list:
         character_data.position = new_scene_path

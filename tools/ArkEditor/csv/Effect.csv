@@ -316,6 +316,8 @@ cid,effect_name,effect_type,effect
 751,MOVE_TO_TARGET_SCENE,系统量_地点,移动至目标场景
 752,DOOR_CLOSE,系统量_地点,当前场景进入关门状态
 753,DOOR_CLOSE_RESET,系统量_地点,当前场景取消关门状态
+754,H_DOOR_CLOSE,系统量_地点,（H开始）当前场景没关门时关门，并记下这把锁由本次H锁上
+755,H_DOOR_RESTORE,系统量_地点,（H结束）打开本次H锁上的门，H开始前就锁着的门保持原样
 761,MOVE_TO_PRE_SCENE,系统量_地点,自己移动至前一场景
 762,TARGET_MOVE_TO_PRE_SCENE,系统量_地点,交互对象移动至前一场景
 763,SCENE_OTHERS_MOVE_TO_PRE_SCENE,系统量_地点,场景内除自己和交互对象以外的其他角色移动至前一场景
