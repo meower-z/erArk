@@ -99,12 +99,27 @@ def has_unnormal_flag(character_id: int, mask: int, *, require_all: bool = False
     return bool(current_mask & mask)
 
 
+def _unnormal_flag_3_follows_clock(character_data: game_type.Character) -> bool:
+    """
+    异常位3（高优先级AI）是否随时钟变化、不能读缓存
+    排了上午/下午体检的干员，到了体检时段才进入体检行动链，而时段开始和结束时没有地方重算这一位，
+    所以她今天的异常位3每次都要按当时的时间重新判定
+    Keyword arguments:
+    character_data -- 角色数据
+    Return arguments:
+    bool -- True 表示异常位3不能读缓存
+    """
+    return character_data.action_info.health_check_today in (1, 2)
+
+
 def _quick_check_normal_by_mask(character_id: int, index: int) -> Optional[int]:
     """若异常位掩码已知，则快速给出normal判定结果。"""
     # 玩家直接反馈正常
     if character_id == 0:
         return 1
     character_data = cache.character_data[character_id]
+    if index == 3 and _unnormal_flag_3_follows_clock(character_data):
+        return None
     unnormal_flag = character_data.sp_flag.unnormal_flag
     if isinstance(unnormal_flag, game_type.UnnormalFlagMask) and unnormal_flag.is_known(index):
         return 0 if unnormal_flag[index] else 1
@@ -125,6 +140,9 @@ def _ensure_known_unnormal_bits(character_id: int, indexes: Iterable[int]) -> ga
     character_data = cache.character_data[character_id]
     unnormal_flag = _ensure_unnormal_flag_storage(character_data)
     unknown_indexes = [index for index in index_tuple if not unnormal_flag.is_known(index)]
+    # 异常位3随时钟变化时，即使已缓存也要重新判定
+    if 3 in index_tuple and 3 not in unknown_indexes and _unnormal_flag_3_follows_clock(character_data):
+        unknown_indexes.append(3)
     if not unknown_indexes:
         return unnormal_flag
     handlers = _get_unnormal_flag_handlers()
