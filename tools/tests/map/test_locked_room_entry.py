@@ -7,8 +7,9 @@
 - 自己找来的助理（送饭、早晚安问候等走「移动到玩家位置」）与其他干员一样被挡在门外；
   她只能自己进锁着的博士房间（Dr_room）和博士办公室（Dr_Office）。
 - 智能跟随或强制跟随博士的助理照旧能进博士所在的锁门房间；没被召集的非助理干员跟不跟随都照旧被挡。
+- 博士在门外时，锁着的博士房间和博士办公室他照样能进，别的锁门房间进不了。
 断言落在 map_handle.judge_scene_accessible 的返回值上，
-以及「移动到玩家位置」状态机给角色选出的行动上。
+「移动到玩家位置」状态机给角色选出的行动上，以及博士走向锁门房间时 character_move.character_move 的返回值上。
 
 在仓库根目录运行：python tools/tests/map/test_locked_room_entry.py
 退出码：0 全部断言通过；1 有断言失败；2 未捕获异常。
@@ -23,7 +24,7 @@ mute_ui()
 
 from Script.Config import game_config  # noqa: E402
 from Script.Core import constant  # noqa: E402
-from Script.Design import attr_calculation, map_handle  # noqa: E402
+from Script.Design import attr_calculation, character_move, map_handle  # noqa: E402
 
 ROOM = ["中枢", "会议室"]
 OTHER_ROOM = ["中枢", "茶水间"]
@@ -123,5 +124,16 @@ for scene, scene_str, label in ((DR_ROOM, DR_ROOM_STR, "博士房间"), (DR_OFFI
     check(f"{label}已上锁", cache.scene_data[scene_str].close_flag == 1)
     check(f"没在跟随的助理可进锁着的{label}", map_handle.judge_scene_accessible(scene_str, 1) == "open", map_handle.judge_scene_accessible(scene_str, 1))
     check(f"非助理干员进不了锁着的{label}", map_handle.judge_scene_accessible(scene_str, 2) == "door_lock")
+
+# ==== 7. 博士在门外，门是锁着的（例如屋里睡着的干员被他吵醒，把他推出门后锁门）：自己的房间和办公室照样能进 ====
+map_handle.character_move_scene(pl.position, CORRIDOR, 0)
+for scene, scene_str, label in ((DR_ROOM, DR_ROOM_STR, "博士房间"), (DR_OFFICE, DR_OFFICE_STR, "博士办公室"), (ROOM, ROOM_STR, "会议室")):
+    room_data = cache.scene_data[scene_str]
+    room_data.close_flag = room_data.close_type
+    expected = "door_lock" if scene == ROOM else "open"
+    check(f"门外的博士对锁着的{label}判定为 {expected}", map_handle.judge_scene_accessible(scene_str, 0) == expected, map_handle.judge_scene_accessible(scene_str, 0))
+    move_result = character_move.character_move(0, scene)[0]
+    check(f"门外的博士走向锁着的{label}时得到 {expected}", move_result == expected, move_result)
+    room_data.close_flag = 0
 
 finish()
