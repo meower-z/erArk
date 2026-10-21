@@ -63,16 +63,17 @@ def _behavior_type_ok(chara) -> bool:
     参数:
         chara -- 角色对象
     返回值:
-        bool -- behavior核心字段类型是否合法(判定逻辑与BEHAV-01的字段类型检查同源)
+        bool -- behavior核心字段类型是否合法(BEHAV-07的字段类型检查即调用本函数)
     功能:
         供BEHAV-10/11/12/22在字段类型损坏时跳过该角色的时间比较，避免抛异常被框架降级为"检查器自身异常"；
-        type(...)is int而非isinstance，因为isinstance(True, int)为真，布尔值不应被当作合法分钟数
+        起时behavior.start_time用isinstance，因为起时取自游戏时钟，类型是datetime的子类GameTime。
+        分钟数behavior.duration用type(...)is int而非isinstance，因为isinstance(True, int)为真，布尔值不应被当作合法分钟数
     """
     try:
         behavior = chara.behavior
         return (
             isinstance(behavior.behavior_id, str)
-            and type(behavior.start_time) is datetime.datetime
+            and isinstance(behavior.start_time, datetime.datetime)
             and behavior.start_time.tzinfo is None
             and type(behavior.duration) is int
         )
@@ -123,7 +124,7 @@ def check_global_clock_sanity() -> List[CheckFailure]:
     返回值:
         List[CheckFailure] -- 失败记录列表
     功能:
-        校验cache.game_time/cache.pre_game_time都是已初始化的朴素datetime且只保留到分钟。三个写入源都不产生
+        校验cache.game_time/cache.pre_game_time都是已初始化的朴素datetime且只保留到分钟(游戏时钟的类型GameTime是datetime的子类，按datetime判定)。三个写入源都不产生
         秒/微秒/时区，哨兵0001-01-01只可能来自旧存档缺字段被补默认值——那正是要抓的迁移缺陷；秒/微秒/时区那半
         是构造性真值(无写入通道)，保留是因为代价为零且能识别外部注入/反序列化损坏
     """
@@ -133,7 +134,7 @@ def check_global_clock_sanity() -> List[CheckFailure]:
     failures = []
     for label, t in (("game_time", game_t), ("pre_game_time", pre_t)):
         ok = (
-            type(t) is datetime.datetime
+            isinstance(t, datetime.datetime)
             and t != datetime.datetime(1, 1, 1)
             and t.second == 0
             and t.microsecond == 0
