@@ -197,7 +197,7 @@ H 状态、群交模式、逆推、隐奸。
 
 ## MIND：意识
 
-时间停止、催眠深度与类型、角色扮演、异常位掩码 5/6、睡眠与装睡、熟睡值。
+时间停止、催眠深度与类型、角色扮演、睡眠与装睡、熟睡值。
 
 | 编号 | 名称 | 说明 |
 |---|---|---|
@@ -226,8 +226,6 @@ H 状态、群交模式、逆推、隐奸。
 | MIND-23 | 睡眠行为与角色状态ID对齐 | behavior.behavior_id=="sleep"时state==111 |
 | MIND-24 | 熟睡值值域 | sleep_point为非bool数值且落在[0,100]内(Sleep_Level.csv最高档上限100) |
 | MIND-25 | 睡眠无意识必须依附睡眠行为或装睡 | unconscious_h==1(睡眠)时behavior_id=="sleep"或h_state.pretend_sleep为真 |
-| MIND-26 | 异常位掩码5/6不得与意识状态相矛盾 | 时停模式/unconscious_h==3/5时若已知第6位则必须为异常，unconscious_h==4时若已知第5位则 必须为异常 |
-| MIND-27 | 睡眠异常位与可推导的睡眠等级一致 | 正在睡眠(behavior_id=="sleep")或处于睡眠无意识(unconscious_h==1)的角色，已知的异常位5/6 与熟睡等级一致：sleep_point<=30(等级0，半梦半醒)时第5位应为异常，>30(等级>=1)时第6位应为异常 (handle_premise/__init__.py，0档上限30来自Sleep_Level.csv) |
 | MIND-28 | 时停高潮计数结构合法 | h_state.time_stop_orgasm_count是dict，键为int、值为非负整数 |
 | MIND-29 | 睡眠计划时分字段合法 | action_info.plan_to_sleep_time与plan_to_wake_time均为[时,分]形状的二元int列表， 小时0-23、分钟0-59 |
 | MIND-30 | 装睡标记在当前版本不应出现 | h_state.pretend_sleep恒为False |
@@ -284,11 +282,8 @@ H 状态、群交模式、逆推、隐奸。
 | OBS-07 | 性爱助手结算必须满足监狱长约束 | 群交调教现场有非零监狱长，且 sex_assist 只落在该监狱长身上；健康存档的助手结算应只写当前监狱长，因此恒不命中 |
 | OBS-08 | 醉酒型无意识H不得在醉酒值耗尽后残留 | 检查醉酒型无意识 H 不会在 drunk_point<=0 后继续残留；健康存档若来源消失就应同步退出该模式，因此恒不命中 |
 | OBS-09 | 非群交下至多一名NPC处于阴茎插入中 | 玩家单一阴茎不会在普通 H 中同时记录插入多名 NPC；健康存档换位与拔出链会清旧对象，所以恒不命中 |
-| OBS-10 | 异常位掩码第5和第6位的反向一致性 | 保守反向复算第5/6位来源，对照 handle_normal_5/6（Script/Design/handle_premise/__init__.py:1010-1058）： 睡眠项复用 MIND-27 已有的睡眠等级安全推导（attr_calculation.get_sleep_level，纯读）配合行为/unconscious_h==1 直读 |
 | OBS-12 | 助理跟随服务开启时恢复正常的空闲助理必须在跟随 | 检查服务2开启后，非疲劳、非困倦、无生理意图、非H的空闲在线助理不会丢失跟随；健康存档的服务承诺应维持 is_follow=1，因此恒不命中 |
 | OBS-13 | 非当前助理的角色助理服务位必须全为0 | 全量检查非玩家、非当前助理角色的已实装服务位均归零；健康存档在替换或取消助理时会清旧服务，因此恒不命中 |
-| OBS-14 | 异常位掩码第4位必须与当前穿着重算一致 | 直读 cloth_wear 复算全裸或大致全裸，不调用会写掩码的 handle_normal_4；健康存档的换衣路径会同步刷新第4位，因此恒不命中 |
-| OBS-15 | 异常位掩码第1位必须与基础生理来源重算一致 | 直读来源 flag 复算基础生理异常，不调用会写掩码的 handle_normal_1；健康存档在来源变化时同步更新缓存，因此恒不命中 |
 | OBS-16 | 洗浴和游泳类行为必须发生在对应设施 |  NPC 当前洗浴/游泳行为与场景标签匹配；健康存档只会在带目标设施前提的状态机中启动行为，移动又会替换行为，因此恒不命中 |
 | OBS-17 | 移动行为中的NPC必须带非空最终目的地 | 检查位置面板可见的移动行为拥有最终目的地；健康存档的寻路提交会同步填写该字段，抵达或取消时会退出移动行为，因此恒不命中 |
 | OBS-18 | 绳缚值必须是合法配置键 | 防止 realtime_settle 以非法绳缚键直接索引 config_bondage 崩溃；健康存档只由绳缚面板写配置表中的合法键，因此恒不命中 |
@@ -333,7 +328,6 @@ H 状态、群交模式、逆推、隐奸。
 | PLACE-23 | 跟随模式取值合法 | sp_flag.is_follow只能取0-4 |
 | PLACE-24 | 玩家不跟随自己 | id 0的sp_flag.is_follow必须为0 |
 | PLACE-25 | 跟随者必须在册、活着、在线 | sp_flag.is_follow != 0的角色必须是非玩家、在npc_id_got中、未死亡、且不带离线标记 |
-| PLACE-26 | 跟随/助理身份必须反映在异常位缓存中 | sp_flag.unnormal_flag第3位（高优先级AI：助理、跟随、体检）缓存：若角色正在跟随或就是助理， 而该位已被标记为"已知"却是"正常"，说明缓存过期 |
 | PLACE-27 | 装袋搬运双向一致 | "装袋搬走"状态的双向一致性：(1) 只有玩家(id 0)可以持有非零bagging_chara_id |
 | PLACE-28 | 登记宿舍不得停留在与当前宿舍相同的值 | LIVE域内角色的「登记宿舍」（双名兼容：permanent_dormitory/pre_dormitory）非空时不得等于 当前dormitory |
 | PLACE-29 | 登记宿舍非空时必须是合法的普通宿舍房间 | LIVE域内角色的「登记宿舍」（双名兼容）非空且不等于当前dormitory时（与PLACE-28互斥的另一种 失败模式），其值必须是一间真实的、当前开放的普通宿舍房间——用 Script/System/Dormitory_System/common.py的get_open_dormitory_room_occupancy()（函数级导入，避免 加载顺序问题）取得的开放宿舍占用表判定，不接受特殊房间（客房/监牢/博士房间/舍管房/关押区休息室） |
@@ -349,12 +343,12 @@ H 状态、群交模式、逆推、隐奸。
 | ROSTER-01 | 在编名册id自洽 | cache.npc_id_got中每个id都存在角色对象，且角色自身cid与名册键一致，这是后续全部名册检查的地基 |
 | ROSTER-02 | 玩家id不应长期留在NPC名册里 | npc_id_got语义上是NPC集合，但init_character_position/init_character_entertainment会对玩家本体add(0)， discard(0)只在基建/宿舍面板(玩家触发)里执行，回合主循环从不调用 |
 | ROSTER-03 | 在编干员与场景名册双向一致 | 在编NPC恰好出现在其position对应的那一个场景里，离线角色从所有场景消失，场景里不得有幽灵id |
-| ROSTER-04 | 离线来源flag必须对应真正的离线态 | 装袋/外勤/越狱三条路径都是"置来源flag→重算异常位→handle_chara_off_line"的原子写法 |
+| ROSTER-04 | 离线来源flag必须对应真正的离线态 | 装袋/外勤/越狱三条路径都是"置来源flag→handle_chara_off_line"的原子写法 |
 | ROSTER-05 | 监禁flag的来源分区完整 | 带imprisonment的角色当且仅当是在册囚犯或逃跑中的前囚犯(escape_success故意保留imprisonment)； 囚犯与逃犯两个集合互斥 |
 | ROSTER-06 | 囚犯名册条目结构合法且本人在编 | current_prisoners每条记录形状为[入狱时间, 逃脱概率]，概率夹在0..100之间且非bool污染， 本人在编且sp_flag.imprisonment为True、escaping为False |
 | ROSTER-07 | 囚犯宿舍是互不重复的合法牢房 | 每名囚犯的dormitory都必须在PRISON_DORMS(全部Prison标签场景，即牢1..牢8)集合内，且互不重复 |
 | ROSTER-08 | 囚犯留在关押区且不得同时被装袋 | 囚犯cant_move，NPC AI会把不在牢房的囚犯瞬移回宿舍，合法的短暂离房只有"正在H(含调教室)"； 用position[0] == "关押"比对目录首段，不拼分隔符 |
-| ROSTER-09 | 逃跑者处于完整离线态 | escape_success依次置escaping→重算异常位→pop囚犯名册→handle_chara_off_line→创建追捕委托， 并保留imprisonment |
+| ROSTER-09 | 逃跑者处于完整离线态 | escape_success依次置escaping→pop囚犯名册→handle_chara_off_line→创建追捕委托， 并保留imprisonment |
 | ROSTER-10 | 逃跑者仍有一条可执行的追捕委托 | 每个escaping角色都应存在一条reward=="追捕_{cid}_1"且未标记完成的委托配置； 牢房全满时抓捕结算会静默跳过归案，委托却照样标完成并出表，逃犯从此永久滞留escaping |
 | ROSTER-11 | 监狱长缓存唯一且指向真实岗位 | 在编干员里最多只能有一名工作类型191的监狱长，current_warden_id非零时必须指向存在的角色， 不能与那名在编191冲突 |
 | ROSTER-12 | 监狱长身份软约束 | 期望状态：current_warden_id非零时该人在编、宿舍是关押区休息室、不是囚犯/访客、不在外勤 |
@@ -376,7 +370,6 @@ H 状态、群交模式、逆推、隐奸。
 | ROSTER-28 | 载具外勤中数与委托明细守恒 | vehicles[vid] = [拥有数, 外勤中数]；外勤中数必须等于所有进行中委托里该型号载具的出现次数， 且不超过拥有数 |
 | ROSTER-29 | 进行中委托id有效且未逾期 | 委托完成判定在每个非时停玩家回合的行为树里先于NPC结算跑一次，回合结束时留下的委托必须严格 满足end_time > game_time(> 而非 >=，恰好到点的委托按完成条件本应已结算) |
 | ROSTER-30 | 外交官表与角色外派flag双向一致 | 任命写diplomat_of_country[国家][0] = id与sp_flag.in_diplomatic_visit = 国家，解任同时清两者 |
-| ROSTER-31 | 异常位掩码与其来源状态一致(第2、7位) | sp_flag.unnormal_flag是带"已知/未知"两层的位掩码缓存，第2位=AI停止(临盆/产后/监禁)， 第7位=离线(装袋/外勤/婴儿/异国外派/逃跑) |
 | ROSTER-32 | 助理身份互斥 | 助理候选排除访客、监狱长以及2/7类异常 |
 | ROSTER-33 | 装袋双方记录双向一致 | 玩家的sp_flag.bagging_chara_id与被搬运者的sp_flag.be_bagged必须互指；被装袋者必须离线， 且不能同时是囚犯、访客、外勤或逃跑者 |
 

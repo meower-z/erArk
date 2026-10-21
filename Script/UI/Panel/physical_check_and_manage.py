@@ -38,7 +38,6 @@ def settle_health_check():
                     continue
                 # 重置今日体检时间数据
                 cache.character_data[chara_id].action_info.health_check_today = 0
-                handle_premise.settle_chara_unnormal_flag(chara_id, 3)
                 # 如果干员在体检名单中，则加入要体检的干员列表
                 if handle_premise.handle_self_in_health_check_list(chara_id):
                     need_physical_examination_chara_id_list.append(chara_id)
@@ -58,7 +57,6 @@ def settle_health_check():
                     now_character_data.action_info.health_check_today = 1
                 else:
                     now_character_data.action_info.health_check_today = 2
-                handle_premise.settle_chara_unnormal_flag(chara_id, 3)
         # 重置周期内的已体检干员数据
         if cache.rhodes_island.physical_examination_setting[3] == 0:
             # 每年重置一次
@@ -233,7 +231,6 @@ class Physical_Check_And_Manage_Panel:
             # 从等待体检名单中移除
             if target_character_id in cache.rhodes_island.waiting_for_exam_operator_ids:
                 cache.rhodes_island.waiting_for_exam_operator_ids.remove(target_character_id)
-            handle_premise.settle_chara_unnormal_flag(target_character_id, 3)
 
     def check_target_physical(self, target_character_id: int):
         """查看目标角色的身体情况"""

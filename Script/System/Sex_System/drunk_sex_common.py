@@ -82,8 +82,6 @@ def add_drunk_point(character_id: int, food: game_type.Food, taste_wine_flag: bo
         add_value = round(add_value * 0.3)
     # 增加角色的醉酒值，并确保不超过100
     character_data.drunk_point = min(100, character_data.drunk_point + add_value)
-    handle_premise.settle_chara_unnormal_flag(character_id, 5)
-    handle_premise.settle_chara_unnormal_flag(character_id, 6)
 
 
 def reduce_drunk_point(character_id: int, time: int):
@@ -127,8 +125,6 @@ def reduce_drunk_point(character_id: int, time: int):
     character_data.drunk_point = max(0, round(character_data.drunk_point - reduce_value))
     # 减少的醉酒值同比转化为尿意值
     character_data.urinate_point = min(300, character_data.urinate_point + round(reduce_value * 1.5))
-    handle_premise.settle_chara_unnormal_flag(character_id, 5)
-    handle_premise.settle_chara_unnormal_flag(character_id, 6)
 
 
 def judge_accept_alcohol_food(character_id: int, food: game_type.Food) -> bool:

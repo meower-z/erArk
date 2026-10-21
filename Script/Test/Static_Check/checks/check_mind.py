@@ -1,28 +1,22 @@
 # -*- coding: UTF-8 -*-
 """
 静态检查系统 - 意识域（时停/催眠/无意识/睡眠）领域检查
-本模块实现 MIND-01 ~ MIND-30 共30条不变量检查，覆盖时间停止、催眠深度/类型/子项、
-角色扮演列表、异常位掩码5/6、睡眠/装睡、熟睡值等意识状态相关字段的一致性约束。
+本模块实现 MIND 组的28条不变量检查（MIND-01 ~ MIND-25、MIND-28 ~ MIND-30），覆盖时间停止、催眠深度/类型/子项、
+角色扮演列表、睡眠/装睡、熟睡值等意识状态相关字段的一致性约束。
 来源: final_invariants_mind.md（M-xx + MS-xx 不变式清单）。
 
 约定与踩坑说明（写在此处，避免散落在各检查函数注释里重复）：
-1. `cid == 0` 是玩家角色。`_quick_check_normal_by_mask`（handle_premise/__init__.py）对玩家恒返回"正常"，
-   于是玩家的 unnormal_flag 第5/6位在开时停等场景下必然是"已知且未激活"——凡是断言该掩码的检查
-   （MIND-26/MIND-27）必须显式排除玩家，否则每次开时停都会稳定误报。
-2. `unnormal_flag` 字段在旧存档中可能仍是原始dict（未被 `_ensure_unnormal_flag_storage` 升级为
-   `UnnormalFlagMask`）。本模块只读不写，绝不调用会回写角色数据的升级函数；遇到非 `UnnormalFlagMask`
-   的原始值一律跳过该角色，见 `_mask()`。
-3. `cache.debug_mode` 下debug面板可越过前提直接改素质、催眠深度/子项、角色扮演列表、熟睡值等，
+1. `cache.debug_mode` 下debug面板可越过前提直接改素质、催眠深度/子项、角色扮演列表、熟睡值等，
    凡这些字段参与、且检查内容为"值来自合法结算路径"的不变式，都在检查体前加debug豁免；
    纯粹的存档结构/schema式检查（如MIND-22/28/29）不受debug模式影响，不加豁免。
-4. `cache.npc_id_got` 不保证是 `cache.character_data` 的子集，一律用 `_iter_npcs()` 做存在性保护。
-5. 场景key统一用 `map_handle.get_map_system_path_str_for_list`（`os.sep.join`），不是 "|".join。
-6. `game_config.config_roleplay` 在独立脚本环境下可能未加载，相关检查（MIND-16）遇缺表时降级为跳过。
-7. 全部字段访问一律使用 getattr/dict.get 加默认值防御，绝不能因为老存档缺字段或类型不符而让检查器自身抛异常。
+2. `cache.npc_id_got` 不保证是 `cache.character_data` 的子集，一律用 `_iter_npcs()` 做存在性保护。
+3. 场景key统一用 `map_handle.get_map_system_path_str_for_list`（`os.sep.join`），不是 "|".join。
+4. `game_config.config_roleplay` 在独立脚本环境下可能未加载，相关检查（MIND-16）遇缺表时降级为跳过。
+5. 全部字段访问一律使用 getattr/dict.get 加默认值防御，绝不能因为老存档缺字段或类型不符而让检查器自身抛异常。
 """
 from typing import List, Optional
 
-from Script.Core import cache_control, game_type
+from Script.Core import cache_control
 from Script.Design import map_handle
 from ..check_registry import CheckFailure, register_check, make_failure
 
@@ -106,18 +100,6 @@ def _talent_get(chara, talent_id: int) -> int:
         return 0
     value = talent.get(talent_id, 0)
     return value if isinstance(value, int) and not isinstance(value, bool) else 0
-
-
-def _mask(chara) -> Optional["game_type.UnnormalFlagMask"]:
-    """
-    参数: chara 角色对象
-    返回值: UnnormalFlagMask实例；旧存档里仍是dict、或sp_flag/unnormal_flag结构缺失时返回None
-    功能: 只读获取角色的异常状态位掩码。绝不调用会回写角色数据的_ensure_unnormal_flag_storage，
-        调用方在收到None时必须跳过该角色而不是报错
-    """
-    sp_flag = getattr(chara, "sp_flag", None)
-    raw = getattr(sp_flag, "unnormal_flag", None)
-    return raw if isinstance(raw, game_type.UnnormalFlagMask) else None
 
 
 def _u(chara) -> int:
@@ -369,8 +351,8 @@ def check_carry_target_valid_and_colocated() -> List[CheckFailure]:
     功能:
         校验pl.action_info.carry_chara_id指向的角色存在、未死亡且与玩家同地点。搬运期间玩家每次
         结算都会把被搬运者移动到玩家所在地点(handle_npc_ai_in_h.py，位于玩家分支内，回合边界上必定已执行)，
-        地点不同步或cid无效即"凭空跟随"的幽灵角色。有意不检查"被搬运者仍处于异常6"——异常位6是可失效缓存，
-        被搬运的睡眠干员自然睡醒后会被刷回"正常"而搬运不会自动停止，纳入会误报
+        地点不同步或cid无效即"凭空跟随"的幽灵角色。有意不检查"被搬运者仍处于异常6"——
+        被搬运的睡眠干员自然睡醒后异常6即为"正常"，而搬运不会自动停止，纳入会误报
     """
     cache = cache_control.cache
     if cache is None:
@@ -385,8 +367,6 @@ def check_carry_target_valid_and_colocated() -> List[CheckFailure]:
     target = character_data.get(cid) if isinstance(character_data, dict) else None
     if target is not None and not getattr(target, "dead", False) and getattr(target, "position", None) == getattr(pl, "position", None):
         return []
-    mask = _mask(target) if target is not None else None
-    bit6 = mask[6] if mask is not None else "?"
     target_pos = getattr(target, "position", "?") if target is not None else "?"
     pl_pos = getattr(pl, "position", "?")
     if target is None:
@@ -400,7 +380,7 @@ def check_carry_target_valid_and_colocated() -> List[CheckFailure]:
             "MIND-07",
             "被搬运的干员必须存在且与玩家同地点",
             f"玩家action_info.carry_chara_id={cid}指向的角色{reason}，"
-            f"该角色unconscious_h={_u(target) if target is not None else '?'}，异常位6={bit6}",
+            f"该角色unconscious_h={_u(target) if target is not None else '?'}",
             [0, cid],
         )
     ]
@@ -1030,84 +1010,6 @@ def check_sleep_unconscious_needs_sleep_or_pretend() -> List[CheckFailure]:
         )
     return failures
 
-
-@register_check("MIND-26", "异常位掩码5/6不得与意识状态相矛盾")
-def check_unnormal_flag_5_6_consistency() -> List[CheckFailure]:
-    """
-    参数: 无
-    返回值: List[CheckFailure]
-    功能:
-        校验时停模式/unconscious_h==3/5时若已知第6位则必须为异常，unconscious_h==4时若已知第5位则
-        必须为异常。unnormal_flag把"异常1-7"的判定结果缓存成位掩码，只在显式调用settle_chara_unnormal_flag
-        时刷新，是典型的失效缓存来源；缓存说"正常"而实际无意识，会让AI与指令前提把该角色当成可正常交互对象。
-        三条必须保留的防误报措施：(1)排除玩家——_quick_check_normal_by_mask对cid 0恒返回"正常"，纳入会
-        每个开时停回合恒假；(2)只查is_known的位，避开惰性缓存的合法unknown；(3)只做单向(无意识⇒该位为
-        异常)，不反向要求，避免醉酒等级/睡眠等级等其他异常来源带来的误报
-    """
-    cache = cache_control.cache
-    if cache is None:
-        return []
-    time_stop = getattr(cache, "time_stop_mode", False)
-    failures = []
-    for cid, chara in _iter_npcs():
-        f = _mask(chara)
-        if f is None:
-            continue
-        u = _u(chara)
-        cond6 = (not f.is_known(6)) or not (u in (3, 5) or time_stop) or f[6]
-        cond5 = (not f.is_known(5)) or u != 4 or f[5]
-        if cond6 and cond5:
-            continue
-        failures.append(
-            make_failure(
-                "MIND-26",
-                "异常位掩码5/6不得与意识状态相矛盾",
-                f"角色id={cid}({_name(chara)})unconscious_h={u} time_stop_mode={time_stop}但unnormal_flag第5/6位与之矛盾: "
-                f"第5位known={f.is_known(5)} val={f[5]}(cond5={cond5})，第6位known={f.is_known(6)} val={f[6]}(cond6={cond6})，"
-                f"behavior_id={_behavior_id(chara)} sleep_point={getattr(chara, 'sleep_point', '?')} drunk_point={getattr(chara, 'drunk_point', '?')}",
-                [cid],
-            )
-        )
-    return failures
-
-
-@register_check("MIND-27", "睡眠异常位与可推导的睡眠等级一致")
-def check_sleep_unnormal_flag_matches_sleep_level() -> List[CheckFailure]:
-    """
-    参数: 无
-    返回值: List[CheckFailure]
-    功能:
-        校验正在睡眠(behavior_id=="sleep")或处于睡眠无意识(unconscious_h==1)的角色，已知的异常位5/6
-        与熟睡等级一致：sleep_point<=30(等级0，半梦半醒)时第5位应为异常，>30(等级>=1)时第6位应为异常
-        (handle_premise/__init__.py，0档上限30来自Sleep_Level.csv)。这是同一份缓存的另一条失效路径，
-        实时结算在每次熟睡值变化后重算两位。同MIND-26，必须排除玩家并做dict保护，只查"应激活"方向
-    """
-    failures = []
-    for cid, chara in _iter_npcs():
-        f = _mask(chara)
-        if f is None:
-            continue
-        if _behavior_id(chara) != "sleep" and _u(chara) != 1:
-            continue
-        sp = getattr(chara, "sleep_point", 0)
-        if not _num(sp):
-            continue
-        if sp <= 30:
-            ok = (not f.is_known(5)) or f[5]
-        else:
-            ok = (not f.is_known(6)) or f[6]
-        if ok:
-            continue
-        failures.append(
-            make_failure(
-                "MIND-27",
-                "睡眠异常位与可推导的睡眠等级一致",
-                f"角色id={cid}({_name(chara)})sleep_point={sp} behavior_id={_behavior_id(chara)} unconscious_h={_u(chara)}"
-                f"但对应异常位与睡眠等级不符: 第5位known={f.is_known(5)} val={f[5]}，第6位known={f.is_known(6)} val={f[6]}",
-                [cid],
-            )
-        )
-    return failures
 
 
 @register_check("MIND-28", "时停高潮计数结构合法")

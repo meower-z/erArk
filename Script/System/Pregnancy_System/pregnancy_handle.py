@@ -485,7 +485,6 @@ def check_near_born(character_id: int):
             # 赋予对应素质和二段行动
             character_data.talent[21] = 0
             character_data.talent[22] = 1
-            handle_premise.settle_chara_unnormal_flag(character_id, 2)
             second_behavior.character_get_second_behavior(character_id, "parturient")
             talk.must_show_talk_check(character_id)
             draw_text = "\n※※※※※※※※※\n"
@@ -531,7 +530,6 @@ def check_rearing(character_id: int):
         if past_day >= pregnancy_constant.POSTPARTUM_REST_DAY:
             character_data.talent[23] = 0
             character_data.talent[24] = 1
-            handle_premise.settle_chara_unnormal_flag(character_id, 2)
             second_behavior.character_get_second_behavior(character_id, "rearing")
             talk.must_show_talk_check(character_id)
             draw_text = "\n※※※※※※※※※\n"
@@ -566,8 +564,6 @@ def _settle_baby_grow_up(character_id: int, child_id: int):
     character_handle.get_new_character(child_id)
     child_character_data.talent[101] = 0
     child_character_data.talent[102] = 1
-    # 结算婴儿到幼女的特殊状态flag
-    handle_premise.settle_chara_unnormal_flag(child_id, 7)
     # 长成幼女即转为学生岗（取教育系统的常量，不写死 152，Plan 28 §3.8）
     child_character_data.work.work_type = education_constant.STUDENT_WORK_TYPE
     # 婴儿期入队、还没处理的婴儿桶事件清掉（Plan 32 §3.11），否则会顶着「幼女期」的抬头弹出

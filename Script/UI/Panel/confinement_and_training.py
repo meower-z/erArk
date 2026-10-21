@@ -154,7 +154,6 @@ def escape_success(character_id: int):
     escape_draw.draw()
     # 进入逃跑中的状态
     character_data.sp_flag.escaping = True
-    handle_premise.settle_chara_unnormal_flag(character_id, 7)
     # 移除囚犯信息
     cache.rhodes_island.current_prisoners.pop(character_id)
     # 囚犯离线
@@ -191,8 +190,6 @@ def chara_become_prisoner(character_id: int):
     character_data.sp_flag.be_bagged = False
     character_data.sp_flag.imprisonment = True
     character_data.sp_flag.escaping = False
-    handle_premise.settle_chara_unnormal_flag(character_id, 2)
-    handle_premise.settle_chara_unnormal_flag(character_id, 7)
     # 重置身体管理
     character_data.body_manage = attr_calculation.get_body_manage_zero()
     # 加入囚犯数据

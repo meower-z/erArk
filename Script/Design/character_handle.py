@@ -11,7 +11,6 @@ from Script.Core import (
 )
 from Script.Design import (
     attr_calculation,
-    handle_premise,
     map_handle,
     attr_text,
     character,
@@ -202,8 +201,6 @@ def born_new_character(mother_id, child_name) -> int:
     first_record_handle.record_first_special_record(mother_id, 2, child_name)
     # cache.npc_id_got.add(now_id)
     init_character(now_id, cache.npc_tem_data[now_id])
-    # 婴儿的特殊状态flag结算
-    handle_premise.settle_chara_unnormal_flag(now_id, 7)
     return now_id
 
 # random_npc_max = normal_config.config_normal.random_npc_max

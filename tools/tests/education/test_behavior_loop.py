@@ -242,7 +242,6 @@ def l4_clear_need(cid: int) -> None:
     cid -- 角色id
     Return arguments:
     无
-    功能: 改了需求标记要同步异常位掩码，否则 normal_1 按旧掩码判
     """
     cd = cache.character_data[cid]
     for name in ("hunger_point", "urinate_point", "tired_point", "sleep_point"):
@@ -255,7 +254,6 @@ def l4_clear_need(cid: int) -> None:
     cd.sp_flag.tired = False
     cd.hit_point = cd.hit_point_max
     cd.mana_point = cd.mana_point_max
-    handle_premise.refresh_unnormal_flag(cid)
 
 
 l4_id = -1

@@ -242,7 +242,6 @@ class Born_Panel:
                     if mom_character_data.talent[talent_id]:
                         mom_character_data.pregnancy.milk_max = 150 + (talent_id - 121) * 40
                         break
-                handle_premise.settle_chara_unnormal_flag(self.mother_character_id, 2)
                 mom_character_data.experience[86] += 1
                 draw_text += _("\n{0}的妊娠经验+1\n").format(mom_character_data.name)
                 draw_text += _("\n{0}接下来的行动重心会以照顾{1}为主\n").format(mom_character_data.name, "、".join(child_name_list) if len(child_name_list) else child_character_data.name)
@@ -254,7 +253,6 @@ class Born_Panel:
                 draw_text += _("\n{0}的生产结束了，但她仍需要在住院部休息几天\n").format(mom_character_data.name)
                 mom_character_data.talent[22] = 0
                 mom_character_data.talent[23] = 1
-                handle_premise.settle_chara_unnormal_flag(self.mother_character_id, 2)
                 draw_text += _("\n{0}从[临盆]转变为[产后]\n").format(mom_character_data.name)
                 mom_character_data.talent[26] = 0
                 draw_text += _("\n{0}失去了[孕肚]\n").format(mom_character_data.name)

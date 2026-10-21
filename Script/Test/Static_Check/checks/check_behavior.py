@@ -780,8 +780,7 @@ def check_last_behavior_id_list_bounded() -> List[CheckFailure]:
         List[CheckFailure] -- 失败记录列表
     功能:
         校验last_behavior_id_list是长度在[1,5]的list，且每个元素要么是0要么是字符串。初值[0]，完成行为时
-        追加并裁到5，是全仓库唯一写入点；长度是生产语义的一部分，用last_behavior_id_list[-1]判睡醒后刷新
-        异常位，空列表会IndexError。定为warning而非error：旧存档迁移原样复制列表且不裁剪，超长列表每轮只
+        追加并裁到5，是全仓库唯一写入点。定为warning而非error：旧存档迁移原样复制列表且不裁剪，超长列表每轮只
         缩短1项，会连续多个合法回合告警。不加x in game_config.config_behavior成员校验(旧存档必然噪声)；
         不并入全局cache.pl_pre_behavior_instruce(它没有任何读档裁剪路径)
     """
@@ -803,8 +802,8 @@ def check_last_behavior_id_list_bounded() -> List[CheckFailure]:
                 "BEHAV-18",
                 "行为历史队列有界且条目可比",
                 f"[warning] 角色cid={cid}(name={getattr(chara, 'name', '?')!r})的last_behavior_id_list={lst!r}"
-                f"(长度{length})不满足'非空列表、长度<=5、元素为0或字符串'；用[-1]判睡醒后刷新异常位，"
-                f"空列表会IndexError；behavior_id={behavior_id!r}",
+                f"(长度{length})不满足'非空列表、长度<=5、元素为0或字符串'；"
+                f"behavior_id={behavior_id!r}",
                 [cid],
             )
         )

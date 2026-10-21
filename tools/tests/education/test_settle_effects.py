@@ -133,10 +133,9 @@ before = student_b.experience.get(exp_45, 0)
 EFFECT[557](202, 45, change, cache.game_time)
 check("H1 教师判来不了（H 中）：557 不结算", student_b.experience.get(exp_45, 0) == before and student_b.child_growth.last_attend_period == [])
 teacher.sp_flag.is_h = False
-# Plan 31 §3.4：空气催眠只在人已在本节教室时算能到岗，木头人一律来不了（测试直接改状态位，要自己刷新异常位）
+# 空气催眠只在人已在本节教室时算能到岗，木头人一律来不了
 teacher.sp_flag.unconscious_h = 5
 move_to(101, SCENE_DORM)
-handle_premise.refresh_unnormal_flag(101)
 EFFECT[557](202, 45, change, cache.game_time)
 check("M3 空气催眠的教师、人不在本节教室（去教室的移动行走不了）：557 不结算", student_b.child_growth.last_attend_period == [])
 move_to(101, classroom_path(ROOM1))
@@ -146,12 +145,10 @@ check("M3 空气催眠的教师、人已在本节教室（授课行照样成立�
 reset_mark(202)
 teacher.sp_flag.unconscious_h = 6
 teacher.hypnosis.blockhead = True
-handle_premise.refresh_unnormal_flag(101)
 EFFECT[557](202, 45, change, cache.game_time)
 check("M3 体控-木头人的教师（每轮被锁成原地等待）：人就在教室也不结算", student_b.child_growth.last_attend_period == [])
 teacher.hypnosis.blockhead = False
 teacher.sp_flag.unconscious_h = 0
-handle_premise.refresh_unnormal_flag(101)
 # 授课者是玩家（当天的临时实操课）：那是课堂 H，不是授课
 sex_class_handle.set_temp_class(cache.game_time.date().toordinal(), 0, ROOM_P, 70, must_attend=[202])
 move_to(202, classroom_path(ROOM_P))

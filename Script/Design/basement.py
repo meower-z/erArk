@@ -466,7 +466,6 @@ def update_work_people():
                     # 仍在外交官名册上的，补回驻在国信息
                     if cache.rhodes_island.diplomat_of_country[country_id][0] == chara_id:
                         character_data.sp_flag.in_diplomatic_visit = country_id
-                        handle_premise.settle_chara_unnormal_flag(chara_id, 7)
                         break
                 else:
                     # 名册上没有的，视为旧版本的外交官数据，改为新的邀请专员

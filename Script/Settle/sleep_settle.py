@@ -68,7 +68,6 @@ def update_sleep():
                 # 如果助理的跟随服务已开启，且没有在跟随，则让助理跟随
                 if assistant_character_data.sp_flag.is_follow != 1 and handle_premise.handle_assistant_follow_1(assistant_id):
                     assistant_character_data.sp_flag.is_follow = 1
-                    handle_premise.settle_chara_unnormal_flag(assistant_id, 3)
                 # 助理成就
                 achievement_panel.achievement_flow(_("助理"))
             # 体外无壳卵：长时间睡眠期间到期的卵进行受精判定（先于各NPC的破壳判定）

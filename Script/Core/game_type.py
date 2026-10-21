@@ -775,7 +775,7 @@ class AUTHOR_FLAG:
 
 
 class UnnormalFlagMask:
-    """角色异常状态位掩码，使用位运算快速判定是否存在异常。"""
+    """角色异常状态位掩码。仅为旧存档能反序列化而保留；异常1~7由handle_normal_1~7每次读取时现算，不读写此类。"""
 
     __slots__ = ("_mask", "_known_bits")
 
@@ -867,7 +867,7 @@ class SPECIAL_FLAG:
     def __init__(self):
         self.unnormal_flag: UnnormalFlagMask = UnnormalFlagMask()
         """
-        角色异常状态标记位掩码；对应位为1表示该类异常存在
+        仅为旧存档能反序列化而保留的异常状态位掩码；异常1~7由handle_normal_1~7每次读取时现算，不读写此字段
         1. 基础生理需求：休息、睡觉、解手、吃饭、沐浴（不含已洗澡）、挤奶、自慰
         2. AI行动基本停止：临盆、产后、监禁
         3. 高优先级AI：助理、跟随、体检

@@ -2,11 +2,11 @@
 """
 静态检查系统 - 可观察矛盾检查
 
-本模块实现 OBS-01 ~ OBS-18 共18条不变量检查，覆盖玩家可直接从指令面板、角色标签、身体面板、
+本模块实现 OBS 组的14条不变量检查（OBS-01 ~ OBS-09、OBS-12、OBS-13、OBS-16 ~ OBS-18），覆盖玩家可直接从指令面板、角色标签、身体面板、
 位置面板与助理设置中观察到的状态矛盾。
 
 全流水线实现总则：
-1. 禁止调用 Script/Design/handle_premise 中的正式前提函数；这些函数可能升级旧档结构、写异常位掩码、
+1. 禁止调用 Script/Design/handle_premise 中的正式前提函数；这些函数可能升级旧档结构、
    补写指令过滤键或通过 setdefault 修改存档。本模块只直读 cache/character_data 字段，并只调用已确认
    无副作用的地图路径与睡眠等级派生函数。
 2. 每回合执行，角色检查保持单层 O(N) 遍历；配置表和场景路径等共享查表放在循环外。
@@ -20,7 +20,7 @@
 from typing import Iterator, List, Optional, Tuple
 
 from Script.Config import normal_config
-from Script.Core import cache_control, constant, game_type
+from Script.Core import cache_control, constant
 from Script.Design import attr_calculation, map_handle
 from ..check_registry import CheckFailure, make_failure, register_check
 
@@ -33,7 +33,6 @@ except Exception:  # pragma: no cover - 独立运行环境下配置包可能尚�
 # 场景路径必须使用游戏自身助手拼接，不能写死平台分隔符。
 _P = map_handle.get_map_system_path_str_for_list
 _ASSISTANT_SERVICE_KEYS = {2, 3, 4, 5, 6, 7, 8, 10}
-_PHYSIOLOGICAL_FLAGS = ("rest", "sleep", "pee", "eat_food", "help_buy_food", "help_make_food", "shower", "milk", "masturebate", "npc_masturebate_for_player")
 _BATH_BEHAVIOR_TAGS = {
     constant.Behavior.SWIMMING: "Swimming_Pool",
     constant.Behavior.TAKE_SHOWER: "Bathroom",
@@ -152,16 +151,6 @@ def _scene(cache, position):
     if not isinstance(scene_data, dict) or not isinstance(position, list) or not position or not all(isinstance(x, str) for x in position):
         return None
     return scene_data.get(_P(position))
-
-
-def _mask(chara) -> Optional[game_type.UnnormalFlagMask]:
-    """
-    参数: chara 角色对象
-    返回值: Optional[UnnormalFlagMask]，旧档原始结构或缺字段时返回 None
-    功能: 只读取得异常位掩码，绝不调用会就地迁移旧档的正式前提函数。
-    """
-    raw = getattr(_sp(chara), "unnormal_flag", None)
-    return raw if isinstance(raw, game_type.UnnormalFlagMask) else None
 
 
 def _sleep_level(chara) -> Optional[int]:
@@ -436,65 +425,6 @@ def check_observable_09() -> List[CheckFailure]:
     return [make_failure("OBS-09", "非群交下至多一名NPC处于阴茎插入中", f"[warning] 已知低频残留机制：普通H换位仅有少数复位点，旧对象可能保留insert_position；{details}", bad)]
 
 
-@register_check("OBS-10", "异常位掩码第5和第6位的反向一致性")
-def check_observable_10() -> List[CheckFailure]:
-    """
-    参数: 无
-    返回值: List[CheckFailure]，已知且激活的意识异常位仍有来源支撑、或醉酒源不可判定时为空
-    功能: 保守反向复算第5/6位来源，对照 handle_normal_5/6（Script/Design/handle_premise/__init__.py:1010-1058）：
-        睡眠项复用 MIND-27 已有的睡眠等级安全推导（attr_calculation.get_sleep_level，纯读）配合行为/unconscious_h==1
-        直读；unconscious_h 3/4/5 与时停直读字段；醉酒项采保守口径——只有 drunk_point<=0 时才断言"醉酒源必不成立"
-        （酒量素质是乘数，0 乘任何数仍为等级0），drunk_point>0 时视为醉酒源可能成立，整条放行、不判该角色，禁止
-        复制 get_drunk_level 的乘数公式或调用 drunk_sex_common（会间接触发正式前提函数，违反总则1）。健康存档中
-        缓存激活该位时，至少一个原始来源仍成立，或醉酒值未耗尽而放行，因此恒不命中。
-    """
-    cache = cache_control.cache
-    if cache is None or getattr(cache, "debug_mode", False):
-        return []
-    if game_config is None or not getattr(game_config, "config_sleep_level", None):
-        return []
-    time_stop = getattr(cache, "time_stop_mode", False)
-    bad = []
-    details = []
-    for cid, chara in _iter_npcs(cache):
-        mask = _mask(chara)
-        if mask is None or not (mask.is_known(5) and mask.check(5)) and not (mask.is_known(6) and mask.check(6)):
-            continue
-        sp = _sp(chara)
-        u = getattr(sp, "unconscious_h", None)
-        if not isinstance(u, int) or isinstance(u, bool):
-            continue
-        drunk_point = getattr(chara, "drunk_point", None)
-        if not isinstance(drunk_point, (int, float)) or isinstance(drunk_point, bool):
-            continue
-        if drunk_point > 0:
-            # 醉酒源可能成立（乘数未知，保守放行），不对该角色下判定。
-            continue
-        sleep_level = _sleep_level(chara)
-        if sleep_level is None:
-            continue
-        behavior_id = getattr(_behavior(chara), "behavior_id", None)
-        sleeping = behavior_id == constant.Behavior.SLEEP or u == 1
-        if mask.is_known(6) and mask.check(6):
-            source6 = (sleep_level >= 1 and sleeping) or u == 5 or time_stop or u == 3
-            if not source6:
-                bad.append(cid)
-                details.append(
-                    f"cid={cid}({_name(chara)})第6位已知且异常但四组来源全不成立: sleep_level={sleep_level} sleeping={sleeping} "
-                    f"unconscious_h={u} time_stop={time_stop} drunk_point={drunk_point}"
-                )
-        if mask.is_known(5) and mask.check(5):
-            source5 = (sleep_level == 0 and sleeping) or u == 4
-            if not source5:
-                bad.append(cid)
-                details.append(
-                    f"cid={cid}({_name(chara)})第5位已知且异常但三组来源全不成立: sleep_level={sleep_level} sleeping={sleeping} "
-                    f"unconscious_h={u} drunk_point={drunk_point}"
-                )
-    if not bad:
-        return []
-    return [make_failure("OBS-10", "异常位掩码第5和第6位的反向一致性", f"[warning] 保守反向陈旧探测（drunk_point<=0时醉酒源必不成立）：{'; '.join(details)}", sorted(set(bad)))]
-
 
 # OBS-11（已删除，2026-08-28）：曾断言"异地智能跟随者必须正在赶路或门外等待"（is_follow==1 且异地却处于
 # SHARE_BLANKLY 即报）。sol 调查 + opus 复核确认该单帧断言结构性不成立：(1) 行为结束重置
@@ -585,90 +515,6 @@ def check_observable_13() -> List[CheckFailure]:
         return []
     return [make_failure("OBS-13", "非当前助理的角色助理服务位必须全为0", f"当前助理cid={assistant_id}，但以下非助理角色仍持有会被AI消费的服务位：{details}", bad)]
 
-
-@register_check("OBS-14", "异常位掩码第4位必须与当前穿着重算一致")
-def check_observable_14() -> List[CheckFailure]:
-    """
-    参数: 无
-    返回值: List[CheckFailure]，服装异常缓存与当前穿着一致时为空
-    功能: 直读 cloth_wear 复算全裸或大致全裸，不调用会写掩码的 handle_normal_4；健康存档的换衣路径会同步刷新第4位，因此恒不命中。
-    """
-    cache = cache_control.cache
-    clothing_types = getattr(game_config, "config_clothing_type", None) if game_config is not None else None
-    if cache is None or getattr(cache, "debug_mode", False) or not clothing_types:
-        return []
-    type_ids = tuple(clothing_types.keys())
-    bad = []
-    details = []
-    for cid, chara in _iter_npcs(cache):
-        mask = _mask(chara)
-        if mask is None or not mask.is_known(4):
-            continue
-        wear = getattr(getattr(chara, "cloth", None), "cloth_wear", None)
-        if not isinstance(wear, dict) or any(key not in wear or not isinstance(wear.get(key), list) for key in type_ids) or any(key not in wear or not isinstance(wear.get(key), list) for key in (5, 6, 8, 9)):
-            continue
-        cloth_off = True
-        for clothing_type in type_ids:
-            slot = wear[clothing_type]
-            if not slot:
-                continue
-            if clothing_type == 3 and slot == [352]:
-                continue
-            if clothing_type == 7 and slot == [751]:
-                continue
-            cloth_off = False
-            break
-        cloth_most_off = all(not wear[key] for key in (5, 6, 8, 9))
-        recomputed = cloth_off or cloth_most_off
-        if mask.check(4) != recomputed:
-            bad.append(cid)
-            details.append(f"cid={cid}({_name(chara)}) mask.check(4)={mask.check(4)} 重算={recomputed} cloth_off={cloth_off} cloth_most_off={cloth_most_off}")
-    if not bad:
-        return []
-    return [make_failure("OBS-14", "异常位掩码第4位必须与当前穿着重算一致", f"[warning] {details}", bad)]
-
-
-@register_check("OBS-15", "异常位掩码第1位必须与基础生理来源重算一致")
-def check_observable_15() -> List[CheckFailure]:
-    """
-    参数: 无
-    返回值: List[CheckFailure]，第1位缓存与全部生理意图来源一致时为空
-    功能: 直读来源 flag 复算基础生理异常，不调用会写掩码的 handle_normal_1；健康存档在来源变化时同步更新缓存，因此恒不命中。
-    """
-    cache = cache_control.cache
-    if cache is None or getattr(cache, "debug_mode", False):
-        return []
-    bad = []
-    details = []
-    for cid, chara in _iter_npcs(cache):
-        mask = _mask(chara)
-        sp = _sp(chara)
-        if mask is None or not mask.is_known(1) or sp is None:
-            continue
-        values = {name: getattr(sp, name, None) for name in _PHYSIOLOGICAL_FLAGS}
-        if any(value is None for value in values.values()):
-            continue
-        try:
-            recomputed = bool(
-                values["rest"] == 1
-                or values["sleep"] == 1
-                or values["pee"] == 1
-                or values["eat_food"] >= 1
-                or values["help_buy_food"] >= 1
-                or values["help_make_food"] >= 1
-                or values["shower"] in {1, 2, 3}
-                or values["milk"] == 1
-                or values["masturebate"] > 0
-                or values["npc_masturebate_for_player"]
-            )
-        except (TypeError, ValueError):
-            continue
-        if mask.check(1) != recomputed:
-            bad.append(cid)
-            details.append(f"cid={cid}({_name(chara)}) mask.check(1)={mask.check(1)} 重算={recomputed} sources={values}")
-    if not bad:
-        return []
-    return [make_failure("OBS-15", "异常位掩码第1位必须与基础生理来源重算一致", f"基础生理异常缓存与来源flag不一致：{details}", bad)]
 
 
 @register_check("OBS-16", "洗浴和游泳类行为必须发生在对应设施")

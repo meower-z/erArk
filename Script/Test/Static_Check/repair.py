@@ -352,8 +352,6 @@ def repair_masturebate_stale_group_flag(cache) -> List[dict]:
         sp_flag.masturebate==3的角色，直接把该标记归0。条件即检查断言本身，只兜住已确认的存量残留形态
         （群交中有人从无意识恢复时先关group_sex_mode再清理其余角色，清理函数不清masturebate），不覆盖
         仍在H/群交中的角色——那些角色下次H/群交正常结束时会经效果407自然清零。
-        masturebate是异常位掩码第1位（基础生理需求）的来源之一，清标记后必须把该位标回未知，
-        由下次读取时重算，否则掩码会停在与来源不符的"异常"上
     """
     if getattr(cache, "group_sex_mode", False):
         return []
@@ -364,10 +362,6 @@ def repair_masturebate_stale_group_flag(cache) -> List[dict]:
             continue
         old_v = sp.masturebate
         sp.masturebate = 0
-        # 把异常位掩码第1位标回未知，交由下次读取重算，与游戏内清标记处的做法一致
-        mask = getattr(sp, "unnormal_flag", None)
-        if hasattr(mask, "mark_unknown"):
-            mask.mark_unknown(1)
         records.append(_record("HGROUP-12", _chara_label(cid, chara), "sp_flag.masturebate", old_v, 0))
     return records
 

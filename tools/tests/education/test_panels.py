@@ -544,7 +544,6 @@ check("L8 实行值够了：成年学生算进「本节选修本教室的学生�
 cache.character_data[201].sp_flag.imprisonment = True
 _count_line, _blocked_line, _no_course_line = draw_sex_class_page()
 cache.character_data[201].sp_flag.imprisonment = False
-handle_premise.refresh_unnormal_flag(201)
 check("L8 状态异常（被监禁）的女儿同样归进「此刻进不了课堂」；一个能参加的都没有时写 0 人、说明选修的人都进不了课堂",
       "女儿01" in _blocked_line and "：0 人" in _count_line and "进不了课堂" in _count_line, (_count_line, _blocked_line))
 clear_schedules()

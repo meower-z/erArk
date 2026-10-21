@@ -144,8 +144,6 @@ def evaluate_hypnosis_completion(character_id: int):
         if now_hypnosis_type == 1 or now_hypnosis_type == 2:
             hypnosis_state.clear_hypnosis_behavior_mode(character_id)
             character_data.sp_flag.unconscious_h = now_hypnosis_type + 3
-        handle_premise.settle_chara_unnormal_flag(character_id, 5)
-        handle_premise.settle_chara_unnormal_flag(character_id, 6)
         # print(f"debug {character_data.name} unconscious_h = {character_data.sp_flag.unconscious_h}")
         return 1
     # 未完成催眠
