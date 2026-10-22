@@ -52,6 +52,18 @@ def repository_test_files() -> list:
     return [path for path in paths if is_test_file(path) and os.path.isfile(os.path.join(ROOT, path))]
 
 
+def covers(entry: str, path: str) -> bool:
+    """
+    LAYERS 或 NOT_IN_LAYERS 的一项是否包含该文件：以 / 结尾的项是目录，包含其下全部文件；其余的项只包含同名文件
+    Keyword arguments:
+    entry -- 表中的一项
+    path -- 用 / 分隔的路径
+    Return arguments:
+    bool -- 是否包含
+    """
+    return path.startswith(entry) if entry.endswith("/") else path == entry
+
+
 def misplaced(paths: list) -> list:
     """
     找出不在两层里、也不在 NOT_IN_LAYERS 里的测试文件
@@ -60,8 +72,7 @@ def misplaced(paths: list) -> list:
     Return arguments:
     list[str] -- 放错位置的测试文件
     """
-    allowed = tuple(LAYERS) + tuple(NOT_IN_LAYERS)
-    return [path for path in paths if not path.startswith(allowed)]
+    return [path for path in paths if not any(covers(entry, path) for entry in (*LAYERS, *NOT_IN_LAYERS))]
 
 
 def layer_modules(layer: str) -> dict:
@@ -94,20 +105,37 @@ def module_name(path: str) -> str:
     return path[: -len(".py")].replace("/", ".").removesuffix(".__init__")
 
 
-def visible_registered(tree: ast.Module, module: str, registered: set) -> set:
+def imported_module(node: ast.ImportFrom, path: str) -> str:
+    """
+    from 导入语句导入的模块名；相对导入按导入它的文件所在的包解析
+    Keyword arguments:
+    node -- from 导入语句
+    path -- 导入它的文件，用 / 分隔的路径
+    Return arguments:
+    str -- 模块名
+    """
+    if not node.level:
+        return node.module
+    package = path.split("/")[: -node.level]
+    return ".".join(package + ([node.module] if node.module else []))
+
+
+def visible_registered(tree: ast.Module, path: str, registered: set) -> set:
     """
     一个模块里可以当作已登记基类使用的名字：从别的模块导入的已登记类，加上本模块里已登记的类
     Keyword arguments:
     tree -- 模块的语法树
-    module -- 模块名
+    path -- 模块的文件，用 / 分隔的路径
     registered -- 已登记的类：(模块名, 类名)
     Return arguments:
     set[str] -- 名字
     """
+    module = module_name(path)
     names = {name for owner, name in registered if owner == module}
     for node in tree.body:
         if isinstance(node, ast.ImportFrom):
-            names.update(alias.asname or alias.name for alias in node.names if (node.module, alias.name) in registered)
+            source = imported_module(node, path)
+            names.update(alias.asname or alias.name for alias in node.names if (source, alias.name) in registered)
     return names
 
 
@@ -125,23 +153,22 @@ def registered_classes(modules: dict, module: str, base: str) -> set:
     while True:
         found = set(registered)
         for path, tree in modules.items():
-            name = module_name(path)
-            names = visible_registered(tree, name, found)
+            names = visible_registered(tree, path, found)
             for node in tree.body:
                 if isinstance(node, ast.ClassDef) and any(isinstance(item, ast.Name) and item.id in names for item in node.bases):
-                    found.add((name, node.name))
+                    found.add((module_name(path), node.name))
                     names.add(node.name)
         if found == registered:
             return registered
         registered = found
 
 
-def base_class_problems(tree: ast.Module, module: str, registered: set, base: str) -> list:
+def base_class_problems(tree: ast.Module, path: str, registered: set, base: str) -> list:
     """
     检查一个测试文件的测试都写在已登记的类里
     Keyword arguments:
     tree -- 测试文件的语法树
-    module -- 测试文件的模块名
+    path -- 测试文件，用 / 分隔的路径
     registered -- 本层已登记的类：(模块名, 类名)
     base -- 本层的基类名，写进问题说明
     Return arguments:
@@ -149,7 +176,7 @@ def base_class_problems(tree: ast.Module, module: str, registered: set, base: st
     功能描述:
         定义 test 开头方法的类都要已登记；模块级的 test 开头函数不算登记；文件里至少要有一个带测试方法的已登记类。
     """
-    names = visible_registered(tree, module, registered)
+    names = visible_registered(tree, path, registered)
     problems = []
     test_classes = 0
     for node in tree.body:
@@ -178,7 +205,7 @@ class RegistrationTest(FastTestCase):
             registered = registered_classes(modules, module, base)
             for path, tree in modules.items():
                 if is_test_file(path):
-                    found = base_class_problems(tree, module_name(path), registered, base)
+                    found = base_class_problems(tree, path, registered, base)
                     if found:
                         problems[path] = found
         self.assertEqual(problems, {})
@@ -189,5 +216,5 @@ class RegistrationTest(FastTestCase):
             raise unittest.SkipTest("两层之外的文件从 git 取，这里没有 git 或不是 git 检出")
         paths = repository_test_files()
         self.assertEqual(misplaced(paths), [])
-        stale = [entry for entry in NOT_IN_LAYERS if not any(path == entry or entry.endswith("/") and path.startswith(entry) for path in paths)]
+        stale = [entry for entry in NOT_IN_LAYERS if not any(covers(entry, path) for path in paths)]
         self.assertEqual(stale, [], "迁移或删除后要从 NOT_IN_LAYERS 去掉")
