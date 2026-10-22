@@ -15,6 +15,7 @@ from Script.Design import (
     character_behavior,
     attr_calculation,
     map_handle,
+    child_stage_gate,
 )
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
@@ -527,6 +528,9 @@ def npc_active_h():
     # 如果对方不是主动H状态，则返回
     if target_character_data.hypnosis.active_h == False and target_character_data.h_state.npc_active_h == False:
         return 0
+    # 对方处于幼年阶段时不逆推
+    if child_stage_gate.is_child_stage(target_character_id):
+        return 0
 
     # 根据NPC的部位喜好，选择一个部位
     part_id = evaluate_npc_body_part_prefs(target_character_id)
@@ -616,8 +620,8 @@ def npc_ai_in_group_sex(character_id: int):
     """
     from Script.System.Sex_System import group_sex_panel
 
-    # 玩家则返回
-    if character_id == 0:
+    # 玩家或幼年阶段角色则返回
+    if character_id == 0 or child_stage_gate.is_child_stage(character_id):
         return
     # 如果自己已在群交模板中，则返回
     group_sex_chara_id_list = group_sex_panel.count_group_sex_character_list()

@@ -18,7 +18,7 @@
 
 from typing import List, Dict, Set, Any, Union, Optional
 from Script.Core import cache_control, game_type, constant
-from Script.Design import handle_premise
+from Script.Design import handle_premise, child_stage_gate
 
 cache: game_type.Cache = cache_control.cache
 
@@ -73,6 +73,9 @@ def _check_single_instruct_premise(instruct_id: str, premise_cache: Dict[str, An
     Returns:
     bool -- 是否满足所有前提条件
     """
+    # 交互对象处于幼年阶段时H类指令不满足
+    if child_stage_gate.blocks_instruct(instruct_id):
+        return False
     # 如果没有前提条件，则视为满足
     if instruct_id not in constant.instruct_premise_data:
         return True

@@ -11,7 +11,7 @@ from Script.Core import (
     constant,
     py_cmd,
 )
-from Script.Design import handle_premise, talk
+from Script.Design import handle_premise, talk, child_stage_gate
 from Script.Config import game_config
 import time
 
@@ -82,6 +82,9 @@ def judge_single_instruct_filter(instruct_id: str, now_premise_data: dict, now_t
     # 如果是debug模式，则强制通过
     if cache.debug_mode:
         filter_judge = True
+    # 交互对象处于幼年阶段时过滤H类指令，debug模式下也一样
+    if child_stage_gate.blocks_instruct(instruct_id):
+        filter_judge = False
 
     return filter_judge, now_premise_data
 

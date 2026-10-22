@@ -6,7 +6,7 @@ from typing import Set, List, Optional, Union
 from types import FunctionType
 from threading import Thread
 from Script.Core import constant, constant_promise, cache_control, game_type, get_text, flow_handle
-from Script.Design import handle_ability, update, map_handle, character_behavior, instuct_judege, handle_npc_ai_in_h, handle_premise, game_time
+from Script.Design import handle_ability, update, map_handle, character_behavior, instuct_judege, handle_npc_ai_in_h, handle_premise, game_time, child_stage_gate
 from Script.UI.Panel import achievement_panel, normal_panel
 from Script.Config import normal_config, game_config
 from Script.UI.Moudle import draw
@@ -43,6 +43,9 @@ def handle_instruct(instruct: str):
     instruct -- 指令id（字符串）
     """
     instruct_queue.put(instruct)
+    # 交互对象处于幼年阶段时不执行H类指令
+    if child_stage_gate.blocks_instruct(instruct):
+        return
     if instruct in constant.instruct_premise_data:
         constant.handle_instruct_data[instruct]()
 
