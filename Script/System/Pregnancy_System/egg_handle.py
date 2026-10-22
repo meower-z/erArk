@@ -589,7 +589,7 @@ def replace_entertainment_for_eggs(character_id: int):
     week_day = cache.game_time.weekday()
     if hasattr(cache.rhodes_island, "party_day_of_week") and cache.rhodes_island.party_day_of_week.get(week_day, 0):
         return
-    # 幼女不进行照料卵（其娱乐固定为过家家）
+    # 幼儿离线，不进行照料卵
     if handle_premise.handle_self_is_child(character_id):
         return
     # 没有需要照料的卵则跳过

@@ -126,10 +126,7 @@ _orig_must_show = talk.must_show_talk_check
 talk.must_show_talk_check = lambda character_id: None
 pregnancy_handle._settle_baby_grow_up(102, 203)
 talk.must_show_talk_check = _orig_must_show
-check("L19 前提：长成幼女（素质 101 → 102）、已上线（进了 npc_id_got）", baby_a.talent[102] == 1 and baby_a.talent[101] == 0 and 203 in cache.npc_id_got)
-_slot_list = [baby_a.entertainment.entertainment_type[slot] for slot in range(3)]
-check("L19 当天娱乐三个时段都在幼女默认池（过家家 / 自由玩耍）里（此前上线时她还算婴儿，刷的是成年随机池，玩家午夜后入睡时要用一整天）",
-      all(one in E.CHILD_DEFAULT_ENTERTAINMENT_LIST for one in _slot_list), _slot_list)
+check("L19 前提：长成幼儿（素质 101 → 102）", baby_a.talent[102] == 1 and baby_a.talent[101] == 0)
 _left_203 = [one["uid"] for one in official_event_handle.get_queue() if one["chara_id"] == 203]
 check("L16 婴儿期入队、还没处理的婴儿 5 清掉，通用 27（通用桶）照留", _left_203 == ["通用27"], _left_203)
 
@@ -145,8 +142,8 @@ birthday_girl.pregnancy.born_time = datetime.datetime(2025, 9, 8, 6, 0)
 _g_new = growth_handle.get_child_growth(206)
 _g_old = growth_handle.get_child_growth(207)
 # 玩家一步跨过午夜：NPC 阶段先跑完新一天的早上，549 挂上新一天的 flag（flag 与日期一起写，README 夹具陷阱）；另一个是前一天的残留
-_g_new.skip_class_flag, _g_new.skip_class_day, _g_new.follow_mother_flag = True, _new_day.toordinal(), True
-_g_old.skip_class_flag, _g_old.skip_class_day, _g_old.follow_mother_flag = True, _new_day.toordinal() - 1, True
+_g_new.skip_class_flag, _g_new.skip_class_day = True, _new_day.toordinal()
+_g_old.skip_class_flag, _g_old.skip_class_day = True, _new_day.toordinal() - 1
 clear_schedules()
 _orig_base_newday = basement.update_base_resouce_newday
 # 基建日结在夹具里缺 materials_resouce（README 夹具陷阱），排在角色刷新段之后，换成空函数
@@ -165,7 +162,6 @@ check("跨天结算在夹具里跑通", not _new_day_error, _new_day_error)
 check("L5 新一天挂上的翘课 flag 跨天后仍在，今天仍算已翘课（此前被无条件清掉，当天余下节次重新掷翘课）",
       _g_new.skip_class_flag and class_ai.judge_skip_class_today(206, _new_day))
 check("L5 对照：前一天的残留照清", not _g_old.skip_class_flag and not class_ai.judge_skip_class_today(207, _new_day))
-check("L5 见学 flag 照旧无条件清", not _g_new.follow_mother_flag and not _g_old.follow_mother_flag)
 _queue = official_event_handle.get_queue()
 check("M2 今天过生日的萝莉：跨天结算后队首是她的生日事件，且只有一条（在日常派发之前推入，日常派发不会再抽到它）",
       bool(_queue) and _queue[0]["uid"] == E.BIRTHDAY_EVENT_UID and _queue[0]["chara_id"] == 208

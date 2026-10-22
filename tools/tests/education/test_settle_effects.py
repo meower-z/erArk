@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-"""结算器：512 授课 / 557 学生坐下听课时教师判能到岗即结算 / 548 自习 / 549 翘课 / 550 检查成绩单 / 552 实习 / 553 见学 / 554 自由玩耍 / 622 炫耀 / 623 翘课被抓 / 10014 10015 课堂H模式"""
+"""结算器：512 授课 / 557 学生坐下听课时教师判能到岗即结算 / 548 自习 / 549 翘课 / 550 检查成绩单 / 552 实习 / 622 炫耀 / 623 翘课被抓 / 10014 10015 课堂H模式"""
 from _bootstrap import *  # noqa: F401,F403
 from Script.Settle import default as settle_default
 from Script.Settle import Second_effect  # noqa: F401  注册二段结算
@@ -11,7 +11,7 @@ ROOM_P = _("实践教室一")
 teacher = make_character(101, "教师甲", 151, position=classroom_path(ROOM1))
 mother = make_character(102, "母亲", 0)
 student_a = make_character(201, "女儿A", 152, daughter=True, stage=103, mother_id=102, born_days=300, position=classroom_path(ROOM1))
-student_b = make_character(202, "女儿B", 152, daughter=True, stage=102, mother_id=102, born_days=120, position=classroom_path(ROOM1))
+student_b = make_character(202, "女儿B", 152, daughter=True, stage=103, mother_id=102, born_days=120, position=classroom_path(ROOM1))
 BE = constant_effect.BehaviorEffect
 SE = constant_effect.SecondEffect
 EFFECT = constant.settle_behavior_effect_data
@@ -36,11 +36,11 @@ def reset_mark(*character_id_list):
 
 
 section("注册")
-for effect_id in (512, 548, 549, 550, 552, 553, 554, 555, 556, 557, 10014, 10015):
+for effect_id in (512, 548, 549, 550, 552, 555, 556, 557, 10014, 10015):
     check(f"效果 {effect_id} 已注册", effect_id in EFFECT)
 check("二段 622 / 623 已注册", SE.SHOW_OFF_STUDY in SECOND and SE.CAUGHT_SKIP_CLASS in SECOND)
 for behavior, effect_id in (("teach", 512), ("attent_class", 557), ("self_study", 548), ("skip_class", 549), ("check_report_card", 550), ("intern_class", 552),
-                            ("follow_mother", 553), ("free_play", 554), ("start_sex_class", 10014), ("end_sex_class", 10015)):
+                            ("start_sex_class", 10014), ("end_sex_class", 10015)):
     check(f"{behavior} 的效果串挂了 {effect_id}", effect_id in game_config.config_behavior_effect_data.get(behavior, []))
 check("show_off_study / caught_skip_class 的二段效果串", 622 in game_config.config_behavior_effect_data.get("show_off_study", []) and 623 in game_config.config_behavior_effect_data.get("caught_skip_class", []))
 
@@ -164,7 +164,7 @@ move_to(202, classroom_path(ROOM1))
 teacher.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
 reset_mark(201, 202)
 
-section("548 自习 / 549 翘课 / 554 自由玩耍")
+section("548 自习 / 549 翘课")
 schedule_handle.set_class_cell(ROOM1, 0, 0, 43, -1)
 exp_43 = growth_handle.get_subject_exp_id(43)
 attend_before = student_a.child_growth.attend_class_count
@@ -181,8 +181,6 @@ check("日程活动的自习（本节没排课）不计出勤（第五轮）", s
 student_a.status_data[19] = 100
 EFFECT[549](201, 45, change, cache.game_time)
 check("翘课：置 flag、抑郁回落一节课的量", student_a.child_growth.skip_class_flag and student_a.status_data[19] == 55)
-EFFECT[554](202, 60, change, cache.game_time)
-check("自由玩耍不报错", True)
 
 section("623 翘课被抓 / 622 炫耀")
 dep_before = student_a.status_data.get(19, 0)
@@ -204,7 +202,7 @@ check("炫耀：走一次好感结算并清空待炫耀", len(favor_calls) == 1 
 SECOND[SE.SHOW_OFF_STUDY](201, change)
 check("没有待炫耀时什么都不做", True)
 
-section("552 实习 / 553 见学")
+section("552 实习")
 intern_work = next(cid for cid in game_config.config_work_type
                    if cid and not game_config.config_work_type[cid].tag and game_config.config_work_type[cid].ability_id
                    and cid not in E.EXCLUDE_INTERN_WORK_TYPE and game_config.config_work_type[cid].place_tag in constant.place_data)
@@ -232,14 +230,6 @@ schedule_handle.clear_selected_course(201, 0, 0)
 before = student_a.experience.get(exp_work, 0)
 EFFECT[552](201, 45, change, cache.game_time)
 check("本节不是实习课时不结算", student_a.experience.get(exp_work, 0) == before)
-care_before = growth_handle.get_child_growth(202).care_point
-EFFECT[553](202, 60, change, cache.game_time)
-check("见学：照料值 +0.5", abs(growth_handle.get_child_growth(202).care_point - care_before - E.FOLLOW_MOTHER_CARE_POINT) < 1e-9)
-mother.sp_flag.is_h = True
-care_before = growth_handle.get_child_growth(202).care_point
-EFFECT[553](202, 60, change, cache.game_time)
-check("结算时母亲已无效 → 不结算", growth_handle.get_child_growth(202).care_point == care_before)
-mother.sp_flag.is_h = False
 
 section("550 检查成绩单")
 pl.target_character_id = 201
@@ -394,20 +384,21 @@ set_time(period_time(0))
 reset_mark(201)
 student_a.talent[103] = 0
 student_a.talent[104] = 1
-schedule_handle.set_selected_course(201, cache.game_time.weekday(), 0, E.COURSE_TYPE_INTEREST, E.ENTERTAINMENT_PLAY_HOUSE)
+schedule_handle.set_selected_course(201, cache.game_time.weekday(), 0, E.COURSE_TYPE_INTEREST, 99999)
 change = game_type.CharacterStatusChange()
 _exp_45 = growth_handle.get_subject_exp_id(45)
 _exp_before = student_a.experience.get(_exp_45, 0)
 _attend_before = student_a.child_growth.attend_class_count
 EFFECT[548](201, 45, change, cache.game_time)
-check("少女排着过家家兴趣课、日程去自习：照给收益（回落学识），不计出勤（此前按「查得到课」多记一节）",
+check("排着不存在的兴趣课、日程去自习：照给收益（回落学识），不计出勤（此前按「查得到课」多记一节）",
       student_a.experience.get(_exp_45, 0) > _exp_before and student_a.child_growth.attend_class_count == _attend_before,
       (student_a.experience.get(_exp_45, 0) - _exp_before, student_a.child_growth.attend_class_count - _attend_before))
 student_a.talent[104] = 0
 student_a.talent[103] = 1
+schedule_handle.set_selected_course(201, cache.game_time.weekday(), 0, E.COURSE_TYPE_INTEREST, schedule_template_handle.get_entertainment_cid_by_name(_("下棋")))
 reset_mark(201)
 EFFECT[548](201, 45, change, cache.game_time)
-check("对照：萝莉的同一格是一节课，这次自习计出勤", student_a.child_growth.attend_class_count == _attend_before + 1)
+check("对照：同一格换成下棋是一节课，这次自习计出勤", student_a.child_growth.attend_class_count == _attend_before + 1)
 schedule_handle.clear_selected_course(201, cache.game_time.weekday(), 0)
 reset_mark(201)
 

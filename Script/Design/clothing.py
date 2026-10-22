@@ -299,9 +299,7 @@ def get_underwear(character_id: int, part_flag = 0, type_cid = 0):
             cache.character_data[0].pl_collection = attr_calculation.get_collection_zero()
         if cache.character_data[0].pl_collection.collection_bonus[102]:
             bra_nor_list += bra_H_list
-            bra_loli_list += bra_H_list
             pan_nor_list += pan_H_list
-            pan_loli_list += pan_H_list
 
     # 判断是否需要穿，包括是否已穿和part_flag限制
     if (
@@ -315,8 +313,8 @@ def get_underwear(character_id: int, part_flag = 0, type_cid = 0):
         if type_cid == 2 and len(bra_H_list):
             bra_id = random.choice(bra_H_list)
             character_data.cloth.cloth_wear[6].append(bra_id)
-        # 童装
-        elif character_data.talent[102] or character_data.talent[103]:
+        # 童装：幼儿
+        elif character_data.talent[102]:
             bra_id = random.choice(bra_loli_list)
             character_data.cloth.cloth_wear[6].append(bra_id)
         # 正常
@@ -332,7 +330,7 @@ def get_underwear(character_id: int, part_flag = 0, type_cid = 0):
         if type_cid == 2 and len(pan_H_list):
             pan_id = random.choice(pan_H_list)
             character_data.cloth.cloth_wear[9].append(pan_id)
-        elif character_data.talent[102] or character_data.talent[103]:
+        elif character_data.talent[102]:
             pan_id = random.choice(pan_loli_list)
             character_data.cloth.cloth_wear[9].append(pan_id)
         else:

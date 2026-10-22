@@ -18,7 +18,7 @@
 """
 import datetime
 from types import FunctionType
-from typing import List, Optional
+from typing import List
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.System.Education_System import education_constant
@@ -49,7 +49,7 @@ def get_character_stage(character_id: int) -> int:
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
-    int -- 101婴儿/102幼女/103萝莉/104少女，都不是则0
+    int -- 101婴儿/102幼儿/103学员/104少女，都不是则0
     """
     character_data: game_type.Character = cache.character_data[character_id]
     # 必须按 id 升序遍历：成长链正常情况下四个素质只会挂一个，
@@ -67,7 +67,7 @@ def get_student_candidate_list() -> List[int]:
     无
     Return arguments:
     List[int] -- 角色id列表，按id升序
-    功能: 玩家的女儿中处于幼女/萝莉/少女阶段的。
+    功能: 玩家的女儿中处于学员/少女阶段的。
           个人课表**不再**用这份名单：它已放宽为「职业为学生的全部干员」，走下面的
              get_course_candidate_list()（一期方案 §9.8.2）。养成总览等只关心女儿的地方仍用本函数
           血缘条件不能省：只看年龄素质的话，世界设定「萝莉化」
@@ -100,7 +100,7 @@ def get_course_candidate_list() -> List[int]:
     功能: 职业为学生（WorkType 152）的全部干员（Plan 24 口径 1：课表只对学生岗生效）。
           上课是工作链里学生岗的目标行（target.csv 组 08），改了岗的女儿不会再去上课，所以也不再列出；
              存档里她残留的个人课表不迁移、不清理，没有行会命中，改回学生岗后照常生效。
-             女儿长到幼女时会被自动置为学生岗，默认都在名单里。
+             女儿长到学员时会被自动置为学生岗，默认都在名单里。
           成年学生只排课、只上课，不出成绩单、不进养成事件——那些地方仍只遍历女儿。
           与 get_student_candidate_list 一样按 id 升序：「选择学生」面板与必修名单逐个列人，set 的迭代顺序会飘
     """
@@ -473,91 +473,7 @@ def settle_teacher_class_gain(
 
 
 # ---------------------------------------------------------------------------
-# 幼女跟随母亲见学（Plan 22 二期 §3.24）
-# ---------------------------------------------------------------------------
-
-
-def get_mother_work_ability_id(mother_id: int) -> int:
-    """
-    取母亲当前工作对应的科目能力id
-    Keyword arguments:
-    mother_id -- 母亲的角色id
-    Return arguments:
-    int -- 能力id，母亲没有工作（work_type为0）或该岗位不对应能力时为0
-    """
-    if mother_id not in cache.character_data:
-        return 0
-    mother_data: game_type.Character = cache.character_data[mother_id]
-    work_type_id = mother_data.work.work_type
-    if not work_type_id or work_type_id not in game_config.config_work_type:
-        return 0
-    return game_config.config_work_type[work_type_id].ability_id
-
-
-def settle_follow_mother_gain(
-        character_id: int,
-        mother_id: int,
-        add_time: int,
-        change_data: Optional[game_type.CharacterStatusChange] = None,
-) -> None:
-    """
-    一次见学的结算：按母亲的工作科目加习得与经验，并累加照料值与母女好感
-
-    母亲没有工作时**只加照料值与好感，不加任何学习收益**（方案 §3.24 的回落表最后一行）——
-       跟着一个没在工作的母亲，学不到手艺，但相处本身是有意义的。
-    不计入 attend_class_count：见学不是课，混进出勤率会让成绩单失真。
-    Keyword arguments:
-    character_id -- 幼女的角色id
-    mother_id -- 母亲的角色id
-    add_time -- 结算的分钟数
-    change_data -- 结算信息记录对象
-    Return arguments:
-    无
-    """
-    if not add_time or mother_id not in cache.character_data:
-        return
-    from Script.Settle import common_default
-    from Script.Design import character_handle
-
-    growth_data = get_child_growth(character_id)
-    growth_data.care_point += education_constant.FOLLOW_MOTHER_CARE_POINT
-
-    # 母女好感：直接走 add_favorability，不套 common_default 的好感链——
-    # 那条链的信物/连续指令/难度修正都是围绕玩家设计的，母女之间套上去只会得到看不懂的数字
-    character_handle.add_favorability(mother_id, character_id, education_constant.FOLLOW_MOTHER_FAVORABILITY, change_data, None)
-    character_handle.add_favorability(character_id, mother_id, education_constant.FOLLOW_MOTHER_FAVORABILITY, change_data, None)
-
-    ability_id = get_mother_work_ability_id(mother_id)
-    if not ability_id:
-        return
-
-    # 速度系数走与教室课同一套曲线：母亲该能力等级 vs 自己的等级；成长停滞同样减半（口径 27）
-    child_data: game_type.Character = cache.character_data[character_id]
-    mother_data: game_type.Character = cache.character_data[mother_id]
-    adjust = get_learn_speed(
-        int(mother_data.ability.get(ability_id, 0)),
-        int(child_data.ability.get(ability_id, 0)),
-    ) * get_education_zone_adjust() * get_growth_stop_adjust(character_id)
-
-    common_default.base_chara_state_common_settle(
-        character_id,
-        add_time,
-        education_constant.LEARN_STATE_ID,
-        base_value=education_constant.FOLLOW_MOTHER_LEARN_BASE,
-        ability_level=-1,
-        extra_adjust=adjust - 1.0,
-        change_data=change_data,
-    )
-    exp_id = get_subject_exp_id(ability_id)
-    if exp_id:
-        common_default.base_chara_experience_common_settle(
-            character_id, exp_id, base_value=max(1, int(education_constant.FOLLOW_MOTHER_EXP_BASE * adjust)),
-            change_data=change_data,
-        )
-
-
-# ---------------------------------------------------------------------------
-# 成年结算：性格选边 / 发育加成输入 / 职业倾向提示（Plan 22 二期 §3.8）
+# 毕业结算：性格选边 / 发育加成输入 / 职业倾向提示
 # ---------------------------------------------------------------------------
 
 
@@ -584,8 +500,8 @@ def settle_personality_pair(character_id: int, pair_id: int) -> int:
     pair_id -- 性格对编号（0勤劳/懒散 1坚强/脆弱 2热情/孤僻 3开放/羞耻，素质对照见 education_constant.PERSONALITY_PAIR_TALENT）
     Return arguments:
     int -- 写上的素质id；倾向为 0、没有养成数据、角色或性格对不存在时为0（两侧都不动）
-    功能: 正值取正向素质、负值取负向素质，并清掉同一对的另一侧；为 0 时不随机选边、两侧都不动（与成年结算同一规则，Plan 22 二期 §3.8）。
-          成年结算逐对调它；成年之后改写倾向时由 settle_adult_personality_pair 只重选被改的那一对。
+    功能: 正值取正向素质、负值取负向素质，并清掉同一对的另一侧；为 0 时不随机选边、两侧都不动。
+          毕业结算逐对调它；毕业之后改写倾向时由 settle_adult_personality_pair 只重选被改的那一对。
           只读养成数据，不惰性创建
     """
     if character_id not in cache.character_data or pair_id not in education_constant.PERSONALITY_PAIR_TALENT:
@@ -611,15 +527,15 @@ def settle_personality_pair(character_id: int, pair_id: int) -> int:
 
 def settle_adult_personality_pair(character_id: int, pair_id: int) -> int:
     """
-    已成年的女儿改写一对性格倾向之后，按新的倾向值重选这一对素质（Plan 32 §3.4）
+    已毕业的女儿改写一对性格倾向之后，按新的倾向值重选这一对素质
     Keyword arguments:
     character_id -- 角色id
     pair_id -- 性格对编号（0~3）
     Return arguments:
-    int -- 写上的素质id；不是已成年（阶段 104）的女儿、或倾向为 0 时为0（素质不动）
-    功能: 成年结算（pregnancy_handle.check_grow_to_girl）只在 103→104 那一刻选一次边，之后毕业典礼、成年纪念、通用 59 / 60
-             与成年前入队、成年后才处理的日常事件，选项加的倾向值若不落到素质上，提示里写的「倾向：坚强」就是空话。
-          只对已成年的女儿生效：未成年的倾向留到成年结算统一选边；成年学生（非女儿）没有性格养成。
+    int -- 写上的素质id；不是已毕业（阶段 104）的女儿、或倾向为 0 时为0（素质不动）
+    功能: 毕业结算（pregnancy_handle.check_grow_to_girl）只在 103→104 那一刻选一次边，之后毕业典礼、成年纪念、通用 59 / 60
+             与毕业前入队、毕业后才处理的日常事件，选项加的倾向值若不落到素质上，提示里写的「倾向：坚强」就是空话。
+          只对已毕业的女儿生效：毕业前的倾向留到毕业时统一选边；成年学生（非女儿）没有性格养成。
           静默改写，不另出文本：事件选项的提示已写明倾向。由 change_growth_value / set_growth_value 在改写倾向后调用
     """
     from Script.Design import handle_premise
@@ -633,11 +549,11 @@ def settle_adult_personality_pair(character_id: int, pair_id: int) -> int:
 
 def settle_personality_talent(character_id: int) -> str:
     """
-    成年时按 personality_point 的符号给四对性格素质选边
+    毕业时按 personality_point 的符号给四对性格素质选边
 
     全为 0 时**不随机选边**，输出"性格尚未定型"（方案 §3.8）——
        玩家全程没参与养成就凭空得到一套性格，会让养成事件显得可有可无。
-    逐对的选边规则在 settle_personality_pair（Plan 32 §3.4），成年之后改写倾向时重选也走它
+    逐对的选边规则在 settle_personality_pair，毕业之后改写倾向时重选也走它
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -661,7 +577,7 @@ def get_career_suggestion_text(character_id: int) -> str:
     """
     按当前等级最高的科目反查岗位，给出职业倾向提示
 
-    **只提示、不自动任命**（口径 39）：成年后成为普通干员、可任命到任何岗位，任命权在玩家手里。
+    **只提示、不自动任命**（口径 39）：毕业后成为普通干员、可任命到任何岗位，任命权在玩家手里。
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -702,11 +618,11 @@ def get_career_suggestion_text(character_id: int) -> str:
 def get_stage_start_day(character_id: int) -> int:
     """
     取角色当前成长阶段的起点（累计有效成长天数）
-    阶段阈值是**累计**天数（婴儿0~30 / 幼女30~90 / 萝莉90~150 / 少女150起），起点即上一阶段的阈值
+    阶段阈值是**累计**天数（婴儿0~30 / 幼儿30~90 / 学员90~150 / 少女150起），起点即上一阶段的阈值
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
-    int -- 起点天数：婴儿0 / 幼女30 / 萝莉90 / 少女150；不在成长阶段时为0
+    int -- 起点天数：婴儿0 / 幼儿30 / 学员90 / 少女150；不在成长阶段时为0
     """
     from Script.System.Pregnancy_System import pregnancy_constant
 
@@ -725,7 +641,7 @@ def get_grow_day_time(character_id: int, grow_day: int) -> datetime.datetime:
     把一个有效成长天数换算回游戏时刻（Plan 32 §3.2：阶段的起点、终点）
     Keyword arguments:
     character_id -- 角色id
-    grow_day -- 有效成长天数（阶段阈值：婴儿0 / 幼女30 / 萝莉90 / 少女150）
+    grow_day -- 有效成长天数（阶段阈值：婴儿0 / 幼儿30 / 学员90 / 少女150）
     Return arguments:
     datetime.datetime -- 出生时刻 + (有效成长天数 − 成长加速药累计天数) 天；早于出生的按出生算
     功能: 有效成长天数 = 出生以来的游戏天数 + 成长加速药累计的天数（pregnancy_handle.get_child_grow_day，加速药取整），
@@ -765,19 +681,19 @@ def get_stage_progress(character_id: int) -> float:
     取角色在当前成长阶段里已经走过的进度百分比
 
     进度 = 本阶段已过的天数（get_stage_day） ÷ 本阶段一共的天数。
-       阶段阈值是**累计**的有效成长天数（婴儿0~30 / 幼女30~90 / 萝莉90~150），起点、终点都换算回游戏时刻（get_grow_day_time）再按游戏日历数天数。
+       阶段阈值是**累计**的有效成长天数（婴儿0~30 / 幼儿30~90 / 学员90~150），起点、终点都换算回游戏时刻（get_grow_day_time）再按游戏日历数天数。
        阶段转换（长大）仍按有效成长天数，不变
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
-    float -- 0~100 的进度百分比；已成年、不在成长阶段、或没有可认的出生日时为100
+    float -- 0~100 的进度百分比；已毕业、不在成长阶段、或没有可认的出生日时为100
     """
     from Script.Design import game_time
     from Script.System.Pregnancy_System import pregnancy_handle
 
     stage_end = pregnancy_handle.get_child_growth_stage_total_day(character_id)
     if not stage_end:
-        # 已经不在成长阶段（成年或不是孩子），按走完算
+        # 已经不在成长阶段（已毕业或不是孩子），按走完算
         return 100.0
     if cache.character_data[character_id].pregnancy.born_time.year <= 1:
         # 没有可认的出生日（不是在岛上出生的），按走完算
@@ -876,7 +792,7 @@ def change_growth_value(character_id: int, value_id: int, add_value: float):
 
     只有性格倾向与照料值是可写的：出勤数由上课结算记账、胎教值由妊娠期写入，
        让事件去改它们会让面板上的「听课N节」变成一个谁都对不上的数（口径33 也不允许事件动能力）
-    已成年的女儿改写性格倾向后即重选这一对素质（Plan 32 §3.4，settle_adult_personality_pair）
+    已毕业的女儿改写性格倾向后即重选这一对素质
     Keyword arguments:
     character_id -- 角色id
     value_id -- 养成数值编号（GROWTH_VALUE_* 常量）
@@ -897,7 +813,7 @@ def change_growth_value(character_id: int, value_id: int, add_value: float):
 def set_growth_value(character_id: int, value_id: int, new_value: float):
     """
     直接把养成数值设为指定值（CVE 的 E 运算）
-    已成年的女儿改写性格倾向后即重选这一对素质（Plan 32 §3.4，settle_adult_personality_pair）
+    已毕业的女儿改写性格倾向后即重选这一对素质
     Keyword arguments:
     character_id -- 角色id
     value_id -- 养成数值编号（GROWTH_VALUE_* 常量）

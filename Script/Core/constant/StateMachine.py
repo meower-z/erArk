@@ -196,8 +196,6 @@ class StateMachine:
     """ 娱乐：品尝点心 """
     ENTERTAIN_TASTE_FOOD = 419
     """ 娱乐：品尝美食 """
-    ENTERTAIN_PLAY_HOUSE = 420
-    """ 娱乐：过家家 """
     ENTERTAIN_STYLE_HAIR = 421
     """ 娱乐：修整发型 """
     ENTERTAIN_FULL_BODY_STYLING = 422
@@ -377,12 +375,6 @@ class StateMachine:
     """ 上课：移动到个人式课型（体育/兴趣/实习）的上课地点 """
     EDUCATION_DO_COURSE = 716
     """ 上课：在个人式课型的地点执行该课对应的既有行为 """
-    EDUCATION_MOVE_TO_MOTHER = 717
-    """ 见学：移动到母亲当前所在的场景 """
-    EDUCATION_FOLLOW_MOTHER = 718
-    """ 见学：与母亲同场景，跟着她见学 """
-    ENTERTAIN_FREE_PLAY = 719
-    """ 娱乐：在育儿室自由玩耍（母亲无效时的见学回落） """
     EDUCATION_WAIT_NEXT_PERIOD = 720
     """ 教育：原地等到下一节课开始（最多30分钟）——教师没课时在办公室待命、提前到教室的师生等开课 """
     EDUCATION_ABSENT_REST = 721

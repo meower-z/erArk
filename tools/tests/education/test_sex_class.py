@@ -7,7 +7,7 @@ clear_schedules()
 ROOM_P = _("实践教室一")
 mother = make_character(102, "母亲", 0)
 student_a = make_character(201, "女儿A", 152, daughter=True, stage=103, mother_id=102)
-student_b = make_character(202, "女儿B", 152, daughter=True, stage=102, mother_id=102)
+student_b = make_character(202, "女儿B", 152, daughter=True, stage=103, mother_id=102)
 adult = make_character(301, "成年干员", 21)
 today = cache.game_time.date().toordinal()
 

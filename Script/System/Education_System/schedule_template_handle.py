@@ -14,8 +14,7 @@
 
 **优先级是节次级别的**（2026-09-10，二期方案 §9.2.9）：有课的节次由工作链里学生岗的上课目标行先接管
 （target.csv 组 08，Plan 24 起；此前是 class_ai 的上课判定），没课的节次工作链没有行命中，才轮到槽位里的活动，
-所以改写时不避让有课的时段。幼女在节次内没课、且该时段是「自由选择」时默认见学
-（class_ai.judge_should_follow_mother），明确排了活动就去做活动；学生岗白天也算娱乐时间
+所以改写时不避让有课的时段。明确排了活动就去做活动；学生岗白天也算娱乐时间
 （handle_premise_time._judge_free_daytime），否则周一~周六的白天根本走不到娱乐链。
 
 数据分两层存（口径 4「操作量不随孩子数翻倍」的落点）：
@@ -279,8 +278,7 @@ def judge_activity_need_pass(character_id: int, entertainment_id: int) -> bool:
     校验一个孩子是否满足某项娱乐的 need 条件（Plan 22 二期第一轮追加）
 
     这道校验非做不可：模板是**全局共享**的，而 need 是**逐人**的。
-       过家家 / 跟随母亲 / 自由玩耍配的 need 是 T102|1/T103|1（限幼女或萝莉），
-       上课（无课时自习）配的是 W152|1（限学生岗）；同一套模板套到少女或非学生岗的干员身上时，
+       如上课（无课时自习）配的是 W152|1（限学生岗）；同一套模板套到非学生岗的干员身上时，
        不校验就会把活动照写进她的 entertainment_type，那一格既做不了该活动也不会随机娱乐，白白空转一个时段。
        不满足的时段就跳过不改写、保留当天的随机娱乐——这就是面板上说的「退回到自由选择娱乐活动」。
     引擎只在**随机抽娱乐**时校验过 need（handle_npc_ai.get_chara_entertainment），
@@ -311,7 +309,7 @@ def judge_activity_place_open(entertainment_id: int) -> bool:
     Return arguments:
     bool -- 是否已开放；地点为「无」或不在 Facility_open 表里的恒为True，配置里没有的娱乐为False
     功能: 与寻路的 wait_open、成年干员随机娱乐的场所判定同口径（schedule_handle.judge_scene_open）。
-          幼女的默认娱乐池与日程改写都是把活动直接写进 entertainment_type 的路径，不查这一道就会把孩子派到还没解锁的场所
+          日程改写是把活动直接写进 entertainment_type 的路径，不查这一道就会把孩子派到还没解锁的场所
              （如教育区 2 级才开的黄澄澄游戏室）：寻路在门口返回 wait_open、移动时长为 0，通用移动模块退成等待 1 分钟，
              下一次决策又派同一个移动，整个时段在门口一分钟一分钟地空转
     """
@@ -364,7 +362,7 @@ def apply_schedule_for_child(character_id: int) -> None:
         return
     # 不是女儿、又不在学生岗的不改写（Plan 32 §3.12 L18）：成年干员离开学生岗后，她既不在个人课表名单、也不在批量套用名单，
     #    此前当学生时套的模板每天照写、面板上又解除不了，只能先改回学生岗。模板与覆盖都留着，改回学生岗照旧生效。
-    #    女儿不看岗位：改了岗的萝莉晚上照旧按日程走，工作时间里的「跟随母亲」由见学判定另外让路（Plan 32 §3.6）
+    #    女儿不看岗位：改了岗的学员晚上照旧按日程走
     if character_data.relationship.father_id != 0 and character_data.work.work_type != education_constant.STUDENT_WORK_TYPE:
         return
     for slot in range(education_constant.SLOT_COUNT):
@@ -394,7 +392,7 @@ def get_child_schedule_text(character_id: int) -> str:
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
-    str -- 形如「均衡（上课（无课时自习） / 下棋 / 自由玩耍）」，未套用模板则为「未设置」；
+    str -- 形如「均衡（上课（无课时自习） / 下棋 / 看电影）」，未套用模板则为「未设置」；
            时段值为 0 显示「自由选择娱乐活动」，这个孩子不满足条件的活动带「（条件不符→自由选择）」标注，
            地点还没开放的带「（未开放→自由选择）」（Plan 27）
     """
@@ -461,8 +459,8 @@ def get_activity_age_limit_talent_list(entertainment_id: int) -> List[int]:
     Return arguments:
     List[int] -- 要求持有的阶段素质id列表（101~104 之一或多个），没有年龄限制则为空表
     功能: need 先按 & 拆成「且」项，再按 / 拆成「或」项，只认 T<阶段素质id>|1 这种写法。
-          不写死「过家家 / 跟随母亲 / 自由玩耍」三项：年龄限制是配置，往后再加一项带年龄需求的活动，
-             面板的第二行与「限幼女/萝莉」标注会自动跟上
+          不写死具体活动：年龄限制是配置，往后加一项带年龄需求的活动，
+             面板的第二行与「限××」标注会自动跟上
     """
     if entertainment_id not in game_config.config_entertainment:
         return []
@@ -490,7 +488,7 @@ def get_activity_age_limit_text(entertainment_id: int) -> str:
     Keyword arguments:
     entertainment_id -- 娱乐cid
     Return arguments:
-    str -- 形如「限幼女/萝莉」，没有年龄限制则为空串
+    str -- 形如「限学员」，没有年龄限制则为空串
     """
     talent_list = get_activity_age_limit_talent_list(entertainment_id)
     if not talent_list:
@@ -506,7 +504,7 @@ def get_schedule_activity_rows() -> Tuple[List[int], List[int], List[int]]:
     Return arguments:
     Tuple[List[int], List[int], List[int]] -- (第一行, 第二行, 其余)：
         第一行固定是 上课（无课时自习）与 自由选择娱乐活动（0）；
-        第二行是有年龄需求的活动（过家家 / 跟随母亲 / 自由玩耍，从 need 列现算）；
+        第二行是有年龄需求的活动（从 need 列现算，没有时为空）；
         其余娱乐按 cid 升序
     """
     candidate_list = get_schedule_activity_candidate()

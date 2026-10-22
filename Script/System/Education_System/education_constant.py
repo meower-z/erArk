@@ -24,14 +24,13 @@
 5. 日程模板与时段
 6. 上课结算：习得与经验
 7. 上课AI：缺课与翘课
-8. 见学（跟随母亲）
-9. 性技实操课
-10. 胎教与哺乳
-11. 照料值与性格倾向
-12. 养成数值编号
-13. 学期与成绩单
-14. 养成事件
-15. 面板显示与排版
+8. 性技实操课
+9. 胎教与哺乳
+10. 照料值与性格倾向
+11. 养成数值编号
+12. 学期与成绩单
+13. 养成事件
+14. 面板显示与排版
 """
 from types import FunctionType
 from typing import List
@@ -48,7 +47,7 @@ if not game_config.config_ability:
 
 # ==== 1. 成长阶段与教育区 ====
 CHILD_TALENT_ID_LIST = (101, 102, 103, 104)
-""" 成长链的四个年龄素质id：101婴儿 / 102幼女 / 103萝莉 / 104少女。
+""" 成长链的四个年龄素质id：101婴儿 / 102幼儿 / 103学员 / 104少女。
     这四个id是成长链的**定义本身**（`pregnancy_handle` 按天数逐级换素质），配置里推不出来，
        所以写死在这里；名字则一律从 Talent.csv 现取，见下 """
 STAGE_TALENT_NAME = {talent_id: game_config.config_talent[talent_id].name for talent_id in CHILD_TALENT_ID_LIST}
@@ -56,9 +55,11 @@ STAGE_TALENT_NAME = {talent_id: game_config.config_talent[talent_id].name for ta
     不要再包一层 `_()`：`game_config` 载入时已对所有 name 列做过翻译，再包一次反而对不上词条 """
 CHILD_TALENT_SET = set(CHILD_TALENT_ID_LIST)
 """ 成长链四个年龄素质的集合形式，判定「是不是孩子」用 """
-STUDENT_STAGE_TALENT_SET = {102, 103, 104}
-""" 可排课、可查养成总览的三个阶段：102幼女 / 103萝莉 / 104少女。
-    婴儿(101)上不了课也没什么可排的，不列入 """
+OFFLINE_STAGE_TALENT_SET = {101, 102}
+""" 离线的两个阶段：101婴儿 / 102幼儿。她们不进任何场景、不进 npc_id_got，长成学员时才上线 """
+STUDENT_STAGE_TALENT_SET = {103, 104}
+""" 可排课、可查养成总览的两个阶段：103学员 / 104少女。
+    婴儿(101)与幼儿(102)离线、不上学，不列入 """
 EDUCATION_ZONE_NAME = _("教育区")
 """ 教育区在 Facility_effect.csv 中的设施名（该表按名字索引）。
     必须过 `_()`：`config_facility_effect_data` 的键是 `game_config` 翻译过的 name，
@@ -166,7 +167,7 @@ CLASSROOM_NUMBER_ORDER = _("一二三四五六七八九十")
 TEACHER_WORK_TYPE = 151
 """ 教师岗位的工作id（WorkType.csv:24），只有该岗位的干员可被排进课表 """
 STUDENT_WORK_TYPE = 152
-""" 学生岗位的工作id（WorkType.csv:25）。女儿长到幼女时由妊娠系统自动置为此岗位，
+""" 学生岗位的工作id（WorkType.csv:25）。女儿长到学员时由妊娠系统自动置为此岗位，
     成年干员也可在基建面板被分配为学生；凡此岗位的干员都可排个人课表（一期方案 §9.8.2） """
 EXCLUDE_INTERN_WORK_TYPE = {TEACHER_WORK_TYPE, STUDENT_WORK_TYPE}
 """ 实习课不开放的岗位：教师与学生是孩子自己在学校里的身份，作为「实习」语义重复（一期方案 §3.21）。
@@ -179,34 +180,20 @@ WEEK_DAY_COUNT = len(WEEK_NAME)
 """ 一周的天数。由 WEEK_NAME 的长度推出，两者不会各改各的 """
 AUTO_SCHEDULE_WEEK_DAY_MAX = 5
 """ 自动排课只铺周一~周五（week_day 0~4）。
-    周末留给日程模板里的自由玩耍/跟随母亲等安排；实习课本来也因为周日全岛无人上班而排不了 """
+    周末留给日程模板里的娱乐安排；实习课本来也因为周日全岛无人上班而排不了 """
 
 # ==== 5. 日程模板与时段 ====
 SLOT_COUNT = 3
 """ 日程时段数：0上午 / 1下午 / 2晚上，与 entertainment.entertainment_type 的三个槽位一一对应 """
 SLOT_NAME = {0: _("上午"), 1: _("下午"), 2: _("晚上")}
 """ 时段编号到显示名 """
-ENTERTAINMENT_PLAY_HOUSE = 151
-""" 娱乐配置「过家家」的cid（Entertainment.csv）。教育区的娱乐编号按「区块id×10+序号」排在 15x 段，
-    过家家是该段的第一项，其后依次是 152 照料卵（妊娠系统，见 pregnancy_constant.TEND_EGGS_ENTERTAINMENT_ID）/
-    153 跟随母亲 / 154 自由玩耍 / 155 上课（无课时自习）。幼女没排日程时的默认池见 CHILD_DEFAULT_ENTERTAINMENT_LIST """
-ENTERTAINMENT_FOLLOW_MOTHER = 153
-""" 娱乐配置「跟随母亲」的cid（Entertainment.csv）。它没有固定地点，执行走 class_ai 的见学分支；
-    日程模板把某个时段排成它时，该时段也走见学分支。
-    2026-09-09 由 176 改为 153（原编号排在大浴场段 17x）：旧存档里的旧编号由 save_handle 读档时换算 """
-ENTERTAINMENT_FREE_PLAY = 154
-""" 娱乐配置「自由玩耍」的cid（原 177），地点为育儿室，也是见学的回落目标 """
 ENTERTAINMENT_SELF_STUDY = 155
-""" 娱乐配置「上课（无课时自习）」的cid（原 178），
+""" 娱乐配置「上课（无课时自习）」的cid。教育区的娱乐编号按「区块id×10+序号」排在 15x 段，
+    同段还有 152 照料卵（妊娠系统，见 pregnancy_constant.TEND_EGGS_ENTERTAINMENT_ID）。
     行为指向 self_study(211)：有课就去上课，没课就在理论教室自习。need 列为 W152|1，只有学生岗能排 """
-CHILD_DEFAULT_ENTERTAINMENT_LIST = [ENTERTAINMENT_PLAY_HOUSE, ENTERTAINMENT_FREE_PLAY]
-""" 幼女没排日程（时段为「自由选择」）时每日随机的默认池：每个时段在过家家 / 自由玩耍之间随机
-    （handle_npc_ai.get_chara_entertainment，2026-09-10 二期方案 §9.2.9；此前固定写过家家）。
-    只管晚上等不在课表节次内的时间：白天没课的节次幼女默认见学（class_ai.judge_should_follow_mother），
-       日程明确排了活动的时段则做那个活动 """
-SCHEDULE_ONLY_ENTERTAINMENT_SET = {ENTERTAINMENT_FOLLOW_MOTHER, ENTERTAINMENT_FREE_PLAY, ENTERTAINMENT_SELF_STUDY}
-""" 只由日程模板指派、不进每日随机娱乐池的三项（handle_npc_ai.get_chara_entertainment 用它排除）。
-    从上面三个常量派生，改编号时只动一处 """
+SCHEDULE_ONLY_ENTERTAINMENT_SET = {ENTERTAINMENT_SELF_STUDY}
+""" 只由日程模板指派、不进每日随机娱乐池的活动（handle_npc_ai.get_chara_entertainment 用它排除）。
+    从上面的常量派生，改编号时只动一处 """
 SCHEDULE_FREE_CHOICE = 0
 """ 日程时段的「自由选择娱乐活动」：槽位存 0，表示该时段不改写、保留当天的随机娱乐。
     它不是 Entertainment.csv 里的一行，只是 0 这个哨兵值的显示名；不满足活动条件的孩子也会退回到它 """
@@ -214,7 +201,7 @@ SCHEDULE_FREE_CHOICE_NAME = _("自由选择娱乐活动")
 """ 「自由选择娱乐活动」的显示名。模板表、编辑页、个人日程摘要里的 0 一律显示成它，不再显示「--」或「未设置」 """
 CHILD_SCHEDULE_FIRST_ROW = [ENTERTAINMENT_SELF_STUDY, SCHEDULE_FREE_CHOICE]
 """ 「选择活动」面板第一行固定的两项：上课（无课时自习）与自由选择娱乐活动。
-    第二行是有年龄需求的活动（过家家 / 跟随母亲 / 自由玩耍），不写死、由 schedule_template_handle 从 need 列现算 """
+    第二行是有年龄需求的活动，不写死、由 schedule_template_handle 从 need 列现算；没有这样的活动时第二行为空 """
 TEMPLATE_ACADEMIC = 1
 """ 预设模板：学业优先 """
 TEMPLATE_BALANCED = 2
@@ -232,8 +219,8 @@ PRESET_TEMPLATE_NAME = {
 """ 四套预设模板的名字（二期方案 §3.6 的表） """
 PRESET_TEMPLATE_SLOT_NAME = {
     TEMPLATE_ACADEMIC: (_("上课（无课时自习）"), _("上课（无课时自习）"), _("读书")),
-    TEMPLATE_BALANCED: (_("上课（无课时自习）"), _("下棋"), _("自由玩耍")),
-    TEMPLATE_PLAYFUL: (_("过家家"), _("下棋"), _("自由玩耍")),
+    TEMPLATE_BALANCED: (_("上课（无课时自习）"), _("下棋"), _("看电影")),
+    TEMPLATE_PLAYFUL: (_("玩街机游戏"), _("下棋"), _("唱歌")),
     TEMPLATE_CUSTOM: ("", "", ""),
 }
 """ 预设模板各时段的娱乐**名字**（不是cid）。
@@ -279,7 +266,7 @@ GROWTH_STOP_TALENT_ID = 28
     总纲口径 27：停滞期间可以继续上课，但一切学习收益减半，作为无限期养成的代价 """
 GROWTH_STOP_LEARN_RATE = 0.5
 """ 成长停滞期间学习收益的倍率（口径 27「经验减半」）。
-    乘在学生侧的每一条收益上：教室课 / 自习 / 实习课（get_class_adjust）、见学（settle_follow_mother_gain）、
+    乘在学生侧的每一条收益上：教室课 / 自习 / 实习课（get_class_adjust）、
     实操课主修加成（sex_class_handle.get_subject_bonus）；教师侧的教学相长不受影响——停滞的是学生 """
 SEX_SKILL_THEORY_EXP_ID = {70: 170, 71: 171, 72: 172, 73: 173, 74: 174, 75: 175, 77: 176}
 """ 性技科目 → 理论经验id（Experience.csv 类型 12）。教室课与自习对性技科目发这里的理论经验，
@@ -333,18 +320,7 @@ UPCOMING_MINUTE = 20
 """ 「马上开课」的提前量（分钟）：教师与学生都在下一节开始前这么多分钟内先去上课地点（今天已翘课的学生不去，Plan 31 §3.5）。
     get_upcoming_teaching / get_upcoming_course 的默认窗口与学生的打断规则共用它（Plan 25 §3.1） """
 
-# ==== 8. 见学（跟随母亲） ====
-FOLLOW_MOTHER_LEARN_BASE = 6
-""" 见学的习得基础值。约为理论课(30)的两成——看着母亲干活当然比正经上课慢，
-    但胜在幼女期没课的时段本来就是空的，积少成多 """
-FOLLOW_MOTHER_EXP_BASE = 1
-""" 见学的科目经验基础值 """
-FOLLOW_MOTHER_CARE_POINT = 0.5
-""" 每次见学累加的照料值。成年时参与身体发育与性格判定（一期方案 §3.8） """
-FOLLOW_MOTHER_FAVORABILITY = 2
-""" 每次见学母女双方各自增加的好感 """
-
-# ==== 9. 性技实操课 ====
+# ==== 8. 性技实操课 ====
 PRE_ARRIVE_MINUTE = 10
 """ 选修学生提前到岗的分钟数（四期方案 §3.28.5）。
     既有节次表首尾相接、没有课间（game_time.CLASS_PERIOD_START），9个节次里有7个的「提前10分钟」
@@ -363,7 +339,7 @@ WATCH_TALK_RATE = 0.30
 """ 旁观口上的触发概率。只限流口上，收益结算每个动作都给——
     玩家一节课可能做20个动作，每次都描写一遍旁观者会刷满屏幕 """
 
-# ==== 10. 胎教与哺乳 ====
+# ==== 9. 胎教与哺乳 ====
 PRENATAL_POINT_PER_TIME = 0.5
 """ 每次胎教给母亲累积的胎教值（一期方案 §3.9 的数值表） """
 PRENATAL_POINT_MAX = 100.0
@@ -381,7 +357,7 @@ NUIRSE_CHILD_FAVOR_BASE = 10
 NUIRSE_CHILD_FRIENDLY_BASE = 10
 """ 玩家亲自喂奶时额外的好意（亲密）结算基础值 """
 
-# ==== 11. 照料值与性格倾向 ====
+# ==== 10. 照料值与性格倾向 ====
 PERSONALITY_PAIR_TALENT = {
     0: (271, 272),
     1: (274, 273),
@@ -404,7 +380,7 @@ CARE_POINT_CHEST_MAX_BONUS = 20
 CARE_POINT_PER_CHEST_BONUS = 5.0
 """ 每多少点照料值换 1 个百分点的发育偏移 """
 
-# ==== 12. 养成数值编号（事件表与口上前提的 CVP/CVE_A?_Growth 取数编号） ====
+# ==== 11. 养成数值编号（事件表与口上前提的 CVP/CVE_A?_Growth 取数编号） ====
 GROWTH_VALUE_ATTEND = 0
 """ 养成数值编号：累计听课节数 """
 GROWTH_VALUE_ABSENT = 1
@@ -445,7 +421,7 @@ GROWTH_VALUE_SKIP = 24
 GROWTH_VALUE_SEX_CLASS = 25
 """ 养成数值编号：累计实操课次数（Plan 31）。开课与开课后到场各记一次，与出勤同一处写入；口上里「第一次来 / 老学生」读它，不读含全部课型的编号 0 """
 
-# ==== 13. 学期与成绩单 ====
+# ==== 12. 学期与成绩单 ====
 SEMESTER_NAME = {3: _("春季学期"), 6: _("夏季学期"), 9: _("秋季学期"), 12: _("冬季学期")}
 """ 四个季月各自对应的学期显示名，键即 game_time.get_season_month() 的返回值 """
 REPORT_GRADE_EXCELLENT = 0
@@ -475,9 +451,9 @@ GOOD_RATE = 70
 REPORT_CARD_HISTORY_MAX = 8
 """ 每个孩子保留的历年成绩单份数上限，超出时丢掉最旧的那份。
     8 份约两年（一年四个学期），够玩家回看整段成长；
-    必须有上限——一个孩子养到成年约十几个学期，多孩存档不设上限会让存档持续变大 """
+    必须有上限——一个孩子养到毕业约十几个学期，多孩存档不设上限会让存档持续变大 """
 
-# ==== 14. 养成事件 ====
+# ==== 13. 养成事件 ====
 GROWTH_EVENT_DEPARTMENT = 15
 """ 养成事件所属的部门id：教育区（Facility.csv 中 type 为 -1 的区块cid） """
 GROWTH_EVENT_DAILY_CHANCE = 70
@@ -488,18 +464,18 @@ GROWTH_EVENT_DAILY_MAX_PER_CHILD = 1
 GROWTH_EVENT_QUEUE_PER_CHILD = 4
 """ 每个女儿为队列贡献的容量。女儿多的时候待办清单本来就该更长，否则后面的事件会被直接丢掉 """
 STAGE_ANY = official_event_handle.SUB_KEY_ANY
-""" 事件的 sub_key 取0时表示适用于全部成长阶段（101婴儿~103萝莉），不含已成年的104。
+""" 事件的 sub_key 取0时表示适用于全部成长阶段（101婴儿~103学员），不含已毕业的104。
     取公务事件系统的同名常量，只留一个真相来源 """
 STAGE_ALL_CHILD = (101, 102, 103)
-""" sub_key 为 0 的事件实际覆盖的阶段。成年（104）只接 sub_key 明确写 104 的事件（如毕业典礼） """
+""" sub_key 为 0 的事件实际覆盖的阶段。已毕业（104）只接 sub_key 明确写 104 的事件（如毕业典礼） """
 GRADUATION_EVENT_UID = "通用1"
 """ 毕业典礼的事件uid。uid由「文件名+cid」拼成，对应 data/official_event/通用.csv 的 cid=1。
     这是**数据键**不是显示文本，绝不能包 `_()`——包了就再也对不上事件表 """
 ADULT_MEMORIAL_EVENT_UID = "通用2"
 """ 成年纪念的事件uid，紧跟在毕业典礼之后 """
 ADULT_EXTRA_EVENT_UID_LIST = ("通用59", "通用60")
-""" 成年结算时在毕业典礼、成年纪念之后推入队尾的成年事件（Plan 31 §3.2）。
-    成年桶（sub_key 104）只有显式推入的事件会出现：日常派发名单只收 101~103（第五轮），默认提供者又跳过部门 15。
+""" 毕业结算时在毕业典礼、成年纪念之后推入队尾的毕业事件。
+    毕业桶（sub_key 104）只有显式推入的事件会出现：日常派发名单只收 101~103（第五轮），默认提供者又跳过部门 15。
     这是**数据键**，不能包 `_()`；tools/official_event_check.py 另抄一份，据此拦截成年桶里别的 uid """
 BIRTHDAY_EVENT_UID = "通用3"
 """ 生日事件的uid（Plan 32 §3.3）：跨天结算时对今天过生日的女儿直接插队首推入（growth_event_handle.push_birthday_event）。
@@ -524,12 +500,13 @@ STAGE_TALENT_PREMISE_SET = frozenset(
     孩子长大时 growth_event_handle.drop_stale_stage_event 只拿这些记号重判队列里的事件；
     别的前提（课型、好感、养成数值等）出队时照旧不复核 """
 SIBLING_PLAY_STAGE_SET = {102, 103}
-""" 养成事件里同胞互动的对象只取这两个阶段（Plan 26 §3.9）：互动事件写的都是能一起玩、一起闯祸的孩子，
-    婴儿与已成年的少女都不合适；婴儿期自己的两条同胞事件（婴儿 37 / 38）主体是婴儿、对手是哥哥姐姐，照样成立 """
+""" 养成事件里同胞与同学互动的对象只取幼儿与学员；婴儿与已毕业的少女都不合适。
+    互动对象从 npc_id_got 里找，幼儿离线、不在里面，所以实际只找得到学员。
+    婴儿期自己的两条同胞事件（婴儿 37 / 38）主体是婴儿、对手是学员，照样成立 """
 
-# ==== 15. 面板显示与排版 ====
+# ==== 14. 面板显示与排版 ====
 HISTORY_SHOW_MAX = 8
-""" 养成履历最多列出的条数。养到成年会攒下几十条，全列出来会把总览面板顶爆 """
+""" 养成履历最多列出的条数。养到毕业会攒下几十条，全列出来会把总览面板顶爆 """
 HISTORY_TEXT_MAX = 24
 """ 履历里事件正文的截断长度，只留能认出是哪件事的开头 """
 REPORT_CARD_PREV = "GROWTH_REPORT_PREV"

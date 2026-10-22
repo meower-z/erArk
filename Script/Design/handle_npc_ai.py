@@ -348,13 +348,6 @@ def find_character_target(character_id: int, now_time: datetime.datetime):
             target, weight, judge, new_premise_data = search_target(character_id, now_target_list, null_target_set, premise_data, target_weight_data)
             null_target_set.update(now_target_list)
             premise_data = new_premise_data
-    # 然后判断见学：孩子的日程行为，不是工作，排在工作链之前（Plan 22 二期 §3.24、§9.2.3、§9.2.9）
-    #    幼女本节没排课、且该时段没有明确排别的日程活动时默认见学，萝莉只在日程时段排了「跟随母亲」时见学，且母亲要有效；
-    #    学生此刻与课表有关（本节有课、马上开课、待赴实操课）时见学判定不成立，让给下面工作链里的上课行（Plan 24 §3.9）
-    if judge == 0:
-        from Script.System.Education_System import class_ai
-
-        judge = class_ai.judge_follow_mother_state_machine(character_id)
     # 然后判断工作：只要有工作就进工作链，时间窗由各目标行自己的时间前提决定（Plan 24 §3.1）
     #    既有的 21/22 行都带 to_work_time / work_time，自动 AI 路径自带 work_time；
     #    教师 / 学生的课表行（target.csv 组 07 / 08）不看星期，周日排的课照常上；学生没课时没有行命中，照旧落到下面的娱乐链
@@ -833,27 +826,15 @@ def get_chara_entertainment(character_id: int):
         # 否则随机当天的娱乐活动
         else:
             # 教育系统的常量从配置现算，必须在函数内延迟 import（与本文件里 class_ai 的延迟 import 同款）
-            from Script.System.Education_System import education_constant, schedule_template_handle
+            from Script.System.Education_System import education_constant
             from Script.System.Pregnancy_System import pregnancy_constant
 
-            # 幼女没排日程时的默认池：每个时段在过家家 / 自由玩耍之间随机（Plan 22 二期 §9.2.9，此前固定写过家家）。
-            # 白天在课表节次内没课的时段，幼女默认仍是见学（class_ai.judge_should_follow_mother），
-            #    这里的值只在晚上等不在节次内的时间生效；日程明确排了活动的时段会在 apply_schedule_for_child 里被改写
-            if handle_premise.handle_self_is_child(character_id):
-                # 地点还没开放的不进池（Plan 27 §3.1），与下面成年干员的随机池同口径：黄澄澄游戏室要教育区 2 级才解锁，
-                #    开局抽到过家家的幼女会在门口一分钟一分钟地空转一整晚。育儿室恒开放，池子不会滤空；滤空了也只剩自由玩耍
-                child_pool = [cid for cid in education_constant.CHILD_DEFAULT_ENTERTAINMENT_LIST if schedule_template_handle.judge_activity_place_open(cid)]
-                if not child_pool:
-                    child_pool = [education_constant.ENTERTAINMENT_FREE_PLAY]
-                for i in range(3):
-                    character_data.entertainment.entertainment_type[i] = random.choice(child_pool)
-                return
             entertainment_list = [i for i in game_config.config_entertainment]
             entertainment_list.remove(0)
             # 照料卵娱乐不进入随机池，仅由每日替换钩子分配给持卵的卵生角色
             if pregnancy_constant.TEND_EGGS_ENTERTAINMENT_ID in entertainment_list:
                 entertainment_list.remove(pregnancy_constant.TEND_EGGS_ENTERTAINMENT_ID)
-            # 跟随母亲 / 自由玩耍 / 上课（无课时自习）是孩子的日程专用活动（Plan 22 二期），
+            # 上课（无课时自习）是孩子的日程专用活动，
             # 只由日程模板指派，随机抽给成年干员没有意义；编号统一取 education_constant.SCHEDULE_ONLY_ENTERTAINMENT_SET
             for schedule_only_id in education_constant.SCHEDULE_ONLY_ENTERTAINMENT_SET:
                 if schedule_only_id in entertainment_list:

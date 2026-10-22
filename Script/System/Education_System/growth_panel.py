@@ -113,8 +113,8 @@ class Growth_Panel:
         绘制母亲、当前成长阶段与距下一阶段的天数和预计日期
         输入类型: character_id(int)
         输出类型: 无
-        功能: 一行「母亲：X｜当前阶段：幼女｜距成长为萝莉还有 1季月5天，预计 2026年秋月12日」（时长满一个季月写成「X季月Y天」）。
-              已成年不写天数；持成长停滞素质时写明阶段不会推进。
+        功能: 一行「母亲：X｜当前阶段：幼儿｜距成长为学员还有 1季月5天，预计 2026年秋月12日」（时长满一个季月写成「X季月Y天」）。
+              已毕业不写天数；持成长停滞素质时写明阶段不会推进。
               天数按游戏日历计（get_child_grow_day），预计日期走 game_time.get_predict_date
         """
         from Script.System.Pregnancy_System import pregnancy_handle, pregnancy_panel
@@ -133,7 +133,7 @@ class Growth_Panel:
         # 下一阶段：阈值与成长天数都由妊娠系统统一计算（含成长加速药），这里只取用不重算
         stage_total_day = pregnancy_handle.get_child_growth_stage_total_day(character_id)
         if not stage_total_day:
-            text += _("（已成年，没有下一阶段）\n")
+            text += _("（已毕业，没有下一阶段）\n")
         else:
             left_day = max(0, stage_total_day - pregnancy_handle.get_child_grow_day(character_id))
             next_stage_name = pregnancy_handle.get_child_next_stage_name(character_id)
@@ -338,7 +338,7 @@ class Growth_Panel:
         history_list = sorted(
             growth_data.event_history.items(),
             key=lambda one: one[1].get("time") or datetime.datetime(1, 1, 1))
-        # 只列最近的HISTORY_SHOW_MAX条：养到成年会攒下几十条，全列出来会把总览面板顶爆
+        # 只列最近的HISTORY_SHOW_MAX条：养到毕业会攒下几十条，全列出来会把总览面板顶爆
         if len(history_list) > education_constant.HISTORY_SHOW_MAX:
             omit_draw = draw.NormalDraw()
             omit_draw.width = self.width

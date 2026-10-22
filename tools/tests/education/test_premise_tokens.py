@@ -45,9 +45,6 @@ schedule_handle.set_selected_course(202, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
 check("同学前提", HP(P.SELF_HAVE_CLASSMATE, 201) == 1)
 schedule_handle.clear_selected_course(202, 0, 0)
 check("没有同学", HP(P.SELF_HAVE_CLASSMATE, 201) == 0)
-growth_handle.get_child_growth(202).follow_mother_flag = True
-check("见学前提", HP(P.SELF_FOLLOW_MOTHER, 202) == 1 and HP(P.SELF_FOLLOW_MOTHER, 201) == 0)
-growth_handle.get_child_growth(202).follow_mother_flag = False
 student.talent[28] = 1
 check("成长停滞前提", HP("growth_stop_1", 201) == 1 and HP("growth_stop_0", 201) == 0)
 student.talent[28] = 0
@@ -222,15 +219,16 @@ from Script.UI.Panel import character_info_head  # noqa: E402
 set_time(period_time(0))
 student.talent[103] = 0
 student.talent[104] = 1
-schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_INTEREST, E.ENTERTAINMENT_PLAY_HOUSE)
+schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_INTEREST, 99999)
 _ct_interest = "CVP_A1_CourseType|{0}_E_1".format(E.COURSE_TYPE_INTEREST)
 student.hit_point = 10
-check("少女排着过家家兴趣课：CVP CourseType 不成立，照常上课 / 体力缺课两个学生前提都为 0（此前都按有课判）", HP(_ct_interest, 201) == 0
+check("排着不存在的兴趣课：CVP CourseType 不成立，照常上课 / 体力缺课两个学生前提都为 0（此前都按有课判）", HP(_ct_interest, 201) == 0
       and HP("self_course_attend", 201) == 0 and HP("self_course_absent_by_hp", 201) == 0)
 student.hit_point = 100
 student.talent[104] = 0
 student.talent[103] = 1
-check("回到萝莉：CourseType 成立", HP(_ct_interest, 201) == 1)
+schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_INTEREST, schedule_template_handle.get_entertainment_cid_by_name(_("下棋")))
+check("换成下棋：CourseType 成立", HP(_ct_interest, 201) == 1)
 schedule_handle.clear_selected_course(201, 0, 0)
 student.behavior.behavior_id = constant.Behavior.SELF_STUDY
 _self_study_tip = (False, _("自习中（日程安排，此刻没课）"))
@@ -317,7 +315,7 @@ check("L11 只排理论课：只有 self_have_theory_course 成立（此前点�
 schedule_handle.set_class_cell(ROOM_P, 1, 3, 43, -1)
 schedule_handle.set_selected_course(201, 1, 3, E.COURSE_TYPE_PRACTICE, ROOM_P)
 schedule_handle.set_selected_course(201, 1, 4, E.COURSE_TYPE_PE, _("木桩房"))
-schedule_handle.set_selected_course(201, 1, 5, E.COURSE_TYPE_INTEREST, E.ENTERTAINMENT_PLAY_HOUSE)
+schedule_handle.set_selected_course(201, 1, 5, E.COURSE_TYPE_INTEREST, schedule_template_handle.get_entertainment_cid_by_name(_("下棋")))
 schedule_handle.set_selected_course(201, 1, 6, E.COURSE_TYPE_INTERN, intern_work)
 check("L11 五种课型各排一格：五个前提都成立", course_type_hit(201) == sorted(_type_premise), course_type_hit(201))
 schedule_handle.clear_class_cell(ROOM1, 1, 2)
@@ -449,8 +447,8 @@ adult.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
 move_to(301, SCENE_DORM)
 pl.behavior.behavior_id = _pl_behavior
 move_to(0, SCENE_DORM)
-check("L18 同学前提的 docstring 写上新口径（双方都在学生岗、确有的课、对方是幼女或萝莉）",
-      all(k in (handle_premise.handle_self_have_classmate.__doc__ or "") for k in ("学生岗", "确有", "萝莉")))
+check("L18 同学前提的 docstring 写上新口径（双方都在学生岗、确有的课、对方是幼儿或学员）",
+      all(k in (handle_premise.handle_self_have_classmate.__doc__ or "") for k in ("学生岗", "确有", "学员")))
 
 section("Plan 32 §3.14（L26）：公开课前提 self_have_public_course 按整张个人课表查每周确有的公开课")
 check("L26 前提 self_have_public_course 已注册", P.SELF_HAVE_PUBLIC_COURSE == "self_have_public_course" and P.SELF_HAVE_PUBLIC_COURSE in constant.handle_premise_data)

@@ -65,7 +65,6 @@ int,str,str,int,str,str
 168,style_hair,修整发型,60,both,娱乐
 169,full_body_styling,全身造型服务,120,both,娱乐
 171,listen_inflation,听肚子里的动静,5,both,娱乐
-172,play_with_child,一起玩耍,30,both,娱乐
 173,pl_win_in_board_game,博士在桌游中获胜,10,pl,娱乐
 174,pl_lose_in_board_game,博士在桌游中输了,10,pl,娱乐
 181,soak_feet,泡脚,30,both,娱乐
@@ -107,7 +106,6 @@ int,str,str,int,str,str
 229,check_report_card,检查成绩单,15,both,日常
 230,intern_class,实习,45,npc,工作
 231,follow_mother,跟随母亲见学,60,npc,娱乐
-232,free_play,自由玩耍,60,npc,娱乐
 
 251,morning_salutation_1,早安问候：叫起床,5,npc,工作_助理
 252,morning_salutation_2,早安问候：早安吻,5,npc,工作_助理

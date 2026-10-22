@@ -76,10 +76,6 @@ def update_new_day():
             #    无条件清掉的话当天余下节次会重新掷翘课，<翘>、翘课被抓、截短规则的翘课日分支都失效
             if growth_data.skip_class_flag and growth_data.skip_class_day < cache.game_time.toordinal():
                 growth_data.skip_class_flag = False
-            # 清零见学flag（Plan 22 二期）：见学是「此刻」的状态，跨日一律重判。
-            # 这是兜底的第四处清位——AI 整天没跑到那个角色（睡着、H中、被抱走）时，
-            #    class_ai 的三处清位一处都摸不着，标记会一直粘着
-            growth_data.follow_mother_flag = False
         if character_id:
             # 排卵日结束仍未结算（玩家当天未睡觉）时的兜底：受精判定与排卵结算
             if character_data.pregnancy.ovulation_flag:

@@ -39,7 +39,7 @@ from typing import List, Tuple
 from Script.Config import game_config
 from Script.Core import cache_control, game_type, constant
 from Script.Design import attr_calculation, game_time, map_handle
-from Script.System.Education_System import education_constant, schedule_handle, growth_handle, schedule_template_handle
+from Script.System.Education_System import education_constant, schedule_handle, growth_handle
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -565,7 +565,7 @@ def judge_student_pullable(student_id: int) -> bool:
     Return arguments:
     bool -- 是否可拉
     功能: 学生岗（口径 1）、活着、不在 H、不在睡觉、今天没翘课、此刻不在休息（体力缺课走的就是休息）。
-          睡觉看两样（Plan 27 §3.7，写法同 judge_mother_followable）：要睡觉标记，或行为就是睡觉——
+          睡觉看两样：要睡觉标记，或行为就是睡觉——
              当场爆睡（疲劳满、安眠药、烂醉 → 状态机 44）只改行为、不置标记，只判标记会把她拉起来听课
           今天翘没翘课走 judge_skip_class_today（Plan 31 §3.6）：flag 认日期，前一天挂上、跨天没清掉的不挡
     """
@@ -729,19 +729,16 @@ def get_student_leave_time(character_id: int):
 
 
 # ---------------------------------------------------------------------------
-# 幼女跟随母亲见学（Plan 22 二期 §3.24）
+# 母亲可用性
 # ---------------------------------------------------------------------------
 
 
 def judge_mother_available(character_id: int) -> int:
     """
-    判断幼女此刻能不能去跟着母亲见学，返回有效的母亲id
-
-    回落链的每一条都必须有出路（方案 §3.24 的表），否则幼女会卡在 SHARE_BLANKLY。
-    其中母亲在 H / 监禁 / 无意识时的排除是**硬要求不是优化**：既有的跟随链完全不判这几个状态，
-    不显式挡住就会出现幼女跟进 H 场景。
+    判断孩子的母亲此刻是否仍在队中且可跟随，返回有效的母亲id
+    母亲在 H / 监禁 / 无意识H、外勤 / 外交访问、所在场景不可达时都算无效
     Keyword arguments:
-    character_id -- 幼女的角色id
+    character_id -- 孩子的角色id
     Return arguments:
     int -- 有效的母亲角色id，无效则为-1
     """
@@ -753,155 +750,16 @@ def judge_mother_available(character_id: int) -> int:
     mother_data: game_type.Character = cache.character_data[mother_id]
     if mother_data.dead:
         return -1
-    # 绝不能让幼女跟进 H 场景：H中 / 无意识H中 / 被监禁
+    # H中 / 无意识H中 / 被监禁
     if mother_data.sp_flag.is_h or mother_data.sp_flag.unconscious_h or mother_data.sp_flag.imprisonment:
         return -1
     # 母亲人不在罗德岛（外勤 / 外交访问）
     if mother_data.sp_flag.field_commission or mother_data.sp_flag.in_diplomatic_visit:
         return -1
-    # 不查医疗系统的住院表（Plan 32 §3.5 M4）：medical_hospitalized 的键是医疗系统里抽象病人的编号（MedicalPatient.patient_id，
-    #    每次启动从 1 自增），不关联任何角色，干员从不进这张表；拿母亲的角色 id 去查，只会在编号撞上时误判她不能跟、
-    #    见学整段回落育儿室，挂 self_mother_available 的事件也抽不到
+    # 不查医疗系统的住院表：medical_hospitalized 的键是医疗系统里抽象病人的编号（MedicalPatient.patient_id，
+    #    每次启动从 1 自增），不关联任何角色，干员从不进这张表；拿母亲的角色 id 去查，只会在编号撞上时误判
     # 母亲所在场景不可达（未解锁 / 已拆除）
     mother_scene_str = map_handle.get_map_system_path_str_for_list(mother_data.position)
     if mother_scene_str not in cache.scene_data:
         return -1
     return mother_id
-
-
-def judge_mother_followable(character_id: int) -> int:
-    """
-    判断幼女此刻能不能真的跟着母亲见学：judge_mother_available 之外，母亲还不能在睡觉（Plan 26 L7）
-    Keyword arguments:
-    character_id -- 幼女的角色id
-    Return arguments:
-    int -- 有效的母亲角色id，无效则为-1
-    功能: 见学的决策、移动、跟随、结算四处都走这里。
-          睡觉不写进 judge_mother_available：那个函数还是公务事件前提 self_mother_available 的判据，
-             而每日的养成事件在跨天结算时派发，那时母亲多半睡着，写进去会让带母亲的事件几乎抽不到
-    """
-    mother_id = judge_mother_available(character_id)
-    if mother_id == -1:
-        return -1
-    mother_data: game_type.Character = cache.character_data[mother_id]
-    # 要睡觉状态或正睡着（吃药、爆睡未必挂那个标记）：跟到宿舍里看着一个睡着的人学不到手艺，回落育儿室自由玩耍
-    if mother_data.sp_flag.sleep or mother_data.behavior.behavior_id == constant.Behavior.SLEEP:
-        return -1
-    return mother_id
-
-
-def judge_should_follow_mother(character_id: int) -> bool:
-    """
-    判断本时刻是否应当走见学分支
-
-    两种入口：
-        1. 幼女期的默认行为 —— 在节次内、本节没排课，**且该时段没有明确排别的日程活动**
-           （方案 §3.24 的触发条件；2026-09-10 二期方案 §9.2.9 收窄：日程明确排了具体活动就去做那个活动，
-           排「自由选择」、或活动没写进槽位（need 不过、退回自由选择）时才默认见学）
-        2. 日程模板把当前娱乐时段排成了「跟随母亲」—— 晚上或没课的时段也能跟；
-           **萝莉只有这一个入口**（2026-09-09 二期方案 §9.2.3 放宽：口径 10 的「萝莉自由时段自由行动」
-           仍是默认，玩家明确在日程里排了「跟随母亲」时才去见学）。
-           另要此刻是她自己的休息时间（handle_premise.handle_all_entertainment_time，Plan 32 §3.6 M5）：学生岗、没有工作、
-           休息日的白天也算，其余岗位工作日只有晚上。改了岗（非学生岗）的萝莉按新岗位上班（口径 1），
-           日程白天排着的「跟随母亲」不再把她整段从岗位上叫走；改回学生岗、或到了晚上照旧生效
-    有课永远优先：学生此刻与课表有关（本节有课、马上开课、待赴实操课）时，两种入口都不成立
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    bool -- 是否应当见学
-    """
-    from Script.Design import handle_premise
-
-    character_data: game_type.Character = cache.character_data[character_id]
-    stage = growth_handle.get_character_stage(character_id)
-    if stage not in (102, 103):
-        return False
-    # 上课是工作链里学生岗的目标行（target.csv 组 08），而见学排在工作链之前，这里不让路就会把上课截走（Plan 24 §3.9）。
-    #    看的是 get_course_stage 而不是个人课表：改了岗的女儿课表还在，但她不会去上课（口径 1），不该因此不让路；
-    #    她能不能见学另由入口 2 的休息时间决定（Plan 32 §3.6 M5）
-    if get_course_stage(character_id) != education_constant.COURSE_STAGE_NONE:
-        return False
-    # get_now_course 已经把"不在节次内"和"没排课"都归为None，所以这里要自己再判一次是不是真的在节次内
-    in_period = game_time.get_class_period(character_id) != -1
-    # 当前娱乐时段的槽位值；不在任何娱乐时段（如 8:40~9:00 的到岗时间、17:45~18:00）时为 -1
-    enter_time = game_time.judge_entertainment_time(character_id)
-    slot = enter_time - 1 if enter_time else -1
-    slot_value = character_data.entertainment.entertainment_type[slot] if slot >= 0 else -1
-    # 入口2：当前娱乐时段的日程活动就是「跟随母亲」（幼女 / 萝莉共用），且此刻是她自己的休息时间（Plan 32 §3.6 M5）：
-    #    非学生岗的工作日白天是她的工作时间，按新岗位上班；学生岗、没有工作、休息日的白天与每天晚上照旧
-    if slot_value == education_constant.ENTERTAINMENT_FOLLOW_MOTHER and handle_premise.handle_all_entertainment_time(character_id):
-        return True
-    # 入口1：幼女在节次内且本节没课。该时段明确排了别的活动、且已经写进槽位时不见学，交给娱乐链去做那个活动；
-    #        「自由选择」（模板值 0）或活动没写进槽位（need 不过）时才是默认见学
-    if stage == 102 and in_period:
-        explicit_id = schedule_template_handle.get_child_slot_activity(character_id, slot) if slot >= 0 else 0
-        if explicit_id and slot_value == explicit_id:
-            return False
-        return True
-    return False
-
-
-def judge_follow_mother_state_machine(character_id: int) -> int:
-    """
-    见学分支的决策入口，返回本时刻该执行的状态机id
-
-    母亲无效时一律回落到育儿室自由玩耍——这是回落链的唯一出口，
-    不返回0交回既有AI链：交回去等于让幼女在没课的时段随机游荡，方案要的是确定的去处。
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 状态机id，0表示本函数不接管
-    """
-    if not judge_should_follow_mother(character_id):
-        # 本时刻不该见学了（上了年纪、排上课、日程换成别的），顺手把标记清掉。
-        #    见学判定排在工作链之前，孩子从见学转去上课时一定先经过这里（Plan 24 起上课接管处不再另清）
-        clear_follow_mother_flag(character_id)
-        return 0
-    mother_id = judge_mother_followable(character_id)
-    if mother_id == -1:
-        return constant.StateMachine.ENTERTAIN_FREE_PLAY
-    character_data: game_type.Character = cache.character_data[character_id]
-    mother_data: game_type.Character = cache.character_data[mother_id]
-    # 还没到母亲身边，先移动过去
-    if character_data.position != mother_data.position:
-        return constant.StateMachine.EDUCATION_MOVE_TO_MOTHER
-    return constant.StateMachine.EDUCATION_FOLLOW_MOTHER
-
-
-def judge_in_follow_mother(character_id: int) -> bool:
-    """
-    校验一个角色此刻是否处于跟随母亲见学的状态（Plan 22 二期）
-
-    这是 child_growth.follow_mother_flag 的统一读口，前提系统与角色状态标识都走它。
-    不要在外部直接读那个字段：全岛绝大多数干员的 child_growth 是 None，直接读会 AttributeError
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    bool -- 是否正在见学
-    """
-    if character_id not in cache.character_data:
-        return False
-    growth_data = cache.character_data[character_id].child_growth
-    if growth_data is None:
-        return False
-    return bool(getattr(growth_data, "follow_mother_flag", False))
-
-
-def clear_follow_mother_flag(character_id: int) -> None:
-    """
-    清掉见学标记（Plan 22 二期）
-
-    置位只有见学状态机一处，清位却有四处——自由玩耍、见学结算、见学判定不成立、跨天兜底。
-       少一处，「见学中」这个状态标识就会粘在孩子身上摘不掉。
-       原先的「上课接管」随 Plan 24 并入工作链后不再需要：见学判定排在工作链之前，不成立时自己会清
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    无
-    """
-    if character_id not in cache.character_data:
-        return
-    growth_data = cache.character_data[character_id].child_growth
-    if growth_data is None:
-        return
-    growth_data.follow_mother_flag = False

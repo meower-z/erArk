@@ -121,8 +121,6 @@ class Behavior_Int:
     """ 全身造型服务 """
     LISTEN_INFLATION = 171
     """ 听肚子里的动静 """
-    PLAY_WITH_CHILD = 172
-    """ 一起玩耍 """
     PL_WIN_IN_BOARD_GAME = 173
     """ 博士在桌游中获胜 """
     PL_LOSE_IN_BOARD_GAME = 174
@@ -179,8 +177,6 @@ class Behavior_Int:
     """ 实习 """
     FOLLOW_MOTHER = 231
     """ 跟随母亲见学 """
-    FREE_PLAY = 232
-    """ 自由玩耍（幼女见学回落，或日程模板排的活动） """
     MAINTENANCE_FACILITIES = 215
     """ 维护设施 """
     REPAIR_EQUIPMENT = 216

@@ -385,28 +385,6 @@ def handle_entertainment_is_taste_food(character_id: int) -> int:
     return character_data.entertainment.entertainment_type[i] == 115
 
 
-@add_premise(constant_promise.Premise.ENTERTAINMENT_IS_PLAY_HOUSE)
-def handle_entertainment_is_play_house(character_id: int) -> int:
-    """
-    自己当前时段的娱乐为过家家
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    character_data: game_type.Character = cache.character_data[character_id]
-
-    i = game_time.judge_entertainment_time(character_id)
-    if i:
-        i -= 1
-    else:
-        return 0
-
-    from Script.System.Education_System import education_constant
-
-    return character_data.entertainment.entertainment_type[i] == education_constant.ENTERTAINMENT_PLAY_HOUSE
-
-
 @add_premise(constant_promise.Premise.ENTERTAINMENT_IS_STYLE_HAIR)
 def handle_entertainment_is_style_hair(character_id: int) -> int:
     """
