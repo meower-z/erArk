@@ -54,7 +54,8 @@ def judge_single_instruct_filter(instruct_id: str, now_premise_data: dict, now_t
     if filter_judge:
         premise_judge = True
         if instruct_id in constant.instruct_premise_data:
-            for premise in constant.instruct_premise_data[instruct_id]:
+            # 按前提id排序后判断，使判断前提时抽的随机数不随集合的遍历顺序变化。
+            for premise in sorted(constant.instruct_premise_data[instruct_id]):
                 # 忽略子类时（即非主界面），NPC逆推模式下则忽略NPC逆推的相关前提
                 if use_type_filter_flag == False and handle_premise.handle_t_npc_active_h(0) and premise == 't_npc_not_active_h':
                     continue

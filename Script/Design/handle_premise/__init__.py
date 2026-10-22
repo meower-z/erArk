@@ -172,8 +172,8 @@ def get_weight_from_premise_dict(talk_premise_dict: set, character_id: int, calc
         ):
         return 0, now_premise_data
 
-    # 遍历前提字典
-    for premise in talk_premise_dict:
+    # 遍历前提字典。按前提id排序后判断，使判断前提时抽的随机数不随集合的遍历顺序变化。
+    for premise in sorted(talk_premise_dict):
         # 判断是否为权重类空白前提
         if premise[:5] == "high_":
             high_flag = True

@@ -239,7 +239,8 @@ def choice_talk_from_talk_data(now_talk_data: dict, behavior_id = "share_blankly
     common_behavior_id = None
     if len(now_talk_data):
         talk_weight = value_handle.get_rand_value_for_value_region(list(now_talk_data.keys()))
-        now_talk_id = random.choice(list(now_talk_data[talk_weight]))
+        # 集合的遍历顺序随字符串哈希变化。排序后，同一随机状态总挑中同一句。
+        now_talk_id = random.choice(sorted(now_talk_data[talk_weight]))
         talk_text = game_config.config_talk[now_talk_id].context
         unusual_talk_flag = game_config.config_talk[now_talk_id].adv_id
         # 如果是非特殊口上且是权重低于100的地文，且行为id在通用口上列表中，则按照设置的几率使用纸娃娃地文

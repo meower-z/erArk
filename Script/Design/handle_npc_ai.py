@@ -532,7 +532,8 @@ def search_target(
         now_target_pass_judge = 0
         now_target_data = {}
         premise_judge = 1
-        for premise in target_premise_list:
+        # 按前提id排序后判断，使判断前提时抽的随机数不随集合的遍历顺序变化。
+        for premise in sorted(target_premise_list):
             premise_judge = 0
             if premise in premise_data:
                 premise_judge = premise_data[premise]
@@ -584,10 +585,12 @@ def search_target(
         else:
             now_value_weight = value_handle.get_rand_value_for_value_region(list(now_target_data.keys()))
             target_data.setdefault(now_weight, set())
-            target_data[now_weight].add(random.choice(list(now_target_data[now_value_weight])))
+            # 集合的遍历顺序随字符串哈希变化。排序后，同一随机状态总挑中同一个目标。
+            target_data[now_weight].add(random.choice(sorted(now_target_data[now_value_weight])))
     if len(target_data):
         value_weight = value_handle.get_rand_value_for_value_region(list(target_data.keys()))
-        final_target = random.choice(list(target_data[value_weight]))
+        # 集合的遍历顺序随字符串哈希变化。排序后，同一随机状态总挑中同一个目标。
+        final_target = random.choice(sorted(target_data[value_weight]))
         return final_target, value_weight, 1, premise_data
     return "", 0, 0, premise_data
 
@@ -640,8 +643,8 @@ def npc_auto_work_or_entertainment(character_id: int, premise_data: Dict[int, in
     else:
         state_machine_id = int(target_data)
     judge = True
-    # 开始遍历前提
-    for premise in tem_premise_data:
+    # 开始遍历前提。按前提id排序后判断，使判断前提时抽的随机数不随集合的遍历顺序变化。
+    for premise in sorted(tem_premise_data):
         premise_judge = 0
         if premise in premise_data:
             premise_judge = premise_data[premise]
