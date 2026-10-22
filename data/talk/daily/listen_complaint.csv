@@ -22,11 +22,6 @@ str,str,int,str,str
 1003,listen_complaint,0,CVP_A2_T|102_E_1,{Name}温柔地倾听着{TargetName}幼稚的牢骚和不满
 1004,listen_complaint,0,CVP_A2_T|102_E_1,{TargetName}像小孩子一样向博士述说着心中的委屈
 
-1005,listen_complaint,0,CVP_A2_T|103_E_1,{TargetName}带着萝莉特有的青涩向{Name}博士倾诉烦恼
-1006,listen_complaint,0,CVP_A2_T|103_E_1,{Name}认真地听着{TargetName}懵懂的抱怨和困惑
-1007,listen_complaint,0,CVP_A2_T|103_E_1,{TargetName}用还带着稚气的声音向博士诉说心中的不满
-1008,listen_complaint,0,CVP_A2_T|103_E_1,{Name}耐心地倾听着{TargetName}青涩的牢骚和烦恼
-1009,listen_complaint,0,CVP_A2_T|103_E_1,{TargetName}怯生生地向博士抱怨着最近让她困扰的事情
 
 1010,listen_complaint,0,CVP_A2_T|104_E_1,{TargetName}带着少女特有的活力向{Name}博士倾诉烦恼
 1011,listen_complaint,0,CVP_A2_T|104_E_1,{Name}专注地听着{TargetName}青春期的抱怨和困惑

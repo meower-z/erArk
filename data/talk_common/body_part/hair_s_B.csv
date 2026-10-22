@@ -11,12 +11,7 @@ str,str,int,str,str
 4,body_part_hair_s_B,0,high_1,发束
 5,body_part_hair_s_B,0,high_1,头发
 
-100,body_part_hair_s_B,0,CVP_A2_T|102_E_1,童发
-101,body_part_hair_s_B,0,CVP_A2_T|102_E_1,碎发
-102,body_part_hair_s_B,0,CVP_A2_T|102_E_1,细发
-103,body_part_hair_s_B,0,CVP_A2_T|102_E_1,小辫
 
-121,body_part_hair_s_B,0,CVP_A2_T|103_E_1,碎发
 
 140,body_part_hair_s_B,0,CVP_A2_T|104_E_1,长发
 141,body_part_hair_s_B,0,CVP_A2_T|104_E_1,秀发
