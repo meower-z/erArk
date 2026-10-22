@@ -63,7 +63,7 @@ def boot():
         import auto_build_config 会按需增量重建 data/ 下的生成物；
         cache 必须在 game_config.init() 之前建好；
         Script.Settle / Script.StateMachine 靠装饰器注册结算器与状态机，缺了会 KeyError；
-        不加载 mod 系统，也不导入 Script.UI.Flow（它会预载全部图片）。
+        不加载 mod 系统，也不导入 Script.UI.Flow。
     """
     import auto_build_config  # noqa: F401
     from Script.Config import normal_config
