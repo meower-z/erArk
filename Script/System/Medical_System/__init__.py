@@ -1,4 +1,5 @@
 """Medical subsystem package - 医疗系统子模块"""
+
 # 显式导入所有子模块以便 PyInstaller 打包
 # 注意：导入顺序很重要，需要先导入基础模块，再导入依赖它们的模块
 # 避免循环导入问题
@@ -23,4 +24,3 @@ from Script.System.Medical_System import medical_service
 from Script.System.Medical_System import medical_department_panel
 from Script.System.Medical_System import medical_player_diagnose_function
 from Script.System.Medical_System import medical_player_diagnose_panel
-

@@ -21,115 +21,122 @@ error_path = os.path.join("error.log")
 
 
 def init(main_flow: object):
-    """
-    游戏流程初始化
-    Keyword argument:
-    main_flow -- 游戏主流程
-    """
-    global def_style
-    io_init.clear_screen()
-    io_init.clear_order()
-    flow_handle.cmd_clear()
-    # 载入按键监听
-    if not normal_config.config_normal.web_draw:
-        from Script.Core import key_listion_event
-        key_listion_event.on_wframe_listion()
-    # 设置背景颜色
-    io_init.set_background(normal_config.config_normal.background)
-    # 初始化字体
-    io_init.init_style()
-    # Tk模式下预热文本度量：绘制一屏典型内容并强制完成行度量后清屏（同批处理玩家不可见），
-    # 把进入游戏后前几屏的 Tk 字形/行度量尖峰（0.3~1秒的偶发卡顿）移到加载期
-    if not normal_config.config_normal.web_draw:
-        io_init.warm_up_text_metrics()
-    # 初始化地图数据
-    global _main_flow
-    _main_flow = main_flow
+  """
+  游戏流程初始化
+  Keyword argument:
+  main_flow -- 游戏主流程
+  """
+  global def_style
+  io_init.clear_screen()
+  io_init.clear_order()
+  flow_handle.cmd_clear()
+  # 载入按键监听
+  if not normal_config.config_normal.web_draw:
+    from Script.Core import key_listion_event
 
-    _have_run = False
+    key_listion_event.on_wframe_listion()
+  # 设置背景颜色
+  io_init.set_background(normal_config.config_normal.background)
+  # 初始化字体
+  io_init.init_style()
+  # Tk模式下预热文本度量：绘制一屏典型内容并强制完成行度量后清屏（同批处理玩家不可见），
+  # 把进入游戏后前几屏的 Tk 字形/行度量尖峰（0.3~1秒的偶发卡顿）移到加载期
+  if not normal_config.config_normal.web_draw:
+    io_init.warm_up_text_metrics()
+  # 初始化地图数据
+  global _main_flow
+  _main_flow = main_flow
 
-    def run_main_flow():
-        nonlocal _have_run
-        while True:
-            if not _have_run:
-                main_flow()
-                _have_run = True
-            askfor_order()
-            flow_handle.call_default_flow()
-            if flow_handle.exit_flag:
-                break
+  _have_run = False
 
+  def run_main_flow():
+    nonlocal _have_run
     while True:
+      if not _have_run:
+        main_flow()
+        _have_run = True
+      askfor_order()
+      flow_handle.call_default_flow()
+      if flow_handle.exit_flag:
+        break
 
-        try:
-            run_main_flow()
-        except Exception:
-            # 最近玩家指令状态
-            instruct_cn_name_list = ""
-            for behavior_id in cache.pl_pre_behavior_instruce:
-                if behavior_id in game_config.config_behavior:
-                    behavior_data = game_config.config_behavior[behavior_id]
-                    instruct_cn_name_list += behavior_data.name + "，"
-            if len(instruct_cn_name_list) and instruct_cn_name_list[-1] == "，":
-                instruct_cn_name_list = instruct_cn_name_list[:-1]
-            # 向error_log写入回溯用信息
-            with open(error_path, "a", encoding="utf-8") as e:
-                e.write(f"\n版本信息：{normal_config.config_normal.verson}\n")
-                e.write(f"最近输入指令：{cache.input_cache}\n")
-                e.write(f"玩家最近状态：{instruct_cn_name_list}\n")
-                e.write(f"当前游戏内时间：{game_time.get_date_text(cache.game_time)}\n")
-            traceback.print_exc(file=open(error_path, "a"))
-            # 向游戏内写入错误信息
-            error_text = "\n"
-            error_text += _("版本信息：{0}\n").format(normal_config.config_normal.verson)
-            error_text += _("最近输入指令：{0}\n").format(cache.input_cache)
-            error_text += _("玩家最近状态：{0}\n").format(instruct_cn_name_list)
-            error_text += _("当前游戏内时间：{0}\n").format(game_time.get_date_text(cache.game_time))
-            error_text += traceback.format_exc()
-            error_text += _("\n\n游戏发生错误，已将上述错误信息写入error.log\n\n")
-            error_text += _("报错数据文件已保存至99号档位，请将error.log和存档发送给游戏作者以帮助解决问题\n\n")
-            save_handle.establish_save("99")
-            # 输出选择面板
-            ask_list = []
-            askfor_panel = panel.OneMessageAndSingleColumnButton()
-            askfor_list = [(_("回到标题画面")), (_("退出游戏"))]
-            askfor_panel.set(askfor_list, (error_text), 0)
-            askfor_panel.draw()
-            askfor_panel_return_list = askfor_panel.get_return_list()
-            ask_list.extend(askfor_panel_return_list.keys())
-            yrn = flow_handle.askfor_all(ask_list)
-            py_cmd.clr_cmd()
-            # 回到标题画面
-            if yrn == "0":
-                io_init.clear_screen()
-                io_init.clear_order()
-                flow_handle.cmd_clear()
-                cache.now_panel_id = constant.Panel.TITLE
-            else:
-                os._exit(0)
+  while True:
+
+    try:
+      run_main_flow()
+    except Exception:
+      # 最近玩家指令状态
+      instruct_cn_name_list = ""
+      for behavior_id in cache.pl_pre_behavior_instruce:
+        if behavior_id in game_config.config_behavior:
+          behavior_data = game_config.config_behavior[behavior_id]
+          instruct_cn_name_list += behavior_data.name + "，"
+      if len(instruct_cn_name_list) and instruct_cn_name_list[-1] == "，":
+        instruct_cn_name_list = instruct_cn_name_list[:-1]
+      # 向error_log写入回溯用信息
+      with open(error_path, "a", encoding="utf-8") as e:
+        e.write(f"\n版本信息：{normal_config.config_normal.verson}\n")
+        e.write(f"最近输入指令：{cache.input_cache}\n")
+        e.write(f"玩家最近状态：{instruct_cn_name_list}\n")
+        e.write(f"当前游戏内时间：{game_time.get_date_text(cache.game_time)}\n")
+      traceback.print_exc(file=open(error_path, "a"))
+      # 向游戏内写入错误信息
+      error_text = "\n"
+      error_text += _("版本信息：{0}\n").format(
+          normal_config.config_normal.verson
+      )
+      error_text += _("最近输入指令：{0}\n").format(cache.input_cache)
+      error_text += _("玩家最近状态：{0}\n").format(instruct_cn_name_list)
+      error_text += _("当前游戏内时间：{0}\n").format(
+          game_time.get_date_text(cache.game_time)
+      )
+      error_text += traceback.format_exc()
+      error_text += _("\n\n游戏发生错误，已将上述错误信息写入error.log\n\n")
+      error_text += _(
+          "报错数据文件已保存至99号档位，请将error.log和存档发送给游戏作者以帮助解决问题\n\n"
+      )
+      save_handle.establish_save("99")
+      # 输出选择面板
+      ask_list = []
+      askfor_panel = panel.OneMessageAndSingleColumnButton()
+      askfor_list = [(_("回到标题画面")), (_("退出游戏"))]
+      askfor_panel.set(askfor_list, (error_text), 0)
+      askfor_panel.draw()
+      askfor_panel_return_list = askfor_panel.get_return_list()
+      ask_list.extend(askfor_panel_return_list.keys())
+      yrn = flow_handle.askfor_all(ask_list)
+      py_cmd.clr_cmd()
+      # 回到标题画面
+      if yrn == "0":
+        io_init.clear_screen()
+        io_init.clear_order()
+        flow_handle.cmd_clear()
+        cache.now_panel_id = constant.Panel.TITLE
+      else:
+        os._exit(0)
 
 
 def run(main_func: object):
-    """
-    执行游戏主流程
-    Keyword arguments:
-    main_func -- 游戏主流程
-    """
+  """
+  执行游戏主流程
+  Keyword arguments:
+  main_func -- 游戏主流程
+  """
 
-    def _init():
-        init(main_func)
+  def _init():
+    init(main_func)
 
-    io_init.run(_init)
+  io_init.run(_init)
 
 
 def console_log(string: str):
-    """
-    向后台打印日志
-    Keyword arguments:
-    string -- 游戏日志信息
-    """
-    print("game log:")
-    print(string + "\n")
+  """
+  向后台打印日志
+  Keyword arguments:
+  string -- 游戏日志信息
+  """
+  print("game log:")
+  print(string + "\n")
 
 
 # 请求输入命令

@@ -33,292 +33,314 @@ HISTORY_ELEMENT_TYPES = {
 
 
 def _ensure_current_draw_list() -> None:
-    """
-    确保当前绘制元素列表存在
+  """
+  确保当前绘制元素列表存在
 
-    参数：无
+  参数：无
 
-    返回值类型：无
-    功能描述：初始化当前绘制元素缓存列表
-    """
-    if not hasattr(cache, "current_draw_elements"):
-        cache.current_draw_elements = []
+  返回值类型：无
+  功能描述：初始化当前绘制元素缓存列表
+  """
+  if not hasattr(cache, "current_draw_elements"):
+    cache.current_draw_elements = []
 
 
 def _ensure_history_list() -> None:
-    """
-    确保历史绘制缓存存在
+  """
+  确保历史绘制缓存存在
 
-    参数：无
+  参数：无
 
-    返回值类型：无
-    功能描述：初始化Web绘制历史缓存列表
-    """
-    if not hasattr(cache, "web_draw_history"):
-        cache.web_draw_history = []
-    if not hasattr(cache, "web_draw_history_line_total"):
-        cache.web_draw_history_line_total = 0
+  返回值类型：无
+  功能描述：初始化Web绘制历史缓存列表
+  """
+  if not hasattr(cache, "web_draw_history"):
+    cache.web_draw_history = []
+  if not hasattr(cache, "web_draw_history_line_total"):
+    cache.web_draw_history_line_total = 0
 
 
 def _calculate_element_lines(element: Dict[str, Any]) -> int:
-    """
-    计算绘制元素占用的行数
+  """
+  计算绘制元素占用的行数
 
-    参数:
-    element (dict): 绘制元素
+  参数:
+  element (dict): 绘制元素
 
-    返回值类型：int
-    功能描述：根据元素类型估算行数，用于限制历史长度
-    """
-    elem_type = element.get("type")
-    if elem_type == "text":
-        text = element.get("text", "")
-        if text == "":
-            return 1
-        # 拆分换行符，避免末尾空行导致额外统计
-        lines = text.split("\n")
-        # 如果文本以换行结尾，split会产生一个额外的空字符串，剔除
-        if lines and lines[-1] == "":
-            lines = lines[:-1]
-        return max(len(lines), 1)
-    if elem_type in {"image", "center_image", "character", "bar"}:
-        return 1
-    if elem_type in {"info_bar", "info_character"}:
-        total = 1
-        if element.get("text"):
-            total += _calculate_element_lines({"type": "text", "text": element["text"]})
-        for item in element.get("draw_list", []):
-            total += _calculate_element_lines(item)
-        return max(total, 1)
+  返回值类型：int
+  功能描述：根据元素类型估算行数，用于限制历史长度
+  """
+  elem_type = element.get("type")
+  if elem_type == "text":
+    text = element.get("text", "")
+    if text == "":
+      return 1
+    # 拆分换行符，避免末尾空行导致额外统计
+    lines = text.split("\n")
+    # 如果文本以换行结尾，split会产生一个额外的空字符串，剔除
+    if lines and lines[-1] == "":
+      lines = lines[:-1]
+    return max(len(lines), 1)
+  if elem_type in {"image", "center_image", "character", "bar"}:
     return 1
+  if elem_type in {"info_bar", "info_character"}:
+    total = 1
+    if element.get("text"):
+      total += _calculate_element_lines(
+          {"type": "text", "text": element["text"]}
+      )
+    for item in element.get("draw_list", []):
+      total += _calculate_element_lines(item)
+    return max(total, 1)
+  return 1
 
 
 def _record_history_element(element: Dict[str, Any]) -> None:
-    """
-    记录历史绘制元素
+  """
+  记录历史绘制元素
 
-    参数:
-    element (dict): 绘制元素
+  参数:
+  element (dict): 绘制元素
 
-    返回值类型：无
-    功能描述：按类型过滤并维护固定长度的历史缓存
-    """
-    if not isinstance(element, dict):
+  返回值类型：无
+  功能描述：按类型过滤并维护固定长度的历史缓存
+  """
+  if not isinstance(element, dict):
+    return
+  if element.get("type") not in HISTORY_ELEMENT_TYPES:
+    return
+  _ensure_history_list()
+  lines = _calculate_element_lines(element)
+  history_entry = {"element": copy.deepcopy(element), "line_count": lines}
+  cache.web_draw_history.append(history_entry)
+  cache.web_draw_history_line_total += lines
+  while (
+      cache.web_draw_history
+      and cache.web_draw_history_line_total > MAX_HISTORY_LENGTH
+  ):
+    removed = cache.web_draw_history.pop(0)
+    cache.web_draw_history_line_total -= removed.get("line_count", 0)
+
+
+def append_current_draw_element(
+    element: Dict[str, Any], record_history: bool = True
+) -> None:
+  """
+  添加绘制元素并根据需要记录历史
+
+  参数:
+  element (dict): 绘制元素
+  record_history (bool): 是否记录到历史缓存
+
+  返回值类型：无
+  功能描述：统一处理绘制元素的追加和历史维护
+  在行为循环期间，文本类元素会被记录到其他文本列表中。
+  但在子面板模式下，文本仍需正常显示，避免子面板交互提示丢失。
+  """
+  _ensure_current_draw_list()
+  # 如果文本为空，则直接返回
+  if isinstance(element, dict):
+    text_content = element.get("text", "")
+    if isinstance(text_content, str) and text_content == "":
+      return
+  # 如果是文本类的元素
+  if isinstance(element, dict) and element.get("type") in {"text", "wait"}:
+    string = element.get("text", "")
+    # 在行为循环期间记录文本到其他文本列表（用于其他文本回溯）
+    if (
+        hasattr(cache, "web_text_recording_flag")
+        and cache.web_text_recording_flag
+    ):
+      text_content = string.strip() if isinstance(string, str) else ""
+      # 排除空白和纯换行符
+      if text_content and text_content != "\n":
+        cache.web_other_texts.append(string)
+        # 实时推送文本到前端
+        emit_realtime_text(string, "other")
+        # 主界面（非子面板）下，同步将文本写入对话框队列
+        # 角色名留空，样式沿用原文本样式，逐条点击推进
+        if not getattr(cache, "web_sub_panel_mode", False):
+          text_style = element.get("style") or element.get("font") or "standard"
+          try:
+            from Script.System.Web_Draw_System.dialog_box import add_dialog_text
+
+            # 去掉开头和结尾的换行符，避免对话框中出现多余空行
+            new_string = string.strip("\n")
+
+            add_dialog_text(
+                speaker_name="PRTS",
+                text=new_string,
+                text_color=text_style,
+                wait_input=True,
+                is_minor=False,
+            )
+          except Exception:
+            # 对话框模块异常时不影响原有文本记录流程
+            pass
+      # 仅在非子面板模式下隐藏已记录文本；
+      # 子面板交互过程中的提示文本必须继续显示。
+      if not getattr(cache, "web_sub_panel_mode", False):
         return
-    if element.get("type") not in HISTORY_ELEMENT_TYPES:
-        return
-    _ensure_history_list()
-    lines = _calculate_element_lines(element)
-    history_entry = {"element": copy.deepcopy(element), "line_count": lines}
-    cache.web_draw_history.append(history_entry)
-    cache.web_draw_history_line_total += lines
-    while cache.web_draw_history and cache.web_draw_history_line_total > MAX_HISTORY_LENGTH:
-        removed = cache.web_draw_history.pop(0)
-        cache.web_draw_history_line_total -= removed.get("line_count", 0)
+  cache.current_draw_elements.append(element)
+  elem_type = element.get("type")
+  if elem_type in {"line_wait", "wait"}:
+    wait_id = element.get("wait_id")
+    text_preview = element.get("text", "")
+    if isinstance(text_preview, str) and len(text_preview) > 30:
+      text_preview = text_preview[:27] + "..."
+    # print(
+    #     f"[io_web] appended element type={elem_type} wait_id={wait_id} record_history={record_history} text={text_preview!r}"
+    # )
+  if record_history:
+    _record_history_element(element)
 
 
-def append_current_draw_element(element: Dict[str, Any], record_history: bool = True) -> None:
-    """
-    添加绘制元素并根据需要记录历史
-
-    参数:
-    element (dict): 绘制元素
-    record_history (bool): 是否记录到历史缓存
-
-    返回值类型：无
-    功能描述：统一处理绘制元素的追加和历史维护
-    在行为循环期间，文本类元素会被记录到其他文本列表中。
-    但在子面板模式下，文本仍需正常显示，避免子面板交互提示丢失。
-    """
-    _ensure_current_draw_list()
-    # 如果文本为空，则直接返回
-    if isinstance(element, dict):
-        text_content = element.get("text", "")
-        if isinstance(text_content, str) and text_content == "":
-            return
-    # 如果是文本类的元素
-    if isinstance(element, dict) and element.get("type") in {"text", "wait"}:
-        string = element.get("text", "")
-        # 在行为循环期间记录文本到其他文本列表（用于其他文本回溯）
-        if hasattr(cache, 'web_text_recording_flag') and cache.web_text_recording_flag:
-            text_content = string.strip() if isinstance(string, str) else ""
-            # 排除空白和纯换行符
-            if text_content and text_content != "\n":
-                cache.web_other_texts.append(string)
-                # 实时推送文本到前端
-                emit_realtime_text(string, "other")
-                # 主界面（非子面板）下，同步将文本写入对话框队列
-                # 角色名留空，样式沿用原文本样式，逐条点击推进
-                if not getattr(cache, 'web_sub_panel_mode', False):
-                    text_style = element.get("style") or element.get("font") or "standard"
-                    try:
-                        from Script.System.Web_Draw_System.dialog_box import add_dialog_text
-
-                        # 去掉开头和结尾的换行符，避免对话框中出现多余空行
-                        new_string = string.strip("\n")
-
-                        add_dialog_text(
-                            speaker_name="PRTS",
-                            text=new_string,
-                            text_color=text_style,
-                            wait_input=True,
-                            is_minor=False,
-                        )
-                    except Exception:
-                        # 对话框模块异常时不影响原有文本记录流程
-                        pass
-            # 仅在非子面板模式下隐藏已记录文本；
-            # 子面板交互过程中的提示文本必须继续显示。
-            if not getattr(cache, 'web_sub_panel_mode', False):
-                return
-    cache.current_draw_elements.append(element)
-    elem_type = element.get("type")
-    if elem_type in {"line_wait", "wait"}:
-        wait_id = element.get("wait_id")
-        text_preview = element.get("text", "")
-        if isinstance(text_preview, str) and len(text_preview) > 30:
-            text_preview = text_preview[:27] + "..."
-        # print(
-        #     f"[io_web] appended element type={elem_type} wait_id={wait_id} record_history={record_history} text={text_preview!r}"
-        # )
-    if record_history:
-        _record_history_element(element)
 input_event = threading.Event()
 _order_queue = []  # 命令队列
 
+
 def _input_event_set(order):
-    """
-    推送一个命令到队列
-    
-    参数:
-    order (str): 需要推送的命令
-    
-    返回值类型：无
-    """
-    put_order(order)
+  """
+  推送一个命令到队列
+
+  参数:
+  order (str): 需要推送的命令
+
+  返回值类型：无
+  """
+  put_order(order)
+
 
 def get_order():
-    """
-    从队列中获取一个命令
-    
-    返回值类型：str
-    返回队列中的一个命令，如果队列为空则返回None
-    """
-    if _order_queue:
-        return _order_queue.pop(0)
-    return None
+  """
+  从队列中获取一个命令
+
+  返回值类型：str
+  返回队列中的一个命令，如果队列为空则返回None
+  """
+  if _order_queue:
+    return _order_queue.pop(0)
+  return None
+
 
 def run(open_func):
-    """
-    在Web模式下运行游戏
-    
-    参数:
-    open_func (function): 游戏开场流程函数
-    
-    返回值类型：无
-    """
-    # Web模式下直接调用开场函数，不启动tkinter窗口
-    open_func()
+  """
+  在Web模式下运行游戏
+
+  参数:
+  open_func (function): 游戏开场流程函数
+
+  返回值类型：无
+  """
+  # Web模式下直接调用开场函数，不启动tkinter窗口
+  open_func()
+
 
 def put_order(message):
-    """
-    向命令队列中推送信息
-    
-    参数:
-    message (str): 推送的命令信息
-    
-    返回值类型：无
-    """
-    _order_queue.append(message)
+  """
+  向命令队列中推送信息
+
+  参数:
+  message (str): 推送的命令信息
+
+  返回值类型：无
+  """
+  _order_queue.append(message)
+
 
 # 以下函数处理文本输出，在Web模式下将输出转换为HTML元素
 
+
 def clear_screen():
-    """
-    清空屏幕
-    
-    返回值类型：无
-    清空当前绘制元素缓存
-    """
-    # 清空当前绘制元素
-    _ensure_current_draw_list()
-    cache.current_draw_elements = []
+  """
+  清空屏幕
 
-    # 回填历史内容
-    if hasattr(cache, "web_draw_history") and cache.web_draw_history:
-        history_snapshot = [copy.deepcopy(entry["element"]) for entry in cache.web_draw_history]
-        cache.current_draw_elements.extend(history_snapshot)
+  返回值类型：无
+  清空当前绘制元素缓存
+  """
+  # 清空当前绘制元素
+  _ensure_current_draw_list()
+  cache.current_draw_elements = []
 
-    # 更新Web界面状态
-    update_game_state(cache.current_draw_elements, None)
+  # 回填历史内容
+  if hasattr(cache, "web_draw_history") and cache.web_draw_history:
+    history_snapshot = [
+        copy.deepcopy(entry["element"]) for entry in cache.web_draw_history
+    ]
+    cache.current_draw_elements.extend(history_snapshot)
+
+  # 更新Web界面状态
+  update_game_state(cache.current_draw_elements, None)
+
 
 def clear_screen_and_history():
-    """
-    清空屏幕和历史记录
-    
-    返回值类型：无
-    彻底清空当前绘制元素和历史记录缓存，用于进入主界面等需要完全清空的场景
-    """
-    # 清空当前绘制元素
-    _ensure_current_draw_list()
-    cache.current_draw_elements = []
-    
-    # 清空历史记录
-    _ensure_history_list()
-    cache.web_draw_history = []
-    cache.web_draw_history_line_total = 0
-    
-    # 更新Web界面状态（发送空内容）
-    update_game_state(cache.current_draw_elements, None)
+  """
+  清空屏幕和历史记录
+
+  返回值类型：无
+  彻底清空当前绘制元素和历史记录缓存，用于进入主界面等需要完全清空的场景
+  """
+  # 清空当前绘制元素
+  _ensure_current_draw_list()
+  cache.current_draw_elements = []
+
+  # 清空历史记录
+  _ensure_history_list()
+  cache.web_draw_history = []
+  cache.web_draw_history_line_total = 0
+
+  # 更新Web界面状态（发送空内容）
+  update_game_state(cache.current_draw_elements, None)
 
 
 def clear_sub_panel_content():
-    """
-    清空子面板当前绘制内容
-    
-    返回值类型：无
-    仅在子面板模式下清空当前绘制元素，但保留历史记录。
-    用于子面板内用户输入后，清除上一批绘制内容，准备绘制新的一批内容。
-    
-    与 clear_screen() 的区别：
-    - clear_screen(): 清空后回填历史记录，适用于主界面循环刷新
-    - clear_sub_panel_content(): 仅清空当前内容，不回填历史，适用于子面板交互
-    """
-    from Script.System.Web_Draw_System import is_in_sub_panel_mode
-    
-    # 仅在子面板模式下执行
-    if not is_in_sub_panel_mode():
-        return
-    
-    # 清空当前绘制元素
-    _ensure_current_draw_list()
-    cache.current_draw_elements = []
-    
-    # 注意：不更新Web界面状态，让后续绘制操作统一更新
-    # 这样可以避免闪烁，同时减少不必要的数据传输
+  """
+  清空子面板当前绘制内容
+
+  返回值类型：无
+  仅在子面板模式下清空当前绘制元素，但保留历史记录。
+  用于子面板内用户输入后，清除上一批绘制内容，准备绘制新的一批内容。
+
+  与 clear_screen() 的区别：
+  - clear_screen(): 清空后回填历史记录，适用于主界面循环刷新
+  - clear_sub_panel_content(): 仅清空当前内容，不回填历史，适用于子面板交互
+  """
+  from Script.System.Web_Draw_System import is_in_sub_panel_mode
+
+  # 仅在子面板模式下执行
+  if not is_in_sub_panel_mode():
+    return
+
+  # 清空当前绘制元素
+  _ensure_current_draw_list()
+  cache.current_draw_elements = []
+
+  # 注意：不更新Web界面状态，让后续绘制操作统一更新
+  # 这样可以避免闪烁，同时减少不必要的数据传输
 
 
 def era_print(string, style="standard", tooltip: str = ""):
-    """
-    输出文本
-    
-    参数:
-    string (str): 输出的文本内容
-    style (str): 显示样式
-    
-    返回值类型：无
-    将文本添加到当前绘制元素列表
-    """
-    # 创建文本元素
-    text_element = {
-        "type": "text",
-        "text": string,
-        "style": style,
-        "tooltip": tooltip or "",
-    }
-    
-    # 添加到当前绘制元素列表
-    append_current_draw_element(text_element, record_history=True)
+  """
+  输出文本
+
+  参数:
+  string (str): 输出的文本内容
+  style (str): 显示样式
+
+  返回值类型：无
+  将文本添加到当前绘制元素列表
+  """
+  # 创建文本元素
+  text_element = {
+      "type": "text",
+      "text": string,
+      "style": style,
+      "tooltip": tooltip or "",
+  }
+
+  # 添加到当前绘制元素列表
+  append_current_draw_element(text_element, record_history=True)
+
 
 def io_print_cmd(
     cmd_str,
@@ -327,59 +349,66 @@ def io_print_cmd(
     on_style="onbutton",
     tooltip: str = "",
 ):
-    """
-    打印一个命令按钮
-    
-    参数:
-    cmd_str (str): 命令文本
-    cmd_number (int): 命令编号
-    normal_style (str): 正常显示样式
-    on_style (str): 鼠标悬停样式
-    tooltip (str): 悬停提示文本
-    
-    返回值类型：无
-    将按钮元素添加到当前绘制元素列表
-    """
-    # 创建按钮元素
-    button_element = {
-        "type": "button",
-        "text": cmd_str,
-        "return_text": str(cmd_number),
-        "style": normal_style,
-        "tooltip": tooltip or "",
-    }
-    
-    # 添加到当前绘制元素列表
-    append_current_draw_element(button_element, record_history=False)
+  """
+  打印一个命令按钮
+
+  参数:
+  cmd_str (str): 命令文本
+  cmd_number (int): 命令编号
+  normal_style (str): 正常显示样式
+  on_style (str): 鼠标悬停样式
+  tooltip (str): 悬停提示文本
+
+  返回值类型：无
+  将按钮元素添加到当前绘制元素列表
+  """
+  # 创建按钮元素
+  button_element = {
+      "type": "button",
+      "text": cmd_str,
+      "return_text": str(cmd_number),
+      "style": normal_style,
+      "tooltip": tooltip or "",
+  }
+
+  # 添加到当前绘制元素列表
+  append_current_draw_element(button_element, record_history=False)
+
 
 def set_background(color):
-    """
-    设置背景颜色
-    
-    参数:
-    color (str): 颜色值
-    
-    返回值类型：无
-    """
-    # Web模式下通过CSS处理背景色，这里暂不处理
-    pass
+  """
+  设置背景颜色
+
+  参数:
+  color (str): 颜色值
+
+  返回值类型：无
+  """
+  # Web模式下通过CSS处理背景色，这里暂不处理
+  pass
+
 
 def clear_order():
-    """
-    清除已设置的命令
-    
-    返回值类型：无
-    """
-    # 清除命令相关元素
-    if hasattr(cache, "current_draw_elements"):
-        cache.current_draw_elements = [elem for elem in cache.current_draw_elements if elem.get("type") != "button"]
+  """
+  清除已设置的命令
+
+  返回值类型：无
+  """
+  # 清除命令相关元素
+  if hasattr(cache, "current_draw_elements"):
+    cache.current_draw_elements = [
+        elem
+        for elem in cache.current_draw_elements
+        if elem.get("type") != "button"
+    ]
+
 
 def init_style():
-    """
-    初始化样式
-    
-    返回值类型：无
-    在Web模式下通过CSS处理样式
-    """
-    # Web模式下样式由CSS处理，这里不需要特别操作
-    pass
+  """
+  初始化样式
+
+  返回值类型：无
+  在Web模式下通过CSS处理样式
+  """
+  # Web模式下样式由CSS处理，这里不需要特别操作
+  pass

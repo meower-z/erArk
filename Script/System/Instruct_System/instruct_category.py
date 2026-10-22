@@ -10,11 +10,11 @@
 1. 系统面板类（SYSTEM_PANEL）：函数内容为 cache.now_panel_id = xxx 的指令
    - 触发方式：点击选项卡栏的按钮
    - 效果：切换到对应的面板进行绘制
-   
+
 2. 角色交互类（CHARACTER）：普通的角色交互指令
    - 触发方式：选择交互类型 → 点击身体部位
    - 效果：直接执行交互并结算
-   
+
 3. 角色交互面板类（CHARACTER_PANEL）：函数内容带有 now_panel.draw() 的指令
    - 触发方式：选择交互类型 → 点击身体部位（同角色交互类）
    - 效果：创建临时选项卡面板，在面板中选择后再结算，结算后退出临时选项卡
@@ -22,30 +22,30 @@
 
 
 class InstructCategory:
-    """
-    指令大类
-    用于区分指令应显示在哪个UI区域和执行方式
-    """
-    
-    SYSTEM_PANEL = 0
-    """
+  """
+  指令大类
+  用于区分指令应显示在哪个UI区域和执行方式
+  """
+
+  SYSTEM_PANEL = 0
+  """
     系统面板类指令
     函数内容为 cache.now_panel_id = xxx 的指令
     点击后将游戏画面从主交互面板切换到特定系统面板
     显示位置：画面最上方的选项卡栏
     包含：系统功能、查看类功能等需要切换面板的功能
     """
-    
-    CHARACTER = 1
-    """
+
+  CHARACTER = 1
+  """
     角色交互类指令
     对当前交互对象进行各种互动的指令
     显示位置：画面左侧的交互类型栏 → 点击身体部位触发
     交互流程：选择交互类型 → 点击角色身体部位 → 直接执行并结算
     """
-    
-    CHARACTER_PANEL = 2
-    """
+
+  CHARACTER_PANEL = 2
+  """
     角色交互面板类指令
     函数内容带有 now_panel.draw() 的指令
     触发方式与角色交互类相同，但执行后会打开一个临时面板
@@ -61,111 +61,111 @@ class InstructCategory:
 
 
 class BodyPart:
-    """
-    身体部位常量
-    用于指定指令关联的身体部位
-    
-    基于 BodyPart.csv 定义的可交互部位:
-    0-头发, 1-脸部, 2-口腔, 3-胸部, 4-腋部, 5-手部, 6-小穴, 7-子宫, 
-    8-后穴, 9-尿道, 10-腿部, 11-脚部, 12-尾巴, 13-兽角, 14-兽耳, 
-    15-胃部, 16-胯部, 17-腹部, 18-背部
-    
-    COCO-WholeBody 17个关键点映射:
-    0-鼻子, 1-左眼, 2-右眼, 3-左耳, 4-右耳, 5-左肩, 6-右肩,
-    7-左肘, 8-右肘, 9-左手腕, 10-右手腕, 11-左胯, 12-右胯,
-    13-左膝, 14-右膝, 15-左脚踝, 16-右脚踝
-    """
-    
-    # ========== 基于 BodyPart.csv 的可交互部位 ==========
-    HAIR = "hair"
-    """ 头发 (csv id:0) - 位置：头部区域，点击头部展开 """
-    
-    FACE = "face"
-    """ 脸部 (csv id:1) - 位置：基于鼻子(0)、左眼(1)、右眼(2) """
-    
-    MOUTH = "mouth"
-    """ 口腔 (csv id:2) - 位置：基于鼻子(0)正下方 """
-    
-    CHEST = "chest"
-    """ 胸部 (csv id:3) - 位置：左肩(5)和右肩(6)的正中间 """
-    
-    ARMPIT = "armpit"
-    """ 腋部 (csv id:4) - 位置：基于双肩(5,6)位置 """
-    
-    HAND = "hand"
-    """ 手部 (csv id:5) - 位置：基于左手腕(9)和右手腕(10)，合并为同一个 """
-    
-    VAGINA = "vagina"
-    """ 小穴 (csv id:6) - 位置：臀部区域，左胯(11)和右胯(12)正中间，点击臀部展开 """
-    
-    WOMB = "womb"
-    """ 子宫 (csv id:7) - 位置：臀部区域，点击臀部展开 """
-    
-    ANUS = "anus"
-    """ 后穴 (csv id:8) - 位置：臀部区域，点击臀部展开 """
-    
-    URETHRA = "urethra"
-    """ 尿道 (csv id:9) - 位置：臀部区域，点击臀部展开 """
-    
-    LEG = "leg"
-    """ 腿部 (csv id:10) - 位置：基于左膝(13)和右膝(14)，合并为同一个 """
-    
-    FOOT = "foot"
-    """ 脚部 (csv id:11) - 位置：基于左脚踝(15)和右脚踝(16)，合并为同一个 """
-    
-    TAIL = "tail"
-    """ 尾巴 (csv id:12) - 位置：臀部区域，点击臀部展开 """
-    
-    HORN = "horn"
-    """ 兽角 (csv id:13) - 位置：头部区域，点击头部展开 """
-    
-    BEAST_EARS = "beast_ears"
-    """ 兽耳 (csv id:14) - 位置：基于左耳(3)和右耳(4) """
-    
-    STOMACH = "stomach"
-    """ 胃部 (csv id:15) - 内部器官，不直接显示为按钮 """
-    
-    CROTCH = "crotch"
-    """ 胯部 (csv id:16) - 位置：基于左胯(11)和右胯(12) """
-    
-    BELLY = "belly"
-    """ 腹部 (csv id:17) - 位置：胸部和胯部之间 """
-    
-    BACK = "back"
-    """ 背部 (csv id:18) - 位置：角色背面，通常不显示 """
-    
-    # ========== 复合/虚拟部位 ==========
-    HEAD = "head"
-    """ 头部 - 包含头发、兽角的综合区域，基于鼻子(0)正上方 """
-    
-    HIP = "hip"
-    """ 臀部 - 复合部位，点击时展开：小穴、子宫、后穴、尿道、尾巴 """
-    
-    # ========== CSV ID 到部位的映射 ==========
-    @classmethod
-    def get_csv_id_mapping(cls):
-        """获取 CSV ID 到部位常量的映射"""
-        return {
-            0: cls.HAIR,
-            1: cls.FACE,
-            2: cls.MOUTH,
-            3: cls.CHEST,
-            4: cls.ARMPIT,
-            5: cls.HAND,
-            6: cls.VAGINA,
-            7: cls.WOMB,
-            8: cls.ANUS,
-            9: cls.URETHRA,
-            10: cls.LEG,
-            11: cls.FOOT,
-            12: cls.TAIL,
-            13: cls.HORN,
-            14: cls.BEAST_EARS,
-            15: cls.STOMACH,
-            16: cls.CROTCH,
-            17: cls.BELLY,
-            18: cls.BACK,
-        }
+  """
+  身体部位常量
+  用于指定指令关联的身体部位
+
+  基于 BodyPart.csv 定义的可交互部位:
+  0-头发, 1-脸部, 2-口腔, 3-胸部, 4-腋部, 5-手部, 6-小穴, 7-子宫,
+  8-后穴, 9-尿道, 10-腿部, 11-脚部, 12-尾巴, 13-兽角, 14-兽耳,
+  15-胃部, 16-胯部, 17-腹部, 18-背部
+
+  COCO-WholeBody 17个关键点映射:
+  0-鼻子, 1-左眼, 2-右眼, 3-左耳, 4-右耳, 5-左肩, 6-右肩,
+  7-左肘, 8-右肘, 9-左手腕, 10-右手腕, 11-左胯, 12-右胯,
+  13-左膝, 14-右膝, 15-左脚踝, 16-右脚踝
+  """
+
+  # ========== 基于 BodyPart.csv 的可交互部位 ==========
+  HAIR = "hair"
+  """ 头发 (csv id:0) - 位置：头部区域，点击头部展开 """
+
+  FACE = "face"
+  """ 脸部 (csv id:1) - 位置：基于鼻子(0)、左眼(1)、右眼(2) """
+
+  MOUTH = "mouth"
+  """ 口腔 (csv id:2) - 位置：基于鼻子(0)正下方 """
+
+  CHEST = "chest"
+  """ 胸部 (csv id:3) - 位置：左肩(5)和右肩(6)的正中间 """
+
+  ARMPIT = "armpit"
+  """ 腋部 (csv id:4) - 位置：基于双肩(5,6)位置 """
+
+  HAND = "hand"
+  """ 手部 (csv id:5) - 位置：基于左手腕(9)和右手腕(10)，合并为同一个 """
+
+  VAGINA = "vagina"
+  """ 小穴 (csv id:6) - 位置：臀部区域，左胯(11)和右胯(12)正中间，点击臀部展开 """
+
+  WOMB = "womb"
+  """ 子宫 (csv id:7) - 位置：臀部区域，点击臀部展开 """
+
+  ANUS = "anus"
+  """ 后穴 (csv id:8) - 位置：臀部区域，点击臀部展开 """
+
+  URETHRA = "urethra"
+  """ 尿道 (csv id:9) - 位置：臀部区域，点击臀部展开 """
+
+  LEG = "leg"
+  """ 腿部 (csv id:10) - 位置：基于左膝(13)和右膝(14)，合并为同一个 """
+
+  FOOT = "foot"
+  """ 脚部 (csv id:11) - 位置：基于左脚踝(15)和右脚踝(16)，合并为同一个 """
+
+  TAIL = "tail"
+  """ 尾巴 (csv id:12) - 位置：臀部区域，点击臀部展开 """
+
+  HORN = "horn"
+  """ 兽角 (csv id:13) - 位置：头部区域，点击头部展开 """
+
+  BEAST_EARS = "beast_ears"
+  """ 兽耳 (csv id:14) - 位置：基于左耳(3)和右耳(4) """
+
+  STOMACH = "stomach"
+  """ 胃部 (csv id:15) - 内部器官，不直接显示为按钮 """
+
+  CROTCH = "crotch"
+  """ 胯部 (csv id:16) - 位置：基于左胯(11)和右胯(12) """
+
+  BELLY = "belly"
+  """ 腹部 (csv id:17) - 位置：胸部和胯部之间 """
+
+  BACK = "back"
+  """ 背部 (csv id:18) - 位置：角色背面，通常不显示 """
+
+  # ========== 复合/虚拟部位 ==========
+  HEAD = "head"
+  """ 头部 - 包含头发、兽角的综合区域，基于鼻子(0)正上方 """
+
+  HIP = "hip"
+  """ 臀部 - 复合部位，点击时展开：小穴、子宫、后穴、尿道、尾巴 """
+
+  # ========== CSV ID 到部位的映射 ==========
+  @classmethod
+  def get_csv_id_mapping(cls):
+    """获取 CSV ID 到部位常量的映射"""
+    return {
+        0: cls.HAIR,
+        1: cls.FACE,
+        2: cls.MOUTH,
+        3: cls.CHEST,
+        4: cls.ARMPIT,
+        5: cls.HAND,
+        6: cls.VAGINA,
+        7: cls.WOMB,
+        8: cls.ANUS,
+        9: cls.URETHRA,
+        10: cls.LEG,
+        11: cls.FOOT,
+        12: cls.TAIL,
+        13: cls.HORN,
+        14: cls.BEAST_EARS,
+        15: cls.STOMACH,
+        16: cls.CROTCH,
+        17: cls.BELLY,
+        18: cls.BACK,
+    }
 
 
 # 身体部位的中文名称映射（基于 BodyPart.csv）
@@ -208,9 +208,9 @@ HIP_SUB_PARTS = [
 # 头部展开的子部位列表（头发默认显示，兽角需要角色有对应特征才显示）
 # 注意：兽耳已独立为单独的可点击部位，不再作为头部子部位
 HEAD_SUB_PARTS = [
-    BodyPart.HEAD,       # 头部
-    BodyPart.HAIR,       # 头发
-    BodyPart.HORN,       # 兽角（需要角色有兽角特征）
+    BodyPart.HEAD,  # 头部
+    BodyPart.HAIR,  # 头发
+    BodyPart.HORN,  # 兽角（需要角色有兽角特征）
 ]
 
 # 需要通过多个关键点计算中心位置的部位
@@ -249,14 +249,14 @@ COMPUTED_BODY_PARTS = {
 # 兽耳作为独立部位，分左右显示，需满足交互对象有兽耳的前提才会显示
 CLICKABLE_BODY_PARTS = [
     BodyPart.BEAST_EARS,  # 兽耳（条件显示：交互对象有兽耳时，分左右耳显示）
-    BodyPart.HEAD,        # 头部（点击展开子部位：头发、兽角）
-    BodyPart.FACE,        # 脸部
-    BodyPart.MOUTH,       # 口腔
-    BodyPart.CHEST,       # 胸部
-    BodyPart.ARMPIT,      # 腋部
-    BodyPart.HAND,        # 手部
-    BodyPart.BELLY,       # 腹部
-    BodyPart.HIP,         # 臀部（点击展开子部位）
-    BodyPart.LEG,         # 腿部
-    BodyPart.FOOT,        # 脚部
+    BodyPart.HEAD,  # 头部（点击展开子部位：头发、兽角）
+    BodyPart.FACE,  # 脸部
+    BodyPart.MOUTH,  # 口腔
+    BodyPart.CHEST,  # 胸部
+    BodyPart.ARMPIT,  # 腋部
+    BodyPart.HAND,  # 手部
+    BodyPart.BELLY,  # 腹部
+    BodyPart.HIP,  # 臀部（点击展开子部位）
+    BodyPart.LEG,  # 腿部
+    BodyPart.FOOT,  # 脚部
 ]

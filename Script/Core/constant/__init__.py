@@ -34,184 +34,184 @@ from Script.System.Instruct_System.interaction_types import (
 _: FunctionType = get_text._
 """ 翻译api """
 
+
 class Panel:
-    """面板id"""
+  """面板id"""
 
-
-    TITLE = 0
-    """ 标题面板 """
-    CREATOR_CHARACTER = 1
-    """ 创建角色面板 """
-    IN_SCENE = 2
-    """ 场景互动面板 """
-    SEE_MAP = 3
-    """ 查看地图面板 """
-    FOOD_SHOP = 4
-    """ 食物商店面板 """
-    FOOD_BAG = 5
-    """ 食物背包面板 """
-    H_ITEM_SHOP = 6
-    """ 成人用品商店面板 """
-    MAKE_FOOD = 7
-    """ 做饭面板 """
-    ALL_NPC_POSITION = 8
-    """ 查询与召集面板 """
-    EJACULATION = 9
-    """ 射精面板 """
-    DIRTY = 10
-    """ 脏污面板 """
-    ITEM = 11
-    """ 道具面板 """
-    ASSISTANT = 12
-    """ 助理面板 """
-    COLLECTION = 13
-    """ 收藏品面板 """
-    UNDRESS = 14
-    """ 脱衣服面板 """
-    BUILDING = 15
-    """ 基建面板 """
-    MANAGE_BASEMENT = 16
-    """ 管理罗德岛面板 """
-    # INSTRUCT_FILTER = 17
-    # """ 指令过滤面板 """
-    EVENT_OPTION = 18
-    """ 事件选项面板 """
-    CHECK_LOCKER = 19
-    """ 检查衣柜面板 """
-    BORROW_BOOK = 20
-    """ 借阅书籍面板 """
-    MANAGE_LIBRARY = 21
-    """ 图书馆管理面板 """
-    DEBUG_ADJUST = 22
-    """ DEBUG面板 """
-    ORIGINIUM_ARTS = 23
-    """ 源石技艺面板 """
-    PRTS = 24
-    """ 普瑞赛斯面板 """
-    NAVIGATION = 25
-    """ 导航面板 """
-    RECRUITMENT = 26
-    """ 招募面板 """
-    VISITOR = 27
-    """ 访客面板 """
-    FRIDGE = 28
-    """ 冰箱面板 """
-    SYSTEM_SETTING = 29
-    """ 系统设置面板 """
-    AROMATHERAPY = 30
-    """ 香薰疗愈面板 """
-    NATION_DIPLOMACY = 31
-    """ 势力外交面板 """
-    CHAT_WITH_AI = 32
-    """ 文本生成AI """
-    PHYSICAL_CHECK_AND_MANAGE = 35
-    """ 身体检查与管理面板 """
-    SAVE = 36
-    """ 读写存档面板 """
-    CHANGE_HYPNOSIS_MODE = 37
-    """ 切换催眠模式面板 """
-    SEE_ACHIEVEMENT = 38
-    """ 查看蚀刻章面板 """
-    SEE_ATTR = 39
-    """ 查看属性面板 """
-    ABL_UP = 40
-    """ 提升能力面板 """
-    OWNER_ABL_UP = 41
-    """ 提升自身能力面板 """
-    TAKE_CARE_BABY = 42
-    """ 照顾婴儿面板 """
-    ORDER_HOTEL_ROOM = 43
-    """ 预定房间面板 """
-    GIVE_GIFT = 44
-    """ 赠送礼物面板 """
-    FIELD_COMMISSION = 45
-    """ 外勤委托面板 """
-    CURE_PATIENT = 46
-    """ 诊疗病人面板 """
-    MANAGE_DEDICAL_DEPARTMENT = 47
-    """ 管理医疗系统面板 """
-    MANAGE_POWER_SYSTEM = 48
-    """ 管理能源系统面板 """
-    EQUIPMENT_MAINTAIN = 49
-    """ 设备维护面板 """
-    TALK_QUICK_TEST = 50
-    """ 快速测试口上面板 """
-    MANAGE_ASSEMBLY_LINE = 51
-    """ 管理流水线面板 """
-    MANAGE_AGRICULTURE = 52
-    """ 管理农业生产面板 """
-    MANAGE_VEHICLE = 53
-    """ 管理载具面板 """
-    MANAGE_CONFINEMENT_AND_TRAINING = 54
-    """ 管理监禁调教面板 """
-    MANAGE_RESOURCE_EXCHANGE = 55
-    """ 管理资源交易面板 """
-    READ_BOOK = 56
-    """ 读书面板 """
-    SLEEP = 57
-    """ 睡觉面板 """
-    DIRAY = 58
-    """ 日记面板 """
-    PLAY_GOMOKU = 59
-    """ 五子棋面板 """
-    MAKE_COFFEE_ADD = 60
-    """ 泡咖啡（加料）面板 """
-    ASK_HIDDEN_SEX = 61
-    """ 邀请隐奸面板 """
-    ASK_EXHIBITIONISM_SEX = 62
-    """ 邀请露出面板 """
-    BONDAGE = 63
-    """ 绳艺面板 """
-    EDIT_GROUP_SEX_TEMPLE = 64
-    """ 编辑群交行动面板 """
-    MANAGE_DORMITORY = 65
-    """ 宿舍管理面板 """
-    MIXOLOGY = 66
-    """ 调酒面板 """
-    PREGNANCY_OVERVIEW = 67
-    """ 怀孕总览面板 """
-    EDUCATION_MANAGE = 68
-    """ 教育管理面板 """
+  TITLE = 0
+  """ 标题面板 """
+  CREATOR_CHARACTER = 1
+  """ 创建角色面板 """
+  IN_SCENE = 2
+  """ 场景互动面板 """
+  SEE_MAP = 3
+  """ 查看地图面板 """
+  FOOD_SHOP = 4
+  """ 食物商店面板 """
+  FOOD_BAG = 5
+  """ 食物背包面板 """
+  H_ITEM_SHOP = 6
+  """ 成人用品商店面板 """
+  MAKE_FOOD = 7
+  """ 做饭面板 """
+  ALL_NPC_POSITION = 8
+  """ 查询与召集面板 """
+  EJACULATION = 9
+  """ 射精面板 """
+  DIRTY = 10
+  """ 脏污面板 """
+  ITEM = 11
+  """ 道具面板 """
+  ASSISTANT = 12
+  """ 助理面板 """
+  COLLECTION = 13
+  """ 收藏品面板 """
+  UNDRESS = 14
+  """ 脱衣服面板 """
+  BUILDING = 15
+  """ 基建面板 """
+  MANAGE_BASEMENT = 16
+  """ 管理罗德岛面板 """
+  # INSTRUCT_FILTER = 17
+  # """ 指令过滤面板 """
+  EVENT_OPTION = 18
+  """ 事件选项面板 """
+  CHECK_LOCKER = 19
+  """ 检查衣柜面板 """
+  BORROW_BOOK = 20
+  """ 借阅书籍面板 """
+  MANAGE_LIBRARY = 21
+  """ 图书馆管理面板 """
+  DEBUG_ADJUST = 22
+  """ DEBUG面板 """
+  ORIGINIUM_ARTS = 23
+  """ 源石技艺面板 """
+  PRTS = 24
+  """ 普瑞赛斯面板 """
+  NAVIGATION = 25
+  """ 导航面板 """
+  RECRUITMENT = 26
+  """ 招募面板 """
+  VISITOR = 27
+  """ 访客面板 """
+  FRIDGE = 28
+  """ 冰箱面板 """
+  SYSTEM_SETTING = 29
+  """ 系统设置面板 """
+  AROMATHERAPY = 30
+  """ 香薰疗愈面板 """
+  NATION_DIPLOMACY = 31
+  """ 势力外交面板 """
+  CHAT_WITH_AI = 32
+  """ 文本生成AI """
+  PHYSICAL_CHECK_AND_MANAGE = 35
+  """ 身体检查与管理面板 """
+  SAVE = 36
+  """ 读写存档面板 """
+  CHANGE_HYPNOSIS_MODE = 37
+  """ 切换催眠模式面板 """
+  SEE_ACHIEVEMENT = 38
+  """ 查看蚀刻章面板 """
+  SEE_ATTR = 39
+  """ 查看属性面板 """
+  ABL_UP = 40
+  """ 提升能力面板 """
+  OWNER_ABL_UP = 41
+  """ 提升自身能力面板 """
+  TAKE_CARE_BABY = 42
+  """ 照顾婴儿面板 """
+  ORDER_HOTEL_ROOM = 43
+  """ 预定房间面板 """
+  GIVE_GIFT = 44
+  """ 赠送礼物面板 """
+  FIELD_COMMISSION = 45
+  """ 外勤委托面板 """
+  CURE_PATIENT = 46
+  """ 诊疗病人面板 """
+  MANAGE_DEDICAL_DEPARTMENT = 47
+  """ 管理医疗系统面板 """
+  MANAGE_POWER_SYSTEM = 48
+  """ 管理能源系统面板 """
+  EQUIPMENT_MAINTAIN = 49
+  """ 设备维护面板 """
+  TALK_QUICK_TEST = 50
+  """ 快速测试口上面板 """
+  MANAGE_ASSEMBLY_LINE = 51
+  """ 管理流水线面板 """
+  MANAGE_AGRICULTURE = 52
+  """ 管理农业生产面板 """
+  MANAGE_VEHICLE = 53
+  """ 管理载具面板 """
+  MANAGE_CONFINEMENT_AND_TRAINING = 54
+  """ 管理监禁调教面板 """
+  MANAGE_RESOURCE_EXCHANGE = 55
+  """ 管理资源交易面板 """
+  READ_BOOK = 56
+  """ 读书面板 """
+  SLEEP = 57
+  """ 睡觉面板 """
+  DIRAY = 58
+  """ 日记面板 """
+  PLAY_GOMOKU = 59
+  """ 五子棋面板 """
+  MAKE_COFFEE_ADD = 60
+  """ 泡咖啡（加料）面板 """
+  ASK_HIDDEN_SEX = 61
+  """ 邀请隐奸面板 """
+  ASK_EXHIBITIONISM_SEX = 62
+  """ 邀请露出面板 """
+  BONDAGE = 63
+  """ 绳艺面板 """
+  EDIT_GROUP_SEX_TEMPLE = 64
+  """ 编辑群交行动面板 """
+  MANAGE_DORMITORY = 65
+  """ 宿舍管理面板 """
+  MIXOLOGY = 66
+  """ 调酒面板 """
+  PREGNANCY_OVERVIEW = 67
+  """ 怀孕总览面板 """
+  EDUCATION_MANAGE = 68
+  """ 教育管理面板 """
 
 
 class InstructType:
-    """指令类型"""
+  """指令类型"""
 
-    SYSTEM = 0
-    """ 系统 """
-    DAILY = 1
-    """ 日常 """
-    PLAY = 2
-    """ 娱乐 """
-    WORK = 3
-    """ 工作 """
-    ARTS = 4
-    """ 技艺 """
-    OBSCENITY = 5
-    """ 猥亵 """
-    SEX = 6
-    """ 性爱 """
+  SYSTEM = 0
+  """ 系统 """
+  DAILY = 1
+  """ 日常 """
+  PLAY = 2
+  """ 娱乐 """
+  WORK = 3
+  """ 工作 """
+  ARTS = 4
+  """ 技艺 """
+  OBSCENITY = 5
+  """ 猥亵 """
+  SEX = 6
+  """ 性爱 """
 
 
 class SexInstructSubType:
-    """性爱指令子类型"""
+  """性爱指令子类型"""
 
-    BASE = 0
-    """ 基础 """
-    FOREPLAY = 1
-    """ 前戏 """
-    WAIT_UPON = 2
-    """ 侍奉 """
-    DRUG = 3
-    """ 药物 """
-    ITEM = 4
-    """ 道具 """
-    INSERT = 5
-    """ 插入 """
-    SM = 6
-    """ SM """
-    ARTS = 7
-    """ 技艺 """
+  BASE = 0
+  """ 基础 """
+  FOREPLAY = 1
+  """ 前戏 """
+  WAIT_UPON = 2
+  """ 侍奉 """
+  DRUG = 3
+  """ 药物 """
+  ITEM = 4
+  """ 道具 """
+  INSERT = 5
+  """ 插入 """
+  SM = 6
+  """ SM """
+  ARTS = 7
+  """ 技艺 """
 
 
 # 注意：Instruct类中的值现在是字符串（小写指令名），不再需要自动赋值
@@ -288,16 +288,57 @@ settle_behavior_effect_data: Dict[int, FunctionType] = {}
 settle_second_behavior_effect_data: Dict[int, FunctionType] = {}
 """ 角色二段行为结算处理器 处理器id:处理器 """
 
-first_NPC_name_set = {_("阿米娅"),_("凯尔希"),_("可露希尔"),_("特蕾西娅"),_("华法琳"),_("杜宾")}
+first_NPC_name_set = {
+    _("阿米娅"),
+    _("凯尔希"),
+    _("可露希尔"),
+    _("特蕾西娅"),
+    _("华法琳"),
+    _("杜宾"),
+}
 """ 初始就有的NPC的名字 """
 
-ban_NPC_name_set = {_("普瑞赛斯"),_("炉芯终曲阿米娅"),_("老天师"),_("魔王"),_("菈玛莲"),_("塔露拉"),_("莉泽洛特"),_("希尔德加德"),_("坎黛拉"),_("克丽斯腾"),_("爱布拉娜"),_("温德米尔"),_("赫拉提娅"),_("文月"),_("年"),_("夕"),_("令"),_("黍")}
+ban_NPC_name_set = {
+    _("普瑞赛斯"),
+    _("炉芯终曲阿米娅"),
+    _("老天师"),
+    _("魔王"),
+    _("菈玛莲"),
+    _("塔露拉"),
+    _("莉泽洛特"),
+    _("希尔德加德"),
+    _("坎黛拉"),
+    _("克丽斯腾"),
+    _("爱布拉娜"),
+    _("温德米尔"),
+    _("赫拉提娅"),
+    _("文月"),
+    _("年"),
+    _("夕"),
+    _("令"),
+    _("黍"),
+}
 """ 无法直接招募到的NPC的名字 """
 
-special_end_H_list = [Behavior.H_INTERRUPT, Behavior.H_HP_0, Behavior.T_H_HP_0, Behavior.GROUP_SEX_PL_HP_0_END, Behavior.HYPNOSIS_CANCEL, Behavior.TIME_STOP_OFF]
+special_end_H_list = [
+    Behavior.H_INTERRUPT,
+    Behavior.H_HP_0,
+    Behavior.T_H_HP_0,
+    Behavior.GROUP_SEX_PL_HP_0_END,
+    Behavior.HYPNOSIS_CANCEL,
+    Behavior.TIME_STOP_OFF,
+]
 """ 意外中断H的行为id列表 """
 
-chat_ai_model_list = ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo', 'gpt-4o', 'gpt-4o-mini', 'gemini-1.5-pro', 'gemini-1.5-flash']
+chat_ai_model_list = [
+    "gpt-3.5-turbo",
+    "gpt-4",
+    "gpt-4-turbo",
+    "gpt-4o",
+    "gpt-4o-mini",
+    "gemini-1.5-pro",
+    "gemini-1.5-flash",
+]
 """ 文本生成的AI模型列表 """
 
 tired_text_list = [_("清醒"), _("疲劳"), _("昏昏欲睡"), _("随时睡着")]

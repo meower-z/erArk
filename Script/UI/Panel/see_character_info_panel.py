@@ -32,1412 +32,1548 @@ window_width = normal_config.config_normal.text_width
 
 
 class SeeCharacterInfoPanel:
+  """
+  用于查看角色属性的面板对象
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 绘制宽度
+  """
+
+  def __init__(self, character_id: int, width: int):
+    """初始化绘制对象"""
+    self.width: int = width
+    """ 绘制的最大宽度 """
+    self.now_panel: str = _("基础属性")
+    """ 当前的属性页id """
+    self.character_id: int = character_id
+    """ 要绘制的角色id """
+    self.return_list: List[str] = []
+    """ 当前面板监听的按钮列表 """
+    base_attributes_draw = See_Character_Base_Attributes_Panel(
+        character_id, width
+    )
+    detailed_attributes_draw = See_Character_Detailed_Attributes_Panel(
+        character_id, width
+    )
+    main_third_draw = SeeCharacterThirdPanel(character_id, width)
+    setting_draw = See_Character_Setting_Panel(character_id, width)
+    if character_id == 0:
+      self.draw_data = {
+          _("基础属性"): base_attributes_draw,
+          _("能力、经验与宝珠"): detailed_attributes_draw,
+          _("玩家能力"): main_third_draw,
+          _("角色设定"): setting_draw,
+      }
+    else:
+      # 性行为履历分页仅NPC可见（玩家童贞数据保留但不进新面板），位置在肉体情况之后、角色设定之前
+      first_record_draw = first_record_panel.See_Character_First_Record_Panel(
+          character_id, width
+      )
+      self.draw_data = {
+          _("基础属性"): base_attributes_draw,
+          _("能力、经验与宝珠"): detailed_attributes_draw,
+          # _("日程与喜好"): see_daily_draw,
+          _("肉体情况"): main_third_draw,
+          _("性行为履历"): first_record_draw,
+          _("角色设定"): setting_draw,
+      }
+    """ 按钮文本对应属性面板 """
+    self.handle_panel = panel.CenterDrawButtonListPanel()
+    """ 属性列表的控制面板 """
+    self.handle_panel.set(
+        [f"[{text}]" for text in self.draw_data.keys()],
+        list(self.draw_data.keys()),
+        width,
+        5,
+        f"[{self.now_panel}]",
+        self.change_panel,
+    )
+
+  def change_panel(self, panel_id: str):
     """
-    用于查看角色属性的面板对象
+    切换当前面板
     Keyword arguments:
-    character_id -- 角色id
-    width -- 绘制宽度
+    panel_id -- 要切换的面板id
     """
+    self.now_panel = panel_id
+    self.handle_panel.set(
+        [f"[{text}]" for text in self.draw_data.keys()],
+        list(self.draw_data.keys()),
+        self.width,
+        5,
+        f"[{self.now_panel}]",
+        self.change_panel,
+    )
 
-    def __init__(self, character_id: int, width: int):
-        """初始化绘制对象"""
-        self.width: int = width
-        """ 绘制的最大宽度 """
-        self.now_panel: str = _("基础属性")
-        """ 当前的属性页id """
-        self.character_id: int = character_id
-        """ 要绘制的角色id """
-        self.return_list: List[str] = []
-        """ 当前面板监听的按钮列表 """
-        base_attributes_draw = See_Character_Base_Attributes_Panel(character_id, width)
-        detailed_attributes_draw = See_Character_Detailed_Attributes_Panel(character_id, width)
-        main_third_draw = SeeCharacterThirdPanel(character_id, width)
-        setting_draw = See_Character_Setting_Panel(character_id, width)
-        if character_id == 0:
-            self.draw_data = {
-                _("基础属性"): base_attributes_draw,
-                _("能力、经验与宝珠"): detailed_attributes_draw,
-                _("玩家能力"): main_third_draw,
-                _("角色设定"): setting_draw,
-            }
-        else:
-            # 性行为履历分页仅NPC可见（玩家童贞数据保留但不进新面板），位置在肉体情况之后、角色设定之前
-            first_record_draw = first_record_panel.See_Character_First_Record_Panel(character_id, width)
-            self.draw_data = {
-                _("基础属性"): base_attributes_draw,
-                _("能力、经验与宝珠"): detailed_attributes_draw,
-                # _("日程与喜好"): see_daily_draw,
-                _("肉体情况"): main_third_draw,
-                _("性行为履历"): first_record_draw,
-                _("角色设定"): setting_draw,
-            }
-        """ 按钮文本对应属性面板 """
-        self.handle_panel = panel.CenterDrawButtonListPanel()
-        """ 属性列表的控制面板 """
-        self.handle_panel.set(
-            [f"[{text}]" for text in self.draw_data.keys()],
-            list(self.draw_data.keys()),
-            width,
-            5,
-            f"[{self.now_panel}]",
-            self.change_panel,
-        )
-
-    def change_panel(self, panel_id: str):
-        """
-        切换当前面板
-        Keyword arguments:
-        panel_id -- 要切换的面板id
-        """
-        self.now_panel = panel_id
-        self.handle_panel.set(
-            [f"[{text}]" for text in self.draw_data.keys()],
-            list(self.draw_data.keys()),
-            self.width,
-            5,
-            f"[{self.now_panel}]",
-            self.change_panel,
-        )
-
-    def draw(self):
-        """绘制面板"""
-        if self.now_panel == _("玩家能力") and _("玩家能力") not in self.draw_data:
-            self.now_panel = _("肉体情况")
-        elif self.now_panel == _("肉体情况") and _("肉体情况") not in self.draw_data:
-            self.now_panel = _("玩家能力")
-        # 从NPC的性行为履历分页切换到查看玩家时，退回基础属性分页
-        elif self.now_panel == _("性行为履历") and _("性行为履历") not in self.draw_data:
-            self.now_panel = _("基础属性")
-        self.draw_data[self.now_panel].draw()
-        self.return_list = []
-        self.return_list.extend(self.draw_data[self.now_panel].return_list)
-        line_feed.draw()
-        line = draw.LineDraw("=", self.width)
-        line.draw()
-        self.handle_panel.draw()
-        self.return_list.extend(self.handle_panel.return_list)
+  def draw(self):
+    """绘制面板"""
+    if self.now_panel == _("玩家能力") and _("玩家能力") not in self.draw_data:
+      self.now_panel = _("肉体情况")
+    elif (
+        self.now_panel == _("肉体情况") and _("肉体情况") not in self.draw_data
+    ):
+      self.now_panel = _("玩家能力")
+    # 从NPC的性行为履历分页切换到查看玩家时，退回基础属性分页
+    elif (
+        self.now_panel == _("性行为履历")
+        and _("性行为履历") not in self.draw_data
+    ):
+      self.now_panel = _("基础属性")
+    self.draw_data[self.now_panel].draw()
+    self.return_list = []
+    self.return_list.extend(self.draw_data[self.now_panel].return_list)
+    line_feed.draw()
+    line = draw.LineDraw("=", self.width)
+    line.draw()
+    self.handle_panel.draw()
+    self.return_list.extend(self.handle_panel.return_list)
 
 
 class See_Character_Base_Attributes_Panel:
-    """
-    显示角色属性面板第一页对象
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 绘制宽度
-    """
+  """
+  显示角色属性面板第一页对象
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 绘制宽度
+  """
 
-    def __init__(self, character_id: int, width: int):
-        """初始化绘制对象"""
-        head_draw = character_info_head.CharacterInfoHead(character_id, width)
-        image_draw = CharacterImage(character_id, width)
-        Talent_draw = CharacterTalentText(character_id, width, 16, False)
-        Daily_draw = CharacterDailyText(character_id, width, 8, False)
-        if character_id == 0:
-            self.draw_list: List = [
-                head_draw,
-                image_draw,
-                Talent_draw,
-            ]
-        else:
-            self.draw_list: List = [
-                head_draw,
-                image_draw,
-                Talent_draw,
-                Daily_draw,
-            ]
-        # 如果是访客则再加一个访客栏
-        if character_id in cache.rhodes_island.visitor_info:
-            visitor_draw = CharacterVisitorText(character_id, width, 8, False)
-            self.draw_list.append(visitor_draw)
-        """ 绘制的面板列表 """
-        self.return_list: List[str] = []
-        """ 当前面板监听的按钮列表 """
+  def __init__(self, character_id: int, width: int):
+    """初始化绘制对象"""
+    head_draw = character_info_head.CharacterInfoHead(character_id, width)
+    image_draw = CharacterImage(character_id, width)
+    Talent_draw = CharacterTalentText(character_id, width, 16, False)
+    Daily_draw = CharacterDailyText(character_id, width, 8, False)
+    if character_id == 0:
+      self.draw_list: List = [
+          head_draw,
+          image_draw,
+          Talent_draw,
+      ]
+    else:
+      self.draw_list: List = [
+          head_draw,
+          image_draw,
+          Talent_draw,
+          Daily_draw,
+      ]
+    # 如果是访客则再加一个访客栏
+    if character_id in cache.rhodes_island.visitor_info:
+      visitor_draw = CharacterVisitorText(character_id, width, 8, False)
+      self.draw_list.append(visitor_draw)
+    """ 绘制的面板列表 """
+    self.return_list: List[str] = []
+    """ 当前面板监听的按钮列表 """
 
-    def draw(self):
-        """绘制面板"""
-        for label in self.draw_list:
-            label.draw()
+  def draw(self):
+    """绘制面板"""
+    for label in self.draw_list:
+      label.draw()
 
 
 class See_Character_Detailed_Attributes_Panel:
-    """
-    显示角色属性面板第二页对象
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 绘制宽度
-    """
+  """
+  显示角色属性面板第二页对象
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 绘制宽度
+  """
 
-    def __init__(self, character_id: int, width: int):
-        """初始化绘制对象"""
-        head_draw = character_info_head.CharacterInfoHead(character_id, width)
-        abi_draw = CharacterabiText(character_id, width)
-        experience_draw = CharacterExperienceText(character_id, width, 8, 0)
-        juel_draw = CharacterJuelText(character_id, width, 8, 0)
-        self.draw_list: List[draw.NormalDraw] = [
-            head_draw,
-            abi_draw,
-            experience_draw,
-            juel_draw,
-        ]
-        """ 绘制的面板列表 """
-        self.return_list: List[str] = []
-        """ 当前面板监听的按钮列表 """
+  def __init__(self, character_id: int, width: int):
+    """初始化绘制对象"""
+    head_draw = character_info_head.CharacterInfoHead(character_id, width)
+    abi_draw = CharacterabiText(character_id, width)
+    experience_draw = CharacterExperienceText(character_id, width, 8, 0)
+    juel_draw = CharacterJuelText(character_id, width, 8, 0)
+    self.draw_list: List[draw.NormalDraw] = [
+        head_draw,
+        abi_draw,
+        experience_draw,
+        juel_draw,
+    ]
+    """ 绘制的面板列表 """
+    self.return_list: List[str] = []
+    """ 当前面板监听的按钮列表 """
 
-    def draw(self):
-        """绘制面板"""
-        for label in self.draw_list:
-            label.draw()
+  def draw(self):
+    """绘制面板"""
+    for label in self.draw_list:
+      label.draw()
 
 
 class SeeCharacterThirdPanel:
-    """
-    显示角色属性面板第三页对象
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 绘制宽度
-    """
+  """
+  显示角色属性面板第三页对象
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 绘制宽度
+  """
 
-    def __init__(self, character_id: int, width: int):
-        """初始化绘制对象"""
-        head_draw = character_info_head.CharacterInfoHead(character_id, width)
-        body_draw = body_info_panel.CharacterBodyText(character_id, width, 8, 0)
-        ability_draw = PlayerAbilityText(character_id, width, 8, 0)
-        if character_id == 0:
-            self.draw_list: List[draw.NormalDraw] = [
-                head_draw,
-                ability_draw,
-            ]
-        else:
-            self.draw_list: List[draw.NormalDraw] = [
-                head_draw,
-                body_draw,
-            ]
-        """ 绘制的面板列表 """
-        self.return_list: List[str] = []
-        """ 当前面板监听的按钮列表 """
+  def __init__(self, character_id: int, width: int):
+    """初始化绘制对象"""
+    head_draw = character_info_head.CharacterInfoHead(character_id, width)
+    body_draw = body_info_panel.CharacterBodyText(character_id, width, 8, 0)
+    ability_draw = PlayerAbilityText(character_id, width, 8, 0)
+    if character_id == 0:
+      self.draw_list: List[draw.NormalDraw] = [
+          head_draw,
+          ability_draw,
+      ]
+    else:
+      self.draw_list: List[draw.NormalDraw] = [
+          head_draw,
+          body_draw,
+      ]
+    """ 绘制的面板列表 """
+    self.return_list: List[str] = []
+    """ 当前面板监听的按钮列表 """
 
-    def draw(self):
-        """绘制面板"""
-        for label in self.draw_list:
-            label.draw()
-            self.return_list.extend(label.return_list)
+  def draw(self):
+    """绘制面板"""
+    for label in self.draw_list:
+      label.draw()
+      self.return_list.extend(label.return_list)
 
 
 class See_Character_Setting_Panel:
-    """
-    显示角色属性面板中的角色设置面板
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 绘制宽度
-    """
+  """
+  显示角色属性面板中的角色设置面板
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 绘制宽度
+  """
 
-    def __init__(self, character_id: int, width: int):
-        """初始化绘制对象"""
+  def __init__(self, character_id: int, width: int):
+    """初始化绘制对象"""
 
-        from Script.UI.Panel import character_setting
+    from Script.UI.Panel import character_setting
 
-        head_draw = character_info_head.CharacterInfoHead(character_id, width)
-        setting_draw = character_setting.CharacterSetting(character_id, width, 8, 0)
-        self.draw_list: List[draw.NormalDraw] = [
-            head_draw,
-            setting_draw,
-        ]
-        """ 绘制的面板列表 """
-        self.return_list: List[str] = []
-        """ 当前面板监听的按钮列表 """
+    head_draw = character_info_head.CharacterInfoHead(character_id, width)
+    setting_draw = character_setting.CharacterSetting(character_id, width, 8, 0)
+    self.draw_list: List[draw.NormalDraw] = [
+        head_draw,
+        setting_draw,
+    ]
+    """ 绘制的面板列表 """
+    self.return_list: List[str] = []
+    """ 当前面板监听的按钮列表 """
 
-    def draw(self):
-        """绘制面板"""
-        for label in self.draw_list:
-            label.draw()
-            self.return_list.extend(label.return_list)
+  def draw(self):
+    """绘制面板"""
+    for label in self.draw_list:
+      label.draw()
+      self.return_list.extend(label.return_list)
 
 
 class SeeCharacterMainAttrPanel:
-    """
-    显示角色主属性面板对象
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 绘制宽度
-    """
+  """
+  显示角色主属性面板对象
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 绘制宽度
+  """
 
-    def __init__(self, character_id: int, width: int):
-        """初始化绘制对象"""
-        head_draw = character_info_head.CharacterInfoHead(character_id, width)
-        # stature_draw = CharacterStatureText(character_id, width)
-        room_draw = CharacterRoomText(character_id, width)
-        birthday_draw = CharacterBirthdayText(character_id, width)
-        # sture_info_draw = CharacterStatureInfoText(character_id, width)
-        # measurement_draw = CharacterMeasurementsText(character_id, width)
-        # sex_experience_draw = CharacterSexExperienceText(character_id, width)
-        self.draw_list: List[draw.NormalDraw] = [
-            head_draw,
-            # stature_draw,
-            room_draw,
-            birthday_draw,
-            # sture_info_draw,
-            # measurement_draw,
-            # sex_experience_draw,
-        ]
-        """ 绘制的面板列表 """
-        self.return_list: List[str] = []
-        """ 当前面板监听的按钮列表 """
+  def __init__(self, character_id: int, width: int):
+    """初始化绘制对象"""
+    head_draw = character_info_head.CharacterInfoHead(character_id, width)
+    # stature_draw = CharacterStatureText(character_id, width)
+    room_draw = CharacterRoomText(character_id, width)
+    birthday_draw = CharacterBirthdayText(character_id, width)
+    # sture_info_draw = CharacterStatureInfoText(character_id, width)
+    # measurement_draw = CharacterMeasurementsText(character_id, width)
+    # sex_experience_draw = CharacterSexExperienceText(character_id, width)
+    self.draw_list: List[draw.NormalDraw] = [
+        head_draw,
+        # stature_draw,
+        room_draw,
+        birthday_draw,
+        # sture_info_draw,
+        # measurement_draw,
+        # sex_experience_draw,
+    ]
+    """ 绘制的面板列表 """
+    self.return_list: List[str] = []
+    """ 当前面板监听的按钮列表 """
 
-    def draw(self):
-        """绘制面板"""
-        for label in self.draw_list:
-            label.draw()
+  def draw(self):
+    """绘制面板"""
+    for label in self.draw_list:
+      label.draw()
 
 
 class SeeCharacterStatusPanel:
-    """
-    显示角色状态面板对象
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 绘制宽度
-    column -- 每行状态最大个数
-    type_number -- 显示的状态类型
-    """
+  """
+  显示角色状态面板对象
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 绘制宽度
+  column -- 每行状态最大个数
+  type_number -- 显示的状态类型
+  """
 
-    def __init__(self, character_id: int, width: int, column: int, type_number: int, center_status: bool = True):
-        """初始化绘制对象"""
-        self.character_id = character_id
-        """ 要绘制的角色id """
-        self.width = width
-        """ 面板最大宽度 """
-        self.column = column
-        """ 每行状态最大个数 """
-        self.draw_list: List = []
-        """ 绘制的文本列表 """
-        self.return_list: List[str] = []
-        """ 当前面板监听的按钮列表 """
-        self.center_status: bool = center_status
-        """ 居中绘制状态文本 """
-        self.type_number = type_number
-        """ 显示的状态类型 """
-        character_data = cache.character_data[character_id]
-        # print("game_config.config_character_state_type :",game_config.config_character_state_type)
-        # print("game_config.config_character_state_type_data :",game_config.config_character_state_type_data)
+  def __init__(
+      self,
+      character_id: int,
+      width: int,
+      column: int,
+      type_number: int,
+      center_status: bool = True,
+  ):
+    """初始化绘制对象"""
+    self.character_id = character_id
+    """ 要绘制的角色id """
+    self.width = width
+    """ 面板最大宽度 """
+    self.column = column
+    """ 每行状态最大个数 """
+    self.draw_list: List = []
+    """ 绘制的文本列表 """
+    self.return_list: List[str] = []
+    """ 当前面板监听的按钮列表 """
+    self.center_status: bool = center_status
+    """ 居中绘制状态文本 """
+    self.type_number = type_number
+    """ 显示的状态类型 """
+    character_data = cache.character_data[character_id]
+    # print("game_config.config_character_state_type :",game_config.config_character_state_type)
+    # print("game_config.config_character_state_type_data :",game_config.config_character_state_type_data)
 
-        # 润滑单独处理，归到快感里
-        other_status_ids = [8]
+    # 润滑单独处理，归到快感里
+    other_status_ids = [8]
 
-        for status_type in game_config.config_character_state_type_data:
-            type_data = game_config.config_character_state_type[status_type]
-            type_line = draw.LittleTitleLineDraw(type_data.name, width, ":")
-            # print("type_data.name :",type_data.name)
-            self.draw_list.append(type_line)
-            type_list = game_config.config_character_state_type_data[status_type]
-            draw_count = 0
-            
-            # 如果是状态类型0，需要特殊处理快感状态的顺序
-            if status_type == 0:
-                
-                # 先处理快感状态
-                for status_id in type_list:
-                    if self._draw_status_bar(character_data, status_id):
-                        draw_count += 1
-                        if draw_count % self.column == 0:
-                            self.draw_list.append(line_feed)
-                
-                # 然后处理其他状态
-                for status_id in other_status_ids:
-                    if self._draw_status_bar(character_data, status_id):
-                        draw_count += 1
-                        if draw_count % self.column == 0:
-                            self.draw_list.append(line_feed)
+    for status_type in game_config.config_character_state_type_data:
+      type_data = game_config.config_character_state_type[status_type]
+      type_line = draw.LittleTitleLineDraw(type_data.name, width, ":")
+      # print("type_data.name :",type_data.name)
+      self.draw_list.append(type_line)
+      type_list = game_config.config_character_state_type_data[status_type]
+      draw_count = 0
 
-                # 进行一次换行
-                if draw_count % self.column != 0:
-                    draw_count = 0
-                    self.draw_list.append(line_feed)
-            else:
-                # 其他类型按原有顺序处理
-                for status_id in type_list:
-                    # 跳过其他类
-                    if status_id in other_status_ids:
-                        continue
-                    if self._draw_status_bar(character_data, status_id):
-                        draw_count += 1
-                        if draw_count % self.column == 0:
-                            self.draw_list.append(line_feed)
-            
-            # 确保在该类型结束时换行
-            if draw_count % self.column != 0:
-                self.draw_list.append(line_feed)
-    
-    def _draw_status_bar(self, character_data, status_id):
-        """绘制单个状态条
-        返回True表示成功绘制，False表示跳过"""
-        # 性别过滤
-        if status_id in {2, 4, 7} and character_data.sex == 0:
-            return False
-        if status_id == 3 and character_data.sex == 1:
-            return False
-        
-        # 计算状态数值和等级
-        status_text = game_config.config_character_state[status_id].name
-        status_value = 0
-        if status_id in character_data.status_data:
-            status_value = character_data.status_data[status_id]
-        status_value = round(status_value)
-        status_level = attr_calculation.get_status_level(status_value)
-        
-        # 计算当前等级的最大值
-        next_level_value = game_config.config_character_state_level[status_level].max_value
-        now_text = f"{status_text}lv{status_level}"
-        
-        # 高潮积累着色：该部位待结算的绝顶次数越多，部位名颜色越深(亮粉→深粉→红→紫 对应 1/2/3/4+次)
-        # 寸止(orgasm_edge_count)与时停(time_stop_orgasm_count)本质是同一种"快感越过阈值但未结算"的积累，一并计入
-        edge_count = character_data.h_state.orgasm_edge_count.get(status_id, 0) + character_data.h_state.time_stop_orgasm_count.get(status_id, 0)
-        edge_style = ""
-        part_tooltip = game_config.config_character_state[status_id].info
-        if edge_count >= 4:
-            edge_style = "levelex"  # 紫(#a020f0，复用EX评定色)，寸止最高档
-        elif edge_count == 3:
-            edge_style = "red"
-        elif edge_count == 2:
-            edge_style = "deep_pink"
-        elif edge_count == 1:
-            edge_style = "hot_pink"
-        if edge_count >= 1:
-            part_tooltip += _("(绝顶寸止{0}次)").format(edge_count)
+      # 如果是状态类型0，需要特殊处理快感状态的顺序
+      if status_type == 0:
 
-        # 绘制状态条
-        bar_draw = draw.InfoBarDraw()
-        bar_draw.width = int(self.width / self.column)
-        bar_draw.scale = 0.8
-        bar_draw.chara_state = True
-        bar_draw.name_style = edge_style
-        bar_draw.set(
-            "StatusPointbar",
-            next_level_value,
-            status_value,
-            now_text,
-            part_tooltip,
-        )
-        self.draw_list.append(bar_draw)
-        return True
+        # 先处理快感状态
+        for status_id in type_list:
+          if self._draw_status_bar(character_data, status_id):
+            draw_count += 1
+            if draw_count % self.column == 0:
+              self.draw_list.append(line_feed)
 
-    def draw(self):
-        """绘制面板"""
-        # title_draw = draw.TitleLineDraw(_("人物状态"), self.width)
-        # title_draw.draw()
+        # 然后处理其他状态
+        for status_id in other_status_ids:
+          if self._draw_status_bar(character_data, status_id):
+            draw_count += 1
+            if draw_count % self.column == 0:
+              self.draw_list.append(line_feed)
+
+        # 进行一次换行
+        if draw_count % self.column != 0:
+          draw_count = 0
+          self.draw_list.append(line_feed)
+      else:
+        # 其他类型按原有顺序处理
+        for status_id in type_list:
+          # 跳过其他类
+          if status_id in other_status_ids:
+            continue
+          if self._draw_status_bar(character_data, status_id):
+            draw_count += 1
+            if draw_count % self.column == 0:
+              self.draw_list.append(line_feed)
+
+      # 确保在该类型结束时换行
+      if draw_count % self.column != 0:
+        self.draw_list.append(line_feed)
+
+  def _draw_status_bar(self, character_data, status_id):
+    """绘制单个状态条
+    返回True表示成功绘制，False表示跳过"""
+    # 性别过滤
+    if status_id in {2, 4, 7} and character_data.sex == 0:
+      return False
+    if status_id == 3 and character_data.sex == 1:
+      return False
+
+    # 计算状态数值和等级
+    status_text = game_config.config_character_state[status_id].name
+    status_value = 0
+    if status_id in character_data.status_data:
+      status_value = character_data.status_data[status_id]
+    status_value = round(status_value)
+    status_level = attr_calculation.get_status_level(status_value)
+
+    # 计算当前等级的最大值
+    next_level_value = game_config.config_character_state_level[
+        status_level
+    ].max_value
+    now_text = f"{status_text}lv{status_level}"
+
+    # 高潮积累着色：该部位待结算的绝顶次数越多，部位名颜色越深(亮粉→深粉→红→紫 对应 1/2/3/4+次)
+    # 寸止(orgasm_edge_count)与时停(time_stop_orgasm_count)本质是同一种"快感越过阈值但未结算"的积累，一并计入
+    edge_count = character_data.h_state.orgasm_edge_count.get(
+        status_id, 0
+    ) + character_data.h_state.time_stop_orgasm_count.get(status_id, 0)
+    edge_style = ""
+    part_tooltip = game_config.config_character_state[status_id].info
+    if edge_count >= 4:
+      edge_style = "levelex"  # 紫(#a020f0，复用EX评定色)，寸止最高档
+    elif edge_count == 3:
+      edge_style = "red"
+    elif edge_count == 2:
+      edge_style = "deep_pink"
+    elif edge_count == 1:
+      edge_style = "hot_pink"
+    if edge_count >= 1:
+      part_tooltip += _("(绝顶寸止{0}次)").format(edge_count)
+
+    # 绘制状态条
+    bar_draw = draw.InfoBarDraw()
+    bar_draw.width = int(self.width / self.column)
+    bar_draw.scale = 0.8
+    bar_draw.chara_state = True
+    bar_draw.name_style = edge_style
+    bar_draw.set(
+        "StatusPointbar",
+        next_level_value,
+        status_value,
+        now_text,
+        part_tooltip,
+    )
+    self.draw_list.append(bar_draw)
+    return True
+
+  def draw(self):
+    """绘制面板"""
+    # title_draw = draw.TitleLineDraw(_("人物状态"), self.width)
+    # title_draw.draw()
+    line_feed.draw()
+    for label in self.draw_list:
+      if isinstance(label, list):
+        for value in label:
+          value.draw()
         line_feed.draw()
-        for label in self.draw_list:
-            if isinstance(label, list):
-                for value in label:
-                    value.draw()
-                line_feed.draw()
-            else:
-                label.draw()
+      else:
+        label.draw()
+
 
 class CharacterStatureText:
-    """
-    身材描述信息面板
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 最大宽度
-    """
+  """
+  身材描述信息面板
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 最大宽度
+  """
 
-    def __init__(self, character_id: int, width: int):
-        """初始化绘制对象"""
-        self.character_id = character_id
-        """ 要绘制的角色id """
-        self.width = width
-        """ 当前最大可绘制宽度 """
-        player_data = cache.character_data[0]
-        description = attr_text.get_stature_text(character_id)
-        description = description.format(
-            Name=player_data.name,
-            NickName=player_data.nick_name,
-        )
-        self.description = description
-        """ 身材描述文本 """
+  def __init__(self, character_id: int, width: int):
+    """初始化绘制对象"""
+    self.character_id = character_id
+    """ 要绘制的角色id """
+    self.width = width
+    """ 当前最大可绘制宽度 """
+    player_data = cache.character_data[0]
+    description = attr_text.get_stature_text(character_id)
+    description = description.format(
+        Name=player_data.name,
+        NickName=player_data.nick_name,
+    )
+    self.description = description
+    """ 身材描述文本 """
 
-    def draw(self):
-        """绘制面板"""
-        line = draw.LineDraw(":", self.width)
-        line.draw()
-        info_draw = draw.CenterDraw()
-        info_draw.text = self.description
-        info_draw.width = self.width
-        info_draw.draw()
-        line_feed.draw()
+  def draw(self):
+    """绘制面板"""
+    line = draw.LineDraw(":", self.width)
+    line.draw()
+    info_draw = draw.CenterDraw()
+    info_draw.text = self.description
+    info_draw.width = self.width
+    info_draw.draw()
+    line_feed.draw()
 
 
 class CharacterRoomText:
-    """
-    角色宿舍/教室和办公室地址显示面板
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 最大宽度
-    """
+  """
+  角色宿舍/教室和办公室地址显示面板
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 最大宽度
+  """
 
-    def __init__(self, character_id: int, width: int):
-        """初始化绘制对象"""
-        self.character_id = character_id
-        """ 要绘制的角色id """
-        self.width = width
-        """ 当前最大可绘制宽度 """
-        character_data: game_type.Character = cache.character_data[self.character_id]
-        dormitory = character_data.dormitory
-        dormitory_text = ""
-        if dormitory == "":
-            dormitory_text = _("暂无")
-        else:
-            dormitory_path = map_handle.get_map_system_path_for_str(dormitory)
-            dormitory_text = attr_text.get_scene_path_text(dormitory_path)
-        self.dormitory_text = _("宿舍位置:") + dormitory_text
-        """ 宿舍位置文本 """
-        # classroom = character_data.classroom
-        # now_classroom_text = _("教室位置:")
-        # if classroom != "":
-        #     classroom_path = map_handle.get_map_system_path_for_str(classroom)
-        #     classroom_text = attr_text.get_scene_path_text(classroom_path)
-        #     now_classroom_text += classroom_text
-        # else:
-        #     now_classroom_text += _("暂无")
-        # self.classroom_text = now_classroom_text
-        # """ 教室位置文本 """
-        officeroom = character_data.officeroom
-        now_officeroom_text = _("办公室位置:")
-        if len(officeroom):
-            officeroom_text = attr_text.get_scene_path_text(officeroom)
-            now_officeroom_text += officeroom_text
-        else:
-            now_officeroom_text += _("暂无")
-        self.officeroom_text = now_officeroom_text
-        """ 办公室位置文本 """
+  def __init__(self, character_id: int, width: int):
+    """初始化绘制对象"""
+    self.character_id = character_id
+    """ 要绘制的角色id """
+    self.width = width
+    """ 当前最大可绘制宽度 """
+    character_data: game_type.Character = cache.character_data[
+        self.character_id
+    ]
+    dormitory = character_data.dormitory
+    dormitory_text = ""
+    if dormitory == "":
+      dormitory_text = _("暂无")
+    else:
+      dormitory_path = map_handle.get_map_system_path_for_str(dormitory)
+      dormitory_text = attr_text.get_scene_path_text(dormitory_path)
+    self.dormitory_text = _("宿舍位置:") + dormitory_text
+    """ 宿舍位置文本 """
+    # classroom = character_data.classroom
+    # now_classroom_text = _("教室位置:")
+    # if classroom != "":
+    #     classroom_path = map_handle.get_map_system_path_for_str(classroom)
+    #     classroom_text = attr_text.get_scene_path_text(classroom_path)
+    #     now_classroom_text += classroom_text
+    # else:
+    #     now_classroom_text += _("暂无")
+    # self.classroom_text = now_classroom_text
+    # """ 教室位置文本 """
+    officeroom = character_data.officeroom
+    now_officeroom_text = _("办公室位置:")
+    if len(officeroom):
+      officeroom_text = attr_text.get_scene_path_text(officeroom)
+      now_officeroom_text += officeroom_text
+    else:
+      now_officeroom_text += _("暂无")
+    self.officeroom_text = now_officeroom_text
+    """ 办公室位置文本 """
 
-    def draw(self):
-        """绘制面板"""
-        line = draw.LineDraw(".", self.width)
-        line.draw()
-        info_draw = panel.CenterDrawTextListPanel()
-        # info_draw.set([self.dormitory_text, self.classroom_text, self.officeroom_text], self.width, 3)
-        info_draw.draw()
+  def draw(self):
+    """绘制面板"""
+    line = draw.LineDraw(".", self.width)
+    line.draw()
+    info_draw = panel.CenterDrawTextListPanel()
+    # info_draw.set([self.dormitory_text, self.classroom_text, self.officeroom_text], self.width, 3)
+    info_draw.draw()
 
 
 class CharacterBirthdayText:
-    """
-    角色年龄/生日信息显示面板
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 最大宽度
-    """
+  """
+  角色年龄/生日信息显示面板
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 最大宽度
+  """
 
-    def __init__(self, character_id: int, width: int):
-        """初始化绘制对象"""
-        self.character_id = character_id
-        """ 要绘制的角色id """
-        self.width = width
-        """ 当前最大可绘制宽度 """
-        character_data = cache.character_data[self.character_id]
-        # age_text = _("年龄:{character_age}岁").format(character_age=character_data.age)
-        birthday_text = _("生日:{birthday_month}月{birthday_day}日").format(
-            birthday_month=character_data.birthday.month, birthday_day=character_data.birthday.day
-        )
-        # self.info_list = [age_text, birthday_text]
-        self.info_list = [birthday_text]
-        """ 绘制的文本列表 """
+  def __init__(self, character_id: int, width: int):
+    """初始化绘制对象"""
+    self.character_id = character_id
+    """ 要绘制的角色id """
+    self.width = width
+    """ 当前最大可绘制宽度 """
+    character_data = cache.character_data[self.character_id]
+    # age_text = _("年龄:{character_age}岁").format(character_age=character_data.age)
+    birthday_text = _("生日:{birthday_month}月{birthday_day}日").format(
+        birthday_month=character_data.birthday.month,
+        birthday_day=character_data.birthday.day,
+    )
+    # self.info_list = [age_text, birthday_text]
+    self.info_list = [birthday_text]
+    """ 绘制的文本列表 """
 
-    def draw(self):
-        """绘制面板"""
-        line = draw.LineDraw(".", self.width)
-        line.draw()
-        info_draw = panel.CenterDrawTextListPanel()
-        info_draw.set(self.info_list, self.width, 2)
-        info_draw.draw()
+  def draw(self):
+    """绘制面板"""
+    line = draw.LineDraw(".", self.width)
+    line.draw()
+    info_draw = panel.CenterDrawTextListPanel()
+    info_draw.set(self.info_list, self.width, 2)
+    info_draw.draw()
 
 
 class CharacterStatureInfoText:
-    """
-    角色身高体重罩杯信息显示面板
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 最大宽度
-    """
+  """
+  角色身高体重罩杯信息显示面板
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 最大宽度
+  """
 
-    def __init__(self, character_id: int, width: int):
-        """初始化绘制对象"""
-        self.character_id = character_id
-        """ 要绘制的角色id """
-        self.width = width
-        """ 当前最大可绘制宽度 """
-        character_data: game_type.Character = cache.character_data[self.character_id]
-        now_height = str(round(character_data.height.now_height, 2))
-        now_height_text = _("身高:") + now_height + "cm"
-        now_weight = str(round(character_data.weight, 2))
-        now_weight_text = _("体重:") + now_weight + "kg"
-        now_chest_tem_id = attr_calculation.judge_chest_group(character_data.chest.now_chest)
-        now_chest_tem = game_config.config_chest[now_chest_tem_id]
-        body_fat = str(round(character_data.bodyfat, 2))
-        body_fat_text = _("体脂率:") + body_fat + "%"
-        now_chest_text = _("罩杯:") + now_chest_tem.info
-        self.info_list = [now_height_text, now_weight_text, now_chest_text, body_fat_text]
-        """ 绘制的文本列表 """
+  def __init__(self, character_id: int, width: int):
+    """初始化绘制对象"""
+    self.character_id = character_id
+    """ 要绘制的角色id """
+    self.width = width
+    """ 当前最大可绘制宽度 """
+    character_data: game_type.Character = cache.character_data[
+        self.character_id
+    ]
+    now_height = str(round(character_data.height.now_height, 2))
+    now_height_text = _("身高:") + now_height + "cm"
+    now_weight = str(round(character_data.weight, 2))
+    now_weight_text = _("体重:") + now_weight + "kg"
+    now_chest_tem_id = attr_calculation.judge_chest_group(
+        character_data.chest.now_chest
+    )
+    now_chest_tem = game_config.config_chest[now_chest_tem_id]
+    body_fat = str(round(character_data.bodyfat, 2))
+    body_fat_text = _("体脂率:") + body_fat + "%"
+    now_chest_text = _("罩杯:") + now_chest_tem.info
+    self.info_list = [
+        now_height_text,
+        now_weight_text,
+        now_chest_text,
+        body_fat_text,
+    ]
+    """ 绘制的文本列表 """
 
-    def draw(self):
-        """绘制面板"""
-        line = draw.LineDraw(".", self.width)
-        line.draw()
-        info_draw = panel.CenterDrawTextListPanel()
-        info_draw.set(self.info_list, self.width, 4)
-        info_draw.draw()
+  def draw(self):
+    """绘制面板"""
+    line = draw.LineDraw(".", self.width)
+    line.draw()
+    info_draw = panel.CenterDrawTextListPanel()
+    info_draw.set(self.info_list, self.width, 4)
+    info_draw.draw()
 
 
 class CharacterMeasurementsText:
-    """
-    角色三围信息显示面板
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 最大宽度
-    """
+  """
+  角色三围信息显示面板
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 最大宽度
+  """
 
-    def __init__(self, character_id: int, width: int):
-        """初始化绘制对象"""
-        self.character_id = character_id
-        """ 要绘制的角色id """
-        self.width = width
-        """ 当前最大可绘制宽度 """
-        character_data = cache.character_data[self.character_id]
-        character_data.measurements.bust
-        character_data.measurements.hip
-        character_data.measurements.waist
-        now_bust = str(round(character_data.measurements.bust, 2))
-        now_hip = str(round(character_data.measurements.hip, 2))
-        now_waist = str(round(character_data.measurements.waist, 2))
-        now_bust_text = _("胸围:") + now_bust + "cm"
-        now_waist_text = _("腰围:") + now_waist + "cm"
-        now_hip_text = _("臀围") + now_hip + "cm"
-        self.info_list = [now_bust_text, now_waist_text, now_hip_text]
-        """ 绘制的文本列表 """
+  def __init__(self, character_id: int, width: int):
+    """初始化绘制对象"""
+    self.character_id = character_id
+    """ 要绘制的角色id """
+    self.width = width
+    """ 当前最大可绘制宽度 """
+    character_data = cache.character_data[self.character_id]
+    character_data.measurements.bust
+    character_data.measurements.hip
+    character_data.measurements.waist
+    now_bust = str(round(character_data.measurements.bust, 2))
+    now_hip = str(round(character_data.measurements.hip, 2))
+    now_waist = str(round(character_data.measurements.waist, 2))
+    now_bust_text = _("胸围:") + now_bust + "cm"
+    now_waist_text = _("腰围:") + now_waist + "cm"
+    now_hip_text = _("臀围") + now_hip + "cm"
+    self.info_list = [now_bust_text, now_waist_text, now_hip_text]
+    """ 绘制的文本列表 """
 
-    def draw(self):
-        """绘制面板"""
-        line = draw.LineDraw(".", self.width)
-        line.draw()
-        info_draw = panel.CenterDrawTextListPanel()
-        info_draw.set(self.info_list, self.width, 3)
-        info_draw.draw()
+  def draw(self):
+    """绘制面板"""
+    line = draw.LineDraw(".", self.width)
+    line.draw()
+    info_draw = panel.CenterDrawTextListPanel()
+    info_draw.set(self.info_list, self.width, 3)
+    info_draw.draw()
 
 
 class CharacterSexExperienceText:
-    """
-    角色性经验信息面板
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 最大宽度
-    """
+  """
+  角色性经验信息面板
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 最大宽度
+  """
 
-    def __init__(self, character_id: int, width: int):
-        """初始化绘制对象"""
-        self.character_id = character_id
-        """ 绘制的角色id """
-        self.width = width
-        """ 当前最大可绘制宽度 """
-        character_data = cache.character_data[self.character_id]
-        self.experience_text_data = {
-            0: _("Ｎ感觉:"),
-            1: _("Ｂ感觉:"),
-            2: _("Ｃ感觉:"),
-            3: _("Ｐ感觉:"),
-            4: _("Ｖ感觉:"),
-            5: _("Ａ感觉:"),
-            6: _("Ｕ感觉:"),
-            7: _("Ｗ感觉:"),
-        }
-        """ 性器官开发度描述 """
-        self.draw_list: List = []
-        """ 绘制对象列表 """
-        sex_tem = character_data.sex in (0, 3)
-        organ_list = game_config.config_organ_data[sex_tem] | game_config.config_organ_data[2]
-        for organ in organ_list:
-            if organ != 8:
-                now_draw = draw.NormalDraw()
-                now_draw_1 = draw.NormalDraw()
-                now_draw_2 = draw.NormalDraw()
-                now_draw_value = draw.NormalDraw()
-                now_draw.text = self.experience_text_data[organ]
-                now_draw_1.text = " "
-                now_draw_2.text = "  "
-                now_draw.width = width / len(organ_list)
-                now_exp = 0
-                if organ in character_data.sex_experience:
-                    now_exp = character_data.sex_experience[organ]
-                now_draw_value.text = str(now_exp)
-                level_draw = draw.ExpLevelDraw(now_exp)
-                new_draw = draw.CenterMergeDraw(width / len(organ_list))
-                # print("width :",width)
-                # print("len(organ_list) :",len(organ_list))
-                new_draw.draw_list.append(now_draw)
-                new_draw.draw_list.append(now_draw_1)
-                new_draw.draw_list.append(level_draw)
-                new_draw.draw_list.append(now_draw_2)
-                new_draw.draw_list.append(now_draw_value)
-                self.draw_list.append(new_draw)
+  def __init__(self, character_id: int, width: int):
+    """初始化绘制对象"""
+    self.character_id = character_id
+    """ 绘制的角色id """
+    self.width = width
+    """ 当前最大可绘制宽度 """
+    character_data = cache.character_data[self.character_id]
+    self.experience_text_data = {
+        0: _("Ｎ感觉:"),
+        1: _("Ｂ感觉:"),
+        2: _("Ｃ感觉:"),
+        3: _("Ｐ感觉:"),
+        4: _("Ｖ感觉:"),
+        5: _("Ａ感觉:"),
+        6: _("Ｕ感觉:"),
+        7: _("Ｗ感觉:"),
+    }
+    """ 性器官开发度描述 """
+    self.draw_list: List = []
+    """ 绘制对象列表 """
+    sex_tem = character_data.sex in (0, 3)
+    organ_list = (
+        game_config.config_organ_data[sex_tem]
+        | game_config.config_organ_data[2]
+    )
+    for organ in organ_list:
+      if organ != 8:
+        now_draw = draw.NormalDraw()
+        now_draw_1 = draw.NormalDraw()
+        now_draw_2 = draw.NormalDraw()
+        now_draw_value = draw.NormalDraw()
+        now_draw.text = self.experience_text_data[organ]
+        now_draw_1.text = " "
+        now_draw_2.text = "  "
+        now_draw.width = width / len(organ_list)
+        now_exp = 0
+        if organ in character_data.sex_experience:
+          now_exp = character_data.sex_experience[organ]
+        now_draw_value.text = str(now_exp)
+        level_draw = draw.ExpLevelDraw(now_exp)
+        new_draw = draw.CenterMergeDraw(width / len(organ_list))
+        # print("width :",width)
+        # print("len(organ_list) :",len(organ_list))
+        new_draw.draw_list.append(now_draw)
+        new_draw.draw_list.append(now_draw_1)
+        new_draw.draw_list.append(level_draw)
+        new_draw.draw_list.append(now_draw_2)
+        new_draw.draw_list.append(now_draw_value)
+        self.draw_list.append(new_draw)
 
-    def draw(self):
-        """绘制对象"""
-        line = draw.LineDraw(".", self.width)
-        line.draw()
-        for value in self.draw_list:
-            value.draw()
+  def draw(self):
+    """绘制对象"""
+    line = draw.LineDraw(".", self.width)
+    line.draw()
+    for value in self.draw_list:
+      value.draw()
 
 
 class CharacterabiText:
-    """
-    角色能力面板
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 最大宽度
-    """
+  """
+  角色能力面板
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 最大宽度
+  """
 
-    def __init__(self, character_id: int, width: int):
-        """初始化绘制对象"""
-        self.character_id = character_id
-        """ 绘制的角色id """
-        self.width = width
-        """ 当前最大可绘制宽度 """
-        self.type = type
-        """ 当前绘制类型 """
-        # self.column = column
-        # """ 每行状态最大个数 """
-        character_data = cache.character_data[self.character_id]
-        """ 角色数据 """
-        self.draw_list: List = []
-        """ 绘制对象列表 """
-        self.title_list: List[draw.NormalDraw] = []
-        """ 绘制标题列表 """
-        ability_list = game_config.config_ability_type_data
-        title_text = _("能力")
-        type_line = draw.LittleTitleLineDraw(title_text, width, ":")
-        self.draw_list.append(type_line)
-        # 进入能力大类#
-        for anility_type in ability_list:
-            # if anility_type == type:
-            type_set = ability_list[anility_type]
-            # 去掉玩家的若干能力类型
-            if self.character_id == 0:
-                if anility_type in {2, 6}:
-                    continue
-            for ability_id in type_set:
-                ability_data = game_config.config_ability[ability_id]
-                # 去掉与性别不符的能力#
-                if character_data.sex == 0 and ability_data.sex_need == 1:
-                    continue
-                elif character_data.sex == 1 and ability_data.sex_need == 0:
-                    continue
-                # 去掉时奸刻印
-                if ability_id == 16:
-                    continue
-                now_exp = character_data.ability[ability_id]
-                now_draw = draw.NormalDraw()
-                now_draw.text = "  " + attr_calculation.pad_display_width(ability_data.name, 10)
-                now_draw.tooltip = ability_data.info
-                new_draw = draw.LeftMergeDraw(int(self.width / 16))
-                # 同类能力里在八个前补个换行
-                if ability_id == 48 or ability_id == 101:
-                    new_draw_n = draw.NormalDraw()
-                    new_draw_n.text = "\n"
-                    new_draw.draw_list.append(new_draw_n)
-                new_draw.draw_list.append(now_draw)
-                level_draw = draw.ExpLevelDraw(now_exp)
-                new_draw.draw_list.append(level_draw)
-                # 8级的能力则只空一个单字符空格
-                now_draw_1 = draw.NormalDraw()
-                now_draw_1.text = " "
-                now_draw_1.width = 1
-                now_draw_2 = draw.NormalDraw()
-                now_draw_2.text = "  "
-                now_draw_2.width = 2
-                if now_exp == 8:
-                    new_draw.draw_list.append(now_draw_1)
-                else:
-                    new_draw.draw_list.append(now_draw_2)
-                now_draw_value = draw.NormalDraw()
-                now_draw_value.text = str(now_exp)
-                new_draw.draw_list.append(now_draw_value)
-                self.draw_list.append(new_draw)
-            # 只有不是最后一个类型就补个换行#
-            if anility_type != 6:
-                new_draw_n = draw.NormalDraw()
-                new_draw_n.text = "\n"
-                new_draw_n.width = 1
-                self.draw_list.append(new_draw_n)
+  def __init__(self, character_id: int, width: int):
+    """初始化绘制对象"""
+    self.character_id = character_id
+    """ 绘制的角色id """
+    self.width = width
+    """ 当前最大可绘制宽度 """
+    self.type = type
+    """ 当前绘制类型 """
+    # self.column = column
+    # """ 每行状态最大个数 """
+    character_data = cache.character_data[self.character_id]
+    """ 角色数据 """
+    self.draw_list: List = []
+    """ 绘制对象列表 """
+    self.title_list: List[draw.NormalDraw] = []
+    """ 绘制标题列表 """
+    ability_list = game_config.config_ability_type_data
+    title_text = _("能力")
+    type_line = draw.LittleTitleLineDraw(title_text, width, ":")
+    self.draw_list.append(type_line)
+    # 进入能力大类#
+    for anility_type in ability_list:
+      # if anility_type == type:
+      type_set = ability_list[anility_type]
+      # 去掉玩家的若干能力类型
+      if self.character_id == 0:
+        if anility_type in {2, 6}:
+          continue
+      for ability_id in type_set:
+        ability_data = game_config.config_ability[ability_id]
+        # 去掉与性别不符的能力#
+        if character_data.sex == 0 and ability_data.sex_need == 1:
+          continue
+        elif character_data.sex == 1 and ability_data.sex_need == 0:
+          continue
+        # 去掉时奸刻印
+        if ability_id == 16:
+          continue
+        now_exp = character_data.ability[ability_id]
+        now_draw = draw.NormalDraw()
+        now_draw.text = "  " + attr_calculation.pad_display_width(
+            ability_data.name, 10
+        )
+        now_draw.tooltip = ability_data.info
+        new_draw = draw.LeftMergeDraw(int(self.width / 16))
+        # 同类能力里在八个前补个换行
+        if ability_id == 48 or ability_id == 101:
+          new_draw_n = draw.NormalDraw()
+          new_draw_n.text = "\n"
+          new_draw.draw_list.append(new_draw_n)
+        new_draw.draw_list.append(now_draw)
+        level_draw = draw.ExpLevelDraw(now_exp)
+        new_draw.draw_list.append(level_draw)
+        # 8级的能力则只空一个单字符空格
+        now_draw_1 = draw.NormalDraw()
+        now_draw_1.text = " "
+        now_draw_1.width = 1
+        now_draw_2 = draw.NormalDraw()
+        now_draw_2.text = "  "
+        now_draw_2.width = 2
+        if now_exp == 8:
+          new_draw.draw_list.append(now_draw_1)
+        else:
+          new_draw.draw_list.append(now_draw_2)
+        now_draw_value = draw.NormalDraw()
+        now_draw_value.text = str(now_exp)
+        new_draw.draw_list.append(now_draw_value)
+        self.draw_list.append(new_draw)
+      # 只有不是最后一个类型就补个换行#
+      if anility_type != 6:
+        new_draw_n = draw.NormalDraw()
+        new_draw_n.text = "\n"
+        new_draw_n.width = 1
+        self.draw_list.append(new_draw_n)
 
-    def draw(self):
-        """绘制对象"""
-        line_feed.draw()
-        for value in self.draw_list:
-            value.draw()
+  def draw(self):
+    """绘制对象"""
+    line_feed.draw()
+    for value in self.draw_list:
+      value.draw()
 
 
 class CharacterImage:
-    """
-    角色立绘面板
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 最大宽度
-    """
+  """
+  角色立绘面板
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 最大宽度
+  """
 
-    def __init__(self, character_id: int, width: int):
-        """初始化绘制对象"""
-        self.character_id = character_id
-        """ 绘制的角色id """
-        self.width = width
-        """ 当前最大可绘制宽度 """
-        # self.type = type
-        # """ 当前绘制类型 """
-        self.draw_list: List = []
-        """ 绘制对象列表 """
-        self.title_list: List[draw.NormalDraw] = []
-        """ 绘制标题列表 """
-        title_text = _("立绘")
-        type_line = draw.LittleTitleLineDraw(title_text, width, ":")
-        self.title_list.append(type_line)
+  def __init__(self, character_id: int, width: int):
+    """初始化绘制对象"""
+    self.character_id = character_id
+    """ 绘制的角色id """
+    self.width = width
+    """ 当前最大可绘制宽度 """
+    # self.type = type
+    # """ 当前绘制类型 """
+    self.draw_list: List = []
+    """ 绘制对象列表 """
+    self.title_list: List[draw.NormalDraw] = []
+    """ 绘制标题列表 """
+    title_text = _("立绘")
+    type_line = draw.LittleTitleLineDraw(title_text, width, ":")
+    self.title_list.append(type_line)
 
-        self.image_name = character_image.find_character_image_name(character_id)
+    self.image_name = character_image.find_character_image_name(character_id)
 
-        now_draw_1 = draw.NormalDraw()
-        now_draw_1.text = "  "
-        now_draw_1.width = 2
-        self.draw_list.append(now_draw_1)
+    now_draw_1 = draw.NormalDraw()
+    now_draw_1.text = "  "
+    now_draw_1.width = 2
+    self.draw_list.append(now_draw_1)
 
-    def draw(self):
-        """绘制对象"""
-        if self.character_id != 0:
-            for value in self.title_list:
-                value.draw()
-            # for value in self.draw_list:
-            #     value.draw()
-            now_draw_1 = draw.NormalDraw()
-            now_draw_1.text = " "
-            now_draw_1.width = 1
-            now_draw_1.draw()
-            flow_handle.print_image_cmd(self.image_name, "立绘按钮")
+  def draw(self):
+    """绘制对象"""
+    if self.character_id != 0:
+      for value in self.title_list:
+        value.draw()
+      # for value in self.draw_list:
+      #     value.draw()
+      now_draw_1 = draw.NormalDraw()
+      now_draw_1.text = " "
+      now_draw_1.width = 1
+      now_draw_1.draw()
+      flow_handle.print_image_cmd(self.image_name, "立绘按钮")
 
 
 class CharacterExperienceText:
-    """
-    显示角色经验面板对象
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 绘制宽度
-    column -- 每行状态最大个数
-    type_number -- 显示的状态类型
-    """
+  """
+  显示角色经验面板对象
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 绘制宽度
+  column -- 每行状态最大个数
+  type_number -- 显示的状态类型
+  """
 
-    def __init__(self, character_id: int, width: int, column: int, center_status: bool = True):
-        """初始化绘制对象"""
-        self.character_id = character_id
-        """ 要绘制的角色id """
-        self.width = width
-        """ 面板最大宽度 """
-        self.column = column
-        """ 每行状态最大个数 """
-        self.draw_list: List = []
-        """ 绘制的文本列表 """
-        self.return_list: List[str] = []
-        """ 当前面板监听的按钮列表 """
-        self.center_status: bool = center_status
-        """ 居中绘制状态文本 """
-        character_data = cache.character_data[character_id]
-        type_data = _("经验")
-        type_line = draw.LittleTitleLineDraw(type_data, width, ":")
-        self.draw_list.append(type_line)
-        experience_text_list = []
-        for experience_id in game_config.config_experience:
-            if character_data.sex == 0:
-                if experience_id in {2, 4, 7, 12, 14, 17, 20, 22, 26, 51, 54, 55, 58, 72, 74, 77, 86, 100, 101, 102,
-                                     103, 104, 105, 106}:
-                    continue
-            elif character_data.sex == 1:
-                if experience_id == {3, 13, 21, 73}:
-                    continue
-            experience_text = game_config.config_experience[experience_id].name
-            experience_value = 0
-            if experience_id in character_data.experience:
-                experience_value = character_data.experience[experience_id]
-                now_text = f" {experience_text}:{experience_value}"
-            if experience_value > 0:
-                experience_text_list.append(now_text)
-        if self.center_status:
-            now_draw = panel.CenterDrawTextListPanel()
-        else:
-            now_draw = panel.LeftDrawTextListPanel()
-        now_draw.set(experience_text_list, self.width, self.column)
-        self.draw_list.extend(now_draw.draw_list)
+  def __init__(
+      self,
+      character_id: int,
+      width: int,
+      column: int,
+      center_status: bool = True,
+  ):
+    """初始化绘制对象"""
+    self.character_id = character_id
+    """ 要绘制的角色id """
+    self.width = width
+    """ 面板最大宽度 """
+    self.column = column
+    """ 每行状态最大个数 """
+    self.draw_list: List = []
+    """ 绘制的文本列表 """
+    self.return_list: List[str] = []
+    """ 当前面板监听的按钮列表 """
+    self.center_status: bool = center_status
+    """ 居中绘制状态文本 """
+    character_data = cache.character_data[character_id]
+    type_data = _("经验")
+    type_line = draw.LittleTitleLineDraw(type_data, width, ":")
+    self.draw_list.append(type_line)
+    experience_text_list = []
+    for experience_id in game_config.config_experience:
+      if character_data.sex == 0:
+        if experience_id in {
+            2,
+            4,
+            7,
+            12,
+            14,
+            17,
+            20,
+            22,
+            26,
+            51,
+            54,
+            55,
+            58,
+            72,
+            74,
+            77,
+            86,
+            100,
+            101,
+            102,
+            103,
+            104,
+            105,
+            106,
+        }:
+          continue
+      elif character_data.sex == 1:
+        if experience_id == {3, 13, 21, 73}:
+          continue
+      experience_text = game_config.config_experience[experience_id].name
+      experience_value = 0
+      if experience_id in character_data.experience:
+        experience_value = character_data.experience[experience_id]
+        now_text = f" {experience_text}:{experience_value}"
+      if experience_value > 0:
+        experience_text_list.append(now_text)
+    if self.center_status:
+      now_draw = panel.CenterDrawTextListPanel()
+    else:
+      now_draw = panel.LeftDrawTextListPanel()
+    now_draw.set(experience_text_list, self.width, self.column)
+    self.draw_list.extend(now_draw.draw_list)
 
-    def draw(self):
-        """绘制面板"""
-        # title_draw = draw.TitleLineDraw(_("人物状态"), self.width)
-        # title_draw.draw()
+  def draw(self):
+    """绘制面板"""
+    # title_draw = draw.TitleLineDraw(_("人物状态"), self.width)
+    # title_draw.draw()
+    line_feed.draw()
+    count = 0
+    for label in self.draw_list:
+      if isinstance(label, list):
+        for value in label:
+          value.draw()
+          count += 1
         line_feed.draw()
-        count = 0
-        for label in self.draw_list:
-            if isinstance(label, list):
-                for value in label:
-                    value.draw()
-                    count += 1
-                line_feed.draw()
-            else:
-                label.draw()
-        if count <= 8:
-            line_feed.draw()
-            if count == 0:
-                line_feed.draw()
+      else:
+        label.draw()
+    if count <= 8:
+      line_feed.draw()
+      if count == 0:
+        line_feed.draw()
 
 
 class CharacterTalentText:
-    """
-    显示角色素质面板对象
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 绘制宽度
-    column -- 每行状态最大个数
-    type_number -- 显示的状态类型
-    """
+  """
+  显示角色素质面板对象
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 绘制宽度
+  column -- 每行状态最大个数
+  type_number -- 显示的状态类型
+  """
 
-    def __init__(self, character_id: int, width: int, column: int, center_status: bool = True):
-        """初始化绘制对象"""
-        self.character_id = character_id
-        """ 要绘制的角色id """
-        self.width = width
-        """ 面板最大宽度 """
-        self.column = column
-        """ 每行状态最大个数 """
-        self.draw_list: List = []
-        """ 绘制的文本列表 """
-        self.return_list: List[str] = []
-        """ 当前面板监听的按钮列表 """
-        self.center_status: bool = center_status
-        """ 居中绘制状态文本 """
-        character_data = cache.character_data[character_id]
-        profession_text = game_config.config_profession[character_data.profession].name
-        race_text = game_config.config_race[character_data.race].name
-        # 如果birthplace是str的话，将其转换为int
-        if isinstance(character_data.relationship.birthplace, str):
-            character_data.relationship.birthplace = int(character_data.relationship.birthplace)
-        birthplace_text = game_config.config_birthplace[character_data.relationship.birthplace].name
-        # 如果nation是str的话，将其转换为int
-        if isinstance(character_data.relationship.nation, str):
-            character_data.relationship.nation = int(character_data.relationship.nation)
-        nation_text = game_config.config_nation[character_data.relationship.nation].name
-        type_data = _("素质")
-        type_line = draw.LittleTitleLineDraw(type_data, width, ":")
-        self.draw_list.append(type_line)
-        talent_list = game_config.config_talent_type_data
-        # print("进入for之前")
-        conut = 0
-        for talent_type in talent_list:
-            type_data = game_config.config_talent_type[talent_type]
-            # print("type_data.name :",type_data.name)
-            type_set = talent_list[talent_type]
-            if conut == 0:
-                message_profession = _(" 职业    ：[{profession_text}]\n").format(
-                    profession_text=profession_text,
-                )
-                now_normal_draw = draw.NormalDraw()
-                now_normal_draw.text = message_profession
-                self.draw_list.append(now_normal_draw)
-                message_race = _(" 种族    ：[{race_text}]\n").format(
-                    race_text=race_text,
-                )
-                now_normal_draw = draw.NormalDraw()
-                now_normal_draw.text = message_race
-                self.draw_list.append(now_normal_draw)
-                message_nation = _(" 势力    ：[{nation_text}]\n").format(
-                    nation_text=nation_text,
-                )
-                now_normal_draw = draw.NormalDraw()
-                now_normal_draw.text = message_nation
-                self.draw_list.append(now_normal_draw)
-                message_birthplace = _(" 出身地  ：[{birthplace_text}]\n").format(
-                    birthplace_text=birthplace_text,
-                )
-                now_normal_draw = draw.NormalDraw()
-                now_normal_draw.text = message_birthplace
-                self.draw_list.append(now_normal_draw)
-                conut = 1
-            race_type = type_data.name
-            if talent_type == 0:
-                message_race = f" {race_type}  ："
-            else:
-                message_race = f" {race_type}："
-            now_normal_draw = draw.NormalDraw()
-            now_normal_draw.text = message_race
-            self.draw_list.append(now_normal_draw)
-            talent_count = 0
-            for talent_id in type_set:
-                if character_data.talent[talent_id]:
-                    talent_text = game_config.config_talent[talent_id].name
-                    talent_info = game_config.config_talent[talent_id].info
-                    now_text = f"[{talent_text}] "
-                    now_normal_draw = draw.NormalDraw()
-                    now_normal_draw.text = now_text
-                    now_normal_draw.tooltip = talent_info
-                    self.draw_list.append(now_normal_draw)
-                    talent_count += 1
-                    # 每行达到最大数量后换行
-                    if talent_count % self.column == 0:
-                        self.draw_list.append(line_feed)
-                        empty_draw = draw.NormalDraw()
-                        empty_draw.text = "           "
-                        self.draw_list.append(empty_draw)
-            # 结束后换行
+  def __init__(
+      self,
+      character_id: int,
+      width: int,
+      column: int,
+      center_status: bool = True,
+  ):
+    """初始化绘制对象"""
+    self.character_id = character_id
+    """ 要绘制的角色id """
+    self.width = width
+    """ 面板最大宽度 """
+    self.column = column
+    """ 每行状态最大个数 """
+    self.draw_list: List = []
+    """ 绘制的文本列表 """
+    self.return_list: List[str] = []
+    """ 当前面板监听的按钮列表 """
+    self.center_status: bool = center_status
+    """ 居中绘制状态文本 """
+    character_data = cache.character_data[character_id]
+    profession_text = game_config.config_profession[
+        character_data.profession
+    ].name
+    race_text = game_config.config_race[character_data.race].name
+    # 如果birthplace是str的话，将其转换为int
+    if isinstance(character_data.relationship.birthplace, str):
+      character_data.relationship.birthplace = int(
+          character_data.relationship.birthplace
+      )
+    birthplace_text = game_config.config_birthplace[
+        character_data.relationship.birthplace
+    ].name
+    # 如果nation是str的话，将其转换为int
+    if isinstance(character_data.relationship.nation, str):
+      character_data.relationship.nation = int(
+          character_data.relationship.nation
+      )
+    nation_text = game_config.config_nation[
+        character_data.relationship.nation
+    ].name
+    type_data = _("素质")
+    type_line = draw.LittleTitleLineDraw(type_data, width, ":")
+    self.draw_list.append(type_line)
+    talent_list = game_config.config_talent_type_data
+    # print("进入for之前")
+    conut = 0
+    for talent_type in talent_list:
+      type_data = game_config.config_talent_type[talent_type]
+      # print("type_data.name :",type_data.name)
+      type_set = talent_list[talent_type]
+      if conut == 0:
+        message_profession = _(" 职业    ：[{profession_text}]\n").format(
+            profession_text=profession_text,
+        )
+        now_normal_draw = draw.NormalDraw()
+        now_normal_draw.text = message_profession
+        self.draw_list.append(now_normal_draw)
+        message_race = _(" 种族    ：[{race_text}]\n").format(
+            race_text=race_text,
+        )
+        now_normal_draw = draw.NormalDraw()
+        now_normal_draw.text = message_race
+        self.draw_list.append(now_normal_draw)
+        message_nation = _(" 势力    ：[{nation_text}]\n").format(
+            nation_text=nation_text,
+        )
+        now_normal_draw = draw.NormalDraw()
+        now_normal_draw.text = message_nation
+        self.draw_list.append(now_normal_draw)
+        message_birthplace = _(" 出身地  ：[{birthplace_text}]\n").format(
+            birthplace_text=birthplace_text,
+        )
+        now_normal_draw = draw.NormalDraw()
+        now_normal_draw.text = message_birthplace
+        self.draw_list.append(now_normal_draw)
+        conut = 1
+      race_type = type_data.name
+      if talent_type == 0:
+        message_race = f" {race_type}  ："
+      else:
+        message_race = f" {race_type}："
+      now_normal_draw = draw.NormalDraw()
+      now_normal_draw.text = message_race
+      self.draw_list.append(now_normal_draw)
+      talent_count = 0
+      for talent_id in type_set:
+        if character_data.talent[talent_id]:
+          talent_text = game_config.config_talent[talent_id].name
+          talent_info = game_config.config_talent[talent_id].info
+          now_text = f"[{talent_text}] "
+          now_normal_draw = draw.NormalDraw()
+          now_normal_draw.text = now_text
+          now_normal_draw.tooltip = talent_info
+          self.draw_list.append(now_normal_draw)
+          talent_count += 1
+          # 每行达到最大数量后换行
+          if talent_count % self.column == 0:
             self.draw_list.append(line_feed)
-        # 如果绘制列表最后一个是换行，则去掉
-        if self.draw_list[-1] == line_feed:
-            self.draw_list.pop()
+            empty_draw = draw.NormalDraw()
+            empty_draw.text = "           "
+            self.draw_list.append(empty_draw)
+      # 结束后换行
+      self.draw_list.append(line_feed)
+    # 如果绘制列表最后一个是换行，则去掉
+    if self.draw_list[-1] == line_feed:
+      self.draw_list.pop()
 
-    def draw(self):
-        """绘制面板"""
-        line_feed.draw()
-        for label in self.draw_list:
-            if isinstance(label, list):
-                for value in label:
-                    value.draw()
-                # line_feed.draw()
-            else:
-                label.draw()
+  def draw(self):
+    """绘制面板"""
+    line_feed.draw()
+    for label in self.draw_list:
+      if isinstance(label, list):
+        for value in label:
+          value.draw()
+        # line_feed.draw()
+      else:
+        label.draw()
 
 
 class CharacterDailyText:
-    """
-    显示角色日程面板对象
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 绘制宽度
-    column -- 每行状态最大个数
-    type_number -- 显示的状态类型
-    """
+  """
+  显示角色日程面板对象
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 绘制宽度
+  column -- 每行状态最大个数
+  type_number -- 显示的状态类型
+  """
 
-    def __init__(self, character_id: int, width: int, column: int, center_status: bool = True):
-        """初始化绘制对象"""
-        self.character_id = character_id
-        """ 要绘制的角色id """
-        self.width = width
-        """ 面板最大宽度 """
-        self.column = column
-        """ 每行状态最大个数 """
-        self.draw_list: List = []
-        """ 绘制的文本列表 """
-        self.return_list: List[str] = []
-        """ 当前面板监听的按钮列表 """
-        self.center_status: bool = center_status
-        """ 居中绘制状态文本 """
-        character_data = cache.character_data[character_id]
-        work_text = game_config.config_work_type[character_data.work.work_type].name
-        entertainment_text_list = []
-        for entertainment_type in character_data.entertainment.entertainment_type:
-            entertainment_name = game_config.config_entertainment[entertainment_type].name
-            entertainment_text_list.append(entertainment_name)
+  def __init__(
+      self,
+      character_id: int,
+      width: int,
+      column: int,
+      center_status: bool = True,
+  ):
+    """初始化绘制对象"""
+    self.character_id = character_id
+    """ 要绘制的角色id """
+    self.width = width
+    """ 面板最大宽度 """
+    self.column = column
+    """ 每行状态最大个数 """
+    self.draw_list: List = []
+    """ 绘制的文本列表 """
+    self.return_list: List[str] = []
+    """ 当前面板监听的按钮列表 """
+    self.center_status: bool = center_status
+    """ 居中绘制状态文本 """
+    character_data = cache.character_data[character_id]
+    work_text = game_config.config_work_type[character_data.work.work_type].name
+    entertainment_text_list = []
+    for entertainment_type in character_data.entertainment.entertainment_type:
+      entertainment_name = game_config.config_entertainment[
+          entertainment_type
+      ].name
+      entertainment_text_list.append(entertainment_name)
 
-        type_data = _("日程")
-        type_line = draw.LittleTitleLineDraw(type_data, width, ":")
-        self.draw_list.append(type_line)
+    type_data = _("日程")
+    type_line = draw.LittleTitleLineDraw(type_data, width, ":")
+    self.draw_list.append(type_line)
 
-        now_draw = panel.LeftDrawTextListPanel()
-        text_list = _("当前工作：{0}     ").format(work_text)
-        if game_time.judge_work_today(character_id) and character_data.work.work_type:
-            text_list += _(" 今日上午：工作    今日下午：工作    今日晚上：{0}").format(entertainment_text_list[2])
-        else:
-            text_list += _(" 今日上午：{0}    今日下午：{1}    今日晚上：{2}").format(entertainment_text_list[0], entertainment_text_list[1], entertainment_text_list[2])
-        live_room = character_data.dormitory.split(os.sep)[-1]
-        text_list += _("\n居住房间：{0}").format(live_room)
+    now_draw = panel.LeftDrawTextListPanel()
+    text_list = _("当前工作：{0}     ").format(work_text)
+    if (
+        game_time.judge_work_today(character_id)
+        and character_data.work.work_type
+    ):
+      text_list += _(
+          " 今日上午：工作    今日下午：工作    今日晚上：{0}"
+      ).format(entertainment_text_list[2])
+    else:
+      text_list += _(" 今日上午：{0}    今日下午：{1}    今日晚上：{2}").format(
+          entertainment_text_list[0],
+          entertainment_text_list[1],
+          entertainment_text_list[2],
+      )
+    live_room = character_data.dormitory.split(os.sep)[-1]
+    text_list += _("\n居住房间：{0}").format(live_room)
 
-        text_draw = draw.LeftDraw()
-        text_draw.text = text_list
-        text_draw.width = self.width
-        now_draw.draw_list.append(text_draw)
-        now_draw.width += len(text_draw.text)
-        self.draw_list.extend(now_draw.draw_list)
+    text_draw = draw.LeftDraw()
+    text_draw.text = text_list
+    text_draw.width = self.width
+    now_draw.draw_list.append(text_draw)
+    now_draw.width += len(text_draw.text)
+    self.draw_list.extend(now_draw.draw_list)
 
-    def draw(self):
-        """绘制面板"""
-        line_feed.draw()
-        for label in self.draw_list:
-            if isinstance(label, list):
-                for value in label:
-                    value.draw()
-                # line_feed.draw()
-            else:
-                label.draw()
+  def draw(self):
+    """绘制面板"""
+    line_feed.draw()
+    for label in self.draw_list:
+      if isinstance(label, list):
+        for value in label:
+          value.draw()
+        # line_feed.draw()
+      else:
+        label.draw()
 
 
 class CharacterVisitorText:
-    """
-    显示角色访客信息子面板对象
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 绘制宽度
-    column -- 每行状态最大个数
-    type_number -- 显示的状态类型
-    """
+  """
+  显示角色访客信息子面板对象
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 绘制宽度
+  column -- 每行状态最大个数
+  type_number -- 显示的状态类型
+  """
 
-    def __init__(self, character_id: int, width: int, column: int, center_status: bool = True):
-        """初始化绘制对象"""
-        self.character_id = character_id
-        """ 要绘制的角色id """
-        self.width = width
-        """ 面板最大宽度 """
-        self.column = column
-        """ 每行状态最大个数 """
-        self.draw_list: List = []
-        """ 绘制的文本列表 """
-        self.return_list: List[str] = []
-        """ 当前面板监听的按钮列表 """
-        self.center_status: bool = center_status
-        """ 居中绘制状态文本 """
-        character_data = cache.character_data[character_id]
+  def __init__(
+      self,
+      character_id: int,
+      width: int,
+      column: int,
+      center_status: bool = True,
+  ):
+    """初始化绘制对象"""
+    self.character_id = character_id
+    """ 要绘制的角色id """
+    self.width = width
+    """ 面板最大宽度 """
+    self.column = column
+    """ 每行状态最大个数 """
+    self.draw_list: List = []
+    """ 绘制的文本列表 """
+    self.return_list: List[str] = []
+    """ 当前面板监听的按钮列表 """
+    self.center_status: bool = center_status
+    """ 居中绘制状态文本 """
+    character_data = cache.character_data[character_id]
 
-        type_data = _("访客")
-        type_line = draw.LittleTitleLineDraw(type_data, width, ":")
-        self.draw_list.append(type_line)
+    type_data = _("访客")
+    type_line = draw.LittleTitleLineDraw(type_data, width, ":")
+    self.draw_list.append(type_line)
 
-        now_draw = panel.LeftDrawTextListPanel()
-        text_list = ""
-        # 计算访客留下概率
-        tem_1, tem_2, stay_posibility = instuct_judege.calculation_instuct_judege(0, character_id, _("访客留下"))
-        # 遍历所有留下态度
-        for attitude_id in game_config.config_visitor_stay_attitude:
-            attitude_data = game_config.config_visitor_stay_attitude[attitude_id]
-            if stay_posibility >= attitude_data.rate:
-                continue
-            # 获得留下态度对应的文本
-            stay_text = attitude_data.name
-            break
-        leav_time = game_time.get_date_until_day(cache.rhodes_island.visitor_info[character_id])
-        live_room = character_data.dormitory.split(os.sep)[-1]
-        text_list += _("留下意愿：{0}     ").format(stay_text)
-        text_list += _("离开时间：{0}     ").format(leav_time)
-        text_list += _("居住房间：{0}").format(live_room)
+    now_draw = panel.LeftDrawTextListPanel()
+    text_list = ""
+    # 计算访客留下概率
+    tem_1, tem_2, stay_posibility = instuct_judege.calculation_instuct_judege(
+        0, character_id, _("访客留下")
+    )
+    # 遍历所有留下态度
+    for attitude_id in game_config.config_visitor_stay_attitude:
+      attitude_data = game_config.config_visitor_stay_attitude[attitude_id]
+      if stay_posibility >= attitude_data.rate:
+        continue
+      # 获得留下态度对应的文本
+      stay_text = attitude_data.name
+      break
+    leav_time = game_time.get_date_until_day(
+        cache.rhodes_island.visitor_info[character_id]
+    )
+    live_room = character_data.dormitory.split(os.sep)[-1]
+    text_list += _("留下意愿：{0}     ").format(stay_text)
+    text_list += _("离开时间：{0}     ").format(leav_time)
+    text_list += _("居住房间：{0}").format(live_room)
 
-        text_draw = draw.LeftDraw()
-        text_draw.text = text_list
-        text_draw.width = self.width
-        now_draw.draw_list.append(text_draw)
-        now_draw.width += len(text_draw.text)
-        self.draw_list.extend(now_draw.draw_list)
+    text_draw = draw.LeftDraw()
+    text_draw.text = text_list
+    text_draw.width = self.width
+    now_draw.draw_list.append(text_draw)
+    now_draw.width += len(text_draw.text)
+    self.draw_list.extend(now_draw.draw_list)
 
-    def draw(self):
-        """绘制面板"""
-        line_feed.draw()
-        for label in self.draw_list:
-            if isinstance(label, list):
-                for value in label:
-                    value.draw()
-                # line_feed.draw()
-            else:
-                label.draw()
+  def draw(self):
+    """绘制面板"""
+    line_feed.draw()
+    for label in self.draw_list:
+      if isinstance(label, list):
+        for value in label:
+          value.draw()
+        # line_feed.draw()
+      else:
+        label.draw()
 
 
 class CharacterJuelText:
-    """
-    显示角色宝珠面板对象
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 绘制宽度
-    column -- 每行状态最大个数
-    type_number -- 显示的状态类型
-    """
+  """
+  显示角色宝珠面板对象
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 绘制宽度
+  column -- 每行状态最大个数
+  type_number -- 显示的状态类型
+  """
 
-    def __init__(self, character_id: int, width: int, column: int, center_status: bool = True):
-        """初始化绘制对象"""
-        self.character_id = character_id
-        """ 要绘制的角色id """
-        self.width = width
-        """ 面板最大宽度 """
-        self.column = column
-        """ 每行状态最大个数 """
-        self.draw_list: List = []
-        """ 绘制的文本列表 """
-        self.return_list: List[str] = []
-        """ 当前面板监听的按钮列表 """
-        self.center_status: bool = center_status
-        """ 居中绘制状态文本 """
-        character_data = cache.character_data[character_id]
-        type_data = _("宝珠")
-        type_line = draw.LittleTitleLineDraw(type_data, width, ":")
-        self.draw_list.append(type_line)
-        juel_text_list = []
-        for juel_id in game_config.config_juel:
-            if character_data.sex == 0:
-                if juel_id in {2, 4, 7}:
-                    continue
-            elif character_data.sex == 1:
-                if juel_id == {3}:
-                    continue
-            juel_text = game_config.config_juel[juel_id].name
-            juel_value = 0
-            if juel_id in character_data.juel:
-                juel_value = character_data.juel[juel_id]
-            now_text = f" {juel_text}:{juel_value}"
-            juel_text_list.append(now_text)
-        if self.center_status:
-            now_draw = panel.CenterDrawTextListPanel()
-        else:
-            now_draw = panel.LeftDrawTextListPanel()
-        now_draw.set(juel_text_list, self.width, self.column)
-        self.draw_list.extend(now_draw.draw_list)
+  def __init__(
+      self,
+      character_id: int,
+      width: int,
+      column: int,
+      center_status: bool = True,
+  ):
+    """初始化绘制对象"""
+    self.character_id = character_id
+    """ 要绘制的角色id """
+    self.width = width
+    """ 面板最大宽度 """
+    self.column = column
+    """ 每行状态最大个数 """
+    self.draw_list: List = []
+    """ 绘制的文本列表 """
+    self.return_list: List[str] = []
+    """ 当前面板监听的按钮列表 """
+    self.center_status: bool = center_status
+    """ 居中绘制状态文本 """
+    character_data = cache.character_data[character_id]
+    type_data = _("宝珠")
+    type_line = draw.LittleTitleLineDraw(type_data, width, ":")
+    self.draw_list.append(type_line)
+    juel_text_list = []
+    for juel_id in game_config.config_juel:
+      if character_data.sex == 0:
+        if juel_id in {2, 4, 7}:
+          continue
+      elif character_data.sex == 1:
+        if juel_id == {3}:
+          continue
+      juel_text = game_config.config_juel[juel_id].name
+      juel_value = 0
+      if juel_id in character_data.juel:
+        juel_value = character_data.juel[juel_id]
+      now_text = f" {juel_text}:{juel_value}"
+      juel_text_list.append(now_text)
+    if self.center_status:
+      now_draw = panel.CenterDrawTextListPanel()
+    else:
+      now_draw = panel.LeftDrawTextListPanel()
+    now_draw.set(juel_text_list, self.width, self.column)
+    self.draw_list.extend(now_draw.draw_list)
 
-    def draw(self):
-        """绘制面板"""
+  def draw(self):
+    """绘制面板"""
+    line_feed.draw()
+    for label in self.draw_list:
+      if isinstance(label, list):
+        for value in label:
+          value.draw()
         line_feed.draw()
-        for label in self.draw_list:
-            if isinstance(label, list):
-                for value in label:
-                    value.draw()
-                line_feed.draw()
-            else:
-                label.draw()
+      else:
+        label.draw()
 
 
 class CharacterTokenText:
-    """
-    显示角色信物面板对象
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 绘制宽度
-    column -- 每行状态最大个数
-    type_number -- 显示的状态类型
-    """
+  """
+  显示角色信物面板对象
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 绘制宽度
+  column -- 每行状态最大个数
+  type_number -- 显示的状态类型
+  """
 
-    def __init__(self, character_id: int, width: int, column: int, center_status: bool = True):
-        """初始化绘制对象"""
-        self.character_id = character_id
-        """ 要绘制的角色id """
-        self.width = width
-        """ 面板最大宽度 """
-        self.column = column
-        """ 每行状态最大个数 """
-        self.draw_list: List = []
-        """ 绘制的文本列表 """
-        self.return_list: List[str] = []
-        """ 当前面板监听的按钮列表 """
-        self.center_status: bool = center_status
-        """ 居中绘制状态文本 """
-        character_data = cache.character_data[character_id]
-        type_data = _("信物")
-        type_line = draw.LittleTitleLineDraw(type_data, width, ":")
-        self.draw_list.append(type_line)
-        token_text_list = []
-        for token_id in range(len(character_data.pl_collection.token_list)):
-            if token_id == 0:
-                continue
-            if character_data.pl_collection.token_list[token_id] == 1:
-                target_character_data = cache.character_data[token_id]
-                character_name = target_character_data.name
-                token_text = target_character_data.token_text
-                now_text = _(" 已拥有{0}的信物:{1}").format(character_name, token_text)
-                token_text_list.append(now_text)
-        if self.center_status:
-            now_draw = panel.CenterDrawTextListPanel()
-        else:
-            now_draw = panel.LeftDrawTextListPanel()
-        now_draw.set(token_text_list, self.width, self.column)
-        self.draw_list.extend(now_draw.draw_list)
+  def __init__(
+      self,
+      character_id: int,
+      width: int,
+      column: int,
+      center_status: bool = True,
+  ):
+    """初始化绘制对象"""
+    self.character_id = character_id
+    """ 要绘制的角色id """
+    self.width = width
+    """ 面板最大宽度 """
+    self.column = column
+    """ 每行状态最大个数 """
+    self.draw_list: List = []
+    """ 绘制的文本列表 """
+    self.return_list: List[str] = []
+    """ 当前面板监听的按钮列表 """
+    self.center_status: bool = center_status
+    """ 居中绘制状态文本 """
+    character_data = cache.character_data[character_id]
+    type_data = _("信物")
+    type_line = draw.LittleTitleLineDraw(type_data, width, ":")
+    self.draw_list.append(type_line)
+    token_text_list = []
+    for token_id in range(len(character_data.pl_collection.token_list)):
+      if token_id == 0:
+        continue
+      if character_data.pl_collection.token_list[token_id] == 1:
+        target_character_data = cache.character_data[token_id]
+        character_name = target_character_data.name
+        token_text = target_character_data.token_text
+        now_text = _(" 已拥有{0}的信物:{1}").format(character_name, token_text)
+        token_text_list.append(now_text)
+    if self.center_status:
+      now_draw = panel.CenterDrawTextListPanel()
+    else:
+      now_draw = panel.LeftDrawTextListPanel()
+    now_draw.set(token_text_list, self.width, self.column)
+    self.draw_list.extend(now_draw.draw_list)
 
-    def draw(self):
-        """绘制面板"""
+  def draw(self):
+    """绘制面板"""
+    line_feed.draw()
+    for label in self.draw_list:
+      if isinstance(label, list):
+        for value in label:
+          value.draw()
         line_feed.draw()
-        for label in self.draw_list:
-            if isinstance(label, list):
-                for value in label:
-                    value.draw()
-                line_feed.draw()
-            else:
-                label.draw()
+      else:
+        label.draw()
 
 
 class PlayerAbilityText:
-    """
-    显示玩家能力面板对象
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 绘制宽度
-    column -- 每行状态最大个数
-    type_number -- 显示的状态类型
-    """
+  """
+  显示玩家能力面板对象
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 绘制宽度
+  column -- 每行状态最大个数
+  type_number -- 显示的状态类型
+  """
 
-    def __init__(self, character_id: int, width: int, column: int, center_status: bool = True):
-        """初始化绘制对象"""
-        self.character_id = character_id
-        """ 要绘制的角色id """
-        self.width = width
-        """ 面板最大宽度 """
-        self.column = column
-        """ 每行状态最大个数 """
-        self.draw_list: List = []
-        """ 绘制的文本列表 """
-        self.return_list: List[str] = []
-        """ 当前面板监听的按钮列表 """
-        self.center_status: bool = center_status
-        """ 居中绘制状态文本 """
-        character_data = cache.character_data[character_id]
-        type_data = _("玩家能力")
-        type_line = draw.LittleTitleLineDraw(type_data, width, ":")
-        self.draw_list.append(type_line)
-        ability_text_list = []
+  def __init__(
+      self,
+      character_id: int,
+      width: int,
+      column: int,
+      center_status: bool = True,
+  ):
+    """初始化绘制对象"""
+    self.character_id = character_id
+    """ 要绘制的角色id """
+    self.width = width
+    """ 面板最大宽度 """
+    self.column = column
+    """ 每行状态最大个数 """
+    self.draw_list: List = []
+    """ 绘制的文本列表 """
+    self.return_list: List[str] = []
+    """ 当前面板监听的按钮列表 """
+    self.center_status: bool = center_status
+    """ 居中绘制状态文本 """
+    character_data = cache.character_data[character_id]
+    type_data = _("玩家能力")
+    type_line = draw.LittleTitleLineDraw(type_data, width, ":")
+    self.draw_list.append(type_line)
+    ability_text_list = []
 
-        # 定义能力与素质的对应字典
-        abilities = {
-            _("视觉系"): {307, 308, 309},
-            _("触觉系"): {310, 311, 312},
-            _("激素系"): {304, 305, 306},
-            _("催眠系"): {331, 332, 333, 334},
-            _("时间系"): {316, 317, 318}
-        }
+    # 定义能力与素质的对应字典
+    abilities = {
+        _("视觉系"): {307, 308, 309},
+        _("触觉系"): {310, 311, 312},
+        _("激素系"): {304, 305, 306},
+        _("催眠系"): {331, 332, 333, 334},
+        _("时间系"): {316, 317, 318},
+    }
 
-        # 遍历能力字典，获取对应的文本
-        for ability_name, ids in abilities.items():
-            now_text = _("\n 【{}】\n".format(ability_name))
-            for i in ids:
-                if character_data.talent[i]:
-                    talent_name = game_config.config_talent[i].name
-                    talent_info = game_config.config_talent[i].info
-                    now_text += f"  {talent_name}：{talent_info}\n"
-            ability_text_list.append(now_text)
+    # 遍历能力字典，获取对应的文本
+    for ability_name, ids in abilities.items():
+      now_text = _("\n 【{}】\n".format(ability_name))
+      for i in ids:
+        if character_data.talent[i]:
+          talent_name = game_config.config_talent[i].name
+          talent_info = game_config.config_talent[i].info
+          now_text += f"  {talent_name}：{talent_info}\n"
+      ability_text_list.append(now_text)
 
-        if self.center_status:
-            now_draw = panel.CenterDrawTextListPanel()
-        else:
-            now_draw = panel.LeftDrawTextListPanel()
-        now_draw.set(ability_text_list, self.width, self.column)
-        self.draw_list.extend(now_draw.draw_list)
+    if self.center_status:
+      now_draw = panel.CenterDrawTextListPanel()
+    else:
+      now_draw = panel.LeftDrawTextListPanel()
+    now_draw.set(ability_text_list, self.width, self.column)
+    self.draw_list.extend(now_draw.draw_list)
 
-        # 绘制装备信物的信息
-        info_text = _("装备信物")
-        now_draw = draw.LittleTitleLineDraw(info_text, width, ":")
-        self.draw_list.append(now_draw)
-        # 绘制提示信息
-        now_text = "\n"
-        now_text += _("○装备信物时，信物干员正面数值结算+10%，负面数值结算-10%，其他干员为+1%和-1%（可叠加，上限同装备信物上限）\n")
-        # 可装备数量
-        pl_character_data = cache.character_data[0]
-        # 此处修正一下旧版本导致的信物数据
-        if pl_character_data.pl_collection.eqip_token == [0, [0]]:
-            pl_character_data.pl_collection.eqip_token = [1, []]
-        equip_number = pl_character_data.pl_collection.eqip_token[0]
-        now_text += _("  当前最大可装备数量：{0}\n\n").format(equip_number)
-        now_text += _("  当前装备的信物：\n")
-        # 当前正在装备的信物展示
-        for chara_id in pl_character_data.pl_collection.eqip_token[1]:
-            if chara_id == 0:
-                continue
-            now_text += f"  {cache.character_data[chara_id].name}："
-            token_text = cache.character_data[chara_id].token_text
-            now_text += f"{token_text}\n"
-        now_draw = draw.LeftDraw()
-        now_draw.text = now_text
-        now_draw.width = self.width
-        self.draw_list.append(now_draw)
-        self.draw_list.append(line_feed)
-        # 更改装备信物的按钮
-        button_text = _("[更改装备信物]")
-        now_draw = draw.CenterButton(
-            button_text, button_text, self.width / 4, cmd_func=self.change_token
-        )
-        self.return_list.append(now_draw.return_text)
-        self.draw_list.append(now_draw)
-        self.draw_list.append(line_feed)
+    # 绘制装备信物的信息
+    info_text = _("装备信物")
+    now_draw = draw.LittleTitleLineDraw(info_text, width, ":")
+    self.draw_list.append(now_draw)
+    # 绘制提示信息
+    now_text = "\n"
+    now_text += _(
+        "○装备信物时，信物干员正面数值结算+10%，负面数值结算-10%，其他干员为+1%和-1%（可叠加，上限同装备信物上限）\n"
+    )
+    # 可装备数量
+    pl_character_data = cache.character_data[0]
+    # 此处修正一下旧版本导致的信物数据
+    if pl_character_data.pl_collection.eqip_token == [0, [0]]:
+      pl_character_data.pl_collection.eqip_token = [1, []]
+    equip_number = pl_character_data.pl_collection.eqip_token[0]
+    now_text += _("  当前最大可装备数量：{0}\n\n").format(equip_number)
+    now_text += _("  当前装备的信物：\n")
+    # 当前正在装备的信物展示
+    for chara_id in pl_character_data.pl_collection.eqip_token[1]:
+      if chara_id == 0:
+        continue
+      now_text += f"  {cache.character_data[chara_id].name}："
+      token_text = cache.character_data[chara_id].token_text
+      now_text += f"{token_text}\n"
+    now_draw = draw.LeftDraw()
+    now_draw.text = now_text
+    now_draw.width = self.width
+    self.draw_list.append(now_draw)
+    self.draw_list.append(line_feed)
+    # 更改装备信物的按钮
+    button_text = _("[更改装备信物]")
+    now_draw = draw.CenterButton(
+        button_text, button_text, self.width / 4, cmd_func=self.change_token
+    )
+    self.return_list.append(now_draw.return_text)
+    self.draw_list.append(now_draw)
+    self.draw_list.append(line_feed)
 
-    def draw(self):
-        """绘制面板"""
+  def draw(self):
+    """绘制面板"""
+    line_feed.draw()
+    for label in self.draw_list:
+      if isinstance(label, list):
+        for value in label:
+          value.draw()
         line_feed.draw()
-        for label in self.draw_list:
-            if isinstance(label, list):
-                for value in label:
-                    value.draw()
-                line_feed.draw()
-            else:
-                label.draw()
+      else:
+        label.draw()
 
-    def change_token(self):
-        """更改装备信物"""
-        pl_character_data = cache.character_data[0]
-        equip_number = pl_character_data.pl_collection.eqip_token[0]
+  def change_token(self):
+    """更改装备信物"""
+    pl_character_data = cache.character_data[0]
+    equip_number = pl_character_data.pl_collection.eqip_token[0]
 
-        while 1:
-            # 初始化变量
-            now_equiped = pl_character_data.pl_collection.eqip_token[1]
-            return_list = []
-            # 横线
-            line = draw.LineDraw("-", self.width)
-            line.draw()
-            # 绘制提示信息
-            info_text = _("\n更改装备信物\n")
-            info_text += _("当前已装备数量/最大可装备数量：{0}/{1}\n").format(len(now_equiped), equip_number)
-            info_text += _("请选择要装备的信物：\n")
-            info_draw = draw.LeftDraw()
-            info_draw.text = info_text
-            info_draw.width = self.width
-            info_draw.draw()
-            line_feed.draw()
-            # 绘制可选择的装备信物
-            count = 0
-            for character_id in cache.npc_id_got:
-                if character_id == 0:
-                    continue
-                # 跳过未拥有信物的
-                if pl_character_data.pl_collection.token_list[character_id] == 0:
-                    continue
-                draw_style = "standard"
-                # 如果已经选择，则绘制为金色
-                if character_id in now_equiped:
-                    draw_style = "gold_enrod"
-                character_data: game_type.Character = cache.character_data[character_id]
-                character_name = character_data.name
-                character_adv = character_data.adv
-                character_token = character_data.token_text
-                draw_text = f"[{str(character_adv).rjust(4,'0')}]{character_name}：{character_token}"
-                # 如果可以选择，则正常绘制按钮
-                if len(now_equiped) < equip_number or character_id in now_equiped:
-                    button_draw = draw.LeftButton(
-                        draw_text,
-                        f"\n{character_id}",
-                        self.width,
-                        normal_style = draw_style,
-                        cmd_func = self.select_this_token,
-                        args=character_id,
-                    )
-                    button_draw.draw()
-                    return_list.append(button_draw.return_text)
-                # 如果当前人数已经满足，则不再绘制按钮，只绘制文本
-                else:
-                    info_draw = draw.LeftDraw()
-                    info_draw.text = draw_text
-                    info_draw.width = self.width
-                    info_draw.style = "deep_gray"
-                    info_draw.draw()
-                count += 1
-                line_feed.draw()
-            # 如果没有可以选择的，则绘制提示信息
-            if count == 0:
-                info_text = _("  当前没有可以选择的信物\n")
-                info_draw = draw.LeftDraw()
-                info_draw.text = info_text
-                info_draw.width = self.width
-                info_draw.draw()
-
-            line_feed.draw()
-            line_feed.draw()
-            back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
-            back_draw.draw()
-            return_list.append(back_draw.return_text)
-            yrn = flow_handle.askfor_all(return_list)
-            if yrn == back_draw.return_text:
-                break
-
-    def select_this_token(self, character_id):
-        """选择信物"""
-        pl_character_data = cache.character_data[0]
-        if character_id in pl_character_data.pl_collection.eqip_token[1]:
-            pl_character_data.pl_collection.eqip_token[1].remove(character_id)
+    while 1:
+      # 初始化变量
+      now_equiped = pl_character_data.pl_collection.eqip_token[1]
+      return_list = []
+      # 横线
+      line = draw.LineDraw("-", self.width)
+      line.draw()
+      # 绘制提示信息
+      info_text = _("\n更改装备信物\n")
+      info_text += _("当前已装备数量/最大可装备数量：{0}/{1}\n").format(
+          len(now_equiped), equip_number
+      )
+      info_text += _("请选择要装备的信物：\n")
+      info_draw = draw.LeftDraw()
+      info_draw.text = info_text
+      info_draw.width = self.width
+      info_draw.draw()
+      line_feed.draw()
+      # 绘制可选择的装备信物
+      count = 0
+      for character_id in cache.npc_id_got:
+        if character_id == 0:
+          continue
+        # 跳过未拥有信物的
+        if pl_character_data.pl_collection.token_list[character_id] == 0:
+          continue
+        draw_style = "standard"
+        # 如果已经选择，则绘制为金色
+        if character_id in now_equiped:
+          draw_style = "gold_enrod"
+        character_data: game_type.Character = cache.character_data[character_id]
+        character_name = character_data.name
+        character_adv = character_data.adv
+        character_token = character_data.token_text
+        draw_text = f"[{str(character_adv).rjust(4,'0')}]{character_name}：{character_token}"
+        # 如果可以选择，则正常绘制按钮
+        if len(now_equiped) < equip_number or character_id in now_equiped:
+          button_draw = draw.LeftButton(
+              draw_text,
+              f"\n{character_id}",
+              self.width,
+              normal_style=draw_style,
+              cmd_func=self.select_this_token,
+              args=character_id,
+          )
+          button_draw.draw()
+          return_list.append(button_draw.return_text)
+        # 如果当前人数已经满足，则不再绘制按钮，只绘制文本
         else:
-            pl_character_data.pl_collection.eqip_token[1].append(character_id)
+          info_draw = draw.LeftDraw()
+          info_draw.text = draw_text
+          info_draw.width = self.width
+          info_draw.style = "deep_gray"
+          info_draw.draw()
+        count += 1
+        line_feed.draw()
+      # 如果没有可以选择的，则绘制提示信息
+      if count == 0:
+        info_text = _("  当前没有可以选择的信物\n")
+        info_draw = draw.LeftDraw()
+        info_draw.text = info_text
+        info_draw.width = self.width
+        info_draw.draw()
+
+      line_feed.draw()
+      line_feed.draw()
+      back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
+      back_draw.draw()
+      return_list.append(back_draw.return_text)
+      yrn = flow_handle.askfor_all(return_list)
+      if yrn == back_draw.return_text:
+        break
+
+  def select_this_token(self, character_id):
+    """选择信物"""
+    pl_character_data = cache.character_data[0]
+    if character_id in pl_character_data.pl_collection.eqip_token[1]:
+      pl_character_data.pl_collection.eqip_token[1].remove(character_id)
+    else:
+      pl_character_data.pl_collection.eqip_token[1].append(character_id)
+
 
 # class SeeCharacterSocialContact:
 #     """
@@ -1495,326 +1631,368 @@ class PlayerAbilityText:
 
 
 class SeeCharacterInfoByNameDraw:
-    """
-    点击后可查看角色属性的角色名字按钮对象
-    Keyword arguments:
-    text -- 角色id
-    width -- 最大宽度
-    is_button -- 绘制按钮
-    num_button -- 绘制数字按钮
-    button_id -- 数字按钮的id
-    """
+  """
+  点击后可查看角色属性的角色名字按钮对象
+  Keyword arguments:
+  text -- 角色id
+  width -- 最大宽度
+  is_button -- 绘制按钮
+  num_button -- 绘制数字按钮
+  button_id -- 数字按钮的id
+  """
 
-    def __init__(self, text: str, width: int, is_button: bool, num_button: bool, button_id: int):
-        """初始化绘制对象"""
-        self.character_id: int = int(text)
-        """ 角色id """
-        self.draw_text: str = ""
-        """ 角色名绘制文本 """
-        self.width: int = width
-        """ 最大宽度 """
-        self.is_button: bool = is_button
-        """ 绘制按钮 """
-        self.num_button: bool = num_button
-        """ 绘制数字按钮 """
-        self.button_id: int = button_id
-        """ 数字按钮的id """
-        self.button_return: str = str(button_id)
-        """ 按钮返回值 """
-        character_data = cache.character_data[self.character_id]
-        character_name = character_data.name
-        name_draw = draw.NormalDraw()
-        if is_button:
-            if num_button:
-                index_text = text_handle.id_index(button_id)
-                button_text = f"{index_text} {character_name}"
-                name_draw = draw.CenterButton(
-                    button_text, self.button_return, self.width, cmd_func=self.see_character
-                )
-            else:
-                button_text = f"[{character_name}]"
-                name_draw = draw.CenterButton(
-                    button_text, character_name, self.width, cmd_func=self.see_character
-                )
-                self.button_return = character_name
-            self.draw_text = button_text
-        else:
-            character_name = f"[{character_name}]"
-            character_name = text_handle.align(character_name, "center", 0, 1, self.width)
-            name_draw.text = character_name
-            self.draw_text = character_name
-        name_draw.width = self.width
-        self.now_draw = name_draw
-        """ 绘制的对象 """
+  def __init__(
+      self,
+      text: str,
+      width: int,
+      is_button: bool,
+      num_button: bool,
+      button_id: int,
+  ):
+    """初始化绘制对象"""
+    self.character_id: int = int(text)
+    """ 角色id """
+    self.draw_text: str = ""
+    """ 角色名绘制文本 """
+    self.width: int = width
+    """ 最大宽度 """
+    self.is_button: bool = is_button
+    """ 绘制按钮 """
+    self.num_button: bool = num_button
+    """ 绘制数字按钮 """
+    self.button_id: int = button_id
+    """ 数字按钮的id """
+    self.button_return: str = str(button_id)
+    """ 按钮返回值 """
+    character_data = cache.character_data[self.character_id]
+    character_name = character_data.name
+    name_draw = draw.NormalDraw()
+    if is_button:
+      if num_button:
+        index_text = text_handle.id_index(button_id)
+        button_text = f"{index_text} {character_name}"
+        name_draw = draw.CenterButton(
+            button_text,
+            self.button_return,
+            self.width,
+            cmd_func=self.see_character,
+        )
+      else:
+        button_text = f"[{character_name}]"
+        name_draw = draw.CenterButton(
+            button_text, character_name, self.width, cmd_func=self.see_character
+        )
+        self.button_return = character_name
+      self.draw_text = button_text
+    else:
+      character_name = f"[{character_name}]"
+      character_name = text_handle.align(
+          character_name, "center", 0, 1, self.width
+      )
+      name_draw.text = character_name
+      self.draw_text = character_name
+    name_draw.width = self.width
+    self.now_draw = name_draw
+    """ 绘制的对象 """
 
-    def draw(self):
-        """绘制对象"""
-        self.now_draw.draw()
+  def draw(self):
+    """绘制对象"""
+    self.now_draw.draw()
 
-    def see_character(self):
-        """绘制角色信息"""
-        py_cmd.clr_cmd()
-        now_draw = SeeCharacterInfoOnSocialPanel(self.character_id, window_width)
-        now_draw.draw()
+  def see_character(self):
+    """绘制角色信息"""
+    py_cmd.clr_cmd()
+    now_draw = SeeCharacterInfoOnSocialPanel(self.character_id, window_width)
+    now_draw.draw()
 
 
 class SeeCharacterInfoByNameDrawInScene:
-    """场景中点击后切换目标角色的角色名字按钮对象"""
+  """场景中点击后切换目标角色的角色名字按钮对象"""
 
-    def __init__(self, text: str, width: int, is_button: bool, num_button: bool, button_id: int):
-        """初始化绘制对象"""
-        self.character_id: int = int(text)
-        """ 角色id """
-        self.draw_text: str = ""
-        """ 角色名绘制文本 """
-        self.width: int = width
-        """ 最大宽度 """
-        self.is_button: bool = is_button
-        """ 绘制按钮 """
-        self.num_button: bool = num_button
-        """ 绘制数字按钮 """
-        self.button_id: int = button_id
-        """ 数字按钮的id """
-        self.button_return: str = str(button_id)
-        """ 按钮返回值 """
-        character_data: game_type.Character = cache.character_data[self.character_id]
-        sex_text = game_config.config_sex_tem[character_data.sex].name
-        character_name = character_data.name
-        # character_name = character_data.name + f"({sex_text})"
-        name_draw = draw.NormalDraw()
-        if is_button:
-            if num_button:
-                index_text = text_handle.id_index(button_id)
-                button_text = f"{index_text} {character_name}"
-                name_draw = draw.CenterButton(
-                    button_text, self.button_return, self.width, cmd_func=self.see_character
-                )
-            else:
-                button_text = f"[{character_name}]"
-                name_draw = draw.CenterButton(
-                    button_text, character_name, self.width, cmd_func=self.see_character
-                )
-                self.button_return = character_name
-            self.draw_text = button_text
-        else:
-            character_name = f"[{character_name}]"
-            character_name = text_handle.align(character_name, "center", 0, 1, self.width)
-            name_draw.text = character_name
-            self.draw_text = character_name
-        name_draw.width = self.width
-        self.now_draw = name_draw
-        """ 绘制的对象 """
+  def __init__(
+      self,
+      text: str,
+      width: int,
+      is_button: bool,
+      num_button: bool,
+      button_id: int,
+  ):
+    """初始化绘制对象"""
+    self.character_id: int = int(text)
+    """ 角色id """
+    self.draw_text: str = ""
+    """ 角色名绘制文本 """
+    self.width: int = width
+    """ 最大宽度 """
+    self.is_button: bool = is_button
+    """ 绘制按钮 """
+    self.num_button: bool = num_button
+    """ 绘制数字按钮 """
+    self.button_id: int = button_id
+    """ 数字按钮的id """
+    self.button_return: str = str(button_id)
+    """ 按钮返回值 """
+    character_data: game_type.Character = cache.character_data[
+        self.character_id
+    ]
+    sex_text = game_config.config_sex_tem[character_data.sex].name
+    character_name = character_data.name
+    # character_name = character_data.name + f"({sex_text})"
+    name_draw = draw.NormalDraw()
+    if is_button:
+      if num_button:
+        index_text = text_handle.id_index(button_id)
+        button_text = f"{index_text} {character_name}"
+        name_draw = draw.CenterButton(
+            button_text,
+            self.button_return,
+            self.width,
+            cmd_func=self.see_character,
+        )
+      else:
+        button_text = f"[{character_name}]"
+        name_draw = draw.CenterButton(
+            button_text, character_name, self.width, cmd_func=self.see_character
+        )
+        self.button_return = character_name
+      self.draw_text = button_text
+    else:
+      character_name = f"[{character_name}]"
+      character_name = text_handle.align(
+          character_name, "center", 0, 1, self.width
+      )
+      name_draw.text = character_name
+      self.draw_text = character_name
+    name_draw.width = self.width
+    self.now_draw = name_draw
+    """ 绘制的对象 """
 
-    def draw(self):
-        """绘制对象"""
-        if isinstance(self.now_draw, draw.NormalDraw):
-            self.now_draw.style = "onbutton"
-        self.now_draw.draw()
+  def draw(self):
+    """绘制对象"""
+    if isinstance(self.now_draw, draw.NormalDraw):
+      self.now_draw.style = "onbutton"
+    self.now_draw.draw()
 
-    def see_character(self):
-        """切换目标角色"""
-        cache.character_data[0].target_character_id = self.character_id
-        py_cmd.clr_cmd()
+  def see_character(self):
+    """切换目标角色"""
+    cache.character_data[0].target_character_id = self.character_id
+    py_cmd.clr_cmd()
 
 
 class SeeCharacterInfoByimageDrawInScene:
-    """场景中点击后切换目标角色的角色立绘按钮对象"""
+  """场景中点击后切换目标角色的角色立绘按钮对象"""
 
-    def __init__(self, text: str, width: int, is_button: bool, num_button: bool, button_id: int):
-        """初始化绘制对象"""
-        self.character_id: int = int(text)
-        """ 角色id """
-        self.draw_text: str = ""
-        """ 角色名绘制文本 """
-        self.width: int = width
-        """ 最大宽度 """
-        self.is_button: bool = is_button
-        """ 绘制按钮 """
-        self.num_button: bool = num_button
-        """ 绘制数字按钮 """
-        self.button_id: int = button_id
-        """ 数字按钮的id """
-        self.button_return: str = str(button_id)
-        """ 按钮返回值 """
-        character_data: game_type.Character = cache.character_data[self.character_id]
-        # sex_text = game_config.config_sex_tem[character_data.sex].name
-        character_name = character_data.name
-        # character_name = character_data.name + f"({sex_text})"
-        button_text = f"{character_name}"
-        name_draw = draw.ImageButton(
-            button_text, self.button_return, self.width, cmd_func=self.see_character
-        )
-        character_name = f"[{character_name}]"
-        character_name = text_handle.align(character_name, "center", 0, 1, self.width)
-        name_draw.text = character_name
-        self.draw_text = character_name
-        name_draw.width = self.width
-        self.now_draw = name_draw
-        """ 绘制的对象 """
+  def __init__(
+      self,
+      text: str,
+      width: int,
+      is_button: bool,
+      num_button: bool,
+      button_id: int,
+  ):
+    """初始化绘制对象"""
+    self.character_id: int = int(text)
+    """ 角色id """
+    self.draw_text: str = ""
+    """ 角色名绘制文本 """
+    self.width: int = width
+    """ 最大宽度 """
+    self.is_button: bool = is_button
+    """ 绘制按钮 """
+    self.num_button: bool = num_button
+    """ 绘制数字按钮 """
+    self.button_id: int = button_id
+    """ 数字按钮的id """
+    self.button_return: str = str(button_id)
+    """ 按钮返回值 """
+    character_data: game_type.Character = cache.character_data[
+        self.character_id
+    ]
+    # sex_text = game_config.config_sex_tem[character_data.sex].name
+    character_name = character_data.name
+    # character_name = character_data.name + f"({sex_text})"
+    button_text = f"{character_name}"
+    name_draw = draw.ImageButton(
+        button_text, self.button_return, self.width, cmd_func=self.see_character
+    )
+    character_name = f"[{character_name}]"
+    character_name = text_handle.align(
+        character_name, "center", 0, 1, self.width
+    )
+    name_draw.text = character_name
+    self.draw_text = character_name
+    name_draw.width = self.width
+    self.now_draw = name_draw
+    """ 绘制的对象 """
 
-    def draw(self):
-        """绘制对象"""
-        if isinstance(self.now_draw, draw.NormalDraw):
-            self.now_draw.style = "onbutton"
-        self.now_draw.draw()
+  def draw(self):
+    """绘制对象"""
+    if isinstance(self.now_draw, draw.NormalDraw):
+      self.now_draw.style = "onbutton"
+    self.now_draw.draw()
 
-    def see_character(self):
-        """切换目标角色"""
-        cache.character_data[0].target_character_id = self.character_id
-        py_cmd.clr_cmd()
+  def see_character(self):
+    """切换目标角色"""
+    cache.character_data[0].target_character_id = self.character_id
+    py_cmd.clr_cmd()
 
 
 class SeeCharacterInfoOnSocialPanel:
-    """
-    在社交面板里查看角色属性
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 最大宽度
-    """
+  """
+  在社交面板里查看角色属性
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 最大宽度
+  """
 
-    def __init__(self, character_id: int, width: int):
-        """初始化绘制对象"""
-        self.character_id: int = character_id
-        """ 要绘制的角色id """
-        self.width: int = width
-        """ 面板最大宽度 """
-        self.return_list: List[str] = []
-        """ 当前面板监听的按钮列表 """
-        self.now_draw: SeeCharacterInfoPanel = SeeCharacterInfoHandle(
-            character_id, width, list(cache.character_data.keys())
-        )
-        """ 角色属性面板 """
+  def __init__(self, character_id: int, width: int):
+    """初始化绘制对象"""
+    self.character_id: int = character_id
+    """ 要绘制的角色id """
+    self.width: int = width
+    """ 面板最大宽度 """
+    self.return_list: List[str] = []
+    """ 当前面板监听的按钮列表 """
+    self.now_draw: SeeCharacterInfoPanel = SeeCharacterInfoHandle(
+        character_id, width, list(cache.character_data.keys())
+    )
+    """ 角色属性面板 """
 
-    def draw(self):
-        """绘制面板"""
-        line_feed.draw()
-        self.now_draw.draw()
+  def draw(self):
+    """绘制面板"""
+    line_feed.draw()
+    self.now_draw.draw()
 
 
 class SeeCharacterInfoHandle:
-    """
-    带切换控制的查看角色属性面板
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 最大宽度
-    character_list -- 角色id列表
-    """
+  """
+  带切换控制的查看角色属性面板
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 最大宽度
+  character_list -- 角色id列表
+  """
 
-    def __init__(self, character_id: int, width: int, character_list: List[int]):
-        """初始化绘制对象"""
-        self.character_id: int = character_id
-        """ 要绘制的角色id """
-        self.width: int = width
-        """ 面板最大宽度 """
-        self.return_list: List[str] = []
-        """ 当前面板监听的按钮列表 """
-        self.character_list: List[int] = character_list
-        """ 当前面板所属的角色id列表 """
+  def __init__(self, character_id: int, width: int, character_list: List[int]):
+    """初始化绘制对象"""
+    self.character_id: int = character_id
+    """ 要绘制的角色id """
+    self.width: int = width
+    """ 面板最大宽度 """
+    self.return_list: List[str] = []
+    """ 当前面板监听的按钮列表 """
+    self.character_list: List[int] = character_list
+    """ 当前面板所属的角色id列表 """
 
-    def draw(self):
-        """绘制面板"""
-        old_button_draw = draw.CenterButton(
-            _("[上一人]"), _("上一人"), self.width / 3, cmd_func=self.old_character
-        )
-        next_button_draw = draw.CenterButton(
-            _("[下一人]"), _("下一人"), self.width / 3, cmd_func=self.next_character
-        )
-        back_draw = draw.CenterButton(_("[返回]"), _("返回"), self.width / 3)
-        now_panel_id = _("基础属性")
-        while 1:
-            self.return_list = []
-            now_character_panel = SeeCharacterInfoPanel(self.character_id, self.width)
-            now_character_panel.change_panel(now_panel_id)
-            now_character_panel.draw()
-            line_feed.draw()
-            old_button_draw.draw()
-            back_draw.draw()
-            next_button_draw.draw()
-            line_feed.draw()
-            self.return_list.extend(now_character_panel.return_list)
-            self.return_list.append(old_button_draw.return_text)
-            self.return_list.append(back_draw.return_text)
-            self.return_list.append(next_button_draw.return_text)
-            yrn = flow_handle.askfor_all(self.return_list)
-            py_cmd.clr_cmd()
-            line_feed.draw()
-            if yrn == back_draw.return_text:
-                break
-            elif yrn in now_character_panel.draw_data:
-                now_panel_id = yrn
+  def draw(self):
+    """绘制面板"""
+    old_button_draw = draw.CenterButton(
+        _("[上一人]"), _("上一人"), self.width / 3, cmd_func=self.old_character
+    )
+    next_button_draw = draw.CenterButton(
+        _("[下一人]"), _("下一人"), self.width / 3, cmd_func=self.next_character
+    )
+    back_draw = draw.CenterButton(_("[返回]"), _("返回"), self.width / 3)
+    now_panel_id = _("基础属性")
+    while 1:
+      self.return_list = []
+      now_character_panel = SeeCharacterInfoPanel(self.character_id, self.width)
+      now_character_panel.change_panel(now_panel_id)
+      now_character_panel.draw()
+      line_feed.draw()
+      old_button_draw.draw()
+      back_draw.draw()
+      next_button_draw.draw()
+      line_feed.draw()
+      self.return_list.extend(now_character_panel.return_list)
+      self.return_list.append(old_button_draw.return_text)
+      self.return_list.append(back_draw.return_text)
+      self.return_list.append(next_button_draw.return_text)
+      yrn = flow_handle.askfor_all(self.return_list)
+      py_cmd.clr_cmd()
+      line_feed.draw()
+      if yrn == back_draw.return_text:
+        break
+      elif yrn in now_character_panel.draw_data:
+        now_panel_id = yrn
 
-    def old_character(self):
-        """切换显示上一人"""
-        now_index = self.character_list.index(self.character_id)
-        self.character_id = self.character_list[now_index - 1]
+  def old_character(self):
+    """切换显示上一人"""
+    now_index = self.character_list.index(self.character_id)
+    self.character_id = self.character_list[now_index - 1]
 
-    def next_character(self):
-        """切换显示下一人"""
-        now_index = self.character_list.index(self.character_id) + 1
-        if now_index > len(self.character_list) - 1:
-            now_index = 0
-        self.character_id = self.character_list[now_index]
+  def next_character(self):
+    """切换显示下一人"""
+    now_index = self.character_list.index(self.character_id) + 1
+    if now_index > len(self.character_list) - 1:
+      now_index = 0
+    self.character_id = self.character_list[now_index]
 
 
 class SeeCharacterInfoHandleInScene(SeeCharacterInfoHandle):
-    """在场景中带切换控制的查看角色属性面板"""
+  """在场景中带切换控制的查看角色属性面板"""
 
-    def old_character(self):
-        """切换显示上一人"""
-        if len(self.character_list):
-            if self.character_id:
-                if self.character_id in self.character_list:
-                    now_index = self.character_list.index(self.character_id)
-                    if now_index:
-                        now_index -= 1
-                        self.character_id = self.character_list[now_index]
-                    else:
-                        self.character_id = 0
-            else:
-                self.character_id = self.character_list[len(self.character_list) - 1]
+  def old_character(self):
+    """切换显示上一人"""
+    if len(self.character_list):
+      if self.character_id:
+        if self.character_id in self.character_list:
+          now_index = self.character_list.index(self.character_id)
+          if now_index:
+            now_index -= 1
+            self.character_id = self.character_list[now_index]
+          else:
+            self.character_id = 0
+      else:
+        self.character_id = self.character_list[len(self.character_list) - 1]
 
-    def next_character(self):
-        """切换显示下一人"""
-        if len(self.character_list):
-            if self.character_id:
-                if self.character_id in self.character_list:
-                    now_index = self.character_list.index(self.character_id)
-                    if now_index == len(self.character_list) - 1:
-                        self.character_id = 0
-                    else:
-                        self.character_id = self.character_list[now_index + 1]
-            else:
-                self.character_id = self.character_list[0]
+  def next_character(self):
+    """切换显示下一人"""
+    if len(self.character_list):
+      if self.character_id:
+        if self.character_id in self.character_list:
+          now_index = self.character_list.index(self.character_id)
+          if now_index == len(self.character_list) - 1:
+            self.character_id = 0
+          else:
+            self.character_id = self.character_list[now_index + 1]
+      else:
+        self.character_id = self.character_list[0]
 
 
 class SeeCharacterInfoInScenePanel:
-    """
-    在场景中查看角色属性的控制对象
-    Keyword arguments:
-    target_id -- 目标id
-    width -- 绘制宽度
-    """
+  """
+  在场景中查看角色属性的控制对象
+  Keyword arguments:
+  target_id -- 目标id
+  width -- 绘制宽度
+  """
 
-    def __init__(self, target_id: int, width: int):
-        """初始化绘制对象"""
-        self.target_id: int = target_id
-        """ 查看属性的目标 """
-        self.width: int = width
-        """ 绘制宽度 """
-        position = cache.character_data[0].position
-        position_str = map_handle.get_map_system_path_str_for_list(position)
-        scene_data: game_type.Scene = cache.scene_data[position_str]
-        if cache.is_collection:
-            character_data: game_type.Character = cache.character_data[0]
-            now_list = [i for i in scene_data.character_list if i in character_data.collection_character]
-        else:
-            now_list = list(scene_data.character_list)
-            now_list.remove(0)
-        self.handle_panel = SeeCharacterInfoHandleInScene(target_id, width, now_list)
-        """ 绘制控制面板 """
+  def __init__(self, target_id: int, width: int):
+    """初始化绘制对象"""
+    self.target_id: int = target_id
+    """ 查看属性的目标 """
+    self.width: int = width
+    """ 绘制宽度 """
+    position = cache.character_data[0].position
+    position_str = map_handle.get_map_system_path_str_for_list(position)
+    scene_data: game_type.Scene = cache.scene_data[position_str]
+    if cache.is_collection:
+      character_data: game_type.Character = cache.character_data[0]
+      now_list = [
+          i
+          for i in scene_data.character_list
+          if i in character_data.collection_character
+      ]
+    else:
+      now_list = list(scene_data.character_list)
+      now_list.remove(0)
+    self.handle_panel = SeeCharacterInfoHandleInScene(
+        target_id, width, now_list
+    )
+    """ 绘制控制面板 """
 
-    def draw(self):
-        """绘制对象"""
-        self.handle_panel.draw()
-        cache.now_panel_id = constant.Panel.IN_SCENE
-
+  def draw(self):
+    """绘制对象"""
+    self.handle_panel.draw()
+    cache.now_panel_id = constant.Panel.IN_SCENE

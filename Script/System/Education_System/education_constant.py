@@ -32,6 +32,7 @@
 13. 养成事件
 14. 面板显示与排版
 """
+
 from types import FunctionType
 from typing import List
 
@@ -43,14 +44,19 @@ _: FunctionType = get_text._
 """ 翻译api """
 
 if not game_config.config_ability:
-    print("\ndebug education_constant 在 game_config.init() 之前被导入了，从配置现算的常量会是空表\n")
+  print(
+      "\ndebug education_constant 在 game_config.init() 之前被导入了，从配置现算的常量会是空表\n"
+  )
 
 # ==== 1. 成长阶段与教育区 ====
 CHILD_TALENT_ID_LIST = (101, 102, 103, 104)
 """ 成长链的四个年龄素质id：101婴儿 / 102幼女 / 103学员 / 104少女。
     这四个id是成长链的**定义本身**（`pregnancy_handle` 按天数逐级换素质），配置里推不出来，
        所以写死在这里；名字则一律从 Talent.csv 现取，见下 """
-STAGE_TALENT_NAME = {talent_id: game_config.config_talent[talent_id].name for talent_id in CHILD_TALENT_ID_LIST}
+STAGE_TALENT_NAME = {
+    talent_id: game_config.config_talent[talent_id].name
+    for talent_id in CHILD_TALENT_ID_LIST
+}
 """ 四个阶段的显示名，从 Talent.csv 现取。
     不要再包一层 `_()`：`game_config` 载入时已对所有 name 列做过翻译，再包一次反而对不上词条 """
 CHILD_TALENT_SET = set(CHILD_TALENT_ID_LIST)
@@ -81,25 +87,44 @@ NOT_SUBJECT_ABILITY_SET = {90}
 SUBJECT_ABILITY_LIST = [
     ability_id
     for ability_id in sorted(game_config.config_ability)
-    if game_config.config_ability[ability_id].ability_type in (ABILITY_TYPE_SUBJECT, ABILITY_TYPE_SEX_SKILL)
+    if game_config.config_ability[ability_id].ability_type
+    in (ABILITY_TYPE_SUBJECT, ABILITY_TYPE_SEX_SKILL)
     and ability_id not in NOT_SUBJECT_ABILITY_SET
 ]
 """ 可排课的18门科目（一期方案 §3.4）：Ability.csv 里类型为技能(4)与技术(5)的能力。
     从配置现算而不是写死 40~49 + 70~77：往后 Ability.csv 增删科目，课表、选课面板、
        成绩单会一起跟上，不必回头改这里 """
-MALE_ONLY_SUBJECT_SET = {ability_id for ability_id in SUBJECT_ABILITY_LIST if game_config.config_ability[ability_id].sex_need == 0}
+MALE_ONLY_SUBJECT_SET = {
+    ability_id
+    for ability_id in SUBJECT_ABILITY_LIST
+    if game_config.config_ability[ability_id].sex_need == 0
+}
 """ 男性专属的科目（Ability.csv 的 sex_need 为0），目前只有76腰技。
     女学生排了它全场吃不到加成且不会报错（四期方案 §7-21），所以下面两张给女儿用的表都排掉它 """
-FEMALE_SUBJECT_LIST: List[int] = [ability_id for ability_id in SUBJECT_ABILITY_LIST if ability_id not in MALE_ONLY_SUBJECT_SET]
+FEMALE_SUBJECT_LIST: List[int] = [
+    ability_id
+    for ability_id in SUBJECT_ABILITY_LIST
+    if ability_id not in MALE_ONLY_SUBJECT_SET
+]
 """ 女儿学得了的科目（17门 = 10门技能 + 7门性技）：全部科目去掉男性专属的那些。
     自动排课取的是这一张，下面实操课的主修表也从它筛。它原先叫 PRENATAL_SUBJECT_LIST、只写了胎教转写一个用途；
     Plan 26 起胎教出生时改折习得珠，不再按科目转写 """
 FALLBACK_SUBJECT_ABILITY = 45
 """ 取不到科目时回落的科目：学识（Plan 31 收拢）。玩家手动授课（结算 512）、日程自习（548）与 CVP 对玩家手动授课的回落
     （handle_premise.get_player_manual_teach_course）共用，口上读到的科目与实际结算不会分叉 """
-SEX_CLASS_ABILITY_LIST = [ability_id for ability_id in FEMALE_SUBJECT_LIST if game_config.config_ability[ability_id].ability_type == ABILITY_TYPE_SEX_SKILL]
+SEX_CLASS_ABILITY_LIST = [
+    ability_id
+    for ability_id in FEMALE_SUBJECT_LIST
+    if game_config.config_ability[ability_id].ability_type
+    == ABILITY_TYPE_SEX_SKILL
+]
 """ 实操课可选的主修性技科目：指技70/舌技71/足技72/胸技73/膣技74/肛技75/榨精77 """
-SEX_SKILL_SUBJECT_SET = {ability_id for ability_id in SUBJECT_ABILITY_LIST if game_config.config_ability[ability_id].ability_type == ABILITY_TYPE_SEX_SKILL}
+SEX_SKILL_SUBJECT_SET = {
+    ability_id
+    for ability_id in SUBJECT_ABILITY_LIST
+    if game_config.config_ability[ability_id].ability_type
+    == ABILITY_TYPE_SEX_SKILL
+}
 """ 全部性技科目（70~77，含男性专属的76腰技）。
     实操课「前置修习」守卫（口径 63 宽松版）按它判：个人课表里排过其中任一门的教室课即可来上实操课 """
 PRACTICE_SUBJECT_SET = {42, 43, 46, 47, 48, 49}
@@ -121,7 +146,11 @@ COURSE_TYPE_INTEREST = 4
 """ 课型：兴趣课（娱乐地点，个人式） """
 COURSE_TYPE_INTERN = 5
 """ 课型：实习课（干员在岗工作，个人式） """
-CLASSROOM_COURSE_TYPE_SET = {COURSE_TYPE_THEORY, COURSE_TYPE_PRACTICE, COURSE_TYPE_PUBLIC}
+CLASSROOM_COURSE_TYPE_SET = {
+    COURSE_TYPE_THEORY,
+    COURSE_TYPE_PRACTICE,
+    COURSE_TYPE_PUBLIC,
+}
 """ 班级式课型（目标为教室场景名，科目与教师查全局课表） """
 COURSE_TYPE_NAME = {
     COURSE_TYPE_THEORY: _("理论课"),
@@ -132,7 +161,11 @@ COURSE_TYPE_NAME = {
     COURSE_TYPE_INTERN: _("实习课"),
 }
 """ 课型编号到显示名的映射，供面板与状态标识使用 """
-COURSE_TYPE_SHORT = {COURSE_TYPE_PE: _("体"), COURSE_TYPE_INTEREST: _("兴"), COURSE_TYPE_INTERN: _("实")}
+COURSE_TYPE_SHORT = {
+    COURSE_TYPE_PE: _("体"),
+    COURSE_TYPE_INTEREST: _("兴"),
+    COURSE_TYPE_INTERN: _("实"),
+}
 """ 课型在格子里的单字缩写。
     只有个人式的三种课型需要它——班级式（理论/实践/公开）的格子里写的是教室名，
        「理论教室一」本身就说明了是理论课，再标一个「[理]」是重复 """
@@ -174,7 +207,15 @@ EXCLUDE_INTERN_WORK_TYPE = {TEACHER_WORK_TYPE, STUDENT_WORK_TYPE}
     从上面两个常量派生而不是再写一遍 151/152，改岗位id时只动一处 """
 
 # ==== 4. 星期与自动排课 ====
-WEEK_NAME = [_("周一"), _("周二"), _("周三"), _("周四"), _("周五"), _("周六"), _("周日")]
+WEEK_NAME = [
+    _("周一"),
+    _("周二"),
+    _("周三"),
+    _("周四"),
+    _("周五"),
+    _("周六"),
+    _("周日"),
+]
 """ 星期的显示名，下标即 datetime 的 weekday() """
 WEEK_DAY_COUNT = len(WEEK_NAME)
 """ 一周的天数。由 WEEK_NAME 的长度推出，两者不会各改各的 """
@@ -218,7 +259,11 @@ PRESET_TEMPLATE_NAME = {
 }
 """ 四套预设模板的名字（二期方案 §3.6 的表） """
 PRESET_TEMPLATE_SLOT_NAME = {
-    TEMPLATE_ACADEMIC: (_("上课（无课时自习）"), _("上课（无课时自习）"), _("读书")),
+    TEMPLATE_ACADEMIC: (
+        _("上课（无课时自习）"),
+        _("上课（无课时自习）"),
+        _("读书"),
+    ),
     TEMPLATE_BALANCED: (_("上课（无课时自习）"), _("下棋"), _("看电影")),
     TEMPLATE_PLAYFUL: (_("玩街机游戏"), _("下棋"), _("唱歌")),
     TEMPLATE_CUSTOM: ("", "", ""),
@@ -268,7 +313,15 @@ GROWTH_STOP_LEARN_RATE = 0.5
 """ 成长停滞期间学习收益的倍率（口径 27「经验减半」）。
     乘在学生侧的每一条收益上：教室课 / 自习 / 实习课（get_class_adjust）、
     实操课主修加成（sex_class_handle.get_subject_bonus）；教师侧的教学相长不受影响——停滞的是学生 """
-SEX_SKILL_THEORY_EXP_ID = {70: 170, 71: 171, 72: 172, 73: 173, 74: 174, 75: 175, 77: 176}
+SEX_SKILL_THEORY_EXP_ID = {
+    70: 170,
+    71: 171,
+    72: 172,
+    73: 173,
+    74: 174,
+    75: 175,
+    77: 176,
+}
 """ 性技科目 → 理论经验id（Experience.csv 类型 12）。教室课与自习对性技科目发这里的理论经验，
     不发 AbilityUp 里的真实性交经验（Plan 26 §3.1，用户拍板）；76 腰技没有对应的理论经验，只给习得。
     推不出来：阴道性交 → 性交理论等三对名字对不上，只能列举，由测试守住类型与覆盖面 """
@@ -368,7 +421,10 @@ PERSONALITY_PAIR_TALENT = {
     勤劳/懒散、坚强/脆弱、热情/孤僻、开放/羞耻（game_type.CHILD_GROWTH.personality_point 为正偏前者）。
     三期的养成事件是它的主要写入方，四对全为0时面板显示「尚未形成」 """
 PERSONALITY_PAIR_NAME = {
-    pair_id: (game_config.config_talent[positive_id].name, game_config.config_talent[negative_id].name)
+    pair_id: (
+        game_config.config_talent[positive_id].name,
+        game_config.config_talent[negative_id].name,
+    )
     for pair_id, (positive_id, negative_id) in PERSONALITY_PAIR_TALENT.items()
 }
 """ 四对性格倾向的显示名，从上面那张素质id表现取 Talent.csv 的名字。
@@ -422,7 +478,12 @@ GROWTH_VALUE_SEX_CLASS = 25
 """ 养成数值编号：累计实操课次数（Plan 31）。开课与开课后到场各记一次，与出勤同一处写入；口上里「第一次来 / 老学生」读它，不读含全部课型的编号 0 """
 
 # ==== 12. 学期与成绩单 ====
-SEMESTER_NAME = {3: _("春季学期"), 6: _("夏季学期"), 9: _("秋季学期"), 12: _("冬季学期")}
+SEMESTER_NAME = {
+    3: _("春季学期"),
+    6: _("夏季学期"),
+    9: _("秋季学期"),
+    12: _("冬季学期"),
+}
 """ 四个季月各自对应的学期显示名，键即 game_time.get_season_month() 的返回值 """
 REPORT_GRADE_EXCELLENT = 0
 """ 成绩档位：优秀 """

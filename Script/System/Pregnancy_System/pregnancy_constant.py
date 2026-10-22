@@ -14,6 +14,7 @@
 6. 生育谱系图排版
 7. 生育方式与多胎
 """
+
 from types import FunctionType
 from Script.Core import get_text
 
@@ -74,7 +75,17 @@ STAGE_POSTPARTUM = 7
 """ 阶段枚举：产后 """
 STAGE_REARING = 8
 """ 阶段枚举：育儿 """
-STAGE_NAME_LIST = [_("全部"), _("受精"), _("持卵待鉴定"), _("卵块待受精"), _("妊娠"), _("孵化中"), _("临盆"), _("产后"), _("育儿")]
+STAGE_NAME_LIST = [
+    _("全部"),
+    _("受精"),
+    _("持卵待鉴定"),
+    _("卵块待受精"),
+    _("妊娠"),
+    _("孵化中"),
+    _("临盆"),
+    _("产后"),
+    _("育儿"),
+]
 """ 阶段名列表（下标与阶段枚举一致，0位为筛选用的全部） """
 
 # ==== 6. 生育谱系图排版 ====
@@ -94,7 +105,11 @@ BIRTH_TYPE_EGG = 11
 """ 生育方式：带壳卵生 """
 BIRTH_TYPE_EGG_SOFT = 12
 """ 生育方式：无壳卵生（体外排卵、体外受精，之后复用带壳卵生的孵化破壳链） """
-BIRTH_TYPE_SETTING_LIST = [BIRTH_TYPE_MULTIPLE, BIRTH_TYPE_EGG, BIRTH_TYPE_EGG_SOFT]
+BIRTH_TYPE_SETTING_LIST = [
+    BIRTH_TYPE_MULTIPLE,
+    BIRTH_TYPE_EGG,
+    BIRTH_TYPE_EGG_SOFT,
+]
 """ 可在系统设置中开关的生育方式（单胎胎生是关闭后的兜底形态，不提供开关）；开关值存于 all_system_setting.birth_type_setting，键即生育方式编号 """
 MULTIPLE_BIRTH_SEMEN_DECAY = 0.3
 """ 多胎受精判定中，每轮判定后临时精液量的衰减比例 """

@@ -9,7 +9,7 @@ PRTS角色立绘下载器 MCP服务器
 
 本MCP服务器提供以下工具：
 1. download_character_image - 下载单个角色的立绘图片
-2. batch_download_characters - 批量下载多个角色的立绘图片  
+2. batch_download_characters - 批量下载多个角色的立绘图片
 3. search_character_image_url - 仅搜索角色立绘图片的URL，不下载
 
 支持多种下载方式：
@@ -22,5 +22,6 @@ PRTS角色立绘下载器 MCP服务器
 from .server import main
 
 if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+  import asyncio
+
+  asyncio.run(main())

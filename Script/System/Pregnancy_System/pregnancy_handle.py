@@ -33,924 +33,1107 @@ width = normal_config.config_normal.text_width
 
 
 def get_pregnancy_past_day(character_id: int) -> int:
-    """
-    计算角色的有效孕期天数（自受精起的自然天数+妊娠加速药累计的加速天数）
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 有效孕期天数
-    """
-    character_data: game_type.Character = cache.character_data[character_id]
-    natural_day = game_time.count_day_for_datetime(character_data.pregnancy.fertilization_time, cache.game_time)
-    return natural_day + int(character_data.pregnancy.acceleration_days)
+  """
+  计算角色的有效孕期天数（自受精起的自然天数+妊娠加速药累计的加速天数）
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 有效孕期天数
+  """
+  character_data: game_type.Character = cache.character_data[character_id]
+  natural_day = game_time.count_day_for_datetime(
+      character_data.pregnancy.fertilization_time, cache.game_time
+  )
+  return natural_day + int(character_data.pregnancy.acceleration_days)
 
 
-def get_acceleration_amount(now_acc: float, effective_day: int, day_cap: int, total_day: int = pregnancy_constant.PREGNANCY_TOTAL_DAY) -> float:
-    """
-    计算加速药单次可入账的加速天数（三重夹取：剩余期30%/累计上限83/临盆(破壳)前一天）
-    Keyword arguments:
-    now_acc -- 当前已累计的加速天数
-    effective_day -- 当前有效天数（自然天数+已累计加速）
-    day_cap -- 注入后允许的有效天数上限（胎生86=临盆前一天，卵91=破壳前一天）
-    total_day -- 剂量公式基数（胎生为名义孕期90，卵为孵化总天数92）
-    Return arguments:
-    float -- 可入账加速天数（<=0时表示已到极限无法使用）
-    """
-    # 剂量为剩余期（基数-当前有效天数）的30%
-    formula_amount = (total_day - effective_day) * pregnancy_constant.ACCELERATION_RATE
-    return min(formula_amount, pregnancy_constant.ACCELERATION_MAX_DAY - now_acc, day_cap - effective_day)
+def get_acceleration_amount(
+    now_acc: float,
+    effective_day: int,
+    day_cap: int,
+    total_day: int = pregnancy_constant.PREGNANCY_TOTAL_DAY,
+) -> float:
+  """
+  计算加速药单次可入账的加速天数（三重夹取：剩余期30%/累计上限83/临盆(破壳)前一天）
+  Keyword arguments:
+  now_acc -- 当前已累计的加速天数
+  effective_day -- 当前有效天数（自然天数+已累计加速）
+  day_cap -- 注入后允许的有效天数上限（胎生86=临盆前一天，卵91=破壳前一天）
+  total_day -- 剂量公式基数（胎生为名义孕期90，卵为孵化总天数92）
+  Return arguments:
+  float -- 可入账加速天数（<=0时表示已到极限无法使用）
+  """
+  # 剂量为剩余期（基数-当前有效天数）的30%
+  formula_amount = (
+      total_day - effective_day
+  ) * pregnancy_constant.ACCELERATION_RATE
+  return min(
+      formula_amount,
+      pregnancy_constant.ACCELERATION_MAX_DAY - now_acc,
+      day_cap - effective_day,
+  )
 
 
 def get_pregnancy_acceleration_amount(character_id: int) -> float:
-    """
-    计算妊娠加速药对该角色单次可入账的加速天数（临盆前一天封顶）
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    float -- 可入账加速天数（<=0时表示已到极限无法使用）
-    """
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_acc = character_data.pregnancy.acceleration_days
-    return get_acceleration_amount(now_acc, get_pregnancy_past_day(character_id), pregnancy_constant.PARTURIENT_DAY - 1)
+  """
+  计算妊娠加速药对该角色单次可入账的加速天数（临盆前一天封顶）
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  float -- 可入账加速天数（<=0时表示已到极限无法使用）
+  """
+  character_data: game_type.Character = cache.character_data[character_id]
+  now_acc = character_data.pregnancy.acceleration_days
+  return get_acceleration_amount(
+      now_acc,
+      get_pregnancy_past_day(character_id),
+      pregnancy_constant.PARTURIENT_DAY - 1,
+  )
 
 
 def get_child_grow_day(child_id: int) -> int:
-    """
-    计算孩子的有效成长天数（自出生起的游戏天数+成长加速药累计的成长天数）
-    Keyword arguments:
-    child_id -- 孩子角色id
-    Return arguments:
-    int -- 有效成长天数
-    """
-    child_character_data: game_type.Character = cache.character_data[child_id]
-    natural_day = game_time.count_day_for_datetime(child_character_data.pregnancy.born_time, cache.game_time)
-    return natural_day + int(getattr(child_character_data.pregnancy, "growth_acceleration_days", 0))
+  """
+  计算孩子的有效成长天数（自出生起的游戏天数+成长加速药累计的成长天数）
+  Keyword arguments:
+  child_id -- 孩子角色id
+  Return arguments:
+  int -- 有效成长天数
+  """
+  child_character_data: game_type.Character = cache.character_data[child_id]
+  natural_day = game_time.count_day_for_datetime(
+      child_character_data.pregnancy.born_time, cache.game_time
+  )
+  return natural_day + int(
+      getattr(child_character_data.pregnancy, "growth_acceleration_days", 0)
+  )
 
 
 def get_child_growth_stage_total_day(child_id: int) -> int:
-    """
-    获取孩子当前成长阶段进入下一阶段所需的有效成长天数阈值（婴儿→幼女30 / 幼女→学员90 / 学员→少女150）
-    Keyword arguments:
-    child_id -- 孩子角色id
-    Return arguments:
-    int -- 阈值天数；不处于可成长阶段（非婴儿/幼女/学员）时返回0
-    """
-    if handle_premise.handle_self_is_baby(child_id):
-        return pregnancy_constant.REARING_COMPLETE_DAY
-    if handle_premise.handle_self_is_child(child_id):
-        return pregnancy_constant.GROW_TO_LOLI_DAY
-    if handle_premise.handle_self_is_loli(child_id):
-        return pregnancy_constant.GROW_TO_GIRL_DAY
-    return 0
+  """
+  获取孩子当前成长阶段进入下一阶段所需的有效成长天数阈值（婴儿→幼女30 / 幼女→学员90 / 学员→少女150）
+  Keyword arguments:
+  child_id -- 孩子角色id
+  Return arguments:
+  int -- 阈值天数；不处于可成长阶段（非婴儿/幼女/学员）时返回0
+  """
+  if handle_premise.handle_self_is_baby(child_id):
+    return pregnancy_constant.REARING_COMPLETE_DAY
+  if handle_premise.handle_self_is_child(child_id):
+    return pregnancy_constant.GROW_TO_LOLI_DAY
+  if handle_premise.handle_self_is_loli(child_id):
+    return pregnancy_constant.GROW_TO_GIRL_DAY
+  return 0
 
 
 def get_child_next_stage_name(child_id: int) -> str:
-    """
-    获取孩子当前成长阶段的下一阶段名（用于提示文本）
-    Keyword arguments:
-    child_id -- 孩子角色id
-    Return arguments:
-    str -- 下一阶段名；不处于可成长阶段时返回空串
-    """
-    if handle_premise.handle_self_is_baby(child_id):
-        return _("幼女")
-    if handle_premise.handle_self_is_child(child_id):
-        return _("学员")
-    if handle_premise.handle_self_is_loli(child_id):
-        return _("少女")
-    return ""
+  """
+  获取孩子当前成长阶段的下一阶段名（用于提示文本）
+  Keyword arguments:
+  child_id -- 孩子角色id
+  Return arguments:
+  str -- 下一阶段名；不处于可成长阶段时返回空串
+  """
+  if handle_premise.handle_self_is_baby(child_id):
+    return _("幼女")
+  if handle_premise.handle_self_is_child(child_id):
+    return _("学员")
+  if handle_premise.handle_self_is_loli(child_id):
+    return _("少女")
+  return ""
 
 
 def get_child_growth_acceleration_amount(child_id: int) -> float:
-    """
-    计算成长加速药对该孩子单次可入账的成长天数：当前阶段剩余天数（阈值-有效成长天数）的30%，
-    夹取到进入下一阶段的前一天；不足1天视为已到极限
-    Keyword arguments:
-    child_id -- 孩子角色id（婴儿/幼女/学员）
-    Return arguments:
-    float -- 可入账成长天数（0表示不处于可成长阶段或已到极限，无法使用）
-    """
-    total_day = get_child_growth_stage_total_day(child_id)
-    if total_day <= 0:
-        return 0
-    grow_day = get_child_grow_day(child_id)
-    amount = min((total_day - grow_day) * pregnancy_constant.ACCELERATION_RATE, total_day - 1 - grow_day)
-    return amount if amount >= 1 else 0
+  """
+  计算成长加速药对该孩子单次可入账的成长天数：当前阶段剩余天数（阈值-有效成长天数）的30%，
+  夹取到进入下一阶段的前一天；不足1天视为已到极限
+  Keyword arguments:
+  child_id -- 孩子角色id（婴儿/幼女/学员）
+  Return arguments:
+  float -- 可入账成长天数（0表示不处于可成长阶段或已到极限，无法使用）
+  """
+  total_day = get_child_growth_stage_total_day(child_id)
+  if total_day <= 0:
+    return 0
+  grow_day = get_child_grow_day(child_id)
+  amount = min(
+      (total_day - grow_day) * pregnancy_constant.ACCELERATION_RATE,
+      total_day - 1 - grow_day,
+  )
+  return amount if amount >= 1 else 0
 
 
 def is_growth_drug_self_target(character_id: int) -> bool:
-    """
-    判断成长加速药是否对该角色本人生效（玩家的女儿且处于幼女或学员阶段；婴儿由母亲代收）
-    Keyword arguments:
-    character_id -- 目标角色id
-    Return arguments:
-    bool -- 是否对本人生效
-    """
-    return bool(handle_premise.handle_self_is_player_daughter(character_id) and handle_premise.handle_self_child_or_loli_1(character_id))
+  """
+  判断成长加速药是否对该角色本人生效（玩家的女儿且处于幼女或学员阶段；婴儿由母亲代收）
+  Keyword arguments:
+  character_id -- 目标角色id
+  Return arguments:
+  bool -- 是否对本人生效
+  """
+  return bool(
+      handle_premise.handle_self_is_player_daughter(character_id)
+      and handle_premise.handle_self_child_or_loli_1(character_id)
+  )
 
 
 def get_baby_id_list(mother_id: int) -> list:
-    """
-    获取母亲名下全部仍处于婴儿期的孩子id列表
-    Keyword arguments:
-    mother_id -- 母亲角色id
-    Return arguments:
-    list -- 婴儿角色id列表（按出生顺序）
-    """
-    mother_character_data: game_type.Character = cache.character_data[mother_id]
-    baby_id_list = []
-    for child_id in mother_character_data.relationship.child_id_list:
-        if child_id not in cache.character_data:
-            continue
-        child_character_data: game_type.Character = cache.character_data[child_id]
-        if handle_premise.handle_self_is_baby(child_id) and child_character_data.relationship.mother_id == mother_id:
-            baby_id_list.append(child_id)
-    return baby_id_list
+  """
+  获取母亲名下全部仍处于婴儿期的孩子id列表
+  Keyword arguments:
+  mother_id -- 母亲角色id
+  Return arguments:
+  list -- 婴儿角色id列表（按出生顺序）
+  """
+  mother_character_data: game_type.Character = cache.character_data[mother_id]
+  baby_id_list = []
+  for child_id in mother_character_data.relationship.child_id_list:
+    if child_id not in cache.character_data:
+      continue
+    child_character_data: game_type.Character = cache.character_data[child_id]
+    if (
+        handle_premise.handle_self_is_baby(child_id)
+        and child_character_data.relationship.mother_id == mother_id
+    ):
+      baby_id_list.append(child_id)
+  return baby_id_list
 
 
 def get_accelerable_babies(mother_id: int) -> list:
-    """
-    获取母亲名下可使用成长加速药的婴儿id列表（婴儿期且尚未到成为幼女的前一天）
-    Keyword arguments:
-    mother_id -- 母亲角色id
-    Return arguments:
-    list -- 可加速的婴儿角色id列表
-    """
-    return [child_id for child_id in get_baby_id_list(mother_id) if get_child_growth_acceleration_amount(child_id) > 0]
+  """
+  获取母亲名下可使用成长加速药的婴儿id列表（婴儿期且尚未到成为幼女的前一天）
+  Keyword arguments:
+  mother_id -- 母亲角色id
+  Return arguments:
+  list -- 可加速的婴儿角色id列表
+  """
+  return [
+      child_id
+      for child_id in get_baby_id_list(mother_id)
+      if get_child_growth_acceleration_amount(child_id) > 0
+  ]
 
 
 def get_fetus_count_draw_text(character_id: int) -> str:
-    """
-    获取妊娠/临盆提示中的胎数说明行：多胞胎为"腹中孕育着N个孩子"，同卵双胞胎为"腹中孕育着一对同卵双胞胎"，单胎返回空串
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    str -- 胎数说明文本（含首尾换行）
-    """
-    character_data: game_type.Character = cache.character_data[character_id]
-    fetus_count = getattr(character_data.pregnancy, "fetus_count", 0)
-    if fetus_count < 2:
-        return ""
-    if getattr(character_data.pregnancy, "identical_twins", False):
-        return _("\n{0}腹中孕育着一对同卵双胞胎\n").format(character_data.name)
-    return _("\n{0}腹中孕育着{1}个孩子\n").format(character_data.name, fetus_count)
+  """
+  获取妊娠/临盆提示中的胎数说明行：多胞胎为"腹中孕育着N个孩子"，同卵双胞胎为"腹中孕育着一对同卵双胞胎"，单胎返回空串
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  str -- 胎数说明文本（含首尾换行）
+  """
+  character_data: game_type.Character = cache.character_data[character_id]
+  fetus_count = getattr(character_data.pregnancy, "fetus_count", 0)
+  if fetus_count < 2:
+    return ""
+  if getattr(character_data.pregnancy, "identical_twins", False):
+    return _("\n{0}腹中孕育着一对同卵双胞胎\n").format(character_data.name)
+  return _("\n{0}腹中孕育着{1}个孩子\n").format(
+      character_data.name, fetus_count
+  )
 
 
 def get_base_fertilization_rate(semen_count: float, semen_level: int) -> float:
-    """
-    由子宫精液量与精液等级计算基础受精概率（不含周期/避孕等修正）
-    Keyword arguments:
-    semen_count -- 精液量（毫升）
-    semen_level -- 精液等级
-    Return arguments:
-    float -- 基础受精概率（百分比）
-    """
-    return math.pow(semen_count / 1000, 2) * 100 + semen_level * 5
+  """
+  由子宫精液量与精液等级计算基础受精概率（不含周期/避孕等修正）
+  Keyword arguments:
+  semen_count -- 精液量（毫升）
+  semen_level -- 精液等级
+  Return arguments:
+  float -- 基础受精概率（百分比）
+  """
+  return math.pow(semen_count / 1000, 2) * 100 + semen_level * 5
 
 
 def get_multiple_birth_range(character_id: int) -> tuple:
-    """
-    获取角色种族的多胞胎产胎数量范围（Race.csv multiple_birth_num 列，形如"4~12"）
-    \n非多胎胎生种族恒为(1, 1)；列缺失或格式非法（非整数、最小值<1、最小值>最大值）时回退为(1, 1)
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    tuple -- (最小胎数, 最大胎数)
-    """
-    from Script.System.Pregnancy_System import egg_handle
-    if not egg_handle.is_multiple_birth(character_id):
-        return (1, 1)
-    character_data: game_type.Character = cache.character_data[character_id]
-    race_config = game_config.config_race.get(character_data.race)
-    range_text = str(getattr(race_config, "multiple_birth_num", "1~1"))
-    try:
-        min_text, max_text = range_text.split("~")
-        min_num, max_num = int(min_text), int(max_text)
-    except ValueError:
-        return (1, 1)
-    if min_num < 1 or min_num > max_num:
-        return (1, 1)
-    return (min_num, max_num)
+  """
+  获取角色种族的多胞胎产胎数量范围（Race.csv multiple_birth_num 列，形如"4~12"）
+  \n非多胎胎生种族恒为(1, 1)；列缺失或格式非法（非整数、最小值<1、最小值>最大值）时回退为(1, 1)
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  tuple -- (最小胎数, 最大胎数)
+  """
+  from Script.System.Pregnancy_System import egg_handle
+
+  if not egg_handle.is_multiple_birth(character_id):
+    return (1, 1)
+  character_data: game_type.Character = cache.character_data[character_id]
+  race_config = game_config.config_race.get(character_data.race)
+  range_text = str(getattr(race_config, "multiple_birth_num", "1~1"))
+  try:
+    min_text, max_text = range_text.split("~")
+    min_num, max_num = int(min_text), int(max_text)
+  except ValueError:
+    return (1, 1)
+  if min_num < 1 or min_num > max_num:
+    return (1, 1)
+  return (min_num, max_num)
 
 
 def get_fertilization_rate(character_id: int):
-    """
-    根据当前V精液量计算受精概率
-    返回：
-    now_rate: float 当前受精概率
-    draw_text: str 受精概率变动信息
-    """
+  """
+  根据当前V精液量计算受精概率
+  返回：
+  now_rate: float 当前受精概率
+  draw_text: str 受精概率变动信息
+  """
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    pl_character_data: game_type.Character = cache.character_data[0]
-    draw_text = ""
+  character_data: game_type.Character = cache.character_data[character_id]
+  pl_character_data: game_type.Character = cache.character_data[0]
+  draw_text = ""
 
-    semen_count = character_data.dirty.body_semen[7][1]
-    semen_level = character_data.dirty.body_semen[7][2]
-    now_reproduction = character_data.pregnancy.reproduction_period
-    # 基础概率
-    now_rate = get_base_fertilization_rate(semen_count, semen_level)
+  semen_count = character_data.dirty.body_semen[7][1]
+  semen_level = character_data.dirty.body_semen[7][2]
+  now_reproduction = character_data.pregnancy.reproduction_period
+  # 基础概率
+  now_rate = get_base_fertilization_rate(semen_count, semen_level)
 
-    # 假孕孕肚修正：假孕状态下无法受精
-    fake_pregnancy_flag = bool(handle_premise.handle_fake_inflation_1(character_id))
+  # 假孕孕肚修正：假孕状态下无法受精
+  fake_pregnancy_flag = bool(
+      handle_premise.handle_fake_inflation_1(character_id)
+  )
+  if fake_pregnancy_flag:
+    now_rate = 0
+  # 事前避孕药修正
+  if character_data.h_state.body_item[11][1]:
+    now_rate = 0
+    if game_time.judge_date_big_or_small(
+        cache.game_time, character_data.h_state.body_item[11][2]
+    ):
+      character_data.h_state.body_item[11][1] = False
+  # 事后避孕药修正
+  if character_data.h_state.body_item[12][1]:
+    now_rate = 0
+    character_data.h_state.body_item[12][1] = False
+  if semen_count > 0:
+    # 如果假孕的话绘制信息
     if fake_pregnancy_flag:
-        now_rate = 0
-    # 事前避孕药修正
-    if character_data.h_state.body_item[11][1]:
-        now_rate = 0
-        if game_time.judge_date_big_or_small(cache.game_time,character_data.h_state.body_item[11][2]):
-            character_data.h_state.body_item[11][1] = False
-    # 事后避孕药修正
-    if character_data.h_state.body_item[12][1]:
-        now_rate = 0
-        character_data.h_state.body_item[12][1] = False
-    if semen_count > 0:
-        # 如果假孕的话绘制信息
-        if fake_pregnancy_flag:
-            draw_text += _("\n在假孕孕肚的影响下，{0}的身体不会真正受精\n").format(character_data.name)
-        # 如果避孕的话绘制信息
-        elif now_rate == 0:
-            draw_text += _("\n在避孕药的影响下，{0}的精子无法受精\n").format(pl_character_data.name)
-        # 其他修正
-        else:
-            # 生理周期修正
-            now_rate *= game_config.config_reproduction_period[now_reproduction].type
-            # 排卵促进药（加成结果须写回now_rate，否则会被函数末尾的赋值覆盖）
-            if character_data.h_state.body_item[10][1]:
-                new_rate = min(100, now_rate * 5)
-                draw_text += _("\n在排卵促进药的影响下，怀孕概率由{0}上升到了{1}%\n").format(round(now_rate, 2), round(new_rate, 2))
-                now_rate = new_rate
-                character_data.h_state.body_item[10][1] = False
-            # 排卵催眠
-            if character_data.hypnosis.force_ovulation:
-                new_rate = min(100, now_rate * 5)
-                draw_text += _("\n在催眠-强制排卵的影响下，怀孕概率由{0}上升到了{1}%\n").format(round(now_rate, 2), round(new_rate, 2))
-                now_rate = new_rate
-                character_data.hypnosis.force_ovulation = False
-            # 浓厚精液
-            if pl_character_data.talent[33] == 1:
-                new_rate = min(100, now_rate * 2)
-                draw_text += _("\n在浓厚精液的影响下，怀孕概率由{0}上升到了{1}%\n").format(round(now_rate, 2), round(new_rate, 2))
-                now_rate = new_rate
-    # 保留两位小数
-    now_rate = round(now_rate,2)
-    character_data.pregnancy.fertilization_rate = now_rate
-    return now_rate, draw_text
+      draw_text += _("\n在假孕孕肚的影响下，{0}的身体不会真正受精\n").format(
+          character_data.name
+      )
+    # 如果避孕的话绘制信息
+    elif now_rate == 0:
+      draw_text += _("\n在避孕药的影响下，{0}的精子无法受精\n").format(
+          pl_character_data.name
+      )
+    # 其他修正
+    else:
+      # 生理周期修正
+      now_rate *= game_config.config_reproduction_period[now_reproduction].type
+      # 排卵促进药（加成结果须写回now_rate，否则会被函数末尾的赋值覆盖）
+      if character_data.h_state.body_item[10][1]:
+        new_rate = min(100, now_rate * 5)
+        draw_text += _(
+            "\n在排卵促进药的影响下，怀孕概率由{0}上升到了{1}%\n"
+        ).format(round(now_rate, 2), round(new_rate, 2))
+        now_rate = new_rate
+        character_data.h_state.body_item[10][1] = False
+      # 排卵催眠
+      if character_data.hypnosis.force_ovulation:
+        new_rate = min(100, now_rate * 5)
+        draw_text += _(
+            "\n在催眠-强制排卵的影响下，怀孕概率由{0}上升到了{1}%\n"
+        ).format(round(now_rate, 2), round(new_rate, 2))
+        now_rate = new_rate
+        character_data.hypnosis.force_ovulation = False
+      # 浓厚精液
+      if pl_character_data.talent[33] == 1:
+        new_rate = min(100, now_rate * 2)
+        draw_text += _(
+            "\n在浓厚精液的影响下，怀孕概率由{0}上升到了{1}%\n"
+        ).format(round(now_rate, 2), round(new_rate, 2))
+        now_rate = new_rate
+  # 保留两位小数
+  now_rate = round(now_rate, 2)
+  character_data.pregnancy.fertilization_rate = now_rate
+  return now_rate, draw_text
 
 
 def check_fertilization(character_id: int):
-    """
-    根据受精概率并判断是否受精
-    """
-    from Script.System.Pregnancy_System import egg_handle
-    character_data: game_type.Character = cache.character_data[character_id]
-    draw_text = ""
+  """
+  根据受精概率并判断是否受精
+  """
+  from Script.System.Pregnancy_System import egg_handle
 
-    # 仅在本周期排卵日事件待处理时进行判定（标记于周期推进到排卵日时置位，0点结算有兜底，玩家不睡觉也不会错过）
-    if not character_data.pregnancy.ovulation_flag:
-        return 0
-    # 无壳卵生没有体内受精判定（排卵在性绝顶时体外发生、受精在体外进行）：只消费标记，体内精液不清零、不判定、不提示
-    if egg_handle.is_egg_soft(character_id):
-        character_data.pregnancy.ovulation_flag = False
-        return 0
-    # 胎生的受精判定即本周期排卵日事件的一次性消费；卵生的标记留给排卵结算消费
-    if egg_handle.get_birth_type(character_id) != pregnancy_constant.BIRTH_TYPE_EGG:
-        character_data.pregnancy.ovulation_flag = False
+  character_data: game_type.Character = cache.character_data[character_id]
+  draw_text = ""
 
-    # 多胎判定用的临时精液量：须在清空精液之前读取子宫精液量与等级
-    semen_total = character_data.dirty.body_semen[7][1]
-    semen_level = character_data.dirty.body_semen[7][2]
-    multiple_birth_flag = egg_handle.is_multiple_birth(character_id)
+  # 仅在本周期排卵日事件待处理时进行判定（标记于周期推进到排卵日时置位，0点结算有兜底，玩家不睡觉也不会错过）
+  if not character_data.pregnancy.ovulation_flag:
+    return 0
+  # 无壳卵生没有体内受精判定（排卵在性绝顶时体外发生、受精在体外进行）：只消费标记，体内精液不清零、不判定、不提示
+  if egg_handle.is_egg_soft(character_id):
+    character_data.pregnancy.ovulation_flag = False
+    return 0
+  # 胎生的受精判定即本周期排卵日事件的一次性消费；卵生的标记留给排卵结算消费
+  if (
+      egg_handle.get_birth_type(character_id)
+      != pregnancy_constant.BIRTH_TYPE_EGG
+  ):
+    character_data.pregnancy.ovulation_flag = False
 
-    # 清空小穴和子宫的当前精液量
-    for body_cid in [6, 7]:
-        character_data.dirty.body_semen[body_cid][1] = 0
-        character_data.dirty.body_semen[body_cid][2] = 0
+  # 多胎判定用的临时精液量：须在清空精液之前读取子宫精液量与等级
+  semen_total = character_data.dirty.body_semen[7][1]
+  semen_level = character_data.dirty.body_semen[7][2]
+  multiple_birth_flag = egg_handle.is_multiple_birth(character_id)
 
-    # 消除强制排卵状态
-    if character_data.hypnosis.force_ovulation:
-        character_data.hypnosis.force_ovulation = False
-    # 如果当前已受精，则跳过判断
-    for i in {20,21,22}:
-        if character_data.talent[i] == 1:
-            character_data.pregnancy.fertilization_rate = 0
-            return 0
+  # 清空小穴和子宫的当前精液量
+  for body_cid in [6, 7]:
+    character_data.dirty.body_semen[body_cid][1] = 0
+    character_data.dirty.body_semen[body_cid][2] = 0
 
-    # 只判断有受精可能的
-    if character_data.pregnancy.fertilization_rate:
+  # 消除强制排卵状态
+  if character_data.hypnosis.force_ovulation:
+    character_data.hypnosis.force_ovulation = False
+  # 如果当前已受精，则跳过判断
+  for i in {20, 21, 22}:
+    if character_data.talent[i] == 1:
+      character_data.pregnancy.fertilization_rate = 0
+      return 0
 
-        # 如果未初潮，则无法受精并触发对话
-        if handle_premise.handle_menarche_1(character_id):
-            draw_text += _("\n因为{0}还没有迎来初潮，所以精子只能在阴道内徒劳地寻找不存在的卵子，无法完成受精\n").format(character_data.name)
+  # 只判断有受精可能的
+  if character_data.pregnancy.fertilization_rate:
 
-        # 假孕孕肚状态下无法受精（正常经get_fertilization_rate已清零概率，此处为绕过概率计算路径的兜底）
-        elif handle_premise.handle_fake_inflation_1(character_id):
-            character_data.pregnancy.fertilization_rate = 0
-            draw_text += _("\n{0}正处于假孕状态，精子无法使其真正受精\n").format(character_data.name)
+    # 如果未初潮，则无法受精并触发对话
+    if handle_premise.handle_menarche_1(character_id):
+      draw_text += _(
+          "\n因为{0}还没有迎来初潮，所以精子只能在阴道内徒劳地寻找不存在的卵子，无法完成受精\n"
+      ).format(character_data.name)
 
-        # 种族是机械的则需要判断是否有生育模组
-        elif character_data.race == 2 and character_data.talent[171] == 0:
-            character_data.pregnancy.fertilization_rate = 0
-            draw_text += _("\n{0}是机械体，且未安装生育模组，无法受精\n").format(character_data.name)
+    # 假孕孕肚状态下无法受精（正常经get_fertilization_rate已清零概率，此处为绕过概率计算路径的兜底）
+    elif handle_premise.handle_fake_inflation_1(character_id):
+      character_data.pregnancy.fertilization_rate = 0
+      draw_text += _("\n{0}正处于假孕状态，精子无法使其真正受精\n").format(
+          character_data.name
+      )
 
-        # 正常情况下可以受精
-        else:
+    # 种族是机械的则需要判断是否有生育模组
+    elif character_data.race == 2 and character_data.talent[171] == 0:
+      character_data.pregnancy.fertilization_rate = 0
+      draw_text += _("\n{0}是机械体，且未安装生育模组，无法受精\n").format(
+          character_data.name
+      )
 
-            # 多胎胎生：先从种族的产胎数量范围随机本次排卵数，逐轮判定；单胎胎生恒为1轮，与原单次判定完全等价
-            min_num, max_num = get_multiple_birth_range(character_id)
-            ovum_count = random.randint(min_num, max_num)
-            success_count = 0
-            base_rate = get_base_fertilization_rate(semen_total, semen_level)
-            now_semen = semen_total
-            for _round in range(ovum_count):
-                # 每轮概率：以判定前的受精概率为基准，按临时精液量对应的基础概率比例缩放（首轮比例为1，与原判定一致）
-                if base_rate > 0:
-                    now_rate = character_data.pregnancy.fertilization_rate * get_base_fertilization_rate(now_semen, semen_level) / base_rate
-                else:
-                    now_rate = character_data.pregnancy.fertilization_rate
-                # 由随机数判断本轮是否受精
-                if random.randint(1, 100) <= now_rate:
-                    success_count += 1
-                # 无论成功与否，临时精液量都衰减后进入下一轮
-                now_semen *= 1 - pregnancy_constant.MULTIPLE_BIRTH_SEMEN_DECAY
-
-            if success_count >= 1:
-                draw_text += "\n※※※※※※※※※\n"
-                draw_text += _("\n博士的精子与{0}的卵子结合，成功在子宫里着床了\n").format(character_data.name)
-                # 多胎胎生：说明本次排卵数与受精数
-                if multiple_birth_flag:
-                    if success_count >= 2:
-                        draw_text += _("\n{0}的卵巢一次排出了{1}颗卵子，其中{2}颗成功受精，{0}怀上了{2}胞胎\n").format(character_data.name, ovum_count, success_count)
-                    else:
-                        draw_text += _("\n{0}的卵巢一次排出了{1}颗卵子，其中1颗成功受精\n").format(character_data.name, ovum_count)
-                # 单胎胎生：按概率判定为同卵双胞胎
-                elif random.randint(1, 100) <= pregnancy_constant.IDENTICAL_TWINS_RATE:
-                    success_count = 2
-                    character_data.pregnancy.identical_twins = True
-                    draw_text += _("\n受精卵在着床后分裂成了两个胚胎，{0}怀上了同卵双胞胎\n").format(character_data.name)
-                draw_text += _("\n{0}获得了[受精]\n").format(character_data.name)
-                draw_text += "\n※※※※※※※※※\n"
-                character_data.talent[20] = 1
-                character_data.pregnancy.fertilization_time = cache.game_time
-                character_data.pregnancy.fetus_count = success_count
-                # 新受精重置妊娠加速药的累计加速天数
-                character_data.pregnancy.acceleration_days = 0.0
-                # 判断是否是无意识妊娠
-                if character_data.pregnancy.unconscious_fertilization:
-                    character_data.talent[35] = 1
-                    draw_text += _("\n{0}从未在有意识下被中出过，因此不会意识到自己已经怀孕了\n").format(character_data.name)
-                    draw_text += _("\n{0}获得了[无意识妊娠]\n").format(character_data.name)
-                    draw_text += "\n※※※※※※※※※\n"
-                # 触发受精的二段行动
-                second_behavior.character_get_second_behavior(character_id, "fertilization")
-            else:
-                if character_data.h_state.body_item[11][1] or character_data.h_state.body_item[12][1]:
-                    draw_text += _("\n在避孕药的影响下——")
-                if multiple_birth_flag:
-                    draw_text += _("\n{0}的卵巢一次排出了{1}颗卵子，但没有一颗成功受精\n").format(character_data.name, ovum_count)
-                else:
-                    draw_text += _("\n精子在{0}的阴道中游荡，但未能成功受精\n").format(character_data.name)
-                second_behavior.character_get_second_behavior(character_id, "fertilization_failed")
-
-        character_data.pregnancy.fertilization_rate = 0
+    # 正常情况下可以受精
     else:
-        if character_data.h_state.body_item[11][1] or character_data.h_state.body_item[12][1]:
-            draw_text += _("\n在避孕药的影响下——\n精子在{0}的阴道中游荡，但未能成功受精\n").format(character_data.name)
 
-    # 绘制输出
-    talk.must_show_talk_check(character_id)
-    now_draw = draw.WaitDraw()
-    now_draw.width = window_width
-    now_draw.text = draw_text
-    now_draw.draw()
-    # 结算成就
-    if handle_premise.handle_fertilization_1(character_id):
-        # 破处当天受精
-        if handle_premise.handle_first_sex_in_today(character_id):
-            achievement_panel.achievement_flow(_("生育"), 706)
-        # 育儿中的角色受精怀孕
-        if handle_premise.handle_rearing_1(character_id):
-            achievement_panel.achievement_flow(_("生育"), 708)
+      # 多胎胎生：先从种族的产胎数量范围随机本次排卵数，逐轮判定；单胎胎生恒为1轮，与原单次判定完全等价
+      min_num, max_num = get_multiple_birth_range(character_id)
+      ovum_count = random.randint(min_num, max_num)
+      success_count = 0
+      base_rate = get_base_fertilization_rate(semen_total, semen_level)
+      now_semen = semen_total
+      for _round in range(ovum_count):
+        # 每轮概率：以判定前的受精概率为基准，按临时精液量对应的基础概率比例缩放（首轮比例为1，与原判定一致）
+        if base_rate > 0:
+          now_rate = (
+              character_data.pregnancy.fertilization_rate
+              * get_base_fertilization_rate(now_semen, semen_level)
+              / base_rate
+          )
+        else:
+          now_rate = character_data.pregnancy.fertilization_rate
+        # 由随机数判断本轮是否受精
+        if random.randint(1, 100) <= now_rate:
+          success_count += 1
+        # 无论成功与否，临时精液量都衰减后进入下一轮
+        now_semen *= 1 - pregnancy_constant.MULTIPLE_BIRTH_SEMEN_DECAY
+
+      if success_count >= 1:
+        draw_text += "\n※※※※※※※※※\n"
+        draw_text += _(
+            "\n博士的精子与{0}的卵子结合，成功在子宫里着床了\n"
+        ).format(character_data.name)
+        # 多胎胎生：说明本次排卵数与受精数
+        if multiple_birth_flag:
+          if success_count >= 2:
+            draw_text += _(
+                "\n{0}的卵巢一次排出了{1}颗卵子，其中{2}颗成功受精，{0}怀上了{2}胞胎\n"
+            ).format(character_data.name, ovum_count, success_count)
+          else:
+            draw_text += _(
+                "\n{0}的卵巢一次排出了{1}颗卵子，其中1颗成功受精\n"
+            ).format(character_data.name, ovum_count)
+        # 单胎胎生：按概率判定为同卵双胞胎
+        elif random.randint(1, 100) <= pregnancy_constant.IDENTICAL_TWINS_RATE:
+          success_count = 2
+          character_data.pregnancy.identical_twins = True
+          draw_text += _(
+              "\n受精卵在着床后分裂成了两个胚胎，{0}怀上了同卵双胞胎\n"
+          ).format(character_data.name)
+        draw_text += _("\n{0}获得了[受精]\n").format(character_data.name)
+        draw_text += "\n※※※※※※※※※\n"
+        character_data.talent[20] = 1
+        character_data.pregnancy.fertilization_time = cache.game_time
+        character_data.pregnancy.fetus_count = success_count
+        # 新受精重置妊娠加速药的累计加速天数
+        character_data.pregnancy.acceleration_days = 0.0
+        # 判断是否是无意识妊娠
+        if character_data.pregnancy.unconscious_fertilization:
+          character_data.talent[35] = 1
+          draw_text += _(
+              "\n{0}从未在有意识下被中出过，因此不会意识到自己已经怀孕了\n"
+          ).format(character_data.name)
+          draw_text += _("\n{0}获得了[无意识妊娠]\n").format(
+              character_data.name
+          )
+          draw_text += "\n※※※※※※※※※\n"
+        # 触发受精的二段行动
+        second_behavior.character_get_second_behavior(
+            character_id, "fertilization"
+        )
+      else:
+        if (
+            character_data.h_state.body_item[11][1]
+            or character_data.h_state.body_item[12][1]
+        ):
+          draw_text += _("\n在避孕药的影响下——")
+        if multiple_birth_flag:
+          draw_text += _(
+              "\n{0}的卵巢一次排出了{1}颗卵子，但没有一颗成功受精\n"
+          ).format(character_data.name, ovum_count)
+        else:
+          draw_text += _("\n精子在{0}的阴道中游荡，但未能成功受精\n").format(
+              character_data.name
+          )
+        second_behavior.character_get_second_behavior(
+            character_id, "fertilization_failed"
+        )
+
+    character_data.pregnancy.fertilization_rate = 0
+  else:
+    if (
+        character_data.h_state.body_item[11][1]
+        or character_data.h_state.body_item[12][1]
+    ):
+      draw_text += _(
+          "\n在避孕药的影响下——\n精子在{0}的阴道中游荡，但未能成功受精\n"
+      ).format(character_data.name)
+
+  # 绘制输出
+  talk.must_show_talk_check(character_id)
+  now_draw = draw.WaitDraw()
+  now_draw.width = window_width
+  now_draw.text = draw_text
+  now_draw.draw()
+  # 结算成就
+  if handle_premise.handle_fertilization_1(character_id):
+    # 破处当天受精
+    if handle_premise.handle_first_sex_in_today(character_id):
+      achievement_panel.achievement_flow(_("生育"), 706)
+    # 育儿中的角色受精怀孕
+    if handle_premise.handle_rearing_1(character_id):
+      achievement_panel.achievement_flow(_("生育"), 708)
 
 
 def check_pregnancy(character_id: int):
-    """
-    判断是否由受精变为怀孕
-    """
-    character_data: game_type.Character = cache.character_data[character_id]
-    # 需要已经是受精状态
-    if handle_premise.handle_fertilization_1(character_id):
-        # 计算经过的天数（含妊娠加速药的加速天数）
-        past_day = get_pregnancy_past_day(character_id)
-        # 受精满一个季月（30天）转为妊娠
-        if past_day >= pregnancy_constant.PREGNANCY_DAY:
-            character_data.talent[20] = 0
-            character_data.talent[21] = 1
-            character_data.talent[26] = 1
-            character_data.talent[27] = 1
-            # 根据罩杯大小修改乳汁上限
-            for talent_id in [121,122,123,124,125]:
-                if character_data.talent[talent_id]:
-                    character_data.pregnancy.milk_max = 150 + (talent_id - 121) * 40
-                    break
-            second_behavior.character_get_second_behavior(character_id, "pregnancy")
-            talk.must_show_talk_check(character_id)
-            draw_text = "\n※※※※※※※※※\n"
-            draw_text += _("\n随着怀孕的进程，{0}挺起了大肚子，隆起的曲线下是正在孕育的新生命\n").format(character_data.name)
-            draw_text += get_fetus_count_draw_text(character_id)
-            draw_text += _("\n{0}有孕在身，将会暂停工作和部分娱乐\n").format(character_data.name)
-            draw_text += _("\n{0}从[受精]转变为[妊娠]\n").format(character_data.name)
-            draw_text += _("\n{0}获得了[孕肚]\n").format(character_data.name)
-            draw_text += _("\n{0}获得了[泌乳]\n").format(character_data.name)
-            draw_text += "\n※※※※※※※※※\n"
-            now_draw = draw.WaitDraw()
-            now_draw.width = window_width
-            now_draw.text = draw_text
-            now_draw.draw()
+  """
+  判断是否由受精变为怀孕
+  """
+  character_data: game_type.Character = cache.character_data[character_id]
+  # 需要已经是受精状态
+  if handle_premise.handle_fertilization_1(character_id):
+    # 计算经过的天数（含妊娠加速药的加速天数）
+    past_day = get_pregnancy_past_day(character_id)
+    # 受精满一个季月（30天）转为妊娠
+    if past_day >= pregnancy_constant.PREGNANCY_DAY:
+      character_data.talent[20] = 0
+      character_data.talent[21] = 1
+      character_data.talent[26] = 1
+      character_data.talent[27] = 1
+      # 根据罩杯大小修改乳汁上限
+      for talent_id in [121, 122, 123, 124, 125]:
+        if character_data.talent[talent_id]:
+          character_data.pregnancy.milk_max = 150 + (talent_id - 121) * 40
+          break
+      second_behavior.character_get_second_behavior(character_id, "pregnancy")
+      talk.must_show_talk_check(character_id)
+      draw_text = "\n※※※※※※※※※\n"
+      draw_text += _(
+          "\n随着怀孕的进程，{0}挺起了大肚子，隆起的曲线下是正在孕育的新生命\n"
+      ).format(character_data.name)
+      draw_text += get_fetus_count_draw_text(character_id)
+      draw_text += _("\n{0}有孕在身，将会暂停工作和部分娱乐\n").format(
+          character_data.name
+      )
+      draw_text += _("\n{0}从[受精]转变为[妊娠]\n").format(character_data.name)
+      draw_text += _("\n{0}获得了[孕肚]\n").format(character_data.name)
+      draw_text += _("\n{0}获得了[泌乳]\n").format(character_data.name)
+      draw_text += "\n※※※※※※※※※\n"
+      now_draw = draw.WaitDraw()
+      now_draw.width = window_width
+      now_draw.text = draw_text
+      now_draw.draw()
 
 
 def check_near_born(character_id: int):
-    """
-    判断是否开始临盆
-    """
-    character_data: game_type.Character = cache.character_data[character_id]
-    # 需要已经是妊娠状态
-    if handle_premise.handle_pregnancy_1(character_id):
-        # 计算经过的天数（含妊娠加速药的加速天数）
-        past_day = get_pregnancy_past_day(character_id)
-        # 从受精开始算，满 PARTURIENT_DAY 天进入临盆，之后每天按概率生产
-        if past_day >= pregnancy_constant.PARTURIENT_DAY:
-            # 清零污浊结构体
-            character_data.dirty = attr_calculation.get_dirty_reset(character_data.dirty)
-            # 赋予对应素质和二段行动
-            character_data.talent[21] = 0
-            character_data.talent[22] = 1
-            second_behavior.character_get_second_behavior(character_id, "parturient")
-            talk.must_show_talk_check(character_id)
-            draw_text = "\n※※※※※※※※※\n"
-            draw_text += _("\n随着怀孕的进程，{0}临近生产，即将诞下爱的结晶\n").format(character_data.name)
-            draw_text += get_fetus_count_draw_text(character_id)
-            draw_text += _("\n{0}在临盆期内会一直躺在医疗部住院区的病床上，多去陪陪她，静候生产的来临吧\n").format(character_data.name)
-            draw_text += _("\n{0}从[妊娠]转变为[临盆]\n").format(character_data.name)
-            draw_text += "\n※※※※※※※※※\n"
-            now_draw = draw.WaitDraw()
-            now_draw.width = window_width
-            now_draw.text = draw_text
-            now_draw.draw()
+  """
+  判断是否开始临盆
+  """
+  character_data: game_type.Character = cache.character_data[character_id]
+  # 需要已经是妊娠状态
+  if handle_premise.handle_pregnancy_1(character_id):
+    # 计算经过的天数（含妊娠加速药的加速天数）
+    past_day = get_pregnancy_past_day(character_id)
+    # 从受精开始算，满 PARTURIENT_DAY 天进入临盆，之后每天按概率生产
+    if past_day >= pregnancy_constant.PARTURIENT_DAY:
+      # 清零污浊结构体
+      character_data.dirty = attr_calculation.get_dirty_reset(
+          character_data.dirty
+      )
+      # 赋予对应素质和二段行动
+      character_data.talent[21] = 0
+      character_data.talent[22] = 1
+      second_behavior.character_get_second_behavior(character_id, "parturient")
+      talk.must_show_talk_check(character_id)
+      draw_text = "\n※※※※※※※※※\n"
+      draw_text += _(
+          "\n随着怀孕的进程，{0}临近生产，即将诞下爱的结晶\n"
+      ).format(character_data.name)
+      draw_text += get_fetus_count_draw_text(character_id)
+      draw_text += _(
+          "\n{0}在临盆期内会一直躺在医疗部住院区的病床上，多去陪陪她，静候生产的来临吧\n"
+      ).format(character_data.name)
+      draw_text += _("\n{0}从[妊娠]转变为[临盆]\n").format(character_data.name)
+      draw_text += "\n※※※※※※※※※\n"
+      now_draw = draw.WaitDraw()
+      now_draw.width = window_width
+      now_draw.text = draw_text
+      now_draw.draw()
 
 
 def check_born(character_id: int):
-    """
-    判断是否开始生产
-    """
-    character_data: game_type.Character = cache.character_data[character_id]
-    # 需要已经是临盆状态
-    if handle_premise.handle_parturient_1(character_id):
-        # 计算经过的天数（含妊娠加速药的加速天数）
-        past_day = get_pregnancy_past_day(character_id) - pregnancy_constant.PARTURIENT_DAY
-        # 每过一天+20%几率判断是否生产
-        now_rate = past_day * 20
-        # print(f"debug {character_data.name}进入生产检测，当前生产几率为{now_rate}%")
-        if random.randint(1,100) <= now_rate:
-            draw_panel = born_event_panel.Born_Panel(character_id)
-            draw_panel.draw()
+  """
+  判断是否开始生产
+  """
+  character_data: game_type.Character = cache.character_data[character_id]
+  # 需要已经是临盆状态
+  if handle_premise.handle_parturient_1(character_id):
+    # 计算经过的天数（含妊娠加速药的加速天数）
+    past_day = (
+        get_pregnancy_past_day(character_id) - pregnancy_constant.PARTURIENT_DAY
+    )
+    # 每过一天+20%几率判断是否生产
+    now_rate = past_day * 20
+    # print(f"debug {character_data.name}进入生产检测，当前生产几率为{now_rate}%")
+    if random.randint(1, 100) <= now_rate:
+      draw_panel = born_event_panel.Born_Panel(character_id)
+      draw_panel.draw()
 
 
 def check_rearing(character_id: int):
-    """
-    判断是否开始育儿
-    """
-    character_data: game_type.Character = cache.character_data[character_id]
-    # 需要已经是产后状态
-    if handle_premise.handle_postpartum_1(character_id):
-        # 计算最新一个孩子出生后经过的有效天数（含成长加速药）
-        child_id = character_data.relationship.child_id_list[-1]
-        child_character_data: game_type.Character = cache.character_data[child_id]
-        past_day = get_child_grow_day(child_id)
-        if past_day >= pregnancy_constant.POSTPARTUM_REST_DAY:
-            character_data.talent[23] = 0
-            character_data.talent[24] = 1
-            second_behavior.character_get_second_behavior(character_id, "rearing")
-            talk.must_show_talk_check(character_id)
-            draw_text = "\n※※※※※※※※※\n"
-            draw_text += _("\n{0}的产后休息结束了\n").format(character_data.name)
-            # 列出名下全部婴儿（多胞胎为多个），无婴儿时退回最新的孩子
-            baby_name_list = [cache.character_data[baby_id].name for baby_id in get_baby_id_list(character_id)]
-            baby_name_text = "、".join(baby_name_list) if len(baby_name_list) else child_character_data.name
-            draw_text += _("\n{0}接下来的行动重心会以照顾{1}为主\n").format(character_data.name, baby_name_text)
-            draw_text += _("\n{0}从[产后]转变为[育儿]\n").format(character_data.name)
-            draw_text += "\n※※※※※※※※※\n"
-            now_draw = draw.WaitDraw()
-            now_draw.width = window_width
-            now_draw.text = draw_text
-            now_draw.draw()
+  """
+  判断是否开始育儿
+  """
+  character_data: game_type.Character = cache.character_data[character_id]
+  # 需要已经是产后状态
+  if handle_premise.handle_postpartum_1(character_id):
+    # 计算最新一个孩子出生后经过的有效天数（含成长加速药）
+    child_id = character_data.relationship.child_id_list[-1]
+    child_character_data: game_type.Character = cache.character_data[child_id]
+    past_day = get_child_grow_day(child_id)
+    if past_day >= pregnancy_constant.POSTPARTUM_REST_DAY:
+      character_data.talent[23] = 0
+      character_data.talent[24] = 1
+      second_behavior.character_get_second_behavior(character_id, "rearing")
+      talk.must_show_talk_check(character_id)
+      draw_text = "\n※※※※※※※※※\n"
+      draw_text += _("\n{0}的产后休息结束了\n").format(character_data.name)
+      # 列出名下全部婴儿（多胞胎为多个），无婴儿时退回最新的孩子
+      baby_name_list = [
+          cache.character_data[baby_id].name
+          for baby_id in get_baby_id_list(character_id)
+      ]
+      baby_name_text = (
+          "、".join(baby_name_list)
+          if len(baby_name_list)
+          else child_character_data.name
+      )
+      draw_text += _("\n{0}接下来的行动重心会以照顾{1}为主\n").format(
+          character_data.name, baby_name_text
+      )
+      draw_text += _("\n{0}从[产后]转变为[育儿]\n").format(character_data.name)
+      draw_text += "\n※※※※※※※※※\n"
+      now_draw = draw.WaitDraw()
+      now_draw.width = window_width
+      now_draw.text = draw_text
+      now_draw.draw()
 
 
 def _settle_baby_grow_up(character_id: int, child_id: int):
-    """
-    结算一名婴儿成长为幼女：素质101→102；母亲名下再无婴儿时同时结束育儿
-    幼女与婴儿一样离线：不进任何场景、不进 npc_id_got，长成学员时才上线（check_grow_to_loli）
-    换完素质后清掉队列里婴儿期残留的养成事件
-    Keyword arguments:
-    character_id -- 母亲角色id
-    child_id -- 成长的婴儿角色id
-    Return arguments:
-    无
-    """
-    from Script.System.Education_System import growth_event_handle
+  """
+  结算一名婴儿成长为幼女：素质101→102；母亲名下再无婴儿时同时结束育儿
+  幼女与婴儿一样离线：不进任何场景、不进 npc_id_got，长成学员时才上线（check_grow_to_loli）
+  换完素质后清掉队列里婴儿期残留的养成事件
+  Keyword arguments:
+  character_id -- 母亲角色id
+  child_id -- 成长的婴儿角色id
+  Return arguments:
+  无
+  """
+  from Script.System.Education_System import growth_event_handle
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    child_character_data: game_type.Character = cache.character_data[child_id]
-    child_character_data.talent[101] = 0
-    child_character_data.talent[102] = 1
-    # 婴儿期入队、还没处理的婴儿桶事件清掉，否则会顶着「幼女期」的抬头弹出
-    growth_event_handle.drop_stale_stage_event(child_id)
-    # 母亲名下是否还有其他婴儿需要照顾（有则保留育儿与泌乳状态）
-    rearing_complete_flag = len(get_baby_id_list(character_id)) == 0
-    if rearing_complete_flag:
-        character_data.talent[24] = 0
-        character_data.talent[27] = 0
-    second_behavior.character_get_second_behavior(character_id, "rearing_complete")
-    talk.must_show_talk_check(character_id)
-    draw_text = "\n※※※※※※※※※\n"
-    draw_text += _("\n在{0}的悉心照料下，{1}顺利长大了\n").format(character_data.name, child_character_data.name)
-    if rearing_complete_flag:
-        draw_text += _("\n{0}完成了育儿行动，开始回到正常的工作生活中来\n").format(character_data.name)
-    else:
-        draw_text += _("\n{0}还有其他婴儿需要照顾，会继续留在育儿室进行育儿\n").format(character_data.name)
-    if rearing_complete_flag:
-        draw_text += _("\n{0}失去了[育儿]\n").format(character_data.name)
-        draw_text += _("\n{0}失去了[泌乳]\n").format(character_data.name)
-    draw_text += _("\n{0}从[婴儿]成长为了[幼女]\n").format(child_character_data.name)
-    draw_text += "\n※※※※※※※※※\n"
-    now_draw = draw.WaitDraw()
-    now_draw.width = window_width
-    now_draw.text = draw_text
-    now_draw.draw()
+  character_data: game_type.Character = cache.character_data[character_id]
+  child_character_data: game_type.Character = cache.character_data[child_id]
+  child_character_data.talent[101] = 0
+  child_character_data.talent[102] = 1
+  # 婴儿期入队、还没处理的婴儿桶事件清掉，否则会顶着「幼女期」的抬头弹出
+  growth_event_handle.drop_stale_stage_event(child_id)
+  # 母亲名下是否还有其他婴儿需要照顾（有则保留育儿与泌乳状态）
+  rearing_complete_flag = len(get_baby_id_list(character_id)) == 0
+  if rearing_complete_flag:
+    character_data.talent[24] = 0
+    character_data.talent[27] = 0
+  second_behavior.character_get_second_behavior(
+      character_id, "rearing_complete"
+  )
+  talk.must_show_talk_check(character_id)
+  draw_text = "\n※※※※※※※※※\n"
+  draw_text += _("\n在{0}的悉心照料下，{1}顺利长大了\n").format(
+      character_data.name, child_character_data.name
+  )
+  if rearing_complete_flag:
+    draw_text += _("\n{0}完成了育儿行动，开始回到正常的工作生活中来\n").format(
+        character_data.name
+    )
+  else:
+    draw_text += _(
+        "\n{0}还有其他婴儿需要照顾，会继续留在育儿室进行育儿\n"
+    ).format(character_data.name)
+  if rearing_complete_flag:
+    draw_text += _("\n{0}失去了[育儿]\n").format(character_data.name)
+    draw_text += _("\n{0}失去了[泌乳]\n").format(character_data.name)
+  draw_text += _("\n{0}从[婴儿]成长为了[幼女]\n").format(
+      child_character_data.name
+  )
+  draw_text += "\n※※※※※※※※※\n"
+  now_draw = draw.WaitDraw()
+  now_draw.width = window_width
+  now_draw.text = draw_text
+  now_draw.draw()
 
 
 def check_rearing_complete(character_id: int):
-    """
-    判断是否完成育儿：逐个检查母亲名下的全部婴儿，有效成长天数满30天的婴儿各自成长为幼女
-    """
-    character_data: game_type.Character = cache.character_data[character_id]
-    # 需要已经是育儿状态
-    if handle_premise.handle_rearing_1(character_id):
-        # 婴儿满一个季月（30天）成长为幼女
-        for child_id in get_baby_id_list(character_id):
-            if get_child_grow_day(child_id) >= pregnancy_constant.REARING_COMPLETE_DAY:
-                _settle_baby_grow_up(character_id, child_id)
+  """
+  判断是否完成育儿：逐个检查母亲名下的全部婴儿，有效成长天数满30天的婴儿各自成长为幼女
+  """
+  character_data: game_type.Character = cache.character_data[character_id]
+  # 需要已经是育儿状态
+  if handle_premise.handle_rearing_1(character_id):
+    # 婴儿满一个季月（30天）成长为幼女
+    for child_id in get_baby_id_list(character_id):
+      if (
+          get_child_grow_day(child_id)
+          >= pregnancy_constant.REARING_COMPLETE_DAY
+      ):
+        _settle_baby_grow_up(character_id, child_id)
 
 
 def check_grow_to_loli(character_id: int):
-    """
-    判断是否成长为学员：素质102→103，孩子上线、置为学生岗，开始在教育区上课
-    """
-    character_data: game_type.Character = cache.character_data[character_id]
-    # 需要是女儿，而且已经是幼女状态，且没有处于成长停滞（素质28）
-    if handle_premise.handle_self_is_player_daughter(character_id) and handle_premise.handle_self_is_child(character_id) and not handle_premise.handle_growth_stop_1(character_id):
-        # 计算经过的有效成长天数（含成长加速药）
-        past_day = get_child_grow_day(character_id)
-        # 在幼女后又过了两个月
-        if past_day >= pregnancy_constant.GROW_TO_LOLI_DAY:
-            second_behavior.character_get_second_behavior(character_id, "child_to_loli")
-            talk.must_show_talk_check(character_id)
-            character_data.talent[102] = 0
-            character_data.talent[103] = 1
-            # 学员已成年：未初潮与未成年一并去掉
-            character_data.talent[6] = 0
-            character_data.talent[7] = 0
-            from Script.Design import handle_npc_ai
-            from Script.System.Education_System import education_constant, growth_event_handle, schedule_template_handle
+  """
+  判断是否成长为学员：素质102→103，孩子上线、置为学生岗，开始在教育区上课
+  """
+  character_data: game_type.Character = cache.character_data[character_id]
+  # 需要是女儿，而且已经是幼女状态，且没有处于成长停滞（素质28）
+  if (
+      handle_premise.handle_self_is_player_daughter(character_id)
+      and handle_premise.handle_self_is_child(character_id)
+      and not handle_premise.handle_growth_stop_1(character_id)
+  ):
+    # 计算经过的有效成长天数（含成长加速药）
+    past_day = get_child_grow_day(character_id)
+    # 在幼女后又过了两个月
+    if past_day >= pregnancy_constant.GROW_TO_LOLI_DAY:
+      second_behavior.character_get_second_behavior(
+          character_id, "child_to_loli"
+      )
+      talk.must_show_talk_check(character_id)
+      character_data.talent[102] = 0
+      character_data.talent[103] = 1
+      # 学员已成年：未初潮与未成年一并去掉
+      character_data.talent[6] = 0
+      character_data.talent[7] = 0
+      from Script.Design import handle_npc_ai
+      from Script.System.Education_System import education_constant, growth_event_handle, schedule_template_handle
 
-            # 成为学员即上线，并转为学生岗（取教育系统的常量，不写死 152）
-            character_handle.get_new_character(character_id)
-            character_data.work.work_type = education_constant.STUDENT_WORK_TYPE
-            # 幼女期入队、还没处理的幼女桶事件清掉，否则会顶着「学员期」的抬头弹出
-            growth_event_handle.drop_stale_stage_event(character_id)
-            # 换完素质、置了学生岗之后刷当天娱乐，再按日程模板改写（顺序与跨天结算相同）
-            handle_npc_ai.get_chara_entertainment(character_id)
-            schedule_template_handle.apply_schedule_for_child(character_id)
-            chest_grow_text = chest_grow(character_id)
-            draw_text = "\n※※※※※※※※※\n"
-            draw_text += _("\n{0}长大成人了\n").format(character_data.name)
-            draw_text += _("\n{0}从[幼女]成长为了[学员]\n").format(character_data.name)
-            draw_text += _("\n{0}失去了[未初潮]与[未成年]\n").format(character_data.name)
-            draw_text += chest_grow_text
-            draw_text += _("\n{0}成为了一名学员，会在教育区上课学习\n").format(character_data.name)
-            if len(cache.rhodes_island.all_work_npc_set[education_constant.TEACHER_WORK_TYPE]) == 0:
-                draw_text += _("\n当前教育区没有进行授课工作的老师，请尽快安排一名干员负责教师工作\n")
-            draw_text += "\n※※※※※※※※※\n"
-            now_draw = draw.WaitDraw()
-            now_draw.width = window_width
-            now_draw.text = draw_text
-            now_draw.draw()
+      # 成为学员即上线，并转为学生岗（取教育系统的常量，不写死 152）
+      character_handle.get_new_character(character_id)
+      character_data.work.work_type = education_constant.STUDENT_WORK_TYPE
+      # 幼女期入队、还没处理的幼女桶事件清掉，否则会顶着「学员期」的抬头弹出
+      growth_event_handle.drop_stale_stage_event(character_id)
+      # 换完素质、置了学生岗之后刷当天娱乐，再按日程模板改写（顺序与跨天结算相同）
+      handle_npc_ai.get_chara_entertainment(character_id)
+      schedule_template_handle.apply_schedule_for_child(character_id)
+      chest_grow_text = chest_grow(character_id)
+      draw_text = "\n※※※※※※※※※\n"
+      draw_text += _("\n{0}长大成人了\n").format(character_data.name)
+      draw_text += _("\n{0}从[幼女]成长为了[学员]\n").format(
+          character_data.name
+      )
+      draw_text += _("\n{0}失去了[未初潮]与[未成年]\n").format(
+          character_data.name
+      )
+      draw_text += chest_grow_text
+      draw_text += _("\n{0}成为了一名学员，会在教育区上课学习\n").format(
+          character_data.name
+      )
+      if (
+          len(
+              cache.rhodes_island.all_work_npc_set[
+                  education_constant.TEACHER_WORK_TYPE
+              ]
+          )
+          == 0
+      ):
+        draw_text += _(
+            "\n当前教育区没有进行授课工作的老师，请尽快安排一名干员负责教师工作\n"
+        )
+      draw_text += "\n※※※※※※※※※\n"
+      now_draw = draw.WaitDraw()
+      now_draw.width = window_width
+      now_draw.text = draw_text
+      now_draw.draw()
 
 
 def check_grow_to_girl(character_id: int):
-    """
-    判断是否成长为少女
-    """
-    character_data: game_type.Character = cache.character_data[character_id]
-    # 需要是女儿，而且已经是学员状态，且没有处于成长停滞（素质28）
-    if handle_premise.handle_self_is_player_daughter(character_id) and handle_premise.handle_self_is_loli(character_id) and not handle_premise.handle_growth_stop_1(character_id):
-        # 计算经过的有效成长天数（含成长加速药）
-        past_day = get_child_grow_day(character_id)
-        # 在学员后又过了两个月
-        if past_day >= pregnancy_constant.GROW_TO_GIRL_DAY:
-            second_behavior.character_get_second_behavior(character_id, "loli_to_girl")
-            talk.must_show_talk_check(character_id)
-            character_data.talent[103] = 0
-            character_data.talent[104] = 1
-            character_data.talent[7] = 0
-            # 成长为少女后成长停滞素质已无意义，顺手清除
-            character_data.talent[28] = 0
-            # 学员期记下的待炫耀也清掉：炫耀口上只写幼女 / 学员，毕业后见面再派只会静默地加一份好感
-            if character_data.child_growth is not None:
-                character_data.child_growth.show_off_ability = {}
-            from Script.System.Education_System import growth_event_handle, growth_handle
+  """
+  判断是否成长为少女
+  """
+  character_data: game_type.Character = cache.character_data[character_id]
+  # 需要是女儿，而且已经是学员状态，且没有处于成长停滞（素质28）
+  if (
+      handle_premise.handle_self_is_player_daughter(character_id)
+      and handle_premise.handle_self_is_loli(character_id)
+      and not handle_premise.handle_growth_stop_1(character_id)
+  ):
+    # 计算经过的有效成长天数（含成长加速药）
+    past_day = get_child_grow_day(character_id)
+    # 在学员后又过了两个月
+    if past_day >= pregnancy_constant.GROW_TO_GIRL_DAY:
+      second_behavior.character_get_second_behavior(
+          character_id, "loli_to_girl"
+      )
+      talk.must_show_talk_check(character_id)
+      character_data.talent[103] = 0
+      character_data.talent[104] = 1
+      character_data.talent[7] = 0
+      # 成长为少女后成长停滞素质已无意义，顺手清除
+      character_data.talent[28] = 0
+      # 学员期记下的待炫耀也清掉：炫耀口上只写幼女 / 学员，毕业后见面再派只会静默地加一份好感
+      if character_data.child_growth is not None:
+        character_data.child_growth.show_off_ability = {}
+      from Script.System.Education_System import growth_event_handle, growth_handle
 
-            # 毕业前入队、还没处理的日常养成事件（学员桶与通用桶）清掉：
-            #    必须排在下面推毕业典礼之前；毕业桶的毕业典礼、成年纪念与通用 59 / 60 本就不在清理范围里
-            growth_event_handle.drop_stale_stage_event(character_id)
-            chest_grow_text = chest_grow(character_id)
-            body_part_grow_text = body_part_grow(character_id)
-            # 毕业结算：能力随学习即时成长，毕业时只结算性格与职业倾向
-            # 守卫是 handle_self_is_loli，上面已把 talent[103] 清零，天然幂等，不需要额外防重复
-            personality_text = growth_handle.settle_personality_talent(character_id)
-            career_text = growth_handle.get_career_suggestion_text(character_id)
-            # 毕业典礼与成年纪念插到养成事件队首，玩家下次处理公务时举行（Plan 22 三期 §3.26）
-            growth_event_handle.push_graduation_event(character_id)
-            ceremony_text = _("\n大礼堂已为{0}备好了毕业典礼，等你下次处理公务时定夺\n").format(character_data.name)
-            draw_text = "\n※※※※※※※※※\n"
-            draw_text += _("\n{0}完成了教育区的学业，迎来了毕业\n").format(character_data.name)
-            draw_text += _("\n{0}从[学员]成长为了[少女]\n").format(character_data.name)
-            draw_text += chest_grow_text
-            draw_text += body_part_grow_text
-            draw_text += personality_text
-            draw_text += career_text
-            draw_text += ceremony_text
-            draw_text += _("\n{0}可以进行正常的工作了\n").format(character_data.name)
-            draw_text += "\n※※※※※※※※※\n"
-            now_draw = draw.WaitDraw()
-            now_draw.width = window_width
-            now_draw.text = draw_text
-            now_draw.draw()
+      # 毕业前入队、还没处理的日常养成事件（学员桶与通用桶）清掉：
+      #    必须排在下面推毕业典礼之前；毕业桶的毕业典礼、成年纪念与通用 59 / 60 本就不在清理范围里
+      growth_event_handle.drop_stale_stage_event(character_id)
+      chest_grow_text = chest_grow(character_id)
+      body_part_grow_text = body_part_grow(character_id)
+      # 毕业结算：能力随学习即时成长，毕业时只结算性格与职业倾向
+      # 守卫是 handle_self_is_loli，上面已把 talent[103] 清零，天然幂等，不需要额外防重复
+      personality_text = growth_handle.settle_personality_talent(character_id)
+      career_text = growth_handle.get_career_suggestion_text(character_id)
+      # 毕业典礼与成年纪念插到养成事件队首，玩家下次处理公务时举行（Plan 22 三期 §3.26）
+      growth_event_handle.push_graduation_event(character_id)
+      ceremony_text = _(
+          "\n大礼堂已为{0}备好了毕业典礼，等你下次处理公务时定夺\n"
+      ).format(character_data.name)
+      draw_text = "\n※※※※※※※※※\n"
+      draw_text += _("\n{0}完成了教育区的学业，迎来了毕业\n").format(
+          character_data.name
+      )
+      draw_text += _("\n{0}从[学员]成长为了[少女]\n").format(
+          character_data.name
+      )
+      draw_text += chest_grow_text
+      draw_text += body_part_grow_text
+      draw_text += personality_text
+      draw_text += career_text
+      draw_text += ceremony_text
+      draw_text += _("\n{0}可以进行正常的工作了\n").format(character_data.name)
+      draw_text += "\n※※※※※※※※※\n"
+      now_draw = draw.WaitDraw()
+      now_draw.width = window_width
+      now_draw.text = draw_text
+      now_draw.draw()
 
 
 def check_all_pregnancy(character_id: int):
-    """
-    进行受精怀孕的全流程检查
-    \n\n包括刷新受精概率、是否受精、是否由受精变为怀孕、是否结束怀孕
-    \n\n带壳卵生角色在受精判定后分流为排卵结算与破壳判定，不走胎生的妊娠/临盆/生产/产后链
-    """
-    from Script.System.Pregnancy_System import egg_handle
+  """
+  进行受精怀孕的全流程检查
+  \n\n包括刷新受精概率、是否受精、是否由受精变为怀孕、是否结束怀孕
+  \n\n带壳卵生角色在受精判定后分流为排卵结算与破壳判定，不走胎生的妊娠/临盆/生产/产后链
+  """
+  from Script.System.Pregnancy_System import egg_handle
 
-    get_fertilization_rate(character_id)
-    check_fertilization(character_id)
-    # 带壳卵生走排卵与破壳链，无壳卵生只走破壳链（排卵在性绝顶时体外发生），胎生（单胎/多胎）走妊娠链
-    if egg_handle.get_birth_type(character_id) == pregnancy_constant.BIRTH_TYPE_EGG:
-        egg_handle.check_ovulation(character_id)
-        egg_handle.check_egg_born(character_id)
-    elif egg_handle.is_egg_soft(character_id):
-        egg_handle.check_egg_born(character_id)
-    else:
-        check_pregnancy(character_id)
-        check_near_born(character_id)
-        check_born(character_id)
-        check_rearing(character_id)
-    check_rearing_complete(character_id)
-    check_grow_to_girl(character_id)
+  get_fertilization_rate(character_id)
+  check_fertilization(character_id)
+  # 带壳卵生走排卵与破壳链，无壳卵生只走破壳链（排卵在性绝顶时体外发生），胎生（单胎/多胎）走妊娠链
+  if (
+      egg_handle.get_birth_type(character_id)
+      == pregnancy_constant.BIRTH_TYPE_EGG
+  ):
+    egg_handle.check_ovulation(character_id)
+    egg_handle.check_egg_born(character_id)
+  elif egg_handle.is_egg_soft(character_id):
+    egg_handle.check_egg_born(character_id)
+  else:
+    check_pregnancy(character_id)
+    check_near_born(character_id)
+    check_born(character_id)
+    check_rearing(character_id)
+  check_rearing_complete(character_id)
+  check_grow_to_girl(character_id)
 
 
 def check_all_child_grow_to_loli():
-    """
-    检查玩家的全部女儿里有没有该长成学员的幼女（睡眠结算时调用一次）
-    幼女离线、不在 npc_id_got 里，逐角色的 check_all_pregnancy 轮不到她，所以从玩家的子女名单里找
-    """
-    for child_id in list(cache.character_data[0].relationship.child_id_list):
-        if child_id in cache.character_data:
-            check_grow_to_loli(child_id)
+  """
+  检查玩家的全部女儿里有没有该长成学员的幼女（睡眠结算时调用一次）
+  幼女离线、不在 npc_id_got 里，逐角色的 check_all_pregnancy 轮不到她，所以从玩家的子女名单里找
+  """
+  for child_id in list(cache.character_data[0].relationship.child_id_list):
+    if child_id in cache.character_data:
+      check_grow_to_loli(child_id)
 
 
 def update_reproduction_period(character_id: int):
-    """
-    刷新生理周期（每日0点逐角色调用），推进到排卵日时挂起本周期的排卵日事件待办标记
-    """
+  """
+  刷新生理周期（每日0点逐角色调用），推进到排卵日时挂起本周期的排卵日事件待办标记
+  """
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_reproduction = character_data.pregnancy.reproduction_period
-    if now_reproduction == 6:
-        character_data.pregnancy.reproduction_period = 0
-    else:
-        character_data.pregnancy.reproduction_period += 1
-    # 该角色自己的排卵日开始时置位待办标记（胎生由受精判定消费，卵生由排卵结算消费）
-    if character_data.pregnancy.reproduction_period == 5:
-        character_data.pregnancy.ovulation_flag = True
-        # 无壳卵生：排卵日当天获得一次体外排卵机会
-        character_data.pregnancy.external_ovulation_chance = True
-    else:
-        # 离开排卵日：体外排卵机会过期；无壳卵生的排卵促进药/催眠强制排卵效果只保留到当日机会结束
-        if character_data.pregnancy.external_ovulation_chance:
-            character_data.pregnancy.external_ovulation_chance = False
-            character_data.h_state.body_item[10][1] = False
-            character_data.hypnosis.force_ovulation = False
+  character_data: game_type.Character = cache.character_data[character_id]
+  now_reproduction = character_data.pregnancy.reproduction_period
+  if now_reproduction == 6:
+    character_data.pregnancy.reproduction_period = 0
+  else:
+    character_data.pregnancy.reproduction_period += 1
+  # 该角色自己的排卵日开始时置位待办标记（胎生由受精判定消费，卵生由排卵结算消费）
+  if character_data.pregnancy.reproduction_period == 5:
+    character_data.pregnancy.ovulation_flag = True
+    # 无壳卵生：排卵日当天获得一次体外排卵机会
+    character_data.pregnancy.external_ovulation_chance = True
+  else:
+    # 离开排卵日：体外排卵机会过期；无壳卵生的排卵促进药/催眠强制排卵效果只保留到当日机会结束
+    if character_data.pregnancy.external_ovulation_chance:
+      character_data.pregnancy.external_ovulation_chance = False
+      character_data.h_state.body_item[10][1] = False
+      character_data.hypnosis.force_ovulation = False
 
 
-def chest_grow(character_id: int,print_flag = False):
-    """
-    进行胸部生长判定
-    """
+def chest_grow(character_id: int, print_flag=False):
+  """
+  进行胸部生长判定
+  """
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    mom_id = character_data.relationship.mother_id
-    mom_character_data: game_type.Character = cache.character_data[mom_id]
-    # 获得本人的旧胸部大小和母亲的胸部大小
-    for i in {121,122,123,124,125}:
-        if character_data.talent[i]:
-            old_chest_id = i
-        if mom_character_data.talent[i]:
-            mom_chest_id = i
+  character_data: game_type.Character = cache.character_data[character_id]
+  mom_id = character_data.relationship.mother_id
+  mom_character_data: game_type.Character = cache.character_data[mom_id]
+  # 获得本人的旧胸部大小和母亲的胸部大小
+  for i in {121, 122, 123, 124, 125}:
+    if character_data.talent[i]:
+      old_chest_id = i
+    if mom_character_data.talent[i]:
+      mom_chest_id = i
 
-    # 跳过机械
-    if mom_character_data.race == 2:
-        return ""
+  # 跳过机械
+  if mom_character_data.race == 2:
+    return ""
 
-    # 用随机数计算生长，可能长3、长2或者长1，母亲胸部越大生长比例就越高
-    # 母亲胸部0时从长0~长3生长比例是 0.6 0.25 0.1 0.05，母亲胸部6时反过来
-    randow_grow = random.randint(1,100)
-    grow_rate = mom_chest_id - 121
-    # 照料值作为母亲属性之外的第二输入（Plan 22 二期 §3.8）：
-    # 只收窄"不长"那一档的窗口，长1/长2的宽度不动，于是照料越多越容易往上跳一档
-    from Script.System.Education_System import growth_handle
+  # 用随机数计算生长，可能长3、长2或者长1，母亲胸部越大生长比例就越高
+  # 母亲胸部0时从长0~长3生长比例是 0.6 0.25 0.1 0.05，母亲胸部6时反过来
+  randow_grow = random.randint(1, 100)
+  grow_rate = mom_chest_id - 121
+  # 照料值作为母亲属性之外的第二输入（Plan 22 二期 §3.8）：
+  # 只收窄"不长"那一档的窗口，长1/长2的宽度不动，于是照料越多越容易往上跳一档
+  from Script.System.Education_System import growth_handle
 
-    care_bonus = growth_handle.get_care_point_grow_bonus(character_id)
-    grow_0 = max(0, 60 - 11 * grow_rate - care_bonus)
-    grow_1 = 25 - 3 *grow_rate
-    grow_2 = 10 + 3 *grow_rate
-    if randow_grow > grow_0 + grow_1 + grow_2:
-        new_chest_id = min(old_chest_id + 3 ,125)
-    elif randow_grow > grow_0 + grow_1:
-        new_chest_id = min(old_chest_id + 2 ,125)
-    elif randow_grow > grow_0 :
-        new_chest_id = min(old_chest_id + 1 ,125)
-    else:
-        new_chest_id = old_chest_id
+  care_bonus = growth_handle.get_care_point_grow_bonus(character_id)
+  grow_0 = max(0, 60 - 11 * grow_rate - care_bonus)
+  grow_1 = 25 - 3 * grow_rate
+  grow_2 = 10 + 3 * grow_rate
+  if randow_grow > grow_0 + grow_1 + grow_2:
+    new_chest_id = min(old_chest_id + 3, 125)
+  elif randow_grow > grow_0 + grow_1:
+    new_chest_id = min(old_chest_id + 2, 125)
+  elif randow_grow > grow_0:
+    new_chest_id = min(old_chest_id + 1, 125)
+  else:
+    new_chest_id = old_chest_id
 
-    # 把旧的胸部素质换成新的
-    character_data.talent[old_chest_id] = 0
-    character_data.talent[new_chest_id] = 1
+  # 把旧的胸部素质换成新的
+  character_data.talent[old_chest_id] = 0
+  character_data.talent[new_chest_id] = 1
 
-    # 根据flag判定是否要绘制输出
-    old_name = game_config.config_talent[old_chest_id].name
-    new_name = game_config.config_talent[new_chest_id].name
+  # 根据flag判定是否要绘制输出
+  old_name = game_config.config_talent[old_chest_id].name
+  new_name = game_config.config_talent[new_chest_id].name
+  now_draw = draw.WaitDraw()
+  now_draw.width = window_width
+  if new_chest_id != old_chest_id:
+    now_text = _("\n{0}的胸部从[{1}]成长为了[{2}]\n").format(
+        character_data.name, old_name, new_name
+    )
+  else:
+    now_text = _("\n{0}的胸部依旧保持在[{1}]没有成长\n").format(
+        character_data.name, old_name
+    )
+  if print_flag:
+    now_draw.text = now_text
+    now_draw.draw()
+
+  # 返回胸部成长情况的文本
+  return now_text
+
+
+def body_part_grow(character_id: int, print_flag=False):
+  """
+  进行除胸部外其他部位的生长判定
+  """
+
+  character_data: game_type.Character = cache.character_data[character_id]
+  mom_id = character_data.relationship.mother_id
+  mom_character_data: game_type.Character = cache.character_data[mom_id]
+  now_text = ""
+
+  # 跳过机械
+  if mom_character_data.race == 2:
+    return now_text
+
+  # 新旧臀部id
+  butt_id_list = [126, 127, 128]
+  # 新旧腿部id
+  leg_id_list = [129, 130]
+  # 新旧足部id
+  foot_id_list = [131, 132]
+  # 新旧部位id集合
+  old_talent_id_list = [butt_id_list, leg_id_list, foot_id_list]
+  # 进行循环
+  for i in range(len(old_talent_id_list)):
+    now_talent_id_list = old_talent_id_list[i]
+    old_talent_id = 0
+    new_talent_id = 0
+    for i in now_talent_id_list:
+      if character_data.talent[i]:
+        old_talent_id = i
+      if mom_character_data.talent[i]:
+        new_talent_id = i
+    # 如果自己id不是0，则去掉旧的素质
+    if old_talent_id != 0:
+      character_data.talent[old_talent_id] = 0
+    # 如果母亲不是0，则继承母亲的素质
+    if new_talent_id != 0:
+      character_data.talent[new_talent_id] = 1
+    # 否则如果母亲是0，则自己和母亲都随机等于当前列表中的一个
+    elif old_talent_id != 0:
+      random_talent_id = random.choice(now_talent_id_list)
+      new_talent_id = random_talent_id
+      old_talent_id = random_talent_id
+      character_data.talent[random_talent_id] = 1
+      mom_character_data.talent[random_talent_id] = 1
+    if new_talent_id != old_talent_id:
+      old_name = game_config.config_talent[old_talent_id].name
+      new_name = game_config.config_talent[new_talent_id].name
+      now_text += _("\n{0}的[{1}]成长为了[{2}]\n").format(
+          character_data.name, old_name, new_name
+      )
+
+  # 根据flag判定是否要绘制输出
+  if print_flag:
     now_draw = draw.WaitDraw()
     now_draw.width = window_width
-    if new_chest_id != old_chest_id:
-        now_text = _("\n{0}的胸部从[{1}]成长为了[{2}]\n").format(character_data.name, old_name, new_name)
-    else:
-        now_text = _("\n{0}的胸部依旧保持在[{1}]没有成长\n").format(character_data.name, old_name)
-    if print_flag:
-        now_draw.text = now_text
-        now_draw.draw()
+    now_draw.text = now_text
+    now_draw.draw()
 
-    # 返回胸部成长情况的文本
-    return now_text
-
-def body_part_grow(character_id: int,print_flag = False):
-    """
-    进行除胸部外其他部位的生长判定
-    """
-
-    character_data: game_type.Character = cache.character_data[character_id]
-    mom_id = character_data.relationship.mother_id
-    mom_character_data: game_type.Character = cache.character_data[mom_id]
-    now_text = ""
-
-    # 跳过机械
-    if mom_character_data.race == 2:
-        return now_text
-
-    # 新旧臀部id
-    butt_id_list = [126,127,128]
-    # 新旧腿部id
-    leg_id_list = [129,130]
-    # 新旧足部id
-    foot_id_list = [131,132]
-    # 新旧部位id集合
-    old_talent_id_list = [butt_id_list, leg_id_list, foot_id_list]
-    # 进行循环
-    for i in range(len(old_talent_id_list)):
-        now_talent_id_list = old_talent_id_list[i]
-        old_talent_id = 0
-        new_talent_id = 0
-        for i in now_talent_id_list:
-            if character_data.talent[i]:
-                old_talent_id = i
-            if mom_character_data.talent[i]:
-                new_talent_id = i
-        # 如果自己id不是0，则去掉旧的素质
-        if old_talent_id != 0:
-            character_data.talent[old_talent_id] = 0
-        # 如果母亲不是0，则继承母亲的素质
-        if new_talent_id != 0:
-            character_data.talent[new_talent_id] = 1
-        # 否则如果母亲是0，则自己和母亲都随机等于当前列表中的一个
-        elif old_talent_id != 0:
-            random_talent_id = random.choice(now_talent_id_list)
-            new_talent_id = random_talent_id
-            old_talent_id = random_talent_id
-            character_data.talent[random_talent_id] = 1
-            mom_character_data.talent[random_talent_id] = 1
-        if new_talent_id != old_talent_id:
-            old_name = game_config.config_talent[old_talent_id].name
-            new_name = game_config.config_talent[new_talent_id].name
-            now_text += _("\n{0}的[{1}]成长为了[{2}]\n").format(character_data.name, old_name, new_name)
-
-    # 根据flag判定是否要绘制输出
-    if print_flag:
-        now_draw = draw.WaitDraw()
-        now_draw.width = window_width
-        now_draw.text = now_text
-        now_draw.draw()
-
-    # 返回成长情况的文本
-    return now_text
+  # 返回成长情况的文本
+  return now_text
 
 
 def judge_suspected_abnormal_daughter(character_id: int) -> bool:
-    """
-    判定一个角色是否是因旧版本存档BUG误入本存档的女儿
+  """
+  判定一个角色是否是因旧版本存档BUG误入本存档的女儿
 
-    识别依据：born_new_character 生下每个女儿时都会把她的id登记进博士（0号）的 child_id_list；
-       旧版本BUG把上一局的女儿凭空实例化进本局时只建了角色、没做这道登记。
-       于是「标记为博士女儿（father_id==0）却不在博士孩子名单里」的，即为误入本存档的女儿
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    bool -- 是否为疑似误入的女儿
-    """
-    if character_id == 0 or character_id not in cache.character_data:
-        return False
-    if cache.character_data[character_id].relationship.father_id != 0:
-        return False
-    return character_id not in cache.character_data[0].relationship.child_id_list
+  识别依据：born_new_character 生下每个女儿时都会把她的id登记进博士（0号）的 child_id_list；
+     旧版本BUG把上一局的女儿凭空实例化进本局时只建了角色、没做这道登记。
+     于是「标记为博士女儿（father_id==0）却不在博士孩子名单里」的，即为误入本存档的女儿
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  bool -- 是否为疑似误入的女儿
+  """
+  if character_id == 0 or character_id not in cache.character_data:
+    return False
+  if cache.character_data[character_id].relationship.father_id != 0:
+    return False
+  return character_id not in cache.character_data[0].relationship.child_id_list
 
 
 def get_all_player_daughter_id_list() -> list:
-    """
-    取本存档全部博士女儿（father_id==0）的id列表
-    Keyword arguments:
-    无
-    Return arguments:
-    list -- 女儿id列表，按id升序
-    """
-    return [cid for cid in sorted(cache.character_data) if cid != 0 and cache.character_data[cid].relationship.father_id == 0]
+  """
+  取本存档全部博士女儿（father_id==0）的id列表
+  Keyword arguments:
+  无
+  Return arguments:
+  list -- 女儿id列表，按id升序
+  """
+  return [
+      cid
+      for cid in sorted(cache.character_data)
+      if cid != 0 and cache.character_data[cid].relationship.father_id == 0
+  ]
 
 
 def get_suspected_abnormal_daughter_list() -> list:
-    """
-    取全部疑似因旧版本存档BUG误入本存档的女儿id列表
-    Keyword arguments:
-    无
-    Return arguments:
-    list -- 疑似误入的女儿id列表，按id升序
-    """
-    child_id_set = set(cache.character_data[0].relationship.child_id_list)
-    return [cid for cid in get_all_player_daughter_id_list() if cid not in child_id_set]
+  """
+  取全部疑似因旧版本存档BUG误入本存档的女儿id列表
+  Keyword arguments:
+  无
+  Return arguments:
+  list -- 疑似误入的女儿id列表，按id升序
+  """
+  child_id_set = set(cache.character_data[0].relationship.child_id_list)
+  return [
+      cid
+      for cid in get_all_player_daughter_id_list()
+      if cid not in child_id_set
+  ]
 
 
 def remove_abnormal_daughter(character_id: int) -> bool:
-    """
-    把一名疑似误入本存档的女儿彻底移除，并清掉她在各处的引用
+  """
+  把一名疑似误入本存档的女儿彻底移除，并清掉她在各处的引用
 
-    只对 judge_suspected_abnormal_daughter 判定为真的角色生效，绝不会误删博士在册的亲生女儿
-    Keyword arguments:
-    character_id -- 要移除的角色id
-    Return arguments:
-    bool -- 是否成功移除
-    """
-    from Script.Design import map_handle
-    from Script.System.Official_Event_System import official_event_handle
+  只对 judge_suspected_abnormal_daughter 判定为真的角色生效，绝不会误删博士在册的亲生女儿
+  Keyword arguments:
+  character_id -- 要移除的角色id
+  Return arguments:
+  bool -- 是否成功移除
+  """
+  from Script.Design import map_handle
+  from Script.System.Official_Event_System import official_event_handle
 
-    # 安全护栏：只移除疑似误入的女儿，绝不动在册的亲生女儿
-    if not judge_suspected_abnormal_daughter(character_id):
-        return False
-    character_data: game_type.Character = cache.character_data[character_id]
-    # 从所在场景的角色列表里移除
-    scene_path_str = map_handle.get_map_system_path_str_for_list(character_data.position)
-    if scene_path_str in cache.scene_data and character_id in cache.scene_data[scene_path_str].character_list:
-        cache.scene_data[scene_path_str].character_list.remove(character_id)
-    # 删掉角色数据、已获得集合与角色模板（模板一并删掉，免得再被实例化）
-    cache.npc_id_got.discard(character_id)
-    cache.character_data.pop(character_id, None)
-    cache.npc_tem_data.pop(character_id, None)
-    # 清掉其他角色对她的引用：血缘子女名单与当前交互对象
-    for other_data in cache.character_data.values():
-        if character_id in other_data.relationship.child_id_list:
-            other_data.relationship.child_id_list.remove(character_id)
-        if other_data.target_character_id == character_id:
-            other_data.target_character_id = other_data.cid
-    # 清掉公务事件队列里指向她的项（clean 会丢弃主体已不在角色表里的项）
-    official_event_handle.clean_official_event_queue()
-    return True
+  # 安全护栏：只移除疑似误入的女儿，绝不动在册的亲生女儿
+  if not judge_suspected_abnormal_daughter(character_id):
+    return False
+  character_data: game_type.Character = cache.character_data[character_id]
+  # 从所在场景的角色列表里移除
+  scene_path_str = map_handle.get_map_system_path_str_for_list(
+      character_data.position
+  )
+  if (
+      scene_path_str in cache.scene_data
+      and character_id in cache.scene_data[scene_path_str].character_list
+  ):
+    cache.scene_data[scene_path_str].character_list.remove(character_id)
+  # 删掉角色数据、已获得集合与角色模板（模板一并删掉，免得再被实例化）
+  cache.npc_id_got.discard(character_id)
+  cache.character_data.pop(character_id, None)
+  cache.npc_tem_data.pop(character_id, None)
+  # 清掉其他角色对她的引用：血缘子女名单与当前交互对象
+  for other_data in cache.character_data.values():
+    if character_id in other_data.relationship.child_id_list:
+      other_data.relationship.child_id_list.remove(character_id)
+    if other_data.target_character_id == character_id:
+      other_data.target_character_id = other_data.cid
+  # 清掉公务事件队列里指向她的项（clean 会丢弃主体已不在角色表里的项）
+  official_event_handle.clean_official_event_queue()
+  return True

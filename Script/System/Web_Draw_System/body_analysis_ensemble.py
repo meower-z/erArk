@@ -43,20 +43,35 @@ import time
 import traceback
 
 # --- 将 pip 安装的 NVIDIA CUDA 12 DLL 加入搜索路径 (Windows GPU 加速所需) ---
-_site_packages = os.path.join(os.path.dirname(sys.executable), "Lib", "site-packages", "nvidia")
+_site_packages = os.path.join(
+    os.path.dirname(sys.executable), 'Lib', 'site-packages', 'nvidia'
+)
 if os.path.isdir(_site_packages):
-    for _sub in os.listdir(_site_packages):
-        _bin = os.path.join(_site_packages, _sub, "bin")
-        if os.path.isdir(_bin):
-            os.add_dll_directory(_bin)
-            os.environ["PATH"] = _bin + os.pathsep + os.environ.get("PATH", "")
+  for _sub in os.listdir(_site_packages):
+    _bin = os.path.join(_site_packages, _sub, 'bin')
+    if os.path.isdir(_bin):
+      os.add_dll_directory(_bin)
+      os.environ['PATH'] = _bin + os.pathsep + os.environ.get('PATH', '')
 
 # COCO 17 关键点名称
 COCO_KEYPOINTS = [
-    "nose", "left_eye", "right_eye", "left_ear", "right_ear",
-    "left_shoulder", "right_shoulder", "left_elbow", "right_elbow",
-    "left_wrist", "right_wrist", "left_hip", "right_hip",
-    "left_knee", "right_knee", "left_ankle", "right_ankle"
+    'nose',
+    'left_eye',
+    'right_eye',
+    'left_ear',
+    'right_ear',
+    'left_shoulder',
+    'right_shoulder',
+    'left_elbow',
+    'right_elbow',
+    'left_wrist',
+    'right_wrist',
+    'left_hip',
+    'right_hip',
+    'left_knee',
+    'right_knee',
+    'left_ankle',
+    'right_ankle',
 ]
 
 
@@ -67,415 +82,447 @@ ALPHA_BACKGROUND_BGR = (0, 0, 0)
 
 
 def load_image_bgr(image_path):
-    """
-    读取图片为 BGR 图像，带透明通道时按 alpha 铺到纯色底上
+  """
+  读取图片为 BGR 图像，带透明通道时按 alpha 铺到纯色底上
 
-    输入：image_path: str - 图片路径（支持中文路径）
-    输出：numpy.ndarray或None - BGR图像（uint8），读取失败返回None
-    功能：去掉透明区域残留杂色对检测与姿态估计的干扰，铺底颜色见 ALPHA_BACKGROUND_BGR
-    """
-    img_array = np.fromfile(image_path, np.uint8)
-    image = cv2.imdecode(img_array, cv2.IMREAD_UNCHANGED)
-    if image is None:
-        return None
-    # 16 位图先转成 8 位
-    if image.dtype == np.uint16:
-        image = (image / 257).astype(np.uint8)
-    if image.ndim == 2:
-        return cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
-    if image.shape[2] == 4:
-        alpha = image[:, :, 3:4].astype(np.float32) / 255.0
-        background = np.array(ALPHA_BACKGROUND_BGR, dtype=np.float32)
-        blended = image[:, :, :3].astype(np.float32) * alpha + background * (1.0 - alpha)
-        return blended.round().astype(np.uint8)
-    return image[:, :, :3]
+  输入：image_path: str - 图片路径（支持中文路径）
+  输出：numpy.ndarray或None - BGR图像（uint8），读取失败返回None
+  功能：去掉透明区域残留杂色对检测与姿态估计的干扰，铺底颜色见 ALPHA_BACKGROUND_BGR
+  """
+  img_array = np.fromfile(image_path, np.uint8)
+  image = cv2.imdecode(img_array, cv2.IMREAD_UNCHANGED)
+  if image is None:
+    return None
+  # 16 位图先转成 8 位
+  if image.dtype == np.uint16:
+    image = (image / 257).astype(np.uint8)
+  if image.ndim == 2:
+    return cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+  if image.shape[2] == 4:
+    alpha = image[:, :, 3:4].astype(np.float32) / 255.0
+    background = np.array(ALPHA_BACKGROUND_BGR, dtype=np.float32)
+    blended = image[:, :, :3].astype(np.float32) * alpha + background * (
+        1.0 - alpha
+    )
+    return blended.round().astype(np.uint8)
+  return image[:, :, :3]
 
 
 def sigmoid(x):
-    """
-    Sigmoid函数，将logit值转为0-1概率
+  """
+  Sigmoid函数，将logit值转为0-1概率
 
-    输入：x: float或numpy.ndarray - logit值
-    输出：float或numpy.ndarray - 0-1之间的概率值
-    """
-    return 1.0 / (1.0 + np.exp(-np.clip(x, -20, 20)))
+  输入：x: float或numpy.ndarray - logit值
+  输出：float或numpy.ndarray - 0-1之间的概率值
+  """
+  return 1.0 / (1.0 + np.exp(-np.clip(x, -20, 20)))
 
 
 def normalize_scores(scores, model_key, needs_sigmoid_keys):
-    """
-    归一化分数：对RTMW系列模型应用sigmoid，其他保持不变
+  """
+  归一化分数：对RTMW系列模型应用sigmoid，其他保持不变
 
-    输入：
-        scores: numpy.ndarray - 原始分数
-        model_key: str - 模型标识符
-        needs_sigmoid_keys: set - 需要sigmoid归一化的模型key集合
-    输出：numpy.ndarray - 归一化后的分数（0-1范围）
-    """
-    if model_key in needs_sigmoid_keys:
-        return sigmoid(scores)
-    return scores.copy()
+  输入：
+      scores: numpy.ndarray - 原始分数
+      model_key: str - 模型标识符
+      needs_sigmoid_keys: set - 需要sigmoid归一化的模型key集合
+  输出：numpy.ndarray - 归一化后的分数（0-1范围）
+  """
+  if model_key in needs_sigmoid_keys:
+    return sigmoid(scores)
+  return scores.copy()
 
 
 def build_ensemble(results, needs_sigmoid_keys):
-    """
-    构建集成结果：对每个关键点，取归一化置信度最高的模型的坐标和分数
+  """
+  构建集成结果：对每个关键点，取归一化置信度最高的模型的坐标和分数
 
-    输入：
-        results: dict - {model_key: {'kps': ndarray(17,2), 'scores': ndarray(17)}}
-        needs_sigmoid_keys: set - 需要sigmoid的模型key集合
-    输出：dict - 集成结果
-    功能：对每个关键点独立选择最优模型结果
-    """
-    ens_kps = np.zeros((17, 2))
-    ens_norm_scores = np.zeros(17)
-    source_models = []
+  输入：
+      results: dict - {model_key: {'kps': ndarray(17,2), 'scores': ndarray(17)}}
+      needs_sigmoid_keys: set - 需要sigmoid的模型key集合
+  输出：dict - 集成结果
+  功能：对每个关键点独立选择最优模型结果
+  """
+  ens_kps = np.zeros((17, 2))
+  ens_norm_scores = np.zeros(17)
+  source_models = []
 
-    for kp_idx in range(17):
-        best_norm_score = -1
-        best_key = ''
-        best_kp = np.zeros(2)
+  for kp_idx in range(17):
+    best_norm_score = -1
+    best_key = ''
+    best_kp = np.zeros(2)
 
-        for key, res in results.items():
-            if res is None or res['scores'] is None:
-                continue
-            raw_score = res['scores'][kp_idx]
-            norm_score = normalize_scores(np.array([raw_score]), key, needs_sigmoid_keys)[0]
+    for key, res in results.items():
+      if res is None or res['scores'] is None:
+        continue
+      raw_score = res['scores'][kp_idx]
+      norm_score = normalize_scores(
+          np.array([raw_score]), key, needs_sigmoid_keys
+      )[0]
 
-            if norm_score > best_norm_score:
-                best_norm_score = norm_score
-                best_key = key
-                best_kp = res['kps'][kp_idx].copy()
+      if norm_score > best_norm_score:
+        best_norm_score = norm_score
+        best_key = key
+        best_kp = res['kps'][kp_idx].copy()
 
-        ens_kps[kp_idx] = best_kp
-        ens_norm_scores[kp_idx] = best_norm_score
-        source_models.append(best_key)
+    ens_kps[kp_idx] = best_kp
+    ens_norm_scores[kp_idx] = best_norm_score
+    source_models.append(best_key)
 
-    return {
-        'kps': ens_kps,
-        'norm_scores': ens_norm_scores,
-        'source_models': source_models,
-        'avg': float(np.mean(ens_norm_scores))
-    }
+  return {
+      'kps': ens_kps,
+      'norm_scores': ens_norm_scores,
+      'source_models': source_models,
+      'avg': float(np.mean(ens_norm_scores)),
+  }
 
 
 def run_yolo11_inference(model, image):
-    """
-    使用YOLO11-pose模型进行推理
+  """
+  使用YOLO11-pose模型进行推理
 
-    输入：
-        model: ultralytics.YOLO - YOLO模型实例
-        image: numpy.ndarray - BGR图像
-    输出：tuple(ndarray, ndarray) - (关键点坐标(17,2), 置信度(17,)) 或 (None, None)
-    """
-    results = model(image, verbose=False, device='cuda')
-    r = results[0]
-    if r.keypoints is not None and len(r.keypoints.data) > 0:
-        if r.boxes is not None and len(r.boxes.data) > 0:
-            confs = r.boxes.conf.cpu().numpy()
-            best_idx = np.argmax(confs)
-        else:
-            best_idx = 0
-        kp_data = r.keypoints.data[best_idx].cpu().numpy()
-        kps = kp_data[:, :2]
-        scores = kp_data[:, 2]
-        return kps, scores
-    return None, None
+  输入：
+      model: ultralytics.YOLO - YOLO模型实例
+      image: numpy.ndarray - BGR图像
+  输出：tuple(ndarray, ndarray) - (关键点坐标(17,2), 置信度(17,)) 或 (None, None)
+  """
+  results = model(image, verbose=False, device='cuda')
+  r = results[0]
+  if r.keypoints is not None and len(r.keypoints.data) > 0:
+    if r.boxes is not None and len(r.boxes.data) > 0:
+      confs = r.boxes.conf.cpu().numpy()
+      best_idx = np.argmax(confs)
+    else:
+      best_idx = 0
+    kp_data = r.keypoints.data[best_idx].cpu().numpy()
+    kps = kp_data[:, :2]
+    scores = kp_data[:, 2]
+    return kps, scores
+  return None, None
 
 
 def run_rtmo_inference(model, image):
-    """
-    使用RTMO单阶段模型进行推理
+  """
+  使用RTMO单阶段模型进行推理
 
-    输入：
-        model: rtmlib.RTMO - RTMO模型实例
-        image: numpy.ndarray - BGR图像
-    输出：tuple(ndarray, ndarray) - (关键点坐标(17,2), 置信度(17,)) 或 (None, None)
-    """
-    keypoints, scores = model(image)
-    if keypoints is not None and len(keypoints) > 0:
-        return keypoints[0][:17], scores[0][:17]
-    return None, None
+  输入：
+      model: rtmlib.RTMO - RTMO模型实例
+      image: numpy.ndarray - BGR图像
+  输出：tuple(ndarray, ndarray) - (关键点坐标(17,2), 置信度(17,)) 或 (None, None)
+  """
+  keypoints, scores = model(image)
+  if keypoints is not None and len(keypoints) > 0:
+    return keypoints[0][:17], scores[0][:17]
+  return None, None
 
 
 def init_models():
-    """
-    初始化所有7个模型
+  """
+  初始化所有7个模型
 
-    输入：无
-    输出：tuple(dict, set) - (模型字典, 需要sigmoid归一化的模型key集合)
-    """
-    from rtmlib import Wholebody, Body, BodyWithFeet, RTMO, Custom
+  输入：无
+  输出：tuple(dict, set) - (模型字典, 需要sigmoid归一化的模型key集合)
+  """
+  from rtmlib import Wholebody, Body, BodyWithFeet, RTMO, Custom
 
-    backend = 'onnxruntime'
-    device = 'cuda'
-    models = {}
-    needs_sigmoid_keys = set()
+  backend = 'onnxruntime'
+  device = 'cuda'
+  models = {}
+  needs_sigmoid_keys = set()
 
-    # A: Wholebody balanced (基线)
-    print("[A] Wholebody balanced: YOLOX-m + RTMW@256x192...", end='', flush=True)
-    try:
-        models['A'] = {
-            'name': 'A:WB_bal',
-            'model': Wholebody(mode='balanced', backend=backend, device=device),
-            'type': 'rtmlib', 'extract_17': True,
-        }
-        needs_sigmoid_keys.add('A')  # 可能输出logit，稍后自动检测
-        print(" OK")
-    except Exception as e:
-        print(f" 失败: {e}")
+  # A: Wholebody balanced (基线)
+  print('[A] Wholebody balanced: YOLOX-m + RTMW@256x192...', end='', flush=True)
+  try:
+    models['A'] = {
+        'name': 'A:WB_bal',
+        'model': Wholebody(mode='balanced', backend=backend, device=device),
+        'type': 'rtmlib',
+        'extract_17': True,
+    }
+    needs_sigmoid_keys.add('A')  # 可能输出logit，稍后自动检测
+    print(' OK')
+  except Exception as e:
+    print(f' 失败: {e}')
 
-    # B: Body performance
-    print("[B] Body performance: YOLOX-x + RTMPose-x@384x288...", end='', flush=True)
-    try:
-        models['B'] = {
-            'name': 'B:Body_perf',
-            'model': Body(mode='performance', backend=backend, device=device),
-            'type': 'rtmlib', 'extract_17': False,
-        }
-        print(" OK")
-    except Exception as e:
-        print(f" 失败: {e}")
+  # B: Body performance
+  print(
+      '[B] Body performance: YOLOX-x + RTMPose-x@384x288...', end='', flush=True
+  )
+  try:
+    models['B'] = {
+        'name': 'B:Body_perf',
+        'model': Body(mode='performance', backend=backend, device=device),
+        'type': 'rtmlib',
+        'extract_17': False,
+    }
+    print(' OK')
+  except Exception as e:
+    print(f' 失败: {e}')
 
-    # C: Wholebody performance
-    print("[C] Wholebody performance: YOLOX-m + RTMW@384x288...", end='', flush=True)
-    try:
-        models['C'] = {
-            'name': 'C:WB_perf',
-            'model': Wholebody(mode='performance', backend=backend, device=device),
-            'type': 'rtmlib', 'extract_17': True,
-        }
-        needs_sigmoid_keys.add('C')
-        print(" OK")
-    except Exception as e:
-        print(f" 失败: {e}")
+  # C: Wholebody performance
+  print(
+      '[C] Wholebody performance: YOLOX-m + RTMW@384x288...', end='', flush=True
+  )
+  try:
+    models['C'] = {
+        'name': 'C:WB_perf',
+        'model': Wholebody(mode='performance', backend=backend, device=device),
+        'type': 'rtmlib',
+        'extract_17': True,
+    }
+    needs_sigmoid_keys.add('C')
+    print(' OK')
+  except Exception as e:
+    print(f' 失败: {e}')
 
-    # D: YOLO11x-pose
-    print("[D] YOLO11x-pose: 单阶段 (COCO训练)...", end='', flush=True)
-    try:
-        from ultralytics import YOLO
-        yolo_model = YOLO('yolo11x-pose.pt')
-        models['D'] = {
-            'name': 'D:YOLO11x',
-            'model': yolo_model,
-            'type': 'yolo11', 'extract_17': False,
-        }
-        print(" OK")
-    except Exception as e:
-        print(f" 失败: {e}")
+  # D: YOLO11x-pose
+  print('[D] YOLO11x-pose: 单阶段 (COCO训练)...', end='', flush=True)
+  try:
+    from ultralytics import YOLO
 
-    # E: BodyWithFeet performance
-    print("[E] BodyWithFeet performance: YOLOX-x + halpe26@384x288...", end='', flush=True)
-    try:
-        models['E'] = {
-            'name': 'E:BWF_perf',
-            'model': BodyWithFeet(mode='performance', backend=backend, device=device),
-            'type': 'rtmlib', 'extract_17': True,
-        }
-        print(" OK")
-    except Exception as e:
-        print(f" 失败: {e}")
+    yolo_model = YOLO('yolo11x-pose.pt')
+    models['D'] = {
+        'name': 'D:YOLO11x',
+        'model': yolo_model,
+        'type': 'yolo11',
+        'extract_17': False,
+    }
+    print(' OK')
+  except Exception as e:
+    print(f' 失败: {e}')
 
-    # F: RTMO-l
-    print("[F] RTMO-l: 单阶段 (640x640)...", end='', flush=True)
-    try:
-        rtmo_url = 'https://download.openmmlab.com/mmpose/v1/projects/rtmo/onnx_sdk/rtmo-l_16xb16-600e_body7-640x640-b37118ce_20231211.zip'
-        rtmo_model = RTMO(
-            onnx_model=rtmo_url,
-            model_input_size=(640, 640),
-            backend=backend, device=device
-        )
-        models['F'] = {
-            'name': 'F:RTMO-l',
-            'model': rtmo_model,
-            'type': 'rtmo', 'extract_17': False,
-        }
-        print(" OK")
-    except Exception as e:
-        print(f" 失败: {e}")
-        traceback.print_exc()
+  # E: BodyWithFeet performance
+  print(
+      '[E] BodyWithFeet performance: YOLOX-x + halpe26@384x288...',
+      end='',
+      flush=True,
+  )
+  try:
+    models['E'] = {
+        'name': 'E:BWF_perf',
+        'model': BodyWithFeet(
+            mode='performance', backend=backend, device=device
+        ),
+        'type': 'rtmlib',
+        'extract_17': True,
+    }
+    print(' OK')
+  except Exception as e:
+    print(f' 失败: {e}')
 
-    # G: Custom最大精度
-    print("[G] Custom: YOLOX-x + RTMW@384x288...", end='', flush=True)
-    try:
-        det_url = 'https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/onnx_sdk/yolox_x_8xb8-300e_humanart-a39d44ed.zip'
-        pose_url = 'https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/onnx_sdk/rtmw-dw-x-l_simcc-cocktail14_270e-384x288_20231122.zip'
-        models['G'] = {
-            'name': 'G:Custom_max',
-            'model': Custom(
-                det_class='YOLOX', det=det_url, det_input_size=(640, 640),
-                pose_class='RTMPose', pose=pose_url, pose_input_size=(288, 384),
-                backend=backend, device=device
-            ),
-            'type': 'rtmlib', 'extract_17': True,
-        }
-        needs_sigmoid_keys.add('G')
-        print(" OK")
-    except Exception as e:
-        print(f" 失败: {e}")
-        traceback.print_exc()
+  # F: RTMO-l
+  print('[F] RTMO-l: 单阶段 (640x640)...', end='', flush=True)
+  try:
+    rtmo_url = 'https://download.openmmlab.com/mmpose/v1/projects/rtmo/onnx_sdk/rtmo-l_16xb16-600e_body7-640x640-b37118ce_20231211.zip'
+    rtmo_model = RTMO(
+        onnx_model=rtmo_url,
+        model_input_size=(640, 640),
+        backend=backend,
+        device=device,
+    )
+    models['F'] = {
+        'name': 'F:RTMO-l',
+        'model': rtmo_model,
+        'type': 'rtmo',
+        'extract_17': False,
+    }
+    print(' OK')
+  except Exception as e:
+    print(f' 失败: {e}')
+    traceback.print_exc()
 
-    return models, needs_sigmoid_keys
+  # G: Custom最大精度
+  print('[G] Custom: YOLOX-x + RTMW@384x288...', end='', flush=True)
+  try:
+    det_url = 'https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/onnx_sdk/yolox_x_8xb8-300e_humanart-a39d44ed.zip'
+    pose_url = 'https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/onnx_sdk/rtmw-dw-x-l_simcc-cocktail14_270e-384x288_20231122.zip'
+    models['G'] = {
+        'name': 'G:Custom_max',
+        'model': Custom(
+            det_class='YOLOX',
+            det=det_url,
+            det_input_size=(640, 640),
+            pose_class='RTMPose',
+            pose=pose_url,
+            pose_input_size=(288, 384),
+            backend=backend,
+            device=device,
+        ),
+        'type': 'rtmlib',
+        'extract_17': True,
+    }
+    needs_sigmoid_keys.add('G')
+    print(' OK')
+  except Exception as e:
+    print(f' 失败: {e}')
+    traceback.print_exc()
+
+  return models, needs_sigmoid_keys
 
 
 def run_model_inference(minfo, key, image):
-    """
-    对单个模型运行推理
+  """
+  对单个模型运行推理
 
-    输入：
-        minfo: dict - 模型信息字典
-        key: str - 模型标识符
-        image: numpy.ndarray - BGR图像
-    输出：dict或None - {'kps': ndarray(17,2), 'scores': ndarray(17)} 或 None
-    """
-    try:
-        if minfo['type'] == 'yolo11':
-            kps_17, scores_17 = run_yolo11_inference(minfo['model'], image)
-        elif minfo['type'] == 'rtmo':
-            kps_17, scores_17 = run_rtmo_inference(minfo['model'], image)
-        else:
-            kps, scores = minfo['model'](image)
-            if kps is not None and len(kps) > 0:
-                kps_17 = kps[0][:17]
-                scores_17 = scores[0][:17]
-            else:
-                kps_17, scores_17 = None, None
+  输入：
+      minfo: dict - 模型信息字典
+      key: str - 模型标识符
+      image: numpy.ndarray - BGR图像
+  输出：dict或None - {'kps': ndarray(17,2), 'scores': ndarray(17)} 或 None
+  """
+  try:
+    if minfo['type'] == 'yolo11':
+      kps_17, scores_17 = run_yolo11_inference(minfo['model'], image)
+    elif minfo['type'] == 'rtmo':
+      kps_17, scores_17 = run_rtmo_inference(minfo['model'], image)
+    else:
+      kps, scores = minfo['model'](image)
+      if kps is not None and len(kps) > 0:
+        kps_17 = kps[0][:17]
+        scores_17 = scores[0][:17]
+      else:
+        kps_17, scores_17 = None, None
 
-        if kps_17 is not None and scores_17 is not None:
-            return {'kps': kps_17, 'scores': scores_17}
-    except Exception:
-        pass
-    return None
+    if kps_17 is not None and scores_17 is not None:
+      return {'kps': kps_17, 'scores': scores_17}
+  except Exception:
+    pass
+  return None
 
 
-def process_character(char_name, full_body_path, json_path, models, needs_sigmoid_keys):
-    """
-    处理单个角色：运行所有模型并生成集成结果JSON
+def process_character(
+    char_name, full_body_path, json_path, models, needs_sigmoid_keys
+):
+  """
+  处理单个角色：运行所有模型并生成集成结果JSON
 
-    输入：
-        char_name: str - 角色名
-        full_body_path: str - 全身图像路径
-        json_path: str - 输出JSON路径
-        models: dict - 模型字典
-        needs_sigmoid_keys: set - 需要sigmoid的模型key集合
-    输出：bool - 是否成功处理
-    """
-    # 加载图像（透明区域铺纯色底，去掉残留杂色）
-    image = load_image_bgr(full_body_path)
-    if image is None:
-        return False
+  输入：
+      char_name: str - 角色名
+      full_body_path: str - 全身图像路径
+      json_path: str - 输出JSON路径
+      models: dict - 模型字典
+      needs_sigmoid_keys: set - 需要sigmoid的模型key集合
+  输出：bool - 是否成功处理
+  """
+  # 加载图像（透明区域铺纯色底，去掉残留杂色）
+  image = load_image_bgr(full_body_path)
+  if image is None:
+    return False
 
-    h, w = image.shape[:2]
+  h, w = image.shape[:2]
 
-    # 运行所有模型
-    results = {}
-    for key in sorted(models.keys()):
-        res = run_model_inference(models[key], key, image)
-        results[key] = res
+  # 运行所有模型
+  results = {}
+  for key in sorted(models.keys()):
+    res = run_model_inference(models[key], key, image)
+    results[key] = res
 
-    # 源图片文件名以实际路径为准（目录模式下不一定是 {角色名}_全身.png）
-    source_image_name = os.path.basename(full_body_path)
+  # 源图片文件名以实际路径为准（目录模式下不一定是 {角色名}_全身.png）
+  source_image_name = os.path.basename(full_body_path)
 
-    # 检查是否至少有一个模型成功
-    valid_results = {k: v for k, v in results.items() if v is not None}
-    if not valid_results:
-        # 所有模型都失败，生成空结果
-        output_data = {
-            "version": "2.0",
-            "model": "ensemble",
-            "character": char_name,
-            "source_image": source_image_name,
-            "image_width": w,
-            "image_height": h,
-            "landmarks": [],
-            "note": "所有模型均未检测到人体"
-        }
-        with open(json_path, 'w', encoding='utf-8') as f:
-            json.dump(output_data, f, ensure_ascii=False, indent=2)
-        return True
-
-    # 构建集成结果
-    ensemble = build_ensemble(results, needs_sigmoid_keys)
-
-    # 构建landmarks数据
-    landmarks_data = []
-    for idx in range(17):
-        kp = ensemble['kps'][idx]
-        norm_x = float(kp[0]) / w
-        norm_y = float(kp[1]) / h
-        norm_score = float(ensemble['norm_scores'][idx])
-        source = ensemble['source_models'][idx]
-
-        landmarks_data.append({
-            "id": idx,
-            "name": COCO_KEYPOINTS[idx],
-            "x": norm_x,
-            "y": norm_y,
-            "score": norm_score,
-            "visibility": norm_score,
-            "source_model": source,
-        })
-
-    # 统计各模型成功率和来源分布
-    source_count = {}
-    for src in ensemble['source_models']:
-        source_count[src] = source_count.get(src, 0) + 1
-
-    model_scores = {}
-    for key, res in results.items():
-        if res is not None:
-            norm_s = normalize_scores(res['scores'][:17], key, needs_sigmoid_keys)
-            model_scores[key] = float(np.mean(norm_s))
-
+  # 检查是否至少有一个模型成功
+  valid_results = {k: v for k, v in results.items() if v is not None}
+  if not valid_results:
+    # 所有模型都失败，生成空结果
     output_data = {
-        "version": "2.0",
-        "model": "ensemble",
-        "ensemble_models": list(sorted(models.keys())),
-        "character": char_name,
-        "source_image": source_image_name,
-        "image_width": w,
-        "image_height": h,
-        "ensemble_avg_score": ensemble['avg'],
-        "per_model_avg": model_scores,
-        "source_distribution": source_count,
-        "landmarks": landmarks_data,
+        'version': '2.0',
+        'model': 'ensemble',
+        'character': char_name,
+        'source_image': source_image_name,
+        'image_width': w,
+        'image_height': h,
+        'landmarks': [],
+        'note': '所有模型均未检测到人体',
     }
-
     with open(json_path, 'w', encoding='utf-8') as f:
-        json.dump(output_data, f, ensure_ascii=False, indent=2)
-
+      json.dump(output_data, f, ensure_ascii=False, indent=2)
     return True
+
+  # 构建集成结果
+  ensemble = build_ensemble(results, needs_sigmoid_keys)
+
+  # 构建landmarks数据
+  landmarks_data = []
+  for idx in range(17):
+    kp = ensemble['kps'][idx]
+    norm_x = float(kp[0]) / w
+    norm_y = float(kp[1]) / h
+    norm_score = float(ensemble['norm_scores'][idx])
+    source = ensemble['source_models'][idx]
+
+    landmarks_data.append(
+        {
+            'id': idx,
+            'name': COCO_KEYPOINTS[idx],
+            'x': norm_x,
+            'y': norm_y,
+            'score': norm_score,
+            'visibility': norm_score,
+            'source_model': source,
+        }
+    )
+
+  # 统计各模型成功率和来源分布
+  source_count = {}
+  for src in ensemble['source_models']:
+    source_count[src] = source_count.get(src, 0) + 1
+
+  model_scores = {}
+  for key, res in results.items():
+    if res is not None:
+      norm_s = normalize_scores(res['scores'][:17], key, needs_sigmoid_keys)
+      model_scores[key] = float(np.mean(norm_s))
+
+  output_data = {
+      'version': '2.0',
+      'model': 'ensemble',
+      'ensemble_models': list(sorted(models.keys())),
+      'character': char_name,
+      'source_image': source_image_name,
+      'image_width': w,
+      'image_height': h,
+      'ensemble_avg_score': ensemble['avg'],
+      'per_model_avg': model_scores,
+      'source_distribution': source_count,
+      'landmarks': landmarks_data,
+  }
+
+  with open(json_path, 'w', encoding='utf-8') as f:
+    json.dump(output_data, f, ensure_ascii=False, indent=2)
+
+  return True
 
 
 def collect_characters(base_dirs, skip_existing=True):
-    """
-    收集所有待处理的角色信息
+  """
+  收集所有待处理的角色信息
 
-    输入：
-        base_dirs: list[str] - 角色目录列表
-        skip_existing: bool - 是否跳过已生成JSON的角色（默认True）
-    输出：list[tuple(str, str, str)] - [(角色名, 全身图路径, JSON输出路径), ...]
-    """
-    characters = []
-    skipped_count = 0
-    for base_dir in base_dirs:
-        if not os.path.exists(base_dir):
-            print(f"目录不存在，跳过: {base_dir}")
-            continue
-        for d in sorted(os.listdir(base_dir)):
-            char_dir = os.path.join(base_dir, d)
-            if not os.path.isdir(char_dir):
-                continue
-            full_body_path = os.path.join(char_dir, f"{d}_全身.png")
-            json_path = os.path.join(char_dir, f"{d}_body.json")
-            if os.path.exists(full_body_path):
-                # 跳过已生成JSON的角色
-                if skip_existing and os.path.exists(json_path):
-                    skipped_count += 1
-                    continue
-                characters.append((d, full_body_path, json_path))
-    if skipped_count > 0:
-        print(f"跳过已识别角色: {skipped_count}个")
-    return characters
+  输入：
+      base_dirs: list[str] - 角色目录列表
+      skip_existing: bool - 是否跳过已生成JSON的角色（默认True）
+  输出：list[tuple(str, str, str)] - [(角色名, 全身图路径, JSON输出路径), ...]
+  """
+  characters = []
+  skipped_count = 0
+  for base_dir in base_dirs:
+    if not os.path.exists(base_dir):
+      print(f'目录不存在，跳过: {base_dir}')
+      continue
+    for d in sorted(os.listdir(base_dir)):
+      char_dir = os.path.join(base_dir, d)
+      if not os.path.isdir(char_dir):
+        continue
+      full_body_path = os.path.join(char_dir, f'{d}_全身.png')
+      json_path = os.path.join(char_dir, f'{d}_body.json')
+      if os.path.exists(full_body_path):
+        # 跳过已生成JSON的角色
+        if skip_existing and os.path.exists(json_path):
+          skipped_count += 1
+          continue
+        characters.append((d, full_body_path, json_path))
+  if skipped_count > 0:
+    print(f'跳过已识别角色: {skipped_count}个')
+  return characters
 
 
 # 目录模式下识别的图片扩展名
@@ -484,217 +531,251 @@ IMAGE_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.webp', '.bmp'}
 FULL_BODY_SUFFIX = '_全身'
 
 
-def collect_images_from_dir(target_dir, skip_existing=True, recursive=False, all_images=False):
-    """
-    目录模式：收集指定目录下所有待识别的全身立绘
+def collect_images_from_dir(
+    target_dir, skip_existing=True, recursive=False, all_images=False
+):
+  """
+  目录模式：收集指定目录下所有待识别的全身立绘
 
-    输入：
-        target_dir: str - 目标目录路径
-        skip_existing: bool - 是否跳过已生成对应JSON的图片（默认True）
-        recursive: bool - 是否连同子目录一起查找（默认False，只看目录本身）
-        all_images: bool - 是否不限 _全身，收集所有图片（默认False，只收集文件名以 _全身 结尾的全身立绘）
-    输出：list[tuple(str, str, str)] - [(角色名, 图片路径, JSON输出路径), ...]
-    功能：去掉扩展名及末尾的"_全身"后缀作为角色名，JSON输出为图片同目录下的 {角色名}_body.json，
-          与游戏按立绘查找关键点文件的规则一致（女儿_萨卡兹_全身.png -> 女儿_萨卡兹_body.json）；
-          _半身、_头部 图层与差分图不是全身立绘，默认不收集；已存在对应JSON的图片会被跳过
-    """
-    # 待查找的目录：递归时按 os.walk 的顺序，目录与文件名都排序，保证处理顺序稳定
-    if recursive:
-        dir_files = []
-        for dir_path, dir_names, file_names in os.walk(target_dir):
-            dir_names.sort()
-            dir_files.append((dir_path, sorted(file_names)))
-    else:
-        dir_files = [(target_dir, sorted(os.listdir(target_dir)))]
+  输入：
+      target_dir: str - 目标目录路径
+      skip_existing: bool - 是否跳过已生成对应JSON的图片（默认True）
+      recursive: bool - 是否连同子目录一起查找（默认False，只看目录本身）
+      all_images: bool - 是否不限 _全身，收集所有图片（默认False，只收集文件名以 _全身 结尾的全身立绘）
+  输出：list[tuple(str, str, str)] - [(角色名, 图片路径, JSON输出路径), ...]
+  功能：去掉扩展名及末尾的"_全身"后缀作为角色名，JSON输出为图片同目录下的 {角色名}_body.json，
+        与游戏按立绘查找关键点文件的规则一致（女儿_萨卡兹_全身.png -> 女儿_萨卡兹_body.json）；
+        _半身、_头部 图层与差分图不是全身立绘，默认不收集；已存在对应JSON的图片会被跳过
+  """
+  # 待查找的目录：递归时按 os.walk 的顺序，目录与文件名都排序，保证处理顺序稳定
+  if recursive:
+    dir_files = []
+    for dir_path, dir_names, file_names in os.walk(target_dir):
+      dir_names.sort()
+      dir_files.append((dir_path, sorted(file_names)))
+  else:
+    dir_files = [(target_dir, sorted(os.listdir(target_dir)))]
 
-    characters = []
-    skipped_count = 0
-    not_full_body = []
-    for dir_path, file_names in dir_files:
-        for filename in file_names:
-            file_path = os.path.join(dir_path, filename)
-            if not os.path.isfile(file_path):
-                continue
-            stem, ext = os.path.splitext(filename)
-            if ext.lower() not in IMAGE_EXTENSIONS:
-                continue
-            # 只收集全身立绘：半身/头部图层和差分图做关键点识别没有意义，还会生成抢先匹配的错误JSON
-            is_full_body = stem.endswith(FULL_BODY_SUFFIX)
-            if not is_full_body and not all_images:
-                not_full_body.append(filename)
-                continue
-            # 去掉"_全身"后缀，与角色子文件夹模式的命名规则保持一致
-            char_name = stem[: -len(FULL_BODY_SUFFIX)] if is_full_body else stem
-            json_path = os.path.join(dir_path, f"{char_name}_body.json")
-            # 跳过已生成JSON的图片（同时兼容按完整文件名命名的JSON）
-            stem_json_path = os.path.join(dir_path, f"{stem}_body.json")
-            if skip_existing and (os.path.exists(json_path) or os.path.exists(stem_json_path)):
-                skipped_count += 1
-                continue
-            characters.append((char_name, file_path, json_path))
-    if skipped_count > 0:
-        print(f"跳过已识别图片: {skipped_count}个")
-    if not_full_body:
-        examples = "、".join(not_full_body[:3]) + ("等" if len(not_full_body) > 3 else "")
-        print(f"不是全身立绘、未收集的图片: {len(not_full_body)}个（{examples}；需要时加 --all-images）")
-    return characters
+  characters = []
+  skipped_count = 0
+  not_full_body = []
+  for dir_path, file_names in dir_files:
+    for filename in file_names:
+      file_path = os.path.join(dir_path, filename)
+      if not os.path.isfile(file_path):
+        continue
+      stem, ext = os.path.splitext(filename)
+      if ext.lower() not in IMAGE_EXTENSIONS:
+        continue
+      # 只收集全身立绘：半身/头部图层和差分图做关键点识别没有意义，还会生成抢先匹配的错误JSON
+      is_full_body = stem.endswith(FULL_BODY_SUFFIX)
+      if not is_full_body and not all_images:
+        not_full_body.append(filename)
+        continue
+      # 去掉"_全身"后缀，与角色子文件夹模式的命名规则保持一致
+      char_name = stem[: -len(FULL_BODY_SUFFIX)] if is_full_body else stem
+      json_path = os.path.join(dir_path, f'{char_name}_body.json')
+      # 跳过已生成JSON的图片（同时兼容按完整文件名命名的JSON）
+      stem_json_path = os.path.join(dir_path, f'{stem}_body.json')
+      if skip_existing and (
+          os.path.exists(json_path) or os.path.exists(stem_json_path)
+      ):
+        skipped_count += 1
+        continue
+      characters.append((char_name, file_path, json_path))
+  if skipped_count > 0:
+    print(f'跳过已识别图片: {skipped_count}个')
+  if not_full_body:
+    examples = '、'.join(not_full_body[:3]) + (
+        '等' if len(not_full_body) > 3 else ''
+    )
+    print(
+        f'不是全身立绘、未收集的图片: {len(not_full_body)}个（{examples}；需要时加 --all-images）'
+    )
+  return characters
 
 
 def main():
-    """
-    主函数：使用集成方案批量处理所有角色
+  """
+  主函数：使用集成方案批量处理所有角色
 
-    执行流程：
-    1. 解析命令行参数（可选指定目录）
-    2. 默认模式收集干员/特殊NPC/终末地干员目录下所有角色子文件夹；目录模式收集指定目录下所有未识别的全身立绘
-    3. 初始化7个模型（--dry-run 时只列出待识别图片后退出）
-    4. 对每个角色运行集成方案并保存JSON
-    5. 输出统计信息
-    """
-    # 解析命令行参数
-    parser = argparse.ArgumentParser(description="集成方案批量身体部位识别工具")
-    parser.add_argument(
-        'target_dir', nargs='?', default=None,
-        help="可选：指定目录，识别该目录下所有尚未生成对应JSON的全身立绘（文件名以 _全身 结尾）；不指定则批量处理默认角色目录"
-    )
-    parser.add_argument(
-        '-r', '--recursive', action='store_true',
-        help="目录模式下连同子目录一起查找"
-    )
-    parser.add_argument(
-        '--all-images', action='store_true',
-        help="目录模式下不限 _全身，识别目录中的所有图片（用于 路人 等文件名不带图层后缀的目录）"
-    )
-    parser.add_argument(
-        '--force', action='store_true',
-        help="不跳过已生成JSON的图片，全部重新处理"
-    )
-    parser.add_argument(
-        '--dry-run', action='store_true',
-        help="只列出待识别的图片及JSON输出路径，不加载模型"
-    )
-    args = parser.parse_args()
+  执行流程：
+  1. 解析命令行参数（可选指定目录）
+  2. 默认模式收集干员/特殊NPC/终末地干员目录下所有角色子文件夹；目录模式收集指定目录下所有未识别的全身立绘
+  3. 初始化7个模型（--dry-run 时只列出待识别图片后退出）
+  4. 对每个角色运行集成方案并保存JSON
+  5. 输出统计信息
+  """
+  # 解析命令行参数
+  parser = argparse.ArgumentParser(description='集成方案批量身体部位识别工具')
+  parser.add_argument(
+      'target_dir',
+      nargs='?',
+      default=None,
+      help='可选：指定目录，识别该目录下所有尚未生成对应JSON的全身立绘（文件名以 _全身 结尾）；不指定则批量处理默认角色目录',
+  )
+  parser.add_argument(
+      '-r',
+      '--recursive',
+      action='store_true',
+      help='目录模式下连同子目录一起查找',
+  )
+  parser.add_argument(
+      '--all-images',
+      action='store_true',
+      help='目录模式下不限 _全身，识别目录中的所有图片（用于 路人 等文件名不带图层后缀的目录）',
+  )
+  parser.add_argument(
+      '--force',
+      action='store_true',
+      help='不跳过已生成JSON的图片，全部重新处理',
+  )
+  parser.add_argument(
+      '--dry-run',
+      action='store_true',
+      help='只列出待识别的图片及JSON输出路径，不加载模型',
+  )
+  args = parser.parse_args()
 
-    if args.target_dir is not None:
-        target_dir = os.path.abspath(args.target_dir)
-        if not os.path.isdir(target_dir):
-            print(f"错误：目录不存在: {target_dir}")
-            return
+  if args.target_dir is not None:
+    target_dir = os.path.abspath(args.target_dir)
+    if not os.path.isdir(target_dir):
+      print(f'错误：目录不存在: {target_dir}')
+      return
 
-    start_time = time.time()
+  start_time = time.time()
 
-    # 构建路径 - 从 Script/System/Web_Draw_System 往上走3级到项目根目录
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    workspace_root = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))
-    base_dirs = [
-        os.path.join(workspace_root, 'image', '立绘', '干员'),
-        os.path.join(workspace_root, 'image', '立绘', '特殊NPC'),
-        os.path.join(workspace_root, 'image', '立绘', '终末地干员'),
-    ]
+  # 构建路径 - 从 Script/System/Web_Draw_System 往上走3级到项目根目录
+  current_dir = os.path.dirname(os.path.abspath(__file__))
+  workspace_root = os.path.dirname(
+      os.path.dirname(os.path.dirname(current_dir))
+  )
+  base_dirs = [
+      os.path.join(workspace_root, 'image', '立绘', '干员'),
+      os.path.join(workspace_root, 'image', '立绘', '特殊NPC'),
+      os.path.join(workspace_root, 'image', '立绘', '终末地干员'),
+  ]
 
-    # 收集所有角色（目录模式收集指定目录下的图片，默认模式收集角色子文件夹）
-    if args.target_dir is not None:
-        print(f"目录模式: {target_dir}{'（含子目录）' if args.recursive else ''}")
-        characters = collect_images_from_dir(target_dir, skip_existing=not args.force, recursive=args.recursive, all_images=args.all_images)
-        print(f"共找到 {len(characters)} 张{'图片' if args.all_images else '全身立绘'}待处理")
+  # 收集所有角色（目录模式收集指定目录下的图片，默认模式收集角色子文件夹）
+  if args.target_dir is not None:
+    print(f"目录模式: {target_dir}{'（含子目录）' if args.recursive else ''}")
+    characters = collect_images_from_dir(
+        target_dir,
+        skip_existing=not args.force,
+        recursive=args.recursive,
+        all_images=args.all_images,
+    )
+    print(
+        f"共找到 {len(characters)} 张{'图片' if args.all_images else '全身立绘'}待处理"
+    )
+  else:
+    characters = collect_characters(base_dirs, skip_existing=not args.force)
+    print(f'共找到 {len(characters)} 个角色待处理')
+    for bd in base_dirs:
+      dir_name = os.path.basename(bd)
+      count = sum(1 for c in characters if bd in c[1])
+      print(f'  {dir_name}: {count}个')
+
+  if len(characters) == 0:
+    print('没有需要处理的图片，退出')
+    return
+
+  # 预览：只列出待识别图片与JSON输出位置，不加载模型
+  if args.dry_run:
+    for char_name, full_body_path, json_path in characters:
+      print(
+          f'  {char_name}: {os.path.relpath(full_body_path)} -> {os.path.relpath(json_path)}'
+      )
+    return
+
+  # 初始化模型
+  print(f"\n{'=' * 70}")
+  print('集成方案批量处理 - 初始化模型')
+  print('=' * 70)
+  models, needs_sigmoid_keys = init_models()
+  init_time = time.time() - start_time
+  print(f'\n模型初始化完成: {len(models)}个模型, 耗时{init_time:.1f}s')
+  print(f'sigmoid归一化模型: {needs_sigmoid_keys}')
+
+  if len(models) == 0:
+    print('错误：没有成功加载任何模型')
+    return
+
+  # 自动检测A模型是否真的需要sigmoid（用第一张图测试，在首次推理时检测，见下方）
+
+  # 处理所有角色
+  print(f"\n{'=' * 70}")
+  print('开始批量处理')
+  print(f"{'=' * 70}")
+
+  success_count = 0
+  fail_count = 0
+  skip_count = 0
+  auto_sigmoid_checked = False
+  process_start = time.time()
+
+  for i, (char_name, full_body_path, json_path) in enumerate(characters):
+    elapsed = time.time() - process_start
+    if i > 0:
+      avg_per_char = elapsed / i
+      remaining = avg_per_char * (len(characters) - i)
+      eta_str = f' ETA:{remaining/60:.0f}min'
     else:
-        characters = collect_characters(base_dirs, skip_existing=not args.force)
-        print(f"共找到 {len(characters)} 个角色待处理")
-        for bd in base_dirs:
-            dir_name = os.path.basename(bd)
-            count = sum(1 for c in characters if bd in c[1])
-            print(f"  {dir_name}: {count}个")
+      eta_str = ''
 
-    if len(characters) == 0:
-        print("没有需要处理的图片，退出")
-        return
+    print(
+        f'[{i+1}/{len(characters)}] {char_name}...{eta_str}', end='', flush=True
+    )
 
-    # 预览：只列出待识别图片与JSON输出位置，不加载模型
-    if args.dry_run:
-        for char_name, full_body_path, json_path in characters:
-            print(f"  {char_name}: {os.path.relpath(full_body_path)} -> {os.path.relpath(json_path)}")
-        return
+    # 首次推理时自动检测A模型是否需要sigmoid
+    if not auto_sigmoid_checked and 'A' in models:
+      test_img = load_image_bgr(full_body_path)
+      if test_img is not None:
+        test_res = run_model_inference(models['A'], 'A', test_img)
+        if test_res is not None:
+          max_score = float(np.max(test_res['scores'][:17]))
+          if max_score <= 1.05:
+            needs_sigmoid_keys.discard('A')
+            print(
+                f'\n  [自动检测] A模型分数范围正常(max={max_score:.4f})，移出sigmoid集合'
+            )
+          else:
+            print(
+                f'\n  [自动检测] A模型输出logit(max={max_score:.4f})，保留sigmoid'
+            )
+      auto_sigmoid_checked = True
+      print(f'  sigmoid模型: {needs_sigmoid_keys}')
+      print(f'[{i+1}/{len(characters)}] {char_name}...', end='', flush=True)
 
-    # 初始化模型
-    print(f"\n{'=' * 70}")
-    print("集成方案批量处理 - 初始化模型")
-    print("=" * 70)
-    models, needs_sigmoid_keys = init_models()
-    init_time = time.time() - start_time
-    print(f"\n模型初始化完成: {len(models)}个模型, 耗时{init_time:.1f}s")
-    print(f"sigmoid归一化模型: {needs_sigmoid_keys}")
+    try:
+      ok = process_character(
+          char_name, full_body_path, json_path, models, needs_sigmoid_keys
+      )
+      if ok:
+        success_count += 1
+        print(f' OK')
+      else:
+        fail_count += 1
+        print(f' 图像加载失败')
+    except Exception as e:
+      fail_count += 1
+      print(f' 错误: {e}')
 
-    if len(models) == 0:
-        print("错误：没有成功加载任何模型")
-        return
-
-    # 自动检测A模型是否真的需要sigmoid（用第一张图测试，在首次推理时检测，见下方）
-
-    # 处理所有角色
-    print(f"\n{'=' * 70}")
-    print("开始批量处理")
-    print(f"{'=' * 70}")
-
-    success_count = 0
-    fail_count = 0
-    skip_count = 0
-    auto_sigmoid_checked = False
-    process_start = time.time()
-
-    for i, (char_name, full_body_path, json_path) in enumerate(characters):
-        elapsed = time.time() - process_start
-        if i > 0:
-            avg_per_char = elapsed / i
-            remaining = avg_per_char * (len(characters) - i)
-            eta_str = f" ETA:{remaining/60:.0f}min"
-        else:
-            eta_str = ""
-
-        print(f"[{i+1}/{len(characters)}] {char_name}...{eta_str}", end='', flush=True)
-
-        # 首次推理时自动检测A模型是否需要sigmoid
-        if not auto_sigmoid_checked and 'A' in models:
-            test_img = load_image_bgr(full_body_path)
-            if test_img is not None:
-                test_res = run_model_inference(models['A'], 'A', test_img)
-                if test_res is not None:
-                    max_score = float(np.max(test_res['scores'][:17]))
-                    if max_score <= 1.05:
-                        needs_sigmoid_keys.discard('A')
-                        print(f"\n  [自动检测] A模型分数范围正常(max={max_score:.4f})，移出sigmoid集合")
-                    else:
-                        print(f"\n  [自动检测] A模型输出logit(max={max_score:.4f})，保留sigmoid")
-            auto_sigmoid_checked = True
-            print(f"  sigmoid模型: {needs_sigmoid_keys}")
-            print(f"[{i+1}/{len(characters)}] {char_name}...", end='', flush=True)
-
-        try:
-            ok = process_character(char_name, full_body_path, json_path, models, needs_sigmoid_keys)
-            if ok:
-                success_count += 1
-                print(f" OK")
-            else:
-                fail_count += 1
-                print(f" 图像加载失败")
-        except Exception as e:
-            fail_count += 1
-            print(f" 错误: {e}")
-
-    # 完成统计
-    total_time = time.time() - start_time
-    process_time = time.time() - process_start
-    print(f"\n{'=' * 70}")
-    print(f"批量处理完成")
-    print(f"{'=' * 70}")
-    print(f"总角色数: {len(characters)}")
-    print(f"成功: {success_count}")
-    print(f"失败: {fail_count}")
-    print(f"模型初始化: {init_time:.1f}s")
-    print(f"处理耗时: {process_time:.1f}s ({process_time/60:.1f}min)")
-    print(f"总耗时: {total_time:.1f}s ({total_time/60:.1f}min)")
-    if success_count > 0:
-        print(f"平均每角色: {process_time/success_count:.2f}s")
+  # 完成统计
+  total_time = time.time() - start_time
+  process_time = time.time() - process_start
+  print(f"\n{'=' * 70}")
+  print(f'批量处理完成')
+  print(f"{'=' * 70}")
+  print(f'总角色数: {len(characters)}')
+  print(f'成功: {success_count}')
+  print(f'失败: {fail_count}')
+  print(f'模型初始化: {init_time:.1f}s')
+  print(f'处理耗时: {process_time:.1f}s ({process_time/60:.1f}min)')
+  print(f'总耗时: {total_time:.1f}s ({total_time/60:.1f}min)')
+  if success_count > 0:
+    print(f'平均每角色: {process_time/success_count:.2f}s')
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+  main()

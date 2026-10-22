@@ -5,7 +5,6 @@ from Script.Design import attr_text, character_move
 from Script.Config import game_config
 from Script.UI.Moudle import panel, draw
 
-
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
 _: FunctionType = get_text._

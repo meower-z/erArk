@@ -42,711 +42,974 @@ _character_behavior = None
 
 
 def _rand_range_int(low: int, high: int) -> int:
-    """
-    快速获取 [low, high] 区间内的均匀随机整数
-    参数:
-        low (int) -- 下界（含）
-        high (int) -- 上界（含）
-    返回值类型：int
-    功能描述：random.randint 的轻量替代（省去其参数校验与多层调用开销），
-              用于每角色每分钟都会执行的高频数值结算
-    """
-    if high <= low:
-        return low
-    return low + int(random.random() * (high - low + 1))
+  """
+  快速获取 [low, high] 区间内的均匀随机整数
+  参数:
+      low (int) -- 下界（含）
+      high (int) -- 上界（含）
+  返回值类型：int
+  功能描述：random.randint 的轻量替代（省去其参数校验与多层调用开销），
+            用于每角色每分钟都会执行的高频数值结算
+  """
+  if high <= low:
+    return low
+  return low + int(random.random() * (high - low + 1))
 
 
 def judge_pl_real_time_data():
-    """
-    玩家实时数据结算\n
-    Keyword arguments:
-    无\n
-    Return arguments:
-    无
-    """
+  """
+  玩家实时数据结算\n
+  Keyword arguments:
+  无\n
+  Return arguments:
+  无
+  """
 
-    pl_character_data: game_type.Character = cache.character_data[0]
-    love_hotel_room_lv = cache.rhodes_island.love_hotel_room_lv
+  pl_character_data: game_type.Character = cache.character_data[0]
+  love_hotel_room_lv = cache.rhodes_island.love_hotel_room_lv
 
-    # 酒店退房时间到了则退房
-    if love_hotel_room_lv > 0:
-        if game_time.judge_date_big_or_small(cache.game_time, pl_character_data.action_info.check_out_time) > 0:
-            # 输出提示信息
-            room_name = [_("标间"),_("情趣主题房"),_("顶级套房")]
-            now_draw = draw.NormalDraw()
-            now_draw.text = _("\n您入住的{0}到退房时间了，已自动退房\n").format(room_name[love_hotel_room_lv - 1])
-            now_draw.draw()
-            # 结算
-            cache.rhodes_island.love_hotel_room_lv = 0
-            pl_character_data.action_info.check_out_time = datetime.datetime(1, 1, 1)
+  # 酒店退房时间到了则退房
+  if love_hotel_room_lv > 0:
+    if (
+        game_time.judge_date_big_or_small(
+            cache.game_time, pl_character_data.action_info.check_out_time
+        )
+        > 0
+    ):
+      # 输出提示信息
+      room_name = [_("标间"), _("情趣主题房"), _("顶级套房")]
+      now_draw = draw.NormalDraw()
+      now_draw.text = _("\n您入住的{0}到退房时间了，已自动退房\n").format(
+          room_name[love_hotel_room_lv - 1]
+      )
+      now_draw.draw()
+      # 结算
+      cache.rhodes_island.love_hotel_room_lv = 0
+      pl_character_data.action_info.check_out_time = datetime.datetime(1, 1, 1)
 
-    # 体外无壳卵：排出满1小时的卵进行受精判定
-    from Script.System.Pregnancy_System import soft_egg_handle
-    soft_egg_handle.check_soft_eggs_fertilization()
+  # 体外无壳卵：排出满1小时的卵进行受精判定
+  from Script.System.Pregnancy_System import soft_egg_handle
 
-    # 课堂 H 以别的方式结束时一并下课（Plan 32 §3.1）：结束群交、玩家体力归零、学生全部力竭、群交中被撞见、转单人 H 后再结束 H，
-    #    效果串都只关群交、清全场 H 状态（407 / 404），课堂模式留着；玩家这一步的收尾检查里按「玩家已不在 H」下课。
-    #    函数内导入：Script/System/* 在本模块顶层导入会循环导入
-    from Script.System.Education_System import sex_class_handle
-    sex_class_handle.settle_orphan_class()
+  soft_egg_handle.check_soft_eggs_fertilization()
 
+  # 课堂 H 以别的方式结束时一并下课（Plan 32 §3.1）：结束群交、玩家体力归零、学生全部力竭、群交中被撞见、转单人 H 后再结束 H，
+  #    效果串都只关群交、清全场 H 状态（407 / 404），课堂模式留着；玩家这一步的收尾检查里按「玩家已不在 H」下课。
+  #    函数内导入：Script/System/* 在本模块顶层导入会循环导入
+  from Script.System.Education_System import sex_class_handle
 
-def character_aotu_change_value(character_id: int, now_time: datetime.datetime, pl_start_time: datetime.datetime):
-    """
-    结算角色随时间自动增加的数值
-    Keyword arguments:
-    character_id -- 角色id
-    now_time -- 指定时间
-    """
-    # 延迟导入并缓存，避免循环导入且不在热路径反复执行导入机制
-    global _drunk_sex_common
-    if _drunk_sex_common is None:
-        from Script.System.Sex_System import drunk_sex_common as _drunk_module
-        _drunk_sex_common = _drunk_module
-    drunk_sex_common = _drunk_sex_common
-    now_character_data: game_type.Character = cache.character_data[character_id]
-    now_behavior_id = now_character_data.behavior.behavior_id
-    if now_character_data.target_character_id not in cache.character_data:
-        now_character_data.target_character_id = character_id
-    # 获取实际增加时间
-    true_add_time = get_true_add_time(character_id, now_time, pl_start_time)
-
-    # 性技实操课的三次提醒（Plan 22 四期 §3.28.6）
-    # 一律用跨越判定（上次结算 < 提醒时刻 <= 当前）：游戏时间按行为时长跳跃，
-    #    玩家13:00开始一个60分钟的行为直接跳到14:00，13:30这个时刻从来没有被"经过"过，
-    #    用等于判定的话提醒永远不会触发
-    if character_id == 0:
-        settle_sex_class_notify(now_character_data, now_behavior_id, now_time)
-
-    # 结算疲劳值
-    settle_tired(character_id, true_add_time)
-
-    # 休息时回复体力、气力
-    if now_behavior_id == constant.Behavior.REST:
-        settle_rest(character_id, true_add_time)
-
-    # 睡觉时大量减少疲劳值，增加熟睡值，回复体力、气力
-    elif now_behavior_id == constant.Behavior.SLEEP:
-        settle_sleep(character_id, true_add_time)
-
-    # 结算尿意值
-    if character_id == 0 and not cache.all_system_setting.difficulty_setting[12]:
-        pass
-    else:
-        add_urinate = _rand_range_int(int(true_add_time * 0.8), int(true_add_time * 1.2))
-        add_urinate *= cache.all_system_setting.difficulty_setting[11] / 2
-        new_urinate = min(now_character_data.urinate_point + int(add_urinate), 300)
-        now_character_data.urinate_point = new_urinate
-
-    # 获取当前体力气力与最大值的比例，当前比例越低，调整系数越高，最高为无体力时的2倍，最低为满比例时的1倍
-    hit_point_ratio = now_character_data.hit_point / now_character_data.hit_point_max
-    mana_point_ratio = now_character_data.mana_point / now_character_data.mana_point_max
-    hit_adjust_coefficient = 2 - hit_point_ratio
-    mana_adjust_coefficient = 2 - mana_point_ratio
-
-    # 结算饥饿值
-    add_hunger = _rand_range_int(int(true_add_time * 0.8), int(true_add_time * 1.2))
-    add_hunger = int(add_hunger * hit_adjust_coefficient * mana_adjust_coefficient)
-    new_hunger = min(now_character_data.hunger_point + add_hunger, 240)
-    now_character_data.hunger_point = new_hunger
-
-    # 结算醉酒值
-    drunk_sex_common.reduce_drunk_point(character_id, true_add_time)
-
-    # 结算玩家
-    if character_id == 0:
-
-        # 非H模式下结算玩家的射精值减少
-        if not now_character_data.sp_flag.is_h:
-            # 上次射精时间距离现在超过30分钟则射精值减少
-            last_time = now_character_data.action_info.last_eaj_add_time
-            if (cache.game_time - last_time) > datetime.timedelta(minutes=30):
-                new_eja = max(now_character_data.eja_point - int(true_add_time * 10), 0)
-                now_character_data.eja_point = new_eja
-
-        # 玩家缓慢恢复精液量
-        new_semen = min(now_character_data.semen_point + int(true_add_time / 20), now_character_data.semen_point_max)
-        now_character_data.semen_point = new_semen
-
-        # 结算玩家源石技艺的理智值消耗
-        settle_player_ability(character_id, true_add_time)
-
-        # 非时停中，当前地点有人睡觉时，结算玩家动作对所有睡眠NPC的影响
-        if not handle_premise.handle_time_stop_on(character_id) and handle_premise.handle_scene_someone_sleeping(character_id):
-            settle_sleep_h(character_id, true_add_time)
-
-    # 结算干员
-    else:
-        # 结算精液流动
-        if len(now_character_data.dirty.semen_flow):
-            settle_semen_flow(character_id, true_add_time)
-
-        # 结算精液消化吸收
-        if now_character_data.dirty.body_semen[8][1] > 0:
-            semen_absorb(character_id, true_add_time, 8)
-        if now_character_data.dirty.body_semen[15][1] > 0:
-            semen_absorb(character_id, true_add_time, 15)
-
-        # 结算乳汁量，仅结算有泌乳素质的
-        if now_character_data.talent[27]:
-            milk_change = int(true_add_time * 2 / 3)
-            add_milk = _rand_range_int(int(milk_change * 0.8), int(milk_change * 1.2))
-            new_milk = min(now_character_data.pregnancy.milk + add_milk, now_character_data.pregnancy.milk_max)
-            now_character_data.pregnancy.milk = new_milk
-
-        # 有意识下的部分持续结算
-        if (
-            handle_premise.handle_unconscious_flag_0(character_id) and
-            handle_premise.handle_normal_1(character_id) and
-            handle_premise.handle_normal_5(character_id) and
-            handle_premise.handle_normal_6(character_id)
-            ):
-            settle_conscious_continuous(character_id, true_add_time)
-
-def settle_sex_class_notify(pl_character_data: game_type.Character, now_behavior_id: str, now_time: datetime.datetime) -> None:
-    """
-    输出性技实操课的三次提醒（Plan 22 四期 §3.28.6、§3.28.9）
-
-        1. 预约日当天玩家起床后 —— "今天几点在哪间教室有一节你安排的课"
-        2. 节次开始前30分钟 —— "选修与点名必修的学生会在开课前 10 分钟动身赶来"
-        3. 预定的下课时刻 —— "可以就此结束，也可以继续下去"，只在课上着的时候才发
-
-    第三次的措辞必须写明不强制，否则玩家会以为系统在催他下课——
-       玩家还在课堂 H 里时，下课时间由玩家手动决定（口径68），系统不自动下课；
-       课堂 H 以别的方式结束（玩家已不在 H）时，由 settle_orphan_class 一并下课（Plan 32 §3.1）。
-    Keyword arguments:
-    pl_character_data -- 玩家角色数据
-    now_behavior_id -- 玩家当前的行为id
-    now_time -- 当前时刻
-    Return arguments:
-    无
-    """
-    from Script.System.Education_System import sex_class_handle
-
-    text_list = []
-    # 第一次：起床时
-    if now_behavior_id == constant.Behavior.GET_UP:
-        wake_text = sex_class_handle.get_today_class_notify_text()
-        if wake_text:
-            text_list.append(wake_text)
-    # 第二、三次：跨越判定
-    last_time = pl_character_data.behavior.start_time
-    if last_time is not None:
-        text_list.extend(sex_class_handle.check_and_send_notify(last_time, now_time))
-    for now_text in text_list:
-        now_draw = draw.NormalDraw()
-        now_draw.width = normal_config.config_normal.text_width
-        now_draw.text = now_text
-        now_draw.draw()
+  sex_class_handle.settle_orphan_class()
 
 
-def get_true_add_time(character_id: int, now_time: datetime.datetime, pl_start_time: datetime.datetime) -> int:
-    """
-    获取真实的行动时间\n
-    Keyword arguments:\n
-    character_id -- 角色id\n
-    now_time -- 当前时间\n
-    pl_start_time -- 玩家开始时间\n
-    Return arguments:\n
-    true_add_time -- 真实的行动时间\n
-    """
-    now_character_data: game_type.Character = cache.character_data[character_id]
-    add_time = now_character_data.behavior.duration
-    # 真实的开始时间是当前角色行动开始时间和玩家行动开始时间中更晚的那个
-    now_character_behavior_start_time = now_character_data.behavior.start_time
-    true_start_time = max(now_character_behavior_start_time, pl_start_time)
-    # 真实的结束时间是当前角色行动结束时间和当前时间中更早的那个
-    now_character_end_time = game_time.get_sub_date(minute=add_time, old_date=now_character_behavior_start_time)
-    true_end_time = min(now_character_end_time, now_time)
-    # 真实的行动时间是真实的结束时间减去真实的开始时间
-    true_add_time = int((true_end_time - true_start_time).total_seconds() / 60)
-    # 避免负数
-    true_add_time = max(true_add_time, 0)
-    return true_add_time
+def character_aotu_change_value(
+    character_id: int,
+    now_time: datetime.datetime,
+    pl_start_time: datetime.datetime,
+):
+  """
+  结算角色随时间自动增加的数值
+  Keyword arguments:
+  character_id -- 角色id
+  now_time -- 指定时间
+  """
+  # 延迟导入并缓存，避免循环导入且不在热路径反复执行导入机制
+  global _drunk_sex_common
+  if _drunk_sex_common is None:
+    from Script.System.Sex_System import drunk_sex_common as _drunk_module
+
+    _drunk_sex_common = _drunk_module
+  drunk_sex_common = _drunk_sex_common
+  now_character_data: game_type.Character = cache.character_data[character_id]
+  now_behavior_id = now_character_data.behavior.behavior_id
+  if now_character_data.target_character_id not in cache.character_data:
+    now_character_data.target_character_id = character_id
+  # 获取实际增加时间
+  true_add_time = get_true_add_time(character_id, now_time, pl_start_time)
+
+  # 性技实操课的三次提醒（Plan 22 四期 §3.28.6）
+  # 一律用跨越判定（上次结算 < 提醒时刻 <= 当前）：游戏时间按行为时长跳跃，
+  #    玩家13:00开始一个60分钟的行为直接跳到14:00，13:30这个时刻从来没有被"经过"过，
+  #    用等于判定的话提醒永远不会触发
+  if character_id == 0:
+    settle_sex_class_notify(now_character_data, now_behavior_id, now_time)
+
+  # 结算疲劳值
+  settle_tired(character_id, true_add_time)
+
+  # 休息时回复体力、气力
+  if now_behavior_id == constant.Behavior.REST:
+    settle_rest(character_id, true_add_time)
+
+  # 睡觉时大量减少疲劳值，增加熟睡值，回复体力、气力
+  elif now_behavior_id == constant.Behavior.SLEEP:
+    settle_sleep(character_id, true_add_time)
+
+  # 结算尿意值
+  if character_id == 0 and not cache.all_system_setting.difficulty_setting[12]:
+    pass
+  else:
+    add_urinate = _rand_range_int(
+        int(true_add_time * 0.8), int(true_add_time * 1.2)
+    )
+    add_urinate *= cache.all_system_setting.difficulty_setting[11] / 2
+    new_urinate = min(now_character_data.urinate_point + int(add_urinate), 300)
+    now_character_data.urinate_point = new_urinate
+
+  # 获取当前体力气力与最大值的比例，当前比例越低，调整系数越高，最高为无体力时的2倍，最低为满比例时的1倍
+  hit_point_ratio = (
+      now_character_data.hit_point / now_character_data.hit_point_max
+  )
+  mana_point_ratio = (
+      now_character_data.mana_point / now_character_data.mana_point_max
+  )
+  hit_adjust_coefficient = 2 - hit_point_ratio
+  mana_adjust_coefficient = 2 - mana_point_ratio
+
+  # 结算饥饿值
+  add_hunger = _rand_range_int(
+      int(true_add_time * 0.8), int(true_add_time * 1.2)
+  )
+  add_hunger = int(
+      add_hunger * hit_adjust_coefficient * mana_adjust_coefficient
+  )
+  new_hunger = min(now_character_data.hunger_point + add_hunger, 240)
+  now_character_data.hunger_point = new_hunger
+
+  # 结算醉酒值
+  drunk_sex_common.reduce_drunk_point(character_id, true_add_time)
+
+  # 结算玩家
+  if character_id == 0:
+
+    # 非H模式下结算玩家的射精值减少
+    if not now_character_data.sp_flag.is_h:
+      # 上次射精时间距离现在超过30分钟则射精值减少
+      last_time = now_character_data.action_info.last_eaj_add_time
+      if (cache.game_time - last_time) > datetime.timedelta(minutes=30):
+        new_eja = max(now_character_data.eja_point - int(true_add_time * 10), 0)
+        now_character_data.eja_point = new_eja
+
+    # 玩家缓慢恢复精液量
+    new_semen = min(
+        now_character_data.semen_point + int(true_add_time / 20),
+        now_character_data.semen_point_max,
+    )
+    now_character_data.semen_point = new_semen
+
+    # 结算玩家源石技艺的理智值消耗
+    settle_player_ability(character_id, true_add_time)
+
+    # 非时停中，当前地点有人睡觉时，结算玩家动作对所有睡眠NPC的影响
+    if not handle_premise.handle_time_stop_on(
+        character_id
+    ) and handle_premise.handle_scene_someone_sleeping(character_id):
+      settle_sleep_h(character_id, true_add_time)
+
+  # 结算干员
+  else:
+    # 结算精液流动
+    if len(now_character_data.dirty.semen_flow):
+      settle_semen_flow(character_id, true_add_time)
+
+    # 结算精液消化吸收
+    if now_character_data.dirty.body_semen[8][1] > 0:
+      semen_absorb(character_id, true_add_time, 8)
+    if now_character_data.dirty.body_semen[15][1] > 0:
+      semen_absorb(character_id, true_add_time, 15)
+
+    # 结算乳汁量，仅结算有泌乳素质的
+    if now_character_data.talent[27]:
+      milk_change = int(true_add_time * 2 / 3)
+      add_milk = _rand_range_int(int(milk_change * 0.8), int(milk_change * 1.2))
+      new_milk = min(
+          now_character_data.pregnancy.milk + add_milk,
+          now_character_data.pregnancy.milk_max,
+      )
+      now_character_data.pregnancy.milk = new_milk
+
+    # 有意识下的部分持续结算
+    if (
+        handle_premise.handle_unconscious_flag_0(character_id)
+        and handle_premise.handle_normal_1(character_id)
+        and handle_premise.handle_normal_5(character_id)
+        and handle_premise.handle_normal_6(character_id)
+    ):
+      settle_conscious_continuous(character_id, true_add_time)
+
+
+def settle_sex_class_notify(
+    pl_character_data: game_type.Character,
+    now_behavior_id: str,
+    now_time: datetime.datetime,
+) -> None:
+  """
+  输出性技实操课的三次提醒（Plan 22 四期 §3.28.6、§3.28.9）
+
+      1. 预约日当天玩家起床后 —— "今天几点在哪间教室有一节你安排的课"
+      2. 节次开始前30分钟 —— "选修与点名必修的学生会在开课前 10 分钟动身赶来"
+      3. 预定的下课时刻 —— "可以就此结束，也可以继续下去"，只在课上着的时候才发
+
+  第三次的措辞必须写明不强制，否则玩家会以为系统在催他下课——
+     玩家还在课堂 H 里时，下课时间由玩家手动决定（口径68），系统不自动下课；
+     课堂 H 以别的方式结束（玩家已不在 H）时，由 settle_orphan_class 一并下课（Plan 32 §3.1）。
+  Keyword arguments:
+  pl_character_data -- 玩家角色数据
+  now_behavior_id -- 玩家当前的行为id
+  now_time -- 当前时刻
+  Return arguments:
+  无
+  """
+  from Script.System.Education_System import sex_class_handle
+
+  text_list = []
+  # 第一次：起床时
+  if now_behavior_id == constant.Behavior.GET_UP:
+    wake_text = sex_class_handle.get_today_class_notify_text()
+    if wake_text:
+      text_list.append(wake_text)
+  # 第二、三次：跨越判定
+  last_time = pl_character_data.behavior.start_time
+  if last_time is not None:
+    text_list.extend(
+        sex_class_handle.check_and_send_notify(last_time, now_time)
+    )
+  for now_text in text_list:
+    now_draw = draw.NormalDraw()
+    now_draw.width = normal_config.config_normal.text_width
+    now_draw.text = now_text
+    now_draw.draw()
+
+
+def get_true_add_time(
+    character_id: int,
+    now_time: datetime.datetime,
+    pl_start_time: datetime.datetime,
+) -> int:
+  """
+  获取真实的行动时间\n
+  Keyword arguments:\n
+  character_id -- 角色id\n
+  now_time -- 当前时间\n
+  pl_start_time -- 玩家开始时间\n
+  Return arguments:\n
+  true_add_time -- 真实的行动时间\n
+  """
+  now_character_data: game_type.Character = cache.character_data[character_id]
+  add_time = now_character_data.behavior.duration
+  # 真实的开始时间是当前角色行动开始时间和玩家行动开始时间中更晚的那个
+  now_character_behavior_start_time = now_character_data.behavior.start_time
+  true_start_time = max(now_character_behavior_start_time, pl_start_time)
+  # 真实的结束时间是当前角色行动结束时间和当前时间中更早的那个
+  now_character_end_time = game_time.get_sub_date(
+      minute=add_time, old_date=now_character_behavior_start_time
+  )
+  true_end_time = min(now_character_end_time, now_time)
+  # 真实的行动时间是真实的结束时间减去真实的开始时间
+  true_add_time = int((true_end_time - true_start_time).total_seconds() / 60)
+  # 避免负数
+  true_add_time = max(true_add_time, 0)
+  return true_add_time
+
 
 def settle_semen_flow(character_id: int, true_add_time: int):
-    """
-    结算精液流动\n
-    Keyword arguments:\n
-    character_id -- 角色id\n
-    true_add_time -- 实际行动时间\n
-    """
-    now_character_data: game_type.Character = cache.character_data[character_id]
-    # 计算流动的精液量
-    flow_semen_max = int(true_add_time * 2)
-    # print(f"debug {now_character_data.name}的精液流动最大量为{flow_semen_max}，add_time = {true_add_time}")
+  """
+  结算精液流动\n
+  Keyword arguments:\n
+  character_id -- 角色id\n
+  true_add_time -- 实际行动时间\n
+  """
+  now_character_data: game_type.Character = cache.character_data[character_id]
+  # 计算流动的精液量
+  flow_semen_max = int(true_add_time * 2)
+  # print(f"debug {now_character_data.name}的精液流动最大量为{flow_semen_max}，add_time = {true_add_time}")
 
-    new_flow_list = []
-    # 遍历每个部位的精液流动
-    for all_flow_dict in now_character_data.dirty.semen_flow:
-        # 如果all_flow_dict没有键"targets"，则跳过
-        if "targets" not in all_flow_dict:
-            continue
-        # 实际流动的精液总量
-        all_real_flow = 0
-        # 源头数据
-        source_id = all_flow_dict["source"]["id"]
-        source_type = all_flow_dict["source"]["type"]
-        new_target_list = []
-        # 遍历每个流动的目标
-        for now_flow_dict in all_flow_dict["targets"]:
-            if now_flow_dict["remaining_volume"] > 0:
-                # 计算该部位的精液流动
-                now_flow = min(flow_semen_max, now_flow_dict["remaining_volume"])
-                all_real_flow += now_flow
-                now_flow_dict["remaining_volume"] -= now_flow
-                now_part_cid = now_flow_dict["id"]
-                # print(f"debug {now_character_data.name}，{now_flow_dict['type']}的{now_part_cid}部位，精液流动{now_flow}，剩余{now_flow_dict['remaining_volume']}")
-                # 目标部位的精液增加
-                ejaculation_panel.update_semen_dirty(character_id=character_id, part_cid=now_part_cid, part_type=now_flow_dict["type"], semen_count=now_flow, update_shoot_position_flag=False)
-                # 如果目标部位的精液流动完毕，则将其从流动列表中移除
-                if now_flow_dict["remaining_volume"] > 0:
-                    new_target_list.append(now_flow_dict)
-        # 更新流动的目标列表
-        all_flow_dict["targets"] = new_target_list
-        # 遍历完全目标后，如果实际流动的精液总量大于0，则在源头部位减少相应的精液量
-        if all_real_flow > 0:
-            ejaculation_panel.update_semen_dirty(character_id=character_id, part_cid=source_id, part_type=source_type, semen_count=-all_real_flow, update_shoot_position_flag=False)
-        # 如果源头部位的精液流动完毕，则将其从流动列表中移除，否则将其加入新的流动列表
-        if len(all_flow_dict["targets"]):
-            new_flow_list.append(all_flow_dict)
-    # 更新流动的源头列表
-    now_character_data.dirty.semen_flow = new_flow_list
-    # print(f"debug {now_character_data.name}的精液流动完毕，剩余流动列表为{now_character_data.dirty.semen_flow}")
+  new_flow_list = []
+  # 遍历每个部位的精液流动
+  for all_flow_dict in now_character_data.dirty.semen_flow:
+    # 如果all_flow_dict没有键"targets"，则跳过
+    if "targets" not in all_flow_dict:
+      continue
+    # 实际流动的精液总量
+    all_real_flow = 0
+    # 源头数据
+    source_id = all_flow_dict["source"]["id"]
+    source_type = all_flow_dict["source"]["type"]
+    new_target_list = []
+    # 遍历每个流动的目标
+    for now_flow_dict in all_flow_dict["targets"]:
+      if now_flow_dict["remaining_volume"] > 0:
+        # 计算该部位的精液流动
+        now_flow = min(flow_semen_max, now_flow_dict["remaining_volume"])
+        all_real_flow += now_flow
+        now_flow_dict["remaining_volume"] -= now_flow
+        now_part_cid = now_flow_dict["id"]
+        # print(f"debug {now_character_data.name}，{now_flow_dict['type']}的{now_part_cid}部位，精液流动{now_flow}，剩余{now_flow_dict['remaining_volume']}")
+        # 目标部位的精液增加
+        ejaculation_panel.update_semen_dirty(
+            character_id=character_id,
+            part_cid=now_part_cid,
+            part_type=now_flow_dict["type"],
+            semen_count=now_flow,
+            update_shoot_position_flag=False,
+        )
+        # 如果目标部位的精液流动完毕，则将其从流动列表中移除
+        if now_flow_dict["remaining_volume"] > 0:
+          new_target_list.append(now_flow_dict)
+    # 更新流动的目标列表
+    all_flow_dict["targets"] = new_target_list
+    # 遍历完全目标后，如果实际流动的精液总量大于0，则在源头部位减少相应的精液量
+    if all_real_flow > 0:
+      ejaculation_panel.update_semen_dirty(
+          character_id=character_id,
+          part_cid=source_id,
+          part_type=source_type,
+          semen_count=-all_real_flow,
+          update_shoot_position_flag=False,
+      )
+    # 如果源头部位的精液流动完毕，则将其从流动列表中移除，否则将其加入新的流动列表
+    if len(all_flow_dict["targets"]):
+      new_flow_list.append(all_flow_dict)
+  # 更新流动的源头列表
+  now_character_data.dirty.semen_flow = new_flow_list
+  # print(f"debug {now_character_data.name}的精液流动完毕，剩余流动列表为{now_character_data.dirty.semen_flow}")
+
 
 def semen_absorb(character_id: int, true_add_time: int, body_part: int):
-    """
-    结算精液吸收\n
-    Keyword arguments:\n
-    character_id -- 角色id\n
-    true_add_time -- 实际行动时间\n
-    body_part -- 身体部位id\n
-    """
-    now_character_data: game_type.Character = cache.character_data[character_id]
-    now_body_semen = now_character_data.dirty.body_semen[body_part][1]
-    # 如果当前部位没有精液则返回
-    if now_body_semen <= 0:
-        return
-    # 计算吸收的精液量，公式为每5分钟吸收1毫升或当前精液量的1%中较大的那个
-    absorb_ml = max(true_add_time // 5, now_body_semen * 0.01)
-    # 不得高于当前精液量
-    absorb_ml = int(min(absorb_ml, now_body_semen))
-    # 从角色身体中吸收精液
-    now_character_data.dirty.body_semen[body_part][1] -= absorb_ml
-    # 更新吸收精液量
-    now_character_data.dirty.absorbed_total_semen += absorb_ml
-    # 根据吸收的精液量来减少饥饿度
-    now_character_data.hunger_point = max(now_character_data.hunger_point - absorb_ml, 0)
-    # 如果现存量小于3ml，则清零
-    if now_character_data.dirty.body_semen[body_part][1] < 3:
-        now_character_data.dirty.body_semen[body_part][1] = 0
-    # 计算新的等级量
-    new_lv = attr_calculation.get_semen_now_level(now_character_data.dirty.body_semen[body_part][1], body_part, 0)
-    # 更新等级
-    now_character_data.dirty.body_semen[body_part][2] = new_lv
+  """
+  结算精液吸收\n
+  Keyword arguments:\n
+  character_id -- 角色id\n
+  true_add_time -- 实际行动时间\n
+  body_part -- 身体部位id\n
+  """
+  now_character_data: game_type.Character = cache.character_data[character_id]
+  now_body_semen = now_character_data.dirty.body_semen[body_part][1]
+  # 如果当前部位没有精液则返回
+  if now_body_semen <= 0:
+    return
+  # 计算吸收的精液量，公式为每5分钟吸收1毫升或当前精液量的1%中较大的那个
+  absorb_ml = max(true_add_time // 5, now_body_semen * 0.01)
+  # 不得高于当前精液量
+  absorb_ml = int(min(absorb_ml, now_body_semen))
+  # 从角色身体中吸收精液
+  now_character_data.dirty.body_semen[body_part][1] -= absorb_ml
+  # 更新吸收精液量
+  now_character_data.dirty.absorbed_total_semen += absorb_ml
+  # 根据吸收的精液量来减少饥饿度
+  now_character_data.hunger_point = max(
+      now_character_data.hunger_point - absorb_ml, 0
+  )
+  # 如果现存量小于3ml，则清零
+  if now_character_data.dirty.body_semen[body_part][1] < 3:
+    now_character_data.dirty.body_semen[body_part][1] = 0
+  # 计算新的等级量
+  new_lv = attr_calculation.get_semen_now_level(
+      now_character_data.dirty.body_semen[body_part][1], body_part, 0
+  )
+  # 更新等级
+  now_character_data.dirty.body_semen[body_part][2] = new_lv
+
 
 def change_character_persistent_state(character_id: int):
-    """
-    结算角色的状态是否会持续\n
-    Keyword arguments:\n
-    character_id -- 角色id\n
-    """
-    now_character_data: game_type.Character = cache.character_data[character_id]
-    # 因为睡眠时间很长，会导致持续状态的时间超过了当前时间，所以改为使用当前时间
-    # start_time = now_character_data.behavior.start_time
-    # now_time = game_time.get_sub_date(minute=now_character_data.behavior.duration, old_date=start_time)
-    now_time = cache.game_time
+  """
+  结算角色的状态是否会持续\n
+  Keyword arguments:\n
+  character_id -- 角色id\n
+  """
+  now_character_data: game_type.Character = cache.character_data[character_id]
+  # 因为睡眠时间很长，会导致持续状态的时间超过了当前时间，所以改为使用当前时间
+  # start_time = now_character_data.behavior.start_time
+  # now_time = game_time.get_sub_date(minute=now_character_data.behavior.duration, old_date=start_time)
+  now_time = cache.game_time
 
-    # H下结算全部持续状态
-    if now_character_data.sp_flag.is_h:
-        # 结算H状态的持续时间
-        for i in range(len(now_character_data.h_state.body_item)):
-            if now_character_data.h_state.body_item[i][1]:
-                end_time = now_character_data.h_state.body_item[i][2]
-                if end_time != None and game_time.judge_date_big_or_small(now_time,end_time):
-                    now_character_data.h_state.body_item[i][1] = False
-                    now_character_data.h_state.body_item[i][2] = None
-    # 非H下结算部分药物
-    else:
-        for i in [8, 9]:
-            if now_character_data.h_state.body_item[i][1]:
-                end_time = now_character_data.h_state.body_item[i][2]
-                if end_time != None and game_time.judge_date_big_or_small(now_time,end_time):
-                    now_character_data.h_state.body_item[i][1] = False
-                    now_character_data.h_state.body_item[i][2] = None
+  # H下结算全部持续状态
+  if now_character_data.sp_flag.is_h:
+    # 结算H状态的持续时间
+    for i in range(len(now_character_data.h_state.body_item)):
+      if now_character_data.h_state.body_item[i][1]:
+        end_time = now_character_data.h_state.body_item[i][2]
+        if end_time != None and game_time.judge_date_big_or_small(
+            now_time, end_time
+        ):
+          now_character_data.h_state.body_item[i][1] = False
+          now_character_data.h_state.body_item[i][2] = None
+  # 非H下结算部分药物
+  else:
+    for i in [8, 9]:
+      if now_character_data.h_state.body_item[i][1]:
+        end_time = now_character_data.h_state.body_item[i][2]
+        if end_time != None and game_time.judge_date_big_or_small(
+            now_time, end_time
+        ):
+          now_character_data.h_state.body_item[i][1] = False
+          now_character_data.h_state.body_item[i][2] = None
+
 
 def settle_tired(character_id: int, true_add_time: int) -> None:
-    """
-    疲劳值结算：增加疲劳值
-    参数:
-        character_id (int): 角色ID
-        true_add_time (int): 实际行动时间（分钟）
-    返回:
-        None
-    """
-    global _drunk_sex_common
-    if _drunk_sex_common is None:
-        from Script.System.Sex_System import drunk_sex_common as _drunk_module
-        _drunk_sex_common = _drunk_module
-    drunk_sex_common = _drunk_sex_common
-    now_character_data: game_type.Character = cache.character_data[character_id]
-    tired_change = int(true_add_time / 6)
-    # 当前在香薰疗愈-疲劳状态下，疲劳值增加减少
-    if handle_premise.handle_aromatherapy_flag_8(character_id):
-        tired_change = int(tired_change * 0.8)
-    # 在喝醉的情况下，根据醉酒等级来提升疲劳值增加速度
-    drunk_level, drunk_name = drunk_sex_common.get_drunk_level(character_id)
-    if drunk_level > 0:
-        tired_change = int(tired_change * (1 + drunk_level * 0.1))
-    # 大于5分钟的疲劳值增加至少为1
-    if true_add_time >= 5:
-        tired_change = max(tired_change, 1)
-    # 如果为0则不结算
-    if tired_change <= 0:
-        return
-    # 不睡觉时、且不是时停中，结算疲劳值
-    if now_character_data.behavior.behavior_id not in {constant.Behavior.SLEEP} and handle_premise.handle_time_stop_off(character_id):
-        new_tired = min(now_character_data.tired_point + tired_change, 160)
-        now_character_data.tired_point = new_tired
+  """
+  疲劳值结算：增加疲劳值
+  参数:
+      character_id (int): 角色ID
+      true_add_time (int): 实际行动时间（分钟）
+  返回:
+      None
+  """
+  global _drunk_sex_common
+  if _drunk_sex_common is None:
+    from Script.System.Sex_System import drunk_sex_common as _drunk_module
+
+    _drunk_sex_common = _drunk_module
+  drunk_sex_common = _drunk_sex_common
+  now_character_data: game_type.Character = cache.character_data[character_id]
+  tired_change = int(true_add_time / 6)
+  # 当前在香薰疗愈-疲劳状态下，疲劳值增加减少
+  if handle_premise.handle_aromatherapy_flag_8(character_id):
+    tired_change = int(tired_change * 0.8)
+  # 在喝醉的情况下，根据醉酒等级来提升疲劳值增加速度
+  drunk_level, drunk_name = drunk_sex_common.get_drunk_level(character_id)
+  if drunk_level > 0:
+    tired_change = int(tired_change * (1 + drunk_level * 0.1))
+  # 大于5分钟的疲劳值增加至少为1
+  if true_add_time >= 5:
+    tired_change = max(tired_change, 1)
+  # 如果为0则不结算
+  if tired_change <= 0:
+    return
+  # 不睡觉时、且不是时停中，结算疲劳值
+  if now_character_data.behavior.behavior_id not in {
+      constant.Behavior.SLEEP
+  } and handle_premise.handle_time_stop_off(character_id):
+    new_tired = min(now_character_data.tired_point + tired_change, 160)
+    now_character_data.tired_point = new_tired
+
 
 def settle_rest(character_id: int, true_add_time: int) -> None:
-    """
-    休息状态结算：恢复体力和气力
-    参数:
-        character_id (int): 角色ID
-        true_add_time (int): 实际行动时间（分钟）
-    返回:
-        None
-    """
-    now_char = cache.character_data[character_id]
-    # 休息室对回复效果的影响
-    if handle_premise.handle_in_rest_room_or_dormitory(character_id):
-        final_adjust = 1
-        now_level = cache.rhodes_island.facility_level[31]
-        facility_cid = game_config.config_facility_effect_data[_("休息室")][int(now_level)]
-        facility_effect = game_config.config_facility_effect[facility_cid].effect
-        final_adjust *= 1 + facility_effect / 100
-    else:
-        final_adjust = 0.3
-    # 素质对回复效果的影响
-    if now_char.talent[351]:
-        final_adjust *= 0.7
-    elif now_char.talent[352]:
-        final_adjust *= 1.5
-    # 监禁条件判定
-    if handle_premise.handle_imprisonment_1(character_id):
-        setting = cache.rhodes_island.confinement_training_setting[4]
-        if setting == 0:
-            final_adjust *= 0.5
-        elif setting == 2:
-            final_adjust *= 1.5
-    # 回复体力和气力
-    hp_base = now_char.hit_point_max * 0.003 + 10
-    mp_base = now_char.mana_point_max * 0.006 + 20
-    now_char.hit_point = min(now_char.hit_point + int(hp_base * true_add_time * final_adjust), now_char.hit_point_max)
-    now_char.mana_point = min(now_char.mana_point + int(mp_base * true_add_time * final_adjust), now_char.mana_point_max)
+  """
+  休息状态结算：恢复体力和气力
+  参数:
+      character_id (int): 角色ID
+      true_add_time (int): 实际行动时间（分钟）
+  返回:
+      None
+  """
+  now_char = cache.character_data[character_id]
+  # 休息室对回复效果的影响
+  if handle_premise.handle_in_rest_room_or_dormitory(character_id):
+    final_adjust = 1
+    now_level = cache.rhodes_island.facility_level[31]
+    facility_cid = game_config.config_facility_effect_data[_("休息室")][
+        int(now_level)
+    ]
+    facility_effect = game_config.config_facility_effect[facility_cid].effect
+    final_adjust *= 1 + facility_effect / 100
+  else:
+    final_adjust = 0.3
+  # 素质对回复效果的影响
+  if now_char.talent[351]:
+    final_adjust *= 0.7
+  elif now_char.talent[352]:
+    final_adjust *= 1.5
+  # 监禁条件判定
+  if handle_premise.handle_imprisonment_1(character_id):
+    setting = cache.rhodes_island.confinement_training_setting[4]
+    if setting == 0:
+      final_adjust *= 0.5
+    elif setting == 2:
+      final_adjust *= 1.5
+  # 回复体力和气力
+  hp_base = now_char.hit_point_max * 0.003 + 10
+  mp_base = now_char.mana_point_max * 0.006 + 20
+  now_char.hit_point = min(
+      now_char.hit_point + int(hp_base * true_add_time * final_adjust),
+      now_char.hit_point_max,
+  )
+  now_char.mana_point = min(
+      now_char.mana_point + int(mp_base * true_add_time * final_adjust),
+      now_char.mana_point_max,
+  )
+
 
 def settle_sleep(character_id: int, true_add_time: int) -> None:
-    """
-    睡眠状态结算：减少疲劳，增加熟睡，恢复体力和气力
-    参数:
-        character_id (int): 角色ID
-        true_add_time (int): 实际行动时间（分钟）
-    返回:
-        None
-    """
-    from Script.System.Dormitory_System import dormitory_manager_system
-    now_char = cache.character_data[character_id]
-    # 疲劳值越高，熟睡值增加越快，最高为疲劳值满时的2倍
-    tired_adjust = 1 + now_char.tired_point / 160
-    # 减少疲劳
-    tired_change = int(true_add_time / 6) * 2
-    now_char.tired_point = max(now_char.tired_point - tired_change, 0)
-    # 增加熟睡值
-    level, tem = attr_calculation.get_sleep_level(now_char.sleep_point)
-    if level <= 1:
-        add_sleep = int(true_add_time * tired_adjust * 1.5)
-    else:
-        add_sleep = random.randint(int(true_add_time * tired_adjust * -0.3), int(true_add_time * tired_adjust * 0.6))
-    # 疲劳已完全恢复，且是白天，且没有服用安眠药，且非醉酒，则熟睡值减少
-    if (
-        handle_premise.handle_tired_le_0(character_id) and
-        handle_premise.handle_time_day(character_id) and
-        handle_premise.handle_self_not_sleep_pills(character_id) and
-        handle_premise.handle_drunk_level_0(character_id)
-    ):
-        now_char.sleep_point = min(max(now_char.sleep_point - add_sleep, 0), 100)
-        # 熟睡值已减少到0时NPC直接醒来
-        if now_char.sleep_point <= 0 and character_id:
-            pl_character_data: game_type.Character = cache.character_data[0]
-            # 玩家与该角色在同一地点，且玩家正在对该角色睡奸中，则结算从无意识H中恢复意识
-            if (
-                pl_character_data.position == now_char.position and
-                pl_character_data.target_character_id == character_id and
-                now_char.sp_flag.unconscious_h == 1
-            ):
-                info_text = _("\n{0}已经睡饱了，从睡梦中自然苏醒过来\n").format(now_char.name)
-                handle_npc_ai_in_h.recover_from_unconscious_h(0, info_text)
-            # 否则直接结束睡眠行为，转为空闲状态交由AI选择新行动
-            else:
-                # 延迟导入并缓存，避免循环导入（导入放在罕见分支内，不增加热路径开销）
-                global _character_behavior
-                if _character_behavior is None:
-                    from Script.Design import character_behavior as _character_behavior_module
-                    _character_behavior = _character_behavior_module
-                _character_behavior.judge_character_status_time_over(character_id, cache.game_time, end_now=2)
-            # 已醒来，跳过后续的睡眠回复结算
-            return
-    # 其他情况下正常增加熟睡值
-    else:
-        now_char.sleep_point = min(max(now_char.sleep_point + add_sleep, 0), 100)
-    # 回复体力和气力
-    final_adjust = 1
-    if now_char.talent[351]:
-        final_adjust *= 0.7
-    elif now_char.talent[352]:
-        final_adjust *= 1.5
-    # 监禁条件判定
-    if handle_premise.handle_imprisonment_1(character_id):
-        setting = cache.rhodes_island.confinement_training_setting[4]
-        if setting == 0:
-            final_adjust *= 0.5
-        elif setting == 2:
-            final_adjust *= 1.5
-    # 宿舍的影响
-    else:
-        final_adjust *= basement.calc_facility_efficiency(4)
-        knowledge_level = dormitory_manager_system.get_dormitory_manager_knowledge(character_id)
-        final_adjust *= (1 + knowledge_level * 0.05)
-    hp_base = now_char.hit_point_max * 0.0025 + 3
-    mp_base = now_char.mana_point_max * 0.005 + 6
-    now_char.hit_point = min(now_char.hit_point + int(hp_base * true_add_time * final_adjust), now_char.hit_point_max)
-    now_char.mana_point = min(now_char.mana_point + int(mp_base * true_add_time * final_adjust), now_char.mana_point_max)
+  """
+  睡眠状态结算：减少疲劳，增加熟睡，恢复体力和气力
+  参数:
+      character_id (int): 角色ID
+      true_add_time (int): 实际行动时间（分钟）
+  返回:
+      None
+  """
+  from Script.System.Dormitory_System import dormitory_manager_system
+
+  now_char = cache.character_data[character_id]
+  # 疲劳值越高，熟睡值增加越快，最高为疲劳值满时的2倍
+  tired_adjust = 1 + now_char.tired_point / 160
+  # 减少疲劳
+  tired_change = int(true_add_time / 6) * 2
+  now_char.tired_point = max(now_char.tired_point - tired_change, 0)
+  # 增加熟睡值
+  level, tem = attr_calculation.get_sleep_level(now_char.sleep_point)
+  if level <= 1:
+    add_sleep = int(true_add_time * tired_adjust * 1.5)
+  else:
+    add_sleep = random.randint(
+        int(true_add_time * tired_adjust * -0.3),
+        int(true_add_time * tired_adjust * 0.6),
+    )
+  # 疲劳已完全恢复，且是白天，且没有服用安眠药，且非醉酒，则熟睡值减少
+  if (
+      handle_premise.handle_tired_le_0(character_id)
+      and handle_premise.handle_time_day(character_id)
+      and handle_premise.handle_self_not_sleep_pills(character_id)
+      and handle_premise.handle_drunk_level_0(character_id)
+  ):
+    now_char.sleep_point = min(max(now_char.sleep_point - add_sleep, 0), 100)
+    # 熟睡值已减少到0时NPC直接醒来
+    if now_char.sleep_point <= 0 and character_id:
+      pl_character_data: game_type.Character = cache.character_data[0]
+      # 玩家与该角色在同一地点，且玩家正在对该角色睡奸中，则结算从无意识H中恢复意识
+      if (
+          pl_character_data.position == now_char.position
+          and pl_character_data.target_character_id == character_id
+          and now_char.sp_flag.unconscious_h == 1
+      ):
+        info_text = _("\n{0}已经睡饱了，从睡梦中自然苏醒过来\n").format(
+            now_char.name
+        )
+        handle_npc_ai_in_h.recover_from_unconscious_h(0, info_text)
+      # 否则直接结束睡眠行为，转为空闲状态交由AI选择新行动
+      else:
+        # 延迟导入并缓存，避免循环导入（导入放在罕见分支内，不增加热路径开销）
+        global _character_behavior
+        if _character_behavior is None:
+          from Script.Design import character_behavior as _character_behavior_module
+
+          _character_behavior = _character_behavior_module
+        _character_behavior.judge_character_status_time_over(
+            character_id, cache.game_time, end_now=2
+        )
+      # 已醒来，跳过后续的睡眠回复结算
+      return
+  # 其他情况下正常增加熟睡值
+  else:
+    now_char.sleep_point = min(max(now_char.sleep_point + add_sleep, 0), 100)
+  # 回复体力和气力
+  final_adjust = 1
+  if now_char.talent[351]:
+    final_adjust *= 0.7
+  elif now_char.talent[352]:
+    final_adjust *= 1.5
+  # 监禁条件判定
+  if handle_premise.handle_imprisonment_1(character_id):
+    setting = cache.rhodes_island.confinement_training_setting[4]
+    if setting == 0:
+      final_adjust *= 0.5
+    elif setting == 2:
+      final_adjust *= 1.5
+  # 宿舍的影响
+  else:
+    final_adjust *= basement.calc_facility_efficiency(4)
+    knowledge_level = dormitory_manager_system.get_dormitory_manager_knowledge(
+        character_id
+    )
+    final_adjust *= 1 + knowledge_level * 0.05
+  hp_base = now_char.hit_point_max * 0.0025 + 3
+  mp_base = now_char.mana_point_max * 0.005 + 6
+  now_char.hit_point = min(
+      now_char.hit_point + int(hp_base * true_add_time * final_adjust),
+      now_char.hit_point_max,
+  )
+  now_char.mana_point = min(
+      now_char.mana_point + int(mp_base * true_add_time * final_adjust),
+      now_char.mana_point_max,
+  )
+
 
 def settle_player_ability(character_id: int, true_add_time: int) -> None:
-    """
-    玩家源石技艺结算：消耗理智，管理技艺状态
-    参数:
-        character_id (int): 角色ID（玩家为0）
-        true_add_time (int): 实际行动时间（分钟）
-    返回:
-        None
-    """
-    character_data = cache.character_data[character_id]
-    # 视觉系技艺消耗
-    if character_data.pl_ability.visual:
-        down_sp = max(int(true_add_time / 12), 1)
-        multiple = character_data.talent[307] + character_data.talent[308] + character_data.talent[309]
-        down_sp *= max(multiple, 1)
-        down_sp = min(down_sp, character_data.sanity_point)
-        character_data.sanity_point -= down_sp
-        character_data.pl_ability.today_sanity_point_cost += down_sp
-    # 时停系技艺消耗
+  """
+  玩家源石技艺结算：消耗理智，管理技艺状态
+  参数:
+      character_id (int): 角色ID（玩家为0）
+      true_add_time (int): 实际行动时间（分钟）
+  返回:
+      None
+  """
+  character_data = cache.character_data[character_id]
+  # 视觉系技艺消耗
+  if character_data.pl_ability.visual:
+    down_sp = max(int(true_add_time / 12), 1)
+    multiple = (
+        character_data.talent[307]
+        + character_data.talent[308]
+        + character_data.talent[309]
+    )
+    down_sp *= max(multiple, 1)
+    down_sp = min(down_sp, character_data.sanity_point)
+    character_data.sanity_point -= down_sp
+    character_data.pl_ability.today_sanity_point_cost += down_sp
+  # 时停系技艺消耗
+  if handle_premise.handle_time_stop_on(character_id):
+    down_sp = min(max(true_add_time * 2, 1), character_data.sanity_point)
+    character_data.sanity_point -= down_sp
+    character_data.pl_ability.today_sanity_point_cost += down_sp
+  # 中断技艺
+  if (
+      handle_premise.handle_at_least_one_arts_on(character_id)
+      and character_data.sanity_point <= 0
+      and character_data.behavior.behavior_id
+      not in {
+          constant.Behavior.HYPNOSIS_CANCEL,
+          constant.Behavior.TIME_STOP_OFF,
+          constant.Behavior.LOW_OBSCENITY_ANUS,
+          constant.Behavior.HIGH_OBSCENITY_ANUS,
+          constant.Behavior.DO_H_FAIL,
+      }
+  ):
+    draw_wait = draw.WaitDraw()
+    draw_wait.width = window_width
+    draw_wait.style = "red"
+    draw_wait.text = _("\n理智值不足，开启的源石技艺已全部中断\n")
+    draw_wait.draw()
+    character_data.sanity_point = 0
+    character_data.pl_ability.visual = False
+    target = cache.character_data[character_data.target_character_id]
+    from Script.System.Instruct_System import handle_instruct
+
+    if target.sp_flag.unconscious_h >= 4:
+      handle_instruct.chara_handle_instruct_common_settle(
+          constant.Behavior.HYPNOSIS_CANCEL
+      )
     if handle_premise.handle_time_stop_on(character_id):
-        down_sp = min(max(true_add_time * 2, 1), character_data.sanity_point)
-        character_data.sanity_point -= down_sp
-        character_data.pl_ability.today_sanity_point_cost += down_sp
-    # 中断技艺
-    if (
-        handle_premise.handle_at_least_one_arts_on(character_id) and
-        character_data.sanity_point <= 0 and
-        character_data.behavior.behavior_id not in {constant.Behavior.HYPNOSIS_CANCEL, constant.Behavior.TIME_STOP_OFF, constant.Behavior.LOW_OBSCENITY_ANUS, constant.Behavior.HIGH_OBSCENITY_ANUS, constant.Behavior.DO_H_FAIL}
-        ):
-        draw_wait = draw.WaitDraw()
-        draw_wait.width = window_width
-        draw_wait.style = "red"
-        draw_wait.text = _("\n理智值不足，开启的源石技艺已全部中断\n")
-        draw_wait.draw()
-        character_data.sanity_point = 0
-        character_data.pl_ability.visual = False
-        target = cache.character_data[character_data.target_character_id]
-        from Script.System.Instruct_System import handle_instruct
-        if target.sp_flag.unconscious_h >= 4:
-            handle_instruct.chara_handle_instruct_common_settle(constant.Behavior.HYPNOSIS_CANCEL)
-        if handle_premise.handle_time_stop_on(character_id):
-            handle_instruct.chara_handle_instruct_common_settle(constant.Behavior.TIME_STOP_OFF)
+      handle_instruct.chara_handle_instruct_common_settle(
+          constant.Behavior.TIME_STOP_OFF
+      )
+
 
 def get_sleep_disturbance_value(behavior_id: str, true_add_time: int) -> int:
-    """
-    根据玩家行为类型计算对睡眠角色熟睡程度的减轻量
-    参数:
-        behavior_id (str): 行为id
-        true_add_time (int): 实际行动时间（分钟）
-    返回:
-        int -- 本次行为对熟睡程度的减轻量
-    """
-    behavior_data = game_config.config_behavior.get(behavior_id)
-    tags = getattr(behavior_data, "tag", "") if behavior_data else ""
+  """
+  根据玩家行为类型计算对睡眠角色熟睡程度的减轻量
+  参数:
+      behavior_id (str): 行为id
+      true_add_time (int): 实际行动时间（分钟）
+  返回:
+      int -- 本次行为对熟睡程度的减轻量
+  """
+  behavior_data = game_config.config_behavior.get(behavior_id)
+  tags = getattr(behavior_data, "tag", "") if behavior_data else ""
 
-    # 影响排序：插入 > 道具/侍奉 > 性爱 > 非性爱
-    if "插入" in tags:
-        factor = 3.0
-    elif "道具" in tags or "侍奉" in tags:
-        factor = 2.0
-    elif "性爱" in tags:
-        factor = 1.0
-    else:
-        factor = 0.5
+  # 影响排序：插入 > 道具/侍奉 > 性爱 > 非性爱
+  if "插入" in tags:
+    factor = 3.0
+  elif "道具" in tags or "侍奉" in tags:
+    factor = 2.0
+  elif "性爱" in tags:
+    factor = 1.0
+  else:
+    factor = 0.5
 
-    if true_add_time <= 0:
-        return 0
-    return max(1, int(true_add_time * factor))
+  if true_add_time <= 0:
+    return 0
+  return max(1, int(true_add_time * factor))
 
 
 def settle_sleep_h(character_id: int, true_add_time: int) -> None:
-    """
-    结算玩家当前场景内所有睡眠NPC的熟睡程度变化与被吵醒判定
-    参数:
-        character_id (int): 角色ID
-        true_add_time (int): 实际行动时间（分钟）
-    返回:
-        None
-    """
-    # 延迟导入并缓存，避免循环导入且不在热路径反复执行导入机制
-    global _map_handle, _drunk_sex_common
-    if _map_handle is None:
-        from Script.Design import map_handle as _map_handle_module
-        _map_handle = _map_handle_module
-    map_handle = _map_handle
-    if _drunk_sex_common is None:
-        from Script.System.Sex_System import drunk_sex_common as _drunk_module
-        _drunk_sex_common = _drunk_module
-    drunk_sex_common = _drunk_sex_common
+  """
+  结算玩家当前场景内所有睡眠NPC的熟睡程度变化与被吵醒判定
+  参数:
+      character_id (int): 角色ID
+      true_add_time (int): 实际行动时间（分钟）
+  返回:
+      None
+  """
+  # 延迟导入并缓存，避免循环导入且不在热路径反复执行导入机制
+  global _map_handle, _drunk_sex_common
+  if _map_handle is None:
+    from Script.Design import map_handle as _map_handle_module
 
-    now_character_data: game_type.Character = cache.character_data[character_id]
-    scene_path_str = map_handle.get_map_system_path_str_for_list(now_character_data.position)
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
+    _map_handle = _map_handle_module
+  map_handle = _map_handle
+  if _drunk_sex_common is None:
+    from Script.System.Sex_System import drunk_sex_common as _drunk_module
 
-    # 遍历玩家当前场景内所有睡眠中的NPC
-    for sleeper_id in list(scene_data.character_list):
-        # 上一个被吵醒的角色可能已经把玩家赶出了本场景，此时不再继续结算，避免玩家被连续推开多个场景
-        if map_handle.get_map_system_path_str_for_list(now_character_data.position) != scene_path_str:
-            break
-        # 跳过玩家和非睡眠角色
-        if sleeper_id == 0:
-            continue
-        sleeper_data: game_type.Character = cache.character_data[sleeper_id]
-        if sleeper_data.behavior.behavior_id != constant.Behavior.SLEEP:
-            continue
-        # 等待、休息、睡觉行为，或目标服用安眠药、烂醉爆睡时不受影响
-        # 烂醉豁免与安眠药同级：深度昏睡状态不会被动静吵醒，否则会反复吵醒后又立刻重新爆睡
-        if (
-            now_character_data.behavior.behavior_id in {constant.Behavior.WAIT, constant.Behavior.REST, constant.Behavior.SLEEP} or
-            sleeper_data.h_state.body_item[9][1] == 1 or
-            drunk_sex_common.get_drunk_level(sleeper_id)[0] >= 3
-        ):
-            continue
+    _drunk_sex_common = _drunk_module
+  drunk_sex_common = _drunk_sex_common
 
-        # 计算本次动作对熟睡程度的影响
-        down_sleep = get_sleep_disturbance_value(now_character_data.behavior.behavior_id, true_add_time)
+  now_character_data: game_type.Character = cache.character_data[character_id]
+  scene_path_str = map_handle.get_map_system_path_str_for_list(
+      now_character_data.position
+  )
+  scene_data: game_type.Scene = cache.scene_data[scene_path_str]
 
-        # 仅玩家当前睡奸目标使用完整影响，非睡奸目标影响减半
-        is_sleep_h_target = (
-            sleeper_id == now_character_data.target_character_id and
-            sleeper_data.sp_flag.unconscious_h == 1
-        )
-        if not is_sleep_h_target:
-            down_sleep = max(1, down_sleep // 2)
-        if down_sleep <= 0:
-            continue
+  # 遍历玩家当前场景内所有睡眠中的NPC
+  for sleeper_id in list(scene_data.character_list):
+    # 上一个被吵醒的角色可能已经把玩家赶出了本场景，此时不再继续结算，避免玩家被连续推开多个场景
+    if (
+        map_handle.get_map_system_path_str_for_list(now_character_data.position)
+        != scene_path_str
+    ):
+      break
+    # 跳过玩家和非睡眠角色
+    if sleeper_id == 0:
+      continue
+    sleeper_data: game_type.Character = cache.character_data[sleeper_id]
+    if sleeper_data.behavior.behavior_id != constant.Behavior.SLEEP:
+      continue
+    # 等待、休息、睡觉行为，或目标服用安眠药、烂醉爆睡时不受影响
+    # 烂醉豁免与安眠药同级：深度昏睡状态不会被动静吵醒，否则会反复吵醒后又立刻重新爆睡
+    if (
+        now_character_data.behavior.behavior_id
+        in {
+            constant.Behavior.WAIT,
+            constant.Behavior.REST,
+            constant.Behavior.SLEEP,
+        }
+        or sleeper_data.h_state.body_item[9][1] == 1
+        or drunk_sex_common.get_drunk_level(sleeper_id)[0] >= 3
+    ):
+      continue
 
-        # 减少熟睡程度；睡眠等级大于1时也照常结算，只是不会进入醒来判定
-        sleeper_data.sleep_point = max(0, sleeper_data.sleep_point - down_sleep)
+    # 计算本次动作对熟睡程度的影响
+    down_sleep = get_sleep_disturbance_value(
+        now_character_data.behavior.behavior_id, true_add_time
+    )
 
-        # 重新计算当前熟睡等级
-        sleep_level,tem = attr_calculation.get_sleep_level(sleeper_data.sleep_point)
-        # 只有睡眠等级小于等于1时才判定是否被吵醒
-        if sleep_level <= 1:
-            handle_npc_ai_in_h.judge_weak_up_in_sleep_h(character_id, sleeper_id)
+    # 仅玩家当前睡奸目标使用完整影响，非睡奸目标影响减半
+    is_sleep_h_target = (
+        sleeper_id == now_character_data.target_character_id
+        and sleeper_data.sp_flag.unconscious_h == 1
+    )
+    if not is_sleep_h_target:
+      down_sleep = max(1, down_sleep // 2)
+    if down_sleep <= 0:
+      continue
+
+    # 减少熟睡程度；睡眠等级大于1时也照常结算，只是不会进入醒来判定
+    sleeper_data.sleep_point = max(0, sleeper_data.sleep_point - down_sleep)
+
+    # 重新计算当前熟睡等级
+    sleep_level, tem = attr_calculation.get_sleep_level(
+        sleeper_data.sleep_point
+    )
+    # 只有睡眠等级小于等于1时才判定是否被吵醒
+    if sleep_level <= 1:
+      handle_npc_ai_in_h.judge_weak_up_in_sleep_h(character_id, sleeper_id)
 
 
 def settle_conscious_continuous(character_id: int, true_add_time: int) -> None:
-    """
-    有意识下持续结算：羞耻、苦痛、欲情等状态增减
-    参数:
-        character_id (int): 角色ID
-        true_add_time (int): 实际行动时间（分钟）
-    返回:
-        None
-    """
-    # 延迟导入并缓存，避免循环导入且不在热路径反复执行导入机制
-    global _common_default, _map_handle
-    if _common_default is None:
-        from Script.Settle import common_default as _common_default_module
-        from Script.Design import map_handle as _map_handle_module
-        _common_default = _common_default_module
-        _map_handle = _map_handle_module
-    base_chara_state_common_settle = _common_default.base_chara_state_common_settle
-    map_handle = _map_handle
-    now_char = cache.character_data[character_id]
-    now_char_ability = now_char.ability
-    # 场景内的角色总数（只计算一次，后续判定复用）
-    scene_chara_count = len(map_handle.get_chara_now_scene_all_chara_id_list(character_id))
-    # 场景内减去自己和玩家之外的角色数量
-    others_count = scene_chara_count - 2
-    # 限制最大加成
-    other_chara_count_adjust = min(others_count * 0.1, 2)
-    # 和周围其他人相关的结算（场景角色数>2，等价于 handle_scene_over_two，复用已计算的人数）
-    if scene_chara_count > 2:
-        # 群交中增加羞耻和心理快感
-        if handle_premise.handle_group_sex_mode_on(character_id) and handle_premise.handle_self_is_h(character_id):
-            base_chara_state_common_settle(character_id, add_time=true_add_time, state_id=16, base_value=0, ability_level=now_char_ability[34], extra_adjust=other_chara_count_adjust, tenths_add=False)
-            base_chara_state_common_settle(character_id, add_time=true_add_time, state_id=23, base_value=0, ability_level=now_char_ability[34], extra_adjust=other_chara_count_adjust, tenths_add=False)
-        # 需要周围有除了自己和玩家以外的有意识且没睡觉的其他人
-        if handle_premise.handle_scene_others_conscious(character_id):
-            # 自己未穿胸衣和内裤、自己异常2正常时羞耻
-            if (
-                handle_premise.handle_not_wear_bra_or_pan(character_id) and
-                handle_premise.handle_normal_2(character_id)
-                ):
-                extra = 0
-                if handle_premise.handle_not_wear_bra(character_id):
-                    extra += 1
-                if handle_premise.handle_not_wear_pan(character_id):
-                    extra += 2
-                base_chara_state_common_settle(character_id, add_time=true_add_time, state_id=16, base_value=0, ability_level=now_char_ability[34], extra_adjust=extra, tenths_add=False)
-            # 隐奸中增加羞耻和心理快感
-            if handle_premise.handle_hidden_sex_mode_ge_1(character_id):
-                hidden_sex_mode = now_char.sp_flag.hidden_sex_mode
-                extra_add = 4 - hidden_sex_mode
-                extra_add += others_count * 0.1
-                base_chara_state_common_settle(character_id, add_time=true_add_time * 5, state_id=16, base_value=0, ability_level=now_char_ability[34], extra_adjust=extra_add, tenths_add=False)
-                base_chara_state_common_settle(character_id, add_time=true_add_time * 5, state_id=23, base_value=0, ability_level=now_char_ability[34], extra_adjust=extra_add, tenths_add=False)
-    # 露出中增加羞耻和心理快感
-    if handle_premise.handle_exhibitionism_sex_mode_ge_1(character_id):
-        base_chara_state_common_settle(character_id, add_time=true_add_time * 3, state_id=16, base_value=0, ability_level=now_char_ability[34], extra_adjust=other_chara_count_adjust, tenths_add=False)
-        base_chara_state_common_settle(character_id, add_time=true_add_time * 3, state_id=23, base_value=0, ability_level=now_char_ability[34], extra_adjust=other_chara_count_adjust, tenths_add=False)
-    # 女儿与自己H时增加欲情和心理快感
-    if handle_premise.handle_self_is_player_daughter(character_id) and handle_premise.handle_self_is_h(character_id):
-        base_chara_state_common_settle(character_id, add_time=true_add_time * 5, state_id=12, base_value=0, ability_level=now_char_ability[33], extra_adjust=5, tenths_add=False)
-        base_chara_state_common_settle(character_id, add_time=true_add_time * 5, state_id=23, base_value=0, ability_level=now_char_ability[33], extra_adjust=5, tenths_add=False)
-    # 灌肠苦痛增加
-    if handle_premise.handle_enema(character_id):
-        extra = now_char.dirty.enema_capacity
-        base_chara_state_common_settle(character_id, add_time=true_add_time * 5, state_id=17, base_value=0, ability_level=now_char_ability[15], extra_adjust=extra, tenths_add=False)
-    # 捆绑时欲情、羞耻、苦痛
-    if handle_premise.handle_self_now_bondage(character_id):
-        bond_id = now_char.h_state.bondage
-        data = game_config.config_bondage[bond_id]
-        adjust = data.level * 0.5
-        for sid in (12,16,17):
-            base_chara_state_common_settle(character_id, add_time=true_add_time * 3, state_id=sid, base_value=0, ability_level=now_char_ability[33 if sid==12 else 34 if sid==16 else 15], extra_adjust=adjust, tenths_add=False)
-    # 破处下增加苦痛
-    first_sex_adjust = 0
-    if character_id != 0 and handle_premise.handle_first_sex_in_today(character_id):
-        first_sex_adjust += 3
-    if handle_premise.handle_first_a_sex_in_today(character_id):
-        first_sex_adjust += 3
-    if handle_premise.handle_first_u_sex_in_today(character_id):
-        first_sex_adjust += 10
-    if handle_premise.handle_first_w_sex_in_today(character_id):
-        first_sex_adjust += 5
-    if first_sex_adjust > 0:
-        base_chara_state_common_settle(character_id, add_time=true_add_time * 5, state_id=17, base_value=0, ability_level=now_char_ability[15], extra_adjust=first_sex_adjust, tenths_add=False)
-    # 被监禁状态下持续增长屈服和恐怖
-    if handle_premise.handle_imprisonment_1(character_id):
-        base_chara_state_common_settle(character_id, add_time=true_add_time * 5, state_id=15, base_value=0, ability_level=now_char_ability[14], extra_adjust=3, tenths_add=False)
-        base_chara_state_common_settle(character_id, add_time=true_add_time * 5, state_id=18, base_value=0, ability_level=now_char_ability[17], extra_adjust=3, tenths_add=False)
-    # 浴室中增加润滑
-    if handle_premise.handle_h_in_bathroom(character_id):
-        base_chara_state_common_settle(character_id, add_time=true_add_time * 10, state_id=8, base_value=0, tenths_add=False)
+  """
+  有意识下持续结算：羞耻、苦痛、欲情等状态增减
+  参数:
+      character_id (int): 角色ID
+      true_add_time (int): 实际行动时间（分钟）
+  返回:
+      None
+  """
+  # 延迟导入并缓存，避免循环导入且不在热路径反复执行导入机制
+  global _common_default, _map_handle
+  if _common_default is None:
+    from Script.Settle import common_default as _common_default_module
+    from Script.Design import map_handle as _map_handle_module
+
+    _common_default = _common_default_module
+    _map_handle = _map_handle_module
+  base_chara_state_common_settle = (
+      _common_default.base_chara_state_common_settle
+  )
+  map_handle = _map_handle
+  now_char = cache.character_data[character_id]
+  now_char_ability = now_char.ability
+  # 场景内的角色总数（只计算一次，后续判定复用）
+  scene_chara_count = len(
+      map_handle.get_chara_now_scene_all_chara_id_list(character_id)
+  )
+  # 场景内减去自己和玩家之外的角色数量
+  others_count = scene_chara_count - 2
+  # 限制最大加成
+  other_chara_count_adjust = min(others_count * 0.1, 2)
+  # 和周围其他人相关的结算（场景角色数>2，等价于 handle_scene_over_two，复用已计算的人数）
+  if scene_chara_count > 2:
+    # 群交中增加羞耻和心理快感
+    if handle_premise.handle_group_sex_mode_on(
+        character_id
+    ) and handle_premise.handle_self_is_h(character_id):
+      base_chara_state_common_settle(
+          character_id,
+          add_time=true_add_time,
+          state_id=16,
+          base_value=0,
+          ability_level=now_char_ability[34],
+          extra_adjust=other_chara_count_adjust,
+          tenths_add=False,
+      )
+      base_chara_state_common_settle(
+          character_id,
+          add_time=true_add_time,
+          state_id=23,
+          base_value=0,
+          ability_level=now_char_ability[34],
+          extra_adjust=other_chara_count_adjust,
+          tenths_add=False,
+      )
+    # 需要周围有除了自己和玩家以外的有意识且没睡觉的其他人
+    if handle_premise.handle_scene_others_conscious(character_id):
+      # 自己未穿胸衣和内裤、自己异常2正常时羞耻
+      if handle_premise.handle_not_wear_bra_or_pan(
+          character_id
+      ) and handle_premise.handle_normal_2(character_id):
+        extra = 0
+        if handle_premise.handle_not_wear_bra(character_id):
+          extra += 1
+        if handle_premise.handle_not_wear_pan(character_id):
+          extra += 2
+        base_chara_state_common_settle(
+            character_id,
+            add_time=true_add_time,
+            state_id=16,
+            base_value=0,
+            ability_level=now_char_ability[34],
+            extra_adjust=extra,
+            tenths_add=False,
+        )
+      # 隐奸中增加羞耻和心理快感
+      if handle_premise.handle_hidden_sex_mode_ge_1(character_id):
+        hidden_sex_mode = now_char.sp_flag.hidden_sex_mode
+        extra_add = 4 - hidden_sex_mode
+        extra_add += others_count * 0.1
+        base_chara_state_common_settle(
+            character_id,
+            add_time=true_add_time * 5,
+            state_id=16,
+            base_value=0,
+            ability_level=now_char_ability[34],
+            extra_adjust=extra_add,
+            tenths_add=False,
+        )
+        base_chara_state_common_settle(
+            character_id,
+            add_time=true_add_time * 5,
+            state_id=23,
+            base_value=0,
+            ability_level=now_char_ability[34],
+            extra_adjust=extra_add,
+            tenths_add=False,
+        )
+  # 露出中增加羞耻和心理快感
+  if handle_premise.handle_exhibitionism_sex_mode_ge_1(character_id):
+    base_chara_state_common_settle(
+        character_id,
+        add_time=true_add_time * 3,
+        state_id=16,
+        base_value=0,
+        ability_level=now_char_ability[34],
+        extra_adjust=other_chara_count_adjust,
+        tenths_add=False,
+    )
+    base_chara_state_common_settle(
+        character_id,
+        add_time=true_add_time * 3,
+        state_id=23,
+        base_value=0,
+        ability_level=now_char_ability[34],
+        extra_adjust=other_chara_count_adjust,
+        tenths_add=False,
+    )
+  # 女儿与自己H时增加欲情和心理快感
+  if handle_premise.handle_self_is_player_daughter(
+      character_id
+  ) and handle_premise.handle_self_is_h(character_id):
+    base_chara_state_common_settle(
+        character_id,
+        add_time=true_add_time * 5,
+        state_id=12,
+        base_value=0,
+        ability_level=now_char_ability[33],
+        extra_adjust=5,
+        tenths_add=False,
+    )
+    base_chara_state_common_settle(
+        character_id,
+        add_time=true_add_time * 5,
+        state_id=23,
+        base_value=0,
+        ability_level=now_char_ability[33],
+        extra_adjust=5,
+        tenths_add=False,
+    )
+  # 灌肠苦痛增加
+  if handle_premise.handle_enema(character_id):
+    extra = now_char.dirty.enema_capacity
+    base_chara_state_common_settle(
+        character_id,
+        add_time=true_add_time * 5,
+        state_id=17,
+        base_value=0,
+        ability_level=now_char_ability[15],
+        extra_adjust=extra,
+        tenths_add=False,
+    )
+  # 捆绑时欲情、羞耻、苦痛
+  if handle_premise.handle_self_now_bondage(character_id):
+    bond_id = now_char.h_state.bondage
+    data = game_config.config_bondage[bond_id]
+    adjust = data.level * 0.5
+    for sid in (12, 16, 17):
+      base_chara_state_common_settle(
+          character_id,
+          add_time=true_add_time * 3,
+          state_id=sid,
+          base_value=0,
+          ability_level=now_char_ability[
+              33 if sid == 12 else 34 if sid == 16 else 15
+          ],
+          extra_adjust=adjust,
+          tenths_add=False,
+      )
+  # 破处下增加苦痛
+  first_sex_adjust = 0
+  if character_id != 0 and handle_premise.handle_first_sex_in_today(
+      character_id
+  ):
+    first_sex_adjust += 3
+  if handle_premise.handle_first_a_sex_in_today(character_id):
+    first_sex_adjust += 3
+  if handle_premise.handle_first_u_sex_in_today(character_id):
+    first_sex_adjust += 10
+  if handle_premise.handle_first_w_sex_in_today(character_id):
+    first_sex_adjust += 5
+  if first_sex_adjust > 0:
+    base_chara_state_common_settle(
+        character_id,
+        add_time=true_add_time * 5,
+        state_id=17,
+        base_value=0,
+        ability_level=now_char_ability[15],
+        extra_adjust=first_sex_adjust,
+        tenths_add=False,
+    )
+  # 被监禁状态下持续增长屈服和恐怖
+  if handle_premise.handle_imprisonment_1(character_id):
+    base_chara_state_common_settle(
+        character_id,
+        add_time=true_add_time * 5,
+        state_id=15,
+        base_value=0,
+        ability_level=now_char_ability[14],
+        extra_adjust=3,
+        tenths_add=False,
+    )
+    base_chara_state_common_settle(
+        character_id,
+        add_time=true_add_time * 5,
+        state_id=18,
+        base_value=0,
+        ability_level=now_char_ability[17],
+        extra_adjust=3,
+        tenths_add=False,
+    )
+  # 浴室中增加润滑
+  if handle_premise.handle_h_in_bathroom(character_id):
+    base_chara_state_common_settle(
+        character_id,
+        add_time=true_add_time * 10,
+        state_id=8,
+        base_value=0,
+        tenths_add=False,
+    )
