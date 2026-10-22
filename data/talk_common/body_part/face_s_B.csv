@@ -11,21 +11,7 @@ str,str,int,str,str
 4,body_part_face_s_B,0,high_1,容颜
 5,body_part_face_s_B,0,high_1,俏脸
 
-100,body_part_face_s_B,0,CVP_A2_T|102_E_1,童颜
-101,body_part_face_s_B,0,CVP_A2_T|102_E_1,圆脸
-102,body_part_face_s_B,0,CVP_A2_T|102_E_1,小脸
-103,body_part_face_s_B,0,CVP_A2_T|102_E_1,婴脸
-104,body_part_face_s_B,0,CVP_A2_T|102_E_1,稚脸
-105,body_part_face_s_B,0,CVP_A2_T|102_E_1,嫩脸
-106,body_part_face_s_B,0,CVP_A2_T|102_E_1,幼颜
-107,body_part_face_s_B,0,CVP_A2_T|102_E_1,软脸
 
-120,body_part_face_s_B,0,CVP_A2_T|103_E_1,童颜
-121,body_part_face_s_B,0,CVP_A2_T|103_E_1,嫩脸
-122,body_part_face_s_B,0,CVP_A2_T|103_E_1,小脸
-123,body_part_face_s_B,0,CVP_A2_T|103_E_1,稚颜
-124,body_part_face_s_B,0,CVP_A2_T|103_E_1,萝脸
-125,body_part_face_s_B,0,CVP_A2_T|103_E_1,萌颜
 
 140,body_part_face_s_B,0,CVP_A2_T|104_E_1,俏脸
 141,body_part_face_s_B,0,CVP_A2_T|104_E_1,少颜

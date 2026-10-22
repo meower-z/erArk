@@ -12,15 +12,7 @@ str,str,int,str,str
 105,body_part_mouth_s_B,0,high_1,喉壁
 105,body_part_mouth_s_B,0,high_1,喉道
 
-1000,body_part_mouth_s_B,0,CVP_A2_T|102_E_1,窄喉
-1001,body_part_mouth_s_B,0,CVP_A2_T|102_E_1,小肉道
-1003,body_part_mouth_s_B,0,CVP_A2_T|102_E_1,细喉
-1004,body_part_mouth_s_B,0,CVP_A2_T|102_E_1,喉儿
-1005,body_part_mouth_s_B,0,CVP_A2_T|102_E_1,玉咽
 
-1030,body_part_mouth_s_B,0,CVP_A2_T|103_E_1,窄喉
-1031,body_part_mouth_s_B,0,CVP_A2_T|103_E_1,细喉
-1032,body_part_mouth_s_B,0,CVP_A2_T|103_E_1,喉儿
 
 1060,body_part_mouth_s_B,0,CVP_A2_T|104_E_1,窄喉
 

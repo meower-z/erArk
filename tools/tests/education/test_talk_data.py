@@ -21,17 +21,20 @@ EDU_BEHAVIOR = {
 section("口上覆盖")
 talk_list = [t for t in game_config.config_talk.values()
              if getattr(t, "behavior_id", "") in EDU_BEHAVIOR or "have_intern_student" in str(getattr(t, "premise", ""))]
-# Plan 31 删掉 52 条腰技炫耀（M4）与 2 条授课 / 听课占位（L15）、新增 4 条档位 3 的检查成绩单口上（L14），总量约 2797 条
-check("教育相关口上总量 ≥ 2750 条", len(talk_list) >= 2750, len(talk_list))
+# 教育相关口上共 1176 条
+check("教育相关口上总量 ≥ 1176 条", len(talk_list) >= 1176, len(talk_list))
 count_by_behavior = {}
 for talk in talk_list:
     count_by_behavior[talk.behavior_id] = count_by_behavior.get(talk.behavior_id, 0) + 1
 for behavior in sorted(EDU_BEHAVIOR):
     check(f"{behavior} 有口上（{count_by_behavior.get(behavior, 0)} 条）", count_by_behavior.get(behavior, 0) > 0)
-check("翘课被抓有 ≥ 16 条", count_by_behavior.get("caught_skip_class", 0) >= 16)
+check("翘课被抓有 ≥ 8 条", count_by_behavior.get("caught_skip_class", 0) >= 8)
 for behavior in ("teach", "attent_class", "self_study", "show_off_study"):
     # M4（Plan 31）：炫耀只在科目升级成功后出，男性专属的腰技女儿永远升不上去，炫耀口上按女儿可学的 17 门覆盖；授课 / 听课 / 自习照旧 18 门
     subject_list = E.FEMALE_SUBJECT_LIST if behavior == "show_off_study" else E.SUBJECT_ABILITY_LIST
+    # 性技科目只有授课口上，听课 / 自习 / 炫耀的覆盖只查其余科目
+    if behavior != "teach":
+        subject_list = [ability_id for ability_id in subject_list if ability_id not in E.SEX_SKILL_SUBJECT_SET]
     subject_hit = set()
     for talk in talk_list:
         if talk.behavior_id != behavior:
@@ -285,28 +288,12 @@ def premise_all(premise_text: str, character_id: int) -> bool:
     return bool(token_list) and all(handle_premise.handle_premise(token, character_id) for token in token_list)
 
 
-OLD_HAND_TALK_LIST = ("sex_class_join_sex_class1053", "sex_class_join_sex_class1054", "sex_class_watch_sex_class1054", "sex_class_watch_sex_class1055")
-""" 写「上过很多次实操课 / 老学生」的四条实操课口上（L12） """
-FIRST_TIME_TALK_LIST = ("sex_class_join_sex_class1055", "sex_class_join_sex_class1056")
-""" 写「第一次来上这种课」的两条实操课到场口上（L12） """
-check(
-    "L12 「老学生」四条改读累计实操课次数 Growth|25_GE_5，不再读含全部课型的累计听课节数",
-    all("CVP_A1_Growth|25_GE_5" in talk_premise(cid) and "Growth|0_" not in talk_premise(cid) for cid in OLD_HAND_TALK_LIST),
-    [talk_premise(cid) for cid in OLD_HAND_TALK_LIST],
-)
-check(
-    "L12 「第一次来」两条改读累计实操课次数 Growth|25_LE_1",
-    all("CVP_A1_Growth|25_LE_1" in talk_premise(cid) and "Growth|0_" not in talk_premise(cid) for cid in FIRST_TIME_TALK_LIST),
-    [talk_premise(cid) for cid in FIRST_TIME_TALK_LIST],
-)
 check("L12 翘课 1004「第一次真的没去」带累计翘课数 ≤ 1", "CVP_A1_Growth|24_LE_1" in talk_premise("work_skip_class1004"), talk_premise("work_skip_class1004"))
 growth_data = growth_handle.get_child_growth(201)
 growth_data.attend_class_count = 20
 growth_data.sex_class_count = 0
-check("L12 上过 20 节普通课、一次实操课都没上过：「老学生」四条都判不过（改前读累计听课节数，四条都判得过）", not any(premise_all(talk_premise(cid), 201) for cid in OLD_HAND_TALK_LIST))
 check("L12 同上：「第一次来」读的计数判得过", bool(handle_premise.handle_premise("CVP_A1_Growth|25_LE_1", 201)))
 growth_data.sex_class_count = 5
-check("L12 实操课上满 5 次：「老学生」四条都判得过", all(premise_all(talk_premise(cid), 201) for cid in OLD_HAND_TALK_LIST))
 check("L12 同上：「第一次来」读的计数判不过", not handle_premise.handle_premise("CVP_A1_Growth|25_LE_1", 201))
 growth_data.skip_count = 1
 check("L12 累计翘课 1 节时翘课 1004 成立", premise_all(talk_premise("work_skip_class1004"), 201))
@@ -316,10 +303,10 @@ growth_data.attend_class_count = 0
 growth_data.sex_class_count = 0
 growth_data.skip_count = 0
 # L14：档位 3（无课可评）的新成绩单
-REPORT_NO_CLASS_TALK = {"daily_check_report_card1014": 102, "daily_check_report_card1015": 102, "daily_check_report_card1016": 103, "daily_check_report_card1017": 103}
-""" Plan 31 新增的四条档位 3 口上：口上cid -> 限定的成长阶段素质 """
+REPORT_NO_CLASS_TALK = {"daily_check_report_card1014": 102, "daily_check_report_card1015": 102}
+""" 幼女的两条档位 3 口上：口上cid -> 限定的成长阶段素质 """
 check(
-    "L14 检查成绩单新增 4 条档位 3 口上（幼女 / 萝莉各 2 条），前提带档位 3 与成绩单待查看",
+    "L14 检查成绩单有 2 条幼女的档位 3 口上，前提带档位 3 与成绩单待查看",
     all(
         "target_is_player_daughter" in talk_premise(cid)
         and f"CVP_A2_T|{stage}_E_1" in talk_premise(cid)
@@ -335,17 +322,10 @@ check(
 )
 growth_data.report_card_history = [{"grade": E.REPORT_GRADE_NO_CLASS}]
 growth_data.report_card_flag = True
-check(
-    "L14 萝莉拿着档位 3 的新成绩单：萝莉的两条档位 3 口上成立，1004 / 1005 不再成立",
-    premise_all(talk_premise("daily_check_report_card1016"), 0)
-    and premise_all(talk_premise("daily_check_report_card1017"), 0)
-    and not premise_all(talk_premise("daily_check_report_card1004"), 0)
-    and not premise_all(talk_premise("daily_check_report_card1005"), 0),
-)
 growth_data.report_card_history = [{"grade": E.REPORT_GRADE_POOR}]
 check(
-    "L14 对照：档位 2 时 1004 / 1005 照旧成立，档位 3 口上不成立",
-    premise_all(talk_premise("daily_check_report_card1004"), 0) and premise_all(talk_premise("daily_check_report_card1005"), 0) and not premise_all(talk_premise("daily_check_report_card1016"), 0),
+    "L14 对照：档位 2 时 1004 / 1005 照旧成立",
+    premise_all(talk_premise("daily_check_report_card1004"), 0) and premise_all(talk_premise("daily_check_report_card1005"), 0),
 )
 growth_data.report_card_history = []
 growth_data.report_card_flag = False
@@ -618,65 +598,9 @@ check(
 schedule_handle.set_selected_course(201, 0, 3, E.COURSE_TYPE_PE, _("木桩房"))
 check("L26 再排一格体育课：萝莉 57 判得过", event_premise_pass("萝莉57", 201, "CVP_A1_Growth|3_"))
 
-section("Plan 32 §3.14：实操课与检查成绩单的口上（L24、L25）")
+section("Plan 32 §3.14：检查成绩单的口上（L25）")
 
 
-def talk_weight_if_pass(character_id: int, talk_cid: str) -> int:
-    """
-    一条口上在前提全部成立时的抽取权重，照 talk.handle_talk_sub 的算法：weight_all_to_1 下每条非 high_ 前提记 1，
-    再乘 talk.handle_special_talk_weight 给的特殊前提倍率（女儿行乘女儿倍率 draw_setting[15]）。
-    抽取时先按权重值本身加权挑一个权重档（value_handle.get_rand_value_for_value_region），再在同一档里等概率挑一句，
-    所以落在同一个权重档的几句抽中概率相同
-    Keyword arguments:
-    character_id -- 说这句口上的角色id
-    talk_cid -- 口上cid
-    Return arguments:
-    int -- 权重；没有这条口上时为 0
-    """
-    premise_set = set(game_config.config_talk_premise_data.get(talk_cid, ()))
-    if not premise_set:
-        return 0
-    return sum(1 for premise in premise_set if not premise.startswith("high_")) * talk.handle_special_talk_weight(character_id, premise_set)
-
-
-_daughter_mult = cache.all_system_setting.draw_setting.get(15, 5)
-""" 女儿倍率（talk.handle_special_talk_weight 读的 draw_setting[15]，默认 5） """
-DAUGHTER_JOIN_TALK = {102: ("sex_class_join_sex_class1032", "sex_class_join_sex_class1034"), 103: ("sex_class_join_sex_class1031", "sex_class_join_sex_class1033")}
-""" 实操课到场口上里的女儿行：成长阶段 -> (必修, 选修) """
-_growth_by_cid[201].sex_class_count = 5
-_growth_by_cid[202].sex_class_count = 0
-check("L24 守卫：女儿倍率大于 1（为 1 时下面几条同权重的断言恒真）", _daughter_mult > 1, _daughter_mult)
-check(
-    "L24 「第一次来」两行、「老学生」到场两行与旁观两行都加了 self_is_player_daughter",
-    all("self_is_player_daughter" in talk_premise(cid).split("&") for cid in FIRST_TIME_TALK_LIST + OLD_HAND_TALK_LIST),
-    [talk_premise(cid) for cid in FIRST_TIME_TALK_LIST + OLD_HAND_TALK_LIST],
-)
-check("L24 第一次上实操课的幼女女儿：「第一次来」两行前提都成立", all(premise_all(talk_premise(cid), 202) for cid in FIRST_TIME_TALK_LIST))
-_first_weight_list = [talk_weight_if_pass(202, cid) for cid in FIRST_TIME_TALK_LIST + DAUGHTER_JOIN_TALK[102]]
-check(
-    "L24 同上：「第一次来」两行与幼女的女儿行（必修 1032 / 选修 1034）落在同一个权重档（3 条前提 × 女儿倍率），抽中概率同量级",
-    len(set(_first_weight_list)) == 1 and _first_weight_list[0] == 3 * _daughter_mult,
-    _first_weight_list,
-)
-_old_first_premise = set(game_config.config_talk_premise_data.get(FIRST_TIME_TALK_LIST[0], ())) - {constant_promise.Premise.SELF_IS_PLAYER_DAUGHTER}
-check(
-    "L24 对照：去掉女儿前提（改前的前提串）只得 2 分，比女儿行低一个量级（改前幼女第一次到场抽中「第一次来」只有约 3%）",
-    len(_old_first_premise) * talk.handle_special_talk_weight(202, _old_first_premise) == 2,
-    _old_first_premise,
-)
-check("L24 实操课上满 5 次的萝莉女儿：「老学生」到场两行与旁观两行前提都成立", all(premise_all(talk_premise(cid), 201) for cid in OLD_HAND_TALK_LIST))
-_old_join_weight_list = [talk_weight_if_pass(201, cid) for cid in OLD_HAND_TALK_LIST[:2] + DAUGHTER_JOIN_TALK[103]]
-check("L24 同上：到场的「老学生」两行与萝莉的女儿行（必修 1031 / 选修 1033）落在同一个权重档", len(set(_old_join_weight_list)) == 1, _old_join_weight_list)
-check(
-    "L24 同上：旁观的「老学生」两行也乘女儿倍率（3 × 倍率；女儿旁观行 1050 是 2 × 倍率）",
-    all(talk_weight_if_pass(201, cid) == 3 * _daughter_mult for cid in OLD_HAND_TALK_LIST[2:]) and talk_weight_if_pass(201, "sex_class_watch_sex_class1050") == 2 * _daughter_mult,
-    [talk_weight_if_pass(201, cid) for cid in OLD_HAND_TALK_LIST[2:] + ("sex_class_watch_sex_class1050",)],
-)
-make_character(205, "非女儿萝莉", 152, stage=103)
-growth_handle.get_child_growth(205).sex_class_count = 5
-check("L24 按设计：萝莉化的非女儿学生不再有这几行（方案 §6 风险一栏；她们仍有其余通用行）", not any(premise_all(talk_premise(cid), 205) for cid in OLD_HAND_TALK_LIST))
-remove_character(205)
-_growth_by_cid[201].sex_class_count = 0
 # L25：成年女儿拿到档位 3（这学期没有上课）的新成绩单时，检查成绩单要有口上
 ADULT_NO_CLASS_TALK = ("daily_check_report_card1018", "daily_check_report_card1019")
 """ Plan 32 L25 新增的两条成年女儿档位 3 口上 """

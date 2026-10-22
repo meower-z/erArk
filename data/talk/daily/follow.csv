@@ -17,9 +17,6 @@ str,str,int,str,str
 1000,follow,0,CVP_A2_T|102_E_1,{Name}轻柔地伸出手，温和地邀请{TargetName}跟着自己一起行动。\n{TargetName}仰着小脸，用大眼睛好奇地看着{Name}，小手拉着{Name}的袖子，用稚嫩的声音答应跟随。\n{Name}弯下腰，用温柔的语气邀请这个娇小的身影与自己一同前往
 1001,follow,0,CVP_A2_T|102_E_1,{Name}蹲下身子，与{TargetName}平视，邀请她跟着自己一起行动。\n{TargetName}歪着小脑袋思考了一会儿，然后用小手牵住{Name}的手指，露出天真无邪的笑容，表示愿意跟随。\n{Name}慢慢起身，小心翼翼地照顾着身边这个需要保护的小家伙
 1002,follow,0,CVP_A2_T|102_E_1,{Name}温柔地看着{TargetName}，用最和蔼的声音邀请她跟着自己一起行动。\n{TargetName}用稚嫩的声音答应同行，小手紧紧抓着{Name}的衣角，显得既兴奋又有些紧张。\n{Name}放慢脚步，时刻关注着身边这个需要细心照顾的小身影
-1003,follow,0,CVP_A2_T|103_E_1,{Name}温和地邀请{TargetName}跟着自己一起行动，语气中带着宠溺。\n{TargetName}眨着大眼睛，脸上带着一丝娇羞，用还带着童音的声音答应跟随。\n{Name}伸出手，{TargetName}有些害羞地握住，两人一起准备出发
-1004,follow,0,CVP_A2_T|103_E_1,{Name}俯身邀请{TargetName}跟着自己一起行动，眼神中满是温柔。\n{TargetName}抬头看着{Name}，脸颊微红，小手不自觉地摆弄着衣角，显得既好奇又有些紧张。\n{Name}轻抚{TargetName}的头发，用鼓励的语气邀请她一同前往
-1005,follow,0,CVP_A2_T|103_E_1,{Name}蹲下身子，用平和的语调邀请{TargetName}跟着自己一起行动。\n{TargetName}睁大眼睛，小脸上写满了兴奋，用还带着稚气的声音答应同行。\n{Name}站起身来，{TargetName}紧跟在身边，小手时不时地碰触{Name}的手臂
 1006,follow,0,CVP_A2_T|104_E_1,{Name}用平和的语调邀请{TargetName}跟着自己一起行动，眼神中带着温和。\n{TargetName}脸上泛起一抹红晕，用青涩的声音答应同行，眼神中既有兴奋也有一丝羞涩。\n{Name}伸出手，{TargetName}有些紧张地握住，两人一起准备前往目的地
 1007,follow,0,CVP_A2_T|104_E_1,{Name}温柔地看着{TargetName}，邀请她跟着自己一起行动。\n{TargetName}低头思考了一会儿，然后抬起头，用带着少女特有的清脆声音答应跟随。\n{Name}点点头，{TargetName}跟在身边，步伐中带着青春的活力和一丝紧张感
 1008,follow,0,CVP_A2_T|104_E_1,{Name}站在{TargetName}面前，用温和的声音邀请她跟着自己一起行动。\n{TargetName}眼神中闪烁着好奇的光芒，脸上带着青涩的笑容，用还带着些许紧张的声音答应同行。\n{Name}鼓励地点头，{TargetName}深吸一口气，鼓起勇气准备跟随{Name}一同前往
