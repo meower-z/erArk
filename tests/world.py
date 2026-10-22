@@ -14,7 +14,7 @@ FullWorld 另有：
     world.player.press(...) / type(...)    -- 安排玩家接下来按的按钮与输入的文字（PlayerInput）
 
 游戏模块在导入时就绑定 cache = cache_control.cache，所以缓存对象只建一次，复原时原地改写它的内容。
-每次复原都重设全部随机源（random、numpy.random、uuid.uuid4），见 seed_everything；载入前让列目录按文件名排序，见 sort_directory_listings。
+每次复原都重设全部随机源（random、numpy.random、uuid.uuid4），见 seed_everything。
 """
 import contextlib
 import copy
@@ -80,106 +80,6 @@ def seed_everything(seed: int = SEED):
     numpy.random.seed(seed % (2**32))
     _uuid_rng.seed(seed)
     uuid.uuid4 = _seeded_uuid4
-
-
-class _SortedScandir:
-    """os.scandir 的替身：按文件名排序给出目录项，与 os.scandir 一样可迭代、可当上下文管理器"""
-
-    def __init__(self, entries: list):
-        """
-        Keyword arguments:
-        entries -- 目录项列表
-        Return arguments:
-        无
-        """
-        self._entries = iter(sorted(entries, key=lambda entry: entry.name))
-
-    def __iter__(self):
-        """
-        Keyword arguments:
-        无
-        Return arguments:
-        _SortedScandir -- 自身
-        """
-        return self
-
-    def __next__(self):
-        """
-        Keyword arguments:
-        无
-        Return arguments:
-        os.DirEntry -- 下一个目录项
-        """
-        return next(self._entries)
-
-    def __enter__(self):
-        """
-        Keyword arguments:
-        无
-        Return arguments:
-        _SortedScandir -- 自身
-        """
-        return self
-
-    def __exit__(self, *exc_info):
-        """
-        Keyword arguments:
-        exc_info -- 异常信息，不使用
-        Return arguments:
-        无
-        """
-        self.close()
-
-    def close(self):
-        """
-        Keyword arguments:
-        无
-        Return arguments:
-        无
-        """
-        self._entries = iter(())
-
-
-def sort_directory_listings():
-    """
-    让 os.listdir 与 os.scandir（os.walk、glob 经它列目录）按文件名排序
-    Keyword arguments:
-    无
-    Return arguments:
-    无
-    功能描述:
-        游戏的构建（auto_build_config）与配置载入按列目录的顺序写入、读入角色模板、事件与口上，
-        这个顺序影响开局时随机数落到哪个角色身上。列目录的顺序随文件系统而不同（btrfs 上随检出目录而不同），
-        排序后它只由文件名决定。
-    """
-    real_listdir, real_scandir = os.listdir, os.scandir
-    if getattr(real_listdir, "sorted_listing", False):
-        return
-
-    def sorted_listdir(path="."):
-        """
-        排序版 os.listdir
-        Keyword arguments:
-        path -- 目录
-        Return arguments:
-        list -- 排好序的文件名
-        """
-        return sorted(real_listdir(path))
-
-    def sorted_scandir(path="."):
-        """
-        排序版 os.scandir
-        Keyword arguments:
-        path -- 目录
-        Return arguments:
-        _SortedScandir -- 按文件名排序的目录项
-        """
-        with real_scandir(path) as entries:
-            return _SortedScandir(list(entries))
-
-    sorted_listdir.sorted_listing = True
-    os.listdir = sorted_listdir
-    os.scandir = sorted_scandir
 
 
 def _mute_ui() -> list:
@@ -261,7 +161,7 @@ class MinimalWorld:
 
     def _boot(self):
         """
-        固定随机源与列目录的顺序，载入游戏
+        固定随机源，载入游戏
         Keyword arguments:
         无
         Return arguments:
@@ -272,7 +172,6 @@ class MinimalWorld:
         # 游戏用相对路径读 data/ 与 config.ini
         os.chdir(ROOT)
         seed_everything()
-        sort_directory_listings()
         self._load_game()
 
     def _load_game(self):
@@ -284,7 +183,7 @@ class MinimalWorld:
         无
         功能描述:
             顺序同 game.py：缓存先于配置建好；构建与配置载入的打印被收起。
-            地图目录按 os.listdir 顺序读入，各平台不同，这里把场景字典与场景标签列表排好序。
+            data/SceneData 等地图预处理文件存在时游戏直接读入它们，其中的顺序取决于写出它们的版本，这里把场景字典与场景标签列表排好序。
         """
         with contextlib.redirect_stdout(io.StringIO()):
             import auto_build_config  # noqa: F401
