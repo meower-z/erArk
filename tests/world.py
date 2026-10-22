@@ -3,7 +3,7 @@
 测试用的游戏世界夹具
 ====================
 MinimalWorld -- 小世界：读一次真实游戏配置，造出空的游戏状态，测试之间一键复原；不启动游戏。快速层（tests/fast）用它。
-FullWorld    -- 完整的无头启动：小世界之外再载入结算器、状态机与界面流程，不复原；慢速层（tests/slow）用它，每个进程开一局新游戏。
+FullWorld    -- 完整的无头启动：小世界之外再载入结算器、状态机与界面流程，不载入图片，不复原；慢速层（tests/slow）用它，每个进程开一局新游戏。
 
 测试向世界要角色、位置和场景：
     world.chara(cid, name, position=...)   -- 造一个穿着衣服、各异常位正常的角色，并当场核对
@@ -23,6 +23,7 @@ import io
 import os
 import random
 import sys
+import types
 import uuid
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -532,9 +533,34 @@ class PlayerInput:
         return matches[0]
 
 
+def _stub_era_image():
+    """
+    把 Script.Core.era_image 换成没有图片的空模块，之后导入它的游戏模块都拿到这个空模块
+    Keyword arguments:
+    无
+    Return arguments:
+    无
+    功能描述:
+        era_image 导入即解码 image/ 下的全部图片（约 4.3 GiB）。界面流程的导入链
+        Script.UI.Flow -> normal_flow -> in_scene_panel -> see_character_info_panel -> character_image 会导入它。
+        游戏代码只读它的四个名字：image_data、image_path_data、image_data_index_by_chara 与 get_image；
+        空模块里三个字典为空、get_image 返回 None，游戏按「没有这张图」处理。
+    """
+    import Script.Core
+
+    stub = types.ModuleType("Script.Core.era_image")
+    stub.image_data = {}
+    stub.image_path_data = {}
+    stub.image_data_index_by_chara = {}
+    stub.get_image = lambda image_name: None
+    sys.modules[stub.__name__] = stub
+    Script.Core.era_image = stub
+
+
 class FullWorld(MinimalWorld):
     """
     完整的无头世界：小世界之外再注册结算器、状态机与界面流程，初始化角色模板，供慢速层用
+    不载入图片：Script.Core.era_image 换成空模块（见 _stub_era_image）。
     绘制照常执行，玩家输入由 self.player（PlayerInput）给出；new_game() 走一遍开新游戏的界面流程。
     不做复原：慢速层每个测试一个新进程。
     导入链中的 handle_instruct 在导入时起一个非守护的指令处理线程，进程正常返回也不会自行退出，须以 os._exit 结束
@@ -558,13 +584,14 @@ class FullWorld(MinimalWorld):
 
     def _load_game(self):
         """
-        先载入小世界，再导入 Script.Settle、Script.StateMachine、医疗系统与界面流程（靠装饰器注册），并初始化角色模板
+        先载入小世界，换上没有图片的 era_image，再导入 Script.Settle、Script.StateMachine、医疗系统与界面流程（靠装饰器注册），并初始化角色模板
         Keyword arguments:
         无
         Return arguments:
         无
         """
         super()._load_game()
+        _stub_era_image()
         import Script.Settle  # noqa: F401
         import Script.StateMachine  # noqa: F401
         import Script.System.Medical_System  # noqa: F401
