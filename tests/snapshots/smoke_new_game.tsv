@@ -1,0 +1,3157 @@
+2020-12-22 10:00	chara.0.angry_point	15
+2020-12-22 10:00	chara.0.behavior.behavior_id	"share_blankly"
+2020-12-22 10:00	chara.0.behavior.duration	0
+2020-12-22 10:00	chara.0.behavior.move_final_target	[]
+2020-12-22 10:00	chara.0.behavior.move_target	["中枢", "博士房间"]
+2020-12-22 10:00	chara.0.behavior.start_time	"2020-12-22 10:00"
+2020-12-22 10:00	chara.0.cloth_wear	{"0": [], "1": [], "10": [], "11": [], "12": [], "13": [], "2": [], "3": [], "4": [], "5": [], "6": [], "7": [], "8": [], "9": []}
+2020-12-22 10:00	chara.0.desire_point	0
+2020-12-22 10:00	chara.0.drunk_point	0
+2020-12-22 10:00	chara.0.eja_point	0
+2020-12-22 10:00	chara.0.favorability	0
+2020-12-22 10:00	chara.0.hit_point	1000
+2020-12-22 10:00	chara.0.hunger_point	240
+2020-12-22 10:00	chara.0.mana_point	1000
+2020-12-22 10:00	chara.0.name	"多克特"
+2020-12-22 10:00	chara.0.position	"中枢/博士房间"
+2020-12-22 10:00	chara.0.sanity_point	100
+2020-12-22 10:00	chara.0.semen_point	100
+2020-12-22 10:00	chara.0.sleep_point	0
+2020-12-22 10:00	chara.0.sp_flag.angry_with_player	false
+2020-12-22 10:00	chara.0.sp_flag.aromatherapy	0
+2020-12-22 10:00	chara.0.sp_flag.bagging_chara_id	0
+2020-12-22 10:00	chara.0.sp_flag.bathhouse_entertainment	0
+2020-12-22 10:00	chara.0.sp_flag.be_bagged	false
+2020-12-22 10:00	chara.0.sp_flag.condom_cloth_flag	0
+2020-12-22 10:00	chara.0.sp_flag.eat_food	0
+2020-12-22 10:00	chara.0.sp_flag.escaping	false
+2020-12-22 10:00	chara.0.sp_flag.exhibitionism_sex_mode	0
+2020-12-22 10:00	chara.0.sp_flag.field_commission	0
+2020-12-22 10:00	chara.0.sp_flag.find_food_weird	false
+2020-12-22 10:00	chara.0.sp_flag.go_to_join_group_sex	false
+2020-12-22 10:00	chara.0.sp_flag.help_buy_food	0
+2020-12-22 10:00	chara.0.sp_flag.help_make_food	0
+2020-12-22 10:00	chara.0.sp_flag.hidden_sex_mode	0
+2020-12-22 10:00	chara.0.sp_flag.imprisonment	false
+2020-12-22 10:00	chara.0.sp_flag.in_diplomatic_visit	0
+2020-12-22 10:00	chara.0.sp_flag.is_follow	0
+2020-12-22 10:00	chara.0.sp_flag.is_h	false
+2020-12-22 10:00	chara.0.sp_flag.masturebate	0
+2020-12-22 10:00	chara.0.sp_flag.masturebate_before_sleep	0
+2020-12-22 10:00	chara.0.sp_flag.milk	false
+2020-12-22 10:00	chara.0.sp_flag.morning_salutation	0
+2020-12-22 10:00	chara.0.sp_flag.move_stop	false
+2020-12-22 10:00	chara.0.sp_flag.night_salutation	0
+2020-12-22 10:00	chara.0.sp_flag.npc_masturebate_for_player	false
+2020-12-22 10:00	chara.0.sp_flag.pee	false
+2020-12-22 10:00	chara.0.sp_flag.rest	false
+2020-12-22 10:00	chara.0.sp_flag.see_h_reaction_settled	false
+2020-12-22 10:00	chara.0.sp_flag.see_pl_h	false
+2020-12-22 10:00	chara.0.sp_flag.sex_toy_level	0
+2020-12-22 10:00	chara.0.sp_flag.shower	0
+2020-12-22 10:00	chara.0.sp_flag.sleep	false
+2020-12-22 10:00	chara.0.sp_flag.sleep_h_awake	false
+2020-12-22 10:00	chara.0.sp_flag.swim	0
+2020-12-22 10:00	chara.0.sp_flag.tired	false
+2020-12-22 10:00	chara.0.sp_flag.unconscious_h	0
+2020-12-22 10:00	chara.0.sp_flag.vistor	0
+2020-12-22 10:00	chara.0.sp_flag.wait_flag	false
+2020-12-22 10:00	chara.0.sp_flag.work_maintenance	false
+2020-12-22 10:00	chara.0.state	0
+2020-12-22 10:00	chara.0.target_character_id	0
+2020-12-22 10:00	chara.0.tired_point	0
+2020-12-22 10:00	chara.0.trust	0
+2020-12-22 10:00	chara.0.urinate_point	0
+2020-12-22 10:00	chara.1.angry_point	20
+2020-12-22 10:00	chara.1.behavior.behavior_id	"share_blankly"
+2020-12-22 10:00	chara.1.behavior.duration	0
+2020-12-22 10:00	chara.1.behavior.move_final_target	[]
+2020-12-22 10:00	chara.1.behavior.move_target	["宿舍", "1区", "101"]
+2020-12-22 10:00	chara.1.behavior.start_time	"2020-12-22 10:00"
+2020-12-22 10:00	chara.1.cloth_wear	{"0": [], "1": [], "10": [10055], "11": [10056], "12": [], "13": [], "2": [], "3": [10050], "4": [], "5": [10051, 10052], "6": [653], "7": [10053], "8": [10054], "9": [955]}
+2020-12-22 10:00	chara.1.desire_point	0
+2020-12-22 10:00	chara.1.drunk_point	0
+2020-12-22 10:00	chara.1.eja_point	0
+2020-12-22 10:00	chara.1.favorability	0
+2020-12-22 10:00	chara.1.hit_point	1400
+2020-12-22 10:00	chara.1.hunger_point	240
+2020-12-22 10:00	chara.1.mana_point	1100
+2020-12-22 10:00	chara.1.name	"阿米娅"
+2020-12-22 10:00	chara.1.position	"宿舍/1区/101"
+2020-12-22 10:00	chara.1.sanity_point	0
+2020-12-22 10:00	chara.1.semen_point	0
+2020-12-22 10:00	chara.1.sleep_point	0
+2020-12-22 10:00	chara.1.sp_flag.angry_with_player	false
+2020-12-22 10:00	chara.1.sp_flag.aromatherapy	0
+2020-12-22 10:00	chara.1.sp_flag.bagging_chara_id	0
+2020-12-22 10:00	chara.1.sp_flag.bathhouse_entertainment	0
+2020-12-22 10:00	chara.1.sp_flag.be_bagged	false
+2020-12-22 10:00	chara.1.sp_flag.condom_cloth_flag	0
+2020-12-22 10:00	chara.1.sp_flag.eat_food	0
+2020-12-22 10:00	chara.1.sp_flag.escaping	false
+2020-12-22 10:00	chara.1.sp_flag.exhibitionism_sex_mode	0
+2020-12-22 10:00	chara.1.sp_flag.field_commission	0
+2020-12-22 10:00	chara.1.sp_flag.find_food_weird	false
+2020-12-22 10:00	chara.1.sp_flag.go_to_join_group_sex	false
+2020-12-22 10:00	chara.1.sp_flag.help_buy_food	0
+2020-12-22 10:00	chara.1.sp_flag.help_make_food	0
+2020-12-22 10:00	chara.1.sp_flag.hidden_sex_mode	0
+2020-12-22 10:00	chara.1.sp_flag.imprisonment	false
+2020-12-22 10:00	chara.1.sp_flag.in_diplomatic_visit	0
+2020-12-22 10:00	chara.1.sp_flag.is_follow	0
+2020-12-22 10:00	chara.1.sp_flag.is_h	false
+2020-12-22 10:00	chara.1.sp_flag.masturebate	0
+2020-12-22 10:00	chara.1.sp_flag.masturebate_before_sleep	0
+2020-12-22 10:00	chara.1.sp_flag.milk	false
+2020-12-22 10:00	chara.1.sp_flag.morning_salutation	0
+2020-12-22 10:00	chara.1.sp_flag.move_stop	false
+2020-12-22 10:00	chara.1.sp_flag.night_salutation	0
+2020-12-22 10:00	chara.1.sp_flag.npc_masturebate_for_player	false
+2020-12-22 10:00	chara.1.sp_flag.pee	false
+2020-12-22 10:00	chara.1.sp_flag.rest	false
+2020-12-22 10:00	chara.1.sp_flag.see_h_reaction_settled	false
+2020-12-22 10:00	chara.1.sp_flag.see_pl_h	false
+2020-12-22 10:00	chara.1.sp_flag.sex_toy_level	0
+2020-12-22 10:00	chara.1.sp_flag.shower	0
+2020-12-22 10:00	chara.1.sp_flag.sleep	false
+2020-12-22 10:00	chara.1.sp_flag.sleep_h_awake	false
+2020-12-22 10:00	chara.1.sp_flag.swim	0
+2020-12-22 10:00	chara.1.sp_flag.tired	false
+2020-12-22 10:00	chara.1.sp_flag.unconscious_h	0
+2020-12-22 10:00	chara.1.sp_flag.vistor	0
+2020-12-22 10:00	chara.1.sp_flag.wait_flag	false
+2020-12-22 10:00	chara.1.sp_flag.work_maintenance	false
+2020-12-22 10:00	chara.1.state	0
+2020-12-22 10:00	chara.1.target_character_id	1
+2020-12-22 10:00	chara.1.tired_point	0
+2020-12-22 10:00	chara.1.trust	0
+2020-12-22 10:00	chara.1.urinate_point	0
+2020-12-22 10:00	chara.130.angry_point	30
+2020-12-22 10:00	chara.130.behavior.behavior_id	"share_blankly"
+2020-12-22 10:00	chara.130.behavior.duration	0
+2020-12-22 10:00	chara.130.behavior.move_final_target	[]
+2020-12-22 10:00	chara.130.behavior.move_target	["宿舍", "1区", "101"]
+2020-12-22 10:00	chara.130.behavior.start_time	"2020-12-22 10:00"
+2020-12-22 10:00	chara.130.cloth_wear	{"0": [], "1": [], "10": [16505], "11": [16506], "12": [16507], "13": [], "2": [], "3": [16500], "4": [], "5": [16501, 16502], "6": [657], "7": [16503], "8": [16504], "9": [953]}
+2020-12-22 10:00	chara.130.desire_point	0
+2020-12-22 10:00	chara.130.drunk_point	0
+2020-12-22 10:00	chara.130.eja_point	0
+2020-12-22 10:00	chara.130.favorability	0
+2020-12-22 10:00	chara.130.hit_point	1600
+2020-12-22 10:00	chara.130.hunger_point	240
+2020-12-22 10:00	chara.130.mana_point	1400
+2020-12-22 10:00	chara.130.name	"杜宾"
+2020-12-22 10:00	chara.130.position	"宿舍/1区/101"
+2020-12-22 10:00	chara.130.sanity_point	0
+2020-12-22 10:00	chara.130.semen_point	0
+2020-12-22 10:00	chara.130.sleep_point	0
+2020-12-22 10:00	chara.130.sp_flag.angry_with_player	false
+2020-12-22 10:00	chara.130.sp_flag.aromatherapy	0
+2020-12-22 10:00	chara.130.sp_flag.bagging_chara_id	0
+2020-12-22 10:00	chara.130.sp_flag.bathhouse_entertainment	0
+2020-12-22 10:00	chara.130.sp_flag.be_bagged	false
+2020-12-22 10:00	chara.130.sp_flag.condom_cloth_flag	0
+2020-12-22 10:00	chara.130.sp_flag.eat_food	0
+2020-12-22 10:00	chara.130.sp_flag.escaping	false
+2020-12-22 10:00	chara.130.sp_flag.exhibitionism_sex_mode	0
+2020-12-22 10:00	chara.130.sp_flag.field_commission	0
+2020-12-22 10:00	chara.130.sp_flag.find_food_weird	false
+2020-12-22 10:00	chara.130.sp_flag.go_to_join_group_sex	false
+2020-12-22 10:00	chara.130.sp_flag.help_buy_food	0
+2020-12-22 10:00	chara.130.sp_flag.help_make_food	0
+2020-12-22 10:00	chara.130.sp_flag.hidden_sex_mode	0
+2020-12-22 10:00	chara.130.sp_flag.imprisonment	false
+2020-12-22 10:00	chara.130.sp_flag.in_diplomatic_visit	0
+2020-12-22 10:00	chara.130.sp_flag.is_follow	0
+2020-12-22 10:00	chara.130.sp_flag.is_h	false
+2020-12-22 10:00	chara.130.sp_flag.masturebate	0
+2020-12-22 10:00	chara.130.sp_flag.masturebate_before_sleep	0
+2020-12-22 10:00	chara.130.sp_flag.milk	false
+2020-12-22 10:00	chara.130.sp_flag.morning_salutation	0
+2020-12-22 10:00	chara.130.sp_flag.move_stop	false
+2020-12-22 10:00	chara.130.sp_flag.night_salutation	0
+2020-12-22 10:00	chara.130.sp_flag.npc_masturebate_for_player	false
+2020-12-22 10:00	chara.130.sp_flag.pee	false
+2020-12-22 10:00	chara.130.sp_flag.rest	false
+2020-12-22 10:00	chara.130.sp_flag.see_h_reaction_settled	false
+2020-12-22 10:00	chara.130.sp_flag.see_pl_h	false
+2020-12-22 10:00	chara.130.sp_flag.sex_toy_level	0
+2020-12-22 10:00	chara.130.sp_flag.shower	0
+2020-12-22 10:00	chara.130.sp_flag.sleep	false
+2020-12-22 10:00	chara.130.sp_flag.sleep_h_awake	false
+2020-12-22 10:00	chara.130.sp_flag.swim	0
+2020-12-22 10:00	chara.130.sp_flag.tired	false
+2020-12-22 10:00	chara.130.sp_flag.unconscious_h	0
+2020-12-22 10:00	chara.130.sp_flag.vistor	0
+2020-12-22 10:00	chara.130.sp_flag.wait_flag	false
+2020-12-22 10:00	chara.130.sp_flag.work_maintenance	false
+2020-12-22 10:00	chara.130.state	0
+2020-12-22 10:00	chara.130.target_character_id	130
+2020-12-22 10:00	chara.130.tired_point	0
+2020-12-22 10:00	chara.130.trust	0
+2020-12-22 10:00	chara.130.urinate_point	0
+2020-12-22 10:00	chara.171.angry_point	26
+2020-12-22 10:00	chara.171.behavior.behavior_id	"share_blankly"
+2020-12-22 10:00	chara.171.behavior.duration	0
+2020-12-22 10:00	chara.171.behavior.move_final_target	[]
+2020-12-22 10:00	chara.171.behavior.move_target	["宿舍", "1区", "103"]
+2020-12-22 10:00	chara.171.behavior.start_time	"2020-12-22 10:00"
+2020-12-22 10:00	chara.171.cloth_wear	{"0": [18550, 18551], "1": [], "10": [18557, 18558, 18559], "11": [18560], "12": [18561], "13": [18562], "2": [], "3": [], "4": [], "5": [18552, 18553], "6": [657], "7": [18554], "8": [18555, 18556], "9": [961]}
+2020-12-22 10:00	chara.171.desire_point	0
+2020-12-22 10:00	chara.171.drunk_point	0
+2020-12-22 10:00	chara.171.eja_point	0
+2020-12-22 10:00	chara.171.favorability	0
+2020-12-22 10:00	chara.171.hit_point	1700
+2020-12-22 10:00	chara.171.hunger_point	240
+2020-12-22 10:00	chara.171.mana_point	1200
+2020-12-22 10:00	chara.171.name	"华法琳"
+2020-12-22 10:00	chara.171.position	"宿舍/1区/103"
+2020-12-22 10:00	chara.171.sanity_point	0
+2020-12-22 10:00	chara.171.semen_point	0
+2020-12-22 10:00	chara.171.sleep_point	0
+2020-12-22 10:00	chara.171.sp_flag.angry_with_player	false
+2020-12-22 10:00	chara.171.sp_flag.aromatherapy	0
+2020-12-22 10:00	chara.171.sp_flag.bagging_chara_id	0
+2020-12-22 10:00	chara.171.sp_flag.bathhouse_entertainment	0
+2020-12-22 10:00	chara.171.sp_flag.be_bagged	false
+2020-12-22 10:00	chara.171.sp_flag.condom_cloth_flag	0
+2020-12-22 10:00	chara.171.sp_flag.eat_food	0
+2020-12-22 10:00	chara.171.sp_flag.escaping	false
+2020-12-22 10:00	chara.171.sp_flag.exhibitionism_sex_mode	0
+2020-12-22 10:00	chara.171.sp_flag.field_commission	0
+2020-12-22 10:00	chara.171.sp_flag.find_food_weird	false
+2020-12-22 10:00	chara.171.sp_flag.go_to_join_group_sex	false
+2020-12-22 10:00	chara.171.sp_flag.help_buy_food	0
+2020-12-22 10:00	chara.171.sp_flag.help_make_food	0
+2020-12-22 10:00	chara.171.sp_flag.hidden_sex_mode	0
+2020-12-22 10:00	chara.171.sp_flag.imprisonment	false
+2020-12-22 10:00	chara.171.sp_flag.in_diplomatic_visit	0
+2020-12-22 10:00	chara.171.sp_flag.is_follow	0
+2020-12-22 10:00	chara.171.sp_flag.is_h	false
+2020-12-22 10:00	chara.171.sp_flag.masturebate	0
+2020-12-22 10:00	chara.171.sp_flag.masturebate_before_sleep	0
+2020-12-22 10:00	chara.171.sp_flag.milk	false
+2020-12-22 10:00	chara.171.sp_flag.morning_salutation	0
+2020-12-22 10:00	chara.171.sp_flag.move_stop	false
+2020-12-22 10:00	chara.171.sp_flag.night_salutation	0
+2020-12-22 10:00	chara.171.sp_flag.npc_masturebate_for_player	false
+2020-12-22 10:00	chara.171.sp_flag.pee	false
+2020-12-22 10:00	chara.171.sp_flag.rest	false
+2020-12-22 10:00	chara.171.sp_flag.see_h_reaction_settled	false
+2020-12-22 10:00	chara.171.sp_flag.see_pl_h	false
+2020-12-22 10:00	chara.171.sp_flag.sex_toy_level	0
+2020-12-22 10:00	chara.171.sp_flag.shower	0
+2020-12-22 10:00	chara.171.sp_flag.sleep	false
+2020-12-22 10:00	chara.171.sp_flag.sleep_h_awake	false
+2020-12-22 10:00	chara.171.sp_flag.swim	0
+2020-12-22 10:00	chara.171.sp_flag.tired	false
+2020-12-22 10:00	chara.171.sp_flag.unconscious_h	0
+2020-12-22 10:00	chara.171.sp_flag.vistor	0
+2020-12-22 10:00	chara.171.sp_flag.wait_flag	false
+2020-12-22 10:00	chara.171.sp_flag.work_maintenance	false
+2020-12-22 10:00	chara.171.state	0
+2020-12-22 10:00	chara.171.target_character_id	171
+2020-12-22 10:00	chara.171.tired_point	0
+2020-12-22 10:00	chara.171.trust	0
+2020-12-22 10:00	chara.171.urinate_point	0
+2020-12-22 10:00	chara.3.angry_point	14
+2020-12-22 10:00	chara.3.behavior.behavior_id	"share_blankly"
+2020-12-22 10:00	chara.3.behavior.duration	0
+2020-12-22 10:00	chara.3.behavior.move_final_target	[]
+2020-12-22 10:00	chara.3.behavior.move_target	["宿舍", "1区", "102"]
+2020-12-22 10:00	chara.3.behavior.start_time	"2020-12-22 10:00"
+2020-12-22 10:00	chara.3.cloth_wear	{"0": [], "1": [], "10": [], "11": [10153], "12": [], "13": [], "2": [], "3": [], "4": [], "5": [10150, 10151], "6": [654], "7": [], "8": [10152], "9": [956]}
+2020-12-22 10:00	chara.3.desire_point	0
+2020-12-22 10:00	chara.3.drunk_point	0
+2020-12-22 10:00	chara.3.eja_point	0
+2020-12-22 10:00	chara.3.favorability	0
+2020-12-22 10:00	chara.3.hit_point	2000
+2020-12-22 10:00	chara.3.hunger_point	240
+2020-12-22 10:00	chara.3.mana_point	1500
+2020-12-22 10:00	chara.3.name	"凯尔希"
+2020-12-22 10:00	chara.3.position	"宿舍/1区/102"
+2020-12-22 10:00	chara.3.sanity_point	0
+2020-12-22 10:00	chara.3.semen_point	0
+2020-12-22 10:00	chara.3.sleep_point	0
+2020-12-22 10:00	chara.3.sp_flag.angry_with_player	false
+2020-12-22 10:00	chara.3.sp_flag.aromatherapy	0
+2020-12-22 10:00	chara.3.sp_flag.bagging_chara_id	0
+2020-12-22 10:00	chara.3.sp_flag.bathhouse_entertainment	0
+2020-12-22 10:00	chara.3.sp_flag.be_bagged	false
+2020-12-22 10:00	chara.3.sp_flag.condom_cloth_flag	0
+2020-12-22 10:00	chara.3.sp_flag.eat_food	0
+2020-12-22 10:00	chara.3.sp_flag.escaping	false
+2020-12-22 10:00	chara.3.sp_flag.exhibitionism_sex_mode	0
+2020-12-22 10:00	chara.3.sp_flag.field_commission	0
+2020-12-22 10:00	chara.3.sp_flag.find_food_weird	false
+2020-12-22 10:00	chara.3.sp_flag.go_to_join_group_sex	false
+2020-12-22 10:00	chara.3.sp_flag.help_buy_food	0
+2020-12-22 10:00	chara.3.sp_flag.help_make_food	0
+2020-12-22 10:00	chara.3.sp_flag.hidden_sex_mode	0
+2020-12-22 10:00	chara.3.sp_flag.imprisonment	false
+2020-12-22 10:00	chara.3.sp_flag.in_diplomatic_visit	0
+2020-12-22 10:00	chara.3.sp_flag.is_follow	0
+2020-12-22 10:00	chara.3.sp_flag.is_h	false
+2020-12-22 10:00	chara.3.sp_flag.masturebate	0
+2020-12-22 10:00	chara.3.sp_flag.masturebate_before_sleep	0
+2020-12-22 10:00	chara.3.sp_flag.milk	false
+2020-12-22 10:00	chara.3.sp_flag.morning_salutation	0
+2020-12-22 10:00	chara.3.sp_flag.move_stop	false
+2020-12-22 10:00	chara.3.sp_flag.night_salutation	0
+2020-12-22 10:00	chara.3.sp_flag.npc_masturebate_for_player	false
+2020-12-22 10:00	chara.3.sp_flag.pee	false
+2020-12-22 10:00	chara.3.sp_flag.rest	false
+2020-12-22 10:00	chara.3.sp_flag.see_h_reaction_settled	false
+2020-12-22 10:00	chara.3.sp_flag.see_pl_h	false
+2020-12-22 10:00	chara.3.sp_flag.sex_toy_level	0
+2020-12-22 10:00	chara.3.sp_flag.shower	0
+2020-12-22 10:00	chara.3.sp_flag.sleep	false
+2020-12-22 10:00	chara.3.sp_flag.sleep_h_awake	false
+2020-12-22 10:00	chara.3.sp_flag.swim	0
+2020-12-22 10:00	chara.3.sp_flag.tired	false
+2020-12-22 10:00	chara.3.sp_flag.unconscious_h	0
+2020-12-22 10:00	chara.3.sp_flag.vistor	0
+2020-12-22 10:00	chara.3.sp_flag.wait_flag	false
+2020-12-22 10:00	chara.3.sp_flag.work_maintenance	false
+2020-12-22 10:00	chara.3.state	0
+2020-12-22 10:00	chara.3.target_character_id	3
+2020-12-22 10:00	chara.3.tired_point	0
+2020-12-22 10:00	chara.3.trust	0
+2020-12-22 10:00	chara.3.urinate_point	0
+2020-12-22 10:00	chara.56.angry_point	23
+2020-12-22 10:00	chara.56.behavior.behavior_id	"share_blankly"
+2020-12-22 10:00	chara.56.behavior.duration	0
+2020-12-22 10:00	chara.56.behavior.move_final_target	[]
+2020-12-22 10:00	chara.56.behavior.move_target	["宿舍", "1区", "103"]
+2020-12-22 10:00	chara.56.behavior.start_time	"2020-12-22 10:00"
+2020-12-22 10:00	chara.56.cloth_wear	{"0": [], "1": [], "10": [12804], "11": [12805], "12": [], "13": [12806], "2": [], "3": [], "4": [], "5": [12800, 12801], "6": [652], "7": [12802], "8": [12803], "9": [953]}
+2020-12-22 10:00	chara.56.desire_point	0
+2020-12-22 10:00	chara.56.drunk_point	0
+2020-12-22 10:00	chara.56.eja_point	0
+2020-12-22 10:00	chara.56.favorability	0
+2020-12-22 10:00	chara.56.hit_point	1700
+2020-12-22 10:00	chara.56.hunger_point	240
+2020-12-22 10:00	chara.56.mana_point	1200
+2020-12-22 10:00	chara.56.name	"特蕾西娅"
+2020-12-22 10:00	chara.56.position	"宿舍/1区/103"
+2020-12-22 10:00	chara.56.sanity_point	0
+2020-12-22 10:00	chara.56.semen_point	0
+2020-12-22 10:00	chara.56.sleep_point	0
+2020-12-22 10:00	chara.56.sp_flag.angry_with_player	false
+2020-12-22 10:00	chara.56.sp_flag.aromatherapy	0
+2020-12-22 10:00	chara.56.sp_flag.bagging_chara_id	0
+2020-12-22 10:00	chara.56.sp_flag.bathhouse_entertainment	0
+2020-12-22 10:00	chara.56.sp_flag.be_bagged	false
+2020-12-22 10:00	chara.56.sp_flag.condom_cloth_flag	0
+2020-12-22 10:00	chara.56.sp_flag.eat_food	0
+2020-12-22 10:00	chara.56.sp_flag.escaping	false
+2020-12-22 10:00	chara.56.sp_flag.exhibitionism_sex_mode	0
+2020-12-22 10:00	chara.56.sp_flag.field_commission	0
+2020-12-22 10:00	chara.56.sp_flag.find_food_weird	false
+2020-12-22 10:00	chara.56.sp_flag.go_to_join_group_sex	false
+2020-12-22 10:00	chara.56.sp_flag.help_buy_food	0
+2020-12-22 10:00	chara.56.sp_flag.help_make_food	0
+2020-12-22 10:00	chara.56.sp_flag.hidden_sex_mode	0
+2020-12-22 10:00	chara.56.sp_flag.imprisonment	false
+2020-12-22 10:00	chara.56.sp_flag.in_diplomatic_visit	0
+2020-12-22 10:00	chara.56.sp_flag.is_follow	0
+2020-12-22 10:00	chara.56.sp_flag.is_h	false
+2020-12-22 10:00	chara.56.sp_flag.masturebate	0
+2020-12-22 10:00	chara.56.sp_flag.masturebate_before_sleep	0
+2020-12-22 10:00	chara.56.sp_flag.milk	false
+2020-12-22 10:00	chara.56.sp_flag.morning_salutation	0
+2020-12-22 10:00	chara.56.sp_flag.move_stop	false
+2020-12-22 10:00	chara.56.sp_flag.night_salutation	0
+2020-12-22 10:00	chara.56.sp_flag.npc_masturebate_for_player	false
+2020-12-22 10:00	chara.56.sp_flag.pee	false
+2020-12-22 10:00	chara.56.sp_flag.rest	false
+2020-12-22 10:00	chara.56.sp_flag.see_h_reaction_settled	false
+2020-12-22 10:00	chara.56.sp_flag.see_pl_h	false
+2020-12-22 10:00	chara.56.sp_flag.sex_toy_level	0
+2020-12-22 10:00	chara.56.sp_flag.shower	0
+2020-12-22 10:00	chara.56.sp_flag.sleep	false
+2020-12-22 10:00	chara.56.sp_flag.sleep_h_awake	false
+2020-12-22 10:00	chara.56.sp_flag.swim	0
+2020-12-22 10:00	chara.56.sp_flag.tired	false
+2020-12-22 10:00	chara.56.sp_flag.unconscious_h	0
+2020-12-22 10:00	chara.56.sp_flag.vistor	0
+2020-12-22 10:00	chara.56.sp_flag.wait_flag	false
+2020-12-22 10:00	chara.56.sp_flag.work_maintenance	false
+2020-12-22 10:00	chara.56.state	0
+2020-12-22 10:00	chara.56.target_character_id	56
+2020-12-22 10:00	chara.56.tired_point	0
+2020-12-22 10:00	chara.56.trust	0
+2020-12-22 10:00	chara.56.urinate_point	0
+2020-12-22 10:00	chara.7.angry_point	28
+2020-12-22 10:00	chara.7.behavior.behavior_id	"share_blankly"
+2020-12-22 10:00	chara.7.behavior.duration	0
+2020-12-22 10:00	chara.7.behavior.move_final_target	[]
+2020-12-22 10:00	chara.7.behavior.move_target	["宿舍", "1区", "102"]
+2020-12-22 10:00	chara.7.behavior.start_time	"2020-12-22 10:00"
+2020-12-22 10:00	chara.7.cloth_wear	{"0": [], "1": [], "10": [10354, 10355], "11": [10356], "12": [], "13": [10357], "2": [], "3": [10350], "4": [], "5": [10351, 10352], "6": [651], "7": [], "8": [10353], "9": [962]}
+2020-12-22 10:00	chara.7.desire_point	0
+2020-12-22 10:00	chara.7.drunk_point	0
+2020-12-22 10:00	chara.7.eja_point	0
+2020-12-22 10:00	chara.7.favorability	0
+2020-12-22 10:00	chara.7.hit_point	2000
+2020-12-22 10:00	chara.7.hunger_point	240
+2020-12-22 10:00	chara.7.mana_point	1400
+2020-12-22 10:00	chara.7.name	"可露希尔"
+2020-12-22 10:00	chara.7.position	"宿舍/1区/102"
+2020-12-22 10:00	chara.7.sanity_point	0
+2020-12-22 10:00	chara.7.semen_point	0
+2020-12-22 10:00	chara.7.sleep_point	0
+2020-12-22 10:00	chara.7.sp_flag.angry_with_player	false
+2020-12-22 10:00	chara.7.sp_flag.aromatherapy	0
+2020-12-22 10:00	chara.7.sp_flag.bagging_chara_id	0
+2020-12-22 10:00	chara.7.sp_flag.bathhouse_entertainment	0
+2020-12-22 10:00	chara.7.sp_flag.be_bagged	false
+2020-12-22 10:00	chara.7.sp_flag.condom_cloth_flag	0
+2020-12-22 10:00	chara.7.sp_flag.eat_food	0
+2020-12-22 10:00	chara.7.sp_flag.escaping	false
+2020-12-22 10:00	chara.7.sp_flag.exhibitionism_sex_mode	0
+2020-12-22 10:00	chara.7.sp_flag.field_commission	0
+2020-12-22 10:00	chara.7.sp_flag.find_food_weird	false
+2020-12-22 10:00	chara.7.sp_flag.go_to_join_group_sex	false
+2020-12-22 10:00	chara.7.sp_flag.help_buy_food	0
+2020-12-22 10:00	chara.7.sp_flag.help_make_food	0
+2020-12-22 10:00	chara.7.sp_flag.hidden_sex_mode	0
+2020-12-22 10:00	chara.7.sp_flag.imprisonment	false
+2020-12-22 10:00	chara.7.sp_flag.in_diplomatic_visit	0
+2020-12-22 10:00	chara.7.sp_flag.is_follow	0
+2020-12-22 10:00	chara.7.sp_flag.is_h	false
+2020-12-22 10:00	chara.7.sp_flag.masturebate	0
+2020-12-22 10:00	chara.7.sp_flag.masturebate_before_sleep	0
+2020-12-22 10:00	chara.7.sp_flag.milk	false
+2020-12-22 10:00	chara.7.sp_flag.morning_salutation	0
+2020-12-22 10:00	chara.7.sp_flag.move_stop	false
+2020-12-22 10:00	chara.7.sp_flag.night_salutation	0
+2020-12-22 10:00	chara.7.sp_flag.npc_masturebate_for_player	false
+2020-12-22 10:00	chara.7.sp_flag.pee	false
+2020-12-22 10:00	chara.7.sp_flag.rest	false
+2020-12-22 10:00	chara.7.sp_flag.see_h_reaction_settled	false
+2020-12-22 10:00	chara.7.sp_flag.see_pl_h	false
+2020-12-22 10:00	chara.7.sp_flag.sex_toy_level	0
+2020-12-22 10:00	chara.7.sp_flag.shower	0
+2020-12-22 10:00	chara.7.sp_flag.sleep	false
+2020-12-22 10:00	chara.7.sp_flag.sleep_h_awake	false
+2020-12-22 10:00	chara.7.sp_flag.swim	0
+2020-12-22 10:00	chara.7.sp_flag.tired	false
+2020-12-22 10:00	chara.7.sp_flag.unconscious_h	0
+2020-12-22 10:00	chara.7.sp_flag.vistor	0
+2020-12-22 10:00	chara.7.sp_flag.wait_flag	false
+2020-12-22 10:00	chara.7.sp_flag.work_maintenance	false
+2020-12-22 10:00	chara.7.state	0
+2020-12-22 10:00	chara.7.target_character_id	7
+2020-12-22 10:00	chara.7.tired_point	0
+2020-12-22 10:00	chara.7.trust	0
+2020-12-22 10:00	chara.7.urinate_point	0
+2020-12-22 10:00	clock	"2020-12-22 10:00"
+2020-12-22 10:00	scene.中枢/博士房间.occupants	[0]
+2020-12-22 10:00	scene.宿舍/1区/101.occupants	[1, 130]
+2020-12-22 10:00	scene.宿舍/1区/102.occupants	[3, 7]
+2020-12-22 10:00	scene.宿舍/1区/103.occupants	[56, 171]
+2020-12-22 10:05	chara.0.behavior.move_target	[]
+2020-12-22 10:05	chara.0.behavior.start_time	"2020-12-22 10:05"
+2020-12-22 10:05	chara.0.tired_point	1
+2020-12-22 10:05	chara.1.behavior.behavior_id	"move"
+2020-12-22 10:05	chara.1.behavior.duration	4
+2020-12-22 10:05	chara.1.behavior.move_final_target	["书", "图书馆"]
+2020-12-22 10:05	chara.1.behavior.move_target	["生娱", "0"]
+2020-12-22 10:05	chara.1.behavior.start_time	"2020-12-22 10:04"
+2020-12-22 10:05	chara.1.position	"生娱/0"
+2020-12-22 10:05	chara.1.state	1
+2020-12-22 10:05	chara.1.urinate_point	1
+2020-12-22 10:05	chara.130.behavior.behavior_id	"move"
+2020-12-22 10:05	chara.130.behavior.duration	4
+2020-12-22 10:05	chara.130.behavior.move_final_target	["训练", "木桩房"]
+2020-12-22 10:05	chara.130.behavior.move_target	["生娱", "0"]
+2020-12-22 10:05	chara.130.behavior.start_time	"2020-12-22 10:04"
+2020-12-22 10:05	chara.130.position	"生娱/0"
+2020-12-22 10:05	chara.130.state	1
+2020-12-22 10:05	chara.130.urinate_point	3
+2020-12-22 10:05	chara.171.behavior.behavior_id	"move"
+2020-12-22 10:05	chara.171.behavior.duration	4
+2020-12-22 10:05	chara.171.behavior.move_final_target	["医疗", "急诊室"]
+2020-12-22 10:05	chara.171.behavior.move_target	["医疗", "0"]
+2020-12-22 10:05	chara.171.behavior.start_time	"2020-12-22 10:04"
+2020-12-22 10:05	chara.171.position	"医疗/0"
+2020-12-22 10:05	chara.171.state	1
+2020-12-22 10:05	chara.171.urinate_point	2
+2020-12-22 10:05	chara.3.behavior.behavior_id	"move"
+2020-12-22 10:05	chara.3.behavior.duration	4
+2020-12-22 10:05	chara.3.behavior.move_final_target	["医疗", "急诊室"]
+2020-12-22 10:05	chara.3.behavior.move_target	["医疗", "0"]
+2020-12-22 10:05	chara.3.behavior.start_time	"2020-12-22 10:04"
+2020-12-22 10:05	chara.3.position	"医疗/0"
+2020-12-22 10:05	chara.3.state	1
+2020-12-22 10:05	chara.3.urinate_point	2
+2020-12-22 10:05	chara.56.behavior.behavior_id	"move"
+2020-12-22 10:05	chara.56.behavior.duration	4
+2020-12-22 10:05	chara.56.behavior.move_final_target	["文职", "办公室"]
+2020-12-22 10:05	chara.56.behavior.move_target	["生娱", "0"]
+2020-12-22 10:05	chara.56.behavior.start_time	"2020-12-22 10:04"
+2020-12-22 10:05	chara.56.position	"生娱/0"
+2020-12-22 10:05	chara.56.state	1
+2020-12-22 10:05	chara.56.urinate_point	2
+2020-12-22 10:05	chara.7.behavior.behavior_id	"move"
+2020-12-22 10:05	chara.7.behavior.duration	4
+2020-12-22 10:05	chara.7.behavior.move_final_target	["工程", "运维部"]
+2020-12-22 10:05	chara.7.behavior.move_target	["生娱", "0"]
+2020-12-22 10:05	chara.7.behavior.start_time	"2020-12-22 10:04"
+2020-12-22 10:05	chara.7.position	"生娱/0"
+2020-12-22 10:05	chara.7.state	1
+2020-12-22 10:05	chara.7.urinate_point	1
+2020-12-22 10:05	clock	"2020-12-22 10:05"
+2020-12-22 10:05	scene.医疗/0.occupants	[3, 171]
+2020-12-22 10:05	scene.宿舍/1区/101.occupants	null
+2020-12-22 10:05	scene.宿舍/1区/102.occupants	null
+2020-12-22 10:05	scene.宿舍/1区/103.occupants	null
+2020-12-22 10:05	scene.生娱/0.occupants	[1, 7, 56, 130]
+2020-12-22 10:10	chara.0.behavior.start_time	"2020-12-22 10:10"
+2020-12-22 10:10	chara.0.tired_point	2
+2020-12-22 10:10	chara.1.behavior.move_target	["疗养庭院", "0"]
+2020-12-22 10:10	chara.1.behavior.start_time	"2020-12-22 10:08"
+2020-12-22 10:10	chara.1.position	"疗养庭院/0"
+2020-12-22 10:10	chara.1.urinate_point	4
+2020-12-22 10:10	chara.130.behavior.move_target	["大浴场", "0"]
+2020-12-22 10:10	chara.130.behavior.start_time	"2020-12-22 10:08"
+2020-12-22 10:10	chara.130.position	"大浴场/0"
+2020-12-22 10:10	chara.130.urinate_point	6
+2020-12-22 10:10	chara.171.behavior.behavior_id	"share_blankly"
+2020-12-22 10:10	chara.171.behavior.duration	0
+2020-12-22 10:10	chara.171.behavior.move_final_target	[]
+2020-12-22 10:10	chara.171.behavior.move_target	[]
+2020-12-22 10:10	chara.171.behavior.start_time	"2020-12-22 10:10"
+2020-12-22 10:10	chara.171.position	"医疗/急诊室"
+2020-12-22 10:10	chara.171.state	0
+2020-12-22 10:10	chara.171.urinate_point	5
+2020-12-22 10:10	chara.3.behavior.behavior_id	"share_blankly"
+2020-12-22 10:10	chara.3.behavior.duration	0
+2020-12-22 10:10	chara.3.behavior.move_final_target	[]
+2020-12-22 10:10	chara.3.behavior.move_target	[]
+2020-12-22 10:10	chara.3.behavior.start_time	"2020-12-22 10:10"
+2020-12-22 10:10	chara.3.position	"医疗/急诊室"
+2020-12-22 10:10	chara.3.state	0
+2020-12-22 10:10	chara.3.urinate_point	4
+2020-12-22 10:10	chara.56.behavior.move_target	["疗养庭院", "0"]
+2020-12-22 10:10	chara.56.behavior.start_time	"2020-12-22 10:08"
+2020-12-22 10:10	chara.56.position	"疗养庭院/0"
+2020-12-22 10:10	chara.56.urinate_point	6
+2020-12-22 10:10	chara.7.behavior.move_target	["疗养庭院", "0"]
+2020-12-22 10:10	chara.7.behavior.start_time	"2020-12-22 10:08"
+2020-12-22 10:10	chara.7.position	"疗养庭院/0"
+2020-12-22 10:10	chara.7.urinate_point	4
+2020-12-22 10:10	clock	"2020-12-22 10:10"
+2020-12-22 10:10	scene.医疗/0.occupants	null
+2020-12-22 10:10	scene.医疗/急诊室.occupants	[3, 171]
+2020-12-22 10:10	scene.大浴场/0.occupants	[130]
+2020-12-22 10:10	scene.生娱/0.occupants	null
+2020-12-22 10:10	scene.疗养庭院/0.occupants	[1, 7, 56]
+2020-12-22 10:15	chara.0.behavior.start_time	"2020-12-22 10:15"
+2020-12-22 10:15	chara.0.tired_point	3
+2020-12-22 10:15	chara.1.behavior.move_target	["书", "0"]
+2020-12-22 10:15	chara.1.behavior.start_time	"2020-12-22 10:12"
+2020-12-22 10:15	chara.1.position	"书/0"
+2020-12-22 10:15	chara.1.urinate_point	8
+2020-12-22 10:15	chara.130.behavior.move_target	["训练", "0"]
+2020-12-22 10:15	chara.130.behavior.start_time	"2020-12-22 10:12"
+2020-12-22 10:15	chara.130.position	"训练/0"
+2020-12-22 10:15	chara.130.urinate_point	9
+2020-12-22 10:15	chara.171.behavior.behavior_id	"cure_patient"
+2020-12-22 10:15	chara.171.behavior.duration	30
+2020-12-22 10:15	chara.171.hit_point	1610
+2020-12-22 10:15	chara.171.mana_point	1020
+2020-12-22 10:15	chara.171.state	207
+2020-12-22 10:15	chara.171.tired_point	1
+2020-12-22 10:15	chara.171.urinate_point	9
+2020-12-22 10:15	chara.3.behavior.behavior_id	"cure_patient"
+2020-12-22 10:15	chara.3.behavior.duration	30
+2020-12-22 10:15	chara.3.hit_point	1910
+2020-12-22 10:15	chara.3.mana_point	1320
+2020-12-22 10:15	chara.3.state	207
+2020-12-22 10:15	chara.3.tired_point	1
+2020-12-22 10:15	chara.3.urinate_point	8
+2020-12-22 10:15	chara.56.behavior.move_target	["文职", "0"]
+2020-12-22 10:15	chara.56.behavior.start_time	"2020-12-22 10:12"
+2020-12-22 10:15	chara.56.position	"文职/0"
+2020-12-22 10:15	chara.56.urinate_point	10
+2020-12-22 10:15	chara.7.behavior.move_target	["动力", "0"]
+2020-12-22 10:15	chara.7.behavior.start_time	"2020-12-22 10:12"
+2020-12-22 10:15	chara.7.position	"动力/0"
+2020-12-22 10:15	chara.7.urinate_point	8
+2020-12-22 10:15	clock	"2020-12-22 10:15"
+2020-12-22 10:15	scene.书/0.occupants	[1]
+2020-12-22 10:15	scene.动力/0.occupants	[7]
+2020-12-22 10:15	scene.大浴场/0.occupants	null
+2020-12-22 10:15	scene.文职/0.occupants	[56]
+2020-12-22 10:15	scene.疗养庭院/0.occupants	null
+2020-12-22 10:15	scene.训练/0.occupants	[130]
+2020-12-22 10:20	chara.0.behavior.start_time	"2020-12-22 10:20"
+2020-12-22 10:20	chara.0.tired_point	4
+2020-12-22 10:20	chara.1.behavior.behavior_id	"read_book"
+2020-12-22 10:20	chara.1.behavior.duration	30
+2020-12-22 10:20	chara.1.behavior.move_final_target	[]
+2020-12-22 10:20	chara.1.behavior.move_target	[]
+2020-12-22 10:20	chara.1.behavior.start_time	"2020-12-22 10:17"
+2020-12-22 10:20	chara.1.mana_point	1010
+2020-12-22 10:20	chara.1.position	"书/图书馆"
+2020-12-22 10:20	chara.1.state	210
+2020-12-22 10:20	chara.1.urinate_point	12
+2020-12-22 10:20	chara.130.behavior.behavior_id	"training"
+2020-12-22 10:20	chara.130.behavior.duration	120
+2020-12-22 10:20	chara.130.behavior.move_final_target	[]
+2020-12-22 10:20	chara.130.behavior.move_target	[]
+2020-12-22 10:20	chara.130.behavior.start_time	"2020-12-22 10:18"
+2020-12-22 10:20	chara.130.hit_point	1000
+2020-12-22 10:20	chara.130.mana_point	200
+2020-12-22 10:20	chara.130.position	"训练/木桩房"
+2020-12-22 10:20	chara.130.state	205
+2020-12-22 10:20	chara.130.urinate_point	12
+2020-12-22 10:20	chara.171.tired_point	2
+2020-12-22 10:20	chara.171.urinate_point	15
+2020-12-22 10:20	chara.3.tired_point	2
+2020-12-22 10:20	chara.3.urinate_point	14
+2020-12-22 10:20	chara.56.behavior.behavior_id	"recruit"
+2020-12-22 10:20	chara.56.behavior.duration	60
+2020-12-22 10:20	chara.56.behavior.move_final_target	[]
+2020-12-22 10:20	chara.56.behavior.move_target	[]
+2020-12-22 10:20	chara.56.behavior.start_time	"2020-12-22 10:18"
+2020-12-22 10:20	chara.56.hit_point	1640
+2020-12-22 10:20	chara.56.mana_point	1020
+2020-12-22 10:20	chara.56.position	"文职/办公室"
+2020-12-22 10:20	chara.56.state	208
+2020-12-22 10:20	chara.56.urinate_point	12
+2020-12-22 10:20	chara.7.behavior.behavior_id	"share_blankly"
+2020-12-22 10:20	chara.7.behavior.duration	0
+2020-12-22 10:20	chara.7.behavior.move_target	[]
+2020-12-22 10:20	chara.7.behavior.start_time	"2020-12-22 10:20"
+2020-12-22 10:20	chara.7.position	"制造加工/0"
+2020-12-22 10:20	chara.7.state	0
+2020-12-22 10:20	chara.7.urinate_point	13
+2020-12-22 10:20	clock	"2020-12-22 10:20"
+2020-12-22 10:20	scene.书/0.occupants	null
+2020-12-22 10:20	scene.书/图书馆.occupants	[1]
+2020-12-22 10:20	scene.制造加工/0.occupants	[7]
+2020-12-22 10:20	scene.动力/0.occupants	null
+2020-12-22 10:20	scene.文职/0.occupants	null
+2020-12-22 10:20	scene.文职/办公室.occupants	[56]
+2020-12-22 10:20	scene.训练/0.occupants	null
+2020-12-22 10:20	scene.训练/木桩房.occupants	[130]
+2020-12-22 10:25	chara.0.behavior.start_time	"2020-12-22 10:25"
+2020-12-22 10:25	chara.0.tired_point	5
+2020-12-22 10:25	chara.1.tired_point	1
+2020-12-22 10:25	chara.1.urinate_point	17
+2020-12-22 10:25	chara.130.tired_point	1
+2020-12-22 10:25	chara.130.urinate_point	17
+2020-12-22 10:25	chara.171.tired_point	3
+2020-12-22 10:25	chara.171.urinate_point	20
+2020-12-22 10:25	chara.3.tired_point	3
+2020-12-22 10:25	chara.3.urinate_point	18
+2020-12-22 10:25	chara.56.tired_point	1
+2020-12-22 10:25	chara.56.urinate_point	16
+2020-12-22 10:25	chara.7.behavior.start_time	"2020-12-22 10:25"
+2020-12-22 10:25	chara.7.position	"工程/走廊"
+2020-12-22 10:25	chara.7.urinate_point	16
+2020-12-22 10:25	clock	"2020-12-22 10:25"
+2020-12-22 10:25	scene.制造加工/0.occupants	null
+2020-12-22 10:25	scene.工程/走廊.occupants	[7]
+2020-12-22 10:30	chara.0.behavior.start_time	"2020-12-22 10:30"
+2020-12-22 10:30	chara.0.tired_point	6
+2020-12-22 10:30	chara.1.tired_point	2
+2020-12-22 10:30	chara.1.urinate_point	22
+2020-12-22 10:30	chara.130.tired_point	2
+2020-12-22 10:30	chara.130.urinate_point	21
+2020-12-22 10:30	chara.171.tired_point	4
+2020-12-22 10:30	chara.171.urinate_point	25
+2020-12-22 10:30	chara.3.tired_point	4
+2020-12-22 10:30	chara.3.urinate_point	22
+2020-12-22 10:30	chara.56.tired_point	2
+2020-12-22 10:30	chara.56.urinate_point	21
+2020-12-22 10:30	chara.7.behavior.behavior_id	"move"
+2020-12-22 10:30	chara.7.behavior.duration	4
+2020-12-22 10:30	chara.7.behavior.move_final_target	["甲板", "桅杆"]
+2020-12-22 10:30	chara.7.behavior.move_target	["制造加工", "0"]
+2020-12-22 10:30	chara.7.behavior.start_time	"2020-12-22 10:29"
+2020-12-22 10:30	chara.7.position	"制造加工/0"
+2020-12-22 10:30	chara.7.sp_flag.work_maintenance	true
+2020-12-22 10:30	chara.7.state	1
+2020-12-22 10:30	chara.7.urinate_point	19
+2020-12-22 10:30	clock	"2020-12-22 10:30"
+2020-12-22 10:30	scene.制造加工/0.occupants	[7]
+2020-12-22 10:30	scene.工程/走廊.occupants	null
+2020-12-22 10:35	chara.0.behavior.start_time	"2020-12-22 10:35"
+2020-12-22 10:35	chara.0.tired_point	7
+2020-12-22 10:35	chara.1.tired_point	3
+2020-12-22 10:35	chara.1.urinate_point	28
+2020-12-22 10:35	chara.130.tired_point	3
+2020-12-22 10:35	chara.130.urinate_point	27
+2020-12-22 10:35	chara.171.tired_point	5
+2020-12-22 10:35	chara.171.urinate_point	29
+2020-12-22 10:35	chara.3.tired_point	5
+2020-12-22 10:35	chara.3.urinate_point	26
+2020-12-22 10:35	chara.56.tired_point	3
+2020-12-22 10:35	chara.56.urinate_point	27
+2020-12-22 10:35	chara.7.behavior.move_target	["动力", "0"]
+2020-12-22 10:35	chara.7.behavior.start_time	"2020-12-22 10:33"
+2020-12-22 10:35	chara.7.position	"动力/0"
+2020-12-22 10:35	chara.7.urinate_point	24
+2020-12-22 10:35	clock	"2020-12-22 10:35"
+2020-12-22 10:35	scene.制造加工/0.occupants	null
+2020-12-22 10:35	scene.动力/0.occupants	[7]
+2020-12-22 10:40	chara.0.behavior.start_time	"2020-12-22 10:40"
+2020-12-22 10:40	chara.0.tired_point	8
+2020-12-22 10:40	chara.1.tired_point	4
+2020-12-22 10:40	chara.1.urinate_point	32
+2020-12-22 10:40	chara.130.tired_point	4
+2020-12-22 10:40	chara.130.urinate_point	31
+2020-12-22 10:40	chara.171.behavior.behavior_id	"share_blankly"
+2020-12-22 10:40	chara.171.behavior.duration	0
+2020-12-22 10:40	chara.171.behavior.start_time	"2020-12-22 10:40"
+2020-12-22 10:40	chara.171.state	0
+2020-12-22 10:40	chara.171.tired_point	6
+2020-12-22 10:40	chara.171.urinate_point	34
+2020-12-22 10:40	chara.3.behavior.behavior_id	"share_blankly"
+2020-12-22 10:40	chara.3.behavior.duration	0
+2020-12-22 10:40	chara.3.behavior.start_time	"2020-12-22 10:40"
+2020-12-22 10:40	chara.3.state	0
+2020-12-22 10:40	chara.3.tired_point	6
+2020-12-22 10:40	chara.3.urinate_point	30
+2020-12-22 10:40	chara.56.tired_point	4
+2020-12-22 10:40	chara.56.urinate_point	31
+2020-12-22 10:40	chara.7.behavior.move_target	["疗养庭院", "0"]
+2020-12-22 10:40	chara.7.behavior.start_time	"2020-12-22 10:37"
+2020-12-22 10:40	chara.7.position	"疗养庭院/0"
+2020-12-22 10:40	chara.7.urinate_point	28
+2020-12-22 10:40	clock	"2020-12-22 10:40"
+2020-12-22 10:40	scene.动力/0.occupants	null
+2020-12-22 10:40	scene.疗养庭院/0.occupants	[7]
+2020-12-22 10:45	chara.0.behavior.start_time	"2020-12-22 10:45"
+2020-12-22 10:45	chara.0.tired_point	9
+2020-12-22 10:45	chara.1.tired_point	5
+2020-12-22 10:45	chara.1.urinate_point	36
+2020-12-22 10:45	chara.130.tired_point	5
+2020-12-22 10:45	chara.130.urinate_point	35
+2020-12-22 10:45	chara.171.behavior.behavior_id	"cure_patient"
+2020-12-22 10:45	chara.171.behavior.duration	30
+2020-12-22 10:45	chara.171.hit_point	1520
+2020-12-22 10:45	chara.171.mana_point	840
+2020-12-22 10:45	chara.171.state	207
+2020-12-22 10:45	chara.171.tired_point	7
+2020-12-22 10:45	chara.171.urinate_point	39
+2020-12-22 10:45	chara.3.behavior.behavior_id	"cure_patient"
+2020-12-22 10:45	chara.3.behavior.duration	30
+2020-12-22 10:45	chara.3.hit_point	1820
+2020-12-22 10:45	chara.3.mana_point	1140
+2020-12-22 10:45	chara.3.state	207
+2020-12-22 10:45	chara.3.tired_point	7
+2020-12-22 10:45	chara.3.urinate_point	34
+2020-12-22 10:45	chara.56.tired_point	5
+2020-12-22 10:45	chara.56.urinate_point	36
+2020-12-22 10:45	chara.7.behavior.behavior_id	"share_blankly"
+2020-12-22 10:45	chara.7.behavior.duration	0
+2020-12-22 10:45	chara.7.behavior.move_target	[]
+2020-12-22 10:45	chara.7.behavior.start_time	"2020-12-22 10:45"
+2020-12-22 10:45	chara.7.position	"生娱/0"
+2020-12-22 10:45	chara.7.state	0
+2020-12-22 10:45	chara.7.urinate_point	32
+2020-12-22 10:45	clock	"2020-12-22 10:45"
+2020-12-22 10:45	scene.生娱/0.occupants	[7]
+2020-12-22 10:45	scene.疗养庭院/0.occupants	null
+2020-12-22 10:50	chara.0.behavior.start_time	"2020-12-22 10:50"
+2020-12-22 10:50	chara.0.tired_point	10
+2020-12-22 10:50	chara.1.behavior.start_time	"2020-12-22 10:47"
+2020-12-22 10:50	chara.1.mana_point	920
+2020-12-22 10:50	chara.1.urinate_point	39
+2020-12-22 10:50	chara.130.tired_point	6
+2020-12-22 10:50	chara.130.urinate_point	40
+2020-12-22 10:50	chara.171.tired_point	8
+2020-12-22 10:50	chara.171.urinate_point	44
+2020-12-22 10:50	chara.3.tired_point	8
+2020-12-22 10:50	chara.3.urinate_point	38
+2020-12-22 10:50	chara.56.tired_point	6
+2020-12-22 10:50	chara.56.urinate_point	41
+2020-12-22 10:50	chara.7.behavior.move_final_target	[]
+2020-12-22 10:50	chara.7.behavior.start_time	"2020-12-22 10:50"
+2020-12-22 10:50	chara.7.position	"甲板/桅杆"
+2020-12-22 10:50	chara.7.urinate_point	35
+2020-12-22 10:50	clock	"2020-12-22 10:50"
+2020-12-22 10:50	scene.生娱/0.occupants	null
+2020-12-22 10:50	scene.甲板/桅杆.occupants	[7]
+2020-12-22 10:55	chara.0.behavior.start_time	"2020-12-22 10:55"
+2020-12-22 10:55	chara.0.tired_point	11
+2020-12-22 10:55	chara.1.tired_point	6
+2020-12-22 10:55	chara.1.urinate_point	45
+2020-12-22 10:55	chara.130.tired_point	7
+2020-12-22 10:55	chara.130.urinate_point	45
+2020-12-22 10:55	chara.171.tired_point	9
+2020-12-22 10:55	chara.171.urinate_point	50
+2020-12-22 10:55	chara.3.tired_point	9
+2020-12-22 10:55	chara.3.urinate_point	43
+2020-12-22 10:55	chara.56.tired_point	7
+2020-12-22 10:55	chara.56.urinate_point	45
+2020-12-22 10:55	chara.7.behavior.behavior_id	"move"
+2020-12-22 10:55	chara.7.behavior.duration	4
+2020-12-22 10:55	chara.7.behavior.move_final_target	["工程", "运维部"]
+2020-12-22 10:55	chara.7.behavior.move_target	["生娱", "0"]
+2020-12-22 10:55	chara.7.behavior.start_time	"2020-12-22 10:53"
+2020-12-22 10:55	chara.7.hit_point	1994
+2020-12-22 10:55	chara.7.mana_point	1388
+2020-12-22 10:55	chara.7.position	"生娱/0"
+2020-12-22 10:55	chara.7.sp_flag.work_maintenance	false
+2020-12-22 10:55	chara.7.state	1
+2020-12-22 10:55	chara.7.urinate_point	40
+2020-12-22 10:55	clock	"2020-12-22 10:55"
+2020-12-22 10:55	scene.生娱/0.occupants	[7]
+2020-12-22 10:55	scene.甲板/桅杆.occupants	null
+2020-12-22 11:00	chara.0.behavior.start_time	"2020-12-22 11:00"
+2020-12-22 11:00	chara.0.tired_point	12
+2020-12-22 11:00	chara.1.tired_point	7
+2020-12-22 11:00	chara.1.urinate_point	50
+2020-12-22 11:00	chara.130.tired_point	8
+2020-12-22 11:00	chara.130.urinate_point	49
+2020-12-22 11:00	chara.171.tired_point	10
+2020-12-22 11:00	chara.171.urinate_point	55
+2020-12-22 11:00	chara.3.tired_point	10
+2020-12-22 11:00	chara.3.urinate_point	48
+2020-12-22 11:00	chara.56.tired_point	8
+2020-12-22 11:00	chara.56.urinate_point	51
+2020-12-22 11:00	chara.7.behavior.move_target	["疗养庭院", "0"]
+2020-12-22 11:00	chara.7.behavior.start_time	"2020-12-22 10:57"
+2020-12-22 11:00	chara.7.position	"疗养庭院/0"
+2020-12-22 11:00	chara.7.urinate_point	44
+2020-12-22 11:00	clock	"2020-12-22 11:00"
+2020-12-22 11:00	scene.生娱/0.occupants	null
+2020-12-22 11:00	scene.疗养庭院/0.occupants	[7]
+2020-12-22 11:05	chara.0.behavior.start_time	"2020-12-22 11:05"
+2020-12-22 11:05	chara.0.tired_point	13
+2020-12-22 11:05	chara.1.tired_point	8
+2020-12-22 11:05	chara.1.urinate_point	55
+2020-12-22 11:05	chara.130.tired_point	9
+2020-12-22 11:05	chara.130.urinate_point	54
+2020-12-22 11:05	chara.171.tired_point	11
+2020-12-22 11:05	chara.171.urinate_point	61
+2020-12-22 11:05	chara.3.tired_point	11
+2020-12-22 11:05	chara.3.urinate_point	54
+2020-12-22 11:05	chara.56.tired_point	9
+2020-12-22 11:05	chara.56.urinate_point	55
+2020-12-22 11:05	chara.7.behavior.behavior_id	"share_blankly"
+2020-12-22 11:05	chara.7.behavior.duration	0
+2020-12-22 11:05	chara.7.behavior.move_target	[]
+2020-12-22 11:05	chara.7.behavior.start_time	"2020-12-22 11:05"
+2020-12-22 11:05	chara.7.position	"动力/0"
+2020-12-22 11:05	chara.7.state	0
+2020-12-22 11:05	chara.7.urinate_point	47
+2020-12-22 11:05	clock	"2020-12-22 11:05"
+2020-12-22 11:05	scene.动力/0.occupants	[7]
+2020-12-22 11:05	scene.疗养庭院/0.occupants	null
+2020-12-22 11:10	chara.0.behavior.start_time	"2020-12-22 11:10"
+2020-12-22 11:10	chara.0.tired_point	14
+2020-12-22 11:10	chara.1.tired_point	9
+2020-12-22 11:10	chara.1.urinate_point	60
+2020-12-22 11:10	chara.130.tired_point	10
+2020-12-22 11:10	chara.130.urinate_point	59
+2020-12-22 11:10	chara.171.behavior.behavior_id	"share_blankly"
+2020-12-22 11:10	chara.171.behavior.duration	0
+2020-12-22 11:10	chara.171.behavior.start_time	"2020-12-22 11:10"
+2020-12-22 11:10	chara.171.state	0
+2020-12-22 11:10	chara.171.tired_point	12
+2020-12-22 11:10	chara.171.urinate_point	65
+2020-12-22 11:10	chara.3.behavior.behavior_id	"share_blankly"
+2020-12-22 11:10	chara.3.behavior.duration	0
+2020-12-22 11:10	chara.3.behavior.start_time	"2020-12-22 11:10"
+2020-12-22 11:10	chara.3.state	0
+2020-12-22 11:10	chara.3.tired_point	12
+2020-12-22 11:10	chara.3.urinate_point	59
+2020-12-22 11:10	chara.56.tired_point	10
+2020-12-22 11:10	chara.56.urinate_point	59
+2020-12-22 11:10	chara.7.behavior.behavior_id	"move"
+2020-12-22 11:10	chara.7.behavior.duration	4
+2020-12-22 11:10	chara.7.behavior.move_target	["工程", "0"]
+2020-12-22 11:10	chara.7.behavior.start_time	"2020-12-22 11:09"
+2020-12-22 11:10	chara.7.position	"工程/0"
+2020-12-22 11:10	chara.7.state	1
+2020-12-22 11:10	chara.7.urinate_point	50
+2020-12-22 11:10	clock	"2020-12-22 11:10"
+2020-12-22 11:10	scene.动力/0.occupants	null
+2020-12-22 11:10	scene.工程/0.occupants	[7]
+2020-12-22 11:15	chara.0.behavior.start_time	"2020-12-22 11:15"
+2020-12-22 11:15	chara.0.tired_point	15
+2020-12-22 11:15	chara.1.tired_point	10
+2020-12-22 11:15	chara.1.urinate_point	65
+2020-12-22 11:15	chara.130.tired_point	11
+2020-12-22 11:15	chara.130.urinate_point	63
+2020-12-22 11:15	chara.171.behavior.move_final_target	["医疗", "门诊室"]
+2020-12-22 11:15	chara.171.behavior.start_time	"2020-12-22 11:15"
+2020-12-22 11:15	chara.171.position	"医疗/外走廊"
+2020-12-22 11:15	chara.171.urinate_point	67
+2020-12-22 11:15	chara.3.behavior.move_final_target	["医疗", "门诊室"]
+2020-12-22 11:15	chara.3.behavior.start_time	"2020-12-22 11:15"
+2020-12-22 11:15	chara.3.position	"医疗/外走廊"
+2020-12-22 11:15	chara.3.urinate_point	62
+2020-12-22 11:15	chara.56.tired_point	11
+2020-12-22 11:15	chara.56.urinate_point	63
+2020-12-22 11:15	chara.7.behavior.behavior_id	"share_blankly"
+2020-12-22 11:15	chara.7.behavior.duration	0
+2020-12-22 11:15	chara.7.behavior.move_final_target	[]
+2020-12-22 11:15	chara.7.behavior.move_target	[]
+2020-12-22 11:15	chara.7.behavior.start_time	"2020-12-22 11:15"
+2020-12-22 11:15	chara.7.position	"工程/运维部"
+2020-12-22 11:15	chara.7.state	0
+2020-12-22 11:15	chara.7.urinate_point	53
+2020-12-22 11:15	clock	"2020-12-22 11:15"
+2020-12-22 11:15	scene.医疗/外走廊.occupants	[3, 171]
+2020-12-22 11:15	scene.医疗/急诊室.occupants	null
+2020-12-22 11:15	scene.工程/0.occupants	null
+2020-12-22 11:15	scene.工程/运维部.occupants	[7]
+2020-12-22 11:20	chara.0.behavior.start_time	"2020-12-22 11:20"
+2020-12-22 11:20	chara.0.tired_point	16
+2020-12-22 11:20	chara.1.behavior.start_time	"2020-12-22 11:17"
+2020-12-22 11:20	chara.1.mana_point	830
+2020-12-22 11:20	chara.1.urinate_point	68
+2020-12-22 11:20	chara.130.tired_point	12
+2020-12-22 11:20	chara.130.urinate_point	67
+2020-12-22 11:20	chara.171.behavior.move_final_target	[]
+2020-12-22 11:20	chara.171.behavior.start_time	"2020-12-22 11:20"
+2020-12-22 11:20	chara.171.position	"医疗/门诊室"
+2020-12-22 11:20	chara.171.urinate_point	68
+2020-12-22 11:20	chara.3.behavior.move_final_target	[]
+2020-12-22 11:20	chara.3.behavior.start_time	"2020-12-22 11:20"
+2020-12-22 11:20	chara.3.position	"医疗/门诊室"
+2020-12-22 11:20	chara.3.urinate_point	64
+2020-12-22 11:20	chara.56.behavior.start_time	"2020-12-22 11:18"
+2020-12-22 11:20	chara.56.hit_point	1580
+2020-12-22 11:20	chara.56.mana_point	840
+2020-12-22 11:20	chara.56.urinate_point	67
+2020-12-22 11:20	chara.7.behavior.behavior_id	"move"
+2020-12-22 11:20	chara.7.behavior.duration	4
+2020-12-22 11:20	chara.7.behavior.move_final_target	["文职", "0"]
+2020-12-22 11:20	chara.7.behavior.move_target	["制造加工", "0"]
+2020-12-22 11:20	chara.7.behavior.start_time	"2020-12-22 11:18"
+2020-12-22 11:20	chara.7.position	"制造加工/0"
+2020-12-22 11:20	chara.7.sp_flag.work_maintenance	true
+2020-12-22 11:20	chara.7.state	1
+2020-12-22 11:20	chara.7.urinate_point	57
+2020-12-22 11:20	clock	"2020-12-22 11:20"
+2020-12-22 11:20	scene.制造加工/0.occupants	[7]
+2020-12-22 11:20	scene.医疗/外走廊.occupants	null
+2020-12-22 11:20	scene.医疗/门诊室.occupants	[3, 171]
+2020-12-22 11:20	scene.工程/运维部.occupants	null
+2020-12-22 11:25	chara.0.behavior.start_time	"2020-12-22 11:25"
+2020-12-22 11:25	chara.0.tired_point	17
+2020-12-22 11:25	chara.1.tired_point	11
+2020-12-22 11:25	chara.1.urinate_point	73
+2020-12-22 11:25	chara.130.tired_point	13
+2020-12-22 11:25	chara.130.urinate_point	73
+2020-12-22 11:25	chara.171.behavior.move_final_target	["医疗", "急诊室"]
+2020-12-22 11:25	chara.171.behavior.start_time	"2020-12-22 11:25"
+2020-12-22 11:25	chara.171.position	"医疗/外走廊"
+2020-12-22 11:25	chara.171.urinate_point	70
+2020-12-22 11:25	chara.3.behavior.move_final_target	["医疗", "急诊室"]
+2020-12-22 11:25	chara.3.behavior.start_time	"2020-12-22 11:25"
+2020-12-22 11:25	chara.3.position	"医疗/外走廊"
+2020-12-22 11:25	chara.3.urinate_point	67
+2020-12-22 11:25	chara.56.tired_point	12
+2020-12-22 11:25	chara.56.urinate_point	72
+2020-12-22 11:25	chara.7.behavior.move_target	["动力", "0"]
+2020-12-22 11:25	chara.7.behavior.start_time	"2020-12-22 11:22"
+2020-12-22 11:25	chara.7.position	"动力/0"
+2020-12-22 11:25	chara.7.urinate_point	61
+2020-12-22 11:25	clock	"2020-12-22 11:25"
+2020-12-22 11:25	scene.制造加工/0.occupants	null
+2020-12-22 11:25	scene.动力/0.occupants	[7]
+2020-12-22 11:25	scene.医疗/外走廊.occupants	[3, 171]
+2020-12-22 11:25	scene.医疗/门诊室.occupants	null
+2020-12-22 11:30	chara.0.behavior.start_time	"2020-12-22 11:30"
+2020-12-22 11:30	chara.0.tired_point	18
+2020-12-22 11:30	chara.1.tired_point	12
+2020-12-22 11:30	chara.1.urinate_point	77
+2020-12-22 11:30	chara.130.tired_point	14
+2020-12-22 11:30	chara.130.urinate_point	78
+2020-12-22 11:30	chara.171.behavior.move_final_target	[]
+2020-12-22 11:30	chara.171.behavior.start_time	"2020-12-22 11:30"
+2020-12-22 11:30	chara.171.position	"医疗/急诊室"
+2020-12-22 11:30	chara.171.urinate_point	72
+2020-12-22 11:30	chara.3.behavior.move_final_target	[]
+2020-12-22 11:30	chara.3.behavior.start_time	"2020-12-22 11:30"
+2020-12-22 11:30	chara.3.position	"医疗/急诊室"
+2020-12-22 11:30	chara.3.urinate_point	68
+2020-12-22 11:30	chara.56.tired_point	13
+2020-12-22 11:30	chara.56.urinate_point	77
+2020-12-22 11:30	chara.7.behavior.behavior_id	"share_blankly"
+2020-12-22 11:30	chara.7.behavior.duration	0
+2020-12-22 11:30	chara.7.behavior.move_final_target	[]
+2020-12-22 11:30	chara.7.behavior.move_target	[]
+2020-12-22 11:30	chara.7.behavior.start_time	"2020-12-22 11:30"
+2020-12-22 11:30	chara.7.position	"文职/0"
+2020-12-22 11:30	chara.7.state	0
+2020-12-22 11:30	chara.7.urinate_point	66
+2020-12-22 11:30	clock	"2020-12-22 11:30"
+2020-12-22 11:30	scene.动力/0.occupants	null
+2020-12-22 11:30	scene.医疗/外走廊.occupants	null
+2020-12-22 11:30	scene.医疗/急诊室.occupants	[3, 171]
+2020-12-22 11:30	scene.文职/0.occupants	[7]
+2020-12-22 11:35	chara.0.behavior.start_time	"2020-12-22 11:35"
+2020-12-22 11:35	chara.0.tired_point	19
+2020-12-22 11:35	chara.1.tired_point	13
+2020-12-22 11:35	chara.1.urinate_point	81
+2020-12-22 11:35	chara.130.tired_point	15
+2020-12-22 11:35	chara.130.urinate_point	82
+2020-12-22 11:35	chara.171.behavior.move_final_target	["医疗", "门诊室"]
+2020-12-22 11:35	chara.171.behavior.start_time	"2020-12-22 11:35"
+2020-12-22 11:35	chara.171.position	"医疗/外走廊"
+2020-12-22 11:35	chara.171.urinate_point	74
+2020-12-22 11:35	chara.3.behavior.move_final_target	["医疗", "门诊室"]
+2020-12-22 11:35	chara.3.behavior.start_time	"2020-12-22 11:35"
+2020-12-22 11:35	chara.3.position	"医疗/外走廊"
+2020-12-22 11:35	chara.3.urinate_point	72
+2020-12-22 11:35	chara.56.tired_point	14
+2020-12-22 11:35	chara.56.urinate_point	82
+2020-12-22 11:35	chara.7.behavior.behavior_id	"move"
+2020-12-22 11:35	chara.7.behavior.duration	4
+2020-12-22 11:35	chara.7.behavior.move_final_target	["工程", "运维部"]
+2020-12-22 11:35	chara.7.behavior.move_target	["动力", "0"]
+2020-12-22 11:35	chara.7.behavior.start_time	"2020-12-22 11:32"
+2020-12-22 11:35	chara.7.hit_point	1988
+2020-12-22 11:35	chara.7.mana_point	1376
+2020-12-22 11:35	chara.7.position	"动力/0"
+2020-12-22 11:35	chara.7.sp_flag.work_maintenance	false
+2020-12-22 11:35	chara.7.state	1
+2020-12-22 11:35	chara.7.urinate_point	70
+2020-12-22 11:35	clock	"2020-12-22 11:35"
+2020-12-22 11:35	scene.动力/0.occupants	[7]
+2020-12-22 11:35	scene.医疗/外走廊.occupants	[3, 171]
+2020-12-22 11:35	scene.医疗/急诊室.occupants	null
+2020-12-22 11:35	scene.文职/0.occupants	null
+2020-12-22 11:40	chara.0.behavior.start_time	"2020-12-22 11:40"
+2020-12-22 11:40	chara.0.tired_point	20
+2020-12-22 11:40	chara.1.tired_point	14
+2020-12-22 11:40	chara.1.urinate_point	87
+2020-12-22 11:40	chara.130.tired_point	16
+2020-12-22 11:40	chara.130.urinate_point	88
+2020-12-22 11:40	chara.171.behavior.move_final_target	[]
+2020-12-22 11:40	chara.171.behavior.start_time	"2020-12-22 11:40"
+2020-12-22 11:40	chara.171.position	"医疗/门诊室"
+2020-12-22 11:40	chara.171.urinate_point	75
+2020-12-22 11:40	chara.3.behavior.move_final_target	[]
+2020-12-22 11:40	chara.3.behavior.start_time	"2020-12-22 11:40"
+2020-12-22 11:40	chara.3.position	"医疗/门诊室"
+2020-12-22 11:40	chara.3.urinate_point	74
+2020-12-22 11:40	chara.56.tired_point	15
+2020-12-22 11:40	chara.56.urinate_point	86
+2020-12-22 11:40	chara.7.behavior.behavior_id	"share_blankly"
+2020-12-22 11:40	chara.7.behavior.duration	0
+2020-12-22 11:40	chara.7.behavior.move_target	[]
+2020-12-22 11:40	chara.7.behavior.start_time	"2020-12-22 11:40"
+2020-12-22 11:40	chara.7.position	"制造加工/0"
+2020-12-22 11:40	chara.7.state	0
+2020-12-22 11:40	chara.7.urinate_point	74
+2020-12-22 11:40	clock	"2020-12-22 11:40"
+2020-12-22 11:40	scene.制造加工/0.occupants	[7]
+2020-12-22 11:40	scene.动力/0.occupants	null
+2020-12-22 11:40	scene.医疗/外走廊.occupants	null
+2020-12-22 11:40	scene.医疗/门诊室.occupants	[3, 171]
+2020-12-22 11:45	chara.0.behavior.start_time	"2020-12-22 11:45"
+2020-12-22 11:45	chara.0.tired_point	21
+2020-12-22 11:45	chara.1.tired_point	15
+2020-12-22 11:45	chara.1.urinate_point	93
+2020-12-22 11:45	chara.130.tired_point	17
+2020-12-22 11:45	chara.130.urinate_point	92
+2020-12-22 11:45	chara.171.behavior.move_final_target	["医疗", "急诊室"]
+2020-12-22 11:45	chara.171.behavior.start_time	"2020-12-22 11:45"
+2020-12-22 11:45	chara.171.position	"医疗/外走廊"
+2020-12-22 11:45	chara.171.urinate_point	76
+2020-12-22 11:45	chara.3.behavior.move_final_target	["医疗", "急诊室"]
+2020-12-22 11:45	chara.3.behavior.start_time	"2020-12-22 11:45"
+2020-12-22 11:45	chara.3.position	"医疗/外走廊"
+2020-12-22 11:45	chara.3.urinate_point	79
+2020-12-22 11:45	chara.56.tired_point	16
+2020-12-22 11:45	chara.56.urinate_point	91
+2020-12-22 11:45	chara.7.behavior.start_time	"2020-12-22 11:45"
+2020-12-22 11:45	chara.7.position	"工程/走廊"
+2020-12-22 11:45	chara.7.urinate_point	77
+2020-12-22 11:45	clock	"2020-12-22 11:45"
+2020-12-22 11:45	scene.制造加工/0.occupants	null
+2020-12-22 11:45	scene.医疗/外走廊.occupants	[3, 171]
+2020-12-22 11:45	scene.医疗/门诊室.occupants	null
+2020-12-22 11:45	scene.工程/走廊.occupants	[7]
+2020-12-22 11:50	chara.0.behavior.start_time	"2020-12-22 11:50"
+2020-12-22 11:50	chara.0.tired_point	22
+2020-12-22 11:50	chara.1.behavior.start_time	"2020-12-22 11:47"
+2020-12-22 11:50	chara.1.mana_point	740
+2020-12-22 11:50	chara.1.urinate_point	96
+2020-12-22 11:50	chara.130.tired_point	18
+2020-12-22 11:50	chara.130.urinate_point	98
+2020-12-22 11:50	chara.171.behavior.move_final_target	[]
+2020-12-22 11:50	chara.171.behavior.start_time	"2020-12-22 11:50"
+2020-12-22 11:50	chara.171.position	"医疗/急诊室"
+2020-12-22 11:50	chara.171.urinate_point	80
+2020-12-22 11:50	chara.3.behavior.move_final_target	[]
+2020-12-22 11:50	chara.3.behavior.start_time	"2020-12-22 11:50"
+2020-12-22 11:50	chara.3.position	"医疗/急诊室"
+2020-12-22 11:50	chara.3.urinate_point	82
+2020-12-22 11:50	chara.56.tired_point	17
+2020-12-22 11:50	chara.56.urinate_point	95
+2020-12-22 11:50	chara.7.behavior.behavior_id	"move"
+2020-12-22 11:50	chara.7.behavior.duration	4
+2020-12-22 11:50	chara.7.behavior.move_final_target	["卫", "监控室"]
+2020-12-22 11:50	chara.7.behavior.move_target	["机库", "0"]
+2020-12-22 11:50	chara.7.behavior.start_time	"2020-12-22 11:49"
+2020-12-22 11:50	chara.7.position	"机库/0"
+2020-12-22 11:50	chara.7.sp_flag.work_maintenance	true
+2020-12-22 11:50	chara.7.state	1
+2020-12-22 11:50	chara.7.urinate_point	78
+2020-12-22 11:50	clock	"2020-12-22 11:50"
+2020-12-22 11:50	scene.医疗/外走廊.occupants	null
+2020-12-22 11:50	scene.医疗/急诊室.occupants	[3, 171]
+2020-12-22 11:50	scene.工程/走廊.occupants	null
+2020-12-22 11:50	scene.机库/0.occupants	[7]
+2020-12-22 11:55	chara.0.behavior.start_time	"2020-12-22 11:55"
+2020-12-22 11:55	chara.0.tired_point	23
+2020-12-22 11:55	chara.1.tired_point	16
+2020-12-22 11:55	chara.1.urinate_point	101
+2020-12-22 11:55	chara.130.tired_point	19
+2020-12-22 11:55	chara.130.urinate_point	104
+2020-12-22 11:55	chara.171.behavior.move_final_target	["医疗", "门诊室"]
+2020-12-22 11:55	chara.171.behavior.start_time	"2020-12-22 11:55"
+2020-12-22 11:55	chara.171.position	"医疗/外走廊"
+2020-12-22 11:55	chara.171.urinate_point	84
+2020-12-22 11:55	chara.3.behavior.move_final_target	["医疗", "门诊室"]
+2020-12-22 11:55	chara.3.behavior.start_time	"2020-12-22 11:55"
+2020-12-22 11:55	chara.3.position	"医疗/外走廊"
+2020-12-22 11:55	chara.3.urinate_point	85
+2020-12-22 11:55	chara.56.tired_point	18
+2020-12-22 11:55	chara.56.urinate_point	99
+2020-12-22 11:55	chara.7.behavior.move_target	["卫", "0"]
+2020-12-22 11:55	chara.7.behavior.start_time	"2020-12-22 11:53"
+2020-12-22 11:55	chara.7.position	"卫/0"
+2020-12-22 11:55	chara.7.urinate_point	82
+2020-12-22 11:55	clock	"2020-12-22 11:55"
+2020-12-22 11:55	scene.医疗/外走廊.occupants	[3, 171]
+2020-12-22 11:55	scene.医疗/急诊室.occupants	null
+2020-12-22 11:55	scene.卫/0.occupants	[7]
+2020-12-22 11:55	scene.机库/0.occupants	null
+2020-12-22 12:00	chara.0.behavior.start_time	"2020-12-22 12:00"
+2020-12-22 12:00	chara.0.tired_point	24
+2020-12-22 12:00	chara.1.tired_point	17
+2020-12-22 12:00	chara.1.urinate_point	106
+2020-12-22 12:00	chara.130.tired_point	20
+2020-12-22 12:00	chara.130.urinate_point	109
+2020-12-22 12:00	chara.171.behavior.move_final_target	[]
+2020-12-22 12:00	chara.171.behavior.start_time	"2020-12-22 12:00"
+2020-12-22 12:00	chara.171.position	"医疗/门诊室"
+2020-12-22 12:00	chara.171.urinate_point	88
+2020-12-22 12:00	chara.3.behavior.move_final_target	[]
+2020-12-22 12:00	chara.3.behavior.start_time	"2020-12-22 12:00"
+2020-12-22 12:00	chara.3.position	"医疗/门诊室"
+2020-12-22 12:00	chara.3.urinate_point	87
+2020-12-22 12:00	chara.56.tired_point	19
+2020-12-22 12:00	chara.56.urinate_point	103
+2020-12-22 12:00	chara.7.behavior.behavior_id	"maintenance_facilities"
+2020-12-22 12:00	chara.7.behavior.duration	2
+2020-12-22 12:00	chara.7.behavior.move_final_target	[]
+2020-12-22 12:00	chara.7.behavior.move_target	[]
+2020-12-22 12:00	chara.7.behavior.start_time	"2020-12-22 11:59"
+2020-12-22 12:00	chara.7.hit_point	1982
+2020-12-22 12:00	chara.7.mana_point	1364
+2020-12-22 12:00	chara.7.position	"卫/监控室"
+2020-12-22 12:00	chara.7.sp_flag.work_maintenance	false
+2020-12-22 12:00	chara.7.state	215
+2020-12-22 12:00	chara.7.urinate_point	86
+2020-12-22 12:00	clock	"2020-12-22 12:00"
+2020-12-22 12:00	scene.医疗/外走廊.occupants	null
+2020-12-22 12:00	scene.医疗/门诊室.occupants	[3, 171]
+2020-12-22 12:00	scene.卫/0.occupants	null
+2020-12-22 12:00	scene.卫/监控室.occupants	[7]
+2020-12-22 12:05	chara.0.behavior.start_time	"2020-12-22 12:05"
+2020-12-22 12:05	chara.0.tired_point	25
+2020-12-22 12:05	chara.1.tired_point	18
+2020-12-22 12:05	chara.1.urinate_point	111
+2020-12-22 12:05	chara.130.tired_point	21
+2020-12-22 12:05	chara.130.urinate_point	115
+2020-12-22 12:05	chara.171.behavior.behavior_id	"move"
+2020-12-22 12:05	chara.171.behavior.duration	4
+2020-12-22 12:05	chara.171.behavior.move_final_target	["生娱", "取餐区"]
+2020-12-22 12:05	chara.171.behavior.move_target	["生娱", "0"]
+2020-12-22 12:05	chara.171.behavior.start_time	"2020-12-22 12:03"
+2020-12-22 12:05	chara.171.position	"生娱/0"
+2020-12-22 12:05	chara.171.sp_flag.eat_food	1
+2020-12-22 12:05	chara.171.state	1
+2020-12-22 12:05	chara.171.urinate_point	90
+2020-12-22 12:05	chara.3.behavior.behavior_id	"move"
+2020-12-22 12:05	chara.3.behavior.duration	4
+2020-12-22 12:05	chara.3.behavior.move_final_target	["生娱", "取餐区"]
+2020-12-22 12:05	chara.3.behavior.move_target	["生娱", "0"]
+2020-12-22 12:05	chara.3.behavior.start_time	"2020-12-22 12:03"
+2020-12-22 12:05	chara.3.position	"生娱/0"
+2020-12-22 12:05	chara.3.sp_flag.eat_food	1
+2020-12-22 12:05	chara.3.state	1
+2020-12-22 12:05	chara.3.urinate_point	90
+2020-12-22 12:05	chara.56.tired_point	20
+2020-12-22 12:05	chara.56.urinate_point	108
+2020-12-22 12:05	chara.7.behavior.behavior_id	"move"
+2020-12-22 12:05	chara.7.behavior.duration	4
+2020-12-22 12:05	chara.7.behavior.move_final_target	["生娱", "取餐区"]
+2020-12-22 12:05	chara.7.behavior.move_target	["访客", "0"]
+2020-12-22 12:05	chara.7.behavior.start_time	"2020-12-22 12:04"
+2020-12-22 12:05	chara.7.position	"访客/0"
+2020-12-22 12:05	chara.7.sp_flag.eat_food	1
+2020-12-22 12:05	chara.7.state	1
+2020-12-22 12:05	chara.7.urinate_point	87
+2020-12-22 12:05	clock	"2020-12-22 12:05"
+2020-12-22 12:05	scene.医疗/门诊室.occupants	null
+2020-12-22 12:05	scene.卫/监控室.occupants	null
+2020-12-22 12:05	scene.生娱/0.occupants	[3, 171]
+2020-12-22 12:05	scene.访客/0.occupants	[7]
+2020-12-22 12:10	chara.0.behavior.start_time	"2020-12-22 12:10"
+2020-12-22 12:10	chara.0.tired_point	26
+2020-12-22 12:10	chara.1.tired_point	19
+2020-12-22 12:10	chara.1.urinate_point	116
+2020-12-22 12:10	chara.130.tired_point	22
+2020-12-22 12:10	chara.130.urinate_point	119
+2020-12-22 12:10	chara.171.behavior.behavior_id	"share_blankly"
+2020-12-22 12:10	chara.171.behavior.duration	0
+2020-12-22 12:10	chara.171.behavior.move_final_target	[]
+2020-12-22 12:10	chara.171.behavior.move_target	[]
+2020-12-22 12:10	chara.171.behavior.start_time	"2020-12-22 12:10"
+2020-12-22 12:10	chara.171.position	"生娱/取餐区"
+2020-12-22 12:10	chara.171.state	0
+2020-12-22 12:10	chara.171.urinate_point	92
+2020-12-22 12:10	chara.3.behavior.behavior_id	"share_blankly"
+2020-12-22 12:10	chara.3.behavior.duration	0
+2020-12-22 12:10	chara.3.behavior.move_final_target	[]
+2020-12-22 12:10	chara.3.behavior.move_target	[]
+2020-12-22 12:10	chara.3.behavior.start_time	"2020-12-22 12:10"
+2020-12-22 12:10	chara.3.position	"生娱/取餐区"
+2020-12-22 12:10	chara.3.state	0
+2020-12-22 12:10	chara.3.urinate_point	92
+2020-12-22 12:10	chara.56.tired_point	21
+2020-12-22 12:10	chara.56.urinate_point	113
+2020-12-22 12:10	chara.7.behavior.move_target	["贸易", "0"]
+2020-12-22 12:10	chara.7.behavior.start_time	"2020-12-22 12:08"
+2020-12-22 12:10	chara.7.position	"贸易/0"
+2020-12-22 12:10	chara.7.urinate_point	91
+2020-12-22 12:10	clock	"2020-12-22 12:10"
+2020-12-22 12:10	scene.生娱/0.occupants	null
+2020-12-22 12:10	scene.生娱/取餐区.occupants	[3, 171]
+2020-12-22 12:10	scene.访客/0.occupants	null
+2020-12-22 12:10	scene.贸易/0.occupants	[7]
+2020-12-22 12:15	chara.0.behavior.start_time	"2020-12-22 12:15"
+2020-12-22 12:15	chara.0.tired_point	27
+2020-12-22 12:15	chara.1.tired_point	20
+2020-12-22 12:15	chara.1.urinate_point	122
+2020-12-22 12:15	chara.130.tired_point	23
+2020-12-22 12:15	chara.130.urinate_point	125
+2020-12-22 12:15	chara.171.behavior.start_time	"2020-12-22 12:15"
+2020-12-22 12:15	chara.171.sp_flag.eat_food	2
+2020-12-22 12:15	chara.171.tired_point	13
+2020-12-22 12:15	chara.171.urinate_point	96
+2020-12-22 12:15	chara.3.behavior.start_time	"2020-12-22 12:15"
+2020-12-22 12:15	chara.3.sp_flag.eat_food	2
+2020-12-22 12:15	chara.3.tired_point	13
+2020-12-22 12:15	chara.3.urinate_point	97
+2020-12-22 12:15	chara.56.tired_point	22
+2020-12-22 12:15	chara.56.urinate_point	119
+2020-12-22 12:15	chara.7.behavior.move_target	["文职", "0"]
+2020-12-22 12:15	chara.7.behavior.start_time	"2020-12-22 12:12"
+2020-12-22 12:15	chara.7.position	"文职/0"
+2020-12-22 12:15	chara.7.urinate_point	94
+2020-12-22 12:15	clock	"2020-12-22 12:15"
+2020-12-22 12:15	scene.文职/0.occupants	[7]
+2020-12-22 12:15	scene.贸易/0.occupants	null
+2020-12-22 12:20	chara.0.behavior.start_time	"2020-12-22 12:20"
+2020-12-22 12:20	chara.0.tired_point	28
+2020-12-22 12:20	chara.1.behavior.behavior_id	"move"
+2020-12-22 12:20	chara.1.behavior.duration	4
+2020-12-22 12:20	chara.1.behavior.move_final_target	["生娱", "取餐区"]
+2020-12-22 12:20	chara.1.behavior.move_target	["疗养庭院", "0"]
+2020-12-22 12:20	chara.1.behavior.start_time	"2020-12-22 12:19"
+2020-12-22 12:20	chara.1.position	"疗养庭院/0"
+2020-12-22 12:20	chara.1.sp_flag.eat_food	1
+2020-12-22 12:20	chara.1.state	1
+2020-12-22 12:20	chara.1.urinate_point	125
+2020-12-22 12:20	chara.130.behavior.behavior_id	"share_blankly"
+2020-12-22 12:20	chara.130.behavior.duration	0
+2020-12-22 12:20	chara.130.behavior.move_final_target	["生娱", "取餐区"]
+2020-12-22 12:20	chara.130.behavior.start_time	"2020-12-22 12:20"
+2020-12-22 12:20	chara.130.position	"训练/走廊"
+2020-12-22 12:20	chara.130.sp_flag.eat_food	1
+2020-12-22 12:20	chara.130.state	0
+2020-12-22 12:20	chara.130.urinate_point	128
+2020-12-22 12:20	chara.171.behavior.behavior_id	"eat"
+2020-12-22 12:20	chara.171.behavior.duration	30
+2020-12-22 12:20	chara.171.behavior.start_time	"2020-12-22 12:16"
+2020-12-22 12:20	chara.171.hit_point	1700
+2020-12-22 12:20	chara.171.hunger_point	3
+2020-12-22 12:20	chara.171.mana_point	1200
+2020-12-22 12:20	chara.171.position	"生娱/食堂"
+2020-12-22 12:20	chara.171.sp_flag.eat_food	0
+2020-12-22 12:20	chara.171.state	135
+2020-12-22 12:20	chara.171.urinate_point	101
+2020-12-22 12:20	chara.3.behavior.behavior_id	"eat"
+2020-12-22 12:20	chara.3.behavior.duration	30
+2020-12-22 12:20	chara.3.behavior.start_time	"2020-12-22 12:16"
+2020-12-22 12:20	chara.3.hit_point	2000
+2020-12-22 12:20	chara.3.hunger_point	4
+2020-12-22 12:20	chara.3.mana_point	1500
+2020-12-22 12:20	chara.3.position	"生娱/食堂"
+2020-12-22 12:20	chara.3.sp_flag.eat_food	0
+2020-12-22 12:20	chara.3.state	135
+2020-12-22 12:20	chara.3.urinate_point	101
+2020-12-22 12:20	chara.56.behavior.behavior_id	"share_blankly"
+2020-12-22 12:20	chara.56.behavior.duration	0
+2020-12-22 12:20	chara.56.behavior.move_final_target	["生娱", "取餐区"]
+2020-12-22 12:20	chara.56.behavior.start_time	"2020-12-22 12:20"
+2020-12-22 12:20	chara.56.position	"文职/外走廊"
+2020-12-22 12:20	chara.56.sp_flag.eat_food	1
+2020-12-22 12:20	chara.56.state	0
+2020-12-22 12:20	chara.56.urinate_point	124
+2020-12-22 12:20	chara.7.behavior.behavior_id	"share_blankly"
+2020-12-22 12:20	chara.7.behavior.duration	0
+2020-12-22 12:20	chara.7.behavior.move_target	[]
+2020-12-22 12:20	chara.7.behavior.start_time	"2020-12-22 12:20"
+2020-12-22 12:20	chara.7.position	"疗养庭院/0"
+2020-12-22 12:20	chara.7.state	0
+2020-12-22 12:20	chara.7.urinate_point	98
+2020-12-22 12:20	clock	"2020-12-22 12:20"
+2020-12-22 12:20	scene.书/图书馆.occupants	null
+2020-12-22 12:20	scene.文职/0.occupants	null
+2020-12-22 12:20	scene.文职/办公室.occupants	null
+2020-12-22 12:20	scene.文职/外走廊.occupants	[56]
+2020-12-22 12:20	scene.生娱/取餐区.occupants	null
+2020-12-22 12:20	scene.生娱/食堂.occupants	[3, 171]
+2020-12-22 12:20	scene.疗养庭院/0.occupants	[1, 7]
+2020-12-22 12:20	scene.训练/木桩房.occupants	null
+2020-12-22 12:20	scene.训练/走廊.occupants	[130]
+2020-12-22 12:25	chara.0.behavior.start_time	"2020-12-22 12:25"
+2020-12-22 12:25	chara.0.tired_point	29
+2020-12-22 12:25	chara.1.behavior.move_target	["生娱", "0"]
+2020-12-22 12:25	chara.1.behavior.start_time	"2020-12-22 12:23"
+2020-12-22 12:25	chara.1.position	"生娱/0"
+2020-12-22 12:25	chara.1.urinate_point	129
+2020-12-22 12:25	chara.130.behavior.start_time	"2020-12-22 12:25"
+2020-12-22 12:25	chara.130.position	"大浴场/0"
+2020-12-22 12:25	chara.130.urinate_point	131
+2020-12-22 12:25	chara.171.hunger_point	7
+2020-12-22 12:25	chara.171.tired_point	14
+2020-12-22 12:25	chara.171.urinate_point	105
+2020-12-22 12:25	chara.3.hunger_point	9
+2020-12-22 12:25	chara.3.tired_point	14
+2020-12-22 12:25	chara.3.urinate_point	105
+2020-12-22 12:25	chara.56.behavior.start_time	"2020-12-22 12:25"
+2020-12-22 12:25	chara.56.position	"疗养庭院/0"
+2020-12-22 12:25	chara.56.urinate_point	129
+2020-12-22 12:25	chara.7.behavior.start_time	"2020-12-22 12:25"
+2020-12-22 12:25	chara.7.position	"生娱/走廊A"
+2020-12-22 12:25	chara.7.urinate_point	103
+2020-12-22 12:25	clock	"2020-12-22 12:25"
+2020-12-22 12:25	scene.大浴场/0.occupants	[130]
+2020-12-22 12:25	scene.文职/外走廊.occupants	null
+2020-12-22 12:25	scene.生娱/0.occupants	[1]
+2020-12-22 12:25	scene.生娱/走廊A.occupants	[7]
+2020-12-22 12:25	scene.疗养庭院/0.occupants	[56]
+2020-12-22 12:25	scene.训练/走廊.occupants	null
+2020-12-22 12:30	chara.0.behavior.start_time	"2020-12-22 12:30"
+2020-12-22 12:30	chara.0.tired_point	30
+2020-12-22 12:30	chara.1.behavior.behavior_id	"share_blankly"
+2020-12-22 12:30	chara.1.behavior.duration	0
+2020-12-22 12:30	chara.1.behavior.move_final_target	[]
+2020-12-22 12:30	chara.1.behavior.move_target	[]
+2020-12-22 12:30	chara.1.behavior.start_time	"2020-12-22 12:30"
+2020-12-22 12:30	chara.1.position	"生娱/取餐区"
+2020-12-22 12:30	chara.1.state	0
+2020-12-22 12:30	chara.1.urinate_point	134
+2020-12-22 12:30	chara.130.behavior.start_time	"2020-12-22 12:30"
+2020-12-22 12:30	chara.130.position	"生娱/走廊A"
+2020-12-22 12:30	chara.130.urinate_point	135
+2020-12-22 12:30	chara.171.hunger_point	11
+2020-12-22 12:30	chara.171.tired_point	15
+2020-12-22 12:30	chara.171.urinate_point	110
+2020-12-22 12:30	chara.3.hunger_point	15
+2020-12-22 12:30	chara.3.tired_point	15
+2020-12-22 12:30	chara.3.urinate_point	110
+2020-12-22 12:30	chara.56.behavior.start_time	"2020-12-22 12:30"
+2020-12-22 12:30	chara.56.position	"生娱/走廊A"
+2020-12-22 12:30	chara.56.urinate_point	134
+2020-12-22 12:30	chara.7.behavior.behavior_id	"buy_food"
+2020-12-22 12:30	chara.7.behavior.duration	5
+2020-12-22 12:30	chara.7.behavior.move_final_target	[]
+2020-12-22 12:30	chara.7.behavior.start_time	"2020-12-22 12:27"
+2020-12-22 12:30	chara.7.position	"生娱/取餐区"
+2020-12-22 12:30	chara.7.sp_flag.eat_food	2
+2020-12-22 12:30	chara.7.state	138
+2020-12-22 12:30	chara.7.urinate_point	107
+2020-12-22 12:30	clock	"2020-12-22 12:30"
+2020-12-22 12:30	scene.大浴场/0.occupants	null
+2020-12-22 12:30	scene.生娱/0.occupants	null
+2020-12-22 12:30	scene.生娱/取餐区.occupants	[1, 7]
+2020-12-22 12:30	scene.生娱/走廊A.occupants	[56, 130]
+2020-12-22 12:30	scene.疗养庭院/0.occupants	null
+2020-12-22 12:35	chara.0.behavior.start_time	"2020-12-22 12:35"
+2020-12-22 12:35	chara.0.tired_point	31
+2020-12-22 12:35	chara.1.behavior.start_time	"2020-12-22 12:35"
+2020-12-22 12:35	chara.1.sp_flag.eat_food	2
+2020-12-22 12:35	chara.1.tired_point	21
+2020-12-22 12:35	chara.1.urinate_point	140
+2020-12-22 12:35	chara.130.behavior.behavior_id	"buy_food"
+2020-12-22 12:35	chara.130.behavior.duration	5
+2020-12-22 12:35	chara.130.behavior.move_final_target	[]
+2020-12-22 12:35	chara.130.behavior.start_time	"2020-12-22 12:32"
+2020-12-22 12:35	chara.130.position	"生娱/取餐区"
+2020-12-22 12:35	chara.130.sp_flag.eat_food	2
+2020-12-22 12:35	chara.130.state	138
+2020-12-22 12:35	chara.130.urinate_point	138
+2020-12-22 12:35	chara.171.hunger_point	17
+2020-12-22 12:35	chara.171.tired_point	16
+2020-12-22 12:35	chara.171.urinate_point	115
+2020-12-22 12:35	chara.3.hunger_point	19
+2020-12-22 12:35	chara.3.tired_point	16
+2020-12-22 12:35	chara.3.urinate_point	115
+2020-12-22 12:35	chara.56.behavior.behavior_id	"buy_food"
+2020-12-22 12:35	chara.56.behavior.duration	5
+2020-12-22 12:35	chara.56.behavior.move_final_target	[]
+2020-12-22 12:35	chara.56.behavior.start_time	"2020-12-22 12:32"
+2020-12-22 12:35	chara.56.position	"生娱/取餐区"
+2020-12-22 12:35	chara.56.sp_flag.eat_food	2
+2020-12-22 12:35	chara.56.state	138
+2020-12-22 12:35	chara.56.urinate_point	138
+2020-12-22 12:35	chara.7.behavior.behavior_id	"eat"
+2020-12-22 12:35	chara.7.behavior.duration	30
+2020-12-22 12:35	chara.7.behavior.start_time	"2020-12-22 12:33"
+2020-12-22 12:35	chara.7.hit_point	2000
+2020-12-22 12:35	chara.7.hunger_point	2
+2020-12-22 12:35	chara.7.mana_point	1400
+2020-12-22 12:35	chara.7.position	"生娱/食堂"
+2020-12-22 12:35	chara.7.sp_flag.eat_food	0
+2020-12-22 12:35	chara.7.state	135
+2020-12-22 12:35	chara.7.urinate_point	111
+2020-12-22 12:35	clock	"2020-12-22 12:35"
+2020-12-22 12:35	scene.生娱/取餐区.occupants	[1, 56, 130]
+2020-12-22 12:35	scene.生娱/走廊A.occupants	null
+2020-12-22 12:35	scene.生娱/食堂.occupants	[3, 7, 171]
+2020-12-22 12:40	chara.0.behavior.start_time	"2020-12-22 12:40"
+2020-12-22 12:40	chara.0.tired_point	32
+2020-12-22 12:40	chara.1.behavior.behavior_id	"eat"
+2020-12-22 12:40	chara.1.behavior.duration	30
+2020-12-22 12:40	chara.1.behavior.start_time	"2020-12-22 12:36"
+2020-12-22 12:40	chara.1.hunger_point	4
+2020-12-22 12:40	chara.1.mana_point	1100
+2020-12-22 12:40	chara.1.position	"生娱/食堂"
+2020-12-22 12:40	chara.1.sp_flag.eat_food	0
+2020-12-22 12:40	chara.1.state	135
+2020-12-22 12:40	chara.1.urinate_point	143
+2020-12-22 12:40	chara.130.behavior.behavior_id	"eat"
+2020-12-22 12:40	chara.130.behavior.duration	30
+2020-12-22 12:40	chara.130.behavior.start_time	"2020-12-22 12:38"
+2020-12-22 12:40	chara.130.hit_point	1432
+2020-12-22 12:40	chara.130.hunger_point	2
+2020-12-22 12:40	chara.130.mana_point	1064
+2020-12-22 12:40	chara.130.position	"生娱/食堂"
+2020-12-22 12:40	chara.130.sp_flag.eat_food	0
+2020-12-22 12:40	chara.130.state	135
+2020-12-22 12:40	chara.130.urinate_point	141
+2020-12-22 12:40	chara.171.hunger_point	22
+2020-12-22 12:40	chara.171.tired_point	17
+2020-12-22 12:40	chara.171.urinate_point	120
+2020-12-22 12:40	chara.3.hunger_point	23
+2020-12-22 12:40	chara.3.tired_point	17
+2020-12-22 12:40	chara.3.urinate_point	121
+2020-12-22 12:40	chara.56.behavior.behavior_id	"eat"
+2020-12-22 12:40	chara.56.behavior.duration	30
+2020-12-22 12:40	chara.56.behavior.start_time	"2020-12-22 12:38"
+2020-12-22 12:40	chara.56.hit_point	1700
+2020-12-22 12:40	chara.56.hunger_point	1
+2020-12-22 12:40	chara.56.mana_point	1200
+2020-12-22 12:40	chara.56.position	"生娱/食堂"
+2020-12-22 12:40	chara.56.sp_flag.eat_food	0
+2020-12-22 12:40	chara.56.state	135
+2020-12-22 12:40	chara.56.urinate_point	141
+2020-12-22 12:40	chara.7.hunger_point	8
+2020-12-22 12:40	chara.7.tired_point	1
+2020-12-22 12:40	chara.7.urinate_point	115
+2020-12-22 12:40	clock	"2020-12-22 12:40"
+2020-12-22 12:40	scene.生娱/取餐区.occupants	null
+2020-12-22 12:40	scene.生娱/食堂.occupants	[1, 3, 7, 56, 130, 171]
+2020-12-22 12:45	chara.0.behavior.start_time	"2020-12-22 12:45"
+2020-12-22 12:45	chara.0.tired_point	33
+2020-12-22 12:45	chara.1.hunger_point	9
+2020-12-22 12:45	chara.1.tired_point	22
+2020-12-22 12:45	chara.1.urinate_point	149
+2020-12-22 12:45	chara.130.hunger_point	7
+2020-12-22 12:45	chara.130.tired_point	24
+2020-12-22 12:45	chara.130.urinate_point	146
+2020-12-22 12:45	chara.171.hunger_point	28
+2020-12-22 12:45	chara.171.tired_point	18
+2020-12-22 12:45	chara.171.urinate_point	125
+2020-12-22 12:45	chara.3.hunger_point	27
+2020-12-22 12:45	chara.3.tired_point	18
+2020-12-22 12:45	chara.3.urinate_point	126
+2020-12-22 12:45	chara.56.hunger_point	6
+2020-12-22 12:45	chara.56.tired_point	23
+2020-12-22 12:45	chara.56.urinate_point	146
+2020-12-22 12:45	chara.7.hunger_point	14
+2020-12-22 12:45	chara.7.tired_point	2
+2020-12-22 12:45	chara.7.urinate_point	121
+2020-12-22 12:45	clock	"2020-12-22 12:45"
+2020-12-22 12:50	chara.0.behavior.start_time	"2020-12-22 12:50"
+2020-12-22 12:50	chara.0.tired_point	34
+2020-12-22 12:50	chara.1.hunger_point	15
+2020-12-22 12:50	chara.1.tired_point	23
+2020-12-22 12:50	chara.1.urinate_point	153
+2020-12-22 12:50	chara.130.hunger_point	15
+2020-12-22 12:50	chara.130.tired_point	25
+2020-12-22 12:50	chara.130.urinate_point	152
+2020-12-22 12:50	chara.171.behavior.behavior_id	"chat"
+2020-12-22 12:50	chara.171.behavior.duration	10
+2020-12-22 12:50	chara.171.behavior.start_time	"2020-12-22 12:46"
+2020-12-22 12:50	chara.171.hunger_point	32
+2020-12-22 12:50	chara.171.mana_point	1170
+2020-12-22 12:50	chara.171.state	101
+2020-12-22 12:50	chara.171.target_character_id	56
+2020-12-22 12:50	chara.171.urinate_point	130
+2020-12-22 12:50	chara.3.behavior.behavior_id	"move"
+2020-12-22 12:50	chara.3.behavior.duration	4
+2020-12-22 12:50	chara.3.behavior.move_final_target	["中枢", "博士办公室"]
+2020-12-22 12:50	chara.3.behavior.move_target	["医疗", "0"]
+2020-12-22 12:50	chara.3.behavior.start_time	"2020-12-22 12:48"
+2020-12-22 12:50	chara.3.hunger_point	31
+2020-12-22 12:50	chara.3.position	"医疗/0"
+2020-12-22 12:50	chara.3.state	1
+2020-12-22 12:50	chara.3.urinate_point	128
+2020-12-22 12:50	chara.56.hunger_point	11
+2020-12-22 12:50	chara.56.mana_point	1170
+2020-12-22 12:50	chara.56.tired_point	24
+2020-12-22 12:50	chara.56.urinate_point	152
+2020-12-22 12:50	chara.7.hunger_point	18
+2020-12-22 12:50	chara.7.tired_point	3
+2020-12-22 12:50	chara.7.urinate_point	126
+2020-12-22 12:50	clock	"2020-12-22 12:50"
+2020-12-22 12:50	scene.医疗/0.occupants	[3]
+2020-12-22 12:50	scene.生娱/食堂.occupants	[1, 7, 56, 130, 171]
+2020-12-22 12:55	chara.0.behavior.start_time	"2020-12-22 12:55"
+2020-12-22 12:55	chara.0.tired_point	35
+2020-12-22 12:55	chara.1.hunger_point	20
+2020-12-22 12:55	chara.1.tired_point	24
+2020-12-22 12:55	chara.1.urinate_point	158
+2020-12-22 12:55	chara.130.hunger_point	23
+2020-12-22 12:55	chara.130.tired_point	26
+2020-12-22 12:55	chara.130.urinate_point	158
+2020-12-22 12:55	chara.171.hunger_point	38
+2020-12-22 12:55	chara.171.tired_point	19
+2020-12-22 12:55	chara.171.urinate_point	135
+2020-12-22 12:55	chara.3.behavior.move_target	["中枢", "0"]
+2020-12-22 12:55	chara.3.behavior.start_time	"2020-12-22 12:52"
+2020-12-22 12:55	chara.3.hunger_point	35
+2020-12-22 12:55	chara.3.position	"中枢/0"
+2020-12-22 12:55	chara.3.urinate_point	133
+2020-12-22 12:55	chara.56.hunger_point	15
+2020-12-22 12:55	chara.56.tired_point	25
+2020-12-22 12:55	chara.56.urinate_point	158
+2020-12-22 12:55	chara.7.hunger_point	22
+2020-12-22 12:55	chara.7.tired_point	4
+2020-12-22 12:55	chara.7.urinate_point	132
+2020-12-22 12:55	clock	"2020-12-22 12:55"
+2020-12-22 12:55	scene.中枢/0.occupants	[3]
+2020-12-22 12:55	scene.医疗/0.occupants	null
+2020-12-22 13:00	chara.0.behavior.start_time	"2020-12-22 13:00"
+2020-12-22 13:00	chara.0.tired_point	36
+2020-12-22 13:00	chara.1.hunger_point	26
+2020-12-22 13:00	chara.1.tired_point	25
+2020-12-22 13:00	chara.1.urinate_point	164
+2020-12-22 13:00	chara.130.hunger_point	28
+2020-12-22 13:00	chara.130.tired_point	27
+2020-12-22 13:00	chara.130.urinate_point	164
+2020-12-22 13:00	chara.171.behavior.behavior_id	"move"
+2020-12-22 13:00	chara.171.behavior.duration	4
+2020-12-22 13:00	chara.171.behavior.move_final_target	["宿舍", "1区", "103"]
+2020-12-22 13:00	chara.171.behavior.move_target	["宿舍", "0"]
+2020-12-22 13:00	chara.171.behavior.start_time	"2020-12-22 12:58"
+2020-12-22 13:00	chara.171.hunger_point	43
+2020-12-22 13:00	chara.171.position	"宿舍/0"
+2020-12-22 13:00	chara.171.state	1
+2020-12-22 13:00	chara.171.target_character_id	171
+2020-12-22 13:00	chara.171.urinate_point	139
+2020-12-22 13:00	chara.3.behavior.behavior_id	"wait"
+2020-12-22 13:00	chara.3.behavior.duration	10
+2020-12-22 13:00	chara.3.behavior.move_final_target	[]
+2020-12-22 13:00	chara.3.behavior.move_target	[]
+2020-12-22 13:00	chara.3.behavior.start_time	"2020-12-22 12:58"
+2020-12-22 13:00	chara.3.hunger_point	38
+2020-12-22 13:00	chara.3.position	"中枢/博士办公室"
+2020-12-22 13:00	chara.3.state	2
+2020-12-22 13:00	chara.3.urinate_point	136
+2020-12-22 13:00	chara.56.hunger_point	20
+2020-12-22 13:00	chara.56.tired_point	26
+2020-12-22 13:00	chara.56.urinate_point	163
+2020-12-22 13:00	chara.7.hunger_point	27
+2020-12-22 13:00	chara.7.tired_point	5
+2020-12-22 13:00	chara.7.urinate_point	138
+2020-12-22 13:00	clock	"2020-12-22 13:00"
+2020-12-22 13:00	scene.中枢/0.occupants	null
+2020-12-22 13:00	scene.中枢/博士办公室.occupants	[3]
+2020-12-22 13:00	scene.宿舍/0.occupants	[171]
+2020-12-22 13:00	scene.生娱/食堂.occupants	[1, 7, 56, 130]
+2020-12-22 13:05	chara.0.behavior.start_time	"2020-12-22 13:05"
+2020-12-22 13:05	chara.0.tired_point	37
+2020-12-22 13:05	chara.1.hunger_point	32
+2020-12-22 13:05	chara.1.tired_point	26
+2020-12-22 13:05	chara.1.urinate_point	168
+2020-12-22 13:05	chara.130.hunger_point	36
+2020-12-22 13:05	chara.130.tired_point	28
+2020-12-22 13:05	chara.130.urinate_point	170
+2020-12-22 13:05	chara.171.behavior.behavior_id	"share_blankly"
+2020-12-22 13:05	chara.171.behavior.duration	0
+2020-12-22 13:05	chara.171.behavior.move_target	[]
+2020-12-22 13:05	chara.171.behavior.start_time	"2020-12-22 13:05"
+2020-12-22 13:05	chara.171.hunger_point	45
+2020-12-22 13:05	chara.171.position	"宿舍/1区/外走廊"
+2020-12-22 13:05	chara.171.state	0
+2020-12-22 13:05	chara.171.urinate_point	141
+2020-12-22 13:05	chara.3.hunger_point	43
+2020-12-22 13:05	chara.3.tired_point	19
+2020-12-22 13:05	chara.3.urinate_point	141
+2020-12-22 13:05	chara.56.hunger_point	24
+2020-12-22 13:05	chara.56.tired_point	27
+2020-12-22 13:05	chara.56.urinate_point	167
+2020-12-22 13:05	chara.7.behavior.behavior_id	"share_blankly"
+2020-12-22 13:05	chara.7.behavior.duration	0
+2020-12-22 13:05	chara.7.behavior.move_final_target	["中枢", "博士办公室"]
+2020-12-22 13:05	chara.7.behavior.start_time	"2020-12-22 13:05"
+2020-12-22 13:05	chara.7.hunger_point	31
+2020-12-22 13:05	chara.7.position	"生娱/0"
+2020-12-22 13:05	chara.7.state	0
+2020-12-22 13:05	chara.7.urinate_point	141
+2020-12-22 13:05	clock	"2020-12-22 13:05"
+2020-12-22 13:05	scene.宿舍/0.occupants	null
+2020-12-22 13:05	scene.宿舍/1区/外走廊.occupants	[171]
+2020-12-22 13:05	scene.生娱/0.occupants	[7]
+2020-12-22 13:05	scene.生娱/食堂.occupants	[1, 56, 130]
+2020-12-22 13:10	chara.0.behavior.start_time	"2020-12-22 13:10"
+2020-12-22 13:10	chara.0.tired_point	38
+2020-12-22 13:10	chara.1.behavior.behavior_id	"move"
+2020-12-22 13:10	chara.1.behavior.duration	4
+2020-12-22 13:10	chara.1.behavior.move_final_target	["中枢", "博士办公室"]
+2020-12-22 13:10	chara.1.behavior.move_target	["医疗", "0"]
+2020-12-22 13:10	chara.1.behavior.start_time	"2020-12-22 13:08"
+2020-12-22 13:10	chara.1.hunger_point	36
+2020-12-22 13:10	chara.1.position	"医疗/0"
+2020-12-22 13:10	chara.1.state	1
+2020-12-22 13:10	chara.1.urinate_point	170
+2020-12-22 13:10	chara.130.behavior.behavior_id	"stroke"
+2020-12-22 13:10	chara.130.behavior.duration	10
+2020-12-22 13:10	chara.130.behavior.start_time	"2020-12-22 13:08"
+2020-12-22 13:10	chara.130.hit_point	1402
+2020-12-22 13:10	chara.130.hunger_point	42
+2020-12-22 13:10	chara.130.mana_point	1004
+2020-12-22 13:10	chara.130.state	103
+2020-12-22 13:10	chara.130.target_character_id	56
+2020-12-22 13:10	chara.130.urinate_point	174
+2020-12-22 13:10	chara.171.behavior.move_final_target	["中枢", "博士办公室"]
+2020-12-22 13:10	chara.171.behavior.start_time	"2020-12-22 13:10"
+2020-12-22 13:10	chara.171.hunger_point	48
+2020-12-22 13:10	chara.171.position	"宿舍/0"
+2020-12-22 13:10	chara.171.urinate_point	144
+2020-12-22 13:10	chara.3.behavior.duration	5
+2020-12-22 13:10	chara.3.behavior.start_time	"2020-12-22 13:08"
+2020-12-22 13:10	chara.3.hunger_point	46
+2020-12-22 13:10	chara.3.urinate_point	145
+2020-12-22 13:10	chara.56.behavior.behavior_id	"share_blankly"
+2020-12-22 13:10	chara.56.behavior.duration	0
+2020-12-22 13:10	chara.56.behavior.move_final_target	["中枢", "博士办公室"]
+2020-12-22 13:10	chara.56.behavior.start_time	"2020-12-22 13:10"
+2020-12-22 13:10	chara.56.hit_point	1670
+2020-12-22 13:10	chara.56.hunger_point	28
+2020-12-22 13:10	chara.56.mana_point	1110
+2020-12-22 13:10	chara.56.position	"生娱/0"
+2020-12-22 13:10	chara.56.state	0
+2020-12-22 13:10	chara.56.urinate_point	171
+2020-12-22 13:10	chara.7.behavior.behavior_id	"move"
+2020-12-22 13:10	chara.7.behavior.duration	4
+2020-12-22 13:10	chara.7.behavior.move_target	["中枢", "0"]
+2020-12-22 13:10	chara.7.behavior.start_time	"2020-12-22 13:09"
+2020-12-22 13:10	chara.7.hunger_point	34
+2020-12-22 13:10	chara.7.position	"中枢/0"
+2020-12-22 13:10	chara.7.state	1
+2020-12-22 13:10	chara.7.urinate_point	145
+2020-12-22 13:10	clock	"2020-12-22 13:10"
+2020-12-22 13:10	scene.中枢/0.occupants	[7]
+2020-12-22 13:10	scene.医疗/0.occupants	[1]
+2020-12-22 13:10	scene.宿舍/0.occupants	[171]
+2020-12-22 13:10	scene.宿舍/1区/外走廊.occupants	null
+2020-12-22 13:10	scene.生娱/0.occupants	[56]
+2020-12-22 13:10	scene.生娱/食堂.occupants	[130]
+2020-12-22 13:15	chara.0.behavior.start_time	"2020-12-22 13:15"
+2020-12-22 13:15	chara.0.tired_point	39
+2020-12-22 13:15	chara.1.behavior.move_target	["中枢", "0"]
+2020-12-22 13:15	chara.1.behavior.start_time	"2020-12-22 13:12"
+2020-12-22 13:15	chara.1.hunger_point	39
+2020-12-22 13:15	chara.1.position	"中枢/0"
+2020-12-22 13:15	chara.1.urinate_point	174
+2020-12-22 13:15	chara.130.behavior.behavior_id	"share_blankly"
+2020-12-22 13:15	chara.130.behavior.duration	0
+2020-12-22 13:15	chara.130.behavior.start_time	"2020-12-22 13:15"
+2020-12-22 13:15	chara.130.hunger_point	47
+2020-12-22 13:15	chara.130.state	0
+2020-12-22 13:15	chara.130.tired_point	29
+2020-12-22 13:15	chara.130.urinate_point	178
+2020-12-22 13:15	chara.171.behavior.behavior_id	"move"
+2020-12-22 13:15	chara.171.behavior.duration	4
+2020-12-22 13:15	chara.171.behavior.move_target	["中枢", "0"]
+2020-12-22 13:15	chara.171.behavior.start_time	"2020-12-22 13:14"
+2020-12-22 13:15	chara.171.hunger_point	52
+2020-12-22 13:15	chara.171.position	"中枢/0"
+2020-12-22 13:15	chara.171.state	1
+2020-12-22 13:15	chara.171.urinate_point	148
+2020-12-22 13:15	chara.3.behavior.behavior_id	"share_blankly"
+2020-12-22 13:15	chara.3.behavior.duration	0
+2020-12-22 13:15	chara.3.behavior.start_time	"2020-12-22 13:15"
+2020-12-22 13:15	chara.3.hunger_point	48
+2020-12-22 13:15	chara.3.state	0
+2020-12-22 13:15	chara.3.urinate_point	149
+2020-12-22 13:15	chara.56.behavior.behavior_id	"move"
+2020-12-22 13:15	chara.56.behavior.duration	4
+2020-12-22 13:15	chara.56.behavior.move_target	["中枢", "0"]
+2020-12-22 13:15	chara.56.behavior.start_time	"2020-12-22 13:14"
+2020-12-22 13:15	chara.56.hunger_point	33
+2020-12-22 13:15	chara.56.position	"中枢/0"
+2020-12-22 13:15	chara.56.state	1
+2020-12-22 13:15	chara.56.urinate_point	175
+2020-12-22 13:15	chara.7.behavior.behavior_id	"share_blankly"
+2020-12-22 13:15	chara.7.behavior.duration	0
+2020-12-22 13:15	chara.7.behavior.move_final_target	[]
+2020-12-22 13:15	chara.7.behavior.move_target	[]
+2020-12-22 13:15	chara.7.behavior.start_time	"2020-12-22 13:15"
+2020-12-22 13:15	chara.7.hunger_point	37
+2020-12-22 13:15	chara.7.position	"中枢/博士办公室"
+2020-12-22 13:15	chara.7.state	0
+2020-12-22 13:15	chara.7.urinate_point	148
+2020-12-22 13:15	clock	"2020-12-22 13:15"
+2020-12-22 13:15	scene.中枢/0.occupants	[1, 56, 171]
+2020-12-22 13:15	scene.中枢/博士办公室.occupants	[3, 7]
+2020-12-22 13:15	scene.医疗/0.occupants	null
+2020-12-22 13:15	scene.宿舍/0.occupants	null
+2020-12-22 13:15	scene.生娱/0.occupants	null
+2020-12-22 13:20	chara.0.behavior.start_time	"2020-12-22 13:20"
+2020-12-22 13:20	chara.0.tired_point	40
+2020-12-22 13:20	chara.1.behavior.behavior_id	"stroke"
+2020-12-22 13:20	chara.1.behavior.duration	10
+2020-12-22 13:20	chara.1.behavior.move_final_target	[]
+2020-12-22 13:20	chara.1.behavior.move_target	[]
+2020-12-22 13:20	chara.1.behavior.start_time	"2020-12-22 13:18"
+2020-12-22 13:20	chara.1.hit_point	1370
+2020-12-22 13:20	chara.1.hunger_point	41
+2020-12-22 13:20	chara.1.mana_point	1040
+2020-12-22 13:20	chara.1.position	"中枢/博士办公室"
+2020-12-22 13:20	chara.1.state	103
+2020-12-22 13:20	chara.1.target_character_id	171
+2020-12-22 13:20	chara.1.urinate_point	176
+2020-12-22 13:20	chara.130.behavior.behavior_id	"move"
+2020-12-22 13:20	chara.130.behavior.duration	4
+2020-12-22 13:20	chara.130.behavior.move_final_target	["中枢", "博士办公室"]
+2020-12-22 13:20	chara.130.behavior.move_target	["医疗", "0"]
+2020-12-22 13:20	chara.130.behavior.start_time	"2020-12-22 13:17"
+2020-12-22 13:20	chara.130.hunger_point	52
+2020-12-22 13:20	chara.130.position	"医疗/0"
+2020-12-22 13:20	chara.130.state	1
+2020-12-22 13:20	chara.130.target_character_id	130
+2020-12-22 13:20	chara.130.urinate_point	181
+2020-12-22 13:20	chara.171.behavior.behavior_id	"share_blankly"
+2020-12-22 13:20	chara.171.behavior.duration	0
+2020-12-22 13:20	chara.171.behavior.move_final_target	[]
+2020-12-22 13:20	chara.171.behavior.move_target	[]
+2020-12-22 13:20	chara.171.behavior.start_time	"2020-12-22 13:20"
+2020-12-22 13:20	chara.171.hit_point	1670
+2020-12-22 13:20	chara.171.hunger_point	54
+2020-12-22 13:20	chara.171.mana_point	1110
+2020-12-22 13:20	chara.171.position	"中枢/博士办公室"
+2020-12-22 13:20	chara.171.state	0
+2020-12-22 13:20	chara.171.urinate_point	151
+2020-12-22 13:20	chara.3.behavior.behavior_id	"move"
+2020-12-22 13:20	chara.3.behavior.duration	4
+2020-12-22 13:20	chara.3.behavior.move_final_target	["宿舍", "1区", "102"]
+2020-12-22 13:20	chara.3.behavior.move_target	["医疗", "0"]
+2020-12-22 13:20	chara.3.behavior.start_time	"2020-12-22 13:17"
+2020-12-22 13:20	chara.3.hunger_point	53
+2020-12-22 13:20	chara.3.position	"医疗/0"
+2020-12-22 13:20	chara.3.state	1
+2020-12-22 13:20	chara.3.urinate_point	151
+2020-12-22 13:20	chara.56.behavior.behavior_id	"share_blankly"
+2020-12-22 13:20	chara.56.behavior.duration	0
+2020-12-22 13:20	chara.56.behavior.move_final_target	[]
+2020-12-22 13:20	chara.56.behavior.move_target	[]
+2020-12-22 13:20	chara.56.behavior.start_time	"2020-12-22 13:20"
+2020-12-22 13:20	chara.56.hunger_point	37
+2020-12-22 13:20	chara.56.position	"中枢/博士办公室"
+2020-12-22 13:20	chara.56.state	0
+2020-12-22 13:20	chara.56.urinate_point	179
+2020-12-22 13:20	chara.7.behavior.behavior_id	"move"
+2020-12-22 13:20	chara.7.behavior.duration	4
+2020-12-22 13:20	chara.7.behavior.move_final_target	["教", "女洗手间"]
+2020-12-22 13:20	chara.7.behavior.move_target	["医疗", "0"]
+2020-12-22 13:20	chara.7.behavior.start_time	"2020-12-22 13:17"
+2020-12-22 13:20	chara.7.hunger_point	39
+2020-12-22 13:20	chara.7.position	"医疗/0"
+2020-12-22 13:20	chara.7.state	1
+2020-12-22 13:20	chara.7.urinate_point	152
+2020-12-22 13:20	clock	"2020-12-22 13:20"
+2020-12-22 13:20	scene.中枢/0.occupants	null
+2020-12-22 13:20	scene.中枢/博士办公室.occupants	[1, 56, 171]
+2020-12-22 13:20	scene.医疗/0.occupants	[3, 7, 130]
+2020-12-22 13:20	scene.生娱/食堂.occupants	null
+2020-12-22 13:25	chara.0.behavior.start_time	"2020-12-22 13:25"
+2020-12-22 13:25	chara.0.tired_point	41
+2020-12-22 13:25	chara.1.hunger_point	45
+2020-12-22 13:25	chara.1.mana_point	1010
+2020-12-22 13:25	chara.1.tired_point	27
+2020-12-22 13:25	chara.1.urinate_point	182
+2020-12-22 13:25	chara.130.behavior.behavior_id	"share_blankly"
+2020-12-22 13:25	chara.130.behavior.duration	0
+2020-12-22 13:25	chara.130.behavior.move_target	[]
+2020-12-22 13:25	chara.130.behavior.start_time	"2020-12-22 13:25"
+2020-12-22 13:25	chara.130.hunger_point	56
+2020-12-22 13:25	chara.130.position	"中枢/0"
+2020-12-22 13:25	chara.130.state	0
+2020-12-22 13:25	chara.130.urinate_point	185
+2020-12-22 13:25	chara.171.behavior.behavior_id	"chat"
+2020-12-22 13:25	chara.171.behavior.duration	10
+2020-12-22 13:25	chara.171.hunger_point	59
+2020-12-22 13:25	chara.171.mana_point	1050
+2020-12-22 13:25	chara.171.state	101
+2020-12-22 13:25	chara.171.target_character_id	1
+2020-12-22 13:25	chara.171.tired_point	20
+2020-12-22 13:25	chara.171.urinate_point	157
+2020-12-22 13:25	chara.3.behavior.behavior_id	"share_blankly"
+2020-12-22 13:25	chara.3.behavior.duration	0
+2020-12-22 13:25	chara.3.behavior.move_target	[]
+2020-12-22 13:25	chara.3.behavior.start_time	"2020-12-22 13:25"
+2020-12-22 13:25	chara.3.hunger_point	56
+2020-12-22 13:25	chara.3.position	"宿舍/0"
+2020-12-22 13:25	chara.3.state	0
+2020-12-22 13:25	chara.3.urinate_point	154
+2020-12-22 13:25	chara.56.behavior.behavior_id	"chat"
+2020-12-22 13:25	chara.56.behavior.duration	10
+2020-12-22 13:25	chara.56.hunger_point	41
+2020-12-22 13:25	chara.56.mana_point	1080
+2020-12-22 13:25	chara.56.state	101
+2020-12-22 13:25	chara.56.target_character_id	171
+2020-12-22 13:25	chara.56.tired_point	28
+2020-12-22 13:25	chara.56.urinate_point	185
+2020-12-22 13:25	chara.7.behavior.behavior_id	"share_blankly"
+2020-12-22 13:25	chara.7.behavior.duration	0
+2020-12-22 13:25	chara.7.behavior.move_target	[]
+2020-12-22 13:25	chara.7.behavior.start_time	"2020-12-22 13:25"
+2020-12-22 13:25	chara.7.hunger_point	44
+2020-12-22 13:25	chara.7.position	"教/0"
+2020-12-22 13:25	chara.7.state	0
+2020-12-22 13:25	chara.7.urinate_point	155
+2020-12-22 13:25	clock	"2020-12-22 13:25"
+2020-12-22 13:25	scene.中枢/0.occupants	[130]
+2020-12-22 13:25	scene.医疗/0.occupants	null
+2020-12-22 13:25	scene.宿舍/0.occupants	[3]
+2020-12-22 13:25	scene.教/0.occupants	[7]
+2020-12-22 13:30	chara.0.behavior.start_time	"2020-12-22 13:30"
+2020-12-22 13:30	chara.0.tired_point	42
+2020-12-22 13:30	chara.1.behavior.behavior_id	"share_blankly"
+2020-12-22 13:30	chara.1.behavior.duration	0
+2020-12-22 13:30	chara.1.behavior.move_final_target	["制造加工", "仓库"]
+2020-12-22 13:30	chara.1.behavior.start_time	"2020-12-22 13:30"
+2020-12-22 13:30	chara.1.hunger_point	49
+2020-12-22 13:30	chara.1.position	"中枢/0"
+2020-12-22 13:30	chara.1.state	0
+2020-12-22 13:30	chara.1.target_character_id	1
+2020-12-22 13:30	chara.1.urinate_point	185
+2020-12-22 13:30	chara.130.behavior.behavior_id	"chat"
+2020-12-22 13:30	chara.130.behavior.duration	10
+2020-12-22 13:30	chara.130.behavior.move_final_target	[]
+2020-12-22 13:30	chara.130.behavior.start_time	"2020-12-22 13:27"
+2020-12-22 13:30	chara.130.hunger_point	60
+2020-12-22 13:30	chara.130.mana_point	974
+2020-12-22 13:30	chara.130.position	"中枢/博士办公室"
+2020-12-22 13:30	chara.130.state	101
+2020-12-22 13:30	chara.130.target_character_id	56
+2020-12-22 13:30	chara.130.urinate_point	188
+2020-12-22 13:30	chara.171.behavior.behavior_id	"share_blankly"
+2020-12-22 13:30	chara.171.behavior.duration	0
+2020-12-22 13:30	chara.171.behavior.start_time	"2020-12-22 13:30"
+2020-12-22 13:30	chara.171.hunger_point	64
+2020-12-22 13:30	chara.171.state	0
+2020-12-22 13:30	chara.171.tired_point	21
+2020-12-22 13:30	chara.171.urinate_point	162
+2020-12-22 13:30	chara.3.behavior.move_final_target	["中枢", "博士办公室"]
+2020-12-22 13:30	chara.3.behavior.start_time	"2020-12-22 13:30"
+2020-12-22 13:30	chara.3.hunger_point	61
+2020-12-22 13:30	chara.3.position	"宿舍/1区/外走廊"
+2020-12-22 13:30	chara.3.urinate_point	157
+2020-12-22 13:30	chara.56.behavior.behavior_id	"share_blankly"
+2020-12-22 13:30	chara.56.behavior.duration	0
+2020-12-22 13:30	chara.56.behavior.start_time	"2020-12-22 13:30"
+2020-12-22 13:30	chara.56.hunger_point	45
+2020-12-22 13:30	chara.56.mana_point	1050
+2020-12-22 13:30	chara.56.state	0
+2020-12-22 13:30	chara.56.tired_point	29
+2020-12-22 13:30	chara.56.urinate_point	190
+2020-12-22 13:30	chara.7.behavior.behavior_id	"move"
+2020-12-22 13:30	chara.7.behavior.duration	4
+2020-12-22 13:30	chara.7.behavior.move_final_target	["中枢", "博士办公室"]
+2020-12-22 13:30	chara.7.behavior.move_target	["医疗", "0"]
+2020-12-22 13:30	chara.7.behavior.start_time	"2020-12-22 13:29"
+2020-12-22 13:30	chara.7.hunger_point	46
+2020-12-22 13:30	chara.7.position	"医疗/0"
+2020-12-22 13:30	chara.7.state	1
+2020-12-22 13:30	chara.7.urinate_point	159
+2020-12-22 13:30	clock	"2020-12-22 13:30"
+2020-12-22 13:30	scene.中枢/0.occupants	[1]
+2020-12-22 13:30	scene.中枢/博士办公室.occupants	[56, 130, 171]
+2020-12-22 13:30	scene.医疗/0.occupants	[7]
+2020-12-22 13:30	scene.宿舍/0.occupants	null
+2020-12-22 13:30	scene.宿舍/1区/外走廊.occupants	[3]
+2020-12-22 13:30	scene.教/0.occupants	null
+2020-12-22 13:35	chara.0.behavior.start_time	"2020-12-22 13:35"
+2020-12-22 13:35	chara.0.tired_point	43
+2020-12-22 13:35	chara.1.behavior.behavior_id	"move"
+2020-12-22 13:35	chara.1.behavior.duration	4
+2020-12-22 13:35	chara.1.behavior.move_target	["生娱", "0"]
+2020-12-22 13:35	chara.1.behavior.start_time	"2020-12-22 13:34"
+2020-12-22 13:35	chara.1.hunger_point	54
+2020-12-22 13:35	chara.1.position	"生娱/0"
+2020-12-22 13:35	chara.1.state	1
+2020-12-22 13:35	chara.1.urinate_point	189
+2020-12-22 13:35	chara.130.hunger_point	67
+2020-12-22 13:35	chara.130.tired_point	30
+2020-12-22 13:35	chara.130.urinate_point	193
+2020-12-22 13:35	chara.171.behavior.behavior_id	"wait"
+2020-12-22 13:35	chara.171.behavior.duration	10
+2020-12-22 13:35	chara.171.behavior.start_time	"2020-12-22 13:31"
+2020-12-22 13:35	chara.171.hit_point	1640
+2020-12-22 13:35	chara.171.hunger_point	68
+2020-12-22 13:35	chara.171.mana_point	990
+2020-12-22 13:35	chara.171.state	2
+2020-12-22 13:35	chara.171.target_character_id	171
+2020-12-22 13:35	chara.171.urinate_point	165
+2020-12-22 13:35	chara.3.behavior.behavior_id	"move"
+2020-12-22 13:35	chara.3.behavior.duration	4
+2020-12-22 13:35	chara.3.behavior.move_target	["医疗", "0"]
+2020-12-22 13:35	chara.3.behavior.start_time	"2020-12-22 13:33"
+2020-12-22 13:35	chara.3.hunger_point	63
+2020-12-22 13:35	chara.3.position	"医疗/0"
+2020-12-22 13:35	chara.3.state	1
+2020-12-22 13:35	chara.3.urinate_point	161
+2020-12-22 13:35	chara.56.behavior.behavior_id	"stroke"
+2020-12-22 13:35	chara.56.behavior.duration	10
+2020-12-22 13:35	chara.56.behavior.start_time	"2020-12-22 13:31"
+2020-12-22 13:35	chara.56.hit_point	1640
+2020-12-22 13:35	chara.56.hunger_point	49
+2020-12-22 13:35	chara.56.mana_point	990
+2020-12-22 13:35	chara.56.state	103
+2020-12-22 13:35	chara.56.urinate_point	195
+2020-12-22 13:35	chara.7.behavior.move_target	["中枢", "0"]
+2020-12-22 13:35	chara.7.behavior.start_time	"2020-12-22 13:33"
+2020-12-22 13:35	chara.7.hunger_point	50
+2020-12-22 13:35	chara.7.position	"中枢/0"
+2020-12-22 13:35	chara.7.urinate_point	163
+2020-12-22 13:35	clock	"2020-12-22 13:35"
+2020-12-22 13:35	scene.中枢/0.occupants	[7]
+2020-12-22 13:35	scene.医疗/0.occupants	[3]
+2020-12-22 13:35	scene.宿舍/1区/外走廊.occupants	null
+2020-12-22 13:35	scene.生娱/0.occupants	[1]
+2020-12-22 13:40	chara.0.behavior.start_time	"2020-12-22 13:40"
+2020-12-22 13:40	chara.0.tired_point	44
+2020-12-22 13:40	chara.1.behavior.move_target	["疗养庭院", "0"]
+2020-12-22 13:40	chara.1.behavior.start_time	"2020-12-22 13:38"
+2020-12-22 13:40	chara.1.hunger_point	58
+2020-12-22 13:40	chara.1.position	"疗养庭院/0"
+2020-12-22 13:40	chara.1.urinate_point	194
+2020-12-22 13:40	chara.130.behavior.behavior_id	"share_blankly"
+2020-12-22 13:40	chara.130.behavior.duration	0
+2020-12-22 13:40	chara.130.behavior.start_time	"2020-12-22 13:40"
+2020-12-22 13:40	chara.130.hunger_point	71
+2020-12-22 13:40	chara.130.position	"中枢/女士洗手间"
+2020-12-22 13:40	chara.130.sp_flag.pee	true
+2020-12-22 13:40	chara.130.state	0
+2020-12-22 13:40	chara.130.target_character_id	130
+2020-12-22 13:40	chara.130.urinate_point	195
+2020-12-22 13:40	chara.171.hunger_point	72
+2020-12-22 13:40	chara.171.tired_point	22
+2020-12-22 13:40	chara.171.urinate_point	171
+2020-12-22 13:40	chara.3.behavior.move_target	["中枢", "0"]
+2020-12-22 13:40	chara.3.behavior.start_time	"2020-12-22 13:37"
+2020-12-22 13:40	chara.3.hunger_point	68
+2020-12-22 13:40	chara.3.position	"中枢/0"
+2020-12-22 13:40	chara.3.urinate_point	164
+2020-12-22 13:40	chara.56.hunger_point	53
+2020-12-22 13:40	chara.56.tired_point	30
+2020-12-22 13:40	chara.56.urinate_point	199
+2020-12-22 13:40	chara.7.behavior.behavior_id	"share_blankly"
+2020-12-22 13:40	chara.7.behavior.duration	0
+2020-12-22 13:40	chara.7.behavior.move_final_target	["疗养庭院", "女士洗手间"]
+2020-12-22 13:40	chara.7.behavior.move_target	[]
+2020-12-22 13:40	chara.7.behavior.start_time	"2020-12-22 13:40"
+2020-12-22 13:40	chara.7.hunger_point	51
+2020-12-22 13:40	chara.7.position	"中枢/走廊"
+2020-12-22 13:40	chara.7.state	0
+2020-12-22 13:40	chara.7.urinate_point	167
+2020-12-22 13:40	clock	"2020-12-22 13:40"
+2020-12-22 13:40	scene.中枢/0.occupants	[3]
+2020-12-22 13:40	scene.中枢/博士办公室.occupants	[56, 171]
+2020-12-22 13:40	scene.中枢/女士洗手间.occupants	[130]
+2020-12-22 13:40	scene.中枢/走廊.occupants	[7]
+2020-12-22 13:40	scene.医疗/0.occupants	null
+2020-12-22 13:40	scene.生娱/0.occupants	null
+2020-12-22 13:40	scene.疗养庭院/0.occupants	[1]
+2020-12-22 13:45	chara.0.behavior.start_time	"2020-12-22 13:45"
+2020-12-22 13:45	chara.0.tired_point	45
+2020-12-22 13:45	chara.1.behavior.move_target	["动力", "0"]
+2020-12-22 13:45	chara.1.behavior.start_time	"2020-12-22 13:42"
+2020-12-22 13:45	chara.1.hunger_point	61
+2020-12-22 13:45	chara.1.position	"动力/0"
+2020-12-22 13:45	chara.1.urinate_point	198
+2020-12-22 13:45	chara.130.behavior.behavior_id	"move"
+2020-12-22 13:45	chara.130.behavior.duration	4
+2020-12-22 13:45	chara.130.behavior.move_final_target	["宿舍", "1区", "101"]
+2020-12-22 13:45	chara.130.behavior.move_target	["医疗", "0"]
+2020-12-22 13:45	chara.130.behavior.start_time	"2020-12-22 13:43"
+2020-12-22 13:45	chara.130.hunger_point	74
+2020-12-22 13:45	chara.130.position	"医疗/0"
+2020-12-22 13:45	chara.130.sp_flag.pee	false
+2020-12-22 13:45	chara.130.state	1
+2020-12-22 13:45	chara.130.urinate_point	2
+2020-12-22 13:45	chara.171.behavior.behavior_id	"move"
+2020-12-22 13:45	chara.171.behavior.duration	4
+2020-12-22 13:45	chara.171.behavior.move_final_target	["宿舍", "1区", "103"]
+2020-12-22 13:45	chara.171.behavior.move_target	["医疗", "0"]
+2020-12-22 13:45	chara.171.behavior.start_time	"2020-12-22 13:43"
+2020-12-22 13:45	chara.171.hunger_point	76
+2020-12-22 13:45	chara.171.position	"医疗/0"
+2020-12-22 13:45	chara.171.state	1
+2020-12-22 13:45	chara.171.urinate_point	174
+2020-12-22 13:45	chara.3.behavior.behavior_id	"share_blankly"
+2020-12-22 13:45	chara.3.behavior.duration	0
+2020-12-22 13:45	chara.3.behavior.move_final_target	["宿舍", "1区", "102"]
+2020-12-22 13:45	chara.3.behavior.move_target	[]
+2020-12-22 13:45	chara.3.behavior.start_time	"2020-12-22 13:45"
+2020-12-22 13:45	chara.3.hunger_point	70
+2020-12-22 13:45	chara.3.state	0
+2020-12-22 13:45	chara.3.urinate_point	166
+2020-12-22 13:45	chara.56.behavior.behavior_id	"share_blankly"
+2020-12-22 13:45	chara.56.behavior.duration	0
+2020-12-22 13:45	chara.56.behavior.move_final_target	["宿舍", "1区", "103"]
+2020-12-22 13:45	chara.56.behavior.start_time	"2020-12-22 13:45"
+2020-12-22 13:45	chara.56.hunger_point	54
+2020-12-22 13:45	chara.56.position	"中枢/女士洗手间"
+2020-12-22 13:45	chara.56.state	0
+2020-12-22 13:45	chara.56.target_character_id	56
+2020-12-22 13:45	chara.56.urinate_point	1
+2020-12-22 13:45	chara.7.behavior.start_time	"2020-12-22 13:45"
+2020-12-22 13:45	chara.7.hunger_point	55
+2020-12-22 13:45	chara.7.position	"医疗/0"
+2020-12-22 13:45	chara.7.urinate_point	171
+2020-12-22 13:45	clock	"2020-12-22 13:45"
+2020-12-22 13:45	scene.中枢/博士办公室.occupants	null
+2020-12-22 13:45	scene.中枢/女士洗手间.occupants	[56]
+2020-12-22 13:45	scene.中枢/走廊.occupants	null
+2020-12-22 13:45	scene.动力/0.occupants	[1]
+2020-12-22 13:45	scene.医疗/0.occupants	[7, 130, 171]
+2020-12-22 13:45	scene.疗养庭院/0.occupants	null
+2020-12-22 13:50	chara.0.behavior.start_time	"2020-12-22 13:50"
+2020-12-22 13:50	chara.0.tired_point	46
+2020-12-22 13:50	chara.1.behavior.behavior_id	"share_blankly"
+2020-12-22 13:50	chara.1.behavior.duration	0
+2020-12-22 13:50	chara.1.behavior.move_target	[]
+2020-12-22 13:50	chara.1.behavior.start_time	"2020-12-22 13:50"
+2020-12-22 13:50	chara.1.hunger_point	64
+2020-12-22 13:50	chara.1.position	"制造加工/0"
+2020-12-22 13:50	chara.1.state	0
+2020-12-22 13:50	chara.1.urinate_point	202
+2020-12-22 13:50	chara.130.behavior.move_target	["宿舍", "0"]
+2020-12-22 13:50	chara.130.behavior.start_time	"2020-12-22 13:47"
+2020-12-22 13:50	chara.130.hunger_point	78
+2020-12-22 13:50	chara.130.position	"宿舍/0"
+2020-12-22 13:50	chara.130.urinate_point	7
+2020-12-22 13:50	chara.171.behavior.move_target	["宿舍", "0"]
+2020-12-22 13:50	chara.171.behavior.start_time	"2020-12-22 13:47"
+2020-12-22 13:50	chara.171.hunger_point	80
+2020-12-22 13:50	chara.171.position	"宿舍/0"
+2020-12-22 13:50	chara.171.urinate_point	178
+2020-12-22 13:50	chara.3.behavior.behavior_id	"move"
+2020-12-22 13:50	chara.3.behavior.duration	4
+2020-12-22 13:50	chara.3.behavior.move_target	["宿舍", "0"]
+2020-12-22 13:50	chara.3.behavior.start_time	"2020-12-22 13:49"
+2020-12-22 13:50	chara.3.hunger_point	73
+2020-12-22 13:50	chara.3.position	"宿舍/0"
+2020-12-22 13:50	chara.3.state	1
+2020-12-22 13:50	chara.3.urinate_point	169
+2020-12-22 13:50	chara.56.behavior.behavior_id	"move"
+2020-12-22 13:50	chara.56.behavior.duration	4
+2020-12-22 13:50	chara.56.behavior.move_target	["医疗", "0"]
+2020-12-22 13:50	chara.56.behavior.start_time	"2020-12-22 13:47"
+2020-12-22 13:50	chara.56.hunger_point	56
+2020-12-22 13:50	chara.56.position	"医疗/0"
+2020-12-22 13:50	chara.56.state	1
+2020-12-22 13:50	chara.56.urinate_point	3
+2020-12-22 13:50	chara.7.behavior.behavior_id	"move"
+2020-12-22 13:50	chara.7.behavior.duration	4
+2020-12-22 13:50	chara.7.behavior.move_target	["疗养庭院", "0"]
+2020-12-22 13:50	chara.7.behavior.start_time	"2020-12-22 13:49"
+2020-12-22 13:50	chara.7.hunger_point	58
+2020-12-22 13:50	chara.7.position	"疗养庭院/0"
+2020-12-22 13:50	chara.7.state	1
+2020-12-22 13:50	chara.7.urinate_point	176
+2020-12-22 13:50	clock	"2020-12-22 13:50"
+2020-12-22 13:50	scene.中枢/0.occupants	null
+2020-12-22 13:50	scene.中枢/女士洗手间.occupants	null
+2020-12-22 13:50	scene.制造加工/0.occupants	[1]
+2020-12-22 13:50	scene.动力/0.occupants	null
+2020-12-22 13:50	scene.医疗/0.occupants	[56]
+2020-12-22 13:50	scene.宿舍/0.occupants	[3, 130, 171]
+2020-12-22 13:50	scene.疗养庭院/0.occupants	[7]
+2020-12-22 13:55	chara.0.behavior.start_time	"2020-12-22 13:55"
+2020-12-22 13:55	chara.0.tired_point	47
+2020-12-22 13:55	chara.1.behavior.move_final_target	[]
+2020-12-22 13:55	chara.1.behavior.start_time	"2020-12-22 13:55"
+2020-12-22 13:55	chara.1.hunger_point	65
+2020-12-22 13:55	chara.1.position	"制造加工/女士洗手间"
+2020-12-22 13:55	chara.1.sp_flag.pee	true
+2020-12-22 13:55	chara.1.urinate_point	204
+2020-12-22 13:55	chara.130.behavior.behavior_id	"share_blankly"
+2020-12-22 13:55	chara.130.behavior.duration	0
+2020-12-22 13:55	chara.130.behavior.move_final_target	[]
+2020-12-22 13:55	chara.130.behavior.move_target	[]
+2020-12-22 13:55	chara.130.behavior.start_time	"2020-12-22 13:55"
+2020-12-22 13:55	chara.130.hunger_point	80
+2020-12-22 13:55	chara.130.position	"宿舍/1区/101"
+2020-12-22 13:55	chara.130.state	0
+2020-12-22 13:55	chara.130.urinate_point	10
+2020-12-22 13:55	chara.171.behavior.behavior_id	"share_blankly"
+2020-12-22 13:55	chara.171.behavior.duration	0
+2020-12-22 13:55	chara.171.behavior.move_final_target	[]
+2020-12-22 13:55	chara.171.behavior.move_target	[]
+2020-12-22 13:55	chara.171.behavior.start_time	"2020-12-22 13:55"
+2020-12-22 13:55	chara.171.hunger_point	83
+2020-12-22 13:55	chara.171.position	"宿舍/1区/103"
+2020-12-22 13:55	chara.171.state	0
+2020-12-22 13:55	chara.171.urinate_point	181
+2020-12-22 13:55	chara.3.behavior.behavior_id	"share_blankly"
+2020-12-22 13:55	chara.3.behavior.duration	0
+2020-12-22 13:55	chara.3.behavior.move_target	[]
+2020-12-22 13:55	chara.3.behavior.start_time	"2020-12-22 13:55"
+2020-12-22 13:55	chara.3.hunger_point	77
+2020-12-22 13:55	chara.3.position	"宿舍/1区/0"
+2020-12-22 13:55	chara.3.state	0
+2020-12-22 13:55	chara.3.urinate_point	173
+2020-12-22 13:55	chara.56.behavior.behavior_id	"share_blankly"
+2020-12-22 13:55	chara.56.behavior.duration	0
+2020-12-22 13:55	chara.56.behavior.move_target	[]
+2020-12-22 13:55	chara.56.behavior.start_time	"2020-12-22 13:55"
+2020-12-22 13:55	chara.56.hunger_point	60
+2020-12-22 13:55	chara.56.position	"宿舍/0"
+2020-12-22 13:55	chara.56.state	0
+2020-12-22 13:55	chara.56.urinate_point	8
+2020-12-22 13:55	chara.7.behavior.behavior_id	"share_blankly"
+2020-12-22 13:55	chara.7.behavior.duration	0
+2020-12-22 13:55	chara.7.behavior.move_final_target	[]
+2020-12-22 13:55	chara.7.behavior.move_target	[]
+2020-12-22 13:55	chara.7.behavior.start_time	"2020-12-22 13:55"
+2020-12-22 13:55	chara.7.hunger_point	61
+2020-12-22 13:55	chara.7.position	"疗养庭院/女士洗手间"
+2020-12-22 13:55	chara.7.state	0
+2020-12-22 13:55	chara.7.urinate_point	180
+2020-12-22 13:55	clock	"2020-12-22 13:55"
+2020-12-22 13:55	scene.制造加工/0.occupants	null
+2020-12-22 13:55	scene.制造加工/女士洗手间.occupants	[1]
+2020-12-22 13:55	scene.医疗/0.occupants	null
+2020-12-22 13:55	scene.宿舍/0.occupants	[56]
+2020-12-22 13:55	scene.宿舍/1区/0.occupants	[3]
+2020-12-22 13:55	scene.宿舍/1区/101.occupants	[130]
+2020-12-22 13:55	scene.宿舍/1区/103.occupants	[171]
+2020-12-22 13:55	scene.疗养庭院/0.occupants	null
+2020-12-22 13:55	scene.疗养庭院/女士洗手间.occupants	[7]
+2020-12-22 14:00	chara.0.behavior.start_time	"2020-12-22 14:00"
+2020-12-22 14:00	chara.0.tired_point	48
+2020-12-22 14:00	chara.1.behavior.behavior_id	"move"
+2020-12-22 14:00	chara.1.behavior.duration	4
+2020-12-22 14:00	chara.1.behavior.move_final_target	["宿舍", "1区", "101"]
+2020-12-22 14:00	chara.1.behavior.move_target	["动力", "0"]
+2020-12-22 14:00	chara.1.behavior.start_time	"2020-12-22 13:58"
+2020-12-22 14:00	chara.1.hunger_point	69
+2020-12-22 14:00	chara.1.position	"动力/0"
+2020-12-22 14:00	chara.1.sp_flag.pee	false
+2020-12-22 14:00	chara.1.state	1
+2020-12-22 14:00	chara.1.urinate_point	2
+2020-12-22 14:00	chara.130.behavior.behavior_id	"move"
+2020-12-22 14:00	chara.130.behavior.duration	4
+2020-12-22 14:00	chara.130.behavior.move_final_target	["中枢", "博士办公室"]
+2020-12-22 14:00	chara.130.behavior.move_target	["医疗", "0"]
+2020-12-22 14:00	chara.130.behavior.start_time	"2020-12-22 13:59"
+2020-12-22 14:00	chara.130.hunger_point	81
+2020-12-22 14:00	chara.130.position	"医疗/0"
+2020-12-22 14:00	chara.130.state	1
+2020-12-22 14:00	chara.130.urinate_point	13
+2020-12-22 14:00	chara.171.behavior.move_final_target	["中枢", "博士办公室"]
+2020-12-22 14:00	chara.171.behavior.start_time	"2020-12-22 14:00"
+2020-12-22 14:00	chara.171.hunger_point	86
+2020-12-22 14:00	chara.171.position	"宿舍/0"
+2020-12-22 14:00	chara.171.urinate_point	184
+2020-12-22 14:00	chara.3.behavior.behavior_id	"wait"
+2020-12-22 14:00	chara.3.behavior.duration	10
+2020-12-22 14:00	chara.3.behavior.move_final_target	[]
+2020-12-22 14:00	chara.3.behavior.start_time	"2020-12-22 13:57"
+2020-12-22 14:00	chara.3.hunger_point	81
+2020-12-22 14:00	chara.3.position	"宿舍/1区/102"
+2020-12-22 14:00	chara.3.state	2
+2020-12-22 14:00	chara.3.urinate_point	175
+2020-12-22 14:00	chara.56.behavior.move_final_target	["中枢", "博士办公室"]
+2020-12-22 14:00	chara.56.behavior.start_time	"2020-12-22 14:00"
+2020-12-22 14:00	chara.56.hunger_point	64
+2020-12-22 14:00	chara.56.position	"宿舍/1区/外走廊"
+2020-12-22 14:00	chara.56.urinate_point	13
+2020-12-22 14:00	chara.7.behavior.behavior_id	"move"
+2020-12-22 14:00	chara.7.behavior.duration	4
+2020-12-22 14:00	chara.7.behavior.move_final_target	["工程", "运维部"]
+2020-12-22 14:00	chara.7.behavior.move_target	["动力", "0"]
+2020-12-22 14:00	chara.7.behavior.start_time	"2020-12-22 13:57"
+2020-12-22 14:00	chara.7.hunger_point	63
+2020-12-22 14:00	chara.7.position	"动力/0"
+2020-12-22 14:00	chara.7.state	1
+2020-12-22 14:00	chara.7.urinate_point	183
+2020-12-22 14:00	clock	"2020-12-22 14:00"
+2020-12-22 14:00	scene.制造加工/女士洗手间.occupants	null
+2020-12-22 14:00	scene.动力/0.occupants	[1, 7]
+2020-12-22 14:00	scene.医疗/0.occupants	[130]
+2020-12-22 14:00	scene.宿舍/0.occupants	[171]
+2020-12-22 14:00	scene.宿舍/1区/0.occupants	null
+2020-12-22 14:00	scene.宿舍/1区/101.occupants	null
+2020-12-22 14:00	scene.宿舍/1区/102.occupants	[3]
+2020-12-22 14:00	scene.宿舍/1区/103.occupants	null
+2020-12-22 14:00	scene.宿舍/1区/外走廊.occupants	[56]
+2020-12-22 14:00	scene.疗养庭院/女士洗手间.occupants	null
+2020-12-22 14:05	chara.0.behavior.start_time	"2020-12-22 14:05"
+2020-12-22 14:05	chara.0.tired_point	49
+2020-12-22 14:05	chara.1.behavior.move_target	["疗养庭院", "0"]
+2020-12-22 14:05	chara.1.behavior.start_time	"2020-12-22 14:02"
+2020-12-22 14:05	chara.1.hunger_point	74
+2020-12-22 14:05	chara.1.position	"疗养庭院/0"
+2020-12-22 14:05	chara.1.urinate_point	6
+2020-12-22 14:05	chara.130.behavior.move_target	["中枢", "0"]
+2020-12-22 14:05	chara.130.behavior.start_time	"2020-12-22 14:03"
+2020-12-22 14:05	chara.130.hunger_point	84
+2020-12-22 14:05	chara.130.position	"中枢/0"
+2020-12-22 14:05	chara.130.urinate_point	18
+2020-12-22 14:05	chara.171.behavior.behavior_id	"move"
+2020-12-22 14:05	chara.171.behavior.duration	4
+2020-12-22 14:05	chara.171.behavior.move_target	["中枢", "0"]
+2020-12-22 14:05	chara.171.behavior.start_time	"2020-12-22 14:04"
+2020-12-22 14:05	chara.171.hunger_point	90
+2020-12-22 14:05	chara.171.position	"中枢/0"
+2020-12-22 14:05	chara.171.state	1
+2020-12-22 14:05	chara.171.urinate_point	188
+2020-12-22 14:05	chara.3.hunger_point	87
+2020-12-22 14:05	chara.3.tired_point	20
+2020-12-22 14:05	chara.3.urinate_point	181
+2020-12-22 14:05	chara.56.behavior.behavior_id	"move"
+2020-12-22 14:05	chara.56.behavior.duration	4
+2020-12-22 14:05	chara.56.behavior.move_target	["医疗", "0"]
+2020-12-22 14:05	chara.56.behavior.start_time	"2020-12-22 14:03"
+2020-12-22 14:05	chara.56.hunger_point	68
+2020-12-22 14:05	chara.56.position	"医疗/0"
+2020-12-22 14:05	chara.56.state	1
+2020-12-22 14:05	chara.56.urinate_point	17
+2020-12-22 14:05	chara.7.behavior.behavior_id	"share_blankly"
+2020-12-22 14:05	chara.7.behavior.duration	0
+2020-12-22 14:05	chara.7.behavior.move_target	[]
+2020-12-22 14:05	chara.7.behavior.start_time	"2020-12-22 14:05"
+2020-12-22 14:05	chara.7.hunger_point	66
+2020-12-22 14:05	chara.7.position	"制造加工/0"
+2020-12-22 14:05	chara.7.state	0
+2020-12-22 14:05	chara.7.urinate_point	187
+2020-12-22 14:05	clock	"2020-12-22 14:05"
+2020-12-22 14:05	scene.中枢/0.occupants	[130, 171]
+2020-12-22 14:05	scene.制造加工/0.occupants	[7]
+2020-12-22 14:05	scene.动力/0.occupants	null
+2020-12-22 14:05	scene.医疗/0.occupants	[56]
+2020-12-22 14:05	scene.宿舍/0.occupants	null
+2020-12-22 14:05	scene.宿舍/1区/外走廊.occupants	null
+2020-12-22 14:05	scene.疗养庭院/0.occupants	[1]
+2020-12-22 14:10	chara.0.behavior.start_time	"2020-12-22 14:10"
+2020-12-22 14:10	chara.0.tired_point	50
+2020-12-22 14:10	chara.1.behavior.behavior_id	"share_blankly"
+2020-12-22 14:10	chara.1.behavior.duration	0
+2020-12-22 14:10	chara.1.behavior.move_target	[]
+2020-12-22 14:10	chara.1.behavior.start_time	"2020-12-22 14:10"
+2020-12-22 14:10	chara.1.hunger_point	77
+2020-12-22 14:10	chara.1.position	"生娱/0"
+2020-12-22 14:10	chara.1.state	0
+2020-12-22 14:10	chara.1.urinate_point	11
+2020-12-22 14:10	chara.130.behavior.behavior_id	"share_blankly"
+2020-12-22 14:10	chara.130.behavior.duration	0
+2020-12-22 14:10	chara.130.behavior.move_final_target	["训练", "木桩房"]
+2020-12-22 14:10	chara.130.behavior.move_target	[]
+2020-12-22 14:10	chara.130.behavior.start_time	"2020-12-22 14:10"
+2020-12-22 14:10	chara.130.hunger_point	87
+2020-12-22 14:10	chara.130.position	"中枢/走廊"
+2020-12-22 14:10	chara.130.state	0
+2020-12-22 14:10	chara.130.urinate_point	22
+2020-12-22 14:10	chara.171.behavior.behavior_id	"share_blankly"
+2020-12-22 14:10	chara.171.behavior.duration	0
+2020-12-22 14:10	chara.171.behavior.move_final_target	[]
+2020-12-22 14:10	chara.171.behavior.move_target	[]
+2020-12-22 14:10	chara.171.behavior.start_time	"2020-12-22 14:10"
+2020-12-22 14:10	chara.171.hunger_point	94
+2020-12-22 14:10	chara.171.position	"中枢/博士办公室"
+2020-12-22 14:10	chara.171.state	0
+2020-12-22 14:10	chara.171.urinate_point	192
+2020-12-22 14:10	chara.3.behavior.behavior_id	"move"
+2020-12-22 14:10	chara.3.behavior.duration	2
+2020-12-22 14:10	chara.3.behavior.move_final_target	["医疗", "急诊室"]
+2020-12-22 14:10	chara.3.behavior.move_target	["宿舍", "0"]
+2020-12-22 14:10	chara.3.behavior.start_time	"2020-12-22 14:09"
+2020-12-22 14:10	chara.3.hunger_point	89
+2020-12-22 14:10	chara.3.position	"宿舍/0"
+2020-12-22 14:10	chara.3.state	1
+2020-12-22 14:10	chara.3.urinate_point	185
+2020-12-22 14:10	chara.56.behavior.move_target	["中枢", "0"]
+2020-12-22 14:10	chara.56.behavior.start_time	"2020-12-22 14:07"
+2020-12-22 14:10	chara.56.hunger_point	72
+2020-12-22 14:10	chara.56.position	"中枢/0"
+2020-12-22 14:10	chara.56.urinate_point	20
+2020-12-22 14:10	chara.7.behavior.start_time	"2020-12-22 14:10"
+2020-12-22 14:10	chara.7.hunger_point	70
+2020-12-22 14:10	chara.7.position	"工程/走廊"
+2020-12-22 14:10	chara.7.urinate_point	192
+2020-12-22 14:10	clock	"2020-12-22 14:10"
+2020-12-22 14:10	scene.中枢/0.occupants	[56]
+2020-12-22 14:10	scene.中枢/博士办公室.occupants	[171]
+2020-12-22 14:10	scene.中枢/走廊.occupants	[130]
+2020-12-22 14:10	scene.制造加工/0.occupants	null
+2020-12-22 14:10	scene.医疗/0.occupants	null
+2020-12-22 14:10	scene.宿舍/0.occupants	[3]
+2020-12-22 14:10	scene.宿舍/1区/102.occupants	null
+2020-12-22 14:10	scene.工程/走廊.occupants	[7]
+2020-12-22 14:10	scene.生娱/0.occupants	[1]
+2020-12-22 14:10	scene.疗养庭院/0.occupants	null
+2020-12-22 14:15	chara.0.behavior.start_time	"2020-12-22 14:15"
+2020-12-22 14:15	chara.0.tired_point	51
+2020-12-22 14:15	chara.1.behavior.behavior_id	"move"
+2020-12-22 14:15	chara.1.behavior.duration	2
+2020-12-22 14:15	chara.1.behavior.move_target	["宿舍", "1区", "0"]
+2020-12-22 14:15	chara.1.behavior.start_time	"2020-12-22 14:14"
+2020-12-22 14:15	chara.1.hunger_point	81
+2020-12-22 14:15	chara.1.position	"宿舍/1区/0"
+2020-12-22 14:15	chara.1.state	1
+2020-12-22 14:15	chara.1.urinate_point	15
+2020-12-22 14:15	chara.130.behavior.start_time	"2020-12-22 14:15"
+2020-12-22 14:15	chara.130.hunger_point	92
+2020-12-22 14:15	chara.130.position	"医疗/0"
+2020-12-22 14:15	chara.130.urinate_point	26
+2020-12-22 14:15	chara.171.behavior.behavior_id	"move"
+2020-12-22 14:15	chara.171.behavior.duration	4
+2020-12-22 14:15	chara.171.behavior.move_final_target	["医疗", "急诊室"]
+2020-12-22 14:15	chara.171.behavior.move_target	["医疗", "0"]
+2020-12-22 14:15	chara.171.behavior.start_time	"2020-12-22 14:12"
+2020-12-22 14:15	chara.171.hunger_point	97
+2020-12-22 14:15	chara.171.position	"医疗/0"
+2020-12-22 14:15	chara.171.state	1
+2020-12-22 14:15	chara.171.urinate_point	196
+2020-12-22 14:15	chara.3.behavior.behavior_id	"share_blankly"
+2020-12-22 14:15	chara.3.behavior.duration	0
+2020-12-22 14:15	chara.3.behavior.move_target	[]
+2020-12-22 14:15	chara.3.behavior.start_time	"2020-12-22 14:15"
+2020-12-22 14:15	chara.3.hunger_point	92
+2020-12-22 14:15	chara.3.position	"医疗/0"
+2020-12-22 14:15	chara.3.state	0
+2020-12-22 14:15	chara.3.urinate_point	190
+2020-12-22 14:15	chara.56.behavior.behavior_id	"share_blankly"
+2020-12-22 14:15	chara.56.behavior.duration	0
+2020-12-22 14:15	chara.56.behavior.move_final_target	["文职", "办公室"]
+2020-12-22 14:15	chara.56.behavior.move_target	[]
+2020-12-22 14:15	chara.56.behavior.start_time	"2020-12-22 14:15"
+2020-12-22 14:15	chara.56.hunger_point	76
+2020-12-22 14:15	chara.56.state	0
+2020-12-22 14:15	chara.56.urinate_point	23
+2020-12-22 14:15	chara.7.behavior.move_final_target	["宿舍", "1区", "102"]
+2020-12-22 14:15	chara.7.behavior.start_time	"2020-12-22 14:15"
+2020-12-22 14:15	chara.7.hunger_point	72
+2020-12-22 14:15	chara.7.position	"工程/女士洗手间"
+2020-12-22 14:15	chara.7.urinate_point	1
+2020-12-22 14:15	clock	"2020-12-22 14:15"
+2020-12-22 14:15	scene.中枢/博士办公室.occupants	null
+2020-12-22 14:15	scene.中枢/走廊.occupants	null
+2020-12-22 14:15	scene.医疗/0.occupants	[3, 130, 171]
+2020-12-22 14:15	scene.宿舍/0.occupants	null
+2020-12-22 14:15	scene.宿舍/1区/0.occupants	[1]
+2020-12-22 14:15	scene.工程/女士洗手间.occupants	[7]
+2020-12-22 14:15	scene.工程/走廊.occupants	null
+2020-12-22 14:15	scene.生娱/0.occupants	null
+2020-12-22 14:20	chara.0.behavior.start_time	"2020-12-22 14:20"
+2020-12-22 14:20	chara.0.tired_point	52
+2020-12-22 14:20	chara.1.behavior.behavior_id	"share_blankly"
+2020-12-22 14:20	chara.1.behavior.duration	0
+2020-12-22 14:20	chara.1.behavior.move_final_target	["生娱", "大水坑体验屋"]
+2020-12-22 14:20	chara.1.behavior.move_target	[]
+2020-12-22 14:20	chara.1.behavior.start_time	"2020-12-22 14:20"
+2020-12-22 14:20	chara.1.hunger_point	82
+2020-12-22 14:20	chara.1.state	0
+2020-12-22 14:20	chara.1.urinate_point	19
+2020-12-22 14:20	chara.130.behavior.behavior_id	"move"
+2020-12-22 14:20	chara.130.behavior.duration	4
+2020-12-22 14:20	chara.130.behavior.move_target	["大浴场", "0"]
+2020-12-22 14:20	chara.130.behavior.start_time	"2020-12-22 14:19"
+2020-12-22 14:20	chara.130.hunger_point	98
+2020-12-22 14:20	chara.130.position	"大浴场/0"
+2020-12-22 14:20	chara.130.state	1
+2020-12-22 14:20	chara.130.urinate_point	31
+2020-12-22 14:20	chara.171.behavior.behavior_id	"share_blankly"
+2020-12-22 14:20	chara.171.behavior.duration	0
+2020-12-22 14:20	chara.171.behavior.move_final_target	["医疗", "女士洗手间"]
+2020-12-22 14:20	chara.171.behavior.move_target	[]
+2020-12-22 14:20	chara.171.behavior.start_time	"2020-12-22 14:20"
+2020-12-22 14:20	chara.171.hunger_point	100
+2020-12-22 14:20	chara.171.position	"医疗/外走廊"
+2020-12-22 14:20	chara.171.sp_flag.pee	true
+2020-12-22 14:20	chara.171.state	0
+2020-12-22 14:20	chara.171.urinate_point	199
+2020-12-22 14:20	chara.3.behavior.move_final_target	[]
+2020-12-22 14:20	chara.3.behavior.start_time	"2020-12-22 14:20"
+2020-12-22 14:20	chara.3.hunger_point	96
+2020-12-22 14:20	chara.3.position	"医疗/门诊室"
+2020-12-22 14:20	chara.3.urinate_point	191
+2020-12-22 14:20	chara.56.behavior.behavior_id	"move"
+2020-12-22 14:20	chara.56.behavior.duration	4
+2020-12-22 14:20	chara.56.behavior.move_target	["生娱", "0"]
+2020-12-22 14:20	chara.56.behavior.start_time	"2020-12-22 14:19"
+2020-12-22 14:20	chara.56.hunger_point	80
+2020-12-22 14:20	chara.56.position	"生娱/0"
+2020-12-22 14:20	chara.56.state	1
+2020-12-22 14:20	chara.56.urinate_point	27
+2020-12-22 14:20	chara.7.behavior.behavior_id	"move"
+2020-12-22 14:20	chara.7.behavior.duration	4
+2020-12-22 14:20	chara.7.behavior.move_target	["制造加工", "0"]
+2020-12-22 14:20	chara.7.behavior.start_time	"2020-12-22 14:17"
+2020-12-22 14:20	chara.7.hunger_point	75
+2020-12-22 14:20	chara.7.position	"制造加工/0"
+2020-12-22 14:20	chara.7.state	1
+2020-12-22 14:20	chara.7.urinate_point	5
+2020-12-22 14:20	clock	"2020-12-22 14:20"
+2020-12-22 14:20	scene.中枢/0.occupants	null
+2020-12-22 14:20	scene.制造加工/0.occupants	[7]
+2020-12-22 14:20	scene.医疗/0.occupants	null
+2020-12-22 14:20	scene.医疗/外走廊.occupants	[171]
+2020-12-22 14:20	scene.医疗/门诊室.occupants	[3]
+2020-12-22 14:20	scene.大浴场/0.occupants	[130]
+2020-12-22 14:20	scene.工程/女士洗手间.occupants	null
+2020-12-22 14:20	scene.生娱/0.occupants	[56]
+2020-12-22 14:25	chara.0.behavior.start_time	"2020-12-22 14:25"
+2020-12-22 14:25	chara.0.tired_point	53
+2020-12-22 14:25	chara.1.behavior.behavior_id	"move"
+2020-12-22 14:25	chara.1.behavior.duration	4
+2020-12-22 14:25	chara.1.behavior.move_target	["生娱", "0"]
+2020-12-22 14:25	chara.1.behavior.start_time	"2020-12-22 14:22"
+2020-12-22 14:25	chara.1.hunger_point	85
+2020-12-22 14:25	chara.1.position	"生娱/0"
+2020-12-22 14:25	chara.1.state	1
+2020-12-22 14:25	chara.1.urinate_point	23
+2020-12-22 14:25	chara.130.behavior.move_target	["训练", "0"]
+2020-12-22 14:25	chara.130.behavior.start_time	"2020-12-22 14:23"
+2020-12-22 14:25	chara.130.hunger_point	101
+2020-12-22 14:25	chara.130.position	"训练/0"
+2020-12-22 14:25	chara.130.urinate_point	35
+2020-12-22 14:25	chara.171.behavior.behavior_id	"move"
+2020-12-22 14:25	chara.171.behavior.duration	4
+2020-12-22 14:25	chara.171.behavior.move_final_target	["宿舍", "1区", "103"]
+2020-12-22 14:25	chara.171.behavior.move_target	["宿舍", "0"]
+2020-12-22 14:25	chara.171.behavior.start_time	"2020-12-22 14:24"
+2020-12-22 14:25	chara.171.hunger_point	101
+2020-12-22 14:25	chara.171.position	"宿舍/0"
+2020-12-22 14:25	chara.171.sp_flag.pee	false
+2020-12-22 14:25	chara.171.state	1
+2020-12-22 14:25	chara.171.urinate_point	1
+2020-12-22 14:25	chara.3.behavior.start_time	"2020-12-22 14:25"
+2020-12-22 14:25	chara.3.hunger_point	97
+2020-12-22 14:25	chara.3.position	"医疗/女士洗手间"
+2020-12-22 14:25	chara.3.sp_flag.pee	true
+2020-12-22 14:25	chara.3.urinate_point	194
+2020-12-22 14:25	chara.56.behavior.move_target	["疗养庭院", "0"]
+2020-12-22 14:25	chara.56.behavior.start_time	"2020-12-22 14:23"
+2020-12-22 14:25	chara.56.hunger_point	84
+2020-12-22 14:25	chara.56.position	"疗养庭院/0"
+2020-12-22 14:25	chara.56.urinate_point	32
+2020-12-22 14:25	chara.7.behavior.behavior_id	"share_blankly"
+2020-12-22 14:25	chara.7.behavior.duration	0
+2020-12-22 14:25	chara.7.behavior.move_target	[]
+2020-12-22 14:25	chara.7.behavior.start_time	"2020-12-22 14:25"
+2020-12-22 14:25	chara.7.hunger_point	80
+2020-12-22 14:25	chara.7.position	"动力/0"
+2020-12-22 14:25	chara.7.state	0
+2020-12-22 14:25	chara.7.urinate_point	9
+2020-12-22 14:25	clock	"2020-12-22 14:25"
+2020-12-22 14:25	scene.制造加工/0.occupants	null
+2020-12-22 14:25	scene.动力/0.occupants	[7]
+2020-12-22 14:25	scene.医疗/外走廊.occupants	null
+2020-12-22 14:25	scene.医疗/女士洗手间.occupants	[3]
+2020-12-22 14:25	scene.医疗/门诊室.occupants	null
+2020-12-22 14:25	scene.大浴场/0.occupants	null
+2020-12-22 14:25	scene.宿舍/0.occupants	[171]
+2020-12-22 14:25	scene.宿舍/1区/0.occupants	null
+2020-12-22 14:25	scene.生娱/0.occupants	[1]
+2020-12-22 14:25	scene.疗养庭院/0.occupants	[56]
+2020-12-22 14:25	scene.训练/0.occupants	[130]
+2020-12-22 14:30	chara.0.behavior.start_time	"2020-12-22 14:30"
+2020-12-22 14:30	chara.0.tired_point	54
+2020-12-22 14:30	chara.1.behavior.behavior_id	"play_water"
+2020-12-22 14:30	chara.1.behavior.duration	60
+2020-12-22 14:30	chara.1.behavior.move_final_target	[]
+2020-12-22 14:30	chara.1.behavior.move_target	[]
+2020-12-22 14:30	chara.1.behavior.start_time	"2020-12-22 14:29"
+2020-12-22 14:30	chara.1.hit_point	1190
+2020-12-22 14:30	chara.1.hunger_point	88
+2020-12-22 14:30	chara.1.mana_point	650
+2020-12-22 14:30	chara.1.position	"生娱/大水坑体验屋"
+2020-12-22 14:30	chara.1.state	155
+2020-12-22 14:30	chara.1.urinate_point	26
+2020-12-22 14:30	chara.130.behavior.behavior_id	"training"
+2020-12-22 14:30	chara.130.behavior.duration	120
+2020-12-22 14:30	chara.130.behavior.move_final_target	[]
+2020-12-22 14:30	chara.130.behavior.move_target	[]
+2020-12-22 14:30	chara.130.behavior.start_time	"2020-12-22 14:29"
+2020-12-22 14:30	chara.130.hit_point	1
+2020-12-22 14:30	chara.130.hunger_point	106
+2020-12-22 14:30	chara.130.mana_point	0
+2020-12-22 14:30	chara.130.position	"训练/木桩房"
+2020-12-22 14:30	chara.130.sp_flag.tired	true
+2020-12-22 14:30	chara.130.state	205
+2020-12-22 14:30	chara.130.urinate_point	37
+2020-12-22 14:30	chara.171.behavior.behavior_id	"share_blankly"
+2020-12-22 14:30	chara.171.behavior.duration	0
+2020-12-22 14:30	chara.171.behavior.move_target	[]
+2020-12-22 14:30	chara.171.behavior.start_time	"2020-12-22 14:30"
+2020-12-22 14:30	chara.171.hunger_point	105
+2020-12-22 14:30	chara.171.position	"宿舍/1区/0"
+2020-12-22 14:30	chara.171.state	0
+2020-12-22 14:30	chara.171.urinate_point	6
+2020-12-22 14:30	chara.3.behavior.behavior_id	"move"
+2020-12-22 14:30	chara.3.behavior.duration	4
+2020-12-22 14:30	chara.3.behavior.move_final_target	["宿舍", "1区", "102"]
+2020-12-22 14:30	chara.3.behavior.move_target	["宿舍", "0"]
+2020-12-22 14:30	chara.3.behavior.start_time	"2020-12-22 14:28"
+2020-12-22 14:30	chara.3.hunger_point	99
+2020-12-22 14:30	chara.3.position	"宿舍/0"
+2020-12-22 14:30	chara.3.sp_flag.pee	false
+2020-12-22 14:30	chara.3.state	1
+2020-12-22 14:30	chara.3.urinate_point	5
+2020-12-22 14:30	chara.56.behavior.move_target	["文职", "0"]
+2020-12-22 14:30	chara.56.behavior.start_time	"2020-12-22 14:27"
+2020-12-22 14:30	chara.56.hunger_point	89
+2020-12-22 14:30	chara.56.position	"文职/0"
+2020-12-22 14:30	chara.56.urinate_point	37
+2020-12-22 14:30	chara.7.behavior.behavior_id	"move"
+2020-12-22 14:30	chara.7.behavior.duration	4
+2020-12-22 14:30	chara.7.behavior.move_target	["生娱", "0"]
+2020-12-22 14:30	chara.7.behavior.start_time	"2020-12-22 14:29"
+2020-12-22 14:30	chara.7.hunger_point	85
+2020-12-22 14:30	chara.7.position	"生娱/0"
+2020-12-22 14:30	chara.7.state	1
+2020-12-22 14:30	chara.7.urinate_point	13
+2020-12-22 14:30	clock	"2020-12-22 14:30"
+2020-12-22 14:30	scene.动力/0.occupants	null
+2020-12-22 14:30	scene.医疗/女士洗手间.occupants	null
+2020-12-22 14:30	scene.宿舍/0.occupants	[3]
+2020-12-22 14:30	scene.宿舍/1区/0.occupants	[171]
+2020-12-22 14:30	scene.文职/0.occupants	[56]
+2020-12-22 14:30	scene.生娱/0.occupants	[7]
+2020-12-22 14:30	scene.生娱/大水坑体验屋.occupants	[1]
+2020-12-22 14:30	scene.疗养庭院/0.occupants	null
+2020-12-22 14:30	scene.训练/0.occupants	null
+2020-12-22 14:30	scene.训练/木桩房.occupants	[130]
+2020-12-22 14:35	chara.0.behavior.start_time	"2020-12-22 14:35"
+2020-12-22 14:35	chara.0.tired_point	55
+2020-12-22 14:35	chara.1.hunger_point	96
+2020-12-22 14:35	chara.1.tired_point	28
+2020-12-22 14:35	chara.1.urinate_point	30
+2020-12-22 14:35	chara.130.hunger_point	129
+2020-12-22 14:35	chara.130.tired_point	31
+2020-12-22 14:35	chara.130.urinate_point	43
+2020-12-22 14:35	chara.171.behavior.behavior_id	"move"
+2020-12-22 14:35	chara.171.behavior.duration	2
+2020-12-22 14:35	chara.171.behavior.move_final_target	["医疗", "急诊室"]
+2020-12-22 14:35	chara.171.behavior.move_target	["宿舍", "0"]
+2020-12-22 14:35	chara.171.behavior.start_time	"2020-12-22 14:34"
+2020-12-22 14:35	chara.171.hunger_point	108
+2020-12-22 14:35	chara.171.position	"宿舍/0"
+2020-12-22 14:35	chara.171.state	1
+2020-12-22 14:35	chara.171.urinate_point	9
+2020-12-22 14:35	chara.3.behavior.behavior_id	"share_blankly"
+2020-12-22 14:35	chara.3.behavior.duration	0
+2020-12-22 14:35	chara.3.behavior.move_target	[]
+2020-12-22 14:35	chara.3.behavior.start_time	"2020-12-22 14:35"
+2020-12-22 14:35	chara.3.hunger_point	102
+2020-12-22 14:35	chara.3.position	"宿舍/1区/外走廊"
+2020-12-22 14:35	chara.3.state	0
+2020-12-22 14:35	chara.3.urinate_point	9
+2020-12-22 14:35	chara.56.behavior.behavior_id	"recruit"
+2020-12-22 14:35	chara.56.behavior.duration	60
+2020-12-22 14:35	chara.56.behavior.move_final_target	[]
+2020-12-22 14:35	chara.56.behavior.move_target	[]
+2020-12-22 14:35	chara.56.behavior.start_time	"2020-12-22 14:33"
+2020-12-22 14:35	chara.56.hit_point	1580
+2020-12-22 14:35	chara.56.hunger_point	90
+2020-12-22 14:35	chara.56.mana_point	810
+2020-12-22 14:35	chara.56.position	"文职/办公室"
+2020-12-22 14:35	chara.56.state	208
+2020-12-22 14:35	chara.56.urinate_point	40
+2020-12-22 14:35	chara.7.behavior.move_target	["宿舍", "0"]
+2020-12-22 14:35	chara.7.behavior.start_time	"2020-12-22 14:33"
+2020-12-22 14:35	chara.7.hunger_point	90
+2020-12-22 14:35	chara.7.position	"宿舍/0"
+2020-12-22 14:35	chara.7.urinate_point	18
+2020-12-22 14:35	clock	"2020-12-22 14:35"
+2020-12-22 14:35	scene.宿舍/0.occupants	[7, 171]
+2020-12-22 14:35	scene.宿舍/1区/0.occupants	null
+2020-12-22 14:35	scene.宿舍/1区/外走廊.occupants	[3]
+2020-12-22 14:35	scene.文职/0.occupants	null
+2020-12-22 14:35	scene.文职/办公室.occupants	[56]
+2020-12-22 14:35	scene.生娱/0.occupants	null
+2020-12-22 14:40	chara.0.behavior.start_time	"2020-12-22 14:40"
+2020-12-22 14:40	chara.0.tired_point	56
+2020-12-22 14:40	chara.1.hunger_point	102
+2020-12-22 14:40	chara.1.tired_point	29
+2020-12-22 14:40	chara.1.urinate_point	35
+2020-12-22 14:40	chara.130.hunger_point	144
+2020-12-22 14:40	chara.130.tired_point	32
+2020-12-22 14:40	chara.130.urinate_point	49
+2020-12-22 14:40	chara.171.behavior.behavior_id	"share_blankly"
+2020-12-22 14:40	chara.171.behavior.duration	0
+2020-12-22 14:40	chara.171.behavior.move_target	[]
+2020-12-22 14:40	chara.171.behavior.start_time	"2020-12-22 14:40"
+2020-12-22 14:40	chara.171.hunger_point	112
+2020-12-22 14:40	chara.171.position	"医疗/0"
+2020-12-22 14:40	chara.171.state	0
+2020-12-22 14:40	chara.171.urinate_point	14
+2020-12-22 14:40	chara.3.behavior.move_final_target	["医疗", "急诊室"]
+2020-12-22 14:40	chara.3.behavior.start_time	"2020-12-22 14:40"
+2020-12-22 14:40	chara.3.hunger_point	106
+2020-12-22 14:40	chara.3.position	"宿舍/0"
+2020-12-22 14:40	chara.3.urinate_point	13
+2020-12-22 14:40	chara.56.hunger_point	98
+2020-12-22 14:40	chara.56.tired_point	31
+2020-12-22 14:40	chara.56.urinate_point	45
+2020-12-22 14:40	chara.7.behavior.behavior_id	"share_blankly"
+2020-12-22 14:40	chara.7.behavior.duration	0
+2020-12-22 14:40	chara.7.behavior.move_target	[]
+2020-12-22 14:40	chara.7.behavior.start_time	"2020-12-22 14:40"
+2020-12-22 14:40	chara.7.hunger_point	94
+2020-12-22 14:40	chara.7.position	"宿舍/1区/外走廊"
+2020-12-22 14:40	chara.7.state	0
+2020-12-22 14:40	chara.7.urinate_point	21
+2020-12-22 14:40	clock	"2020-12-22 14:40"
+2020-12-22 14:40	scene.医疗/0.occupants	[171]
+2020-12-22 14:40	scene.宿舍/0.occupants	[3]
+2020-12-22 14:40	scene.宿舍/1区/外走廊.occupants	[7]
+2020-12-22 14:45	chara.0.behavior.start_time	"2020-12-22 14:45"
+2020-12-22 14:45	chara.0.tired_point	57
+2020-12-22 14:45	chara.1.hunger_point	108
+2020-12-22 14:45	chara.1.tired_point	30
+2020-12-22 14:45	chara.1.urinate_point	40
+2020-12-22 14:45	chara.130.hunger_point	167
+2020-12-22 14:45	chara.130.tired_point	33
+2020-12-22 14:45	chara.130.urinate_point	54
+2020-12-22 14:45	chara.171.behavior.start_time	"2020-12-22 14:45"
+2020-12-22 14:45	chara.171.hunger_point	115
+2020-12-22 14:45	chara.171.position	"医疗/外走廊"
+2020-12-22 14:45	chara.171.urinate_point	17
+2020-12-22 14:45	chara.3.behavior.start_time	"2020-12-22 14:45"
+2020-12-22 14:45	chara.3.hunger_point	110
+2020-12-22 14:45	chara.3.position	"医疗/外走廊"
+2020-12-22 14:45	chara.3.urinate_point	17
+2020-12-22 14:45	chara.56.hunger_point	103
+2020-12-22 14:45	chara.56.tired_point	32
+2020-12-22 14:45	chara.56.urinate_point	50
+2020-12-22 14:45	chara.7.behavior.move_final_target	["工程", "运维部"]
+2020-12-22 14:45	chara.7.behavior.start_time	"2020-12-22 14:45"
+2020-12-22 14:45	chara.7.hunger_point	97
+2020-12-22 14:45	chara.7.position	"宿舍/0"
+2020-12-22 14:45	chara.7.urinate_point	24
+2020-12-22 14:45	clock	"2020-12-22 14:45"
+2020-12-22 14:45	scene.医疗/0.occupants	null
+2020-12-22 14:45	scene.医疗/外走廊.occupants	[3, 171]
+2020-12-22 14:45	scene.宿舍/0.occupants	[7]
+2020-12-22 14:45	scene.宿舍/1区/外走廊.occupants	null
+2020-12-22 14:50	chara.0.behavior.start_time	"2020-12-22 14:50"
+2020-12-22 14:50	chara.0.tired_point	58
+2020-12-22 14:50	chara.1.hunger_point	116
+2020-12-22 14:50	chara.1.tired_point	31
+2020-12-22 14:50	chara.1.urinate_point	46
+2020-12-22 14:50	chara.130.hunger_point	182
+2020-12-22 14:50	chara.130.tired_point	34
+2020-12-22 14:50	chara.130.urinate_point	60
+2020-12-22 14:50	chara.171.behavior.move_final_target	[]
+2020-12-22 14:50	chara.171.behavior.start_time	"2020-12-22 14:50"
+2020-12-22 14:50	chara.171.hunger_point	116
+2020-12-22 14:50	chara.171.position	"医疗/急诊室"
+2020-12-22 14:50	chara.171.urinate_point	21
+2020-12-22 14:50	chara.3.behavior.move_final_target	[]
+2020-12-22 14:50	chara.3.behavior.start_time	"2020-12-22 14:50"
+2020-12-22 14:50	chara.3.hunger_point	113
+2020-12-22 14:50	chara.3.position	"医疗/急诊室"
+2020-12-22 14:50	chara.3.urinate_point	18
+2020-12-22 14:50	chara.56.hunger_point	111
+2020-12-22 14:50	chara.56.tired_point	33
+2020-12-22 14:50	chara.56.urinate_point	55
+2020-12-22 14:50	chara.7.behavior.behavior_id	"move"
+2020-12-22 14:50	chara.7.behavior.duration	4
+2020-12-22 14:50	chara.7.behavior.move_target	["疗养庭院", "0"]
+2020-12-22 14:50	chara.7.behavior.start_time	"2020-12-22 14:49"
+2020-12-22 14:50	chara.7.hunger_point	101
+2020-12-22 14:50	chara.7.position	"疗养庭院/0"
+2020-12-22 14:50	chara.7.state	1
+2020-12-22 14:50	chara.7.urinate_point	28
+2020-12-22 14:50	clock	"2020-12-22 14:50"
+2020-12-22 14:50	scene.医疗/外走廊.occupants	null
+2020-12-22 14:50	scene.医疗/急诊室.occupants	[3, 171]
+2020-12-22 14:50	scene.宿舍/0.occupants	null
+2020-12-22 14:50	scene.疗养庭院/0.occupants	[7]
+2020-12-22 14:55	chara.0.behavior.start_time	"2020-12-22 14:55"
+2020-12-22 14:55	chara.0.tired_point	59
+2020-12-22 14:55	chara.1.hunger_point	124
+2020-12-22 14:55	chara.1.tired_point	32
+2020-12-22 14:55	chara.1.urinate_point	51
+2020-12-22 14:55	chara.130.hunger_point	201
+2020-12-22 14:55	chara.130.tired_point	35
+2020-12-22 14:55	chara.130.urinate_point	65
+2020-12-22 14:55	chara.171.behavior.move_final_target	["医疗", "门诊室"]
+2020-12-22 14:55	chara.171.behavior.start_time	"2020-12-22 14:55"
+2020-12-22 14:55	chara.171.hunger_point	119
+2020-12-22 14:55	chara.171.position	"医疗/外走廊"
+2020-12-22 14:55	chara.171.urinate_point	23
+2020-12-22 14:55	chara.3.behavior.move_final_target	["医疗", "门诊室"]
+2020-12-22 14:55	chara.3.behavior.start_time	"2020-12-22 14:55"
+2020-12-22 14:55	chara.3.hunger_point	116
+2020-12-22 14:55	chara.3.position	"医疗/外走廊"
+2020-12-22 14:55	chara.3.urinate_point	21
+2020-12-22 14:55	chara.56.hunger_point	119
+2020-12-22 14:55	chara.56.tired_point	34
+2020-12-22 14:55	chara.56.urinate_point	61
+2020-12-22 14:55	chara.7.behavior.move_target	["动力", "0"]
+2020-12-22 14:55	chara.7.behavior.start_time	"2020-12-22 14:53"
+2020-12-22 14:55	chara.7.hunger_point	105
+2020-12-22 14:55	chara.7.position	"动力/0"
+2020-12-22 14:55	chara.7.urinate_point	33
+2020-12-22 14:55	clock	"2020-12-22 14:55"
+2020-12-22 14:55	scene.动力/0.occupants	[7]
+2020-12-22 14:55	scene.医疗/外走廊.occupants	[3, 171]
+2020-12-22 14:55	scene.医疗/急诊室.occupants	null
+2020-12-22 14:55	scene.疗养庭院/0.occupants	null
+2020-12-22 15:00	chara.0.behavior.start_time	"2020-12-22 15:00"
+2020-12-22 15:00	chara.0.tired_point	60
+2020-12-22 15:00	chara.1.hunger_point	130
+2020-12-22 15:00	chara.1.tired_point	33
+2020-12-22 15:00	chara.1.urinate_point	55
+2020-12-22 15:00	chara.130.hunger_point	216
+2020-12-22 15:00	chara.130.tired_point	36
+2020-12-22 15:00	chara.130.urinate_point	70
+2020-12-22 15:00	chara.171.behavior.move_final_target	[]
+2020-12-22 15:00	chara.171.behavior.start_time	"2020-12-22 15:00"
+2020-12-22 15:00	chara.171.hunger_point	121
+2020-12-22 15:00	chara.171.position	"医疗/门诊室"
+2020-12-22 15:00	chara.171.urinate_point	26
+2020-12-22 15:00	chara.3.behavior.move_final_target	[]
+2020-12-22 15:00	chara.3.behavior.start_time	"2020-12-22 15:00"
+2020-12-22 15:00	chara.3.hunger_point	118
+2020-12-22 15:00	chara.3.position	"医疗/门诊室"
+2020-12-22 15:00	chara.3.urinate_point	25
+2020-12-22 15:00	chara.56.hunger_point	124
+2020-12-22 15:00	chara.56.tired_point	35
+2020-12-22 15:00	chara.56.urinate_point	67
+2020-12-22 15:00	chara.7.behavior.move_target	["制造加工", "0"]
+2020-12-22 15:00	chara.7.behavior.start_time	"2020-12-22 14:57"
+2020-12-22 15:00	chara.7.hunger_point	108
+2020-12-22 15:00	chara.7.position	"制造加工/0"
+2020-12-22 15:00	chara.7.urinate_point	36
+2020-12-22 15:00	clock	"2020-12-22 15:00"
+2020-12-22 15:00	scene.制造加工/0.occupants	[7]
+2020-12-22 15:00	scene.动力/0.occupants	null
+2020-12-22 15:00	scene.医疗/外走廊.occupants	null
+2020-12-22 15:00	scene.医疗/门诊室.occupants	[3, 171]
+2020-12-22 15:05	chara.0.behavior.start_time	"2020-12-22 15:05"
+2020-12-22 15:05	chara.0.tired_point	61
+2020-12-22 15:05	chara.1.hunger_point	138
+2020-12-22 15:05	chara.1.tired_point	34
+2020-12-22 15:05	chara.1.urinate_point	59
+2020-12-22 15:05	chara.130.hunger_point	231
+2020-12-22 15:05	chara.130.tired_point	37
+2020-12-22 15:05	chara.130.urinate_point	74
+2020-12-22 15:05	chara.171.behavior.move_final_target	["医疗", "急诊室"]
+2020-12-22 15:05	chara.171.behavior.start_time	"2020-12-22 15:05"
+2020-12-22 15:05	chara.171.hunger_point	125
+2020-12-22 15:05	chara.171.position	"医疗/外走廊"
+2020-12-22 15:05	chara.171.urinate_point	28
+2020-12-22 15:05	chara.3.behavior.move_final_target	["医疗", "急诊室"]
+2020-12-22 15:05	chara.3.behavior.start_time	"2020-12-22 15:05"
+2020-12-22 15:05	chara.3.hunger_point	119
+2020-12-22 15:05	chara.3.position	"医疗/外走廊"
+2020-12-22 15:05	chara.3.urinate_point	29
+2020-12-22 15:05	chara.56.hunger_point	132
+2020-12-22 15:05	chara.56.tired_point	36
+2020-12-22 15:05	chara.56.urinate_point	71
+2020-12-22 15:05	chara.7.behavior.behavior_id	"share_blankly"
+2020-12-22 15:05	chara.7.behavior.duration	0
+2020-12-22 15:05	chara.7.behavior.move_target	[]
+2020-12-22 15:05	chara.7.behavior.start_time	"2020-12-22 15:05"
+2020-12-22 15:05	chara.7.hunger_point	112
+2020-12-22 15:05	chara.7.position	"工程/0"
+2020-12-22 15:05	chara.7.state	0
+2020-12-22 15:05	chara.7.urinate_point	40
+2020-12-22 15:05	clock	"2020-12-22 15:05"
+2020-12-22 15:05	scene.制造加工/0.occupants	null
+2020-12-22 15:05	scene.医疗/外走廊.occupants	[3, 171]
+2020-12-22 15:05	scene.医疗/门诊室.occupants	null
+2020-12-22 15:05	scene.工程/0.occupants	[7]
+2020-12-22 15:10	chara.0.behavior.start_time	"2020-12-22 15:10"
+2020-12-22 15:10	chara.0.tired_point	62
+2020-12-22 15:10	chara.1.hunger_point	146
+2020-12-22 15:10	chara.1.tired_point	35
+2020-12-22 15:10	chara.1.urinate_point	65
+2020-12-22 15:10	chara.130.hunger_point	240
+2020-12-22 15:10	chara.130.tired_point	38
+2020-12-22 15:10	chara.130.urinate_point	78
+2020-12-22 15:10	chara.171.behavior.move_final_target	[]
+2020-12-22 15:10	chara.171.behavior.start_time	"2020-12-22 15:10"
+2020-12-22 15:10	chara.171.hunger_point	127
+2020-12-22 15:10	chara.171.position	"医疗/急诊室"
+2020-12-22 15:10	chara.171.urinate_point	31
+2020-12-22 15:10	chara.3.behavior.move_final_target	[]
+2020-12-22 15:10	chara.3.behavior.start_time	"2020-12-22 15:10"
+2020-12-22 15:10	chara.3.hunger_point	121
+2020-12-22 15:10	chara.3.position	"医疗/急诊室"
+2020-12-22 15:10	chara.3.urinate_point	30
+2020-12-22 15:10	chara.56.hunger_point	139
+2020-12-22 15:10	chara.56.tired_point	37
+2020-12-22 15:10	chara.56.urinate_point	75
+2020-12-22 15:10	chara.7.behavior.move_final_target	["文职", "档案室"]
+2020-12-22 15:10	chara.7.behavior.start_time	"2020-12-22 15:10"
+2020-12-22 15:10	chara.7.hunger_point	113
+2020-12-22 15:10	chara.7.sp_flag.work_maintenance	true
+2020-12-22 15:10	chara.7.urinate_point	41
+2020-12-22 15:10	clock	"2020-12-22 15:10"
+2020-12-22 15:10	scene.医疗/外走廊.occupants	null
+2020-12-22 15:10	scene.医疗/急诊室.occupants	[3, 171]
+2020-12-22 15:15	chara.0.behavior.start_time	"2020-12-22 15:15"
+2020-12-22 15:15	chara.0.tired_point	63
+2020-12-22 15:15	chara.1.hunger_point	152
+2020-12-22 15:15	chara.1.tired_point	36
+2020-12-22 15:15	chara.1.urinate_point	70
+2020-12-22 15:15	chara.130.tired_point	39
+2020-12-22 15:15	chara.130.urinate_point	82
+2020-12-22 15:15	chara.171.behavior.move_final_target	["医疗", "门诊室"]
+2020-12-22 15:15	chara.171.behavior.start_time	"2020-12-22 15:15"
+2020-12-22 15:15	chara.171.hunger_point	128
+2020-12-22 15:15	chara.171.position	"医疗/外走廊"
+2020-12-22 15:15	chara.171.urinate_point	35
+2020-12-22 15:15	chara.3.behavior.move_final_target	["医疗", "门诊室"]
+2020-12-22 15:15	chara.3.behavior.start_time	"2020-12-22 15:15"
+2020-12-22 15:15	chara.3.hunger_point	122
+2020-12-22 15:15	chara.3.position	"医疗/外走廊"
+2020-12-22 15:15	chara.3.urinate_point	33
+2020-12-22 15:15	chara.56.hunger_point	147
+2020-12-22 15:15	chara.56.tired_point	38
+2020-12-22 15:15	chara.56.urinate_point	81
+2020-12-22 15:15	chara.7.behavior.behavior_id	"move"
+2020-12-22 15:15	chara.7.behavior.duration	4
+2020-12-22 15:15	chara.7.behavior.move_target	["动力", "0"]
+2020-12-22 15:15	chara.7.behavior.start_time	"2020-12-22 15:14"
+2020-12-22 15:15	chara.7.hunger_point	117
+2020-12-22 15:15	chara.7.position	"动力/0"
+2020-12-22 15:15	chara.7.state	1
+2020-12-22 15:15	chara.7.urinate_point	44
+2020-12-22 15:15	clock	"2020-12-22 15:15"
+2020-12-22 15:15	scene.动力/0.occupants	[7]
+2020-12-22 15:15	scene.医疗/外走廊.occupants	[3, 171]
+2020-12-22 15:15	scene.医疗/急诊室.occupants	null
+2020-12-22 15:15	scene.工程/0.occupants	null
+2020-12-22 15:20	chara.0.behavior.start_time	"2020-12-22 15:20"
+2020-12-22 15:20	chara.0.tired_point	64
+2020-12-22 15:20	chara.1.hunger_point	161
+2020-12-22 15:20	chara.1.tired_point	37
+2020-12-22 15:20	chara.1.urinate_point	74
+2020-12-22 15:20	chara.130.tired_point	40
+2020-12-22 15:20	chara.130.urinate_point	86
+2020-12-22 15:20	chara.171.behavior.move_final_target	[]
+2020-12-22 15:20	chara.171.behavior.start_time	"2020-12-22 15:20"
+2020-12-22 15:20	chara.171.hunger_point	130
+2020-12-22 15:20	chara.171.position	"医疗/门诊室"
+2020-12-22 15:20	chara.171.urinate_point	38
+2020-12-22 15:20	chara.3.behavior.move_final_target	[]
+2020-12-22 15:20	chara.3.behavior.start_time	"2020-12-22 15:20"
+2020-12-22 15:20	chara.3.hunger_point	123
+2020-12-22 15:20	chara.3.position	"医疗/门诊室"
+2020-12-22 15:20	chara.3.urinate_point	37
+2020-12-22 15:20	chara.56.hunger_point	152
+2020-12-22 15:20	chara.56.tired_point	39
+2020-12-22 15:20	chara.56.urinate_point	87
+2020-12-22 15:20	chara.7.behavior.move_target	["文职", "0"]
+2020-12-22 15:20	chara.7.behavior.start_time	"2020-12-22 15:18"
+2020-12-22 15:20	chara.7.hunger_point	120
+2020-12-22 15:20	chara.7.position	"文职/0"
+2020-12-22 15:20	chara.7.urinate_point	48
+2020-12-22 15:20	clock	"2020-12-22 15:20"
+2020-12-22 15:20	scene.动力/0.occupants	null
+2020-12-22 15:20	scene.医疗/外走廊.occupants	null
+2020-12-22 15:20	scene.医疗/门诊室.occupants	[3, 171]
+2020-12-22 15:20	scene.文职/0.occupants	[7]
+2020-12-22 15:25	chara.0.behavior.start_time	"2020-12-22 15:25"
+2020-12-22 15:25	chara.0.tired_point	65
+2020-12-22 15:25	chara.1.hunger_point	170
+2020-12-22 15:25	chara.1.tired_point	38
+2020-12-22 15:25	chara.1.urinate_point	80
+2020-12-22 15:25	chara.130.tired_point	41
+2020-12-22 15:25	chara.130.urinate_point	91
+2020-12-22 15:25	chara.171.behavior.move_final_target	["医疗", "急诊室"]
+2020-12-22 15:25	chara.171.behavior.start_time	"2020-12-22 15:25"
+2020-12-22 15:25	chara.171.hunger_point	132
+2020-12-22 15:25	chara.171.position	"医疗/外走廊"
+2020-12-22 15:25	chara.171.urinate_point	42
+2020-12-22 15:25	chara.3.behavior.move_final_target	["医疗", "急诊室"]
+2020-12-22 15:25	chara.3.behavior.start_time	"2020-12-22 15:25"
+2020-12-22 15:25	chara.3.hunger_point	126
+2020-12-22 15:25	chara.3.position	"医疗/外走廊"
+2020-12-22 15:25	chara.3.urinate_point	39
+2020-12-22 15:25	chara.56.hunger_point	159
+2020-12-22 15:25	chara.56.tired_point	40
+2020-12-22 15:25	chara.56.urinate_point	91
+2020-12-22 15:25	chara.7.behavior.behavior_id	"share_blankly"
+2020-12-22 15:25	chara.7.behavior.duration	0
+2020-12-22 15:25	chara.7.behavior.move_target	[]
+2020-12-22 15:25	chara.7.behavior.start_time	"2020-12-22 15:25"
+2020-12-22 15:25	chara.7.hunger_point	123
+2020-12-22 15:25	chara.7.position	"文职/内走廊"
+2020-12-22 15:25	chara.7.state	0
+2020-12-22 15:25	chara.7.urinate_point	50
+2020-12-22 15:25	clock	"2020-12-22 15:25"
+2020-12-22 15:25	scene.医疗/外走廊.occupants	[3, 171]
+2020-12-22 15:25	scene.医疗/门诊室.occupants	null
+2020-12-22 15:25	scene.文职/0.occupants	null
+2020-12-22 15:25	scene.文职/内走廊.occupants	[7]
+2020-12-22 15:30	chara.0.behavior.start_time	"2020-12-22 15:30"
+2020-12-22 15:30	chara.0.tired_point	66
+2020-12-22 15:30	chara.1.behavior.start_time	"2020-12-22 15:29"
+2020-12-22 15:30	chara.1.hit_point	1010
+2020-12-22 15:30	chara.1.hunger_point	176
+2020-12-22 15:30	chara.1.mana_point	290
+2020-12-22 15:30	chara.1.urinate_point	85
+2020-12-22 15:30	chara.130.tired_point	42
+2020-12-22 15:30	chara.130.urinate_point	96
+2020-12-22 15:30	chara.171.behavior.move_final_target	[]
+2020-12-22 15:30	chara.171.behavior.start_time	"2020-12-22 15:30"
+2020-12-22 15:30	chara.171.hunger_point	133
+2020-12-22 15:30	chara.171.position	"医疗/急诊室"
+2020-12-22 15:30	chara.171.urinate_point	45
+2020-12-22 15:30	chara.3.behavior.move_final_target	[]
+2020-12-22 15:30	chara.3.behavior.start_time	"2020-12-22 15:30"
+2020-12-22 15:30	chara.3.hunger_point	130
+2020-12-22 15:30	chara.3.position	"医疗/急诊室"
+2020-12-22 15:30	chara.3.urinate_point	43
+2020-12-22 15:30	chara.56.hunger_point	167
+2020-12-22 15:30	chara.56.tired_point	41
+2020-12-22 15:30	chara.56.urinate_point	95
+2020-12-22 15:30	chara.7.behavior.move_final_target	["工程", "运维部"]
+2020-12-22 15:30	chara.7.behavior.start_time	"2020-12-22 15:30"
+2020-12-22 15:30	chara.7.hit_point	1994
+2020-12-22 15:30	chara.7.hunger_point	126
+2020-12-22 15:30	chara.7.mana_point	1388
+2020-12-22 15:30	chara.7.position	"文职/会议室"
+2020-12-22 15:30	chara.7.sp_flag.work_maintenance	false
+2020-12-22 15:30	chara.7.urinate_point	52
+2020-12-22 15:30	clock	"2020-12-22 15:30"
+2020-12-22 15:30	scene.医疗/外走廊.occupants	null
+2020-12-22 15:30	scene.医疗/急诊室.occupants	[3, 171]
+2020-12-22 15:30	scene.文职/会议室.occupants	[7]
+2020-12-22 15:30	scene.文职/内走廊.occupants	null
+2020-12-22 15:35	chara.0.behavior.start_time	"2020-12-22 15:35"
+2020-12-22 15:35	chara.0.tired_point	67
+2020-12-22 15:35	chara.1.hunger_point	187
+2020-12-22 15:35	chara.1.tired_point	39
+2020-12-22 15:35	chara.1.urinate_point	91
+2020-12-22 15:35	chara.130.tired_point	43
+2020-12-22 15:35	chara.130.urinate_point	100
+2020-12-22 15:35	chara.171.behavior.move_final_target	["医疗", "门诊室"]
+2020-12-22 15:35	chara.171.behavior.start_time	"2020-12-22 15:35"
+2020-12-22 15:35	chara.171.hunger_point	134
+2020-12-22 15:35	chara.171.position	"医疗/外走廊"
+2020-12-22 15:35	chara.171.urinate_point	48
+2020-12-22 15:35	chara.3.behavior.move_final_target	["医疗", "门诊室"]
+2020-12-22 15:35	chara.3.behavior.start_time	"2020-12-22 15:35"
+2020-12-22 15:35	chara.3.hunger_point	132
+2020-12-22 15:35	chara.3.position	"医疗/外走廊"
+2020-12-22 15:35	chara.3.urinate_point	46
+2020-12-22 15:35	chara.56.behavior.start_time	"2020-12-22 15:33"
+2020-12-22 15:35	chara.56.hit_point	1520
+2020-12-22 15:35	chara.56.hunger_point	172
+2020-12-22 15:35	chara.56.mana_point	630
+2020-12-22 15:35	chara.56.urinate_point	98
+2020-12-22 15:35	chara.7.behavior.behavior_id	"move"
+2020-12-22 15:35	chara.7.behavior.duration	4
+2020-12-22 15:35	chara.7.behavior.move_target	["动力", "0"]
+2020-12-22 15:35	chara.7.behavior.start_time	"2020-12-22 15:32"
+2020-12-22 15:35	chara.7.hunger_point	129
+2020-12-22 15:35	chara.7.position	"动力/0"
+2020-12-22 15:35	chara.7.state	1
+2020-12-22 15:35	chara.7.urinate_point	55
+2020-12-22 15:35	clock	"2020-12-22 15:35"
+2020-12-22 15:35	scene.动力/0.occupants	[7]
+2020-12-22 15:35	scene.医疗/外走廊.occupants	[3, 171]
+2020-12-22 15:35	scene.医疗/急诊室.occupants	null
+2020-12-22 15:35	scene.文职/会议室.occupants	null
+2020-12-22 15:40	chara.0.behavior.start_time	"2020-12-22 15:40"
+2020-12-22 15:40	chara.0.tired_point	68
+2020-12-22 15:40	chara.1.hunger_point	195
+2020-12-22 15:40	chara.1.tired_point	40
+2020-12-22 15:40	chara.1.urinate_point	95
+2020-12-22 15:40	chara.130.tired_point	44
+2020-12-22 15:40	chara.130.urinate_point	105
+2020-12-22 15:40	chara.171.behavior.move_final_target	[]
+2020-12-22 15:40	chara.171.behavior.start_time	"2020-12-22 15:40"
+2020-12-22 15:40	chara.171.hunger_point	135
+2020-12-22 15:40	chara.171.position	"医疗/门诊室"
+2020-12-22 15:40	chara.171.urinate_point	52
+2020-12-22 15:40	chara.3.behavior.move_final_target	[]
+2020-12-22 15:40	chara.3.behavior.start_time	"2020-12-22 15:40"
+2020-12-22 15:40	chara.3.hunger_point	134
+2020-12-22 15:40	chara.3.position	"医疗/门诊室"
+2020-12-22 15:40	chara.3.urinate_point	51
+2020-12-22 15:40	chara.56.hunger_point	181
+2020-12-22 15:40	chara.56.tired_point	42
+2020-12-22 15:40	chara.56.urinate_point	103
+2020-12-22 15:40	chara.7.behavior.behavior_id	"share_blankly"
+2020-12-22 15:40	chara.7.behavior.duration	0
+2020-12-22 15:40	chara.7.behavior.move_target	[]
+2020-12-22 15:40	chara.7.behavior.start_time	"2020-12-22 15:40"
+2020-12-22 15:40	chara.7.hunger_point	133
+2020-12-22 15:40	chara.7.position	"制造加工/0"
+2020-12-22 15:40	chara.7.state	0
+2020-12-22 15:40	chara.7.urinate_point	60
+2020-12-22 15:40	clock	"2020-12-22 15:40"
+2020-12-22 15:40	scene.制造加工/0.occupants	[7]
+2020-12-22 15:40	scene.动力/0.occupants	null
+2020-12-22 15:40	scene.医疗/外走廊.occupants	null
+2020-12-22 15:40	scene.医疗/门诊室.occupants	[3, 171]
+2020-12-22 15:45	chara.0.behavior.start_time	"2020-12-22 15:45"
+2020-12-22 15:45	chara.0.tired_point	69
+2020-12-22 15:45	chara.1.hunger_point	203
+2020-12-22 15:45	chara.1.tired_point	41
+2020-12-22 15:45	chara.1.urinate_point	99
+2020-12-22 15:45	chara.130.tired_point	45
+2020-12-22 15:45	chara.130.urinate_point	110
+2020-12-22 15:45	chara.171.behavior.move_final_target	["医疗", "急诊室"]
+2020-12-22 15:45	chara.171.behavior.start_time	"2020-12-22 15:45"
+2020-12-22 15:45	chara.171.hunger_point	138
+2020-12-22 15:45	chara.171.position	"医疗/外走廊"
+2020-12-22 15:45	chara.171.urinate_point	54
+2020-12-22 15:45	chara.3.behavior.move_final_target	["医疗", "急诊室"]
+2020-12-22 15:45	chara.3.behavior.start_time	"2020-12-22 15:45"
+2020-12-22 15:45	chara.3.hunger_point	138
+2020-12-22 15:45	chara.3.position	"医疗/外走廊"
+2020-12-22 15:45	chara.3.urinate_point	54
+2020-12-22 15:45	chara.56.hunger_point	187
+2020-12-22 15:45	chara.56.tired_point	43
+2020-12-22 15:45	chara.56.urinate_point	109
+2020-12-22 15:45	chara.7.behavior.start_time	"2020-12-22 15:45"
+2020-12-22 15:45	chara.7.hunger_point	138
+2020-12-22 15:45	chara.7.position	"工程/走廊"
+2020-12-22 15:45	chara.7.urinate_point	64
+2020-12-22 15:45	clock	"2020-12-22 15:45"
+2020-12-22 15:45	scene.制造加工/0.occupants	null
+2020-12-22 15:45	scene.医疗/外走廊.occupants	[3, 171]
+2020-12-22 15:45	scene.医疗/门诊室.occupants	null
+2020-12-22 15:45	scene.工程/走廊.occupants	[7]
+2020-12-22 15:50	chara.0.behavior.start_time	"2020-12-22 15:50"
+2020-12-22 15:50	chara.0.tired_point	70
+2020-12-22 15:50	chara.1.hunger_point	214
+2020-12-22 15:50	chara.1.tired_point	42
+2020-12-22 15:50	chara.1.urinate_point	104
+2020-12-22 15:50	chara.130.tired_point	46
+2020-12-22 15:50	chara.130.urinate_point	115
+2020-12-22 15:50	chara.171.behavior.move_final_target	[]
+2020-12-22 15:50	chara.171.behavior.start_time	"2020-12-22 15:50"
+2020-12-22 15:50	chara.171.hunger_point	139
+2020-12-22 15:50	chara.171.position	"医疗/急诊室"
+2020-12-22 15:50	chara.171.urinate_point	57
+2020-12-22 15:50	chara.3.behavior.move_final_target	[]
+2020-12-22 15:50	chara.3.behavior.start_time	"2020-12-22 15:50"
+2020-12-22 15:50	chara.3.hunger_point	141
+2020-12-22 15:50	chara.3.position	"医疗/急诊室"
+2020-12-22 15:50	chara.3.urinate_point	57
+2020-12-22 15:50	chara.56.hunger_point	193
+2020-12-22 15:50	chara.56.tired_point	44
+2020-12-22 15:50	chara.56.urinate_point	114
+2020-12-22 15:50	chara.7.behavior.behavior_id	"move"
+2020-12-22 15:50	chara.7.behavior.duration	4
+2020-12-22 15:50	chara.7.behavior.move_final_target	["科研", "医疗临床"]
+2020-12-22 15:50	chara.7.behavior.move_target	["制造加工", "0"]
+2020-12-22 15:50	chara.7.behavior.start_time	"2020-12-22 15:49"
+2020-12-22 15:50	chara.7.hunger_point	140
+2020-12-22 15:50	chara.7.position	"制造加工/0"
+2020-12-22 15:50	chara.7.sp_flag.work_maintenance	true
+2020-12-22 15:50	chara.7.state	1
+2020-12-22 15:50	chara.7.urinate_point	65
+2020-12-22 15:50	clock	"2020-12-22 15:50"
+2020-12-22 15:50	scene.制造加工/0.occupants	[7]
+2020-12-22 15:50	scene.医疗/外走廊.occupants	null
+2020-12-22 15:50	scene.医疗/急诊室.occupants	[3, 171]
+2020-12-22 15:50	scene.工程/走廊.occupants	null
+2020-12-22 15:55	chara.0.behavior.start_time	"2020-12-22 15:55"
+2020-12-22 15:55	chara.0.tired_point	71
+2020-12-22 15:55	chara.1.hunger_point	227
+2020-12-22 15:55	chara.1.tired_point	43
+2020-12-22 15:55	chara.1.urinate_point	108
+2020-12-22 15:55	chara.130.tired_point	47
+2020-12-22 15:55	chara.130.urinate_point	120
+2020-12-22 15:55	chara.171.behavior.move_final_target	["医疗", "门诊室"]
+2020-12-22 15:55	chara.171.behavior.start_time	"2020-12-22 15:55"
+2020-12-22 15:55	chara.171.hunger_point	142
+2020-12-22 15:55	chara.171.position	"医疗/外走廊"
+2020-12-22 15:55	chara.171.urinate_point	59
+2020-12-22 15:55	chara.3.behavior.move_final_target	["医疗", "门诊室"]
+2020-12-22 15:55	chara.3.behavior.start_time	"2020-12-22 15:55"
+2020-12-22 15:55	chara.3.hunger_point	143
+2020-12-22 15:55	chara.3.position	"医疗/外走廊"
+2020-12-22 15:55	chara.56.hunger_point	201
+2020-12-22 15:55	chara.56.tired_point	45
+2020-12-22 15:55	chara.56.urinate_point	119
+2020-12-22 15:55	chara.7.behavior.move_target	["动力", "0"]
+2020-12-22 15:55	chara.7.behavior.start_time	"2020-12-22 15:53"
+2020-12-22 15:55	chara.7.hunger_point	143
+2020-12-22 15:55	chara.7.position	"动力/0"
+2020-12-22 15:55	chara.7.urinate_point	69
+2020-12-22 15:55	clock	"2020-12-22 15:55"
+2020-12-22 15:55	scene.制造加工/0.occupants	null
+2020-12-22 15:55	scene.动力/0.occupants	[7]
+2020-12-22 15:55	scene.医疗/外走廊.occupants	[3, 171]
+2020-12-22 15:55	scene.医疗/急诊室.occupants	null
+2020-12-22 16:00	chara.0.behavior.start_time	"2020-12-22 16:00"
+2020-12-22 16:00	chara.0.tired_point	72
+2020-12-22 16:00	chara.1.hunger_point	238
+2020-12-22 16:00	chara.1.tired_point	44
+2020-12-22 16:00	chara.1.urinate_point	114
+2020-12-22 16:00	chara.130.tired_point	48
+2020-12-22 16:00	chara.130.urinate_point	126
+2020-12-22 16:00	chara.171.behavior.move_final_target	[]
+2020-12-22 16:00	chara.171.behavior.start_time	"2020-12-22 16:00"
+2020-12-22 16:00	chara.171.hunger_point	143
+2020-12-22 16:00	chara.171.position	"医疗/门诊室"
+2020-12-22 16:00	chara.171.urinate_point	63
+2020-12-22 16:00	chara.3.behavior.move_final_target	[]
+2020-12-22 16:00	chara.3.behavior.start_time	"2020-12-22 16:00"
+2020-12-22 16:00	chara.3.hunger_point	145
+2020-12-22 16:00	chara.3.position	"医疗/门诊室"
+2020-12-22 16:00	chara.3.urinate_point	59
+2020-12-22 16:00	chara.56.hunger_point	210
+2020-12-22 16:00	chara.56.tired_point	46
+2020-12-22 16:00	chara.56.urinate_point	123
+2020-12-22 16:00	chara.7.behavior.move_target	["科研", "0"]
+2020-12-22 16:00	chara.7.behavior.start_time	"2020-12-22 15:57"
+2020-12-22 16:00	chara.7.hunger_point	147
+2020-12-22 16:00	chara.7.position	"科研/0"
+2020-12-22 16:00	chara.7.urinate_point	74
+2020-12-22 16:00	clock	"2020-12-22 16:00"
+2020-12-22 16:00	scene.动力/0.occupants	null
+2020-12-22 16:00	scene.医疗/外走廊.occupants	null
+2020-12-22 16:00	scene.医疗/门诊室.occupants	[3, 171]
+2020-12-22 16:00	scene.科研/0.occupants	[7]
