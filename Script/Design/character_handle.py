@@ -432,12 +432,6 @@ def handle_character_setting():
         if character_id == 0:
             continue
         character_data = cache.character_data[character_id]
-        # 萝莉化
-        if cache.world_setting[1]:
-            for talent_id in {104,105,106,107}:
-                if character_data.talent[talent_id]:
-                    character_data.talent[talent_id] = 0
-                    character_data.talent[103] = 1
         # 淫乱化
         if cache.world_setting[2]:
             character_data.talent[40] = 1

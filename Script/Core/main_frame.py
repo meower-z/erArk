@@ -1070,8 +1070,11 @@ def io_print_image_cmd(cmd_str: str, cmd_number: int, tooltip: str = ""):
     cmd_str -- 命令对应图片名称
     cmd_number -- 点击图片响应数字
     tooltip -- 鼠标悬停提示文本
+    功能描述：图片名不在图片索引里时（例如没有立绘的女儿）不绘制按钮
     """
     global cmd_tag_map
+    if cmd_str not in era_image.image_data:
+        return
     cmd_tag_name = str(uuid.uuid1())
     textbox.tag_configure(cmd_tag_name)
     if cmd_number in cmd_tag_map:
