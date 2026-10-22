@@ -5,8 +5,8 @@
 体检科满员（Room_Area 0 上限 10 人）时，要去体检的干员在动身时就放弃今天的体检：清掉今日体检时间、退出等待名单，当天不回体检科，下一个体检日照常抽选；
 否则她会在门口被拒，之后反复重选同一个体检目标、在走廊重试。
 
-开新游戏后，博士在「身体检查与管理」里给检修工程师可露希尔排每天的体检，博士睡过午夜的抽签（见 tests/slow/health_check.py）。
-她要动身去体检科之前，博士招募 10 名新干员并带进体检科：新干员原地等待 30 分钟，这段时间里体检科满员。
+开新游戏后，博士在「身体检查与管理」里给检修工程师可露希尔排每天的体检，博士睡觉期间进行午夜抽签（见 tests/slow/health_check.py）。
+她动身去体检科之前，或登记后离开、正走回体检科时，博士招募 10 名新干员并带进体检科：新干员原地等待 30 分钟，这段时间里体检科满员。
 """
 from tests.slow.health_check import EXAM_ROOM, SLOT_START, HealthCheckTestCase
 
@@ -19,7 +19,7 @@ class FullExamRoomDropsExamTest(HealthCheckTestCase):
 
     def setUp(self):
         """
-        给可露希尔排体检，博士睡过午夜的抽签
+        给可露希尔排体检，博士睡觉期间进行午夜抽签
         Keyword arguments:
         无
         Return arguments:

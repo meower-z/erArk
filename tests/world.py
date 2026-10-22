@@ -543,8 +543,8 @@ def _stub_era_image():
     功能描述:
         era_image 导入即解码 image/ 下的全部图片（约 4.3 GiB）。界面流程的导入链
         Script.UI.Flow -> normal_flow -> in_scene_panel -> see_character_info_panel -> character_image 会导入它。
-        游戏代码只读它的四个名字：image_data、image_path_data、image_data_index_by_chara 与 get_image；
-        空模块里三个字典为空、get_image 返回 None，游戏按「没有这张图」处理。
+        游戏代码只读它的三个字典：image_data、image_path_data 与 image_data_index_by_chara；
+        空模块里三个字典都为空，游戏按「没有这张图」处理。
     """
     import Script.Core
 
@@ -552,7 +552,6 @@ def _stub_era_image():
     stub.image_data = {}
     stub.image_path_data = {}
     stub.image_data_index_by_chara = {}
-    stub.get_image = lambda image_name: None
     sys.modules[stub.__name__] = stub
     Script.Core.era_image = stub
 
