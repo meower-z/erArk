@@ -36,6 +36,18 @@ POINTS = ("hit_point", "mana_point", "sanity_point", "eja_point", "semen_point",
 """ 每个角色都记的数值 """
 
 
+def same(a, b) -> bool:
+    """
+    两个快照值是否相同：比较它们的 JSON 文本，所以 true 与 1、1 与 1.0 算不同
+    Keyword arguments:
+    a -- 快照值或 ABSENT
+    b -- 快照值或 ABSENT
+    Return arguments:
+    bool -- JSON 文本相同时为真
+    """
+    return json.dumps(a, ensure_ascii=False, sort_keys=True) == json.dumps(b, ensure_ascii=False, sort_keys=True)
+
+
 def canonical(value):
     """
     把值转成只含 JSON 数据的形式：集合排序成列表，元组转列表，字典的键转成字符串并排序
@@ -132,7 +144,7 @@ class Recorder:
         self._steps.add(step)
         for name in sorted(set(state) | set(self._last)):
             value = state.get(name, ABSENT)
-            if self._last.get(name, ABSENT) != value:
+            if not same(self._last.get(name, ABSENT), value):
                 self.lines.append((step, name, json.dumps(value, ensure_ascii=False, sort_keys=True)))
         self._last = dict(state)
 
@@ -197,7 +209,7 @@ def diff(baseline: dict, new: dict) -> list:
         old_state, new_state = baseline[step], new[step]
         for name in sorted(set(old_state) | set(new_state)):
             old_value, new_value = old_state.get(name, ABSENT), new_state.get(name, ABSENT)
-            if old_value != new_value:
+            if not same(old_value, new_value):
                 differences.append((step, name, old_value, new_value))
     return differences
 
@@ -232,12 +244,13 @@ def compare(baseline: dict, new: dict, allowances: list) -> tuple:
     Return arguments:
     tuple[list, list, list] -- (没放行的差异, 放行了的差异及其理由, 没用上的放行)
     功能描述:
-        一条放行只放行与它四个字段完全相同的一处差异。
+        一条放行只放行与它四个字段完全相同的一处差异（值按 same 比较）。
     """
     unused = list(allowances)
     unexpected, allowed = [], []
     for difference in diff(baseline, new):
-        match = next((a for a in unused if (a["step"], a["name"], a["baseline"], a["new"]) == difference), None)
+        step, name, old, value = difference
+        match = next((a for a in unused if (a["step"], a["name"]) == (step, name) and same(a["baseline"], old) and same(a["new"], value)), None)
         if match is None:
             unexpected.append(difference)
         else:
