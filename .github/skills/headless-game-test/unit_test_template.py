@@ -17,35 +17,38 @@ erArk 无头**函数级单元测试** harness 模板
   - 结尾的 os._exit() 会主动结束进程；若删掉它，需要外层 timeout 兜底
     （游戏导入链的 Flask 非守护线程会让进程跑完后不退出）
 """
+
 import datetime
 import os
 import random
 import sys
 
 sys.path.insert(0, os.getcwd())
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # Windows GBK 控制台防乱码
+sys.stdout.reconfigure(
+    encoding="utf-8", errors="replace"
+)  # Windows GBK 控制台防乱码
 
 FAIL = []
 PASS = 0
 
 
 def check(name, cond, extra=""):
-    """
-    记录一条断言结果
-    Keyword arguments:
-    name -- 断言名
-    cond -- 断言条件
-    extra -- 失败时附带打印的实际值
-    Return arguments:
-    无
-    """
-    global PASS
-    if cond:
-        PASS += 1
-        print(f"  [OK] {name}")
-    else:
-        FAIL.append(name)
-        print(f"  [FAIL] {name} {extra}")
+  """
+  记录一条断言结果
+  Keyword arguments:
+  name -- 断言名
+  cond -- 断言条件
+  extra -- 失败时附带打印的实际值
+  Return arguments:
+  无
+  """
+  global PASS
+  if cond:
+    PASS += 1
+    print(f"  [OK] {name}")
+  else:
+    FAIL.append(name)
+    print(f"  [FAIL] {name} {extra}")
 
 
 # ==== 1. 初始化链（照抄 game.py 顺序，顺序不能乱） ====
@@ -93,14 +96,16 @@ assert map_handle.get_map_system_path_str_for_list(SCENE) in cache.scene_data
 
 # ==== 3. 屏蔽 UI ====
 for _n in dir(draw):
-    _c = getattr(draw, _n)
-    if isinstance(_c, type) and hasattr(_c, "draw"):
-        try:
-            _c.draw = lambda self, *a, **k: None
-        except Exception:
-            pass
+  _c = getattr(draw, _n)
+  if isinstance(_c, type) and hasattr(_c, "draw"):
+    try:
+      _c.draw = lambda self, *a, **k: None
+    except Exception:
+      pass
 # askfor_all 返回第一个可选项：面板的 `while 1: ... if yrn in return_list: break` 按钮循环才能退出
-flow_handle.askfor_all = lambda return_list, *a, **k: return_list[0] if return_list else ""
+flow_handle.askfor_all = (
+    lambda return_list, *a, **k: return_list[0] if return_list else ""
+)
 flow_handle.askfor_wait = lambda *a, **k: None
 
 # 记录 WaitDraw 文本，供「某段提示是否被绘制」类断言使用
@@ -108,15 +113,15 @@ messages = []
 
 
 def record_draw(self, *a, **k):
-    """
-    记录型 WaitDraw 桩：把绘制文本收进 messages
-    Keyword arguments:
-    self -- 绘制对象
-    Return arguments:
-    无
-    """
-    if getattr(self, "text", None):
-        messages.append(str(self.text))
+  """
+  记录型 WaitDraw 桩：把绘制文本收进 messages
+  Keyword arguments:
+  self -- 绘制对象
+  Return arguments:
+  无
+  """
+  if getattr(self, "text", None):
+    messages.append(str(self.text))
 
 
 draw.WaitDraw.draw = record_draw
@@ -126,46 +131,58 @@ print("初始化完成，游戏时间 =", cache.game_time)
 
 # ==== 4. 角色 fixture ====
 def new_chara(cid, name="测试干员", adv=0, race=0):
-    """
-    构造一个能跑通结算/前提/口上的最小角色对象
-    Keyword arguments:
-    cid -- 角色id（0 为玩家）
-    name -- 角色名
-    adv -- 剧情npc编号，影响可穿服装的筛选
-    race -- 种族id（生育方式等按 game_config.config_race[race] 判定，测卵生/多胎时显式传入）
-    Return arguments:
-    game_type.Character -- 已注册进 cache.character_data 的角色对象
-    功能描述:
-        game_type.Character() 的多数容器字段初值是空 dict，代码里普遍用 xxx[key] 直接下标访问，
-        不预填就会 KeyError。下面这份是实测跑通「结算器 + 前提 + talk.handle_talk」全链路的最小集合。
-        置零函数的命名不规律，容易记错（见 SKILL.md「fixture 字段与置零函数对照表」）。
-    """
-    cd = game_type.Character()
-    cd.cid = cid
-    cd.name = name
-    cd.adv = adv
-    cd.sex = 1
-    # 服装：cloth_wear / 两个衣柜都要单独置零
-    cd.cloth = attr_calculation.get_cloth_zero()
-    cd.cloth.cloth_locker_in_dormitory = attr_calculation.get_cloth_locker_in_dormitory_zero()
-    cd.cloth.cloth_locker_in_shower = attr_calculation.get_shower_cloth_locker_zero()
-    cd.dirty = attr_calculation.get_zero_dirty()  # 注意是 get_zero_dirty，不是 get_dirty_zero
-    cd.talent = attr_calculation.get_talent_zero({})  # 这一组都要传一个 dict 进去
-    cd.ability = attr_calculation.get_ability_zero({})
-    cd.status_data = attr_calculation.get_status_zero({})  # 字段叫 status_data，函数叫 get_status_zero
-    cd.juel = attr_calculation.get_juel_zero({})
-    cd.experience = attr_calculation.get_experience_zero({})
-    cd.second_behavior = attr_calculation.get_second_behavior_zero({})
-    cd.h_state = attr_calculation.get_h_state_reset(cd.h_state)  # 只有 reset 版，要把旧对象传进去
-    cd.body_manage = attr_calculation.get_body_manage_zero()  # 无参
-    cd.favorability = {0: 0}  # 好感/信赖类前提会直接取 [0]
-    cd.social_contact = {}
-    cd.social_contact_data = {}
-    cd.position = list(SCENE)
-    cd.race = race
-    cd.talent[121] = 1  # 罩杯素质 121~125 至少一个为 1，否则胸部成长/乳汁上限处 UnboundLocalError
-    cache.character_data[cid] = cd
-    return cd
+  """
+  构造一个能跑通结算/前提/口上的最小角色对象
+  Keyword arguments:
+  cid -- 角色id（0 为玩家）
+  name -- 角色名
+  adv -- 剧情npc编号，影响可穿服装的筛选
+  race -- 种族id（生育方式等按 game_config.config_race[race] 判定，测卵生/多胎时显式传入）
+  Return arguments:
+  game_type.Character -- 已注册进 cache.character_data 的角色对象
+  功能描述:
+      game_type.Character() 的多数容器字段初值是空 dict，代码里普遍用 xxx[key] 直接下标访问，
+      不预填就会 KeyError。下面这份是实测跑通「结算器 + 前提 + talk.handle_talk」全链路的最小集合。
+      置零函数的命名不规律，容易记错（见 SKILL.md「fixture 字段与置零函数对照表」）。
+  """
+  cd = game_type.Character()
+  cd.cid = cid
+  cd.name = name
+  cd.adv = adv
+  cd.sex = 1
+  # 服装：cloth_wear / 两个衣柜都要单独置零
+  cd.cloth = attr_calculation.get_cloth_zero()
+  cd.cloth.cloth_locker_in_dormitory = (
+      attr_calculation.get_cloth_locker_in_dormitory_zero()
+  )
+  cd.cloth.cloth_locker_in_shower = (
+      attr_calculation.get_shower_cloth_locker_zero()
+  )
+  cd.dirty = (
+      attr_calculation.get_zero_dirty()
+  )  # 注意是 get_zero_dirty，不是 get_dirty_zero
+  cd.talent = attr_calculation.get_talent_zero({})  # 这一组都要传一个 dict 进去
+  cd.ability = attr_calculation.get_ability_zero({})
+  cd.status_data = attr_calculation.get_status_zero(
+      {}
+  )  # 字段叫 status_data，函数叫 get_status_zero
+  cd.juel = attr_calculation.get_juel_zero({})
+  cd.experience = attr_calculation.get_experience_zero({})
+  cd.second_behavior = attr_calculation.get_second_behavior_zero({})
+  cd.h_state = attr_calculation.get_h_state_reset(
+      cd.h_state
+  )  # 只有 reset 版，要把旧对象传进去
+  cd.body_manage = attr_calculation.get_body_manage_zero()  # 无参
+  cd.favorability = {0: 0}  # 好感/信赖类前提会直接取 [0]
+  cd.social_contact = {}
+  cd.social_contact_data = {}
+  cd.position = list(SCENE)
+  cd.race = race
+  cd.talent[121] = (
+      1  # 罩杯素质 121~125 至少一个为 1，否则胸部成长/乳汁上限处 UnboundLocalError
+  )
+  cache.character_data[cid] = cd
+  return cd
 
 
 pl = new_chara(0, "博士")
@@ -179,11 +196,20 @@ check("前提已注册", "high_1" in constant.handle_premise_data)
 check("结算器已注册", 62 in constant.settle_behavior_effect_data)
 check("行为配置存在", "sleep" in game_config.config_behavior)
 check("行为效果链存在", "sleep" in game_config.config_behavior_effect_data)
-check("口上已编译进 Character_Talk",
-      any(getattr(t, "behavior_id", "") == "sleep" for t in game_config.config_talk.values()))
+check(
+    "口上已编译进 Character_Talk",
+    any(
+        getattr(t, "behavior_id", "") == "sleep"
+        for t in game_config.config_talk.values()
+    ),
+)
 
 # 5.2 效果链顺序断言（改过 Behavior_Effect.csv 时用）
-chain = [e for e in game_config.config_behavior_effect_data.get("sleep", []) if isinstance(e, int)]
+chain = [
+    e
+    for e in game_config.config_behavior_effect_data.get("sleep", [])
+    if isinstance(e, int)
+]
 print("  sleep 效果链:", chain)
 
 # 5.3 直接调用结算器：constant.settle_behavior_effect_data[效果id](角色id, add_time, change_data, now_time)
@@ -191,8 +217,14 @@ print("  sleep 效果链:", chain)
 target = new_chara(101, "样例干员")
 pl.target_character_id = 101
 change = game_type.CharacterStatusChange()
-constant.settle_behavior_effect_data[62](0, 1, change, cache.game_time)  # 交互对象增加少量反感
-check("结算器确实改动了数值", target.status_data.get(20, 0) > 0, f"disgust={target.status_data.get(20, 0)}")
+constant.settle_behavior_effect_data[62](
+    0, 1, change, cache.game_time
+)  # 交互对象增加少量反感
+check(
+    "结算器确实改动了数值",
+    target.status_data.get(20, 0) > 0,
+    f"disgust={target.status_data.get(20, 0)}",
+)
 
 # 5.4 前提函数：直接调 handle_premise.handle_xxx(cid)
 check("前提返回值符合预期", handle_premise.handle_high_1(101) == 1)
@@ -206,26 +238,31 @@ random.randint = _orig_randint
 
 # 5.6 可记录、可控序列的 randint 桩：验证「调了几次随机、每次的范围、按序命中/不命中」
 class RandStub:
-    """
-    记录型 randint 桩
-    Keyword arguments:
-    seq -- 依次返回的值序列，耗尽后返回上界（概率判定不命中）
-    功能描述:
-        每次调用把 (a, b) 追加到 calls，便于断言随机调用次数与参数；
-        按阈值探测概率：第 i 轮返回 int(p_i) 应命中、int(p_i)+1 应不命中
-    """
+  """
+  记录型 randint 桩
+  Keyword arguments:
+  seq -- 依次返回的值序列，耗尽后返回上界（概率判定不命中）
+  功能描述:
+      每次调用把 (a, b) 追加到 calls，便于断言随机调用次数与参数；
+      按阈值探测概率：第 i 轮返回 int(p_i) 应命中、int(p_i)+1 应不命中
+  """
 
-    def __init__(self, seq):
-        self.seq = list(seq)
+  def __init__(self, seq):
+    self.seq = list(seq)
 
-    def __call__(self, a, b):
-        calls.append((a, b))
-        return self.seq.pop(0) if self.seq else b
+  def __call__(self, a, b):
+    calls.append((a, b))
+    return self.seq.pop(0) if self.seq else b
 
 
 calls = []
 random.randint = RandStub([1, 100])
-check("randint 桩按序返回", random.randint(1, 100) == 1 and random.randint(1, 100) == 100 and calls == [(1, 100), (1, 100)])
+check(
+    "randint 桩按序返回",
+    random.randint(1, 100) == 1
+    and random.randint(1, 100) == 100
+    and calls == [(1, 100), (1, 100)],
+)
 random.randint = _orig_randint
 
 # 5.7 面板/事件级测试的打桩组见 SKILL.md「面板 / 事件级测试」：
@@ -237,6 +274,6 @@ print()
 print("=" * 50)
 print(f"通过 {PASS} 项，失败 {len(FAIL)} 项")
 for f in FAIL:
-    print("  失败:", f)
+  print("  失败:", f)
 print("=" * 50)
 os._exit(0 if not FAIL else 1)  # 主动退出，绕开残留的非守护线程

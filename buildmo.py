@@ -1,28 +1,31 @@
 import os
 import polib
 
-po_dir = os.path.join("data", "po", "en_US", "LC_MESSAGES")
-file_name_list = ["erArk_talk", "erArk_csv", "erArk_py"]
+po_dir = os.path.join('data', 'po', 'en_US', 'LC_MESSAGES')
+file_name_list = ['erArk_talk', 'erArk_csv', 'erArk_py']
+
 
 def build_po_text(po):
-    po = "\n"
-    po += '# SOME DESCRIPTIVE TITLE.\n'
-    po += '# Copyright (C) YEAR Free Software Foundation, Inc.\n'
-    po += '# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.\n'
-    po += '#\n'
-    po += 'msgid ""\n'
-    po += 'msgstr ""\n'
-    po += '"Project-Id-Version: PACKAGE VERSION\\n"\n'
-    po += '"Report-Msgid-Bugs-To: \\n"\n'
-    po += '"POT-Creation-Date: 2024-03-11 08:00+0800\\n"\n'
-    po += '"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\\n"\n'
-    po += '"Last-Translator: FULL NAME <EMAIL@ADDRESS>\\n"\n'
-    po += '"Language-Team: LANGUAGE <LANGUAGE-TEAM-EMAIL@ADDRESS>\\n"\n'
-    po += '"Language: en_US\\n"\n'
-    po += '"MIME-Version: 1.0\\n"\n'
-    po += '"Content-Type: text/plain; charset=UTF-8\\n"\n'
-    po += '"Content-Transfer-Encoding: 8bit\\n"\n\n'
-    return po
+  po = '\n'
+  po += '# SOME DESCRIPTIVE TITLE.\n'
+  po += '# Copyright (C) YEAR Free Software Foundation, Inc.\n'
+  po += '# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.\n'
+  po += '#\n'
+  po += 'msgid ""\n'
+  po += 'msgstr ""\n'
+  po += '"Project-Id-Version: PACKAGE VERSION\\n"\n'
+  po += '"Report-Msgid-Bugs-To: \\n"\n'
+  po += '"POT-Creation-Date: 2024-03-11 08:00+0800\\n"\n'
+  po += '"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\\n"\n'
+  po += '"Last-Translator: FULL NAME <EMAIL@ADDRESS>\\n"\n'
+  po += '"Language-Team: LANGUAGE <LANGUAGE-TEAM-EMAIL@ADDRESS>\\n"\n'
+  po += '"Language: en_US\\n"\n'
+  po += '"MIME-Version: 1.0\\n"\n'
+  po += '"Content-Type: text/plain; charset=UTF-8\\n"\n'
+  po += '"Content-Transfer-Encoding: 8bit\\n"\n\n'
+  return po
+
+
 """
 # 读取PO文件
 po = polib.pofile(po_path)
@@ -56,6 +59,6 @@ new_po.save(po_path)
 """
 # 将PO文件编译成MO文件
 for file_name in file_name_list:
-    po_path = os.path.join(po_dir, file_name + ".po")
-    mo_path = os.path.join(po_dir, file_name + ".mo")
-    os.system("msgfmt " + po_path + " -o " + mo_path)
+  po_path = os.path.join(po_dir, file_name + '.po')
+  mo_path = os.path.join(po_dir, file_name + '.mo')
+  os.system('msgfmt ' + po_path + ' -o ' + mo_path)

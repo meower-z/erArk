@@ -6,7 +6,7 @@ from Script.Core import (
     get_text,
     game_type,
     constant,
-    flow_handle
+    flow_handle,
 )
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle
@@ -34,856 +34,1124 @@ body_part_name_dict = {
     "anal": _("肛门"),
 }
 
-def group_sex_settle(
-        character_id: int,
-        target_character_id: int,
-        behavior_id: str,
-):
-    """
-    群交结算
-    Keyword arguments:
-    character_id -- 角色id
-    target_character_id -- 目标角色id
-    """
-    # 如果是非群交模式，则返回
-    if not cache.group_sex_mode:
-        return
-    # 非玩家或无交互对象返回
-    if character_id != 0 or target_character_id == character_id:
-        return
-    character_data: game_type.Character = cache.character_data[character_id]
-    now_template_data = character_data.h_state.group_sex_body_template_dict["A"]
-    # 如果当前群交模板已锁死，则返回
-    if character_data.h_state.group_sex_lock_flag:
-        return
-    # 阴茎插入
-    if behavior_id in game_config.config_behavior_id_list_of_group_sex_body_part[_("插入")]:
-        now_template_data[0]["penis"] = [target_character_id, behavior_id]
-        now_template_data[1] = [[-1], -1]
-    # 阴茎侍奉
-    elif behavior_id in game_config.config_behavior_id_list_of_group_sex_body_part[_("侍奉")]:
-        now_template_data[0]["penis"] = [-1, -1]
-        # 如果新指令，则重置数据
-        if now_template_data[1][1] != behavior_id:
-            now_template_data[1] = [[target_character_id], behavior_id]
-        # 否则则只将角色id加进角色列表里
-        elif target_character_id not in now_template_data[1][0]:
-            now_template_data[1][0].append(target_character_id)
-    # 口
-    elif behavior_id in game_config.config_behavior_id_list_of_group_sex_body_part[_("口")]:
-        now_template_data[0]["mouth"] = [target_character_id, behavior_id]
-    # 手
-    elif behavior_id in game_config.config_behavior_id_list_of_group_sex_body_part[_("手")]:
-        # 如果L是空的，或当前对象是L对象，则赋给L
-        if now_template_data[0]["L_hand"][1] == -1 or now_template_data[0]["L_hand"][0] == target_character_id:
-            now_template_data[0]["L_hand"] = [target_character_id, behavior_id]
-        # R同理
-        elif now_template_data[0]["R_hand"][1] == -1 or now_template_data[0]["R_hand"][0] == target_character_id:
-            now_template_data[0]["R_hand"] = [target_character_id, behavior_id]
-        # 否则，全部更新，左等于右，右等于新
-        else:
-            now_template_data[0]["L_hand"] = now_template_data[0]["R_hand"]
-            now_template_data[0]["R_hand"] = [target_character_id, behavior_id]
-    # 肛
-    elif behavior_id in game_config.config_behavior_id_list_of_group_sex_body_part[_("肛")]:
-        now_template_data[0]["anal"] = [target_character_id, behavior_id]
 
-    # 特殊指令特殊处理
-    behavior_data = game_config.config_behavior[behavior_id]
-    if behavior_data.name == _("六九式"):
-        now_template_data[0]["mouth"] = [target_character_id, behavior_id]
-        now_template_data[1] = [[target_character_id], behavior_id]
+def group_sex_settle(
+    character_id: int,
+    target_character_id: int,
+    behavior_id: str,
+):
+  """
+  群交结算
+  Keyword arguments:
+  character_id -- 角色id
+  target_character_id -- 目标角色id
+  """
+  # 如果是非群交模式，则返回
+  if not cache.group_sex_mode:
+    return
+  # 非玩家或无交互对象返回
+  if character_id != 0 or target_character_id == character_id:
+    return
+  character_data: game_type.Character = cache.character_data[character_id]
+  now_template_data = character_data.h_state.group_sex_body_template_dict["A"]
+  # 如果当前群交模板已锁死，则返回
+  if character_data.h_state.group_sex_lock_flag:
+    return
+  # 阴茎插入
+  if (
+      behavior_id
+      in game_config.config_behavior_id_list_of_group_sex_body_part[_("插入")]
+  ):
+    now_template_data[0]["penis"] = [target_character_id, behavior_id]
+    now_template_data[1] = [[-1], -1]
+  # 阴茎侍奉
+  elif (
+      behavior_id
+      in game_config.config_behavior_id_list_of_group_sex_body_part[_("侍奉")]
+  ):
+    now_template_data[0]["penis"] = [-1, -1]
+    # 如果新指令，则重置数据
+    if now_template_data[1][1] != behavior_id:
+      now_template_data[1] = [[target_character_id], behavior_id]
+    # 否则则只将角色id加进角色列表里
+    elif target_character_id not in now_template_data[1][0]:
+      now_template_data[1][0].append(target_character_id)
+  # 口
+  elif (
+      behavior_id
+      in game_config.config_behavior_id_list_of_group_sex_body_part[_("口")]
+  ):
+    now_template_data[0]["mouth"] = [target_character_id, behavior_id]
+  # 手
+  elif (
+      behavior_id
+      in game_config.config_behavior_id_list_of_group_sex_body_part[_("手")]
+  ):
+    # 如果L是空的，或当前对象是L对象，则赋给L
+    if (
+        now_template_data[0]["L_hand"][1] == -1
+        or now_template_data[0]["L_hand"][0] == target_character_id
+    ):
+      now_template_data[0]["L_hand"] = [target_character_id, behavior_id]
+    # R同理
+    elif (
+        now_template_data[0]["R_hand"][1] == -1
+        or now_template_data[0]["R_hand"][0] == target_character_id
+    ):
+      now_template_data[0]["R_hand"] = [target_character_id, behavior_id]
+    # 否则，全部更新，左等于右，右等于新
+    else:
+      now_template_data[0]["L_hand"] = now_template_data[0]["R_hand"]
+      now_template_data[0]["R_hand"] = [target_character_id, behavior_id]
+  # 肛
+  elif (
+      behavior_id
+      in game_config.config_behavior_id_list_of_group_sex_body_part[_("肛")]
+  ):
+    now_template_data[0]["anal"] = [target_character_id, behavior_id]
+
+  # 特殊指令特殊处理
+  behavior_data = game_config.config_behavior[behavior_id]
+  if behavior_data.name == _("六九式"):
+    now_template_data[0]["mouth"] = [target_character_id, behavior_id]
+    now_template_data[1] = [[target_character_id], behavior_id]
 
 
 def count_group_sex_instruct_list():
-    """
-    统计群交指令列表\n
-    Return arguments:\n
-    [], [] -- 已去重的群交指令列表，[角色id列表，状态id]
-    """
-    # 变量定义
-    group_sex_instruct_list = []
-    full_list_of_target_id_and_state_id = []
-    player_character_data: game_type.Character = cache.character_data[0]
-    # 获取全模板
-    template_data_list = []
-    A_template_data = player_character_data.h_state.group_sex_body_template_dict["A"]
-    template_data_list.append(A_template_data)
-    if handle_premise.handle_all_group_sex_temple_run_on(0):
-        B_template_data = player_character_data.h_state.group_sex_body_template_dict["B"]
-        template_data_list.append(B_template_data)
-    # 遍历模板
-    for template_data in template_data_list:
-        # 对单
-        for body_part in template_data[0]:
-            target_chara_id = [template_data[0][body_part][0]]
-            state_id = template_data[0][body_part][1]
-            if state_id != -1:
-                group_sex_instruct_list.append(state_id)
-                full_list_of_target_id_and_state_id.append([target_chara_id, state_id])
-        # 对多
-        target_chara_id_list = template_data[1][0]
-        state_id = template_data[1][1]
-        if state_id != -1:
-            group_sex_instruct_list.append(state_id)
-            full_list_of_target_id_and_state_id.append([target_chara_id_list, state_id])
-    # 去重
-    group_sex_instruct_list = list(set(group_sex_instruct_list))
+  """
+  统计群交指令列表\n
+  Return arguments:\n
+  [], [] -- 已去重的群交指令列表，[角色id列表，状态id]
+  """
+  # 变量定义
+  group_sex_instruct_list = []
+  full_list_of_target_id_and_state_id = []
+  player_character_data: game_type.Character = cache.character_data[0]
+  # 获取全模板
+  template_data_list = []
+  A_template_data = player_character_data.h_state.group_sex_body_template_dict[
+      "A"
+  ]
+  template_data_list.append(A_template_data)
+  if handle_premise.handle_all_group_sex_temple_run_on(0):
+    B_template_data = (
+        player_character_data.h_state.group_sex_body_template_dict["B"]
+    )
+    template_data_list.append(B_template_data)
+  # 遍历模板
+  for template_data in template_data_list:
+    # 对单
+    for body_part in template_data[0]:
+      target_chara_id = [template_data[0][body_part][0]]
+      state_id = template_data[0][body_part][1]
+      if state_id != -1:
+        group_sex_instruct_list.append(state_id)
+        full_list_of_target_id_and_state_id.append([target_chara_id, state_id])
+    # 对多
+    target_chara_id_list = template_data[1][0]
+    state_id = template_data[1][1]
+    if state_id != -1:
+      group_sex_instruct_list.append(state_id)
+      full_list_of_target_id_and_state_id.append(
+          [target_chara_id_list, state_id]
+      )
+  # 去重
+  group_sex_instruct_list = list(set(group_sex_instruct_list))
 
-    # 返回
-    return group_sex_instruct_list, full_list_of_target_id_and_state_id
+  # 返回
+  return group_sex_instruct_list, full_list_of_target_id_and_state_id
 
 
 def count_group_sex_character_list():
-    """
-    统计群交模板中的角色列表\n
-    Return arguments:\n
-    [] -- 已去重的群交角色列表
-    """
-    # 变量定义
-    group_sex_chara_id_list = []
-    player_character_data: game_type.Character = cache.character_data[0]
-    # 获取全模板
-    template_data_list = []
-    A_template_data = player_character_data.h_state.group_sex_body_template_dict["A"]
-    template_data_list.append(A_template_data)
-    if handle_premise.handle_all_group_sex_temple_run_on(0):
-        B_template_data = player_character_data.h_state.group_sex_body_template_dict["B"]
-        template_data_list.append(B_template_data)
-    # 遍历模板
-    for template_data in template_data_list:
-        # 对单
-        for body_part in template_data[0]:
-            target_chara_id = template_data[0][body_part][0]
-            if target_chara_id != -1:
-                group_sex_chara_id_list.append(target_chara_id)
-        # 对多
-        target_chara_id_list = template_data[1][0]
-        if -1 not in target_chara_id_list:
-            group_sex_chara_id_list += target_chara_id_list
-    # 去重
-    group_sex_chara_id_list = list(set(group_sex_chara_id_list))
+  """
+  统计群交模板中的角色列表\n
+  Return arguments:\n
+  [] -- 已去重的群交角色列表
+  """
+  # 变量定义
+  group_sex_chara_id_list = []
+  player_character_data: game_type.Character = cache.character_data[0]
+  # 获取全模板
+  template_data_list = []
+  A_template_data = player_character_data.h_state.group_sex_body_template_dict[
+      "A"
+  ]
+  template_data_list.append(A_template_data)
+  if handle_premise.handle_all_group_sex_temple_run_on(0):
+    B_template_data = (
+        player_character_data.h_state.group_sex_body_template_dict["B"]
+    )
+    template_data_list.append(B_template_data)
+  # 遍历模板
+  for template_data in template_data_list:
+    # 对单
+    for body_part in template_data[0]:
+      target_chara_id = template_data[0][body_part][0]
+      if target_chara_id != -1:
+        group_sex_chara_id_list.append(target_chara_id)
+    # 对多
+    target_chara_id_list = template_data[1][0]
+    if -1 not in target_chara_id_list:
+      group_sex_chara_id_list += target_chara_id_list
+  # 去重
+  group_sex_chara_id_list = list(set(group_sex_chara_id_list))
 
-    # 返回
-    return group_sex_chara_id_list
+  # 返回
+  return group_sex_chara_id_list
 
 
 def get_status_id_list_from_group_sex_body_part(body_part: str):
-    """
-    从群交部位获取状态id列表\n
-    Keyword arguments:\n
-    body_part -- 群交部位\n
-    Return arguments:\n
-    [] -- 状态id列表
-    """
-    from Script.System.Instruct_System import see_instruct_panel
+  """
+  从群交部位获取状态id列表\n
+  Keyword arguments:\n
+  body_part -- 群交部位\n
+  Return arguments:\n
+  [] -- 状态id列表
+  """
+  from Script.System.Instruct_System import see_instruct_panel
 
-    new_status_id_list = []
-    # 获取状态id列表
-    if body_part == "mouth":
-        status_id_list = game_config.config_behavior_id_list_of_group_sex_body_part[_("口")]
-    elif body_part == "L_hand" or body_part == "R_hand":
-        status_id_list = game_config.config_behavior_id_list_of_group_sex_body_part[_("手")]
-    elif body_part == "penis":
-        status_id_list = game_config.config_behavior_id_list_of_group_sex_body_part[_("插入")]
-    elif body_part == _("侍奉"):
-        status_id_list = game_config.config_behavior_id_list_of_group_sex_body_part[_("侍奉")]
-    elif body_part == "anal":
-        status_id_list = game_config.config_behavior_id_list_of_group_sex_body_part[_("肛")]
-    # 遍历状态id
-    now_premise_data = {}
-    new_status_id_list = []
-    for status_id in status_id_list:
-        if status_id in constant.behavior_id_to_instruct_id:
-            # 获取指令id
-            instruct_id = constant.behavior_id_to_instruct_id[status_id]
-            # 检查指令是否可用
-            filter_judge, now_premise_data = see_instruct_panel.judge_single_instruct_filter(instruct_id, now_premise_data, constant.InstructType.SEX, use_type_filter_flag=False)
-            # 去掉有破处判定且当前为处的
-            if filter_judge:
-                status_data = game_config.config_behavior[status_id]
-                status_tag_list = status_data.tag
-                status_tag_list = status_data.tag.split("|")
-                pl_character_data = cache.character_data[0]
-                if pl_character_data.target_character_id == 0:
-                    target_character_data = cache.character_data[pl_character_data.target_character_id]
-                    # 如果NPC为处，则跳过破处类
-                    if target_character_data.talent[0] and _("V") in status_tag_list and _("破处") in status_tag_list:
-                        continue
-                    if target_character_data.talent[1] and _("A") in status_tag_list and _("破处") in status_tag_list:
-                        continue
-                    if target_character_data.talent[2] and _("U") in status_tag_list and _("破处") in status_tag_list:
-                        continue
-                    if target_character_data.talent[3] and _("W") in status_tag_list and _("破处") in status_tag_list:
-                        continue
-                    if target_character_data.talent[4] and _("N") in status_tag_list and _("破处") in status_tag_list:
-                        continue
+  new_status_id_list = []
+  # 获取状态id列表
+  if body_part == "mouth":
+    status_id_list = game_config.config_behavior_id_list_of_group_sex_body_part[
+        _("口")
+    ]
+  elif body_part == "L_hand" or body_part == "R_hand":
+    status_id_list = game_config.config_behavior_id_list_of_group_sex_body_part[
+        _("手")
+    ]
+  elif body_part == "penis":
+    status_id_list = game_config.config_behavior_id_list_of_group_sex_body_part[
+        _("插入")
+    ]
+  elif body_part == _("侍奉"):
+    status_id_list = game_config.config_behavior_id_list_of_group_sex_body_part[
+        _("侍奉")
+    ]
+  elif body_part == "anal":
+    status_id_list = game_config.config_behavior_id_list_of_group_sex_body_part[
+        _("肛")
+    ]
+  # 遍历状态id
+  now_premise_data = {}
+  new_status_id_list = []
+  for status_id in status_id_list:
+    if status_id in constant.behavior_id_to_instruct_id:
+      # 获取指令id
+      instruct_id = constant.behavior_id_to_instruct_id[status_id]
+      # 检查指令是否可用
+      filter_judge, now_premise_data = (
+          see_instruct_panel.judge_single_instruct_filter(
+              instruct_id,
+              now_premise_data,
+              constant.InstructType.SEX,
+              use_type_filter_flag=False,
+          )
+      )
+      # 去掉有破处判定且当前为处的
+      if filter_judge:
+        status_data = game_config.config_behavior[status_id]
+        status_tag_list = status_data.tag
+        status_tag_list = status_data.tag.split("|")
+        pl_character_data = cache.character_data[0]
+        if pl_character_data.target_character_id == 0:
+          target_character_data = cache.character_data[
+              pl_character_data.target_character_id
+          ]
+          # 如果NPC为处，则跳过破处类
+          if (
+              target_character_data.talent[0]
+              and _("V") in status_tag_list
+              and _("破处") in status_tag_list
+          ):
+            continue
+          if (
+              target_character_data.talent[1]
+              and _("A") in status_tag_list
+              and _("破处") in status_tag_list
+          ):
+            continue
+          if (
+              target_character_data.talent[2]
+              and _("U") in status_tag_list
+              and _("破处") in status_tag_list
+          ):
+            continue
+          if (
+              target_character_data.talent[3]
+              and _("W") in status_tag_list
+              and _("破处") in status_tag_list
+          ):
+            continue
+          if (
+              target_character_data.talent[4]
+              and _("N") in status_tag_list
+              and _("破处") in status_tag_list
+          ):
+            continue
 
-                # 加入到新列表中
-                new_status_id_list.append(status_id)
+        # 加入到新列表中
+        new_status_id_list.append(status_id)
 
-    return new_status_id_list
+  return new_status_id_list
 
 
 def get_now_template_part_list():
-    """
-    获取当前模板中空缺与非空缺的部位列表\n
-    Keyword arguments:\n
-    body_part -- 群交部位\n
-    Return arguments:\n
-    [], [] -- 空缺的部位列表，非空缺的部位列表
-    """
+  """
+  获取当前模板中空缺与非空缺的部位列表\n
+  Keyword arguments:\n
+  body_part -- 群交部位\n
+  Return arguments:\n
+  [], [] -- 空缺的部位列表，非空缺的部位列表
+  """
 
-    pl_character_data: game_type.Character = cache.character_data[0]
-    A_template_data = pl_character_data.h_state.group_sex_body_template_dict["A"]
+  pl_character_data: game_type.Character = cache.character_data[0]
+  A_template_data = pl_character_data.h_state.group_sex_body_template_dict["A"]
 
-    now_template_empty_part_list = [] # 空缺的部位列表
-    now_template_not_empty_part_list = [] # 非空缺的部位列表
-    wait_upon_flag = True # 侍奉是否可选
-    wait_upon_state_id = A_template_data[1][1] # 侍奉的状态id
-    # 对单
-    for body_part in A_template_data[0]:
-        state_id = A_template_data[0][body_part][1]
-        if state_id == -1:
-            # 如果不是阴茎，则直接加入
-            if body_part != "penis":
-                now_template_empty_part_list.append(body_part)
-            # 如果是阴茎，则需要未选侍奉
-            elif wait_upon_state_id == -1:
-                now_template_empty_part_list.append(body_part)
-        # 如果阴茎已选，则侍奉不可选
-        elif body_part == "penis":
-            wait_upon_flag = False
-        if state_id != -1:
-            now_template_not_empty_part_list.append(body_part)
+  now_template_empty_part_list = []  # 空缺的部位列表
+  now_template_not_empty_part_list = []  # 非空缺的部位列表
+  wait_upon_flag = True  # 侍奉是否可选
+  wait_upon_state_id = A_template_data[1][1]  # 侍奉的状态id
+  # 对单
+  for body_part in A_template_data[0]:
+    state_id = A_template_data[0][body_part][1]
+    if state_id == -1:
+      # 如果不是阴茎，则直接加入
+      if body_part != "penis":
+        now_template_empty_part_list.append(body_part)
+      # 如果是阴茎，则需要未选侍奉
+      elif wait_upon_state_id == -1:
+        now_template_empty_part_list.append(body_part)
+    # 如果阴茎已选，则侍奉不可选
+    elif body_part == "penis":
+      wait_upon_flag = False
+    if state_id != -1:
+      now_template_not_empty_part_list.append(body_part)
 
-    # 侍奉
-    if wait_upon_flag:
-        target_chara_id_list = A_template_data[1][0]
-        if wait_upon_state_id == -1:
-            now_template_empty_part_list.append(_("侍奉"))
-        elif wait_upon_state_id != -1:
-            now_template_not_empty_part_list.append(_("侍奉"))
-            if len(target_chara_id_list) < 4:
-                now_template_empty_part_list.append(_("加入侍奉"))
+  # 侍奉
+  if wait_upon_flag:
+    target_chara_id_list = A_template_data[1][0]
+    if wait_upon_state_id == -1:
+      now_template_empty_part_list.append(_("侍奉"))
+    elif wait_upon_state_id != -1:
+      now_template_not_empty_part_list.append(_("侍奉"))
+      if len(target_chara_id_list) < 4:
+        now_template_empty_part_list.append(_("加入侍奉"))
 
-    return now_template_empty_part_list, now_template_not_empty_part_list
+  return now_template_empty_part_list, now_template_not_empty_part_list
 
 
 def clear_character_data_in_group_sex_template(character_id: int) -> bool:
-    """
-    清除角色在玩家当前群交模板中的数据（A与B）
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    bool -- 是否找到并重置过该角色数据
-    """
+  """
+  清除角色在玩家当前群交模板中的数据（A与B）
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  bool -- 是否找到并重置过该角色数据
+  """
 
-    pl_character_data: game_type.Character = cache.character_data[0]
-    group_sex_body_template_dict = pl_character_data.h_state.group_sex_body_template_dict
-    found_flag = False
+  pl_character_data: game_type.Character = cache.character_data[0]
+  group_sex_body_template_dict = (
+      pl_character_data.h_state.group_sex_body_template_dict
+  )
+  found_flag = False
 
-    for template_key in ["A", "B"]:
-        if template_key not in group_sex_body_template_dict:
-            continue
+  for template_key in ["A", "B"]:
+    if template_key not in group_sex_body_template_dict:
+      continue
 
-        now_template_data = group_sex_body_template_dict[template_key]
+    now_template_data = group_sex_body_template_dict[template_key]
 
-        # 对单部位
-        for body_part in now_template_data[0]:
-            if now_template_data[0][body_part][0] == character_id:
-                now_template_data[0][body_part] = [-1, -1]
-                found_flag = True
+    # 对单部位
+    for body_part in now_template_data[0]:
+      if now_template_data[0][body_part][0] == character_id:
+        now_template_data[0][body_part] = [-1, -1]
+        found_flag = True
 
-        # 对多部位（侍奉）
-        target_chara_id_list = now_template_data[1][0]
-        if character_id in target_chara_id_list:
-            # 将该角色id从列表中移除
-            target_chara_id_list.remove(character_id)
-            # 如果移除后列表为空，则重置状态id
-            if not target_chara_id_list:
-                now_template_data[1] = [[-1], -1]
-            found_flag = True
+    # 对多部位（侍奉）
+    target_chara_id_list = now_template_data[1][0]
+    if character_id in target_chara_id_list:
+      # 将该角色id从列表中移除
+      target_chara_id_list.remove(character_id)
+      # 如果移除后列表为空，则重置状态id
+      if not target_chara_id_list:
+        now_template_data[1] = [[-1], -1]
+      found_flag = True
 
-    return found_flag
+  return found_flag
 
 
 class SeeGroupSexInfoPanel:
-    """
-    显示群交栏数据面板对象
-    Keyword arguments:
-    character_id -- 角色id
-    width -- 绘制宽度
-    column -- 每行状态最大个数
-    type_number -- 显示的状态类型
-    """
+  """
+  显示群交栏数据面板对象
+  Keyword arguments:
+  character_id -- 角色id
+  width -- 绘制宽度
+  column -- 每行状态最大个数
+  type_number -- 显示的状态类型
+  """
 
-    def __init__(self, character_id: int, width: int, column: int, type_number: int, center_status: bool = True):
-        """初始化绘制对象"""
-        self.character_id = character_id
-        """ 要绘制的角色id """
-        self.width = width
-        """ 面板最大宽度 """
-        self.column = column
-        """ 每行状态最大个数 """
-        self.draw_list: List[draw.NormalDraw] = []
-        """ 绘制的文本列表 """
-        self.return_list: List[str] = []
-        """ 当前面板监听的按钮列表 """
-        self.center_status: bool = center_status
-        """ 居中绘制状态文本 """
-        self.type_number = type_number
-        """ 显示的状态类型 """
+  def __init__(
+      self,
+      character_id: int,
+      width: int,
+      column: int,
+      type_number: int,
+      center_status: bool = True,
+  ):
+    """初始化绘制对象"""
+    self.character_id = character_id
+    """ 要绘制的角色id """
+    self.width = width
+    """ 面板最大宽度 """
+    self.column = column
+    """ 每行状态最大个数 """
+    self.draw_list: List[draw.NormalDraw] = []
+    """ 绘制的文本列表 """
+    self.return_list: List[str] = []
+    """ 当前面板监听的按钮列表 """
+    self.center_status: bool = center_status
+    """ 居中绘制状态文本 """
+    self.type_number = type_number
+    """ 显示的状态类型 """
 
-        type_line = draw.LittleTitleLineDraw(_("群交"), width, ":")
-        # print("type_data.name :",type_data.name)
-        now_draw = panel.LeftDrawTextListPanel()
-        text_draw = draw.NormalDraw()
+    type_line = draw.LittleTitleLineDraw(_("群交"), width, ":")
+    # print("type_data.name :",type_data.name)
+    now_draw = panel.LeftDrawTextListPanel()
+    text_draw = draw.NormalDraw()
 
-        character_data = cache.character_data[0]
-        now_template_data = character_data.h_state.group_sex_body_template_dict["A"]
+    character_data = cache.character_data[0]
+    now_template_data = character_data.h_state.group_sex_body_template_dict["A"]
 
-        # 全部位文本
-        all_part_text = ""
+    # 全部位文本
+    all_part_text = ""
 
-        # 对单遍历各部位
-        for body_part in now_template_data[0]:
-            state_id = now_template_data[0][body_part][1]
-            if state_id != -1:
-                target_chara_id = now_template_data[0][body_part][0]
-                target_chara_name = cache.character_data[target_chara_id].name
-                state_name = game_config.config_behavior[state_id].name
-                body_part_name = body_part_name_dict[body_part]
-                all_part_text += _("{0}-{1}-{2} ").format(body_part_name, state_name, target_chara_name)
+    # 对单遍历各部位
+    for body_part in now_template_data[0]:
+      state_id = now_template_data[0][body_part][1]
+      if state_id != -1:
+        target_chara_id = now_template_data[0][body_part][0]
+        target_chara_name = cache.character_data[target_chara_id].name
+        state_name = game_config.config_behavior[state_id].name
+        body_part_name = body_part_name_dict[body_part]
+        all_part_text += _("{0}-{1}-{2} ").format(
+            body_part_name, state_name, target_chara_name
+        )
 
-        # 对多
-        target_chara_id_list = now_template_data[1][0]
-        state_id = now_template_data[1][1]
-        if state_id != -1:
-            state_name = game_config.config_behavior[state_id].name
-            all_target_chara_name = ""
-            for target_chara_id in target_chara_id_list:
-                all_target_chara_name += cache.character_data[target_chara_id].name
-                # 除最后一个人名字之外其他都加一个顿号
-                if target_chara_id != target_chara_id_list[-1]:
-                    all_target_chara_name += "、"
-            # 如果人数大于1，则加一个"一起"
-            if len(target_chara_id_list) > 1:
-                all_target_chara_name += _("一起")
-            all_part_text += _("阴茎正在被{0}{1} ").format(all_target_chara_name, state_name)
+    # 对多
+    target_chara_id_list = now_template_data[1][0]
+    state_id = now_template_data[1][1]
+    if state_id != -1:
+      state_name = game_config.config_behavior[state_id].name
+      all_target_chara_name = ""
+      for target_chara_id in target_chara_id_list:
+        all_target_chara_name += cache.character_data[target_chara_id].name
+        # 除最后一个人名字之外其他都加一个顿号
+        if target_chara_id != target_chara_id_list[-1]:
+          all_target_chara_name += "、"
+      # 如果人数大于1，则加一个"一起"
+      if len(target_chara_id_list) > 1:
+        all_target_chara_name += _("一起")
+      all_part_text += _("阴茎正在被{0}{1} ").format(
+          all_target_chara_name, state_name
+      )
 
-        # 如果文本不为空，则加入到绘制列表中
-        if all_part_text != "":
-            all_part_text = character_data.name + " " + all_part_text + "\n"
-            self.draw_list.append(type_line)
-        text_draw.text = all_part_text
-        now_draw.draw_list.append(text_draw)
-        now_draw.width += len(text_draw.text)
+    # 如果文本不为空，则加入到绘制列表中
+    if all_part_text != "":
+      all_part_text = character_data.name + " " + all_part_text + "\n"
+      self.draw_list.append(type_line)
+    text_draw.text = all_part_text
+    now_draw.draw_list.append(text_draw)
+    now_draw.width += len(text_draw.text)
 
-        self.draw_list.extend(now_draw.draw_list)
+    self.draw_list.extend(now_draw.draw_list)
 
-    def draw(self):
-        """绘制面板"""
-        for label in self.draw_list:
-            if isinstance(label, list):
-                for value in label:
-                    value.draw()
-                line_feed.draw()
-            else:
-                label.draw()
+  def draw(self):
+    """绘制面板"""
+    for label in self.draw_list:
+      if isinstance(label, list):
+        for value in label:
+          value.draw()
+        line_feed.draw()
+      else:
+        label.draw()
 
 
 class Edit_Group_Sex_Temple_Panel:
-    """
-    总面板对象
-    Keyword arguments:
-    width -- 绘制宽度
-    """
+  """
+  总面板对象
+  Keyword arguments:
+  width -- 绘制宽度
+  """
 
-    def __init__(self, width: int):
-        """初始化绘制对象"""
-        self.width: int = width
-        """ 绘制的最大宽度 """
-        self.handle_panel: panel.PageHandlePanel = None
-        """ 当前名字列表控制面板 """
-        self.pl_character_data = cache.character_data[0]
-        """ 玩家角色数据 """
+  def __init__(self, width: int):
+    """初始化绘制对象"""
+    self.width: int = width
+    """ 绘制的最大宽度 """
+    self.handle_panel: panel.PageHandlePanel = None
+    """ 当前名字列表控制面板 """
+    self.pl_character_data = cache.character_data[0]
+    """ 玩家角色数据 """
 
-    def draw(self):
-        """绘制对象"""
-        title_draw = draw.TitleLineDraw("编辑群交行动", self.width)
+  def draw(self):
+    """绘制对象"""
+    title_draw = draw.TitleLineDraw("编辑群交行动", self.width)
 
-        while 1:
-            title_draw.draw()
-            return_list = []
+    while 1:
+      title_draw.draw()
+      return_list = []
 
-            # 刷新玩家角色数据
-            self.pl_character_data = cache.character_data[0]
-            now_template_data = self.pl_character_data.h_state.group_sex_body_template_dict["A"]
+      # 刷新玩家角色数据
+      self.pl_character_data = cache.character_data[0]
+      now_template_data = (
+          self.pl_character_data.h_state.group_sex_body_template_dict["A"]
+      )
 
-            # 人员筛选
-            info_text = _("当前群交状态：\n")
-            info_text += _("○群交时同一角色无法同时占用多个部位\n")
-            info_text += _("○插入和侍奉只能二选一，插入为单人，侍奉可最多四人\n\n")
-            info_draw = draw.NormalDraw()
-            info_draw.text = info_text
-            info_draw.width = self.width
-            info_draw.draw()
+      # 人员筛选
+      info_text = _("当前群交状态：\n")
+      info_text += _("○群交时同一角色无法同时占用多个部位\n")
+      info_text += _("○插入和侍奉只能二选一，插入为单人，侍奉可最多四人\n\n")
+      info_draw = draw.NormalDraw()
+      info_draw.text = info_text
+      info_draw.width = self.width
+      info_draw.draw()
 
-            # 对单遍历各部位
-            for body_part in now_template_data[0]:
-                # 部位名字绘制
-                now_name = body_part_name_dict[body_part].ljust(8, "　")
-                if body_part == "penis":
-                    now_name = _("阴茎（插入）").ljust(8, "　")
-                body_part_name = f"  {now_name}"
-                body_part_name_draw = draw.NormalDraw()
-                body_part_name_draw.text = body_part_name
-                body_part_name_draw.width = int(self.width / 4)
-                body_part_name_draw.draw()
-                # 交互对象按钮绘制
-                target_chara_id = now_template_data[0][body_part][0]
-                if target_chara_id == -1:
-                    target_chara_name = _("未选择角色")
-                else:
-                    target_chara_name = cache.character_data[target_chara_id].name
-                target_chara_button = draw.CenterButton(
-                    f"▶{target_chara_name}", body_part_name + target_chara_name, int(self.width / 4), cmd_func=self.show_target_chara_list, args=("A", body_part)
-                )
-                target_chara_button.draw()
-                return_list.append(target_chara_button.return_text)
-                # 状态名字绘制
-                state_id = now_template_data[0][body_part][1]
-                if state_id == -1:
-                    state_name = _("未选择指令")
-                else:
-                    state_name = game_config.config_behavior[state_id].name
-                state_name_button = draw.CenterButton(
-                    f"▶{state_name}", body_part_name + state_name, int(self.width / 5), cmd_func=self.show_status_list, args=("A", body_part)
-                )
-                state_name_button.draw()
-                return_list.append(state_name_button.return_text)
-                line_feed.draw()
-
-                # 阴茎栏中额外增加一个侍奉行
-                if body_part == "penis":
-                    now_name = _("阴茎（侍奉）").ljust(8, "　")
-                    body_part_name = f"  {now_name}"
-                    body_part_name_draw = draw.NormalDraw()
-                    body_part_name_draw.text = body_part_name
-                    body_part_name_draw.width = int(self.width / 2)
-                    body_part_name_draw.draw()
-                    # 交互对象按钮绘制
-                    target_chara_id_list = now_template_data[1][0]
-                    if -1 in target_chara_id_list:
-                        target_chara_name_text = _("未选择角色")
-                    else:
-                        target_chara_name_text = ""
-                        for target_chara_id in target_chara_id_list:
-                            target_chara_name_text += cache.character_data[target_chara_id].name
-                            target_chara_name_text += " "
-                    target_chara_button = draw.CenterButton(
-                        f"▶{target_chara_name_text}", body_part_name + target_chara_name_text, int(self.width / 4), cmd_func=self.show_target_chara_list, args=("A", _("侍奉"))
-                    )
-                    target_chara_button.draw()
-                    return_list.append(target_chara_button.return_text)
-                    # 状态名字绘制
-                    state_id = now_template_data[1][1]
-                    if state_id == -1:
-                        state_name = _("未选择指令")
-                    else:
-                        state_name = game_config.config_behavior[state_id].name
-                    state_name_button = draw.CenterButton(
-                        f"▶{state_name}", body_part_name + state_name, int(self.width / 5), cmd_func=self.show_status_list, args=("A", _("侍奉"))
-                    )
-                    state_name_button.draw()
-                    return_list.append(state_name_button.return_text)
-                    line_feed.draw()
-
-            line_feed.draw()
-            reset_button = draw.CenterButton(_("▶重置模板"), _("重置模板"), self.width // 8, cmd_func=self.reset_template)
-            reset_button.draw()
-            return_list.append(reset_button.return_text)
-
-            # 轮流用副模板
-            line_feed.draw()
-            line_feed.draw()
-            info_draw = draw.NormalDraw()
-            info_draw.text = _("轮流用副模板：在当前状态之外新增一套副模板，可在两套模板之间切换，或者使用轮流群交指令，可轮流进行一次双模板中的群交指令\n")
-            info_draw.text += "              "
-            info_draw.width = self.width
-            info_draw.draw()
-            now_B_text = _("未启用")
-            if handle_premise.handle_all_group_sex_temple_run_on(0):
-                now_B_text = _("已启用")
-            B_change_button = draw.LeftButton(
-                f"▶{now_B_text}", _("轮流用副模板"), len(now_B_text) * 4 + 1, cmd_func=self.change_B_temple_flag
-            )
-            B_change_button.draw()
-            return_list.append(B_change_button.return_text)
-            if handle_premise.handle_all_group_sex_temple_run_on(0):
-                change_temple_button = draw.CenterButton(
-                    _("切换模板"), _("切换"), len(now_B_text) * 4 + 1, cmd_func=self.change_temple
-                )
-                change_temple_button.draw()
-                return_list.append(change_temple_button.return_text)
-
-            # 锁定按钮
-            line_feed.draw()
-            info_draw = draw.NormalDraw()
-            info_draw.text = _("锁定群交模板：锁定后使用指令时不会再自动调整状态，仅可在当前编辑面板中修改\n")
-            info_draw.text += "              "
-            info_draw.width = self.width
-            info_draw.draw()
-
-            now_lock_text = _("已锁定")
-            if self.pl_character_data.h_state.group_sex_lock_flag == False:
-                now_lock_text = _("未锁定")
-            lock_change_button = draw.LeftButton(
-                f"▶{now_lock_text}", _("锁定群交模板"), len(now_lock_text) * 4 + 1, cmd_func=self.change_lock_flag
-            )
-            lock_change_button.draw()
-            return_list.append(lock_change_button.return_text)
-
-            # NPC行动调整按钮
-            line_feed.draw()
-            info_draw = draw.NormalDraw()
-            info_draw.text = _("调整干员行动：没有在上述位置中的干员会\n")
-            info_draw.text += "              "
-            info_draw.width = self.width
-            info_draw.draw()
-
-            npc_ai_text = _("无行动")
-            if handle_premise.handle_npc_ai_type_1_in_group_sex(0):
-                npc_ai_text = _("自慰")
-            elif handle_premise.handle_npc_ai_type_2_in_group_sex(0):
-                npc_ai_text = _("优先补空位，无空位则自慰")
-            elif handle_premise.handle_npc_ai_type_3_in_group_sex(0):
-                npc_ai_text = _("随机抢占替换当前位置，无位则自慰")
-            npc_ai_change_button = draw.LeftButton(
-                f"▶{npc_ai_text}", _("调整干员行动"), len(npc_ai_text) * 4 + 1, cmd_func=self.change_npc_ai
-            )
-            npc_ai_change_button.draw()
-            return_list.append(npc_ai_change_button.return_text)
-
-            # 邀请其他干员按钮
-            line_feed.draw()
-            info_draw = draw.NormalDraw()
-            info_draw.text = _("邀请其他干员：邀请不在场的干员来这里参加群交，只能邀请实行值足够同意的\n")
-            info_draw.text += "              "
-            info_draw.width = self.width
-            info_draw.draw()
-
-            invite_other_npc_text = _("邀请")
-            invite_other_npc_button = draw.LeftButton(
-                f"▶{invite_other_npc_text}", _("邀请其他干员"), len(npc_ai_text) * 4 + 1, cmd_func=self.show_invite_npc_panel
-            )
-            invite_other_npc_button.draw()
-            return_list.append(invite_other_npc_button.return_text)
-
-            line_feed.draw()
-            line_feed.draw()
-            back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
-            back_draw.draw()
-            line_feed.draw()
-            return_list.append(back_draw.return_text)
-            yrn = flow_handle.askfor_all(return_list)
-            if yrn == back_draw.return_text:
-                self.reset_unfinish_select()
-                cache.now_panel_id = constant.Panel.IN_SCENE
-                break
-
-    def show_target_chara_list(self, temple_id: str, body_part: str):
-        """绘制可选择的交互对象角色列表"""
-        # 函数内 import：Script/System/* 之间在文件顶层互引会循环导入
-        from Script.System.Education_System import sex_class_handle
-
-        # 全NPC列表
-        scene_path_str = map_handle.get_map_system_path_str_for_list(self.pl_character_data.position)
-        scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-        all_character_list = scene_data.character_list
-        # 全模板中的角色id列表
-        group_sex_chara_id_list = count_group_sex_character_list()
-        # 获取已选的角色id
-        if body_part != "侍奉":
-            selected_chara_id_list = [self.pl_character_data.h_state.group_sex_body_template_dict[temple_id][0][body_part][0]]
+      # 对单遍历各部位
+      for body_part in now_template_data[0]:
+        # 部位名字绘制
+        now_name = body_part_name_dict[body_part].ljust(8, "　")
+        if body_part == "penis":
+          now_name = _("阴茎（插入）").ljust(8, "　")
+        body_part_name = f"  {now_name}"
+        body_part_name_draw = draw.NormalDraw()
+        body_part_name_draw.text = body_part_name
+        body_part_name_draw.width = int(self.width / 4)
+        body_part_name_draw.draw()
+        # 交互对象按钮绘制
+        target_chara_id = now_template_data[0][body_part][0]
+        if target_chara_id == -1:
+          target_chara_name = _("未选择角色")
         else:
-            selected_chara_id_list = self.pl_character_data.h_state.group_sex_body_template_dict[temple_id][1][0]
-        # 从全模板角色id列表中去掉已选的角色id
-        group_sex_chara_id_list = [chara_id for chara_id in group_sex_chara_id_list if chara_id not in selected_chara_id_list]
-        # 去掉列表中可能存在的玩家id
-        all_character_list = [chara_id for chara_id in all_character_list if chara_id != 0]
-        # 去掉列表中已在其他部位中的角色id
-        all_character_list = [chara_id for chara_id in all_character_list if chara_id not in group_sex_chara_id_list]
-        # 性技实操课上只列已在这节课里的学生（sex_class_handle.get_class_member_list，Plan 32 §3.8 L11）：
-        #    模板动作逐个目标结算、不查 is_h 与入课门槛，跟随进教室的干员、没过门槛的学生被选进模板就会被操作并吃主修加成，
-        #    绕过「课堂 H 只收学生岗」。普通群交不变
+          target_chara_name = cache.character_data[target_chara_id].name
+        target_chara_button = draw.CenterButton(
+            f"▶{target_chara_name}",
+            body_part_name + target_chara_name,
+            int(self.width / 4),
+            cmd_func=self.show_target_chara_list,
+            args=("A", body_part),
+        )
+        target_chara_button.draw()
+        return_list.append(target_chara_button.return_text)
+        # 状态名字绘制
+        state_id = now_template_data[0][body_part][1]
+        if state_id == -1:
+          state_name = _("未选择指令")
+        else:
+          state_name = game_config.config_behavior[state_id].name
+        state_name_button = draw.CenterButton(
+            f"▶{state_name}",
+            body_part_name + state_name,
+            int(self.width / 5),
+            cmd_func=self.show_status_list,
+            args=("A", body_part),
+        )
+        state_name_button.draw()
+        return_list.append(state_name_button.return_text)
+        line_feed.draw()
+
+        # 阴茎栏中额外增加一个侍奉行
+        if body_part == "penis":
+          now_name = _("阴茎（侍奉）").ljust(8, "　")
+          body_part_name = f"  {now_name}"
+          body_part_name_draw = draw.NormalDraw()
+          body_part_name_draw.text = body_part_name
+          body_part_name_draw.width = int(self.width / 2)
+          body_part_name_draw.draw()
+          # 交互对象按钮绘制
+          target_chara_id_list = now_template_data[1][0]
+          if -1 in target_chara_id_list:
+            target_chara_name_text = _("未选择角色")
+          else:
+            target_chara_name_text = ""
+            for target_chara_id in target_chara_id_list:
+              target_chara_name_text += cache.character_data[
+                  target_chara_id
+              ].name
+              target_chara_name_text += " "
+          target_chara_button = draw.CenterButton(
+              f"▶{target_chara_name_text}",
+              body_part_name + target_chara_name_text,
+              int(self.width / 4),
+              cmd_func=self.show_target_chara_list,
+              args=("A", _("侍奉")),
+          )
+          target_chara_button.draw()
+          return_list.append(target_chara_button.return_text)
+          # 状态名字绘制
+          state_id = now_template_data[1][1]
+          if state_id == -1:
+            state_name = _("未选择指令")
+          else:
+            state_name = game_config.config_behavior[state_id].name
+          state_name_button = draw.CenterButton(
+              f"▶{state_name}",
+              body_part_name + state_name,
+              int(self.width / 5),
+              cmd_func=self.show_status_list,
+              args=("A", _("侍奉")),
+          )
+          state_name_button.draw()
+          return_list.append(state_name_button.return_text)
+          line_feed.draw()
+
+      line_feed.draw()
+      reset_button = draw.CenterButton(
+          _("▶重置模板"),
+          _("重置模板"),
+          self.width // 8,
+          cmd_func=self.reset_template,
+      )
+      reset_button.draw()
+      return_list.append(reset_button.return_text)
+
+      # 轮流用副模板
+      line_feed.draw()
+      line_feed.draw()
+      info_draw = draw.NormalDraw()
+      info_draw.text = _(
+          "轮流用副模板：在当前状态之外新增一套副模板，可在两套模板之间切换，或者使用轮流群交指令，可轮流进行一次双模板中的群交指令\n"
+      )
+      info_draw.text += "              "
+      info_draw.width = self.width
+      info_draw.draw()
+      now_B_text = _("未启用")
+      if handle_premise.handle_all_group_sex_temple_run_on(0):
+        now_B_text = _("已启用")
+      B_change_button = draw.LeftButton(
+          f"▶{now_B_text}",
+          _("轮流用副模板"),
+          len(now_B_text) * 4 + 1,
+          cmd_func=self.change_B_temple_flag,
+      )
+      B_change_button.draw()
+      return_list.append(B_change_button.return_text)
+      if handle_premise.handle_all_group_sex_temple_run_on(0):
+        change_temple_button = draw.CenterButton(
+            _("切换模板"),
+            _("切换"),
+            len(now_B_text) * 4 + 1,
+            cmd_func=self.change_temple,
+        )
+        change_temple_button.draw()
+        return_list.append(change_temple_button.return_text)
+
+      # 锁定按钮
+      line_feed.draw()
+      info_draw = draw.NormalDraw()
+      info_draw.text = _(
+          "锁定群交模板：锁定后使用指令时不会再自动调整状态，仅可在当前编辑面板中修改\n"
+      )
+      info_draw.text += "              "
+      info_draw.width = self.width
+      info_draw.draw()
+
+      now_lock_text = _("已锁定")
+      if self.pl_character_data.h_state.group_sex_lock_flag == False:
+        now_lock_text = _("未锁定")
+      lock_change_button = draw.LeftButton(
+          f"▶{now_lock_text}",
+          _("锁定群交模板"),
+          len(now_lock_text) * 4 + 1,
+          cmd_func=self.change_lock_flag,
+      )
+      lock_change_button.draw()
+      return_list.append(lock_change_button.return_text)
+
+      # NPC行动调整按钮
+      line_feed.draw()
+      info_draw = draw.NormalDraw()
+      info_draw.text = _("调整干员行动：没有在上述位置中的干员会\n")
+      info_draw.text += "              "
+      info_draw.width = self.width
+      info_draw.draw()
+
+      npc_ai_text = _("无行动")
+      if handle_premise.handle_npc_ai_type_1_in_group_sex(0):
+        npc_ai_text = _("自慰")
+      elif handle_premise.handle_npc_ai_type_2_in_group_sex(0):
+        npc_ai_text = _("优先补空位，无空位则自慰")
+      elif handle_premise.handle_npc_ai_type_3_in_group_sex(0):
+        npc_ai_text = _("随机抢占替换当前位置，无位则自慰")
+      npc_ai_change_button = draw.LeftButton(
+          f"▶{npc_ai_text}",
+          _("调整干员行动"),
+          len(npc_ai_text) * 4 + 1,
+          cmd_func=self.change_npc_ai,
+      )
+      npc_ai_change_button.draw()
+      return_list.append(npc_ai_change_button.return_text)
+
+      # 邀请其他干员按钮
+      line_feed.draw()
+      info_draw = draw.NormalDraw()
+      info_draw.text = _(
+          "邀请其他干员：邀请不在场的干员来这里参加群交，只能邀请实行值足够同意的\n"
+      )
+      info_draw.text += "              "
+      info_draw.width = self.width
+      info_draw.draw()
+
+      invite_other_npc_text = _("邀请")
+      invite_other_npc_button = draw.LeftButton(
+          f"▶{invite_other_npc_text}",
+          _("邀请其他干员"),
+          len(npc_ai_text) * 4 + 1,
+          cmd_func=self.show_invite_npc_panel,
+      )
+      invite_other_npc_button.draw()
+      return_list.append(invite_other_npc_button.return_text)
+
+      line_feed.draw()
+      line_feed.draw()
+      back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
+      back_draw.draw()
+      line_feed.draw()
+      return_list.append(back_draw.return_text)
+      yrn = flow_handle.askfor_all(return_list)
+      if yrn == back_draw.return_text:
+        self.reset_unfinish_select()
+        cache.now_panel_id = constant.Panel.IN_SCENE
+        break
+
+  def show_target_chara_list(self, temple_id: str, body_part: str):
+    """绘制可选择的交互对象角色列表"""
+    # 函数内 import：Script/System/* 之间在文件顶层互引会循环导入
+    from Script.System.Education_System import sex_class_handle
+
+    # 全NPC列表
+    scene_path_str = map_handle.get_map_system_path_str_for_list(
+        self.pl_character_data.position
+    )
+    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
+    all_character_list = scene_data.character_list
+    # 全模板中的角色id列表
+    group_sex_chara_id_list = count_group_sex_character_list()
+    # 获取已选的角色id
+    if body_part != "侍奉":
+      selected_chara_id_list = [
+          self.pl_character_data.h_state.group_sex_body_template_dict[
+              temple_id
+          ][0][body_part][0]
+      ]
+    else:
+      selected_chara_id_list = (
+          self.pl_character_data.h_state.group_sex_body_template_dict[
+              temple_id
+          ][1][0]
+      )
+    # 从全模板角色id列表中去掉已选的角色id
+    group_sex_chara_id_list = [
+        chara_id
+        for chara_id in group_sex_chara_id_list
+        if chara_id not in selected_chara_id_list
+    ]
+    # 去掉列表中可能存在的玩家id
+    all_character_list = [
+        chara_id for chara_id in all_character_list if chara_id != 0
+    ]
+    # 去掉列表中已在其他部位中的角色id
+    all_character_list = [
+        chara_id
+        for chara_id in all_character_list
+        if chara_id not in group_sex_chara_id_list
+    ]
+    # 性技实操课上只列已在这节课里的学生（sex_class_handle.get_class_member_list，Plan 32 §3.8 L11）：
+    #    模板动作逐个目标结算、不查 is_h 与入课门槛，跟随进教室的干员、没过门槛的学生被选进模板就会被操作并吃主修加成，
+    #    绕过「课堂 H 只收学生岗」。普通群交不变
+    if cache.sex_class_mode:
+      class_member_set = set(sex_class_handle.get_class_member_list())
+      all_character_list = [
+          chara_id
+          for chara_id in all_character_list
+          if chara_id in class_member_set
+      ]
+    while 1:
+      line = draw.LineDraw("-", self.width)
+      line.draw()
+      line_feed.draw()
+      return_list = []
+      # 生成角色名的按钮，让玩家选择
+      chara_count = 0
+      for chara_id in all_character_list:
+        character_data = cache.character_data[chara_id]
+        button_text = (
+            f"[{str(character_data.adv).rjust(4,'0')}]{character_data.name}"
+        )
+        # 性技实操课上，体力不足的学生只能站在一边旁观，不进模板（Plan 22 四期 口径65）。
+        # 只在课堂模式下生效：普通群交没有这条限制，把它一并管上会改掉既有玩法
+        if cache.sex_class_mode and sex_class_handle.judge_hp_low_only_watch(
+            chara_id
+        ):
+          watch_draw = draw.LeftDraw()
+          watch_draw.width = int(self.width / 5)
+          watch_draw.style = "deep_gray"
+          watch_draw.text = f" {button_text}（体力不足，只能旁观）"
+          watch_draw.draw()
+          chara_count += 1
+          if chara_count != 0 and chara_count % 5 == 0:
+            line_feed.draw()
+          continue
+        name_draw = draw.LeftButton(
+            button_text,
+            character_data.name,
+            int(self.width / 5),
+            cmd_func=self.set_target_chara,
+            args=(temple_id, body_part, chara_id),
+        )
+        # 如果已经选中，则改变绘制颜色
+        if chara_id in selected_chara_id_list:
+          name_draw = draw.LeftButton(
+              button_text,
+              character_data.name,
+              int(self.width / 5),
+              normal_style="gold_enrod",
+              cmd_func=self.set_target_chara,
+              args=(temple_id, body_part, chara_id),
+          )
+        name_draw.draw()
+        return_list.append(name_draw.return_text)
+        # 每五个换行一次
+        chara_count += 1
+        if chara_count != 0 and chara_count % 5 == 0:
+          line_feed.draw()
+      line_feed.draw()
+      line_feed.draw()
+      back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
+      back_draw.draw()
+      return_list.append(back_draw.return_text)
+      line_feed.draw()
+
+      yrn = flow_handle.askfor_all(return_list)
+      if yrn in return_list:
+        break
+
+  def show_status_list(self, temple_id: str, body_part: str):
+    """绘制可选择的状态列表"""
+    # 如果当前已指定对象角色id，则将其设为玩家的交互对象
+    old_target_character_id = self.pl_character_data.target_character_id
+    try:
+      if body_part != _("侍奉"):
+        target_chara_id = (
+            self.pl_character_data.h_state.group_sex_body_template_dict[
+                temple_id
+            ][0][body_part][0]
+        )
+        if target_chara_id != -1:
+          self.pl_character_data.target_character_id = target_chara_id
+      else:
+        target_chara_id_list = (
+            self.pl_character_data.h_state.group_sex_body_template_dict[
+                temple_id
+            ][1][0]
+        )
+        # 侍奉中则将最后一位设为玩家的交互对象
+        if -1 not in target_chara_id_list:
+          target_chara_id = target_chara_id_list[-1]
+          self.pl_character_data.target_character_id = target_chara_id
+      new_status_id_list = get_status_id_list_from_group_sex_body_part(
+          body_part
+      )
+    finally:
+      self.pl_character_data.target_character_id = old_target_character_id
+    while 1:
+      line = draw.LineDraw("-", self.width)
+      line.draw()
+      line_feed.draw()
+      return_list = []
+      # 生成状态名的按钮，让玩家选择
+      status_count = 0
+      for status_id in new_status_id_list:
+        status_data = game_config.config_behavior[status_id]
+        button_text = f"[{str(status_id).rjust(4,'0')}]{status_data.name}"
+        name_draw = draw.LeftButton(
+            button_text,
+            status_data.name,
+            int(self.width / 5),
+            cmd_func=self.set_status,
+            args=(temple_id, body_part, status_id),
+        )
+        name_draw.draw()
+        return_list.append(name_draw.return_text)
+        # 每五个换行一次
+        status_count += 1
+        if status_count != 0 and status_count % 5 == 0:
+          line_feed.draw()
+      line_feed.draw()
+      line_feed.draw()
+      back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
+      back_draw.draw()
+      return_list.append(back_draw.return_text)
+      line_feed.draw()
+
+      yrn = flow_handle.askfor_all(return_list)
+      if yrn in return_list:
+        break
+
+  def reset_template(self):
+    """重置当前模板中的所有位的角色和指令状态"""
+    current_template = (
+        self.pl_character_data.h_state.group_sex_body_template_dict["A"]
+    )
+    # 重置各个部位的单项数据
+    for key in current_template[0]:
+      current_template[0][key] = [-1, -1]
+    # 重置侍奉的多项数据
+    current_template[1] = [[-1], -1]
+    info_draw = draw.NormalDraw()
+    info_draw.text = _("当前模板已重置\n")
+    info_draw.width = self.width
+    info_draw.draw()
+
+  def show_invite_npc_panel(self):
+    """绘制可邀请的NPC列表"""
+    from Script.Design import instuct_judege
+    from Script.UI.Panel import common_select_NPC
+    from Script.System.Education_System import sex_class_handle
+
+    now_draw_panel: panel.PageHandlePanel = panel.PageHandlePanel(
+        [],
+        common_select_NPC.CommonSelectNPCButtonList,
+        50,
+        5,
+        window_width,
+        True,
+        False,
+        0,
+    )
+    # 当前地点的角色列表
+    scene_path_str = map_handle.get_map_system_path_str_for_list(
+        self.pl_character_data.position
+    )
+    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
+    now_scene_character_list = scene_data.character_list
+    select_state = {}
+
+    while 1:
+      npc_id_got_list = sorted(cache.npc_id_got)
+      # 课堂模式下的必修名单：点名必修的人豁免前置修习
+      must_attend_set = (
+          sex_class_handle.get_must_attend_set()
+          if cache.sex_class_mode
+          else set()
+      )
+      # 已选择的角色id列表
+      selected_id_list = []
+      final_list = []
+      # 遍历角色id
+      for chara_id in npc_id_got_list:
+        if chara_id == 0:
+          continue
+        # 如果角色已在场景中，则跳过
+        if chara_id in now_scene_character_list:
+          continue
+        # 性技实操课按实操课的参加门槛筛（Plan 26 §3.3）：学生岗、状态正常、女儿零门槛、成年学生看 H 模式实行值、
+        #    没修过性技课的要被点名必修；受邀者到场后由状态机 722 走课堂的入课流程并记出勤（target 515）
         if cache.sex_class_mode:
-            class_member_set = set(sex_class_handle.get_class_member_list())
-            all_character_list = [chara_id for chara_id in all_character_list if chara_id in class_member_set]
-        while 1:
-            line = draw.LineDraw("-", self.width)
-            line.draw()
-            line_feed.draw()
-            return_list = []
-            # 生成角色名的按钮，让玩家选择
-            chara_count = 0
-            for chara_id in all_character_list:
-                character_data = cache.character_data[chara_id]
-                button_text = f"[{str(character_data.adv).rjust(4,'0')}]{character_data.name}"
-                # 性技实操课上，体力不足的学生只能站在一边旁观，不进模板（Plan 22 四期 口径65）。
-                # 只在课堂模式下生效：普通群交没有这条限制，把它一并管上会改掉既有玩法
-                if cache.sex_class_mode and sex_class_handle.judge_hp_low_only_watch(chara_id):
-                    watch_draw = draw.LeftDraw()
-                    watch_draw.width = int(self.width / 5)
-                    watch_draw.style = "deep_gray"
-                    watch_draw.text = f" {button_text}（体力不足，只能旁观）"
-                    watch_draw.draw()
-                    chara_count += 1
-                    if chara_count != 0 and chara_count % 5 == 0:
-                        line_feed.draw()
-                    continue
-                name_draw = draw.LeftButton(button_text, character_data.name, int(self.width / 5), cmd_func=self.set_target_chara, args=(temple_id, body_part, chara_id))
-                # 如果已经选中，则改变绘制颜色
-                if chara_id in selected_chara_id_list:
-                    name_draw = draw.LeftButton(button_text, character_data.name, int(self.width / 5), normal_style='gold_enrod', cmd_func=self.set_target_chara, args=(temple_id, body_part, chara_id))
-                name_draw.draw()
-                return_list.append(name_draw.return_text)
-                # 每五个换行一次
-                chara_count += 1
-                if chara_count != 0 and chara_count % 5 == 0:
-                    line_feed.draw()
-            line_feed.draw()
-            line_feed.draw()
-            back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
-            back_draw.draw()
-            return_list.append(back_draw.return_text)
-            line_feed.draw()
+          if not sex_class_handle.judge_can_join_sex_class(
+              chara_id, check_course=chara_id not in must_attend_set
+          ):
+            continue
+        # 普通群交：判断群交实行值是否足够，不够的跳过
+        elif (
+            instuct_judege.calculation_instuct_judege(
+                0, chara_id, _("群交"), not_draw_flag=True
+            )[0]
+            == False
+        ):
+          continue
+        # 力竭/疲劳/重度困倦者不再提供邀请
+        if handle_premise.handle_self_exhausted(chara_id):
+          continue
+        # 判断是否被选择过
+        if handle_premise.handle_self_now_go_to_join_group_sex(chara_id):
+          selected_id_list.append(chara_id)
+        now_list = [chara_id, self.invite_npc, selected_id_list]
+        final_list.append(now_list)
+      now_draw_panel.text_list = final_list
 
-            yrn = flow_handle.askfor_all(return_list)
-            if yrn in return_list:
-                break
+      # 调用通用选择按钮列表函数
+      return_list, other_return_list, select_state = (
+          common_select_NPC.common_select_npc_button_list_func(
+              now_draw_panel,
+              _("邀请干员参加群交"),
+              _("当前可邀请的干员有：\n"),
+              select_state,
+          )
+      )
 
-    def show_status_list(self, temple_id: str, body_part: str):
-        """绘制可选择的状态列表"""
-        # 如果当前已指定对象角色id，则将其设为玩家的交互对象
-        old_target_character_id = self.pl_character_data.target_character_id
-        try:
-            if body_part != _("侍奉"):
-                target_chara_id = self.pl_character_data.h_state.group_sex_body_template_dict[temple_id][0][body_part][0]
-                if target_chara_id != -1:
-                    self.pl_character_data.target_character_id = target_chara_id
-            else:
-                target_chara_id_list = self.pl_character_data.h_state.group_sex_body_template_dict[temple_id][1][0]
-                # 侍奉中则将最后一位设为玩家的交互对象
-                if -1 not in target_chara_id_list:
-                    target_chara_id = target_chara_id_list[-1]
-                    self.pl_character_data.target_character_id = target_chara_id
-            new_status_id_list = get_status_id_list_from_group_sex_body_part(body_part)
-        finally:
-            self.pl_character_data.target_character_id = old_target_character_id
-        while 1:
-            line = draw.LineDraw("-", self.width)
-            line.draw()
-            line_feed.draw()
-            return_list = []
-            # 生成状态名的按钮，让玩家选择
-            status_count = 0
-            for status_id in new_status_id_list:
-                status_data = game_config.config_behavior[status_id]
-                button_text = f"[{str(status_id).rjust(4,'0')}]{status_data.name}"
-                name_draw = draw.LeftButton(button_text, status_data.name, int(self.width / 5), cmd_func=self.set_status, args=(temple_id, body_part, status_id))
-                name_draw.draw()
-                return_list.append(name_draw.return_text)
-                # 每五个换行一次
-                status_count += 1
-                if status_count != 0 and status_count % 5 == 0:
-                    line_feed.draw()
-            line_feed.draw()
-            line_feed.draw()
-            back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
-            back_draw.draw()
-            return_list.append(back_draw.return_text)
-            line_feed.draw()
+      yrn = flow_handle.askfor_all(return_list)
+      if yrn == _("返回"):
+        break
 
-            yrn = flow_handle.askfor_all(return_list)
-            if yrn in return_list:
-                break
+  def set_target_chara(
+      self, temple_id: str, body_part: str, target_chara_id: int
+  ):
+    """设置交互对象"""
+    if body_part != "侍奉":
+      now_template_data = (
+          self.pl_character_data.h_state.group_sex_body_template_dict[temple_id]
+      )
+      now_template_data[0][body_part][0] = target_chara_id
+      # 如果是阴茎，则清空侍奉
+      if body_part == "penis":
+        self.pl_character_data.h_state.group_sex_body_template_dict[temple_id][
+            1
+        ] = [[-1], -1]
+    else:
+      now_template_data_chara_list = (
+          self.pl_character_data.h_state.group_sex_body_template_dict[
+              temple_id
+          ][1][0]
+      )
+      # 如果已经选中，则取消选中
+      if target_chara_id in now_template_data_chara_list:
+        now_template_data_chara_list.remove(target_chara_id)
+        # 如果没有人了，则加入一个-1
+        if len(now_template_data_chara_list) == 0:
+          now_template_data_chara_list.append(-1)
+      # 否则选中
+      else:
+        now_template_data_chara_list.append(target_chara_id)
+        # 如果已经超过4个了，则去掉第一个
+        if len(now_template_data_chara_list) > 4:
+          now_template_data_chara_list.pop(0)
+        # 去掉里面可能存在的-1
+        if -1 in now_template_data_chara_list:
+          now_template_data_chara_list.remove(-1)
+      # 清空插入
+      self.pl_character_data.h_state.group_sex_body_template_dict[temple_id][0][
+          "penis"
+      ] = [-1, -1]
 
-    def reset_template(self):
-        """重置当前模板中的所有位的角色和指令状态"""
-        current_template = self.pl_character_data.h_state.group_sex_body_template_dict["A"]
-        # 重置各个部位的单项数据
-        for key in current_template[0]:
-            current_template[0][key] = [-1, -1]
-        # 重置侍奉的多项数据
-        current_template[1] = [[-1], -1]
-        info_draw = draw.NormalDraw()
-        info_draw.text = _("当前模板已重置\n")
-        info_draw.width = self.width
-        info_draw.draw()
+  def set_status(self, temple_id: str, body_part: str, status_id: int):
+    """设置状态"""
+    if body_part != _("侍奉"):
+      now_template_data = (
+          self.pl_character_data.h_state.group_sex_body_template_dict[temple_id]
+      )
+      now_template_data[0][body_part][1] = status_id
+      # 如果是阴茎，则清空侍奉
+      if body_part == "penis":
+        self.pl_character_data.h_state.group_sex_body_template_dict[temple_id][
+            1
+        ] = [[-1], -1]
+    else:
+      now_template_data = (
+          self.pl_character_data.h_state.group_sex_body_template_dict[temple_id]
+      )
+      now_template_data[1][1] = status_id
+      # 清空插入
+      self.pl_character_data.h_state.group_sex_body_template_dict[temple_id][0][
+          "penis"
+      ] = [-1, -1]
 
-    def show_invite_npc_panel(self):
-        """绘制可邀请的NPC列表"""
-        from Script.Design import instuct_judege
-        from Script.UI.Panel import common_select_NPC
-        from Script.System.Education_System import sex_class_handle
-        now_draw_panel : panel.PageHandlePanel = panel.PageHandlePanel([], common_select_NPC.CommonSelectNPCButtonList, 50, 5, window_width, True, False, 0)
-        # 当前地点的角色列表
-        scene_path_str = map_handle.get_map_system_path_str_for_list(self.pl_character_data.position)
-        scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-        now_scene_character_list = scene_data.character_list
-        select_state = {}
+  def change_lock_flag(self):
+    """改变锁定状态"""
+    self.pl_character_data.h_state.group_sex_lock_flag = (
+        not self.pl_character_data.h_state.group_sex_lock_flag
+    )
 
-        while 1:
-            npc_id_got_list = sorted(cache.npc_id_got)
-            # 课堂模式下的必修名单：点名必修的人豁免前置修习
-            must_attend_set = sex_class_handle.get_must_attend_set() if cache.sex_class_mode else set()
-            # 已选择的角色id列表
-            selected_id_list = []
-            final_list = []
-            # 遍历角色id
-            for chara_id in npc_id_got_list:
-                if chara_id == 0:
-                    continue
-                # 如果角色已在场景中，则跳过
-                if chara_id in now_scene_character_list:
-                    continue
-                # 性技实操课按实操课的参加门槛筛（Plan 26 §3.3）：学生岗、状态正常、女儿零门槛、成年学生看 H 模式实行值、
-                #    没修过性技课的要被点名必修；受邀者到场后由状态机 722 走课堂的入课流程并记出勤（target 515）
-                if cache.sex_class_mode:
-                    if not sex_class_handle.judge_can_join_sex_class(chara_id, check_course=chara_id not in must_attend_set):
-                        continue
-                # 普通群交：判断群交实行值是否足够，不够的跳过
-                elif instuct_judege.calculation_instuct_judege(0, chara_id, _("群交"), not_draw_flag = True)[0] == False:
-                    continue
-                # 力竭/疲劳/重度困倦者不再提供邀请
-                if handle_premise.handle_self_exhausted(chara_id):
-                    continue
-                # 判断是否被选择过
-                if handle_premise.handle_self_now_go_to_join_group_sex(chara_id):
-                    selected_id_list.append(chara_id)
-                now_list = [chara_id, self.invite_npc, selected_id_list]
-                final_list.append(now_list)
-            now_draw_panel.text_list = final_list
+  def change_npc_ai(self):
+    """改变NPC行动逻辑"""
+    self.pl_character_data.h_state.npc_ai_type_in_group_sex += 1
+    if self.pl_character_data.h_state.npc_ai_type_in_group_sex >= 4:
+      self.pl_character_data.h_state.npc_ai_type_in_group_sex = 0
 
-            # 调用通用选择按钮列表函数
-            return_list, other_return_list, select_state = common_select_NPC.common_select_npc_button_list_func(now_draw_panel, _("邀请干员参加群交"), _("当前可邀请的干员有：\n"), select_state)
+  def change_B_temple_flag(self):
+    """改变B模板状态"""
+    self.pl_character_data.h_state.all_group_sex_temple_run = (
+        not self.pl_character_data.h_state.all_group_sex_temple_run
+    )
 
-            yrn = flow_handle.askfor_all(return_list)
-            if yrn == _("返回"):
-                break
+  def change_temple(self):
+    """切换模板"""
+    (
+        self.pl_character_data.h_state.group_sex_body_template_dict["A"],
+        self.pl_character_data.h_state.group_sex_body_template_dict["B"],
+    ) = (
+        self.pl_character_data.h_state.group_sex_body_template_dict["B"],
+        self.pl_character_data.h_state.group_sex_body_template_dict["A"],
+    )
 
-    def set_target_chara(self, temple_id: str, body_part: str, target_chara_id: int):
-        """设置交互对象"""
-        if body_part != "侍奉":
-            now_template_data = self.pl_character_data.h_state.group_sex_body_template_dict[temple_id]
-            now_template_data[0][body_part][0] = target_chara_id
-            # 如果是阴茎，则清空侍奉
-            if body_part == "penis":
-                self.pl_character_data.h_state.group_sex_body_template_dict[temple_id][1] = [[-1], -1]
-        else:
-            now_template_data_chara_list = self.pl_character_data.h_state.group_sex_body_template_dict[temple_id][1][0]
-            # 如果已经选中，则取消选中
-            if target_chara_id in now_template_data_chara_list:
-                now_template_data_chara_list.remove(target_chara_id)
-                # 如果没有人了，则加入一个-1
-                if len(now_template_data_chara_list) == 0:
-                    now_template_data_chara_list.append(-1)
-            # 否则选中
-            else:
-                now_template_data_chara_list.append(target_chara_id)
-                # 如果已经超过4个了，则去掉第一个
-                if len(now_template_data_chara_list) > 4:
-                    now_template_data_chara_list.pop(0)
-                # 去掉里面可能存在的-1
-                if -1 in now_template_data_chara_list:
-                    now_template_data_chara_list.remove(-1)
-            # 清空插入
-            self.pl_character_data.h_state.group_sex_body_template_dict[temple_id][0]["penis"] = [-1, -1]
+  def invite_npc(self, character_id: int):
+    """邀请NPC"""
+    from Script.Design import instuct_judege, second_behavior
 
-    def set_status(self, temple_id: str, body_part: str, status_id: int):
-        """设置状态"""
-        if body_part != _("侍奉"):
-            now_template_data = self.pl_character_data.h_state.group_sex_body_template_dict[temple_id]
-            now_template_data[0][body_part][1] = status_id
-            # 如果是阴茎，则清空侍奉
-            if body_part == "penis":
-                self.pl_character_data.h_state.group_sex_body_template_dict[temple_id][1] = [[-1], -1]
-        else:
-            now_template_data = self.pl_character_data.h_state.group_sex_body_template_dict[temple_id]
-            now_template_data[1][1] = status_id
-            # 清空插入
-            self.pl_character_data.h_state.group_sex_body_template_dict[temple_id][0]["penis"] = [-1, -1]
+    character_data = cache.character_data[character_id]
+    if not handle_premise.handle_normal_24567(character_id):
+      info_draw_text = _("***{0}状态异常，无法召集***\n").format(
+          character_data.name
+      )
+    # 如果已经邀请，则取消邀请
+    elif character_data.sp_flag.go_to_join_group_sex:
+      character_data.sp_flag.go_to_join_group_sex = False
+      info_draw_text = _(
+          "\n已取消对{0}的群交邀请，{0}不会来这里参加群交了\n"
+      ).format(character_data.name)
+      # 结算等待
+      instuct_judege.init_character_behavior_start_time(
+          character_id, cache.game_time
+      )
+      constant.handle_state_machine_data[0](character_id)
+    # 力竭/疲劳/重度困倦者无法被邀请加入群交
+    elif handle_premise.handle_self_exhausted(character_id):
+      info_draw_text = _("***{0}过于疲劳，无法参加群交***\n").format(
+          character_data.name
+      )
+    # 否则邀请
+    else:
+      character_data.sp_flag.go_to_join_group_sex = True
+      info_draw_text = _("\n已邀请{0}来这里参加群交\n").format(
+          character_data.name
+      )
+      # 赋予二段行为
+      second_behavior.character_get_second_behavior(
+          character_id, "be_invited_join_group_sex"
+      )
+      # 结算移动
+      instuct_judege.init_character_behavior_start_time(
+          character_id, cache.game_time
+      )
+      constant.handle_state_machine_data[503](character_id)
+    # 绘制信息
+    info_draw = draw.WaitDraw()
+    info_draw.text = info_draw_text
+    info_draw.width = self.width
+    info_draw.draw()
 
-    def change_lock_flag(self):
-        """改变锁定状态"""
-        self.pl_character_data.h_state.group_sex_lock_flag = not self.pl_character_data.h_state.group_sex_lock_flag
-
-    def change_npc_ai(self):
-        """改变NPC行动逻辑"""
-        self.pl_character_data.h_state.npc_ai_type_in_group_sex += 1
-        if self.pl_character_data.h_state.npc_ai_type_in_group_sex >= 4:
-            self.pl_character_data.h_state.npc_ai_type_in_group_sex = 0
-
-    def change_B_temple_flag(self):
-        """改变B模板状态"""
-        self.pl_character_data.h_state.all_group_sex_temple_run = not self.pl_character_data.h_state.all_group_sex_temple_run
-
-    def change_temple(self):
-        """切换模板"""
-        self.pl_character_data.h_state.group_sex_body_template_dict["A"], self.pl_character_data.h_state.group_sex_body_template_dict["B"] = self.pl_character_data.h_state.group_sex_body_template_dict["B"], self.pl_character_data.h_state.group_sex_body_template_dict["A"]
-
-    def invite_npc(self, character_id: int):
-        """邀请NPC"""
-        from Script.Design import instuct_judege, second_behavior
-        character_data = cache.character_data[character_id]
-        if not handle_premise.handle_normal_24567(character_id):
-            info_draw_text = _("***{0}状态异常，无法召集***\n").format(character_data.name)
-        # 如果已经邀请，则取消邀请
-        elif character_data.sp_flag.go_to_join_group_sex:
-            character_data.sp_flag.go_to_join_group_sex = False
-            info_draw_text = _("\n已取消对{0}的群交邀请，{0}不会来这里参加群交了\n").format(character_data.name)
-            # 结算等待
-            instuct_judege.init_character_behavior_start_time(character_id, cache.game_time)
-            constant.handle_state_machine_data[0](character_id)
-        # 力竭/疲劳/重度困倦者无法被邀请加入群交
-        elif handle_premise.handle_self_exhausted(character_id):
-            info_draw_text = _("***{0}过于疲劳，无法参加群交***\n").format(character_data.name)
-        # 否则邀请
-        else:
-            character_data.sp_flag.go_to_join_group_sex = True
-            info_draw_text = _("\n已邀请{0}来这里参加群交\n").format(character_data.name)
-            # 赋予二段行为
-            second_behavior.character_get_second_behavior(character_id, "be_invited_join_group_sex")
-            # 结算移动
-            instuct_judege.init_character_behavior_start_time(character_id, cache.game_time)
-            constant.handle_state_machine_data[503](character_id)
-        # 绘制信息
-        info_draw = draw.WaitDraw()
-        info_draw.text = info_draw_text
-        info_draw.width = self.width
-        info_draw.draw()
-
-    def reset_unfinish_select(self):
-        """重置角色id或者状态id没有全部填完的项"""
-        # 获取全模板
-        template_data_list = []
-        A_template_data = self.pl_character_data.h_state.group_sex_body_template_dict["A"]
-        template_data_list.append(A_template_data)
-        if handle_premise.handle_all_group_sex_temple_run_on(0):
-            B_template_data = self.pl_character_data.h_state.group_sex_body_template_dict["B"]
-            template_data_list.append(B_template_data)
-        # 遍历模板
-        for template_data in template_data_list:
-            # 对单
-            for body_part in template_data[0]:
-                target_chara_id = template_data[0][body_part][0]
-                state_id = template_data[0][body_part][1]
-                if state_id == -1 or target_chara_id == -1:
-                    template_data[0][body_part] = [-1, -1]
-            # 对多
-            target_chara_id_list = template_data[1][0]
-            state_id = template_data[1][1]
-            if state_id == -1 or -1 in target_chara_id_list:
-                template_data[1] = [[-1], -1]
+  def reset_unfinish_select(self):
+    """重置角色id或者状态id没有全部填完的项"""
+    # 获取全模板
+    template_data_list = []
+    A_template_data = (
+        self.pl_character_data.h_state.group_sex_body_template_dict["A"]
+    )
+    template_data_list.append(A_template_data)
+    if handle_premise.handle_all_group_sex_temple_run_on(0):
+      B_template_data = (
+          self.pl_character_data.h_state.group_sex_body_template_dict["B"]
+      )
+      template_data_list.append(B_template_data)
+    # 遍历模板
+    for template_data in template_data_list:
+      # 对单
+      for body_part in template_data[0]:
+        target_chara_id = template_data[0][body_part][0]
+        state_id = template_data[0][body_part][1]
+        if state_id == -1 or target_chara_id == -1:
+          template_data[0][body_part] = [-1, -1]
+      # 对多
+      target_chara_id_list = template_data[1][0]
+      state_id = template_data[1][1]
+      if state_id == -1 or -1 in target_chara_id_list:
+        template_data[1] = [[-1], -1]

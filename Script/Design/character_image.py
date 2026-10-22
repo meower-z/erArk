@@ -1,200 +1,209 @@
 import itertools
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    game_type,
-    get_text,
-    era_image
-)
+from Script.Core import (cache_control, game_type, get_text, era_image)
 from Script.Config import game_config
 from Script.Design import handle_premise
 
 cache: game_type.Cache = cache_control.cache  # 游戏缓存数据
 _: FunctionType = get_text._  # 翻译api
 
+
 def find_character_image_name(character_id: int) -> str:
-    """
-    查找角色图片名称。
-    参数:
-      character_id (int): 角色id。
-    返回:
-      str: 最终选中的角色图片名称。
-    功能描述:
-      根据角色当前状态构造所有可能差分组合，并按差分优先度依次尝试匹配完全符合的图片名，
-      若无符合项则返回原始立绘。
-    """
-    character_data: game_type.Character = cache.character_data[character_id]
-    # 判断是否为女儿（特殊角色）
-    if character_data.relationship.father_id == 0:
-        # 没有同名立绘与种族女儿图时的立绘名，图片索引里没有它，女儿不显示立绘
-        character_image_name = "女儿_1"
-        # 优先选择自己的同名图片（兼容扁平命名与半身图层命名）
-        if character_data.name in era_image.image_data or f"{character_data.name}_半身" in era_image.image_data:
-            character_image_name = _(character_data.name, revert_translation=True)
-        # 其次选择自己所属种族的女儿图片
-        else:
-            race_image_name = find_daughter_race_image_name(character_data)
-            if race_image_name != "":
-                character_image_name = race_image_name
-    # 非女儿的正常干员角色
+  """
+  查找角色图片名称。
+  参数:
+    character_id (int): 角色id。
+  返回:
+    str: 最终选中的角色图片名称。
+  功能描述:
+    根据角色当前状态构造所有可能差分组合，并按差分优先度依次尝试匹配完全符合的图片名，
+    若无符合项则返回原始立绘。
+  """
+  character_data: game_type.Character = cache.character_data[character_id]
+  # 判断是否为女儿（特殊角色）
+  if character_data.relationship.father_id == 0:
+    # 没有同名立绘与种族女儿图时的立绘名，图片索引里没有它，女儿不显示立绘
+    character_image_name = "女儿_1"
+    # 优先选择自己的同名图片（兼容扁平命名与半身图层命名）
+    if (
+        character_data.name in era_image.image_data
+        or f"{character_data.name}_半身" in era_image.image_data
+    ):
+      character_image_name = _(character_data.name, revert_translation=True)
+    # 其次选择自己所属种族的女儿图片
     else:
-        character_image_name = _(character_data.name, revert_translation=True)
-    base_name = character_image_name
+      race_image_name = find_daughter_race_image_name(character_data)
+      if race_image_name != "":
+        character_image_name = race_image_name
+  # 非女儿的正常干员角色
+  else:
+    character_image_name = _(character_data.name, revert_translation=True)
+  base_name = character_image_name
 
-    # 调用各差分判断，得到各差分字符串
-    naked_diff: str = naked_judge(character_id)
-    chest_diff: str = chest_judge(character_id)
-    big_belly_diff: str = big_belly_judge(character_id)
-    emotion_diff: str = emotion_judge(character_id)
-    # 依照优先度顺序：裸体 > 胸部 > 膨腹 > 心情
-    diff_list = [naked_diff, chest_diff, big_belly_diff, emotion_diff]
+  # 调用各差分判断，得到各差分字符串
+  naked_diff: str = naked_judge(character_id)
+  chest_diff: str = chest_judge(character_id)
+  big_belly_diff: str = big_belly_judge(character_id)
+  emotion_diff: str = emotion_judge(character_id)
+  # 依照优先度顺序：裸体 > 胸部 > 膨腹 > 心情
+  diff_list = [naked_diff, chest_diff, big_belly_diff, emotion_diff]
 
-    # 图片索引以文件名首段（第一个"_"之前的部分）为键，与角色名不一定相同
-    # 例如女儿的底图是"女儿_丰蹄"，索引键为"女儿"，用角色名（女儿的自定义名）去查会永远查不到，导致差分匹配被整段跳过
-    base_chara_key = base_name.split("_")[0]
-    # 如果底图在差分索引中存在，则尝试匹配符合的候选图片
-    if base_chara_key in era_image.image_data_index_by_chara:
-        # 只保留实际生效的差分，顺序仍为优先度顺序
-        active_diff_list = [diff for diff in diff_list if diff != ""]
-        # 构造候选组合列表：
-        # 按"保留的差分个数从多到少"枚举差分子集，个数相同时优先保留高优先度的差分，最后回落到无差分的底图
-        # 不能只从尾部逐级削减：高优先度差分若没有对应图片，会连带挡住所有低优先度差分
-        # 例如角色有"_巨乳"图但没有"_全裸"图，从尾部削减时"{角色名}_巨乳"永远拼不出来，只能落到无差分底图
-        candidates = []
-        for keep_count in range(len(active_diff_list), -1, -1):
-            for index_group in itertools.combinations(range(len(active_diff_list)), keep_count):
-                candidates.append(base_name + "".join(active_diff_list[i] for i in index_group))
+  # 图片索引以文件名首段（第一个"_"之前的部分）为键，与角色名不一定相同
+  # 例如女儿的底图是"女儿_丰蹄"，索引键为"女儿"，用角色名（女儿的自定义名）去查会永远查不到，导致差分匹配被整段跳过
+  base_chara_key = base_name.split("_")[0]
+  # 如果底图在差分索引中存在，则尝试匹配符合的候选图片
+  if base_chara_key in era_image.image_data_index_by_chara:
+    # 只保留实际生效的差分，顺序仍为优先度顺序
+    active_diff_list = [diff for diff in diff_list if diff != ""]
+    # 构造候选组合列表：
+    # 按"保留的差分个数从多到少"枚举差分子集，个数相同时优先保留高优先度的差分，最后回落到无差分的底图
+    # 不能只从尾部逐级削减：高优先度差分若没有对应图片，会连带挡住所有低优先度差分
+    # 例如角色有"_巨乳"图但没有"_全裸"图，从尾部削减时"{角色名}_巨乳"永远拼不出来，只能落到无差分底图
+    candidates = []
+    for keep_count in range(len(active_diff_list), -1, -1):
+      for index_group in itertools.combinations(
+          range(len(active_diff_list)), keep_count
+      ):
+        candidates.append(
+            base_name + "".join(active_diff_list[i] for i in index_group)
+        )
 
-        # 按顺序在候选列表中选择存在的第一个
-        for candidate in candidates:
-            # 检查候选图片是否存在（扁平命名）
-            if candidate in era_image.image_data:
-                return candidate
-            # 检查半身图层命名（如 薇薇安娜_半身），兼容半身/全身双图层结构
-            if f"{candidate}_半身" in era_image.image_data:
-                return f"{candidate}_半身"
-            # 如果候选图片不匹配且裸体差分不为空，则尝试互换全裸与半裸
-            if naked_diff != "" and naked_diff in candidate:
-                # 判断裸体差分类型并替换为另一种
-                if naked_diff == "_全裸":
-                    candidate_alt = candidate.replace("_全裸", "_半裸")  # 替换为半裸
-                elif naked_diff == "_半裸":
-                    candidate_alt = candidate.replace("_半裸", "_全裸")  # 替换为全裸
-                # 检查替换后的候选图片是否存在
-                if candidate_alt in era_image.image_data:
-                    return candidate_alt
-                # 同样检查替换后候选的半身图层命名
-                if f"{candidate_alt}_半身" in era_image.image_data:
-                    return f"{candidate_alt}_半身"
+    # 按顺序在候选列表中选择存在的第一个
+    for candidate in candidates:
+      # 检查候选图片是否存在（扁平命名）
+      if candidate in era_image.image_data:
+        return candidate
+      # 检查半身图层命名（如 薇薇安娜_半身），兼容半身/全身双图层结构
+      if f"{candidate}_半身" in era_image.image_data:
+        return f"{candidate}_半身"
+      # 如果候选图片不匹配且裸体差分不为空，则尝试互换全裸与半裸
+      if naked_diff != "" and naked_diff in candidate:
+        # 判断裸体差分类型并替换为另一种
+        if naked_diff == "_全裸":
+          candidate_alt = candidate.replace("_全裸", "_半裸")  # 替换为半裸
+        elif naked_diff == "_半裸":
+          candidate_alt = candidate.replace("_半裸", "_全裸")  # 替换为全裸
+        # 检查替换后的候选图片是否存在
+        if candidate_alt in era_image.image_data:
+          return candidate_alt
+        # 同样检查替换后候选的半身图层命名
+        if f"{candidate_alt}_半身" in era_image.image_data:
+          return f"{candidate_alt}_半身"
 
-    # 若无匹配则使用原始立绘名，但需要检查半身图格式兼容
-    # 这是为了兼容新的文件名格式：{角色名}_半身.png
-    if base_name in era_image.image_data:
-        return base_name
-    # 如果原始立绘名不存在，尝试查找半身图格式
-    half_body_name = f"{base_name}_半身"
-    if half_body_name in era_image.image_data:
-        return half_body_name
-    # 都不存在则返回原始名，调用方按没有立绘处理
+  # 若无匹配则使用原始立绘名，但需要检查半身图格式兼容
+  # 这是为了兼容新的文件名格式：{角色名}_半身.png
+  if base_name in era_image.image_data:
     return base_name
+  # 如果原始立绘名不存在，尝试查找半身图格式
+  half_body_name = f"{base_name}_半身"
+  if half_body_name in era_image.image_data:
+    return half_body_name
+  # 都不存在则返回原始名，调用方按没有立绘处理
+  return base_name
+
 
 def find_daughter_race_image_name(character_data: game_type.Character) -> str:
-    """
-    查找女儿所属种族的专用立绘名。
-    参数:
-      character_data (game_type.Character): 女儿的角色数据。
-    返回:
-      str: 种族女儿图的底图名（如"女儿_丰蹄"），该种族没有对应图片时返回空字符串。
-    功能描述:
-      按角色种族名在图片索引中查找"女儿_{种族名}"，兼容扁平命名与半身/全身图层命名；
-      种族名含"/"时（如"卡特斯/奇美拉"）再拆开逐个尝试，因为文件名中不能包含"/"。
-    """
-    race_data = game_config.config_race.get(character_data.race)
-    if race_data is None:
-        return ""
-    # 种族名在载入时已被翻译，需还原为中文原文才能对上图片文件名
-    race_name = _(race_data.name, revert_translation=True)
-    # 先尝试完整种族名，再尝试拆分后的各个子种族名
-    race_name_list = [race_name]
-    if "/" in race_name:
-        race_name_list += [name for name in race_name.split("/") if name != ""]
-    for now_race_name in race_name_list:
-        image_name = f"女儿_{now_race_name}"
-        # 扁平命名、半身图层、全身图层任一存在即视为该种族有女儿图
-        for layer_name in (image_name, f"{image_name}_半身", f"{image_name}_全身"):
-            if layer_name in era_image.image_data:
-                return image_name
+  """
+  查找女儿所属种族的专用立绘名。
+  参数:
+    character_data (game_type.Character): 女儿的角色数据。
+  返回:
+    str: 种族女儿图的底图名（如"女儿_丰蹄"），该种族没有对应图片时返回空字符串。
+  功能描述:
+    按角色种族名在图片索引中查找"女儿_{种族名}"，兼容扁平命名与半身/全身图层命名；
+    种族名含"/"时（如"卡特斯/奇美拉"）再拆开逐个尝试，因为文件名中不能包含"/"。
+  """
+  race_data = game_config.config_race.get(character_data.race)
+  if race_data is None:
     return ""
+  # 种族名在载入时已被翻译，需还原为中文原文才能对上图片文件名
+  race_name = _(race_data.name, revert_translation=True)
+  # 先尝试完整种族名，再尝试拆分后的各个子种族名
+  race_name_list = [race_name]
+  if "/" in race_name:
+    race_name_list += [name for name in race_name.split("/") if name != ""]
+  for now_race_name in race_name_list:
+    image_name = f"女儿_{now_race_name}"
+    # 扁平命名、半身图层、全身图层任一存在即视为该种族有女儿图
+    for layer_name in (image_name, f"{image_name}_半身", f"{image_name}_全身"):
+      if layer_name in era_image.image_data:
+        return image_name
+  return ""
+
 
 def emotion_judge(character_id: int) -> str:
-    """
-    判断角色心情状态。
-    参数:
-      character_id (int): 角色id。
-    返回:
-      str: 根据角色心情返回对应的差分后缀，否则返回空字符串。
-    """
-    image_name = ""
-    if handle_premise.handle_good_mood(character_id):
-        image_name += "_愉快"
-    elif handle_premise.handle_bad_mood(character_id):
-        image_name += "_不爽"
-    elif handle_premise.handle_angry_mood(character_id):
-        image_name += "_愤怒"
-    return image_name
+  """
+  判断角色心情状态。
+  参数:
+    character_id (int): 角色id。
+  返回:
+    str: 根据角色心情返回对应的差分后缀，否则返回空字符串。
+  """
+  image_name = ""
+  if handle_premise.handle_good_mood(character_id):
+    image_name += "_愉快"
+  elif handle_premise.handle_bad_mood(character_id):
+    image_name += "_不爽"
+  elif handle_premise.handle_angry_mood(character_id):
+    image_name += "_愤怒"
+  return image_name
+
 
 def naked_judge(character_id: int) -> str:
-    """
-    判断角色裸体状态。
-    参数:
-      character_id (int): 角色id。
-    返回:
-      str: 若符合裸体状态返回差分后缀（全裸或半裸），否则返回空字符串。
-    """
-    image_name = ""
-    if handle_premise.handle_cloth_off(character_id):
-        image_name += "_全裸"
-    elif handle_premise.handle_cloth_most_off(character_id):
-        image_name += "_半裸"
-    elif handle_premise.handle_not_wear_in_up(character_id) and handle_premise.handle_not_wear_bra(character_id):
-        image_name += "_半裸"
-    return image_name
+  """
+  判断角色裸体状态。
+  参数:
+    character_id (int): 角色id。
+  返回:
+    str: 若符合裸体状态返回差分后缀（全裸或半裸），否则返回空字符串。
+  """
+  image_name = ""
+  if handle_premise.handle_cloth_off(character_id):
+    image_name += "_全裸"
+  elif handle_premise.handle_cloth_most_off(character_id):
+    image_name += "_半裸"
+  elif handle_premise.handle_not_wear_in_up(
+      character_id
+  ) and handle_premise.handle_not_wear_bra(character_id):
+    image_name += "_半裸"
+  return image_name
+
 
 def chest_judge(character_id: int) -> str:
-    """
-    判断角色胸部状态。
-    参数:
-      character_id (int): 角色id。
-    返回:
-      str: 返回对应的胸部差分后缀（绝壁、贫乳、普乳、巨乳或爆乳），否则返回空字符串。
-    """
-    image_name = ""
-    if handle_premise.handle_self_chest_is_cliff(character_id):
-        image_name += "_绝壁"
-    elif handle_premise.handle_self_chest_is_small(character_id):
-        image_name += "_贫乳"
-    elif handle_premise.handle_self_chest_is_normal(character_id):
-        image_name += "_普乳"
-    elif handle_premise.handle_self_chest_is_big(character_id):
-        image_name += "_巨乳"
-    elif handle_premise.handle_self_chest_is_super(character_id):
-        image_name += "_爆乳"
-    return image_name
+  """
+  判断角色胸部状态。
+  参数:
+    character_id (int): 角色id。
+  返回:
+    str: 返回对应的胸部差分后缀（绝壁、贫乳、普乳、巨乳或爆乳），否则返回空字符串。
+  """
+  image_name = ""
+  if handle_premise.handle_self_chest_is_cliff(character_id):
+    image_name += "_绝壁"
+  elif handle_premise.handle_self_chest_is_small(character_id):
+    image_name += "_贫乳"
+  elif handle_premise.handle_self_chest_is_normal(character_id):
+    image_name += "_普乳"
+  elif handle_premise.handle_self_chest_is_big(character_id):
+    image_name += "_巨乳"
+  elif handle_premise.handle_self_chest_is_super(character_id):
+    image_name += "_爆乳"
+  return image_name
+
 
 def big_belly_judge(character_id: int) -> str:
-    """
-    判断角色膨腹状态。
-    参数:
-      character_id (int): 角色id。
-    返回:
-      str: 若符合膨腹状态返回对应的差分后缀，否则返回空字符串。
-    """
-    image_name = ""
-    if handle_premise.handle_parturient_1(character_id):
-        image_name += "_大膨腹"
-    elif handle_premise.handle_inflation_1(character_id):
-        image_name += "_膨腹"
-    elif handle_premise.handle_cumflation_1(character_id):
-        image_name += "_膨腹"
-    return image_name
-
+  """
+  判断角色膨腹状态。
+  参数:
+    character_id (int): 角色id。
+  返回:
+    str: 若符合膨腹状态返回对应的差分后缀，否则返回空字符串。
+  """
+  image_name = ""
+  if handle_premise.handle_parturient_1(character_id):
+    image_name += "_大膨腹"
+  elif handle_premise.handle_inflation_1(character_id):
+    image_name += "_膨腹"
+  elif handle_premise.handle_cumflation_1(character_id):
+    image_name += "_膨腹"
+  return image_name

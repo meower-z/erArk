@@ -10,16 +10,18 @@ import sys
 # Windows高DPI支持：必须在创建任何窗口之前设置DPI感知
 # 这解决了打包后游戏窗口在高分屏上模糊的问题
 if sys.platform == "win32":
+  try:
+    import ctypes
+    # 尝试使用 Windows 8.1+ 的 Per-Monitor DPI 感知
     try:
-        import ctypes
-        # 尝试使用 Windows 8.1+ 的 Per-Monitor DPI 感知
-        try:
-            ctypes.windll.shcore.SetProcessDpiAwareness(2)  # PROCESS_PER_MONITOR_DPI_AWARE
-        except AttributeError:
-            # Windows 8.1 之前的系统使用 SetProcessDPIAware
-            ctypes.windll.user32.SetProcessDPIAware()
-    except Exception:
-        pass
+      ctypes.windll.shcore.SetProcessDpiAwareness(
+          2
+      )  # PROCESS_PER_MONITOR_DPI_AWARE
+    except AttributeError:
+      # Windows 8.1 之前的系统使用 SetProcessDPIAware
+      ctypes.windll.user32.SetProcessDPIAware()
+  except Exception:
+    pass
 
 from tkinter import (
     ttk,
@@ -50,183 +52,189 @@ cache: game_type.Cache = cache_control.cache
 
 
 def close_window():
-    """
-    关闭游戏，会终止当前进程和所有子进程
-    """
-    parent = psutil.Process(os.getpid())
-    children = parent.children(recursive=True)
-    for process in children:
-        process.send_signal(signal.SIGTERM)
-    os._exit(0)
+  """
+  关闭游戏，会终止当前进程和所有子进程
+  """
+  parent = psutil.Process(os.getpid())
+  children = parent.children(recursive=True)
+  for process in children:
+    process.send_signal(signal.SIGTERM)
+  os._exit(0)
+
 
 def get_resource_path(file_name: str) -> str:
-    """
-    获取资源文件绝对路径
-    参数:
-        file_name (str): 资源文件相对路径，例如 "image/logo.png"
-    返回:
-        str: 资源文件的绝对路径
-    """
-    # 如果是 PyInstaller 打包后的环境，资源会被解压到 _MEIPASS 目录
-    if getattr(sys, "frozen", False):
-        # 获取当前工作目录作为资源根路径
-        base_path = os.getcwd()
-    else:
-        # 开发环境：资源在项目根目录
-        base_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
-        )
-    # 将类似 "image/logo.png" 拆分并拼接成正确的绝对路径
-    return os.path.join(base_path, *file_name.split('/'))
+  """
+  获取资源文件绝对路径
+  参数:
+      file_name (str): 资源文件相对路径，例如 "image/logo.png"
+  返回:
+      str: 资源文件的绝对路径
+  """
+  # 如果是 PyInstaller 打包后的环境，资源会被解压到 _MEIPASS 目录
+  if getattr(sys, "frozen", False):
+    # 获取当前工作目录作为资源根路径
+    base_path = os.getcwd()
+  else:
+    # 开发环境：资源在项目根目录
+    base_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
+    )
+  # 将类似 "image/logo.png" 拆分并拼接成正确的绝对路径
+  return os.path.join(base_path, *file_name.split("/"))
+
 
 def load_local_fonts(tk_root: Tk) -> None:
-    """加载 static/fonts 下的字体文件供 Tk 窗口使用"""
-    fonts_dir = None
-    fonts_dir_candidates = []
+  """加载 static/fonts 下的字体文件供 Tk 窗口使用"""
+  fonts_dir = None
+  fonts_dir_candidates = []
 
-    # 如果是在打包环境下运行，字体文件可能在可执行文件同级目录的 static/fonts 下
-    if hasattr(sys, "_MEIPASS") or getattr(sys, "frozen", False):
-        base_dir = os.path.dirname(sys.executable)
-        fonts_dir_candidates.append(os.path.join(base_dir, "static", "fonts"))
-        fonts_dir_candidates.append(os.path.join(base_dir, "fonts"))
-    # 开发环境下，字体文件在项目的 static/fonts 目录
-    else:
-        project_root = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
+  # 如果是在打包环境下运行，字体文件可能在可执行文件同级目录的 static/fonts 下
+  if hasattr(sys, "_MEIPASS") or getattr(sys, "frozen", False):
+    base_dir = os.path.dirname(sys.executable)
+    fonts_dir_candidates.append(os.path.join(base_dir, "static", "fonts"))
+    fonts_dir_candidates.append(os.path.join(base_dir, "fonts"))
+  # 开发环境下，字体文件在项目的 static/fonts 目录
+  else:
+    project_root = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
+    )
+    fonts_dir_candidates.append(os.path.join(project_root, "static", "fonts"))
+
+  for candidate in fonts_dir_candidates:
+    if os.path.isdir(candidate):
+      fonts_dir = candidate
+      break
+
+  if fonts_dir is None:
+    return
+
+  alias_overrides = {
+      "等距更纱黑体": ["等距更纱黑体 SC", "Sarasa Mono SC", "SarasaMonoSC"],
+      "等距更纱黑体.ttf": ["等距更纱黑体 SC", "Sarasa Mono SC", "SarasaMonoSC"],
+      "emoji": ["EmojiSupport"],
+      "emoji.ttf": ["EmojiSupport"],
+  }
+
+  existing_fonts = set(map(str, tk_root.tk.call("font", "names")))
+
+  for entry in os.scandir(fonts_dir):
+    if not entry.is_file():
+      continue
+    name_lower = entry.name.lower()
+    if not name_lower.endswith((".ttf", ".otf", ".ttc")):
+      continue
+
+    font_path = entry.path.replace("\\", "/")
+    base_name = os.path.splitext(entry.name)[0]
+
+    alias_candidates = []
+    for candidate in (
+        base_name,
+        base_name.replace("_", " "),
+        base_name.replace("_", ""),
+        entry.name,
+    ):
+      cleaned = candidate.strip()
+      if cleaned and cleaned not in alias_candidates:
+        alias_candidates.append(cleaned)
+
+    for extra in alias_overrides.get(entry.name, []):
+      cleaned = extra.strip()
+      if cleaned and cleaned not in alias_candidates:
+        alias_candidates.append(cleaned)
+    for extra in alias_overrides.get(base_name, []):
+      cleaned = extra.strip()
+      if cleaned and cleaned not in alias_candidates:
+        alias_candidates.append(cleaned)
+
+    primary_alias = None
+    first_success_alias = None
+    source_desc = None
+    failed_aliases = []
+
+    # 首先检查是否已存在同名字体
+    for alias in alias_candidates:
+      if alias in existing_fonts:
+        primary_alias = alias
+        first_success_alias = alias
+        source_desc = "existing"
+        break
+
+    # 优先尝试从本地字体文件创建
+    if primary_alias is None:
+      for alias in alias_candidates:
+        if alias in existing_fonts:
+          continue
+        try:
+          tk_root.tk.call("font", "create", alias, "-family", f"@{font_path}")
+          primary_alias = alias
+          first_success_alias = alias
+          source_desc = font_path
+          existing_fonts.add(alias)
+          break
+        except Exception:
+          failed_aliases.append(alias)
+
+    # 若本地字体加载失败，尝试系统字体
+    if primary_alias is None:
+      try:
+        system_families = set(map(str, tk_root.tk.call("font", "families")))
+      except Exception:
+        system_families = set()
+
+      for alias in alias_candidates:
+        if alias in existing_fonts:
+          primary_alias = alias
+          first_success_alias = alias
+          source_desc = "existing"
+          break
+        if alias not in system_families:
+          failed_aliases.append(alias)
+          continue
+        try:
+          tk_root.tk.call("font", "create", alias, "-family", alias)
+          primary_alias = alias
+          first_success_alias = alias
+          source_desc = "system"
+          existing_fonts.add(alias)
+          break
+        except Exception:
+          failed_aliases.append(alias)
+
+    # 为其余别名创建引用
+    if primary_alias is not None:
+      for alias in alias_candidates:
+        if alias == primary_alias or alias in existing_fonts:
+          continue
+        try:
+          tk_root.tk.call("font", "create", alias, "-family", primary_alias)
+          existing_fonts.add(alias)
+        except Exception:
+          # 若别名创建失败且存在同名系统字体，再尝试直接使用系统字体
+          try:
+            tk_root.tk.call("font", "create", alias, "-family", alias)
+            existing_fonts.add(alias)
+          except Exception:
+            failed_aliases.append(alias)
+
+    # 输出加载结果
+    if primary_alias is not None:
+      if source_desc == font_path:
+        print(
+            f"[load_local_fonts] 成功加载字体 {first_success_alias} <- {font_path}"
         )
-        fonts_dir_candidates.append(os.path.join(project_root, "static", "fonts"))
-
-    for candidate in fonts_dir_candidates:
-        if os.path.isdir(candidate):
-            fonts_dir = candidate
-            break
-
-    if fonts_dir is None:
-        return
-
-    alias_overrides = {
-        "等距更纱黑体": ["等距更纱黑体 SC", "Sarasa Mono SC", "SarasaMonoSC"],
-        "等距更纱黑体.ttf": ["等距更纱黑体 SC", "Sarasa Mono SC", "SarasaMonoSC"],
-        "emoji": ["EmojiSupport"],
-        "emoji.ttf": ["EmojiSupport"],
-    }
-
-    existing_fonts = set(map(str, tk_root.tk.call("font", "names")))
-
-    for entry in os.scandir(fonts_dir):
-        if not entry.is_file():
-            continue
-        name_lower = entry.name.lower()
-        if not name_lower.endswith((".ttf", ".otf", ".ttc")):
-            continue
-
-        font_path = entry.path.replace("\\", "/")
-        base_name = os.path.splitext(entry.name)[0]
-
-        alias_candidates = []
-        for candidate in (
-            base_name,
-            base_name.replace("_", " "),
-            base_name.replace("_", ""),
-            entry.name,
-        ):
-            cleaned = candidate.strip()
-            if cleaned and cleaned not in alias_candidates:
-                alias_candidates.append(cleaned)
-
-        for extra in alias_overrides.get(entry.name, []):
-            cleaned = extra.strip()
-            if cleaned and cleaned not in alias_candidates:
-                alias_candidates.append(cleaned)
-        for extra in alias_overrides.get(base_name, []):
-            cleaned = extra.strip()
-            if cleaned and cleaned not in alias_candidates:
-                alias_candidates.append(cleaned)
-
-        primary_alias = None
-        first_success_alias = None
-        source_desc = None
-        failed_aliases = []
-
-        # 首先检查是否已存在同名字体
-        for alias in alias_candidates:
-            if alias in existing_fonts:
-                primary_alias = alias
-                first_success_alias = alias
-                source_desc = "existing"
-                break
-
-        # 优先尝试从本地字体文件创建
-        if primary_alias is None:
-            for alias in alias_candidates:
-                if alias in existing_fonts:
-                    continue
-                try:
-                    tk_root.tk.call("font", "create", alias, "-family", f"@{font_path}")
-                    primary_alias = alias
-                    first_success_alias = alias
-                    source_desc = font_path
-                    existing_fonts.add(alias)
-                    break
-                except Exception:
-                    failed_aliases.append(alias)
-
-        # 若本地字体加载失败，尝试系统字体
-        if primary_alias is None:
-            try:
-                system_families = set(map(str, tk_root.tk.call("font", "families")))
-            except Exception:
-                system_families = set()
-
-            for alias in alias_candidates:
-                if alias in existing_fonts:
-                    primary_alias = alias
-                    first_success_alias = alias
-                    source_desc = "existing"
-                    break
-                if alias not in system_families:
-                    failed_aliases.append(alias)
-                    continue
-                try:
-                    tk_root.tk.call("font", "create", alias, "-family", alias)
-                    primary_alias = alias
-                    first_success_alias = alias
-                    source_desc = "system"
-                    existing_fonts.add(alias)
-                    break
-                except Exception:
-                    failed_aliases.append(alias)
-
-        # 为其余别名创建引用
-        if primary_alias is not None:
-            for alias in alias_candidates:
-                if alias == primary_alias or alias in existing_fonts:
-                    continue
-                try:
-                    tk_root.tk.call("font", "create", alias, "-family", primary_alias)
-                    existing_fonts.add(alias)
-                except Exception:
-                    # 若别名创建失败且存在同名系统字体，再尝试直接使用系统字体
-                    try:
-                        tk_root.tk.call("font", "create", alias, "-family", alias)
-                        existing_fonts.add(alias)
-                    except Exception:
-                        failed_aliases.append(alias)
-
-        # 输出加载结果
-        if primary_alias is not None:
-            if source_desc == font_path:
-                print(f"[load_local_fonts] 成功加载字体 {first_success_alias} <- {font_path}")
-            elif source_desc == "system":
-                print(f"[load_local_fonts] 使用系统字体 {first_success_alias} (未找到本地文件 {font_path})")
-            elif source_desc == "existing":
-                # 字体已存在，无需重复加载
-                pass
-        else:
-            print(
-                f"[load_local_fonts] 无法加载字体文件: {font_path} "
-                f"(别名尝试: {', '.join(alias_candidates)})"
-            )
+      elif source_desc == "system":
+        print(
+            f"[load_local_fonts] 使用系统字体 {first_success_alias} (未找到本地文件 {font_path})"
+        )
+      elif source_desc == "existing":
+        # 字体已存在，无需重复加载
+        pass
+    else:
+      print(
+          f"[load_local_fonts] 无法加载字体文件: {font_path} "
+          f"(别名尝试: {', '.join(alias_candidates)})"
+      )
 
 
 # 显示主框架
@@ -236,45 +244,51 @@ title_text = game_name + " " + game_version + " -α测"
 root = Tk()
 load_local_fonts(root)
 # normal_config.config_normal.window_width = root.maxsize()[0]
-#读取屏幕长宽
+# 读取屏幕长宽
 screen_weight = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
-#如果设定长宽大于屏幕长宽，则缩小为屏幕长宽
+# 如果设定长宽大于屏幕长宽，则缩小为屏幕长宽
 if normal_config.config_normal.window_width + 30 > screen_weight:
-    normal_config.config_normal.window_width = screen_weight - 30
+  normal_config.config_normal.window_width = screen_weight - 30
 if normal_config.config_normal.window_hight + 30 > screen_height:
-    normal_config.config_normal.window_hight = screen_height - 30
-#字体大小为屏幕宽度除以行数，输入字体大小为普通字体大小-2
-now_font_size = int(normal_config.config_normal.window_width / normal_config.config_normal.text_width) * 2
+  normal_config.config_normal.window_hight = screen_height - 30
+# 字体大小为屏幕宽度除以行数，输入字体大小为普通字体大小-2
+now_font_size = (
+    int(
+        normal_config.config_normal.window_width
+        / normal_config.config_normal.text_width
+    )
+    * 2
+)
 normal_config.config_normal.font_size = now_font_size
 normal_config.config_normal.order_font_size = now_font_size - 2
 # 设置DPI缩放
 # tk_dpi配置说明：100=100%缩放(1.0)，125=125%缩放(1.25)，150=150%缩放(1.5)，0=自动(1.0)
-config_dpi = getattr(normal_config.config_normal, 'tk_dpi', 0)
+config_dpi = getattr(normal_config.config_normal, "tk_dpi", 0)
 if config_dpi > 0:
-    # 使用配置文件指定的DPI值，以100为基准计算scaling
-    scaling_factor = config_dpi / 100.0
+  # 使用配置文件指定的DPI值，以100为基准计算scaling
+  scaling_factor = config_dpi / 100.0
 else:
-    # 自动模式：从系统读取实际DPI并计算
-    system_dpi = root.winfo_fpixels("1i")
-    # 96是Windows标准DPI，以此为基准计算scaling
-    scaling_factor = system_dpi / 96.0
+  # 自动模式：从系统读取实际DPI并计算
+  system_dpi = root.winfo_fpixels("1i")
+  # 96是Windows标准DPI，以此为基准计算scaling
+  scaling_factor = system_dpi / 96.0
 root.tk.call("tk", "scaling", scaling_factor)
 root.title(title_text)
 width = normal_config.config_normal.window_width
-#根窗口左上角x坐标-当前窗口左上角x坐标
+# 根窗口左上角x坐标-当前窗口左上角x坐标
 frm_width = root.winfo_rootx() - root.winfo_x()
 win_width = width + 2 * frm_width
 height = normal_config.config_normal.window_hight
-#同理y坐标
+# 同理y坐标
 titlebar_height = root.winfo_rooty() - root.winfo_y()
 win_height = height + titlebar_height + frm_width
 x = root.winfo_screenwidth() // 2 - win_width // 2
 y = root.winfo_screenheight() // 2 - win_height // 2
 # 从窗口改为最大化
-#root.geometry("{}x{}+{}+{}".format(width, height, x, y))
-root.state('zoomed')
-#隐藏窗口
+# root.geometry("{}x{}+{}+{}".format(width, height, x, y))
+root.state("zoomed")
+# 隐藏窗口
 root.deiconify()
 root.columnconfigure(0, weight=1)
 root.rowconfigure(0, weight=1)
@@ -308,10 +322,10 @@ textbox = Text(
     # （双击选词、三击选行、按住左右拖选）建立的选区若用醒目色，会从透明像素处透出
     # （露红底）。设为背景色后选区不可见、露红根除，拖选复制文本仍可用。
     selectbackground=normal_config.config_normal.background,
-    #123分别是，\n的上行间距，自动换行行间距，\n的下行间距
-    spacing1 = 1,
-    spacing2 = 1,
-    spacing3 = 1
+    # 123分别是，\n的上行间距，自动换行行间距，\n的下行间距
+    spacing1=1,
+    spacing2=1,
+    spacing3=1,
 )
 textbox.grid(column=0, row=0, sticky=(N, W, E, S))
 
@@ -323,10 +337,10 @@ s_vertical.grid(column=1, row=0, sticky=(N, E, S), rowspan=2)
 # 输入框背景容器
 order_font_data = game_config.config_font[1]
 for k in game_config.config_font[0].__dict__:
-    if k not in order_font_data.__dict__:
-        order_font_data.__dict__[k] = game_config.config_font[0].__dict__[k]
-        order_font_data.font = normal_config.config_normal.font
-        order_font_data.font_size = normal_config.config_normal.order_font_size
+  if k not in order_font_data.__dict__:
+    order_font_data.__dict__[k] = game_config.config_font[0].__dict__[k]
+    order_font_data.font = normal_config.config_normal.font
+    order_font_data.font_size = normal_config.config_normal.order_font_size
 input_background_box = Text(
     main_frame,
     highlightbackground=normal_config.config_normal.background,
@@ -351,7 +365,9 @@ input_background_box_cursor.config(foreground=order_font_data.foreground)
 
 # 输入栏
 order = StringVar()
-order_font = font.Font(family=order_font_data.font, size=order_font_data.font_size)
+order_font = font.Font(
+    family=order_font_data.font, size=order_font_data.font_size
+)
 inputbox = Entry(
     input_background_box,
     borderwidth=0,
@@ -369,11 +385,11 @@ inputbox.grid(column=1, row=0, sticky=(N, E, S))
 
 
 def _return_focus_to_inputbox(event=None):
-    """
-    将键盘焦点交还给底部输入框。
-    输入：event —— Tk 事件对象，可为 None；返回值：None。
-    """
-    inputbox.focus_set()
+  """
+  将键盘焦点交还给底部输入框。
+  输入：event —— Tk 事件对象，可为 None；返回值：None。
+  """
+  inputbox.focus_set()
 
 
 # 输出显示区（textbox）是纯展示控件，绝不应持有键盘焦点。
@@ -385,7 +401,9 @@ def _return_focus_to_inputbox(event=None):
 textbox.configure(takefocus=0)
 textbox.bind("<FocusIn>", _return_focus_to_inputbox)
 
-normal_font = font.Font(family=order_font_data.font, size=normal_config.config_normal.font_size)
+normal_font = font.Font(
+    family=order_font_data.font, size=normal_config.config_normal.font_size
+)
 
 
 input_event_func = None
@@ -406,31 +424,31 @@ from Script.Core import era_image
 
 
 def send_input(*args):
-    """
-    发送一条指令
-    """
-    global input_event_func, input_armed
-    # 渲染期输入门禁：未上膛时（界面尚在渲染/未定型）直接丢弃本次输入注入，
-    # 拦截滞留点击命中新按钮触发的 send_cmd 命令注入，以及黑屏/渲染期回车的提前推进。
-    if not input_armed:
-        return
-    # 一次性门：接受本次输入即撤膛，防止双击按钮/连按回车的第二条输入残留、被下一个提示误消费；
-    # 下一次 order_deal 入口 push 的上膛标记会重新开门。
-    input_armed = False
-    order = get_order()
-    if len(cache.input_cache) >= 21:
-        if not (order) == "":
-            del cache.input_cache[0]
-            cache.input_cache.append(order)
-            cache.input_position = 0
-    else:
-        if not (order) == "":
-            cache.input_cache.append(order)
-            cache.input_position = 0
-    cache.input_cache_draft = ""
-    cache.input_cache_browsing = False
-    input_event_func(order)
-    clear_order()
+  """
+  发送一条指令
+  """
+  global input_event_func, input_armed
+  # 渲染期输入门禁：未上膛时（界面尚在渲染/未定型）直接丢弃本次输入注入，
+  # 拦截滞留点击命中新按钮触发的 send_cmd 命令注入，以及黑屏/渲染期回车的提前推进。
+  if not input_armed:
+    return
+  # 一次性门：接受本次输入即撤膛，防止双击按钮/连按回车的第二条输入残留、被下一个提示误消费；
+  # 下一次 order_deal 入口 push 的上膛标记会重新开门。
+  input_armed = False
+  order = get_order()
+  if len(cache.input_cache) >= 21:
+    if not (order) == "":
+      del cache.input_cache[0]
+      cache.input_cache.append(order)
+      cache.input_position = 0
+  else:
+    if not (order) == "":
+      cache.input_cache.append(order)
+      cache.input_position = 0
+  cache.input_cache_draft = ""
+  cache.input_cache_browsing = False
+  input_event_func(order)
+  clear_order()
 
 
 # #######################################################################
@@ -445,238 +463,247 @@ _see_end_pending = False
 
 
 def _do_arm():
-    """
-    真正执行输入上膛
+  """
+  真正执行输入上膛
 
-    参数：无
+  参数：无
 
-    返回值类型：无
-    功能描述：由 read_queue 处理上膛标记时经 root.after_idle 挂起，在 Tk 事件队列
-              无待派发事件（滞留点击均已被派发并丢弃）后才运行；幂等且异常安全。
-              性能监控开启时，此处是"一屏"的边界：计算端到端渲染延迟并落盘本屏报告。
-    """
-    global input_armed, _arm_after_id
-    _arm_after_id = None
-    input_armed = True
-    if perf_hook.enabled:
-        # 端到端延迟配对：flow 侧入队完成 / 本屏首条消息入队 -> GUI 侧界面可交互
-        t_now = time.perf_counter()
-        extra = {}
-        t_enqueue = perf_hook.get_mark("flow.enqueue_done")
-        if t_enqueue:
-            extra["enqueue_to_interactive_ms"] = round((t_now - t_enqueue) * 1000, 3)
-        t_screen = perf_hook.get_mark("flow.screen_first_msg")
-        if t_screen:
-            extra["screen_total_ms"] = round((t_now - t_screen) * 1000, 3)
-        # 采样 Text 控件当前 tag 总数（观测 tooltip tag 是否泄漏增长）
-        try:
-            perf_hook.hook_value("gui.textbox_tag_count", len(textbox.tag_names()))
-        except Exception:
-            pass
-        perf_hook.flush_screen_report(extra)
-        # 复位"本屏首条消息"标记，下一屏第一条入队消息会重新打标
-        perf_hook.clear_mark("flow.screen_first_msg")
+  返回值类型：无
+  功能描述：由 read_queue 处理上膛标记时经 root.after_idle 挂起，在 Tk 事件队列
+            无待派发事件（滞留点击均已被派发并丢弃）后才运行；幂等且异常安全。
+            性能监控开启时，此处是"一屏"的边界：计算端到端渲染延迟并落盘本屏报告。
+  """
+  global input_armed, _arm_after_id
+  _arm_after_id = None
+  input_armed = True
+  if perf_hook.enabled:
+    # 端到端延迟配对：flow 侧入队完成 / 本屏首条消息入队 -> GUI 侧界面可交互
+    t_now = time.perf_counter()
+    extra = {}
+    t_enqueue = perf_hook.get_mark("flow.enqueue_done")
+    if t_enqueue:
+      extra["enqueue_to_interactive_ms"] = round((t_now - t_enqueue) * 1000, 3)
+    t_screen = perf_hook.get_mark("flow.screen_first_msg")
+    if t_screen:
+      extra["screen_total_ms"] = round((t_now - t_screen) * 1000, 3)
+    # 采样 Text 控件当前 tag 总数（观测 tooltip tag 是否泄漏增长）
+    try:
+      perf_hook.hook_value("gui.textbox_tag_count", len(textbox.tag_names()))
+    except Exception:
+      pass
+    perf_hook.flush_screen_report(extra)
+    # 复位"本屏首条消息"标记，下一屏第一条入队消息会重新打标
+    perf_hook.clear_mark("flow.screen_first_msg")
 
 
 def read_queue():
-    """
-    从队列中获取在前端显示的信息。
-    一次调度会排空整条输出队列；期间开启批末合并滚动，
-    使这一批中所有输出仅在批末真正滚动一次（而非每条各滚一次）。
-    无输入参数，无返回值。
-    """
-    global _defer_see_end, _see_end_pending
-    # 进入批处理：本批内各输出调用的 see_end() 仅记录待滚动标志
-    _defer_see_end = True
-    try:
-        _read_queue_drain()
-    finally:
-        # 异常安全：无论是否抛异常都复位延迟标志，避免一次异常把滚动永久关掉
-        _defer_see_end = False
-        if _see_end_pending:
-            # 本批确有输出请求过滚动，批末统一滚动一次；重绘由事件循环在下一空闲时刻自然完成，
-            # 不显式冲刷 idle 队列（update_idletasks 会提前执行其他挂起的 idle 回调，产生越权副作用）
-            see_end()
-            _see_end_pending = False
-    root.after(1, read_queue)
+  """
+  从队列中获取在前端显示的信息。
+  一次调度会排空整条输出队列；期间开启批末合并滚动，
+  使这一批中所有输出仅在批末真正滚动一次（而非每条各滚一次）。
+  无输入参数，无返回值。
+  """
+  global _defer_see_end, _see_end_pending
+  # 进入批处理：本批内各输出调用的 see_end() 仅记录待滚动标志
+  _defer_see_end = True
+  try:
+    _read_queue_drain()
+  finally:
+    # 异常安全：无论是否抛异常都复位延迟标志，避免一次异常把滚动永久关掉
+    _defer_see_end = False
+    if _see_end_pending:
+      # 本批确有输出请求过滚动，批末统一滚动一次；重绘由事件循环在下一空闲时刻自然完成，
+      # 不显式冲刷 idle 队列（update_idletasks 会提前执行其他挂起的 idle 回调，产生越权副作用）
+      see_end()
+      _see_end_pending = False
+  root.after(1, read_queue)
 
 
 def _read_queue_drain():
-    """
-    排空输出队列并逐条渲染的内部实现，无输入参数，无返回值。
-    独立成函数，供 read_queue 用 try/finally 包裹以实现批末合并滚动逻辑。
-    性能监控开启时按消息类别分类计时（json 反序列化/文本插入/按钮渲染/图片嵌入/行数裁剪）。
-    """
-    global input_armed, _arm_after_id
-    _perf = perf_hook.enabled
+  """
+  排空输出队列并逐条渲染的内部实现，无输入参数，无返回值。
+  独立成函数，供 read_queue 用 try/finally 包裹以实现批末合并滚动逻辑。
+  性能监控开启时按消息类别分类计时（json 反序列化/文本插入/按钮渲染/图片嵌入/行数裁剪）。
+  """
+  global input_armed, _arm_after_id
+  _perf = perf_hook.enabled
+  if _perf:
+    _batch_start = time.perf_counter()
+    _batch_msg_count = 0
+  while not main_queue.empty():
+    quene_str = main_queue.get()
     if _perf:
-        _batch_start = time.perf_counter()
-        _batch_msg_count = 0
-    while not main_queue.empty():
-        quene_str = main_queue.get()
+      _t0 = time.perf_counter()
+    json_data = json.loads(quene_str)
+    if _perf:
+      perf_hook.hook_time("gui.json_loads", time.perf_counter() - _t0)
+      _batch_msg_count += 1
+
+    # 渲染期输入门禁：逐条按批内顺序判定。上膛标记恒在一屏内容之后入队，
+    # 逐条处理时"内容先撤膛、末尾标记再上膛"天然正确，无需批末统一置位。
+    # 独立的上膛标记消息（无 content）→ 挂起 idle 上膛后跳过后续内容处理。
+    if json_data.get("input_arm"):
+      # 不能在此直接置 True：标记常与一屏内容落在同一 read_queue 批（微秒级紧跟入队），
+      # 批处理期间玩家的点击滞留在 Tk 事件队列，批返回后才派发；若此刻门已开则照常注入。
+      # after_idle 回调只在事件队列无待派发事件时才运行，故滞留点击必先被派发
+      # （此刻仍未上膛 → 被门丢弃），之后才真正上膛。
+      if _arm_after_id is not None:
+        root.after_cancel(_arm_after_id)
+      _arm_after_id = root.after_idle(_do_arm)
+      continue
+    # 度量同步标记：强制完成当前全部内容的行度量（Tk 8.6+ 的 sync 子命令），
+    # 供启动期预热把字形/行度量欠账一次性还清在加载期，消除进入游戏后的首屏度量尖峰
+    if json_data.get("metrics_sync"):
+      _sync_start = time.perf_counter()
+      try:
+        textbox.tk.call(textbox._w, "sync")
+      except Exception:
+        # 旧版 Tk 无 sync 子命令时静默跳过（预热退化为仅字形绘制）
+        pass
+      _sync_duration = time.perf_counter() - _sync_start
+      # 向终端输出预热完成信息（该耗时即启动加载期为消除进入游戏后首屏卡顿付出的延迟）
+      print(f"常用字符预热完毕，耗时 {_sync_duration:.2f} 秒")
+      if _perf:
+        perf_hook.hook_time("gui.metrics_sync", _sync_duration)
+      continue
+    # 任何其它内容消息（文本/按钮/图片/清屏等）都意味着新一屏正在渲染 → 撤膛，
+    # 并取消挂起未执行的上膛回调，防止"标记批之后又来内容批"时旧回调迟到误开门。
+    input_armed = False
+    if _arm_after_id is not None:
+      root.after_cancel(_arm_after_id)
+      _arm_after_id = None
+
+    if "clear_cmd" in json_data and json_data["clear_cmd"] == "true":
+      clear_screen()
+    if "clearorder_cmd" in json_data and json_data["clearorder_cmd"] == "true":
+      clear_order()
+    if "clearcmd_cmd" in json_data:
+      cmd_nums = json_data["clearcmd_cmd"]
+      if cmd_nums == "all":
+        io_clear_cmd()
+      else:
+        io_clear_cmd(tuple(cmd_nums))
+    if "bgcolor" in json_data:
+      set_background(json_data["bgcolor"])
+    if "set_style" in json_data:
+      temp = json_data["set_style"]
+      frame_style_def(
+          temp["style_name"],
+          temp["foreground"],
+          temp["background"],
+          temp["font"],
+          temp["fontsize"],
+          temp["bold"],
+          temp["underline"],
+          temp["italic"],
+      )
+    if "image" in json_data:
+      if _perf:
+        _t0 = time.perf_counter()
+      textbox.image_create(
+          "end", image=era_image.image_data[json_data["image"]["image_name"]]
+      )
+      if _perf:
+        perf_hook.hook_time("gui.image_create", time.perf_counter() - _t0)
+    if "image_list" in json_data:
+      # 批量图片消息（如整条比例条），一条消息内逐格嵌入
+      if _perf:
+        _t0 = time.perf_counter()
+      image_data_dict = era_image.image_data
+      for image_name in json_data["image_list"]:
+        textbox.image_create("end", image=image_data_dict[image_name])
+      if _perf:
+        perf_hook.hook_time("gui.image_create", time.perf_counter() - _t0)
+
+    for c in json_data["content"]:
+      if c["type"] == "text":
+        c["style"][0] = c["style"][0].replace(" ", "")
         if _perf:
-            _t0 = time.perf_counter()
-        json_data = json.loads(quene_str)
+          _t0 = time.perf_counter()
+        now_print(
+            c["text"], style=tuple(c["style"]), tooltip=c.get("tooltip", "")
+        )
         if _perf:
-            perf_hook.hook_time("gui.json_loads", time.perf_counter() - _t0)
-            _batch_msg_count += 1
-
-        # 渲染期输入门禁：逐条按批内顺序判定。上膛标记恒在一屏内容之后入队，
-        # 逐条处理时"内容先撤膛、末尾标记再上膛"天然正确，无需批末统一置位。
-        # 独立的上膛标记消息（无 content）→ 挂起 idle 上膛后跳过后续内容处理。
-        if json_data.get("input_arm"):
-            # 不能在此直接置 True：标记常与一屏内容落在同一 read_queue 批（微秒级紧跟入队），
-            # 批处理期间玩家的点击滞留在 Tk 事件队列，批返回后才派发；若此刻门已开则照常注入。
-            # after_idle 回调只在事件队列无待派发事件时才运行，故滞留点击必先被派发
-            # （此刻仍未上膛 → 被门丢弃），之后才真正上膛。
-            if _arm_after_id is not None:
-                root.after_cancel(_arm_after_id)
-            _arm_after_id = root.after_idle(_do_arm)
-            continue
-        # 度量同步标记：强制完成当前全部内容的行度量（Tk 8.6+ 的 sync 子命令），
-        # 供启动期预热把字形/行度量欠账一次性还清在加载期，消除进入游戏后的首屏度量尖峰
-        if json_data.get("metrics_sync"):
-            _sync_start = time.perf_counter()
-            try:
-                textbox.tk.call(textbox._w, "sync")
-            except Exception:
-                # 旧版 Tk 无 sync 子命令时静默跳过（预热退化为仅字形绘制）
-                pass
-            _sync_duration = time.perf_counter() - _sync_start
-            # 向终端输出预热完成信息（该耗时即启动加载期为消除进入游戏后首屏卡顿付出的延迟）
-            print(f"常用字符预热完毕，耗时 {_sync_duration:.2f} 秒")
-            if _perf:
-                perf_hook.hook_time("gui.metrics_sync", _sync_duration)
-            continue
-        # 任何其它内容消息（文本/按钮/图片/清屏等）都意味着新一屏正在渲染 → 撤膛，
-        # 并取消挂起未执行的上膛回调，防止"标记批之后又来内容批"时旧回调迟到误开门。
-        input_armed = False
-        if _arm_after_id is not None:
-            root.after_cancel(_arm_after_id)
-            _arm_after_id = None
-
-        if "clear_cmd" in json_data and json_data["clear_cmd"] == "true":
-            clear_screen()
-        if "clearorder_cmd" in json_data and json_data["clearorder_cmd"] == "true":
-            clear_order()
-        if "clearcmd_cmd" in json_data:
-            cmd_nums = json_data["clearcmd_cmd"]
-            if cmd_nums == "all":
-                io_clear_cmd()
-            else:
-                io_clear_cmd(tuple(cmd_nums))
-        if "bgcolor" in json_data:
-            set_background(json_data["bgcolor"])
-        if "set_style" in json_data:
-            temp = json_data["set_style"]
-            frame_style_def(
-                temp["style_name"],
-                temp["foreground"],
-                temp["background"],
-                temp["font"],
-                temp["fontsize"],
-                temp["bold"],
-                temp["underline"],
-                temp["italic"],
-            )
-        if "image" in json_data:
-            if _perf:
-                _t0 = time.perf_counter()
-            textbox.image_create("end",image=era_image.image_data[json_data["image"]["image_name"]])
-            if _perf:
-                perf_hook.hook_time("gui.image_create", time.perf_counter() - _t0)
-        if "image_list" in json_data:
-            # 批量图片消息（如整条比例条），一条消息内逐格嵌入
-            if _perf:
-                _t0 = time.perf_counter()
-            image_data_dict = era_image.image_data
-            for image_name in json_data["image_list"]:
-                textbox.image_create("end", image=image_data_dict[image_name])
-            if _perf:
-                perf_hook.hook_time("gui.image_create", time.perf_counter() - _t0)
-
-        for c in json_data["content"]:
-            if c["type"] == "text":
-                c["style"][0] = c["style"][0].replace(" ","")
-                if _perf:
-                    _t0 = time.perf_counter()
-                now_print(c["text"], style=tuple(c["style"]), tooltip=c.get("tooltip", ""))
-                if _perf:
-                    perf_hook.hook_time("gui.now_print", time.perf_counter() - _t0)
-            if c["type"] == "cmd":
-                c["normal_style"][0] = c["normal_style"][0].replace(" ", "")
-                c["on_style"][0] = c["on_style"][0].replace(" ", "")
-                if _perf:
-                    _t0 = time.perf_counter()
-                io_print_cmd(
-                    c["text"],
-                    c["num"],
-                    c["normal_style"],
-                    c["on_style"],
-                    c.get("tooltip", ""),
-                )
-                if _perf:
-                    perf_hook.hook_time("gui.cmd_render", time.perf_counter() - _t0)
-            if c["type"] == "image_cmd":
-                if _perf:
-                    _t0 = time.perf_counter()
-                io_print_image_cmd(c["text"], c["num"], c.get("tooltip", ""))
-                if _perf:
-                    perf_hook.hook_time("gui.image_cmd_render", time.perf_counter() - _t0)
-            if "\n" in c["text"]:
-                if _perf:
-                    _t0 = time.perf_counter()
-                # 用 end-1c 的行号索引取当前总行数（Tk 内部 O(1)），
-                # 避免旧实现把整个缓冲区拷贝成字符串再数换行（O(缓冲区长度)，且随历史增长变慢）
-                if int(textbox.index("end-1c").split(".")[0]) > normal_config.config_normal.text_hight * 10:
-                    if _perf:
-                        perf_hook.hook_count("gui.line_trim_delete")
-                    textbox.delete("1.0", str(normal_config.config_normal.text_hight * 5) + ".0")
-                    # 裁剪后顺带回收已无文本范围的 tooltip tag，防止 tag 表随会话无限增长
-                    _cleanup_tooltip_tags()
-                if _perf:
-                    perf_hook.hook_time("gui.line_trim_scan", time.perf_counter() - _t0)
-    if _perf and _batch_msg_count:
-        perf_hook.hook_time("gui.drain_batch", time.perf_counter() - _batch_start)
-        perf_hook.hook_count("gui.msg_total", _batch_msg_count)
+          perf_hook.hook_time("gui.now_print", time.perf_counter() - _t0)
+      if c["type"] == "cmd":
+        c["normal_style"][0] = c["normal_style"][0].replace(" ", "")
+        c["on_style"][0] = c["on_style"][0].replace(" ", "")
+        if _perf:
+          _t0 = time.perf_counter()
+        io_print_cmd(
+            c["text"],
+            c["num"],
+            c["normal_style"],
+            c["on_style"],
+            c.get("tooltip", ""),
+        )
+        if _perf:
+          perf_hook.hook_time("gui.cmd_render", time.perf_counter() - _t0)
+      if c["type"] == "image_cmd":
+        if _perf:
+          _t0 = time.perf_counter()
+        io_print_image_cmd(c["text"], c["num"], c.get("tooltip", ""))
+        if _perf:
+          perf_hook.hook_time("gui.image_cmd_render", time.perf_counter() - _t0)
+      if "\n" in c["text"]:
+        if _perf:
+          _t0 = time.perf_counter()
+        # 用 end-1c 的行号索引取当前总行数（Tk 内部 O(1)），
+        # 避免旧实现把整个缓冲区拷贝成字符串再数换行（O(缓冲区长度)，且随历史增长变慢）
+        if (
+            int(textbox.index("end-1c").split(".")[0])
+            > normal_config.config_normal.text_hight * 10
+        ):
+          if _perf:
+            perf_hook.hook_count("gui.line_trim_delete")
+          textbox.delete(
+              "1.0", str(normal_config.config_normal.text_hight * 5) + ".0"
+          )
+          # 裁剪后顺带回收已无文本范围的 tooltip tag，防止 tag 表随会话无限增长
+          _cleanup_tooltip_tags()
+        if _perf:
+          perf_hook.hook_time("gui.line_trim_scan", time.perf_counter() - _t0)
+  if _perf and _batch_msg_count:
+    perf_hook.hook_time("gui.drain_batch", time.perf_counter() - _batch_start)
+    perf_hook.hook_count("gui.msg_total", _batch_msg_count)
 
 
 def run():
-    """
-    启动屏幕
-    """
-    root.after(1, read_queue)
-    root.mainloop()
+  """
+  启动屏幕
+  """
+  root.after(1, read_queue)
+  root.mainloop()
 
 
 def see_end():
-    """
-    滚动到输出末尾，无输入参数，无返回值。
-    批末合并滚动开启时（_defer_see_end 为真），仅记录待滚动标志并返回，
-    由 read_queue 在批末统一滚动一次；否则立即滚动到末尾。
-    """
-    global _see_end_pending
-    if _defer_see_end:
-        # 处于一批输出中，推迟到批末再滚动
-        _see_end_pending = True
-        return
-    if perf_hook.enabled:
-        _t0 = time.perf_counter()
-        textbox.see(END)
-        perf_hook.hook_time("gui.see_end", time.perf_counter() - _t0)
-        return
+  """
+  滚动到输出末尾，无输入参数，无返回值。
+  批末合并滚动开启时（_defer_see_end 为真），仅记录待滚动标志并返回，
+  由 read_queue 在批末统一滚动一次；否则立即滚动到末尾。
+  """
+  global _see_end_pending
+  if _defer_see_end:
+    # 处于一批输出中，推迟到批末再滚动
+    _see_end_pending = True
+    return
+  if perf_hook.enabled:
+    _t0 = time.perf_counter()
     textbox.see(END)
+    perf_hook.hook_time("gui.see_end", time.perf_counter() - _t0)
+    return
+  textbox.see(END)
 
 
 def set_background(color):
-    """
-    设置背景颜色
-    Keyword arguments:
-    color -- 背景颜色
-    """
-    textbox.config(insertbackground=color)
-    # selectbackground 跟随背景色，避免选区从正文透明 PNG 处透出（见 textbox 创建处说明）
-    textbox.configure(background=color, selectbackground=color)
+  """
+  设置背景颜色
+  Keyword arguments:
+  color -- 背景颜色
+  """
+  textbox.config(insertbackground=color)
+  # selectbackground 跟随背景色，避免选区从正文透明 PNG 处透出（见 textbox 创建处说明）
+  textbox.configure(background=color, selectbackground=color)
 
 
 # ######################################################################
@@ -688,23 +715,23 @@ main_queue = None
 
 
 def bind_return(func):
-    """
-    绑定输入处理函数
-    Keyword arguments:
-    func -- 输入处理函数
-    """
-    global input_event_func
-    input_event_func = func
+  """
+  绑定输入处理函数
+  Keyword arguments:
+  func -- 输入处理函数
+  """
+  global input_event_func
+  input_event_func = func
 
 
 def bind_queue(q):
-    """
-    绑定信息队列
-    Keyword arguments:
-    q -- 消息队列
-    """
-    global main_queue
-    main_queue = q
+  """
+  绑定信息队列
+  Keyword arguments:
+  q -- 消息队列
+  """
+  global main_queue
+  main_queue = q
 
 
 # #######################################################################
@@ -714,100 +741,102 @@ sys_print = print
 
 
 def now_print(string, style=("standard",), tooltip: str = ""):
-    """
-    输出文本
-    Keyword arguments:
-    string -- 字符串
-    style -- 样式序列
-    tooltip -- 悬浮提示文本，用于在 Tk 端展示说明
-    """
-    _perf = perf_hook.enabled
-    tooltip_text = tooltip or ""
-    start_index = None
-    if tooltip_text and string:
-        # 记录插入前的位置，便于为新增文本打标签
-        start_index = textbox.index("end-1c")
-    if _perf:
-        _t0 = time.perf_counter()
-    textbox.insert("end", string, style)
-    if _perf:
-        perf_hook.hook_time("gui.text_insert", time.perf_counter() - _t0)
-        _t0 = time.perf_counter()
-    if tooltip_text and string and start_index is not None:
-        end_index = textbox.index("end-1c")
-        if textbox.compare(start_index, "<", end_index):
-            tag_name = f"text_tooltip_{uuid.uuid4().hex}"
-            textbox.tag_add(tag_name, start_index, end_index)
+  """
+  输出文本
+  Keyword arguments:
+  string -- 字符串
+  style -- 样式序列
+  tooltip -- 悬浮提示文本，用于在 Tk 端展示说明
+  """
+  _perf = perf_hook.enabled
+  tooltip_text = tooltip or ""
+  start_index = None
+  if tooltip_text and string:
+    # 记录插入前的位置，便于为新增文本打标签
+    start_index = textbox.index("end-1c")
+  if _perf:
+    _t0 = time.perf_counter()
+  textbox.insert("end", string, style)
+  if _perf:
+    perf_hook.hook_time("gui.text_insert", time.perf_counter() - _t0)
+    _t0 = time.perf_counter()
+  if tooltip_text and string and start_index is not None:
+    end_index = textbox.index("end-1c")
+    if textbox.compare(start_index, "<", end_index):
+      tag_name = f"text_tooltip_{uuid.uuid4().hex}"
+      textbox.tag_add(tag_name, start_index, end_index)
 
-            def enter_func(event=None):
-                """鼠标进入文本范围时展示提示。"""
-                coords = (event.x_root, event.y_root) if event is not None else None
-                _schedule_tooltip(tooltip_text, coords)
+      def enter_func(event=None):
+        """鼠标进入文本范围时展示提示。"""
+        coords = (event.x_root, event.y_root) if event is not None else None
+        _schedule_tooltip(tooltip_text, coords)
 
-            def leave_func(event=None):
-                """鼠标离开文本范围时隐藏提示。"""
-                _hide_tooltip()
-
-            def motion_func(event=None):
-                """鼠标移动时更新提示位置。"""
-                if event is not None:
-                    _update_tooltip_coords((event.x_root, event.y_root))
-
-            textbox.tag_bind(tag_name, "<Enter>", enter_func)
-            textbox.tag_bind(tag_name, "<Leave>", leave_func)
-            textbox.tag_bind(tag_name, "<Motion>", motion_func)
-        if _perf:
-            # 单独统计 tooltip tag 的创建耗时与数量（观测 tag 泄漏的来源）
-            perf_hook.hook_time("gui.tooltip_tag", time.perf_counter() - _t0)
-            perf_hook.hook_count("gui.tooltip_tag_created")
-    if not string and tooltip_text:
-        # 空字符串不创建标签，直接取消已安排的提示
+      def leave_func(event=None):
+        """鼠标离开文本范围时隐藏提示。"""
         _hide_tooltip()
-    see_end()
+
+      def motion_func(event=None):
+        """鼠标移动时更新提示位置。"""
+        if event is not None:
+          _update_tooltip_coords((event.x_root, event.y_root))
+
+      textbox.tag_bind(tag_name, "<Enter>", enter_func)
+      textbox.tag_bind(tag_name, "<Leave>", leave_func)
+      textbox.tag_bind(tag_name, "<Motion>", motion_func)
+    if _perf:
+      # 单独统计 tooltip tag 的创建耗时与数量（观测 tag 泄漏的来源）
+      perf_hook.hook_time("gui.tooltip_tag", time.perf_counter() - _t0)
+      perf_hook.hook_count("gui.tooltip_tag_created")
+  if not string and tooltip_text:
+    # 空字符串不创建标签，直接取消已安排的提示
+    _hide_tooltip()
+  see_end()
 
 
 def print_cmd(string, style=("standard",)):
-    """
-    输出文本
-    Keyword arguments:
-    string -- 字符串
-    style -- 样式序列
-    """
-    textbox.insert("end", string, style)
-    see_end()
+  """
+  输出文本
+  Keyword arguments:
+  string -- 字符串
+  style -- 样式序列
+  """
+  textbox.insert("end", string, style)
+  see_end()
 
 
 def _cleanup_tooltip_tags():
-    """
-    回收已无文本范围的 tooltip tag
+  """
+  回收已无文本范围的 tooltip tag
 
-    参数：无
+  参数：无
 
-    返回值类型：无
-    功能描述：now_print 为带悬浮提示的文本创建的 text_tooltip_* tag 在文本被
-              清屏/裁剪删除后仍留在 Text 控件的 tag 表中（含事件绑定闭包），
-              导致 tag 表随会话时长线性增长、拖慢后续所有插入与排版操作。
-              此函数删除所有已经没有对应文本范围的 tooltip tag，
-              在清屏与行数裁剪后调用。
-    """
-    for tag_name in textbox.tag_names():
-        if tag_name.startswith("text_tooltip_") and not textbox.tag_ranges(tag_name):
-            textbox.tag_delete(tag_name)
+  返回值类型：无
+  功能描述：now_print 为带悬浮提示的文本创建的 text_tooltip_* tag 在文本被
+            清屏/裁剪删除后仍留在 Text 控件的 tag 表中（含事件绑定闭包），
+            导致 tag 表随会话时长线性增长、拖慢后续所有插入与排版操作。
+            此函数删除所有已经没有对应文本范围的 tooltip tag，
+            在清屏与行数裁剪后调用。
+  """
+  for tag_name in textbox.tag_names():
+    if tag_name.startswith("text_tooltip_") and not textbox.tag_ranges(
+        tag_name
+    ):
+      textbox.tag_delete(tag_name)
 
 
 def clear_screen():
-    """
-    清屏
-    """
-    io_clear_cmd()
-    if perf_hook.enabled:
-        _t0 = time.perf_counter()
-        textbox.delete("1.0", END)
-        _cleanup_tooltip_tags()
-        perf_hook.hook_time("gui.clear_screen_delete", time.perf_counter() - _t0)
-        return
+  """
+  清屏
+  """
+  io_clear_cmd()
+  if perf_hook.enabled:
+    _t0 = time.perf_counter()
     textbox.delete("1.0", END)
     _cleanup_tooltip_tags()
+    perf_hook.hook_time("gui.clear_screen_delete", time.perf_counter() - _t0)
+    return
+  textbox.delete("1.0", END)
+  _cleanup_tooltip_tags()
 
 
 def frame_style_def(
@@ -820,34 +849,34 @@ def frame_style_def(
     under_line: str,
     italic: str,
 ):
-    """
-    定义样式
-    Keyword arguments:
-    style_name -- 样式名称
-    foreground -- 前景色/字体颜色
-    background -- 背景色
-    font -- 字体
-    fontsize -- 字号
-    bold -- 加粗
-    underline -- 下划线
-    italic -- 斜体
-    """
-    style_name = style_name.replace(" ", "")
-    font_list = []
-    font_list.append(font)
-    font_list.append(font_size)
-    if bold == "1":
-        font_list.append("bold")
-    if under_line == "1":
-        font_list.append("underline")
-    if italic == "1":
-        font_list.append("italic")
-    textbox.tag_configure(
-        style_name,
-        foreground=foreground,
-        background=background,
-        font=tuple(font_list),
-    )
+  """
+  定义样式
+  Keyword arguments:
+  style_name -- 样式名称
+  foreground -- 前景色/字体颜色
+  background -- 背景色
+  font -- 字体
+  fontsize -- 字号
+  bold -- 加粗
+  underline -- 下划线
+  italic -- 斜体
+  """
+  style_name = style_name.replace(" ", "")
+  font_list = []
+  font_list.append(font)
+  font_list.append(font_size)
+  if bold == "1":
+    font_list.append("bold")
+  if under_line == "1":
+    font_list.append("underline")
+  if italic == "1":
+    font_list.append("italic")
+  textbox.tag_configure(
+      style_name,
+      foreground=foreground,
+      background=background,
+      font=tuple(font_list),
+  )
 
 
 # #########################################################3
@@ -855,24 +884,24 @@ def frame_style_def(
 
 
 def get_order():
-    """
-    获取命令框中的内容
-    """
-    return order.get()
+  """
+  获取命令框中的内容
+  """
+  return order.get()
 
 
 def set_order(order_str: str):
-    """
-    设置命令框中内容
-    """
-    order.set(order_str)
+  """
+  设置命令框中内容
+  """
+  order.set(order_str)
 
 
 def clear_order():
-    """
-    清空命令框
-    """
-    order.set("")
+  """
+  清空命令框
+  """
+  order.set("")
 
 
 cmd_tag_map = {}
@@ -884,102 +913,108 @@ TOOLTIP_DELAY_MS = 350  # 提示延迟显示的时长，毫秒
 
 
 def _cancel_tooltip_schedule():
-    """取消已经注册的 tooltip 定时任务，无输入，返回值为 None。"""
-    global tooltip_after_id
-    if tooltip_after_id is not None and textbox.winfo_exists():
-        try:
-            textbox.after_cancel(tooltip_after_id)
-        except Exception:
-            pass
-    tooltip_after_id = None
+  """取消已经注册的 tooltip 定时任务，无输入，返回值为 None。"""
+  global tooltip_after_id
+  if tooltip_after_id is not None and textbox.winfo_exists():
+    try:
+      textbox.after_cancel(tooltip_after_id)
+    except Exception:
+      pass
+  tooltip_after_id = None
 
 
 def _destroy_tooltip():
-    """销毁已有的 tooltip 顶层窗口，无输入，返回值为 None。"""
-    global tooltip_window
-    if tooltip_window is not None:
-        try:
-            tooltip_window.destroy()
-        except Exception:
-            pass
-    tooltip_window = None
+  """销毁已有的 tooltip 顶层窗口，无输入，返回值为 None。"""
+  global tooltip_window
+  if tooltip_window is not None:
+    try:
+      tooltip_window.destroy()
+    except Exception:
+      pass
+  tooltip_window = None
 
 
 def _position_tooltip():
-    """按照记录的屏幕坐标重新定位 tooltip，无输入，返回值为 None。"""
-    if tooltip_window is None:
-        return
-    x, y = tooltip_coords
-    tooltip_window.wm_geometry(f"+{x + 12}+{y + 18}")
+  """按照记录的屏幕坐标重新定位 tooltip，无输入，返回值为 None。"""
+  if tooltip_window is None:
+    return
+  x, y = tooltip_coords
+  tooltip_window.wm_geometry(f"+{x + 12}+{y + 18}")
+
 
 def _show_tooltip():
-    """显示 tooltip 浮窗，无输入且无返回值。"""
-    global tooltip_window, tooltip_after_id
-    tooltip_after_id = None
-    if not tooltip_text_cache:
-        return
-    _destroy_tooltip()
-    window = Toplevel(textbox)
-    window.wm_overrideredirect(True)
-    try:
-        window.wm_attributes("-topmost", True)
-    except Exception:
-        pass
-    # 计算合适的换行长度，避免提示过宽，从取最大值改为取最小值
-    # wrap_length = max(textbox.winfo_width() // 2, 240)
-    wrap_length = min(textbox.winfo_width() // 2, 600)
-    # 使用全局 now_font_size 作为提示文字字号，保持与游戏文本一致
-    tooltip_font = font.Font(family=normal_config.config_normal.font, size=now_font_size)
-    label = ttk.Label(
-        window,
-        text=tooltip_text_cache,
-        justify="left",
-        background="#fef3c7",
-        foreground="#1f2933",
-        relief="solid",
-        borderwidth=1,
-        padding=(6, 3),
-        wraplength=wrap_length,
-        font=tooltip_font,
-    )
-    label.pack()
-    tooltip_window = window
-    _position_tooltip()
+  """显示 tooltip 浮窗，无输入且无返回值。"""
+  global tooltip_window, tooltip_after_id
+  tooltip_after_id = None
+  if not tooltip_text_cache:
+    return
+  _destroy_tooltip()
+  window = Toplevel(textbox)
+  window.wm_overrideredirect(True)
+  try:
+    window.wm_attributes("-topmost", True)
+  except Exception:
+    pass
+  # 计算合适的换行长度，避免提示过宽，从取最大值改为取最小值
+  # wrap_length = max(textbox.winfo_width() // 2, 240)
+  wrap_length = min(textbox.winfo_width() // 2, 600)
+  # 使用全局 now_font_size 作为提示文字字号，保持与游戏文本一致
+  tooltip_font = font.Font(
+      family=normal_config.config_normal.font, size=now_font_size
+  )
+  label = ttk.Label(
+      window,
+      text=tooltip_text_cache,
+      justify="left",
+      background="#fef3c7",
+      foreground="#1f2933",
+      relief="solid",
+      borderwidth=1,
+      padding=(6, 3),
+      wraplength=wrap_length,
+      font=tooltip_font,
+  )
+  label.pack()
+  tooltip_window = window
+  _position_tooltip()
 
 
 def _schedule_tooltip(text: str, coords=None):
-    """
-    注册 tooltip 的延迟显示任务。
-    输入：text 为提示内容字符串，coords 为可选的 (x, y) 坐标；
-    输出：无返回值，仅安排 after 定时任务。
-    """
-    global tooltip_text_cache, tooltip_coords, tooltip_after_id
-    tooltip_text_cache = text or ""
-    tooltip_coords = coords or (textbox.winfo_pointerx(), textbox.winfo_pointery())
-    _cancel_tooltip_schedule()
-    if not tooltip_text_cache:
-        _destroy_tooltip()
-        return
-    tooltip_after_id = textbox.after(TOOLTIP_DELAY_MS, _show_tooltip)
+  """
+  注册 tooltip 的延迟显示任务。
+  输入：text 为提示内容字符串，coords 为可选的 (x, y) 坐标；
+  输出：无返回值，仅安排 after 定时任务。
+  """
+  global tooltip_text_cache, tooltip_coords, tooltip_after_id
+  tooltip_text_cache = text or ""
+  tooltip_coords = coords or (
+      textbox.winfo_pointerx(),
+      textbox.winfo_pointery(),
+  )
+  _cancel_tooltip_schedule()
+  if not tooltip_text_cache:
+    _destroy_tooltip()
+    return
+  tooltip_after_id = textbox.after(TOOLTIP_DELAY_MS, _show_tooltip)
 
 
 def _hide_tooltip():
-    """立即隐藏 tooltip，输入输出均为空。"""
-    global tooltip_text_cache
-    tooltip_text_cache = ""
-    _cancel_tooltip_schedule()
-    _destroy_tooltip()
+  """立即隐藏 tooltip，输入输出均为空。"""
+  global tooltip_text_cache
+  tooltip_text_cache = ""
+  _cancel_tooltip_schedule()
+  _destroy_tooltip()
 
 
 def _update_tooltip_coords(coords):
-    """
-    更新 tooltip 的参考坐标。
-    输入：coords 为 (x, y) 元组，表示最新的屏幕坐标；输出：None。
-    """
-    global tooltip_coords
-    tooltip_coords = coords
-    if tooltip_window is not None:
-        _position_tooltip()
+  """
+  更新 tooltip 的参考坐标。
+  输入：coords 为 (x, y) 元组，表示最新的屏幕坐标；输出：None。
+  """
+  global tooltip_coords
+  tooltip_coords = coords
+  if tooltip_window is not None:
+    _position_tooltip()
 
 
 def io_print_cmd(
@@ -989,172 +1024,172 @@ def io_print_cmd(
     on_style="onbutton",
     tooltip: str = "",
 ):
-    """
-    打印一条指令
-    Keyword arguments:
-    cmd_str -- 命令对应文字
-    cmd_number -- 命令数字
-    normal_style -- 正常显示样式
-    on_style -- 鼠标在其上时显示样式
-    tooltip -- 鼠标悬停提示文本
-    """
-    global cmd_tag_map
-    cmd_tag_name = str(uuid.uuid1())
-    textbox.tag_configure(cmd_tag_name)
+  """
+  打印一条指令
+  Keyword arguments:
+  cmd_str -- 命令对应文字
+  cmd_number -- 命令数字
+  normal_style -- 正常显示样式
+  on_style -- 鼠标在其上时显示样式
+  tooltip -- 鼠标悬停提示文本
+  """
+  global cmd_tag_map
+  cmd_tag_name = str(uuid.uuid1())
+  textbox.tag_configure(cmd_tag_name)
 
-    if cmd_number in cmd_tag_map:
-        io_clear_cmd(cmd_number)
-    cmd_tag_map[cmd_number] = cmd_tag_name
+  if cmd_number in cmd_tag_map:
+    io_clear_cmd(cmd_number)
+  cmd_tag_map[cmd_number] = cmd_tag_name
 
-    tooltip_text = tooltip or ""
+  tooltip_text = tooltip or ""
 
-    def send_cmd(event=None):
-        """处理按钮点击事件，输入 event 为 Tk 事件对象，可为 None；无返回值。"""
-        global send_order_state
-        send_order_state = True
-        order.set(cmd_number)
-        textbox.configure(cursor="")
-        _hide_tooltip()
-        send_input(order)
+  def send_cmd(event=None):
+    """处理按钮点击事件，输入 event 为 Tk 事件对象，可为 None；无返回值。"""
+    global send_order_state
+    send_order_state = True
+    order.set(cmd_number)
+    textbox.configure(cursor="")
+    _hide_tooltip()
+    send_input(order)
 
-    def enter_func(event=None):
-        """响应鼠标进入事件，输入 event 为 Tk 事件对象；无返回值。"""
-        # 进入文本按钮时切换高亮样式，并根据需求准备 tooltip
-        textbox.tag_remove(
-            normal_style,
-            textbox.tag_ranges(cmd_tag_name)[0],
-            textbox.tag_ranges(cmd_tag_name)[1],
-        )
-        textbox.tag_add(
-            on_style,
-            textbox.tag_ranges(cmd_tag_name)[0],
-            textbox.tag_ranges(cmd_tag_name)[1],
-        )
-        if tooltip_text:
-            coords = (event.x_root, event.y_root) if event is not None else None
-            _schedule_tooltip(tooltip_text, coords)
+  def enter_func(event=None):
+    """响应鼠标进入事件，输入 event 为 Tk 事件对象；无返回值。"""
+    # 进入文本按钮时切换高亮样式，并根据需求准备 tooltip
+    textbox.tag_remove(
+        normal_style,
+        textbox.tag_ranges(cmd_tag_name)[0],
+        textbox.tag_ranges(cmd_tag_name)[1],
+    )
+    textbox.tag_add(
+        on_style,
+        textbox.tag_ranges(cmd_tag_name)[0],
+        textbox.tag_ranges(cmd_tag_name)[1],
+    )
+    if tooltip_text:
+      coords = (event.x_root, event.y_root) if event is not None else None
+      _schedule_tooltip(tooltip_text, coords)
 
-    def leave_func(event=None):
-        """响应鼠标离开事件，输入 event 为 Tk 事件对象；无返回值。"""
-        # 鼠标离开时恢复原样式并关闭 tooltip
-        textbox.tag_add(
-            normal_style,
-            textbox.tag_ranges(cmd_tag_name)[0],
-            textbox.tag_ranges(cmd_tag_name)[1],
-        )
-        textbox.tag_remove(
-            on_style,
-            textbox.tag_ranges(cmd_tag_name)[0],
-            textbox.tag_ranges(cmd_tag_name)[1],
-        )
-        textbox.configure(cursor="")
-        _hide_tooltip()
+  def leave_func(event=None):
+    """响应鼠标离开事件，输入 event 为 Tk 事件对象；无返回值。"""
+    # 鼠标离开时恢复原样式并关闭 tooltip
+    textbox.tag_add(
+        normal_style,
+        textbox.tag_ranges(cmd_tag_name)[0],
+        textbox.tag_ranges(cmd_tag_name)[1],
+    )
+    textbox.tag_remove(
+        on_style,
+        textbox.tag_ranges(cmd_tag_name)[0],
+        textbox.tag_ranges(cmd_tag_name)[1],
+    )
+    textbox.configure(cursor="")
+    _hide_tooltip()
 
-    def motion_func(event=None):
-        """响应鼠标移动事件，输入 event 为 Tk 事件对象；无返回值。"""
-        # 鼠标在按钮上移动时更新 tooltip 的屏幕坐标
-        if tooltip_text and event is not None:
-            _update_tooltip_coords((event.x_root, event.y_root))
+  def motion_func(event=None):
+    """响应鼠标移动事件，输入 event 为 Tk 事件对象；无返回值。"""
+    # 鼠标在按钮上移动时更新 tooltip 的屏幕坐标
+    if tooltip_text and event is not None:
+      _update_tooltip_coords((event.x_root, event.y_root))
 
-    textbox.tag_bind(cmd_tag_name, "<1>", send_cmd)
-    textbox.tag_bind(cmd_tag_name, "<Enter>", enter_func)
-    textbox.tag_bind(cmd_tag_name, "<Leave>", leave_func)
-    textbox.tag_bind(cmd_tag_name, "<Motion>", motion_func)
-    print_cmd(cmd_str, style=(cmd_tag_name, normal_style))
+  textbox.tag_bind(cmd_tag_name, "<1>", send_cmd)
+  textbox.tag_bind(cmd_tag_name, "<Enter>", enter_func)
+  textbox.tag_bind(cmd_tag_name, "<Leave>", leave_func)
+  textbox.tag_bind(cmd_tag_name, "<Motion>", motion_func)
+  print_cmd(cmd_str, style=(cmd_tag_name, normal_style))
 
 
 def io_print_image_cmd(cmd_str: str, cmd_number: int, tooltip: str = ""):
-    """
-    打印一个图片按钮
-    Keyword arguments:
-    cmd_str -- 命令对应图片名称
-    cmd_number -- 点击图片响应数字
-    tooltip -- 鼠标悬停提示文本
-    功能描述：图片名不在图片索引里时（例如没有立绘的女儿）不绘制按钮
-    """
-    global cmd_tag_map
-    if cmd_str not in era_image.image_data:
-        return
-    cmd_tag_name = str(uuid.uuid1())
-    textbox.tag_configure(cmd_tag_name)
-    if cmd_number in cmd_tag_map:
-        io_clear_cmd(cmd_number)
-    cmd_tag_map[cmd_number] = cmd_tag_name
+  """
+  打印一个图片按钮
+  Keyword arguments:
+  cmd_str -- 命令对应图片名称
+  cmd_number -- 点击图片响应数字
+  tooltip -- 鼠标悬停提示文本
+  功能描述：图片名不在图片索引里时（例如没有立绘的女儿）不绘制按钮
+  """
+  global cmd_tag_map
+  if cmd_str not in era_image.image_data:
+    return
+  cmd_tag_name = str(uuid.uuid1())
+  textbox.tag_configure(cmd_tag_name)
+  if cmd_number in cmd_tag_map:
+    io_clear_cmd(cmd_number)
+  cmd_tag_map[cmd_number] = cmd_tag_name
 
-    tooltip_text = tooltip or ""
+  tooltip_text = tooltip or ""
 
-    def send_cmd(event=None):
-        """处理图片按钮点击事件，输入 event 为 Tk 事件对象，可为 None；无返回值。"""
-        global send_order_state
-        send_order_state = True
-        order.set(cmd_number)
-        textbox.configure(cursor="")
-        _hide_tooltip()
-        send_input(order)
+  def send_cmd(event=None):
+    """处理图片按钮点击事件，输入 event 为 Tk 事件对象，可为 None；无返回值。"""
+    global send_order_state
+    send_order_state = True
+    order.set(cmd_number)
+    textbox.configure(cursor="")
+    _hide_tooltip()
+    send_input(order)
 
-    def enter_func(event=None):
-        """响应鼠标进入图片按钮事件，输入 event 为 Tk 事件对象；无返回值。"""
-        # 鼠标进入图片按钮时安排 tooltip 延迟显示
-        if tooltip_text:
-            coords = (event.x_root, event.y_root) if event is not None else None
-            _schedule_tooltip(tooltip_text, coords)
+  def enter_func(event=None):
+    """响应鼠标进入图片按钮事件，输入 event 为 Tk 事件对象；无返回值。"""
+    # 鼠标进入图片按钮时安排 tooltip 延迟显示
+    if tooltip_text:
+      coords = (event.x_root, event.y_root) if event is not None else None
+      _schedule_tooltip(tooltip_text, coords)
 
-    def leave_func(event=None):
-        """响应鼠标离开图片按钮事件，输入 event 为 Tk 事件对象；无返回值。"""
-        # 鼠标离开图片按钮时立即隐藏 tooltip
-        _hide_tooltip()
+  def leave_func(event=None):
+    """响应鼠标离开图片按钮事件，输入 event 为 Tk 事件对象；无返回值。"""
+    # 鼠标离开图片按钮时立即隐藏 tooltip
+    _hide_tooltip()
 
-    def motion_func(event=None):
-        """响应鼠标在图片按钮内移动事件，输入 event 为 Tk 事件对象；无返回值。"""
-        # 鼠标在图片按钮上移动时刷新 tooltip 位置
-        if tooltip_text and event is not None:
-            _update_tooltip_coords((event.x_root, event.y_root))
+  def motion_func(event=None):
+    """响应鼠标在图片按钮内移动事件，输入 event 为 Tk 事件对象；无返回值。"""
+    # 鼠标在图片按钮上移动时刷新 tooltip 位置
+    if tooltip_text and event is not None:
+      _update_tooltip_coords((event.x_root, event.y_root))
 
-    index = textbox.index("end -1c")
-    textbox.image_create(index, image=era_image.image_data[cmd_str])
-    textbox.tag_add(cmd_tag_name, index, f"{index} + 1 char")
-    textbox.tag_bind(cmd_tag_name, "<1>", send_cmd)
-    textbox.tag_bind(cmd_tag_name, "<Enter>", enter_func)
-    textbox.tag_bind(cmd_tag_name, "<Leave>", leave_func)
-    textbox.tag_bind(cmd_tag_name, "<Motion>", motion_func)
-    see_end()
+  index = textbox.index("end -1c")
+  textbox.image_create(index, image=era_image.image_data[cmd_str])
+  textbox.tag_add(cmd_tag_name, index, f"{index} + 1 char")
+  textbox.tag_bind(cmd_tag_name, "<1>", send_cmd)
+  textbox.tag_bind(cmd_tag_name, "<Enter>", enter_func)
+  textbox.tag_bind(cmd_tag_name, "<Leave>", leave_func)
+  textbox.tag_bind(cmd_tag_name, "<Motion>", motion_func)
+  see_end()
 
 
 # 清除命令函数
 def io_clear_cmd(*cmd_numbers: list):
-    """
-    清除命令
-    Keyword arguments:
-    cmd_number -- 命令数字，不输入则清楚当前已有的全部命令
-    """
-    global cmd_tag_map
-    _perf = perf_hook.enabled
-    if _perf:
-        _t0 = time.perf_counter()
-        _clear_count = len(cmd_numbers) if cmd_numbers else len(cmd_tag_map)
-    if cmd_numbers:
-        for num in cmd_numbers:
-            if num in cmd_tag_map:
-                tag_ranges = textbox.tag_ranges(cmd_tag_map[num])
-                if len(tag_ranges):
-                    index_first = tag_ranges[0]
-                    index_last = tag_ranges[1]
-                    for tag_name in textbox.tag_names(index_first):
-                        textbox.tag_remove(tag_name, index_first, index_last)
-                    textbox.tag_add("standard", index_first, index_last)
-                    textbox.tag_delete(cmd_tag_map[num])
-                del cmd_tag_map[num]
-    else:
-        for num in list(cmd_tag_map.keys()):
-            tag_tuple = textbox.tag_ranges(cmd_tag_map[num])
-            if len(tag_tuple):
-                index_first = tag_tuple[0]
-                index_lskip_one_waitast = tag_tuple[1]
-                for tag_name in textbox.tag_names(index_first):
-                    textbox.tag_remove(tag_name, index_first, index_lskip_one_waitast)
-                textbox.tag_add("standard", index_first, index_lskip_one_waitast)
-            textbox.tag_delete(cmd_tag_map[num])
-        cmd_tag_map.clear()
-    if _perf:
-        perf_hook.hook_time("gui.clear_cmd", time.perf_counter() - _t0)
-        perf_hook.hook_count("gui.clear_cmd_tags", _clear_count)
+  """
+  清除命令
+  Keyword arguments:
+  cmd_number -- 命令数字，不输入则清楚当前已有的全部命令
+  """
+  global cmd_tag_map
+  _perf = perf_hook.enabled
+  if _perf:
+    _t0 = time.perf_counter()
+    _clear_count = len(cmd_numbers) if cmd_numbers else len(cmd_tag_map)
+  if cmd_numbers:
+    for num in cmd_numbers:
+      if num in cmd_tag_map:
+        tag_ranges = textbox.tag_ranges(cmd_tag_map[num])
+        if len(tag_ranges):
+          index_first = tag_ranges[0]
+          index_last = tag_ranges[1]
+          for tag_name in textbox.tag_names(index_first):
+            textbox.tag_remove(tag_name, index_first, index_last)
+          textbox.tag_add("standard", index_first, index_last)
+          textbox.tag_delete(cmd_tag_map[num])
+        del cmd_tag_map[num]
+  else:
+    for num in list(cmd_tag_map.keys()):
+      tag_tuple = textbox.tag_ranges(cmd_tag_map[num])
+      if len(tag_tuple):
+        index_first = tag_tuple[0]
+        index_lskip_one_waitast = tag_tuple[1]
+        for tag_name in textbox.tag_names(index_first):
+          textbox.tag_remove(tag_name, index_first, index_lskip_one_waitast)
+        textbox.tag_add("standard", index_first, index_lskip_one_waitast)
+      textbox.tag_delete(cmd_tag_map[num])
+    cmd_tag_map.clear()
+  if _perf:
+    perf_hook.hook_time("gui.clear_cmd", time.perf_counter() - _t0)
+    perf_hook.hook_count("gui.clear_cmd_tags", _clear_count)

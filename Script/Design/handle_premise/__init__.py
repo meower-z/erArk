@@ -26,7 +26,6 @@ from Script.Design.handle_premise.handle_premise_body_manage import *
 from Script.Design.handle_premise.handle_premise_work import *
 from Script.Design.handle_premise.handle_premise_food import *
 
-
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
 _: FunctionType = get_text._
@@ -36,13 +35,14 @@ _NORMAL_HANDLERS: dict[int, Callable[[int], int]] = {}
 
 
 def _get_normal_handlers() -> dict[int, Callable[[int], int]]:
-    """
-    延迟构建异常位1~7与其判定函数的映射
-    Return arguments:
-    dict[int, Callable[[int], int]] -- 异常位索引:判定函数（返回1为正常）
-    """
-    if not _NORMAL_HANDLERS:
-        _NORMAL_HANDLERS.update({
+  """
+  延迟构建异常位1~7与其判定函数的映射
+  Return arguments:
+  dict[int, Callable[[int], int]] -- 异常位索引:判定函数（返回1为正常）
+  """
+  if not _NORMAL_HANDLERS:
+    _NORMAL_HANDLERS.update(
+        {
             1: handle_normal_1,
             2: handle_normal_2,
             3: handle_normal_3,
@@ -50,1698 +50,1835 @@ def _get_normal_handlers() -> dict[int, Callable[[int], int]]:
             5: handle_normal_5,
             6: handle_normal_6,
             7: handle_normal_7,
-        })
-    return _NORMAL_HANDLERS
+        }
+    )
+  return _NORMAL_HANDLERS
 
 
 def _check_normal_combo(character_id: int, indexes: Iterable[int]) -> int:
-    """
-    判定指定多异常组合是否均为正常状态，按顺序现算，遇到第一个异常即停
-    Keyword arguments:
-    character_id -- 角色id
-    indexes -- 异常位索引
-    Return arguments:
-    int -- 均正常为1，否则为0
-    """
-    # 玩家直接反馈正常
-    if character_id == 0:
-        return 1
-    handlers = _get_normal_handlers()
-    for index in indexes:
-        if not handlers[index](character_id):
-            return 0
+  """
+  判定指定多异常组合是否均为正常状态，按顺序现算，遇到第一个异常即停
+  Keyword arguments:
+  character_id -- 角色id
+  indexes -- 异常位索引
+  Return arguments:
+  int -- 均正常为1，否则为0
+  """
+  # 玩家直接反馈正常
+  if character_id == 0:
     return 1
+  handlers = _get_normal_handlers()
+  for index in indexes:
+    if not handlers[index](character_id):
+      return 0
+  return 1
 
 
 def _check_unnormal_combo(character_id: int, indexes: Iterable[int]) -> int:
-    """
-    判定指定多异常组合是否存在任意异常
-    Keyword arguments:
-    character_id -- 角色id
-    indexes -- 异常位索引
-    Return arguments:
-    int -- 存在异常为1，否则为0
-    """
-    # 玩家直接反馈无异常
-    if character_id == 0:
-        return 0
-    return 1 - _check_normal_combo(character_id, indexes)
+  """
+  判定指定多异常组合是否存在任意异常
+  Keyword arguments:
+  character_id -- 角色id
+  indexes -- 异常位索引
+  Return arguments:
+  int -- 存在异常为1，否则为0
+  """
+  # 玩家直接反馈无异常
+  if character_id == 0:
+    return 0
+  return 1 - _check_normal_combo(character_id, indexes)
+
 
 def add_premise(premise: str) -> FunctionType:
-    """
-    添加前提
-    Keyword arguments:
-    premise -- 前提id
-    Return arguments:
-    FunctionType -- 前提处理函数对象
-    """
+  """
+  添加前提
+  Keyword arguments:
+  premise -- 前提id
+  Return arguments:
+  FunctionType -- 前提处理函数对象
+  """
 
-    def decoraror(func):
-        # 直接注册原函数：原先的 return_wrapper 只做纯转发，
-        # 每次前提判定都要白付一层函数调用（热路径每百tick百万次级），故移除
-        constant.handle_premise_data[premise] = func
-        return func
+  def decoraror(func):
+    # 直接注册原函数：原先的 return_wrapper 只做纯转发，
+    # 每次前提判定都要白付一层函数调用（热路径每百tick百万次级），故移除
+    constant.handle_premise_data[premise] = func
+    return func
 
-    return decoraror
+  return decoraror
 
 
 def handle_premise(premise: str, character_id: int) -> int:
-    """
-    调用前提id对应的前提处理函数
-    Keyword arguments:
-    premise -- 前提id
-    character_id -- 角色id
-    Return arguments:
-    int -- 前提权重加成
-    """
-    handler = constant.handle_premise_data.get(premise)
-    if handler is not None:
-        return handler(character_id)
-    if "CVP" in premise:
+  """
+  调用前提id对应的前提处理函数
+  Keyword arguments:
+  premise -- 前提id
+  character_id -- 角色id
+  Return arguments:
+  int -- 前提权重加成
+  """
+  handler = constant.handle_premise_data.get(premise)
+  if handler is not None:
+    return handler(character_id)
+  if "CVP" in premise:
+    premise_all_value_list = premise.split("_")[1:]
+    return handle_comprehensive_value_premise(
+        character_id, premise_all_value_list
+    )
+  return 0
+
+
+def get_weight_from_premise_dict(
+    talk_premise_dict: set,
+    character_id: int,
+    calculated_premise_dict: dict,
+    weight_all_to_1_flag: bool = False,
+    unconscious_pass_flag: bool = False,
+) -> tuple[int, dict]:
+  """
+  遍历前提字典，计算总权重
+  Keyword arguments:
+  talk_premise_set -- 当前口上的前提集合
+  character_id -- 角色id
+  calculated_premise_dict -- 已计算的前提字典，默认空字典
+  weight_all_to_1_flag -- 将所有非high的前提权重转换为1，默认为False
+  unconscious_h_pass_flag -- 跳过无意识判定，默认为false，不可以跳过
+  Return arguments:
+  now_weight -- int，总权重
+  """
+
+  character_data: game_type.Character = cache.character_data[character_id]
+  target_character_id = character_data.target_character_id
+  target_character_data = cache.character_data[target_character_id]
+  behavior_id = character_data.behavior.behavior_id
+  now_weight = 0  # 总权重
+  now_premise_data = {}  # 记录已经计算过的前提
+  if calculated_premise_dict:
+    # 如果有已计算的前提，则直接使用
+    now_premise_data = calculated_premise_dict
+  fixed_weight = 0  # 固定权重
+  premise_handlers = constant.handle_premise_data
+
+  # 无意识模式判定
+  # 平然催眠下目标仍正常与博士互动，口上照常放行
+  if (
+      unconscious_pass_flag == False
+      and handle_unconscious_flag_ge_1(target_character_id)
+      and not handle_unconscious_flag_4(target_character_id)
+  ):
+    # 有技艺tag的行为则直接通过
+    behavior_data = game_config.config_behavior[behavior_id]
+    if _("技艺") in behavior_data.tag:
+      unconscious_pass_flag = True
+    # 需要前提里有无意识的判定
+    for now_premise in talk_premise_dict:
+      # 如果前提里有无意识，则正常通过
+      if "unconscious" in now_premise:
+        unconscious_pass_flag = True
+        break
+    # 如果没有无意识的前提，则直接返回0
+    if not unconscious_pass_flag:
+      return 0, now_premise_data
+
+  # 口球判定
+  if (
+      (
+          handle_self_now_gag(character_id)
+          and "self_now_gag" not in talk_premise_dict
+          and behavior_id
+          not in {
+              constant.Behavior.GAG_ON,
+              constant.Behavior.GAG_OFF,
+              constant.SecondBehavior.GAG,
+          }
+      )
+      or handle_self_now_gag(target_character_id)
+      and "target_now_gag" not in talk_premise_dict
+      and behavior_id
+      not in {
+          constant.Behavior.GAG_ON,
+          constant.Behavior.GAG_OFF,
+          constant.SecondBehavior.GAG,
+      }
+  ):
+    return 0, now_premise_data
+
+  # 遍历前提字典。按前提id排序后判断，使判断前提时抽的随机数不随集合的遍历顺序变化。
+  for premise in sorted(talk_premise_dict):
+    # 判断是否为权重类空白前提
+    if premise[:5] == "high_":
+      high_flag = True
+    else:
+      high_flag = False
+    # 已录入前提的判定
+    if premise in now_premise_data:
+      cached_weight = now_premise_data[premise]
+      if not cached_weight:
+        now_weight = 0
+        break
+      else:
+        if weight_all_to_1_flag and not high_flag:
+          now_weight += 1
+        else:
+          now_weight += cached_weight
+    else:
+      # 综合数值前提判定
+      if "CVP" in premise:
         premise_all_value_list = premise.split("_")[1:]
-        return handle_comprehensive_value_premise(character_id, premise_all_value_list)
-    return 0
-
-
-def get_weight_from_premise_dict(talk_premise_dict: set, character_id: int, calculated_premise_dict: dict, weight_all_to_1_flag: bool = False, unconscious_pass_flag: bool = False) -> tuple[int, dict]:
-    """
-    遍历前提字典，计算总权重
-    Keyword arguments:
-    talk_premise_set -- 当前口上的前提集合
-    character_id -- 角色id
-    calculated_premise_dict -- 已计算的前提字典，默认空字典
-    weight_all_to_1_flag -- 将所有非high的前提权重转换为1，默认为False
-    unconscious_h_pass_flag -- 跳过无意识判定，默认为false，不可以跳过
-    Return arguments:
-    now_weight -- int，总权重
-    """
-
-    character_data: game_type.Character = cache.character_data[character_id]
-    target_character_id = character_data.target_character_id
-    target_character_data = cache.character_data[target_character_id]
-    behavior_id = character_data.behavior.behavior_id
-    now_weight = 0 # 总权重
-    now_premise_data = {} # 记录已经计算过的前提
-    if calculated_premise_dict:
-        # 如果有已计算的前提，则直接使用
-        now_premise_data = calculated_premise_dict
-    fixed_weight = 0 # 固定权重
-    premise_handlers = constant.handle_premise_data
-
-    # 无意识模式判定
-    # 平然催眠下目标仍正常与博士互动，口上照常放行
-    if unconscious_pass_flag == False and handle_unconscious_flag_ge_1(target_character_id) and not handle_unconscious_flag_4(target_character_id):
-        # 有技艺tag的行为则直接通过
-        behavior_data = game_config.config_behavior[behavior_id]
-        if _("技艺") in behavior_data.tag:
-            unconscious_pass_flag = True
-        # 需要前提里有无意识的判定
-        for now_premise in talk_premise_dict:
-            # 如果前提里有无意识，则正常通过
-            if "unconscious" in now_premise:
-                unconscious_pass_flag = True
-                break
-        # 如果没有无意识的前提，则直接返回0
-        if not unconscious_pass_flag:
-            return 0, now_premise_data
-
-    # 口球判定
-    if (
-        (handle_self_now_gag(character_id) and "self_now_gag" not in talk_premise_dict and behavior_id not in {constant.Behavior.GAG_ON, constant.Behavior.GAG_OFF, constant.SecondBehavior.GAG}) or
-        handle_self_now_gag(target_character_id) and "target_now_gag" not in talk_premise_dict and behavior_id not in {constant.Behavior.GAG_ON, constant.Behavior.GAG_OFF, constant.SecondBehavior.GAG}
-        ):
-        return 0, now_premise_data
-
-    # 遍历前提字典。按前提id排序后判断，使判断前提时抽的随机数不随集合的遍历顺序变化。
-    for premise in sorted(talk_premise_dict):
-        # 判断是否为权重类空白前提
-        if premise[:5] == "high_":
-            high_flag = True
+        # 如果是权重前提
+        if premise_all_value_list[1] == "Weight|0":
+          fixed_weight = int(premise_all_value_list[-1])
+          # 最小为1，最大为999
+          fixed_weight = max(1, min(fixed_weight, 999))
+          continue
+        now_add_weight = handle_comprehensive_value_premise(
+            character_id, premise_all_value_list
+        )
+        now_premise_data[premise] = now_add_weight
+      # 其他正常口上判定
+      else:
+        # 正常前提
+        handler = premise_handlers.get(premise)
+        if handler is not None:
+          now_add_weight = handler(character_id)
+          now_premise_data[premise] = now_add_weight
+        # 不存在的前提
         else:
-            high_flag = False
-        # 已录入前提的判定
-        if premise in now_premise_data:
-            cached_weight = now_premise_data[premise]
-            if not cached_weight:
-                now_weight = 0
-                break
-            else:
-                if weight_all_to_1_flag and not high_flag:
-                    now_weight += 1
-                else:
-                    now_weight += cached_weight
+          now_add_weight = 0
+          now_premise_data[premise] = 0
+          print(f"\ndebug 前提{premise}不存在，请检查前提是否正确\n")
+      # 计算总权重
+      if now_add_weight:
+        if weight_all_to_1_flag and not high_flag:
+          now_weight += 1
         else:
-            # 综合数值前提判定
-            if "CVP" in premise:
-                premise_all_value_list = premise.split("_")[1:]
-                # 如果是权重前提
-                if premise_all_value_list[1] == "Weight|0":
-                    fixed_weight = int(premise_all_value_list[-1])
-                    # 最小为1，最大为999
-                    fixed_weight = max(1, min(fixed_weight, 999))
-                    continue
-                now_add_weight = handle_comprehensive_value_premise(character_id, premise_all_value_list)
-                now_premise_data[premise] = now_add_weight
-            # 其他正常口上判定
-            else:
-                # 正常前提
-                handler = premise_handlers.get(premise)
-                if handler is not None:
-                    now_add_weight = handler(character_id)
-                    now_premise_data[premise] = now_add_weight
-                # 不存在的前提
-                else:
-                    now_add_weight = 0
-                    now_premise_data[premise] = 0
-                    print(f"\ndebug 前提{premise}不存在，请检查前提是否正确\n")
-            # 计算总权重
-            if now_add_weight:
-                if weight_all_to_1_flag and not high_flag:
-                    now_weight += 1
-                else:
-                    now_weight += now_add_weight
-            else:
-                now_weight = 0
-                break
-    # 如果权重大于0且有固定权重，则变为固定权重
-    if now_weight > 0 and fixed_weight > 0:
-        now_weight = fixed_weight
-    return now_weight, now_premise_data
+          now_weight += now_add_weight
+      else:
+        now_weight = 0
+        break
+  # 如果权重大于0且有固定权重，则变为固定权重
+  if now_weight > 0 and fixed_weight > 0:
+    now_weight = fixed_weight
+  return now_weight, now_premise_data
 
 
 def get_player_manual_teach_course(character_id: int) -> Optional[tuple]:
-    """
-    取玩家手动授课这一节的课型与科目（Plan 31 §3.13：CVP Course / CourseType 对玩家手动授课的回落）
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    Optional[tuple] -- (课型编号int, 科目能力id int)；不是玩家、或此刻的行为不是授课时为None
-    功能: 玩家手动发起的授课不在课表上（他从不出现在全局课表的教师位上），教师反查只取得到他人就在那间教室里的当天临时实操课。
-             此前 CVP 两项都读成 -1，授课口上全判不过，只剩开发占位地文。
-          与结算 512（Settle/default.py 的授课结算）共用同两处定义：课型 schedule_handle.get_course_type_by_position（理论 / 实践教室、大礼堂，
-             不在这三类教室里按理论课），科目 education_constant.FALLBACK_SUBJECT_ABILITY（学识）。调用方只在 get_now_teaching 取不到时才问它。只读
-    """
-    from Script.System.Education_System import education_constant, schedule_handle
+  """
+  取玩家手动授课这一节的课型与科目（Plan 31 §3.13：CVP Course / CourseType 对玩家手动授课的回落）
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  Optional[tuple] -- (课型编号int, 科目能力id int)；不是玩家、或此刻的行为不是授课时为None
+  功能: 玩家手动发起的授课不在课表上（他从不出现在全局课表的教师位上），教师反查只取得到他人就在那间教室里的当天临时实操课。
+           此前 CVP 两项都读成 -1，授课口上全判不过，只剩开发占位地文。
+        与结算 512（Settle/default.py 的授课结算）共用同两处定义：课型 schedule_handle.get_course_type_by_position（理论 / 实践教室、大礼堂，
+           不在这三类教室里按理论课），科目 education_constant.FALLBACK_SUBJECT_ABILITY（学识）。调用方只在 get_now_teaching 取不到时才问它。只读
+  """
+  from Script.System.Education_System import education_constant, schedule_handle
 
-    if character_id != 0:
-        return None
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.behavior.behavior_id != constant.Behavior.TEACH:
-        return None
-    return schedule_handle.get_course_type_by_position(character_data.position), education_constant.FALLBACK_SUBJECT_ABILITY
+  if character_id != 0:
+    return None
+  character_data: game_type.Character = cache.character_data[character_id]
+  if character_data.behavior.behavior_id != constant.Behavior.TEACH:
+    return None
+  return (
+      schedule_handle.get_course_type_by_position(character_data.position),
+      education_constant.FALLBACK_SUBJECT_ABILITY,
+  )
 
 
 def get_listen_manual_teach_course(character_id: int) -> Optional[tuple]:
-    """
-    取正在听玩家手动授课的学生这一节的课型与科目（Plan 32 §3.9 / §3.10 L13：学生侧与 512 同口径）
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    Optional[tuple] -- (课型编号int, 科目能力id int)；她此刻不是在听玩家的手动授课时为None
-    功能: 玩家「授课」把在场的学生拉成听课、开始时刻对齐到玩家（handle_instruct.handle_teach），512 按学识与所在教室给她们结算；
-             此前学生侧的 CVP 与 <课> 仍按她自己的课表取，节次外一句听课口上都不出，节次内写的是课表上的另一门课。
-          判据：不是玩家、行为是听课、与玩家同场景、玩家此刻在授课且不是课表上的课（get_now_teaching(0) 取不到）、两人的行为开始时刻对齐。只读
-    """
-    from Script.System.Education_System import schedule_handle
+  """
+  取正在听玩家手动授课的学生这一节的课型与科目（Plan 32 §3.9 / §3.10 L13：学生侧与 512 同口径）
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  Optional[tuple] -- (课型编号int, 科目能力id int)；她此刻不是在听玩家的手动授课时为None
+  功能: 玩家「授课」把在场的学生拉成听课、开始时刻对齐到玩家（handle_instruct.handle_teach），512 按学识与所在教室给她们结算；
+           此前学生侧的 CVP 与 <课> 仍按她自己的课表取，节次外一句听课口上都不出，节次内写的是课表上的另一门课。
+        判据：不是玩家、行为是听课、与玩家同场景、玩家此刻在授课且不是课表上的课（get_now_teaching(0) 取不到）、两人的行为开始时刻对齐。只读
+  """
+  from Script.System.Education_System import schedule_handle
 
-    if character_id == 0 or character_id not in cache.character_data:
-        return None
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.behavior.behavior_id != constant.Behavior.ATTENT_CLASS:
-        return None
-    pl_character_data: game_type.Character = cache.character_data[0]
-    if pl_character_data.behavior.behavior_id != constant.Behavior.TEACH:
-        return None
-    if character_data.position != pl_character_data.position or character_data.behavior.start_time != pl_character_data.behavior.start_time:
-        return None
-    if schedule_handle.get_now_teaching(0) is not None:
-        return None
-    return get_player_manual_teach_course(0)
+  if character_id == 0 or character_id not in cache.character_data:
+    return None
+  character_data: game_type.Character = cache.character_data[character_id]
+  if character_data.behavior.behavior_id != constant.Behavior.ATTENT_CLASS:
+    return None
+  pl_character_data: game_type.Character = cache.character_data[0]
+  if pl_character_data.behavior.behavior_id != constant.Behavior.TEACH:
+    return None
+  if (
+      character_data.position != pl_character_data.position
+      or character_data.behavior.start_time
+      != pl_character_data.behavior.start_time
+  ):
+    return None
+  if schedule_handle.get_now_teaching(0) is not None:
+    return None
+  return get_player_manual_teach_course(0)
 
 
 def get_now_course_type(character_id: int) -> int:
-    """
-    取角色当前这一节在上（或在教）的课型，供 CourseType 型 CVP token 使用
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 课型编号0~5，不在上课则为-1
-    功能: 教师反查优先，其次是玩家手动授课的回落（按所在教室判，Plan 31 §3.13），
-          再是被玩家「授课」拉来听课的学生（同样按所在教室判，Plan 32 §3.10 L13），最后查学生自己的课表
-    """
-    from Script.System.Education_System import schedule_handle
+  """
+  取角色当前这一节在上（或在教）的课型，供 CourseType 型 CVP token 使用
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 课型编号0~5，不在上课则为-1
+  功能: 教师反查优先，其次是玩家手动授课的回落（按所在教室判，Plan 31 §3.13），
+        再是被玩家「授课」拉来听课的学生（同样按所在教室判，Plan 32 §3.10 L13），最后查学生自己的课表
+  """
+  from Script.System.Education_System import schedule_handle
 
-    # 教师优先：同一个人不可能既在授课又在听课
-    teaching = schedule_handle.get_now_teaching(character_id)
-    if teaching is not None:
-        return teaching["course_type"]
-    # 玩家手动授课不在课表上，教师反查取不到：课型按所在教室判（Plan 31 §3.13，与 512 同口径）
-    manual_course = get_player_manual_teach_course(character_id)
-    if manual_course is not None:
-        return manual_course[0]
-    # 在听玩家手动授课的学生：课型同样按教室判，与 512 给她的结算同口径（Plan 32 §3.10 L13）。
-    #    此前读她自己的课表：节次外恒为 -1，听课口上一句不出；节次内读的是课表上的另一门课
-    listen_course = get_listen_manual_teach_course(character_id)
-    if listen_course is not None:
-        return listen_course[0]
-    now_course = schedule_handle.get_now_course(character_id)
-    if now_course is not None:
-        return now_course["course_type"]
-    return -1
+  # 教师优先：同一个人不可能既在授课又在听课
+  teaching = schedule_handle.get_now_teaching(character_id)
+  if teaching is not None:
+    return teaching["course_type"]
+  # 玩家手动授课不在课表上，教师反查取不到：课型按所在教室判（Plan 31 §3.13，与 512 同口径）
+  manual_course = get_player_manual_teach_course(character_id)
+  if manual_course is not None:
+    return manual_course[0]
+  # 在听玩家手动授课的学生：课型同样按教室判，与 512 给她的结算同口径（Plan 32 §3.10 L13）。
+  #    此前读她自己的课表：节次外恒为 -1，听课口上一句不出；节次内读的是课表上的另一门课
+  listen_course = get_listen_manual_teach_course(character_id)
+  if listen_course is not None:
+    return listen_course[0]
+  now_course = schedule_handle.get_now_course(character_id)
+  if now_course is not None:
+    return now_course["course_type"]
+  return -1
 
 
 def get_now_course_ability(character_id: int) -> int:
-    """
-    取角色当前这一节课的科目能力id，供 Course 型 CVP token 使用
-    体育课与兴趣课没有"科目"这个概念（学的是该活动自带的东西），恒返回-1不成立；
-       实习课的科目取该岗位 WorkType.csv 的 ability_id 列
-    正在进行的性技实操课优先于课表（Plan 22 四期）：当场开课与拖堂都可能发生在节次之外，
-       此时下面那两条课表链一律取不到东西，所以先问 judge_in_running_class()。
-       （教师反查 get_teacher_cell() 自 2026-09-09 起也并入了临时课覆盖层，节次内查玩家同样取得到）
-    玩家手动授课不在课表上，教师反查取不到时科目回落学识（Plan 31 §3.13，与 512 同口径，见 get_player_manual_teach_course）；
-       被玩家「授课」拉来听课的学生同样回落学识，先于她自己的课表（Plan 32 §3.10 L13，见 get_listen_manual_teach_course）
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 科目能力id，取不到则为-1
-    """
-    from Script.System.Education_System import education_constant, schedule_handle, sex_class_handle
+  """
+  取角色当前这一节课的科目能力id，供 Course 型 CVP token 使用
+  体育课与兴趣课没有"科目"这个概念（学的是该活动自带的东西），恒返回-1不成立；
+     实习课的科目取该岗位 WorkType.csv 的 ability_id 列
+  正在进行的性技实操课优先于课表（Plan 22 四期）：当场开课与拖堂都可能发生在节次之外，
+     此时下面那两条课表链一律取不到东西，所以先问 judge_in_running_class()。
+     （教师反查 get_teacher_cell() 自 2026-09-09 起也并入了临时课覆盖层，节次内查玩家同样取得到）
+  玩家手动授课不在课表上，教师反查取不到时科目回落学识（Plan 31 §3.13，与 512 同口径，见 get_player_manual_teach_course）；
+     被玩家「授课」拉来听课的学生同样回落学识，先于她自己的课表（Plan 32 §3.10 L13，见 get_listen_manual_teach_course）
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 科目能力id，取不到则为-1
+  """
+  from Script.System.Education_System import education_constant, schedule_handle, sex_class_handle
 
-    if sex_class_handle.judge_in_running_class(character_id):
-        now_class_ability = sex_class_handle.get_now_class_ability()
-        if now_class_ability != -1:
-            return now_class_ability
-    teaching = schedule_handle.get_now_teaching(character_id)
-    if teaching is not None:
-        return teaching["ability_id"]
-    # 玩家手动授课：科目回落学识（Plan 31 §3.13）
-    manual_course = get_player_manual_teach_course(character_id)
-    if manual_course is not None:
-        return manual_course[1]
-    # 在听玩家手动授课的学生：512 给她发的是学识，口上也按学识取（Plan 32 §3.10 L13），不读课表上的那门课
-    listen_course = get_listen_manual_teach_course(character_id)
-    if listen_course is not None:
-        return listen_course[1]
-    now_course = schedule_handle.get_now_course(character_id)
-    if now_course is None:
-        return -1
-    if now_course["course_type"] in education_constant.CLASSROOM_COURSE_TYPE_SET:
-        return now_course["ability_id"]
-    if now_course["course_type"] == education_constant.COURSE_TYPE_INTERN:
-        if now_course["target"] in game_config.config_work_type:
-            return game_config.config_work_type[now_course["target"]].ability_id
+  if sex_class_handle.judge_in_running_class(character_id):
+    now_class_ability = sex_class_handle.get_now_class_ability()
+    if now_class_ability != -1:
+      return now_class_ability
+  teaching = schedule_handle.get_now_teaching(character_id)
+  if teaching is not None:
+    return teaching["ability_id"]
+  # 玩家手动授课：科目回落学识（Plan 31 §3.13）
+  manual_course = get_player_manual_teach_course(character_id)
+  if manual_course is not None:
+    return manual_course[1]
+  # 在听玩家手动授课的学生：512 给她发的是学识，口上也按学识取（Plan 32 §3.10 L13），不读课表上的那门课
+  listen_course = get_listen_manual_teach_course(character_id)
+  if listen_course is not None:
+    return listen_course[1]
+  now_course = schedule_handle.get_now_course(character_id)
+  if now_course is None:
     return -1
+  if now_course["course_type"] in education_constant.CLASSROOM_COURSE_TYPE_SET:
+    return now_course["ability_id"]
+  if now_course["course_type"] == education_constant.COURSE_TYPE_INTERN:
+    if now_course["target"] in game_config.config_work_type:
+      return game_config.config_work_type[now_course["target"]].ability_id
+  return -1
 
 
-def judge_value_by_operator(final_value: float, operator_text: str, judge_text: str) -> int:
-    """
-    按运算符比较两个数值，供不需要角色主体的前提复用（如 Plan 23 的 CVP_RI_ 全局数值）
-    Keyword arguments:
-    final_value -- 当前值
-    operator_text -- 运算符（G大于/L小于/E等于/GE大于等于/LE小于等于/NE不等于）
-    judge_text -- 判定值文本
-    Return arguments:
-    int -- 成立为1，不成立为0
-    """
-    try:
-        judge_value = float(judge_text)
-    except (TypeError, ValueError):
-        return 0
-    if operator_text == "G":
-        return 1 if final_value > judge_value else 0
-    if operator_text == "L":
-        return 1 if final_value < judge_value else 0
-    if operator_text == "E":
-        return 1 if final_value == judge_value else 0
-    if operator_text == "GE":
-        return 1 if final_value >= judge_value else 0
-    if operator_text == "LE":
-        return 1 if final_value <= judge_value else 0
-    if operator_text == "NE":
-        return 1 if final_value != judge_value else 0
+def judge_value_by_operator(
+    final_value: float, operator_text: str, judge_text: str
+) -> int:
+  """
+  按运算符比较两个数值，供不需要角色主体的前提复用（如 Plan 23 的 CVP_RI_ 全局数值）
+  Keyword arguments:
+  final_value -- 当前值
+  operator_text -- 运算符（G大于/L小于/E等于/GE大于等于/LE小于等于/NE不等于）
+  judge_text -- 判定值文本
+  Return arguments:
+  int -- 成立为1，不成立为0
+  """
+  try:
+    judge_value = float(judge_text)
+  except (TypeError, ValueError):
     return 0
+  if operator_text == "G":
+    return 1 if final_value > judge_value else 0
+  if operator_text == "L":
+    return 1 if final_value < judge_value else 0
+  if operator_text == "E":
+    return 1 if final_value == judge_value else 0
+  if operator_text == "GE":
+    return 1 if final_value >= judge_value else 0
+  if operator_text == "LE":
+    return 1 if final_value <= judge_value else 0
+  if operator_text == "NE":
+    return 1 if final_value != judge_value else 0
+  return 0
 
 
-def handle_comprehensive_value_premise(character_id: int, premise_all_value_list: list) -> int:
-    """
-    综合型基础数值前提
-    Keyword arguments:
-    character_id -- 角色id
-    premise_all_value_list -- 前提的各项数值
-    Return arguments:
-    int -- 前提权重加成
-    """
-    character_data: game_type.Character = cache.character_data[character_id]
-    pl_character_data = cache.character_data[0]
-    pl_target_character_id = pl_character_data.target_character_id
-    pl_target_character_data = cache.character_data[pl_target_character_id]
-    # print(f"debug character_id = {character_id}, premise_all_value_list = {premise_all_value_list}")
+def handle_comprehensive_value_premise(
+    character_id: int, premise_all_value_list: list
+) -> int:
+  """
+  综合型基础数值前提
+  Keyword arguments:
+  character_id -- 角色id
+  premise_all_value_list -- 前提的各项数值
+  Return arguments:
+  int -- 前提权重加成
+  """
+  character_data: game_type.Character = cache.character_data[character_id]
+  pl_character_data = cache.character_data[0]
+  pl_target_character_id = pl_character_data.target_character_id
+  pl_target_character_data = cache.character_data[pl_target_character_id]
+  # print(f"debug character_id = {character_id}, premise_all_value_list = {premise_all_value_list}")
 
-    # 罗德岛全局数值的主体RI（Plan 23）：资源、声望、公务量这类不属于任何角色的数值
-    # 必须在角色主体的判别之前提前返回：下面那段数值B的判别是按「类型|子id」拆的，
-    #    而 RI 的类型可以不带子id（如 CVE_RI_Work_G_20），落进去会直接 IndexError
-    if premise_all_value_list[0] == "RI":
-        from Script.System.Official_Event_System import ri_value
+  # 罗德岛全局数值的主体RI（Plan 23）：资源、声望、公务量这类不属于任何角色的数值
+  # 必须在角色主体的判别之前提前返回：下面那段数值B的判别是按「类型|子id」拆的，
+  #    而 RI 的类型可以不带子id（如 CVE_RI_Work_G_20），落进去会直接 IndexError
+  if premise_all_value_list[0] == "RI":
+    from Script.System.Official_Event_System import ri_value
 
-        return judge_value_by_operator(ri_value.get_ri_value(premise_all_value_list[1]), premise_all_value_list[2], premise_all_value_list[3])
+    return judge_value_by_operator(
+        ri_value.get_ri_value(premise_all_value_list[1]),
+        premise_all_value_list[2],
+        premise_all_value_list[3],
+    )
 
-    # 进行主体A的判别，A1为自己，A2为交互对象，A3为指定id角色(格式为A3|15)
-    if premise_all_value_list[0] == "A1":
-        final_character_id = character_id
-        final_character_data = character_data
-    elif premise_all_value_list[0] == "A2":
-        # （已废弃）如果没有交互对象，则返回0
-        # if character_data.target_character_id == character_id:
-        #     return 0
-        final_character_id = character_data.target_character_id
-        final_character_data = cache.character_data[character_data.target_character_id]
-    elif premise_all_value_list[0][:2] == "A3":
-        final_character_adv = int(premise_all_value_list[0][3:])
-        final_character_id = character.get_character_id_from_adv(final_character_adv)
-        final_character_data = cache.character_data[final_character_id]
-        # 如果还没拥有该角色，则返回0
-        if final_character_id not in cache.npc_id_got:
-            return 0
+  # 进行主体A的判别，A1为自己，A2为交互对象，A3为指定id角色(格式为A3|15)
+  if premise_all_value_list[0] == "A1":
+    final_character_id = character_id
+    final_character_data = character_data
+  elif premise_all_value_list[0] == "A2":
+    # （已废弃）如果没有交互对象，则返回0
+    # if character_data.target_character_id == character_id:
+    #     return 0
+    final_character_id = character_data.target_character_id
+    final_character_data = cache.character_data[
+        character_data.target_character_id
+    ]
+  elif premise_all_value_list[0][:2] == "A3":
+    final_character_adv = int(premise_all_value_list[0][3:])
+    final_character_id = character.get_character_id_from_adv(
+        final_character_adv
+    )
+    final_character_data = cache.character_data[final_character_id]
+    # 如果还没拥有该角色，则返回0
+    if final_character_id not in cache.npc_id_got:
+      return 0
 
-    # 进行数值B的判别,A能力,T素质,Time时间,J宝珠,E经验,S状态,F好感度,Flag作者用flag,X信赖,G攻略程度,Instruct指令,Son子嵌套事件,OtherChara其他角色在场,Dirty污浊,Bondage绳子捆绑,Roleplay角色扮演,PenisPos阴茎位置,ShootPos射精位置,Relationship身份关系,Course当前课程科目,CourseType当前课型,CourseShowOff待炫耀的已升级科目,Growth养成数值
-    if (
-        len(premise_all_value_list[1]) > 1 and
-        "Time" not in premise_all_value_list[1] and
-        "Dirty" not in premise_all_value_list[1] and
-        "PenisPos" not in premise_all_value_list[1] and
-        "ShootPos" not in premise_all_value_list[1] and
-        "Relationship" not in premise_all_value_list[1] and
-        "Instruct" not in premise_all_value_list[1]
-        ):
-        type_son_id = int(premise_all_value_list[1].split("|")[1])
-    if "Son" in premise_all_value_list[1]:
-        return 0
-    if premise_all_value_list[1][0] == "A":
-        final_value = final_character_data.ability.get(type_son_id, 0)
-    elif premise_all_value_list[1][0] == "T":
-        if "Time" in premise_all_value_list[1]:
-            final_value = final_character_data.behavior.start_time.hour
-        else:
-            final_value = final_character_data.talent.get(type_son_id, 0)
-    elif premise_all_value_list[1][0] == "J":
-        final_value = final_character_data.juel.get(type_son_id, 0)
-    elif premise_all_value_list[1][0] == "E":
-        final_value = final_character_data.experience.get(type_son_id, 0)
-    elif premise_all_value_list[1][0] == "S":
-        if "ShootPos" in premise_all_value_list[1]:
-            b2_value = premise_all_value_list[1].split("ShootPos|")[1]
-            part_type = b2_value[0]
-            part_cid = int(b2_value[1:])
-            # 区分是身体还是服装
-            if part_type == "B":
-                if pl_target_character_data.h_state.shoot_position_body == part_cid:
-                    return 1
-            else:
-                if pl_target_character_data.h_state.shoot_position_cloth == part_cid:
-                    return 1
-            return 0
-        else:
-            final_value = final_character_data.status_data.get(type_son_id, 0)
-    elif premise_all_value_list[1][0] == "F":
-        if "Flag" in premise_all_value_list[1]:
-            final_character_data.author_flag.chara_int_flag_dict.setdefault(type_son_id, 0)
-            final_value = final_character_data.author_flag.chara_int_flag_dict[type_son_id]
-        else:
-            final_value = final_character_data.favorability[0]
-    elif premise_all_value_list[1][0] == "X":
-        final_value = final_character_data.trust
-    elif premise_all_value_list[1][0] == "D":
-        if "Dirty" in premise_all_value_list[1]:
-            b2_value = premise_all_value_list[1].split("Dirty|")[1]
-            part_type = b2_value[0]
-            part_cid = int(b2_value[1:])
-            # 区分是身体还是服装
-            if part_type == "B":
-                final_value = final_character_data.dirty.body_semen[part_cid][1]
-            else:
-                final_value = final_character_data.dirty.cloth_semen[part_cid][1]
-    elif premise_all_value_list[1][0] == "G":
-        # 养成数值前提（Plan 22 三期）：出勤、性格倾向、照料值等，编号见 education_constant.GROWTH_VALUE_*
-        # 必须排在攻略程度之前——"Growth" 与 "Gift" 的首字母都是 G，落到默认分支会被当成攻略程度
-        if "Growth" in premise_all_value_list[1]:
-            from Script.System.Education_System import growth_handle
-
-            final_value = growth_handle.get_growth_value(final_character_id, type_son_id)
-        # 礼物前提
-        elif "Gift" in premise_all_value_list[1]:
-            if final_character_data.behavior.gift_id == type_son_id:
-                return 1
-            else:
-                return 0
-        # 攻略程度
-        else:
-            final_value = attr_calculation.get_character_fall_level(final_character_id, minus_flag=True)
-    elif premise_all_value_list[1][0] == "B":
-        if "Bondage" in premise_all_value_list[1]:
-            if final_character_data.h_state.bondage == type_son_id:
-                final_value = 1
-            else:
-                final_value = 0
-    elif premise_all_value_list[1][0] == "C":
-        # 上课前提（Plan 22 §3.17）：一条分支覆盖全部18门科目与6种课型，日后加科目零改动
-        # 不新增字段，当前课程由课表现算——教师侧查全局课表、学生侧查个人课表，
-        #    与 <课> 状态标识、上课结算读的是同一个入口，三处不会各说各话
-        # 三者判序不能改：CourseShowOff 与 CourseType 的字符串里都含有 "Course"，
-        #    长的必须先判，否则会被 Course 分支抢先吃掉（而且不报错，只是永远不成立）
-        if "CourseShowOff" in premise_all_value_list[1]:
-            growth_data = final_character_data.child_growth
-            if growth_data is None:
-                return 0
-            return 1 if type_son_id in growth_data.show_off_ability else 0
-        if "CourseType" in premise_all_value_list[1]:
-            now_type = get_now_course_type(final_character_id)
-            return 1 if now_type == type_son_id else 0
-        if "Course" in premise_all_value_list[1]:
-            now_ability_id = get_now_course_ability(final_character_id)
-            return 1 if now_ability_id == type_son_id else 0
-        return 0
-    elif premise_all_value_list[1][0] == "R":
-        if "Roleplay" in premise_all_value_list[1]:
-            if type_son_id in final_character_data.hypnosis.roleplay:
-                final_value = 1
-            else:
-                final_value = 0
-        elif "Relationship" in premise_all_value_list[1]:
-            target_character_type = premise_all_value_list[1].split("|")[1]
-            if target_character_type == "是玩家的":
-                target_character_data = cache.character_data[0]
-            elif target_character_type == "是自己的":
-                target_character_data = final_character_data
-            elif target_character_type == "是交互对象的":
-                target_character_data = cache.character_data[final_character_data.target_character_id]
-            elif target_character_type == "是指定id角色的":
-                target_character_adv = int(premise_all_value_list[3])
-                target_character_id = character.get_character_id_from_adv(target_character_adv)
-                target_character_data = cache.character_data[target_character_id]
-            relation_type = premise_all_value_list[2]
-            if relation_type == "父亲":
-                return final_character_id == target_character_data.relationship.father_id
-            elif relation_type == "母亲":
-                return final_character_id == target_character_data.relationship.mother_id
-            elif relation_type == "女儿":
-                return final_character_id in target_character_data.relationship.child_id_list
-
-    elif premise_all_value_list[1][0] == "P":
-        if "PenisPos" in premise_all_value_list[1]:
-            b2_value = premise_all_value_list[1].split("PenisPos|")[1]
-            part_type = b2_value[0]
-            part_cid = int(b2_value[1:])
-            # 区分是身体还是服装
-            if part_type == "B":
-                if pl_target_character_data.h_state.insert_position == part_cid:
-                    return 1
-            else:
-                if pl_target_character_data.h_state.insert_position - 20 == part_cid:
-                    return 1
-            return 0
-
-    # 前指令的单独计算
-    elif premise_all_value_list[1][0] == "I":
-        if "Instruct" in premise_all_value_list[1]:
-            len_pre_behavior = len(cache.pl_pre_behavior_instruce)
-            behavior_id_str = "_".join(premise_all_value_list[1:-2])
-            premise_all_value_list[1] = behavior_id_str
-            premise_all_value_list = premise_all_value_list[:2] + premise_all_value_list[-2:]
-            behavior_id = behavior_id_str.split("|")[1]
-            # print(f"debug behavior_id = {behavior_id}, premise_all_value_list = {premise_all_value_list}")
-            # 指令计数
-            count = 0
-            for i in range(len_pre_behavior):
-                last_cmd = cache.pl_pre_behavior_instruce[len_pre_behavior - 1 - i]
-                # 跳过当前指令
-                if count == 0:
-                    count += 1
-                    continue
-                if last_cmd == behavior_id:
-                    # 判定是否为该指令
-                    if premise_all_value_list[2] == "E":
-                        return 1
-                    if premise_all_value_list[2] == "NE":
-                        return 0
-                if premise_all_value_list[2] == "E":
-                    return 0
-                if premise_all_value_list[2] == "NE":
-                    return 1
-            return 0
-
-    # 进行方式C和数值D的判别
-    judge_value = int(premise_all_value_list[3])
-    # print(f"debug final_value = {final_value}, judge_value = {judge_value}")
-
-    # 攻略程度的不过0处理。养成数值同样以G开头，但它是可正可负的普通数值，不能套这套夹逼
-    if premise_all_value_list[1][0] == "G" and "Growth" not in premise_all_value_list[1]:
-        # 如果当前值与判定值的正负号不同，则直接返回0
-        if (final_value > 0 and judge_value < 0) or (final_value < 0 and judge_value > 0):
-            return 0
-        # 如果是在大于，或者大于等于负数的情况下，则当前值最大为0
-        if premise_all_value_list[2] in {"G", "GE"} and judge_value < 0:
-            final_value = min(0, final_value)
-        # 如果是在小于，或者小于等于正数的情况下，则当前值最小为0
-        elif premise_all_value_list[2] in {"L", "LE"} and judge_value > 0:
-            final_value = max(0, final_value)
-
-
-    # 其他角色在场的判定
-    if premise_all_value_list[1][0] == "O":
-        if "OtherChara" in premise_all_value_list[1]:
-            if character_data.position == final_character_data.position:
-                return 1 if judge_value >= 1 else 0
-            else:
-                return 0 if judge_value >= 1 else 1
-
-    # 正常的运算符判定
-    if premise_all_value_list[2] == "G":
-        if final_value > judge_value:
-            # print(f"debug 成功进入G判定，返回值为1")
-            return 1
-    elif premise_all_value_list[2] == "L":
-        if final_value < judge_value:
-            return 1
-    elif premise_all_value_list[2] == "E":
-        if final_value == judge_value:
-            return 1
-    elif premise_all_value_list[2] == "GE":
-        if final_value >= judge_value:
-            return 1
-    elif premise_all_value_list[2] == "LE":
-        if final_value <= judge_value:
-            return 1
-    elif premise_all_value_list[2] == "NE":
-        if final_value != judge_value:
-            return 1
-
+  # 进行数值B的判别,A能力,T素质,Time时间,J宝珠,E经验,S状态,F好感度,Flag作者用flag,X信赖,G攻略程度,Instruct指令,Son子嵌套事件,OtherChara其他角色在场,Dirty污浊,Bondage绳子捆绑,Roleplay角色扮演,PenisPos阴茎位置,ShootPos射精位置,Relationship身份关系,Course当前课程科目,CourseType当前课型,CourseShowOff待炫耀的已升级科目,Growth养成数值
+  if (
+      len(premise_all_value_list[1]) > 1
+      and "Time" not in premise_all_value_list[1]
+      and "Dirty" not in premise_all_value_list[1]
+      and "PenisPos" not in premise_all_value_list[1]
+      and "ShootPos" not in premise_all_value_list[1]
+      and "Relationship" not in premise_all_value_list[1]
+      and "Instruct" not in premise_all_value_list[1]
+  ):
+    type_son_id = int(premise_all_value_list[1].split("|")[1])
+  if "Son" in premise_all_value_list[1]:
     return 0
+  if premise_all_value_list[1][0] == "A":
+    final_value = final_character_data.ability.get(type_son_id, 0)
+  elif premise_all_value_list[1][0] == "T":
+    if "Time" in premise_all_value_list[1]:
+      final_value = final_character_data.behavior.start_time.hour
+    else:
+      final_value = final_character_data.talent.get(type_son_id, 0)
+  elif premise_all_value_list[1][0] == "J":
+    final_value = final_character_data.juel.get(type_son_id, 0)
+  elif premise_all_value_list[1][0] == "E":
+    final_value = final_character_data.experience.get(type_son_id, 0)
+  elif premise_all_value_list[1][0] == "S":
+    if "ShootPos" in premise_all_value_list[1]:
+      b2_value = premise_all_value_list[1].split("ShootPos|")[1]
+      part_type = b2_value[0]
+      part_cid = int(b2_value[1:])
+      # 区分是身体还是服装
+      if part_type == "B":
+        if pl_target_character_data.h_state.shoot_position_body == part_cid:
+          return 1
+      else:
+        if pl_target_character_data.h_state.shoot_position_cloth == part_cid:
+          return 1
+      return 0
+    else:
+      final_value = final_character_data.status_data.get(type_son_id, 0)
+  elif premise_all_value_list[1][0] == "F":
+    if "Flag" in premise_all_value_list[1]:
+      final_character_data.author_flag.chara_int_flag_dict.setdefault(
+          type_son_id, 0
+      )
+      final_value = final_character_data.author_flag.chara_int_flag_dict[
+          type_son_id
+      ]
+    else:
+      final_value = final_character_data.favorability[0]
+  elif premise_all_value_list[1][0] == "X":
+    final_value = final_character_data.trust
+  elif premise_all_value_list[1][0] == "D":
+    if "Dirty" in premise_all_value_list[1]:
+      b2_value = premise_all_value_list[1].split("Dirty|")[1]
+      part_type = b2_value[0]
+      part_cid = int(b2_value[1:])
+      # 区分是身体还是服装
+      if part_type == "B":
+        final_value = final_character_data.dirty.body_semen[part_cid][1]
+      else:
+        final_value = final_character_data.dirty.cloth_semen[part_cid][1]
+  elif premise_all_value_list[1][0] == "G":
+    # 养成数值前提（Plan 22 三期）：出勤、性格倾向、照料值等，编号见 education_constant.GROWTH_VALUE_*
+    # 必须排在攻略程度之前——"Growth" 与 "Gift" 的首字母都是 G，落到默认分支会被当成攻略程度
+    if "Growth" in premise_all_value_list[1]:
+      from Script.System.Education_System import growth_handle
+
+      final_value = growth_handle.get_growth_value(
+          final_character_id, type_son_id
+      )
+    # 礼物前提
+    elif "Gift" in premise_all_value_list[1]:
+      if final_character_data.behavior.gift_id == type_son_id:
+        return 1
+      else:
+        return 0
+    # 攻略程度
+    else:
+      final_value = attr_calculation.get_character_fall_level(
+          final_character_id, minus_flag=True
+      )
+  elif premise_all_value_list[1][0] == "B":
+    if "Bondage" in premise_all_value_list[1]:
+      if final_character_data.h_state.bondage == type_son_id:
+        final_value = 1
+      else:
+        final_value = 0
+  elif premise_all_value_list[1][0] == "C":
+    # 上课前提（Plan 22 §3.17）：一条分支覆盖全部18门科目与6种课型，日后加科目零改动
+    # 不新增字段，当前课程由课表现算——教师侧查全局课表、学生侧查个人课表，
+    #    与 <课> 状态标识、上课结算读的是同一个入口，三处不会各说各话
+    # 三者判序不能改：CourseShowOff 与 CourseType 的字符串里都含有 "Course"，
+    #    长的必须先判，否则会被 Course 分支抢先吃掉（而且不报错，只是永远不成立）
+    if "CourseShowOff" in premise_all_value_list[1]:
+      growth_data = final_character_data.child_growth
+      if growth_data is None:
+        return 0
+      return 1 if type_son_id in growth_data.show_off_ability else 0
+    if "CourseType" in premise_all_value_list[1]:
+      now_type = get_now_course_type(final_character_id)
+      return 1 if now_type == type_son_id else 0
+    if "Course" in premise_all_value_list[1]:
+      now_ability_id = get_now_course_ability(final_character_id)
+      return 1 if now_ability_id == type_son_id else 0
+    return 0
+  elif premise_all_value_list[1][0] == "R":
+    if "Roleplay" in premise_all_value_list[1]:
+      if type_son_id in final_character_data.hypnosis.roleplay:
+        final_value = 1
+      else:
+        final_value = 0
+    elif "Relationship" in premise_all_value_list[1]:
+      target_character_type = premise_all_value_list[1].split("|")[1]
+      if target_character_type == "是玩家的":
+        target_character_data = cache.character_data[0]
+      elif target_character_type == "是自己的":
+        target_character_data = final_character_data
+      elif target_character_type == "是交互对象的":
+        target_character_data = cache.character_data[
+            final_character_data.target_character_id
+        ]
+      elif target_character_type == "是指定id角色的":
+        target_character_adv = int(premise_all_value_list[3])
+        target_character_id = character.get_character_id_from_adv(
+            target_character_adv
+        )
+        target_character_data = cache.character_data[target_character_id]
+      relation_type = premise_all_value_list[2]
+      if relation_type == "父亲":
+        return (
+            final_character_id == target_character_data.relationship.father_id
+        )
+      elif relation_type == "母亲":
+        return (
+            final_character_id == target_character_data.relationship.mother_id
+        )
+      elif relation_type == "女儿":
+        return (
+            final_character_id
+            in target_character_data.relationship.child_id_list
+        )
+
+  elif premise_all_value_list[1][0] == "P":
+    if "PenisPos" in premise_all_value_list[1]:
+      b2_value = premise_all_value_list[1].split("PenisPos|")[1]
+      part_type = b2_value[0]
+      part_cid = int(b2_value[1:])
+      # 区分是身体还是服装
+      if part_type == "B":
+        if pl_target_character_data.h_state.insert_position == part_cid:
+          return 1
+      else:
+        if pl_target_character_data.h_state.insert_position - 20 == part_cid:
+          return 1
+      return 0
+
+  # 前指令的单独计算
+  elif premise_all_value_list[1][0] == "I":
+    if "Instruct" in premise_all_value_list[1]:
+      len_pre_behavior = len(cache.pl_pre_behavior_instruce)
+      behavior_id_str = "_".join(premise_all_value_list[1:-2])
+      premise_all_value_list[1] = behavior_id_str
+      premise_all_value_list = (
+          premise_all_value_list[:2] + premise_all_value_list[-2:]
+      )
+      behavior_id = behavior_id_str.split("|")[1]
+      # print(f"debug behavior_id = {behavior_id}, premise_all_value_list = {premise_all_value_list}")
+      # 指令计数
+      count = 0
+      for i in range(len_pre_behavior):
+        last_cmd = cache.pl_pre_behavior_instruce[len_pre_behavior - 1 - i]
+        # 跳过当前指令
+        if count == 0:
+          count += 1
+          continue
+        if last_cmd == behavior_id:
+          # 判定是否为该指令
+          if premise_all_value_list[2] == "E":
+            return 1
+          if premise_all_value_list[2] == "NE":
+            return 0
+        if premise_all_value_list[2] == "E":
+          return 0
+        if premise_all_value_list[2] == "NE":
+          return 1
+      return 0
+
+  # 进行方式C和数值D的判别
+  judge_value = int(premise_all_value_list[3])
+  # print(f"debug final_value = {final_value}, judge_value = {judge_value}")
+
+  # 攻略程度的不过0处理。养成数值同样以G开头，但它是可正可负的普通数值，不能套这套夹逼
+  if (
+      premise_all_value_list[1][0] == "G"
+      and "Growth" not in premise_all_value_list[1]
+  ):
+    # 如果当前值与判定值的正负号不同，则直接返回0
+    if (final_value > 0 and judge_value < 0) or (
+        final_value < 0 and judge_value > 0
+    ):
+      return 0
+    # 如果是在大于，或者大于等于负数的情况下，则当前值最大为0
+    if premise_all_value_list[2] in {"G", "GE"} and judge_value < 0:
+      final_value = min(0, final_value)
+    # 如果是在小于，或者小于等于正数的情况下，则当前值最小为0
+    elif premise_all_value_list[2] in {"L", "LE"} and judge_value > 0:
+      final_value = max(0, final_value)
+
+  # 其他角色在场的判定
+  if premise_all_value_list[1][0] == "O":
+    if "OtherChara" in premise_all_value_list[1]:
+      if character_data.position == final_character_data.position:
+        return 1 if judge_value >= 1 else 0
+      else:
+        return 0 if judge_value >= 1 else 1
+
+  # 正常的运算符判定
+  if premise_all_value_list[2] == "G":
+    if final_value > judge_value:
+      # print(f"debug 成功进入G判定，返回值为1")
+      return 1
+  elif premise_all_value_list[2] == "L":
+    if final_value < judge_value:
+      return 1
+  elif premise_all_value_list[2] == "E":
+    if final_value == judge_value:
+      return 1
+  elif premise_all_value_list[2] == "GE":
+    if final_value >= judge_value:
+      return 1
+  elif premise_all_value_list[2] == "LE":
+    if final_value <= judge_value:
+      return 1
+  elif premise_all_value_list[2] == "NE":
+    if final_value != judge_value:
+      return 1
+
+  return 0
+
 
 @add_premise(constant_promise.Premise.HIGH_1)
 def handle_high_1(character_id: int) -> int:
-    """
-    优先度为1的空白前提
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return 1
+  """
+  优先度为1的空白前提
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  return 1
 
 
 @add_premise(constant_promise.Premise.HIGH_2)
 def handle_high_2(character_id: int) -> int:
-    """
-    优先度为2的空白前提
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return 2
+  """
+  优先度为2的空白前提
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  return 2
 
 
 @add_premise(constant_promise.Premise.HIGH_5)
 def handle_high_5(character_id: int) -> int:
-    """
-    优先度为5的空白前提
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return 5
+  """
+  优先度为5的空白前提
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  return 5
 
 
 @add_premise(constant_promise.Premise.HIGH_10)
 def handle_high_10(character_id: int) -> int:
-    """
-    优先度为10的空白前提
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return 10
+  """
+  优先度为10的空白前提
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  return 10
 
 
 @add_premise(constant_promise.Premise.HIGH_999)
 def handle_high_999(character_id: int) -> int:
-    """
-    优先度为999的空白前提
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return 999
+  """
+  优先度为999的空白前提
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  return 999
 
 
 @add_premise(constant_promise.Premise.PLAYER_CAN_BE_INTERACT)
 def handle_player_can_be_interact(character_id: int) -> int:
-    """
-    玩家当前可被交互（非睡觉、非隐藏等），自己非空气催眠
-    输入：character_id: int - 角色id
-    输出：int - 权重
-    """
-    # 非睡觉状态
-    if handle_pl_action_sleep(0):
-        return 0
-    # 非隐藏状态
-    if handle_hidden_sex_mode_3(0):
-        return 0
-    if handle_hidden_sex_mode_4(0):
-        return 0
-    # 自己非空气催眠
-    if handle_unconscious_flag_5(character_id):
-        return 0
-    return 1
+  """
+  玩家当前可被交互（非睡觉、非隐藏等），自己非空气催眠
+  输入：character_id: int - 角色id
+  输出：int - 权重
+  """
+  # 非睡觉状态
+  if handle_pl_action_sleep(0):
+    return 0
+  # 非隐藏状态
+  if handle_hidden_sex_mode_3(0):
+    return 0
+  if handle_hidden_sex_mode_4(0):
+    return 0
+  # 自己非空气催眠
+  if handle_unconscious_flag_5(character_id):
+    return 0
+  return 1
 
 
 @add_premise(constant_promise.Premise.INSTRUCT_JUDGE_LOW_OBSCENITY)
 def handle_instruct_judge_low_obscenity(character_id: int) -> int:
-    """
-    口上用：当前实行值足以对自己轻度性骚扰
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    if character_id == 0:
-        return 0
-    if instuct_judege.calculation_instuct_judege(0, character_id, _("初级骚扰"), not_draw_flag = True)[0]:
-        return 1
+  """
+  口上用：当前实行值足以对自己轻度性骚扰
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  if character_id == 0:
     return 0
+  if instuct_judege.calculation_instuct_judege(
+      0, character_id, _("初级骚扰"), not_draw_flag=True
+  )[0]:
+    return 1
+  return 0
+
 
 @add_premise(constant_promise.Premise.TARGET_INSTRUCT_JUDGE_LOW_OBSCENITY)
 def handle_target_instruct_judge_low_obscenity(character_id: int) -> int:
-    """
-    口上用：当前实行值足以对交互对象轻度性骚扰
-    输入：character_id: int - 角色id
-    输出：int - 权重
-    """
-    # 获取角色数据
-    character_data = cache.character_data[character_id]
-    target_character_id = character_data.target_character_id
-    # 如果角色没有交互对象则返回0
-    if character_id == target_character_id:
-        return 0
-    # 判断交互对象是否满足低级骚扰条件（调用计算函数判断低级骚扰）
-    if instuct_judege.calculation_instuct_judege(character_id, target_character_id, _("初级骚扰"), not_draw_flag=True)[0]:
-        return 1
+  """
+  口上用：当前实行值足以对交互对象轻度性骚扰
+  输入：character_id: int - 角色id
+  输出：int - 权重
+  """
+  # 获取角色数据
+  character_data = cache.character_data[character_id]
+  target_character_id = character_data.target_character_id
+  # 如果角色没有交互对象则返回0
+  if character_id == target_character_id:
     return 0
+  # 判断交互对象是否满足低级骚扰条件（调用计算函数判断低级骚扰）
+  if instuct_judege.calculation_instuct_judege(
+      character_id, target_character_id, _("初级骚扰"), not_draw_flag=True
+  )[0]:
+    return 1
+  return 0
 
 
 @add_premise(constant_promise.Premise.TARGET_INSTRUCT_NOT_JUDGE_LOW_OBSCENITY)
 def handle_target_instruct_not_judge_low_obscenity(character_id: int) -> int:
-    """
-    口上用：当前实行值不足以对交互对象轻度性骚扰
-    输入：character_id: int - 角色id
-    输出：int - 权重
-    """
-    return not handle_target_instruct_judge_low_obscenity(character_id)
+  """
+  口上用：当前实行值不足以对交互对象轻度性骚扰
+  输入：character_id: int - 角色id
+  输出：int - 权重
+  """
+  return not handle_target_instruct_judge_low_obscenity(character_id)
 
 
 @add_premise(constant_promise.Premise.INSTRUCT_JUDGE_HIGH_OBSCENITY)
 def handle_instruct_judge_high_obscenity(character_id: int) -> int:
-    """
-    口上用：当前实行值足以对自己重度性骚扰
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    if character_id == 0:
-        return 0
-    if instuct_judege.calculation_instuct_judege(0, character_id, _("严重骚扰"), not_draw_flag = True)[0]:
-        return 1
+  """
+  口上用：当前实行值足以对自己重度性骚扰
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  if character_id == 0:
     return 0
+  if instuct_judege.calculation_instuct_judege(
+      0, character_id, _("严重骚扰"), not_draw_flag=True
+  )[0]:
+    return 1
+  return 0
 
 
 @add_premise(constant_promise.Premise.TARGET_INSTRUCT_JUDGE_HIGH_OBSCENITY)
 def handle_target_instruct_judge_high_obscenity(character_id: int) -> int:
-    """
-    口上用：当前实行值足以对交互对象重度性骚扰
-    参数:
-        character_id (int): 角色id
-    返回:
-        int: 权重（1 表示满足，0 表示不满足）
-    """
-    # 获取当前角色数据
-    character_data = cache.character_data[character_id]
-    # 获取交互对象id
-    target_character_id = character_data.target_character_id
-    # 如果角色没有交互对象，则直接返回0
-    if character_id == target_character_id:
-        return 0
-    # 调用评价函数判断交互对象是否满足“严重骚扰”条件
-    if instuct_judege.calculation_instuct_judege(character_id, target_character_id, _("严重骚扰"), not_draw_flag=True)[0]:
-        return 1
+  """
+  口上用：当前实行值足以对交互对象重度性骚扰
+  参数:
+      character_id (int): 角色id
+  返回:
+      int: 权重（1 表示满足，0 表示不满足）
+  """
+  # 获取当前角色数据
+  character_data = cache.character_data[character_id]
+  # 获取交互对象id
+  target_character_id = character_data.target_character_id
+  # 如果角色没有交互对象，则直接返回0
+  if character_id == target_character_id:
     return 0
+  # 调用评价函数判断交互对象是否满足“严重骚扰”条件
+  if instuct_judege.calculation_instuct_judege(
+      character_id, target_character_id, _("严重骚扰"), not_draw_flag=True
+  )[0]:
+    return 1
+  return 0
 
 
 @add_premise(constant_promise.Premise.TARGET_INSTRUCT_NOT_JUDGE_HIGH_OBSCENITY)
 def handle_target_instruct_not_judge_high_obscenity(character_id: int) -> int:
-    """
-    口上用：当前实行值不足以对交互对象重度性骚扰
-    参数:
-        character_id (int): 角色id
-    返回:
-        int: 权重（1 表示满足，0 表示不满足）
-    """
-    return not handle_target_instruct_judge_high_obscenity(character_id)
+  """
+  口上用：当前实行值不足以对交互对象重度性骚扰
+  参数:
+      character_id (int): 角色id
+  返回:
+      int: 权重（1 表示满足，0 表示不满足）
+  """
+  return not handle_target_instruct_judge_high_obscenity(character_id)
 
 
 @add_premise(constant_promise.Premise.INSTRUCT_JUDGE_H)
 def handle_instruct_judge_h(character_id: int) -> int:
-    """
-    口上用：当前实行值足以对自己邀请H
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    if character_id == 0:
-        return 0
-    if instuct_judege.calculation_instuct_judege(0, character_id, _("H模式"), not_draw_flag = True)[0]:
-        return 1
+  """
+  口上用：当前实行值足以对自己邀请H
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  if character_id == 0:
     return 0
+  if instuct_judege.calculation_instuct_judege(
+      0, character_id, _("H模式"), not_draw_flag=True
+  )[0]:
+    return 1
+  return 0
 
 
 @add_premise(constant_promise.Premise.TARGET_INSTRUCT_JUDGE_H)
 def handle_target_instruct_judge_h(character_id: int) -> int:
-    """
-    口上用：当前实行值足以对交互对象邀请H
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    character_data = cache.character_data[character_id]
-    target_character_id = character_data.target_character_id
-    if character_id == target_character_id:
-        return 0
-    if instuct_judege.calculation_instuct_judege(character_id, target_character_id, _("H模式"), not_draw_flag = True)[0]:
-        return 1
+  """
+  口上用：当前实行值足以对交互对象邀请H
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  character_data = cache.character_data[character_id]
+  target_character_id = character_data.target_character_id
+  if character_id == target_character_id:
     return 0
+  if instuct_judege.calculation_instuct_judege(
+      character_id, target_character_id, _("H模式"), not_draw_flag=True
+  )[0]:
+    return 1
+  return 0
 
 
 @add_premise(constant_promise.Premise.TARGET_INSTRUCT_NOT_JUDGE_H)
 def handle_target_instruct_not_judge_h(character_id: int) -> int:
-    """
-    口上用：当前实行值不足以对交互对象邀请H
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return not handle_target_instruct_judge_h(character_id)
+  """
+  口上用：当前实行值不足以对交互对象邀请H
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  return not handle_target_instruct_judge_h(character_id)
 
 
 @add_premise(constant_promise.Premise.INSTRUCT_JUDGE_GROUP_SEX)
 def handle_instruct_judge_group_sex(character_id: int) -> int:
-    """
-    口上用：当前实行值足以对自己邀请群交
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    if character_id == 0:
-        return 0
-    if instuct_judege.calculation_instuct_judege(0, character_id, _("群交"), not_draw_flag = True)[0]:
-        return 1
+  """
+  口上用：当前实行值足以对自己邀请群交
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  if character_id == 0:
     return 0
+  if instuct_judege.calculation_instuct_judege(
+      0, character_id, _("群交"), not_draw_flag=True
+  )[0]:
+    return 1
+  return 0
 
 
 @add_premise(constant_promise.Premise.INSTRUCT_NOT_JUDGE_GROUP_SEX)
 def handle_instruct_not_judge_group_sex(character_id: int) -> int:
-    """
-    口上用：当前实行值不足以对自己邀请群交
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return not handle_instruct_judge_group_sex(character_id)
+  """
+  口上用：当前实行值不足以对自己邀请群交
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  return not handle_instruct_judge_group_sex(character_id)
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_CHARA_DIY_INSTRUCT)
 def handle_target_have_chara_diy_instruct(character_id: int) -> int:
-    """
-    交互对象有角色自定义指令且至少有一个序号0的子事件满足全前提
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    from Script.UI.Panel import event_option_panel
-    len_son_event_list, son_event_list = event_option_panel.get_target_chara_diy_instruct(character_id)
-    if len_son_event_list:
-        return 1
-    return 0
+  """
+  交互对象有角色自定义指令且至少有一个序号0的子事件满足全前提
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  from Script.UI.Panel import event_option_panel
+
+  len_son_event_list, son_event_list = (
+      event_option_panel.get_target_chara_diy_instruct(character_id)
+  )
+  if len_son_event_list:
+    return 1
+  return 0
 
 
 @add_premise(constant_promise.Premise.NO_TARGET_OR_TARGET_CAN_COOPERATE)
 def handle_no_target_or_target_can_cooperate(character_id: int) -> int:
-    """
-    无交互对象或交互对象可以协同指令
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    character_data = cache.character_data[character_id]
-    if character_data.target_character_id == 0:
-        return 1
-    # 交互对象：HP正常，未疲劳，未睡眠，267正常
-    elif (
-        handle_target_hp_ne_1(character_id) and
-        handle_t_tired_le_84(character_id) and
-        handle_t_action_not_sleep(character_id) and
-        _check_normal_combo(character_data.target_character_id, (2, 6, 7))
-        ):
-        return 1
-    return 0
+  """
+  无交互对象或交互对象可以协同指令
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  character_data = cache.character_data[character_id]
+  if character_data.target_character_id == 0:
+    return 1
+  # 交互对象：HP正常，未疲劳，未睡眠，267正常
+  elif (
+      handle_target_hp_ne_1(character_id)
+      and handle_t_tired_le_84(character_id)
+      and handle_t_action_not_sleep(character_id)
+      and _check_normal_combo(character_data.target_character_id, (2, 6, 7))
+  ):
+    return 1
+  return 0
 
 
-@add_premise(constant_promise.Premise.NO_TARGET_OR_TARGET_CAN_COOPERATE_OR_IMPRISONMENT_1)
-def handle_no_target_or_target_can_cooperate_or_imprisonment_1(character_id: int) -> int:
-    """
-    无交互对象或交互对象可以协同指令或交互对象被监禁
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    if handle_no_target_or_target_can_cooperate(character_id):
-        return 1
-    elif handle_t_imprisonment_1(character_id):
-        return 1
-    return 0
+@add_premise(
+    constant_promise.Premise.NO_TARGET_OR_TARGET_CAN_COOPERATE_OR_IMPRISONMENT_1
+)
+def handle_no_target_or_target_can_cooperate_or_imprisonment_1(
+    character_id: int,
+) -> int:
+  """
+  无交互对象或交互对象可以协同指令或交互对象被监禁
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  if handle_no_target_or_target_can_cooperate(character_id):
+    return 1
+  elif handle_t_imprisonment_1(character_id):
+    return 1
+  return 0
 
 
 @add_premise(constant_promise.Premise.NORMAL_ALL)
 def handle_normal_all(character_id: int) -> int:
-    """
-    没有任何异常的绝对正常状态
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return _check_normal_combo(character_id, (1, 2, 3, 4, 5, 6, 7))
+  """
+  没有任何异常的绝对正常状态
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  return _check_normal_combo(character_id, (1, 2, 3, 4, 5, 6, 7))
 
 
 @add_premise(constant_promise.Premise.NORMAL_1_2_4)
 def handle_normal_1_2_4(character_id: int) -> int:
-    """
-    124正常的普通状态
-    \n1:基础生理需求：休息、睡觉、解手、吃饭、沐浴（不含已洗澡）、挤奶、自慰
-    \n包括2:临盆、产后、监禁
-    \n包括4:大致全裸、全裸
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return _check_normal_combo(character_id, (1, 2, 4))
+  """
+  124正常的普通状态
+  \n1:基础生理需求：休息、睡觉、解手、吃饭、沐浴（不含已洗澡）、挤奶、自慰
+  \n包括2:临盆、产后、监禁
+  \n包括4:大致全裸、全裸
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  return _check_normal_combo(character_id, (1, 2, 4))
 
 
 @add_premise(constant_promise.Premise.NORMAL_2_3_4)
 def handle_normal_2_3_4(character_id: int) -> int:
-    """
-    234正常的普通状态
-    \n包括2:临盆、产后、监禁
-    \n包括3:助理、跟随、体检
-    \n包括4:大致全裸、全裸
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return _check_normal_combo(character_id, (2, 3, 4))
+  """
+  234正常的普通状态
+  \n包括2:临盆、产后、监禁
+  \n包括3:助理、跟随、体检
+  \n包括4:大致全裸、全裸
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  return _check_normal_combo(character_id, (2, 3, 4))
 
 
 @add_premise(constant_promise.Premise.NORMAL_2_5_6)
 def handle_normal_2_5_6(character_id: int) -> int:
-    """
-    256正常的普通状态
-    \n包括2:临盆、产后、监禁
-    \n5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
-    \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return _check_normal_combo(character_id, (2, 5, 6))
+  """
+  256正常的普通状态
+  \n包括2:临盆、产后、监禁
+  \n5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
+  \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  return _check_normal_combo(character_id, (2, 5, 6))
 
 
 @add_premise(constant_promise.Premise.NORMAL_1)
 def handle_normal_1(character_id: int) -> int:
-    """
-    1正常的普通状态
-    \n1:基础生理需求：休息、睡觉、解手、吃饭、沐浴（不含已洗澡）、挤奶、自慰
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    # 玩家直接反馈正常
-    if character_id == 0:
-        return 1
-    if(
-        handle_rest_flag_1(character_id)
-        or handle_sleep_flag_1(character_id)
-        or handle_pee_flag_1(character_id)
-        or handle_eat_food_flag_ge_1(character_id)
-        or handle_shower_flag_123(character_id)
-        or handle_milk_flag_1(character_id)
-        or handle_masturebate_flag_g_0(character_id)
-    ):
-        return 0
+  """
+  1正常的普通状态
+  \n1:基础生理需求：休息、睡觉、解手、吃饭、沐浴（不含已洗澡）、挤奶、自慰
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  # 玩家直接反馈正常
+  if character_id == 0:
     return 1
+  if (
+      handle_rest_flag_1(character_id)
+      or handle_sleep_flag_1(character_id)
+      or handle_pee_flag_1(character_id)
+      or handle_eat_food_flag_ge_1(character_id)
+      or handle_shower_flag_123(character_id)
+      or handle_milk_flag_1(character_id)
+      or handle_masturebate_flag_g_0(character_id)
+  ):
+    return 0
+  return 1
 
 
 @add_premise(constant_promise.Premise.NORMAL_2)
 def handle_normal_2(character_id: int) -> int:
-    """
-    \n2:AI行动基本停止：临盆、产后、监禁
-    \n包括2:临盆、产后、监禁
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    # 玩家直接反馈正常
-    if character_id == 0:
-        return 1
-    if(
-        handle_parturient_1(character_id)
-        or handle_postpartum_1(character_id)
-        or handle_imprisonment_1(character_id)
-    ):
-        return 0
+  """
+  \n2:AI行动基本停止：临盆、产后、监禁
+  \n包括2:临盆、产后、监禁
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  # 玩家直接反馈正常
+  if character_id == 0:
     return 1
+  if (
+      handle_parturient_1(character_id)
+      or handle_postpartum_1(character_id)
+      or handle_imprisonment_1(character_id)
+  ):
+    return 0
+  return 1
 
 
 @add_premise(constant_promise.Premise.NORMAL_3)
 def handle_normal_3(character_id: int) -> int:
-    """
-    3正常的普通状态
-    \n3:高优先级AI：助理、跟随、体检
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    # 玩家直接反馈正常
-    if character_id == 0:
-        return 1
-    if handle_is_assistant(character_id) or handle_is_follow(character_id):
-        return 0
-    # 今天没排体检、也不在等待名单上时，不可能在体检行动链中
-    if (
-        cache.character_data[character_id].action_info.health_check_today or character_id in cache.rhodes_island.waiting_for_exam_operator_ids
-    ) and handle_self_in_health_check_action_chain(character_id):
-        return 0
+  """
+  3正常的普通状态
+  \n3:高优先级AI：助理、跟随、体检
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  # 玩家直接反馈正常
+  if character_id == 0:
     return 1
+  if handle_is_assistant(character_id) or handle_is_follow(character_id):
+    return 0
+  # 今天没排体检、也不在等待名单上时，不可能在体检行动链中
+  if (
+      cache.character_data[character_id].action_info.health_check_today
+      or character_id in cache.rhodes_island.waiting_for_exam_operator_ids
+  ) and handle_self_in_health_check_action_chain(character_id):
+    return 0
+  return 1
 
 
 @add_premise(constant_promise.Premise.NORMAL_4)
 def handle_normal_4(character_id: int) -> int:
-    """
-    4正常的普通状态
-    \n4:服装异常：大致全裸、全裸
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    # 玩家直接反馈正常
-    if character_id == 0:
-        return 1
-    # 全裸必然大致全裸（5/6/8/9类都没穿），只查大致全裸即可
-    if handle_cloth_most_off(character_id):
-        return 0
+  """
+  4正常的普通状态
+  \n4:服装异常：大致全裸、全裸
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  # 玩家直接反馈正常
+  if character_id == 0:
     return 1
+  # 全裸必然大致全裸（5/6/8/9类都没穿），只查大致全裸即可
+  if handle_cloth_most_off(character_id):
+    return 0
+  return 1
 
 
 def _sleep_counts(character_id: int) -> int:
-    """
-    异常位5、6的睡眠项只在角色正在睡觉或处于睡眠无意识时才看睡眠等级
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 正在睡觉或睡眠无意识为1，否则为0
-    """
-    return handle_action_sleep(character_id) or handle_unconscious_flag_1(character_id)
+  """
+  异常位5、6的睡眠项只在角色正在睡觉或处于睡眠无意识时才看睡眠等级
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 正在睡觉或睡眠无意识为1，否则为0
+  """
+  return handle_action_sleep(character_id) or handle_unconscious_flag_1(
+      character_id
+  )
 
 
 @add_premise(constant_promise.Premise.NORMAL_5)
 def handle_normal_5(character_id: int) -> int:
-    """
-    5正常的普通状态
-    \n5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    # 玩家直接反馈正常
-    if character_id == 0:
-        return 1
-    # 平然
-    if handle_unconscious_flag_4(character_id):
-        return 0
-    # 睡眠（半梦半醒），只在睡觉或睡眠无意识时才算睡眠等级
-    if _sleep_counts(character_id) and handle_sleep_level_0(character_id):
-        return 0
-    # 醉酒，醉酒值为0时必为清醒
-    if cache.character_data[character_id].drunk_point > 0 and handle_drunk_level_2(character_id):
-        return 0
+  """
+  5正常的普通状态
+  \n5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  # 玩家直接反馈正常
+  if character_id == 0:
     return 1
+  # 平然
+  if handle_unconscious_flag_4(character_id):
+    return 0
+  # 睡眠（半梦半醒），只在睡觉或睡眠无意识时才算睡眠等级
+  if _sleep_counts(character_id) and handle_sleep_level_0(character_id):
+    return 0
+  # 醉酒，醉酒值为0时必为清醒
+  if cache.character_data[
+      character_id
+  ].drunk_point > 0 and handle_drunk_level_2(character_id):
+    return 0
+  return 1
 
 
 @add_premise(constant_promise.Premise.NORMAL_6)
 def handle_normal_6(character_id: int) -> int:
-    """
-    6正常的普通状态
-    \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），烂醉，时停，空气
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    # 玩家直接反馈正常
-    if character_id == 0:
-        return 1
-    # 时停、空气
-    if handle_time_stop_on(character_id) or handle_unconscious_flag_3(character_id) or handle_unconscious_flag_5(character_id):
-        return 0
-    # 睡眠（浅睡或熟睡或完全深眠），只在睡觉或睡眠无意识时才算睡眠等级
-    if _sleep_counts(character_id) and handle_sleep_level_ge_1(character_id):
-        return 0
-    # 烂醉，醉酒值为0时必为清醒
-    if cache.character_data[character_id].drunk_point > 0 and handle_drunk_level_3(character_id):
-        return 0
+  """
+  6正常的普通状态
+  \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），烂醉，时停，空气
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  # 玩家直接反馈正常
+  if character_id == 0:
     return 1
+  # 时停、空气
+  if (
+      handle_time_stop_on(character_id)
+      or handle_unconscious_flag_3(character_id)
+      or handle_unconscious_flag_5(character_id)
+  ):
+    return 0
+  # 睡眠（浅睡或熟睡或完全深眠），只在睡觉或睡眠无意识时才算睡眠等级
+  if _sleep_counts(character_id) and handle_sleep_level_ge_1(character_id):
+    return 0
+  # 烂醉，醉酒值为0时必为清醒
+  if cache.character_data[
+      character_id
+  ].drunk_point > 0 and handle_drunk_level_3(character_id):
+    return 0
+  return 1
 
 
 @add_premise(constant_promise.Premise.NORMAL_7)
 def handle_normal_7(character_id: int) -> int:
-    """
-    7正常的普通状态
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    # 玩家直接反馈正常
-    if character_id == 0:
-        return 1
-    if(
-        handle_be_bagged_1(character_id)
-        or handle_field_commission_1(character_id)
-        or handle_self_is_baby(character_id)
-        or handle_self_is_child(character_id)
-        or handle_in_diplomatic_visit_1_and_other_country(character_id)
-        or handle_escaping_1(character_id)
-    ):
-        return 0
+  """
+  7正常的普通状态
+  \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  # 玩家直接反馈正常
+  if character_id == 0:
     return 1
+  if (
+      handle_be_bagged_1(character_id)
+      or handle_field_commission_1(character_id)
+      or handle_self_is_baby(character_id)
+      or handle_self_is_child(character_id)
+      or handle_in_diplomatic_visit_1_and_other_country(character_id)
+      or handle_escaping_1(character_id)
+  ):
+    return 0
+  return 1
 
 
 @add_premise(constant_promise.Premise.T_NORMAL_7)
 def handle_t_normal_7(character_id: int) -> int:
-    """
-    交互对象7正常
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    character_data = cache.character_data[character_id]
-    return handle_normal_7(character_data.target_character_id)
+  """
+  交互对象7正常
+  \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  character_data = cache.character_data[character_id]
+  return handle_normal_7(character_data.target_character_id)
 
 
 @add_premise(constant_promise.Premise.NORMAL_2_4)
 def handle_normal_2_4(character_id: int) -> int:
-    """
-    24正常的普通状态
-    \n包括2:临盆、产后、监禁
-    \n包括4:大致全裸、全裸
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return _check_normal_combo(character_id, (2, 4))
+  """
+  24正常的普通状态
+  \n包括2:临盆、产后、监禁
+  \n包括4:大致全裸、全裸
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  return _check_normal_combo(character_id, (2, 4))
 
 
 @add_premise(constant_promise.Premise.NORMAL_267)
 def handle_normal_267(character_id: int) -> int:
-    """
-    267正常（可能基础异常、高优先级AI、服装异常或意识模糊）
-    \n2:AI行动基本停止：临盆、产后、监禁
-    \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return _check_normal_combo(character_id, (2, 6, 7))
+  """
+  267正常（可能基础异常、高优先级AI、服装异常或意识模糊）
+  \n2:AI行动基本停止：临盆、产后、监禁
+  \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
+  \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  return _check_normal_combo(character_id, (2, 6, 7))
 
 
 @add_premise(constant_promise.Premise.T_NORMAL_267)
 def handle_t_normal_267(character_id: int) -> int:
-    """
-    交互对象267正常（可能基础异常、高优先级AI、服装异常或意识模糊）
-    \n2:AI行动基本停止：临盆、产后、监禁
-    \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
-    return _check_normal_combo(target_chara_id, (2, 6, 7))
+  """
+  交互对象267正常（可能基础异常、高优先级AI、服装异常或意识模糊）
+  \n2:AI行动基本停止：临盆、产后、监禁
+  \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
+  \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  character_data = cache.character_data[character_id]
+  target_chara_id = character_data.target_character_id
+  return _check_normal_combo(target_chara_id, (2, 6, 7))
 
 
 @add_premise(constant_promise.Premise.NORMAL_2467)
 def handle_normal_2467(character_id: int) -> int:
-    """
-    2467正常（可能基础异常、高优先级AI或意识模糊）
-    \n2:AI行动基本停止：临盆、产后、监禁
-    \n4:服装异常：大致全裸、全裸
-    \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return _check_normal_combo(character_id, (2, 4, 6, 7))
+  """
+  2467正常（可能基础异常、高优先级AI或意识模糊）
+  \n2:AI行动基本停止：临盆、产后、监禁
+  \n4:服装异常：大致全裸、全裸
+  \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
+  \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  return _check_normal_combo(character_id, (2, 4, 6, 7))
 
 
 @add_premise(constant_promise.Premise.T_NORMAL_2467)
 def handle_t_normal_2467(character_id: int) -> int:
-    """
-    交互对象2467正常（可能基础异常、高优先级AI或意识模糊）
-    \n2:AI行动基本停止：临盆、产后、监禁
-    \n4:服装异常：大致全裸、全裸
-    \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
-    return _check_normal_combo(target_chara_id, (2, 4, 6, 7))
+  """
+  交互对象2467正常（可能基础异常、高优先级AI或意识模糊）
+  \n2:AI行动基本停止：临盆、产后、监禁
+  \n4:服装异常：大致全裸、全裸
+  \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
+  \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  character_data = cache.character_data[character_id]
+  target_chara_id = character_data.target_character_id
+  return _check_normal_combo(target_chara_id, (2, 4, 6, 7))
 
 
 @add_premise(constant_promise.Premise.NORMAL_23467)
 def handle_normal_23467(character_id: int) -> int:
-    """
-    23467正常（可能基础异常或意识模糊）
-    \n2:AI行动基本停止：临盆、产后、监禁
-    \n3:高优先级AI：助理、跟随、体检
-    \n4:服装异常：大致全裸、全裸
-    \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return _check_normal_combo(character_id, (2, 3, 4, 6, 7))
+  """
+  23467正常（可能基础异常或意识模糊）
+  \n2:AI行动基本停止：临盆、产后、监禁
+  \n3:高优先级AI：助理、跟随、体检
+  \n4:服装异常：大致全裸、全裸
+  \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
+  \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  return _check_normal_combo(character_id, (2, 3, 4, 6, 7))
 
 
 @add_premise(constant_promise.Premise.NORMAL_24567)
 def handle_normal_24567(character_id: int) -> int:
-    """
-    24567正常（可能基础异常、高优先级AI）
-    \n2:AI行动基本停止：临盆、产后、监禁
-    \n4:服装异常：大致全裸、全裸
-    \n5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
-    \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return _check_normal_combo(character_id, (2, 4, 5, 6, 7))
+  """
+  24567正常（可能基础异常、高优先级AI）
+  \n2:AI行动基本停止：临盆、产后、监禁
+  \n4:服装异常：大致全裸、全裸
+  \n5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
+  \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
+  \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  return _check_normal_combo(character_id, (2, 4, 5, 6, 7))
 
 
 @add_premise(constant_promise.Premise.T_NORMAL_24567)
 def handle_t_normal_24567(character_id: int) -> int:
-    """
-    交互对象24567正常（可能基础异常、高优先级AI）
-    \n2:AI行动基本停止：临盆、产后、监禁
-    \n4:服装异常：大致全裸、全裸
-    \n5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
-    \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
-    return _check_normal_combo(target_chara_id, (2, 4, 5, 6, 7))
+  """
+  交互对象24567正常（可能基础异常、高优先级AI）
+  \n2:AI行动基本停止：临盆、产后、监禁
+  \n4:服装异常：大致全裸、全裸
+  \n5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
+  \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
+  \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  character_data = cache.character_data[character_id]
+  target_chara_id = character_data.target_character_id
+  return _check_normal_combo(target_chara_id, (2, 4, 5, 6, 7))
 
 
 @add_premise(constant_promise.Premise.NORMAL_124567)
 def handle_normal_124567(character_id: int) -> int:
-    """
-    124567正常（可能基础异常、高优先级AI）
-    \n1:基础生理需求：休息、睡觉、解手、吃饭、沐浴（不含已洗澡）、挤奶、自慰
-    \n2:AI行动基本停止：临盆、产后、监禁
-    \n4:服装异常：大致全裸、全裸
-    \n5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
-    \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return _check_normal_combo(character_id, (1, 2, 4, 5, 6, 7))
+  """
+  124567正常（可能基础异常、高优先级AI）
+  \n1:基础生理需求：休息、睡觉、解手、吃饭、沐浴（不含已洗澡）、挤奶、自慰
+  \n2:AI行动基本停止：临盆、产后、监禁
+  \n4:服装异常：大致全裸、全裸
+  \n5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
+  \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
+  \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  return _check_normal_combo(character_id, (1, 2, 4, 5, 6, 7))
 
 
 @add_premise(constant_promise.Premise.NORMAL_1267)
 def handle_normal_1267(character_id: int) -> int:
-    """
-    1267正常（可能高优先级AI、服装异常或意识模糊）
-    \n1:基础生理需求：休息、睡觉、解手、吃饭、沐浴（不含已洗澡）、挤奶、自慰
-    \n2:AI行动基本停止：临盆、产后、监禁
-    \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return _check_normal_combo(character_id, (1, 2, 6, 7))
+  """
+  1267正常（可能高优先级AI、服装异常或意识模糊）
+  \n1:基础生理需求：休息、睡觉、解手、吃饭、沐浴（不含已洗澡）、挤奶、自慰
+  \n2:AI行动基本停止：临盆、产后、监禁
+  \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
+  \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  return _check_normal_combo(character_id, (1, 2, 6, 7))
 
 
 @add_premise(constant_promise.Premise.NORMAL_123467)
 def handle_normal_123467(character_id: int) -> int:
-    """
-    123467正常（可能意识模糊）
-    \n1:基础生理需求：休息、睡觉、解手、吃饭、沐浴（不含已洗澡）、挤奶、自慰
-    \n2:AI行动基本停止：临盆、产后、监禁
-    \n3:高优先级AI：助理、跟随、体检
-    \n4:服装异常：大致全裸、全裸
-    \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return _check_normal_combo(character_id, (1, 2, 3, 4, 6, 7))
+  """
+  123467正常（可能意识模糊）
+  \n1:基础生理需求：休息、睡觉、解手、吃饭、沐浴（不含已洗澡）、挤奶、自慰
+  \n2:AI行动基本停止：临盆、产后、监禁
+  \n3:高优先级AI：助理、跟随、体检
+  \n4:服装异常：大致全裸、全裸
+  \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
+  \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  return _check_normal_combo(character_id, (1, 2, 3, 4, 6, 7))
 
 
 @add_premise(constant_promise.Premise.T_NORMAL_1)
 def handle_t_normal_1(character_id: int) -> int:
-    """
-    交互对象1正常的普通状态
-    \n1:基础生理需求：休息、睡觉、解手、吃饭、沐浴（不含已洗澡）、挤奶、自慰
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    character_data = cache.character_data[character_id]
-    return _check_normal_combo(character_data.target_character_id, (1,))
+  """
+  交互对象1正常的普通状态
+  \n1:基础生理需求：休息、睡觉、解手、吃饭、沐浴（不含已洗澡）、挤奶、自慰
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  character_data = cache.character_data[character_id]
+  return _check_normal_combo(character_data.target_character_id, (1,))
 
 
 @add_premise(constant_promise.Premise.T_NORMAL_2)
 def handle_t_normal_2(character_id: int) -> int:
-    """
-    交互对象2正常的普通状态
-    \n包括2:临盆、产后、监禁
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    character_data = cache.character_data[character_id]
-    return _check_normal_combo(character_data.target_character_id, (2,))
+  """
+  交互对象2正常的普通状态
+  \n包括2:临盆、产后、监禁
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  character_data = cache.character_data[character_id]
+  return _check_normal_combo(character_data.target_character_id, (2,))
 
 
 @add_premise(constant_promise.Premise.T_NORMAL_6)
 def handle_t_normal_6(character_id: int) -> int:
-    """
-    交互对象6正常的普通状态
-    \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
-    return _check_normal_combo(target_chara_id, (6,))
+  """
+  交互对象6正常的普通状态
+  \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  character_data = cache.character_data[character_id]
+  target_chara_id = character_data.target_character_id
+  return _check_normal_combo(target_chara_id, (6,))
 
 
 @add_premise(constant_promise.Premise.UNNORMAL)
 def handle_unnormal(character_id: int) -> int:
-    """
-    有特殊需求的异常状态
-    \n包括1~7
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return _check_unnormal_combo(character_id, (1, 2, 3, 4, 5, 6, 7))
+  """
+  有特殊需求的异常状态
+  \n包括1~7
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  return _check_unnormal_combo(character_id, (1, 2, 3, 4, 5, 6, 7))
 
 
 @add_premise(constant_promise.Premise.UNNORMAL_2)
 def handle_unnormal_2(character_id: int) -> int:
-    """
-    2异常
-    \n2:AI行动基本停止：临盆、产后、监禁
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return _check_unnormal_combo(character_id, (2,))
+  """
+  2异常
+  \n2:AI行动基本停止：临盆、产后、监禁
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  return _check_unnormal_combo(character_id, (2,))
 
 
 @add_premise(constant_promise.Premise.UNNORMAL_27)
 def handle_unnormal_27(character_id: int) -> int:
-    """
-    27异常（AI停止或离线）
-    \n2:AI行动基本停止：临盆、产后、监禁
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return _check_unnormal_combo(character_id, (2, 7))
+  """
+  27异常（AI停止或离线）
+  \n2:AI行动基本停止：临盆、产后、监禁
+  \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  return _check_unnormal_combo(character_id, (2, 7))
 
 
 @add_premise(constant_promise.Premise.T_NORMAL_5_6)
 def handle_t_normal_5_6(character_id: int) -> int:
-    """
-    交互对象56正常
-    \n包括5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
-    \n包括6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
-    return _check_normal_combo(target_chara_id, (5, 6))
+  """
+  交互对象56正常
+  \n包括5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
+  \n包括6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  character_data = cache.character_data[character_id]
+  target_chara_id = character_data.target_character_id
+  return _check_normal_combo(target_chara_id, (5, 6))
 
 
 @add_premise(constant_promise.Premise.T_NORMAL_5_6_OR_UNCONSCIOUS_FLAG_4_7)
 def handle_t_normal_5_6_or_unconscious_flag_4_7(character_id: int) -> int:
-    """
-    交互对象56正常或平然或心控
-    \n包括5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
-    \n包括6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    if handle_t_normal_5_6(character_id) or handle_t_unconscious_flag_4(character_id) or handle_t_unconscious_flag_7(character_id):
-        return 1
-    else:
-        return 0
+  """
+  交互对象56正常或平然或心控
+  \n包括5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
+  \n包括6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  if (
+      handle_t_normal_5_6(character_id)
+      or handle_t_unconscious_flag_4(character_id)
+      or handle_t_unconscious_flag_7(character_id)
+  ):
+    return 1
+  else:
+    return 0
 
 
 @add_premise(constant_promise.Premise.T_UNNORMAL_5_6)
 def handle_t_unnormal_5_6(character_id: int) -> int:
-    """
-    交互对象5异常或6异常
-    \n包括5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
-    \n包括6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
-    return _check_unnormal_combo(target_chara_id, (5, 6))
+  """
+  交互对象5异常或6异常
+  \n包括5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
+  \n包括6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  character_data = cache.character_data[character_id]
+  target_chara_id = character_data.target_character_id
+  return _check_unnormal_combo(target_chara_id, (5, 6))
 
 
 @add_premise(constant_promise.Premise.T_UNNORMAL_6)
 def handle_t_unnormal_6(character_id: int) -> int:
-    """
-    交互对象6异常
-    \n包括6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
-    return _check_unnormal_combo(target_chara_id, (6,))
+  """
+  交互对象6异常
+  \n包括6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  character_data = cache.character_data[character_id]
+  target_chara_id = character_data.target_character_id
+  return _check_unnormal_combo(target_chara_id, (6,))
 
 
 @add_premise(constant_promise.Premise.UNNORMAL_567)
 def handle_unnormal_567(character_id: int) -> int:
-    """
-    自身5或6或7异常
-    \n包括5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
-    \n包括6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return _check_unnormal_combo(character_id, (5, 6, 7))
+  """
+  自身5或6或7异常
+  \n包括5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
+  \n包括6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
+  \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  return _check_unnormal_combo(character_id, (5, 6, 7))
 
 
 @add_premise(constant_promise.Premise.T_NORMAL_256_OR_UNCONSCIOUS_FLAG)
 def handle_t_normal_256_or_unconscious_flag(character_id: int) -> int:
-    """
-    交互对象256正常或无意识
-    \n包括2:临盆、产后、监禁
-    \n包括5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
-    \n包括6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
-    target_chara_id = character_data.target_character_id
-    if _check_normal_combo(target_chara_id, (2, 5, 6)):
-        return 1
-    if target_data.sp_flag.unconscious_h != 0:
-        return 1
-    return 0
+  """
+  交互对象256正常或无意识
+  \n包括2:临盆、产后、监禁
+  \n包括5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
+  \n包括6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  character_data = cache.character_data[character_id]
+  target_data = cache.character_data[character_data.target_character_id]
+  target_chara_id = character_data.target_character_id
+  if _check_normal_combo(target_chara_id, (2, 5, 6)):
+    return 1
+  if target_data.sp_flag.unconscious_h != 0:
+    return 1
+  return 0
 
 
 @add_premise(constant_promise.Premise.T_NORMAL_56_OR_UNCONSCIOUS_FLAG)
 def handle_t_normal_56_or_unconscious_flag(character_id: int) -> int:
-    """
-    交互对象56正常或无意识
-    \n包括5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
-    \n包括6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
-    target_chara_id = character_data.target_character_id
-    if _check_normal_combo(target_chara_id, (5, 6)):
-        return 1
-    if target_data.sp_flag.unconscious_h != 0:
-        return 1
-    return 0
+  """
+  交互对象56正常或无意识
+  \n包括5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
+  \n包括6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  character_data = cache.character_data[character_id]
+  target_data = cache.character_data[character_data.target_character_id]
+  target_chara_id = character_data.target_character_id
+  if _check_normal_combo(target_chara_id, (5, 6)):
+    return 1
+  if target_data.sp_flag.unconscious_h != 0:
+    return 1
+  return 0
 
 
 @add_premise(constant_promise.Premise.T_NORMAL_56_OR_H_OR_UNCONSCIOUS)
 def handle_t_normal_56_or_h_or_unconscious(character_id: int) -> int:
-    """
-    交互对象56正常或H中或无意识
-    \n用于H模式与日常均可用的指令：H中直接放行，日常则要求56正常或无意识
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
-    if target_data.sp_flag.is_h:
-        return 1
-    return handle_t_normal_56_or_unconscious_flag(character_id)
+  """
+  交互对象56正常或H中或无意识
+  \n用于H模式与日常均可用的指令：H中直接放行，日常则要求56正常或无意识
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  character_data = cache.character_data[character_id]
+  target_data = cache.character_data[character_data.target_character_id]
+  if target_data.sp_flag.is_h:
+    return 1
+  return handle_t_normal_56_or_unconscious_flag(character_id)
 
 
 @add_premise(constant_promise.Premise.T_UNNORMAL_567)
 def handle_t_unnormal_567(character_id: int) -> int:
-    """
-    交互对象5或6或7异常
-    \n包括5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
-    \n包括6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    character_data = cache.character_data[character_id]
-    target_chara_id = character_data.target_character_id
-    return _check_unnormal_combo(target_chara_id, (5, 6, 7))
+  """
+  交互对象5或6或7异常
+  \n包括5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
+  \n包括6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
+  \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  character_data = cache.character_data[character_id]
+  target_chara_id = character_data.target_character_id
+  return _check_unnormal_combo(target_chara_id, (5, 6, 7))
 
 
 @add_premise(constant_promise.Premise.NORMAL_ALL_EXCEPT_SPECIAL_HYPNOSIS)
 def handle_normal_all_except_special_hypnosis(character_id: int) -> int:
-    """
-    没有任何异常的普通状态或被空气或体控催眠中
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    if handle_normal_all(character_id):
-        return 1
-    elif (
-        handle_unconscious_flag_5(character_id) or
-        handle_unconscious_flag_6(character_id)
-        ):
-        return 1
-    else:
-        return 0
+  """
+  没有任何异常的普通状态或被空气或体控催眠中
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  if handle_normal_all(character_id):
+    return 1
+  elif handle_unconscious_flag_5(character_id) or handle_unconscious_flag_6(
+      character_id
+  ):
+    return 1
+  else:
+    return 0
+
 
 @add_premise(constant_promise.Premise.HAVE_INSTRUMENT_OR_IN_MUSIC_ROOM)
 def handle_have_instrument_or_in_music_room(character_id: int) -> int:
-    """
-    校验角色是否已持有乐器或在乐器练习室里
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    if handle_have_instrument(character_id):
-        return 1
-    if handle_in_music_room(character_id):
-        return 1
-    return 0
+  """
+  校验角色是否已持有乐器或在乐器练习室里
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  if handle_have_instrument(character_id):
+    return 1
+  if handle_in_music_room(character_id):
+    return 1
+  return 0
 
-@add_premise(constant_promise.Premise.DESIRE_POINT_GE_80_OR_MASTUREBATE_TO_PL_FLAG_1)
-def handle_masturebate_to_pl_flag_1_or_desire_point_ge_80(character_id: int) -> int:
-    """
-    校验角色自身欲望值≥80或要找玩家逆推来自慰状态
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    if handle_desire_point_ge_80(character_id):
-        return 1
-    if handle_masturebate_to_pl_flag_1(character_id):
-        return 1
-    return 0
+
+@add_premise(
+    constant_promise.Premise.DESIRE_POINT_GE_80_OR_MASTUREBATE_TO_PL_FLAG_1
+)
+def handle_masturebate_to_pl_flag_1_or_desire_point_ge_80(
+    character_id: int,
+) -> int:
+  """
+  校验角色自身欲望值≥80或要找玩家逆推来自慰状态
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  if handle_desire_point_ge_80(character_id):
+    return 1
+  if handle_masturebate_to_pl_flag_1(character_id):
+    return 1
+  return 0
+
 
 @add_premise(constant_promise.Premise.NOT_IS_ASSISTANT_AND_IN_DR_ROOM)
 def handle_not_is_assistant_and_in_dr_room(character_id: int) -> int:
-    """
-    不符合自己是当前的助理干员且正在博士房间里的条件
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    if handle_is_assistant(character_id) and handle_in_dr_room(character_id):
-        return 0
-    return 1
+  """
+  不符合自己是当前的助理干员且正在博士房间里的条件
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  if handle_is_assistant(character_id) and handle_in_dr_room(character_id):
+    return 0
+  return 1
+
 
 @add_premise(constant_promise.Premise.T_WORK_IS_WARDEN_OR_T_ASSISTANT)
 def handle_t_work_is_warden_or_t_assistant(character_id: int) -> int:
-    """
-    交互对象的工作为监狱长或交互对象是助理
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    character_data: game_type.Character = cache.character_data[character_id]
-    if handle_work_is_warden(character_data.target_character_id):
-        return 1
-    if handle_is_assistant(character_data.target_character_id):
-        return 1
-    return 0
+  """
+  交互对象的工作为监狱长或交互对象是助理
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  character_data: game_type.Character = cache.character_data[character_id]
+  if handle_work_is_warden(character_data.target_character_id):
+    return 1
+  if handle_is_assistant(character_data.target_character_id):
+    return 1
+  return 0
 
-@add_premise(constant_promise.Premise.DR_HAVE_SEX_POSITION_OR_PENIS_IN_T_ANYPART)
+
+@add_premise(
+    constant_promise.Premise.DR_HAVE_SEX_POSITION_OR_PENIS_IN_T_ANYPART
+)
 def handle_dr_have_sex_position_or_penis_in_t_anypart(character_id: int) -> int:
-    """
-    博士有任意体位或当前阴茎位置为交互对象_任意存在位置
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    if handle_dr_have_sex_position(character_id):
-        return 1
-    if handle_penis_in_t_anypart(character_id):
-        return 1
-    return 0
+  """
+  博士有任意体位或当前阴茎位置为交互对象_任意存在位置
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  if handle_dr_have_sex_position(character_id):
+    return 1
+  if handle_penis_in_t_anypart(character_id):
+    return 1
+  return 0
 
-@add_premise(constant_promise.Premise.IN_KITCHEN_OR_IN_DR_ROOM_AND_DR_ROOM_LEVEL_GE_2)
-def handle_in_kitchen_or_in_dr_room_and_dr_room_level_ge_2(character_id: int) -> int:
-    """
-    在厨房或者在等级大于等于2级的博士房间
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    if handle_in_kitchen(character_id):
-        return 1
-    if handle_in_dr_room(character_id) and handle_dr_room_level_ge_2(character_id):
-        return 1
-    return 0
+
+@add_premise(
+    constant_promise.Premise.IN_KITCHEN_OR_IN_DR_ROOM_AND_DR_ROOM_LEVEL_GE_2
+)
+def handle_in_kitchen_or_in_dr_room_and_dr_room_level_ge_2(
+    character_id: int,
+) -> int:
+  """
+  在厨房或者在等级大于等于2级的博士房间
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  if handle_in_kitchen(character_id):
+    return 1
+  if handle_in_dr_room(character_id) and handle_dr_room_level_ge_2(
+      character_id
+  ):
+    return 1
+  return 0
+
 
 @add_premise(constant_promise.Premise.PLAYER_NOT_H_OR_HIDDEN_SEX_MODE)
 def handle_player_not_h_or_hidden_sex_mode(character_id: int) -> int:
-    """
-    玩家不在H模式或在隐奸模式中
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    if handle_not_h(character_id) or handle_player_in_hidden_sex_mode(character_id):
-        return 1
-    return 0
+  """
+  玩家不在H模式或在隐奸模式中
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  if handle_not_h(character_id) or handle_player_in_hidden_sex_mode(
+      character_id
+  ):
+    return 1
+  return 0
+
 
 @add_premise(constant_promise.Premise.TIRED_LE_84_AND_DRUNK_LEVEL_NOT_3)
 def handle_tired_le_84_and_drunk_level_not_3(character_id: int) -> int:
-    """
-    疲劳值小于等于84且醉酒等级不为3
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    if handle_tired_le_84(character_id) and not handle_drunk_level_3(character_id):
-        return 1
-    return 0
+  """
+  疲劳值小于等于84且醉酒等级不为3
+  Keyword arguments:
+  character_id -- 角色id
+  Return arguments:
+  int -- 权重
+  """
+  if handle_tired_le_84(character_id) and not handle_drunk_level_3(
+      character_id
+  ):
+    return 1
+  return 0

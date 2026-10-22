@@ -24,31 +24,31 @@ def pcmd(
     on_style="onbutton",
     tooltip: str = "",
 ):
-    """
-    打印一条指令
-    Keyword arguments:
-    cmd_str -- 命令对应文字
-    cmd_id -- 命令响应文本
-    cmd_func -- 命令函数
-    arg -- 传给命令函数的顺序参数
-    kw -- 传给命令函数的字典参数
-    normal_style -- 正常状态下命令显示样式
-    on_style -- 鼠标在其上的时候命令显示样式
-    """
-    cache.text_wait = float(normal_config.config_normal.text_wait)
-    global last_char
-    if len(cmd_str) > 0:
-        last_char = cmd_str[-1:]
-    flow_handle.print_cmd(
-        cmd_str,
-        cmd_id,
-        cmd_func,
-        arg,
-        kw,
-        normal_style,
-        on_style,
-        tooltip,
-    )
+  """
+  打印一条指令
+  Keyword arguments:
+  cmd_str -- 命令对应文字
+  cmd_id -- 命令响应文本
+  cmd_func -- 命令函数
+  arg -- 传给命令函数的顺序参数
+  kw -- 传给命令函数的字典参数
+  normal_style -- 正常状态下命令显示样式
+  on_style -- 鼠标在其上的时候命令显示样式
+  """
+  cache.text_wait = float(normal_config.config_normal.text_wait)
+  global last_char
+  if len(cmd_str) > 0:
+    last_char = cmd_str[-1:]
+  flow_handle.print_cmd(
+      cmd_str,
+      cmd_id,
+      cmd_func,
+      arg,
+      kw,
+      normal_style,
+      on_style,
+      tooltip,
+  )
 
 
 def pimagecmd(
@@ -59,62 +59,63 @@ def pimagecmd(
     kw={},
     tooltip: str = "",
 ):
-    """
-    打印图片按钮
-    Keyword arguments:
-    cmd_str -- 命令对应文字
-    cmd_id -- 命令响应文本
-    cmd_func -- 命令函数
-    arg -- 传给命令函数的顺序参数
-    kw -- 传给命令函数的字典参数
-    """
-    cache.text_wait = float(normal_config.config_normal.text_wait)
-    global last_char
-    if len(cmd_str) > 0:
-        last_char = cmd_str[-1:]
-    flow_handle.print_image_cmd(cmd_str, cmd_id, cmd_func, arg, kw, tooltip)
+  """
+  打印图片按钮
+  Keyword arguments:
+  cmd_str -- 命令对应文字
+  cmd_id -- 命令响应文本
+  cmd_func -- 命令函数
+  arg -- 传给命令函数的顺序参数
+  kw -- 传给命令函数的字典参数
+  """
+  cache.text_wait = float(normal_config.config_normal.text_wait)
+  global last_char
+  if len(cmd_str) > 0:
+    last_char = cmd_str[-1:]
+  flow_handle.print_image_cmd(cmd_str, cmd_id, cmd_func, arg, kw, tooltip)
 
 
 unused_cmd_num = 500
 
 
 def get_unused_cmd_num():
-    """
-    获得一个没有使用的命令编号，从500开始
-    """
-    global unused_cmd_num
-    unused_cmd_num += 1
-    return unused_cmd_num
+  """
+  获得一个没有使用的命令编号，从500开始
+  """
+  global unused_cmd_num
+  unused_cmd_num += 1
+  return unused_cmd_num
 
 
 # 清除命令，没有参数则清除所有命令
 def clr_cmd(*number, clr_default_flow=True):
-    """
-    清除绑定命令和默认处理函数
-    Keyword arguments:
-    number -- 清楚绑定命令数字
-    clr_default_flow -- 是否同时清除默认处理函数
-    """
-    if clr_default_flow:
-        clear_default_flow()
-    if number:
-        flow_handle.cmd_clear(number)
-    else:
-        global unused_cmd_num
-        unused_cmd_num = 500
-        flow_handle.cmd_clear()
+  """
+  清除绑定命令和默认处理函数
+  Keyword arguments:
+  number -- 清楚绑定命令数字
+  clr_default_flow -- 是否同时清除默认处理函数
+  """
+  if clr_default_flow:
+    clear_default_flow()
+  if number:
+    flow_handle.cmd_clear(number)
+  else:
+    global unused_cmd_num
+    unused_cmd_num = 500
+    flow_handle.cmd_clear()
 
 
 def focus_cmd():
-    """
-    使光标聚焦在命令输出框上
-    """
-    # Web模式下不执行tkinter的焦点操作，避免线程错误
-    if normal_config.config_normal.web_draw:
-        return
-    try:
-        # 仅在需要时导入，避免Web/无显示环境在模块导入阶段触发Tk初始化
-        from Script.Core import main_frame
-        main_frame.inputbox.focus_force()
-    except Exception:
-        return
+  """
+  使光标聚焦在命令输出框上
+  """
+  # Web模式下不执行tkinter的焦点操作，避免线程错误
+  if normal_config.config_normal.web_draw:
+    return
+  try:
+    # 仅在需要时导入，避免Web/无显示环境在模块导入阶段触发Tk初始化
+    from Script.Core import main_frame
+
+    main_frame.inputbox.focus_force()
+  except Exception:
+    return

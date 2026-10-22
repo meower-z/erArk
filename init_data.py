@@ -13,7 +13,6 @@ game_config.init()
 
 from Script.Config import map_config
 
-
 map_config.init_map_data()
 
 

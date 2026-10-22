@@ -9,7 +9,7 @@ from Script.Core import (
     game_type,
     get_text,
     io_init,
-    old_chara_to_new
+    old_chara_to_new,
 )
 from Script.Config import normal_config, game_config, character_config
 from Script.Design import attr_calculation, character_handle, map_handle
@@ -25,98 +25,99 @@ _: FunctionType = get_text._
 
 
 def get_save_dir_path(save_id: str) -> str:
-    """
-    按存档id获取存档所在系统路径
-    Keyword arguments:
-    save_id -- 存档id
-    """
-    save_path = os.path.join("save")
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
-    return os.path.join(save_path, save_id)
+  """
+  按存档id获取存档所在系统路径
+  Keyword arguments:
+  save_id -- 存档id
+  """
+  save_path = os.path.join("save")
+  if not os.path.exists(save_path):
+    os.makedirs(save_path)
+  return os.path.join(save_path, save_id)
 
 
 def judge_save_file_exist(save_id: str) -> bool:
-    """
-    判断存档id对应的存档是否存在
-    Keyword arguments:
-    save_id -- 存档id
-    """
-    save_head_path = os.path.join(get_save_dir_path(save_id), "0")
-    if not os.path.exists(save_head_path):
-        return False
-    save_path = os.path.join(get_save_dir_path(save_id), "1")
-    if not os.path.exists(save_path):
-        return False
-    return True
+  """
+  判断存档id对应的存档是否存在
+  Keyword arguments:
+  save_id -- 存档id
+  """
+  save_head_path = os.path.join(get_save_dir_path(save_id), "0")
+  if not os.path.exists(save_head_path):
+    return False
+  save_path = os.path.join(get_save_dir_path(save_id), "1")
+  if not os.path.exists(save_path):
+    return False
+  return True
 
 
 def establish_save(save_id: str):
-    """
-    将游戏数据存入指定id的存档内
-    Keyword arguments:
-    save_id -- 存档id
-    """
-    establish_save_linux(save_id)
-    return
+  """
+  将游戏数据存入指定id的存档内
+  Keyword arguments:
+  save_id -- 存档id
+  """
+  establish_save_linux(save_id)
+  return
 
 
 def establish_save_linux(save_id: str):
-    """
-    针对linux的并行自动存档函数
-    笔记:得益于unix的fork机制,子进程直接复制了一份内存,效率高,且不用创建传参管道,数据进程安全,不受玩家操作影响
-    Keyword argumentsL
-    save_id -- 当前存档id
-    """
-    # 如果是web模式且不是自动存档
-    if cache.web_mode and save_id != "auto":
-        # 清理Web模式图片缓存（避免缓存数据被序列化到存档中）
-        try:
-            from Script.System.Web_Draw_System.image_processor import clear_image_cache
-            clear_image_cache()
-        except ImportError:
-            pass  # 如果模块不存在，忽略
-    
-    save_verson = {
-        "game_verson": normal_config.config_normal.verson,
-        "game_time": cache.game_time,
-        "character_name": cache.character_data[0].name,
-        "save_time": datetime.datetime.now(),
-    }
-    data = {
-        "1": cache,
-        "0": save_verson,
-    }
-    for key, value in data.items():
-        write_save_data(save_id, key, value)
+  """
+  针对linux的并行自动存档函数
+  笔记:得益于unix的fork机制,子进程直接复制了一份内存,效率高,且不用创建传参管道,数据进程安全,不受玩家操作影响
+  Keyword argumentsL
+  save_id -- 当前存档id
+  """
+  # 如果是web模式且不是自动存档
+  if cache.web_mode and save_id != "auto":
+    # 清理Web模式图片缓存（避免缓存数据被序列化到存档中）
+    try:
+      from Script.System.Web_Draw_System.image_processor import clear_image_cache
+
+      clear_image_cache()
+    except ImportError:
+      pass  # 如果模块不存在，忽略
+
+  save_verson = {
+      "game_verson": normal_config.config_normal.verson,
+      "game_time": cache.game_time,
+      "character_name": cache.character_data[0].name,
+      "save_time": datetime.datetime.now(),
+  }
+  data = {
+      "1": cache,
+      "0": save_verson,
+  }
+  for key, value in data.items():
+    write_save_data(save_id, key, value)
 
 
 def load_save_info_head(save_id: str) -> dict:
-    """
-    获取存档的头部信息
-    Keyword arguments:
-    save_id -- 存档id
-    """
-    save_path = get_save_dir_path(save_id)
-    file_path = os.path.join(save_path, "0")
-    with open(file_path, "rb") as f:
-        return pickle.load(f)
+  """
+  获取存档的头部信息
+  Keyword arguments:
+  save_id -- 存档id
+  """
+  save_path = get_save_dir_path(save_id)
+  file_path = os.path.join(save_path, "0")
+  with open(file_path, "rb") as f:
+    return pickle.load(f)
 
 
 def write_save_data(save_id: str, data_id: str, write_data: dict):
-    """
-    将存档数据写入文件
-    Keyword arguments:
-    save_id -- 存档id
-    data_id -- 要写入的数据在存档下的文件id
-    write_data -- 要写入的数据
-    """
-    save_path = get_save_dir_path(save_id)
-    file_path = os.path.join(save_path, data_id)
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
-    with open(file_path, "wb+") as f:
-        pickle.dump(write_data, f)
+  """
+  将存档数据写入文件
+  Keyword arguments:
+  save_id -- 存档id
+  data_id -- 要写入的数据在存档下的文件id
+  write_data -- 要写入的数据
+  """
+  save_path = get_save_dir_path(save_id)
+  file_path = os.path.join(save_path, data_id)
+  if not os.path.exists(save_path):
+    os.makedirs(save_path)
+  with open(file_path, "wb+") as f:
+    pickle.dump(write_data, f)
 
 
 _ENTERTAINMENT_CID_MIGRATE = {175: 152, 176: 153, 177: 154, 178: 155}
@@ -126,49 +127,57 @@ _ENTERTAINMENT_CID_MIGRATE = {175: 152, 176: 153, 177: 154, 178: 155}
 
 
 def _migrate_entertainment_cid(value):
-    """
-    把存档里的旧娱乐编号换成新编号
-    Keyword arguments:
-    value -- 存档里的娱乐cid（也可能是别的类型，原样返回）
-    Return arguments:
-    value -- 换算后的娱乐cid
-    功能: 只在旧编号已经不在 Entertainment.csv 里、新编号在 Entertainment.csv 里时才换：日后大浴场段真的用上 175 时，
-          新档里的 175 就是那项浴场娱乐，不该被当成旧编号改掉；新编号不在表里时原样返回，
-          由 old_chara_to_new.migrate_age_and_body_type 按表里没有的编号处理
-    """
-    from Script.Config import game_config
+  """
+  把存档里的旧娱乐编号换成新编号
+  Keyword arguments:
+  value -- 存档里的娱乐cid（也可能是别的类型，原样返回）
+  Return arguments:
+  value -- 换算后的娱乐cid
+  功能: 只在旧编号已经不在 Entertainment.csv 里、新编号在 Entertainment.csv 里时才换：日后大浴场段真的用上 175 时，
+        新档里的 175 就是那项浴场娱乐，不该被当成旧编号改掉；新编号不在表里时原样返回，
+        由 old_chara_to_new.migrate_age_and_body_type 按表里没有的编号处理
+  """
+  from Script.Config import game_config
 
-    if (
-        isinstance(value, int)
-        and not isinstance(value, bool)
-        and value in _ENTERTAINMENT_CID_MIGRATE
-        and value not in game_config.config_entertainment
-        and _ENTERTAINMENT_CID_MIGRATE[value] in game_config.config_entertainment
-    ):
-        return _ENTERTAINMENT_CID_MIGRATE[value]
-    return value
+  if (
+      isinstance(value, int)
+      and not isinstance(value, bool)
+      and value in _ENTERTAINMENT_CID_MIGRATE
+      and value not in game_config.config_entertainment
+      and _ENTERTAINMENT_CID_MIGRATE[value] in game_config.config_entertainment
+  ):
+    return _ENTERTAINMENT_CID_MIGRATE[value]
+  return value
 
 
 def _migrate_child_schedule_template(rhodes_island_data) -> int:
-    """
-    把罗德岛数据里日程模板各时段存的旧娱乐编号换成新编号
-    Keyword arguments:
-    rhodes_island_data -- 存档里的 Rhodes_Island 对象（须已有 child_schedule_template 字段）
-    Return arguments:
-    int -- 换掉的时段数
-    """
-    count = 0
-    for template_data in getattr(rhodes_island_data, "child_schedule_template", {}).values():
-        slot_data = template_data.get("slot", {}) if isinstance(template_data, dict) else {}
-        for slot in list(slot_data):
-            new_cid = _migrate_entertainment_cid(slot_data[slot])
-            if new_cid != slot_data[slot]:
-                slot_data[slot] = new_cid
-                count += 1
-    return count
+  """
+  把罗德岛数据里日程模板各时段存的旧娱乐编号换成新编号
+  Keyword arguments:
+  rhodes_island_data -- 存档里的 Rhodes_Island 对象（须已有 child_schedule_template 字段）
+  Return arguments:
+  int -- 换掉的时段数
+  """
+  count = 0
+  for template_data in getattr(
+      rhodes_island_data, "child_schedule_template", {}
+  ).values():
+    slot_data = (
+        template_data.get("slot", {}) if isinstance(template_data, dict) else {}
+    )
+    for slot in list(slot_data):
+      new_cid = _migrate_entertainment_cid(slot_data[slot])
+      if new_cid != slot_data[slot]:
+        slot_data[slot] = new_cid
+        count += 1
+  return count
 
 
-_OFFICIAL_EVENT_UID_MIGRATE = {"萝莉1": "期末17", "萝莉20": "期末18", "萝莉26": "期末19"}
+_OFFICIAL_EVENT_UID_MIGRATE = {
+    "萝莉1": "期末17",
+    "萝莉20": "期末18",
+    "萝莉26": "期末19",
+}
 """ 挪了桶的养成事件（Plan 32 L22）：旧uid → 新uid。
     写成绩单的萝莉 1 / 20 / 26 挪进期末桶后换了uid，而事件按uid逐角色去重（official_event_handle.judge_event_done）：
     旧档履历里记的是旧uid，不改名的话，经历过它们的孩子会在学期切换时再遇到一次同文同选项的期末 17 / 18 / 19，
@@ -176,937 +185,1159 @@ _OFFICIAL_EVENT_UID_MIGRATE = {"萝莉1": "期末17", "萝莉20": "期末18", "�
 
 
 def _migrate_official_event_history(history_data: dict) -> int:
-    """
-    把事件履历里挪了桶的事件的旧uid改成新uid
-    Keyword arguments:
-    history_data -- 事件履历：CHILD_GROWTH.event_history 以uid为键，罗德岛的 official_event_history 以「uid@角色id」为键（无主体时就是uid）
-    Return arguments:
-    int -- 改了名的条数
-    功能: 只在旧uid已不在配置里、且新键还没有记录时才改（与 _migrate_entertainment_cid 同样的保护），重复读档是幂等的；
-          新键已有记录时旧键原样留着，履历面板查不到配置会跳过它
-    """
-    from Script.Config import game_config
+  """
+  把事件履历里挪了桶的事件的旧uid改成新uid
+  Keyword arguments:
+  history_data -- 事件履历：CHILD_GROWTH.event_history 以uid为键，罗德岛的 official_event_history 以「uid@角色id」为键（无主体时就是uid）
+  Return arguments:
+  int -- 改了名的条数
+  功能: 只在旧uid已不在配置里、且新键还没有记录时才改（与 _migrate_entertainment_cid 同样的保护），重复读档是幂等的；
+        新键已有记录时旧键原样留着，履历面板查不到配置会跳过它
+  """
+  from Script.Config import game_config
 
-    count = 0
-    for key in list(history_data):
-        if not isinstance(key, str):
-            continue
-        uid, sep, suffix = key.partition("@")
-        if uid not in _OFFICIAL_EVENT_UID_MIGRATE or uid in game_config.config_official_event:
-            continue
-        new_key = _OFFICIAL_EVENT_UID_MIGRATE[uid] + sep + suffix
-        if new_key in history_data:
-            continue
-        history_data[new_key] = history_data.pop(key)
-        count += 1
-    return count
+  count = 0
+  for key in list(history_data):
+    if not isinstance(key, str):
+      continue
+    uid, sep, suffix = key.partition("@")
+    if (
+        uid not in _OFFICIAL_EVENT_UID_MIGRATE
+        or uid in game_config.config_official_event
+    ):
+      continue
+    new_key = _OFFICIAL_EVENT_UID_MIGRATE[uid] + sep + suffix
+    if new_key in history_data:
+      continue
+    history_data[new_key] = history_data.pop(key)
+    count += 1
+  return count
 
 
 def _normalize_save_path(path_text):
-    """
-    将存档中的路径文本转换为当前系统的路径格式
-    Keyword arguments:
-    path_text -- 可能包含其他系统路径分隔符的值
-    Return arguments:
-    str/object -- 字符串路径会被归一化，其他类型原样返回
-    """
-    foreign_sep = "\\" if os.sep == "/" else "/"
-    if isinstance(path_text, str) and foreign_sep in path_text:
-        return path_text.replace(foreign_sep, os.sep)
-    return path_text
+  """
+  将存档中的路径文本转换为当前系统的路径格式
+  Keyword arguments:
+  path_text -- 可能包含其他系统路径分隔符的值
+  Return arguments:
+  str/object -- 字符串路径会被归一化，其他类型原样返回
+  """
+  foreign_sep = "\\" if os.sep == "/" else "/"
+  if isinstance(path_text, str) and foreign_sep in path_text:
+    return path_text.replace(foreign_sep, os.sep)
+  return path_text
 
 
 def _normalize_save_path_keys(path_dict):
-    """
-    归一化以场景或地图路径为键的存档字典
-    Keyword arguments:
-    path_dict -- 以路径文本为键的字典
-    Return arguments:
-    dict/object -- 有外来分隔符时返回归一化后的字典，否则原样返回
-    """
-    if not isinstance(path_dict, dict):
-        return path_dict
-    if not any(_normalize_save_path(key) != key for key in path_dict):
-        return path_dict
-    return {_normalize_save_path(key): value for key, value in path_dict.items()}
+  """
+  归一化以场景或地图路径为键的存档字典
+  Keyword arguments:
+  path_dict -- 以路径文本为键的字典
+  Return arguments:
+  dict/object -- 有外来分隔符时返回归一化后的字典，否则原样返回
+  """
+  if not isinstance(path_dict, dict):
+    return path_dict
+  if not any(_normalize_save_path(key) != key for key in path_dict):
+    return path_dict
+  return {_normalize_save_path(key): value for key, value in path_dict.items()}
 
 
 def _migrate_first_record_flat_fields(character) -> None:
-    """
-    将旧存档FIRST_RECORD中的平铺处女字段迁移进first_part_sex_dict
-    Keyword arguments:
-    character -- 反序列化得到的角色对象（旧档判据：first_record无first_part_sex_dict属性，二次载入幂等）
-    Return arguments:
-    None
-    """
-    first_record = getattr(character, "first_record", None)
-    if first_record is None or hasattr(first_record, "first_part_sex_dict"):
-        return
-    default_time = datetime.datetime(1, 1, 1)
-    # 先补齐9个新dict默认值
-    first_record.first_part_sex_dict = {}
-    first_record.first_shoot_body_dict = {}
-    first_record.first_strong_orgasm_dict = {}
-    first_record.first_super_orgasm_dict = {}
-    first_record.first_plural_orgasm_dict = {}
-    first_record.fall_talent_time_dict = {}
-    first_record.first_mark_dict = {}
-    first_record.first_h_mode_dict = {}
-    first_record.first_special_record_dict = {}
-    # 仅NPC：V处女平铺字段转入键6，随后重置回默认值（字段保留给玩家童贞用，不delattr）
-    if getattr(character, "cid", 0) != 0 and getattr(first_record, "first_sex_id", -1) != -1:
-        first_record.first_part_sex_dict[6] = {
-            "id": first_record.first_sex_id,
-            "time": first_record.first_sex_time,
-            "place": list(first_record.first_sex_place),
-            "posture": first_record.first_sex_posture,
-            "item": getattr(first_record, "first_sex_item", -1),
-        }
-        first_record.first_sex_id = -1
-        first_record.first_sex_time = default_time
-        first_record.first_sex_place = ["0"]
-        first_record.first_sex_posture = ""
-        first_record.first_sex_item = -1
-    # A处女平铺字段转入键8
-    if getattr(first_record, "first_a_sex_id", -1) != -1:
-        first_record.first_part_sex_dict[8] = {
-            "id": first_record.first_a_sex_id,
-            "time": first_record.first_a_sex_time,
-            "place": list(first_record.first_a_sex_place),
-            "posture": first_record.first_a_sex_posture,
-            "item": getattr(first_record, "first_a_sex_item", -1),
-        }
-    # U处女平铺字段转入键9（旧道具编号1采尿器改记为2）
-    if getattr(first_record, "first_u_sex_id", -1) != -1:
-        old_u_item = getattr(first_record, "first_u_sex_item", -1)
-        first_record.first_part_sex_dict[9] = {
-            "id": first_record.first_u_sex_id,
-            "time": first_record.first_u_sex_time,
-            "place": list(first_record.first_u_sex_place),
-            "posture": first_record.first_u_sex_posture,
-            "item": 2 if old_u_item == 1 else old_u_item,
-        }
-    # W处女平铺字段转入键7
-    if getattr(first_record, "first_w_sex_id", -1) != -1:
-        first_record.first_part_sex_dict[7] = {
-            "id": first_record.first_w_sex_id,
-            "time": first_record.first_w_sex_time,
-            "place": list(first_record.first_w_sex_place),
-            "posture": first_record.first_w_sex_posture,
-            "item": -1,
-        }
-    # M处女时间转入键2（旧档只有时间，无对象/姿势/道具信息）
-    if getattr(first_record, "first_m_sex_time", default_time).year > 1:
-        first_record.first_part_sex_dict[2] = {
-            "id": -1,
-            "time": first_record.first_m_sex_time,
-            "place": ["0"],
-            "posture": "",
-            "item": -1,
-        }
-    # 清理已从类中删除的平铺字段，避免被recursive_update当孤儿属性带进新对象
-    for old_attr in (
-        "first_a_sex_id", "first_a_sex_time", "first_a_sex_place", "first_a_sex_posture", "first_a_sex_item",
-        "first_u_sex_id", "first_u_sex_time", "first_u_sex_place", "first_u_sex_posture", "first_u_sex_item",
-        "first_w_sex_id", "first_w_sex_time", "first_w_sex_place", "first_w_sex_posture",
-        "first_m_sex_time",
-    ):
-        if hasattr(first_record, old_attr):
-            delattr(first_record, old_attr)
+  """
+  将旧存档FIRST_RECORD中的平铺处女字段迁移进first_part_sex_dict
+  Keyword arguments:
+  character -- 反序列化得到的角色对象（旧档判据：first_record无first_part_sex_dict属性，二次载入幂等）
+  Return arguments:
+  None
+  """
+  first_record = getattr(character, "first_record", None)
+  if first_record is None or hasattr(first_record, "first_part_sex_dict"):
+    return
+  default_time = datetime.datetime(1, 1, 1)
+  # 先补齐9个新dict默认值
+  first_record.first_part_sex_dict = {}
+  first_record.first_shoot_body_dict = {}
+  first_record.first_strong_orgasm_dict = {}
+  first_record.first_super_orgasm_dict = {}
+  first_record.first_plural_orgasm_dict = {}
+  first_record.fall_talent_time_dict = {}
+  first_record.first_mark_dict = {}
+  first_record.first_h_mode_dict = {}
+  first_record.first_special_record_dict = {}
+  # 仅NPC：V处女平铺字段转入键6，随后重置回默认值（字段保留给玩家童贞用，不delattr）
+  if (
+      getattr(character, "cid", 0) != 0
+      and getattr(first_record, "first_sex_id", -1) != -1
+  ):
+    first_record.first_part_sex_dict[6] = {
+        "id": first_record.first_sex_id,
+        "time": first_record.first_sex_time,
+        "place": list(first_record.first_sex_place),
+        "posture": first_record.first_sex_posture,
+        "item": getattr(first_record, "first_sex_item", -1),
+    }
+    first_record.first_sex_id = -1
+    first_record.first_sex_time = default_time
+    first_record.first_sex_place = ["0"]
+    first_record.first_sex_posture = ""
+    first_record.first_sex_item = -1
+  # A处女平铺字段转入键8
+  if getattr(first_record, "first_a_sex_id", -1) != -1:
+    first_record.first_part_sex_dict[8] = {
+        "id": first_record.first_a_sex_id,
+        "time": first_record.first_a_sex_time,
+        "place": list(first_record.first_a_sex_place),
+        "posture": first_record.first_a_sex_posture,
+        "item": getattr(first_record, "first_a_sex_item", -1),
+    }
+  # U处女平铺字段转入键9（旧道具编号1采尿器改记为2）
+  if getattr(first_record, "first_u_sex_id", -1) != -1:
+    old_u_item = getattr(first_record, "first_u_sex_item", -1)
+    first_record.first_part_sex_dict[9] = {
+        "id": first_record.first_u_sex_id,
+        "time": first_record.first_u_sex_time,
+        "place": list(first_record.first_u_sex_place),
+        "posture": first_record.first_u_sex_posture,
+        "item": 2 if old_u_item == 1 else old_u_item,
+    }
+  # W处女平铺字段转入键7
+  if getattr(first_record, "first_w_sex_id", -1) != -1:
+    first_record.first_part_sex_dict[7] = {
+        "id": first_record.first_w_sex_id,
+        "time": first_record.first_w_sex_time,
+        "place": list(first_record.first_w_sex_place),
+        "posture": first_record.first_w_sex_posture,
+        "item": -1,
+    }
+  # M处女时间转入键2（旧档只有时间，无对象/姿势/道具信息）
+  if getattr(first_record, "first_m_sex_time", default_time).year > 1:
+    first_record.first_part_sex_dict[2] = {
+        "id": -1,
+        "time": first_record.first_m_sex_time,
+        "place": ["0"],
+        "posture": "",
+        "item": -1,
+    }
+  # 清理已从类中删除的平铺字段，避免被recursive_update当孤儿属性带进新对象
+  for old_attr in (
+      "first_a_sex_id",
+      "first_a_sex_time",
+      "first_a_sex_place",
+      "first_a_sex_posture",
+      "first_a_sex_item",
+      "first_u_sex_id",
+      "first_u_sex_time",
+      "first_u_sex_place",
+      "first_u_sex_posture",
+      "first_u_sex_item",
+      "first_w_sex_id",
+      "first_w_sex_time",
+      "first_w_sex_place",
+      "first_w_sex_posture",
+      "first_m_sex_time",
+  ):
+    if hasattr(first_record, old_attr):
+      delattr(first_record, old_attr)
 
 
-def _clear_soft_egg_race_pregnancy(character: game_type.Character, soft_egg_enabled: bool = True) -> None:
-    """
-    清除无壳卵生种族角色正在进行的胎生孕程（旧存档兼容，方案 plan_19 §11-6 确认口径）
-    \n无壳卵生（birth_type=12）实装前被归一化为单胎胎生，旧存档中该种族角色可能持有受精/妊娠/临盆素质；
-    \n读档时一次性清除 20受精/21妊娠/22临盆/26孕肚/35无意识妊娠 及本次胎数/同卵双胞胎/妊娠加速累计，
-    \n23产后/24育儿/27泌乳与已出生的孩子不受影响；非无壳卵生或未在孕程中的角色不做任何改动
-    \n※本函数每次读档都会执行：无壳卵生开关关闭时该种族按单胎胎生运行，其孕程是正常妊娠，必须整体跳过，
-    \n否则玩家每读一次档就会被清空一次孕程（plan_21）
-    Keyword arguments:
-    character -- 角色数据
-    soft_egg_enabled -- 无壳卵生开关是否开启（关闭时不做任何处理）
-    Return arguments:
-    无
-    """
-    if not soft_egg_enabled:
-        return
-    talent_data = getattr(character, "talent", None)
-    pregnancy_data = getattr(character, "pregnancy", None)
-    if not isinstance(talent_data, dict) or pregnancy_data is None:
-        return
-    race_config = game_config.config_race.get(getattr(character, "race", -1))
-    if race_config is None or getattr(race_config, "birth_type", 1) != 12:
-        return
-    if not any(talent_data.get(talent_id, 0) for talent_id in (20, 21, 22)):
-        return
-    for talent_id in (20, 21, 22, 26, 35):
-        talent_data[talent_id] = 0
-    pregnancy_data.fetus_count = 0
-    pregnancy_data.identical_twins = False
-    pregnancy_data.acceleration_days = 0.0
+def _clear_soft_egg_race_pregnancy(
+    character: game_type.Character, soft_egg_enabled: bool = True
+) -> None:
+  """
+  清除无壳卵生种族角色正在进行的胎生孕程（旧存档兼容，方案 plan_19 §11-6 确认口径）
+  \n无壳卵生（birth_type=12）实装前被归一化为单胎胎生，旧存档中该种族角色可能持有受精/妊娠/临盆素质；
+  \n读档时一次性清除 20受精/21妊娠/22临盆/26孕肚/35无意识妊娠 及本次胎数/同卵双胞胎/妊娠加速累计，
+  \n23产后/24育儿/27泌乳与已出生的孩子不受影响；非无壳卵生或未在孕程中的角色不做任何改动
+  \n※本函数每次读档都会执行：无壳卵生开关关闭时该种族按单胎胎生运行，其孕程是正常妊娠，必须整体跳过，
+  \n否则玩家每读一次档就会被清空一次孕程（plan_21）
+  Keyword arguments:
+  character -- 角色数据
+  soft_egg_enabled -- 无壳卵生开关是否开启（关闭时不做任何处理）
+  Return arguments:
+  无
+  """
+  if not soft_egg_enabled:
+    return
+  talent_data = getattr(character, "talent", None)
+  pregnancy_data = getattr(character, "pregnancy", None)
+  if not isinstance(talent_data, dict) or pregnancy_data is None:
+    return
+  race_config = game_config.config_race.get(getattr(character, "race", -1))
+  if race_config is None or getattr(race_config, "birth_type", 1) != 12:
+    return
+  if not any(talent_data.get(talent_id, 0) for talent_id in (20, 21, 22)):
+    return
+  for talent_id in (20, 21, 22, 26, 35):
+    talent_data[talent_id] = 0
+  pregnancy_data.fetus_count = 0
+  pregnancy_data.identical_twins = False
+  pregnancy_data.acceleration_days = 0.0
 
 
 def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
-    """
-    归一化反序列化存档中已知的结构性路径字段
-    Keyword arguments:
-    loaded_cache -- 从存档反序列化得到的游戏缓存
-    Return arguments:
-    None
-    """
-    scene_data = getattr(loaded_cache, "scene_data", None)
-    if isinstance(scene_data, dict):
-        loaded_cache.scene_data = _normalize_save_path_keys(scene_data)
-        for scene in loaded_cache.scene_data.values():
-            if hasattr(scene, "scene_path"):
-                scene.scene_path = _normalize_save_path(scene.scene_path)
+  """
+  归一化反序列化存档中已知的结构性路径字段
+  Keyword arguments:
+  loaded_cache -- 从存档反序列化得到的游戏缓存
+  Return arguments:
+  None
+  """
+  scene_data = getattr(loaded_cache, "scene_data", None)
+  if isinstance(scene_data, dict):
+    loaded_cache.scene_data = _normalize_save_path_keys(scene_data)
+    for scene in loaded_cache.scene_data.values():
+      if hasattr(scene, "scene_path"):
+        scene.scene_path = _normalize_save_path(scene.scene_path)
 
-    map_data = getattr(loaded_cache, "map_data", None)
-    if isinstance(map_data, dict):
-        loaded_cache.map_data = _normalize_save_path_keys(map_data)
-        for map_data_value in loaded_cache.map_data.values():
-            if hasattr(map_data_value, "map_path"):
-                map_data_value.map_path = _normalize_save_path(map_data_value.map_path)
+  map_data = getattr(loaded_cache, "map_data", None)
+  if isinstance(map_data, dict):
+    loaded_cache.map_data = _normalize_save_path_keys(map_data)
+    for map_data_value in loaded_cache.map_data.values():
+      if hasattr(map_data_value, "map_path"):
+        map_data_value.map_path = _normalize_save_path(map_data_value.map_path)
 
-    # 无壳卵生开关：本函数早于 update_settings 执行，且此时全局cache尚未被替换，只能从存档自身的设置对象里读
-    # 旧存档没有该设置项，.get兜底为开启，正是旧存档迁移应有的行为
-    from Script.System.Pregnancy_System import pregnancy_constant
+  # 无壳卵生开关：本函数早于 update_settings 执行，且此时全局cache尚未被替换，只能从存档自身的设置对象里读
+  # 旧存档没有该设置项，.get兜底为开启，正是旧存档迁移应有的行为
+  from Script.System.Pregnancy_System import pregnancy_constant
 
-    loaded_setting = getattr(loaded_cache, "all_system_setting", None)
-    loaded_birth_setting = getattr(loaded_setting, "birth_type_setting", None) if loaded_setting is not None else None
-    soft_egg_enabled = True
-    if isinstance(loaded_birth_setting, dict):
-        soft_egg_enabled = bool(loaded_birth_setting.get(pregnancy_constant.BIRTH_TYPE_EGG_SOFT, 1))
+  loaded_setting = getattr(loaded_cache, "all_system_setting", None)
+  loaded_birth_setting = (
+      getattr(loaded_setting, "birth_type_setting", None)
+      if loaded_setting is not None
+      else None
+  )
+  soft_egg_enabled = True
+  if isinstance(loaded_birth_setting, dict):
+    soft_egg_enabled = bool(
+        loaded_birth_setting.get(pregnancy_constant.BIRTH_TYPE_EGG_SOFT, 1)
+    )
 
-    character_data = getattr(loaded_cache, "character_data", None)
-    if isinstance(character_data, dict):
-        for character in character_data.values():
-            if hasattr(character, "dormitory"):
-                character.dormitory = _normalize_save_path(character.dormitory)
-            # 此处在 old_chara_to_new 迁移之前运行，可能遇到旧存档的 pre_dormitory 或新存档的 permanent_dormitory
-            if hasattr(character, "permanent_dormitory"):
-                character.permanent_dormitory = _normalize_save_path(character.permanent_dormitory)
-            elif hasattr(character, "pre_dormitory"):
-                character.pre_dormitory = _normalize_save_path(character.pre_dormitory)
-            work_data = getattr(character, "work", None)
-            if work_data is not None and hasattr(work_data, "dormitory_admin_target_room"):
-                work_data.dormitory_admin_target_room = _normalize_save_path(work_data.dormitory_admin_target_room)
-            ability_data = getattr(character, "pl_ability", None)
-            if ability_data is not None and hasattr(ability_data, "air_hypnosis_position"):
-                ability_data.air_hypnosis_position = _normalize_save_path(ability_data.air_hypnosis_position)
-            # 避孕套系统旧存档兼容：补全玩家收藏品与角色污浊结构体中缺失的字段
-            pl_collection = getattr(character, "pl_collection", None)
-            if pl_collection is not None and not hasattr(pl_collection, "used_condoms"):
-                pl_collection.used_condoms = []
-            dirty_data = getattr(character, "dirty", None)
-            if dirty_data is not None and not hasattr(dirty_data, "condom_decoration"):
-                dirty_data.condom_decoration = {}
-            # 卵生系统旧存档兼容：补全妊娠结构体的卵字典与玩家收藏品的持有卵索引
-            pregnancy_data = getattr(character, "pregnancy", None)
-            if pregnancy_data is not None and not hasattr(pregnancy_data, "eggs"):
-                pregnancy_data.eggs = {}
-            if pregnancy_data is not None and not hasattr(pregnancy_data, "next_egg_id"):
-                pregnancy_data.next_egg_id = 0
-            if pregnancy_data is not None and not hasattr(pregnancy_data, "ovulation_flag"):
-                pregnancy_data.ovulation_flag = False
-            # 怀孕药物旧存档兼容：补全妊娠加速药的累计加速天数
-            if pregnancy_data is not None and not hasattr(pregnancy_data, "acceleration_days"):
-                pregnancy_data.acceleration_days = 0.0
-            # 养成药物旧存档兼容：补全成长加速药的累计成长天数
-            if pregnancy_data is not None and not hasattr(pregnancy_data, "growth_acceleration_days"):
-                pregnancy_data.growth_acceleration_days = 0.0
-            # 孕程/成长天数缩短后的旧存档兼容：加速药累计天数截到新上限
-            if pregnancy_data is not None:
-                pregnancy_data.acceleration_days = min(pregnancy_data.acceleration_days, pregnancy_constant.ACCELERATION_MAX_DAY)
-                pregnancy_data.growth_acceleration_days = min(pregnancy_data.growth_acceleration_days, pregnancy_constant.GROW_TO_GIRL_DAY - 1)
-                for egg_data in pregnancy_data.eggs.values():
-                    if "acceleration_days" in egg_data:
-                        egg_data["acceleration_days"] = min(egg_data["acceleration_days"], pregnancy_constant.ACCELERATION_MAX_DAY)
-            # 多胞胎旧存档兼容：补全本次胎数与同卵双胞胎标记
-            if pregnancy_data is not None and not hasattr(pregnancy_data, "fetus_count"):
-                pregnancy_data.fetus_count = 0
-            if pregnancy_data is not None and not hasattr(pregnancy_data, "identical_twins"):
-                pregnancy_data.identical_twins = False
-            # 无壳卵生旧存档兼容：补全体外排卵机会标记
-            if pregnancy_data is not None and not hasattr(pregnancy_data, "external_ovulation_chance"):
-                pregnancy_data.external_ovulation_chance = False
-            # 胎教旧存档兼容：补全妊娠期胎教累积值（Plan 22 四期）
-            if pregnancy_data is not None and not hasattr(pregnancy_data, "prenatal_point"):
-                pregnancy_data.prenatal_point = 0.0
-            # 生长养成系统旧存档兼容：补全养成数据结构体的挂载位（Plan 22）
-            # 默认None，由 growth_handle.get_child_growth() 惰性创建，此处只保证属性存在
-            if not hasattr(character, "child_growth"):
-                character.child_growth = None
-            # 生长养成系统旧存档兼容：补全养成数据结构体在后续各期新增的字段
-            # 用属性表整体回填而不是逐字段 hasattr：CHILD_GROWTH 在二期（日程模板）、
-            #    四期（胎教）、学期制各加过字段，逐个写漏一个就是一次读档崩溃
-            # 每个角色各 new 一个默认体：dict/list 这类可变默认值不能被多个角色共享
-            elif character.child_growth is not None:
-                default_growth_data = game_type.CHILD_GROWTH()
-                for growth_attr_name in vars(default_growth_data):
-                    if not hasattr(character.child_growth, growth_attr_name):
-                        setattr(character.child_growth, growth_attr_name,
-                                getattr(default_growth_data, growth_attr_name))
-                # 成绩单由「只存最近一份」改为「存历年列表」：把早先那份并进列表头，别让它凭空消失
-                old_report_card = getattr(character.child_growth, "last_report_card", None)
-                if old_report_card and not character.child_growth.report_card_history:
-                    character.child_growth.report_card_history = [old_report_card]
-                if hasattr(character.child_growth, "last_report_card"):
-                    del character.child_growth.last_report_card
-                # 教育区娱乐改编号（2026-09-09）：单孩日程覆盖里存的旧编号换成新编号
-                for slot in list(character.child_growth.schedule_override):
-                    character.child_growth.schedule_override[slot] = _migrate_entertainment_cid(character.child_growth.schedule_override[slot])
-                # 挪了桶的养成事件（Plan 32 L22）：履历里的旧uid改成新uid，按uid去重与养成总览的履历才对得上
-                _migrate_official_event_history(character.child_growth.event_history)
-            # 教育区娱乐改编号（2026-09-09）：当天三个娱乐槽位里的旧编号也换掉，
-            # 免得读档当天照料卵 / 见学 / 自习的判定对不上号
-            entertainment_data = getattr(character, "entertainment", None)
-            if entertainment_data is not None and isinstance(getattr(entertainment_data, "entertainment_type", None), list):
-                entertainment_data.entertainment_type = [_migrate_entertainment_cid(one) for one in entertainment_data.entertainment_type]
-            # 无壳卵生旧存档兼容：无壳卵生种族此前按单胎胎生运行，读档时一次性清除其正在进行的胎生孕程（受精/妊娠/临盆及伴生状态），产后/育儿/泌乳与已出生的孩子保留
-            _clear_soft_egg_race_pregnancy(character, soft_egg_enabled)
-            if pl_collection is not None and not hasattr(pl_collection, "held_eggs"):
-                pl_collection.held_eggs = {}
-            if pl_collection is not None and not hasattr(pl_collection, "next_held_egg_id"):
-                pl_collection.next_held_egg_id = 0
-            # 无壳卵生旧存档兼容：补全玩家收藏品中的体外无壳卵字典
-            if pl_collection is not None and not hasattr(pl_collection, "soft_eggs"):
-                pl_collection.soft_eggs = {}
-            if pl_collection is not None and not hasattr(pl_collection, "next_soft_egg_id"):
-                pl_collection.next_soft_egg_id = 0
-            # 睡觉中被吵醒旧存档兼容：补全角色行动信息中缺失的被吵醒状态结束时间
-            action_info_data = getattr(character, "action_info", None)
-            if action_info_data is not None and not hasattr(action_info_data, "sleep_disturbed_end_time"):
-                action_info_data.sleep_disturbed_end_time = datetime.datetime(1, 1, 1)
-            # 性行为履历旧存档兼容：平铺处女字段合并进first_part_sex_dict
-            _migrate_first_record_flat_fields(character)
+  character_data = getattr(loaded_cache, "character_data", None)
+  if isinstance(character_data, dict):
+    for character in character_data.values():
+      if hasattr(character, "dormitory"):
+        character.dormitory = _normalize_save_path(character.dormitory)
+      # 此处在 old_chara_to_new 迁移之前运行，可能遇到旧存档的 pre_dormitory 或新存档的 permanent_dormitory
+      if hasattr(character, "permanent_dormitory"):
+        character.permanent_dormitory = _normalize_save_path(
+            character.permanent_dormitory
+        )
+      elif hasattr(character, "pre_dormitory"):
+        character.pre_dormitory = _normalize_save_path(character.pre_dormitory)
+      work_data = getattr(character, "work", None)
+      if work_data is not None and hasattr(
+          work_data, "dormitory_admin_target_room"
+      ):
+        work_data.dormitory_admin_target_room = _normalize_save_path(
+            work_data.dormitory_admin_target_room
+        )
+      ability_data = getattr(character, "pl_ability", None)
+      if ability_data is not None and hasattr(
+          ability_data, "air_hypnosis_position"
+      ):
+        ability_data.air_hypnosis_position = _normalize_save_path(
+            ability_data.air_hypnosis_position
+        )
+      # 避孕套系统旧存档兼容：补全玩家收藏品与角色污浊结构体中缺失的字段
+      pl_collection = getattr(character, "pl_collection", None)
+      if pl_collection is not None and not hasattr(
+          pl_collection, "used_condoms"
+      ):
+        pl_collection.used_condoms = []
+      dirty_data = getattr(character, "dirty", None)
+      if dirty_data is not None and not hasattr(
+          dirty_data, "condom_decoration"
+      ):
+        dirty_data.condom_decoration = {}
+      # 卵生系统旧存档兼容：补全妊娠结构体的卵字典与玩家收藏品的持有卵索引
+      pregnancy_data = getattr(character, "pregnancy", None)
+      if pregnancy_data is not None and not hasattr(pregnancy_data, "eggs"):
+        pregnancy_data.eggs = {}
+      if pregnancy_data is not None and not hasattr(
+          pregnancy_data, "next_egg_id"
+      ):
+        pregnancy_data.next_egg_id = 0
+      if pregnancy_data is not None and not hasattr(
+          pregnancy_data, "ovulation_flag"
+      ):
+        pregnancy_data.ovulation_flag = False
+      # 怀孕药物旧存档兼容：补全妊娠加速药的累计加速天数
+      if pregnancy_data is not None and not hasattr(
+          pregnancy_data, "acceleration_days"
+      ):
+        pregnancy_data.acceleration_days = 0.0
+      # 养成药物旧存档兼容：补全成长加速药的累计成长天数
+      if pregnancy_data is not None and not hasattr(
+          pregnancy_data, "growth_acceleration_days"
+      ):
+        pregnancy_data.growth_acceleration_days = 0.0
+      # 孕程/成长天数缩短后的旧存档兼容：加速药累计天数截到新上限
+      if pregnancy_data is not None:
+        pregnancy_data.acceleration_days = min(
+            pregnancy_data.acceleration_days,
+            pregnancy_constant.ACCELERATION_MAX_DAY,
+        )
+        pregnancy_data.growth_acceleration_days = min(
+            pregnancy_data.growth_acceleration_days,
+            pregnancy_constant.GROW_TO_GIRL_DAY - 1,
+        )
+        for egg_data in pregnancy_data.eggs.values():
+          if "acceleration_days" in egg_data:
+            egg_data["acceleration_days"] = min(
+                egg_data["acceleration_days"],
+                pregnancy_constant.ACCELERATION_MAX_DAY,
+            )
+      # 多胞胎旧存档兼容：补全本次胎数与同卵双胞胎标记
+      if pregnancy_data is not None and not hasattr(
+          pregnancy_data, "fetus_count"
+      ):
+        pregnancy_data.fetus_count = 0
+      if pregnancy_data is not None and not hasattr(
+          pregnancy_data, "identical_twins"
+      ):
+        pregnancy_data.identical_twins = False
+      # 无壳卵生旧存档兼容：补全体外排卵机会标记
+      if pregnancy_data is not None and not hasattr(
+          pregnancy_data, "external_ovulation_chance"
+      ):
+        pregnancy_data.external_ovulation_chance = False
+      # 胎教旧存档兼容：补全妊娠期胎教累积值（Plan 22 四期）
+      if pregnancy_data is not None and not hasattr(
+          pregnancy_data, "prenatal_point"
+      ):
+        pregnancy_data.prenatal_point = 0.0
+      # 生长养成系统旧存档兼容：补全养成数据结构体的挂载位（Plan 22）
+      # 默认None，由 growth_handle.get_child_growth() 惰性创建，此处只保证属性存在
+      if not hasattr(character, "child_growth"):
+        character.child_growth = None
+      # 生长养成系统旧存档兼容：补全养成数据结构体在后续各期新增的字段
+      # 用属性表整体回填而不是逐字段 hasattr：CHILD_GROWTH 在二期（日程模板）、
+      #    四期（胎教）、学期制各加过字段，逐个写漏一个就是一次读档崩溃
+      # 每个角色各 new 一个默认体：dict/list 这类可变默认值不能被多个角色共享
+      elif character.child_growth is not None:
+        default_growth_data = game_type.CHILD_GROWTH()
+        for growth_attr_name in vars(default_growth_data):
+          if not hasattr(character.child_growth, growth_attr_name):
+            setattr(
+                character.child_growth,
+                growth_attr_name,
+                getattr(default_growth_data, growth_attr_name),
+            )
+        # 成绩单由「只存最近一份」改为「存历年列表」：把早先那份并进列表头，别让它凭空消失
+        old_report_card = getattr(
+            character.child_growth, "last_report_card", None
+        )
+        if old_report_card and not character.child_growth.report_card_history:
+          character.child_growth.report_card_history = [old_report_card]
+        if hasattr(character.child_growth, "last_report_card"):
+          del character.child_growth.last_report_card
+        # 教育区娱乐改编号（2026-09-09）：单孩日程覆盖里存的旧编号换成新编号
+        for slot in list(character.child_growth.schedule_override):
+          character.child_growth.schedule_override[slot] = (
+              _migrate_entertainment_cid(
+                  character.child_growth.schedule_override[slot]
+              )
+          )
+        # 挪了桶的养成事件（Plan 32 L22）：履历里的旧uid改成新uid，按uid去重与养成总览的履历才对得上
+        _migrate_official_event_history(character.child_growth.event_history)
+      # 教育区娱乐改编号（2026-09-09）：当天三个娱乐槽位里的旧编号也换掉，
+      # 免得读档当天照料卵 / 见学 / 自习的判定对不上号
+      entertainment_data = getattr(character, "entertainment", None)
+      if entertainment_data is not None and isinstance(
+          getattr(entertainment_data, "entertainment_type", None), list
+      ):
+        entertainment_data.entertainment_type = [
+            _migrate_entertainment_cid(one)
+            for one in entertainment_data.entertainment_type
+        ]
+      # 无壳卵生旧存档兼容：无壳卵生种族此前按单胎胎生运行，读档时一次性清除其正在进行的胎生孕程（受精/妊娠/临盆及伴生状态），产后/育儿/泌乳与已出生的孩子保留
+      _clear_soft_egg_race_pregnancy(character, soft_egg_enabled)
+      if pl_collection is not None and not hasattr(pl_collection, "held_eggs"):
+        pl_collection.held_eggs = {}
+      if pl_collection is not None and not hasattr(
+          pl_collection, "next_held_egg_id"
+      ):
+        pl_collection.next_held_egg_id = 0
+      # 无壳卵生旧存档兼容：补全玩家收藏品中的体外无壳卵字典
+      if pl_collection is not None and not hasattr(pl_collection, "soft_eggs"):
+        pl_collection.soft_eggs = {}
+      if pl_collection is not None and not hasattr(
+          pl_collection, "next_soft_egg_id"
+      ):
+        pl_collection.next_soft_egg_id = 0
+      # 睡觉中被吵醒旧存档兼容：补全角色行动信息中缺失的被吵醒状态结束时间
+      action_info_data = getattr(character, "action_info", None)
+      if action_info_data is not None and not hasattr(
+          action_info_data, "sleep_disturbed_end_time"
+      ):
+        action_info_data.sleep_disturbed_end_time = datetime.datetime(1, 1, 1)
+      # 性行为履历旧存档兼容：平铺处女字段合并进first_part_sex_dict
+      _migrate_first_record_flat_fields(character)
 
-    rhodes_island = getattr(loaded_cache, "rhodes_island", None)
-    if rhodes_island is not None:
-        facility_damage_data = getattr(rhodes_island, "facility_damage_data", None)
-        if isinstance(facility_damage_data, dict):
-            rhodes_island.facility_damage_data = _normalize_save_path_keys(facility_damage_data)
-        maintenance_place = getattr(rhodes_island, "maintenance_place", None)
-        if isinstance(maintenance_place, dict):
-            for character_id, place in maintenance_place.items():
-                maintenance_place[character_id] = _normalize_save_path(place)
+  rhodes_island = getattr(loaded_cache, "rhodes_island", None)
+  if rhodes_island is not None:
+    facility_damage_data = getattr(rhodes_island, "facility_damage_data", None)
+    if isinstance(facility_damage_data, dict):
+      rhodes_island.facility_damage_data = _normalize_save_path_keys(
+          facility_damage_data
+      )
+    maintenance_place = getattr(rhodes_island, "maintenance_place", None)
+    if isinstance(maintenance_place, dict):
+      for character_id, place in maintenance_place.items():
+        maintenance_place[character_id] = _normalize_save_path(place)
 
 
 def _load_save_datetime(*args) -> datetime.datetime:
-    """
-    读存档时还原存档里的普通 datetime：旧版本存的游戏时间都是普通 datetime，按游戏日历规整成 GameTime（不在游戏日历上的时间按下一个季月的1日0时算）
-    公元1年的缺省占位时间规整后仍在公元1年，各处按 year <= 1 判断未设置
-    Keyword arguments:
-    args -- pickle 记录的 datetime 构造参数
-    Return arguments:
-    GameTime -- 规整后的游戏时间
-    """
-    from Script.Design import game_time
+  """
+  读存档时还原存档里的普通 datetime：旧版本存的游戏时间都是普通 datetime，按游戏日历规整成 GameTime（不在游戏日历上的时间按下一个季月的1日0时算）
+  公元1年的缺省占位时间规整后仍在公元1年，各处按 year <= 1 判断未设置
+  Keyword arguments:
+  args -- pickle 记录的 datetime 构造参数
+  Return arguments:
+  GameTime -- 规整后的游戏时间
+  """
+  from Script.Design import game_time
 
-    return game_time.to_game_time(datetime.datetime(*args))
+  return game_time.to_game_time(datetime.datetime(*args))
 
 
 class SaveUnpickler(pickle.Unpickler):
-    """读存档用的 Unpickler：把存档里的普通 datetime 换成游戏时间 GameTime，兼容旧存档"""
+  """读存档用的 Unpickler：把存档里的普通 datetime 换成游戏时间 GameTime，兼容旧存档"""
 
-    def find_class(self, module: str, name: str):
-        """
-        按模块名与类名取类，普通 datetime 换成 _load_save_datetime
-        Keyword arguments:
-        module -- 模块名
-        name -- 类名
-        Return arguments:
-        任意 -- 类或构造函数
-        """
-        if module == "datetime" and name == "datetime":
-            return _load_save_datetime
-        return super().find_class(module, name)
+  def find_class(self, module: str, name: str):
+    """
+    按模块名与类名取类，普通 datetime 换成 _load_save_datetime
+    Keyword arguments:
+    module -- 模块名
+    name -- 类名
+    Return arguments:
+    任意 -- 类或构造函数
+    """
+    if module == "datetime" and name == "datetime":
+      return _load_save_datetime
+    return super().find_class(module, name)
 
 
 def load_save(save_id: str) -> game_type.Cache:
-    """
-    按存档id读取存档数据
-    Keyword arguments:
-    save_id -- 存档id
-    Return arguments:
-    game_type.Cache -- 游戏缓存数据
-    """
-    save_path = get_save_dir_path(save_id)
-    file_path = os.path.join(save_path, "1")
-    with open(file_path, "rb") as f:
-        loaded_cache = SaveUnpickler(f).load()
-    _normalize_loaded_save_paths(loaded_cache)
-    return loaded_cache
+  """
+  按存档id读取存档数据
+  Keyword arguments:
+  save_id -- 存档id
+  Return arguments:
+  game_type.Cache -- 游戏缓存数据
+  """
+  save_path = get_save_dir_path(save_id)
+  file_path = os.path.join(save_path, "1")
+  with open(file_path, "rb") as f:
+    loaded_cache = SaveUnpickler(f).load()
+  _normalize_loaded_save_paths(loaded_cache)
+  return loaded_cache
+
 
 def input_load_save(save_id: str):
-    """
-    载入存档存档id对应数据，覆盖当前游戏内存
-    Keyword arguments:
-    save_id -- 存档id
-    """
-    from Script.Design import basement
-    from Script.System.Cooking_System import cooking
-    from Script.System.Medical_System import medical_service
-    # 创建一个新的类实例，这个实例会包含所有的默认键值
-    new_cache = game_type.Cache()
-    new_cache.rhodes_island = basement.get_base_zero()
-    update_count = 0
+  """
+  载入存档存档id对应数据，覆盖当前游戏内存
+  Keyword arguments:
+  save_id -- 存档id
+  """
+  from Script.Design import basement
+  from Script.System.Cooking_System import cooking
+  from Script.System.Medical_System import medical_service
+  # 创建一个新的类实例，这个实例会包含所有的默认键值
+  new_cache = game_type.Cache()
+  new_cache.rhodes_island = basement.get_base_zero()
+  update_count = 0
 
+  # 从存档中加载字典
+  loaded_dict = load_save(save_id).__dict__
 
-    # 从存档中加载字典
-    loaded_dict = load_save(save_id).__dict__
+  draw_text = _("\n开始检测存档的数据结构是否需要跨版本更新\n")
+  now_draw = draw.LeftDraw()
+  now_draw.text = draw_text
+  now_draw.draw()
 
-    draw_text = _("\n开始检测存档的数据结构是否需要跨版本更新\n")
+  # 检测是否为旧版存档（npc_tem_data是List而不是Dict）
+  if isinstance(loaded_dict.get("npc_tem_data"), list):
+    draw_text = _("\n检测到旧版存档，开始迁移角色ID系统...\n")
     now_draw = draw.LeftDraw()
     now_draw.text = draw_text
     now_draw.draw()
 
-    # 检测是否为旧版存档（npc_tem_data是List而不是Dict）
-    if isinstance(loaded_dict.get("npc_tem_data"), list):
-        draw_text = _("\n检测到旧版存档，开始迁移角色ID系统...\n")
-        now_draw = draw.LeftDraw()
-        now_draw.text = draw_text
-        now_draw.draw()
-        
-        migrate_count = old_chara_to_new.migrate_old_save_data(loaded_dict)
-        
-        draw_text = _("\n角色ID迁移完成，共处理{0}条数据\n").format(migrate_count)
-        now_draw = draw.LeftDraw()
-        now_draw.text = draw_text
-        now_draw.draw()
-        update_count += migrate_count
+    migrate_count = old_chara_to_new.migrate_old_save_data(loaded_dict)
 
-    # 递归地更新 loaded_dict
-    update_count += update_dict_with_default(loaded_dict, new_cache.__dict__)
-    # 更新角色预设
-    update_count += old_chara_to_new.update_tem_character(loaded_dict)
-    # 修正编号错误的角色数据
-    update_count += old_chara_to_new.fix_wrong_character(loaded_dict)
+    draw_text = _("\n角色ID迁移完成，共处理{0}条数据\n").format(migrate_count)
+    now_draw = draw.LeftDraw()
+    now_draw.text = draw_text
+    now_draw.draw()
+    update_count += migrate_count
 
-    # ========== 角色替换迁移（新旧角色ID映射） ==========
-    # 用于将旧角色的数据迁移到新角色，例如：1478号梅捷缇克缇 → 4056号缇缇
-    character_replacement_map = {
-        891: 4212,  # NPC娜斯提 → 干员娜斯提
-        1040: 4052,  # 蒂拉 → 寻澜
-        1478: 4056,  # 梅捷缇克缇 → 缇缇
-    }
-    # 检测是否需要进行角色替换迁移
-    need_migration = False
-    for old_id in character_replacement_map.keys():
-        if old_id in loaded_dict["character_data"]:
-            need_migration = True
-            break
-    
-    if need_migration:
-        draw_text = _("\n检测到需要进行角色替换迁移...\n")
-        now_draw = draw.LeftDraw()
-        now_draw.text = draw_text
-        now_draw.draw()
-        
-        migration_count = old_chara_to_new.migrate_character_replacement(loaded_dict, character_replacement_map)
-        
-        if migration_count > 0:
-            draw_text = _("\n角色替换迁移完成，共迁移{0}个角色\n").format(migration_count)
-            now_draw = draw.LeftDraw()
-            now_draw.text = draw_text
-            now_draw.draw()
-            update_count += migration_count
+  # 递归地更新 loaded_dict
+  update_count += update_dict_with_default(loaded_dict, new_cache.__dict__)
+  # 更新角色预设
+  update_count += old_chara_to_new.update_tem_character(loaded_dict)
+  # 修正编号错误的角色数据
+  update_count += old_chara_to_new.fix_wrong_character(loaded_dict)
 
-    # 更新绘制模式
-    loaded_dict["web_mode"] = cache.web_mode
-    # 重置游戏更新流程的嵌套深度
-    loaded_dict["game_update_flow_running"] = 0
+  # ========== 角色替换迁移（新旧角色ID映射） ==========
+  # 用于将旧角色的数据迁移到新角色，例如：1478号梅捷缇克缇 → 4056号缇缇
+  character_replacement_map = {
+      891: 4212,  # NPC娜斯提 → 干员娜斯提
+      1040: 4052,  # 蒂拉 → 寻澜
+      1478: 4056,  # 梅捷缇克缇 → 缇缇
+  }
+  # 检测是否需要进行角色替换迁移
+  need_migration = False
+  for old_id in character_replacement_map.keys():
+    if old_id in loaded_dict["character_data"]:
+      need_migration = True
+      break
 
-    # 遍历更新全角色属性
-    cloth_update_count = 0
-    color_update_count = 0
-    for key, value in loaded_dict["character_data"].items():
-        new_character_data = game_type.Character()
-        recursive_update(new_character_data, value)
-        # new_character_data.__dict__.update(value.__dict__)
-        # print(f"debug name = {value.name}")
-        # 角色素质、经验、宝珠、能力、设置的更新
-        update_count += old_chara_to_new.update_character_config_data(new_character_data)
-        # 当前角色模板数据（使用Dict方式访问，兼容新旧存档）
-        tem_character = loaded_dict["npc_tem_data"].get(new_character_data.cid, None)
-        if tem_character is None:
-            # 如果找不到，尝试用adv
-            tem_character = loaded_dict["npc_tem_data"].get(new_character_data.adv, None)
-        if tem_character is None:
-            # 处理找不到模板的情况（玩家跳过，NPC创建空白模板）
-            if new_character_data.cid != 0:
-                tem_character = character_handle.create_empty_character_tem()
-                tem_character.Name = new_character_data.name
-                tem_character.AdvNpc = new_character_data.adv
-                loaded_dict["npc_tem_data"][new_character_data.cid] = tem_character
-            else:
-                # 玩家没有模板，跳过模板相关更新
-                loaded_dict["character_data"][key] = new_character_data
-                continue
-        # 更新角色服装
-        cloth_update_count += old_chara_to_new.update_chara_cloth(new_character_data, tem_character)
-        # 更新角色口上颜色
-        if new_character_data.cid != 0 and tem_character.TextColor != new_character_data.text_color:
-            # print(f"debug value.name = {value.name}，tem_character.TextColor = {tem_character.TextColor}，value.text_color = {value.text_color}")
-            new_character_data.text_color = tem_character.TextColor
-            text_color_list = [new_character_data.adv, new_character_data.name, tem_character.TextColor]
-            character_config.add_text_color_data_to_config_data(text_color_list)
-            update_count += 1
-            color_update_count += 1
-        # 更新角色的口上大小
-        if new_character_data.cid != 0 and tem_character.Talk_Size != new_character_data.talk_size:
-            # print(f"debug value.name = {value.name}，tem_character.TextSize = {tem_character.TextSize}，value.text_size = {value.text_size}")
-            new_character_data.talk_size = tem_character.Talk_Size
-            update_count += 1
-        # 更新角色势力与出身地
-        if new_character_data.cid != 0 and tem_character.Nation != new_character_data.relationship.nation:
-            new_character_data.relationship.nation = tem_character.Nation
-            update_count += 1
-        if new_character_data.cid != 0 and tem_character.Birthplace != new_character_data.relationship.birthplace:
-            new_character_data.relationship.birthplace = tem_character.Birthplace
-            update_count += 1
-        # 更新到玩家收藏品列表
-        if new_character_data.cid != 0 and new_character_data.cid not in loaded_dict["character_data"][0].pl_collection.token_list:
-            loaded_dict["character_data"][0].pl_collection.token_list[new_character_data.cid] = False
-            loaded_dict["character_data"][0].pl_collection.first_panties[new_character_data.cid] = ""
-            loaded_dict["character_data"][0].pl_collection.npc_panties[new_character_data.cid] = []
-            loaded_dict["character_data"][0].pl_collection.npc_socks[new_character_data.cid] = []
-            # print(f"debug value.cid = {value.cid}, value.name = {value.name}")
-            update_count += 1
-        # 被监禁的角色检查是否在囚犯列表中，需要排除正在逃跑的人
-        if new_character_data.sp_flag.imprisonment and not new_character_data.sp_flag.escaping and new_character_data.cid not in loaded_dict["rhodes_island"].current_prisoners:
-            loaded_dict["rhodes_island"].current_prisoners[new_character_data.cid] = [cache.game_time, 0]
-            update_count += 1
-        # 重新指向新的角色数据
-        loaded_dict["character_data"][key] = new_character_data
-    if cloth_update_count:
-        now_draw = draw.LeftDraw()
-        draw_text = _("\n共有{0}个角色的服装数据已重置\n").format(cloth_update_count)
-        now_draw.text = draw_text
-        now_draw.draw()
-
-    # 更新字体颜色
-    if color_update_count:
-        io_init.init_style()
-        now_draw = draw.LeftDraw()
-        draw_text = _("\n共有{0}个角色的口上颜色已更新\n").format(color_update_count)
-        now_draw.text = draw_text
-        now_draw.draw()
-
-    # 更新罗德岛的资源
-    for all_cid in game_config.config_resouce:
-    # 不存在的资源数量设为0
-        if all_cid not in loaded_dict["rhodes_island"].materials_resouce:
-            loaded_dict["rhodes_island"].materials_resouce[all_cid] = 0
-            update_count += 1
-    # 生长养成系统旧存档兼容：补全全局课表与孩子日程模板（Plan 22）
-    if not hasattr(loaded_dict["rhodes_island"], "class_schedule"):
-        loaded_dict["rhodes_island"].class_schedule = {}
-        update_count += 1
-    if not hasattr(loaded_dict["rhodes_island"], "child_schedule_template"):
-        loaded_dict["rhodes_island"].child_schedule_template = {}
-        update_count += 1
-    # 教育区娱乐改编号（2026-09-09）：日程模板各时段里存的旧编号换成新编号
-    update_count += _migrate_child_schedule_template(loaded_dict["rhodes_island"])
-    # 成长阶段与体型素质、见学与上课状态、表里没有的行为与娱乐编号、101/102阶段的H与身体状态和离线、外表年龄药、世界设定1
-    young_child_session = {}
-    update_count += old_chara_to_new.migrate_age_and_body_type(loaded_dict, young_child_session)
-    # 临时性技实操课（Plan 22 四期）
-    if not hasattr(loaded_dict["rhodes_island"], "temp_sex_class"):
-        loaded_dict["rhodes_island"].temp_sex_class = {}
-        update_count += 1
-    # 公务事件待处理队列与全局履历（Plan 23，由 Plan 22 三期的养成事件队列升格而来）
-    if not hasattr(loaded_dict["rhodes_island"], "official_event_queue"):
-        old_queue = getattr(loaded_dict["rhodes_island"], "growth_event_queue", [])
-        new_queue = []
-        # 旧档的队列元素没有 department，按 uid 回查配置补上；事件已被删掉的直接丢弃，
-        #    留着会在出队时查不到配置而被清理，不如在载入时就清干净
-        for one in old_queue:
-            if not isinstance(one, dict) or one.get("uid") not in game_config.config_official_event:
-                continue
-            one["department"] = game_config.config_official_event[one["uid"]].get("department", 0)
-            new_queue.append(one)
-        loaded_dict["rhodes_island"].official_event_queue = new_queue
-        update_count += 1
-    if not hasattr(loaded_dict["rhodes_island"], "official_event_history"):
-        loaded_dict["rhodes_island"].official_event_history = {}
-        update_count += 1
-    # 挪了桶的养成事件（Plan 32 L22）：没有养成数据的主体记在罗德岛的全局履历里（键为「uid@角色id」），旧uid同样改成新uid
-    update_count += _migrate_official_event_history(loaded_dict["rhodes_island"].official_event_history)
-    # 更新罗德岛的设施等级
-    for all_cid in game_config.config_facility:
-        # 没有记录的设施改为初始等级0
-        if all_cid not in loaded_dict["rhodes_island"].facility_level:
-            loaded_dict["rhodes_island"].facility_level[all_cid] = 1
-            update_count += 1
-    # 更新罗德岛的设施开启状态
-    for all_cid in game_config.config_facility_open:
-        # 没有记录的设施改为初始关闭
-        if all_cid not in loaded_dict["rhodes_island"].facility_open:
-            loaded_dict["rhodes_island"].facility_open[all_cid] = False
-        # 已关闭的查询是否可以被已有角色开启
-        if loaded_dict["rhodes_island"].facility_open[all_cid] == False:
-            if game_config.config_facility_open[all_cid].NPC_id != 0:
-                for chara_cid in loaded_dict["npc_id_got"]:
-                    character_data = loaded_dict["character_data"][chara_cid]
-                    if character_data.adv == game_config.config_facility_open[all_cid].NPC_id:
-                        loaded_dict["rhodes_island"].facility_open[all_cid] = True
-                        break
-    # 更新食谱
-    loaded_dict["recipe_data"] = cooking.init_recipes()
-    # 更新图书借阅
-    for all_cid in game_config.config_book:
-        if all_cid not in loaded_dict["rhodes_island"].book_borrow_dict:
-            loaded_dict["rhodes_island"].book_borrow_dict[all_cid] = -1
-
-    # 更新各项设置
-    update_count += update_settings(loaded_dict)
-
-    # 更新大地图势力数据
-    loaded_dict["country"] = attr_calculation.get_country_reset(loaded_dict["country"])
-
-    # 更新游戏地图
-    update_count += update_map(loaded_dict)
-
-    # 更新医疗系统存档结构
-    medical_service.update_medical_save_data_structure(loaded_dict)
-
-    # 最后输出
-    now_draw = draw.NormalDraw()
-    draw_text = _("\n检测完毕，共有{0}条数据完成了更新\n").format(update_count)
+  if need_migration:
+    draw_text = _("\n检测到需要进行角色替换迁移...\n")
+    now_draw = draw.LeftDraw()
     now_draw.text = draw_text
     now_draw.draw()
 
-    # 使用 update() 方法来更新 cache 的字典
-    cache.__dict__.update(loaded_dict)
+    migration_count = old_chara_to_new.migrate_character_replacement(
+        loaded_dict, character_replacement_map
+    )
 
-    # 鼠标状态属于临时界面状态，不该随存档带入：旧版存档可能把“正在按任意键继续”的0值一起存了进来，
-    # 载入后 w_frame_up 残留为0，之后第一次左键会被 mouse_left_check 误判为“推进等待”，
-    # 消耗掉一次性的输入许可却不产生任何指令，askfor_all 从此收不到输入，游戏静默卡死
-    cache.wframe_mouse = game_type.WFrameMouse()
+    if migration_count > 0:
+      draw_text = _("\n角色替换迁移完成，共迁移{0}个角色\n").format(
+          migration_count
+      )
+      now_draw = draw.LeftDraw()
+      now_draw.text = draw_text
+      now_draw.draw()
+      update_count += migration_count
 
-    # 有101/102阶段的孩子参与的群交、时停与H，各按自己的结束结算收尾（这些结算读写游戏缓存，须在覆盖缓存之后）
-    old_chara_to_new.end_young_child_session(young_child_session)
+  # 更新绘制模式
+  loaded_dict["web_mode"] = cache.web_mode
+  # 重置游戏更新流程的嵌套深度
+  loaded_dict["game_update_flow_running"] = 0
 
-    # 游戏状态自检（系统设置14号，默认关闭）：对载入后的存档做保守修复，包在开关关闭时不会被导入
-    if cache.all_system_setting.base_setting.get(14, 0):
-        from Script.Test import Static_Check as static_check_system
-        static_check_system.run_load_repair()
+  # 遍历更新全角色属性
+  cloth_update_count = 0
+  color_update_count = 0
+  for key, value in loaded_dict["character_data"].items():
+    new_character_data = game_type.Character()
+    recursive_update(new_character_data, value)
+    # new_character_data.__dict__.update(value.__dict__)
+    # print(f"debug name = {value.name}")
+    # 角色素质、经验、宝珠、能力、设置的更新
+    update_count += old_chara_to_new.update_character_config_data(
+        new_character_data
+    )
+    # 当前角色模板数据（使用Dict方式访问，兼容新旧存档）
+    tem_character = loaded_dict["npc_tem_data"].get(
+        new_character_data.cid, None
+    )
+    if tem_character is None:
+      # 如果找不到，尝试用adv
+      tem_character = loaded_dict["npc_tem_data"].get(
+          new_character_data.adv, None
+      )
+    if tem_character is None:
+      # 处理找不到模板的情况（玩家跳过，NPC创建空白模板）
+      if new_character_data.cid != 0:
+        tem_character = character_handle.create_empty_character_tem()
+        tem_character.Name = new_character_data.name
+        tem_character.AdvNpc = new_character_data.adv
+        loaded_dict["npc_tem_data"][new_character_data.cid] = tem_character
+      else:
+        # 玩家没有模板，跳过模板相关更新
+        loaded_dict["character_data"][key] = new_character_data
+        continue
+    # 更新角色服装
+    cloth_update_count += old_chara_to_new.update_chara_cloth(
+        new_character_data, tem_character
+    )
+    # 更新角色口上颜色
+    if (
+        new_character_data.cid != 0
+        and tem_character.TextColor != new_character_data.text_color
+    ):
+      # print(f"debug value.name = {value.name}，tem_character.TextColor = {tem_character.TextColor}，value.text_color = {value.text_color}")
+      new_character_data.text_color = tem_character.TextColor
+      text_color_list = [
+          new_character_data.adv,
+          new_character_data.name,
+          tem_character.TextColor,
+      ]
+      character_config.add_text_color_data_to_config_data(text_color_list)
+      update_count += 1
+      color_update_count += 1
+    # 更新角色的口上大小
+    if (
+        new_character_data.cid != 0
+        and tem_character.Talk_Size != new_character_data.talk_size
+    ):
+      # print(f"debug value.name = {value.name}，tem_character.TextSize = {tem_character.TextSize}，value.text_size = {value.text_size}")
+      new_character_data.talk_size = tem_character.Talk_Size
+      update_count += 1
+    # 更新角色势力与出身地
+    if (
+        new_character_data.cid != 0
+        and tem_character.Nation != new_character_data.relationship.nation
+    ):
+      new_character_data.relationship.nation = tem_character.Nation
+      update_count += 1
+    if (
+        new_character_data.cid != 0
+        and tem_character.Birthplace
+        != new_character_data.relationship.birthplace
+    ):
+      new_character_data.relationship.birthplace = tem_character.Birthplace
+      update_count += 1
+    # 更新到玩家收藏品列表
+    if (
+        new_character_data.cid != 0
+        and new_character_data.cid
+        not in loaded_dict["character_data"][0].pl_collection.token_list
+    ):
+      loaded_dict["character_data"][0].pl_collection.token_list[
+          new_character_data.cid
+      ] = False
+      loaded_dict["character_data"][0].pl_collection.first_panties[
+          new_character_data.cid
+      ] = ""
+      loaded_dict["character_data"][0].pl_collection.npc_panties[
+          new_character_data.cid
+      ] = []
+      loaded_dict["character_data"][0].pl_collection.npc_socks[
+          new_character_data.cid
+      ] = []
+      # print(f"debug value.cid = {value.cid}, value.name = {value.name}")
+      update_count += 1
+    # 被监禁的角色检查是否在囚犯列表中，需要排除正在逃跑的人
+    if (
+        new_character_data.sp_flag.imprisonment
+        and not new_character_data.sp_flag.escaping
+        and new_character_data.cid
+        not in loaded_dict["rhodes_island"].current_prisoners
+    ):
+      loaded_dict["rhodes_island"].current_prisoners[new_character_data.cid] = [
+          cache.game_time,
+          0,
+      ]
+      update_count += 1
+    # 重新指向新的角色数据
+    loaded_dict["character_data"][key] = new_character_data
+  if cloth_update_count:
+    now_draw = draw.LeftDraw()
+    draw_text = _("\n共有{0}个角色的服装数据已重置\n").format(
+        cloth_update_count
+    )
+    now_draw.text = draw_text
+    now_draw.draw()
+
+  # 更新字体颜色
+  if color_update_count:
+    io_init.init_style()
+    now_draw = draw.LeftDraw()
+    draw_text = _("\n共有{0}个角色的口上颜色已更新\n").format(
+        color_update_count
+    )
+    now_draw.text = draw_text
+    now_draw.draw()
+
+  # 更新罗德岛的资源
+  for all_cid in game_config.config_resouce:
+    # 不存在的资源数量设为0
+    if all_cid not in loaded_dict["rhodes_island"].materials_resouce:
+      loaded_dict["rhodes_island"].materials_resouce[all_cid] = 0
+      update_count += 1
+  # 生长养成系统旧存档兼容：补全全局课表与孩子日程模板（Plan 22）
+  if not hasattr(loaded_dict["rhodes_island"], "class_schedule"):
+    loaded_dict["rhodes_island"].class_schedule = {}
+    update_count += 1
+  if not hasattr(loaded_dict["rhodes_island"], "child_schedule_template"):
+    loaded_dict["rhodes_island"].child_schedule_template = {}
+    update_count += 1
+  # 教育区娱乐改编号（2026-09-09）：日程模板各时段里存的旧编号换成新编号
+  update_count += _migrate_child_schedule_template(loaded_dict["rhodes_island"])
+  # 成长阶段与体型素质、见学与上课状态、表里没有的行为与娱乐编号、101/102阶段的H与身体状态和离线、外表年龄药、世界设定1
+  young_child_session = {}
+  update_count += old_chara_to_new.migrate_age_and_body_type(
+      loaded_dict, young_child_session
+  )
+  # 临时性技实操课（Plan 22 四期）
+  if not hasattr(loaded_dict["rhodes_island"], "temp_sex_class"):
+    loaded_dict["rhodes_island"].temp_sex_class = {}
+    update_count += 1
+  # 公务事件待处理队列与全局履历（Plan 23，由 Plan 22 三期的养成事件队列升格而来）
+  if not hasattr(loaded_dict["rhodes_island"], "official_event_queue"):
+    old_queue = getattr(loaded_dict["rhodes_island"], "growth_event_queue", [])
+    new_queue = []
+    # 旧档的队列元素没有 department，按 uid 回查配置补上；事件已被删掉的直接丢弃，
+    #    留着会在出队时查不到配置而被清理，不如在载入时就清干净
+    for one in old_queue:
+      if (
+          not isinstance(one, dict)
+          or one.get("uid") not in game_config.config_official_event
+      ):
+        continue
+      one["department"] = game_config.config_official_event[one["uid"]].get(
+          "department", 0
+      )
+      new_queue.append(one)
+    loaded_dict["rhodes_island"].official_event_queue = new_queue
+    update_count += 1
+  if not hasattr(loaded_dict["rhodes_island"], "official_event_history"):
+    loaded_dict["rhodes_island"].official_event_history = {}
+    update_count += 1
+  # 挪了桶的养成事件（Plan 32 L22）：没有养成数据的主体记在罗德岛的全局履历里（键为「uid@角色id」），旧uid同样改成新uid
+  update_count += _migrate_official_event_history(
+      loaded_dict["rhodes_island"].official_event_history
+  )
+  # 更新罗德岛的设施等级
+  for all_cid in game_config.config_facility:
+    # 没有记录的设施改为初始等级0
+    if all_cid not in loaded_dict["rhodes_island"].facility_level:
+      loaded_dict["rhodes_island"].facility_level[all_cid] = 1
+      update_count += 1
+  # 更新罗德岛的设施开启状态
+  for all_cid in game_config.config_facility_open:
+    # 没有记录的设施改为初始关闭
+    if all_cid not in loaded_dict["rhodes_island"].facility_open:
+      loaded_dict["rhodes_island"].facility_open[all_cid] = False
+    # 已关闭的查询是否可以被已有角色开启
+    if loaded_dict["rhodes_island"].facility_open[all_cid] == False:
+      if game_config.config_facility_open[all_cid].NPC_id != 0:
+        for chara_cid in loaded_dict["npc_id_got"]:
+          character_data = loaded_dict["character_data"][chara_cid]
+          if (
+              character_data.adv
+              == game_config.config_facility_open[all_cid].NPC_id
+          ):
+            loaded_dict["rhodes_island"].facility_open[all_cid] = True
+            break
+  # 更新食谱
+  loaded_dict["recipe_data"] = cooking.init_recipes()
+  # 更新图书借阅
+  for all_cid in game_config.config_book:
+    if all_cid not in loaded_dict["rhodes_island"].book_borrow_dict:
+      loaded_dict["rhodes_island"].book_borrow_dict[all_cid] = -1
+
+  # 更新各项设置
+  update_count += update_settings(loaded_dict)
+
+  # 更新大地图势力数据
+  loaded_dict["country"] = attr_calculation.get_country_reset(
+      loaded_dict["country"]
+  )
+
+  # 更新游戏地图
+  update_count += update_map(loaded_dict)
+
+  # 更新医疗系统存档结构
+  medical_service.update_medical_save_data_structure(loaded_dict)
+
+  # 最后输出
+  now_draw = draw.NormalDraw()
+  draw_text = _("\n检测完毕，共有{0}条数据完成了更新\n").format(update_count)
+  now_draw.text = draw_text
+  now_draw.draw()
+
+  # 使用 update() 方法来更新 cache 的字典
+  cache.__dict__.update(loaded_dict)
+
+  # 鼠标状态属于临时界面状态，不该随存档带入：旧版存档可能把“正在按任意键继续”的0值一起存了进来，
+  # 载入后 w_frame_up 残留为0，之后第一次左键会被 mouse_left_check 误判为“推进等待”，
+  # 消耗掉一次性的输入许可却不产生任何指令，askfor_all 从此收不到输入，游戏静默卡死
+  cache.wframe_mouse = game_type.WFrameMouse()
+
+  # 有101/102阶段的孩子参与的群交、时停与H，各按自己的结束结算收尾（这些结算读写游戏缓存，须在覆盖缓存之后）
+  old_chara_to_new.end_young_child_session(young_child_session)
+
+  # 游戏状态自检（系统设置14号，默认关闭）：对载入后的存档做保守修复，包在开关关闭时不会被导入
+  if cache.all_system_setting.base_setting.get(14, 0):
+    from Script.Test import Static_Check as static_check_system
+
+    static_check_system.run_load_repair()
 
 
 def update_dict_with_default(loaded_dict, default_dict):
-    """
-    递归地赋值字典
-    Keyword arguments:
-    loaded_dict -- 要赋值的字典
-    default_dict -- 默认字典
-    """
-    update_count = 0
-    for key, value in default_dict.items():
-        # print("存档修复: key", key, "value", value)
-        # 跳过Python的内置方法
-        if key.startswith('__') and key.endswith('__'):
-            continue
-        # 如果 key 不在 loaded_dict 中，将其添加到 loaded_dict 中
-        if key not in loaded_dict:
-            loaded_dict[key] = value
-            update_count += 1
-            # 只有在不是私有属性时才会输出
-            draw_text = _("存档跨版本更新: key {0}, not found，已设为默认值 {1}\n").format(key, value)
-            now_draw = draw.LeftDraw()
-            now_draw.text = draw_text
-            # now_draw.draw()
-        elif isinstance(value, game_type.Cache):
-            update_count += update_dict_with_default(loaded_dict[key].__dict__, value.__dict__)
-        elif hasattr(value, '__dict__'):  # 检查 value 是否是一个类的实例
-            update_count += update_dict_with_default(loaded_dict[key].__dict__, value.__dict__)
-        # 存档里的游戏时间是 GameTime（datetime 的子类），默认值是普通 datetime，两者都是时间就保留存档值
-        elif isinstance(value, datetime.datetime) and isinstance(loaded_dict[key], datetime.datetime):
-            continue
-        # 如果key的类型不同，且value不为None，类型也不为int或float时，将其设为默认值
-        elif type(loaded_dict[key]) != type(default_dict[key]) and value != None and type(value) != int and type(value) != float:
-            loaded_dict[key] = value
-            update_count += 1
-            draw_text = _("存档跨版本更新: key {0}, type not match，原type {1}，新type {2}, 已设为默认值 {3}\n").format(key, type(loaded_dict[key]), type(default_dict[key]), value)
-            now_draw = draw.LeftDraw()
-            now_draw.text = draw_text
-            # now_draw.draw()
-    return update_count
+  """
+  递归地赋值字典
+  Keyword arguments:
+  loaded_dict -- 要赋值的字典
+  default_dict -- 默认字典
+  """
+  update_count = 0
+  for key, value in default_dict.items():
+    # print("存档修复: key", key, "value", value)
+    # 跳过Python的内置方法
+    if key.startswith("__") and key.endswith("__"):
+      continue
+    # 如果 key 不在 loaded_dict 中，将其添加到 loaded_dict 中
+    if key not in loaded_dict:
+      loaded_dict[key] = value
+      update_count += 1
+      # 只有在不是私有属性时才会输出
+      draw_text = _(
+          "存档跨版本更新: key {0}, not found，已设为默认值 {1}\n"
+      ).format(key, value)
+      now_draw = draw.LeftDraw()
+      now_draw.text = draw_text
+      # now_draw.draw()
+    elif isinstance(value, game_type.Cache):
+      update_count += update_dict_with_default(
+          loaded_dict[key].__dict__, value.__dict__
+      )
+    elif hasattr(value, "__dict__"):  # 检查 value 是否是一个类的实例
+      update_count += update_dict_with_default(
+          loaded_dict[key].__dict__, value.__dict__
+      )
+    # 存档里的游戏时间是 GameTime（datetime 的子类），默认值是普通 datetime，两者都是时间就保留存档值
+    elif isinstance(value, datetime.datetime) and isinstance(
+        loaded_dict[key], datetime.datetime
+    ):
+      continue
+    # 如果key的类型不同，且value不为None，类型也不为int或float时，将其设为默认值
+    elif (
+        type(loaded_dict[key]) != type(default_dict[key])
+        and value != None
+        and type(value) != int
+        and type(value) != float
+    ):
+      loaded_dict[key] = value
+      update_count += 1
+      draw_text = _(
+          "存档跨版本更新: key {0}, type not match，原type {1}，新type {2}, 已设为默认值 {3}\n"
+      ).format(key, type(loaded_dict[key]), type(default_dict[key]), value)
+      now_draw = draw.LeftDraw()
+      now_draw.text = draw_text
+      # now_draw.draw()
+  return update_count
+
 
 def recursive_update(target, source):
-    """
-    递归更新字典
-    Keyword arguments:
-    target -- 要被更新的目标字典
-    source -- 数据来源的源字典
-    """
-    for key, value in source.__dict__.items():
-        if isinstance(value, object) and hasattr(value, '__dict__'):
-            if key in target.__dict__ and isinstance(target.__dict__[key], object) and hasattr(target.__dict__[key], '__dict__'):
-                recursive_update(target.__dict__[key], value)
-            else:
-                target.__dict__[key] = value
-        else:
-            target.__dict__[key] = value
+  """
+  递归更新字典
+  Keyword arguments:
+  target -- 要被更新的目标字典
+  source -- 数据来源的源字典
+  """
+  for key, value in source.__dict__.items():
+    if isinstance(value, object) and hasattr(value, "__dict__"):
+      if (
+          key in target.__dict__
+          and isinstance(target.__dict__[key], object)
+          and hasattr(target.__dict__[key], "__dict__")
+      ):
+        recursive_update(target.__dict__[key], value)
+      else:
+        target.__dict__[key] = value
+    else:
+      target.__dict__[key] = value
 
 
 def update_map(loaded_dict):
-    """
-    更新地图
-    Keyword arguments:
-    loaded_dict -- 存档数据
-    """
+  """
+  更新地图
+  Keyword arguments:
+  loaded_dict -- 存档数据
+  """
 
-    update_count = 0
+  update_count = 0
 
-    # 遍历地图数据，如果该地图在缓存数据中但不在存档中，将其添加到存档中
-    change_map_flag = False
-    for key, value in cache.scene_data.items():
-        if key not in loaded_dict["scene_data"]:
-            loaded_dict["scene_data"][key] = value
-            update_count += 1
-            change_map_flag = True
-        if value.scene_tag != loaded_dict["scene_data"][key].scene_tag:
-            loaded_dict["scene_data"][key].scene_tag = value.scene_tag
-            update_count += 1
-            change_map_flag = True
-        if not hasattr(loaded_dict["scene_data"][key], 'scene_img') or value.scene_img != loaded_dict["scene_data"][key].scene_img:
-            loaded_dict["scene_data"][key].scene_img = value.scene_img
-            update_count += 1
-            change_map_flag = True
-        if not hasattr(loaded_dict["scene_data"][key], 'room_area') or value.room_area != loaded_dict["scene_data"][key].room_area:
-            loaded_dict["scene_data"][key].room_area = value.room_area
-            update_count += 1
-            change_map_flag = True
-    # 如果地图数据有变化，将地图路径也更新，同时删除不存在的地图数据
-    if change_map_flag:
-        loaded_dict["map_data"] = cache.map_data
-        # 在2024.7月的版本中将人气快餐开封菜改为了约翰老妈汉堡店
-        if '贸易\人气快餐开封菜' in loaded_dict["scene_data"]:
-            # print("发现存档存在人气快餐开封菜")
-            for key, value in loaded_dict["character_data"].items():
-                if value.position[-1] == '人气快餐开封菜':
-                    value.position[-1] = '约翰老妈汉堡店'
-                    # print(f"已将{value.name}的位置从人气开封菜改为约翰老妈汉堡店")
-        for key, value in loaded_dict["scene_data"].copy().items():
-            # print(f"debug 地图数据: key = {key}, value = {value.scene_tag}")
-            if key not in cache.scene_data:
-                del loaded_dict["scene_data"][key]
-                update_count += 1
-        now_draw = draw.LeftDraw()
-        draw_text = _("\n游戏地图已更新\n")
-        now_draw.text = draw_text
-        now_draw.draw()
-
-    # 把站在已被删除的场景里的角色挪回来
-    # 地图改建会删掉旧场景（如教育区改建把原本的单间「教室」拆成了6间理论教室、3间实践教室与大礼堂），
-    # 但站在里面的角色，position 不会跟着改，此后每一次 cache.scene_data[该路径] 都会直接 KeyError
-    # 必须放在 change_map_flag 之外无条件执行：上面那个删除循环只在地图有变动的那一次读取里跑，
-    #    它把死场景删掉了却没管站在里面的人，之后每次读取 change_map_flag 都是假，
-    #    坏位置于是永远留在存档里，再也没有代码会去碰它
-    move_back_count = 0
-    for character_id, character_data in loaded_dict["character_data"].items():
-        old_position_str = map_handle.get_map_system_path_str_for_list(character_data.position)
-        if old_position_str in cache.scene_data:
-            continue
-        # 回落到同一区块的入口——每个区块都有一个"0"号入口场景；整个区块都没了才回落到地图原点
-        new_position = [character_data.position[0], "0"] if character_data.position else ["0", "0"]
-        if map_handle.get_map_system_path_str_for_list(new_position) not in cache.scene_data:
-            new_position = ["0", "0"]
-        new_position_str = map_handle.get_map_system_path_str_for_list(new_position)
-        # 死场景可能还留在存档里（本次读取没触发上面的删除），要先把人从它的名单里摘掉
-        if old_position_str in loaded_dict["scene_data"]:
-            loaded_dict["scene_data"][old_position_str].character_list.discard(character_id)
-        loaded_dict["scene_data"][new_position_str].character_list.add(character_id)
-        character_data.position = new_position
+  # 遍历地图数据，如果该地图在缓存数据中但不在存档中，将其添加到存档中
+  change_map_flag = False
+  for key, value in cache.scene_data.items():
+    if key not in loaded_dict["scene_data"]:
+      loaded_dict["scene_data"][key] = value
+      update_count += 1
+      change_map_flag = True
+    if value.scene_tag != loaded_dict["scene_data"][key].scene_tag:
+      loaded_dict["scene_data"][key].scene_tag = value.scene_tag
+      update_count += 1
+      change_map_flag = True
+    if (
+        not hasattr(loaded_dict["scene_data"][key], "scene_img")
+        or value.scene_img != loaded_dict["scene_data"][key].scene_img
+    ):
+      loaded_dict["scene_data"][key].scene_img = value.scene_img
+      update_count += 1
+      change_map_flag = True
+    if (
+        not hasattr(loaded_dict["scene_data"][key], "room_area")
+        or value.room_area != loaded_dict["scene_data"][key].room_area
+    ):
+      loaded_dict["scene_data"][key].room_area = value.room_area
+      update_count += 1
+      change_map_flag = True
+  # 如果地图数据有变化，将地图路径也更新，同时删除不存在的地图数据
+  if change_map_flag:
+    loaded_dict["map_data"] = cache.map_data
+    # 在2024.7月的版本中将人气快餐开封菜改为了约翰老妈汉堡店
+    if "贸易\人气快餐开封菜" in loaded_dict["scene_data"]:
+      # print("发现存档存在人气快餐开封菜")
+      for key, value in loaded_dict["character_data"].items():
+        if value.position[-1] == "人气快餐开封菜":
+          value.position[-1] = "约翰老妈汉堡店"
+          # print(f"已将{value.name}的位置从人气开封菜改为约翰老妈汉堡店")
+    for key, value in loaded_dict["scene_data"].copy().items():
+      # print(f"debug 地图数据: key = {key}, value = {value.scene_tag}")
+      if key not in cache.scene_data:
+        del loaded_dict["scene_data"][key]
         update_count += 1
-        move_back_count += 1
-    if move_back_count:
-        now_draw = draw.LeftDraw()
-        now_draw.text = _("\n有{0}名角色所在的房间已不存在（地图改建），已将她们移动到所属区块的入口\n").format(move_back_count)
-        now_draw.style = "gold_enrod"
-        now_draw.draw()
+    now_draw = draw.LeftDraw()
+    draw_text = _("\n游戏地图已更新\n")
+    now_draw.text = draw_text
+    now_draw.draw()
 
-    return update_count
+  # 把站在已被删除的场景里的角色挪回来
+  # 地图改建会删掉旧场景（如教育区改建把原本的单间「教室」拆成了6间理论教室、3间实践教室与大礼堂），
+  # 但站在里面的角色，position 不会跟着改，此后每一次 cache.scene_data[该路径] 都会直接 KeyError
+  # 必须放在 change_map_flag 之外无条件执行：上面那个删除循环只在地图有变动的那一次读取里跑，
+  #    它把死场景删掉了却没管站在里面的人，之后每次读取 change_map_flag 都是假，
+  #    坏位置于是永远留在存档里，再也没有代码会去碰它
+  move_back_count = 0
+  for character_id, character_data in loaded_dict["character_data"].items():
+    old_position_str = map_handle.get_map_system_path_str_for_list(
+        character_data.position
+    )
+    if old_position_str in cache.scene_data:
+      continue
+    # 回落到同一区块的入口——每个区块都有一个"0"号入口场景；整个区块都没了才回落到地图原点
+    new_position = (
+        [character_data.position[0], "0"]
+        if character_data.position
+        else ["0", "0"]
+    )
+    if (
+        map_handle.get_map_system_path_str_for_list(new_position)
+        not in cache.scene_data
+    ):
+      new_position = ["0", "0"]
+    new_position_str = map_handle.get_map_system_path_str_for_list(new_position)
+    # 死场景可能还留在存档里（本次读取没触发上面的删除），要先把人从它的名单里摘掉
+    if old_position_str in loaded_dict["scene_data"]:
+      loaded_dict["scene_data"][old_position_str].character_list.discard(
+          character_id
+      )
+    loaded_dict["scene_data"][new_position_str].character_list.add(character_id)
+    character_data.position = new_position
+    update_count += 1
+    move_back_count += 1
+  if move_back_count:
+    now_draw = draw.LeftDraw()
+    now_draw.text = _(
+        "\n有{0}名角色所在的房间已不存在（地图改建），已将她们移动到所属区块的入口\n"
+    ).format(move_back_count)
+    now_draw.style = "gold_enrod"
+    now_draw.draw()
+
+  return update_count
+
 
 def update_settings(loaded_dict):
-    """
-    更新设置
-    Keyword arguments:
-    loaded_dict -- 存档数据
-    """
-    update_count = 0
-    zero_system_setting = attr_calculation.get_system_setting_zero()
-    base_setting = zero_system_setting.base_setting
-    if len(loaded_dict["all_system_setting"].base_setting) != len(base_setting):
-        for key in base_setting:
-            if key not in loaded_dict["all_system_setting"].base_setting:
-                loaded_dict["all_system_setting"].base_setting[key] = base_setting[key]
-                update_count += 1
-        now_draw = draw.NormalDraw()
-        draw_text = _("\n系统设置已更新，如有需要请手动修改\n")
-        now_draw.style = "gold_enrod"
-        now_draw.text = draw_text
-        now_draw.draw()
-    draw_setting = zero_system_setting.draw_setting
-    if len(loaded_dict["all_system_setting"].draw_setting) != len(draw_setting):
-        for key in draw_setting:
-            if key not in loaded_dict["all_system_setting"].draw_setting:
-                loaded_dict["all_system_setting"].draw_setting[key] = draw_setting[key]
-                update_count += 1
-        now_draw = draw.NormalDraw()
-        draw_text = _("\n绘制设置已更新，如有需要请手动修改\n")
-        now_draw.style = "gold_enrod"
-        now_draw.text = draw_text
-        now_draw.draw()
-    difficulty_setting = zero_system_setting.difficulty_setting
-    if len(loaded_dict["all_system_setting"].difficulty_setting) != len(difficulty_setting):
-        for key in difficulty_setting:
-            if key not in loaded_dict["all_system_setting"].difficulty_setting:
-                loaded_dict["all_system_setting"].difficulty_setting[key] = difficulty_setting[key]
-                update_count += 1
-        now_difficulty = draw.NormalDraw()
-        draw_text = _("\n难度设置已更新，如有需要请手动修改\n")
-        now_difficulty.style = "gold_enrod"
-        now_difficulty.text = draw_text
-        now_difficulty.draw()
-    # 生殖方式设置（旧存档的设置对象里没有该属性，需先补空字典再逐项补默认值）
-    birth_type_setting = zero_system_setting.birth_type_setting
-    if not hasattr(loaded_dict["all_system_setting"], "birth_type_setting"):
-        loaded_dict["all_system_setting"].birth_type_setting = {}
-    if len(loaded_dict["all_system_setting"].birth_type_setting) != len(birth_type_setting):
-        for key in birth_type_setting:
-            if key not in loaded_dict["all_system_setting"].birth_type_setting:
-                loaded_dict["all_system_setting"].birth_type_setting[key] = birth_type_setting[key]
-                update_count += 1
-        now_birth_type = draw.NormalDraw()
-        draw_text = _("\n生殖方式设置已更新，如有需要请手动修改\n")
-        now_birth_type.style = "gold_enrod"
-        now_birth_type.text = draw_text
-        now_birth_type.draw()
-    # 角色口上选择设置
-    character_text_version = zero_system_setting.character_text_version
-    # 获取玩家的女儿角色列表
-    daughter_characters = loaded_dict["character_data"][0].relationship.child_id_list
-    for daughter_cid in daughter_characters:
-        if daughter_cid not in character_text_version:
-            character_text_version[daughter_cid] = 1
-    if len(loaded_dict["all_system_setting"].character_text_version) != len(character_text_version):
-        for key in character_text_version:
-            if key not in loaded_dict["all_system_setting"].character_text_version:
-                loaded_dict["all_system_setting"].character_text_version[key] = character_text_version[key]
-                update_count += 1
-        now_draw = draw.NormalDraw()
-        draw_text = _("\n角色口上选择设置已更新，如有需要请手动修改\n")
-        now_draw.style = "gold_enrod"
-        now_draw.text = draw_text
-        now_draw.draw()
-    # 更新AI设置
-    if len(loaded_dict["ai_setting"].ai_chat_setting) != len(game_config.config_ai_chat_setting):
-        for key in game_config.config_ai_chat_setting:
-            if key not in loaded_dict["ai_setting"].ai_chat_setting:
-                loaded_dict["ai_setting"].ai_chat_setting[key] = 0
-                update_count += 1
-        now_draw = draw.NormalDraw()
-        draw_text = _("\n文本生成AI设置已更新，如有需要请手动修改\n")
-        now_draw.style = "gold_enrod"
-        now_draw.text = draw_text
-        now_draw.draw()
-    # 更新体检设置
-    zero_physical_exam_setting = attr_calculation.get_physical_exam_setting_zero()
-    if len(loaded_dict["rhodes_island"].physical_examination_setting) != len(zero_physical_exam_setting):
-        for key in zero_physical_exam_setting:
-            if key not in loaded_dict["rhodes_island"].physical_examination_setting:
-                loaded_dict["rhodes_island"].physical_examination_setting[key] = zero_physical_exam_setting[key]
-                update_count += 1
-        now_draw = draw.NormalDraw()
-        draw_text = _("\n体检设置已更新，如有需要请手动修改\n")
-        now_draw.style = "gold_enrod"
-        now_draw.text = draw_text
-        now_draw.draw()
-    # 更新监禁调教设置
-    if len(loaded_dict["rhodes_island"].confinement_training_setting) != len(game_config.config_confinement_training_setting):
-        for key in game_config.config_confinement_training_setting:
-            if key not in loaded_dict["rhodes_island"].confinement_training_setting:
-                loaded_dict["rhodes_island"].confinement_training_setting[key] = 0
-                update_count += 1
-        now_draw = draw.NormalDraw()
-        draw_text = _("\n监禁调教设置已更新，如有需要请手动修改\n")
-        now_draw.style = "gold_enrod"
-        now_draw.text = draw_text
-        now_draw.draw()
-    return update_count
+  """
+  更新设置
+  Keyword arguments:
+  loaded_dict -- 存档数据
+  """
+  update_count = 0
+  zero_system_setting = attr_calculation.get_system_setting_zero()
+  base_setting = zero_system_setting.base_setting
+  if len(loaded_dict["all_system_setting"].base_setting) != len(base_setting):
+    for key in base_setting:
+      if key not in loaded_dict["all_system_setting"].base_setting:
+        loaded_dict["all_system_setting"].base_setting[key] = base_setting[key]
+        update_count += 1
+    now_draw = draw.NormalDraw()
+    draw_text = _("\n系统设置已更新，如有需要请手动修改\n")
+    now_draw.style = "gold_enrod"
+    now_draw.text = draw_text
+    now_draw.draw()
+  draw_setting = zero_system_setting.draw_setting
+  if len(loaded_dict["all_system_setting"].draw_setting) != len(draw_setting):
+    for key in draw_setting:
+      if key not in loaded_dict["all_system_setting"].draw_setting:
+        loaded_dict["all_system_setting"].draw_setting[key] = draw_setting[key]
+        update_count += 1
+    now_draw = draw.NormalDraw()
+    draw_text = _("\n绘制设置已更新，如有需要请手动修改\n")
+    now_draw.style = "gold_enrod"
+    now_draw.text = draw_text
+    now_draw.draw()
+  difficulty_setting = zero_system_setting.difficulty_setting
+  if len(loaded_dict["all_system_setting"].difficulty_setting) != len(
+      difficulty_setting
+  ):
+    for key in difficulty_setting:
+      if key not in loaded_dict["all_system_setting"].difficulty_setting:
+        loaded_dict["all_system_setting"].difficulty_setting[key] = (
+            difficulty_setting[key]
+        )
+        update_count += 1
+    now_difficulty = draw.NormalDraw()
+    draw_text = _("\n难度设置已更新，如有需要请手动修改\n")
+    now_difficulty.style = "gold_enrod"
+    now_difficulty.text = draw_text
+    now_difficulty.draw()
+  # 生殖方式设置（旧存档的设置对象里没有该属性，需先补空字典再逐项补默认值）
+  birth_type_setting = zero_system_setting.birth_type_setting
+  if not hasattr(loaded_dict["all_system_setting"], "birth_type_setting"):
+    loaded_dict["all_system_setting"].birth_type_setting = {}
+  if len(loaded_dict["all_system_setting"].birth_type_setting) != len(
+      birth_type_setting
+  ):
+    for key in birth_type_setting:
+      if key not in loaded_dict["all_system_setting"].birth_type_setting:
+        loaded_dict["all_system_setting"].birth_type_setting[key] = (
+            birth_type_setting[key]
+        )
+        update_count += 1
+    now_birth_type = draw.NormalDraw()
+    draw_text = _("\n生殖方式设置已更新，如有需要请手动修改\n")
+    now_birth_type.style = "gold_enrod"
+    now_birth_type.text = draw_text
+    now_birth_type.draw()
+  # 角色口上选择设置
+  character_text_version = zero_system_setting.character_text_version
+  # 获取玩家的女儿角色列表
+  daughter_characters = loaded_dict["character_data"][
+      0
+  ].relationship.child_id_list
+  for daughter_cid in daughter_characters:
+    if daughter_cid not in character_text_version:
+      character_text_version[daughter_cid] = 1
+  if len(loaded_dict["all_system_setting"].character_text_version) != len(
+      character_text_version
+  ):
+    for key in character_text_version:
+      if key not in loaded_dict["all_system_setting"].character_text_version:
+        loaded_dict["all_system_setting"].character_text_version[key] = (
+            character_text_version[key]
+        )
+        update_count += 1
+    now_draw = draw.NormalDraw()
+    draw_text = _("\n角色口上选择设置已更新，如有需要请手动修改\n")
+    now_draw.style = "gold_enrod"
+    now_draw.text = draw_text
+    now_draw.draw()
+  # 更新AI设置
+  if len(loaded_dict["ai_setting"].ai_chat_setting) != len(
+      game_config.config_ai_chat_setting
+  ):
+    for key in game_config.config_ai_chat_setting:
+      if key not in loaded_dict["ai_setting"].ai_chat_setting:
+        loaded_dict["ai_setting"].ai_chat_setting[key] = 0
+        update_count += 1
+    now_draw = draw.NormalDraw()
+    draw_text = _("\n文本生成AI设置已更新，如有需要请手动修改\n")
+    now_draw.style = "gold_enrod"
+    now_draw.text = draw_text
+    now_draw.draw()
+  # 更新体检设置
+  zero_physical_exam_setting = attr_calculation.get_physical_exam_setting_zero()
+  if len(loaded_dict["rhodes_island"].physical_examination_setting) != len(
+      zero_physical_exam_setting
+  ):
+    for key in zero_physical_exam_setting:
+      if key not in loaded_dict["rhodes_island"].physical_examination_setting:
+        loaded_dict["rhodes_island"].physical_examination_setting[key] = (
+            zero_physical_exam_setting[key]
+        )
+        update_count += 1
+    now_draw = draw.NormalDraw()
+    draw_text = _("\n体检设置已更新，如有需要请手动修改\n")
+    now_draw.style = "gold_enrod"
+    now_draw.text = draw_text
+    now_draw.draw()
+  # 更新监禁调教设置
+  if len(loaded_dict["rhodes_island"].confinement_training_setting) != len(
+      game_config.config_confinement_training_setting
+  ):
+    for key in game_config.config_confinement_training_setting:
+      if key not in loaded_dict["rhodes_island"].confinement_training_setting:
+        loaded_dict["rhodes_island"].confinement_training_setting[key] = 0
+        update_count += 1
+    now_draw = draw.NormalDraw()
+    draw_text = _("\n监禁调教设置已更新，如有需要请手动修改\n")
+    now_draw.style = "gold_enrod"
+    now_draw.text = draw_text
+    now_draw.draw()
+  return update_count
 
 
 def remove_save(save_id: str):
-    """
-    删除存档id对应存档
-    Keyword arguments:
-    save_id -- 存档id
-    """
-    save_path = get_save_dir_path(save_id)
-    if os.path.isdir(save_path):
-        shutil.rmtree(save_path)
+  """
+  删除存档id对应存档
+  Keyword arguments:
+  save_id -- 存档id
+  """
+  save_path = get_save_dir_path(save_id)
+  if os.path.isdir(save_path):
+    shutil.rmtree(save_path)
 
 
 def _get_save_info_path() -> str:
-    """
-    获取 save_info.json 的路径（用于记录界面相关的简单配置）
-    """
-    save_dir = os.path.join("save")
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-    return os.path.join(save_dir, "save_info.json")
+  """
+  获取 save_info.json 的路径（用于记录界面相关的简单配置）
+  """
+  save_dir = os.path.join("save")
+  if not os.path.exists(save_dir):
+    os.makedirs(save_dir)
+  return os.path.join(save_dir, "save_info.json")
+
 
 def load_save_info_file() -> dict:
-    """
-    读取 save/save_info.json 并返回字典，文件不存在时返回空字典
-    """
-    path = _get_save_info_path()
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return {}
+  """
+  读取 save/save_info.json 并返回字典，文件不存在时返回空字典
+  """
+  path = _get_save_info_path()
+  try:
+    with open(path, "r", encoding="utf-8") as f:
+      return json.load(f)
+  except Exception:
+    return {}
+
 
 def save_save_info_file(data: dict) -> None:
-    """
-    将 data 字典写入 save/save_info.json（覆盖写）
-    """
-    path = _get_save_info_path()
-    try:
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-    except Exception:
-        # 忽略写入错误，避免影响保存流程
-        pass
+  """
+  将 data 字典写入 save/save_info.json（覆盖写）
+  """
+  path = _get_save_info_path()
+  try:
+    with open(path, "w", encoding="utf-8") as f:
+      json.dump(data, f, ensure_ascii=False, indent=2)
+  except Exception:
+    # 忽略写入错误，避免影响保存流程
+    pass
+
 
 def get_last_save_page() -> int:
-    """方便的包装，返回保存的 last_save_page，默认 0"""
-    info = load_save_info_file()
-    try:
-        return int(info.get("last_save_page", 0))
-    except Exception:
-        return 0
+  """方便的包装，返回保存的 last_save_page，默认 0"""
+  info = load_save_info_file()
+  try:
+    return int(info.get("last_save_page", 0))
+  except Exception:
+    return 0
+
 
 def set_last_save_page(page: int) -> None:
-    """方便的包装，写入 last_save_page 到 save_info.json"""
-    info = load_save_info_file()
-    info["last_save_page"] = int(page)
-    save_save_info_file(info)
+  """方便的包装，写入 last_save_page 到 save_info.json"""
+  info = load_save_info_file()
+  info["last_save_page"] = int(page)
+  save_save_info_file(info)
+
 
 def get_last_save_id() -> str:
-    """返回上次保存的存档 id，默认空字符串"""
-    info = load_save_info_file()
-    try:
-        v = info.get("last_save_id", "")
-        return str(v) if v is not None else ""
-    except Exception:
-        return ""
+  """返回上次保存的存档 id，默认空字符串"""
+  info = load_save_info_file()
+  try:
+    v = info.get("last_save_id", "")
+    return str(v) if v is not None else ""
+  except Exception:
+    return ""
+
 
 def set_last_save_id(save_id: str) -> None:
-    """写入上次保存的存档 id 到 save_info.json"""
-    info = load_save_info_file()
-    info["last_save_id"] = str(save_id)
-    save_save_info_file(info)
+  """写入上次保存的存档 id 到 save_info.json"""
+  info = load_save_info_file()
+  info["last_save_id"] = str(save_id)
+  save_save_info_file(info)

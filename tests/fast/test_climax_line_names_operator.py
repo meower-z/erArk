@@ -9,6 +9,7 @@
 - B_climax 里写到替她掩护的人的 11 行写了 {PlayerName}；
 - 全部口上里，干员的高潮描写（行为 id 为「一个小写字母_orgasm_」开头，p_ 开头的是博士射精）都不用 {TargetName}。
 """
+
 import re
 
 from Script.Config import game_config
@@ -26,27 +27,50 @@ CHARA_ROWS += [f"chara_0377_澄闪{row}" for row in (92, 93, 94, 105)]
 CHARA_ROWS += [f"chara_0204_白金{row}" for row in (971, 1118, 1139)]
 CHARA_ROWS += [f"chara_0474_歌蕾蒂娅{row}" for row in (2290, 2291, 2292)]
 """ 角色高潮口上的 id """
-HELPER_ROWS = [f"second_climax_B_climax{row}" for row in (1227, 1228, *range(1231, 1240))]
+HELPER_ROWS = [
+    f"second_climax_B_climax{row}" for row in (1227, 1228, *range(1231, 1240))
+]
 """ B_climax 里写到替她掩护的人的行 """
 
 
 class ClimaxLineNamesOperatorTest(FastTestCase):
-    """高潮口上用 {Name} 写高潮的干员，用 {PlayerName} 写掩护她的博士"""
+  """高潮口上用 {Name} 写高潮的干员，用 {PlayerName} 写掩护她的博士"""
 
-    def test_listed_lines_name_operator(self):
-        """列出的隐奸与角色高潮口上都写 {Name}，不写 {TargetName}"""
-        talk_ids = [f"{prefix}{row}" for prefix, rows in SYSTEM_ROWS.items() for row in rows] + CHARA_ROWS
-        missing = [talk_id for talk_id in talk_ids if talk_id not in game_config.config_talk]
-        self.assertEqual(missing, [])
-        wrong = [talk_id for talk_id in talk_ids if "{Name}" not in game_config.config_talk[talk_id].context or "{TargetName}" in game_config.config_talk[talk_id].context]
-        self.assertEqual(wrong, [])
+  def test_listed_lines_name_operator(self):
+    """列出的隐奸与角色高潮口上都写 {Name}，不写 {TargetName}"""
+    talk_ids = [
+        f"{prefix}{row}" for prefix, rows in SYSTEM_ROWS.items() for row in rows
+    ] + CHARA_ROWS
+    missing = [
+        talk_id
+        for talk_id in talk_ids
+        if talk_id not in game_config.config_talk
+    ]
+    self.assertEqual(missing, [])
+    wrong = [
+        talk_id
+        for talk_id in talk_ids
+        if "{Name}" not in game_config.config_talk[talk_id].context
+        or "{TargetName}" in game_config.config_talk[talk_id].context
+    ]
+    self.assertEqual(wrong, [])
 
-    def test_helper_is_doctor(self):
-        """B_climax 里替她掩护的人写作 {PlayerName}"""
-        wrong = [talk_id for talk_id in HELPER_ROWS if "{PlayerName}" not in game_config.config_talk[talk_id].context]
-        self.assertEqual(wrong, [])
+  def test_helper_is_doctor(self):
+    """B_climax 里替她掩护的人写作 {PlayerName}"""
+    wrong = [
+        talk_id
+        for talk_id in HELPER_ROWS
+        if "{PlayerName}" not in game_config.config_talk[talk_id].context
+    ]
+    self.assertEqual(wrong, [])
 
-    def test_no_operator_climax_line_uses_target_name(self):
-        """全部口上里，干员的高潮描写都不用 {TargetName}"""
-        left = sorted(talk_id for talk_id, talk in game_config.config_talk.items() if re.match(r"^[a-z]_orgasm_", talk.behavior_id) and not talk.behavior_id.startswith("p_") and "{TargetName}" in talk.context)
-        self.assertEqual(left, [])
+  def test_no_operator_climax_line_uses_target_name(self):
+    """全部口上里，干员的高潮描写都不用 {TargetName}"""
+    left = sorted(
+        talk_id
+        for talk_id, talk in game_config.config_talk.items()
+        if re.match(r"^[a-z]_orgasm_", talk.behavior_id)
+        and not talk.behavior_id.startswith("p_")
+        and "{TargetName}" in talk.context
+    )
+    self.assertEqual(left, [])

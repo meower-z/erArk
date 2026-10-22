@@ -4,6 +4,7 @@
 """
 重新实现流程控制函数，适配Web UI
 """
+
 from Script.Core import cache_control, io_init, constant
 from Script.Core.web_server import get_button_response, get_wait_response, get_input_response, update_game_state, update_input_request, emit_settlement_buttons, get_settlement_button_response, clear_settlement_button_response
 import time
@@ -24,470 +25,519 @@ PANEL_CHANGE_SIGNAL = "__PANEL_CHANGE__"
 
 
 class PanelChangeException(Exception):
-    """面板切换异常，用于中断当前面板的循环并返回主循环"""
-    pass
+  """面板切换异常，用于中断当前面板的循环并返回主循环"""
+
+  pass
 
 
 def _handle_sub_panel_mode_on_panel_change(initial_panel_id, current_panel_id):
-    """
-    处理面板切换时的子面板模式
-    
-    当从主面板（IN_SCENE）切换到其他面板时，进入子面板模式。
-    当从其他面板切换回主面板时，退出子面板模式。
-    
-    Keyword arguments:
-    initial_panel_id -- 切换前的面板ID
-    current_panel_id -- 切换后的面板ID
-    """
-    from Script.System.Web_Draw_System import enter_sub_panel_mode, exit_sub_panel_mode
-    
-    # 检查是否是从主面板切换到其他面板
-    if initial_panel_id == constant.Panel.IN_SCENE and current_panel_id != constant.Panel.IN_SCENE:
-        # 进入子面板模式
-        # 清除当前绘制元素，避免主面板内容残留
-        if hasattr(cache, 'current_draw_elements'):
-            cache.current_draw_elements = []
-        if hasattr(cache, 'web_draw_history'):
-            cache.web_draw_history = []
-            cache.web_draw_history_line_total = 0
-        
-        # 获取子面板的ID和名称
-        panel_id, panel_name = _get_sub_panel_info(current_panel_id)
-        enter_sub_panel_mode(panel_id, panel_name)
-    
-    # 检查是否是从其他面板切换回主面板
-    elif initial_panel_id != constant.Panel.IN_SCENE and current_panel_id == constant.Panel.IN_SCENE:
-        exit_sub_panel_mode()
+  """
+  处理面板切换时的子面板模式
+
+  当从主面板（IN_SCENE）切换到其他面板时，进入子面板模式。
+  当从其他面板切换回主面板时，退出子面板模式。
+
+  Keyword arguments:
+  initial_panel_id -- 切换前的面板ID
+  current_panel_id -- 切换后的面板ID
+  """
+  from Script.System.Web_Draw_System import enter_sub_panel_mode, exit_sub_panel_mode
+
+  # 检查是否是从主面板切换到其他面板
+  if (
+      initial_panel_id == constant.Panel.IN_SCENE
+      and current_panel_id != constant.Panel.IN_SCENE
+  ):
+    # 进入子面板模式
+    # 清除当前绘制元素，避免主面板内容残留
+    if hasattr(cache, "current_draw_elements"):
+      cache.current_draw_elements = []
+    if hasattr(cache, "web_draw_history"):
+      cache.web_draw_history = []
+      cache.web_draw_history_line_total = 0
+
+    # 获取子面板的ID和名称
+    panel_id, panel_name = _get_sub_panel_info(current_panel_id)
+    enter_sub_panel_mode(panel_id, panel_name)
+
+  # 检查是否是从其他面板切换回主面板
+  elif (
+      initial_panel_id != constant.Panel.IN_SCENE
+      and current_panel_id == constant.Panel.IN_SCENE
+  ):
+    exit_sub_panel_mode()
 
 
 def _get_sub_panel_info(panel_id):
-    """
-    根据面板ID获取子面板的指令ID和名称
-    
-    Keyword arguments:
-    panel_id -- 面板ID（constant.Panel 枚举值）
-    
-    Returns:
-    tuple -- (指令ID, 指令名称)
-    """
-    # 遍历所有指令，查找对应的面板ID
-    for instruct_id, stored_panel_id in constant.instruct_panel_id_data.items():
-        if stored_panel_id == panel_id:
-            panel_name = constant.handle_instruct_name_data.get(instruct_id, instruct_id)
-            return instruct_id, panel_name
-    
-    # 如果没找到，使用面板ID作为标识
-    return f"panel_{panel_id}", f"面板{panel_id}"
+  """
+  根据面板ID获取子面板的指令ID和名称
+
+  Keyword arguments:
+  panel_id -- 面板ID（constant.Panel 枚举值）
+
+  Returns:
+  tuple -- (指令ID, 指令名称)
+  """
+  # 遍历所有指令，查找对应的面板ID
+  for instruct_id, stored_panel_id in constant.instruct_panel_id_data.items():
+    if stored_panel_id == panel_id:
+      panel_name = constant.handle_instruct_name_data.get(
+          instruct_id, instruct_id
+      )
+      return instruct_id, panel_name
+
+  # 如果没找到，使用面板ID作为标识
+  return f"panel_{panel_id}", f"面板{panel_id}"
 
 
 def _clear_sub_panel_before_return():
-    """
-    在子面板模式下返回响应前清除上一批绘制内容
-    
-    返回值类型：无
-    功能描述：在子面板模式下，用户每次输入后需要清除上一批绘制内容，
-    避免历史内容堆积。仅在子面板模式下执行清除操作。
-    """
-    from Script.System.Web_Draw_System import is_in_sub_panel_mode
-    from Script.Core.io_web import clear_sub_panel_content
-    
-    if is_in_sub_panel_mode():
-        clear_sub_panel_content()
+  """
+  在子面板模式下返回响应前清除上一批绘制内容
+
+  返回值类型：无
+  功能描述：在子面板模式下，用户每次输入后需要清除上一批绘制内容，
+  避免历史内容堆积。仅在子面板模式下执行清除操作。
+  """
+  from Script.System.Web_Draw_System import is_in_sub_panel_mode
+  from Script.Core.io_web import clear_sub_panel_content
+
+  if is_in_sub_panel_mode():
+    clear_sub_panel_content()
 
 
-def _handle_settlement_buttons(return_list: List[str], saved_other_texts: Optional[List[str]] = None) -> Optional[str]:
-    """
-    处理结算模式下的按钮显示
-    
-    参数:
-    return_list (List[str]): 可选择的返回值列表
-    saved_other_texts (List[str]): 保存的其他文本列表（因为 update_game_state 会清空 web_other_texts）
-    
-    返回值类型：Optional[str]
-    功能描述：在结算模式下，从当前绘制元素中提取按钮，
-    通过WebSocket发送到前端结算选项弹窗中显示，
-    等待用户选择后返回选中的按钮值。
-    如果没有按钮，返回None让主流程继续正常处理。
-    
-    注意：由于在 web_text_recording_flag 为 True 时，文本元素会被
-    发送到 web_other_texts 而不是 current_draw_elements，因此描述文本
-    需要从 saved_other_texts 中获取（因为 update_game_state 会清空 web_other_texts）。
-    """
-    # 从当前绘制元素中提取按钮
-    buttons = []
-    
-    elements = getattr(cache, 'current_draw_elements', []) or []
-    for elem in elements:
-        if isinstance(elem, dict):
-            if elem.get('type') == 'button':
-                # 提取按钮信息
-                buttons.append({
-                    'text': elem.get('text', ''),
-                    'return_text': elem.get('return_text', ''),
-                    'tooltip': elem.get('tooltip', '')
-                })
-    
-    # 如果没有按钮，返回None让主流程继续
-    if not buttons:
-        return None
-    
-    # 检查是否有预设的描述文本
-    description_text = getattr(cache, 'web_settlement_description', '')
-    
-    # 如果没有预设描述文本，从 saved_other_texts 中获取
-    # （因为 update_game_state 会清空 web_other_texts，所以需要在调用前保存）
-    if not description_text and saved_other_texts:
-        # 过滤非空文本
-        valid_texts = [t.strip() for t in saved_other_texts if isinstance(t, str) and t.strip() and t.strip() != '\n']
-        if valid_texts:
-            # 使用最后一段文本作为描述（通常是选项说明）
-            description_text = valid_texts[-1]
-    
-    # 清空之前的响应
-    clear_settlement_button_response()
-    
-    # 发送按钮到前端
-    emit_settlement_buttons(buttons, description_text)
-    
-    # 等待用户选择
-    response = None
-    while response is None:
-        response = get_settlement_button_response()
-        if response is not None:
-            # 验证响应是否在返回列表中
-            if response in return_list:
-                # 关闭结算选项弹窗
-                emit_settlement_buttons(None)
-                # 清空描述文本缓存
-                cache.web_settlement_description = ""
-                # 清空当前绘制元素中的按钮，避免下次重复显示
-                cache.current_draw_elements = [
-                    elem for elem in cache.current_draw_elements 
-                    if not (isinstance(elem, dict) and elem.get('type') == 'button')
-                ]
-                # 清空用于描述的其他文本缓存
-                cache.web_other_texts = []
-                # 执行关联的命令
-                if _cmd_valid(response):
-                    _cmd_deal(response)
-                return response
-            else:
-                # 无效响应，继续等待
-                response = None
-        time.sleep(0.1)
-    
+def _handle_settlement_buttons(
+    return_list: List[str], saved_other_texts: Optional[List[str]] = None
+) -> Optional[str]:
+  """
+  处理结算模式下的按钮显示
+
+  参数:
+  return_list (List[str]): 可选择的返回值列表
+  saved_other_texts (List[str]): 保存的其他文本列表（因为 update_game_state 会清空 web_other_texts）
+
+  返回值类型：Optional[str]
+  功能描述：在结算模式下，从当前绘制元素中提取按钮，
+  通过WebSocket发送到前端结算选项弹窗中显示，
+  等待用户选择后返回选中的按钮值。
+  如果没有按钮，返回None让主流程继续正常处理。
+
+  注意：由于在 web_text_recording_flag 为 True 时，文本元素会被
+  发送到 web_other_texts 而不是 current_draw_elements，因此描述文本
+  需要从 saved_other_texts 中获取（因为 update_game_state 会清空 web_other_texts）。
+  """
+  # 从当前绘制元素中提取按钮
+  buttons = []
+
+  elements = getattr(cache, "current_draw_elements", []) or []
+  for elem in elements:
+    if isinstance(elem, dict):
+      if elem.get("type") == "button":
+        # 提取按钮信息
+        buttons.append(
+            {
+                "text": elem.get("text", ""),
+                "return_text": elem.get("return_text", ""),
+                "tooltip": elem.get("tooltip", ""),
+            }
+        )
+
+  # 如果没有按钮，返回None让主流程继续
+  if not buttons:
     return None
+
+  # 检查是否有预设的描述文本
+  description_text = getattr(cache, "web_settlement_description", "")
+
+  # 如果没有预设描述文本，从 saved_other_texts 中获取
+  # （因为 update_game_state 会清空 web_other_texts，所以需要在调用前保存）
+  if not description_text and saved_other_texts:
+    # 过滤非空文本
+    valid_texts = [
+        t.strip()
+        for t in saved_other_texts
+        if isinstance(t, str) and t.strip() and t.strip() != "\n"
+    ]
+    if valid_texts:
+      # 使用最后一段文本作为描述（通常是选项说明）
+      description_text = valid_texts[-1]
+
+  # 清空之前的响应
+  clear_settlement_button_response()
+
+  # 发送按钮到前端
+  emit_settlement_buttons(buttons, description_text)
+
+  # 等待用户选择
+  response = None
+  while response is None:
+    response = get_settlement_button_response()
+    if response is not None:
+      # 验证响应是否在返回列表中
+      if response in return_list:
+        # 关闭结算选项弹窗
+        emit_settlement_buttons(None)
+        # 清空描述文本缓存
+        cache.web_settlement_description = ""
+        # 清空当前绘制元素中的按钮，避免下次重复显示
+        cache.current_draw_elements = [
+            elem
+            for elem in cache.current_draw_elements
+            if not (isinstance(elem, dict) and elem.get("type") == "button")
+        ]
+        # 清空用于描述的其他文本缓存
+        cache.web_other_texts = []
+        # 执行关联的命令
+        if _cmd_valid(response):
+          _cmd_deal(response)
+        return response
+      else:
+        # 无效响应，继续等待
+        response = None
+    time.sleep(0.1)
+
+  return None
 
 
 def askfor_all(return_list: List[str]) -> str:
-    """
-    等待用户选择一个选项
-    
-    参数:
-    return_list (List[str]): 可选择的返回值列表
-    
-    返回值类型：str
-    返回用户选择的选项
-    
-    特殊处理：
-    - __WEB_REFRESH__ 信号会被特殊处理，用于处理面板切换
-    - 当收到刷新信号时，检查面板ID是否改变，如果改变则抛出 PanelChangeException
-    - 从主面板切换到其他面板时，自动进入子面板模式
-    
-    在Web UI中，这变成等待用户通过API发送选择
-    """
-    from Script.Core import constant
-    
-    # 记录进入时的面板ID，用于检测面板切换
-    initial_panel_id = getattr(cache, 'now_panel_id', None)
-    
-    # 在 update_game_state 之前保存 web_other_texts
-    # 因为 update_game_state 会清空 web_other_texts，而结算按钮需要用到其中的描述文本
-    saved_other_texts = None
-    if getattr(cache, 'web_text_recording_flag', False):
-        other_texts = getattr(cache, 'web_other_texts', [])
-        if other_texts:
-            saved_other_texts = other_texts.copy()
-    
-    # 更新Web界面状态
-    update_game_state(cache.current_draw_elements, None)
-    # 将当前的返回列表保存到缓存中
-    cache.current_return_list = return_list
-    
-    # 检查是否处于结算模式（web_text_recording_flag 为 True）
-    # 如果是，则需要将按钮显示在结算选项弹窗中
-    if getattr(cache, 'web_text_recording_flag', False):
-        response = _handle_settlement_buttons(return_list, saved_other_texts)
-        if response is not None:
-            return response
-    
-    # Web版本中，轮询等待用户响应
-    response = None
-    while response is None:
-        # 检查面板ID是否改变（由其他途径触发的面板切换）
-        current_panel_id = getattr(cache, 'now_panel_id', None)
+  """
+  等待用户选择一个选项
+
+  参数:
+  return_list (List[str]): 可选择的返回值列表
+
+  返回值类型：str
+  返回用户选择的选项
+
+  特殊处理：
+  - __WEB_REFRESH__ 信号会被特殊处理，用于处理面板切换
+  - 当收到刷新信号时，检查面板ID是否改变，如果改变则抛出 PanelChangeException
+  - 从主面板切换到其他面板时，自动进入子面板模式
+
+  在Web UI中，这变成等待用户通过API发送选择
+  """
+  from Script.Core import constant
+
+  # 记录进入时的面板ID，用于检测面板切换
+  initial_panel_id = getattr(cache, "now_panel_id", None)
+
+  # 在 update_game_state 之前保存 web_other_texts
+  # 因为 update_game_state 会清空 web_other_texts，而结算按钮需要用到其中的描述文本
+  saved_other_texts = None
+  if getattr(cache, "web_text_recording_flag", False):
+    other_texts = getattr(cache, "web_other_texts", [])
+    if other_texts:
+      saved_other_texts = other_texts.copy()
+
+  # 更新Web界面状态
+  update_game_state(cache.current_draw_elements, None)
+  # 将当前的返回列表保存到缓存中
+  cache.current_return_list = return_list
+
+  # 检查是否处于结算模式（web_text_recording_flag 为 True）
+  # 如果是，则需要将按钮显示在结算选项弹窗中
+  if getattr(cache, "web_text_recording_flag", False):
+    response = _handle_settlement_buttons(return_list, saved_other_texts)
+    if response is not None:
+      return response
+
+  # Web版本中，轮询等待用户响应
+  response = None
+  while response is None:
+    # 检查面板ID是否改变（由其他途径触发的面板切换）
+    current_panel_id = getattr(cache, "now_panel_id", None)
+    if current_panel_id != initial_panel_id:
+      # print(f"[askfor_all] 检测到面板切换：{initial_panel_id} -> {current_panel_id}")
+      # 从主面板切换到其他面板时，进入子面板模式
+      _handle_sub_panel_mode_on_panel_change(initial_panel_id, current_panel_id)
+      raise PanelChangeException(
+          f"面板从 {initial_panel_id} 切换到 {current_panel_id}"
+      )
+
+    # 检查是否有按钮点击响应
+    response = get_button_response()
+    if response is not None:
+      # 特殊处理：刷新信号
+      if response == WEB_REFRESH_SIGNAL:
+        # 检查面板ID是否改变
+        current_panel_id = getattr(cache, "now_panel_id", None)
         if current_panel_id != initial_panel_id:
-            # print(f"[askfor_all] 检测到面板切换：{initial_panel_id} -> {current_panel_id}")
-            # 从主面板切换到其他面板时，进入子面板模式
-            _handle_sub_panel_mode_on_panel_change(initial_panel_id, current_panel_id)
-            raise PanelChangeException(f"面板从 {initial_panel_id} 切换到 {current_panel_id}")
-        
-        # 检查是否有按钮点击响应
-        response = get_button_response()
-        if response is not None:
-            # 特殊处理：刷新信号
-            if response == WEB_REFRESH_SIGNAL:
-                # 检查面板ID是否改变
-                current_panel_id = getattr(cache, 'now_panel_id', None)
-                if current_panel_id != initial_panel_id:
-                    # print(f"[askfor_all] 刷新信号触发，检测到面板切换：{initial_panel_id} -> {current_panel_id}")
-                    # 从主面板切换到其他面板时，进入子面板模式
-                    _handle_sub_panel_mode_on_panel_change(initial_panel_id, current_panel_id)
-                    raise PanelChangeException(f"面板从 {initial_panel_id} 切换到 {current_panel_id}")
-                # 如果面板ID没有改变，但刷新信号在return_list中，正常处理
-                if response in return_list:
-                    # 子面板模式下，清除上一批绘制内容，准备绘制新内容
-                    _clear_sub_panel_before_return()
-                    if _cmd_valid(response):
-                        _cmd_deal(response)
-                    return response
-                # 如果刷新信号不在return_list中，继续等待
-                response = None
-                continue
-            
-            # 检查响应是否在返回列表中
-            if response in return_list:
-                # 子面板模式下，清除上一批绘制内容，准备绘制新内容
-                _clear_sub_panel_before_return()
-                # 非刷新信号则输出该响应
-                io_init.era_print(response + "\n")
-                # 同步记录到 input_cache，与Tk模式 main_frame.send_input 行为一致
-                # 部分结算逻辑（如 handle_first_a_sex）会读取 input_cache[-1] 判定上一步指令
-                if response:
-                    if len(cache.input_cache) >= 21:
-                        del cache.input_cache[0]
-                    cache.input_cache.append(response)
-                    cache.input_position = 0
-                # 然后判断值是否有效，有效则执行该命令
-                if _cmd_valid(response):
-                    _cmd_deal(response)
-                elif response == "999" and cache.all_system_setting.base_setting[9]:
-                    from Script.Core import save_handle
-                    # 保存到自动存档
-                    save_handle.establish_save("auto")
-                    # 退出游戏
-                    import os, psutil, signal
-                    parent = psutil.Process(os.getpid())
-                    children = parent.children(recursive=True)
-                    for process in children:
-                        process.send_signal(signal.SIGTERM)
-                    os._exit(0)
-                return response
-            elif response == "":
-                continue
-            else:
-                # 响应不在列表中，检查是否是面板切换导致的
-                current_panel_id = getattr(cache, 'now_panel_id', None)
-                if current_panel_id != initial_panel_id:
-                    print(f"[askfor_all] 收到无效响应但面板已切换：{initial_panel_id} -> {current_panel_id}")
-                    # 从主面板切换到其他面板时，进入子面板模式
-                    _handle_sub_panel_mode_on_panel_change(initial_panel_id, current_panel_id)
-                    raise PanelChangeException(f"面板从 {initial_panel_id} 切换到 {current_panel_id}")
-                # 确实是无效响应
-                io_init.era_print(response + "\n")
-                io_init.era_print("您输入的选项无效，请重试\n")
-                response = None  # 重置响应，继续等待
-                continue
-        # 短暂休眠以避免CPU占用过高
-        time.sleep(0.1)
-    
-    return response
+          # print(f"[askfor_all] 刷新信号触发，检测到面板切换：{initial_panel_id} -> {current_panel_id}")
+          # 从主面板切换到其他面板时，进入子面板模式
+          _handle_sub_panel_mode_on_panel_change(
+              initial_panel_id, current_panel_id
+          )
+          raise PanelChangeException(
+              f"面板从 {initial_panel_id} 切换到 {current_panel_id}"
+          )
+        # 如果面板ID没有改变，但刷新信号在return_list中，正常处理
+        if response in return_list:
+          # 子面板模式下，清除上一批绘制内容，准备绘制新内容
+          _clear_sub_panel_before_return()
+          if _cmd_valid(response):
+            _cmd_deal(response)
+          return response
+        # 如果刷新信号不在return_list中，继续等待
+        response = None
+        continue
+
+      # 检查响应是否在返回列表中
+      if response in return_list:
+        # 子面板模式下，清除上一批绘制内容，准备绘制新内容
+        _clear_sub_panel_before_return()
+        # 非刷新信号则输出该响应
+        io_init.era_print(response + "\n")
+        # 同步记录到 input_cache，与Tk模式 main_frame.send_input 行为一致
+        # 部分结算逻辑（如 handle_first_a_sex）会读取 input_cache[-1] 判定上一步指令
+        if response:
+          if len(cache.input_cache) >= 21:
+            del cache.input_cache[0]
+          cache.input_cache.append(response)
+          cache.input_position = 0
+        # 然后判断值是否有效，有效则执行该命令
+        if _cmd_valid(response):
+          _cmd_deal(response)
+        elif response == "999" and cache.all_system_setting.base_setting[9]:
+          from Script.Core import save_handle
+          # 保存到自动存档
+          save_handle.establish_save("auto")
+          # 退出游戏
+          import os, psutil, signal
+
+          parent = psutil.Process(os.getpid())
+          children = parent.children(recursive=True)
+          for process in children:
+            process.send_signal(signal.SIGTERM)
+          os._exit(0)
+        return response
+      elif response == "":
+        continue
+      else:
+        # 响应不在列表中，检查是否是面板切换导致的
+        current_panel_id = getattr(cache, "now_panel_id", None)
+        if current_panel_id != initial_panel_id:
+          print(
+              f"[askfor_all] 收到无效响应但面板已切换：{initial_panel_id} -> {current_panel_id}"
+          )
+          # 从主面板切换到其他面板时，进入子面板模式
+          _handle_sub_panel_mode_on_panel_change(
+              initial_panel_id, current_panel_id
+          )
+          raise PanelChangeException(
+              f"面板从 {initial_panel_id} 切换到 {current_panel_id}"
+          )
+        # 确实是无效响应
+        io_init.era_print(response + "\n")
+        io_init.era_print("您输入的选项无效，请重试\n")
+        response = None  # 重置响应，继续等待
+        continue
+    # 短暂休眠以避免CPU占用过高
+    time.sleep(0.1)
+
+  return response
+
 
 def _cmd_deal(order_number):
-    """
-    执行命令
-    
-    参数:
-    order_number (str/int) -- 对应命令数字
-    
-    返回值类型：无
-    功能描述：执行与命令ID绑定的函数
-    """
-    if order_number in cmd_map:
-        cmd_func, args, kwargs = cmd_map[order_number]
-        if cmd_func:
-            if not isinstance(args, tuple):
-                args = (args,)
-            cmd_func(*args, **kwargs)
+  """
+  执行命令
+
+  参数:
+  order_number (str/int) -- 对应命令数字
+
+  返回值类型：无
+  功能描述：执行与命令ID绑定的函数
+  """
+  if order_number in cmd_map:
+    cmd_func, args, kwargs = cmd_map[order_number]
+    if cmd_func:
+      if not isinstance(args, tuple):
+        args = (args,)
+      cmd_func(*args, **kwargs)
+
 
 def _cmd_valid(order_number):
-    """
-    判断命令数字是否有效
-    
-    参数:
-    order_number (str/int) -- 对应命令数字
-    
-    返回值类型：bool
-    功能描述：判断命令ID是否有效
-    """
-    return (order_number in cmd_map and 
-            cmd_map[order_number] is not None and 
-            cmd_map[order_number][0] is not None)
+  """
+  判断命令数字是否有效
+
+  参数:
+  order_number (str/int) -- 对应命令数字
+
+  返回值类型：bool
+  功能描述：判断命令ID是否有效
+  """
+  return (
+      order_number in cmd_map
+      and cmd_map[order_number] is not None
+      and cmd_map[order_number][0] is not None
+  )
+
 
 def askfor_wait() -> None:
-    """
-    等待用户任意点击继续
-    
-    返回值类型：None
-    
-    在Web UI中，这变成等待用户通过API发送继续指令
-    """
-    # Web版本中，轮询等待用户响应
-    while not get_wait_response():
-        # 短暂休眠以避免CPU占用过高
-        time.sleep(0.1)
+  """
+  等待用户任意点击继续
+
+  返回值类型：None
+
+  在Web UI中，这变成等待用户通过API发送继续指令
+  """
+  # Web版本中，轮询等待用户响应
+  while not get_wait_response():
+    # 短暂休眠以避免CPU占用过高
+    time.sleep(0.1)
+
 
 def askfor_str(message: str, default_str: str = "") -> str:
-    """
-    请求用户输入字符串
-    
-    参数:
-    message (str): 提示信息
-    default_str (str): 默认字符串
-    
-    返回值类型：str
-    返回用户输入的字符串
-    """
-    # Web版本中，创建输入请求元素
-    cache.current_input_request = {
-        "type": "string",
-        "message": message,
-        "default": default_str
-    }
-    # 将请求发送给前端
-    update_game_state(cache.current_draw_elements, None)
-    update_input_request(cache.current_input_request)
-    
-    # 轮询等待用户输入
-    response = None
-    while response is None:
-        # 检查是否有输入响应
-        response = get_input_response()
-        if response is not None:
-            break
-        # 短暂休眠以避免CPU占用过高
-        time.sleep(0.1)
-    
-    # 如果没有响应，返回默认值
-    return response if response is not None else default_str
+  """
+  请求用户输入字符串
+
+  参数:
+  message (str): 提示信息
+  default_str (str): 默认字符串
+
+  返回值类型：str
+  返回用户输入的字符串
+  """
+  # Web版本中，创建输入请求元素
+  cache.current_input_request = {
+      "type": "string",
+      "message": message,
+      "default": default_str,
+  }
+  # 将请求发送给前端
+  update_game_state(cache.current_draw_elements, None)
+  update_input_request(cache.current_input_request)
+
+  # 轮询等待用户输入
+  response = None
+  while response is None:
+    # 检查是否有输入响应
+    response = get_input_response()
+    if response is not None:
+      break
+    # 短暂休眠以避免CPU占用过高
+    time.sleep(0.1)
+
+  # 如果没有响应，返回默认值
+  return response if response is not None else default_str
+
 
 def askfor_int(message: str, default_int: int = 0) -> int:
-    """
-    请求用户输入整数
-    
-    参数:
-    message (str): 提示信息
-    default_int (int): 默认整数
-    
-    返回值类型：int
-    返回用户输入的整数
-    """
-    # Web版本中，创建输入请求元素
-    cache.current_input_request = {
-        "type": "integer",
-        "message": message,
-        "default": default_int
-    }
-    # 将请求发送给前端
-    update_game_state(cache.current_draw_elements, None)
-    update_input_request(cache.current_input_request)
-    
-    # 轮询等待用户输入
-    response = None
-    while response is None:
-        # 检查是否有输入响应
-        response = get_input_response()
-        if response is not None:
-            break
-        # 短暂休眠以避免CPU占用过高
-        time.sleep(0.1)
-    
-    # 如果没有响应，返回默认值
-    return response if response is not None else default_int
+  """
+  请求用户输入整数
+
+  参数:
+  message (str): 提示信息
+  default_int (int): 默认整数
+
+  返回值类型：int
+  返回用户输入的整数
+  """
+  # Web版本中，创建输入请求元素
+  cache.current_input_request = {
+      "type": "integer",
+      "message": message,
+      "default": default_int,
+  }
+  # 将请求发送给前端
+  update_game_state(cache.current_draw_elements, None)
+  update_input_request(cache.current_input_request)
+
+  # 轮询等待用户输入
+  response = None
+  while response is None:
+    # 检查是否有输入响应
+    response = get_input_response()
+    if response is not None:
+      break
+    # 短暂休眠以避免CPU占用过高
+    time.sleep(0.1)
+
+  # 如果没有响应，返回默认值
+  return response if response is not None else default_int
+
 
 def clear_screen() -> None:
-    """
-    清空屏幕
-    
-    返回值类型：None
-    
-    在Web UI中通过前端JavaScript实现
-    """
-    # 在Web版本中，这会清空当前绘制元素缓存
-    cache.current_draw_elements = []
+  """
+  清空屏幕
 
-def order_deal(flag: str = "order", print_order: bool = True, donot_return_null_str: bool = True) -> str:
-    """
-    处理命令函数 - Web版本
-    
-    参数:
-    flag (str): 类型，默认为order，如果为console，这会执行输入得到的内容
-    print_order (bool): 是否将输入的order输出到屏幕上
-    donot_return_null_str (bool): 不接受输入空字符串
-    
-    返回值类型：str
-    返回用户输入的命令
-    
-    这个函数替代了原始flow_handle中的order_deal，解决了死循环问题
-    """
-    # 创建命令输入请求
-    cache.current_input_request = {
-        "type": "command",
-        "message": "请输入命令:",
-        "default": ""
-    }
-    
-    # 修复死循环：使用轮询机制获取响应，而不是等待队列
-    response = None
-    
-    # 如果为按钮命令，等待按钮点击响应
-    if flag == "order":
-        while response is None:
-            response = get_button_response()
-            if response is not None:
-                break
-            time.sleep(0.1)
-    # 否则等待文本输入
-    else:
-        while response is None:
-            response = get_input_response()
-            if response is not None and (not donot_return_null_str or response != ""):
-                break
-            time.sleep(0.1)
-    
-    # 如果需要打印命令，将其添加到绘制元素
-    if print_order and response:
-        io_init.era_print(f"\n{response}\n")
-    
-    return response if response is not None else ""
+  返回值类型：None
+
+  在Web UI中通过前端JavaScript实现
+  """
+  # 在Web版本中，这会清空当前绘制元素缓存
+  cache.current_draw_elements = []
+
+
+def order_deal(
+    flag: str = "order",
+    print_order: bool = True,
+    donot_return_null_str: bool = True,
+) -> str:
+  """
+  处理命令函数 - Web版本
+
+  参数:
+  flag (str): 类型，默认为order，如果为console，这会执行输入得到的内容
+  print_order (bool): 是否将输入的order输出到屏幕上
+  donot_return_null_str (bool): 不接受输入空字符串
+
+  返回值类型：str
+  返回用户输入的命令
+
+  这个函数替代了原始flow_handle中的order_deal，解决了死循环问题
+  """
+  # 创建命令输入请求
+  cache.current_input_request = {
+      "type": "command",
+      "message": "请输入命令:",
+      "default": "",
+  }
+
+  # 修复死循环：使用轮询机制获取响应，而不是等待队列
+  response = None
+
+  # 如果为按钮命令，等待按钮点击响应
+  if flag == "order":
+    while response is None:
+      response = get_button_response()
+      if response is not None:
+        break
+      time.sleep(0.1)
+  # 否则等待文本输入
+  else:
+    while response is None:
+      response = get_input_response()
+      if response is not None and (not donot_return_null_str or response != ""):
+        break
+      time.sleep(0.1)
+
+  # 如果需要打印命令，将其添加到绘制元素
+  if print_order and response:
+    io_init.era_print(f"\n{response}\n")
+
+  return response if response is not None else ""
+
 
 # 添加退出标志和命令处理相关变量
 exit_flag = False
 
-def bind_cmd(cmd_number: str, cmd_func: callable, arg: tuple = (), kw: dict = {}) -> None:
-    """
-    绑定命令数字与命令函数
-    
-    参数:
-    cmd_number (str): 命令数字或标识符
-    cmd_func (callable): 命令函数
-    arg (tuple): 传给命令函数的顺序参数
-    kw (dict): 传给命令函数的字典参数
-    
-    返回值类型：None
-    """
-    # 在Web版本中，我们保存命令函数及其参数
-    cmd_map[cmd_number] = (cmd_func, arg, kw)
+
+def bind_cmd(
+    cmd_number: str, cmd_func: callable, arg: tuple = (), kw: dict = {}
+) -> None:
+  """
+  绑定命令数字与命令函数
+
+  参数:
+  cmd_number (str): 命令数字或标识符
+  cmd_func (callable): 命令函数
+  arg (tuple): 传给命令函数的顺序参数
+  kw (dict): 传给命令函数的字典参数
+
+  返回值类型：None
+  """
+  # 在Web版本中，我们保存命令函数及其参数
+  cmd_map[cmd_number] = (cmd_func, arg, kw)
+
 
 def print_cmd(
     cmd_str: str,
@@ -499,107 +549,117 @@ def print_cmd(
     on_style: str = "onbutton",
     tooltip: str = "",
 ) -> str:
-    """
-    输出命令按钮
-    
-    参数:
-    cmd_str (str): 命令对应文字
-    cmd_number (str): 命令数字或标识符
-    cmd_func (callable): 命令函数
-    arg (tuple): 传给命令函数的顺序参数
-    kw (dict): 传给命令函数的字典参数
-    normal_style (str): 正常状态下命令显示样式
-    on_style (str): 鼠标在其上的时候命令显示样式
-    tooltip (str): 鼠标悬停提示文本
-    
-    返回值类型：str
-    返回命令文本
-    """
-    # 绑定命令
-    bind_cmd(cmd_number, cmd_func, arg, kw)
-    
-    # 在Web版本中，创建按钮元素并添加到当前绘制元素列表
-    if not hasattr(cache, "current_draw_elements"):
-        cache.current_draw_elements = []
-    
-    # 创建按钮元素
-    button_element = {
-        "type": "button",
-        "text": cmd_str,
-        "return_text": str(cmd_number),
-        "style": normal_style,
-        "tooltip": tooltip or "",
-        # 保留提示文本，前端据此渲染工具提示
-    }
-    
-    # 添加到当前绘制元素列表
-    cache.current_draw_elements.append(button_element)
-    
-    return cmd_str
+  """
+  输出命令按钮
+
+  参数:
+  cmd_str (str): 命令对应文字
+  cmd_number (str): 命令数字或标识符
+  cmd_func (callable): 命令函数
+  arg (tuple): 传给命令函数的顺序参数
+  kw (dict): 传给命令函数的字典参数
+  normal_style (str): 正常状态下命令显示样式
+  on_style (str): 鼠标在其上的时候命令显示样式
+  tooltip (str): 鼠标悬停提示文本
+
+  返回值类型：str
+  返回命令文本
+  """
+  # 绑定命令
+  bind_cmd(cmd_number, cmd_func, arg, kw)
+
+  # 在Web版本中，创建按钮元素并添加到当前绘制元素列表
+  if not hasattr(cache, "current_draw_elements"):
+    cache.current_draw_elements = []
+
+  # 创建按钮元素
+  button_element = {
+      "type": "button",
+      "text": cmd_str,
+      "return_text": str(cmd_number),
+      "style": normal_style,
+      "tooltip": tooltip or "",
+      # 保留提示文本，前端据此渲染工具提示
+  }
+
+  # 添加到当前绘制元素列表
+  cache.current_draw_elements.append(button_element)
+
+  return cmd_str
+
 
 def cmd_clear(*numbers) -> None:
-    """
-    清除绑定命令
-    
-    参数:
-    numbers (tuple): 要清除的命令标识符，不传则清除所有
-    
-    返回值类型：None
-    """
-    
-    # 在Web版本中，从绘制元素中移除按钮并清除命令映射
-    
-    if not hasattr(cache, "current_draw_elements"):
-        cache.current_draw_elements = []
-    
-    if numbers:
-        # 清除指定命令
-        for num in numbers:
-            if num in cmd_map:
-                del cmd_map[num]
-            
-            # 从绘制元素中移除对应按钮
-            cache.current_draw_elements = [elem for elem in cache.current_draw_elements 
-                                         if not (elem.get('type') == 'button' and 
-                                                elem.get('return_text') == str(num))]
-    else:
-        # 清除所有命令
-        cmd_map.clear()
-        
-        # 从绘制元素中移除所有按钮
-        cache.current_draw_elements = [elem for elem in cache.current_draw_elements 
-                                     if elem.get('type') != 'button']
+  """
+  清除绑定命令
 
+  参数:
+  numbers (tuple): 要清除的命令标识符，不传则清除所有
+
+  返回值类型：None
+  """
+
+  # 在Web版本中，从绘制元素中移除按钮并清除命令映射
+
+  if not hasattr(cache, "current_draw_elements"):
+    cache.current_draw_elements = []
+
+  if numbers:
+    # 清除指定命令
+    for num in numbers:
+      if num in cmd_map:
+        del cmd_map[num]
+
+      # 从绘制元素中移除对应按钮
+      cache.current_draw_elements = [
+          elem
+          for elem in cache.current_draw_elements
+          if not (
+              elem.get("type") == "button"
+              and elem.get("return_text") == str(num)
+          )
+      ]
+  else:
+    # 清除所有命令
+    cmd_map.clear()
+
+    # 从绘制元素中移除所有按钮
+    cache.current_draw_elements = [
+        elem
+        for elem in cache.current_draw_elements
+        if elem.get("type") != "button"
+    ]
 
 
 def set_tail_deal_cmd_func(func: callable) -> None:
-    """
-    设置尾处理命令函数
-    参数:
-        func (callable): 尾处理命令函数，用于流程结束时调用
-    返回值类型: None
-    功能描述: 将传入的函数赋值给全局尾处理命令函数变量
-    """
-    global tail_deal_cmd_func  # 声明使用全局变量
-    tail_deal_cmd_func = func  # 设置尾处理命令函数
+  """
+  设置尾处理命令函数
+  参数:
+      func (callable): 尾处理命令函数，用于流程结束时调用
+  返回值类型: None
+  功能描述: 将传入的函数赋值给全局尾处理命令函数变量
+  """
+  global tail_deal_cmd_func  # 声明使用全局变量
+  tail_deal_cmd_func = func  # 设置尾处理命令函数
+
 
 def deco_set_tail_deal_cmd_func(func: callable) -> callable:
-    """
-    装饰器，用于设置尾处理命令函数
-    参数:
-        func (callable): 需要设置为尾处理命令函数的函数
-    返回值类型: callable
-    功能描述: 使用装饰器方式将指定函数注册为尾处理命令函数，并返回原函数
-    """
-    set_tail_deal_cmd_func(func)  # 注册尾处理命令函数
-    return func  # 返回原函数保持其行为不变
+  """
+  装饰器，用于设置尾处理命令函数
+  参数:
+      func (callable): 需要设置为尾处理命令函数的函数
+  返回值类型: callable
+  功能描述: 使用装饰器方式将指定函数注册为尾处理命令函数，并返回原函数
+  """
+  set_tail_deal_cmd_func(func)  # 注册尾处理命令函数
+  return func  # 返回原函数保持其行为不变
+
 
 def call_default_flow() -> None:
-    """
-    调用默认流程处理函数
-    返回值类型: None
-    功能描述: 如果已设置尾处理命令函数，则调用该函数处理默认流程
-    """
-    # 判断是否存在尾处理命令函数
-    if tail_deal_cmd_func is not None:
-        tail_deal_cmd_func()  # 调用尾处理命令函数
+  """
+  调用默认流程处理函数
+  返回值类型: None
+  功能描述: 如果已设置尾处理命令函数，则调用该函数处理默认流程
+  """
+  # 判断是否存在尾处理命令函数
+  if tail_deal_cmd_func is not None:
+    tail_deal_cmd_func()  # 调用尾处理命令函数
