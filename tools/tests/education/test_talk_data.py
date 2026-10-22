@@ -391,8 +391,10 @@ if _builder_node_list:
     #    描述是 docstring 第一个空格之后的全部。按片段查而不是按行查：前面若有没带 docstring 的常量，行首会粘着别的前提（生成器的既有限制，与本条无关）
     _expect_fragment = {}
     _spaced_name_set = set()
-    for _index, _line in enumerate(_promise_line_list[:-1]):
-        _doc_line = _promise_line_list[_index + 1]
+    # pyink 把超过 80 列的常量赋值折成「常量名 = (」「值」「)」三行，期望值按并回一行后的文字取
+    _joined_line_list = re.sub(r'= \(\n\s*("[^"\n]*")\n\s*\)\n', r'= \1\n', "".join(_promise_line_list)).splitlines(True)
+    for _index, _line in enumerate(_joined_line_list[:-1]):
+        _doc_line = _joined_line_list[_index + 1]
         _match = re.fullmatch(r'\s*([A-Z0-9_]+) = "([a-z0-9_]+)"\n', _line)
         if not _match or not _doc_line.endswith('"""\n') or "#" in _doc_line or _doc_line.count('"') != 6:
             continue

@@ -413,7 +413,8 @@ remove_character(210)
 remove_character(211)
 
 section("Plan 32 L28 / L27：基础值回落按课型常量取；557 的说明")
-_class_gain_src = inspect.getsource(growth_handle.settle_student_class_gain)
+# 去掉全部空白再查：格式化可能把一个下标折成几行
+_class_gain_src = "".join(inspect.getsource(growth_handle.settle_student_class_gain).split())
 check("L28 表里没有的课型回落到理论课的基础值，按课型常量取、不再写死 [0]",
       "COURSE_LEARN_BASE[0]" not in _class_gain_src and "COURSE_EXP_BASE[0]" not in _class_gain_src
       and "COURSE_LEARN_BASE[education_constant.COURSE_TYPE_THEORY]" in _class_gain_src and "COURSE_EXP_BASE[education_constant.COURSE_TYPE_THEORY]" in _class_gain_src)

@@ -80,13 +80,17 @@ def update_behavior_file(behavior_py_path, behavior_data):
                     file_header = header_match.group(1)
         
         # 生成新的类代码
-        code = 'class Behavior:\n    """行为id字符串常量"""\n\n'
+        code = 'class Behavior:\n  """行为id字符串常量"""\n\n'
         
         for _, en_name, description in behavior_data:
             if en_name and en_name.strip():
                 constant_name = en_name.upper()
-                code += f'    {constant_name} = "{en_name}"\n'
-                code += f'    """ {description} """\n'
+                line = f'  {constant_name} = "{en_name}"'
+                # 整行超过 80 列、值本身放得进折行时，照 pyink 的样子折成三行
+                if len(line) > 80 and len(en_name) + 2 <= 74:
+                    line = f'  {constant_name} = (\n      "{en_name}"\n  )'
+                code += line + '\n'
+                code += f'  """ {description} """\n'
         
         # 写入文件
         with open(behavior_py_path, 'w', encoding='utf-8') as file:
