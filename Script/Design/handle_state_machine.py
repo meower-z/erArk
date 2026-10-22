@@ -1,6 +1,7 @@
 from functools import wraps
 from types import FunctionType
 from Script.Core import constant
+from Script.Design import child_stage_gate
 
 
 def handle_state_machine(state_machine_id: int, character_id: int):
@@ -23,8 +24,12 @@ def add_state_machine(state_machine_id: int):
 
     def decorator(func: FunctionType):
         @wraps(func)
-        def return_wrapper(*args, **kwargs):
-            return func(*args, **kwargs)
+        def return_wrapper(character_id: int, *args, **kwargs):
+            result = func(character_id, *args, **kwargs)
+            # 状态机选出的H类行为若涉及幼年阶段角色，则换成发呆
+            if child_stage_gate.blocks_behavior(character_id):
+                child_stage_gate.reset_to_idle(character_id)
+            return result
 
         constant.handle_state_machine_data[state_machine_id] = return_wrapper
         return return_wrapper
