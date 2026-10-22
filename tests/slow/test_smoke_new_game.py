@@ -3,14 +3,14 @@
 冒烟测试：新开局后经主循环跑几个游戏小时，每小时跑全部静态自检，并录下行为快照
 ================================================================================
 开新游戏（开局时间为 tests.world.START_TIME，10:00）后，博士在原地反复用「等待五分钟」，主循环推进 HOURS 个小时，
-其间至少一名干员吃饭（12:00 的午饭）；每一步结束都记一份行为快照（tests/snapshot.py）。
-开局时和此后每个整点各跑一遍全部静态自检（Script.Test.Static_Check.run_all_checks，游戏在主界面等待输入前经 run_turn_check 调用它），
+其间至少一名干员吃饭；每一步结束都记一份行为快照（tests/snapshot.py）。
+开局时和此后每个整点各跑一遍全部静态自检（Script.Test.Static_Check.run_all_checks，系统设置 14 打开时，游戏在主界面等待输入前经 run_turn_check 调用它），
 任何一条失败都让测试失败，失败信息写明整点与检查编号。
 唯一的例外是已知的未修缺陷 KNOWN_OPEN_BUG，它是严格的预期失败：只认 is_known_open_bug 描述的那一种失败，
 而且它必须出现；不出现时测试失败（XPASS），说明缺陷已修好，要删掉这个预期失败。
 
-快照写到 LAST_RUN；与基准 BASELINE 比较：python -m tests.snapshot compare tests/snapshots/smoke_new_game.tsv tests/snapshots/smoke_new_game.last.tsv
-行为有意改变时，把 LAST_RUN 复制成 BASELINE，随改动一起提交。
+快照写到 LAST_RUN；与提交在仓库里的基准比较：python -m tests.snapshot compare tests/snapshots/smoke_new_game.tsv tests/snapshots/smoke_new_game.last.tsv
+行为有意改变时，把 LAST_RUN 复制成基准 tests/snapshots/smoke_new_game.tsv，随改动一起提交。
 """
 import os
 
@@ -21,12 +21,10 @@ HOURS = 6
 """ 推进的游戏小时数：10:00 到 16:00 """
 STEP_MINUTES = 5
 """ 每一步「等待五分钟」推进的分钟数 """
-BASELINE = os.path.join(ROOT, "tests", "snapshots", "smoke_new_game.tsv")
-""" 提交在仓库里的基准快照 """
 LAST_RUN = os.path.join(ROOT, "tests", "snapshots", "smoke_new_game.last.tsv")
 """ 本次运行写出的快照（不提交） """
 KNOWN_OPEN_BUG = "已知的未修缺陷：阿米娅在大浴场把袜子和鞋子放进衣柜时，结算「袜子和鞋子转移到大浴场衣柜」只往空的 cloth_locker_semen 写入 10、11 两类衣物，BODY-10 报告它半初始化"
-""" 本测试唯一的预期失败；缺陷修好后测试因它不再出现而失败，届时删掉它与 is_known_open_bug """
+""" 本测试唯一的预期失败；缺陷修好后它不出现，测试随之失败，那时删掉它与 is_known_open_bug """
 KNOWN_OPEN_BUG_NAME = "阿米娅"
 """ 已知缺陷涉及的干员 """
 
