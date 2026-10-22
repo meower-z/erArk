@@ -6,7 +6,8 @@
 - tests/fast/ 下的 test_*.py 是快速层测试，其中的测试类继承 tests.fast.base.FastTestCase；
 - tests/slow/ 下的 test_*.py 是慢速层测试，其中的测试类继承 tests.slow.base.SlowTestCase；
 - 仓库里别处不能有 test_*.py，NOT_IN_LAYERS 列出的例外除外。
-继承可以经过同一层里的其他模块（如 tests/slow/health_check.py 的 HealthCheckTestCase）。
+继承可以经过同一层里的其他模块中定义的类（如 tests/slow/health_check.py 的 HealthCheckTestCase）。
+认不出的写法一律报出：认不出是该层基类的基类（包括从同层模块转导入的名字）、写在类体的 if、try 等语句里的测试、类里嵌套的测试类、模块级的 test 函数。
 两层的模块只解析、不导入（慢速层的模块不能在快速层的进程里导入）；两层之外的文件取自 git：已跟踪的，加上没有被忽略的新文件。
 """
 import ast
@@ -190,9 +191,62 @@ def registered_classes(modules: dict, module: str, base: str) -> set:
         registered = found
 
 
+CONTROL_FLOW = (ast.If, ast.Try, ast.TryStar, ast.With, ast.AsyncWith, ast.For, ast.AsyncFor, ast.While, ast.Match)
+""" 类体里不能包住测试的语句 """
+
+
+def is_test_method(node: ast.stmt) -> bool:
+    """
+    是不是 test 开头的函数定义
+    Keyword arguments:
+    node -- 语句
+    Return arguments:
+    bool -- 是否为 test 开头的函数定义
+    """
+    return isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("test")
+
+
+def has_test_methods(node: ast.ClassDef) -> bool:
+    """
+    类体里直接定义了 test 开头的方法
+    Keyword arguments:
+    node -- 类定义
+    Return arguments:
+    bool -- 是否有测试方法
+    """
+    return any(is_test_method(item) for item in node.body)
+
+
+def hidden_tests(node: ast.ClassDef) -> list:
+    """
+    写在类体的 if、try、with、for、while、match 里的测试方法与测试类
+    Keyword arguments:
+    node -- 类定义
+    Return arguments:
+    list[str] -- 名字
+    """
+    found = []
+    pending = [item for item in node.body if isinstance(item, CONTROL_FLOW)]
+    while pending:
+        statement = pending.pop(0)
+        nested = []
+        for field in ("body", "orelse", "finalbody"):
+            nested.extend(getattr(statement, field, []))
+        for handler in getattr(statement, "handlers", []):
+            nested.extend(handler.body)
+        for case in getattr(statement, "cases", []):
+            nested.extend(case.body)
+        for item in nested:
+            if is_test_method(item) or isinstance(item, ast.ClassDef) and has_test_methods(item):
+                found.append(item.name)
+            elif isinstance(item, CONTROL_FLOW):
+                pending.append(item)
+    return found
+
+
 def base_class_problems(tree: ast.Module, path: str, registered: set, base: str) -> list:
     """
-    检查一个测试文件的测试都写在已登记的类里
+    检查一个测试文件的测试都写在已登记的类里，认不出的写法一律报出
     Keyword arguments:
     tree -- 测试文件的语法树
     path -- 测试文件，用 / 分隔的路径
@@ -201,19 +255,34 @@ def base_class_problems(tree: ast.Module, path: str, registered: set, base: str)
     Return arguments:
     list[str] -- 问题，没有问题时为空
     功能描述:
-        模块级（含模块级 if、try 等语句里）定义 test 开头方法的类都要已登记；模块级的 test 开头函数不算登记；文件里至少要有一个带测试方法的已登记类。
+        模块级（含模块级 if、try 等语句里）的类，只要有测试方法，就要有一个基类认得出已登记：
+        基类写成从别的模块 from 导入的已登记类（可改名），或本文件里已登记的类；从别的模块转导入的名字、属性写法都认不出。
+        类体的 if、try 等语句里的测试方法与测试类、类里嵌套的测试类、模块级的 test 开头函数都报出；文件里至少要有一个已登记的测试类。
     """
     names = visible_registered(tree, path, registered)
     problems = []
     test_classes = 0
     for node in module_statements(tree):
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("test"):
+        if is_test_method(node):
             problems.append(f"模块级函数 {node.name}：测试要写在继承 {base} 的类里")
-        elif isinstance(node, ast.ClassDef) and any(isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)) and item.name.startswith("test") for item in node.body):
-            if node.name in names:
-                test_classes += 1
-            else:
-                problems.append(f"类 {node.name} 没有继承 {base}")
+        if not isinstance(node, ast.ClassDef):
+            continue
+        hidden = hidden_tests(node)
+        if hidden:
+            problems.append(f"类 {node.name} 的 {'、'.join(hidden)} 写在类体的 if、try、with、for、while 等语句里：两层里不允许这样写测试")
+        for item in node.body:
+            if isinstance(item, ast.ClassDef) and has_test_methods(item):
+                problems.append(f"类 {node.name} 里嵌套的类 {item.name} 有测试方法：测试类要写在模块级")
+        if not (has_test_methods(node) or hidden):
+            continue
+        if node.name in names:
+            test_classes += 1
+            continue
+        fix = f"直接继承 {base}，或继承同层模块里定义的、继承 {base} 的类"
+        if node.bases:
+            problems.append(f"类 {node.name} 的基类 {'、'.join(ast.unparse(item) for item in node.bases)} 认不出是 {base}：{fix}")
+        else:
+            problems.append(f"类 {node.name} 没有基类：{fix}")
     if not test_classes and not problems:
         problems.append(f"没有继承 {base} 的测试类")
     return problems
