@@ -5,7 +5,7 @@
 异常位3（高优先级AI：助理、跟随、体检）看读取时是否在她的体检时段内：午夜排体检时在时段外，位3为正常；
 到了时段内位3必须读成异常。位3异常时，要求 normal_all 的工作行与要求 normal_123467 的「继续移动」都不成立，AI 选去体检科。
 
-开新游戏后，博士在「身体检查与管理」里给检修工程师可露希尔排每天的体检，博士睡过午夜的抽签（见 tests/slow/health_check.py）。
+开新游戏后，博士在「身体检查与管理」里给检修工程师可露希尔排每天的体检，博士睡觉期间进行午夜抽签（见 tests/slow/health_check.py）。
 时段前她不去体检科；进入时段后她选的第一个行动就是去体检科，并走进体检科。
 """
 from tests.slow.health_check import EXAM_ROOM, MOVE_TO_EXAM, SLOT_START, HealthCheckTestCase

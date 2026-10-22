@@ -5,8 +5,10 @@
 排了体检的干员处于智能跟随时，不应动身去体检科：否则她在博士身边时去体检科，离开一步后又被「移动到玩家位置」拉回，
 逐分钟来回。跟随中她留在等待体检名单上，跟随结束后再去体检科。
 
-开新游戏后，博士在「身体检查与管理」里给检修工程师可露希尔排每天的体检，博士睡过午夜的抽签（见 tests/slow/health_check.py）。
-博士在博士办公室邀请她同行，在办公室里等到时段过半；用「结束同行」结束跟随后，她去体检科。
+开新游戏后，博士在「身体检查与管理」里给检修工程师可露希尔排每天的体检，博士睡觉期间进行午夜抽签（见 tests/slow/health_check.py）。
+- 排了体检、还没登记：时段开始前一小时，博士在博士办公室邀请她同行，在办公室等待 90 分钟。
+- 已登记在等待名单上：博士到体检科邀请她同行，带回博士办公室等待 90 分钟。
+两种情形下，跟随中她都不去体检科；用「结束同行」结束跟随后，她去体检科。
 """
 from tests.slow.health_check import DR_OFFICE, EXAM_ROOM, MOVE_TO_EXAM, SLOT_START, HealthCheckTestCase
 
@@ -19,7 +21,7 @@ class FollowerSkipsExamTest(HealthCheckTestCase):
 
     def setUp(self):
         """
-        给可露希尔排体检，博士睡过午夜的抽签
+        给可露希尔排体检，博士睡觉期间进行午夜抽签
         Keyword arguments:
         无
         Return arguments:
