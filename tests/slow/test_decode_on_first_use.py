@@ -6,7 +6,7 @@ Script.Core.era_image 导入时只建立图片名 -> 路径索引，不解码图
 测试数 PIL.Image.open 的调用次数：启动游戏并开新游戏（其间导入 era_image）、in 检查、首次取图、再次取图各调用几次；
 另在索引里加一张解码会失败的图片，检查取到的替代图片与 in 的结果。
 PhotoImage 换成记录尺寸的替身，所以不需要 Tk 窗口；字体缩放比例固定为 1.5，检查缩放后的尺寸。
-导入 era_image 的测试属于慢速层（快速层不导入它）。
+导入 era_image 的测试属于慢速层（快速层不能导入它）。
 """
 import os
 import tempfile

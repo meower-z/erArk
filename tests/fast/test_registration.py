@@ -105,6 +105,32 @@ def module_name(path: str) -> str:
     return path[: -len(".py")].replace("/", ".").removesuffix(".__init__")
 
 
+def module_statements(tree: ast.Module) -> list:
+    """
+    模块级的全部语句，包括写在模块级 if、try、with、for、while 里的语句，不进入函数与类的内部
+    Keyword arguments:
+    tree -- 模块的语法树
+    Return arguments:
+    list[ast.stmt] -- 语句，按源码顺序
+    """
+    statements = []
+    pending = list(tree.body)
+    while pending:
+        node = pending.pop(0)
+        statements.append(node)
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            continue
+        nested = []
+        for field in ("body", "orelse", "finalbody"):
+            nested.extend(getattr(node, field, []))
+        for handler in getattr(node, "handlers", []):
+            nested.extend(handler.body)
+        for case in getattr(node, "cases", []):
+            nested.extend(case.body)
+        pending[:0] = nested
+    return statements
+
+
 def imported_module(node: ast.ImportFrom, path: str) -> str:
     """
     from 导入语句导入的模块名；相对导入按导入它的文件所在的包解析
@@ -132,7 +158,7 @@ def visible_registered(tree: ast.Module, path: str, registered: set) -> set:
     """
     module = module_name(path)
     names = {name for owner, name in registered if owner == module}
-    for node in tree.body:
+    for node in module_statements(tree):
         if isinstance(node, ast.ImportFrom):
             source = imported_module(node, path)
             names.update(alias.asname or alias.name for alias in node.names if (source, alias.name) in registered)
@@ -154,7 +180,7 @@ def registered_classes(modules: dict, module: str, base: str) -> set:
         found = set(registered)
         for path, tree in modules.items():
             names = visible_registered(tree, path, found)
-            for node in tree.body:
+            for node in module_statements(tree):
                 if isinstance(node, ast.ClassDef) and any(isinstance(item, ast.Name) and item.id in names for item in node.bases):
                     found.add((module_name(path), node.name))
                     names.add(node.name)
@@ -174,12 +200,12 @@ def base_class_problems(tree: ast.Module, path: str, registered: set, base: str)
     Return arguments:
     list[str] -- 问题，没有问题时为空
     功能描述:
-        定义 test 开头方法的类都要已登记；模块级的 test 开头函数不算登记；文件里至少要有一个带测试方法的已登记类。
+        模块级（含模块级 if、try 等语句里）定义 test 开头方法的类都要已登记；模块级的 test 开头函数不算登记；文件里至少要有一个带测试方法的已登记类。
     """
     names = visible_registered(tree, path, registered)
     problems = []
     test_classes = 0
-    for node in tree.body:
+    for node in module_statements(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("test"):
             problems.append(f"模块级函数 {node.name}：测试要写在继承 {base} 的类里")
         elif isinstance(node, ast.ClassDef) and any(isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)) and item.name.startswith("test") for item in node.body):
