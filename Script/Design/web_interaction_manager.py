@@ -298,7 +298,8 @@ def _check_single_instruct_premise(instruct_id: str, premise_cache: Dict) -> boo
     
     premises = constant.instruct_premise_data[instruct_id]
     
-    for premise in premises:
+    # 按前提id排序后判断，使判断前提时抽的随机数不随集合的遍历顺序变化。
+    for premise in sorted(premises):
         # 使用缓存优化重复判断
         if premise in premise_cache:
             if not premise_cache[premise]:

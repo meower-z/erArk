@@ -440,17 +440,17 @@ def get_behavior_id_of_sex_assistant() -> str:
             if handle_premise.handle_sex_assistant_1(0):
                 # 获取目标的行为id
                 new_behavior_id_list = get_all_can_use_behavior_id_for_sex_assistant(select_part=now_part)
-                # 随机选择一个行为id
+                # 随机选择一个行为id。列表经集合去重，顺序随字符串哈希变化；排序后，同一随机状态总挑中同一个。
                 if len(new_behavior_id_list) > 0:
-                    behavior_id = random.choice(new_behavior_id_list)
+                    behavior_id = random.choice(sorted(new_behavior_id_list))
                     return behavior_id
             # 如果为非玩家同部位
             elif handle_premise.handle_sex_assistant_2(0):
                 # 获取目标的行为id
                 new_behavior_id_list = get_all_can_use_behavior_id_for_sex_assistant(not_selet_part=now_part)
-                # 随机选择一个行为id
+                # 随机选择一个行为id。列表经集合去重，顺序随字符串哈希变化；排序后，同一随机状态总挑中同一个。
                 if len(new_behavior_id_list) > 0:
-                    behavior_id = random.choice(new_behavior_id_list)
+                    behavior_id = random.choice(sorted(new_behavior_id_list))
                     return behavior_id
     return '0'
 
