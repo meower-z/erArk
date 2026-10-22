@@ -8,7 +8,7 @@ from Script.Core import (
     get_text,
 )
 from Script.Config import game_config
-from Script.Design import attr_calculation, character_handle
+from Script.Design import attr_calculation, character_handle, child_stage_gate
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -1592,3 +1592,582 @@ def update_new_character(loaded_dict):
 
     return update_count
 
+
+STAGE_TALENT_TUPLE = (101, 102, 103)
+""" 成长阶段素质：101婴儿 / 102幼女 / 103学员，静态干员不持有 """
+BODY_TALENT_TUPLE = (104, 105, 106, 107, 108)
+""" 体型素质 """
+ADULT_BODY_TALENT = 104
+""" 少女素质：没开世界设定1、或角色模板没有体型素质时，静态干员身上的成长阶段素质换成它 """
+MINOR_TALENT_TUPLE = (6, 7)
+""" 未初潮、未成年素质：静态干员与103阶段的女儿不持有 """
+WORLD_SETTING_SHRINK = 1
+""" 世界设定1在存档 world_setting 里的键：开着它开局的存档，全岛干员的体型素质104~107在开局时换成了103 """
+AGE_DRUG_ITEM_TUPLE = (31, 32)
+""" 外表年龄增长药、外表年龄减少药的道具id，读档时从所有角色的道具栏中清掉 """
+FOLLOW_MOTHER_BEHAVIOR = "follow_mother"
+""" 跟随母亲行为id，读档时一律换成发呆 """
+YOUNG_CHILD_H_FLAG_TUPLE = (
+    "is_h", "unconscious_h", "hidden_sex_mode", "condom_cloth_flag", "exhibitionism_sex_mode", "sleep_h_awake",
+    "milk", "masturebate", "masturebate_before_sleep", "npc_masturebate_for_player",
+    "go_to_join_group_sex", "see_pl_h", "see_h_reaction_settled", "sex_toy_level",
+)
+""" 101/102阶段的孩子读档时换回默认值的 SPECIAL_FLAG 字段：H（含无意识H与睡奸中醒来）、隐奸、避孕套装饰、露出、挤奶与自慰后续链、群交邀请、看H反应、玩具档位 """
+YOUNG_CHILD_H_TALENT_TUPLE = (20, 21, 22, 23, 24, 25, 26, 27, 32, 35)
+""" 101/102阶段的孩子读档时清掉的素质：受精、妊娠、临盆、产后、育儿、假孕孕肚、孕肚、泌乳、精液膨腹、无意识妊娠 """
+KEEP_PREGNANCY_ATTR_SET = {"reproduction_period", "born_time", "growth_acceleration_days", "milk_max"}
+""" 101/102阶段的孩子读档时保留的 PREGNANCY 字段：生殖周期、出生时间、成长加速天数、奶量上限 """
+
+
+def _is_young_child(character) -> bool:
+    """
+    判断角色是否处于幼年阶段（与 child_stage_gate 同口径，按存档里的角色数据判断）
+    Keyword arguments:
+    character -- 角色数据
+    Return arguments:
+    bool -- 持有 child_stage_gate.CHILD_STAGE_TALENTS 中任一素质时为True
+    """
+    return any(character.talent.get(talent_id, 0) for talent_id in child_stage_gate.CHILD_STAGE_TALENTS)
+
+
+def _is_player_daughter(character) -> bool:
+    """
+    判断角色是否为玩家的女儿（与前提 SELF_IS_PLAYER_DAUGHTER 同口径）
+    Keyword arguments:
+    character -- 角色数据
+    Return arguments:
+    bool -- 是否为玩家的女儿
+    """
+    return character.cid != 0 and character.relationship.father_id == 0
+
+
+def _clear_minor_talent(character) -> int:
+    """
+    去掉角色的未初潮与未成年素质
+    Keyword arguments:
+    character -- 角色数据
+    Return arguments:
+    int -- 改动的素质数
+    """
+    count = 0
+    for talent_id in MINOR_TALENT_TUPLE:
+        if character.talent.get(talent_id, 0):
+            character.talent[talent_id] = 0
+            count += 1
+    return count
+
+
+def _migrate_static_talent(character, world_setting_shrink: bool) -> int:
+    """
+    静态干员（非玩家、非女儿的角色）的素质：去掉未初潮与未成年；持有成长阶段素质时去掉它，换成体型素质
+    Keyword arguments:
+    character -- 角色数据
+    world_setting_shrink -- 存档是否开着世界设定1
+    Return arguments:
+    int -- 改动的素质数
+    功能: 开着世界设定1时取回 data/character 角色模板的体型素质，模板没有体型素质或没开世界设定1时取少女
+    """
+    from Script.Config import character_config
+
+    count = _clear_minor_talent(character)
+    stage_list = [talent_id for talent_id in STAGE_TALENT_TUPLE if character.talent.get(talent_id, 0)]
+    if not stage_list:
+        return count
+    for talent_id in stage_list:
+        character.talent[talent_id] = 0
+        count += 1
+    tem_character = character_config.character_tem_list.get(character.adv)
+    body_list = [talent_id for talent_id in BODY_TALENT_TUPLE if world_setting_shrink and tem_character is not None and tem_character.Talent.get(talent_id, 0)]
+    for talent_id in body_list or [ADULT_BODY_TALENT]:
+        if not character.talent.get(talent_id, 0):
+            character.talent[talent_id] = 1
+            count += 1
+    return count
+
+
+def _reset_behavior_to_idle(character) -> None:
+    """
+    把角色的当前行为换成1分钟的发呆，交互对象换回自己
+    Keyword arguments:
+    character -- 角色数据
+    Return arguments:
+    None
+    """
+    character.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
+    character.behavior.duration = 1
+    character.state = constant.CharacterStatus.STATUS_ARDER
+    character.target_character_id = character.cid
+
+
+def _clear_missing_interest_course(selected_course: dict) -> int:
+    """
+    从个人课表里删掉目标娱乐已不在 Entertainment.csv 里的兴趣课
+    Keyword arguments:
+    selected_course -- 个人课表 键int:星期 值dict:{节次int: [课型int, 目标]}
+    Return arguments:
+    int -- 删掉的节数
+    """
+    from Script.System.Education_System import education_constant
+
+    count = 0
+    for period_data in selected_course.values():
+        if not isinstance(period_data, dict):
+            continue
+        for period in [period for period, course in period_data.items() if isinstance(course, list) and len(course) >= 2 and course[0] == education_constant.COURSE_TYPE_INTEREST and course[1] not in game_config.config_entertainment]:
+            del period_data[period]
+            count += 1
+    return count
+
+
+def _clear_child_activity(character) -> int:
+    """
+    清掉角色身上的见学状态、行为表里已没有的行为、娱乐表里已没有的娱乐；101/102阶段的孩子再清掉课表、日程与上课状态
+    Keyword arguments:
+    character -- 角色数据
+    Return arguments:
+    int -- 改动的项数
+    功能: 跟随母亲行为与 Behavior_Data 里没有的行为换成发呆；当天娱乐槽位里 Entertainment.csv 没有的编号换成0（无），
+          单项覆盖与个人课表的兴趣课里的删掉。养成数据只清值、保留结构体；毕业的女儿与学员保留课表与成绩记录，只删掉目标娱乐不在表里的兴趣课
+    """
+    count = 0
+    is_young_child = _is_young_child(character)
+    behavior_id = character.behavior.behavior_id
+    if behavior_id == FOLLOW_MOTHER_BEHAVIOR or behavior_id not in game_config.config_behavior:
+        _reset_behavior_to_idle(character)
+        count += 1
+    entertainment_list = character.entertainment.entertainment_type
+    if any(one not in game_config.config_entertainment for one in entertainment_list):
+        character.entertainment.entertainment_type = [one if one in game_config.config_entertainment else 0 for one in entertainment_list]
+        count += 1
+    growth_data = character.child_growth
+    if growth_data is None:
+        return count
+    if growth_data.follow_mother_flag:
+        growth_data.follow_mother_flag = False
+        count += 1
+    for slot in [slot for slot, value in growth_data.schedule_override.items() if value not in game_config.config_entertainment]:
+        del growth_data.schedule_override[slot]
+        count += 1
+    count += _clear_missing_interest_course(growth_data.selected_course)
+    if not is_young_child:
+        return count
+    if growth_data.selected_course:
+        growth_data.selected_course = {}
+        count += 1
+    if growth_data.schedule_template_id:
+        growth_data.schedule_template_id = 0
+        count += 1
+    if growth_data.schedule_override:
+        growth_data.schedule_override = {}
+        count += 1
+    if growth_data.skip_class_flag or growth_data.skip_class_day:
+        growth_data.skip_class_flag = False
+        growth_data.skip_class_day = 0
+        count += 1
+    return count
+
+
+def _replace_if_changed(owner, attr_name: str, default_value) -> int:
+    """
+    属性值与默认值不同时换成默认值
+    Keyword arguments:
+    owner -- 属性所在的对象
+    attr_name -- 属性名
+    default_value -- 默认值（结构体按 vars 比较）
+    Return arguments:
+    int -- 换了为1，没换为0
+    """
+    now_value = getattr(owner, attr_name)
+    if hasattr(default_value, "__dict__"):
+        if vars(now_value) == vars(default_value):
+            return 0
+    elif now_value == default_value:
+        return 0
+    setattr(owner, attr_name, default_value)
+    return 1
+
+
+def _get_new_dirty() -> game_type.DIRTY:
+    """
+    新角色的污浊数据：身上、穿着与衣柜里的服装精液各用各的列表
+    Return arguments:
+    game_type.DIRTY -- 污浊数据
+    """
+    dirty_data = attr_calculation.get_dirty_reset(game_type.DIRTY())
+    dirty_data.cloth_locker_semen = {clothing_type: list(semen_list) for clothing_type, semen_list in dirty_data.cloth_semen.items()}
+    return dirty_data
+
+
+def _clear_young_child_h_state(character) -> int:
+    """
+    101/102阶段的孩子：污浊、H状态与身体道具、H相关标记与后续链、泌乳、妊娠与卵，换成新角色的默认值
+    Keyword arguments:
+    character -- 孩子的角色数据
+    Return arguments:
+    int -- 改动的项数
+    功能: 妊娠数据里的生殖周期、出生时间、成长加速天数与奶量上限保留，其余换成默认值；只改孩子本人，不动母亲
+    """
+    count = _replace_if_changed(character, "dirty", _get_new_dirty())
+    count += _replace_if_changed(character, "h_state", attr_calculation.get_h_state_reset(game_type.BODY_H_STATE()))
+    default_flag = game_type.SPECIAL_FLAG()
+    for flag_name in YOUNG_CHILD_H_FLAG_TUPLE:
+        count += _replace_if_changed(character.sp_flag, flag_name, getattr(default_flag, flag_name))
+    for talent_id in YOUNG_CHILD_H_TALENT_TUPLE:
+        if character.talent.get(talent_id, 0):
+            character.talent[talent_id] = 0
+            count += 1
+    default_pregnancy = game_type.PREGNANCY()
+    for attr_name, default_value in vars(default_pregnancy).items():
+        if attr_name not in KEEP_PREGNANCY_ATTR_SET:
+            count += _replace_if_changed(character.pregnancy, attr_name, default_value)
+    return count
+
+
+def _clear_young_child_egg_index(player, young_child_id_set: set) -> int:
+    """
+    从玩家收藏品中删掉指向101/102阶段孩子的持有卵索引，以及她们排出的体外无壳卵
+    Keyword arguments:
+    player -- 玩家的角色数据
+    young_child_id_set -- 101/102阶段孩子的角色id集合
+    Return arguments:
+    int -- 删掉的条数
+    """
+    collection = player.pl_collection
+    count = 0
+    for held_id in [held_id for held_id, (chara_id, _) in collection.held_eggs.items() if chara_id in young_child_id_set]:
+        del collection.held_eggs[held_id]
+        count += 1
+    for egg_id in [egg_id for egg_id, egg_data in collection.soft_eggs.items() if egg_data.get("mother_id") in young_child_id_set]:
+        del collection.soft_eggs[egg_id]
+        count += 1
+    return count
+
+
+def _remove_from_group_sex_template(character, young_child_id_set: set) -> int:
+    """
+    从角色的群交部位模板（A、B）里去掉101/102阶段的孩子：单部位的交互对象换回 [-1, -1]，阴茎侍奉的对象列表里删掉她们
+    Keyword arguments:
+    character -- 角色数据
+    young_child_id_set -- 101/102阶段孩子的角色id集合
+    Return arguments:
+    int -- 改动的项数
+    功能: 阴茎侍奉的对象删空时换回默认的 [[-1], -1]。两部分分别检查结构：模板不是长度至少为2、第一项为字典的列表时整份跳过；
+          阴茎侍奉部分不是 [对象列表, 指令状态] 时只跳过这一部分，单部位已做的改动保留
+    """
+    count = 0
+    for template_data in character.h_state.group_sex_body_template_dict.values():
+        if not isinstance(template_data, list) or len(template_data) < 2 or not isinstance(template_data[0], dict):
+            continue
+        for part_key, part_value in template_data[0].items():
+            if isinstance(part_value, list) and part_value and part_value[0] in young_child_id_set:
+                template_data[0][part_key] = [-1, -1]
+                count += 1
+        serve_data = template_data[1]
+        if not isinstance(serve_data, list) or len(serve_data) < 2 or not isinstance(serve_data[0], list):
+            continue
+        serve_id_list = [chara_id for chara_id in serve_data[0] if chara_id not in young_child_id_set]
+        if len(serve_id_list) != len(serve_data[0]):
+            template_data[1] = [serve_id_list, serve_data[1]] if serve_id_list else [[-1], -1]
+            count += 1
+    return count
+
+
+def _discard_id(container, young_child_id_set: set) -> int:
+    """
+    从角色id的集合或列表里删掉101/102阶段的孩子
+    Keyword arguments:
+    container -- 角色id的 set 或 list（其他类型原样跳过）
+    young_child_id_set -- 101/102阶段孩子的角色id集合
+    Return arguments:
+    int -- 删掉的个数
+    """
+    if not isinstance(container, (set, list)):
+        return 0
+    hit_list = [chara_id for chara_id in container if chara_id in young_child_id_set]
+    for chara_id in hit_list:
+        container.remove(chara_id)
+    return len(hit_list)
+
+
+def _clear_young_child_reference(loaded_dict, young_child_id_set: set) -> int:
+    """
+    清掉存档里其他结构对101/102阶段孩子的引用：时停自由活动对象、装袋对象、交互中对象、拒绝群交名单、
+       玩家收藏品里她的胖次、袜子、乳汁与圣水，冷库里她的母乳与圣水，囚犯、外勤委托、实操课必修名单、体检名单、借书，
+       以及离开场景面板前查看的角色
+    Keyword arguments:
+    loaded_dict -- 存档数据
+    young_child_id_set -- 101/102阶段孩子的角色id集合
+    Return arguments:
+    int -- 改动的项数
+    功能: 只改值与目标不同的项；孩子自己的装袋、监禁、逃跑与外勤标记一并清掉，借的书还回去
+    """
+    count = 0
+    character_data = loaded_dict["character_data"]
+    for character in character_data.values():
+        if character.pl_ability.free_in_time_stop_chara_id in young_child_id_set:
+            character.pl_ability.free_in_time_stop_chara_id = 0
+            count += 1
+        if character.sp_flag.bagging_chara_id in young_child_id_set:
+            character.sp_flag.bagging_chara_id = 0
+            count += 1
+        end_info = character.action_info.interacting_character_end_info
+        if character.cid in young_child_id_set or (isinstance(end_info, list) and end_info and end_info[0] in young_child_id_set):
+            count += _replace_if_changed(character.action_info, "interacting_character_end_info", [-1, datetime.datetime(1, 1, 1)])
+        count += _discard_id(character.action_info.ask_group_sex_refuse_chara_id_list, young_child_id_set)
+        collection = character.pl_collection
+        for chara_id in young_child_id_set:
+            if collection.first_panties.get(chara_id):
+                collection.first_panties[chara_id] = ""
+                count += 1
+            for item_dict in (collection.npc_panties, collection.npc_panties_tem, collection.npc_socks, collection.npc_socks_tem):
+                if item_dict.get(chara_id):
+                    item_dict[chara_id] = []
+                    count += 1
+            for total_dict in (collection.milk_total, collection.urine_total):
+                if total_dict.get(chara_id):
+                    total_dict[chara_id] = 0
+                    count += 1
+    for chara_id in young_child_id_set:
+        child = character_data[chara_id]
+        count += _replace_if_changed(child.sp_flag, "be_bagged", False)
+        count += _replace_if_changed(child.sp_flag, "imprisonment", False)
+        count += _replace_if_changed(child.sp_flag, "escaping", False)
+        count += _replace_if_changed(child.sp_flag, "field_commission", 0)
+        if child.entertainment.borrow_book_id_set:
+            child.entertainment.borrow_book_id_set = set()
+            count += 1
+    rhodes_island = loaded_dict["rhodes_island"]
+    for chara_key_dict in (rhodes_island.milk_in_fridge, rhodes_island.urine_in_fridge, rhodes_island.current_prisoners, rhodes_island.today_physical_examination_chara_id_dict):
+        for chara_id in young_child_id_set & set(chara_key_dict):
+            del chara_key_dict[chara_id]
+            count += 1
+    for commission_data in rhodes_island.ongoing_field_commissions.values():
+        if isinstance(commission_data, list) and commission_data:
+            count += _discard_id(commission_data[0], young_child_id_set)
+    for class_data in rhodes_island.temp_sex_class.values():
+        if isinstance(class_data, dict):
+            count += _discard_id(class_data.get("must_attend"), young_child_id_set)
+    for exam_set in (rhodes_island.examined_operator_ids, rhodes_island.waiting_for_exam_operator_ids, rhodes_island.manually_selected_exam_operator_ids):
+        count += _discard_id(exam_set, young_child_id_set)
+    for book_id, borrower_id in list(rhodes_island.book_borrow_dict.items()):
+        if borrower_id in young_child_id_set:
+            rhodes_island.book_borrow_dict[book_id] = -1
+            count += 1
+    if loaded_dict.get("old_character_id") in young_child_id_set:
+        loaded_dict["old_character_id"] = 0
+        count += 1
+    return count
+
+
+def _take_young_child_off_line(loaded_dict, young_child_id_set: set) -> int:
+    """
+    让101/102阶段的孩子离线：离开所有场景与当前干员列表，位置换成离线位置 ["0", "0"]，交互对象换成自己，
+       行为不是发呆或带着移动路线时换成默认行为（发呆），跟随关闭；
+       没有职业（work_type 为0）、不在任何职业名单里，空出宿舍床位（宿舍与登记宿舍为空串），助理服务归零（同 handle_assistant_reset）；
+       催眠、待触发事件、必须结算与显示的二段行为、快感状态归零；
+       别人以她为目标的，目标换回自己（NPC 当前的行为换成发呆）；以她为助理的，助理清零；别人正在搬运她的，搬运对象清零；别人的群交部位模板里去掉她。角色数据保留
+    Keyword arguments:
+    loaded_dict -- 存档数据
+    young_child_id_set -- 101/102阶段孩子的角色id集合
+    Return arguments:
+    int -- 改动的项数
+    功能: 与角色离线结算 handle_chara_off_line 的位置口径相同：位置为 ["0", "0"]
+    """
+    count = 0
+    if not young_child_id_set:
+        return count
+    for scene in loaded_dict["scene_data"].values():
+        for character_id in young_child_id_set & set(scene.character_list):
+            scene.character_list.remove(character_id)
+            count += 1
+    for character_id in young_child_id_set & set(loaded_dict["npc_id_got"]):
+        loaded_dict["npc_id_got"].remove(character_id)
+        count += 1
+    for work_npc_set in loaded_dict["rhodes_island"].all_work_npc_set.values():
+        for character_id in young_child_id_set & set(work_npc_set):
+            work_npc_set.remove(character_id)
+            count += 1
+    for character_id in young_child_id_set:
+        character = loaded_dict["character_data"][character_id]
+        count += _replace_if_changed(character, "position", ["0", "0"])
+        behavior = character.behavior
+        if behavior.behavior_id != constant.Behavior.SHARE_BLANKLY or behavior.move_target or behavior.move_src or behavior.move_final_target:
+            character.behavior = game_type.Behavior()
+            character.state = constant.CharacterStatus.STATUS_ARDER
+            count += 1
+        count += _replace_if_changed(character.sp_flag, "is_follow", 0)
+        count += _replace_if_changed(character, "target_character_id", character_id)
+        count += _replace_if_changed(character.work, "work_type", 0)
+        count += _replace_if_changed(character, "assistant_services", attr_calculation.get_assistant_services_zero())
+        count += _replace_if_changed(character, "dormitory", "")
+        count += _replace_if_changed(character, "permanent_dormitory", "")
+        count += _replace_if_changed(character, "hypnosis", game_type.HYPNOSIS())
+        count += _replace_if_changed(character, "event", game_type.Chara_Event())
+        count += _replace_if_changed(character, "must_settle_second_behavior_id_list", [])
+        count += _replace_if_changed(character, "must_show_second_behavior_id_list", [])
+        for state_id in [state_id for state_id, state in game_config.config_character_state.items() if state.type == 0]:
+            if character.status_data.get(state_id, 0):
+                character.status_data[state_id] = 0
+                count += 1
+    for character in loaded_dict["character_data"].values():
+        if character.target_character_id in young_child_id_set and character.target_character_id != character.cid:
+            # NPC 正在对孩子进行的行为换成发呆；有孩子参与的会话由读档后的 end_young_child_session 结束
+            if character.cid != 0:
+                _reset_behavior_to_idle(character)
+            character.target_character_id = character.cid
+            count += 1
+        if character.assistant_character_id in young_child_id_set:
+            character.assistant_character_id = 0
+            count += 1
+        if character.action_info.carry_chara_id in young_child_id_set:
+            character.action_info.carry_chara_id = 0
+            count += 1
+        if character.pl_ability.carry_chara_id_in_time_stop in young_child_id_set:
+            character.pl_ability.carry_chara_id_in_time_stop = 0
+            count += 1
+        count += _remove_from_group_sex_template(character, young_child_id_set)
+    count += _clear_young_child_reference(loaded_dict, young_child_id_set)
+    return count
+
+
+def _clear_age_drug_item(character) -> int:
+    """
+    从角色道具栏中清掉外表年龄药：道具表里还有这一项时数量置0，没有时删掉这一项
+    Keyword arguments:
+    character -- 角色数据
+    Return arguments:
+    int -- 改动的项数
+    """
+    count = 0
+    for item_id in AGE_DRUG_ITEM_TUPLE:
+        if item_id not in character.item:
+            continue
+        if item_id not in game_config.config_item:
+            del character.item[item_id]
+            count += 1
+        elif character.item[item_id]:
+            character.item[item_id] = 0
+            count += 1
+    return count
+
+
+def _find_young_child_session(loaded_dict, young_child_id_set: set) -> dict:
+    """
+    找出有101/102阶段的孩子参与、读档后要结束的会话
+    Keyword arguments:
+    loaded_dict -- 存档数据（在清掉孩子的H标记、群交模板与对孩子的引用之前调用）
+    young_child_id_set -- 101/102阶段孩子的角色id集合
+    Return arguments:
+    dict -- {"group": 群交是否要结束, "time_stop": 时停是否要结束, "single_partner_id_set": 与孩子单人H的角色id集合, "child_id_set": 孩子的角色id集合}
+    功能: 群交：开着群交模式，且玩家以孩子为交互对象、或孩子在某个群交部位模板里、或孩子与玩家同场景在H中；
+          时停：开着时停，且玩家以孩子为交互对象、搬运她或让她自由活动；
+          单人H（含隐奸、露出）：交互对象是孩子且在H、隐奸或露出中的角色，与玩家同场景的群交参与者归群交结束
+    """
+    character_data = loaded_dict["character_data"]
+    player = character_data.get(0)
+    session = {"group": False, "time_stop": False, "single_partner_id_set": set(), "child_id_set": set(young_child_id_set)}
+    if player is None or not young_child_id_set:
+        return session
+    if loaded_dict.get("group_sex_mode"):
+        in_template = False
+        for character in character_data.values():
+            for template_data in character.h_state.group_sex_body_template_dict.values():
+                if isinstance(template_data, list) and len(template_data) >= 2 and isinstance(template_data[0], dict) and isinstance(template_data[1], list):
+                    part_id_list = [part_value[0] for part_value in template_data[0].values() if isinstance(part_value, list) and part_value]
+                    serve_id_list = template_data[1][0] if template_data[1] and isinstance(template_data[1][0], list) else []
+                    if young_child_id_set & set(part_id_list + serve_id_list):
+                        in_template = True
+        child_in_scene_h = any(character_data[chara_id].sp_flag.is_h and character_data[chara_id].position == player.position for chara_id in young_child_id_set)
+        session["group"] = player.target_character_id in young_child_id_set or in_template or child_in_scene_h
+    if loaded_dict.get("time_stop_mode"):
+        time_stop_id_set = {player.target_character_id, player.pl_ability.free_in_time_stop_chara_id, player.action_info.carry_chara_id, player.pl_ability.carry_chara_id_in_time_stop}
+        session["time_stop"] = bool(time_stop_id_set & young_child_id_set)
+    for character in character_data.values():
+        if character.cid in young_child_id_set or character.target_character_id not in young_child_id_set:
+            continue
+        if session["group"] and character.position == player.position:
+            continue
+        if character.sp_flag.is_h or character.sp_flag.hidden_sex_mode or character.sp_flag.exhibitionism_sex_mode:
+            session["single_partner_id_set"].add(character.cid)
+    return session
+
+
+def end_young_child_session(session: dict) -> None:
+    """
+    存档载入缓存后，有101/102阶段的孩子参与的会话各按自己的结束结算收尾，奖励类结算不调用
+    Keyword arguments:
+    session -- migrate_age_and_body_type 填入的会话信息（见 _find_young_child_session）
+    Return arguments:
+    None
+    功能: 群交按「群交结束」：场景内所有角色H状态归零（SCENE_ALL_CHARACTERS_H_STATE_RESET）、穿回衣服、阴茎位置归零、关闭群交模式；
+          时停按「解除时停」：清零时停搬运与自由活动对象、关闭时停；
+          单人H按「结束H」：另一方H状态归零（BOTH_H_STATE_RESET 对其一侧）、开门；
+          最后孩子一侧H状态归零、穿回衣服。结算读写游戏缓存，所以在读档覆盖缓存之后调用；
+          体力气力上限奖励、寸止解放与时停绝顶解放是对这次会话的结算，不调用。各方的交互对象已在转换时换成不指向孩子的值
+    """
+    from Script.Settle import default, default_cloth
+
+    now_time = cache.game_time
+    if session.get("group"):
+        default.handle_scene_all_characters_h_state_reset(0, 1, game_type.CharacterStatusChange(), now_time)
+        default_cloth.handle_scene_all_characters_cloth_back(0, 1, game_type.CharacterStatusChange(), now_time)
+        default.handle_scene_all_characters_penis_in_reset(0, 1, game_type.CharacterStatusChange(), now_time)
+        default.handle_group_sex_mode_off(0, 1, game_type.CharacterStatusChange(), now_time)
+    if session.get("time_stop"):
+        default.handle_target_not_be_carried_in_time_stop(0, 1, game_type.CharacterStatusChange(), now_time)
+        default.handle_target_not_be_free_in_time_stop(0, 1, game_type.CharacterStatusChange(), now_time)
+        default.handle_time_stop_off(0, 1, game_type.CharacterStatusChange(), now_time)
+    for character_id in sorted(session.get("single_partner_id_set", set())):
+        if character_id not in cache.character_data:
+            continue
+        default.handle_self_h_state_reset(character_id, 1, game_type.CharacterStatusChange(), now_time)
+        default.handle_door_close_reset(character_id, 1, game_type.CharacterStatusChange(), now_time)
+    for character_id in sorted(session.get("child_id_set", set())):
+        if character_id not in cache.character_data:
+            continue
+        default.handle_self_h_state_reset(character_id, 1, game_type.CharacterStatusChange(), now_time)
+        default_cloth.handle_self_cloth_back(character_id, 1, game_type.CharacterStatusChange(), now_time)
+
+
+def migrate_age_and_body_type(loaded_dict, session: dict = None) -> int:
+    """
+    读档时整理成长阶段、体型、见学与上课、行为表与娱乐表里已没有的编号、101/102阶段的H与身体状态和离线、外表年龄药相关的数据；对整理过的存档再读一次，这些数据不变
+    Keyword arguments:
+    loaded_dict -- 存档数据（角色数据须已经过 update_character_config_data）
+    session -- 传入 dict 时填入有孩子参与的会话（见 _find_young_child_session），读档覆盖缓存后交给 end_young_child_session
+    Return arguments:
+    int -- 改动的项数
+    功能: 静态干员见 _migrate_static_talent；103阶段的女儿去掉未初潮与未成年，女儿的成长阶段与体型保持原样；
+          见学、表里没有的行为与娱乐编号、101/102阶段的上课状态、101/102阶段的H与身体状态、离线、外表年龄药见 _clear_child_activity、_clear_young_child_h_state、_clear_young_child_egg_index、_take_young_child_off_line、_clear_age_drug_item；
+          最后清掉世界设定1的开关
+    """
+    count = 0
+    world_setting = loaded_dict.get("world_setting", {})
+    world_setting_shrink = bool(world_setting.get(WORLD_SETTING_SHRINK, 0))
+    # 先换静态干员与103女儿的素质：药物缩成101/102的静态干员由此回到成年，不算孩子
+    for character in loaded_dict["character_data"].values():
+        if character.cid != 0 and not _is_player_daughter(character):
+            count += _migrate_static_talent(character, world_setting_shrink)
+        elif _is_player_daughter(character) and character.talent.get(103, 0):
+            count += _clear_minor_talent(character)
+    young_child_id_set = {character.cid for character in loaded_dict["character_data"].values() if _is_young_child(character)}
+    # 在清掉任何H标记、群交模板与交互对象之前记下有孩子参与的会话
+    if session is not None:
+        session.update(_find_young_child_session(loaded_dict, young_child_id_set))
+    for character in loaded_dict["character_data"].values():
+        count += _clear_child_activity(character)
+        if character.cid in young_child_id_set:
+            count += _clear_young_child_h_state(character)
+        count += _clear_age_drug_item(character)
+    if 0 in loaded_dict["character_data"]:
+        count += _clear_young_child_egg_index(loaded_dict["character_data"][0], young_child_id_set)
+    count += _take_young_child_off_line(loaded_dict, young_child_id_set)
+    for template_data in loaded_dict["rhodes_island"].child_schedule_template.values():
+        slot_data = template_data.get("slot", {}) if isinstance(template_data, dict) else {}
+        for slot in [slot for slot, value in slot_data.items() if value not in game_config.config_entertainment]:
+            slot_data[slot] = 0
+            count += 1
+    if world_setting_shrink:
+        world_setting[WORLD_SETTING_SHRINK] = 0
+        count += 1
+    return count

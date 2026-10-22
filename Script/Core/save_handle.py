@@ -132,12 +132,19 @@ def _migrate_entertainment_cid(value):
     value -- 存档里的娱乐cid（也可能是别的类型，原样返回）
     Return arguments:
     value -- 换算后的娱乐cid
-    功能: 只在旧编号已经不在 Entertainment.csv 里时才换：日后大浴场段真的用上 175 时，
-          新档里的 175 就是那项浴场娱乐，不该被当成旧编号改掉
+    功能: 只在旧编号已经不在 Entertainment.csv 里、新编号在 Entertainment.csv 里时才换：日后大浴场段真的用上 175 时，
+          新档里的 175 就是那项浴场娱乐，不该被当成旧编号改掉；新编号不在表里时原样返回，
+          由 old_chara_to_new.migrate_age_and_body_type 按表里没有的编号处理
     """
     from Script.Config import game_config
 
-    if isinstance(value, int) and not isinstance(value, bool) and value in _ENTERTAINMENT_CID_MIGRATE and value not in game_config.config_entertainment:
+    if (
+        isinstance(value, int)
+        and not isinstance(value, bool)
+        and value in _ENTERTAINMENT_CID_MIGRATE
+        and value not in game_config.config_entertainment
+        and _ENTERTAINMENT_CID_MIGRATE[value] in game_config.config_entertainment
+    ):
         return _ENTERTAINMENT_CID_MIGRATE[value]
     return value
 
@@ -702,6 +709,9 @@ def input_load_save(save_id: str):
         update_count += 1
     # 教育区娱乐改编号（2026-09-09）：日程模板各时段里存的旧编号换成新编号
     update_count += _migrate_child_schedule_template(loaded_dict["rhodes_island"])
+    # 成长阶段与体型素质、见学与上课状态、表里没有的行为与娱乐编号、101/102阶段的H与身体状态和离线、外表年龄药、世界设定1
+    young_child_session = {}
+    update_count += old_chara_to_new.migrate_age_and_body_type(loaded_dict, young_child_session)
     # 临时性技实操课（Plan 22 四期）
     if not hasattr(loaded_dict["rhodes_island"], "temp_sex_class"):
         loaded_dict["rhodes_island"].temp_sex_class = {}
@@ -775,6 +785,9 @@ def input_load_save(save_id: str):
     # 载入后 w_frame_up 残留为0，之后第一次左键会被 mouse_left_check 误判为“推进等待”，
     # 消耗掉一次性的输入许可却不产生任何指令，askfor_all 从此收不到输入，游戏静默卡死
     cache.wframe_mouse = game_type.WFrameMouse()
+
+    # 有101/102阶段的孩子参与的群交、时停与H，各按自己的结束结算收尾（这些结算读写游戏缓存，须在覆盖缓存之后）
+    old_chara_to_new.end_young_child_session(young_child_session)
 
     # 游戏状态自检（系统设置14号，默认关闭）：对载入后的存档做保守修复，包在开关关闭时不会被导入
     if cache.all_system_setting.base_setting.get(14, 0):
