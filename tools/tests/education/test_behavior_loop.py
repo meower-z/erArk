@@ -5,7 +5,7 @@
    不 inline 调用 init_character_behavior()（其结尾的成就结算可能写文件）。
 """
 from _bootstrap import *  # noqa: F401,F403
-from Script.Design import character_behavior, instuct_judege, handle_npc_ai
+from Script.Design import character_behavior, clothing, instuct_judege, handle_npc_ai
 from Script.Settle import past_day_settle, realtime_settle
 from Script.UI.Panel import character_info_head
 
@@ -45,17 +45,46 @@ daughter_list = [cid for cid in all_daughter_list if cache.character_data[cid].w
 if not daughter_list:
     mother_id = next(cid for cid in sorted(cache.npc_id_got) if cid in cache.character_data)
     for index in range(3):
-        make_character(9001 + index, f"测试女儿{index + 1}", 152, daughter=True, stage=103, mother_id=mother_id, born_days=300, position=SCENE_EDU_ENTRY)
+        cd = make_character(9001 + index, f"测试女儿{index + 1}", 152, daughter=True, stage=103, mother_id=mother_id, born_days=300, position=SCENE_EDU_ENTRY)
+        # make_character 给的 100 点体力撑不过一节 45 分钟的自习，这里按游戏角色的量级给 1000；它造出的角色也没穿衣服，穿上内衣才过得了 normal_4
+        cd.hit_point_max = cd.hit_point = 1000
+        cd.mana_point_max = cd.mana_point = 1000
+        clothing.get_underwear(9001 + index)
     all_daughter_list = growth_handle.get_student_candidate_list()
     daughter_list = [cid for cid in all_daughter_list if cache.character_data[cid].work.work_type == E.STUDENT_WORK_TYPE]
 check("有在学的学生岗女儿", len(daughter_list) > 0, (len(daughter_list), len(all_daughter_list)))
 
 section("环境：教师、教室、课表")
+
+
+def clear_need(cid: int) -> None:
+    """
+    夹具控制：清掉生理需求（饥饿 / 尿意 / 疲劳 / 困意与对应标记），体力气力回满，只看课表链（照 test_class_ai.clear_need）
+    Keyword arguments:
+    cid -- 角色id
+    Return arguments:
+    无
+    """
+    cd = cache.character_data[cid]
+    for name in ("hunger_point", "urinate_point", "tired_point", "sleep_point"):
+        if hasattr(cd, name):
+            setattr(cd, name, 0)
+    for name in ("eat_food", "rest", "pee"):
+        if hasattr(cd.sp_flag, name):
+            setattr(cd.sp_flag, name, 0)
+    cd.sp_flag.sleep = False
+    cd.sp_flag.tired = False
+    cd.hit_point = cd.hit_point_max
+    cd.mana_point = cd.mana_point_max
+
+
 teacher_list = schedule_handle.get_teacher_candidate_list()
 if len(teacher_list) < 2:
+    # 按「是不是玩家的女儿」筛而不按成长阶段筛：存档里的普通干员也可能带成长阶段素质（如 104 少女），按阶段筛会把她们全部跳过；
+    #    normal_2 不成立（临盆、产后、监禁）的干员 AI 行动基本停止、不会去授课，也不选
     for cid in sorted(cache.npc_id_got):
         cd = cache.character_data[cid]
-        if cid in all_daughter_list or cd.dead or growth_handle.get_character_stage(cid) or cd.work.work_type in (E.TEACHER_WORK_TYPE,):
+        if cid in all_daughter_list or cd.dead or handle_premise.handle_self_is_player_daughter(cid) or not handle_premise.handle_normal_2(cid) or cd.work.work_type in (E.TEACHER_WORK_TYPE,):
             continue
         cd.work.work_type = E.TEACHER_WORK_TYPE
         if len(schedule_handle.get_teacher_candidate_list()) >= 3:
@@ -73,14 +102,12 @@ if day.month != now.month:
         day += datetime.timedelta(days=1)
 set_time(day)
 cache.pre_game_time = day
-# 女儿与教师都从空闲开始：存档里带进来的半截行为（睡觉、吃饭、H）会让开头几十分钟的取样全是噪声
+# 女儿与教师都从空闲、没有生理需求开始：存档里带进来的半截行为（睡觉、吃饭、H）和饥饿会让开头几十分钟的取样全是噪声
 for cid in daughter_list + teacher_list:
     cd = cache.character_data[cid]
     cd.sp_flag.is_h = False
     cd.sp_flag.imprisonment = False
-    cd.hit_point = cd.hit_point_max
-    cd.mana_point = cd.mana_point_max
-    cd.sp_flag.sleep = False
+    clear_need(cid)
     cd.sp_flag.is_follow = 0
     cd.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
     cd.behavior.duration = 0
@@ -206,6 +233,9 @@ for cid in daughter_list:
     if len(must_list) >= 4:
         break
 check("挑到了第 5 节在别的教室上课的女儿", len(must_list) > 0, must_list)
+# 夹具前提：两轮开始前体力气力回满、需求清空。上了一上午课她们的气力已经不多，先去休息的女儿赶不上开课
+for cid in daughter_list:
+    clear_need(cid)
 sex_class_handle.set_temp_class(cache.game_time.date().toordinal(), 5, sex_room, 70, must_attend=must_list)
 pre_round_log = []
 for minute in (14 * 60 - (cache.game_time.hour * 60 + cache.game_time.minute), 45):
@@ -235,34 +265,16 @@ L4_RT_LOG = []
 _orig_true_add = realtime_settle.get_true_add_time
 
 
-def l4_clear_need(cid: int) -> None:
-    """
-    夹具控制：清掉生理需求（饥饿 / 尿意 / 疲劳 / 困意与对应标记），体力气力回满，只看课表链（照 test_class_ai.clear_need）
-    Keyword arguments:
-    cid -- 角色id
-    Return arguments:
-    无
-    """
-    cd = cache.character_data[cid]
-    for name in ("hunger_point", "urinate_point", "tired_point", "sleep_point"):
-        if hasattr(cd, name):
-            setattr(cd, name, 0)
-    for name in ("eat_food", "rest", "pee"):
-        if hasattr(cd.sp_flag, name):
-            setattr(cd.sp_flag, name, 0)
-    cd.sp_flag.sleep = False
-    cd.sp_flag.tired = False
-    cd.hit_point = cd.hit_point_max
-    cd.mana_point = cd.mana_point_max
-
-
 l4_id = -1
 """ 挑出的学生岗女儿：不是助理、清掉需求后 normal_all 成立（截短规则要求上课行的门槛成立） """
 for cid in daughter_list:
     if cid == cache.character_data[0].assistant_character_id:
         continue
     cache.character_data[cid].sp_flag.is_follow = 0
-    l4_clear_need(cid)
+    clear_need(cid)
+    # 夹具前提：她没有大致全裸，否则 normal_all 里的 normal_4 不成立
+    if handle_premise.handle_cloth_most_off(cid):
+        clothing.get_underwear(cid)
     if handle_premise.handle_normal_all(cid):
         l4_id = cid
         break
@@ -317,7 +329,7 @@ def run_l4_step(minute: int, class_period: int) -> tuple:
     cd.state = constant.CharacterStatus.STATUS_ARDER
     cd.target_character_id = l4_id
     cd.action_info.wake_time = step_start
-    l4_clear_need(l4_id)
+    clear_need(l4_id)
     pl_data = cache.character_data[0]
     pl_data.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
     pl_data.behavior.start_time = step_start
@@ -332,7 +344,7 @@ def run_l4_step(minute: int, class_period: int) -> tuple:
             npc_pass += 1
             if npc_pass > 120:
                 break
-            l4_clear_need(l4_id)
+            clear_need(l4_id)
             character_behavior.character_behavior(l4_id, cache.game_time, step_start)
     finally:
         realtime_settle.get_true_add_time = _orig_true_add
