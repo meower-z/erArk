@@ -130,8 +130,6 @@ class Instruct:
     """ 抚摸孕肚（Plan 22 四期） """
     LISTEN_INFLATION = "listen_inflation"
     """ 听肚子里的动静 """
-    PLAY_WITH_CHILD = "play_with_child"
-    """ 一起玩耍 """
     EXERCISE = "exercise"
     """ 锻炼身体 """
     BORROW_BOOK = "borrow_book"

@@ -494,6 +494,7 @@ normal_7,NORMAL_7,属性_异常状态,7正常(角色离线)
 t_normal_1,T_NORMAL_1,属性_异常状态,交互对象1正常
 t_normal_2,T_NORMAL_2,属性_异常状态,交互对象2正常
 t_normal_6,T_NORMAL_6,属性_异常状态,交互对象6正常
+t_normal_7,T_NORMAL_7,属性_异常状态,交互对象7正常(交互对象不离线)
 normal_2_4,NORMAL_2_4,属性_异常状态,24正常的普通状态
 normal_267,NORMAL_267,属性_异常状态,267正常（可能基础异常、高优先级AI、服装异常或意识模糊）
 t_normal_267,T_NORMAL_267,属性_异常状态,交互对象267正常（可能基础异常、高优先级AI、服装异常或意识模糊）
@@ -1256,11 +1257,11 @@ t_oestrus_0,T_OESTRUS_0,属性_素质,交互对象发情期==0
 t_oestrus_1,T_OESTRUS_1,属性_素质,交互对象发情期==1
 is_medical,IS_MEDICAL,属性_素质,自己的职业为医疗
 t_is_medical,T_IS_MEDICAL,属性_素质,交互对象的职业为医疗
-child_1,SELF_IS_CHILD,属性_素质,自己是幼女
+child_1,SELF_IS_CHILD,属性_素质,自己是幼儿
 baby_1,SELF_IS_BABY,属性_素质,自己是婴儿
-loli_1,SELF_IS_LOLI,属性_素质,自己是萝莉
-self_child_or_loli_1,SELF_CHILD_OR_LOLI_1,属性_素质,自己幼女或萝莉==1
-t_child_or_loli_1,T_CHILD_OR_LOLI_1,属性_素质,交互对象幼女或萝莉==1
+loli_1,SELF_IS_LOLI,属性_素质,自己是学员
+self_child_or_loli_1,SELF_CHILD_OR_LOLI_1,属性_素质,自己幼儿或学员==1
+t_child_or_loli_1,T_CHILD_OR_LOLI_1,属性_素质,交互对象幼儿或学员==1
 self_underage,SELF_UNDERAGE,属性_素质,自己是未成年
 self_not_underage,SELF_NOT_UNDERAGE,属性_素质,自己不是未成年
 patient_0,TARGET_NOT_PATIENT,属性_素质,交互对象不是源石病感染者
@@ -1368,7 +1369,6 @@ entertainment_is_taste_tea,ENTERTAINMENT_IS_TASTE_TEA,属性_娱乐,自己当前
 entertainment_is_taste_coffee,ENTERTAINMENT_IS_TASTE_COFFEE,属性_娱乐,自己当前时段的娱乐为品咖啡
 entertainment_is_taste_dessert,ENTERTAINMENT_IS_TASTE_DESSERT,属性_娱乐,自己当前时段的娱乐为品尝点心
 entertainment_is_taste_food,ENTERTAINMENT_IS_TASTE_FOOD,属性_娱乐,自己当前时段的娱乐为品尝美食
-entertainment_is_play_house,ENTERTAINMENT_IS_PLAY_HOUSE,属性_娱乐,自己当前时段的娱乐为过家家
 entertainment_is_style_hair,ENTERTAINMENT_IS_STYLE_HAIR,属性_娱乐,自己当前时段的娱乐为修整发型
 entertainment_is_full_body_styling,ENTERTAINMENT_IS_FULL_BODY_STYLING,属性_娱乐,自己当前时段的娱乐为全身造型服务
 entertainment_is_bathhouse_type,ENTERTAINMENT_IS_BATHHOUSE_TYPE,属性_娱乐,自己当前时段的娱乐为大浴场类的娱乐
@@ -2045,7 +2045,7 @@ player_held_eggs_not_empty,PLAYER_HELD_EGGS_NOT_EMPTY,生育,玩家临时持有�
 self_have_sibling_child,SELF_HAVE_SIBLING_CHILD,生育,自己有同为孩子的兄弟姐妹
 self_birthday_today,SELF_BIRTHDAY_TODAY,生育,今天是自己的生日：出生日的月日与今天相同，2月29日出生的平年按2月28日过
 
-self_have_classmate,SELF_HAVE_CLASSMATE,授课,自己与别的孩子在同一格上确有的课，双方都在学生岗，对方是幼女或萝莉
+self_have_classmate,SELF_HAVE_CLASSMATE,授课,自己与别的孩子在同一格上确有的课，双方都在学生岗，对方是幼儿或学员
 self_mother_available,SELF_MOTHER_AVAILABLE,授课,自己的母亲仍在队中且当前可跟随
 self_follow_mother,SELF_FOLLOW_MOTHER,授课,自己正处于跟随母亲见学的状态
 self_have_any_course,SELF_HAVE_ANY_COURSE,授课,自己有课可上：学生岗且个人课表上至少有一格每周确有的课

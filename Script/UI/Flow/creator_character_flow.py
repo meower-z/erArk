@@ -825,18 +825,10 @@ class Character_FirstNPC:
         self.age_filter_flag = (self.age_filter_flag + 1) % 7
         if self.age_filter_flag == 0:
             self.id_list = list(cache.npc_tem_data.keys())
-        elif self.age_filter_flag == 1:
-            self.id_list = self.age_filter_id_dict[_("幼女")]
-        elif self.age_filter_flag == 2:
-            self.id_list = self.age_filter_id_dict[_("萝莉")]
-        elif self.age_filter_flag == 3:
-            self.id_list = self.age_filter_id_dict[_("少女")]
-        elif self.age_filter_flag == 4:
-            self.id_list = self.age_filter_id_dict[_("大姐姐")]
-        elif self.age_filter_flag == 5:
-            self.id_list = self.age_filter_id_dict[_("熟女")]
-        elif self.age_filter_flag == 6:
-            self.id_list = self.age_filter_id_dict[_("人妻")]
+        else:
+            # 筛选名单按素质名登记（见上面建名单处），这里同样从素质id取名，素质改名时不会对不上
+            age_talent_id = [102, 103, 104, 105, 106, 107][self.age_filter_flag - 1]
+            self.id_list = self.age_filter_id_dict[game_config.config_talent[age_talent_id].name]
         self.chest_filter_flag = 0
         self.talk_character_list = []
         self.show_normal_handle_panel = True

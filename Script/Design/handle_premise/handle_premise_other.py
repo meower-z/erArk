@@ -1190,7 +1190,7 @@ def handle_self_have_sibling_child(character_id: int) -> int:
 def handle_self_have_classmate(character_id: int) -> int:
     """
     校验自己有同班同学（Plan 22 三期，同班同学事件用）：双方都在学生岗、同一格上确有同一节课（Plan 30 §3.6），
-       对方是幼女或萝莉（Plan 31 §3.11，与同胞同口径）
+       对方是幼儿或学员（与同胞同口径；幼儿离线、不在 npc_id_got 里，实际只有学员）
     同学关系由课表反查而非落成字段：课表一改同学就跟着变，存字段反而多一处同步点。
        判据在 growth_event_handle.get_classmate_list，只读，不惰性创建养成数据
     Keyword arguments:
@@ -1207,8 +1207,8 @@ def handle_self_have_classmate(character_id: int) -> int:
 def handle_self_mother_available(character_id: int) -> int:
     """
     校验自己的母亲仍在队中且当前可跟随（Plan 23，母亲相关的公务事件用）
-    直接复用二期的 judge_mother_available：母亲正在H、被监禁、外出委托时算不可跟随（住院判定 Plan 32 删掉：医疗系统的住院表以抽象病人编号为键，干员从不进表），
-       与幼女跟随见学的判定口径保持一致，免得事件里写「母亲带她去岗位」时母亲其实不在
+    直接复用 judge_mother_available：母亲正在H、被监禁、外出委托时算不可跟随（不查医疗系统的住院表：那张表以抽象病人编号为键，干员从不进表），
+       免得事件里写「母亲带她去岗位」时母亲其实不在
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -1222,18 +1222,14 @@ def handle_self_mother_available(character_id: int) -> int:
 @add_premise(constant_promise.Premise.SELF_FOLLOW_MOTHER)
 def handle_self_follow_mother(character_id: int) -> int:
     """
-    校验自己正处于跟随母亲见学的状态（Plan 22 二期）
-    读的是 child_growth.follow_mother_flag 而不是当前行为id：
-       玩家对见学中的女儿发起互动时，她的行为已经被换成被交互的那个了，
-       只有这个跨行为保留的标记还能说明「她本来在跟着妈妈」
+    校验自己正处于跟随母亲见学的状态
+    没有角色会跟随母亲见学，前提恒为0；前提键留着，是因为口上数据还在引用它
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
     int -- 权重
     """
-    from Script.System.Education_System import class_ai
-
-    return 1 if class_ai.judge_in_follow_mother(character_id) else 0
+    return 0
 
 
 @add_premise(constant_promise.Premise.SELF_HAVE_ANY_COURSE)
@@ -1397,7 +1393,7 @@ def handle_target_not_player_daughter(character_id: int) -> int:
 @add_premise(constant_promise.Premise.TARGET_REPORT_CARD_CHECKABLE)
 def handle_target_report_card_checkable(character_id: int) -> int:
     """
-    校验交互对象可以检查成绩单：不是成年后离开学生岗的女儿，她有待查看的成绩单时除外（Plan 30 §3.3 Q1，用户拍板）
+    校验交互对象可以检查成绩单：不是毕业后离开学生岗的女儿，她有待查看的成绩单时除外
     是不是女儿、是不是婴儿不在这里判，指令 1036 的前提串里另有 target_is_player_daughter 与 t_baby_0
     Keyword arguments:
     character_id -- 角色id

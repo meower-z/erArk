@@ -1058,12 +1058,6 @@ def handle_listen_inflation():
     chara_handle_instruct_common_settle(constant.Behavior.LISTEN_INFLATION)
 
 
-@add_instruct(constant.Instruct.PLAY_WITH_CHILD)
-def handle_play_with_child():
-    """处理一起玩耍指令"""
-    chara_handle_instruct_common_settle(constant.Behavior.PLAY_WITH_CHILD)
-
-
 @add_instruct(constant.Instruct.PRENATAL_TALK)
 def handle_prenatal_talk():
     """处理对孕肚说话指令（胎教，Plan 22 四期）"""

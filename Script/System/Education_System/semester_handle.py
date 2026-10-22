@@ -253,17 +253,17 @@ def get_report_incomplete_reason(character_id: int) -> str:
 
 def judge_adult_out_of_school(character_id: int) -> bool:
     """
-    校验角色是不是已成年（少女期）且此刻不在学生岗（Plan 30 §3.3 Q1，用户拍板）
+    校验角色是不是已毕业（少女期）且此刻不在学生岗
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
-    bool -- 是否成年且不在学生岗；角色不存在为False
+    bool -- 是否已毕业且不在学生岗；角色不存在为False
     功能: 学期结算（整学期都不在学生岗的不再出空成绩单）与「检查成绩单」的前提共用。
-          幼女 / 萝莉不在学生岗的不算：照 Plan 29 的用户口径照出成绩单并写明理由
+          学员不在学生岗的不算：照出成绩单并写明理由
     """
     if character_id not in cache.character_data:
         return False
-    # 104 少女即成年后的阶段素质，成长链走完后一直挂着
+    # 104 少女即毕业后的阶段素质，成长链走完后一直挂着
     if growth_handle.get_character_stage(character_id) != 104:
         return False
     return cache.character_data[character_id].work.work_type != education_constant.STUDENT_WORK_TYPE
@@ -275,8 +275,8 @@ def judge_report_card_checkable(character_id: int) -> bool:
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
-    bool -- 能否检查；成年后不在学生岗、又没有待查看成绩单的为False，角色不存在为False
-    功能: 成年后不在学生岗的女儿不再每学期收到空成绩单，指令也就不再对她可用；以前的成绩单照旧在养成总览里翻。
+    bool -- 能否检查；毕业后不在学生岗、又没有待查看成绩单的为False，角色不存在为False
+    功能: 毕业后不在学生岗的女儿不会每学期收到空成绩单，指令也就对她不可用；以前的成绩单照旧在养成总览里翻。
           例外是她还有一份没看过的成绩单（学期中途才离开学生岗，那一学期照出了）：养成总览写着「用「检查成绩单」指令」，
              这时也挡掉的话待查看永远消不掉；看完 flag 清掉，指令随之不可用。
           只管这一条：是不是女儿、是不是婴儿由指令前提串里的 target_is_player_daughter / t_baby_0 判。只读不写
@@ -394,7 +394,7 @@ def settle_semester_change() -> List[int]:
     学期切换的总入口：逐个孩子比对学期号，切了就出成绩单并重置基线
 
     用「逐孩比对学期号」而不是全局切月标记，于是天然幂等、天然自愈：
-       同一天调两次不会出两份成绩单；学期中途出生的、中途长成幼女的、旧存档里的孩子
+       同一天调两次不会出两份成绩单；学期中途出生的、中途长成学员的、旧存档里的孩子
        都各自从自己第一次被看到的那天起算，不需要任何全局状态，也不需要存档迁移
     Keyword arguments:
     无
@@ -407,13 +407,13 @@ def settle_semester_change() -> List[int]:
     #    改成遍历全角色会给全岛每个人惰性创建 CHILD_GROWTH 并写进存档
     for character_id in growth_handle.get_student_candidate_list():
         growth_data = growth_handle.get_child_growth(character_id)
-        # 第一次记账（刚长成幼女 / 旧存档 / 新开局）：只立基线，不出成绩单
+        # 第一次记账（刚长成学员 / 旧存档 / 新开局）：只立基线，不出成绩单
         if not growth_data.semester_id:
             reset_semester_baseline(character_id, now_semester)
             continue
         if growth_data.semester_id == now_semester:
             continue
-        # 成年后整学期都不在学生岗（学期初也不是、本学期没有出勤与缺课记录）：只重置基线，不出空成绩单、不置待查看、
+        # 毕业后整学期都不在学生岗（学期初也不是、本学期没有出勤与缺课记录）：只重置基线，不出空成绩单、不置待查看、
         #    不进学期结束提示（Plan 30 §3.3 Q1，用户拍板）。学期初未知（-1）的旧档同样按「没有记录」认；
         #    学期中途才离开学生岗的有记录，照出最后一份。这份名单养成总览也在用，所以收窄只能加在这里
         if (judge_adult_out_of_school(character_id) and growth_data.semester_base_work_type != education_constant.STUDENT_WORK_TYPE

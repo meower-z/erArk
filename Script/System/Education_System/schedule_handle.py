@@ -510,8 +510,7 @@ def get_course_at(character_id: int, now_time, period: int) -> Optional[dict]:
         result["ability_id"] = cell[0]
         result["teacher_id"] = cell[1]
     # 个人式课（体育/兴趣/实习）这一节上不成——场所未开放、或兴趣课的活动条件不符（孩子长大了、复制来的课表）——
-    #    同样视为没课（Plan 28 §3.2，与上面的已停课同一口径）。此前只有「在 / 不在上课地点」两行交回既有 AI，
-    #    体力闸与心情闸照样按有课判：记一节缺课、翘课，日程自习还多记一节出勤，幼女这一节也不见学。
+    #    同样视为没课，与上面的已停课同一口径，体力闸与心情闸不按有课判。
     #    必修覆盖不受影响（覆盖后是教室课）；实习课本节无人在岗时地点仍解析得出，照旧是一节课、降级见习
     elif not judge_personal_course_valid(character_id, result):
         return None
@@ -690,7 +689,7 @@ def judge_course_need_pass(character_id: int, course: dict) -> bool:
     course -- get_now_course() / get_course_at() 的返回值
     Return arguments:
     bool -- 是否满足；只有兴趣课有条件（娱乐的 need 列），其余课型恒为 True
-    功能: 兴趣课的目标是一项娱乐，娱乐自带 need（如过家家限幼女 / 萝莉）。个人课表面板不让选条件不符的，
+    功能: 兴趣课的目标是一项娱乐，娱乐可以在 need 列里带条件。个人课表面板不让选条件不符的，
           但课表写好之后孩子会长大、会换岗，残留的格子要在上课判定里再挡一次，否则 716 照常执行
     """
     if course["course_type"] != education_constant.COURSE_TYPE_INTEREST:

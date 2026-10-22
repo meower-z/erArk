@@ -31,7 +31,7 @@ def get_character_stage(character_id: int) -> int:
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
-    int -- 101婴儿/102幼女/103萝莉/104少女，都不是则0
+    int -- 101婴儿/102幼儿/103学员/104少女，都不是则0
     """
     from Script.System.Education_System import growth_handle
 
@@ -44,12 +44,12 @@ def get_growth_event_character_list() -> List[int]:
 
     只看玩家的女儿：普通干员也可能因为选课被建出 child_growth（口径24），
        但养成事件是给孩子的，给成年干员派「第一次上课」只会显得莫名其妙
-    只看婴儿~萝莉（101~103）：已成年的少女没有日常养成事件可派，毕业典礼与成年纪念由成年结算显式推入；
-       算进来会让每个成年女儿永久多占 4 条队列容量，旧档里早就成年的女儿还会被每日派发随机抽中毕业典礼（2026-09-12 第五轮）
-    遍历全部角色，婴儿不看 npc_id_got（Plan 28 §3.1）：婴儿从出生到长成幼女都不上线——
-       character_handle.born_new_character 不把她加进 npc_id_got，长成幼女时 get_new_character 才加。
+    只看婴儿~学员（101~103）：已毕业的少女没有日常养成事件可派，毕业典礼与成年纪念由毕业结算显式推入；
+       算进来会让每个已毕业的女儿永久多占 4 条队列容量，旧档里早就毕业的女儿还会被每日派发随机抽中毕业典礼
+    遍历全部角色，婴儿与幼儿不看 npc_id_got：两者离线，从出生到长成学员都不在 npc_id_got 里——
+       character_handle.born_new_character 不把她加进 npc_id_got，长成学员时 get_new_character 才加。
        此前只遍历 npc_id_got，婴儿桶的事件一条都派不出来，队列容量里也没有婴儿的份。
-       幼女 / 萝莉仍要求在 npc_id_got 里：离线的不派
+       学员仍要求在 npc_id_got 里：不在名单里的不派
     Keyword arguments:
     无
     Return arguments:
@@ -65,7 +65,7 @@ def get_growth_event_character_list() -> List[int]:
         stage = get_character_stage(character_id)
         if stage not in education_constant.STAGE_ALL_CHILD:
             continue
-        if stage != 101 and character_id not in cache.npc_id_got:
+        if stage not in education_constant.OFFLINE_STAGE_TALENT_SET and character_id not in cache.npc_id_got:
             continue
         if not handle_premise.handle_self_is_player_daughter(character_id):
             continue
@@ -75,7 +75,7 @@ def get_growth_event_character_list() -> List[int]:
 
 def get_sibling_child_list(character_id: int) -> List[int]:
     """
-    取能一起玩的兄弟姐妹列表（只取幼女 / 萝莉，Plan 26 §3.9）
+    取能一起玩的兄弟姐妹列表（只取幼儿与学员；幼儿离线、不在 npc_id_got 里，实际只找得到学员）
 
     直接读既有的 relationship，不新建亲缘结构：同父同母、同父异母都算兄弟姐妹，
        判据是「父亲相同或母亲相同」
@@ -93,7 +93,7 @@ def get_sibling_child_list(character_id: int) -> List[int]:
     for other_id in cache.npc_id_got:
         if other_id == character_id:
             continue
-        # 互动事件写的都是能一起玩、一起闯祸的孩子，婴儿和已成年的少女都不合适
+        # 只取幼儿与学员（幼儿离线、不在 npc_id_got 里，实际只有学员）：婴儿和已毕业的少女都不合适
         if get_character_stage(other_id) not in education_constant.SIBLING_PLAY_STAGE_SET:
             continue
         other_data: game_type.Character = cache.character_data[other_id]
@@ -112,7 +112,7 @@ def get_classmate_list(character_id: int) -> List[int]:
        存成字段反而要多一处同步点
     只认双方都在学生岗、且那一格是每周确有的课（Plan 30 §3.6，growth_handle.judge_selected_cell_real）：
        改了岗的女儿课表残留、已停课的格子、上不成的个人式课都还躺在课表上，那都不是在一起上课
-    对方只取幼女 / 萝莉（Plan 31 §3.11，与同胞同口径）：同学事件写的都是能一起玩的孩子
+    对方只取幼儿与学员，与同胞同口径；幼儿离线、不在 npc_id_got 里，实际只有学员
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -135,8 +135,7 @@ def get_classmate_list(character_id: int) -> List[int]:
     for other_id in cache.npc_id_got:
         if other_id == character_id:
             continue
-        # 只取幼女 / 萝莉（Plan 31 §3.11，与同胞同口径，Plan 26 口径 5）：仍在学生岗的成年姐姐与妹妹同班时，
-        #    会被点成幼女 41「班上的{TargetName}」这类事件的对象；婴儿不上学，本就没有课表
+        # 只取幼儿与学员，与同胞同口径（幼儿离线，实际只有学员）：仍在学生岗的已毕业姐姐不算同学；婴儿不上学，本就没有课表
         if get_character_stage(other_id) not in education_constant.SIBLING_PLAY_STAGE_SET:
             continue
         other_growth = cache.character_data[other_id].child_growth
@@ -195,7 +194,7 @@ def judge_stage_pass(uid: str, character_id: int) -> bool:
         return False
     sub_key = event_data.get("sub_key", education_constant.STAGE_ANY)
     now_stage = get_character_stage(character_id)
-    # sub_key 为 0 时覆盖全部未成年阶段，写了具体阶段就只派给该阶段
+    # sub_key 为 0 时覆盖婴儿、幼儿、学员三个阶段，写了具体阶段就只派给该阶段
     if sub_key == education_constant.STAGE_ANY:
         return now_stage in education_constant.STAGE_ALL_CHILD
     return sub_key == now_stage
@@ -298,16 +297,16 @@ def get_growth_event_title(queue_data: dict) -> str:
 
 def push_graduation_event(character_id: int):
     """
-    成年结算时把毕业典礼与成年纪念插到队首，再把成年后的里程碑事件（通用 59 / 60）推到队尾
+    毕业结算时把毕业典礼与成年纪念插到队首，再把毕业后的里程碑事件（通用 59 / 60）推到队尾
 
     **不做成玩家指令**（口径44）：一辈子只触发一次的叙事节点，
        做成指令要配行为、时长、口上、前提一整套，事件系统的一次性叙事正是为此而生
-    插队首而不是追加：成年是叙事上的大节点，让它排在一堆日常事件后面会很怪
-    幂等由成年结算本身的守卫保证（素质 103→104，一个孩子只会经过一次）
-    成年桶（sub_key 104）只有这里显式推入的事件会出现（Plan 31 §3.2）：日常派发名单只收 101~103（第五轮），
+    插队首而不是追加：毕业是叙事上的大节点，让它排在一堆日常事件后面会很怪
+    幂等由毕业结算本身的守卫保证（素质 103→104，一个孩子只会经过一次）
+    毕业桶（sub_key 104）只有这里显式推入的事件会出现：日常派发名单只收 101~103（第五轮），
        默认提供者又跳过部门 15。通用 59 / 60 此前没有入口，永远推不出来
     Keyword arguments:
-    character_id -- 刚成年的孩子角色id
+    character_id -- 刚毕业的孩子角色id
     Return arguments:
     无
     """
@@ -315,9 +314,9 @@ def push_graduation_event(character_id: int):
     official_event_handle.push_official_event(education_constant.ADULT_MEMORIAL_EVENT_UID, character_id, to_front=True)
     official_event_handle.push_official_event(education_constant.GRADUATION_EVENT_UID, character_id, to_front=True)
     # 通用 59 / 60（人事送来干员编号、第一次以干员身份报到）按普通顺序推到队尾（Plan 31 §3.2）：
-    #    成年当天先看到毕业典礼与成年纪念，之后处理公务时再遇到这两条。
+    #    毕业当天先看到毕业典礼与成年纪念，之后处理公务时再遇到这两条。
     #    仍过 judge_event_can_enqueue：已触发过、已在队列里的不重复推。
-    #    不受队列容量上限约束：与毕业典礼、成年纪念一样一辈子只有这一次入口，成年那一刻队列若已满，按普通入队就永远丢了
+    #    不受队列容量上限约束：与毕业典礼、成年纪念一样一辈子只有这一次入口，毕业那一刻队列若已满，按普通入队就永远丢了
     for uid in education_constant.ADULT_EXTRA_EVENT_UID_LIST:
         if not official_event_handle.judge_event_can_enqueue(uid, character_id):
             continue
@@ -430,14 +429,14 @@ def drop_stale_stage_event(character_id: int) -> int:
     功能: 公务队列出队时不重判阶段，长大前入队、还没处理的上一阶段事件会顶着新阶段的抬头弹出
              （婴儿期入队的「忽然睁开了眼睛」写成「幼女期第 3 天」）。
           阶段桶（sub_key 0 与 101~103）：judge_stage_pass 已不成立的清掉——婴儿→幼女、幼女→萝莉清掉上一阶段桶的事件，
-             成年时通用桶与萝莉桶一并清掉；前提里的阶段素质记号（judge_stage_marker_pass）已不成立的也清掉——
+             毕业时通用桶与萝莉桶一并清掉；前提里的阶段素质记号（judge_stage_marker_pass）已不成立的也清掉——
              幼女期入队、写婴儿的通用 6 / 15 / 27（前提写着不派萝莉）长成萝莉时清掉。
           期末桶（200）：sub_key 不分阶段，judge_stage_pass 对它恒不成立，只按阶段素质记号判——
-             幼女期的期末 2 / 6 / 12 长成萝莉时、萝莉期的期末 3 / 7 / 10 / 17 / 18 / 19 成年时清掉，前提不写阶段的照留。
-          成年桶（104：毕业典礼、成年纪念、通用 59 / 60）不动：只由成年结算显式推入。
+             幼女期的期末 2 / 6 / 12 长成萝莉时、萝莉期的期末 3 / 7 / 10 / 17 / 18 / 19 毕业时清掉，前提不写阶段的照留。
+          毕业桶（104：毕业典礼、成年纪念、通用 59 / 60）不动：只由毕业结算显式推入。
           只重判阶段，别的前提（课型、好感、养成数值等）出队时照旧不复核。
           事件配置已删掉的队列项留给 official_event_handle.clean_official_event_queue 处理。
-          由妊娠系统的三处阶段转换在换完素质后调用；成年结算要排在推毕业典礼之前
+          由妊娠系统的三处阶段转换在换完素质后调用；毕业结算要排在推毕业典礼之前
     """
     stage_bucket_set = {education_constant.STAGE_ANY, *education_constant.STAGE_ALL_CHILD}
     queue = official_event_handle.get_queue()
@@ -455,7 +454,7 @@ def drop_stale_stage_event(character_id: int) -> int:
                 # 期末桶：阶段只写在前提里，只按记号判
                 elif sub_key == education_constant.SEMESTER_EVENT_SUB_KEY:
                     stale = not judge_stage_marker_pass(uid, character_id)
-                # 成年桶：只由成年结算显式推入，不动
+                # 毕业桶：只由毕业结算显式推入，不动
                 else:
                     stale = False
                 if stale:
@@ -499,7 +498,7 @@ def push_semester_event(character_id: int) -> bool:
 
 def push_semester_event_for_list(character_list: List[int]) -> int:
     """
-    给一批刚出了成绩单的孩子各推一条期末事件（只推幼女 / 萝莉）
+    给一批刚出了成绩单的孩子各推一条期末事件（只推学员）
     Keyword arguments:
     character_list -- 孩子角色id列表
     Return arguments:
@@ -507,9 +506,9 @@ def push_semester_event_for_list(character_list: List[int]) -> int:
     """
     push_count = 0
     for character_id in character_list:
-        # 期末事件写的都是在上学的孩子（成绩单、教室、课表），只推给幼女 / 萝莉（Plan 26 §3.4）。
+        # 期末事件写的都是在上学的孩子（成绩单、教室、课表），只推给学员。
         #    成年女儿在学生岗时照出成绩单、整学期不在学生岗的不出（Plan 30 Q1），两种都不推事件
-        if get_character_stage(character_id) not in (102, 103):
+        if get_character_stage(character_id) != 103:
             continue
         if push_semester_event(character_id):
             push_count += 1

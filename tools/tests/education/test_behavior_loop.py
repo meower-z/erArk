@@ -300,9 +300,9 @@ def l4_true_add_spy(character_id: int, now_time: datetime.datetime, pl_start_tim
 
 def run_l4_step(minute: int, class_period: int) -> tuple:
     """
-    让挑出的女儿从此刻起在宿舍自由玩耍 minute 分钟，跑一步「玩家走 minute 分钟」的真实行为循环，记下她的实时结算
+    让挑出的女儿从此刻起在宿舍过家家 minute 分钟，跑一步「玩家走 minute 分钟」的真实行为循环，记下她的实时结算
     Keyword arguments:
-    minute -- 玩家这一步的分钟数，也是她这段自由玩耍的时长
+    minute -- 玩家这一步的分钟数，也是她这段过家家的时长
     class_period -- 今天给她排一节理论课的节次（那一格在全局课表上排成没有教师、到了教室自习），-1 为一节课都不排
     Return arguments:
     tuple -- (NPC 阶段遍数, 是否收敛, 她的实时结算记录)
@@ -321,7 +321,7 @@ def run_l4_step(minute: int, class_period: int) -> tuple:
     move_to(l4_id, l4_home)
     cd.sp_flag.is_h = False
     cd.sp_flag.is_follow = 0
-    cd.behavior.behavior_id = constant.Behavior.FREE_PLAY
+    cd.behavior.behavior_id = constant.Behavior.PLAY_HOUSE
     cd.behavior.start_time = step_start
     cd.behavior.duration = minute
     cd.behavior.move_target = []
@@ -374,11 +374,11 @@ if l4_id != -1 and l4_room:
     # 14:45 起连跑两步：第一步没课作对照；第二步 16:15 有课，开课前 20 分钟（15:55）落在没课的第 7 节里，截短规则 B 截得到
     set_time(cache.game_time.replace(hour=14, minute=45, second=0, microsecond=0))
     pass0, over0, log0 = run_l4_step(60, -1)
-    check("L4 对照：这一步没课、14:45 起自由玩耍 60 分钟、玩家一步 60 分钟 → 不截，实时结算合计 60 分钟",
+    check("L4 对照：这一步没课、14:45 起过家家 60 分钟、玩家一步 60 分钟 → 不截，实时结算合计 60 分钟",
           over0 and bool(log0) and log0[0][2] == 60 and sum(one[3] for one in log0) == 60, (pass0, l4_log_text(log0)))
     pass1, over1, log1 = run_l4_step(60, 7)
-    check("L4 16:15 有课、15:45 起自由玩耍：在实时结算之前就截到 15:55（开课前 20 分钟），这一段只结算 10 分钟（此前先按 60 分钟结算、再截短）",
-          bool(log1) and log1[0][0] == constant.Behavior.FREE_PLAY and log1[0][2] == 10 and log1[0][3] == 10, l4_log_text(log1))
+    check("L4 16:15 有课、15:45 起过家家：在实时结算之前就截到 15:55（开课前 20 分钟），这一段只结算 10 分钟（此前先按 60 分钟结算、再截短）",
+          bool(log1) and log1[0][0] == constant.Behavior.PLAY_HOUSE and log1[0][2] == 10 and log1[0][3] == 10, l4_log_text(log1))
     check("L4 这一步收敛，她的实时结算合计 60 分钟、与玩家这一步等长（此前 110：15:55~16:45 那一段饥饿、尿意、疲劳算了两遍）",
           over1 and sum(one[3] for one in log1) == 60, (pass1, l4_log_text(log1)))
 class_ai.get_skip_class_rate = _orig_rate

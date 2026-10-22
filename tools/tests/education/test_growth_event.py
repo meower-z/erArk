@@ -116,8 +116,7 @@ _picked = {one["chara_id"] for one in growth_event_handle.get_today_growth_event
 random.randint = _orig_randint
 check("必派时派得到婴儿", 204 in _picked, _picked)
 cache.npc_id_got.discard(202)
-check("离线的幼女不进名单、不占容量（幼女 / 萝莉仍要求在 npc_id_got 里）", 202 not in growth_event_handle.get_growth_event_character_list()
-      and growth_event_handle.get_growth_event_queue_capacity() == E.GROWTH_EVENT_QUEUE_PER_CHILD * 3, growth_event_handle.get_growth_event_character_list())
+check("幼儿与婴儿一样离线，不在 npc_id_got 里也进名单", 202 in growth_event_handle.get_growth_event_character_list(), growth_event_handle.get_growth_event_character_list())
 cache.npc_id_got.add(202)
 check("婴儿占 4 条容量，成年少女照旧不进", growth_event_handle.get_growth_event_queue_capacity() == E.GROWTH_EVENT_QUEUE_PER_CHILD * 4
       and 206 not in growth_event_handle.get_growth_event_character_list())
@@ -287,7 +286,7 @@ schedule_handle.set_selected_course(211, 0, 0, E.COURSE_TYPE_THEORY, _("理论�
 _loli_steps = [
     ("萝莉7", E.COURSE_TYPE_PE, _("木桩房"), 2),
     ("萝莉8", E.COURSE_TYPE_INTERN, _intern_work, 3),
-    ("萝莉9", E.COURSE_TYPE_INTEREST, E.ENTERTAINMENT_PLAY_HOUSE, 4),
+    ("萝莉9", E.COURSE_TYPE_INTEREST, schedule_template_handle.get_entertainment_cid_by_name(_("下棋")), 4),
     ("萝莉16", E.COURSE_TYPE_PRACTICE, _("实践教室一"), 1),
 ]
 _step_uid_list = [step[0] for step in _loli_steps]
@@ -481,6 +480,9 @@ _orig_must_show = talk.must_show_talk_check
 talk.must_show_talk_check = lambda character_id: None
 clear_schedules()
 set_time(period_time(0))
+# 长成学员时按学员重刷当天娱乐、查有没有教师；派对计划表与各岗位名单由新游戏的 basement 初始化铺满，最小 fixture 里没有，这里补上
+cache.rhodes_island.party_day_of_week = {day: 0 for day in range(7)}
+cache.rhodes_island.all_work_npc_set.setdefault(education_constant.TEACHER_WORK_TYPE, set())
 to_loli = make_character(216, "要长成萝莉的幼女", 152, daughter=True, stage=102, mother_id=103)
 to_loli.pregnancy.born_time = cache.game_time - datetime.timedelta(days=pregnancy_constant.GROW_TO_LOLI_DAY + 10)  # 已过长成萝莉的阈值 10 天
 for _uid in (child_bucket[0], "通用27", "通用16", "期末2"):

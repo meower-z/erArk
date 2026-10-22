@@ -238,7 +238,7 @@ class Schedule_Template_Panel:
         输出类型: Optional[int]，娱乐cid；0为「自由选择娱乐活动」（该时段不改写、保留随机）；None为取消
         功能: 每行6个，分三组画（schedule_template_handle.get_schedule_activity_rows）：
               第一行固定是 上课（无课时自习）与 自由选择娱乐活动；
-              第二行是有年龄需求的活动（过家家 / 跟随母亲 / 自由玩耍），按钮上标注「限幼女/萝莉」——
+              第二行是有年龄需求的活动（没有时为空），按钮上标注「限××」——
               套了这种活动的模板给不符合年龄的干员用时，那个时段会退回到自由选择；
               第三行起是其余娱乐。
               地点还没开放的活动在同一对括号里再标「未开放」，仍可选（Plan 27 §3.1）。
@@ -260,7 +260,7 @@ class Schedule_Template_Panel:
                 name = schedule_template_handle.get_activity_name(entertainment_id)
                 limit_text = schedule_template_handle.get_activity_age_limit_text(entertainment_id)
                 # 地点还没开放的仍可选（Plan 27 §3.1）：模板长期有效，场所解锁之后自动生效，没开放的这段时间里那个时段退回自由选择。
-                #    最长的「[过家家（限幼女/萝莉，未开放）]」正好 31 列，等于每格宽度
+                #    带年龄限制又未开放的按钮最长，文字不能超过每格宽度 31 列
                 place_closed = bool(entertainment_id) and not schedule_template_handle.judge_activity_place_open(entertainment_id)
                 if limit_text and place_closed:
                     name = _("{0}（{1}，未开放）").format(name, limit_text)

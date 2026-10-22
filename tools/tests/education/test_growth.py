@@ -92,27 +92,7 @@ check("教学相长：教师加该科经验与习得", teacher.experience.get(ex
 growth_handle.settle_teacher_class_gain(101, 45, 0)
 check("add_time=0 不结算", True)
 
-section("见学结算")
-check("母亲没工作时科目为 0", growth_handle.get_mother_work_ability_id(102) == 0)
-care_before = growth_handle.get_child_growth(202).care_point
-growth_handle.settle_follow_mother_gain(202, 102, 60)
-check("母亲无工作：只加照料值与好感", growth_handle.get_child_growth(202).care_point == care_before + education_constant.FOLLOW_MOTHER_CARE_POINT
-      and child.favorability.get(102, 0) >= education_constant.FOLLOW_MOTHER_FAVORABILITY and mother.favorability.get(202, 0) >= education_constant.FOLLOW_MOTHER_FAVORABILITY)
 cook_work = next(cid for cid in game_config.config_work_type if cid and game_config.config_work_type[cid].ability_id == 43)
-mother.work.work_type = cook_work
-mother.ability[43] = 4
-m_exp_id = growth_handle.get_subject_exp_id(43)
-exp_before = child.experience.get(m_exp_id, 0)
-growth_handle.settle_follow_mother_gain(202, 102, 60)
-check("母亲有工作：学该岗位科目", child.experience.get(m_exp_id, 0) - exp_before == max(1, int(education_constant.FOLLOW_MOTHER_EXP_BASE * 2.0)))
-check("见学不计入出勤", growth_handle.get_child_growth(202).attend_class_count == 0)
-child.talent[28] = 1
-exp_before = child.experience.get(m_exp_id, 0)
-growth_handle.settle_follow_mother_gain(202, 102, 60)
-check("停滞后见学收益减半", child.experience.get(m_exp_id, 0) - exp_before == max(1, int(education_constant.FOLLOW_MOTHER_EXP_BASE * 1.0)))
-child.talent[28] = 0
-growth_handle.settle_follow_mother_gain(202, 999, 60)
-check("母亲不存在不报错", True)
 
 section("成年结算")
 g = growth_handle.get_child_growth(201)
@@ -169,7 +149,7 @@ check("出勤数不可被事件改写", growth_handle.get_growth_value(201, V.GR
 check("学期进度读口不依赖养成数据", 0.0 <= growth_handle.get_growth_value(301, V.GROWTH_VALUE_SEMESTER_PROGRESS) <= 100.0)
 
 section("候选名单")
-check("女儿名单 = 三阶段女儿", growth_handle.get_student_candidate_list() == [201, 202])
+check("女儿名单 = 学员与少女阶段的女儿，不含幼儿", growth_handle.get_student_candidate_list() == [201])
 check("个人课表名单 = 学生岗（Plan 24 口径 1）", growth_handle.get_course_candidate_list() == [201, 202, 301])
 baby = make_character(203, "婴儿", 152, daughter=True, stage=101, mother_id=102, born_days=10)
 check("婴儿不进女儿名单", 203 not in growth_handle.get_student_candidate_list())
@@ -299,13 +279,8 @@ check("体育课：场地开放时算", growth_handle.judge_selected_cell_real(2
 cache.rhodes_island.facility_open[_lockable_cid] = False
 check("场地未开放：不算", not growth_handle.judge_selected_cell_real(201, 2, 4))
 cache.rhodes_island.facility_open[_lockable_cid] = True
-schedule_handle.set_selected_course(201, 2, 5, E6.COURSE_TYPE_INTEREST, E6.ENTERTAINMENT_PLAY_HOUSE)
-check("兴趣课过家家：萝莉算", growth_handle.judge_selected_cell_real(201, 2, 5))
-student.talent[103] = 0
-student.talent[104] = 1
-check("长成少女后活动条件不符：不算", not growth_handle.judge_selected_cell_real(201, 2, 5))
-student.talent[104] = 0
-student.talent[103] = 1
+schedule_handle.set_selected_course(201, 2, 5, E6.COURSE_TYPE_INTEREST, schedule_template_handle.get_entertainment_cid_by_name(_("下棋")))
+check("兴趣课下棋：学员算", growth_handle.judge_selected_cell_real(201, 2, 5))
 _read_cid = next(cid for cid in game_config.config_entertainment if game_config.config_entertainment[cid].class_ok
                  and schedule_handle.judge_interest_course_is_read_book({"course_type": E6.COURSE_TYPE_INTEREST, "target": cid}))
 schedule_handle.set_selected_course(201, 2, 6, E6.COURSE_TYPE_INTEREST, _read_cid)

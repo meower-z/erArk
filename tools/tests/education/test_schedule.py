@@ -173,9 +173,7 @@ if lockable is not None:
     check("开放其中一间：解析到已开放的那间", bool(_place) and cache.scene_data[scene_str(_place)].scene_name == _names[-1], _place)
     open_all_classroom()
 teen = make_character(210, "少女", 152, daughter=True, stage=104)
-play_house = {"course_type": education_constant.COURSE_TYPE_INTEREST, "target": education_constant.ENTERTAINMENT_PLAY_HOUSE}
-check("活动条件：过家家对少女不成立、对萝莉成立，其余课型恒成立", not schedule_handle.judge_course_need_pass(210, play_house) and schedule_handle.judge_course_need_pass(201, play_house)
-      and schedule_handle.judge_course_need_pass(210, pe_pool))
+check("活动条件：体育课恒成立", schedule_handle.judge_course_need_pass(210, pe_pool))
 remove_character(210)
 import inspect  # noqa: E402
 
@@ -202,13 +200,10 @@ section("Plan 28 §3.2：个人式课这一节上不成视为没课")
 set_time(period_time(0))
 _wd = cache.game_time.weekday()
 teen_b = make_character(211, "少女B", 152, daughter=True, stage=104)
-schedule_handle.set_selected_course(211, _wd, 0, education_constant.COURSE_TYPE_INTEREST, education_constant.ENTERTAINMENT_PLAY_HOUSE)
-check("judge_personal_course_valid：少女的过家家不成立、萝莉的成立", not schedule_handle.judge_personal_course_valid(211, play_house)
-      and schedule_handle.judge_personal_course_valid(201, play_house))
-check("少女的过家家：get_now_course / get_course_at 为 None（此前照样返回，两道闸与出勤都按有课判）", schedule_handle.get_now_course(211) is None
+schedule_handle.set_selected_course(211, _wd, 0, education_constant.COURSE_TYPE_INTEREST, 99999)
+check("judge_personal_course_valid：不存在的兴趣课不成立", not schedule_handle.judge_personal_course_valid(211, {"course_type": education_constant.COURSE_TYPE_INTEREST, "target": 99999}))
+check("不存在的兴趣课：get_now_course / get_course_at 为 None（此前照样返回，两道闸与出勤都按有课判）", schedule_handle.get_now_course(211) is None
       and schedule_handle.get_course_at(211, period_time(0), 0) is None)
-schedule_handle.set_selected_course(201, _wd, 0, education_constant.COURSE_TYPE_INTEREST, education_constant.ENTERTAINMENT_PLAY_HOUSE)
-check("同一格对萝莉照常是一节课", schedule_handle.get_now_course(201) is not None)
 cache.rhodes_island.facility_open[pool_open_cid] = False
 schedule_handle.set_selected_course(201, _wd, 0, education_constant.COURSE_TYPE_PE, pool)
 check("体育课排在未解锁的游泳池：不成立，视为没课", not schedule_handle.judge_personal_course_valid(201, pe_pool) and schedule_handle.get_now_course(201) is None)
@@ -229,8 +224,9 @@ set_time(period_time(0))
 _read_cid = next(cid for cid in game_config.config_entertainment if game_config.config_entertainment[cid].class_ok
                  and schedule_handle.get_behavior_name_by_cid(game_config.config_entertainment[cid].behavior_id) == constant.Behavior.READ_BOOK)
 read_course = {"course_type": education_constant.COURSE_TYPE_INTEREST, "target": _read_cid}
-check("judge_interest_course_is_read_book：读书课成立，过家家与体育课不成立",
-      schedule_handle.judge_interest_course_is_read_book(read_course) and not schedule_handle.judge_interest_course_is_read_book(play_house)
+check("judge_interest_course_is_read_book：读书课成立，下棋与体育课不成立",
+      schedule_handle.judge_interest_course_is_read_book(read_course)
+      and not schedule_handle.judge_interest_course_is_read_book({"course_type": education_constant.COURSE_TYPE_INTEREST, "target": schedule_template_handle.get_entertainment_cid_by_name(_("下棋"))})
       and not schedule_handle.judge_interest_course_is_read_book(pe_pool))
 schedule_handle.set_selected_course(201, _wd, 0, education_constant.COURSE_TYPE_INTEREST, _read_cid)
 _reader = cache.character_data[201]

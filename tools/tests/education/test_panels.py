@@ -303,14 +303,6 @@ clear_schedules()
 
 section("Plan 26 §3.8：个人课表选目标时，未开放与条件不符的置灰")
 cs = course_select_panel.Course_Select_Panel(W)
-play_house_name = game_config.config_entertainment[E.ENTERTAINMENT_PLAY_HOUSE].name
-drawn_text.clear()
-cs._select_target(301, 0, 0, E.COURSE_TYPE_INTEREST)
-check("成年学生看过家家：标「（条件不符）」、不是按钮", any(t == _(" {0}（条件不符）").format(play_house_name) for t in drawn_text)
-      and not any(t == _("[{0}]").format(play_house_name) for t in drawn_text))
-drawn_text.clear()
-cs._select_target(201, 0, 0, E.COURSE_TYPE_INTEREST)
-check("萝莉看过家家：可选", any(t == _("[{0}]").format(play_house_name) for t in drawn_text))
 pool = _("游泳池")
 cache.rhodes_island.facility_open[game_config.config_facility_open_name_to_cid[pool]] = False
 drawn_text.clear()
@@ -364,9 +356,6 @@ _game_room_cid = game_config.config_facility_open_name_to_cid[_("黄澄澄游戏
 cache.rhodes_island.facility_open[_game_room_cid] = False
 drawn_text.clear()
 check("选择活动：点[取消]返回 None", schedule_template_panel.Schedule_Template_Panel(W)._select_activity() is None)
-_play_house_button = _("[{0}]").format(_("{0}（{1}，未开放）").format(play_house_name, schedule_template_handle.get_activity_age_limit_text(E.ENTERTAINMENT_PLAY_HOUSE)))
-check("游戏室没解锁：过家家的按钮标「限幼女/萝莉，未开放」，仍是按钮（可选）", _play_house_button in drawn_text, [t for t in drawn_text if play_house_name in t])
-check("按钮宽度不超过每格 31 列", text_handle.get_text_index(_play_house_button) <= int(W / 6), text_handle.get_text_index(_play_house_button))
 check("地点开放的活动不带「未开放」", _("[{0}]").format(_("下棋")) in drawn_text and not any("未开放" in t and _("下棋") in t for t in drawn_text))
 cache.rhodes_island.facility_open[_game_room_cid] = True
 drawn_text.clear()
@@ -386,10 +375,6 @@ clear_schedules()
 _pool_cid = game_config.config_facility_open_name_to_cid[pool]
 _cell_width = max(8, int((W - 14) / len(E.WEEK_NAME)))
 cs = course_select_panel.Course_Select_Panel(W)
-schedule_handle.set_selected_course(301, 0, 0, E.COURSE_TYPE_INTEREST, E.ENTERTAINMENT_PLAY_HOUSE)
-_text_need = cs._get_cell_text(301, 0, 0)
-check("成年学生排着过家家兴趣课：格子写「[兴]过家家/条件不符」（此前照常写，上课判定却已不认这节课）",
-      _text_need == _("{0}/条件不符").format("[{0}]{1}".format(E.COURSE_TYPE_SHORT[E.COURSE_TYPE_INTEREST], play_house_name)), _text_need)
 cache.rhodes_island.facility_open[_pool_cid] = False
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_PE, pool)
 _text_open = cs._get_cell_text(201, 0, 0)

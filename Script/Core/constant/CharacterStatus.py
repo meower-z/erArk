@@ -123,8 +123,6 @@ class CharacterStatus:
     """ 全身造型服务 """
     STATUS_LISTEN_INFLATION = 171
     """ 听肚子里的动静 """
-    STATUS_PLAY_WITH_CHILD = 172
-    """ 一起玩耍 """
     STATUS_PL_WIN_IN_BOARD_GAME = 173
     """ 博士在桌游中获胜 """
     STATUS_PL_LOSE_IN_BOARD_GAME = 174
@@ -183,8 +181,6 @@ class CharacterStatus:
     """ 实习 """
     STATUS_FOLLOW_MOTHER = 231
     """ 跟随母亲见学 """
-    STATUS_FREE_PLAY = 232
-    """ 自由玩耍 """
     STATUS_MAINTENANCE_FACILITIES = 215
     """ 维护设施 """
     STATUS_REPAIR_EQUIPMENT = 216
