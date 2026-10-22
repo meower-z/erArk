@@ -48,7 +48,7 @@ def register_check(check_id: str, check_name: str):
     """
     检查项注册装饰器
     参数:
-        check_id (str): 检查项唯一编号，例如 "CORE-01"，要求全局唯一
+        check_id (str): 检查项唯一编号，例如 "CORE-01"，不同检查函数之间不能重复
         check_name (str): 检查项中文名称，用于日志展示
     返回值:
         Callable: 装饰器函数，原样返回被装饰的检查函数
@@ -64,10 +64,14 @@ def register_check(check_id: str, check_name: str):
         返回值:
             Callable[[], List[CheckFailure]]: 原样返回func，不做包装
         功能:
-            将func登记进注册表
+            将func登记进注册表；同一函数（__module__ 与 __qualname__ 都相同）再次注册时替换原条目，
+            其他函数注册已有id时抛 ValueError
         """
-        if check_id in _check_registry:
-            raise ValueError(f"静态检查项id重复注册: {check_id}")
+        registered = _check_registry.get(check_id)
+        if registered is not None:
+            old_func = registered[1]
+            if (old_func.__module__, old_func.__qualname__) != (func.__module__, func.__qualname__):
+                raise ValueError(f"静态检查项id重复注册: {check_id}")
         _check_registry[check_id] = (check_name, func)
         return func
 
