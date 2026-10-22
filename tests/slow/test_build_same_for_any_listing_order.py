@@ -17,9 +17,7 @@ import runpy
 import tempfile
 from unittest import mock
 
-from Script.Config import map_config
-from Script.Core import constant
-from tests.fast.base import FastTestCase
+from tests.slow.base import SlowTestCase
 from tests.world import ROOT
 
 BUILD_SCRIPTS = ("auto_build_config.py", "buildconfig.py")
@@ -160,22 +158,23 @@ def run_build(script: str, reverse: bool) -> dict:
         return digests
 
 
-class BuildSameForAnyListingOrderTest(FastTestCase):
+class BuildSameForAnyListingOrderTest(SlowTestCase):
     """列目录按文件名正序或倒序，构建产物与地图载入的结果都相同"""
 
     def test_build_outputs_same(self):
         """两个构建脚本各跑两次（正序、倒序），写出的文件集合相同，每个文件逐字节相同（po 文件头的生成时间除外）"""
         for script in BUILD_SCRIPTS:
-            with self.subTest(script=script):
-                ascending = run_build(script, reverse=False)
-                descending = run_build(script, reverse=True)
-                self.assertIn(os.path.join("data", "Character.json"), ascending)
-                self.assertEqual(sorted(ascending), sorted(descending))
-                changed = sorted(path for path in ascending if ascending[path] != descending[path])
-                self.assertEqual(changed, [], f"{script} 在两种列目录顺序下写出的这些文件不同")
+            ascending = run_build(script, reverse=False)
+            descending = run_build(script, reverse=True)
+            self.assertIn(os.path.join("data", "Character.json"), ascending, script)
+            self.assertEqual(sorted(ascending), sorted(descending), script)
+            changed = sorted(path for path in ascending if ascending[path] != descending[path])
+            self.assertEqual(changed, [], f"{script} 在两种列目录顺序下写出的这些文件不同")
 
     def test_map_order_same(self):
         """地图载入两次（正序、倒序），场景字典、地图字典与地点标签（标签及其场景列表）的顺序相同"""
+        from Script.Config import map_config
+        from Script.Core import constant
 
         def load_map(reverse: bool) -> tuple:
             """
