@@ -71,4 +71,5 @@ class SmokeNewGameTest(SlowTestCase):
         recorder.write(LAST_RUN)
         self.assertEqual((self.cache.game_time - start).total_seconds(), HOURS * 3600, "主循环推进的时间")
         self.assertIn(constant.Behavior.EAT, npc_behaviors, "没有干员吃饭")
+        self.maxDiff = None
         self.assertEqual(failures, [])
