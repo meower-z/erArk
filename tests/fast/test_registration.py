@@ -21,6 +21,7 @@ from tests.world import ROOT
 LAYERS = {"tests/fast/": ("tests.fast.base", "FastTestCase"), "tests/slow/": ("tests.slow.base", "SlowTestCase")}
 """ 层的目录: (基类所在模块, 基类名) """
 NOT_IN_LAYERS = {
+    # 临时的一项：育儿系统的测试迁入 tests/ 后删掉
     "tools/tests/education/": "育儿系统的旧测试，各自单独运行，迁移前保留",
     "tools/MCP/prts_character_downloader/test_downloader.py": "PRTS 立绘下载器的手动脚本，从网上下载图片，不是游戏的测试",
 }
