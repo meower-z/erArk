@@ -96,7 +96,7 @@
 
 ## 9. 图片与资源处理
 
-- **图片加载**：`Script.Core.era_image` 在启动时扫描 `image/` 目录，将 `.png` 缩放后缓存为 `PhotoImage`。缩放比例与当前字体宽度相关 (`main_frame.normal_font.measure("A")`) ，保证图像与文本排版一致。
+- **图片加载**：`Script.Core.era_image` 在启动时扫描 `image/` 目录，建立图片名 → 路径索引；某张 `.png` 首次显示时才缩放并缓存为 `PhotoImage`。缩放比例与当前字体宽度相关 (`main_frame.normal_font.measure("A")`) ，保证图像与文本排版一致。
 - **图片绘制**：
   - `draw.ImageDraw.draw()` 调用 `io_init.image_print()`。
   - `main_frame.read_queue()` 在 `textbox` 中 `image_create`。
@@ -129,7 +129,7 @@
 - **输出异常/乱码**：检查 `io_init.init_style()` 是否执行；确认字体文件是否被 `load_local_fonts()` 正常加载（查看控制台日志）。
 - **命令点击无反应**：确认 `py_cmd.pcmd()` 绑定的 `cmd_id` 是否唯一，`flow_handle.cmd_map` 有对应条目；`io_init.clear_cmd()` 是否被提前清空。
 - **等待卡死**：定位 `cache.wframe_mouse` 状态，确保在鼠标事件中正确设置 `w_frame_up`；必要时排查是否存在持续的 `askfor_wait()`。
-- **图片不显示**：确认 `image/*.png` 名称与 `game_config.config_image` 中一致，`era_image.load_images_from_directory()` 控制台是否输出异常。
+- **图片不显示**：确认 `image/*.png` 名称与 `game_config.config_image` 中一致，首次显示该图片时控制台是否输出「加载图片失败」。
 - **与 Web 共存**：扩展 Tk 专用逻辑前，先判断 `cache.web_mode`，必要时提供双实现或保持抽象层调用。
 
 ---

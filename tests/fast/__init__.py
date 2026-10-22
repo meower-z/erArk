@@ -8,7 +8,7 @@
 导入本包时先装上导入拦截，再载入本进程的 MinimalWorld。游戏模块在导入时绑定缓存，
 所以世界必须先于测试模块里的游戏导入载入；包在其中任何模块之前执行，测试模块可以在顶部直接导入游戏模块。
 
-快速层不能导入 FORBIDDEN 中的三个模块：era_image 导入即解码全部图片，web_server 与 game_init 是启动 Web 服务与 Tk 游戏的模块。
+快速层不能导入 FORBIDDEN 中的三个模块：era_image 导入时遍历整个 image 目录，web_server 与 game_init 是启动 Web 服务与 Tk 游戏的模块。
 拦截装上后，本进程首次导入其中之一时抛 FastLayerImportError，说明是哪个模块；这样的测试属于慢速层。
 拦截不管装上前已载入的模块；pytest tests/fast 在导入任何测试模块之前就导入本包。
 """
