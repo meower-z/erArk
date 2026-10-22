@@ -150,8 +150,8 @@ def sort_directory_listings():
     无
     功能描述:
         游戏的构建（auto_build_config）与配置载入按列目录的顺序写入、读入角色模板、事件与口上，
-        这个顺序决定开局时随机数分给谁、事件按什么顺序抽取。列目录的顺序随文件系统而不同（btrfs 上随检出目录而不同），
-        排序后同一提交在任何检出目录、任何平台上开出同一局。
+        这个顺序影响开局时随机数落到哪个角色身上。列目录的顺序随文件系统而不同（btrfs 上随检出目录而不同），
+        排序后它只由文件名决定。
     """
     real_listdir, real_scandir = os.listdir, os.scandir
     if getattr(real_listdir, "sorted_listing", False):
