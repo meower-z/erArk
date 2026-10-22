@@ -359,9 +359,9 @@ class SecondBehavior_Int:
     REARING_COMPLETE = 1319
     """ 结算育儿完成 """
     CHILD_TO_LOLI = 1320
-    """ 结算幼女长成萝莉 """
+    """ 结算幼女长成学员 """
     LOLI_TO_GIRL = 1321
-    """ 结算萝莉长成少女 """
+    """ 结算学员长成少女 """
     LAY_EGG = 1322
     """ 结算排出卵 """
     EGG_FERTILIZED = 1323

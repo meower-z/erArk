@@ -1190,7 +1190,7 @@ def handle_self_have_sibling_child(character_id: int) -> int:
 def handle_self_have_classmate(character_id: int) -> int:
     """
     校验自己有同班同学（Plan 22 三期，同班同学事件用）：双方都在学生岗、同一格上确有同一节课（Plan 30 §3.6），
-       对方是幼儿或学员（与同胞同口径；幼儿离线、不在 npc_id_got 里，实际只有学员）
+       对方是幼女或学员（与同胞同口径；幼女离线、不在 npc_id_got 里，实际只有学员）
     同学关系由课表反查而非落成字段：课表一改同学就跟着变，存字段反而多一处同步点。
        判据在 growth_event_handle.get_classmate_list，只读，不惰性创建养成数据
     Keyword arguments:

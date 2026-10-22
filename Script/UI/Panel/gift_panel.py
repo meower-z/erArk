@@ -101,7 +101,7 @@ def handle_drug_use_effect(character_id: int, drug_id: int):
         from Script.System.Pregnancy_System import pregnancy_handle, pregnancy_panel
         pl_character_data: game_type.Character = cache.character_data[0]
         if pregnancy_handle.is_growth_drug_self_target(character_id):
-            # 幼女/萝莉阶段的女儿：对收礼者本人生效
+            # 幼女/学员阶段的女儿：对收礼者本人生效
             child_id = character_id
         else:
             # 母亲：对送礼前选中的婴儿生效
@@ -261,7 +261,7 @@ class Gift_Panel:
         if gift_id == 36:
             if not self.select_target_egg():
                 return
-        # 成长加速药送给母亲时需要先选择目标婴儿（玩家取消则不送出）；送给幼女/萝莉女儿时对本人生效，无需选择
+        # 成长加速药送给母亲时需要先选择目标婴儿（玩家取消则不送出）；送给幼女/学员女儿时对本人生效，无需选择
         if gift_id == 39:
             from Script.System.Pregnancy_System import pregnancy_handle
             if not pregnancy_handle.is_growth_drug_self_target(character_data.target_character_id):
@@ -563,7 +563,7 @@ class Gift_Panel:
             effective_flag = bool(handle_premise.handle_fake_inflation_1(target_character_data.cid))
             if not effective_flag:
                 draw_text = _("\n  {0}没有处于假孕状态，不需要使用假孕终止药\n").format(target_character_data.name)
-        # 成长加速药：目标为幼女/萝莉阶段的女儿时对本人生效（需未到加速极限）；
+        # 成长加速药：目标为幼女/学员阶段的女儿时对本人生效（需未到加速极限）；
         # 否则目标视为母亲：玩家需在育儿室，且目标名下有可加速的婴儿
         elif drug_id == 39:
             from Script.System.Pregnancy_System import pregnancy_handle
@@ -580,25 +580,25 @@ class Gift_Panel:
             elif not len(pregnancy_handle.get_accelerable_babies(target_character_data.cid)):
                 effective_flag = False
                 draw_text = _("\n  {0}的孩子都已经快要长成幼女了，无法使用成长加速药\n").format(target_character_data.name)
-        # 成长停滞药：仅对处于幼女或萝莉阶段、且未处于成长停滞的女儿有效
+        # 成长停滞药：仅对处于幼女或学员阶段、且未处于成长停滞的女儿有效
         elif drug_id == 40:
             if not handle_premise.handle_self_is_player_daughter(target_character_data.cid):
                 effective_flag = False
                 draw_text = _("\n  {0}不是博士的女儿，无法使用成长停滞药\n").format(target_character_data.name)
             elif not handle_premise.handle_self_child_or_loli_1(target_character_data.cid):
                 effective_flag = False
-                draw_text = _("\n  {0}不处于幼女或萝莉阶段，无法使用成长停滞药\n").format(target_character_data.name)
+                draw_text = _("\n  {0}不处于幼女或学员阶段，无法使用成长停滞药\n").format(target_character_data.name)
             elif handle_premise.handle_growth_stop_1(target_character_data.cid):
                 effective_flag = False
                 draw_text = _("\n  {0}已经处于【成长停滞】状态了，无法重复使用成长停滞药\n").format(target_character_data.name)
-        # 成长继续药：仅对处于幼女或萝莉阶段、且已处于成长停滞的女儿有效
+        # 成长继续药：仅对处于幼女或学员阶段、且已处于成长停滞的女儿有效
         elif drug_id == 41:
             if not handle_premise.handle_self_is_player_daughter(target_character_data.cid):
                 effective_flag = False
                 draw_text = _("\n  {0}不是博士的女儿，无法使用成长继续药\n").format(target_character_data.name)
             elif not handle_premise.handle_self_child_or_loli_1(target_character_data.cid):
                 effective_flag = False
-                draw_text = _("\n  {0}不处于幼女或萝莉阶段，无法使用成长继续药\n").format(target_character_data.name)
+                draw_text = _("\n  {0}不处于幼女或学员阶段，无法使用成长继续药\n").format(target_character_data.name)
             elif not handle_premise.handle_growth_stop_1(target_character_data.cid):
                 effective_flag = False
                 draw_text = _("\n  {0}没有处于【成长停滞】状态，不需要使用成长继续药\n").format(target_character_data.name)

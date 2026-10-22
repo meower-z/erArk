@@ -73,7 +73,7 @@ def update_sleep():
             # 体外无壳卵：长时间睡眠期间到期的卵进行受精判定（先于各NPC的破壳判定）
             from Script.System.Pregnancy_System import soft_egg_handle
             soft_egg_handle.check_soft_eggs_fertilization()
-            # 幼儿离线、不在 npc_id_got 里，长成学员的检查在这里统一做
+            # 幼女离线、不在 npc_id_got 里，长成学员的检查在这里统一做
             pregnancy_handle.check_all_child_grow_to_loli()
             # 检查是否有可以升级的能力
             if cache.all_system_setting.base_setting[1]:

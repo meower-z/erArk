@@ -1,6 +1,6 @@
 """
 幼年阶段的H闸
-幼年阶段指年龄素质 101 婴儿与 102 幼儿。本模块判断角色是否处于幼年阶段、指令与行为是否属于H类，
+幼年阶段指年龄素质 101 婴儿与 102 幼女。本模块判断角色是否处于幼年阶段、指令与行为是否属于H类，
 指令的列表与执行、NPC状态机选出的行为据此避开幼年阶段的角色
 """
 from typing import Set
@@ -12,7 +12,7 @@ cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
 
 CHILD_STAGE_TALENTS = (101, 102)
-""" 幼年阶段的年龄素质：101 婴儿、102 幼儿 """
+""" 幼年阶段的年龄素质：101 婴儿、102 幼女 """
 H_INSTRUCT_TYPES = {"SEX", "OBSCENITY"}
 """ 属于H类的指令类型（InstructConfig.csv 的 instruct_type 列） """
 H_WEB_MINOR_TYPES = {"hand_touch", "arts_hypnosis", "arts_time_stop", "tool_item", "arts_xray", "arts_hormone"}

@@ -27,9 +27,9 @@ import unittest
 from tests.world import ROOT
 
 CHILD_TALENTS = (101, 102, 103)
-""" 儿童阶段素质：婴儿、幼儿与旧的萝莉阶段 """
+""" 儿童阶段素质：婴儿、幼女与旧的萝莉阶段 """
 CHILD_EVENT_BUCKETS = frozenset({"101", "102", "103", "200"})
-""" 只派给儿童阶段的养成事件桶（sub_key）：婴儿、幼儿、旧萝莉阶段与期末 """
+""" 只派给儿童阶段的养成事件桶（sub_key）：婴儿、幼女、旧萝莉阶段与期末 """
 CHILD_PREMISES = frozenset({"baby_1", "child_1", "loli_1", "self_child_or_loli_1", "t_child_or_loli_1", "self_underage", "t_baby_1"})
 """ 只在角色处于儿童阶段时成立的具名前提 """
 SEXUAL_TAG_HEADS = frozenset({"猥亵", "性爱"})

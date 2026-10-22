@@ -1153,7 +1153,7 @@ def handle_normal_6(character_id: int) -> int:
 def handle_normal_7(character_id: int) -> int:
     """
     7正常的普通状态
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼儿、他国外交访问、逃跑中
+    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -1178,7 +1178,7 @@ def handle_normal_7(character_id: int) -> int:
 def handle_t_normal_7(character_id: int) -> int:
     """
     交互对象7正常
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼儿、他国外交访问、逃跑中
+    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -1208,7 +1208,7 @@ def handle_normal_267(character_id: int) -> int:
     267正常（可能基础异常、高优先级AI、服装异常或意识模糊）
     \n2:AI行动基本停止：临盆、产后、监禁
     \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼儿、他国外交访问、逃跑中
+    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -1223,7 +1223,7 @@ def handle_t_normal_267(character_id: int) -> int:
     交互对象267正常（可能基础异常、高优先级AI、服装异常或意识模糊）
     \n2:AI行动基本停止：临盆、产后、监禁
     \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼儿、他国外交访问、逃跑中
+    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -1241,7 +1241,7 @@ def handle_normal_2467(character_id: int) -> int:
     \n2:AI行动基本停止：临盆、产后、监禁
     \n4:服装异常：大致全裸、全裸
     \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼儿、他国外交访问、逃跑中
+    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -1257,7 +1257,7 @@ def handle_t_normal_2467(character_id: int) -> int:
     \n2:AI行动基本停止：临盆、产后、监禁
     \n4:服装异常：大致全裸、全裸
     \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼儿、他国外交访问、逃跑中
+    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -1276,7 +1276,7 @@ def handle_normal_23467(character_id: int) -> int:
     \n3:高优先级AI：助理、跟随、体检
     \n4:服装异常：大致全裸、全裸
     \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼儿、他国外交访问、逃跑中
+    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -1293,7 +1293,7 @@ def handle_normal_24567(character_id: int) -> int:
     \n4:服装异常：大致全裸、全裸
     \n5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
     \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼儿、他国外交访问、逃跑中
+    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -1310,7 +1310,7 @@ def handle_t_normal_24567(character_id: int) -> int:
     \n4:服装异常：大致全裸、全裸
     \n5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
     \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼儿、他国外交访问、逃跑中
+    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -1330,7 +1330,7 @@ def handle_normal_124567(character_id: int) -> int:
     \n4:服装异常：大致全裸、全裸
     \n5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
     \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼儿、他国外交访问、逃跑中
+    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -1346,7 +1346,7 @@ def handle_normal_1267(character_id: int) -> int:
     \n1:基础生理需求：休息、睡觉、解手、吃饭、沐浴（不含已洗澡）、挤奶、自慰
     \n2:AI行动基本停止：临盆、产后、监禁
     \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼儿、他国外交访问、逃跑中
+    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -1364,7 +1364,7 @@ def handle_normal_123467(character_id: int) -> int:
     \n3:高优先级AI：助理、跟随、体检
     \n4:服装异常：大致全裸、全裸
     \n6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼儿、他国外交访问、逃跑中
+    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -1447,7 +1447,7 @@ def handle_unnormal_27(character_id: int) -> int:
     """
     27异常（AI停止或离线）
     \n2:AI行动基本停止：临盆、产后、监禁
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼儿、他国外交访问、逃跑中
+    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -1526,7 +1526,7 @@ def handle_unnormal_567(character_id: int) -> int:
     自身5或6或7异常
     \n包括5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
     \n包括6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼儿、他国外交访问、逃跑中
+    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -1601,7 +1601,7 @@ def handle_t_unnormal_567(character_id: int) -> int:
     交互对象5或6或7异常
     \n包括5:意识模糊，或弱交互：睡眠（半梦半醒），醉酒，平然
     \n包括6:完全意识不清醒，或无交互：睡眠（浅睡或熟睡或完全深眠），时停，空气
-    \n7:角色离线：装袋搬走、外勤、婴儿、幼儿、他国外交访问、逃跑中
+    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中
     Keyword arguments:
     character_id -- 角色id
     Return arguments:

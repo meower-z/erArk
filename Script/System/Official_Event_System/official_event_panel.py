@@ -63,7 +63,7 @@ def get_event_title(queue_data: dict) -> str:
     """
     取事件抬头
 
-    有主体的部门可以注册自己的抬头（如养成的"薇薇安 · 萝莉期第 38 天"），
+    有主体的部门可以注册自己的抬头（如养成的"薇薇安 · 学员期第 38 天"），
     没注册的一律画部门名——玩家至少要知道这件事是哪个部门的。
     Keyword arguments:
     queue_data -- 队列元素dict

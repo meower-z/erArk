@@ -149,7 +149,7 @@ check("出勤数不可被事件改写", growth_handle.get_growth_value(201, V.GR
 check("学期进度读口不依赖养成数据", 0.0 <= growth_handle.get_growth_value(301, V.GROWTH_VALUE_SEMESTER_PROGRESS) <= 100.0)
 
 section("候选名单")
-check("女儿名单 = 学员与少女阶段的女儿，不含幼儿", growth_handle.get_student_candidate_list() == [201])
+check("女儿名单 = 学员与少女阶段的女儿，不含幼女", growth_handle.get_student_candidate_list() == [201])
 check("个人课表名单 = 学生岗（Plan 24 口径 1）", growth_handle.get_course_candidate_list() == [201, 202, 301])
 baby = make_character(203, "婴儿", 152, daughter=True, stage=101, mother_id=102, born_days=10)
 check("婴儿不进女儿名单", 203 not in growth_handle.get_student_candidate_list())

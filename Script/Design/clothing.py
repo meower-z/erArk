@@ -313,7 +313,7 @@ def get_underwear(character_id: int, part_flag = 0, type_cid = 0):
         if type_cid == 2 and len(bra_H_list):
             bra_id = random.choice(bra_H_list)
             character_data.cloth.cloth_wear[6].append(bra_id)
-        # 童装：幼儿
+        # 童装：幼女
         elif character_data.talent[102]:
             bra_id = random.choice(bra_loli_list)
             character_data.cloth.cloth_wear[6].append(bra_id)

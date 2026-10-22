@@ -1257,11 +1257,11 @@ t_oestrus_0,T_OESTRUS_0,属性_素质,交互对象发情期==0
 t_oestrus_1,T_OESTRUS_1,属性_素质,交互对象发情期==1
 is_medical,IS_MEDICAL,属性_素质,自己的职业为医疗
 t_is_medical,T_IS_MEDICAL,属性_素质,交互对象的职业为医疗
-child_1,SELF_IS_CHILD,属性_素质,自己是幼儿
+child_1,SELF_IS_CHILD,属性_素质,自己是幼女
 baby_1,SELF_IS_BABY,属性_素质,自己是婴儿
 loli_1,SELF_IS_LOLI,属性_素质,自己是学员
-self_child_or_loli_1,SELF_CHILD_OR_LOLI_1,属性_素质,自己幼儿或学员==1
-t_child_or_loli_1,T_CHILD_OR_LOLI_1,属性_素质,交互对象幼儿或学员==1
+self_child_or_loli_1,SELF_CHILD_OR_LOLI_1,属性_素质,自己幼女或学员==1
+t_child_or_loli_1,T_CHILD_OR_LOLI_1,属性_素质,交互对象幼女或学员==1
 self_underage,SELF_UNDERAGE,属性_素质,自己是未成年
 self_not_underage,SELF_NOT_UNDERAGE,属性_素质,自己不是未成年
 patient_0,TARGET_NOT_PATIENT,属性_素质,交互对象不是源石病感染者
@@ -2045,7 +2045,7 @@ player_held_eggs_not_empty,PLAYER_HELD_EGGS_NOT_EMPTY,生育,玩家临时持有�
 self_have_sibling_child,SELF_HAVE_SIBLING_CHILD,生育,自己有同为孩子的兄弟姐妹
 self_birthday_today,SELF_BIRTHDAY_TODAY,生育,今天是自己的生日：出生日的月日与今天相同，2月29日出生的平年按2月28日过
 
-self_have_classmate,SELF_HAVE_CLASSMATE,授课,自己与别的孩子在同一格上确有的课，双方都在学生岗，对方是幼儿或学员
+self_have_classmate,SELF_HAVE_CLASSMATE,授课,自己与别的孩子在同一格上确有的课，双方都在学生岗，对方是幼女或学员
 self_mother_available,SELF_MOTHER_AVAILABLE,授课,自己的母亲仍在队中且当前可跟随
 self_follow_mother,SELF_FOLLOW_MOTHER,授课,自己正处于跟随母亲见学的状态
 self_have_any_course,SELF_HAVE_ANY_COURSE,授课,自己有课可上：学生岗且个人课表上至少有一格每周确有的课

@@ -122,9 +122,9 @@ def gain_ability(character_id: int):
             if character_data.child_growth is not None:
                 from Script.System.Education_System import education_constant, growth_handle
 
-                # 只记课程科目、且只记处于幼女 / 萝莉期的女儿（Plan 22 第五轮）：炫耀口上全部限定这两个条件，
+                # 只记课程科目、且只记处于幼女 / 学员期的女儿：炫耀口上全部限定这两个条件，
                 #    欲望、感觉之类的升级或成年学生的升级记进来，只会让二段行为静默地发一份好感。
-                #    还要在学生岗（Plan 32 §3.10 L20）：改了岗的萝莉靠工作练升的科目不是课上学的，而萝莉的炫耀口上约一半写老师与课堂
+                #    还要在学生岗：改了岗的学员靠工作练升的科目不是课上学的，而学员的炫耀口上约一半写老师与课堂
                 if (
                     ability_cid in education_constant.SUBJECT_ABILITY_LIST
                     and character_data.relationship.father_id == 0

@@ -47,7 +47,7 @@ if not game_config.config_ability:
 
 # ==== 1. 成长阶段与教育区 ====
 CHILD_TALENT_ID_LIST = (101, 102, 103, 104)
-""" 成长链的四个年龄素质id：101婴儿 / 102幼儿 / 103学员 / 104少女。
+""" 成长链的四个年龄素质id：101婴儿 / 102幼女 / 103学员 / 104少女。
     这四个id是成长链的**定义本身**（`pregnancy_handle` 按天数逐级换素质），配置里推不出来，
        所以写死在这里；名字则一律从 Talent.csv 现取，见下 """
 STAGE_TALENT_NAME = {talent_id: game_config.config_talent[talent_id].name for talent_id in CHILD_TALENT_ID_LIST}
@@ -56,10 +56,10 @@ STAGE_TALENT_NAME = {talent_id: game_config.config_talent[talent_id].name for ta
 CHILD_TALENT_SET = set(CHILD_TALENT_ID_LIST)
 """ 成长链四个年龄素质的集合形式，判定「是不是孩子」用 """
 OFFLINE_STAGE_TALENT_SET = {101, 102}
-""" 离线的两个阶段：101婴儿 / 102幼儿。她们不进任何场景、不进 npc_id_got，长成学员时才上线 """
+""" 离线的两个阶段：101婴儿 / 102幼女。她们不进任何场景、不进 npc_id_got，长成学员时才上线 """
 STUDENT_STAGE_TALENT_SET = {103, 104}
 """ 可排课、可查养成总览的两个阶段：103学员 / 104少女。
-    婴儿(101)与幼儿(102)离线、不上学，不列入 """
+    婴儿(101)与幼女(102)离线、不上学，不列入 """
 EDUCATION_ZONE_NAME = _("教育区")
 """ 教育区在 Facility_effect.csv 中的设施名（该表按名字索引）。
     必须过 `_()`：`config_facility_effect_data` 的键是 `game_config` 翻译过的 name，
@@ -496,12 +496,12 @@ STAGE_TALENT_PREMISE_SET = frozenset(
     for judge_value in (0, 1)
 )
 """ 事件前提里的「阶段素质记号」（Plan 32 §3.11）：主体自己的四个年龄素质与 0 / 1 比较的 CVP，六种运算符全收。
-    期末桶的阶段区分（上面 SEMESTER_EVENT_SUB_KEY 的说明）、通用桶里的「不派婴儿 / 不派萝莉」都写成这种记号，sub_key 上看不出来。
+    期末桶的阶段区分（上面 SEMESTER_EVENT_SUB_KEY 的说明）、通用桶里的「不派婴儿 / 不派学员」都写成这种记号，sub_key 上看不出来。
     孩子长大时 growth_event_handle.drop_stale_stage_event 只拿这些记号重判队列里的事件；
     别的前提（课型、好感、养成数值等）出队时照旧不复核 """
 SIBLING_PLAY_STAGE_SET = {102, 103}
-""" 养成事件里同胞与同学互动的对象只取幼儿与学员；婴儿与已毕业的少女都不合适。
-    互动对象从 npc_id_got 里找，幼儿离线、不在里面，所以实际只找得到学员。
+""" 养成事件里同胞与同学互动的对象只取幼女与学员；婴儿与已毕业的少女都不合适。
+    互动对象从 npc_id_got 里找，幼女离线、不在里面，所以实际只找得到学员。
     婴儿期自己的两条同胞事件（婴儿 37 / 38）主体是婴儿、对手是学员，照样成立 """
 
 # ==== 14. 面板显示与排版 ====

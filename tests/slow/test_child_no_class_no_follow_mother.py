@@ -1,14 +1,14 @@
 # -*- coding: UTF-8 -*-
 """
-婴儿与幼儿离线、幼儿不上学、女儿不跟随母亲见学的回归测试
+婴儿与幼女离线、幼女不上学、女儿不跟随母亲见学的回归测试
 ========================================================
 开新游戏后，取本局 id 最小的干员（不含博士）当母亲。
-- 出生（character_handle.born_new_character）后、婴儿长成幼儿（pregnancy_handle.check_rearing_complete）后，
-  孩子都不在任何场景的角色名单里，也不在 npc_id_got 里；长成幼儿时不置学生岗，不在养成名单里。
-  幼儿长成学员（睡眠结算里的 pregnancy_handle.check_all_child_grow_to_loli）后，孩子进了 npc_id_got 和一个场景，没有未初潮与未成年，
+- 出生（character_handle.born_new_character）后、婴儿长成幼女（pregnancy_handle.check_rearing_complete）后，
+  孩子都不在任何场景的角色名单里，也不在 npc_id_got 里；长成幼女时不置学生岗，不在养成名单里。
+  幼女长成学员（睡眠结算里的 pregnancy_handle.check_all_child_grow_to_loli）后，孩子进了 npc_id_got 和一个场景，没有未初潮与未成年，
   置为学生岗、进养成名单。
-- 离线的幼儿照样被每日派发挑作养成事件的主体；以她为主体的事件入队、结算一个选项后，她的照料值或性格倾向变了。
-- 另取第二名干员当女儿：工作日上课节次内、母亲在别的场景时，幼儿与学员女儿的 AI 都不派见学的两个状态机
+- 离线的幼女照样被每日派发挑作养成事件的主体；以她为主体的事件入队、结算一个选项后，她的照料值或性格倾向变了。
+- 另取第二名干员当女儿：工作日上课节次内、母亲在别的场景时，幼女与学员女儿的 AI 都不派见学的两个状态机
   （717 移动到母亲身边、718 跟着母亲见学），行为也不是跟随母亲见学。
 """
 import datetime
@@ -19,7 +19,7 @@ from tests.slow.base import SlowTestCase
 BABY = 101
 """ 婴儿素质 """
 CHILD = 102
-""" 幼儿素质 """
+""" 幼女素质 """
 TRAINEE = 103
 """ 学员素质 """
 NO_MENARCHE = 6
@@ -35,7 +35,7 @@ CLASS_TIME = datetime.datetime(2020, 12, 22, 10, 0)
 
 
 class ChildStagesOfflineTest(SlowTestCase):
-    """婴儿与幼儿离线、幼儿不上学、女儿不跟随母亲见学"""
+    """婴儿与幼女离线、幼女不上学、女儿不跟随母亲见学"""
 
     def setUp(self):
         """
@@ -60,7 +60,7 @@ class ChildStagesOfflineTest(SlowTestCase):
         return [path for path, scene in self.cache.scene_data.items() if character_id in scene.character_list]
 
     def test_child_offline_until_trainee(self):
-        """出生后与长成幼儿后不在任何场景、不在 npc_id_got、不上学；长成学员后上线、成年、上学"""
+        """出生后与长成幼女后不在任何场景、不在 npc_id_got、不上学；长成学员后上线、成年、上学"""
         from Script.Design import character_handle, talk
         from Script.System.Education_System import education_constant, growth_handle
         from Script.System.Pregnancy_System import pregnancy_constant, pregnancy_handle
@@ -78,13 +78,13 @@ class ChildStagesOfflineTest(SlowTestCase):
         self.mother.talent[REARING_TALENT] = 1
         with mock.patch.object(pregnancy_handle, "get_child_grow_day", return_value=pregnancy_constant.REARING_COMPLETE_DAY):
             pregnancy_handle.check_rearing_complete(self.mother_id)
-        self.assertEqual(child.talent[CHILD], 1, "婴儿长成了幼儿")
-        self.assertEqual(self.scene_list_with(child_id), [], "长成幼儿后不在任何场景")
-        self.assertNotIn(child_id, self.cache.npc_id_got, "长成幼儿后不在 npc_id_got")
-        self.assertNotEqual(child.work.work_type, education_constant.STUDENT_WORK_TYPE, "长成幼儿时不置学生岗")
+        self.assertEqual(child.talent[CHILD], 1, "婴儿长成了幼女")
+        self.assertEqual(self.scene_list_with(child_id), [], "长成幼女后不在任何场景")
+        self.assertNotIn(child_id, self.cache.npc_id_got, "长成幼女后不在 npc_id_got")
+        self.assertNotEqual(child.work.work_type, education_constant.STUDENT_WORK_TYPE, "长成幼女时不置学生岗")
         child.work.work_type = education_constant.STUDENT_WORK_TYPE
         self.cache.npc_id_got.add(child_id)
-        self.assertNotIn(child_id, growth_handle.get_student_candidate_list(), "即便是学生岗、在 npc_id_got 里，幼儿也不在养成名单里")
+        self.assertNotIn(child_id, growth_handle.get_student_candidate_list(), "即便是学生岗、在 npc_id_got 里，幼女也不在养成名单里")
         self.cache.npc_id_got.discard(child_id)
         child.work.work_type = 0
 
@@ -92,7 +92,7 @@ class ChildStagesOfflineTest(SlowTestCase):
         with mock.patch.object(pregnancy_handle, "get_child_grow_day", return_value=pregnancy_constant.GROW_TO_LOLI_DAY), \
                 mock.patch.object(pregnancy_handle, "chest_grow", return_value=""):
             pregnancy_handle.check_all_child_grow_to_loli()
-        self.assertEqual(child.talent[TRAINEE], 1, "幼儿长成了学员")
+        self.assertEqual(child.talent[TRAINEE], 1, "幼女长成了学员")
         self.assertEqual((child.talent[NO_MENARCHE], child.talent[UNDERAGE]), (0, 0), "学员已成年：没有未初潮，也没有未成年")
         self.assertIn(child_id, self.cache.npc_id_got, "长成学员后进了 npc_id_got")
         self.assertEqual(len(self.scene_list_with(child_id)), 1, "长成学员后在一个场景里")
@@ -101,7 +101,7 @@ class ChildStagesOfflineTest(SlowTestCase):
 
     def test_offline_child_growth_event(self):
         """
-        离线的幼儿照样派得到养成事件：每日派发会挑她当主体，挑一条选项会改她养成数值的事件入队，
+        离线的幼女照样派得到养成事件：每日派发会挑她当主体，挑一条选项会改她养成数值的事件入队，
         经 settle_official_event_option 结算那个选项后，她的照料值或性格倾向变了
         """
         import random
@@ -119,13 +119,13 @@ class ChildStagesOfflineTest(SlowTestCase):
         self.mother.talent[REARING_TALENT] = 1
         with mock.patch.object(pregnancy_handle, "get_child_grow_day", return_value=pregnancy_constant.REARING_COMPLETE_DAY):
             pregnancy_handle.check_rearing_complete(self.mother_id)
-        self.assertEqual(child.talent[CHILD], 1, "婴儿长成了幼儿")
-        self.assertNotIn(child_id, self.cache.npc_id_got, "幼儿不在 npc_id_got")
+        self.assertEqual(child.talent[CHILD], 1, "婴儿长成了幼女")
+        self.assertNotIn(child_id, self.cache.npc_id_got, "幼女不在 npc_id_got")
 
         # 每日派发每个女儿只按一定概率派，这里让概率判定必过
         with mock.patch.object(random, "randint", return_value=1):
             pick_list = growth_event_handle.get_today_growth_event_pick_list()
-        self.assertIn(child_id, [one["chara_id"] for one in pick_list], "每日派发挑了离线的幼儿当主体")
+        self.assertIn(child_id, [one["chara_id"] for one in pick_list], "每日派发挑了离线的幼女当主体")
 
         # 从她此刻可触发的事件里取一条有可选选项会改养成数值（Growth|10~13 性格倾向、Growth|20 照料值）的
         found = None
@@ -136,7 +136,7 @@ class ChildStagesOfflineTest(SlowTestCase):
                     break
             if found:
                 break
-        self.assertIsNotNone(found, "幼儿有选项会改养成数值的可触发事件")
+        self.assertIsNotNone(found, "幼女有选项会改养成数值的可触发事件")
         uid, partner_id, option_index = found
         self.assertTrue(official_event_handle.push_official_event(uid, child_id, partner_id), "事件入队")
         self.assertIn((uid, child_id), [(one["uid"], one["chara_id"]) for one in official_event_handle.get_queue()], "队列里有以她为主体的这条事件")
@@ -146,7 +146,7 @@ class ChildStagesOfflineTest(SlowTestCase):
         self.assertNotEqual((growth_data.care_point, dict(growth_data.personality_point)), before, f"结算 {uid} 的选项 {option_index} 后照料值或性格倾向变了")
 
     def test_follow_mother_never_starts(self):
-        """工作日上课节次内、母亲在别的场景时，幼儿与学员女儿的 AI 都不派见学的状态机，行为也不是跟随母亲见学"""
+        """工作日上课节次内、母亲在别的场景时，幼女与学员女儿的 AI 都不派见学的状态机，行为也不是跟随母亲见学"""
         from Script.Core import constant
         from Script.Design import game_time, handle_npc_ai, map_handle
         from Script.System.Education_System import education_constant
