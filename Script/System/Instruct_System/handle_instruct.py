@@ -1027,6 +1027,9 @@ def handle_door_unlock_inner():
     now_scene_str = map_handle.get_map_system_path_str_for_list(now_position)
     now_scene_data = cache.scene_data[now_scene_str]
     now_scene_data.close_flag = 0
+    # 博士亲手解锁后作废本次H锁门的记录，之后再锁上的门不是H锁的
+    if pl_character_data.h_state.door_locked_by_h == now_scene_str:
+        pl_character_data.h_state.door_locked_by_h = ""
     chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration = 1)
 
 
@@ -1256,6 +1259,7 @@ def handle_collect():
 @add_instruct(constant.Instruct.DO_H)
 def handle_do_h():
     """处理邀请H指令"""
+    from Script.Settle import default
     character_data: game_type.Character = cache.character_data[0]
     target_data = cache.character_data[character_data.target_character_id]
     now_draw = draw.WaitDraw()
@@ -1263,9 +1267,9 @@ def handle_do_h():
     now_draw_text = "\n"
     if instuct_judege.calculation_instuct_judege(0, character_data.target_character_id, _("H模式"))[0]:
         now_scene_str = map_handle.get_map_system_path_str_for_list(character_data.position)
-        # 如果没关门，则自动将门关上
+        # 如果没关门，则自动将门关上，并记作本次H锁上
         if cache.scene_data[now_scene_str].close_flag == 0:
-            cache.scene_data[now_scene_str].close_flag = cache.scene_data[now_scene_str].close_type
+            default.handle_h_door_close(0, 1, game_type.CharacterStatusChange(), cache.game_time)
             now_draw_text += _("已自动关门\n")
         target_data.sp_flag.is_follow = 0
         target_data.action_info.last_conscious_h_time = cache.game_time
@@ -1322,6 +1326,7 @@ def handle_switch_to_h_interface():
 @add_instruct(constant.Instruct.SLEEP_OBSCENITY)
 def handle_sleep_obscenity():
     """处理睡眠猥亵指令"""
+    from Script.Settle import default
     instuct_judege.init_character_behavior_start_time(0, cache.game_time)
     character_data: game_type.Character = cache.character_data[0]
     target_data = cache.character_data[character_data.target_character_id]
@@ -1331,6 +1336,9 @@ def handle_sleep_obscenity():
         door_return = now_draw.draw()
         if door_return == -1:
             return
+        # 面板里关上的门记作本次H锁上
+        if cache.scene_data[now_scene_str].close_flag != 0:
+            default.mark_door_locked_by_h(0)
     target_data.sp_flag.unconscious_h = 1
     now_draw = draw.WaitDraw()
     now_draw.width = width
@@ -1352,7 +1360,7 @@ def handle_stop_sleep_obscenity():
     now_draw.width = width
     now_draw.text = _("\n退出睡眠猥亵模式\n")
     now_draw.draw()
-    default.handle_door_close_reset(0,1,game_type.CharacterStatusChange(),datetime.datetime(1, 1, 1))
+    default.handle_h_door_restore(0,1,game_type.CharacterStatusChange(),datetime.datetime(1, 1, 1))
 
 @add_instruct(constant.Instruct.IMPRISONMENT_H)
 def handle_imprisonment_h():
@@ -1374,6 +1382,9 @@ def handle_unconscious_h(type_name:str = ""):
         door_return = now_draw.draw()
         if door_return == -1:
             return
+        # 面板里关上的门记作本次H锁上
+        if cache.scene_data[now_scene_str].close_flag != 0:
+            default.mark_door_locked_by_h(0)
     target_data.action_info.last_unconscious_h_time = cache.game_time
     target_data.sp_flag.is_follow = 0
     now_draw = draw.WaitDraw()

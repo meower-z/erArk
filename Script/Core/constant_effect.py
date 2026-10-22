@@ -619,6 +619,10 @@ class BehaviorEffect:
     """ 系统量_地点 当前场景进入关门状态 """
     DOOR_CLOSE_RESET = 753
     """ 系统量_地点 当前场景取消关门状态 """
+    H_DOOR_CLOSE = 754
+    """ 系统量_地点 （H开始）当前场景没关门时关门，并记下这把锁由本次H锁上 """
+    H_DOOR_RESTORE = 755
+    """ 系统量_地点 （H结束）打开本次H锁上的门，H开始前就锁着的门保持原样 """
     MOVE_TO_PRE_SCENE = 761
     """ 系统量_地点 自己移动至前一场景 """
     TARGET_MOVE_TO_PRE_SCENE = 762

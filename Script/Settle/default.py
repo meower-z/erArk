@@ -4163,6 +4163,75 @@ def handle_door_close_reset(
     now_position_str = map_handle.get_map_system_path_str_for_list(now_position)
     now_scene_data = cache.scene_data[now_position_str]
     now_scene_data.close_flag = 0
+    # 门已解锁，作废本次H锁门的记录，之后再锁上的门不是H锁的
+    pl_h_state = cache.character_data[0].h_state
+    if pl_h_state.door_locked_by_h == now_position_str:
+        pl_h_state.door_locked_by_h = ""
+
+
+def mark_door_locked_by_h(character_id: int):
+    """
+    记下角色当前场景的门由本次H锁上，H结束时由H_DOOR_RESTORE打开
+    Keyword arguments:
+    character_id -- 角色id
+    """
+    character_data: game_type.Character = cache.character_data[character_id]
+    now_position_str = map_handle.get_map_system_path_str_for_list(character_data.position)
+    cache.character_data[0].h_state.door_locked_by_h = now_position_str
+
+
+@settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.H_DOOR_CLOSE)
+def handle_h_door_close(
+        character_id: int,
+        add_time: int,
+        change_data: game_type.CharacterStatusChange,
+        now_time: datetime.datetime,
+):
+    """
+    H开始时当前场景没关门则关门，并记下这把锁由本次H锁上；已经锁着的门不变
+    Keyword arguments:
+    character_id -- 角色id
+    add_time -- 结算时间
+    change_data -- 状态变更信息记录对象
+    now_time -- 结算的时间
+    """
+    if not add_time:
+        return
+    character_data: game_type.Character = cache.character_data[character_id]
+    now_position_str = map_handle.get_map_system_path_str_for_list(character_data.position)
+    now_scene_data = cache.scene_data[now_position_str]
+    if now_scene_data.close_flag != 0:
+        return
+    handle_door_close(character_id, add_time, change_data, now_time)
+    # 无门的场景关不上，不记录
+    if now_scene_data.close_flag != 0:
+        mark_door_locked_by_h(character_id)
+
+
+@settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.H_DOOR_RESTORE)
+def handle_h_door_restore(
+        character_id: int,
+        add_time: int,
+        change_data: game_type.CharacterStatusChange,
+        now_time: datetime.datetime,
+):
+    """
+    H结束时，当前场景的门若是本次H锁上的，则解锁并清空记录；H开始前就锁着的门和其他场景的记录不变
+    Keyword arguments:
+    character_id -- 角色id
+    add_time -- 结算时间
+    change_data -- 状态变更信息记录对象
+    now_time -- 结算的时间
+    """
+    if not add_time:
+        return
+    character_data: game_type.Character = cache.character_data[character_id]
+    now_position_str = map_handle.get_map_system_path_str_for_list(character_data.position)
+    pl_h_state = cache.character_data[0].h_state
+    if pl_h_state.door_locked_by_h != now_position_str:
+        return
+    cache.scene_data[now_position_str].close_flag = 0
+    pl_h_state.door_locked_by_h = ""
 
 
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.MOVE_TO_PRE_SCENE)

@@ -248,10 +248,10 @@ def recover_from_unconscious_h(character_id: int, info_text: str = ""):
     else:
         # 对象行为时间改为1分钟
         target_data.behavior.duration = 1
+        # 打开本次H锁上的门，须在H结构体归零前进行
+        default.handle_h_door_restore(0, 1, game_type.CharacterStatusChange(), datetime.datetime(1, 1, 1))
         # 重置双方H结构体和相关数据
         default.handle_both_h_state_reset(0, 1, game_type.CharacterStatusChange(), datetime.datetime(1, 1, 1))
-        # 地点开门
-        scene_data.close_flag = 0
 
     # 时间推进5分钟
     update.game_update_flow(5)
