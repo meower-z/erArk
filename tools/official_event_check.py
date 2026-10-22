@@ -108,7 +108,8 @@ def load_premise_name_set() -> set:
     path = os.path.join("Script", "Core", "constant_promise.py")
     with open(path, encoding="utf-8") as f:
         text = f.read()
-    return set(re.findall(r'^\s*[A-Z0-9_]+\s*=\s*"([a-z0-9_]+)"', text, re.M))
+    # 值前可有「(」与换行：pyink 把超过 80 列的赋值折成「常量名 = (」「值」「)」三行
+    return set(re.findall(r'^\s*[A-Z0-9_]+\s*=\s*\(?\s*"([a-z0-9_]+)"', text, re.M))
 
 
 def load_effect_id_set() -> set:
@@ -122,7 +123,8 @@ def load_effect_id_set() -> set:
     path = os.path.join("Script", "Core", "constant_effect.py")
     with open(path, encoding="utf-8") as f:
         text = f.read()
-    return set(re.findall(r"^\s*[A-Z0-9_]+\s*=\s*(\d+)", text, re.M))
+    # 值前可有「(」与换行：pyink 把超过 80 列的赋值折成「常量名 = (」「值」「)」三行
+    return set(re.findall(r"^\s*[A-Z0-9_]+\s*=\s*\(?\s*(\d+)", text, re.M))
 
 
 def load_department_set() -> set:

@@ -183,7 +183,9 @@ def load_premise_categories() -> dict:
     dict -- {前提键(小写): 类别}
     """
     with open(os.path.join(ROOT, "Script", "Core", "constant_promise.py"), encoding="utf-8") as f:
-        lines = f.read().split("\n")
+        text = f.read()
+    # pyink 把超过 80 列的常量赋值折成「常量名 = (」「值」「)」三行，先并回一行
+    lines = re.sub(r'= \(\n\s*("[^"\n]*")\n\s*\)\n', r'= \1\n', text).split("\n")
     categories = {}
     for i, line in enumerate(lines[:-1]):
         match = re.match(r'\s+[A-Z0-9_]+ = "([^"]+)"$', line)

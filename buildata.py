@@ -1,3 +1,5 @@
+import re
+
 from Script.Config import game_config
 
 '''
@@ -17,6 +19,45 @@ premise_type = premise_type_dict[datetype]
 
 # 数据初始化
 game_config.init()
+
+def class_indent(path: str) -> str:
+    """
+    读常量文件里第一条类成员的缩进，接上去的常量照它缩进
+    Keyword arguments:
+    path -- 常量文件路径
+    Return arguments:
+    str -- 缩进的空白；文件里没有缩进行时为 2 个空格
+    """
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            if line.strip() and line[0] in " \t":
+                return line[: len(line) - len(line.lstrip())]
+    return "  "
+
+def constant_line(name: str, value: str, indent: str = "  ") -> str:
+    """
+    生成一条类常量赋值；整行超过 80 列、值本身放得进折行时，照 pyink 的样子折成三行
+    Keyword arguments:
+    name -- 常量名
+    value -- 值的源码文字（带引号的字符串或整数）
+    indent -- 类成员的缩进
+    Return arguments:
+    str -- 赋值的源码，以换行结尾
+    """
+    line = f"{indent}{name} = {value}"
+    if len(line) > 80 and len(indent) + 4 + len(value) <= 80:
+        return f"{indent}{name} = (\n{indent}    {value}\n{indent})\n"
+    return line + "\n"
+
+def appended_block(text: str) -> str:
+    """
+    整理要接到常量文件末尾的一段代码，使其与 pyink 的格式一致：和原有内容隔一个空行，连续空行并成一个，末尾不留空行
+    Keyword arguments:
+    text -- 要接上的代码
+    Return arguments:
+    str -- 整理后的代码
+    """
+    return "\n" + re.sub(r"\n{3,}", "\n\n", text.strip("\n")) + "\n"
 
 def constand_2_handle():
     '''
@@ -73,8 +114,8 @@ def constand_2_handle():
 
     # 生成constant_promise的out_str
     out_str = "\n"
-    out_str += f"    {command_str.upper()} = \"{command_str}\"\n"
-    out_str += f"    \"\"\" {premise_type} "
+    out_str += constant_line(command_str.upper(), f"\"{command_str}\"")
+    out_str += f"  \"\"\" {premise_type} "
     if target_flag:
         out_str += f"交互对象"
     else:
@@ -106,24 +147,24 @@ def constand_2_handle():
     out_str = "\n\n"
     out_str += f"@add_premise(constant_promise.Premise.{capital_command})\n"
     out_str += f"def handle_{command_str}(character_id: int) -> int:\n"
-    out_str += f"    \"\"\"\n"
+    out_str += f"  \"\"\"\n"
     if not target_flag:
-        out_str += f"    校验角色是否{dataname}{operation}{command_list[-1]}\n"
+        out_str += f"  校验角色是否{dataname}{operation}{command_list[-1]}\n"
     else:
-        out_str += f"    校验交互对象是否{dataname}{operation}{command_list[-1]}\n"
-    out_str += f"    Keyword arguments:\n"
-    out_str += f"    character_id -- 角色id\n"
-    out_str += f"    Return arguments:\n"
-    out_str += f"    int -- 权重\n"
-    out_str += f"    \"\"\"\n"
-    out_str += f"    character_data = cache.character_data[character_id]\n"
+        out_str += f"  校验交互对象是否{dataname}{operation}{command_list[-1]}\n"
+    out_str += f"  Keyword arguments:\n"
+    out_str += f"  character_id -- 角色id\n"
+    out_str += f"  Return arguments:\n"
+    out_str += f"  int -- 权重\n"
+    out_str += f"  \"\"\"\n"
+    out_str += f"  character_data = cache.character_data[character_id]\n"
     if target_flag:
-        out_str += f"    target_data = cache.character_data[character_data.target_character_id]\n"
-        out_str += f"    if target_data.{datetype_str}[{data_index}] {operation} {command_list[-1]}:\n"
+        out_str += f"  target_data = cache.character_data[character_data.target_character_id]\n"
+        out_str += f"  if target_data.{datetype_str}[{data_index}] {operation} {command_list[-1]}:\n"
     else:
-        out_str += f"    if character_data.{datetype_str}[{data_index}] {operation} {command_list[-1]}:\n"
-    out_str += f"        return 1\n"
-    out_str += f"    return 0\n"
+        out_str += f"  if character_data.{datetype_str}[{data_index}] {operation} {command_list[-1]}:\n"
+    out_str += f"    return 1\n"
+    out_str += f"  return 0\n"
 
     # 开始保存
     with open("Script\\Design\\handle_premise.py", "a",encoding="utf-8") as f:
@@ -143,6 +184,10 @@ def build_promise_csv_text(line_list: list) -> str:
     Return arguments:
     str -- 前提表的完整文本：表头 + 每个前提一行「前提id,常量名,分类,描述」
     """
+    import re  # 本函数会被单独取出来跑，用到的模块在函数里导入
+
+    # pyink 把超过 80 列的常量赋值折成「常量名 = (」「值」「)」三行，先并回一行
+    line_list = re.sub(r'= \(\n\s*("[^"\n]*")\n\s*\)\n', r'= \1\n', "".join(line_list)).splitlines(True)
     out_str = "cid,premise_name,premise_type,premise\n"
     for line in line_list:
         # 只看以引号收尾、不带注释的行：常量行（NAME = "id"）与紧随其后的单行 docstring
@@ -192,6 +237,7 @@ def csv_2_constand():
         # print(a)
         f.close()
 
+    indent = class_indent("Script\\Core\\constant_promise.py")
     out_str = "\n"
     for line in a:
         promise_text = line.strip().split(",")
@@ -199,9 +245,10 @@ def csv_2_constand():
         if len(promise_text) == 1:
             out_str += "\n"
         elif promise_text[0] != "cid" and len(promise_text) == 4:
-            out_str += f"    {promise_text[1]} = \"{promise_text[0]}\"\n"
-            out_str += f"    \"\"\" {promise_text[2]} {promise_text[3]} \"\"\"\n"
+            out_str += constant_line(promise_text[1], f"\"{promise_text[0]}\"", indent)
+            out_str += f"{indent}\"\"\" {promise_text[2]} {promise_text[3]} \"\"\"\n"
 
+    out_str = appended_block(out_str)
 
     # 开始保存
     with open("Script\\Core\\constant_promise.py", "a",encoding="utf-8") as f:
@@ -215,6 +262,8 @@ def constand_effect_2_csv():
     with open("Script\\Core\\constant_effect.py", "r",encoding="utf-8") as f:
         a=f.readlines()
         f.close()
+    # pyink 把超过 80 列的常量赋值折成「常量名 = (」「值」「)」三行，先并回一行
+    a = re.sub(r"= \(\n\s*(\d+)\n\s*\)\n", r"= \1\n", "".join(a)).splitlines(True)
     out_str = "cid,effect_name,effect_type,effect\n"
 
     for line in a:
@@ -251,6 +300,7 @@ def csv_2_constand_effect():
         # print(a)
         f.close()
 
+    indent = class_indent("Script\\Core\\constant_effect.py")
     out_str = "\n"
     for line in a:
         effect_text = line.strip().split(",")
@@ -258,9 +308,10 @@ def csv_2_constand_effect():
         if len(effect_text) == 1:
             out_str += "\n"
         elif effect_text[0] != "cid":
-            out_str += f"    {effect_text[1]} = {effect_text[0]}\n"
-            out_str += f"    \"\"\" {effect_text[2]} {effect_text[3]} \"\"\"\n"
+            out_str += constant_line(effect_text[1], effect_text[0], indent)
+            out_str += f"{indent}\"\"\" {effect_text[2]} {effect_text[3]} \"\"\"\n"
 
+    out_str = appended_block(out_str)
 
     # 开始保存
     with open("Script\\Core\\constant_effect.py", "a",encoding="utf-8") as f:
