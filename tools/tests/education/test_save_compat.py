@@ -28,17 +28,17 @@ check("Plan 30 的三个新字段按默认值回填：累计翘课 0、被抓日
 check("Plan 31 的两个新字段按默认值回填：翘课 flag 的日期 0（读作不是今天）、累计实操课次数 0",
       all(one.skip_class_day == 0 and one.sex_class_count == 0 for one in (ga, gb)))
 
-section("教育区娱乐改编号的读档迁移（175~178 → 152~155）")
+section("教育区娱乐改编号的读档迁移（175~178 → 152~155，新编号不在 Entertainment.csv 里的留着旧编号）")
 migrated = [save_handle._migrate_entertainment_cid(value) for value in (175, 176, 177, 178, 152, 58, 0, None, True)]
-check("迁移函数：旧编号换新、新编号与无关值不动", migrated == [152, 153, 154, 155, 152, 58, 0, None, True], migrated)
+check("迁移函数：旧编号换成表里有的新编号，新编号不在表里的（153、154）与无关值不动", migrated == [152, 176, 177, 155, 152, 58, 0, None, True], migrated)
 cache.rhodes_island.child_schedule_template = {9: {"name": "旧模板", "slot": {0: 178, 1: 58, 2: 177}}, 10: {"name": "空模板", "slot": {}}}
 count = save_handle._migrate_child_schedule_template(cache.rhodes_island)
-check("模板侧：时段里的旧编号换成新编号并计数", count == 2 and cache.rhodes_island.child_schedule_template[9]["slot"] == {0: 155, 1: 58, 2: 154}, cache.rhodes_island.child_schedule_template)
+check("模板侧：时段里的旧编号换成表里有的新编号并计数", count == 1 and cache.rhodes_island.child_schedule_template[9]["slot"] == {0: 155, 1: 58, 2: 177}, cache.rhodes_island.child_schedule_template)
 check("模板侧：再跑一次是幂等的", save_handle._migrate_child_schedule_template(cache.rhodes_island) == 0)
 ga.schedule_override = {1: 176, 2: 152}
 student_a.entertainment.entertainment_type = [175, 58, 178]
 save_handle._normalize_loaded_save_paths(cache)
-check("角色侧：单孩覆盖与当天娱乐槽位换成新编号", ga.schedule_override == {1: 153, 2: 152} and student_a.entertainment.entertainment_type == [152, 58, 155], (ga.schedule_override, student_a.entertainment.entertainment_type))
+check("角色侧：单孩覆盖与当天娱乐槽位换成表里有的新编号", ga.schedule_override == {1: 176, 2: 152} and student_a.entertainment.entertainment_type == [152, 58, 155], (ga.schedule_override, student_a.entertainment.entertainment_type))
 cache.rhodes_island.child_schedule_template = {}
 
 section("Plan 32 L22：挪了桶的养成事件，履历里的旧 uid 读档时改成新 uid（萝莉 1 / 20 / 26 → 期末 17 / 18 / 19）")
