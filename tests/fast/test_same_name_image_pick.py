@@ -35,7 +35,7 @@ class SameNameImagePickTest(FastTestCase):
 
     def setUp(self):
         """
-        在临时目录里摆出三种重名与两张不重名的图片
+        在临时目录里摆出三组重名的图片、一张不重名的图片和一个不是 png 的文件
         Keyword arguments:
         无
         Return arguments:
