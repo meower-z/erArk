@@ -312,7 +312,7 @@ def build_scene_config(data_path):
     功能：构建场景配置并提取文本
     """
     global config_po_lines
-    for i in os.listdir(data_path):
+    for i in sorted(os.listdir(data_path)):
         now_path = os.path.join(data_path, i)
         if os.path.isfile(now_path):
             if i == "Scene.json":
@@ -441,7 +441,8 @@ if BUILD_PO:
     common_talk_po_lines.append(header_text)
     event_po_lines.append(header_text)
 
-file_list = os.listdir(config_dir)
+# 读入数据时各处列目录都按名称排序：产物里条目的顺序决定开局时随机数落到哪个角色身上，不能随文件系统列目录的顺序变化
+file_list = sorted(os.listdir(config_dir))
 index = 0
 for i in file_list:
     now_file = os.path.join(config_dir, i)
@@ -486,7 +487,7 @@ if BUILD_OFFICIAL_EVENT and os.path.isdir(official_event_dir):
 # 在写入 talk 数据时根据 BUILD_TALK 判断是否覆盖
 if BUILD_TALK:
     # 获取talk目录下的文件列表
-    talk_file_list = os.listdir(talk_dir)
+    talk_file_list = sorted(os.listdir(talk_dir))
     # 递归统计talk目录及其所有子目录下的csv文件总数
     def count_csv_files(dir_path):
         """
@@ -542,7 +543,9 @@ if BUILD_TALK:
         # 如果是目录，则递归遍历其子目录
         if os.path.isdir(now_path):
             for root, dirs, files in os.walk(now_path):
-                for f in files:
+                # 子目录与文件都按名称排序
+                dirs.sort()
+                for f in sorted(files):
                     # 跳过非 csv 文件
                     if not f.endswith(".csv"):
                         continue
@@ -607,7 +610,7 @@ if BUILD_TALK_COMMON:
                 total_size += os.path.getsize(full_path)
         return count, total_size
 
-    talk_common_file_list = os.listdir(talk_common_dir)
+    talk_common_file_list = sorted(os.listdir(talk_common_dir))
     # 统计talk_common目录及其所有子目录下的csv文件总数和总大小
     total_files, total_bytes = count_csv_files_and_size(talk_common_dir)
     processed_files = 0
@@ -619,7 +622,9 @@ if BUILD_TALK_COMMON:
         # 如果是目录，则递归遍历其子目录
         if os.path.isdir(now_path):
             for root, dirs, files in os.walk(now_path):
-                for f in files:
+                # 子目录与文件都按名称排序
+                dirs.sort()
+                for f in sorted(files):
                     # 跳过非 csv 文件
                     if not f.endswith(".csv"):
                         continue
@@ -654,22 +659,22 @@ if BUILD_TALK_COMMON:
 
 # 在写入 target 数据时根据 BUILD_TARGET 判断是否覆盖
 if BUILD_TARGET:
-    target_file_list = os.listdir(target_dir)
+    target_file_list = sorted(os.listdir(target_dir))
     for i in target_file_list:
         now_dir = os.path.join(target_dir, i)
-        for f in os.listdir(now_dir):
+        for f in sorted(os.listdir(now_dir)):
             config_def_str += "\n\n\n"
             now_f = os.path.join(now_dir, f)
             build_csv_config(now_f, f, False, True)
 
 if BUILD_CHARACTER:
-    character_file_list = os.listdir(character_dir)
+    character_file_list = sorted(os.listdir(character_dir))
     for i in character_file_list:
         now_path = os.path.join(character_dir,i)
         build_character_config(now_path,i)
 
 if BUILD_UI_TEXT:
-    ui_text_file_list = os.listdir(ui_text_dir)
+    ui_text_file_list = sorted(os.listdir(ui_text_dir))
     for i in ui_text_file_list:
         now_path = os.path.join(ui_text_dir,i)
         build_ui_text(now_path,i)
@@ -678,7 +683,9 @@ if BUILD_UI_TEXT:
 if BUILD_EVENT:
     event_list = []
     for root, dirs, files in os.walk(event_dir):
-        for file in files:
+        # 子目录与文件都按名称排序
+        dirs.sort()
+        for file in sorted(files):
             # 跳过非json文件
             if file.split(".")[-1] != "json":
                 continue

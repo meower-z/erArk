@@ -50,7 +50,8 @@ def load_dir_now(data_path: str):
     Keyword arguments:
     data_path -- 地图路径
     """
-    for i in os.listdir(data_path):
+    # 按名称排序：场景与地点标签列表的顺序不随文件系统列目录的顺序变化
+    for i in sorted(os.listdir(data_path)):
         now_path = os.path.join(data_path, i)
         if os.path.isfile(now_path):
             now_file = i.split(".")
