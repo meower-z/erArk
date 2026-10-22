@@ -126,7 +126,7 @@ _orig_must_show = talk.must_show_talk_check
 talk.must_show_talk_check = lambda character_id: None
 pregnancy_handle._settle_baby_grow_up(102, 203)
 talk.must_show_talk_check = _orig_must_show
-check("L19 前提：长成幼儿（素质 101 → 102）", baby_a.talent[102] == 1 and baby_a.talent[101] == 0)
+check("L19 前提：长成幼女（素质 101 → 102）", baby_a.talent[102] == 1 and baby_a.talent[101] == 0)
 _left_203 = [one["uid"] for one in official_event_handle.get_queue() if one["chara_id"] == 203]
 check("L16 婴儿期入队、还没处理的婴儿 5 清掉，通用 27（通用桶）照留", _left_203 == ["通用27"], _left_203)
 

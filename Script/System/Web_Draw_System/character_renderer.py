@@ -191,7 +191,7 @@ class CharacterRenderer:
 
         说明：
         直接复用tk模式的 character_image.find_character_image_name，
-        使Web模式与tk模式的立绘选择逻辑保持一致（差分、女儿、母亲萝莉图等）。
+        使Web模式与tk模式的立绘选择逻辑保持一致（差分、女儿等）。
         """
         if character_id < 0:
             return ""

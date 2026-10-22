@@ -116,7 +116,7 @@ _picked = {one["chara_id"] for one in growth_event_handle.get_today_growth_event
 random.randint = _orig_randint
 check("必派时派得到婴儿", 204 in _picked, _picked)
 cache.npc_id_got.discard(202)
-check("幼儿与婴儿一样离线，不在 npc_id_got 里也进名单", 202 in growth_event_handle.get_growth_event_character_list(), growth_event_handle.get_growth_event_character_list())
+check("幼女与婴儿一样离线，不在 npc_id_got 里也进名单", 202 in growth_event_handle.get_growth_event_character_list(), growth_event_handle.get_growth_event_character_list())
 cache.npc_id_got.add(202)
 check("婴儿占 4 条容量，成年少女照旧不进", growth_event_handle.get_growth_event_queue_capacity() == E.GROWTH_EVENT_QUEUE_PER_CHILD * 4
       and 206 not in growth_event_handle.get_growth_event_character_list())

@@ -447,7 +447,7 @@ adult.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
 move_to(301, SCENE_DORM)
 pl.behavior.behavior_id = _pl_behavior
 move_to(0, SCENE_DORM)
-check("L18 同学前提的 docstring 写上新口径（双方都在学生岗、确有的课、对方是幼儿或学员）",
+check("L18 同学前提的 docstring 写上新口径（双方都在学生岗、确有的课、对方是幼女或学员）",
       all(k in (handle_premise.handle_self_have_classmate.__doc__ or "") for k in ("学生岗", "确有", "学员")))
 
 section("Plan 32 §3.14（L26）：公开课前提 self_have_public_course 按整张个人课表查每周确有的公开课")

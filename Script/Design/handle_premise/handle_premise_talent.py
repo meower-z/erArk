@@ -189,7 +189,7 @@ def handle_t_oestrus_1(character_id: int) -> int:
 @add_premise(constant_promise.Premise.SELF_IS_CHILD)
 def handle_self_is_child(character_id: int) -> int:
     """
-    校验自己是幼儿
+    校验自己是幼女
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -234,7 +234,7 @@ def handle_self_is_loli(character_id: int) -> int:
 @add_premise(constant_promise.Premise.SELF_CHILD_OR_LOLI_1)
 def handle_self_child_or_loli_1(character_id: int) -> int:
     """
-    校验自己是否幼儿或学员==1
+    校验自己是否幼女或学员==1
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -248,7 +248,7 @@ def handle_self_child_or_loli_1(character_id: int) -> int:
 @add_premise(constant_promise.Premise.T_CHILD_OR_LOLI_1)
 def handle_t_child_or_loli_1(character_id: int) -> int:
     """
-    校验交互对象是否幼儿或学员==1
+    校验交互对象是否幼女或学员==1
     Keyword arguments:
     character_id -- 角色id
     Return arguments:

@@ -693,8 +693,8 @@ int,str,str,int,str,str
 1317,postpartum,生产后的对话+获得产后,0,npc,二段结算
 1318,rearing,结算获得育儿,0,npc,二段结算
 1319,rearing_complete,结算育儿完成,0,npc,二段结算
-1320,child_to_loli,结算幼女长成萝莉,0,npc,二段结算
-1321,loli_to_girl,结算萝莉长成少女,0,npc,二段结算
+1320,child_to_loli,结算幼女长成学员,0,npc,二段结算
+1321,loli_to_girl,结算学员长成少女,0,npc,二段结算
 1322,lay_egg,结算排出卵,0,npc,二段结算
 1323,egg_fertilized,结算鉴定出受精卵,0,npc,二段结算
 1324,egg_born,破壳前的对话,0,npc,二段结算

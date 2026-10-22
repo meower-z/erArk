@@ -380,18 +380,18 @@ class Select_Hidden_Sex_Mode_Panel:
             # 输出提示信息
             info_draw = draw.NormalDraw()
             info_text = _("\n请选择要进行的隐奸：\n")
-            info_text += _("○需要在没有其他人，或者其他人都无意识下才可以选择单方或者双方隐藏或携带\n")
+            info_text += _("○需要在没有其他人，或者其他人都无意识下才可以选择单方或者双方隐藏\n")
             info_text += _("  隐奸被发现的概率取决于隐奸模式、隐蔽技能等级、指令动作、在场人数、地点环境等\n")
             info_text += "\n"
             info_draw.text = info_text
             info_draw.draw()
 
+            # 携带模式（mode_id 5）不列出；select_this_mode 与 select_carry_insert_part 里它的流程保留
             button_text_list = []
             button_text_list.append(_("[1]不隐藏：双方身体均暴露在外，仅靠视线遮挡来避免被发现，容易被察觉"))
             button_text_list.append(_("[2]干员隐藏：博士不隐藏，干员藏起来不让别人看见，隐蔽程度中等"))
             button_text_list.append(_("[3]博士隐藏：干员不隐藏，博士藏起来不让别人看见，隐蔽程度中等"))
             button_text_list.append(_("[4]双方隐藏：博士和干员都藏起来不让别人看见，很难被察觉"))
-            button_text_list.append(_("[5]携带：干员以对面抱位被博士抱起，藏在博士的衣服遮盖下，可以边走边做，但博士的体力气力消耗大幅增加"))
             for i in range(len(button_text_list)):
                 button_text = button_text_list[i]
                 can_use = True
@@ -402,9 +402,6 @@ class Select_Hidden_Sex_Mode_Panel:
                 # debug模式下不限制
                 if cache.debug_mode:
                     can_use = True
-                # 从被发现面板跳转时不可选择携带模式（此时可能已在其他部位插入，无法满足携带的插入要求）
-                if i == 4 and self.sex_be_discovered_flag:
-                    can_use = False
                 if can_use:
                     button_draw = draw.LeftButton(
                         button_text,
@@ -501,8 +498,7 @@ class Select_Hidden_Sex_Mode_Panel:
         """
         line_feed.draw()
         info_draw = draw.NormalDraw()
-        info_text = _("○只能对小体型干员，即【幼女】或【萝莉】干员进行携带隐奸\n")
-        info_text += _("○携带模式需先选择插入部位（V阴道/A后穴/U尿道），全程无法拔出，体位固定为对面抱位\n")
+        info_text = _("○携带模式需先选择插入部位（V阴道/A后穴/U尿道），全程无法拔出，体位固定为对面抱位\n")
         info_text += _("○携带模式中双方消耗为3倍，可用专属的携带H中移动指令带着对方移动（消耗为10倍）\n")
         info_text += _("\n请选择携带时插入的部位：\n")
         info_draw.text = info_text
@@ -514,9 +510,6 @@ class Select_Hidden_Sex_Mode_Panel:
         # 技巧判定
         if sex_position_data.skill_req > character_data.ability[76]:
             base_cant_text += _("(需要博士腰技至少为{0}级)").format(sex_position_data.skill_req)
-        # 体型判定
-        if not handle_premise.handle_t_child_or_loli_1(0):
-            base_cant_text += _("(需要对方体型为【幼女】或【萝莉】)")
         return_list = []
         # 各部位的文本、性交类型与可选条件（与对应插入指令的前提一致）
         part_data_list = [
