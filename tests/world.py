@@ -3,12 +3,15 @@
 测试用的游戏世界夹具
 ====================
 MinimalWorld -- 小世界：读一次真实游戏配置，造出空的游戏状态，测试之间一键复原；不启动游戏。快速层（tests/fast）用它。
-FullWorld    -- 完整的无头启动：小世界之外再注册结算器与状态机，供慢速层用。
+FullWorld    -- 完整的无头启动：小世界之外再载入结算器、状态机与界面流程，不复原；慢速层（tests/slow）用它，每个进程开一局新游戏。
 
 测试向世界要角色、位置和场景：
     world.chara(cid, name, position=...)   -- 造一个穿着衣服、各异常位正常的角色，并当场核对
     world.chara(cid, name, naked=True)     -- 要裸体角色必须写明，当场核对她全裸
     world.scene(path) / world.move(cid, path)
+FullWorld 另有：
+    world.new_game()                       -- 走一遍开新游戏的界面流程
+    world.player.press(...) / type(...)    -- 安排玩家接下来按的按钮与输入的文字（PlayerInput）
 
 游戏模块在导入时就绑定 cache = cache_control.cache，所以缓存对象只建一次，复原时原地改写它的内容。
 每次复原都重设全部随机源（random、numpy.random、uuid.uuid4），见 seed_everything。
@@ -135,12 +138,7 @@ class MinimalWorld:
         Return arguments:
         无
         """
-        if ROOT not in sys.path:
-            sys.path.insert(0, ROOT)
-        # 游戏用相对路径读 data/ 与 config.ini
-        os.chdir(ROOT)
-        seed_everything()
-        self._load_game()
+        self._boot()
         self.wait_texts = _mute_ui()
         """ WaitDraw 绘制过的文本，每次复原清空 """
         self._snapshot()
@@ -160,6 +158,21 @@ class MinimalWorld:
         elif type(MinimalWorld._loaded) is not cls:
             raise RuntimeError(f"本进程已载入 {type(MinimalWorld._loaded).__name__}，不能再载入 {cls.__name__}：两者共用同一个游戏缓存")
         return MinimalWorld._loaded
+
+    def _boot(self):
+        """
+        固定随机源，载入游戏
+        Keyword arguments:
+        无
+        Return arguments:
+        无
+        """
+        if ROOT not in sys.path:
+            sys.path.insert(0, ROOT)
+        # 游戏用相对路径读 data/ 与 config.ini
+        os.chdir(ROOT)
+        seed_everything()
+        self._load_game()
 
     def _load_game(self):
         """
@@ -368,15 +381,184 @@ class MinimalWorld:
             raise FixtureError(f"角色 {cid} 的 normal_all 应为 1")
 
 
+class UnplannedInput(AssertionError):
+    """游戏在等玩家输入，测试没有安排这一步，或屏幕上没有安排的按钮"""
+
+
+class PlayerInput:
+    """
+    无头的玩家输入：记下屏幕上画出的按钮，游戏等输入时按测试安排的顺序按下按钮或输入文字
+    绘制照常执行，输出不送往界面：文字收进 self.screen，按钮收进 self.buttons。
+    清屏、清除命令绑定时忘掉相应的按钮，命令id 重新绑定时只留最新的按钮；按下一个按钮后忘掉全部按钮，下一次只从之后画出的按钮里选。
+    按下的按钮经游戏自己的 askfor_all 执行，所以按钮绑定的函数（如事件选项）照常生效。
+    """
+
+    SCREEN_LIMIT = 400
+    """ self.screen 只留最近的这么多段文字 """
+
+    def __init__(self):
+        """
+        Keyword arguments:
+        无
+        Return arguments:
+        无
+        """
+        self.buttons = []
+        """ 可以按的按钮：(按钮文字, 命令id)；几个按钮都含安排的文字时按最后画出的那个 """
+        self.screen = []
+        """ 最近输出的文字 """
+        self.planned = []
+        """ 还没用掉的输入：("press", 按钮文字的一部分) 或 ("type", 输入的文字) """
+
+    def install(self):
+        """
+        换掉界面输出与读输入的函数
+        Keyword arguments:
+        无
+        Return arguments:
+        无
+        """
+        from Script.Core import flow_handle, io_init
+
+        io_init.put_queue = lambda message: None
+        io_init.era_print = self._print
+        io_init.io_print_cmd = self._print_cmd
+        io_init.io_print_image_cmd = self._print_cmd
+        io_init.io_clear_cmd = self._clear_cmd
+        io_init.clear_screen = self._clear_cmd
+        io_init.clear_screen_and_history = self._clear_cmd
+        flow_handle.order_deal = self._order_deal
+
+    def press(self, *labels: str):
+        """
+        安排接下来依次按下的按钮
+        Keyword arguments:
+        labels -- 按钮文字的一部分，按顺序各按一次
+        Return arguments:
+        无
+        """
+        self.planned.extend(("press", label) for label in labels)
+
+    def type(self, text: str):
+        """
+        安排下一次输入文字（如角色名）
+        Keyword arguments:
+        text -- 输入的文字
+        Return arguments:
+        无
+        """
+        self.planned.append(("type", text))
+
+    def check_done(self):
+        """
+        安排的输入都已用掉，否则抛 UnplannedInput
+        Keyword arguments:
+        无
+        Return arguments:
+        无
+        """
+        if self.planned:
+            raise UnplannedInput(f"安排的输入没有用掉：{self.planned}；最近的文字：{self.screen[-5:]}")
+
+    def _print(self, string, style="standard", tooltip=""):
+        """
+        替换 io_init.era_print：记下文字
+        Keyword arguments:
+        string -- 文字
+        style -- 样式，不使用
+        tooltip -- 悬停提示，不使用
+        Return arguments:
+        无
+        """
+        if str(string).strip():
+            self.screen.append(str(string))
+            del self.screen[: -self.SCREEN_LIMIT]
+
+    def _print_cmd(self, cmd_str, cmd_number, *args, **kwargs):
+        """
+        替换 io_init.io_print_cmd：记下按钮（命令已由 flow_handle.print_cmd 绑定）
+        Keyword arguments:
+        cmd_str -- 按钮文字
+        cmd_number -- 命令id
+        Return arguments:
+        无
+        """
+        self._clear_cmd(cmd_number)
+        self.buttons.append((str(cmd_str), str(cmd_number)))
+
+    def _clear_cmd(self, *cmd_numbers):
+        """
+        替换 io_init.io_clear_cmd、clear_screen 与 clear_screen_and_history：忘掉按钮
+        Keyword arguments:
+        cmd_numbers -- 要忘掉的按钮的命令id；不给时忘掉全部按钮
+        Return arguments:
+        无
+        """
+        if not cmd_numbers:
+            self.buttons.clear()
+            return
+        gone = {str(number) for number in cmd_numbers}
+        self.buttons = [(text, cmd) for text, cmd in self.buttons if cmd not in gone]
+
+    def _order_deal(self, flag="order", print_order=True, donot_return_null_str=True):
+        """
+        替换 flow_handle.order_deal：给出下一项安排的输入
+        Keyword arguments:
+        flag -- "str" 时返回命令id；"order" 时执行按钮绑定的函数
+        print_order -- 不使用
+        donot_return_null_str -- 为假时是「按任意键继续」的等待，没有安排的输入就返回空串
+        Return arguments:
+        str -- 命令id、输入的文字或空串
+        功能描述:
+            游戏要求选择而测试没有安排、或屏幕上没有安排的按钮时抛 UnplannedInput，并列出屏幕上的按钮。
+        """
+        from Script.Core import flow_handle
+
+        kind, value = self.planned[0] if self.planned else ("", "")
+        if kind == "type":
+            self.planned.pop(0)
+            return value
+        matches = [cmd for text, cmd in reversed(self.buttons) if kind == "press" and value in text]
+        if not matches:
+            if not donot_return_null_str:
+                return ""
+            shown = [text for text, _ in self.buttons]
+            raise UnplannedInput(f"游戏在等玩家选择，安排的下一步是 {value or '（没有）'!r}；屏幕上的按钮：{shown}；最近的文字：{self.screen[-5:]}")
+        self.planned.pop(0)
+        self.buttons.clear()
+        if flag == "order":
+            flow_handle._cmd_deal(matches[0])
+            return None
+        return matches[0]
+
+
 class FullWorld(MinimalWorld):
     """
-    完整的无头世界：小世界之外再注册结算器与状态机、初始化角色模板，供慢速层用
+    完整的无头世界：小世界之外再注册结算器、状态机与界面流程，初始化角色模板，供慢速层用
+    绘制照常执行，玩家输入由 self.player（PlayerInput）给出；new_game() 走一遍开新游戏的界面流程。
+    不做复原：慢速层每个测试一个新进程。
     导入链中的 handle_instruct 在导入时起一个非守护的指令处理线程，进程正常返回也不会自行退出，须以 os._exit 结束
     """
 
+    PLAYER_NAME = "多克特"
+    """ new_game() 输入的玩家名字：与口上里写死的「博士」区分开 """
+
+    def __init__(self):
+        """
+        只由 load() 调用：载入配置与全部游戏模块，换上 PlayerInput
+        Keyword arguments:
+        无
+        Return arguments:
+        无
+        """
+        self._boot()
+        self.player = PlayerInput()
+        """ 玩家输入 """
+        self.player.install()
+
     def _load_game(self):
         """
-        先载入小世界，再导入 Script.Settle 与 Script.StateMachine（靠装饰器注册），并初始化角色模板
+        先载入小世界，再导入 Script.Settle、Script.StateMachine、医疗系统与界面流程（靠装饰器注册），并初始化角色模板
         Keyword arguments:
         无
         Return arguments:
@@ -385,6 +567,42 @@ class FullWorld(MinimalWorld):
         super()._load_game()
         import Script.Settle  # noqa: F401
         import Script.StateMachine  # noqa: F401
+        import Script.System.Medical_System  # noqa: F401
+        import Script.UI.Flow  # noqa: F401
         from Script.Design import character_handle
 
         character_handle.init_character_tem()
+
+    def reset(self):
+        """
+        慢速层不复原，调用即抛 RuntimeError
+        Keyword arguments:
+        无
+        Return arguments:
+        无
+        """
+        raise RuntimeError("FullWorld 不复原：慢速层每个测试一个新进程")
+
+    def new_game(self):
+        """
+        走一遍开新游戏的界面流程：标题画面「初次唤醒」，读完免责声明，输入名字 PLAYER_NAME，「睁开双眼」
+        Keyword arguments:
+        无
+        Return arguments:
+        无
+        功能描述:
+            初始干员、设施与设置都取创建角色面板的默认值。流程结束时重设随机源，开局之后的随机与开局流程的长短无关。
+        """
+        from Script.Core import constant
+        from Script.UI.Flow import creator_character_flow, title_flow
+
+        self.player.press("初次唤醒")
+        title_flow.title_panel()
+        if self.cache.now_panel_id != constant.Panel.CREATOR_CHARACTER:
+            raise FixtureError(f"标题画面没有进入创建角色：now_panel_id={self.cache.now_panel_id}")
+        self.player.press("我读完并理解了以上8条")
+        self.player.type(self.PLAYER_NAME)
+        self.player.press("睁开双眼")
+        creator_character_flow.creator_character_panel()
+        self.player.check_done()
+        seed_everything()

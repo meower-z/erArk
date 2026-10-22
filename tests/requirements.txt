@@ -1,0 +1,4 @@
+# 测试依赖：pip install -r tests/requirements.txt（游戏本身的依赖在根目录 requirements.txt）
+pytest>=9.1
+# 慢速层的 --forked
+pytest-forked>=1.7
