@@ -43,7 +43,7 @@ cache: game_type.Cache = cache_control.cache
 def handle_nothing(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   空白结算
   Keyword arguments:
@@ -59,7 +59,7 @@ def handle_nothing(
 def handle_must_show(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   必须显示的空白结算
   Keyword arguments:
@@ -75,7 +75,7 @@ def handle_must_show(
 def handle_must_settle(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   必须计算但不必须显示的空白结算
   Keyword arguments:
@@ -91,7 +91,7 @@ def handle_must_settle(
 def handle_add_1_nclimax_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加1S绝顶经验
   Keyword arguments:
@@ -118,7 +118,7 @@ def handle_add_1_nclimax_experience(
 def handle_add_1_bclimax_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加1B绝顶经验
   Keyword arguments:
@@ -145,7 +145,7 @@ def handle_add_1_bclimax_experience(
 def handle_add_1_cclimax_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加1C绝顶经验
   Keyword arguments:
@@ -198,7 +198,7 @@ def handle_add_1_cclimax_experience(
 def handle_add_1_vclimax_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加1V绝顶经验
   Keyword arguments:
@@ -225,7 +225,7 @@ def handle_add_1_vclimax_experience(
 def handle_add_1_aclimax_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加1A绝顶经验
   Keyword arguments:
@@ -252,7 +252,7 @@ def handle_add_1_aclimax_experience(
 def handle_add_1_uclimax_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加1U绝顶经验
   Keyword arguments:
@@ -279,7 +279,7 @@ def handle_add_1_uclimax_experience(
 def handle_add_1_wclimax_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加1W绝顶经验
   Keyword arguments:
@@ -332,7 +332,7 @@ def handle_add_1_wclimax_experience(
 def handle_add_1_cumming_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加1射精经验
   Keyword arguments:
@@ -355,7 +355,7 @@ def handle_add_1_cumming_experience(
 def handle_add_1_milking_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加1喷乳经验
   Keyword arguments:
@@ -376,7 +376,7 @@ def handle_add_1_milking_experience(
 def handle_add_1_peeing_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加1放尿经验
   Keyword arguments:
@@ -397,7 +397,7 @@ def handle_add_1_peeing_experience(
 def handle_target_add_1_cums_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   交互对象增加1精液经验
   Keyword arguments:
@@ -422,7 +422,7 @@ def handle_target_add_1_cums_experience(
 def handle_target_add_small_lubrication(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   交互对象增加少量润滑
   Keyword arguments:
@@ -446,7 +446,7 @@ def handle_target_add_small_lubrication(
 def handle_target_add_middle_lubrication(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   交互对象增加中量润滑
   Keyword arguments:
@@ -470,7 +470,7 @@ def handle_target_add_middle_lubrication(
 def handle_target_add_large_lubrication(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   交互对象增加大量润滑
   Keyword arguments:
@@ -494,7 +494,7 @@ def handle_target_add_large_lubrication(
 def handle_add_small_lubrication(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量润滑
   Keyword arguments:
@@ -512,7 +512,7 @@ def handle_add_small_lubrication(
 def handle_add_middle_lubrication(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量润滑
   Keyword arguments:
@@ -530,7 +530,7 @@ def handle_add_middle_lubrication(
 def handle_add_large_lubrication(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量润滑
   Keyword arguments:
@@ -548,7 +548,7 @@ def handle_add_large_lubrication(
 def handle_down_small_hit_point(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   减少少量体力
   Keyword arguments:
@@ -567,7 +567,7 @@ def handle_down_small_hit_point(
 def handle_down_small_mana_point(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   减少少量气力
   Keyword arguments:
@@ -586,7 +586,7 @@ def handle_down_small_mana_point(
 def handle_down_middle_hit_point(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   减少中量体力
   Keyword arguments:
@@ -605,7 +605,7 @@ def handle_down_middle_hit_point(
 def handle_down_middle_mana_point(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   减少中量气力
   Keyword arguments:
@@ -624,7 +624,7 @@ def handle_down_middle_mana_point(
 def handle_down_large_hit_point(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   减少大量体力
   Keyword arguments:
@@ -643,7 +643,7 @@ def handle_down_large_hit_point(
 def handle_lay_soft_egg(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   无壳卵生体外排卵：生成一枚体外无壳卵（登记到玩家收藏品），把子宫与小穴中八成的精液转移到卵上并提示玩家
   Keyword arguments:
@@ -661,7 +661,7 @@ def handle_lay_soft_egg(
 def handle_down_large_mana_point(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   减少大量气力
   Keyword arguments:
@@ -680,7 +680,7 @@ def handle_down_large_mana_point(
 def handle_add_small_s_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量Ｎ快（S感补正）
   Keyword arguments:
@@ -708,7 +708,7 @@ def handle_add_small_s_feel(
 def handle_add_small_b_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量Ｂ快（B感补正）
   Keyword arguments:
@@ -736,7 +736,7 @@ def handle_add_small_b_feel(
 def handle_add_small_c_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量Ｃ快（C感补正）
   Keyword arguments:
@@ -764,7 +764,7 @@ def handle_add_small_c_feel(
 def handle_add_small_p_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加玩家少量射精值（P感补正）
   Keyword arguments:
@@ -791,7 +791,7 @@ def handle_add_small_p_feel(
 def handle_add_small_v_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量Ｖ快（V感补正）
   Keyword arguments:
@@ -819,7 +819,7 @@ def handle_add_small_v_feel(
 def handle_add_small_a_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量Ａ快（A感补正）
   Keyword arguments:
@@ -847,7 +847,7 @@ def handle_add_small_a_feel(
 def handle_add_small_u_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量Ｕ快（U感补正）
   Keyword arguments:
@@ -875,7 +875,7 @@ def handle_add_small_u_feel(
 def handle_add_small_w_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量Ｗ快（W感补正）
   Keyword arguments:
@@ -903,7 +903,7 @@ def handle_add_small_w_feel(
 def handle_add_small_m_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量Ｍ快（M感补正）
   参数：
@@ -931,7 +931,7 @@ def handle_add_small_m_feel(
 def handle_add_middle_m_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量Ｍ快（M感补正）
   参数：
@@ -959,7 +959,7 @@ def handle_add_middle_m_feel(
 def handle_add_small_f_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量Ｆ快（F感补正）
   参数：
@@ -987,7 +987,7 @@ def handle_add_small_f_feel(
 def handle_add_middle_f_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量Ｆ快（F感补正）
   参数：
@@ -1015,7 +1015,7 @@ def handle_add_middle_f_feel(
 def handle_add_small_h_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量Ｈ快（H感补正）
   参数：
@@ -1043,7 +1043,7 @@ def handle_add_small_h_feel(
 def handle_add_middle_h_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量Ｈ快（H感补正）
   参数：
@@ -1071,7 +1071,7 @@ def handle_add_middle_h_feel(
 def handle_add_small_lubrication_plus(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量润滑（欲望补正）
   Keyword arguments:
@@ -1099,7 +1099,7 @@ def handle_add_small_lubrication_plus(
 def handle_add_small_learn_plus(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量习得（技巧补正）
   Keyword arguments:
@@ -1127,7 +1127,7 @@ def handle_add_small_learn_plus(
 def handle_add_small_respect_plus(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量恭顺（顺从补正）
   Keyword arguments:
@@ -1155,7 +1155,7 @@ def handle_add_small_respect_plus(
 def handle_add_small_friendly(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量好意（亲密补正）
   Keyword arguments:
@@ -1183,7 +1183,7 @@ def handle_add_small_friendly(
 def handle_add_small_desire(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量欲情（欲望补正）
   Keyword arguments:
@@ -1211,7 +1211,7 @@ def handle_add_small_desire(
 def handle_add_small_happy(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量快乐（快乐刻印补正）
   Keyword arguments:
@@ -1239,7 +1239,7 @@ def handle_add_small_happy(
 def handle_add_small_lead(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量先导（施虐补正）
   Keyword arguments:
@@ -1267,7 +1267,7 @@ def handle_add_small_lead(
 def handle_add_small_submit(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量屈服（屈服刻印补正）
   Keyword arguments:
@@ -1295,7 +1295,7 @@ def handle_add_small_submit(
 def handle_add_small_shy(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量羞耻（露出补正）
   Keyword arguments:
@@ -1323,7 +1323,7 @@ def handle_add_small_shy(
 def handle_add_small_pain(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量苦痛（苦痛刻印补正）
   Keyword arguments:
@@ -1351,7 +1351,7 @@ def handle_add_small_pain(
 def handle_add_small_terror(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量恐怖（恐怖刻印补正）
   Keyword arguments:
@@ -1379,7 +1379,7 @@ def handle_add_small_terror(
 def handle_add_small_depression(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量抑郁
   Keyword arguments:
@@ -1401,7 +1401,7 @@ def handle_add_small_depression(
 def handle_add_small_disgust(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加少量反感（反发刻印补正）
   Keyword arguments:
@@ -1429,7 +1429,7 @@ def handle_add_small_disgust(
 def handle_add_middle_n_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量Ｎ快（N感补正）
   Keyword arguments:
@@ -1456,7 +1456,7 @@ def handle_add_middle_n_feel(
 def handle_add_middle_b_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量Ｂ快（B感补正）
   Keyword arguments:
@@ -1483,7 +1483,7 @@ def handle_add_middle_b_feel(
 def handle_add_middle_c_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量Ｃ快（C感补正）
   Keyword arguments:
@@ -1510,7 +1510,7 @@ def handle_add_middle_c_feel(
 def handle_add_middle_p_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量P快（P感补正）
   Keyword arguments:
@@ -1537,7 +1537,7 @@ def handle_add_middle_p_feel(
 def handle_add_middle_v_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量Ｖ快（V感补正）
   Keyword arguments:
@@ -1563,7 +1563,7 @@ def handle_add_middle_v_feel(
 def handle_add_middle_a_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量Ａ快（A感补正）
   Keyword arguments:
@@ -1590,7 +1590,7 @@ def handle_add_middle_a_feel(
 def handle_add_middle_u_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量Ｕ快（U感补正）
   Keyword arguments:
@@ -1617,7 +1617,7 @@ def handle_add_middle_u_feel(
 def handle_add_middle_w_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量Ｗ快（W感补正）
   Keyword arguments:
@@ -1644,7 +1644,7 @@ def handle_add_middle_w_feel(
 def handle_add_middle_lubrication_plus(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量润滑（欲望补正）
   Keyword arguments:
@@ -1671,7 +1671,7 @@ def handle_add_middle_lubrication_plus(
 def handle_add_middle_learn_plus(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量习得（技巧补正）
   Keyword arguments:
@@ -1698,7 +1698,7 @@ def handle_add_middle_learn_plus(
 def handle_add_middle_respect_plus(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量恭顺（顺从补正）
   Keyword arguments:
@@ -1725,7 +1725,7 @@ def handle_add_middle_respect_plus(
 def handle_add_middle_friendly(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量好意（亲密补正）
   Keyword arguments:
@@ -1752,7 +1752,7 @@ def handle_add_middle_friendly(
 def handle_add_middle_desire(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量欲情（欲望补正）
   Keyword arguments:
@@ -1779,7 +1779,7 @@ def handle_add_middle_desire(
 def handle_add_middle_happy(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量快乐（快乐刻印补正）
   Keyword arguments:
@@ -1806,7 +1806,7 @@ def handle_add_middle_happy(
 def handle_add_middle_lead(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量先导（施虐补正）
   Keyword arguments:
@@ -1833,7 +1833,7 @@ def handle_add_middle_lead(
 def handle_add_middle_submit(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量屈服（屈服刻印补正）
   Keyword arguments:
@@ -1860,7 +1860,7 @@ def handle_add_middle_submit(
 def handle_add_middle_shy(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量羞耻（露出补正）
   Keyword arguments:
@@ -1887,7 +1887,7 @@ def handle_add_middle_shy(
 def handle_add_middle_pain(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量苦痛（苦痛刻印补正）
   Keyword arguments:
@@ -1915,7 +1915,7 @@ def handle_add_middle_pain(
 def handle_add_middle_terror(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量恐怖（恐怖刻印补正）
   Keyword arguments:
@@ -1943,7 +1943,7 @@ def handle_add_middle_terror(
 def handle_add_middle_depression(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量抑郁
   Keyword arguments:
@@ -1965,7 +1965,7 @@ def handle_add_middle_depression(
 def handle_add_middle_disgust(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加中量反感（反发刻印补正）
   Keyword arguments:
@@ -1993,7 +1993,7 @@ def handle_add_middle_disgust(
 def handle_add_large_n_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量Ｎ快（N感补正）
   Keyword arguments:
@@ -2021,7 +2021,7 @@ def handle_add_large_n_feel(
 def handle_add_large_b_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量Ｂ快（B感补正）
   Keyword arguments:
@@ -2049,7 +2049,7 @@ def handle_add_large_b_feel(
 def handle_add_large_c_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量Ｃ快（C感补正）
   Keyword arguments:
@@ -2077,7 +2077,7 @@ def handle_add_large_c_feel(
 def handle_add_large_p_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量P快（P感补正）
   Keyword arguments:
@@ -2103,7 +2103,7 @@ def handle_add_large_p_feel(
 def handle_add_large_v_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量Ｖ快（V感补正）
   Keyword arguments:
@@ -2131,7 +2131,7 @@ def handle_add_large_v_feel(
 def handle_add_large_a_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量Ａ快（A感补正）
   Keyword arguments:
@@ -2159,7 +2159,7 @@ def handle_add_large_a_feel(
 def handle_add_large_u_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量Ｕ快（U感补正）
   Keyword arguments:
@@ -2187,7 +2187,7 @@ def handle_add_large_u_feel(
 def handle_add_large_w_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量Ｗ快（W感补正）
   Keyword arguments:
@@ -2215,7 +2215,7 @@ def handle_add_large_w_feel(
 def handle_add_large_m_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量Ｍ快（M感补正）
   参数：
@@ -2243,7 +2243,7 @@ def handle_add_large_m_feel(
 def handle_add_large_f_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量Ｆ快（F感补正）
   参数：
@@ -2271,7 +2271,7 @@ def handle_add_large_f_feel(
 def handle_add_large_h_feel(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量Ｈ快（H感补正）
   参数：
@@ -2299,7 +2299,7 @@ def handle_add_large_h_feel(
 def handle_add_b_feel_remote_toy(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加Ｂ快（情趣玩具强度补正）
   Keyword arguments:
@@ -2335,7 +2335,7 @@ def handle_add_b_feel_remote_toy(
 def handle_add_c_feel_remote_toy(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加Ｃ快（情趣玩具强度补正）
   Keyword arguments:
@@ -2365,7 +2365,7 @@ def handle_add_c_feel_remote_toy(
 def handle_add_v_feel_remote_toy(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加Ｖ快（情趣玩具强度补正）
   Keyword arguments:
@@ -2395,7 +2395,7 @@ def handle_add_v_feel_remote_toy(
 def handle_add_a_feel_remote_toy(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加Ａ快（情趣玩具强度补正）
   Keyword arguments:
@@ -2425,7 +2425,7 @@ def handle_add_a_feel_remote_toy(
 def handle_add_u_feel_remote_toy(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加Ｕ快（情趣玩具强度补正）
   Keyword arguments:
@@ -2455,7 +2455,7 @@ def handle_add_u_feel_remote_toy(
 def handle_add_large_lubrication_plus(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量润滑（欲望补正）
   Keyword arguments:
@@ -2483,7 +2483,7 @@ def handle_add_large_lubrication_plus(
 def handle_add_large_learn_plus(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量习得（技巧补正）
   Keyword arguments:
@@ -2511,7 +2511,7 @@ def handle_add_large_learn_plus(
 def handle_add_large_respect_plus(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量恭顺（顺从补正）
   Keyword arguments:
@@ -2539,7 +2539,7 @@ def handle_add_large_respect_plus(
 def handle_add_large_friendly(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量好意（亲密补正）
   Keyword arguments:
@@ -2567,7 +2567,7 @@ def handle_add_large_friendly(
 def handle_add_large_desire(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量欲情（欲望补正）
   Keyword arguments:
@@ -2595,7 +2595,7 @@ def handle_add_large_desire(
 def handle_add_large_happy(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量快乐（快乐刻印补正）
   Keyword arguments:
@@ -2623,7 +2623,7 @@ def handle_add_large_happy(
 def handle_add_large_lead(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量先导（受虐补正）
   Keyword arguments:
@@ -2651,7 +2651,7 @@ def handle_add_large_lead(
 def handle_add_large_submit(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量屈服（屈服刻印补正）
   Keyword arguments:
@@ -2679,7 +2679,7 @@ def handle_add_large_submit(
 def handle_add_large_shy(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量羞耻（露出补正）
   Keyword arguments:
@@ -2707,7 +2707,7 @@ def handle_add_large_shy(
 def handle_add_large_pain(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量苦痛（苦痛刻印补正）
   Keyword arguments:
@@ -2735,7 +2735,7 @@ def handle_add_large_pain(
 def handle_add_large_terror(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量恐怖（恐怖刻印补正）
   Keyword arguments:
@@ -2763,7 +2763,7 @@ def handle_add_large_terror(
 def handle_add_large_depression(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量抑郁
   Keyword arguments:
@@ -2785,7 +2785,7 @@ def handle_add_large_depression(
 def handle_add_large_disgust(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加大量反感（反发刻印补正）
   Keyword arguments:
@@ -2813,7 +2813,7 @@ def handle_add_large_disgust(
 def handle_down_small_pain(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   减少少量苦痛（苦痛刻印补正）
   Keyword arguments:
@@ -2844,7 +2844,7 @@ def handle_down_small_pain(
 def handle_down_small_disgust(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   减少少量反感（反发刻印补正）
   Keyword arguments:
@@ -2875,7 +2875,7 @@ def handle_down_small_disgust(
 def handle_down_middle_pain(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   减少中量苦痛（苦痛刻印补正）
   Keyword arguments:
@@ -2905,7 +2905,7 @@ def handle_down_middle_pain(
 def handle_down_middle_disgust(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   减少中量反感（反发刻印补正）
   Keyword arguments:
@@ -2935,7 +2935,7 @@ def handle_down_middle_disgust(
 def handle_down_large_pain(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   减少大量苦痛（苦痛刻印补正）
   Keyword arguments:
@@ -2965,7 +2965,7 @@ def handle_down_large_pain(
 def handle_down_large_disgust(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   减少大量反感（反发刻印补正）
   Keyword arguments:
@@ -2995,7 +2995,7 @@ def handle_down_large_disgust(
 def handle_add_large_pain_first_sex(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加巨量苦痛（破处修正）
   Keyword arguments:
@@ -3039,7 +3039,7 @@ def handle_add_large_pain_first_sex(
 def handle_add_large_pain_first_a_sex(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加巨量苦痛（A破处修正）
   Keyword arguments:
@@ -3079,7 +3079,7 @@ def handle_add_large_pain_first_a_sex(
 def handle_add_large_pain_first_u_sex(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加巨量苦痛（U破处修正）
   Keyword arguments:
@@ -3119,7 +3119,7 @@ def handle_add_large_pain_first_u_sex(
 def handle_add_large_pain_first_w_sex(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加巨量苦痛（W破处修正）
   Keyword arguments:
@@ -3159,7 +3159,7 @@ def handle_add_large_pain_first_w_sex(
 def handle_add_urinate(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加尿意（持续性利尿剂）
   Keyword arguments:
@@ -3181,7 +3181,7 @@ def handle_add_urinate(
 def handle_add_sleep_point(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   维持熟睡值（安眠药）
   Keyword arguments:
@@ -3203,7 +3203,7 @@ def handle_add_sleep_point(
 def handle_milking_machine(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   角色的奶量转化为乳汁（搾乳机）
   Keyword arguments:
@@ -3259,7 +3259,7 @@ def handle_milking_machine(
 def handle_urine_collector(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   角色的尿液转化为圣水（采尿器）
   Keyword arguments:
@@ -3299,7 +3299,7 @@ def handle_urine_collector(
 def handle_b_orgasm_to_milk(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   结算因B绝顶而被迫喷乳
   Keyword arguments:
@@ -3350,7 +3350,7 @@ def handle_b_orgasm_to_milk(
 def handle_u_orgasm_to_pee(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   结算因U绝顶而被迫漏尿
   Keyword arguments:
@@ -3398,7 +3398,7 @@ def handle_u_orgasm_to_pee(
 def handle_extra_orgasm(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   结算额外绝顶(痛苦+恐怖)
   Keyword arguments:
@@ -3452,7 +3452,7 @@ def handle_extra_orgasm(
 def handle_plural_orgasm(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   结算多重绝顶(快乐+屈服)
   Keyword arguments:
@@ -3498,7 +3498,7 @@ def handle_plural_orgasm(
 def handle_bondage_effect(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   结算绳子捆绑效果(已弃用)
   Keyword arguments:
@@ -3529,7 +3529,7 @@ def handle_bondage_effect(
 def handle_exposed_orgasm_small_in_hidden_sex(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   结算因隐奸中的小绝顶而导致的暴露
   Keyword arguments:
@@ -3552,7 +3552,7 @@ def handle_exposed_orgasm_small_in_hidden_sex(
 def handle_exposed_orgasm_normal_in_hidden_sex(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   结算因隐奸中的普绝顶而导致的暴露
   Keyword arguments:
@@ -3575,7 +3575,7 @@ def handle_exposed_orgasm_normal_in_hidden_sex(
 def handle_exposed_orgasm_strong_in_hidden_sex(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   结算因隐奸中的强绝顶而导致的暴露
   Keyword arguments:
@@ -3598,7 +3598,7 @@ def handle_exposed_orgasm_strong_in_hidden_sex(
 def handle_exposed_orgasm_super_in_hidden_sex(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   结算因隐奸中的超强绝顶而导致的暴露
   Keyword arguments:
@@ -3621,7 +3621,7 @@ def handle_exposed_orgasm_super_in_hidden_sex(
 def handle_store_small_orgasm_charge(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   结算因小绝顶而获得的电量
   Keyword arguments:
@@ -3646,7 +3646,7 @@ def handle_store_small_orgasm_charge(
 def handle_store_normal_orgasm_charge(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   结算因普绝顶而获得的电量
   Keyword arguments:
@@ -3671,7 +3671,7 @@ def handle_store_normal_orgasm_charge(
 def handle_store_strong_orgasm_charge(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   结算因强绝顶而获得的电量
   Keyword arguments:
@@ -3696,7 +3696,7 @@ def handle_store_strong_orgasm_charge(
 def handle_store_super_orgasm_charge(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   结算因超强绝顶而获得的电量
   Keyword arguments:
@@ -3721,7 +3721,7 @@ def handle_store_super_orgasm_charge(
 def handle_penis_in_t_reset(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   当前阴茎位置为交互对象_双方归零
   Keyword arguments:
@@ -3745,7 +3745,7 @@ def handle_penis_in_t_reset(
 def handle_give_pan_in_day_first_meet(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   在每日招呼时上交今天的内裤
   Keyword arguments:
@@ -3763,7 +3763,7 @@ def handle_give_pan_in_day_first_meet(
 def handle_give_socks_in_day_first_meet(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   在每日招呼时上交今天的袜子
   Keyword arguments:
@@ -3781,7 +3781,7 @@ def handle_give_socks_in_day_first_meet(
 def handle_add_1_sex_v_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加1V性交经验
   Keyword arguments:
@@ -3799,7 +3799,7 @@ def handle_add_1_sex_v_experience(
 def handle_add_1_sex_a_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加1A性交经验
   Keyword arguments:
@@ -3817,7 +3817,7 @@ def handle_add_1_sex_a_experience(
 def handle_add_1_sex_u_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加1U性交经验
   Keyword arguments:
@@ -3835,7 +3835,7 @@ def handle_add_1_sex_u_experience(
 def handle_add_1_sex_w_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加1W性交经验
   Keyword arguments:
@@ -3853,7 +3853,7 @@ def handle_add_1_sex_w_experience(
 def handle_add_1_expand_v_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加1V扩张经验
   Keyword arguments:
@@ -3871,7 +3871,7 @@ def handle_add_1_expand_v_experience(
 def handle_add_1_expand_a_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加1A扩张经验
   Keyword arguments:
@@ -3889,7 +3889,7 @@ def handle_add_1_expand_a_experience(
 def handle_add_1_expand_u_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加1U扩张经验
   Keyword arguments:
@@ -3907,7 +3907,7 @@ def handle_add_1_expand_u_experience(
 def handle_add_1_expand_w_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加1W扩张经验
   Keyword arguments:
@@ -3925,7 +3925,7 @@ def handle_add_1_expand_w_experience(
 def handle_add_1_n_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   自己增加1N经验
   Keyword arguments:
@@ -3943,7 +3943,7 @@ def handle_add_1_n_experience(
 def handle_add_1_b_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   自己增加1B经验
   Keyword arguments:
@@ -3961,7 +3961,7 @@ def handle_add_1_b_experience(
 def handle_add_1_c_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   自己增加1C经验
   Keyword arguments:
@@ -3979,7 +3979,7 @@ def handle_add_1_c_experience(
 def handle_add_1_p_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   自己增加1P经验
   Keyword arguments:
@@ -3997,7 +3997,7 @@ def handle_add_1_p_experience(
 def handle_add_1_v_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   自己增加1V经验
   Keyword arguments:
@@ -4015,7 +4015,7 @@ def handle_add_1_v_experience(
 def handle_add_1_a_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   自己增加1A经验
   Keyword arguments:
@@ -4033,7 +4033,7 @@ def handle_add_1_a_experience(
 def handle_add_1_u_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   自己增加1U经验
   Keyword arguments:
@@ -4051,7 +4051,7 @@ def handle_add_1_u_experience(
 def handle_add_1_w_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   自己增加1W经验
   Keyword arguments:
@@ -4069,7 +4069,7 @@ def handle_add_1_w_experience(
 def handle_add_1_mclimax_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加1M绝顶经验
   Keyword arguments:
@@ -4096,7 +4096,7 @@ def handle_add_1_mclimax_experience(
 def handle_add_1_fclimax_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加1F绝顶经验
   Keyword arguments:
@@ -4123,7 +4123,7 @@ def handle_add_1_fclimax_experience(
 def handle_add_1_hclimax_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   增加1H绝顶经验
   Keyword arguments:
@@ -4150,7 +4150,7 @@ def handle_add_1_hclimax_experience(
 def handle_add_1_m_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   自己增加1M经验
   Keyword arguments:
@@ -4168,7 +4168,7 @@ def handle_add_1_m_experience(
 def handle_add_1_f_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   自己增加1F经验
   Keyword arguments:
@@ -4186,7 +4186,7 @@ def handle_add_1_f_experience(
 def handle_add_1_h_experience(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   自己增加1H经验
   Keyword arguments:
@@ -4204,7 +4204,7 @@ def handle_add_1_h_experience(
 def handle_show_off_study(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   （炫耀用）女儿向博士炫耀最近升级的能力，加好感与亲密，并清空待炫耀记录
      能力升级发生在玩家睡觉时的睡眠结算里，当场没有观众；本二段行为把这份成就感延后到
@@ -4241,7 +4241,7 @@ def handle_show_off_study(
 def handle_caught_skip_class(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   （翘课被抓用）翘课中的孩子与玩家同场景时被撞见，当场清掉翘课flag、记下被抓的日期（本日剩余节次回去上课、不再掷翘课，Plan 30），
   并按被抓的心虚加抑郁与恐怖

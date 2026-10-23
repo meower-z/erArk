@@ -29,7 +29,7 @@ line_feed.text = "\n"
 line_feed.width = 1
 
 
-def update_new_day():
+def update_new_day() -> None:
   """
   新一天的刷新\n
   Keyword arguments:
@@ -162,7 +162,7 @@ def update_new_day():
   cache.daily_intsruce.append("\n\n" + game_time.get_date_until_day() + "\n\n")
 
 
-def fall_chara_give_pink_voucher(character_id: int):
+def fall_chara_give_pink_voucher(character_id: int) -> None:
   """
   陷落角色给予粉红凭证\n
   Keyword arguments:\n

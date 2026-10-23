@@ -56,7 +56,7 @@ def _rand_range_int(low: int, high: int) -> int:
   return low + int(random.random() * (high - low + 1))
 
 
-def judge_pl_real_time_data():
+def judge_pl_real_time_data() -> None:
   """
   玩家实时数据结算\n
   Keyword arguments:
@@ -104,7 +104,7 @@ def character_aotu_change_value(
     character_id: int,
     now_time: datetime.datetime,
     pl_start_time: datetime.datetime,
-):
+) -> None:
   """
   结算角色随时间自动增加的数值
   Keyword arguments:
@@ -310,7 +310,7 @@ def get_true_add_time(
   return true_add_time
 
 
-def settle_semen_flow(character_id: int, true_add_time: int):
+def settle_semen_flow(character_id: int, true_add_time: int) -> None:
   """
   结算精液流动\n
   Keyword arguments:\n
@@ -373,7 +373,7 @@ def settle_semen_flow(character_id: int, true_add_time: int):
   # print(f"debug {now_character_data.name}的精液流动完毕，剩余流动列表为{now_character_data.dirty.semen_flow}")
 
 
-def semen_absorb(character_id: int, true_add_time: int, body_part: int):
+def semen_absorb(character_id: int, true_add_time: int, body_part: int) -> None:
   """
   结算精液吸收\n
   Keyword arguments:\n
@@ -409,7 +409,7 @@ def semen_absorb(character_id: int, true_add_time: int, body_part: int):
   now_character_data.dirty.body_semen[body_part][2] = new_lv
 
 
-def change_character_persistent_state(character_id: int):
+def change_character_persistent_state(character_id: int) -> None:
   """
   结算角色的状态是否会持续\n
   Keyword arguments:\n

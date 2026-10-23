@@ -17,8 +17,8 @@ line_feed.width = 1
 
 
 def general_movement_module(
-    character_id: int, target_scene: list, show_info_flag=True
-):
+    character_id: int, target_scene: list, show_info_flag: bool = True
+) -> bool:
   """
   通用移动模块\n
   Keyword arguments:\n
@@ -72,7 +72,7 @@ def general_movement_module(
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.WAIT_5_MIN)
-def character_wait_5_min(character_id: int):
+def character_wait_5_min(character_id: int) -> None:
   """
   等待5分钟
   Keyword arguments:
@@ -87,7 +87,7 @@ def character_wait_5_min(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.WAIT_10_MIN)
-def character_wait_10_min(character_id: int):
+def character_wait_10_min(character_id: int) -> None:
   """
   等待10分钟
   Keyword arguments:
@@ -101,7 +101,7 @@ def character_wait_10_min(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.WAIT_30_MIN)
-def character_wait_30_min(character_id: int):
+def character_wait_30_min(character_id: int) -> None:
   """
   等待30分钟，并取消跟随状态
   Keyword arguments:
@@ -116,7 +116,7 @@ def character_wait_30_min(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MOVE_TO_DORMITORY)
-def character_move_to_dormitory(character_id: int):
+def character_move_to_dormitory(character_id: int) -> None:
   """
   移动至所在宿舍
   Keyword arguments:
@@ -135,7 +135,7 @@ def character_move_to_dormitory(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.SLEEP)
-def character_sleep(character_id: int):
+def character_sleep(character_id: int) -> None:
   """
   睡觉
   Keyword arguments:
@@ -181,7 +181,7 @@ def character_sleep(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.REST)
-def character_rest(character_id: int):
+def character_rest(character_id: int) -> None:
   """
   休息
   Keyword arguments:
@@ -197,7 +197,7 @@ def character_rest(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_RAND_SCENE
 )
-def character_move_to_rand_scene(character_id: int):
+def character_move_to_rand_scene(character_id: int) -> None:
   """
   移动至随机场景
   Keyword arguments:
@@ -216,7 +216,7 @@ def character_move_to_rand_scene(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MOVE_TO_DR_OFFICE)
-def character_move_to_dr_office(character_id: int):
+def character_move_to_dr_office(character_id: int) -> None:
   """
   移动至博士办公室
   Keyword arguments:
@@ -229,7 +229,7 @@ def character_move_to_dr_office(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MOVE_TO_DR_ROOM)
-def character_move_to_dr_room(character_id: int):
+def character_move_to_dr_room(character_id: int) -> None:
   """
   移动至博士房间
   Keyword arguments:
@@ -242,7 +242,7 @@ def character_move_to_dr_room(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MOVE_TO_TOILET)
-def character_move_to_toilet(character_id: int):
+def character_move_to_toilet(character_id: int) -> None:
   """
   移动至洗手间
   Keyword arguments:
@@ -311,7 +311,7 @@ def character_move_to_toilet(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MOVE_TO_KITCHEN)
-def character_move_to_kitchen(character_id: int):
+def character_move_to_kitchen(character_id: int) -> None:
   """
   移动至厨房
   Keyword arguments:
@@ -324,7 +324,7 @@ def character_move_to_kitchen(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MOVE_TO_FOODSHOP)
-def character_move_to_foodshop(character_id: int):
+def character_move_to_foodshop(character_id: int) -> None:
   """
   移动至食物商店
   Keyword arguments:
@@ -358,7 +358,7 @@ def character_move_to_foodshop(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_DINING_HALL
 )
-def character_move_to_dining_hall(character_id: int):
+def character_move_to_dining_hall(character_id: int) -> None:
   """
   移动至食堂
   Keyword arguments:
@@ -371,7 +371,7 @@ def character_move_to_dining_hall(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MOVE_TO_CLINIC)
-def character_move_to_clinic(character_id: int):
+def character_move_to_clinic(character_id: int) -> None:
   """
   随机移动到门诊室（含急诊室）
   Keyword arguments:
@@ -394,7 +394,7 @@ def character_move_to_clinic(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_PHYSICAL_EXAMINATION
 )
-def character_move_to_physical_examination(character_id: int):
+def character_move_to_physical_examination(character_id: int) -> None:
   """
   移动至体检科，体检科满员时放弃今天的体检
   Keyword arguments:
@@ -412,7 +412,7 @@ def character_move_to_physical_examination(character_id: int):
   )
 
 
-def give_up_today_health_check(character_id: int):
+def give_up_today_health_check(character_id: int) -> None:
   """
   放弃今天的体检：清空今天的体检安排并退出等待体检名单，原地发呆1分钟后回到日常行动，下一个体检日照常抽选
   Keyword arguments:
@@ -430,7 +430,7 @@ def give_up_today_health_check(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_INPATIENT_DEPARTMENT
 )
-def character_move_to_inpatient_department(character_id: int):
+def character_move_to_inpatient_department(character_id: int) -> None:
   """
   移动至住院部
   Keyword arguments:
@@ -445,7 +445,7 @@ def character_move_to_inpatient_department(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_SURGERY_ROOM
 )
-def character_move_to_surgery_room(character_id: int):
+def character_move_to_surgery_room(character_id: int) -> None:
   """
   移动至手术室
   Keyword arguments:
@@ -458,7 +458,7 @@ def character_move_to_surgery_room(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MOVE_TO_HR_OFFICE)
-def character_move_to_hr_office(character_id: int):
+def character_move_to_hr_office(character_id: int) -> None:
   """
   移动到人事部办公室
   Keyword arguments:
@@ -473,7 +473,7 @@ def character_move_to_hr_office(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_LIBRARY_OFFICE
 )
-def character_move_to_library_office(character_id: int):
+def character_move_to_library_office(character_id: int) -> None:
   """
   移动到图书馆办公室
   Keyword arguments:
@@ -486,7 +486,7 @@ def character_move_to_library_office(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MOVE_TO_LIBRARY)
-def character_move_to_library(character_id: int):
+def character_move_to_library(character_id: int) -> None:
   """
   移动到图书馆
   Keyword arguments:
@@ -501,7 +501,7 @@ def character_move_to_library(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_CLASS_ROOM
 )
-def character_move_to_class_room(character_id: int):
+def character_move_to_class_room(character_id: int) -> None:
   """
   移动到教室
   Plan 22 改造：目标教室改为由课表决定。现在的调用方有三个（Plan 24 并入工作链后）：
@@ -566,7 +566,7 @@ def character_move_to_class_room(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_TEACHER_OFFICE
 )
-def character_move_to_teacher_office(character_id: int):
+def character_move_to_teacher_office(character_id: int) -> None:
   """
   移动到教师办公室
   Keyword arguments:
@@ -581,7 +581,7 @@ def character_move_to_teacher_office(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_GOLDEN_GAME_ROOM
 )
-def character_move_to_golden_game_room(character_id: int):
+def character_move_to_golden_game_room(character_id: int) -> None:
   """
   移动至黄澄澄游戏室
   Keyword arguments:
@@ -594,7 +594,7 @@ def character_move_to_golden_game_room(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MOVE_TO_NURSERY)
-def character_move_to_nursery(character_id: int):
+def character_move_to_nursery(character_id: int) -> None:
   """
   移动至育儿室
   Keyword arguments:
@@ -609,7 +609,7 @@ def character_move_to_nursery(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_CLASSIC_MUSIC_ROOM
 )
-def character_move_to_classic_music_room(character_id: int):
+def character_move_to_classic_music_room(character_id: int) -> None:
   """
   移动至夕照区音乐室
   Keyword arguments:
@@ -624,7 +624,7 @@ def character_move_to_classic_music_room(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_MODEN_MUSIC_ROOM
 )
-def character_move_to_moden_music_room(character_id: int):
+def character_move_to_moden_music_room(character_id: int) -> None:
   """
   移动至现代音乐排练室
   Keyword arguments:
@@ -639,7 +639,7 @@ def character_move_to_moden_music_room(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_MULTIMEDIA_ROOM
 )
-def character_move_to_multimedia_room(character_id: int):
+def character_move_to_multimedia_room(character_id: int) -> None:
   """
   移动至多媒体室
   Keyword arguments:
@@ -654,7 +654,7 @@ def character_move_to_multimedia_room(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_PHOTOGRAPHY_STUDIO
 )
-def character_move_to_photography_studio(character_id: int):
+def character_move_to_photography_studio(character_id: int) -> None:
   """
   移动至摄影爱好者影棚
   Keyword arguments:
@@ -669,7 +669,7 @@ def character_move_to_photography_studio(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_AQUAPIT_EXPERIENTORIUM
 )
-def character_move_to_aquapit_experientorium(character_id: int):
+def character_move_to_aquapit_experientorium(character_id: int) -> None:
   """
   移动至大水坑快活体验屋
   Keyword arguments:
@@ -684,7 +684,7 @@ def character_move_to_aquapit_experientorium(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_BOARD_GAMES_ROOM
 )
-def character_move_to_board_games_room(character_id: int):
+def character_move_to_board_games_room(character_id: int) -> None:
   """
   移动至棋牌室
   Keyword arguments:
@@ -699,7 +699,7 @@ def character_move_to_board_games_room(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_FAIRY_BANQUET
 )
-def character_move_to_fairy_banquet(character_id: int):
+def character_move_to_fairy_banquet(character_id: int) -> None:
   """
   移动至糖果仙子宴会厅
   Keyword arguments:
@@ -712,7 +712,7 @@ def character_move_to_fairy_banquet(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MOVE_TO_BAR)
-def character_move_to_bar(character_id: int):
+def character_move_to_bar(character_id: int) -> None:
   """
   移动至酒吧
   Keyword arguments:
@@ -727,7 +727,7 @@ def character_move_to_bar(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_RESOURCE_EXCHANGE
 )
-def character_move_to_resource_exchange(character_id: int):
+def character_move_to_resource_exchange(character_id: int) -> None:
   """
   移动至资源交易所
   Keyword arguments:
@@ -742,7 +742,7 @@ def character_move_to_resource_exchange(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_AVANT_GARDE_ARCADE
 )
-def character_move_to_avant_garde_arcade(character_id: int):
+def character_move_to_avant_garde_arcade(character_id: int) -> None:
   """
   移动至前卫街机厅
   Keyword arguments:
@@ -757,7 +757,7 @@ def character_move_to_avant_garde_arcade(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_WALYRIA_CAKE_SHOP
 )
-def character_move_to_walyria_cake_shop(character_id: int):
+def character_move_to_walyria_cake_shop(character_id: int) -> None:
   """
   移动至瓦莱丽蛋糕店
   Keyword arguments:
@@ -772,7 +772,7 @@ def character_move_to_walyria_cake_shop(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_STYLING_STUDIO
 )
-def character_move_to_styling_studio(character_id: int):
+def character_move_to_styling_studio(character_id: int) -> None:
   """
   移动至造型工作室
   Keyword arguments:
@@ -787,7 +787,7 @@ def character_move_to_styling_studio(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_HAIR_SALON
 )
-def character_move_to_hair_salon(character_id: int):
+def character_move_to_hair_salon(character_id: int) -> None:
   """
   移动至理发店
   Keyword arguments:
@@ -800,7 +800,7 @@ def character_move_to_hair_salon(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MOVE_TO_TEAHOUSE)
-def character_move_to_teahouse(character_id: int):
+def character_move_to_teahouse(character_id: int) -> None:
   """
   移动至山城茶馆
   Keyword arguments:
@@ -813,7 +813,7 @@ def character_move_to_teahouse(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MOVE_TO_CAFÉ)
-def character_move_to_café(character_id: int):
+def character_move_to_café(character_id: int) -> None:
   """
   移动至哥伦比亚咖啡馆
   Keyword arguments:
@@ -828,7 +828,7 @@ def character_move_to_café(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_LIGHT_STORE
 )
-def character_move_to_light_store(character_id: int):
+def character_move_to_light_store(character_id: int) -> None:
   """
   移动至花草灯艺屋
   Keyword arguments:
@@ -841,7 +841,7 @@ def character_move_to_light_store(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MOVE_TO_PIZZERIA)
-def character_move_to_pizzeria(character_id: int):
+def character_move_to_pizzeria(character_id: int) -> None:
   """
   移动至快捷连锁披萨店
   Keyword arguments:
@@ -856,7 +856,7 @@ def character_move_to_pizzeria(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_SEVEN_CITIES_RESTAURANT
 )
-def character_move_to_seven_cities_restaurant(character_id: int):
+def character_move_to_seven_cities_restaurant(character_id: int) -> None:
   """
   移动至七城风情餐厅
   Keyword arguments:
@@ -869,7 +869,7 @@ def character_move_to_seven_cities_restaurant(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MOVE_TO_BURGER)
-def character_move_to_burger_joint(character_id: int):
+def character_move_to_burger_joint(character_id: int) -> None:
   """
   移动至约翰老妈汉堡店
   Keyword arguments:
@@ -884,7 +884,7 @@ def character_move_to_burger_joint(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_HEALTHY_DINER
 )
-def character_move_to_healthy_diner(character_id: int):
+def character_move_to_healthy_diner(character_id: int) -> None:
   """
   移动至健康快餐店
   Keyword arguments:
@@ -899,7 +899,7 @@ def character_move_to_healthy_diner(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_LUNGMEN_EATERY
 )
-def character_move_to_lungmen_eatery(character_id: int):
+def character_move_to_lungmen_eatery(character_id: int) -> None:
   """
   移动至龙门食坊
   Keyword arguments:
@@ -914,7 +914,7 @@ def character_move_to_lungmen_eatery(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_SWIMMING_POOL
 )
-def character_move_to_swimming_pool(character_id: int):
+def character_move_to_swimming_pool(character_id: int) -> None:
   """
   移动至游泳池
   Keyword arguments:
@@ -927,7 +927,7 @@ def character_move_to_swimming_pool(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MOVE_TO_GYM_ROOM)
-def character_move_to_gym_room(character_id: int):
+def character_move_to_gym_room(character_id: int) -> None:
   """
   移动至健身区
   Keyword arguments:
@@ -940,7 +940,7 @@ def character_move_to_gym_room(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MOVE_TO_FOOT_BATH)
-def character_move_to_foot_bath(character_id: int):
+def character_move_to_foot_bath(character_id: int) -> None:
   """
   移动至足浴区
   Keyword arguments:
@@ -953,7 +953,7 @@ def character_move_to_foot_bath(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MOVE_TO_SAUNA)
-def character_move_to_sauna(character_id: int):
+def character_move_to_sauna(character_id: int) -> None:
   """
   移动至桑拿房
   Keyword arguments:
@@ -966,7 +966,7 @@ def character_move_to_sauna(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MOVE_TO_SPA_ROOM)
-def character_move_to_spa_room(character_id: int):
+def character_move_to_spa_room(character_id: int) -> None:
   """
   移动至水疗房
   Keyword arguments:
@@ -979,7 +979,7 @@ def character_move_to_spa_room(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MOVE_TO_ONSEN)
-def character_move_to_onsen(character_id: int):
+def character_move_to_onsen(character_id: int) -> None:
   """
   移动至温泉
   Keyword arguments:
@@ -994,7 +994,7 @@ def character_move_to_onsen(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_MAINTENANCE_DEPARTMENT
 )
-def character_move_to_maintenance_department(character_id: int):
+def character_move_to_maintenance_department(character_id: int) -> None:
   """
   移动至运维部
   Keyword arguments:
@@ -1009,7 +1009,7 @@ def character_move_to_maintenance_department(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_BLACKSMITH_SHOP
 )
-def character_move_to_blacksmith_shop(character_id: int):
+def character_move_to_blacksmith_shop(character_id: int) -> None:
   """
   移动至铁匠铺
   Keyword arguments:
@@ -1024,7 +1024,7 @@ def character_move_to_blacksmith_shop(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_POWER_DISPATCH
 )
-def character_move_to_power_dispatch(character_id: int):
+def character_move_to_power_dispatch(character_id: int) -> None:
   """
   移动至动力控制室
   Keyword arguments:
@@ -1039,7 +1039,7 @@ def character_move_to_power_dispatch(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_DIPLOMATIC_OFFICE
 )
-def character_move_to_diplomatic_office(character_id: int):
+def character_move_to_diplomatic_office(character_id: int) -> None:
   """
   移动至外交官办公室
   Keyword arguments:
@@ -1054,7 +1054,7 @@ def character_move_to_diplomatic_office(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_HERB_GARDEN
 )
-def character_move_to_herb_garden(character_id: int):
+def character_move_to_herb_garden(character_id: int) -> None:
   """
   移动至药田
   Keyword arguments:
@@ -1069,7 +1069,7 @@ def character_move_to_herb_garden(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_GREENHOUSE
 )
-def character_move_to_greenhouse(character_id: int):
+def character_move_to_greenhouse(character_id: int) -> None:
   """
   移动至温室
   Keyword arguments:
@@ -1084,7 +1084,7 @@ def character_move_to_greenhouse(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_HUMILIATION_ROOM
 )
-def character_move_to_humiliation_room(character_id: int):
+def character_move_to_humiliation_room(character_id: int) -> None:
   """
   移动至调教室
   Keyword arguments:
@@ -1099,7 +1099,7 @@ def character_move_to_humiliation_room(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_WARDEN_OFFICE
 )
-def character_move_to_warden_office(character_id: int):
+def character_move_to_warden_office(character_id: int) -> None:
   """
   移动至监狱长办公室
   Keyword arguments:
@@ -1112,7 +1112,7 @@ def character_move_to_warden_office(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MOVE_TO_REST_ROOM)
-def character_move_to_rest_room(character_id: int):
+def character_move_to_rest_room(character_id: int) -> None:
   """
   移动至休息室
   Keyword arguments:
@@ -1157,7 +1157,7 @@ def character_move_to_rest_room(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_RESTAURANT
 )
-def character_move_to_restaurant(character_id: int):
+def character_move_to_restaurant(character_id: int) -> None:
   """
   移动至餐馆（随机某个正餐餐馆）
   Keyword arguments:
@@ -1184,7 +1184,7 @@ def character_move_to_restaurant(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_MAINTENANCE_PLACE
 )
-def character_move_to_maintenance_place(character_id: int):
+def character_move_to_maintenance_place(character_id: int) -> None:
   """
   移动至检修地点
   Keyword arguments:
@@ -1205,7 +1205,7 @@ def character_move_to_maintenance_place(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_PRODUCTION_WORKSHOP
 )
-def character_move_to_production_workshop(character_id: int):
+def character_move_to_production_workshop(character_id: int) -> None:
   """
   移动至生产车间
   Keyword arguments:
@@ -1254,7 +1254,7 @@ def character_move_to_production_workshop(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_BATHZONE_LOCKER_ROOM
 )
-def character_move_to_bathzone_locker_room(character_id: int):
+def character_move_to_bathzone_locker_room(character_id: int) -> None:
   """
   移动至大浴场的更衣室
   Keyword arguments:
@@ -1276,7 +1276,7 @@ def character_move_to_bathzone_locker_room(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_BATHZONE_REST_ROOM
 )
-def character_move_to_bathzone_rest_room(character_id: int):
+def character_move_to_bathzone_rest_room(character_id: int) -> None:
   """
   移动至大浴场的休息室
   Keyword arguments:
@@ -1298,7 +1298,7 @@ def character_move_to_bathzone_rest_room(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_TRAINING_LOCKER_ROOM
 )
-def character_move_to_training_locker_room(character_id: int):
+def character_move_to_training_locker_room(character_id: int) -> None:
   """
   移动至训练场的更衣室
   Keyword arguments:
@@ -1318,7 +1318,7 @@ def character_move_to_training_locker_room(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MOVE_TO_BATH_ROOM)
-def character_move_to_bath_room(character_id: int):
+def character_move_to_bath_room(character_id: int) -> None:
   """
   移动至淋浴室
   Keyword arguments:
@@ -1345,7 +1345,7 @@ def character_move_to_bath_room(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MOVE_TO_TRAINING_ROOM
 )
-def character_move_to_training_room(character_id: int):
+def character_move_to_training_room(character_id: int) -> None:
   """
   根据职业自动移动至对应训练室
   Keyword arguments:
@@ -1365,7 +1365,7 @@ def character_move_to_training_room(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MOVE_TO_PLAYER)
-def character_move_to_player(character_id: int):
+def character_move_to_player(character_id: int) -> None:
   """
   移动至玩家位置
   Keyword arguments:
@@ -1401,7 +1401,7 @@ def character_move_to_player(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.CONTINUE_MOVE)
-def character_continue_move(character_id: int):
+def character_continue_move(character_id: int) -> None:
   """
   继续移动
   Keyword arguments:
@@ -1452,7 +1452,7 @@ def character_continue_move(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.CHAT_RAND_CHARACTER
 )
-def character_chat_rand_character(character_id: int):
+def character_chat_rand_character(character_id: int) -> None:
   """
   角色和场景内玩家以外的随机角色聊天
   Keyword arguments:
@@ -1470,7 +1470,7 @@ def character_chat_rand_character(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.STROKE_RAND_CHARACTER
 )
-def character_stroke_rand_character(character_id: int):
+def character_stroke_rand_character(character_id: int) -> None:
   """
   角色和场景内随机角色身体接触
   Keyword arguments:
@@ -1486,7 +1486,7 @@ def character_stroke_rand_character(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.CHAT_TO_DR)
-def character_chat_to_dr(character_id: int):
+def character_chat_to_dr(character_id: int) -> None:
   """
   角色和玩家聊天
   Keyword arguments:
@@ -1501,7 +1501,7 @@ def character_chat_to_dr(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.STROKE_TO_DR)
-def character_stroke_to_dr(character_id: int):
+def character_stroke_to_dr(character_id: int) -> None:
   """
   角色和玩家身体接触
   Keyword arguments:
@@ -1516,7 +1516,7 @@ def character_stroke_to_dr(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MAKE_COFFEE_TO_DR)
-def character_make_coffee_to_dr(character_id: int):
+def character_make_coffee_to_dr(character_id: int) -> None:
   """
   角色给玩家泡咖啡
   Keyword arguments:
@@ -1533,7 +1533,7 @@ def character_make_coffee_to_dr(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MAKE_COFFEE_ADD_TO_DR
 )
-def character_make_coffee_Add_to_dr(character_id: int):
+def character_make_coffee_Add_to_dr(character_id: int) -> None:
   """
   角色给玩家泡咖啡（加料）
   Keyword arguments:
@@ -1550,7 +1550,7 @@ def character_make_coffee_Add_to_dr(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.SEE_H_AND_MOVE_TO_DORMITORY
 )
-def character_see_h_and_move_to_dormitory(character_id: int):
+def character_see_h_and_move_to_dormitory(character_id: int) -> None:
   """
   目睹玩家和其他角色H
   Keyword arguments:
@@ -1574,7 +1574,7 @@ def character_see_h_and_move_to_dormitory(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.SINGING)
-def character_singing(character_id: int):
+def character_singing(character_id: int) -> None:
   """
   唱歌
   Keyword arguments:
@@ -1588,7 +1588,7 @@ def character_singing(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.PLAY_INSTRUMENT)
-def character_play_instrument(character_id: int):
+def character_play_instrument(character_id: int) -> None:
   """
   角色演奏乐器
   Keyword arguments:
@@ -1602,7 +1602,7 @@ def character_play_instrument(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.ENTERTAIN_READ)
-def character_entertain_read(character_id: int):
+def character_entertain_read(character_id: int) -> None:
   """
   角色娱乐：读书
   Keyword arguments:
@@ -1623,7 +1623,7 @@ def character_entertain_read(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.ENTERTAIN_SINGING)
-def character_entertain_singing(character_id: int):
+def character_entertain_singing(character_id: int) -> None:
   """
   娱乐：唱歌
   Keyword arguments:
@@ -1639,7 +1639,7 @@ def character_entertain_singing(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ENTERTAIN_PLAY_CLASSIC_INSTRUMENT
 )
-def character_play_classic_instrument(character_id: int):
+def character_play_classic_instrument(character_id: int) -> None:
   """
   娱乐：演奏传统乐器
   Keyword arguments:
@@ -1655,7 +1655,7 @@ def character_play_classic_instrument(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ENTERTAIN_PLAY_MODEN_INSTRUMENT
 )
-def character_play_moden_instrument(character_id: int):
+def character_play_moden_instrument(character_id: int) -> None:
   """
   娱乐：演奏现代乐器
   Keyword arguments:
@@ -1671,7 +1671,7 @@ def character_play_moden_instrument(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ENTERTAIN_WATCH_MOVIE
 )
-def character_watch_movie(character_id: int):
+def character_watch_movie(character_id: int) -> None:
   """
   娱乐：看电影
   Keyword arguments:
@@ -1687,7 +1687,7 @@ def character_watch_movie(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ENTERTAIN_PHOTOGRAPHY
 )
-def character_photography(character_id: int):
+def character_photography(character_id: int) -> None:
   """
   娱乐：摄影
   Keyword arguments:
@@ -1703,7 +1703,7 @@ def character_photography(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ENTERTAIN_PLAY_WATER
 )
-def character_play_water(character_id: int):
+def character_play_water(character_id: int) -> None:
   """
   娱乐：玩水
   Keyword arguments:
@@ -1719,7 +1719,7 @@ def character_play_water(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ENTERTAIN_PLAY_CHESS
 )
-def character_play_chess(character_id: int):
+def character_play_chess(character_id: int) -> None:
   """
   娱乐：下棋
   Keyword arguments:
@@ -1735,7 +1735,7 @@ def character_play_chess(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ENTERTAIN_PLAY_MAHJONG
 )
-def character_play_mahjong(character_id: int):
+def character_play_mahjong(character_id: int) -> None:
   """
   娱乐：打麻将
   Keyword arguments:
@@ -1751,7 +1751,7 @@ def character_play_mahjong(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ENTERTAIN_PLAY_CARDS
 )
-def character_play_cards(character_id: int):
+def character_play_cards(character_id: int) -> None:
   """
   娱乐：打牌
   Keyword arguments:
@@ -1767,7 +1767,7 @@ def character_play_cards(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ENTERTAIN_REHEARSE_DANCE
 )
-def character_rehearse_dance(character_id: int):
+def character_rehearse_dance(character_id: int) -> None:
   """
   娱乐：排演舞剧
   Keyword arguments:
@@ -1783,7 +1783,7 @@ def character_rehearse_dance(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ENTERTAIN_PLAY_ARCADE_GAME
 )
-def character_play_arcade_game(character_id: int):
+def character_play_arcade_game(character_id: int) -> None:
   """
   娱乐：玩街机游戏
   Keyword arguments:
@@ -1799,7 +1799,7 @@ def character_play_arcade_game(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ENTERTAIN_SWIMMING
 )
-def character_swimming(character_id: int):
+def character_swimming(character_id: int) -> None:
   """
   娱乐：游泳
   Keyword arguments:
@@ -1815,7 +1815,7 @@ def character_swimming(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ENTERTAIN_TASTE_WINE
 )
-def character_taste_wine(character_id: int):
+def character_taste_wine(character_id: int) -> None:
   """
   娱乐：品酒
   Keyword arguments:
@@ -1831,7 +1831,7 @@ def character_taste_wine(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ENTERTAIN_TASTE_TEA
 )
-def character_taste_tea(character_id: int):
+def character_taste_tea(character_id: int) -> None:
   """
   娱乐：品茶
   Keyword arguments:
@@ -1847,7 +1847,7 @@ def character_taste_tea(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ENTERTAIN_TASTE_COFFEE
 )
-def character_taste_coffee(character_id: int):
+def character_taste_coffee(character_id: int) -> None:
   """
   娱乐：品咖啡
   Keyword arguments:
@@ -1863,7 +1863,7 @@ def character_taste_coffee(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ENTERTAIN_TASTE_DESSERT
 )
-def character_taste_dessert(character_id: int):
+def character_taste_dessert(character_id: int) -> None:
   """
   娱乐：品尝点心
   Keyword arguments:
@@ -1879,7 +1879,7 @@ def character_taste_dessert(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ENTERTAIN_TASTE_FOOD
 )
-def character_taste_food(character_id: int):
+def character_taste_food(character_id: int) -> None:
   """
   娱乐：品尝美食
   Keyword arguments:
@@ -1895,7 +1895,7 @@ def character_taste_food(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ENTERTAIN_TEND_EGGS
 )
-def character_tend_eggs(character_id: int):
+def character_tend_eggs(character_id: int) -> None:
   """
   娱乐：照料卵（有可鉴定卵时：自己是保育员或无在班保育员在场则自己鉴定，有在班保育员在场则等待其鉴定；否则进行孵化）
   Keyword arguments:
@@ -1935,7 +1935,7 @@ def character_tend_eggs(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.WORK_NURSERY_CARE)
-def character_work_nursery_care(character_id: int):
+def character_work_nursery_care(character_id: int) -> None:
   """
   工作：保育员照料育儿室——优先为在场角色（含自己）鉴定卵；无卵可鉴定时等权重照料孵化中的卵/照料婴儿
   Keyword arguments:
@@ -2019,7 +2019,7 @@ def character_work_nursery_care(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ENTERTAIN_STYLE_HAIR
 )
-def character_style_hair(character_id: int):
+def character_style_hair(character_id: int) -> None:
   """
   娱乐：修整发型
   Keyword arguments:
@@ -2035,7 +2035,7 @@ def character_style_hair(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ENTERTAIN_FULL_BODY_STYLING
 )
-def character_full_body_styling(character_id: int):
+def character_full_body_styling(character_id: int) -> None:
   """
   娱乐：全身造型服务
   Keyword arguments:
@@ -2051,7 +2051,7 @@ def character_full_body_styling(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ENTERTAIN_SOAK_FEET
 )
-def character_soak_feet(character_id: int):
+def character_soak_feet(character_id: int) -> None:
   """
   娱乐：泡脚
   Keyword arguments:
@@ -2067,7 +2067,7 @@ def character_soak_feet(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ENTERTAIN_STEAM_SAUNA
 )
-def character_steam_sauna(character_id: int):
+def character_steam_sauna(character_id: int) -> None:
   """
   娱乐：蒸桑拿
   Keyword arguments:
@@ -2083,7 +2083,7 @@ def character_steam_sauna(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ENTERTAIN_HYDROTHERAPY_TREATMENT
 )
-def character_hydrotherapy_treatment(character_id: int):
+def character_hydrotherapy_treatment(character_id: int) -> None:
   """
   娱乐：水疗护理
   Keyword arguments:
@@ -2099,7 +2099,7 @@ def character_hydrotherapy_treatment(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ENTERTAIN_ONSEN_BATH
 )
-def character_onsen_bath(character_id: int):
+def character_onsen_bath(character_id: int) -> None:
   """
   娱乐：泡温泉
   Keyword arguments:
@@ -2115,7 +2115,7 @@ def character_onsen_bath(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.SINGING_RAND_CHARACTER
 )
-def character_singing_to_rand_character(character_id: int):
+def character_singing_to_rand_character(character_id: int) -> None:
   """
   唱歌给房间里随机角色听
   Keyword arguments:
@@ -2133,7 +2133,7 @@ def character_singing_to_rand_character(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.PLAY_INSTRUMENT_RAND_CHARACTER
 )
-def character_play_instrument_to_rand_character(character_id: int):
+def character_play_instrument_to_rand_character(character_id: int) -> None:
   """
   演奏乐器给房间里随机角色听
   Keyword arguments:
@@ -2149,7 +2149,7 @@ def character_play_instrument_to_rand_character(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.PEE)
-def character_pee(character_id: int):
+def character_pee(character_id: int) -> None:
   """
   角色解手
   Keyword arguments:
@@ -2173,7 +2173,7 @@ def character_pee(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.START_SHOWER)
-def character_start_shower(character_id: int):
+def character_start_shower(character_id: int) -> None:
   """
   进入要脱衣服（洗澡）状态
   Keyword arguments:
@@ -2188,7 +2188,7 @@ def character_start_shower(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.SIWM_1)
-def character_swim_1(character_id: int):
+def character_swim_1(character_id: int) -> None:
   """
   进入要换泳衣状态
   Keyword arguments:
@@ -2203,7 +2203,7 @@ def character_swim_1(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.SIWM_2)
-def character_swim_2(character_id: int):
+def character_swim_2(character_id: int) -> None:
   """
   脱掉衣服并换上泳衣并进入要游泳状态
   Keyword arguments:
@@ -2219,7 +2219,7 @@ def character_swim_2(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.START_BATHHOUSE_ENTERTAINMENT
 )
-def character_start_bathhouse_entertainment(character_id: int):
+def character_start_bathhouse_entertainment(character_id: int) -> None:
   """
   进入要去大浴场娱乐_要更衣状态
   Keyword arguments:
@@ -2236,7 +2236,7 @@ def character_start_bathhouse_entertainment(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.FOOT_CLOTH_TO_LOCKER
 )
-def character_foot_cloth_to_locker(character_id: int):
+def character_foot_cloth_to_locker(character_id: int) -> None:
   """
   袜子和鞋子转移到衣柜里
   Keyword arguments:
@@ -2252,7 +2252,7 @@ def character_foot_cloth_to_locker(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.WEAR_TO_LOCKER_AND_GET_SHOWER_CLOTH
 )
-def character_wear_to_locker_and_get_shower_cloth(character_id: int):
+def character_wear_to_locker_and_get_shower_cloth(character_id: int) -> None:
   """
   当前身上衣服转移到衣柜里，并换上浴帽和浴巾
   Keyword arguments:
@@ -2272,7 +2272,7 @@ def character_wear_to_locker_and_get_shower_cloth(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.CLEAN_WEAR_AND_LOCKER_TO_WEAR
 )
-def character_clean_wear_and_locker_to_wear(character_id: int):
+def character_clean_wear_and_locker_to_wear(character_id: int) -> None:
   """
   清空身上的衣服然后穿回衣柜的衣服，如果有浴场或游泳娱乐flag则置0
   Keyword arguments:
@@ -2296,7 +2296,7 @@ def character_clean_wear_and_locker_to_wear(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.HELP_BUY_FOOD_1)
-def character_help_buy_food(character_id: int):
+def character_help_buy_food(character_id: int) -> None:
   """
   进入要买饭状态
   Keyword arguments:
@@ -2317,7 +2317,7 @@ def character_help_buy_food(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.HELP_MAKE_FOOD_1)
-def character_help_make_food(character_id: int):
+def character_help_make_food(character_id: int) -> None:
   """
   进入要做饭状态
   Keyword arguments:
@@ -2340,7 +2340,7 @@ def character_help_make_food(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MORNING_SALUTATION_FLAG_1
 )
-def character_morning_salutation_flag_1(character_id: int):
+def character_morning_salutation_flag_1(character_id: int) -> None:
   """
   进入要早安问候状态
   Keyword arguments:
@@ -2360,7 +2360,7 @@ def character_morning_salutation_flag_1(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.NIGHT_SALUTATION_FLAG_1
 )
-def character_night_salutation_flag_1(character_id: int):
+def character_night_salutation_flag_1(character_id: int) -> None:
   """
   进入要晚安问候状态
   Keyword arguments:
@@ -2378,7 +2378,7 @@ def character_night_salutation_flag_1(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.START_MILK)
-def character_start_milk(character_id: int):
+def character_start_milk(character_id: int) -> None:
   """
   进入要挤奶状态
   Keyword arguments:
@@ -2393,7 +2393,7 @@ def character_start_milk(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MAKE_MILK)
-def character_make_milk(character_id: int):
+def character_make_milk(character_id: int) -> None:
   """
   角色挤奶
   Keyword arguments:
@@ -2407,7 +2407,7 @@ def character_make_milk(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.START_MASTUREBATE)
-def character_start_masturebate(character_id: int):
+def character_start_masturebate(character_id: int) -> None:
   """
   进入要自慰或要逆推状态
   Keyword arguments:
@@ -2443,7 +2443,7 @@ def character_start_masturebate(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.MASTUREBATE)
-def character_masturebate(character_id: int):
+def character_masturebate(character_id: int) -> None:
   """
   角色自慰
   Keyword arguments:
@@ -2459,7 +2459,7 @@ def character_masturebate(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.GET_CHARA_NORMAL_CLOTH_AND_DAY_EQIP
 )
-def character_get_chara_normal_cloth_and_day_equip(character_id: int):
+def character_get_chara_normal_cloth_and_day_equip(character_id: int) -> None:
   """
   起床（换上正常服装+调整管理白天道具）
   Keyword arguments:
@@ -2490,7 +2490,7 @@ def character_reset_shower_status_and_get_normal_cloth(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.START_MASTUREBATE_BEFORE_SLEEP
 )
-def character_start_masturebate_before_sleep(character_id: int):
+def character_start_masturebate_before_sleep(character_id: int) -> None:
   """
   进入要睡前自慰状态
   Keyword arguments:
@@ -2505,7 +2505,7 @@ def character_start_masturebate_before_sleep(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.JOIN_GROUP_SEX)
-def character_join_group_sex(character_id: int):
+def character_join_group_sex(character_id: int) -> None:
   """
   加入群交
   Keyword arguments:
@@ -2521,7 +2521,7 @@ def character_join_group_sex(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.STOP_JOIN_GROUP_SEX
 )
-def character_stop_join_group_sex(character_id: int):
+def character_stop_join_group_sex(character_id: int) -> None:
   """
   停止加入群交
   Keyword arguments:
@@ -2538,7 +2538,7 @@ def character_stop_join_group_sex(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.WAIT_FOR_HEALTH_CHECK
 )
-def character_wait_for_health_check(character_id: int):
+def character_wait_for_health_check(character_id: int) -> None:
   """
   等待体检
   Keyword arguments:
@@ -2557,7 +2557,7 @@ def character_wait_for_health_check(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.WEAR_TO_LOCKER)
-def character_wear_to_locker(character_id: int):
+def character_wear_to_locker(character_id: int) -> None:
   """
   当前身上衣服转移到衣柜里
   Keyword arguments:
@@ -2575,7 +2575,7 @@ def character_wear_to_locker(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.LOCKER_TO_WEAR)
-def character_locker_to_wear(character_id: int):
+def character_locker_to_wear(character_id: int) -> None:
   """
   当前衣柜里衣服转移到身上，如果有浴场flag则置0
   Keyword arguments:
@@ -2596,7 +2596,7 @@ def character_locker_to_wear(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.TAKE_SHOWER)
-def character_take_shower(character_id: int):
+def character_take_shower(character_id: int) -> None:
   """
   角色淋浴
   Keyword arguments:
@@ -2610,7 +2610,7 @@ def character_take_shower(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.SIMPLE_SHOWER)
-def character_simple_shower(character_id: int):
+def character_simple_shower(character_id: int) -> None:
   """
   角色简易洗澡
   Keyword arguments:
@@ -2625,7 +2625,7 @@ def character_simple_shower(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.GET_SHOWER_CLOTH_AND_CLEAN_LOCKER
 )
-def character_get_shower_cloth_and_clean_locker(character_id: int):
+def character_get_shower_cloth_and_clean_locker(character_id: int) -> None:
   """
   角色换上浴帽和浴巾并清空衣柜
   Keyword arguments:
@@ -2643,7 +2643,7 @@ def character_get_shower_cloth_and_clean_locker(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.START_EAT_FOOD)
-def character_start_eat_food(character_id: int):
+def character_start_eat_food(character_id: int) -> None:
   """
   进入要取餐状态
   Keyword arguments:
@@ -2696,7 +2696,7 @@ def character_start_eat_food(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.BUY_RAND_FOOD_AT_FOODSHOP
 )
-def character_buy_rand_food_at_foodshop(character_id: int):
+def character_buy_rand_food_at_foodshop(character_id: int) -> None:
   """
   在食物商店购买随机食物
   Keyword arguments:
@@ -2801,7 +2801,7 @@ def character_buy_rand_food_at_foodshop(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.EAT_BAG_RAND_FOOD)
-def character_eat_rand_food(character_id: int):
+def character_eat_rand_food(character_id: int) -> None:
   """
   角色随机食用背包中的食物
   Keyword arguments:
@@ -2843,7 +2843,7 @@ def character_eat_rand_food(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.START_SLEEP)
-def character_start_sleep(character_id: int):
+def character_start_sleep(character_id: int) -> None:
   """
   进入要睡眠状态
   Keyword arguments:
@@ -2858,7 +2858,7 @@ def character_start_sleep(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.START_REST)
-def character_start_rest(character_id: int):
+def character_start_rest(character_id: int) -> None:
   """
   进入要休息状态
   Keyword arguments:
@@ -2873,7 +2873,7 @@ def character_start_rest(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.START_PEE)
-def character_start_pee(character_id: int):
+def character_start_pee(character_id: int) -> None:
   """
   进入要撒尿状态
   Keyword arguments:
@@ -2888,7 +2888,7 @@ def character_start_pee(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.WORK_CURE_PATIENT)
-def character_work_cure_patient(character_id: int):
+def character_work_cure_patient(character_id: int) -> None:
   """
   角色工作：治疗病人
   Keyword arguments:
@@ -2905,7 +2905,7 @@ def character_work_cure_patient(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.WORK_WARD_ROUND)
-def character_work_ward_round(character_id: int):
+def character_work_ward_round(character_id: int) -> None:
   """角色工作：病房查房"""
 
   character_data: game_type.Character = cache.character_data[character_id]
@@ -2920,7 +2920,7 @@ def character_work_ward_round(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.WORK_START_SURGERY
 )
-def character_work_start_surgery(character_id: int):
+def character_work_start_surgery(character_id: int) -> None:
   """
   工作：进入要手术状态，并指定一个对象病人
   Keyword arguments:
@@ -2972,7 +2972,7 @@ def character_work_start_surgery(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.WORK_PERFORM_SURGERY
 )
-def character_work_perform_surgery(character_id: int):
+def character_work_perform_surgery(character_id: int) -> None:
   """角色工作：执行手术治疗"""
 
   character_data: game_type.Character = cache.character_data[character_id]
@@ -2985,7 +2985,7 @@ def character_work_perform_surgery(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.WORK_RECRUIT)
-def character_work_recruit(character_id: int):
+def character_work_recruit(character_id: int) -> None:
   """
   角色工作：招募干员
   Keyword arguments:
@@ -2999,7 +2999,7 @@ def character_work_recruit(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.WORK_TEACH)
-def character_work_teach(character_id: int):
+def character_work_teach(character_id: int) -> None:
   """
   角色工作：授课
   Keyword arguments:
@@ -3045,7 +3045,7 @@ def character_work_teach(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.WORK_ATTENT_CLASS)
-def character_attend_class(character_id: int):
+def character_attend_class(character_id: int) -> None:
   """
   角色工作：上学
   Keyword arguments:
@@ -3066,7 +3066,7 @@ def character_attend_class(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.EDUCATION_SELF_STUDY
 )
-def character_education_self_study(character_id: int):
+def character_education_self_study(character_id: int) -> None:
   """
   上课：本节无可用教师，降级为自习（Plan 22 §3.5）
   与听课的区别只在结算：自习走 548 效果，基础值降档且不吃师生等级差
@@ -3088,7 +3088,7 @@ def character_education_self_study(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.EDUCATION_SKIP_CLASS
 )
-def character_education_skip_class(character_id: int):
+def character_education_skip_class(character_id: int) -> None:
   """
   上课：翘课（Plan 22 §3.19）
   还在教室里就先溜回自己宿舍，人已经不在教室了才开始摸鱼——
@@ -3128,7 +3128,7 @@ def character_education_skip_class(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.EDUCATION_MOVE_TO_COURSE_PLACE
 )
-def character_education_move_to_course_place(character_id: int):
+def character_education_move_to_course_place(character_id: int) -> None:
   """
   上课：移动到个人式课型（体育/兴趣/实习）的上课地点（Plan 22 §3.21）
   Keyword arguments:
@@ -3151,7 +3151,7 @@ def character_education_move_to_course_place(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.EDUCATION_DO_COURSE
 )
-def character_education_do_course(character_id: int):
+def character_education_do_course(character_id: int) -> None:
   """
   上课：在个人式课型的地点执行该课对应的既有行为（Plan 22 §3.21）
   体育课与兴趣课执行的是自带效果串的既有行为，学生侧的学习收益无需另加结算；
@@ -3220,7 +3220,7 @@ def character_education_do_course(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.EDUCATION_WAIT_NEXT_PERIOD
 )
-def character_education_wait_next_period(character_id: int):
+def character_education_wait_next_period(character_id: int) -> None:
   """
   等到下一节开始（Plan 22 第五轮）：教师本节没课时在教师办公室待命，提前到了教室的师生原地等开课
   时长截到下一节开始，最少1分钟、最多30分钟——不截会一分钟一分钟地空转，截太长又会误了下一节
@@ -3252,7 +3252,7 @@ def character_education_wait_next_period(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.EDUCATION_ABSENT_REST
 )
-def character_education_absent_rest(character_id: int):
+def character_education_absent_rest(character_id: int) -> None:
   """
   上课：体力不足缺这一节课，记一节缺课后原地休息（Plan 24）
   记缺课原先写在 AI 判定里，前提不能有副作用，所以挪进状态机；settle_absent 自带同一节只记一次的去重
@@ -3268,7 +3268,7 @@ def character_education_absent_rest(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.EDUCATION_JOIN_SEX_CLASS
 )
-def character_education_join_sex_class(character_id: int):
+def character_education_join_sex_class(character_id: int) -> None:
   """
   上课：走进正在上性技实操课的教室，直接加入课堂 H 并记一节出勤（Plan 25 §3.2，Plan 26 §3.3 泛化）
   两个调用方：
@@ -3299,7 +3299,7 @@ def character_education_join_sex_class(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.WORK_LIBRARY_1)
-def character_work_library_1(character_id: int):
+def character_work_library_1(character_id: int) -> None:
   """
   工作：三成去图书馆，七成原地等待30分钟
   Keyword arguments:
@@ -3320,7 +3320,7 @@ def character_work_library_1(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.WORK_LIBRARY_2)
-def character_work_library_2(character_id: int):
+def character_work_library_2(character_id: int) -> None:
   """
   工作：三成去图书馆办公室，七成看书
   Keyword arguments:
@@ -3358,7 +3358,7 @@ def character_work_library_2(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.WORK_MAINTENANCE_1
 )
-def character_work_maintenance_1(character_id: int):
+def character_work_maintenance_1(character_id: int) -> None:
   """
   工作：进入要检修状态，并随机指定一个检修地点
   Keyword arguments:
@@ -3382,7 +3382,7 @@ def character_work_maintenance_1(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.WORK_MAINTENANCE_2
 )
-def character_work_maintenance_2(character_id: int):
+def character_work_maintenance_2(character_id: int) -> None:
   """
   角色工作：维护设施，并清零检修状态
   Keyword arguments:
@@ -3419,7 +3419,7 @@ def character_work_maintenance_2(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.WORK_REPAIR_EQUIPMENT
 )
-def character_work_repair_equipment(character_id: int):
+def character_work_repair_equipment(character_id: int) -> None:
   """
   角色工作：修理装备
   Keyword arguments:
@@ -3434,7 +3434,7 @@ def character_work_repair_equipment(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.WORK_COOK)
-def character_work_cook(character_id: int):
+def character_work_cook(character_id: int) -> None:
   """
   角色工作：做饭
   Keyword arguments:
@@ -3452,7 +3452,7 @@ def character_work_cook(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.ASSISTANT_MAKE_FOOD
 )
-def character_assistant_work_cook(character_id: int):
+def character_assistant_work_cook(character_id: int) -> None:
   """
   角色助理：做饭
   Keyword arguments:
@@ -3473,7 +3473,7 @@ def character_assistant_work_cook(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MORNING_SALUTATION_1
 )
-def character_morning_salutation_1(character_id: int):
+def character_morning_salutation_1(character_id: int) -> None:
   """
   早安问候：叫起床
   Keyword arguments:
@@ -3497,7 +3497,7 @@ def character_morning_salutation_1(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MORNING_SALUTATION_2
 )
-def character_morning_salutation_2(character_id: int):
+def character_morning_salutation_2(character_id: int) -> None:
   """
   早安问候：早安吻
   Keyword arguments:
@@ -3521,7 +3521,7 @@ def character_morning_salutation_2(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.MORNING_SALUTATION_3
 )
-def character_morning_salutation_3(character_id: int):
+def character_morning_salutation_3(character_id: int) -> None:
   """
   早安问候：早安咬
   Keyword arguments:
@@ -3545,7 +3545,7 @@ def character_morning_salutation_3(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.NIGHT_SALUTATION_1
 )
-def character_night_salutation_1(character_id: int):
+def character_night_salutation_1(character_id: int) -> None:
   """
   晚安问候：催睡觉
   Keyword arguments:
@@ -3571,7 +3571,7 @@ def character_night_salutation_1(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.NIGHT_SALUTATION_2
 )
-def character_night_salutation_2(character_id: int):
+def character_night_salutation_2(character_id: int) -> None:
   """
   晚安问候：晚安吻
   Keyword arguments:
@@ -3596,7 +3596,7 @@ def character_night_salutation_2(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.NIGHT_SALUTATION_3
 )
-def character_night_salutation_3(character_id: int):
+def character_night_salutation_3(character_id: int) -> None:
   """
   晚安问候：晚安咬
   Keyword arguments:
@@ -3621,7 +3621,7 @@ def character_night_salutation_3(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.NIGHT_SALUTATION_FLAG_2
 )
-def character_night_salutation_flag_2(character_id: int):
+def character_night_salutation_flag_2(character_id: int) -> None:
   """
   进入已晚安问候状态
   Keyword arguments:
@@ -3641,7 +3641,7 @@ def character_night_salutation_flag_2(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.SELF_NIPPLE_CLAMP_SWITCH_CHANEG
 )
-def character_self_nipple_clamp_switch_chaneg(character_id: int):
+def character_self_nipple_clamp_switch_chaneg(character_id: int) -> None:
   """
   切换自己是否装备道具_乳头夹
   Keyword arguments:
@@ -3661,7 +3661,7 @@ def character_self_nipple_clamp_switch_chaneg(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.SELF_CLIT_CLAMP_SWITCH_CHANEG
 )
-def character_self_clit_clamp_switch_chaneg(character_id: int):
+def character_self_clit_clamp_switch_chaneg(character_id: int) -> None:
   """
   切换自己是否装备道具_阴蒂夹
   Keyword arguments:
@@ -3681,7 +3681,7 @@ def character_self_clit_clamp_switch_chaneg(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.SELF_V_VIBRATOR_SWITCH_CHANEG
 )
-def character_self_v_vibrator_switch_chaneg(character_id: int):
+def character_self_v_vibrator_switch_chaneg(character_id: int) -> None:
   """
   切换自己是否装备道具_V振动棒
   Keyword arguments:
@@ -3705,7 +3705,7 @@ def character_self_v_vibrator_switch_chaneg(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.SELF_A_VIBRATOR_SWITCH_CHANEG
 )
-def character_self_a_vibrator_switch_chaneg(character_id: int):
+def character_self_a_vibrator_switch_chaneg(character_id: int) -> None:
   """
   切换自己是否装备道具_A振动棒
   Keyword arguments:
@@ -3731,7 +3731,7 @@ def character_self_a_vibrator_switch_chaneg(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.WORK_PRODUCE)
-def character_work_produce(character_id: int):
+def character_work_produce(character_id: int) -> None:
   """
   角色工作：制造产品
   Keyword arguments:
@@ -3747,7 +3747,7 @@ def character_work_produce(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.WORK_OFFICIAL_WORK
 )
-def character_work_official_work(character_id: int):
+def character_work_official_work(character_id: int) -> None:
   """
   工作：处理公务
   Keyword arguments:
@@ -3761,7 +3761,7 @@ def character_work_official_work(character_id: int):
 
 
 @handle_state_machine.add_state_machine(constant.StateMachine.WORK_MASSAGE)
-def character_work_massage(character_id: int):
+def character_work_massage(character_id: int) -> None:
   """
   工作：按摩（自动寻找对象）
   Keyword arguments:
@@ -3794,7 +3794,7 @@ def character_work_massage(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.WORK_INVITE_VISITOR
 )
-def character_work_invite_visitor(character_id: int):
+def character_work_invite_visitor(character_id: int) -> None:
   """
   工作：邀请访客
   Keyword arguments:
@@ -3810,7 +3810,7 @@ def character_work_invite_visitor(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.WORK_PLANT_MANAGE_CROP
 )
-def character_work_plant_manage_crop(character_id: int):
+def character_work_plant_manage_crop(character_id: int) -> None:
   """
   工作：种植与养护作物
   Keyword arguments:
@@ -3826,7 +3826,7 @@ def character_work_plant_manage_crop(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.WORK_DEAL_WITH_DIPLOMACY
 )
-def character_work_deal_with_diplomacy(character_id: int):
+def character_work_deal_with_diplomacy(character_id: int) -> None:
   """
   工作：处理外交事宜
   Keyword arguments:
@@ -3842,7 +3842,7 @@ def character_work_deal_with_diplomacy(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.WORK_SEX_EXERCISES
 )
-def character_work_sex_exercises(character_id: int):
+def character_work_sex_exercises(character_id: int) -> None:
   """
   工作：性爱练习
   Keyword arguments:
@@ -3869,7 +3869,7 @@ def character_work_sex_exercises(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.WORK_COMBAT_TRAINING
 )
-def character_combat_training(character_id: int):
+def character_combat_training(character_id: int) -> None:
   """
   角色战斗训练
   Keyword arguments:
@@ -3885,7 +3885,7 @@ def character_combat_training(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.WORK_FITNESS_TRAINING
 )
-def character_fitness_training(character_id: int):
+def character_fitness_training(character_id: int) -> None:
   """
   角色健身锻炼
   Keyword arguments:
@@ -3901,7 +3901,7 @@ def character_fitness_training(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.WORK_TRAIN_PRISONER
 )
-def character_train_prisoner(character_id: int):
+def character_train_prisoner(character_id: int) -> None:
   """
   工作：对囚犯进行日常训练
   Keyword arguments:
@@ -3917,7 +3917,7 @@ def character_train_prisoner(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.WORK_MANAGE_FACILITY_POWER
 )
-def character_manage_facility_power(character_id: int):
+def character_manage_facility_power(character_id: int) -> None:
   """
   工作：调控设施供能
   Keyword arguments:
@@ -3933,7 +3933,7 @@ def character_manage_facility_power(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.WORK_INVESTIGATE_RESOURCE_MARKET
 )
-def character_investigate_resource_market(character_id: int):
+def character_investigate_resource_market(character_id: int) -> None:
   """
   工作：研判资源市场
   Keyword arguments:

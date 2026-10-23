@@ -30,7 +30,7 @@ line_feed.text = "\n"
 line_feed.width = 1
 
 
-def update_sleep():
+def update_sleep() -> None:
   """
   玩家睡觉时的刷新\n
   Keyword arguments:
@@ -174,7 +174,7 @@ def settle_character_juel(character_id: int) -> int:
   return 1
 
 
-def update_save():
+def update_save() -> None:
   """
   自动存档\n
   Keyword arguments:
@@ -200,7 +200,7 @@ def update_save():
   save_handle.establish_save("auto")
 
 
-def sanity_point_grow():
+def sanity_point_grow() -> None:
   """
   玩家理智值的自然成长\n
   Keyword arguments:
@@ -224,7 +224,7 @@ def sanity_point_grow():
     now_draw.draw()
 
 
-def refresh_temp_semen_max():
+def refresh_temp_semen_max() -> None:
   """
   刷新临时最大精液量\n
   """

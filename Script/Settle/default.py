@@ -53,7 +53,7 @@ def handle_nothing(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   空结算
   Keyword arguments:
@@ -73,7 +73,7 @@ def handle_add_small_hit_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   增加少量体力
   Keyword arguments:
@@ -108,7 +108,7 @@ def handle_add_small_mana_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   增加少量气力
   Keyword arguments:
@@ -138,7 +138,7 @@ def handle_add_interaction_favoravility(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   增加基础互动好感
   Keyword arguments:
@@ -162,7 +162,7 @@ def handle_down_interaction_favoravility(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   降低基础互动好感
   Keyword arguments:
@@ -186,7 +186,7 @@ def handle_add_small_trust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   增加基础互动信赖
   Keyword arguments:
@@ -210,7 +210,7 @@ def handle_down_small_trust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   降低基础互动信赖
   Keyword arguments:
@@ -234,7 +234,7 @@ def handle_sub_both_small_hit_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   双方减少少量体力（若没有交互对象则仅减少自己）
   Keyword arguments:
@@ -260,7 +260,7 @@ def handle_sub_both_small_mana_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   双方减少少量气力（若没有交互对象则仅减少自己）
   Keyword arguments:
@@ -286,7 +286,7 @@ def handle_sub_both_medium_hit_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   双方减少中量体力（若没有交互对象则仅减少自己）
   Keyword arguments:
@@ -313,7 +313,7 @@ def handle_sub_both_medium_mana_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   双方减少中量气力（若没有交互对象则仅减少自己）
   Keyword arguments:
@@ -340,7 +340,7 @@ def handle_sub_both_large_hit_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   双方减少大量体力（若没有交互对象则仅减少自己）
   Keyword arguments:
@@ -367,7 +367,7 @@ def handle_sub_both_large_mana_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   双方减少大量气力（若没有交互对象则仅减少自己）
   Keyword arguments:
@@ -394,7 +394,7 @@ def handle_sub_self_small_hit_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   减少自己少量体力
   Keyword arguments:
@@ -416,7 +416,7 @@ def handle_sub_self_small_mana_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   减少自己少量气力
   Keyword arguments:
@@ -438,7 +438,7 @@ def handle_sub_self_medium_hit_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   减少自己中量体力
   Keyword arguments:
@@ -460,7 +460,7 @@ def handle_sub_self_medium_mana_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   减少自己中量气力
   Keyword arguments:
@@ -482,7 +482,7 @@ def handle_sub_self_large_hit_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   减少自己大量体力
   Keyword arguments:
@@ -504,7 +504,7 @@ def handle_sub_self_large_mana_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   减少自己大量气力
   Keyword arguments:
@@ -526,7 +526,7 @@ def handle_sub_target_medium_hit_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   减少交互对象中量体力
   Keyword arguments:
@@ -553,7 +553,7 @@ def handle_sub_target_medium_mana_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   减少交互对象中量气力
   Keyword arguments:
@@ -580,7 +580,7 @@ def handle_sub_target_large_hit_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   减少交互对象大量体力
   Keyword arguments:
@@ -607,7 +607,7 @@ def handle_sub_target_large_mana_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   减少交互对象大量气力
   Keyword arguments:
@@ -634,7 +634,7 @@ def handle_mood_to_good(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己心情变为好
   Keyword arguments:
@@ -655,7 +655,7 @@ def handle_mood_to_normal(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己心情变为普通
   Keyword arguments:
@@ -676,7 +676,7 @@ def handle_mood_to_bad(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己心情变为不好
   Keyword arguments:
@@ -697,7 +697,7 @@ def handle_mood_to_angry(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己心情变为愤怒
   Keyword arguments:
@@ -718,7 +718,7 @@ def handle_target_mood_to_good(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象心情变为好
   Keyword arguments:
@@ -741,7 +741,7 @@ def handle_target_mood_to_normal(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象心情变为普通
   Keyword arguments:
@@ -764,7 +764,7 @@ def handle_target_mood_to_bad(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象心情变为不好
   Keyword arguments:
@@ -787,7 +787,7 @@ def handle_target_mood_to_angry(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象心情变为愤怒
   Keyword arguments:
@@ -810,7 +810,7 @@ def handle_scene_all_characters_desire_point_zero(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   场景内所有角色欲望值归零
   Keyword arguments:
@@ -838,7 +838,7 @@ def handle_add_both_small_hit_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   增加双方少量体力
   Keyword arguments:
@@ -895,7 +895,7 @@ def handle_add_both_small_mana_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   增加双方少量气力
   Keyword arguments:
@@ -943,7 +943,7 @@ def handle_move_to_target_scene(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   移动至目标场景
   Keyword arguments:
@@ -1129,7 +1129,7 @@ def handle_first_kiss(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   记录初吻
   Keyword arguments:
@@ -1200,7 +1200,7 @@ def handle_first_sex(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   记录处女
   Keyword arguments:
@@ -1300,7 +1300,7 @@ def handle_first_a_sex(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   记录A处女
   Keyword arguments:
@@ -1368,7 +1368,7 @@ def handle_first_u_sex(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   记录U处女
   Keyword arguments:
@@ -1425,7 +1425,7 @@ def handle_first_w_sex(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   记录W处女
   Keyword arguments:
@@ -1477,7 +1477,7 @@ def handle_day_first_meet_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己变为今天已见过面
   Keyword arguments:
@@ -1502,7 +1502,7 @@ def handle_day_first_meet_1(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己变为今天未见过面
   Keyword arguments:
@@ -1527,7 +1527,7 @@ def handle_first_kiss_to_penis(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   记录阴茎初吻
   Keyword arguments:
@@ -1566,7 +1566,7 @@ def handle_penetrating_vision_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   开启透视（含理智消耗）
   Keyword arguments:
@@ -1594,7 +1594,7 @@ def handle_penetrating_vision_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   关闭透视
   Keyword arguments:
@@ -1619,7 +1619,7 @@ def handle_hormone_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   开启信息素
   Keyword arguments:
@@ -1644,7 +1644,7 @@ def handle_hormone_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   关闭信息素
   Keyword arguments:
@@ -1669,7 +1669,7 @@ def handle_hypnosis_one(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   单人催眠（含理智消耗）
   Keyword arguments:
@@ -1743,7 +1743,7 @@ def handle_hypnosis_all(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   集体催眠（含理智消耗）
   Keyword arguments:
@@ -1837,7 +1837,7 @@ def handle_hypnosis_cancel(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   解除交互对象的催眠
   Keyword arguments:
@@ -1874,7 +1874,7 @@ def handle_target_hypnosis_increase_body_sensitivity_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   对方开启体控-敏感度提升（含理智消耗）
   Keyword arguments:
@@ -1906,7 +1906,7 @@ def handle_target_hypnosis_increase_body_sensitivity_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   对方关闭体控-敏感度提升
   Keyword arguments:
@@ -1934,7 +1934,7 @@ def handle_target_hypnosis_force_climax(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   对方开启体控-强制高潮（含理智消耗）
   Keyword arguments:
@@ -1970,7 +1970,7 @@ def handle_target_hypnosis_force_ovulation_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   对方开启体控-强制排卵（含理智消耗）
   Keyword arguments:
@@ -2008,7 +2008,7 @@ def handle_target_hypnosis_force_ovulation_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   对方关闭体控-强制排卵
   Keyword arguments:
@@ -2036,7 +2036,7 @@ def handle_target_hypnosis_blockhead_switch_change(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   对方切换体控-木头人开关（含理智消耗）
   Keyword arguments:
@@ -2077,7 +2077,7 @@ def handle_target_hypnosis_blockhead_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   对方关闭体控-木头人
   Keyword arguments:
@@ -2107,7 +2107,7 @@ def handle_target_hypnosis_active_h_switch_change(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   对方切换体控-逆推开关（含理智消耗）
   Keyword arguments:
@@ -2150,7 +2150,7 @@ def handle_target_hypnosis_active_h_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   对方关闭体控-逆推
   Keyword arguments:
@@ -2181,7 +2181,7 @@ def handle_target_hypnosis_pain_as_pleasure_switch_change(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   对方切换心控-苦痛快感化开关（含理智消耗）
   Keyword arguments:
@@ -2218,7 +2218,7 @@ def handle_target_hypnosis_pain_as_pleasure_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   对方关闭心控-苦痛快感化
   Keyword arguments:
@@ -2246,7 +2246,7 @@ def handle_time_stop_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   开启时停
   Keyword arguments:
@@ -2275,7 +2275,7 @@ def handle_time_stop_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   关闭时停
   Keyword arguments:
@@ -2300,7 +2300,7 @@ def handle_target_be_carried_in_time_stop(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象变成被时停搬运状态
   Keyword arguments:
@@ -2327,7 +2327,7 @@ def handle_target_not_be_carried_in_time_stop(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   清零自己的当前时停搬运对象
   Keyword arguments:
@@ -2350,7 +2350,7 @@ def handle_target_be_free_in_time_stop(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   将交互对象设为时停中自由状态（含理智消耗）
   Keyword arguments:
@@ -2378,7 +2378,7 @@ def handle_target_not_be_free_in_time_stop(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   清零自己的让某人时停中自由状态
   Keyword arguments:
@@ -2401,7 +2401,7 @@ def handle_npc_active_h_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己开启主动H
   Keyword arguments:
@@ -2426,7 +2426,7 @@ def handle_npc_active_h_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己关闭主动H
   Keyword arguments:
@@ -2451,7 +2451,7 @@ def handle_target_npc_active_h_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   对方开启主动H
   Keyword arguments:
@@ -2479,7 +2479,7 @@ def handle_target_npc_active_h_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   对方关闭主动H
   Keyword arguments:
@@ -2507,7 +2507,7 @@ def handle_pl_just_shoot_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   玩家变为前指令刚刚射精状态
   Keyword arguments:
@@ -2530,7 +2530,7 @@ def handle_pl_just_shoot_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   玩家清零前指令刚刚射精状态
   Keyword arguments:
@@ -2553,7 +2553,7 @@ def handle_pl_condom_use_reset(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   重置玩家的避孕套使用状态
   Keyword arguments:
@@ -2576,7 +2576,7 @@ def handle_self_condom_info_show_flag_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己开启避孕套信息显示
   Keyword arguments:
@@ -2599,7 +2599,7 @@ def handle_target_condom_info_show_flag_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象开启避孕套信息显示
   Keyword arguments:
@@ -2624,7 +2624,7 @@ def handle_scene_all_characters_condom_info_show_flag_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   场景内所有角色开启避孕套信息显示
   Keyword arguments:
@@ -2656,7 +2656,7 @@ def handle_self_orgasm_edge_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己开启绝顶寸止
   Keyword arguments:
@@ -2682,7 +2682,7 @@ def handle_self_orgasm_edge_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己关闭绝顶寸止
   Keyword arguments:
@@ -2705,7 +2705,7 @@ def handle_target_orgasm_edge_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象开启绝顶寸止
   Keyword arguments:
@@ -2730,7 +2730,7 @@ def handle_target_orgasm_edge_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象关闭绝顶寸止
   Keyword arguments:
@@ -2755,7 +2755,7 @@ def handle_all_group_sex_temple_run_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   开启全群交模板，进行轮流群交
   Keyword arguments:
@@ -2778,7 +2778,7 @@ def handle_all_group_sex_temple_run_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   关闭全群交模板，进行单轮群交
   Keyword arguments:
@@ -2801,7 +2801,7 @@ def handle_self_join_group_sex_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己开始加入群交
   Keyword arguments:
@@ -2824,7 +2824,7 @@ def handle_self_join_group_sex_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己停止加入群交
   Keyword arguments:
@@ -2847,7 +2847,7 @@ def handle_clear_group_sex_template(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   清空自己的群交模板
   Keyword arguments:
@@ -2874,7 +2874,7 @@ def handle_target_get_weeknesss_by_dr(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象获得[被博士持有把柄]
   Keyword arguments:
@@ -2908,7 +2908,7 @@ def handle_self_get_weeknesss_to_dr(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己获得[持有博士把柄]
   Keyword arguments:
@@ -2937,7 +2937,7 @@ def handle_enter_waiting_for_physical_exam(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己进入等待体检状态
   Keyword arguments:
@@ -2960,7 +2960,7 @@ def handle_exit_waiting_for_physical_exam(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己退出等待体检状态
   Keyword arguments:
@@ -2983,7 +2983,7 @@ def handle_wait_unitl_traget_action_end(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   玩家等待至交互对象行动结束
   Keyword arguments:
@@ -3023,7 +3023,7 @@ def handle_wait_unitl_player_action_end(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己等待至玩家行动结束
   Keyword arguments:
@@ -3057,7 +3057,7 @@ def handle_set_target_food_from_bag_last(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   将自己行为目标食物指定为背包里的最后一个食物
   Keyword arguments:
@@ -3085,7 +3085,7 @@ def handle_clear_target_toilet_path(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   清空自己记录的目标厕所位置路径
   Keyword arguments:
@@ -3108,7 +3108,7 @@ def handle_move_to_own_dormitory(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己前往自己的宿舍
   Keyword arguments:
@@ -3134,7 +3134,7 @@ def handle_stop_endurance_shoot(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   射出忍耐的射精次数
   Keyword arguments:
@@ -3159,7 +3159,7 @@ def handle_target_be_carried(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   将交互对象设为当前搬运对象
   Keyword arguments:
@@ -3184,7 +3184,7 @@ def handle_target_not_be_carried(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   清零自己的当前搬运对象
   Keyword arguments:
@@ -3209,7 +3209,7 @@ def handle_get_sleep_disturbed_state(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身获得睡觉中被吵醒状态，一小时内不会再产生睡觉需求
   Keyword arguments:
@@ -3234,7 +3234,7 @@ def handle_facility_damage_check(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   几率判定自己所在地点是否造成损坏
   Keyword arguments:
@@ -3272,7 +3272,7 @@ def handle_add_medium_hit_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   增加中量体力
   Keyword arguments:
@@ -3303,7 +3303,7 @@ def handle_add_medium_mana_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   增加中量气力
   Keyword arguments:
@@ -3334,7 +3334,7 @@ def handle_interrupt_target_activity(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   打断交互目标活动
   Keyword arguments:
@@ -3382,7 +3382,7 @@ def handle_option_fater(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   开启子选项面板
   Keyword arguments:
@@ -3406,7 +3406,7 @@ def handle_target_to_player(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象设为对玩家交互
   Keyword arguments:
@@ -3429,7 +3429,7 @@ def handle_open_instruct_filter_h(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   开启H面板过滤器（已弃用）
   Keyword arguments:
@@ -3449,7 +3449,7 @@ def handle_close_instruct_filter_h(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   关闭H面板过滤器（已弃用）
   Keyword arguments:
@@ -3469,7 +3469,7 @@ def handle_add_this_event_to_already_triggered(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   将玩家当前触发的事件加入总次数已触发记录
   Keyword arguments:
@@ -3493,7 +3493,7 @@ def handle_add_this_event_to_today_already_triggered(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   将玩家当前触发的事件加入今日已触发记录
   Keyword arguments:
@@ -3519,7 +3519,7 @@ def handle_group_sex_mode_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   开启群交模式
   Keyword arguments:
@@ -3545,7 +3545,7 @@ def handle_group_sex_mode_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   关闭群交模式
   Keyword arguments:
@@ -3565,7 +3565,7 @@ def handle_sex_class_mode_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   开启性技实操课（课堂H）模式，并把场景内可参加的学生全部拉进H状态
   Keyword arguments:
@@ -3600,7 +3600,7 @@ def handle_sex_class_mode_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   关闭性技实操课（课堂H）模式
 
@@ -3629,7 +3629,7 @@ def handle_retain_command_with_event_text(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   用事件文本代替指令文本，限指令后置
   Keyword arguments:
@@ -3649,7 +3649,7 @@ def handle_pl_target_to_me(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   将玩家的交互对象设为自己
   Keyword arguments:
@@ -3672,7 +3672,7 @@ def handle_target_to_self(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   将交互对象设为对自己交互
   Keyword arguments:
@@ -3695,7 +3695,7 @@ def handle_target_to_masturebate(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   将交互对象设为对当前场景中的首位自慰角色
   Keyword arguments:
@@ -3735,7 +3735,7 @@ def handle_target_to_most_desire(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   将交互对象设为场景内欲望值最高的角色
   Keyword arguments:
@@ -3776,7 +3776,7 @@ def handle_not_tired(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   从疲劳中恢复
   Keyword arguments:
@@ -3799,7 +3799,7 @@ def handle_target_add_small_s_feel(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加少量S快（S感补正）
   Keyword arguments:
@@ -3828,7 +3828,7 @@ def handle_target_add_small_b_feel(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加少量Ｂ快（B感补正）
   Keyword arguments:
@@ -3857,7 +3857,7 @@ def handle_target_add_small_c_feel(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加少量Ｃ快（C感补正）
   Keyword arguments:
@@ -3886,7 +3886,7 @@ def handle_target_add_small_p_feel(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加少量Ｐ快（P感补正）
   Keyword arguments:
@@ -3925,7 +3925,7 @@ def handle_target_add_small_v_feel(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加少量Ｖ快（V感补正）
   Keyword arguments:
@@ -3954,7 +3954,7 @@ def handle_target_add_small_a_feel(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加少量Ａ快（A感补正）
   Keyword arguments:
@@ -3983,7 +3983,7 @@ def handle_target_add_small_u_feel(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加少量Ｕ快（U感补正）
   Keyword arguments:
@@ -4012,7 +4012,7 @@ def handle_target_add_small_w_feel(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加少量Ｗ快（W感补正）
   Keyword arguments:
@@ -4041,7 +4041,7 @@ def handle_target_add_small_lubrication(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加少量润滑（欲望补正）
   Keyword arguments:
@@ -4073,7 +4073,7 @@ def handle_target_add_small_learn(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加少量习得（技巧补正）
   Keyword arguments:
@@ -4105,7 +4105,7 @@ def handle_target_add_small_repect(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加少量恭顺（顺从补正）
   Keyword arguments:
@@ -4139,7 +4139,7 @@ def handle_target_add_small_friendly(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加少量好意（亲密补正）
   Keyword arguments:
@@ -4173,7 +4173,7 @@ def handle_target_add_small_desire(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加少量欲情（欲望补正）
   Keyword arguments:
@@ -4207,7 +4207,7 @@ def handle_target_add_small_happy(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加少量快乐（快乐刻印补正）
   Keyword arguments:
@@ -4241,7 +4241,7 @@ def handle_target_add_small_lead(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加少量先导（施虐补正）
   Keyword arguments:
@@ -4275,7 +4275,7 @@ def handle_target_add_small_submit(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加少量屈服（屈服刻印补正）
   Keyword arguments:
@@ -4309,7 +4309,7 @@ def handle_target_add_small_shy(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加少量羞耻（露出补正）
   Keyword arguments:
@@ -4343,7 +4343,7 @@ def handle_target_add_small_pain(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加少量苦痛（苦痛刻印补正）
   Keyword arguments:
@@ -4377,7 +4377,7 @@ def handle_target_add_small_terror(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加少量恐怖（恐怖刻印补正）
   Keyword arguments:
@@ -4412,7 +4412,7 @@ def handle_target_add_small_depression(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加少量抑郁
   Keyword arguments:
@@ -4445,7 +4445,7 @@ def handle_target_add_small_disgust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加少量反感（反发刻印补正）
   Keyword arguments:
@@ -4480,7 +4480,7 @@ def handle_add_small_p_feel(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身增加少量Ｐ快
   Keyword arguments:
@@ -4510,7 +4510,7 @@ def handle_both_add_small_learn(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   双方增加少量习得（若没有交互对象则仅增加自己）
   Keyword arguments:
@@ -4546,7 +4546,7 @@ def handle_add_small_learn_old(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己增加少量习得
   Keyword arguments:
@@ -4566,7 +4566,7 @@ def handle_add_small_lubrication(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己增加少量润滑（欲望补正）
   Keyword arguments:
@@ -4597,7 +4597,7 @@ def handle_add_small_learn(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己增加少量习得（技巧补正）
   Keyword arguments:
@@ -4628,7 +4628,7 @@ def handle_add_small_respect(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己增加少量恭顺（顺从补正）
   Keyword arguments:
@@ -4659,7 +4659,7 @@ def handle_add_small_friendly(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己增加少量好意（亲密补正）
   Keyword arguments:
@@ -4690,7 +4690,7 @@ def handle_add_small_desire(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己增加少量欲情（欲望补正）
   Keyword arguments:
@@ -4721,7 +4721,7 @@ def handle_add_small_happy(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己增加少量快乐（快乐刻印补正）
   Keyword arguments:
@@ -4752,7 +4752,7 @@ def handle_add_small_lead(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己增加少量先导（施虐补正）
   Keyword arguments:
@@ -4783,7 +4783,7 @@ def handle_add_small_submit(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己增加少量屈服（屈服刻印补正）
   Keyword arguments:
@@ -4814,7 +4814,7 @@ def handle_add_small_shy(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己增加少量羞耻（露出补正）
   Keyword arguments:
@@ -4845,7 +4845,7 @@ def handle_self_add_middle_disgust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己增加中量反感（反发刻印补正）
   Keyword arguments:
@@ -4875,7 +4875,7 @@ def handle_dirty_reset(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   污浊情况(身体+衣服)归零
   Keyword arguments:
@@ -4898,7 +4898,7 @@ def handle_assistant_reset(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   助理数据归零
   Keyword arguments:
@@ -4926,7 +4926,7 @@ def handle_door_close(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   当前场景进入关门状态
   Keyword arguments:
@@ -4952,7 +4952,7 @@ def handle_door_close_reset(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   当前场景取消关门状态
   Keyword arguments:
@@ -4978,7 +4978,7 @@ def handle_move_to_pre_scene(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   角色移动至前一场景
   Keyword arguments:
@@ -5020,7 +5020,7 @@ def handle_target_move_to_pre_scene(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象移动至前一场景
   Keyword arguments:
@@ -5045,7 +5045,7 @@ def handle_scene_others_move_to_pre_scene(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   场景内除自己和交互对象以外的其他角色移动至前一场景
   Keyword arguments:
@@ -5080,7 +5080,7 @@ def handle_scene_all_chara_move_to_pre_scene(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   场景除自己以外的全部角色移动至前一场景
   Keyword arguments:
@@ -5112,7 +5112,7 @@ def handle_scene_all_chara_except_masturebate_to_pl_move_to_pre_scene(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   场景内不逆推自己的角色移动至前一场景
   Keyword arguments:
@@ -5147,7 +5147,7 @@ def handle_self_h_state_reset(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己H状态结构体归零，同步高潮程度记录，清零H相关二段状态
   Keyword arguments:
@@ -5222,7 +5222,7 @@ def handle_both_h_state_reset(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   双方H状态结构体归零，同步高潮程度记录，清零H相关二段状态
   Keyword arguments:
@@ -5248,7 +5248,7 @@ def handle_update_orgasm_level(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   双方同步高潮程度记录
   Keyword arguments:
@@ -5283,7 +5283,7 @@ def handle_scene_all_characters_update_orgasm_level(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   场景内所有角色同步高潮程度记录
   Keyword arguments:
@@ -5317,7 +5317,7 @@ def handle_scene_all_characters_h_state_reset(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   场景内所有角色H状态结构体归零，同步高潮程度记录，清零H相关二段状态
   Keyword arguments:
@@ -5345,7 +5345,7 @@ def handle_all_character_unconscious_semen_reset(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   清零所有角色的无意识精液情况
   Keyword arguments:
@@ -5369,7 +5369,7 @@ def handle_chara_off_line(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   角色离线，归零若干数据结构体，从当前干员列表中移除，离开地图
   Keyword arguments:
@@ -5418,7 +5418,7 @@ def handle_chara_on_line(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   角色上线，加入当前干员列表，进入地图
   Keyword arguments:
@@ -5470,7 +5470,7 @@ def handle_t_be_bagged(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象变成被装袋搬走状态
   Keyword arguments:
@@ -5496,7 +5496,7 @@ def handle_t_be_imprisonment(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象变成被监禁状态
   Keyword arguments:
@@ -5522,7 +5522,7 @@ def handle_shower_flag_to_1(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身变成要脱衣服（洗澡）状态
   Keyword arguments:
@@ -5545,7 +5545,7 @@ def handle_place_all_chara_add_1_been_hypnosis_experience(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   场景内所有其他角色均增加1被催眠经验
   Keyword arguments:
@@ -5582,7 +5582,7 @@ def handle_shower_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身清零洗澡状态
   Keyword arguments:
@@ -5605,7 +5605,7 @@ def handle_shower_flag_to_2(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身变成要洗澡状态
   Keyword arguments:
@@ -5628,7 +5628,7 @@ def handle_shower_flag_to_3(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身变成要披浴巾状态
   Keyword arguments:
@@ -5651,7 +5651,7 @@ def handle_shower_flag_to_4(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身变成洗完澡状态
   Keyword arguments:
@@ -5674,7 +5674,7 @@ def handle_eat_food_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身清零吃饭状态
   Keyword arguments:
@@ -5697,7 +5697,7 @@ def handle_eat_food_flag_to_1(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身变成要取餐状态
   Keyword arguments:
@@ -5720,7 +5720,7 @@ def handle_eat_food_flag_to_2(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身变成要进食状态
   Keyword arguments:
@@ -5743,7 +5743,7 @@ def handle_sleep_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身清零要睡眠状态
   Keyword arguments:
@@ -5766,7 +5766,7 @@ def handle_sleep_flag_to_1(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身变成要睡眠状态
   Keyword arguments:
@@ -5789,7 +5789,7 @@ def handle_rest_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身清零要休息状态
   Keyword arguments:
@@ -5812,7 +5812,7 @@ def handle_rest_flag_to_1(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身变成要休息状态
   Keyword arguments:
@@ -5835,7 +5835,7 @@ def handle_pee_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身清零要撒尿状态
   Keyword arguments:
@@ -5858,7 +5858,7 @@ def handle_pee_flag_to_1(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身变成要撒尿状态
   Keyword arguments:
@@ -5881,7 +5881,7 @@ def handle_swim_flag_to_1(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身变成要换泳衣状态
   Keyword arguments:
@@ -5904,7 +5904,7 @@ def handle_swim_flag_to_2(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身变成要游泳状态
   Keyword arguments:
@@ -5927,7 +5927,7 @@ def handle_maintenance_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身清零要检修状态
   Keyword arguments:
@@ -5950,7 +5950,7 @@ def handle_morning_salutation_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   将自身早安问候设为未问候
   Keyword arguments:
@@ -5973,7 +5973,7 @@ def handle_dormitory_admin_phase_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身宿舍管理员阶段设为0（到岗整理）
   Keyword arguments:
@@ -5996,7 +5996,7 @@ def handle_dormitory_admin_phase_to_1(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身宿舍管理员阶段设为1（移动处理）
   Keyword arguments:
@@ -6019,7 +6019,7 @@ def handle_cancel_all_work_and_entertainment_flag(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身取消所有工作和娱乐状态
   Keyword arguments:
@@ -6044,7 +6044,7 @@ def handle_self_intelligent_follow_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身进入智能跟随状态
   Keyword arguments:
@@ -6067,7 +6067,7 @@ def handle_target_intelligent_follow_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象进入智能跟随状态
   Keyword arguments:
@@ -6092,7 +6092,7 @@ def handle_self_intelligent_follow_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身退出智能跟随状态
   Keyword arguments:
@@ -6115,7 +6115,7 @@ def handle_target_intelligent_follow_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象退出智能跟随状态
   Keyword arguments:
@@ -6140,7 +6140,7 @@ def handle_self_intelligent_follow_on_if_assistant(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   如果自己是助理且打开了跟随服务，则自己进入智能跟随状态
   Keyword arguments:
@@ -6167,7 +6167,7 @@ def handle_self_stop_move(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己停止移动
   Keyword arguments:
@@ -6190,7 +6190,7 @@ def handle_h_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身清零H状态
   Keyword arguments:
@@ -6213,7 +6213,7 @@ def handle_h_flag_to_1(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身变成H状态
   Keyword arguments:
@@ -6242,7 +6242,7 @@ def handle_t_h_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象清零H状态
   Keyword arguments:
@@ -6267,7 +6267,7 @@ def handle_t_h_flag_to_1(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象变成H状态
   Keyword arguments:
@@ -6292,7 +6292,7 @@ def handle_scene_all_characters_h_flag_to_1(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   场景内所有角色变成H状态
   Keyword arguments:
@@ -6322,7 +6322,7 @@ def handle_self_hidden_sex_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己清零隐奸状态
   Keyword arguments:
@@ -6345,7 +6345,7 @@ def handle_target_hidden_sex_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象清零隐奸状态
   Keyword arguments:
@@ -6370,7 +6370,7 @@ def handle_both_hidden_sex_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   双方清零隐奸状态
   Keyword arguments:
@@ -6398,7 +6398,7 @@ def handle_self_exhibitionism_sex_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己清零露出H状态
   Keyword arguments:
@@ -6421,7 +6421,7 @@ def handle_target_exhibitionism_sex_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象清零露出H状态
   Keyword arguments:
@@ -6446,7 +6446,7 @@ def handle_both_exhibitionism_sex_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   双方清零露出H状态
   Keyword arguments:
@@ -6474,7 +6474,7 @@ def handle_unconscious_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身清零无意识状态
   Keyword arguments:
@@ -6497,7 +6497,7 @@ def handle_unconscious_flag_to_1(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身变成无意识_睡眠状态
   Keyword arguments:
@@ -6520,7 +6520,7 @@ def handle_unconscious_flag_to_2(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身变成无意识_醉酒状态
   Keyword arguments:
@@ -6543,7 +6543,7 @@ def handle_unconscious_flag_to_3(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身变成无意识_时停状态
   Keyword arguments:
@@ -6566,7 +6566,7 @@ def handle_unconscious_flag_to_4(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身变成无意识_平然状态
   Keyword arguments:
@@ -6589,7 +6589,7 @@ def handle_unconscious_flag_to_5(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身变成无意识_空气状态
   Keyword arguments:
@@ -6612,7 +6612,7 @@ def handle_unconscious_flag_to_6(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身变成无意识_心控状态
   Keyword arguments:
@@ -6635,7 +6635,7 @@ def handle_unconscious_flag_to_7(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身变成无意识_体控状态
   Keyword arguments:
@@ -6658,7 +6658,7 @@ def handle_help_buy_food_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身清零要帮忙买午饭状态
   Keyword arguments:
@@ -6681,7 +6681,7 @@ def handle_bathhouse_entertainment_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身清零大浴场娱乐状态
   Keyword arguments:
@@ -6704,7 +6704,7 @@ def handle_bathhouse_entertainment_flag_to_1(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身变成大浴场娱乐_要更衣状态
   Keyword arguments:
@@ -6727,7 +6727,7 @@ def handle_bathhouse_entertainment_flag_to_2(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身变成大浴场娱乐_要娱乐状态
   Keyword arguments:
@@ -6750,7 +6750,7 @@ def handle_milk_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身清零要挤奶状态
   Keyword arguments:
@@ -6773,7 +6773,7 @@ def handle_hypnosis_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身清零催眠系的flag与催眠子项
   Keyword arguments:
@@ -6798,7 +6798,7 @@ def handle_target_angry_with_player_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象清零对玩家的愤怒状态
   Keyword arguments:
@@ -6822,7 +6822,7 @@ def handle_see_pl_h(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身进入目击H状态
   Keyword arguments:
@@ -6845,7 +6845,7 @@ def handle_cancel_see_pl_h(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身退出目击H状态
   Keyword arguments:
@@ -6868,7 +6868,7 @@ def handle_masturebate_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身清零要自慰状态
   Keyword arguments:
@@ -6891,7 +6891,7 @@ def handle_masturebate_before_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身清零要睡前自慰状态
   Keyword arguments:
@@ -6914,7 +6914,7 @@ def handle_masturebate_before_flag_to_2(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身变为已睡前自慰状态
   Keyword arguments:
@@ -6937,7 +6937,7 @@ def handle_masturebate_to_pl_flag_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身清零要找玩家逆推来自慰状态
   Keyword arguments:
@@ -6960,7 +6960,7 @@ def handle_all_chara_masturebate_in_group_sex_flag_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   全角色清零群交中自慰状态
   Keyword arguments:
@@ -6985,7 +6985,7 @@ def handle_help_make_food_flag_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身清零做午饭状态
   Keyword arguments:
@@ -7008,7 +7008,7 @@ def handle_talk_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （聊天用）根据发起者的话术技能进行双方的好感度、好意、快乐调整，并记录当前谈话时间
   Keyword arguments:
@@ -7067,7 +7067,7 @@ def handle_coffee_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （泡咖啡用）根据发起者的料理技能进行好感度、信赖、好意调整
   Keyword arguments:
@@ -7119,7 +7119,7 @@ def handle_target_coffee_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （泡咖啡用）根据交互对象的料理技能进行好感度、信赖、好意调整
   Keyword arguments:
@@ -7171,7 +7171,7 @@ def handle_make_food_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （制作食物用）根据当前行为中的菜谱难度等级，动态获得料理经验与习得。
   收益仅按单份结算，不随制作数量变化。
@@ -7217,7 +7217,7 @@ def handle_taste_wine_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （品酒用）根据酒量随机选一个酒，并结算部分饮用效果
   Keyword arguments:
@@ -7254,7 +7254,7 @@ def handle_official_work_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （处理公务用）根据自己（如果有的话再加上交互对象）的学识以及办公室等级来处理当前的剩余工作量
   Keyword arguments:
@@ -7324,7 +7324,7 @@ def handle_cure_patient_add_just(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （诊疗病人用）根据发起者(如果有的话再加上交互对象)的医疗技能治愈了一名病人，并获得一定的龙门币
   Keyword arguments:
@@ -7451,7 +7451,7 @@ def handle_perform_surgery(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """执行手术治疗并根据结果输出提示"""
   from Script.System.Medical_System import medical_service
 
@@ -7489,7 +7489,7 @@ def handle_ward_round_process(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """病房查房：推进住院病人治疗进度并输出提示"""
   from Script.System.Medical_System import medical_service
 
@@ -7578,7 +7578,7 @@ def handle_ask_copy_key(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （要求复制钥匙用）获取交互对象的所在楼层的钥匙
   Keyword arguments:
@@ -7610,7 +7610,7 @@ def handle_recruit_add_just(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （招募干员用）根据发起者的话术技能增加招募槽
   Keyword arguments:
@@ -7702,7 +7702,7 @@ def handle_invite_visitor_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （邀请访客用）根据发起者(如果有的话再加上交互对象)的话术技能增加邀请槽
   Keyword arguments:
@@ -7785,7 +7785,7 @@ def handle_milk_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （挤奶用）把交互对象的乳汁转移到厨房的冰箱里
   Keyword arguments:
@@ -7827,7 +7827,7 @@ def handle_salutation_3_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （早安咬与晚安咬）触发交互对象一次射精，射到发起者嘴里
   Keyword arguments:
@@ -7849,7 +7849,7 @@ def handle_aromatherapy_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （香薰疗愈用）对各配方结算各效果
   Keyword arguments:
@@ -7883,7 +7883,7 @@ def handle_urethral_swab_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据交互对象的U属性(润滑+扩张)对其进行苦痛调整
   Keyword arguments:
@@ -7938,7 +7938,7 @@ def handle_urethral_finger_insertion_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据交互对象的U属性(润滑+扩张)对其进行苦痛调整
   Keyword arguments:
@@ -7993,7 +7993,7 @@ def handle_masturebate_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （自慰用）选择自己最高感度的部位，增加该部位快感和经验
   Keyword arguments:
@@ -8049,7 +8049,7 @@ def handle_dirty_reset_in_shower(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自身部分部位污浊保留一定比例，其他污浊体归零
   Keyword arguments:
@@ -8114,7 +8114,7 @@ def handle_orgasm_edge_release(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （绝顶解放）交互对象变为寸止解放状态，将寸止计数转化为绝顶并立即结算
   Keyword arguments:
@@ -8150,7 +8150,7 @@ def handle_time_stop_orgasm_release(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （解除时停）交互对象变为时停解放状态，结算时停绝顶和时停精液
   Keyword arguments:
@@ -8196,7 +8196,7 @@ def handle_end_h_add_hpmp_max(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （结束H）自己和交互对象根据本次H中的绝顶次数增加体力气力上限
   Keyword arguments:
@@ -8280,7 +8280,7 @@ def handle_group_sex_end_h_add_hpmp_max(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （群交结束H）在场全部角色根据本次H中的绝顶次数增加体力气力上限
   Keyword arguments:
@@ -8366,7 +8366,7 @@ def handle_group_sex_fail_add_just(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （群交失败）在场全部角色减体力气力，拒绝者进行邀请H失败结算
   Keyword arguments:
@@ -8405,7 +8405,7 @@ def handle_board_game_win_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （桌游获胜用）根据游戏难度获得好感度、信赖、习得、粉红凭证
   Keyword arguments:
@@ -8484,7 +8484,7 @@ def handle_board_game_lose_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （桌游输了用）根据游戏难度获得好感度、习得
   Keyword arguments:
@@ -8541,7 +8541,7 @@ def handle_maintenance_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （维护设施用）修复当前地点的损坏设施
   Keyword arguments:
@@ -8574,7 +8574,7 @@ def handle_train_prisoners_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （训练囚犯用）对所有被关押的囚犯进行日常训练
   Keyword arguments:
@@ -8611,7 +8611,7 @@ def handle_train_prisoners_add_adjust(
     # 选择部位
     target_part_id = value_handle.get_random_for_weight(all_part_data)
 
-    def now_tarin(now_prisoner_cid):
+    def now_tarin(now_prisoner_cid: int) -> None:
       base_chara_state_common_settle(
           now_prisoner_cid,
           add_time,
@@ -8635,7 +8635,7 @@ def handle_train_prisoners_add_adjust(
     # 选择部位
     target_part_id = value_handle.get_random_for_weight(all_part_data)
 
-    def now_tarin(now_prisoner_cid):
+    def now_tarin(now_prisoner_cid: int) -> None:
       base_chara_state_common_settle(
           now_prisoner_cid,
           add_time,
@@ -8652,7 +8652,7 @@ def handle_train_prisoners_add_adjust(
   # 苦痛快感训练
   elif now_train_id == 3:
 
-    def now_tarin(now_prisoner_cid):
+    def now_tarin(now_prisoner_cid: int) -> None:
       base_chara_state_common_settle(
           now_prisoner_cid,
           add_time,
@@ -8683,7 +8683,7 @@ def handle_train_prisoners_add_adjust(
     # 选择部位
     target_part_id = value_handle.get_random_for_weight(all_part_data)
 
-    def now_tarin(now_prisoner_cid):
+    def now_tarin(now_prisoner_cid: int) -> None:
       base_chara_state_common_settle(
           now_prisoner_cid,
           add_time,
@@ -8704,13 +8704,13 @@ def handle_train_prisoners_add_adjust(
   # 身体锻炼训练
   elif now_train_id == 5:
 
-    def now_tarin(now_prisoner_cid):
+    def now_tarin(now_prisoner_cid: int) -> None:
       handle_add_hpmp_max(now_prisoner_cid, add_time, change_data, now_time)
 
   # 心理服从训练
   elif now_train_id == 6:
 
-    def now_tarin(now_prisoner_cid):
+    def now_tarin(now_prisoner_cid: int) -> None:
       base_chara_state_common_settle(
           now_prisoner_cid,
           add_time,
@@ -8755,7 +8755,7 @@ def handle_recover_from_unconscious_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象从无意识H中恢复意识的结算
   Keyword arguments:
@@ -8780,7 +8780,7 @@ def handle_target_dirty_reset_in_shower(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象进行污浊清洗(525)
   Keyword arguments:
@@ -8803,7 +8803,7 @@ def handle_give_gift_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （赠送礼物用）根据礼物的类型结算交互对象的对应数值
   Keyword arguments:
@@ -8944,7 +8944,7 @@ def handle_maintain_equipment_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （维护装备用）进行一次装备的维修保养
   Keyword arguments:
@@ -8972,7 +8972,7 @@ def handle_read_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （读书用）根据书的不同对发起者(如果有的话再加上交互对象)获得对应的知识，并进行NPC的还书判定
   Keyword arguments:
@@ -9128,7 +9128,7 @@ def handle_teach_add_just(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （教学用）按课表所排的科目结算：教师与场景内所有听课角色都获得该科目的习得与经验，如果玩家是老师则再加好感和信赖
   Plan 22 改造：科目从写死的学识(45)改为查全局课表取当节所授科目；查不到课表时回落学识，保证既有干员学生链不被破坏
@@ -9252,7 +9252,7 @@ def handle_self_study_add_just(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （自习用）本节无教师时的降级行为，按自习基础值增加习得与所选科目的经验，不受师生等级差影响
   Keyword arguments:
@@ -9291,7 +9291,7 @@ def handle_attent_class_add_just(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （听课用）学生开始听课时，从学生这一侧结算本节课的收益与出勤（Plan 22 第五轮加，Plan 31 §3.1 放宽）
   NPC 的行为结算发生在行为**开始**时，而且各按自己的时间线推进：玩家一步跨满一整节时，教师换教室（或先处理需求）晚到几分钟，
@@ -9345,7 +9345,7 @@ def handle_skip_class_add_just(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （翘课用）置翘课flag并记下挂上的日期，小幅回复心情，本节不获得任何学习收益
   Keyword arguments:
@@ -9383,7 +9383,7 @@ def handle_intern_class_add_just(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （实习课用）找同场景中该岗位的在岗干员当导师，按师徒等级差学该岗位的能力
   实习课是三种个人式课型里唯一需要自己结算的：体育课与兴趣课执行的是自带效果串的既有行为，
@@ -9431,7 +9431,7 @@ def handle_check_report_card_add_just(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （检查成绩单用）有未查看的新成绩单时输出那一份并清除成绩单flag，否则输出该女儿本学期截至目前的各科成长与出勤；按成绩档位加好感与亲密
   Keyword arguments:
@@ -9508,7 +9508,7 @@ def handle_bagging_and_moving_add_just(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （装袋搬走用）交互对象获得装袋搬走flag，玩家增加搬运人id，对方离线
   Keyword arguments:
@@ -9541,7 +9541,7 @@ def handle_release_from_bag_add_just(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （从袋中放出来）交互对象失去装袋搬走flag，玩家失去搬运人id，对方上线
   Keyword arguments:
@@ -9577,7 +9577,7 @@ def handle_put_into_prison_add_just(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （投入监牢用）被搬运对象上线，成为囚犯并结算，玩家失去搬运人id
   Keyword arguments:
@@ -9619,7 +9619,7 @@ def handle_set_free_add_just(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （解除囚禁）交互对象失去监禁flag，从囚犯数据中删除
   Keyword arguments:
@@ -9661,7 +9661,7 @@ def handle_eat_add_just(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （进食）食物结算。会根据有无交互目标，食物的调味来自动判别食用对象和结算内容
   Keyword arguments:
@@ -9868,7 +9868,7 @@ def handle_add_hpmp_max(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （锻炼身体用）增加体力气力上限
   Keyword arguments:
@@ -9948,7 +9948,7 @@ def handle_sing_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （唱歌用）根据自己的音乐技能进行好感度、信赖、好意、恐怖、抑郁、反感调整
   Keyword arguments:
@@ -10080,7 +10080,7 @@ def handle_play_instrument_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （演奏乐器用）根据自己的音乐技能进行好感度、信赖、好意、恐怖、抑郁、反感调整
   Keyword arguments:
@@ -10221,7 +10221,7 @@ def handle_tech_add_s_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据发起者的技巧技能和交互对象的感度，和交互对象的感度，对交互对象进行S快、欲情调整
   Keyword arguments:
@@ -10272,7 +10272,7 @@ def handle_tech_add_b_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据发起者的技巧技能和交互对象的感度，对交互对象进行B快、欲情调整
   Keyword arguments:
@@ -10323,7 +10323,7 @@ def handle_tech_add_c_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据发起者的技巧技能和交互对象的感度，对交互对象进行C快、欲情调整
   Keyword arguments:
@@ -10374,7 +10374,7 @@ def handle_tech_add_p_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据发起者的技巧技能和交互对象的感度，对交互对象进行P快、欲情调整
   Keyword arguments:
@@ -10444,7 +10444,7 @@ def handle_tech_add_v_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据发起者的技巧技能和交互对象的感度，对交互对象进行V快、欲情调整
   Keyword arguments:
@@ -10495,7 +10495,7 @@ def handle_tech_add_a_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据发起者的技巧技能和交互对象的感度，对交互对象进行A快、欲情调整
   Keyword arguments:
@@ -10546,7 +10546,7 @@ def handle_tech_add_u_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据发起者的技巧技能和交互对象的感度，对交互对象进行U快、欲情调整
   Keyword arguments:
@@ -10597,7 +10597,7 @@ def handle_tech_add_w_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据发起者的技巧技能和交互对象的感度，对交互对象进行W快、欲情调整
   Keyword arguments:
@@ -10648,7 +10648,7 @@ def handle_tech_add_m_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据发起者的技巧技能和交互对象的感度，对交互对象进行M快、欲情调整
   Keyword arguments:
@@ -10699,7 +10699,7 @@ def handle_tech_add_f_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据发起者的技巧技能和交互对象的感度，对交互对象进行F快、欲情调整
   Keyword arguments:
@@ -10750,7 +10750,7 @@ def handle_tech_add_pl_p_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据对交互对象的技巧技能对发起者进行P快调整
   Keyword arguments:
@@ -10797,7 +10797,7 @@ def handle_target_lubrication_adjust_add_pain(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据交互对象的润滑情况对其进行苦痛调整
   Keyword arguments:
@@ -10841,7 +10841,7 @@ def handle_target_v_adjust_add_pain(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据交互对象的V属性(润滑+腰技+扩张+阴茎大小)对其进行苦痛调整
   Keyword arguments:
@@ -10898,7 +10898,7 @@ def handle_target_a_adjust_add_pain(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据交互对象的A属性(润滑+腰技+扩张+阴茎大小)对其进行苦痛调整
   Keyword arguments:
@@ -10955,7 +10955,7 @@ def handle_target_u_adjust_add_pain(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据交互对象的U属性(润滑+腰技+扩张+阴茎大小)对其进行苦痛调整
   Keyword arguments:
@@ -11013,7 +11013,7 @@ def handle_target_w_adjust_add_pain(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据交互对象的W属性(润滑+腰技+扩张+阴茎大小)对其进行苦痛调整
   Keyword arguments:
@@ -11075,7 +11075,7 @@ def handle_target_v_adjust_add_by_sex(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据发起者的技巧+腰技+阴茎大小对交互目标进行V快、欲情调整
   Keyword arguments:
@@ -11138,7 +11138,7 @@ def handle_target_a_adjust_add_by_sex(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据发起者的技巧+腰技+阴茎大小对交互目标进行A快、欲情调整
   Keyword arguments:
@@ -11201,7 +11201,7 @@ def handle_target_u_adjust_add_by_sex(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据发起者的技巧+腰技+阴茎大小对交互目标进行U快、欲情调整
   Keyword arguments:
@@ -11264,7 +11264,7 @@ def handle_target_w_adjust_add_by_sex(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据发起者的技巧+腰技+阴茎大小对交互目标进行W快、欲情调整
   Keyword arguments:
@@ -11327,7 +11327,7 @@ def handle_target_pain_to_h_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据发起者的技巧、交互对象的受虐对其进行H快、欲情、苦痛调整
   Keyword arguments:
@@ -11400,7 +11400,7 @@ def handle_finger_tech_add_pl_p_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据交互对象的技巧+指技对发起者进行P快调整
   Keyword arguments:
@@ -11449,7 +11449,7 @@ def handle_tongue_tech_add_pl_p_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据交互对象的技巧+舌技对发起者进行P快调整
   Keyword arguments:
@@ -11498,7 +11498,7 @@ def handle_feet_tech_add_pl_p_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据交互对象的技巧+足技对发起者进行P快调整
   Keyword arguments:
@@ -11547,7 +11547,7 @@ def handle_breast_tech_add_pl_p_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据交互对象的技巧+胸技对发起者进行P快调整
   Keyword arguments:
@@ -11596,7 +11596,7 @@ def handle_vagina_tech_add_pl_p_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据交互对象的技巧+膣技对发起者进行P快调整
   Keyword arguments:
@@ -11645,7 +11645,7 @@ def handle_anus_tech_add_pl_p_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   根据交互对象的技巧+肛技对发起者进行P快调整
   Keyword arguments:
@@ -11694,7 +11694,7 @@ def handle_low_obscenity_failed_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   轻度性骚扰失败的加反感、加愤怒、降好感度修正
   Keyword arguments:
@@ -11743,7 +11743,7 @@ def handle_high_obscenity_failed_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   重度性骚扰失败的加反感、加愤怒、降好感度修正
   Keyword arguments:
@@ -11812,7 +11812,7 @@ def handle_do_h_failed_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   邀请H失败的加反感、加愤怒、降好感度、降信赖修正
   Keyword arguments:
@@ -11885,7 +11885,7 @@ def handle_sleep_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （睡觉用）如果在自己宿舍，则换睡衣并有一定几率关门
   Keyword arguments:
@@ -11918,7 +11918,7 @@ def handle_urinate_point_zero(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   尿意值归零
   Keyword arguments:
@@ -11944,7 +11944,7 @@ def handle_target_urinate_point_zero(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象尿意值归零
   Keyword arguments:
@@ -11969,7 +11969,7 @@ def handle_hunger_point_zero(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   饥饿值归零
   Keyword arguments:
@@ -11992,7 +11992,7 @@ def handle_target_hunger_point_zero(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象饥饿值归零
   Keyword arguments:
@@ -12018,7 +12018,7 @@ def handle_sleep_point_zero(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   熟睡值归零
   Keyword arguments:
@@ -12041,7 +12041,7 @@ def handle_target_sleep_point_zero(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象熟睡值归零
   Keyword arguments:
@@ -12067,7 +12067,7 @@ def handle_add_small_urinate_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己增加少量尿意值
   Keyword arguments:
@@ -12090,7 +12090,7 @@ def handle_target_add_small_urinate_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加少量尿意值
   Keyword arguments:
@@ -12116,7 +12116,7 @@ def handle_target_desire_point_zero(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象欲望值归零
   Keyword arguments:
@@ -12142,7 +12142,7 @@ def handle_desire_point_to_79(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己欲望值调为79
   Keyword arguments:
@@ -12165,7 +12165,7 @@ def handle_target_desire_point_to_79(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象欲望值调为79
   Keyword arguments:
@@ -12191,7 +12191,7 @@ def handle_desire_point_to_0(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己欲望值归零
   Keyword arguments:
@@ -12214,7 +12214,7 @@ def handle_add_small_sanity_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   增加少量理智值(15%/h)
   Keyword arguments:
@@ -12241,7 +12241,7 @@ def handle_add_small_semen_point(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   增加少量精液值(15%/h)
   Keyword arguments:
@@ -12270,7 +12270,7 @@ def handle_record_training_time(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   记录当前训练时间
   Keyword arguments:
@@ -12293,7 +12293,7 @@ def handle_record_shower_time(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   记录当前淋浴时间
   Keyword arguments:
@@ -12316,7 +12316,7 @@ def handle_record_wake_time(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   角色记录并刷新起床时间
   Keyword arguments:
@@ -12339,7 +12339,7 @@ def handle_record_conscious_h_time(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   角色记录并刷新有意识H时间
   Keyword arguments:
@@ -12362,7 +12362,7 @@ def handle_record_unconscious_h_time(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   角色记录并刷新无意识H时间
   Keyword arguments:
@@ -12385,7 +12385,7 @@ def handle_penis_in_t_reset(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   当前阴茎位置为交互对象_双方归零
   Keyword arguments:
@@ -12412,7 +12412,7 @@ def handle_scene_all_characters_penis_in_reset(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   场景内所有角色的当前阴茎位置归零
   Keyword arguments:
@@ -12435,7 +12435,7 @@ def handle_scene_all_characters_penis_in_reset(
 
 def record_first_part_sex(
     character_id: int, target_data: game_type.Character, item: int = -1
-):
+) -> None:
   """
   部位交初体验记录（键取自insert_position，未记录才写入；破处handler的完整写入会覆盖本条目）\n
   Keyword arguments:
@@ -12474,7 +12474,7 @@ def handle_penis_in_t_hair(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   当前阴茎位置为交互对象_发交中
   Keyword arguments:
@@ -12501,7 +12501,7 @@ def handle_penis_in_t_face(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   当前阴茎位置为交互对象_阴茎蹭脸中
   Keyword arguments:
@@ -12528,7 +12528,7 @@ def handle_penis_in_t_mouse(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   当前阴茎位置为交互对象_口交中
   Keyword arguments:
@@ -12555,7 +12555,7 @@ def handle_penis_in_t_breast(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   当前阴茎位置为交互对象_乳交中
   Keyword arguments:
@@ -12582,7 +12582,7 @@ def handle_penis_in_t_axilla(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   当前阴茎位置为交互对象_腋交中
   Keyword arguments:
@@ -12609,7 +12609,7 @@ def handle_penis_in_t_hand(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   当前阴茎位置为交互对象_手交中
   Keyword arguments:
@@ -12636,7 +12636,7 @@ def handle_penis_in_t_vagina(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   当前阴茎位置为交互对象_V插入中
   Keyword arguments:
@@ -12663,7 +12663,7 @@ def handle_penis_in_t_womb(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   当前阴茎位置为交互对象_W插入中
   Keyword arguments:
@@ -12690,7 +12690,7 @@ def handle_penis_in_t_anal(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   当前阴茎位置为交互对象_A插入中
   Keyword arguments:
@@ -12717,7 +12717,7 @@ def handle_penis_in_t_urethral(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   当前阴茎位置为交互对象_U插入中
   Keyword arguments:
@@ -12744,7 +12744,7 @@ def handle_penis_in_t_leg(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   当前阴茎位置为交互对象_腿交中
   Keyword arguments:
@@ -12771,7 +12771,7 @@ def handle_penis_in_t_foot(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   当前阴茎位置为交互对象_足交中
   Keyword arguments:
@@ -12798,7 +12798,7 @@ def handle_penis_in_t_tail(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   当前阴茎位置为交互对象_尾交中
   Keyword arguments:
@@ -12825,7 +12825,7 @@ def handle_penis_in_t_horn(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   当前阴茎位置为交互对象_阴茎蹭角中
   Keyword arguments:
@@ -12852,7 +12852,7 @@ def handle_penis_in_t_ears(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   当前阴茎位置为交互对象_阴茎蹭耳朵中
   Keyword arguments:
@@ -12879,7 +12879,7 @@ def handle_penis_in_t_deep_throat(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   改变当前阴茎位置为交互对象_深喉中
   Keyword arguments:
@@ -12906,7 +12906,7 @@ def handle_penis_in_t_hat(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   改变当前阴茎位置为交互对象_帽子交中
   Keyword arguments:
@@ -12932,7 +12932,7 @@ def handle_penis_in_t_classes(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   改变当前阴茎位置为交互对象_眼镜交中
   Keyword arguments:
@@ -12958,7 +12958,7 @@ def handle_penis_in_t_ear_ornament(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   改变当前阴茎位置为交互对象_耳饰交中
   Keyword arguments:
@@ -12984,7 +12984,7 @@ def handle_penis_in_t_neck_ornament(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   改变当前阴茎位置为交互对象_脖饰交中
   Keyword arguments:
@@ -13010,7 +13010,7 @@ def handle_penis_in_t_mouth_ornament(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   改变当前阴茎位置为交互对象_口罩交中
   Keyword arguments:
@@ -13036,7 +13036,7 @@ def handle_penis_in_t_top(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   改变当前阴茎位置为交互对象_上衣交中
   Keyword arguments:
@@ -13062,7 +13062,7 @@ def handle_penis_in_t_corset(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   改变当前阴茎位置为交互对象_胸衣交中
   Keyword arguments:
@@ -13088,7 +13088,7 @@ def handle_penis_in_t_gloves(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   改变当前阴茎位置为交互对象_手套交中
   Keyword arguments:
@@ -13114,7 +13114,7 @@ def handle_penis_in_t_skirt(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   改变当前阴茎位置为交互对象_裙子交中
   Keyword arguments:
@@ -13140,7 +13140,7 @@ def handle_penis_in_t_underwear(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   改变当前阴茎位置为交互对象_内裤交中
   Keyword arguments:
@@ -13166,7 +13166,7 @@ def handle_penis_in_t_socks(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   改变当前阴茎位置为交互对象_袜子交中
   Keyword arguments:
@@ -13192,7 +13192,7 @@ def handle_penis_in_t_shoes(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   改变当前阴茎位置为交互对象_鞋子交中
   Keyword arguments:
@@ -13218,7 +13218,7 @@ def handle_penis_in_t_weapoms(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   改变当前阴茎位置为交互对象_武器交中
   Keyword arguments:
@@ -13244,7 +13244,7 @@ def handle_penis_in_t_trousers(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   改变当前阴茎位置为交互对象_裤子交中
   Keyword arguments:
@@ -13270,7 +13270,7 @@ def handle_cancel_penis_in_face_or_mouse(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   取消为阴茎位置交互对象_阴茎蹭脸中和口交中
   Keyword arguments:
@@ -13297,7 +13297,7 @@ def handle_dr_position_null(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   博士体位数据变成无
   Keyword arguments:
@@ -13320,7 +13320,7 @@ def handle_dr_position_normal(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   博士体位数据变成正常体位
   Keyword arguments:
@@ -13343,7 +13343,7 @@ def handle_dr_position_back(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   博士体位数据变成后背体位
   Keyword arguments:
@@ -13366,7 +13366,7 @@ def handle_dr_position_face_ride(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   博士体位数据变成对面骑乘体位
   Keyword arguments:
@@ -13389,7 +13389,7 @@ def handle_dr_position_back_ride(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   博士体位数据变成背面骑乘体位
   Keyword arguments:
@@ -13412,7 +13412,7 @@ def handle_dr_position_face_seat(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   博士体位数据变成对面座体位
   Keyword arguments:
@@ -13435,7 +13435,7 @@ def handle_dr_position_back_seat(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   博士体位数据变成背面座体位
   Keyword arguments:
@@ -13458,7 +13458,7 @@ def handle_dr_position_face_stand(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   博士体位数据变成对面立体位
   Keyword arguments:
@@ -13481,7 +13481,7 @@ def handle_dr_position_back_stand(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   博士体位数据变成背面立体位
   Keyword arguments:
@@ -13504,7 +13504,7 @@ def handle_dr_position_face_hug(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   博士体位数据变成对面抱体位
   Keyword arguments:
@@ -13527,7 +13527,7 @@ def handle_dr_position_back_hug(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   博士体位数据变成背面抱体位
   Keyword arguments:
@@ -13550,7 +13550,7 @@ def handle_dr_position_face_lie(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   博士体位数据变成对面卧体位
   Keyword arguments:
@@ -13573,7 +13573,7 @@ def handle_dr_position_back_lie(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   博士体位数据变成背面卧体位
   Keyword arguments:
@@ -13596,7 +13596,7 @@ def handle_dr_position_womb_null(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   博士子宫性交位置变成无
   Keyword arguments:
@@ -13619,7 +13619,7 @@ def handle_dr_position_womb_insert(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   博士子宫性交位置变成子宫口插入
   Keyword arguments:
@@ -13642,7 +13642,7 @@ def handle_dr_position_womb_sex(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   博士子宫性交位置变成子宫奸
   Keyword arguments:
@@ -13665,7 +13665,7 @@ def handle_h_in_love_hotel_to_false(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   取消自己和交互对象正在爱情旅馆中H的状态
   Keyword arguments:
@@ -13692,7 +13692,7 @@ def handle_take_chara_eggs_settle(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （拿走产下的卵用）拿走交互对象的全部未鉴定卵，卵数据留原处标记被拿走并写入玩家临时持有索引
   Keyword arguments:
@@ -13724,7 +13724,7 @@ def handle_identify_held_eggs_settle(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （鉴定持有的卵用）鉴定玩家临时持有的全部卵并经索引回写原角色卵数据，无精删卵、受精进入孵化
   Keyword arguments:
@@ -13751,7 +13751,7 @@ def handle_eat_last_two_food(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   吃掉背包里的最后两个食物，助理送饭时用
   Keyword arguments:
@@ -13778,7 +13778,7 @@ def handle_official_event_accept_recruit(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   公务事件用：接收一名待确认的招募干员（Plan 23）
 
@@ -13808,7 +13808,7 @@ def handle_official_event_temp_commission(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   公务事件用：生成一条突发的临时外勤委托（Plan 23）
 
@@ -13851,7 +13851,7 @@ def handle_prenatal_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （胎教用）给交互对象（孕妇）的妊娠期胎教累积值 +0.5（Plan 22 四期 §3.27）
 
@@ -13883,7 +13883,7 @@ def handle_nuirse_child_add_adjust(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   （喂奶用）婴儿的体力与气力上限微增；发起者是玩家时额外给婴儿加好感与好意（Plan 22 四期 §3.20）
 
