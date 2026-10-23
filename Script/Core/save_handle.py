@@ -1140,7 +1140,7 @@ def update_map(loaded_dict):
   if change_map_flag:
     loaded_dict["map_data"] = cache.map_data
     # 在2024.7月的版本中将人气快餐开封菜改为了约翰老妈汉堡店
-    if "贸易\人气快餐开封菜" in loaded_dict["scene_data"]:
+    if "贸易\\人气快餐开封菜" in loaded_dict["scene_data"]:
       # print("发现存档存在人气快餐开封菜")
       for key, value in loaded_dict["character_data"].items():
         if value.position[-1] == "人气快餐开封菜":

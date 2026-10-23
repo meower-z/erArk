@@ -1,6 +1,6 @@
 # lint-baseline v2
 # fingerprint astroid=4.3.4 config=7945e0c931b0 mypy=2.4.0 pylint=4.1.3
-# clean-rules abstract-class-instantiated,anomalous-unicode-escape-in-string,arguments-renamed,assert-on-string-literal,assert-on-tuple,assigning-non-slot,assignment-from-no-return,astroid-error,async-context-manager-with-regular-with,await-outside-async,bad-chained-comparison,bad-classmethod-argument,bad-configuration-section,bad-except-order,bad-exception-cause,bad-file-encoding,bad-format-character,bad-format-string,bad-format-string-key,bad-indentation,bad-mcs-classmethod-argument,bad-mcs-method-argument,bad-open-mode,bad-plugin-value,bad-reversed-sequence,bad-staticmethod-argument,bad-str-strip-call,bad-string-format-type,bad-super-call,bad-thread-instantiation,bare-name-capture-pattern,bidirectional-unicode,binary-op-exception,break-in-finally,catching-non-exception,class-variable-slots-conflict,config-parse-error,confusing-with-statement,contextmanager-generator-missing-cleanup,continue-in-finally,declare-non-slot,deprecated-argument,deprecated-attribute,deprecated-class,deprecated-decorator,deprecated-method,deprecated-module,dict-iter-missing-items,duplicate-argument-name,duplicate-bases,duplicate-except,duplicate-key,duplicate-string-formatting-argument,duplicate-value,empty-docstring,eval-used,expression-not-assigned,fatal,fmt-off,forgotten-debug-statement,format-combined-specification,format-needs-mapping,format-string-without-interpolation,global-at-module-level,implicit-flag-alias,inconsistent-mro,inconsistent-quotes,inherit-non-class,init-is-generator,invalid-all-format,invalid-all-object,invalid-bool-returned,invalid-bytes-returned,invalid-character-backspace,invalid-character-carriage-return,invalid-character-esc,invalid-character-nul,invalid-character-sub,invalid-character-zero-width-space,invalid-characters-in-docstring,invalid-class-object,invalid-enum-extension,invalid-envvar-default,invalid-envvar-value,invalid-field-call,invalid-format-index,invalid-format-returned,invalid-getnewargs-ex-returned,invalid-getnewargs-returned,invalid-hash-returned,invalid-index-returned,invalid-length-hint-returned,invalid-length-returned,invalid-match-args-definition,invalid-metaclass,invalid-overridden-method,invalid-repr-returned,invalid-sequence-index,invalid-slice-index,invalid-slice-step,invalid-slots,invalid-slots-object,invalid-star-assignment-target,invalid-str-returned,invalid-unary-operand-type,invalid-unicode-codec,isinstance-second-argument-not-valid-type,kwarg-superseded-by-positional-arg,logging-format-interpolation,logging-format-truncated,logging-not-lazy,logging-too-few-args,logging-too-many-args,logging-unsupported-format,looping-through-iterator,method-cache-max-size-none,method-check-failed,method-hidden,misplaced-bare-raise,misplaced-format-function,misplaced-future,missing-final-newline,missing-format-argument-key,missing-format-attribute,missing-format-string-key,missing-kwoa,missing-parentheses-for-call-in-test,missing-timeout,mixed-format-string,mixed-line-endings,modified-iterating-dict,modified-iterating-set,multiple-class-sub-patterns,multiple-statements,mypy-comment,mypy:used-before-def,named-expr-without-context,nan-comparison,nested-min-max,no-method-argument,no-self-argument,no-value-for-parameter,non-ascii-file-name,non-ascii-module-import,non-iterator-returned,non-parent-init-called,non-str-assignment-to-dunder-name,nonexistent-operator,nonlocal-and-global,nonlocal-without-binding,not-a-mapping,not-async-context-manager,not-callable,not-context-manager,not-in-loop,notimplemented-raised,overridden-final-method,parse-error,pointless-exception-statement,positional-only-arguments-expected,possibly-unused-variable,potential-index-error,preferred-module,raising-bad-type,raising-format-tuple,raising-non-exception,redeclared-assigned-name,redefined-slots-in-subclass,redundant-keyword-arg,redundant-u-string-prefix,redundant-unittest-assert,repeated-keyword,return-in-init,return-outside-function,self-cls-assignment,shadowed-import,shallow-copy-environ,single-string-used-for-slots,singledispatch-method,singledispatchmethod-function,star-needs-assignment-target,subclassed-final-class,subprocess-popen-preexec-fn,super-without-brackets,syntax-error,too-few-format-args,too-many-format-args,too-many-function-args,too-many-lines,too-many-positional-sub-patterns,too-many-star-expressions,trailing-whitespace,truncated-format-string,try-except-raise,typevar-double-variance,typevar-name-incorrect-variance,typevar-name-mismatch,unbalanced-dict-unpacking,undefined-all-variable,unexpected-keyword-arg,unexpected-line-ending-format,unexpected-special-method-signature,unhashable-member,unknown-option-value,unnecessary-ellipsis,unnecessary-semicolon,unpacking-non-sequence,unrecognized-inline-option,unrecognized-option,unsupported-assignment-operation,unsupported-binary-operation,unsupported-delete-operation,unused-format-string-argument,unused-format-string-key,unused-private-member,used-before-assignment,used-prior-global-declaration,useless-else-on-loop,useless-import-alias,useless-parent-delegation,useless-with-lock,using-assignment-expression-in-unsupported-version,using-comprehension-unpacking-in-unsupported-version,using-exception-groups-in-unsupported-version,using-f-string-in-unsupported-version,using-final-decorator-in-unsupported-version,using-generic-type-syntax-in-unsupported-version,using-positional-only-args-in-unsupported-version,wrong-exception-operation,wrong-spelling-in-comment,wrong-spelling-in-docstring,yield-inside-async-function,yield-outside-function
+# clean-rules abstract-class-instantiated,anomalous-backslash-in-string,anomalous-unicode-escape-in-string,arguments-renamed,assert-on-string-literal,assert-on-tuple,assigning-non-slot,assignment-from-no-return,astroid-error,async-context-manager-with-regular-with,await-outside-async,bad-chained-comparison,bad-classmethod-argument,bad-configuration-section,bad-except-order,bad-exception-cause,bad-file-encoding,bad-format-character,bad-format-string,bad-format-string-key,bad-indentation,bad-mcs-classmethod-argument,bad-mcs-method-argument,bad-open-mode,bad-plugin-value,bad-reversed-sequence,bad-staticmethod-argument,bad-str-strip-call,bad-string-format-type,bad-super-call,bad-thread-instantiation,bare-name-capture-pattern,bidirectional-unicode,binary-op-exception,break-in-finally,catching-non-exception,class-variable-slots-conflict,config-parse-error,confusing-with-statement,contextmanager-generator-missing-cleanup,continue-in-finally,declare-non-slot,deprecated-argument,deprecated-attribute,deprecated-class,deprecated-decorator,deprecated-method,deprecated-module,dict-iter-missing-items,duplicate-argument-name,duplicate-bases,duplicate-except,duplicate-key,duplicate-string-formatting-argument,duplicate-value,empty-docstring,eval-used,expression-not-assigned,fatal,fmt-off,forgotten-debug-statement,format-combined-specification,format-needs-mapping,format-string-without-interpolation,global-at-module-level,implicit-flag-alias,inconsistent-mro,inconsistent-quotes,inherit-non-class,init-is-generator,invalid-all-format,invalid-all-object,invalid-bool-returned,invalid-bytes-returned,invalid-character-backspace,invalid-character-carriage-return,invalid-character-esc,invalid-character-nul,invalid-character-sub,invalid-character-zero-width-space,invalid-characters-in-docstring,invalid-class-object,invalid-enum-extension,invalid-envvar-default,invalid-envvar-value,invalid-field-call,invalid-format-index,invalid-format-returned,invalid-getnewargs-ex-returned,invalid-getnewargs-returned,invalid-hash-returned,invalid-index-returned,invalid-length-hint-returned,invalid-length-returned,invalid-match-args-definition,invalid-metaclass,invalid-overridden-method,invalid-repr-returned,invalid-sequence-index,invalid-slice-index,invalid-slice-step,invalid-slots,invalid-slots-object,invalid-star-assignment-target,invalid-str-returned,invalid-unary-operand-type,invalid-unicode-codec,isinstance-second-argument-not-valid-type,kwarg-superseded-by-positional-arg,logging-format-interpolation,logging-format-truncated,logging-not-lazy,logging-too-few-args,logging-too-many-args,logging-unsupported-format,looping-through-iterator,method-cache-max-size-none,method-check-failed,method-hidden,misplaced-bare-raise,misplaced-format-function,misplaced-future,missing-final-newline,missing-format-argument-key,missing-format-attribute,missing-format-string-key,missing-kwoa,missing-parentheses-for-call-in-test,missing-timeout,mixed-format-string,mixed-line-endings,modified-iterating-dict,modified-iterating-set,multiple-class-sub-patterns,multiple-statements,mypy-comment,mypy:used-before-def,named-expr-without-context,nan-comparison,nested-min-max,no-method-argument,no-self-argument,no-value-for-parameter,non-ascii-file-name,non-ascii-module-import,non-iterator-returned,non-parent-init-called,non-str-assignment-to-dunder-name,nonexistent-operator,nonlocal-and-global,nonlocal-without-binding,not-a-mapping,not-async-context-manager,not-callable,not-context-manager,not-in-loop,notimplemented-raised,overridden-final-method,parse-error,pointless-exception-statement,positional-only-arguments-expected,possibly-unused-variable,potential-index-error,preferred-module,raising-bad-type,raising-format-tuple,raising-non-exception,redeclared-assigned-name,redefined-slots-in-subclass,redundant-keyword-arg,redundant-u-string-prefix,redundant-unittest-assert,repeated-keyword,return-in-init,return-outside-function,self-cls-assignment,shadowed-import,shallow-copy-environ,single-string-used-for-slots,singledispatch-method,singledispatchmethod-function,star-needs-assignment-target,subclassed-final-class,subprocess-popen-preexec-fn,super-without-brackets,syntax-error,too-few-format-args,too-many-format-args,too-many-function-args,too-many-lines,too-many-positional-sub-patterns,too-many-star-expressions,trailing-whitespace,truncated-format-string,try-except-raise,typevar-double-variance,typevar-name-incorrect-variance,typevar-name-mismatch,unbalanced-dict-unpacking,undefined-all-variable,unexpected-keyword-arg,unexpected-line-ending-format,unexpected-special-method-signature,unhashable-member,unknown-option-value,unnecessary-ellipsis,unnecessary-semicolon,unpacking-non-sequence,unrecognized-inline-option,unrecognized-option,unsupported-assignment-operation,unsupported-binary-operation,unsupported-delete-operation,unused-format-string-argument,unused-format-string-key,unused-private-member,used-before-assignment,used-prior-global-declaration,useless-else-on-loop,useless-import-alias,useless-parent-delegation,useless-with-lock,using-assignment-expression-in-unsupported-version,using-comprehension-unpacking-in-unsupported-version,using-exception-groups-in-unsupported-version,using-f-string-in-unsupported-version,using-final-decorator-in-unsupported-version,using-generic-type-syntax-in-unsupported-version,using-positional-only-args-in-unsupported-version,wrong-exception-operation,wrong-spelling-in-comment,wrong-spelling-in-docstring,yield-inside-async-function,yield-outside-function
 # old-module .github/skills/headless-game-test/harness_template.py
 # old-module .github/skills/headless-game-test/unit_test_template.py
 # old-module .github/skills/system-review-round/dead_code_scan.py
@@ -534,7 +534,6 @@ Script/Config/name_config.py	<module>	missing-module-docstring	count=1
 Script/Config/name_config.py	init_name_data	global-variable-not-assigned	count=2
 Script/Config/normal_config.py	<module>	missing-module-docstring	count=1
 Script/Config/normal_config.py	init_normal_config	bare-except	count=1
-Script/Config/normal_config.py	init_normal_config	unspecified-encoding	count=1
 Script/Core/cache_control.py	<module>	invalid-name	count=1
 Script/Core/cache_control.py	<module>	missing-module-docstring	count=1
 Script/Core/cache_control.py	<module>	mypy:assignment	count=1
@@ -642,7 +641,6 @@ Script/Core/game_init.py	init	global-variable-not-assigned	count=1
 Script/Core/game_init.py	init	import-outside-toplevel	count=1
 Script/Core/game_init.py	init	mypy:var-annotated	count=1
 Script/Core/game_init.py	init	too-many-statements	statements=63
-Script/Core/game_init.py	init	unspecified-encoding	count=1
 Script/Core/game_init.py	init	use-implicit-booleaness-not-len	count=1
 Script/Core/game_path_config.py	<module>	invalid-name	count=1
 Script/Core/game_path_config.py	<module>	missing-module-docstring	count=1
@@ -974,7 +972,6 @@ Script/Core/save_handle.py	load_save_info_file	broad-exception-caught	count=1
 Script/Core/save_handle.py	save_save_info_file	broad-exception-caught	count=1
 Script/Core/save_handle.py	update_dict_with_default	singleton-comparison	count=1
 Script/Core/save_handle.py	update_dict_with_default	unidiomatic-typecheck	count=2
-Script/Core/save_handle.py	update_map	anomalous-backslash-in-string	count=1
 Script/Core/save_handle.py	update_map	too-many-branches	branches=16
 Script/Core/save_handle.py	update_map	too-many-statements	statements=50
 Script/Core/save_handle.py	update_settings	consider-using-dict-items	count=6
@@ -3524,7 +3521,7 @@ Script/Test/Static_Check/checks/check_behavior.py	check_time_stop_player_unconsc
 Script/Test/Static_Check/checks/check_behavior.py	check_update_flow_depth_zero	line-too-long	count=2,max=113
 Script/Test/Static_Check/checks/check_behavior.py	check_update_flow_depth_zero	unidiomatic-typecheck	count=1
 Script/Test/Static_Check/checks/check_behavior.py	check_world_month_is_seasonal	line-too-long	count=2,max=93
-Script/Test/Static_Check/checks/check_body.py	<module>	module-lines	lines=1561
+Script/Test/Static_Check/checks/check_body.py	<module>	module-lines	lines=1553
 Script/Test/Static_Check/checks/check_body.py	_get_config_sets	broad-exception-caught	count=1
 Script/Test/Static_Check/checks/check_body.py	_get_config_sets	import-outside-toplevel	count=1
 Script/Test/Static_Check/checks/check_body.py	_get_config_sets	line-too-long	count=1,max=110
@@ -3535,25 +3532,19 @@ Script/Test/Static_Check/checks/check_body.py	check_child_born_time	line-too-lon
 Script/Test/Static_Check/checks/check_body.py	check_cloth_container_keys	line-too-long	count=2,max=130
 Script/Test/Static_Check/checks/check_body.py	check_cloth_id_validity	line-too-long	count=2,max=168
 Script/Test/Static_Check/checks/check_body.py	check_cloth_id_validity	unidiomatic-typecheck	count=1
-Script/Test/Static_Check/checks/check_body.py	check_cloth_id_validity	unsubscriptable-object	count=3
-Script/Test/Static_Check/checks/check_body.py	check_cloth_id_validity	unsupported-membership-test	count=1
 Script/Test/Static_Check/checks/check_body.py	check_cloth_see_shape	unidiomatic-typecheck	count=2
 Script/Test/Static_Check/checks/check_body.py	check_cloth_slot_duplicates	line-too-long	count=1,max=85
 Script/Test/Static_Check/checks/check_body.py	check_cloth_slot_duplicates	unidiomatic-typecheck	count=1
 Script/Test/Static_Check/checks/check_body.py	check_clothing_tem_list	line-too-long	count=1,max=114
 Script/Test/Static_Check/checks/check_body.py	check_clothing_tem_list	unidiomatic-typecheck	count=2
-Script/Test/Static_Check/checks/check_body.py	check_clothing_tem_list	unsupported-membership-test	count=2
 Script/Test/Static_Check/checks/check_body.py	check_condom_decoration	line-too-long	count=2,max=101
 Script/Test/Static_Check/checks/check_body.py	check_condom_decoration	unidiomatic-typecheck	count=2
-Script/Test/Static_Check/checks/check_body.py	check_condom_decoration	unsupported-membership-test	count=1
 Script/Test/Static_Check/checks/check_body.py	check_enema_state	line-too-long	count=1,max=100
 Script/Test/Static_Check/checks/check_body.py	check_enema_state	unidiomatic-typecheck	count=2
 Script/Test/Static_Check/checks/check_body.py	check_equipment_condition_bound	line-too-long	count=1,max=88
 Script/Test/Static_Check/checks/check_body.py	check_equipment_condition_bound	superfluous-parens	count=1
 Script/Test/Static_Check/checks/check_body.py	check_exclusive_cloth_owner	line-too-long	count=1,max=147
 Script/Test/Static_Check/checks/check_body.py	check_exclusive_cloth_owner	unidiomatic-typecheck	count=1
-Script/Test/Static_Check/checks/check_body.py	check_exclusive_cloth_owner	unsubscriptable-object	count=2
-Script/Test/Static_Check/checks/check_body.py	check_exclusive_cloth_owner	unsupported-membership-test	count=1
 Script/Test/Static_Check/checks/check_body.py	check_fertilization_time	line-too-long	count=1,max=103
 Script/Test/Static_Check/checks/check_body.py	check_milk_bounds	line-too-long	count=2,max=86
 Script/Test/Static_Check/checks/check_body.py	check_penis_dirty_dict	unidiomatic-typecheck	count=1
@@ -3565,14 +3556,11 @@ Script/Test/Static_Check/checks/check_body.py	check_reproduction_period	line-too
 Script/Test/Static_Check/checks/check_body.py	check_reproduction_period	unidiomatic-typecheck	count=1
 Script/Test/Static_Check/checks/check_body.py	check_semen_flow_shape	line-too-long	count=1,max=84
 Script/Test/Static_Check/checks/check_body.py	check_semen_flow_shape	unidiomatic-typecheck	count=1
-Script/Test/Static_Check/checks/check_body.py	check_semen_flow_shape	unsupported-membership-test	count=4
 Script/Test/Static_Check/checks/check_body.py	check_semen_flow_source_container	line-too-long	count=1,max=104
 Script/Test/Static_Check/checks/check_body.py	check_semen_level_sync	broad-exception-caught	count=2
 Script/Test/Static_Check/checks/check_body.py	check_semen_level_sync	import-outside-toplevel	count=1
 Script/Test/Static_Check/checks/check_body.py	check_semen_level_sync	line-too-long	count=1,max=106
-Script/Test/Static_Check/checks/check_body.py	check_semen_level_sync	unsupported-membership-test	count=1
 Script/Test/Static_Check/checks/check_body.py	check_semen_list_aliasing	line-too-long	count=1,max=99
-Script/Test/Static_Check/checks/check_body.py	check_semen_list_aliasing	not-an-iterable	count=1
 Script/Test/Static_Check/checks/check_body.py	check_semen_non_negative	line-too-long	count=2,max=95
 Script/Test/Static_Check/checks/check_body.py	check_semen_table_shape	line-too-long	count=4,max=115
 Script/Test/Static_Check/checks/check_body.py	check_semen_total_ge_current	line-too-long	count=1,max=103
@@ -3725,8 +3713,7 @@ Script/Test/Static_Check/checks/check_island.py	check_island_30_facility_damage_
 Script/Test/Static_Check/checks/check_island.py	check_island_31_visitor_and_recruited_id	line-too-long	count=1,max=105
 Script/Test/Static_Check/checks/check_island.py	check_island_33_diplomat_mapping_consistency	line-too-long	count=6,max=133
 Script/Test/Static_Check/checks/check_mind.py	<module>	line-too-long	count=1,max=85
-Script/Test/Static_Check/checks/check_mind.py	<module>	module-lines	lines=1203
-Script/Test/Static_Check/checks/check_mind.py	_iter_npcs	not-an-iterable	count=1
+Script/Test/Static_Check/checks/check_mind.py	<module>	module-lines	lines=1200
 Script/Test/Static_Check/checks/check_mind.py	check_air_hypnosis_anchor_shape	line-too-long	count=2,max=98
 Script/Test/Static_Check/checks/check_mind.py	check_air_hypnosis_anchor_shape	unsupported-membership-test	count=1
 Script/Test/Static_Check/checks/check_mind.py	check_air_hypnosis_colocated_with_anchor	line-too-long	count=2,max=112
@@ -4113,7 +4100,6 @@ Script/UI/Flow/normal_flow.py	mixology_flow	import-outside-toplevel	count=1
 Script/UI/Flow/normal_flow.py	pregnancy_overview_flow	import-outside-toplevel	count=1
 Script/UI/Flow/title_flow.py	<module>	invalid-name	count=1
 Script/UI/Flow/title_flow.py	<module>	missing-module-docstring	count=1
-Script/UI/Flow/title_flow.py	draw_logo	anomalous-backslash-in-string	count=6
 Script/UI/Flow/title_flow.py	draw_logo	invalid-name	count=1
 Script/UI/Flow/title_flow.py	draw_logo	line-too-long	count=1,max=178
 Script/UI/Flow/title_flow.py	title_panel	invalid-name	count=1
@@ -4906,12 +4892,11 @@ Script/UI/Panel/manage_basement_panel.py	Manage_Basement_Panel.show_department	u
 Script/UI/Panel/manage_basement_panel.py	change_npc_work_out	dangerous-default-value	count=1
 Script/UI/Panel/manage_library.py	<module>	invalid-name	count=1
 Script/UI/Panel/manage_library.py	<module>	missing-module-docstring	count=1
-Script/UI/Panel/manage_library.py	<module>	module-lines	lines=544
+Script/UI/Panel/manage_library.py	<module>	module-lines	lines=540
 Script/UI/Panel/manage_library.py	Manage_Library_Panel	invalid-name	own=1
 Script/UI/Panel/manage_library.py	Manage_Library_Panel.borrowing_history	unused-variable	count=1
 Script/UI/Panel/manage_library.py	Manage_Library_Panel.draw	too-many-locals	locals=18
-Script/UI/Panel/manage_library.py	Manage_Library_Panel.draw	too-many-statements	statements=47
-Script/UI/Panel/manage_library.py	Manage_Library_Panel.draw	using-constant-test	count=4
+Script/UI/Panel/manage_library.py	Manage_Library_Panel.draw	too-many-statements	statements=43
 Script/UI/Panel/manage_library.py	Manage_Library_Panel.reading_party	line-too-long	count=1,max=117
 Script/UI/Panel/manage_library.py	Manage_Library_Panel.show_character_history	too-many-branches	branches=13
 Script/UI/Panel/manage_library.py	Manage_Library_Panel.show_character_history	too-many-locals	locals=25
@@ -5142,7 +5127,7 @@ Script/UI/Panel/originium_arts.py	Originium_Arts_Panel.gain_and_upgrade_ability	
 Script/UI/Panel/originium_arts.py	Originium_Arts_Panel.new_round_for_sure	import-outside-toplevel	count=1
 Script/UI/Panel/physical_check_and_manage.py	<module>	invalid-name	count=1
 Script/UI/Panel/physical_check_and_manage.py	<module>	missing-module-docstring	count=1
-Script/UI/Panel/physical_check_and_manage.py	<module>	module-lines	lines=1472
+Script/UI/Panel/physical_check_and_manage.py	<module>	module-lines	lines=1470
 Script/UI/Panel/physical_check_and_manage.py	Physical_Check_And_Manage_Panel	invalid-name	own=1
 Script/UI/Panel/physical_check_and_manage.py	Physical_Check_And_Manage_Panel.__init__	mypy:var-annotated	count=1
 Script/UI/Panel/physical_check_and_manage.py	Physical_Check_And_Manage_Panel.adjust_physical_check_schedule	consider-using-dict-items	count=1
@@ -5167,8 +5152,7 @@ Script/UI/Panel/physical_check_and_manage.py	Physical_Check_And_Manage_Panel.che
 Script/UI/Panel/physical_check_and_manage.py	Physical_Check_And_Manage_Panel.check_target_physical	too-many-locals	locals=23
 Script/UI/Panel/physical_check_and_manage.py	Physical_Check_And_Manage_Panel.check_target_physical	too-many-statements	statements=72
 Script/UI/Panel/physical_check_and_manage.py	Physical_Check_And_Manage_Panel.draw	too-many-locals	locals=20
-Script/UI/Panel/physical_check_and_manage.py	Physical_Check_And_Manage_Panel.draw	too-many-statements	statements=81
-Script/UI/Panel/physical_check_and_manage.py	Physical_Check_And_Manage_Panel.draw	using-constant-test	count=2
+Script/UI/Panel/physical_check_and_manage.py	Physical_Check_And_Manage_Panel.draw	too-many-statements	statements=79
 Script/UI/Panel/physical_check_and_manage.py	Physical_Check_And_Manage_Panel.judge_manage_requirement	too-many-branches	branches=48
 Script/UI/Panel/physical_check_and_manage.py	Physical_Check_And_Manage_Panel.judge_manage_requirement	too-many-statements	statements=142
 Script/UI/Panel/physical_check_and_manage.py	Physical_Check_And_Manage_Panel.manage_target_physical	consider-using-dict-items	count=1

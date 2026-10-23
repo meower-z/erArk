@@ -177,31 +177,29 @@ class Physical_Check_And_Manage_Panel:
         button2_draw.width = self.width
         button2_draw.draw()
 
-      if 1:
-        button3_text = _("[003]取消身体管理")
-        button3_draw = draw.LeftButton(
-            _(button3_text),
-            _("3"),
-            window_width,
-            cmd_func=self.cancle_physical_manage_panel,
-            args=(),
-        )
-        line_feed.draw()
-        button3_draw.draw()
-        return_list.append(button3_draw.return_text)
+      button3_text = _("[003]取消身体管理")
+      button3_draw = draw.LeftButton(
+          _(button3_text),
+          _("3"),
+          window_width,
+          cmd_func=self.cancle_physical_manage_panel,
+          args=(),
+      )
+      line_feed.draw()
+      button3_draw.draw()
+      return_list.append(button3_draw.return_text)
 
-      if 1:
-        button4_text = _("[004]调整体检日程")
-        button4_draw = draw.LeftButton(
-            _(button4_text),
-            _("4"),
-            window_width,
-            cmd_func=self.adjust_physical_check_schedule,
-            args=(),
-        )
-        line_feed.draw()
-        button4_draw.draw()
-        return_list.append(button4_draw.return_text)
+      button4_text = _("[004]调整体检日程")
+      button4_draw = draw.LeftButton(
+          _(button4_text),
+          _("4"),
+          window_width,
+          cmd_func=self.adjust_physical_check_schedule,
+          args=(),
+      )
+      line_feed.draw()
+      button4_draw.draw()
+      return_list.append(button4_draw.return_text)
 
       if len(self.done_check_behavior_id_set) > 0:
         button11_text = _("[011]查看检查报告")

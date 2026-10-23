@@ -44,21 +44,13 @@ def _get_config_sets() -> Tuple[Optional[set], Optional[set], Optional[dict]]:
     from Script.Config import game_config
   except Exception:
     return None, None, None
-  ct = (
-      set(game_config.config_clothing_type)
-      if getattr(game_config, "config_clothing_type", None)
-      else None
-  )
-  bp = (
-      set(game_config.config_body_part)
-      if getattr(game_config, "config_body_part", None)
-      else None
-  )
-  tem = (
-      game_config.config_clothing_tem
-      if getattr(game_config, "config_clothing_tem", None)
-      else None
-  )
+  ct = bp = tem = None
+  if getattr(game_config, "config_clothing_type", None):
+    ct = set(game_config.config_clothing_type)
+  if getattr(game_config, "config_body_part", None):
+    bp = set(game_config.config_body_part)
+  if getattr(game_config, "config_clothing_tem", None):
+    tem = game_config.config_clothing_tem
   return ct, bp, tem
 
 
