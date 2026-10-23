@@ -166,7 +166,7 @@ def handle_eat_time(character_id: int) -> int:
   int -- 权重
   """
   character_data: game_type.Character = cache.character_data[character_id]
-  now_time = game_time.get_sun_time(character_data.behavior.start_time)
+  game_time.get_sun_time(character_data.behavior.start_time)
   # return (now_time == 4) * 100
   # print(f"debug start_time = {character_data.behavior.start_time}，now_time = {now_time}")
   if character_data.behavior.start_time.hour in {7, 8, 12, 13, 18, 19}:
@@ -261,7 +261,7 @@ def handle_sleep_time(character_id: int) -> int:
   int -- 权重
   """
   character_data: game_type.Character = cache.character_data[character_id]
-  now_time = game_time.get_sun_time(character_data.behavior.start_time)
+  game_time.get_sun_time(character_data.behavior.start_time)
   # return (now_time == 4) * 100
   if character_data.behavior.start_time.hour in {0, 1, 2, 3, 4, 5, 22, 23}:
     now_hour = (
@@ -285,7 +285,7 @@ def handle_not_sleep_time(character_id: int) -> int:
   int -- 权重
   """
   character_data: game_type.Character = cache.character_data[character_id]
-  now_time = game_time.get_sun_time(character_data.behavior.start_time)
+  game_time.get_sun_time(character_data.behavior.start_time)
   # return (now_time == 4) * 100
   if character_data.behavior.start_time.hour in {0, 1, 2, 3, 4, 5, 22, 23}:
     return 0
@@ -362,7 +362,7 @@ def handle_to_work_time(character_id: int) -> int:
   int -- 权重
   """
   character_data: game_type.Character = cache.character_data[character_id]
-  now_time = game_time.get_sun_time(character_data.behavior.start_time)
+  game_time.get_sun_time(character_data.behavior.start_time)
   # return (now_time == 4) * 100
   # 首先需要是工作日
   if game_time.judge_work_today(0):
@@ -387,7 +387,7 @@ def handle_work_time(character_id: int) -> int:
   int -- 权重
   """
   character_data: game_type.Character = cache.character_data[character_id]
-  now_time = game_time.get_sun_time(character_data.behavior.start_time)
+  game_time.get_sun_time(character_data.behavior.start_time)
   # return (now_time == 4) * 100
   # 首先需要是工作日
   if game_time.judge_work_today(0):
@@ -409,7 +409,7 @@ def handle_to_work_time_or_work_time(character_id: int) -> int:
   int -- 权重
   """
   character_data: game_type.Character = cache.character_data[character_id]
-  now_time = game_time.get_sun_time(character_data.behavior.start_time)
+  game_time.get_sun_time(character_data.behavior.start_time)
   # return (now_time == 4) * 100
   # 首先需要是工作日
   if game_time.judge_work_today(0):
@@ -510,7 +510,7 @@ def handle_morning_entertainment_time(character_id: int) -> int:
   int -- 权重
   """
   character_data: game_type.Character = cache.character_data[character_id]
-  now_time = game_time.get_sun_time(character_data.behavior.start_time)
+  game_time.get_sun_time(character_data.behavior.start_time)
   # return (now_time == 4) * 100
   if 9 <= character_data.behavior.start_time.hour < 12:
     return 50
@@ -527,7 +527,7 @@ def handle_afternoon_entertainment_time(character_id: int) -> int:
   int -- 权重
   """
   character_data: game_type.Character = cache.character_data[character_id]
-  now_time = game_time.get_sun_time(character_data.behavior.start_time)
+  game_time.get_sun_time(character_data.behavior.start_time)
   # return (now_time == 4) * 100
   if 14 <= character_data.behavior.start_time.hour < 18:
     return 50
@@ -544,7 +544,7 @@ def handle_evening_entertainment_time(character_id: int) -> int:
   int -- 权重
   """
   character_data: game_type.Character = cache.character_data[character_id]
-  now_time = game_time.get_sun_time(character_data.behavior.start_time)
+  game_time.get_sun_time(character_data.behavior.start_time)
   # return (now_time == 4) * 100
   if 19 <= character_data.behavior.start_time.hour < 22:
     return 50

@@ -113,7 +113,7 @@ def get_stage_info_text(character_id: int, now_stage: int) -> str:
     from Script.System.Pregnancy_System import soft_egg_handle
     # 逐枚列出体外卵的地点、精液量与距受精判定的剩余分钟
     egg_text_list = []
-    for egg_id, egg_data in soft_egg_handle.get_mother_soft_eggs(
+    for __, egg_data in soft_egg_handle.get_mother_soft_eggs(
         character_id
     ).items():
       remain_minute = soft_egg_handle.get_soft_egg_remain_minute(egg_data)

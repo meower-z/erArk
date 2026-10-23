@@ -148,7 +148,6 @@ def get_weight_from_premise_dict(
 
   character_data: game_type.Character = cache.character_data[character_id]
   target_character_id = character_data.target_character_id
-  target_character_data = cache.character_data[target_character_id]
   behavior_id = character_data.behavior.behavior_id
   now_weight: float = 0  # 总权重
   now_premise_data = {}  # 记录已经计算过的前提
@@ -989,8 +988,8 @@ def handle_target_have_chara_diy_instruct(character_id: int) -> int:
   """
   from Script.UI.Panel import event_option_panel
 
-  len_son_event_list, son_event_list = (
-      event_option_panel.get_target_chara_diy_instruct(character_id)
+  len_son_event_list, __ = event_option_panel.get_target_chara_diy_instruct(
+      character_id
   )
   if len_son_event_list:
     return 1

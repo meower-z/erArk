@@ -1944,11 +1944,11 @@ def handle_favorability_le_2(character_id: int) -> int:
 
   level = 3
   if character_id == 0:
-    level, tem = attr_calculation.get_favorability_level(
+    level, __ = attr_calculation.get_favorability_level(
         target_data.favorability[0]
     )
   elif character_data.target_character_id == 0:
-    level, tem = attr_calculation.get_favorability_level(
+    level, __ = attr_calculation.get_favorability_level(
         character_data.favorability[0]
     )
   if level <= 2:
@@ -1971,11 +1971,11 @@ def handle_favorability_ge_3(character_id: int) -> int:
 
   level = 0
   if character_id == 0:
-    level, tem = attr_calculation.get_favorability_level(
+    level, __ = attr_calculation.get_favorability_level(
         target_data.favorability[0]
     )
   elif character_data.target_character_id == 0:
-    level, tem = attr_calculation.get_favorability_level(
+    level, __ = attr_calculation.get_favorability_level(
         character_data.favorability[0]
     )
   if level >= 3:
@@ -2663,7 +2663,6 @@ def handle_can_manual_change_dormitory(character_id: int) -> int:
   from Script.Design.handle_premise import handle_normal_7
   from Script.System.Dormitory_System import common as dormitory_common
 
-  character_data: game_type.Character = cache.character_data[character_id]
   # 处于特殊住宿状态（监禁/同居/舍管/监狱长）的角色不允许手动换宿
   if dormitory_common.get_residence_type(character_id) != "dormitory":
     return 0

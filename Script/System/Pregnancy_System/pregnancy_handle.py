@@ -615,7 +615,6 @@ def check_born(character_id: int):
   """
   判断是否开始生产
   """
-  character_data: game_type.Character = cache.character_data[character_id]
   # 需要已经是临盆状态
   if handle_premise.handle_parturient_1(character_id):
     # 计算经过的天数（含妊娠加速药的加速天数）
@@ -726,7 +725,6 @@ def check_rearing_complete(character_id: int):
   """
   判断是否完成育儿：逐个检查母亲名下的全部婴儿，有效成长天数满30天的婴儿各自成长为幼女
   """
-  character_data: game_type.Character = cache.character_data[character_id]
   # 需要已经是育儿状态
   if handle_premise.handle_rearing_1(character_id):
     # 婴儿满一个季月（30天）成长为幼女

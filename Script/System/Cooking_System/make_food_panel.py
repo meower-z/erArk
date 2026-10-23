@@ -131,7 +131,7 @@ class Make_food_Panel:
       info_draw = draw.NormalDraw()
       info_draw.text = _("○筛选：\n")
       info_draw.draw()
-      filter_text, sort_text = self.get_filter_sort_status_text()
+      filter_text, __ = self.get_filter_sort_status_text()
       filter_text = "[{0}]".format(filter_text)
       empty_draw = draw.NormalDraw()
       empty_draw.text = "  "
@@ -581,10 +581,8 @@ class Make_food_Panel:
       for type_id, type_name in type_name_map.items():
         if type_id in current_filter_type:
           button_text = f"[√{type_name}]"
-          style = "onbutton"
         else:
           button_text = f"[{type_name}]"
-          style = "standard"
         type_button = draw.CenterButton(
             button_text,
             f"type_{type_id}",
@@ -1055,7 +1053,7 @@ class SeeFoodListByFoodNameDraw:
         character_data.item[self.special_seasoning] -= 1
       # 精液调味则每份扣除一次精液量，库存不足时停止制作
       if self.special_seasoning in {11, 12}:
-        semen_text, semen_count = ejaculation_panel.common_ejaculation()
+        __, semen_count = ejaculation_panel.common_ejaculation()
         if semen_count <= 0:
           break
       # 创建食物对象并赋予名字、作者、品质、味道

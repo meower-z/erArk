@@ -385,7 +385,7 @@ def settle_medical_department(
   rhodes_island.medical_daily_counters = medical_constant.MedicalDailyCounters()
 
   # 检查是否有待调整的收费系数，若有则应用并清空。
-  price_ratio_updated = clinic_patient_management.apply_new_medical_price_ratio(
+  clinic_patient_management.apply_new_medical_price_ratio(
       target_base=rhodes_island
   )
 

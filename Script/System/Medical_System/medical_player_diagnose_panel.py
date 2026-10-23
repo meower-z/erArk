@@ -631,7 +631,7 @@ class MedicalPlayerDiagnosePanel:
         part_map_check = raw_info.get("parts", {})
         has_confirmed_sys = False
         if isinstance(part_map_check, dict):
-          for part_key, p_info in part_map_check.items():
+          for __, p_info in part_map_check.items():
             if isinstance(p_info, dict):
               opts = p_info.get("options", [])
               if any(

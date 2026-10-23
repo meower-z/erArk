@@ -305,7 +305,6 @@ def judge_character_status_time_over(
   bool -- 本次update时间切片内活动是否已完成
   """
   character_data: game_type.Character = cache.character_data[character_id]
-  pl_character_data = cache.character_data[0]
   scene_path_str = map_handle.get_map_system_path_str_for_list(
       character_data.position
   )

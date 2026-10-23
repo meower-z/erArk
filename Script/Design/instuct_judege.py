@@ -100,14 +100,14 @@ def calculation_instuct_judege(
   judge = 0
 
   # 好感判定#
-  favorability_level, judge_favorability = (
-      attr_calculation.get_favorability_level(target_data.favorability[0])
+  __, judge_favorability = attr_calculation.get_favorability_level(
+      target_data.favorability[0]
   )
   calculation_text += _("好感修正(") + str(judge_favorability) + ")"
   judge += judge_favorability
 
   # 信赖判定#
-  trust_level, judge_trust = attr_calculation.get_trust_level(target_data.trust)
+  __, judge_trust = attr_calculation.get_trust_level(target_data.trust)
   judge += judge_trust
   calculation_text += _("+信赖修正(") + str(judge_trust) + ")"
 
@@ -205,7 +205,7 @@ def calculation_instuct_judege(
     calculation_text += _("+女儿(+") + str(judge_daughter) + ")"
 
   # 醉酒修正
-  drunk_level, drunk_name = drunk_sex_common.get_drunk_level(target_data.cid)
+  drunk_level, __ = drunk_sex_common.get_drunk_level(target_data.cid)
   if drunk_level:
     # 醉酒等级 1~3 的修正值
     judge_drunk = {1: 20, 2: 100, 3: 500}[drunk_level]

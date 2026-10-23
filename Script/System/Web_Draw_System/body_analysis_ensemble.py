@@ -737,7 +737,6 @@ def main() -> None:
 
   success_count = 0
   fail_count = 0
-  skip_count = 0
   auto_sigmoid_checked = False
   process_start = time.time()
 

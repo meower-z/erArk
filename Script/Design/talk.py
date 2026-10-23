@@ -463,7 +463,7 @@ def handle_talk_draw(
     if not_draw_flag:
       return
     # 特殊符号检测
-    tem_text, special_code = special_code_judge(talk_text)
+    __, special_code = special_code_judge(talk_text)
     # 检测并绘制图片
     talk_text = talk_image.draw_image_in_talk(talk_text)
     now_draw: draw.NormalDraw = draw.LineFeedWaitDraw()
@@ -1087,7 +1087,7 @@ def code_text_to_draw_text(
   ]
 
   # 输入的原文本
-  now_talk_text, special_code = special_code_judge(talk_text)
+  now_talk_text, __ = special_code_judge(talk_text)
 
   # 替换通用文本
   original_target_character_id = player_data.target_character_id

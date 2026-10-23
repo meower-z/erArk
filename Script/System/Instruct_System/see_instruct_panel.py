@@ -13,7 +13,6 @@ from Script.Core import (
 )
 from Script.Design import handle_premise, talk, child_stage_gate
 from Script.Config import game_config
-import time
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -147,7 +146,6 @@ class SeeInstructPanel:
 
   def draw(self):
     """绘制操作菜单面板"""
-    start_instruct = time.time()
     SINGLE_LINE_INSTRUCT_NUM = (
         int(cache.all_system_setting.draw_setting[11]) + 1
     )  # 单行显示的指令数量

@@ -239,9 +239,7 @@ def base_chara_state_common_settle(
   for tem_state_id in game_config.config_character_state:
     if game_config.config_character_state[tem_state_id].type == 0:
       feel_state_set.append(tem_state_id)
-  good_state_set = {8, 9, 10, 11, 12, 13, 14, 15, 16}  # 正面状态
   bad_state_set = {18, 19, 20}  # 负面状态，恐怖抑郁反感
-  body_state_set = {8, 12, 17}  # 身体状态，润滑欲情苦痛
   mentel_state_set = {9, 10, 11, 13, 14, 15, 16, 18, 19, 20}  # 心智状态
 
   # 基础固定值
@@ -446,7 +444,7 @@ def chara_feel_state_adjust(
         handle_ability.get_ability_adjust(character_data.ability[19]) - 1
     ) * 2
   # 醉酒程度会增加全部快感
-  drunk_level, drunk_name = drunk_sex_common.get_drunk_level(character_id)
+  drunk_level, __ = drunk_sex_common.get_drunk_level(character_id)
   final_adjust += 0.2 * drunk_level
   # 信物调整值
   now_token = pl_character_data.pl_collection.eqip_token[1]

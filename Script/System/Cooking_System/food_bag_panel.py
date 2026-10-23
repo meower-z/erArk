@@ -406,16 +406,13 @@ class FoodGroupDraw:
           f"({game_config.config_seasoning[special_seasoning].name})"
       )
 
-    # 遍历计算最高品质和是否有制作者
+    # 遍历计算最高品质
     max_quality = 0
-    has_maker = False
     for uid in uid_list:
       if uid in cache.character_data[0].food_bag:
         food_data: game_type.Food = cache.character_data[0].food_bag[uid]
         if food_data.quality > max_quality:
           max_quality = food_data.quality
-        if food_data.maker != "":
-          has_maker = True
 
     _quality_level, quality_str = attr_calculation.get_food_quality(max_quality)
     count = len(uid_list)

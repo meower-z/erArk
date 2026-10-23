@@ -110,7 +110,7 @@ def reduce_drunk_point(character_id: int, time: int) -> None:
     base_reduce = round(time / 10)
   coefficient = 1.0
   # 根据当前醉酒程度获取修正系数：醉酒×0.8，烂醉×0.5，其他状态不影响
-  drunk_cid, drunk_name = get_drunk_level(character_id)
+  drunk_cid, __ = get_drunk_level(character_id)
   if drunk_cid == 2:
     coefficient *= 0.8
   elif drunk_cid == 3:
@@ -185,7 +185,7 @@ def taste_wine(character_id: int) -> None:
   character_data = cache.character_data[character_id]
   # 获取角色当前醉酒值和醉酒等级
   drunk_value = character_data.drunk_point
-  drunk_cid, drunk_name = get_drunk_level(character_id)
+  get_drunk_level(character_id)
   # 角色的酒量基础为3，从一杯就倒到千杯不醉，分别对应为1到5
   alcohol_tolerance = 3
   if handle_premise.handle_self_have_easily_drunk(character_id):

@@ -304,9 +304,9 @@ def build_user_prompt(
   ave_text: int | str = 0
   if tem_send_data_flags[11]:
     favorability = npc_character_data.favorability[0]
-    favorability_lv, tem = attr_calculation.get_favorability_level(favorability)
+    favorability_lv, __ = attr_calculation.get_favorability_level(favorability)
     trust = npc_character_data.trust
-    trust_lv, tem = attr_calculation.get_trust_level(trust)
+    trust_lv, __ = attr_calculation.get_trust_level(trust)
     ave_lv = int((favorability_lv + trust_lv) / 2)
     ave_text = str(ave_lv)
 
@@ -331,7 +331,7 @@ def build_user_prompt(
   sleep_text, tired_text = "", ""
   # 睡眠
   if tem_send_data_flags[35]:
-    tem, sleep_text = attr_calculation.get_sleep_level(
+    __, sleep_text = attr_calculation.get_sleep_level(
         npc_character_data.sleep_point
     )
   # 疲劳
@@ -749,7 +749,7 @@ def text_ai(
         )
         # 获取返回的文本
         ai_gererate_text = completion.choices[0].message.content
-    except Exception as e:
+    except Exception:
       # 如果发生异常，将返回的文本设为空
       ai_gererate_text = ""
   # 调用Gemini
@@ -801,7 +801,7 @@ def text_ai(
         )
         # 获取返回的文本
         ai_gererate_text = completion.text
-    except Exception as e:
+    except Exception:
       # 如果发生异常，将返回的文本设为空
       ai_gererate_text = ""
 

@@ -541,7 +541,7 @@ class Manage_Dormitory_Panel:
     free_slots: List[str] = []
 
     for layer in sorted(open_rooms_by_layer.keys()):
-      for room_name, room_path in open_rooms_by_layer[layer]:
+      for __, room_path in open_rooms_by_layer[layer]:
         room_count = occupancy.get(room_path, 0)
         room_capacity = self._get_room_capacity(room_path, occupancy)
         for _slot_idx in range(max(0, room_capacity - room_count)):
@@ -580,7 +580,7 @@ class Manage_Dormitory_Panel:
     open_rooms_by_layer = self._get_open_rooms_by_layer()
     occupancy = self._get_room_occupancy()
     for layer in sorted(open_rooms_by_layer.keys()):
-      for room_name, room_path in open_rooms_by_layer[layer]:
+      for __, room_path in open_rooms_by_layer[layer]:
         if occupancy.get(room_path, 0) > 2:
           return True
     return False
@@ -595,7 +595,7 @@ class Manage_Dormitory_Panel:
     open_rooms_by_layer = self._get_open_rooms_by_layer()
     open_room_paths: List[str] = []
     for layer in sorted(open_rooms_by_layer.keys()):
-      for room_name, room_path in open_rooms_by_layer[layer]:
+      for __, room_path in open_rooms_by_layer[layer]:
         open_room_paths.append(room_path)
 
     room_character_ids: Dict[str, List[int]] = {

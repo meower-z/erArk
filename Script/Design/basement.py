@@ -189,8 +189,8 @@ def get_base_updata():
         cache.rhodes_island.recruit_line[3] = [0, 0, 0, 0]
       # 计算各线当前效率
       for recruit_line_id in cache.rhodes_island.recruit_line:
-        detail_str, total_bonus = (
-            recruit_panel.calculate_recruit_line_efficiency(recruit_line_id)
+        __, total_bonus = recruit_panel.calculate_recruit_line_efficiency(
+            recruit_line_id
         )
         cache.rhodes_island.recruit_line[recruit_line_id][3] = round(
             total_bonus, 1
@@ -234,7 +234,7 @@ def get_base_updata():
             2
         ] = produce_effect
       for agriculture_line_id in cache.rhodes_island.green_house_line:
-        detail_str, produce_effect = (
+        __, produce_effect = (
             agriculture_production_panel.calculate_agriculture_line_efficiency(
                 agriculture_line_id, agriculture_type=1
             )
@@ -262,7 +262,7 @@ def get_base_updata():
         cache.rhodes_island.herb_garden_line[3] = [0, 0, 0, 0, 0]
       # 计算各线当前效率
       for agriculture_line_id in cache.rhodes_island.herb_garden_line:
-        detail_str, produce_effect = (
+        __, produce_effect = (
             agriculture_production_panel.calculate_agriculture_line_efficiency(
                 agriculture_line_id, agriculture_type=0
             )
@@ -797,7 +797,7 @@ def settle_office_work() -> None:
   # 结算能源系统
   from Script.UI.Panel import manage_power_system_panel
 
-  shortage_ratio, text = manage_power_system_panel.settle_power_system(
+  shortage_ratio, __ = manage_power_system_panel.settle_power_system(
       draw_flag=True
   )
   # # 如果能源系统出现供电不足，则降低效率

@@ -1080,7 +1080,7 @@ def handle_sleep_level_0(character_id: int) -> int:
   """
   character_data = cache.character_data[character_id]
 
-  level, tem = attr_calculation.get_sleep_level(character_data.sleep_point)
+  level, __ = attr_calculation.get_sleep_level(character_data.sleep_point)
   if level == 0:
     return 1
   else:
@@ -1098,7 +1098,7 @@ def handle_sleep_level_1(character_id: int) -> int:
   """
   character_data = cache.character_data[character_id]
 
-  level, tem = attr_calculation.get_sleep_level(character_data.sleep_point)
+  level, __ = attr_calculation.get_sleep_level(character_data.sleep_point)
   if level == 1:
     return 1
   else:
@@ -1116,7 +1116,7 @@ def handle_sleep_level_2(character_id: int) -> int:
   """
   character_data = cache.character_data[character_id]
 
-  level, tem = attr_calculation.get_sleep_level(character_data.sleep_point)
+  level, __ = attr_calculation.get_sleep_level(character_data.sleep_point)
   if level == 2:
     return 1
   else:
@@ -1134,7 +1134,7 @@ def handle_sleep_level_3(character_id: int) -> int:
   """
   character_data = cache.character_data[character_id]
 
-  level, tem = attr_calculation.get_sleep_level(character_data.sleep_point)
+  level, __ = attr_calculation.get_sleep_level(character_data.sleep_point)
   if level == 3:
     return 1
   else:
@@ -1152,7 +1152,7 @@ def handle_sleep_level_ge_1(character_id: int) -> int:
   """
   character_data = cache.character_data[character_id]
 
-  level, tem = attr_calculation.get_sleep_level(character_data.sleep_point)
+  level, __ = attr_calculation.get_sleep_level(character_data.sleep_point)
   if level >= 1:
     return 1
   else:
@@ -1183,7 +1183,7 @@ def handle_drunk_level_0(character_id: int) -> int:
   """
   from Script.System.Sex_System import drunk_sex_common
 
-  level, tem = drunk_sex_common.get_drunk_level(character_id)
+  level, __ = drunk_sex_common.get_drunk_level(character_id)
   if level == 0:
     return 1
   else:
@@ -1214,7 +1214,7 @@ def handle_drunk_level_1(character_id: int) -> int:
   """
   from Script.System.Sex_System import drunk_sex_common
 
-  level, tem = drunk_sex_common.get_drunk_level(character_id)
+  level, __ = drunk_sex_common.get_drunk_level(character_id)
   if level == 1:
     return 1
   else:
@@ -1232,7 +1232,7 @@ def handle_drunk_level_2(character_id: int) -> int:
   """
   from Script.System.Sex_System import drunk_sex_common
 
-  level, tem = drunk_sex_common.get_drunk_level(character_id)
+  level, __ = drunk_sex_common.get_drunk_level(character_id)
   if level == 2:
     return 1
   else:
@@ -1250,7 +1250,7 @@ def handle_drunk_level_3(character_id: int) -> int:
   """
   from Script.System.Sex_System import drunk_sex_common
 
-  level, tem = drunk_sex_common.get_drunk_level(character_id)
+  level, __ = drunk_sex_common.get_drunk_level(character_id)
   if level == 3:
     return 1
   else:
@@ -1280,7 +1280,7 @@ def handle_drunk_level_ge_1(character_id: int) -> int:
   """
   from Script.System.Sex_System import drunk_sex_common
 
-  level, tem = drunk_sex_common.get_drunk_level(character_id)
+  level, __ = drunk_sex_common.get_drunk_level(character_id)
   if level >= 1:
     return 1
   else:

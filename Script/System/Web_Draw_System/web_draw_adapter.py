@@ -260,7 +260,7 @@ class WebDrawAdapter:
           )
       )
 
-    for line_index, line in enumerate(normalized_lines):
+    for __, line in enumerate(normalized_lines):
       remain = line
       segment_index = 0
 

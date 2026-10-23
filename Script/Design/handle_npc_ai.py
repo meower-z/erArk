@@ -269,7 +269,7 @@ def judge_character_follow(character_id: int) -> int:
     if character_data.position != cache.character_data[0].position:
       # print("检测到跟随，NPC编号为：",character_id)
       to_dr = cache.character_data[0].position
-      tem_1, tem_2, move_path, move_time = character_move.character_move(
+      __, __, move_path, move_time = character_move.character_move(
           character_id, to_dr
       )
       # print("开始移动，路径为：",move_path,"，时间为：",move_time)
@@ -366,7 +366,7 @@ def find_character_target(
 
   # 首先判定是否有高优先级的行动
   type_0_target_list = game_config.config_target_type_index[0]
-  target, weight, judge, new_premise_data = search_target(
+  target, __, judge, new_premise_data = search_target(
       character_id,
       type_0_target_list,
       null_target_set,
@@ -379,7 +379,7 @@ def find_character_target(
   # 然后判断需求，先判断需求链中的需求，再判断非链中的需求，最后判断是否需要进入需求链
   if judge == 0 and not handle_premise.handle_normal_1(character_id):
     now_target_list = game_config.config_target_type_index[12]
-    target, weight, judge, new_premise_data = search_target(
+    target, __, judge, new_premise_data = search_target(
         character_id,
         now_target_list,
         null_target_set,
@@ -392,7 +392,7 @@ def find_character_target(
   # 非链中的需求
   if judge == 0 and handle_premise.handle_unnormal_27(character_id):
     now_target_list = game_config.config_target_type_index[13]
-    target, weight, judge, new_premise_data = search_target(
+    target, __, judge, new_premise_data = search_target(
         character_id,
         now_target_list,
         null_target_set,
@@ -405,7 +405,7 @@ def find_character_target(
   # 进入需求链
   if judge == 0:
     now_target_list = game_config.config_target_type_index[11]
-    target, weight, judge, new_premise_data = search_target(
+    target, __, judge, new_premise_data = search_target(
         character_id,
         now_target_list,
         null_target_set,
@@ -422,7 +422,7 @@ def find_character_target(
         character_id
     ):
       now_target_list = game_config.config_target_type_index[42]
-      target, weight, judge, new_premise_data = search_target(
+      target, __, judge, new_premise_data = search_target(
           character_id,
           now_target_list,
           null_target_set,
@@ -434,7 +434,7 @@ def find_character_target(
     # 是否进行非链的助理服务
     if judge == 0:
       now_target_list = game_config.config_target_type_index[43]
-      target, weight, judge, new_premise_data = search_target(
+      target, __, judge, new_premise_data = search_target(
           character_id,
           now_target_list,
           null_target_set,
@@ -446,7 +446,7 @@ def find_character_target(
     # 是否进入助理服务链
     if judge == 0:
       now_target_list = game_config.config_target_type_index[41]
-      target, weight, judge, new_premise_data = search_target(
+      target, __, judge, new_premise_data = search_target(
           character_id,
           now_target_list,
           null_target_set,
@@ -482,7 +482,7 @@ def find_character_target(
       # 没有的话则正常寻找
       else:
         now_target_list = game_config.config_target_type_index[22]
-        target, weight, judge, new_premise_data = search_target(
+        target, __, judge, new_premise_data = search_target(
             character_id,
             now_target_list,
             null_target_set,
@@ -504,7 +504,7 @@ def find_character_target(
       # 没有的话则正常寻找
       else:
         now_target_list = game_config.config_target_type_index[21]
-        target, weight, judge, new_premise_data = search_target(
+        target, __, judge, new_premise_data = search_target(
             character_id,
             now_target_list,
             null_target_set,
@@ -543,7 +543,7 @@ def find_character_target(
       # 没有的话则正常寻找
       else:
         now_target_list = game_config.config_target_type_index[32]
-        target, weight, judge, new_premise_data = search_target(
+        target, __, judge, new_premise_data = search_target(
             character_id,
             now_target_list,
             null_target_set,
@@ -555,7 +555,7 @@ def find_character_target(
     # 娱乐后处理
     if judge == 0:
       now_target_list = game_config.config_target_type_index[33]
-      target, weight, judge, new_premise_data = search_target(
+      target, __, judge, new_premise_data = search_target(
           character_id,
           now_target_list,
           null_target_set,
@@ -577,7 +577,7 @@ def find_character_target(
       # 没有的话则正常寻找
       else:
         now_target_list = game_config.config_target_type_index[31]
-        target, weight, judge, new_premise_data = search_target(
+        target, __, judge, new_premise_data = search_target(
             character_id,
             now_target_list,
             null_target_set,
@@ -589,7 +589,7 @@ def find_character_target(
 
   # 如果以上都没有，则遍历所有大类的目标行动
   if judge == 0:
-    target, weight, judge, new_premise_data = search_target(
+    target, __, judge, new_premise_data = search_target(
         character_id,
         all_target_list,
         null_target_set,
@@ -990,7 +990,7 @@ def judge_same_position_npc_follow() -> None:
     ):
 
       # 变成移动状态，目标为玩家位置
-      tem_1, tem_2, move_path, move_time = character_move.character_move(
+      __, __, move_path, move_time = character_move.character_move(
           character_id, pl_character_data.behavior.move_final_target
       )
       move_flag, wait_flag = character_move.judge_character_move_to_private(
@@ -1103,7 +1103,7 @@ def get_chara_entertainment(character_id: int) -> None:
               need_data_list = [need_data_all]
             else:
               need_data_list = need_data_all.split('&')
-            judge, reason = attr_calculation.judge_require(
+            judge, __ = attr_calculation.judge_require(
                 need_data_list, character_id
             )
             # 如果满足条件则选择该娱乐活动，否则去掉该id后重新随机
