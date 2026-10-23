@@ -7,8 +7,9 @@
 开局时和此后每个整点各跑一遍全部静态自检（Script.Test.Static_Check.run_all_checks，系统设置 14 打开时，游戏在主界面等待输入前经 run_turn_check 调用它），
 任何一条失败都让测试失败，失败信息写明整点与检查编号。
 
-快照写到 LAST_RUN；与提交在仓库里的基准比较：python -m tests.snapshot compare tests/snapshots/smoke_new_game.tsv tests/snapshots/smoke_new_game.last.tsv
-行为有意改变时，把 LAST_RUN 复制成基准 tests/snapshots/smoke_new_game.tsv，随改动一起提交。
+快照写到 LAST_RUN；与提交在仓库里的基准比较：python -m tests.snapshot compare tests/snapshots/smoke_new_game.tsv.gz tests/snapshots/smoke_new_game.last.tsv.gz
+行为有意改变时，把 LAST_RUN 复制成基准 tests/snapshots/smoke_new_game.tsv.gz，随改动一起提交。
+其他起始状态的快照在 tests/slow/test_snapshot_states.py。
 """
 
 import os
@@ -20,7 +21,9 @@ HOURS = 6
 """ 推进的游戏小时数：10:00 到 16:00 """
 STEP_MINUTES = 5
 """ 每一步「等待五分钟」推进的分钟数 """
-LAST_RUN = os.path.join(ROOT, "tests", "snapshots", "smoke_new_game.last.tsv")
+LAST_RUN = os.path.join(
+    ROOT, "tests", "snapshots", "smoke_new_game.last.tsv.gz"
+)
 """ 本次运行写出的快照（不提交） """
 
 
@@ -32,7 +35,7 @@ class SmokeNewGameTest(SlowTestCase):
     from Script.Core import constant
     from Script.Test import Static_Check
     from Script.Test.Static_Check import checks
-    from tests.snapshot import Recorder, capture
+    from tests.snapshot import ActionLog, Recorder, capture
 
     checks_dir = os.path.dirname(checks.__file__)
     modules = sorted(
@@ -61,15 +64,17 @@ class SmokeNewGameTest(SlowTestCase):
         )
 
     recorder = Recorder()
+    log, memo = ActionLog(), {}
+    log.install()
     npc_behaviors = set()
     """ 干员在各步结束时的行为id """
     start = self.cache.game_time
-    recorder.record(start.strftime("%Y-%m-%d %H:%M"), capture(self.cache))
+    recorder.record("0000", capture(self.cache, log, memo))
     run_checks()
-    for _ in range(HOURS * 60 // STEP_MINUTES):
+    for index in range(1, HOURS * 60 // STEP_MINUTES + 1):
       self.instruct(constant.Instruct.WAIT)
       now = self.cache.game_time
-      recorder.record(now.strftime("%Y-%m-%d %H:%M"), capture(self.cache))
+      recorder.record(f"{index:04d}", capture(self.cache, log, memo))
       npc_behaviors.update(
           self.cache.character_data[cid].behavior.behavior_id
           for cid in self.cache.npc_id_got

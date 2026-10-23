@@ -14,7 +14,7 @@ FullWorld 另有：
     world.player.press(...) / type(...)    -- 安排玩家接下来按的按钮与输入的文字（PlayerInput）
 
 游戏模块在导入时就绑定 cache = cache_control.cache，所以缓存对象只建一次，复原时原地改写它的内容。
-每次复原都重设全部随机源（random、numpy.random、uuid.uuid4），见 seed_everything。
+每次复原都重设全部随机源（random、numpy.random、uuid.uuid4），见 seed_everything；启动时让列目录的顺序固定，见 pin_listing_order。
 """
 
 import contextlib
@@ -81,6 +81,47 @@ def seed_everything(seed: int = SEED):
   numpy.random.seed(seed % (2**32))
   _uuid_rng.seed(seed)
   uuid.uuid4 = _seeded_uuid4
+
+
+def pin_listing_order():
+  """
+  让 os.listdir 与 glob.glob 按文件名排序返回，可重复调用
+  Keyword arguments:
+  无
+  Return arguments:
+  无
+  功能描述:
+      两者的顺序随文件系统而变；游戏读角色口上与事件文件（character_config.find_files_and_get_size）、读模组目录时用它们。
+  """
+  import glob
+
+  if getattr(os.listdir, "sorted_listing", False):
+    return
+  real_listdir, real_glob = os.listdir, glob.glob
+
+  def sorted_listdir(*args, **kwargs):
+    """
+    排好序的 os.listdir
+    Keyword arguments:
+    同 os.listdir
+    Return arguments:
+    list -- 排序后的文件名
+    """
+    return sorted(real_listdir(*args, **kwargs))
+
+  def sorted_glob(*args, **kwargs):
+    """
+    排好序的 glob.glob
+    Keyword arguments:
+    同 glob.glob
+    Return arguments:
+    list -- 排序后的路径
+    """
+    return sorted(real_glob(*args, **kwargs))
+
+  sorted_listdir.sorted_listing = True
+  os.listdir = sorted_listdir
+  glob.glob = sorted_glob
 
 
 def _mute_ui() -> list:
@@ -176,6 +217,7 @@ class MinimalWorld:
       sys.path.insert(0, ROOT)
     # 游戏用相对路径读 data/ 与 config.ini
     os.chdir(ROOT)
+    pin_listing_order()
     seed_everything()
     self._load_game()
 
@@ -552,16 +594,17 @@ class PlayerInput:
     Keyword arguments:
     flag -- "str" 时返回命令id；"order" 时执行按钮绑定的函数
     print_order -- 不使用
-    donot_return_null_str -- 为假时是「按任意键继续」的等待，没有安排的输入就返回空串
+    donot_return_null_str -- 为假时是「按任意键继续」的等待：安排的下一项是文字，或是屏幕上没有的按钮时，返回空串、不用掉它
     Return arguments:
     str -- 命令id、输入的文字或空串
     功能描述:
+        安排的文字交给 donot_return_null_str 为真的请求（输入文字、选择按钮都是），「按任意键继续」的等待不用掉它。
         游戏要求选择而测试没有安排、或屏幕上没有安排的按钮时抛 UnplannedInput，并列出屏幕上的按钮。
     """
     from Script.Core import flow_handle
 
     kind, value = self.planned[0] if self.planned else ("", "")
-    if kind == "type":
+    if kind == "type" and donot_return_null_str:
       self.planned.pop(0)
       return value
     matches = [
@@ -635,11 +678,12 @@ class FullWorld(MinimalWorld):
     """
     raise RuntimeError("FullWorld 不复原：慢速层每个测试一个新进程")
 
-  def new_game(self):
+  def new_game(self, first_bonus: tuple = ()):
     """
-    走一遍开新游戏的界面流程：标题画面「初次唤醒」，读完免责声明，输入名字 PLAYER_NAME，「睁开双眼」
+    走一遍开新游戏的界面流程：标题画面「初次唤醒」，读完免责声明，输入名字 PLAYER_NAME，按下 first_bonus 的按钮，「睁开双眼」
     Keyword arguments:
-    无
+    first_bonus -- 在创建角色面板里依次按下的初期奖励按钮，选助理干员时紧接着按下干员的名字，
+        如 ("窄域时停", "启动资金", "助理干员", "阿米娅")；默认不选
     Return arguments:
     无
     功能描述:
@@ -656,7 +700,7 @@ class FullWorld(MinimalWorld):
       )
     self.player.press("我读完并理解了以上8条")
     self.player.type(self.PLAYER_NAME)
-    self.player.press("睁开双眼")
+    self.player.press(*first_bonus, "睁开双眼")
     creator_character_flow.creator_character_panel()
     self.player.check_done()
     seed_everything()

@@ -13,27 +13,20 @@ from tests.slow import remove_parent_guard
 from tests.world import FullWorld
 
 TIME_LIMIT = 300
-""" 每个测试（含启动与开局）的时限，秒 """
+""" 每个测试（含启动与开局）的默认时限，秒；测试类可用 time_limit 另设 """
 
 
 class SlowTestTimeout(AssertionError):
-  """测试超过 TIME_LIMIT 仍未结束"""
-
-
-def _time_up(signum, frame):
-  """
-  SIGALRM 的处理函数：抛 SlowTestTimeout，测试以失败结束而不是卡住整批
-  Keyword arguments:
-  signum -- 信号编号
-  frame -- 当前栈帧
-  Return arguments:
-  无
-  """
-  raise SlowTestTimeout(f"测试超过 {TIME_LIMIT} 秒")
+  """测试超过时限仍未结束"""
 
 
 class SlowTestCase(unittest.TestCase):
   """慢速层测试的基类：self.world 为刚开新游戏的 FullWorld，self.cache 为游戏缓存"""
+
+  time_limit = TIME_LIMIT
+  """ 这个类的每个测试的时限，秒 """
+  first_bonus = ()
+  """ 开新游戏时选的初期奖励按钮，见 FullWorld.new_game """
 
   def setUp(self):
     """
@@ -43,12 +36,23 @@ class SlowTestCase(unittest.TestCase):
     Return arguments:
     无
     """
-    signal.signal(signal.SIGALRM, _time_up)
-    signal.alarm(TIME_LIMIT)
+    signal.signal(signal.SIGALRM, self._time_up)
+    signal.alarm(self.time_limit)
     remove_parent_guard()
     self.world = FullWorld.load()
     self.cache = self.world.cache
-    self.world.new_game()
+    self.world.new_game(self.first_bonus)
+
+  def _time_up(self, signum, frame):
+    """
+    SIGALRM 的处理函数：抛 SlowTestTimeout，测试以失败结束而不是卡住整批
+    Keyword arguments:
+    signum -- 信号编号
+    frame -- 当前栈帧
+    Return arguments:
+    无
+    """
+    raise SlowTestTimeout(f"测试超过 {self.time_limit} 秒")
 
   def tearDown(self):
     """
