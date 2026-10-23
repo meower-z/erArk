@@ -5476,14 +5476,6 @@ msgstr ""
 msgid "以某个移动城市总督为主角的小说，描述了他与三位不同性格女性的复杂情感关系。"
 msgstr ""
 
-#: ./data\csv\Book.csv:38
-msgid "《小天使的秘密日记》"
-msgstr ""
-
-#: ./data\csv\Book.csv:38
-msgid "一本以年幼的萝莉角色为主角的小说，内容涉及她的成长烦恼和初次体验，在某些圈子里颇受欢迎。"
-msgstr ""
-
 #: ./data\csv\Book.csv:39
 msgid "《乌萨斯的征服者》"
 msgstr ""
@@ -7932,10 +7924,6 @@ msgstr "순애"
 msgid "后宫"
 msgstr "하렘"
 
-#: ./data\csv\BookType.csv:28
-msgid "萝莉"
-msgstr "로리"
-
 #: ./data\csv\BookType.csv:29
 msgid "强奸"
 msgstr "강간"
@@ -8594,26 +8582,6 @@ msgstr ""
 
 #: ./data\csv\Book_Excerpt.csv:37
 msgid "总督发现最难管理的不是城市，而是三颗女人的心。"
-msgstr ""
-
-#: ./data\csv\Book_Excerpt.csv:38
-msgid "今天我发现自己的身体开始发生一些奇怪的变化。"
-msgstr ""
-
-#: ./data\csv\Book_Excerpt.csv:38
-msgid "大人们总是说我还小，但我觉得自己已经长大了。"
-msgstr ""
-
-#: ./data\csv\Book_Excerpt.csv:38
-msgid "学校里的同学开始用奇怪的眼神看我，让我很困惑。"
-msgstr ""
-
-#: ./data\csv\Book_Excerpt.csv:38
-msgid "我在日记里记录下这些不能对任何人说的小秘密。"
-msgstr ""
-
-#: ./data\csv\Book_Excerpt.csv:38
-msgid "成长的路上有太多疑问，但没有人能给我答案。"
 msgstr ""
 
 #: ./data\csv\Book_Excerpt.csv:39

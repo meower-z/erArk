@@ -113,11 +113,6 @@ msgstr "인디고"
 msgid "阿玛雅"
 msgstr "아미야"
 
-#: .\Script\Core\save_handle.py:397
-#, python-brace-format
-msgid "存档跨版本更新: 角色 {0} 的序号不一致，已修正\n"
-msgstr "이전 세이브 파일 동기화:오퍼레이터 {0}의 번호가 일치하지 않아 수정되었습니다\n"
-
 #: .\Script\Core\save_handle.py:722
 msgid ""
 "\n"
@@ -410,13 +405,6 @@ msgid ""
 "由于仓库容量不足，【矿石病药材】已达上限数量{0}\n"
 msgstr "\n[광석병 약재]가 저장 상한에 도달했습니다  현재 {0}\n"
 
-#: .\Script\Design\basement.py:575
-#, python-brace-format
-msgid ""
-"\n"
-"今日剩余待处理公务量为{0}，"
-msgstr "\n오늘의 남은 미처리 업무:{0}, "
-
 #: .\Script\Design\basement.py:577
 msgid "且各区块设施运行基本正常，"
 msgstr "모든 구역의 시설이 정상적으로 작동 중이며, "
@@ -429,20 +417,6 @@ msgstr "일부 구역의 시설에 큰 고장이 발생했으며, "
 #, python-brace-format
 msgid "因此今日罗德岛的各设施的总效率为{0}%\n"
 msgstr "따라서 오늘 로도스 아일랜드 전체 시설의 총 효율은 {0}%입니다.\n"
-
-#: .\Script\Design\basement.py:612
-msgid "今日罗德岛收入为："
-msgstr "금일 도로스 아일랜드 수입："
-
-#: .\Script\Design\basement.py:613
-#, python-brace-format
-msgid "医疗部收入{0}，"
-msgstr "의료부 수입{0}，"
-
-#: .\Script\Design\basement.py:614
-#, python-brace-format
-msgid "总收入为{0}，已全部转化为龙门币\n"
-msgstr "총 수입은 {0}이며, 모두 용문폐로 전환되었습니다.\n"
 
 #: .\Script\Design\basement.py:621 .\Script\UI\Panel\achievement_panel.py:89
 msgid "龙门币"
@@ -531,11 +505,6 @@ msgstr "\n  ●일회용 만능열쇠를 꺼내 조용히 문을 열었다\n\n"
 #, python-brace-format
 msgid "因为等待时间过长，所以{0}不再继续跟随\n"
 msgstr "기다리는 시간이 너무 길어져 {0}은(는) 더 이상 따라오지 않는다.\n"
-
-#: .\Script\Design\character_move.py:153
-#, python-brace-format
-msgid "{0}有事找你，已经在门外等候多时了\n"
-msgstr "{0}은(는) 업무가 있지만, 아직도 문 밖에서 기다리고 있다.\n"
 
 #: .\Script\Design\character_move.py:170
 #, python-brace-format
@@ -1147,14 +1116,6 @@ msgstr "성인용품구매"
 msgid "读写存档"
 msgstr "세이브/로드"
 
-#: .\Script\Design\handle_instruct.py:358
-msgid "属性上升"
-msgstr "능력강화"
-
-#: .\Script\Design\handle_instruct.py:376
-msgid "自身属性上升"
-msgstr "능력강화(본인)"
-
 #: .\Script\Design\handle_instruct.py:392
 msgid "开启DEBUG模式"
 msgstr "디버그모드 실행"
@@ -1469,10 +1430,6 @@ msgstr "테스트 임시 명령"
 #: .\Script\Design\handle_instruct.py:1776
 msgid "听肚子里的动静"
 msgstr "배의 움직임을 듣는다"
-
-#: .\Script\Design\handle_instruct.py:1793
-msgid "一起玩耍"
-msgstr "같이 논다"
 
 #: .\Script\Design\handle_instruct.py:1810
 #: .\Script\UI\Panel\normal_panel.py:238 .\Script\UI\Panel\normal_panel.py:246
@@ -2980,22 +2937,6 @@ msgid ""
 " 是否要用阴茎夺走{0}的初吻？"
 msgstr "\n\n 정말 {0}의 첫키스를 자지로 가져가겠습니까?"
 
-#: .\Script\Design\instuct_judege.py:363
-#, python-brace-format
-msgid ""
-"\n"
-"\n"
-" 是否要夺走{0}的处女？"
-msgstr "\n\n 정말 {0}의 처녀를 가져가시겠습니까?"
-
-#: .\Script\Design\instuct_judege.py:365
-#, python-brace-format
-msgid ""
-"\n"
-"\n"
-" 是否要夺走{0}的A处女？"
-msgstr "\n\n 정말 {0}의 A처녀를 가져가시겠습니까?"
-
 #: .\Script\Design\instuct_judege.py:381
 #, python-brace-format
 msgid "当前正在对{0}无意识奸，是否不戴套？\n"
@@ -3603,13 +3544,6 @@ msgid ""
 "{0}完成了育儿行动，开始回到正常的工作生活中来\n"
 msgstr "\n{0}은(는) 육아를 마치고 복귀했다\n"
 
-#: .\Script\Design\pregnancy.py:316
-#, python-brace-format
-msgid ""
-"\n"
-"{0}能够初步独立了，在长大成人之前会一直在教育区上课学习\n"
-msgstr "\n{0}은(는) 이제 성인이 되기 전까지 교육실에서 교육을 받습니다\n"
-
 #: .\Script\Design\pregnancy.py:318
 msgid ""
 "\n"
@@ -3637,63 +3571,6 @@ msgid ""
 "{0}从[婴儿]成长为了[幼女]\n"
 msgstr "\n{0}은(는) 성장으로 [아기]에서 [유녀]로 바뀌었다\n"
 
-#: .\Script\Design\pregnancy.py:322
-#, python-brace-format
-msgid ""
-"\n"
-"{0}成为了一名准干员\n"
-msgstr "\n{0}은(는) 준 오퍼레이터가 되었다\n"
-
-#: .\Script\Design\pregnancy.py:350
-#, python-brace-format
-msgid ""
-"\n"
-"{0}的身体渐渐成长，开始进入青春期，在第二性征发育的同时，也迎来了第一次的初"
-"潮\n"
-msgstr "\n{0}의 몸은 성장해 사춘기에 접어들었고, 첫 초경을 맞이했습니다.\n"
-
-#: .\Script\Design\pregnancy.py:351
-#, python-brace-format
-msgid ""
-"\n"
-"{0}从[幼女]成长为了[萝莉]\n"
-msgstr "\n{0}은(는) 성장으로 [유녀]에서 [로리]로 바뀌었다\n"
-
-#: .\Script\Design\pregnancy.py:352
-#, python-brace-format
-msgid ""
-"\n"
-"{0}失去了[未初潮]\n"
-msgstr "\n{0}은(는) [미초경]을 잃었다\n"
-
-#: .\Script\Design\pregnancy.py:354
-#, python-brace-format
-msgid ""
-"\n"
-"{0}可以参加上课以外的工作了\n"
-msgstr "\n{0}은(는) 이제 공부 외 업무를 참가할 수 있습니다.\n"
-
-#: .\Script\Design\pregnancy.py:383
-#, python-brace-format
-msgid ""
-"\n"
-"{0}的身体完全长成，迎来了自己的成人礼，成为了一位亭亭玉立的少女\n"
-msgstr "\n{0}은(는) 자신의 성인식을 맞이하고 어엿한 소녀가 되었습니다.\n"
-
-#: .\Script\Design\pregnancy.py:384
-#, python-brace-format
-msgid ""
-"\n"
-"{0}从[萝莉]成长为了[少女]\n"
-msgstr "\n{0}은(는) 성장으로 [로리]에서 [소녀]로 바뀌었다\n"
-
-#: .\Script\Design\pregnancy.py:385
-#, python-brace-format
-msgid ""
-"\n"
-"{0}失去了[未成年]\n"
-msgstr "\n{0}은(는) [미성년]을 잃었다\n"
-
 #: .\Script\Design\pregnancy.py:388
 #, python-brace-format
 msgid ""
@@ -3714,14 +3591,6 @@ msgid ""
 "\n"
 "{0}的胸部依旧保持在[{1}]没有成长\n"
 msgstr "\n{0}의 가슴은 [{1}]에 머물렀다\n"
-
-#: .\Script\Design\pregnancy.py:511
-#, python-brace-format
-msgid ""
-"\n"
-"error {0}的身体部位成长时新旧素质列表长度不一致，母亲为{1}，旧列表{2}，新列表"
-"{3}\n"
-msgstr ""
 
 #: .\Script\Design\pregnancy.py:523
 #, python-brace-format
@@ -3779,22 +3648,6 @@ msgstr "신뢰"
 #: .\Script\Design\settle_behavior.py:287
 msgid "催眠度"
 msgstr "최면도"
-
-#: .\Script\Design\settle_behavior.py:347
-#, python-brace-format
-msgid ""
-"\n"
-"\n"
-" {0}分钟过去了\n"
-msgstr "\n\n {0}분이 지났다\n"
-
-#: .\Script\Design\settle_behavior.py:349
-#, python-brace-format
-msgid ""
-"\n"
-"\n"
-" 该行动将持续{0}分钟\n"
-msgstr "\n\n 이 행동은 {0}분 동안 지속됩니다\n"
 
 #: .\Script\Design\settle_behavior.py:410
 msgid "娱乐"
@@ -4277,14 +4130,6 @@ msgstr "모든 업무가 완료되었습니다\n\n"
 #: .\Script\Settle\default.py:7270 .\Script\UI\Panel\achievement_panel.py:100
 msgid "公务"
 msgstr "업무"
-
-#: .\Script\Settle\default.py:7315
-#, python-brace-format
-msgid ""
-"\n"
-"在{0}的努力下，医治了一名病人，支付了{1}龙门币的医疗费。（今日剩余病人数：{2}"
-"人）\n"
-msgstr "\n{0}에게 한 환자가 치료를 받았다. {1} 용문폐를 치료비로 받았다. (오늘 남은 환자:{2}명)\n"
 
 #: .\Script\Settle\default.py:7388
 #, python-brace-format
@@ -4919,10 +4764,6 @@ msgstr "폭유"
 msgid "幼女"
 msgstr "유녀"
 
-#: .\Script\UI\Flow\creator_character_flow.py:802
-msgid "萝莉"
-msgstr "로리"
-
 #: .\Script\UI\Flow\creator_character_flow.py:804
 msgid "少女"
 msgstr "소녀"
@@ -5068,12 +4909,6 @@ msgid ""
 "○部分刻印除了其原本的升级获取方式之外，还可以通过消耗大量宝珠来直接升级\n"
 "\n"
 msgstr "○일부 각인은 정상 획득 방식 외에 많은 양의 구슬을 소비해 직접 획득 할 수 있습니다.\n\n"
-
-#: .\Script\UI\Panel\ability_up_panel.py:210
-#: .\Script\UI\Panel\ability_up_panel.py:279
-#, python-brace-format
-msgid "当前刻印及等级为：{0}{1}\n"
-msgstr "현재 {0} 각인 Lv:{1}\n"
 
 #: .\Script\UI\Panel\ability_up_panel.py:211
 #, python-brace-format
@@ -5453,11 +5288,6 @@ msgstr ""
 msgid "(空缺)"
 msgstr ""
 
-#: .\Script\UI\Panel\agriculture_production_panel.py:362
-#, python-brace-format
-msgid "药田{0}号线 主种植员: {1}  "
-msgstr ""
-
 #: .\Script\UI\Panel\agriculture_production_panel.py:366
 #: .\Script\UI\Panel\agriculture_production_panel.py:393
 #: .\Script\UI\Panel\manage_assembly_line_panel.py:306
@@ -5483,11 +5313,6 @@ msgstr ""
 
 #: .\Script\UI\Panel\agriculture_production_panel.py:379
 msgid "药田副种植员：暂无\n"
-msgstr ""
-
-#: .\Script\UI\Panel\agriculture_production_panel.py:389
-#, python-brace-format
-msgid "温室{0}号线 主种植员: {1}  "
 msgstr ""
 
 #: .\Script\UI\Panel\agriculture_production_panel.py:393
@@ -5889,16 +5714,6 @@ msgstr "분을 입력하세요:"
 msgid "肉体情况"
 msgstr "신체 상황"
 
-#: .\Script\UI\Panel\body_info_panel.py:79
-msgid ""
-"\n"
-" 【总】\n"
-msgstr "\n [전신]\n"
-
-#: .\Script\UI\Panel\body_info_panel.py:84
-msgid "  未接触过精液\n"
-msgstr "  정액 미접촉\n"
-
 #: .\Script\UI\Panel\body_info_panel.py:86
 #, python-brace-format
 msgid "  全身总共被射上过{0}ml精液\n"
@@ -5929,38 +5744,11 @@ msgstr "{kiss_time}에 {kiss_palce}에서 {character_name}에게"
 msgid "的阴茎"
 msgstr " 자지"
 
-#: .\Script\UI\Panel\body_info_panel.py:110
-msgid "  未品尝过精液\n"
-msgstr "  정액 미섭취\n"
-
-#: .\Script\UI\Panel\body_info_panel.py:113
-#, python-brace-format
-msgid "  总共喝过{0}ml精液\n"
-msgstr "  {0}ml의 정액을 마셨다\n"
-
-#: .\Script\UI\Panel\body_info_panel.py:116
-#, python-brace-format
-msgid "  总共喝过{0}ml精液（有{1}ml精液在食道直接射进了胃里）\n"
-msgstr "  {0}ml의 정액을 마셨다(식도로 마신 정액 {1}ml 포함)\n"
-
 #: .\Script\UI\Panel\body_info_panel.py:122
 msgid ""
 "\n"
 " 【胸】\n"
 msgstr "\n [가슴]\n"
-
-#: .\Script\UI\Panel\body_info_panel.py:135
-#: .\Script\UI\Panel\body_info_panel.py:150
-#: .\Script\UI\Panel\body_info_panel.py:160
-msgid "  未淋上过精液\n"
-msgstr "  정액 미접촉\n"
-
-#: .\Script\UI\Panel\body_info_panel.py:137
-#: .\Script\UI\Panel\body_info_panel.py:152
-#: .\Script\UI\Panel\body_info_panel.py:162
-#, python-brace-format
-msgid "  总共被淋上过{0}ml精液\n"
-msgstr "  {0}ml의 정액이 묻었다\n"
 
 #: .\Script\UI\Panel\body_info_panel.py:142
 #, python-brace-format
@@ -5998,26 +5786,6 @@ msgstr "  처녀:"
 msgid "保有处女\n"
 msgstr "아직 미사용된 처녀다\n"
 
-#: .\Script\UI\Panel\body_info_panel.py:176
-#, python-brace-format
-msgid "于{time}在{palce}，被{character_name}博士以{posture}夺走了处女\n"
-msgstr "첫경험을 {time}에 {palce}에서 {character_name}에게 {posture}로 잃었다\n"
-
-#: .\Script\UI\Panel\body_info_panel.py:189
-#: .\Script\UI\Panel\body_info_panel.py:218
-#: .\Script\UI\Panel\body_info_panel.py:245
-#: .\Script\UI\Panel\body_info_panel.py:300
-msgid "  未射入过精液\n"
-msgstr " 사정된 정액 없음\n"
-
-#: .\Script\UI\Panel\body_info_panel.py:191
-#: .\Script\UI\Panel\body_info_panel.py:220
-#: .\Script\UI\Panel\body_info_panel.py:247
-#: .\Script\UI\Panel\body_info_panel.py:302
-#, python-brace-format
-msgid "  总共被射入过{0}ml精液\n"
-msgstr "  {0}ml의 사정을 받았다\n"
-
 #: .\Script\UI\Panel\body_info_panel.py:194
 msgid ""
 "\n"
@@ -6027,11 +5795,6 @@ msgstr "\n [애널]\n"
 #: .\Script\UI\Panel\body_info_panel.py:198
 msgid "保有后庭处女\n"
 msgstr "아직 미사용된 애널이다\n"
-
-#: .\Script\UI\Panel\body_info_panel.py:205
-#, python-brace-format
-msgid "于{time}在{palce}，被{character_name}博士以{posture}夺走了后庭处女\n"
-msgstr ""
 
 #: .\Script\UI\Panel\body_info_panel.py:223
 msgid ""
@@ -6043,18 +5806,6 @@ msgstr "\n [자궁]\n"
 msgid "保有子宫处女\n"
 msgstr ""
 
-#: .\Script\UI\Panel\body_info_panel.py:234
-#, python-brace-format
-msgid "于{time}在{palce}，被{character_name}博士以{posture}夺走了子宫处女\n"
-msgstr ""
-
-#: .\Script\UI\Panel\body_info_panel.py:253
-#: .\Script\UI\Panel\body_info_panel.py:256
-#: .\Script\UI\Panel\body_info_panel.py:264
-#, python-brace-format
-msgid "  已受精{0}天，"
-msgstr "  수정 후 {0}일 경과,"
-
 #: .\Script\UI\Panel\body_info_panel.py:254
 msgid "但从外表上还看不出来\n"
 msgstr "하지만 겉으로는 아직 티가 나지 않는다\n"
@@ -6062,11 +5813,6 @@ msgstr "하지만 겉으로는 아직 티가 나지 않는다\n"
 #: .\Script\UI\Panel\body_info_panel.py:257
 msgid "[妊娠]中，肚子已经大起来了"
 msgstr "[임신]중, 벌써 배가 부풀었다"
-
-#: .\Script\UI\Panel\body_info_panel.py:260
-#, python-brace-format
-msgid "，距离临盆预计还有{0}天左右\n"
-msgstr ", 만삭 예정일은 {0}일 후\n"
 
 #: .\Script\UI\Panel\body_info_panel.py:265
 msgid "[临盆]中，即将诞下爱的结晶\n"
@@ -6103,26 +5849,10 @@ msgstr "\n [요도]\n"
 msgid "保有尿道处女\n"
 msgstr ""
 
-#: .\Script\UI\Panel\body_info_panel.py:290
-#, python-brace-format
-msgid "于{time}在{palce}，被{character_name}博士以{posture}夺走了尿道处女\n"
-msgstr ""
-
 #: .\Script\UI\Panel\body_info_panel.py:307
 #, python-brace-format
 msgid "  总共收集了{0}ml圣水\n"
 msgstr "  {0}ml의 성수를 흘렸다\n"
-
-#: .\Script\UI\Panel\body_info_panel.py:310
-msgid ""
-"\n"
-" 【其他】"
-msgstr "\n [기타]"
-
-#: .\Script\UI\Panel\body_info_panel.py:312
-#, python-brace-format
-msgid "  肠胃一共吸收了{0}ml精液\n"
-msgstr "  위장과 장에서 총 {0}ml의 정액을 흡수했다\n"
 
 #: .\Script\UI\Panel\borrow_book_panel.py:155
 msgid "色情"
@@ -6152,19 +5882,6 @@ msgid ""
 "\n"
 "已借书量/最大借书量：{0}/3\n"
 msgstr "\n대출 중인 책/최대 대출 가능 수:{0}/3\n"
-
-#: .\Script\UI\Panel\borrow_book_panel.py:328
-msgid "  (可借阅)"
-msgstr "  (대출 가능)"
-
-#: .\Script\UI\Panel\borrow_book_panel.py:332
-msgid "  (已被博士借走)"
-msgstr "  (박사가 대출 중)"
-
-#: .\Script\UI\Panel\borrow_book_panel.py:337
-#, python-brace-format
-msgid "  (已被{0}借走)"
-msgstr "  ({0}이(가) 대출 중)"
 
 #: .\Script\UI\Panel\borrow_book_panel.py:364
 msgid ""
@@ -6218,11 +5935,6 @@ msgstr "\n최대 대출 한도에 도달하여, 더 이상 대출할 수 없습�
 #: .\Script\UI\Panel\building_panel.py:102
 msgid "区块总览"
 msgstr "지도 개요"
-
-#: .\Script\UI\Panel\building_panel.py:42
-#: .\Script\UI\Panel\building_panel.py:103
-msgid "特殊房间"
-msgstr "특수실"
 
 #: .\Script\UI\Panel\building_panel.py:74
 #: .\Script\UI\Panel\building_panel.py:195
@@ -6488,10 +6200,6 @@ msgstr " <반발>"
 #: .\Script\UI\Panel\character_info_head.py:216
 msgid " <寸止>"
 msgstr " <절정금지>"
-
-#: .\Script\UI\Panel\character_info_head.py:224
-msgid " <时停>"
-msgstr " <시간정지>"
 
 #: .\Script\UI\Panel\character_info_head.py:232
 #: .\Script\UI\Panel\character_info_head.py:234
@@ -6779,18 +6487,6 @@ msgstr "  온라인 호출 예시: http://my.test.server.example.com:8083/v1\n"
 #: .\Script\UI\Panel\chat_ai_setting.py:325
 msgid "  本地调用示例：http://localhost:1234/v1\n"
 msgstr "  로컬 호출 예시: http://localhost:1234/v1\n"
-
-#: .\Script\UI\Panel\chat_ai_setting.py:343
-msgid "请输入您要使用的代理ip（不含引号、逗号或空格）：\n"
-msgstr "사용할 프록시 IP를 입력하세요 (따옴표, 쉼표, 공백 없이):\n"
-
-#: .\Script\UI\Panel\chat_ai_setting.py:344
-msgid "  示例：http://my.test.proxy.example.com\n"
-msgstr "  예시: http://my.test.proxy.example.com\n"
-
-#: .\Script\UI\Panel\chat_ai_setting.py:353
-msgid "请输入您要使用的代理端口，不使用端口则随便输入数字后回车即可：\n"
-msgstr "사용할 프록시 포트를 입력하세요. 사용하지 않을 경우 아무 숫자나 입력하고 엔터를 누르세요:\n"
 
 #: .\Script\UI\Panel\chat_ai_setting.py:354
 msgid "  示例：0.0.0.0\n"
@@ -7324,15 +7020,6 @@ msgid ""
 "\n"
 msgstr "이 기능은 현재 데이터 상황에서 특정 캐릭터의 특정 ID 구상이 트리거되는 조건을 빠르게 테스트하는 용도입니다. 트리거 주체 및 대상, 조건 충족 여부, 최종 출력 텍스트 등이 포함됩니다\n\n"
 
-#: .\Script\UI\Panel\debug_panel.py:177
-msgid ""
-"刷新口上文件，用于在不重启游戏的情况，重新刷新并读取发生了变更的口上文件。即"
-"可以在编辑器中写完新的条目、保存，然后在游戏中点击该刷新按钮，读取刚写好的条"
-"目并进行测试\n"
-"\n"
-"\n"
-msgstr "구상 파일을 새로 고침합니다. 게임을 재시작하지 않고도 변경된 구상 파일을 다시 불러올 수 있습니다. 에디터에서 새 항목을 작성 후 저장하고, 이 버튼을 눌러 새 항목을 게임 내에서 테스트할 수 있습니다\n\n\n"
-
 #: .\Script\UI\Panel\debug_panel.py:181
 msgid "[001]刷新口上文件后测试"
 msgstr "[001] 구상 파일 새로 고침 후 테스트"
@@ -7360,10 +7047,6 @@ msgstr "구상 ID를 입력하세요"
 #: .\Script\UI\Panel\debug_panel.py:246
 msgid "未找到该角色，请确认是否输入正确\n"
 msgstr "해당 캐릭터를 찾을 수 없습니다. 입력이 정확한지 확인하세요\n"
-
-#: .\Script\UI\Panel\debug_panel.py:248
-msgid "未找到该口上，请确认是否输入正确\n"
-msgstr "해당 구상을 찾을 수 없습니다. 입력이 정확한지 확인하세요\n"
 
 #: .\Script\UI\Panel\debug_panel.py:252
 #, python-brace-format
@@ -7672,11 +7355,6 @@ msgstr "{0}(으)로"
 msgid " 被绳子捆成了{0}"
 msgstr " 밧줄에 묶여 {0} 상태가 되었다."
 
-#: .\Script\UI\Panel\dirty_panel.py:313
-#, python-brace-format
-msgid " 用掉了{0}个避孕套，总精液量{1}ml"
-msgstr " 콘돔{0}개 사용, 총사정량{1}ml"
-
 #: .\Script\UI\Panel\ejaculation_panel.py:35
 msgid "必定忍住"
 msgstr "확정"
@@ -7690,11 +7368,6 @@ msgstr "높음"
 #: .\Script\UI\Panel\normal_panel.py:146
 msgid "低"
 msgstr "낮음"
-
-#: .\Script\UI\Panel\ejaculation_panel.py:63
-#, python-brace-format
-msgid "要射精了，是否要忍住射精（当前已忍住{0}次，忍耐几率 {1}）\n"
-msgstr "사정한다, 사정을 참는다 (현재 {0}회 참음, 성공 확률-{1})\n"
 
 #: .\Script\UI\Panel\ejaculation_panel.py:70
 msgid "[忍住]"
@@ -8069,11 +7742,6 @@ msgstr "인"
 msgid "天"
 msgstr "일"
 
-#: .\Script\UI\Panel\field_commission_panel.py:760
-#, python-brace-format
-msgid " {0}(天数-1) * {1}(人数) = {2}"
-msgstr " {0}(일수 - 1) * {1}(인원) = {2}"
-
 #: .\Script\UI\Panel\field_commission_panel.py:786
 #, python-brace-format
 msgid ""
@@ -8088,33 +7756,12 @@ msgid ""
 "委托等级：{0}"
 msgstr "\n의뢰 등급:{0}"
 
-#: .\Script\UI\Panel\field_commission_panel.py:788
-#, python-brace-format
-msgid ""
-"\n"
-"派遣人数：{0}"
-msgstr "\n파견 인원:{0}"
-
 #: .\Script\UI\Panel\field_commission_panel.py:789
 #, python-brace-format
 msgid ""
 "\n"
 "耗时天数：{0}"
 msgstr "\n소요 일수:{0}"
-
-#: .\Script\UI\Panel\field_commission_panel.py:790
-#, python-brace-format
-msgid ""
-"\n"
-"载具运量需求：{0}"
-msgstr "\n필요 운반량:{0}"
-
-#: .\Script\UI\Panel\field_commission_panel.py:791
-#, python-brace-format
-msgid ""
-"\n"
-"其他需求：{0}"
-msgstr "\n기타 요구사항:{0}"
 
 #: .\Script\UI\Panel\field_commission_panel.py:792
 #, python-brace-format
@@ -8145,26 +7792,6 @@ msgid ""
 "派遣载具："
 msgstr "\n\n파견 차량:"
 
-#: .\Script\UI\Panel\field_commission_panel.py:809
-#, python-brace-format
-msgid "  总运载量：{0}"
-msgstr "  총 운반량:{0}"
-
-#: .\Script\UI\Panel\field_commission_panel.py:810
-msgid ""
-"\n"
-"\n"
-"是否满足需求："
-msgstr "\n\n요구 조건 충족 여부:"
-
-#: .\Script\UI\Panel\field_commission_panel.py:812
-msgid "人数需求："
-msgstr "필요 인원:"
-
-#: .\Script\UI\Panel\field_commission_panel.py:819
-msgid "  载具需求："
-msgstr "  필요 차량:"
-
 #: .\Script\UI\Panel\field_commission_panel.py:826
 msgid "  其他需求："
 msgstr "  기타 요구사항:"
@@ -8173,36 +7800,13 @@ msgstr "  기타 요구사항:"
 msgid "【调整派遣人员】"
 msgstr " [파견 인원 조정]"
 
-#: .\Script\UI\Panel\field_commission_panel.py:842
-msgid ""
-"\n"
-"【调整派遣人员】"
-msgstr "\n [파견 인원 조정]"
-
 #: .\Script\UI\Panel\field_commission_panel.py:852
 msgid "【调整使用载具】"
 msgstr "[사용 차량 조정]"
 
-#: .\Script\UI\Panel\field_commission_panel.py:853
-msgid ""
-"\n"
-"【调整使用载具】"
-msgstr "\n[사용 차량 조정]"
-
 #: .\Script\UI\Panel\field_commission_panel.py:865
 msgid "[执行委托]"
 msgstr "[의뢰 수행]"
-
-#: .\Script\UI\Panel\field_commission_panel.py:899
-#, python-brace-format
-msgid "可派遣人员（需要{0}人）：\n"
-msgstr "파견 가능 인원 (필요 인원: {0}명):\n"
-
-#: .\Script\UI\Panel\field_commission_panel.py:900
-msgid ""
-"（无意识状态下，或装备在严重损坏及以上、或助理、监狱长等特殊职位的干员无法出"
-"勤）\n"
-msgstr " (무의식상태나 장비가 심각하게 훼손된 경우, 어시스턴트나 교도관 등 특수직 오퍼레이터는 출근을 할 수 없습니다) \n"
 
 #: .\Script\UI\Panel\field_commission_panel.py:901
 msgid "队长："
@@ -8211,12 +7815,6 @@ msgstr "팀장:"
 #: .\Script\UI\Panel\field_commission_panel.py:906
 msgid "。队员："
 msgstr " 팀원:"
-
-#: .\Script\UI\Panel\field_commission_panel.py:913
-msgid ""
-"\n"
-"\n"
-msgstr "\n\n"
 
 #: .\Script\UI\Panel\field_commission_panel.py:944
 msgid "调整派遣人员"
@@ -8247,47 +7845,6 @@ msgid ""
 "\n"
 msgstr " 이전\n\n"
 
-#: .\Script\UI\Panel\field_commission_panel.py:1103
-msgid ""
-"\n"
-"可派遣载具：\n"
-"\n"
-msgstr "\n파견 가능 차량:\n\n"
-
-#: .\Script\UI\Panel\field_commission_panel.py:1120
-#, python-brace-format
-msgid ""
-"[{0}] {1} 当前选择/可选择：{2}/{3} 速度：{4} 运载量：{5} 特殊效果：{6}\n"
-msgstr "[{0}] {1} 현재 선택/가능:{2}/{3} 속도:{4} 운반량:{5} 특수 효과:{6}\n"
-
-#: .\Script\UI\Panel\field_commission_panel.py:1128
-msgid "[增加一辆]"
-msgstr "[차량추가]"
-
-#: .\Script\UI\Panel\field_commission_panel.py:1139
-msgid "[减少一辆]"
-msgstr "[차량제거]"
-
-#: .\Script\UI\Panel\field_commission_panel.py:1172
-#, python-brace-format
-msgid "当前总运载量/需要运载量：{0}/{1}\n"
-msgstr "현재 운반량/필요 운반량: {0}/{1}\n"
-
-#: .\Script\UI\Panel\field_commission_panel.py:1173
-#, python-brace-format
-msgid "当前速度（取决于所有载具中最慢的，能够减少委托时间）：{0}\n"
-msgstr "현재 속도 (가장 느린 차량 기준, 파견 시간 단축 가능): {0}\n"
-
-#: .\Script\UI\Panel\field_commission_panel.py:1174
-#, python-brace-format
-msgid "其他效果（未实装）：{0}\n"
-msgstr "특수 효과 (미구현):{0}\n"
-
-#: .\Script\UI\Panel\food_bag_panel.py:32
-#: .\Script\UI\Panel\food_bag_panel.py:42
-msgid "当前持有食物"
-msgstr "보유음식"
-
 #: .\Script\UI\Panel\food_bag_panel.py:41
 msgid "食物背包"
 msgstr "보관음식"
@@ -8304,20 +7861,6 @@ msgid ""
 "◆普通食物在场景无人时为独自食用，有人时则与目标一起分享，特殊调味食物仅可让目"
 "标食用。\n"
 msgstr "◆일반적인 음식은 아무도 없으면 혼자 먹거나, 다른 사람이 있으면 나눠 먹습니다. 특수 음식은 대상에게만 주어집니다. \n"
-
-#: .\Script\UI\Panel\food_bag_panel.py:120
-msgid "○正常调味食物\n"
-msgstr "○일반 음식\n"
-
-#: .\Script\UI\Panel\food_bag_panel.py:122
-msgid ""
-"  现在不饿，无法吃东西。\n"
-"\n"
-msgstr "  지금은 배가 고프지 않아 음식을 먹을 수 없다.\n\n"
-
-#: .\Script\UI\Panel\food_bag_panel.py:129
-msgid "○特殊调味食物\n"
-msgstr "○특수 음식\n"
 
 #: .\Script\UI\Panel\food_bag_panel.py:131
 msgid ""
@@ -8429,10 +7972,6 @@ msgstr "다리"
 msgid "足部"
 msgstr "발"
 
-#: .\Script\UI\Panel\gift_panel.py:58 .\Script\UI\Panel\gift_panel.py:60
-msgid "外表年龄"
-msgstr "외견연령"
-
 #: .\Script\UI\Panel\gift_panel.py:63
 #, python-brace-format
 msgid "{0}获得了【泌乳】\n"
@@ -8542,20 +8081,6 @@ msgid ""
 "\n"
 "  {0}已经是【小足】了，无法使用瘦足药\n"
 msgstr "\n  {0}은(는) 최소인 [작은 다리]라 [빈족제]를 사용할 수 없다\n"
-
-#: .\Script\UI\Panel\gift_panel.py:312
-#, python-brace-format
-msgid ""
-"\n"
-"  {0}已经是最大的【熟女】或【人妻】了，无法使用外表年龄增长药\n"
-msgstr "\n  {0}은(는) 외모상으로 [숙녀]나 [유부녀]라 [외모연령증가제]를 사용할 수 없다\n"
-
-#: .\Script\UI\Panel\gift_panel.py:317
-#, python-brace-format
-msgid ""
-"\n"
-"  {0}已经是最小的【幼女】了，无法使用外表年龄减少药\n"
-msgstr "\n  {0}은(는) 외모상으로 [유녀]라 [외모연령감소제]를 사용할 수 없다\n"
 
 #: .\Script\UI\Panel\gift_panel.py:322
 #, python-brace-format
@@ -8907,14 +8432,6 @@ msgstr "\n사용 가능한 최면계 아츠:\n"
 #, python-brace-format
 msgid "(需要[{0}]，且催眠深度达到{1}%)"
 msgstr "([{0}], 최면 심도 {1}% 필요)"
-
-#: .\Script\UI\Panel\hypnosis_panel.py:286
-#, python-brace-format
-msgid ""
-"\n"
-"已切换为{0}催眠模式\n"
-"\n"
-msgstr "\n{0}은(는) 최면 모드로 전환되었다\n\n"
 
 #: .\Script\UI\Panel\hypnosis_panel.py:295
 #, python-brace-format
@@ -9430,11 +8947,6 @@ msgstr "상세 오염 펼치기"
 msgid "制作食物"
 msgstr "요리하기"
 
-#: .\Script\UI\Panel\make_food_panel.py:81
-#, python-brace-format
-msgid "○当前的调味： {0}"
-msgstr "○현재 맛:{0}"
-
 #: .\Script\UI\Panel\make_food_panel.py:93
 msgid ""
 "\n"
@@ -9485,10 +8997,6 @@ msgstr ""
 #: .\Script\UI\Panel\make_food_panel.py:288
 #, python-brace-format
 msgid "当前调味: {0}\n"
-msgstr ""
-
-#: .\Script\UI\Panel\make_food_panel.py:289
-msgid "是否确认制作该食物？"
 msgstr ""
 
 #: .\Script\UI\Panel\manage_assembly_line_panel.py:31
@@ -9604,11 +9112,6 @@ msgstr ""
 
 #: .\Script\UI\Panel\manage_assembly_line_panel.py:292
 msgid "[生产工人增减]"
-msgstr ""
-
-#: .\Script\UI\Panel\manage_assembly_line_panel.py:302
-#, python-brace-format
-msgid "{0}号生产线 主生产工人: {1}  "
 msgstr ""
 
 #: .\Script\UI\Panel\manage_assembly_line_panel.py:316
@@ -9769,11 +9272,6 @@ msgid ""
 "\n"
 msgstr "\n ↓[부서명] 또는 [시스템명]을 클릭하면 상세 정보를 확인할 수 있습니다. 시스템이나 업무가 없는 부서는 미구현 상태입니다.\n\n"
 
-#: .\Script\UI\Panel\manage_basement_panel.py:220
-#, python-brace-format
-msgid "  病人 — {0}"
-msgstr "  환자 — {0}"
-
 #: .\Script\UI\Panel\manage_basement_panel.py:225
 #, python-brace-format
 msgid "  外勤干员 — {0}"
@@ -9893,20 +9391,6 @@ msgid ""
 "  当前检修人员与其负责地点："
 msgstr "\n  현재 정비 인원 및 담당 지역:"
 
-#: .\Script\UI\Panel\manage_basement_panel.py:397
-#, python-brace-format
-msgid ""
-"\n"
-"  今日已治疗患者数/排队中患者数：{0}/{1}"
-msgstr "\n  금일 치료한 환자 수/대기 중인 환자 수: {0}/{1}"
-
-#: .\Script\UI\Panel\manage_basement_panel.py:399
-#, python-brace-format
-msgid ""
-"\n"
-"  截至目前为止，今日医疗部门龙门币总收入为：{0}\n"
-msgstr "\n  현재까지 금일 의료 부서의 총 수입: {0} 용문폐\n"
-
 #: .\Script\UI\Panel\manage_basement_panel.py:403
 #, python-brace-format
 msgid ""
@@ -9940,12 +9424,6 @@ msgid ""
 "\n"
 "  干员总数/宿舍容量：{0}/{1}"
 msgstr "\n  오퍼레이터 총원/숙소 수용 인원:{0}/{1}"
-
-#: .\Script\UI\Panel\manage_basement_panel.py:417
-msgid ""
-"\n"
-"  具体居住情况：\n"
-msgstr "\n  거주 현황:\n"
 
 #: .\Script\UI\Panel\manage_basement_panel.py:464
 msgid ""
@@ -10218,12 +9696,6 @@ msgstr ""
 msgid "光伏"
 msgstr ""
 
-#: .\Script\UI\Panel\manage_power_system_panel.py:445
-msgid ""
-"\n"
-"能源结算\n"
-msgstr ""
-
 #: .\Script\UI\Panel\manage_power_system_panel.py:465
 #, python-brace-format
 msgid ""
@@ -10414,11 +9886,6 @@ msgstr ""
 
 #: .\Script\UI\Panel\manage_power_system_panel.py:720
 msgid "光伏发电"
-msgstr ""
-
-#: .\Script\UI\Panel\manage_power_system_panel.py:727
-#, python-brace-format
-msgid "{0}主调控员: {1}"
 msgstr ""
 
 #: .\Script\UI\Panel\manage_power_system_panel.py:741
@@ -10690,16 +10157,8 @@ msgid "外勤中数量/总持有量"
 msgstr "외근 차량/전체 보유 차량"
 
 #: .\Script\UI\Panel\manage_vehicle_panel.py:133
-msgid "载具速度"
-msgstr "차량 속도"
-
-#: .\Script\UI\Panel\manage_vehicle_panel.py:133
 msgid "运载量"
 msgstr "적재량"
-
-#: .\Script\UI\Panel\manage_vehicle_panel.py:133
-msgid "特殊效果(未实装)"
-msgstr "특수 효과(미구현)"
 
 #: .\Script\UI\Panel\manage_vehicle_panel.py:152
 #: .\Script\UI\Panel\manage_vehicle_panel.py:155
@@ -10713,41 +10172,6 @@ msgstr "특수 효과(미구현)"
 #: .\Script\UI\Panel\system_setting.py:219
 msgid "基础"
 msgstr "기본"
-
-#: .\Script\UI\Panel\manage_vehicle_panel.py:231
-#, python-brace-format
-msgid ""
-"\n"
-"载具名称：{0}"
-msgstr "\n차량 이름: {0}"
-
-#: .\Script\UI\Panel\manage_vehicle_panel.py:232
-#, python-brace-format
-msgid ""
-"\n"
-"载具速度：{0}"
-msgstr "\n차량 속도: {0}"
-
-#: .\Script\UI\Panel\manage_vehicle_panel.py:233
-#, python-brace-format
-msgid ""
-"\n"
-"运载量：{0}"
-msgstr "\n적재량: {0}"
-
-#: .\Script\UI\Panel\manage_vehicle_panel.py:234
-#, python-brace-format
-msgid ""
-"\n"
-"购入价格：{0}（出售价格为购入的0.8倍）"
-msgstr "\n구매 가격:{0}(판매가는 구매가의 0.8배)"
-
-#: .\Script\UI\Panel\manage_vehicle_panel.py:235
-#, python-brace-format
-msgid ""
-"\n"
-"特殊效果：{0}"
-msgstr "\n특수 효과: {0}"
 
 #: .\Script\UI\Panel\manage_vehicle_panel.py:252
 msgid "【购买载具】"
@@ -10793,11 +10217,6 @@ msgstr "\n{0}을(를) 판매하여 {1} 용문폐를 얻었다\n"
 #, python-brace-format
 msgid "本周全势力声望变化：{0}\n"
 msgstr "이번 주 전체 세력의 평판 변화:{0}\n"
-
-#: .\Script\UI\Panel\nation_diplomacy_panel.py:130
-#, python-brace-format
-msgid "本周全势力源石病感染率变化：{0}%\n"
-msgstr "이번 주 전체 세력의 광석병 감염률 변화:{0}%\n"
 
 #: .\Script\UI\Panel\nation_diplomacy_panel.py:148
 #: .\Script\UI\Panel\nation_diplomacy_panel.py:159
@@ -11213,14 +10632,6 @@ msgstr "플레이어의 소장품 계승 완료\n"
 #: .\Script\UI\Panel\new_round.py:706
 msgid "开始继承干员数据\n"
 msgstr "오퍼레이터 데이터 계승 시작\n"
-
-#: .\Script\UI\Panel\new_round.py:739
-msgid "干员好感与信任继承完毕\n"
-msgstr "오퍼레이터의 호감도 및 신뢰도 계승 완료\n"
-
-#: .\Script\UI\Panel\new_round.py:740
-msgid "干员能力与经验继承完毕\n"
-msgstr "오퍼레이터의 재능 및 경험 계승 완료\n"
 
 #: .\Script\UI\Panel\new_round.py:756
 msgid "开始重置游戏数据\n"
@@ -11753,13 +11164,6 @@ msgid ""
 "\n"
 "[011]查看检查报告（需要先进行身体检查）"
 msgstr "\n[011]임상 진단 분석 결과 (신체검사 필요)"
-
-#: .\Script\UI\Panel\physical_check_and_manage.py:284
-#, python-brace-format
-msgid ""
-"\n"
-"可以进行的检查项目/已进行的检查项目：{0}/{1}（每级医术技能+4）\n"
-msgstr "\n진행 가능/진행 완료 검사 목록:{0}/{1} ((의료기술+4)*Lv) \n"
 
 #: .\Script\UI\Panel\physical_check_and_manage.py:285
 #, python-brace-format
@@ -12441,19 +11845,9 @@ msgstr ""
 msgid "，已停止招募"
 msgstr ""
 
-#: .\Script\UI\Panel\recruit_panel.py:273
-#, python-brace-format
-msgid "当前效率加成：{0} {1} {2} = {2}%"
-msgstr ""
-
 #: .\Script\UI\Panel\recruit_panel.py:319
 #, python-brace-format
 msgid "  当前设施等级为：{0}，可同时有{1}条招募线\n"
-msgstr ""
-
-#: .\Script\UI\Panel\recruit_panel.py:321
-#, python-brace-format
-msgid "  当前国家剩余可招募干员数量（不含委托特殊招募）：{0}\n"
 msgstr ""
 
 #: .\Script\UI\Panel\recruit_panel.py:323
@@ -12496,13 +11890,6 @@ msgstr ""
 msgid " {0}号招募当前的策略为：{1}"
 msgstr " 채용 슬롯 {0}의 현재 전략:{1}"
 
-#: .\Script\UI\Panel\recruit_panel.py:408
-msgid ""
-"\n"
-"\n"
-" 当前可以选择的策略有（系数越高越简单）：\n"
-msgstr ""
-
 #: .\Script\UI\Panel\recruit_panel.py:426
 #, python-brace-format
 msgid "(调整系数{0})"
@@ -12518,26 +11905,8 @@ msgstr ""
 msgid "招聘专员管理"
 msgstr ""
 
-#: .\Script\UI\Panel\recruit_panel.py:495
-#, python-brace-format
-msgid "当前招聘专员数量：{0}"
-msgstr ""
-
 #: .\Script\UI\Panel\recruit_panel.py:500
 msgid "[招聘专员增减]"
-msgstr ""
-
-#: .\Script\UI\Panel\recruit_panel.py:517
-#, python-brace-format
-msgid "{0}号招募线 主招聘专员: {1}  "
-msgstr ""
-
-#: .\Script\UI\Panel\recruit_panel.py:532
-msgid "副招聘专员："
-msgstr ""
-
-#: .\Script\UI\Panel\recruit_panel.py:534
-msgid "副招聘专员：暂无\n"
 msgstr ""
 
 #: .\Script\UI\Panel\recruit_panel.py:554
@@ -12549,84 +11918,9 @@ msgstr ""
 msgid "任命主招聘专员"
 msgstr ""
 
-#: .\Script\UI\Panel\resource_exchange_panel.py:108
-#, python-brace-format
-msgid ""
-"\n"
-"  当前龙门币数量    ：{0}"
-msgstr "\n  현재 용문폐 수량  :{0}"
-
-#: .\Script\UI\Panel\resource_exchange_panel.py:113
-#, python-brace-format
-msgid ""
-"\n"
-"\n"
-"  要交易的资源为    ：{0}({1}/{2})    "
-msgstr "\n\n  거래 자원        :{0}({1}/{2})    "
-
 #: .\Script\UI\Panel\resource_exchange_panel.py:123
 msgid " [更改交易资源] "
 msgstr " [담판전략]"
-
-#: .\Script\UI\Panel\resource_exchange_panel.py:133
-#, python-brace-format
-msgid ""
-"\n"
-"\n"
-"  要交易的数量为    ：{0}    "
-msgstr "\n\n  거래 수량         :{0}    "
-
-#: .\Script\UI\Panel\resource_exchange_panel.py:149
-msgid " [重置] "
-msgstr " [취소] "
-
-#: .\Script\UI\Panel\resource_exchange_panel.py:161
-msgid ""
-"\n"
-"\n"
-"  交易的价格为      ："
-msgstr "\n\n  거래 가격         :"
-
-#: .\Script\UI\Panel\resource_exchange_panel.py:165
-msgid " [买入] "
-msgstr " [구입] "
-
-#: .\Script\UI\Panel\resource_exchange_panel.py:165
-msgid " [卖出] "
-msgstr " [판매]"
-
-#: .\Script\UI\Panel\resource_exchange_panel.py:184
-#, python-brace-format
-msgid " {0}龙门币/1单位 {1} "
-msgstr "{0}용문폐/1단위 {1}"
-
-#: .\Script\UI\Panel\resource_exchange_panel.py:190
-#, python-brace-format
-msgid ""
-"\n"
-"  ○预计共花费{0} * {1} = {2}龙门币\n"
-msgstr "\n  ○예상 총 비용: {0} * {1} = {2} 용문폐\n"
-
-#: .\Script\UI\Panel\resource_exchange_panel.py:192
-msgid "  ●龙门币不足，无法购买\n"
-msgstr "  ●용문폐가 부족해 구매할 수 없다.\n"
-
-#: .\Script\UI\Panel\resource_exchange_panel.py:195
-msgid ""
-"\n"
-"  ●该资源无法购买，只能卖出\n"
-msgstr "\n  ●구매 불가 재료입니다.\n"
-
-#: .\Script\UI\Panel\resource_exchange_panel.py:197
-#, python-brace-format
-msgid ""
-"\n"
-"  ○预计共获得{0} * {1} = {2}龙门币\n"
-msgstr "\n  ○예상 총 획득: {0} * {1} = {2} 용문폐\n"
-
-#: .\Script\UI\Panel\resource_exchange_panel.py:199
-msgid "  ●资源不足，无法出售\n"
-msgstr "  ●재료가 부족해 팔 수 없다.\n"
 
 #: .\Script\UI\Panel\resource_exchange_panel.py:283
 #, python-brace-format
@@ -12765,32 +12059,6 @@ msgstr "W감각:"
 #: .\Script\UI\Panel\see_character_info_panel.py:782
 msgid "立绘"
 msgstr "아츠"
-
-#: .\Script\UI\Panel\see_character_info_panel.py:926
-#, python-brace-format
-msgid " 职业    ：[{profession_text}]"
-msgstr " 직업    :[{profession_text}]"
-
-#: .\Script\UI\Panel\see_character_info_panel.py:930
-#, python-brace-format
-msgid ""
-"\n"
-" 种族    ：[{race_text}]"
-msgstr "\n 종족    ：[{race_text}]"
-
-#: .\Script\UI\Panel\see_character_info_panel.py:934
-#, python-brace-format
-msgid ""
-"\n"
-" 势力    ：[{nation_text}]"
-msgstr "\n 세력    ：[{nation_text}]"
-
-#: .\Script\UI\Panel\see_character_info_panel.py:938
-#, python-brace-format
-msgid ""
-"\n"
-" 出身地  ：[{birthplace_text}]"
-msgstr "\n 출신지  ：[{birthplace_text}]"
 
 #: .\Script\UI\Panel\see_character_info_panel.py:1004
 msgid "日程"
@@ -12957,11 +12225,6 @@ msgstr "\n{0}은(는) 사용할 수 있는 이성회복제가 없다\n\n"
 #: .\Script\UI\Panel\see_item_info_panel.py:142
 msgid "人物道具"
 msgstr "보유 아이템"
-
-#: .\Script\UI\Panel\see_item_info_panel.py:147
-#, python-brace-format
-msgid "当前持有粉红凭证：{0}"
-msgstr "보유 분홍증명서:{0}"
 
 #: .\Script\UI\Panel\see_item_info_panel.py:225
 msgid "(持有数量:"
@@ -13264,10 +12527,6 @@ msgid ""
 "被推入产房\n"
 msgstr "\n {0}이(가) 곧 출산할 거라는 소식이 들려왔다. 당신은 곧바로 분만실로 달려갔다...\n 잠시 곁을 지킨 후, 그녀가 분만실로 들어가는 모습을 지켜보았다...\n"
 
-#: .\Script\UI\Panel\sp_event_panel.py:90
-msgid " 焦急等待"
-msgstr " 초조한 기다림 중"
-
 #: .\Script\UI\Panel\sp_event_panel.py:99
 #, python-brace-format
 msgid ""
@@ -13374,11 +12633,6 @@ msgstr " ▼[{0} 설정]"
 #, python-brace-format
 msgid " ▶[{0}设置]"
 msgstr " ▶[{0} 설정]"
-
-#: .\Script\UI\Panel\system_setting.py:168
-#, python-brace-format
-msgid "[ {cache.font_size} ]"
-msgstr ""
 
 #: .\Script\UI\Panel\system_setting.py:186
 msgid " [修改已禁止干员列表] "
@@ -13517,12 +12771,6 @@ msgstr " 신뢰도>50%"
 msgid " 反发刻印0"
 msgstr " 반발각인 Lv0"
 
-#: .\Script\UI\Panel\talent_up_panel.py:79
-msgid ""
-" 分为爱情系与隶属系两条路线，只能任选其一，选择后另一路线消失，仅在新周目时可"
-"以重置\n"
-msgstr " 함락소질은 연모계와 굴복계로 나뉘며 둘 중 하나만 선택 가능합니다. 소질 획득 후 다른 계열로는 진입할 수 없습니다.\n"
-
 #: .\Script\UI\Panel\talent_up_panel.py:99
 msgid "爱情路线前提："
 msgstr "연모계:"
@@ -13539,12 +12787,6 @@ msgstr " 공포각인 Lv0"
 msgid " 亲密等级至少为2"
 msgstr " 친밀 Lv2 이상"
 
-#: .\Script\UI\Panel\talent_up_panel.py:124
-msgid ""
-"\n"
-"已达到最高级-爱侣\n"
-msgstr "\n연모계는 [애인]이 마지막 함락소질입니다\n"
-
 #: .\Script\UI\Panel\talent_up_panel.py:142
 msgid "隶属路线前提："
 msgstr "굴복계:"
@@ -13560,12 +12802,6 @@ msgstr " 굴복각인 >=1"
 #: .\Script\UI\Panel\talent_up_panel.py:157
 msgid " 顺从等级至少为2"
 msgstr " 순종 Lv2 이상"
-
-#: .\Script\UI\Panel\talent_up_panel.py:167
-msgid ""
-"\n"
-"已达到最高级-奴隶\n"
-msgstr "\n굴복계는 [노예]가 마지막 함락소질입니다\n"
 
 #: .\Script\UI\Panel\talent_up_panel.py:188
 #, python-brace-format
