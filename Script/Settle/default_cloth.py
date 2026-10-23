@@ -27,7 +27,7 @@ def handle_change_underware(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   换新的内衣（胸部+内裤）
   Keyword arguments:
@@ -53,7 +53,7 @@ def handle_bra_see(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   胸罩可视
   Keyword arguments:
@@ -76,7 +76,7 @@ def handle_target_bra_see(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象胸罩可视
   Keyword arguments:
@@ -101,7 +101,7 @@ def handle_pan_see(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   内裤可视
   Keyword arguments:
@@ -124,7 +124,7 @@ def handle_target_pan_see(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象内裤可视
   Keyword arguments:
@@ -149,7 +149,7 @@ def handle_cloth_see_zero(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   内衣可视清零
   Keyword arguments:
@@ -172,7 +172,7 @@ def handle_reset_cloth(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   衣服重置为初始状态
   Keyword arguments:
@@ -196,7 +196,7 @@ def handle_scene_all_characters_bra_pan_see(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   场景内所有角色胸罩、内裤可视
   Keyword arguments:
@@ -227,7 +227,7 @@ def handle_get_t_pan(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   获得交互对象的内裤
   Keyword arguments:
@@ -255,7 +255,7 @@ def handle_get_t_sock(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   获得交互对象的袜子
   Keyword arguments:
@@ -283,7 +283,7 @@ def handle_get_scene_t_pan(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   获得场景内所有其他角色的内裤
   Keyword arguments:
@@ -319,7 +319,7 @@ def handle_get_scene_t_socks(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   获得场景内所有其他角色的袜子
   Keyword arguments:
@@ -355,7 +355,7 @@ def handle_self_cloth_back(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己穿回H时脱掉的衣服
   Keyword arguments:
@@ -397,7 +397,7 @@ def handle_t_cloth_back(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象穿回H时脱掉的衣服
   Keyword arguments:
@@ -422,7 +422,7 @@ def handle_scene_all_characters_cloth_back(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   场景内所有角色穿回H时脱掉的衣服
   Keyword arguments:
@@ -453,7 +453,7 @@ def handle_wear_cloth_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   脱掉全部衣服
   Keyword arguments:
@@ -475,7 +475,7 @@ def handle_wear_cloth_off_most(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   脱掉大部分衣服（保留首饰等）
   Keyword arguments:
@@ -497,7 +497,7 @@ def handle_get_shower_cloth(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   清零其他衣服并换上浴帽和浴巾
   Keyword arguments:
@@ -519,7 +519,7 @@ def handle_get_swim_cloth(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   清零其他衣服并换上泳衣
   Keyword arguments:
@@ -541,7 +541,7 @@ def handle_get_sleep_cloth(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   睡觉服装结算（正常时清零其他衣服并换上睡衣）
   Keyword arguments:
@@ -571,7 +571,7 @@ def handle_get_self_prisoner_cloth(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   按照监禁设定对自身进行囚犯服装结算
   Keyword arguments:
@@ -593,7 +593,7 @@ def handle_locker_cloth_in_shower_reset(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   大浴场衣柜里的衣服清零
   Keyword arguments:
@@ -620,7 +620,7 @@ def handle_wear_to_shower_locker(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   身上首饰以外的衣服转移到大浴场柜子里
   Keyword arguments:
@@ -674,7 +674,7 @@ def handle_shower_locker_to_wear(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   大浴场衣柜里的衣服转移到身上
   Keyword arguments:
@@ -719,7 +719,7 @@ def handle_foot_cloth_to_shower_locker(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   袜子和鞋子转移到大浴场衣柜里
   Keyword arguments:
@@ -785,7 +785,7 @@ def handle_shower_locker_to_dormitory_locker(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   大浴场衣柜里的衣服转移到宿舍衣柜
   Keyword arguments:
@@ -817,7 +817,7 @@ def handle_wear_to_dormitory_locker(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   身上除首饰与必穿项外的所有衣服转移到宿舍衣柜里
   Keyword arguments:
@@ -890,7 +890,7 @@ def handle_clean_locker_cloth_semen(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   清理衣柜里的衣服精液
   Keyword arguments:
@@ -910,7 +910,7 @@ def handle_get_cloth_from_dormitory_locker(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   清空身上的旧衣服，从宿舍的衣柜里穿上衣服、内衣内裤，并转移衣柜中的精液数据到穿着的衣服上
   Keyword arguments:
@@ -930,7 +930,7 @@ def handle_up_and_bra_to_tem(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己的上衣和胸罩转移到临时脱下
   Keyword arguments:
@@ -959,7 +959,7 @@ def handle_down_and_pan_to_tem(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己的下衣和内裤转移到临时脱下
   Keyword arguments:
@@ -988,7 +988,7 @@ def handle_target_up_and_bra_to_tem(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象的上衣和胸罩转移到临时脱下
   Keyword arguments:
@@ -1020,7 +1020,7 @@ def handle_target_down_and_pan_to_tem(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象的下衣和内裤转移到临时脱下
   Keyword arguments:

@@ -30,7 +30,7 @@ def handle_item_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   去掉身上所有的道具（含药品）
   Keyword arguments:
@@ -55,7 +55,7 @@ def handle_target_item_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象去掉身上所有的道具（含药品）
   Keyword arguments:
@@ -80,7 +80,7 @@ def handle_item_off_except_pill(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   去掉身上所有的H道具（不含药品）
   Keyword arguments:
@@ -107,7 +107,7 @@ def handle_target_item_off_except_pill(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象去掉身上所有的道具（不含药品）
   Keyword arguments:
@@ -132,7 +132,7 @@ def handle_target_b_item_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象去掉B部位的道具
   Keyword arguments:
@@ -160,7 +160,7 @@ def handle_target_a_item_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象去掉A部位的道具
   Keyword arguments:
@@ -188,7 +188,7 @@ def handle_target_vibrator_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象插入V震动棒
   Keyword arguments:
@@ -214,7 +214,7 @@ def handle_target_vibrator_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象拔出V震动棒
   Keyword arguments:
@@ -240,7 +240,7 @@ def handle_target_anal_vibrator_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象插入A震动棒
   Keyword arguments:
@@ -266,7 +266,7 @@ def handle_target_anal_vibrator_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象拔出A震动棒
   Keyword arguments:
@@ -292,7 +292,7 @@ def handle_target_nipple_clamp_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象戴上乳头夹
   Keyword arguments:
@@ -318,7 +318,7 @@ def handle_target_nipple_clamp_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象取下乳头夹
   Keyword arguments:
@@ -344,7 +344,7 @@ def handle_target_clit_clamp_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象戴上阴蒂夹
   Keyword arguments:
@@ -370,7 +370,7 @@ def handle_target_clit_clamp_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象取下阴蒂夹
   Keyword arguments:
@@ -396,7 +396,7 @@ def handle_target_anal_beads_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象塞入肛门拉珠
   Keyword arguments:
@@ -422,7 +422,7 @@ def handle_target_anal_beads_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象拔出肛门拉珠
   Keyword arguments:
@@ -448,7 +448,7 @@ def handle_target_milking_machine_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象戴上搾乳机
   Keyword arguments:
@@ -474,7 +474,7 @@ def handle_target_milking_machine_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象取下搾乳机
   Keyword arguments:
@@ -500,7 +500,7 @@ def handle_target_urine_collector_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象戴上采尿器
   Keyword arguments:
@@ -526,7 +526,7 @@ def handle_target_urine_collector_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象取下采尿器
   Keyword arguments:
@@ -552,7 +552,7 @@ def handle_target_patch_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象戴上眼罩
   Keyword arguments:
@@ -578,7 +578,7 @@ def handle_target_patch_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象取下眼罩
   Keyword arguments:
@@ -604,7 +604,7 @@ def handle_target_gag_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象戴上口球
   Keyword arguments:
@@ -630,7 +630,7 @@ def handle_target_gag_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象取下口球
   Keyword arguments:
@@ -656,7 +656,7 @@ def handle_adjust_body_manage_day_item(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   调整自己的身体管理_白天道具
   Keyword arguments:
@@ -734,7 +734,7 @@ def handle_adjust_body_manage_sleep_item(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   调整自己的身体管理_睡觉道具
   Keyword arguments:
@@ -812,7 +812,7 @@ def handle_clear_used_condoms(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   清理储存的避孕套
   Keyword arguments:
@@ -838,7 +838,7 @@ def handle_use_body_lubricant(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   使用了一个润滑液
   Keyword arguments:
@@ -866,7 +866,7 @@ def handle_use_philter(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   使用了一个媚药
   Keyword arguments:
@@ -894,7 +894,7 @@ def handle_use_enemas(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   使用了一个灌肠液
   Keyword arguments:
@@ -922,7 +922,7 @@ def handle_use_diuretics_once(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   使用了一个一次性利尿剂
   Keyword arguments:
@@ -950,7 +950,7 @@ def handle_use_diuretics_persistent(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   使用了一个持续性利尿剂
   Keyword arguments:
@@ -978,7 +978,7 @@ def handle_use_sleeping_pills(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   使用了一个安眠药
   Keyword arguments:
@@ -1006,7 +1006,7 @@ def handle_use_ovulation_promoting_drugs(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   使用了一个排卵促进药
   Keyword arguments:
@@ -1034,7 +1034,7 @@ def handle_use_contraceptive_before(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   使用了一个事前避孕药
   Keyword arguments:
@@ -1062,7 +1062,7 @@ def handle_use_contraceptive_after(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   使用了一个事后避孕药
   Keyword arguments:
@@ -1090,7 +1090,7 @@ def handle_use_ring(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   使用了一个戒指
   Keyword arguments:
@@ -1113,7 +1113,7 @@ def handle_use_collar(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   使用了一个项圈
   Keyword arguments:
@@ -1136,7 +1136,7 @@ def handle_use_bag(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   使用了一个干员携袋
   Keyword arguments:
@@ -1159,7 +1159,7 @@ def handle_use_condom(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   使用了一个避孕套
   Keyword arguments:
@@ -1187,7 +1187,7 @@ def handle_use_urethral_swab(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   使用了一个尿道棉棒
   Keyword arguments:
@@ -1215,7 +1215,7 @@ def handle_use_safe_candles(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   使用了一个低温蜡烛
   Keyword arguments:
@@ -1243,7 +1243,7 @@ def handle_delete_food(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   删除当前行动中的对象食物
   Keyword arguments:
@@ -1271,7 +1271,7 @@ def handle_make_food(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   结算因为制作食物而加好感
   Keyword arguments:
@@ -1306,7 +1306,7 @@ def handle_npc_make_food_to_shop(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   NPC随机制作一个食物，并补充到当前所在食物商店中
   Keyword arguments:
@@ -1361,7 +1361,7 @@ def handle_npc_make_food_to_bag(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   NPC随机制作一个食物，并补充到自己背包中
   Keyword arguments:
@@ -1397,7 +1397,7 @@ def handle_assistant_make_food_to_bag(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   助理制作两个食物，并补充到自己背包中
   Keyword arguments:
@@ -1465,7 +1465,7 @@ def handle_delete_all_food(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   删除背包内所有食物
   Keyword arguments:
@@ -1492,7 +1492,7 @@ def handle_delete_last_food(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   删除背包内最后一个食物
   Keyword arguments:
@@ -1519,7 +1519,7 @@ def handle_target_add_huge_lubrication(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加大量润滑（润滑液）
   Keyword arguments:
@@ -1560,7 +1560,7 @@ def handle_target_add_huge_desire_and_submit(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象增加大量欲情和屈服和欲望值（媚药）
   Keyword arguments:
@@ -1622,7 +1622,7 @@ def handle_target_enema(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象A灌肠并增加中量润滑
   Keyword arguments:
@@ -1689,7 +1689,7 @@ def handle_target_enema_end(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象结束A灌肠并增加中量润滑
   Keyword arguments:
@@ -1756,7 +1756,7 @@ def handle_target_add_urinate(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象尿意值全满
   Keyword arguments:
@@ -1782,7 +1782,7 @@ def handle_target_diuretics_on(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象获得利尿剂状态
   Keyword arguments:
@@ -1810,7 +1810,7 @@ def handle_target_add_tired_tosleep(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象疲劳值全满，进入8h的睡眠
   Keyword arguments:
@@ -1839,7 +1839,7 @@ def handle_target_add_pregnancy_chance(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   道具_使用效果 交互对象获得排卵促进药状态
   Keyword arguments:
@@ -1865,7 +1865,7 @@ def handle_target_no_pregnancy_next_day(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象获得事前避孕药状态
   Keyword arguments:
@@ -1892,7 +1892,7 @@ def handle_target_no_pregnancy_from_last_h(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   交互对象获得事后避孕药状态
   Keyword arguments:
@@ -1918,7 +1918,7 @@ def handle_wear_condom(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己获得戴上避孕套状态
   Keyword arguments:
@@ -1941,7 +1941,7 @@ def handle_take_condom_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   自己去掉戴上避孕套状态
   Keyword arguments:
@@ -1964,7 +1964,7 @@ def handle_self_remote_toy_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   关闭自己身上的情趣玩具
   Keyword arguments:
@@ -1987,7 +1987,7 @@ def handle_self_remote_toy_set_weak(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   将自己身上的情趣玩具调到弱档
   Keyword arguments:
@@ -2010,7 +2010,7 @@ def handle_self_remote_toy_set_medium(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   将自己身上的情趣玩具调到中档
   Keyword arguments:
@@ -2033,7 +2033,7 @@ def handle_self_remote_toy_set_strong(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   将自己身上的情趣玩具调到强档
   Keyword arguments:
@@ -2056,7 +2056,7 @@ def handle_target_remote_toy_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   关闭交互对象身上的情趣玩具
   Keyword arguments:
@@ -2081,7 +2081,7 @@ def handle_target_remote_toy_set_weak(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   将交互对象身上的情趣玩具调到弱档
   Keyword arguments:
@@ -2109,7 +2109,7 @@ def handle_target_remote_toy_set_medium(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   将交互对象身上的情趣玩具调到中档
   Keyword arguments:
@@ -2137,7 +2137,7 @@ def handle_target_remote_toy_set_strong(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   将交互对象身上的情趣玩具调到强档
   Keyword arguments:
@@ -2165,7 +2165,7 @@ def handle_all_remote_toy_off(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   关闭在场所有人身上的情趣玩具
   Keyword arguments:
@@ -2199,7 +2199,7 @@ def handle_all_remote_toy_set_weak(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   将在场所有人身上的情趣玩具调到弱档
   Keyword arguments:
@@ -2231,7 +2231,7 @@ def handle_all_remote_toy_set_medium(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   将在场所有人身上的情趣玩具调到中档
   Keyword arguments:
@@ -2263,7 +2263,7 @@ def handle_all_remote_toy_set_strong(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   将在场所有人身上的情趣玩具调到强档
   Keyword arguments:
@@ -2295,7 +2295,7 @@ def handle_target_remote_toy_use_or_set_weak(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> None:
   """
   如果交互对象已有强度设定则继续使用，否则开启到弱档
   Keyword arguments:
