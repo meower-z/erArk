@@ -79,7 +79,7 @@ def init(main_flow: object):
         e.write(f"最近输入指令：{cache.input_cache}\n")
         e.write(f"玩家最近状态：{instruct_cn_name_list}\n")
         e.write(f"当前游戏内时间：{game_time.get_date_text(cache.game_time)}\n")
-      traceback.print_exc(file=open(error_path, "a"))
+        traceback.print_exc(file=e)
       # 向游戏内写入错误信息
       error_text = "\n"
       error_text += _("版本信息：{0}\n").format(

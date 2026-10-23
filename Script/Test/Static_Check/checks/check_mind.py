@@ -57,10 +57,7 @@ def _iter_npcs():
       getattr(cache, "character_data", None), dict
   ):
     return
-  npc_id_got = getattr(cache, "npc_id_got", None)
-  if not npc_id_got:
-    return
-  for cid in npc_id_got:
+  for cid in getattr(cache, "npc_id_got", None) or ():
     if cid and cid in cache.character_data:
       yield cid, cache.character_data[cid]
 

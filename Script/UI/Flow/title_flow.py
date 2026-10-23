@@ -81,9 +81,9 @@ def draw_logo():
   logo_text.append("|                              |")
   logo_text.append("|                              |")
   logo_text.append("|    #                         |")
-  logo_text.append("|    |¯¯ |¯¯\   /\             |")
-  logo_text.append("|    |-- |__/  /__\  |/¯ |/    |")
-  logo_text.append("60%         |    |__ |  \ /    \ |   |\    |         60%")
+  logo_text.append(r"|    |¯¯ |¯¯\   /\             |")
+  logo_text.append(r"|    |-- |__/  /__\  |/¯ |/    |")
+  logo_text.append(r"60%         |    |__ |  \ /    \ |   |\    |         60%")
   logo_text.append(
       "------------------------------------------------------------         |                              |         ------------------------------------------------------------"
   )

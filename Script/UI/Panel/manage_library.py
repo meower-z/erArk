@@ -63,57 +63,53 @@ class Manage_Library_Panel:
       button0_draw.draw()
       return_list.append(button0_draw.return_text)
 
-      if 1:
-        button1_text = _("[002]图书进货(未实装)")
-        button1_draw = draw.LeftButton(
-            _(button1_text),
-            _("2"),
-            window_width,
-            cmd_func=self.get_new_book,
-            args=(),
-        )
-        line_feed.draw()
-        button1_draw.draw()
-        return_list.append(button1_draw.return_text)
+      button1_text = _("[002]图书进货(未实装)")
+      button1_draw = draw.LeftButton(
+          _(button1_text),
+          _("2"),
+          window_width,
+          cmd_func=self.get_new_book,
+          args=(),
+      )
+      line_feed.draw()
+      button1_draw.draw()
+      return_list.append(button1_draw.return_text)
 
-      if 1:
-        button2_text = _("[003]阅读推荐")
-        button2_draw = draw.LeftButton(
-            _(button2_text),
-            _("3"),
-            window_width,
-            cmd_func=self.read_recommend,
-            args=(),
-        )
-        line_feed.draw()
-        button2_draw.draw()
-        return_list.append(button2_draw.return_text)
+      button2_text = _("[003]阅读推荐")
+      button2_draw = draw.LeftButton(
+          _(button2_text),
+          _("3"),
+          window_width,
+          cmd_func=self.read_recommend,
+          args=(),
+      )
+      line_feed.draw()
+      button2_draw.draw()
+      return_list.append(button2_draw.return_text)
 
-      if 1:
-        button3_text = _("[004]读书会")
-        button3_draw = draw.LeftButton(
-            _(button3_text),
-            _("4"),
-            window_width,
-            cmd_func=self.reading_party,
-            args=(),
-        )
-        line_feed.draw()
-        button3_draw.draw()
-        return_list.append(button3_draw.return_text)
+      button3_text = _("[004]读书会")
+      button3_draw = draw.LeftButton(
+          _(button3_text),
+          _("4"),
+          window_width,
+          cmd_func=self.reading_party,
+          args=(),
+      )
+      line_feed.draw()
+      button3_draw.draw()
+      return_list.append(button3_draw.return_text)
 
-      if 1:
-        button4_text = _("[005]借阅历史记录")
-        button4_draw = draw.LeftButton(
-            _(button4_text),
-            _("5"),
-            window_width,
-            cmd_func=self.borrowing_history,
-            args=(),
-        )
-        line_feed.draw()
-        button4_draw.draw()
-        return_list.append(button4_draw.return_text)
+      button4_text = _("[005]借阅历史记录")
+      button4_draw = draw.LeftButton(
+          _(button4_text),
+          _("5"),
+          window_width,
+          cmd_func=self.borrowing_history,
+          args=(),
+      )
+      line_feed.draw()
+      button4_draw.draw()
+      return_list.append(button4_draw.return_text)
 
       line_feed.draw()
       back_draw = draw.CenterButton(_("[返回]"), _("返回"), window_width)
