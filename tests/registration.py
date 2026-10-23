@@ -92,16 +92,25 @@ def module_classes(module) -> list:
 def pytest_classes(module) -> list:
   """
   pytest 收集的类：名字以 Test 开头（pytest 的默认设置）、__test__ 不为假的类，不是 TestCase 的还要 __init__ 与 __new__ 都沿用 object 的；
-  先找模块里的，再找其中不是 TestCase 的类与它的基类里的，逐层往下
+  先找模块里的，再找其中不是 TestCase 的类与它的基类里的，逐层往下；类与基类里同名的只看最先找到的那个（与 pytest 相同）
   Keyword arguments:
   module -- 测试模块
   Return arguments:
   list[type] -- 类，不重复
   """
   found = []
-  owners = [vars(module)]
+  owners = [module]
   while owners:
-    for name, obj in owners.pop().items():
+    owner = owners.pop()
+    if isinstance(owner, type):
+      namespaces = [vars(klass) for klass in owner.__mro__]
+    else:
+      namespaces = [vars(owner)]
+    seen = set()
+    for name, obj in (item for names in namespaces for item in names.items()):
+      if name in seen:
+        continue
+      seen.add(name)
       if (
           not isinstance(obj, type)
           or not name.startswith("Test")
@@ -113,7 +122,7 @@ def pytest_classes(module) -> list:
         found.append(obj)
       elif obj.__init__ == object.__init__ and obj.__new__ == object.__new__:
         found.append(obj)
-        owners += [vars(klass) for klass in obj.__mro__]
+        owners.append(obj)
   return found
 
 
