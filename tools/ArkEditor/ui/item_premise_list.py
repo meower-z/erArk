@@ -217,6 +217,9 @@ class ItemPremiseList(QWidget):
         data = cache_control.now_event_data[cache_control.now_select_id]
       elif cache_control.now_edit_type_flag == 0:
         data = cache_control.now_talk_data[cache_control.now_select_id]
+      else:
+        # 人物属性模式下没有选中的口上或事件
+        data = None
       # 创建右键菜单
       menu = QMenu(self)
       delete_action = menu.addAction("删除")
@@ -224,6 +227,9 @@ class ItemPremiseList(QWidget):
       paste_action = menu.addAction(
           "粘贴"
       )  # 添加“粘贴”按钮，用于将复制的文本粘贴到列表中
+      # 没有口上或事件数据时，删除与粘贴不可选
+      delete_action.setEnabled(data is not None)
+      paste_action.setEnabled(data is not None)
       # 自定义快速插入菜单项
       if self.is_in_quick_insert(premise_cid):
         quick_action = menu.addAction("从快速插入列表中删除")
@@ -308,6 +314,9 @@ class ItemPremiseList(QWidget):
       elif cache_control.now_edit_type_flag == 1:
         # 事件
         data = cache_control.now_event_data[cache_control.now_select_id]
+      else:
+        # 人物属性模式下没有选中的口上或事件，不改数据
+        return
       # 重新按界面顺序排列premise
       new_order = []
       for i in range(self.item_list.count()):

@@ -125,6 +125,9 @@ class ItemEffectList(QWidget):
         data = cache_control.now_event_data[cache_control.now_select_id]
       elif cache_control.now_edit_type_flag == 0:
         data = cache_control.now_talk_data[cache_control.now_select_id]
+      else:
+        # 人物属性模式下没有选中的口上或事件
+        data = None
       # 创建右键菜单
       menu = QMenu(self)
       delete_action = menu.addAction("删除")  # 添加“删除”按钮，删除当前结算
@@ -132,6 +135,9 @@ class ItemEffectList(QWidget):
       paste_action = menu.addAction(
           "粘贴"
       )  # 添加“粘贴”按钮，将复制的结算粘贴到列表中
+      # 没有口上或事件数据时，删除与粘贴不可选
+      delete_action.setEnabled(data is not None)
+      paste_action.setEnabled(data is not None)
       # 显示菜单并等待用户选择操作
       action = menu.exec_(self.item_list.mapToGlobal(pos))
       # 如果选择删除操作

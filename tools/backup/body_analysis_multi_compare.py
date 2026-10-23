@@ -1044,17 +1044,11 @@ def main():
 
     # 4b. 最佳3个 + 集成对比
     # 按归一化平均分排序取前3
-    sorted_models = sorted(
-        valid_results.keys(),
-        key=lambda k: float(
-            np.mean(
-                normalize_scores(
-                    valid_results[k]['scores'], k, needs_sigmoid_keys
-                )
-            )
-        ),
-        reverse=True,
-    )
+    mean_scores = {
+        k: float(np.mean(normalize_scores(v['scores'], k, needs_sigmoid_keys)))
+        for k, v in valid_results.items()
+    }
+    sorted_models = sorted(mean_scores, key=mean_scores.get, reverse=True)
     top3 = sorted_models[:3]
     focus_keys = top3 + ['ENS']
     imgs_focus = []

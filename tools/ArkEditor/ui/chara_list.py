@@ -602,6 +602,7 @@ class MenuWidget(QWidget):
     # 赋予下拉框初始值
     have_text_flag = True
     cloth_flag = False
+    initial_text_list = []
     if self.type_flag == 0:
       initial_text_list = [
           cache_control.ability_data[i] for i in cache_control.ability_data

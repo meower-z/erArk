@@ -517,8 +517,11 @@ if l4_id != -1:
       "",
   )
 check("L4 前提：有一间已开放的理论教室可排课", l4_room != "", l4_room)
+l4_week_day = cache.game_time.weekday()
+""" 给她排课的星期：今天 """
+l4_home = []
+""" 她过家家的地点：她宿舍的场景路径，宿舍不在场景表里时用教育区入口 """
 if l4_id != -1 and l4_room:
-  l4_week_day = cache.game_time.weekday()
   l4_dorm = cache.character_data[l4_id].dormitory
   l4_home = (
       map_handle.get_map_system_path_for_str(l4_dorm)

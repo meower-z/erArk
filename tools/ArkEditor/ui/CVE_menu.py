@@ -134,6 +134,7 @@ class CVEMenu(QDialog):
       cve_b2 = self.cve_b2.currentText().split("|")[0]
     else:
       cve_b2 = ""
+    cve_b_value = ""
     if cve_b1 == "待选择":
       cve_b_value = ""
     elif cve_b1 == "好感":

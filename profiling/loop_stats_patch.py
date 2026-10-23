@@ -68,11 +68,10 @@ def apply_loop_stats_patch():
   def _timed_game_update_flow(add_time):
     # 记录单 tick 墙钟耗时与当前 NPC 规模
     t0 = time.perf_counter()
-    result = original_game_update_flow(add_time)
+    original_game_update_flow(add_time)
     loop_stats["tick_times"].append(time.perf_counter() - t0)
     loop_stats["ticks"] += 1
     loop_stats["npc_count"] = len(cache.npc_id_got)
-    return result
 
   update.game_update_flow = _timed_game_update_flow
 

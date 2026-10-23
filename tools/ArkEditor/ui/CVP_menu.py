@@ -138,6 +138,7 @@ class CVPMenu(QDialog):
       cvp_b2 = self.cvp_b2.currentText().split("|")[0]
     else:
       cvp_b2 = ""
+    cvp_b_value = ""
     if cvp_b1 == "待选择":
       cvp_b_value = ""
     elif cvp_b1 == "好感":

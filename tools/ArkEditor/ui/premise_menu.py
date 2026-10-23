@@ -210,6 +210,9 @@ class PremiseMenu(QDialog):
       data = cache_control.now_event_data[cache_control.now_select_id]
     elif cache_control.now_edit_type_flag == 0:
       data = cache_control.now_talk_data[cache_control.now_select_id]
+    else:
+      # 人物属性模式下没有选中的口上或事件，不改数据
+      return
 
     if item.checkState(column) == Qt.Checked:
       item.setCheckState(0, Qt.Unchecked)

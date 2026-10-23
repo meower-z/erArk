@@ -547,6 +547,29 @@ if BUILD_OFFICIAL_EVENT and os.path.isdir(official_event_dir):
   if count:
     print(f"[进度] 已处理公务事件，共 {count} 个部门文件合并为公务事件表")
 
+
+# 递归统计 talk 与 talk_common 目录及其子目录下的csv文件总数和总大小
+def count_csv_files_and_size(dir_path):
+  """
+  输入：
+      dir_path (str): 目录路径
+  返回：(int, int)，总的csv文件数量和总字节数
+  功能：递归统计目录下所有csv文件数量和总大小
+  """
+  count = 0
+  total_size = 0
+  for entry in os.listdir(dir_path):
+    full_path = os.path.join(dir_path, entry)
+    if os.path.isdir(full_path):
+      sub_count, sub_size = count_csv_files_and_size(full_path)
+      count += sub_count
+      total_size += sub_size
+    elif entry.endswith(".csv"):
+      count += 1
+      total_size += os.path.getsize(full_path)
+  return count, total_size
+
+
 # 在写入 talk 数据时根据 BUILD_TALK 判断是否覆盖
 if BUILD_TALK:
   # 获取talk目录下的文件列表
@@ -568,27 +591,6 @@ if BUILD_TALK:
       elif entry.endswith(".csv"):
         count += 1
     return count
-
-  # 递归统计talk目录及其所有子目录下的csv文件总数和总大小
-  def count_csv_files_and_size(dir_path):
-    """
-    输入：
-        dir_path (str): 目录路径
-    返回：(int, int)，总的csv文件数量和总字节数
-    功能：递归统计目录下所有csv文件数量和总大小
-    """
-    count = 0
-    total_size = 0
-    for entry in os.listdir(dir_path):
-      full_path = os.path.join(dir_path, entry)
-      if os.path.isdir(full_path):
-        sub_count, sub_size = count_csv_files_and_size(full_path)
-        count += sub_count
-        total_size += sub_size
-      elif entry.endswith(".csv"):
-        count += 1
-        total_size += os.path.getsize(full_path)
-    return count, total_size
 
   # 统计talk目录及其所有子目录下的csv文件总数和总大小
   total_files, total_bytes = count_csv_files_and_size(talk_dir)
@@ -659,27 +661,6 @@ else:
   pass
 
 if BUILD_TALK_COMMON:
-  # 递归统计talk_common目录及其所有子目录下的csv文件总数和总大小
-  def count_csv_files_and_size(dir_path):
-    """
-    输入：
-        dir_path (str): 目录路径
-    返回：(int, int)，总的csv文件数量和总字节数
-    功能：递归统计目录下所有csv文件数量和总大小
-    """
-    count = 0
-    total_size = 0
-    for entry in os.listdir(dir_path):
-      full_path = os.path.join(dir_path, entry)
-      if os.path.isdir(full_path):
-        sub_count, sub_size = count_csv_files_and_size(full_path)
-        count += sub_count
-        total_size += sub_size
-      elif entry.endswith(".csv"):
-        count += 1
-        total_size += os.path.getsize(full_path)
-    return count, total_size
-
   talk_common_file_list = sorted(os.listdir(talk_common_dir))
   # 统计talk_common目录及其所有子目录下的csv文件总数和总大小
   total_files, total_bytes = count_csv_files_and_size(talk_common_dir)
