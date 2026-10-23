@@ -724,3 +724,34 @@ file = "tests/registration.py"
 symbol = "layer_problems"
 pattern = "__file__"
 why = "用已加载测试模块的 __file__ 列出哪些文件已导入，不读源码内容"
+
+[[reader]]
+id = "R33"
+file = "buildata.py"
+symbol = "skip_module_docstring"
+mechanism = "ast"
+reads = "constant_promise.py、constant_effect.py 开头的模块 docstring 所占的行"
+used_for = "R03、R04 逐行解析之前，去掉这些行与其后的空行"
+when = "build"
+capture = "command"
+command = ["python", "-c", '''
+import sys, types
+stub = types.ModuleType("Script.Config.game_config")
+stub.init = lambda: None
+sys.modules["Script.Config.game_config"] = stub
+import buildata
+for path in ["Script/Core/constant_promise.py", "Script/Core/constant_effect.py"]:
+    lines = open(path, encoding="utf-8").readlines()
+    print(path, len(lines), len(buildata.skip_module_docstring(lines)))
+''']
+outputs = []
+
+[[reader]]
+id = "R34"
+file = "tests/fast/test_buildata_tables_ignore_module_docstring.py"
+symbol = "BuildataTablesIgnoreModuleDocstringTest.test_tables_equal_with_and_without_docstring"
+mechanism = "open+bytes"
+reads = "constant_promise.py、constant_effect.py 的全文"
+used_for = "测试：原样复制与加上模块 docstring 的两份，buildata 生成的前提表与结算表相同"
+when = "test"
+capture = "suite"

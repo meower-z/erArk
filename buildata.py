@@ -1,3 +1,4 @@
+import ast
 import os
 import re
 
@@ -221,6 +222,27 @@ def constand_2_handle():
   return out_str
 
 
+def skip_module_docstring(line_list: list) -> list:
+  """
+  去掉代码文件开头的模块 docstring 与紧随其后的空行，其余行原样保留
+  Keyword arguments:
+  line_list -- 代码文件的全部行（readlines() 的结果）
+  Return arguments:
+  list -- 去掉模块 docstring 后的行；没有模块 docstring 时返回 line_list 本身
+  """
+  # 按字节解析：文件开头的 BOM 在字符串里会被当成非法字符
+  tree = ast.parse("".join(line_list).encode("utf-8"))
+  if ast.get_docstring(tree, clean=False) is None:
+    return line_list
+  docstring_node = tree.body[0]
+  # ast.parse 解析出的语句节点都带结束行号
+  assert docstring_node.end_lineno is not None
+  end_index = docstring_node.end_lineno
+  while end_index < len(line_list) and not line_list[end_index].strip():
+    end_index += 1
+  return line_list[: docstring_node.lineno - 1] + line_list[end_index:]
+
+
 def build_promise_csv_text(line_list: list) -> str:
   """
   把 constant_promise.py 的全部行转成 ArkEditor 前提表（tools/ArkEditor/csv/Premise.csv）的文本
@@ -274,7 +296,7 @@ def constand_promise_2_csv():
       "r",
       encoding="utf-8",
   ) as f:
-    line_list = f.readlines()
+    line_list = skip_module_docstring(f.readlines())
   out_str = build_promise_csv_text(line_list)
 
   # 开始保存
@@ -329,7 +351,7 @@ def constand_effect_2_csv():
       "r",
       encoding="utf-8",
   ) as f:
-    a = f.readlines()
+    a = skip_module_docstring(f.readlines())
     f.close()
   # pyink 把超过 80 列的常量赋值折成「常量名 = (」「值」「)」三行，先并回一行
   a = re.sub(r"= \(\n\s*(\d+)\n\s*\)\n", r"= \1\n", "".join(a)).splitlines(True)
