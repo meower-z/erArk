@@ -2560,6 +2560,9 @@ msgstr "Swimming Pool"
 msgid "影像厅"
 msgstr "Video Hall"
 
+msgid "游戏室"
+msgstr "Game Room"
+
 msgid "乌萨斯学生活动室"
 msgstr "Activity Room"
 
@@ -2580,6 +2583,9 @@ msgstr "Grove"
 
 msgid "秘密通道"
 msgstr "Secret Passage"
+
+msgid "温泉"
+msgstr "Hot Spring"
 
 msgid "多索雷斯私人水疗室"
 msgstr "Spa"
@@ -9605,6 +9611,9 @@ msgstr "Inner Corridor"
 
 msgid "外走廊"
 msgstr "Outer Corridor"
+
+msgid "控制室"
+msgstr "Control Room"
 
 msgid "源石反应堆"
 msgstr "Originium Reactor"
@@ -18478,6 +18487,12 @@ msgstr ""
 msgid "10"
 msgstr ""
 
+msgid "56"
+msgstr ""
+
+msgid "101"
+msgstr ""
+
 msgid ""
 "各位，这里是亚北小老虎，各位直接叫亚北或老虎就行。\n"
 "这次负责是空的口上，本来是没打算参与到口上的制作的，\n"
@@ -18489,6 +18504,9 @@ msgid ""
 "最后呢......要是有什么新的想法欢迎来给本虎提意见（如果要求简单基本上本虎都会考虑添加的。）\n"
 "本虎要是代码好的话我在这把我人设放出来让各位爽爽，毕竟在岛上还没有西伯利亚虎呢（金毛傲娇大老虎谁不喜欢呢对吧~）。\n"
 "最后的最后嘛~本虎其实是很希望哪怕是空这种冷门干员也有一个说的过去的口上才写的（应该没人看到这吧。）。"
+msgstr ""
+
+msgid "107"
 msgstr ""
 
 msgid ""
@@ -18504,6 +18522,24 @@ msgid ""
 "损伤最多一天触发一次 睡觉时重置损伤和冷却 当然不一定正常 bug炸了麻烦上dc找我或者git填issue"
 msgstr ""
 
+msgid "113"
+msgstr ""
+
+msgid "129"
+msgstr ""
+
+msgid "179"
+msgstr ""
+
+msgid "181"
+msgstr ""
+
+msgid "204"
+msgstr ""
+
+msgid "220"
+msgstr ""
+
 msgid ""
 "喔，小馬，總是充滿活力的小馬。想我當年就是因為一張小馬的美圖才開始了解方舟的。露著大腿外側的褲子，想必內褲是高腰細繩的那種...\n"
 "問我為什麼喜歡小馬呢...\n"
@@ -18513,11 +18549,38 @@ msgid ""
 "(個人私心覺得格拉尼是方舟最適合跑賽馬的庫蘭塔了，我還有藏勝者舞台在口上裡喔，獻給博士的勝者舞台)"
 msgstr ""
 
+msgid "230"
+msgstr ""
+
 msgid ""
 "阿，夏洛特...當時正值羅德島活動結束，當大家都沉浸在緬懷殿下(或前文明)而傷神，我卻被這位大姑娘的劇情擊中了\n"
 "試想她一個大姑娘，就這麼陪著博士和阿米婭，在大地上旅行了這麼久，是在什麼樣的心情下說出那句\"如果你願意，我們可以給阿米婭一個家\"\n"
 "又是在一聽到羅德島時馬上跑去找凱貓貓...不行，我不能忍受大家聊到暴行時大家只會調侃\"她的胡蘿蔔派很好吃\"、\"她本有機會贏的，可惜和博士的記憶被刪光光了\"\n"
 "本世界線，我的夏洛特必會大贏特贏，善良的人應得到該有的獎賞"
+msgstr ""
+
+msgid "241"
+msgstr ""
+
+msgid "245"
+msgstr ""
+
+msgid "248"
+msgstr ""
+
+msgid "249"
+msgstr ""
+
+msgid "254"
+msgstr ""
+
+msgid "263"
+msgstr ""
+
+msgid "274"
+msgstr ""
+
+msgid "285"
 msgstr ""
 
 msgid ""
@@ -18530,11 +18593,56 @@ msgid ""
 "（小車的內容仍偏少，也希望有想法的博士能踴躍參與）"
 msgstr ""
 
+msgid "290"
+msgstr ""
+
+msgid "291"
+msgstr ""
+
+msgid "304"
+msgstr ""
+
+msgid "308"
+msgstr ""
+
+msgid "328"
+msgstr ""
+
+msgid "358"
+msgstr ""
+
+msgid "365"
+msgstr ""
+
+msgid "377"
+msgstr ""
+
 msgid ""
 "喔，澄閃，一位善良、正質、偶爾缺乏點運氣的小貓咪，這片大地上不該只有不公，善良之人應得一個美好的故事，試問誰又不是如蘇茜一般努力過著日子呢\n"
 "(只可惜鷹角又在密錄裡把貓貓當成駱駝澄子開涮，鷹角壞!)\n"
 "好像還要給玩家一點建議來著....那，希望溫柔的人都能被溫柔以待\n"
 "(說貓貓是豬豬的人聽著，YOU!!  馬上到你家門口!!)"
+msgstr ""
+
+msgid "405"
+msgstr ""
+
+msgid "469"
+msgstr ""
+
+msgid "426"
+msgstr ""
+
+msgid "474"
+msgstr ""
+
+msgid "497"
+msgstr ""
+
+msgid "1012"
+msgstr ""
+
+msgid "2013"
 msgstr ""
 
 msgid ""
@@ -18546,6 +18654,15 @@ msgid ""
 "雖然寫這段時發情期系統尚未實裝，但寫了不少篇幅，一想到平時活潑可愛的大姑娘一到時間就變得扭捏，滿腦子只想和博士貼貼跟瑟瑟，一想就覺得這簡直要瑟瘋了\n"
 "\n"
 "希望大家都能喜歡我的小刻喔，讓小刻成為幸福的刻俄柏吧!"
+msgstr ""
+
+msgid "4027"
+msgstr ""
+
+msgid "4080"
+msgstr ""
+
+msgid "4091"
 msgstr ""
 
 msgid "监狱长"
@@ -27483,6 +27600,12 @@ msgid "27"
 msgstr ""
 
 msgid "28"
+msgstr ""
+
+msgid "31"
+msgstr ""
+
+msgid "32"
 msgstr ""
 
 msgid "33"
