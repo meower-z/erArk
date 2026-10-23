@@ -1,3 +1,7 @@
+"""
+角色素质升级显示面板
+"""
+
 from typing import List
 from types import FunctionType
 from Script.UI.Moudle import draw
@@ -293,6 +297,14 @@ class Character_talent_show_Text:
       line_feed.draw()
 
   def level_up(self, talent_id):
+    """
+    提示选择成功，以手动获得类型结算该素质
+    再让玩家等待1分钟并推进游戏时间以输出结果
+    Keyword arguments:
+    talent_id -- 素质id
+    Return arguments:
+    None
+    """
     now_draw_succed = draw.WaitDraw()
     now_draw_succed.text = _("选择成功\n")
     now_draw_succed.draw()

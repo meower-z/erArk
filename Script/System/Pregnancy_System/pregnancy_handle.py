@@ -1,3 +1,8 @@
+"""
+受精、妊娠、临盆、生产、育儿与孩子成长的判定和结算，
+以及生理周期、身体部位生长与疑似误入存档的女儿的清理
+"""
+
 import math
 import random
 from types import FunctionType

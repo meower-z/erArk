@@ -1,3 +1,7 @@
+"""
+动力系统：理论发电量与耗电量的计算、每天的发电与储能结算，以及动力系统管理面板
+"""
+
 import random
 from typing import Dict, List, Tuple, Union, overload, Literal, TypedDict
 from types import FunctionType
@@ -611,11 +615,22 @@ class Manage_Power_System_Panel:
   """动力系统管理面板"""
 
   def __init__(self, width: int):
+    """
+    初始化面板，并确保动力系统运行期字段存在
+    Keyword arguments:
+    width -- 绘制宽度
+    """
     self.width = width
     _init_power_runtime_fields()
 
   # ---------- 主绘制 ---------- #
   def draw(self):
+    """
+    循环绘制动力系统概览与四个子界面按钮（供电策略、调控员、发电设施、蓄电池）
+    选择返回时把当前面板设为主场景并退出
+    Return arguments:
+    None
+    """
     while 1:
       _init_power_runtime_fields()
       ri = cache.rhodes_island
@@ -819,6 +834,14 @@ class Manage_Power_System_Panel:
     ri.power_supply_strategy[cid] = (now + 1) % 5
 
   def _set_strategy(self, cid: int, value: int):
+    """
+    设置某区块的供电策略
+    Keyword arguments:
+    cid -- 区块id
+    value -- 供电策略值
+    Return arguments:
+    None
+    """
     ri = cache.rhodes_island
     ri.power_supply_strategy[cid] = value
 
@@ -1373,6 +1396,15 @@ class Manage_Power_System_Panel:
         break
 
   def _change_battery(self, level: int, delta: int):
+    """
+    增加或减少1个某等级的蓄电池，再重算最大储能与已使用的扩展位
+    增加时若蓄电池总数已达上限，只绘制提示并返回；减少时该等级数量为0则数量不变
+    Keyword arguments:
+    level -- 蓄电池等级下标，0为L1，1为L2，2为L3
+    delta -- 大于0为增加，否则为减少
+    Return arguments:
+    None
+    """
     ri = cache.rhodes_island
     lv = ri.facility_level.get(1, 1)
     # 设施等级提供的基础上限
@@ -1401,6 +1433,13 @@ class Manage_Power_System_Panel:
 
   # ---------- 小提示 ---------- #
   def _hint(self, text: str):
+    """
+    绘制一条前后带空行的提示文本，并等待玩家确认
+    Keyword arguments:
+    text -- 提示文本
+    Return arguments:
+    None
+    """
     msg = draw.WaitDraw()
     msg.width = self.width
     msg.text = "\n" + str(text) + "\n"

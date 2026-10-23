@@ -1,3 +1,8 @@
+"""
+衣柜面板：列出当前场景衣柜里存有衣服的干员并查看其衣物，
+可偷取全部内裤或袜子，或选择射在衣物上
+"""
+
 from typing import Tuple, Dict, List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, text_handle, constant, py_cmd
@@ -571,6 +576,11 @@ class Ejaculation_NameDraw:
     self.now_draw.draw()
 
   def shoot_here(self):
+    """
+    清除当前命令，并对该干员衣柜里的这一衣物类型执行射精流程
+    Return arguments:
+    None
+    """
     py_cmd.clr_cmd()
     # 调用射精流程
     ejaculation_panel.ejaculation_flow(

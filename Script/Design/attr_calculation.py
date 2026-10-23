@@ -1,3 +1,8 @@
+"""
+角色、玩家与系统数据结构的初始化与重置函数，
+以及按数值评定等级、宝珠、修正比例与等级文本等的计算函数
+"""
+
 import random
 from types import FunctionType
 from Script.Core import (

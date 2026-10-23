@@ -1,3 +1,7 @@
+"""
+指令实行值：按角色与目标角色的属性计算总实行值，并同步角色的行动开始时间
+"""
+
 import datetime
 from types import FunctionType
 from Script.Core import (

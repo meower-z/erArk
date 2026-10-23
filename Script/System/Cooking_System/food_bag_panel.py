@@ -1,3 +1,7 @@
+"""
+食物背包面板：按食物分组显示背包里的食物，并结算食物对角色的影响
+"""
+
 import random
 from types import FunctionType
 from uuid import UUID

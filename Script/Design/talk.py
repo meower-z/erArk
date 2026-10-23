@@ -1,3 +1,8 @@
+"""
+口上：为行为与二段行为选取并绘制口上文本，
+把文本里的代码与通用占位符转换为对应文本
+"""
+
 import random
 import re
 from types import FunctionType

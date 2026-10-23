@@ -1,3 +1,7 @@
+"""
+角色能力升级面板：显示能力升级需求，并消耗宝珠提升能力
+"""
+
 from typing import Dict, List
 from types import FunctionType
 
@@ -845,6 +849,13 @@ class Characterabi_cmd_Text:
     return judge, jule_dict
 
   def level_up(self, jule_dict: Dict[int, int]):
+    """
+    扣除升级所需的宝珠，把当前能力提升1级，并结算技能类成就
+    Keyword arguments:
+    jule_dict -- 要扣除的宝珠，宝珠id:数量
+    Return arguments:
+    None
+    """
     for need_type_id in jule_dict:
       cache.character_data[self.character_id].juel[need_type_id] -= jule_dict[
           need_type_id

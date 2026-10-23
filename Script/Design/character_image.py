@@ -1,3 +1,7 @@
+"""
+按角色的心情、裸体、胸部、膨腹状态与女儿的种族，查找角色立绘的图片名
+"""
+
 import itertools
 from types import FunctionType
 from Script.Core import (cache_control, game_type, get_text, era_image)

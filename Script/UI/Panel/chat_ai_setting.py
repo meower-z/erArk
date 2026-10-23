@@ -1,3 +1,7 @@
+"""
+文本生成AI的设置面板
+"""
+
 from typing import List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle

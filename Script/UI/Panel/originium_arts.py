@@ -1,3 +1,7 @@
+"""
+源石技艺面板，与降低负面素质的面板
+"""
+
 from typing import List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant

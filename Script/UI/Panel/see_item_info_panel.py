@@ -1,3 +1,7 @@
+"""
+角色道具背包面板与道具名、道具数据的绘制对象，以及药剂的使用
+"""
+
 from typing import List
 from types import FunctionType
 from Script.Core import cache_control, text_handle, get_text, flow_handle, constant, py_cmd, game_type
