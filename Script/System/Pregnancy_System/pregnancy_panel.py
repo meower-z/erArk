@@ -216,7 +216,7 @@ class Pregnancy_Overview_Panel:
     self.pending_remove_id: int = 0
     """ 异常女儿排查页里待二次确认移除的角色id（0为无） """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     title_draw = draw.TitleLineDraw(_("怀孕状态总览"), self.width)
     while 1:
@@ -233,6 +233,7 @@ class Pregnancy_Overview_Panel:
         self.pending_remove_id = 0
       for page_id in range(len(page_name_list)):
         if page_id == self.now_page:
+          now_draw: draw.CenterDraw | draw.CenterButton
           now_draw = draw.CenterDraw()
           now_draw.text = f"[{page_name_list[page_id]}]"
           now_draw.style = "onbutton"
@@ -474,7 +475,7 @@ class Pregnancy_Overview_Panel:
 
     return return_list
 
-  def change_page(self, page_id: int):
+  def change_page(self, page_id: int) -> None:
     """
     切换页签
     Keyword arguments:
@@ -482,11 +483,11 @@ class Pregnancy_Overview_Panel:
     """
     self.now_page = page_id
 
-  def change_sort_type(self):
+  def change_sort_type(self) -> None:
     """切换总览页的排序方向"""
     cache.pregnancy_panel_sort_type = 1 - cache.pregnancy_panel_sort_type
 
-  def change_filter_type(self, stage_id: int):
+  def change_filter_type(self, stage_id: int) -> None:
     """
     切换总览页的阶段筛选
     Keyword arguments:
@@ -494,7 +495,7 @@ class Pregnancy_Overview_Panel:
     """
     cache.pregnancy_panel_filter_type = stage_id
 
-  def jump_to_tree(self, character_id: int):
+  def jump_to_tree(self, character_id: int) -> None:
     """
     从总览页跳转到以某角色为中心的谱系图页
     Keyword arguments:
@@ -504,7 +505,7 @@ class Pregnancy_Overview_Panel:
     self.tree_page = 0
     self.now_page = 1
 
-  def change_tree_center(self, character_id: int):
+  def change_tree_center(self, character_id: int) -> None:
     """
     以某角色为新中心重绘谱系图（页码重置）
     Keyword arguments:
@@ -513,7 +514,7 @@ class Pregnancy_Overview_Panel:
     self.tree_center_id = character_id
     self.tree_page = 0
 
-  def change_tree_page(self, delta: int):
+  def change_tree_page(self, delta: int) -> None:
     """
     谱系图家族分页翻页（下限钳位，上限由绘制时按总页数钳位）
     Keyword arguments:
@@ -521,7 +522,7 @@ class Pregnancy_Overview_Panel:
     """
     self.tree_page = max(0, self.tree_page + delta)
 
-  def reset_tree_center(self):
+  def reset_tree_center(self) -> None:
     """谱系图中心重置回玩家"""
     self.tree_center_id = 0
     self.tree_page = 0
@@ -627,7 +628,7 @@ class Pregnancy_Overview_Panel:
 
     return return_list
 
-  def ask_remove_abnormal(self, character_id: int):
+  def ask_remove_abnormal(self, character_id: int) -> None:
     """
     点击[去除]：记下待确认移除的女儿id，下次重绘时弹出二次确认
     Keyword arguments:
@@ -635,7 +636,7 @@ class Pregnancy_Overview_Panel:
     """
     self.pending_remove_id = character_id
 
-  def do_remove_abnormal(self):
+  def do_remove_abnormal(self) -> None:
     """确认移除待处理的疑似误入女儿"""
     if self.pending_remove_id:
       if (
@@ -645,6 +646,6 @@ class Pregnancy_Overview_Panel:
         self.tree_center_id = 0
     self.pending_remove_id = 0
 
-  def cancel_remove_abnormal(self):
+  def cancel_remove_abnormal(self) -> None:
     """取消移除"""
     self.pending_remove_id = 0

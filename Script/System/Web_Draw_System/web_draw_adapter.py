@@ -5,9 +5,16 @@
 Web绘制适配器，用于转换原有绘制类到Web界面
 """
 
+from __future__ import annotations
+
 import time
 from typing import List, Dict, Any, Optional
 from Script.Core import cache_control, web_server, flow_handle, text_handle
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import Callable
 
 line_wait_id_counter = 0
 from Script.UI.Moudle import draw
@@ -32,7 +39,7 @@ class WebDrawAdapter:
     return line_wait_id_counter
 
   @staticmethod
-  def adapt_normal_draw(normal_draw: draw.NormalDraw):
+  def adapt_normal_draw(normal_draw: draw.NormalDraw) -> None:
     """
     适配普通文本绘制类
 
@@ -60,7 +67,7 @@ class WebDrawAdapter:
     append_current_draw_element(web_element, record_history=True)
 
   @staticmethod
-  def adapt_center_draw(center_draw: draw.CenterDraw):
+  def adapt_center_draw(center_draw: draw.CenterDraw) -> None:
     """
     适配居中文本绘制类
 
@@ -85,7 +92,7 @@ class WebDrawAdapter:
     append_current_draw_element(web_element, record_history=True)
 
   @staticmethod
-  def adapt_right_draw(right_draw: draw.RightDraw):
+  def adapt_right_draw(right_draw: draw.RightDraw) -> None:
     """
     适配右对齐文本绘制类
 
@@ -111,7 +118,7 @@ class WebDrawAdapter:
     append_current_draw_element(web_element, record_history=True)
 
   @staticmethod
-  def adapt_button(button: draw.Button):
+  def adapt_button(button: draw.Button) -> None:
     """
     适配按钮绘制类
 
@@ -150,7 +157,7 @@ class WebDrawAdapter:
     flow_handle.bind_cmd(button.return_text, button.cmd_func, button.args)
 
   @staticmethod
-  def adapt_line_draw(line_draw: draw.LineDraw):
+  def adapt_line_draw(line_draw: draw.LineDraw) -> None:
     """
     适配线条绘制类
 
@@ -173,7 +180,7 @@ class WebDrawAdapter:
     append_current_draw_element(web_element, record_history=True)
 
   @staticmethod
-  def adapt_title_line_draw(title_line: draw.TitleLineDraw):
+  def adapt_title_line_draw(title_line: draw.TitleLineDraw) -> None:
     """
     适配标题线绘制类
 
@@ -195,7 +202,7 @@ class WebDrawAdapter:
     append_current_draw_element(web_element, record_history=True)
 
   @staticmethod
-  def adapt_wait_draw(wait_draw: draw.WaitDraw):
+  def adapt_wait_draw(wait_draw: draw.WaitDraw) -> None:
     """
     适配等待绘制类
 
@@ -218,7 +225,7 @@ class WebDrawAdapter:
     append_current_draw_element(web_element, record_history=True)
 
   @staticmethod
-  def adapt_line_feed_wait_draw(line_wait_draw: draw.LineFeedWaitDraw):
+  def adapt_line_feed_wait_draw(line_wait_draw: draw.LineFeedWaitDraw) -> None:
     """适配逐行等待绘制类"""
     width = line_wait_draw.width
     style = line_wait_draw.style
@@ -336,7 +343,7 @@ class WebDrawAdapter:
     # )
 
   @staticmethod
-  def adapt_image_draw(image_draw: draw.ImageDraw):
+  def adapt_image_draw(image_draw: draw.ImageDraw) -> None:
     """
     适配图片绘制类
 
@@ -357,7 +364,7 @@ class WebDrawAdapter:
     append_current_draw_element(web_element, record_history=True)
 
   @staticmethod
-  def adapt_bar_draw(bar_draw: draw.BarDraw):
+  def adapt_bar_draw(bar_draw: draw.BarDraw) -> None:
     """
     适配比例条绘制类
 
@@ -386,7 +393,7 @@ class WebDrawAdapter:
     append_current_draw_element(web_element, record_history=True)
 
   @staticmethod
-  def adapt_chara_draw(chara_draw: draw.CharaDraw):
+  def adapt_chara_draw(chara_draw: draw.CharaDraw) -> None:
     """
     适配人物图片绘制类
 
@@ -415,7 +422,7 @@ class WebDrawAdapter:
     append_current_draw_element(web_element, record_history=True)
 
   @staticmethod
-  def adapt_info_bar_draw(info_bar_draw: draw.InfoBarDraw):
+  def adapt_info_bar_draw(info_bar_draw: draw.InfoBarDraw) -> None:
     """
     适配带有文本和数值描述的比例条绘制类
 
@@ -480,7 +487,7 @@ class WebDrawAdapter:
     append_current_draw_element(web_element, record_history=True)
 
   @staticmethod
-  def adapt_info_chara_draw(info_chara_draw: draw.InfoCharaDraw):
+  def adapt_info_chara_draw(info_chara_draw: draw.InfoCharaDraw) -> None:
     """
     适配带有文本的人物图像绘制类
 
@@ -535,7 +542,7 @@ class WebDrawAdapter:
     append_current_draw_element(web_element, record_history=True)
 
   @staticmethod
-  def adapt_image_button(image_button: draw.ImageButton):
+  def adapt_image_button(image_button: draw.ImageButton) -> None:
     """
     适配图片按钮绘制类
 
@@ -566,7 +573,7 @@ class WebDrawAdapter:
     )
 
   @staticmethod
-  def adapt_center_draw_image(center_draw_image: draw.CenterDrawImage):
+  def adapt_center_draw_image(center_draw_image: draw.CenterDrawImage) -> None:
     """
     适配居中图片绘制类
 
@@ -591,7 +598,9 @@ class WebDrawAdapter:
 # 包装原始绘制类的draw方法，使其在Web模式下调用适配器
 
 
-def wrap_draw_method(cls, adapter_method):
+def wrap_draw_method(
+    cls: Any, adapter_method: Callable[..., None]
+) -> Callable[[object], None]:
   """
   包装绘制类的draw方法
 
@@ -604,7 +613,7 @@ def wrap_draw_method(cls, adapter_method):
   """
   original_draw = cls.draw
 
-  def wrapped_draw(self):
+  def wrapped_draw(self: object) -> None:
     """
     包装后的draw方法
 

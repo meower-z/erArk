@@ -83,7 +83,7 @@ def _split_text_to_pages(
   return pages if pages else [""]
 
 
-def _trigger_state_update():
+def _trigger_state_update() -> None:
   """
   触发对话框状态更新推送到前端（内部辅助函数）
 
@@ -114,7 +114,7 @@ def add_dialog_text(
     is_minor: bool = False,
     character_id: int = -1,
     target_character_id: int = -1,
-):
+) -> None:
   """
   添加对话文本到对话框队列（全局函数，供talk.py调用）
 
@@ -208,7 +208,7 @@ def advance_dialog() -> bool:
     return False
 
 
-def hide_dialog():
+def hide_dialog() -> None:
   """隐藏对话框（全局函数）"""
   cache.web_dialog_visible = False
   cache.web_dialog_speaker = ""
@@ -217,7 +217,7 @@ def hide_dialog():
   cache.web_dialog_wait_input = False
 
 
-def clear_dialog_queue():
+def clear_dialog_queue() -> None:
   """清空对话队列（全局函数）"""
   if hasattr(cache, "web_dialog_queue"):
     cache.web_dialog_queue = []
@@ -260,13 +260,13 @@ def get_dialog_state() -> dict:
   }
 
 
-def clear_minor_dialogs():
+def clear_minor_dialogs() -> None:
   """清空其他角色的小对话框（全局函数）"""
   if hasattr(cache, "web_minor_dialog_queue"):
     cache.web_minor_dialog_queue = []
 
 
-def skip_all_dialogs():
+def skip_all_dialogs() -> None:
   """跳过所有剩余对话（全局函数）"""
   clear_dialog_queue()
 
@@ -305,7 +305,9 @@ class DialogBox:
     """当前对话文本"""
     return cache.web_dialog_text if hasattr(cache, "web_dialog_text") else ""
 
-  def show(self, speaker_name: str, text: str, text_color: str = "standard"):
+  def show(
+      self, speaker_name: str, text: str, text_color: str = "standard"
+  ) -> None:
     """
     显示对话框
 
@@ -316,13 +318,13 @@ class DialogBox:
     """
     add_dialog_text(speaker_name, text, text_color, wait_input=True)
 
-  def hide(self):
+  def hide(self) -> None:
     """隐藏对话框"""
     hide_dialog()
 
   def add_to_queue(
       self, speaker_name: str, text: str, text_color: str = "standard"
-  ):
+  ) -> None:
     """
     将对话添加到队列
 
@@ -333,7 +335,7 @@ class DialogBox:
     """
     add_dialog_text(speaker_name, text, text_color, wait_input=True)
 
-  def clear_queue(self):
+  def clear_queue(self) -> None:
     """清空对话队列"""
     clear_dialog_queue()
 
@@ -346,11 +348,11 @@ class DialogBox:
     """
     return advance_dialog()
 
-  def start_skip(self):
+  def start_skip(self) -> None:
     """开始跳过模式"""
     skip_all_dialogs()
 
-  def stop_skip(self):
+  def stop_skip(self) -> None:
     """停止跳过模式"""
     pass  # 跳过模式由前端控制
 
@@ -368,6 +370,6 @@ class DialogBox:
     """
     return get_dialog_state()
 
-  def skip_all(self):
+  def skip_all(self) -> None:
     """跳过所有剩余对话"""
     skip_all_dialogs()

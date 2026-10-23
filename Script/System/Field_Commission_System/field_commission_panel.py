@@ -39,7 +39,7 @@ class Field_Commission_Panel:
     self.send_vehicle_dict = {}
     """ 派遣载具字典 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("外勤委托")
@@ -57,6 +57,7 @@ class Field_Commission_Panel:
       # 绘制面板类型切换
       for commission_type in commission_type_list:
         if commission_type == self.now_panel:
+          now_draw: draw.CenterDraw | draw.CenterButton
           now_draw = draw.CenterDraw()
           now_draw.text = f"[{commission_type}]"
           now_draw.style = "onbutton"
@@ -197,7 +198,7 @@ class Field_Commission_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def change_panel(self, building_type: str):
+  def change_panel(self, building_type: str) -> None:
     """
     切换当前面板显示
     Keyword arguments:
@@ -317,11 +318,11 @@ class CommissionDraw:
     self.draw_text = commision_draw.text
     self.now_draw = commision_draw
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.now_draw.draw()
 
-  def commision_info(self, commision_id: int):
+  def commision_info(self, commision_id: int) -> None:
     """
     显示委托详细信息
     Keyword arguments:
@@ -561,7 +562,7 @@ class CommissionDraw:
       if yrn == _("执行委托") or yrn == back_draw.return_text:
         break
 
-  def adjust_send_npc(self, commision_id: int):
+  def adjust_send_npc(self, commision_id: int) -> None:
     """
     调整派遣人员
     Keyword arguments:
@@ -624,7 +625,7 @@ class CommissionDraw:
 
     show_equip_modifier = True  # 是否在面板中计算装备加成
 
-    def pass_func():
+    def pass_func() -> None:
       pass
 
     # 辅助函数：根据开关获取最终能力值 (加入装备判定)
@@ -1104,7 +1105,7 @@ class CommissionDraw:
       elif yrn == back_draw.return_text:
         break
 
-  def select_this_npc(self, character_id: int):
+  def select_this_npc(self, character_id: int) -> None:
     """
     选择当前人物
     Keyword arguments:
@@ -1129,7 +1130,7 @@ class CommissionDraw:
       if len(self.send_npc_list) == 1:
         self.lead_chara_id = character_id
 
-  def add_this_vehicle(self, vehicle_id: int):
+  def add_this_vehicle(self, vehicle_id: int) -> None:
     """
     增加一辆载具
     Keyword arguments:
@@ -1147,7 +1148,7 @@ class CommissionDraw:
     if self.send_vehicle_dict[vehicle_id] > vehicle_count:
       self.send_vehicle_dict[vehicle_id] = vehicle_count
 
-  def reduce_this_vehicle(self, vehicle_id: int):
+  def reduce_this_vehicle(self, vehicle_id: int) -> None:
     """
     减少一辆载具
     Keyword arguments:
@@ -1158,7 +1159,7 @@ class CommissionDraw:
       if self.send_vehicle_dict[vehicle_id] <= 0:
         self.send_vehicle_dict.pop(vehicle_id)
 
-  def send_commision(self, commision_id: int):
+  def send_commision(self, commision_id: int) -> None:
     """
     派遣委托
     Keyword arguments:
@@ -1265,7 +1266,7 @@ class CommissionDraw:
     self.send_npc_list = []
     self.send_vehicle_dict = {}
 
-  def adjust_send_vehicle(self, commision_capacity_int: int):
+  def adjust_send_vehicle(self, commision_capacity_int: int) -> None:
     """
     调整派遣载具
     Keyword arguments:

@@ -143,7 +143,7 @@ class BodyPart:
 
   # ========== CSV ID 到部位的映射 ==========
   @classmethod
-  def get_csv_id_mapping(cls):
+  def get_csv_id_mapping(cls) -> dict[int, str]:
     """获取 CSV ID 到部位常量的映射"""
     return {
         0: cls.HAIR,

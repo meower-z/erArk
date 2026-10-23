@@ -93,7 +93,7 @@ def register_instruct_meta(
     panel_id: Optional[int] = None,
     interaction_type: str = InteractionMinorType.OTHER_MISC,
     body_parts: Optional[List[str]] = None,
-):
+) -> None:
   """
   注册指令的分类元数据
 
@@ -371,7 +371,9 @@ def get_body_part_name(body_part: str) -> str:
 # ========== 以下为批量注册函数 ==========
 
 
-def batch_register_panel_instructs(instruct_ids: List[int], names: List[str]):
+def batch_register_panel_instructs(
+    instruct_ids: List[int], names: List[str]
+) -> None:
   """
   批量注册面板类指令
 
@@ -387,7 +389,7 @@ def batch_register_panel_instructs(instruct_ids: List[int], names: List[str]):
     )
 
 
-def batch_register_character_instructs(instruct_configs: List[Dict]):
+def batch_register_character_instructs(instruct_configs: List[Dict]) -> None:
   """
   批量注册角色交互类指令
 

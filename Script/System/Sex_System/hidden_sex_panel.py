@@ -31,7 +31,10 @@ window_width = normal_config.config_normal.text_width
 
 
 def handle_hidden_sex_flow(
-    character_id: int = 0, add_flag=None, now_duration=0, now_intensity=0
+    character_id: int = 0,
+    add_flag: bool | None = None,
+    now_duration: int = 0,
+    now_intensity: int = 0,
 ) -> None:
   """
   处理隐奸整体流程：先结算隐蔽值，再判断是否被发现
@@ -63,7 +66,7 @@ def handle_hidden_sex_flow(
     settle_discovered(character_id)
 
 
-def get_hidden_level(value: int):
+def get_hidden_level(value: int) -> tuple[int, str]:
   """
   按当前隐蔽值返回当前隐蔽等级的str\n
   Keyword arguments:\n
@@ -145,7 +148,10 @@ def get_nearby_conscious_unfallen_characters(character_id: int) -> List[int]:
 
 
 def settle_hidden_value_by_action(
-    character_id=0, add_flag=None, now_duration=0, now_intensity=0
+    character_id: int = 0,
+    add_flag: bool | None = None,
+    now_duration: int = 0,
+    now_intensity: int = 0,
 ) -> None:
   """
   根据玩家当前的行为和其他因素来结算角色的隐蔽值
@@ -384,7 +390,7 @@ class See_Hidden_Sex_InfoPanel:
 
     self.draw_list.extend(now_draw.draw_list)
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     for label in self.draw_list:
       if isinstance(label, list):
@@ -413,7 +419,7 @@ class Select_Hidden_Sex_Mode_Panel:
     self.draw_list: List[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("选择隐奸模式")
@@ -493,7 +499,7 @@ class Select_Hidden_Sex_Mode_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def select_this_mode(self, mode_id):
+  def select_this_mode(self, mode_id: int) -> None:
     """选择隐奸模式"""
     from Script.Design import instuct_judege
 

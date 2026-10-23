@@ -1041,7 +1041,9 @@ def get_attend_judge_time(now_time: datetime.datetime) -> datetime.datetime:
   return start_time
 
 
-def settle_attend(student_id: int, now_time=None) -> None:
+def settle_attend(
+    student_id: int, now_time: datetime.datetime | None = None
+) -> None:
   """
   给一名到场学生记一次出勤，并累计一次实操课
   Keyword arguments:

@@ -333,7 +333,7 @@ class SeeInstructPanel:
     system_draw.set(system_draw_list, self.width, SINGLE_LINE_INSTRUCT_NUM)
     system_draw.draw()
 
-  def change_filter(self, now_type: int):
+  def change_filter(self, now_type: int) -> None:
     """
     更改指令类型过滤状态
     Keyword arguments:
@@ -360,7 +360,7 @@ class SeeInstructPanel:
             cache.instruct_type_filter[now_type]
         )
 
-  def handle_instruct(self, instruct_id_or_cid):
+  def handle_instruct(self, instruct_id_or_cid: str) -> None:
     """
     处理玩家操作指令
     Keyword arguments:
@@ -399,7 +399,7 @@ class SeeInstructPanel:
     # 指令结算
     handle_instruct.handle_instruct(instruct_id)
 
-  def handle_chara_diy_instruct(self, event_id: str):
+  def handle_chara_diy_instruct(self, event_id: str) -> None:
     """
     处理角色自定义指令
     Keyword arguments:

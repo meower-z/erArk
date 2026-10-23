@@ -208,7 +208,7 @@ def get_mother_soft_eggs(mother_id: int) -> dict:
   }
 
 
-def add_semen_to_soft_egg(egg_id: int, semen_count: int):
+def add_semen_to_soft_egg(egg_id: int, semen_count: int) -> None:
   """
   向体外无壳卵追加精液
   Keyword arguments:
@@ -310,7 +310,7 @@ def get_soft_egg_fertilization_rate(semen_count: float) -> float:
   return min(100.0, now_rate)
 
 
-def check_soft_eggs_fertilization():
+def check_soft_eggs_fertilization() -> None:
   """
   体外受精判定：对所有排出满1小时的体外无壳卵进行无限轮衰减判定（每轮后精液量衰减30%，低于5ml停止），
   \n每一轮成功即为一枚受精卵回写母亲的卵字典（已鉴定、无壳、孵化计时自体外排出起算）；无论结果都从玩家收藏品中删除该卵并提示

@@ -115,7 +115,7 @@ def register_title(department: int) -> Callable:
   return decorator
 
 
-def init_provider():
+def init_provider() -> None:
   """
   载入各部门的候选提供者
 
@@ -300,7 +300,7 @@ def judge_event_done(uid: str, character_id: int) -> bool:
   )
 
 
-def record_event_done(uid: str, character_id: int, option_index: int):
+def record_event_done(uid: str, character_id: int, option_index: int) -> None:
   """
   把这次决断写进履历（有养成数据的角色记在自己身上，其余记进罗德岛的全局履历）
   Keyword arguments:
@@ -438,7 +438,7 @@ def get_default_department_pick_list() -> List[dict]:
   return result
 
 
-def check_new_day_official_event():
+def check_new_day_official_event() -> None:
   """
   每日结算时筛选并入队今日的公务事件
 
@@ -471,7 +471,7 @@ def check_new_day_official_event():
     )
 
 
-def clean_official_event_queue():
+def clean_official_event_queue() -> None:
   """
   清掉队列里已经失效的项
 
@@ -584,7 +584,7 @@ def get_option_list(
   return result
 
 
-def handle_ri_effect(effect_list: List[str]):
+def handle_ri_effect(effect_list: List[str]) -> None:
   """
   执行一条罗德岛全局数值的结算（CVE_RI_<类型>_<G/L/E>_<值>）
 
@@ -624,7 +624,7 @@ def handle_ri_effect(effect_list: List[str]):
 
 def handle_effect_text(
     effect_text: str, character_id: int = 0, partner_id: int = 0
-):
+) -> None:
   """
   执行一串 & 连接的结算
 
@@ -678,7 +678,7 @@ def handle_effect_text(
 
 def settle_official_event_option(
     uid: str, character_id: int, partner_id: int, option_index: int
-):
+) -> None:
   """
   结算玩家选定的选项，并把这次决断写进履历
 

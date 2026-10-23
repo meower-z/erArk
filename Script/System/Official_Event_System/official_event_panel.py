@@ -185,7 +185,7 @@ class Official_Event_Draw:
         return option["index"]
     return 0
 
-  def draw_result(self, option_index: int):
+  def draw_result(self, option_index: int) -> None:
     """
     玩家选定并结算之后，单独显示这个选项带来的后果（Plan 32 §8.2）
     Keyword arguments:
@@ -215,7 +215,7 @@ class Official_Event_Draw:
       return
 
 
-def handle_official_event_queue(width: int = 0):
+def handle_official_event_queue(width: int = 0) -> None:
   """
   逐条处理待决断的公务事件（处理公务指令的入口）
 

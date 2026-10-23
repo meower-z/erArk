@@ -771,7 +771,7 @@ class CharacterRenderer:
 
     return avatars
 
-  def clear_cache(self):
+  def clear_cache(self) -> None:
     """清除缓存"""
     self._body_parts_cache.clear()
     self._image_path_cache.clear()

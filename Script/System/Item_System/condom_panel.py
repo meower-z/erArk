@@ -37,7 +37,7 @@ class Condom_Select_Panel:
     self.select_index_set: set = set()
     """ 已勾选的条目下标集合 """
 
-  def draw(self):
+  def draw(self) -> int:
     """
     绘制对象，玩家确认选择后直接调用对应的结算函数完成数据结算\n
     Return arguments:\n

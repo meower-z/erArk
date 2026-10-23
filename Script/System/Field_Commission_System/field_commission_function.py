@@ -33,7 +33,7 @@ def format_commission_reputation_for_display(value: float) -> str:
   return display_text
 
 
-def update_field_commission():
+def update_field_commission() -> None:
   """
   刷新外勤委托的相关数据
   """
@@ -43,7 +43,7 @@ def update_field_commission():
 
 def get_commission_demand_and_reward(
     commission_id: int,
-    send_npc_list=[],
+    send_npc_list: list[int] = [],
     demand_or_reward: bool = False,
     deduction_or_increase: bool = False,
 ) -> List[str]:
@@ -432,7 +432,7 @@ def process_commission_text(
   return type_text, full_text, satify_flag
 
 
-def judge_field_commission_finish():
+def judge_field_commission_finish() -> None:
   """
   判断与结算外勤委托的完成
   """
@@ -557,7 +557,7 @@ def settle_recruit_new_chara(commision_id: int) -> str:
   return recruited_text
 
 
-def find_nation_field_commission():
+def find_nation_field_commission() -> None:
   """
   寻找来自势力的外勤委托
   Keyword arguments:
@@ -579,7 +579,7 @@ def create_temp_commission(
     related_id: int = -1,
     special: int = 1,
     country_id: int = -1,
-):
+) -> None:
   """
   通用函数：创建一个临时的委托数据并加入 game_config.config_commission，
   使用 config_def 中的 Commission 类
@@ -611,7 +611,7 @@ def create_temp_commission(
     f.write(new_commission_data)
 
 
-def create_capture_fugitive_commission(fugitive_id: int):
+def create_capture_fugitive_commission(fugitive_id: int) -> None:
   """
   创建“追捕逃跑囚犯干员”委托
   Keyword arguments:

@@ -38,7 +38,7 @@ OLD_MINOR_TYPE_ID_TO_NEW = {
 }
 
 
-def migrate():
+def migrate() -> bool:
   """执行迁移"""
   # 计算 CSV 文件路径
   script_dir = os.path.dirname(os.path.abspath(__file__))

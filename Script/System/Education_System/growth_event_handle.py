@@ -338,7 +338,7 @@ def get_growth_event_title(queue_data: dict) -> str:
   )
 
 
-def push_graduation_event(character_id: int):
+def push_graduation_event(character_id: int) -> None:
   """
   毕业结算时把毕业典礼与成年纪念插到队首，再把毕业后的里程碑事件（通用 59 / 60）推到队尾
 

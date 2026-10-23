@@ -243,7 +243,7 @@ class TabMenu:
 
     return result
 
-  def set_active_tab(self, tab_id: str):
+  def set_active_tab(self, tab_id: str) -> None:
     """
     设置当前激活的选项卡
 
@@ -288,7 +288,7 @@ class TabMenu:
     }
 
 
-def enter_sub_panel_mode(panel_id: str, panel_name: str = ""):
+def enter_sub_panel_mode(panel_id: str, panel_name: str = "") -> None:
   """
   进入子面板模式
 
@@ -358,7 +358,7 @@ def enter_managed_sub_panel_mode_by_type(sub_panel_type: str) -> Dict[str, Any]:
   return enter_managed_sub_panel_mode(sub_panel_type, panel_name)
 
 
-def exit_sub_panel_mode():
+def exit_sub_panel_mode() -> None:
   """
   退出子面板模式
 

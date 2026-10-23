@@ -9,6 +9,8 @@
 3. 支持在保存存档时清理缓存
 """
 
+from __future__ import annotations
+
 import io
 import os
 from collections import OrderedDict
@@ -44,7 +46,7 @@ class ImageProcessor:
   _instance = None
   _initialized = False
 
-  def __new__(cls):
+  def __new__(cls) -> ImageProcessor:
     """单例模式"""
     if cls._instance is None:
       cls._instance = super().__new__(cls)
@@ -209,7 +211,7 @@ class ImageProcessor:
       original_size: Tuple[int, int],
       cropped_size: Tuple[int, int],
       offset: Tuple[int, int],
-  ):
+  ) -> None:
     """
     将图片添加到缓存中
 
@@ -229,7 +231,7 @@ class ImageProcessor:
     self._cache[path] = (image_bytes, original_size, cropped_size, offset)
     # print(f"[图片处理器] 已缓存: {os.path.basename(path)}, 当前缓存数: {len(self._cache)}/{self.MAX_CACHE_SIZE}")
 
-  def clear_cache(self):
+  def clear_cache(self) -> None:
     """
     清空所有缓存
     用于保存存档时调用
@@ -416,7 +418,7 @@ def get_cropped_image(image_path: str) -> Optional[Tuple[bytes, dict]]:
   return image_processor.get_cropped_image(image_path)
 
 
-def clear_image_cache():
+def clear_image_cache() -> None:
   """
   便捷函数：清空图片缓存
   """

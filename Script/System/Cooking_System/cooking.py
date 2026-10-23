@@ -13,7 +13,7 @@ _: FunctionType = get_text._
 """ 翻译api """
 
 
-def init_recipes():
+def init_recipes() -> Dict[int, game_type.Recipes]:
   """初始化菜谱数据"""
   cache = cache_control.cache
   cache.recipe_data = {}
@@ -55,9 +55,9 @@ def create_recipe(
 
 def create_food(
     food_id: str,
-    food_recipe=-1,
-    food_quality=5,
-    food_maker="",
+    food_recipe: int = -1,
+    food_quality: int = 5,
+    food_maker: str = "",
 ) -> Food:
   """
   创建食物对象
@@ -129,7 +129,9 @@ def is_special_seasoning(seasoning_cid: int) -> bool:
   return seasoning_cid >= 11
 
 
-def get_special_seasoning_question_stage(special_seasoning: int):
+def get_special_seasoning_question_stage(
+    special_seasoning: int,
+) -> tuple[str, str] | None:
   """
   获取特殊调味对应的烹饪问题阶段替换规则
   选择特殊调味进行精细烹饪时，其对应的常规阶段问题池会被替换为特殊阶段的问题池
@@ -195,7 +197,7 @@ def cook(
 
 def init_food_shop_data(
     update_restaurant_id: int = -2, new_day_flag: bool = False
-):
+) -> None:
   """
   初始化食物商店内的食物数据\n
   Keyword arguments:\n
@@ -290,7 +292,7 @@ def init_food_shop_data(
 
 
 def get_character_cookable_recipes(
-    character_id: int = 0, weight_flag=False, food_type: int = -1
+    character_id: int = 0, weight_flag: bool = False, food_type: int = -1
 ) -> list[int]:
   """
   获取角色可以制作的食物食谱列表
@@ -333,7 +335,7 @@ def get_character_cookable_recipes(
   return cookable_recipes_list
 
 
-def init_makefood_data():
+def init_makefood_data() -> None:
   """
   初始化玩家做饭区内可制作的菜谱数据\n
   延迟创建：此处仅记录玩家当前可制作的菜谱id，实际的食物对象在玩家选定菜谱并制作时才创建，\n
@@ -368,7 +370,7 @@ def get_character_food_bag_type_list_buy_food_type(
 
 
 def get_food_list_from_food_shop(
-    food_type: str, restaurant_id=-1
+    food_type: str, restaurant_id: int = -1
 ) -> Dict[uuid.UUID, str]:
   """
   获取餐馆内指定类型的食物种类
@@ -527,7 +529,7 @@ def get_filtered_sorted_cook_data(food_type: str) -> list:
   return food_list
 
 
-def judge_accept_special_seasoning_food(character_id: int):
+def judge_accept_special_seasoning_food(character_id: int) -> int:
   """
   是否接受特殊调味的食物
   Keyword arguments:
@@ -653,7 +655,7 @@ def find_character_birthplace_restaurant(character_id: int) -> int:
   return -1
 
 
-def handle_food_deterioration(character_id: int):
+def handle_food_deterioration(character_id: int) -> int:
   """
   结算角色持有食物的变质与过期\n
   Keyword arguments:\n

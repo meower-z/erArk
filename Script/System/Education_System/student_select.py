@@ -95,7 +95,7 @@ def select_student(
 
   selected = {"id": now_student, "hit": False}
 
-  def on_select(character_id: int):
+  def on_select(character_id: int) -> None:
     """通用面板人名按钮的 cmd_func：记下选中者"""
     selected["id"] = character_id
     selected["hit"] = True

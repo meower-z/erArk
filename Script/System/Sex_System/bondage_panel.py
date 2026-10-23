@@ -40,7 +40,7 @@ class Bondage_Panel:
     self.draw_list: List[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     character_data: game_type.Character = cache.character_data[0]
@@ -142,7 +142,7 @@ class Bondage_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def select_bondage(self, bondage_id):
+  def select_bondage(self, bondage_id: int) -> None:
     """赋予选择的捆绑"""
     from Script.System.Instruct_System import handle_instruct
 

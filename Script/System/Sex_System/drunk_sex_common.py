@@ -9,7 +9,7 @@ _: FunctionType = get_text._
 """ 翻译api """
 
 
-def get_drunk_level(character_id: int):
+def get_drunk_level(character_id: int) -> tuple[int, str]:
   """
   按角色当前醉酒值返回当前醉酒等级的cid与名称\n
   Keyword arguments:\n
@@ -65,7 +65,7 @@ def get_food_drunk_value(food: game_type.Food) -> int:
 
 def add_drunk_point(
     character_id: int, food: game_type.Food, taste_wine_flag: bool = False
-):
+) -> None:
   """
   根据食用的食物增加角色的醉酒值\n
   Keyword arguments:\n
@@ -87,7 +87,7 @@ def add_drunk_point(
   character_data.drunk_point = min(100, character_data.drunk_point + add_value)
 
 
-def reduce_drunk_point(character_id: int, time: int):
+def reduce_drunk_point(character_id: int, time: int) -> None:
   """
   根据时间流逝减少角色的醉酒值\n
   Keyword arguments:\n
@@ -171,7 +171,7 @@ def judge_accept_alcohol_food(character_id: int, food: game_type.Food) -> bool:
   return judge_result[0] == 1
 
 
-def taste_wine(character_id: int):
+def taste_wine(character_id: int) -> None:
   """
   角色品酒，角色随机选一个酒，根据角色的酒量和当前醉酒值选择，酒量越好、醉酒程度越高越可能选择度数更高的酒，并结算部分饮用效果\n
   Keyword arguments:\n

@@ -160,7 +160,7 @@ class Education_Manage_Panel:
     }
     """ 页签名到子面板实例的映射 """
 
-  def draw(self):
+  def draw(self) -> None:
     """
     绘制主循环
     输入类型: 无
@@ -182,6 +182,7 @@ class Education_Manage_Panel:
       for now_panel in self.panel_list:
         panel_width = int(self.width / len(self.panel_list))
         if now_panel == self.now_panel:
+          now_draw: draw.CenterDraw | draw.CenterButton
           now_draw = draw.CenterDraw()
           now_draw.text = f"[{now_panel}]"
           now_draw.style = "onbutton"
@@ -215,7 +216,7 @@ class Education_Manage_Panel:
         continue
       now_sub_panel.handle_yrn(yrn)
 
-  def _draw_semester_head(self):
+  def _draw_semester_head(self) -> None:
     """
     绘制学期抬头
     输入类型: 无
@@ -239,7 +240,7 @@ class Education_Manage_Panel:
       tip_draw.draw()
     line_feed.draw()
 
-  def change_panel(self, now_panel: str):
+  def change_panel(self, now_panel: str) -> None:
     """
     切换当前页签
     输入类型: now_panel(str)
@@ -267,7 +268,7 @@ class Class_Schedule_Panel:
     self.cell_return: Dict[str, tuple] = {}
     """ 本轮课表格子按钮的返回值 → (星期, 节次)，由 draw_page 写、handle_yrn 读 """
 
-  def draw_page(self, return_list: List[str]):
+  def draw_page(self, return_list: List[str]) -> None:
     """
     绘制本页内容
     输入类型: return_list(List[str])，容器的共享返回值列表，本页的按钮往里加
@@ -334,7 +335,7 @@ class Class_Schedule_Panel:
     return_list.append(clear_draw.return_text)
     line_feed.draw()
 
-  def handle_yrn(self, yrn: str):
+  def handle_yrn(self, yrn: str) -> None:
     """
     处理本页按钮的选择结果
     输入类型: yrn(str)，容器 askfor_all 的返回值
@@ -439,7 +440,7 @@ class Class_Schedule_Panel:
       line_feed.draw()
     return cell_return
 
-  def _auto_fill_schedule(self):
+  def _auto_fill_schedule(self) -> None:
     """
     一键把全部已开放教室的空格子排满
     输入类型: 无
@@ -470,7 +471,7 @@ class Class_Schedule_Panel:
       info_draw.text = _("\n课表已经排满了，没有空格子可排\n")
     info_draw.draw()
 
-  def _clear_room(self, classroom: str):
+  def _clear_room(self, classroom: str) -> None:
     """
     清空一间教室的全部排课
     输入类型: classroom(str)
@@ -481,7 +482,7 @@ class Class_Schedule_Panel:
       for period in range(len(game_time.CLASS_PERIOD_START)):
         schedule_handle.clear_class_cell(classroom, week_day, period)
 
-  def _edit_cell(self, classroom: str, week_day: int, period: int):
+  def _edit_cell(self, classroom: str, week_day: int, period: int) -> None:
     """
     编辑一个课表格子：先选科目、再选教师
     输入类型: classroom(str), week_day(int), period(int)
@@ -505,7 +506,7 @@ class Class_Schedule_Panel:
         classroom, week_day, period, ability_id, teacher_id
     )
 
-  def _edit_sex_class(self, classroom: str, week_day: int, period: int):
+  def _edit_sex_class(self, classroom: str, week_day: int, period: int) -> None:
     """
     排一节临时的性技实操课
     输入类型: classroom(str), week_day(int), period(int)

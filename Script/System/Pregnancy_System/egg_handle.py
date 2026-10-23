@@ -231,7 +231,7 @@ def clear_birth_type_data(birth_type: int) -> str:
   return draw_text
 
 
-def add_egg(character_id: int, fertilized: bool, soft: bool = False):
+def add_egg(character_id: int, fertilized: bool, soft: bool = False) -> int:
   """
   为角色新增一枚卵
   Keyword arguments:
@@ -445,7 +445,7 @@ def nursery_worker_on_duty_in_scene(character_id: int) -> bool:
   return False
 
 
-def check_ovulation(character_id: int):
+def check_ovulation(character_id: int) -> None:
   """
   排卵结算：每个排卵日必排一枚卵（受精判定成功则为受精卵并清受精素质，否则为无精卵）
   \n由本周期排卵日事件待办标记驱动（周期推进到排卵日时置位，0点结算有兜底，玩家不睡觉也不会错过）；
@@ -488,7 +488,7 @@ def check_ovulation(character_id: int):
 
 def npc_identify_eggs_settle(
     character_id: int, identifier_id: Optional[int] = None
-):
+) -> None:
   """
   鉴定卵结算：一次揭示角色当前全部可鉴定的未鉴定卵
   \n未受精卵静默删除（不通知玩家）；受精卵置已鉴定并通知玩家、进入孵化流程
@@ -533,7 +533,7 @@ def npc_identify_eggs_settle(
     now_draw.draw()
 
 
-def check_egg_born(character_id: int):
+def check_egg_born(character_id: int) -> None:
   """
   破壳判定：孵化中的卵自排出起满孵化总天数则触发破壳事件
   Keyword arguments:
@@ -563,7 +563,7 @@ def check_egg_born(character_id: int):
     draw_panel.draw()
 
 
-def take_eggs_from_chara(target_character_id: int):
+def take_eggs_from_chara(target_character_id: int) -> int:
   """
   拿走交互对象的全部未鉴定卵（卵详细数据留在原角色处并标记被拿走，玩家收藏品中记录索引）
   Keyword arguments:
@@ -594,14 +594,14 @@ def take_eggs_from_chara(target_character_id: int):
   return take_count
 
 
-def identify_held_eggs_settle():
+def identify_held_eggs_settle() -> None:
   """
   鉴定玩家临时持有的全部卵，并经索引同步回写原角色的卵数据
   \n未受精则删除原角色的该卵；受精则置已鉴定并进入孵化流程（回到原角色的常规孵化轨道）
   """
   pl_character_data: game_type.Character = cache.character_data[0]
   held_eggs = dict(pl_character_data.pl_collection.held_eggs)
-  fertilized_chara_count = {}
+  fertilized_chara_count: dict[int, int] = {}
   for held_id, (chara_id, egg_id) in held_eggs.items():
     # 索引即将消耗，先行删除
     del pl_character_data.pl_collection.held_eggs[held_id]
@@ -638,7 +638,7 @@ def identify_held_eggs_settle():
     now_draw.draw()
 
 
-def replace_entertainment_for_eggs(character_id: int):
+def replace_entertainment_for_eggs(character_id: int) -> None:
   """
   每日娱乐替换钩子：持有需要照料的卵的带壳卵生角色，随机一个娱乐时段替换为照料卵
   \n需在每日娱乐刷新（get_chara_entertainment）之后调用；派对日、监禁等无法自由活动的角色跳过

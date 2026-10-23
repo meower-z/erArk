@@ -99,7 +99,7 @@ class SceneRenderer:
     # 如果默认背景也不存在，返回空
     return ""
 
-  def clear_cache(self):
+  def clear_cache(self) -> None:
     """清除缓存"""
     self._cached_scene_name = None
     self._cached_background_path = None

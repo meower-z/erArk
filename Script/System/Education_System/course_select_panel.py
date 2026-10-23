@@ -45,7 +45,7 @@ class Course_Select_Panel:
     self.cell_return: Dict[str, tuple] = {}
     """ 本轮课表格子按钮的返回值 → (星期, 节次)，由 draw_page 写、handle_yrn 读 """
 
-  def draw_page(self, return_list: List[str]):
+  def draw_page(self, return_list: List[str]) -> None:
     """
     绘制本页内容
     输入类型: return_list(List[str])，容器的共享返回值列表，本页的按钮往里加
@@ -105,7 +105,7 @@ class Course_Select_Panel:
     return_list.append(clear_draw.return_text)
     line_feed.draw()
 
-  def handle_yrn(self, yrn: str):
+  def handle_yrn(self, yrn: str) -> None:
     """
     处理本页按钮的选择结果
     输入类型: yrn(str)，容器 askfor_all 的返回值
@@ -228,7 +228,7 @@ class Course_Select_Panel:
       return _("{0}/条件不符").format(text)
     return text
 
-  def _auto_fill_course(self, character_id: int):
+  def _auto_fill_course(self, character_id: int) -> None:
     """
     一键把这个学生个人课表上的空节次选满
     输入类型: character_id(int)
@@ -260,7 +260,7 @@ class Course_Select_Panel:
       info_draw.text = _("\n{0}的课表已经选满了\n").format(name)
     info_draw.draw()
 
-  def _clear_student(self, character_id: int):
+  def _clear_student(self, character_id: int) -> None:
     """
     清空一个学生的全部选课
     输入类型: character_id(int)
@@ -271,7 +271,7 @@ class Course_Select_Panel:
       for period in range(len(game_time.CLASS_PERIOD_START)):
         schedule_handle.clear_selected_course(character_id, week_day, period)
 
-  def _edit_schedule(self, character_id: int):
+  def _edit_schedule(self, character_id: int) -> None:
     """
     单孩日程微调：换模板，或对某个时段单独覆盖
     输入类型: character_id(int)
@@ -351,7 +351,7 @@ class Course_Select_Panel:
               character_id, slot_by_return[yrn], entertainment_id
           )
 
-  def _copy_to_others(self, character_id: int, student_list: List[int]):
+  def _copy_to_others(self, character_id: int, student_list: List[int]) -> None:
     """
     把当前学生的课表整份复制给另一个学生
     输入类型: character_id(int), student_list(List[int])
@@ -400,7 +400,7 @@ class Course_Select_Panel:
             target_id, week_day, period, course[0], course[1]
         )
 
-  def _edit_cell(self, character_id: int, week_day: int, period: int):
+  def _edit_cell(self, character_id: int, week_day: int, period: int) -> None:
     """
     编辑一个个人课表格子
     输入类型: character_id(int), week_day(int), period(int)
@@ -548,7 +548,7 @@ class Course_Select_Panel:
 
   def _select_target(
       self, character_id: int, week_day: int, period: int, course_type: int
-  ):
+  ) -> object:
     """
     选个人式课型的具体目标
     输入类型: character_id(int), week_day(int), period(int), course_type(int)

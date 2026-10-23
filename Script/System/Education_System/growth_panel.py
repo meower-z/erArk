@@ -47,7 +47,7 @@ class Growth_Panel:
     """ 成绩单历史当前翻到第几份（0起），-1表示尚未翻过、由 _draw_report_card 回落到最新那份。
             必须是面板的状态而不是局部变量：容器每轮 while 都重画，局部变量会被冲掉 """
 
-  def draw_page(self, return_list: List[str]):
+  def draw_page(self, return_list: List[str]) -> None:
     """
     绘制本页内容
     输入类型: return_list(List[str])，容器的共享返回值列表，本页的按钮往里加
@@ -85,7 +85,7 @@ class Growth_Panel:
     line_feed.draw()
     draw.LineDraw("-", self.width).draw()
 
-  def handle_yrn(self, yrn: str):
+  def handle_yrn(self, yrn: str) -> None:
     """
     处理本页按钮的选择结果
     输入类型: yrn(str)，容器 askfor_all 的返回值
@@ -115,7 +115,7 @@ class Growth_Panel:
         self.report_card_index = -1
       self.now_student = student_id
 
-  def _draw_stage(self, character_id: int):
+  def _draw_stage(self, character_id: int) -> None:
     """
     绘制母亲、当前成长阶段与距下一阶段的天数和预计日期
     输入类型: character_id(int)
@@ -191,7 +191,7 @@ class Growth_Panel:
       prenatal_draw.style = "deep_gray"
       prenatal_draw.draw()
 
-  def _draw_subject(self, character_id: int):
+  def _draw_subject(self, character_id: int) -> None:
     """
     绘制18门科目的等级与本学期增量（方案 §5.4）
     输入类型: character_id(int)
@@ -227,7 +227,7 @@ class Growth_Panel:
         line_feed.draw()
     line_feed.draw()
 
-  def _draw_attendance(self, character_id: int):
+  def _draw_attendance(self, character_id: int) -> None:
     """
     绘制出勤情况
     输入类型: character_id(int)
@@ -267,7 +267,9 @@ class Growth_Panel:
     )
     now_draw.draw()
 
-  def _draw_report_card(self, character_id: int, return_list: List[str]):
+  def _draw_report_card(
+      self, character_id: int, return_list: List[str]
+  ) -> None:
     """
     绘制历年成绩单，一次一份，可前后翻页
     输入类型: character_id(int), return_list(List[str]) 容器的共享返回值列表
@@ -357,7 +359,7 @@ class Growth_Panel:
       blank_draw.draw()
     line_feed.draw()
 
-  def _draw_personality(self, character_id: int):
+  def _draw_personality(self, character_id: int) -> None:
     """
     绘制四对性格倾向
     输入类型: character_id(int)
@@ -384,7 +386,7 @@ class Growth_Panel:
       now_draw.draw()
     line_feed.draw()
 
-  def _draw_event_history(self, character_id: int):
+  def _draw_event_history(self, character_id: int) -> None:
     """
     绘制养成事件履历（Plan 22 三期 §5.2）
     输入类型: character_id(int)
@@ -436,7 +438,7 @@ class Growth_Panel:
       now_draw.draw()
     line_feed.draw()
 
-  def _draw_flag(self, character_id: int):
+  def _draw_flag(self, character_id: int) -> None:
     """
     绘制待处理的几个 flag
     输入类型: character_id(int)
