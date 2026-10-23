@@ -225,7 +225,7 @@ def build_promise_csv_text(line_list: list) -> str:
   """
   把 constant_promise.py 的全部行转成 ArkEditor 前提表（tools/ArkEditor/csv/Premise.csv）的文本
   只做字符串处理、不读写文件：本模块顶层会调 game_config.init()，回归测试不 import 本模块，
-     而是用 ast 单独取出这个函数来跑（tools/tests/education/test_talk_data.py）
+     而是用 ast 单独取出这个函数来跑（tests/education/test_talk_data.py）
   Keyword arguments:
   line_list -- constant_promise.py 的全部行（readlines() 的结果，每行带换行符）
   Return arguments:

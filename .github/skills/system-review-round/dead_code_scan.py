@@ -80,12 +80,10 @@ def is_test_file(path: str, root: str) -> bool:
   path -- 文件绝对路径
   root -- 仓库根目录
   Return arguments:
-  bool -- 在 tools/tests 下或文件名以 test_ 开头即为测试代码
+  bool -- 在 tests/ 下或文件名以 test_ 开头即为测试代码
   """
   rel = os.path.relpath(path, root).replace("\\", "/")
-  return rel.startswith("tools/tests/") or os.path.basename(path).startswith(
-      "test_"
-  )
+  return rel.startswith("tests/") or os.path.basename(path).startswith("test_")
 
 
 def decorator_name(node: ast.AST) -> str:
