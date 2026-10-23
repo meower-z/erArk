@@ -21932,6 +21932,14 @@ msgstr ""
 msgid "瘦足药"
 msgstr "빈족제"
 
+#: ./data\csv\Gift_Items.csv:19
+msgid "31"
+msgstr ""
+
+#: ./data\csv\Gift_Items.csv:20
+msgid "32"
+msgstr ""
+
 #: ./data\csv\Gift_Items.csv:21
 msgid "33"
 msgstr ""
