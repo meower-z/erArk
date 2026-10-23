@@ -223,25 +223,10 @@ def judge_character_status(character_id: int) -> int:
   int -- 结算是否成功
   """
   character_data: game_type.Character = cache.character_data[character_id]
-  scene_path_str = map_handle.get_map_system_path_str_for_list(
-      character_data.position
-  )
-  scene_data: game_type.Scene = cache.scene_data[scene_path_str]
   start_time = character_data.behavior.start_time
   end_time = game_time.get_sub_date(
       minute=character_data.behavior.duration, old_date=start_time
   )
-  if (
-      character_data.target_character_id != character_id
-      and character_data.target_character_id not in scene_data.character_list
-  ):
-    # 例外：玩家在搬运该角色
-    if (
-        character_data.target_character_id
-        != character_data.sp_flag.bagging_chara_id
-    ):
-      # end_time = now_time # 这里本来是游戏实际时间，架构改了之后大概不需要了，姑且先保留着
-      end_time = end_time
   # print(f"debug {character_data.name}的end_time = {end_time}")
 
   # 跳过指令和指令后置类型的事件触发

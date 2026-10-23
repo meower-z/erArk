@@ -19,7 +19,7 @@ def pcmd(
     cmd_id: str,
     cmd_func=flow_handle.null_func,
     arg=(),
-    kw={},
+    kw=None,
     normal_style="standard",
     on_style="onbutton",
     tooltip: str = "",
@@ -31,7 +31,7 @@ def pcmd(
   cmd_id -- 命令响应文本
   cmd_func -- 命令函数
   arg -- 传给命令函数的顺序参数
-  kw -- 传给命令函数的字典参数
+  kw -- 传给命令函数的字典参数，None 时不传字典参数
   normal_style -- 正常状态下命令显示样式
   on_style -- 鼠标在其上的时候命令显示样式
   """
@@ -44,7 +44,7 @@ def pcmd(
       cmd_id,
       cmd_func,
       arg,
-      kw,
+      {} if kw is None else kw,
       normal_style,
       on_style,
       tooltip,
@@ -56,7 +56,7 @@ def pimagecmd(
     cmd_id: str,
     cmd_func=flow_handle.null_func,
     arg=(),
-    kw={},
+    kw=None,
     tooltip: str = "",
 ):
   """
@@ -66,13 +66,15 @@ def pimagecmd(
   cmd_id -- 命令响应文本
   cmd_func -- 命令函数
   arg -- 传给命令函数的顺序参数
-  kw -- 传给命令函数的字典参数
+  kw -- 传给命令函数的字典参数，None 时不传字典参数
   """
   cache.text_wait = float(normal_config.config_normal.text_wait)
   global last_char
   if len(cmd_str) > 0:
     last_char = cmd_str[-1:]
-  flow_handle.print_image_cmd(cmd_str, cmd_id, cmd_func, arg, kw, tooltip)
+  flow_handle.print_image_cmd(
+      cmd_str, cmd_id, cmd_func, arg, {} if kw is None else kw, tooltip
+  )
 
 
 unused_cmd_num = 500

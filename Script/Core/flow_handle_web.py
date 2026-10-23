@@ -522,7 +522,7 @@ exit_flag = False
 
 
 def bind_cmd(
-    cmd_number: str, cmd_func: callable, arg: tuple = (), kw: dict = {}
+    cmd_number: str, cmd_func: callable, arg: tuple = (), kw: dict | None = None
 ) -> None:
   """
   绑定命令数字与命令函数
@@ -531,12 +531,12 @@ def bind_cmd(
   cmd_number (str): 命令数字或标识符
   cmd_func (callable): 命令函数
   arg (tuple): 传给命令函数的顺序参数
-  kw (dict): 传给命令函数的字典参数
+  kw (dict): 传给命令函数的字典参数，None 时不传字典参数
 
   返回值类型：None
   """
   # 在Web版本中，我们保存命令函数及其参数
-  cmd_map[cmd_number] = (cmd_func, arg, kw)
+  cmd_map[cmd_number] = (cmd_func, arg, {} if kw is None else kw)
 
 
 def print_cmd(
@@ -544,7 +544,7 @@ def print_cmd(
     cmd_number: str,
     cmd_func=None,
     arg: tuple = (),
-    kw: dict = {},
+    kw: dict | None = None,
     normal_style: str = "standard",
     on_style: str = "onbutton",
     tooltip: str = "",

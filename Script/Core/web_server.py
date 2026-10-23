@@ -1646,8 +1646,8 @@ def handle_select_major_type(data):
   logging.info(f'选择交互大类型: {major_type_id}')
 
   try:
-    # 选择大类型，返回记忆的小类型
-    remembered_minor = web_interaction_manager.select_major_type(major_type_id)
+    # 切换到该大类；前端不自动选中小类，remembered_minor_type 恒为 None
+    web_interaction_manager.select_major_type(major_type_id)
 
     # 获取该大类下的小类型列表
     minor_types = web_interaction_manager.get_available_minor_types(
@@ -1662,7 +1662,7 @@ def handle_select_major_type(data):
             'major_type_id': major_type_id,
             'major_type_name': constant.get_major_type_name(major_type_id),
             'minor_types': minor_types,
-            'remembered_minor_type': remembered_minor,
+            'remembered_minor_type': None,
             'success': True,
         },
     )

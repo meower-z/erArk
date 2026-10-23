@@ -1,7 +1,7 @@
 import itertools
 import math
 import time
-from typing import List, Dict, Tuple
+from typing import List, Dict, Sequence, Tuple
 from types import FunctionType
 from Script.UI.Moudle import draw
 from Script.Core import io_init, flow_handle, text_handle, get_text, value_handle, game_type, cache_control
@@ -413,7 +413,7 @@ class CenterDrawButtonListPanel:
       column: int,
       null_text: str = "",
       cmd_func=None,
-      func_args: List[Tuple] = [],
+      func_args: Sequence[Tuple] = (),
   ):
     """
     设置绘制信息
@@ -488,7 +488,7 @@ class LeftDrawIDButtonListPanel:
       column: int,
       null_text: str = "",
       cmd_func=None,
-      func_args: List[Tuple] = [],
+      func_args: Sequence[Tuple] = (),
   ):
     """
     设置绘制信息

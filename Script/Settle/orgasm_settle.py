@@ -171,19 +171,22 @@ def orgasm_judge(
 def orgasm_settle_in_second_behavior(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-    normal_orgasm_dict: dict = {},
-    extra_orgasm_dict: dict = {},
-    un_count_orgasm_dict: dict = {},
+    normal_orgasm_dict: dict | None = None,
+    extra_orgasm_dict: dict | None = None,
+    un_count_orgasm_dict: dict | None = None,
 ):
   """
   处理第二结算中的高潮结算
   Keyword arguments:
   character_id -- 角色id
   change_data -- 状态变更信息记录对象
-  normal_orgasm_dict -- 普通高潮字典
-  extra_orgasm_dict -- 额外高潮字典
-  un_count_orgasm_dict -- 不计数高潮字典
+  normal_orgasm_dict -- 普通高潮字典，None 视为空字典
+  extra_orgasm_dict -- 额外高潮字典，None 视为空字典
+  un_count_orgasm_dict -- 不计数高潮字典，None 视为空字典
   """
+  normal_orgasm_dict = normal_orgasm_dict or {}
+  extra_orgasm_dict = extra_orgasm_dict or {}
+  un_count_orgasm_dict = un_count_orgasm_dict or {}
   # 导入常用结算函数，避免循环导入
   from Script.Settle.common_default import base_chara_experience_common_settle
   from Script.UI.Panel.manage_power_system_panel import store_power_by_human_power
@@ -268,15 +271,9 @@ def orgasm_settle_in_second_behavior(
 
     pre_data = character_data.h_state.orgasm_level[orgasm]  # 记录里的前高潮程度
 
-    normal_orgasm_data = 0
-    if orgasm in normal_orgasm_dict:
-      normal_orgasm_data = normal_orgasm_dict[orgasm]
-    extra_orgasm_data = 0
-    if orgasm in extra_orgasm_dict:
-      extra_orgasm_data = extra_orgasm_dict[orgasm]
-    un_count_orgasm_data = 0
-    if orgasm in un_count_orgasm_dict:
-      un_count_orgasm_data = un_count_orgasm_dict[orgasm]
+    normal_orgasm_data = normal_orgasm_dict.get(orgasm, 0)
+    extra_orgasm_data = extra_orgasm_dict.get(orgasm, 0)
+    un_count_orgasm_data = un_count_orgasm_dict.get(orgasm, 0)
 
     # 如果已经进入额外高潮，则将额外高潮次数加入到高潮次数中
     if extra_orgasm_data > 0:
@@ -513,7 +510,7 @@ def judge_orgasm_degree(level_count: int) -> int:
 
 def judge_orgasm_edge_success(
     character_id: int,
-    orgasm_edge_count: dict = dict(),
+    orgasm_edge_count: dict | None = None,
     crossed_part_count: int = 1,
 ) -> bool:
   """
