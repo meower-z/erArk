@@ -23,8 +23,7 @@ import json
 import os
 import re
 import subprocess
-import unittest
-
+from tests.fast.base import FastTestCase
 from tests.world import ROOT
 
 CHILD_TALENTS = (101, 102, 103)
@@ -498,7 +497,7 @@ def iter_rows():
       )
 
 
-class ChildStageTalkNotSexualTest(unittest.TestCase):
+class ChildStageTalkNotSexualTest(FastTestCase):
   """挂在儿童阶段的口上与事件里没有 H 内容，也没有无法判定的行"""
 
   @classmethod
