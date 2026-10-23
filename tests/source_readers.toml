@@ -1,0 +1,721 @@
+# 源码读取者清单：代码里把 Python 源码当数据读的地方，每处一行。
+# 新增这类代码的 PR 在同一改动里加行；删掉或改名时同样改这里。
+#
+# [[reader]] 的字段：
+#   id        R 加两位以上数字，不重复
+#   file      读取代码所在的文件（仓库相对路径）
+#   symbol    读取代码所在的函数或类的全名（外层.内层），模块顶层写 "<module>"；不写行号
+#   mechanism getsource | ast | tokenize | open+regex | open+bytes | gettext | writer | test-needle | metadata
+#   reads     读的是什么
+#   used_for  读出来的东西用在哪
+#   when      startup | build | dev-tool | test | game-runtime | ci
+#   capture   怎样取它的真实输出，好比较改动前后：
+#             instruct-registry  载入游戏，取每条指令的大类与面板 id（只用于 R01）
+#             command            在检出目录里运行 command，输出是标准输出加上 outputs 里列的文件；
+#                                "@diff" 表示运行后整个检出目录的 git diff；command 的第一个词 "python" 指游戏的 venv
+#             suite              读取者是测试里的断言，输出就是测试结果，跑测试套件时一起比较
+#   compare   exact（默认）| po-messages（去掉 #: 位置行和生成时间）| no-line-numbers（去掉 :行号 与 diff 的行号头）
+#   why       compare 不是 exact 时必填：为什么去掉的部分不算输出
+#
+# [[allow]]：扫描命中了、但不是读取者的地方。字段 file、symbol、pattern（命中的模式名）、why 都必填；
+# 一条 allow 若不再对应任何命中，清单就算格式错误，要删掉它。
+
+[[reader]]
+id = "R01"
+file = "Script/System/Instruct_System/handle_instruct.py"
+symbol = "add_instruct.decorator"
+mechanism = "getsource"
+reads = "没写大类的指令函数的源码"
+used_for = "指令大类与面板 id 的登记，Web 指令界面按它分组"
+when = "startup"
+capture = "instruct-registry"
+
+[[reader]]
+id = "R02"
+file = "buildata.py"
+symbol = "class_indent"
+mechanism = "writer"
+reads = "constant_promise.py、constant_effect.py 与 handle_premise 包里各模块的第一条缩进行"
+used_for = "生成的常量与前提函数照这个缩进写入"
+when = "build"
+capture = "command"
+command = ["python", "-c", '''
+import sys, types
+stub = types.ModuleType("Script.Config.game_config")
+stub.init = lambda: None
+sys.modules["Script.Config.game_config"] = stub
+import buildata
+for path in ["Script/Core/constant_promise.py", "Script/Core/constant_effect.py", *sorted(set("Script/Design/handle_premise/" + m for m in buildata.premise_module_dict.values()))]:
+    print(path, repr(buildata.class_indent(path)))
+''']
+outputs = []
+
+[[reader]]
+id = "R03"
+file = "buildata.py"
+symbol = "constand_promise_2_csv"
+mechanism = "open+regex"
+reads = "constant_promise.py 的前提常量名、id 与说明行"
+used_for = "重新生成 ArkEditor 的前提表 Premise.csv"
+when = "build"
+capture = "command"
+command = ["python", "-c", '''
+import sys, types
+stub = types.ModuleType("Script.Config.game_config")
+stub.init = lambda: None
+sys.modules["Script.Config.game_config"] = stub
+import buildata
+buildata.constand_promise_2_csv()
+''']
+outputs = ["tools/ArkEditor/csv/Premise.csv"]
+
+[[reader]]
+id = "R04"
+file = "buildata.py"
+symbol = "constand_effect_2_csv"
+mechanism = "open+regex"
+reads = "constant_effect.py 的结算常量名、id 与说明行，读到二段结算为止"
+used_for = "重新生成 ArkEditor 的结算表 Effect.csv"
+when = "build"
+capture = "command"
+command = ["python", "-c", '''
+import sys, types
+stub = types.ModuleType("Script.Config.game_config")
+stub.init = lambda: None
+sys.modules["Script.Config.game_config"] = stub
+import buildata
+buildata.constand_effect_2_csv()
+''']
+outputs = ["tools/ArkEditor/csv/Effect.csv"]
+
+[[reader]]
+id = "R05"
+file = "buildpo.py"
+symbol = "<module>"
+mechanism = "gettext"
+reads = "全部 .py 里的可翻译字符串（交给 xgettext）"
+used_for = "翻译目录 erArk_py.po"
+when = "build"
+capture = "command"
+command = ["python", "buildpo.py"]
+outputs = ["data/po/zh_CN/LC_MESSAGES/erArk_py.po"]
+compare = "po-messages"
+why = "#: 行只记字符串出自哪个文件第几行，生成时间每次都变；编译出的 .mo 里两者都没有"
+
+[[reader]]
+id = "R06"
+file = "tools/official_event_check.py"
+symbol = "load_premise_name_set"
+mechanism = "open+regex"
+reads = "constant_promise.py 里赋给大写常量的小写字符串 id"
+used_for = "官方事件检查：前提名是否合法"
+when = "dev-tool"
+capture = "command"
+command = ["python", "-c", '''
+import sys
+sys.path.insert(0, "tools")
+import official_event_check
+print(sorted(official_event_check.load_premise_name_set()))
+''']
+outputs = []
+
+[[reader]]
+id = "R07"
+file = "tools/official_event_check.py"
+symbol = "load_effect_id_set"
+mechanism = "open+regex"
+reads = "constant_effect.py 里赋给大写常量的数字 id"
+used_for = "官方事件检查：结算 id 是否合法"
+when = "dev-tool"
+capture = "command"
+command = ["python", "-c", '''
+import sys
+sys.path.insert(0, "tools")
+import official_event_check
+print(sorted(official_event_check.load_effect_id_set()))
+''']
+outputs = []
+
+[[reader]]
+id = "R08"
+file = "tools/update_behavior.py"
+symbol = "update_behavior_file"
+mechanism = "writer"
+reads = "Behavior.py 里 class Behavior 之前的文件头"
+used_for = "按 Behavior_Data.csv 重写 Behavior.py 时原样保留文件头"
+when = "dev-tool"
+capture = "command"
+command = ["python", "tools/update_behavior.py"]
+outputs = ["@diff"]
+compare = "no-line-numbers"
+why = "diff 的行号头只说改在第几行，改动前后行号会移；改了什么由 + 与 - 行比较"
+
+[[reader]]
+id = "R09"
+file = "tools/fix_f_in_str.py"
+symbol = "<module>"
+mechanism = "writer"
+reads = "全部 .py 里翻译调用中的 f 字符串"
+used_for = "把 _(f\"...\") 改写成 _(\"...\").format(...)"
+when = "dev-tool"
+capture = "command"
+command = ["python", "tools/fix_f_in_str.py"]
+outputs = ["@diff"]
+compare = "no-line-numbers"
+why = "diff 的行号头只说改在第几行，改动前后行号会移；改了什么由 + 与 - 行比较"
+
+[[reader]]
+id = "R10"
+file = ".github/skills/system-review-round/dead_code_scan.py"
+symbol = "collect_definitions"
+mechanism = "ast"
+reads = "目标目录里的顶层函数、类、方法、常量及其注册装饰器"
+used_for = "死代码候选报告"
+when = "dev-tool"
+capture = "command"
+command = ["python", ".github/skills/system-review-round/dead_code_scan.py", "Script"]
+outputs = []
+compare = "no-line-numbers"
+why = "报告里的 文件:行号 只是定位，改动前后行号会移；候选清单本身逐项比较"
+
+[[reader]]
+id = "R11"
+file = ".github/skills/system-review-round/dead_code_scan.py"
+symbol = "count_name_tokens"
+mechanism = "tokenize"
+reads = "全仓 .py 的 NAME token，分生产代码与测试代码计数"
+used_for = "死代码候选报告里的引用计数"
+when = "dev-tool"
+capture = "command"
+command = ["python", ".github/skills/system-review-round/dead_code_scan.py", "Script"]
+outputs = []
+compare = "no-line-numbers"
+why = "报告里的 文件:行号 只是定位，改动前后行号会移；候选清单本身逐项比较"
+
+[[reader]]
+id = "R12"
+file = "tests/fast/test_child_stage_talk_not_sexual.py"
+symbol = "load_premise_categories"
+mechanism = "open+regex"
+reads = "constant_promise.py 的前提 id 与紧跟其后说明行的第一个词"
+used_for = "测试：幼年阶段口上的前提分类"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R13"
+file = "tools/tests/education/test_talk_data.py"
+symbol = "<module>"
+mechanism = "ast"
+reads = "buildata.py 里的 build_promise_csv_text 函数，单独编译执行"
+used_for = "测试：前提表生成器"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R14"
+file = "tools/tests/education/test_talk_data.py"
+symbol = "<module>"
+mechanism = "open+regex"
+reads = "constant_promise.py 的前提 id、名字、分类与说明片段"
+used_for = "测试：前提表生成器的期望值"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R15"
+file = "tools/tests/education/test_talk_data.py"
+symbol = "<module>"
+mechanism = "test-needle"
+reads = "official_event_check.py 里 TEXT_DUP_LEN 一行与下一行的说明"
+used_for = "测试：说明写在常量下一行"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R16"
+file = "tools/tests/education/test_schedule_template.py"
+symbol = "literal_hit_list"
+mechanism = "ast"
+reads = "schedule_template_handle 与 schedule_template_panel 的字符串字面量"
+used_for = "测试：模板键与分隔符不写死"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R17"
+file = "tools/tests/education/test_panels.py"
+symbol = "<module>"
+mechanism = "test-needle"
+reads = "Course_Select_Panel._select_target 的源码"
+used_for = "测试：用 WEEK_DAY_COUNT，不写死比较，不在函数里 import"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R18"
+file = "tools/tests/education/test_panels.py"
+symbol = "<module>"
+mechanism = "test-needle"
+reads = "Growth_Panel._draw_event_history 的源码"
+used_for = "测试：不再用 _game_config 别名"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R19"
+file = "tools/tests/education/test_growth_event.py"
+symbol = "<module>"
+mechanism = "test-needle"
+reads = "pregnancy_handle.check_grow_to_girl 的源码"
+used_for = "测试：成年转换调用毕业分派"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R20"
+file = "tools/tests/education/test_growth_event.py"
+symbol = "<module>"
+mechanism = "test-needle"
+reads = "growth_event_handle.push_semester_event_for_list 的源码"
+used_for = "测试：注释措辞"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R21"
+file = "tools/tests/education/test_growth_event.py"
+symbol = "<module>"
+mechanism = "test-needle"
+reads = "past_day_settle.update_new_day 的源码"
+used_for = "测试：生日分派在每日事件之前"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R22"
+file = "tools/tests/education/test_growth_event.py"
+symbol = "<module>"
+mechanism = "test-needle"
+reads = "pregnancy_handle._settle_baby_grow_up 的源码"
+used_for = "测试：切换阶段之后清理过期事件"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R23"
+file = "tools/tests/education/test_growth_event.py"
+symbol = "<module>"
+mechanism = "test-needle"
+reads = "pregnancy_handle.check_grow_to_loli 的源码"
+used_for = "测试：切换阶段之后清理过期事件"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R24"
+file = "tools/tests/education/test_growth_event.py"
+symbol = "<module>"
+mechanism = "test-needle"
+reads = "pregnancy_handle.check_grow_to_girl 的源码"
+used_for = "测试：切换阶段之后清理过期事件，并在毕业分派之前"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R25"
+file = "tools/tests/education/test_growth.py"
+symbol = "<module>"
+mechanism = "test-needle"
+reads = "growth_handle.settle_student_class_gain 的源码（去掉空白后）"
+used_for = "测试：未知课程类型按理论课常量回退"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R26"
+file = "tests/slow/test_build_same_for_any_listing_order.py"
+symbol = "run_build"
+mechanism = "open+bytes"
+reads = "临时构建出的全部文件（含 config_def.py）的字节"
+used_for = "测试：目录列举顺序不同，构建结果相同"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R27"
+file = "buildata.py"
+symbol = "class_end_index"
+mechanism = "writer"
+reads = "constant_effect.py 里 class BehaviorEffect 最后一个非空行的位置"
+used_for = "新结算常量的插入位置"
+when = "build"
+capture = "command"
+command = ["python", "-c", '''
+import sys, types
+stub = types.ModuleType("Script.Config.game_config")
+stub.init = lambda: None
+sys.modules["Script.Config.game_config"] = stub
+import buildata
+lines = open("Script/Core/constant_effect.py", encoding="utf-8").readlines()
+end = buildata.class_end_index(lines, "BehaviorEffect")
+print(repr(lines[end - 1]), repr(lines[end] if end < len(lines) else "<end of file>"))
+''']
+outputs = []
+
+[[reader]]
+id = "R28"
+file = "tools/tests/education/test_growth.py"
+symbol = "<module>"
+mechanism = "metadata"
+reads = "growth_handle.settle_student_class_gain 的 __doc__"
+used_for = "测试：557 的说明措辞"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R29"
+file = "tools/tests/education/test_schedule.py"
+symbol = "<module>"
+mechanism = "metadata"
+reads = "inspect.signature(schedule_handle.get_upcoming_course) 的参数名"
+used_for = "测试：get_upcoming_course 删掉了 now_time 参数"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R30"
+file = "tools/tests/education/test_schedule.py"
+symbol = "<module>"
+mechanism = "metadata"
+reads = "schedule_handle.get_now_course 的 __doc__"
+used_for = "测试：返回说明写全"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R31"
+file = "tools/tests/education/test_premise_tokens.py"
+symbol = "<module>"
+mechanism = "metadata"
+reads = "handle_premise.handle_self_have_classmate 的 __doc__"
+used_for = "测试：同学前提的说明口径"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R32"
+file = "tools/tests/education/test_talk_data.py"
+symbol = "<module>"
+mechanism = "metadata"
+reads = "game_type.CHILD_GROWTH 的 __doc__"
+used_for = "测试：类说明写明出生时不一定创建"
+when = "test"
+capture = "suite"
+
+[[allow]]
+file = "auto_build_config.py"
+symbol = "<module>"
+pattern = "open-py"
+why = "只读 CSV、JSON 与地图数据，写出生成的数据和 .po；不读任何 .py 的内容"
+
+[[allow]]
+file = "buildconfig.py"
+symbol = "<module>"
+pattern = "open-py"
+why = "只读 CSV、JSON 与地图数据；config_def.py 由生成的字符串整份写出，不读它原来的内容"
+
+[[allow]]
+file = "buildata.py"
+symbol = "csv_2_constand"
+pattern = "open-py"
+why = "读 CSV，把生成的常量追加到 constant_promise.py 末尾；它对源码的读取只经 class_indent（R02）"
+
+[[allow]]
+file = "buildata.py"
+symbol = "csv_2_constand_effect"
+pattern = "open-py"
+why = "读 constant_effect.py 的行只为交给 class_end_index（R27）定插入位置，再把生成的常量写进去"
+
+[[allow]]
+file = "profiling/ui_perf_patch.py"
+symbol = "_wrap_draw_method"
+pattern = "__doc__"
+why = "把被包装的 draw 方法的说明抄到计时包装函数上，没有代码读这个包装函数的说明"
+
+[[allow]]
+file = "tests/slow/test_smoke_new_game.py"
+symbol = "SmokeNewGameTest.test_hours_pass_static_checks"
+pattern = "__file__"
+why = "用 checks 模块的 __file__ 列出静态自检模块的文件名，不读它们的内容"
+
+[[allow]]
+file = "tests/world.py"
+symbol = "<module>"
+pattern = "__file__"
+why = "用 __file__ 定位仓库根目录"
+
+[[allow]]
+file = "tools/tests/education/_bootstrap.py"
+symbol = "<module>"
+pattern = "__file__"
+why = "用 __file__ 定位仓库根目录"
+
+[[allow]]
+file = "tools/tests/education/run_all.py"
+symbol = "<module>"
+pattern = "open-py"
+why = "模块说明里写了 test_*.py 的用法"
+
+[[allow]]
+file = "tools/tests/education/run_all.py"
+symbol = "<module>"
+pattern = "__file__"
+why = "用 __file__ 定位测试目录"
+
+[[allow]]
+file = "tools/tests/education/run_all.py"
+symbol = "main"
+pattern = "open-py"
+why = "按 test_*.py 列出测试文件并逐个起子进程运行，只读它们的日志，不读源码"
+
+
+[[allow]]
+file = ".github/skills/system-review-round/dead_code_scan.py"
+symbol = "<module>"
+pattern = "tokenize"
+why = "模块顶层的 import tokenize；读源码的是 count_name_tokens（R11）"
+
+[[allow]]
+file = ".github/skills/system-review-round/dead_code_scan.py"
+symbol = "main"
+pattern = "__file__"
+why = "用 __file__ 找仓库根目录，交给 collect_definitions（R10）与 count_name_tokens（R11）"
+
+[[allow]]
+file = ".github/skills/system-review-round/wf_watch.py"
+symbol = "<module>"
+pattern = "open-py"
+why = "模块说明里写了 .py 用法；它读的是 Workflow 运行目录里的 jsonl 日志"
+
+[[allow]]
+file = "Script/Core/game_path_config.py"
+symbol = "<module>"
+pattern = "__file__"
+why = "用 __file__ 定位游戏根目录，供资源路径使用"
+
+[[allow]]
+file = "Script/Core/main_frame.py"
+symbol = "get_resource_path"
+pattern = "__file__"
+why = "用 __file__ 定位游戏根目录，拼出资源文件路径"
+
+[[allow]]
+file = "Script/Core/main_frame.py"
+symbol = "load_local_fonts"
+pattern = "__file__"
+why = "用 __file__ 定位游戏根目录，读取字体文件"
+
+[[allow]]
+file = "Script/Core/mod_manager.py"
+symbol = "ModManager.get_mod_folder_path"
+pattern = "__file__"
+why = "用 __file__ 定位 mod 目录"
+
+[[allow]]
+file = "Script/Core/web_server.py"
+symbol = "<module>"
+pattern = "__file__"
+why = "用 __file__ 定位静态网页与模板目录"
+
+[[allow]]
+file = "Script/Core/web_server.py"
+symbol = "get_image_paths"
+pattern = "__file__"
+why = "用 __file__ 定位游戏根目录，列出图片路径"
+
+[[allow]]
+file = "Script/Core/web_server.py"
+symbol = "favicon"
+pattern = "__file__"
+why = "用 __file__ 定位游戏根目录，读取图标文件"
+
+[[allow]]
+file = "Script/Core/web_server.py"
+symbol = "serve_image"
+pattern = "__file__"
+why = "用 __file__ 定位游戏根目录，读取图片文件"
+
+[[allow]]
+file = "Script/Core/web_server.py"
+symbol = "serve_cropped_image"
+pattern = "__file__"
+why = "用 __file__ 定位游戏根目录，读取并裁剪图片文件"
+
+[[allow]]
+file = "Script/System/Instruct_System/migrate_interaction_types.py"
+symbol = "migrate"
+pattern = "__file__"
+why = "用 __file__ 定位仓库根目录，只读写 data/csv/InstructConfig.csv"
+
+[[allow]]
+file = "Script/System/Web_Draw_System/body_analysis_ensemble.py"
+symbol = "main"
+pattern = "__file__"
+why = "用 __file__ 定位立绘目录，只读图片、写分析结果"
+
+[[allow]]
+file = "Script/UI/Panel/chat_ai_setting.py"
+symbol = "Chat_Ai_Setting_Panel.draw"
+pattern = "open-py"
+why = "界面说明文字里提到源码路径 Script/UI/Panel/…；同一函数打开的是 ai_chat_api_key.csv"
+
+[[allow]]
+file = "buildata.py"
+symbol = "constand_2_handle"
+pattern = "open-py"
+why = "命中的是被三引号注释掉的旧代码；函数只把生成的前提函数追加到 handle_premise 模块末尾，不读它的内容"
+
+[[allow]]
+file = "tools/ArkEditor/main.py"
+symbol = "<module>"
+pattern = "__file__"
+why = "用 PySide6.__file__ 定位 Qt 插件目录"
+
+[[allow]]
+file = "tools/ArkEditor/main.py"
+symbol = "backup_file"
+pattern = "__file__"
+why = "用 __file__ 定位仓库根目录，备份 CSV 文件"
+
+[[allow]]
+file = "tools/MCP/prts_character_downloader/downloader.py"
+symbol = "PRTSCharacterDownloader._find_workspace_root"
+pattern = "__file__"
+why = "用 __file__ 找工作区根目录"
+
+[[allow]]
+file = "tools/MCP/prts_character_downloader/test_downloader.py"
+symbol = "<module>"
+pattern = "__file__"
+why = "用 __file__ 把下载器目录加进 sys.path"
+
+[[allow]]
+file = "tools/MCP/prts_character_downloader/verify_mcp_setup.py"
+symbol = "<module>"
+pattern = "__file__"
+why = "用 __file__ 把仓库根目录加进 sys.path"
+
+[[allow]]
+file = "tools/ai_text_all_to_one.py"
+symbol = "main"
+pattern = "__file__"
+why = "用 __file__ 定位语料目录，只读写文本文件"
+
+[[allow]]
+file = "tools/backup/body_analysis_multi_compare.py"
+symbol = "main"
+pattern = "__file__"
+why = "用 __file__ 定位立绘测试目录，只读图片、写分析报告"
+
+[[allow]]
+file = "tools/backup/create_converted_behavior_effect.py"
+symbol = "main"
+pattern = "__file__"
+why = "用 __file__ 定位仓库根目录，只读写 CSV"
+
+[[allow]]
+file = "tools/backup/detect_long_sentences.py"
+symbol = "main"
+pattern = "__file__"
+why = "用 __file__ 定位仓库根目录，只读口上 CSV"
+
+[[allow]]
+file = "tools/backup/download_full_body_images.py"
+symbol = "<module>"
+pattern = "__file__"
+why = "用 __file__ 定位图片下载目录"
+
+[[allow]]
+file = "tools/backup/parse_character_ability_to_csv.py"
+symbol = "main"
+pattern = "read_text"
+why = "读角色能力的文本稿，写 CSV"
+
+[[allow]]
+file = "tools/backup/process_character_csvs.py"
+symbol = "process_file"
+pattern = "read_text"
+why = "读角色 CSV"
+
+[[allow]]
+file = "tools/backup/process_csv_classification.py"
+symbol = "main"
+pattern = "__file__"
+why = "用 __file__ 定位仓库根目录，只读写 CSV"
+
+[[allow]]
+file = "tools/backup/rename_and_organize_images.py"
+symbol = "download_full_body_images"
+pattern = "open-py"
+why = "说明文字里提到 .py 脚本；同一函数写的是下载的图片"
+
+[[allow]]
+file = "tools/backup/rename_and_organize_images.py"
+symbol = "download_full_body_images"
+pattern = "__file__"
+why = "用 __file__ 定位工具目录与图片目录"
+
+[[allow]]
+file = "tools/backup/rename_and_organize_images.py"
+symbol = "<module>"
+pattern = "__file__"
+why = "用 __file__ 定位脚本所在目录"
+
+[[allow]]
+file = "tools/backup/replace_commas.py"
+symbol = "main"
+pattern = "read_text"
+why = "读 CSV 文件"
+
+[[allow]]
+file = "tools/generate_character_portrait.py"
+symbol = "<module>"
+pattern = "__file__"
+why = "用 __file__ 定位仓库根目录与立绘目录"
+
+[[allow]]
+file = "tools/lint_target_csv.py"
+symbol = "<module>"
+pattern = "__file__"
+why = "用 __file__ 定位仓库根目录，只读 data/target 的 CSV"
+
+[[allow]]
+file = "tools/map_aa_build_education.py"
+symbol = "main"
+pattern = "open-py"
+why = "报错文字里提到 rich_text.py 的行号；同一函数写的是地图文件"
+
+[[allow]]
+file = "tools/map_aa_build_training.py"
+symbol = "main"
+pattern = "open-py"
+why = "报错文字里提到 rich_text.py 的行号；同一函数写的是地图文件"
+
+[[allow]]
+file = "tools/official_event_check.py"
+symbol = "<module>"
+pattern = "open-py"
+why = "模块说明里提到 constant_promise.py 等文件；读它们的是 load_premise_name_set（R06）与 load_effect_id_set（R07）"
+
+[[allow]]
+file = "tools/replace_quotes.py"
+symbol = "<module>"
+pattern = "__file__"
+why = "用 __file__ 定位仓库根目录，只读写 CSV"
+
+[[allow]]
+file = "tools/update_behavior.py"
+symbol = "main"
+pattern = "__file__"
+why = "用 __file__ 定位仓库根目录，把 Behavior.py 的路径交给 update_behavior_file（R08）"
