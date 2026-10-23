@@ -90,7 +90,7 @@ python init_data.py
 # 从 .py 源码提取可翻译字符串 -> data/po/zh_CN/LC_MESSAGES/erArk_py.po
 python buildpo.py
 
-# 将 en_US 的 talk/csv/py 三类 PO 编译成 MO
+# 将 zh_CN 以外每个语言的全部 PO 编译成 MO（--out DIR 写到别的目录）
 python buildmo.py
 
 # 代码格式化（项目约定）
@@ -881,7 +881,7 @@ SocketIO 事件（后端处理函数）：
 - 构建：
   1. `buildconfig.py` 同步生成 zh_CN 源 PO
   2. `buildpo.py` 从 `.py` 提取生成 `erArk_py.po`
-  3. `buildmo.py` 将 en_US 的 `erArk_talk/csv/py` 编译为 MO
+  3. `buildmo.py` 将 zh_CN 以外每个语言的全部 PO 编译为 MO（用 msgfmt，没有时用 polib）
 - CSV 中第 4 行 `get_text` 列标记哪些列需要翻译；JSON 的 `gettext` 字典保存标记
 
 ---
