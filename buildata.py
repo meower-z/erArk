@@ -1,3 +1,4 @@
+import os
 import re
 
 from Script.Config import game_config
@@ -21,6 +22,14 @@ premise_type_dict = {
     "X": premise_type_diy,
 }
 premise_type = premise_type_dict[datetype]
+premise_module_dict = {
+    "A": "handle_premise_ability.py",
+    "S": "handle_premise_other.py",
+    "T": "handle_premise_talent.py",
+    "X": "handle_premise_other.py",
+}
+""" 各类前提的处理函数写进 handle_premise 包里的哪个模块：能力进能力模块，素质进素质模块，状态与自定义内容进其他通用前提模块 """
+premise_module = premise_module_dict[datetype]
 
 # 数据初始化
 game_config.init()
@@ -28,9 +37,9 @@ game_config.init()
 
 def class_indent(path: str) -> str:
   """
-  读常量文件里第一条类成员的缩进，接上去的常量照它缩进
+  读代码文件里第一条缩进行的缩进，写进去的代码照它缩进
   Keyword arguments:
-  path -- 常量文件路径
+  path -- 代码文件路径
   Return arguments:
   str -- 缩进的空白；文件里没有缩进行时为 2 个空格
   """
@@ -59,7 +68,7 @@ def constant_line(name: str, value: str, indent: str = "  ") -> str:
 
 def appended_block(text: str) -> str:
   """
-  整理要接到常量文件末尾的一段代码，使其与 pyink 的格式一致：和原有内容隔一个空行，连续空行并成一个，末尾不留空行
+  整理要接到常量文件末尾或类末尾的一段代码，使其与 pyink 的格式一致：和原有内容隔一个空行，连续空行并成一个，末尾不留空行
   Keyword arguments:
   text -- 要接上的代码
   Return arguments:
@@ -68,9 +77,31 @@ def appended_block(text: str) -> str:
   return "\n" + re.sub(r"\n{3,}", "\n\n", text.strip("\n")) + "\n"
 
 
+def class_end_index(line_list: list, class_name: str) -> int:
+  """
+  找到类的最后一行代码之后的位置，接在这里的代码仍属于这个类
+  Keyword arguments:
+  line_list -- 代码文件的全部行（readlines() 的结果）
+  class_name -- 类名
+  Return arguments:
+  int -- 类的最后一个非空行的下一行的下标
+  """
+  start_index = line_list.index(f"class {class_name}:\n")
+  end_index = len(line_list)
+  # 类体到下一个顶格的语句为止
+  for index in range(start_index + 1, len(line_list)):
+    if line_list[index].strip() and line_list[index][0] not in " \t":
+      end_index = index
+      break
+  # 退过类体末尾的空行
+  while not line_list[end_index - 1].strip():
+    end_index -= 1
+  return end_index
+
+
 def constand_2_handle():
   """
-  输出constand_promise里的标准格式，以及自动填入handle_premise.py里
+  输出constand_promise里的标准格式，以及把前提处理函数接到 handle_premise 包里 premise_module 模块的末尾
   """
 
   # 判断数据编号
@@ -135,7 +166,7 @@ def constand_2_handle():
   # 输出到constant_promise里，还没写出来
   """
     break_flag = 0
-    with open("Script\\Core\\constant_promise.py", "r+",encoding="utf-8") as f:
+    with open(os.path.join("Script", "Core", "constant_promise.py"), "r+",encoding="utf-8") as f:
         while 1:
             a=f.readline() # 逐行读取
             if len(a) >= 3 and a[-3] == "\"": # 锁定到文字行
@@ -152,34 +183,40 @@ def constand_2_handle():
     out_str = "\n"
     """
 
-  # 进行前提输出
+  # 进行前提输出，函数体照目标模块的缩进
+  premise_path = os.path.join(
+      "Script", "Design", "handle_premise", premise_module
+  )
+  indent = class_indent(premise_path)
   out_str = "\n\n"
   out_str += f"@add_premise(constant_promise.Premise.{capital_command})\n"
   out_str += f"def handle_{command_str}(character_id: int) -> int:\n"
-  out_str += f'  """\n'
+  out_str += f'{indent}"""\n'
   if not target_flag:
-    out_str += f"  校验角色是否{dataname}{operation}{command_list[-1]}\n"
+    out_str += f"{indent}校验角色是否{dataname}{operation}{command_list[-1]}\n"
   else:
-    out_str += f"  校验交互对象是否{dataname}{operation}{command_list[-1]}\n"
-  out_str += f"  Keyword arguments:\n"
-  out_str += f"  character_id -- 角色id\n"
-  out_str += f"  Return arguments:\n"
-  out_str += f"  int -- 权重\n"
-  out_str += f'  """\n'
-  out_str += f"  character_data = cache.character_data[character_id]\n"
+    out_str += (
+        f"{indent}校验交互对象是否{dataname}{operation}{command_list[-1]}\n"
+    )
+  out_str += f"{indent}Keyword arguments:\n"
+  out_str += f"{indent}character_id -- 角色id\n"
+  out_str += f"{indent}Return arguments:\n"
+  out_str += f"{indent}int -- 权重\n"
+  out_str += f'{indent}"""\n'
+  out_str += f"{indent}character_data = cache.character_data[character_id]\n"
   if target_flag:
-    out_str += f"  target_data = cache.character_data[character_data.target_character_id]\n"
-    out_str += f"  if target_data.{datetype_str}[{data_index}] {operation} {command_list[-1]}:\n"
+    out_str += f"{indent}target_data = cache.character_data[character_data.target_character_id]\n"
+    out_str += f"{indent}if target_data.{datetype_str}[{data_index}] {operation} {command_list[-1]}:\n"
   else:
-    out_str += f"  if character_data.{datetype_str}[{data_index}] {operation} {command_list[-1]}:\n"
-  out_str += f"    return 1\n"
-  out_str += f"  return 0\n"
+    out_str += f"{indent}if character_data.{datetype_str}[{data_index}] {operation} {command_list[-1]}:\n"
+  out_str += f"{indent}{indent}return 1\n"
+  out_str += f"{indent}return 0\n"
 
   # 开始保存
-  with open("Script\\Design\\handle_premise.py", "a", encoding="utf-8") as f:
+  with open(premise_path, "a", encoding="utf-8") as f:
     f.write(out_str)
     f.close()
-  print(f"已写入前提文件末尾")
+  print(f"已写入{premise_path}末尾")
 
   return out_str
 
@@ -232,12 +269,20 @@ def constand_promise_2_csv():
   Return arguments:
   str -- 写入的前提表文本
   """
-  with open("Script\\Core\\constant_promise.py", "r", encoding="utf-8") as f:
+  with open(
+      os.path.join("Script", "Core", "constant_promise.py"),
+      "r",
+      encoding="utf-8",
+  ) as f:
     line_list = f.readlines()
   out_str = build_promise_csv_text(line_list)
 
   # 开始保存
-  with open("tools\\ArkEditor\\csv\\premise.csv", "w", encoding="utf-8") as f:
+  with open(
+      os.path.join("tools", "ArkEditor", "csv", "Premise.csv"),
+      "w",
+      encoding="utf-8",
+  ) as f:
     f.write(out_str)
   print("已写入csv文件末尾")
 
@@ -245,12 +290,14 @@ def constand_promise_2_csv():
 
 
 def csv_2_constand():
-  with open("tools\\csv\\premise.csv", "r", encoding="utf-8") as f:
+  with open(
+      os.path.join("tools", "csv", "premise.csv"), "r", encoding="utf-8"
+  ) as f:
     a = f.readlines()
     # print(a)
     f.close()
 
-  indent = class_indent("Script\\Core\\constant_promise.py")
+  indent = class_indent(os.path.join("Script", "Core", "constant_promise.py"))
   out_str = "\n"
   for line in a:
     promise_text = line.strip().split(",")
@@ -264,7 +311,11 @@ def csv_2_constand():
   out_str = appended_block(out_str)
 
   # 开始保存
-  with open("Script\\Core\\constant_promise.py", "a", encoding="utf-8") as f:
+  with open(
+      os.path.join("Script", "Core", "constant_promise.py"),
+      "a",
+      encoding="utf-8",
+  ) as f:
     f.write(out_str)
     f.close()
   print(f"已写入前提文件末尾")
@@ -273,7 +324,11 @@ def csv_2_constand():
 
 
 def constand_effect_2_csv():
-  with open("Script\\Core\\constant_effect.py", "r", encoding="utf-8") as f:
+  with open(
+      os.path.join("Script", "Core", "constant_effect.py"),
+      "r",
+      encoding="utf-8",
+  ) as f:
     a = f.readlines()
     f.close()
   # pyink 把超过 80 列的常量赋值折成「常量名 = (」「值」「)」三行，先并回一行
@@ -301,7 +356,11 @@ def constand_effect_2_csv():
       out_str += "\n"
 
   # 开始保存
-  with open("tools\\ArkEditor\\csv\\Effect.csv", "w", encoding="utf-8") as f:
+  with open(
+      os.path.join("tools", "ArkEditor", "csv", "Effect.csv"),
+      "w",
+      encoding="utf-8",
+  ) as f:
     f.write(out_str)
     f.close()
   print(f"已写入csv文件末尾")
@@ -310,12 +369,14 @@ def constand_effect_2_csv():
 
 
 def csv_2_constand_effect():
-  with open("tools\\csv\\Effect.csv", "r", encoding="utf-8") as f:
+  with open(
+      os.path.join("tools", "csv", "Effect.csv"), "r", encoding="utf-8"
+  ) as f:
     a = f.readlines()
     # print(a)
     f.close()
 
-  indent = class_indent("Script\\Core\\constant_effect.py")
+  indent = class_indent(os.path.join("Script", "Core", "constant_effect.py"))
   out_str = "\n"
   for line in a:
     effect_text = line.strip().split(",")
@@ -328,11 +389,15 @@ def csv_2_constand_effect():
 
   out_str = appended_block(out_str)
 
-  # 开始保存
-  with open("Script\\Core\\constant_effect.py", "a", encoding="utf-8") as f:
-    f.write(out_str)
-    f.close()
-  print(f"已写入结算文件末尾")
+  # 开始保存：接到 BehaviorEffect 类的末尾，类后面的内容原样保留
+  effect_path = os.path.join("Script", "Core", "constant_effect.py")
+  with open(effect_path, "r", encoding="utf-8") as f:
+    line_list = f.readlines()
+  insert_index = class_end_index(line_list, "BehaviorEffect")
+  line_list.insert(insert_index, out_str)
+  with open(effect_path, "w", encoding="utf-8") as f:
+    f.writelines(line_list)
+  print(f"已写入结算文件 BehaviorEffect 类末尾")
 
   return out_str
 
