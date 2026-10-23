@@ -6,7 +6,12 @@ from Script.Core import (
     get_text,
 )
 from Script.Config import game_config, normal_config
-from Script.Design import attr_calculation, handle_premise, map_handle
+from Script.Design import (
+    attr_calculation,
+    child_stage_gate,
+    handle_premise,
+    map_handle,
+)
 from Script.UI.Moudle import draw
 
 cache: game_type.Cache = cache_control.cache
@@ -271,6 +276,7 @@ def get_underwear(character_id: int, part_flag=0, type_cid=0):
   Keyword arguments:\n
   character_id -- 角色id\n
   part_flag -- 是否只穿某个部件，0都穿，1仅胸衣，2仅内裤\n
+  type_cid -- 指定类别，2为情趣内衣；婴儿与幼女指定时照常穿童装或正常内衣\n
   Return arguments:\n
   无
   """
@@ -304,6 +310,9 @@ def get_underwear(character_id: int, part_flag=0, type_cid=0):
       elif cloth.tag == 2:
         pan_H_list.append(cloth_id)
 
+  # 婴儿与幼女不穿情趣内衣
+  child_stage = child_stage_gate.is_child_stage(character_id)
+
   # 解锁了情趣内衣的情况下，对2级攻略以上的角色增加情趣内衣
   character_fall_level = attr_calculation.get_character_fall_level(character_id)
   if character_fall_level >= 2:
@@ -311,7 +320,10 @@ def get_underwear(character_id: int, part_flag=0, type_cid=0):
       cache.character_data[0].pl_collection = (
           attr_calculation.get_collection_zero()
       )
-    if cache.character_data[0].pl_collection.collection_bonus[102]:
+    if (
+        cache.character_data[0].pl_collection.collection_bonus[102]
+        and not child_stage
+    ):
       bra_nor_list += bra_H_list
       pan_nor_list += pan_H_list
 
@@ -326,7 +338,7 @@ def get_underwear(character_id: int, part_flag=0, type_cid=0):
   ):
     # 随机选择胸衣和内裤
     # 指定类别
-    if type_cid == 2 and len(bra_H_list):
+    if type_cid == 2 and len(bra_H_list) and not child_stage:
       bra_id = random.choice(bra_H_list)
       character_data.cloth.cloth_wear[6].append(bra_id)
     # 童装：幼女
@@ -343,7 +355,7 @@ def get_underwear(character_id: int, part_flag=0, type_cid=0):
       and part_flag != 1  # 本次穿内裤
       and len(pan_nor_list)  # 有可穿的内裤
   ):
-    if type_cid == 2 and len(pan_H_list):
+    if type_cid == 2 and len(pan_H_list) and not child_stage:
       pan_id = random.choice(pan_H_list)
       character_data.cloth.cloth_wear[9].append(pan_id)
     elif character_data.talent[102]:
