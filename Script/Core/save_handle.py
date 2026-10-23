@@ -214,6 +214,72 @@ def _migrate_official_event_history(history_data: dict) -> int:
   return count
 
 
+def _drop_unknown_books(loaded_dict: dict) -> int:
+  """
+  去掉存档里书籍配置中没有的书与书籍类型的引用，再跑一次不改任何东西
+  Keyword arguments:
+  loaded_dict -- 读入的存档字典（Cache 的 __dict__，已按默认值补齐字段）
+  Return arguments:
+  int -- 改动的处数
+  功能描述:
+      罗德岛：借阅表去掉这些书（谁借着都一样），图书馆展示列表去掉这些类型与书，阅读推荐去掉这些类型；
+      每个角色：借书集合去掉这些书，借书卡上这些书没还的记录记为在读档时刻还了，正在读的书是这些书时书号与书名归零。
+      阅读进度不动：成就按读完的书数统计
+  """
+  rhodes_island = loaded_dict["rhodes_island"]
+  count = 0
+  for book_id in [
+      book_id
+      for book_id in rhodes_island.book_borrow_dict
+      if book_id not in game_config.config_book
+  ]:
+    del rhodes_island.book_borrow_dict[book_id]
+    count += 1
+  show_book_dict = rhodes_island.now_show_book_cid_of_type
+  for book_type in list(show_book_dict):
+    if book_type not in game_config.config_book_type:
+      del show_book_dict[book_type]
+      count += 1
+      continue
+    book_list = [
+        book_id
+        for book_id in show_book_dict[book_type]
+        if book_id in game_config.config_book
+    ]
+    if book_list != show_book_dict[book_type]:
+      show_book_dict[book_type] = book_list
+      count += 1
+  for book_type in [
+      book_type
+      for book_type in rhodes_island.recommend_book_type_set
+      if book_type not in game_config.config_book_type
+  ]:
+    rhodes_island.recommend_book_type_set.discard(book_type)
+    count += 1
+  for character in loaded_dict["character_data"].values():
+    entertainment = character.entertainment
+    for book_id in [
+        book_id
+        for book_id in entertainment.borrow_book_id_set
+        if book_id not in game_config.config_book
+    ]:
+      entertainment.borrow_book_id_set.discard(book_id)
+      count += 1
+    for record in getattr(entertainment, "borrow_book_history", []):
+      if (
+          record.get("book_id") not in game_config.config_book
+          and record.get("return_time") is None
+      ):
+        record["return_time"] = loaded_dict["game_time"]
+        count += 1
+    behavior = character.behavior
+    if behavior.book_id and behavior.book_id not in game_config.config_book:
+      behavior.book_id = 0
+      behavior.book_name = ""
+      count += 1
+  return count
+
+
 def _normalize_save_path(path_text):
   """
   将存档中的路径文本转换为当前系统的路径格式
@@ -919,6 +985,8 @@ def input_load_save(save_id: str):
   for all_cid in game_config.config_book:
     if all_cid not in loaded_dict["rhodes_island"].book_borrow_dict:
       loaded_dict["rhodes_island"].book_borrow_dict[all_cid] = -1
+  # 去掉书籍配置里没有的书与书籍类型的引用
+  update_count += _drop_unknown_books(loaded_dict)
 
   # 更新各项设置
   update_count += update_settings(loaded_dict)
