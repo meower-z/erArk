@@ -200,16 +200,6 @@ class SeeInstructPanel:
       self.return_list.append(now_button.return_text)
       now_button.draw()
 
-    # 如果交互对象是临盆、产后或婴儿的话，则在常规指令类里不显示技艺、猥亵、H类指令
-    if (
-        handle_premise.handle_t_parturient_1(0)
-        or handle_premise.handle_t_postpartum_1(0)
-        or handle_premise.handle_t_baby_1(0)
-    ):
-      cache.instruct_type_filter[4] = False
-      cache.instruct_type_filter[5] = False
-      cache.instruct_type_filter[6] = False
-
     line_feed.draw()
     line = draw.LineDraw("~..", self.width)
     line.draw()
@@ -217,8 +207,8 @@ class SeeInstructPanel:
     now_premise_data = {}
     # 遍历指令过滤
     for now_type in cache.instruct_type_filter:
-      # 当前类没有开启的指令则过滤
-      if not cache.instruct_type_filter[now_type]:
+      # 玩家关闭了该类，或交互对象临盆、产后、处于幼年阶段而隐藏该类时，跳过该类
+      if not handle_premise.instruct_type_shown(now_type):
         continue
       # 不在H模式中则过滤H指令
       if (
