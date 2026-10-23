@@ -31,10 +31,10 @@ def run_cook_question_flow(
   """
   # 阶段显示标签
   stage_label = {
-      _("备料"): _("备料时"),
-      _("烹饪"): _("烹饪时"),
-      _("调味"): _("调味时"),
-      _("装盘"): _("装盘时"),
+      "备料": _("备料时"),
+      "烹饪": _("烹饪时"),
+      "调味": _("调味时"),
+      "装盘": _("装盘时"),
   }
   quality = base_quality
   max_quality = cooking.get_max_food_quality()

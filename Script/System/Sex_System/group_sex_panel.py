@@ -60,14 +60,14 @@ def group_sex_settle(
   # 阴茎插入
   if (
       behavior_id
-      in game_config.config_behavior_id_list_of_group_sex_body_part[_("插入")]
+      in game_config.config_behavior_id_list_of_group_sex_body_part["插入"]
   ):
     now_template_data[0]["penis"] = [target_character_id, behavior_id]
     now_template_data[1] = [[-1], -1]
   # 阴茎侍奉
   elif (
       behavior_id
-      in game_config.config_behavior_id_list_of_group_sex_body_part[_("侍奉")]
+      in game_config.config_behavior_id_list_of_group_sex_body_part["侍奉"]
   ):
     now_template_data[0]["penis"] = [-1, -1]
     # 如果新指令，则重置数据
@@ -79,13 +79,13 @@ def group_sex_settle(
   # 口
   elif (
       behavior_id
-      in game_config.config_behavior_id_list_of_group_sex_body_part[_("口")]
+      in game_config.config_behavior_id_list_of_group_sex_body_part["口"]
   ):
     now_template_data[0]["mouth"] = [target_character_id, behavior_id]
   # 手
   elif (
       behavior_id
-      in game_config.config_behavior_id_list_of_group_sex_body_part[_("手")]
+      in game_config.config_behavior_id_list_of_group_sex_body_part["手"]
   ):
     # 如果L是空的，或当前对象是L对象，则赋给L
     if (
@@ -106,7 +106,7 @@ def group_sex_settle(
   # 肛
   elif (
       behavior_id
-      in game_config.config_behavior_id_list_of_group_sex_body_part[_("肛")]
+      in game_config.config_behavior_id_list_of_group_sex_body_part["肛"]
   ):
     now_template_data[0]["anal"] = [target_character_id, behavior_id]
 
@@ -214,23 +214,23 @@ def get_status_id_list_from_group_sex_body_part(body_part: str):
   # 获取状态id列表
   if body_part == "mouth":
     status_id_list = game_config.config_behavior_id_list_of_group_sex_body_part[
-        _("口")
+        "口"
     ]
   elif body_part == "L_hand" or body_part == "R_hand":
     status_id_list = game_config.config_behavior_id_list_of_group_sex_body_part[
-        _("手")
+        "手"
     ]
   elif body_part == "penis":
     status_id_list = game_config.config_behavior_id_list_of_group_sex_body_part[
-        _("插入")
+        "插入"
     ]
-  elif body_part == _("侍奉"):
+  elif body_part == "侍奉":
     status_id_list = game_config.config_behavior_id_list_of_group_sex_body_part[
-        _("侍奉")
+        "侍奉"
     ]
   elif body_part == "anal":
     status_id_list = game_config.config_behavior_id_list_of_group_sex_body_part[
-        _("肛")
+        "肛"
     ]
   # 遍历状态id
   now_premise_data = {}
@@ -261,32 +261,32 @@ def get_status_id_list_from_group_sex_body_part(body_part: str):
           # 如果NPC为处，则跳过破处类
           if (
               target_character_data.talent[0]
-              and _("V") in status_tag_list
-              and _("破处") in status_tag_list
+              and "V" in status_tag_list
+              and "破处" in status_tag_list
           ):
             continue
           if (
               target_character_data.talent[1]
-              and _("A") in status_tag_list
-              and _("破处") in status_tag_list
+              and "A" in status_tag_list
+              and "破处" in status_tag_list
           ):
             continue
           if (
               target_character_data.talent[2]
-              and _("U") in status_tag_list
-              and _("破处") in status_tag_list
+              and "U" in status_tag_list
+              and "破处" in status_tag_list
           ):
             continue
           if (
               target_character_data.talent[3]
-              and _("W") in status_tag_list
-              and _("破处") in status_tag_list
+              and "W" in status_tag_list
+              and "破处" in status_tag_list
           ):
             continue
           if (
               target_character_data.talent[4]
-              and _("N") in status_tag_list
-              and _("破处") in status_tag_list
+              and "N" in status_tag_list
+              and "破处" in status_tag_list
           ):
             continue
 
@@ -332,9 +332,9 @@ def get_now_template_part_list():
   if wait_upon_flag:
     target_chara_id_list = A_template_data[1][0]
     if wait_upon_state_id == -1:
-      now_template_empty_part_list.append(_("侍奉"))
+      now_template_empty_part_list.append("侍奉")
     elif wait_upon_state_id != -1:
-      now_template_not_empty_part_list.append(_("侍奉"))
+      now_template_not_empty_part_list.append("侍奉")
       if len(target_chara_id_list) < 4:
         now_template_empty_part_list.append(_("加入侍奉"))
 
@@ -583,7 +583,7 @@ class Edit_Group_Sex_Temple_Panel:
               body_part_name + target_chara_name_text,
               int(self.width / 4),
               cmd_func=self.show_target_chara_list,
-              args=("A", _("侍奉")),
+              args=("A", "侍奉"),
           )
           target_chara_button.draw()
           return_list.append(target_chara_button.return_text)
@@ -598,7 +598,7 @@ class Edit_Group_Sex_Temple_Panel:
               body_part_name + state_name,
               int(self.width / 5),
               cmd_func=self.show_status_list,
-              args=("A", _("侍奉")),
+              args=("A", "侍奉"),
           )
           state_name_button.draw()
           return_list.append(state_name_button.return_text)
@@ -840,7 +840,7 @@ class Edit_Group_Sex_Temple_Panel:
     # 如果当前已指定对象角色id，则将其设为玩家的交互对象
     old_target_character_id = self.pl_character_data.target_character_id
     try:
-      if body_part != _("侍奉"):
+      if body_part != "侍奉":
         target_chara_id = (
             self.pl_character_data.h_state.group_sex_body_template_dict[
                 temple_id
@@ -1035,7 +1035,7 @@ class Edit_Group_Sex_Temple_Panel:
 
   def set_status(self, temple_id: str, body_part: str, status_id: int):
     """设置状态"""
-    if body_part != _("侍奉"):
+    if body_part != "侍奉":
       now_template_data = (
           self.pl_character_data.h_state.group_sex_body_template_dict[temple_id]
       )

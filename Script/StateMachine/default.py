@@ -126,7 +126,7 @@ def character_move_to_dormitory(character_id: int):
 
   character_data: game_type.Character = cache.character_data[character_id]
   # 增加一个对宿舍是否为无的判定
-  if character_data.dormitory == _("无"):
+  if character_data.dormitory == "无":
     dormitory_common.new_character_get_dormitory(character_id)
   target_scene = map_handle.get_map_system_path_for_str(
       character_data.dormitory
@@ -269,7 +269,7 @@ def character_move_to_toilet(character_id: int):
         character_id
     ) and handle_premise.handle_assistant_live_together_on(character_id):
       # 如果当前在控制中枢
-      if now_position == _("中枢") or now_position == _("控制中枢"):
+      if now_position == "中枢" or now_position == "控制中枢":
         # 优先去博士房间
         to_toilet = map_handle.get_map_system_path_for_str(
             random.choice(constant.place_data["Dr_room"])

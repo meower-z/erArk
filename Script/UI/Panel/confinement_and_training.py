@@ -442,13 +442,13 @@ def get_all_can_use_behavior_id_for_sex_assistant(
   # 获取所有可用的状态id
   behavior_id_list = []
   behavior_id_list.extend(
-      game_config.config_behavior_id_list_of_group_sex_body_part[_("口")]
+      game_config.config_behavior_id_list_of_group_sex_body_part["口"]
   )
   behavior_id_list.extend(
-      game_config.config_behavior_id_list_of_group_sex_body_part[_("手")]
+      game_config.config_behavior_id_list_of_group_sex_body_part["手"]
   )
   behavior_id_list.extend(
-      game_config.config_behavior_id_list_of_group_sex_body_part[_("道具")]
+      game_config.config_behavior_id_list_of_group_sex_body_part["道具"]
   )
   # 去重
   behavior_id_list = list(set(behavior_id_list))
@@ -498,32 +498,32 @@ def get_all_can_use_behavior_id_for_sex_assistant(
           # 如果NPC为处，则跳过破处类
           if (
               target_character_data.talent[0]
-              and _("V") in behavior_tag_list
-              and _("破处") in behavior_tag_list
+              and "V" in behavior_tag_list
+              and "破处" in behavior_tag_list
           ):
             continue
           if (
               target_character_data.talent[1]
-              and _("A") in behavior_tag_list
-              and _("破处") in behavior_tag_list
+              and "A" in behavior_tag_list
+              and "破处" in behavior_tag_list
           ):
             continue
           if (
               target_character_data.talent[2]
-              and _("U") in behavior_tag_list
-              and _("破处") in behavior_tag_list
+              and "U" in behavior_tag_list
+              and "破处" in behavior_tag_list
           ):
             continue
           if (
               target_character_data.talent[3]
-              and _("W") in behavior_tag_list
-              and _("破处") in behavior_tag_list
+              and "W" in behavior_tag_list
+              and "破处" in behavior_tag_list
           ):
             continue
           if (
               target_character_data.talent[4]
-              and _("N") in behavior_tag_list
-              and _("破处") in behavior_tag_list
+              and "N" in behavior_tag_list
+              and "破处" in behavior_tag_list
           ):
             continue
 

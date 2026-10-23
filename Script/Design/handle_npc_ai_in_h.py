@@ -660,42 +660,42 @@ def npc_active_h():
     behavior_tag_list = behavior_data.tag.split("|")
     # 跳过其中非性爱类，道具类、药物类、SM类、非逆推类
     if (
-        _("性爱") not in behavior_tag_list
-        or _("道具") in behavior_tag_list
-        or _("药物") in behavior_tag_list
-        or _("SM") in behavior_tag_list
-        or _("非逆推") in behavior_tag_list
+        "性爱" not in behavior_tag_list
+        or "道具" in behavior_tag_list
+        or "药物" in behavior_tag_list
+        or "SM" in behavior_tag_list
+        or "非逆推" in behavior_tag_list
     ):
       continue
     # 如果NPC为处，则跳过破处类
     if (
         part_id == 21
         and target_character_data.talent[4]
-        and _("破处") in behavior_tag_list
+        and "破处" in behavior_tag_list
     ):
       continue
     if (
         part_id == 4
         and target_character_data.talent[0]
-        and _("破处") in behavior_tag_list
+        and "破处" in behavior_tag_list
     ):
       continue
     if (
         part_id == 5
         and target_character_data.talent[1]
-        and _("破处") in behavior_tag_list
+        and "破处" in behavior_tag_list
     ):
       continue
     if (
         part_id == 6
         and target_character_data.talent[2]
-        and _("破处") in behavior_tag_list
+        and "破处" in behavior_tag_list
     ):
       continue
     if (
         part_id == 7
         and target_character_data.talent[3]
-        and _("破处") in behavior_tag_list
+        and "破处" in behavior_tag_list
     ):
       continue
 
@@ -821,7 +821,7 @@ def npc_ai_in_group_sex(character_id: int):
       # 随机选择一个状态
       status_id = random.choice(new_status_id_list)
       # 如果是侍奉
-      if body_part == _("侍奉"):
+      if body_part == "侍奉":
         A_template_data[1] = [[character_id], status_id]
       # 如果是对单
       else:
@@ -900,7 +900,7 @@ def npc_ai_in_group_sex_type_3():
       # 随机选择一个状态
       status_id = random.choice(new_status_id_list)
       # 如果是侍奉
-      if body_part == _("侍奉"):
+      if body_part == "侍奉":
         A_template_data[1] = [[character_id], status_id]
       # 如果是对单
       else:
@@ -920,7 +920,7 @@ def npc_ai_in_group_sex_type_3():
     # 从列表中去掉该角色
     new_chara_id_list.remove(character_id)
     # 如果是侍奉，则加入角色列表，并踢出列表中的第0个角色
-    if body_part == _("侍奉"):
+    if body_part == "侍奉":
       A_template_data[1][0].append(character_id)
       A_template_data[1][0].pop(0)
     # 否则代替原角色
