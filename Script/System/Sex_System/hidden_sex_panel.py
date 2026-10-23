@@ -342,7 +342,7 @@ class See_Hidden_Sex_InfoPanel:
     # 被发现文本
     now_dregree = pl_character_data.h_state.hidden_sex_discovery_dregree
     # 根据隐蔽程度数值判断状态文本
-    hidden_level, hidden_text = get_hidden_level(now_dregree)
+    __, hidden_text = get_hidden_level(now_dregree)
     all_text += _(" 隐蔽程度：{0}").format(hidden_text)
 
     # 携带模式文本

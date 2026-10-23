@@ -4154,7 +4154,6 @@ def handle_have_anal_plug(character_id: int) -> int:
   Return arguments:
   int -- 权重
   """
-  character_data = cache.character_data[character_id]
   # if character_data.item[130] > 0:
   # return 1
   return 0

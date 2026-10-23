@@ -423,7 +423,6 @@ def add_favorability(
   character_data.favorability.setdefault(target_id, 0)
   if target_change is not None:
     target_change.status_data.setdefault(12, 0)
-  old_add_favorability = now_add_favorability
   # if 12 in target_data.status:
   #     disgust = target_data.status[12]
   #     if disgust:

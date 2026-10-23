@@ -794,7 +794,7 @@ def npc_ai_in_group_sex(character_id: int) -> None:
     return
 
   # 获取当前模板的空缺部位和非空缺部位
-  now_template_empty_part_list, now_template_not_empty_part_list = (
+  now_template_empty_part_list, __ = (
       group_sex_panel.get_now_template_part_list()
   )
 

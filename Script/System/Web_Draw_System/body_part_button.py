@@ -112,8 +112,6 @@ class BodyPartButton:
     nose = self._coco_keypoints[0]  # 鼻子
     left_eye = self._coco_keypoints[1]  # 左眼
     right_eye = self._coco_keypoints[2]  # 右眼
-    left_ear = self._coco_keypoints[3]  # 左耳
-    right_ear = self._coco_keypoints[4]  # 右耳
 
     if nose[0] != 0 or nose[1] != 0:
       #

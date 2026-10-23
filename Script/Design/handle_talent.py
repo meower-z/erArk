@@ -72,7 +72,7 @@ def gain_talent(
         need_list.append(gain_talent_data.gain_need)
       else:
         need_list = gain_talent_data.gain_need.split("&")
-      judge, reason = attr_calculation.judge_require(need_list, character_id)
+      judge, __ = attr_calculation.judge_require(need_list, character_id)
 
     # 如果符合获得条件，则获得该素质
     if judge:

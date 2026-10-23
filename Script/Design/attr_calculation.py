@@ -50,7 +50,7 @@ def get_system_setting_zero() -> game_type.System_Setting:
     empty_system_setting.birth_type_setting[system_setting] = (
         birth_type_setting_data.default_value
     )
-  for adv_id, tem_data in cache.npc_tem_data.items():
+  for __, tem_data in cache.npc_tem_data.items():
     chara_adv_id = tem_data.AdvNpc
     empty_system_setting.character_text_version[chara_adv_id] = 1
   return empty_system_setting

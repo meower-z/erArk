@@ -141,7 +141,6 @@ def check_second_effect(
   # print("进入第二结算")
   orgasm_list = []
   mark_list = []
-  item_list: list[str] = []
   character_data: game_type.Character = cache.character_data[character_id]
   # 仅在存在激活的二段行为时才构建分类列表：
   # 无激活行为时，下游 second_behavior_effect 会因"无任何二段行为"直接返回，
@@ -685,8 +684,8 @@ def mark_effect(
       )
 
   # 屈服刻印检测屈服+恭顺+羞耻/5，30000屈服1，50000屈服2，100000屈服3
-  yield_count, yield_count_text = (
-      get_now_state_all_value_and_text_from_mark_up_data(10, character_id)
+  yield_count, __ = get_now_state_all_value_and_text_from_mark_up_data(
+      10, character_id
   )
   # 进行判断
   if (
@@ -727,8 +726,8 @@ def mark_effect(
       )
 
   # 苦痛刻印检测苦痛，20000苦痛1，40000苦痛2，80000苦痛3
-  pain_count, pain_count_text = (
-      get_now_state_all_value_and_text_from_mark_up_data(21, character_id)
+  pain_count, __ = get_now_state_all_value_and_text_from_mark_up_data(
+      21, character_id
   )
   # 单次增加量
   if 17 in change_data.status_data:
@@ -826,8 +825,8 @@ def mark_effect(
         )
 
   # 恐怖刻印检测恐怖+苦痛/5，20000恐怖1，40000恐怖2，80000恐怖3
-  terror_count, terror_count_text = (
-      get_now_state_all_value_and_text_from_mark_up_data(41, character_id)
+  terror_count, __ = get_now_state_all_value_and_text_from_mark_up_data(
+      41, character_id
   )
   # 单次增加量
   if 18 in change_data.status_data:
@@ -854,8 +853,8 @@ def mark_effect(
     character_get_second_behavior(character_id, "terror_mark_3")
 
   # 反发刻印检测反感+抑郁+恐怖+苦痛，10000反发1，30000反发2，80000反发3
-  hate_count, hate_count_text = (
-      get_now_state_all_value_and_text_from_mark_up_data(51, character_id)
+  hate_count, __ = get_now_state_all_value_and_text_from_mark_up_data(
+      51, character_id
   )
   # 单次增加量
   if 20 in change_data.status_data:

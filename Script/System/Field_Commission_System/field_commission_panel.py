@@ -339,7 +339,6 @@ class CommissionDraw:
       commision_name = "⭐" + commision_name
 
     commision_level = str(commision_data.level)
-    commision_people = str(commision_data.people) + _("人")
     commision_time = str(commision_data.time) + _("天")
     commision_capacity_int = (commision_data.time - 1) * commision_data.people
 
@@ -1026,7 +1025,7 @@ class CommissionDraw:
         line_feed.draw()
 
       # 补充空行以固定列表显示高度
-      for i in range(chara_per_page - len(current_page_charas)):
+      for __ in range(chara_per_page - len(current_page_charas)):
         line_feed.draw()
 
       # --- 8. 绘制底部：翻页操作区 ---
@@ -1212,7 +1211,7 @@ class CommissionDraw:
       cache.rhodes_island.vehicles[vehicle_id][1] += self.send_vehicle_dict[
           vehicle_id
       ]
-      for i in range(self.send_vehicle_dict[vehicle_id]):
+      for __ in range(self.send_vehicle_dict[vehicle_id]):
         now_vehicle_list.append(vehicle_id)
 
     # 结算速度对时间的影响
@@ -1276,10 +1275,6 @@ class CommissionDraw:
     Keyword arguments:
     commision_capacity_int -- 需要的载具运量
     """
-
-    # 辅助函数：计算中英文混合字符串的显示宽度
-    def get_display_width(text: str) -> int:
-      return sum(2 if ord(c) > 127 else 1 for c in text)
 
     while 1:
       return_list = []

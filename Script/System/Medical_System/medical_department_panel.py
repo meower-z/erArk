@@ -480,7 +480,7 @@ class DoctorManagementSubPanel(_BaseSubPanel):
   ) -> None:
     """切换病人接诊优先策略并提示结果"""
     resolved = medical_service.set_patient_priority_mode(mode)
-    mode_text = medical_constant.translate_priority(resolved)
+    medical_constant.translate_priority(resolved)
     # self.feedback_text = _("已切换接诊策略为：{0}").format(mode_text)
 
   def _estimate_remaining_hours(self) -> float:

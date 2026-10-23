@@ -344,7 +344,7 @@ def orgasm_settle_in_second_behavior(
           (0 if climax_count >= 3 else 1) if release_flag else climax_count
       )
       # 开始根据概率计算
-      for i in range(roll_count):
+      for __ in range(roll_count):
         # 判断高潮程度
         now_degree = judge_orgasm_degree(now_data)
         # 强绝顶需要该部位敏感度至少为3级
@@ -531,7 +531,7 @@ def judge_orgasm_edge_success(
   all_orgasm_edge_count = 0
   if not orgasm_edge_count:
     orgasm_edge_count = character_data.h_state.orgasm_edge_count
-  for key, value in orgasm_edge_count.items():
+  for __, value in orgasm_edge_count.items():
     all_orgasm_edge_count += value * value
   # 玩家的高潮寸止技巧
   pl_character_data: game_type.Character = cache.character_data[0]

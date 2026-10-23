@@ -105,7 +105,7 @@ def reorganize_csv() -> pd.DataFrame:
   df['temp_seq'] = df.groupby('temp_group').cumcount() + 1
 
   new_cid_list = []
-  for idx, row in df.iterrows():
+  for __, row in df.iterrows():
     itype = row['instruct_type']
     isubtype = row['instruct_sub_type']
 
