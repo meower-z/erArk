@@ -53,7 +53,7 @@ def is_child_stage(character_id: int) -> bool:
   )
 
 
-def _build_h_sets():
+def _build_h_sets() -> None:
   """
   由指令配置与行为配置建立H类指令id集合与H类行为id集合
   Keyword arguments:
@@ -149,7 +149,7 @@ def blocks_behavior(character_id: int) -> bool:
   ) and involves_child_stage(character_id)
 
 
-def reset_to_idle(character_id: int):
+def reset_to_idle(character_id: int) -> None:
   """
   把NPC的行为换成1分钟的发呆，交互对象改回自己
   Keyword arguments:

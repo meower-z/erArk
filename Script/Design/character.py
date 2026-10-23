@@ -30,7 +30,7 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def init_attr(character_id: int):
+def init_attr(character_id: int) -> None:
   """
   初始化角色属性
   Keyword arguments:

@@ -192,7 +192,7 @@ def judge_character_h_obscenity_unconscious(
   return 1
 
 
-def recover_from_unconscious_h(character_id: int, info_text: str = ""):
+def recover_from_unconscious_h(character_id: int, info_text: str = "") -> None:
   """
   交互对象从无意识H中恢复意识的结算\n
   Keyword arguments:\n
@@ -440,7 +440,9 @@ def handle_unconscious_h_response(
   return response
 
 
-def judge_weak_up_in_sleep_h(character_id: int, target_character_id: int):
+def judge_weak_up_in_sleep_h(
+    character_id: int, target_character_id: int
+) -> None:
   """
   判断睡眠中是否被吵醒\n
   Keyword arguments:\n
@@ -752,7 +754,7 @@ def npc_active_h():
   update.game_update_flow(10)
 
 
-def npc_ai_in_group_sex(character_id: int):
+def npc_ai_in_group_sex(character_id: int) -> None:
   """
   NPC在群交中的AI，不含抢占\n
   Keyword arguments:\n
@@ -835,7 +837,7 @@ def npc_ai_in_group_sex(character_id: int):
     # print(f"debug {character_data.name}进入了要自慰状态")
 
 
-def npc_ai_in_group_sex_type_3():
+def npc_ai_in_group_sex_type_3() -> None:
   """
   NPC在群交中的抢占AI\n
   Keyword arguments:\n

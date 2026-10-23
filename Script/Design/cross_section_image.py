@@ -21,7 +21,7 @@ line_feed.text = "\n"
 line_feed.width = 1
 
 
-def draw_cross_section_image():
+def draw_cross_section_image() -> None:
   """
   选择并绘制断面图
   """

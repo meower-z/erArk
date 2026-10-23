@@ -17,7 +17,7 @@ _: FunctionType = get_text._
 """ 翻译api """
 
 
-def get_npc_cloth(character_id: int):
+def get_npc_cloth(character_id: int) -> None:
   """
   根据csv换一身同样的衣服，然后随机内衣
   Keyword arguments:
@@ -107,7 +107,7 @@ def get_cloth_locker_by_type(character_id: int, locker_type: int) -> dict:
 
 def set_cloth_locker_by_type(
     character_id: int, locker_type: int, locker_data: dict
-):
+) -> None:
   """
   按衣柜类型写回角色对应的衣柜数据
   Keyword arguments:
@@ -136,7 +136,7 @@ def get_cloth_locker_zero_by_type(locker_type: int) -> dict:
   return attr_calculation.get_cloth_locker_in_dormitory_zero()
 
 
-def get_cloth_from_dormitory_locker(character_id: int):
+def get_cloth_from_dormitory_locker(character_id: int) -> None:
   """
   清空身上的旧衣服，从宿舍的衣柜里穿上衣服、内衣内裤，并转移衣柜中的精液数据到穿着的衣服上\n
   Keyword arguments:\n
@@ -205,7 +205,7 @@ def get_cloth_from_dormitory_locker(character_id: int):
   chara_special_wear_cloth(character_id)
 
 
-def handle_prisoner_clothing(character_id: int):
+def handle_prisoner_clothing(character_id: int) -> None:
   """
   处理囚犯的服装\n
   参数:
@@ -244,7 +244,7 @@ def handle_prisoner_clothing(character_id: int):
     chara_special_wear_cloth(character_id)
 
 
-def get_random_underwear():
+def get_random_underwear() -> tuple[int, int]:
   """
   随机返回一件内衣和一件内裤
   Keyword arguments:
@@ -265,7 +265,9 @@ def get_random_underwear():
   return bra_id, pan_id
 
 
-def get_underwear(character_id: int, part_flag=0, type_cid=0):
+def get_underwear(
+    character_id: int, part_flag: int = 0, type_cid: int = 0
+) -> None:
   """
   随机穿内衣，包括胸罩和内裤\n
   Keyword arguments:\n
@@ -354,7 +356,7 @@ def get_underwear(character_id: int, part_flag=0, type_cid=0):
       character_data.cloth.cloth_wear[9].append(pan_id)
 
 
-def get_socks(character_id: int):
+def get_socks(character_id: int) -> None:
   """
   随机穿袜子
   Keyword arguments:
@@ -381,7 +383,7 @@ def get_socks(character_id: int):
   character_data.cloth.cloth_wear[10].append(socks_id)
 
 
-def undress_out_cloth(character_id: int):
+def undress_out_cloth(character_id: int) -> None:
   """
   脱掉外衣
   Keyword arguments:
@@ -396,7 +398,7 @@ def undress_out_cloth(character_id: int):
     chara_special_wear_cloth(character_id)
 
 
-def strip_down_till_socks_and_gloves_left(character_id: int):
+def strip_down_till_socks_and_gloves_left(character_id: int) -> None:
   """
   脱到只穿袜子手套等
   Keyword arguments:
@@ -411,7 +413,7 @@ def strip_down_till_socks_and_gloves_left(character_id: int):
     chara_special_wear_cloth(character_id)
 
 
-def pl_get_chara_pan(character_id: int):
+def pl_get_chara_pan(character_id: int) -> None:
   """
   玩家获得该角色的内裤
   Keyword arguments:
@@ -455,7 +457,7 @@ def pl_get_chara_pan(character_id: int):
       now_draw.draw()
 
 
-def pl_get_chara_socks(character_id: int):
+def pl_get_chara_socks(character_id: int) -> None:
   """
   玩家获得该角色的袜子
   Keyword arguments:
@@ -492,7 +494,7 @@ def pl_get_chara_socks(character_id: int):
       now_draw.draw()
 
 
-def get_all_cloth_off(character_id: int):
+def get_all_cloth_off(character_id: int) -> None:
   """
   脱成全裸
   Keyword arguments:
@@ -510,7 +512,7 @@ def get_all_cloth_off(character_id: int):
     chara_special_wear_cloth(character_id)
 
 
-def get_shower_cloth(character_id: int):
+def get_shower_cloth(character_id: int) -> None:
   """
   清零其他衣服并换上浴帽和浴巾
   Keyword arguments:
@@ -527,7 +529,7 @@ def get_shower_cloth(character_id: int):
     chara_special_wear_cloth(character_id)
 
 
-def get_sleep_cloth(character_id: int):
+def get_sleep_cloth(character_id: int) -> None:
   """
   清零其他衣服并换上睡衣和内裤
   Keyword arguments:
@@ -559,7 +561,7 @@ def get_sleep_cloth(character_id: int):
     chara_special_wear_cloth(character_id)
 
 
-def get_swim_cloth(character_id: int):
+def get_swim_cloth(character_id: int) -> None:
   """
   清零其他衣服并换上泳衣的胸衣和内裤
   Keyword arguments:
@@ -576,7 +578,7 @@ def get_swim_cloth(character_id: int):
     chara_special_wear_cloth(character_id)
 
 
-def get_prison_cloth(character_id: int):
+def get_prison_cloth(character_id: int) -> None:
   """
   清零其他衣服并换上囚服的上衣和下衣
   Keyword arguments:
@@ -592,7 +594,7 @@ def get_prison_cloth(character_id: int):
     chara_special_wear_cloth(character_id)
 
 
-def get_patient_cloth(character_id: int):
+def get_patient_cloth(character_id: int) -> None:
   """
   清零其他衣服并换上病号服的上衣和下衣
   Keyword arguments:
@@ -608,7 +610,7 @@ def get_patient_cloth(character_id: int):
     chara_special_wear_cloth(character_id)
 
 
-def get_common_cloth(character_id: int):
+def get_common_cloth(character_id: int) -> None:
   """
   清零其他衣服并换上通用的衣服和随机内衣
   Keyword arguments:
@@ -629,7 +631,7 @@ def get_common_cloth(character_id: int):
     chara_special_wear_cloth(character_id)
 
 
-def chara_special_wear_cloth(character_id: int):
+def chara_special_wear_cloth(character_id: int) -> list[int]:
   """
   角色穿上必须穿的衣物
   Keyword arguments:
@@ -675,7 +677,7 @@ def chara_special_wear_cloth(character_id: int):
   return return_list
 
 
-def get_cloth_wear_zero_except_need(character_id: int):
+def get_cloth_wear_zero_except_need(character_id: int) -> None:
   """
   遍历当前穿着服装类型，将首饰和必要物品以外的设为空
   """
@@ -705,7 +707,7 @@ def get_cloth_wear_zero_except_need(character_id: int):
   # print(f"debug 脱衣服后 = {character_data.cloth.cloth_wear}")
 
 
-def clean_locker_semen(character_id: int):
+def clean_locker_semen(character_id: int) -> None:
   """
   清理衣柜里的衣服精液
   Keyword arguments:
@@ -718,7 +720,7 @@ def clean_locker_semen(character_id: int):
   character_data.dirty.cloth_locker_semen = empty_dirty_data.cloth_locker_semen
 
 
-def locker_cloth_semen_to_wear_cloth_semen(character_id: int):
+def locker_cloth_semen_to_wear_cloth_semen(character_id: int) -> None:
   """
   将衣柜里的衣服精液转移到穿着的衣服上
   Keyword arguments:
@@ -745,7 +747,9 @@ def locker_cloth_semen_to_wear_cloth_semen(character_id: int):
     clean_locker_semen(character_id)
 
 
-def get_exposed_body_parts(character_id: int, ignore_panties: bool = False):
+def get_exposed_body_parts(
+    character_id: int, ignore_panties: bool = False
+) -> list[int]:
   """
   获得角色暴露在外的身体部位
   参数:

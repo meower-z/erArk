@@ -19,7 +19,7 @@ window_width = normal_config.config_normal.text_width
 """ 屏幕宽度 """
 
 
-def record_fall_talent_time(character_id: int, talent_id: int):
+def record_fall_talent_time(character_id: int, talent_id: int) -> None:
   """
   记录获得陷落素质的时间与地点\n
   Keyword arguments:
@@ -36,7 +36,9 @@ def record_fall_talent_time(character_id: int, talent_id: int):
     ]
 
 
-def gain_talent(character_id: int, now_gain_type: int, traget_talent_id=0):
+def gain_talent(
+    character_id: int, now_gain_type: int, traget_talent_id: int = 0
+) -> None:
   """
   结算可以获得的素质\n
   Keyword arguments:
@@ -114,7 +116,7 @@ def gain_talent(character_id: int, now_gain_type: int, traget_talent_id=0):
     settle_favorite_sex_position(character_id)
 
 
-def have_age_talent(character_id: int):
+def have_age_talent(character_id: int) -> int:
   """
   返回年龄素质\n
   """
@@ -125,7 +127,7 @@ def have_age_talent(character_id: int):
   return 0
 
 
-def have_chest_talent(character_id: int):
+def have_chest_talent(character_id: int) -> int:
   """
   返回胸部大小素质\n
   """
@@ -136,7 +138,7 @@ def have_chest_talent(character_id: int):
   return 0
 
 
-def have_hip_talent(character_id: int):
+def have_hip_talent(character_id: int) -> int:
   """
   返回臀部大小素质\n
   """
@@ -147,7 +149,7 @@ def have_hip_talent(character_id: int):
   return 0
 
 
-def have_leg_talent(character_id: int):
+def have_leg_talent(character_id: int) -> int:
   """
   返回腿部大小素质\n
   """
@@ -158,7 +160,7 @@ def have_leg_talent(character_id: int):
   return 0
 
 
-def have_foot_talent(character_id: int):
+def have_foot_talent(character_id: int) -> int:
   """
   返回脚部大小素质\n
   """
@@ -169,7 +171,7 @@ def have_foot_talent(character_id: int):
   return 0
 
 
-def have_hypnosis_talent():
+def have_hypnosis_talent() -> int:
   """
   验证是否有催眠系素质\n
   """
@@ -180,7 +182,7 @@ def have_hypnosis_talent():
   return 0
 
 
-def have_hormone_talent():
+def have_hormone_talent() -> int:
   """
   验证是否有激素系素质\n
   """
@@ -191,7 +193,7 @@ def have_hormone_talent():
   return 0
 
 
-def have_visual_talent():
+def have_visual_talent() -> int:
   """
   验证是否有视觉系素质\n
   """
@@ -202,7 +204,7 @@ def have_visual_talent():
   return 0
 
 
-def have_tactile_talent():
+def have_tactile_talent() -> int:
   """
   验证是否有触觉系素质\n
   """
@@ -213,7 +215,7 @@ def have_tactile_talent():
   return 0
 
 
-def have_fall_talent(character_id: int):
+def have_fall_talent(character_id: int) -> int:
   """
   验证是否有陷落素质\n
   """
@@ -224,7 +226,7 @@ def have_fall_talent(character_id: int):
   return 0
 
 
-def npc_gain_hypnosis_talent(character_id: int):
+def npc_gain_hypnosis_talent(character_id: int) -> None:
   """
   干员获得被催眠素质\n
   """
@@ -265,7 +267,7 @@ def npc_gain_hypnosis_talent(character_id: int):
   achievement_panel.achievement_flow(_("催眠"))
 
 
-def npc_gain_and_lost_cumflation(character_id: int):
+def npc_gain_and_lost_cumflation(character_id: int) -> None:
   """
   干员获得和失去精液膨腹素质\n
   """
@@ -304,7 +306,7 @@ def npc_gain_and_lost_cumflation(character_id: int):
     now_draw_succed.draw()
 
 
-def npc_gain_semen_drinking_climax_talent(character_id: int):
+def npc_gain_semen_drinking_climax_talent(character_id: int) -> None:
   """
   干员获得饮精绝顶素质\n
   """
@@ -326,7 +328,7 @@ def npc_gain_semen_drinking_climax_talent(character_id: int):
     now_draw_succed.draw()
 
 
-def npc_b_talent_change_for_lactation_flag(character_id: int):
+def npc_b_talent_change_for_lactation_flag(character_id: int) -> None:
   """
   干员因涨奶而发生的罩杯变化\n
   """
@@ -354,7 +356,7 @@ def npc_b_talent_change_for_lactation_flag(character_id: int):
       pass
 
 
-def npc_lost_no_menarche_talent(character_id: int):
+def npc_lost_no_menarche_talent(character_id: int) -> None:
   """
   干员失去未初潮素质\n
   """
@@ -374,7 +376,9 @@ def npc_lost_no_menarche_talent(character_id: int):
       now_draw_succed.draw()
 
 
-def body_part_talent_update(character_id, talent_ids, increase, body_part):
+def body_part_talent_update(
+    character_id: int, talent_ids: list[int], increase: bool, body_part: str
+) -> str:
   """
   根据素质id表来使角色的身体部位素质变大或变小
   Keyword arguments:
@@ -454,7 +458,7 @@ def settle_favorite_sex_position(character_id: int) -> int:
   return favorite_position_id
 
 
-def chara_settle_drink_talent(character_id: int):
+def chara_settle_drink_talent(character_id: int) -> None:
   """
   角色结算酒量相关素质\n
   Keyword arguments:\n

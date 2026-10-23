@@ -1,9 +1,16 @@
+from __future__ import annotations
+
 from types import FunctionType
 from Script.Core import cache_control, constant, game_type, get_text
 from Script.Design import handle_premise, talk, settle_behavior
 from Script.System.First_Record_System import first_record_handle
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from types import ModuleType
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -16,7 +23,7 @@ _orgasm_settle = None
 """ orgasm_settle 模块的延迟导入缓存（规避与Script.Settle包的循环导入，同时消除热路径重复导入开销） """
 
 
-def _get_orgasm_settle():
+def _get_orgasm_settle() -> ModuleType:
   """
   获取 orgasm_settle 模块（延迟导入并缓存）
   参数：无
@@ -33,7 +40,7 @@ def _get_orgasm_settle():
 
 def character_get_second_behavior(
     character_id: int, second_behavior_id: str, reset: bool = False
-):
+) -> None:
   """
   角色获得二段行为
   Keyword arguments:
@@ -120,7 +127,7 @@ def check_second_effect(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
     pl_to_npc: bool = False,
-):
+) -> None:
   """
   处理第二结算
   Keyword arguments:
@@ -212,7 +219,7 @@ def second_behavior_effect(
     change_data: game_type.CharacterStatusChange,
     second_behavior_list: list | None = None,
     orgasm_settle_flag: bool = False,
-):
+) -> None:
   """
   触发二段行为的口上与效果
   Keyword arguments:
@@ -322,7 +329,7 @@ def second_behavior_effect(
       character_data.second_behavior[second_behavior_id] = 0
 
 
-def must_settle_check(character_id: int):
+def must_settle_check(character_id: int) -> None:
   """
   检查是否有必须计算但不必须显示的空白结算
   Keyword arguments:
@@ -356,7 +363,7 @@ def must_settle_check(character_id: int):
   character_data.must_settle_second_behavior_id_list = []
 
 
-def judge_character_first_meet(character_id: int):
+def judge_character_first_meet(character_id: int) -> None:
   """
   判断初见和每日招呼\n
   Keyword arguments:
@@ -407,7 +414,7 @@ def judge_character_first_meet(character_id: int):
         )
 
 
-def judge_child_growth_second_behavior(character_id: int):
+def judge_child_growth_second_behavior(character_id: int) -> None:
   """
   判断孩子与玩家同场景时的养成二段行为（Plan 22）
   两件事都是"攒着等见面再兑现"：
@@ -461,7 +468,7 @@ def judge_child_growth_second_behavior(character_id: int):
 
 def insert_position_effect(
     character_id: int, change_data: game_type.CharacterStatusChange
-):
+) -> None:
   """
   处理第二结算中的阴茎位置结算
   Keyword arguments:
@@ -614,7 +621,7 @@ def get_now_juel_all_value_and_text_from_mark_down_data(
 
 def mark_effect(
     character_id: int, change_data: game_type.CharacterStatusChange
-):
+) -> None:
   """
   处理第二结算中的刻印结算
   Keyword arguments:
@@ -884,7 +891,7 @@ def mark_effect(
   now_draw.draw()
 
 
-def item_effect(character_id: int):
+def item_effect(character_id: int) -> None:
   """
   处理第二结算中的道具结算
   Keyword arguments:

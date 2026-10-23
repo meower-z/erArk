@@ -540,7 +540,7 @@ def handle_instruct_data(
     now_time: datetime.datetime,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> game_type.CharacterStatusChange:
   """
   处理指令数据
   Keyword arguments:
@@ -622,7 +622,13 @@ def handle_instruct_data(
   return change_data
 
 
-def handle_event_data(event_id, character_id, add_time, change_data, now_time):
+def handle_event_data(
+    event_id: str,
+    character_id: int,
+    add_time: int,
+    change_data: game_type.CharacterStatusChange,
+    now_time: datetime.datetime,
+) -> game_type.CharacterStatusChange:
   """
   处理事件数据
   Keyword arguments:
@@ -698,7 +704,7 @@ def add_settle_second_behavior_effect(second_behavior_effect_id: int):
   return decorator
 
 
-def get_cut_down_favorability_for_consume_time(consume_time: int):
+def get_cut_down_favorability_for_consume_time(consume_time: int) -> int:
   """
   从经过的时间计算出扣除的好感度
   Keyword arguments:
@@ -746,7 +752,7 @@ def get_cut_down_favorability_for_consume_time(consume_time: int):
 
 def change_character_talkcount_for_time(
     character_id: int, now_time: datetime.datetime
-):
+) -> None:
   """
   结算上次进行聊天的时间，以重置聊天计数器
   Keyword arguments:
@@ -847,7 +853,7 @@ def get_favorability_social(favorability: int) -> int:
 def extra_exp_settle(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   处理额外经验结算
   Keyword arguments:
@@ -1141,7 +1147,9 @@ def handle_comprehensive_value_effect(
   return 0
 
 
-def collect_web_value_changes(change_data, character_id: int):
+def collect_web_value_changes(
+    change_data: game_type.CharacterStatusChange, character_id: int
+) -> None:
   """
   收集结算过程中的数值变化，用于Web模式的浮动文本显示
   Keyword arguments:
