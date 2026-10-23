@@ -211,7 +211,7 @@ capture = "suite"
 
 [[reader]]
 id = "R13"
-file = "tools/tests/education/test_talk_data.py"
+file = "tests/education/test_talk_data.py"
 symbol = "<module>"
 mechanism = "ast"
 reads = "buildata.py 里的 build_promise_csv_text 函数，单独编译执行"
@@ -221,7 +221,7 @@ capture = "suite"
 
 [[reader]]
 id = "R14"
-file = "tools/tests/education/test_talk_data.py"
+file = "tests/education/test_talk_data.py"
 symbol = "<module>"
 mechanism = "open+regex"
 reads = "constant_promise.py 的前提 id、名字、分类与说明片段"
@@ -231,7 +231,7 @@ capture = "suite"
 
 [[reader]]
 id = "R15"
-file = "tools/tests/education/test_talk_data.py"
+file = "tests/education/test_talk_data.py"
 symbol = "<module>"
 mechanism = "test-needle"
 reads = "official_event_check.py 里 TEXT_DUP_LEN 一行与下一行的说明"
@@ -241,7 +241,7 @@ capture = "suite"
 
 [[reader]]
 id = "R16"
-file = "tools/tests/education/test_schedule_template.py"
+file = "tests/education/test_schedule_template.py"
 symbol = "literal_hit_list"
 mechanism = "ast"
 reads = "schedule_template_handle 与 schedule_template_panel 的字符串字面量"
@@ -251,7 +251,7 @@ capture = "suite"
 
 [[reader]]
 id = "R17"
-file = "tools/tests/education/test_panels.py"
+file = "tests/education/test_panels.py"
 symbol = "<module>"
 mechanism = "test-needle"
 reads = "Course_Select_Panel._select_target 的源码"
@@ -261,7 +261,7 @@ capture = "suite"
 
 [[reader]]
 id = "R18"
-file = "tools/tests/education/test_panels.py"
+file = "tests/education/test_panels.py"
 symbol = "<module>"
 mechanism = "test-needle"
 reads = "Growth_Panel._draw_event_history 的源码"
@@ -271,7 +271,7 @@ capture = "suite"
 
 [[reader]]
 id = "R19"
-file = "tools/tests/education/test_growth_event.py"
+file = "tests/education/test_growth_event.py"
 symbol = "<module>"
 mechanism = "test-needle"
 reads = "pregnancy_handle.check_grow_to_girl 的源码"
@@ -281,7 +281,7 @@ capture = "suite"
 
 [[reader]]
 id = "R20"
-file = "tools/tests/education/test_growth_event.py"
+file = "tests/education/test_growth_event.py"
 symbol = "<module>"
 mechanism = "test-needle"
 reads = "growth_event_handle.push_semester_event_for_list 的源码"
@@ -291,7 +291,7 @@ capture = "suite"
 
 [[reader]]
 id = "R21"
-file = "tools/tests/education/test_growth_event.py"
+file = "tests/education/test_growth_event.py"
 symbol = "<module>"
 mechanism = "test-needle"
 reads = "past_day_settle.update_new_day 的源码"
@@ -301,7 +301,7 @@ capture = "suite"
 
 [[reader]]
 id = "R22"
-file = "tools/tests/education/test_growth_event.py"
+file = "tests/education/test_growth_event.py"
 symbol = "<module>"
 mechanism = "test-needle"
 reads = "pregnancy_handle._settle_baby_grow_up 的源码"
@@ -311,7 +311,7 @@ capture = "suite"
 
 [[reader]]
 id = "R23"
-file = "tools/tests/education/test_growth_event.py"
+file = "tests/education/test_growth_event.py"
 symbol = "<module>"
 mechanism = "test-needle"
 reads = "pregnancy_handle.check_grow_to_loli 的源码"
@@ -321,7 +321,7 @@ capture = "suite"
 
 [[reader]]
 id = "R24"
-file = "tools/tests/education/test_growth_event.py"
+file = "tests/education/test_growth_event.py"
 symbol = "<module>"
 mechanism = "test-needle"
 reads = "pregnancy_handle.check_grow_to_girl 的源码"
@@ -331,7 +331,7 @@ capture = "suite"
 
 [[reader]]
 id = "R25"
-file = "tools/tests/education/test_growth.py"
+file = "tests/education/test_growth.py"
 symbol = "<module>"
 mechanism = "test-needle"
 reads = "growth_handle.settle_student_class_gain 的源码（去掉空白后）"
@@ -372,7 +372,7 @@ outputs = []
 
 [[reader]]
 id = "R28"
-file = "tools/tests/education/test_growth.py"
+file = "tests/education/test_growth.py"
 symbol = "<module>"
 mechanism = "metadata"
 reads = "growth_handle.settle_student_class_gain 的 __doc__"
@@ -382,7 +382,7 @@ capture = "suite"
 
 [[reader]]
 id = "R29"
-file = "tools/tests/education/test_schedule.py"
+file = "tests/education/test_schedule.py"
 symbol = "<module>"
 mechanism = "metadata"
 reads = "inspect.signature(schedule_handle.get_upcoming_course) 的参数名"
@@ -392,7 +392,7 @@ capture = "suite"
 
 [[reader]]
 id = "R30"
-file = "tools/tests/education/test_schedule.py"
+file = "tests/education/test_schedule.py"
 symbol = "<module>"
 mechanism = "metadata"
 reads = "schedule_handle.get_now_course 的 __doc__"
@@ -402,7 +402,7 @@ capture = "suite"
 
 [[reader]]
 id = "R31"
-file = "tools/tests/education/test_premise_tokens.py"
+file = "tests/education/test_premise_tokens.py"
 symbol = "<module>"
 mechanism = "metadata"
 reads = "handle_premise.handle_self_have_classmate 的 __doc__"
@@ -412,7 +412,7 @@ capture = "suite"
 
 [[reader]]
 id = "R32"
-file = "tools/tests/education/test_talk_data.py"
+file = "tests/education/test_talk_data.py"
 symbol = "<module>"
 mechanism = "metadata"
 reads = "game_type.CHILD_GROWTH 的 __doc__"
@@ -463,7 +463,7 @@ pattern = "__file__"
 why = "用 __file__ 定位仓库根目录"
 
 [[allow]]
-file = "tools/tests/education/_bootstrap.py"
+file = "tests/education/_bootstrap.py"
 symbol = "<module>"
 pattern = "__file__"
 why = "用 __file__ 定位仓库根目录"
