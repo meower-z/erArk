@@ -3005,7 +3005,7 @@ def handle_add_large_pain_first_sex(
 
   character_data: game_type.Character = cache.character_data[character_id]
 
-  now_add_lust = 4000
+  now_add_lust: float = 4000
   # 润滑修正
   adjust = attr_calculation.get_pain_adjust(character_data.status_data[8])
   now_add_lust *= adjust
@@ -3049,7 +3049,7 @@ def handle_add_large_pain_first_a_sex(
 
   character_data: game_type.Character = cache.character_data[character_id]
 
-  now_add_lust = 2000
+  now_add_lust: float = 2000
   # 润滑修正
   adjust = attr_calculation.get_pain_adjust(character_data.status_data[8])
   now_add_lust *= adjust
@@ -3089,7 +3089,7 @@ def handle_add_large_pain_first_u_sex(
 
   character_data: game_type.Character = cache.character_data[character_id]
 
-  now_add_lust = 4000
+  now_add_lust: float = 4000
   # 润滑修正
   adjust = attr_calculation.get_pain_adjust(character_data.status_data[8])
   now_add_lust *= adjust
@@ -3129,7 +3129,7 @@ def handle_add_large_pain_first_w_sex(
 
   character_data: game_type.Character = cache.character_data[character_id]
 
-  now_add_lust = 3000
+  now_add_lust: float = 3000
   # 润滑修正
   adjust = attr_calculation.get_pain_adjust(character_data.status_data[8])
   now_add_lust *= adjust

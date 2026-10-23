@@ -1338,7 +1338,7 @@ def handle_npc_make_food_to_shop(
   # NPC制作食物的品质上限为6
   food_quality_limit = min(6, cook_ability_lv)
   # 制作食物
-  food_list = {}
+  food_list: dict[str, game_type.Food] = {}
   # 每级料理技能等级增加一次制作次数
   for i in range(cook_ability_lv + 1):
     new_food = cooking.cook(
@@ -1381,7 +1381,7 @@ def handle_npc_make_food_to_bag(
       character_id, weight_flag=True
   )
   recipes_id = random.choice(cookable_recipes_list)
-  food_list = {}
+  food_list: dict[str, game_type.Food] = {}
   new_food = cooking.cook(
       food_list, recipes_id, character_data.ability[43], character_data.name
   )
@@ -1432,7 +1432,7 @@ def handle_assistant_make_food_to_bag(
   )
   # 从正餐食谱中随机选择一个食谱进行烹饪
   main_recipes_id = random.choice(main_cookable_recipes_list)
-  food_list = {}
+  food_list: dict[str, game_type.Food] = {}
   new_food = cooking.cook(
       food_list,
       main_recipes_id,
@@ -1604,9 +1604,7 @@ def handle_target_add_huge_desire_and_submit(
   change_data.target_change.setdefault(
       target_data.cid, game_type.TargetChange()
   )
-  target_change: game_type.TargetChange = change_data.target_change[
-      target_data.cid
-  ]
+  target_change = change_data.target_change[target_data.cid]
   target_change.status_data.setdefault(15, 0)
   target_change.status_data[15] += now_add_lust
 
