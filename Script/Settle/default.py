@@ -3730,7 +3730,7 @@ def handle_target_to_masturebate(
 @settle_behavior.add_settle_behavior_effect(
     constant_effect.BehaviorEffect.TARGET_TO_MOST_DESIRE
 )
-def handle_target_to_masturebate(
+def handle_target_to_most_desire(
     character_id: int,
     add_time: int,
     change_data: game_type.CharacterStatusChange,
