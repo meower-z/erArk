@@ -1,3 +1,7 @@
+"""
+从编辑器 csv 目录读入前提、行为、结算与各类属性配置，以及外勤委托与公务事件 csv 的读写
+"""
+
 import os
 import csv
 import cache_control

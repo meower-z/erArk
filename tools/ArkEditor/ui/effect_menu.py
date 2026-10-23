@@ -1,3 +1,7 @@
+"""
+结算选择对话框 EffectMenu：按树形列出结算，勾选或取消时增删当前事件的结算，可搜索
+"""
+
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QDialog,

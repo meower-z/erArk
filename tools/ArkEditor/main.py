@@ -1,5 +1,8 @@
 #!/usr/bin/python3
 # -*- coding: UTF-8 -*-
+"""
+编辑器入口：载入配置，建立主窗口与各面板，连接菜单、快捷键与保存操作，启动 Qt 事件循环
+"""
 
 import sys
 import os
@@ -87,6 +90,11 @@ def update_window_title():
 
 # 保存字体和路径到配置
 def save_editor_config():
+  """
+  把上次打开的目录与字体名、字号、是否加粗写进 editor_config.ini 的 Editor 节
+  Return arguments:
+  None
+  """
   global last_open_dir
   if "Editor" not in config:
     config["Editor"] = {}
@@ -807,6 +815,11 @@ item_effect_list.findChild(QPushButton, "btn_reset_all").clicked.connect(
 
 
 def save_data_and_mark():
+  """
+  按当前编辑类型保存事件或口上文件，有当前文件路径时备份该文件，再标记为已保存
+  Return arguments:
+  None
+  """
   function.save_data()
   # 保存时同步备份
   if hasattr(cache_control, "now_file_path") and cache_control.now_file_path:
@@ -815,6 +828,11 @@ def save_data_and_mark():
 
 
 def save_talk_data_and_mark():
+  """
+  保存口上文件，有当前文件路径时备份该文件，再标记为已保存
+  Return arguments:
+  None
+  """
   function.save_talk_data()
   # 保存时同步备份
   if hasattr(cache_control, "now_file_path") and cache_control.now_file_path:

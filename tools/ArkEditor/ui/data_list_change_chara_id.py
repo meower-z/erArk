@@ -1,5 +1,8 @@
 # 新增方法文件用于存放DataList的角色id修改相关方法
 # 所有方法均带有详细中文注释
+"""
+DataList 的混入类：把当前条目或全部条目的角色 id 设为输入框里的值
+"""
 
 
 class DataListIdEditMixin:

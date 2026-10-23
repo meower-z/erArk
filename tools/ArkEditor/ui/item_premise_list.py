@@ -1,3 +1,8 @@
+"""
+当前口上或事件的前提列表 ItemPremiseList：打开前提与 CVP 选择菜单，右键操作前提，
+把当前前提设为前提组，拖动后同步前提顺序，以及快速插入前提
+"""
+
 from PySide6.QtWidgets import QListWidgetItem, QListWidget, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QMenu
 from PySide6.QtGui import QFont
 from PySide6.QtCore import Qt

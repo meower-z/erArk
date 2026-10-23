@@ -1,3 +1,8 @@
+"""
+编辑器的通用函数：把 CVP、CVE、CSE 编码转成说明文字，保存当前的事件或口上文件，
+显示口上、事件、角色属性的说明对话框与字体设置对话框
+"""
+
 from PySide6.QtWidgets import QDialog, QTextEdit, QVBoxLayout, QSizePolicy, QScrollArea, QPushButton, QLabel, QComboBox
 from PySide6.QtGui import QFontMetrics, QFont, QFontDatabase
 import cache_control, game_type

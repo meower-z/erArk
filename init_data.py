@@ -1,3 +1,8 @@
+"""
+初始化缓存对象与基础配置，载入游戏配置与地图数据；
+地图缓存文件不全时，地图载入会重新生成它们
+"""
+
 from Script.Core import game_type, cache_control
 from Script.Config import normal_config
 

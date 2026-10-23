@@ -51,6 +51,11 @@ os.makedirs(PROFILE_DIR, exist_ok=True)
 
 # ------------------------- 参数解析 -------------------------
 def parse_args():
+  """
+  解析命令行参数
+  Return arguments:
+  argparse.Namespace -- 解析后的参数
+  """
   ap = argparse.ArgumentParser()
   ap.add_argument(
       "--ticks",
@@ -112,11 +117,26 @@ def parse_args():
 
 # ------------------------- 日志工具 -------------------------
 def log(msg):
+  """
+  打印一行带 [run_profile] 前缀的日志
+  Keyword arguments:
+  msg -- 日志内容
+  Return arguments:
+  None
+  """
   print(f"[run_profile] {msg}")
 
 
 # ------------------------- IO / 等待补丁 -------------------------
 def patch_for_benchmark(no_patch_io=False):
+  """
+  替换输入与界面函数：py_cmd.focus_cmd、py_cmd.clr_cmd 与 WaitDraw.draw 换成什么也不做的函数，
+  flow_handle.askfor_all 换成返回第一个选项的函数，该选项是有效命令时先分发它；某项替换失败时只打日志
+  Keyword arguments:
+  no_patch_io -- 为真时不做任何替换
+  Return arguments:
+  None
+  """
   if no_patch_io:
     log("未应用 IO 补丁 (--no-patch-io)")
     return
@@ -398,6 +418,13 @@ def init_game_environment(args):
 
 # ------------------------- 前提统计补丁检测 -------------------------
 def load_premise_profiler(args):
+  """
+  开启了 --with-premise-profiler 时载入前提统计补丁模块
+  Keyword arguments:
+  args -- 命令行参数
+  Return arguments:
+  module | None -- 补丁模块；未开启、载入失败或模块里没有 premise_profile_stats 时为 None
+  """
   # argparse 会把 --with-premise-profiler 转为 with_premise_profiler
   if not getattr(args, "with_premise_profiler", False):
     return None
@@ -417,6 +444,14 @@ def load_premise_profiler(args):
 
 # ------------------------- Tick 驱动 -------------------------
 def run_ticks(ticks: int, minutes_per_tick: int):
+  """
+  调用 update.game_update_flow 推进游戏 ticks 次，并按进度打日志
+  Keyword arguments:
+  ticks -- 推进次数，不大于 0 时直接返回
+  minutes_per_tick -- 每次推进的分钟数
+  Return arguments:
+  None
+  """
   from Script.Design import update
 
   if ticks <= 0:
@@ -436,6 +471,18 @@ def run_ticks(ticks: int, minutes_per_tick: int):
 
 # ------------------------- Profile 执行 -------------------------
 def profile_run(ticks, minutes_per_tick, warmup, profile_name, top_n):
+  """
+  先推进预热的 tick，再在 cProfile 下推进 ticks 次，
+  把原始数据写成 .prof，把按累计耗时与自身耗时各取前 top_n 的函数写成汇总 json
+  Keyword arguments:
+  ticks -- 采集期间的推进次数
+  minutes_per_tick -- 每次推进的分钟数
+  warmup -- 采集前预热的推进次数
+  profile_name -- 输出文件名前缀
+  top_n -- 汇总里每种排序保留的函数数
+  Return arguments:
+  tuple[str, str] -- .prof 文件路径与汇总 json 路径
+  """
   if warmup > 0:
     log(f"预热 {warmup} ticks...")
     run_ticks(warmup, minutes_per_tick)
@@ -492,6 +539,15 @@ def profile_run(ticks, minutes_per_tick, warmup, profile_name, top_n):
 
 # ------------------------- 前提统计导出 -------------------------
 def export_premise_stats(pmod, path):
+  """
+  导出前提统计：补丁模块有 export_premise_profile 时交给它，
+  否则把 premise_profile_stats 里调用过的前提按总耗时降序写成 json；出错时只打日志
+  Keyword arguments:
+  pmod -- 前提统计补丁模块，为空时直接返回
+  path -- 输出文件路径
+  Return arguments:
+  None
+  """
   if not pmod:
     return
   try:
@@ -526,6 +582,12 @@ def export_premise_stats(pmod, path):
 
 # ------------------------- 主入口 -------------------------
 def main():
+  """
+  解析参数并初始化游戏环境，按参数替换输入输出函数、挂上主循环结构统计补丁，
+  采集 profile 后按参数导出前提统计与主循环结构统计，最后用 os._exit(0) 结束进程
+  Return arguments:
+  None
+  """
   args = parse_args()
 
   premise_mod = init_game_environment(args)

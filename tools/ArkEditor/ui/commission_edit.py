@@ -220,6 +220,11 @@ class CommissionEditWidget(QWidget):
   commission_saved = Signal(object)
 
   def __init__(self, parent=None):
+    """
+    初始化控件，此时还没有要编辑的委托
+    Keyword arguments:
+    parent -- 父控件
+    """
     super().__init__(parent)
     self.commission = None
     self.init_ui()
@@ -385,6 +390,11 @@ class CommissionEditWidget(QWidget):
     self.commission_saved.emit(c)
 
   def add_demand_item(self):
+    """
+    弹出需求/奖励项添加对话框，确定后把生成的项接到需求输入框末尾，已有内容时用 & 连接
+    Return arguments:
+    None
+    """
     dialog = CommissionItemAddDialog(self)
     if dialog.exec():
       new_item = dialog.get_result()
@@ -395,6 +405,11 @@ class CommissionEditWidget(QWidget):
         self.demand_edit.setText(new_item)
 
   def add_reward_item(self):
+    """
+    弹出需求/奖励项添加对话框，确定后把生成的项接到奖励输入框末尾，已有内容时用 & 连接
+    Return arguments:
+    None
+    """
     dialog = CommissionItemAddDialog(self)
     if dialog.exec():
       new_item = dialog.get_result()
@@ -417,6 +432,11 @@ class CommissionItemAddDialog(QDialog):
   """
 
   def __init__(self, parent=None):
+    """
+    建立类型下拉框、子项控件、数值输入框（初值 1）与确定按钮，并按当前类型填好子项
+    Keyword arguments:
+    parent -- 父控件
+    """
     super().__init__(parent)
     # 设置窗口标题
     self.setWindowTitle("添加需求/奖励项")
@@ -495,6 +515,14 @@ class CommissionItemAddDialog(QDialog):
     self.update_sub_items(self.type_combo.currentText())
 
   def update_sub_items(self, type_name):
+    """
+    移除当前的子项控件，换成与类型对应的控件：能力、资源、经验、宝珠、素质、声望与特产用列出对应数据的下拉框，
+    特产的下拉框第一项为当前国家，其他类型用文本输入框
+    Keyword arguments:
+    type_name -- 类型名
+    Return arguments:
+    None
+    """
     # 只移除当前插入的控件
     from PySide6.QtWidgets import QHBoxLayout
 
@@ -568,6 +596,11 @@ class CommissionItemAddDialog(QDialog):
       self.current_sub_widget = self.sub_edit
 
   def get_result(self):
+    """
+    按所选类型、子项与数值生成需求/奖励项字符串，格式为「前缀_子项_数值」
+    Return arguments:
+    str -- 生成的字符串，类型不在已知列表里时为空串
+    """
     type_name = self.type_combo.currentText()
     if type_name in ["能力", "资源", "经验", "宝珠", "素质", "声望", "特产"]:
       sub_id = self.sub_combo.currentData()

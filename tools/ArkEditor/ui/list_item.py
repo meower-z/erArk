@@ -1,3 +1,7 @@
+"""
+带 uid 属性的列表条目 ListItem
+"""
+
 from PySide6.QtWidgets import QListWidgetItem
 
 

@@ -37,6 +37,13 @@ captured = {}
 
 
 def fake_askfor(return_list, *a, **k):
+  """
+  替换 flow_handle.askfor_all 的桩：把可选项记到 captured["rl"]，返回「返回」
+  Keyword arguments:
+  return_list -- 可选项列表
+  Return arguments:
+  str -- 翻译后的「返回」
+  """
   captured["rl"] = list(return_list)
   return _("返回")
 
@@ -120,6 +127,14 @@ answers = []
 
 
 def scripted_askfor(return_list, *a, **k):
+  """
+  替换 flow_handle.askfor_all 的桩：把可选项记到 captured["rl"]；按 answers 的顺序找第一个
+  有选项满足的判断函数，把它从 answers 移除并返回满足它的第一个选项，都不满足时返回最后一个选项
+  Keyword arguments:
+  return_list -- 可选项列表
+  Return arguments:
+  str -- 选中的选项
+  """
   captured["rl"] = list(return_list)
   for want in list(answers):
     for option in return_list:

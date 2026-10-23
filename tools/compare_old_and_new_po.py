@@ -1,3 +1,8 @@
+"""
+把 zh_CN 的 erArk_py.po 里有、en_US 的 erArk_py.po 里没有的 msgid 连同其 msgstr 追加进 en_US 的 erArk_py.po；
+两个文件都在写死的 base_dir 下
+"""
+
 import os
 import polib
 

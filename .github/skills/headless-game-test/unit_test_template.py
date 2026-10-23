@@ -248,9 +248,22 @@ class RandStub:
   """
 
   def __init__(self, seq):
+    """
+    把依次返回的值序列复制成列表记下
+    Keyword arguments:
+    seq -- 依次返回的值序列
+    """
     self.seq = list(seq)
 
   def __call__(self, a, b):
+    """
+    把 (a, b) 追加到模块级的 calls，返回序列里的下一个值，序列耗尽后返回 b
+    Keyword arguments:
+    a -- 下界
+    b -- 上界
+    Return arguments:
+    int -- 序列里的下一个值，或 b
+    """
     calls.append((a, b))
     return self.seq.pop(0) if self.seq else b
 

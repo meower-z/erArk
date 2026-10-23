@@ -1,3 +1,8 @@
+"""
+把「生成目标文件」目录下各 csv 第 6 行起的数据剪切出来，追加到「生成完待处理数据.csv」；
+两者都在本脚本所在目录下的 .github/prompts/AI文本生成工作流/ 里
+"""
+
 from pathlib import Path
 import csv
 

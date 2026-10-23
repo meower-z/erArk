@@ -1,3 +1,7 @@
+"""
+把当前目录下 name.txt 里以空行分隔的段落写成当前目录下 output.csv 的行
+"""
+
 import csv
 
 # 定义txt文件路径
@@ -8,6 +12,13 @@ csv_path = 'output.csv'
 
 # 读取txt文件并按行存入列表
 def read_txt_to_list(txt_path):
+  """
+  按空行把文本文件分段：每段去掉首尾空白，段内换行转写成反斜杠加 n 两个字符
+  Keyword arguments:
+  txt_path -- 文本文件路径
+  Return arguments:
+  list -- 各段的字符串
+  """
   with open(txt_path, 'r', encoding='utf-8') as file:
     lines = file.readlines()
 
@@ -39,6 +50,14 @@ def read_txt_to_list(txt_path):
 
 # 将列表数据保存到csv文件
 def save_list_to_csv(data, csv_path):
+  """
+  把每段写成 csv 的一行：从 1 起的序号、101、1、high_1、该段；覆盖原有文件
+  Keyword arguments:
+  data -- 各段的字符串
+  csv_path -- 输出 csv 文件路径
+  Return arguments:
+  None
+  """
   with open(csv_path, 'w', newline='', encoding='utf-8') as file:
     writer = csv.writer(file)
     # 初始化条目编号

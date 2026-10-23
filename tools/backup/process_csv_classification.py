@@ -59,6 +59,12 @@ def process_csv_file(csv_file_path):
 
 
 def main():
+  """
+  对本脚本所在目录的上一级下的 .github/prompts/AI文本生成工作流/生成完待处理数据.csv
+  调用 process_csv_file；文件不存在时打印提示并返回
+  Return arguments:
+  None
+  """
   # CSV文件路径
   csv_file = (
       Path(__file__).parent.parent

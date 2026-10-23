@@ -1,3 +1,8 @@
+"""
+完整构建游戏数据：读取 data/ 下的 csv、事件、口上与地图等配置，
+写出 data/ 下的 json 数据文件、Script/Config/config_def.py 与 zh_CN 的 po 文件
+"""
+
 import csv
 import os
 import json

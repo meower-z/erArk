@@ -1,5 +1,10 @@
 #!/usr/bin/python3
 # -*- coding: UTF-8 -*-
+"""
+用 xgettext 从当前目录及其子目录下的 .py 文件（跳过路径含 .conda 的目录）提取可翻译字符串，
+写成 data/po/zh_CN/LC_MESSAGES/erArk_py.po
+"""
+
 import io
 import os
 import shutil
