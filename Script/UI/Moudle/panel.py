@@ -1,3 +1,5 @@
+"""按钮监听、文本列表、分页等通用面板类型"""
+
 import itertools
 import math
 import time

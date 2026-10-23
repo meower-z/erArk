@@ -1,3 +1,5 @@
+"""命令按钮的打印与清除接口，封装 flow_handle 中的命令操作"""
+
 from Script.Core import (
     flow_handle,
     cache_control,

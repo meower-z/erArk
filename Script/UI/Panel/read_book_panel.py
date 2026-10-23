@@ -1,3 +1,5 @@
+"""读书面板与书籍片段的绘制"""
+
 from typing import List
 from types import FunctionType
 from Script.UI.Moudle import draw

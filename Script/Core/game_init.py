@@ -1,4 +1,6 @@
 # -*- coding: UTF-8 -*-
+"""游戏流程的初始化与运行入口，以及命令输入请求函数的别名"""
+
 import os
 import traceback
 from types import FunctionType

@@ -1,3 +1,6 @@
+"""角色状态id常量类 CharacterStatus"""
+
+
 class CharacterStatus:
   """角色状态id"""
 

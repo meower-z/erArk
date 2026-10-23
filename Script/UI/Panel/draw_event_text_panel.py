@@ -1,3 +1,5 @@
+"""事件描述文本的绘制面板与子事件检查"""
+
 from Script.Core import cache_control, game_type
 from Script.Design import talk
 from Script.UI.Moudle import draw

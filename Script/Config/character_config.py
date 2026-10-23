@@ -1,3 +1,5 @@
+"""预设角色模板数据的读取，以及随之写入的服装模板与口上颜色数据"""
+
 import os, glob
 from typing import List, Dict
 from types import FunctionType
@@ -88,6 +90,14 @@ def init_character_tem_data():
 
 
 def find_files_and_get_size(directory, character):
+  """
+  在指定目录中查找文件名中的角色名与指定角色相同的文件，并在 data/event/chara 中查找该角色的事件文件（有多个时只取 glob 列出的最后一个），返回这些文件的大小
+  Keyword arguments:
+  directory -- 要查找的目录，目录中的文件名形如 前缀_角色名_版本.扩展名
+  character -- 角色名
+  Return arguments:
+  dict -- 文件路径:文件大小（字节）
+  """
   # 构造文件路径
   path = os.path.join(directory, "*")
   # 查找文件名包含特定字符的文件

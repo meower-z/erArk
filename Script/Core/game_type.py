@@ -1,3 +1,5 @@
+"""游戏运行中使用的各类数据结构体定义(角色、地图、存档缓存、结算变化等)"""
+
 import uuid
 from uuid import UUID
 from typing import List, Dict, Set, Tuple, Any, Optional
@@ -36,6 +38,7 @@ class NpcTem:
   """npc模板用结构体对象"""
 
   def __init__(self):
+    """初始化npc模板对象"""
     self.Name: str = ""
     """ npc名字 """
     self.Sex: int = 0
@@ -119,6 +122,7 @@ class Food:
   """食物数据结构体"""
 
   def __init__(self):
+    """初始化食物对象"""
     self.id: str = ""
     """ 食物配置表id """
     self.name: str = ""
@@ -145,6 +149,7 @@ class Recipes:
   """菜谱数据结构体"""
 
   def __init__(self):
+    """初始化菜谱对象"""
     self.name: str = ""
     """ 菜谱名字 """
     self.type: int = 0
@@ -258,6 +263,7 @@ class DIRTY:
   """污浊情况数据结构体"""
 
   def __init__(self):
+    """初始化污浊情况对象"""
     # 人类正常一次射精量在2～6ml
 
     self.body_semen: dict = {}
@@ -311,6 +317,7 @@ class PREGNANCY:
   """受精怀孕情况数据结构体"""
 
   def __init__(self):
+    """初始化受精怀孕情况对象"""
 
     self.fertilization_rate: float = 0
     """ 受精概率 """
@@ -373,6 +380,7 @@ class CHILD_GROWTH:
   """
 
   def __init__(self):
+    """初始化生长养成数据对象"""
 
     self.personality_point: dict = {}
     """ 四对性格倾向的累积值 键int:性格对编号(0勤劳/懒散 1坚强/脆弱 2热情/孤僻 3开放/羞耻)
@@ -450,6 +458,7 @@ class RELATIONSHIP:
   """社交关系数据结构体"""
 
   def __init__(self):
+    """初始化社交关系对象"""
 
     self.father_id: int = -1
     """ 父亲id """
@@ -469,6 +478,7 @@ class HYPNOSIS:
   """催眠数据结构体"""
 
   def __init__(self):
+    """初始化催眠数据对象"""
 
     self.hypnosis_degree: float = 0
     """ 催眠程度 """
@@ -491,6 +501,7 @@ class CLOTH:
   # 鞋子比靴子低，前面的是帮，低帮在脚踝下，中帮脚踝一半，高帮盖过脚踝
   # 靴子低筒不过小腿肚，中筒过小腿肚，高筒过膝盖
   def __init__(self):
+    """初始化角色服装数据对象"""
     self.clothing_tem: List = []
     """ 角色个人服装模板 编号"""
     self.cloth_wear: Dict[int, List] = {}
@@ -515,6 +526,7 @@ class BODY_H_STATE:
   """H状态结构体"""
 
   def __init__(self):
+    """初始化H状态对象"""
     self.body_item: dict = {}
     """ 身体道具情况    
         编号int:[道具名str,当前有无bool,状态的结束时间datetime.datetime]    
@@ -623,6 +635,7 @@ class FIRST_RECORD:
   """初次状态记录结构体"""
 
   def __init__(self):
+    """初始化初次状态记录对象"""
     self.first_meet: int = 1
     """ 第一次见面，1为未见面过，0为已见面过 """
     self.day_first_meet: int = 1
@@ -700,6 +713,7 @@ class ACTION_INFO:
   """角色的行动信息结构体"""
 
   def __init__(self):
+    """初始化角色行动信息对象"""
     self.talk_count: int = 0
     """ 角色聊天次数计数器 """
     self.talk_time: datetime.datetime = datetime.datetime(1, 1, 1)
@@ -768,6 +782,7 @@ class AUTHOR_FLAG:
   """角色作者变量结构体"""
 
   def __init__(self):
+    """初始化角色作者变量对象"""
     self.chara_int_flag_dict: dict = {}
     """ 角色的int类型flag字典，最大长度为50，默认值为0 """
     self.chara_str_flag_dict: dict = {}
@@ -787,6 +802,11 @@ class UnnormalFlagMask:
   ALL_BITS = (1 << MAX_INDEX) - 1
 
   def __init__(self, initial: Any = None):
+    """
+    初始化异常状态位掩码对象，可由字典或整数初始值还原
+    Keyword arguments:
+    initial -- 初始值，字典时按 {编号: 是否异常} 逐位写入，整数时作为位掩码整体写入，None 时全部为 0 (default None)
+    """
     self._mask: int = 0
     self._known_bits: int = 0
     if isinstance(initial, dict):
@@ -797,6 +817,12 @@ class UnnormalFlagMask:
 
   # 直接位移计算，降低时间复杂度
   def update(self, index: int, active: bool) -> None:
+    """
+    设置指定编号异常位的状态，并将该位标记为已知
+    Keyword arguments:
+    index -- 异常编号(从 1 开始)
+    active -- True 置位，False 清除
+    """
     bit = 1 << (index - 1)
     self._known_bits |= bit
     if active:
@@ -805,37 +831,100 @@ class UnnormalFlagMask:
       self._mask &= ~bit
 
   def set(self, index: int) -> None:
+    """
+    将指定编号的异常位置为 True
+    Keyword arguments:
+    index -- 异常编号(从 1 开始)
+    """
     self.update(index, True)
 
   def clear(self, index: int) -> None:
+    """
+    将指定编号的异常位清除为 False
+    Keyword arguments:
+    index -- 异常编号(从 1 开始)
+    """
     self.update(index, False)
 
   def reset(self) -> None:
+    """清空全部异常位和已知位"""
     self._mask = 0
     self._known_bits = 0
 
   def is_known(self, index: int) -> bool:
+    """
+    判断指定编号的异常位是否已被标记为已知
+    Keyword arguments:
+    index -- 异常编号(从 1 开始)
+    Return arguments:
+    bool -- 该位是否已知
+    """
     return bool(self._known_bits & (1 << (index - 1)))
 
   def mark_unknown(self, index: int) -> None:
+    """
+    将指定编号的异常位标记为未知
+    Keyword arguments:
+    index -- 异常编号(从 1 开始)
+    """
     self._known_bits &= ~(1 << (index - 1))
 
   def check(self, index: int) -> bool:
+    """
+    读取指定编号异常位的值
+    Keyword arguments:
+    index -- 异常编号(从 1 开始)
+    Return arguments:
+    bool -- 该位是否置位
+    """
     return bool(self._mask & (1 << (index - 1)))
 
   def __getitem__(self, index: int) -> bool:
+    """
+    按下标读取指定编号异常位的值，等同于 check
+    Keyword arguments:
+    index -- 异常编号(从 1 开始)
+    Return arguments:
+    bool -- 该位是否置位
+    """
     return self.check(index)
 
   def __setitem__(self, index: int, value: bool) -> None:
+    """
+    按下标设置指定编号异常位的值，等同于 update
+    Keyword arguments:
+    index -- 异常编号(从 1 开始)
+    value -- True 置位，False 清除
+    """
     self.update(index, value)
 
   def any(self, mask: int) -> bool:
+    """
+    判断给定掩码中是否有任一位在当前位掩码中置位
+    Keyword arguments:
+    mask -- 要检查的位掩码
+    Return arguments:
+    bool -- 是否有任一位置位
+    """
     return bool(self._mask & mask)
 
   def all(self, mask: int) -> bool:
+    """
+    判断给定掩码中(限于有效位)的所有位是否都在当前位掩码中置位
+    Keyword arguments:
+    mask -- 要检查的位掩码
+    Return arguments:
+    bool -- 是否全部置位
+    """
     return (self._mask & mask) == (mask & self.ALL_BITS)
 
   def set_mask(self, mask: int, known_bits: Optional[int] = None) -> None:
+    """
+    整体写入位掩码与已知位，超出有效位的部分被丢弃
+    Keyword arguments:
+    mask -- 要写入的位掩码
+    known_bits -- 要写入的已知位，None 时视为所有有效位均已知 (default None)
+    """
     self._mask = mask & self.ALL_BITS
     if known_bits is None:
       self._known_bits = self.ALL_BITS
@@ -844,24 +933,54 @@ class UnnormalFlagMask:
 
   @property
   def mask(self) -> int:
+    """
+    当前的异常位掩码
+    Return arguments:
+    int -- 位掩码
+    """
     return self._mask
 
   @property
   def known_bits(self) -> int:
+    """
+    当前的已知位掩码
+    Return arguments:
+    int -- 已知位掩码
+    """
     return self._known_bits
 
   def to_dict(self) -> Dict[int, bool]:
+    """
+    把全部异常位转成字典
+    Return arguments:
+    Dict[int, bool] -- 键为异常编号(1 到 MAX_INDEX)，值为该位是否置位
+    """
     return {index: self.check(index) for index in range(1, self.MAX_INDEX + 1)}
 
   def copy(self) -> "UnnormalFlagMask":
+    """
+    复制出一个位掩码与已知位都相同的新对象
+    Return arguments:
+    UnnormalFlagMask -- 复制得到的新对象
+    """
     new_mask = UnnormalFlagMask()
     new_mask.set_mask(self._mask, self._known_bits)
     return new_mask
 
   def __int__(self) -> int:
+    """
+    转换为整数时返回位掩码
+    Return arguments:
+    int -- 位掩码
+    """
     return self._mask
 
   def __repr__(self) -> str:
+    """
+    生成对象的字符串表示
+    Return arguments:
+    str -- 含位掩码与已知位的十六进制字符串
+    """
     return f"UnnormalFlagMask(mask={self._mask:#04x}, known={self._known_bits:#04x})"
 
 
@@ -869,6 +988,7 @@ class SPECIAL_FLAG:
   """特殊的flag"""
 
   def __init__(self):
+    """初始化特殊flag对象"""
     self.unnormal_flag: UnnormalFlagMask = UnnormalFlagMask()
     """
         仅为旧存档能反序列化而保留的异常状态位掩码；异常1~7由handle_normal_1~7每次读取时现算，不读写此字段
@@ -966,6 +1086,7 @@ class CHARA_WORK:
   """角色的工作信息结构体"""
 
   def __init__(self):
+    """初始化角色工作信息对象"""
     self.work_type: int = 0
     """ 角色工作的类型 """
     self.recruit_index: int = -1
@@ -984,6 +1105,7 @@ class CHARA_ENTERTAINMENT:
   """角色的娱乐信息结构体"""
 
   def __init__(self):
+    """初始化角色娱乐信息对象"""
     self.entertainment_type: list = [0, 0, 0]
     """ 角色娱乐活动的类型 """
     self.borrow_book_id_set: set = set()
@@ -1002,6 +1124,7 @@ class PLAYER_COLLECTION:
   """玩家收集品结构体"""
 
   def __init__(self):
+    """初始化玩家收集品对象"""
     self.collection_bonus: Dict[int, bool] = {}
     """ 收藏品的解锁奖励 """
     self.token_list: Dict[int, bool] = {}
@@ -1045,6 +1168,7 @@ class ACHIEVEMENT:
   """成就结构体"""
 
   def __init__(self):
+    """初始化成就对象"""
     self.achievement_dict: Dict[int, bool] = {}
     """ 成就字典，键为成就编号，值为是否完成 """
     self.buy_item_count_list: List[int] = []
@@ -1093,6 +1217,7 @@ class PLAYER_ABILITY:
   """玩家能力结构体"""
 
   def __init__(self):
+    """初始化玩家能力对象"""
     self.follow_count: int = 1
     """ 最大同时跟随人数 """
     self.jj_size: int = 1
@@ -1135,6 +1260,7 @@ class Behavior:
   """角色行为状态数据"""
 
   def __init__(self):
+    """初始化角色行为状态对象"""
     self.start_time: datetime.datetime = datetime.datetime(1, 1, 1)
     """ 行为开始时间 """
     self.duration: int = 0
@@ -1183,6 +1309,7 @@ class Chara_Event:
   """角色事件状态数据"""
 
   def __init__(self):
+    """初始化角色事件状态对象"""
     self.event_id: str = ""
     """ 角色当前事件id """
     self.son_event_id: str = ""
@@ -1197,6 +1324,7 @@ class Map:
   """地图数据"""
 
   def __init__(self):
+    """初始化地图数据对象"""
     self.map_path: str = ""
     """ 地图路径 """
     self.map_name: str = ""
@@ -1219,6 +1347,7 @@ class MapDraw:
   """地图绘制数据"""
 
   def __init__(self):
+    """初始化地图绘制数据对象"""
     self.draw_text: List[MapDrawLine] = []
     """ 绘制行对象列表 """
     self.max_width: int = 0
@@ -1229,6 +1358,7 @@ class MapDrawLine:
   """地图绘制行数据"""
 
   def __init__(self):
+    """初始化地图绘制行数据对象"""
     self.width: int = 0
     """ 总行宽 """
     self.draw_list: List[MapDrawText] = []
@@ -1239,6 +1369,7 @@ class MapDrawText:
   """地图绘制文本数据"""
 
   def __init__(self):
+    """初始化地图绘制文本数据对象"""
     self.text: str = ""
     """ 要绘制的文本 """
     self.is_button: bool = False
@@ -1251,6 +1382,7 @@ class TargetPath:
   """寻路目标路径数据"""
 
   def __init__(self):
+    """初始化寻路目标路径对象"""
     self.path: List[str] = []
     """ 寻路路径节点列表 """
     self.time: List[int] = []
@@ -1261,6 +1393,7 @@ class Scene:
   """场景数据"""
 
   def __init__(self):
+    """初始化场景数据对象"""
     self.scene_path: str = ""
     """ 场景路径 """
     self.scene_name: str = ""
@@ -1289,6 +1422,7 @@ class Rhodes_Island:
   """罗德岛相关属性"""
 
   def __init__(self):
+    """初始化罗德岛相关属性对象"""
     self.facility_level: Dict[int, int] = {}
     """ 基地当前所有设施的等级 """
     self.facility_open: Dict[int, bool] = {}
@@ -1623,6 +1757,7 @@ class Country:
   """大地图国家数据"""
 
   def __init__(self):
+    """初始化大地图国家数据对象"""
     self.nation_reputation: Dict[int, float] = {}
     """ 势力声望 """
     self.country_infection_rate: Dict[int, float] = {}
@@ -1637,6 +1772,7 @@ class System_Setting:
   """系统设置"""
 
   def __init__(self):
+    """初始化系统设置对象"""
     self.base_setting: Dict[int, int] = {}
     """ 基础系统设定，即base类 """
     self.draw_setting: Dict[int, int] = {}
@@ -1657,6 +1793,7 @@ class Ai_Setting:
   """AI设置"""
 
   def __init__(self):
+    """初始化AI设置对象"""
     self.ai_chat_setting: Dict[int, Any] = {}
     """ ai聊天设定，见Ai_Chat_Setting.csv """
     self.ai_chat_api_key: Dict[str, str] = {}
@@ -1677,6 +1814,7 @@ class Character:
   """角色数据结构体"""
 
   def __init__(self):
+    """初始化角色数据对象"""
     self.cid: int = 0
     """ 角色id """
     self.name: str = ""
@@ -1854,6 +1992,7 @@ class Cache:
   """游戏缓存数据结构体"""
 
   def __init__(self):
+    """初始化游戏缓存数据对象"""
     self.back_save_panel: bool = False
     """ 退出存档面板 """
     self.wframe_mouse: WFrameMouse = WFrameMouse()
@@ -2062,6 +2201,7 @@ class TargetChange:
   """交互对象角色变化结构体"""
 
   def __init__(self):
+    """初始化交互对象角色变化对象"""
     self.hit_point: int = 0
     """ hp变化 """
     self.mana_point: int = 0
@@ -2090,6 +2230,7 @@ class CharacterStatusChange:
   """角色属性状态变更结构体"""
 
   def __init__(self):
+    """初始化角色属性状态变更对象"""
     self.hit_point: int = 0
     """ hp变化 """
     self.mana_point: int = 0

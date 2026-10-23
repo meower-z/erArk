@@ -1,3 +1,5 @@
+"""游戏缓存对象 cache 的存放处，启动流程赋值之前为 None"""
+
 import typing
 
 from Script.Core import game_type

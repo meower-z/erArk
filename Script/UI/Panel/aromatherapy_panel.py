@@ -1,3 +1,5 @@
+"""香薰疗愈面板与香薰疗愈次数的结算"""
+
 from typing import Tuple, Dict, List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant

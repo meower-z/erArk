@@ -1,3 +1,5 @@
+"""标题流程：绘制游戏标题菜单与logo，并注册标题面板"""
+
 import os
 from types import FunctionType
 from Script.Config import normal_config

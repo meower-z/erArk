@@ -25,6 +25,13 @@ class ModInfo:
   """Mod信息类"""
 
   def __init__(self, mod_id: str, info_dict: dict, mod_path: str):
+    """
+    初始化mod信息
+    Keyword arguments:
+    mod_id -- mod的id
+    info_dict -- mod信息字典，缺少的项使用默认值
+    mod_path -- mod所在文件夹路径
+    """
     self.mod_id = mod_id
     self.name = info_dict.get("name", mod_id)
     self.version = info_dict.get("version", "1.0.0")
@@ -49,11 +56,17 @@ class ModManager:
   _initialized = False
 
   def __new__(cls):
+    """
+    创建mod管理器，已有实例时返回已有实例
+    Return arguments:
+    ModManager -- mod管理器单例
+    """
     if cls._instance is None:
       cls._instance = super().__new__(cls)
     return cls._instance
 
   def __init__(self):
+    """初始化mod管理器，单例只初始化一次"""
     if self._initialized:
       return
     self._initialized = True

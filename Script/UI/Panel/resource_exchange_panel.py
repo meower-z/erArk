@@ -1,3 +1,5 @@
+"""资源交易面板，以及交易价格、供需波动与自动交易的计算"""
+
 from typing import Dict, List, Tuple, Optional
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant

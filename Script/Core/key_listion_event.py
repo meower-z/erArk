@@ -1,3 +1,5 @@
+"""Tk 窗口的鼠标与键盘事件监听，包含输入历史的上下翻查"""
+
 from tkinter import Event
 from Script.Core import main_frame, py_cmd, game_type, cache_control
 

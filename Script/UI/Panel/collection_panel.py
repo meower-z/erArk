@@ -1,3 +1,5 @@
+"""收藏品界面面板，以及信物、内裤、袜子的绘制对象"""
+
 from typing import List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant

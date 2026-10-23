@@ -1,3 +1,5 @@
+"""管理罗德岛的基建界面面板与干员工作岗位的调整"""
+
 from typing import Dict, List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
@@ -1279,6 +1281,11 @@ class Manage_Basement_Panel:
     )
 
   def see_attr(self, character_id: int):
+    """
+    查看指定干员的角色属性面板，可在除玩家外的已获得干员间翻页，返回后面板回到场景互动界面
+    Keyword arguments:
+    character_id -- 要查看的角色id
+    """
     # 获取所有npc的列表，用于上一页下一页功能
     npc_list = list(cache.npc_id_got)
     if 0 in npc_list:

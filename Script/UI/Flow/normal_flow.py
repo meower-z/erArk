@@ -1,3 +1,5 @@
+"""日常游戏流程：把各功能面板按面板id注册到面板调度中"""
+
 from Script.Core import constant, cache_control, game_type
 from Script.Design import handle_panel
 from Script.UI.Panel import (

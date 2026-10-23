@@ -1,3 +1,5 @@
+"""选择睡眠时间的面板与睡到玩家起床时间的计算"""
+
 import datetime
 from types import FunctionType
 from Script.UI.Moudle import draw

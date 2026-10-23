@@ -1,3 +1,5 @@
+"""地图数据的载入、地图字符画的解析整理，以及场景间最短路径数据的生成"""
+
 import os
 import pickle
 from typing import Dict, List

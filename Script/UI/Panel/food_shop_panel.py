@@ -1,3 +1,5 @@
+"""食物商店界面面板与自制食物放入食堂的处理"""
+
 from typing import Tuple
 from types import FunctionType
 from uuid import UUID

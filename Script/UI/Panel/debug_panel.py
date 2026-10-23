@@ -1,3 +1,5 @@
+"""debug 界面面板，以及口上快速测试和数据重建工具"""
+
 from typing import Dict, List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant, py_cmd
@@ -676,6 +678,7 @@ class TALK_QUICK_TEST:
     now_draw.draw()
 
   def nothing(self):
+    """[002] 与 [003] 两个测试按钮的点击回调，不做任何事"""
     pass
 
 

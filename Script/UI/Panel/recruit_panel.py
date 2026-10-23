@@ -1,3 +1,5 @@
+"""招募面板，以及招募栏位的刷新、招募线效率与新干员的招募"""
+
 from typing import List, Tuple
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
@@ -1040,6 +1042,12 @@ class Recruit_Panel:
         break
 
   def _do_appoint_main_hr(self, line_id: int, chara_id: int):
+    """
+    任命或撤销招募线的主招聘专员：该干员已是该线主招聘专员时撤销，否则先清除其在其他线的主招聘专员身份，再任命为该线主招聘专员，不在招聘专员名单中的干员不处理
+    Keyword arguments:
+    line_id -- 招募线id
+    chara_id -- 干员角色id
+    """
     ri = cache.rhodes_island
     if chara_id not in ri.hr_operator_ids_list:
       return

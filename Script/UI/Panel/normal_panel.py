@@ -1,3 +1,5 @@
+"""关门、照顾婴儿、初始奖励能力选择、冰箱与预订房间等日常小面板"""
+
 from typing import List
 from types import FunctionType
 from Script.UI.Moudle import draw, panel

@@ -1,3 +1,5 @@
+"""常量包：面板id、指令类型等常量类与全局数据表，并汇入各行为、状态机、指令常量类"""
+
 from typing import Dict, List, Set
 from types import FunctionType
 from Script.Core import get_text

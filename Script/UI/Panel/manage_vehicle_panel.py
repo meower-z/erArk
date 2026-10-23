@@ -1,3 +1,5 @@
+"""载具管理界面面板，以及基地载具数据的更新与损坏回收结算"""
+
 from typing import Tuple, List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
@@ -85,16 +87,27 @@ class Manage_Vehicle_Panel:
 
   # === 切换排序条件 ===
   def change_sort_by(self, sort_by_type: str):
+    """
+    切换载具列表的排序条件，并回到第一页
+    Keyword arguments:
+    sort_by_type -- 排序条件名称
+    """
     self.sort_by = sort_by_type
     self.current_page = 1
 
   # === 切换升降序 ===
   def change_sort_order(self):
+    """切换载具列表的升序与降序，并回到第一页"""
     self.is_ascending = not self.is_ascending
     self.current_page = 1
 
   # === 切换页数 ===
   def change_page(self, target_page: int):
+    """
+    切换载具列表当前所在的页数
+    Keyword arguments:
+    target_page -- 目标页数
+    """
     self.current_page = target_page
 
   def draw(self):

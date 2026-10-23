@@ -1,3 +1,6 @@
+"""二段结算行为函数字符串常量类 SecondBehavior"""
+
+
 class SecondBehavior:
   """二段结算行为函数"""
 

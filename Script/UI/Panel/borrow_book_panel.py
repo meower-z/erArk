@@ -1,3 +1,5 @@
+"""图书馆借书面板，以及借还书、借阅历史记录与读书条件的处理"""
+
 from typing import Tuple, List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant

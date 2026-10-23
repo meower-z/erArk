@@ -1,3 +1,5 @@
+"""查看全干员所在位置并可移动到其位置的面板"""
+
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant, py_cmd
 from Script.Design import map_handle, handle_premise

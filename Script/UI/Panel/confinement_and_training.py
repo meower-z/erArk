@@ -1,3 +1,5 @@
+"""监禁调教管理面板，以及囚犯的逃脱结算与调教助手的行为选择"""
+
 import os
 from typing import List, Tuple
 from types import FunctionType

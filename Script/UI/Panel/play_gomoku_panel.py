@@ -1,3 +1,5 @@
+"""五子棋小游戏面板：棋盘、局面评估、AI搜索与绘制"""
+
 import random
 import numpy as np
 from collections import deque, defaultdict
@@ -105,18 +107,38 @@ only_three_threshold = 6
 class Gomoku_Cache:
 
   def __init__(self, capacity=1000000):
+    """
+    初始化缓存对象
+    Keyword arguments:
+    capacity -- 最多保存的键数 (default 1000000)
+    """
     self.capacity = capacity
     self.gomoku_cache = deque()
     self.map = {}
 
   # 获取一个键的值
   def get(self, key):
+    """
+    读取缓存中某个键的值
+    Keyword arguments:
+    key -- 要查询的键
+    Return arguments:
+    object -- 键对应的值，键不存在时为 None，缓存开关关闭时为 False
+    """
     if not config['enable_cache']:
       return False
     return self.map.get(key, None)
 
   # 设置或插入一个值
   def put(self, key, value):
+    """
+    缓存开关打开时写入或更新某个键的值
+    Keyword arguments:
+    key -- 要写入的键
+    value -- 要写入的值
+    Return arguments:
+    bool | None -- 缓存开关关闭时为 False，否则为 None
+    """
     if not config['enable_cache']:
       return False
     if len(self.gomoku_cache) >= self.capacity:
@@ -129,6 +151,13 @@ class Gomoku_Cache:
 
   # 检查缓存中是否存在某个键
   def has(self, key):
+    """
+    判断缓存中是否有某个键
+    Keyword arguments:
+    key -- 要查询的键
+    Return arguments:
+    bool -- 是否有该键，缓存开关关闭时为 False
+    """
     if not config['enable_cache']:
       return False
     return key in self.map
@@ -137,6 +166,12 @@ class Gomoku_Cache:
 class Gomoku_Board:
 
   def __init__(self, size=15, first_role=1):
+    """
+    初始化五子棋棋盘对象
+    Keyword arguments:
+    size -- 棋盘边长 (default 15)
+    first_role -- 先手方，1 或 -1 (default 1)
+    """
     self.size = size
     self.board = np.zeros((self.size, self.size), dtype=int)
     self.first_role = first_role  # 1 for black, -1 for white
@@ -151,6 +186,11 @@ class Gomoku_Board:
     self.evaluator = Evaluate(self.size)
 
   def is_game_over(self):
+    """
+    判断对局是否结束
+    Return arguments:
+    bool -- 对局是否结束
+    """
     hash_value = self.hash()
     if self.gameover_cache.get(hash_value):
       return self.gameover_cache.get(hash_value)
@@ -165,6 +205,11 @@ class Gomoku_Board:
     return True
 
   def get_winner(self):
+    """
+    判断获胜方
+    Return arguments:
+    numpy 整数 | int -- 获胜方的棋子值，无人获胜为 0
+    """
     hash_value = self.hash()
     if self.winner_cache.get(hash_value):
       return self.winner_cache.get(hash_value)
@@ -194,10 +239,24 @@ class Gomoku_Board:
     return 0
 
   def get_valid_moves(self):
+    """
+    返回棋盘上所有空位
+    Return arguments:
+    list -- 空位坐标列表
+    """
     print('get_valid_moves is deprecated. Use get_valuable_moves instead.')
     return list(zip(*np.where(self.board == 0)))
 
   def put(self, i, j, role=None):
+    """
+    在指定坐标落子
+    Keyword arguments:
+    i -- 行号
+    j -- 列号
+    role -- 落子方，为 None 时用当前行棋方 (default None)
+    Return arguments:
+    bool -- 是否落子成功
+    """
     if role is None:
       role = self.role
     if not (0 <= i < self.size and 0 <= j < self.size):
@@ -214,6 +273,11 @@ class Gomoku_Board:
     return True
 
   def undo(self):
+    """
+    撤销最近一步落子
+    Return arguments:
+    bool -- 是否撤销成功
+    """
     if not self.history:
       print('No moves to undo!')
       return False
@@ -227,16 +291,40 @@ class Gomoku_Board:
     return True
 
   def position2coordinate(self, position):
+    """
+    将位置序号转换为 (行号, 列号)
+    Keyword arguments:
+    position -- 位置序号
+    Return arguments:
+    tuple -- (行号, 列号)
+    """
     row = position // self.size
     col = position % self.size
     return row, col
 
   def coordinate2position(self, coordinate):
+    """
+    将 (行号, 列号) 转换为位置序号
+    Keyword arguments:
+    coordinate -- (行号, 列号)
+    Return arguments:
+    int -- 位置序号
+    """
     return coordinate[0] * self.size + coordinate[1]
 
   def get_valuable_moves(
       self, role, depth=0, only_three=False, only_four=False
   ):
+    """
+    获取指定行棋方值得搜索的落子点
+    Keyword arguments:
+    role -- 落子方，1 或 -1
+    depth -- 当前搜索深度 (default 0)
+    only_three -- 传给评估器 get_moves 的同名开关 (default False)
+    only_four -- 传给评估器 get_moves 的同名开关 (default False)
+    Return arguments:
+    list -- 落子坐标列表
+    """
     hash_value = self.hash()
     prev = self.valuable_moves_cache.get(hash_value)
     if (
@@ -266,6 +354,13 @@ class Gomoku_Board:
     return moves
 
   def display(self, extra_points=()):
+    """
+    生成带行列标注的棋盘文本
+    Keyword arguments:
+    extra_points -- 要用 ? 标出的坐标 (default ())
+    Return arguments:
+    str -- 棋盘文本
+    """
     extra_positions = [
         self.coordinate2position(point) for point in extra_points
     ]
@@ -292,9 +387,21 @@ class Gomoku_Board:
     return result
 
   def hash(self):
+    """
+    获取当前棋盘的哈希值
+    Return arguments:
+    int -- 哈希值
+    """
     return self.zobrist.get_hash()
 
   def evaluate(self, role):
+    """
+    评估当前局面对指定一方的分数
+    Keyword arguments:
+    role -- 评估视角，1 或 -1
+    Return arguments:
+    numpy 整数 -- 局面分数
+    """
     hash_value = self.hash()
     prev = self.evaluate_cache.get(hash_value)
     if prev and prev['role'] == role:
@@ -308,12 +415,22 @@ class Gomoku_Board:
     return score
 
   def reverse(self):
+    """
+    生成黑白互换的新棋盘
+    Return arguments:
+    Gomoku_Board -- 新棋盘对象
+    """
     new_board = Gomoku_Board(self.size, -self.first_role)
     for move in self.history:
       new_board.put(move[0], move[1], -move[2])
     return new_board
 
   def __str__(self):
+    """
+    将棋盘转为文本
+    Return arguments:
+    str -- 棋盘文本
+    """
     return '\n'.join(''.join(str(cell) for cell in row) for row in self.board)
 
   # def play_game(self, ai_difficulty=4):
@@ -341,6 +458,11 @@ class Gomoku_Board:
   #             break
 
   def get_player_move(self):
+    """
+    从控制台读取玩家落子
+    Return arguments:
+    tuple -- (行号, 列号)
+    """
     while True:
       try:
         move = input(f'Player {self.role} move (row,col): ')
@@ -355,11 +477,23 @@ class Gomoku_Board:
 class ZobristCache:
 
   def __init__(self, size):
+    """
+    初始化 Zobrist 哈希对象
+    Keyword arguments:
+    size -- 棋盘边长
+    """
     self.size = size
     self.zobrist_table = self.initialize_zobrist_table(size)
     self.hash = 0
 
   def initialize_zobrist_table(self, size):
+    """
+    为棋盘每个位置生成双方的随机哈希值
+    Keyword arguments:
+    size -- 棋盘边长
+    Return arguments:
+    list -- 二维哈希表
+    """
     table = []
     for i in range(size):
       row = []
@@ -374,18 +508,42 @@ class ZobristCache:
     return table
 
   def random_bit_string(self, length):
+    """
+    把 length 位随机二进制串转成整数
+    Keyword arguments:
+    length -- 二进制串的位数
+    Return arguments:
+    int -- 转成的整数
+    """
     return int(''.join(str(random.randint(0, 1)) for _ in range(length)), 2)
 
   def toggle_piece(self, x, y, role):
+    """
+    把某位置某一方棋子的哈希值异或进当前哈希
+    Keyword arguments:
+    x -- 行号
+    y -- 列号
+    role -- 棋子方，1 或 -1
+    """
     self.hash ^= self.zobrist_table[x][y][role]
 
   def get_hash(self):
+    """
+    获取当前哈希值
+    Return arguments:
+    int -- 哈希值
+    """
     return self.hash
 
 
 class Evaluate:
 
   def __init__(self, size=15):
+    """
+    初始化局面评估对象
+    Keyword arguments:
+    size -- 棋盘边长 (default 15)
+    """
     self.size = size
     self.board = np.zeros((self.size + 2, self.size + 2), dtype=int)
     self.board[0, :] = self.board[:, 0] = self.board[-1, :] = self.board[
@@ -397,6 +555,13 @@ class Evaluate:
     self.history = []  # 记录历史 [position, role]
 
   def move(self, x, y, role):
+    """
+    在评估棋盘上落子并更新评估数据
+    Keyword arguments:
+    x -- 行号
+    y -- 列号
+    role -- 落子方，1 或 -1
+    """
     # 清空记录
     for d in range(4):
       self.shape_cache[role][d][x][y] = 0
@@ -410,11 +575,20 @@ class Evaluate:
     self.history.append((coordinate2position(x, y, self.size), role))
 
   def undo(self, x, y):
+    """
+    在评估棋盘上撤销某点的落子并更新评估数据
+    Keyword arguments:
+    x -- 行号
+    y -- 列号
+    """
     self.board[x + 1, y + 1] = 0  # Adjust for the added wall
     self.update_point(x, y)
     self.history.pop()
 
   def init_points(self):
+    """
+    初始化 shape_cache 与 points_cache
+    """
     # 缓存每个点位的分数，避免重复计算
     # 结构： [role][direction][x][y] = shape
     self.shape_cache = defaultdict(
@@ -427,6 +601,13 @@ class Evaluate:
     self.points_cache = defaultdict(lambda: defaultdict(set))
 
   def get_points_in_line(self, role):
+    """
+    按形状收集最近几步落子所在直线上的空位
+    Keyword arguments:
+    role -- 落子方，1 或 -1
+    Return arguments:
+    defaultdict | bool -- {形状: 位置序号集合}，没有时为 False
+    """
     points_in_line = defaultdict(set)  # 在一条线上的点位
     has_points_in_line = False
     last2_points = [
@@ -463,6 +644,16 @@ class Evaluate:
     return False
 
   def get_points(self, role, depth, vct, vcf):
+    """
+    按形状收集当前可考虑的空位
+    Keyword arguments:
+    role -- 落子方，1 或 -1
+    depth -- 当前搜索深度
+    vct -- vct 搜索开关
+    vcf -- vcf 搜索开关
+    Return arguments:
+    defaultdict -- {形状: 位置序号集合}
+    """
     first = role if depth % 2 == 0 else -role  # 先手
     start = PERFORMANCE['getPointsTime']
     if config['only_in_line'] and len(self.history) >= config['inline_count']:
@@ -572,6 +763,12 @@ class Evaluate:
     return points
 
   def update_point(self, x, y):
+    """
+    重算该点及其周围点位中空位的形状与得分
+    Keyword arguments:
+    x -- 行号
+    y -- 列号
+    """
     start = PERFORMANCE['updateTime']
     self.update_single_point(x, y, 1)
     self.update_single_point(x, y, -1)
@@ -599,6 +796,16 @@ class Evaluate:
     PERFORMANCE['updateTime'] += PERFORMANCE['updateTime'] - start
 
   def update_single_point(self, x, y, role, direction=None):
+    """
+    重算某点对指定一方的形状缓存与得分
+    Keyword arguments:
+    x -- 行号
+    y -- 列号
+    role -- 假设落子的一方，1 或 -1
+    direction -- 只重算的方向 (ox, oy)，为 None 时为四个方向 (default None)
+    Return arguments:
+    int | float | None -- 该点得分，该点已有棋子时为 None
+    """
     if self.board[x + 1, y + 1] != 0:
       return
 
@@ -655,6 +862,13 @@ class Evaluate:
     return score
 
   def evaluate(self, role):
+    """
+    根据双方得分表计算局面分数
+    Keyword arguments:
+    role -- 评估视角，1 或 -1
+    Return arguments:
+    numpy 整数 -- 局面分数
+    """
     black_score = np.sum(self.black_scores)
     white_score = np.sum(self.white_scores)
     score = (
@@ -663,6 +877,16 @@ class Evaluate:
     return score
 
   def get_moves(self, role, depth, only_three=False, only_four=False):
+    """
+    获取候选落子坐标
+    Keyword arguments:
+    role -- 落子方，1 或 -1
+    depth -- 当前搜索深度
+    only_three -- 传给 _get_moves 的同名开关 (default False)
+    only_four -- 传给 _get_moves 的同名开关 (default False)
+    Return arguments:
+    list -- 落子坐标列表
+    """
     moves = [
         (move // self.size, move % self.size)
         for move in self._get_moves(role, depth, only_three, only_four)
@@ -670,6 +894,16 @@ class Evaluate:
     return moves
 
   def _get_moves(self, role, depth, only_three=False, only_four=False):
+    """
+    按形状挑选候选落子点
+    Keyword arguments:
+    role -- 落子方，1 或 -1
+    depth -- 当前搜索深度
+    only_three -- 传给 get_points 的 vct 开关 (default False)
+    only_four -- 传给 get_points 的 vcf 开关 (default False)
+    Return arguments:
+    set -- 位置序号集合
+    """
     points = self.get_points(role, depth, only_three, only_four)
     fives = points[SHAPES['FIVE']]
     block_fives = points[SHAPES['BLOCK_FIVE']]
@@ -702,6 +936,9 @@ class Evaluate:
     return res
 
   def display(self):
+    """
+    在控制台打印评估棋盘
+    """
     result = ''
     for i in range(1, self.size + 1):
       for j in range(1, self.size + 1):
@@ -716,6 +953,15 @@ class Evaluate:
 
 
 def check_winner(list, COLUMN, ROW):
+  """
+  判断棋子坐标列表里是否有五子连珠
+  Keyword arguments:
+  list -- 一方棋子的坐标 (行, 列) 列表
+  COLUMN -- 棋盘尺寸
+  ROW -- 棋盘尺寸
+  Return arguments:
+  bool -- 是否有五子连珠
+  """
   # 检查是否有五子连珠
   for m in range(COLUMN):
     for n in range(ROW):
@@ -762,6 +1008,13 @@ def check_winner(list, COLUMN, ROW):
 
 # 形状转换分数，注意这里的分数是当前位置还没有落子的分数
 def get_real_shape_score(shape):
+  """
+  将形状编号转换为评估用的得分
+  Keyword arguments:
+  shape -- 形状编号
+  Return arguments:
+  int | float -- 得分
+  """
   if shape == SHAPES['FIVE']:
     return FOUR
   elif shape == SHAPES['BLOCK_FIVE']:
@@ -789,6 +1042,14 @@ def get_real_shape_score(shape):
 
 
 def direction2index(ox, oy):
+  """
+  将方向向量转换为方向序号
+  Keyword arguments:
+  ox -- 行方向偏移
+  oy -- 列方向偏移
+  Return arguments:
+  int -- 方向序号
+  """
   if ox == 0:
     return 0  # |
   if oy == 0:
@@ -801,15 +1062,41 @@ def direction2index(ox, oy):
 
 # 坐标转换函数
 def position2coordinate(position, size):
+  """
+  将位置序号转换为 [行号, 列号]
+  Keyword arguments:
+  position -- 位置序号
+  size -- 棋盘边长
+  Return arguments:
+  list -- [行号, 列号]
+  """
   return [position // size, position % size]
 
 
 def coordinate2position(x, y, size):
+  """
+  将行号与列号转换为位置序号
+  Keyword arguments:
+  x -- 行号
+  y -- 列号
+  size -- 棋盘边长
+  Return arguments:
+  int -- 位置序号
+  """
   return x * size + y
 
 
 # a和b是否在一条直线上，且距离小于maxDistance
 def is_line(a, b, size):
+  """
+  判断两个位置是否在同一行、同一列或同一斜线上，且距离小于配置的 in_line_distance
+  Keyword arguments:
+  a -- 位置序号
+  b -- 位置序号
+  size -- 棋盘边长
+  Return arguments:
+  bool -- 是否满足
+  """
   max_distance = config['in_line_distance']
   x1, y1 = position2coordinate(a, size)
   x2, y2 = position2coordinate(b, size)
@@ -821,6 +1108,15 @@ def is_line(a, b, size):
 
 
 def is_all_in_line(p, arr, size):
+  """
+  判断列表里的每个位置是否都与指定位置满足 is_line
+  Keyword arguments:
+  p -- 指定位置序号
+  arr -- 位置序号列表
+  size -- 棋盘边长
+  Return arguments:
+  bool -- 是否全部满足
+  """
   for i in range(len(arr)):
     if not is_line(p, arr[i], size):
       return False
@@ -828,6 +1124,15 @@ def is_all_in_line(p, arr, size):
 
 
 def has_in_line(p, arr, size):
+  """
+  判断列表里是否有位置与指定位置满足 is_line
+  Keyword arguments:
+  p -- 指定位置序号
+  arr -- 位置序号列表
+  size -- 棋盘边长
+  Return arguments:
+  bool -- 是否有满足的位置
+  """
   for i in range(len(arr)):
     if is_line(p, arr[i], size):
       return True
@@ -836,6 +1141,18 @@ def has_in_line(p, arr, size):
 
 # 使用字符串匹配的方式实现的形状检测，速度较慢，但逻辑比较容易理解
 def get_shape(board, x, y, offsetX, offsetY, role):
+  """
+  判断某点沿指定方向的形状
+  Keyword arguments:
+  board -- 带边界的评估棋盘
+  x -- 行号
+  y -- 列号
+  offsetX -- 行方向偏移
+  offsetY -- 列方向偏移
+  role -- 落子方，1 或 -1
+  Return arguments:
+  list -- [形状, self_count, opponent_count, empty_count]
+  """
   opponent = -role
   empty_count = 0
   self_count = 1
@@ -944,6 +1261,18 @@ def get_shape(board, x, y, offsetX, offsetY, role):
 
 
 def count_shape(board, x, y, offsetX, offsetY, role):
+  """
+  沿指定方向统计某点一侧的棋子与空位
+  Keyword arguments:
+  board -- 带边界的评估棋盘
+  x -- 行号
+  y -- 列号
+  offsetX -- 行方向偏移
+  offsetY -- 列方向偏移
+  role -- 落子方，1 或 -1
+  Return arguments:
+  dict -- 键为 self_count、total_length、no_empty_self_count、one_empty_self_count、inner_empty_count、side_empty_count 的计数
+  """
   opponent = -role
 
   inner_empty_count = 0  # 棋子中间的内部空位
@@ -992,6 +1321,18 @@ def count_shape(board, x, y, offsetX, offsetY, role):
 
 # 使用遍历位置的方式实现的形状检测，速度较快，大约是字符串速度的2倍 但理解起来会稍微复杂一些
 def get_shape_fast(board, x, y, offsetX, offsetY, role):
+  """
+  判断某点沿指定方向的形状
+  Keyword arguments:
+  board -- 带边界的评估棋盘
+  x -- 行号
+  y -- 列号
+  offsetX -- 行方向偏移
+  offsetY -- 列方向偏移
+  role -- 落子方，1 或 -1
+  Return arguments:
+  list -- [形状, self_count]
+  """
   # 有一点点优化效果：跳过为空的节点
   if (
       board[x + offsetX + 1][y + offsetY + 1] == 0
@@ -1072,14 +1413,38 @@ def get_shape_fast(board, x, y, offsetX, offsetY, role):
 
 
 def is_five(shape):
+  """
+  判断形状是否为 FIVE 或 BLOCK_FIVE
+  Keyword arguments:
+  shape -- 形状编号
+  Return arguments:
+  bool -- 是否为其中之一
+  """
   return shape == SHAPES['FIVE'] or shape == SHAPES['BLOCK_FIVE']
 
 
 def is_four(shape):
+  """
+  判断形状是否为 FOUR 或 BLOCK_FOUR
+  Keyword arguments:
+  shape -- 形状编号
+  Return arguments:
+  bool -- 是否为其中之一
+  """
   return shape == SHAPES['FOUR'] or shape == SHAPES['BLOCK_FOUR']
 
 
 def get_all_shapes_of_point(shape_cache, x, y, role):
+  """
+  收集某点在四个方向上大于 0 的形状
+  Keyword arguments:
+  shape_cache -- 形状缓存，shape_cache[角色][方向][行][列]
+  x -- 行号
+  y -- 列号
+  role -- 1 或 -1，为假值时取双方
+  Return arguments:
+  list -- 形状编号列表
+  """
   roles = [role] if role else [1, -1]
   result = []
   for r in roles:
@@ -1441,6 +1806,15 @@ class GomokuPanel:
         self.ai_move()
 
   def factory(self, only_three=False, only_four=False):
+    """
+    生成搜索函数
+    Keyword arguments:
+    only_three -- 搜索选点用的 only_three 开关 (default False)
+    only_four -- 搜索选点用的 only_four 开关 (default False)
+    Return arguments:
+    function -- 搜索函数 helper，返回 [分数, 落子或 None, 路径]
+    """
+
     # depth 表示总深度，cDepth表示当前搜索深度
     def helper(board, role, depth, c_depth=0, path=None, alpha=-MAX, beta=MAX):
       board = self.board_class
@@ -1529,6 +1903,16 @@ class GomokuPanel:
     return helper
 
   def minmax(self, board, role, depth=4, enable_vct=True):
+    """
+    AI 搜索入口，在面板自身的棋盘上搜索落子
+    Keyword arguments:
+    board -- 不使用，函数内换成面板自身的棋盘
+    role -- AI 一方，1 或 -1
+    depth -- 搜索深度 (default 4)
+    enable_vct -- 是否先做 vct 搜索 (default True)
+    Return arguments:
+    list -- [分数, 落子坐标或 None, 落子路径]
+    """
     board = self.board_class
     if enable_vct:
       vct_depth = depth + 4

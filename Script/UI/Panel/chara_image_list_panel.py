@@ -1,3 +1,5 @@
+"""查看角色图片列表的绘制对象与按钮"""
+
 from typing import List
 from types import FunctionType
 from Script.UI.Moudle import draw

@@ -1,3 +1,5 @@
+"""日记界面面板"""
+
 from turtle import position
 from typing import Dict, List
 from types import FunctionType

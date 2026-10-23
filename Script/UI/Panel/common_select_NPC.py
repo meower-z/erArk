@@ -1,3 +1,5 @@
+"""通用的从列表中选择目标干员的按钮列表与筛选切换"""
+
 from typing import List, Optional
 from types import FunctionType
 from Script.UI.Moudle import draw, panel
