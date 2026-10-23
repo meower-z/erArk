@@ -2,7 +2,7 @@ import datetime
 from functools import wraps
 from types import FunctionType
 from Script.Core import cache_control, constant, constant_promise, game_type, get_text
-from Script.Design import map_handle, game_time, attr_calculation
+from Script.Design import map_handle, game_time, attr_calculation, child_stage_gate
 from Script.Config import normal_config, game_config
 
 cache: game_type.Cache = cache_control.cache
@@ -2192,6 +2192,36 @@ def handle_this_event_not_in_today_triggered_record(character_id: int) -> int:
   return 1
 
 
+TARGET_HIDDEN_INSTRUCT_TYPES = {
+    constant.InstructType.ARTS,
+    constant.InstructType.OBSCENITY,
+    constant.InstructType.SEX,
+}
+""" 交互对象临盆、产后或处于幼年阶段时不显示的指令类型：技艺、猥亵、性爱 """
+
+
+def instruct_type_shown(instruct_type: int) -> bool:
+  """
+  判断玩家当前能否看到某类指令
+  Keyword arguments:
+  instruct_type -- 指令类型（constant.InstructType）
+  Return arguments:
+  bool -- 玩家的指令类型过滤开着该类，且该类不因交互对象而隐藏时为True
+  功能描述:
+      交互对象临盆、产后或处于幼年阶段（素质101、102）时，隐藏TARGET_HIDDEN_INSTRUCT_TYPES里的类型。
+      只读玩家的过滤设置 cache.instruct_type_filter，不改写它。
+  """
+  if not cache.instruct_type_filter[instruct_type]:
+    return False
+  if instruct_type not in TARGET_HIDDEN_INSTRUCT_TYPES:
+    return True
+  target_id = cache.character_data[0].target_character_id
+  return not (
+      handle_target_parturient_or_postpartum(0)
+      or child_stage_gate.is_child_stage(target_id)
+  )
+
+
 @add_premise(constant_promise.Premise.DAILY_PANEL_SHOW)
 def handle_daily_panel_show(character_id: int) -> int:
   """
@@ -2243,7 +2273,7 @@ def handle_arts_panel_show(character_id: int) -> int:
   Return arguments:
   int -- 权重
   """
-  if cache.instruct_type_filter[4]:
+  if instruct_type_shown(constant.InstructType.ARTS):
     return 1
   return 0
 
@@ -2257,7 +2287,7 @@ def handle_obscenity_panel_show(character_id: int) -> int:
   Return arguments:
   int -- 权重
   """
-  if cache.instruct_type_filter[5]:
+  if instruct_type_shown(constant.InstructType.OBSCENITY):
     return 1
   return 0
 
@@ -2271,7 +2301,7 @@ def handle_sex_panel_show(character_id: int) -> int:
   Return arguments:
   int -- 权重
   """
-  if cache.instruct_type_filter[6]:
+  if instruct_type_shown(constant.InstructType.SEX):
     return 1
   return 0
 
