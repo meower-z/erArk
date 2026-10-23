@@ -800,8 +800,9 @@ class Gift_Panel:
         draw_text = _("\n  {0}不是博士的女儿，无法使用成长停滞药\n").format(
             target_character_data.name
         )
-      elif not handle_premise.handle_self_child_or_loli_1(
-          target_character_data.cid
+      elif not (
+          handle_premise.handle_self_is_child(target_character_data.cid)
+          or handle_premise.handle_self_is_loli(target_character_data.cid)
       ):
         effective_flag = False
         draw_text = _(
@@ -821,8 +822,9 @@ class Gift_Panel:
         draw_text = _("\n  {0}不是博士的女儿，无法使用成长继续药\n").format(
             target_character_data.name
         )
-      elif not handle_premise.handle_self_child_or_loli_1(
-          target_character_data.cid
+      elif not (
+          handle_premise.handle_self_is_child(target_character_data.cid)
+          or handle_premise.handle_self_is_loli(target_character_data.cid)
       ):
         effective_flag = False
         draw_text = _(

@@ -1260,8 +1260,8 @@ t_is_medical,T_IS_MEDICAL,属性_素质,交互对象的职业为医疗
 child_1,SELF_IS_CHILD,属性_素质,自己是幼女
 baby_1,SELF_IS_BABY,属性_素质,自己是婴儿
 loli_1,SELF_IS_LOLI,属性_素质,自己是学员
-self_child_or_loli_1,SELF_CHILD_OR_LOLI_1,属性_素质,自己幼女或学员==1
-t_child_or_loli_1,T_CHILD_OR_LOLI_1,属性_素质,交互对象幼女或学员==1
+self_child_or_loli_1,SELF_CHILD_OR_LOLI_1,属性_素质,自己是幼女（儿童阶段，学员不算）
+t_child_or_loli_1,T_CHILD_OR_LOLI_1,属性_素质,交互对象是幼女（儿童阶段，学员不算）
 self_underage,SELF_UNDERAGE,属性_素质,自己是未成年
 self_not_underage,SELF_NOT_UNDERAGE,属性_素质,自己不是未成年
 patient_0,TARGET_NOT_PATIENT,属性_素质,交互对象不是源石病感染者
