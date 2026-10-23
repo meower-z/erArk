@@ -2,7 +2,7 @@
 
 import os
 import pickle
-from typing import Dict, List
+from typing import Any, Dict, List, Tuple
 from Script.Core import game_type, json_handle, get_text, text_handle, cache_control, constant, rich_text, dijkstra
 from Script.Design import map_handle
 
@@ -21,28 +21,39 @@ all_map_data_path = os.path.join("data", "MapData")
 
 
 def init_map_data() -> None:
-  """载入地图和场景数据"""
-  if (
-      os.path.exists(all_scene_data_path)
-      and os.path.exists(all_map_data_path)
-      and os.path.exists(all_place_data_path)
-      and os.path.exists(scene_path_edge_path)
+  """载入地图和场景数据：场景名与地图名经过翻译，三个 pickle 预处理文件在数据之后记着写出它们时的游戏语言；
+  四个预处理文件齐全且三个记的都是当前语言时读入它们，否则由 data/map 重建并写出"""
+  pickle_paths: Tuple[str, str, str] = (
+      all_scene_data_path,
+      all_map_data_path,
+      all_place_data_path,
+  )
+  # pickle.load 返回 Any：三个文件分别存场景、地图、地点标签三种数据
+  loaded: Dict[str, Any] = {}
+  if all(
+      os.path.exists(path) for path in (*pickle_paths, scene_path_edge_path)
   ):
-    with open(all_scene_data_path, "rb") as all_scene_data_file:
-      cache.scene_data = pickle.load(all_scene_data_file)
-    with open(all_map_data_path, "rb") as all_map_data_file:
-      cache.map_data = pickle.load(all_map_data_file)
-    with open(all_place_data_path, "rb") as all_place_data_file:
-      constant.place_data = pickle.load(all_place_data_file)
+    for path in pickle_paths:
+      with open(path, "rb") as now_file:
+        data: Any = pickle.load(now_file)
+        if now_file.peek(1) and pickle.load(now_file) == get_text.now_language:
+          loaded[path] = data
+  if len(loaded) == len(pickle_paths):
+    cache.scene_data = loaded[all_scene_data_path]
+    cache.map_data = loaded[all_map_data_path]
+    constant.place_data = loaded[all_place_data_path]
     map_handle.scene_path_edge = json_handle.load_json(scene_path_edge_path)
   else:
     load_dir_now(map_data_path)
-    with open(all_map_data_path, "wb") as all_map_data_file:
-      pickle.dump(cache.map_data, all_map_data_file)
-    with open(all_scene_data_path, "wb") as all_scene_data_file:
-      pickle.dump(cache.scene_data, all_scene_data_file)
-    with open(all_place_data_path, "wb") as all_place_data_file:
-      pickle.dump(constant.place_data, all_place_data_file)
+    built: Tuple[
+        Dict[str, game_type.Scene],
+        Dict[str, game_type.Map],
+        Dict[str, List[str]],
+    ] = (cache.scene_data, cache.map_data, constant.place_data)
+    for path, built_data in zip(pickle_paths, built):
+      with open(path, "wb") as built_file:
+        pickle.dump(built_data, built_file)
+        pickle.dump(get_text.now_language, built_file)
     map_handle.init_scene_edge_path_data()
 
 
