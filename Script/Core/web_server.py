@@ -2270,7 +2270,7 @@ def find_free_port(start_port=5000, max_attempts=50):
       else:
         print(f'端口 {port} 可用')
       return port
-    except socket.error as e:
+    except socket.error:
       # 端口被占用，尝试下一个
       if port == start_port:
         pass  # 已经在上面显示了详细信息
@@ -3046,7 +3046,7 @@ def start_server():
               )
               lines = result.stdout.split('\n')
               ips = []
-              for i, line in enumerate(lines):
+              for __, line in enumerate(lines):
                 if 'IPv4' in line or 'IP Address' in line:
                   # 提取IP地址
                   parts = line.split(':')

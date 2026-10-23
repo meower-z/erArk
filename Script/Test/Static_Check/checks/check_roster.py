@@ -156,7 +156,6 @@ def check_player_id_not_lingering_in_roster() -> List[CheckFailure]:
   的保守豁免，避免每局开头都刷一条假警报；游戏时间推进后(game_round>1)仍命中才报出
   """
   cache = cache_control.cache
-  ri = cache.rhodes_island
   warn = _sev(cache, True)
   failures: List[CheckFailure] = []
   if 0 not in cache.npc_id_got:

@@ -818,7 +818,6 @@ def check_island_16_dormitory_managers_structure() -> List[CheckFailure]:
   dormitory_managers = getattr(ri, "dormitory_managers", None)
   if not isinstance(dormitory_managers, dict):
     return []
-  failures = []
   illegal_layers = [
       layer for layer in dormitory_managers if layer not in range(1, 10)
   ]
@@ -990,8 +989,6 @@ def check_island_20_dormitory_room_capacity() -> List[CheckFailure]:
     if ch is None:
       continue
     occ.setdefault(ch.dormitory, []).append(cid)
-  ri = cache.rhodes_island
-  materials = getattr(ri, "materials_resouce", {})
   failures = []
   for path, cids in occ.items():
     try:

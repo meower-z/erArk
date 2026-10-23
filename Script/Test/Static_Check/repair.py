@@ -557,7 +557,7 @@ def apply_all_repairs(cache) -> List[dict]:
   all_records: List[dict] = []
   if getattr(cache, "debug_mode", False):
     return all_records
-  for check_id, (repair_name, repair_func) in _repair_registry.items():
+  for __, (__, repair_func) in _repair_registry.items():
     try:
       all_records.extend(repair_func(cache))
     except Exception as e:
