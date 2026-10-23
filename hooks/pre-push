@@ -1,0 +1,11 @@
+#!/bin/sh
+# 本钩子没有自己的检查，只串接到 .local 钩子（见 _chain.sh）
+. "$(dirname "$0")/_chain.sh"
+
+# 本钩子自己的检查：没有
+# 返回：0
+own_job() {
+  return 0
+}
+
+run_chain pre-push "$@"

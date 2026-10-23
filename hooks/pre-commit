@@ -1,0 +1,6 @@
+#!/bin/sh
+# 提交前检查暂存的 Python 代码（见 _lint.sh），再串接到 .local 钩子（见 _chain.sh）
+hooks_dir=$(dirname "$0")
+. "$hooks_dir/_chain.sh"
+. "$hooks_dir/_lint.sh"
+run_chain pre-commit "$@"

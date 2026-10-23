@@ -8,3 +8,15 @@ pyink-use-majority-quotes = true
 include = '^/((\.github|mod|profiling|Script|tests|tools)/.*)?[^/]+\.pyi?$'
 # config_def.py 由 buildconfig.py 生成
 force-exclude = '^/Script/Config/config_def\.py$'
+
+# mypy 默认参数，老模块用这一套；新模块的严格参数由可选的本机 lint 引擎运行时另加
+[tool.mypy]
+explicit_package_bases = true
+follow_imports = "silent"
+
+# lint 棘轮：基线文件、排除的文件与模块行数（超过 soft 行警告，超过 hard 行算违规）
+[tool.lint-ratchet]
+baseline = ".lint-baseline.tsv"
+exclude = ["Script/Config/config_def.py"]
+soft = 300
+hard = 400

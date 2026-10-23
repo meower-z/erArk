@@ -84,7 +84,7 @@ Headless regression tests live under `tools/tests/` (currently `tools/tests/educ
 #### Mod System
 - **Manager**: `Script/Core/mod_manager.py` (`ModInfo` / `ModManager`); `init_mod_system()` is called from `game.py` at startup (failures only warn, never abort)
 - **Capabilities**: mod metadata (`mod_info.json`) with dependencies / incompatibilities / load priority, script-level **function replacement** (original functions are saved and swapped), and asset overrides (e.g. replacing a CSV)
-- **Configuration**: `mod/mod_config.json` (`enabled_mods`, `load_order`); sample mods in `mod/easy_mode/` and `mod/semen_boost/`
+- **Configuration**: `mod/mod_config.json` (`enabled_mods`, `load_order`); sample mod in `mod/semen_boost/`
 
 #### AI Text Generation
 - **Core**: `Script/Design/handle_chat_ai.py` — supports OpenAI-compatible APIs (including DeepSeek) and Google Gemini; entry point `judge_use_text_ai()` returns the original text unless AI chat is enabled in the in-game settings
@@ -106,7 +106,8 @@ The game supports a web-based interface:
    - Return values and types
    - Function purpose
 3. **Code Sections**: Each code section should have comments explaining its purpose
-4. **Code Style**: Use Black formatter with line width 200
+4. **Code Style**: pyink (`pyink .` at the repo root) with 2-space indent, 80 columns and majority quotes; the generated `Script/Config/config_def.py` is excluded. pylint (`.pylintrc`) and mypy (`pyproject.toml`) follow a ratchet rule: new code must be fully clean, changed code may never get worse than its entry in `.lint-baseline.tsv`, and the baseline only shrinks. The repo hooks on their own check only formatting; see `CONTRIBUTING.md`.
+5. **Hooks setup**: `pip install -r requirements-dev.txt` and `git config core.hooksPath hooks`
 
 ## Key Configuration Files
 

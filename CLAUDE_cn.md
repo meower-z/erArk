@@ -82,7 +82,7 @@ pip install -r requirements.txt
 #### Mod 系统
 - **管理器**：`Script/Core/mod_manager.py`（`ModInfo` / `ModManager`）；`game.py` 启动时调用 `init_mod_system()`（失败仅告警，不会中断游戏）
 - **能力**：mod 元数据（`mod_info.json`）支持依赖/不兼容声明与加载优先级；支持脚本级**函数替换**（保存原函数并注入 mod 新函数）以及素材覆盖（如替换某个 CSV）
-- **配置**：`mod/mod_config.json`（`enabled_mods`、`load_order`）；示例 mod 见 `mod/easy_mode/` 和 `mod/semen_boost/`
+- **配置**：`mod/mod_config.json`（`enabled_mods`、`load_order`）；示例 mod 见 `mod/semen_boost/`
 
 #### AI 文本生成
 - **核心**：`Script/Design/handle_chat_ai.py` — 支持 OpenAI 兼容接口（含 DeepSeek）和 Google Gemini；入口 `judge_use_text_ai()`，若游戏内 AI 设置未开启则原样返回文本
@@ -104,7 +104,8 @@ pip install -r requirements.txt
    - 返回值和类型
    - 函数功能
 3. **代码段**：每一小段代码都需要有注释说明其作用
-4. **代码风格**：使用 Black 格式化器，行宽 200
+4. **代码风格**：pyink（在仓库根目录运行 `pyink .`），2 空格缩进、每行 80 列、引号随多数；生成的 `Script/Config/config_def.py` 不参与。pylint（`.pylintrc`）与 mypy（`pyproject.toml`）按棘轮规则：新代码必须完全达标，改到的代码不许比 `.lint-baseline.tsv` 里记的更差，基线只会变小。仓库自带的钩子本身只查格式；详见 `CONTRIBUTING.md`。
+5. **钩子设置**：`pip install -r requirements-dev.txt` 与 `git config core.hooksPath hooks`
 
 ## 关键配置文件
 
