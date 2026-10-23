@@ -19,6 +19,13 @@
 #
 # [[allow]]：扫描命中了、但不是读取者的地方。字段 file、symbol、pattern（命中的模式名）、why 都必填；
 # 一条 allow 若不再对应任何命中，清单就算格式错误，要删掉它。
+#
+# [[decorator]]：审过的 erArk 装饰器。被它装饰的函数，可以在顶部有 from __future__ import annotations 的模块里改注解。
+# 字段 file、symbol（模块顶层函数名；带参数的写法按工厂函数算）、why 都必填。这张表可以没有；
+# 没有或为空时，除 staticmethod、classmethod、property、functools.wraps 外，带装饰器的函数都不许改注解。
+# 清单里的装饰器自己的定义必须原样不变（按 AST 比较，注解、文档字符串、内层函数都算），
+# 它函数体用到的同模块顶层名字也必须不变；同一模块里别的改动，只要是机械规范化就可以。
+# 一条 decorator 若不再装饰任何函数，清单就算格式错误。
 
 [[reader]]
 id = "R01"
@@ -719,3 +726,135 @@ file = "tools/update_behavior.py"
 symbol = "main"
 pattern = "__file__"
 why = "用 __file__ 定位仓库根目录，把 Behavior.py 的路径交给 update_behavior_file（R08）"
+
+[[allow]]
+file = "tests/registration.py"
+symbol = "module_problems"
+pattern = "__file__"
+why = "用测试模块的 __file__ 算出相对路径写进提示，不读源码内容"
+
+[[allow]]
+file = "tests/registration.py"
+symbol = "layer_problems"
+pattern = "__file__"
+why = "用已加载测试模块的 __file__ 列出哪些文件已导入，不读源码内容"
+
+[[decorator]]
+file = "Script/Design/handle_premise/__init__.py"
+symbol = "add_premise"
+why = "把被装饰的前提函数原样存进 constant.handle_premise_data[前提id] 并原样返回；不读它的注解"
+
+[[decorator]]
+file = "Script/Design/handle_premise/handle_premise_H.py"
+symbol = "add_premise"
+why = "把被装饰的前提函数原样存进 constant.handle_premise_data[前提id] 并原样返回；不读它的注解"
+
+[[decorator]]
+file = "Script/Design/handle_premise/handle_premise_ability.py"
+symbol = "add_premise"
+why = "把被装饰的前提函数原样存进 constant.handle_premise_data[前提id] 并原样返回；不读它的注解"
+
+[[decorator]]
+file = "Script/Design/handle_premise/handle_premise_arts.py"
+symbol = "add_premise"
+why = "把被装饰的前提函数原样存进 constant.handle_premise_data[前提id] 并原样返回；不读它的注解"
+
+[[decorator]]
+file = "Script/Design/handle_premise/handle_premise_assistant.py"
+symbol = "add_premise"
+why = "把被装饰的前提函数原样存进 constant.handle_premise_data[前提id] 并原样返回；不读它的注解"
+
+[[decorator]]
+file = "Script/Design/handle_premise/handle_premise_base_value.py"
+symbol = "add_premise"
+why = "把被装饰的前提函数原样存进 constant.handle_premise_data[前提id] 并原样返回；不读它的注解"
+
+[[decorator]]
+file = "Script/Design/handle_premise/handle_premise_body_manage.py"
+symbol = "add_premise"
+why = "把被装饰的前提函数原样存进 constant.handle_premise_data[前提id] 并原样返回；不读它的注解"
+
+[[decorator]]
+file = "Script/Design/handle_premise/handle_premise_cloth.py"
+symbol = "add_premise"
+why = "把被装饰的前提函数原样存进 constant.handle_premise_data[前提id] 并原样返回；不读它的注解"
+
+[[decorator]]
+file = "Script/Design/handle_premise/handle_premise_dirty.py"
+symbol = "add_premise"
+why = "把被装饰的前提函数原样存进 constant.handle_premise_data[前提id] 并原样返回；不读它的注解"
+
+[[decorator]]
+file = "Script/Design/handle_premise/handle_premise_entertainment.py"
+symbol = "add_premise"
+why = "把被装饰的前提函数原样存进 constant.handle_premise_data[前提id] 并原样返回；不读它的注解"
+
+[[decorator]]
+file = "Script/Design/handle_premise/handle_premise_fall.py"
+symbol = "add_premise"
+why = "把被装饰的前提函数原样存进 constant.handle_premise_data[前提id] 并原样返回；不读它的注解"
+
+[[decorator]]
+file = "Script/Design/handle_premise/handle_premise_first.py"
+symbol = "add_premise"
+why = "把被装饰的前提函数原样存进 constant.handle_premise_data[前提id] 并原样返回；不读它的注解"
+
+[[decorator]]
+file = "Script/Design/handle_premise/handle_premise_food.py"
+symbol = "add_premise"
+why = "把被装饰的前提函数原样存进 constant.handle_premise_data[前提id] 并原样返回；不读它的注解"
+
+[[decorator]]
+file = "Script/Design/handle_premise/handle_premise_last_cmd.py"
+symbol = "add_premise"
+why = "把被装饰的前提函数原样存进 constant.handle_premise_data[前提id] 并原样返回；不读它的注解"
+
+[[decorator]]
+file = "Script/Design/handle_premise/handle_premise_other.py"
+symbol = "add_premise"
+why = "把被装饰的前提函数原样存进 constant.handle_premise_data[前提id] 并原样返回；不读它的注解"
+
+[[decorator]]
+file = "Script/Design/handle_premise/handle_premise_place.py"
+symbol = "add_premise"
+why = "把被装饰的前提函数原样存进 constant.handle_premise_data[前提id] 并原样返回；不读它的注解"
+
+[[decorator]]
+file = "Script/Design/handle_premise/handle_premise_sp_flag.py"
+symbol = "add_premise"
+why = "把被装饰的前提函数原样存进 constant.handle_premise_data[前提id] 并原样返回；不读它的注解"
+
+[[decorator]]
+file = "Script/Design/handle_premise/handle_premise_talent.py"
+symbol = "add_premise"
+why = "把被装饰的前提函数原样存进 constant.handle_premise_data[前提id] 并原样返回；不读它的注解"
+
+[[decorator]]
+file = "Script/Design/handle_premise/handle_premise_time.py"
+symbol = "add_premise"
+why = "把被装饰的前提函数原样存进 constant.handle_premise_data[前提id] 并原样返回；不读它的注解"
+
+[[decorator]]
+file = "Script/Design/handle_premise/handle_premise_work.py"
+symbol = "add_premise"
+why = "把被装饰的前提函数原样存进 constant.handle_premise_data[前提id] 并原样返回；不读它的注解"
+
+[[decorator]]
+file = "Script/Design/settle_behavior.py"
+symbol = "add_settle_behavior_effect"
+why = "用 functools.wraps 包一层只做转发的函数（wraps 把 __annotations__ 原样复制过去，不求值），存进 constant.settle_behavior_effect_data[结算id] 并返回；仓库里没有代码读登记函数的注解"
+
+[[decorator]]
+file = "Script/Design/settle_behavior.py"
+symbol = "add_settle_second_behavior_effect"
+why = "用 functools.wraps 包一层只做转发的函数（wraps 把 __annotations__ 原样复制过去，不求值），存进 constant.settle_second_behavior_effect_data[二段结算id] 并返回；仓库里没有代码读登记函数的注解"
+
+[[decorator]]
+file = "Script/Design/handle_state_machine.py"
+symbol = "add_state_machine"
+why = "用 functools.wraps 包一层的函数（wraps 把 __annotations__ 原样复制过去，不求值）：调用原函数后按 child_stage_gate 判定复位，存进 constant.handle_state_machine_data[状态机id] 并返回；仓库里没有代码读登记函数的注解"
+
+[[decorator]]
+file = "Script/Design/handle_panel.py"
+symbol = "add_panel"
+why = "用 functools.wraps 包一层只做转发的函数（wraps 把 __annotations__ 原样复制过去，不求值），存进 constant.panel_data[面板id] 并返回；仓库里没有代码读登记函数的注解"
