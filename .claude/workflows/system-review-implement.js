@@ -84,7 +84,7 @@ const A = args || {}
 const errors = []
 for (const key of ['plan', 'impl', 'scratch']) if (typeof A[key] !== 'string' || !A[key]) errors.push(`缺少字符串参数 ${key}`)
 if (!Array.isArray(A.units) || A.units.length === 0) errors.push('units 必须是非空数组')
-if (!Array.isArray(A.regress_commands) || A.regress_commands.length === 0) errors.push('regress_commands 必须是非空数组（例：["./.conda/python.exe tools/tests/education/run_all.py"]）')
+if (!Array.isArray(A.regress_commands) || A.regress_commands.length === 0) errors.push('regress_commands 必须是非空数组（例：["pytest tests/slow --forked -k EducationSuiteTest -rP"]）')
 const owner = {}
 const conflicts = []
 for (const u of A.units || []) {
@@ -161,7 +161,7 @@ ${A.regress_commands.map((c, i) => `${i + 1}. ${c}`).join('\n')}
 
 ## 做法
 - 每条命令都重定向到文件再读，不要接管道：timeout 600 <命令> > ${scratch}/regress_<序号>.log 2>&1; echo EXIT=$?
-- 读日志末尾，取汇总行里的 PASS= / FAIL= 与失败断言名；run_all.py 的各文件日志在 %TEMP%/erArk_education_tests/ 之类的目录里，汇总行会写
+- 读日志末尾，取汇总行里的 PASS= / FAIL= 与失败断言名；pytest 加 -rP 时通过与失败的脚本的输出都在日志里，各自末尾有它的 PASS= / FAIL= 汇总行
 - 全部跑完后执行 git status --short data/po/，有改动就 git checkout -- data/po/（本机无 gettext，构建会写乱 PO）；Script/Config/config_def.py 只多了空行时也还原
 - 不修改任何代码或测试，不做其它 git 写操作；全部用中文回答`, { label: '全套回归', phase: 'Regress', schema: REGRESS }))
 

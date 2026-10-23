@@ -26,7 +26,7 @@ if not os.path.isfile(os.path.join(ROOT, "game.py")):
       f"找不到仓库根目录（{ROOT} 下没有 game.py），请在仓库根目录运行或设置 ERARK_ROOT"
   )
   sys.exit(2)
-SUITE_DIR = os.path.join(ROOT, "tools", "tests", "education")
+SUITE_DIR = os.path.join(ROOT, "tests", "education")
 """ 回归套件目录：复用它的 _bootstrap.py 做初始化；别的系统换成自己的套件目录 """
 sys.path.insert(0, SUITE_DIR)
 

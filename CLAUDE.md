@@ -32,7 +32,12 @@ Key dependencies: `PySide6` (ArkEditor GUI), `flask` + `flask-socketio` + `pytho
 ### Testing Individual Components
 The game uses a debug mode (configured in config.ini) for testing. Set `debug = 1` to enable debug features.
 
-Headless regression tests live under `tools/tests/` (currently `tools/tests/education/` for the child-raising system: `.conda\python.exe tools/tests/education/run_all.py`, each `test_*.py` runs in its own process). New headless scripts and tests import the general setup `tools/tests/headless_boot.py`: run them from the repo root and call `sys.path.insert(0, "tools/tests")` before the import. The child-raising suite keeps its own `tools/tests/education/_bootstrap.py`; new code does not use it.
+Tests live under `tests/`. Install `tests/requirements.txt` and run them from the repo root:
+- `pytest tests/fast`: the fast layer. It does not boot the game; test classes inherit `tests.fast.base.FastTestCase`.
+- `pytest tests/slow --forked`: the slow layer. `--forked` runs each test in its own process; test classes inherit `tests.slow.base.SlowTestCase`, whose `setUp` boots the game (`FullWorld` in `tests/world.py`) and starts a new game. On systems without `os.fork` (Windows) the whole layer is skipped.
+- The child-raising suite in `tests/education/` is a set of standalone scripts on its own `_bootstrap.py`. The slow-layer test `tests/slow/test_education_suite.py` runs each script in its own process: `pytest tests/slow --forked -k EducationSuiteTest -rP` (`-rP` also prints the output of passing scripts). One script also runs alone: `python -u tests/education/test_<name>.py`.
+
+New tests go into one of the two layers. `tests/fast/test_registration.py` fails on any `test_*.py` outside them that its `NOT_IN_LAYERS` does not list.
 
 ## High-Level Architecture
 

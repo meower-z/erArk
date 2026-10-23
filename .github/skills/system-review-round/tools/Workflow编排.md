@@ -58,7 +58,7 @@
 | --- | --- | --- |
 | `plan` / `impl` | 是 | 方案与实施文档的路径 |
 | `units` | 是 | 实施单元数组 `{id, title, sections, files, tests}`，取自实施文档的「实施单元」表；**各单元的 `files` 与 `tests` 必须互不相交**（脚本开头校验，相交直接报错返回） |
-| `regress_commands` | 是 | 回归命令数组，如 `["./.conda/python.exe tools/official_event_check.py", "./.conda/python.exe tools/tests/education/run_all.py"]` |
+| `regress_commands` | 是 | 回归命令数组，如 `["./.conda/python.exe tools/official_event_check.py", "pytest tests/slow --forked -k EducationSuiteTest -rP"]` |
 | `scratch` | 是 | 回归日志目录 |
 | `validateOnly` | 否 | 同上 |
 
@@ -74,7 +74,7 @@
 
 - `deviations`：先改方案（记进实施文档 §6.1 的偏离），再决定代码怎么改
 - `needs_outside`：主代理自己改
-- `review_issues` / `audit`：逐条核实后修；修完主代理自己重跑 `run_all.py`
+- `review_issues` / `audit`：逐条核实后修；修完主代理自己重跑回归命令
 - `audit[].p6_todo`：并进 P6 的收尾清单
 
 ## 失败与续跑
