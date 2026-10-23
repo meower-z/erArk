@@ -15,42 +15,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "Ｎ感觉"
-msgstr "N Feel"
-
-msgid "Ｂ感觉"
-msgstr "B Feel"
-
-msgid "Ｃ感觉"
-msgstr "C Feel"
-
-msgid "Ｐ感觉"
-msgstr "P Feel"
-
-msgid "Ｖ感觉"
-msgstr "V Feel"
-
-msgid "Ａ感觉"
-msgstr "A Feel"
-
-msgid "Ｕ感觉"
-msgstr "U Feel"
-
-msgid "Ｗ感觉"
-msgstr "W Feel"
-
-msgid "Ｖ扩张"
-msgstr "V Dilate"
-
-msgid "Ａ扩张"
-msgstr "A Dilate"
-
-msgid "Ｕ扩张"
-msgstr "U Dilate"
-
-msgid "Ｗ扩张"
-msgstr "W Dilate"
-
 msgid "快乐刻印"
 msgstr "Happy Engraving"
 
@@ -182,9 +146,6 @@ msgstr "No|Wake you up|Morning kiss|Morning bite"
 
 msgid "晚安服务"
 msgstr "Night service"
-
-msgid "否|晚安吻（未实装）|晚安咬（未实装）"
-msgstr "No|Night kiss (not implemented)|Night bite (not implemented)"
 
 msgid "同居服务"
 msgstr "Living together service"
@@ -347,16 +308,10 @@ msgstr "Abdomen"
 msgid "背部"
 msgstr "Back"
 
-msgid "天灾详解"
-msgstr "Catastrophe Explanations"
-
 msgid "详细介绍了各种天灾以及相应的影响"
 msgstr ""
 "Introduce in detail types of Catastrophes alongside their corresponding "
 "impact."
-
-msgid "急救说明"
-msgstr "First Aid Instructions"
 
 msgid "常见外伤以及相应的救治办法"
 msgstr "Common injuries and corresponding treatment method"
@@ -409,140 +364,8 @@ msgstr ""
 msgid "《世间的美与丑》"
 msgstr "\"Beauty and Ugliness of the World\""
 
-msgid ""
-"十五年前出版于维多利亚的传奇书籍，这本书简单地记述了作者对审美的理解，记载了大量文学、艺术、音乐相关的知识与历史。该书的内容涵盖古今，通俗易懂，被誉为“本世代的艺术大典”。然而据说该书的作者只是某个小剧团的剧团长，数年前被一个代号为“血钻”的刺客谋害。"
-msgstr ""
-"The legendary literature published in Victoria 15 years ago, this book "
-"briefly described the understanding of aesthetics for the creator, and "
-"recorded a huge amount of knowledge and history of literature, art, music. "
-"The content of the book covered ancient times and now, and is easy to "
-"understand, hence also known as \"Art Dictionary of Generation\". However "
-"it's heard that the writer is just a troupe leader of a small troupe, who "
-"was being murdered by an assassin codenamed \"Blood Diamond\" a few years "
-"ago."
-
-msgid "测试书籍_技能_话术"
-msgstr "Testing Book - Skill - Speech"
-
 msgid "无"
 msgstr ""
-
-msgid "测试书籍_技能_指挥"
-msgstr "Testing Book - Skill - Command"
-
-msgid "测试书籍_技能_战斗"
-msgstr "Testing Book - Skill - Combat"
-
-msgid "测试书籍_技能_料理"
-msgstr "Testing Book - Skill - Cuisine"
-
-msgid "测试书籍_技能_音乐"
-msgstr "Testing Book - Skill - Musical"
-
-msgid "测试书籍_技能_学识"
-msgstr "Testing Book - Skill - Knowledge"
-
-msgid "测试书籍_技能_医疗"
-msgstr "Testing Book - Skill - Medical"
-
-msgid "测试书籍_技能_农业"
-msgstr "Testing Book - Skill - Agriculture"
-
-msgid "测试书籍_技能_制造"
-msgstr "Testing Book - Skill - Crafting"
-
-msgid "测试书籍_技能_绘画"
-msgstr "Testing Book - Skill - Drawing"
-
-msgid "测试书籍_色情_手交"
-msgstr "Testing Book - Pornography - Handjob"
-
-msgid "测试书籍_色情_口交"
-msgstr "Testing Book - Pornography - Fellatio"
-
-msgid "测试书籍_色情_足交"
-msgstr "Testing Book - Pornography - Footjob"
-
-msgid "测试书籍_色情_乳交"
-msgstr "Testing Book - Pornography - Paizuri"
-
-msgid "测试书籍_色情_本番"
-msgstr "Testing Book - Pornography - Unsimulated Sex"
-
-msgid "测试书籍_色情_肛交"
-msgstr "Testing Book - Pornography - Anal Sex"
-
-msgid "测试书籍_色情_榨精"
-msgstr "Testing Book - Pornography - Squeezing Sperm"
-
-msgid "测试书籍_色情_纯爱"
-msgstr "Testing Book - Pornography - Pure Love"
-
-msgid "测试书籍_色情_后宫"
-msgstr "Testing Book - Pornography - Harem"
-
-msgid "测试书籍_色情_萝莉"
-msgstr "Testing Book - Pornography - Loli"
-
-msgid "测试书籍_色情_强奸"
-msgstr "Testing Book - Pornography - Rape"
-
-msgid "测试书籍_色情_逆强奸"
-msgstr "Testing Book - Pornography - Reverse Rape"
-
-msgid "测试书籍_色情_怀孕与母乳"
-msgstr "Testing Book - Pornography - Pregnancy and Breast Milk"
-
-msgid "测试书籍_色情_角色扮演"
-msgstr "Testing Book - Pornography - Cosplay"
-
-msgid "测试书籍_色情_情趣服装"
-msgstr "Testing Book - Pornography - Sexy Clothing"
-
-msgid "测试书籍_色情_调教与凌辱"
-msgstr "Testing Book - Pornography - Training and Humiliation"
-
-msgid "测试书籍_色情_近亲"
-msgstr "Testing Book - Pornography - Close Relative"
-
-msgid "测试书籍_色情_露出"
-msgstr "Testing Book - Pornography - Exposure"
-
-msgid "测试书籍_色情_成人玩具"
-msgstr "Testing Book - Pornography - Adult Toys"
-
-msgid "测试书籍_色情_校园"
-msgstr "Testing Book - Pornography - School"
-
-msgid "测试书籍_娱乐_童话绘本"
-msgstr "Testing Book - Entertainment - Fairy Tale Picture Book"
-
-msgid "测试书籍_娱乐_科幻小说/漫画"
-msgstr "Testing Book - Entertainment - Science Fiction/Comic"
-
-msgid "测试书籍_娱乐_推理小说/漫画"
-msgstr "Testing Book - Entertainment - Inference Fiction/Comic"
-
-msgid "测试书籍_娱乐_武侠小说/漫画"
-msgstr "Testing Book - Entertainment - Martial Arts Fiction/Comic"
-
-msgid "测试书籍_娱乐_仙侠小说/漫画"
-msgstr "Testing Book - Entertainment - Celestial Fiction/Comic"
-
-msgid "测试书籍_娱乐_言情小说/漫画"
-msgstr "Testing Book - Entertainment - Romance Fiction/Comic"
-
-msgid "测试书籍_娱乐_悬疑小说/漫画"
-msgstr "Testing Book - Entertainment - Suspense Fiction/Comic"
-
-msgid "测试书籍_娱乐_历史小说/漫画"
-msgstr "Testing Book - Entertainment - History Fiction/Comic"
-
-msgid "测试书籍_娱乐_军事小说/漫画"
-msgstr "Testing Book - Entertainment - Military Fiction/Comic"
-
-msgid "测试书籍_娱乐_诗歌"
-msgstr "Testing Book - Entertainment - Poetry"
 
 msgid "话术"
 msgstr "Speech"
@@ -576,9 +399,6 @@ msgstr "Drawing"
 
 msgid "色情"
 msgstr "Pornography"
-
-msgid "本番"
-msgstr "Unsimulated Sex"
 
 msgid "肛交"
 msgstr "Anal Sex"
@@ -655,30 +475,6 @@ msgstr "Military Fiction/Comic"
 msgid "诗歌"
 msgstr "Poetry"
 
-msgid "Ｎ快"
-msgstr "N Pleasure"
-
-msgid "Ｂ快"
-msgstr "B Pleasure"
-
-msgid "Ｃ快"
-msgstr "C Pleasure"
-
-msgid "Ｐ快"
-msgstr "P Pleasure"
-
-msgid "Ｖ快"
-msgstr "V Pleasure"
-
-msgid "Ａ快"
-msgstr "A Pleasure"
-
-msgid "Ｕ快"
-msgstr "U Pleasure"
-
-msgid "Ｗ快"
-msgstr "W Pleasure"
-
 msgid "润滑"
 msgstr "Lubrication"
 
@@ -718,17 +514,8 @@ msgstr "Depression"
 msgid "反感"
 msgstr "Antipathy"
 
-msgid "状态"
-msgstr "Statuses"
-
-msgid "状态（H）"
-msgstr "Statuses (H)"
-
 msgid "素质"
 msgstr "Qualities"
-
-msgid "中毒"
-msgstr "Poisonousness"
 
 msgid "跟随中长时间等待时"
 msgstr "When Waiting for long time while Following"
@@ -1712,9 +1499,6 @@ msgstr "Pajama pants"
 msgid "通用下衣"
 msgstr "Interchangeable bottom"
 
-msgid "酒红色超低腰内裤"
-msgstr "Wine red low waist underwear"
-
 msgid "深棕色内裤(白色衬里)"
 msgstr "Dark brown underwear (white lining)"
 
@@ -1738,9 +1522,6 @@ msgstr "Blue-white striped underwear"
 
 msgid "蓝绿条纹内裤"
 msgstr "Blue-green striped underwear"
-
-msgid "动物图案内裤"
-msgstr "Animal pattern underwear"
 
 msgid "水果图案内裤"
 msgstr "Fruit pattern underwear"
@@ -2066,9 +1847,6 @@ msgstr "Tactical satchel"
 msgid "电工工具套"
 msgstr "Electrician tool set"
 
-msgid "仿生海龙小叶"
-msgstr "Bionic Seadragon Leaf"
-
 msgid "机械水獭咪波"
 msgstr "Robotic Otter Meeboo"
 
@@ -2095,15 +1873,6 @@ msgstr "Hat"
 
 msgid "眼镜"
 msgstr "Glasses"
-
-msgid "耳部"
-msgstr "Ear ornaments"
-
-msgid "脖子"
-msgstr "Neck ornament"
-
-msgid "嘴部"
-msgstr "Mouth ornament"
 
 msgid "上衣"
 msgstr "Top"
@@ -2150,18 +1919,6 @@ msgstr "Adornment"
 msgid "获得1至纯源石，可以用来获得或升级源石技艺"
 msgstr ""
 "Gains 1 Originite Prime, can be used to obtain or upgrade Originium Arts"
-
-msgid "获得10至纯源石，可以用来获得或升级源石技艺"
-msgstr ""
-"Gains 10 Originite Prime, can be used to obtain or upgrade Originium Arts"
-
-msgid "获得100至纯源石，可以用来获得或升级源石技艺"
-msgstr ""
-"Gains 100 Originite Prime, can be used to obtain or upgrade Originium Arts"
-
-msgid "获得9999至纯源石，可以用来获得或升级源石技艺"
-msgstr ""
-"Gains 9999 Originite Prime, can be used to obtain or upgrade Originium Arts"
 
 msgid "解锁猥亵指令：【索要内裤】，可以在日常生活中让干员把内裤脱下来给你"
 msgstr ""
@@ -2255,9 +2012,6 @@ msgstr "Fixes hair at the salon."
 msgid "在造型工作室接受全身造型服务。"
 msgstr "Does full body styling at Styling Studio."
 
-msgid "在黄澄澄游戏室过家家。"
-msgstr "Does playhouse at Golden Game Room."
-
 msgid "在足浴区泡脚。"
 msgstr "Soaks feet at Foot Bathing Zone."
 
@@ -2269,54 +2023,6 @@ msgstr "Does spa treatments at Spa Room."
 
 msgid "在温泉泡温泉。"
 msgstr "Goes to hot springs."
-
-msgid "Ｎ经验"
-msgstr "N Experience"
-
-msgid "Ｂ经验"
-msgstr "B Experience"
-
-msgid "Ｃ经验"
-msgstr "C Experience"
-
-msgid "Ｐ经验"
-msgstr "P Experience"
-
-msgid "Ｖ经验"
-msgstr "V Experience"
-
-msgid "Ａ经验"
-msgstr "A Experience"
-
-msgid "Ｕ经验"
-msgstr "U Experience"
-
-msgid "Ｗ经验"
-msgstr "W Experience"
-
-msgid "Ｎ绝顶经验"
-msgstr "N Orgasm EXP"
-
-msgid "Ｂ绝顶经验"
-msgstr "B Orgasm EXP"
-
-msgid "Ｃ绝顶经验"
-msgstr "C Orgasm EXP"
-
-msgid "Ｐ绝顶经验"
-msgstr "P Orgasm EXP"
-
-msgid "Ｖ绝顶经验"
-msgstr "V Orgasm EXP"
-
-msgid "Ａ绝顶经验"
-msgstr "A Orgasm EXP"
-
-msgid "Ｕ绝顶经验"
-msgstr "U Orgasm EXP"
-
-msgid "Ｗ绝顶经验"
-msgstr "W Orgasm EXP"
 
 msgid "绝顶经验"
 msgstr "Orgasm EXP"
@@ -2342,9 +2048,6 @@ msgstr "Penis EXP"
 msgid "肛射经验"
 msgstr "Anal Ejaculation EXP"
 
-msgid "奉仕快乐经验"
-msgstr "Served Happiness EXP"
-
 msgid "爱情经验"
 msgstr "Love EXP"
 
@@ -2354,17 +2057,8 @@ msgstr "Pain Happiness EXP"
 msgid "嗜虐快乐经验"
 msgstr "Sadistic Happiness EXP"
 
-msgid "露出快乐经验"
-msgstr "Exposure Happiness EXP"
-
 msgid "接吻经验"
 msgstr "Kissing EXP"
-
-msgid "手淫经验"
-msgstr "Handjob EXP"
-
-msgid "口淫经验"
-msgstr "Fellatio EXP"
 
 msgid "乳交经验"
 msgstr "Paizuri EXP"
@@ -2398,54 +2092,6 @@ msgstr "Humiliation Masturbation EXP"
 
 msgid "插入经验"
 msgstr "Insertion EXP"
-
-msgid "Ｖ性交经验"
-msgstr "V Sex Experience"
-
-msgid "Ａ性交经验"
-msgstr "A Sex Experience"
-
-msgid "Ｕ性交经验"
-msgstr "U Sex Experience"
-
-msgid "Ｗ性交经验"
-msgstr "W Sex Experience"
-
-msgid "Ｖ扩张经验"
-msgstr "V Dilation EXP"
-
-msgid "Ａ扩张经验"
-msgstr "A Dilation EXP"
-
-msgid "Ｕ扩张经验"
-msgstr "U Dilation EXP"
-
-msgid "Ｗ扩张经验"
-msgstr "W Dilation EXP"
-
-msgid "无意识Ｎ经验"
-msgstr "Unconscious N EXP"
-
-msgid "无意识Ｂ经验"
-msgstr "Unconscious B EXP"
-
-msgid "无意识Ｃ经验"
-msgstr "Unconscious C EXP"
-
-msgid "无意识Ｐ经验"
-msgstr "Unconscious P EXP"
-
-msgid "无意识Ｖ经验"
-msgstr "Unconscious V EXP"
-
-msgid "无意识Ａ经验"
-msgstr "Unconscious A EXP"
-
-msgid "无意识Ｕ经验"
-msgstr "Unconscious U EXP"
-
-msgid "无意识Ｗ经验"
-msgstr "Unconscious W EXP"
 
 msgid "无意识绝顶经验"
 msgstr "Unconscious Orgasm EXP"
@@ -2494,27 +2140,6 @@ msgstr "Reading EXP"
 
 msgid "H书阅读经验"
 msgstr "H Book Reading EXP"
-
-msgid "正常位绝顶经验"
-msgstr "Missionary Orgasm EXP"
-
-msgid "後背位绝顶经验"
-msgstr "Doggy Orgasm EXP"
-
-msgid "骑乘位绝顶经验"
-msgstr "Cowgirl Orgasm EXP"
-
-msgid "对面座位绝顶经验"
-msgstr "Face Sitting Orgasm EXP"
-
-msgid "背面座位绝顶经验"
-msgstr "Back Sitting Orgasm EXP"
-
-msgid "对面立位绝顶经验"
-msgstr "Face Standing Orgasm EXP"
-
-msgid "背面立位绝顶经验"
-msgstr "Back Standing Orgasm EXP"
 
 msgid "睡姦经验"
 msgstr "Sleep Rape EXP"
@@ -2738,21 +2363,6 @@ msgstr "Maximum level increases to 5 for facilities"
 msgid "还没想好"
 msgstr "No idea"
 
-msgid "基础供电量为400"
-msgstr "Initially 400 power supply"
-
-msgid "供电量提升至800"
-msgstr "Power supply increases to 800"
-
-msgid "供电量提升至1500"
-msgstr "Power supply increases to 1500"
-
-msgid "供电量提升至2500"
-msgstr "Power supply increases to 2500"
-
-msgid "供电量提升至5000"
-msgstr "Power supply increases to 5000"
-
 msgid "开放基础设施：【基建部】、【运维部】"
 msgstr ""
 "Opens basic facilities: [Base Building Department], [Operation and "
@@ -2760,9 +2370,6 @@ msgstr ""
 
 msgid "开放新设施：【铁匠铺】"
 msgstr "Opens new facility: [Smithing Shop]"
-
-msgid "开放新设施：【生物工程部】"
-msgstr "Opens new facility: [Bioengineering Department]"
 
 msgid "仓储上限为500"
 msgstr "500 storage limit"
@@ -2781,26 +2388,6 @@ msgstr "Storage limit increases to 10000"
 
 msgid "宿舍开放至1区的106室，干员最大人数为12人"
 msgstr "Dormitory opens to Room 106 of Zone 1, 12 maximum number of Operators"
-
-msgid "宿舍开放至1区全部，干员最大人数提升至28人"
-msgstr ""
-"Dormitory opens to the whole Zone 1, maximum number of Operators increases "
-"to 28"
-
-msgid "宿舍开放至2区全部，干员最大人数提升至44人"
-msgstr ""
-"Dormitory opens to the whole Zone 2, maximum number of Operators increases "
-"to 44"
-
-msgid "宿舍开放至4区全部，干员最大人数提升至106人"
-msgstr ""
-"Dormitory opens to the whole Zone 4, maximum number of Operators increases "
-"to 106"
-
-msgid "宿舍开放至8区全部，干员最大人数提升至210人"
-msgstr ""
-"Dormitory opens to the whole Zone 8, maximum number of Operators increases "
-"to 210"
 
 msgid "娱乐室和休息室修建上限为各三个（未实装）"
 msgstr "Maximum 3 entertainment rooms and restrooms each (not implemented)"
@@ -2825,50 +2412,10 @@ msgstr ""
 "Maximum amount of entertainment rooms and restrooms increases to infinite "
 "(not implemented)"
 
-msgid "开放基础设施：【门诊部】、【急诊部】、【住院部】，可收治患者为50人"
-msgstr ""
-"Opens basic facilities: [Outpatient Department], [Emergency Room], "
-"[Inpatient Department],\\n 50 maximum number of admissible patients"
-
-msgid "开放新设施：【手术室】（未实装）、【血库】（未实装），可收治患者数量提升至100人"
-msgstr ""
-"Opens new facilities: [Surgery Room] (not implemented), [Blood Storage Room]"
-" (not implemented),\\n maximum number of admissible patients increases to "
-"100"
-
-msgid "开放新功能：【招募病人干员】（未实装），可收治患者数量提升至200人"
-msgstr ""
-"Opens new function: [Recruit patient Operator] (not implemented), maximum "
-"number of admissible patients increases to 200"
-
-msgid "开放新设施：【体检科】（未实装），可收治患者数量提升至500人"
-msgstr ""
-"Opens new facility: [Body Check Department] (not implemented), maximum "
-"number of admissible patients increases to 500"
-
-msgid "可收治患者数量提升至1000人"
-msgstr "Maximum number of admissible patients increases to 1000"
-
 msgid "开放基础设施：【人事办公室】、开放基础功能：【随机招募当地干员】"
 msgstr ""
 "Opens basic facility: [Office], opens basic function: [Random recruiting "
 "local Operators]"
-
-msgid "开放新功能：【招募全泰拉干员】，招募效率+5%"
-msgstr ""
-"Opens new function: [Recruit Operators globally], recruitment speed +5%"
-
-msgid "开放新功能：【招募关联干员】，可同时招募2名干员，招募效率+10%"
-msgstr ""
-"Opens new function: [Recruit related Operators], recruitment speed +10%"
-
-msgid "开放新功能：【招募指定干员】，可同时招募3名干员，招募效率+20%"
-msgstr ""
-"Opens new function: [Recruit specific Operator], recruitment speed +20%"
-
-msgid "开放新功能：【招募路人干员】，可同时招募4名干员，招募效率+50%"
-msgstr ""
-"Opens new function: [Recruit passerby Operators], recruitment speed +50%"
 
 msgid "源石部和医疗部的附属研究室各可修建一个（未实装）"
 msgstr ""
@@ -2914,40 +2461,8 @@ msgstr "Exercise efficiency +100%"
 msgid "开放基础设施：【图书馆】、【藏品馆】"
 msgstr "Opens basic facilities: [Library], [Collection Hall]"
 
-msgid "学习效率加成提升至5%"
-msgstr "Learning speed +5%"
-
-msgid "开放新设施:【影像厅】，学习效率加成提升至20%"
-msgstr "Opens new facility: [Video Hall], learning speed +20%"
-
-msgid "学习效率加成提升至50%"
-msgstr "Learning speed +50%"
-
 msgid "学习效率加成提升至100%"
 msgstr "Learning speed +100%"
-
-msgid "可修建三个商店（未实装）"
-msgstr "Maximum three built shops (not implemented)"
-
-msgid "商店的修建上限提升至六个，价格优惠提升至5%，开放新设施:【对外贸易站】（未实装）"
-msgstr ""
-"Maximum number of built shops increases to six, price discount +5%, opens "
-"new facility:\\n [Foreign Trading Post] (not implemented)"
-
-msgid "商店的修建上限提升至九个，价格优惠提升至10%，开放新设施:【流动小摊】（未实装）"
-msgstr ""
-"Maximum number of built shops increases to nine, price discount +10%, opens "
-"new facility:\\n [Mobile Stall] (not implemented)"
-
-msgid "商店的修建上限提升至十二个，价格优惠提升至20%（未实装）"
-msgstr ""
-"Maximum number of built shops increases to twelve, price discount +20% (not "
-"implemented)"
-
-msgid "商店的修建数量不设上限，价格优惠提升至30%（未实装）"
-msgstr ""
-"Maximum number of built shops increases to infinite, price discount +30% "
-"(not implemented)"
 
 msgid "生产效率加成提升至5%"
 msgstr "Production speed +5%"
@@ -2985,65 +2500,14 @@ msgstr ""
 msgid "访客数量上限提升为12名，访客停留时长延长至一个月"
 msgstr "Maximum number of guests increases to 12, stays for a month instead"
 
-msgid "开放基础设施:【教室】"
-msgstr "Opens basic facility: [Classroom]"
-
-msgid "开放新设施:【游戏室】和【乌萨斯学生活动室】"
-msgstr "Opens new facilities: [Game Room] and [Activity Room]"
-
-msgid "开放新设施:【育儿室】，成长效率加成提升至20%"
-msgstr "Opens new facility: [Parenting Room], growing speed +20%"
-
-msgid "成长效率加成提升至50%"
-msgstr "Growing speed +50%"
-
-msgid "成长效率加成提升至100%"
-msgstr "Growing speed +100%"
-
-msgid "开放基础设施:【香熏治疗室】和【莱娜的憩所】"
-msgstr ""
-"Opens basic facilities: [Aromatherapy Treatment Room] and [Lena's Rest]"
-
-msgid "开放新设施:【温室】（未实装），生产效率加成提升至5%"
-msgstr "Opens new facility: [Conservatory], production speed +5%"
-
-msgid "开放新设施:【农田】（未实装），生产效率加成提升至20%"
-msgstr "Opens new facility: [Farmland], production speed +20% "
-
-msgid "开放新设施:【磐蟹养殖场】（未实装），生产效率加成提升至50%"
-msgstr "Opens new facility: [Metal Crab Breeding Farm], production speed +50%"
-
-msgid "开放新设施:【小树林】（未实装），生产效率加成提升至100%"
-msgstr "Opens new facility: [Grove], production speed +100%"
-
 msgid "开放基础设施:【淋浴】和【洗脚池】"
 msgstr "Opens basic facilities: [Showering Room] and [Foot Bathing Zone]"
-
-msgid "开放新设施:【秘密通道】"
-msgstr "Opens new facility: [Secret Passage]"
 
 msgid "开放新设施:【温泉】、【桑拿房】"
 msgstr "Opens new facilities: [Hot Spring], [Sauna]"
 
 msgid "开放新设施:【水疗室】"
 msgstr "Opens new facility: [Spa]"
-
-msgid "可同时派出2名干员进行战斗"
-msgstr "Can dispatch 2 Operators for battle"
-
-msgid "同时派出的干员数量提升至5人"
-msgstr "Increases number of dispatchable Operators to 5"
-
-msgid "开放新功能：【挂机扫荡】，同时派出的干员数量提升至10人"
-msgstr ""
-"Opens new function: [Idle Sweep], increases number of dispatchable Operators"
-" to 10"
-
-msgid "同时派出的干员数量提升至20人"
-msgstr "Increases number of dispatchable Operators to 20"
-
-msgid "同时派出的干员数量提升至50人"
-msgstr "Increases number of dispatchable Operators to 50"
 
 msgid "开放基础功能：【处理文书工作】"
 msgstr "Opens basic function: [Work]"
@@ -3062,18 +2526,6 @@ msgstr "Working speed +100%"
 
 msgid "无休息效率加成"
 msgstr "No recovery speed increase"
-
-msgid "休息效率加成提升至5%"
-msgstr "Recovery speed +5%"
-
-msgid "休息效率加成提升至20%"
-msgstr "Recovery speed +20%"
-
-msgid "休息效率加成提升至50%"
-msgstr "Recovery speed +50%"
-
-msgid "休息效率加成提升至100%"
-msgstr "Recovery speed +100%"
 
 msgid "铁匠铺"
 msgstr "Smithing Shop"
@@ -3108,15 +2560,6 @@ msgstr "Swimming Pool"
 msgid "影像厅"
 msgstr "Video Hall"
 
-msgid "对外贸易站"
-msgstr "Foreign Trading Post"
-
-msgid "流动小摊"
-msgstr "Mobile Stall"
-
-msgid "游戏室"
-msgstr "Game Room"
-
 msgid "乌萨斯学生活动室"
 msgstr "Activity Room"
 
@@ -3129,9 +2572,6 @@ msgstr "Lena's Rest"
 msgid "温室"
 msgstr "Conservatory"
 
-msgid "农田"
-msgstr "Farmland"
-
 msgid "磐蟹养殖场"
 msgstr "Metal Crab Farm"
 
@@ -3140,12 +2580,6 @@ msgstr "Grove"
 
 msgid "秘密通道"
 msgstr "Secret Passage"
-
-msgid "温泉"
-msgstr "Hot Spring"
-
-msgid "桑拿房"
-msgstr "Sauna"
 
 msgid "多索雷斯私人水疗室"
 msgstr "Spa"
@@ -3527,9 +2961,6 @@ msgstr ""
 msgid "启动资金"
 msgstr "Start-up Capital"
 
-msgid "初始获得50000龙门币、6000合成玉和100粉色凭证"
-msgstr "Gains 50000 LMD, 6000 Orundums and 100 Pink Certificates initially"
-
 msgid "专精领域"
 msgstr "Specialized Domain"
 
@@ -3666,13 +3097,6 @@ msgstr ""
 msgid "空气"
 msgstr "Air"
 
-msgid ""
-"被催眠的干员将会把博士视为空气，无论博士做什么都不会引起干员的注意，对自身和周围发生的任何事情也不会觉得奇怪，效果持续到干员离开当前场所或者博士主动解除为止。"
-msgstr ""
-"Hypnotized Operators will see the Doctor as thin air,\\n and won't pay "
-"attention to what the Doctor is doing,\\n and won't feel strange on anything"
-" on and around self,\\n effect lasts until leaving or manual removal."
-
 msgid "体控"
 msgstr "Body Control"
 
@@ -3770,22 +3194,11 @@ msgstr ""
 msgid "相机"
 msgstr "Camera"
 
-msgid "可以用来拍照。"
-msgstr "Can be used to take photos."
-
 msgid "录像机"
 msgstr "Recorder"
 
-msgid "可以用来录像。"
-msgstr "Can be used to record videos."
-
 msgid "全乐器套装"
 msgstr "Full instrument set"
-
-msgid "含有全部类型的乐器，因为分类很麻烦所以不拆开卖"
-msgstr ""
-"Having all types of instruments, not sold separately because hard to "
-"categorize"
 
 msgid "增加润滑"
 msgstr "Increases Lubrication"
@@ -3809,9 +3222,6 @@ msgstr "Increases Kindness and Lust"
 msgid "灌肠液"
 msgstr "Applying enema"
 
-msgid "使后穴恢复清洁状态"
-msgstr "Clean up butt hole"
-
 msgid "促进排尿，一次性回满尿意值"
 msgstr "Accelerates urination, instantly fully recovers Urinary Value"
 
@@ -3828,9 +3238,6 @@ msgstr "Increases chance of pregnancy, last till Ovulation Period"
 
 msgid "避孕套"
 msgstr "Condom"
-
-msgid "说明暂无"
-msgstr "No description yet"
 
 msgid "跳蛋"
 msgstr "Love eggs"
@@ -3921,30 +3328,6 @@ msgstr "Thick"
 
 msgid "巨根"
 msgstr "Huge"
-
-msgid "快Ｎ珠"
-msgstr "Happy N Juel"
-
-msgid "快Ｂ珠"
-msgstr "Happy B Juel"
-
-msgid "快Ｃ珠"
-msgstr "Happy C Juel"
-
-msgid "快Ｐ珠"
-msgstr "Happy P Juel"
-
-msgid "快Ｖ珠"
-msgstr "Happy V Juel"
-
-msgid "快Ａ珠"
-msgstr "Happy A Juel"
-
-msgid "快Ｕ珠"
-msgstr "Happy U Juel"
-
-msgid "快Ｗ珠"
-msgstr "Happy W Juel"
 
 msgid "润滑珠"
 msgstr "Lubrication Juel"
@@ -4123,17 +3506,11 @@ msgstr "Dublinn"
 msgid "黑钢国际"
 msgstr "Blacksteel Worldwide"
 
-msgid "彩虹小队"
-msgstr "Team Rainbow"
-
 msgid "使徒"
 msgstr "Followers"
 
 msgid "整合运动"
 msgstr "Reunion"
-
-msgid "胸"
-msgstr "Breasts"
 
 msgid "阴蒂"
 msgstr "Clitoris"
@@ -4174,99 +3551,14 @@ msgstr "Supporter"
 msgid "特种"
 msgstr "Specialist"
 
-msgid "经常看到的部位字母缩写分别代表什么意思？"
-msgstr "What's the meaning of the letters for body parts?"
-
-msgid ""
-"Ｂ：Breast  ，胸部\\nＣ：Clitoris，阴蒂\\nＰ：Penis   ，阴茎\\nＶ：Vagina  ，阴道\\nＡ：Anus    "
-"，肛门\\nＵ：Urethra ，尿道\\nＷ：Womb    ，子宫\\nＮ：Normal  "
-"，身体其他部位通用（如耳朵、尾巴、口腔、脖子、肚子、大腿等）"
-msgstr ""
-"B: Breast\\nC: Clitoris\\nP: Penis\\nV: Vagina\\nA: Anus\\nU: Urethra\\nW: "
-"Womb\\nN: Normal (like ear, tail, mouth, neck, belly, leg, etc.)"
-
 msgid "刻印是什么东西？有什么用？如何获得或消除？"
 msgstr "What's Engravings? What's their uses? How to obtain or remove?"
-
-msgid ""
-"刻印是干员的一种特殊属性，在干员经历对她影响足够大的事件时才会获得/升级，除无觉刻印外为最高六级以外，其他刻印最高为三级\\n目前共实装了6个刻印，分别是快乐刻印、屈服刻印、无觉刻印、苦痛刻印、恐怖刻印、反发刻印\\n其中负面刻印（恐怖刻印和反发刻印），可以使用博士的源石技艺来降低刻印等级，降低到零级即为消除\\n\\n快乐刻印：在干员体验到足够强烈的性快感时会获得/升级该刻印\\n"
-"          一旦体验过性的快乐，就会发自内心的想要更多品尝这份快感，不停地堕落下去\\n          "
-"能够在博士对干员进行性骚扰/H指令时增加实行值，关系到部位敏感度提升与淫乱系素质获得\\n\\n屈服刻印：在干员做了足够卑微或耻辱的事时会获得/升级该刻印\\n"
-"          逐渐放弃不需要的自尊和骄傲，开始服从于你的每个命令，以满足你的意志为人生的全部目的\\n          "
-"能够在博士对干员进行所有指令时增加实行值，并且是隶属系攻略路线的前置条件\\n\\n无觉刻印：干员在意识薄弱或无意识中体验到足够强烈的性快感时会获得/升级该刻印\\n"
-"          尽管脑海里没有印象，但身体依旧会忠实地记住并习惯于这美好的感觉，直到为时已晚的那一刻的到来\\n          "
-"能够在博士对干员进行性骚扰/H指令时增加实行值，并显著增强无意识奸下的快感\\n\\n苦痛刻印：在干员受到了足够多的物理疼痛时会获得/升级该刻印\\n"
-"          适度的鞭打作为教育的一环，能够让身体一点点理解疼痛也是一种快感\\n          "
-"能够在博士对干员进行SM指令时增加实行值，但在进行爱情指令时减少实行值\\n\\n恐怖刻印：在干员遭受了足够大的精神打击时会获得/升级该刻印\\n"
-"          不断累积的精神创伤会逐渐封闭人的心灵，并最终把人格推向无底的深渊\\n          "
-"负面刻印，在博士对干员进行所有指令时减少实行值，刻印等级的提高会使干员的AI无法正常行动直至完全错乱\\n\\n反发刻印：在干员对博士产生了足够大的愤怒、怀疑和仇恨时会获得/升级该刻印\\n"
-"          信任的裂隙逐渐扩大，其反面就是刻骨的仇恨\\n          "
-"非常严重的负面刻印，在博士对干员进行所有指令时极大的减少实行值，一级会拒绝大部分互动指令，二级会有意避免与博士接触，三级会伺机攻击博士\\n\\n*目前恐怖刻印和反发刻印的负面效果暂未实装"
-msgstr ""
-"Engravings is a special attribute of Operators, which will be "
-"obtained/upgraded once the said Operator experienced something huge, and "
-"besides Unconscious Engraving with maximum level 6, the rest have maximum "
-"level 3\\nCurrently there's 6 Engravings, being Happy Engraving, Yield "
-"Engraving, Unconscious Engraving, Pain Engraving, Fear Engraving, Hatred "
-"Engraving\\nNegative Engravings (Fear Engraving and Hatred Engraving) can "
-"have their level reduced through Originium Arts, and removed once it reached"
-" zero\\n\\nHappy Engraving: Will be obtained/upgraded when the Operator "
-"experienced strong sexual pleasure\\nOnce they have experienced such "
-"pleasure, they would want to have more of this pleasure from inner heart, "
-"and be fallen continuously\\nWill increase Command Execution Value during "
-"harassment/H commands, and related to body parts' sensitivity increase and "
-"promiscuous-type statuses acquirement\\n\\nYield Engraving: Will be "
-"obtained/upgraded when the Operator experienced strong humiliative "
-"actions\\nSlowly abandon their self-esteem and pride, and starts to follow "
-"all of your commands, and sees satisfying your will as only objective of "
-"life\\nWill increase Command Execution Value on all commands, and is the "
-"preconditions for Affiliation relationship\\n\\nUnconscious Engraving: Will "
-"be obtained/upgraded when the Operator experienced strong sexual pleasure "
-"while unconscious\\nEven if there's no impression, but their own body will "
-"remember and get used to such beautiful feelings until when it's too "
-"late\\nWill increase Command Execution Value during harassment/H commands, "
-"and greatly increase pleasure during unconscious rape\\n\\nPain Engraving: "
-"Will be obtained/upgraded when the Operator experienced strong painful "
-"actions\\nModerate lashing served as a part of education, and making the "
-"body slowly understands pain as a type of pleasure\\nWill increase Command "
-"Execution Value for SM commands, but decrease Command Execution Value for "
-"love-type commands\\n\\nFear Engraving: Will be obtained/upgraded when the "
-"Operator experienced strong mental blow\\nThe ever-increasing mental damage "
-"will slowly close their heart, and slowly push their personality to the "
-"abyss\\nWill decrease Command Execution Value on all commands, and their "
-"movement will be affected as the level goes higher\\n\\nHatred Engraving: "
-"Will be obtained/upgraded when the Operator experienced strong anger, "
-"suspicion and hatred\\nAs the gap of trust widens, the opposite side is the "
-"deep hatred\\nWill greatly decrease Command Execution Value of all commands,"
-" and will reject most commands at level 1, tries to avoid interaction at "
-"level 2, and even attempt to attack at level 3"
 
 msgid "如何进行催眠？都有哪些催眠？"
 msgstr "How to hypnotize? What's the type of hypnosis?"
 
-msgid ""
-"当博士通过开局选取或者使用至纯源石来学习催眠的源石技艺素质后，即可对干员进行催眠\\n\\n初期可以在与干员两人独处的时候进行【单人催眠】，在升级到高级催眠就可以直接对房间内全员进行【集体催眠】\\n\\n每次对干员进行催眠时会提升对方的催眠程度，到50%、100%、200%时分别对应浅层、深层、完全催眠\\n\\n当前催眠的种类共有平然、空气、体控、心控四种，分别更强的催眠效果，需要的深度也依次提升，默认手动选取每次进行催眠的种类，也可以在【源石技艺】更改为指定种类"
-msgstr ""
-"When the Doctor learned hypnosis-type Originium Arts through starting bonus "
-"or using Originium Prime, they can casts hypnosis on Operators\\n\\nOn early"
-" phase, [Single Hypnosis] can be used when interacting with the Operator "
-"alone, and [Group Hypnosis] can be used on all Operators in the room after "
-"upgrading to higher stage\\n\\nAfter each hypnosis, the hypnosis level of "
-"Operators will be increased, at 50%, 100%, 200% which represents slim, deep,"
-" fully hypnotized respectively\\n\\nCurrently, there's four types of "
-"hypnosis, Calming, Air, Body Control, Mental Control, and as the effect gets"
-" stronger, the hypnosis level required will be higher, initially hypnosis "
-"types must be chosen manually, but it can also be changed to specific "
-"default types at [Originium Arts]"
-
 msgid "我的UI扭扭斜斜/地图支离破碎，和我看到的其他人的截图不太一样，是什么原因？"
 msgstr "My UI and map is looking broken, what's the reason?"
-
-msgid ""
-"游戏需要专门的字体，在该字体下UI和地图绘制在特定的字体下会有比较好的效果。虽然不确定你是在哪里发现该游戏的，但是一般来说在下载链接里会附带该字体，安装后即可解决该问题"
-msgstr ""
-"This game needs a specific font, and the design of UI and map will be better"
-" under that font. The font will be attached with the download link."
 
 msgid "干员每天的日常行动是什么样的？"
 msgstr "How's the daily activities of Operators?"
@@ -4301,15 +3593,6 @@ msgstr ""
 msgid "惹干员生气了怎么办？"
 msgstr "What if Operators got angry?"
 
-msgid "去诚恳的道歉，不行的话就多道几次歉，总会原谅你的。\\n如果生气很严重，获得反发刻印或者恐怖刻印了的话，可以用源石技艺进行消除，然后再去道歉。"
-msgstr ""
-"Apologize sincerely, do it more than once, they'll forgive you "
-"eventually.\\nIf they have Hatred Engraving or Fear Engraving, then "
-"apologize after removing the said Engravings via Originium Arts."
-
-msgid "攻略路线是怎么样的？"
-msgstr "How's the relationship progress?"
-
 msgid ""
 "攻略分为【爱情系】和【隶属系】两条路线，只能二选其一，两条路线在抵达第三阶段时均可获得该干员的【信物】。\\n\\n爱情系：以和干员相亲相爱为主要目标，通过日常中的点点滴滴拉近感情，最终坠入爱河，从低到高共有[思慕]、[恋慕]、[恋人]、[爱侣]四个阶段\\n隶属系：以博士的意志为主要目标，通过强迫性指令和肉体快感调教等方式等方式，最终达到干员对博士的绝对服从，从低到高共有[屈从]、[驯服]、[宠物]、[奴隶]四个阶段\\n\\n最开始路线的选择是博士在属性提升中手动选择的，之后当前周目内就不能再更改了，请慎重选择"
 msgstr ""
@@ -4341,40 +3624,8 @@ msgstr ""
 msgid "如何用道具来H？"
 msgstr "How to use items for H?"
 
-msgid ""
-"在贸易区里有一个成人用品商店，消耗粉红凭证就可以购买对应道具\\n大部分道具购买后即可在H中使用，部分特殊道具（如搾乳机等）需要对应部位已经开发到满足条件才可以使用"
-msgstr ""
-"In Commerce Zone, there's Adult Items' Shop, which you can get certain items"
-" by spending Pink Certificates\\nMost items can be used while H, but certain"
-" items (like Milking Machine) requires some part to be at certain stage"
-
 msgid "干员会怀孕吗？可以真的生出小孩吗？"
 msgstr "Will Operators get pregnant? Will they actually give birth?"
-
-msgid ""
-"除去还没有来初潮的干员之外，其他所有人都是可以怀孕的。虽然耗时比较长，最后生出来的小孩在成长后也会成为新的干员\\n\\n干员的生理周期以七天为一个循环，包含安全日、普通日、危险日和排卵日四种日子\\n在每个生理周期的排卵日(第6天)会根据整个周期内，安全日以外的其他日被射入精液总量来判断是否[受精]\\n\\n在[受精]后，过一个月左右的时间会变成[妊娠]状态，获得[孕肚]和[泌乳]\\n再过两个月左右，会[临盆]，接着过不了几天就会[生产]\\n生出孩子后，母亲会进入[育儿]状态，养育需要一个月左右，孩子就会从[婴儿]成长为可以初步自理的[幼女]\\n结束了[育儿]后，母亲会恢复孕前状态，也会失去[泌乳]，而孩子还会依次成长为[萝莉]再到[少女]，每次成长会耗时两个月左右\\n\\n孩子的性别仅为女性，在成长到[少女]后即完全成为一名正常的干员\\n女儿会继承母亲包括种族在内大部分生理特征，也会在[育儿]期间学到部分来自母亲的后天知识和技能"
-msgstr ""
-"Besides those that haven't had their menarche, all other Operators can be "
-"pregnant. While the time taken is long, the children will also be new "
-"Operators\\n\\nOperator's menstrual cycle takes 7 days, including Safe "
-"Period, Normal Period, Danger Period and Ovulation Period\\nOn the Ovulation"
-" Period (6th day), the total amount of semen ejaculated into the Operator "
-"during non-Safe Period will be considered for rate of "
-"[Fertilized]\\n\\nAfter [Fertilized], the Operator will enter [Pregnancy] "
-"status after a month and gains [Pregnant Belly] and [Lactation]\\nAfter two "
-"more months, the Operator will have [Confined], and afterwards, [Giving "
-"Birth]\\nAfter the process, the mother will enter [Parenting] status, which "
-"takes a month, and the child will grow from [Baby] to [Young Girl]\\nAfter "
-"[Parenting] ends, the mother will lose [Lactation] and returns to before "
-"pregnancy, and the child will grow to [Loli] and then to [Girl], which takes"
-" two months per phase\\n\\nThe child will always be female, and will be a "
-"normal Operator on [Girl]\\nThe daughter will inherit most physical "
-"appearance from the mother, and will learn part of the mother's knowledge "
-"and skills during [Parenting]"
-
-msgid "我在射精时选定了指定部位，但发现还射到了其他部位上，这是怎么回事？"
-msgstr ""
-"I ejaculated on the chosen body part, but why it went onto other body parts?"
 
 msgid ""
 "精液的容积系统中有液体流通计算，射上去的精液会有一部分流向联通的其他部位，还会有一部分向环境中滴落，是正常现象\\n如果不想让出现该计算，可以在设置中关闭液体流通功能，这样射出的精液就只会停留在指定部位上了"
@@ -4423,29 +3674,11 @@ msgstr ""
 msgid "都有哪些获得龙门币的方法？"
 msgstr "What are the ways to obtain LMD?"
 
-msgid ""
-"目前主要的获取途径有两个。\\n①，医疗部每天治疗病人，能够获得稳定的龙门币收入\\n②，将资源在制造加工区将其加工成药品或奢侈品，再在贸易区的[资源交易所]中卖出，能够获得较高的利润"
-msgstr ""
-"Two ways.\\n1) Treating patients in Medical Zone, which have stable LMD "
-"income\\n2) Produces medicines or luxuries in Production Zone and sells them"
-" on Resource Exchange, which gives higher profit"
-
 msgid "都有哪些获得粉红凭证的方法？"
 msgstr "What are the ways to obtain Pink Certificates?"
 
-msgid "①，每日的干员好感度提升会换算为一定的粉红凭证\\n②，已攻略的干员会根据攻略程度每日提供固定的粉红凭证"
-msgstr ""
-"1) The Affinity increase on Operators will be exchanged to certain amount of"
-" Pink Certificates\\n2) Operators that have completed relationship will "
-"provide Pink Certificates according to the relationship stage"
-
 msgid "都有哪些获得至纯源石的方法？"
 msgstr "What are the ways to obtain Originium Primes?"
-
-msgid "目前的主要获得办法是在图书馆的藏品馆中进行收集解锁，获得至纯源石奖励"
-msgstr ""
-"Current main acquirement source is from Collection Bonus at Collection Hall "
-"of Library, which will award Originium Primes"
 
 msgid "卡特斯/奇美拉"
 msgstr "Cautus/Chimera"
@@ -4461,9 +3694,6 @@ msgstr "Chimera"
 
 msgid "麒麟"
 msgstr "Kirin"
-
-msgid "阿达纳克斯"
-msgstr "Archosauria"
 
 msgid "阿纳缇"
 msgstr "Anaty"
@@ -4988,43 +4218,9 @@ msgstr ""
 "Fresh breast milk, tastes mellow and nutritious,\\n can be drunk directly or"
 " used to produce dairy products."
 
-msgid "随机招募当地干员"
-msgstr "Random recruiting local Operators"
-
-msgid "最基础的招聘策略，仅能招募罗德岛当前驻所在地的干员"
-msgstr ""
-"The most basic recruitment strategy,\\n only capable of recruiting Operators"
-" from the current location of Rhodes Island"
-
-msgid "招募全泰拉干员"
-msgstr "Recruit Operators globally"
-
 msgid "招募范围扩大至全泰拉干员，但仍是随机招募"
 msgstr ""
 "Recruitment range expands to the whole Terra, but remained random recruiting"
-
-msgid "招募关联干员"
-msgstr "Recruit related Operators"
-
-msgid "指定一名正在进行招聘工作的干员，招募目标会限定为与该干员同势力的未招募干员（未实装）"
-msgstr ""
-"Targets an Operator that is doing the recruitment work,\\n and have the "
-"recruitment target be from the same Nation of that Operator (not "
-"implemented)"
-
-msgid "招募指定干员"
-msgstr "Recruit specific Operator"
-
-msgid "指定一名未招募的干员，招募目标会限定为该干员（未实装）"
-msgstr ""
-"Targets an unrecruited Operator, and have the recruitment target be that "
-"Operator (not implemented)"
-
-msgid "招募路人干员"
-msgstr "Recruit passerby Operators"
-
-msgid "可以招募到NPC作为干员（未实装）"
-msgstr "Can recruit NPC as Operators (not implemented)"
 
 msgid "安全日"
 msgstr "Safe Period"
@@ -5434,9 +4630,6 @@ msgstr "Field commissions"
 msgid "上学"
 msgstr "Studying"
 
-msgid "干员工作做饭"
-msgstr "Cooking as work"
-
 msgid "制造产品"
 msgstr "Producing"
 
@@ -5490,9 +4683,6 @@ msgstr "Propose failed"
 
 msgid "戴上项圈失败"
 msgstr "Put on collar failed"
-
-msgid "目睹玩家与其他角色H并打断"
-msgstr "Saw player doing H with others"
 
 msgid "亲吻失败"
 msgstr "Kiss failed"
@@ -5563,16 +4753,10 @@ msgstr "Decreases and increases empty lines according to self preferences"
 msgid "1行|2行|3行|5行|10行|50行"
 msgstr "1 row|2 rows|3 rows|5 rows|10 rows|50 rows"
 
-msgid "是否在博士入睡结算时自动升级玩家的能力"
-msgstr "Auto upgrade player's abilities on sleep"
-
 msgid "会依次遍历全能力，符合升级条件则进行升级。对自己的升级路线有特定规划的话，建议自己手动升级"
 msgstr ""
 "Will upgrade abilities automatically, recommended doing manually if having "
 "plans on upgrades"
-
-msgid "是否在博士入睡结算时自动升级干员的能力"
-msgstr "Auto upgrade Operators' abilities on sleep"
 
 msgid "会依次遍历全能力，符合升级条件则进行升级。因干员数量较多，建议开启"
 msgstr "Will upgrade abilities automatically, recommended to enable"
@@ -5590,9 +4774,6 @@ msgstr "No|Yes"
 
 msgid "博士的尿意值自然增长"
 msgstr "Urinary Value generates naturally for Doctor"
-
-msgid "博士是否和其他干员一样需要上厕所解手（该选项的优先度高于6号的全角色尿意值的增长速度选项）"
-msgstr "Requiring to relieve in toilet (takes priority over setting #6)"
 
 msgid "否，博士的尿意值不再自然增加|是"
 msgstr "No|Yes"
@@ -5620,25 +4801,8 @@ msgstr "No|Yes"
 msgid "全角色是否使用通用文本"
 msgstr "General text"
 
-msgid ""
-"指令文本分为通用文本和角色专属文本，通用文本可以被所有角色使用，角色专属文本只能被指定角色使用。注意，改变该项将会覆盖全角色的该个人选项，如需个别调整请手动调整对应角色"
-msgstr ""
-"Command test is separated into general and specific,\\n where general can be"
-" used by all characters and specific can only be used on specific "
-"characters.\\n Note that changing this setting will change on all "
-"characters,\\n please manually change the settings for personal reasons"
-
 msgid "处女"
 msgstr "Virgin"
-
-msgid "Ａ处女"
-msgstr "A Virgin"
-
-msgid "Ｕ处女"
-msgstr "U Virgin"
-
-msgid "Ｗ处女"
-msgstr "W Virgin"
 
 msgid "无接吻经验"
 msgstr "No Kissing Experience"
@@ -5649,44 +4813,14 @@ msgstr "Virginity"
 msgid "未初潮"
 msgstr "No Menarche"
 
-msgid "还没有迎来初潮，因此就算被射入精液无法受精或怀孕"
-msgstr ""
-"Haven't faced menarche yet, hence unable to be [Fertilized] or entering "
-"[Pregnancy]"
-
 msgid "未成年"
 msgstr "Underage"
 
 msgid "亲吻合意"
 msgstr "Kiss Agreement"
 
-msgid "同意亲吻"
-msgstr "Allows being kissed"
-
-msgid "Ｈ合意"
-msgstr "H Agreenment"
-
-msgid "同意V性行为"
-msgstr "Allows V-type actions"
-
-msgid "中出合意"
-msgstr "Creampie Agreement"
-
-msgid "同意不带套射在里面，但是要吃药"
-msgstr "Allows being ejaculated inside without covering, but needs medicines"
-
 msgid "妊娠合意"
 msgstr "Pregnancy Agreement"
-
-msgid "同意不带套射在里面，不需要吃药"
-msgstr ""
-"Allows being ejaculated inside without covering, and don't need medicines"
-
-msgid "Ａ合意"
-msgstr "A Agreement"
-
-msgid "同意A性行为"
-msgstr "Allows A-type actions"
 
 msgid "受精"
 msgstr "Fertilized"
@@ -5706,14 +4840,8 @@ msgstr "Parenting"
 msgid "孕肚"
 msgstr "Pregnant Belly"
 
-msgid "怀孕中后期腹部隆起"
-msgstr "Belly swelling on mid and late pregnancy"
-
 msgid "泌乳"
 msgstr "Lactation"
-
-msgid "孕后分泌母乳"
-msgstr "Secretes breast milk after birth"
 
 msgid "精爱味觉"
 msgstr "Semen Taste Loving"
@@ -5825,9 +4953,6 @@ msgstr "Semen Drinking Obsession"
 msgid "周期性发情"
 msgstr "Periodical Estrus"
 
-msgid "隔一段时间会发情"
-msgstr "Become horny periodically"
-
 msgid "发情期中"
 msgstr "On oestrum"
 
@@ -5861,59 +4986,8 @@ msgstr ""
 "Entered full hypnosis, and body and mind were being played and fiddled like "
 "a doll"
 
-msgid "Ｎ钝感"
-msgstr "N Insensitive"
-
-msgid "Ｎ敏感"
-msgstr "N Sensitive"
-
-msgid "Ｂ钝感"
-msgstr "B Insensitive"
-
-msgid "Ｂ敏感"
-msgstr "B Sensitive"
-
-msgid "Ｃ钝感"
-msgstr "C Insensitive"
-
-msgid "Ｃ敏感"
-msgstr "C Sensitive"
-
-msgid "Ｐ钝感"
-msgstr "P Insensitive"
-
-msgid "Ｐ敏感"
-msgstr "P Sensitive"
-
-msgid "Ｖ钝感"
-msgstr "V Insensitive"
-
-msgid "Ｖ敏感"
-msgstr "V Sensitive"
-
-msgid "Ａ钝感"
-msgstr "A Insensitive"
-
-msgid "Ａ敏感"
-msgstr "A Sensitive"
-
-msgid "Ｕ钝感"
-msgstr "U Insensitive"
-
-msgid "Ｕ敏感"
-msgstr "U Sensitive"
-
-msgid "Ｗ钝感"
-msgstr "W Insensitive"
-
-msgid "Ｗ敏感"
-msgstr "W Sensitive"
-
 msgid "婴儿"
 msgstr "Baby"
-
-msgid "身体年龄特征"
-msgstr "Body age properties"
 
 msgid "幼女"
 msgstr "Young Girl"
@@ -5933,17 +5007,11 @@ msgstr "Wife"
 msgid "长生者"
 msgstr "Longlives"
 
-msgid "可与以上几个叠加"
-msgstr "Can be stacked with the talents above"
-
 msgid "兽尾"
 msgstr "Beast Tail"
 
 msgid "光环"
 msgstr "Halo"
-
-msgid "光翼"
-msgstr "Wings"
 
 msgid "触手"
 msgstr "Tentacle"
@@ -6080,95 +5148,47 @@ msgstr "Prosthetic Limb"
 msgid "毒抗性"
 msgstr "Poison Resistance"
 
-msgid "下药无效"
-msgstr "Medicines Ineffective"
-
 msgid "大胃王"
 msgstr "Big Stomach"
 
 msgid "昼伏夜出"
 msgstr "Night Awake"
 
-msgid "作息规律相反"
-msgstr "Reversed Routine"
-
 msgid "猫舌"
 msgstr "Cat Tongue"
-
-msgid "口系减值"
-msgstr "Oral Impairment"
 
 msgid "水分身"
 msgstr "Water Clone"
 
-msgid "可以召唤分身"
-msgstr "Can summon clones"
-
 msgid "思慕"
 msgstr "Longing"
-
-msgid "爱情系第一阶段"
-msgstr "First phase of love relationship"
 
 msgid "恋慕"
 msgstr "Envy"
 
-msgid "爱情系第二阶段"
-msgstr "Second phase of love relationship"
-
 msgid "恋人"
 msgstr "Lover"
-
-msgid "爱情系第三阶段"
-msgstr "Third phase of love relationship"
 
 msgid "爱侣"
 msgstr "Couple"
 
-msgid "爱情系第四阶段"
-msgstr "Fourth phase of love relationship"
-
-msgid "指令[告白]成功后获得"
-msgstr "Obtained after success of [Propose]"
-
 msgid "屈从"
 msgstr "Yielded"
-
-msgid "隶属系第一阶段"
-msgstr "First phase of affiliation relationship"
 
 msgid "驯服"
 msgstr "Tamed"
 
-msgid "隶属系第二阶段"
-msgstr "Second phase of affiliation relationship"
-
 msgid "宠物"
 msgstr "Pet"
-
-msgid "隶属系第三阶段"
-msgstr "Third phase of affiliation relationship"
 
 msgid "奴隶"
 msgstr "Slave"
 
-msgid "隶属系第四阶段"
-msgstr "Fourth phase of affiliation relationship"
-
-msgid "指令[戴上项圈]成功后获得"
-msgstr "Obtained after success of [Put on collar]"
-
 msgid "性好奇"
 msgstr "Sexual Curiosity"
 
-msgid "H指令加值"
-msgstr "Increases Command Execution Value for H commands"
-
 msgid "性冷漠"
 msgstr "Sexual Indifference"
-
-msgid "H指令减值"
-msgstr "Decreases Command Execution Value for H commands"
 
 msgid "性无知"
 msgstr "Sexual Ignorance"
@@ -6176,44 +5196,17 @@ msgstr "Sexual Ignorance"
 msgid "感情缺乏"
 msgstr "Lack of Feelings"
 
-msgid "全体状态上升难"
-msgstr "Reduces rate of all statuses' increases"
-
-msgid "难以与越过的底线"
-msgstr "Unpassable Borderline"
-
-msgid "全abl上升难，实行值降低"
-msgstr ""
-"Reduces rate of all abilities' increases, and Command Execution Value "
-"decreases"
-
 msgid "献身"
 msgstr "Body Sacrificing"
-
-msgid "abl_受虐上升易，恭顺、屈服上升易"
-msgstr ""
-"Increased rate of Masochism increase, and increased rate of Humbleness "
-"increase and Yield increase"
 
 msgid "倒错"
 msgstr "Perversion"
 
-msgid "苦痛系、SM系实行值上升、效果上升"
-msgstr ""
-"Command Execution Value and effect of pain-type and SM-type commands "
-"increase"
-
 msgid "讨厌男性"
 msgstr "Male Hatred"
 
-msgid "男性博士全实行值降低"
-msgstr "Command Execution Value from male Doctor decreases"
-
 msgid "讨厌女性"
 msgstr "Female Hatred"
-
-msgid "女性博士全实行值降低"
-msgstr "Command Execution Value from female Doctor decreases"
 
 msgid "施虐狂"
 msgstr "Sadist"
@@ -6224,47 +5217,23 @@ msgstr "Masochist"
 msgid "勤劳"
 msgstr "Hardworking"
 
-msgid "习得、先导上升易"
-msgstr "Increased rate of Acquirement increase and Guidance increase"
-
 msgid "懒散"
 msgstr "Lazy"
-
-msgid "习得、先导上升难"
-msgstr "Decreased rate of Acquirement increase and Guidance increase"
 
 msgid "脆弱"
 msgstr "Fragile"
 
-msgid "恭顺、屈服上升易"
-msgstr "Increased rate of Humbleness increase and Yield increase"
-
 msgid "坚强"
 msgstr "Strong"
-
-msgid "恭顺、屈服上升难"
-msgstr "Decreased rate of Humbleness increase and Yield increase"
 
 msgid "热情"
 msgstr "Enthusiasm"
 
-msgid "好意、快乐上升易"
-msgstr "Increased rate of Kindness increase and Happiness increase"
-
 msgid "孤僻"
 msgstr "Withdrawn"
 
-msgid "好意、快乐上升难"
-msgstr "Decreased rate of Kindness increase and Happiness increase"
-
-msgid "欲情、羞耻上升易"
-msgstr "Increased rate of Lust increase and Shame increase"
-
 msgid "开放"
 msgstr "Opening"
-
-msgid "欲情、羞耻上升难"
-msgstr "Decreased rate of Lust increase and Shame increase"
 
 msgid "博士信息素集组"
 msgstr "Doctor's Pheromone Groups"
@@ -6298,25 +5267,8 @@ msgstr ""
 "Tertiary vision-type ability,\\n can directly see the menstrual cycle and "
 "fertilization rate of the target"
 
-msgid "隔空触摸"
-msgstr "Air-through Touch"
-
-msgid "初级触觉系能力，可以隔空抚摸对方的身体"
-msgstr "Primary touch-type ability, can touch the target's body from afar"
-
-msgid "隔空脱衣"
-msgstr "Air-through Takeoff"
-
-msgid "中级触觉系能力，可以隔空脱掉对方的衣服"
-msgstr ""
-"Secondary touch-type ability, can take off the target's clothes from afar"
-
 msgid "隔空插入"
 msgstr "Air-through Insertion"
-
-msgid "高级触觉系能力，可以隔空插入对方的腔内"
-msgstr ""
-"Tertiary touch-type ability, can insert into the target's cavity from afar"
 
 msgid "性爱催眠"
 msgstr "Sex Hypnosis"
@@ -6342,14 +5294,8 @@ msgstr ""
 msgid "回复慢"
 msgstr "Slow Recovery"
 
-msgid "进行体力气力恢复时有减值"
-msgstr "Decreased rate of Stamina and Energy recovery"
-
 msgid "回复快"
 msgstr "Fast Recovery"
-
-msgid "进行体力气力恢复时有加值"
-msgstr "Increased rate of Stamina and Energy recovery"
 
 msgid "酒量差"
 msgstr "Bad Drinker"
@@ -6372,29 +5318,14 @@ msgstr "Instructor"
 msgid "厨艺"
 msgstr "Cooking Skills"
 
-msgid "料理加值"
-msgstr "Increased rate of Cuisine increase"
-
 msgid "持有博士把柄"
 msgstr "Got Hold on Doctor"
-
-msgid "实行值减少"
-msgstr "Decreases Command Execution Value"
 
 msgid "被博士持有把柄"
 msgstr "Get Hold by Doctor"
 
-msgid "实行值增加"
-msgstr "Increases Command Execution Value"
-
-msgid "把自己的信物交给了博士"
-msgstr "Handed the token to Doctor"
-
 msgid "女儿"
 msgstr "Daughter"
-
-msgid "是博士的女儿"
-msgstr "Doctor's Daughter"
 
 msgid "性素质"
 msgstr "Sex talents"
@@ -6497,129 +5428,6 @@ msgstr ""
 msgid "设施"
 msgstr "Facilities"
 
-msgid "地点Tip：【控制中枢】-【博士房间】。博士醒来后会逐渐变得困倦，很困的时候会限制可以用的指令，需要回博士房间【睡觉】"
-msgstr ""
-"Location Tip: [Control Center] - [Doctor's Room]. Doctor will get tired "
-"gradually,\\n which will limit the commands that are usable, and you must "
-"return to [Sleep]"
-
-msgid "地点Tip：【控制中枢】-【博士办公室】。博士进行办公的主要场所，在这里使用【管理罗德岛】指令可以一览整个罗德岛的情况，并且对各部门进行管理"
-msgstr ""
-"Location Tip: [Control Center] - [Doctor's Office]. The main place of "
-"Doctor's work,\\n where [Manage Rhodes Island] can be used to monitor and "
-"manage each department"
-
-msgid ""
-"地点Tip：【生活娱乐区】-【取餐区】。早上7~8点、中午12~13点、晚上17~18点是饭点，取餐区会在此时供应免费饭菜，博士可以到这里【购买食物】"
-msgstr ""
-"Location Tip: [Entertainment Zone] - [Meal Taking Zone].\\n 7-8, 12-13, "
-"17-18 is dining time, where you can [Purchase food] for free"
-
-msgid "地点Tip：【工程部】-【基建部】。博士可以在这里的【基建系统】中消耗资源来兴建新的设施、或者升级已有的设施"
-msgstr ""
-"Location Tip: [Engineering Zone] - [Base Building Department].\\n [Base "
-"system] can be used to consume resources for building or upgrading "
-"facilities"
-
-msgid "地点Tip：【关押区】-【监牢】。博士可以在这里使用【投入监牢】来监禁干员，或使用【解除囚禁】来释放干员"
-msgstr ""
-"Location Tip: [Detention Zone] - [Prison].\\n [Put in prison] can be used to"
-" imprison Operators, or [Free from captivity] to release Operators"
-
-msgid "地点Tip：【贸易区】-【资源交易所】。博士可以在这里进行【资源交易】，买卖各种资源"
-msgstr ""
-"Location Tip: [Commerce Zone] - [Resource Exchange].\\n [Trade resources] "
-"can be conducted to buy or sell resources"
-
-msgid "地点Tip：【训练场】-【健身房】。博士可以在这里【锻炼身体】，从而提高体力和气力的上限"
-msgstr ""
-"Location Tip: [Training Room] - [Fitness Zone].\\n [Exercise] can be "
-"conducted to increase maximum Stamina and Energy"
-
-msgid "在训练场的模拟对战房可以邀请和其他干员切磋，从而获得战斗经验，提高战斗技能"
-msgstr ""
-"You can invite Operators for a friendly duel in Combat Simulation Room\\n to"
-" obtain Combat EXP and upgrade Combat Skill"
-
-msgid "地点Tip：【生活娱乐区】-【厨房】。博士可以在这里【做饭】，获得料理经验，料理技能的等级关系到可以做的饭的种类和质量"
-msgstr ""
-"Location Tip: [Entertainment Zone] - [Kitchen].\\n [Cook] can be conducted "
-"to obtain Cuisine EXP,\\n and the types and quality of food will be affected"
-" by level of Cuisine Skill"
-
-msgid ""
-"地点Tip：【图书馆】-【图书馆】。博士可以在这里【借阅书籍】，选择自己想看的书借走后，可以在任何[有办公级家具]的地点进行【读书】，获得的经验与借阅的书籍有关"
-msgstr ""
-"Location Tip: [Library] - [Library].\\n [Borrow books] can be conducted to "
-"borrow books\\n and [Read books] on any location with office furnitures,\\n "
-"which the Experience obtained will be related to the book borrowed"
-
-msgid "在生活娱乐区的多媒体室可以和电影兴趣小组的干员一起观看影片，加深感情"
-msgstr ""
-"You can watch movies with Operators that enjoy movies in Multimedia Room of "
-"Entertainment Zone\\n to deepen feelings"
-
-msgid "在生活娱乐区的现代音乐排练室可以和喜欢流行乐的干员一起唱歌和演奏乐器，加深感情"
-msgstr ""
-"You can sing and play instruments with Operators that enjoy modern music\\n "
-"at Modern Music Rehearsal Room of Entertainment Zone to deepen feelings"
-
-msgid "在生活娱乐区的夕照区音乐室可以和喜欢古典乐的干员一起唱歌和演奏乐器，加深感情"
-msgstr ""
-"You can sing and play instruments with Operators that enjoy traditional "
-"music\\n at Afterglow-styled Music Room of Entertainment Zone to deepen "
-"feelings"
-
-msgid "在生活娱乐区的棋牌室可以和喜欢棋牌的干员一起下棋或打牌，加深感情"
-msgstr ""
-"You can play chess or cards with Operators that enjoy chess\\n in Chess Room"
-" of Entertainment Zone to deepen feelings"
-
-msgid "在生活娱乐区的酒吧可以和喜欢喝酒的干员一起饮酒，加深感情"
-msgstr ""
-"You can drink alcohol with Operators that enjoy alcohol in Bar of "
-"Entertainment Room\\n to deepen feelings"
-
-msgid "在训练场的木桩房和射击房可以自己独自训练，从而获得战斗经验，提高战斗技能"
-msgstr ""
-"You can train alone in Stake Room and Shooting Room of Training Room\\n to "
-"obtain Combat EXP and upgrade Combat Skill"
-
-msgid "地点Tip：【控制中枢】-【指挥室】。博士可以在这里使用【导航】，消耗燃料，使罗德岛前往其他地点"
-msgstr ""
-"Location Tip: [Control Center] - [Command Room].\\n [Navigate] can be used "
-"to consume fuel to head to other locations"
-
-msgid "疗养庭院的香熏治疗室需要在获得调香师干员后才能开放"
-msgstr ""
-"Aromatherapy Treatment Room of Convalescence Garden will only open after "
-"obtaining Operator Perfumer"
-
-msgid "疗养庭院的香熏治疗室可以舒缓心情，邀请心情不好的干员来这里休息，可以让她们变得开心起来"
-msgstr ""
-"Aromatherapy Treatment Room of Convalescence Garden can soothe feelings,\\n "
-"invite Operators that are feeling unhappy to there can help them to feel "
-"better"
-
-msgid "工程部的鲁特拉工作室需要在获得梅尔干员后才能开放"
-msgstr ""
-"Lutra in Engineering Zone will only open after obtaining Operator Mayer"
-
-msgid "工程部的鲁特拉工作室可以提供无人机方面的支援，可以给博士提供一台咪波，并进行功能的升级"
-msgstr ""
-"Lutra in Engineering Zone can provide drone support,\\n which is done by "
-"providing a Meeboo and conducting function upgrades"
-
-msgid "仓储区的裁缝铺需要在获得柏喙干员后才能开放"
-msgstr ""
-"Tailor Shop of Storage Zone will only open after obtaining Operator Bibeak"
-
-msgid "仓储区的裁缝铺可以提供服装定制服务，在这里给干员购买新衣服或者手动指定干员穿某些衣服"
-msgstr ""
-"Tailor Shop of Storage Zone can provide clothing customization service,\\n "
-"which allows purchasing clothes for Operators or asking them to wear certain"
-" clothes"
-
 msgid "毫无兴趣"
 msgstr "Not interested"
 
@@ -6686,9 +5494,6 @@ msgstr "Consultation Doctor"
 msgid "门诊室"
 msgstr "Outpatient Department"
 
-msgid "接待并诊治病人，获得龙门币"
-msgstr "Receive and treat patients for LMD"
-
 msgid "招募专员"
 msgstr "Recruitment Specialist"
 
@@ -6724,16 +5529,8 @@ msgstr "Produces products according to materials used in Production Workshop"
 msgid "外交官"
 msgstr "Diplomatist"
 
-msgid "处理与各国之间的关系，邀请各界人士来罗德岛访问"
-msgstr ""
-"Manages the relationship with other countries, as well as inviting others to"
-" Rhodes Island for visit"
-
 msgid "教师"
 msgstr "Teacher"
-
-msgid "教室"
-msgstr "Classroom"
 
 msgid "给学生上课"
 msgstr "Teaches students"
@@ -6744,12 +5541,6 @@ msgstr "Student"
 msgid "听老师讲课"
 msgstr "Learns from teachers"
 
-msgid "种植员（实装中）"
-msgstr "Planter (implementing)"
-
-msgid "在农田里种植药材等农作物"
-msgstr "Plant crude drugs and other crops in farmland"
-
 msgid "按摩师"
 msgstr "Masseuse"
 
@@ -6758,12 +5549,6 @@ msgstr "Rest Zone"
 
 msgid "为干员提供搓澡、按摩、捏脚、刮痧、拔罐等服务"
 msgstr "Provides bathing, massaging, feet pinching,  scraping, cupping, etc."
-
-msgid "铜化方舟"
-msgstr "Childknights"
-
-msgid "所有角色变成【萝莉】"
-msgstr "All characters become [Loli]"
 
 msgid "银銮方舟"
 msgstr "Empireknights"
@@ -6817,35 +5602,14 @@ msgstr ""
 "brought down international criminals. Now works at Rhodes Island, providing "
 "on-site tactical command."
 
-msgid "黄色领带"
-msgstr "Yellow tie"
-
 msgid "蓝黑色龙门警署制服外套"
 msgstr "Blue-black Lungmen Police uniform coat"
 
 msgid "白色制服衬衫"
 msgstr "White uniform shirt"
 
-msgid "蓝黑色制服短裤"
-msgstr "Blue-black uniform shorts"
-
 msgid "黑色露指手套"
 msgstr "Black fingerless gloves"
-
-msgid "厚高跟作战靴"
-msgstr "Thick high heel combat boots"
-
-msgid "短袜"
-msgstr "Short socks"
-
-msgid "小腿护具"
-msgstr "Calf protective gear"
-
-msgid "赤霄与近卫局制式长剑"
-msgstr "Chi Xiao and L.G.D. standard sword"
-
-msgid "半片式绑腿"
-msgstr "Half piece leggings"
 
 msgid "米莎"
 msgstr "Misha"
@@ -6883,20 +5647,8 @@ msgstr ""
 " skills and tactical decision making in mobile operations, annihilation, and"
 " raids. Now commanded by Amiya, she is a staple for when battles get tough."
 
-msgid "白色罗德岛战斗制服"
-msgstr "White Rhodes Island combat uniform"
-
-msgid "白色V领衬衣"
-msgstr "White V-neck shift"
-
 msgid "黑色战术手套"
 msgstr "Black tactical gloves"
-
-msgid "黑色罗德岛改良合身短裙"
-msgstr "Black Rhodes Island refined fitting skirt"
-
-msgid "白色长袜（右）"
-msgstr "White long sock (right)"
 
 msgid "黑色作战靴"
 msgstr "Black combat boots"
@@ -6957,9 +5709,6 @@ msgstr ""
 "The first single CD Sora released when she debuted as an idol. It is a kids "
 "song from a cartoon, but you can still feel she put her heart and soul into "
 "it."
-
-msgid "一位偽裝成魯珀的卡特斯偶像。希望能用她的歌聲帶來和平"
-msgstr ""
 
 msgid "紅色領帶"
 msgstr "Red tie"
@@ -7251,24 +6000,6 @@ msgstr ""
 "after defecting from Reunion for unknown reasons, signed a strategic "
 "cooperation agreement with Rhodes Island after negotiating with Dr. Kal'tsit"
 " in person."
-
-msgid "灰色围巾"
-msgstr "Gray scarf"
-
-msgid "短休闲服"
-msgstr "Short casual wear"
-
-msgid "白色T恤"
-msgstr "White T-shirt"
-
-msgid "黑色短褶裙"
-msgstr "Black short pleated skirt"
-
-msgid "厚连身裤"
-msgstr "Thick one-piece pants"
-
-msgid "黑色加固运动鞋"
-msgstr "Black reinforced sneakers"
 
 msgid "凛冬"
 msgstr "Zima"
@@ -7856,9 +6587,6 @@ msgstr "Black boots"
 msgid "幽灵鲨"
 msgstr "Specter"
 
-msgid "一幅难以描述的绘画。斑驳的留白令人茫然若失。"
-msgstr "An indescribable painting. The use of negative space is confusing."
-
 msgid ""
 "幽灵鲨，身份不明，履历缺失。在对抗大型生物与破坏硬目标等行动中展现出极强的技巧，推测与其过往战斗经验相关。现作为近卫干员于罗德岛某作战小队任职。"
 msgstr ""
@@ -8153,15 +6881,6 @@ msgstr ""
 "ambushes, sniping, unconventional tactics, and mobile tactics. She currently"
 " works as part of the Rhodes Island sniper group to provide protection "
 "services."
-
-msgid "灰绿色带兜帽休闲外套"
-msgstr "Gray-green hooded casual coat"
-
-msgid "白色V领背心"
-msgstr "White V-neck vest"
-
-msgid "灰绿色长袖衬衣"
-msgstr "Gray-green long sleeved shirt"
 
 msgid "深棕色短百褶裙"
 msgstr "Dark brown short pleated skirt"
@@ -8929,21 +7648,6 @@ msgstr "Sciurus"
 msgid "斯卡蒂"
 msgstr "Skadi"
 
-msgid "用家乡语言写下的歌谱。虽然完全没法理解这种文字，但她确实是打算教你这首歌的。"
-msgstr ""
-"A song written in her mother tongue. Although you can't understand a word of"
-" it, she IS going to teach it to you."
-
-msgid ""
-"斯卡蒂，赏金猎人，现为罗德岛所雇佣。在过去完成的赏金任务中，于对抗大型生物，破坏硬目标，攻坚战，歼灭战等多类行动中展现出强劲实力，推测与其过往战斗经验相关。成为赏金猎人之前的履历缺失。现于罗德岛某攻坚小队供职，同时身兼单兵任务预备执行干员一职。"
-msgstr ""
-"Skadi is a bounty hunter, currently employed by Rhodes Island. She has shown"
-" impressive combat prowess in the past, defeating large creatures, "
-"eliminating difficult targets, fighting crucial battles, and winning entire "
-"wars. She is very experienced in combat, but her history prior to becoming a"
-" bounty hunter is unclear. She is now an Operator for a Rhodes Island "
-"assault team, and also executes solo missions."
-
 msgid "鞭刃"
 msgstr "Whislash"
 
@@ -9332,16 +8036,6 @@ msgid "一把弩。保养得很好，使用起来也十分便捷。但从上面�
 msgstr ""
 "A crossbow. Well maintained and easy to use. But the tiny scratches and "
 "dents on it provide some insight into all the killing it has done."
-
-msgid ""
-"前汐斯塔市市长SP兼城市治安局局长，随干员锡兰共同加入罗德岛。在隐秘行动、侦察与反侦察、野外求生、弩使用等技能上拥有卓越的造诣。在担任博士护卫的同时，负责一部分罗德岛基层干员的训练工作。"
-msgstr ""
-"Formerly both SP for the Mayor of Siesta and the Bureau Chief of the Urban "
-"Public Security Bureau, Schwarz joined Rhodes Island at the same time as "
-"Ceylon. She has outstanding achievements in covert operations, "
-"reconnaissance and anti-reconnaissance, survival, and crossbow usage. She is"
-" in charge of protecting the Doctor and is responsible for the training of "
-"basic level Rhodes Island operators."
 
 msgid "月禾"
 msgstr "Tsukinogi"
@@ -10552,13 +9246,6 @@ msgid "粉色洞洞鞋"
 msgstr "Pink crocs"
 
 msgid ""
-"完全没有性经验。阴道处于未开发状态。阴道口细小。处女膜完好。内壁柔软而紧致。阴道狭窄干涩。无法接纳任何物体的插入。性对她来说是一个完全陌生的概念。"
-msgstr ""
-"No sex experience, no development. Tiny orifice, hymen remained unbroken, "
-"and the inner wall was tight and soft. Being narrow and dry, it can't accept"
-" any sort of insertion. Sex is a totally unknown concept for her."
-
-msgid ""
 "有过初次性经验，处女膜破裂，但阴道还比较紧致。阴道口能够打开，但仍然比较狭窄。内壁也比较薄嫩，只能勉强接纳较细的物体插入。阴道分泌的爱液还比较少，插入时还需要额外的润滑。"
 msgstr ""
 "Had first sex, hymen was broken, but the vagina remained tight. The orifice "
@@ -10580,17 +9267,6 @@ msgstr ""
 "can open up widely, and the inner wall is very thick and covering. Even if "
 "no sex was conducted for a long time, the vagina can quickly accept "
 "insertion. A lot of love juice was secreted for smooth piston motion."
-
-msgid ""
-"阴道已经被开发到极致，有极强的适应能力，无论是夸张的巨物还是细小的器物都可以完美包裹。内壁肌肉也非常发达，穴肉如同活物一般，可以紧紧吸附任何大小的插入物，即使是小指也难以拔出。大量爱液的分泌使插入非常顺畅。如果长时间不性交，会产生强烈的空虚感。"
-msgstr ""
-"The vagina has been developed till the limit, and has very high adaptivity, "
-"can cover anything from huge objects to small penis. The inner wall's muscle"
-" was also well developed, and the meat of it was the same as livings, can "
-"tightly adsorb onto any inserted object, even the little finger will be hard"
-" to be pulled out after inserted. The huge amount of love juice secreted "
-"makes insertion very smooth. Huge emptiness will be produced if sex wasn't "
-"conducted for a long time"
 
 msgid "后庭处于未开发状态，肛门紧闭，括约肌也非常紧致，无法接受任何物体的插入和接触。后庭对性完全没有概念，也无法带来性快感。"
 msgstr ""
@@ -10623,13 +9299,6 @@ msgstr ""
 " lubrication allows painless piston actions, which sufficient sexual "
 "pleasure can be obtained from them."
 
-msgid "后庭开发到极致，肛门可以完全打开，括约肌也非常松软有弹性，可以接受巨大插入和各种玩法。后庭性快感非常强烈，已经成为重要的性感带之一"
-msgstr ""
-"The posterior has developed till the limit, the anus can open fully, and the"
-" sphincter is very soft and elastic, can accept huge insertions and other "
-"plays. The sexual pleasure from the posterior is very strong, to the point "
-"it has become an important sex zone."
-
 msgid "子宫口处于最初封闭的状态，接触会引起明显的疼痛和不适。"
 msgstr ""
 "The cervix is in the state of initial closing, obvious pain and uncomfort "
@@ -10661,44 +9330,6 @@ msgstr ""
 "cervix will suck on the inserted object enthusiastically, trying to swallow "
 "it as a whole. The whole womb wished to be filled to full, and is fully "
 "ready for intercourse."
-
-msgid ""
-"口腔和舌头完全不敏感，无法作为性器官，也无法接受和吞咽精液。舌头仅具有基本的味觉功能，口腔内除了牙齿以外没有特殊的触觉反应。这时的口腔就像一般人的口腔一样，不会从接触精液中获得性快感，也无法有效地吞咽下去，大部分会被唾弃出来。"
-msgstr ""
-"The said cavity and tongue are insensitive, and unable to perform as sex "
-"organ, and unable to accept and swallow semen. The tongue only has basic "
-"sense tastes, and the cavity has no special sense of touch besides teeth. "
-"The current oral cavity is the same as normal people, who won't have sexual "
-"pleasure from tasting semen, and won't be able to swallow it but spit it out"
-" instead."
-
-msgid ""
-"口腔和舌头开始有了一定的敏感度，可以感受到舌面和口腔内壁被触碰时产生的快感，但这种快感还很微弱。舌头可以品尝到精液的味道，但吞咽仍然有困难。口腔有了一定的性快感，但还达不到高潮的程度，吞咽精液也还有障碍。"
-msgstr ""
-"The said cavity and tongue starts to have sensitivity, and can feel pleasure"
-" when the surface of tongue and inner wall of the cavity is touched, but the"
-" sensitivity is still weak. The tongue can taste semen but it is still "
-"difficult to swallow. The cavity has certain sexual pleasure, but not to the"
-" point of orgasm, and still difficult to swallow semen."
-
-msgid ""
-"口腔和舌头的敏感度明显增强，舌面和口腔内壁被触碰可以产生较强烈的性快感。舌头可以敏锐地品尝到精液的味道，吞咽精液也比较流畅。口腔已经成为一个敏感的性器官，可以通过舌头和口腔的刺激达到高潮，吞咽精液也基本无障碍。"
-msgstr ""
-"The sensitivity of the cavity and tongue has strengthened, and strong sexual"
-" pleasure can be produced on the touching surface of the tongue and inner "
-"wall of the cavity. The tongue can taste semen sharply, and can swallow it "
-"smoothly. The cavity has become a sensitive sex organ, can reach orgasm on "
-"stimulating tongue and cavity, and no difficulties on swallowing semen."
-
-msgid ""
-"口腔和舌头的敏感度非常高，轻微的接触和舔舐就可以带来极强的性快感，日常进食也会产生性冲动。腔内已经高度敏感，舌头可以最大限度地感受精液的味道，吞咽精液也成为一种本能和乐趣。口腔已经完全成为性器官，可以通过口交达到极致的性高潮。"
-msgstr ""
-"The sensitivity of cavity and tongue is very high, and strong sexual "
-"pleasure can be produced by even slight touch or lick, even eating will "
-"cause sex drive. The cavity is very sensitive, the tongue can taste semen to"
-" the greatest extent, and swallowing semen has become a habit and "
-"entertainment. The cavity can fully become a sex organ, and extreme sex "
-"orgasm can be reached through fellatio."
 
 msgid "有一点精液"
 msgstr "Has a bit of semen"
@@ -10735,17 +9366,11 @@ msgstr "Semen inflated"
 msgid "难以置信的精液膨胀"
 msgstr "Unbelievable semen inflation"
 
-msgid "精液灌肠"
-msgstr "Lavated by semen"
-
 msgid "难以忍受的精液膨胀"
 msgstr "Unholdable semen inflation"
 
 msgid "有精液在晃荡"
 msgstr "Semen is shaking inside"
-
-msgid "明显的感到胃里精液的分量"
-msgstr "Can feel the amount of semen in the stomach easily"
 
 msgid "几乎全被精液占据"
 msgstr "Nearly fully occupied with semen"
@@ -10786,23 +9411,8 @@ msgstr "Moisturized with love juice"
 msgid "爱液泛滥的一塌糊涂"
 msgstr "Overflowing with love juice"
 
-msgid "爱液像泉水一样涌出"
-msgstr "Gushing with love juice"
-
 msgid "未灌肠"
 msgstr "Not lavated"
-
-msgid "灌肠液灌肠中"
-msgstr "In enema lavation"
-
-msgid "已灌肠完毕"
-msgstr "Lavated"
-
-msgid "精液灌肠中"
-msgstr "In semen lavation"
-
-msgid "已精液灌肠"
-msgstr "Lavated by semen"
 
 msgid "安全期"
 msgstr "Safe Period"
@@ -10864,61 +9474,10 @@ msgstr "Ears being rubbed with penis"
 msgid "未捆绑"
 msgstr "Not tied"
 
-msgid "被绳子捆成了后高手缚"
-msgstr "Being backhand tied with ropes"
-
-msgid "被绳子捆成了直立缚"
-msgstr "Being upright tied with ropes"
-
-msgid "被绳子捆成了驷马捆绑"
-msgstr "Being hogtie tied with ropes"
-
-msgid "被绳子捆成了直臂缚"
-msgstr "Straight arms being tied with ropes"
-
-msgid "被绳子捆成了双手缚"
-msgstr "Both hands being tied with ropes"
-
-msgid "被绳子捆成了菱绳缚"
-msgstr "Being rhombus tied with ropes"
-
-msgid "被绳子捆成了龟甲缚"
-msgstr "Being turtleshell tied with ropes"
-
-msgid "被绳子捆成了团缚"
-msgstr "Being fully tied with ropes"
-
-msgid "被绳子捆成了逆团缚"
-msgstr "Being reverse fully tied with ropes"
-
-msgid "被绳子捆成了吊缚"
-msgstr "Being hanged with ropes"
-
-msgid "被绳子捆成了后手吊缚"
-msgstr "Being backhand hanged with ropes"
-
-msgid "被绳子捆成了单足吊缚"
-msgstr "Single leg being hanged with ropes"
-
-msgid "被绳子捆成了后手观音"
-msgstr "Being tied into Avalokitesvara with ropes"
-
-msgid "被绳子捆成了苏秦背剑"
-msgstr "Being tied into iron cannon with ropes"
-
-msgid "被绳子捆成了五花大绑"
-msgstr "Being truss tied with ropes"
-
 msgid "{TargetSceneName}里现在好像有人，要进去吗"
 msgstr ""
 "There seems to be someone inside {TargetSceneName}, do you really want to "
 "enter"
-
-msgid "进去|{NickName}被{SrcOneCharaName}很生气地赶出来了"
-msgstr "Enter|{NickName} got chased out by {SrcOneCharaName} angrily"
-
-msgid "不进去|{NickName}放弃了打算"
-msgstr "Nope|{NickName} refused the thought"
 
 msgid "{Name}从食堂带了{AllFoodName}回来，向{PlayerName}打了个招呼"
 msgstr ""
@@ -11046,9 +9605,6 @@ msgstr "Inner Corridor"
 
 msgid "外走廊"
 msgstr "Outer Corridor"
-
-msgid "控制室"
-msgstr "Control Room"
 
 msgid "源石反应堆"
 msgstr "Originium Reactor"
@@ -11395,9 +9951,6 @@ msgstr "Convalescence Garden"
 msgid "工具间"
 msgstr "Workshop"
 
-msgid "药草园"
-msgstr "Herb Garden"
-
 msgid "过道"
 msgstr "Aisle"
 
@@ -11451,9 +10004,6 @@ msgstr "7 Cities Restaurant"
 
 msgid "乐器维修工坊"
 msgstr "Instrument Repair"
-
-msgid "人气快餐开封菜"
-msgstr "Fast Food KaiFengCai"
 
 msgid "伊比利亚度假村"
 msgstr "Iberian Resort Town"
@@ -11515,54 +10065,17 @@ msgstr "Tribal-style Inn"
 msgid "龙门食坊"
 msgstr "Lungmen Eatery"
 
-msgid "宁静时光"
-msgstr "Calm Moment"
-
-msgid "放松身心，舒缓紧张，能够将体力与气力全部回满"
-msgstr ""
-"Loose body and mind, relieve the tension, and recovers Stamina and Energy to"
-" max"
-
-msgid "灵感烛光"
-msgstr "Inspiring Candlelight"
-
-msgid "提高认知功能与精神专注，今日习得的获得速度+1倍"
-msgstr "Strengthen the cognitive and focus, gaining doubled Acquirement"
-
 msgid "橙色心灵"
 msgstr "Orange Soul"
-
-msgid "振奋精神，积极向上，今日恐怖、苦痛、抑郁、反感的获得速度-0.5倍"
-msgstr ""
-"Hardens the will, be motivated, and halved the gain of Terror, Pain, "
-"Depression and Antipathy"
 
 msgid "迷乱情梦"
 msgstr "Chaotic Dream"
 
-msgid "提升感官敏感度，促进荷尔蒙分泌，今日全部位快感与欲情的获得速度+1倍"
-msgstr ""
-"Increases sensitivity and stimulate hormone secretion, doubling the gain of "
-"Happiness and Lust"
-
 msgid "情感共鸣"
 msgstr "Emotion Resonance"
 
-msgid "打开心扉，增进情感交流，今日好感与信赖的获得速度变为+0.5倍"
-msgstr ""
-"Open your heart, encouraging emotion interflow, granting a 50% boost on "
-"Affinity and Trust gain"
-
 msgid "下坠天空"
 msgstr "Falling Sky"
-
-msgid "意识陷入深渊，思维迟缓，催眠进度的增长速度+5倍"
-msgstr ""
-"Dropping consciousness to the abyss, delaying the thoughts, sextupling the "
-"gain of Hypnosis Depth"
-
-msgid "否|晚安吻|晚安咬"
-msgstr "No|Night Kiss|Night Bite"
 
 msgid "《天灾详解》"
 msgstr "\"Catastrophe Explanations\""
@@ -11572,12 +10085,6 @@ msgstr "\"First Aid Instructions\""
 
 msgid "《无名诗集》"
 msgstr "\"Nameless Poetry\""
-
-msgid "“酒杯的碎屑在我皮肉里欢唱，鲜血自指缝间攀上脊索。饮下尖锐的晶莹光彩，脏腑随之璨烂流落。”"
-msgstr ""
-"\"The shards of the wine glass sung within my flesh,\\n and fresh blood "
-"climbedbetween my fingers towards my spine.\\n As I lapped up the sharp, "
-"crystalline brilliance,\\n light began to flow from my viscera."
 
 msgid "手交"
 msgstr "Handjob"
@@ -11733,21 +10240,6 @@ msgstr ""
 "Dormitory opens to the whole Zone 1, maximum number of Operators increases "
 "to 56"
 
-msgid "宿舍开放至3区全部，干员最大人数提升至140人"
-msgstr ""
-"Dormitory opens to the whole Zone 3, maximum number of Operators increases "
-"to 140"
-
-msgid "宿舍开放至6区全部，干员最大人数提升至218人"
-msgstr ""
-"Dormitory opens to the whole Zone 6, maximum number of Operators increases "
-"to 218"
-
-msgid "宿舍开放至9区全部，干员最大人数提升至296人"
-msgstr ""
-"Dormitory opens to the whole Zone 9, maximum number of Operators increases "
-"to 296"
-
 msgid "开放新功能：【招募路人干员】（未实装），可同时招募4名干员，招募效率+50%"
 msgstr ""
 "Opens new function: [Recruit passerby Operators] (not implemented), "
@@ -11756,9 +10248,6 @@ msgstr ""
 msgid "开放新设施:【影像厅】（未实装），学习效率加成提升至20%"
 msgstr ""
 "Opens new facility: [Video Hall] (not implemented), learning speed +20%"
-
-msgid "载具相关设施，未实装"
-msgstr "Vehicle-related facility, not implemented"
 
 msgid "开放基础设施:【药田】"
 msgstr "Opens basic facilities: [Herb Garden]"
@@ -11961,9 +10450,6 @@ msgstr "U development"
 msgid "精力剂"
 msgstr "Energizer"
 
-msgid "使用后回复100精液量。暂未实装。"
-msgstr "Recovers 100 Semen (not implemented)"
-
 msgid "可以用来拍照，暂未实装。"
 msgstr "Can be used to take photos (not implemented)"
 
@@ -12020,18 +10506,8 @@ msgstr ""
 msgid "如何提升博士或干员的体力与气力上限？"
 msgstr "How to increase Doctor's or Operators' Stamina and Energy limit?"
 
-msgid "可以在[训练场]的[健身区]中进行【锻炼身体】，需要注意的是该设施初期未解锁，需要在基建升级后才可使用"
-msgstr ""
-"[Exercise] in [Fitness Zone] of [Training Room],\\n but be reminded this is "
-"notavailable until base upgrade"
-
 msgid "如何提升博士的理智上限？"
 msgstr "How to increase Sanity limit?"
-
-msgid "每日多多使用源石技艺，将理智尽量消耗光，会根据消耗的量来缓慢提升理智上限"
-msgstr ""
-"Use Originium Arts frequently, and it will increase slowly based on "
-"consumption"
 
 msgid "羽蛇"
 msgstr "K'uk'ulkan"
@@ -12066,9 +10542,6 @@ msgstr "Maid"
 msgid "职业"
 msgstr "Profession"
 
-msgid "老师"
-msgstr "Teacher"
-
 msgid "护士"
 msgstr "Nurse"
 
@@ -12089,9 +10562,6 @@ msgstr "Scenario"
 
 msgid "户外当众"
 msgstr "Outdoor"
-
-msgid "公共厕所"
-msgstr "Public toilet"
 
 msgid "移动"
 msgstr "Move"
@@ -12146,9 +10616,6 @@ msgstr "Try on gourmets"
 
 msgid "听肚子里的动静"
 msgstr "Hear on stomach"
-
-msgid "一起玩耍"
-msgstr "Play together"
 
 msgid "对目标香薰疗愈_回复"
 msgstr "Aromatherapy-Recovery"
@@ -12309,9 +10776,6 @@ msgstr "Order her to masturbate"
 msgid "命令对方舔自己肛门"
 msgstr "Order her to lick anus"
 
-msgid "什么也不做"
-msgstr "Do nothing"
-
 msgid "诱惑对方"
 msgstr "Seduce her"
 
@@ -12411,9 +10875,6 @@ msgstr "Missionary position"
 msgid "背后位"
 msgstr "Doggy style"
 
-msgid "骑乘位"
-msgstr "Cowgirl position"
-
 msgid "对面座位"
 msgstr "Face sitting sex"
 
@@ -12443,9 +10904,6 @@ msgstr "Missionary anal sex"
 
 msgid "后背位肛交"
 msgstr "Doggy anal sex"
-
-msgid "骑乘位肛交"
-msgstr "Cowgirl anal sex"
 
 msgid "对面座位肛交"
 msgstr "Face sitting anal sex"
@@ -12568,28 +11026,8 @@ msgstr ""
 msgid "本番合意"
 msgstr "Insertion Agreement"
 
-msgid "同意避孕套下的本番行为"
-msgstr "Allows inserting with condom"
-
 msgid "避孕中出合意"
 msgstr "Birth Controlled Creampie Agreement"
-
-msgid "同意在安全期或已经服用避孕药的情况下内射"
-msgstr ""
-"Allows being ejaculated inside while at Safe Period or after consuming birth"
-" control pills"
-
-msgid "同意在任何时候内射"
-msgstr "Allows being ejaculated inside at any time"
-
-msgid "Ａ性交合意"
-msgstr "A Sex Agreement"
-
-msgid "Ｕ性交合意"
-msgstr "U Sex Agreement"
-
-msgid "同意U性行为"
-msgstr "Allows U-type actions"
 
 msgid "药材种植员"
 msgstr "Herb Planter"
@@ -12639,12 +11077,6 @@ msgstr "Brown-red overknee socks"
 msgid "长筒登山靴"
 msgstr "Platform mountaineering boots"
 
-msgid "#415567"
-msgstr ""
-
-msgid "#616161"
-msgstr ""
-
 msgid "深灰色套頭披肩"
 msgstr "Dark-gray pullover shawl"
 
@@ -12674,11 +11106,6 @@ msgstr "Explosive hammer"
 
 msgid "塑心"
 msgstr "Virtuosa"
-
-msgid "一副质地考究的黑色手套。既能安抚琴弦，也能安抚繁杂的心声。"
-msgstr ""
-"A pair of black gloves made from fine materials, bringing calm to "
-"theinstrument's strings, and to the restless sounds of the heart."
 
 msgid ""
 "阿尔图罗·吉亚洛，出身于拉特兰、活跃于泰拉大地的著名音乐家。受莱塔尼亚帝国宫廷、拉特兰教皇厅委托，罗德岛与两方签署协议确认，在受相应人员的严格监管下，允许其以干员“塑心”身份暂留罗德岛。"
@@ -12772,15 +11199,6 @@ msgstr ""
 "She is level-headed in her view of Oripathy, living life largely the same as before she became Infected. However, when she is working, she exhibits a terrifying demeanor.\n"
 "(A very seducing body is hidden under her loose shirt)"
 
-msgid "宽松款女式卫衣"
-msgstr "Loose hoodie for ladies"
-
-msgid "热裤"
-msgstr "Hot pants"
-
-msgid "精致小皮鞋"
-msgstr "Exquisite leather boots"
-
 msgid "寒檀"
 msgstr "Santalla"
 
@@ -12863,18 +11281,6 @@ msgstr ""
 "Magdelene Shaw, survivor of the Sanguinarch's ceremony in the town of Brentwood. More than half the town was razed, including the family greenhouse she so cherished. \n"
 "At the invitation of Rockrock and Feist, she joined the Self-Salvation Corps, offering them her assistance before eventually joining Rhodes Island. After the Londinium incident, she decided on her own to apply to return to Victoria to rebuild her hometown, taking up a post as a local Rhodes Island branch office liaison."
 
-msgid "黑色冠状头饰"
-msgstr "Black coronal head decoration"
-
-msgid "制式夹克"
-msgstr "Uniform jacket"
-
-msgid "白色荷叶边裙"
-msgstr "White ruffled skirt"
-
-msgid "亮铜色高跟鞋"
-msgstr "Light bronze heels"
-
 msgid "炎狱炎熔"
 msgstr "Purgatory"
 
@@ -12892,15 +11298,6 @@ msgstr ""
 "during her time in Rhodes Island and never wasted even a moment in her quest"
 " to hone her Originium Arts prowess."
 
-msgid "战损版罗德岛制式干员上衣"
-msgstr "Broken Rhodes Island uniform shirt"
-
-msgid "破损版黑色热裤"
-msgstr "Broken black hot pants"
-
-msgid "濒毁的匕首"
-msgstr "Near broken dagger"
-
 msgid "浊心斯卡蒂"
 msgstr "Corrupting Heart"
 
@@ -12909,36 +11306,6 @@ msgstr ""
 "A curved quill formed of cartilage. A light blue liquid drips from the "
 "quill's point, violently transforming an experimental organism's "
 "physiological structure."
-
-msgid ""
-"照这个方向发展下去，就不会有人关心她究竟是什么了。不是斯卡蒂的问题，一个人也不能改变什么。我说的是，这种生理状态，以及该类生物性物质表现出的最终状态，可能会摧毁我们社会、历史与科学的所有度量衡。希望我们简陋的医疗科研条件现在还够使上点劲......\n"
-"（还能听到我的声音吗...Dr?）"
-msgstr ""
-"If things continue to develop in this direction, no one will care what "
-"exactly she is. It is not Skadi's problem, and a single person can only "
-"change so much. What I'm talking about is her physiological state, as well "
-"as the final state exhibited by this kind of biological substance. It is "
-"something that may well shatter the scales of our society, history, and "
-"science. I only pray that our porous medical research conditions are strong "
-"enough..."
-
-msgid "骸饰帆船帽"
-msgstr "Skull decorated sailor cap"
-
-msgid "大红色歌者缎带上衣"
-msgstr "Red singer ribboned shirt"
-
-msgid "大红色木耳边短裙"
-msgstr "Red fungus-edged short skirt"
-
-msgid "白色高跟长筒靴"
-msgstr "White high heel platform boots"
-
-msgid "剑骸长杖"
-msgstr "Swordskull long staff"
-
-msgid "腿部绑带"
-msgstr "Leg straps"
 
 msgid "假日威龙陈"
 msgstr "Holungday"
@@ -12956,18 +11323,6 @@ msgstr ""
 "Ch'en, former Lungmen superintendent and former head of the L.G.D.'s Special Inspection Unit, graduated from the Victorian Royal Guard Academy with superb marks and outstanding achievements. During her time with the Department, she cracked down on crime, fought violent offenders, tracked down armed fugitives, and brought down international criminals. \n"
 "Having resigned from the L.G.D., she is now officially a member of Rhodes Island. In accordance with her wishes, she is mainly assigned to provide field operators adequate support and on-location guidance."
 
-msgid "假日风格鸭舌帽"
-msgstr "Holiday styled peaked cap"
-
-msgid "皮质黑色夹克"
-msgstr "Black leather jacket"
-
-msgid "蓝渐变色光滑热裤"
-msgstr "Blue gradient smooth hot pants"
-
-msgid "在沙滩上行走需要这种东西吗"
-msgstr "Why you need this on beaches"
-
 msgid "耀骑士临光"
 msgstr "Radiant Knight"
 
@@ -12984,18 +11339,6 @@ msgid ""
 msgstr ""
 "Nearl, the Radiant Knight of Kazimierz. Embodies extreme combat skill and personal military accomplishment in protecting allies, flexible engagement, annihilation and open-zone battle. \n"
 "After returning to Kazimierz and being crowned winner of the 24th Kazimierz Major, remained in Kazimierz to follow up on remaining affairs. Provides tactical support to the Rhodes Island Kawalerielki Branch Office as a collaborating operator, as well as assisting the landship with assorted operations in other regions in times of need."
-
-msgid "纯白色风格骑士长袍"
-msgstr "Pure white knight robe"
-
-msgid "纯黑色热裤"
-msgstr "Pure black hot pants"
-
-msgid "金属风格覆腿护膝"
-msgstr "Metallic leg-covered leggings"
-
-msgid "皮质长筒靴"
-msgstr "Leather platform boots"
 
 msgid "纯烬艾雅法拉"
 msgstr "Hvit Aska"
@@ -13015,15 +11358,6 @@ msgstr ""
 "at Rhodes Island and undertakes a variety of activities, including "
 "Catastrophe research, as needed."
 
-msgid "白色罗德岛制式改装风衣"
-msgstr "White Rhodes Island modified trench coat"
-
-msgid "深色过膝袜"
-msgstr "Dark overknee socks"
-
-msgid "粉色高跟鞋"
-msgstr "Pink heels"
-
 msgid "焰影苇草"
 msgstr "Flame Shadow"
 
@@ -13033,23 +11367,8 @@ msgstr ""
 "for all to understand it—she simply hopes there will be a corner to reside "
 "in, for those who wish to read these poems."
 
-msgid ""
-"苇草，驻留罗德岛的维多利亚南部办事处期间，曾提出撤离申请，近期再次成功与罗德岛建立联络。目前正以深池名义带领小股部队在维多利亚境内活动，以救助被暴力胁迫的塔拉人为主要行动目标。"
-msgstr ""
-"Reed previously applied to withdraw while stationed at a Rhodes Island "
-"branch office in southern Victoria, and has only recently reestablished "
-"contact with us. Presently actively leading a small force within Victorian "
-"borders under Dublinn's name, with her primary objective being to aid those "
-"Tarans forcefully displaced."
-
-msgid "皮质白色纹饰连衣裙"
-msgstr "White leather patterned dress"
-
 msgid "安全裤"
 msgstr "Safety pants"
-
-msgid "黑色茉莉纹连裤袜"
-msgstr "Black jasmine pattern pantyhose"
 
 msgid "寒芒克洛丝"
 msgstr "Keen Glint"
@@ -13125,17 +11444,8 @@ msgstr ""
 "knowledge, she won't hesitate to pick up her battleaxe and charge toward her"
 " enemies."
 
-msgid "墨绿色胸衣"
-msgstr "Dark green corset"
-
 msgid "绿色携物特化改装热裤"
 msgstr "Green modified-for-carrying hot pants"
-
-msgid "黑色连袜护膝"
-msgstr "Black sock leggings"
-
-msgid "凉鞋"
-msgstr "Sandals"
 
 msgid "淬羽赫默"
 msgstr "Paradigmatic"
@@ -13153,15 +11463,6 @@ msgstr ""
 "Sponsor of the \"Trimounts Ethics in Scientific Research Joint Declaration\" and executive advisor to Rhine Lab's Components Control Section, now cooperating with Rhodes Island in medical matters. \n"
 "She has extensive clinical experience in medicine, and provides medical support to Rhodes Island as she receives Oripathy related treatment."
 
-msgid "改版莱茵生命制式服装"
-msgstr "Modified Rhine Lab uniform"
-
-msgid "透肉色短袜"
-msgstr "Sheer short socks"
-
-msgid "淡绿色防护靴"
-msgstr "Light green protection boots"
-
 msgid "琳琅诗怀雅"
 msgstr "Elegant Wit"
 
@@ -13178,12 +11479,6 @@ msgstr ""
 "Swire, Commissioner of the Lungmen Guard Department. \n"
 "Returning from her holiday in Siesta, she is currently providing Rhodes Island assistance in her capacity as a private individual, and based on her own judgment."
 
-msgid "清凉款黑色露胸凉衣"
-msgstr "Cool black revealing cooling shirt"
-
-msgid "全覆盖式大号遮阳帽"
-msgstr "Full-covered big sun-covering hat"
-
 msgid "涤火杰西卡"
 msgstr "Liberated"
 
@@ -13198,15 +11493,6 @@ msgstr ""
 "chose to go to the frontier to become a sheriff. Currently, she provides "
 "assistance to Rhodes Island as a partnered operator in the local branch "
 "office."
-
-msgid "制式外勤风衣"
-msgstr "Uniform fieldwork trench coat"
-
-msgid "黑色高腰裙"
-msgstr "Black high waist skirt"
-
-msgid "白色球鞋"
-msgstr "White sneakers"
 
 msgid "提丰"
 msgstr "Typhon"
@@ -13226,17 +11512,8 @@ msgstr ""
 " with Rhodes Island and assisting in our affairs in Sami and the endless "
 "icefields."
 
-msgid "束腰式紧身上衣"
-msgstr "Waist tight shirt"
-
-msgid "皮质安全裤"
-msgstr "Leather safety pants"
-
 msgid "黑色吊带袜"
 msgstr "Black garter stockings"
-
-msgid "象牙白式高跟鞋"
-msgstr "Ivory white heels"
 
 msgid "年"
 msgstr "Nian"
@@ -13256,15 +11533,6 @@ msgstr ""
 "to be skilled in audio-visual entertainment, often providing products that "
 "are not received too well by Operators."
 
-msgid "白色长袍"
-msgstr "White gown"
-
-msgid "红色束胸"
-msgstr "Red corset"
-
-msgid "纯白色热裤"
-msgstr "Pure white hot pants"
-
 msgid "夕"
 msgstr "Dusk"
 
@@ -13281,14 +11549,8 @@ msgstr ""
 " impressive, particularly when it comes the traditional Yan painting style. "
 "She currently resides off an isolated Rhodes Island walkway."
 
-msgid "水墨色渐变长长袍"
-msgstr "Ink gradient long robe"
-
 msgid "碎蓝色辅白色旗袍"
 msgstr "Brokenblue white cheongsam"
-
-msgid "画出来的靴子"
-msgstr "Drawn boots"
 
 msgid "令"
 msgstr "Ling"
@@ -13306,17 +11568,8 @@ msgstr ""
 "Shangshu incident. Now remaining as a visitor aboard the landship, following"
 " thorough audits."
 
-msgid "白色披袍"
-msgstr "White robe"
-
-msgid "白色束胸"
-msgstr "White corset"
-
 msgid "黑色超短热裤"
 msgstr "Black ultrashort hot pants"
-
-msgid "白色过踝球鞋"
-msgstr "White overankle sneakers"
 
 msgid "黍"
 msgstr "Shu"
@@ -13326,9 +11579,6 @@ msgstr ""
 
 msgid "黍，炎国农业天师，天师府授业天师。曾于炎国北部农业基地大荒城从事农业研究多年且已有丰富的科研成果。现因访问亲属，以访客身份暂驻罗德岛。"
 msgstr ""
-
-msgid "白色云纹饰束胸"
-msgstr "White moire corset"
 
 msgid "白色宽松喇叭裤"
 msgstr "White loose flare"
@@ -13409,9 +11659,6 @@ msgstr "White Maylander upper robe"
 msgid "长款包臀裙"
 msgstr "Long hip-covering skirt"
 
-msgid "黑色高更鞋"
-msgstr "Black heels"
-
 msgid "明椒"
 msgstr "Paprika"
 
@@ -13435,9 +11682,6 @@ msgstr "Broken safety pants"
 
 msgid "黑色泡泡袜"
 msgstr "Black bubble socks"
-
-msgid "黑色拖鞋？"
-msgstr "Black sneakers"
 
 msgid "截云"
 msgstr "Jieyun"
@@ -13473,13 +11717,6 @@ msgstr ""
 "A delicate, detailed hourglass, the glass sparkling, the sand of finest "
 "grain. Time passes through overturnings and upheavals, but some things never"
 " change."
-
-msgid ""
-"林，本名林雨霞，龙门人。本职工作不明，本人提供的档案资料信息十分有限，同样存疑。\n"
-"于“玉门事件”后，主动提出与罗德岛正式建立合作。为罗德岛在龙门收治感染者的工作提供帮助"
-msgstr ""
-"Lin, full name Lin Yühsia, is a Lungmenite. Her occupation remains unclear, and her file remains equally suspect, owing to how little information she provided. \n"
-"After the \"Yumen Incident\" came to an end, she proposed to Rhodes Island the formation of a formal cooperative agreement, and she now assists Rhodes Island with its treatment of the Infected populace in Lungmen."
 
 msgid "黑底蓝缎饰紧身裙"
 msgstr "Black blue-ribboned tight dress"
@@ -13722,12 +11959,6 @@ msgstr ""
 msgid "露脐黑色短衬衫"
 msgstr "Revealing black short shirt"
 
-msgid "深色热裤"
-msgstr "Dark hot pants"
-
-msgid "黑色登山靴"
-msgstr "Black mountaineering boots"
-
 msgid "一支手工制作的竹笛，声音清亮，但音准稍稍有些问题。"
 msgstr ""
 
@@ -13799,40 +12030,16 @@ msgstr ""
 "Hidden in the heart, lurking below the fear, resonate with me, open your "
 "heart and feel others.\\nAffinity and Trust gain increased by 50%"
 
-msgid "浓郁的气味让人头晕眼花，失重的眩晕感袭来，天地倒转，意识陷入深渊。催眠进度的增长速度+5倍"
-msgstr ""
-"The rich smell makes people dizzy, and the weightless dizziness rushed in, "
-"\\nbringing your consciousness into the abyss.\\nGain of Hypnosis Depth is "
-"sextupled"
-
 msgid "隶属项圈"
 msgstr "Affiliated collar"
 
 msgid "恋人戒指"
 msgstr "Lover ring"
 
-msgid "获得3至纯源石，可以用来获得或升级源石技艺"
-msgstr ""
-"Gains 3 Originite Prime, can be used to obtain or upgrade Originium Arts"
-
-msgid "获得5至纯源石，可以用来获得或升级源石技艺"
-msgstr ""
-"Gains 5 Originite Prime, can be used to obtain or upgrade Originium Arts"
-
 msgid "宿舍开放至3区全部，干员最大人数提升至172人"
 msgstr ""
 "Dormitory opens to the whole Zone 3, maximum number of Operators increases "
 "to 172"
-
-msgid "宿舍开放至6区全部，干员最大人数提升至282人"
-msgstr ""
-"Dormitory opens to the whole Zone 6, maximum number of Operators increases "
-"to 282"
-
-msgid "宿舍开放至9区全部，干员最大人数提升至360人"
-msgstr ""
-"Dormitory opens to the whole Zone 9, maximum number of Operators increases "
-"to 360"
 
 msgid "固定为浊心斯卡蒂宿舍"
 msgstr "Always as the Dormitory for Corrupting Heart"
@@ -13936,15 +12143,6 @@ msgstr "Room 429"
 msgid "亮粉"
 msgstr "Light pink"
 
-msgid "深粉"
-msgstr "Dark pink"
-
-msgid "深岩暗蓝灰色"
-msgstr "Deep rock blue gray"
-
-msgid "比深岩暗蓝灰色亮一点"
-msgstr "Slightly brighter than deep rock blue gray"
-
 msgid "岩暗蓝灰色"
 msgstr "Rock blue gray"
 
@@ -13969,23 +12167,11 @@ msgstr "Light pink"
 msgid "紫色"
 msgstr "Purple"
 
-msgid "黄褐色（卡其布）"
-msgstr "Khaki"
-
 msgid "米色"
 msgstr "Beige"
 
-msgid "适中的春天的绿色"
-msgstr "Summer green"
-
 msgid "春天的绿色"
 msgstr "Spring green"
-
-msgid "猩红"
-msgstr "Crimson red"
-
-msgid "使用后回复20ml精液量。"
-msgstr "Recovers 20ml of semen"
 
 msgid "含有全部类型的乐器，因为分类很麻烦所以不拆开卖，可以获得比唱歌更好的效果"
 msgstr ""
@@ -14015,14 +12201,6 @@ msgstr ""
 msgid "博士每天都需要做什么？"
 msgstr "What does the Doctor need to do?"
 
-msgid ""
-"没有特别的要求，一般来说以攻略干员为主要目标，经营和发展罗德岛为次要目标。\\n可以根据自己的喜好和需求来安排每天的行动，比如去处理公务、练习源石技艺、和干员互动、看书、锻炼、收集藏品、招募新干员、看病制药、逛地图视察各部门的情况等等"
-msgstr ""
-"No specific requirement, but normally building relationship is the main "
-"target while developing Rhodes Island is the side target.\\nArrange your "
-"actions according to own preferences, such as work, train Arts, interact, "
-"train, etc."
-
 msgid "攻略路线是怎么样的？如何获得信物？"
 msgstr "How's the relationship pathway? How to obtain Tokens?"
 
@@ -14034,72 +12212,19 @@ msgstr ""
 "Underwears and socks belong to collections, using [Place collectibles] in "
 "[Collection Hall] of [Library] will grant special rewards on certain amount."
 
-msgid ""
-"除去还没有来初潮的干员之外，其他所有人都是可以怀孕的。虽然耗时比较长，最后生出来的小孩在成长后也会成为新的干员\\n\\n在【受精】后，过一个月左右的时间会变成【妊娠】状态，获得【孕肚】和【泌乳】\\n再过两个月左右，会【临盆】，接着过不了几天就会【生产】\\n生出孩子后，母亲会进入【育儿】状态，养育需要一个月左右，孩子就会从【婴儿】成长为可以初步自理的【幼女】\\n结束了【育儿】后，母亲会恢复孕前状态，也会失去【泌乳】，而孩子还会依次成长为【萝莉】再到【少女】，每次成长会耗时两个月左右\\n\\n孩子的性别仅为女性，在成长到【少女】后即完全成为一名正常的干员\\n女儿会继承母亲包括种族在内大部分生理特征，也会在【育儿】期间学到部分来自母亲的后天知识和技能"
-msgstr ""
-"Besides those that haven't had their menarche, all other Operators can be "
-"pregnant. While the time taken is long, the children will also be new "
-"Operators\\n\\nAfter [Fertilized], the Operator will enter [Pregnancy] "
-"status after a month and gains [Pregnant Belly] and [Lactation]\\nAfter two "
-"more months, the Operator will have [Confined], and afterwards, [Giving "
-"Birth]\\nAfter the process, the mother will enter [Parenting] status, which "
-"takes a month, and the child will grow from [Baby] to [Young Girl]\\nAfter "
-"[Parenting] ends, the mother will lose [Lactation] and returns to before "
-"pregnancy, and the child will grow to [Loli] and then to [Girl], which takes"
-" two months per phase\\n\\nThe child will always be female, and will be a "
-"normal Operator on [Girl]\\nThe daughter will inherit most physical "
-"appearance from the mother, and will learn part of the mother's knowledge "
-"and skills during [Parenting]"
-
 msgid "在H中该如何让干员获得更多的快感和快乐，并减少苦痛反发等负面数值？"
 msgstr "How to increase Happiness and reduce negative stats during H?"
-
-msgid ""
-"①在H之前，可以提前进行香薰疗愈、媚药等准备，让干员提前进入状态\n"
-"\\n②在H中，插入前可以多做点前戏，用其他非插入指令或者道具来提升干员的快感、欲情和润滑，这些值越高，插入时的快感就越多、苦痛也越少\\n  在H中，干员绝顶时会获得极大的快感和快乐，并减少苦痛、反感等负面状态值\\n\\n③在H之外，也要记得多升级干员的欲望、部位感觉、部位扩张和正面刻印等能力，并且尽量避免负面刻印的获得"
-msgstr ""
-"①Before H, prepare aromatherapy or love potions to get into condition "
-"quickly\\n\\n②During H, do other actions before insertion, such as other "
-"non-insertion commands or items to increase Happiness, Lust and Lubrication,"
-" and the Happiness will increase on insertion as these go higher, vice versa"
-" for Pain\\n  When triggering orgasm, they will gain high Happiness and "
-"reduce Pain\\n\\n③Upgrading Desire, Feels, Dilations and positive Engravings"
-" while avoiding negative Engravings outside H"
 
 msgid "我想让干员怀孕，有什么办法提高受精几率吗？"
 msgstr ""
 "I want to make my Operators pregnant, is there ways to increase chance of "
 "fertilization?"
 
-msgid ""
-"干员的生理周期以七天为一个循环，包含安全日、普通日、危险日和排卵日四种日子\\n在每个生理周期的排卵日(第6天)会根据整个周期内，安全日以外的其他日被射入精液总量来判断是否[受精]\\n不同日子的概率高低列表是：排卵日＞危险日＞普通日＞安全日（=0）\\n\\n\\n目前已实装的提高概率的手段有（可叠加）：\\n①在成人商店里购买【排卵促进药】后直接让对方服用，或偷偷加在咖啡/食物中让对方服用\\n②每天如果不射精的话，能够有一部分精液转化为临时精液而储存到下一天，最高可以储存到4倍，此时可以获得【浓厚精液】素质\\n③在干员的排卵日里，如果该干员已经被完全催眠（200%催眠深度），可以切换到【体控催眠】，然后使用【体控-"
-"强制排卵】的源石技艺\\n\\n\\n其他相关功能：\\n使用【生理透视】的源石技艺（在透视系中）可以看到干员的生理周期与受精概率，方便进行判断\\n在阴道内射精（即一般交合姿势指令时射精）的情况下，大部分精液会停留在阴道内，小部分会流到子宫，没有流到子宫内的阴道部分的精液会在干员当日去大浴场里洗澡时被洗掉，进而降低怀孕概率。\\n在子宫内射精（即子宫口或子宫奸等指令时射精）的情况下，大部分精液都会射进子宫内，只有小部分会向外流到阴道，因此不容易被清洗掉。\\n当子宫内射精量足够多时，文字上会提示有腹部隆起等相关信息，同时如果开启了【腔内透视】的源石技艺的话，可以看到干员子宫和阴道的断面图，此时可以根据图片中子宫内的精液量和子宫的被撑大程度来进行判断。"
-msgstr ""
-"Operator's menstrual cycle takes 7 days, including Safe Period, Normal Period, Danger Period and Ovulation Period\\nOn the Ovulation Period (6th day), the total amount of semen ejaculated into the Operator during non-Safe Period will be considered for rate of [Fertilized]\\nChance according to period: Ovulation > Danger > Normal > Safe Period\\n\\n\\nMany ways of increasing fertilization rate (can stack): \\n①Buy [Ovulation Drugs] and feed to Operators\\n②If not ejaculating, a part of the current limit will be inherited on next day, up to 4 times, which [Concentrated Semen] can be acquired\\n③At Ovulation Period, use [Body Control-Ovulation]\\n\\\n"
-"\\nRelated functions: \\nUse [Physiological Perspective] will show the menstrual cycle and fertilization rate\\nEjaculating in the vagina will only have small amount of it flow into the womb.\\nEjaculating in the womb will only have small amount of it flow into the vagina.\\nWhen enough semen was in the womb, their stomach will bulge up, and if [Cavity Perspective] is active, you can see the cross-section, which allows you to judge based on the semen amount in the womb and the stretching of the womb."
-
 msgid "该如何让拥有【未初潮】素质的干员怀孕？"
 msgstr "How to make Operators with [No Menarche] pregnant?"
 
-msgid ""
-"【未初潮】是年幼干员的特殊生理素质，拥有该素质是无法怀孕的\\n需要先对阴道和子宫进行一段时间的开发，让【V感度】和【W感度】升级到足够的等级后，即可提前迎来性成熟，失去该素质\\n\\n除此之外，如果是自己的女儿的话，对方是会随着时间而成长的。在从【幼女】成长为【萝莉】后，即可失去【未初潮】素质"
-msgstr ""
-" [No Menarche] is the special talent for young Operators, which prohibit "
-"them to be pregnant\\nWhen [V Feel] and [W Feel] reached a certain point, "
-"early sexual maturity can be reached and remove the talent\\n\\nFor "
-"daughters, the talent will be removed on growing to [Loli]"
-
 msgid "种植相关的基建系统是如何运作的？"
 msgstr "How does the systems related to planting works?"
-
-msgid ""
-"在基建系统中，是由【疗养庭院】的【药田】和【温室】来种植作物，前者种植的是普通药材，后者种植的是香料。\\n在解锁后可以安排干员到药田或温室工作，选择要种植的作物即可自动种植，每天自动收获。\\n收获后的植物可以在【生产加工区】里加工成药品或者【香熏治疗室】里用来给目标干员进行调香。"
-msgstr ""
-"In base system, [Farmland] and [Conservatory] are for planting, the former "
-"for herbs and latter for perfumes.\\nOn unlocking, you can assign Operators "
-"to there, and choose your crops for automatic planting and "
-"collecting.\\nProducts can be used for medicines in [Production Zone] or "
-"aromatherapy in [Aromatherapy Treatment Room]."
 
 msgid "不加肉类、芝士、酸黄瓜的生菜汉堡"
 msgstr "A hamburger without meat, cheese, pickles, or lettuce"
@@ -14699,13 +12824,6 @@ msgstr ""
 msgid "卡西米尔骑士补充剂"
 msgstr "Kazimierzian Knight Supplement"
 
-msgid "喝下去以后感觉精神百倍。之前有商家说这就是耀骑士赛前喝的东西，人们蜂拥而上。酽茶醇酒，斜风细雪，似乎都能在这之中体味到。"
-msgstr ""
-"The color alone excites the mind and arouses the desire to have it, turning "
-"heads even if one has already passed it by. A single sip fills you with "
-"energy. It has been in high demand due to rumors that the Radiant Knight "
-"drinks it."
-
 msgid "哥伦比亚分子胶囊"
 msgstr "Columbian Molecular Capsule"
 
@@ -15165,12 +13283,6 @@ msgstr "Settling on Parenting"
 msgid "结算育儿完成"
 msgstr "Settling Parenting completed"
 
-msgid "结算幼女长成萝莉"
-msgstr "Settling growing to Loli"
-
-msgid "结算萝莉长成少女"
-msgstr "Settling growing to Girl"
-
 msgid "初次见面"
 msgstr "First Met"
 
@@ -15300,12 +13412,6 @@ msgstr ""
 "regularly replace the old flowers with new ones."
 
 msgid "#e3b9a1"
-msgstr ""
-
-msgid "#556971"
-msgstr ""
-
-msgid "#6B6B6B"
 msgstr ""
 
 msgid "Lancet-2"
@@ -15444,13 +13550,6 @@ msgstr ""
 "body part. \\nHence, {PlayerName} watched this interesting performance, and "
 "left \\nwhen she's still at the aftertaste of the orgasm."
 
-msgid ""
-"推门而入|{PlayerName}直接用力推开了门，看着里面没穿衣服正在自慰的{TargetName}，趁对方还不知所措的愣在原地的时候，大胆地发出了加我一个的邀请"
-msgstr ""
-"Rush in|{PlayerName} pushed the door, and saw {TargetName} who's "
-"masturbating with her clothes off, \\nand while she's still stuck in place, "
-"you asked to join her"
-
 msgid "{TargetName}的乳汁貌似快喷出来了，该怎么做"
 msgstr ""
 "{TargetName}'s breast milk is about to leak out, what do you want to do"
@@ -15557,13 +13656,6 @@ msgstr ""
 msgid "否|晚上催睡觉|晚安吻|晚安咬"
 msgstr "None|Induce to sleep|Night kiss|Night bite"
 
-msgid ""
-"十五年前出版于维多利亚的传奇书籍，这本书简单地记述了作者对审美的理解，记载了大量文学、艺术、音乐相关的知识与历史。该书的内容涵盖古今，通俗易懂，被誉为“本世代的艺术大典”。\n"
-"然而据说该书的作者只是某个小剧团的剧团长，数年前被一个代号为“血钻”的刺客谋害。"
-msgstr ""
-"A legendary book published in Victoria fifteen years ago. The book describes the author's appreciation of aesthetics in simple terms, and it contains a comprehensive record of literary, artistic and musical knowledge and history. The book covers both the past and present and is an easy read, with many honoring it as the \"great art encyclopedia of our generation.\"\n"
-"Yet it is rumored that the book's author was the leader of a certain small troupe and was murdered a few years ago by a hitman codenamed \"Blood Diamond.\""
-
 msgid "《尼古拉米娜》"
 msgstr "\"Nikolamina\""
 
@@ -15630,10 +13722,6 @@ msgstr ""
 
 msgid "《最后的骑士》"
 msgstr "\"The Last Knight\""
-
-msgid ""
-"卡西米尔家喻户晓的经典骑士小说，讲述了一位骑士伊比利亚的成长与奋斗，最后与巨浪搏斗直至消失的故事，是卡西米尔骑士的精神象征。“如果觉得浪涛吵闹，就去令大海平静。”"
-msgstr ""
 
 msgid "《白牙》"
 msgstr "\"White Fang\""
@@ -15959,9 +14047,6 @@ msgstr "Restaurant"
 msgid "娱乐设施"
 msgstr "Entertainment Facility"
 
-msgid "夏日绿"
-msgstr "Summer green"
-
 msgid "浮石色"
 msgstr "Pumice"
 
@@ -15980,23 +14065,11 @@ msgstr "Light maroon"
 msgid "浅法国米色（娱乐颜色）"
 msgstr "Light French beige"
 
-msgid "浅天蓝色"
-msgstr "Light sky blue"
-
 msgid "矢车菊蓝"
 msgstr "Cornflower blue"
 
-msgid "浅蔚蓝"
-msgstr "Light cerulean"
-
 msgid "浅钢蓝（技艺颜色）"
 msgstr "Light steel blue"
-
-msgid "公主香水"
-msgstr "Princess perfume"
-
-msgid "玫瑰粉"
-msgstr "Rose pink"
 
 msgid "淡洋红"
 msgstr "Light magenta"
@@ -16043,148 +14116,11 @@ msgstr ""
 "The country in civil war, now on anarchy, with most Sarkaz as Infected.\n"
 "Managed by Military Commission, with the subraces managed by the corresponding Royal Court who was controlled by the Commission."
 
-msgid ""
-"拉特兰，或称拉特兰城，是位于泰拉大陆中部的神权国家。北邻叙拉古，维多利亚和莱塔尼亚；南邻伊比利亚；东邻雷姆必拓。在泰拉千年的战火与混乱中独树一帜，屹立不倒。"
-msgstr ""
-"Laterano, or Lateran City, located at middle of Terra. North with Siracusa, "
-"Victoria and Leithanien; South with Iberia, East with Rim Billiton. Remains "
-"stable even after long war and chaos within Terra."
-
-msgid "以矿业为主要产业，参与与谢拉格的贸易。历史上与维多利亚围绕矿业问题爆发过冲突，导致“围栏事件”爆发。"
-msgstr ""
-"Mining as main production, participated in Kjerag's trade. Having many "
-"conflicts with Victoria, causing the \"Cage Incident\"."
-
-msgid "前身为古阿加门王国。曾受到萨尔贡的殖民入侵，激起民众的强烈反抗，最终在十二英雄的领导下将萨尔贡军驱逐。"
-msgstr ""
-"Formerly Old Agamam. Once colonized by Sargon, but chased them away under "
-"lead of Twelve Heroes."
-
-msgid "新近并入萨尔贡的地区，处于无政府状态，治安混乱。"
-msgstr "A new area in Sargon, currently in anarchy and disorder."
-
-msgid "地处泰拉大陆北部的国家，终年严寒，发展落后，遭受北原邪魔的坍缩影响，该地的萨米雪祀与独眼巨人共同抵御坍缩威胁。"
-msgstr ""
-"Located at north, having delayed development due to eternal cold, currently "
-"affected by the Collapsals, with Samipriests and Cyclops defending against "
-"them."
-
-msgid "主要城市为帕勒莫。黑帮势力盛行，由几大黑帮家族支配政权。"
-msgstr ""
-"Palermo as main city. Having a prevalent mafia strength, the governing was "
-"controlled by the famiglias."
-
 msgid "深海教会"
 msgstr "Church of the Deep"
 
 msgid "锈锤"
 msgstr "Rusthammer"
-
-msgid ""
-"Ｂ：Breast  ，胸部\n"
-"Ｃ：Clitoris，阴蒂\n"
-"Ｐ：Penis   ，阴茎\n"
-"Ｖ：Vagina  ，阴道\n"
-"Ａ：Anus    ，肛门\n"
-"Ｕ：Urethra ，尿道\n"
-"Ｗ：Womb    ，子宫\n"
-"Ｎ：Normal  ，身体其他部位通用（如耳朵、尾巴、口腔、脖子、肚子、大腿等）"
-msgstr ""
-"B: Breast\\nC: Clitoris\\nP: Penis\\nV: Vagina\\nA: Anus\\nU: Urethra\\nW: "
-"Womb\\nN: Normal (like ear, tail, mouth, neck, belly, leg, etc.)"
-
-msgid ""
-"刻印是干员的一种特殊属性，在干员经历对她影响足够大的事件时才会获得/升级，除无觉刻印外为最高六级以外，其他刻印最高为三级\n"
-"目前共实装了6个刻印，分别是快乐刻印、屈服刻印、无觉刻印、苦痛刻印、恐怖刻印、反发刻印\n"
-"其中负面刻印（恐怖刻印和反发刻印），可以使用博士的源石技艺来降低刻印等级，降低到零级即为消除\n"
-"\n"
-"快乐刻印：在干员体验到足够强烈的性快感时会获得/升级该刻印\n"
-"          一旦体验过性的快乐，就会发自内心的想要更多品尝这份快感，不停地堕落下去\n"
-"          能够在博士对干员进行性骚扰/H指令时增加实行值，关系到部位敏感度提升与淫乱系素质获得\n"
-"\n"
-"屈服刻印：在干员做了足够卑微或耻辱的事时会获得/升级该刻印\n"
-"          逐渐放弃不需要的自尊和骄傲，开始服从于你的每个命令，以满足你的意志为人生的全部目的\n"
-"          能够在博士对干员进行所有指令时增加实行值，并且是隶属系攻略路线的前置条件\n"
-"\n"
-"无觉刻印：干员在意识薄弱或无意识中体验到足够强烈的性快感时会获得/升级该刻印\n"
-"          尽管脑海里没有印象，但身体依旧会忠实地记住并习惯于这美好的感觉，直到为时已晚的那一刻的到来\n"
-"          能够在博士对干员进行性骚扰/H指令时增加实行值，并显著增强无意识奸下的快感\n"
-"\n"
-"苦痛刻印：在干员受到了足够多的物理疼痛时会获得/升级该刻印\n"
-"          适度的鞭打作为教育的一环，在让人听话的同时，或许也能让身体理解疼痛也是一种快感？\n"
-"          能够在博士对干员进行SM指令时增加实行值，但在进行爱情指令时减少实行值\n"
-"\n"
-"恐怖刻印：在干员遭受了足够大的精神打击时会获得/升级该刻印\n"
-"          不断累积的精神创伤会逐渐封闭人的心灵，并最终把人格推向无底的深渊\n"
-"          负面刻印，在博士对干员进行所有指令时减少实行值，刻印等级的提高会使干员的AI无法正常行动直至完全错乱\n"
-"\n"
-"反发刻印：在干员对博士产生了足够大的愤怒、怀疑和仇恨时会获得/升级该刻印\n"
-"          信任的裂隙逐渐扩大，其反面就是刻骨的仇恨\n"
-"          非常严重的负面刻印，在博士对干员进行所有指令时极大的减少实行值，一级会拒绝大部分互动指令，二级会有意避免与博士接触，三级会伺机攻击博士\n"
-"\n"
-"*目前恐怖刻印和反发刻印的负面效果暂未实装"
-msgstr ""
-"Engravings is a special attribute of Operators, which will be "
-"obtained/upgraded once the said Operator experienced something huge, and "
-"besides Unconscious Engraving with maximum level 6, the rest have maximum "
-"level 3\\nCurrently there's 6 Engravings, being Happy Engraving, Yield "
-"Engraving, Unconscious Engraving, Pain Engraving, Fear Engraving, Hatred "
-"Engraving\\nNegative Engravings (Fear Engraving and Hatred Engraving) can "
-"have their level reduced through Originium Arts, and removed once it reached"
-" zero\\n\\nHappy Engraving: Will be obtained/upgraded when the Operator "
-"experienced strong sexual pleasure\\n          Once they have experienced "
-"such pleasure, they would want to have more of this pleasure from inner "
-"heart, and be fallen continuously\\n          Will increase Command "
-"Execution Value during harassment/H commands, and related to body parts' "
-"sensitivity increase and promiscuous-type statuses acquirement\\n\\nYield "
-"Engraving: Will be obtained/upgraded when the Operator experienced strong "
-"humiliative actions\\n          Slowly abandon their self-esteem and pride, "
-"and starts to follow all of your commands, and sees satisfying your will as "
-"only objective of life\\n          Will increase Command Execution Value on "
-"all commands, and is the preconditions for Affiliation "
-"relationship\\n\\nUnconscious Engraving: Will be obtained/upgraded when the "
-"Operator experienced strong sexual pleasure while unconscious\\n          "
-"Even if there's no impression, but their own body will remember and get used"
-" to such beautiful feelings until when it's too late\\n          Will "
-"increase Command Execution Value during harassment/H commands, and greatly "
-"increase pleasure during unconscious rape\\n\\nPain Engraving: Will be "
-"obtained/upgraded when the Operator experienced strong painful actions\\n"
-"          Moderate lashing served as a part of education, and making the "
-"body slowly understands pain as a type of pleasure\\n          Will increase"
-" Command Execution Value for SM commands, but decrease Command Execution "
-"Value for love-type commands\\n\\nFear Engraving: Will be obtained/upgraded "
-"when the Operator experienced strong mental blow\\n          The ever-"
-"increasing mental damage will slowly close their heart, and slowly push "
-"their personality to the abyss\\n          Will decrease Command Execution "
-"Value on all commands, and their movement will be affected as the level goes"
-" higher\\n\\nHatred Engraving: Will be obtained/upgraded when the Operator "
-"experienced strong anger, suspicion and hatred\\n          As the gap of "
-"trust widens, the opposite side is the deep hatred\\n          Will greatly "
-"decrease Command Execution Value of all commands, and will reject most "
-"commands at level 1, tries to avoid interaction at level 2, and even attempt"
-" to attack at level 3\\n\\n*No implemented effects from negative Engravings "
-"yet"
-
-msgid ""
-"当博士通过开局选取或者使用至纯源石来学习催眠的源石技艺素质后，即可对干员进行催眠\n"
-"\n"
-"初期可以在与干员两人独处的时候进行【单人催眠】，在升级到高级催眠就可以直接对房间内全员进行【集体催眠】\n"
-"\n"
-"每次对干员进行催眠时会提升对方的催眠程度，到50%、100%、200%时分别对应浅层、深层、完全催眠\n"
-"\n"
-"当前催眠的种类共有平然、空气、体控、心控四种，分别更强的催眠效果，需要的深度也依次提升，默认手动选取每次进行催眠的种类，也可以在【源石技艺】更改为指定种类"
-msgstr ""
-"When the Doctor learned hypnosis-type Originium Arts through starting bonus "
-"or using Originium Prime, they can casts hypnosis on Operators\\n\\nOn early"
-" phase, [Single Hypnosis] can be used when interacting with the Operator "
-"alone, and [Group Hypnosis] can be used on all Operators in the room after "
-"upgrading to higher stage\\n\\nAfter each hypnosis, the hypnosis level of "
-"Operators will be increased, at 50%, 100%, 200% which represents slim, deep,"
-" fully hypnotized respectively\\n\\nCurrently, there's four types of "
-"hypnosis, Calming, Air, Body Control, Mental Control, and as the effect gets"
-" stronger, the hypnosis level required will be higher, initially hypnosis "
-"types must be chosen manually, but it can also be changed to specific "
-"default types at [Originium Arts]"
 
 msgid ""
 "大体上可以分为工作和非工作（无工作或有工作但今天休息）两种状态\n"
@@ -16214,15 +14150,6 @@ msgstr ""
 "to simulate logical AI actions as accurate as possible"
 
 msgid ""
-"没有特别的要求，一般来说以攻略干员为主要目标，经营和发展罗德岛为次要目标。\n"
-"可以根据自己的喜好和需求来安排每天的行动，比如去处理公务、练习源石技艺、和干员互动、看书、锻炼、收集藏品、招募新干员、看病制药、逛地图视察各部门的情况等等"
-msgstr ""
-"No specific requirement, but normally building relationship is the main "
-"target while developing Rhodes Island is the side target.\\nArrange your "
-"actions according to own preferences, such as work, train Arts, interact, "
-"train, etc."
-
-msgid ""
 "正常的和干员相处就会自然而然的关系要好起来了，最简单的方式就是把要攻略的目标设为助理，这样平常就一直在一起行动了\n"
 "一开始还是陌生的状态下，就不要急于进行性骚扰甚至做更过分的事情，日常系的指令都是不会出问题的，等到熟悉起来了再逐步尝试吧"
 msgstr ""
@@ -16231,14 +14158,6 @@ msgstr ""
 "not have sexual harassment or excessive actions if the relationship is still"
 " stale, daily command will not have any issues, only try when you're getting"
 " along"
-
-msgid ""
-"去诚恳的道歉，不行的话就多道几次歉，总会原谅你的。\n"
-"如果生气很严重，获得反发刻印或者恐怖刻印了的话，可以用源石技艺进行消除，然后再去道歉。"
-msgstr ""
-"Apologize sincerely, do it more than once, they'll forgive you "
-"eventually.\\nIf they have Hatred Engraving or Fear Engraving, then "
-"apologize after removing the said Engravings via Originium Arts."
 
 msgid ""
 "攻略分为【爱情系】和【隶属系】两条路线，只能二选其一，两条路线在抵达第三阶段时均可获得该干员的【信物】。\n"
@@ -16275,39 +14194,6 @@ msgstr ""
 "agreement of Operators"
 
 msgid ""
-"在贸易区里有一个成人用品商店，消耗粉红凭证就可以购买对应道具\n"
-"大部分道具购买后即可在H中使用，部分特殊道具（如搾乳机等）需要对应部位已经开发到满足条件才可以使用"
-msgstr ""
-"In Commerce Zone, there's Adult Items' Shop, which you can get certain items"
-" by spending Pink Certificates\\nMost items can be used while H, but certain"
-" items (like Milking Machine) requires some part to be at certain stage"
-
-msgid ""
-"除去还没有来初潮的干员之外，其他所有人都是可以怀孕的。虽然耗时比较长，最后生出来的小孩在成长后也会成为新的干员\n"
-"\n"
-"在【受精】后，过一个月左右的时间会变成【妊娠】状态，获得【孕肚】和【泌乳】\n"
-"再过两个月左右，会【临盆】，接着过不了几天就会【生产】\n"
-"生出孩子后，母亲会进入【育儿】状态，养育需要一个月左右，孩子就会从【婴儿】成长为可以初步自理的【幼女】\n"
-"结束了【育儿】后，母亲会恢复孕前状态，也会失去【泌乳】，而孩子还会依次成长为【萝莉】再到【少女】，每次成长会耗时两个月左右\n"
-"\n"
-"孩子的性别仅为女性，在成长到【少女】后即完全成为一名正常的干员\n"
-"女儿会继承母亲包括种族在内大部分生理特征，也会在【育儿】期间学到部分来自母亲的后天知识和技能"
-msgstr ""
-"Besides those that haven't had their menarche, all other Operators can be "
-"pregnant. While the time taken is long, the children will also be new "
-"Operators\\n\\nAfter [Fertilized], the Operator will enter [Pregnancy] "
-"status after a month and gains [Pregnant Belly] and [Lactation]\\nAfter two "
-"more months, the Operator will have [Confined], and afterwards, [Giving "
-"Birth]\\nAfter the process, the mother will enter [Parenting] status, which "
-"takes a month, and the child will grow from [Baby] to [Young Girl]\\nAfter "
-"[Parenting] ends, the mother will lose [Lactation] and returns to before "
-"pregnancy, and the child will grow to [Loli] and then to [Girl], which takes"
-" two months per phase\\n\\nThe child will always be female, and will be a "
-"normal Operator on [Girl]\\nThe daughter will inherit most physical "
-"appearance from the mother, and will learn part of the mother's knowledge "
-"and skills during [Parenting]"
-
-msgid ""
 "精液的容积系统中有液体流通计算，射上去的精液会有一部分流向联通的其他部位，还会有一部分向环境中滴落，是正常现象\n"
 "如果不想让出现该计算，可以在设置中关闭液体流通功能，这样射出的精液就只会停留在指定部位上了"
 msgstr ""
@@ -16330,52 +14216,6 @@ msgstr ""
 " for Pain\\n  When triggering orgasm, they will gain high Happiness and "
 "reduce Pain\\n\\n③Upgrading Desire, Feels, Dilations and positive Engravings"
 " while avoiding negative Engravings outside H"
-
-msgid ""
-"干员的生理周期以七天为一个循环，包含安全日、普通日、危险日和排卵日四种日子\n"
-"在每个生理周期的排卵日(第6天)会根据整个周期内，安全日以外的其他日被射入精液总量来判断是否[受精]\n"
-"不同日子的概率高低列表是：排卵日＞危险日＞普通日＞安全日（=0）\n"
-"\n"
-"\n"
-"目前已实装的提高概率的手段有（可叠加）：\n"
-"①在成人商店里购买【排卵促进药】后直接让对方服用，或偷偷加在咖啡/食物中让对方服用\n"
-"②每天如果不射精的话，能够有一部分精液转化为临时精液而储存到下一天，最高可以储存到4倍，此时可以获得【浓厚精液】素质\n"
-"③在干员的排卵日里，如果该干员已经被完全催眠（200%催眠深度），可以切换到【体控催眠】，然后使用【体控-强制排卵】的源石技艺\n"
-"\n"
-"\n"
-"其他相关功能：\n"
-"使用【生理透视】的源石技艺（在透视系中）可以看到干员的生理周期与受精概率，方便进行判断\n"
-"在阴道内射精（即一般交合姿势指令时射精）的情况下，大部分精液会停留在阴道内，小部分会流到子宫，没有流到子宫内的阴道部分的精液会在干员当日去大浴场里洗澡时被洗掉，进而降低怀孕概率。\n"
-"在子宫内射精（即子宫口或子宫奸等指令时射精）的情况下，大部分精液都会射进子宫内，只有小部分会向外流到阴道，因此不容易被清洗掉。\n"
-"当子宫内射精量足够多时，文字上会提示有腹部隆起等相关信息，同时如果开启了【腔内透视】的源石技艺的话，可以看到干员子宫和阴道的断面图，此时可以根据图片中子宫内的精液量和子宫的被撑大程度来进行判断。"
-msgstr ""
-"Operator's menstrual cycle takes 7 days, including Safe Period, Normal "
-"Period, Danger Period and Ovulation Period\\nOn the Ovulation Period (6th "
-"day), the total amount of semen ejaculated into the Operator during non-Safe"
-" Period will be considered for rate of [Fertilized]\\nChance according to "
-"period: Ovulation > Danger > Normal > Safe Period\\n\\n\\nMany ways of "
-"increasing fertilization rate (can stack): \\n①Buy [Ovulation Drugs] and "
-"feed to Operators\\n②If not ejaculating, a part of the current limit will be"
-" inherited on next day, up to 4 times, which [Concentrated Semen] can be "
-"acquired\\n③At Ovulation Period, use [Body Control-"
-"Ovulation]\\n\\n\\nRelated functions: \\nUse [Physiological Perspective] "
-"will show the menstrual cycle and fertilization rate\\nEjaculating in the "
-"vagina will only have small amount of it flow into the womb.\\nEjaculating "
-"in the womb will only have small amount of it flow into the vagina.\\nWhen "
-"enough semen was in the womb, their stomach will bulge up, and if [Cavity "
-"Perspective] is active, you can see the cross-section, which allows you to "
-"judge based on the semen amount in the womb and the stretching of the womb."
-
-msgid ""
-"【未初潮】是年幼干员的特殊生理素质，拥有该素质是无法怀孕的\n"
-"需要先对阴道和子宫进行一段时间的开发，让【V感度】和【W感度】升级到足够的等级后，即可提前迎来性成熟，失去该素质\n"
-"\n"
-"除此之外，如果是自己的女儿的话，对方是会随着时间而成长的。在从【幼女】成长为【萝莉】后，即可失去【未初潮】素质"
-msgstr ""
-"[No Menarche] is the special talent for young Operators, which prohibit them"
-" to be pregnant\\nWhen [V Feel] and [W Feel] reached a certain point, early "
-"sexual maturity can be reached and remove the talent\\n\\nFor daughters, the"
-" talent will be removed on growing to [Loli]"
 
 msgid ""
 "需要在文职区的办公室进行【招募干员】，虽然博士可以亲自上场，不过还是建议任命干员来做。\n"
@@ -16403,34 +14243,6 @@ msgstr ""
 "Center] affects the maximum of all other areas, the level of [Power Zone] "
 "affects the power supply, and the rest will focus on their usages or "
 "functions unlocking"
-
-msgid ""
-"目前主要的获取途径有两个。\n"
-"①，医疗部每天治疗病人，能够获得稳定的龙门币收入\n"
-"②，将资源在制造加工区将其加工成药品或奢侈品，再在贸易区的[资源交易所]中卖出，能够获得较高的利润"
-msgstr ""
-"Two ways.\\n① Treating patients in Medical Zone, which have stable LMD "
-"income\\n② Produces medicines or luxuries in Production Zone and sells them "
-"on Resource Exchange, which gives higher profit"
-
-msgid ""
-"①，每日的干员好感度提升会换算为一定的粉红凭证\n"
-"②，已攻略的干员会根据攻略程度每日提供固定的粉红凭证"
-msgstr ""
-"① The Affinity increase on Operators will be exchanged to certain amount of "
-"Pink Certificates\\n② Operators that have completed relationship will "
-"provide Pink Certificates according to the relationship stage"
-
-msgid ""
-"在基建系统中，是由【疗养庭院】的【药田】和【温室】来种植作物，前者种植的是普通药材，后者种植的是香料。\n"
-"在解锁后可以安排干员到药田或温室工作，选择要种植的作物即可自动种植，每天自动收获。\n"
-"收获后的植物可以在【生产加工区】里加工成药品或者【香熏治疗室】里用来给目标干员进行调香。"
-msgstr ""
-"In base system, [Farmland] and [Conservatory] are for planting, the former "
-"for herbs and latter for perfumes.\\nOn unlocking, you can assign Operators "
-"to there, and choose your crops for automatic planting and "
-"collecting.\\nProducts can be used for medicines in [Production Zone] or "
-"aromatherapy in [Aromatherapy Treatment Room]."
 
 msgid "阿达克利斯"
 msgstr "Adakrys"
@@ -16883,11 +14695,6 @@ msgstr ""
 "Engineering, having huge load, and can travel stablely and fastly even in "
 "sand terrain, can support in combat effectively."
 
-msgid "处理与各国之间的关系，承接大小委托，协调当地的外勤工作(需要在[外交势力]系统中任命)"
-msgstr ""
-"Manage relationship with other nations, receive commissions, and consort the"
-" field work"
-
 msgid "邀请专员"
 msgstr "Invitation Specialist"
 
@@ -17145,21 +14952,6 @@ msgid ""
 "她很清楚，有些气味无法被掩盖，也有些痕迹无法被涤除。"
 msgstr ""
 
-msgid "发箍"
-msgstr "Hairband"
-
-msgid "卫衣"
-msgstr "Hoodie"
-
-msgid "工作外套"
-msgstr "Working coat"
-
-msgid "医疗塑胶手套"
-msgstr "Medical rubber gloves"
-
-msgid "紧身七分裤"
-msgstr "Tight cropped pants"
-
 msgid "阿玛雅"
 msgstr "Amaia"
 
@@ -17243,26 +15035,8 @@ msgid ""
 "对德克萨斯女士有着很强的执念。"
 msgstr ""
 
-msgid "方片耳饰"
-msgstr "Square ear ornaments"
-
-msgid "方片Choker"
-msgstr "Square choker"
-
-msgid "风衣"
-msgstr "Windbreaker"
-
-msgid "深V皮西装"
-msgstr "Deep V-leather suit"
-
-msgid "OL裙"
-msgstr "OL dress"
-
 msgid "黑丝过膝袜"
 msgstr "Black lace overknee socks"
-
-msgid "长靴"
-msgstr "Boots"
 
 msgid "福尔图娜"
 msgstr "Fortuna"
@@ -17275,18 +15049,6 @@ msgid ""
 "\n"
 "闪耀的光环与心爱的守护铳，如今已成为了新的诅咒。"
 msgstr ""
-
-msgid "亮蓝绑带"
-msgstr "Light blue straps"
-
-msgid "流苏披肩"
-msgstr "Tassel shawl"
-
-msgid "圆领灰色连衣裙"
-msgstr "Round necked dress"
-
-msgid "玛丽珍鞋"
-msgstr "Mary Jane shoes"
 
 msgid "#be7f52"
 msgstr ""
@@ -17511,11 +15273,6 @@ msgstr ""
 "Negotiate|Under the friendly communication, both agreed to not threaten each"
 " other with the incidents earlier"
 
-msgid "{PlayerName}本想邀请{TargetName}，但看着{TargetName}生气的样子，还是算了"
-msgstr ""
-"{PlayerName} wish to invite {TargetName}, but looking at {TargetName}'s "
-"angry face, he gave up"
-
 msgid "外勤集合点"
 msgstr "Gathering Point"
 
@@ -17725,22 +15482,10 @@ msgstr ""
 msgid "經系統性的研究，我們合理懷疑食用該菌類後，其食用人意識會來到一與現實相似的維度，我們可以徵集一隻探險隊對該維度進行探索"
 msgstr ""
 
-msgid "凱爾西的警告"
-msgstr ""
-
-msgid "意識帝國的探索不甚順利，精神上的疲勞在探險隊員的身上累積，凱爾西醫生知道此事後嚴正警告了我們的動作"
-msgstr ""
-
 msgid "也許我們該聽她的"
 msgstr ""
 
-msgid "凱爾西醫生說的有道理，這不是我們現在該踏足了領域，我們應銷毀實驗記錄並封存相關數據"
-msgstr ""
-
 msgid "扎實理論"
-msgstr ""
-
-msgid "你相信你的理論模型，也相信工程部的能力。我們應該暫時無視凱爾西的警告，根據現有的資料來做出一台溝通兩界的試驗機"
 msgstr ""
 
 msgid "試驗機"
@@ -17800,9 +15545,6 @@ msgstr ""
 msgid "可露希爾找上了你，說是想借Lancet-2幾天，並神秘兮兮的說你後半生的幸福就靠在她身上了?"
 msgstr ""
 
-msgid "純屬意外?"
-msgstr ""
-
 msgid "你從其他途徑得知了關於獎卷的事，就算蘇茜可以接受，但你不介意用你的方式解決這個問題"
 msgstr ""
 
@@ -17822,21 +15564,6 @@ msgstr ""
 
 msgid "情有所屬"
 msgstr ""
-
-msgid ""
-"萊娜歸來後，送給你一個精緻的香囊。閉上眼，那淡淡的香味讓你聯想到眼前這位愛你的沃爾柏姑娘。\n"
-"在你追問這香氣的名字時，萊那只是墊起腳尖，在你的唇上留下輕輕一吻"
-msgstr ""
-
-msgid "开放基础设施：【门诊部】、【急诊部】、【住院部】，可收治患者为20人"
-msgstr ""
-"Opens basic facilities: [Outpatient Department], [Emergency Room], "
-"[Inpatient Department], 20 maximum number of admissible patients"
-
-msgid "开放新设施：【手术室】（未实装）、【血库】（未实装），可收治患者数量提升至50人"
-msgstr ""
-"Opens new facilities: [Surgery Room] (not implemented), [Blood Storage Room]"
-" (not implemented), maximum number of admissible patients increases to 50"
 
 msgid "休息效率加成提升5%"
 msgstr "Recovery speed +5%"
@@ -17872,11 +15599,6 @@ msgstr "Steal all socks"
 msgid "生育模组"
 msgstr "Reproduction Module"
 
-msgid "仿照人体结构制成的生育模组，使无机体一样可以进行妊娠与生育"
-msgstr ""
-"Module made according to human structure, giving robots ability to be "
-"pregnant and give birth"
-
 msgid "隔衣触摸"
 msgstr "Cloth-blocked Touch"
 
@@ -17901,24 +15623,11 @@ msgstr ""
 msgid "窄域时停"
 msgstr "Narrow Timestop"
 
-msgid "初级时停系能力，可以让时间暂时停止，但自己行动范围受限，无法移动到房间以外的地方（未实装）"
-msgstr ""
-"Primary time-type ability, can stop time but limited self's movement to in "
-"the room"
-
 msgid "广域时停"
 msgstr "Wide Timestop"
 
-msgid "中级时停系能力，可以让时间暂时停止，且自己可以随意移动（未实装）"
-msgstr "Secondary time-type ability, can stop time while move freely"
-
 msgid "精确时停"
 msgstr "Point-blank Timestop"
-
-msgid "高级时停系能力，可以让时间暂时停止，且可以选择性地让某些人或物不受影响（未实装）"
-msgstr ""
-"Tertiary time-type ability, can stop time and choose targets to not be "
-"affected"
 
 msgid "一篇用其家乡的语言写就的歌谱。虽然你完全没法阅读上面的文字，不过斯卡蒂确实打算将这首曲教予你。"
 msgstr ""
@@ -18127,9 +15836,6 @@ msgstr ""
 msgid "反重力科研項目"
 msgstr ""
 
-msgid "也許我們能通過研究幹員安潔莉娜的源石技藝運作方式，開發一種新的載具，博士不試試嗎?"
-msgstr ""
-
 msgid "理論驗證機"
 msgstr ""
 
@@ -18168,16 +15874,6 @@ msgid "宿舍开放至9区全部，干员最大人数提升至424人"
 msgstr ""
 "Dormitory open to the whole Zone 9, maximum number of Operators increases to"
 " 424"
-
-msgid "开放新设施：【体检科】，可收治患者数量提升至200人"
-msgstr ""
-"Opens new facility: [Body Check Department], maximum number of admissible "
-"patients increases to 200"
-
-msgid "开放新功能：【招募病人干员】（未实装），可收治患者数量提升至500人"
-msgstr ""
-"Opens new function: [Recruit patient Operator] (not implemented), maximum "
-"number of admissible patients increases to 500"
 
 msgid "宿舍514房"
 msgstr "Room 514"
@@ -18312,74 +16008,32 @@ msgstr ""
 msgid "丰胸药"
 msgstr "Breast expansion medicine"
 
-msgid "使用后会让对方的胸部增大一个级别"
-msgstr "After usage, expands the target's breasts"
-
 msgid "缩胸药"
 msgstr "Breast shrinking medicine"
-
-msgid "使用后会让对方的胸部缩小一个级别"
-msgstr "After usage, shrinks the target's breasts"
 
 msgid "丰臀药"
 msgstr "Butt expansion medicine"
 
-msgid "使用后会让对方的臀部增大一个级别"
-msgstr "After usage, expands the target's butt"
-
 msgid "缩臀药"
 msgstr "Butt shrinking medicine"
-
-msgid "使用后会让对方的臀部缩小一个级别"
-msgstr "After usage, shrinks the target's butt"
 
 msgid "丰腿药"
 msgstr "Leg expansion medicine"
 
-msgid "使用后会让对方的腿部变成丰满的肉腿"
-msgstr "After usage, transforms the target's leg to plump legs"
-
 msgid "瘦腿药"
 msgstr "Leg slimming medicine"
-
-msgid "使用后会让对方的腿部变成纤细的细腿"
-msgstr "After usage, transforms the target's leg to thin legs"
 
 msgid "丰足药"
 msgstr "Foot expansion medicine"
 
-msgid "使用后会让对方的脚部变成细长的长足"
-msgstr "After usage, transforms the target's feet to long feet"
-
 msgid "瘦足药"
 msgstr "Foot slimming medicine"
-
-msgid "使用后会让对方的脚部变成小巧的小足"
-msgstr "After usage, transforms the target's feet to small feet"
-
-msgid "外表年龄增长药"
-msgstr "Age increasing medicine"
-
-msgid "使用后会让对方的外表年龄增长一个级别，最大为【熟女】"
-msgstr "After usage, increase the target's age by one stage, up to [Wife]"
-
-msgid "外表年龄减少药"
-msgstr "Age decreasing medicine"
-
-msgid "使用后会让对方的外表年龄减少一个级别，最小为【幼女】"
-msgstr "After usage, decrease the target's age by one stage, up to [Wife]"
 
 msgid "泌乳药"
 msgstr "Lactation medicine"
 
-msgid "使用后会让对方的乳房开始分泌奶水"
-msgstr "After usage, the target's breasts will start to lactate"
-
 msgid "停乳药"
 msgstr "Milkblock medicine"
-
-msgid "使用后会让对方的乳房停止分泌奶水"
-msgstr "After usage, the target's breasts will stop to lactate"
 
 msgid ""
 "可以在[训练场]的[健身区]中进行【锻炼身体】，需要注意的是该设施初期未解锁，需要在基建升级后才可使用\n"
@@ -18415,23 +16069,6 @@ msgstr ""
 " Exchange, which gives higher profit\\n③ Certain commissions grant great LMD"
 " rewards"
 
-msgid ""
-"①每日的干员好感度提升会换算为一定的粉红凭证\n"
-"②已攻略的干员会根据攻略程度每日提供固定的粉红凭证\n"
-"③部分外勤委托会提供粉红凭证作为奖励"
-msgstr ""
-"① The Affinity increase on Operators will be exchanged to certain amount of "
-"Pink Certificates\\n② Operators that have completed relationship will "
-"provide Pink Certificates according to the relationship stage\\n③ Some "
-"commissions grant Pink Certificates as reward"
-
-msgid ""
-"①在图书馆的藏品馆中进行收集解锁，获得至纯源石奖励\n"
-"②部分外勤委托会提供至纯源石作为报酬"
-msgstr ""
-"① From Collection Bonus at Collection Hall of Library, which will award "
-"Originium Primes\\n② Some commissions grant Originium Primes as reward"
-
 msgid "外勤委托系统是如何运作的？"
 msgstr "How does commission system work?"
 
@@ -18465,15 +16102,6 @@ msgstr "Doctor won"
 
 msgid "博士在桌游中输了"
 msgstr "Doctor lost"
-
-msgid "邀请多P"
-msgstr "Invite for group sex"
-
-msgid "结束多P"
-msgstr "End group sex"
-
-msgid "邀请多P失败"
-msgstr "Invite for group sex failed"
 
 msgid "清洁口交"
 msgstr "Cleaning blowjob"
@@ -18846,20 +16474,6 @@ msgstr ""
 msgid "翅膀"
 msgstr "Wings"
 
-msgid "H指令加值，部分H指令不需判定直接通过"
-msgstr ""
-"H command have increased Execution Value, with some ignoring the "
-"requirements"
-
-msgid "包括正负面在内的全体状态上升难"
-msgstr "All statuses, including positive and negative, increase slower"
-
-msgid "先导上升易，施虐效果上升"
-msgstr "Guidance increases faster, Sadism effect increases"
-
-msgid "苦痛上升易，受虐效果上升"
-msgstr "Pain increases faster, Masochism effect increases"
-
 msgid "中级时停系能力，可以让时间暂时停止，且自己可以随意移动"
 msgstr ""
 "Secondary timestop-type ability, can stop time while keeping free movement"
@@ -18887,15 +16501,7 @@ msgstr ""
 " [Doctor's Office] : Using [Manage Rhodes Island] can observe and manage the"
 " departments"
 
-msgid "【基建部】：可以在这里的[基建系统]中消耗资源来兴建新的设施、或者升级已有的设施"
-msgstr ""
-" [Base Building Department] : Using [Base system] can build or upgrade "
-"facilities with resources"
-
 msgid "【鲁特拉】：梅尔可以给博士提供一台咪波，并对其进行进行[咪波改装]，并进行功能的升级（未实装）"
-msgstr ""
-
-msgid "【铁匠铺】：火神会在这里[维修装备]，帮助外勤的干员们修复和升级装备"
 msgstr ""
 
 msgid "【机房】：罗德岛的服务器和网络设备都在这里，可以在这里登录核心系统[普瑞赛斯]，获取很多有用的信息"
@@ -18953,11 +16559,6 @@ msgid "【糖果仙子宴会厅】：可以在这里和喜欢歌舞剧的干员�
 msgstr ""
 " [Sugar Pome Fairy's Banquet Hall] : Can do [Rehearsal] with Operators"
 
-msgid "【门诊室】/【急诊室】：被安排进行坐诊的医生干员会在这里[诊疗病人]，医治完毕后可以获得医疗经验和龙门币"
-msgstr ""
-" [Outpatient Department]/[Emergency Room] : Operators appointed will do "
-"[Diagnosis] for Medical EXP and LMD"
-
 msgid "【住院部】：怀孕后临盆的干员会在这里待产，可以来这里向她[听肚子里的动静]"
 msgstr ""
 " [Inpatient Department] : Operators that are pregnant will stay here to wait"
@@ -18967,11 +16568,6 @@ msgid "【体检科】：可以在这里对干员进行[身体检查]，仔细�
 msgstr ""
 " [Body Check Department] : Can do [Body check] on Operators and conduct "
 "[Body management]"
-
-msgid "【会议室】：被安排进行招募干员的HR干员会在这里[招募干员]，检查招募进度或者调整招募方案可以使用[招募情况]"
-msgstr ""
-" [Meeting Room] : Operators appointed will [Recruit Operators] here, and the"
-" progress and plan can be viewed via [Recruitment progress]"
 
 msgid "【健身房】：可以在这里[锻炼身体]，从而提高体力和气力的上限"
 msgstr ""
@@ -19354,26 +16950,11 @@ msgid ""
 "郑清钺的养女，拥有魄力和胆识，带领一群年轻人行走江湖。其父在十年前行裕镖局押运酒盏被劫的事件中丧生。意图迎合时代发展，将没落的行裕镖局改为物流公司，但遭到郑清钺反对，因而与其渐生嫌隙。原本意图破坏抢盏之事，后发现事情的严重性而停手。岁相酒盏事件后和郑清钺商量，带领年轻人们前去玉门。在孟铁衣帮助下建立行裕物流，参与了天灾情报的运输。\n"
 msgstr ""
 
-msgid "白色女侠劲装"
-msgstr ""
-
-msgid "橙色披风"
-msgstr ""
-
 msgid "宁辞秋"
 msgstr "Ning Ciqiu"
 
 msgid ""
 "炎国礼部左侍郎，官阶从二品。出身南方水乡，家中同辈排行第七，其祖父官至一品，出任尚书。曾卷入走私贪污案，但成功抓出贼人并因此而入仕。为监管在尚蜀的令，出任钦差之责带领青雷伯白定山等数位天师坐镇尚蜀，在此期间也与尚蜀知府梁洵关系日益亲密，因关心梁洵而派夜半偷走梁洵手中的酒盏。酒盏一事后接太傅指令前往玉门，随后又调任到大荒城与工部尚书万勤城共事，协调十二楼五城的建造。\n"
-msgstr ""
-
-msgid "官服"
-msgstr ""
-
-msgid "米色长裤"
-msgstr ""
-
-msgid "#ff7300"
 msgstr ""
 
 msgid "龙门警卫局夹克"
@@ -19382,16 +16963,7 @@ msgstr ""
 msgid "OL上班族衬衫"
 msgstr ""
 
-msgid "紧束绳"
-msgstr ""
-
-msgid "胸垫"
-msgstr ""
-
 msgid "ol制服裙"
-msgstr ""
-
-msgid "粉色兔胖次"
 msgstr ""
 
 msgid "黑色丝袜"
@@ -19627,12 +17199,6 @@ msgid ""
 "特里蒙的警长，与桑尼为青梅竹马，曾收留了流离失所的桑尼，但后来被桑尼打劫，其祖母因受到过度惊吓瘫痪，因此对桑尼大失所望。在359号基地事件时因为收到桑尼挟持人质的报警而来到基地，事件后两人和好。"
 msgstr ""
 
-msgid "对讲器"
-msgstr ""
-
-msgid "黑色牛仔裤"
-msgstr ""
-
 msgid "行星碎屑"
 msgstr ""
 
@@ -19641,12 +17207,6 @@ msgid ""
 "与塞雷娅是大学同学，又是最要好的朋友，心有灵犀，互相认为对方是唯一理解自己的人。两人一拍即合，一同创建了莱茵生命。但在炎魔事件后，克丽斯腾被塞雷娅指出其行为越过了她的底线，导致塞雷娅与克丽斯腾决裂，离开莱茵生命。\n"
 "\n"
 "359号基地事件期间，斐尔迪南企图架空克丽斯腾的权力，但在塞雷娅与克丽斯腾的磋商下，斐尔迪南的图谋最终失败。"
-msgstr ""
-
-msgid "白金大衣"
-msgstr ""
-
-msgid "莱茵生命工牌"
 msgstr ""
 
 msgid "黑色长裤"
@@ -19670,18 +17230,6 @@ msgstr ""
 msgid ""
 "思想扭曲而又疯狂的赦罪师家族成员的一员，其体内的基因相当驳杂，经过了数次实验性的融合，如同奇美拉一般。\n"
 "而她所珍视的家人，无一将其视为家人。"
-msgstr ""
-
-msgid "白褶胸巾"
-msgstr ""
-
-msgid "黑色烫金饰礼服"
-msgstr ""
-
-msgid "黑色高衩群"
-msgstr ""
-
-msgid "黑色哑光连裤袜"
 msgstr ""
 
 msgid "茉莉"
@@ -19741,15 +17289,6 @@ msgid ""
 "温德米尔以剑法和领军能力闻名，其剑刃能斩断高塔。她是镇守莱塔尼亚边境的大公爵，选帝侯的大敌。军纪严明，忠于维多利亚，对王剑没有兴趣，对危险非常敏锐，对部下比较仁义。"
 msgstr ""
 
-msgid "黑色军大衣"
-msgstr ""
-
-msgid "黑色军靴"
-msgstr ""
-
-msgid "长剑"
-msgstr ""
-
 msgid "埃芒加德"
 msgstr "Ermengarde"
 
@@ -19762,13 +17301,6 @@ msgstr ""
 
 msgid "娜斯提"
 msgstr "Nasti"
-
-msgid "研究装置"
-msgstr "Research device"
-
-msgid ""
-"莱茵生命工程科主任，女妖，因为厌倦战争离开卡兹戴尔来到哥伦比亚并进入莱茵生命，梦想是建设能够飞在空中的移动城市作为萨卡兹的应许之地。其构建的空间结构被塞雷娅认为不符合安全规范但却能够自洽。协助克丽斯腾建设万星园，希望能通过这次的数据接近自己的目标。事件结束后与缪尔赛思一起参加了赫默的伦理会议。"
-msgstr ""
 
 msgid "雅拉"
 msgstr "Jara"
@@ -19837,22 +17369,10 @@ msgstr ""
 msgid "萨卡兹雇佣兵领袖W，现正式更名为维什戴尔。于伦蒂尼姆战争期间，与罗德岛伦蒂尼姆特别行动队紧密合作，数度阻遏军事委员会的行动。"
 msgstr ""
 
-msgid "红色外套"
-msgstr ""
-
-msgid "黑色胸衣"
-msgstr ""
-
 msgid "祖宗发射器"
 msgstr ""
 
 msgid "黑色战术靴"
-msgstr ""
-
-msgid "匕首"
-msgstr ""
-
-msgid "炸弹"
 msgstr ""
 
 msgid "历阵锐枪芬"
@@ -19868,21 +17388,6 @@ msgid ""
 "一件宽大的风衣。在野外活动的时候，可要注意防风保暖呀。"
 msgstr ""
 
-msgid "黑色长筒作战靴"
-msgstr ""
-
-msgid "米色夹克"
-msgstr ""
-
-msgid "黑色裹胸"
-msgstr ""
-
-msgid "高腰作战裤"
-msgstr ""
-
-msgid "防风镜"
-msgstr ""
-
 msgid "西尔维娅"
 msgstr "Sylvia"
 
@@ -19891,15 +17396,6 @@ msgstr "A ring with shattered diamond"
 
 msgid ""
 "达维镇的银行职员，前前任镇长的女儿。自身对数字异常敏感而成绩优异，因此考上全哥伦比亚最好的金融系，毕业后却回到了达维镇成为一名普普通通的职员。由于银行与达维镇居民敏感而尖锐的关系而在镇民中受尽脸色，依靠着戒指麻木度日。之后离开了达维镇接应海伦娜，跟杰西卡等人一起在拓荒地生活。"
-msgstr ""
-
-msgid "蒂拉"
-msgstr "Tila"
-
-msgid "便身武器包"
-msgstr "Convenient weapon bag"
-
-msgid "直接与黑钢创始人接触的黑钢国际的成员。达维镇的事件尘埃落定后和海伦娜一起在某处等待某人。"
 msgstr ""
 
 msgid "厄尔苏拉"
@@ -19944,15 +17440,6 @@ msgid ""
 msgstr ""
 
 msgid "十字星状吊坠"
-msgstr ""
-
-msgid "淡褐色衬衫外套御寒披袍"
-msgstr ""
-
-msgid "黑色百褶裙"
-msgstr ""
-
-msgid "过踝长筒高跟鞋"
 msgstr ""
 
 msgid "老天师"
@@ -20047,15 +17534,6 @@ msgid "被抢走的金酒之杯"
 msgstr "Stolen Golden Cup"
 
 msgid "来自米诺斯的游客。米诺斯被萨尔贡入侵期间阿斯帕齐亚的家族丢失了一对金杯。"
-msgstr ""
-
-msgid "梅捷缇克缇"
-msgstr "Medjedtyti"
-
-msgid "远古法杖"
-msgstr "Ancient staff"
-
-msgid "简称缇缇。是佩佩和莎草上学时期的好友。"
 msgstr ""
 
 msgid "红隼"
@@ -20254,23 +17732,10 @@ msgid ""
 "。"
 msgstr ""
 
-msgid "2.你可以描写两个角色的对话、表情、动作、心理活动。"
-msgstr ""
-
-msgid "3.你的描写必须非常细致、生动、充满文学感，可以适度的运用比喻、拟人、排比、成语等修辞手法，每种手法只能出现一次。"
-msgstr ""
-
-msgid ""
-"4.故事的大背景是，这是一家大型跨国医疗公司，两个角色中一位是这个医药公司的博士，也是领导人之一，是青年男性。另一位是这个公司的员工，一个女性。"
-msgstr ""
-
 msgid "5.你的描述文本中需要充分利用给出的条件，突出两个角色之间的关系，详细描述要求进行的动作。"
 msgstr ""
 
 msgid "6.你只能输出最后的描述文本，不要重复我的问题。"
-msgstr ""
-
-msgid "7.如果生成的内容不符合规范或涉及到非全年龄的内容，那你就必须要用其他的描述方式和安全的词语来回避掉不符合规范的内容。"
 msgstr ""
 
 msgid "进去|{Name}被{SrcOneCharaName}很生气地赶出来了"
@@ -20468,11 +17933,6 @@ msgstr "Don't|Ban"
 msgid "是否在处理公务时显示待处理事项"
 msgstr "Show situations needing handling"
 
-msgid "开启后会在处理公务时检测各部门的运作情况，对有问题需要博士处理的情况进行提示"
-msgstr ""
-"On enabled, the state of all departments will be shown, and problematic "
-"spots will be hinted"
-
 msgid "是否屏蔽思考过程"
 msgstr "Enable hiding of thinking process"
 
@@ -20538,11 +17998,6 @@ msgstr ""
 msgid "雙王計"
 msgstr ""
 
-msgid ""
-"博士博士，這次的野史絕對勁爆，在故事的彼端，特雷西婭小姐和特雷西斯先生同時成為魔王囉!\n"
-"而且在阿米婭進來撈我們的時候，兩位魔王大人還露出了懷念的表情，真想知道最後阿米婭和他們的悄悄話說了些什麼"
-msgstr ""
-
 msgid "天使之城"
 msgstr ""
 
@@ -20552,12 +18007,6 @@ msgid ""
 msgstr ""
 
 msgid "遁入阇那"
-msgstr ""
-
-msgid ""
-"嗯，雖然出來了，但覺者奎隆...或是說青色怒火，前魔王奎隆先生的話好難懂喔...\n"
-"啊，博士，我說的是另一個事件線喔，奎隆先生建了佛國，傳授佛法，卡茲戴爾在悟道的薩卡茲們轉化而成的阿納薩們的建設下變得很美好呢\n"
-"他還託我給您帶句話，\"安存法度之外，或不失于梦幻泡影，奇妙\"，果然好難懂啊"
 msgstr ""
 
 msgid "迫近的陰影"
@@ -20576,12 +18025,6 @@ msgid ""
 msgstr ""
 
 msgid "孤注一擲"
-msgstr ""
-
-msgid ""
-"我原本只是想結束這個故事而已，但現在!!\n"
-"幻境變得混沌，有一股\"終結故事的存在\"正在從空無中現身，博士!!\n"
-"它、它正在封存其他的故事，而且，還是以阿米婭的模樣，我們得阻止..."
 msgstr ""
 
 msgid "不容拒絕"
@@ -20688,10 +18131,6 @@ msgstr ""
 msgid "囚犯训练管理"
 msgstr "Prison training management"
 
-msgid "训练效果取决于监狱长对应的属性，如部位快感训练效果取决于监狱长的部位快感能力等级"
-msgstr ""
-"Training effect depends on abilities of the Warden, such as body pleasure"
-
 msgid "不进行训练|部位快感训练|部位扩张训练|苦痛快感训练|性爱技巧训练|身体锻炼训练|心理服从训练"
 msgstr ""
 "None|Body pleasure|Body dilation|Pain pleasure|Sex technique|Body "
@@ -20734,12 +18173,6 @@ msgstr "Before training H, choose the preparation work for targets"
 
 msgid "污浊清洗|部位润滑|持续性道具"
 msgstr "Cleaning|Lubricating|Continuous items"
-
-msgid "调教助手(未实装)"
-msgstr ""
-
-msgid "在调教H中是否作为助手辅助调教，可以使用和助手相关的指令"
-msgstr ""
 
 msgid "正常位经验"
 msgstr "Missionary EXP"
@@ -20818,19 +18251,6 @@ msgstr ""
 "low temperature and won't cause injuries"
 
 msgid ""
-"Ｂ：Breast  ，胸部\n"
-"Ｃ：Clitoris，阴蒂\n"
-"Ｐ：Penis   ，阴茎\n"
-"Ｖ：Vagina  ，阴道\n"
-"Ａ：Anus    ，肛门\n"
-"Ｕ：Urethra ，尿道\n"
-"Ｗ：Womb    ，子宫\n"
-"Ｎ：Normal  ，身体其他部位通用（如耳朵、尾巴、口腔、脖子、肚子、大腿、心理等）"
-msgstr ""
-"B: Breast\\nC: Clitoris\\nP: Penis\\nV: Vagina\\nA: Anus\\nU: Urethra\\nW: "
-"Womb\\nN: Normal (like ear, tail, mouth, neck, belly, leg, mentality etc.)"
-
-msgid ""
 "刻印是干员的一种特殊属性，在干员经历对她影响足够大的事件时才会获得/升级，也可以在能力提升界面消耗大量宝珠来升降级\n"
 "除无觉刻印外为最高六级以外，其他刻印最高为三级\n"
 "目前共实装了6个刻印，分别是快乐刻印、屈服刻印、无觉刻印、苦痛刻印、恐怖刻印、反发刻印\n"
@@ -20907,21 +18327,6 @@ msgid "为了练料理，做了太多的菜，该怎么处理？"
 msgstr ""
 "Made too many dishes for training Cuisine Skill, how to deal with them?"
 
-msgid "只要是正常调味的食物，就可以在[生活娱乐区]的[取餐区]中选择【放入正常食物】，干员们会在打饭的时候取走吃掉"
-msgstr ""
-"As long as it's normal food, then you may [Put normal food] in "
-"[Entertainment Zone] - [Meal Taking Zone], Operators will take and eat "
-"during meal time"
-
-msgid ""
-"去诚恳的道歉，不行的话就多道几次歉，总会原谅你的。\n"
-"如果生气很严重，获得反发刻印或者恐怖刻印了的话，可以用源石技艺进行消除，或消耗大量宝珠来消除。"
-msgstr ""
-"Apologize sincerely, do it more than once, they'll forgive you "
-"eventually.\\nIf they have Hatred Engraving or Fear Engraving, then "
-"apologize after removing the said Engravings via Originium Arts or consuming"
-" Juels."
-
 msgid "如何获得更多的宝珠？"
 msgstr "How to get more Juels?"
 
@@ -20994,11 +18399,6 @@ msgstr ""
 msgid "干员的心智强韧度"
 msgstr "Operator's mentality"
 
-msgid "同时影响正面状态与负面状态，设为积极时对正面状态向上修正，对负面状态进行向下修正，设为消极时同理，不影响扣除结算、固定值结算等特殊结算"
-msgstr ""
-"Increase positive statuses and decrease negative statuses if optimistic, "
-"vice versa for pessimistic, does not affect reduction or fixed calculations"
-
 msgid "非常消极|消极|较消极|标准|较积极|积极|非常积极"
 msgstr ""
 "Very pessimistic|Pessimistic|Not optimistic|Standard|Not "
@@ -21006,12 +18406,6 @@ msgstr ""
 
 msgid "博士是否和其他干员一样需要上厕所解手（该选项的优先度高于11号的全角色尿意值的增长速度选项）"
 msgstr "Does Doctor need toilet (takes priority over Urinary Value increase)"
-
-msgid "是否显示玩家的指令结算数据"
-msgstr "Enable showing player's calculations"
-
-msgid "即指令结算中玩家部分的数据，默认为是"
-msgstr "The settlements for player, default as yes"
 
 msgid "是否显示干员的指令结算数据"
 msgstr "Enable showing Operators' calculations"
@@ -21035,15 +18429,6 @@ msgstr ""
 
 msgid "均不显示|全显示|仅显示口上招呼"
 msgstr "None|All|Dialogues only"
-
-msgid "【铁匠铺】：火神会在这里[维修装备]，帮助外勤的干员们修复和升级装备（未实装）"
-msgstr ""
-
-msgid "【运维部】：被安排为检修工程师干员会在这里检查罗德岛各区块的设施运行情况，发现问题后会前往有故障的地点进行[维护设施]"
-msgstr ""
-" [Operation and Maintenance Department]: Maintenance engineers appointed "
-"will check the facilities, and conduct [Maintain facilities] if there's "
-"errors"
 
 msgid "【厨房】：被安排进行烹饪的厨师干员会在这里[做饭]，烹饪食物的质量与数量与料理技能等级有关，做出来的食物会在【取餐区】供应"
 msgstr ""
@@ -21093,12 +18478,6 @@ msgstr ""
 msgid "10"
 msgstr ""
 
-msgid "56"
-msgstr ""
-
-msgid "101"
-msgstr ""
-
 msgid ""
 "各位，这里是亚北小老虎，各位直接叫亚北或老虎就行。\n"
 "这次负责是空的口上，本来是没打算参与到口上的制作的，\n"
@@ -21110,9 +18489,6 @@ msgid ""
 "最后呢......要是有什么新的想法欢迎来给本虎提意见（如果要求简单基本上本虎都会考虑添加的。）\n"
 "本虎要是代码好的话我在这把我人设放出来让各位爽爽，毕竟在岛上还没有西伯利亚虎呢（金毛傲娇大老虎谁不喜欢呢对吧~）。\n"
 "最后的最后嘛~本虎其实是很希望哪怕是空这种冷门干员也有一个说的过去的口上才写的（应该没人看到这吧。）。"
-msgstr ""
-
-msgid "107"
 msgstr ""
 
 msgid ""
@@ -21128,24 +18504,6 @@ msgid ""
 "损伤最多一天触发一次 睡觉时重置损伤和冷却 当然不一定正常 bug炸了麻烦上dc找我或者git填issue"
 msgstr ""
 
-msgid "113"
-msgstr ""
-
-msgid "129"
-msgstr ""
-
-msgid "179"
-msgstr ""
-
-msgid "181"
-msgstr ""
-
-msgid "204"
-msgstr ""
-
-msgid "220"
-msgstr ""
-
 msgid ""
 "喔，小馬，總是充滿活力的小馬。想我當年就是因為一張小馬的美圖才開始了解方舟的。露著大腿外側的褲子，想必內褲是高腰細繩的那種...\n"
 "問我為什麼喜歡小馬呢...\n"
@@ -21155,38 +18513,11 @@ msgid ""
 "(個人私心覺得格拉尼是方舟最適合跑賽馬的庫蘭塔了，我還有藏勝者舞台在口上裡喔，獻給博士的勝者舞台)"
 msgstr ""
 
-msgid "230"
-msgstr ""
-
 msgid ""
 "阿，夏洛特...當時正值羅德島活動結束，當大家都沉浸在緬懷殿下(或前文明)而傷神，我卻被這位大姑娘的劇情擊中了\n"
 "試想她一個大姑娘，就這麼陪著博士和阿米婭，在大地上旅行了這麼久，是在什麼樣的心情下說出那句\"如果你願意，我們可以給阿米婭一個家\"\n"
 "又是在一聽到羅德島時馬上跑去找凱貓貓...不行，我不能忍受大家聊到暴行時大家只會調侃\"她的胡蘿蔔派很好吃\"、\"她本有機會贏的，可惜和博士的記憶被刪光光了\"\n"
 "本世界線，我的夏洛特必會大贏特贏，善良的人應得到該有的獎賞"
-msgstr ""
-
-msgid "241"
-msgstr ""
-
-msgid "245"
-msgstr ""
-
-msgid "248"
-msgstr ""
-
-msgid "249"
-msgstr ""
-
-msgid "254"
-msgstr ""
-
-msgid "263"
-msgstr ""
-
-msgid "274"
-msgstr ""
-
-msgid "285"
 msgstr ""
 
 msgid ""
@@ -21199,56 +18530,11 @@ msgid ""
 "（小車的內容仍偏少，也希望有想法的博士能踴躍參與）"
 msgstr ""
 
-msgid "290"
-msgstr ""
-
-msgid "291"
-msgstr ""
-
-msgid "304"
-msgstr ""
-
-msgid "308"
-msgstr ""
-
-msgid "328"
-msgstr ""
-
-msgid "358"
-msgstr ""
-
-msgid "365"
-msgstr ""
-
-msgid "377"
-msgstr ""
-
 msgid ""
 "喔，澄閃，一位善良、正質、偶爾缺乏點運氣的小貓咪，這片大地上不該只有不公，善良之人應得一個美好的故事，試問誰又不是如蘇茜一般努力過著日子呢\n"
 "(只可惜鷹角又在密錄裡把貓貓當成駱駝澄子開涮，鷹角壞!)\n"
 "好像還要給玩家一點建議來著....那，希望溫柔的人都能被溫柔以待\n"
 "(說貓貓是豬豬的人聽著，YOU!!  馬上到你家門口!!)"
-msgstr ""
-
-msgid "405"
-msgstr ""
-
-msgid "469"
-msgstr ""
-
-msgid "426"
-msgstr ""
-
-msgid "474"
-msgstr ""
-
-msgid "497"
-msgstr ""
-
-msgid "1012"
-msgstr ""
-
-msgid "2013"
 msgstr ""
 
 msgid ""
@@ -21262,25 +18548,11 @@ msgid ""
 "希望大家都能喜歡我的小刻喔，讓小刻成為幸福的刻俄柏吧!"
 msgstr ""
 
-msgid "4027"
-msgstr ""
-
-msgid "4080"
-msgstr ""
-
-msgid "4091"
-msgstr ""
-
 msgid "监狱长"
 msgstr "Warden"
 
 msgid "监狱长办公室"
 msgstr "Warden's Office"
-
-msgid "管理和训练关押区的囚犯干员，只能有一位，不能兼任助理"
-msgstr ""
-"Manage and train prisoners, up to one only, cannot be an assistant at the "
-"same time"
 
 msgid "可露希尔打折券，手绘有带小翅膀和尾巴的可爱玩偶印章，以廉价的打印纸制成。\n"
 msgstr ""
@@ -21296,9 +18568,6 @@ msgid "#e95353"
 msgstr ""
 
 msgid "咬过一口的苹果，小小的牙印清晰可见。"
-msgstr ""
-
-msgid "#FF69B4"
 msgstr ""
 
 msgid "墨黑色小礼帽"
@@ -21460,14 +18729,6 @@ msgid "3.你可以描写两个角色的对话台词、表情、肢体动作、�
 msgstr ""
 "3.You can describe the lines, expressions, body movements and mental "
 "activities, and you may add on details under the condition of being simple."
-
-msgid ""
-"4.故事的大背景是，这是一家大型跨国医疗公司，两个角色中一位是这个医药公司的博士，也是公司的领导人之一，是青年男性。另一位是这个公司的员工，一个女性。"
-msgstr ""
-"4.The story's background is, this is a big international pharmaceutical "
-"company, and within the two character, one is the Doctor, the leader of the "
-"company, and is a male adult, while the other character is the employee of "
-"the company, and is a female."
 
 msgid "角色名"
 msgstr ""
@@ -21665,11 +18926,6 @@ msgstr ""
 msgid "護身符"
 msgstr ""
 
-msgid ""
-"拜託啦，炎蓉妹妹。博士都批准這次外勤了，還同意讓克洛斯和你一起去喔\n"
-"要是你成功把我那瓜妹妹找回來，我額外答應你一個要求如何?"
-msgstr ""
-
 msgid "婆山鎮？"
 msgstr ""
 
@@ -21764,9 +19020,6 @@ msgid "先別急著拒絕，黎小姐。人世間難得走一遭，不知你聽�
 msgstr ""
 
 msgid "迷路小僧"
-msgstr ""
-
-msgid "既然這就是炎蓉施主提到的羅德島，而您又是她口中所言之博士，相逢即是有緣，就容小僧在此艦停留一段時日吧!"
 msgstr ""
 
 msgid ""
@@ -21874,10 +19127,6 @@ msgid "结算绳子捆绑"
 msgstr ""
 
 msgid ""
-"同时影响正面状态与负面状态，设为积极时对正面状态（如习得、恭顺、好意等）向上修正，对负面状态（如苦痛、恐怖、反感等）向下修正，设为消极时同理，不影响扣除结算、固定值结算等特殊结算"
-msgstr ""
-
-msgid ""
 "爱吃鸡：\n"
 "愿大家能享受小小的欢乐时光。"
 msgstr ""
@@ -21888,12 +19137,6 @@ msgid ""
 "虽然本坑有打算继续完善的计划，但做好了抛砖引玉的心理准备，\n"
 "不过此刻，三分热度的初篇已经成功憋出来，我也没什么心理负担，可以安心继续活下去了。\n"
 "谢谢你，迷迭香。"
-msgstr ""
-
-msgid "管理和训练关押区的囚犯干员(需要3级陷落且有囚犯)(只能有一位，不能兼任助理)"
-msgstr ""
-
-msgid "利用道具练习自己的性爱技巧(需要身体管理-性爱练习)"
 msgstr ""
 
 msgid "一个奇特的怀表，从未在诸国见过的制式，上面刻有四个年份日期，以及歪歪扭扭的几个字母。"
@@ -21945,15 +19188,6 @@ msgid "“先驱者” “后继者”"
 msgstr ""
 
 msgid "弹力运动绑带"
-msgstr ""
-
-msgid ""
-"苇草，驻留罗德岛的维多利亚南部办事处期间，曾提出撤离申请，近期再次成功与罗德岛建立联络。目前正以深池名义带领小股部队在维多利亚境内活动，以救助被暴力胁迫的塔拉人为主要行动目标。\n"
-"【特殊状态更新】\n"
-"苇草，于纳斯尔莎事件后接任塔拉王位，与博士通信后以巡视王国领地与外交名义前往罗德岛开始环塔拉巡游。"
-msgstr ""
-
-msgid "#fff8dc"
 msgstr ""
 
 msgid "百合花发饰"
@@ -22070,12 +19304,6 @@ msgid "紫色系半透明外套"
 msgstr ""
 
 msgid "深紫白色外套式连衣裙"
-msgstr ""
-
-msgid "破洞黑紫袜"
-msgstr ""
-
-msgid "黑紫色绑带短靴"
 msgstr ""
 
 msgid "黑柄尖枪法杖"
@@ -22307,483 +19535,17 @@ msgstr ""
 msgid "生物极限程度的精液膨胀"
 msgstr ""
 
-msgid "已灌肠液灌肠"
-msgstr ""
-
-msgid "刚排空后的尿渍"
-msgstr ""
-
 msgid "少许尿液"
 msgstr ""
 
 msgid "一定尿液"
 msgstr ""
 
-msgid "大量尿液，尿意明显"
-msgstr ""
-
 msgid "处子血"
-msgstr ""
-
-msgid "有轻微的白色粘稠液体附着在发丝上，呈现出点状光泽"
-msgstr ""
-
-msgid "发丝间缠绕着明显的白浊液体，部分已经开始凝结，使头发略显湿润沉重"
-msgstr ""
-
-msgid "大量白色粘稠液体覆盖头发，使发丝纠结在一起，呈现出湿漉漉的状态，光线下泛着不自然的光泽，每次移动都有液体滴落"
-msgstr ""
-
-msgid "头发几乎被白浊液体完全覆盖，沉重地黏在一起，呈现出浓稠的白色光泽，发丝间完全无法分开，形成一块块凝固状的区域，散发出浓烈的腥味"
-msgstr ""
-
-msgid "脸颊上粘着少量白浊液体，在灯光下微微反光，形成细小痕迹"
-msgstr ""
-
-msgid "面部大面积沾染着浓稠的白浊液体，从额头流至下巴，状如面膜般覆盖皮肤"
-msgstr ""
-
-msgid "整个脸庞完全被白浊液体覆盖，形成一层厚重的白色涂层，液体顺着脸部轮廓缓慢流淌，连睫毛和眉毛都被浸湿黏结，面部表情变得僵硬而沉重"
-msgstr ""
-
-msgid "唇边残留着少量的白色粘稠液体，微微泛着湿润光泽"
-msgstr ""
-
-msgid "口腔内充满了白浊液体，从嘴角溢出，无法完全闭合嘴唇"
-msgstr ""
-
-msgid "口腔完全被充满，白色粘稠液体从唇边不断溢出，无法完全闭合嘴巴，每次呼吸都伴随着气泡的声音，液体顺着下巴蜿蜒流下，形成长长的白色丝线"
-msgstr ""
-
-msgid "胸前有几滴白浊液体，微微反光，形成小小的湿润区域"
-msgstr ""
-
-msgid "胸部覆盖着较多白浊液体，缓缓流淌，在肌肤上形成蜿蜒的痕迹"
-msgstr ""
-
-msgid "整个胸部被浓稠精液完全覆盖，形成厚厚的一层白色涂层，皮肤几乎看不见原本的颜色，液体在胸部的曲线上缓慢流动，随着呼吸起伏而微微晃动"
-msgstr ""
-
-msgid "腋下有少量粘稠液体附着，微微湿润，呈现细小的光点"
-msgstr ""
-
-msgid "腋部完全湿润，白浊液体顺着皮肤缓缓流淌下来，形成闪亮的湿痕"
-msgstr ""
-
-msgid "腋窝完全被白浊液体填满，液体在每次手臂移动时被挤压，发出微弱的水声，随着体温变得温热，皮肤与皮肤之间形成黏腻的接触感，散发出特殊的气味"
-msgstr ""
-
-msgid "手掌和指间沾有少量粘稠的白浊液体，触物时留下痕迹"
-msgstr ""
-
-msgid "双手完全沾满黏腻的白浊液体，指间拉出长丝，无法灵活操作物品"
-msgstr ""
-
-msgid ""
-"手部完全被白浊液体浸透，每个指尖都滴落着粘稠液体，掌纹被填满呈现出平滑的质感，手指活动时发出湿润的声响，无法拿取精细物品，握紧再张开时能拉出蛛网状的丝线"
-msgstr ""
-
-msgid "阴唇间微微沾染些许白浊液体，从紧闭的穴口处渗出少量精液，形成细小的湿润区域"
-msgstr ""
-
-msgid "白浊液体从阴道口溢出，湿润着粉嫩的阴唇，使其呈现晶莹的光泽，能感觉到明显的滑腻感"
-msgstr ""
-
-msgid ""
-"大量白浊液体从充盈的阴道内不断涌出，挤开粉嫩的阴唇，顺着大腿内侧缓缓流下，形成蜿蜒的白色痕迹，每走一步都能感受到内部液体的晃动和从穴口持续流出"
-msgstr ""
-
-msgid ""
-"阴道完全被浓稠的白浊液体填满并持续从穴口溢出，在重力下像瀑布一样从穴口倾泻，阴唇被精液冲开到无法闭合，完全无法阻止精液的喷出，整个下半身被溅湿一片，在地面形成了一滩持续扩大的白浊水池"
-msgstr ""
-
-msgid "子宫内壁感受到少量液体的存在，微微温热，带来轻微的满足感"
-msgstr ""
-
-msgid "子宫被适量白浊液体滋润，内部传来温暖的感觉，如同被轻柔地填满"
-msgstr ""
-
-msgid "子宫内被大量白浊液体充满，有明显的充实感，内部压力使下腹产生微妙的鼓胀，每次移动都能感受到液体在内部轻微晃动"
-msgstr ""
-
-msgid "子宫完全被浓稠液体塞满，有微微的饱胀感，腹部出现不自然的紧绷感，内部液体的重量使站立姿势变得略显不适"
-msgstr ""
-
-msgid "子宫因内部液体过多而略微鼓胀，腹部出现轻微的隆起，像怀孕初期一般，内部液体随着身体移动而缓慢晃动，给人一种奇特的饱足感"
-msgstr ""
-
-msgid ""
-"子宫大幅膨胀，充满的液体使下腹部明显隆起，像怀孕初期一般，行走时能明显感受到液体的重量和波动，腹部皮肤变得紧绷光滑，轻轻触摸能感受到内部的饱满"
-msgstr ""
-
-msgid ""
-"子宫极度膨胀，腹部高高隆起，白浊液体充满整个腔体，令人难以置信的饱胀感，如同怀孕中后期的状态，皮肤绷紧发亮，每走一步都伴随着宫内满溢精液的晃动，几乎无法正常行走"
-msgstr ""
-
-msgid "后穴入口处有少量白浊液体附着，形成微微的湿润光泽"
-msgstr ""
-
-msgid "适量的白浊液体附着在内壁上，使后穴显得湿润光滑，每次移动都有微妙感觉"
-msgstr ""
-
-msgid "大量白浊液体充满后穴，有细微的溢出，内壁被完全浸润，每次移动都能感受到液体在内部轻微晃动，带来异样的饱胀感"
-msgstr ""
-
-msgid "后穴内壁被完全灌注，白浊液体随着身体移动而轻微晃动，腹部有微妙的沉重感，行走时液体从穴口缓慢溢出，形成细小的白色水流"
-msgstr ""
-
-msgid "后穴完全被白浊液体填满，无法容纳更多，从穴口不断溢出，内部压力使肠道感到明显的胀痛，每次移动都伴随着大量液体的流出，无法控制"
-msgstr ""
-
-msgid "肠道因大量液体而明显膨胀，腹部出现不自然的隆起，如同怀孕初期，行走困难，每走一步都伴随着内部液体的晃动和从穴口喷溅出的白浊液体"
-msgstr ""
-
-msgid ""
-"肠道极度膨胀，腹部像气球一样鼓起，充满的液体令人难以承受，如同怀孕中后期，几乎无法行走，腹部皮肤紧绷发亮，轻轻碰触就能感受到内部液体的波动，每走一步都伴随着大量白浊液体向外喷出"
-msgstr ""
-
-msgid ""
-"肠道已达极限膨胀，腹部畸形隆起如临产妇，皮肤绷紧到近乎透明，白浊液体快要撑破肠壁，沉重感坠得全身不适到无法站立，每次呼吸或轻微动作都会引发大量精液不受控地喷出，身下形成扩散的白浊湖泊"
-msgstr ""
-
-msgid "尿道口沾染少量白浊液体，微微湿润，形成细小的光点"
-msgstr ""
-
-msgid "尿道内壁被白浊液体滋润，有轻微的温热感，尿道口呈现湿润状态，膀胱内感到微热"
-msgstr ""
-
-msgid "尿道充满白浊液体，膀胱内积聚少量精液，产生轻微胀感。内部压力使排尿变得困难，每走一步都能感受到液体在尿道与膀胱内晃动的异样感觉"
-msgstr ""
-
-msgid ""
-"尿道被白浊液体完全填满，膀胱内积聚大量精液，形成明显的饱胀感。尿道口无法完全闭合，轻微挤压下腹就会有液体从尿道口溢出，膀胱压力增大，走动时带来强烈的不适与满足感"
-msgstr ""
-
-msgid ""
-"尿道内液体充盈，膀胱被大量精液撑开，下腹部出现轻微隆起。排尿困难，尿道周围组织明显肿胀，膀胱内精液晃动感明显，体位变化时能感受到内部液体的波动，液体不受控制地从尿道口滴落"
-msgstr ""
-
-msgid ""
-"尿道极度膨胀，膀胱被过量精液填满，下腹部明显凸起如同小型气球。白浊液体在内部形成强烈压力，产生难以抑制的排出欲望，膀胱壁被撑到极限，尿道口持续喷出浓稠的白浊液体，无法控制液体的流出"
-msgstr ""
-
-msgid "大腿上有几道白浊液体痕迹，缓缓流淌，形成蜿蜒痕迹"
-msgstr ""
-
-msgid "双腿布满白浊液体，在皮肤上形成多道流痕，走动时有微妙的滑腻感"
-msgstr ""
-
-msgid "整个腿部都被浓稠的白浊液体覆盖，黏腻而湿滑，如同涂了一层厚厚的乳霜，走动时大腿内侧发出轻微的水声，液体顺着腿部曲线缓慢流淌"
-msgstr ""
-
-msgid "脚背上沾有少量白浊液体，在趾间形成细丝，微微湿润"
-msgstr ""
-
-msgid "整个脚部都被白浊液体浸湿，脚趾间溢满黏腻液体，踩在地面上留下湿痕"
-msgstr ""
-
-msgid "脚部完全被白浊液体包裹，每一个脚趾都被黏稠液体浸透，脚底时不时时发出轻微的黏液吸附声，行走时精液持续从脚踝处流下，每一步都留下湿润的脚印"
-msgstr ""
-
-msgid "尾巴尖端沾有少量白浊液体，呈现出微微的湿润光泽"
-msgstr ""
-
-msgid "尾巴上有明显的白浊液体痕迹，使毛发粘在一起，失去了蓬松感"
-msgstr ""
-
-msgid "尾巴大部分被白浊液体覆盖，毛发湿漉漉地纠结在一起，呈现出一绺一绺的状态，尾巴变得沉重而难以自如摆动，液体顺着毛发缓慢滴落"
-msgstr ""
-
-msgid "整条尾巴完全被白浊液体浸透，显得沉重而潮湿，原本蓬松的毛发紧紧黏在一起，形成一个个湿漉漉的块状物，无法正常摆动，每次移动都有液体从尾尖滴落"
-msgstr ""
-
-msgid "角上附着少量白浊液体，在光线下微微反光，形成点状光泽"
-msgstr ""
-
-msgid "整个兽角都被白浊液体覆盖，顺着角的纹理缓缓流下，表面呈现湿润光泽"
-msgstr ""
-
-msgid ""
-"兽角完全被浓稠白浊液体包裹，原本的质感和色泽被完全遮盖，液体在角的沟壑和纹理间积聚，随着头部移动而缓慢流动，在光线下呈现出粘稠的光泽，散发出淡淡的气味"
-msgstr ""
-
-msgid "耳尖沾有少量白浊液体，微微湿润，呈现细小光点"
-msgstr ""
-
-msgid "兽耳内侧布满白浊液体，使毛发结成一缕一缕，失去了原有的柔软感"
-msgstr ""
-
-msgid "整个兽耳完全被浓稠的白浊液体覆盖，耳毛粘成一团，失去了原本的蓬松感，耳朵变得沉重而下垂，液体沿着耳廓缓慢流淌，形成粘稠的丝线"
-msgstr ""
-
-msgid "胃部感受到少量液体的存在，微微温热，带来轻微的满足感"
-msgstr ""
-
-msgid "胃里的白浊液体随着身体移动而轻微晃动，有饱腹感，如同刚喝下温热饮品"
-msgstr ""
-
-msgid "胃部明显感受到液体的重量，每动一下都能感觉到液体的晃动，如同喝下过量的水，但更加粘稠和沉重，产生持续的饱腹感和轻微的不适"
-msgstr ""
-
-msgid "胃几乎被白浊液体占据，有强烈的饱腹感，腹部开始出现轻微的膨胀，每次移动都伴随着内部液体的晃动，带来异样的满足感"
-msgstr ""
-
-msgid "胃被过量液体填满，产生明显的饱腹感，如同吃了一顿丰盛大餐，腹部出现明显的隆起，呼吸变得略微困难，无法进食任何东西"
-msgstr ""
-
-msgid "腹部因胃内液体过多而明显膨胀，活动时能感受到液体的冲击，如同怀孕初期的状态，腹部皮肤变得紧绷，每走一步都能清晰感受到内部液体的晃动和重量"
-msgstr ""
-
-msgid ""
-"胃部极度膨胀，白浊液体充满整个腔体，腹部高高隆起，难以活动，如同怀孕中后期的状态，呼吸变得急促而困难，皮肤绷紧发亮，轻轻触碰就能感受到内部液体的波动"
-msgstr ""
-
-msgid "胯部皮肤上附着少量白浊液体，形成细小的痕迹，微微反光"
-msgstr ""
-
-msgid "整个胯部都被白浊液体完全覆盖，在皮肤褶皱处特别明显，走动时有湿滑感"
-msgstr ""
-
-msgid ""
-"胯部被厚重的白浊液体包裹，液体填满了每一道皱褶和凹陷，行走时液体在皮肤表面缓慢流动，皮肤与衣物之间产生湿滑的摩擦，发出细微的水声，散发出特殊的气味"
-msgstr ""
-
-msgid "腹部表面有几道白浊液体痕迹，形成细小的流线型图案"
-msgstr ""
-
-msgid "腹部大部分被白浊液体覆盖，形成不规则的图案，皮肤呈现湿润光泽"
-msgstr ""
-
-msgid "整个腹部完全被浓稠的白浊液体覆盖，形成一层厚厚的涂层，液体顺着腹部的曲线和肌肉的沟壑缓慢流淌，皮肤几乎看不见原本的颜色，光线下泛着湿润的光泽"
-msgstr ""
-
-msgid "背部有几处白浊液体痕迹，随着动作而微微流淌，形成细小痕迹"
-msgstr ""
-
-msgid "背部大面积被白浊液体覆盖，汇集成小片区域，沿着脊椎凹陷向下流动"
-msgstr ""
-
-msgid "整个背部都被白浊液体完全覆盖，从肩膀一直延伸到腰部，液体在背部肌肉的沟壑中汇集，随着身体的每一次移动而缓慢流淌，皮肤完全被湿润的白色覆盖"
-msgstr ""
-
-msgid "腹部形态正常，没有任何异常，保持着平坦紧致的状态"
-msgstr ""
-
-msgid "腹部有轻微的凸起，腹部皮肤绷紧，触摸时能感受到内部的微妙变化"
-msgstr ""
-
-msgid "腹部明显鼓起，摸上去能感受到内部液体的存在，触摸时有微妙的波动感，腹部皮肤变得光滑而紧绷，行走时内部液体轻微晃动"
-msgstr ""
-
-msgid "腹部高高隆起如同包含一个小型皮球，走动时能感受到液体的波动，如同怀孕初期的状态，皮肤变得紧绷发亮，轻轻按压能感受到内部液体的存在和移动"
-msgstr ""
-
-msgid "腹部极度膨胀，如同怀孕中期的孕妇，行动变得缓慢而谨慎，每走一步都伴随着内部液体的晃动，皮肤被撑得发亮，能清晰看到下面青色的血管"
-msgstr ""
-
-msgid ""
-"腹部巨大而圆润，像怀胎十月的孕妇，行走困难，内部液体随动作明显波动，腹部皮肤极度绷紧，几乎透明，能看到下面浅浅的液体轮廓，无法弯腰或进行剧烈运动"
-msgstr ""
-
-msgid "帽子边缘沾有少量白浊液体，形成细小的湿润痕迹"
-msgstr ""
-
-msgid "帽子表面有明显的白浊液体痕迹，局部湿润，材质变得略显沉重"
-msgstr ""
-
-msgid "帽子大部分被白浊液体浸湿，材质变得沉重，液体渗透帽子的织物，形成湿漉漉的区域，原本的形状变得松垮，戴在头上明显感到额外的重量"
-msgstr ""
-
-msgid "整个帽子都被白浊液体浸透，完全湿透，材质变形且沉重，液体从帽檐滴落，几乎无法直立保持原有形状，戴上后头发立刻被浸湿"
-msgstr ""
-
-msgid "帽子完全被浓稠的白浊液体覆盖，几乎看不出原本的颜色，每一根纤维都被液体饱和，沉重得难以戴在头上，触摸就会有大量液体挤出，形成湿润的水洼"
-msgstr ""
-
-msgid "镜片上有少量白浊液体痕迹，影响视线，形成模糊的光晕"
-msgstr ""
-
-msgid "整个眼镜都被白浊液体覆盖，镜片和镜框上都是黏腻的液体，几乎无法透视"
-msgstr ""
-
-msgid ""
-"眼镜完全被浓稠白浊液体包裹，镜片上的液体厚重到几乎无法看清外界，框架被液体浸润变得沉重，戴上时液体会沿着脸颊流淌，每次调整都会挤出更多液体，几乎失去了眼镜的功能"
-msgstr ""
-
-msgid "耳饰上有一点白浊液体，微微反光，形成细小的湿润痕迹"
-msgstr ""
-
-msgid "耳饰大部分被白浊液体覆盖，液体顺着饰品的纹理流淌，显得沉重湿润"
-msgstr ""
-
-msgid "整个耳饰完全被白浊液体包裹，原本的形状变得模糊，装饰细节完全被白色覆盖，液体从耳饰底部滴落到颈部，形成湿润的痕迹，戴着时能感受到湿滑的触感"
-msgstr ""
-
-msgid "脖饰上沾有少量白浊液体，形成细小的痕迹，微微反光"
-msgstr ""
-
-msgid "脖饰大部分被白浊液体覆盖，在皮肤接触处特别明显，触感湿润黏腻"
-msgstr ""
-
-msgid "整个脖饰都被浓稠的白浊液体完全包裹，黏在皮肤上，装饰细节完全消失在白色液体中，质地变得湿滑难以固定，接触皮肤的地方形成一圈湿润的痕迹"
-msgstr ""
-
-msgid "口饰边缘沾有少量白浊液体，微微湿润，呈现细小光泽"
-msgstr ""
-
-msgid "口饰大部分被白浊液体覆盖，与嘴唇接触的部分特别明显，说话时能感受到"
-msgstr ""
-
-msgid ""
-"整个口饰完全被白浊液体浸透，无法分辨原本的颜色和形状，液体从边缘不断滴落，沾湿下巴和颈部，呼吸时能感受到湿润的气息，佩戴时嘴唇能尝到咸腥的味道"
-msgstr ""
-
-msgid "衣物散发出微弱的腥咸气味，但表面看不出异常，只有细微的湿痕"
-msgstr ""
-
-msgid "衣物前襟有少量白色斑点，微微湿润，布料局部变得半透明"
-msgstr ""
-
-msgid "上衣多处有明显的白浊液体痕迹，部分区域已经湿透，液体渗透织物形成半透明的区域，靠近皮肤的部分变得粘腻，散发出明显的腥咸气息"
-msgstr ""
-
-msgid "上衣大部分被白浊液体浸湿，布料紧贴皮肤，形成贴身的轮廓，湿透的织物沉重而冰冷，移动时衣物发出湿漉漉的声音，留下湿润的印记"
-msgstr ""
-
-msgid "整件上衣都被白浊液体完全浸透，几乎看不出原本的颜色，织物变得半透明，完全贴合身体轮廓，沉重得像穿了一件水浸的衣服，行走时液体从下摆不断滴落"
-msgstr ""
-
-msgid "上衣彻底被白色浓稠液体覆盖，沉重地悬挂在身上，湿漉漉地滴落液体，织物完全看不出原样，厚重得难以活动，每一个动作都会挤出大量液体，发出水声"
-msgstr ""
-
-msgid "胸衣边缘附着少量白浊液体，在布料上形成湿痕，微微反光"
-msgstr ""
-
-msgid "胸衣大部分被白浊液体浸湿，布料变得半透明，紧贴皮肤呈现轮廓"
-msgstr ""
-
-msgid ""
-"整件胸衣完全被白浊液体浸透，紧贴在皮肤上，显出下面的轮廓，每一根纤维都被液体饱和，沉重而黏腻，呼吸时液体随着胸部起伏而微微流动，散发出浓烈的气味"
-msgstr ""
-
-msgid "手套指尖和掌心沾有白浊液体，触摸物品会留下痕迹，微微湿滑"
-msgstr ""
-
-msgid "手套大部分被白浊液体浸湿，变得黏腻而沉重，手指活动受限"
-msgstr ""
-
-msgid ""
-"整副手套完全被白浊液体浸透，每动一下都有液体滴落，手指活动时能听到湿润的水声，指缝间拉出长长的白色丝线，握持物品时会留下湿漉漉的印记，无法精细操作"
-msgstr ""
-
-msgid "下装散发出微弱的腥咸气味，表面看起来正常，只有极细微的湿痕"
-msgstr ""
-
-msgid "下装某些部位有微微的湿痕，形成小片白色区域，行走时有轻微摩擦感"
-msgstr ""
-
-msgid "下装多处有明显的白浊液体痕迹，部分已经渗透布料，湿润的区域紧贴皮肤，走动时布料与皮肤之间发出轻微的水声，散发出明显的腥咸气息"
-msgstr ""
-
-msgid "下装大部分被白浊液体浸湿，布料紧贴皮肤，显出下面的轮廓，每走一步都有湿润的感觉，留下微微的水痕，裤腿间摩擦时发出粘腻的声响"
-msgstr ""
-
-msgid "整件下装都被白浊液体完全浸透，行走时发出湿润的声音，布料变得沉重且半透明，完全贴合腿部轮廓，每一步都会挤出少量液体，形成细小的水流"
-msgstr ""
-
-msgid ""
-"下装彻底被浓稠的白浊液体覆盖，每走一步都有液体滴落，留下湿漉漉的足迹，布料完全湿透且沉重，行走变得困难，内层的液体不断与皮肤摩擦，发出明显的水声"
-msgstr ""
-
-msgid "内裤上有少量白浊液体痕迹，布料微微湿润，形成小范围的湿痕"
-msgstr ""
-
-msgid "内裤大部分被白浊液体浸湿，布料变得半透明，紧贴私密部位"
-msgstr ""
-
-msgid ""
-"整条内裤完全被白浊液体浸透，几乎看不出原本的颜色和形状，布料变得沉重且完全贴合私密部位，行走时液体在布料和皮肤之间流动，带来持续的湿滑感，散发出浓烈的气味"
-msgstr ""
-
-msgid "袜子尖端有少量白浊液体痕迹，形成小片湿润区域"
-msgstr ""
-
-msgid "袜子上有明显的白浊液体痕迹，部分区域湿润，与皮肤接触有滑腻感"
-msgstr ""
-
-msgid "袜子大部分被白浊液体浸湿，布料紧贴皮肤，脚趾之间的部分特别湿润，每走一步都有湿漉漉的触感，鞋内形成潮湿的环境"
-msgstr ""
-
-msgid "整双袜子都被白浊液体完全浸透，走路时发出湿润的声音，布料完全贴合脚部轮廓，行走时液体在袜子和皮肤之间流动，每一步都能感受到湿滑的触感"
-msgstr ""
-
-msgid "袜子彻底被白浊液体覆盖，每走一步都有液体从袜子中挤出，里面积满了液体，行走时发出明显的水声，脚部完全浸泡在湿滑的环境中，布料几乎无法分辨"
-msgstr ""
-
-msgid "鞋面上有少量白浊液体痕迹，形成小片区域，微微反光"
-msgstr ""
-
-msgid "鞋子多处有明显的白浊液体附着，特别是在缝隙处，步态略显沉重"
-msgstr ""
-
-msgid "鞋子大部分被白浊液体浸湿，材质变得沉重，走路时能感受到鞋内积累的液体，每一步都伴随着轻微的水声，鞋面变得湿滑而有光泽"
-msgstr ""
-
-msgid "整双鞋都被白浊液体完全浸透，走路时发出湿润的声音，鞋内积满液体，形成湿润的环境，脚趾被液体包围，每走一步都伴随着液体的挤压声"
-msgstr ""
-
-msgid ""
-"鞋子彻底被白浊液体覆盖，从内到外都湿漉漉的，每走一步都留下湿痕，液体从鞋面的各个缝隙溢出，内部完全被液体填满，行走时发出明显的水声，如同在黏液沼泽中行走"
-msgstr ""
-
-msgid "武器握柄处有少量白浊液体痕迹，手持时感到微微湿滑"
-msgstr ""
-
-msgid "武器表面有明显的白浊液体附着，特别是在握持部位，使用时易滑脱"
-msgstr ""
-
-msgid ""
-"整件武器大部分被白浊液体覆盖，使表面变得湿滑难以握持，液体渗入武器的每一道纹理和缝隙，增加了重量和黏腻感，挥舞时有液体甩出，形成飞溅的弧线，完全无法使用"
-msgstr ""
-
-msgid "附属物表面有少量白浊液体痕迹，局部区域湿润，微微反光"
-msgstr ""
-
-msgid "附属物大部分被白浊液体覆盖，原本的色泽变得模糊，触感湿滑黏腻"
 msgstr ""
 
 msgid ""
 "整个附属物完全被浓稠白浊液体包裹，原本的形状和材质特征变得模糊，液体填满每一个细小的缝隙，沾染周围的物体，触摸时能感受到湿滑温热的质感，重量明显增加"
-msgstr ""
-
-msgid "阴唇微微湿润，从紧闭的穴口处渗出少量透明爱液，使粉嫩的阴唇间闪烁着湿润光泽"
-msgstr ""
-
-msgid "透明爱液从内部充盈的阴道涌出，挤开粉嫩的阴唇，使整个私密区域都变得湿滑而温暖，阴唇呈现晶莹透亮的状态，行走时有轻微水声"
-msgstr ""
-
-msgid ""
-"大量透明爱液不断从湿润的阴道口涌出，阴唇被完全浸润呈微微张开状态，爱液顺着大腿内侧蜿蜒流下，形成明显的湿痕，内部持续的充盈感使每一步行走都带来轻微的快感，液体在光线下泛着微妙的光泽"
-msgstr ""
-
-msgid ""
-"透明的爱液如泉水般从充盈的阴道内持续喷涌而出，阴唇无法闭合，形成小股瀑布，无论如何夹紧都无法阻止液体从穴口不断流出，行走时伴随着明显的水声，每一步都能感受到内部液体的晃动与涌出"
-msgstr ""
-
-msgid "肠道状态正常，无任何灌入物质，保持着自然健康的状态"
-msgstr ""
-
-msgid "温热灌肠液已经注入，内壁湿润。液体在肠道内流动带来奇妙的充盈感，轻轻按压腹部能感受到内部液体的轻微波动"
-msgstr ""
-
-msgid "灌肠后肠道洁净如新，行走时有微妙的空荡感。内壁被彻底清洁，呈现出健康的粉色，只有一种舒适的轻盈与通畅"
-msgstr ""
-
-msgid ""
-"粘稠精液充盈肠道，腹内温热，伴随微妙饱胀感。白色液体填满了肠道褶皱，行走时能感受到内部液体缓慢流动的异样触感，富有生命力的精子依然在肠道内四处游动"
-msgstr ""
-
-msgid "肠内残留少量精液，微微湿润，走动时有轻微粘黏感。肠壁上附着着稀薄的白色液体痕迹，除了残留的空荡感之外，还能感受到微妙的湿滑触感和隐约的余温"
 msgstr ""
 
 msgid "肠道内没有灌入任何液体，状态正常，腹部平坦，无任何不适感"
@@ -22803,21 +19565,6 @@ msgstr ""
 
 msgid ""
 "超量的液体使肠道极度扩张，腹部膨胀到极限，如同临产，几乎无法行动，腹部皮肤绷紧透亮，遍布淡淡的纹路，触摸能明显感受到内部液体的压力，稍微移动就伴随着强烈的不适和内部液体的剧烈晃动"
-msgstr ""
-
-msgid "膀胱刚刚排空，呈现舒适的放松状态，尿道内仅残留着微量透明液体，腹部平坦柔软，没有任何压力感，如释重负的轻松感使身体倍感舒适"
-msgstr ""
-
-msgid ""
-"膀胱内积存少量淡黄色液体，带来轻微的充盈感，下腹部有微妙的轻压感，但并不影响正常活动，偶尔走动时能感受到液体的轻微晃动，但尚不需要寻找排泄场所"
-msgstr ""
-
-msgid ""
-"膀胱已积累了一定程度的尿液，下腹部出现明显的饱胀感，时刻能感受到内部液体的存在，走动时液体的晃动带来轻微的不适，压力渐增使人不自觉地并拢双腿，排泄的欲望变得越发明显"
-msgstr ""
-
-msgid ""
-"膀胱被尿液完全撑满，下腹部隆起并伴随着持续的胀痛感，每走一步都能感受到液体在内部的剧烈晃动，膀胱壁绷紧到极限，尿道口有微微的湿润感，难以控制的排泄欲望使人无法集中注意力"
 msgstr ""
 
 msgid ""
@@ -30738,12 +27485,6 @@ msgstr ""
 msgid "28"
 msgstr ""
 
-msgid "31"
-msgstr ""
-
-msgid "32"
-msgstr ""
-
 msgid "33"
 msgstr ""
 
@@ -31045,26 +27786,6 @@ msgid ""
 "由活动于荒地的一群流民组成的暴力组织，他们自喻为“荒地的征服者”，远离一切文明，依靠狩猎野兽、开垦土地，互相照应着生存在荒原之上，利用自制的武器战胜敌人。“锈锤”因犯有袭击贵族的队伍等罪行而恶名远扬，被形容为一群残暴野蛮，以杀戮为乐的荒地暴徒。"
 msgstr ""
 
-msgid ""
-"干员的生理周期以七天为一个循环，包含安全日、普通日、危险日和排卵日四种日子\n"
-"在每个生理周期的排卵日(第6天)会根据整个周期内，安全日以外的其他日被射入精液总量来判断是否[受精]\n"
-"不同日子的概率高低列表是：排卵日＞危险日＞普通日＞安全日（=0）\n"
-"\n"
-"\n"
-"目前已实装的提高概率的手段有（可叠加）：\n"
-"①在成人商店里购买【排卵促进药】后直接让对方服用，或偷偷加在咖啡/食物中让对方服用\n"
-"②每天如果不射精的话，能够有一部分精液转化为临时精液而储存到下一天，最高可以储存到4倍，此时可以获得【浓厚精液】素质\n"
-"③如果该干员已经被完全催眠（200%催眠深度），可以切换到【体控催眠】，然后使用【体控-强制排卵】的源石技艺\n"
-"④在身体管理中禁止干员清洗阴道内的精液\n"
-"\n"
-"\n"
-"其他相关功能：\n"
-"使用【生理透视】的源石技艺（在透视系中）可以看到干员的生理周期与受精概率，方便进行判断\n"
-"在阴道内射精（即一般交合姿势指令时射精）的情况下，大部分精液会停留在阴道内，小部分会流到子宫，没有流到子宫内的阴道部分的精液会在干员当日去大浴场里洗澡时被洗掉，进而降低怀孕概率。\n"
-"在子宫内射精（即子宫口或子宫奸等指令时射精）的情况下，大部分精液都会射进子宫内，只有小部分会向外流到阴道，因此不容易被清洗掉。\n"
-"当子宫内射精量足够多时，文字上会提示有腹部隆起等相关信息，同时如果开启了【腔内透视】的源石技艺的话，可以看到干员子宫和阴道的断面图，此时可以根据图片中子宫内的精液量和子宫的被撑大程度来进行判断。"
-msgstr ""
-
 msgid "不进行角色扮演。"
 msgstr ""
 
@@ -31337,14 +28058,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"体型娇小但比婴儿更加协调，脸部轮廓柔和可爱，大眼睛占据脸部较大比例。四肢纤细但带有幼童特有的圆润。行为天真活泼，充满童趣，举手投足间带有稚气和纯真。"
-msgstr ""
-
-msgid ""
-"身材娇小但已初现少女轮廓，身体还在发育中。肢体纤细，脸部保留着孩童的圆润与稚气，但已有了些许少女感。性格和行为举止往往兼具天真与早熟的矛盾特质。"
-msgstr ""
-
-msgid ""
 "身体已基本发育完全，但仍保持青春的活力与线条。皮肤富有弹性且光滑细腻，脸部轮廓清晰但柔和。举止间充满朝气与活力，眼神中透露出对世界的好奇与热情。"
 msgstr ""
 
@@ -31369,22 +28082,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"从尾椎骨延伸出的柔软尾巴，覆盖着与兽耳相同特性的毛发。尾巴能自主活动，反映主人的情绪变化。长度和形态各异，从短小蓬松到修长灵活，都能展现出独特的魅力与性感。"
-msgstr ""
-
-msgid ""
-"头顶上方漂浮着的圆形光芒，散发出柔和而神圣的光辉。光环不受物理约束，可随主人移动而保持稳定悬浮。根据情绪变化，光环的亮度和颜色可能会有微妙变化。"
-msgstr ""
-
-msgid ""
-"背部生长出的翼状结构，覆盖着细腻的羽毛或薄如蝉翼的膜。翅膀可以自由展开收拢，充分展开时能达到身高的一到两倍宽度。羽翼轻盈而富有弹性，有着极高的审美价值。"
-msgstr ""
-
-msgid ""
 "身体某处可以长出柔软灵活的触手组织，表面光滑且略带黏性。这些触手能够自由延展收缩，具有惊人的力量和灵敏度。触手末端的感知极为敏锐，可以感知微小的温度和质地变化。"
-msgstr ""
-
-msgid "带着小车。"
 msgstr ""
 
 msgid "修长纤细的双腿，肌肉线条若隐若现，关节处形成优美的轮廓。腿部肌肤光滑细腻，充满了视觉上的美感。行走时姿态轻盈，给人以高挑优雅的印象。"
@@ -31433,22 +28131,10 @@ msgstr ""
 msgid "灰色魔法权杖"
 msgstr ""
 
-msgid "黑色蕾丝颈饰"
-msgstr ""
-
-msgid "白色斗篷外套"
-msgstr ""
-
-msgid "灰粉色连衣裙"
-msgstr ""
-
 msgid "黑色蕾丝手套"
 msgstr ""
 
 msgid "黑色过膝长袜"
-msgstr ""
-
-msgid "红黑系带长靴"
 msgstr ""
 
 msgid "黑色长柄法杖"
@@ -31641,18 +28327,6 @@ msgid "黑色毛领夹克"
 msgstr ""
 
 msgid "黑色运动内衣"
-msgstr ""
-
-msgid "白色战斗手套"
-msgstr ""
-
-msgid "深蓝色热裤"
-msgstr ""
-
-msgid "黑白色运动靴"
-msgstr ""
-
-msgid "金属棺材盾"
 msgstr ""
 
 msgid "白灰色实验大衣"
@@ -32325,15 +28999,6 @@ msgid "蓝纹太刀·狮子王"
 msgstr ""
 
 msgid "灰色多功能背包"
-msgstr ""
-
-msgid "黑色围脖"
-msgstr ""
-
-msgid "透明防雨斗篷"
-msgstr ""
-
-msgid "黑色运动上衣"
 msgstr ""
 
 msgid "战术弩弓"
@@ -33509,19 +30174,10 @@ msgstr ""
 msgid "飘逸黑纱披风"
 msgstr ""
 
-msgid "银色护目镜"
-msgstr ""
-
 msgid "棕色长风衣"
 msgstr ""
 
 msgid "黑色工装长裤"
-msgstr ""
-
-msgid "黑色工程靴"
-msgstr ""
-
-msgid "多功能测量仪"
 msgstr ""
 
 msgid "白色单片眼镜"
@@ -35734,19 +32390,10 @@ msgstr ""
 msgid "拘束镣铐"
 msgstr ""
 
-msgid "源石"
-msgstr ""
-
 msgid "资源"
 msgstr ""
 
-msgid "成长"
-msgstr ""
-
 msgid "角色"
-msgstr ""
-
-msgid "支线"
 msgstr ""
 
 msgid "日正当中"
@@ -35978,11 +32625,6 @@ msgid ""
 msgstr ""
 
 msgid "11:08P.M."
-msgstr ""
-
-msgid ""
-"就在甘比诺决心要与叛徒卡彭做了断的同时，企鹅物流全面铺开情报网络，可颂与博士一起发现了敌人的指挥塔，但在狙击的的干扰下当场暴露，战局瞬间一片混乱。\n"
-"莫斯提马也再次现身并加入战局，游刃有余地牵制住了敌方领袖。然而沙暴突然出现，鼠王毫无征兆地出手打散了众人，博士在风沙中与队友短暂结队穿插撤离。"
 msgstr ""
 
 msgid "11:41P.M."
@@ -36482,12 +33124,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"没有特别的要求，一般来说以攻略干员为主要目标，经营和发展罗德岛为次要目标。\n"
-"可以根据自己的喜好和需求自由安排每天的行动，比如去处理公务、练习源石技艺、和干员互动、看书、锻炼、收集藏品、招募新干员、看病制药、逛地图视察各部门的情况等等\n"
-"也可以去[藏品馆]里【查看蚀刻章】，去达成一些自己感兴趣的蚀刻章。"
-msgstr ""
-
-msgid ""
 "去诚恳的道歉，不行的话就多道几次歉，总会原谅你的。\n"
 "如果生气很严重，获得反发刻印或者恐怖刻印了的话，可以用源石技艺进行消除，或消耗大量宝珠来消除。\n"
 "只是1级的反发刻印的话，还可以去[成人商店]购买道歉礼物，送给干员来表达歉意。"
@@ -36526,9 +33162,6 @@ msgid ""
 "在阴道内射精（即一般交合姿势指令时射精）的情况下，大部分精液会停留在阴道内，小部分会流到子宫，没有流到子宫内的阴道部分的精液会在干员当日去大浴场里洗澡时被洗掉，进而降低怀孕概率。\n"
 "在子宫内射精（即欺负子宫口或子宫奸等指令时射精）的情况下，大部分精液都会射进子宫内，只有小部分会向外流到阴道，因此不容易被清洗掉。\n"
 "当子宫内射精量足够多时，文字上会提示有腹部隆起等相关信息，同时如果开启了【腔内透视】的源石技艺的话，可以看到干员子宫和阴道的断面图，此时可以根据图片中子宫内的精液量和子宫的被撑大程度来进行判断。"
-msgstr ""
-
-msgid "在睡奸中，如何不让干员醒来？"
 msgstr ""
 
 msgid ""
@@ -36625,59 +33258,19 @@ msgstr ""
 msgid "未在性交中。"
 msgstr ""
 
-msgid "女方仰卧在床上或平面上，双腿分开或抬起；男方则面对女方，位于其两腿之间，可采取跪姿、俯卧或撑起上身的姿势。"
-msgstr ""
-
-msgid "女方采取跪姿（四肢着地）或趴卧姿势，臀部抬高；男方跪在女方身后，双手扶住女方腰胯或肩部，从后方进入。"
-msgstr ""
-
 msgid "骑乘"
-msgstr ""
-
-msgid ""
-"女方跨坐在仰卧的男方身上，面对男方，双膝着床在男方身体两侧；女方可前后摆动或上下起伏，掌控节奏和深度。男方双手可自由爱抚女方全身或扶住其腰部协助运动。"
-msgstr ""
-
-msgid "女方跨坐在仰卧的男方身上，但背对男方，可采取跪姿或蹲姿。女方掌控运动节奏，通常呈现前后摆动或上下起伏。"
 msgstr ""
 
 msgid "座位"
 msgstr ""
 
-msgid ""
-"男方坐在床沿、椅子或地面上；女方面对男方坐在其腿上，双腿环绕男方腰部，双臂可环抱男方颈部。这个姿势使双方上身紧密接触，便于亲吻和拥抱，运动多由女方腰部摆动或双方共同配合完成。"
-msgstr ""
-
-msgid ""
-"男方坐姿，女方背对男方坐在其腿上，双腿可能分开放置在男方腿外侧。男方从后方环抱女方，双手可自由抚摸其胸部、腹部或大腿。运动主要依靠女方上下起伏或前后摆动，男方也可通过顶胯配合。"
-msgstr ""
-
 msgid "立位"
-msgstr ""
-
-msgid "双方均站立面对面，女方可能需要抬起一条腿环绕男方腰部，或靠墙/桌等物体支撑，或被抬高以适应高度差异。男方双手可扶住女方大腿或臀部提供支撑。"
-msgstr ""
-
-msgid ""
-"双方均站立，女方背对男方，可能略微前倾，双手撑在墙壁、桌子或其他稳固物体上保持平衡；或者被男方拉住双臂向后。男方双手扶住女方腰胯，控制运动节奏。"
 msgstr ""
 
 msgid "抱位"
 msgstr ""
 
-msgid "男方站立，女方面对男方被抱起，双腿环绕男方腰部，双臂环绕男方颈部以维持平衡。男方双手托住女方臀部或大腿，支撑其体重。"
-msgstr ""
-
-msgid "男方站立，将女方从背后抱起，双手牢固地抓住女方腰部或腹部。女方双脚离地，可能需要双手前伸寻找支撑点或完全依靠男方力量支撑。"
-msgstr ""
-
 msgid "卧位"
-msgstr ""
-
-msgid "双方侧卧面对面，女方通常抬起上方的腿以便于插入，可能放在男方腰上或由男方手臂支撑。"
-msgstr ""
-
-msgid "双方侧卧，女方背对男方，身体可能略微蜷缩。男方从后方环抱女方，一只手臂可能垫在女方颈下，另一只手自由抚摸女方身体前侧。"
 msgstr ""
 
 msgid "标准"
@@ -36713,79 +33306,25 @@ msgstr ""
 msgid "在角色口上中出现纸娃娃地文的百分比"
 msgstr ""
 
-msgid ""
-"纸娃娃地文是使用纸娃娃功能来拼接文本，从而实现丰富的通用文本的系统。\n"
-"在没有角色口上，且当前行为有纸娃娃地文时，将直接使用纸娃娃地文系统来挑选文本并显示。\n"
-"在当前行为有角色口上时，将按照此处设置的百分比来决定是否使用纸娃娃地文来显示文本"
-msgstr ""
-
 msgid "0%|10%|20%|30%|40%|50%|60%|70%|80%|90%|100%"
 msgstr ""
 
 msgid "阴道处女"
 msgstr ""
 
-msgid "处女膜还在，未进行过阴道性交"
-msgstr ""
-
 msgid "肛门处女"
-msgstr ""
-
-msgid "没有被插入过的肛门"
 msgstr ""
 
 msgid "尿道处女"
 msgstr ""
 
-msgid "没有被插入过的尿道"
-msgstr ""
-
 msgid "子宫处女"
-msgstr ""
-
-msgid "没有被插入过的子宫"
-msgstr ""
-
-msgid "还没有接吻过"
-msgstr ""
-
-msgid "还没有进行过任何形式的性行为"
-msgstr ""
-
-msgid "还没有成年"
 msgstr ""
 
 msgid "肛门性交合意"
 msgstr ""
 
-msgid "同意肛交性行为"
-msgstr ""
-
 msgid "尿道性交合意"
-msgstr ""
-
-msgid "同意尿道交性行为"
-msgstr ""
-
-msgid "体内的卵子已经被博士的精子受精，但肚子还没有隆起"
-msgstr ""
-
-msgid "体内孕育着博士的孩子，可以看到肚子的隆起"
-msgstr ""
-
-msgid "已经临近分娩，正在医疗区待产中"
-msgstr ""
-
-msgid "刚刚生完孩子，正在医疗区休养中"
-msgstr ""
-
-msgid "正在照顾自己刚刚出生的孩子"
-msgstr ""
-
-msgid "处于怀孕中后期，腹部隆起"
-msgstr ""
-
-msgid "乳房正在分泌乳汁"
 msgstr ""
 
 msgid "皮肤钝感"
@@ -37317,12 +33856,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"足部技巧达到极致大师水平，动作如同艺术般精湛。\n"
-"脚趾协调性完美如同手指般灵巧，足弓完美包裹如同活物，脚背滑动炉火纯青，能够运用多种技巧如螺旋、震颤和精准按压，敏感点把握精准到微妙之处。\n"
-"能够通过脚趾的捏合、足弓的紧致曲线、脚背的柔滑摩擦带来强烈的愉悦。"
-msgstr ""
-
-msgid ""
 "胸部技巧完全没有经验。使用乳房对阴茎进行刺激时动作笨拙生硬，乳沟无法有效包裹，乳头摩擦力度不均，容易造成不适，无法提供有效的乳房包裹感和柔软刺激。"
 msgstr ""
 
@@ -37361,12 +33894,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"膣技技巧达到极致大师水平，阴道肌肉如同活物般精湛。\n"
-"阴道壁完美协调，能够运用螺旋、震颤、吸吮和精准收缩等高级技巧，包裹力炉火纯青，敏感点把握精准到微妙之处。\n"
-"能够通过内部的肌肉蠕动、紧致吸吮和深度颤动带来极致的痉挛快感和全身高潮，成为独特的内部性感带。"
-msgstr ""
-
-msgid ""
 "肛技技巧完全没有经验。使用肛门和肠道对阴茎进行刺激时动作笨拙生硬，括约肌无法有效放松和收缩，肠道内壁缺乏弹性，插入时容易造成剧烈疼痛或撕裂，无法提供有效的包裹感和内部摩擦刺激。"
 msgstr ""
 
@@ -37380,22 +33907,6 @@ msgstr ""
 
 msgid ""
 "肛技技巧相当娴熟，动作精准而富有变化。括约肌精准收缩有力，肠道内壁弹性十足，能够运用蠕动、吸吮和弯曲等多层次技巧，包裹力强而协调，节奏把握到位，突出肠道的紧致、颤动和深度刺激。"
-msgstr ""
-
-msgid ""
-"肛技技巧达到极致大师水平，肠道收缩动作如同艺术般精湛。\n"
-"括约肌和肠道肌肉完美协调如同活物，能够运用螺旋、震颤、吸吮和精准收缩等高级技巧，包裹力炉火纯青，敏感点把握精准到微妙之处。\n"
-"能够通过肠道的弯曲蠕动、紧致吸吮和深度颤动带来极致的痉挛快感和全身高潮，成为独特的肠道性感带。"
-msgstr ""
-
-msgid "满膀胱尿液，随时失禁"
-msgstr ""
-
-msgid "膀胱处于正常状态，尿液积累量很少，几乎感觉不到存在，腹部没有任何压力感，一段时间内不需要考虑排泄问题，身体状态舒适自然"
-msgstr ""
-
-msgid ""
-"膀胱极度膨胀，尿液几乎要从尿道口溢出，下腹部明显隆起，疼痛感持续不断，尿道口不断有微量液体渗出，随时可能完全失禁，无法站直或行走，必须用双手按压腹部才能勉强控制，无法思考其他任何事情"
 msgstr ""
 
 msgid "人力发电室"
