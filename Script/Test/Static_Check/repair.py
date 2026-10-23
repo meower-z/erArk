@@ -30,12 +30,19 @@ def register_repair(check_id: str, repair_name: str):
   返回值:
       Callable: 装饰器
   功能:
-      将一个接收cache参数的修复函数注册到修复注册表；重复注册同一check_id抛ValueError（导入期即暴露配置错误）
+      将一个接收cache参数的修复函数注册到修复注册表；同一函数（__module__ 与 __qualname__ 都相同）再次注册同一check_id时
+      替换原条目，其他函数注册已有check_id时抛ValueError（导入期即暴露配置错误）
   """
 
   def decorator(func: Callable[[object], List[dict]]):
-    if check_id in _repair_registry:
-      raise ValueError(f"重复注册修复: {check_id}")
+    registered = _repair_registry.get(check_id)
+    if registered is not None:
+      old_func = registered[1]
+      if (old_func.__module__, old_func.__qualname__) != (
+          func.__module__,
+          func.__qualname__,
+      ):
+        raise ValueError(f"重复注册修复: {check_id}")
     _repair_registry[check_id] = (repair_name, func)
     return func
 
