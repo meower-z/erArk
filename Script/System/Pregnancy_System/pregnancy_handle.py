@@ -172,7 +172,10 @@ def is_growth_drug_self_target(character_id: int) -> bool:
   """
   return bool(
       handle_premise.handle_self_is_player_daughter(character_id)
-      and handle_premise.handle_self_child_or_loli_1(character_id)
+      and (
+          handle_premise.handle_self_is_child(character_id)
+          or handle_premise.handle_self_is_loli(character_id)
+      )
   )
 
 

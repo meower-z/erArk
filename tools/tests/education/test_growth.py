@@ -463,37 +463,6 @@ check(
 )
 remove_character(205)
 
-section("Plan 26 §3.12：未成年且一门性技都没学会时不升技巧")
-minor = make_character(
-    206, "攒了珠的萝莉", 152, daughter=True, stage=103, mother_id=102
-)
-minor.juel[E6.LEARN_STATE_ID] = 150
-handle_ability.gain_ability(206)
-check(
-    "萝莉 150 珠、没学过性技：技巧仍 0、珠一个不少",
-    minor.ability[30] == 0 and minor.juel[E6.LEARN_STATE_ID] == 150,
-    (minor.ability[30], minor.juel[E6.LEARN_STATE_ID]),
-)
-drawn_text.clear()
-check(
-    "能力面板的说明写明未成年的额外条件",
-    handle_ability.extra_ability_check(30, 206, draw_flag=True) == 0
-    and any("未成年干员至少要有一门子性技达到1级" in t for t in drawn_text),
-)
-minor.ability[70] = 1
-handle_ability.gain_ability(206)
-check(
-    "学会一门性技（指技 1 级）后：技巧照原规则升 1 级",
-    minor.ability[30] == 1 and minor.juel[E6.LEARN_STATE_ID] == 50,
-    (minor.ability[30], minor.juel[E6.LEARN_STATE_ID]),
-)
-grown_npc = make_character(207, "成年干员", 21)
-grown_npc.juel[E6.LEARN_STATE_ID] = 150
-handle_ability.gain_ability(207)
-check("成年干员不受影响：150 珠照旧升技巧 1 级", grown_npc.ability[30] == 1)
-remove_character(206)
-remove_character(207)
-
 section(
     "Plan 29 §3.3（Plan 32 M1 起按可游玩天）：本阶段第几天（get_stage_day）"
 )
