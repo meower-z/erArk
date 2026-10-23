@@ -1,3 +1,5 @@
+"""显示角色身体污秽状况的面板，以及精液量与插入对象的查询"""
+
 from typing import Tuple, List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, rich_text

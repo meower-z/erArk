@@ -1,3 +1,5 @@
+"""指令过滤面板与调整过滤的按钮对象"""
+
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant, py_cmd
 from Script.UI.Moudle import draw, panel

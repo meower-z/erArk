@@ -1,3 +1,5 @@
+"""角色信息面板头部，含角色状态标识与上课信息文本的生成"""
+
 from typing import List, Tuple
 from types import FunctionType
 from Script.UI.Moudle import draw

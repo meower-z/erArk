@@ -1,3 +1,5 @@
+"""场景互动界面面板"""
+
 from types import FunctionType
 from Script.System.Instruct_System import see_instruct_panel
 from Script.UI.Moudle import draw, panel

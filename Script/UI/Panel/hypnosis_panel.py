@@ -1,3 +1,5 @@
+"""催眠类型与角色扮演类型的选择面板，以及催眠的消耗、程度、上限与完成判定"""
+
 from typing import List
 from types import FunctionType
 import random

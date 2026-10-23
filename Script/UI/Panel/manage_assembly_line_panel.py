@@ -1,3 +1,5 @@
+"""生产流水线管理面板，以及流水线效率的计算与生产结算"""
+
 from typing import Tuple, Dict, List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant

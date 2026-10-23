@@ -1,3 +1,5 @@
+"""游戏配置数据的存放与载入：从 data.json 等 json 文件读取各类配置，整理成按 cid 及各种分类索引的字典"""
+
 import os
 from typing import Dict, List, Set, Tuple
 from Script.Config import config_def

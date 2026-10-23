@@ -1,3 +1,5 @@
+"""课程表面板模块：只定义缓存、翻译函数与换行绘制对象，课程表面板类整段写在注释里"""
+
 from types import FunctionType
 from typing import List
 from Script.Core import cache_control, game_type, get_text, flow_handle, py_cmd, constant

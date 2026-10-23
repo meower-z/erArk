@@ -1,4 +1,6 @@
 # -*- coding: UTF-8 -*-
+"""Tk 主窗口：字体加载、文本框与输入框、命令按钮及悬浮提示的绘制"""
+
 import os
 import json
 import time

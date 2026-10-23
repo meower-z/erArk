@@ -1,3 +1,5 @@
+"""成就面板与各类成就的判定、结算及获得提示"""
+
 from types import FunctionType
 from typing import List
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant

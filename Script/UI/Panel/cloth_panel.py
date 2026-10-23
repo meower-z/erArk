@@ -1,3 +1,5 @@
+"""角色服装、脱衣服及穿脱切换相关的面板"""
+
 from typing import List
 from types import FunctionType
 from Script.Core import game_type, cache_control, rich_text, get_text, constant, py_cmd, text_handle, flow_handle

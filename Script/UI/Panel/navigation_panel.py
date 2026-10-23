@@ -1,3 +1,5 @@
+"""导航面板、快捷移动菜单与场景名列表的绘制，以及抵达判断"""
+
 from typing import List, Dict
 from types import FunctionType
 from Script.UI.Moudle import draw, panel
@@ -437,6 +439,12 @@ class MapSceneNameDraw(Base_function_class):
   """
 
   def __init__(self, now_map: List[str], width: int):
+    """
+    初始化地图场景名列表绘制对象
+    Keyword arguments:
+    now_map -- 地图路径
+    width -- 绘制宽度
+    """
     self.width: int = width
     """ 绘制的最大宽度 """
     self.now_map: List[str] = now_map

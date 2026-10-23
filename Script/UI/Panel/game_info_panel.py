@@ -1,3 +1,5 @@
+"""查看游戏时间的面板"""
+
 from types import FunctionType
 from Script.UI.Moudle import draw
 from Script.Design import game_time, handle_premise

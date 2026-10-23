@@ -1,3 +1,5 @@
+"""势力外交界面面板，以及外交方针与各国感染率的结算"""
+
 from typing import Tuple, List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant

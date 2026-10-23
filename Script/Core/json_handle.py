@@ -1,3 +1,5 @@
+"""json 文件的编码判断与载入"""
+
 import json
 
 

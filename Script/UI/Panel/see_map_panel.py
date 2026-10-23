@@ -1,3 +1,5 @@
+"""查看当前地图的面板、快捷移动菜单，以及场景名列表与各类快捷寻路按钮列表"""
+
 from typing import List, Dict
 from types import FunctionType
 from Script.UI.Moudle import draw, panel
@@ -399,6 +401,12 @@ class MapSceneNameDraw:
   """
 
   def __init__(self, now_map: List[str], width: int):
+    """
+    初始化地图场景名列表绘制对象
+    Keyword arguments:
+    now_map -- 地图路径
+    width -- 绘制宽度
+    """
     self.width: int = width
     """ 绘制的最大宽度 """
     self.now_map: List[str] = now_map
@@ -503,6 +511,12 @@ class UsefulSceneNamePanel:
   """
 
   def __init__(self, now_map: List[str], width: int):
+    """
+    初始化功能地点快捷寻路按钮列表，并创建按场景路径分页的绘制面板
+    Keyword arguments:
+    now_map -- 地图路径
+    width -- 绘制宽度
+    """
     self.width: int = width
     """ 绘制的最大宽度 """
     self.now_map: List[str] = now_map
@@ -752,6 +766,12 @@ class CollectionSceneNamePanel:
   """
 
   def __init__(self, now_map: List[str], width: int):
+    """
+    初始化绘制对象，记下绘制宽度与地图路径
+    Keyword arguments:
+    now_map -- 地图路径
+    width -- 绘制宽度
+    """
     self.width: int = width
     """ 绘制的最大宽度 """
     self.now_map: List[str] = now_map

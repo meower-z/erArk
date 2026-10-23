@@ -1,3 +1,5 @@
+"""邀请访客面板，以及访客的抵达、离开与留下的结算"""
+
 import os
 from typing import List
 from types import FunctionType

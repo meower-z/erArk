@@ -1,3 +1,5 @@
+"""文本对齐、宽度计算与全半角转换等文本处理函数"""
+
 from wcwidth import wcswidth
 from Script.Config import game_config, normal_config
 import functools
@@ -48,6 +50,7 @@ def align(
 
 
 def _build_style_pattern():
+  """构建匹配样式标签（<样式名> 与 </样式名>）的正则并存入 _STYLE_PATTERN，没有样式名时置为 None"""
   global _STYLE_PATTERN
   # 样式名来自 config_font_data 的 key，形如 <name> 与 </name>
   style_names = list(game_config.config_font_data.keys())

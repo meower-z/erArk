@@ -1,3 +1,6 @@
+"""状态机id常量类 StateMachine"""
+
+
 class StateMachine:
   """状态机id"""
 

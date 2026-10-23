@@ -1,3 +1,5 @@
+"""存档的读写、载入时的数据迁移与补全，以及存档信息文件的读写"""
+
 import os
 import pickle
 import shutil

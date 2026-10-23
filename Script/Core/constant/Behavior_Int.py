@@ -1,3 +1,6 @@
+"""行为id整数常量类 Behavior_Int"""
+
+
 class Behavior_Int:
   """行为id"""
 

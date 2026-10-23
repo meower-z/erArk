@@ -1,3 +1,6 @@
+"""行为id字符串常量类 BehaviorStr"""
+
+
 class BehaviorStr:
   """行为id字符串常量"""
 

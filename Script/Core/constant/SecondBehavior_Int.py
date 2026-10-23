@@ -1,3 +1,6 @@
+"""二段结算行为函数整数id常量类 SecondBehavior_Int"""
+
+
 class SecondBehavior_Int:
   """二段结算行为函数"""
 

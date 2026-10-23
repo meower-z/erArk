@@ -1,3 +1,5 @@
+"""角色起床界面面板与带切换控制的总起床面板"""
+
 from types import FunctionType
 from Script.UI.Moudle import draw
 from Script.UI.Panel import see_character_info_panel

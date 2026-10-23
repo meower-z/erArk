@@ -1,3 +1,5 @@
+"""Dijkstra 最短路径算法，以及最短路径与各段路程数据的整理"""
+
 import heapq
 from typing import Dict, List, Tuple
 
@@ -6,6 +8,7 @@ class SortedPathData:
   """最短路径数据"""
 
   def __init__(self):
+    """初始化最短路径数据"""
     self.node_id: str = ""
     """ 节点id """
     self.distance: int = 0

@@ -1,3 +1,5 @@
+"""存档载入时对旧存档角色数据的迁移与修正，以及幼年角色相关数据的清理"""
+
 import datetime
 from types import FunctionType
 from Script.Core import (

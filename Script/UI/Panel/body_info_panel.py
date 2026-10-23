@@ -1,3 +1,5 @@
+"""显示角色肉体信息的面板与能力等级的界面文本"""
+
 from typing import List
 from types import FunctionType
 from Script.UI.Moudle import draw, panel

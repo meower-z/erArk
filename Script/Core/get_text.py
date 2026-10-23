@@ -1,4 +1,6 @@
 # -*- coding: UTF-8 -*-
+"""按当前语言构建翻译函数 _"""
+
 import gettext
 import os
 from types import FunctionType
@@ -26,6 +28,14 @@ mo_files_per_language = {
 
 # 接受一个语言和对应的.mo文件列表，然后为这些文件创建一个GNUTranslations实例链
 def create_translation_chain(language, mo_files):
+  """
+  按顺序加载指定语言的 .mo 文件，第一个加载到的作为主翻译，其余依次加为它的回退翻译，不存在的 .mo 文件跳过
+  Keyword arguments:
+  language -- 语言代码
+  mo_files -- .mo 文件名列表（不含扩展名）
+  Return arguments:
+  gettext.NullTranslations -- 链接好回退的翻译对象，一个 .mo 文件都没加载到时为 None
+  """
   main_translation = None
   for mo_file in mo_files:
     try:
@@ -49,6 +59,15 @@ if now_language in mo_files_per_language:
   def _translation_gettext(
       message, skip_translation=False, revert_translation=False
   ):
+    """
+    翻译文本，可跳过翻译或由译文还原原文
+    Keyword arguments:
+    message -- 要翻译的文本，还原时为译文
+    skip_translation -- 为真时直接返回原文 (default False)
+    revert_translation -- 为真时在已翻译过的文本中查找译文对应的原文，找不到则返回传入的文本 (default False)
+    Return arguments:
+    str -- 译文、原文或传入的文本
+    """
     # 如果需要跳过翻译，直接返回原文
     if skip_translation:
       return message
@@ -70,6 +89,15 @@ else:
   def _translation_gettext(
       message, skip_translation=False, revert_translation=False
   ):
+    """
+    没有对应语言的翻译时的翻译函数，直接返回传入的文本
+    Keyword arguments:
+    message -- 要翻译的文本
+    skip_translation -- 不使用 (default False)
+    revert_translation -- 不使用 (default False)
+    Return arguments:
+    str -- 传入的文本
+    """
     return message  # 如果没有找到对应语言的翻译，直接返回原文
 
   translation_values = set()

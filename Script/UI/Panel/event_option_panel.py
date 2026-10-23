@@ -1,3 +1,5 @@
+"""事件选项面板（含多层嵌套与子事件选项），以及 Web 模式下事件选项的准备与处理"""
+
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, text_handle, py_cmd, constant
 from Script.Design import talk, handle_premise

@@ -1,3 +1,5 @@
+"""成人用品商店界面面板与购买道具的按钮对象"""
+
 from types import FunctionType
 from Script.Core import cache_control, game_type, text_handle, get_text, flow_handle, py_cmd, constant
 from Script.Design import map_handle

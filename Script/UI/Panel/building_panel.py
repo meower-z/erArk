@@ -1,3 +1,5 @@
+"""基建界面面板"""
+
 from typing import Tuple, List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant

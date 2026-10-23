@@ -1,3 +1,5 @@
+"""config.ini 通用配置与游戏版本号的读取"""
+
 import os
 import json
 import configparser

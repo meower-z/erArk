@@ -1,3 +1,5 @@
+"""角色名字与姓氏权重数据的载入，及随机名字区间表的生成"""
+
 import os
 from typing import Dict
 from Script.Core import json_handle, value_handle, cache_control, game_type, constant

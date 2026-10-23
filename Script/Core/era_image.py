@@ -1,3 +1,5 @@
+"""游戏图片的路径索引与按需解码缓存"""
+
 import os
 import threading
 import time

@@ -1,3 +1,5 @@
+"""文本、图片、比例条、按钮与线条等基础绘制类型"""
+
 import time
 from typing import List, Optional
 from types import MethodType
@@ -938,6 +940,13 @@ class CenterDraw(NormalDraw):
   """居中绘制文本"""
 
   def __gt__(self, other) -> bool:
+    """
+    按 len() 比较两个绘制对象的长度，self 更长时为真
+    Keyword arguments:
+    other -- 另一个绘制对象
+    Return arguments:
+    bool -- len(self) 是否大于 len(other)
+    """
     return int(len(self)) > int(len(other))
 
   def draw(self):
@@ -970,6 +979,13 @@ class CenterDrawImage(NormalDraw):
   """居中绘制图片_现阶段为立绘限定"""
 
   def __gt__(self, other) -> bool:
+    """
+    按 len() 比较两个绘制对象的长度，self 更长时为真
+    Keyword arguments:
+    other -- 另一个绘制对象
+    Return arguments:
+    bool -- len(self) 是否大于 len(other)
+    """
     return int(len(self)) > int(len(other))
 
   def draw(self):
@@ -1024,6 +1040,13 @@ class CenterMergeDraw:
     return self.width
 
   def __gt__(self, other) -> int:
+    """
+    按 len() 比较两个绘制对象的长度，self 更长时为真
+    Keyword arguments:
+    other -- 另一个绘制对象
+    Return arguments:
+    bool -- len(self) 是否大于 len(other)
+    """
     return int(len(self)) > int(len(other))
 
   def draw(self):
@@ -1066,6 +1089,13 @@ class LeftMergeDraw:
     return self.width
 
   def __gt__(self, other) -> int:
+    """
+    按 len() 比较两个绘制对象的长度，self 更长时为真
+    Keyword arguments:
+    other -- 另一个绘制对象
+    Return arguments:
+    bool -- len(self) 是否大于 len(other)
+    """
     return int(len(self)) > int(len(other))
 
   def draw(self):

@@ -1,4 +1,6 @@
 # -*- coding: UTF-8 -*-
+"""输入输出接口层：命令与文本的队列收发、文本样式设置与图片打印，Tk 与 Web 两种模式共用"""
+
 import threading
 import queue
 import json

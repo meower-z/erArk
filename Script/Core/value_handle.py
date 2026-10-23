@@ -1,3 +1,5 @@
+"""列表、字典与随机数相关的数值处理函数"""
+
 import random
 import bisect
 import itertools

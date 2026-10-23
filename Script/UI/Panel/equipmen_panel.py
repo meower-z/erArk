@@ -1,3 +1,5 @@
+"""装备维护面板，以及装备损坏、维修与保养的结算"""
+
 from typing import List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
