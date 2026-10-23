@@ -72,7 +72,7 @@ def _get_target_room(character_id: int) -> str:
   return str(work_data.dormitory_admin_target_room)
 
 
-def _set_target_room(character_id: int, room_path: str):
+def _set_target_room(character_id: int, room_path: str) -> None:
   """
   设置宿舍管理员目标宿舍
   输入类型: character_id(int), room_path(str)
@@ -83,7 +83,7 @@ def _set_target_room(character_id: int, room_path: str):
   work_data.dormitory_admin_target_room = room_path
 
 
-def _set_wait_behavior(character_id: int, minute: int):
+def _set_wait_behavior(character_id: int, minute: int) -> None:
   """
   设置角色原地等待行为
   输入类型: character_id(int), minute(int)
@@ -129,7 +129,7 @@ def _get_open_room_paths_by_layer(layer: int) -> list:
 @handle_state_machine.add_state_machine(
     constant.StateMachine.DORMITORY_ADMIN_TO_OFFICE
 )
-def dormitory_admin_to_office(character_id: int):
+def dormitory_admin_to_office(character_id: int) -> None:
   """
   宿舍管理员状态机入口：前往所属层舍管房
   输入类型: character_id(int)
@@ -158,7 +158,7 @@ def dormitory_admin_to_office(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.DORMITORY_ADMIN_ORGANIZE
 )
-def dormitory_admin_organize(character_id: int):
+def dormitory_admin_organize(character_id: int) -> None:
   """
   整理宿舍意见
   输入类型: character_id(int)
@@ -176,7 +176,7 @@ def dormitory_admin_organize(character_id: int):
   )
 
 
-def dormitory_admin_select_room(character_id: int):
+def dormitory_admin_select_room(character_id: int) -> None:
   """
   选择目标宿舍
   输入类型: character_id(int)
@@ -201,7 +201,7 @@ def dormitory_admin_select_room(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.DORMITORY_ADMIN_MOVE_TO_DORM
 )
-def dormitory_admin_move_to_dorm(character_id: int):
+def dormitory_admin_move_to_dorm(character_id: int) -> None:
   """
   移动至目标宿舍
   输入类型: character_id(int)
@@ -226,7 +226,7 @@ def dormitory_admin_move_to_dorm(character_id: int):
 @handle_state_machine.add_state_machine(
     constant.StateMachine.DORMITORY_ADMIN_HANDLE_PROBLEM
 )
-def dormitory_admin_handle_problem(character_id: int):
+def dormitory_admin_handle_problem(character_id: int) -> None:
   """
   处理宿舍问题
   输入类型: character_id(int)
@@ -246,7 +246,7 @@ def dormitory_admin_handle_problem(character_id: int):
   _set_target_room(character_id, "")
 
 
-def ask_copy_key(character_id: int):
+def ask_copy_key(character_id: int) -> int:
   """
   （要求复制钥匙用）获取交互对象的所在楼层的钥匙
   输入类型: character_id(int)

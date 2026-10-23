@@ -27,7 +27,7 @@ window_width = normal_config.config_normal.text_width
 """ 屏幕宽度 """
 
 
-def update_exhibiionism_sex_mode():
+def update_exhibiionism_sex_mode() -> None:
   """更新露出H模式"""
   character_data: game_type.Character = cache.character_data[0]
   # 如果不在露出模式则直接返回

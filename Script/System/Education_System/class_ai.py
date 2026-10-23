@@ -35,12 +35,19 @@ judge_student_pullable（玩家授课与教师 303 共用）/ judge_student_join
 兴趣课去棋牌室下棋、实习课去厨房跟着厨师。
 """
 
+from __future__ import annotations
+
 import random
 from typing import List, Tuple
 from Script.Config import game_config
 from Script.Core import cache_control, game_type, constant
 from Script.Design import attr_calculation, game_time, map_handle
 from Script.System.Education_System import education_constant, schedule_handle, growth_handle
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  import datetime
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -256,7 +263,9 @@ def settle_absent(character_id: int, by_skip: bool = False) -> bool:
   return True
 
 
-def judge_must_attend_sex_class(character_id: int, now_time=None) -> bool:
+def judge_must_attend_sex_class(
+    character_id: int, now_time: datetime.datetime | None = None
+) -> bool:
   """
   判断本节课是不是玩家点名要这名学生必修的性技实操课
 
@@ -286,7 +295,7 @@ def judge_must_attend_sex_class(character_id: int, now_time=None) -> bool:
   return character_id in temp_class.get("must_attend", [])
 
 
-def get_next_sex_class(character_id: int, now_time) -> tuple:
+def get_next_sex_class(character_id: int, now_time: datetime.datetime) -> tuple:
   """
   取该角色下一节要上的性技实操课（仅在距开始 PRE_ARRIVE_MINUTE 分钟内时返回）
 
@@ -323,7 +332,7 @@ def get_next_sex_class(character_id: int, now_time) -> tuple:
 
 
 def judge_sex_class_is_mine(
-    character_id: int, temp_class, week_day: int, period: int
+    character_id: int, temp_class: dict | None, week_day: int, period: int
 ) -> bool:
   """
   判断某节临时实操课是不是这名角色要上的（必修被点名，或选修：个人课表这一节本来就指向这间教室）
@@ -560,7 +569,9 @@ def get_course_place_now_or_upcoming(character_id: int) -> List[str]:
   return schedule_handle.get_course_place(course)
 
 
-def roll_skip_class(character_id: int, now_time=None) -> bool:
+def roll_skip_class(
+    character_id: int, now_time: datetime.datetime | None = None
+) -> bool:
   """
   本节是否掷中翘课：以「角色 + 日期 + 节次」定种子，同一节无论判定多少次结果都相同（Plan 24 §3.5）
   Keyword arguments:
@@ -595,7 +606,9 @@ def roll_skip_class(character_id: int, now_time=None) -> bool:
   )
 
 
-def judge_skip_class_today(character_id: int, now_time=None) -> bool:
+def judge_skip_class_today(
+    character_id: int, now_time: datetime.datetime | None = None
+) -> bool:
   """
   判断角色此刻是否处于「今天已翘课」的状态（Plan 31 §3.6：翘课 flag 认日期）
   Keyword arguments:
@@ -656,7 +669,9 @@ def judge_student_pullable(student_id: int) -> bool:
   return character_data.behavior.behavior_id != constant.Behavior.REST
 
 
-def judge_student_join_class(student_id: int, classroom: str, now_time) -> bool:
+def judge_student_join_class(
+    student_id: int, classroom: str, now_time: datetime.datetime
+) -> bool:
   """
   判断 NPC 教师开讲时该不该把这名学生拉进听课（Plan 25 §3.5）
   Keyword arguments:
@@ -704,7 +719,7 @@ def judge_student_join_class(student_id: int, classroom: str, now_time) -> bool:
   return not roll_skip_class(student_id, now_time)
 
 
-def get_student_leave_time(character_id: int):
+def get_student_leave_time(character_id: int) -> datetime.datetime | None:
   """
   取学生当前行为应当提前结束的时刻（handle_npc_ai.judge_student_leave_truncate 调用，Plan 25 §3.1；Plan 32 §3.7 L4 起排在实时结算之前）
   Keyword arguments:

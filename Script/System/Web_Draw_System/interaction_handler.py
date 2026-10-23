@@ -156,7 +156,7 @@ class InteractionHandler:
 
     return list(body_parts)
 
-  def clear_selection(self):
+  def clear_selection(self) -> None:
     """清除当前选择状态"""
     self._current_interaction_type = None
     self._available_body_parts = []

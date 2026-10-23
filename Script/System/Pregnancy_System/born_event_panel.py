@@ -401,7 +401,7 @@ class Born_Panel:
 
       break
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     from Script.System.Web_Draw_System import (
         BORN_EVENT_PANEL_TAB_ID,

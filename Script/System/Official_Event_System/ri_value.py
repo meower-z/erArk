@@ -113,7 +113,7 @@ def get_ri_value(type_text: str) -> float:
   return 0.0
 
 
-def set_ri_value(type_text: str, new_value: float):
+def set_ri_value(type_text: str, new_value: float) -> None:
   """
   把一项罗德岛全局数值直接设为指定值（CVE 的 E 运算）
 
@@ -149,7 +149,7 @@ def set_ri_value(type_text: str, new_value: float):
     cache.rhodes_island.power_storage = max(0, int(new_value))
 
 
-def change_ri_value(type_text: str, add_value: float):
+def change_ri_value(type_text: str, add_value: float) -> None:
   """
   增减一项罗德岛全局数值（CVE 的 G/L 运算，正负已由调用方取好）
   Keyword arguments:

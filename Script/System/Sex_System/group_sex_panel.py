@@ -39,7 +39,7 @@ def group_sex_settle(
     character_id: int,
     target_character_id: int,
     behavior_id: str,
-):
+) -> None:
   """
   群交结算
   Keyword arguments:
@@ -117,7 +117,7 @@ def group_sex_settle(
     now_template_data[1] = [[target_character_id], behavior_id]
 
 
-def count_group_sex_instruct_list():
+def count_group_sex_instruct_list() -> tuple[list[str], list[list]]:
   """
   统计群交指令列表\n
   Return arguments:\n
@@ -162,7 +162,7 @@ def count_group_sex_instruct_list():
   return group_sex_instruct_list, full_list_of_target_id_and_state_id
 
 
-def count_group_sex_character_list():
+def count_group_sex_character_list() -> list[int]:
   """
   统计群交模板中的角色列表\n
   Return arguments:\n
@@ -200,7 +200,7 @@ def count_group_sex_character_list():
   return group_sex_chara_id_list
 
 
-def get_status_id_list_from_group_sex_body_part(body_part: str):
+def get_status_id_list_from_group_sex_body_part(body_part: str) -> list[str]:
   """
   从群交部位获取状态id列表\n
   Keyword arguments:\n
@@ -296,7 +296,7 @@ def get_status_id_list_from_group_sex_body_part(body_part: str):
   return new_status_id_list
 
 
-def get_now_template_part_list():
+def get_now_template_part_list() -> tuple[list[str], list[str]]:
   """
   获取当前模板中空缺与非空缺的部位列表\n
   Keyword arguments:\n
@@ -466,7 +466,7 @@ class SeeGroupSexInfoPanel:
 
     self.draw_list.extend(now_draw.draw_list)
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     for label in self.draw_list:
       if isinstance(label, list):
@@ -493,7 +493,7 @@ class Edit_Group_Sex_Temple_Panel:
     self.pl_character_data = cache.character_data[0]
     """ 玩家角色数据 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     title_draw = draw.TitleLineDraw("编辑群交行动", self.width)
 
@@ -723,7 +723,7 @@ class Edit_Group_Sex_Temple_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def show_target_chara_list(self, temple_id: str, body_part: str):
+  def show_target_chara_list(self, temple_id: str, body_part: str) -> None:
     """绘制可选择的交互对象角色列表"""
     # 函数内 import：Script/System/* 之间在文件顶层互引会循环导入
     from Script.System.Education_System import sex_class_handle
@@ -835,7 +835,7 @@ class Edit_Group_Sex_Temple_Panel:
       if yrn in return_list:
         break
 
-  def show_status_list(self, temple_id: str, body_part: str):
+  def show_status_list(self, temple_id: str, body_part: str) -> None:
     """绘制可选择的状态列表"""
     # 如果当前已指定对象角色id，则将其设为玩家的交互对象
     old_target_character_id = self.pl_character_data.target_character_id
@@ -897,7 +897,7 @@ class Edit_Group_Sex_Temple_Panel:
       if yrn in return_list:
         break
 
-  def reset_template(self):
+  def reset_template(self) -> None:
     """重置当前模板中的所有位的角色和指令状态"""
     current_template = (
         self.pl_character_data.h_state.group_sex_body_template_dict["A"]
@@ -995,7 +995,7 @@ class Edit_Group_Sex_Temple_Panel:
 
   def set_target_chara(
       self, temple_id: str, body_part: str, target_chara_id: int
-  ):
+  ) -> None:
     """设置交互对象"""
     if body_part != "侍奉":
       now_template_data = (
@@ -1033,7 +1033,7 @@ class Edit_Group_Sex_Temple_Panel:
           "penis"
       ] = [-1, -1]
 
-  def set_status(self, temple_id: str, body_part: str, status_id: int):
+  def set_status(self, temple_id: str, body_part: str, status_id: int) -> None:
     """设置状态"""
     if body_part != "侍奉":
       now_template_data = (
@@ -1055,25 +1055,25 @@ class Edit_Group_Sex_Temple_Panel:
           "penis"
       ] = [-1, -1]
 
-  def change_lock_flag(self):
+  def change_lock_flag(self) -> None:
     """改变锁定状态"""
     self.pl_character_data.h_state.group_sex_lock_flag = (
         not self.pl_character_data.h_state.group_sex_lock_flag
     )
 
-  def change_npc_ai(self):
+  def change_npc_ai(self) -> None:
     """改变NPC行动逻辑"""
     self.pl_character_data.h_state.npc_ai_type_in_group_sex += 1
     if self.pl_character_data.h_state.npc_ai_type_in_group_sex >= 4:
       self.pl_character_data.h_state.npc_ai_type_in_group_sex = 0
 
-  def change_B_temple_flag(self):
+  def change_B_temple_flag(self) -> None:
     """改变B模板状态"""
     self.pl_character_data.h_state.all_group_sex_temple_run = (
         not self.pl_character_data.h_state.all_group_sex_temple_run
     )
 
-  def change_temple(self):
+  def change_temple(self) -> None:
     """切换模板"""
     (
         self.pl_character_data.h_state.group_sex_body_template_dict["A"],
@@ -1083,7 +1083,7 @@ class Edit_Group_Sex_Temple_Panel:
         self.pl_character_data.h_state.group_sex_body_template_dict["A"],
     )
 
-  def invite_npc(self, character_id: int):
+  def invite_npc(self, character_id: int) -> None:
     """邀请NPC"""
     from Script.Design import instuct_judege, second_behavior
 
@@ -1129,7 +1129,7 @@ class Edit_Group_Sex_Temple_Panel:
     info_draw.width = self.width
     info_draw.draw()
 
-  def reset_unfinish_select(self):
+  def reset_unfinish_select(self) -> None:
     """重置角色id或者状态id没有全部填完的项"""
     # 获取全模板
     template_data_list = []

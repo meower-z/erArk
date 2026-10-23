@@ -448,7 +448,7 @@ def init_character_dormitory():
             break
 
 
-def new_character_get_dormitory(character_id: int):
+def new_character_get_dormitory(character_id: int) -> None:
   """
   给新角色分配宿舍
   Keyword arguments:

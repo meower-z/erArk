@@ -6,7 +6,7 @@ cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
 
 
-def check_collection_data(character_id: int = 0):
+def check_collection_data(character_id: int = 0) -> None:
   """
   校验玩家收藏品结构体中避孕套存量池字段是否存在（旧存档兼容），不存在则补上\n
   Keyword arguments:\n
@@ -19,7 +19,7 @@ def check_collection_data(character_id: int = 0):
     pl_collection.used_condoms = []
 
 
-def check_dirty_data(character_id: int):
+def check_dirty_data(character_id: int) -> None:
   """
   校验角色污浊结构体中装饰避孕套字段是否存在（旧存档兼容），不存在则补上\n
   Keyword arguments:\n
@@ -42,7 +42,7 @@ def get_used_condoms() -> List[int]:
   return cache.character_data[0].pl_collection.used_condoms
 
 
-def add_used_condom(semen_count: int):
+def add_used_condom(semen_count: int) -> None:
   """
   向存量池中添加一个用过的避孕套（戴套射精时调用）\n
   Keyword arguments:\n
@@ -54,7 +54,7 @@ def add_used_condom(semen_count: int):
   cache.character_data[0].pl_collection.used_condoms.append(semen_count)
 
 
-def clear_used_condoms():
+def clear_used_condoms() -> None:
   """
   清空存量池（下一次H开始时调用），挂在角色身上的装饰不受影响\n
   Return arguments:\n
@@ -206,7 +206,7 @@ def settle_hang(
     part_type: int,
     part_cid: int,
     condom_index_list: List[int],
-):
+) -> None:
   """
   挂上避孕套装饰的结算（由选择面板在确认时直接调用）\n
   Keyword arguments:\n
@@ -226,7 +226,7 @@ def settle_hang(
 
 def settle_take_back(
     target_character_id: int, location_index_list: List[Tuple[tuple, int]]
-):
+) -> None:
   """
   取回避孕套装饰的结算（由选择面板在确认时直接调用）\n
   Keyword arguments:\n
@@ -245,7 +245,9 @@ def settle_take_back(
   take_back_decoration(target_character_id, location_index_list)
 
 
-def settle_drink(target_character_id: int, condom_index_list: List[int]):
+def settle_drink(
+    target_character_id: int, condom_index_list: List[int]
+) -> None:
   """
   饮用避孕套精液的结算（由选择面板在确认时直接调用）\n
   消耗选中的避孕套，每套精液按10%残留口腔、90%进入胃部结算，并加精液/饮精经验与口喉快感\n
@@ -303,7 +305,7 @@ def settle_squeeze(
     part_type: int,
     part_cid: int,
     condom_index_list: List[int],
-):
+) -> None:
   """
   挤出避孕套精液的结算（由选择面板在确认时直接调用）\n
   消耗选中的避孕套，将其中精液全额转移到交互对象指定部位（身体部位追加自然流动）\n
@@ -338,7 +340,9 @@ def settle_squeeze(
     )
 
 
-def remove_cloth_decoration(character_id: int, part_cid_list: List[int] = None):
+def remove_cloth_decoration(
+    character_id: int, part_cid_list: List[int] = None
+) -> None:
   """
   去除指定角色服装部位上的装饰避孕套记录（换衣/洗衣时调用），头发（身体部位）上的不受影响\n
   Keyword arguments:\n

@@ -9,12 +9,19 @@
 教师视角不另存字段，由全局课表反查得到，避免两处数据互相追赶。
 """
 
+from __future__ import annotations
+
 from types import FunctionType
 from typing import Dict, List, Optional, Tuple
 from Script.Core import cache_control, game_type, constant, get_text
 from Script.Config import game_config
 from Script.Design import game_time, map_handle
 from Script.System.Education_System import education_constant
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  import datetime
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -377,7 +384,11 @@ def get_selected_course(
 
 
 def set_selected_course(
-    character_id: int, week_day: int, period: int, course_type: int, target
+    character_id: int,
+    week_day: int,
+    period: int,
+    course_type: int,
+    target: str | int,
 ) -> None:
   """
   往某角色的个人课表上填一个格子
@@ -503,7 +514,9 @@ def get_upcoming_course(
   return None
 
 
-def get_course_at(character_id: int, now_time, period: int) -> Optional[dict]:
+def get_course_at(
+    character_id: int, now_time: datetime.datetime, period: int
+) -> Optional[dict]:
   """
   取角色在某一天某一节要上的课（get_now_course / get_upcoming_course 的共用实现）
   Keyword arguments:

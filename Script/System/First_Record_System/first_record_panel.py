@@ -25,7 +25,7 @@ _selected_round: int = -1
 """ 履历面板当前查看的周目数（-1为跟随当前周目；无效选择时回退为当前周目；仅会话内有效，不进存档） """
 
 
-def _select_round(round_num: int):
+def _select_round(round_num: int) -> None:
   """
   切换履历面板当前查看的周目
   Keyword arguments:
@@ -98,7 +98,7 @@ _ORGASM_STATE_ID_LIST = [0, 1, 2, 4, 5, 6, 7, 21, 22, 23]
 """ 绝顶履历遍历的快感部位id列表（NPC专用面板，排除3阴茎） """
 
 
-def _toggle_fold(fold_key: str, default_expand: bool):
+def _toggle_fold(fold_key: str, default_expand: bool) -> None:
   """
   翻转指定分组的折叠状态
   Keyword arguments:
@@ -122,7 +122,7 @@ def _format_time(now_time) -> str:
     return _("未知时间")
 
 
-def _format_place(place) -> str:
+def _format_place(place: list[str]) -> str:
   """
   格式化履历地点文本（对旧数据缺失地点做防御）
   Keyword arguments:
@@ -149,7 +149,7 @@ def _get_character_name(character_id: int) -> str:
   return ""
 
 
-def _build_part_sex_text(first_record) -> str:
+def _build_part_sex_text(first_record: game_type.FIRST_RECORD) -> str:
   """
   构建部位初体验分组文本（初吻条目+各部位交条目；V/A/U/W破处条目沿用肉体情况页原句式，其余用统一简句式；未记录的条目不显示）
   Keyword arguments:
@@ -222,7 +222,7 @@ def _build_part_sex_text(first_record) -> str:
   return now_text
 
 
-def _build_shoot_body_text(first_record) -> str:
+def _build_shoot_body_text(first_record: game_type.FIRST_RECORD) -> str:
   """
   构建初次被射精分组文本（按BodyPart.csv全部位遍历，未记录的部位不显示）
   Keyword arguments:
@@ -243,7 +243,7 @@ def _build_shoot_body_text(first_record) -> str:
   return now_text
 
 
-def _build_orgasm_text(first_record) -> str:
+def _build_orgasm_text(first_record: game_type.FIRST_RECORD) -> str:
   """
   构建初次绝顶履历分组文本（强绝顶/超强绝顶/多重绝顶三小节，无记录的小节与条目不显示）
   Keyword arguments:
@@ -291,7 +291,7 @@ def _build_orgasm_text(first_record) -> str:
   return now_text
 
 
-def _build_fall_and_mark_text(first_record) -> str:
+def _build_fall_and_mark_text(first_record: game_type.FIRST_RECORD) -> str:
   """
   构建陷落与刻印履历分组文本（陷落素质/刻印两小节，无记录的小节与条目不显示）
   Keyword arguments:
@@ -332,7 +332,7 @@ def _build_fall_and_mark_text(first_record) -> str:
   return now_text
 
 
-def _build_h_mode_text(first_record) -> str:
+def _build_h_mode_text(first_record: game_type.FIRST_RECORD) -> str:
   """
   构建H模式初体验分组文本（固定11项：无意识7类型+群交/露出H/隐奸H/装睡H，未体验的条目不显示）
   Keyword arguments:
@@ -374,7 +374,7 @@ def _build_h_mode_text(first_record) -> str:
   return now_text
 
 
-def _build_special_record_text(first_record) -> str:
+def _build_special_record_text(first_record: game_type.FIRST_RECORD) -> str:
   """
   构建特殊履历分组文本（FirstRecordSpecial.csv配表驱动，配表加行后自动跟随；未达成的条目不显示）
   Keyword arguments:
@@ -478,7 +478,9 @@ _GROUP_BUILD_FUNC_LIST = [
 """ 6个分组的文本构建函数列表（与_GROUP_NAME_LIST顺序一致） """
 
 
-def build_group_text(first_record, group_index: int) -> str:
+def build_group_text(
+    first_record: game_type.FIRST_RECORD, group_index: int
+) -> str:
   """
   构建指定分组的履历文本（当前周目与历史周目块共用，未记录的条目一律不显示）
   Keyword arguments:
@@ -606,7 +608,7 @@ class FirstRecordText:
       # 组与组之间以一个空行分隔
       self.draw_list.append(line_feed)
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     line_feed.draw()
     for label in self.draw_list:
@@ -633,7 +635,7 @@ class See_Character_First_Record_Panel:
     self.return_list: List[str] = []
     """ 当前面板监听的按钮列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     # 每帧先清空监听列表再收集（本面板含折叠按钮，不能省略）
     self.return_list = []

@@ -9,7 +9,7 @@ import pandas as pd
 import os
 
 
-def reorganize_csv():
+def reorganize_csv() -> pd.DataFrame:
   csv_path = 'data/csv/InstructConfig.csv'
 
   # 读取CSV，跳过前5行元数据（第1行列名，第2-5行是描述和配置行）

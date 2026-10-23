@@ -39,7 +39,7 @@ class Manage_Dormitory_Panel:
     self.dormitory_select_state: Dict[str, Any] = {}
     """ 干员选择面板的筛选状态 """
 
-  def draw(self):
+  def draw(self) -> None:
     """
     绘制主循环
     输入类型: 无
@@ -59,6 +59,7 @@ class Manage_Dormitory_Panel:
       for now_panel in panel_list:
         panel_width = int(self.width / len(panel_list))
         if now_panel == self.now_panel:
+          now_draw: draw.CenterDraw | draw.CenterButton
           now_draw = draw.CenterDraw()
           now_draw.text = f"[{now_panel}]"
           now_draw.style = "onbutton"
@@ -108,7 +109,7 @@ class Manage_Dormitory_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def change_panel(self, now_panel: str):
+  def change_panel(self, now_panel: str) -> None:
     """
     切换当前页签
     输入类型: now_panel(str)
@@ -123,7 +124,7 @@ class Manage_Dormitory_Panel:
       return
     self.now_panel = now_panel
 
-  def _draw_overview_page(self, return_list: List[str]):
+  def _draw_overview_page(self, return_list: List[str]) -> None:
     """
     绘制宿舍总览
     输入类型: return_list(List[str])
@@ -244,7 +245,7 @@ class Manage_Dormitory_Panel:
 
     line_feed.draw()
 
-  def show_dormitory_detail_func(self):
+  def show_dormitory_detail_func(self) -> None:
     """
     显示/隐藏宿舍具体居住情况
     输入类型: 无
@@ -298,7 +299,7 @@ class Manage_Dormitory_Panel:
       if yrn in return_list and yrn not in other_return_list:
         break
 
-  def _draw_manage_dormitory_manager_page(self, return_list: List[str]):
+  def _draw_manage_dormitory_manager_page(self, return_list: List[str]) -> None:
     """
     绘制宿舍管理员调整页
     输入类型: return_list(List[str])
@@ -379,7 +380,7 @@ class Manage_Dormitory_Panel:
       wait_draw.text = _("\n 暂无可管理的开放层。\n")
       wait_draw.draw()
 
-  def _choose_new_dormitory(self, character_id: int):
+  def _choose_new_dormitory(self, character_id: int) -> None:
     """
     进入单角色换宿舍流程
     输入类型: character_id(int)
@@ -480,7 +481,9 @@ class Manage_Dormitory_Panel:
       if yrn == back_draw.return_text or yrn in return_list:
         break
 
-  def _set_character_dormitory(self, character_id: int, dormitory_path: str):
+  def _set_character_dormitory(
+      self, character_id: int, dormitory_path: str
+  ) -> None:
     """
     应用角色宿舍变更
     输入类型: character_id(int), dormitory_path(str)
@@ -500,7 +503,7 @@ class Manage_Dormitory_Panel:
     )
     info_draw.draw()
 
-  def _move_character_to_temp_blank(self, character_id: int):
+  def _move_character_to_temp_blank(self, character_id: int) -> None:
     """
     将干员移入临时空白位
     输入类型: character_id(int)
@@ -521,7 +524,7 @@ class Manage_Dormitory_Panel:
     )
     info_draw.draw()
 
-  def _auto_sort_temp_blank_characters(self):
+  def _auto_sort_temp_blank_characters(self) -> None:
     """
     将临时空白位干员自动排序入住宿舍可用位
     输入类型: 无
@@ -581,7 +584,7 @@ class Manage_Dormitory_Panel:
           return True
     return False
 
-  def _redistribute_overcrowded_dormitories(self):
+  def _redistribute_overcrowded_dormitories(self) -> None:
     """
     将大于两人的宿舍重新分配
     输入类型: 无
@@ -645,7 +648,7 @@ class Manage_Dormitory_Panel:
     )
     info_draw.draw()
 
-  def _appoint_manager_for_layer(self, layer: int):
+  def _appoint_manager_for_layer(self, layer: int) -> None:
     """
     为指定层任命管理员
     输入类型: layer(int)
@@ -704,7 +707,7 @@ class Manage_Dormitory_Panel:
       if yrn == back_draw.return_text or yrn in return_list:
         break
 
-  def _do_appoint_manager(self, layer: int, character_id: int):
+  def _do_appoint_manager(self, layer: int, character_id: int) -> None:
     """
     执行任命管理员
     输入类型: layer(int), character_id(int)
@@ -750,7 +753,7 @@ class Manage_Dormitory_Panel:
     )
     info_draw.draw()
 
-  def _remove_manager_for_layer(self, layer: int):
+  def _remove_manager_for_layer(self, layer: int) -> None:
     """
     撤换指定层管理员
     输入类型: layer(int)
@@ -830,7 +833,7 @@ class Manage_Dormitory_Panel:
     self.temp_blank_character_ids = valid_ids
     return self.temp_blank_character_ids
 
-  def _remove_from_temp_blank(self, character_id: int):
+  def _remove_from_temp_blank(self, character_id: int) -> None:
     """
     将角色从临时空白位列表移除
     输入类型: character_id(int)
@@ -853,7 +856,7 @@ class Manage_Dormitory_Panel:
         and len(self._get_temp_blank_character_ids()) > 0
     )
 
-  def _draw_temp_blank_lock_hint(self):
+  def _draw_temp_blank_lock_hint(self) -> None:
     """
     绘制临时空白位锁定提示
     输入类型: 无
@@ -936,7 +939,7 @@ class Manage_Dormitory_Panel:
       )
     return False
 
-  def _move_manager_to_layer_room(self, layer: int, character_id: int):
+  def _move_manager_to_layer_room(self, layer: int, character_id: int) -> None:
     """
     将宿舍管理员迁入对应层舍管房
     输入类型: layer(int), character_id(int)
@@ -958,7 +961,7 @@ class Manage_Dormitory_Panel:
           character_position, target_scene, character_id
       )
 
-  def _restore_manager_dormitory(self, character_id: int):
+  def _restore_manager_dormitory(self, character_id: int) -> None:
     """
     将被撤销任命的宿舍管理员恢复原宿舍
     输入类型: character_id(int)

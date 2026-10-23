@@ -120,7 +120,7 @@ class SettlementManager:
         None
     )
 
-  def start_settlement(self, duration: int = 0):
+  def start_settlement(self, duration: int = 0) -> None:
     """
     开始结算阶段
 
@@ -139,7 +139,7 @@ class SettlementManager:
 
   def add_dialog(
       self, character_id: int, text: str, is_player_or_target: bool = False
-  ):
+  ) -> None:
     """
     添加对话到队列
 
@@ -175,7 +175,7 @@ class SettlementManager:
       old_value: float,
       new_value: float,
       display_position: str = "default",
-  ):
+  ) -> None:
     """
     添加数值变化记录
 
@@ -200,7 +200,7 @@ class SettlementManager:
     )
     self.value_changes.append(entry)
 
-  def start_dialog_phase(self):
+  def start_dialog_phase(self) -> None:
     """
     进入对话显示阶段
     """
@@ -260,7 +260,7 @@ class SettlementManager:
     self._show_current_dialog()
     return True
 
-  def _show_current_dialog(self):
+  def _show_current_dialog(self) -> None:
     """
     显示当前对话
     """
@@ -272,7 +272,7 @@ class SettlementManager:
     if self._on_dialog_update:
       self._on_dialog_update(dialog, self.current_line_index)
 
-  def start_value_change_phase(self):
+  def start_value_change_phase(self) -> None:
     """
     进入数值变化显示阶段
     """
@@ -291,7 +291,7 @@ class SettlementManager:
       if self._on_value_change_show:
         self._on_value_change_show(entry)
 
-  def finish_settlement(self):
+  def finish_settlement(self) -> None:
     """
     结束结算阶段
     """
@@ -373,21 +373,25 @@ class SettlementManager:
       return entry.text
     return None
 
-  def set_on_phase_change(self, callback: Callable[[SettlementPhase], None]):
+  def set_on_phase_change(
+      self, callback: Callable[[SettlementPhase], None]
+  ) -> None:
     """设置阶段变化回调"""
     self._on_phase_change = callback
 
-  def set_on_dialog_update(self, callback: Callable[[DialogEntry, int], None]):
+  def set_on_dialog_update(
+      self, callback: Callable[[DialogEntry, int], None]
+  ) -> None:
     """设置对话更新回调"""
     self._on_dialog_update = callback
 
   def set_on_value_change_show(
       self, callback: Callable[[ValueChangeEntry], None]
-  ):
+  ) -> None:
     """设置数值变化显示回调"""
     self._on_value_change_show = callback
 
-  def clear(self):
+  def clear(self) -> None:
     """清除所有状态"""
     self.phase = SettlementPhase.IDLE
     self.dialog_queue.clear()

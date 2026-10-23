@@ -32,7 +32,9 @@ HIDDEN_SEX_MODE_NAME_DICT = {
 """ 隐奸H模式编号到模式名的映射（同sp_flag.hidden_sex_mode） """
 
 
-def get_part_sex_record(first_record, part_id: int):
+def get_part_sex_record(
+    first_record: game_type.FIRST_RECORD, part_id: int
+) -> dict | None:
   """
   读取部位交/破处初体验记录（带旧快照缺字段防御）\n
   Keyword arguments:
@@ -46,7 +48,7 @@ def get_part_sex_record(first_record, part_id: int):
 
 def record_first_special_record(
     character_id: int, special_cid: int, special_data: str = ""
-):
+) -> None:
   """
   记录特殊履历（FirstRecordSpecial.csv配表驱动，已记录则跳过）\n
   Keyword arguments:
@@ -117,7 +119,9 @@ def get_special_data_for_second_behavior(
   return ""
 
 
-def record_first_h_mode(character_id: int, mode_key: str, extra_data: str = ""):
+def record_first_h_mode(
+    character_id: int, mode_key: str, extra_data: str = ""
+) -> None:
   """
   H模式初体验通用写入（未记录才写）\n
   Keyword arguments:
@@ -134,7 +138,7 @@ def record_first_h_mode(character_id: int, mode_key: str, extra_data: str = ""):
     ]
 
 
-def check_first_h_mode(character_id: int):
+def check_first_h_mode(character_id: int) -> None:
   """
   H模式初体验的中心判定（由行为结算必经处调用，dict去重使重复判定零成本）\n
   Keyword arguments:

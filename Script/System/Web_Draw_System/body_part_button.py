@@ -58,7 +58,7 @@ class BodyPartButton:
 
   def load_coco_keypoints(
       self, keypoints: List[Tuple[float, float]], image_size: Tuple[int, int]
-  ):
+  ) -> None:
     """
     从COCO-WholeBody格式的关键点数据加载
 
@@ -258,7 +258,7 @@ class BodyPartButton:
 
   def _calculate_hip_sub_parts(
       self, hip_center: List[float], width: int, height: int
-  ):
+  ) -> None:
     """
     计算臀部子部位的位置（环绕臀部中心排列）
 
@@ -289,7 +289,7 @@ class BodyPartButton:
           "is_hip_sub_part": True,
       }
 
-  def load_body_parts(self, body_parts_json: dict):
+  def load_body_parts(self, body_parts_json: dict) -> None:
     """
     从JSON格式加载身体部位数据（兼容旧格式）
 
@@ -313,7 +313,9 @@ class BodyPartButton:
       )
       self._body_parts_data = body_parts_json.get("body_parts", {})
 
-  def set_visible_parts(self, parts: List[str], has_beast_ears: bool = False):
+  def set_visible_parts(
+      self, parts: List[str], has_beast_ears: bool = False
+  ) -> None:
     """
     设置可见的部位
     会自动将成对部位展开为左右两个
@@ -365,7 +367,7 @@ class BodyPartButton:
     """
     return self._visible_parts
 
-  def set_default_visible_parts(self, has_beast_ears: bool = False):
+  def set_default_visible_parts(self, has_beast_ears: bool = False) -> None:
     """
     设置默认的可见部位列表（主要可点击部位）
     条件部位（如兽耳）只有满足条件时才会显示
@@ -461,7 +463,7 @@ class BodyPartButton:
     """
     return self._image_size
 
-  def expand_hip(self):
+  def expand_hip(self) -> None:
     """
     展开臀部子部位
     当点击臀部时调用，将子部位添加到可见列表
@@ -474,7 +476,7 @@ class BodyPartButton:
       ):
         self._visible_parts.append(sub_part)
 
-  def collapse_hip(self):
+  def collapse_hip(self) -> None:
     """
     收起臀部子部位
     """
@@ -504,7 +506,9 @@ class BodyPartButton:
     """
     return part_name in HIP_SUB_PARTS
 
-  def expand_head(self, has_horn: bool = False, has_beast_ears: bool = False):
+  def expand_head(
+      self, has_horn: bool = False, has_beast_ears: bool = False
+  ) -> None:
     """
     展开头部子部位
     当点击头部时调用，将满足条件的子部位添加到可见列表
@@ -531,7 +535,7 @@ class BodyPartButton:
         elif sub_part == BodyPart.HORN and has_horn:
           self._visible_parts.append(sub_part)
 
-  def collapse_head(self):
+  def collapse_head(self) -> None:
     """
     收起头部子部位
     """
@@ -561,7 +565,9 @@ class BodyPartButton:
     """
     return part_name in HEAD_SUB_PARTS
 
-  def set_has_beast_features(self, has_horn: bool, has_beast_ears: bool):
+  def set_has_beast_features(
+      self, has_horn: bool, has_beast_ears: bool
+  ) -> None:
     """
     设置角色是否有兽类特征
 
@@ -600,7 +606,7 @@ class BodyPartButton:
 
     return buttons
 
-  def set_hovered_part(self, part_name: Optional[str]):
+  def set_hovered_part(self, part_name: Optional[str]) -> None:
     """
     设置当前悬停的部位
 
@@ -730,7 +736,7 @@ class BodyPartButton:
           "display_name": self.get_part_display_name(part_name),
       }
 
-  def clear(self):
+  def clear(self) -> None:
     """清除所有数据"""
     self._coco_keypoints = []
     self._body_parts_data = {}

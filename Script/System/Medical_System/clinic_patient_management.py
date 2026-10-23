@@ -90,7 +90,7 @@ def pick_severity_level(facility_level: Optional[int] = None) -> Optional[int]:
 
 def generate_patient(
     severity_level: int,
-    rhodes_island,
+    rhodes_island: Optional[game_type.Rhodes_Island],
 ) -> Optional[medical_constant.MedicalPatient]:
   """生成单个门诊病人实体。
 

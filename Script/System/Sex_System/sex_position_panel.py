@@ -173,7 +173,7 @@ class Sex_Position_Panel:
       # 无论正常退出还是抛出异常，都要清理当前方法进入的子面板
       cleanup_managed_sub_panel_mode(sub_panel_context)
 
-  def select_sex_position(self, sex_position_id):
+  def select_sex_position(self, sex_position_id: int) -> None:
     """结算选择的性交体位"""
     from Script.System.Instruct_System import handle_instruct
 

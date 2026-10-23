@@ -243,8 +243,8 @@ def settle_student_class_gain(
     ability_id: int,
     course_type: int,
     add_time: int,
-    change_data=None,
-    change_data_to_target_change=None,
+    change_data: game_type.CharacterStatusChange | None = None,
+    change_data_to_target_change: game_type.CharacterStatusChange | None = None,
     count_attend: bool = True,
 ) -> bool:
   """
@@ -344,7 +344,9 @@ def settle_student_class_gain(
   return True
 
 
-def judge_absent_this_period(character_id: int, now_time) -> bool:
+def judge_absent_this_period(
+    character_id: int, now_time: datetime.datetime
+) -> bool:
   """
   校验这一节是不是已经记过缺课（Plan 30 §3.4：同一节只落一种记录）
   Keyword arguments:
@@ -476,7 +478,7 @@ def settle_teacher_class_gain(
     teacher_id: int,
     ability_id: int,
     add_time: int,
-    change_data=None,
+    change_data: game_type.CharacterStatusChange | None = None,
 ) -> None:
   """
   一节课的教师侧结算：教师自己也获得当节所授科目的习得与经验（教学相长）
@@ -877,7 +879,9 @@ def get_growth_value(character_id: int, value_id: int) -> float:
   return 0.0
 
 
-def change_growth_value(character_id: int, value_id: int, add_value: float):
+def change_growth_value(
+    character_id: int, value_id: int, add_value: float
+) -> None:
   """
   改写养成数值，供 CVE_A1_Growth|N_G/L/E_值 结算使用
 
@@ -907,7 +911,9 @@ def change_growth_value(character_id: int, value_id: int, add_value: float):
     growth_data.care_point = max(0.0, growth_data.care_point + add_value)
 
 
-def set_growth_value(character_id: int, value_id: int, new_value: float):
+def set_growth_value(
+    character_id: int, value_id: int, new_value: float
+) -> None:
   """
   直接把养成数值设为指定值（CVE 的 E 运算）
   已毕业的女儿改写性格倾向后即重选这一对素质

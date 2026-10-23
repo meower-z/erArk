@@ -325,7 +325,7 @@ def _build_family_blocks(center_id: int) -> list:
   return [{"kind": "person", "node": center_node}]
 
 
-def _measure_node(node: dict, center_id: int):
+def _measure_node(node: dict, center_id: int) -> None:
   """
   递归计算节点的显示宽度并重建token（写入node["width"]等字段）
   Keyword arguments:
@@ -345,7 +345,7 @@ def _measure_node(node: dict, center_id: int):
   ) + pregnancy_constant.GAP * (len(node["boxes"]) - 1)
 
 
-def _measure_box(box: dict, center_id: int):
+def _measure_box(box: dict, center_id: int) -> None:
   """
   递归计算夫妇框的显示宽度并重建token（写入box["width"]/["couple_width"]/["tokens"]字段）
   Keyword arguments:
@@ -401,7 +401,7 @@ _LINK_CHAR_MAP = {
 
 def _add_link_cells(
     link_chars: dict, gen: int, drop_col: int, child_cols: list
-):
+) -> None:
   """
   向排版行写入一个夫妇框的过渡连线字符（跨度限于该框内部，相邻框因GAP互不粘连）
   Keyword arguments:
@@ -504,12 +504,12 @@ def _collect_block_ids(block: dict) -> set:
   """
   id_set = set()
 
-  def _collect_node(node: dict):
+  def _collect_node(node: dict) -> None:
     id_set.add(node["chara_id"])
     for now_box in node["boxes"]:
       _collect_box(now_box)
 
-  def _collect_box(now_box: dict):
+  def _collect_box(now_box: dict) -> None:
     id_set.add(now_box["left_id"])
     if now_box["right_id"] != -1:
       id_set.add(now_box["right_id"])

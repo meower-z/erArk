@@ -21,7 +21,7 @@ instruct_queue = queue.Queue()
 """ 待处理的指令队列 """
 
 
-def init_instruct_handle_thread():
+def init_instruct_handle_thread() -> None:
   """初始化指令处理线程"""
   while 1:
     if not instruct_queue.empty():
@@ -36,7 +36,7 @@ instruct_handle_thread = Thread(target=init_instruct_handle_thread)
 instruct_handle_thread.start()
 
 
-def handle_instruct(instruct: str):
+def handle_instruct(instruct: str) -> None:
   """
   处理执行指令
   Keyword arguments:
@@ -336,7 +336,7 @@ def add_instruct(
   return decorator
 
 
-def instruct_filter_H_change(on_off_flag: bool):
+def instruct_filter_H_change(on_off_flag: bool) -> None:
   """
   指令类型过滤器进出H变更（已弃用）
   Keyword arguments:
@@ -486,7 +486,7 @@ def handle_comprehensive_state_effect(
 
 
 @add_instruct(constant.Instruct.REST)
-def handle_rest():
+def handle_rest() -> None:
   """处理休息指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.REST, force_taget_wait=True
@@ -494,19 +494,19 @@ def handle_rest():
 
 
 @add_instruct(constant.Instruct.BUY_FOOD)
-def handle_buy_food():
+def handle_buy_food() -> None:
   """处理购买食物指令"""
   cache.now_panel_id = constant.Panel.FOOD_SHOP
 
 
 @add_instruct(constant.Instruct.EAT)
-def handle_eat():
+def handle_eat() -> None:
   """处理食物背包指令"""
   cache.now_panel_id = constant.Panel.FOOD_BAG
 
 
 @add_instruct(constant.Instruct.PUT_SELFMADE_FOOD_IN)
-def handle_put_selfmade_food_in():
+def handle_put_selfmade_food_in() -> None:
   """处理放入正常食物指令"""
   from Script.UI.Panel import food_shop_panel
 
@@ -514,25 +514,25 @@ def handle_put_selfmade_food_in():
 
 
 @add_instruct(constant.Instruct.MOVE)
-def handle_move():
+def handle_move() -> None:
   """处理移动指令"""
   cache.now_panel_id = constant.Panel.SEE_MAP
 
 
 @add_instruct(constant.Instruct.CARRY_MOVE)
-def handle_carry_move():
+def handle_carry_move() -> None:
   """处理携带H中移动指令，与移动指令共用地图面板，实际行为在own_charcter_move中按携带模式区分"""
   cache.now_panel_id = constant.Panel.SEE_MAP
 
 
 @add_instruct(constant.Instruct.SEE_ATTR)
-def handle_see_attr():
+def handle_see_attr() -> None:
   """查看属性"""
   cache.now_panel_id = constant.Panel.SEE_ATTR
 
 
 @add_instruct(constant.Instruct.CHAT)
-def handle_chat():
+def handle_chat() -> None:
   """处理聊天指令"""
   character_data = cache.character_data[0]
   target_data: game_type.Character = cache.character_data[
@@ -547,73 +547,73 @@ def handle_chat():
 
 
 @add_instruct(constant.Instruct.BUY_H_ITEM)
-def handle_buy_h_item():
+def handle_buy_h_item() -> None:
   """处理购买成人用品指令"""
   cache.now_panel_id = constant.Panel.H_ITEM_SHOP
 
 
 @add_instruct(constant.Instruct.ITEM)
-def handle_item():
+def handle_item() -> None:
   """处理道具指令"""
   cache.now_panel_id = constant.Panel.ITEM
 
 
 @add_instruct(constant.Instruct.SAVE)
-def handle_save():
+def handle_save() -> None:
   """处理读写存档指令"""
   cache.now_panel_id = constant.Panel.SAVE
 
 
 @add_instruct(constant.Instruct.ABL_UP)
-def handle_abl_up():
+def handle_abl_up() -> None:
   """处理属性上升"""
   cache.now_panel_id = constant.Panel.ABL_UP
 
 
 @add_instruct(constant.Instruct.OWNER_ABL_UP)
-def handle_owner_abl_up():
+def handle_owner_abl_up() -> None:
   """处理自身属性上升"""
   cache.now_panel_id = constant.Panel.OWNER_ABL_UP
 
 
 @add_instruct(constant.Instruct.DEBUG_MODE_ON)
-def debug_mode():
+def debug_mode() -> None:
   """处理开启DEBUG模式指令"""
   cache.debug_mode = True
 
 
 @add_instruct(constant.Instruct.DEBUG_MODE_OFF)
-def debug_mode_off():
+def debug_mode_off() -> None:
   """处理关闭DEBUG模式指令"""
   cache.debug_mode = False
 
 
 @add_instruct(constant.Instruct.DEBUG_ADJUST)
-def debug_adjust():
+def debug_adjust() -> None:
   """处理debug数值调整指令"""
   cache.now_panel_id = constant.Panel.DEBUG_ADJUST
 
 
 @add_instruct(constant.Instruct.SYSTEM_SETTING)
-def handle_system_setting():
+def handle_system_setting() -> None:
   """系统设置"""
   cache.now_panel_id = constant.Panel.SYSTEM_SETTING
 
 
 @add_instruct(constant.Instruct.TALK_QUICK_TEST)
-def handle_talk_quick_test():
+def handle_talk_quick_test() -> None:
   """快速测试口上"""
   cache.now_panel_id = constant.Panel.TALK_QUICK_TEST
 
 
 @add_instruct(constant.Instruct.CHAT_WITH_AI)
-def handle_chat_with_ai():
+def handle_chat_with_ai() -> None:
   """与文本生成AI对话"""
   cache.now_panel_id = constant.Panel.CHAT_WITH_AI
 
 
 @add_instruct(constant.Instruct.TEACH)
-def handle_teach():
+def handle_teach() -> None:
   """处理授课指令"""
   from Script.System.Education_System import class_ai, schedule_handle
 
@@ -665,61 +665,61 @@ def handle_teach():
 
 
 @add_instruct(constant.Instruct.BORROW_BOOK)
-def handle_borrow_book():
+def handle_borrow_book() -> None:
   """处理借阅书籍指令"""
   cache.now_panel_id = constant.Panel.BORROW_BOOK
 
 
 @add_instruct(constant.Instruct.READ_BOOK)
-def handle_read_book():
+def handle_read_book() -> None:
   """处理读书指令"""
   cache.now_panel_id = constant.Panel.READ_BOOK
 
 
 @add_instruct(constant.Instruct.MANAGE_LIBRARY)
-def handle_manage_library():
+def handle_manage_library() -> None:
   """处理管理图书馆指令"""
   cache.now_panel_id = constant.Panel.MANAGE_LIBRARY
 
 
 @add_instruct(constant.Instruct.MANAGE_ASSEMBLY_LINE)
-def handle_manage_assembly_line():
+def handle_manage_assembly_line() -> None:
   """处理管理流水线指令"""
   cache.now_panel_id = constant.Panel.MANAGE_ASSEMBLY_LINE
 
 
 @add_instruct(constant.Instruct.PLANT_MANAGE_CROP)
-def handle_plant_manage_crop():
+def handle_plant_manage_crop() -> None:
   """处理种植与养护作物指令"""
   chara_handle_instruct_common_settle(constant.Behavior.PLANT_MANAGE_CROP)
 
 
 @add_instruct(constant.Instruct.MANAGE_AGRICULTURE)
-def handle_manage_agriculture():
+def handle_manage_agriculture() -> None:
   """处理管理农业生产指令"""
   cache.now_panel_id = constant.Panel.MANAGE_AGRICULTURE
 
 
 @add_instruct(constant.Instruct.MANAGE_VEHICLE)
-def handle_manage_vehicle():
+def handle_manage_vehicle() -> None:
   """处理管理载具指令"""
   cache.now_panel_id = constant.Panel.MANAGE_VEHICLE
 
 
 @add_instruct(constant.Instruct.PHYSICAL_CHECK_AND_MANAGE)
-def handle_physical_check_and_manage():
+def handle_physical_check_and_manage() -> None:
   """处理身体检查与管理指令"""
   cache.now_panel_id = constant.Panel.PHYSICAL_CHECK_AND_MANAGE
 
 
 @add_instruct(constant.Instruct.MANAGE_CONFINEMENT_AND_TRAINING)
-def handle_manage_vonfinement_and_training():
+def handle_manage_vonfinement_and_training() -> None:
   """处理管理监禁调教指令"""
   cache.now_panel_id = constant.Panel.MANAGE_CONFINEMENT_AND_TRAINING
 
 
 @add_instruct(constant.Instruct.INVESTIGATE_RESOURCE_MARKET)
-def handle_investigate_resource_market():
+def handle_investigate_resource_market() -> None:
   """处理研判资源市场指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.INVESTIGATE_RESOURCE_MARKET
@@ -727,37 +727,37 @@ def handle_investigate_resource_market():
 
 
 @add_instruct(constant.Instruct.MANAGE_RESOURCE_EXCHANGE)
-def handle_manage_resource_exchange():
+def handle_manage_resource_exchange() -> None:
   """处理管理资源交易指令"""
   cache.now_panel_id = constant.Panel.MANAGE_RESOURCE_EXCHANGE
 
 
 @add_instruct(constant.Instruct.NAVIGATION)
-def handle_navigation():
+def handle_navigation() -> None:
   """处理导航指令"""
   cache.now_panel_id = constant.Panel.NAVIGATION
 
 
 @add_instruct(constant.Instruct.MANAGE_BASEMENT)
-def handle_manage_basement():
+def handle_manage_basement() -> None:
   """处理管理罗德岛指令"""
   cache.now_panel_id = constant.Panel.MANAGE_BASEMENT
 
 
 @add_instruct(constant.Instruct.EDUCATION_MANAGE)
-def handle_education_manage():
+def handle_education_manage() -> None:
   """处理教育管理系统指令"""
   cache.now_panel_id = constant.Panel.EDUCATION_MANAGE
 
 
 @add_instruct(constant.Instruct.CHECK_REPORT_CARD)
-def handle_check_report_card():
+def handle_check_report_card() -> None:
   """处理检查成绩单指令"""
   chara_handle_instruct_common_settle(constant.Behavior.CHECK_REPORT_CARD)
 
 
 @add_instruct(constant.Instruct.MANAGE_DORMITORY)
-def handle_manage_dormitory():
+def handle_manage_dormitory() -> None:
   """处理宿舍管理系统指令"""
   cache.now_panel_id = constant.Panel.MANAGE_DORMITORY
 
@@ -766,7 +766,7 @@ def handle_manage_dormitory():
 
 
 @add_instruct(constant.Instruct.HYPNOSIS_ONE)
-def handle_hypnosis_one():
+def handle_hypnosis_one() -> None:
   """处理单人催眠"""
   character_data: game_type.Character = cache.character_data[0]
   now_scene_str = map_handle.get_map_system_path_str_for_list(
@@ -781,13 +781,13 @@ def handle_hypnosis_one():
 
 
 @add_instruct(constant.Instruct.DEEPENING_HYPNOSIS)
-def handle_deepening_hypnosis():
+def handle_deepening_hypnosis() -> None:
   """处理加深催眠"""
   chara_handle_instruct_common_settle(constant.Behavior.HYPNOSIS_ONE)
 
 
 @add_instruct(constant.Instruct.HYPNOSIS_ALL)
-def handle_hypnosis_all():
+def handle_hypnosis_all() -> None:
   """处理集体催眠"""
   character_data: game_type.Character = cache.character_data[0]
   now_scene_str = map_handle.get_map_system_path_str_for_list(
@@ -798,6 +798,7 @@ def handle_hypnosis_all():
   now_npc_num = len(scene_data.character_list) - 1
   sanity_point_cost = 10 + 10 * now_npc_num
   if character_data.sanity_point < sanity_point_cost:
+    now_draw: draw.WaitDraw | normal_panel.Close_Door_Panel
     now_draw = draw.WaitDraw()
     draw_text = _(
         "\n当前理智值不足，至少需要{0}点理智值，无法进行集体催眠\n"
@@ -814,19 +815,19 @@ def handle_hypnosis_all():
 
 
 @add_instruct(constant.Instruct.CHANGE_HYPNOSIS_MODE)
-def handle_change_hypnosis_mode():
+def handle_change_hypnosis_mode() -> None:
   """处理切换催眠模式"""
   cache.now_panel_id = constant.Panel.CHANGE_HYPNOSIS_MODE
 
 
 @add_instruct(constant.Instruct.HYPNOSIS_CANCEL)
-def handle_hypnosis_cancel():
+def handle_hypnosis_cancel() -> None:
   """处理解除催眠"""
   chara_handle_instruct_common_settle(constant.Behavior.HYPNOSIS_CANCEL)
 
 
 @add_instruct(constant.Instruct.HYPNOSIS_INCREASE_BODY_SENSITIVITY)
-def handle_hypnosis_increase_body_sensitivity():
+def handle_hypnosis_increase_body_sensitivity() -> None:
   """处理体控-敏感度提升"""
   chara_handle_instruct_common_settle(
       constant.Behavior.HYPNOSIS_INCREASE_BODY_SENSITIVITY
@@ -834,13 +835,13 @@ def handle_hypnosis_increase_body_sensitivity():
 
 
 @add_instruct(constant.Instruct.HYPNOSIS_FORCE_CLIMAX)
-def handle_hypnosis_force_climax():
+def handle_hypnosis_force_climax() -> None:
   """处理体控-强制高潮"""
   chara_handle_instruct_common_settle(constant.Behavior.HYPNOSIS_FORCE_CLIMAX)
 
 
 @add_instruct(constant.Instruct.HYPNOSIS_FORCE_OVULATION)
-def handle_hypnosis_force_ovulation():
+def handle_hypnosis_force_ovulation() -> None:
   """处理体控-强制排卵"""
   chara_handle_instruct_common_settle(
       constant.Behavior.HYPNOSIS_FORCE_OVULATION
@@ -848,7 +849,7 @@ def handle_hypnosis_force_ovulation():
 
 
 @add_instruct(constant.Instruct.HYPNOSIS_PAIN_AS_PLEASURE)
-def handle_hypnosis_pain_as_pleasure():
+def handle_hypnosis_pain_as_pleasure() -> None:
   """处理心控-苦痛快感化"""
   chara_handle_instruct_common_settle(
       constant.Behavior.HYPNOSIS_PAIN_AS_PLEASURE
@@ -856,61 +857,61 @@ def handle_hypnosis_pain_as_pleasure():
 
 
 @add_instruct(constant.Instruct.PENETRATING_VISION_ON)
-def handle_penetrating_vision_on():
+def handle_penetrating_vision_on() -> None:
   """处理开启透视"""
   chara_handle_instruct_common_settle(constant.Behavior.PENETRATING_VISION_ON)
 
 
 @add_instruct(constant.Instruct.PENETRATING_VISION_OFF)
-def handle_penetrating_vision_off():
+def handle_penetrating_vision_off() -> None:
   """处理关闭透视"""
   chara_handle_instruct_common_settle(constant.Behavior.PENETRATING_VISION_OFF)
 
 
 @add_instruct(constant.Instruct.HORMONE_ON)
-def handle_hormone_on():
+def handle_hormone_on() -> None:
   """处理开启信息素"""
   chara_handle_instruct_common_settle(constant.Behavior.HORMONE_ON)
 
 
 @add_instruct(constant.Instruct.HORMONE_OFF)
-def handle_hormone_off():
+def handle_hormone_off() -> None:
   """处理关闭信息素"""
   chara_handle_instruct_common_settle(constant.Behavior.HORMONE_OFF)
 
 
 @add_instruct(constant.Instruct.TIME_STOP_ON)
-def handle_time_stop_on():
+def handle_time_stop_on() -> None:
   """处理时间停止流动"""
   chara_handle_instruct_common_settle(constant.Behavior.TIME_STOP_ON)
 
 
 @add_instruct(constant.Instruct.TIME_STOP_OFF)
-def handle_time_stop_off():
+def handle_time_stop_off() -> None:
   """处理时间重新流动"""
   chara_handle_instruct_common_settle(constant.Behavior.TIME_STOP_OFF)
 
 
 @add_instruct(constant.Instruct.TIME_STOP_OFF_IN_H)
-def handle_time_stop_off_in_h():
+def handle_time_stop_off_in_h() -> None:
   """处理在H中取消时停"""
   chara_handle_instruct_common_settle(constant.Behavior.TIME_STOP_OFF)
 
 
 @add_instruct(constant.Instruct.CARRY_TARGET)
-def handle_carry_target():
+def handle_carry_target() -> None:
   """处理搬运对方"""
   chara_handle_instruct_common_settle(constant.Behavior.CARRY_TARGET)
 
 
 @add_instruct(constant.Instruct.STOP_CARRY_TARGET)
-def handle_stop_carry_target():
+def handle_stop_carry_target() -> None:
   """处理停止搬运对方"""
   chara_handle_instruct_common_settle(constant.Behavior.STOP_CARRY_TARGET)
 
 
 @add_instruct(constant.Instruct.TARGET_FREE_IN_TIME_STOP)
-def handle_target_free_in_time_stop():
+def handle_target_free_in_time_stop() -> None:
   """处理让在时停中正常行动"""
   # TODO，到写隐奸和露出的时候一起写
   chara_handle_instruct_common_settle(
@@ -919,7 +920,7 @@ def handle_target_free_in_time_stop():
 
 
 @add_instruct(constant.Instruct.TARGET_STOP_IN_TIME_STOP)
-def handle_target_stop_in_time_stop():
+def handle_target_stop_in_time_stop() -> None:
   """处理在时停中再次停止"""
   # TODO，到写隐奸和露出的时候一起写
   chara_handle_instruct_common_settle(
@@ -928,93 +929,93 @@ def handle_target_stop_in_time_stop():
 
 
 @add_instruct(constant.Instruct.DIRAY)
-def handle_diary():
+def handle_diary() -> None:
   """处理日记指令"""
   cache.now_panel_id = constant.Panel.DIRAY
 
 
 @add_instruct(constant.Instruct.SLEEP)
-def handle_sleep():
+def handle_sleep() -> None:
   """处理睡觉指令"""
   cache.now_panel_id = constant.Panel.SLEEP
 
 
 @add_instruct(constant.Instruct.TAKE_SHOWER)
-def handle_take_shower():
+def handle_take_shower() -> None:
   """处理淋浴指令"""
   chara_handle_instruct_common_settle(constant.Behavior.TAKE_SHOWER)
 
 
 @add_instruct(constant.Instruct.STROKE)
-def handle_stroke():
+def handle_stroke() -> None:
   """处理身体接触指令"""
   chara_handle_instruct_common_settle(constant.Behavior.STROKE)
 
 
 @add_instruct(constant.Instruct.MASSAGE)
-def handle_massage():
+def handle_massage() -> None:
   """处理按摩指令"""
   chara_handle_instruct_common_settle(constant.Behavior.MASSAGE)
 
 
 @add_instruct(constant.Instruct.WAIT)
-def handle_wait():
+def handle_wait() -> None:
   """处理等待五分钟指令"""
   chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration=5)
 
 
 @add_instruct(constant.Instruct.WAIT_1_HOUR)
-def handle_wait_1_hour():
+def handle_wait_1_hour() -> None:
   """处理等待一个小时指令"""
   cache.wframe_mouse.w_frame_skip_wait_mouse = 1
   chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration=60)
 
 
 @add_instruct(constant.Instruct.WAIT_6_HOUR)
-def handle_wait_6_hour():
+def handle_wait_6_hour() -> None:
   """处理等待六个小时指令"""
   cache.wframe_mouse.w_frame_skip_wait_mouse = 1
   chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration=360)
 
 
 @add_instruct(constant.Instruct.MAKE_COFFEE)
-def handle_make_coffee():
+def handle_make_coffee() -> None:
   """处理泡咖啡指令"""
   chara_handle_instruct_common_settle(constant.Behavior.MAKE_COFFEE)
 
 
 @add_instruct(constant.Instruct.MAKE_COFFEE_ADD)
-def handle_make_coffee_add():
+def handle_make_coffee_add() -> None:
   """处理泡咖啡（加料）指令"""
   cache.now_panel_id = constant.Panel.MAKE_COFFEE_ADD
 
 
 @add_instruct(constant.Instruct.ASK_MAKE_COFFEE)
-def handle_ask_make_coffee():
+def handle_ask_make_coffee() -> None:
   """处理让对方泡咖啡指令"""
   chara_handle_instruct_common_settle(constant.Behavior.ASK_MAKE_COFFEE)
 
 
 @add_instruct(constant.Instruct.MAKE_FOOD)
-def handle_make_food():
+def handle_make_food() -> None:
   """做饭"""
   cache.now_panel_id = constant.Panel.MAKE_FOOD
 
 
 @add_instruct(constant.Instruct.MIXOLOGY)
-def handle_mixology():
+def handle_mixology() -> None:
   """处理调酒指令"""
   cache.now_panel_id = constant.Panel.MIXOLOGY
 
 
 @add_instruct(constant.Instruct.ALL_NPC_POSITION)
-def handle_all_npc_position():
+def handle_all_npc_position() -> None:
   """处理干员位置一览指令"""
   cache.now_panel_id = constant.Panel.ALL_NPC_POSITION
 
 
 @add_instruct(constant.Instruct.FOLLOW)
-def handle_followed():
+def handle_followed() -> None:
   """处理邀请同行指令"""
   character_data: game_type.Character = cache.character_data[0]
   target_data: game_type.Character = cache.character_data[
@@ -1046,13 +1047,13 @@ def handle_followed():
 
 
 @add_instruct(constant.Instruct.END_FOLLOW)
-def handle_end_followed():
+def handle_end_followed() -> None:
   """处理结束同行指令"""
   chara_handle_instruct_common_settle(constant.Behavior.END_FOLLOW, duration=5)
 
 
 @add_instruct(constant.Instruct.ASK_TARGET_REST)
-def handle_ask_target_rest():
+def handle_ask_target_rest() -> None:
   """处理让对方休息指令"""
   character_data: game_type.Character = cache.character_data[0]
   target_character_data: game_type.Character = cache.character_data[
@@ -1063,7 +1064,7 @@ def handle_ask_target_rest():
 
 
 @add_instruct(constant.Instruct.ASK_TARGET_SLEEP)
-def handle_ask_target_sleep():
+def handle_ask_target_sleep() -> None:
   """处理让对方睡觉指令"""
   character_data: game_type.Character = cache.character_data[0]
   target_character_data: game_type.Character = cache.character_data[
@@ -1074,7 +1075,7 @@ def handle_ask_target_sleep():
 
 
 @add_instruct(constant.Instruct.APOLOGIZE)
-def handle_apologize():
+def handle_apologize() -> None:
   """处理道歉指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data: game_type.Character = cache.character_data[0]
@@ -1099,7 +1100,7 @@ def handle_apologize():
 
 
 @add_instruct(constant.Instruct.LISTEN_COMPLAINT)
-def handle_listen_complaint():
+def handle_listen_complaint() -> None:
   """处理听牢骚指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data: game_type.Character = cache.character_data[0]
@@ -1118,19 +1119,19 @@ def handle_listen_complaint():
 
 
 @add_instruct(constant.Instruct.GIVE_GIFT)
-def handle_give_gift():
+def handle_give_gift() -> None:
   """处理赠送礼物指令"""
   cache.now_panel_id = constant.Panel.GIVE_GIFT
 
 
 @add_instruct(constant.Instruct.ORIGINIUM_ARTS)
-def handle_originium_arts():
+def handle_originium_arts() -> None:
   """处理源石技艺指令"""
   cache.now_panel_id = constant.Panel.ORIGINIUM_ARTS
 
 
 @add_instruct(constant.Instruct.TARGET_TO_SELF)
-def handle_target_to_self():
+def handle_target_to_self() -> None:
   """处理对自己交互指令"""
   pl_character_data = cache.character_data[0]
   pl_character_data.target_character_id = 0
@@ -1138,7 +1139,7 @@ def handle_target_to_self():
 
 
 @add_instruct(constant.Instruct.DOOR_LOCK_INNER)
-def handle_door_lock_inner():
+def handle_door_lock_inner() -> None:
   """处理锁上门内侧锁指令"""
   pl_character_data = cache.character_data[0]
   now_position = pl_character_data.position
@@ -1149,7 +1150,7 @@ def handle_door_lock_inner():
 
 
 @add_instruct(constant.Instruct.DOOR_UNLOCK_INNER)
-def handle_door_unlock_inner():
+def handle_door_unlock_inner() -> None:
   """处理解开门内侧锁指令"""
   pl_character_data = cache.character_data[0]
   now_position = pl_character_data.position
@@ -1160,7 +1161,7 @@ def handle_door_unlock_inner():
 
 
 @add_instruct(constant.Instruct.CHARA_DIY_INSTRUCT)
-def handle_chara_diy_instruct():
+def handle_chara_diy_instruct() -> None:
   """处理角色特殊指令"""
   # 本指令仅在下述函数中特殊调用，不会被正常调用
   # Script/UI/Panel/in_scene_panel.py/handle_chara_diy_instruct()
@@ -1175,73 +1176,73 @@ def handle_chara_diy_instruct():
 
 
 @add_instruct(constant.Instruct.TEST_INSTRUCT)
-def handle_test_instruct():
+def handle_test_instruct() -> None:
   """处理测试用临时指令"""
   chara_handle_instruct_common_settle(constant.Behavior.TEST_INSTRUCT)
 
 
 @add_instruct(constant.Instruct.LISTEN_INFLATION)
-def handle_listen_inflation():
+def handle_listen_inflation() -> None:
   """处理听肚子里的动静指令"""
   chara_handle_instruct_common_settle(constant.Behavior.LISTEN_INFLATION)
 
 
 @add_instruct(constant.Instruct.PRENATAL_TALK)
-def handle_prenatal_talk():
+def handle_prenatal_talk() -> None:
   """处理对孕肚说话指令（胎教，Plan 22 四期）"""
   chara_handle_instruct_common_settle(constant.Behavior.PRENATAL_TALK)
 
 
 @add_instruct(constant.Instruct.PRENATAL_MUSIC)
-def handle_prenatal_music():
+def handle_prenatal_music() -> None:
   """处理给孕肚放音乐指令（胎教，Plan 22 四期）"""
   chara_handle_instruct_common_settle(constant.Behavior.PRENATAL_MUSIC)
 
 
 @add_instruct(constant.Instruct.PRENATAL_TOUCH)
-def handle_prenatal_touch():
+def handle_prenatal_touch() -> None:
   """处理抚摸孕肚指令（胎教，Plan 22 四期）"""
   chara_handle_instruct_common_settle(constant.Behavior.PRENATAL_TOUCH)
 
 
 @add_instruct(constant.Instruct.TAKE_CARE_BABY)
-def handle_take_care_baby():
+def handle_take_care_baby() -> None:
   """处理照顾婴儿指令"""
   cache.now_panel_id = constant.Panel.TAKE_CARE_BABY
 
 
 @add_instruct(constant.Instruct.ORDER_HOTEL_ROOM)
-def handle_order_hotel_room():
+def handle_order_hotel_room() -> None:
   """处理预定房间指令"""
   cache.now_panel_id = constant.Panel.ORDER_HOTEL_ROOM
 
 
 @add_instruct(constant.Instruct.SEE_COLLECTION)
-def handle_see_collection():
+def handle_see_collection() -> None:
   """处理查看收藏品指令"""
   cache.now_panel_id = constant.Panel.COLLECTION
 
 
 @add_instruct(constant.Instruct.SEE_ACHIEVEMENT)
-def handle_see_achievement():
+def handle_see_achievement() -> None:
   """处理查看蚀刻章指令"""
   cache.now_panel_id = constant.Panel.SEE_ACHIEVEMENT
 
 
 @add_instruct(constant.Instruct.SEE_FRIDGE)
-def handle_see_fridge():
+def handle_see_fridge() -> None:
   """处理查看冰箱指令"""
   cache.now_panel_id = constant.Panel.FRIDGE
 
 
 @add_instruct(constant.Instruct.PREGNANCY_OVERVIEW)
-def handle_pregnancy_overview():
+def handle_pregnancy_overview() -> None:
   """处理怀孕总览指令"""
   cache.now_panel_id = constant.Panel.PREGNANCY_OVERVIEW
 
 
 @add_instruct(constant.Instruct.TAKE_CHARA_EGGS)
-def handle_take_chara_eggs():
+def handle_take_chara_eggs() -> None:
   """处理拿走产下的卵指令"""
   # 数据结算由行为挂接的专用结算（BehaviorEffect.TAKE_CHARA_EGGS_SETTLE=546）在行为结算阶段完成
   chara_handle_instruct_common_settle(
@@ -1250,7 +1251,7 @@ def handle_take_chara_eggs():
 
 
 @add_instruct(constant.Instruct.IDENTIFY_HELD_EGGS)
-def handle_identify_held_eggs():
+def handle_identify_held_eggs() -> None:
   """处理鉴定持有的卵指令"""
   # 数据结算由行为挂接的专用结算（BehaviorEffect.IDENTIFY_HELD_EGGS_SETTLE=547）在行为结算阶段完成
   chara_handle_instruct_common_settle(
@@ -1259,19 +1260,19 @@ def handle_identify_held_eggs():
 
 
 @add_instruct(constant.Instruct.FIELD_COMMISSION)
-def handle_field_commission():
+def handle_field_commission() -> None:
   """处理外勤委托指令"""
   cache.now_panel_id = constant.Panel.FIELD_COMMISSION
 
 
 @add_instruct(constant.Instruct.CHECK_LOCKER)
-def handle_check_locker():
+def handle_check_locker() -> None:
   """处理检查衣柜指令"""
   cache.now_panel_id = constant.Panel.CHECK_LOCKER
 
 
 @add_instruct(constant.Instruct.COLLCET_PANTY)
-def handle_collect_panty():
+def handle_collect_panty() -> None:
   """处理收起内裤指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data: game_type.Character = cache.character_data[0]
@@ -1280,7 +1281,7 @@ def handle_collect_panty():
 
 
 @add_instruct(constant.Instruct.ASK_DATE)
-def handle_ask_date():
+def handle_ask_date() -> None:
   """处理邀请约会指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data: game_type.Character = cache.character_data[0]
@@ -1289,7 +1290,7 @@ def handle_ask_date():
 
 
 @add_instruct(constant.Instruct.CONFESSION)
-def handle_confession():
+def handle_confession() -> None:
   """处理告白指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data: game_type.Character = cache.character_data[0]
@@ -1338,7 +1339,7 @@ def handle_confession():
 
 
 @add_instruct(constant.Instruct.GIVE_NECKLACE)
-def handle_give_necklace():
+def handle_give_necklace() -> None:
   """处理戴上项圈指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data: game_type.Character = cache.character_data[0]
@@ -1387,7 +1388,7 @@ def handle_give_necklace():
 
 
 @add_instruct(constant.Instruct.DRINK_ALCOHOL)
-def handle_drink_alcohol():
+def handle_drink_alcohol() -> None:
   """处理劝酒指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data: game_type.Character = cache.character_data[0]
@@ -1396,13 +1397,13 @@ def handle_drink_alcohol():
 
 
 @add_instruct(constant.Instruct.PEE)
-def handle_pee():
+def handle_pee() -> None:
   """处理解手指令"""
   chara_handle_instruct_common_settle(constant.Behavior.PEE)
 
 
 @add_instruct(constant.Instruct.COLLECT)
-def handle_collect():
+def handle_collect() -> None:
   """处理摆放藏品指令"""
   from Script.UI.Panel import collection_panel
   # 收起藏品
@@ -1411,7 +1412,7 @@ def handle_collect():
 
 
 @add_instruct(constant.Instruct.DO_H)
-def handle_do_h():
+def handle_do_h() -> None:
   """处理邀请H指令"""
   character_data: game_type.Character = cache.character_data[0]
   target_data = cache.character_data[character_data.target_character_id]
@@ -1445,7 +1446,7 @@ def handle_do_h():
 
 
 @add_instruct(constant.Instruct.DO_H_IN_LOVE_HOTEL)
-def handle_do_h_in_love_hotel():
+def handle_do_h_in_love_hotel() -> None:
   """处理邀请在爱情旅馆H指令"""
   character_data: game_type.Character = cache.character_data[0]
   character_data.h_state.h_in_love_hotel = True
@@ -1455,7 +1456,7 @@ def handle_do_h_in_love_hotel():
 
 
 @add_instruct(constant.Instruct.DO_H_IN_BATHROOM)
-def handle_do_h_in_bathroom():
+def handle_do_h_in_bathroom() -> None:
   """处理邀请在浴室H指令"""
   character_data: game_type.Character = cache.character_data[0]
   character_data.h_state.h_in_bathroom = True
@@ -1465,13 +1466,13 @@ def handle_do_h_in_bathroom():
 
 
 @add_instruct(constant.Instruct.DO_H_WITH_DAUGHTER)
-def handle_do_h_with_daughter():
+def handle_do_h_with_daughter() -> None:
   """处理邀请乱伦H指令"""
   handle_do_h()
 
 
 @add_instruct(constant.Instruct.PREPARE_TRAINING)
-def handle_prepare_training():
+def handle_prepare_training() -> None:
   """处理调教前准备指令"""
   from Script.UI.Panel import confinement_and_training
 
@@ -1481,13 +1482,13 @@ def handle_prepare_training():
 
 
 @add_instruct(constant.Instruct.SWITCH_TO_H_INTERFACE)
-def handle_switch_to_h_interface():
+def handle_switch_to_h_interface() -> None:
   """处理切换到H指令"""
   cache.show_non_h_in_hidden_sex = False
 
 
 @add_instruct(constant.Instruct.SLEEP_OBSCENITY)
-def handle_sleep_obscenity():
+def handle_sleep_obscenity() -> None:
   """处理睡眠猥亵指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data: game_type.Character = cache.character_data[0]
@@ -1496,7 +1497,9 @@ def handle_sleep_obscenity():
       character_data.position
   )
   if cache.scene_data[now_scene_str].close_flag == 0:
-    now_draw = normal_panel.Close_Door_Panel(width)
+    now_draw: normal_panel.Close_Door_Panel | draw.WaitDraw = (
+        normal_panel.Close_Door_Panel(width)
+    )
     door_return = now_draw.draw()
     if door_return == -1:
       return
@@ -1510,7 +1513,7 @@ def handle_sleep_obscenity():
 
 
 @add_instruct(constant.Instruct.STOP_SLEEP_OBSCENITY)
-def handle_stop_sleep_obscenity():
+def handle_stop_sleep_obscenity() -> None:
   """处理停止睡眠猥亵指令"""
   from Script.Settle import default
 
@@ -1528,13 +1531,13 @@ def handle_stop_sleep_obscenity():
 
 
 @add_instruct(constant.Instruct.IMPRISONMENT_H)
-def handle_imprisonment_h():
+def handle_imprisonment_h() -> None:
   """处理监禁奸指令"""
   handle_do_h()
 
 
 @add_instruct(constant.Instruct.UNCONSCIOUS_H)
-def handle_unconscious_h(type_name: str = ""):
+def handle_unconscious_h(type_name: str = "") -> None:
   """
   处理无意识奸指令
   type_name: str = ""  # 用于区分无意识奸类型
@@ -1587,43 +1590,43 @@ def handle_unconscious_h(type_name: str = ""):
 
 
 @add_instruct(constant.Instruct.SLEEP_H)
-def handle_sleep_h():
+def handle_sleep_h() -> None:
   """处理睡奸指令"""
   handle_unconscious_h("sleep")
 
 
 @add_instruct(constant.Instruct.DRUNK_H)
-def handle_drunk_h():
+def handle_drunk_h() -> None:
   """处理醉奸指令"""
   handle_unconscious_h("drunk")
 
 
 @add_instruct(constant.Instruct.TIME_STOP_H)
-def handle_time_stop_h():
+def handle_time_stop_h() -> None:
   """处理时停奸指令"""
   handle_unconscious_h("time_stop")
 
 
 @add_instruct(constant.Instruct.HYPNOSIS_H)
-def handle_hypnosis_h():
+def handle_hypnosis_h() -> None:
   """处理催眠奸指令"""
   handle_unconscious_h("hypnosis")
 
 
 @add_instruct(constant.Instruct.ASK_HIDDEN_SEX)
-def handle_ask_hidden_sex():
+def handle_ask_hidden_sex() -> None:
   """处理邀请隐奸指令"""
   cache.now_panel_id = constant.Panel.ASK_HIDDEN_SEX
 
 
 @add_instruct(constant.Instruct.ASK_EXHIBITIONISM_SEX)
-def handle_ask_exhibitionism_sex():
+def handle_ask_exhibitionism_sex() -> None:
   """处理邀请露出指令"""
   cache.now_panel_id = constant.Panel.ASK_EXHIBITIONISM_SEX
 
 
 @add_instruct(constant.Instruct.ASK_GROUP_SEX)
-def handle_ask_group_sex():
+def handle_ask_group_sex() -> None:
   """处理邀请群交指令"""
   now_draw = draw.WaitDraw()
   now_draw.width = width
@@ -1696,7 +1699,7 @@ def handle_ask_group_sex():
 
 
 @add_instruct(constant.Instruct.WAIT_5_MIN_IN_H)
-def handle_wait_5_min_in_h():
+def handle_wait_5_min_in_h() -> None:
   """处理等待五分钟指令"""
   # 如果场景里已经没有除自己以外的在H中的角色，则转为结束H
   now_scene_character_list = map_handle.get_chara_now_scene_all_chara_id_list(
@@ -1715,7 +1718,7 @@ def handle_wait_5_min_in_h():
 
 
 @add_instruct(constant.Instruct.H_END)
-def handle_h_end():
+def handle_h_end() -> None:
   """处理H结束指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data: game_type.Character = cache.character_data[0]
@@ -1753,7 +1756,7 @@ def handle_h_end():
 
 
 @add_instruct(constant.Instruct.H_WITH_DAUGHTER_END)
-def handle_h_with_daughter_end():
+def handle_h_with_daughter_end() -> None:
   """处理结束乱伦H指令"""
   cache.achievement.h_with_daughter_count += 1
   # 结算成就
@@ -1762,13 +1765,13 @@ def handle_h_with_daughter_end():
 
 
 @add_instruct(constant.Instruct.IMPRISONMENT_H_END)
-def handle_imprisonment_h_end():
+def handle_imprisonment_h_end() -> None:
   """处理结束监禁奸指令"""
   handle_h_end()
 
 
 @add_instruct(constant.Instruct.UNCONSCIOUS_H_END)
-def handle_unconscious_h_end():
+def handle_unconscious_h_end() -> None:
   """处理结束无意识奸指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data: game_type.Character = cache.character_data[0]
@@ -1788,7 +1791,7 @@ def handle_unconscious_h_end():
 
 
 @add_instruct(constant.Instruct.HIDDEN_SEX_END)
-def handle_hidden_sex_end():
+def handle_hidden_sex_end() -> None:
   """处理结束隐奸指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data: game_type.Character = cache.character_data[0]
@@ -1824,7 +1827,7 @@ def handle_hidden_sex_end():
 
 
 @add_instruct(constant.Instruct.EXHIBITIONISM_SEX_END)
-def handle_exhibitionism_sex_end():
+def handle_exhibitionism_sex_end() -> None:
   """处理结束露出指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data: game_type.Character = cache.character_data[0]
@@ -1860,7 +1863,7 @@ def handle_exhibitionism_sex_end():
 
 
 @add_instruct(constant.Instruct.START_SEX_CLASS)
-def handle_start_sex_class():
+def handle_start_sex_class() -> None:
   """处理性技实操课（开课）指令"""
   from Script.System.Education_System import education_constant, sex_class_handle
 
@@ -1971,7 +1974,7 @@ def handle_end_sex_class():
 
 
 @add_instruct(constant.Instruct.GROUP_SEX_END)
-def handle_group_sex_end():
+def handle_group_sex_end() -> None:
   """处理结束群交指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data: game_type.Character = cache.character_data[0]
@@ -2009,7 +2012,7 @@ def handle_group_sex_end():
 
 
 @add_instruct(constant.Instruct.SINGING)
-def handle_singing():
+def handle_singing() -> None:
   """处理唱歌指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data = cache.character_data[0]
@@ -2040,7 +2043,7 @@ def handle_singing():
 
 
 @add_instruct(constant.Instruct.PLAY_INSTRUMENT)
-def handle_play_instrument():
+def handle_play_instrument() -> None:
   """处理演奏乐器指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data: game_type.Character = cache.character_data[0]
@@ -2071,7 +2074,7 @@ def handle_play_instrument():
 
 
 @add_instruct(constant.Instruct.WATCH_MOVIE)
-def handle_watch_movie():
+def handle_watch_movie() -> None:
   """处理看电影指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.WATCH_MOVIE, force_taget_wait=True
@@ -2079,7 +2082,7 @@ def handle_watch_movie():
 
 
 @add_instruct(constant.Instruct.PHOTOGRAPHY)
-def handle_photography():
+def handle_photography() -> None:
   """处理摄影指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.PHOTOGRAPHY, force_taget_wait=True
@@ -2087,7 +2090,7 @@ def handle_photography():
 
 
 @add_instruct(constant.Instruct.PLAY_WATER)
-def handle_play_water():
+def handle_play_water() -> None:
   """处理玩水指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.PLAY_WATER, force_taget_wait=True
@@ -2095,13 +2098,13 @@ def handle_play_water():
 
 
 @add_instruct(constant.Instruct.PLAY_GOMOKU)
-def handle_play_gomoku():
+def handle_play_gomoku() -> None:
   """处理下五子棋指令"""
   cache.now_panel_id = constant.Panel.PLAY_GOMOKU
 
 
 @add_instruct(constant.Instruct.PLAY_CHESS)
-def handle_play_chess():
+def handle_play_chess() -> None:
   """处理下棋指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.PLAY_CHESS, force_taget_wait=True
@@ -2109,7 +2112,7 @@ def handle_play_chess():
 
 
 @add_instruct(constant.Instruct.PLAY_MAHJONG)
-def handle_play_mahjong():
+def handle_play_mahjong() -> None:
   """处理打麻将指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.PLAY_MAHJONG, force_taget_wait=True
@@ -2117,7 +2120,7 @@ def handle_play_mahjong():
 
 
 @add_instruct(constant.Instruct.PLAY_CARDS)
-def handle_play_cards():
+def handle_play_cards() -> None:
   """处理打牌指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.PLAY_CARDS, force_taget_wait=True
@@ -2125,7 +2128,7 @@ def handle_play_cards():
 
 
 @add_instruct(constant.Instruct.REHEARSE_DANCE)
-def handle_rehearse_dance():
+def handle_rehearse_dance() -> None:
   """处理排演舞剧指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.REHEARSE_DANCE, force_taget_wait=True
@@ -2133,7 +2136,7 @@ def handle_rehearse_dance():
 
 
 @add_instruct(constant.Instruct.PLAY_ARCADE_GAME)
-def handle_play_arcade_game():
+def handle_play_arcade_game() -> None:
   """处理玩街机游戏指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.PLAY_ARCADE_GAME, force_taget_wait=True
@@ -2141,7 +2144,7 @@ def handle_play_arcade_game():
 
 
 @add_instruct(constant.Instruct.SWIMMING)
-def handle_swimming():
+def handle_swimming() -> None:
   """处理游泳指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.SWIMMING, force_taget_wait=True
@@ -2149,37 +2152,37 @@ def handle_swimming():
 
 
 @add_instruct(constant.Instruct.TASTE_WINE)
-def handle_taste_wine():
+def handle_taste_wine() -> None:
   """处理品酒指令"""
   cache.now_panel_id = constant.Panel.FOOD_BAG
 
 
 @add_instruct(constant.Instruct.TASTE_TEA)
-def handle_taste_tea():
+def handle_taste_tea() -> None:
   """处理品茶指令"""
   chara_handle_instruct_common_settle(constant.Behavior.TASTE_TEA)
 
 
 @add_instruct(constant.Instruct.TASTE_COFFEE)
-def handle_taste_coffee():
+def handle_taste_coffee() -> None:
   """处理品咖啡指令"""
   chara_handle_instruct_common_settle(constant.Behavior.TASTE_COFFEE)
 
 
 @add_instruct(constant.Instruct.TASTE_DESSERT)
-def handle_taste_dessert():
+def handle_taste_dessert() -> None:
   """处理品尝点心指令"""
   chara_handle_instruct_common_settle(constant.Behavior.TASTE_DESSERT)
 
 
 @add_instruct(constant.Instruct.TASTE_FOOD)
-def handle_taste_food():
+def handle_taste_food() -> None:
   """处理品尝美食指令"""
   chara_handle_instruct_common_settle(constant.Behavior.TASTE_FOOD)
 
 
 @add_instruct(constant.Instruct.PLAY_HOUSE)
-def handle_play_house():
+def handle_play_house() -> None:
   """处理过家家指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.PLAY_HOUSE, force_taget_wait=True
@@ -2187,43 +2190,43 @@ def handle_play_house():
 
 
 @add_instruct(constant.Instruct.STYLE_HAIR)
-def handle_style_hair():
+def handle_style_hair() -> None:
   """处理修整发型指令"""
   chara_handle_instruct_common_settle(constant.Behavior.STYLE_HAIR)
 
 
 @add_instruct(constant.Instruct.FULL_BODY_STYLING)
-def handle_full_body_styling():
+def handle_full_body_styling() -> None:
   """处理全身造型服务指令"""
   chara_handle_instruct_common_settle(constant.Behavior.FULL_BODY_STYLING)
 
 
 @add_instruct(constant.Instruct.SOAK_FEET)
-def handle_soak_feet():
+def handle_soak_feet() -> None:
   """处理泡脚指令"""
   chara_handle_instruct_common_settle(constant.Behavior.SOAK_FEET)
 
 
 @add_instruct(constant.Instruct.STEAM_SAUNA)
-def handle_steam_sauna():
+def handle_steam_sauna() -> None:
   """处理蒸桑拿指令"""
   chara_handle_instruct_common_settle(constant.Behavior.STEAM_SAUNA)
 
 
 @add_instruct(constant.Instruct.HYDROTHERAPY_TREATMENT)
-def handle_hydrotherapy_treatment():
+def handle_hydrotherapy_treatment() -> None:
   """处理水疗护理指令"""
   chara_handle_instruct_common_settle(constant.Behavior.HYDROTHERAPY_TREATMENT)
 
 
 @add_instruct(constant.Instruct.ONSEN_BATH)
-def handle_onsen_bath():
+def handle_onsen_bath() -> None:
   """处理泡温泉指令"""
   chara_handle_instruct_common_settle(constant.Behavior.ONSEN_BATH)
 
 
 @add_instruct(constant.Instruct.AROMATHERAPY)
-def handle_aromatherapy():
+def handle_aromatherapy() -> None:
   """处理香薰疗愈指令"""
   cache.now_panel_id = constant.Panel.AROMATHERAPY
 
@@ -2232,7 +2235,7 @@ def handle_aromatherapy():
 
 
 @add_instruct(constant.Instruct.OFFICIAL_WORK)
-def handle_official_work():
+def handle_official_work() -> None:
   """处理处理公务指令"""
   from Script.System.Official_Event_System import official_event_panel
 
@@ -2245,7 +2248,7 @@ def handle_official_work():
 
 
 @add_instruct(constant.Instruct.BATTLE_COMMAND)
-def handle_battle_command():
+def handle_battle_command() -> None:
   """处理指挥作战指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data = cache.character_data[0]
@@ -2254,43 +2257,43 @@ def handle_battle_command():
 
 
 @add_instruct(constant.Instruct.ASSISTANT_ADJUSTMENTS)
-def handle_ASSISTANT_ADJUSTMENTS():
+def handle_ASSISTANT_ADJUSTMENTS() -> None:
   """处理助理相关调整指令"""
   cache.now_panel_id = constant.Panel.ASSISTANT
 
 
 @add_instruct(constant.Instruct.BUILDING)
-def handle_building():
+def handle_building() -> None:
   """处理基建系统指令"""
   cache.now_panel_id = constant.Panel.BUILDING
 
 
 @add_instruct(constant.Instruct.EQUIPMENT_MAINTAIN)
-def handle_equipment_maintain():
+def handle_equipment_maintain() -> None:
   """处理管理装备维护指令"""
   cache.now_panel_id = constant.Panel.EQUIPMENT_MAINTAIN
 
 
 @add_instruct(constant.Instruct.RECRUITMENT)
-def handle_recruiment():
+def handle_recruiment() -> None:
   """处理招募情况指令"""
   cache.now_panel_id = constant.Panel.RECRUITMENT
 
 
 @add_instruct(constant.Instruct.VISITOR_SYSTEM)
-def handle_visitor_system():
+def handle_visitor_system() -> None:
   """处理访客系统指令"""
   cache.now_panel_id = constant.Panel.VISITOR
 
 
 @add_instruct(constant.Instruct.NATION_DIPLOMACY)
-def handle_nation_diplomacy():
+def handle_nation_diplomacy() -> None:
   """处理势力与外交指令"""
   cache.now_panel_id = constant.Panel.NATION_DIPLOMACY
 
 
 @add_instruct(constant.Instruct.INVITE_VISITOR)
-def handle_invite_visitor():
+def handle_invite_visitor() -> None:
   """处理邀请访客指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.INVITE_VISITOR, force_taget_wait=True
@@ -2298,13 +2301,13 @@ def handle_invite_visitor():
 
 
 @add_instruct(constant.Instruct.PRTS)
-def handle_prts():
+def handle_prts() -> None:
   """处理普瑞赛斯指令"""
   cache.now_panel_id = constant.Panel.PRTS
 
 
 @add_instruct(constant.Instruct.TRAINING)
-def handle_training():
+def handle_training() -> None:
   """处理战斗训练指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.TRAINING, force_taget_wait=True
@@ -2312,7 +2315,7 @@ def handle_training():
 
 
 @add_instruct(constant.Instruct.EXERCISE)
-def handle_exercise():
+def handle_exercise() -> None:
   """处理锻炼身体指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.EXERCISE, force_taget_wait=True
@@ -2320,7 +2323,7 @@ def handle_exercise():
 
 
 @add_instruct(constant.Instruct.CURE_PATIENT)
-def handle_cure_patient():
+def handle_cure_patient() -> None:
   """处理诊疗病人指令"""
   # 如果当前没有病人，输出提示并返回
   if not handle_premise.handle_patient_wait(0):
@@ -2333,13 +2336,13 @@ def handle_cure_patient():
 
 
 @add_instruct(constant.Instruct.MANAGE_DEDICAL_DEPARTMENT)
-def handle_manage_dedical_department():
+def handle_manage_dedical_department() -> None:
   """处理管理医疗系统指令"""
   cache.now_panel_id = constant.Panel.MANAGE_DEDICAL_DEPARTMENT
 
 
 @add_instruct(constant.Instruct.RECRUIT)
-def handle_recruit():
+def handle_recruit() -> None:
   """处理招募干员指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.RECRUIT, force_taget_wait=True
@@ -2347,7 +2350,7 @@ def handle_recruit():
 
 
 @add_instruct(constant.Instruct.CONFIM_RECRUIT)
-def handle_confim_recruit():
+def handle_confim_recruit() -> None:
   """处理确认已招募干员指令"""
   from Script.UI.Panel import recruit_panel
 
@@ -2356,25 +2359,25 @@ def handle_confim_recruit():
 
 
 @add_instruct(constant.Instruct.MAINTENANCE_FACILITIES)
-def handle_maintenance_facilities():
+def handle_maintenance_facilities() -> None:
   """处理维护设施指令"""
   chara_handle_instruct_common_settle(constant.Behavior.MAINTENANCE_FACILITIES)
 
 
 @add_instruct(constant.Instruct.MANAGE_FACILITY_POWER)
-def handle_manage_facility_power():
+def handle_manage_facility_power() -> None:
   """处理调控设施供能指令"""
   chara_handle_instruct_common_settle(constant.Behavior.MANAGE_FACILITY_POWER)
 
 
 @add_instruct(constant.Instruct.MANAGE_POWER_SYSTEM)
-def handle_manage_power_system():
+def handle_manage_power_system() -> None:
   """处理管理能源系统指令"""
   cache.now_panel_id = constant.Panel.MANAGE_POWER_SYSTEM
 
 
 @add_instruct(constant.Instruct.REPAIR_EQUIPMENT)
-def handle_repair_equipment():
+def handle_repair_equipment() -> None:
   """处理维修装备指令"""
   chara_handle_instruct_common_settle(constant.Behavior.REPAIR_EQUIPMENT)
 
@@ -2383,7 +2386,7 @@ def handle_repair_equipment():
 
 
 @add_instruct(constant.Instruct.EMBRACE)
-def handle_embrace():
+def handle_embrace() -> None:
   """处理拥抱指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.EMBRACE, judge=_("初级骚扰"), force_taget_wait=True
@@ -2391,13 +2394,13 @@ def handle_embrace():
 
 
 @add_instruct(constant.Instruct.KISS)
-def handle_kiss():
+def handle_kiss() -> None:
   """处理亲吻指令"""
   chara_handle_instruct_common_settle(constant.Behavior.KISS, judge=_("亲吻"))
 
 
 @add_instruct(constant.Instruct.TOUCH_HEAD)
-def handle_touch_head():
+def handle_touch_head() -> None:
   """处理摸头指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.TOUCH_HEAD, judge=_("初级骚扰")
@@ -2405,7 +2408,7 @@ def handle_touch_head():
 
 
 @add_instruct(constant.Instruct.TOUCH_BREAST)
-def handle_touch_breast():
+def handle_touch_breast() -> None:
   """处理摸胸指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.TOUCH_BREAST, judge=_("初级骚扰")
@@ -2413,7 +2416,7 @@ def handle_touch_breast():
 
 
 @add_instruct(constant.Instruct.TOUCH_BUTTOCKS)
-def handle_touch_buttocks():
+def handle_touch_buttocks() -> None:
   """处理摸屁股指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.TOUCH_BUTTOCKS, judge=_("初级骚扰")
@@ -2421,7 +2424,7 @@ def handle_touch_buttocks():
 
 
 @add_instruct(constant.Instruct.TOUCH_EARS)
-def handle_touch_ears():
+def handle_touch_ears() -> None:
   """处理摸耳朵指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.TOUCH_EARS, judge=_("初级骚扰")
@@ -2429,7 +2432,7 @@ def handle_touch_ears():
 
 
 @add_instruct(constant.Instruct.TOUCH_HORN)
-def handle_touch_horn():
+def handle_touch_horn() -> None:
   """处理摸角指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.TOUCH_HORN, judge=_("初级骚扰")
@@ -2437,7 +2440,7 @@ def handle_touch_horn():
 
 
 @add_instruct(constant.Instruct.TOUCH_TAIL)
-def handle_touch_tail():
+def handle_touch_tail() -> None:
   """处理摸尾巴指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.TOUCH_TAIL, judge=_("初级骚扰")
@@ -2445,7 +2448,7 @@ def handle_touch_tail():
 
 
 @add_instruct(constant.Instruct.TOUCH_RING)
-def handle_touch_ring():
+def handle_touch_ring() -> None:
   """处理摸光环指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.TOUCH_RING, judge=_("初级骚扰")
@@ -2453,7 +2456,7 @@ def handle_touch_ring():
 
 
 @add_instruct(constant.Instruct.TOUCH_WING)
-def handle_touch_wing():
+def handle_touch_wing() -> None:
   """处理摸翅膀指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.TOUCH_WING, judge=_("初级骚扰")
@@ -2461,7 +2464,7 @@ def handle_touch_wing():
 
 
 @add_instruct(constant.Instruct.TOUCH_TENTACLE)
-def handle_touch_tentacle():
+def handle_touch_tentacle() -> None:
   """处理摸触手指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.TOUCH_TENTACLE, judge=_("初级骚扰")
@@ -2469,7 +2472,7 @@ def handle_touch_tentacle():
 
 
 @add_instruct(constant.Instruct.TOUCH_CAR)
-def handle_touch_car():
+def handle_touch_car() -> None:
   """处理摸小车指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.TOUCH_CAR, judge=_("初级骚扰")
@@ -2477,7 +2480,7 @@ def handle_touch_car():
 
 
 @add_instruct(constant.Instruct.HAND_IN_HAND)
-def handle_handle_in_handle():
+def handle_handle_in_handle() -> None:
   """处理牵手指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.HAND_IN_HAND, judge=_("初级骚扰")
@@ -2485,7 +2488,7 @@ def handle_handle_in_handle():
 
 
 @add_instruct(constant.Instruct.LAP_PILLOW)
-def handle_lap_pillow():
+def handle_lap_pillow() -> None:
   """处理膝枕指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.LAP_PILLOW, judge=_("初级骚扰")
@@ -2493,7 +2496,7 @@ def handle_lap_pillow():
 
 
 @add_instruct(constant.Instruct.RAISE_SKIRT)
-def handle_raise_skirt():
+def handle_raise_skirt() -> None:
   """处理掀起裙子指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.RAISE_SKIRT, judge=_("严重骚扰")
@@ -2501,7 +2504,7 @@ def handle_raise_skirt():
 
 
 @add_instruct(constant.Instruct.ASK_FOR_PAN)
-def handle_ask_for_pan():
+def handle_ask_for_pan() -> None:
   """处理索要内裤指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.ASK_FOR_PAN, judge=_("严重骚扰")
@@ -2509,7 +2512,7 @@ def handle_ask_for_pan():
 
 
 @add_instruct(constant.Instruct.ASK_FOR_SOCKS)
-def handle_ask_for_socks():
+def handle_ask_for_socks() -> None:
   """处理索要袜子指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.ASK_FOR_SOCKS, judge=_("严重骚扰")
@@ -2517,7 +2520,7 @@ def handle_ask_for_socks():
 
 
 @add_instruct(constant.Instruct.INVITE_TO_BATH)
-def handle_invite_to_bath():
+def handle_invite_to_bath() -> None:
   """处理一起洗澡指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.INVITE_TO_BATH,
@@ -2527,7 +2530,7 @@ def handle_invite_to_bath():
 
 
 @add_instruct(constant.Instruct.ASK_COPY_KEY)
-def handle_ask_copy_key():
+def handle_ask_copy_key() -> None:
   """处理要求复制钥匙指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.ASK_COPY_KEY, judge=_("严重骚扰")
@@ -2535,31 +2538,31 @@ def handle_ask_copy_key():
 
 
 @add_instruct(constant.Instruct.STEAL_PAN)
-def handle_steal_pan():
+def handle_steal_pan() -> None:
   """处理偷走内裤指令"""
   chara_handle_instruct_common_settle(constant.Behavior.STEAL_PAN)
 
 
 @add_instruct(constant.Instruct.STEAL_SOCKS)
-def handle_steal_socks():
+def handle_steal_socks() -> None:
   """处理偷走袜子指令"""
   chara_handle_instruct_common_settle(constant.Behavior.STEAL_SOCKS)
 
 
 @add_instruct(constant.Instruct.STEAL_SCENE_ALL_PAN)
-def handle_steal_scene_all_pan():
+def handle_steal_scene_all_pan() -> None:
   """处理偷走所有人内裤指令"""
   chara_handle_instruct_common_settle(constant.Behavior.STEAL_SCENE_ALL_PAN)
 
 
 @add_instruct(constant.Instruct.STEAL_SCENE_ALL_SOCKS)
-def handle_steal_scene_all_socks():
+def handle_steal_scene_all_socks() -> None:
   """处理偷走所有人袜子指令"""
   chara_handle_instruct_common_settle(constant.Behavior.STEAL_SCENE_ALL_SOCKS)
 
 
 @add_instruct(constant.Instruct.TOUCH_CLITORIS)
-def handle_touch_clitoris():
+def handle_touch_clitoris() -> None:
   """处理阴蒂爱抚指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.TOUCH_CLITORIS, judge=_("严重骚扰")
@@ -2567,7 +2570,7 @@ def handle_touch_clitoris():
 
 
 @add_instruct(constant.Instruct.TOUCH_VAGINA)
-def handle_touch_vagina():
+def handle_touch_vagina() -> None:
   """处理手指插入（V）指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.TOUCH_VAGINA, judge=_("严重骚扰")
@@ -2575,7 +2578,7 @@ def handle_touch_vagina():
 
 
 @add_instruct(constant.Instruct.TOUCH_ANUS)
-def handle_touch_anus():
+def handle_touch_anus() -> None:
   """处理手指插入（A）指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.TOUCH_ANUS, judge=_("严重骚扰")
@@ -2583,7 +2586,7 @@ def handle_touch_anus():
 
 
 @add_instruct(constant.Instruct.MILK)
-def handle_milk():
+def handle_milk() -> None:
   """处理挤奶指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.MILK, judge=_("严重骚扰")
@@ -2591,7 +2594,7 @@ def handle_milk():
 
 
 @add_instruct(constant.Instruct.REMOTE_TOY_ON)
-def handle_remote_toy_on():
+def handle_remote_toy_on() -> None:
   """处理遥控启动玩具指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.REMOTE_TURN_ON_SEX_TOY, judge=_("严重骚扰")
@@ -2599,13 +2602,13 @@ def handle_remote_toy_on():
 
 
 @add_instruct(constant.Instruct.REMOTE_TOY_OFF)
-def handle_remote_toy_off():
+def handle_remote_toy_off() -> None:
   """处理遥控关闭玩具指令"""
   chara_handle_instruct_common_settle(constant.Behavior.REMOTE_TURN_OFF_SEX_TOY)
 
 
 @add_instruct(constant.Instruct.REMOTE_TOY_LEVEL_UP)
-def handle_remote_toy_level_up():
+def handle_remote_toy_level_up() -> None:
   """处理调高玩具档位指令"""
   if handle_premise.handle_target_now_sex_toy_weak(0):
     chara_handle_instruct_common_settle(
@@ -2618,7 +2621,7 @@ def handle_remote_toy_level_up():
 
 
 @add_instruct(constant.Instruct.REMOTE_TOY_LEVEL_DOWN)
-def handle_remote_toy_level_down():
+def handle_remote_toy_level_down() -> None:
   """处理降低玩具档位指令"""
   if handle_premise.handle_target_now_sex_toy_strong(0):
     chara_handle_instruct_common_settle(
@@ -2632,7 +2635,7 @@ def handle_remote_toy_level_down():
 
 
 @add_instruct(constant.Instruct.REMOTE_TOY_ALL_OFF)
-def handle_remote_toy_all_off():
+def handle_remote_toy_all_off() -> None:
   """处理遥控关闭全员玩具指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.REMOTE_ALL_TURN_OFF_SEX_TOY
@@ -2640,7 +2643,7 @@ def handle_remote_toy_all_off():
 
 
 @add_instruct(constant.Instruct.REMOTE_ALL_SET_SEX_TOY_WEAK)
-def handle_remote_all_set_sex_toy_weak():
+def handle_remote_all_set_sex_toy_weak() -> None:
   """处理全员玩具调到弱档指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.REMOTE_ALL_SET_SEX_TOY_WEAK, judge=_("严重骚扰")
@@ -2648,7 +2651,7 @@ def handle_remote_all_set_sex_toy_weak():
 
 
 @add_instruct(constant.Instruct.REMOTE_ALL_SET_SEX_TOY_MEDIUM)
-def handle_remote_all_set_sex_toy_medium():
+def handle_remote_all_set_sex_toy_medium() -> None:
   """处理全员玩具调到中档指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.REMOTE_ALL_SET_SEX_TOY_MEDIUM, judge=_("严重骚扰")
@@ -2656,7 +2659,7 @@ def handle_remote_all_set_sex_toy_medium():
 
 
 @add_instruct(constant.Instruct.REMOTE_ALL_SET_SEX_TOY_STRONG)
-def handle_remote_all_set_sex_toy_strong():
+def handle_remote_all_set_sex_toy_strong() -> None:
   """处理全员玩具调到强档指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.REMOTE_ALL_SET_SEX_TOY_STRONG, judge=_("严重骚扰")
@@ -2664,13 +2667,13 @@ def handle_remote_all_set_sex_toy_strong():
 
 
 @add_instruct(constant.Instruct.BAGGING_AND_MOVING)
-def handle_bagging_and_moving():
+def handle_bagging_and_moving() -> None:
   """处理装袋搬走指令"""
   chara_handle_instruct_common_settle(constant.Behavior.BAGGING_AND_MOVING)
 
 
 @add_instruct(constant.Instruct.RELEASE_FROM_BAG)
-def handle_release_from_bag():
+def handle_release_from_bag() -> None:
   """处理从袋中放出来指令"""
   pl_character_data = cache.character_data[0]
   pl_character_data.target_character_id = (
@@ -2682,7 +2685,7 @@ def handle_release_from_bag():
 
 
 @add_instruct(constant.Instruct.PUT_INTO_PRISON)
-def handle_put_into_prision():
+def handle_put_into_prision() -> None:
   """处理投入监牢指令"""
   pl_character_data = cache.character_data[0]
   pl_character_data.target_character_id = (
@@ -2694,7 +2697,7 @@ def handle_put_into_prision():
 
 
 @add_instruct(constant.Instruct.SET_FREE)
-def handle_set_free():
+def handle_set_free() -> None:
   """处理解除囚禁指令"""
   chara_handle_instruct_common_settle(constant.Behavior.SET_FREE)
 
@@ -2703,85 +2706,85 @@ def handle_set_free():
 
 
 @add_instruct(constant.Instruct.MAKING_OUT)
-def handle_making_out():
+def handle_making_out() -> None:
   """处理身体爱抚指令"""
   chara_handle_instruct_common_settle(constant.Behavior.MAKING_OUT)
 
 
 @add_instruct(constant.Instruct.KISS_H)
-def handle_kiss_h():
+def handle_kiss_h() -> None:
   """处理接吻指令"""
   chara_handle_instruct_common_settle(constant.Behavior.KISS_H, judge=_("亲吻"))
 
 
 @add_instruct(constant.Instruct.BREAST_CARESS)
-def handle_breast_caress():
+def handle_breast_caress() -> None:
   """处理胸爱抚指令"""
   chara_handle_instruct_common_settle(constant.Behavior.BREAST_CARESS)
 
 
 @add_instruct(constant.Instruct.TWIDDLE_NIPPLES)
-def handle_twiddle_nipples():
+def handle_twiddle_nipples() -> None:
   """处理玩弄乳头指令"""
   chara_handle_instruct_common_settle(constant.Behavior.TWIDDLE_NIPPLES)
 
 
 @add_instruct(constant.Instruct.BREAST_SUCKING)
-def handle_breast_sucking():
+def handle_breast_sucking() -> None:
   """处理舔吸乳头指令"""
   chara_handle_instruct_common_settle(constant.Behavior.BREAST_SUCKING)
 
 
 @add_instruct(constant.Instruct.EXTERNAL_WOMB_MASSAGE)
-def handle_external_womb_massage():
+def handle_external_womb_massage() -> None:
   """处理体外子宫按摩指令"""
   chara_handle_instruct_common_settle(constant.Behavior.EXTERNAL_WOMB_MASSAGE)
 
 
 @add_instruct(constant.Instruct.CLIT_CARESS)
-def handle_cilt_caress():
+def handle_cilt_caress() -> None:
   """处理阴蒂爱抚指令"""
   chara_handle_instruct_common_settle(constant.Behavior.CLIT_CARESS)
 
 
 @add_instruct(constant.Instruct.OPEN_LABIA)
-def handle_open_labia():
+def handle_open_labia() -> None:
   """处理掰开阴唇观察指令"""
   chara_handle_instruct_common_settle(constant.Behavior.OPEN_LABIA)
 
 
 @add_instruct(constant.Instruct.OPEN_ANUS)
-def handle_open_anus():
+def handle_open_anus() -> None:
   """处理掰开肛门观察指令"""
   chara_handle_instruct_common_settle(constant.Behavior.OPEN_ANUS)
 
 
 @add_instruct(constant.Instruct.CUNNILINGUS)
-def handle_cunnilingus():
+def handle_cunnilingus() -> None:
   """处理舔阴指令"""
   chara_handle_instruct_common_settle(constant.Behavior.CUNNILINGUS)
 
 
 @add_instruct(constant.Instruct.LICK_ANAL)
-def handle_lict_anal():
+def handle_lict_anal() -> None:
   """处理舔肛指令"""
   chara_handle_instruct_common_settle(constant.Behavior.LICK_ANAL)
 
 
 @add_instruct(constant.Instruct.FINGER_INSERTION)
-def handle_finger_insertion():
+def handle_finger_insertion() -> None:
   """处理手指插入(V)指令"""
   chara_handle_instruct_common_settle(constant.Behavior.FINGER_INSERTION)
 
 
 @add_instruct(constant.Instruct.ANAL_CARESS)
-def handle_anal_caress():
+def handle_anal_caress() -> None:
   """处理手指插入(A)指令"""
   chara_handle_instruct_common_settle(constant.Behavior.ANAL_CARESS)
 
 
 @add_instruct(constant.Instruct.URETHRAL_FINGER_INSERTION)
-def handle_urethral_finger_insertion():
+def handle_urethral_finger_insertion() -> None:
   """处理尿道指姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.URETHRAL_FINGER_INSERTION, judge=_("U开发")
@@ -2789,19 +2792,19 @@ def handle_urethral_finger_insertion():
 
 
 @add_instruct(constant.Instruct.MAKE_MASTUREBATE)
-def handle_make_masturebate():
+def handle_make_masturebate() -> None:
   """处理命令对方自慰指令"""
   chara_handle_instruct_common_settle(constant.Behavior.MAKE_MASTUREBATE)
 
 
 @add_instruct(constant.Instruct.MAKE_LICK_ANAL)
-def handle_make_lick_anal():
+def handle_make_lick_anal() -> None:
   """处理命令对方舔自己肛门指令"""
   chara_handle_instruct_common_settle(constant.Behavior.MAKE_LICK_ANAL)
 
 
 @add_instruct(constant.Instruct.ASK_PEE)
-def handle_ask_pee():
+def handle_ask_pee() -> None:
   """处理命令对方小便指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.ASK_PEE, judge=_("严重骚扰")
@@ -2809,19 +2812,19 @@ def handle_ask_pee():
 
 
 @add_instruct(constant.Instruct.SEDECU)
-def handle_sedecu():
+def handle_sedecu() -> None:
   """处理诱惑对方指令"""
   chara_handle_instruct_common_settle(constant.Behavior.SEDECU)
 
 
 @add_instruct(constant.Instruct.HANDJOB)
-def handle_handjob():
+def handle_handjob() -> None:
   """处理手交指令"""
   chara_handle_instruct_common_settle(constant.Behavior.HANDJOB)
 
 
 @add_instruct(constant.Instruct.BLOWJOB)
-def handle_blowjob():
+def handle_blowjob() -> None:
   """处理口交指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BLOWJOB, judge=_("口交")
@@ -2829,37 +2832,37 @@ def handle_blowjob():
 
 
 @add_instruct(constant.Instruct.PAIZURI)
-def handle_paizuri():
+def handle_paizuri() -> None:
   """处理乳交指令"""
   chara_handle_instruct_common_settle(constant.Behavior.PAIZURI)
 
 
 @add_instruct(constant.Instruct.FOOTJOB)
-def handle_footjob():
+def handle_footjob() -> None:
   """处理足交指令"""
   chara_handle_instruct_common_settle(constant.Behavior.FOOTJOB)
 
 
 @add_instruct(constant.Instruct.HAIRJOB)
-def handle_hairjob():
+def handle_hairjob() -> None:
   """处理发交指令"""
   chara_handle_instruct_common_settle(constant.Behavior.HAIRJOB)
 
 
 @add_instruct(constant.Instruct.AXILLAJOB)
-def handle_axillajob():
+def handle_axillajob() -> None:
   """处理腋交指令"""
   chara_handle_instruct_common_settle(constant.Behavior.AXILLAJOB)
 
 
 @add_instruct(constant.Instruct.RUB_BUTTOCK)
-def handle_rub_buttock():
+def handle_rub_buttock() -> None:
   """处理素股指令"""
   chara_handle_instruct_common_settle(constant.Behavior.RUB_BUTTOCK)
 
 
 @add_instruct(constant.Instruct.HAND_BLOWJOB)
-def handle_hand_blowjob():
+def handle_hand_blowjob() -> None:
   """处理手交口交指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.HAND_BLOWJOB, judge=_("口交")
@@ -2867,7 +2870,7 @@ def handle_hand_blowjob():
 
 
 @add_instruct(constant.Instruct.TITS_BLOWJOB)
-def handle_tits_blowjob():
+def handle_tits_blowjob() -> None:
   """处理乳交口交指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.TITS_BLOWJOB, judge=_("口交")
@@ -2875,7 +2878,7 @@ def handle_tits_blowjob():
 
 
 @add_instruct(constant.Instruct.FOCUS_BLOWJOB)
-def handle_focus_blowjob():
+def handle_focus_blowjob() -> None:
   """处理真空口交指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.FOCUS_BLOWJOB, judge=_("口交")
@@ -2883,7 +2886,7 @@ def handle_focus_blowjob():
 
 
 @add_instruct(constant.Instruct.DEEP_THROAT)
-def handle_deep_throat():
+def handle_deep_throat() -> None:
   """处理深喉插入指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.DEEP_THROAT, judge=_("SM")
@@ -2891,7 +2894,7 @@ def handle_deep_throat():
 
 
 @add_instruct(constant.Instruct.CLEAN_BLOWJOB)
-def handle_clean_blowjob():
+def handle_clean_blowjob() -> None:
   """处理清洁口交指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.CLEAN_BLOWJOB, judge=_("口交")
@@ -2899,7 +2902,7 @@ def handle_clean_blowjob():
 
 
 @add_instruct(constant.Instruct.SIXTY_NINE)
-def handle_sixty_nine():
+def handle_sixty_nine() -> None:
   """处理六九式指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.SIXTY_NINE, judge=_("口交")
@@ -2907,121 +2910,121 @@ def handle_sixty_nine():
 
 
 @add_instruct(constant.Instruct.LEGJOB)
-def handle_legjob():
+def handle_legjob() -> None:
   """处理腿交指令"""
   chara_handle_instruct_common_settle(constant.Behavior.LEGJOB)
 
 
 @add_instruct(constant.Instruct.TAILJOB)
-def handle_tailjob():
+def handle_tailjob() -> None:
   """处理尾交指令"""
   chara_handle_instruct_common_settle(constant.Behavior.TAILJOB)
 
 
 @add_instruct(constant.Instruct.FACE_RUB)
-def handle_face_rub():
+def handle_face_rub() -> None:
   """处理阴茎蹭脸指令"""
   chara_handle_instruct_common_settle(constant.Behavior.FACE_RUB)
 
 
 @add_instruct(constant.Instruct.HORN_RUB)
-def handle_horn_rub():
+def handle_horn_rub() -> None:
   """处理阴茎蹭角指令"""
   chara_handle_instruct_common_settle(constant.Behavior.HORN_RUB)
 
 
 @add_instruct(constant.Instruct.EARS_RUB)
-def handle_eras_rub():
+def handle_eras_rub() -> None:
   """处理阴茎蹭耳朵指令"""
   chara_handle_instruct_common_settle(constant.Behavior.EARS_RUB)
 
 
 @add_instruct(constant.Instruct.HAT_JOB)
-def handle_hat_job():
+def handle_hat_job() -> None:
   """处理帽子交指令"""
   chara_handle_instruct_common_settle(constant.Behavior.HAT_JOB)
 
 
 @add_instruct(constant.Instruct.GLASSES_JOB)
-def handle_glasses_job():
+def handle_glasses_job() -> None:
   """处理眼镜交指令"""
   chara_handle_instruct_common_settle(constant.Behavior.GLASSES_JOB)
 
 
 @add_instruct(constant.Instruct.EAR_ORNAMENT_JOB)
-def handle_ear_ornament_job():
+def handle_ear_ornament_job() -> None:
   """处理耳饰交指令"""
   chara_handle_instruct_common_settle(constant.Behavior.EAR_ORNAMENT_JOB)
 
 
 @add_instruct(constant.Instruct.NECK_ORNAMENT_JOB)
-def handle_neck_ornament_job():
+def handle_neck_ornament_job() -> None:
   """处理脖饰交指令"""
   chara_handle_instruct_common_settle(constant.Behavior.NECK_ORNAMENT_JOB)
 
 
 @add_instruct(constant.Instruct.MOUTH_ORNAMENT_JOB)
-def handle_mouth_ornament_job():
+def handle_mouth_ornament_job() -> None:
   """处理口罩交指令"""
   chara_handle_instruct_common_settle(constant.Behavior.MOUTH_ORNAMENT_JOB)
 
 
 @add_instruct(constant.Instruct.TOP_JOB)
-def handle_top_job():
+def handle_top_job() -> None:
   """处理上衣交指令"""
   chara_handle_instruct_common_settle(constant.Behavior.TOP_JOB)
 
 
 @add_instruct(constant.Instruct.CORSET_JOB)
-def handle_corset_job():
+def handle_corset_job() -> None:
   """处理胸衣交指令"""
   chara_handle_instruct_common_settle(constant.Behavior.CORSET_JOB)
 
 
 @add_instruct(constant.Instruct.GLOVES_JOB)
-def handle_gloves_job():
+def handle_gloves_job() -> None:
   """处理手套交指令"""
   chara_handle_instruct_common_settle(constant.Behavior.GLOVES_JOB)
 
 
 @add_instruct(constant.Instruct.SKIRT_JOB)
-def handle_skirt_job():
+def handle_skirt_job() -> None:
   """处理裙子交指令"""
   chara_handle_instruct_common_settle(constant.Behavior.SKIRT_JOB)
 
 
 @add_instruct(constant.Instruct.TROUSERS_JOB)
-def handle_trousers_job():
+def handle_trousers_job() -> None:
   """处理裤子交指令"""
   chara_handle_instruct_common_settle(constant.Behavior.TROUSERS_JOB)
 
 
 @add_instruct(constant.Instruct.UNDERWEAR_JOB)
-def handle_underwear_job():
+def handle_underwear_job() -> None:
   """处理内裤交指令"""
   chara_handle_instruct_common_settle(constant.Behavior.UNDERWEAR_JOB)
 
 
 @add_instruct(constant.Instruct.SOCKS_JOB)
-def handle_socks_job():
+def handle_socks_job() -> None:
   """处理袜子交指令"""
   chara_handle_instruct_common_settle(constant.Behavior.SOCKS_JOB)
 
 
 @add_instruct(constant.Instruct.SHOES_JOB)
-def handle_shoes_job():
+def handle_shoes_job() -> None:
   """处理鞋子交指令"""
   chara_handle_instruct_common_settle(constant.Behavior.SHOES_JOB)
 
 
 @add_instruct(constant.Instruct.WEAPONS_JOB)
-def handle_weapons_job():
+def handle_weapons_job() -> None:
   """处理武器交指令"""
   chara_handle_instruct_common_settle(constant.Behavior.WEAPONS_JOB)
 
 
 @add_instruct(constant.Instruct.NIPPLE_CLAMP_ON)
-def handle_nipple_clamp_on():
+def handle_nipple_clamp_on() -> None:
   """处理戴上乳头夹指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.NIPPLE_CLAMP_ON, judge=_("道具")
@@ -3029,13 +3032,13 @@ def handle_nipple_clamp_on():
 
 
 @add_instruct(constant.Instruct.NIPPLE_CLAMP_OFF)
-def handle_nipple_clamp_off():
+def handle_nipple_clamp_off() -> None:
   """处理取下乳头夹指令"""
   chara_handle_instruct_common_settle(constant.Behavior.NIPPLE_CLAMP_OFF)
 
 
 @add_instruct(constant.Instruct.URETHRAL_SWAB)
-def handle_urethral_swab():
+def handle_urethral_swab() -> None:
   """处理尿道棉棒指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.URETHRAL_SWAB, judge=_("U开发")
@@ -3043,13 +3046,13 @@ def handle_urethral_swab():
 
 
 @add_instruct(constant.Instruct.NIPPLES_LOVE_EGG)
-def handle_nipples_love_egg():
+def handle_nipples_love_egg() -> None:
   """处理乳头跳蛋指令"""
   chara_handle_instruct_common_settle(constant.Behavior.NIPPLES_LOVE_EGG)
 
 
 @add_instruct(constant.Instruct.CLIT_CLAMP_ON)
-def handle_clit_clamp_on():
+def handle_clit_clamp_on() -> None:
   """处理戴上阴蒂夹指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.CLIT_CLAMP_ON, judge=_("道具")
@@ -3057,25 +3060,25 @@ def handle_clit_clamp_on():
 
 
 @add_instruct(constant.Instruct.CLIT_CLAMP_OFF)
-def handle_clit_clamp_off():
+def handle_clit_clamp_off() -> None:
   """处理取下阴蒂夹指令"""
   chara_handle_instruct_common_settle(constant.Behavior.CLIT_CLAMP_OFF)
 
 
 @add_instruct(constant.Instruct.CLIT_LOVE_EGG)
-def handle_clit_love_egg():
+def handle_clit_love_egg() -> None:
   """处理阴蒂跳蛋指令"""
   chara_handle_instruct_common_settle(constant.Behavior.CLIT_LOVE_EGG)
 
 
 @add_instruct(constant.Instruct.ELECTRIC_MESSAGE_STICK)
-def handle_electric_message_stick():
+def handle_electric_message_stick() -> None:
   """处理电动按摩棒指令"""
   chara_handle_instruct_common_settle(constant.Behavior.ELECTRIC_MESSAGE_STICK)
 
 
 @add_instruct(constant.Instruct.VIBRATOR_INSERTION)
-def handle_vibrator_insertion():
+def handle_vibrator_insertion() -> None:
   """处理插入震动棒指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.VIBRATOR_INSERTION, judge=_("道具")
@@ -3083,7 +3086,7 @@ def handle_vibrator_insertion():
 
 
 @add_instruct(constant.Instruct.VIBRATOR_INSERTION_ANAL)
-def handle_vibrator_insertion_anal():
+def handle_vibrator_insertion_anal() -> None:
   """处理肛门插入震动棒指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.VIBRATOR_INSERTION_ANAL, judge=_("道具")
@@ -3091,13 +3094,13 @@ def handle_vibrator_insertion_anal():
 
 
 @add_instruct(constant.Instruct.VIBRATOR_INSERTION_OFF)
-def handle_vibrator_insertion_off():
+def handle_vibrator_insertion_off() -> None:
   """处理拔出震动棒指令"""
   chara_handle_instruct_common_settle(constant.Behavior.VIBRATOR_INSERTION_OFF)
 
 
 @add_instruct(constant.Instruct.VIBRATOR_INSERTION_ANAL_OFF)
-def handle_vibrator_insertion_anal_off():
+def handle_vibrator_insertion_anal_off() -> None:
   """处理拔出肛门震动棒指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.VIBRATOR_INSERTION_ANAL_OFF
@@ -3105,31 +3108,31 @@ def handle_vibrator_insertion_anal_off():
 
 
 @add_instruct(constant.Instruct.CLYSTER)
-def handle_clyster():
+def handle_clyster() -> None:
   """处理灌肠指令"""
   chara_handle_instruct_common_settle(constant.Behavior.CLYSTER, judge=_("SM"))
 
 
 @add_instruct(constant.Instruct.CONTINUE_CLYSTER)
-def handle_continue_clyster():
+def handle_continue_clyster() -> None:
   """处理继续灌肠指令"""
   chara_handle_instruct_common_settle(constant.Behavior.CLYSTER, judge=_("SM"))
 
 
 @add_instruct(constant.Instruct.CLYSTER_END)
-def handle_clyster_end():
+def handle_clyster_end() -> None:
   """处理拔出肛塞指令"""
   chara_handle_instruct_common_settle(constant.Behavior.CLYSTER_END)
 
 
 @add_instruct(constant.Instruct.ANAL_PLUG)
-def handle_anal_plug():
+def handle_anal_plug() -> None:
   """处理肛塞指令"""
   chara_handle_instruct_common_settle(constant.Behavior.ANAL_PLUG)
 
 
 @add_instruct(constant.Instruct.ANAL_BEADS)
-def handle_anal_beads():
+def handle_anal_beads() -> None:
   """处理塞入肛门拉珠指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.ANAL_BEADS, judge=_("道具")
@@ -3137,13 +3140,13 @@ def handle_anal_beads():
 
 
 @add_instruct(constant.Instruct.ANAL_BEADS_OFF)
-def handle_anal_beads_off():
+def handle_anal_beads_off() -> None:
   """处理拔出肛门拉珠指令"""
   chara_handle_instruct_common_settle(constant.Behavior.ANAL_BEADS_OFF)
 
 
 @add_instruct(constant.Instruct.MILKING_MACHINE_ON)
-def handle_milking_machine_on():
+def handle_milking_machine_on() -> None:
   """处理装上搾乳机指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.MILKING_MACHINE_ON, judge=_("道具")
@@ -3151,13 +3154,13 @@ def handle_milking_machine_on():
 
 
 @add_instruct(constant.Instruct.MILKING_MACHINE_OFF)
-def handle_milking_machine_off():
+def handle_milking_machine_off() -> None:
   """处理取下搾乳机指令"""
   chara_handle_instruct_common_settle(constant.Behavior.MILKING_MACHINE_OFF)
 
 
 @add_instruct(constant.Instruct.URINE_COLLECTOR_ON)
-def handle_urine_collector_on():
+def handle_urine_collector_on() -> None:
   """处理装上采尿器指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.URINE_COLLECTOR_ON, judge=_("U开发")
@@ -3165,25 +3168,25 @@ def handle_urine_collector_on():
 
 
 @add_instruct(constant.Instruct.URINE_COLLECTOR_OFF)
-def handle_urine_collector_off():
+def handle_urine_collector_off() -> None:
   """处理取下采尿器指令"""
   chara_handle_instruct_common_settle(constant.Behavior.URINE_COLLECTOR_OFF)
 
 
 @add_instruct(constant.Instruct.REMOTE_TOY_ON_IN_H)
-def handle_remote_toy_on_in_h():
+def handle_remote_toy_on_in_h() -> None:
   """处理遥控启动玩具指令"""
   chara_handle_instruct_common_settle(constant.Behavior.REMOTE_TURN_ON_SEX_TOY)
 
 
 @add_instruct(constant.Instruct.REMOTE_TOY_OFF_IN_H)
-def handle_remote_toy_off_in_h():
+def handle_remote_toy_off_in_h() -> None:
   """处理遥控关闭玩具指令"""
   chara_handle_instruct_common_settle(constant.Behavior.REMOTE_TURN_OFF_SEX_TOY)
 
 
 @add_instruct(constant.Instruct.REMOTE_TOY_LEVEL_UP_IN_H)
-def handle_remote_toy_level_up_in_h():
+def handle_remote_toy_level_up_in_h() -> None:
   """处理调高玩具档位指令"""
   if handle_premise.handle_target_now_sex_toy_weak(0):
     chara_handle_instruct_common_settle(
@@ -3196,7 +3199,7 @@ def handle_remote_toy_level_up_in_h():
 
 
 @add_instruct(constant.Instruct.REMOTE_TOY_LEVEL_DOWN_IN_H)
-def handle_remote_toy_level_down_in_h():
+def handle_remote_toy_level_down_in_h() -> None:
   """处理降低玩具档位指令"""
   if handle_premise.handle_target_now_sex_toy_strong(0):
     chara_handle_instruct_common_settle(
@@ -3209,7 +3212,7 @@ def handle_remote_toy_level_down_in_h():
 
 
 @add_instruct(constant.Instruct.REMOTE_TOY_ALL_OFF_IN_H)
-def handle_remote_toy_all_off_in_h():
+def handle_remote_toy_all_off_in_h() -> None:
   """处理遥控关闭全员玩具指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.REMOTE_ALL_TURN_OFF_SEX_TOY, judge=_("严重骚扰")
@@ -3217,7 +3220,7 @@ def handle_remote_toy_all_off_in_h():
 
 
 @add_instruct(constant.Instruct.REMOTE_ALL_SET_SEX_TOY_WEAK_IN_H)
-def handle_remote_all_set_sex_toy_weak_in_h():
+def handle_remote_all_set_sex_toy_weak_in_h() -> None:
   """处理全员玩具调到弱档指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.REMOTE_ALL_SET_SEX_TOY_WEAK, judge=_("严重骚扰")
@@ -3225,7 +3228,7 @@ def handle_remote_all_set_sex_toy_weak_in_h():
 
 
 @add_instruct(constant.Instruct.REMOTE_ALL_SET_SEX_TOY_MEDIUM_IN_H)
-def handle_remote_all_set_sex_toy_medium_in_h():
+def handle_remote_all_set_sex_toy_medium_in_h() -> None:
   """处理全员玩具调到中档指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.REMOTE_ALL_SET_SEX_TOY_MEDIUM, judge=_("严重骚扰")
@@ -3233,7 +3236,7 @@ def handle_remote_all_set_sex_toy_medium_in_h():
 
 
 @add_instruct(constant.Instruct.REMOTE_ALL_SET_SEX_TOY_STRONG_IN_H)
-def handle_remote_all_set_sex_toy_strong_in_h():
+def handle_remote_all_set_sex_toy_strong_in_h() -> None:
   """处理全员玩具调到强档指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.REMOTE_ALL_SET_SEX_TOY_STRONG, judge=_("严重骚扰")
@@ -3241,60 +3244,60 @@ def handle_remote_all_set_sex_toy_strong_in_h():
 
 
 @add_instruct(constant.Instruct.BONDAGE)
-def handle_bondage():
+def handle_bondage() -> None:
   """处理绳艺指令"""
   cache.now_panel_id = constant.Panel.BONDAGE
 
 
 @add_instruct(constant.Instruct.PATCH_ON)
-def handle_patch_on():
+def handle_patch_on() -> None:
   """处理戴上眼罩指令"""
   chara_handle_instruct_common_settle(constant.Behavior.PATCH_ON)
 
 
 @add_instruct(constant.Instruct.PATCH_OFF)
-def handle_patch_off():
+def handle_patch_off() -> None:
   """处理摘下眼罩指令"""
   chara_handle_instruct_common_settle(constant.Behavior.PATCH_OFF)
 
 
 @add_instruct(constant.Instruct.GAG_ON)
-def handle_gag_on():
+def handle_gag_on() -> None:
   """处理戴上口球指令"""
   chara_handle_instruct_common_settle(constant.Behavior.GAG_ON)
 
 
 @add_instruct(constant.Instruct.GAG_OFF)
-def handle_gag_off():
+def handle_gag_off() -> None:
   """处理摘下口球指令"""
   chara_handle_instruct_common_settle(constant.Behavior.GAG_OFF)
 
 
 @add_instruct(constant.Instruct.WHIP)
-def handle_whip():
+def handle_whip() -> None:
   """处理鞭子指令"""
   chara_handle_instruct_common_settle(constant.Behavior.WHIP, judge=_("SM"))
 
 
 @add_instruct(constant.Instruct.NEEDLE)
-def handle_neddle():
+def handle_neddle() -> None:
   """处理针指令"""
   chara_handle_instruct_common_settle(constant.Behavior.NEEDLE, judge=_("SM"))
 
 
 @add_instruct(constant.Instruct.PUT_CONDOM)
-def handle_put_condom():
+def handle_put_condom() -> None:
   """处理戴上避孕套指令"""
   chara_handle_instruct_common_settle(constant.Behavior.PUT_CONDOM)
 
 
 @add_instruct(constant.Instruct.TAKE_CONDOM_OUT)
-def handle_take_condom_out():
+def handle_take_condom_out() -> None:
   """处理摘掉避孕套指令"""
   chara_handle_instruct_common_settle(constant.Behavior.TAKE_CONDOM_OUT)
 
 
-def handle_condom_instruct_common(mode: str, behavior_id: str):
+def handle_condom_instruct_common(mode: str, behavior_id: str) -> None:
   """
   避孕套指令的公共处理流程
   先进行严重骚扰级别的实行值判定，判定失败则结算为严重骚扰失败行为且不打开选择面板；
@@ -3323,7 +3326,7 @@ def handle_condom_instruct_common(mode: str, behavior_id: str):
 
 
 @add_instruct(constant.Instruct.HANG_CONDOM_DECORATION)
-def handle_hang_condom_decoration():
+def handle_hang_condom_decoration() -> None:
   """处理挂上避孕套装饰指令，数据结算在选择面板确认时直接完成"""
   handle_condom_instruct_common(
       "hang", constant.Behavior.HANG_CONDOM_DECORATION
@@ -3331,7 +3334,7 @@ def handle_hang_condom_decoration():
 
 
 @add_instruct(constant.Instruct.TAKE_BACK_CONDOM_DECORATION)
-def handle_take_back_condom_decoration():
+def handle_take_back_condom_decoration() -> None:
   """处理取回避孕套装饰指令，数据结算在选择面板确认时直接完成"""
   handle_condom_instruct_common(
       "take_back", constant.Behavior.TAKE_BACK_CONDOM_DECORATION
@@ -3339,13 +3342,13 @@ def handle_take_back_condom_decoration():
 
 
 @add_instruct(constant.Instruct.DRINK_CONDOM_SEMEN)
-def handle_drink_condom_semen():
+def handle_drink_condom_semen() -> None:
   """处理饮用避孕套精液指令，数据结算在选择面板确认时直接完成"""
   handle_condom_instruct_common("drink", constant.Behavior.DRINK_CONDOM_SEMEN)
 
 
 @add_instruct(constant.Instruct.SQUEEZE_CONDOM_SEMEN)
-def handle_squeeze_condom_semen():
+def handle_squeeze_condom_semen() -> None:
   """处理挤出避孕套精液指令，数据结算在选择面板确认时直接完成"""
   handle_condom_instruct_common(
       "squeeze", constant.Behavior.SQUEEZE_CONDOM_SEMEN
@@ -3353,7 +3356,7 @@ def handle_squeeze_condom_semen():
 
 
 @add_instruct(constant.Instruct.HANG_CONDOM_DECORATION_DAILY)
-def handle_hang_condom_decoration_daily():
+def handle_hang_condom_decoration_daily() -> None:
   """处理非H下的挂上避孕套装饰指令，与H版共用行为与面板"""
   handle_condom_instruct_common(
       "hang", constant.Behavior.HANG_CONDOM_DECORATION
@@ -3361,7 +3364,7 @@ def handle_hang_condom_decoration_daily():
 
 
 @add_instruct(constant.Instruct.TAKE_BACK_CONDOM_DECORATION_DAILY)
-def handle_take_back_condom_decoration_daily():
+def handle_take_back_condom_decoration_daily() -> None:
   """处理非H下的取回避孕套装饰指令，与H版共用行为与面板"""
   handle_condom_instruct_common(
       "take_back", constant.Behavior.TAKE_BACK_CONDOM_DECORATION
@@ -3369,13 +3372,13 @@ def handle_take_back_condom_decoration_daily():
 
 
 @add_instruct(constant.Instruct.DRINK_CONDOM_SEMEN_DAILY)
-def handle_drink_condom_semen_daily():
+def handle_drink_condom_semen_daily() -> None:
   """处理非H下的饮用避孕套精液指令，与H版共用行为与面板"""
   handle_condom_instruct_common("drink", constant.Behavior.DRINK_CONDOM_SEMEN)
 
 
 @add_instruct(constant.Instruct.SQUEEZE_CONDOM_SEMEN_DAILY)
-def handle_squeeze_condom_semen_daily():
+def handle_squeeze_condom_semen_daily() -> None:
   """处理非H下的挤出避孕套精液指令，与H版共用行为与面板"""
   handle_condom_instruct_common(
       "squeeze", constant.Behavior.SQUEEZE_CONDOM_SEMEN
@@ -3383,7 +3386,7 @@ def handle_squeeze_condom_semen_daily():
 
 
 @add_instruct(constant.Instruct.SAFE_CANDLES)
-def handle_safe_candles():
+def handle_safe_candles() -> None:
   """处理滴蜡指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.SAFE_CANDLES, judge=_("SM")
@@ -3391,13 +3394,13 @@ def handle_safe_candles():
 
 
 @add_instruct(constant.Instruct.BODY_LUBRICANT)
-def handle_body_lubricant():
+def handle_body_lubricant() -> None:
   """处理润滑液指令"""
   chara_handle_instruct_common_settle(constant.Behavior.BODY_LUBRICANT)
 
 
 @add_instruct(constant.Instruct.PHILTER)
-def handle_philter():
+def handle_philter() -> None:
   """处理媚药指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.PHILTER, judge=_("药物")
@@ -3405,7 +3408,7 @@ def handle_philter():
 
 
 @add_instruct(constant.Instruct.ENEMAS)
-def handle_enemas():
+def handle_enemas() -> None:
   """处理灌肠液指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data: game_type.Character = cache.character_data[0]
@@ -3414,7 +3417,7 @@ def handle_enemas():
 
 
 @add_instruct(constant.Instruct.DIURETICS_ONCE)
-def handle_diuretics_once():
+def handle_diuretics_once() -> None:
   """处理一次性利尿剂指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.DIURETICS_ONCE, judge=_("药物")
@@ -3422,7 +3425,7 @@ def handle_diuretics_once():
 
 
 @add_instruct(constant.Instruct.DIURETICS_PERSISTENT)
-def handle_diuretics_persistent():
+def handle_diuretics_persistent() -> None:
   """处理持续性利尿剂指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.DIURETICS_PERSISTENT, judge=_("药物")
@@ -3430,7 +3433,7 @@ def handle_diuretics_persistent():
 
 
 @add_instruct(constant.Instruct.SLEEPING_PILLS)
-def handle_sleeping_pills():
+def handle_sleeping_pills() -> None:
   """处理安眠药指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.SLEEPING_PILLS, judge=_("药物")
@@ -3438,13 +3441,13 @@ def handle_sleeping_pills():
 
 
 @add_instruct(constant.Instruct.CLOMID)
-def handle_clomid():
+def handle_clomid() -> None:
   """处理排卵促进药指令"""
   chara_handle_instruct_common_settle(constant.Behavior.CLOMID, judge=_("药物"))
 
 
 @add_instruct(constant.Instruct.BIRTH_CONTROL_PILLS_BEFORE)
-def handle_birth_control_pills_before():
+def handle_birth_control_pills_before() -> None:
   """处理事前避孕药指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BIRTH_CONTROL_PILLS_BEFORE
@@ -3452,7 +3455,7 @@ def handle_birth_control_pills_before():
 
 
 @add_instruct(constant.Instruct.BIRTH_CONTROL_PILLS_AFTER)
-def handle_birth_control_pills_after():
+def handle_birth_control_pills_after() -> None:
   """处理事后避孕药指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BIRTH_CONTROL_PILLS_AFTER
@@ -3460,7 +3463,7 @@ def handle_birth_control_pills_after():
 
 
 @add_instruct(constant.Instruct.VAGINAL_SEX)
-def handle_vaginal_sex():
+def handle_vaginal_sex() -> None:
   """处理阴道性交指令"""
   from Script.System.Sex_System import sex_position_panel
 
@@ -3469,7 +3472,7 @@ def handle_vaginal_sex():
 
 
 @add_instruct(constant.Instruct.CHANGE_VAGINAL_SEX_POSITION)
-def handle_change_vaginal_sex_position():
+def handle_change_vaginal_sex_position() -> None:
   """处理换阴道性交体位指令"""
   from Script.System.Sex_System import sex_position_panel
 
@@ -3480,7 +3483,7 @@ def handle_change_vaginal_sex_position():
 
 
 @add_instruct(constant.Instruct.NORMAL_SEX)
-def handle_normal_sex():
+def handle_normal_sex() -> None:
   """处理正常位指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.NORMAL_SEX, judge=_("性交")
@@ -3488,7 +3491,7 @@ def handle_normal_sex():
 
 
 @add_instruct(constant.Instruct.BACK_SEX)
-def handle_back_sex():
+def handle_back_sex() -> None:
   """处理背后位指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_SEX, judge=_("性交")
@@ -3496,7 +3499,7 @@ def handle_back_sex():
 
 
 @add_instruct(constant.Instruct.RIDING_SEX)
-def handle_riding_sex():
+def handle_riding_sex() -> None:
   """处理对面骑乘位指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.RIDING_SEX, judge=_("性交")
@@ -3504,7 +3507,7 @@ def handle_riding_sex():
 
 
 @add_instruct(constant.Instruct.BACK_RIDING_SEX)
-def handle_back_riding_sex():
+def handle_back_riding_sex() -> None:
   """处理背面骑乘位指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_RIDING_SEX, judge=_("性交")
@@ -3512,7 +3515,7 @@ def handle_back_riding_sex():
 
 
 @add_instruct(constant.Instruct.FACE_SEAT_SEX)
-def handle_face_seat_sex():
+def handle_face_seat_sex() -> None:
   """处理对面座位指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.FACE_SEAT_SEX, judge=_("性交")
@@ -3520,7 +3523,7 @@ def handle_face_seat_sex():
 
 
 @add_instruct(constant.Instruct.BACK_SEAT_SEX)
-def handle_back_seat_sex():
+def handle_back_seat_sex() -> None:
   """处理背面座位指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_SEAT_SEX, judge=_("性交")
@@ -3528,7 +3531,7 @@ def handle_back_seat_sex():
 
 
 @add_instruct(constant.Instruct.FACE_STAND_SEX)
-def handle_face_stand_sex():
+def handle_face_stand_sex() -> None:
   """处理对面立位指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.FACE_STAND_SEX, judge=_("性交")
@@ -3536,7 +3539,7 @@ def handle_face_stand_sex():
 
 
 @add_instruct(constant.Instruct.BACK_STAND_SEX)
-def handle_back_stand_sex():
+def handle_back_stand_sex() -> None:
   """处理背面立位指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_STAND_SEX, judge=_("性交")
@@ -3544,7 +3547,7 @@ def handle_back_stand_sex():
 
 
 @add_instruct(constant.Instruct.FACE_HUG_SEX)
-def handle_face_hug_sex():
+def handle_face_hug_sex() -> None:
   """处理对面抱位指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.FACE_HUG_SEX, judge=_("性交")
@@ -3552,7 +3555,7 @@ def handle_face_hug_sex():
 
 
 @add_instruct(constant.Instruct.BACK_HUG_SEX)
-def handle_back_hug_sex():
+def handle_back_hug_sex() -> None:
   """处理背面抱位指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_HUG_SEX, judge=_("性交")
@@ -3560,7 +3563,7 @@ def handle_back_hug_sex():
 
 
 @add_instruct(constant.Instruct.FACE_LAY_SEX)
-def handle_face_lay_sex():
+def handle_face_lay_sex() -> None:
   """处理对面卧位指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.FACE_LAY_SEX, judge=_("性交")
@@ -3568,7 +3571,7 @@ def handle_face_lay_sex():
 
 
 @add_instruct(constant.Instruct.BACK_LAY_SEX)
-def handle_back_lay_sex():
+def handle_back_lay_sex() -> None:
   """处理背面卧位指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_LAY_SEX, judge=_("性交")
@@ -3576,7 +3579,7 @@ def handle_back_lay_sex():
 
 
 @add_instruct(constant.Instruct.STIMULATE_G_POINT)
-def handle_stimulate_g_point():
+def handle_stimulate_g_point() -> None:
   """处理刺激G点指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.STIMULATE_G_POINT, judge=_("性交")
@@ -3584,7 +3587,7 @@ def handle_stimulate_g_point():
 
 
 @add_instruct(constant.Instruct.WOMB_OS_CARESS)
-def handle_womb_os_caress():
+def handle_womb_os_caress() -> None:
   """处理玩弄子宫口指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.WOMB_OS_CARESS, judge=_("性交")
@@ -3598,7 +3601,7 @@ def handle_womb_os_caress():
 
 
 @add_instruct(constant.Instruct.CHANGE_CERVIX_SEX_POSITION)
-def handle_change_cervix_sex_position():
+def handle_change_cervix_sex_position() -> None:
   """处理换子宫姦口体位指令"""
   from Script.System.Sex_System import sex_position_panel
 
@@ -3609,7 +3612,7 @@ def handle_change_cervix_sex_position():
 
 
 @add_instruct(constant.Instruct.NORMAL_CERVIX_SEX)
-def handle_normal_cervix_sex():
+def handle_normal_cervix_sex() -> None:
   """处理正常位子宫口姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.NORMAL_CERVIX_SEX, judge=_("W性交")
@@ -3617,7 +3620,7 @@ def handle_normal_cervix_sex():
 
 
 @add_instruct(constant.Instruct.BACK_CERVIX_SEX)
-def handle_back_cervix_sex():
+def handle_back_cervix_sex() -> None:
   """处理后背位子宫口姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_CERVIX_SEX, judge=_("W性交")
@@ -3625,7 +3628,7 @@ def handle_back_cervix_sex():
 
 
 @add_instruct(constant.Instruct.RIDING_CERVIX_SEX)
-def handle_riding_cervix_sex():
+def handle_riding_cervix_sex() -> None:
   """处理对面骑乘位子宫口姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.RIDING_CERVIX_SEX, judge=_("W性交")
@@ -3633,7 +3636,7 @@ def handle_riding_cervix_sex():
 
 
 @add_instruct(constant.Instruct.BACK_RIDING_CERVIX_SEX)
-def handle_back_riding_cervix_sex():
+def handle_back_riding_cervix_sex() -> None:
   """处理背面骑乘位子宫口姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_RIDING_CERVIX_SEX, judge=_("W性交")
@@ -3641,7 +3644,7 @@ def handle_back_riding_cervix_sex():
 
 
 @add_instruct(constant.Instruct.FACE_SEAT_CERVIX_SEX)
-def handle_face_seat_cervix_sex():
+def handle_face_seat_cervix_sex() -> None:
   """处理对面座位子宫口姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.FACE_SEAT_CERVIX_SEX, judge=_("W性交")
@@ -3649,7 +3652,7 @@ def handle_face_seat_cervix_sex():
 
 
 @add_instruct(constant.Instruct.BACK_SEAT_CERVIX_SEX)
-def handle_back_seat_cervix_sex():
+def handle_back_seat_cervix_sex() -> None:
   """处理背面座位子宫口姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_SEAT_CERVIX_SEX, judge=_("W性交")
@@ -3657,7 +3660,7 @@ def handle_back_seat_cervix_sex():
 
 
 @add_instruct(constant.Instruct.FACE_STAND_CERVIX_SEX)
-def handle_face_stand_cervix_sex():
+def handle_face_stand_cervix_sex() -> None:
   """处理对面立位子宫口姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.FACE_STAND_CERVIX_SEX, judge=_("W性交")
@@ -3665,7 +3668,7 @@ def handle_face_stand_cervix_sex():
 
 
 @add_instruct(constant.Instruct.BACK_STAND_CERVIX_SEX)
-def handle_back_stand_cervix_sex():
+def handle_back_stand_cervix_sex() -> None:
   """处理背面立位子宫口姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_STAND_CERVIX_SEX, judge=_("W性交")
@@ -3673,7 +3676,7 @@ def handle_back_stand_cervix_sex():
 
 
 @add_instruct(constant.Instruct.FACE_HUG_CERVIX_SEX)
-def handle_face_hug_cervix_sex():
+def handle_face_hug_cervix_sex() -> None:
   """处理对面抱位子宫口姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.FACE_HUG_CERVIX_SEX, judge=_("W性交")
@@ -3681,7 +3684,7 @@ def handle_face_hug_cervix_sex():
 
 
 @add_instruct(constant.Instruct.BACK_HUG_CERVIX_SEX)
-def handle_back_hug_cervix_sex():
+def handle_back_hug_cervix_sex() -> None:
   """处理背面抱位子宫口姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_HUG_CERVIX_SEX, judge=_("W性交")
@@ -3689,7 +3692,7 @@ def handle_back_hug_cervix_sex():
 
 
 @add_instruct(constant.Instruct.FACE_LAY_CERVIX_SEX)
-def handle_face_lay_cervix_sex():
+def handle_face_lay_cervix_sex() -> None:
   """处理对面卧位子宫口姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.FACE_LAY_CERVIX_SEX, judge=_("W性交")
@@ -3697,7 +3700,7 @@ def handle_face_lay_cervix_sex():
 
 
 @add_instruct(constant.Instruct.BACK_LAY_CERVIX_SEX)
-def handle_back_lay_cervix_sex():
+def handle_back_lay_cervix_sex() -> None:
   """处理背面卧位子宫口姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_LAY_CERVIX_SEX, judge=_("W性交")
@@ -3711,7 +3714,7 @@ def handle_back_lay_cervix_sex():
 
 
 @add_instruct(constant.Instruct.CHANGE_WOMB_SEX_POSITION)
-def handle_change_womb_sex_position():
+def handle_change_womb_sex_position() -> None:
   """处理换子宫姦体位指令"""
   from Script.System.Sex_System import sex_position_panel
 
@@ -3722,7 +3725,7 @@ def handle_change_womb_sex_position():
 
 
 @add_instruct(constant.Instruct.NORMAL_WOMB_SEX)
-def handle_normal_womb_sex():
+def handle_normal_womb_sex() -> None:
   """处理正常位子宫姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.NORMAL_WOMB_SEX, judge=_("W性交")
@@ -3730,7 +3733,7 @@ def handle_normal_womb_sex():
 
 
 @add_instruct(constant.Instruct.BACK_WOMB_SEX)
-def handle_back_womb_sex():
+def handle_back_womb_sex() -> None:
   """处理后背位子宫姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_WOMB_SEX, judge=_("W性交")
@@ -3738,7 +3741,7 @@ def handle_back_womb_sex():
 
 
 @add_instruct(constant.Instruct.RIDING_WOMB_SEX)
-def handle_riding_womb_sex():
+def handle_riding_womb_sex() -> None:
   """处理对面骑乘位子宫姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.RIDING_WOMB_SEX, judge=_("W性交")
@@ -3746,7 +3749,7 @@ def handle_riding_womb_sex():
 
 
 @add_instruct(constant.Instruct.BACK_RIDING_WOMB_SEX)
-def handle_back_riding_womb_sex():
+def handle_back_riding_womb_sex() -> None:
   """处理背面骑乘位子宫姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_RIDING_WOMB_SEX, judge=_("W性交")
@@ -3754,7 +3757,7 @@ def handle_back_riding_womb_sex():
 
 
 @add_instruct(constant.Instruct.FACE_SEAT_WOMB_SEX)
-def handle_face_seat_womb_sex():
+def handle_face_seat_womb_sex() -> None:
   """处理对面座位子宫姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.FACE_SEAT_WOMB_SEX, judge=_("W性交")
@@ -3762,7 +3765,7 @@ def handle_face_seat_womb_sex():
 
 
 @add_instruct(constant.Instruct.BACK_SEAT_WOMB_SEX)
-def handle_back_seat_womb_sex():
+def handle_back_seat_womb_sex() -> None:
   """处理背面座位子宫姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_SEAT_WOMB_SEX, judge=_("W性交")
@@ -3770,7 +3773,7 @@ def handle_back_seat_womb_sex():
 
 
 @add_instruct(constant.Instruct.FACE_STAND_WOMB_SEX)
-def handle_face_stand_womb_sex():
+def handle_face_stand_womb_sex() -> None:
   """处理对面立位子宫姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.FACE_STAND_WOMB_SEX, judge=_("W性交")
@@ -3778,7 +3781,7 @@ def handle_face_stand_womb_sex():
 
 
 @add_instruct(constant.Instruct.BACK_STAND_WOMB_SEX)
-def handle_back_stand_womb_sex():
+def handle_back_stand_womb_sex() -> None:
   """处理背面立位子宫姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_STAND_WOMB_SEX, judge=_("W性交")
@@ -3786,7 +3789,7 @@ def handle_back_stand_womb_sex():
 
 
 @add_instruct(constant.Instruct.FACE_HUG_WOMB_SEX)
-def handle_face_hug_womb_sex():
+def handle_face_hug_womb_sex() -> None:
   """处理对面抱位子宫姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.FACE_HUG_WOMB_SEX, judge=_("W性交")
@@ -3794,7 +3797,7 @@ def handle_face_hug_womb_sex():
 
 
 @add_instruct(constant.Instruct.BACK_HUG_WOMB_SEX)
-def handle_back_hug_womb_sex():
+def handle_back_hug_womb_sex() -> None:
   """处理背面抱位子宫姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_HUG_WOMB_SEX, judge=_("W性交")
@@ -3802,7 +3805,7 @@ def handle_back_hug_womb_sex():
 
 
 @add_instruct(constant.Instruct.FACE_LAY_WOMB_SEX)
-def handle_face_lay_womb_sex():
+def handle_face_lay_womb_sex() -> None:
   """处理对面卧位子宫姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.FACE_LAY_WOMB_SEX, judge=_("W性交")
@@ -3810,7 +3813,7 @@ def handle_face_lay_womb_sex():
 
 
 @add_instruct(constant.Instruct.BACK_LAY_WOMB_SEX)
-def handle_back_lay_womb_sex():
+def handle_back_lay_womb_sex() -> None:
   """处理背面卧位子宫姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_LAY_WOMB_SEX, judge=_("W性交")
@@ -3818,7 +3821,7 @@ def handle_back_lay_womb_sex():
 
 
 @add_instruct(constant.Instruct.ANAL_SEX)
-def handle_anal_sex():
+def handle_anal_sex() -> None:
   """处理肛门性交指令"""
   from Script.System.Sex_System import sex_position_panel
 
@@ -3827,7 +3830,7 @@ def handle_anal_sex():
 
 
 @add_instruct(constant.Instruct.CHANGE_ANAL_SEX_POSITION)
-def handle_change_anal_sex_position():
+def handle_change_anal_sex_position() -> None:
   """处理换肛交体位指令"""
   from Script.System.Sex_System import sex_position_panel
 
@@ -3838,7 +3841,7 @@ def handle_change_anal_sex_position():
 
 
 @add_instruct(constant.Instruct.NORMAL_ANAL_SEX)
-def handle_normal_anal_sex():
+def handle_normal_anal_sex() -> None:
   """处理正常位肛交指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.NORMAL_ANAL_SEX, judge=_("A性交")
@@ -3846,7 +3849,7 @@ def handle_normal_anal_sex():
 
 
 @add_instruct(constant.Instruct.BACK_ANAL_SEX)
-def handle_back_anal_sex():
+def handle_back_anal_sex() -> None:
   """处理后背位肛交指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_ANAL_SEX, judge=_("A性交")
@@ -3854,7 +3857,7 @@ def handle_back_anal_sex():
 
 
 @add_instruct(constant.Instruct.RIDING_ANAL_SEX)
-def handle_riding_anal_sex():
+def handle_riding_anal_sex() -> None:
   """处理对面骑乘位肛交指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.RIDING_ANAL_SEX, judge=_("A性交")
@@ -3862,7 +3865,7 @@ def handle_riding_anal_sex():
 
 
 @add_instruct(constant.Instruct.BACK_RIDING_ANAL_SEX)
-def handle_back_riding_anal_sex():
+def handle_back_riding_anal_sex() -> None:
   """处理背面骑乘位肛交指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_RIDING_ANAL_SEX, judge=_("A性交")
@@ -3870,7 +3873,7 @@ def handle_back_riding_anal_sex():
 
 
 @add_instruct(constant.Instruct.FACE_SEAT_ANAL_SEX)
-def handle_face_seat_anal_sex():
+def handle_face_seat_anal_sex() -> None:
   """处理对面座位肛交指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.FACE_SEAT_ANAL_SEX, judge=_("A性交")
@@ -3878,7 +3881,7 @@ def handle_face_seat_anal_sex():
 
 
 @add_instruct(constant.Instruct.BACK_SEAT_ANAL_SEX)
-def handle_back_seat_anal_sex():
+def handle_back_seat_anal_sex() -> None:
   """处理背面座位肛交指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_SEAT_ANAL_SEX, judge=_("A性交")
@@ -3886,7 +3889,7 @@ def handle_back_seat_anal_sex():
 
 
 @add_instruct(constant.Instruct.FACE_STAND_ANAL_SEX)
-def handle_face_stand_anal_sex():
+def handle_face_stand_anal_sex() -> None:
   """处理对面立位肛交指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.FACE_STAND_ANAL_SEX, judge=_("A性交")
@@ -3894,7 +3897,7 @@ def handle_face_stand_anal_sex():
 
 
 @add_instruct(constant.Instruct.BACK_STAND_ANAL_SEX)
-def handle_back_stand_anal_sex():
+def handle_back_stand_anal_sex() -> None:
   """处理背面立位肛交指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_STAND_ANAL_SEX, judge=_("A性交")
@@ -3902,7 +3905,7 @@ def handle_back_stand_anal_sex():
 
 
 @add_instruct(constant.Instruct.FACE_HUG_ANAL_SEX)
-def handle_face_hug_anal_sex():
+def handle_face_hug_anal_sex() -> None:
   """处理对面抱位肛交指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.FACE_HUG_ANAL_SEX, judge=_("A性交")
@@ -3910,7 +3913,7 @@ def handle_face_hug_anal_sex():
 
 
 @add_instruct(constant.Instruct.BACK_HUG_ANAL_SEX)
-def handle_back_hug_anal_sex():
+def handle_back_hug_anal_sex() -> None:
   """处理背面抱位肛交指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_HUG_ANAL_SEX, judge=_("A性交")
@@ -3918,7 +3921,7 @@ def handle_back_hug_anal_sex():
 
 
 @add_instruct(constant.Instruct.FACE_LAY_ANAL_SEX)
-def handle_face_lay_anal_sex():
+def handle_face_lay_anal_sex() -> None:
   """处理对面卧位肛交指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.FACE_LAY_ANAL_SEX, judge=_("A性交")
@@ -3926,7 +3929,7 @@ def handle_face_lay_anal_sex():
 
 
 @add_instruct(constant.Instruct.BACK_LAY_ANAL_SEX)
-def handle_back_lay_anal_sex():
+def handle_back_lay_anal_sex() -> None:
   """处理背面卧位肛交指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_LAY_ANAL_SEX, judge=_("A性交")
@@ -3934,7 +3937,7 @@ def handle_back_lay_anal_sex():
 
 
 @add_instruct(constant.Instruct.STIMULATE_SIGMOID_COLON)
-def handle_stimulate_sigmoid_colon():
+def handle_stimulate_sigmoid_colon() -> None:
   """处理玩弄s状结肠指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.STIMULATE_SIGMOID_COLON, judge=_("A性交")
@@ -3942,7 +3945,7 @@ def handle_stimulate_sigmoid_colon():
 
 
 @add_instruct(constant.Instruct.STIMULATE_VAGINA)
-def handle_stimulate_vagina():
+def handle_stimulate_vagina() -> None:
   """处理隔着刺激阴道指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.STIMULATE_VAGINA, judge=_("A性交")
@@ -3950,7 +3953,7 @@ def handle_stimulate_vagina():
 
 
 @add_instruct(constant.Instruct.DOUBLE_PENETRATION)
-def handle_double_penetration():
+def handle_double_penetration() -> None:
   """处理二穴插入指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data: game_type.Character = cache.character_data[0]
@@ -3959,7 +3962,7 @@ def handle_double_penetration():
 
 
 @add_instruct(constant.Instruct.URETHRAL_SEX)
-def handle_urethral_sex():
+def handle_urethral_sex() -> None:
   """处理尿道姦指令"""
   from Script.System.Sex_System import sex_position_panel
 
@@ -3968,7 +3971,7 @@ def handle_urethral_sex():
 
 
 @add_instruct(constant.Instruct.CHANGE_URETHRAL_SEX_POSITION)
-def handle_change_urethral_sex_position():
+def handle_change_urethral_sex_position() -> None:
   """处理换尿道姦体位指令"""
   from Script.System.Sex_System import sex_position_panel
 
@@ -3979,7 +3982,7 @@ def handle_change_urethral_sex_position():
 
 
 @add_instruct(constant.Instruct.NORMAL_URETHRAL_SEX)
-def handle_normal_urethral_sex():
+def handle_normal_urethral_sex() -> None:
   """处理正常位尿道姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.NORMAL_URETHRAL_SEX, judge=_("U性交")
@@ -3987,7 +3990,7 @@ def handle_normal_urethral_sex():
 
 
 @add_instruct(constant.Instruct.BACK_URETHRAL_SEX)
-def handle_back_urethral_sex():
+def handle_back_urethral_sex() -> None:
   """处理后背位尿道姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_URETHRAL_SEX, judge=_("U性交")
@@ -3995,7 +3998,7 @@ def handle_back_urethral_sex():
 
 
 @add_instruct(constant.Instruct.RIDING_URETHRAL_SEX)
-def handle_riding_urethral_sex():
+def handle_riding_urethral_sex() -> None:
   """处理对面骑乘位尿道姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.RIDING_URETHRAL_SEX, judge=_("U性交")
@@ -4003,7 +4006,7 @@ def handle_riding_urethral_sex():
 
 
 @add_instruct(constant.Instruct.BACK_RIDING_URETHRAL_SEX)
-def handle_back_riding_urethral_sex():
+def handle_back_riding_urethral_sex() -> None:
   """处理背面骑乘位尿道姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_RIDING_URETHRAL_SEX, judge=_("U性交")
@@ -4011,7 +4014,7 @@ def handle_back_riding_urethral_sex():
 
 
 @add_instruct(constant.Instruct.FACE_SEAT_URETHRAL_SEX)
-def handle_face_seat_urethral_sex():
+def handle_face_seat_urethral_sex() -> None:
   """处理对面座位尿道姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.FACE_SEAT_URETHRAL_SEX, judge=_("U性交")
@@ -4019,7 +4022,7 @@ def handle_face_seat_urethral_sex():
 
 
 @add_instruct(constant.Instruct.BACK_SEAT_URETHRAL_SEX)
-def handle_back_seat_urethral_sex():
+def handle_back_seat_urethral_sex() -> None:
   """处理背面座位尿道姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_SEAT_URETHRAL_SEX, judge=_("U性交")
@@ -4027,7 +4030,7 @@ def handle_back_seat_urethral_sex():
 
 
 @add_instruct(constant.Instruct.FACE_STAND_URETHRAL_SEX)
-def handle_face_stand_urethral_sex():
+def handle_face_stand_urethral_sex() -> None:
   """处理对面立位尿道姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.FACE_STAND_URETHRAL_SEX, judge=_("U性交")
@@ -4035,7 +4038,7 @@ def handle_face_stand_urethral_sex():
 
 
 @add_instruct(constant.Instruct.BACK_STAND_URETHRAL_SEX)
-def handle_back_stand_urethral_sex():
+def handle_back_stand_urethral_sex() -> None:
   """处理背面立位尿道姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_STAND_URETHRAL_SEX, judge=_("U性交")
@@ -4043,7 +4046,7 @@ def handle_back_stand_urethral_sex():
 
 
 @add_instruct(constant.Instruct.FACE_HUG_URETHRAL_SEX)
-def handle_face_hug_urethral_sex():
+def handle_face_hug_urethral_sex() -> None:
   """处理对面抱位尿道姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.FACE_HUG_URETHRAL_SEX, judge=_("U性交")
@@ -4051,7 +4054,7 @@ def handle_face_hug_urethral_sex():
 
 
 @add_instruct(constant.Instruct.BACK_HUG_URETHRAL_SEX)
-def handle_back_hug_urethral_sex():
+def handle_back_hug_urethral_sex() -> None:
   """处理背面抱位尿道姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_HUG_URETHRAL_SEX, judge=_("U性交")
@@ -4059,7 +4062,7 @@ def handle_back_hug_urethral_sex():
 
 
 @add_instruct(constant.Instruct.FACE_LAY_URETHRAL_SEX)
-def handle_face_lay_urethral_sex():
+def handle_face_lay_urethral_sex() -> None:
   """处理对面卧位尿道姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.FACE_LAY_URETHRAL_SEX, judge=_("U性交")
@@ -4067,7 +4070,7 @@ def handle_face_lay_urethral_sex():
 
 
 @add_instruct(constant.Instruct.BACK_LAY_URETHRAL_SEX)
-def handle_back_lay_urethral_sex():
+def handle_back_lay_urethral_sex() -> None:
   """处理背面卧位尿道姦指令"""
   chara_handle_instruct_common_settle(
       constant.Behavior.BACK_LAY_URETHRAL_SEX, judge=_("U性交")
@@ -4075,7 +4078,7 @@ def handle_back_lay_urethral_sex():
 
 
 @add_instruct(constant.Instruct.BEAT_BREAST)
-def handle_beat_breast():
+def handle_beat_breast() -> None:
   """处理打胸部指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data: game_type.Character = cache.character_data[0]
@@ -4084,13 +4087,13 @@ def handle_beat_breast():
 
 
 @add_instruct(constant.Instruct.SPANKING)
-def handle_spanking():
+def handle_spanking() -> None:
   """处理打屁股指令"""
   chara_handle_instruct_common_settle(constant.Behavior.SPANKING)
 
 
 @add_instruct(constant.Instruct.SHAME_PLAY)
-def handle_shame_play():
+def handle_shame_play() -> None:
   """处理羞耻play指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data: game_type.Character = cache.character_data[0]
@@ -4099,7 +4102,7 @@ def handle_shame_play():
 
 
 @add_instruct(constant.Instruct.TAKE_SHOWER_H)
-def handle_take_shower_h():
+def handle_take_shower_h() -> None:
   """处理淋浴指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data: game_type.Character = cache.character_data[0]
@@ -4108,7 +4111,7 @@ def handle_take_shower_h():
 
 
 @add_instruct(constant.Instruct.BUBBLE_BATH)
-def handle_bubble_bath():
+def handle_bubble_bath() -> None:
   """处理泡泡浴指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data: game_type.Character = cache.character_data[0]
@@ -4117,7 +4120,7 @@ def handle_bubble_bath():
 
 
 @add_instruct(constant.Instruct.GIVE_BLOWJOB)
-def handle_give_blowjob():
+def handle_give_blowjob() -> None:
   """处理给对方口交指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data: game_type.Character = cache.character_data[0]
@@ -4126,7 +4129,7 @@ def handle_give_blowjob():
 
 
 @add_instruct(constant.Instruct.CHANGE_TOP_AND_BOTTOM)
-def handle_change_top_and_bottom():
+def handle_change_top_and_bottom() -> None:
   """处理交给对方指令"""
   character_data: game_type.Character = cache.character_data[0]
   target_character_data: game_type.Character = cache.character_data[
@@ -4137,13 +4140,13 @@ def handle_change_top_and_bottom():
 
 
 @add_instruct(constant.Instruct.KEEP_ENJOY)
-def handle_keep_enjoy():
+def handle_keep_enjoy() -> None:
   """处理继续享受指令"""
   handle_npc_ai_in_h.npc_active_h()
 
 
 @add_instruct(constant.Instruct.TRY_PL_ACTIVE_H)
-def handle_try_pl_active_h():
+def handle_try_pl_active_h() -> None:
   """处理尝试掌握主动权指令"""
   character_data: game_type.Character = cache.character_data[0]
   target_character_data: game_type.Character = cache.character_data[
@@ -4153,54 +4156,54 @@ def handle_try_pl_active_h():
 
 
 @add_instruct(constant.Instruct.UNDRESS)
-def handle_undress():
+def handle_undress() -> None:
   """处理脱衣服指令"""
   cache.now_panel_id = constant.Panel.UNDRESS
 
 
 @add_instruct(constant.Instruct.ORGASM_EDGE_ON)
-def handle_orgasm_edge_on():
+def handle_orgasm_edge_on() -> None:
   """处理绝顶寸止指令"""
   chara_handle_instruct_common_settle(constant.Behavior.ORGASM_EDGE_ON)
 
 
 @add_instruct(constant.Instruct.ORGASM_EDGE_OFF)
-def handle_orgasm_edge_off():
+def handle_orgasm_edge_off() -> None:
   """处理绝顶解放指令"""
   chara_handle_instruct_common_settle(constant.Behavior.ORGASM_EDGE_OFF)
 
 
 @add_instruct(constant.Instruct.RUN_GROUP_SEX_TEMPLE)
-def handle_run_group_sex_temple():
+def handle_run_group_sex_temple() -> None:
   """处理进行一次当前群交指令"""
   chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration=10)
 
 
 @add_instruct(constant.Instruct.RUN_ALL_GROUP_SEX_TEMPLE)
-def handle_run_all_group_sex_temple():
+def handle_run_all_group_sex_temple() -> None:
   """处理进行一次轮流群交指令"""
   chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration=10)
 
 
 @add_instruct(constant.Instruct.EDIT_GROUP_SEX_TEMPLE)
-def handle_edit_group_sex_temple():
+def handle_edit_group_sex_temple() -> None:
   """处理编辑群交行动指令"""
   cache.now_panel_id = constant.Panel.EDIT_GROUP_SEX_TEMPLE
 
 
 @add_instruct(constant.Instruct.SWITCH_TO_NON_H_INTERFACE)
-def handle_switch_to_non_h_interface():
+def handle_switch_to_non_h_interface() -> None:
   """处理切换到非H指令"""
   cache.show_non_h_in_hidden_sex = True
 
 
 @add_instruct(constant.Instruct.PULL_OUT_PENIS)
-def handle_pull_out_penis():
+def handle_pull_out_penis() -> None:
   """处理拔出阴茎指令"""
   chara_handle_instruct_common_settle(constant.Behavior.PULL_OUT_PENIS)
 
 
 @add_instruct(constant.Instruct.STOP_ENDURE)
-def handle_stop_endure():
+def handle_stop_endure() -> None:
   """处理停止忍耐指令"""
   chara_handle_instruct_common_settle(constant.Behavior.STOP_ENDURE)

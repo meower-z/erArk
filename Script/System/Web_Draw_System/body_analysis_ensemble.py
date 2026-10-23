@@ -33,6 +33,8 @@ G. Custom最大精度      = YOLOX-x + RTMW-dw-x-l@384x288 (最强检测器+最�
         --dry-run          只列出待识别的图片，不加载模型
 """
 
+from __future__ import annotations
+
 import os
 import sys
 import json
@@ -41,6 +43,11 @@ import cv2
 import numpy as np
 import time
 import traceback
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import Any
 
 # --- 将 pip 安装的 NVIDIA CUDA 12 DLL 加入搜索路径 (Windows GPU 加速所需) ---
 _site_packages = os.path.join(
@@ -81,7 +88,7 @@ COCO_KEYPOINTS = [
 ALPHA_BACKGROUND_BGR = (0, 0, 0)
 
 
-def load_image_bgr(image_path):
+def load_image_bgr(image_path: str) -> np.ndarray | None:
   """
   读取图片为 BGR 图像，带透明通道时按 alpha 铺到纯色底上
 
@@ -108,7 +115,7 @@ def load_image_bgr(image_path):
   return image[:, :, :3]
 
 
-def sigmoid(x):
+def sigmoid(x: np.ndarray) -> np.ndarray:
   """
   Sigmoid函数，将logit值转为0-1概率
 
@@ -118,7 +125,9 @@ def sigmoid(x):
   return 1.0 / (1.0 + np.exp(-np.clip(x, -20, 20)))
 
 
-def normalize_scores(scores, model_key, needs_sigmoid_keys):
+def normalize_scores(
+    scores: np.ndarray, model_key: str, needs_sigmoid_keys: set[str]
+) -> np.ndarray:
   """
   归一化分数：对RTMW系列模型应用sigmoid，其他保持不变
 
@@ -133,7 +142,10 @@ def normalize_scores(scores, model_key, needs_sigmoid_keys):
   return scores.copy()
 
 
-def build_ensemble(results, needs_sigmoid_keys):
+def build_ensemble(
+    results: dict[str, dict[str, np.ndarray] | None],
+    needs_sigmoid_keys: set[str],
+) -> dict[str, Any]:
   """
   构建集成结果：对每个关键点，取归一化置信度最高的模型的坐标和分数
 
@@ -177,7 +189,9 @@ def build_ensemble(results, needs_sigmoid_keys):
   }
 
 
-def run_yolo11_inference(model, image):
+def run_yolo11_inference(
+    model: Any, image: np.ndarray
+) -> tuple[np.ndarray | None, np.ndarray | None]:
   """
   使用YOLO11-pose模型进行推理
 
@@ -201,7 +215,9 @@ def run_yolo11_inference(model, image):
   return None, None
 
 
-def run_rtmo_inference(model, image):
+def run_rtmo_inference(
+    model: Any, image: np.ndarray
+) -> tuple[np.ndarray | None, np.ndarray | None]:
   """
   使用RTMO单阶段模型进行推理
 
@@ -216,7 +232,7 @@ def run_rtmo_inference(model, image):
   return None, None
 
 
-def init_models():
+def init_models() -> tuple[dict[str, dict[str, Any]], set[str]]:
   """
   初始化所有7个模型
 
@@ -360,7 +376,9 @@ def init_models():
   return models, needs_sigmoid_keys
 
 
-def run_model_inference(minfo, key, image):
+def run_model_inference(
+    minfo: dict[str, Any], key: str, image: np.ndarray
+) -> dict[str, np.ndarray] | None:
   """
   对单个模型运行推理
 
@@ -391,8 +409,12 @@ def run_model_inference(minfo, key, image):
 
 
 def process_character(
-    char_name, full_body_path, json_path, models, needs_sigmoid_keys
-):
+    char_name: str,
+    full_body_path: str,
+    json_path: str,
+    models: dict[str, dict[str, Any]],
+    needs_sigmoid_keys: set[str],
+) -> bool:
   """
   处理单个角色：运行所有模型并生成集成结果JSON
 
@@ -463,7 +485,7 @@ def process_character(
     )
 
   # 统计各模型成功率和来源分布
-  source_count = {}
+  source_count: dict[str, int] = {}
   for src in ensemble['source_models']:
     source_count[src] = source_count.get(src, 0) + 1
 
@@ -493,7 +515,9 @@ def process_character(
   return True
 
 
-def collect_characters(base_dirs, skip_existing=True):
+def collect_characters(
+    base_dirs: list[str], skip_existing: bool = True
+) -> list[tuple[str, str, str]]:
   """
   收集所有待处理的角色信息
 
@@ -532,8 +556,11 @@ FULL_BODY_SUFFIX = '_全身'
 
 
 def collect_images_from_dir(
-    target_dir, skip_existing=True, recursive=False, all_images=False
-):
+    target_dir: str,
+    skip_existing: bool = True,
+    recursive: bool = False,
+    all_images: bool = False,
+) -> list[tuple[str, str, str]]:
   """
   目录模式：收集指定目录下所有待识别的全身立绘
 
@@ -595,7 +622,7 @@ def collect_images_from_dir(
   return characters
 
 
-def main():
+def main() -> None:
   """
   主函数：使用集成方案批量处理所有角色
 

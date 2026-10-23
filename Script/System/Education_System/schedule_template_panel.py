@@ -43,7 +43,7 @@ class Schedule_Template_Panel:
     self.template_id_by_return: Dict[str, int] = {}
     """ 本轮模板行按钮的返回值 → 模板编号，由 draw_page 写、handle_yrn 读 """
 
-  def draw_page(self, return_list: List[str]):
+  def draw_page(self, return_list: List[str]) -> None:
     """
     绘制本页内容
     输入类型: return_list(List[str])，容器的共享返回值列表，本页的按钮往里加
@@ -72,7 +72,7 @@ class Schedule_Template_Panel:
     return_list.append(apply_draw.return_text)
     line_feed.draw()
 
-  def handle_yrn(self, yrn: str):
+  def handle_yrn(self, yrn: str) -> None:
     """
     处理本页按钮的选择结果
     输入类型: yrn(str)，容器 askfor_all 的返回值
@@ -88,7 +88,7 @@ class Schedule_Template_Panel:
     if yrn in self.template_id_by_return:
       self._edit_template(self.template_id_by_return[yrn])
 
-  def _draw_head(self):
+  def _draw_head(self) -> None:
     """
     绘制表头一行
     输入类型: 无
@@ -161,7 +161,7 @@ class Schedule_Template_Panel:
       line_feed.draw()
     return template_id_by_return
 
-  def _edit_template(self, template_id: int):
+  def _edit_template(self, template_id: int) -> None:
     """
     编辑一套模板：选一个时段，再给它挑活动
     输入类型: template_id(int)
@@ -257,7 +257,7 @@ class Schedule_Template_Panel:
     line_feed.draw()
     return ask_panel.draw().strip()
 
-  def _create_template(self):
+  def _create_template(self) -> None:
     """
     新建一套模板并直接进入编辑
     输入类型: 无
@@ -273,7 +273,7 @@ class Schedule_Template_Panel:
     if new_id:
       self._edit_template(new_id)
 
-  def _select_activity(self):
+  def _select_activity(self) -> int | None:
     """
     从娱乐候选表里挑一项活动
     输入类型: 无
@@ -299,7 +299,7 @@ class Schedule_Template_Panel:
           schedule_template_handle.get_schedule_activity_rows()
       )
 
-      def draw_activity(entertainment_id):
+      def draw_activity(entertainment_id: int) -> None:
         """画一个活动按钮并登记返回值；年龄限制与「未开放」写在名字后面的同一对括号里"""
         name = schedule_template_handle.get_activity_name(entertainment_id)
         limit_text = schedule_template_handle.get_activity_age_limit_text(
@@ -354,7 +354,7 @@ class Schedule_Template_Panel:
       if yrn in id_by_return:
         return id_by_return[yrn]
 
-  def _batch_apply(self):
+  def _batch_apply(self) -> None:
     """
     批量套用：先选模板，再多选孩子，一次套完
     输入类型: 无
@@ -377,7 +377,7 @@ class Schedule_Template_Panel:
       info_draw.draw()
       return
     # 多选：选中的孩子存在集合里，再点一次取消选中，最后一次性套用
-    selected_set = set()
+    selected_set: set[int] = set()
     while 1:
       return_list: List[str] = []
       id_by_return: Dict[str, int] = {}
@@ -443,7 +443,7 @@ class Schedule_Template_Panel:
         else:
           selected_set.add(child_id)
 
-  def _select_template(self):
+  def _select_template(self) -> int | None:
     """
     选一套模板
     输入类型: 无
