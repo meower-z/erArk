@@ -53,10 +53,10 @@ class InteractionHandler:
     major_type_id -- 大类型ID（字符串标识符，如 'mouth', 'hand', 'penis', 'tool', 'arts', 'stop', 'other'）
 
     Returns:
-    dict -- 包含该大类下的小类列表和记忆的小类
+    dict -- 包含该大类下的小类列表；记忆的小类 remembered_minor_type 恒为 None
     """
-    # 使用web_interaction_manager处理大类选择和记忆
-    remembered_minor = web_interaction_manager.select_major_type(major_type_id)
+    # 使用web_interaction_manager切换到该大类
+    web_interaction_manager.select_major_type(major_type_id)
 
     # 获取该大类下的小类列表
     minor_types = web_interaction_manager.get_available_minor_types(
@@ -74,7 +74,7 @@ class InteractionHandler:
             major_type_id, ""
         ),
         "minor_types": minor_types,
-        "remembered_minor_type": remembered_minor,
+        "remembered_minor_type": None,
         "interaction_state": self.get_interaction_types(),
     }
 

@@ -40,14 +40,14 @@ class ImageProcessor:
   # 最大缓存图片数量
   MAX_CACHE_SIZE = 10
 
-  # 单例实例
+  # 单例实例，及其是否已完成 __init__
   _instance = None
+  _initialized = False
 
   def __new__(cls):
     """单例模式"""
     if cls._instance is None:
       cls._instance = super().__new__(cls)
-      cls._instance._initialized = False
     return cls._instance
 
   def __init__(self):

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from types import FunctionType
 from Script.UI.Moudle import draw, panel
 from Script.Core import (
@@ -27,7 +27,7 @@ def common_select_npc_button_list_func(
     now_draw_panel: panel.PageHandlePanel,
     title_text: str = "",
     info_text: str = "",
-    select_state: dict = {},
+    select_state: Optional[dict] = None,
 ) -> list:
   """
   通用npc选择按钮列表函数\n

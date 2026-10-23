@@ -715,7 +715,7 @@ class CharacterRenderer:
     return result
 
   def get_scene_characters_avatars(
-      self, exclude_ids: List[int] = []
+      self, exclude_ids: Optional[List[int]] = None
   ) -> List[dict]:
     """
     获取场景内所有角色的头像信息（除指定排除的角色外）

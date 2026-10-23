@@ -1983,7 +1983,6 @@ def update_chara_cloth(value, tem_character):
   if value.cid == 0:
     return 0
   # print(f"debug value.cid = {value.cid}")
-  tem_character = tem_character
 
   # 判断是否需要重置服装数据
   reset_cloth_flag = False

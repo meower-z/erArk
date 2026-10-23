@@ -265,7 +265,7 @@ class Gomoku_Board:
     )
     return moves
 
-  def display(self, extra_points=[]):
+  def display(self, extra_points=()):
     extra_positions = [
         self.coordinate2position(point) for point in extra_points
     ]

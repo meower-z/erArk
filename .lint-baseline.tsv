@@ -1,6 +1,6 @@
 # lint-baseline v2
 # fingerprint astroid=4.3.4 config=7945e0c931b0 mypy=2.4.0 pylint=4.1.3
-# clean-rules abstract-class-instantiated,anomalous-backslash-in-string,anomalous-unicode-escape-in-string,arguments-renamed,assert-on-string-literal,assert-on-tuple,assigning-non-slot,assignment-from-no-return,astroid-error,async-context-manager-with-regular-with,await-outside-async,bad-chained-comparison,bad-classmethod-argument,bad-configuration-section,bad-except-order,bad-exception-cause,bad-file-encoding,bad-format-character,bad-format-string,bad-format-string-key,bad-indentation,bad-mcs-classmethod-argument,bad-mcs-method-argument,bad-open-mode,bad-plugin-value,bad-reversed-sequence,bad-staticmethod-argument,bad-str-strip-call,bad-string-format-type,bad-super-call,bad-thread-instantiation,bare-name-capture-pattern,bidirectional-unicode,binary-op-exception,break-in-finally,catching-non-exception,class-variable-slots-conflict,config-parse-error,confusing-with-statement,contextmanager-generator-missing-cleanup,continue-in-finally,declare-non-slot,deprecated-argument,deprecated-attribute,deprecated-class,deprecated-decorator,deprecated-method,deprecated-module,dict-iter-missing-items,duplicate-argument-name,duplicate-bases,duplicate-except,duplicate-key,duplicate-string-formatting-argument,duplicate-value,empty-docstring,eval-used,expression-not-assigned,fatal,fmt-off,forgotten-debug-statement,format-combined-specification,format-needs-mapping,format-string-without-interpolation,global-at-module-level,implicit-flag-alias,inconsistent-mro,inconsistent-quotes,inherit-non-class,init-is-generator,invalid-all-format,invalid-all-object,invalid-bool-returned,invalid-bytes-returned,invalid-character-backspace,invalid-character-carriage-return,invalid-character-esc,invalid-character-nul,invalid-character-sub,invalid-character-zero-width-space,invalid-characters-in-docstring,invalid-class-object,invalid-enum-extension,invalid-envvar-default,invalid-envvar-value,invalid-field-call,invalid-format-index,invalid-format-returned,invalid-getnewargs-ex-returned,invalid-getnewargs-returned,invalid-hash-returned,invalid-index-returned,invalid-length-hint-returned,invalid-length-returned,invalid-match-args-definition,invalid-metaclass,invalid-overridden-method,invalid-repr-returned,invalid-sequence-index,invalid-slice-index,invalid-slice-step,invalid-slots,invalid-slots-object,invalid-star-assignment-target,invalid-str-returned,invalid-unary-operand-type,invalid-unicode-codec,isinstance-second-argument-not-valid-type,kwarg-superseded-by-positional-arg,logging-format-interpolation,logging-format-truncated,logging-not-lazy,logging-too-few-args,logging-too-many-args,logging-unsupported-format,looping-through-iterator,method-cache-max-size-none,method-check-failed,method-hidden,misplaced-bare-raise,misplaced-format-function,misplaced-future,missing-final-newline,missing-format-argument-key,missing-format-attribute,missing-format-string-key,missing-kwoa,missing-parentheses-for-call-in-test,missing-timeout,mixed-format-string,mixed-line-endings,modified-iterating-dict,modified-iterating-set,multiple-class-sub-patterns,multiple-statements,mypy-comment,mypy:used-before-def,named-expr-without-context,nan-comparison,nested-min-max,no-method-argument,no-self-argument,no-value-for-parameter,non-ascii-file-name,non-ascii-module-import,non-iterator-returned,non-parent-init-called,non-str-assignment-to-dunder-name,nonexistent-operator,nonlocal-and-global,nonlocal-without-binding,not-a-mapping,not-async-context-manager,not-callable,not-context-manager,not-in-loop,notimplemented-raised,overridden-final-method,parse-error,pointless-exception-statement,positional-only-arguments-expected,possibly-unused-variable,potential-index-error,preferred-module,raising-bad-type,raising-format-tuple,raising-non-exception,redeclared-assigned-name,redefined-slots-in-subclass,redundant-keyword-arg,redundant-u-string-prefix,redundant-unittest-assert,repeated-keyword,return-in-init,return-outside-function,self-cls-assignment,shadowed-import,shallow-copy-environ,single-string-used-for-slots,singledispatch-method,singledispatchmethod-function,star-needs-assignment-target,subclassed-final-class,subprocess-popen-preexec-fn,super-without-brackets,syntax-error,too-few-format-args,too-many-format-args,too-many-function-args,too-many-lines,too-many-positional-sub-patterns,too-many-star-expressions,trailing-whitespace,truncated-format-string,try-except-raise,typevar-double-variance,typevar-name-incorrect-variance,typevar-name-mismatch,unbalanced-dict-unpacking,undefined-all-variable,unexpected-keyword-arg,unexpected-line-ending-format,unexpected-special-method-signature,unhashable-member,unknown-option-value,unnecessary-ellipsis,unnecessary-semicolon,unpacking-non-sequence,unrecognized-inline-option,unrecognized-option,unsupported-assignment-operation,unsupported-binary-operation,unsupported-delete-operation,unused-format-string-argument,unused-format-string-key,unused-private-member,used-before-assignment,used-prior-global-declaration,useless-else-on-loop,useless-import-alias,useless-parent-delegation,useless-with-lock,using-assignment-expression-in-unsupported-version,using-comprehension-unpacking-in-unsupported-version,using-exception-groups-in-unsupported-version,using-f-string-in-unsupported-version,using-final-decorator-in-unsupported-version,using-generic-type-syntax-in-unsupported-version,using-positional-only-args-in-unsupported-version,wrong-exception-operation,wrong-spelling-in-comment,wrong-spelling-in-docstring,yield-inside-async-function,yield-outside-function
+# clean-rules abstract-class-instantiated,access-member-before-definition,anomalous-backslash-in-string,anomalous-unicode-escape-in-string,arguments-renamed,assert-on-string-literal,assert-on-tuple,assigning-non-slot,assignment-from-no-return,astroid-error,async-context-manager-with-regular-with,await-outside-async,bad-chained-comparison,bad-classmethod-argument,bad-configuration-section,bad-except-order,bad-exception-cause,bad-file-encoding,bad-format-character,bad-format-string,bad-format-string-key,bad-indentation,bad-mcs-classmethod-argument,bad-mcs-method-argument,bad-open-mode,bad-plugin-value,bad-reversed-sequence,bad-staticmethod-argument,bad-str-strip-call,bad-string-format-type,bad-super-call,bad-thread-instantiation,bare-name-capture-pattern,bidirectional-unicode,binary-op-exception,break-in-finally,catching-non-exception,class-variable-slots-conflict,config-parse-error,confusing-with-statement,contextmanager-generator-missing-cleanup,continue-in-finally,declare-non-slot,deprecated-argument,deprecated-attribute,deprecated-class,deprecated-decorator,deprecated-method,deprecated-module,dict-iter-missing-items,duplicate-argument-name,duplicate-bases,duplicate-except,duplicate-key,duplicate-string-formatting-argument,duplicate-value,empty-docstring,eval-used,expression-not-assigned,fatal,fmt-off,forgotten-debug-statement,format-combined-specification,format-needs-mapping,format-string-without-interpolation,global-at-module-level,implicit-flag-alias,inconsistent-mro,inconsistent-quotes,inherit-non-class,init-is-generator,invalid-all-format,invalid-all-object,invalid-bool-returned,invalid-bytes-returned,invalid-character-backspace,invalid-character-carriage-return,invalid-character-esc,invalid-character-nul,invalid-character-sub,invalid-character-zero-width-space,invalid-characters-in-docstring,invalid-class-object,invalid-enum-extension,invalid-envvar-default,invalid-envvar-value,invalid-field-call,invalid-format-index,invalid-format-returned,invalid-getnewargs-ex-returned,invalid-getnewargs-returned,invalid-hash-returned,invalid-index-returned,invalid-length-hint-returned,invalid-length-returned,invalid-match-args-definition,invalid-metaclass,invalid-overridden-method,invalid-repr-returned,invalid-sequence-index,invalid-slice-index,invalid-slice-step,invalid-slots,invalid-slots-object,invalid-star-assignment-target,invalid-str-returned,invalid-unary-operand-type,invalid-unicode-codec,isinstance-second-argument-not-valid-type,kwarg-superseded-by-positional-arg,logging-format-interpolation,logging-format-truncated,logging-not-lazy,logging-too-few-args,logging-too-many-args,logging-unsupported-format,looping-through-iterator,method-cache-max-size-none,method-check-failed,method-hidden,misplaced-bare-raise,misplaced-format-function,misplaced-future,missing-final-newline,missing-format-argument-key,missing-format-attribute,missing-format-string-key,missing-kwoa,missing-parentheses-for-call-in-test,missing-timeout,mixed-format-string,mixed-line-endings,modified-iterating-dict,modified-iterating-set,multiple-class-sub-patterns,multiple-statements,mypy-comment,mypy:used-before-def,named-expr-without-context,nan-comparison,nested-min-max,no-method-argument,no-self-argument,no-value-for-parameter,non-ascii-file-name,non-ascii-module-import,non-iterator-returned,non-parent-init-called,non-str-assignment-to-dunder-name,nonexistent-operator,nonlocal-and-global,nonlocal-without-binding,not-a-mapping,not-async-context-manager,not-callable,not-context-manager,not-in-loop,notimplemented-raised,overridden-final-method,parse-error,pointless-exception-statement,positional-only-arguments-expected,possibly-unused-variable,potential-index-error,preferred-module,raising-bad-type,raising-format-tuple,raising-non-exception,redeclared-assigned-name,redefined-slots-in-subclass,redundant-keyword-arg,redundant-u-string-prefix,redundant-unittest-assert,repeated-keyword,return-in-init,return-outside-function,self-assigning-variable,self-cls-assignment,shadowed-import,shallow-copy-environ,single-string-used-for-slots,singledispatch-method,singledispatchmethod-function,star-needs-assignment-target,subclassed-final-class,subprocess-popen-preexec-fn,super-without-brackets,syntax-error,too-few-format-args,too-many-format-args,too-many-function-args,too-many-lines,too-many-positional-sub-patterns,too-many-star-expressions,trailing-whitespace,truncated-format-string,try-except-raise,typevar-double-variance,typevar-name-incorrect-variance,typevar-name-mismatch,unbalanced-dict-unpacking,undefined-all-variable,unexpected-keyword-arg,unexpected-line-ending-format,unexpected-special-method-signature,unhashable-member,unknown-option-value,unnecessary-ellipsis,unnecessary-semicolon,unpacking-non-sequence,unrecognized-inline-option,unrecognized-option,unsupported-assignment-operation,unsupported-binary-operation,unsupported-delete-operation,unused-format-string-argument,unused-format-string-key,unused-private-member,used-before-assignment,used-prior-global-declaration,useless-else-on-loop,useless-import-alias,useless-parent-delegation,useless-with-lock,using-assignment-expression-in-unsupported-version,using-comprehension-unpacking-in-unsupported-version,using-exception-groups-in-unsupported-version,using-f-string-in-unsupported-version,using-final-decorator-in-unsupported-version,using-generic-type-syntax-in-unsupported-version,using-positional-only-args-in-unsupported-version,wrong-exception-operation,wrong-spelling-in-comment,wrong-spelling-in-docstring,yield-inside-async-function,yield-outside-function
 # old-module .github/skills/headless-game-test/harness_template.py
 # old-module .github/skills/headless-game-test/unit_test_template.py
 # old-module .github/skills/system-review-round/dead_code_scan.py
@@ -624,13 +624,11 @@ Script/Core/flow_handle_web.py	askfor_all	too-many-statements	statements=62
 Script/Core/flow_handle_web.py	askfor_all	unused-import	count=1
 Script/Core/flow_handle_web.py	askfor_int	mypy:assignment	count=1
 Script/Core/flow_handle_web.py	askfor_str	mypy:assignment	count=1
-Script/Core/flow_handle_web.py	bind_cmd	dangerous-default-value	count=1
 Script/Core/flow_handle_web.py	bind_cmd	mypy:assignment	count=1
 Script/Core/flow_handle_web.py	bind_cmd	mypy:index	count=1
 Script/Core/flow_handle_web.py	bind_cmd	mypy:valid-type	count=1
 Script/Core/flow_handle_web.py	deco_set_tail_deal_cmd_func	mypy:valid-type	count=1
 Script/Core/flow_handle_web.py	order_deal	mypy:assignment	count=1
-Script/Core/flow_handle_web.py	print_cmd	dangerous-default-value	count=1
 Script/Core/flow_handle_web.py	print_cmd	too-many-arguments	args=8
 Script/Core/flow_handle_web.py	print_cmd	too-many-positional-arguments	args=8
 Script/Core/flow_handle_web.py	set_tail_deal_cmd_func	mypy:valid-type	count=1
@@ -841,7 +839,6 @@ Script/Core/mod_manager.py	<module>	invalid-name	count=2
 Script/Core/mod_manager.py	<module>	module-lines	lines=518
 Script/Core/mod_manager.py	<module>	unused-import	count=1
 Script/Core/mod_manager.py	ModInfo.__init__	missing-function-docstring	count=1
-Script/Core/mod_manager.py	ModManager.__init__	access-member-before-definition	count=1
 Script/Core/mod_manager.py	ModManager.__init__	missing-function-docstring	count=1
 Script/Core/mod_manager.py	ModManager.__new__	missing-function-docstring	count=1
 Script/Core/mod_manager.py	ModManager._create_mod_namespace	broad-exception-caught	count=1
@@ -863,7 +860,7 @@ Script/Core/mod_manager.py	ModManager.scan_mods	broad-exception-caught	count=1
 Script/Core/old_chara_to_new.py	<module>	invalid-name	count=1
 Script/Core/old_chara_to_new.py	<module>	line-too-long	count=1,max=96
 Script/Core/old_chara_to_new.py	<module>	missing-module-docstring	count=1
-Script/Core/old_chara_to_new.py	<module>	module-lines	lines=2869
+Script/Core/old_chara_to_new.py	<module>	module-lines	lines=2868
 Script/Core/old_chara_to_new.py	_clear_missing_interest_course	import-outside-toplevel	count=1
 Script/Core/old_chara_to_new.py	_clear_young_child_reference	too-many-branches	branches=22
 Script/Core/old_chara_to_new.py	_clear_young_child_reference	too-many-locals	locals=18
@@ -894,7 +891,6 @@ Script/Core/old_chara_to_new.py	migrate_old_save_data	unused-variable	count=6
 Script/Core/old_chara_to_new.py	normalize_single_character_id	too-many-return-statements	returns=8
 Script/Core/old_chara_to_new.py	update_chara_cloth	import-outside-toplevel	count=1
 Script/Core/old_chara_to_new.py	update_chara_cloth	redefined-builtin	count=1
-Script/Core/old_chara_to_new.py	update_chara_cloth	self-assigning-variable	count=1
 Script/Core/old_chara_to_new.py	update_chara_cloth	too-many-branches	branches=16
 Script/Core/old_chara_to_new.py	update_chara_cloth	use-implicit-booleaness-not-len	count=2
 Script/Core/old_chara_to_new.py	update_character_config_data	consider-using-dict-items	count=3
@@ -910,13 +906,11 @@ Script/Core/py_cmd.py	<module>	invalid-name	count=2
 Script/Core/py_cmd.py	<module>	missing-module-docstring	count=1
 Script/Core/py_cmd.py	focus_cmd	broad-exception-caught	count=1
 Script/Core/py_cmd.py	focus_cmd	import-outside-toplevel	count=1
-Script/Core/py_cmd.py	pcmd	dangerous-default-value	count=1
 Script/Core/py_cmd.py	pcmd	global-variable-undefined	count=1
 Script/Core/py_cmd.py	pcmd	mypy:assignment	count=1
 Script/Core/py_cmd.py	pcmd	mypy:name-defined	count=1
 Script/Core/py_cmd.py	pcmd	too-many-arguments	args=8
 Script/Core/py_cmd.py	pcmd	too-many-positional-arguments	args=8
-Script/Core/py_cmd.py	pimagecmd	dangerous-default-value	count=1
 Script/Core/py_cmd.py	pimagecmd	global-variable-undefined	count=1
 Script/Core/py_cmd.py	pimagecmd	mypy:assignment	count=1
 Script/Core/py_cmd.py	pimagecmd	mypy:name-defined	count=1
@@ -1103,7 +1097,6 @@ Script/Core/web_server.py	handle_select_interaction_type	logging-fstring-interpo
 Script/Core/web_server.py	handle_select_item	broad-exception-caught	count=1
 Script/Core/web_server.py	handle_select_item	import-outside-toplevel	count=1
 Script/Core/web_server.py	handle_select_item	logging-fstring-interpolation	count=2
-Script/Core/web_server.py	handle_select_major_type	assignment-from-none	count=1
 Script/Core/web_server.py	handle_select_major_type	broad-exception-caught	count=1
 Script/Core/web_server.py	handle_select_major_type	import-outside-toplevel	count=2
 Script/Core/web_server.py	handle_select_major_type	logging-fstring-interpolation	count=3
@@ -1270,7 +1263,7 @@ Script/Design/character.py	init_attr	too-many-statements	statements=50
 Script/Design/character.py	judge_character_time_over_24	mypy:return-value	count=2
 Script/Design/character_behavior.py	<module>	invalid-name	count=1
 Script/Design/character_behavior.py	<module>	missing-module-docstring	count=1
-Script/Design/character_behavior.py	<module>	module-lines	lines=491
+Script/Design/character_behavior.py	<module>	module-lines	lines=476
 Script/Design/character_behavior.py	character_behavior	line-too-long	count=2,max=405
 Script/Design/character_behavior.py	character_behavior	too-many-branches	branches=16
 Script/Design/character_behavior.py	character_behavior	too-many-statements	statements=47
@@ -1278,9 +1271,7 @@ Script/Design/character_behavior.py	init_character_behavior	import-outside-tople
 Script/Design/character_behavior.py	init_character_behavior	line-too-long	count=2,max=149
 Script/Design/character_behavior.py	judge_before_pl_behavior	import-outside-toplevel	count=2
 Script/Design/character_behavior.py	judge_character_status	line-too-long	count=3,max=108
-Script/Design/character_behavior.py	judge_character_status	self-assigning-variable	count=1
 Script/Design/character_behavior.py	judge_character_status	singleton-comparison	count=5
-Script/Design/character_behavior.py	judge_character_status	too-many-locals	locals=16
 Script/Design/character_behavior.py	judge_character_status	use-implicit-booleaness-not-len	count=1
 Script/Design/character_behavior.py	judge_character_status_time_over	line-too-long	count=2,max=115
 Script/Design/character_behavior.py	judge_character_status_time_over	too-many-statements	statements=42
@@ -1446,16 +1437,14 @@ Script/Design/handle_chat_ai.py	text_ai	unused-variable	count=1
 Script/Design/handle_chat_ai.py	text_ai	use-implicit-booleaness-not-len	count=1
 Script/Design/handle_npc_ai.py	<module>	invalid-name	count=2
 Script/Design/handle_npc_ai.py	<module>	missing-module-docstring	count=1
-Script/Design/handle_npc_ai.py	<module>	module-lines	lines=1199
+Script/Design/handle_npc_ai.py	<module>	module-lines	lines=1183
 Script/Design/handle_npc_ai.py	commit_group_sex_tired_exit	import-outside-toplevel	count=1
 Script/Design/handle_npc_ai.py	find_character_target	line-too-long	count=7,max=192
-Script/Design/handle_npc_ai.py	find_character_target	mypy:var-annotated	count=4
-Script/Design/handle_npc_ai.py	find_character_target	self-assigning-variable	count=1
-Script/Design/handle_npc_ai.py	find_character_target	too-many-branches	branches=41
-Script/Design/handle_npc_ai.py	find_character_target	too-many-locals	locals=25
-Script/Design/handle_npc_ai.py	find_character_target	too-many-statements	statements=129
+Script/Design/handle_npc_ai.py	find_character_target	mypy:var-annotated	count=3
+Script/Design/handle_npc_ai.py	find_character_target	too-many-branches	branches=37
+Script/Design/handle_npc_ai.py	find_character_target	too-many-locals	locals=23
+Script/Design/handle_npc_ai.py	find_character_target	too-many-statements	statements=121
 Script/Design/handle_npc_ai.py	find_character_target	unused-variable	count=1
-Script/Design/handle_npc_ai.py	find_character_target	use-implicit-booleaness-not-len	count=2
 Script/Design/handle_npc_ai.py	get_chara_entertainment	import-outside-toplevel	count=2
 Script/Design/handle_npc_ai.py	get_chara_entertainment	line-too-long	count=1,max=86
 Script/Design/handle_npc_ai.py	get_chara_entertainment	too-many-branches	branches=18
@@ -1944,7 +1933,6 @@ Script/Design/second_behavior.py	mark_effect	too-many-branches	branches=49
 Script/Design/second_behavior.py	mark_effect	too-many-locals	locals=16
 Script/Design/second_behavior.py	mark_effect	too-many-statements	statements=138
 Script/Design/second_behavior.py	mark_effect	unused-variable	count=4
-Script/Design/second_behavior.py	second_behavior_effect	dangerous-default-value	count=1
 Script/Design/second_behavior.py	second_behavior_effect	line-too-long	count=3,max=101
 Script/Design/second_behavior.py	second_behavior_effect	mypy:var-annotated	count=1
 Script/Design/second_behavior.py	second_behavior_effect	too-many-branches	branches=20
@@ -2063,7 +2051,7 @@ Script/Settle/__init__.py	<module>	invalid-name	own=1
 Script/Settle/__init__.py	<module>	missing-module-docstring	count=1
 Script/Settle/common_default.py	<module>	invalid-name	count=1
 Script/Settle/common_default.py	<module>	missing-module-docstring	count=1
-Script/Settle/common_default.py	<module>	module-lines	lines=1309
+Script/Settle/common_default.py	<module>	module-lines	lines=1307
 Script/Settle/common_default.py	<module>	multiple-imports	count=1
 Script/Settle/common_default.py	base_chara_climix_common_settle	import-outside-toplevel	count=1
 Script/Settle/common_default.py	base_chara_climix_common_settle	too-many-arguments	args=7
@@ -2077,7 +2065,6 @@ Script/Settle/common_default.py	base_chara_experience_common_settle	too-many-arg
 Script/Settle/common_default.py	base_chara_experience_common_settle	too-many-branches	branches=17
 Script/Settle/common_default.py	base_chara_experience_common_settle	too-many-positional-arguments	args=6
 Script/Settle/common_default.py	base_chara_experience_common_settle	too-many-statements	statements=47
-Script/Settle/common_default.py	base_chara_favorability_and_trust_common_settle	arguments-out-of-order	count=1
 Script/Settle/common_default.py	base_chara_favorability_and_trust_common_settle	mypy:arg-type	count=1
 Script/Settle/common_default.py	base_chara_favorability_and_trust_common_settle	mypy:assignment	count=8
 Script/Settle/common_default.py	base_chara_favorability_and_trust_common_settle	mypy:union-attr	count=2
@@ -2295,8 +2282,7 @@ Script/Settle/item_effect.py	handle_target_enema	import-outside-toplevel	count=2
 Script/Settle/item_effect.py	handle_target_enema	too-many-locals	locals=17
 Script/Settle/orgasm_settle.py	<module>	invalid-name	count=1
 Script/Settle/orgasm_settle.py	<module>	missing-module-docstring	count=1
-Script/Settle/orgasm_settle.py	<module>	module-lines	lines=572
-Script/Settle/orgasm_settle.py	judge_orgasm_edge_success	dangerous-default-value	count=1
+Script/Settle/orgasm_settle.py	<module>	module-lines	lines=569
 Script/Settle/orgasm_settle.py	judge_orgasm_edge_success	too-many-locals	locals=16
 Script/Settle/orgasm_settle.py	judge_orgasm_edge_success	unused-variable	count=1
 Script/Settle/orgasm_settle.py	orgasm_judge	consider-using-dict-items	count=1
@@ -2304,12 +2290,11 @@ Script/Settle/orgasm_settle.py	orgasm_judge	too-many-branches	branches=17
 Script/Settle/orgasm_settle.py	orgasm_judge	too-many-locals	locals=19
 Script/Settle/orgasm_settle.py	orgasm_judge	too-many-statements	statements=61
 Script/Settle/orgasm_settle.py	orgasm_settle_in_second_behavior	consider-using-dict-items	count=1
-Script/Settle/orgasm_settle.py	orgasm_settle_in_second_behavior	dangerous-default-value	count=3
 Script/Settle/orgasm_settle.py	orgasm_settle_in_second_behavior	import-outside-toplevel	count=3
 Script/Settle/orgasm_settle.py	orgasm_settle_in_second_behavior	line-too-long	count=2,max=94
-Script/Settle/orgasm_settle.py	orgasm_settle_in_second_behavior	too-many-branches	branches=43
+Script/Settle/orgasm_settle.py	orgasm_settle_in_second_behavior	too-many-branches	branches=40
 Script/Settle/orgasm_settle.py	orgasm_settle_in_second_behavior	too-many-locals	locals=37
-Script/Settle/orgasm_settle.py	orgasm_settle_in_second_behavior	too-many-statements	statements=129
+Script/Settle/orgasm_settle.py	orgasm_settle_in_second_behavior	too-many-statements	statements=126
 Script/Settle/orgasm_settle.py	orgasm_settle_in_second_behavior	unused-variable	count=1
 Script/Settle/orgasm_settle.py	release_orgasm_edge_now	consider-using-dict-items	count=1
 Script/Settle/past_day_settle.py	<module>	invalid-name	count=1
@@ -3347,7 +3332,6 @@ Script/System/Web_Draw_System/character_renderer.py	CharacterRenderer._get_era_i
 Script/System/Web_Draw_System/character_renderer.py	CharacterRenderer._get_resolved_image_name	broad-exception-caught	count=1
 Script/System/Web_Draw_System/character_renderer.py	CharacterRenderer._get_resolved_image_name	import-outside-toplevel	count=1
 Script/System/Web_Draw_System/character_renderer.py	CharacterRenderer.get_character_image_data	mypy:assignment	count=1
-Script/System/Web_Draw_System/character_renderer.py	CharacterRenderer.get_scene_characters_avatars	dangerous-default-value	count=1
 Script/System/Web_Draw_System/character_renderer.py	CharacterRenderer.get_scene_characters_avatars	import-outside-toplevel	count=1
 Script/System/Web_Draw_System/dialog_box.py	<module>	invalid-name	count=1
 Script/System/Web_Draw_System/dialog_box.py	<module>	unused-import	count=1
@@ -3361,7 +3345,6 @@ Script/System/Web_Draw_System/dialog_box.py	add_dialog_text	too-many-positional-
 Script/System/Web_Draw_System/image_processor.py	<module>	module-lines	lines=450
 Script/System/Web_Draw_System/image_processor.py	<module>	mypy:import-not-found	count=1
 Script/System/Web_Draw_System/image_processor.py	ImageProcessor	line-too-long	count=1,max=102
-Script/System/Web_Draw_System/image_processor.py	ImageProcessor.__init__	access-member-before-definition	count=1
 Script/System/Web_Draw_System/image_processor.py	ImageProcessor._add_to_cache	unused-variable	count=1
 Script/System/Web_Draw_System/image_processor.py	ImageProcessor._crop_and_cache	broad-exception-caught	count=1
 Script/System/Web_Draw_System/image_processor.py	ImageProcessor.crop_head_from_fullbody	broad-exception-caught	count=1
@@ -3369,7 +3352,6 @@ Script/System/Web_Draw_System/image_processor.py	ImageProcessor.crop_head_from_f
 Script/System/Web_Draw_System/image_processor.py	ImageProcessor.crop_head_from_fullbody	too-many-statements	statements=48
 Script/System/Web_Draw_System/interaction_handler.py	<module>	invalid-name	count=1
 Script/System/Web_Draw_System/interaction_handler.py	<module>	unused-import	count=2
-Script/System/Web_Draw_System/interaction_handler.py	InteractionHandler.select_major_type	assignment-from-none	count=1
 Script/System/Web_Draw_System/interaction_handler.py	InteractionHandler.select_major_type	line-too-long	count=1,max=94
 Script/System/Web_Draw_System/interaction_handler.py	InteractionHandler.select_minor_type	line-too-long	count=1,max=82
 Script/System/Web_Draw_System/scene_renderer.py	<module>	invalid-name	count=1
@@ -4141,13 +4123,11 @@ Script/UI/Moudle/draw.py	WaitDraw.draw	unused-variable	count=1
 Script/UI/Moudle/panel.py	<module>	invalid-name	count=1
 Script/UI/Moudle/panel.py	<module>	missing-module-docstring	count=1
 Script/UI/Moudle/panel.py	<module>	module-lines	lines=771
-Script/UI/Moudle/panel.py	CenterDrawButtonListPanel.set	dangerous-default-value	count=1
 Script/UI/Moudle/panel.py	CenterDrawButtonListPanel.set	mypy:arg-type	count=2
 Script/UI/Moudle/panel.py	CenterDrawButtonListPanel.set	mypy:no-redef	count=1
 Script/UI/Moudle/panel.py	CenterDrawButtonListPanel.set	too-many-arguments	args=7
 Script/UI/Moudle/panel.py	CenterDrawButtonListPanel.set	too-many-locals	locals=16
 Script/UI/Moudle/panel.py	CenterDrawButtonListPanel.set	too-many-positional-arguments	args=7
-Script/UI/Moudle/panel.py	LeftDrawIDButtonListPanel.set	dangerous-default-value	count=1
 Script/UI/Moudle/panel.py	LeftDrawIDButtonListPanel.set	mypy:arg-type	count=2
 Script/UI/Moudle/panel.py	LeftDrawIDButtonListPanel.set	mypy:no-redef	count=1
 Script/UI/Moudle/panel.py	LeftDrawIDButtonListPanel.set	too-many-arguments	args=7
@@ -4462,7 +4442,6 @@ Script/UI/Panel/collection_panel.py	collapse_collection	pointless-string-stateme
 Script/UI/Panel/collection_panel.py	refresh_all_bonus	consider-using-dict-items	count=1
 Script/UI/Panel/common_select_NPC.py	<module>	invalid-name	count=1,own=1
 Script/UI/Panel/common_select_NPC.py	<module>	missing-module-docstring	count=1
-Script/UI/Panel/common_select_NPC.py	common_select_npc_button_list_func	dangerous-default-value	count=1
 Script/UI/Panel/common_select_NPC.py	common_select_npc_button_list_func	line-too-long	count=2,max=103
 Script/UI/Panel/common_select_NPC.py	common_select_npc_button_list_func	mypy:assignment	count=1
 Script/UI/Panel/common_select_NPC.py	common_select_npc_button_list_func	mypy:attr-defined	count=2
@@ -5218,7 +5197,6 @@ Script/UI/Panel/play_gomoku_panel.py	Gomoku_Board	invalid-name	own=1
 Script/UI/Panel/play_gomoku_panel.py	Gomoku_Board.__init__	missing-function-docstring	count=1
 Script/UI/Panel/play_gomoku_panel.py	Gomoku_Board.__str__	missing-function-docstring	count=1
 Script/UI/Panel/play_gomoku_panel.py	Gomoku_Board.coordinate2position	missing-function-docstring	count=1
-Script/UI/Panel/play_gomoku_panel.py	Gomoku_Board.display	dangerous-default-value	count=1
 Script/UI/Panel/play_gomoku_panel.py	Gomoku_Board.display	missing-function-docstring	count=1
 Script/UI/Panel/play_gomoku_panel.py	Gomoku_Board.evaluate	missing-function-docstring	count=1
 Script/UI/Panel/play_gomoku_panel.py	Gomoku_Board.get_player_move	missing-function-docstring	count=1

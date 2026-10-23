@@ -585,27 +585,11 @@ def find_character_target(character_id: int, now_time: datetime.datetime):
         null_target_set.update(now_target_list)
         premise_data = new_premise_data
 
-  # 如果以上都没有，则开始遍历各大类的目标行动
+  # 如果以上都没有，则遍历所有大类的目标行动
   if judge == 0:
-    now_target_list = []
-    target_type_list = []
-
-    # 如果已经有now_target_list了，则直接使用
-    if len(now_target_list):
-      now_target_list = now_target_list
-    # 或者有target_type_list，则遍历后加入now_target_list
-    elif len(target_type_list):
-      for target_type in target_type_list:
-        now_target_list.extend(
-            game_config.config_target_type_index[target_type]
-        )
-    # 如果还是没有，则遍历所有大类
-    else:
-      now_target_list = all_target_list
-
     target, weight, judge, new_premise_data = search_target(
         character_id,
-        now_target_list,
+        all_target_list,
         null_target_set,
         premise_data,
         target_weight_data,
