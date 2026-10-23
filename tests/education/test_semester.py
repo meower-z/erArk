@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """semester_handle：学期时间、本学期出勤、成绩档位、学期切换、成绩单历史"""
 
-from _bootstrap import *  # noqa: F401,F403
+from _bootstrap import DEFAULT_TIME, _, check, class_ai, clear_schedules, datetime, education_constant, finish, game_config, game_time, growth_handle, make_character, period_time, remove_character, section, semester_handle, set_time
 
 clear_schedules()
 mother = make_character(102, "母亲", 0)

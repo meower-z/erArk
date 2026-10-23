@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """面板：页签容器、全局课表、个人课表、日程模板、养成总览、选人按钮（通用 NPC 选择面板）、临时课编辑、Web 适配器冒烟"""
 
-from _bootstrap import *  # noqa: F401,F403
+from _bootstrap import DEFAULT_TIME, SCENE_DORM, _, auto_schedule, cache, check, classroom_path, clear_schedules, constant, datetime, draw, drawn_text, education_constant, finish, flow_handle, game_config, growth_handle, make_character, move_to, open_all_classroom, period_time, pl, schedule_handle, section, semester_handle, set_time, sex_class_handle
 from Script.System.Education_System import class_schedule_panel, course_select_panel, growth_panel, schedule_template_panel
 
 open_all_classroom()

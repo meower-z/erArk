@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """class_ai：翘课概率与定种子掷骰、教师可用性、上课状态函数、工作链里的师生目标行（Plan 24）、normal 门槛、外层闸、见学回落链"""
 
-from _bootstrap import *  # noqa: F401,F403
+from _bootstrap import DEFAULT_TIME, SCENE_DORM, SCENE_EDU_ENTRY, SCENE_NURSERY, _, attr_calculation, cache, check, class_ai, classroom_path, clear_schedules, constant, constant_effect, datetime, education_constant, finish, game_config, game_time, game_type, growth_handle, handle_premise, make_character, map_handle, move_to, open_all_classroom, period_time, pl, random, remove_character, scene_str, schedule_handle, schedule_template_handle, section, set_time, sex_class_handle
 from Script.Design import handle_npc_ai, clothing
 from Script.Settle import realtime_settle
 from Script.System.Medical_System import medical_constant

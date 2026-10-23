@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """存档兼容：CHILD_GROWTH 字段回填、成绩单迁移、罗德岛新字段、真实存档只读载入"""
 
-from _bootstrap import *  # noqa: F401,F403
+from _bootstrap import ROOT, cache, check, finish, game_config, game_type, growth_handle, make_character, os, save_handle, scene_str, section, semester_handle
 
 section("CHILD_GROWTH 字段级回填")
 mother = make_character(102, "母亲", 0)

@@ -5,7 +5,7 @@
    不 inline 调用 init_character_behavior()（其结尾的成就结算可能写文件）。
 """
 
-from _bootstrap import *  # noqa: F401,F403
+from _bootstrap import ROOT, SCENE_EDU_ENTRY, auto_schedule, cache, check, class_ai, constant, datetime, education_constant, finish, game_time, growth_handle, handle_premise, make_character, map_handle, move_to, os, pl, save_handle, schedule_handle, section, semester_handle, set_time, sex_class_handle
 from tests.education._skip import skip
 from Script.Design import character_behavior, clothing, instuct_judege, handle_npc_ai
 from Script.Settle import past_day_settle, realtime_settle

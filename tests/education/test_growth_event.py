@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """growth_event_handle：候选人、同胞与同学、事件桶、入队、注册式容量与抬头"""
 
-from _bootstrap import *  # noqa: F401,F403
+from _bootstrap import DEFAULT_TIME, _, cache, character_handle, check, class_ai, clear_schedules, constant, constant_promise, datetime, education_constant, finish, game_config, game_time, growth_event_handle, growth_handle, handle_premise, make_character, open_all_classroom, period_time, pl, random, remove_character, schedule_handle, schedule_template_handle, section, semester_handle, set_time
 from Script.System.Official_Event_System import official_event_handle
 
 open_all_classroom()

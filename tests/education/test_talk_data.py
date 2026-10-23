@@ -3,7 +3,7 @@
 
 import subprocess
 
-from _bootstrap import *  # noqa: F401,F403
+from _bootstrap import ROOT, _, check, classroom_path, clear_schedules, constant, constant_promise, education_constant, finish, game_config, game_type, growth_event_handle, growth_handle, handle_premise, make_character, open_all_classroom, os, period_time, pl, remove_character, schedule_handle, section, set_time, sys
 
 open_all_classroom()
 mother = make_character(102, "母亲", 0)

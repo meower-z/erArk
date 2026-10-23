@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """baby_growth_handle：胎教累积与出生折习得珠（Plan 26）；六个照料行为的效果串与 CVE；喂奶 556；胎教 555"""
 
-from _bootstrap import *  # noqa: F401,F403
+from _bootstrap import baby_growth_handle, cache, check, class_ai, clear_schedules, constant, constant_effect, datetime, education_constant, finish, game_config, game_type, growth_handle, make_character, open_all_classroom, pl, section, set_time, settle_behavior
 
 clear_schedules()
 mother = make_character(102, "母亲", 0)
