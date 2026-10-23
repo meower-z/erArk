@@ -19,28 +19,28 @@ all_map_data_path = os.path.join("data", "MapData")
 
 
 def init_map_data():
-  """载入地图和场景数据"""
-  if (
-      os.path.exists(all_scene_data_path)
-      and os.path.exists(all_map_data_path)
-      and os.path.exists(all_place_data_path)
-      and os.path.exists(scene_path_edge_path)
-  ):
-    with open(all_scene_data_path, "rb") as all_scene_data_file:
-      cache.scene_data = pickle.load(all_scene_data_file)
-    with open(all_map_data_path, "rb") as all_map_data_file:
-      cache.map_data = pickle.load(all_map_data_file)
-    with open(all_place_data_path, "rb") as all_place_data_file:
-      constant.place_data = pickle.load(all_place_data_file)
+  """载入地图和场景数据：场景名与地图名经过翻译，三个 pickle 预处理文件在数据之后记着写出它们时的游戏语言；
+  四个预处理文件齐全且三个记的都是当前语言时读入它们，否则由 data/map 重建并写出"""
+  pickle_paths = (all_scene_data_path, all_map_data_path, all_place_data_path)
+  loaded = {}
+  for path in pickle_paths:
+    if os.path.exists(path):
+      with open(path, "rb") as now_file:
+        data = pickle.load(now_file)
+        if now_file.peek(1) and pickle.load(now_file) == get_text.now_language:
+          loaded[path] = data
+  if len(loaded) == len(pickle_paths) and os.path.exists(scene_path_edge_path):
+    cache.scene_data = loaded[all_scene_data_path]
+    cache.map_data = loaded[all_map_data_path]
+    constant.place_data = loaded[all_place_data_path]
     map_handle.scene_path_edge = json_handle.load_json(scene_path_edge_path)
   else:
     load_dir_now(map_data_path)
-    with open(all_map_data_path, "wb") as all_map_data_file:
-      pickle.dump(cache.map_data, all_map_data_file)
-    with open(all_scene_data_path, "wb") as all_scene_data_file:
-      pickle.dump(cache.scene_data, all_scene_data_file)
-    with open(all_place_data_path, "wb") as all_place_data_file:
-      pickle.dump(constant.place_data, all_place_data_file)
+    built = (cache.scene_data, cache.map_data, constant.place_data)
+    for path, data in zip(pickle_paths, built):
+      with open(path, "wb") as now_file:
+        pickle.dump(data, now_file)
+        pickle.dump(get_text.now_language, now_file)
     map_handle.init_scene_edge_path_data()
 
 
