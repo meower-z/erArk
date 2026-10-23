@@ -2,4 +2,5 @@
 pytest>=9.1
 # 慢速层的 --forked
 pytest-forked>=1.7
+# 量两层的测试覆盖到哪些模块
 coverage>=7.16
