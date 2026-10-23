@@ -1,0 +1,56 @@
+# pylint 配置。底本：谷歌公开的 Python 风格 pylintrc（github.com/google/styleguide），
+# 再加上函数体量检查与阈值。
+
+[MAIN]
+jobs=0
+
+[MESSAGES CONTROL]
+disable=R,
+        abstract-method,
+        arguments-differ,
+        attribute-defined-outside-init,
+        c-extension-no-member,
+        consider-using-enumerate,
+        fixme,
+        global-statement,
+        implicit-str-concat,
+        import-error,
+        import-self,
+        locally-disabled,
+        missing-class-docstring,
+        no-member,
+        no-name-in-module,
+        signature-differs,
+        suppressed-message,
+        trailing-newlines,
+        unnecessary-pass,
+        unused-argument,
+        useless-suppression,
+        wrong-import-order
+enable=too-many-lines,
+       too-many-statements,
+       too-many-branches,
+       too-many-locals,
+       too-many-arguments,
+       too-many-positional-arguments,
+       too-many-return-statements
+
+[BASIC]
+good-names=main,_
+no-docstring-rgx=^$
+docstring-min-length=-1
+method-rgx=^((_?[a-z][a-z0-9_]*)|(__[a-z0-9_]+__)|(visit_[A-Za-z0-9_]+))$
+
+[FORMAT]
+indent-string='  '
+max-line-length=80
+max-module-lines=400
+ignore-long-lines=(?x)(^\s*(\#\s*)?<?https?://\S+>?$|^\s*(from\s+\S+\s+)?import\s+.+$)
+
+[DESIGN]
+max-args=5
+max-positional-arguments=5
+max-branches=12
+max-locals=15
+max-returns=6
+max-statements=40

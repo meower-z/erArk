@@ -77,3 +77,21 @@ try:
   from . import check_supplement  # noqa: F401  补充盲点检查（SUPP-01…SUPP-08）
 except Exception as _e:
   check_log.write_self_error_log(_e)
+
+# 导入让各检查模块用 register_check 注册检查项
+__all__ = [
+    "check_core",
+    "check_behavior",
+    "check_body",
+    "check_education",
+    "check_h_group",
+    "check_island",
+    "check_mind",
+    "check_numeric",
+    "check_observable",
+    "check_official",
+    "check_place",
+    "check_roster",
+    "check_setting",
+    "check_supplement",
+]
