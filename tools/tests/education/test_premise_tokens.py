@@ -898,7 +898,7 @@ _hall = schedule_handle.get_classroom_list(E.COURSE_TYPE_PUBLIC)[0]
 schedule_handle.set_class_cell(ROOM1, 1, 2, 45, 101)
 schedule_handle.set_selected_course(201, 1, 2, E.COURSE_TYPE_THEORY, ROOM1)
 check(
-    "L26 只排理论课：不成立（此前萝莉 51 / 幼女 24「大礼堂的公开课」挂的是任意课，照样抽得到）",
+    "L26 只排理论课：不成立（此前萝莉 51「大礼堂的公开课」挂的是任意课，照样抽得到）",
     HP(P.SELF_HAVE_PUBLIC_COURSE, 201) == 0,
 )
 schedule_handle.set_selected_course(201, 1, 3, E.COURSE_TYPE_PUBLIC, _hall)

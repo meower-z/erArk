@@ -1326,7 +1326,7 @@ def handle_self_have_any_course(character_id: int) -> int:
 @add_premise(constant_promise.Premise.SELF_HAVE_THEORY_COURSE)
 def handle_self_have_theory_course(character_id: int) -> int:
   """
-  校验自己有理论课：学生岗，且个人课表上至少有一格是每周确有的理论课（Plan 31 §3.14 L11，幼女 1 等点名课型的养成事件用）
+  校验自己有理论课：学生岗，且个人课表上至少有一格是每周确有的理论课
   日常事件在 0 点推送，读「此刻这一节」的 CVP CourseType 恒为 -1，所以查整张个人课表（growth_handle.judge_have_course_type）；
      只读 child_growth，不惰性创建养成数据
   Keyword arguments:
@@ -1348,7 +1348,7 @@ def handle_self_have_theory_course(character_id: int) -> int:
 @add_premise(constant_promise.Premise.SELF_HAVE_PRACTICE_COURSE)
 def handle_self_have_practice_course(character_id: int) -> int:
   """
-  校验自己有实践课：学生岗，且个人课表上至少有一格是每周确有的实践课（Plan 31 §3.14 L11，萝莉 16、幼女 22 用）
+  校验自己有实践课：学生岗，且个人课表上至少有一格是每周确有的实践课（萝莉 16、通用 5 用）
   与 self_have_theory_course 同一个判据，只读，不惰性创建养成数据
   Keyword arguments:
   character_id -- 角色id
@@ -1432,7 +1432,7 @@ def handle_self_have_intern_course(character_id: int) -> int:
 @add_premise(constant_promise.Premise.SELF_HAVE_PUBLIC_COURSE)
 def handle_self_have_public_course(character_id: int) -> int:
   """
-  校验自己有公开课：学生岗，且个人课表上至少有一格是每周确有的公开课（Plan 32 §3.14 L26，萝莉 51、幼女 24「大礼堂的公开课」用）
+  校验自己有公开课：学生岗，且个人课表上至少有一格是每周确有的公开课（萝莉 51「大礼堂的公开课」用）
   与 self_have_theory_course 同一个判据（growth_handle.judge_have_course_type），只读，不惰性创建养成数据
   Keyword arguments:
   character_id -- 角色id

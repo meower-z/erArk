@@ -580,14 +580,14 @@ schedule_handle.set_class_cell(ROOM3, 2, 3, 45, -1)
 schedule_handle.set_selected_course(212, 2, 3, E.COURSE_TYPE_THEORY, ROOM3)
 schedule_handle.set_selected_course(214, 2, 3, E.COURSE_TYPE_THEORY, ROOM3)
 check(
-    "L7 幼女与仍在学生岗的成年姐姐同在一格：姐姐不算她的同学，同学前提不成立（此前算，幼女 41 的对象会是她）",
+    "L7 幼女与仍在学生岗的成年姐姐同在一格：姐姐不算她的同学，同学前提不成立（此前算，通用 46 的对象会是她）",
     214 not in growth_event_handle.get_classmate_list(212)
     and HP(constant_promise.Premise.SELF_HAVE_CLASSMATE, 212) == 0,
     growth_event_handle.get_classmate_list(212),
 )
 check(
-    "L7 幼女 41「班上的{TargetName}」不在她的候选里",
-    "幼女41"
+    "L7 同学事件通用 46 不在她的候选里",
+    "通用46"
     not in {
         one[0] for one in growth_event_handle.get_candidate_event_list(212)
     },
@@ -602,10 +602,10 @@ check(
     growth_event_handle.get_classmate_list(212),
 )
 check(
-    "L7 幼女 41 进候选，互动对象是萝莉、不是成年姐姐",
-    "幼女41"
+    "L7 通用 46 进候选，互动对象是萝莉、不是成年姐姐",
+    "通用46"
     in {one[0] for one in growth_event_handle.get_candidate_event_list(212)}
-    and growth_event_handle.get_event_partner("幼女41", 212) == 211,
+    and growth_event_handle.get_event_partner("通用46", 212) == 211,
 )
 
 section(
@@ -766,26 +766,6 @@ for _step_uid, _step_type, _step_target, _step_period in _loli_steps:
       and not any(uid in _now for uid in _step_uid_list if uid not in _added),
       sorted(set(_step_uid_list) & _now),
   )
-schedule_handle.set_selected_course(212, 0, 2, E.COURSE_TYPE_PE, _("木桩房"))
-growth_handle.get_child_growth(212).attend_class_count = 3
-_now = candidate_uid_set(212)
-check(
-    "L11 只排体育课、听过课的幼女：幼女 1（第一次坐进理论教室）、幼女 22（实践课）都不在候选里（此前都在）",
-    "幼女1" not in _now and "幼女22" not in _now,
-)
-schedule_handle.set_selected_course(
-    212, 0, 0, E.COURSE_TYPE_THEORY, _("理论教室一")
-)
-check("L11 排上理论课：幼女 1 进候选", "幼女1" in candidate_uid_set(212))
-growth_handle.get_child_growth(212).attend_class_count = 0
-check(
-    "L11 一节课都没听过：幼女 1 仍不在（保留累计听课 ≥ 1）",
-    "幼女1" not in candidate_uid_set(212),
-)
-schedule_handle.set_selected_course(
-    212, 0, 1, E.COURSE_TYPE_PRACTICE, _("实践教室一")
-)
-check("L11 排上实践课：幼女 22 进候选", "幼女22" in candidate_uid_set(212))
 
 section(
     "Plan 31 §3.14（Q4 / L10）：写成绩单的事件要有待查看的新成绩单；萝莉 6 读本学期出勤"
@@ -1052,12 +1032,12 @@ check(
     sorted(_marker_used - E.STAGE_TALENT_PREMISE_SET),
 )
 check(
-    "L16 judge_stage_marker_pass：前提不写阶段记号的恒成立，写了的按当前阶段判（通用 27 不派萝莉、期末 2 只派幼女），事件不存在的不成立",
+    "L16 judge_stage_marker_pass：前提不写阶段记号的恒成立，写了的按当前阶段判（通用 27 不派萝莉、期末 3 只派萝莉），事件不存在的不成立",
     growth_event_handle.judge_stage_marker_pass("通用16", 201)
     and growth_event_handle.judge_stage_marker_pass("通用27", 202)
     and not growth_event_handle.judge_stage_marker_pass("通用27", 201)
-    and growth_event_handle.judge_stage_marker_pass("期末2", 202)
-    and not growth_event_handle.judge_stage_marker_pass("期末2", 201)
+    and growth_event_handle.judge_stage_marker_pass("期末3", 201)
+    and not growth_event_handle.judge_stage_marker_pass("期末3", 202)
     and not growth_event_handle.judge_stage_marker_pass("不存在999", 201),
 )
 growing = make_character(
@@ -1094,14 +1074,13 @@ check(
     growth_event_handle.drop_stale_stage_event(215) == 0
     and queue_pair_list() == _left,
 )
-for _uid in (child_bucket[0], "期末2"):
-  official_event_handle.push_official_event(_uid, 215)
+official_event_handle.push_official_event(child_bucket[0], 215)
 growing.talent[102], growing.talent[103] = 0, 1
 _dropped = growth_event_handle.drop_stale_stage_event(215)
 _left_215 = [one[0] for one in queue_pair_list() if one[1] == 215]
 check(
-    "L16 幼女→萝莉：幼女桶的、前提写着不派萝莉的通用 27、前提写着只派幼女的期末 2 都清掉（3 条），通用 16 与期末 1 照留",
-    _dropped == 3 and _left_215 == ["通用16", "期末1"],
+    "L16 幼女→萝莉：幼女桶的与前提写着不派萝莉的通用 27 都清掉（2 条），通用 16 与期末 1 照留",
+    _dropped == 2 and _left_215 == ["通用16", "期末1"],
     (_dropped, _left_215),
 )
 for _uid in (loli_bucket[0], "期末3", E.GRADUATION_EVENT_UID):
@@ -1133,11 +1112,11 @@ to_loli = make_character(
 to_loli.pregnancy.born_time = cache.game_time - datetime.timedelta(
     days=pregnancy_constant.GROW_TO_LOLI_DAY + 10
 )  # 已过长成萝莉的阈值 10 天
-for _uid in (child_bucket[0], "通用27", "通用16", "期末2"):
+for _uid in (child_bucket[0], "通用27", "通用16"):
   official_event_handle.push_official_event(_uid, 216)
 pregnancy_handle.check_grow_to_loli(216)
 check(
-    "L16 幼女长成萝莉（pregnancy_handle.check_grow_to_loli）：素质已换成萝莉，幼女桶的与前提写着不派萝莉 / 只派幼女的（通用 27、期末 2）清掉，通用 16 照留",
+    "L16 幼女长成萝莉（pregnancy_handle.check_grow_to_loli）：素质已换成萝莉，幼女桶的与前提写着不派萝莉的通用 27 清掉，通用 16 照留",
     to_loli.talent[103] == 1
     and to_loli.talent[102] == 0
     and queue_pair_list() == [("通用16", 216)],
