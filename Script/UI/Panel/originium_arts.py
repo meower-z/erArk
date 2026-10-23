@@ -181,18 +181,17 @@ class Originium_Arts_Panel:
         button7_draw.draw()
         return_list.append(button7_draw.return_text)
 
-      if 1:
-        button11_text = _("[011]能力获得与升级")
-        button11_draw = draw.LeftButton(
-            _(button11_text),
-            _("11"),
-            window_width,
-            cmd_func=self.gain_and_upgrade_ability,
-            args=(),
-        )
-        line_feed.draw()
-        button11_draw.draw()
-        return_list.append(button11_draw.return_text)
+      button11_text = _("[011]能力获得与升级")
+      button11_draw = draw.LeftButton(
+          _(button11_text),
+          _("11"),
+          window_width,
+          cmd_func=self.gain_and_upgrade_ability,
+          args=(),
+      )
+      line_feed.draw()
+      button11_draw.draw()
+      return_list.append(button11_draw.return_text)
 
       if cache.debug_mode or handle_premise.handle_time_over_a_year(0):
         button12_text = _("[012]Re:败者食尘")
@@ -248,8 +247,8 @@ class Originium_Arts_Panel:
         elif ability_type == 5:
           talent_id_list = [304, 305, 306]
           info_text = _("\n激素系能力（不消耗理智）：\n")
-        # 视觉系
-        elif ability_type == 6:
+        # 视觉系（类型6）
+        else:
           talent_id_list = [307, 308, 309]
           info_text = _("\n视觉系能力（每级消耗5理智/h）：\n")
         info_draw.text = _(info_text)

@@ -610,7 +610,7 @@ def get_mark_debuff_adjust(value: int) -> int:
     just = 1.5
   elif level == 2:
     just = 3
-  elif level >= 3:
+  else:
     just = 5
   return just
 
@@ -644,7 +644,7 @@ def get_juel(value: int) -> int:
     juel = round(0.15 * value)
   elif level == 9:
     juel = round(0.12 * value)
-  elif level == 10:
+  else:
     juel = round(0.1 * value)
   return juel
 
@@ -690,7 +690,7 @@ def get_pain_adjust(value: int, level_flag=False) -> float:
     just = 0.6
   elif level == 9:
     just = 0.4
-  elif level >= 10:
+  else:
     just = 0.2
   return just
 
@@ -991,8 +991,8 @@ def judge_require(
       reason += _("或").join(sub_reason_list) + "  "
       break
     judge_type = judge_text.split("|")[0][0]
-    if len(judge_text.split("|")[0]) >= 2:
-      judge_type_id = int(judge_text.split("|")[0][1:])
+    # F、X、G 类条件不带 id，记为 0
+    judge_type_id = int(judge_text.split("|")[0][1:] or 0)
     judge_value = int(judge_text.split("|")[1])
     if judge_type == "A":
       if character_data.ability[judge_type_id] < judge_value:

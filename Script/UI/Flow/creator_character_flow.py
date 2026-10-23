@@ -1277,14 +1277,8 @@ class Character_Bonus:
 
     # 获得素质
     if first_bonus_id <= 10:
-      if first_bonus_id == 1:
-        talent_id = 304
-      elif first_bonus_id == 2:
-        talent_id = 307
-      elif first_bonus_id == 3:
-        talent_id = 331
-      elif first_bonus_id == 4:
-        talent_id = 316
+      # 1~4 号奖励各对应一个素质
+      talent_id = {1: 304, 2: 307, 3: 331, 4: 316}[first_bonus_id]
 
       if pl_character_data.talent[talent_id]:
         pl_character_data.talent[talent_id] = 0

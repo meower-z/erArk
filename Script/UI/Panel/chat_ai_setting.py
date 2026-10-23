@@ -212,7 +212,7 @@ class Chat_Ai_Setting_Panel:
           button_text = _(" [翻译地文和口上] ")
         button_draw = draw.LeftButton(
             button_text,
-            str(cid) + button_text,
+            "translator" + button_text,
             button_len,
             cmd_func=self.change_translator,
         )
@@ -640,16 +640,17 @@ class Chat_Ai_Setting_Panel:
       now_draw.draw()
 
       # 输入框
-      if key_type == "OPENAI_API_KEY":
-        ask_text = _(
-            "请输入您的OpenAI API密钥，应当是以 sk- 开头的一长段字符串（第三方或本地部署没有格式需求）\n"
-        )
-      elif key_type == "DEEPSEEK_API_KEY":
-        ask_text = _(
-            "请输入您的DeepSeek API密钥，应当是以 sk- 开头的一长段字符串（第三方或本地部署没有格式需求）\n"
-        )
-      elif key_type == "GEMINI_API_KEY":
-        ask_text = _("请输入您的Gemini API密钥，应当是一个长段字符串\n")
+      ask_text = {
+          "OPENAI_API_KEY": _(
+              "请输入您的OpenAI API密钥，应当是以 sk- 开头的一长段字符串（第三方或本地部署没有格式需求）\n"
+          ),
+          "DEEPSEEK_API_KEY": _(
+              "请输入您的DeepSeek API密钥，应当是以 sk- 开头的一长段字符串（第三方或本地部署没有格式需求）\n"
+          ),
+          "GEMINI_API_KEY": _(
+              "请输入您的Gemini API密钥，应当是一个长段字符串\n"
+          ),
+      }[key_type]
       ask_name_panel = panel.AskForOneMessage()
       ask_name_panel.set(ask_text, 999)
       API_KEY = ask_name_panel.draw()
@@ -830,7 +831,6 @@ class Chat_Ai_Setting_Panel:
         future.cancel()
         # 关闭线程池
         executor.shutdown(wait=False, cancel_futures=True)
-        return
 
   def get_completion(self, client, key_type):
     """获取AI的返回结果"""

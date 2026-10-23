@@ -208,7 +208,8 @@ class Make_food_Panel:
       # now_draw.width = 1
       now_draw.draw()
 
-      # 加料面板
+      # 加料面板：先用精液行的按钮宽度，药物行在下面另设
+      button_width = int(self.width / 4)
       for seasoning_cid in game_config.config_seasoning:
         # 不再显示基础调味
         if seasoning_cid <= 10:
@@ -220,7 +221,6 @@ class Make_food_Panel:
           now_draw.draw()
         # 精液或下药则换行并加长文本宽度
         if seasoning_cid == 11:
-          button_width = int(self.width / 4)
           now_draw = draw.NormalDraw()
           now_draw.text = _("\n  精液:    ")
           # now_draw.width = 1

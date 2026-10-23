@@ -277,8 +277,8 @@ def update_semen_dirty(
     if not len(character_data.cloth.cloth_locker_in_shower[part_cid]):
       return
     now_semen_data = character_data.dirty.cloth_locker_semen[part_cid]
-  elif part_type == 3:
-    # 检查该部位是否有服装
+  else:
+    # 宿舍衣柜（部位类型3）：检查该部位是否有服装
     if not len(character_data.cloth.cloth_locker_in_dormitory[part_cid]):
       return
     now_semen_data = character_data.dirty.cloth_locker_semen[part_cid]
@@ -399,7 +399,7 @@ def calculate_semen_flow(
       # 未满溢时使用正常流动表
       else:
         flow_list = game_config.config_body_part_normal_flow[part_cid]
-    elif part_type == 1:
+    else:
       # 判断是否满溢
       max_volume = game_config.config_clothing_type[part_cid].max_volume
       # 满溢时使用满溢流动表，且仅计算额外溢出来的部分
@@ -521,7 +521,7 @@ def ejaculation_flow(
           # 更新无意识妊娠flag
           if part_cid in [6, 7] and target_data.sp_flag.unconscious_h == 0:
             target_data.pregnancy.unconscious_fertilization = False
-        elif part_type in [1, 2, 3]:
+        else:
           cloth_text = game_config.config_clothing_type[part_cid].name
           now_text = _("在{0}的{1}{2}").format(
               target_data.name, cloth_text, semen_text

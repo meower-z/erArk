@@ -563,8 +563,8 @@ class Ejaculation_NameDraw:
         )
         self.button_return = now_text
       self.draw_text = button_text
-    self.now_draw = name_draw
-    """ 绘制的对象 """
+      self.now_draw = name_draw
+      """ 绘制的对象 """
 
   def draw(self):
     """绘制对象"""

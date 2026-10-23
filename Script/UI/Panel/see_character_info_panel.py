@@ -637,9 +637,6 @@ class CharacterMeasurementsText:
     self.width = width
     """ 当前最大可绘制宽度 """
     character_data = cache.character_data[self.character_id]
-    character_data.measurements.bust
-    character_data.measurements.hip
-    character_data.measurements.waist
     now_bust = str(round(character_data.measurements.bust, 2))
     now_hip = str(round(character_data.measurements.hip, 2))
     now_waist = str(round(character_data.measurements.waist, 2))
@@ -931,8 +928,8 @@ class CharacterExperienceText:
       if experience_id in character_data.experience:
         experience_value = character_data.experience[experience_id]
         now_text = f" {experience_text}:{experience_value}"
-      if experience_value > 0:
-        experience_text_list.append(now_text)
+        if experience_value > 0:
+          experience_text_list.append(now_text)
     if self.center_status:
       now_draw = panel.CenterDrawTextListPanel()
     else:

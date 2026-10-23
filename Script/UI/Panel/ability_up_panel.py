@@ -540,7 +540,8 @@ class Characterabi_show_Text:
             ][now_level]
             mark_up_data = game_config.config_mark_up_data[mark_up_data_id]
             need_state_all_value = mark_up_data.need_state_all_value
-            now_state_all_value, _ = (
+            # 丢弃的返回值记为 __：_ 是翻译函数，本函数后面还要用
+            now_state_all_value, __ = (
                 second_behavior.get_now_state_all_value_and_text_from_mark_up_data(
                     mark_up_data_id, self.character_id
                 )
@@ -830,7 +831,7 @@ class Characterabi_cmd_Text:
             juel_name, need_value, now_value
         )
         jule_dict[need_type_id] = need_value
-      elif need_type == "E":
+      else:  # 经验需求（E）
         experience_name = game_config.config_experience[need_type_id].name
         now_value = self.character_data.experience[need_type_id]
         button_text = _("需要经验 : {0} 至少为{1}，当前为{2}\n").format(
