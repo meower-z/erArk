@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """schedule_handle：教室、全局课表、个人课表、当前课程、上课地点、实习导师"""
 
-from _bootstrap import *  # noqa: F401,F403
+from _bootstrap import DEFAULT_TIME, SCENE_DORM, _, auto_schedule, cache, check, clear_schedules, constant, datetime, education_constant, finish, game_config, growth_handle, make_character, move_to, open_all_classroom, period_time, pl, remove_character, scene_str, schedule_handle, schedule_template_handle, section, set_time, sex_class_handle
 
 section("教室列表与开放判定")
 clear_schedules()

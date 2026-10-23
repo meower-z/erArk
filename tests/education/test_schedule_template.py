@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """schedule_template_handle：预设模板、增删改、套用与覆盖、每日改写"""
 
-from _bootstrap import *  # noqa: F401,F403
+from _bootstrap import _, attr_calculation, cache, check, clear_schedules, education_constant, finish, game_config, make_character, open_all_classroom, remove_character, schedule_handle, schedule_template_handle, section
 
 clear_schedules()
 mother = make_character(102, "母亲", 0)

@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """growth_handle：速度曲线、教育区加成、成长停滞、上课/见学结算、成年结算、养成数值、候选名单"""
 
-from _bootstrap import *  # noqa: F401,F403
+from _bootstrap import DEFAULT_TIME, _, cache, check, clear_schedules, datetime, education_constant, finish, game_config, game_time, growth_handle, make_character, open_all_classroom, period_time, remove_character, schedule_handle, schedule_template_handle, section, set_time
 from Script.System.Pregnancy_System import pregnancy_constant  # noqa: E402
 
 open_all_classroom()

@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """生长养成系统回归测试的公共引导
 
-每个 test_*.py 开头 `from _bootstrap import *` 即可拿到：
+每个 test_*.py 开头从 _bootstrap 导入它用到的名字，即可拿到：
     已初始化的游戏配置与缓存（不启动 Tk / Web）、被屏蔽并可记录文本的绘制类、
     check() / section() / finish() 三个断言工具、make_character() 角色 fixture 工厂、
     set_time() / move_to() / open_all_classroom() / clear_schedules() 等环境工具。

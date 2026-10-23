@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """前提与结算 token：CVP Course / CourseType / CourseShowOff / Growth、CVE Growth、实操课与岗位前提、女儿前提"""
 
-from _bootstrap import *  # noqa: F401,F403
+from _bootstrap import DEFAULT_TIME, SCENE_DORM, SCENE_EDU_ENTRY, _, cache, check, class_ai, classroom_path, clear_schedules, constant, constant_promise, datetime, education_constant, finish, game_config, game_time, game_type, growth_handle, handle_premise, make_character, move_to, open_all_classroom, period_time, pl, remove_character, schedule_handle, schedule_template_handle, section, set_time, settle_behavior, sex_class_handle
 
 open_all_classroom()
 clear_schedules()

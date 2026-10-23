@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """auto_schedule：一键排课与一键选课"""
 
-from _bootstrap import *  # noqa: F401,F403
+from _bootstrap import auto_schedule, cache, check, clear_schedules, education_constant, finish, game_time, make_character, open_all_classroom, schedule_handle, section
 
 open_all_classroom()
 clear_schedules()
