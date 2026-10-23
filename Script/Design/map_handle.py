@@ -290,7 +290,9 @@ def judge_scene_is_affiliation(
   ):
     return "subordinate"
   elif (
-      judge_scene_affiliation(target_scene_path, now_scene_path)
+      judge_scene_affiliation(
+          now_scene_path=target_scene_path, target_scene_path=now_scene_path
+      )
       == "subordinate"
   ):
     return "superior"
@@ -518,7 +520,7 @@ def judge_scene_is_full(scene_path_str: str) -> bool:
     max_character = 50
   elif scene_data.room_area == 2:
     max_character = 100
-  elif scene_data.room_area == 3:
+  else:
     max_character = 9999
   if len(scene_data.character_list) >= max_character:
     return True
@@ -593,7 +595,7 @@ def init_scene_edge_path_data():
           now_move_target,
           now_move_time,
       ]
-  with open(scene_path_edge_path, "w") as path_edge_file:
+  with open(scene_path_edge_path, "w", encoding="utf-8") as path_edge_file:
     json.dump(scene_path_edge, path_edge_file)
 
 

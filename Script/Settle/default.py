@@ -1257,7 +1257,7 @@ def handle_first_sex(
       now_draw.draw()
 
     # 处子血胖次
-    no_pan_flag = False
+    pan_id = None
     now_draw = draw.NormalDraw()
     if len(target_data.cloth.cloth_wear[9]):
       pan_id = target_data.cloth.cloth_wear[9][-1]
@@ -1270,9 +1270,7 @@ def handle_first_sex(
       pan_id = character_data.pl_collection.npc_panties_tem[
           character_data.target_character_id
       ][-1]
-    else:
-      no_pan_flag = True
-    if not no_pan_flag:
+    if pan_id is not None:
       pan_name = game_config.config_clothing_tem[pan_id].name
       target_data.cloth.cloth_wear[9] = []
       now_draw.text = _(
@@ -8708,7 +8706,7 @@ def handle_train_prisoners_add_adjust(
       handle_add_hpmp_max(now_prisoner_cid, add_time, change_data, now_time)
 
   # 心理服从训练
-  elif now_train_id == 6:
+  else:
 
     def now_tarin(now_prisoner_cid: int) -> None:
       base_chara_state_common_settle(
@@ -9080,13 +9078,11 @@ def handle_read_add_adjust(
       character_data.entertainment.read_book_progress[book_id] = 100
       # 如果是技能书籍，则增加对应技能的经验
       if exp_id != 0:
-        if book_difficulty == 1:
+        if book_difficulty <= 1:
           add_value = 5
-        elif book_difficulty == 1:
-          add_value = 10
         elif book_difficulty == 2:
           add_value = 20
-        elif book_difficulty == 3:
+        else:
           add_value = 40
         base_chara_experience_common_settle(
             character_id, exp_id, add_value, change_data=change_data
