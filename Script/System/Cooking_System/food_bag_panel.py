@@ -381,7 +381,8 @@ class FoodGroupDraw:
     self.special_seasoning: int = special_seasoning
     """ 特殊调味类型 """
 
-    # 获取食物名称和介绍
+    # 获取食物名称和介绍，并按食谱类型决定按食用还是饮用判断能否点击
+    now_panel = ""
     if recipe_id != -1 and recipe_id in cache.recipe_data:
       food_recipe: game_type.Recipes = cache.recipe_data[recipe_id]
       self.food_name = food_recipe.name

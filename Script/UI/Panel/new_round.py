@@ -1365,8 +1365,8 @@ class CharacterExperienceText:
         inherit_exp = int(experience_value * self.rate / 100)
         now_text = f" {experience_text}:{experience_value}(→{inherit_exp})"
         # ↑
-      if experience_value > 0:
-        experience_text_list.append(now_text)
+        if experience_value > 0:
+          experience_text_list.append(now_text)
     now_draw = panel.LeftDrawTextListPanel()
     now_draw.set(experience_text_list, self.width, self.column)
     self.draw_list.extend(now_draw.draw_list)

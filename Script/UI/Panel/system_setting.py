@@ -129,7 +129,7 @@ class System_Setting_Panel:
       setting_data = game_config.config_difficulty_setting
       setting_option = game_config.config_difficulty_setting_option
       setting = cache.all_system_setting.difficulty_setting
-    elif type_name == _("绘制"):
+    else:
       setting_data = game_config.config_draw_setting
       setting_option = game_config.config_draw_setting_option
       setting = cache.all_system_setting.draw_setting
@@ -288,7 +288,7 @@ class System_Setting_Panel:
       setting_data = game_config.config_system_setting[cid]
     elif type_name == _("难度"):
       setting_data = game_config.config_difficulty_setting[cid]
-    elif type_name == _("绘制"):
+    else:
       setting_data = game_config.config_draw_setting[cid]
     # 将介绍信息中的换行符替换为实际换行
     info_text = setting_data.info.replace("\\n", " \n")
@@ -318,7 +318,7 @@ class System_Setting_Panel:
       setting = cache.all_system_setting.base_setting
     elif type_name == _("难度"):
       setting = cache.all_system_setting.difficulty_setting
-    elif type_name == _("绘制"):
+    else:
       setting = cache.all_system_setting.draw_setting
     if setting[cid] < option_len - 1:
       setting[cid] += 1

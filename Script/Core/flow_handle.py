@@ -77,18 +77,19 @@ def null_func():
 default_flow = null_func
 
 
-def set_default_flow(func, arg=(), kw={}):
+def set_default_flow(func, arg=(), kw=None):
   """
   设置默认流程
 
   参数：
   func (function) -- 对应的流程函数
   arg (tuple) -- 传给func的顺序参数
-  kw (dict) -- 传给func的字典参数
+  kw (dict | None) -- 传给func的字典参数，None 视为空字典
 
   返回值类型：无
   功能描述：设置默认的流程函数，供后续调用
   """
+  kw = {} if kw is None else kw
   # 检查是否在Web模式下
   if _is_web_mode():
     return (
@@ -101,7 +102,7 @@ def set_default_flow(func, arg=(), kw={}):
   global default_flow
   if not isinstance(arg, tuple):
     arg = (arg,)
-  if func == null_func:
+  if func is null_func:
     default_flow = null_func
     return
 
@@ -215,7 +216,7 @@ def deco_set_tail_deal_cmd_func(func):
   return func
 
 
-def bind_cmd(cmd_number, cmd_func, arg=(), kw={}):
+def bind_cmd(cmd_number, cmd_func, arg=(), kw=None):
   """
   绑定命令数字与命令函数
 
@@ -223,11 +224,12 @@ def bind_cmd(cmd_number, cmd_func, arg=(), kw={}):
   cmd_number (str/int) -- 命令数字
   cmd_func (function) -- 命令函数
   arg (tuple) -- 传给命令函数的顺序参数
-  kw (dict) -- 传给命令函数的字典参数
+  kw (dict | None) -- 传给命令函数的字典参数，None 视为空字典
 
   返回值类型：无
   功能描述：将命令ID与对应的处理函数绑定
   """
+  kw = {} if kw is None else kw
   # 检查是否在Web模式下
   if _is_web_mode():
     # 调用Web版的绑定函数
@@ -236,10 +238,7 @@ def bind_cmd(cmd_number, cmd_func, arg=(), kw={}):
   # 原始逻辑
   if not isinstance(arg, tuple):
     arg = (arg,)
-  if cmd_func == null_func:
-    cmd_map[cmd_number] = null_func
-    return
-  elif cmd_func is None:
+  if cmd_func is null_func or cmd_func is None:
     cmd_map[cmd_number] = null_func
     return
 
@@ -254,7 +253,7 @@ def print_cmd(
     cmd_number,
     cmd_func=null_func,
     arg=(),
-    kw={},
+    kw=None,
     normal_style="standard",
     on_style="onbutton",
     tooltip: str = "",
@@ -267,13 +266,14 @@ def print_cmd(
   cmd_number (str/int) -- 命令数字
   cmd_func (function) -- 命令函数
   arg (tuple) -- 传给命令函数的顺序参数
-  kw (dict) -- 传给命令函数的字典参数
+  kw (dict | None) -- 传给命令函数的字典参数，None 视为空字典
   normal_style (str) -- 正常状态下命令显示样式
   on_style (str) -- 鼠标在其上的时候命令显示样式
 
   返回值类型：str
   功能描述：创建一个可点击的命令按钮
   """
+  kw = {} if kw is None else kw
   # 检查是否在Web模式下
   if _is_web_mode():
     # 使用Web版的print_cmd函数
@@ -292,7 +292,7 @@ def print_image_cmd(
     cmd_number,
     cmd_func=null_func,
     arg=(),
-    kw={},
+    kw=None,
     tooltip: str = "",
 ):
   """
@@ -303,11 +303,12 @@ def print_image_cmd(
   cmd_number (str/int) -- 命令数字
   cmd_func (function) -- 命令函数
   arg (tuple) -- 传给命令函数的顺序参数
-  kw (dict) -- 传给命令函数的字典参数
+  kw (dict | None) -- 传给命令函数的字典参数，None 视为空字典
 
   返回值类型：str
   功能描述：创建一个图片按钮
   """
+  kw = {} if kw is None else kw
   # 检查是否在Web模式下
   if _is_web_mode() and hasattr(flow_handle_web, "print_image_cmd"):
     # 使用Web版的print_image_cmd函数
@@ -382,9 +383,7 @@ def _cmd_valid(order_number):
     return flow_handle_web._cmd_valid(order_number)
 
   # 原始逻辑
-  return (order_number in cmd_map) and (
-      cmd_map[order_number] != null_func and cmd_map[order_number] is not None
-  )
+  return cmd_map.get(order_number) not in (null_func, None)
 
 
 __skip_flag__ = False

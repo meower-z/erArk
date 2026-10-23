@@ -11,6 +11,7 @@ from Script.Design import (
     character_handle,
     game_time,
     handle_premise,
+    handle_talent,
     talk,
     attr_calculation,
     second_behavior,
@@ -931,16 +932,13 @@ def chest_grow(character_id: int, print_flag=False):
   character_data: game_type.Character = cache.character_data[character_id]
   mom_id = character_data.relationship.mother_id
   mom_character_data: game_type.Character = cache.character_data[mom_id]
-  # 获得本人的旧胸部大小和母亲的胸部大小
-  for i in {121, 122, 123, 124, 125}:
-    if character_data.talent[i]:
-      old_chest_id = i
-    if mom_character_data.talent[i]:
-      mom_chest_id = i
-
   # 跳过机械
   if mom_character_data.race == 2:
     return ""
+
+  # 获得本人的旧胸部大小和母亲的胸部大小
+  old_chest_id = handle_talent.have_chest_talent(character_id)
+  mom_chest_id = handle_talent.have_chest_talent(mom_id)
 
   # 用随机数计算生长，可能长3、长2或者长1，母亲胸部越大生长比例就越高
   # 母亲胸部0时从长0~长3生长比例是 0.6 0.25 0.1 0.05，母亲胸部6时反过来

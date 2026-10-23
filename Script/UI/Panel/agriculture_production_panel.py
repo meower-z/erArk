@@ -619,10 +619,7 @@ class Agriculture_Production_Panel:
     agriculture_line_id: int 生产线id\n
     agriculture_type: int 农业类型，0药田，1温室\n
     """
-    if agriculture_type == 0:
-      resouce_id_list = [11]
-    elif agriculture_type == 1:
-      resouce_id_list = [16]
+    resouce_id_list = [11] if agriculture_type == 0 else [16]
     while 1:
 
       line = draw.LineDraw("-", window_width)

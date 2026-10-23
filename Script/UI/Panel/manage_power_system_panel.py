@@ -1165,14 +1165,10 @@ class Manage_Power_System_Panel:
         num = str(num).rjust(2, " ")
         # 对应类别名称
         cat_map = {0: _("水力"), 1: _("风力"), 2: _("光伏"), 3: _("人力")}
-        cid_lv3 = game_config.config_power_generation_level_index.get(
-            cat_map[idx], {}
-        ).get(3)
-        if (
-            cid_lv3 is not None
-            and cid_lv3 in game_config.config_power_generation
-        ):
-          base_val = float(game_config.config_power_generation[cid_lv3].value)
+        cid_lv3 = game_config.config_power_generation_level_index[cat_map[idx]][
+            3
+        ]
+        base_val = float(game_config.config_power_generation[cid_lv3].value)
         # 检测是否可以发电
         cant_flag = False
         # 如果是在行驶中，则水力与风力发电设施无效

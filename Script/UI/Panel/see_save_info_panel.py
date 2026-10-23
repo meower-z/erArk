@@ -145,7 +145,7 @@ class SaveInfoDraw:
         month_text = _("夏")
       elif game_time.month == 9:
         month_text = _("秋")
-      elif game_time.month == 12:
+      else:
         month_text = _("冬")
       game_time_text = (_("{year}年{month}月{day}日{hour}点{minute}分")).format(
           year=game_time.year,

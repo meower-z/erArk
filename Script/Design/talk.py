@@ -145,7 +145,7 @@ def handle_second_talk(character_id: int, behavior_id: str = "share_blankly"):
 def handle_talk_sub(
     character_id: int,
     behavior_id: str,
-    calculated_premise_dict: dict = {},
+    calculated_premise_dict: dict,
     unconscious_pass_flag=False,
 ):
   """
@@ -689,29 +689,20 @@ def second_behavior_info_text(character_id: int, second_behavior_id: str):
       info_draw.style = "semen"
     # NPC
     else:
-      # 获取部位名称
-      if second_behavior_id[0] == "n":
-        orgasm_name = _("通用")
-      elif second_behavior_id[0] == "b":
-        orgasm_name = _("胸部")
-      elif second_behavior_id[0] == "c":
-        orgasm_name = _("阴蒂")
-      elif second_behavior_id[0] == "v":
-        orgasm_name = _("阴道")
-      elif second_behavior_id[0] == "a":
-        orgasm_name = _("肛肠")
-      elif second_behavior_id[0] == "u":
-        orgasm_name = _("尿道")
-      elif second_behavior_id[0] == "w":
-        orgasm_name = _("子宫")
-      elif second_behavior_id[0] == "s":
-        orgasm_name = _("皮肤")
-      elif second_behavior_id[0] == "m":
-        orgasm_name = _("口喉")
-      elif second_behavior_id[0] == "f":
-        orgasm_name = _("兽部")
-      elif second_behavior_id[0] == "h":
-        orgasm_name = _("心理")
+      # 获取部位名称（按二段行为id的首字母）
+      orgasm_name = {
+          "n": _("通用"),
+          "b": _("胸部"),
+          "c": _("阴蒂"),
+          "v": _("阴道"),
+          "a": _("肛肠"),
+          "u": _("尿道"),
+          "w": _("子宫"),
+          "s": _("皮肤"),
+          "m": _("口喉"),
+          "f": _("兽部"),
+          "h": _("心理"),
+      }[second_behavior_id[0]]
       # 绝顶程度
       if "normal" in second_behavior_id:
         orgasm_degree = _("绝顶")
@@ -729,21 +720,16 @@ def second_behavior_info_text(character_id: int, second_behavior_id: str):
       )
   # 一般刻印
   elif "mark" in second_behavior_id:
-    # 获取刻印名称
-    if "happy" in second_behavior_id:
-      mark_name = _("快乐")
-    elif "yield" in second_behavior_id:
-      mark_name = _("屈服")
-    elif "pain" in second_behavior_id:
-      mark_name = _("苦痛")
-    elif "time" in second_behavior_id:
-      mark_name = _("时姦")
-    elif "terror" in second_behavior_id:
-      mark_name = _("恐怖")
-    elif "hate" in second_behavior_id:
-      mark_name = _("反发")
-    elif "unconscious" in second_behavior_id:
-      mark_name = _("无觉")
+    # 获取刻印名称（二段行为id形如 happy_mark_1）
+    mark_name = {
+        "happy": _("快乐"),
+        "yield": _("屈服"),
+        "pain": _("苦痛"),
+        "time": _("时姦"),
+        "terror": _("恐怖"),
+        "hate": _("反发"),
+        "unconscious": _("无觉"),
+    }[second_behavior_id.split("_")[0]]
     # 获取刻印程度
     mark_degree = second_behavior_id[-1]
     info_text = _("\n{0}获得了{1}刻印{2}\n").format(

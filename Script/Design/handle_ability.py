@@ -33,8 +33,8 @@ def check_upgrade_requirements(
   for need_text in need_list:
     # 解析需求字符串
     need_type = need_text.split("|")[0][0]
-    if len(need_text.split("|")[0]) >= 2:
-      need_type_id = int(need_text.split("|")[0][1:])
+    # T、F、X 类需求不带 id，记为 0
+    need_type_id = int(need_text.split("|")[0][1:] or 0)
     need_value = int(need_text.split("|")[1])
     # 检查不同类型的需求
     if need_type == "A":

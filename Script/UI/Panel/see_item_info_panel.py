@@ -110,8 +110,8 @@ def use_drug(item_id: int):
             pl_character_data.name, size_name
         )
     )
-  # 阴茎缩小
-  elif item_id == 17:
+  # 阴茎缩小（17 号）
+  else:
     pl_character_data.pl_ability.jj_size -= 1
     pl_character_data.pl_ability.jj_size = max(
         pl_character_data.pl_ability.jj_size, 0
