@@ -465,7 +465,7 @@ def settle_tired(character_id: int, true_add_time: int) -> None:
   if handle_premise.handle_aromatherapy_flag_8(character_id):
     tired_change = int(tired_change * 0.8)
   # 在喝醉的情况下，根据醉酒等级来提升疲劳值增加速度
-  drunk_level, drunk_name = drunk_sex_common.get_drunk_level(character_id)
+  drunk_level, __ = drunk_sex_common.get_drunk_level(character_id)
   if drunk_level > 0:
     tired_change = int(tired_change * (1 + drunk_level * 0.1))
   # 大于5分钟的疲劳值增加至少为1
@@ -546,7 +546,7 @@ def settle_sleep(character_id: int, true_add_time: int) -> None:
   tired_change = int(true_add_time / 6) * 2
   now_char.tired_point = max(now_char.tired_point - tired_change, 0)
   # 增加熟睡值
-  level, tem = attr_calculation.get_sleep_level(now_char.sleep_point)
+  level, __ = attr_calculation.get_sleep_level(now_char.sleep_point)
   if level <= 1:
     add_sleep = int(true_add_time * tired_adjust * 1.5)
   else:
@@ -785,9 +785,7 @@ def settle_sleep_h(character_id: int, true_add_time: int) -> None:
     sleeper_data.sleep_point = max(0, sleeper_data.sleep_point - down_sleep)
 
     # 重新计算当前熟睡等级
-    sleep_level, tem = attr_calculation.get_sleep_level(
-        sleeper_data.sleep_point
-    )
+    sleep_level, __ = attr_calculation.get_sleep_level(sleeper_data.sleep_point)
     # 只有睡眠等级小于等于1时才判定是否被吵醒
     if sleep_level <= 1:
       handle_npc_ai_in_h.judge_weak_up_in_sleep_h(character_id, sleeper_id)

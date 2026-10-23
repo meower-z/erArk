@@ -39,7 +39,7 @@ def general_movement_module(
           target_scene[i] = "中枢"
         else:
           target_scene[i] = _(target_scene[i], revert_translation=True)
-  tem_1, tem_2, move_path, move_time = character_move.character_move(
+  __, __, move_path, move_time = character_move.character_move(
       character_id, target_scene
   )
   # 寻路正常时
@@ -1374,16 +1374,14 @@ def character_move_to_player(character_id: int) -> None:
   character_data: game_type.Character = cache.character_data[character_id]
   character_data.target_character_id = character_id
   to_dr = cache.character_data[0].position
-  move_type, tem_1, move_path, move_time = character_move.character_move(
-      character_id, to_dr
-  )
+  __, __, move_path, __ = character_move.character_move(character_id, to_dr)
   move_flag = True  # flase的话就是等待
   if move_path == []:
     move_flag = False
   #     print(f"debug {character_data.name} 无法移动至玩家位置，move_type = {move_type},当前位置 = {character_data.position},move_path = {move_path}")
   # 进行私密跟随判断
   else:
-    move_flag, wait_flag = character_move.judge_character_move_to_private(
+    move_flag, __ = character_move.judge_character_move_to_private(
         character_id, move_path
     )
   # 最后决定是移动还是继续等待
@@ -1418,7 +1416,7 @@ def character_continue_move(character_id: int) -> None:
 
       # 基础数据计算
       to_dr = cache.character_data[0].position
-      tem_1, tem_2, move_path, move_time = character_move.character_move(
+      __, __, move_path, move_time = character_move.character_move(
           character_id, character_data.behavior.move_final_target
       )
       move_flag = True  # true的话就是移动

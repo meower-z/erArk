@@ -1944,9 +1944,6 @@ def handle_target_hypnosis_force_climax(
   if not add_time:
     return
   character_data: game_type.Character = cache.character_data[character_id]
-  target_character_data = cache.character_data[
-      character_data.target_character_id
-  ]
   if character_data.dead:
     return
   character_data.sanity_point = max(character_data.sanity_point - 50, 0)
@@ -3902,7 +3899,6 @@ def handle_target_add_small_p_feel(
   if target_data.dead:
     return
   target_data.status_data.setdefault(3, 0)
-  now_lust = target_data.status_data[3]
   now_lust_multiple = 30
   now_add_lust: float = add_time + now_lust_multiple
   adjust = handle_ability.get_ability_adjust(target_data.ability[3])
@@ -4422,9 +4418,6 @@ def handle_target_add_small_depression(
   if not add_time:
     return
   character_data: game_type.Character = cache.character_data[character_id]
-  target_data: game_type.Character = cache.character_data[
-      character_data.target_character_id
-  ]
   if character_id != 0 and character_data.target_character_id != 0:
     return
   base_chara_state_common_settle(
@@ -5354,7 +5347,7 @@ def handle_all_character_unconscious_semen_reset(
   """
   if not add_time:
     return
-  for chara_id, character_data in cache.character_data.items():
+  for __, character_data in cache.character_data.items():
     character_data.dirty.body_semen_in_unconscious = []
     character_data.dirty.cloth_semen_in_unconscious = []
 
@@ -7077,9 +7070,6 @@ def handle_coffee_add_adjust(
   if not add_time:
     return
   character_data: game_type.Character = cache.character_data[character_id]
-  target_data: game_type.Character = cache.character_data[
-      character_data.target_character_id
-  ]
   if character_data.target_character_id != character_id and (
       not character_id or not character_data.target_character_id
   ):
@@ -8727,7 +8717,7 @@ def handle_train_prisoners_add_adjust(
       )
 
   # 遍历犯人
-  for key, value in all_prisoner_data.items():
+  for key, __ in all_prisoner_data.items():
     now_prisoner_cid = key
     # 1异常或睡觉中的角色不进行训练
     if not handle_premise.handle_normal_1(
@@ -9016,7 +9006,7 @@ def handle_read_add_adjust(
   experience_index_list = []
   experience_index_list.append(92)
   # 书籍的额外经验增长
-  for i in range(book_difficulty_int):
+  for __ in range(book_difficulty_int):
     if exp_id != 0:
       experience_index_list.append(exp_id)
 
@@ -13750,7 +13740,7 @@ def handle_eat_last_two_food(
   """
   if not add_time:
     return
-  for i in range(2):
+  for __ in range(2):
     handle_set_target_food_from_bag_last(
         character_id, add_time, change_data, now_time
     )

@@ -1389,7 +1389,6 @@ def handle_add_small_depression(
   now_time -- 结算的时间
   """
 
-  character_data: game_type.Character = cache.character_data[character_id]
   base_chara_state_common_settle(
       character_id, 0, 19, 20, tenths_add=False, change_data=change_data
   )
@@ -1953,7 +1952,6 @@ def handle_add_middle_depression(
   now_time -- 结算的时间
   """
 
-  character_data: game_type.Character = cache.character_data[character_id]
   base_chara_state_common_settle(
       character_id, 0, 19, 100, tenths_add=True, change_data=change_data
   )
@@ -2773,7 +2771,6 @@ def handle_add_large_depression(
   now_time -- 结算的时间
   """
 
-  character_data: game_type.Character = cache.character_data[character_id]
   base_chara_state_common_settle(
       character_id, 0, 19, 1000, tenths_add=False, change_data=change_data
   )

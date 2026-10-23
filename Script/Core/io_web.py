@@ -184,7 +184,6 @@ def append_current_draw_element(
   cache.current_draw_elements.append(element)
   elem_type = element.get("type")
   if elem_type in {"line_wait", "wait"}:
-    wait_id = element.get("wait_id")
     text_preview = element.get("text", "")
     if isinstance(text_preview, str) and len(text_preview) > 30:
       text_preview = text_preview[:27] + "..."
