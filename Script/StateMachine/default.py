@@ -2760,9 +2760,9 @@ def character_buy_rand_food_at_foodshop(character_id: int) -> None:
       for food_uid in cache.rhodes_island.restaurant_data[restaurant_id][
           recipes_id
       ]:
-        now_food: game_type.Food = cache.rhodes_island.restaurant_data[
-            restaurant_id
-        ][recipes_id][food_uid]
+        now_food = cache.rhodes_island.restaurant_data[restaurant_id][
+            recipes_id
+        ][food_uid]
         all_food_list.append(recipes_id)
         break
     if not len(all_food_list):
@@ -3106,7 +3106,7 @@ def character_education_skip_class(character_id: int) -> None:
   now_scene_str = map_handle.get_map_system_path_str_for_list(
       character_data.position
   )
-  now_scene_tag = ""
+  now_scene_tag: str | list[str] = ""
   if now_scene_str in cache.scene_data:
     now_scene_tag = cache.scene_data[now_scene_str].scene_tag
   # 还在教室（含实践教室与大礼堂）里，先离开

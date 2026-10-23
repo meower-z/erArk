@@ -147,7 +147,7 @@ def character_aotu_change_value(
   if character_id == 0 and not cache.all_system_setting.difficulty_setting[12]:
     pass
   else:
-    add_urinate = _rand_range_int(
+    add_urinate: float = _rand_range_int(
         int(true_add_time * 0.8), int(true_add_time * 1.2)
     )
     add_urinate *= cache.all_system_setting.difficulty_setting[11] / 2
@@ -494,7 +494,7 @@ def settle_rest(character_id: int, true_add_time: int) -> None:
   now_char = cache.character_data[character_id]
   # 休息室对回复效果的影响
   if handle_premise.handle_in_rest_room_or_dormitory(character_id):
-    final_adjust = 1
+    final_adjust: float = 1
     now_level = cache.rhodes_island.facility_level[31]
     facility_cid = game_config.config_facility_effect_data[_("休息室")][
         int(now_level)
@@ -592,7 +592,7 @@ def settle_sleep(character_id: int, true_add_time: int) -> None:
   else:
     now_char.sleep_point = min(max(now_char.sleep_point + add_sleep, 0), 100)
   # 回复体力和气力
-  final_adjust = 1
+  final_adjust: float = 1
   if now_char.talent[351]:
     final_adjust *= 0.7
   elif now_char.talent[352]:
@@ -871,7 +871,7 @@ def settle_conscious_continuous(character_id: int, true_add_time: int) -> None:
       # 隐奸中增加羞耻和心理快感
       if handle_premise.handle_hidden_sex_mode_ge_1(character_id):
         hidden_sex_mode = now_char.sp_flag.hidden_sex_mode
-        extra_add = 4 - hidden_sex_mode
+        extra_add: float = 4 - hidden_sex_mode
         extra_add += others_count * 0.1
         base_chara_state_common_settle(
             character_id,

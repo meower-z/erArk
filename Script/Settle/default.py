@@ -37,9 +37,9 @@ from Script.Settle.item_effect import *
 
 _: FunctionType = get_text._
 """ 翻译api """
-window_width: int = normal_config.config_normal.text_width
+window_width = normal_config.config_normal.text_width
 """ 窗体宽度 """
-cache: game_type.Cache = cache_control.cache
+cache = cache_control.cache
 """ 游戏缓存数据 """
 width = normal_config.config_normal.text_width
 """ 屏幕宽度 """
@@ -1758,7 +1758,7 @@ def handle_hypnosis_all(
   if character_data.dead:
     return
   # 获取当前场景的全角色名单
-  character_data: game_type.Character = cache.character_data[character_id]
+  character_data = cache.character_data[character_id]
   scene_path_str = map_handle.get_map_system_path_str_for_list(
       character_data.position
   )
@@ -3008,7 +3008,7 @@ def handle_wait_unitl_traget_action_end(
   )
   # 到结束时间还有多少分钟
   add_time = int((target_end_time - now_time).total_seconds() / 60)
-  character_data: game_type.Character = cache.character_data[0]
+  character_data = cache.character_data[0]
   character_data.behavior.behavior_id = constant.Behavior.WAIT
   character_data.state = constant.CharacterStatus.STATUS_WAIT
   character_data.behavior.duration = add_time
@@ -3906,7 +3906,7 @@ def handle_target_add_small_p_feel(
   target_data.status_data.setdefault(3, 0)
   now_lust = target_data.status_data[3]
   now_lust_multiple = 30
-  now_add_lust = add_time + now_lust_multiple
+  now_add_lust: float = add_time + now_lust_multiple
   adjust = handle_ability.get_ability_adjust(target_data.ability[3])
   now_add_lust *= adjust
   target_data.eja_point += now_add_lust
@@ -9200,7 +9200,11 @@ def handle_teach_add_just(
           #    典型是她下一节是玩家的临时实操课（格子教师为 0，557 不结算、也不写去重标记）、已坐在这间教室等，
           #    上一节的 NPC 教师换教室晚到才开讲：按她下一节的节次记出勤、发上一节的科目收益，玩家开课时又记一次。
           #    玩家手动授课不受影响
-          if character_id != 0 and student_course["period"] != teacher_period:
+          if (
+              character_id != 0
+              and student_course is not None
+              and student_course["period"] != teacher_period
+          ):
             continue
 
           # 按课表科目结算该学生的习得与科目经验，学习速度由师生等级差决定；同一节只结算一次。
@@ -9996,7 +10000,7 @@ def handle_sing_add_adjust(
       # 跳过睡觉中的角色
       if handle_premise.handle_action_sleep(chara_id):
         continue
-      target_data: game_type.Character = cache.character_data[chara_id]
+      target_data = cache.character_data[chara_id]
 
       change_data.target_change.setdefault(
           target_data.cid, game_type.TargetChange()
@@ -10030,7 +10034,7 @@ def handle_sing_add_adjust(
       target_data.status_data.setdefault(11, 0)
       now_lust = target_data.status_data[11]
       now_lust_multiple = 30
-      now_add_lust = add_time + now_lust_multiple
+      now_add_lust: float = add_time + now_lust_multiple
       if good_flag:
         now_add_lust *= adjust
         now_add_lust += now_lust / 10
@@ -10042,9 +10046,7 @@ def handle_sing_add_adjust(
       change_data.target_change.setdefault(
           target_data.cid, game_type.TargetChange()
       )
-      target_change: game_type.TargetChange = change_data.target_change[
-          target_data.cid
-      ]
+      target_change = change_data.target_change[target_data.cid]
       target_change.status_data.setdefault(11, 0)
       target_change.status_data[11] += now_add_lust
 
@@ -10065,9 +10067,7 @@ def handle_sing_add_adjust(
           change_data.target_change.setdefault(
               target_data.cid, game_type.TargetChange()
           )
-          target_change: game_type.TargetChange = change_data.target_change[
-              target_data.cid
-          ]
+          target_change = change_data.target_change[target_data.cid]
           target_change.status_data.setdefault(i, 0)
           target_change.status_data[i] += now_add_lust
 
@@ -10130,7 +10130,7 @@ def handle_play_instrument_add_adjust(
       # 跳过睡觉中的角色
       if handle_premise.handle_action_sleep(chara_id):
         continue
-      target_data: game_type.Character = cache.character_data[chara_id]
+      target_data = cache.character_data[chara_id]
 
       change_data.target_change.setdefault(
           target_data.cid, game_type.TargetChange()
@@ -10171,7 +10171,7 @@ def handle_play_instrument_add_adjust(
       target_data.status_data.setdefault(11, 0)
       now_lust = target_data.status_data[11]
       now_lust_multiple = 30
-      now_add_lust = add_time + now_lust_multiple
+      now_add_lust: float = add_time + now_lust_multiple
       if good_flag:
         now_add_lust *= adjust
         now_add_lust += now_lust / 8
@@ -10183,9 +10183,7 @@ def handle_play_instrument_add_adjust(
       change_data.target_change.setdefault(
           target_data.cid, game_type.TargetChange()
       )
-      target_change: game_type.TargetChange = change_data.target_change[
-          target_data.cid
-      ]
+      target_change = change_data.target_change[target_data.cid]
       target_change.status_data.setdefault(11, 0)
       target_change.status_data[11] += now_add_lust
 
@@ -10206,9 +10204,7 @@ def handle_play_instrument_add_adjust(
           change_data.target_change.setdefault(
               target_data.cid, game_type.TargetChange()
           )
-          target_change: game_type.TargetChange = change_data.target_change[
-              target_data.cid
-          ]
+          target_change = change_data.target_change[target_data.cid]
           target_change.status_data.setdefault(i, 0)
           target_change.status_data[i] += now_add_lust
 
@@ -10406,7 +10402,7 @@ def handle_tech_add_p_adjust(
     target_data.status_data.setdefault(3, 0)
     now_lust = target_data.status_data[3]
     now_lust_multiple = 50
-    now_add_lust = add_time + now_lust_multiple
+    now_add_lust: float = add_time + now_lust_multiple
     now_add_lust *= adjust
     now_add_lust += now_lust / 8
     now_add_lust = int(now_add_lust)
@@ -10780,7 +10776,7 @@ def handle_tech_add_pl_p_adjust(
     character_data.status_data.setdefault(3, 0)
     now_lust = character_data.status_data[3]
     now_lust_multiple = 50
-    now_add_lust = add_time + now_lust_multiple
+    now_add_lust: float = add_time + now_lust_multiple
     now_add_lust *= adjust
     now_add_lust += now_lust / 8
     now_add_lust = int(now_add_lust)
@@ -11432,7 +11428,7 @@ def handle_finger_tech_add_pl_p_adjust(
     character_data.status_data.setdefault(3, 0)
     now_lust = character_data.status_data[3]
     now_lust_multiple = 50
-    now_add_lust = add_time + now_lust_multiple
+    now_add_lust: float = add_time + now_lust_multiple
     now_add_lust *= adjust
     now_add_lust += now_lust / 8
     now_add_lust = int(now_add_lust)
@@ -11481,7 +11477,7 @@ def handle_tongue_tech_add_pl_p_adjust(
     character_data.status_data.setdefault(3, 0)
     now_lust = character_data.status_data[3]
     now_lust_multiple = 50
-    now_add_lust = add_time + now_lust_multiple
+    now_add_lust: float = add_time + now_lust_multiple
     now_add_lust *= adjust
     now_add_lust += now_lust / 8
     now_add_lust = int(now_add_lust)
@@ -11530,7 +11526,7 @@ def handle_feet_tech_add_pl_p_adjust(
     character_data.status_data.setdefault(3, 0)
     now_lust = character_data.status_data[3]
     now_lust_multiple = 50
-    now_add_lust = add_time + now_lust_multiple
+    now_add_lust: float = add_time + now_lust_multiple
     now_add_lust *= adjust
     now_add_lust += now_lust / 8
     now_add_lust = int(now_add_lust)
@@ -11579,7 +11575,7 @@ def handle_breast_tech_add_pl_p_adjust(
     character_data.status_data.setdefault(3, 0)
     now_lust = character_data.status_data[3]
     now_lust_multiple = 50
-    now_add_lust = add_time + now_lust_multiple
+    now_add_lust: float = add_time + now_lust_multiple
     now_add_lust *= adjust
     now_add_lust += now_lust / 8
     now_add_lust = int(now_add_lust)
@@ -11628,7 +11624,7 @@ def handle_vagina_tech_add_pl_p_adjust(
     character_data.status_data.setdefault(3, 0)
     now_lust = character_data.status_data[3]
     now_lust_multiple = 50
-    now_add_lust = add_time + now_lust_multiple
+    now_add_lust: float = add_time + now_lust_multiple
     now_add_lust *= adjust
     now_add_lust += now_lust / 8
     now_add_lust = int(now_add_lust)
@@ -11677,7 +11673,7 @@ def handle_anus_tech_add_pl_p_adjust(
     character_data.status_data.setdefault(3, 0)
     now_lust = character_data.status_data[3]
     now_lust_multiple = 50
-    now_add_lust = add_time + now_lust_multiple
+    now_add_lust: float = add_time + now_lust_multiple
     now_add_lust *= adjust
     now_add_lust += now_lust / 8
     now_add_lust = int(now_add_lust)
@@ -11770,8 +11766,8 @@ def handle_high_obscenity_failed_adjust(
     # 加反感
     target_data.status_data.setdefault(20, 0)
     now_lust = target_data.status_data[20]
-    now_lust_multiple = 10000
-    now_add_lust = add_time + now_lust_multiple
+    now_lust_multiple: float = 10000
+    now_add_lust: float = add_time + now_lust_multiple
     adjust = handle_ability.get_ability_adjust(target_data.ability[18])
     now_add_lust *= adjust
     now_add_lust += now_lust / 2
@@ -11798,9 +11794,7 @@ def handle_high_obscenity_failed_adjust(
     change_data.target_change.setdefault(
         target_data.cid, game_type.TargetChange()
     )
-    target_change: game_type.TargetChange = change_data.target_change[
-        target_data.cid
-    ]
+    target_change = change_data.target_change[target_data.cid]
     target_change.trust -= now_lust_multiple
 
 
@@ -11843,8 +11837,8 @@ def handle_do_h_failed_adjust(
     # 加反感
     target_data.status_data.setdefault(20, 0)
     now_lust = target_data.status_data[20]
-    now_lust_multiple = 20000
-    now_add_lust = add_time + now_lust_multiple
+    now_lust_multiple: float = 20000
+    now_add_lust: float = add_time + now_lust_multiple
     adjust = handle_ability.get_ability_adjust(target_data.ability[18])
     now_add_lust *= adjust
     now_add_lust += now_lust / 2
@@ -11871,9 +11865,7 @@ def handle_do_h_failed_adjust(
     change_data.target_change.setdefault(
         target_data.cid, game_type.TargetChange()
     )
-    target_change: game_type.TargetChange = change_data.target_change[
-        target_data.cid
-    ]
+    target_change = change_data.target_change[target_data.cid]
     target_change.trust -= now_lust_multiple
 
 
