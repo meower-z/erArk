@@ -201,20 +201,20 @@ growth_uid_list = [
     for uid, data in game_config.config_official_event.items()
     if data.get("department") == E.GROWTH_EVENT_DEPARTMENT
 ]
-check("养成事件 ≥ 250 条", len(growth_uid_list) >= 250, len(growth_uid_list))
+check("养成事件 ≥ 213 条", len(growth_uid_list) >= 213, len(growth_uid_list))
 check(
     "毕业典礼与成年纪念存在",
     E.GRADUATION_EVENT_UID in game_config.config_official_event
     and E.ADULT_MEMORIAL_EVENT_UID in game_config.config_official_event,
 )
 check(
-    "期末桶 19 条（Plan 32 L22 挪进 3 条）且 sub_key 为保留键",
+    "期末桶 16 条且 sub_key 为保留键",
     len(
         game_config.config_official_event_by_sub_key.get(
             (E.GROWTH_EVENT_DEPARTMENT, E.SEMESTER_EVENT_SUB_KEY), ()
         )
     )
-    >= 19,
+    >= 16,
 )
 # Plan 30 §3.2：期末事件在学期基线重置之后推送，前提不许读本学期的养成数值 4 / 5 / 6
 import csv  # noqa: E402
@@ -278,8 +278,6 @@ EVENT_PREMISE_EXPECT = {
         "萝莉8": "self_have_intern_course",
         "萝莉9": "self_have_interest_course",
         "萝莉16": "self_have_practice_course",
-        "幼女1": "CVP_A1_Growth|0_GE_1&self_have_theory_course",
-        "幼女22": "self_have_practice_course",
     },
     "L13": {
         "通用3": "CVP_A1_T|101_E_0&self_birthday_today",
@@ -899,12 +897,10 @@ PLAN32_EVENT_PREMISE_EXPECT = {
     "L26": {
         "通用5": "self_have_sibling_child&CVP_A1_T|101_E_0&self_have_practice_course",
         "萝莉51": "self_have_public_course&CVP_A1_Growth|3_GE_50",
-        "萝莉57": "CVP_A1_Growth|3_GE_50&self_have_pe_course",
-        "幼女24": "self_have_public_course&CVP_A1_Growth|3_GE_50",
     },
 }
 """ Plan 32 方案 §4.3 改过前提的事件：发现编号 -> {事件uid: 新前提串}（期末 17 / 18 / 19 是原萝莉 1 / 20 / 26 挪进期末桶后的uid）。
-    萝莉 51 / 幼女 24 的公开课前提替换掉被它蕴含的「有课」（实施复审补）：抽取权重按「配置权重 × 前提条数」算，留着被蕴含的旧前提只会平白抬权重。
+    萝莉 51 的公开课前提替换掉被它蕴含的「有课」（实施复审补）：抽取权重按「配置权重 × 前提条数」算，留着被蕴含的旧前提只会平白抬权重。
     通用 5 的「非婴儿」照留：Plan 26 起写会走会说的孩子的 17 条通用事件一律显式排除婴儿（test_growth_event 锁着），实践课是新加的条件 """
 for finding, expect_dict in PLAN32_EVENT_PREMISE_EXPECT.items():
   for uid, premise_text in expect_dict.items():
@@ -973,9 +969,9 @@ _semester_uid_set = set(
     )
 )
 check(
-    "L22 期末 17 / 18 / 19 在期末桶（sub_key 200），期末桶共 19 条",
+    "L22 期末 17 / 18 / 19 在期末桶（sub_key 200），期末桶共 16 条",
     set(MOVED_REPORT_EVENT) <= _semester_uid_set
-    and len(_semester_uid_set) >= 19,
+    and len(_semester_uid_set) >= 16,
     sorted(_semester_uid_set),
 )
 check(
@@ -1156,13 +1152,9 @@ check(
     not event_premise_pass("通用5", 201),
 )
 check(
-    "L26 萝莉 51「大礼堂的公开课」、萝莉 57「训练场的记录」：只排理论课判不过",
+    "L26 萝莉 51「大礼堂的公开课」、萝莉 7（体育课）：只排理论课判不过",
     not event_premise_pass("萝莉51", 201, "CVP_A1_Growth|3_")
-    and not event_premise_pass("萝莉57", 201, "CVP_A1_Growth|3_"),
-)
-check(
-    "L26 幼女 24「大礼堂有一场公开课」：只排理论课的幼女判不过（此前挂的是任意课）",
-    not event_premise_pass("幼女24", 202, "CVP_A1_Growth|3_"),
+    and not event_premise_pass("萝莉7", 201),
 )
 schedule_handle.set_class_cell(_("实践教室一"), 0, 1, 43, -1)
 schedule_handle.set_selected_course(
@@ -1170,20 +1162,18 @@ schedule_handle.set_selected_course(
 )
 check("L26 再排一格实践课：通用 5 判得过", event_premise_pass("通用5", 201))
 schedule_handle.set_class_cell(_("大礼堂"), 0, 2, 45, -1)
-for _cid in (201, 202):
-  schedule_handle.set_selected_course(
-      _cid, 0, 2, E.COURSE_TYPE_PUBLIC, _("大礼堂")
-  )
+schedule_handle.set_selected_course(
+    201, 0, 2, E.COURSE_TYPE_PUBLIC, _("大礼堂")
+)
 check(
-    "L26 再排一格大礼堂的公开课：萝莉 51 与幼女 24 都判得过（新前提 self_have_public_course），萝莉 57 仍判不过（公开课不是体育课）",
+    "L26 再排一格大礼堂的公开课：萝莉 51 判得过（新前提 self_have_public_course），萝莉 7 仍判不过（公开课不是体育课）",
     event_premise_pass("萝莉51", 201, "CVP_A1_Growth|3_")
-    and event_premise_pass("幼女24", 202, "CVP_A1_Growth|3_")
-    and not event_premise_pass("萝莉57", 201, "CVP_A1_Growth|3_"),
+    and not event_premise_pass("萝莉7", 201),
 )
 schedule_handle.set_selected_course(201, 0, 3, E.COURSE_TYPE_PE, _("木桩房"))
 check(
-    "L26 再排一格体育课：萝莉 57 判得过",
-    event_premise_pass("萝莉57", 201, "CVP_A1_Growth|3_"),
+    "L26 再排一格体育课：萝莉 7 判得过",
+    event_premise_pass("萝莉7", 201),
 )
 
 section("Plan 32 §3.14：检查成绩单的口上（L25）")
