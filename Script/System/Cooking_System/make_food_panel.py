@@ -1,3 +1,8 @@
+"""
+制作食物面板：按类型列出可制作的食谱，可筛选、排序，选择调味与烹饪模式，并显示品质预测；
+点击食谱名后确认制作数量并制作食物
+"""
+
 from typing import Tuple
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, text_handle, constant, py_cmd

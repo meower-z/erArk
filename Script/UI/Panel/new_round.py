@@ -1,3 +1,7 @@
+"""
+新周目面板：选择继承到新周目的玩家与干员数据，并显示角色能力与经验
+"""
+
 from typing import List
 from types import FunctionType
 from Script.Core import get_text, flow_handle, game_type, cache_control, constant

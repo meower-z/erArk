@@ -1,3 +1,7 @@
+"""
+系统设置面板与游戏基础设置面板，以及按难度返回修正系数
+"""
+
 import os, configparser
 from typing import List
 from types import FunctionType

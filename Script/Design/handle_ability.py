@@ -1,3 +1,7 @@
+"""
+能力升级：判断升级需求与额外条件，结算可以获得的能力，按能力数值评定修正比例
+"""
+
 from types import FunctionType
 from typing import Tuple
 from Script.Core import cache_control, game_type, get_text

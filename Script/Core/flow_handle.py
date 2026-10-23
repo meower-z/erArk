@@ -1,4 +1,9 @@
 # -*- coding: UTF-8 -*-
+"""
+命令流程控制：绑定、绘制与清除命令按钮，管理默认流程与结尾命令处理函数，
+并请求玩家输入
+"""
+
 import time
 import os
 import psutil

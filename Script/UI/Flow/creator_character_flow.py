@@ -1,3 +1,8 @@
+"""
+开始新游戏时的角色创建流程：性别、阴茎、初始干员、奖励点数、世界设定等面板，
+以及开始游戏时的数据初始化
+"""
+
 import random
 from functools import wraps
 from typing import List

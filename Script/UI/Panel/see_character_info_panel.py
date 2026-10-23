@@ -1,3 +1,8 @@
+"""
+查看角色属性的面板、各页与各信息子面板，
+以及打开或切换所看角色的按钮与在场景、社交面板里使用的控制对象
+"""
+
 import os
 from typing import List
 from types import FunctionType

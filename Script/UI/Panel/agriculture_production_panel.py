@@ -1,3 +1,7 @@
+"""
+农业生产：结算药田与温室生产线的产出，以及农业生产面板
+"""
+
 from typing import Tuple, Dict, List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
@@ -588,6 +592,17 @@ class Agriculture_Production_Panel:
   def _do_appoint_main_agri(
       self, line_id: int, agriculture_type: int, chara_id: int
   ):
+    """
+    任命或撤销生产线的主种植员
+    角色已是该线主种植员时撤销；否则先撤销其在同类其他生产线的任命，再任命到该线
+    角色不在对应农业类型的种植员名单里时不做任何改动
+    Keyword arguments:
+    line_id -- 生产线id
+    agriculture_type -- 农业类型，0药田，1温室
+    chara_id -- 角色id
+    Return arguments:
+    None
+    """
     ri = cache.rhodes_island
     if agriculture_type == 0:
       if chara_id not in ri.herb_garden_operator_ids:

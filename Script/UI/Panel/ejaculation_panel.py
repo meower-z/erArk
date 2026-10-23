@@ -1,3 +1,7 @@
+"""
+射精：忍住射精的判断、射精量与部位污浊的结算、精液流动，以及射精面板
+"""
+
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant, py_cmd
 from Script.Design import attr_calculation, handle_premise, map_handle, handle_ability
