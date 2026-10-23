@@ -432,8 +432,6 @@
 # old-module tools/map_aa_check.py
 # old-module tools/official_event_check.py
 # old-module tools/replace_quotes.py
-# old-module tools/tests/education/run_all.py
-# old-module tools/tests/headless_boot.py
 # old-module tools/update_behavior.py
 .github/skills/headless-game-test/harness_template.py	<module>	broad-exception-caught	count=1
 .github/skills/headless-game-test/harness_template.py	<module>	line-too-long	count=10,max=107
@@ -5738,7 +5736,7 @@ profiling/ui_render_benchmark.py	main.<locals>.benchmark_flow	too-many-statement
 profiling/ui_render_benchmark.py	parse_args	line-too-long	count=1,max=85
 tests/education/_bootstrap.py	<module>	broad-exception-caught	count=1
 tests/education/_bootstrap.py	<module>	line-too-long	count=1,max=81
-tests/education/_bootstrap.py	<module>	module-lines	lines=432
+tests/education/_bootstrap.py	<module>	module-lines	lines=431
 tests/education/_bootstrap.py	<module>	mypy:union-attr	count=1
 tests/education/_bootstrap.py	<module>	mypy:var-annotated	count=2
 tests/education/_bootstrap.py	<module>	unused-import	count=19
@@ -5760,7 +5758,7 @@ tests/education/test_behavior_loop.py	<module>	broad-exception-caught	count=3
 tests/education/test_behavior_loop.py	<module>	line-too-long	count=9,max=166
 tests/education/test_behavior_loop.py	<module>	module-lines	lines=582
 tests/education/test_behavior_loop.py	<module>	mypy:import-not-found	count=1
-tests/education/test_behavior_loop.py	<module>	mypy:name-defined	count=123
+tests/education/test_behavior_loop.py	<module>	mypy:name-defined	count=122
 tests/education/test_behavior_loop.py	<module>	mypy:var-annotated	count=1
 tests/education/test_behavior_loop.py	<module>	unused-import	count=1
 tests/education/test_behavior_loop.py	<module>	unused-wildcard-import	count=1
@@ -6772,15 +6770,4 @@ tools/official_event_check.py	Checker.collect_stat	unused-variable	count=1
 tools/official_event_check.py	Checker.print_stat	consider-using-dict-items	count=1
 tools/official_event_check.py	Checker.print_stat	line-too-long	count=1,max=134
 tools/replace_quotes.py	batch_process_directory	unused-variable	count=1
-tools/tests/education/run_all.py	<module>	line-too-long	count=1,max=86
-tools/tests/education/run_all.py	<module>	mypy:union-attr	count=1
-tools/tests/education/run_all.py	main	line-too-long	count=1,max=85
-tools/tests/education/run_all.py	run_one	line-too-long	count=1,max=114
-tools/tests/education/run_all.py	run_one	subprocess-run-check	count=1
-tools/tests/headless_boot.py	<module>	mypy:union-attr	count=1
-tools/tests/headless_boot.py	<module>	mypy:var-annotated	count=1
-tools/tests/headless_boot.py	boot	import-outside-toplevel	count=8
-tools/tests/headless_boot.py	boot	unused-import	count=2
-tools/tests/headless_boot.py	mute_ui	import-outside-toplevel	count=2
-tools/tests/headless_boot.py	new_chara	import-outside-toplevel	count=2
 tools/update_behavior.py	update_behavior_file	broad-exception-caught	count=1

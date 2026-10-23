@@ -6,6 +6,7 @@
 """
 
 from _bootstrap import *  # noqa: F401,F403
+from tests.education._skip import skip
 from Script.Design import character_behavior, clothing, instuct_judege, handle_npc_ai
 from Script.Settle import past_day_settle, realtime_settle
 from Script.UI.Panel import character_info_head
@@ -28,10 +29,9 @@ _save_id_list = [
     if save_handle.judge_save_file_exist(save_id)
 ]
 if not _save_id_list:
-  print(
-      "  跳过：本机没有可读的存档（save 目录不存在或为空），本文件要在真实存档上跑行为循环"
+  skip(
+      "本机没有可读的存档（save 目录不存在或为空），本文件要在真实存档上跑行为循环"
   )
-  finish()
 best_id = ""
 best_count = -1
 for save_id in _save_id_list:

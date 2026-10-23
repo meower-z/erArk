@@ -31,8 +31,7 @@ from tests.world import ROOT
 LAYERS = (FAST_LAYER, SLOW_LAYER)
 """ 两层的目录 """
 NOT_IN_LAYERS = {
-    # 临时的一项：育儿系统的测试迁入 tests/ 后删掉
-    "tools/tests/education/": "育儿系统的旧测试，各自单独运行，迁移前保留",
+    "tests/education/": "生长养成系统的脚本，由慢速层的 test_education_suite.py 运行",
     "tools/MCP/prts_character_downloader/test_downloader.py": "PRTS 立绘下载器的手动脚本，从网上下载图片，不是游戏的测试",
 }
 """ 可以不在两层里的 test_*.py：路径（以 / 结尾的是目录）: 原因 """

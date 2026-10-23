@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-"""生长养成系统回归测试的公共引导（Plan 22 收尾轮）
+"""生长养成系统回归测试的公共引导
 
 每个 test_*.py 开头 `from _bootstrap import *` 即可拿到：
     已初始化的游戏配置与缓存（不启动 Tk / Web）、被屏蔽并可记录文本的绘制类、
@@ -7,10 +7,9 @@
     set_time() / move_to() / open_all_classroom() / clear_schedules() 等环境工具。
 
 铁律（详见 .claude/skills/headless-game-test/SKILL.md）：
-    1. 必须用 ./.conda/python.exe 跑，裸 python 是商店空壳
-    2. 导入链会起非守护线程，脚本末尾必须 finish() → os._exit()
-    3. 含中文的脚本一律写成文件跑，不要走 heredoc / stdin（GBK 会把中文喂坏）
-    4. 只读：绝不调用 save_handle.establish_save()，不 inline 调用 init_character_behavior()
+    1. 导入链会起非守护线程，脚本末尾必须 finish() → os._exit()
+    2. 含中文的脚本一律写成文件跑，不要走 heredoc / stdin（GBK 会把中文喂坏）
+    3. 只读：绝不调用 save_handle.establish_save()，不 inline 调用 init_character_behavior()
 """
 
 import datetime
@@ -19,7 +18,7 @@ import random
 import sys
 
 ROOT = os.path.abspath(
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..")
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
 )
 os.chdir(ROOT)
 if ROOT not in sys.path:
@@ -416,7 +415,7 @@ pl = make_character(0, "博士")
 def _exit_on_exception(exc_type, exc_value, exc_traceback):
   """
   未捕获异常时打印回溯并强制退出
-  导入链起的非守护线程会让崩溃的测试进程挂住，直到 run_all 的超时才被杀掉
+  导入链起的非守护线程会让崩溃的测试进程挂住，直到运行它的测试超时才被杀掉
   """
   import traceback
 
