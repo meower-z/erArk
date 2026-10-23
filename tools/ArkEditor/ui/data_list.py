@@ -1,3 +1,8 @@
+"""
+口上与事件的条目列表 DataList：新增、复制、删除与移动条目，按文本、前提或当前指令筛选，
+快照式撤销与重做
+"""
+
 import uuid
 from PySide6.QtWidgets import QListWidget, QMenuBar, QWidgetAction, QListWidgetItem, QAbstractItemView, QPushButton, QHBoxLayout, QWidget, QTextEdit, QLabel, QGridLayout, QMenu, QCheckBox, QSizePolicy
 from PySide6.QtCore import Qt
@@ -212,6 +217,13 @@ class DataList(DataListIdEditMixin, QWidget):
   # 保留原手动调用 save_snapshot 策略，避免动态覆写导致类型检查问题
 
   def update_font(self, font):
+    """
+    打印传入的字体，把它记为当前字体并设给全部子控件
+    Keyword arguments:
+    font -- 字体
+    Return arguments:
+    None
+    """
     print(font)
     self.font = font
     for widget in self.findChildren(QWidget):

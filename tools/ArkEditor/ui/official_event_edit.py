@@ -52,6 +52,13 @@ class SelectorShim:
   """
 
   def __init__(self, text: str, premise: dict, effect: dict):
+    """
+    记下文字、前提集合与结算集合
+    Keyword arguments:
+    text -- 弹窗标题用的文字
+    premise -- 前提集合
+    effect -- 结算集合
+    """
     self.text = text
     self.premise = premise
     self.effect = effect
@@ -109,6 +116,12 @@ class OfficialEventEditWidget(QWidget):
   event_saved = Signal(object)
 
   def __init__(self, department_name_data: dict = None, parent=None):
+    """
+    初始化控件，此时还没有要编辑的事件
+    Keyword arguments:
+    department_name_data -- 部门id到部门名的字典，为空时用空字典
+    parent -- 父控件
+    """
     super().__init__(parent)
     self.now_event = None
     """ 当前编辑的事件 """

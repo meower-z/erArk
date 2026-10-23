@@ -1,3 +1,8 @@
+"""
+当前事件的结算列表 ItemEffectList：打开结算、CVE、CSE 选择菜单，右键删除、复制、粘贴结算，
+拖动后同步结算顺序
+"""
+
 from PySide6.QtWidgets import QListWidgetItem, QListWidget, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QDialog, QMenu, QComboBox, QTextEdit, QMenuBar, QWidgetAction
 from PySide6.QtGui import QFont, QActionGroup
 from PySide6.QtCore import Qt

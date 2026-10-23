@@ -37,6 +37,13 @@ class OfficialEventListWidget(QWidget):
   event_changed = Signal(str)
 
   def __init__(self, event_list, file_name_list, parent=None):
+    """
+    建立文件筛选下拉框、关键字搜索栏、重置按钮与带右键菜单的列表，并显示全部事件
+    Keyword arguments:
+    event_list -- 全部事件
+    file_name_list -- 全部事件文件名
+    parent -- 父控件
+    """
     super().__init__(parent)
     self.event_list = event_list
     """ 全部事件 """

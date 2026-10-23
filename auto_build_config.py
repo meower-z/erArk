@@ -1,3 +1,9 @@
+"""
+游戏启动时的增量数据构建，导入本模块即执行：读取 data/ 下的 csv、事件、口上与地图等配置，
+写出 data/ 下的 json 数据文件与 zh_CN 的 po 文件，不写 Script/Config/config_def.py；
+data/ 下已有 Character_Talk.json 或 Talk_Common.json 时跳过对应口上的构建
+"""
+
 import csv
 import os
 import json

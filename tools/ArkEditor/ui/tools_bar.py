@@ -1,3 +1,8 @@
+"""
+菜单栏 ToolsBar：依次放入标题为 0 的 npc_menu、以当前行为名为标题的 status_menu、
+以 cache_control.now_type 为标题的 type_menu
+"""
+
 from PySide6.QtWidgets import QMenuBar, QMenu
 from PySide6.QtGui import QFont
 import cache_control

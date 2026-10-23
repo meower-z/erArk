@@ -1,3 +1,8 @@
+"""
+编辑器运行期的共享状态：字体、编辑类型与当前文件路径，正在编辑的口上、事件与角色属性，
+以及从 csv 读入的前提、行为、结算与各类属性配置
+"""
+
 from typing import Dict, Set, List
 import game_type
 

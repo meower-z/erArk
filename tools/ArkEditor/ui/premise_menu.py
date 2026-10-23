@@ -1,3 +1,7 @@
+"""
+前提选择对话框 PremiseMenu：按树形列出前提与前提组，勾选或取消时增删当前事件或口上的前提，可搜索
+"""
+
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QDialog,

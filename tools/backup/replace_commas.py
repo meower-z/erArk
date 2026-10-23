@@ -34,6 +34,12 @@ def replace_commas(line: str, count: int = 5) -> str:
 
 
 def main() -> None:
+  """
+  解析命令行参数（文件路径，以及从第几个逗号起替换，默认 5），
+  把该文件每行从这个逗号起的英文逗号换成中文逗号并写回；文件不存在时抛出 FileNotFoundError
+  Return arguments:
+  None
+  """
   parser = argparse.ArgumentParser(
       description="替换 CSV 文件中的逗号（从第五个开始替换为中文逗号）"
   )

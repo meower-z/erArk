@@ -1,3 +1,7 @@
+"""
+角色属性编辑表单 CharaList，以及其中按类型列出能力、经验、素质或服装并可增删条目的 MenuWidget
+"""
+
 from PySide6.QtWidgets import QVBoxLayout, QSplitter, QPushButton, QHBoxLayout, QWidget, QTextEdit, QLabel, QSizePolicy, QComboBox, QScrollArea
 from PySide6.QtGui import QFont, QPalette, QColor
 import cache_control
@@ -183,6 +187,13 @@ class CharaList(QWidget):
     self.layout.addWidget(self.reset_button)
 
   def resizeEvent(self, event):
+    """
+    处理窗口大小变化，并把分割器的两栏设为各占一半宽度
+    Keyword arguments:
+    event -- 大小变化事件
+    Return arguments:
+    None
+    """
     super(CharaList, self).resizeEvent(event)
 
     width = self.width() / 2
@@ -576,6 +587,11 @@ class CharaList(QWidget):
 class MenuWidget(QWidget):
 
   def __init__(self, type_flag=0):
+    """
+    建立添加、删除两个按钮，并记下条目类型
+    Keyword arguments:
+    type_flag -- 条目下拉框列出的数据，0能力，1经验，2素质，3服装
+    """
     super().__init__()
 
     self.mainLayout = QVBoxLayout(self)
@@ -596,6 +612,12 @@ class MenuWidget(QWidget):
     self.items_per_layout = 0  # 新增属性来跟踪每个水平布局中的项目数量
 
   def addItems(self):
+    """
+    新增一项：按 type_flag 列出选项的下拉框，加一个初值为 1 的文本框；
+    服装每项单独一行，其他类型每行最多 4 项
+    Return arguments:
+    None
+    """
     comboBox = QComboBox(self)
     textEdit = QTextEdit(self)
 
@@ -652,6 +674,12 @@ class MenuWidget(QWidget):
     self.items_per_layout += 1  # 增加项目数量
 
   def removeItems(self):
+    """
+    删除最后加入的一项：把它所在的水平布局从主布局移除，并删除它的控件；
+    这一项的元组长度不是 3 或 4 时抛出 ValueError
+    Return arguments:
+    None
+    """
     if self.items:
       item = self.items.pop()
       if len(item) == 3:

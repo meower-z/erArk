@@ -1,3 +1,7 @@
+"""
+编辑器主窗体 Window：口上、事件与角色属性的网格布局，工具栏区，以及按文件名与修改状态设置窗口标题
+"""
+
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QMainWindow, QWidget, QGridLayout, QLabel
 import os
 

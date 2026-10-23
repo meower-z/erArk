@@ -1,3 +1,8 @@
+"""
+编辑器的数据对象：口上、事件、角色属性、外勤委托与公务事件
+"""
+
+
 class Talk:
   """口上对象"""
 
@@ -120,6 +125,22 @@ class Commission:
       special,
       description,
   ):
+    """
+    按传入的字段初始化委托，cid、country_id、level、people、time、related_id、special 转成 int
+    Keyword arguments:
+    cid -- 委托ID
+    name -- 委托名称
+    country_id -- 国家ID
+    level -- 委托等级
+    type -- 委托类型
+    people -- 需要人数
+    time -- 耗时天数
+    demand -- 需求字符串
+    reward -- 奖励字符串
+    related_id -- 前置委托ID
+    special -- 是否特殊委托
+    description -- 委托描述
+    """
     # 初始化各属性
     self.cid = int(cid)
     self.name = name
@@ -152,6 +173,13 @@ class OfficialEvent:
   OPTION_SUFFIX = ["", "_premise", "_reason", "_tip", "_effect"]
 
   def __init__(self, row: dict, file_name: str = ""):
+    """
+    从 csv 的一行读入公务事件：department、subject、sub_key、once、weight 转成 int，
+    四个选项各收成一个字典放进 options
+    Keyword arguments:
+    row -- csv 的一行，键为列名
+    file_name -- 所属文件名
+    """
     # 基本字段
     self.file_name = file_name
     self.cid = row.get("cid", "")

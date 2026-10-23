@@ -1,3 +1,8 @@
+"""
+口上或事件的文本编辑框 ItemTextEdit：右键插入文本、编辑与预览切换、保存文本，
+以及把自定义标签转成 HTML 的 render_text_for_display
+"""
+
 from PySide6.QtWidgets import QTextEdit, QWidget, QVBoxLayout, QLabel, QPushButton, QMenu, QHBoxLayout
 from PySide6.QtGui import QFont, QAction
 from PySide6.QtCore import Qt

@@ -1,3 +1,7 @@
+"""
+综合指令状态结算（CSE）的选择对话框 CSEMenu：按所选对象与行为生成 CSE 结算，加进当前事件的结算
+"""
+
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QDialog,

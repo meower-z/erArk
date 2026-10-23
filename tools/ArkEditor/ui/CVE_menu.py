@@ -1,3 +1,8 @@
+"""
+综合型基础数值结算（CVE）的选择对话框 CVEMenu：按对话框里的选项生成 CVE 结算，
+编辑事件时加进当前事件的结算
+"""
+
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QDialog,

@@ -1,3 +1,8 @@
+"""
+综合型基础数值前提（CVP）的选择对话框 CVPMenu：按对话框里的选项生成 CVP 前提，
+加进当前事件或口上的前提
+"""
+
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QDialog,

@@ -111,6 +111,12 @@ def renumber_csv(
 
 
 def parse_args() -> argparse.Namespace:
+  """
+  解析命令行参数：起始编号 start，以及 --csv、--start-line（默认 6）、--column（从 1 数，默认 1）、
+  --encoding（默认 utf-8）与 --no-backup
+  Return arguments:
+  argparse.Namespace -- 解析后的参数
+  """
   parser = argparse.ArgumentParser(
       description="从指定行开始将 CSV 指定列重编号（写回原文件，默认生成 .bak 备份）",
   )
@@ -153,6 +159,11 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+  """
+  解析参数后调用 renumber_csv：列号从 1 起换成从 0 起，列号与起始行小于 1 时都按 1 算
+  Return arguments:
+  None
+  """
   args = parse_args()
 
   file_path = Path(args.csv)

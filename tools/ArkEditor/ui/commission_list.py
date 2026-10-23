@@ -32,6 +32,12 @@ class CommissionListWidget(QWidget):
   commission_delete = Signal(object)  # 删除条目信号
 
   def __init__(self, commissions, parent=None):
+    """
+    建立搜索栏与可拖动排序、带右键菜单的列表，并显示全部委托
+    Keyword arguments:
+    commissions -- 委托对象列表
+    parent -- 父控件
+    """
     super().__init__(parent)
     self.commissions = commissions  # 原始数据
     self.filtered_commissions = commissions.copy()  # 搜索过滤后的数据

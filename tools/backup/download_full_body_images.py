@@ -1,3 +1,8 @@
+"""
+批量补全干员差分立绘：用 PRTS 下载器给每个角色目录下载缺少的 {角色名}_全身.png，
+并在没有 {角色名}_半身.png 时把 {角色名}.png 改名为它
+"""
+
 import os
 import sys
 import shutil

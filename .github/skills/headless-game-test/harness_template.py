@@ -60,6 +60,14 @@ CAPTURE_KEYWORD = "吵醒"  # 改成要断言的文本关键词；不需要捕�
 
 
 def record_draw(self, *a, **k):
+  """
+  记录型绘制桩，不绘制任何内容：CAPTURE_KEYWORD 非空且绘制对象的 text 含该关键词时，
+  把去掉首尾空白的 text 追加到 captured_messages
+  Keyword arguments:
+  self -- 绘制对象
+  Return arguments:
+  None
+  """
   if (
       CAPTURE_KEYWORD
       and getattr(self, "text", None)
@@ -149,6 +157,14 @@ if ENABLE_PROBE and WATCH:
   _orig_find = handle_npc_ai.find_character_target
 
   def _wrap_find(cid, now_time):
+    """
+    调用原来的 find_character_target，角色在 WATCH 里时打印其行为 id、时长与状态
+    Keyword arguments:
+    cid -- 角色id
+    now_time -- 原样传给原函数的时间
+    Return arguments:
+    None
+    """
     _orig_find(cid, now_time)
     if cid in WATCH:
       cd = cache.character_data[cid]
@@ -162,6 +178,13 @@ if ENABLE_PROBE and WATCH:
   _orig_int = handle_npc_ai.judge_interrupt_character_behavior
 
   def _wrap_int(cid):
+    """
+    调用原来的 judge_interrupt_character_behavior，角色在 WATCH 里时打印调用前后的行为 id 与时长和返回值
+    Keyword arguments:
+    cid -- 角色id
+    Return arguments:
+    int -- 原函数的返回值
+    """
     pre = (
         cache.character_data[cid].behavior.behavior_id,
         cache.character_data[cid].behavior.duration,
@@ -183,6 +206,13 @@ if ENABLE_PROBE and WATCH:
   _orig_trunc = handle_npc_ai.judge_student_leave_truncate
 
   def _wrap_trunc(cid):
+    """
+    调用原来的 judge_student_leave_truncate，角色在 WATCH 里且原函数返回真值时打印调用前后的行为时长
+    Keyword arguments:
+    cid -- 角色id
+    Return arguments:
+    bool -- 原函数的返回值
+    """
     pre = cache.character_data[cid].behavior.duration
     r = _orig_trunc(cid)
     if cid in WATCH and r:

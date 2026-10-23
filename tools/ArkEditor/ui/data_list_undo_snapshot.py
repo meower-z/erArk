@@ -14,6 +14,9 @@ class UndoSnapshotManager:
   """
 
   def __init__(self):
+    """
+    建立空的撤销栈、重做栈与监听器列表，撤销栈最大深度为 100
+    """
     # 撤销栈，每个元素为一个快照字典
     self.snapshot_stack = []  # 存放“修改前”状态
     self.redo_stack = []  # 存放“撤销前(修改后)”状态，用于 Ctrl+Y 重做
@@ -99,10 +102,22 @@ class UndoSnapshotManager:
       self._listeners.append(callback)
 
   def remove_listener(self, callback):
+    """
+    移除一个监听器，未添加过时什么也不做
+    Keyword arguments:
+    callback -- 监听器
+    Return arguments:
+    None
+    """
     if callback in self._listeners:
       self._listeners.remove(callback)
 
   def _notify(self):
+    """
+    以撤销栈与重做栈的长度调用每个监听器，忽略监听器抛出的异常
+    Return arguments:
+    None
+    """
     for cb in list(self._listeners):
       try:
         cb(len(self.snapshot_stack), len(self.redo_stack))

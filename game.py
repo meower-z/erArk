@@ -1,5 +1,10 @@
 #!/usr/bin/python3
 # -*- coding: UTF-8 -*-
+"""
+游戏入口：作为主程序运行时构建数据，初始化缓存、配置、Mod、角色与时间，
+再按 config.ini 的 web_draw 以 Tk 窗口或 Web 服务器启动游戏
+"""
+
 import sys
 import logging
 import time
