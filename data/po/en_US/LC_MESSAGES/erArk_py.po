@@ -20,12 +20,6 @@ msgstr ""
 msgid "您输入的选项无效，请重试\n"
 msgstr "Option chosen invalid, please retry\n"
 
-msgid "版本信息：{normal_config.config_normal.verson}\n"
-msgstr "Version info: {normal_config.config_normal.verson}\n"
-
-msgid "最近输入指令：{cache.input_cache}\n"
-msgstr "Recent command input: {cache.input_cache}\n"
-
 msgid ""
 "\n"
 "\n"
@@ -48,40 +42,6 @@ msgid ""
 msgstr ""
 "\n"
 "Starts scanning if the data structure update requires cross version\n"
-
-msgid ""
-"\n"
-"共有{cloth_update_count}个角色的服装数据已重置\n"
-msgstr ""
-"\n"
-"{cloth_update_count} characters have their clothes data restored\n"
-
-msgid ""
-"\n"
-"系统设置已重置，如有需要请手动修改\n"
-msgstr ""
-"\n"
-"System settings is restored, please edit manually if needed\n"
-
-msgid ""
-"\n"
-"检测完毕，共有{update_count}条数据完成了更新\n"
-msgstr ""
-"\n"
-"Scanning completed, {update_count} datas have been updated\n"
-
-msgid "存档跨版本更新: key {key}, not found，已设为默认值 {value}\n"
-msgstr ""
-"Save file cross version update: key {key}, not found, set to default "
-"{value}\n"
-
-msgid ""
-"存档跨版本更新: key {key}, type not match，原type {type(loaded_dict[key])}，新type "
-"{type(default_dict[key])}, 已设为默认值 {value}\n"
-msgstr ""
-"Save file cross version update: key {key}, type not match, original type "
-"{type(loaded_dict[key])},New type {type(default_dict[key])}, set to default "
-"{value}\n"
 
 msgid "需要:"
 msgstr "Needs:"
@@ -146,15 +106,6 @@ msgstr "Items"
 msgid "读写存档"
 msgstr "Save and load"
 
-msgid "属性上升"
-msgstr "Upgrade attributes"
-
-msgid "自身属性上升"
-msgstr "Upgrade self attributes"
-
-msgid "查看污浊情况"
-msgstr "Check dirty condition"
-
 msgid "指令过滤"
 msgstr "Command filter"
 
@@ -169,12 +120,6 @@ msgstr "debug value change"
 
 msgid "系统设置"
 msgstr "System settings"
-
-msgid "收藏该地点"
-msgstr "Mark the location as favourite"
-
-msgid "取消收藏地点"
-msgstr "Cancel the marked location"
 
 msgid "查看收藏品"
 msgstr "View collection"
@@ -196,9 +141,6 @@ msgstr "Manage library"
 
 msgid "管理流水线"
 msgstr "Manage assembly line"
-
-msgid "管理农田"
-msgstr "Manage farm"
 
 msgid "资源交易"
 msgstr "Trade resources"
@@ -284,14 +226,8 @@ msgstr "Originium Arts"
 msgid "听肚子里的动静"
 msgstr "Hear on stomach"
 
-msgid "一起玩耍"
-msgstr "Play together"
-
 msgid "照顾婴儿"
 msgstr "Take care of baby"
-
-msgid "外勤委托_未实装"
-msgstr "Listen to commissions (not implemented)"
 
 msgid "检查衣柜"
 msgstr "Check closet"
@@ -305,30 +241,8 @@ msgstr "Ask for date (not implemented)"
 msgid "告白"
 msgstr "Propose"
 
-msgid "\\告白成功，[恋慕]转为[恋人]，{target_data.name}收下了你赠予的[戒指]\n"
-msgstr ""
-"\\Successfully proposed, [Envy] changes to [Lover], {target_data.name} "
-"accepted your [Ring]\n"
-
-msgid ""
-"\n"
-"告白失败，需要[恋慕]且满足实行值\n"
-msgstr ""
-"\n"
-"Propose failed, [Envy] and sufficient Execution Value required\n"
-
 msgid "戴上项圈"
 msgstr "Put on collar"
-
-msgid "\\对方接受了项圈，[驯服]转为[宠物]\n"
-msgstr "\\The target accepted the collar, [Tamed] changes to [Pet]\n"
-
-msgid ""
-"\n"
-"戴上项圈失败，需要[驯服]且满足实行值\n"
-msgstr ""
-"\n"
-"Put on collar failed, [Tamed] and sufficient Execution Value required\n"
 
 msgid "劝酒_未实装"
 msgstr "Persuade to stop drinking (not implemented)"
@@ -339,50 +253,8 @@ msgstr "Relieve"
 msgid "摆放藏品"
 msgstr "Place collectibles"
 
-msgid ""
-"\n"
-"已持有藏品：{cache.character_data[npc_id].name}的{pan_name}"
-msgstr ""
-"\n"
-"Already obtained Collectible: {cache.character_data[npc_id].name}'s {pan_name}"
-
-msgid ""
-"\n"
-"增加了藏品：{cache.character_data[npc_id].name}的{pan_name}"
-msgstr ""
-"\n"
-"Added Collectible: {cache.character_data[npc_id].name}'s {pan_name}"
-
-msgid ""
-"\n"
-"已持有藏品：{cache.character_data[npc_id].name}的{socks_name}"
-msgstr ""
-"\n"
-"Already obtained Collectible: {cache.character_data[npc_id].name}'s {socks_name}"
-
-msgid ""
-"\n"
-"增加了藏品：{cache.character_data[npc_id].name}的{socks_name}"
-msgstr ""
-"\n"
-"Added Collectible: {cache.character_data[npc_id].name}'s {socks_name}"
-
 msgid "邀请H"
 msgstr "Invite for H"
-
-msgid ""
-"\n"
-"进入H模式\n"
-msgstr ""
-"\n"
-"Enters H mode\n"
-
-msgid ""
-"\n"
-"进入H模式失败\n"
-msgstr ""
-"\n"
-"Enter H mode failed\n"
 
 msgid "睡眠猥亵"
 msgstr "Sleep indecency"
@@ -413,9 +285,6 @@ msgid ""
 msgstr ""
 "\n"
 "Enter unconscious rape mode\n"
-
-msgid "H结束"
-msgstr "End H"
 
 msgid ""
 "\n"
@@ -573,17 +442,6 @@ msgstr ""
 "   ※ No empty dormitory, unable to recruit ※\n"
 "\n"
 
-msgid ""
-"\n"
-"\n"
-"   ※ 成功招募了{character_data.name} ※\n"
-"\n"
-msgstr ""
-"\n"
-"\n"
-"   ※ Recruited {character_data.name} successfully ※\n"
-"\n"
-
 msgid "维护设施"
 msgstr "Maintain facilities"
 
@@ -707,9 +565,6 @@ msgstr "Order her to masturbate"
 msgid "命令对方舔自己肛门"
 msgstr "Order her to lick anus"
 
-msgid "什么也不做"
-msgstr "Do nothing"
-
 msgid "诱惑对方"
 msgstr "Seduce her"
 
@@ -803,9 +658,6 @@ msgstr "Lavation"
 msgid "拔出肛塞"
 msgstr "Pull out anal plug"
 
-msgid "肛塞_未实装"
-msgstr "Anal plug (not implemented)"
-
 msgid "塞入肛门拉珠"
 msgstr "Insert anal beads"
 
@@ -845,9 +697,6 @@ msgstr "Lubricating fluid"
 msgid "媚药"
 msgstr "Love potion"
 
-msgid "灌肠液_未实装"
-msgstr "Enema (not implemented)"
-
 msgid "一次性利尿剂"
 msgstr "Disposable diuretics"
 
@@ -872,9 +721,6 @@ msgstr "Missionary position"
 msgid "背后位"
 msgstr "Doggy style"
 
-msgid "骑乘位"
-msgstr "Cowgirl position"
-
 msgid "对面座位"
 msgstr "Face sitting sex"
 
@@ -893,17 +739,11 @@ msgstr "Stimulate G spot"
 msgid "玩弄子宫口"
 msgstr "Play with cervix"
 
-msgid "插入子宫"
-msgstr "Insert into womb"
-
 msgid "正常位肛交"
 msgstr "Missionary anal sex"
 
 msgid "后背位肛交"
 msgstr "Doggy anal sex"
-
-msgid "骑乘位肛交"
-msgstr "Cowgirl anal sex"
 
 msgid "对面座位肛交"
 msgstr "Face sitting anal sex"
@@ -929,12 +769,6 @@ msgstr ""
 msgid "尿道棉棒"
 msgstr "Urethral swab"
 
-msgid "放尿play_未实装"
-msgstr ""
-
-msgid "尿道插入_未实装"
-msgstr ""
-
 msgid "打胸部_未实装"
 msgstr ""
 
@@ -944,16 +778,10 @@ msgstr "Spank butt"
 msgid "羞耻play_未实装"
 msgstr ""
 
-msgid "拘束play_未实装"
-msgstr ""
-
 msgid "淋浴_未实装"
 msgstr ""
 
 msgid "泡泡浴_未实装"
-msgstr ""
-
-msgid "交给对方_未实装"
 msgstr ""
 
 msgid "给对方口交_未实装"
@@ -961,66 +789,6 @@ msgstr ""
 
 msgid "脱衣服"
 msgstr "Take off clothes"
-
-msgid ""
-"\n"
-"  体力"
-msgstr ""
-"\n"
-"  Stamina"
-
-msgid ""
-"\n"
-"  气力"
-msgstr ""
-"\n"
-"  Energy"
-
-msgid ""
-"\n"
-"  射精"
-msgstr ""
-"\n"
-"  Ejaculation"
-
-msgid ""
-"\n"
-"  理智"
-msgstr ""
-"\n"
-"  Sanity"
-
-msgid ""
-"\n"
-"  "
-msgstr ""
-
-msgid ""
-"\n"
-"  对{character_name}{character_nick_name}好感"
-msgstr ""
-"\n"
-"  Affinity towards {character_name}{character_nick_name}"
-
-msgid ""
-"\n"
-"  对{character_name}{character_nick_name}信赖"
-msgstr ""
-"\n"
-"  Trust towards {character_name}{character_nick_name}"
-
-msgid ""
-"\n"
-"  催眠度"
-msgstr ""
-"\n"
-"  Hypnosis level"
-
-msgid "在{target_data.name}的帮助下，"
-msgstr "With the help of {target_data.name},"
-
-msgid "还有{cache.rhodes_island.office_work}需要处理\n"
-msgstr "{cache.rhodes_island.office_work} remaining\n"
 
 msgid ""
 "已经全部处理完毕\n"
@@ -1031,52 +799,10 @@ msgstr ""
 
 msgid ""
 "\n"
-"在{character_data.name}的努力下，医治了一名病人，支付了{now_add_lust}龙门币的医疗费。（今日剩余病人数：{cache.rhodes_island.patient_now}人）\n"
-msgstr ""
-"\n"
-"With the effort of {character_data.name}, one patient was treated, and paid {now_add_lust} LMD as medical fee. (Remaining patients today: {cache.rhodes_island.patient_now})\n"
-
-msgid ""
-"\n"
-"在{character_data.name}的努力下，{select_index}号招募位进度+{round(now_add_lust,1)}%，现在为{round(cache.rhodes_island.recruit_line[select_index][0] + now_add_lust,1)}%\n"
-msgstr ""
-"\n"
-"With the effort of {character_data.name}, Recruitment Slot no.{select_index} progress+{round(now_add_lust,1)}%, now {round(cache.rhodes_island.recruit_line[select_index][0] + now_add_lust,1)}%\n"
-
-msgid ""
-"\n"
 "请先使用邀请系统选择邀请的对象，再进行邀请\n"
 msgstr ""
 "\n"
 "Please use [Guest system] to select the target and then only invite\n"
-
-msgid ""
-"\n"
-"在{character_data.name}的努力下，邀请进度+{round(now_add_lust,1)}%，现在为{round(cache.rhodes_island.invite_visitor[1] + now_add_lust,1)}%\n"
-msgstr ""
-"\n"
-"With the effort of {character_data.name}, invite progress +{round(now_add_lust,1)}%, now{round(cache.rhodes_island.invite_visitor[1] + now_add_lust,1)}%\n"
-
-msgid ""
-"\n"
-"获得了{target_data.name}的{TPanName}，可在藏品馆里纳入收藏\n"
-msgstr ""
-"\n"
-"Obtained {target_data.name}'s {TPanName} , can be added to collection in Collection Hall\n"
-
-msgid ""
-"\n"
-"获得了{target_data.name}的{TSocName}，可在藏品馆里纳入收藏\n"
-msgstr ""
-"\n"
-"Obtained {target_data.name}'s {TSocName} , can be added to collection in Collection Hall\n"
-
-msgid ""
-"\n"
-"{target_data.name}穿回了脱下的衣服"
-msgstr ""
-"\n"
-"{target_data.name} wears their clothes back"
 
 msgid ""
 "\n"
@@ -1164,13 +890,6 @@ msgstr "You have entered this name before, please enter again\n"
 msgid "详细设定"
 msgstr "Detailed settings"
 
-msgid ""
-"\n"
-" 性别：{sex_text}      "
-msgstr ""
-"\n"
-" Gender: {sex_text}      "
-
 msgid "    [改变性别]"
 msgstr "    [Change gender]"
 
@@ -1228,18 +947,11 @@ msgstr "[Assign Operators]"
 msgid "指派干员工作"
 msgstr "Assign Operators"
 
-msgid " 当前剩余可选干员数量 = {self.npc_select_now}"
-msgstr " Remaining choices = {self.npc_select_now}"
-
 msgid "  (debug模式下可选999个干员)"
 msgstr "  (999 Operators can be chosen in debug mode)"
 
 msgid " 已选择全部初始干员"
 msgstr " All initial Operators are chosen"
-
-msgid "， 当前工作中干员/总干员：{work_people_now}/{people_max}"
-msgstr ""
-",  Current working Operators/total Operators: {work_people_now}/{people_max}"
 
 msgid " 有口上的角色会注明文本文件的大小，欢迎使用附带的编辑器erArkEditor，无需写代码仅写文本即可创作口上\n"
 msgstr ""
@@ -1252,13 +964,6 @@ msgid ""
 msgstr ""
 "\n"
 " Current chosen Operators:"
-
-msgid ""
-"\n"
-" 当前剩余可选干员数量 = {self.npc_select_now}\n"
-msgstr ""
-"\n"
-" Remaining choices = {self.npc_select_now}\n"
 
 msgid " [一键全选] "
 msgstr " [Choose all] "
@@ -1275,20 +980,11 @@ msgstr " [Name filter]"
 msgid "请输入要筛选的名字："
 msgstr "Please enter the name for filtering:"
 
-msgid " [胸围筛选中-{chest_filter_list[self.chest_filter_flag]}] "
-msgstr " [Chest size filtering-{chest_filter_list[self.chest_filter_flag]}]"
-
 msgid " [胸围筛选] "
 msgstr " [Chest size filter] "
 
-msgid " [外表年龄筛选中-{age_filter_list[self.age_filter_flag]}] "
-msgstr " [Appearance age filtering-{age_filter_list[self.age_filter_flag]}] "
-
 msgid " [外表年龄筛选] "
 msgstr " [Appearance age filter] "
-
-msgid " [种族筛选中-{race_filter_list[self.race_filter_flag - 1]}] "
-msgstr " [Race filtering-{race_filter_list[self.race_filter_flag - 1]}] "
 
 msgid " [种族筛选] "
 msgstr " [Race filter] "
@@ -1311,24 +1007,8 @@ msgstr "(Chosen)"
 msgid " 可选奖励有：\n"
 msgstr " Bonus for selection:\n"
 
-msgid "(已选{ability_name})"
-msgstr "({ability_name} chosen)"
-
-msgid "(已选{target_data.name})"
-msgstr "({target_data.name} chosen)"
-
-msgid ""
-" \n"
-" 当前为第 {str(cache.game_round)} 周目\n"
-msgstr ""
-" \n"
-" {str(cache.game_round)}th playthrough\n"
-
 msgid " 当前剩余奖励点数 ="
 msgstr " Remaining bonus points ="
-
-msgid " {self.bonus_now} = [周目数 * 20]"
-msgstr " {self.bonus_now} = [Numbers of playthroughs * 20]"
 
 msgid " + [debug(999)]"
 msgstr " + [debug(999)]"
@@ -1384,9 +1064,6 @@ msgstr "Upgrade attributes"
 msgid "农业生产"
 msgstr "Farm production"
 
-msgid "{button_text}_{agriculture_line_id}"
-msgstr ""
-
 msgid "召集到办公室"
 msgstr "Call to Office"
 
@@ -1404,9 +1081,6 @@ msgstr "Choose call/move method"
 
 msgid "[更改小时 (24小时制) ]"
 msgstr "[Change hour (24hr)]"
-
-msgid "更改小时，需至少为18时"
-msgstr "Change hour, needs to be at least Hour 18"
 
 msgid "[更改分钟]"
 msgstr "[Change minute]"
@@ -1432,12 +1106,6 @@ msgstr "Pornography-type books"
 msgid "区块总览"
 msgstr "Map overview"
 
-msgid "特殊房间"
-msgstr "Special rooms"
-
-msgid "{map_name}的衣柜"
-msgstr "Closet at {map_name}"
-
 msgid "1"
 msgstr ""
 
@@ -1450,20 +1118,6 @@ msgstr ""
 msgid "4"
 msgstr ""
 
-msgid ""
-"\n"
-"获得了{ self.character_data.name}的{pan_name}，可在藏品馆里纳入收藏\n"
-msgstr ""
-"\n"
-"Obtained {self.character_data.name}'s {pan_name} , can be added to collection in Collection Hall\n"
-
-msgid ""
-"\n"
-"获得了{ self.character_data.name}的{socks_name}，可在藏品馆里纳入收藏\n"
-msgstr ""
-"\n"
-"Obtained {self.character_data.name}'s {socks_name} , can be added to collection in Collection Hall\n"
-
 msgid "信物"
 msgstr "Token"
 
@@ -1474,9 +1128,6 @@ msgid "袜子"
 msgstr "Socks"
 
 msgid "全局变量"
-msgstr ""
-
-msgid "玩家属性"
 msgstr ""
 
 msgid "NPC角色"
@@ -1512,9 +1163,6 @@ msgstr "Body"
 msgid "服装"
 msgstr "Clothes"
 
-msgid "当前持有食物"
-msgstr "Current food on hands"
-
 msgid "食物背包"
 msgstr "Food backpack"
 
@@ -1526,24 +1174,10 @@ msgstr ""
 "Detected data abnormalities for food due to version change, abnormal food is deleted and some food data is reset, please save and override the original save file.\n"
 
 msgid ""
-"  你已经吃饱了，无法再吃东西了。\n"
-"\n"
-msgstr ""
-"  You are already full, hence unable to eat.\n"
-"\n"
-
-msgid ""
 "  当前没有目标，无法食用特殊调味食物。\n"
 "\n"
 msgstr ""
 "  No target in range, unable to eat special food.\n"
-"\n"
-
-msgid ""
-"  {target_character_data.name}已经吃饱了，无法再吃东西了。\n"
-"\n"
-msgstr ""
-"  {target_character_data.name} is already full, hence unable to eat.\n"
 "\n"
 
 msgid "当前提供的食物"
@@ -1585,14 +1219,8 @@ msgstr "[Next]"
 msgid "下一人"
 msgstr "Next"
 
-msgid "{nickname}购买了{item_name}"
-msgstr "{nickname} bought {item_name}"
-
 msgid "场景"
 msgstr "Background"
-
-msgid "已死亡！"
-msgstr "Dead!"
 
 msgid "当前位置:"
 msgstr "Current location:"
@@ -1603,9 +1231,6 @@ msgstr "Characters in current location:    "
 msgid "产品生产"
 msgstr "Production"
 
-msgid "{button_text}_{assembly_line_id}"
-msgstr ""
-
 msgid "罗德岛资源总览"
 msgstr "Resource list"
 
@@ -1615,13 +1240,6 @@ msgid ""
 msgstr ""
 "\n"
 "  No one borrowed books\n"
-
-msgid ""
-"\n"
-"{character_data.name}将在空闲时间前往图书馆还书\n"
-msgstr ""
-"\n"
-"{character_data.name} will return the book on free time\n"
 
 msgid ""
 "\n"
@@ -1644,28 +1262,11 @@ msgstr ""
 "\n"
 "This day is chosen for other events\n"
 
-msgid ""
-"\n"
-"\n"
-"移动至{scene_path[0]}需要消耗{need_fuel}燃料，当前有{now_fuel}单位燃料，燃料不足，无法移动\n"
-msgstr ""
-"\n"
-"\n"
-"Moving to {scene_path[0]} needs {need_fuel} fuel, current fuel left: {now_fuel},"
-" unable to move due to insufficient fuel\n"
-
 msgid "是"
 msgstr "Yes"
 
 msgid "否"
 msgstr "No"
-
-msgid ""
-"\n"
-"移动至{scene_path[0]}需要消耗{need_fuel}燃料，当前有{now_fuel}单位燃料，确定要移动吗\n"
-msgstr ""
-"\n"
-"Moving to {scene_path[0]} needs {need_fuel} fuel, current fuel left: {now_fuel}, do you wish to move\n"
 
 msgid ""
 "\n"
@@ -1741,21 +1342,6 @@ msgstr "Teach to speak"
 msgid "给她玩玩具"
 msgstr "Give toys"
 
-msgid ""
-"\n"
-"选择照顾[{name}]的方式：\n"
-"\n"
-msgstr ""
-"\n"
-"Choose the way to take care of [{name}]\n"
-"\n"
-
-msgid "[00{button_id}]:{button_text_list[button_id]}"
-msgstr ""
-
-msgid "当前选择的能力为{ability_name}，请选择新的能力："
-msgstr "Current ability: {ability_name}, please choose a new ability:"
-
 msgid "当前没有选择能力，请选择："
 msgstr "No abilities chosen, please choose:"
 
@@ -1792,22 +1378,10 @@ msgstr " [Don't close door] "
 
 msgid ""
 "\n"
-"\n"
-" 预计完全回复最少需要{need_time}小时，当前睡眠时间为：{self.sleep_time}小时     "
-msgstr ""
-"\n"
-"\n"
-" Fully recovery needs {need_time} hours, current sleep duration:{self.sleep_time} hours"
-
-msgid ""
-"\n"
 " 睡眠时间选择："
 msgstr ""
 "\n"
 " Choose sleep duration:"
-
-msgid " [{i}小时] "
-msgstr " [{i}hours]"
 
 msgid " [自定义睡眠时间] "
 msgstr " [Customize sleep duration] "
@@ -1850,11 +1424,6 @@ msgstr ""
 "\n"
 "    No breast milk in fridge\n"
 
-msgid ""
-"  "
-"[{str(character_data.adv).rjust(4,'0')}]{character_name}：{character_milk}ml"
-msgstr ""
-
 msgid "  [带走]  "
 msgstr "  [Take away]  "
 
@@ -1863,21 +1432,6 @@ msgstr "_{character_id}"
 
 msgid "  [转化]  "
 msgstr "  [Convert]  "
-
-msgid ""
-"\n"
-"  你将{character_data.name}的母乳（{new_food.milk_ml}ml）放进了背包\n"
-msgstr ""
-"\n"
-"  You have placed {character_data.name}'s breast milk ({new_food.milk_ml}ml) into the backpack\n"
-
-msgid ""
-"\n"
-"  你将{character_data.name}的母乳（{cache.rhodes_island.milk_in_fridge[character_id]}ml）转化为了【鲜母乳】\n"
-msgstr ""
-"\n"
-"  You changed {character_data.name}'s breast milk ({cache.rhodes_island.milk_in_fridge[character_id]}ml)"
-" to [Fresh Breast Milk]\n"
 
 msgid "5"
 msgstr ""
@@ -1894,90 +1448,8 @@ msgstr ""
 msgid "招募"
 msgstr "Recruitment"
 
-msgid "{button_text}_{recruit_line_id}"
-msgstr ""
-
-msgid ""
-"\n"
-"  当前龙门币数量    ：{money}"
-msgstr ""
-"\n"
-"  Current LMD    ：{money}"
-
-msgid ""
-"\n"
-"\n"
-"  要交易的资源为    ：{resouce_data.name}({now_resouce_stock}/{warehouse_capacity})    "
-msgstr ""
-"\n"
-"\n"
-"  Resource    ：{resouce_data.name}({now_resouce_stock}/{warehouse_capacity})    "
-
 msgid " [更改交易资源] "
 msgstr " [Change resource for trade]"
-
-msgid "{button_text}"
-msgstr ""
-
-msgid ""
-"\n"
-"\n"
-"  要交易的数量为    ：{self.quantity_of_resouce}    "
-msgstr ""
-"\n"
-"\n"
-"  Quantity    ：{self.quantity_of_resouce}    "
-
-msgid " [重置] "
-msgstr " [Reset] "
-
-msgid ""
-"\n"
-"\n"
-"  交易的价格为      ："
-msgstr ""
-"\n"
-"\n"
-"  Price      ："
-
-msgid " [买入] "
-msgstr " [Buy] "
-
-msgid " [卖出] "
-msgstr " [Sell]"
-
-msgid " {price}龙门币/1单位 "
-msgstr " {price} LMD/unit "
-
-msgid ""
-"\n"
-"  ○预计共花费{price} * {self.quantity_of_resouce} = {price * self.quantity_of_resouce}龙门币\n"
-msgstr ""
-"\n"
-"  ○Total：{price} * {self.quantity_of_resouce} = {price * self.quantity_of_resouce} LMD\n"
-
-msgid "  ●龙门币不足，无法购买\n"
-msgstr "  ●LMD insufficient, unable to purchase\n"
-
-msgid ""
-"\n"
-"  ●该资源无法购买，只能卖出\n"
-msgstr ""
-"\n"
-"  ●Unable to be purchased\n"
-
-msgid ""
-"\n"
-"  ○预计共获得{price} * {self.quantity_of_resouce} = {price * self.quantity_of_resouce}龙门币\n"
-msgstr ""
-"\n"
-"  ○Total：{price} * {self.quantity_of_resouce} = {price * self.quantity_of_resouce} LMD\n"
-
-msgid "  ●资源不足，无法出售\n"
-msgstr "  ●Insufficient resources, unable to sell\n"
-
-msgid "当前的交易资源为：{resouce_now_data.name}"
-msgstr "Current resource for trade：{resouce_now_data.name}"
 
 msgid ""
 "\n"
@@ -1985,19 +1457,6 @@ msgid ""
 msgstr ""
 "\n"
 "Available resources：\n"
-
-msgid ""
-"\n"
-"      当前存量：{cache.rhodes_island.materials_resouce[resouce_id]}/{cache.rhodes_island.warehouse_capacity}"
-msgstr ""
-"\n"
-"      Current storage：{cache.rhodes_island.materials_resouce[resouce_id]}/{cache.rhodes_island.warehouse_capacity}"
-
-msgid "   买入:{int(resouce_data.price * 1.2)}龙门币/1单位"
-msgstr "   Purchase:{int(resouce_data.price * 1.2)} LMD/unit"
-
-msgid "   卖出:{int(resouce_data.price * 0.8)}龙门币/1单位\n"
-msgstr "   Sell:{int(resouce_data.price * 0.8)} LMD/unit\n"
 
 msgid "基础属性"
 msgstr "Basic Attributes"
@@ -2013,16 +1472,6 @@ msgstr "Character settings"
 
 msgid "肉体情况"
 msgstr "Body condition"
-
-msgid ""
-"{character_name} 好感度:{favorability}({f_lv})，信赖度:{trust}%({t_lv}) {angry} "
-"{sleep}{urinate}{hunger}{hypnosis}"
-msgstr ""
-"{character_name} Affinity:{favorability}({f_lv})，Trust:{trust}%({t_lv}) "
-"{angry} {sleep}{urinate}{hunger}{hypnosis}"
-
-msgid "{character_name}{character_nick_name}{sleep}{urinate}{eja}"
-msgstr ""
 
 msgid "体力"
 msgstr "Stamina"
@@ -2096,40 +1545,6 @@ msgstr "U Feel:"
 msgid "Ｗ感觉:"
 msgstr "W Feel:"
 
-msgid " 职业    ：[{profession_text}]"
-msgstr " Profession    :[{profession_text}]"
-
-msgid ""
-"\n"
-" 种族    ：[{race_text}]"
-msgstr ""
-"\n"
-" Race    ：[{race_text}]"
-
-msgid ""
-"\n"
-" 势力    ：[{nation_text}]"
-msgstr ""
-"\n"
-" Nation    ：[{nation_text}]"
-
-msgid ""
-"\n"
-" 出身地  ：[{birthplace_text}]"
-msgstr ""
-"\n"
-" Birthplace  ：[{birthplace_text}]"
-
-msgid "于{kiss_time}在{kiss_palce}，向{character_name}博士献上了初吻\n"
-msgstr ""
-"First kiss was given to Dr.{character_name} at {kiss_palce} on {kiss_time}\n"
-
-msgid "于{time}在{palce}，被{character_name}博士以{posture}夺走了处女\n"
-msgstr "Virginity was taken by Dr.{character_name} at {palce} on {time}\n"
-
-msgid "于{time}在{palce}，被{character_name}博士以{posture}夺走了A处女\n"
-msgstr "A Virginity was taken by Dr.{character_name} at {palce} on {time}\n"
-
 msgid "角色设置"
 msgstr "Character Settings"
 
@@ -2140,9 +1555,6 @@ msgstr ""
 " \n"
 " -Click on [Option title] to show [Option introduction], click [Option itself] to [Change the option]\n"
 
-msgid " {button_text}(  更改{reason})"
-msgstr " {button_text}(  Change{reason})"
-
 msgid ""
 " \n"
 " 暂无设置\n"
@@ -2150,17 +1562,8 @@ msgstr ""
 " \n"
 " No settings yet\n"
 
-msgid "体力:({character_data.hit_point}/{character_data.hit_point_max})"
-msgstr "Stamina:({character_data.hit_point}/{character_data.hit_point_max})"
-
-msgid "气力:({character_data.mana_point}/{character_data.mana_point_max})"
-msgstr "Energy:({character_data.mana_point}/{character_data.mana_point_max})"
-
 msgid "人物道具"
 msgstr "Character items"
-
-msgid "使用"
-msgstr "Use"
 
 msgid "当前区块:"
 msgstr "Current area:"
@@ -2192,45 +1595,17 @@ msgstr "Override"
 msgid "删除"
 msgstr "Delete"
 
-msgid "[000]确认删除存档?"
-msgstr "[000]Confirm for deletion?"
-
 msgid "0"
 msgstr ""
 
 msgid "[001]取消"
 msgstr "[001]Cancel"
 
-msgid "[000]确认覆盖存档?"
-msgstr "[000]Confirm to overwrite?"
-
 msgid "\n"
 msgstr "\n"
 
 msgid " 你决定给女儿取名为——"
 msgstr " You decided to name your daughter as-"
-
-msgid ""
-"\n"
-"获得了{target_data.name}的{pan_name}，可在藏品馆里纳入收藏\n"
-msgstr ""
-"\n"
-"Obtained {target_data.name}'s {pan_name}, can be added to collection in Collection Hall\n"
-
-msgid "favorability[0]"
-msgstr ""
-
-msgid "experience[{0}]"
-msgstr ""
-
-msgid "juel[{0}]"
-msgstr ""
-
-msgid "talent[{0}]"
-msgstr ""
-
-msgid "ability[{0}]"
-msgstr ""
 
 msgid "阿米娅"
 msgstr "Amiya"
@@ -2284,10 +1659,6 @@ msgid "存档跨版本更新: key {0}, type not match，原type {1}，新type {2
 msgstr ""
 "Cross-version save file update: key {0}, type not match, original type "
 "{1}，new type {2}, set to default {3}\n"
-
-msgid "存档跨版本更新: 角色 {0} 的序号不一致，已修正\n"
-msgstr ""
-"Cross-version save file update: Operator {0} have different serial number, fixed now\n"
 
 msgid ""
 "\n"
@@ -2377,17 +1748,6 @@ msgstr ""
 "   ※ New Operator recruited, please confirm it at the Doctor's Office ※\n"
 "\n"
 
-msgid ""
-"\n"
-"\n"
-"   ※ 当前招募策略无可招募npc，招募失败 ※\n"
-"\n"
-msgstr ""
-"\n"
-"\n"
-"   ※ No recruitable npc for the current strategy, recruitment failed ※\n"
-"\n"
-
 msgid "访客留下"
 msgstr "Guest stay"
 
@@ -2442,27 +1802,10 @@ msgstr ""
 
 msgid ""
 "\n"
-"今日剩余待处理公务量为{0}，因此今日罗德岛的各设施的总效率为{1}%\n"
-msgstr ""
-"\n"
-"{0} work needed to be handled, efficiency of all facilities increased to {1}%\n"
-
-msgid ""
-"\n"
-"今日罗德岛总收入为： 医疗部收入{0}，乘以效率后最终收入为{1}，已全部转化为龙门币\n"
-msgstr ""
-"\n"
-"Today's income： {0} from Medical Department, final income {1}, exchanged to LMD\n"
-
-msgid ""
-"\n"
 "今日全角色总好感度上升为：{0}，折合为 {1} 粉红凭证\n"
 msgstr ""
 "\n"
 "Total Affinity increase： {0}, exchanged to {1} Pink Certificates\n"
-
-msgid "中枢\\博士房间"
-msgstr "Control Center\\Doctor's Room"
 
 msgid "中枢"
 msgstr "Control Center"
@@ -2494,9 +1837,6 @@ msgstr "+ Status bonus("
 msgid "+能力修正("
 msgstr "+ Ability bonus("
 
-msgid "+刻印修正("
-msgstr "+ Engraving bonus("
-
 msgid "+心情修正("
 msgstr "+ Emotion bonus("
 
@@ -2509,53 +1849,26 @@ msgstr "+ Male Hatred(-"
 msgid "+难以越过的底线(-"
 msgstr "+ Unpassable Borderline(-"
 
-msgid "+淫乱(+30)"
-msgstr "+ Promiscuous(+30)"
-
-msgid "+当前场景有其他人在("
-msgstr "+ Others around("
-
 msgid "+助理助攻(+50)"
 msgstr "+ Assistant bonus(+50)"
 
 msgid "+今天H被打断过(-"
 msgstr "+ Disturbed H today(-"
 
-msgid "+监禁中(+400)"
-msgstr "+ Imprisoned(+400)"
-
-msgid "+睡眠(+1000)"
-msgstr "+ Sleeping(+1000)"
-
 msgid "性交"
 msgstr "Sex"
-
-msgid "+处女(-100)"
-msgstr "+ Virginity(-100)"
 
 msgid "A性交"
 msgstr "A Sex"
 
-msgid "+Ａ处女(-200)"
-msgstr "+ A Virginity(-200)"
-
 msgid "U性交"
 msgstr "U Sex"
-
-msgid "+Ｕ处女(-300)"
-msgstr "+ U Virginity(-300)"
-
-msgid "+初吻(-50)"
-msgstr "+ First kiss(-50)"
 
 msgid "+安全期(-10)"
 msgstr "+ Safe Period(-10)"
 
 msgid "+普通期(-50)"
 msgstr "+ Normal Period(-50)"
-
-msgid "+危险期(-100)"
-msgstr "+ Danger Period(-100)"
 
 msgid "+排卵期(-300)"
 msgstr "+ Ovulation Period(-300)"
@@ -2580,24 +1893,6 @@ msgstr ""
 "\n"
 "\n"
 " Do you wish to take the first kiss of {0} away?"
-
-msgid ""
-"\n"
-"\n"
-" 是否要夺走{0}的处女？"
-msgstr ""
-"\n"
-"\n"
-" Do you wish to take the virginity of {0} away?"
-
-msgid ""
-"\n"
-"\n"
-" 是否要夺走{0}的A处女？"
-msgstr ""
-"\n"
-"\n"
-" Do you wish to take the A virginity of {0} away?"
 
 msgid "当前正在对{0}无意识奸，是否不戴套？\n"
 msgstr "Doing unconscious rape on {0}, do you wish to not put on condom?\n"
@@ -2716,13 +2011,6 @@ msgstr ""
 "\n"
 "After a hard training, Sanity limit increased by {0}\n"
 
-msgid ""
-"\n"
-"今日未消耗的 {0}ml 精液转化为了 {1}ml 次日额外精液"
-msgstr ""
-"\n"
-"Unused {0}ml semen is exchanged into {1}ml temporary semen"
-
 msgid "，额外精液量已达上限，并获得了为期一天的[浓厚精液]"
 msgstr ""
 ", temporary semen reached the limit, one day of [Concentrated Semen] granted"
@@ -2733,42 +2021,14 @@ msgstr "Manage farm production"
 msgid "平然催眠"
 msgstr "Calming hypnosis"
 
-msgid ""
-"\n"
-"{0}会理所当然地接受{1}的不合理行为了\n"
-msgstr ""
-"\n"
-"{0} will accept the unacceptable actions of {1} now\n"
-
 msgid "空气催眠"
 msgstr "Air hypnosis"
-
-msgid ""
-"\n"
-"{0}会把{1}视为空气了\n"
-msgstr ""
-"\n"
-"{0} will treat {1} as air now\n"
 
 msgid "体控催眠"
 msgstr "Body control hypnosis"
 
-msgid ""
-"\n"
-"{0}可以随意地操纵{1}的身体了\n"
-msgstr ""
-"\n"
-"{0} can control body of {1} on will now\n"
-
 msgid "心控催眠"
 msgstr "Mind control hypnosis"
-
-msgid ""
-"\n"
-"{0}可以向{1}的潜意识灌输指令了\n"
-msgstr ""
-"\n"
-"{0} can now insert commands into the conscious of {1} now\n"
 
 msgid "体控-敏感度提升"
 msgstr "Body control-Increase body sensitivity"
@@ -2985,13 +2245,6 @@ msgstr ""
 
 msgid ""
 "\n"
-"{0}能够初步独立了，在长大成人之前会一直在教育区上课学习\n"
-msgstr ""
-"\n"
-"{0} can be independent now, and will stay at Education Zone to study before becoming an adult\n"
-
-msgid ""
-"\n"
 "当前教育区没有进行授课工作的老师，请尽快安排一名干员负责教师工作\n"
 msgstr ""
 "\n"
@@ -3020,63 +2273,6 @@ msgstr ""
 
 msgid ""
 "\n"
-"{0}成为了一名准干员\n"
-msgstr ""
-"\n"
-"{0} became a quasi-operator\n"
-
-msgid ""
-"\n"
-"{0}的身体渐渐成长，开始进入青春期，在第二性征发育的同时，也迎来了第一次的初潮\n"
-msgstr ""
-"\n"
-"{0}'s body gradually grew up, entering puberty, and have her first menarche while"
-" secondary characteristics are growing\n"
-
-msgid ""
-"\n"
-"{0}从[幼女]成长为了[萝莉]\n"
-msgstr ""
-"\n"
-"{0} grew up from [Young Girl] to [Loli]\n"
-
-msgid ""
-"\n"
-"{0}失去了[未初潮]\n"
-msgstr ""
-"\n"
-"{0} lost [No Menarche]\n"
-
-msgid ""
-"\n"
-"{0}可以参加上课以外的工作了\n"
-msgstr ""
-"\n"
-"{0} can now performing work outside studying\n"
-
-msgid ""
-"\n"
-"{0}的身体完全长成，迎来了自己的成人礼，成为了一位亭亭玉立的少女\n"
-msgstr ""
-"\n"
-"{0} has fully grew up, had her own age-coming ceremony and became a graceful girl\n"
-
-msgid ""
-"\n"
-"{0}从[萝莉]成长为了[少女]\n"
-msgstr ""
-"\n"
-"{0} grew up from [Loli] to [Girl]\n"
-
-msgid ""
-"\n"
-"{0}失去了[未成年]\n"
-msgstr ""
-"\n"
-"{0} lost [Underage]\n"
-
-msgid ""
-"\n"
 "{0}可以进行正常的工作了\n"
 msgstr ""
 "\n"
@@ -3095,9 +2291,6 @@ msgid ""
 msgstr ""
 "\n"
 "{0}'s breasts remained at [{1}]\n"
-
-msgid "({0})"
-msgstr ""
 
 msgid "在快乐刻印的影响下，{0}的欲望提升至1级\n"
 msgstr "Under the effect of Happy Engraving, {0}'s Desire increased to Lv1\n"
@@ -3137,13 +2330,6 @@ msgstr "{0} remaining\n"
 
 msgid ""
 "\n"
-"在{0}的努力下，医治了一名病人，支付了{1}龙门币的医疗费。（今日剩余病人数：{2}人）\n"
-msgstr ""
-"\n"
-"Under the hardwork of {0}, a patient is cured，paying {1} LMD as medical fee. (Remaining patients: {0} people)\n"
-
-msgid ""
-"\n"
 "在{0}的努力下，{1}号招募位进度+{2}%，现在为{3}%\n"
 msgstr ""
 "\n"
@@ -3162,13 +2348,6 @@ msgid ""
 msgstr ""
 "\n"
 "Obtained {0}'s {1}, can be added to collection in Collection Hall\n"
-
-msgid ""
-"\n"
-"{0}穿回了脱下的衣服"
-msgstr ""
-"\n"
-"{0} wore the clothes back"
 
 msgid ""
 "\n"
@@ -3211,18 +2390,6 @@ msgid ""
 msgstr ""
 "\n"
 "{0} spilled {1}ml urine out onto the ground while orgasm\n"
-
-msgid "被{0}看到了情事现场\n"
-msgstr "{0} saw the incident\n"
-
-msgid "{0}还不懂这是什么意义，被你随口糊弄走了"
-msgstr "{0} doesn't know what happened, and you tricked her away"
-
-msgid "{0}获得了[持有博士把柄]\n"
-msgstr "{0} acquired [Got Hold on Doctor]\n"
-
-msgid "{0}红着脸跑走了"
-msgstr "{0} running away, blushed"
 
 msgid "尿意达到了极限的{0}实在无法继续憋下去，被迫当场尿了出来\n"
 msgstr ""
@@ -3278,9 +2445,6 @@ msgstr "Huge Breasts"
 msgid "幼女"
 msgstr "Young Girl"
 
-msgid "萝莉"
-msgstr "Loli"
-
 msgid "少女"
 msgstr "Girl"
 
@@ -3322,28 +2486,11 @@ msgstr ""
 "\n"
 " Herb Garden: "
 
-msgid ""
-"\n"
-"    当前生产：{0}(10/d)      "
-msgstr ""
-"\n"
-"   Producting:{0}(10/d)     "
-
 msgid " [生产调整] "
 msgstr " [Production Arrangement]"
 
 msgid "{0}_药田_{1}"
 msgstr "{0}_Herb Garden_{1}"
-
-msgid ""
-"\n"
-"    当前效率加成：设施(lv{0}:{1}%)"
-msgstr ""
-"\n"
-"    Efficiency boost: Facility(lv{0}:{1}%)"
-
-msgid " + {0}(农业lv{1}:{2}%)"
-msgstr " + {0}(Agriculture lv{1}:{2}%)"
 
 msgid ""
 "\n"
@@ -3354,9 +2501,6 @@ msgstr ""
 
 msgid "{0}_温室_{1}"
 msgstr "{0}_Conservatory_{1}"
-
-msgid "[001]种植员增减"
-msgstr "[001]Planter arrangement"
 
 msgid " 当前种植的是：{0}"
 msgstr " Currently planting: {0}"
@@ -3421,9 +2565,6 @@ msgstr ""
 "\n"
 "  Current recipe  ："
 
-msgid "  {0}"
-msgstr ""
-
 msgid " [001]选择配方 "
 msgstr " [001]Choose recipe "
 
@@ -3435,19 +2576,6 @@ msgstr ""
 "\n"
 "\n"
 "Available recipes: \n"
-
-msgid ""
-"\n"
-"     调香消耗："
-msgstr ""
-"\n"
-"     Perfume consuming: "
-
-msgid "当前助理为{0}，请选择新的助理："
-msgstr "Current assistant is {0}, choose the new assistant: "
-
-msgid "当前无助理，请选择新的助理："
-msgstr "Currently no assistant, choose the new assistant: "
 
 msgid ""
 "\n"
@@ -3467,29 +2595,8 @@ msgstr "    Currently no assistant"
 msgid "    当前助理：{0}"
 msgstr "    Current assistant: {0}"
 
-msgid "[002]跟随服务"
-msgstr "[002]Following service"
-
-msgid "    智能跟随（在吃饭/上厕所/休息/睡觉等生理需求时会暂离，其他情况下跟随）"
-msgstr ""
-"    Intelligence follow (follows the player on all time besides physical needs)"
-
-msgid "    强制跟随（测试用，会影响一部分游戏机能）"
-msgstr "    Force follow (for testing, might affect a part of game mechanics)"
-
-msgid "    来博士办公室一趟（抵达后会如果博士不在，则最多等待半小时）"
-msgstr ""
-"    Comes to Doctor's Office (wait for at most half an hour if Doctor is absent)"
-
-msgid "    前往博士当前位置（抵达后会最多等待半小时）"
-msgstr ""
-"    Comes to Doctor's Location (wait for at most half an hour after arrival)"
-
 msgid "  [更改早安服务预定时间]——当前预定时间：{0}:{1}"
 msgstr "  [Changing morning service time]——Current time: {0}:{1}"
-
-msgid "  [更改晚安服务预定时间]——当前预定时间: {0}:{1}"
-msgstr "  [Changing night service time]——Current time: {0}:{1}"
 
 msgid ""
 "\n"
@@ -3513,9 +2620,6 @@ msgstr ""
 msgid "如果这个时间博士已经醒来，助理干员会直接前往博士身边，进行早安服务后离开\n"
 msgstr ""
 "If the Doctor has woke up, the assistant will carry out the service and leave\n"
-
-msgid "更改小时，需至晚为9时"
-msgstr "Change time, at latest 9"
 
 msgid ""
 "当前预定晚安服务时间为：{0}:{1}\n"
@@ -3584,13 +2688,6 @@ msgid "避孕套"
 msgstr "Condom"
 
 msgid ""
-"  现在不饿，无法吃东西。\n"
-"\n"
-msgstr ""
-"  You aren't hungry, unable to eat.\n"
-"\n"
-
-msgid ""
 "  {0}现在不饿，无法吃东西。\n"
 "\n"
 msgstr ""
@@ -3614,21 +2711,12 @@ msgstr ""
 msgid "{0}_{1}"
 msgstr ""
 
-msgid " + {0}(制造lv{1}:{2}%)"
-msgstr " + {0}(Crafting lv{1}:{2}%)"
-
 msgid ""
 "\n"
 "    当前生产消耗："
 msgstr ""
 "\n"
 "    Production consuming: "
-
-msgid "[001]工人增减"
-msgstr "[001]Worker arrangement"
-
-msgid "[002]工位调整"
-msgstr "[002]Position adjustment"
 
 msgid " {0}号流水线当前生产的产品为：{1}"
 msgstr " Production Line {0} is producing: {1}"
@@ -3654,43 +2742,6 @@ msgstr ""
 msgid "未选择"
 msgstr "Not selected"
 
-msgid ""
-"\n"
-"○当前的决定： 把 {0} 从 {1} 号流水线调整到 {2} 号流水线"
-msgstr ""
-"\n"
-"○Current decision: Switch position of {0} from Production Line {1} to Production Line {2} "
-
-msgid ""
-"\n"
-"可选工人有：\n"
-msgstr ""
-"\n"
-"Available workers: \n"
-
-msgid " [{0}(制造lv{1}:{2}%)] "
-msgstr " [{0}(Crafting lv{1}:{2}%)] "
-
-msgid " 暂无工作是生产工人的干员"
-msgstr " No production worker yet"
-
-msgid " [将选择工人调整至该流水线] "
-msgstr " [Switch to that production line] "
-
-msgid ""
-"\n"
-"    当前工人："
-msgstr ""
-"\n"
-"    Current worker："
-
-msgid ""
-"\n"
-"  空闲干员：\n"
-msgstr ""
-"\n"
-"  Free Operator：\n"
-
 msgid "各部门工作概况"
 msgstr "Department work summary"
 
@@ -3710,18 +2761,6 @@ msgid ""
 msgstr ""
 "\n"
 " Current working Operators/total Operators: {0}/{1}"
-
-msgid ""
-"\n"
-" ↓点击[部门名]或[系统名]可查看对应详情，没有系统也没有工作位的部门是未实装的空白部门\n"
-"\n"
-msgstr ""
-"\n"
-" ↓Click on [Department name] or [System name] for information, not implemented if no system or position\n"
-"\n"
-
-msgid "  病人 — {0}"
-msgstr "  Patient — {0}"
 
 msgid ""
 "\n"
@@ -3767,13 +2806,6 @@ msgstr ""
 
 msgid ""
 "\n"
-"移动至{0}需要消耗{1}燃料，当前有{2}单位燃料，确定要移动吗\n"
-msgstr ""
-"\n"
-"Moving to {0} needs {1} fuel, current fuel left: {2}, do you wish to move\n"
-
-msgid ""
-"\n"
 "选择照顾[{0}]的方式：\n"
 "\n"
 msgstr ""
@@ -3787,20 +2819,8 @@ msgstr ""
 msgid "当前选择的能力为{0}，请选择新的能力："
 msgstr "Current ability: {0}, please choose a new ability"
 
-msgid ""
-"\n"
-"\n"
-" 预计完全回复体力和气力最少需要 {0} 小时，预计完全回复疲劳至少需要 {1} 小时，当前决定的睡眠时间为：{2} 小时（默认取两者最大值）"
-msgstr ""
-"\n"
-"\n"
-" {0} hours for fully recovering Stamina and Energy，{1} hours for fully recovering Tiredness，sleep duration set：{2} hours (default on the higher from the two)"
-
 msgid " [{0}小时] "
 msgstr " [{0} hours]"
-
-msgid "  [{0}]{1}：{2}ml"
-msgstr ""
 
 msgid ""
 "\n"
@@ -3852,15 +2872,6 @@ msgstr ""
 msgid "[001]消除负面刻印"
 msgstr "[001]Remove negative Engravings"
 
-msgid "[002]时间停止(未实装)"
-msgstr ""
-
-msgid "[003]催眠"
-msgstr "[003]Hypnosis"
-
-msgid "（当前默认催眠类型：{0}）"
-msgstr "(Default hypnosis type: {0})"
-
 msgid "[004]自我强化(未实装)"
 msgstr ""
 
@@ -3899,13 +2910,6 @@ msgstr "  {0}(Highest Hypnosis Depth {1}%)：{2}\n"
 msgid "  {0}(未解锁)：{1}\n"
 msgstr "  {0}(not unlocked)：{1}\n"
 
-msgid ""
-"\n"
-"催眠类型：\n"
-msgstr ""
-"\n"
-"Hypnosis type: \n"
-
 msgid "(需要[{0}]，且催眠深度达到{1}%)"
 msgstr "(Needs [{0}], and {1}% Hypnosis Depth)"
 
@@ -3940,15 +2944,6 @@ msgstr ""
 "Available/Upgradeable abilites:\n"
 "\n"
 
-msgid "  {0}({1}至纯源石-当前源石不足)：{2}\n"
-msgstr "  {0}({1} Originium Primes-insufficient): {2}\n"
-
-msgid "  {0}(未实装)：{1}\n"
-msgstr "  {0}(Not implemented): {1}\n"
-
-msgid "  {0}( {1} 至纯源石)：{2}"
-msgstr "  {0}({1} Originium Primes): {2}"
-
 msgid "(未实装)"
 msgstr "(Not implemented)"
 
@@ -3965,15 +2960,6 @@ msgstr ""
 
 msgid "降低负面素质"
 msgstr "Reduce negative talents"
-
-msgid ""
-"\n"
-"当前拥有反发刻印或恐怖刻印的角色有：\n"
-"\n"
-msgstr ""
-"\n"
-"Characters with Hatred or Fear Engraving: \n"
-"\n"
 
 msgid "  没有符合条件的角色\n"
 msgstr "  none\n"
@@ -3995,13 +2981,6 @@ msgstr ""
 
 msgid "选择催眠类型"
 msgstr "Choose hypnosis type"
-
-msgid ""
-"\n"
-"要使用哪一种催眠类型呢？\n"
-msgstr ""
-"\n"
-"Which hypnosis type do you wish to use? \n"
 
 msgid "选择角色扮演类型"
 msgstr "Choose roleplay type"
@@ -4027,53 +3006,8 @@ msgstr "（Current: "
 msgid "无）\n"
 msgstr "none) \n"
 
-msgid "{0}）\n"
-msgstr ""
-
-msgid ""
-"\n"
-"{0}被催眠了，开始进行{1}的扮演\n"
-"\n"
-msgstr ""
-"\n"
-"{0} was hypnotised, roleplaying {1}\n"
-"\n"
-
-msgid " 当前没有招募到干员\n"
-msgstr " No Operator recruited\n"
-
-msgid " 当前已招募待确认的干员有："
-msgstr " Operators ready to be confirmed: "
-
-msgid ""
-"\n"
-" {0}号招募进度：{1}"
-msgstr ""
-"\n"
-" Recruitment Slot {0} progress: {1}"
-
-msgid ""
-"\n"
-"    招募策略：{0}(1/h)      "
-msgstr ""
-"\n"
-"    Recruitment strategy: {0}(1/h)      "
-
 msgid " [调整策略] "
 msgstr " [Change strategy] "
-
-msgid ""
-"\n"
-"    当前效率加成：["
-msgstr ""
-"\n"
-"    Efficiency boost: ["
-
-msgid "{0}(话术lv{1}:{2}%)"
-msgstr "{0}(Speech lv{1}:{2}%)"
-
-msgid "] * 效率加成：设施(lv{0}:{1}%)"
-msgstr "] * Efficiency boost：Facility(lv{0}:{1}%)"
 
 msgid "[001]人员增减"
 msgstr "[001]Officer arrangement"
@@ -4081,106 +3015,8 @@ msgstr "[001]Officer arrangement"
 msgid " {0}号招募当前的策略为：{1}"
 msgstr " Strategy of Recruitment Slot {0}: {1}"
 
-msgid ""
-"\n"
-"\n"
-" 当前可以选择的策略有：\n"
-msgstr ""
-"\n"
-"\n"
-" Available strategies: \n"
-
-msgid ""
-"\n"
-"○当前的决定： 把 {0} 从 {1} 号招募调整到 {2} 号招募"
-msgstr ""
-"\n"
-"○Current decision: Switch position of {0} from Recruitment Slot {1} to Recruitment Slot {2}"
-
-msgid ""
-"\n"
-"可选招募专员有：\n"
-msgstr ""
-"\n"
-"Available recruitment officers: \n"
-
-msgid " [{0}(话术lv{1}:{2}%)] "
-msgstr " [{0}(Speech lv{1}:{2}%)] "
-
-msgid " 暂无工作是招募专员的干员"
-msgstr " No Operators as recruitment officer yet"
-
-msgid ""
-"\n"
-" {0}号招募："
-msgstr ""
-"\n"
-" Recruitment Slot {0}: "
-
-msgid ""
-"\n"
-"    当前招募策略：{0}      "
-msgstr ""
-"\n"
-"    Recruitment strategy: {0}      "
-
-msgid " [将选择专员调整至该招募] "
-msgstr " [Switch to that recruitment slot] "
-
-msgid ""
-"\n"
-"    当前招募专员："
-msgstr ""
-"\n"
-"    Current recruitment officer: "
-
-msgid " + {0}(话术lv{1}:{2}%)"
-msgstr " + {0}(Speech lv{1}:{2}%)"
-
-msgid ""
-"\n"
-"  当前龙门币数量    ：{0}"
-msgstr ""
-"\n"
-"  Current LMD    : {0}"
-
-msgid ""
-"\n"
-"\n"
-"  要交易的资源为    ：{0}({1}/{2})    "
-msgstr ""
-"\n"
-"\n"
-"  Trading the resource    : {0}({1}/{2})    "
-
 msgid "{0}"
 msgstr ""
-
-msgid ""
-"\n"
-"\n"
-"  要交易的数量为    ：{0}    "
-msgstr ""
-"\n"
-"\n"
-"  Trading the quantity    : {0}    "
-
-msgid " {0}龙门币/1单位 "
-msgstr " {0}LMD/unit "
-
-msgid ""
-"\n"
-"  ○预计共花费{0} * {1} = {2}龙门币\n"
-msgstr ""
-"\n"
-"  ○Total cost: {0} * {1} = {2} LMD\n"
-
-msgid ""
-"\n"
-"  ○预计共获得{0} * {1} = {2}龙门币\n"
-msgstr ""
-"\n"
-"  ○Total gain: {0} * {1} = {2} LMD\n"
 
 msgid "当前的交易资源为：{0}"
 msgstr "Trading the resource: {0}"
@@ -4192,12 +3028,6 @@ msgstr ""
 "\n"
 "      Current storage: {0}/{1}"
 
-msgid "   买入:{0}龙门币/1单位"
-msgstr "   Buy:{0} LMD/unit"
-
-msgid "   卖出:{0}龙门币/1单位\n"
-msgstr "   Sell:{0} LMD/unit\n"
-
 msgid "好感度:{0}，信赖度:{1}"
 msgstr "Affinity:{0}, Trust:{1}"
 
@@ -4206,15 +3036,6 @@ msgstr "Affinity:{0}({1}), Trust:{2}({3})"
 
 msgid " <清醒>"
 msgstr " <Awake>"
-
-msgid " <疲劳>"
-msgstr " <Tired>"
-
-msgid " <昏昏欲睡>"
-msgstr " <Sleepy>"
-
-msgid " <随时睡着>"
-msgstr " <Unstable>"
 
 msgid "普通"
 msgstr "Normal"
@@ -4246,40 +3067,20 @@ msgstr " <Hypnosis"
 msgid ":{0}"
 msgstr ""
 
-msgid "(敏感度提升)"
-msgstr "(Increase sensitivity)"
-
-msgid "(强制排卵)"
-msgstr "Force ovulation"
-
 msgid "(木头人)"
 msgstr "(Blockhead)"
 
 msgid "(逆推)"
 msgstr "(Active H)"
 
-msgid "(角色扮演)"
-msgstr "(Roleplay)"
-
 msgid " <携袋:{0}>"
 msgstr " <In Bag:{0}>"
-
-msgid " <监禁>"
-msgstr " <Imprisoned>"
 
 msgid " <访>"
 msgstr " <Guest>"
 
-msgid ""
-"{character_name} "
-"{favorability_and_trust}{angry}{sleep}{follow}{urinate}{hunger}{hypnosis}{imprisonment}{visitor}"
-msgstr ""
-
 msgid "立绘"
 msgstr "Art"
-
-msgid "女儿_1"
-msgstr "Daughter_1"
 
 msgid "素质"
 msgstr "Talent"
@@ -4314,9 +3115,6 @@ msgstr "Vibrator"
 msgid "肛门震动棒"
 msgstr "Anus vibrator"
 
-msgid "二穴插入"
-msgstr "Second insertion"
-
 msgid "继续享受"
 msgstr "Continue to enjoy"
 
@@ -4334,13 +3132,6 @@ msgstr "Let others do it"
 
 msgid "尝试掌握主动权"
 msgstr "Try to take initiative"
-
-msgid ""
-"\n"
-"{0}获得了{1}\n"
-msgstr ""
-"\n"
-"{0} acquired {1}\n"
 
 msgid ""
 "\n"
@@ -4381,27 +3172,8 @@ msgstr ""
 "\n"
 "{0}'s [{1}] grew up to [{2}]\n"
 
-msgid ""
-"\n"
-"给{0}穿上了脱下的衣服，并尽量整理成H前的样子"
-msgstr ""
-"\n"
-"{0} wore her clothes on, and try to tidy herself back to the appearance before H"
-
 msgid "能力"
 msgstr "Abilities"
-
-msgid "需要能力 : "
-msgstr "Needs ability : "
-
-msgid " 至少为"
-msgstr " at least"
-
-msgid "需要宝珠 : "
-msgstr "Needs Juels :"
-
-msgid "需要经验 : "
-msgstr "Needs EXP :"
 
 msgid "已达到最高级\n"
 msgstr "Reached max level\n"
@@ -4428,11 +3200,6 @@ msgstr " Trust >50%"
 msgid " 反发刻印0"
 msgstr " Antipathy Engraving Lv0"
 
-msgid " 分为爱情系与隶属系两条路线，只能任选其一，选择后另一路线消失，仅在新周目时可以重置\n"
-msgstr ""
-" Divided into love relationship and affiliation relationship, only one can be chosen,"
-" the other will disappear, only reset on new walkthrough\n"
-
 msgid "爱情路线前提："
 msgstr "Love relationship: "
 
@@ -4445,13 +3212,6 @@ msgstr " Fear Engraving Lv0"
 msgid " 亲密等级至少为2"
 msgstr " Intimate Lv2 or above"
 
-msgid ""
-"\n"
-"已达到最高级-爱侣\n"
-msgstr ""
-"\n"
-"Maximum stage-Lover reached\n"
-
 msgid "隶属路线前提："
 msgstr "Affiliation relationship: "
 
@@ -4463,13 +3223,6 @@ msgstr " Yield Engraving >=1"
 
 msgid " 顺从等级至少为2"
 msgstr " Obedience Lv2 or above"
-
-msgid ""
-"\n"
-"已达到最高级-奴隶\n"
-msgstr ""
-"\n"
-"Maximum stage-Slave reached\n"
 
 msgid "下一级为：[{0}]\n"
 msgstr "Next stage: [{0}]\n"
@@ -4532,9 +3285,6 @@ msgstr ""
 msgid "收到了博士的信息，开始智能跟随\n"
 msgstr "Received Doctor's message, enabling Intelligence Following\n"
 
-msgid "退出跟随模式\n"
-msgstr "Exit from Following mode\n"
-
 msgid "  [更改晚安服务预定时间]——当前预定时间：{0}:{1}"
 msgstr "  [Changing night service time]——Current time: {0}:{1}"
 
@@ -4544,15 +3294,6 @@ msgid ""
 msgstr ""
 "\n"
 "Borrowed books/Maximum borrowed books: {0}/3\n"
-
-msgid "  (可借阅)"
-msgstr "  (可借阅)"
-
-msgid "  (已被博士借走)"
-msgstr "  (Borrowed by the Doctor)"
-
-msgid "  (已被{0}借走)"
-msgstr "  (Borrowed by {0})"
 
 msgid ""
 "\n"
@@ -4581,13 +3322,6 @@ msgid ""
 msgstr ""
 "\n"
 "Current resources: "
-
-msgid ""
-"\n"
-"  当前使用电力/当前总供电：{0}/{1}"
-msgstr ""
-"\n"
-"  Current power used/Power supplied: {0}/{1}"
 
 msgid ""
 "\n"
@@ -4635,13 +3369,6 @@ msgstr "Unable to upgrade: "
 
 msgid ""
 "\n"
-"  升级所需电量不足"
-msgstr ""
-"\n"
-"  Power insufficient"
-
-msgid ""
-"\n"
 "  升级所需龙门币不足"
 msgstr ""
 "\n"
@@ -4679,9 +3406,6 @@ msgid ""
 msgstr ""
 "\n"
 "{0} went to Lv{1}!\n"
-
-msgid "{0}精液污浊{1}"
-msgstr "Semen on {0} {1}"
 
 msgid "  [{0}]: 真空"
 msgstr "  [{0}]: Empty"
@@ -4746,9 +3470,6 @@ msgstr ""
 "\n"
 "  Condition unfulfilled, unlocking failed\n"
 
-msgid "污浊情况"
-msgstr "Dirty condition"
-
 msgid "货币"
 msgstr "Currencies"
 
@@ -4811,27 +3532,6 @@ msgstr " None"
 
 msgid ""
 "\n"
-"  当前待检修地点："
-msgstr ""
-"\n"
-"  Facilities needing maintenance: "
-
-msgid ""
-"\n"
-"  今日已治疗患者数/排队中患者数：{0}/{1}"
-msgstr ""
-"\n"
-"  Patient treated/Patient on queue: {0}/{1}"
-
-msgid ""
-"\n"
-"  截至目前为止，今日医疗部门龙门币总收入为：{0}\n"
-msgstr ""
-"\n"
-"  Until now, the LMD income from Medical Zone: {0}\n"
-
-msgid ""
-"\n"
 "  当前已招募未确认干员人数为：{0}人，请前往博士办公室确认"
 msgstr ""
 "\n"
@@ -4864,13 +3564,6 @@ msgid ""
 msgstr ""
 "\n"
 "  Total Operators/Dormitory size: {0}/{1}"
-
-msgid ""
-"\n"
-"  具体居住情况：\n"
-msgstr ""
-"\n"
-"  Staying condition: \n"
 
 msgid "{0}的当前工作为："
 msgstr "{0}'s current job: "
@@ -4911,9 +3604,6 @@ msgstr "Library"
 
 msgid "藏品馆"
 msgstr "Collection Hall"
-
-msgid "太累了\n"
-msgstr "too tired\n"
 
 msgid ""
 "\n"
@@ -5022,65 +3712,11 @@ msgstr " ({0}ml semen) "
 msgid "在{0}的{1}{2}"
 msgstr "On {0}'s {1}{2}"
 
-msgid " <脏污>"
-msgstr " <Dirty>"
-
-msgid " <灌肠中>"
-msgstr " <Lavaging>"
-
-msgid " <已灌肠清洁过>"
-msgstr " <Lavaged>"
-
-msgid " <精液灌肠中>"
-msgstr " <Lavaging with semen>"
-
-msgid " <已精液灌肠过>"
-msgstr " <Semen lavaged>"
-
-msgid "<未知>（需要腔内透视）\n"
-msgstr "<Unknown> (needs Cavity Perspective)\n"
-
-msgid " <破处血>"
-msgstr " <Virgin blood>"
-
-msgid " <些许爱液>"
-msgstr " <Some love juice>"
-
-msgid " <充分湿润>"
-msgstr " <Very wet>"
-
-msgid " <泛滥的一塌糊涂>"
-msgstr " <Overflowed>"
-
-msgid " <残留的尿渍>"
-msgstr " <Urine leftover>"
-
-msgid " <洁净>"
-msgstr " <Clean>"
-
-msgid " <些许尿意>"
-msgstr " <Slight urge to pee>"
-
-msgid " <充盈的尿意>"
-msgstr " <Very urged to pee>"
-
-msgid " <{0}ml精液>"
-msgstr " <{0}ml semen>"
-
-msgid " 未知（需要内衣透视）\n"
-msgstr " Unknown (needs Bra Perspective)\n"
-
 msgid " 乳汁量为{0}ml"
 msgstr " breast milk {0}ml"
 
 msgid "受精概率{0}%"
 msgstr "Fertilize rate {0}%"
-
-msgid " 当前为{0},{1}"
-msgstr " currently {0}, {1}"
-
-msgid " 用掉了{0}个避孕套，总精液量{1}ml"
-msgstr " {0} condoms used, total semen {1}ml"
 
 msgid "只流出了些许前列腺液，已经射不出精液了"
 msgstr "Only some prostatic fluid is flowing out, as semen stored has ran out"
@@ -5088,22 +3724,10 @@ msgstr "Only some prostatic fluid is flowing out, as semen stored has ran out"
 msgid "在避孕套里"
 msgstr "In the condom"
 
-msgid "射精部位选择"
-msgstr "Choose body part for ejaculation"
-
 msgid "◆普通食物在场景无人时为独自食用，有人时则与目标一起分享，特殊调味食物仅可让目标食用。\n"
 msgstr ""
 "◆Normal food is being ate alone if no one is around, or shared if there's others,"
 " while special food is only for the target. \n"
-
-msgid "○正常调味食物\n"
-msgstr "○Normal food\n"
-
-msgid "○特殊调味食物\n"
-msgstr "○Special food\n"
-
-msgid "(食堂自助免费拿取)"
-msgstr "(Canteen free pick-up)"
 
 msgid "成人用品商店"
 msgstr "Adult items shop"
@@ -5223,9 +3847,6 @@ msgstr " no invite target\n"
 msgid "制作食物"
 msgstr "Make food"
 
-msgid "○当前的调味： {0}"
-msgstr "○Current taste: {0}"
-
 msgid ""
 "\n"
 "  基础:    "
@@ -5329,9 +3950,6 @@ msgstr " : Will take off"
 msgid " ：无可收的内裤"
 msgstr " : No available underwear"
 
-msgid "今日全陷落角色提供的粉红凭证为：{0}\n"
-msgstr "Total Pink Certificates produced from Operators today: {0}\n"
-
 msgid "+被对方持有把柄(-"
 msgstr "+ Got hold by(-"
 
@@ -5344,48 +3962,6 @@ msgid ""
 msgstr ""
 "\n"
 "{0} acquired [Get Hold by Doctor]\n"
-
-msgid "{0}打算去洗手间\n"
-msgstr "{0} wanted to go to the toilet\n"
-
-msgid "{0}打算去吃饭\n"
-msgstr "{0} wanted to go have meal\n"
-
-msgid "{0}打算去运维部\n"
-msgstr "{0} wanted to go to O&M Department\n"
-
-msgid "{0}打算去铁匠铺\n"
-msgstr "{0} wanted to go to Smithing Shop\n"
-
-msgid "{0}打算去外交官办公室\n"
-msgstr "{0} wanted to go to Civil Service Office\n"
-
-msgid "{0}打算去药田\n"
-msgstr "{0} wanted to go to the farmland\n"
-
-msgid "{0}打算去温室\n"
-msgstr "{0} wanted to go to the conservatory\n"
-
-msgid "{0}打算去休息\n"
-msgstr "{0} wanted to go rest\n"
-
-msgid "{0}打算去检修地点\n"
-msgstr "{0} wanted to go maintaining\n"
-
-msgid "{0}打算去生产车间\n"
-msgstr "{0} wanted to go to the production line\n"
-
-msgid "{0}打算去大浴场的更衣室\n"
-msgstr "{0} wanted to go to the fitting room in Bathing Spot\n"
-
-msgid "{0}打算去训练场的更衣室\n"
-msgstr "{0} wanted to go to the fitting room in Training Room\n"
-
-msgid "{0}打算去淋浴\n"
-msgstr "{0} wanted to go shower\n"
-
-msgid "{0}打算去进行战斗训练\n"
-msgstr "{0} wanted to go combat training\n"
 
 msgid "{0}打算去买饭\n"
 msgstr "{0} wanted to go buy food\n"
@@ -5511,24 +4087,6 @@ msgstr ""
 
 msgid ""
 "\n"
-"\n"
-" {0}分钟过去了\n"
-msgstr ""
-"\n"
-"\n"
-" {0} minutes passed\n"
-
-msgid ""
-"\n"
-"\n"
-" 该行动将持续{0}分钟\n"
-msgstr ""
-"\n"
-"\n"
-" This action will last for {0} minutes\n"
-
-msgid ""
-"\n"
 "给{0}穿上了脱下的衣服，并尽量整理成H前的样子\n"
 msgstr ""
 "\n"
@@ -5579,9 +4137,6 @@ msgstr ""
 msgid " (已推荐)"
 msgstr " (Suggested)"
 
-msgid "当前持有粉红凭证：{0}"
-msgstr "Pink Certificates: {0}"
-
 msgid "(持有数量:"
 msgstr "(Current amount:"
 
@@ -5600,9 +4155,6 @@ msgid ""
 msgstr ""
 "\n"
 " Upon receiving the notice of {0} is about to give birth, you rushed to the maternity room, and after a short accompany, you looked at her being pushed into the delivery room\n"
-
-msgid " 焦急等待"
-msgstr " Wait anxiously"
 
 msgid " 经过了漫长的等待之后，随着响亮的哭声，{0}推开产房的门，告诉你{1}生了一个可爱的女儿，母女平安\n"
 msgstr " After a long wait, followed by a loud cry, {0} opened the door, and told you that {1} have gave birth to a cute daughter, both of them are safe\n"
@@ -5658,9 +4210,6 @@ msgid ""
 msgstr ""
 "\n"
 "{0}'s Ｗ Dilate upgraded to Lv5\n"
-
-msgid "+标间(+10)"
-msgstr "+ Basic Room(+10)"
 
 msgid "+情趣主题房(+50)"
 msgstr "+ Sexual Theme Room(+50)"
@@ -5730,16 +4279,6 @@ msgstr ""
 "\n"
 "Diary saved to {0}\n"
 
-msgid "[日记]"
-msgstr "[Diary]"
-
-msgid ""
-"日记\n"
-"\n"
-msgstr ""
-"Diary\n"
-"\n"
-
 msgid "预订房间"
 msgstr "Order for a room"
 
@@ -5787,9 +4326,6 @@ msgstr ""
 "\n"
 "Ordered {0}, check out time: {1}\n"
 
-msgid "：需要全干员总好感度≥{0}（当前{1}），全干员总信赖度≥{2}（当前{3}）"
-msgstr ": Need total Affinity ≥{0} (Currently {1}), total Trust ≥{2} (Currently {3})"
-
 msgid "：需要全干员总好感度≥{0}（当前{1}），已进入任意陷落路线的干员人数≥{2}（当前{3}）"
 msgstr ": Need total Affinity ≥{0} (Currently {1}), total Operators in relationship ≥{2} (Currently {3})"
 
@@ -5798,9 +4334,6 @@ msgstr ": Need total Affinity ≥{0} (Currently {1}), total Operators as [Couple
 
 msgid "：需要全干员内裤收藏总数量≥{0}（当前{1}）"
 msgstr ": Need total underwear count ≥{0} (Currently {1})"
-
-msgid "：需要全干员体内被射精总量≥{0}ml（当前{1}ml），全干员总绝顶经验≥{2}（当前{3}）"
-msgstr ": Need total semen ejaculated inside ≥{0}ml (Currently {1}ml), total Orgasm EXP ≥{2} (Currently {3})"
 
 msgid "：需要生育孩子数量≥{0}（当前{1}）"
 msgstr ": Need total children ≥{0} (Currently {1})"
@@ -5858,16 +4391,6 @@ msgstr "Juel"
 msgid " 已拥有{0}的信物:{1}"
 msgstr " already have {0}'s token: {1}"
 
-msgid ""
-"\n"
-" 【总】\n"
-msgstr ""
-"\n"
-" [Total]\n"
-
-msgid "  未接触过精液\n"
-msgstr "  Haven't touched semen\n"
-
 msgid "  全身总共被射上过{0}ml精液\n"
 msgstr "  {0}ml of semen on body\n"
 
@@ -5884,23 +4407,11 @@ msgstr "  First kiss condition:"
 msgid "保有初吻\n"
 msgstr " First kiss kept\n"
 
-msgid "于{kiss_time}在{kiss_palce}，向{character_name}博士\n"
-msgstr "On {kiss_time} at {kiss_palce}, to Dr.{character_name}'s\n"
-
 msgid "的阴茎"
 msgstr " penis"
 
 msgid "献上了初吻\n"
 msgstr " delivered her first kiss\n"
-
-msgid "  普普通通的舌头\n"
-msgstr "  Normal tongue\n"
-
-msgid "  未品尝过精液\n"
-msgstr "  Haven't tasted semen\n"
-
-msgid "  总共喝过{0}ml精液\n"
-msgstr "  {0}ml of semen drank\n"
 
 msgid ""
 "\n"
@@ -5908,12 +4419,6 @@ msgid ""
 msgstr ""
 "\n"
 " [Breasts]\n"
-
-msgid "  未淋上过精液\n"
-msgstr "  No semen on top\n"
-
-msgid "  总共被淋上过{0}ml精液\n"
-msgstr "  {0}ml of semen on her breasts\n"
 
 msgid "  总共收集了{0}ml乳汁\n"
 msgstr "  {0}ml of breast milk collected\n"
@@ -5945,12 +4450,6 @@ msgstr "  Virginity condition:"
 msgid "保有处女\n"
 msgstr " Virginity kept\n"
 
-msgid "  未射入过精液\n"
-msgstr "  No semen inside\n"
-
-msgid "  总共被射入过{0}ml精液\n"
-msgstr "  {0}ml of semen ejaculated into it\n"
-
 msgid ""
 "\n"
 " 【肛】\n"
@@ -5968,9 +4467,6 @@ msgstr ""
 "\n"
 " [Womb]\n"
 
-msgid "  未怀孕过\n"
-msgstr "  never got pregnant\n"
-
 msgid "  为博士生下了  "
 msgstr "  gave birth to"
 
@@ -5986,27 +4482,6 @@ msgstr ""
 
 msgid "  总共收集了{0}ml圣水\n"
 msgstr "  {0}ml of holy water collected\n"
-
-msgid ""
-"\n"
-" 【视觉系】\n"
-msgstr ""
-"\n"
-" [Vision-type]\n"
-
-msgid ""
-"\n"
-" 【触觉系】\n"
-msgstr ""
-"\n"
-" [Touch-type]\n"
-
-msgid ""
-"\n"
-" 【激素系】\n"
-msgstr ""
-"\n"
-" [Pheromone-type]\n"
 
 msgid "[使用]"
 msgstr "[Use]"
@@ -6056,23 +4531,11 @@ msgstr ""
 "\n"
 "  ●Target room——{0}, door was locked, requiring keys or certain method\n"
 
-msgid ""
-"  ●你拿出了一次性万能钥匙，悄悄打开了门\n"
-"\n"
-msgstr ""
-"  ●You used disposable key, and opened the door silently\n"
-"\n"
-
 msgid "请输入角色id"
 msgstr "Enter character id"
 
 msgid "请输入口上id"
 msgstr "Enter dialogue id"
-
-msgid ""
-"{0}\n"
-"\n"
-msgstr ""
 
 msgid "(博士免费)"
 msgstr "(Free for Doctor)"
@@ -6173,9 +4636,6 @@ msgstr ""
 "Total Walkthrough Points: {0}\n"
 "\n"
 
-msgid "[0]博士的能力与经验"
-msgstr "[0]Doctor's Abilities and EXP"
-
 msgid ""
 "\n"
 "   当前继承等级{0}，继承比例{1}%，点数消耗{2}\n"
@@ -6191,12 +4651,6 @@ msgstr " [Increase] "
 msgid " [降低] "
 msgstr " [Decrease] "
 
-msgid "[1]博士的源石技艺"
-msgstr "[1]Doctor's Originium Arts"
-
-msgid "[2]博士的收藏品"
-msgstr "[2]Doctor's Collections"
-
 msgid ""
 "  收藏品统计：当前内裤{0}(→{1})条，袜子{2}(→{3})双\n"
 "\n"
@@ -6209,29 +4663,6 @@ msgstr "Operators in relationship will be inherited in new walkthrough and requi
 
 msgid "耗费点数可以进一步继承这些干员一定比例的好感、信赖、能力、经验\n"
 msgstr "Consuming points can inherit their Affinity, Trust, Abilities, EXP\n"
-
-msgid ""
-"\n"
-"[3]干员的好感与信任"
-msgstr ""
-"\n"
-"[3]Operators' Affinity and Trust"
-
-msgid ""
-"\n"
-"[4]干员的能力与经验"
-msgstr ""
-"\n"
-"[4]Operators' Abilities and EXP"
-
-msgid ""
-"\n"
-"总点数消耗：{0}，剩余：{1}\n"
-"\n"
-msgstr ""
-"\n"
-"Total Points cost: {0}, remaining: {1}\n"
-"\n"
 
 msgid "[醒来]"
 msgstr "[Wake up]"
@@ -6253,12 +4684,6 @@ msgstr "Player's collection finished inheriting\n"
 
 msgid "开始继承干员数据\n"
 msgstr "Inheriting Operators' stats\n"
-
-msgid "干员好感与信任继承完毕\n"
-msgstr "Operators' Affinity and Trust finished inheriting\n"
-
-msgid "干员能力与经验继承完毕\n"
-msgstr "Operators' Abilities and EXP finished inheriting\n"
 
 msgid "开始重置游戏数据\n"
 msgstr "Resetting game data\n"
@@ -6307,13 +4732,6 @@ msgstr "[Yes]"
 
 msgid "[否]"
 msgstr "[No]"
-
-msgid ""
-"\n"
-" 【催眠系】\n"
-msgstr ""
-"\n"
-" [Hypnosis-type] \n"
 
 msgid ""
 "\n"
@@ -6379,11 +4797,6 @@ msgid ""
 msgstr ""
 "\n"
 " [Construct]"
-
-msgid ""
-"\n"
-"{0}"
-msgstr ""
 
 msgid ""
 "\n"
@@ -6457,12 +4870,6 @@ msgid ""
 "\n"
 msgstr ""
 
-msgid ""
-"刷新口上文件，用于在不重启游戏的情况，重新刷新并读取发生了变更的口上文件。即可以在编辑器中写完新的条目、保存，然后在游戏中点击该刷新按钮，读取刚写好的条目并进行测试\n"
-"\n"
-"\n"
-msgstr ""
-
 msgid "[001]刷新口上文件后测试"
 msgstr ""
 
@@ -6479,12 +4886,6 @@ msgstr ""
 msgid "未找到该角色，请确认是否输入正确\n"
 msgstr ""
 
-msgid "未找到该口上，请确认是否输入正确\n"
-msgstr ""
-
-msgid "测试角色：{target_character_data.name}\n"
-msgstr ""
-
 msgid "  博士未获得该角色(X)\n"
 msgstr ""
 
@@ -6495,11 +4896,6 @@ msgid "  博士当前交互对象不是该角色(X)\n"
 msgstr ""
 
 msgid "  博士当前交互对象是该角色(√)\n"
-msgstr ""
-
-msgid ""
-"\n"
-"指令状态：{game_config.config_status[now_behavior_id].name}\n"
 msgstr ""
 
 msgid ""
@@ -6536,24 +4932,7 @@ msgstr ""
 
 msgid ""
 "\n"
-"口上原文本：\n"
-"  {talk_context}\n"
-msgstr ""
-
-msgid ""
-"口上输出文本：\n"
-"  {talk.code_text_to_draw_text(talk_context, start_chara_id)}\n"
-msgstr ""
-
-msgid ""
-"\n"
 "前提条件：\n"
-msgstr ""
-
-msgid "  {premise}：满足(√)\n"
-msgstr ""
-
-msgid "  {premise}：不满足(X)\n"
 msgstr ""
 
 msgid ""
@@ -6572,16 +4951,6 @@ msgid ""
 "\n"
 "\n"
 "开始刷新口上文件，请稍等\n"
-msgstr ""
-
-msgid ""
-"\n"
-"开始加载数据读取模块，该部分耗时较长\n"
-msgstr ""
-
-msgid ""
-"\n"
-"整体数据读取完成，开始处理口上数据\n"
 msgstr ""
 
 msgid ""
@@ -6605,19 +4974,6 @@ msgstr "ejaculated massively"
 
 msgid "小"
 msgstr "small"
-
-msgid "普"
-msgstr "medium"
-
-msgid "强"
-msgstr "strong"
-
-msgid ""
-"\n"
-"{0}{1}{2}绝顶\n"
-msgstr ""
-"\n"
-"{0}{1}{2} orgasm\n"
 
 msgid ""
 "\n"
@@ -6740,24 +5096,10 @@ msgstr ""
 
 msgid ""
 "\n"
-"派遣人数：{0}"
-msgstr ""
-"\n"
-"Operator count: {0}"
-
-msgid ""
-"\n"
 "耗时天数：{0}"
 msgstr ""
 "\n"
 "Days required: {0}"
-
-msgid ""
-"\n"
-"需求：{0}"
-msgstr ""
-"\n"
-"Request: {0}"
 
 msgid ""
 "\n"
@@ -6782,45 +5124,11 @@ msgstr ""
 "\n"
 "Operators dispatched: "
 
-msgid ""
-"\n"
-"\n"
-"是否满足需求："
-msgstr ""
-"\n"
-"\n"
-"Condition fulfilled: "
-
 msgid "【调整派遣人员】"
 msgstr " [Arrange Operators dispatched]"
 
-msgid ""
-"\n"
-"【调整派遣人员】"
-msgstr ""
-"\n"
-" [Arrange Operators dispatched]"
-
 msgid "[执行委托]"
 msgstr "[Begin commission]"
-
-msgid ""
-"\n"
-"可派遣人员（需要{0}人）：\n"
-"\n"
-msgstr ""
-"\n"
-"Operators available ({0} required): \n"
-"\n"
-
-msgid ""
-"\n"
-"\n"
-"已派遣"
-msgstr ""
-"\n"
-"\n"
-"Dispatched"
 
 msgid "执行委托："
 msgstr "Begin commission: "
@@ -6883,48 +5191,6 @@ msgstr "Normal vehicle"
 msgid "特殊载具"
 msgstr "Special vehicle"
 
-msgid ""
-"\n"
-"当前机库等级：{0}，载具数量：{1}/{2}\n"
-msgstr ""
-"\n"
-"Current Garage level: {0}, vehicle count: {1}/{2}\n"
-
-msgid ""
-"\n"
-"载具名称：{0}"
-msgstr ""
-"\n"
-"Vehicle name: {0}"
-
-msgid ""
-"\n"
-"载具速度：{0}"
-msgstr ""
-"\n"
-"Vehicle speed: {0}"
-
-msgid ""
-"\n"
-"运载量：{0}"
-msgstr ""
-"\n"
-"Load: {0}"
-
-msgid ""
-"\n"
-"购入价格：{0}"
-msgstr ""
-"\n"
-"Price: {0}"
-
-msgid ""
-"\n"
-"特殊效果：{0}"
-msgstr ""
-"\n"
-"Effect: {0}"
-
 msgid "【购买载具】"
 msgstr " [Purchase vehicle]"
 
@@ -6944,9 +5210,6 @@ msgid ""
 msgstr ""
 "\n"
 " [Sell vehicle]"
-
-msgid "资金不足，无法购买"
-msgstr "Insufficient funds, unable to purchase"
 
 msgid "测试角色：{0}\n"
 msgstr ""
@@ -6983,34 +5246,6 @@ msgstr ""
 "\n"
 "Insufficient Sanity, at least {0} Sanity required, unable to conduct Group Hypnosis\n"
 
-msgid ""
-"\n"
-"已切换为平然催眠模式\n"
-msgstr ""
-"\n"
-"Entered Calming Hypnosis\n"
-
-msgid ""
-"\n"
-"已切换为空气催眠模式\n"
-msgstr ""
-"\n"
-"Entered Air Hypnosis\n"
-
-msgid ""
-"\n"
-"已切换为体控催眠模式\n"
-msgstr ""
-"\n"
-"Entered Body Control Hypnosis\n"
-
-msgid ""
-"\n"
-"已切换为心控催眠模式\n"
-msgstr ""
-"\n"
-"Entered Mind Control Hypnosis\n"
-
 msgid "势力与外交"
 msgstr "Faction and Diplomacy"
 
@@ -7033,23 +5268,6 @@ msgstr ""
 msgid "({0}损坏)"
 msgstr "({0} damaged)"
 
-msgid " {0}(天数-1) * {1}(人数) = {2}"
-msgstr " {0}(Days -1) * {1}(Ops) = {2}"
-
-msgid ""
-"\n"
-"载具运量需求：{0}"
-msgstr ""
-"\n"
-"Vehicle volume requirement: {0}"
-
-msgid ""
-"\n"
-"其他需求：{0}"
-msgstr ""
-"\n"
-"Other requirements: {0}"
-
 msgid ""
 "\n"
 "\n"
@@ -7059,54 +5277,11 @@ msgstr ""
 "\n"
 "Send vehicle: "
 
-msgid "  总运载量：{0}"
-msgstr "  Total load: {0}"
-
-msgid "人数需求："
-msgstr "Ops required: "
-
-msgid "  载具需求："
-msgstr "  Vehicle required:"
-
 msgid "  其他需求："
 msgstr "  Other requirements:"
 
 msgid "【调整使用载具】"
 msgstr " [Change Vehicle]"
-
-msgid ""
-"\n"
-"【调整使用载具】"
-msgstr ""
-"\n"
-" [Change Vehicle]"
-
-msgid ""
-"\n"
-"可派遣载具：\n"
-"\n"
-msgstr ""
-"\n"
-"Available vehicles: \n"
-"\n"
-
-msgid "[{0}] {1} 当前选择/可选择：{2}/{3} 速度：{4} 运载量：{5} 特殊效果：{6}\n"
-msgstr "[{0}] {1} Currently selected/available: {2}/{3} Speed: {4} Load: {5} Special effect: {6}\n"
-
-msgid "[增加一辆]"
-msgstr "[Add one]"
-
-msgid "[减少一辆]"
-msgstr "[Reduce one]"
-
-msgid "当前总运载量/需要运载量：{0}/{1}\n"
-msgstr "Current load/Required load: {0}/{1}\n"
-
-msgid "当前速度（取决于所有载具中最慢的）（未实装）：{0}\n"
-msgstr "Current Speed (Based on slowest) (not implemented) : {0}\n"
-
-msgid "其他效果（未实装）：{0}\n"
-msgstr "Other effect (not implemented) : {0}\n"
 
 msgid "[势力外交系统]"
 msgstr "[Faction Diplomacy System]"
@@ -7135,21 +5310,8 @@ msgstr "Vehicle Name"
 msgid "外勤中数量/总持有量"
 msgstr "Vehicles on Commission/Vehicles Owned"
 
-msgid "载具速度"
-msgstr "Vehicle Spped"
-
 msgid "运载量"
 msgstr "Load"
-
-msgid "特殊效果(未实装)"
-msgstr "Special Effect (not implemented)"
-
-msgid ""
-"\n"
-"购入价格：{0}（出售价格为购入的0.8倍）"
-msgstr ""
-"\n"
-"Purchase price: {0} (Sell price is 0.8 times of purchase)"
 
 msgid ""
 "\n"
@@ -7174,9 +5336,6 @@ msgstr ""
 
 msgid "本周全势力声望变化：{0}\n"
 msgstr "This week's Prestige for factions: {0}\n"
-
-msgid "本周全势力源石病感染率变化：{0}%\n"
-msgstr "This week's Infection Rate: {0}%\n"
 
 msgid "国家及附属势力"
 msgstr "Nations and Factions"
@@ -7348,13 +5507,6 @@ msgstr " [Sleep till Morning Service time]"
 
 msgid ""
 "\n"
-"当前目标的催眠深度未达到{0}%，无法进入{1}催眠状态，需要使用基础手段来加深催眠程度\n"
-msgstr ""
-"\n"
-"Current Hypnosis Depth has not reached {0}%, unable to enter {1}\n"
-
-msgid ""
-"\n"
 " {0}号招募进度：{1}%"
 msgstr ""
 "\n"
@@ -7367,26 +5519,8 @@ msgstr ""
 "\n"
 "    Recruitment strategy: {0}      "
 
-msgid "  （已停止招募）"
-msgstr "   (Stops Recruiting)"
-
 msgid "特产"
 msgstr "Specialty"
-
-msgid "好感度>={judge_value}  "
-msgstr "Affinity >= {judge_value}  "
-
-msgid "信赖度>={judge_value}"
-msgstr "Trust >= {judge_value}  "
-
-msgid "或催眠进度>={judge_value/2}"
-msgstr "Hypnosis Depth >= {judge_value/2}"
-
-msgid "解锁{game_config.config_facility_open[judge_type_id].name}  "
-msgstr "Unlock {game_config.config_facility_open[judge_type_id].name}  "
-
-msgid "攻略等级>={judge_value}  "
-msgstr "Relationship >= {judge_value}  "
 
 msgid "+淫乱(+50)"
 msgstr "+ Promiscuous(+50)"
@@ -7396,9 +5530,6 @@ msgstr "+ Basic Room(+25)"
 
 msgid "+有别人在时的露出修正("
 msgstr "+ Revealing towards others("
-
-msgid "+监禁中(+500)"
-msgstr "+ Imprisoned(+500)"
 
 msgid "+处女(-250)"
 msgstr "+ Virgin(-250)"
@@ -7468,18 +5599,8 @@ msgstr "Affinity"
 msgid "信赖"
 msgstr "Trust"
 
-msgid "攻略"
-msgstr "Relation"
-
 msgid "攻略程度"
 msgstr "Relationship"
-
-msgid ""
-"汇报说，在进行委托时意外遇到了一个同行的路人，在短暂的相处中，她对罗德岛产生了兴趣，愿意加入我们成为一名新的干员（请前往博士办公室确认） ※\n"
-"\n"
-msgstr ""
-"Reports say that they met a wanderer in commission, and after a short intercation, she's interested in Rhodes Island, and wishing to join here (confirm at Doctor's Office) ※\n"
-"\n"
 
 msgid "○通用委托无论在哪里都可以接到，地区委托则需要罗德岛移动到对应地区时才可接到，能接到的委托等级与机库的等级有关\n"
 msgstr "○General commissions can be accepted anywhere, regional commissions otherwise need Rhodes Island to be at specific area; The commission level is related to Garage's level\n"
@@ -7495,9 +5616,6 @@ msgstr "○Current Garage level: {0}, maximum Lv{1} commission can be accepted\n
 
 msgid "（进行中）"
 msgstr " (In progress)"
-
-msgid "(队长)"
-msgstr "(Leader)"
 
 msgid ""
 "\n"
@@ -7525,12 +5643,6 @@ msgstr " Sleep time chosen: {0} hours (default as the larger value in both condi
 
 msgid "请输入睡眠时间(最小1小时，最大12小时)："
 msgstr "Please enter sleep time (1-12 hours)"
-
-msgid "当前设施等级为：{0}，可同时有{1}条招募线，每条招募线最多有{2}人\n"
-msgstr "Current facility level: {0}, up to {1} recruitment line available, up to {2} Operators per recruitment line\n"
-
-msgid "(当前人数：{0}/{1})"
-msgstr "(当前人数：{0}/{1})"
 
 msgid " <累>"
 msgstr " <Tired>"
@@ -7561,13 +5673,6 @@ msgstr "Equip token"
 msgid "○装备信物时，信物干员正面数值结算+10%，负面数值结算-10%，其他干员为+1%和-1%（可叠加，上限同装备信物上限）\n"
 msgstr "○On equipping tokens, positive effects +10% and negative effects -10% for the correct Operator, or +1% and -1% if incorrect (stackable)\n"
 
-msgid ""
-"  当前最大可装备数量：{equip_number}\n"
-"\n"
-msgstr ""
-"  Maximum tokens: {equip_number}\n"
-"\n"
-
 msgid "  当前装备的信物：\n"
 msgstr "  Currently equipped tokens: \n"
 
@@ -7580,9 +5685,6 @@ msgid ""
 msgstr ""
 "\n"
 "Change equipped tokens\n"
-
-msgid "当前已装备数量/最大可装备数量：{len(now_equiped)}/{equip_number}\n"
-msgstr "Equipped/Maximum: {len(now_equiped)}/{equip_number}\n"
 
 msgid "请选择要装备的信物：\n"
 msgstr "Please choose token to be equipped: \n"
@@ -7617,9 +5719,6 @@ msgstr "Unlock {0}"
 msgid "攻略等级>={0}  "
 msgstr "Relationship >= {0}"
 
-msgid "+睡眠(+999)"
-msgstr "+ Sleeping(+999)"
-
 msgid "+时停(+9999)"
 msgstr "+ Time Stop(+9999)"
 
@@ -7649,12 +5748,6 @@ msgstr "Stop timeflow"
 
 msgid "时间重新流动"
 msgstr "Resume timeflow"
-
-msgid "让在时停中正常行动"
-msgstr "Allows movement"
-
-msgid "让在时停中再次停止"
-msgstr "Stop movement"
 
 msgid "角色特殊指令"
 msgstr "Special commands"
@@ -7697,12 +5790,6 @@ msgstr "Failed to edge {0}'s orgasm\n"
 msgid "成功寸止了{0}的绝顶，但已经超过了能控制住的极限，随时都可能释放出来\n"
 msgstr "Edged {0}'s orgasm, but it's over the limit, it can be released at any time\n"
 
-msgid "超强"
-msgstr "Super"
-
-msgid "在激烈的H之后，{0}的体力上限增加了{1}，气力上限增加了{2}\n"
-msgstr "After an intense H, {0}'s Stamina limit +{1}, Energy limit +{2}\n"
-
 msgid "  （未选择的源石能力均可在游戏中满足特定条件解锁）\n"
 msgstr "   (Unselected Originium Arts can be unlocked via conditions) \n"
 
@@ -7716,91 +5803,8 @@ msgstr ""
 msgid "请根据以下条件，描写两个角色的互动场景："
 msgstr "Please describe the interaction between two characters under the conditions: "
 
-msgid "场景发生的地点是{0}。"
-msgstr "Currently at {0}."
-
-msgid "在当前的场景里，{0}是医药公司的领导人，被称为博士，{1}是一家医药公司的员工。"
-msgstr "In the event, {0} is a leader of a pharmaceutical company known as leader, while {1} is his employee."
-
-msgid "{0}正在对{1}进行的动作是{2}。"
-msgstr "{0}'s action on {1} is {2}."
-
-msgid "如果用数字等级来表示关系好坏，0是第一次见面的陌生人，8是托付人生的亲密伴侣，那{0}和{1}的关系大概是{2}。"
-msgstr "If using numbers are showing relationship, where 0 is first met strangers and 8 is the eternal partner, then {0} and {1} is at {2}."
-
-msgid "{0}和{1}是正常的爱情关系。如果用数字等级来表示爱情的程度，1是有些懵懂的好感，4是至死不渝的爱人，那{0}和{1}的关系大概是{4}。"
-msgstr "{0} and {1} is in normal love relationship, if using numbers to show it, where 1 is slight affinity and 4 is lover till death, then {0} and {1} is at {4}."
-
-msgid ""
-"{0}和{1}是扭曲的服从和支配的关系。如果用数字等级来表示服从的程度，1是有些讨好和有些卑微，4是无比的尊敬和彻底的服从，那{2}对{3}的服从的等级大概是{4}。"
-msgstr ""
-"{0}and {1} is in twisted dominance relationship, if using numbers to show it, where 1 is slight flattening and humble and 4 is absolute respect and submission, then {2} and {3} is at {4}."
-
-msgid "{0}的年龄是{1}。"
-msgstr "{0}'s age level is {1}."
-
-msgid "{0}正在睡觉，睡眠的深度是{1}。"
-msgstr "{0} is sleeping, she {1}."
-
-msgid "{0}有些困了，困的程度为{1}。"
-msgstr "{0} is tired, she's {1}."
-
-msgid "{0}的心情状态是{1}。"
-msgstr "{0}'s mood is {1}."
-
-msgid "{0}正在跟随{1}一起行动。"
-msgstr "{0} is following {1}."
-
-msgid "{0}有点想上厕所尿尿。"
-msgstr "{0} wish to go toilet for pee."
-
-msgid "{0}有点饿了，想吃东西。"
-msgstr "{0} is hungry."
-
-msgid "{0}被{1}催眠了。"
-msgstr "{0} is hypnotised by {1}."
-
-msgid "{0}被{1}监禁在监狱里了。"
-msgstr "{0} is imprisoned by {1}."
-
-msgid "{0}不是公司的员工，是前来拜访的访客。"
-msgstr "{0} is not an employee, but a visitor."
-
-msgid "{0}正处在停止的时间中，无法做出任何反应。"
-msgstr "{0} can't move as she's in the halted time."
-
-msgid "{0}的职业是{1}。"
-msgstr "{0}'s profession is {1}."
-
-msgid "{0}是一种虚构的奇幻种族，种族名是{1}。"
-msgstr "{0} is a mystical race {1}."
-
-msgid "{0}的出生地是{1}。"
-msgstr "{0} was born at {1}."
-
-msgid "{0}所属的具体势力是{1}。"
-msgstr "{0}'s faction is {1}."
-
-msgid "{0}有以下素质特性："
-msgstr "{0} has the following talents and traits:"
-
 msgid "{0}、"
 msgstr ""
-
-msgid "{0}穿着的衣服有："
-msgstr "{0} is wearing: "
-
-msgid "{0}的工作是{1}。"
-msgstr "{0}'s job in the company is {1}."
-
-msgid "{0}称呼{1}为{2}。"
-msgstr "{0} call {1} as {2}."
-
-msgid "在当前的场景里，{0}是医药公司的领导人之一，被称为博士。"
-msgstr "In current event, {0} is a leader of pharmaceutical company known as Doctor."
-
-msgid "{0}正在进行的动作是{1}。"
-msgstr "{0} is doing {1}."
 
 msgid ""
 " \n"
@@ -7899,9 +5903,6 @@ msgstr "  [Change Gemini API]"
 msgid "更改Gemini API密钥"
 msgstr "Change Gemini API"
 
-msgid "  [测试] "
-msgstr "  [Test]"
-
 msgid "测试"
 msgstr "Test"
 
@@ -7911,13 +5912,6 @@ msgid ""
 msgstr ""
 " \n"
 "  Test approved, model used: "
-
-msgid ""
-" \n"
-"  测试不通过\n"
-msgstr ""
-" \n"
-"  Test not approved\n"
 
 msgid "请输入1~10的数字\n"
 msgstr "Enter numbers of 1-10\n"
@@ -7936,18 +5930,8 @@ msgstr ""
 "\n"
 "\n"
 
-msgid "请输入您的OpenAI API密钥，应当是以 sk- 开头的一长段字符串\n"
-msgstr "Please enter OpenAI API, starting with sk- \n"
-
 msgid "请输入您的Gemini API密钥，应当是一个长段字符串\n"
 msgstr "Please enter Gemini API\n"
-
-msgid ""
-" \n"
-"  输入的API密钥不符合规范，请重新输入\n"
-msgstr ""
-" \n"
-"  Incorrect API, please enter again\n"
 
 msgid ""
 " \n"
@@ -8011,15 +5995,6 @@ msgstr ""
 
 msgid ""
 "\n"
-"已切换为{0}催眠模式\n"
-"\n"
-msgstr ""
-"\n"
-"Switched to {0}\n"
-"\n"
-
-msgid ""
-"\n"
 "{0}会理所当然地接受{1}的不合理行为了\n"
 "\n"
 msgstr ""
@@ -8071,9 +6046,6 @@ msgstr ""
 
 msgid " <寸止>"
 msgstr " <Edged>"
-
-msgid " <时停>"
-msgstr " <Time Stop>"
 
 msgid ""
 "  当前最大可装备数量：{0}\n"
@@ -8145,9 +6117,6 @@ msgstr "+ Sexual Curiosity(+30)"
 msgid "+性冷漠(-30)"
 msgstr "+ Sexual Indifference(-30)"
 
-msgid "+性无知(+30)"
-msgstr "+ Sexual Ignorance (+30)"
-
 msgid ""
 "\n"
 "\n"
@@ -8186,30 +6155,6 @@ msgstr ""
 
 msgid "身体检查与管理"
 msgstr "Body check and management"
-
-msgid "邀请多P_未实装"
-msgstr ""
-
-msgid ""
-"\n"
-"场景内有角色处于疲劳状态，无法进行多P\n"
-msgstr ""
-"\n"
-"There are characters tired, unable to perform group sex\n"
-
-msgid ""
-"\n"
-"进入多P模式\n"
-msgstr ""
-"\n"
-"Enter group sex\n"
-
-msgid ""
-"\n"
-"进入多P模式失败\n"
-msgstr ""
-"\n"
-"Failed to enter group sex\n"
 
 msgid "下五子棋"
 msgstr "Backgammon"
@@ -8262,22 +6207,7 @@ msgstr "Shoejob"
 msgid "武器交"
 msgstr "Weaponjob"
 
-msgid "绳子_未实装"
-msgstr ""
-
-msgid "眼罩_未实装"
-msgstr ""
-
-msgid "鞭子_未实装"
-msgstr ""
-
 msgid "针_未实装"
-msgstr ""
-
-msgid "滴蜡_未实装"
-msgstr ""
-
-msgid "打屁股_未实装"
 msgstr ""
 
 msgid "在无觉刻印的影响下，{0}的欲望提升至6级\n"
@@ -8314,9 +6244,6 @@ msgstr ""
 "{0} won in {1}, and gained {2} Pink Certificates\n"
 "\n"
 
-msgid "{0}打算去调教室\n"
-msgstr "{0} want to go to Humiliation Room\n"
-
 msgid ""
 " \n"
 "  测试不通过，错误信息为：\n"
@@ -8329,32 +6256,8 @@ msgstr ""
 msgid "请输入您要使用的模型名（不含引号、逗号或空格）：\n"
 msgstr "Please enter model name (not including quotations, commas and spaces): \n"
 
-msgid "  *目前仅支持gpt和gemini模型，未包含在示例中的更多模型名请在官方文档中查阅\n"
-msgstr "  *Only support gpt and gemini, for not included models please read at official files\n"
-
-msgid "  gpt模型示例：gpt-3.5-turbo, gpt-4, gpt-4-turbo, gpt-4o, gpt-4o-mini\n"
-msgstr "  gpt model examples: gpt-3.5-turbo, gpt-4, gpt-4-turbo, gpt-4o, gpt-4o-mini\n"
-
-msgid "  gemini模型示例：gemini-1.5-pro, gemini-1.5-flash\n"
-msgstr "  gemini model examples: gemini-1.5-pro, gemini-1.5-flash\n"
-
 msgid "请输入您要使用的api的base_url（不含引号、逗号或空格）：\n"
 msgstr "Please enter api's base_url (not including quotations, commas and spaces): \n"
-
-msgid "  目前仅支持openAI\n"
-msgstr "  only support openAI\n"
-
-msgid "  示例：http://my.test.server.example.com:8083/v1\n"
-msgstr "  example: http://my.test.server.example.com:8083/v1\n"
-
-msgid "请输入您要使用的代理ip（不含引号、逗号或空格）：\n"
-msgstr "Please enter proxy ip (not including quotations, commas and spaces): \n"
-
-msgid "  示例：http://my.test.proxy.example.com\n"
-msgstr "  example: http://my.test.proxy.example.com\n"
-
-msgid "请输入您要使用的代理端口，不使用端口则随便输入数字后回车即可：\n"
-msgstr "Please enter proxy port, or enter random numbers if no port: \n"
 
 msgid "  示例：0.0.0.0\n"
 msgstr "  example: 0.0.0.0.\n"
@@ -8405,9 +6308,6 @@ msgstr ""
 "\n"
 "Obtained a new vehicle: {0}\n"
 
-msgid "当前速度（取决于所有载具中最慢的，能够减少委托时间）：{0}\n"
-msgstr "Current speed (slowest of all vehicles, can reduce commission time): {0}\n"
-
 msgid "当前设施等级：{0}，提升设施等级可解锁更多道具"
 msgstr "Current facility level: {0}, upgrading unlocks more items"
 
@@ -8434,18 +6334,8 @@ msgstr ""
 msgid "[001]检查{0}的身体情况"
 msgstr "[001] Check {0}'s body condition"
 
-msgid "[001]检查身体情况（当前没有查看对象）\n"
-msgstr "[001] Check body condition (no target currently)\n"
-
 msgid "[002]对{0}进行身体管理"
 msgstr "[002] Do body management on {0}"
-
-msgid ""
-"\n"
-"[002]进行身体管理（当前没有管理对象）"
-msgstr ""
-"\n"
-"[002] Do body management (no target currently)"
 
 msgid ""
 "\n"
@@ -8453,18 +6343,6 @@ msgid ""
 msgstr ""
 "\n"
 "[002] Do body management (checking required)"
-
-msgid "[003]调整体检日程(未实装)"
-msgstr ""
-
-msgid ""
-"\n"
-"请选择要对{0}进行的身体检查：\n"
-"\n"
-msgstr ""
-"\n"
-"Please select body check programme for {0}: \n"
-"\n"
 
 msgid ""
 "\n"
@@ -8608,9 +6486,6 @@ msgstr ""
 "\n"
 "{0} is thinking\n"
 
-msgid "(苦痛快感化)"
-msgstr "(Pain to Pleasure)"
-
 msgid ""
 "\n"
 "{0}使用了{1}\n"
@@ -8627,15 +6502,6 @@ msgid ""
 msgstr ""
 "\n"
 "This item can't be used directly\n"
-"\n"
-
-msgid ""
-"\n"
-"当前没有交互对象，无法使用{0}\n"
-"\n"
-msgstr ""
-"\n"
-"No target available, unable to use {0}\n"
 "\n"
 
 msgid "{0}的阴茎尺寸增加了，现在是{1}\n"
@@ -8656,17 +6522,8 @@ msgstr "Leg"
 msgid "足部"
 msgstr "Feet"
 
-msgid "外表年龄"
-msgstr "Age"
-
-msgid "{0}已经有【泌乳】了，无法再获得【泌乳】\n"
-msgstr "{0} already have [Lactation]\n"
-
 msgid "{0}获得了【泌乳】\n"
 msgstr "{0} acquired [Lactation]\n"
-
-msgid "{0}没有【泌乳】，无法失去【泌乳】\n"
-msgstr "{0} doesn't have [Lactation]\n"
 
 msgid "{0}失去了【泌乳】\n"
 msgstr "{0} lost [Lactation]\n"
@@ -8965,14 +6822,8 @@ msgstr ""
 "\n"
 "{0} acquired [{1}]\n"
 
-msgid "{0}决定加入其中\n"
-msgstr "{0} decided to join\n"
-
 msgid "{0}还不懂这是什么意义，被你随口糊弄走了\n"
 msgstr "{0} doesn't know what was happening, and you tricked her away\n"
-
-msgid "{0}红着脸跑走了\n"
-msgstr "{0} ran away blushed\n"
 
 msgid ""
 "\n"
@@ -8990,9 +6841,6 @@ msgstr ""
 
 msgid "你需要将一段文本翻译为"
 msgstr "You need to translate the text as"
-
-msgid "语言。如果文本中有有\\{\\}括起来的字符，请原样保留。请原样保留文本中的换行符。以下是需要翻译的文本："
-msgstr "language. if there is \\{\\} characters, please keep them, and keep the newline characters. The text for translation is:"
 
 msgid "  [语言翻译]： "
 msgstr "  [Translator]: "
@@ -9030,9 +6878,6 @@ msgstr "Medium"
 
 msgid "低"
 msgstr "Low"
-
-msgid "要射精了，是否要忍住射精（当前已忍住{0}次，忍耐几率 {1}）\n"
-msgstr "You're about to ejaculate, do you want to hold it ({0} times held, current chance {1})\n"
 
 msgid "[忍住]"
 msgstr "[Hold it]"
@@ -9202,13 +7047,6 @@ msgid "邀请其他干员"
 msgstr "Invite others"
 
 msgid ""
-"当前可邀请的干员有：\n"
-"\n"
-msgstr ""
-"Available Operators: \n"
-"\n"
-
-msgid ""
 "\n"
 "已取消对{0}的群交邀请，{0}不会来这里参加群交了\n"
 msgstr ""
@@ -9221,9 +7059,6 @@ msgid ""
 msgstr ""
 "\n"
 "Invited {0} for group sex\n"
-
-msgid "食物名字: {food_name}\n"
-msgstr "Food name: {food_name}\n"
 
 msgid "[确认]"
 msgstr "[Confirm]"
@@ -9239,16 +7074,6 @@ msgstr "[001] Check body condition (already checked)"
 
 msgid "[001]检查身体情况（当前没有查看对象）"
 msgstr "[001] Check body condition (no target)"
-
-msgid "[003]调整体检日程"
-msgstr "[003] Change schedule for checking"
-
-msgid ""
-"\n"
-"可以进行的检查项目/已进行的检查项目：{0}/{1}（每级医术技能+4）\n"
-msgstr ""
-"\n"
-"Available/Conducted: {0}/{1} (Medical Skill * 4 = available attempts) \n"
 
 msgid ""
 "请选择要对{0}进行的身体检查：\n"
@@ -9346,13 +7171,6 @@ msgstr ""
 "\n"
 "Updated prison training settings, please edit manually if needed\n"
 
-msgid ""
-"\n"
-"今日剩余待处理公务量为{0}，"
-msgstr ""
-"\n"
-"{0} work needed to be handled"
-
 msgid "且各区块设施运行基本正常，"
 msgstr "and all facilities are operating normally, "
 
@@ -9361,12 +7179,6 @@ msgstr "and some facilities are requiring fixing, "
 
 msgid "因此今日罗德岛的各设施的总效率为{0}%\n"
 msgstr "hence efficiency of all facilities increased to {0}%\n"
-
-msgid "医疗部设施损坏，效率降低{0}%\n"
-msgstr "Medical Department have broken facilities, efficiency -{0}%\n"
-
-msgid "今日罗德岛总收入为： 医疗部收入{0}，乘以效率后最终收入为{1}，已全部转化为龙门币\n"
-msgstr "Today's income： {0} from Medical Department, final income {1}, exchanged to LMD\n"
 
 msgid "  今日有访客要离开罗德岛，且其留下意愿较低\n"
 msgstr "  There's guests leaving Rhodes Island, and have low interest to stay\n"
@@ -9391,12 +7203,6 @@ msgstr "Take off eye mask"
 
 msgid "灌肠液_已废弃"
 msgstr ""
-
-msgid "太累了"
-msgstr "Too tired"
-
-msgid "，无法继续H"
-msgstr ", can't continue H"
 
 msgid "未找到目标素质，无法进行变化\n"
 msgstr "Cannot change the target's talent due to failed search\n"
@@ -9429,9 +7235,6 @@ msgstr ""
 "○Some Engravings can be upgraded directly via Juels besides the normal way\n"
 "\n"
 
-msgid "当前刻印及等级为：{0}{1}\n"
-msgstr "Current Engraving and Level: {0} at Lv{1}\n"
-
 msgid "升级需要的总值为：{0}\n"
 msgstr "Upgrade requirement: {0}\n"
 
@@ -9460,14 +7263,8 @@ msgstr "Downgrade requirement: {0}\n"
 msgid "该干员已被关押，当前关押区等级为{0}，降级所需宝珠值降低{1}%，降级所需宝珠值为{2}\n"
 msgstr "The Operator was imprisoned, currently having Detention Zone Lv{0}, Juels required -{1}%, now requiring {2}\n"
 
-msgid "当前角色宝珠可以提供的总值为："
-msgstr "Current total amount provided by Juels: "
-
 msgid "使用宝珠降低刻印"
 msgstr "Use Juels to downgrade"
-
-msgid "刻印降级成功，{0}降至{1}级\n"
-msgstr "Engraving downgraded, {0} is reduced to Lv{1}\n"
 
 msgid ""
 "\n"
@@ -9484,22 +7281,6 @@ msgstr "Filter Operators in same area"
 
 msgid "筛选无意识干员"
 msgstr "Filter unconscious Operators"
-
-msgid "{0}正在对{1}进行的动作是{2}。你要弄清楚是谁对谁做了什么，{0}是做这个动作的人，{1}是被做了这个动作的人。"
-msgstr "{0} is currently targeting {1} for doing {2}, you need to know who's doing to who, {0} is the doer and {1} is the target."
-
-msgid ""
-"你需要仅描述这个动作，包括角色的肢体动作、角色的台词、角色的心理活动、角色与场景中的物体的交互等。你不要描述动作之前的剧情，或者动作之后的剧情，只描述这个动作的过程。"
-msgstr ""
-"You only need to describe the action, include body language, dialogues, mental activities, the interaction between characters and object. You should not to describe the story before and after the action, only describe during the action."
-
-msgid ""
-"以下是一些额外提供的参考信息，信息里包括了两个人的详细信息，你可以这些信息中挑选一部分来丰富对本次动作的描述，你只能直接使用这些信息本身，不能从这些信息中联想或者猜测其他的信息："
-msgstr ""
-"The message below is information added, including two related people's information, you can choose a few to enrichen the narration, but you shall not have additional information outside of these provided: "
-
-msgid "当前的季节是{0}，当前的时间是{1}。"
-msgstr "Current season is {0}, and current time is {1}."
 
 msgid "(生成失败，使用原文本)"
 msgstr "(Generation failed)"
@@ -9524,9 +7305,6 @@ msgstr "  *More model name can be found in official files, will automatically us
 
 msgid "  deepseek模型示例：deepseek-chat,deepseek-reasoner\n"
 msgstr "  deepseek model examples: deepseek-chat,deepseek-reasoner\n"
-
-msgid "  gemini模型示例：gemini-1.5-pro, gemini-1.5-flash，gemini-2.0-flash-exp\n"
-msgstr "  gemini model examples: gemini-1.5-pro, gemini-1.5-flash，gemini-2.0-flash-exp\n"
 
 msgid "  调用gpt、deepseek、gemini的官方api时url会自动填充，非官方api调用或本地api调用可在此手动输入\n"
 msgstr "  url will automatically filled if using official api of gpt、deepseek、gemini, else you may enter manually here\n"
@@ -9617,9 +7395,6 @@ msgstr "Become Operator"
 msgid "追捕囚犯{0}"
 msgstr "Capture prisoner {0}"
 
-msgid "追捕_{0}_1"
-msgstr "Capture_{0}_1"
-
 msgid "囚犯{0}从监狱逃跑了，请尽快将其抓回。"
 msgstr "Prisoner {0} have escaped, please capture asap"
 
@@ -9671,9 +7446,6 @@ msgstr ""
 
 msgid "[0000]通用文本  by {0}"
 msgstr "[0000]General dialogues  by {0}"
-
-msgid "当前国家剩余可招募干员数量（不含委托特殊招募）：{0}\n"
-msgstr "Current available Operators to recruit here: {0}\n"
 
 msgid "  当前没有已招募待确认的干员\n"
 msgstr "  There's no Operators requiring confirmation\n"
@@ -10013,11 +7785,6 @@ msgstr ""
 
 msgid ""
 "\n"
-"最多可以使用{0}个{1}，当前使用量为{2}，预计需要{3}个\n"
-msgstr ""
-
-msgid ""
-"\n"
 "刻印降级成功，{0}降至{1}级\n"
 msgstr ""
 
@@ -10030,13 +7797,7 @@ msgstr ""
 msgid "选择助理"
 msgstr ""
 
-msgid "  已受精{0}天，"
-msgstr ""
-
 msgid "但从外表上还看不出来\n"
-msgstr ""
-
-msgid "[妊娠]中，肚子已经大起来了\n"
 msgstr ""
 
 msgid "[临盆]中，即将诞下爱的结晶\n"
@@ -10049,14 +7810,6 @@ msgid "  [育儿]中，正在给宝宝喂奶\n"
 msgstr ""
 
 msgid "  未分娩过\n"
-msgstr ""
-
-msgid ""
-"\n"
-" 【其他】"
-msgstr ""
-
-msgid "  肠胃一共吸收了{0}ml精液\n"
 msgstr ""
 
 msgid " [调整发送的数据] "
@@ -10153,18 +7906,10 @@ msgstr ""
 msgid " 被绳子捆成了{0}"
 msgstr ""
 
-msgid "可派遣人员（需要{0}人）：\n"
-msgstr ""
-
 msgid "队长："
 msgstr ""
 
 msgid "。队员："
-msgstr ""
-
-msgid ""
-"\n"
-"\n"
 msgstr ""
 
 msgid "调整派遣人员"
@@ -10354,13 +8099,6 @@ msgid " [选择该版本] "
 msgstr ""
 
 msgid " [不使用任何版本] "
-msgstr ""
-
-msgid ""
-"\n"
-"\n"
-"   ※ 当前招募策略无可招募npc，招募失败，已自动停止招募，请调整策略或移动至其他国家 ※\n"
-"\n"
 msgstr ""
 
 msgid " <隐>"
@@ -10574,13 +8312,7 @@ msgstr ""
 msgid "     调香消耗："
 msgstr ""
 
-msgid "  总共喝过{0}ml精液（有{1}ml精液在食道直接射进了胃里）\n"
-msgstr ""
-
 msgid "[妊娠]中，肚子已经大起来了"
-msgstr ""
-
-msgid "，距离临盆预计还有{0}天左右\n"
 msgstr ""
 
 msgid "技能"
@@ -10686,9 +8418,6 @@ msgid ""
 "\n"
 msgstr ""
 
-msgid "（无意识状态下，或装备在严重损坏及以上、或助理、监狱长等特殊职位的干员无法出勤）\n"
-msgstr ""
-
 msgid "▼药物类"
 msgstr ""
 
@@ -10757,16 +8486,6 @@ msgstr ""
 msgid ""
 "\n"
 "  {0}已经是【小足】了，无法使用瘦足药\n"
-msgstr ""
-
-msgid ""
-"\n"
-"  {0}已经是最大的【熟女】或【人妻】了，无法使用外表年龄增长药\n"
-msgstr ""
-
-msgid ""
-"\n"
-"  {0}已经是最小的【幼女】了，无法使用外表年龄减少药\n"
 msgstr ""
 
 msgid ""
@@ -10950,9 +8669,6 @@ msgid ""
 "\n"
 msgstr ""
 
-msgid " {cache.font_size} "
-msgstr ""
-
 msgid "请输入新的字体大小（1~50），数字越大字体就越大，默认为21，改变字体大小可能会导致绘制提前截断、错行、对不齐等排版问题，对游戏性没有影响\n"
 msgstr ""
 
@@ -10966,19 +8682,7 @@ msgstr ""
 msgid "阿玛雅"
 msgstr ""
 
-msgid "今日罗德岛收入为："
-msgstr ""
-
-msgid "医疗部收入{0}，"
-msgstr ""
-
-msgid "总收入为{0}，已全部转化为龙门币\n"
-msgstr ""
-
 msgid "龙门币"
-msgstr ""
-
-msgid "{0}有事找你，已经在门外等候多时了\n"
 msgstr ""
 
 msgid "种植与养护作物"
@@ -11039,11 +8743,6 @@ msgid "+找博士逆推(+50)"
 msgstr ""
 
 msgid "生育"
-msgstr ""
-
-msgid ""
-"\n"
-"error {0}的身体部位成长时新旧素质列表长度不一致，母亲为{1}，旧列表{2}，新列表{3}\n"
 msgstr ""
 
 msgid "射精欲"
@@ -11218,9 +8917,6 @@ msgstr ""
 msgid "(空缺)"
 msgstr ""
 
-msgid "药田{0}号线 主种植员: {1}  "
-msgstr ""
-
 msgid "[任命]"
 msgstr ""
 
@@ -11234,9 +8930,6 @@ msgid "药田副种植员："
 msgstr ""
 
 msgid "药田副种植员：暂无\n"
-msgstr ""
-
-msgid "温室{0}号线 主种植员: {1}  "
 msgstr ""
 
 msgid "任命温室主种植员"
@@ -11263,19 +8956,10 @@ msgstr ""
 msgid "(囚)"
 msgstr ""
 
-msgid "于{time}在{palce}，被{character_name}博士以{posture}夺走了后庭处女\n"
-msgstr ""
-
 msgid "保有子宫处女\n"
 msgstr ""
 
-msgid "于{time}在{palce}，被{character_name}博士以{posture}夺走了子宫处女\n"
-msgstr ""
-
 msgid "保有尿道处女\n"
-msgstr ""
-
-msgid "于{time}在{palce}，被{character_name}博士以{posture}夺走了尿道处女\n"
 msgstr ""
 
 msgid "  当前理论用电量: {0} / 理论供电量:{1}"
@@ -11374,9 +9058,6 @@ msgstr ""
 msgid "当前调味: {0}\n"
 msgstr ""
 
-msgid "是否确认制作该食物？"
-msgstr ""
-
 msgid "无此生产线"
 msgstr ""
 
@@ -11396,9 +9077,6 @@ msgid "当前生产工人数量：{0}"
 msgstr ""
 
 msgid "[生产工人增减]"
-msgstr ""
-
-msgid "{0}号生产线 主生产工人: {1}  "
 msgstr ""
 
 msgid "副生产工人："
@@ -11450,11 +9128,6 @@ msgid "风力"
 msgstr ""
 
 msgid "光伏"
-msgstr ""
-
-msgid ""
-"\n"
-"能源结算\n"
 msgstr ""
 
 msgid " - 火力发电：燃料不足（计划 {0:.1f}，实际 {1:.1f}），按比例产出 {2:.1f} 单位电量\n"
@@ -11574,9 +9247,6 @@ msgid "风力发电"
 msgstr ""
 
 msgid "光伏发电"
-msgstr ""
-
-msgid "{0}主调控员: {1}"
 msgstr ""
 
 msgid "辅助调控员: "
@@ -11778,22 +9448,10 @@ msgstr ""
 msgid "，已停止招募"
 msgstr ""
 
-msgid "当前效率加成：{0} {1} {2} = {2}%"
-msgstr ""
-
 msgid "  当前设施等级为：{0}，可同时有{1}条招募线\n"
 msgstr ""
 
-msgid "  当前国家剩余可招募干员数量（不含委托特殊招募）：{0}\n"
-msgstr ""
-
 msgid "[001]招聘专员管理"
-msgstr ""
-
-msgid ""
-"\n"
-"\n"
-" 当前可以选择的策略有（系数越高越简单）：\n"
 msgstr ""
 
 msgid "(调整系数{0})"
@@ -11805,28 +9463,13 @@ msgstr ""
 msgid "招聘专员管理"
 msgstr ""
 
-msgid "当前招聘专员数量：{0}"
-msgstr ""
-
 msgid "[招聘专员增减]"
-msgstr ""
-
-msgid "{0}号招募线 主招聘专员: {1}  "
-msgstr ""
-
-msgid "副招聘专员："
-msgstr ""
-
-msgid "副招聘专员：暂无\n"
 msgstr ""
 
 msgid "请选择一名招聘专员担任第{0}号招募线主招聘专员:\n"
 msgstr ""
 
 msgid "任命主招聘专员"
-msgstr ""
-
-msgid " {0}龙门币/1单位 {1} "
 msgstr ""
 
 msgid ""
@@ -11901,9 +9544,6 @@ msgid "[5]尴尬地结束H"
 msgstr ""
 
 msgid "目击H后被话术支开"
-msgstr ""
-
-msgid "[ {cache.font_size} ]"
 msgstr ""
 
 msgid "游戏基础设置"
