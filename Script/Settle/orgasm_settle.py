@@ -52,7 +52,7 @@ def orgasm_judge(
     character_id: int,
     change_data: game_type.CharacterStatusChange,
     skip_undure: bool = False,
-):
+) -> None:
   """
   判断第二结算中的高潮，都发生哪些高潮，各多少次
   Keyword arguments:
@@ -174,7 +174,7 @@ def orgasm_settle_in_second_behavior(
     normal_orgasm_dict: dict | None = None,
     extra_orgasm_dict: dict | None = None,
     un_count_orgasm_dict: dict | None = None,
-):
+) -> None:
   """
   处理第二结算中的高潮结算
   Keyword arguments:

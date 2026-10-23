@@ -35,7 +35,7 @@ line_feed.text = "\n"
 line_feed.width = 1
 
 
-def init_character_behavior():
+def init_character_behavior() -> None:
   """
   角色行为树总控制
   """
@@ -102,7 +102,7 @@ def character_behavior(
     character_id: int,
     now_time: datetime.datetime,
     pl_start_time: datetime.datetime,
-):
+) -> None:
   """
   角色行为控制
   Keyword arguments:
@@ -294,7 +294,7 @@ def judge_character_status(character_id: int) -> int:
 
 
 def judge_character_status_time_over(
-    character_id: int, now_time: datetime.datetime, end_now=0
+    character_id: int, now_time: datetime.datetime, end_now: int = 0
 ) -> int:
   """
   结算角色状态是否本次行动已经结束
@@ -423,7 +423,7 @@ def character_instruct_record(character_id: int) -> str:
   return instruct_text
 
 
-def judge_before_pl_behavior():
+def judge_before_pl_behavior() -> None:
   """
   玩家角色行动前的判断\n
   Keyword arguments:

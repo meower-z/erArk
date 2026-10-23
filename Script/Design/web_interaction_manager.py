@@ -71,7 +71,7 @@ def select_major_type(major_type: str) -> Optional[str]:
   return None
 
 
-def select_minor_type(minor_type: str):
+def select_minor_type(minor_type: str) -> None:
   """
   选择小类型
 
@@ -82,7 +82,7 @@ def select_minor_type(minor_type: str):
   # 已取消记忆功能：不再保存小类选择到记忆
 
 
-def clear_selection():
+def clear_selection() -> None:
   """清除当前选择"""
   cache.web_current_major_type = None
   cache.web_current_minor_type = None
@@ -256,12 +256,12 @@ def get_item_list() -> List[Dict]:
   return result
 
 
-def select_drug(drug_id: int):
+def select_drug(drug_id: int) -> None:
   """选择药物"""
   cache.web_selected_drug_id = drug_id
 
 
-def select_item(item_id: int):
+def select_item(item_id: int) -> None:
   """选择道具"""
   cache.web_selected_item_id = item_id
 

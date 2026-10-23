@@ -4,7 +4,7 @@ from Script.Core import constant
 from Script.Design import child_stage_gate
 
 
-def handle_state_machine(state_machine_id: int, character_id: int):
+def handle_state_machine(state_machine_id: int, character_id: int) -> None:
   """
   创建角色状态机
   Keyword arguments:

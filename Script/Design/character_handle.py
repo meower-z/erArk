@@ -26,7 +26,7 @@ _: FunctionType = get_text._
 """ 翻译api """
 
 
-def init_character_list():
+def init_character_list() -> None:
   """
   初始生成所有npc数据
   """
@@ -112,7 +112,7 @@ def init_character(
   return cache.character_data[character_id]
 
 
-def first_NPC_work():
+def first_NPC_work() -> None:
   """
   初始角色的工作安排
   """
@@ -129,7 +129,7 @@ def first_NPC_work():
   basement.update_work_people()
 
 
-def init_character_tem():
+def init_character_tem() -> None:
   """
   初始化角色模板数据
   """
@@ -144,7 +144,7 @@ def init_character_tem():
   cache.npc_tem_data = dict(character_config.character_tem_list)
 
 
-def create_empty_character_tem():
+def create_empty_character_tem() -> game_type.NpcTem:
   """
   生成空的角色模板数据
   """
@@ -160,7 +160,7 @@ def create_empty_character_tem():
   return now_tem
 
 
-def born_new_character(mother_id, child_name) -> int:
+def born_new_character(mother_id: int, child_name: str) -> int:
   """
   生成新的小孩模板数据
   Returns:
@@ -246,7 +246,7 @@ def born_new_character(mother_id, child_name) -> int:
 #         create_random_npc(i)
 
 
-def create_random_npc(id) -> dict:
+def create_random_npc(id: int) -> dict:
   """
   生成随机npc数据模板
   """
@@ -286,7 +286,7 @@ def get_rand_npc_sex() -> int:
   return sex_weight_regin_data[weight_regin]
 
 
-def init_character_position():
+def init_character_position() -> None:
   """初始化角色位置"""
   cache = cache_control.cache
   id_list = cache.npc_id_got
@@ -305,7 +305,7 @@ def init_character_position():
   map_handle.character_move_scene(["0", "0"], character_position, 0)
 
 
-def init_character_entertainment():
+def init_character_entertainment() -> None:
   """初始化角色娱乐"""
   cache = cache_control.cache
   id_list = cache.npc_id_got
@@ -314,7 +314,7 @@ def init_character_entertainment():
     handle_npc_ai.get_chara_entertainment(character_id)
 
 
-def init_character_facility_open():
+def init_character_facility_open() -> None:
   """初始化角色开放设施"""
   cache = cache_control.cache
   for open_cid in game_config.config_facility_open:
@@ -332,7 +332,7 @@ def init_character_facility_open():
         break
 
 
-def get_new_character(character_id: int, visitor_flag: bool = False):
+def get_new_character(character_id: int, visitor_flag: bool = False) -> None:
   """
   获得新角色
   Keyword arguments:
@@ -402,7 +402,7 @@ def add_favorability(
     now_add_favorability: int,
     change_data: Optional[game_type.CharacterStatusChange],
     target_change: Optional[game_type.TargetChange],
-):
+) -> None:
   """
   增加目标角色对当前角色的好感
   Keyword arguments:
@@ -470,7 +470,7 @@ def add_favorability(
     cache.rhodes_island.total_favorability_increased += now_add_favorability
 
 
-def handle_character_setting():
+def handle_character_setting() -> None:
   """
   处理角色的初始世界设置
   """

@@ -75,7 +75,7 @@ def get_scene_list_for_map(map_path_str: str) -> list:
   return scene_list
 
 
-def get_scene_name_list_for_map_path(map_path_str: str):
+def get_scene_name_list_for_map_path(map_path_str: str) -> dict[str, str]:
   """
   获取地图下所有场景的名字
   Keyword arguments:
@@ -92,7 +92,7 @@ def get_scene_name_list_for_map_path(map_path_str: str):
 
 def character_move_scene(
     old_scene_path: list, new_scene_path: list, character_id: int
-):
+) -> None:
   """
   将角色移动至新场景
   Keyword arguments:
@@ -444,7 +444,7 @@ def get_map_door_data(map_path_str: str) -> dict:
 
 
 def get_chara_now_scene_all_chara_id_list(
-    character_id: int, remove_own_character=False
+    character_id: int, remove_own_character: bool = False
 ) -> list:
   """
   获取角色当前场景下所有角色的id列表
@@ -462,7 +462,7 @@ def get_chara_now_scene_all_chara_id_list(
 
 
 def get_scene_character_name_list(
-    scene_path_str: str, remove_own_character=False
+    scene_path_str: str, remove_own_character: bool = False
 ) -> list:
   """
   获取场景上所有角色的姓名列表
@@ -558,7 +558,7 @@ def judge_follow_player_into_scene(
   return False
 
 
-def init_scene_edge_path_data():
+def init_scene_edge_path_data() -> None:
   """初始化全部地图寻路数据"""
   global scene_path_edge
   scene_path_edge = {}
@@ -697,7 +697,7 @@ def identical_map_move(
 
 
 def judge_scene_accessible(
-    target_scene_str: str, character_id: int, draw_flag=True
+    target_scene_str: str, character_id: int, draw_flag: bool = True
 ) -> str:
   """
   判断目标地点是否可以进入

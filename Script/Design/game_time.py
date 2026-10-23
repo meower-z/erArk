@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime
 import time
 import random
@@ -102,7 +104,7 @@ class GameTime(datetime.datetime):
         play_time.microseconds,
     )
 
-  def __add__(self, other):
+  def __add__(self, other: object) -> GameTime:
     """
     游戏时间加上一段时长，按游戏日历推进（不经过被跳过的非季月）
     Keyword arguments:
@@ -130,7 +132,7 @@ class GameTime(datetime.datetime):
       return get_play_time(self) - get_play_time(other)
     return NotImplemented
 
-  def __rsub__(self, other):
+  def __rsub__(self, other: object) -> datetime.timedelta:
     """
     普通 datetime 减去游戏时间，同样按游戏日历计算经过的时长
     Keyword arguments:
@@ -164,7 +166,7 @@ def get_anchor_date(date: datetime.datetime) -> datetime.datetime:
   )
 
 
-def init_time():
+def init_time() -> None:
   """
   初始化游戏时间
   """
@@ -292,7 +294,9 @@ def get_week_day_text() -> str:
   return week_date_data.name
 
 
-def sub_time_now(minute=0, hour=0, day=0, month=0, year=0) -> datetime.datetime:
+def sub_time_now(
+    minute: int = 0, hour: int = 0, day: int = 0, month: int = 0, year: int = 0
+) -> datetime.datetime:
   """
   增加当前游戏时间
   Keyword arguments:
@@ -306,11 +310,11 @@ def sub_time_now(minute=0, hour=0, day=0, month=0, year=0) -> datetime.datetime:
 
 
 def get_sub_date(
-    minute=0,
-    hour=0,
-    day=0,
-    month=0,
-    year=0,
+    minute: int = 0,
+    hour: int = 0,
+    day: int = 0,
+    month: int = 0,
+    year: int = 0,
     old_date: datetime.datetime = None,
 ) -> datetime.datetime:
   """

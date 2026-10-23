@@ -135,7 +135,7 @@ def judge_character_tired_sleep(character_id: int):
 
 def run_npc_pre_behavior_checks(
     character_id: int, pl_start_time: datetime.datetime
-):
+) -> None:
   """
   依次执行NPC的行动前检查序列\n
   疲劳/睡眠检查判定为群交力竭退出时，由本序列提交这一次退出转换并跳过其余检查，\n
@@ -167,7 +167,7 @@ def run_npc_pre_behavior_checks(
   )  # H状态、猥亵与无意识
 
 
-def commit_group_sex_tired_exit(character_id: int):
+def commit_group_sex_tired_exit(character_id: int) -> None:
   """
   调度器提交群交力竭退出\n
   配置退出行为并恰好结算一次退出效果链（清is_h、将角色移出群交模板等），\n
@@ -330,7 +330,9 @@ def judge_character_cant_move(character_id: int) -> int:
   return cant_move_flag
 
 
-def find_character_target(character_id: int, now_time: datetime.datetime):
+def find_character_target(
+    character_id: int, now_time: datetime.datetime
+) -> None:
   """
   查询角色可用目标活动并赋给角色
   Keyword arguments:
@@ -638,7 +640,7 @@ def search_target(
     premise_data: Dict[int, int],
     target_weight_data: Dict[int, int],
     get_first_only: bool = False,
-):
+) -> tuple[str, int, int, Dict[int, int]]:
   """
   查找可用目标\n
   Keyword arguments:\n
@@ -749,7 +751,7 @@ def npc_auto_work_or_entertainment(
     premise_data: Dict[int, int],
     move_flag: bool,
     work_flag: bool,
-):
+) -> tuple[int, Dict[int, int]]:
   """
   NPC自动工作或娱乐\n
   Keyword arguments:\n
@@ -969,7 +971,7 @@ def judge_interrupt_character_behavior(character_id: int) -> int:
   return 0
 
 
-def judge_same_position_npc_follow():
+def judge_same_position_npc_follow() -> None:
   """
   判断同位置的NPC是否跟随玩家\n
   Keyword arguments:\n
@@ -1024,7 +1026,7 @@ def judge_same_position_npc_follow():
         )
 
 
-def get_chara_entertainment(character_id: int):
+def get_chara_entertainment(character_id: int) -> None:
   """
   刷新角色的娱乐活动\n
   Keyword arguments:\n

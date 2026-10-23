@@ -37,7 +37,7 @@ def base_chara_hp_mp_common_settle(
     change_data_to_target_change: Optional[
         game_type.CharacterStatusChange
     ] = None,
-):
+) -> None:
   """
   基础角色体力与气力通用结算函数\n
   Keyword arguments:\n
@@ -216,7 +216,7 @@ def base_chara_state_common_settle(
     change_data_to_target_change: Optional[
         game_type.CharacterStatusChange
     ] = None,
-):
+) -> None:
   """
   基础角色状态通用结算函数\n
   Keyword arguments:\n
@@ -369,7 +369,7 @@ def base_chara_state_common_settle(
 
 def chara_feel_state_adjust(
     character_id: int, state_id: int, ability_level: int = -1
-):
+) -> float:
   """
   角色快感系数获得的共用函数
   Keyword arguments:
@@ -385,7 +385,7 @@ def chara_feel_state_adjust(
   from Script.System.Sex_System import drunk_sex_common
 
   # 系数加成
-  final_adjust = 0
+  final_adjust: float = 0
   # 部位感觉
   feel_ability_id = state_id
   # 口喉
@@ -480,7 +480,7 @@ def chara_feel_state_adjust(
 
 def chara_base_state_adjust(
     character_id: int, state_id: int, ability_level: int = -1
-):
+) -> float:
   """
   角色状态系数获得的共用函数
   Keyword arguments:
@@ -625,7 +625,7 @@ def extra_feel_settle(
     final_value: float,
     change_data: game_type.CharacterStatusChange,
     change_data_to_target_change: game_type.CharacterStatusChange,
-):
+) -> None:
   """
   顺从对恭顺、露出对羞耻、施虐对先导、受虐对苦痛而产生的额外快感
   Keyword arguments:
@@ -725,7 +725,7 @@ def base_chara_favorability_and_trust_common_settle(
         Union[game_type.CharacterStatusChange, game_type.TargetChange]
     ] = None,
     target_character_id: int = 0,
-):
+) -> None:
   """
   基础角色好感与信赖通用结算函数\n
   Keyword arguments:\n
@@ -1066,7 +1066,7 @@ def base_chara_climix_common_settle(
     change_data_to_target_change: Optional[
         game_type.CharacterStatusChange
     ] = None,
-):
+) -> None:
   """
   基础角色绝顶通用结算函数\n
   Keyword arguments:\n
@@ -1161,7 +1161,7 @@ def base_chara_experience_common_settle(
     change_data_to_target_change: Optional[
         Union[game_type.CharacterStatusChange, game_type.TargetChange]
     ] = None,
-):
+) -> None:
   """
   基础角色经验通用结算函数\n
   Keyword arguments:\n

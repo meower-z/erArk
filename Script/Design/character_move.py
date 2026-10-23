@@ -15,7 +15,7 @@ _: FunctionType = get_text._
 """ 翻译api """
 
 
-def cancel_movement_plan(character_id: int):
+def cancel_movement_plan(character_id: int) -> None:
   """
   撤销角色尚未完成的移动计划，同时保留最后一次移动的起点和目标点
   Keyword arguments:
@@ -27,7 +27,7 @@ def cancel_movement_plan(character_id: int):
   character_data.behavior.move_final_target = []
 
 
-def own_charcter_move(target_scene: list):
+def own_charcter_move(target_scene: list) -> None:
   """
   主角寻路至目标场景
   Keyword arguments:

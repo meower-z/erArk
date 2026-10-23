@@ -52,7 +52,7 @@ def _get_event_index(behavior_id: str) -> dict:
 
 
 def handle_event(
-    character_id: int, event_before_instrust_flag=False
+    character_id: int, event_before_instrust_flag: bool = False
 ) -> (draw_event_text_panel.DrawEventTextPanel, str):
   """
   处理状态触发事件

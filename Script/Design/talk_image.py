@@ -2,7 +2,7 @@ from Script.UI.Moudle import draw
 import re
 
 
-def draw_image_in_talk(talk_text: str):
+def draw_image_in_talk(talk_text: str) -> str:
   """
   绘制口上中的图片
   """

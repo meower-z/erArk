@@ -21,6 +21,11 @@ import time
 from typing import Callable, Dict
 from Script.Core import constant
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from types import FunctionType
+
 premise_profile_stats: Dict[str, Dict] = {}
 
 
@@ -39,7 +44,7 @@ def _wrap(pid: str, func: Callable) -> Callable:
     _init_premise_stat(pid)
   stat = premise_profile_stats[pid]
 
-  def wrapped(character_id: int):
+  def wrapped(character_id: int) -> int:
     start = time.perf_counter()
     result = func(character_id)
     dur = time.perf_counter() - start
@@ -63,7 +68,7 @@ def _wrap(pid: str, func: Callable) -> Callable:
 class _PremiseDictProxy(dict):
   """拦截注册的新条目，统一包裹。"""
 
-  def __setitem__(self, key: str, value):
+  def __setitem__(self, key: str, value: object) -> None:
     # 仅对可调用对象包裹
     if callable(value):
       value = _wrap(key, value)
@@ -93,13 +98,13 @@ def activate_profiler() -> None:
   constant.handle_premise_data = proxy
 
 
-def add_premise(premise_id: str):
+def add_premise(premise_id: str) -> Callable[[FunctionType], FunctionType]:
   """
   兼容用：若某处显式使用了本模块的 add_premise，则仍可工作。
   更推荐方式是使用 activate_profiler() + 代理字典拦截。
   """
 
-  def decorator(func):
+  def decorator(func: FunctionType) -> FunctionType:
     # 确保已激活
     activate_profiler()
     constant.handle_premise_data[premise_id] = func  # 会被代理自动包裹

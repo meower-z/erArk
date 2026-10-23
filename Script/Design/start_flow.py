@@ -5,12 +5,12 @@ cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
 
 
-def start_frame():
+def start_frame() -> None:
   """
   游戏主流程
   """
   # 尝试导入Web模式的面板切换异常
-  PanelChangeException = None
+  PanelChangeException: type[Exception] | None = None
   if getattr(cache, 'web_mode', False):
     try:
       from Script.Core.flow_handle_web import PanelChangeException

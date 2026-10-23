@@ -2475,7 +2475,9 @@ def character_get_chara_normal_cloth_and_day_equip(character_id: int) -> None:
 @handle_state_machine.add_state_machine(
     constant.StateMachine.RESET_SHOWER_STATUS_AND_GET_NORMAL_CLOTH
 )
-def character_reset_shower_status_and_get_normal_cloth(character_id: int):
+def character_reset_shower_status_and_get_normal_cloth(
+    character_id: int,
+) -> None:
   """
   清零洗澡状态并换上标准衣服
   Keyword arguments:

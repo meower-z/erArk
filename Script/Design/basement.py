@@ -104,7 +104,7 @@ def get_base_zero() -> game_type.Rhodes_Island:
   return base_data
 
 
-def init_dormitory_managers(base_data: game_type.Rhodes_Island):
+def init_dormitory_managers(base_data: game_type.Rhodes_Island) -> None:
   """
   初始化宿舍管理员数据
   输入类型: game_type.Rhodes_Island
@@ -197,7 +197,7 @@ def get_base_updata():
         )
     elif facility_name == _("制造加工区"):
       # 初始化流水线(按等级开放数量)
-      def _init_line(idx: int):
+      def _init_line(idx: int) -> None:
         if idx not in cache.rhodes_island.assembly_line:
           cache.rhodes_island.assembly_line[idx] = [0, 0, 0.0, 0, 0]
 
@@ -420,7 +420,7 @@ def calc_facility_efficiency(facility_cid: int = -1) -> float:
   return adjust
 
 
-def update_base_resouce_newday():
+def update_base_resouce_newday() -> None:
   """
   每日刷新基地资源数据\n
   Keyword arguments:
@@ -465,7 +465,7 @@ def update_base_resouce_newday():
   confinement_and_training.settle_prisoners()
 
 
-def update_work_people():
+def update_work_people() -> None:
   """
   刷新各干员的职位和当前正在工作的干员
   """
@@ -663,7 +663,7 @@ def update_work_people():
   )
 
 
-def update_facility_people():
+def update_facility_people() -> None:
   """
   更新当前基地各设施使用人数
   """
@@ -677,7 +677,7 @@ def update_facility_people():
       cache.rhodes_island.reader_now += 1
 
 
-def settle_milk():
+def settle_milk() -> None:
   """
   结算母乳转化
   """
@@ -733,7 +733,7 @@ def settle_milk():
     now_draw.draw()
 
 
-def settle_semen():
+def settle_semen() -> None:
   """
   结算精液转化
   """
@@ -767,7 +767,7 @@ def settle_semen():
     now_draw.draw()
 
 
-def settle_office_work():
+def settle_office_work() -> None:
   """
   结算公务
   """
@@ -840,7 +840,7 @@ def settle_office_work():
   now_draw.draw()
 
 
-def settle_pink_certificate():
+def settle_pink_certificate() -> None:
   """
   结算粉红凭证
   """
@@ -874,7 +874,7 @@ def settle_pink_certificate():
   cache.rhodes_island.week_fall_chara_pink_certificate_add = 0
 
 
-def draw_todo():
+def draw_todo() -> None:
   """
   绘制待办事项
   """
@@ -932,7 +932,7 @@ def draw_todo():
     now_draw.draw()
 
 
-def find_facility_damage():
+def find_facility_damage() -> str:
   """
   检查设施损坏
   """
