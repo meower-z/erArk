@@ -2379,7 +2379,8 @@ def _remove_from_group_sex_template(character, young_child_id_set: set) -> int:
   Return arguments:
   int -- 改动的项数
   功能: 阴茎侍奉的对象删空时换回默认的 [[-1], -1]。两部分分别检查结构：模板不是长度至少为2、第一项为字典的列表时整份跳过；
-        阴茎侍奉部分不是 [对象列表, 指令状态] 时只跳过这一部分，单部位已做的改动保留
+        阴茎侍奉部分不是 [对象列表, 指令状态] 时只跳过这一部分，单部位已做的改动保留。
+        group_sex_panel.clear_character_data_in_group_sex_template 只改游戏缓存里玩家的模板、不检查结构，而这里改的是还没载入缓存的存档里每个角色的模板，所以不用它
   """
   count = 0
   for template_data in character.h_state.group_sex_body_template_dict.values():
@@ -2440,7 +2441,7 @@ def _clear_young_child_reference(loaded_dict, young_child_id_set: set) -> int:
   """
   清掉存档里其他结构对101/102阶段孩子的引用：时停自由活动对象、装袋对象、交互中对象、拒绝群交名单、
      玩家收藏品里她的胖次、袜子、乳汁与圣水，冷库里她的母乳与圣水，囚犯、外勤委托、实操课必修名单、体检名单、借书，
-     以及离开场景面板前查看的角色
+     以及离开场景面板前查看的角色；成员删空的外勤委托取消（见 _cancel_empty_field_commission）
   Keyword arguments:
   loaded_dict -- 存档数据
   young_child_id_set -- 101/102阶段孩子的角色id集合
@@ -2512,6 +2513,7 @@ def _clear_young_child_reference(loaded_dict, young_child_id_set: set) -> int:
   for commission_data in rhodes_island.ongoing_field_commissions.values():
     if isinstance(commission_data, list) and commission_data:
       count += _discard_id(commission_data[0], young_child_id_set)
+  count += _cancel_empty_field_commission(rhodes_island)
   for class_data in rhodes_island.temp_sex_class.values():
     if isinstance(class_data, dict):
       count += _discard_id(class_data.get('must_attend'), young_child_id_set)
@@ -2527,6 +2529,37 @@ def _clear_young_child_reference(loaded_dict, young_child_id_set: set) -> int:
       count += 1
   if loaded_dict.get('old_character_id') in young_child_id_set:
     loaded_dict['old_character_id'] = 0
+    count += 1
+  return count
+
+
+def _cancel_empty_field_commission(rhodes_island) -> int:
+  """
+  取消没有成员的外勤委托：从进行中的委托里移除，派出的载具收回
+  Keyword arguments:
+  rhodes_island -- 存档里的罗德岛数据
+  Return arguments:
+  int -- 改动的项数
+  功能: 游戏里没有取消委托的流程，这里只做完成结算 judge_field_commission_finish 里收回载具与移除委托的两步：
+        载具按 settle_vehicle 不损坏时的做法，每辆的派出数减1；委托从 ongoing_field_commissions 移除。
+        奖励、计入已完成、成就、招募、载具损坏与装备损坏都不结算，派遣时扣掉的资源不退
+  """
+  count = 0
+  for commission_id, commission_data in list(
+      rhodes_island.ongoing_field_commissions.items()
+  ):
+    if (
+        not isinstance(commission_data, list)
+        or not commission_data
+        or commission_data[0]
+    ):
+      continue
+    vehicle_id_list = commission_data[2] if len(commission_data) > 2 else []
+    for vehicle_id in vehicle_id_list:
+      if vehicle_id in rhodes_island.vehicles:
+        rhodes_island.vehicles[vehicle_id][1] -= 1
+        count += 1
+    del rhodes_island.ongoing_field_commissions[commission_id]
     count += 1
   return count
 
@@ -2624,7 +2657,7 @@ def _take_young_child_off_line(loaded_dict, young_child_id_set: set) -> int:
 
 def _clear_age_drug_item(character) -> int:
   """
-  从角色道具栏中清掉外表年龄药：道具表里还有这一项时数量置0，没有时删掉这一项
+  从角色道具栏中删掉外表年龄药（道具表里没有这两项）
   Keyword arguments:
   character -- 角色数据
   Return arguments:
@@ -2632,13 +2665,8 @@ def _clear_age_drug_item(character) -> int:
   """
   count = 0
   for item_id in AGE_DRUG_ITEM_TUPLE:
-    if item_id not in character.item:
-      continue
-    if item_id not in game_config.config_item:
+    if item_id in character.item:
       del character.item[item_id]
-      count += 1
-    elif character.item[item_id]:
-      character.item[item_id] = 0
       count += 1
   return count
 
