@@ -146,7 +146,7 @@ def process_commission_text(
   from Script.Design import character
 
   # 无则直接返回
-  if now_text == _("无"):
+  if now_text == "无":
     type_text += _("无 ")
     full_text += _("无 ")
     satify_flag = True
@@ -315,7 +315,7 @@ def process_commission_text(
     item_name = cache.character_data[character_id].name + item_name
     now_have_item_num = attr_calculation.get_character_fall_level(character_id)
   # 招募
-  elif text_list[0] == _("招募"):
+  elif text_list[0] == "招募":
     if item_num == 0:
       item_name = _("未招募")
     else:
@@ -348,7 +348,7 @@ def process_commission_text(
       # 扣除资源
       if deduction_or_increase and text_list[0] == "r":
         cache.rhodes_island.materials_resouce[item_id] -= int(item_num)
-      elif deduction_or_increase and text_list[0] == _("声望"):
+      elif deduction_or_increase and text_list[0] == "声望":
         # 将不再扣除声望
         # cache.country.nation_reputation[item_id] -= item_num
         pass
@@ -387,7 +387,7 @@ def process_commission_text(
         item_name = cache.character_data[chara_id].name
         item_num = _("成为干员")
       # 特产
-      elif text_list[0] == _("特产"):
+      elif text_list[0] == "特产":
         cache.rhodes_island.materials_resouce[item_id] += int(item_num)
       # 委托部分，-1不可完成，0可以进行，1已完成
       elif text_list[0] == "m":
@@ -401,15 +401,15 @@ def process_commission_text(
         elif item_num == 1:
           cache.rhodes_island.finished_field_commissions_set.add(item_id)
       # 声望
-      elif text_list[0] == _("声望"):
+      elif text_list[0] == "声望":
         # 在前面已经乘过了，不需要再乘一遍
         # item_num *= 0.01
         cache.country.nation_reputation[item_id] += item_num
       # 好感
-      elif text_list[0] == _("好感"):
+      elif text_list[0] == "好感":
         cache.character_data[item_id].favorability[0] += int(item_num)
       # 信赖
-      elif text_list[0] == _("信赖"):
+      elif text_list[0] == "信赖":
         cache.character_data[item_id].trust += item_num
 
   # 添加类型文本
