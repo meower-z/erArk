@@ -25,6 +25,7 @@ from Script.Design.handle_premise.handle_premise_assistant import *
 from Script.Design.handle_premise.handle_premise_body_manage import *
 from Script.Design.handle_premise.handle_premise_work import *
 from Script.Design.handle_premise.handle_premise_food import *
+from Script.Design.handle_premise.premise_registry import add_premise
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -87,24 +88,6 @@ def _check_unnormal_combo(character_id: int, indexes: Iterable[int]) -> int:
   if character_id == 0:
     return 0
   return 1 - _check_normal_combo(character_id, indexes)
-
-
-def add_premise(premise: str) -> FunctionType:
-  """
-  添加前提
-  Keyword arguments:
-  premise -- 前提id
-  Return arguments:
-  FunctionType -- 前提处理函数对象
-  """
-
-  def decoraror(func):
-    # 直接注册原函数：原先的 return_wrapper 只做纯转发，
-    # 每次前提判定都要白付一层函数调用（热路径每百tick百万次级），故移除
-    constant.handle_premise_data[premise] = func
-    return func
-
-  return decoraror
 
 
 def handle_premise(premise: str, character_id: int) -> int:

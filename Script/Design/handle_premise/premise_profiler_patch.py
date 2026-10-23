@@ -6,7 +6,7 @@
 工作方式：
 - 用一个代理字典替换 Script.Core.constant.handle_premise_data，拦截所有注册（setitem）并自动包裹函数；
 - 同时对替换当下已经存在于字典中的条目进行一次性包裹；
-- 无需改动各 handle_premise_* 模块里本地的 add_premise 定义。
+- 无需改动 premise_registry 里的 add_premise 装饰器。
 
 用法（推荐）：
 1) 在初始化较早阶段调用 activate_profiler()；
@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+import functools
 import time
 from typing import Callable, Dict
 from Script.Core import constant
@@ -39,6 +40,8 @@ def _wrap(pid: str, func: Callable) -> Callable:
     _init_premise_stat(pid)
   stat = premise_profile_stats[pid]
 
+  # 包裹函数带上原函数的模块名与限定名，add_premise 按它们判断是否同一函数
+  @functools.wraps(func)
   def wrapped(character_id: int):
     start = time.perf_counter()
     result = func(character_id)
@@ -53,10 +56,6 @@ def _wrap(pid: str, func: Callable) -> Callable:
       stat["non_zero"] += 1
     return result
 
-  try:
-    wrapped.__name__ = getattr(func, "__name__", "wrapped")
-  except Exception:
-    pass
   return wrapped
 
 
