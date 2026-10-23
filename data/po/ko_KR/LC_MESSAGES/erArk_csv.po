@@ -2392,10 +2392,6 @@ msgstr "전신 스타일링"
 msgid "听肚子里的动静"
 msgstr "배의 움직임을 듣는다"
 
-#: ./data\csv\Behavior_Data.csv:59
-msgid "一起玩耍"
-msgstr "같이 논다"
-
 #: ./data\csv\Behavior_Data.csv:60
 msgid "博士在桌游中获胜"
 msgstr "박사는 보드게임에서 승리했다"
@@ -4631,14 +4627,6 @@ msgstr "설정 on Parenting"
 #: ./data\csv\Behavior_Data.csv:669
 msgid "结算育儿完成"
 msgstr "설정 Parenting completed"
-
-#: ./data\csv\Behavior_Data.csv:670
-msgid "结算幼女长成萝莉"
-msgstr "설정 growing to Loli"
-
-#: ./data\csv\Behavior_Data.csv:671
-msgid "结算萝莉长成少女"
-msgstr "설정 growing to Girl"
 
 #: ./data\csv\Behavior_Data.csv:673
 msgid "初次见面"
@@ -17157,10 +17145,6 @@ msgid "给感染者送抑制剂"
 msgstr "감염자 억제제 전달"
 
 #: ./data\csv\Commission.csv:6
-msgid "源石"
-msgstr "오리지늄"
-
-#: ./data\csv\Commission.csv:6
 msgid "当地有一个隐蔽的感染者小聚落，需要将2份感染抑制剂小样送到那里。"
 msgstr "현지의 감염자 소집단과 접촉했습니다. 위독한 환자가 있어 급하게 감염 억제제 전달을 요청합니다."
 
@@ -17259,10 +17243,6 @@ msgstr "주민들에게 무상 의료 지원과 광석병 예방 교육을 실�
 #: ./data\csv\Commission.csv:19
 msgid "越野訓練"
 msgstr "크로스컨트리"
-
-#: ./data\csv\Commission.csv:19
-msgid "成长"
-msgstr "성장"
 
 #: ./data\csv\Commission.csv:19
 msgid "幹員杜賓提議舉辦一場艦外訓練，以提升我島幹員體能水平"
@@ -17812,28 +17792,12 @@ msgstr ""
 msgid "經系統性的研究，我們合理懷疑食用該菌類後，其食用人意識會來到一與現實相似的維度，我們可以徵集一隻探險隊對該維度進行探索"
 msgstr ""
 
-#: ./data\csv\Commission.csv:88
-msgid "凱爾西的警告"
-msgstr ""
-
-#: ./data\csv\Commission.csv:88
-msgid "意識帝國的探索不甚順利，精神上的疲勞在探險隊員的身上累積，凱爾西醫生知道此事後嚴正警告了我們的動作"
-msgstr ""
-
 #: ./data\csv\Commission.csv:89
 msgid "也許我們該聽她的"
 msgstr ""
 
-#: ./data\csv\Commission.csv:89
-msgid "凱爾西醫生說的有道理，這不是我們現在該踏足了領域，我們應銷毀實驗記錄並封存相關數據"
-msgstr ""
-
 #: ./data\csv\Commission.csv:90
 msgid "扎實理論"
-msgstr ""
-
-#: ./data\csv\Commission.csv:90
-msgid "你相信你的理論模型，也相信工程部的能力。我們應該暫時無視凱爾西的警告，根據現有的資料來做出一台溝通兩界的試驗機"
 msgstr ""
 
 #: ./data\csv\Commission.csv:91
@@ -18093,10 +18057,6 @@ msgid "死魂靈安撫儀式"
 msgstr ""
 
 #: ./data\csv\Commission.csv:122
-msgid "支线"
-msgstr ""
-
-#: ./data\csv\Commission.csv:122
 msgid "卡茲戴爾的重建進度已經進行的差不多，是時候更換一下這座移動城市的動力來源了，先從安撫這些勞苦功高的老祖宗開始吧"
 msgstr ""
 
@@ -18142,10 +18102,6 @@ msgstr ""
 
 #: ./data\csv\Commission.csv:128
 msgid "雙王計"
-msgstr ""
-
-#: ./data\csv\Commission.csv:128
-msgid "博士博士，這次的野史絕對勁爆，在故事的彼端，特雷西婭小姐和特雷西斯先生同時成為魔王囉!\n而且在阿米婭進來撈我們的時候，兩位魔王大人還露出了懷念的表情，真想知道最後阿米婭和他們的悄悄話說了些什麼"
 msgstr ""
 
 #: ./data\csv\Commission.csv:129
@@ -18312,10 +18268,6 @@ msgstr ""
 msgid "護身符"
 msgstr ""
 
-#: ./data\csv\Commission.csv:149
-msgid "拜託啦，炎蓉妹妹。博士都批准這次外勤了，還同意讓克洛斯和你一起去喔\n要是你成功把我那瓜妹妹找回來，我額外答應你一個要求如何?"
-msgstr ""
-
 #: ./data\csv\Commission.csv:150
 msgid "婆山鎮？"
 msgstr ""
@@ -18434,10 +18386,6 @@ msgstr ""
 
 #: ./data\csv\Commission.csv:165
 msgid "迷路小僧"
-msgstr ""
-
-#: ./data\csv\Commission.csv:165
-msgid "既然這就是炎蓉施主提到的羅德島，而您又是她口中所言之博士，相逢即是有緣，就容小僧在此艦停留一段時日吧!"
 msgstr ""
 
 #: ./data\csv\Commission.csv:166
@@ -18684,10 +18632,6 @@ msgstr ""
 msgid "11:08P.M."
 msgstr ""
 
-#: ./data\csv\Commission.csv:196
-msgid "就在甘比诺决心要与叛徒卡彭做了断的同时，企鹅物流全面铺开情报网络，可颂与博士一起发现了敌人的指挥塔，但在狙击的的干扰下当场暴露，战局瞬间一片混乱。\n莫斯提马也再次现身并加入战局，游刃有余地牵制住了敌方领袖。然而沙暴突然出现，鼠王毫无征兆地出手打散了众人，博士在风沙中与队友短暂结队穿插撤离。"
-msgstr ""
-
 #: ./data\csv\Commission.csv:197
 msgid "11:41P.M."
 msgstr ""
@@ -18810,10 +18754,6 @@ msgstr ""
 
 #: ./data\csv\Commission.csv:212
 msgid "求生"
-msgstr ""
-
-#: ./data\csv\Commission.csv:212
-msgid "在切尔诺伯格废墟中，W遇到了两个幸存的孩子。\n一个受伤躺着，一个满眼慌张；一个颐指气使，一个卑微怯懦。她们的心中隐藏着隔阂，也不得不依靠对方。\nW没急着救，而是逼她们自己想办法，胆怯的那个还是咬牙去了旧医院，另一个抓着破布，一遍遍地告诉W，告诉她的绝望和希望。\n药和抑制剂被带回来时，两人抱成一团，W看到了可能性，也看到了自己。"
 msgstr ""
 
 #: ./data\csv\Commission.csv:213
@@ -19127,10 +19067,6 @@ msgstr "이발소에서 머리 손질하기."
 #: ./data\csv\Entertainment.csv:28
 msgid "在造型工作室接受全身造型服务。"
 msgstr "스타일링 스튜디오에서 전신 스타일링 받기."
-
-#: ./data\csv\Entertainment.csv:29
-msgid "在黄澄澄游戏室过家家。"
-msgstr "노란 놀이방에서 소꿉놀이 하기."
 
 #: ./data\csv\Entertainment.csv:30
 msgid "在足浴区泡脚。"
@@ -20295,26 +20231,6 @@ msgstr "Opens new facility: [Renovation Zone] (미구현), vehicle limit increas
 #: ./data\csv\Facility_effect.csv:95
 msgid "载具上限提升至99辆"
 msgstr "Vehicle limit increases to 99"
-
-#: ./data\csv\Facility_effect.csv:97
-msgid "开放基础设施:【教室】"
-msgstr "Opens basic facility: [Classroom]"
-
-#: ./data\csv\Facility_effect.csv:98
-msgid "开放新设施:【游戏室】和【乌萨斯学生活动室】"
-msgstr "Opens new facilities: [Game Room] and [Activity Room]"
-
-#: ./data\csv\Facility_effect.csv:99
-msgid "开放新设施:【育儿室】，成长效率加成提升至20%"
-msgstr "Opens new facility: [Parenting Room], growing speed +20%"
-
-#: ./data\csv\Facility_effect.csv:100
-msgid "成长效率加成提升至50%"
-msgstr "식물 성장 효율+50%"
-
-#: ./data\csv\Facility_effect.csv:101
-msgid "成长效率加成提升至100%"
-msgstr "식물 성장 효율+100%"
 
 #: ./data\csv\Facility_effect.csv:103
 msgid "开放基础设施:【药田】"
@@ -22016,22 +21932,6 @@ msgstr ""
 msgid "瘦足药"
 msgstr "빈족제"
 
-#: ./data\csv\Gift_Items.csv:19
-msgid "31"
-msgstr ""
-
-#: ./data\csv\Gift_Items.csv:19
-msgid "外表年龄增长药"
-msgstr "외모연령증가제"
-
-#: ./data\csv\Gift_Items.csv:20
-msgid "32"
-msgstr ""
-
-#: ./data\csv\Gift_Items.csv:20
-msgid "外表年龄减少药"
-msgstr "외모연령감소제"
-
 #: ./data\csv\Gift_Items.csv:21
 msgid "33"
 msgstr ""
@@ -22163,34 +22063,6 @@ msgstr "인격조작"
 #: ./data\csv\Hypnosis_Type.csv:11
 msgid "被催眠的干员会在精神上完全服从，无条件地接受所有被灌输的指令并坚定不移地执行，效果会永远持续到博士主动解除为止。"
 msgstr "최면에 걸린 오퍼는 정신적으로 완전히 복종하게 됩니다. 모든 명령을 다른 생각 없이 무조건 받아들입니다. 수동 해제 전까지 지속"
-
-#: ./data\csv\InstructConfig.csv:6
-msgid "SYSTEM"
-msgstr ""
-
-#: ./data\csv\InstructConfig.csv:24
-msgid "DAILY"
-msgstr ""
-
-#: ./data\csv\InstructConfig.csv:59
-msgid "WORK"
-msgstr ""
-
-#: ./data\csv\InstructConfig.csv:92
-msgid "PLAY"
-msgstr ""
-
-#: ./data\csv\InstructConfig.csv:122
-msgid "ARTS"
-msgstr ""
-
-#: ./data\csv\InstructConfig.csv:145
-msgid "OBSCENITY"
-msgstr ""
-
-#: ./data\csv\InstructConfig.csv:205
-msgid "SEX"
-msgstr ""
 
 #: ./data\csv\InstructJudge.csv:7
 msgid "约会"
@@ -22335,54 +22207,6 @@ msgstr "Penis shrinking medicine"
 #: ./data\csv\Item.csv:12
 msgid "使用后会让自己的阴茎缩小一个级别，越小的阴茎带来的快感越少，但苦痛也会更少"
 msgstr "After usage, shrink own penis; the smaller the size, the lesser the 만족 and pain"
-
-#: ./data\csv\Item.csv:13
-msgid "使用后会让对方的胸部增大一个级别"
-msgstr "After usage, expands the target's breasts"
-
-#: ./data\csv\Item.csv:14
-msgid "使用后会让对方的胸部缩小一个级别"
-msgstr "After usage, shrinks the target's breasts"
-
-#: ./data\csv\Item.csv:15
-msgid "使用后会让对方的臀部增大一个级别"
-msgstr "After usage, expands the target's butt"
-
-#: ./data\csv\Item.csv:16
-msgid "使用后会让对方的臀部缩小一个级别"
-msgstr "After usage, shrinks the target's butt"
-
-#: ./data\csv\Item.csv:17
-msgid "使用后会让对方的腿部变成丰满的肉腿"
-msgstr "After usage, transforms the target's leg to 통통한 다리"
-
-#: ./data\csv\Item.csv:18
-msgid "使用后会让对方的腿部变成纤细的细腿"
-msgstr "After usage, transforms the target's leg to 얇은 다리"
-
-#: ./data\csv\Item.csv:19
-msgid "使用后会让对方的脚部变成细长的长足"
-msgstr "After usage, transforms the target's feet to 큰 발"
-
-#: ./data\csv\Item.csv:20
-msgid "使用后会让对方的脚部变成小巧的小足"
-msgstr "After usage, transforms the target's feet to 작은 발"
-
-#: ./data\csv\Item.csv:21
-msgid "使用后会让对方的外表年龄增长一个级别，最大为【熟女】"
-msgstr "After usage, increase the target's age by one stage, up to [Wife]"
-
-#: ./data\csv\Item.csv:22
-msgid "使用后会让对方的外表年龄减少一个级别，最小为【幼女】"
-msgstr "After usage, decrease the target's age by one stage, up to [Wife]"
-
-#: ./data\csv\Item.csv:23
-msgid "使用后会让对方的乳房开始分泌奶水"
-msgstr "After usage, the target's breasts will start to lactate"
-
-#: ./data\csv\Item.csv:24
-msgid "使用后会让对方的乳房停止分泌奶水"
-msgstr "After usage, the target's breasts will stop to lactate"
 
 #: ./data\csv\Item.csv:25
 msgid "相机"
@@ -36600,17 +36424,9 @@ msgstr ""
 msgid "我的UI扭扭斜斜/地图支离破碎，和我看到的其他人的截图不太一样，是什么原因？"
 msgstr "My UI and map is looking broken, what's the reason?"
 
-#: ./data\csv\Prts.csv:11
-msgid "游戏需要专门的字体，在该字体下UI和地图绘制在特定的字体下会有比较好的效果。虽然不确定你是在哪里发现该游戏的，但是一般来说在下载链接里会附带该字体，安装后即可解决该问题"
-msgstr "This game needs a specific font, and the design of UI and map will be better under that font. The font will be attached with the download link."
-
 #: ./data\csv\Prts.csv:13
 msgid "博士每天都需要做什么？"
 msgstr "What does the Doctor need to do?"
-
-#: ./data\csv\Prts.csv:14
-msgid "没有特别的要求，一般来说以攻略干员为主要目标，经营和发展罗德岛为次要目标。\n可以根据自己的喜好和需求自由安排每天的行动，比如去处理公务、练习源石技艺、和干员互动、看书、锻炼、收集藏品、招募新干员、看病制药、逛地图视察各部门的情况等等\n也可以去[藏品馆]里【查看蚀刻章】，去达成一些自己感兴趣的蚀刻章。"
-msgstr ""
 
 #: ./data\csv\Prts.csv:15
 msgid "如何提升博士或干员的体力与气力上限？"
@@ -36639,10 +36455,6 @@ msgstr "Generally, it can be separated to working or not working (not assigned o
 #: ./data\csv\Prts.csv:21
 msgid "为了练料理，做了太多的菜，该怎么处理？"
 msgstr "Made too many dishes for training 요리기능, how to deal with them?"
-
-#: ./data\csv\Prts.csv:22
-msgid "只要是正常调味的食物，就可以在[生活娱乐区]的[取餐区]中选择【放入正常食物】，干员们会在打饭的时候取走吃掉\n如果是特殊调味的食物，除了给干员直接吃掉之外，在开启了系统设置-食物过期的情况下，食物会每天过期变质，变质到品质为0时会被自动丢弃"
-msgstr ""
 
 #: ./data\csv\Prts.csv:24
 msgid "如何和干员处好关系？"
@@ -36712,10 +36524,6 @@ msgstr "In Commerce Zone, there's Adult Items' Shop, which you can get certain i
 msgid "干员会怀孕吗？可以真的生出小孩吗？"
 msgstr "Will Operators get pregnant? Will they actually give birth?"
 
-#: ./data\csv\Prts.csv:42
-msgid "除去还没有来初潮的干员之外，其他所有人都是可以怀孕的。虽然耗时比较长，最后生出来的小孩在成长后也会成为新的干员\n\n在【受精】后，过一个月左右的时间会变成【妊娠】状态，获得【孕肚】和【泌乳】\n再过两个月左右，会【临盆】，接着过不了几天就会【生产】\n生出孩子后，母亲会进入【育儿】状态，养育需要一个月左右，孩子就会从【婴儿】成长为可以初步自理的【幼女】\n结束了【育儿】后，母亲会恢复孕前状态，也会失去【泌乳】，而孩子还会依次成长为【萝莉】再到【少女】，每次成长会耗时两个月左右\n\n孩子的性别仅为女性，在成长到【少女】后即完全成为一名正常的干员\n女儿会继承母亲包括种族在内大部分生理特征，也会在【育儿】期间学到部分来自母亲的后天知识和技能"
-msgstr "Besides those that haven't had their menarche, all other Operators can be pregnant. While the time taken is long, the children will also be new Operators\\n\\nAfter [Fertilized], the Operator will enter [Pregnancy] status after a month and gains [Pregnant Belly] and [Lactation]\\nAfter two more months, the Operator will have [Confined], and afterwards, [Giving Birth]\\nAfter the process, the mother will enter [Parenting] status, which takes a month, and the child will grow from [Baby] to [Young Girl]\\nAfter [Parenting] ends, the mother will lose [Lactation] and returns to before pregnancy, and the child will grow to [Loli] and then to [Girl], which takes two months per phase\\n\\nThe child will always be female, and will be a normal Operator on [Girl]\\nThe daughter will inherit most physical appearance from the mother, and will learn part of the mother's knowledge and skills during [Parenting]"
-
 #: ./data\csv\Prts.csv:43
 msgid "我在射精时选定了指定部位，但发现其他部位上也有精液，这是怎么回事？"
 msgstr ""
@@ -36743,10 +36551,6 @@ msgstr ""
 #: ./data\csv\Prts.csv:49
 msgid "该如何让拥有【未初潮】素质的干员怀孕？"
 msgstr "How to make Operators with [미초경] pregnant?"
-
-#: ./data\csv\Prts.csv:50
-msgid "【未初潮】是年幼干员的特殊生理素质，拥有该素质是无法怀孕的\n需要先对阴道和子宫进行一段时间的开发，让【V感度】和【W感度】升级到足够的等级后，即可提前迎来性成熟，失去该素质\n\n除此之外，如果是自己的女儿的话，对方是会随着时间而成长的。在从【幼女】成长为【萝莉】后，即可失去【未初潮】素质"
-msgstr "[미초경] is the special talent for young Operators, which prohibit them to be pregnant\\nWhen [V 감각] and [W 감각] reached a certain point, early sexual maturity can be reached and remove the talent\\n\\nFor daughters, the talent will be removed on growing to [Loli]"
 
 #: ./data\csv\Prts.csv:51
 msgid "在睡奸中，如何不让干员醒来？如何让干员装睡继续配合？"
@@ -38015,10 +37819,6 @@ msgstr "A dream in the cloudy mountains. Tea, wine, wind, snow, you can taste it
 #: ./data\csv\Recipes.csv:148
 msgid "卡西米尔骑士补充剂"
 msgstr "Kazimierzian Knight Supplement"
-
-#: ./data\csv\Recipes.csv:148
-msgid "喝下去以后感觉精神百倍。之前有商家说这就是耀骑士赛前喝的东西，人们蜂拥而上。酽茶醇酒，斜风细雪，似乎都能在这之中体味到。"
-msgstr "The color alone excites the mind and arouses the 욕망 to have it, turning heads even if one has already passed it by. A single sip fills you with energy. It has been in high demand due to rumors that the Radiant Knight drinks it."
 
 #: ./data\csv\Recipes.csv:149
 msgid "哥伦比亚分子胶囊"
@@ -40416,14 +40216,6 @@ msgstr ""
 msgid "幼女"
 msgstr "유녀"
 
-#: ./data\csv\Talent.csv:83
-msgid "体型娇小但比婴儿更加协调，脸部轮廓柔和可爱，大眼睛占据脸部较大比例。四肢纤细但带有幼童特有的圆润。行为天真活泼，充满童趣，举手投足间带有稚气和纯真。"
-msgstr ""
-
-#: ./data\csv\Talent.csv:84
-msgid "身材娇小但已初现少女轮廓，身体还在发育中。肢体纤细，脸部保留着孩童的圆润与稚气，但已有了些许少女感。性格和行为举止往往兼具天真与早熟的矛盾特质。"
-msgstr ""
-
 #: ./data\csv\Talent.csv:85
 msgid "少女"
 msgstr "소녀"
@@ -41211,10 +41003,6 @@ msgstr ""
 #: ./data\csv\Talent.csv:200
 msgid "千杯不醉"
 msgstr "알코올내성"
-
-#: ./data\csv\Talent.csv:200
-msgid "酒精完全无效，永远不会喝醉，可以无限制地参与饮酒活动"
-msgstr ""
 
 #: ./data\csv\Talent.csv:201
 msgid "灵活手指"
@@ -42004,10 +41792,6 @@ msgstr "작업장 원자재를 사용해 대응하는 제품을 만든다."
 msgid "外交官"
 msgstr "외교관"
 
-#: ./data\csv\WorkType.csv:21
-msgid "处理与各国之间的关系，承接大小委托，协调当地的外勤工作(需要在[外交势力]系统中任命)"
-msgstr "외교를 처리하고, 위임을 수락하며, 현지 외근 업무를 조정한다. ([외교 세력]에서 임명 필요)"
-
 #: ./data\csv\WorkType.csv:22
 msgid "邀请专员"
 msgstr "초대 전달자"
@@ -42015,10 +41799,6 @@ msgstr "초대 전달자"
 #: ./data\csv\WorkType.csv:22
 msgid "邀请各界人士来罗德岛访问，拓宽罗德岛的人脉"
 msgstr "각계 인사들을 로도스로 초청하고, 로도스의 인맥을 넓힌다."
-
-#: ./data\csv\WorkType.csv:23
-msgid "教室"
-msgstr "교실"
 
 #: ./data\csv\WorkType.csv:23
 msgid "给学生上课"
@@ -42068,10 +41848,6 @@ msgstr "교도관"
 msgid "监狱长办公室"
 msgstr "교도관 사무실"
 
-#: ./data\csv\WorkType.csv:28
-msgid "管理和训练关押区的囚犯干员(需要3级陷落且有囚犯)(只能有一位，不能兼任助理)"
-msgstr "수감자의 관리 및 훈련을 담당한다.(함락 주순이 3이상인 상태며 수감자가 있어야 함)(한 명만 배치 가능, 어시스턴트 겸직 불가)"
-
 #: ./data\csv\WorkType.csv:29
 msgid "性爱练习生"
 msgstr "섹스 연습생"
@@ -42079,18 +41855,6 @@ msgstr "섹스 연습생"
 #: ./data\csv\WorkType.csv:29
 msgid "调教室"
 msgstr "조교실"
-
-#: ./data\csv\WorkType.csv:29
-msgid "利用道具练习自己的性爱技巧(需要体检-身体管理-性爱练习)"
-msgstr ""
-
-#: ./data\csv\World_Setting.csv:7
-msgid "铜化方舟"
-msgstr "농농방주"
-
-#: ./data\csv\World_Setting.csv:7
-msgid "所有角色变成【萝莉】"
-msgstr "모든 인물이 [로리]가 됩니다"
 
 #: ./data\csv\World_Setting.csv:8
 msgid "银銮方舟"
@@ -43775,18 +43539,6 @@ msgstr "A simple harmonica. The moment the melodious tweedle sounds, the leaves 
 #: ./data\character\0158_守林人.csv:14
 msgid "守林人，出身不详，于卡西米尔-乌萨斯边境地区作战多年，推测身份：游击队员。在伏击、远程狙击、散兵战术、流动战术等非对称作战中展现出深厚经验。现于罗德岛狙击小组任职，提供射击援护方面的保障服务。"
 msgstr "Firewatch comes from unknown origins. She fought for many years on the border between Kazimierz and Ursus. It is suspected that she was a guerrilla during this time. She shows deep경험 in asymmetric operations like ambushes, sniping, unconventional tactics, and mobile tactics. She currently works as part of the Rhodes Island sniper group to provide protection services."
-
-#: ./data\character\0158_守林人.csv:30
-msgid "灰绿色带兜帽休闲外套"
-msgstr "Gray-green hooded casual coat"
-
-#: ./data\character\0158_守林人.csv:31
-msgid "白色V领背心"
-msgstr "White V-neck vest"
-
-#: ./data\character\0158_守林人.csv:32
-msgid "灰绿色长袖衬衣"
-msgstr "Gray-green long sleeved shirt"
 
 #: ./data\character\0158_守林人.csv:33
 msgid "深棕色短百褶裙"
@@ -49740,32 +49492,12 @@ msgstr ""
 msgid "娜斯提"
 msgstr "네스티"
 
-#: ./data\character\0891_娜斯提.csv:13
-msgid "研究装置"
-msgstr "Research device"
-
-#: ./data\character\0891_娜斯提.csv:14
-msgid "莱茵生命工程科主任，女妖，因为厌倦战争离开卡兹戴尔来到哥伦比亚并进入莱茵生命，梦想是建设能够飞在空中的移动城市作为萨卡兹的应许之地。其构建的空间结构被塞雷娅认为不符合安全规范但却能够自洽。协助克丽斯腾建设万星园，希望能通过这次的数据接近自己的目标。事件结束后与缪尔赛思一起参加了赫默的伦理会议。"
-msgstr ""
-
-#: ./data\character\0891_娜斯提.csv:31
-msgid "银色护目镜"
-msgstr ""
-
 #: ./data\character\0891_娜斯提.csv:33
 msgid "棕色长风衣"
 msgstr ""
 
 #: ./data\character\0891_娜斯提.csv:36
 msgid "黑色工装长裤"
-msgstr ""
-
-#: ./data\character\0891_娜斯提.csv:37
-msgid "黑色工程靴"
-msgstr ""
-
-#: ./data\character\0891_娜斯提.csv:38
-msgid "多功能测量仪"
 msgstr ""
 
 #: ./data\character\0893_雅拉.csv:4
@@ -50204,14 +49936,6 @@ msgstr "플레임 섀도우"
 msgid "一本用陌生语言抄下的诗歌集。她不求所有人都读懂，只希望想读这些诗歌的人有可以栖身的一隅。"
 msgstr "A poetry anthology transcribed in an unfamiliar language. She does not seek for all to understand it—she simply hopes there will be a corner to reside in, for those who wish to read these poems."
 
-#: ./data\character\1020_焰影苇草.csv:14
-msgid "苇草，驻留罗德岛的维多利亚南部办事处期间，曾提出撤离申请，近期再次成功与罗德岛建立联络。目前正以深池名义带领小股部队在维多利亚境内活动，以救助被暴力胁迫的塔拉人为主要行动目标。\n【特殊状态更新】\n苇草，于纳斯尔莎事件后接任塔拉王位，与博士通信后以巡视王国领地与外交名义前往罗德岛开始环塔拉巡游。"
-msgstr ""
-
-#: ./data\character\1020_焰影苇草.csv:15
-msgid "#fff8dc"
-msgstr ""
-
 #: ./data\character\1020_焰影苇草.csv:37
 msgid "百合花发饰"
 msgstr ""
@@ -50634,18 +50358,6 @@ msgstr ""
 
 #: ./data\character\1039_西尔维娅.csv:35
 msgid "黑色职业高跟鞋"
-msgstr ""
-
-#: ./data\character\1040_蒂拉.csv:4
-msgid "蒂拉"
-msgstr "틸라"
-
-#: ./data\character\1040_蒂拉.csv:13
-msgid "便身武器包"
-msgstr "Convenient weapon bag"
-
-#: ./data\character\1040_蒂拉.csv:14
-msgid "直接与黑钢创始人接触的黑钢国际的成员。达维镇的事件尘埃落定后和海伦娜一起在某处等待某人。"
 msgstr ""
 
 #: ./data\character\1040_蒂拉.csv:31
@@ -51274,18 +50986,6 @@ msgstr ""
 
 #: ./data\character\1477_阿斯帕齐娅.csv:37
 msgid "银色金属手提箱"
-msgstr ""
-
-#: ./data\character\1478_梅捷缇克缇.csv:4
-msgid "梅捷缇克缇"
-msgstr "Medjedtyti"
-
-#: ./data\character\1478_梅捷缇克缇.csv:13
-msgid "远古法杖"
-msgstr "Ancient staff"
-
-#: ./data\character\1478_梅捷缇克缇.csv:14
-msgid "简称缇缇。是佩佩和莎草上学时期的好友。"
 msgstr ""
 
 #: ./data\character\1478_梅捷缇克缇.csv:29
