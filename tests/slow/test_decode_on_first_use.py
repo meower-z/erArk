@@ -113,8 +113,7 @@ class DecodeOnFirstUseTest(SlowTestCase):
     self.assertIs(image_data.get(name), first)
     self.assertEqual(self.opened, [])
     self.assertEqual(image_data.get("不存在的图片名", "默认"), "默认")
-    with self.assertRaises(KeyError):
-      image_data["不存在的图片名"]
+    self.assertRaises(KeyError, image_data.__getitem__, "不存在的图片名")
 
   def test_broken_image_decodes_once(self):
     """索引里有、解码失败的图片：解码前后 in 都找得到，取到 1x1 的图片，再次取图返回同一个对象，文件只打开一次"""

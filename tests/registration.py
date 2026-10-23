@@ -120,7 +120,7 @@ def pytest_classes(module) -> list:
         continue
       if issubclass(obj, unittest.TestCase):
         found.append(obj)
-      elif obj.__init__ == object.__init__ and obj.__new__ == object.__new__:
+      elif obj.__init__ is object.__init__ and obj.__new__ is object.__new__:
         found.append(obj)
         owners.append(obj)
   return found

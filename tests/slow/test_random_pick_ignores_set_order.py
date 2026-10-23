@@ -22,6 +22,7 @@
 - 指令的前提：see_instruct_panel.judge_single_instruct_filter，以及 Web 模式的两个 _check_single_instruct_premise（博士）。
 """
 
+import functools
 import random
 from unittest import mock
 
@@ -119,11 +120,11 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
     Return arguments:
     tuple -- 按加入顺序、倒序两遍各自的（判断结果，之后的随机状态）
     """
-    result = []
-    for set_type in (InsertionOrderSet, ReversedOrderSet):
-      random.seed(0)
-      result.append((judge(set_type), random.getstate()))
-    return tuple(result)
+    random.seed(0)
+    forward = (judge(InsertionOrderSet), random.getstate())
+    random.seed(0)
+    backward = (judge(ReversedOrderSet), random.getstate())
+    return forward, backward
 
   def assert_same_draws(self, judge, name: str):
     """
@@ -348,25 +349,26 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
             instruct_id, {}
         ),
     }
+
+    def judge(check, set_type):
+      """
+      指令的前提集合换成两个前提的 set_type，用 check 判断指令能否显示
+      Keyword arguments:
+      check -- 无参函数，判断指令能否显示
+      set_type -- 集合类型
+      Return arguments:
+      bool -- 指令能否显示
+      """
+      with mock.patch.dict(
+          constant.instruct_premise_data,
+          {instruct_id: self.premise_set(set_type, 0)},
+      ):
+        return check()
+
     differ = []
     """ 两种判断顺序下结果或随机状态不同的函数 """
     for name, check in checks.items():
-
-      def judge(set_type):
-        """
-        指令的前提集合换成两个前提的 set_type，判断指令能否显示
-        Keyword arguments:
-        set_type -- 集合类型
-        Return arguments:
-        bool -- 指令能否显示
-        """
-        with mock.patch.dict(
-            constant.instruct_premise_data,
-            {instruct_id: self.premise_set(set_type, 0)},
-        ):
-          return check()
-
-      forward, backward = self.draws(judge)
+      forward, backward = self.draws(functools.partial(judge, check))
       if forward != backward:
         differ.append(name)
     self.assertEqual(

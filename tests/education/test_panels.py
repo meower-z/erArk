@@ -121,7 +121,7 @@ answers = []
 
 def scripted_askfor(return_list, *a, **k):
   captured["rl"] = list(return_list)
-  for want in answers:
+  for want in list(answers):
     for option in return_list:
       if want(option):
         answers.remove(want)

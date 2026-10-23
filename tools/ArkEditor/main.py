@@ -269,11 +269,8 @@ def load_chara_data_to_cache():
       now_type = row["type"]
       # print(f"debug now_key = {now_key}, now_type = {now_type}")
       # 基础数值变换
-      if now_type == "int":
-        now_value = int(row["value"])
-      elif now_type == "str":
-        now_value = str(row["value"])
-      elif now_type == "bool":
+      now_value = row["value"]
+      if now_type in {"int", "bool"}:
         now_value = int(row["value"])
       # 基础属性赋予
       if now_key == "AdvNpc":

@@ -6,7 +6,7 @@ move_item_utils.py
 from PySide6.QtGui import QColor
 import cache_control
 from collections import OrderedDict
-from .data_list_undo_snapshot import undo_snapshot_manager  # 导入快照式撤销管理器
+from ui.data_list_undo_snapshot import undo_snapshot_manager  # 导入快照式撤销管理器
 
 # 以下函数为条目移动相关的功能，供DataList调用
 
