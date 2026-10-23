@@ -451,6 +451,18 @@ pattern = "__doc__"
 why = "把被包装的 draw 方法的说明抄到计时包装函数上，没有代码读这个包装函数的说明"
 
 [[allow]]
+file = "tests/slow/test_education_suite.py"
+symbol = "<module>"
+pattern = "open-py"
+why = "按 test_*.py 列出 tests/education/ 的脚本并逐个起子进程运行，只读它们的输出，不读源码"
+
+[[allow]]
+file = "tests/slow/test_education_suite.py"
+symbol = "script_test"
+pattern = "__doc__"
+why = "给生成的测试方法写说明，不读任何源码"
+
+[[allow]]
 file = "tests/slow/test_smoke_new_game.py"
 symbol = "SmokeNewGameTest.test_hours_pass_static_checks"
 pattern = "__file__"
@@ -467,25 +479,6 @@ file = "tests/education/_bootstrap.py"
 symbol = "<module>"
 pattern = "__file__"
 why = "用 __file__ 定位仓库根目录"
-
-[[allow]]
-file = "tools/tests/education/run_all.py"
-symbol = "<module>"
-pattern = "open-py"
-why = "模块说明里写了 test_*.py 的用法"
-
-[[allow]]
-file = "tools/tests/education/run_all.py"
-symbol = "<module>"
-pattern = "__file__"
-why = "用 __file__ 定位测试目录"
-
-[[allow]]
-file = "tools/tests/education/run_all.py"
-symbol = "main"
-pattern = "open-py"
-why = "按 test_*.py 列出测试文件并逐个起子进程运行，只读它们的日志，不读源码"
-
 
 [[allow]]
 file = ".github/skills/system-review-round/dead_code_scan.py"
