@@ -29,7 +29,7 @@ class Instruct_filter_Panel:
     self.width: int = width
     """ 绘制的最大宽度 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     title_draw = draw.TitleLineDraw(_("指令过滤"), self.width)
 
@@ -132,12 +132,12 @@ class HandleFilterButtonList:
     """ 绘制的对象 """
     self.now_draw = name_draw
 
-  def chose_button(self):
+  def chose_button(self) -> None:
     """玩家点击了选项"""
     cache.instruct_index_filter[self.index] = not cache.instruct_index_filter[
         self.index
     ]
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.now_draw.draw()

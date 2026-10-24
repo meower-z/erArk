@@ -20,7 +20,7 @@ window_width = normal_config.config_normal.text_width
 """ 屏幕宽度 """
 
 
-def use_drug(item_id: int):
+def use_drug(item_id: int) -> None:
   """
   使用药剂\n
   Keyword arguments:
@@ -138,7 +138,7 @@ def use_drug(item_id: int):
   now_draw.draw()
 
 
-def auto_use_sanity_drug():
+def auto_use_sanity_drug() -> None:
   """
   自动使用理智药剂，优先使用最低级的理智药剂
   """
@@ -347,10 +347,10 @@ class ItemNameDraw:
 
     self.button_return = str(text)
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制道具"""
     if self.is_button:
-      now_draw = draw.LeftButton(
+      now_draw: draw.LeftButton | draw.NormalDraw = draw.LeftButton(
           self.draw_text,
           self.button_return,
           self.width,
@@ -363,7 +363,7 @@ class ItemNameDraw:
     now_draw.width = self.width
     now_draw.draw()
 
-  def draw_item_info(self):
+  def draw_item_info(self) -> None:
     """绘制道具信息"""
     now_draw = ItemInfoDraw(self.item_id, window_width)
     now_draw.draw()
@@ -392,7 +392,7 @@ class ItemNameDraw:
         elif yrn == return_draw.return_text:
           break
 
-  def use_consumables(self):
+  def use_consumables(self) -> None:
     """使用消耗品"""
     from Script.Design import character
 
@@ -442,7 +442,7 @@ class ItemInfoDraw:
     self.width: int = width
     """ 最大宽度 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制道具信息"""
     py_cmd.clr_cmd()
     item_config = game_config.config_item[self.cid]

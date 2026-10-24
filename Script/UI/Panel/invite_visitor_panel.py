@@ -22,7 +22,7 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def get_empty_guest_room_id():
+def get_empty_guest_room_id() -> int | bool:
   """
   判断是否有空闲客房，如果有的话返回客房id
   """
@@ -53,7 +53,7 @@ def get_empty_guest_room_id():
   return False
 
 
-def sort_guest_room_key(room_path):
+def sort_guest_room_key(room_path: str) -> int:
   """
   按照客房编号进行数字排序的函数
   Keyword arguments:
@@ -71,7 +71,7 @@ def sort_guest_room_key(room_path):
   return 999
 
 
-def update_invite_visitor():
+def update_invite_visitor() -> None:
   """刷新邀请访客栏位"""
 
   # 未选择邀请目标则跳过
@@ -89,7 +89,7 @@ def update_invite_visitor():
       cache.rhodes_island.invite_visitor[1] = 0
 
 
-def visitor_to_operator(character_id: int):
+def visitor_to_operator(character_id: int) -> None:
   """
   访客留下成为干员
   Keyword arguments:
@@ -118,7 +118,7 @@ def visitor_to_operator(character_id: int):
   dormitory_common.new_character_get_dormitory(character_id)
 
 
-def settle_visitor_arrivals(visitor_id=0):
+def settle_visitor_arrivals(visitor_id: int = 0) -> int:
   """
   结算访客抵达
   visitor_id = 0 时，随机抽取一名访客
@@ -171,7 +171,7 @@ def settle_visitor_arrivals(visitor_id=0):
     return 1
 
 
-def visitor_leave(character_id: int):
+def visitor_leave(character_id: int) -> None:
   """
   访客离开
   Keyword arguments:
@@ -198,7 +198,7 @@ def visitor_leave(character_id: int):
   character_data.position = ["0", "0"]
 
 
-def settle_visitor_arrivals_and_departures():
+def settle_visitor_arrivals_and_departures() -> None:
   """
   结算访客抵达和离开
   """
@@ -230,7 +230,7 @@ def settle_visitor_arrivals_and_departures():
       judge_visitor_if_leave(visitor_id)
 
 
-def judge_visitor_if_leave(visitor_id: int):
+def judge_visitor_if_leave(visitor_id: int) -> None:
   """
   判断访客是否离开
   Keyword arguments:
@@ -276,7 +276,7 @@ def judge_visitor_if_leave(visitor_id: int):
     now_draw.draw()
 
 
-def get_today_departing_visitors():
+def get_today_departing_visitors() -> list[int]:
   """
   检查今天是否有要离开的访客
   return: List[int] -- 所有今天要离开的访客的角色id
@@ -579,12 +579,12 @@ class Invite_Visitor_Panel:
       if yrn in return_list:
         break
 
-  def change_invite_target(self, chara_id: int):
+  def change_invite_target(self, chara_id: int) -> None:
     """更改邀请目标"""
     cache.rhodes_island.invite_visitor[0] = chara_id
     cache.rhodes_island.invite_visitor[1] = 0
 
-  def settle_visitor_departures(self):
+  def settle_visitor_departures(self) -> None:
     """结算访客离开"""
     while 1:
       return_list = []

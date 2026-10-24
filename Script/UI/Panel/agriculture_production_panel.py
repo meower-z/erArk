@@ -2,6 +2,8 @@
 农业生产：结算药田与温室生产线的产出，以及农业生产面板
 """
 
+from __future__ import annotations
+
 from typing import Tuple, Dict, List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
@@ -9,6 +11,11 @@ from Script.Design import handle_ability, basement
 from Script.UI.Moudle import draw, panel
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import Callable
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -115,7 +122,7 @@ def calculate_agriculture_line_efficiency(
   return detail_str, ratio
 
 
-def settle_agriculture_line(draw_flag=True):
+def settle_agriculture_line(draw_flag: bool = True) -> tuple[bool, str]:
   """
   结算农业的生产
   Keyword arguments:
@@ -270,7 +277,7 @@ class Agriculture_Production_Panel:
     self.draw_list: List[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("农业生产")
@@ -396,7 +403,7 @@ class Agriculture_Production_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def select_agri_position(self):
+  def select_agri_position(self) -> None:
     """种植员管理(任命各线主种植员)"""
     ri = cache.rhodes_island
     from Script.UI.Panel import manage_basement_panel
@@ -444,7 +451,7 @@ class Agriculture_Production_Panel:
         )
         row.draw()
 
-        def _make(idx):
+        def _make(idx: int) -> Callable[[], None]:
           return lambda: self._appoint_main_agri(idx, 0)
 
         btn = draw.CenterButton(
@@ -498,7 +505,7 @@ class Agriculture_Production_Panel:
           )
           row.draw()
 
-          def _make2(idx):
+          def _make2(idx: int) -> Callable[[], None]:
             return lambda: self._appoint_main_agri(idx, 1)
 
           btn = draw.CenterButton(
@@ -542,7 +549,7 @@ class Agriculture_Production_Panel:
       if yrn == back.return_text:
         break
 
-  def _appoint_main_agri(self, line_id: int, agriculture_type: int):
+  def _appoint_main_agri(self, line_id: int, agriculture_type: int) -> None:
     """任命某条农业线主种植员(重复选择同一人可撤销)"""
     from Script.UI.Panel import common_select_NPC
 
@@ -559,7 +566,7 @@ class Agriculture_Production_Panel:
     )
     select_state = {}
 
-    def _make(chara_id):
+    def _make(chara_id: int) -> None:
       self._do_appoint_main_agri(line_id, agriculture_type, chara_id)
 
     while 1:
@@ -591,7 +598,7 @@ class Agriculture_Production_Panel:
 
   def _do_appoint_main_agri(
       self, line_id: int, agriculture_type: int, chara_id: int
-  ):
+  ) -> None:
     """
     任命或撤销生产线的主种植员
     角色已是该线主种植员时撤销；否则先撤销其在同类其他生产线的任命，再任命到该线
@@ -627,8 +634,8 @@ class Agriculture_Production_Panel:
         ri.green_house_line[line_id][1] = chara_id
 
   def select_agriculture_line_produce(
-      self, agriculture_line_id, agriculture_type
-  ):
+      self, agriculture_line_id: int, agriculture_type: int
+  ) -> None:
     """
     选择生产的资源\n
     agriculture_line_id: int 生产线id\n
@@ -686,8 +693,8 @@ class Agriculture_Production_Panel:
         break
 
   def change_agriculture_line_produce(
-      self, agriculture_line_id, formula_cid, agriculture_type
-  ):
+      self, agriculture_line_id: int, formula_cid: int, agriculture_type: int
+  ) -> None:
     """更改农产品的种植"""
     if agriculture_type == 0:
       if (

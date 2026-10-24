@@ -143,7 +143,7 @@ class Prts_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def change_panel(self, prts_type: str):
+  def change_panel(self, prts_type: str) -> None:
     """
     切换当前面板显示
     Keyword arguments:
@@ -152,7 +152,7 @@ class Prts_Panel:
 
     self.now_panel = prts_type
 
-  def select_question(self, key_index: int):
+  def select_question(self, key_index: int) -> None:
     """
     选择问题
     """
@@ -196,7 +196,7 @@ class Prts_Panel:
     if self.fater_type == 5:
       chara_talk_info()
 
-  def show_answer(self, key_index: int):
+  def show_answer(self, key_index: int) -> None:
     """
     显示答案
     """
@@ -342,7 +342,7 @@ class ShowCharaNameDraw:
     self.button_return = button_draw.return_text
     """ 绘制的对象 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.info_draw.draw()
     self.now_draw.draw()
@@ -408,7 +408,7 @@ class ShowCharaNameDraw:
 
     return per_version_sizes
 
-  def show_character_text_version(self):
+  def show_character_text_version(self) -> None:
     """
     切换角色文本版本
     """
@@ -509,7 +509,7 @@ class ShowCharaNameDraw:
       if yrn == back_draw.return_text:
         break
 
-  def select_character_text_version(self, version_id: int):
+  def select_character_text_version(self, version_id: int) -> None:
     """
     选择角色文本版本
     """
@@ -518,7 +518,7 @@ class ShowCharaNameDraw:
         version_id
     )
 
-  def show_chara_info(self, name_text: str, info_text: str):
+  def show_chara_info(self, name_text: str, info_text: str) -> None:
     """
     显示角色信息
     """

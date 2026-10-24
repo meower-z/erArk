@@ -139,7 +139,7 @@ class DrawEventTextPanel(draw.LineFeedWaitDraw):
       elif tar_text_color:
         self.style = target_character_data.name
 
-  def draw(self):
+  def draw(self) -> None:
     """
     绘制事件文本
     在Web模式下：
@@ -177,7 +177,7 @@ class DrawEventTextPanel(draw.LineFeedWaitDraw):
       # 非Web模式下使用父类的draw方法（包含等待逻辑）
       super().draw()
 
-  def _output_as_dialog_text(self):
+  def _output_as_dialog_text(self) -> None:
     """
     将事件文本作为对话文本输出
     包括：添加到文本回溯缓存、实时推送到前端、添加到对话框队列

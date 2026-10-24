@@ -285,13 +285,13 @@ class SeeMapPanel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def up_map(self):
+  def up_map(self) -> None:
     """将当前地图切换为上级地图"""
     py_cmd.clr_cmd()
     up_map_path = map_handle.get_map_for_path(self.now_map)
     self.now_map = up_map_path
 
-  def down_map(self):
+  def down_map(self) -> None:
     """将当前地图切换为下级地图"""
     py_cmd.clr_cmd()
     character_position = cache.character_data[0].position
@@ -300,7 +300,7 @@ class SeeMapPanel:
     )
     self.now_map.append(down_map_scene_id)
 
-  def all_npc_position(self):
+  def all_npc_position(self) -> None:
     """查看所有干员位置"""
     py_cmd.clr_cmd()
     from Script.UI.Panel import all_npc_position_panel
@@ -308,7 +308,7 @@ class SeeMapPanel:
     now_panel = all_npc_position_panel.All_Npc_Position_Panel(self.width)
     now_panel.draw()
 
-  def move_now(self, scene_path: List[str]):
+  def move_now(self, scene_path: List[str]) -> None:
     """
     控制角色移动至指定场景
     Keyword arguments:
@@ -375,7 +375,7 @@ class MoveMenuPanel:
     self.draw_list.append(menu_draw)
     self.return_list.extend(menu_draw.return_list)
 
-  def change_type(self, to_type: str):
+  def change_type(self, to_type: str) -> None:
     """
     改变当前快捷移动菜单类型
     Keyword arguments:
@@ -384,7 +384,7 @@ class MoveMenuPanel:
     self.now_type = self.move_type_id_data[to_type]
     py_cmd.clr_cmd()
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     for now_draw in self.draw_list:
       now_draw.draw()
@@ -416,7 +416,7 @@ class MapSceneNameDraw:
     self.end_index: int = 0
     """ 结束按钮id """
 
-  def update(self, now_map: List[str], start_index: int):
+  def update(self, now_map: List[str], start_index: int) -> None:
     """
     更新当前面板对象
     Keyword arguments:
@@ -490,7 +490,7 @@ class MapSceneNameDraw:
         line_feed.draw()
     self.end_index = len(scene_id_list) - 1
 
-  def move_now(self, scene_path: List[str]):
+  def move_now(self, scene_path: List[str]) -> None:
     """
     控制角色移动至指定场景
     Keyword arguments:
@@ -567,7 +567,7 @@ class UsefulSceneNamePanel:
     path_list = [i for i in path_list if len(i)]
     return path_list
 
-  def update(self, now_map: List[str], start_index: int):
+  def update(self, now_map: List[str], start_index: int) -> None:
     """
     更新当前面板对象
     Keyword arguments:
@@ -580,7 +580,7 @@ class UsefulSceneNamePanel:
     self.handle_panel.update()
     self.end_index = self.handle_panel.end_index
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     self.handle_panel.draw()
     self.return_list = self.handle_panel.return_list
@@ -632,11 +632,11 @@ class ScenePathNameMoveDraw:
     """ 绘制的对象 """
     self.button_return = path_text
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.now_draw.draw()
 
-  def move_now(self):
+  def move_now(self) -> None:
     """
     控制角色移动至指定场景
     Keyword arguments:
@@ -741,11 +741,11 @@ class SocialSceneNameDraw:
     """ 绘制的对象 """
     self.button_return = character_data.name
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.now_draw.draw()
 
-  def move_now(self):
+  def move_now(self) -> None:
     """
     控制角色移动至指定场景
     Keyword arguments:
@@ -791,7 +791,7 @@ class CollectionSceneNamePanel:
     # self.end_index = self.handle_panel.end_index
     """ 结束按钮id """
 
-  def update(self, now_map: List[str], start_index: int):
+  def update(self, now_map: List[str], start_index: int) -> None:
     """
     更新当前面板对象
     Keyword arguments:
@@ -880,7 +880,7 @@ class CollectionSceneNamePanel:
       )  # 添加按钮返回值到监听列表
       line_feed.draw()
 
-  def move_now(self, scene_path: List[str]):
+  def move_now(self, scene_path: List[str]) -> None:
     """
     控制角色移动至指定场景
     Keyword arguments:
@@ -891,7 +891,7 @@ class CollectionSceneNamePanel:
     cache.wframe_mouse.w_frame_skip_wait_mouse = 1
     character_move.own_charcter_move(scene_path)
 
-  def settle_collection_place(self, collect_flag: bool):
+  def settle_collection_place(self, collect_flag: bool) -> None:
     """
     收藏或取消收藏当前地点
     Keyword arguments:

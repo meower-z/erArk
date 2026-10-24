@@ -70,7 +70,7 @@ class Read_Book_Panel:
     self.draw_list: List[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     character_data: game_type.Character = cache.character_data[0]
@@ -126,7 +126,7 @@ class Read_Book_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def read(self, book_id):
+  def read(self, book_id: int) -> None:
     """读选择的书"""
     instuct_judege.init_character_behavior_start_time(0, cache.game_time)
     character_data: game_type.Character = cache.character_data[0]

@@ -57,7 +57,7 @@ def settle_library_book():
       cache.rhodes_island.now_show_book_cid_of_type[book_type].append(book_id)
 
 
-def check_return_book(character_id):
+def check_return_book(character_id: int) -> int:
   """
   检查并决定是否归还当前书籍
   """
@@ -239,7 +239,7 @@ def can_read_book(character_id: int, book_cid: int) -> bool:
   return True
 
 
-def add_borrow_history_record(character_id: int, book_id: int):
+def add_borrow_history_record(character_id: int, book_id: int) -> None:
   """
   添加借书历史记录
 
@@ -270,7 +270,7 @@ def add_borrow_history_record(character_id: int, book_id: int):
   character_data.entertainment.borrow_book_history.append(new_record)
 
 
-def update_return_history_record(character_id: int, book_id: int):
+def update_return_history_record(character_id: int, book_id: int) -> None:
   """
   更新还书历史记录
 
@@ -298,7 +298,7 @@ def update_return_history_record(character_id: int, book_id: int):
       break
 
 
-def update_read_count_in_history(character_id: int, book_id: int):
+def update_read_count_in_history(character_id: int, book_id: int) -> None:
   """
   更新历史记录中的阅读次数
 
@@ -491,7 +491,7 @@ class Borrow_Book_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def change_panel(self, building_type: str):
+  def change_panel(self, building_type: str) -> None:
     """
     切换当前面板显示
     Keyword arguments:
@@ -500,7 +500,7 @@ class Borrow_Book_Panel:
 
     self.now_panel = building_type
 
-  def show_book(self, book_cid: int):
+  def show_book(self, book_cid: int) -> None:
     """
     显示书籍信息
     Keyword arguments:
@@ -581,7 +581,7 @@ class Borrow_Book_Panel:
       if yrn in return_list:
         break
 
-  def borrow(self, book_cid: int):
+  def borrow(self, book_cid: int) -> None:
     """
     借阅书籍
     Keyword arguments:

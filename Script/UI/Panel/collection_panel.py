@@ -18,7 +18,7 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def collapse_collection():
+def collapse_collection() -> None:
   """
   收起收集品
   """
@@ -26,7 +26,7 @@ def collapse_collection():
 
   character_data: game_type.Character = cache.character_data[0]
 
-  now_draw = draw.WaitDraw()
+  now_draw: draw.NormalDraw = draw.WaitDraw()
   now_draw.width = window_width
   now_draw.text = _("\n开始摆放藏品\n")
   now_draw.draw()
@@ -95,7 +95,7 @@ def collapse_collection():
   achievement_panel.achievement_flow(_("收藏服装"))
 
 
-def refresh_all_bonus():
+def refresh_all_bonus() -> None:
   """
   刷新所有未获得的解锁奖励
   """
@@ -339,7 +339,7 @@ class Collection_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def change_panel(self, collection_type: str):
+  def change_panel(self, collection_type: str) -> None:
     """
     切换当前面板显示
     Keyword arguments:
@@ -348,7 +348,7 @@ class Collection_Panel:
 
     self.now_panel = collection_type
 
-  def get_bonus(self, bonus_id: int):
+  def get_bonus(self, bonus_id: int) -> None:
     """
     获得解锁奖励
     Keyword arguments:
@@ -434,7 +434,7 @@ class Token_Draw:
     self.now_draw = token_draw
     """ 绘制的对象 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.now_draw.draw()
 
@@ -499,7 +499,7 @@ class Pan_Draw:
     self.now_draw = pan_draw
     """ 绘制的对象 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.now_draw.draw()
 
@@ -554,6 +554,6 @@ class Socks_Draw:
     self.now_draw = socks_draw
     """ 绘制的对象 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.now_draw.draw()

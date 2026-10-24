@@ -21,7 +21,7 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def put_selfmade_food_in():
+def put_selfmade_food_in() -> None:
   """
   将自制食物放入食堂
   """
@@ -174,7 +174,7 @@ class FoodShopPanel:
         break
     cache.now_panel_id = constant.Panel.IN_SCENE
 
-  def change_panel(self, food_type: str):
+  def change_panel(self, food_type: str) -> None:
     """
     切换当前面板显示的食物类型
     Keyword arguments:
@@ -342,7 +342,7 @@ class SeeFoodListByFoodNameDraw:
     self.now_draw = name_draw
     """ 绘制的对象 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     # 如果食物列表为空，则返回
     if not len(self.now_food_list):
@@ -419,7 +419,7 @@ class SeeFoodListByFoodNameDraw:
         break
       cache.rhodes_island.dining_hall_data.setdefault(self.cid, {})
 
-  def buy_food(self, cid: str, uid: UUID, restaurant_id: int = None):
+  def buy_food(self, cid: str, uid: UUID, restaurant_id: int = None) -> None:
     """玩家购买食物"""
     # 将食物放入背包，并从食物商店中删除
     if restaurant_id is None:

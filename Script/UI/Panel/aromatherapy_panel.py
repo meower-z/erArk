@@ -20,7 +20,7 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def settle_aromatherapy_sessions():
+def settle_aromatherapy_sessions() -> None:
   """
   结算香薰疗愈次数
   """
@@ -54,7 +54,7 @@ class Aromatherapy_Panel:
     self.now_choice_recipe_id = 0
     """ 当前选择的配方id """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("香薰疗愈")
@@ -163,7 +163,7 @@ class Aromatherapy_Panel:
         self.run_aromatherapy()
         break
 
-  def select_recipe(self):
+  def select_recipe(self) -> None:
     """选择配方"""
     pl_character_data = cache.character_data[0]
     target_character_data = cache.character_data[
@@ -248,11 +248,11 @@ class Aromatherapy_Panel:
       if yrn in return_list:
         break
 
-  def change_now_choice_recipe_id(self, recipe_id):
+  def change_now_choice_recipe_id(self, recipe_id: int) -> None:
     """更改当前选择的配方id"""
     self.now_choice_recipe_id = recipe_id
 
-  def run_aromatherapy(self):
+  def run_aromatherapy(self) -> None:
     """进行调香"""
     # 检查是否有足够的资源
     recipes_data = game_config.config_aromatherapy_recipes[

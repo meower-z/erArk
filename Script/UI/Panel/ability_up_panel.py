@@ -51,7 +51,7 @@ def expand_juel_entries(juel_entries: List[str]) -> List[str]:
 
 
 def total_juel_value_from_entries(
-    character_data, juel_entries: List[str]
+    character_data: game_type.Character, juel_entries: List[str]
 ) -> int:
   """
   给定角色数据和宝珠条目列表，计算角色使用所有对应宝珠后可提供的总值。
@@ -91,7 +91,7 @@ class Characterabi_show_Text:
     self.character_data = cache.character_data[self.character_id]
     """ 角色数据 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.return_list = []
     # 绘制标题#
@@ -222,7 +222,7 @@ class Characterabi_show_Text:
         new_draw_n.draw()
     # yrn = flow_handle.askfor_all(self.return_list)
 
-  def mark_up_show(self, ability_id: int):
+  def mark_up_show(self, ability_id: int) -> None:
     """显示刻印升级面板"""
     # 获取刻印升级数据
     now_mark_level = self.character_data.ability[ability_id]
@@ -300,7 +300,7 @@ class Characterabi_show_Text:
       if yrn in return_list:
         break
 
-  def mark_down_show(self, ability_id: int):
+  def mark_down_show(self, ability_id: int) -> None:
     """显示刻印降级面板"""
     # 调整使用的宝珠
     # 获取刻印降级数据
@@ -431,7 +431,7 @@ class Characterabi_show_Text:
       adjust: float,
       mark_down_data_all_value: int,
       need_juel_all_value: int,
-  ):
+  ) -> None:
     """
     输入宝珠使用量
     参数:
@@ -469,7 +469,7 @@ class Characterabi_show_Text:
       new_num = max_count
     self.jewel_use_dict[juel_id] = new_num
 
-  def mark_up(self, ability_id: int, need_juel: int):
+  def mark_up(self, ability_id: int, need_juel: int) -> None:
     """升级刻印"""
     now_mark_level = self.character_data.ability[ability_id]
     mark_up_data_id = game_config.config_mark_up_data_by_ability[ability_id][
@@ -493,7 +493,7 @@ class Characterabi_show_Text:
         [second_behavior_id],
     )
 
-  def mark_down(self, ability_id: int):
+  def mark_down(self, ability_id: int) -> None:
     """降级刻印"""
     # 刻印等级-1
     self.character_data.ability[ability_id] -= 1
@@ -510,13 +510,13 @@ class Characterabi_show_Text:
     info_draw.style = "gold_enrod"
     info_draw.draw()
 
-  def mark_can_up_show(self):
+  def mark_can_up_show(self) -> None:
     """显示无法升级的刻印信息"""
     now_draw = draw.WaitDraw()
     now_draw.text = _("\n该刻印当前无法使用宝珠升级\n")
     now_draw.draw()
 
-  def check_ability_change_possible(self, ability_id: int):
+  def check_ability_change_possible(self, ability_id: int) -> tuple[bool, bool]:
     """
     检查指定能力是否可升级或可降级
     返回 (can_up: bool, can_down: bool)
@@ -674,11 +674,11 @@ class Characterabi_cmd_Text:
     self.ability_level = self.character_data.ability[ability_id]
     """ 能力等级 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.return_list = []
-    jule_dict_1 = {}
-    jule_dict_2 = {}
+    jule_dict_1: dict[int, int] = {}
+    jule_dict_2: dict[int, int] = {}
     judge = 1
     # 绘制标题#
     while 1:
@@ -807,7 +807,7 @@ class Characterabi_cmd_Text:
       if yrn in self.return_list:
         break
 
-  def draw_need_list(self, need_list: list):
+  def draw_need_list(self, need_list: list) -> tuple[int, dict[int, int]]:
     """
     绘制升级需求列表
     Keyword arguments
@@ -848,7 +848,7 @@ class Characterabi_cmd_Text:
       now_draw.draw()
     return judge, jule_dict
 
-  def level_up(self, jule_dict: Dict[int, int]):
+  def level_up(self, jule_dict: Dict[int, int]) -> None:
     """
     扣除升级所需的宝珠，把当前能力提升1级，并结算技能类成就
     Keyword arguments:
@@ -883,7 +883,7 @@ class Character_abi_up_main_Handle:
     self.return_list: List[str] = []
     """ 当前面板监听的按钮列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     back_draw = draw.CenterButton(_("[返回]"), _("返回"), int(self.width))
     now_panel_id = _("属性升级")
@@ -942,7 +942,7 @@ class Character_abi_up_sub_Handle:
         self.change_panel,
     )
 
-  def change_panel(self, panel_id: str):
+  def change_panel(self, panel_id: str) -> None:
     """
     切换当前面板
     Keyword arguments:
@@ -958,7 +958,7 @@ class Character_abi_up_sub_Handle:
         self.change_panel,
     )
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     self.draw_data[self.now_panel].draw()
     self.return_list = []
@@ -1010,7 +1010,7 @@ class Character_abi_up_main_panel:
     self.return_list: List[str] = []
     """ 当前面板监听的按钮列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     for label in self.draw_list:
       label.draw()

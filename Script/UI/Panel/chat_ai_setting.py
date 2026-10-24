@@ -2,6 +2,8 @@
 文本生成AI的设置面板
 """
 
+from __future__ import annotations
+
 from typing import List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle
@@ -13,6 +15,11 @@ import concurrent.futures
 import os
 import csv
 import httpx
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import Any
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -48,7 +55,7 @@ class Chat_Ai_Setting_Panel:
     self.error_message = ""
     """ 错误信息 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("文本生成AI设置")
@@ -134,7 +141,7 @@ class Chat_Ai_Setting_Panel:
         # 选项名
         button_text = f"  [{ai_chat_setting_data.name}]： "
         button_len = max(len(button_text) * 2, 60)
-        button_draw = draw.LeftButton(
+        button_draw: draw.CenterButton = draw.LeftButton(
             button_text,
             button_text,
             button_len,
@@ -353,7 +360,7 @@ class Chat_Ai_Setting_Panel:
       if yrn == back_draw.return_text:
         break
 
-  def draw_info(self, cid):
+  def draw_info(self, cid: int) -> None:
     """绘制选项介绍信息"""
     line = draw.LineDraw("-", self.width)
     line.draw()
@@ -373,7 +380,7 @@ class Chat_Ai_Setting_Panel:
     line = draw.LineDraw("-", self.width)
     line.draw()
 
-  def change_setting(self, cid, option_len):
+  def change_setting(self, cid: int, option_len: int) -> None:
     """修改设置"""
     # 自定义模型的名字
     if cid == 5:
@@ -490,7 +497,7 @@ class Chat_Ai_Setting_Panel:
       else:
         cache.ai_setting.ai_chat_setting[cid] = 0
 
-  def select_send_data(self):
+  def select_send_data(self) -> None:
     """选择发送的数据"""
     while True:
       send_data_all_flags = cache.ai_setting.send_data_flags
@@ -602,7 +609,7 @@ class Chat_Ai_Setting_Panel:
       if yrn == save_draw.return_text:
         break
 
-  def print_send_data_prompt(self, send_data_cid):
+  def print_send_data_prompt(self, send_data_cid: int) -> None:
     """打印数据的提示信息"""
     line_draw = draw.LineDraw("-", self.width)
     line_draw.draw()
@@ -615,19 +622,19 @@ class Chat_Ai_Setting_Panel:
     line_feed.draw()
     line_feed.draw()
 
-  def toggle_send_data(self, send_data_cid):
+  def toggle_send_data(self, send_data_cid: int) -> None:
     """切换数据是否被选择"""
     cache.ai_setting.send_data_flags[send_data_cid] = (
         not cache.ai_setting.send_data_flags[send_data_cid]
     )
 
-  def change_translator(self):
+  def change_translator(self) -> None:
     """修改翻译设置"""
     cache.ai_setting.ai_chat_translator_setting += 1
     if cache.ai_setting.ai_chat_translator_setting > 2:
       cache.ai_setting.ai_chat_translator_setting = 0
 
-  def change_api_key(self, key_type: str):
+  def change_api_key(self, key_type: str) -> None:
     """修改api密钥"""
     while 1:
       return_list = []
@@ -694,7 +701,9 @@ class Chat_Ai_Setting_Panel:
       elif yrn == back_draw.return_text:
         break
 
-  def update_or_add_key(self, file_path, key_type, new_api_key):
+  def update_or_add_key(
+      self, file_path: str, key_type: str, new_api_key: str
+  ) -> None:
     """更新或添加键值对"""
     rows = []
     key_found = False
@@ -722,13 +731,13 @@ class Chat_Ai_Setting_Panel:
       writer = csv.writer(f)
       writer.writerows(rows)
 
-  def test_ai(self):
+  def test_ai(self) -> None:
     """测试AI"""
 
     # 判断在调用哪个api
     model = cache.ai_setting.ai_chat_setting[5]
     if model == 0 or model == "0":
-      info_draw = draw.WaitDraw()
+      info_draw: draw.NormalDraw = draw.WaitDraw()
       info_draw.style = "warning"
       info_draw.text = _(" \n  未设置模型，请先选择模型\n")
       info_draw.width = self.width
@@ -836,7 +845,7 @@ class Chat_Ai_Setting_Panel:
         # 关闭线程池
         executor.shutdown(wait=False, cancel_futures=True)
 
-  def get_completion(self, client, key_type):
+  def get_completion(self, client: Any, key_type: str) -> Any:
     """获取AI的返回结果"""
     if key_type == "OPENAI_API_KEY" or key_type == "DEEPSEEK_API_KEY":
       return client.chat.completions.create(

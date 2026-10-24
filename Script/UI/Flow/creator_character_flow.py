@@ -33,7 +33,7 @@ line = draw.LineDraw("=", width)
 
 
 @handle_panel.add_panel(constant.Panel.CREATOR_CHARACTER)
-def creator_character_panel():
+def creator_character_panel() -> None:
   """创建角色面板"""
   # 清掉同一进程里上一局残留的角色与已获得集合，并从干净的全局配置池重新拷贝一份角色模板：
   #    上一局生的女儿，其模板会随 born_new_character 留在运行时的 npc_tem_data 里、角色也留在
@@ -60,7 +60,7 @@ def creator_character_panel():
   cache.now_panel_id = constant.Panel.IN_SCENE
 
 
-def first_bonus_and_setting_updata():
+def first_bonus_and_setting_updata() -> None:
   """刷新初始奖励和设定"""
   cache = cache_control.cache
   for cid in game_config.config_first_bonus:
@@ -83,7 +83,7 @@ def first_bonus_and_setting_updata():
   )
 
 
-def game_start():
+def game_start() -> None:
   """初始化游戏数据"""
   cache = cache_control.cache
   from Script.System.Cooking_System import cooking
@@ -108,7 +108,7 @@ def game_start():
   # print(f"debug 2facility_open = {cache.base_resouce.facility_open}")
 
 
-def confirm_game_info_panel():
+def confirm_game_info_panel() -> None:
   """确认游戏说明面板"""
   now_line = draw.LineDraw("-", width)
   now_line.draw()
@@ -121,7 +121,7 @@ def confirm_game_info_panel():
   while 1:
     askfor_panel.draw()
     askfor_panel_return_list = askfor_panel.get_return_list()
-    ask_list = []
+    ask_list: list[str] = []
     ask_list.extend(askfor_panel_return_list.keys())
     yrn = flow_handle.askfor_all(ask_list)
     py_cmd.clr_cmd()
@@ -129,7 +129,7 @@ def confirm_game_info_panel():
       break
 
 
-def confirm_character_attr_panel():
+def confirm_character_attr_panel() -> bool:
   """确认角色属性面板"""
   # now_attr_panel = see_character_info_panel.SeeCharacterInfoPanel(0, width)
   askfor_panel = panel.OneMessageAndSingleColumnButton()
@@ -214,7 +214,7 @@ class Character_creat_Handle:
     self.return_list: List[str] = []
     """ 当前面板监听的按钮列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     line_feed_draw.draw()
     title_draw = draw.TitleLineDraw(_("详细设定"), self.width)
@@ -267,7 +267,7 @@ class Character_Sex:
     """ 绘制的文本列表 """
     self.draw_list.extend(now_draw.draw_list)
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     for label in self.draw_list:
       if isinstance(label, list):
@@ -277,7 +277,7 @@ class Character_Sex:
       else:
         label.draw()
 
-  def change(self):
+  def change(self) -> None:
     """性别改变"""
     character_data: game_type.Character = cache.character_data[0]
     if character_data.sex:
@@ -327,7 +327,7 @@ class Character_JJ:
     """ 绘制的文本列表 """
     self.draw_list.extend(now_draw.draw_list)
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     if cache.character_data[0].sex == 0:
       for label in self.draw_list:
@@ -338,7 +338,7 @@ class Character_JJ:
         else:
           label.draw()
 
-  def change(self):
+  def change(self) -> None:
     """大小改变"""
     character_data: game_type.Character = cache.character_data[0]
     if character_data.pl_ability.jj_size == 3:
@@ -383,7 +383,7 @@ class Character_Debug:
     """ 绘制的文本列表 """
     self.draw_list.extend(now_draw.draw_list)
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     if cache.character_data[0].sex == 0:
       for label in self.draw_list:
@@ -394,7 +394,7 @@ class Character_Debug:
         else:
           label.draw()
 
-  def change(self):
+  def change(self) -> None:
     """改变"""
     cache.debug_mode = not cache.debug_mode
 
@@ -534,7 +534,7 @@ class Character_FirstNPC:
     """ 绘制的文本列表 """
     self.draw_list.extend(now_draw.draw_list)
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     for label in self.draw_list:
       if isinstance(label, list):
@@ -836,7 +836,7 @@ class Character_FirstNPC:
       if yrn == random_draw.return_text or yrn == back_draw.return_text:
         break
 
-  def show_handle_panel(self, panel_id):
+  def show_handle_panel(self, panel_id: int) -> None:
     """切换面板显示"""
     if panel_id == 0:
       self.show_normal_handle_panel = not self.show_normal_handle_panel
@@ -847,7 +847,7 @@ class Character_FirstNPC:
           not self.show_special_chara_handle_panel
       )
 
-  def prepare_filter(self):
+  def prepare_filter(self) -> None:
     """完善各种过滤器"""
 
     for NPC_id in self.id_list:
@@ -879,13 +879,13 @@ class Character_FirstNPC:
       if race_name in self.race_filter_id_dict:
         self.race_filter_id_dict[race_name].append(NPC_id)
 
-  def select_all(self):
+  def select_all(self) -> None:
     """一键全选"""
     for adv_id in cache.npc_tem_data.keys():
       if adv_id not in cache.npc_id_got:
         cache.npc_id_got.add(adv_id)
 
-  def random_select(self):
+  def random_select(self) -> None:
     """随机选择"""
     self.reset_select()
     # 获取当前未选择的NPC
@@ -899,12 +899,12 @@ class Character_FirstNPC:
     for npc_id in random_npc:
       cache.npc_id_got.add(npc_id)
 
-  def change_show_character_attributes_flag(self):
+  def change_show_character_attributes_flag(self) -> None:
     """切换显示干员属性标记"""
     self.show_chara_attributes_flag = not self.show_chara_attributes_flag
     SelectFirstNPCButton.show_attributes_mode = self.show_chara_attributes_flag
 
-  def talk_filter(self):
+  def talk_filter(self) -> None:
     """口上过滤"""
     self.age_filter_flag = 0
     self.chest_filter_flag = 0
@@ -914,7 +914,7 @@ class Character_FirstNPC:
     self.show_normal_handle_panel = False
     self.show_talk_chara_handle_panel = True
 
-  def name_filter(self):
+  def name_filter(self) -> None:
     """姓名筛选"""
     # 进入筛选模式
     if not self.name_filter_flag:
@@ -937,7 +937,7 @@ class Character_FirstNPC:
     self.name_filter_flag = not self.name_filter_flag
     self.show_normal_handle_panel = True
 
-  def chest_filter(self):
+  def chest_filter(self) -> None:
     """胸围筛选"""
     self.chest_filter_flag = (self.chest_filter_flag + 1) % 6
     if self.chest_filter_flag == 0:
@@ -956,7 +956,7 @@ class Character_FirstNPC:
     self.talk_character_list = []
     self.show_normal_handle_panel = True
 
-  def age_filter(self):
+  def age_filter(self) -> None:
     """外表年龄筛选"""
     self.age_filter_flag = (self.age_filter_flag + 1) % 7
     if self.age_filter_flag == 0:
@@ -971,7 +971,7 @@ class Character_FirstNPC:
     self.talk_character_list = []
     self.show_normal_handle_panel = True
 
-  def race_filter(self):
+  def race_filter(self) -> None:
     """种族筛选"""
     self.race_filter_flag = (self.race_filter_flag + 1) % len(
         game_config.config_race
@@ -985,7 +985,7 @@ class Character_FirstNPC:
     self.talk_character_list = []
     self.show_normal_handle_panel = True
 
-  def reset_select(self):
+  def reset_select(self) -> None:
     """重置选择"""
     # 获取当前已选择的NPC
     now_select_npc_ld_list = [
@@ -1012,7 +1012,7 @@ class Character_FirstNPC:
     self.prepare_filter()
 
 
-def draw_first_npc_attributes(npc_id: int):
+def draw_first_npc_attributes(npc_id: int) -> None:
   """
   绘制初期干员的属性查看界面
   Keyword arguments:
@@ -1146,7 +1146,7 @@ class SelectFirstNPCButton:
     """ 绘制的对象 """
     self.now_draw = name_draw
 
-  def button_0(self):
+  def button_0(self) -> None:
     """选项1"""
     # 查看属性模式下，点击角色名字改为查看该角色的详细属性
     if SelectFirstNPCButton.show_attributes_mode:
@@ -1159,7 +1159,7 @@ class SelectFirstNPCButton:
     elif 9 - len(cache.npc_id_got):
       cache.npc_id_got.add(self.NPC_id)
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.now_draw.draw()
 
@@ -1263,7 +1263,7 @@ class Character_Bonus:
     """ 绘制的文本列表 """
     self.draw_list.extend(now_draw.draw_list)
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     for label in self.draw_list:
       if isinstance(label, list):
@@ -1273,7 +1273,7 @@ class Character_Bonus:
       else:
         label.draw()
 
-  def get_first_bonus(self, first_bonus_id: int):
+  def get_first_bonus(self, first_bonus_id: int) -> None:
     """获得初期奖励"""
     from Script.UI.Panel import assistant_panel, normal_panel
 
@@ -1432,7 +1432,7 @@ class World_Setting:
     """ 绘制的文本列表 """
     self.draw_list.extend(now_draw.draw_list)
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     for label in self.draw_list:
       if isinstance(label, list):
@@ -1442,7 +1442,7 @@ class World_Setting:
       else:
         label.draw()
 
-  def select_setting(self, setting_cid: int):
+  def select_setting(self, setting_cid: int) -> None:
     """选择该设定"""
     cache.world_setting[setting_cid] = not cache.world_setting[setting_cid]
 
@@ -1504,14 +1504,14 @@ class Other_Settings:
     """ 绘制的文本列表 """
     self.draw_list.extend(now_draw.draw_list)
 
-  def system_setting_draw(self):
+  def system_setting_draw(self) -> None:
     """系统设定"""
     from Script.UI.Panel import system_setting
 
     now_panel = system_setting.System_Setting_Panel(width)
     now_panel.draw()
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     for label in self.draw_list:
       if isinstance(label, list):

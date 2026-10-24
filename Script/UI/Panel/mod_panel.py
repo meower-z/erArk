@@ -31,7 +31,7 @@ class ModManagePanel:
     self.page_size = 10
     self.selected_mod_id = None
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     self.mod_manager.scan_mods()  # 刷新mod列表
 
@@ -164,11 +164,11 @@ class ModManagePanel:
         if 0 <= idx < len(mods):
           self._show_mod_detail(mods[idx])
 
-  def _select_mod(self, mod_id: str):
+  def _select_mod(self, mod_id: str) -> None:
     """选择mod"""
     self.selected_mod_id = mod_id
 
-  def _show_mod_detail(self, mod: ModInfo):
+  def _show_mod_detail(self, mod: ModInfo) -> None:
     """显示mod详情"""
     while True:
       py_cmd.clr_cmd()

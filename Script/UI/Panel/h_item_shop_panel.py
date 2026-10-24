@@ -36,7 +36,7 @@ body_item_list = [
 ]
 
 
-def get_item_id_from_body_item_list(body_item_id: int):
+def get_item_id_from_body_item_list(body_item_id: int) -> int:
   """根据身体道具序号获取道具id"""
   # 对应的id字典
   item_id_dict = {
@@ -273,11 +273,11 @@ class BuyItemByItemNameDraw:
     self.now_draw = name_draw
     """ 绘制的对象 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.now_draw.draw()
 
-  def show_item_info(self):
+  def show_item_info(self) -> None:
     """显示道具信息"""
     line_feed.draw()
     line_draw = draw.LineDraw("-", window_width)
@@ -331,13 +331,13 @@ class BuyItemByItemNameDraw:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def buy_many(self):
+  def buy_many(self) -> None:
     """购买多个道具"""
     while True:
       line_feed.draw()
       ask_number_panel = panel.AskForOneMessage()
       ask_number_panel.set(_("请输入要购买多少个"), 10)
-      now_number = ask_number_panel.draw()
+      now_number: str | int = ask_number_panel.draw()
       # 如果可以的话，将输入的文本转换为数字
       try:
         now_number = int(now_number)
@@ -355,7 +355,7 @@ class BuyItemByItemNameDraw:
         info_draw.draw()
     self.buy_item(now_number)
 
-  def buy_item(self, number: int = 1):
+  def buy_item(self, number: int = 1) -> None:
     """购买道具"""
     from Script.UI.Panel import achievement_panel
 

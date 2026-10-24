@@ -148,7 +148,7 @@ class Check_locker_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def steal_all_pan(self, npc_id_list, map_data):
+  def steal_all_pan(self, npc_id_list, map_data) -> None:
     """结算：偷取所有内裤"""
     pl_data: game_type.Character = cache.character_data[0]
     count = 0
@@ -179,7 +179,7 @@ class Check_locker_Panel:
     ).format(count)
     now_draw.draw()
 
-  def steal_all_socks(self, npc_id_list, map_data):
+  def steal_all_socks(self, npc_id_list, map_data) -> None:
     """结算：偷取所有袜子"""
     pl_data: game_type.Character = cache.character_data[0]
     count = 0
@@ -280,7 +280,7 @@ class FindDraw:
     self.now_draw = name_draw
     """ 绘制的对象 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.now_draw.draw()
 
@@ -408,7 +408,7 @@ class FindDraw:
       if yrn == back_draw.return_text:
         break
 
-  def smell(self):
+  def smell(self) -> None:
     """闻味道"""
 
     self.pl_data.behavior.duration = 1
@@ -416,7 +416,7 @@ class FindDraw:
     self.pl_data.state = constant.CharacterStatus.STATUS_SMELL_UNDERWEAR
     update.game_update_flow(1)
 
-  def get_pan(self):
+  def get_pan(self) -> None:
     """偷内裤"""
     # 如果没有内裤则直接返回
     if not len(self.now_locker[9]):
@@ -434,7 +434,7 @@ class FindDraw:
     )
     now_draw.draw()
 
-  def get_socks(self):
+  def get_socks(self) -> None:
     """偷袜子"""
     # 如果没有袜子则直接返回
     if not len(self.now_locker[10]):
@@ -571,11 +571,11 @@ class Ejaculation_NameDraw:
       self.now_draw = name_draw
       """ 绘制的对象 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.now_draw.draw()
 
-  def shoot_here(self):
+  def shoot_here(self) -> None:
     """
     清除当前命令，并对该干员衣柜里的这一衣物类型执行射精流程
     Return arguments:

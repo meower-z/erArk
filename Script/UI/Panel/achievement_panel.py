@@ -1,11 +1,18 @@
 """成就面板与各类成就的判定、结算及获得提示"""
 
+from __future__ import annotations
+
 from types import FunctionType
 from typing import List
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.Design import handle_premise, map_handle
 from Script.UI.Moudle import draw, panel
 from Script.Config import game_config, normal_config
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import Any
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -44,7 +51,7 @@ def get_achievement_judge_by_value(
   return False
 
 
-def achievement_flow(achievement_type: str, achievement_id: int = 0):
+def achievement_flow(achievement_type: str, achievement_id: int = 0) -> None:
   """
   成就系统流程\n
   输入：\n
@@ -91,7 +98,7 @@ def achievement_flow(achievement_type: str, achievement_id: int = 0):
       if pl_character_data.entertainment.read_book_progress[book_id] >= 100:
         read_book_count += 1
   # 成就类型与结算值的映射字典
-  achievement_type_value_dict = {
+  achievement_type_value_dict: dict[str, list[Any]] = {
       _("周目"): [cache.game_round, [1, 2]],
       _("囚犯"): [len(cache.rhodes_island.current_prisoners), [121, 122]],
       _("龙门币"): [cache.rhodes_island.materials_resouce[1], [201, 202, 203]],
@@ -150,7 +157,9 @@ def achievement_flow(achievement_type: str, achievement_id: int = 0):
   draw_achievement_notice(achievement_id_list)
 
 
-def settle_achievement(judge_value: int, achievement_ids, force: bool = False):
+def settle_achievement(
+    judge_value: int, achievement_ids: int | list[int], force: bool = False
+) -> list[int]:
   """
   通用成就结算函数（支持单个或批量）\n
   输入：\n
@@ -164,7 +173,7 @@ def settle_achievement(judge_value: int, achievement_ids, force: bool = False):
   # 如果achievement_ids是单个成就ID，则转换为列表
   if isinstance(achievement_ids, int):
     achievement_ids = [achievement_ids]
-  return_list = []
+  return_list: list[int] = []
   # 遍历成就ID列表
   for achievement_id in achievement_ids:
     # 需要未达成该成就
@@ -179,7 +188,7 @@ def settle_achievement(judge_value: int, achievement_ids, force: bool = False):
   return return_list
 
 
-def draw_achievement_notice(achievement_id_list: list[int]):
+def draw_achievement_notice(achievement_id_list: list[int]) -> None:
   """
   绘制获得了一个成就的提示\n
   输入：\n
@@ -204,7 +213,7 @@ def draw_achievement_notice(achievement_id_list: list[int]):
     now_draw.draw()
 
 
-def settle_chara_relationship():
+def settle_chara_relationship() -> list[int]:
   """
   结算角色关系类的成就\n
   返回：\n
@@ -254,14 +263,14 @@ def settle_chara_relationship():
       (slave_count, 63),  # 奴隶人数100
       (daught_slave_flag, 66),  # 与女儿的关系达成奴隶
   ]
-  return_list = []
+  return_list: list[int] = []
   # 统一调用settle_achievement进行批量结算
   for judge_value, achievement_id in achievement_checks:
     return_list.extend(settle_achievement(judge_value, achievement_id))
   return return_list
 
 
-def settle_chara_recruit():
+def settle_chara_recruit() -> list[int]:
   """
   结算招募类的成就\n
   返回：\n
@@ -279,13 +288,13 @@ def settle_chara_recruit():
     ):
       continue
     recruit_count += 1
-  return_list = []
+  return_list: list[int] = []
   # 统一调用settle_achievement进行批量结算
   return_list.extend(settle_achievement(recruit_count, [101, 102]))
   return return_list
 
 
-def settle_chara_visitor():
+def settle_chara_visitor() -> list[int]:
   """
   结算访客类的成就\n
   返回：\n
@@ -301,19 +310,19 @@ def settle_chara_visitor():
     # 如果当前或曾经是访客，则增加访客数量
     if now_character_data.sp_flag.vistor > 0:
       visitor_count += 1
-  return_list = []
+  return_list: list[int] = []
   # 统一调用settle_achievement进行批量结算
   return_list.extend(settle_achievement(visitor_count, [111, 112]))
   return return_list
 
 
-def settle_chara_assistant():
+def settle_chara_assistant() -> list[int]:
   """
   结算助理类的成就\n
   返回：\n
   - return_list: 成就列表，包含已达成的成就ID
   """
-  return_list = []
+  return_list: list[int] = []
   pl_character_data: game_type.Character = cache.character_data[0]
   assistant_chara_id = pl_character_data.assistant_character_id
   # 如果没有助理则返回空列表
@@ -347,13 +356,13 @@ def settle_chara_assistant():
   return return_list
 
 
-def settle_chara_clothing():
+def settle_chara_clothing() -> list[int]:
   """
   结算角色服装类的成就\n
   返回：\n
   - return_list: 成就列表，包含已达成的成就ID
   """
-  return_list = []
+  return_list: list[int] = []
   # 统计服装数量
   clothing_count = 0
   pl_character_data: game_type.Character = cache.character_data[0]
@@ -371,13 +380,13 @@ def settle_chara_clothing():
   return return_list
 
 
-def settle_chara_ability():
+def settle_chara_ability() -> list[int]:
   """
   结算角色能力类的成就\n
   返回：\n
   - return_list: 成就列表，包含已达成的成就ID
   """
-  return_list = []
+  return_list: list[int] = []
   pl_character_data: game_type.Character = cache.character_data[0]
 
   # 构建成就结算列表
@@ -420,13 +429,13 @@ def settle_chara_ability():
   return return_list
 
 
-def settle_chara_hypnosis():
+def settle_chara_hypnosis() -> list[int]:
   """
   结算催眠类的成就\n
   返回：\n
   - return_list: 成就列表，包含已达成的成就ID
   """
-  return_list = []
+  return_list: list[int] = []
   # 已催眠角色
   hypnosis_flag = 0
   # 完全催眠的角色数量
@@ -460,13 +469,13 @@ def settle_chara_hypnosis():
   return return_list
 
 
-def settle_chara_group_sex():
+def settle_chara_group_sex() -> list[int]:
   """
   结算群交类的成就\n
   返回：\n
   - return_list: 成就列表，包含已达成的成就ID
   """
-  return_list = []
+  return_list: list[int] = []
   # 如果没有在群交中则返回
   if handle_premise.handle_group_sex_mode_off(0):
     return return_list
@@ -528,13 +537,13 @@ def settle_chara_group_sex():
   return return_list
 
 
-def settle_chara_exhibitionism_sex():
+def settle_chara_exhibitionism_sex() -> list[int]:
   """
   结算露出类的成就\n
   返回：\n
   - return_list: 成就列表，包含已达成的成就ID
   """
-  return_list = []
+  return_list: list[int] = []
   # 如果没有在露出中则返回
   if handle_premise.handle_player_not_in_exhibitionism_sex_mode(0):
     return return_list
@@ -578,13 +587,13 @@ def settle_chara_exhibitionism_sex():
   return return_list
 
 
-def settle_chara_hidden_sex():
+def settle_chara_hidden_sex() -> list[int]:
   """
   结算隐奸类的成就\n
   返回：\n
   - return_list: 成就列表，包含已达成的成就ID
   """
-  return_list = []
+  return_list: list[int] = []
   # 如果没有在隐奸中则返回
   if handle_premise.handle_player_not_in_hidden_sex_mode(0):
     return return_list
@@ -624,13 +633,13 @@ def settle_chara_hidden_sex():
   return return_list
 
 
-def settle_chara_sleep_sex():
+def settle_chara_sleep_sex() -> list[int]:
   """
   结算睡奸类的成就\n
   返回：\n
   - return_list: 成就列表，包含已达成的成就ID
   """
-  return_list = []
+  return_list: list[int] = []
   # 如果没有在睡奸中则返回
   if not handle_premise.handle_t_unconscious_flag_1(0):
     return return_list
@@ -663,13 +672,13 @@ def settle_chara_sleep_sex():
   return return_list
 
 
-def settle_semen_shoot():
+def settle_semen_shoot() -> list[int]:
   """
   结算射精类的成就\n
   返回：\n
   - return_list: 成就列表，包含已达成的成就ID
   """
-  return_list = []
+  return_list: list[int] = []
   pl_character_data: game_type.Character = cache.character_data[0]
   target_character_id = pl_character_data.target_character_id
   target_character_data: game_type.Character = cache.character_data[
@@ -813,7 +822,7 @@ class Achievement_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def update_achievement(self):
+  def update_achievement(self) -> None:
     """
     更新成就列表
     功能：重新加载成就数据并刷新面板
@@ -909,6 +918,6 @@ class Achievement_Draw:
     self.now_draw = achievement_draw
     """ 绘制的对象 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.now_draw.draw()

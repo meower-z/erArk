@@ -1,5 +1,7 @@
 """按钮监听、文本列表、分页等通用面板类型"""
 
+from __future__ import annotations
+
 import itertools
 import math
 import time
@@ -8,6 +10,11 @@ from types import FunctionType
 from Script.UI.Moudle import draw
 from Script.Core import io_init, flow_handle, text_handle, get_text, value_handle, game_type, cache_control
 from Script.Config import normal_config
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import Callable
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -36,9 +43,9 @@ class SingleColumnButton:
       self,
       button_list: List[str],
       return_list: List[str],
-      normal_style="standard",
-      onbutton_style="onbutton",
-  ):
+      normal_style: str = "standard",
+      onbutton_style: str = "onbutton",
+  ) -> None:
     """
     设置按钮和返回列表
     Keyword arguments:
@@ -72,7 +79,7 @@ class SingleColumnButton:
     """
     return len(self.button_list)
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制按钮列表"""
     for button in self.button_list:
       button.draw()
@@ -89,7 +96,9 @@ class OneMessageAndSingleColumnButton:
     self.button_panel: SingleColumnButton = None
     """ 按钮监听列表 """
 
-  def set(self, button_list: List[str], message: str, start_id=0):
+  def set(
+      self, button_list: List[str], message: str, start_id: int = 0
+  ) -> None:
     """
     设置要绘制的信息
     Keyword arguments:
@@ -123,7 +132,7 @@ class OneMessageAndSingleColumnButton:
     """
     return self.button_panel.return_list
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     self.message.draw()
     io_init.era_print("\n")
@@ -140,7 +149,7 @@ class AskForOneMessage:
     self.input_max: int = 0
     """ 玩家输入文本的最大长度 """
 
-  def set(self, message: str, input_max: int):
+  def set(self, message: str, input_max: int) -> None:
     """
     设置要绘制的消息和允许玩家输入的长度
     Keyword arguments:
@@ -188,7 +197,7 @@ class TitleAndRightInfoListPanel:
     self.draw_list: List[draw.NormalDraw] = []
     """ 绘制列表 """
 
-  def set(self, title_text: str, info_list: List[str], width: int):
+  def set(self, title_text: str, info_list: List[str], width: int) -> None:
     """
     设置绘制信息
     Keyword arguments:
@@ -210,7 +219,7 @@ class TitleAndRightInfoListPanel:
       self.draw_list.append(info)
     self.draw_list.append(line)
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     for value in self.draw_list:
       value.draw()
@@ -229,7 +238,7 @@ class CenterDrawTextListPanel:
     self.draw_list: List[List[draw.CenterDraw]] = []
     """ 绘制列表 """
 
-  def set(self, info_list: List[str], width: int, column: int):
+  def set(self, info_list: List[str], width: int, column: int) -> None:
     """
     设置绘制信息
     Keyword arguments:
@@ -250,7 +259,7 @@ class CenterDrawTextListPanel:
         now_list.append(now_info_draw)
       self.draw_list.append(now_list)
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     for now_list in self.draw_list:
       for value in now_list:
@@ -270,7 +279,7 @@ class LeftDrawTextListPanel:
     self.draw_list: List[List[draw.LeftDraw]] = []
     """ 绘制列表 """
 
-  def set(self, info_list: List[str], width: int, column: int):
+  def set(self, info_list: List[str], width: int, column: int) -> None:
     """
     设置绘制信息
     Keyword arguments:
@@ -298,7 +307,7 @@ class LeftDrawTextListPanel:
         now_list.append(now_info_draw)
       self.draw_list.append(now_list)
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     for now_list in self.draw_list:
       for value in now_list:
@@ -309,7 +318,7 @@ class LeftDrawTextListPanel:
 class LeftDrawTextListWaitPanel(LeftDrawTextListPanel):
   """绘制一个左对齐列表并等待玩家任意键"""
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     for now_list in self.draw_list:
       for value in now_list:
@@ -320,7 +329,7 @@ class LeftDrawTextListWaitPanel(LeftDrawTextListPanel):
     else:
       time.sleep(0.001)
 
-  def __len__(self):
+  def __len__(self) -> int:
     """获取面板的内容宽度"""
     index = 0
     for now_list in self.draw_list:
@@ -341,7 +350,9 @@ class DrawTextListPanel:
     self.draw_list: List[List[draw.NormalDraw]] = []
     """ 绘制列表 """
 
-  def set(self, info_list: List[draw.NormalDraw], width: int, column: int):
+  def set(
+      self, info_list: List[draw.NormalDraw], width: int, column: int
+  ) -> None:
     """
     设置绘制信息
     Keyword arguments:
@@ -353,7 +364,7 @@ class DrawTextListPanel:
     self.column = column
     self.draw_list = value_handle.list_of_groups(info_list, column)
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     for now_list in self.draw_list:
       for value in now_list:
@@ -375,7 +386,7 @@ class VerticalDrawTextListGroup:
     self.draw_list: List[List[draw.NormalDraw]] = []
     """ 绘制的对象列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     new_group = itertools.zip_longest(*self.draw_list)
     for draw_list in new_group:
@@ -414,9 +425,9 @@ class CenterDrawButtonListPanel:
       width: int,
       column: int,
       null_text: str = "",
-      cmd_func=None,
+      cmd_func: Callable[..., object] | None = None,
       func_args: Sequence[Tuple] = (),
-  ):
+  ) -> None:
     """
     设置绘制信息
     Keyword arguments:
@@ -455,7 +466,7 @@ class CenterDrawButtonListPanel:
         index += 1
       self.draw_list.append(now_list)
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     for now_list in self.draw_list:
       for value in now_list:
@@ -489,9 +500,9 @@ class LeftDrawIDButtonListPanel:
       width: int,
       column: int,
       null_text: str = "",
-      cmd_func=None,
+      cmd_func: Callable[..., object] | None = None,
       func_args: Sequence[Tuple] = (),
-  ):
+  ) -> None:
     """
     设置绘制信息
     Keyword arguments:
@@ -534,7 +545,7 @@ class LeftDrawIDButtonListPanel:
         now_index += 1
       self.draw_list.append(now_list)
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     for now_list in self.draw_list:
       for value in now_list:
@@ -545,7 +556,7 @@ class LeftDrawIDButtonListPanel:
 class ClearScreenPanel:
   """绘制一屏长度的空行"""
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     panel = "\n" * 50
     io_init.era_print(panel)
@@ -586,7 +597,7 @@ class PageHandleDrawType:
     self.button_return: str = ""
     """ 按钮返回值 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
 
@@ -751,12 +762,12 @@ class PageHandlePanel:
       draw_list.append(line_feed)
     self.draw_list = draw_list
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     for value in self.draw_list:
       value.draw()
 
-  def next_page(self):
+  def next_page(self) -> None:
     """将面板切换至下一页"""
     total_page = math.ceil(len(self.text_list) / self.limit)
     if self.now_page >= total_page - 1:
@@ -764,7 +775,7 @@ class PageHandlePanel:
     else:
       self.now_page += 1
 
-  def old_page(self):
+  def old_page(self) -> None:
     """将面板切换至上一页"""
     total_page = math.ceil(len(self.text_list) / self.limit)
     if self.now_page <= 0:

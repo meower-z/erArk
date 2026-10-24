@@ -536,7 +536,7 @@ class SeeCharacterBodyPanel:
       return dirty_diff_text_cid
     return ""
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     for label in self.draw_list:
       if isinstance(label, list):

@@ -27,7 +27,7 @@ window_width = normal_config.config_normal.text_width
 """ 屏幕宽度 """
 
 
-def get_now_class_tip(character_id: int):
+def get_now_class_tip(character_id: int) -> tuple[bool, str] | None:
   """
   取角色当前的上课信息，供 <课> / <翘> 状态标识使用（Plan 22）
   只在角色**此刻正在上课/授课**时返回内容，而不是"本节有排课"——状态标识描述的是此刻的状态，
@@ -778,7 +778,7 @@ class CharacterInfoHead:
         self.return_list.append(semen_item_draw.return_text)
     """ 要绘制的面板列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     if self.draw_title:
       title_draw = draw.TitleLineDraw(_("人物属性"), self.width)

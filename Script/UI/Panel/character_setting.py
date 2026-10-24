@@ -50,7 +50,7 @@ class CharacterSetting:
     self.center_status: bool = center_status
     """ 居中绘制状态文本 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     character_data = cache.character_data[self.character_id]
     type_data = _("角色设置")
@@ -138,7 +138,7 @@ class CharacterSetting:
 
     # yrn = flow_handle.askfor_all(self.return_list)
 
-  def draw_info(self, cid):
+  def draw_info(self, cid: int) -> None:
     """绘制选项介绍信息"""
     line = draw.LineDraw("-", self.width)
     line.draw()
@@ -151,7 +151,7 @@ class CharacterSetting:
     line = draw.LineDraw("-", self.width)
     line.draw()
 
-  def change_setting(self, cid, option_len):
+  def change_setting(self, cid: int, option_len: int) -> None:
     """修改设置"""
     from Script.Design import character
 

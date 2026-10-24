@@ -125,7 +125,7 @@ def hypnosis_degree_limit_calculation() -> int:
   return hypnosis_degree_limit
 
 
-def evaluate_hypnosis_completion(character_id: int):
+def evaluate_hypnosis_completion(character_id: int) -> int:
   """
   判断与结算催眠完成\n
   Keyword arguments:\n
@@ -225,7 +225,7 @@ class Chose_Hypnosis_Type_Panel:
     self.draw_list: List[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("选择催眠类型")
@@ -320,7 +320,7 @@ class Chose_Hypnosis_Type_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def change_hypnosis_type(self, hypnosis_type_cid):
+  def change_hypnosis_type(self, hypnosis_type_cid: int) -> None:
     """改变当前的催眠类型"""
     pl_character_data: game_type.Character = cache.character_data[0]
     pl_character_data.pl_ability.hypnosis_type = hypnosis_type_cid
@@ -375,7 +375,7 @@ class Chose_Hypnosis_Type_Panel:
           now_draw.draw()
           self.body_or_mind_control_option(1)
 
-  def body_or_mind_control_option(self, body_or_mind_flag=0):
+  def body_or_mind_control_option(self, body_or_mind_flag: int = 0) -> None:
     """
     身体或心灵的控制选项
     Keyword arguments:
@@ -440,7 +440,7 @@ class Chose_Hypnosis_Type_Panel:
       if yrn in return_list:
         break
 
-  def son_instruct(self, behavbior_cid):
+  def son_instruct(self, behavbior_cid: str) -> None:
     """进行子选项"""
     from Script.System.Instruct_System import handle_instruct
 
@@ -449,7 +449,9 @@ class Chose_Hypnosis_Type_Panel:
 
     # 心控-角色扮演需要单独绘制面板
     if behavbior_cid == "hypnosis_roleplay":
-      now_draw = Chose_Roleplay_Type_Panel(self.width)
+      now_draw: Chose_Roleplay_Type_Panel | draw.WaitDraw = (
+          Chose_Roleplay_Type_Panel(self.width)
+      )
       now_draw.draw()
       character_data: game_type.Character = cache.character_data[0]
       target_data: game_type.Character = cache.character_data[
@@ -740,7 +742,7 @@ class Chose_Roleplay_Type_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def toggle_type_expand(self, t):
+  def toggle_type_expand(self, t: str) -> None:
     """
     切换类型展开/收起状态
     参数：
@@ -754,12 +756,12 @@ class Chose_Roleplay_Type_Panel:
 
   def judge_can_select(
       self,
-      cid,
-      selected_special_cid,
-      selected_type_cid,
-      t,
-      selected_roleplay_cache,
-  ):
+      cid: int,
+      selected_special_cid: int | None,
+      selected_type_cid: dict[str, int],
+      t: str,
+      selected_roleplay_cache: list[int],
+  ) -> bool:
     """
     判断是否可以选择该角色扮演类型
     参数：
@@ -885,7 +887,7 @@ class Chose_Roleplay_Type_Panel:
     else:
       self.selected_roleplay_cache.remove(cid)
 
-  def confirm_roleplay(self, cid):
+  def confirm_roleplay(self, cid: int) -> None:
     """
     确认进行角色扮演
     参数：
@@ -921,7 +923,7 @@ class Chose_Roleplay_Type_Panel:
     # 添加角色扮演到缓存
     self.selected_roleplay_cache.append(cid)
 
-  def settle_roleplay_selection(self):
+  def settle_roleplay_selection(self) -> None:
     """
     结算角色扮演选择，将缓存的值赋予到目标角色的催眠状态中
     输入：无

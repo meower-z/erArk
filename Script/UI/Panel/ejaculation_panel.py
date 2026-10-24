@@ -24,7 +24,7 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def show_endure_ejaculation_panel():
+def show_endure_ejaculation_panel() -> bool:
   """
   进行是否忍住射精的判断
   return
@@ -126,7 +126,7 @@ def judge_endure_ejaculation(endure_rate: int) -> bool:
     return False
 
 
-def common_ejaculation():
+def common_ejaculation() -> tuple[str, int]:
   """
   通用射精结算，进行一次射精，并返回射精文本和射精量
   return
@@ -147,7 +147,7 @@ def common_ejaculation():
   else:
     # 基础射精值，小中多射精区分
     if character_data.second_behavior["p_orgasm_strong"] == 1:
-      semen_count = int(
+      semen_count: float = int(
           game_config.config_semen_shoot_amount[2].base_semen_amount
           * random_weight
       ) * (character_data.h_state.endure_not_shot_count + 1)
@@ -246,7 +246,7 @@ def update_semen_dirty(
     part_type: int,
     semen_count: int,
     update_shoot_position_flag: bool = True,
-):
+) -> None:
   """
   更新部位的被射精污浊数据
   Keyword arguments:
@@ -376,7 +376,7 @@ def update_semen_dirty(
 
 def calculate_semen_flow(
     character_id: int, part_cid: int, part_type: int, semen_count: int
-):
+) -> None:
   """
   计算精液流动
   Keyword arguments:
@@ -448,7 +448,7 @@ def ejaculation_flow(
     target_character_id: int = 0,
     draw_flag: bool = True,
     soft_egg_id: int = -1,
-):
+) -> None:
   """
   射精流程的总函数
   Keyword arguments:
@@ -585,7 +585,7 @@ class Ejaculation_Panel:
     self.now_panel = _("身体")
     """ 当前绘制的射精页面 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     character_data: game_type.Character = cache.character_data[0]
     target_data: game_type.Character = cache.character_data[
@@ -628,7 +628,7 @@ class Ejaculation_Panel:
     else:
       self.draw_choose_part()
 
-  def part_can_choose(self, body_part_cid: int):
+  def part_can_choose(self, body_part_cid: int) -> bool:
     """判断该部位是否可以绘制"""
     from Script.Design import clothing
     from Script.Design import instuct_judege
@@ -671,7 +671,7 @@ class Ejaculation_Panel:
       return True
     return False
 
-  def draw_choose_target_chara_in_group_sex(self):
+  def draw_choose_target_chara_in_group_sex(self) -> None:
     """绘制选择射精对象"""
 
     title_name = _("选择射精对象")
@@ -713,7 +713,7 @@ class Ejaculation_Panel:
       if yrn in return_list:
         break
 
-  def draw_choose_part(self, self_mode: bool = False):
+  def draw_choose_part(self, self_mode: bool = False) -> None:
     """
     绘制选择射精部位
     Keyword arguments:
@@ -741,7 +741,7 @@ class Ejaculation_Panel:
           draw_text = f"[{body_part_cid}]{part_name}"
           # print("debug draw_text = ",draw_text)
           body_count += 1
-          show_flag = self.part_can_choose(body_part_cid)
+          show_flag: bool | int = self.part_can_choose(body_part_cid)
           if show_flag:
             name_draw = draw.CenterButton(
                 draw_text,
@@ -822,12 +822,12 @@ class Ejaculation_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def change_shoot_target(self, target_character_id: int):
+  def change_shoot_target(self, target_character_id: int) -> None:
     """更改射精目标"""
     character_data: game_type.Character = cache.character_data[0]
     character_data.target_character_id = target_character_id
 
-  def shoot_soft_egg(self, egg_id: int):
+  def shoot_soft_egg(self, egg_id: int) -> None:
     """
     结算射在体外无壳卵上（不涉及任何身体/服装部位，不更新阴茎插入与射精部位记录）
     Keyword arguments:
@@ -836,7 +836,7 @@ class Ejaculation_Panel:
     py_cmd.clr_cmd()
     ejaculation_flow(-1, 0, soft_egg_id=egg_id)
 
-  def shoot_here(self, part_cid: int, part_type: int):
+  def shoot_here(self, part_cid: int, part_type: int) -> None:
     """结算射精"""
     py_cmd.clr_cmd()
     # 更新阴茎插入部位

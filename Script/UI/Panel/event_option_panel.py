@@ -131,7 +131,9 @@ def _handle_web_event_options(son_event_list: list, character_id: int) -> str:
   return selected_event_id
 
 
-def get_target_chara_diy_instruct(character_id: int = 0):
+def get_target_chara_diy_instruct(
+    character_id: int = 0,
+) -> tuple[int, list[str]]:
   """
   获得交互对象的角色自定义指令\n
   Keyword arguments:\n
@@ -187,7 +189,7 @@ def check_son_event_list_from_event_list(
     character_id: int,
     event_parent_chid_id: int,
     event_parent_value: int,
-):
+) -> list[str]:
   """
   检查事件列表中是否有子事件\n
   Keyword arguments:\n
@@ -480,11 +482,11 @@ class SonEventDraw:
     self.now_draw = name_draw
     """ 绘制的对象 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.now_draw.draw()
 
-  def run_son_event(self):
+  def run_son_event(self) -> None:
     """点击后运行对应的子事件"""
     character_data: game_type.Character = cache.character_data[
         self.character_id

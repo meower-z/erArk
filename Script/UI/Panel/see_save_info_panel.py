@@ -67,7 +67,7 @@ class SeeSaveListPanel:
     except Exception:
       pass
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     while 1:
       if cache.back_save_panel:
@@ -189,10 +189,10 @@ class SaveInfoDraw:
       new_text = text_handle.align(save_name, "center", text_width=self.width)
       self.draw_text = new_text
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     if self.is_button and (self.save_exist_judge or self.write_save):
-      now_draw = draw.Button(
+      now_draw: draw.Button | draw.NormalDraw = draw.Button(
           self.draw_text, self.button_return, cmd_func=self.draw_save_handle
       )
     else:
@@ -201,7 +201,7 @@ class SaveInfoDraw:
     now_draw.width = self.width
     now_draw.draw()
 
-  def draw_save_handle(self):
+  def draw_save_handle(self) -> None:
     """处理读写存档"""
     # py_cmd.clr_cmd()
     line_feed.draw()
@@ -261,7 +261,7 @@ class SaveInfoDraw:
       except Exception:
         pass
 
-  def load_save(self):
+  def load_save(self) -> None:
     """载入存档"""
     # 进行二次确认
     while 1:
@@ -284,7 +284,7 @@ class SaveInfoDraw:
     cache.now_panel_id = constant.Panel.IN_SCENE
     cache.back_save_panel = True
 
-  def delete_save(self):
+  def delete_save(self) -> None:
     """删除存档"""
     # 进行二次确认
     while 1:
@@ -305,7 +305,7 @@ class SaveInfoDraw:
         return
     save_handle.remove_save(self.text)
 
-  def re_write_save(self):
+  def re_write_save(self) -> None:
     """覆盖存档"""
     # 进行二次确认
     while 1:

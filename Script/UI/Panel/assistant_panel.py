@@ -20,7 +20,7 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def get_assistant_candidates():
+def get_assistant_candidates() -> list[int]:
   """
   获取助理候选角色id列表
   """
@@ -91,7 +91,7 @@ def chose_assistant():
       break
 
 
-def select_random_assistant():
+def select_random_assistant() -> None:
   """
   随机选择助理\n
   Keyword arguments:
@@ -114,7 +114,7 @@ def select_random_assistant():
   assistant_replace(assistant_id)
 
 
-def assistant_replace(new_assistant_id: int):
+def assistant_replace(new_assistant_id: int) -> None:
   """
   助理替换\n
   Keyword arguments:
@@ -220,7 +220,7 @@ class Assistant_Panel:
     self.now_panel = _("助理相关调整")
     """ 当前绘制的食物类型 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     title_draw = draw.TitleLineDraw(_("助理相关调整"), self.width)
 
@@ -348,7 +348,7 @@ class Assistant_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def chose_button(self, service_cid: int, service_option_len: int):
+  def chose_button(self, service_cid: int, service_option_len: int) -> None:
     """玩家点击了选项"""
     character_data: game_type.Character = cache.character_data[0]
     assistant_data: game_type.Character = cache.character_data[
@@ -419,7 +419,7 @@ class Assistant_Panel:
 
   def settlement_of_associated_attribute(
       self, service_cid: int, service_option_len: int
-  ):
+  ) -> None:
     """结算附带的属性变化"""
     # 跳过没有变化的
     if service_cid in {10}:
@@ -505,7 +505,7 @@ class Assistant_Panel:
           )
         # print(f"debug target_data.dormitory = {target_data.dormitory}")
 
-  def select_morning_salutation_time(self):
+  def select_morning_salutation_time(self) -> None:
     """选择早安服务的时间"""
     character_data: game_type.Character = cache.character_data[0]
     return_list = []
@@ -574,7 +574,7 @@ class Assistant_Panel:
       if yrn == back_button.return_text:
         break
 
-  def select_night_salutation_time(self):
+  def select_night_salutation_time(self) -> None:
     """选择晚安服务的时间"""
     character_data: game_type.Character = cache.character_data[0]
     return_list = []
@@ -637,7 +637,7 @@ class Assistant_Panel:
       if yrn == back_button.return_text:
         break
 
-  def change_hour(self, morning_flag: bool = True):
+  def change_hour(self, morning_flag: bool = True) -> None:
     """更改小时"""
     character_data: game_type.Character = cache.character_data[0]
     while 1:
@@ -662,7 +662,7 @@ class Assistant_Panel:
           character_data.action_info.plan_to_sleep_time[0] = user_input
           break
 
-  def change_minute(self, morning_flag: bool = True):
+  def change_minute(self, morning_flag: bool = True) -> None:
     """更改分钟"""
     character_data: game_type.Character = cache.character_data[0]
     while 1:
@@ -734,6 +734,6 @@ class SeeNPCButtonList:
     self.now_draw = name_draw
     self.draw_text = button_text
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.now_draw.draw()

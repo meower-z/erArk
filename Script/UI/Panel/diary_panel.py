@@ -39,7 +39,7 @@ class Diary_Panel:
     self.all_insert_text: str = ""
     """ 插入的文本 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("日记")
@@ -105,18 +105,18 @@ class Diary_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def insert_text(self):
+  def insert_text(self) -> None:
     """插入文本"""
     insert_text_panel = panel.AskForOneMessage()
     insert_text_panel.set(_(" 插入的文本为"), 100)
     text = insert_text_panel.draw()
     self.all_insert_text += text
 
-  def clear_text(self):
+  def clear_text(self) -> None:
     """清零增加文本"""
     self.all_insert_text = ""
 
-  def save_diary(self):
+  def save_diary(self) -> None:
     """保存并更新日记文件"""
     diary_files_path = os.path.join("save", "diary")
     if not os.path.exists(diary_files_path):

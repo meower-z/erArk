@@ -92,10 +92,10 @@ class GameTimeInfoPanel:
     self.now_draw: draw.NormalDraw = now_draw
     """ 当前面板绘制对象 """
 
-  def __len__(self):
+  def __len__(self) -> int:
     """获取绘制宽度"""
     return self.width
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.now_draw.draw()
