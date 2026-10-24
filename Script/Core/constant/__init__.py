@@ -271,18 +271,6 @@ instruct_minor_type_data: Dict[str, str] = {}
 
 handle_state_machine_data: Dict[int, Callable[..., object]] = {}
 """ 角色状态机函数 """
-family_region_list: Dict[int, str] = {}
-""" 姓氏区间数据 """
-boys_region_list: Dict[int, str] = {}
-""" 男孩名字区间数据 """
-girls_region_list: Dict[int, str] = {}
-""" 女孩名字区间数据 """
-family_region_int_list: List[int] = []
-""" 姓氏权重区间数据 """
-boys_region_int_list: List[int] = []
-""" 男孩名字权重区间数据 """
-girls_region_int_list: List[int] = []
-""" 女孩名字权重区间数据 """
 panel_data: Dict[int, Callable[..., object]] = {}
 """
 面板id对应的面板绘制函数集合

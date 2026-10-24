@@ -2141,8 +2141,6 @@ class Cache:
     """ 游戏地图数据 地图路径:地图数据 """
     self.scene_data: Dict[str, Scene] = {}
     """ 游戏场景数据 场景路径:场景数据 """
-    self.random_npc_list: List[NpcTem] = []
-    """ 随机npc数据 """
     # self.wear_item_type_data: dict = {}
     # """ 可穿戴道具类型数据 """
     self.over_behavior_character: Set = set()

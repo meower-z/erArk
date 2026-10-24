@@ -356,7 +356,7 @@ def init_game_environment(args):
 
   # 重要：先加载 game_config 再 import 依赖 UI 的东西
   from Script.Core import get_text
-  from Script.Config import game_config, name_config
+  from Script.Config import game_config
 
   game_config.init()
 

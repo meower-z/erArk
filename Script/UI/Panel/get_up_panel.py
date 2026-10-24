@@ -1,9 +1,9 @@
-"""角色起床界面面板与带切换控制的总起床面板"""
+"""角色起床界面面板"""
 
 from types import FunctionType
 from Script.UI.Moudle import draw
 from Script.UI.Panel import see_character_info_panel
-from typing import Tuple, List
+from typing import Tuple
 from Script.Design import game_time
 from Script.Core import get_text, cache_control, game_type, flow_handle
 from Script.Config import game_config, normal_config
@@ -13,9 +13,7 @@ from Script.Core import (
     value_handle,
     game_type,
     text_handle,
-    py_cmd,
     flow_handle,
-    constant,
 )
 
 _: FunctionType = get_text._
@@ -70,71 +68,3 @@ class GetUpPanel_1:
         self.character_id, self.width
     )
     attr_panel.draw()
-
-
-class GetUpPanel:
-  """
-  带切换控制的总起床面板
-  Keyword arguments:
-  character_id -- 角色id
-  width -- 最大宽度
-  character_list -- 角色id列表
-  """
-
-  def __init__(self, character_id: int, width: int):
-    """初始化绘制对象"""
-    self.character_id: int = character_id
-    """ 要绘制的角色id """
-    self.width: int = width
-    """ 面板最大宽度 """
-    self.return_list: List[str] = []
-    """ 当前面板监听的按钮列表 """
-    self.title_draw = draw.TitleLineDraw(_("睡梦面板"), self.width)
-    cache.now_panel_id = constant.Panel.IN_SCENE
-    self.back_draw = draw.CenterButton(
-        _("[起床]"), _("返回"), int(self.width / 3)
-    )
-    self.time_draw = draw.CenterButton(
-        _("[睡觉时间]"), _("返回"), int(self.width / 3)
-    )
-    character_list = [0, 1, 2, 3]
-    now_list = list(character_list)
-    self.now_character_panel = see_character_info_panel.SeeCharacterInfoHandle(
-        self.character_id, self.width, now_list
-    )
-    self.chara_data_draw = draw.CenterButton(
-        _("[角色列表]"),
-        _("角色列表"),
-        int(self.width / 3),
-        cmd_func=self.now_character_panel.draw,
-    )
-
-  def draw(self) -> None:
-    """绘制面板"""
-
-    while 1:
-      self.title_draw.draw()
-      self.return_list = []
-      # self.now_character_panel.draw()
-      self.back_draw.draw()
-      self.chara_data_draw.draw()
-      line_feed.draw()
-      self.return_list.append(self.back_draw.return_text)
-      self.return_list.append(self.chara_data_draw.return_text)
-      yrn = flow_handle.askfor_all(self.return_list)
-      py_cmd.clr_cmd()
-      line_feed.draw()
-      if yrn == self.back_draw.return_text:
-        break
-
-  def old_character(self) -> None:
-    """切换显示上一人"""
-    # now_index = self.character_list.index(self.character_id)
-    # self.character_id = self.character_list[now_index - 1]
-
-  def next_character(self) -> None:
-    """切换显示下一人"""
-    # now_index = self.character_list.index(self.character_id) + 1
-    # if now_index > len(self.character_list) - 1:
-    #     now_index = 0
-    # self.character_id = self.character_list[now_index]

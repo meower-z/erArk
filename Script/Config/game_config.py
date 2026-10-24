@@ -278,11 +278,6 @@ config_tip_chara_data_by_adv: Dict[int, List] = {}
 """ 按adv分类的角色文本说明数据的cid列表  """
 config_sun_time: Dict[int, config_def.SunTime] = {}
 """ 太阳时间配置 """
-config_random_npc_sex_region: Dict[int, int] = {}
-"""
-生成随机npc时性别权重
-性别:权重
-"""
 config_solar_period: Dict[int, config_def.SolarPeriod] = {}
 """ 节气配置数据 """
 config_behavior: Dict[str, config_def.Behavior_Data] = {}
@@ -1459,7 +1454,6 @@ def load_sex_tem() -> None:
     now_tem = config_def.SexTem()
     now_tem.__dict__ = tem_data
     config_sex_tem[now_tem.cid] = now_tem
-    config_random_npc_sex_region[now_tem.cid] = now_tem.region
 
 
 def load_jj_tem() -> None:

@@ -10,10 +10,9 @@ cache_control.cache = game_type.Cache()
 normal_config.init_normal_config()
 
 
-from Script.Config import game_config, name_config
+from Script.Config import game_config
 
 game_config.init()
-# name_config.init_name_data()
 
 
 from Script.Config import map_config
