@@ -44,7 +44,6 @@ def build_csv_config(
     path_list = file_path.split(os.sep)
     file_id = path_list[-2] + "_" + file_id
     i = 0
-    class_text = ""
     type_text = file_id
     type_text = "Talk"
     if "premise" in file_name:
@@ -53,8 +52,6 @@ def build_csv_config(
     character_talk_data[type_text].setdefault("data", [])
     character_talk_data[type_text].setdefault("gettext", {})
     for row in now_read:
-      # 获得当前的行数
-      now_index = now_read.line_num
       if not i:
         for k in row:
           now_docstring_data[k] = row[k]
@@ -71,7 +68,6 @@ def build_csv_config(
         i += 1
         continue
       elif i == 3:
-        class_text = list(row.values())[0]
         i += 1
         continue
       # 跳过非指定角色的行
@@ -137,7 +133,7 @@ def build_chara_talk(chara_adv_id: int = 0) -> None:
     # 判断当前路径是否为目录
     if os.path.isdir(now_dir):
       # 如果是目录，则递归遍历子目录
-      for root, dirs, files in os.walk(now_dir):
+      for root, _dirs, files in os.walk(now_dir):
         for f in files:
           now_f = os.path.join(root, f)
           build_csv_config(now_f, f, chara_adv_id, character_talk_data)
@@ -1030,7 +1026,6 @@ class Debug_Panel:
 
       info_draw = draw.NormalDraw()
       info_draw.width = self.width
-      return_list = []
 
       if self.now_panel == "全局变量":
         if key_index == 0:

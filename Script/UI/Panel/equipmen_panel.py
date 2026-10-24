@@ -622,7 +622,7 @@ class Equipment_Maintain_Panel:
       now_draw_panel.text_list = final_list
 
       # 调用通用选择按钮列表函数
-      return_list, other_return_list, select_state = (
+      return_list, _other_return_list, select_state = (
           common_select_NPC.common_select_npc_button_list_func(
               now_draw_panel, _("装备维护对象名单"), select_state=select_state
           )

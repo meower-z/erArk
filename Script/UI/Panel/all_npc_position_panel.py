@@ -74,7 +74,7 @@ class All_Npc_Position_Panel:
     while 1:
       title_draw.draw()
       py_cmd.clr_cmd()
-      npc_list, return_list = [], []
+      return_list = []
 
       # 暂时去掉同时跟随干员数量的提示信息
       # info_draw = draw.NormalDraw()

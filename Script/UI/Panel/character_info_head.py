@@ -629,11 +629,13 @@ class CharacterInfoHead:
     # 好感与信赖
     favorability_and_trust_text = ""
     if character_id:
-      favorability_lv, tem = attr_calculation.get_favorability_level(
+      favorability_lv, _fav_tem = attr_calculation.get_favorability_level(
           character_data.favorability[0]
       )
       favorability_lv_letter = attr_calculation.judge_grade(favorability_lv)
-      trust_lv, tem = attr_calculation.get_trust_level(character_data.trust)
+      trust_lv, _trust_tem = attr_calculation.get_trust_level(
+          character_data.trust
+      )
       trust_lv_letter = attr_calculation.judge_grade(trust_lv)
       favorability_text = f"{int(character_data.favorability[0])}"
       trust_text = f"{round(character_data.trust, 1)}%"

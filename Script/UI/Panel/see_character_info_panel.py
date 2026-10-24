@@ -1177,7 +1177,7 @@ class CharacterVisitorText:
     now_draw = panel.LeftDrawTextListPanel()
     text_list = ""
     # 计算访客留下概率
-    tem_1, tem_2, stay_posibility = instuct_judege.calculation_instuct_judege(
+    _tem_1, _tem_2, stay_posibility = instuct_judege.calculation_instuct_judege(
         0, character_id, _("访客留下")
     )
     # 遍历所有留下态度
@@ -1703,9 +1703,7 @@ class SeeCharacterInfoByNameDrawInScene:
     character_data: game_type.Character = cache.character_data[
         self.character_id
     ]
-    sex_text = game_config.config_sex_tem[character_data.sex].name
     character_name = character_data.name
-    # character_name = character_data.name + f"({sex_text})"
     name_draw = draw.NormalDraw()
     if is_button:
       if num_button:

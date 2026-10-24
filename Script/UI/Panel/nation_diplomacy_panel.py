@@ -73,7 +73,7 @@ def judge_diplomatic_policy():
     ]
 
     # 外交官增加对话经验和学识经验
-    for i in range(diplomatic_policy_data.difficulty):
+    for _i in range(diplomatic_policy_data.difficulty):
       common_default.base_chara_experience_common_settle(diplomat_chara_id, 80)
       common_default.base_chara_experience_common_settle(diplomat_chara_id, 82)
 
@@ -377,7 +377,7 @@ class Nation_Diplomacy_Panel:
         # 声望
         now_nation_reputation = cache.country.nation_reputation[nation_id]
         now_nation_reputation = round(now_nation_reputation, 2)
-        tem, now_nation_reputation_level = (
+        _tem_rep, now_nation_reputation_level = (
             attr_calculation.get_reputation_level(now_nation_reputation)
         )
         now_nation_reputation_str = (
@@ -455,7 +455,6 @@ class Nation_Diplomacy_Panel:
     # 势力信息
     nation_data = game_config.config_nation[nation_id]
     nation_name = nation_data.name
-    nation_leader = nation_data.leader
     nation_introduction = nation_data.introduction
     nation_reputation = round(cache.country.nation_reputation[nation_id], 2)
     if self.now_panel == _("国家及附属势力"):
@@ -476,8 +475,8 @@ class Nation_Diplomacy_Panel:
     nation_subordinate_str = ""
     for cid in nation_subordinate_list:
       now_nation_reputation = round(cache.country.nation_reputation[cid], 2)
-      tem, now_nation_reputation_level = attr_calculation.get_reputation_level(
-          now_nation_reputation
+      _tem_sub, now_nation_reputation_level = (
+          attr_calculation.get_reputation_level(now_nation_reputation)
       )
       now_nation_reputation_str = (
           f"{now_nation_reputation}({now_nation_reputation_level})"
@@ -500,7 +499,6 @@ class Nation_Diplomacy_Panel:
       # 绘制势力信息
       info_draw = draw.NormalDraw()
       info_draw.text = _("\n势力名称：{0}").format(nation_name)
-      # info_draw.text += _("\n领导人：{0}").format(nation_leader)
       # info_draw.text += _("\n势力简介：{0}").format(nation_introduction)
       info_draw.text += _("\n势力声望：{0}").format(nation_reputation)
       if self.now_panel == _("国家及附属势力"):

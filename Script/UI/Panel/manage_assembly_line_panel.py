@@ -139,7 +139,7 @@ def settle_assembly_line(
             - cache.rhodes_island.assembly_line[assembly_line_id][4]
         )
       # 生产效率(动态计算)
-      detail_str, produce_effect = calculate_assembly_line_efficiency(
+      _detail_str, produce_effect = calculate_assembly_line_efficiency(
           assembly_line_id
       )
       produce_effect = produce_effect / 100
@@ -348,7 +348,7 @@ class Manage_Assembly_Line_Panel:
         line_feed.draw()
 
         # 生产效率展示
-        detail_str, total_eff = calculate_assembly_line_efficiency(
+        detail_str, _total_eff = calculate_assembly_line_efficiency(
             assembly_line_id
         )
         all_info_draw.text = "    " + detail_str
@@ -531,7 +531,7 @@ class Manage_Assembly_Line_Panel:
           continue
         final_list.append([npc_id, _handler, [ri.assembly_line[line_id][1]]])
       now_panel.text_list = final_list
-      return_list, other_return_list, select_state = (
+      return_list, _other_return_list, select_state = (
           common_select_NPC.common_select_npc_button_list_func(
               now_panel, _("任命主生产工人"), info_text, select_state
           )

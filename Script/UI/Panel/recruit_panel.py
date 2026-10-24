@@ -290,8 +290,6 @@ def calculate_recruit_line_efficiency(line_id: int) -> Tuple[str, float]:
   if recruitment_strategy_id == 11:
     return _("已停止招募"), 0.0
 
-  # 当前设施数据
-  now_level = cache.rhodes_island.facility_level[7]
   # 当前设施效率
   facility_effect = basement.calc_facility_efficiency(7)
 
@@ -574,7 +572,7 @@ class Recruit_Panel:
           detail_draw.draw()
 
         # 计算本线当前效率
-        detail_str, total_bonus = calculate_recruit_line_efficiency(
+        detail_str, _total_bonus = calculate_recruit_line_efficiency(
             recruit_line_id
         )
         if recruitment_strategy_id == 11:
@@ -1051,7 +1049,7 @@ class Recruit_Panel:
           continue
         final_list.append([npc_id, _make, [ri.recruit_line[line_id][2]]])
       now_draw_panel.text_list = final_list
-      return_list, other_return_list, select_state = (
+      return_list, _other_return_list, select_state = (
           common_select_NPC.common_select_npc_button_list_func(
               now_draw_panel, _("任命主招聘专员"), info_text, select_state
           )
