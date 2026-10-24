@@ -116,13 +116,14 @@ def first_NPC_work() -> None:
   """
   for character_id in cache.npc_id_got:
     character_data = cache.character_data[character_id]
-    if character_data.name in {"可露希尔"}:
+    # 按干员编号认人：角色名随语言翻译
+    if character_data.adv in {7}:  # 可露希尔
       character_data.work.work_type = 21
-    elif character_data.name in {"凯尔希", "华法琳"}:
+    elif character_data.adv in {3, 171}:  # 凯尔希、华法琳
       character_data.work.work_type = 61
-    elif character_data.name in {"特蕾西娅"}:
+    elif character_data.adv in {56}:  # 特蕾西娅
       character_data.work.work_type = 71
-    elif character_data.name in {"杜宾"}:
+    elif character_data.adv in {130}:  # 杜宾
       character_data.work.work_type = 91
   basement.update_work_people()
 
