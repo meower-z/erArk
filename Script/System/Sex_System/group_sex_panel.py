@@ -212,26 +212,17 @@ def get_status_id_list_from_group_sex_body_part(body_part: str) -> list[str]:
 
   new_status_id_list: List[str] = []
   # 获取状态id列表
-  if body_part == "mouth":
-    status_id_list = game_config.config_behavior_id_list_of_group_sex_body_part[
-        "口"
-    ]
-  elif body_part == "L_hand" or body_part == "R_hand":
-    status_id_list = game_config.config_behavior_id_list_of_group_sex_body_part[
-        "手"
-    ]
-  elif body_part == "penis":
-    status_id_list = game_config.config_behavior_id_list_of_group_sex_body_part[
-        "插入"
-    ]
-  elif body_part == "侍奉":
-    status_id_list = game_config.config_behavior_id_list_of_group_sex_body_part[
-        "侍奉"
-    ]
-  elif body_part == "anal":
-    status_id_list = game_config.config_behavior_id_list_of_group_sex_body_part[
-        "肛"
-    ]
+  config_body_part = {
+      "mouth": "口",
+      "L_hand": "手",
+      "R_hand": "手",
+      "penis": "插入",
+      "侍奉": "侍奉",
+      "anal": "肛",
+  }[body_part]
+  status_id_list = game_config.config_behavior_id_list_of_group_sex_body_part[
+      config_body_part
+  ]
   # 遍历状态id
   now_premise_data: dict[str, float] = {}
   new_status_id_list = []

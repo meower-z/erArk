@@ -1,6 +1,6 @@
 """管理罗德岛的基建界面面板与干员工作岗位的调整"""
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.Design import basement, attr_calculation, handle_premise, game_time
@@ -20,7 +20,7 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def change_npc_work_out(width, target_work_type_id=[]):
+def change_npc_work_out(width, target_work_type_id=None):
   """
   调整干员的工作岗位
   """
@@ -1040,13 +1040,13 @@ class Manage_Basement_Panel:
     from Script.System.Dormitory_System import manage_dormitory_panel
     from Script.System.Cooking_System import make_food_panel
 
-    if _("基建系统") in son_panel:
+    if son_panel == _("[基建系统]"):
       now_panel = building_panel.Building_Panel(self.width)
-    if _("能源系统") in son_panel:
+    elif son_panel == _("[能源系统]"):
       now_panel = manage_power_system_panel.Manage_Power_System_Panel(
           self.width
       )
-    elif _("装备维护系统") in son_panel:
+    elif son_panel == _("[装备维护系统]"):
       # 如果铁匠铺还没有开放，则不显示装备维护系统
       if not handle_premise.handle_blacksmith_shop_open(0):
         info_draw = draw.WaitDraw()
@@ -1057,33 +1057,33 @@ class Manage_Basement_Panel:
         return
       else:
         now_panel = equipmen_panel.Equipment_Maintain_Panel(self.width)
-    elif _("生产系统") in son_panel:
+    elif son_panel == _("[生产系统]"):
       now_panel = manage_assembly_line_panel.Manage_Assembly_Line_Panel(
           self.width
       )
-    elif _("图书馆管理系统") in son_panel:
+    elif son_panel == _("[图书馆管理系统]"):
       now_panel = manage_library.Manage_Library_Panel(self.width)
-    elif _("资源交易系统") in son_panel:
+    elif son_panel == _("[资源交易系统]"):
       now_panel = resource_exchange_panel.Resource_Exchange_Line_Panel(
           self.width
       )
-    elif _("招募系统") in son_panel:
+    elif son_panel == _("[招募系统]"):
       now_panel = recruit_panel.Recruit_Panel(self.width)
-    elif _("势力外交系统") in son_panel:
+    elif son_panel == _("[势力外交系统]"):
       now_panel = nation_diplomacy_panel.Nation_Diplomacy_Panel(self.width)
-    elif _("邀请访客系统") in son_panel:
+    elif son_panel == _("[邀请访客系统]"):
       now_panel = invite_visitor_panel.Invite_Visitor_Panel(self.width)
-    elif _("外勤委托系统") in son_panel:
+    elif son_panel == _("[外勤委托系统]"):
       now_panel = field_commission_panel.Field_Commission_Panel(self.width)
-    elif _("载具管理系统") in son_panel:
+    elif son_panel == _("[载具管理系统]"):
       now_panel = manage_vehicle_panel.Manage_Vehicle_Panel(self.width)
-    elif _("农业系统") in son_panel:
+    elif son_panel == _("[农业系统]"):
       now_panel = agriculture_production_panel.Agriculture_Production_Panel(
           self.width
       )
-    elif _("宿舍管理系统") in son_panel:
+    elif son_panel == _("[宿舍管理系统]"):
       now_panel = manage_dormitory_panel.Manage_Dormitory_Panel(self.width)
-    elif _("烹饪系统") in son_panel:
+    elif son_panel == _("[烹饪系统]"):
       # 输出提示
       info_draw = draw.WaitDraw()
       info_draw.text = _("\n○需要在生活娱乐区-厨房中进行烹饪\n")
@@ -1091,7 +1091,7 @@ class Manage_Basement_Panel:
       info_draw.width = self.width
       info_draw.draw()
       return
-    elif _("监禁调教系统") in son_panel:
+    elif son_panel == _("[监禁调教系统]"):
       # 如果没有监狱长，则不显示监禁调教系统
       if not handle_premise.handle_have_warden(0):
         info_draw = draw.WaitDraw()
@@ -1106,17 +1106,17 @@ class Manage_Basement_Panel:
                 self.width
             )
         )
-    elif _("医疗经营系统") in son_panel:
+    elif son_panel == _("[医疗经营系统]"):
       now_panel = medical_department_panel.Medical_Department_Panel(self.width)
-    elif _("妊娠总览系统") in son_panel:
+    elif son_panel == _("[妊娠总览系统]"):
       from Script.System.Pregnancy_System import pregnancy_panel
 
       now_panel = pregnancy_panel.Pregnancy_Overview_Panel(self.width)
-    elif _("教育管理系统") in son_panel:
+    elif son_panel == _("[教育管理系统]"):
       from Script.System.Education_System import class_schedule_panel
 
       now_panel = class_schedule_panel.Education_Manage_Panel(self.width)
-    elif _("诊疗病人系统") in son_panel:
+    elif son_panel == _("[诊疗病人系统]"):
       # 输出提示
       info_draw = draw.WaitDraw()
       info_draw.text = _(
@@ -1311,7 +1311,7 @@ class Change_Npc_Work_Panel:
   button_id -- 数字按钮id
   """
 
-  def __init__(self, width: int, target_work_type_id: List = []):
+  def __init__(self, width: int, target_work_type_id: Optional[List] = None):
     """初始化绘制对象"""
     self.width: int = width
     """ 最大宽度 """
@@ -1321,7 +1321,7 @@ class Change_Npc_Work_Panel:
     """ 工作类型id和是否展开的状态 """
     self.work_type_state[0] = True
     """ 默认展开第一个工作类型 """
-    self.target_work_type_id_list: List = target_work_type_id
+    self.target_work_type_id_list: List = target_work_type_id or []
     """ 目标工作类型id的列表 """
     # 如果目标工作类型id有效，则展开该工作类型
     for work_type_id in self.target_work_type_id_list:
