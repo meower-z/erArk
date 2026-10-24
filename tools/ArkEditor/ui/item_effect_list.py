@@ -10,6 +10,10 @@ import cache_control
 from ui.effect_menu import EffectMenu
 from ui.CVE_menu import CVEMenu
 from ui.CSE_menu import CSEMenu
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from PySide6.QtCore import QModelIndex, QPoint
 
 font = QFont()
 font.setPointSize(cache_control.now_font_size)
@@ -88,7 +92,7 @@ class ItemEffectList(QWidget):
     menu = EffectMenu()
     menu.exec()
 
-  def change_this_item(self, item):
+  def change_this_item(self, item: QListWidgetItem) -> None:
     """删除该结算并展开结算菜单"""
     self.item_list.takeItem(self.item_list.row(item))
     for effect in cache_control.effect_data:
@@ -110,7 +114,7 @@ class ItemEffectList(QWidget):
     cache_control.now_event_data[cache_control.now_select_id].effect = {}
     self.item_list.clear()
 
-  def show_context_menu(self, pos):
+  def show_context_menu(self, pos: "QPoint") -> None:
     """右键菜单：删除、复制、粘贴结算
     参数:
         pos (QPoint): 鼠标点击的位置
@@ -186,7 +190,14 @@ class ItemEffectList(QWidget):
       menu = CSEMenu()
       menu.exec()
 
-  def on_rows_moved(self, parent, start, end, dest, row):
+  def on_rows_moved(
+      self,
+      parent: "QModelIndex",
+      start: int,
+      end: int,
+      dest: "QModelIndex",
+      row: int,
+  ) -> None:
     """
     拖拽移动结算条目后，更新数据顺序
     """

@@ -28,6 +28,12 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QFont
 import cache_control
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from collections.abc import Callable
+  from PySide6.QtWidgets import QDialog
+  from game_type import OfficialEvent
 
 font = QFont()
 font.setPointSize(cache_control.now_font_size)
@@ -115,7 +121,9 @@ class OfficialEventEditWidget(QWidget):
 
   event_saved = Signal(object)
 
-  def __init__(self, department_name_data: dict = None, parent=None):
+  def __init__(
+      self, department_name_data: dict = None, parent: QWidget | None = None
+  ) -> None:
     """
     初始化控件，此时还没有要编辑的事件
     Keyword arguments:
@@ -239,7 +247,12 @@ class OfficialEventEditWidget(QWidget):
     row_layout.addWidget(value_btn)
     return row
 
-  def run_with_shim(self, edit: QLineEdit, is_premise: bool, dialog_maker):
+  def run_with_shim(
+      self,
+      edit: QLineEdit,
+      is_premise: bool,
+      dialog_maker: "Callable[[], QDialog]",
+  ) -> None:
     """
     用临时载体顶替全局数据，打开一个既有的选择器弹窗，关闭后把结果写回输入框
     参数:
@@ -323,7 +336,7 @@ class OfficialEventEditWidget(QWidget):
 
     self.run_with_shim(edit, False, CVEMenu)
 
-  def set_event(self, event):
+  def set_event(self, event: "OfficialEvent | None") -> None:
     """
     把一条事件填进表单
     参数:

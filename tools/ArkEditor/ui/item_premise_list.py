@@ -12,6 +12,10 @@ from ui.premise_menu import PremiseMenu
 from ui.CVP_menu import CVPMenu
 import os
 import csv
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from PySide6.QtCore import QModelIndex, QPoint
 
 font = QFont()
 font.setPointSize(cache_control.now_font_size)
@@ -172,7 +176,7 @@ class ItemPremiseList(QWidget):
       menu = PremiseMenu()
       menu.exec()
 
-  def change_this_item(self, item):
+  def change_this_item(self, item: QListWidgetItem) -> None:
     """删除该前提并展开前提菜单"""
     # 先遍历找到cid
     for premise in cache_control.premise_data:
@@ -208,7 +212,7 @@ class ItemPremiseList(QWidget):
         cache_control.now_talk_data[cache_control.now_select_id].premise = {}
       self.item_list.clear()
 
-  def show_context_menu(self, pos):
+  def show_context_menu(self, pos: "QPoint") -> None:
     """右键菜单"""
     item = self.item_list.itemAt(pos)
     if item is not None:
@@ -308,7 +312,14 @@ class ItemPremiseList(QWidget):
     # 更新前提列表
     self.update()
 
-  def on_rows_moved(self, parent, start, end, dest, row):
+  def on_rows_moved(
+      self,
+      parent: "QModelIndex",
+      start: int,
+      end: int,
+      dest: "QModelIndex",
+      row: int,
+  ) -> None:
     """
     拖拽移动前提条目后，更新数据顺序
     """
@@ -366,7 +377,7 @@ class ItemPremiseList(QWidget):
     # 若是快速插入按钮，刷新按钮区（防止文本变化）
     self.refresh_quick_insert_buttons()
 
-  def read_quick_insert_list(self):
+  def read_quick_insert_list(self) -> list[str]:
     """
     读取快速插入前提csv文件，返回前提cid列表。
     返回值：

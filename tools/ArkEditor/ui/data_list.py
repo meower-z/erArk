@@ -11,6 +11,10 @@ from ui.list_item import ListItem
 import cache_control
 import game_type
 import function
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from PySide6.QtCore import QPoint
 from .data_list_change_chara_id import DataListIdEditMixin
 from .data_list_move_item import move_item, move_to_up, move_to_down, move_cancel, refresh_item_flags, on_rows_moved
 from .data_list_undo_snapshot import undo_snapshot_manager  # 导入快照式撤销管理器
@@ -209,14 +213,14 @@ class DataList(DataListIdEditMixin, QWidget):
     self.redo_shortcut.activated.connect(self.redo_delete)
 
     # 注册监听器，实时更新撤销/重做步数
-    def _update_undo_redo(undo_len, redo_len):
+    def _update_undo_redo(undo_len: int, redo_len: int) -> None:
       self.undo_redo_label.setText(f"撤销:{undo_len} | 重做:{redo_len}")
 
     undo_snapshot_manager.add_listener(_update_undo_redo)
 
   # 保留原手动调用 save_snapshot 策略，避免动态覆写导致类型检查问题
 
-  def update_font(self, font):
+  def update_font(self, font: QFont) -> None:
     """
     打印传入的字体，把它记为当前字体并设给全部子控件
     Keyword arguments:
@@ -229,7 +233,7 @@ class DataList(DataListIdEditMixin, QWidget):
     for widget in self.findChildren(QWidget):
       widget.setFont(font)
 
-  def right_button_menu(self, old_position):
+  def right_button_menu(self, old_position: "QPoint") -> None:
     """
     右键菜单
     Keyword arguments:

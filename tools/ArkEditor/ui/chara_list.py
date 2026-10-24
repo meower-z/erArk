@@ -5,6 +5,10 @@
 from PySide6.QtWidgets import QVBoxLayout, QSplitter, QPushButton, QHBoxLayout, QWidget, QTextEdit, QLabel, QSizePolicy, QComboBox, QScrollArea
 from PySide6.QtGui import QFont, QPalette, QColor
 import cache_control
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from PySide6.QtGui import QResizeEvent
 
 font = QFont()
 font.setPointSize(cache_control.now_font_size)
@@ -186,7 +190,7 @@ class CharaList(QWidget):
     self.layout.addWidget(self.apply_button)
     self.layout.addWidget(self.reset_button)
 
-  def resizeEvent(self, event):
+  def resizeEvent(self, event: "QResizeEvent") -> None:
     """
     处理窗口大小变化，并把分割器的两栏设为各占一半宽度
     Keyword arguments:
@@ -199,7 +203,7 @@ class CharaList(QWidget):
     width = self.width() / 2
     self.splitter.setSizes([width, width])
 
-  def create_label(self, text, width=100):
+  def create_label(self, text: str, width: int = 100) -> QLabel:
     """创建一个带有固定宽度和大小策略的标签"""
     label = QLabel(text)
     label.setFixedWidth(width)  # 设置固定宽度
@@ -208,14 +212,16 @@ class CharaList(QWidget):
     )  # 设置大小策略
     return label
 
-  def create_text_edit(self, initial_text, width=400, height=32):
+  def create_text_edit(
+      self, initial_text: str, width: int = 400, height: int = 32
+  ) -> QTextEdit:
     """创建一个文本编辑框"""
     text_edit = QTextEdit(initial_text)
     text_edit.setFixedHeight(height)
     text_edit.setFixedWidth(width)
     return text_edit
 
-  def create_qcombo_box(self, initial_text_list):
+  def create_qcombo_box(self, initial_text_list: list[str]) -> QComboBox:
     """创建一个下拉框"""
     combo_box = QComboBox()
     # combo_box.setFixedHeight(30)
@@ -586,7 +592,7 @@ class CharaList(QWidget):
 
 class MenuWidget(QWidget):
 
-  def __init__(self, type_flag=0):
+  def __init__(self, type_flag: int = 0) -> None:
     """
     建立添加、删除两个按钮，并记下条目类型
     Keyword arguments:

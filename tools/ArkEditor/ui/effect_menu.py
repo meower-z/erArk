@@ -29,7 +29,7 @@ font.setFamily(cache_control.now_font_name)
 class TreeItem(QTreeWidgetItem):
   """树选框对象"""
 
-  def __init__(self, any):
+  def __init__(self, any: QTreeWidgetItem) -> None:
     """初始化树选框对象"""
     super(TreeItem, self).__init__(any)
     self.cid = ""

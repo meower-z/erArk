@@ -7,11 +7,16 @@ from PySide6.QtGui import QColor
 import cache_control
 from collections import OrderedDict
 from ui.data_list_undo_snapshot import undo_snapshot_manager  # 导入快照式撤销管理器
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from PySide6.QtCore import QModelIndex
+  from ui.data_list import DataList
 
 # 以下函数为条目移动相关的功能，供DataList调用
 
 
-def move_item(self) -> None:
+def move_item(self: 'DataList') -> None:
   """
   移动条目
   输入参数：self（DataList实例）
@@ -49,7 +54,7 @@ def move_item(self) -> None:
     self.undo_stack.append({'type': 'event_move', 'order': order})
 
 
-def move_to_up(self) -> None:
+def move_to_up(self: 'DataList') -> None:
   """
   移至选中条目上方
   输入参数：self（DataList实例）
@@ -136,7 +141,7 @@ def move_to_up(self) -> None:
   self.update()
 
 
-def move_to_down(self) -> None:
+def move_to_down(self: 'DataList') -> None:
   """
   移至选中条目下方
   输入参数：self（DataList实例）
@@ -220,7 +225,7 @@ def move_to_down(self) -> None:
   self.update()
 
 
-def move_cancel(self) -> None:
+def move_cancel(self: 'DataList') -> None:
   """
   取消移动
   输入参数：self（DataList实例）
@@ -231,7 +236,7 @@ def move_cancel(self) -> None:
   self.edited_item.setBackground(QColor('white'))
 
 
-def refresh_item_flags(self) -> None:
+def refresh_item_flags(self: 'DataList') -> None:
   """
   为所有条目设置可拖拽和可放置标志
   输入参数：self（DataList实例）
@@ -251,7 +256,14 @@ def refresh_item_flags(self) -> None:
     )
 
 
-def on_rows_moved(self, parent, start, end, dest, row):
+def on_rows_moved(
+    self: 'DataList',
+    parent: 'QModelIndex',
+    start: int,
+    end: int,
+    dest: 'QModelIndex',
+    row: int,
+) -> None:
   """
   拖拽后重建数据顺序
   输入参数：self（DataList实例），parent, start, end, dest, row（拖拽信号参数）

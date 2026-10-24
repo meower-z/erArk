@@ -112,19 +112,19 @@ class Commission:
 
   def __init__(
       self,
-      cid,
-      name,
-      country_id,
-      level,
-      type,
-      people,
-      time,
-      demand,
-      reward,
-      related_id,
-      special,
-      description,
-  ):
+      cid: int | str,
+      name: str,
+      country_id: int | str,
+      level: int | str,
+      type: str,
+      people: int | str,
+      time: int | str,
+      demand: str,
+      reward: str,
+      related_id: int | str,
+      special: int | str,
+      description: str,
+  ) -> None:
     """
     按传入的字段初始化委托，cid、country_id、level、people、time、related_id、special 转成 int
     Keyword arguments:

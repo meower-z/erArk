@@ -14,6 +14,10 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QFont, Qt
 import cache_control
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from PySide6.QtCore import QEvent, QObject
 
 font = QFont()
 font.setPointSize(cache_control.now_font_size)
@@ -458,7 +462,7 @@ class CVPMenu(QDialog):
 
     self.cvp_b = self.cvp_b2
 
-  def eventFilter(self, obj, event):
+  def eventFilter(self, obj: "QObject", event: "QEvent") -> bool:
     """
     事件过滤器：在搜索栏按下回车时触发搜索
     输入：obj -- 事件源对象，event -- 事件对象
