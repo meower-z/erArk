@@ -229,10 +229,7 @@ def get_base_updata():
       # 温室生产线初始化
       if 0 not in cache.rhodes_island.green_house_line:
         cache.rhodes_island.green_house_line[0] = [0, 0, 0, 0, 0]
-        # 计算各线当前效率
-        cache.rhodes_island.herb_garden_line[agriculture_line_id][
-            2
-        ] = produce_effect
+      # 计算各线当前效率
       for agriculture_line_id in cache.rhodes_island.green_house_line:
         __, produce_effect = (
             agriculture_production_panel.calculate_agriculture_line_efficiency(
