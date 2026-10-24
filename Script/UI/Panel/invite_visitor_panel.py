@@ -243,7 +243,7 @@ def judge_visitor_if_leave(visitor_id: int) -> None:
   # 获得访客角色数据
   character_data: game_type.Character = cache.character_data[visitor_id]
   # 计算访客留下概率
-  tem_1, tem_2, stay_posibility = instuct_judege.calculation_instuct_judege(
+  _tem_1, _tem_2, stay_posibility = instuct_judege.calculation_instuct_judege(
       0, visitor_id, _("访客留下")
   )
   # 遍历所有留下态度
@@ -293,8 +293,10 @@ def get_today_departing_visitors() -> list[int]:
         judge_time, cache.rhodes_island.visitor_info[visitor_id]
     ):
       # 计算访客留下概率
-      tem_1, tem_2, stay_posibility = instuct_judege.calculation_instuct_judege(
-          0, visitor_id, _("访客留下")
+      _tem_1, _tem_2, stay_posibility = (
+          instuct_judege.calculation_instuct_judege(
+              0, visitor_id, _("访客留下")
+          )
       )
       if stay_posibility < 0.5:
         departing_visitors.append(visitor_id)

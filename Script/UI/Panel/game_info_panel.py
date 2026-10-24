@@ -30,7 +30,6 @@ class GameTimeInfoPanel:
     year_draw.text = f"{game_time.get_year_text()} "
     now_draw.draw_list.append(year_draw)
     now_width += len(year_draw)
-    solar_period = game_time.get_solar_period(cache.game_time)
     # 月
     month_draw = draw.NormalDraw()
     month_draw.text = f"{game_time.get_month_text()} "

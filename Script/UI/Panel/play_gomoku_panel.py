@@ -511,9 +511,9 @@ class ZobristCache:
     list -- 二维哈希表
     """
     table = []
-    for i in range(size):
+    for _i in range(size):
       row = []
-      for j in range(size):
+      for _j in range(size):
         row.append(
             {
                 1: self.random_bit_string(64),  # black
@@ -858,7 +858,7 @@ class Evaluate:
 
     for ox, oy in directions:
       int_direction = direction2index(ox, oy)
-      shape, self_count = get_shape_fast(self.board, x, y, ox, oy, role)
+      shape, _self_count = get_shape_fast(self.board, x, y, ox, oy, role)
       if not shape:
         continue
       shape_cache[int_direction][x][y] = shape
@@ -1914,7 +1914,7 @@ class GomokuPanel:
         for point in points:
           board.put(point[0], point[1], role)
           new_path = path + [point]  # Add current move to path
-          current_value, current_move, current_path = helper(
+          current_value, _current_move, current_path = helper(
               board, -role, d, c_depth + 1, new_path, -beta, -alpha
           )
           current_value = -current_value
@@ -1996,7 +1996,9 @@ class GomokuPanel:
         value2, move2, best_path2 = self.vct(board.reverse(), role, vct_depth)
         board.undo()
         if value < FIVE and value2 == FIVE and len(best_path2) > len(best_path):
-          value3, move3, best_path3 = self.vct(board.reverse(), role, vct_depth)
+          _value3, _move3, best_path3 = self.vct(
+              board.reverse(), role, vct_depth
+          )
           if len(best_path2) <= len(best_path3):
             return [
                 value,

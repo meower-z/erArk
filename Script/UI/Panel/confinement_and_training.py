@@ -29,7 +29,7 @@ def settle_prisoners() -> None:
     # 计算逃脱概率
     escape_probability = calculate_escape_probability(character_id)
     # 判断是否能逃脱
-    can_escape, escape_value, warden_value = judge_can_escape(character_id)
+    can_escape, _escape_value, _warden_value = judge_can_escape(character_id)
     # 逃脱成功
     if can_escape:
       escape_success(character_id)
@@ -717,7 +717,6 @@ class Confinement_And_Training_Manage_Panel:
         elif cid == 11:
           clean_flag = cache.rhodes_island.pre_training_cleaning
           lubrication_flag = cache.rhodes_island.pre_training_lubrication
-          tool_dict = cache.rhodes_island.pre_training_tool_dict
 
           if clean_flag:
             clean_text = _(" [进行污浊清洗] ")

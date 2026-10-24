@@ -78,7 +78,7 @@ def use_drug(item_id: int) -> None:
     )
   # 解酒药
   elif item_id == 12:
-    drunk_level, drunk_name = drunk_sex_common.get_drunk_level(0)
+    drunk_level, _drunk_name = drunk_sex_common.get_drunk_level(0)
     # 如果没有醉酒则不需使用
     if drunk_level == 0:
       now_draw_text = _("\n{0}当前没有醉酒，不需要使用\n\n").format(

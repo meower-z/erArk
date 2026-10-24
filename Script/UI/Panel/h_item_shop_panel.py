@@ -2,7 +2,6 @@
 
 from types import FunctionType
 from Script.Core import cache_control, game_type, text_handle, get_text, flow_handle, py_cmd, constant
-from Script.Design import map_handle
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import panel, draw
 from Script.UI.Panel import see_item_info_panel
@@ -74,12 +73,6 @@ class HItemShopPanel:
 
   def draw(self):
     """绘制对象"""
-    character_data: game_type.Character = cache.character_data[0]
-    scene_position = character_data.position
-    scene_position_str = map_handle.get_map_system_path_str_for_list(
-        scene_position
-    )
-    # scene_name = cache.scene_data[scene_position_str].scene_name
     title_draw = draw.TitleLineDraw(_("成人用品商店"), self.width)
     now_level = cache.rhodes_island.facility_level[11]  # 获取设施等级
 

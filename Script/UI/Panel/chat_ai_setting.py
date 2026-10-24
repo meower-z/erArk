@@ -825,7 +825,7 @@ class Chat_Ai_Setting_Panel:
       future = executor.submit(self.get_completion, client, now_key_type)
       try:
         # 等待10秒以获取结果
-        result = future.result(timeout=10)
+        future.result(timeout=10)
         info_text = _(" \n  测试通过\n")
         self.test_flag = 1
       except concurrent.futures.TimeoutError:

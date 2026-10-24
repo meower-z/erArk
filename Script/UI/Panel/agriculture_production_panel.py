@@ -153,7 +153,7 @@ def settle_agriculture_line(draw_flag: bool = True) -> tuple[bool, str]:
       # 每天生产一次
       max_time = 10
       # 计算效率倍率（含设施效率）
-      detail_str, produce_effect = calculate_agriculture_line_efficiency(
+      _detail_str, produce_effect = calculate_agriculture_line_efficiency(
           agriculture_line_id, 0
       )
       # 计算最大生产数
@@ -210,7 +210,7 @@ def settle_agriculture_line(draw_flag: bool = True) -> tuple[bool, str]:
       # 每天生产一次
       max_time = 10
       # 计算效率倍率（含设施效率）
-      detail_str, produce_effect = calculate_agriculture_line_efficiency(
+      _detail_str, produce_effect = calculate_agriculture_line_efficiency(
           agriculture_line_id, 1
       )
       # 计算最大生产数
@@ -587,7 +587,7 @@ class Agriculture_Production_Panel:
           continue
         final_list.append([npc_id, _make, [now_main]])
       now_draw_panel.text_list = final_list
-      return_list, other_return_list, select_state = (
+      return_list, _other_return_list, select_state = (
           common_select_NPC.common_select_npc_button_list_func(
               now_draw_panel, _("任命主种植员"), info_text, select_state
           )

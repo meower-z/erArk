@@ -254,7 +254,7 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
           pl_data.pl_collection.urine_total[new_id] = value
 
   # 5.2 每个角色的favorability字典（角色id:好感度）
-  for char_id, character in new_character_data.items():
+  for _char_id, character in new_character_data.items():
     if hasattr(character, 'favorability'):
       old_fav = character.favorability.copy()
       character.favorability = {}
@@ -263,13 +263,13 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
         character.favorability[new_id] = value
 
   # 5.3 每个角色的target_character_id
-  for char_id, character in new_character_data.items():
+  for _char_id, character in new_character_data.items():
     if hasattr(character, 'target_character_id'):
       old_target = character.target_character_id
       character.target_character_id = old_to_new_id.get(old_target, old_target)
 
   # 5.4 每个角色的assistant_character_id
-  for char_id, character in new_character_data.items():
+  for _char_id, character in new_character_data.items():
     if hasattr(character, 'assistant_character_id'):
       old_assistant = character.assistant_character_id
       character.assistant_character_id = old_to_new_id.get(
@@ -277,7 +277,7 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
       )
 
   # 5.4b 每个角色的其他角色ID引用
-  for char_id, character in new_character_data.items():
+  for _char_id, character in new_character_data.items():
     # ask_group_sex_refuse_chara_id_list (位于action_info中)
     if hasattr(character, 'action_info') and hasattr(
         character.action_info, 'ask_group_sex_refuse_chara_id_list'
@@ -380,7 +380,7 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
           if len(template_dict[template_key]) > 0 and isinstance(
               template_dict[template_key][0], dict
           ):
-            for part_key, part_value in template_dict[template_key][0].items():
+            for _part_key, part_value in template_dict[template_key][0].items():
               if (
                   isinstance(part_value, list)
                   and len(part_value) > 0
@@ -519,7 +519,7 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
 
     # diplomat_of_country (Dict[int, List])
     if hasattr(ri, 'diplomat_of_country'):
-      for country_id, data in ri.diplomat_of_country.items():
+      for _country_id, data in ri.diplomat_of_country.items():
         if len(data) > 0:
           data[0] = normalize_single_character_id(data[0], 0)
         if len(data) > 0 and data[0] != 0:
@@ -527,7 +527,7 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
 
     # ongoing_field_commissions (Dict[int, List])
     if hasattr(ri, 'ongoing_field_commissions'):
-      for commission_id, data in ri.ongoing_field_commissions.items():
+      for _commission_id, data in ri.ongoing_field_commissions.items():
         if len(data) > 0 and isinstance(data[0], list):
           data[0] = [old_to_new_id.get(oid, oid) for oid in data[0]]
 
@@ -623,7 +623,7 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
 
     # medical_doctor_specializations (Dict[str, Dict[str, List[int]]])
     if hasattr(ri, 'medical_doctor_specializations'):
-      for pos_key, system_dict in ri.medical_doctor_specializations.items():
+      for _pos_key, system_dict in ri.medical_doctor_specializations.items():
         for sys_key, id_list in system_dict.items():
           system_dict[sys_key] = [
               old_to_new_id.get(oid, oid) for oid in id_list
@@ -646,7 +646,7 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
           }
 
   # 5.6 关系数据中的角色引用
-  for char_id, character in new_character_data.items():
+  for _char_id, character in new_character_data.items():
     if hasattr(character, 'relationship'):
       rel = character.relationship
       # father_id
@@ -668,7 +668,7 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
 
   # 5.7 场景数据中的角色列表
   if 'scene_data' in loaded_dict:
-    for scene_name, scene in loaded_dict['scene_data'].items():
+    for _scene_name, scene in loaded_dict['scene_data'].items():
       if hasattr(scene, 'character_list'):
         old_list = scene.character_list.copy()
         scene.character_list = set()
@@ -1099,7 +1099,7 @@ def migrate_character_replacement(
           ] = value
         # 转换group_sex_body_template_dict中serve_data的角色ID
         for (
-            char_id,
+            _char_id,
             serve_data,
         ) in new_character.h_state.group_sex_body_template_dict.items():
           if (
@@ -1135,7 +1135,7 @@ def migrate_character_replacement(
     return 0
 
   # ========== 6. 更新所有角色中对旧ID的引用 ==========
-  for char_id, character in character_data.items():
+  for _char_id, character in character_data.items():
     # 好感度字典
     if hasattr(character, 'favorability') and character.favorability:
       old_fav = character.favorability.copy()
@@ -1479,7 +1479,7 @@ def migrate_character_replacement(
 
     # diplomat_of_country
     if hasattr(ri, 'diplomat_of_country') and ri.diplomat_of_country:
-      for country_id, data in ri.diplomat_of_country.items():
+      for _country_id, data in ri.diplomat_of_country.items():
         if len(data) > 0:
           data[0] = normalize_single_character_id(data[0], 0)
         if len(data) > 0 and data[0] != 0:
@@ -1490,7 +1490,7 @@ def migrate_character_replacement(
         hasattr(ri, 'ongoing_field_commissions')
         and ri.ongoing_field_commissions
     ):
-      for commission_id, data in ri.ongoing_field_commissions.items():
+      for _commission_id, data in ri.ongoing_field_commissions.items():
         if len(data) > 0 and isinstance(data[0], list):
           data[0] = [old_to_new_id_map.get(oid, oid) for oid in data[0]]
 
@@ -1603,7 +1603,7 @@ def migrate_character_replacement(
         hasattr(ri, 'medical_doctor_specializations')
         and ri.medical_doctor_specializations
     ):
-      for pos_key, system_dict in ri.medical_doctor_specializations.items():
+      for _pos_key, system_dict in ri.medical_doctor_specializations.items():
         for sys_key, id_list in system_dict.items():
           system_dict[sys_key] = [
               old_to_new_id_map.get(oid, oid) for oid in id_list
@@ -1628,7 +1628,7 @@ def migrate_character_replacement(
 
   # ========== 9. 更新场景数据中的角色列表 ==========
   if 'scene_data' in loaded_dict:
-    for scene_name, scene in loaded_dict['scene_data'].items():
+    for _scene_name, scene in loaded_dict['scene_data'].items():
       if hasattr(scene, 'character_list') and scene.character_list:
         old_list = scene.character_list.copy()
         scene.character_list = set()
@@ -1728,7 +1728,7 @@ def update_tem_character(loaded_dict: dict[str, Any]) -> int:
   update_count += update_new_character(loaded_dict)
 
   # 修正角色数据中缺失模板的情况
-  for key, value in loaded_dict['character_data'].items():
+  for _key, value in loaded_dict['character_data'].items():
     # 跳过玩家
     if value.cid == 0:
       continue

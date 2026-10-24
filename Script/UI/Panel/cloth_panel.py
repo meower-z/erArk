@@ -538,7 +538,6 @@ class SwitchCharacterClothPanel:
     type_line = draw.LittleTitleLineDraw(_("服装"), self.width, ":")
     self.draw_list.append(type_line)
     now_row: List[draw.NormalDraw] = []  # 当前行的绘制对象
-    now_text = ""  # 当前行的普通文本
     # 遍历全部衣服类型
     for clothing_type in game_config.config_clothing_type:
       type_name = game_config.config_clothing_type[clothing_type].name

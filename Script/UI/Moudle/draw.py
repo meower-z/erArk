@@ -71,7 +71,7 @@ class NormalDraw:
     text = self.text
     while text:
       now_text = ""
-      for i, ch in enumerate(text):
+      for _i, ch in enumerate(text):
         if text_handle.get_text_index(now_text + ch) > self.width:
           break
         now_text += ch
@@ -115,7 +115,7 @@ class WaitDraw(NormalDraw):
     while text:
       now_text = ""
       # 逐字符累加，直到达到最大宽度
-      for i, ch in enumerate(text):
+      for _i, ch in enumerate(text):
         # 计算当前行的宽度
         if text_handle.get_text_index(now_text + ch) > self.width:
           break
@@ -248,11 +248,11 @@ class BarDraw:
       # print("game_config.config_bar_data[bar_id] =",game_config.config_bar_data[bar_id])
       # print("game_config.config_bar[game_config.config_bar_data[bar_id]] =",game_config.config_bar[game_config.config_bar_data[bar_id]])
       style_data = game_config.config_bar[game_config.config_bar_data[bar_id]]
-      for i in range(proportion):
+      for _i in range(proportion):
         now_draw = ImageDraw(style_data.ture_bar)
         now_draw.width = style_data.width
         self.draw_list.append(now_draw)
-      for i in range(fix_bar):
+      for _i in range(fix_bar):
         now_draw = ImageDraw(style_data.null_bar)
         now_draw.width = style_data.width
         self.draw_list.append(now_draw)
@@ -969,7 +969,7 @@ class CenterDraw(NormalDraw):
     text = self.text
     while text:
       now_text = ""
-      for i, ch in enumerate(text):
+      for _i, ch in enumerate(text):
         if text_handle.get_text_index(now_text + ch) > self.width:
           break
         now_text += ch
@@ -1140,7 +1140,7 @@ class RightDraw(NormalDraw):
     text = self.text
     while text:
       now_text = ""
-      for i, ch in enumerate(text):
+      for _i, ch in enumerate(text):
         if text_handle.get_text_index(now_text + ch) > self.width:
           break
         now_text += ch
@@ -1172,7 +1172,7 @@ class LeftDraw(NormalDraw):
     while text:
       now_text = ""
       # 逐字符累加，直到达到最大宽度
-      for i, ch in enumerate(text):
+      for _i, ch in enumerate(text):
         # 判断当前行加上新字符后是否超出宽度
         if text_handle.get_text_index(now_text + ch) > self.width:
           break

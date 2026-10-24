@@ -112,31 +112,15 @@ class GetUpPanel:
   def draw(self) -> None:
     """绘制面板"""
 
-    old_button_draw = draw.CenterButton(
-        _("[上一人]"),
-        _("上一人"),
-        int(self.width / 3),
-        cmd_func=self.old_character,
-    )
-    next_button_draw = draw.CenterButton(
-        _("[下一人]"),
-        _("下一人"),
-        int(self.width / 3),
-        cmd_func=self.next_character,
-    )
     while 1:
       self.title_draw.draw()
       self.return_list = []
       # self.now_character_panel.draw()
-      # old_button_draw.draw()
       self.back_draw.draw()
       self.chara_data_draw.draw()
-      # next_button_draw.draw()
       line_feed.draw()
-      # self.return_list.append(old_button_draw.return_text)
       self.return_list.append(self.back_draw.return_text)
       self.return_list.append(self.chara_data_draw.return_text)
-      # self.return_list.append(next_button_draw.return_text)
       yrn = flow_handle.askfor_all(self.return_list)
       py_cmd.clr_cmd()
       line_feed.draw()

@@ -847,7 +847,6 @@ class New_Round_Handle:
 
     # 输出送别干员的送别口上
     if self.farewell_npc_id:
-      now_character_data = cache.character_data[self.farewell_npc_id]
       second_behavior.character_get_second_behavior(
           self.farewell_npc_id, "new_round_farewell"
       )

@@ -160,7 +160,6 @@ def get_print_map_data(map_draw: str) -> game_type.MapDraw:
         set_map_button = True  # 标记为开始设置地图按钮
         if len(new_x_list):
           # 如果new_x_list不为空
-          # now_rich_draw_list: List[game_type.MapDraw] = []  # 初始化富文本绘制列表
           now_style_list = rich_text.get_rich_text_print(
               new_x_list, "standard"
           )  # 获取富文本样式列表
@@ -224,7 +223,6 @@ def get_print_map_data(map_draw: str) -> game_type.MapDraw:
         i += 11
       i += 1
     if len(new_x_list):
-      now_rich_draw_list: List[game_type.MapDraw] = []
       now_style_list = rich_text.get_rich_text_print(new_x_list, "standard")
       new_x_list = rich_text.remove_rich_cache(new_x_list)
       # test_flag = True

@@ -190,7 +190,6 @@ class InScenePanel:
       #     if "character_id" in page_draw.__dict__:
       #         now_draw_character_list.append(page_draw.character_id)
       # ↓角色信息面板↓#
-      character_info_draw_list = []
       character_head_draw = character_info_head.CharacterInfoHead(
           pl_character_data.cid, self.width
       )

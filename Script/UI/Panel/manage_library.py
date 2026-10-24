@@ -362,7 +362,7 @@ class Manage_Library_Panel:
         self.character_handle_panel.text_list = original_character_list.copy()
 
         # 使用通用角色选择面板
-        return_list, other_return_list, select_state = (
+        return_list, _other_return_list, select_state = (
             common_select_NPC.common_select_npc_button_list_func(
                 self.character_handle_panel,
                 _("借阅历史记录"),

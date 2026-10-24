@@ -536,7 +536,6 @@ class UsefulSceneNamePanel:
     Return arguments:
     list -- 路径列表
     """
-    character_data: game_type.Character = cache.character_data[0]
     # if character_data.classroom == "":
     #     class_room_path = []
     # else:

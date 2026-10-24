@@ -382,8 +382,7 @@ class SeeFoodListByFoodNameDraw:
         if isinstance(now_cid, str):
           food_recipe = game_config.config_recipes[int(now_cid)]
           self.food_name = food_recipe.name
-          food_money = food_recipe.money
-        food_quality_level, food_quality_str = (
+        _food_quality_level, food_quality_str = (
             attr_calculation.get_food_quality(food_data.quality)
         )
         button_text = f"[{now_cid}]{self.food_name}"

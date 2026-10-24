@@ -332,7 +332,7 @@ class Manage_Vehicle_Panel:
 
       # === 用空行填充剩余的总行数 ===
       drawn_lines = len(display_list)
-      for i in range(self.items_per_page - drawn_lines):
+      for _i in range(self.items_per_page - drawn_lines):
         line_feed.draw()
 
       # === 返回上面加翻页和第几页 ===

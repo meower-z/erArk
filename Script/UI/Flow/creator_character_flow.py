@@ -189,7 +189,6 @@ class Character_creat_Handle:
     self.width = normal_config.config_normal.text_width
     info_draw = character_info_head.CharacterInfoHead(0, width)
     info_draw.draw_title = False
-    sex_draw = Character_Sex(self.width)
     jj_draw = Character_JJ(self.width)
     debug_draw = Character_Debug(self.width)
     firstNpc_draw = Character_FirstNPC(self.width)
@@ -200,7 +199,6 @@ class Character_creat_Handle:
     # tal_draw = see_character_info_panel.CharacterTalentText(0, width, 8, 0)
     self.draw_list: List = [
         info_draw,
-        # sex_draw,
         jj_draw,
         debug_draw,
         firstNpc_draw,

@@ -213,8 +213,6 @@ class Navigation_Panel(Base_function_class):
       # 当前位置
       now_country_id = cache.rhodes_island.current_location[0]
       now_country_name = game_config.config_birthplace[now_country_id].name
-      now_city_id = cache.rhodes_island.current_location[1]
-      now_city_name = game_config.config_city[now_city_id].name
       # TODO 在处理好中文地图路径之后再改回来
       base_scene_name = _(now_country_name, revert_translation=True)
       # 移动中的目标地点
@@ -478,8 +476,6 @@ class MapSceneNameDraw(Base_function_class):
     # 当前位置
     now_country_id = cache.rhodes_island.current_location[0]
     now_country_name = game_config.config_birthplace[now_country_id].name
-    now_city_id = cache.rhodes_island.current_location[1]
-    now_city_name = game_config.config_city[now_city_id].name
     # TODO 在处理好中文地图路径之后再改回来
     base_scene_name = _(now_country_name, revert_translation=True)
     # 临近地点
@@ -495,9 +491,6 @@ class MapSceneNameDraw(Base_function_class):
         # print(f"debug scene_id = {scene_id}")
         load_scene_data = map_handle.get_scene_data_for_map(
             map_path_str, scene_name
-        )
-        now_scene_path = map_handle.get_map_system_path_for_str(
-            load_scene_data.scene_path
         )
         target_scene = [scene_name, scene_path[scene_name]]
 

@@ -151,7 +151,6 @@ def perform_trade(
   # 数量为0或负数直接返回无效
   if quantity <= 0:
     return None
-  resouce_data = game_config.config_resouce[resouce_id]
   price, _percent = get_resouce_price(resouce_id, buy_flag)
   # 价格为0或负数直接返回无效
   if price <= 0:
@@ -236,7 +235,7 @@ def auto_trade_resources() -> None:
           and sell_percent > 0
           and cache.rhodes_island.materials_resouce[resouce_id] > sell_stock
       ):
-        price_now, percent_sell = get_resouce_price(resouce_id, False)
+        _price_now, percent_sell = get_resouce_price(resouce_id, False)
         if percent_sell + 100 >= sell_percent:
           need_qty = (
               cache.rhodes_island.materials_resouce[resouce_id] - sell_stock
@@ -260,7 +259,7 @@ def auto_trade_resources() -> None:
           and resouce_data.cant_buy == 0
           and cache.rhodes_island.materials_resouce[resouce_id] < buy_stock
       ):
-        price_now, percent_buy = get_resouce_price(resouce_id, True)
+        _price_now, percent_buy = get_resouce_price(resouce_id, True)
         if percent_buy + 100 <= buy_percent:
           need_qty = (
               buy_stock - cache.rhodes_island.materials_resouce[resouce_id]
@@ -311,7 +310,7 @@ def get_resouce_price(
   # 供需影响
   supply_demand = cache.rhodes_island.supply_demand_dict[resouce_id]
   # 交易员影响
-  multiplier, tem1, tem2 = calculate_trade_multiplier(
+  multiplier, _tem1, _tem2 = calculate_trade_multiplier(
       resouce_id, buy_or_sell_flag
   )
   # 总影响
@@ -430,7 +429,7 @@ class Resource_Exchange_Line_Panel:
       sell_price, sell_percent = get_resouce_price(
           self.now_select_resouce_id, False
       )
-      multiplier, main_bonus, sub_bonus = calculate_trade_multiplier(
+      _multiplier, main_bonus, sub_bonus = calculate_trade_multiplier(
           self.now_select_resouce_id, True
       )
 
@@ -863,7 +862,6 @@ class Resource_Exchange_Line_Panel:
       line_feed.draw()
       return
 
-    price = trade_result["price"]
     actual_quantity = trade_result["quantity"]
     total_price = trade_result["total_price"]
     money_delta = (
@@ -1048,7 +1046,7 @@ class Resource_Exchange_Line_Panel:
             "当前没有可任命的交易员，请先安排干员担任贸易相关工作。\n"
         )
       npc_panel.text_list = candidate_list
-      return_list, other_return_list, select_state = (
+      return_list, _other_return_list, select_state = (
           common_select_NPC.common_select_npc_button_list_func(
               npc_panel,
               _("任命主交易员"),

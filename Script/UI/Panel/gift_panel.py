@@ -546,7 +546,7 @@ class Gift_Panel:
         return False
     # 道歉礼物的情况
     elif gift_data.type == 2:
-      hate_count, hate_count_text = (
+      hate_count, _hate_count_text = (
           second_behavior.get_now_state_all_value_and_text_from_mark_up_data(
               51, character_data.target_character_id
           )

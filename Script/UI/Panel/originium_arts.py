@@ -49,10 +49,6 @@ class Originium_Arts_Panel:
       title_draw.draw()
       # line = draw.LineDraw("-", window_width)
       # line.draw()
-      pl_character_data: game_type.Character = cache.character_data[0]
-      target_data: game_type.Character = cache.character_data[
-          pl_character_data.target_character_id
-      ]
       cinfo_draw = draw.NormalDraw()
       info_text = _("\n要使用哪一个源石技艺呢？\n")
       cinfo_draw.text = info_text
@@ -659,13 +655,10 @@ class Down_Negative_Talent_Panel:
   def draw(self) -> None:
     """绘制对象"""
 
-    title_text = _("降低负面素质")
-    title_draw = draw.TitleLineDraw(title_text, self.width)
     self.ability_id_list = [15, 17, 18]
 
     while 1:
       return_list = []
-      # title_draw.draw()
 
       # 输出提示信息
       info_draw = draw.NormalDraw()
@@ -787,7 +780,7 @@ class Down_Negative_Talent_Panel:
           # 优先删除重复款式的内裤
           if count > 1:
             remove_count = min(count - 1, 5 - pop_pan_count)
-            for tem in range(remove_count):
+            for _tem in range(remove_count):
               pl_character_data.pl_collection.npc_panties[self.chara_id].remove(
                   pan
               )
