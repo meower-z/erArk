@@ -93,7 +93,7 @@ class OfficialEventListWidget(QWidget):
     """
     return f"[{event.file_name}] {event.cid} {event.text[:TITLE_TEXT_MAX]}"
 
-  def refresh_list(self):
+  def refresh_list(self) -> None:
     """
     按当前筛选结果重画列表
     参数: 无
@@ -106,7 +106,7 @@ class OfficialEventListWidget(QWidget):
       item.setFont(font)
       self.list_widget.addItem(item)
 
-  def refresh_filter(self):
+  def refresh_filter(self) -> None:
     """
     按文件与关键字重新筛选
     参数: 无
@@ -127,7 +127,7 @@ class OfficialEventListWidget(QWidget):
       self.filtered_list.append(event)
     self.refresh_list()
 
-  def reset_search(self):
+  def reset_search(self) -> None:
     """
     清空筛选
     参数: 无
@@ -166,7 +166,7 @@ class OfficialEventListWidget(QWidget):
         max_cid = max(max_cid, int(event.cid))
     return str(max_cid + 1)
 
-  def add_event(self):
+  def add_event(self) -> None:
     """
     在当前文件下新增一条空事件
     参数: 无

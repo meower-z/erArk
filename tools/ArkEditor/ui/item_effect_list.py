@@ -19,7 +19,7 @@ font.setFamily(cache_control.now_font_name)
 class ItemEffectList(QWidget):
   """结算表单主体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化结算表单主体"""
     super(ItemEffectList, self).__init__()
     self.font = font
@@ -72,7 +72,7 @@ class ItemEffectList(QWidget):
     main_layout.addLayout(list_layout)
     self.setLayout(main_layout)
 
-  def update(self):
+  def update(self) -> None:
     """更新结算列表"""
     self.item_list.clear()
     if cache_control.now_edit_type_flag == 1:
@@ -83,7 +83,7 @@ class ItemEffectList(QWidget):
         item.setToolTip(item.text())
         self.item_list.addItem(item)
 
-  def change(self):
+  def change(self) -> None:
     """展开结算菜单"""
     menu = EffectMenu()
     menu.exec()
@@ -105,7 +105,7 @@ class ItemEffectList(QWidget):
     menu = EffectMenu()
     menu.exec()
 
-  def reset(self):
+  def reset(self) -> None:
     """清零结算列表"""
     cache_control.now_event_data[cache_control.now_select_id].effect = {}
     self.item_list.clear()
@@ -174,13 +174,13 @@ class ItemEffectList(QWidget):
               cache_control.effect_data[cache_control.now_copied_effect]
           )
 
-  def CVE(self):
+  def CVE(self) -> None:
     """展开CVE菜单"""
     if cache_control.now_select_id != "":
       menu = CVEMenu()
       menu.exec()
 
-  def CSE(self):
+  def CSE(self) -> None:
     """展开CSE菜单"""
     if cache_control.now_select_id != "":
       menu = CSEMenu()

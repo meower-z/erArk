@@ -9,7 +9,7 @@ import os
 class Window(QMainWindow):
   """编辑器主窗体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化编辑器主窗体"""
     super(Window, self).__init__()
     self.setWindowTitle("ErArk编辑器")
@@ -18,7 +18,7 @@ class Window(QMainWindow):
 
   def add_grid_talk_layout(
       self, label1: QWidget, label2: QWidget, label3: QWidget
-  ):
+  ) -> None:
     """
     进行部件的布局，1：0行0列，占2行1列；2：0行1列，占1行2列；3：1行1列，占1行2列
     Keyword arguments:
@@ -30,7 +30,7 @@ class Window(QMainWindow):
 
   def add_grid_event_layout(
       self, label1: QWidget, label2: QWidget, label3: QWidget, label4: QWidget
-  ):
+  ) -> None:
     """
     进行部件的布局，1：0行0列，占2行1列；2：0行1列；3：0行2列；4：1行1列，占1行2列
     Keyword arguments:
@@ -41,7 +41,7 @@ class Window(QMainWindow):
     self.main_layout.addWidget(label3, 0, 2)
     self.main_layout.addWidget(label4, 1, 1, 1, 2)
 
-  def add_grid_chara_data_layout(self, label1: QWidget):
+  def add_grid_chara_data_layout(self, label1: QWidget) -> None:
     """
     进行部件的布局，1：0行0列，占2行1列；2：0行1列；3：0行2列；4：1行1列，占1行2列
     Keyword arguments:
@@ -49,7 +49,7 @@ class Window(QMainWindow):
     """
     self.main_layout.addWidget(label1)
 
-  def add_tool_widget(self, widget: QWidget):
+  def add_tool_widget(self, widget: QWidget) -> None:
     """
     添加工具部件
     Keyword arguments:
@@ -57,7 +57,7 @@ class Window(QMainWindow):
     """
     self.tool_layout.addWidget(widget)
 
-  def completed_layout(self):
+  def completed_layout(self) -> None:
     """布局完成"""
     widget = QWidget()
     layout = QVBoxLayout()
@@ -70,7 +70,9 @@ class Window(QMainWindow):
     widget.setLayout(layout)
     self.setCentralWidget(widget)
 
-  def set_dynamic_title(self, filename: str = None, modified: bool = False):
+  def set_dynamic_title(
+      self, filename: str = None, modified: bool = False
+  ) -> None:
     """
     设置动态窗口标题，显示当前文件名和修改状态
     输入：

@@ -25,7 +25,7 @@ PANEL_WIDTH = 100
 class InstructTypeFilterKeptTest(SlowTestCase):
   """面板按交互对象隐藏技艺、猥亵、性爱三类，不改写玩家的指令类型过滤设置"""
 
-  def setUp(self):
+  def setUp(self) -> None:
     """
     开新游戏，把杜宾放到博士所在的场景
     Keyword arguments:
@@ -65,7 +65,7 @@ class InstructTypeFilterKeptTest(SlowTestCase):
         listed.setdefault(type_of[instruct_id], []).append(instruct_id)
     return listed
 
-  def toggle_type(self, instruct_type: int):
+  def toggle_type(self, instruct_type: int) -> None:
     """
     像玩家点面板上的类型按钮一样切换一类指令的开关
     Keyword arguments:
@@ -113,7 +113,7 @@ class InstructTypeFilterKeptTest(SlowTestCase):
     self.world.move(chara_id, self.pl.position)
     return chara_id
 
-  def test_special_target_keeps_player_setting(self):
+  def test_special_target_keeps_player_setting(self) -> None:
     """交互对象临盆、产后、婴儿或幼女：三类不列出；玩家的设置不变，换回成年交互对象时猥亵类照设置列出"""
     self.toggle_type(OBSCENITY)
     before = dict(self.cache.instruct_type_filter)
@@ -158,7 +158,7 @@ class InstructTypeFilterKeptTest(SlowTestCase):
           f"交互对象{kind}之后换回杜宾，obscenity_panel_show",
       )
 
-  def test_adult_target_follows_player_setting(self):
+  def test_adult_target_follows_player_setting(self) -> None:
     """杜宾为交互对象：猥亵类随玩家的按钮列出或不列出"""
     self.assertNotIn(
         OBSCENITY,

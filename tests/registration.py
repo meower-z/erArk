@@ -24,7 +24,7 @@ SLOW_LAYER = "tests/slow/"
 class RecordingLoader(unittest.TestLoader):
   """unittest discover 用的加载器，另记下载入了哪些模块"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """
     初始化
     Keyword arguments:

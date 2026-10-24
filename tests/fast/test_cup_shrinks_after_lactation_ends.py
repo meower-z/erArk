@@ -20,7 +20,7 @@ LACTATION_DRUG, STOP_LACTATION_DRUG, SHRINK_CHEST_DRUG = 33, 34, 22
 class CupShrinksAfterLactationEndsTest(FastTestCase):
   """失去泌乳素质后，涨奶时变大的罩杯缩回一次并清除涨奶标记"""
 
-  def setUp(self):
+  def setUp(self) -> None:
     """
     造博士
     Keyword arguments:
@@ -74,7 +74,7 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
     cd = self.cache.character_data[cid]
     return [t for t in CUPS if cd.talent[t]], cd.pregnancy.lactation_flag
 
-  def test_stop_lactation_shrinks_cup_once(self):
+  def test_stop_lactation_shrinks_cup_once(self) -> None:
     """涨奶后用停乳药：罩杯缩回涨奶前的大小，只缩一次"""
     cd = self.make(1, 122)
     gift_panel.handle_drug_use_effect(1, LACTATION_DRUG)
@@ -85,7 +85,7 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
     self.assertEqual(self.settle(1), ([122], False))
     self.assertEqual(self.settle(1), ([122], False))
 
-  def test_stuck_old_save_repaired_once(self):
+  def test_stuck_old_save_repaired_once(self) -> None:
     """旧存档里卡住的状态（没有泌乳素质、涨奶标记还在、奶量为 0）：第一次结算修复，只修一次"""
     cd = self.make(2, 123)
     cd.pregnancy.lactation_flag = True
@@ -93,7 +93,7 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
     self.assertEqual(self.settle(2), ([122], False))
     self.assertEqual(self.settle(2), ([122], False))
 
-  def test_largest_cup_unchanged(self):
+  def test_largest_cup_unchanged(self) -> None:
     """罩杯已是爆乳时涨奶：没有变大也没有涨奶标记，停乳后保持爆乳"""
     cd = self.make(3, 125)
     gift_panel.handle_drug_use_effect(3, LACTATION_DRUG)
@@ -102,7 +102,7 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
     gift_panel.handle_drug_use_effect(3, STOP_LACTATION_DRUG)
     self.assertEqual(self.settle(3), ([125], False))
 
-  def test_shrink_drug_during_engorgement(self):
+  def test_shrink_drug_during_engorgement(self) -> None:
     """涨奶期间用过缩胸药：停乳或奶量降到 79% 及以下后比涨奶前小一级，最小到绝壁"""
     self.engorge(4, 122)
     gift_panel.handle_drug_use_effect(4, SHRINK_CHEST_DRUG)
@@ -120,7 +120,7 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
     gift_panel.handle_drug_use_effect(8, STOP_LACTATION_DRUG)
     self.assertEqual(self.settle(8), ([121], False))
 
-  def test_unaffected_cases(self):
+  def test_unaffected_cases(self) -> None:
     """从没泌乳过的干员罩杯不变；还在涨奶的干员保持涨奶，奶量降到 79% 及以下时照旧缩回"""
     self.make(5, 122)
     self.assertEqual(self.settle(5), ([122], False))

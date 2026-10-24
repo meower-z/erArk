@@ -15,7 +15,7 @@ font.setFamily(cache_control.now_font_name)
 class ToolsBar(QMenuBar):
   """筛选表单用菜单栏"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化顶部筛选栏"""
     super(ToolsBar, self).__init__()
     self.font = font

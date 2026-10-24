@@ -136,7 +136,7 @@ SHORT = {
 class UnnormalBitsSameMeaningTest(FastTestCase):
   """handle_normal_3~6 与完整定义处处相同，normal_all 与 unnormal 与逐位判定一致"""
 
-  def setUp(self):
+  def setUp(self) -> None:
     """
     造博士与一名干员，准备每类衣物可选的衣服id
     Keyword arguments:
@@ -152,7 +152,7 @@ class UnnormalBitsSameMeaningTest(FastTestCase):
     for cloth_id, cloth in game_config.config_clothing_tem.items():
       self.cloth_by_type.setdefault(cloth.clothing_type, []).append(cloth_id)
 
-  def randomize(self):
+  def randomize(self) -> None:
     """
     随机生成一组会影响位1~7的状态；另有两个「仍算全裸」的特例：只戴项圈（3类352）、只戴戒指（7类751）
     Keyword arguments:
@@ -201,7 +201,7 @@ class UnnormalBitsSameMeaningTest(FastTestCase):
             rng.choice(self.cloth_by_type[clothing_type])
         ]
 
-  def test_short_circuit_matches_full_definition(self):
+  def test_short_circuit_matches_full_definition(self) -> None:
     """随机状态下位3~6与完整定义相同，normal_all 与 unnormal 与逐位判定一致"""
     mismatch = {3: [], 4: [], 5: [], 6: [], "normal_all": [], "unnormal": []}
     abnormal_count = {3: 0, 4: 0, 5: 0, 6: 0}
@@ -245,7 +245,7 @@ class UnnormalBitsSameMeaningTest(FastTestCase):
     self.assertEqual(mismatch["normal_all"], [])
     self.assertEqual(mismatch["unnormal"], [])
 
-  def test_player_bits_always_normal(self):
+  def test_player_bits_always_normal(self) -> None:
     """玩家的位1~7恒为正常，unnormal 恒不成立"""
     self.player.cloth.cloth_wear = {
         clothing_type: [] for clothing_type in game_config.config_clothing_type

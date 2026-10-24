@@ -34,7 +34,7 @@ spec.loader.exec_module(downloader_module)
 PRTSCharacterDownloader = downloader_module.PRTSCharacterDownloader
 
 
-def main():
+def main() -> None:
   """
   主函数：批量下载干员全身立绘并重命名原有立绘为半身版本
 

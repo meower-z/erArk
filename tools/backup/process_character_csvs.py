@@ -110,7 +110,7 @@ def process_file(path: Path, apply: bool = False) -> bool:
   return True
 
 
-def main():
+def main() -> None:
   """
   脚本入口：解析命令行参数并遍历目标目录进行批量处理。
 

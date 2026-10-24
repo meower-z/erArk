@@ -23,7 +23,7 @@ CALM = 1
 class HypnosisBit5AfterTimeStopTest(SlowTestCase):
   """关时停后，平然催眠过的干员异常位5为正常"""
 
-  def test_calm_operator_is_lucid_after_time_stop(self):
+  def test_calm_operator_is_lucid_after_time_stop(self) -> None:
     """杜宾进入平然后开、关时停：关时停后她清醒，异常位5正常，「交互对象5、6正常」成立"""
     from Script.Config import game_config
     from Script.Core import constant

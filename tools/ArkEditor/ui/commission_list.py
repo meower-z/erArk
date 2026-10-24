@@ -75,7 +75,7 @@ class CommissionListWidget(QWidget):
     self.list_widget.setDragDropMode(QListWidget.InternalMove)
     self.list_widget.model().rowsMoved.connect(self.on_rows_moved)
 
-  def refresh_list(self):
+  def refresh_list(self) -> None:
     """
     刷新列表内容，根据当前过滤结果显示
     """
@@ -85,7 +85,7 @@ class CommissionListWidget(QWidget):
       item.setData(1000, commission)
       self.list_widget.addItem(item)
 
-  def search_by_name(self):
+  def search_by_name(self) -> None:
     """
     按委托名搜索
     """
@@ -98,7 +98,7 @@ class CommissionListWidget(QWidget):
       ]
     self.refresh_list()
 
-  def search_by_desc(self):
+  def search_by_desc(self) -> None:
     """
     按描述文本搜索
     """
@@ -111,7 +111,7 @@ class CommissionListWidget(QWidget):
       ]
     self.refresh_list()
 
-  def reset_search(self):
+  def reset_search(self) -> None:
     """
     重置搜索，显示全部条目
     """
@@ -126,7 +126,7 @@ class CommissionListWidget(QWidget):
     commission = item.data(1000)
     self.commission_selected.emit(commission)
 
-  def add_commission(self):
+  def add_commission(self) -> None:
     """
     新增委托条目，自动生成唯一ID和默认名称，插入到列表顶部
     """

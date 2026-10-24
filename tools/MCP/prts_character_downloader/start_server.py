@@ -30,7 +30,7 @@ def check_mcp_available():
     return False
 
 
-def run_standalone_cli():
+def run_standalone_cli() -> None:
   """
   运行独立的命令行界面
 
@@ -126,7 +126,7 @@ def run_standalone_cli():
       print("✗ 无效选择，请输入 1-4")
 
 
-async def run_mcp_server():
+async def run_mcp_server() -> None:
   """
   运行MCP服务器
 
@@ -137,7 +137,7 @@ async def run_mcp_server():
   await main()
 
 
-def main():
+def main() -> None:
   """
   主函数
 

@@ -109,7 +109,7 @@ def build_csv_config(
     talk_common: bool = False,
     cook_question: bool = False,
     official_event: bool = False,
-):
+) -> None:
   """
   输入：
       file_path (str): 文件路径
@@ -277,7 +277,7 @@ def build_csv_config(
 
 def build_config_def(
     class_name: str, value_type: dict, docstring: dict, class_text: str
-):
+) -> None:
   """
   输入：
       class_name (str): 类名
@@ -316,7 +316,7 @@ def build_config_po(
     common_talk: bool = False,
     cook_question: bool = False,
     event: bool = False,
-):
+) -> None:
   """
   输入：
       message (str): 文本内容
@@ -381,7 +381,7 @@ def build_scene_config(data_path):
       build_scene_config(now_path)
 
 
-def build_character_config(file_path: str, file_name: str):
+def build_character_config(file_path: str, file_name: str) -> None:
   """
   输入：
       file_path (str): 文件路径
@@ -419,7 +419,7 @@ def build_character_config(file_path: str, file_name: str):
     character_data[file_id] = now_data
 
 
-def build_ui_text(file_path: str, file_name: str):
+def build_ui_text(file_path: str, file_name: str) -> None:
   """
   输入：
       file_path (str): 文件路径

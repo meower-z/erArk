@@ -18,7 +18,7 @@ GIVE_UP_MINUTES = 30
 class FullExamRoomDropsExamTest(HealthCheckTestCase):
   """体检科满员时，要去体检的干员放弃今天的体检"""
 
-  def setUp(self):
+  def setUp(self) -> None:
     """
     给可露希尔排体检，博士睡觉期间进行午夜抽签
     Keyword arguments:
@@ -33,7 +33,7 @@ class FullExamRoomDropsExamTest(HealthCheckTestCase):
     self.sleep_through_midnight()
     self.start = SLOT_START[self.operator.action_info.health_check_today]
 
-  def check_gives_up_for_today(self):
+  def check_gives_up_for_today(self) -> None:
     """
     体检科已坐满：她在 GIVE_UP_MINUTES 分钟内放弃今天的体检（今日体检时间清零、不在等待名单上），之后到当天结束都不进体检科
     Keyword arguments:
@@ -65,7 +65,7 @@ class FullExamRoomDropsExamTest(HealthCheckTestCase):
         f"{self.cache.game_time} 她又进了体检科",
     )
 
-  def test_booked_operator_gives_up_when_full(self):
+  def test_booked_operator_gives_up_when_full(self) -> None:
     """排了体检、还没进等待名单（目标 210500）：时段开始前体检科坐满，她放弃今天的体检；下一个体检日照常抽中她"""
     self.wait_until_hour(self.start - 1)
     self.assertTrue(
@@ -79,7 +79,7 @@ class FullExamRoomDropsExamTest(HealthCheckTestCase):
         "下一个体检日的抽签抽中了她",
     )
 
-  def test_waiting_operator_gives_up_when_full(self):
+  def test_waiting_operator_gives_up_when_full(self) -> None:
     """已在等待体检名单上（目标 220505）：她暂时离开体检科、正往回走时体检科坐满，她退出等待名单"""
     operator = self.operator
     self.assertTrue(

@@ -101,7 +101,7 @@ def update_behavior_file(behavior_py_path, behavior_data):
     return False
 
 
-def main():
+def main() -> None:
   """
   主函数，执行行为常量更新流程
   """

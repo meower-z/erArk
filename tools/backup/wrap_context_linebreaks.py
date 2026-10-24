@@ -76,7 +76,7 @@ def process_csv(
     column_name: str = 'context',
     threshold: int = 100,
     backup: bool = True,
-):
+) -> None:
   """
   对 csv 指定列的每个值调用 wrap_text_by_sentences 后写回原文件，再把全文里的 ," 换成 ,、
   "" 换成 "、行尾的 " 去掉；文件不存在时抛出 FileNotFoundError，没有表头或没有该列时抛出 ValueError
@@ -136,7 +136,7 @@ def process_csv(
     f.write(content)
 
 
-def main():
+def main() -> None:
   """
   解析命令行参数（--file、--column、--threshold 默认 60、--no-backup）并调用 process_csv；
   出错时把错误打印到标准错误并以退出码 2 结束

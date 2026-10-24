@@ -16,7 +16,7 @@ CORRIDOR = ["中枢", "走廊"]
 class LockedRoomStaysLockedTest(FastTestCase):
   """character_move_scene 只在旧场景里已没有玩家时解锁"""
 
-  def setUp(self):
+  def setUp(self) -> None:
     """
     博士和两名干员都在博士房间里，门已上锁
     Keyword arguments:
@@ -31,17 +31,17 @@ class LockedRoomStaysLockedTest(FastTestCase):
     self.room = self.world.scene(ROOM)
     self.room.close_flag = 1
 
-  def test_npc_leaving_with_player_inside_keeps_lock(self):
+  def test_npc_leaving_with_player_inside_keeps_lock(self) -> None:
     """玩家在屋内时，NPC 离开后房间仍上锁"""
     self.world.move(1, CORRIDOR)
     self.assertEqual(self.room.close_flag, 1)
 
-  def test_player_leaving_unlocks(self):
+  def test_player_leaving_unlocks(self) -> None:
     """玩家离开后房间解锁"""
     self.world.move(0, CORRIDOR)
     self.assertEqual(self.room.close_flag, 0)
 
-  def test_npc_leaving_without_player_unlocks(self):
+  def test_npc_leaving_without_player_unlocks(self) -> None:
     """屋里只有 NPC、没有玩家时，其中一个离开后房间解锁"""
     self.world.move(0, CORRIDOR)
     self.room.close_flag = 1

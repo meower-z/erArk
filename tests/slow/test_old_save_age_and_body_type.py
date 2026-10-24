@@ -34,7 +34,7 @@ MINOR_OPERATOR_ADV = 254
 class TestOldSaveAgeAndBodyType(SlowTestCase):
   """旧存档读档后的成长阶段、体型、见学与上课状态、外表年龄药、世界设定1"""
 
-  def tearDown(self):
+  def tearDown(self) -> None:
     """
     删掉本测试写入的存档
     Keyword arguments:
@@ -344,7 +344,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
     id_dict["mother"] = mother_id
     return id_dict
 
-  def _save_and_load(self):
+  def _save_and_load(self) -> None:
     """
     写盘再读档
     Keyword arguments:
@@ -463,7 +463,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
       )
     return snapshot
 
-  def _assert_converted(self, id_dict: dict):
+  def _assert_converted(self, id_dict: dict) -> None:
     """
     检查读档后的数据
     Keyword arguments:
@@ -803,7 +803,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
           f"日程模板的时段{value}应是自由选择或 Entertainment.csv 里的娱乐",
       )
 
-  def _assert_no_child_reference(self, id_dict: dict):
+  def _assert_no_child_reference(self, id_dict: dict) -> None:
     """
     检查其他结构里没有对102孩子的引用，与她并列的母亲的条目保留
     Keyword arguments:
@@ -889,7 +889,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         "孩子借的书还回去，场景面板记着的角色不是她",
     )
 
-  def _assert_h_session_ended(self, id_dict: dict):
+  def _assert_h_session_ended(self, id_dict: dict) -> None:
     """
     检查与102孩子的单人H已按结束H收尾：玩家不在H中、交互对象是自己、插入位置复位、房门打开；
        孩子穿回衣服，快感、催眠、待触发事件与必须结算的二段行为归零；母亲对她的行为换成发呆
@@ -947,7 +947,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         "母亲对孩子的行为换成发呆",
     )
 
-  def test_old_save_converts_once(self):
+  def test_old_save_converts_once(self) -> None:
     """
     旧存档读档后符合现行规则；再写盘读档一次，数据不变
     Keyword arguments:
@@ -965,7 +965,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         self._snapshot(), first, "第二次读档不应改动任何被检查的数据"
     )
 
-  def test_stage_without_world_setting(self):
+  def test_stage_without_world_setting(self) -> None:
     """
     没开世界设定1时，持有103的静态干员读档后持有少女，不取模板的体型
     Keyword arguments:
@@ -997,7 +997,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         "没开世界设定1时持有103的静态干员应只持有少女",
     )
 
-  def _group_h_case(self, child_in_template: bool):
+  def _group_h_case(self, child_in_template: bool) -> None:
     """
     摆出群交中的旧存档并检查读档：玩家、102的孩子与另一名干员同场景在群交；
        读档后群交按群交结束收尾，三人有效的交互对象，再写盘读档一次，数据不变
@@ -1103,7 +1103,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         snapshot_list[0], snapshot_list[1], "第二次读档不应改动任何被检查的数据"
     )
 
-  def test_group_h_with_child_ends(self):
+  def test_group_h_with_child_ends(self) -> None:
     """
     群交中玩家以102的孩子为交互对象、孩子在部位模板里：读档后群交结束
     Keyword arguments:
@@ -1113,7 +1113,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
     """
     self._group_h_case(True)
 
-  def test_group_h_child_not_in_template_ends(self):
+  def test_group_h_child_not_in_template_ends(self) -> None:
     """
     群交中孩子与玩家同场景在H中，玩家以另一名干员为交互对象，没有部位模板写着孩子：读档后群交同样结束
     Keyword arguments:

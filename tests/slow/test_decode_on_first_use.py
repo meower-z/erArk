@@ -72,7 +72,7 @@ class DecodeOnFirstUseTest(SlowTestCase):
       patcher.start()
       self.addCleanup(patcher.stop)
 
-  def test_start_indexes_without_decoding(self):
+  def test_start_indexes_without_decoding(self) -> None:
     """启动游戏、开新游戏不打开任何图片；索引与 image_path_index 的取舍结果一致，角色索引按文件名首段收录"""
     from Script.Core import image_path_index
 
@@ -91,7 +91,7 @@ class DecodeOnFirstUseTest(SlowTestCase):
         expected_by_chara,
     )
 
-  def test_first_use_decodes_once(self):
+  def test_first_use_decodes_once(self) -> None:
     """in 检查不打开图片；首次取图打开它的文件一次并按缩放比例缩放；再次取图不打开文件、返回同一个对象；不存在的图片名 get 给默认值、[] 抛 KeyError"""
     image_data = self.era_image.image_data
     path_data = self.era_image.image_path_data
@@ -115,7 +115,7 @@ class DecodeOnFirstUseTest(SlowTestCase):
     self.assertEqual(image_data.get("不存在的图片名", "默认"), "默认")
     self.assertRaises(KeyError, image_data.__getitem__, "不存在的图片名")
 
-  def test_broken_image_decodes_once(self):
+  def test_broken_image_decodes_once(self) -> None:
     """索引里有、解码失败的图片：解码前后 in 都找得到，取到 1x1 的图片，再次取图返回同一个对象，文件只打开一次"""
     image_data = self.era_image.image_data
     temp_dir = tempfile.TemporaryDirectory()

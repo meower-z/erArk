@@ -21,7 +21,7 @@ DR_ROOM = ["中枢", "博士房间"]
 class FollowerEntersFullRoomTest(FastTestCase):
   """judge_scene_accessible 对满员房间的判定"""
 
-  def setUp(self):
+  def setUp(self) -> None:
     """
     博士、跟随者（id 1）与路人（id 2）在门口，体检科里已有 10 人；体检科按设施已开放处理
     Keyword arguments:
@@ -58,7 +58,7 @@ class FollowerEntersFullRoomTest(FastTestCase):
         map_handle.get_map_system_path_str_for_list(path), cid
     )
 
-  def test_follower_steps_in_with_doctor(self):
+  def test_follower_steps_in_with_doctor(self) -> None:
     """博士正从门口迈进满员的体检科：智能跟随的干员能进，没在跟随的干员进不了"""
     behavior = self.pl.behavior
     behavior.behavior_id = constant.Behavior.MOVE
@@ -69,7 +69,7 @@ class FollowerEntersFullRoomTest(FastTestCase):
     self.assertEqual(self.access(ROOM, 1), "open")
     self.assertEqual(self.access(ROOM, 2), "full")
 
-  def test_follower_enters_room_with_doctor(self):
+  def test_follower_enters_room_with_doctor(self) -> None:
     """博士已在满员的体检科里：跟随（1、2）的干员能进，被召集（3、4）的干员进不了"""
     self.world.move(0, ROOM)
     for is_follow, expected in (
@@ -82,12 +82,12 @@ class FollowerEntersFullRoomTest(FastTestCase):
         self.follower.sp_flag.is_follow = is_follow
         self.assertEqual(self.access(ROOM, 1), expected)
 
-  def test_follower_blocked_when_doctor_elsewhere(self):
+  def test_follower_blocked_when_doctor_elsewhere(self) -> None:
     """博士在门口站着、不进体检科时，跟随中的干员被满员挡在门外"""
     self.follower.sp_flag.is_follow = 1
     self.assertEqual(self.access(ROOM, 1), "full")
 
-  def test_private_room_unchanged(self):
+  def test_private_room_unchanged(self) -> None:
     """博士在博士房间里时，跟随的非助理干员进不了博士房间"""
     self.world.move(0, DR_ROOM)
     self.follower.sp_flag.is_follow = 1

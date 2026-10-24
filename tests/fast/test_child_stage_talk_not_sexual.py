@@ -502,7 +502,7 @@ class ChildStageTalkNotSexualTest(FastTestCase):
   """挂在儿童阶段的口上与事件里没有 H 内容，也没有无法判定的行"""
 
   @classmethod
-  def setUpClass(cls):
+  def setUpClass(cls) -> None:
     """
     给全部行分类一次
     Keyword arguments:
@@ -512,21 +512,21 @@ class ChildStageTalkNotSexualTest(FastTestCase):
     """
     cls.rows = list(iter_rows())
 
-  def test_no_sexual_child_stage_rows(self):
+  def test_no_sexual_child_stage_rows(self) -> None:
     """没有既挂在儿童阶段、又属于 H 内容的行"""
     sexual = [
         f"{path}:{cid}" for path, cid, kind in self.rows if kind == "sexual"
     ]
     self.assertEqual(len(sexual), 0, sexual[:20])
 
-  def test_no_child_body_common_rows(self):
+  def test_no_child_body_common_rows(self) -> None:
     """通用文本里没有挂在儿童阶段的行"""
     child_body = [
         f"{path}:{cid}" for path, cid, kind in self.rows if kind == "child_body"
     ]
     self.assertEqual(len(child_body), 0, child_body[:20])
 
-  def test_judged_rows_deleted(self):
+  def test_judged_rows_deleted(self) -> None:
     """JUDGED_DELETED 列出的行都已不在文件里"""
     present = {(path, cid) for path, cid, _ in self.rows}
     remaining = [
@@ -537,7 +537,7 @@ class ChildStageTalkNotSexualTest(FastTestCase):
     ]
     self.assertEqual(len(remaining), 0, remaining[:20])
 
-  def test_no_undecided_child_stage_rows(self):
+  def test_no_undecided_child_stage_rows(self) -> None:
     """没有挂在儿童阶段、又无法判定的行"""
     undecided = [
         f"{path}:{cid}" for path, cid, kind in self.rows if kind == "undecided"

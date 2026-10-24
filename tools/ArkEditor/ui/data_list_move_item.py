@@ -11,7 +11,7 @@ from ui.data_list_undo_snapshot import undo_snapshot_manager  # 导入快照式�
 # 以下函数为条目移动相关的功能，供DataList调用
 
 
-def move_item(self):
+def move_item(self) -> None:
   """
   移动条目
   输入参数：self（DataList实例）
@@ -49,7 +49,7 @@ def move_item(self):
     self.undo_stack.append({'type': 'event_move', 'order': order})
 
 
-def move_to_up(self):
+def move_to_up(self) -> None:
   """
   移至选中条目上方
   输入参数：self（DataList实例）
@@ -136,7 +136,7 @@ def move_to_up(self):
   self.update()
 
 
-def move_to_down(self):
+def move_to_down(self) -> None:
   """
   移至选中条目下方
   输入参数：self（DataList实例）
@@ -220,7 +220,7 @@ def move_to_down(self):
   self.update()
 
 
-def move_cancel(self):
+def move_cancel(self) -> None:
   """
   取消移动
   输入参数：self（DataList实例）
@@ -231,7 +231,7 @@ def move_cancel(self):
   self.edited_item.setBackground(QColor('white'))
 
 
-def refresh_item_flags(self):
+def refresh_item_flags(self) -> None:
   """
   为所有条目设置可拖拽和可放置标志
   输入参数：self（DataList实例）

@@ -50,7 +50,7 @@ logger = logging.getLogger(__name__)
 class PRTSMCPServer:
   """PRTS角色立绘下载器MCP服务器"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """
     初始化MCP服务器
 
@@ -238,7 +238,7 @@ class PRTSMCPServer:
         ]
 
 
-async def main():
+async def main() -> None:
   """
   主函数
 

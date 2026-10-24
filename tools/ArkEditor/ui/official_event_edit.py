@@ -51,7 +51,7 @@ class SelectorShim:
   功能：冒充 cache_control.now_event_data 里的一条事件，接住选择器写进来的内容
   """
 
-  def __init__(self, text: str, premise: dict, effect: dict):
+  def __init__(self, text: str, premise: dict, effect: dict) -> None:
     """
     记下文字、前提集合与结算集合
     Keyword arguments:
@@ -72,7 +72,7 @@ class DummyItemList:
   功能：选择器写完会调它的 update()，这里什么也不做
   """
 
-  def update(self):
+  def update(self) -> None:
     """什么也不做"""
     return
 
@@ -129,7 +129,7 @@ class OfficialEventEditWidget(QWidget):
     """ 部门id -> 部门名 """
     self.init_ui()
 
-  def init_ui(self):
+  def init_ui(self) -> None:
     """
     初始化UI控件
     参数: 无
@@ -279,7 +279,7 @@ class OfficialEventEditWidget(QWidget):
         cache_control.item_effect_list = old_effect_list
     edit.setText(dict_to_text(shim.premise if is_premise else shim.effect))
 
-  def open_premise_menu(self, edit: QLineEdit):
+  def open_premise_menu(self, edit: QLineEdit) -> None:
     """
     打开前提列表选择器
     参数:
@@ -290,7 +290,7 @@ class OfficialEventEditWidget(QWidget):
 
     self.run_with_shim(edit, True, PremiseMenu)
 
-  def open_cvp_menu(self, edit: QLineEdit):
+  def open_cvp_menu(self, edit: QLineEdit) -> None:
     """
     打开综合数值前提构造器
     参数:
@@ -301,7 +301,7 @@ class OfficialEventEditWidget(QWidget):
 
     self.run_with_shim(edit, True, CVPMenu)
 
-  def open_effect_menu(self, edit: QLineEdit):
+  def open_effect_menu(self, edit: QLineEdit) -> None:
     """
     打开结算列表选择器
     参数:
@@ -312,7 +312,7 @@ class OfficialEventEditWidget(QWidget):
 
     self.run_with_shim(edit, False, EffectMenu)
 
-  def open_cve_menu(self, edit: QLineEdit):
+  def open_cve_menu(self, edit: QLineEdit) -> None:
     """
     打开综合数值结算构造器
     参数:
@@ -356,7 +356,7 @@ class OfficialEventEditWidget(QWidget):
       widget_data["tip"].setText(option["tip"])
       widget_data["effect"].setText(option["effect"])
 
-  def save_event(self):
+  def save_event(self) -> None:
     """
     把表单内容写回事件对象并发出保存信号
     参数: 无

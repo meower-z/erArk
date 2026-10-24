@@ -34,7 +34,7 @@ def touch(root: str, *parts: str) -> str:
 class SameNameImagePickTest(FastTestCase):
   """同名图片按层级与分类顺序取文件，重名全部列出，与遍历顺序无关"""
 
-  def setUp(self):
+  def setUp(self) -> None:
     """
     在临时目录里摆出三组重名的图片、一张不重名的图片和一个不是 png 的文件
     Keyword arguments:
@@ -61,7 +61,7 @@ class SameNameImagePickTest(FastTestCase):
     self.single = touch(root, "立绘", "干员", "莱伊", "莱伊_半身.png")
     touch(root, "立绘", "干员", "莱伊", "莱伊_body.json")
 
-  def test_pick_by_depth_then_category(self):
+  def test_pick_by_depth_then_category(self) -> None:
     """主文件夹胜过更深的草稿文件夹；同层级按分类顺序取干员、取路人；不重名的照常收录，只收 png"""
     index, _ = image_path_index.build_image_path_index(self.root)
     self.assertEqual(index.get("莱伊_全身"), self.main_full)
@@ -72,7 +72,7 @@ class SameNameImagePickTest(FastTestCase):
         set(index), {"电弧_半身", "路人_1", "莱伊_全身", "莱伊_半身"}
     )
 
-  def test_duplicates_listed_in_pick_order(self):
+  def test_duplicates_listed_in_pick_order(self) -> None:
     """重名清单只含三个重名的图片名，每个按取舍顺序列出全部文件"""
     _, duplicates = image_path_index.build_image_path_index(self.root)
     self.assertEqual(

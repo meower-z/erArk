@@ -70,7 +70,7 @@ class HealthCheckTestCase(SlowTestCase):
     self.walk(DR_OFFICE)
     return cid
 
-  def sleep_through_midnight(self):
+  def sleep_through_midnight(self) -> None:
     """
     博士 23:00 回博士房间睡 8 小时，午夜结算（含体检抽签）在睡眠中进行；醒来后回博士办公室
     Keyword arguments:
@@ -90,7 +90,7 @@ class HealthCheckTestCase(SlowTestCase):
     self.assertNotEqual(self.cache.game_time.day, today, "博士睡过了午夜")
     self.walk(DR_OFFICE)
 
-  def wait_until_hour(self, hour: int):
+  def wait_until_hour(self, hour: int) -> None:
     """
     用「等待五分钟」推进到当天的某个整点之后
     Keyword arguments:

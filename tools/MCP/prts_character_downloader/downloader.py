@@ -19,7 +19,7 @@ from typing import Optional, Dict, List
 class PRTSCharacterDownloader:
   """PRTS角色立绘下载器"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """
     初始化下载器
 

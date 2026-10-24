@@ -198,7 +198,7 @@ def main():
 
   flow_handle.askfor_all = benchmark_askfor_all
 
-  def benchmark_flow():
+  def benchmark_flow() -> None:
     """
     flow 线程主函数
     参数：无

@@ -14,7 +14,7 @@ font.setFamily(cache_control.now_font_name)
 class MenuBar(QMenuBar):
   """顶部菜单栏"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化顶部菜单栏"""
     super(MenuBar, self).__init__()
 
@@ -92,7 +92,7 @@ class MenuBar(QMenuBar):
     self.addMenu(commission_menu)
 
     # 绑定说明弹窗
-    def show_commission_path_info():
+    def show_commission_path_info() -> None:
       dialog = QDialog(self)
       dialog.setWindowTitle("外勤委托文件路径说明")
       layout = QVBoxLayout(dialog)
@@ -122,7 +122,7 @@ class MenuBar(QMenuBar):
     official_event_menu.setFont(self.font)
     self.addMenu(official_event_menu)
 
-    def show_official_event_path_info():
+    def show_official_event_path_info() -> None:
       """弹出公务事件目录的说明"""
       dialog = QDialog(self)
       dialog.setWindowTitle("公务事件目录说明")

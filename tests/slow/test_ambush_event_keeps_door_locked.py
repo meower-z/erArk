@@ -52,7 +52,7 @@ class AmbushEventKeepsDoorLockedTest(SlowTestCase):
 
     settle_behavior.handle_event_data = record_handle
 
-  def check_ambush(self, behavior_id: str):
+  def check_ambush(self, behavior_id: str) -> None:
     """
     核对：结算了该行为的「逆来顺受」选项，门仍锁着，杜宾开启主动H
     Keyword arguments:
@@ -82,7 +82,7 @@ class AmbushEventKeepsDoorLockedTest(SlowTestCase):
         self.cache.character_data[0].target_character_id, self.operator_id
     )
 
-  def test_wait_option_keeps_door_locked(self):
+  def test_wait_option_keeps_door_locked(self) -> None:
     """杜宾在屋里，锁门指令里触发 wait 事件，选「逆来顺受」后门仍锁着"""
     from Script.Core import constant
 
@@ -91,7 +91,7 @@ class AmbushEventKeepsDoorLockedTest(SlowTestCase):
     self.instruct(constant.Instruct.DOOR_LOCK_INNER)
     self.check_ambush("wait")
 
-  def test_move_option_keeps_door_locked(self):
+  def test_move_option_keeps_door_locked(self) -> None:
     """博士锁门后召集杜宾，她走进来时触发 move 事件，选「逆来顺受」后门仍锁着"""
     from Script.Core import constant
 

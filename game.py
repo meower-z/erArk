@@ -126,7 +126,7 @@ if __name__ == "__main__":
     # 添加退出处理函数
     import atexit
 
-    def cleanup():
+    def cleanup() -> None:
       """
       退出前清理函数
 

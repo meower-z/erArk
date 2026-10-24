@@ -61,7 +61,7 @@ def set_stage(character, talent_id: int):
 class ChildStageNamesTest(FastTestCase):
   """素质 102 叫幼女、103 叫学员，玩家可见文字按这两个名字称呼她们"""
 
-  def setUp(self):
+  def setUp(self) -> None:
     """
     造博士（id 0）
     Keyword arguments:
@@ -72,7 +72,7 @@ class ChildStageNamesTest(FastTestCase):
     super().setUp()
     self.world.chara(0, "博士")
 
-  def assert_stage_text(self, label: str, text: str, stage_list: tuple):
+  def assert_stage_text(self, label: str, text: str, stage_list: tuple) -> None:
     """
     text 写着 stage_list 里每个阶段的名称，没有 UNUSED_NAMES
     Keyword arguments:
@@ -105,7 +105,7 @@ class ChildStageNamesTest(FastTestCase):
     set_stage(daughter, talent_id)
     return daughter
 
-  def test_config_texts(self):
+  def test_config_texts(self) -> None:
     """素质 102、103 的名称是幼女、学员；写着阶段名的素质、道具与行为配置按这两个名字写"""
     for talent_id, name in STAGE_NAME.items():
       self.assertEqual(
@@ -116,7 +116,7 @@ class ChildStageNamesTest(FastTestCase):
     for label, get_text, stage_list in STAGE_TEXT_CONFIG:
       self.assert_stage_text(label, get_text(), stage_list)
 
-  def test_growth_event_title(self):
+  def test_growth_event_title(self) -> None:
     """幼女与学员女儿的养成事件抬头写着她的阶段名"""
     for cid, talent_id in enumerate(BOTH_STAGES, start=1):
       self.make_daughter(cid, talent_id)
@@ -126,7 +126,7 @@ class ChildStageNamesTest(FastTestCase):
           (talent_id,),
       )
 
-  def test_growth_stop_drug_texts(self):
+  def test_growth_stop_drug_texts(self) -> None:
     """成长停滞药与成长继续药对少女女儿无效，提示写着幼女与学员"""
     daughter = self.make_daughter(1, 104)
     for drug_id in GROWTH_STOP_DRUG_LIST:

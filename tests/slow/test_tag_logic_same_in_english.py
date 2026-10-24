@@ -84,7 +84,7 @@ def set_language(language: str) -> Callable[[str], str]:
 class LanguageRun:
   """以一种语言启动并开新游戏的游戏，各项结果由它的方法取得"""
 
-  def __init__(self, language: str):
+  def __init__(self, language: str) -> None:
     """
     启动游戏，开新游戏
     Keyword arguments:

@@ -34,7 +34,7 @@ class TreeItem(QTreeWidgetItem):
 class PremiseMenu(QDialog):
   """前提选择对象"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化前提复选框"""
     super(PremiseMenu, self).__init__()
     if cache_control.now_edit_type_flag == 1:
@@ -200,7 +200,7 @@ class PremiseMenu(QDialog):
     else:
       data.premise[item.cid] = 1
 
-  def click_item(self, item: TreeItem, column: int):
+  def click_item(self, item: TreeItem, column: int) -> None:
     """
     点击选项时勾选选框并更新事件前提
     Keyword arguments:
@@ -227,7 +227,7 @@ class PremiseMenu(QDialog):
 
     cache_control.item_premise_list.update()
 
-  def search(self):
+  def search(self) -> None:
     """搜索前提"""
     search_text = self.search_text.text()  # QLineEdit 获取文本用 text()
     if not len(search_text):
@@ -246,7 +246,7 @@ class PremiseMenu(QDialog):
         # 如果没有任何子项可见，则隐藏该type（root）
         root.setHidden(not has_visible_child)
 
-  def reset(self):
+  def reset(self) -> None:
     """重置搜索"""
     self.search_text.setText("")  # QLineEdit 设置文本
     for tree in self.tree_list:

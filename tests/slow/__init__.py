@@ -45,7 +45,7 @@ class ParentImportGuard(importlib.abc.MetaPathFinder):
     return None
 
 
-def remove_parent_guard():
+def remove_parent_guard() -> None:
   """
   撤下 ParentImportGuard（SlowTestCase.setUp 在启动游戏前调用）
   Keyword arguments:

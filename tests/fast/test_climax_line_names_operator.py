@@ -36,7 +36,7 @@ HELPER_ROWS = [
 class ClimaxLineNamesOperatorTest(FastTestCase):
   """高潮口上用 {Name} 写高潮的干员，用 {PlayerName} 写掩护她的博士"""
 
-  def test_listed_lines_name_operator(self):
+  def test_listed_lines_name_operator(self) -> None:
     """列出的隐奸与角色高潮口上都写 {Name}，不写 {TargetName}"""
     talk_ids = [
         f"{prefix}{row}" for prefix, rows in SYSTEM_ROWS.items() for row in rows
@@ -55,7 +55,7 @@ class ClimaxLineNamesOperatorTest(FastTestCase):
     ]
     self.assertEqual(wrong, [])
 
-  def test_helper_is_doctor(self):
+  def test_helper_is_doctor(self) -> None:
     """B_climax 里替她掩护的人写作 {PlayerName}"""
     wrong = [
         talk_id
@@ -64,7 +64,7 @@ class ClimaxLineNamesOperatorTest(FastTestCase):
     ]
     self.assertEqual(wrong, [])
 
-  def test_no_operator_climax_line_uses_target_name(self):
+  def test_no_operator_climax_line_uses_target_name(self) -> None:
     """全部口上里，干员的高潮描写都不用 {TargetName}"""
     left = sorted(
         talk_id

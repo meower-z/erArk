@@ -838,7 +838,7 @@ EFFECT_DATA = constant.settle_behavior_effect_data
 BEHAVIOR_EFFECT = game_config.config_behavior_effect_data
 
 
-def run_effect_list(effect_id_list: list):
+def run_effect_list(effect_id_list: list) -> None:
   """
   以玩家为结算主体、按顺序结算一串效果（结算时长 5 分钟）
   Keyword arguments:
@@ -1026,7 +1026,7 @@ student_b.sp_flag.is_h = False  # 女儿B 已先力竭退出，只剩女儿A
 _h1_flow_call = []
 
 
-def fake_game_update_flow(add_time: int):
+def fake_game_update_flow(add_time: int) -> None:
   """
   update.game_update_flow 的桩：只跑玩家这一步（结算玩家此刻行为的效果串，再做玩家的实时数据结算）
   Keyword arguments:

@@ -81,7 +81,7 @@ def R(
   return holds
 
 
-def summary():
+def summary() -> None:
   """
   打印汇总并强制退出（导入链里的非守护线程会让进程不自行结束）
   Keyword arguments:

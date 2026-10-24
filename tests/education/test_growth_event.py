@@ -1410,7 +1410,7 @@ _orig_settle_option = official_event_handle.settle_official_event_option
 
 def od_settle_spy(
     uid: str, character_id: int, partner_id: int, option_index: int
-):
+) -> None:
   """
   记下结算发生的时刻（与 WaitDraw 比先后），再照常结算
   Keyword arguments:

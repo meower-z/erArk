@@ -64,7 +64,7 @@ def download_single_image(img_url, output_dir, headers, index, total):
     return (False, img_url, str(e))
 
 
-def download_prts_backgrounds():
+def download_prts_backgrounds() -> None:
   """
   从 PRTS Wiki 下载所有场景背景图片（10线程并行）
 

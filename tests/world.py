@@ -64,7 +64,7 @@ def _seeded_uuid4() -> uuid.UUID:
   return uuid.UUID(int=_uuid_rng.getrandbits(128), version=4)
 
 
-def seed_everything(seed: int = SEED):
+def seed_everything(seed: int = SEED) -> None:
   """
   重设全部随机源：random、numpy.random，以及替换后的 uuid.uuid4
   Keyword arguments:
@@ -174,7 +174,7 @@ class MinimalWorld:
   _loaded = None
   """ 本进程已载入的世界 """
 
-  def __init__(self):
+  def __init__(self) -> None:
     """
     只由 load() 调用：载入配置、造基线状态并记下快照
     Keyword arguments:
@@ -205,7 +205,7 @@ class MinimalWorld:
       )
     return MinimalWorld._loaded
 
-  def _boot(self):
+  def _boot(self) -> None:
     """
     固定随机源，载入游戏
     Keyword arguments:
@@ -221,7 +221,7 @@ class MinimalWorld:
     seed_everything()
     self._load_game()
 
-  def _load_game(self):
+  def _load_game(self) -> None:
     """
     增量构建 data/ 生成物，读入真实配置，造出空的游戏状态
     Keyword arguments:
@@ -271,7 +271,7 @@ class MinimalWorld:
         ):
           raise FixtureError(f"默认服装 {cloth_id} 不是 {clothing_type} 类衣物")
 
-  def _snapshot(self):
+  def _snapshot(self) -> None:
     """
     记下基线：SHALLOW_CACHE_FIELDS 中字段的浅拷贝，其余缓存字段（场景字典除外）的深拷贝，以及每个场景的属性
     Keyword arguments:
@@ -293,7 +293,7 @@ class MinimalWorld:
         for key, scene in self._scenes.items()
     }
 
-  def reset(self):
+  def reset(self) -> None:
     """
     把游戏状态原地复原到基线，并重设全部随机源
     Keyword arguments:
@@ -337,7 +337,7 @@ class MinimalWorld:
       raise FixtureError(f"没有这个场景：{path}")
     return self.cache.scene_data[key]
 
-  def move(self, cid: int, path: list):
+  def move(self, cid: int, path: list) -> None:
     """
     用游戏的移动函数把角色从当前位置移到 path
     Keyword arguments:
@@ -431,7 +431,7 @@ class MinimalWorld:
     self._check_chara(cid, naked)
     return cd
 
-  def _check_chara(self, cid: int, naked: bool):
+  def _check_chara(self, cid: int, naked: bool) -> None:
     """
     核对新角色的衣着与异常位，不符合时抛 FixtureError
     Keyword arguments:
@@ -478,7 +478,7 @@ class PlayerInput:
   SCREEN_LIMIT = 400
   """ self.screen 只留最近的这么多段文字 """
 
-  def __init__(self):
+  def __init__(self) -> None:
     """
     Keyword arguments:
     无
@@ -492,7 +492,7 @@ class PlayerInput:
     self.planned = []
     """ 还没用掉的输入：("press", 按钮文字的一部分) 或 ("type", 输入的文字) """
 
-  def install(self):
+  def install(self) -> None:
     """
     换掉界面输出与读输入的函数
     Keyword arguments:
@@ -511,7 +511,7 @@ class PlayerInput:
     io_init.clear_screen_and_history = self._clear_cmd
     flow_handle.order_deal = self._order_deal
 
-  def press(self, *labels: str):
+  def press(self, *labels: str) -> None:
     """
     安排接下来依次按下的按钮
     Keyword arguments:
@@ -521,7 +521,7 @@ class PlayerInput:
     """
     self.planned.extend(("press", label) for label in labels)
 
-  def type(self, text: str):
+  def type(self, text: str) -> None:
     """
     安排下一次输入文字（如角色名）
     Keyword arguments:
@@ -531,7 +531,7 @@ class PlayerInput:
     """
     self.planned.append(("type", text))
 
-  def check_done(self):
+  def check_done(self) -> None:
     """
     安排的输入都已用掉，否则抛 UnplannedInput
     Keyword arguments:
@@ -638,7 +638,7 @@ class FullWorld(MinimalWorld):
   PLAYER_NAME = "多克特"
   """ new_game() 输入的玩家名字：与口上里写死的「博士」区分开 """
 
-  def __init__(self):
+  def __init__(self) -> None:
     """
     只由 load() 调用：载入配置与全部游戏模块，换上 PlayerInput
     Keyword arguments:
@@ -651,7 +651,7 @@ class FullWorld(MinimalWorld):
     """ 玩家输入 """
     self.player.install()
 
-  def _load_game(self):
+  def _load_game(self) -> None:
     """
     先载入小世界，再导入 Script.Settle、Script.StateMachine、医疗系统与界面流程（靠装饰器注册），并初始化角色模板
     Keyword arguments:
@@ -668,7 +668,7 @@ class FullWorld(MinimalWorld):
 
     character_handle.init_character_tem()
 
-  def reset(self):
+  def reset(self) -> None:
     """
     慢速层不复原，调用即抛 RuntimeError
     Keyword arguments:
@@ -678,7 +678,7 @@ class FullWorld(MinimalWorld):
     """
     raise RuntimeError("FullWorld 不复原：慢速层每个测试一个新进程")
 
-  def new_game(self, first_bonus: tuple = ()):
+  def new_game(self, first_bonus: tuple = ()) -> None:
     """
     走一遍开新游戏的界面流程：标题画面「初次唤醒」，读完免责声明，输入名字 PLAYER_NAME，按下 first_bonus 的按钮，「睁开双眼」
     Keyword arguments:

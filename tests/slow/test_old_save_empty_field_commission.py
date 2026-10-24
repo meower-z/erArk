@@ -29,7 +29,7 @@ REWARD_RESOURCE = 15
 class TestOldSaveEmptyFieldCommission(SlowTestCase):
   """旧存档读档后，成员全是101/102孩子的外勤委托取消，有成年干员的照常进行"""
 
-  def tearDown(self):
+  def tearDown(self) -> None:
     """
     删掉本测试写入的存档
     Keyword arguments:
@@ -75,7 +75,7 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
     talent[stage] = 1
     return daughter_id
 
-  def _buy_vehicle(self):
+  def _buy_vehicle(self) -> None:
     """
     像在载具管理面板里一样买一辆 VEHICLE_ID 载具
     Keyword arguments:
@@ -97,7 +97,7 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
         "派遣前有一辆空闲的载具",
     )
 
-  def _send(self, commission_id: int, member_id_list: list):
+  def _send(self, commission_id: int, member_id_list: list) -> None:
     """
     经外勤面板的按钮派出委托：选人、加一辆载具、派遣
     Keyword arguments:
@@ -126,7 +126,7 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
         self.cache.rhodes_island.vehicles[VEHICLE_ID], [1, 1], "载具已派出"
     )
 
-  def _save_and_load(self):
+  def _save_and_load(self) -> None:
     """
     写盘再读档
     Keyword arguments:
@@ -142,7 +142,7 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
     )
     save_handle.input_load_save(SAVE_ID)
 
-  def _finish_after(self, end_time: datetime.datetime):
+  def _finish_after(self, end_time: datetime.datetime) -> None:
     """
     让时间过了返回时间，再结算外勤完成
     Keyword arguments:
@@ -155,7 +155,7 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
     self.cache.game_time = end_time + datetime.timedelta(days=1)
     field_commission_function.judge_field_commission_finish()
 
-  def test_all_child_commission_cancelled_on_load(self):
+  def test_all_child_commission_cancelled_on_load(self) -> None:
     """成员全是101/102孩子的委托读档后取消：载具收回，不发奖励，不算完成；再读一次不变"""
     island = self.cache.rhodes_island
     self._buy_vehicle()
@@ -205,7 +205,7 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
         island.vehicles[VEHICLE_ID], [1, 0], "过了返回时间，载具不变"
     )
 
-  def test_partial_team_keeps_running_and_finishes(self):
+  def test_partial_team_keeps_running_and_finishes(self) -> None:
     """一名成年干员加一名孩子的委托读档后只剩成年干员、仍在进行，到返回时间照常完成"""
     island = self.cache.rhodes_island
     self._buy_vehicle()

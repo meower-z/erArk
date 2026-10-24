@@ -1020,7 +1020,7 @@ def l13_judge_spy(character_id: int) -> int:
   return 0
 
 
-def l13_game_update_flow(add_time: int):
+def l13_game_update_flow(add_time: int) -> None:
   """
   update.game_update_flow 的桩：只做玩家这一步的授课结算（效果 512），不进真实的行为循环
   Keyword arguments:

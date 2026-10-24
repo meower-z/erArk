@@ -51,7 +51,7 @@ GIRL_OPERATOR_ADV_IDS = (
 class StaticOperatorMinorTalentTest(FastTestCase):
   """静态干员模板不带未初潮、未成年与萝莉素质"""
 
-  def test_no_minor_talents(self):
+  def test_no_minor_talents(self) -> None:
     """没有静态干员模板带未初潮、未成年或萝莉素质"""
     for talent_id in (NO_MENARCHE_TALENT, UNDERAGE_TALENT, LOLI_TALENT):
       with self.subTest(talent_id=talent_id):
@@ -62,7 +62,7 @@ class StaticOperatorMinorTalentTest(FastTestCase):
         )
         self.assertEqual(holders, [], f"带素质 {talent_id} 的静态干员模板")
 
-  def test_operators_have_girl_talent(self):
+  def test_operators_have_girl_talent(self) -> None:
     """这 26 名静态干员模板都带少女素质"""
     missing = [
         adv_id

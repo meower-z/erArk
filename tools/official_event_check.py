@@ -195,7 +195,7 @@ class Checker:
   无
   """
 
-  def __init__(self, full: bool = False):
+  def __init__(self, full: bool = False) -> None:
     """初始化校验器"""
     self.full: bool = full
     """ 是否校验条数下限 """
@@ -210,7 +210,7 @@ class Checker:
     self.stat: dict = {}
     """ 统计报告数据 文件名:各项统计 """
 
-  def error(self, path: str, line: int, text: str):
+  def error(self, path: str, line: int, text: str) -> None:
     """
     记一条错误
     Keyword arguments:
@@ -300,7 +300,7 @@ class Checker:
     )
     return not premise_text
 
-  def check_text(self, path: str, line: int, name: str, text: str):
+  def check_text(self, path: str, line: int, name: str, text: str) -> None:
     """
     校验一段展示文本：只允许 talk.py 认识的占位符，不能有裸花括号与英文标点
     Keyword arguments:
@@ -332,7 +332,7 @@ class Checker:
 
   def check_premise_text(
       self, path: str, line: int, name: str, premise_text: str
-  ):
+  ) -> None:
     """
     校验一串 & 连接的前提
     Keyword arguments:
@@ -377,7 +377,7 @@ class Checker:
       row: dict,
       department: int,
       sub_key: int,
-  ):
+  ) -> None:
     """
     校验一串 & 连接的结算
     Keyword arguments:
@@ -455,7 +455,7 @@ class Checker:
 
   def check_row(
       self, path: str, line: int, row: dict, cid_set: set, text_set: set
-  ):
+  ) -> None:
     """
     校验一条事件
     Keyword arguments:
@@ -563,7 +563,7 @@ class Checker:
           "所有选项都带前提，全被挡住时事件会跳过且不写履历，于是第二天再被抽中反复弹出",
       )
 
-  def check_semester_premise(self, path: str, line: int, row: dict):
+  def check_semester_premise(self, path: str, line: int, row: dict) -> None:
     """
     期末事件的主前提与四个选项前提不许读推送时恒定的养成数值（Plan 30 禁 4 / 5 / 6，Plan 31 §3.15 补 9 / 23）
     Keyword arguments:
@@ -585,7 +585,7 @@ class Checker:
               "看刚结束的学期用编号 7 / 8",
           )
 
-  def check_dir(self):
+  def check_dir(self) -> None:
     """
     校验整个事件目录
     Keyword arguments:
@@ -628,7 +628,7 @@ class Checker:
       if self.full:
         self.check_count(path, file_stat)
 
-  def collect_stat(self, file_stat: dict, row: dict):
+  def collect_stat(self, file_stat: dict, row: dict) -> None:
     """
     累计一条事件的统计数据
     Keyword arguments:
@@ -657,7 +657,7 @@ class Checker:
       for one in re.findall(r"CVE_A1_F_([GL])_(\d+)", effect_text):
         file_stat["favorability"] += int(one[1]) * (1 if one[0] == "G" else -1)
 
-  def check_count(self, path: str, file_stat: dict):
+  def check_count(self, path: str, file_stat: dict) -> None:
     """
     校验条数下限（--full 模式）
     Keyword arguments:
@@ -680,7 +680,7 @@ class Checker:
           f"条数 {count} 少于下限 {MIN_COUNT[name]}（供需推导见 plan_23 方案 §3.5）",
       )
 
-  def print_stat(self):
+  def print_stat(self) -> None:
     """
     打印统计报告（只提示，不判失败）
     Keyword arguments:

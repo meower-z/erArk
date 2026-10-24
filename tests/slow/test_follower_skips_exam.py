@@ -20,7 +20,7 @@ FOLLOW_MINUTES = 90
 class FollowerSkipsExamTest(HealthCheckTestCase):
   """智能跟随中的干员不动身去体检科，跟随结束后再去"""
 
-  def setUp(self):
+  def setUp(self) -> None:
     """
     给可露希尔排体检，博士睡觉期间进行午夜抽签
     Keyword arguments:
@@ -34,7 +34,7 @@ class FollowerSkipsExamTest(HealthCheckTestCase):
     self.sleep_through_midnight()
     self.start = SLOT_START[self.operator.action_info.health_check_today]
 
-  def follow_doctor_in_office(self):
+  def follow_doctor_in_office(self) -> None:
     """
     博士邀请身边的她同行，回到博士办公室等待 FOLLOW_MINUTES 分钟，等她回到身边，核对她一直跟随、没去体检科；然后结束同行
     Keyword arguments:
@@ -69,7 +69,7 @@ class FollowerSkipsExamTest(HealthCheckTestCase):
     self.instruct(constant.Instruct.END_FOLLOW)
     self.assertEqual(self.operator.sp_flag.is_follow, 0)
 
-  def test_booked_follower_waits_until_follow_ends(self):
+  def test_booked_follower_waits_until_follow_ends(self) -> None:
     """排了体检、还没进等待名单（目标 210500）：时段前开始跟随，时段内不去体检科，结束同行后去"""
     self.wait_until_hour(self.start - 1)
     # 把她带到博士身边，再邀请同行
@@ -83,7 +83,7 @@ class FollowerSkipsExamTest(HealthCheckTestCase):
         f"她在 {self.operator.position}",
     )
 
-  def test_waiting_follower_waits_until_follow_ends(self):
+  def test_waiting_follower_waits_until_follow_ends(self) -> None:
     """已在等待体检名单上（目标 220505）：博士在体检科邀请她同行带回办公室，她不回体检科，结束同行后回去"""
     waiting = self.cache.rhodes_island.waiting_for_exam_operator_ids
     self.assertTrue(

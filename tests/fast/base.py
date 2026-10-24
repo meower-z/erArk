@@ -16,7 +16,7 @@ class FastTestCase(unittest.TestCase):
   world = WORLD
   cache = WORLD.cache
 
-  def setUp(self):
+  def setUp(self) -> None:
     """
     复原小世界并重设随机源
     Keyword arguments:

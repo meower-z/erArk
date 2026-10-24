@@ -51,7 +51,7 @@ def check(name: str, cond, extra="") -> bool:
   return False
 
 
-def section(title: str):
+def section(title: str) -> None:
   """
   打印一个分节标题
   Keyword arguments:
@@ -62,7 +62,7 @@ def section(title: str):
   print(f"\n==== {title} ====")
 
 
-def finish():
+def finish() -> None:
   """
   打印汇总并强制退出进程（导入链里的非守护线程会让进程不自行结束）
   Keyword arguments:
@@ -197,7 +197,7 @@ def scene_str(path: list) -> str:
   return map_handle.get_map_system_path_str_for_list(path)
 
 
-def _scene_list_add(scene_path_str: str, character_id: int):
+def _scene_list_add(scene_path_str: str, character_id: int) -> None:
   """
   把角色登记进场景的角色名单（兼容 set 与 list 两种容器）
   """
@@ -210,7 +210,7 @@ def _scene_list_add(scene_path_str: str, character_id: int):
     char_list.append(character_id)
 
 
-def _scene_list_remove(scene_path_str: str, character_id: int):
+def _scene_list_remove(scene_path_str: str, character_id: int) -> None:
   """
   把角色从场景的角色名单里移除
   """
@@ -223,7 +223,7 @@ def _scene_list_remove(scene_path_str: str, character_id: int):
     char_list.remove(character_id)
 
 
-def move_to(character_id: int, path: list):
+def move_to(character_id: int, path: list) -> None:
   """
   把角色直接放到某个场景（同步 position 与两边的场景名单，不走寻路）
   Keyword arguments:
@@ -238,7 +238,7 @@ def move_to(character_id: int, path: list):
   _scene_list_add(scene_str(path), character_id)
 
 
-def set_time(now_time: datetime.datetime):
+def set_time(now_time: datetime.datetime) -> None:
   """
   设置游戏时间，并把全部角色的行为起始时间同步过去
   get_class_period 等函数读的是 behavior.start_time（默认是公元1年），不同步会永远算成不在节次内
@@ -338,7 +338,7 @@ def make_character(
   return cd
 
 
-def remove_character(cid: int):
+def remove_character(cid: int) -> None:
   """
   把一个 fixture 角色从缓存里撤掉
   Keyword arguments:
@@ -352,7 +352,7 @@ def remove_character(cid: int):
   cache.npc_id_got.discard(cid)
 
 
-def open_all_classroom():
+def open_all_classroom() -> None:
   """
   把 Facility_open.csv 里的全部房间置为已开放（10 间教室全开）
   Keyword arguments:
@@ -364,7 +364,7 @@ def open_all_classroom():
     cache.rhodes_island.facility_open[open_cid] = True
 
 
-def clear_schedules():
+def clear_schedules() -> None:
   """
   清空课表、临时实操课、日程模板与公务事件队列，供各组用例之间隔离
   Keyword arguments:

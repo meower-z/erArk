@@ -18,7 +18,7 @@ BABY_TALENT = 101
 class OfflineBitSelfIsBabyTest(FastTestCase):
   """handle_normal_7 的「婴儿」条件读自己的婴儿素质"""
 
-  def test_carer_of_baby_stays_online(self):
+  def test_carer_of_baby_stays_online(self) -> None:
     """保育员在育儿室照料婴儿：婴儿离线，交互对象是婴儿的保育员在线"""
     self.world.chara(0, "博士")
     baby = self.world.chara(1, "婴儿", position=NURSERY)

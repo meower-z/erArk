@@ -25,7 +25,7 @@ import random
 _mod_semen_config = {}
 
 
-def _load_mod_semen_data():
+def _load_mod_semen_data() -> None:
   """加载mod自带的射精量数据"""
   global _mod_semen_config
 

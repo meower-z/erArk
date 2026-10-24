@@ -30,7 +30,7 @@ class SnapshotStatesTest(SlowTestCase):
   first_bonus = snapshot_states.FIRST_BONUS
   """ 开局选的初期奖励 """
 
-  def record(self, state_name: str):
+  def record(self, state_name: str) -> None:
     """
     构建状态、按动作表推进并写出快照；动作表里的指令不成立、安排的按钮没用掉时抛 PlanError
     Keyword arguments:
@@ -41,10 +41,10 @@ class SnapshotStatesTest(SlowTestCase):
     recorder = snapshot_states.run(self.world, state_name)
     recorder.write(os.path.join(SNAPSHOT_DIR, f"{state_name}.last.tsv.gz"))
 
-  def test_time_stop_h(self):
+  def test_time_stop_h(self) -> None:
     """时停中的 H：构建、推进并录下快照"""
     self.record("time_stop_h")
 
-  def test_family_commission(self):
+  def test_family_commission(self) -> None:
     """孕产、各阶段的孩子与外勤委托：构建、推进并录下快照"""
     self.record("family_commission")

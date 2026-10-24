@@ -85,7 +85,7 @@ def clean_csv_file(file_path, common_contexts):
     f.writelines(output_lines)
 
 
-def main():
+def main() -> None:
   """
   功能：主函数，遍历目录并处理所有目标csv文件
   输入参数：无

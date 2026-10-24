@@ -199,7 +199,7 @@ def split_md_file(input_file, output_dir=None):
   print(f'输出位置: {output_folder.absolute()}')
 
 
-def main():
+def main() -> None:
   """
   主函数，处理命令行参数
   """

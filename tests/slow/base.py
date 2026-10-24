@@ -28,7 +28,7 @@ class SlowTestCase(unittest.TestCase):
   first_bonus = ()
   """ 开新游戏时选的初期奖励按钮，见 FullWorld.new_game """
 
-  def setUp(self):
+  def setUp(self) -> None:
     """
     设好时限，启动游戏并开新游戏
     Keyword arguments:
@@ -54,7 +54,7 @@ class SlowTestCase(unittest.TestCase):
     """
     raise SlowTestTimeout(f"测试超过 {self.time_limit} 秒")
 
-  def tearDown(self):
+  def tearDown(self) -> None:
     """
     取消时限
     Keyword arguments:
@@ -93,7 +93,7 @@ class SlowTestCase(unittest.TestCase):
     self.assertEqual(len(found), 1, f"本局应有一名「{name}」")
     return found[0]
 
-  def instruct(self, instruct_id: str):
+  def instruct(self, instruct_id: str) -> None:
     """
     像玩家在主界面点下指令一样执行它：先确认它的前提都成立（主界面才会列出），再交给 handle_instruct
     Keyword arguments:
@@ -113,7 +113,7 @@ class SlowTestCase(unittest.TestCase):
     self.assertEqual(failed, [], f"指令 {instruct_id} 此刻不会出现在主界面")
     handle_instruct.handle_instruct(instruct_id)
 
-  def show_panel(self):
+  def show_panel(self) -> None:
     """
     显示指令打开的面板（如「干员位置一览」），与游戏主流程 start_flow.start_frame 每一轮做的相同；面板里的选择由 self.world.player 安排
     Keyword arguments:
@@ -142,7 +142,7 @@ class SlowTestCase(unittest.TestCase):
       self.instruct(constant.Instruct.WAIT)
     return done()
 
-  def walk(self, path: list):
+  def walk(self, path: list) -> None:
     """
     像玩家在地图上点选目的地一样让博士走过去，每一段路都经主循环结算
     Keyword arguments:

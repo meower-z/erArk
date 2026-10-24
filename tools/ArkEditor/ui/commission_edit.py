@@ -229,7 +229,7 @@ class CommissionEditWidget(QWidget):
     self.commission = None
     self.init_ui()
 
-  def init_ui(self):
+  def init_ui(self) -> None:
     """
     初始化UI控件
     """
@@ -331,14 +331,14 @@ class CommissionEditWidget(QWidget):
     self.demand_add_btn.clicked.connect(self.add_demand_item)
     self.reward_add_btn.clicked.connect(self.add_reward_item)
 
-  def update_demand_explain(self):
+  def update_demand_explain(self) -> None:
     """
     实时更新需求说明
     """
     text = self.demand_edit.text()
     self.demand_explain.setPlainText(explain_commission_text(text))
 
-  def update_reward_explain(self):
+  def update_reward_explain(self) -> None:
     """
     实时更新奖励说明
     """
@@ -369,7 +369,7 @@ class CommissionEditWidget(QWidget):
     self.demand_explain.setPlainText(explain_commission_text(commission.demand))
     self.reward_explain.setPlainText(explain_commission_text(commission.reward))
 
-  def save_commission(self):
+  def save_commission(self) -> None:
     """
     保存属性到对象并发出信号
     """
@@ -389,7 +389,7 @@ class CommissionEditWidget(QWidget):
     c.description = self.description_edit.toPlainText()
     self.commission_saved.emit(c)
 
-  def add_demand_item(self):
+  def add_demand_item(self) -> None:
     """
     弹出需求/奖励项添加对话框，确定后把生成的项接到需求输入框末尾，已有内容时用 & 连接
     Return arguments:
@@ -404,7 +404,7 @@ class CommissionEditWidget(QWidget):
       else:
         self.demand_edit.setText(new_item)
 
-  def add_reward_item(self):
+  def add_reward_item(self) -> None:
     """
     弹出需求/奖励项添加对话框，确定后把生成的项接到奖励输入框末尾，已有内容时用 & 连接
     Return arguments:

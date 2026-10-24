@@ -7,7 +7,7 @@ DataList 的混入类：把当前条目或全部条目的角色 id 设为输入�
 
 class DataListIdEditMixin:
 
-  def change_current_chara_id(self):
+  def change_current_chara_id(self) -> None:
     """
     修改当前选中条目的角色id
     输入：无（直接读取self.chara_id_text_edit的内容）
@@ -38,7 +38,7 @@ class DataListIdEditMixin:
     # 刷新界面
     self.update()
 
-  def change_all_chara_id(self):
+  def change_all_chara_id(self) -> None:
     """
     修改所有条目的角色id
     输入：无（直接读取self.chara_id_text_edit的内容）

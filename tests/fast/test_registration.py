@@ -94,7 +94,7 @@ def covers(entry: str, path: str) -> bool:
 class RegistrationTest(FastTestCase):
   """两层里的测试类继承该层的基类；别处的 test_*.py 只有 NOT_IN_LAYERS 列出的"""
 
-  def check(self, problems: list):
+  def check(self, problems: list) -> None:
     """
     有问题时逐行列出并失败
     Keyword arguments:
@@ -105,15 +105,15 @@ class RegistrationTest(FastTestCase):
     if problems:
       self.fail("\n" + "\n".join(problems))
 
-  def test_fast_layer_uses_fast_base(self):
+  def test_fast_layer_uses_fast_base(self) -> None:
     """快速层收集到的测试类都继承 FastTestCase，没有不会运行的测试"""
     self.check(layer_problems(FAST_LAYER, FastTestCase))
 
-  def test_slow_layer_uses_slow_base(self):
+  def test_slow_layer_uses_slow_base(self) -> None:
     """慢速层收集到的测试类都继承 SlowTestCase，没有不会运行的测试"""
     self.check(slow_layer_problems())
 
-  def test_no_test_outside_layers(self):
+  def test_no_test_outside_layers(self) -> None:
     """test_*.py 只在 tests/fast/、tests/slow/ 与 NOT_IN_LAYERS 里；NOT_IN_LAYERS 的每一项都还有 test_*.py"""
     if shutil.which("git") is None or not os.path.exists(
         os.path.join(ROOT, ".git")

@@ -185,7 +185,7 @@ class BodyPartEditor:
     self.root.bind("<Control-Left>", self._prev_file)
     self.root.bind("<Control-Right>", self._next_file)
 
-  def _create_menu(self):
+  def _create_menu(self) -> None:
     """
     创建菜单栏
 
@@ -227,7 +227,7 @@ class BodyPartEditor:
     menubar.add_cascade(label="帮助", menu=help_menu)
     help_menu.add_command(label="使用说明", command=self._show_help)
 
-  def _create_main_ui(self):
+  def _create_main_ui(self) -> None:
     """
     创建主界面
 
@@ -390,7 +390,7 @@ class BodyPartEditor:
     )
     self.save_btn.pack(side=tk.LEFT, padx=20)
 
-  def _open_file(self):
+  def _open_file(self) -> None:
     """
     打开单个JSON文件
 
@@ -410,7 +410,7 @@ class BodyPartEditor:
       self.current_index = 0
       self._display_current()
 
-  def _open_folder(self):
+  def _open_folder(self) -> None:
     """
     打开文件夹（递归搜索所有_body.json）
 
@@ -484,7 +484,7 @@ class BodyPartEditor:
     except Exception as e:
       print(f"加载失败 {json_path}: {e}")
 
-  def _display_current(self):
+  def _display_current(self) -> None:
     """
     显示当前文件
 
@@ -557,7 +557,7 @@ class BodyPartEditor:
         self._image_cache.pop(oldest)
     return image
 
-  def _prefetch_neighbors(self):
+  def _prefetch_neighbors(self) -> None:
     """
     后台预取相邻文件的图片
 
@@ -573,7 +573,7 @@ class BodyPartEditor:
     if not paths:
       return
 
-    def work():
+    def work() -> None:
       for path in paths:
         try:
           self._get_image(path)
@@ -664,7 +664,7 @@ class BodyPartEditor:
       self._draw_skeleton()
       self._draw_keypoints()
 
-  def _schedule_hq_redraw(self):
+  def _schedule_hq_redraw(self) -> None:
     """
     延迟调度一次高质量重绘（防抖）
 
@@ -676,7 +676,7 @@ class BodyPartEditor:
       self.root.after_cancel(self._hq_redraw_after_id)
     self._hq_redraw_after_id = self.root.after(200, self._do_hq_redraw)
 
-  def _do_hq_redraw(self):
+  def _do_hq_redraw(self) -> None:
     """
     执行高质量重绘
 
@@ -686,7 +686,7 @@ class BodyPartEditor:
     self._hq_redraw_after_id = None
     self._redraw(fast=False)
 
-  def _draw_skeleton(self):
+  def _draw_skeleton(self) -> None:
     """
     绘制骨架连线
 
@@ -722,7 +722,7 @@ class BodyPartEditor:
         )
         self.line_items[(start_id, end_id)] = line_id
 
-  def _draw_keypoints(self):
+  def _draw_keypoints(self) -> None:
     """
     绘制关键点
 
@@ -991,7 +991,7 @@ class BodyPartEditor:
         self.root.after_cancel(self._resize_after_id)
       self._resize_after_id = self.root.after(100, self._do_resize_redraw)
 
-  def _do_resize_redraw(self):
+  def _do_resize_redraw(self) -> None:
     """
     执行窗口大小变化后的重绘
 
@@ -1039,7 +1039,7 @@ class BodyPartEditor:
     # （如果撤销后与原始数据一致，可以取消修改标记）
     # 这里简化处理，保持修改标记
 
-  def _toggle_visibility(self):
+  def _toggle_visibility(self) -> None:
     """
     切换关键点可视化模式
 
@@ -1061,7 +1061,7 @@ class BodyPartEditor:
     else:
       self._redraw()
 
-  def _swap_left_right(self):
+  def _swap_left_right(self) -> None:
     """
     左右互换
 
@@ -1118,7 +1118,7 @@ class BodyPartEditor:
     # 只重绘覆盖层，底图无需重新缩放
     self._redraw_overlay()
 
-  def _zoom_in(self):
+  def _zoom_in(self) -> None:
     """
     放大
 
@@ -1131,7 +1131,7 @@ class BodyPartEditor:
       # 快速模式：连续缩放时保持流畅，停止后自动补高质量重绘
       self._redraw(fast=True)
 
-  def _zoom_out(self):
+  def _zoom_out(self) -> None:
     """
     缩小
 
@@ -1144,7 +1144,7 @@ class BodyPartEditor:
       # 快速模式：连续缩放时保持流畅，停止后自动补高质量重绘
       self._redraw(fast=True)
 
-  def _zoom_reset(self):
+  def _zoom_reset(self) -> None:
     """
     重置缩放
 
@@ -1155,7 +1155,7 @@ class BodyPartEditor:
     self._update_zoom_label()
     self._redraw()
 
-  def _update_zoom_label(self):
+  def _update_zoom_label(self) -> None:
     """
     更新缩放级别显示
 
@@ -1266,7 +1266,7 @@ class BodyPartEditor:
       )
       return False
 
-  def _save_all(self):
+  def _save_all(self) -> None:
     """
     保存所有已修改的文件
 
@@ -1293,7 +1293,7 @@ class BodyPartEditor:
       self.modified_label.config(text="")
     messagebox.showinfo("保存完成", f"已保存 {saved_count} 个文件")
 
-  def _show_help(self):
+  def _show_help(self) -> None:
     """
     显示帮助信息
 
@@ -1327,7 +1327,7 @@ class BodyPartEditor:
     messagebox.showinfo("使用说明", help_text)
 
 
-def main():
+def main() -> None:
   """主函数"""
   root = tk.Tk()
 

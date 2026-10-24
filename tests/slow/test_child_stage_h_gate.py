@@ -40,7 +40,7 @@ class ChildStageHGateTest(SlowTestCase):
     self.world.move(child_id, self.cache.character_data[0].position)
     return child_id
 
-  def assert_h_instructs_closed(self, stage: int):
+  def assert_h_instructs_closed(self, stage: int) -> None:
     """
     博士以幼年阶段的干员为交互对象：抽查的H类指令在三处列表判断中都不成立，handle_instruct 也不调用它们的处理函数
     Keyword arguments:
@@ -91,15 +91,15 @@ class ChildStageHGateTest(SlowTestCase):
         f"T|{stage}：各处列出或执行的H类指令",
     )
 
-  def test_h_instructs_closed_for_t102_target(self):
+  def test_h_instructs_closed_for_t102_target(self) -> None:
     """交互对象是102：抽查的H类指令不列出也不执行"""
     self.assert_h_instructs_closed(102)
 
-  def test_h_instructs_closed_for_t101_target(self):
+  def test_h_instructs_closed_for_t101_target(self) -> None:
     """交互对象是101：抽查的H类指令不列出也不执行"""
     self.assert_h_instructs_closed(101)
 
-  def test_h_instructs_closed_in_debug_mode(self):
+  def test_h_instructs_closed_in_debug_mode(self) -> None:
     """debug模式下交互对象是102：抽查的H类指令在三处判断中仍不成立"""
     from Script.Design import web_interaction_manager
     from Script.System.Instruct_System import see_instruct_panel
@@ -134,7 +134,7 @@ class ChildStageHGateTest(SlowTestCase):
         "debug模式下各处列出的H类指令",
     )
 
-  def test_npc_state_machine_does_not_target_child(self):
+  def test_npc_state_machine_does_not_target_child(self) -> None:
     """按摩师状态机在场景里找到102为对象时，行为换成发呆，对象改回自己"""
     from Script.Core import constant
 
@@ -152,7 +152,7 @@ class ChildStageHGateTest(SlowTestCase):
         "按摩师状态机之后的（行为，对象）",
     )
 
-  def test_child_keeps_ordinary_wait(self):
+  def test_child_keeps_ordinary_wait(self) -> None:
     """102自己的等待30分钟不是H类行为：行为与时长不变"""
     from Script.Core import constant
 

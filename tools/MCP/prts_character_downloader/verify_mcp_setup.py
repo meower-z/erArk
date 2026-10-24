@@ -80,7 +80,7 @@ def test_downloader_basic():
     return False
 
 
-def main():
+def main() -> None:
   """
   主函数
 
