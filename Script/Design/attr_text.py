@@ -1,14 +1,11 @@
-import random
-import bisect
 from types import FunctionType
 from typing import List
 from Script.Core import (
     cache_control,
-    constant,
     game_type,
     get_text,
 )
-from Script.Design import handle_premise, map_handle
+from Script.Design import map_handle
 from Script.Config import game_config
 
 cache: game_type.Cache = cache_control.cache
@@ -16,78 +13,6 @@ cache: game_type.Cache = cache_control.cache
 
 _: FunctionType = get_text._
 """ 翻译api """
-
-
-def get_random_name_for_sex(sex_grade: str) -> str:
-  """
-  按性别随机生成姓名
-  Keyword arguments:
-  sex_grade -- 性别
-  """
-  while 1:
-    family_random = random.randint(1, constant.family_region_int_list[-1])
-    family_region_index = bisect.bisect_left(
-        constant.family_region_int_list, family_random
-    )
-    family_region = constant.family_region_int_list[family_region_index]
-    family_name = constant.family_region_list[family_region]
-    if sex_grade == "Man":
-      sex_judge = 1
-    elif sex_grade == "Woman":
-      sex_judge = 0
-    else:
-      sex_judge = random.randint(0, 1)
-    if sex_judge == 0:
-      name_random = random.randint(1, constant.girls_region_int_list[-1])
-      name_region_index = bisect.bisect_left(
-          constant.girls_region_int_list, name_random
-      )
-      name_region = constant.girls_region_int_list[name_region_index]
-      name = constant.girls_region_list[name_region]
-    else:
-      name_random = random.randint(1, constant.boys_region_int_list[-2])
-      name_region_index = bisect.bisect_left(
-          constant.boys_region_int_list, name_random
-      )
-      name_region = constant.boys_region_int_list[name_region_index]
-      name = constant.boys_region_list[name_region]
-    now_name = f"{family_name}{name}"
-    if now_name not in cache.npc_name_data:
-      cache.npc_name_data.add(now_name)
-      return family_name + name
-
-
-def get_stature_text(character_id: int) -> str:
-  """
-  按角色Id获取身材描述信息
-  Keyword arguments:
-  character_id -- 角色Id
-  Return arguments:
-  str -- 身材描述文本
-  """
-  descript_data = {}
-  for descript in game_config.config_stature_description_text:
-    descript_tem = game_config.config_stature_description_text[descript]
-    now_weight: float = 0
-    if descript in game_config.config_stature_description_premise_data:
-      for premise in game_config.config_stature_description_premise_data[
-          descript
-      ]:
-        now_add_weight = handle_premise.handle_premise(premise, character_id)
-        if now_add_weight:
-          now_weight += now_add_weight
-        else:
-          now_weight = 0
-          break
-    else:
-      now_weight = 1
-    if now_weight:
-      descript_data.setdefault(now_weight, set())
-      descript_data[now_weight].add(descript_tem.text)
-  if len(descript_data):
-    max_weight = max(descript_data.keys())
-    return random.choice(list(descript_data[max_weight]))
-  return ""
 
 
 def get_scene_path_text(scene_path: List[str]) -> str:
@@ -154,29 +79,6 @@ def get_value_text(value: float) -> str:
   company_group = min((digit_count - 1) // 3, len(company))
   compact_value = absolute_value // (1000**company_group)
   return sign + str(compact_value) + company[company_group - 1]
-
-
-def get_semen_now_text(level: int, position: int) -> str:
-  """
-  按当前部位精液覆盖等级(level)和部位(position)返回精液文本
-  [0"头发",1"脸部",2"嘴部",3"胸部",4"腋部",5"手部",6"小穴",7"后穴",8"尿道",9"腿部",10"脚部"]
-  Keyword arguments:
-  value -- 精液量
-  Return arguments:
-  level -- 精液覆盖等级
-  """
-  if level == 0:
-    return "没有粘上精液"
-  elif level == 1:
-    return "被射上了一点精液"
-  elif level == 2:
-    return "被射上了精液"
-  elif level == 3:
-    return "被射上了很多精液"
-  elif level == 4:
-    return "被射上了非常多的精液"
-  elif level == 5:
-    return "被射上了多得数不清的精液"
 
 
 def get_age_talent_text(character_id: int) -> str:

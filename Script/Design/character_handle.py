@@ -4,7 +4,6 @@ from types import FunctionType
 from typing import Optional
 from Script.Core import (
     cache_control,
-    value_handle,
     constant,
     game_type,
     get_text,
@@ -12,7 +11,6 @@ from Script.Core import (
 from Script.Design import (
     attr_calculation,
     map_handle,
-    attr_text,
     character,
     handle_npc_ai,
     basement,
@@ -133,10 +131,6 @@ def init_character_tem() -> None:
   """
   初始化角色模板数据
   """
-  # init_random_npc_data()
-  # npc_data = cache.random_npc_list
-  # numpy.random.shuffle(npc_data)
-  # print("初始化角色模板数据")
   # 必须浅拷贝而非直接引用 character_config.character_tem_list：后者是模块级全局配置池，
   #    进程内持久且跨存档 / 跨周目共享，而 born_new_character 会往 cache.npc_tem_data 写运行时
   #    生成的女儿模板（adv 9000~9999）。直接共享引用会把某一局的女儿写进全局池，使别的存档 /
@@ -166,10 +160,6 @@ def born_new_character(mother_id: int, child_name: str) -> int:
   Returns:
       int: 新角色的id（等于adv）
   """
-  # init_random_npc_data()
-  # npc_data = cache.random_npc_list
-  # numpy.random.shuffle(npc_data)
-  # print("初始化角色模板数据")
   mom_character_data: game_type.Character = cache.character_data[mother_id]
   now_tem = create_empty_character_tem()
   now_tem.Name = child_name
@@ -223,67 +213,6 @@ def born_new_character(mother_id: int, child_name: str) -> int:
   # cache.npc_id_got.add(now_id)
   init_character(now_id, cache.npc_tem_data[now_id])
   return now_id
-
-
-# random_npc_max = normal_config.config_normal.random_npc_max
-# random_teacher_proportion = normal_config.config_normal.proportion_teacher
-# random_student_proportion = normal_config.config_normal.proportion_student
-# age_weight_data = {
-#     "teacher": random_teacher_proportion,
-#     "student": random_student_proportion,
-# }
-# age_weight_regin_data = value_handle.get_region_list(age_weight_data)
-# age_weight_regin_list = list(map(int, age_weight_regin_data.keys()))
-# age_weight_max = sum([int(age_weight_data[age_weight]) for age_weight in age_weight_data])
-
-
-# def init_random_npc_data() -> list:
-#     """
-#     生成所有随机npc的数据模板
-#     """
-#     cache.random_npc_list = []
-#     for i in range(random_npc_max):
-#         create_random_npc(i)
-
-
-def create_random_npc(id: int) -> dict:
-  """
-  生成随机npc数据模板
-  """
-  # now_age_weight = random.randint(-1, age_weight_max - 1)
-  # now_age_weight_regin = value_handle.get_next_value_for_list(now_age_weight, age_weight_regin_list)
-  # age_weight_tem = age_weight_regin_data[now_age_weight_regin]
-  random_npc_sex = get_rand_npc_sex()
-  random_npc_name = attr_text.get_random_name_for_sex(random_npc_sex)
-  random_npc_new_data = game_type.NpcTem()
-  random_npc_new_data.Name = random_npc_name
-  random_npc_new_data.Sex = random_npc_sex
-  random_npc_new_data.Position = ["0"]
-  random_npc_new_data.AdvNpc = 0
-  # if random_npc_sex in {1, 2}:
-  #     random_npc_new_data.Chest = attr_calculation.get_rand_npc_chest_tem()
-  # else:
-  #     random_npc_new_data.Chest = 0
-  cache.random_npc_list.append(random_npc_new_data)
-
-
-sex_weight_data = game_config.config_random_npc_sex_region
-sex_weight_max = sum([sex_weight_data[weight] for weight in sex_weight_data])
-sex_weight_regin_data = value_handle.get_region_list(sex_weight_data)
-sex_weight_regin_list = list(map(int, sex_weight_regin_data.keys()))
-
-
-def get_rand_npc_sex() -> int:
-  """
-  随机获取npc性别
-  Return arguments:
-  int -- 性别id
-  """
-  now_weight = random.randint(0, sex_weight_max - 1)
-  weight_regin = value_handle.get_next_value_for_list(
-      now_weight, sex_weight_regin_list
-  )
-  return sex_weight_regin_data[weight_regin]
 
 
 def init_character_position() -> None:

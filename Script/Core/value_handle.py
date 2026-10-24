@@ -3,7 +3,6 @@
 import random
 import bisect
 import itertools
-import math
 import numpy
 from typing import Dict, List
 
@@ -26,13 +25,6 @@ def get_rand_value_for_value_region(value_list: List[float]) -> float:
   float -- 获得的元素
   """
   return random.choices(value_list, weights=value_list)[0]
-  # key_list = [math.ceil(i) for i in value_list]
-  # now_data = dict(zip(itertools.accumulate(key_list), value_list))
-  # weight_max = sum(key_list)
-  # weight_region_list = list(now_data.keys())
-  # now_weight = random.randint(0, weight_max - 1)
-  # weight_region = get_next_value_for_list(now_weight, weight_region_list)
-  # return now_data[weight_region]
 
 
 def get_region_list(now_data: Dict[any, int]) -> dict:
@@ -63,17 +55,6 @@ def get_random_for_weight(data: Dict[any, int]) -> any:
   keys = list(data.keys())
   weights = list(data.values())
   return random.choices(keys, weights=weights)[0]
-
-
-def get_next_value_for_list(now_int: int, int_list: List[int]) -> int:
-  """
-  获取列表中第一个比指定值大的数
-  Keyword arguments:
-  now_int -- 作为获取参考的指定数值
-  int_list -- 用于取值的列表
-  """
-  now_id = bisect.bisect_left(int_list, now_int)
-  return int_list[now_id]
 
 
 def get_old_value_for_list(now_int: int, int_list: List[int]) -> int:
