@@ -287,7 +287,6 @@ class SeeCharacterMainAttrPanel:
     # sex_experience_draw = CharacterSexExperienceText(character_id, width)
     self.draw_list: List[draw.NormalDraw] = [
         head_draw,
-        # stature_draw,
         room_draw,
         birthday_draw,
         # sture_info_draw,
