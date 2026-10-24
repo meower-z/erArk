@@ -13,9 +13,13 @@
 """
 
 import datetime
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
+
+if TYPE_CHECKING:
+  from collections.abc import Callable
 
 BABY = 101
 """ 婴儿素质 """
@@ -193,6 +197,7 @@ class ChildStagesOfflineTest(SlowTestCase):
       if found:
         break
     self.assertIsNotNone(found, "幼女有选项会改养成数值的可触发事件")
+    assert found is not None
     uid, partner_id, option_index = found
     self.assertTrue(
         official_event_handle.push_official_event(uid, child_id, partner_id),
@@ -228,15 +233,28 @@ class ChildStagesOfflineTest(SlowTestCase):
     daughter.relationship.father_id = 0
     daughter.relationship.mother_id = self.mother_id
     daughter.target_character_id = daughter_id
-    ran_list = []
+    ran_list: list[int] = []
     state_machine_data = dict(constant.handle_state_machine_data)
     for state_machine_id, run in state_machine_data.items():
-      constant.handle_state_machine_data[state_machine_id] = (
-          lambda character_id, state_machine_id=state_machine_id, run=run: (
-              ran_list.append(state_machine_id),
-              run(character_id),
-          )
-      )
+
+      def record_and_run(
+          character_id: int,
+          state_machine_id: int = state_machine_id,
+          run: "Callable[..., object]" = run,
+      ) -> object:
+        """
+        记下派过的状态机id，再照常执行原状态机
+        Keyword arguments:
+        character_id -- 角色id
+        state_machine_id -- 状态机id
+        run -- 原状态机函数
+        Return arguments:
+        object -- 原状态机的返回值
+        """
+        ran_list.append(state_machine_id)
+        return run(character_id)
+
+      constant.handle_state_machine_data[state_machine_id] = record_and_run
     self.addCleanup(
         constant.handle_state_machine_data.update, state_machine_data
     )

@@ -34,6 +34,7 @@ class LocationDirNamesTranslate(FastTestCase):
         LANGUAGE, get_text.mo_files_per_language[LANGUAGE]
     )
     self.assertIsNotNone(translation)
+    assert translation is not None
     for scene_tag in SCENE_TAG_LIST:
       with self.subTest(scene_tag=scene_tag):
         scene_path_list = constant.place_data[scene_tag]

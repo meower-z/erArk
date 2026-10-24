@@ -305,13 +305,10 @@ check(
     and g.skip_count == _skip_before + 3,
     card,
 )
+set_time(DEFAULT_TIME.replace(hour=13))
 check(
     "节次外不记缺课",
-    (
-        set_time(DEFAULT_TIME.replace(hour=13)),
-        class_ai.settle_absent(201, by_skip=True),
-    )[1]
-    is False
+    class_ai.settle_absent(201, by_skip=True) is False
     and g.skip_count == _skip_before + 3,
 )
 

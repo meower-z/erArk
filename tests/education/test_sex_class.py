@@ -47,9 +47,11 @@ check(
     ]
     == [True, True, True],
 )
+running_class = sex_class_handle.get_running_class()
+assert running_class is not None
 check(
     "运行中的那条",
-    sex_class_handle.get_running_class()["ability_id"] == 71
+    running_class["ability_id"] == 71
     and sex_class_handle.get_running_class_key()
     == sex_class_handle.get_class_key(today, 3),
 )
@@ -265,7 +267,9 @@ check("起床提醒只发一次", sex_class_handle.get_today_class_notify_text()
 
 section("开课与下课")
 set_time(period_time(4))
-student_a.child_growth.attend_class_count = 0
+student_a_growth = student_a.child_growth
+assert student_a_growth is not None
+student_a_growth.attend_class_count = 0
 now_class = sex_class_handle.start_sex_class(70)
 check(
     "预约的那节：复用条目、标记预约",
@@ -273,7 +277,7 @@ check(
 )
 check(
     "到场学生记出勤",
-    student_a.child_growth.attend_class_count == 1
+    student_a_growth.attend_class_count == 1
     and growth_handle.get_child_growth(202).attend_class_count == 1,
 )
 check("当前主修科目 70", sex_class_handle.get_now_class_ability() == 70)
@@ -354,12 +358,10 @@ check(
 )
 
 section("旁观")
+student_b.hit_point = 10
 check(
     "体力不足只旁观",
-    (
-        setattr(student_b, "hit_point", 10),
-        sex_class_handle.judge_hp_low_only_watch(202),
-    )[1]
+    sex_class_handle.judge_hp_low_only_watch(202)
     and not sex_class_handle.judge_hp_low_only_watch(201)
     and not sex_class_handle.judge_hp_low_only_watch(999),
 )
@@ -1023,7 +1025,7 @@ from Script.Design import handle_npc_ai, update  # noqa: E402
 
 _h1_class = open_class_for_h1(5)
 student_b.sp_flag.is_h = False  # 女儿B 已先力竭退出，只剩女儿A
-_h1_flow_call = []
+_h1_flow_call: list[tuple[int, str]] = []
 
 
 def fake_game_update_flow(add_time: int) -> None:

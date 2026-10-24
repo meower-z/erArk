@@ -45,10 +45,13 @@ mother.pregnancy.prenatal_point = 40.0
 exp_before_a = dict(baby_a.experience)
 text_a = baby_growth_handle.settle_prenatal_to_child(102, 203)
 text_b = baby_growth_handle.settle_prenatal_to_child(102, 204)
+growth_a = baby_a.child_growth
+assert growth_a is not None
+growth_b = baby_b.child_growth
+assert growth_b is not None
 check(
     "双胎各自全额 40 点",
-    baby_a.child_growth.prenatal_point == 40.0
-    and baby_b.child_growth.prenatal_point == 40.0,
+    growth_a.prenatal_point == 40.0 and growth_b.prenatal_point == 40.0,
 )
 check("转写不清零母亲侧", mother.pregnancy.prenatal_point == 40.0)
 check(
@@ -89,7 +92,7 @@ juel_before = baby_b.juel.get(J, 0)
 text = baby_growth_handle.settle_prenatal_to_child(102, 204)
 check(
     "1 点：折 10 个珠，也有一句文本",
-    baby_b.child_growth.prenatal_point == 1.0
+    growth_b.prenatal_point == 1.0
     and baby_b.juel.get(J, 0) - juel_before == 10
     and "10" in text,
     text,
@@ -176,19 +179,19 @@ settle_behavior.handle_comprehensive_value_effect(
 )
 check(
     "倾向 1 +0.5（坚强方向）",
-    baby_a.child_growth.personality_point.get(1, 0.0) == 0.5,
+    growth_a.personality_point.get(1, 0.0) == 0.5,
 )
 settle_behavior.handle_comprehensive_value_effect(
     0, ["A2", "Growth|13", "L", "0.5"], change
 )
 check(
     "倾向 3 -0.5（羞耻方向）",
-    baby_a.child_growth.personality_point.get(3, 0.0) == -0.5,
+    growth_a.personality_point.get(3, 0.0) == -0.5,
 )
 settle_behavior.handle_comprehensive_value_effect(
     0, ["A2", "Growth|20", "G", "0.3"], change
 )
-check("照料值 +0.3", abs(baby_a.child_growth.care_point - 0.3) < 1e-9)
+check("照料值 +0.3", abs(growth_a.care_point - 0.3) < 1e-9)
 exp_before = baby_a.experience.get(85, 0)
 settle_behavior.handle_comprehensive_value_effect(
     0, ["A2", "E|85", "G", "8"], change
@@ -197,7 +200,7 @@ check("音乐经验 +8", baby_a.experience.get(85, 0) - exp_before == 8)
 settle_behavior.handle_comprehensive_value_effect(
     0, ["A2", "Growth|0", "G", "9"], change
 )
-check("出勤数不可被 CVE 改写", baby_a.child_growth.attend_class_count == 0)
+check("出勤数不可被 CVE 改写", growth_a.attend_class_count == 0)
 
 section("喂奶 556")
 hp_max = baby_a.hit_point_max

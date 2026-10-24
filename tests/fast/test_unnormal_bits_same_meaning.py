@@ -148,7 +148,7 @@ class UnnormalBitsSameMeaningTest(FastTestCase):
     self.player = self.world.chara(0, "博士")
     self.operator = self.world.chara(1, "干员")
     self.rng = random.Random(20261021)
-    self.cloth_by_type = {}
+    self.cloth_by_type: dict[int, list[int]] = {}
     for cloth_id, cloth in game_config.config_clothing_tem.items():
       self.cloth_by_type.setdefault(cloth.clothing_type, []).append(cloth_id)
 
@@ -203,7 +203,14 @@ class UnnormalBitsSameMeaningTest(FastTestCase):
 
   def test_short_circuit_matches_full_definition(self) -> None:
     """随机状态下位3~6与完整定义相同，normal_all 与 unnormal 与逐位判定一致"""
-    mismatch = {3: [], 4: [], 5: [], 6: [], "normal_all": [], "unnormal": []}
+    mismatch: dict[int | str, list[tuple[object, ...]]] = {
+        3: [],
+        4: [],
+        5: [],
+        6: [],
+        "normal_all": [],
+        "unnormal": [],
+    }
     abnormal_count = {3: 0, 4: 0, 5: 0, 6: 0}
     for n in range(SAMPLES):
       self.randomize()

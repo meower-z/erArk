@@ -25,7 +25,7 @@ class SlowTestCase(unittest.TestCase):
 
   time_limit = TIME_LIMIT
   """ 这个类的每个测试的时限，秒 """
-  first_bonus = ()
+  first_bonus: tuple[str, ...] = ()
   """ 开新游戏时选的初期奖励按钮，见 FullWorld.new_game """
 
   def setUp(self) -> None:

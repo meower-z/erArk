@@ -97,16 +97,17 @@ conflict_ok = True
 for day in range(5):
   for p in range(period_count):
     teacher_used = [
-        schedule_handle.get_class_cell(room, day, p)[1]
+        teacher_cell[1]
         for room in room_list
-        if schedule_handle.get_class_cell(room, day, p) is not None
+        if (teacher_cell := schedule_handle.get_class_cell(room, day, p))
+        is not None
     ]
     if len(teacher_used) != len(set(teacher_used)):
       conflict_ok = False
 check("同一节次没有教师被排进两间教室", conflict_ok)
 practice_ok = all(
     auto_schedule.judge_subject_fit_classroom(
-        schedule_handle.get_class_cell(room, day, p)[0],
+        practice_cell[0],
         education_constant.COURSE_TYPE_PRACTICE,
     )
     for room in schedule_handle.get_classroom_list(
@@ -114,14 +115,15 @@ practice_ok = all(
     )
     for day in range(5)
     for p in range(period_count)
-    if schedule_handle.get_class_cell(room, day, p) is not None
+    if (practice_cell := schedule_handle.get_class_cell(room, day, p))
+    is not None
 )
 check("实践教室里只有动手类与性技", practice_ok)
 check(
     "没排上 76 腰技",
     not any(
-        schedule_handle.get_class_cell(room, day, p) is not None
-        and schedule_handle.get_class_cell(room, day, p)[0] == 76
+        (waist_cell := schedule_handle.get_class_cell(room, day, p)) is not None
+        and waist_cell[0] == 76
         for room in room_list
         for day in range(5)
         for p in range(period_count)
@@ -168,7 +170,9 @@ student.ability[45] = 8
 clear_schedules()
 schedule_handle.set_class_cell(room_list[0], 0, 0, 45, 101)
 schedule_handle.set_class_cell(room_list[1], 0, 0, 43, 103)
-cache.character_data[201].child_growth.selected_course = {}
+student_growth = cache.character_data[201].child_growth
+assert student_growth is not None
+student_growth.selected_course = {}
 auto_schedule.auto_fill_selected_course(201)
 check(
     "同节多课时选自己等级最低的那门",

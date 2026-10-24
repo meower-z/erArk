@@ -28,7 +28,7 @@ for name in (
 ):
   delattr(ga, name)
   delattr(gb, name)
-ga.last_report_card = {"year": 2026, "month": 6, "grade": 1}
+setattr(ga, "last_report_card", {"year": 2026, "month": 6, "grade": 1})
 del adult.child_growth
 del student_b.pregnancy.prenatal_point
 save_handle._normalize_loaded_save_paths(cache)
@@ -164,7 +164,7 @@ def find_old_report_uid_left(label) -> list:
   Return arguments:
   list -- [(来源, "rhodes" 或角色id, 键), ...]，没有残留时为空列表
   """
-  result = []
+  result: list[tuple[str, str | int, str]] = []
   for key in cache.rhodes_island.official_event_history:
     if isinstance(key, str) and key.partition("@")[0] in OLD_REPORT_UID_SET:
       result.append((label, "rhodes", key))
@@ -218,7 +218,7 @@ if not candidate_list:
   finish()
 check("有可用的存档目录", bool(candidate_list), candidate_list)
 loaded = 0
-problem = []
+problem: list[tuple[object, ...]] = []
 _old_report_uid_gone = not (
     OLD_REPORT_UID_SET & set(game_config.config_official_event)
 )

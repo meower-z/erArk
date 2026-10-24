@@ -6,6 +6,10 @@ from Script.Design import handle_npc_ai, clothing
 from Script.Settle import realtime_settle
 from Script.System.Medical_System import medical_constant
 from Script.System.Pregnancy_System import pregnancy_constant
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from collections.abc import Callable
 
 open_all_classroom()
 clear_schedules()
@@ -60,7 +64,7 @@ def prepare_ai(cid: int) -> None:
   clothing.get_npc_cloth(cid)
 
 
-def dispatch(cid: int, now_time: datetime.datetime = None) -> int:
+def dispatch(cid: int, now_time: datetime.datetime | None = None) -> int:
   """
   跑一遍 find_character_target，记下它派发的状态机id
   Keyword arguments:
@@ -79,12 +83,28 @@ def dispatch(cid: int, now_time: datetime.datetime = None) -> int:
   cd.state = constant.CharacterStatus.STATUS_ARDER
   set_time(now_time if now_time is not None else period_time(0))
   cd.action_info.wake_time = cache.game_time
-  hit = []
+  hit: list[int] = []
   origin = dict(constant.handle_state_machine_data)
   for sid, func in origin.items():
-    constant.handle_state_machine_data[sid] = (
-        lambda s, f: (lambda c: (hit.append(s), f(c))[1])
-    )(sid, func)
+
+    def record_hit(
+        character_id: int,
+        state_machine_id: int = sid,
+        run: "Callable[..., object]" = func,
+    ) -> object:
+      """
+      记下派发的状态机id，再照常执行原状态机
+      Keyword arguments:
+      character_id -- 角色id
+      state_machine_id -- 状态机id
+      run -- 原状态机函数
+      Return arguments:
+      object -- 原状态机的返回值
+      """
+      hit.append(state_machine_id)
+      return run(character_id)
+
+    constant.handle_state_machine_data[sid] = record_hit
   try:
     handle_npc_ai.find_character_target(cid, cache.game_time)
   finally:
@@ -136,7 +156,19 @@ for level_sum, rate in (
     (16, 0.70),
     (32, 0.70),
 ):
-  class_ai.get_negative_status_level_sum = lambda cid, s=level_sum: s
+
+  def fixed_level_sum(character_id: int, fixed_sum: int = level_sum) -> int:
+    """
+    get_negative_status_level_sum 的桩：返回本轮钉死的等级和
+    Keyword arguments:
+    character_id -- 角色id
+    fixed_sum -- 本轮钉死的等级和
+    Return arguments:
+    int -- 本轮钉死的等级和
+    """
+    return fixed_sum
+
+  class_ai.get_negative_status_level_sum = fixed_level_sum
   check(
       f"等级和 {level_sum} → 概率 {rate}",
       abs(class_ai.get_skip_class_rate(201) - rate) < 1e-9,
@@ -147,7 +179,7 @@ check("等级和按状态等级累加", class_ai.get_negative_status_level_sum(2
 
 section("翘课每节只掷一次（Plan 24 §3.5）")
 set_time(period_time(0))
-class_ai.get_skip_class_rate = lambda cid: 0.5
+class_ai.get_skip_class_rate = lambda character_id: 0.5
 _first = class_ai.roll_skip_class(201)
 check(
     "同一节连掷 20 次结果一致（前提在一次决策里被多行读取，读到的必须是同一个结果）",
@@ -167,9 +199,9 @@ check(
     60 <= _hits <= 120,
     _hits,
 )
-class_ai.get_skip_class_rate = lambda cid: 0.0
+class_ai.get_skip_class_rate = lambda character_id: 0.0
 check("概率 0 恒不翘", not class_ai.roll_skip_class(201))
-class_ai.get_skip_class_rate = lambda cid: 1.0
+class_ai.get_skip_class_rate = lambda character_id: 1.0
 check("概率 1 恒翘", class_ai.roll_skip_class(201))
 class_ai.get_skip_class_rate = _orig_rate
 set_time(period_time(0))
@@ -245,16 +277,14 @@ section("缺课去重")
 set_time(period_time(0))
 class_ai.settle_absent(201)
 class_ai.settle_absent(201)
-check(
-    "同一节只记一次", cache.character_data[201].child_growth.absent_count == 1
-)
+absent_growth = cache.character_data[201].child_growth
+assert absent_growth is not None
+check("同一节只记一次", absent_growth.absent_count == 1)
 set_time(period_time(1))
 class_ai.settle_absent(201)
-check(
-    "换节次再记一次", cache.character_data[201].child_growth.absent_count == 2
-)
-cache.character_data[201].child_growth.absent_count = 0
-cache.character_data[201].child_growth.last_absent_period = []
+check("换节次再记一次", absent_growth.absent_count == 2)
+absent_growth.absent_count = 0
+absent_growth.last_absent_period = []
 
 section("状态函数：教师职责（get_teacher_duty）")
 clear_schedules()
@@ -324,7 +354,7 @@ check(
     class_ai.get_course_stage(201) == E.COURSE_STAGE_SKIP,
 )
 growth_handle.get_child_growth(201).skip_class_flag = False
-class_ai.roll_skip_class = lambda cid: True
+class_ai.roll_skip_class = lambda character_id, now_time=None: True
 check(
     "本节掷中翘课 → SKIP", class_ai.get_course_stage(201) == E.COURSE_STAGE_SKIP
 )
@@ -357,7 +387,7 @@ sex_class_handle.set_temp_class(_today, 0, ROOM_P, 70, must_attend=[201])
 student.hit_point = 10
 growth_handle.get_child_growth(201).skip_class_flag = True
 growth_handle.get_child_growth(201).skip_class_day = cache.game_time.toordinal()
-class_ai.roll_skip_class = lambda cid: True
+class_ai.roll_skip_class = lambda character_id, now_time=None: True
 check(
     "必修实操课：体力不足、翘课 flag、掷中翘课同时成立也是 ATTEND（口径 60 / 65）",
     class_ai.get_course_stage(201) == E.COURSE_STAGE_ATTEND,
@@ -476,10 +506,10 @@ check(
     dispatch(201) == SM.EDUCATION_SKIP_CLASS,
 )
 growth_handle.get_child_growth(201).skip_class_flag = False
-class_ai.roll_skip_class = lambda cid: True
+class_ai.roll_skip_class = lambda character_id, now_time=None: True
 move_to(201, classroom_path(ROOM1))
 check("本节掷中翘课 → 714", dispatch(201) == SM.EDUCATION_SKIP_CLASS)
-class_ai.roll_skip_class = lambda cid: False
+class_ai.roll_skip_class = lambda character_id, now_time=None: False
 move_to(201, classroom_path(ROOM1))
 check("没掷中 → 照常听课", dispatch(201) == SM.WORK_ATTENT_CLASS)
 class_ai.roll_skip_class = _orig_roll
@@ -501,7 +531,7 @@ check(
     sm,
 )
 student.hit_point = 100
-class_ai.roll_skip_class = lambda cid: True
+class_ai.roll_skip_class = lambda character_id, now_time=None: True
 move_to(201, classroom_path(ROOM_P))
 check("必修 + 掷中翘课：不翘课", dispatch(201) == SM.WORK_ATTENT_CLASS)
 class_ai.roll_skip_class = _orig_roll
@@ -531,8 +561,8 @@ check(
 schedule_handle.clear_selected_course(201, 0, 0)
 check(
     "必修覆盖：本节自己没排课也照样来",
-    schedule_handle.get_now_course(201) is not None
-    and schedule_handle.get_now_course(201)["classroom"] == ROOM_P,
+    (must_course := schedule_handle.get_now_course(201)) is not None
+    and must_course["classroom"] == ROOM_P,
 )
 check("非必修且没排课的人不受影响", schedule_handle.get_now_course(202) is None)
 cache.rhodes_island.temp_sex_class = {}
@@ -544,7 +574,9 @@ check(
     "体育课：人不在场地 → 715 移动",
     dispatch(201) == SM.EDUCATION_MOVE_TO_COURSE_PLACE,
 )
-pe_place = schedule_handle.get_course_place(schedule_handle.get_now_course(201))
+pe_course = schedule_handle.get_now_course(201)
+assert pe_course is not None
+pe_place = schedule_handle.get_course_place(pe_course)
 move_to(201, pe_place)
 _attend = growth_handle.get_child_growth(201).attend_class_count
 check(
@@ -589,7 +621,7 @@ _interest_list = [
 check(
     "可排兴趣课的娱乐有 15 项", len(_interest_list) == 15, len(_interest_list)
 )
-_interest_bad = []
+_interest_bad: list[tuple[object, ...]] = []
 for _cid in _interest_list:
   _cfg = game_config.config_entertainment[_cid]
   schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_INTEREST, _cid)
@@ -667,14 +699,14 @@ _intern_list = [
     and cid not in E.EXCLUDE_INTERN_WORK_TYPE
 ]
 check("可排实习的岗位取到了", len(_intern_list) > 0, _intern_list)
-_intern_bad = []
+_intern_bad: list[tuple[object, ...]] = []
 for _wid in _intern_list:
-  _cfg = game_config.config_work_type[_wid]
+  _work_cfg = game_config.config_work_type[_wid]
   schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_INTERN, _wid)
   set_time(period_time(0))
   _place = class_ai.get_course_place_now_or_upcoming(201)
   if not _place:
-    _intern_bad.append((_wid, _cfg.name, "地点解析不出"))
+    _intern_bad.append((_wid, _work_cfg.name, "地点解析不出"))
     continue
   move_to(201, course_start_place(_place))
   _move_sm = dispatch(201)
@@ -694,7 +726,7 @@ for _wid in _intern_list:
     _intern_bad.append(
         (
             _wid,
-            _cfg.name,
+            _work_cfg.name,
             scene_str(_place),
             _move_sm,
             _do_sm,
@@ -871,7 +903,9 @@ move_to(101, office_path)
 check(
     "到岗时间、第一节在实践教室 → 561 先去实践教室",
     dispatch(101, _arrive_time) == SM.MOVE_TO_CLASS_ROOM
-    and schedule_handle.get_upcoming_teaching(101)["classroom"] == ROOM_P,
+    and (upcoming_teaching := schedule_handle.get_upcoming_teaching(101))
+    is not None
+    and upcoming_teaching["classroom"] == ROOM_P,
 )
 move_to(101, classroom_path(ROOM_P))
 check(
@@ -923,10 +957,10 @@ check(
     "已在教室 → 720 原地等开课",
     dispatch(201, _arrive_time) == SM.EDUCATION_WAIT_NEXT_PERIOD,
 )
+set_time(period_time(0))
 check(
     "节次开始时离下一节还有 45 分钟 → 不在「马上开课」窗口里",
-    (set_time(period_time(0)), schedule_handle.get_upcoming_course(201))[1]
-    is None,
+    schedule_handle.get_upcoming_course(201) is None,
 )
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_PE, _("木桩房"))
 move_to(201, SCENE_DORM)
@@ -1004,14 +1038,14 @@ for _cid, _name in ((101, "教师"), (201, "学生")):
   move_to(0, SCENE_EDU_ENTRY)
   move_to(_cid, SCENE_EDU_ENTRY)
   _cd.sp_flag.is_follow = 1
-  _first = dispatch(_cid)
+  _first_sm = dispatch(_cid)
   move_to(_cid, classroom_path(ROOM1))
-  _second = dispatch(_cid)
+  _second_sm = dispatch(_cid)
   _cd.sp_flag.is_follow = 0
   check(
       f"跟随中的{_name}：在玩家身边不被派去教室、在教室被拉回玩家身边（不再来回走）",
-      _first not in CLASS_SM_SET and _second not in CLASS_SM_SET,
-      (_first, _second),
+      _first_sm not in CLASS_SM_SET and _second_sm not in CLASS_SM_SET,
+      (_first_sm, _second_sm),
   )
 move_to(101, classroom_path(ROOM1))
 move_to(201, classroom_path(ROOM1))
@@ -1383,10 +1417,10 @@ check(
 )
 move_to(202, classroom_path(ROOM_P))
 _attend = growth_handle.get_child_growth(202).attend_class_count
+set_time(_late)
 check(
     "走进正在上实操课的教室 → JOIN_SEX_CLASS",
-    (set_time(_late), class_ai.get_course_stage(202))[1]
-    == E.COURSE_STAGE_JOIN_SEX_CLASS,
+    class_ai.get_course_stage(202) == E.COURSE_STAGE_JOIN_SEX_CLASS,
 )
 sm = dispatch(202, _late)
 check(
@@ -1456,7 +1490,7 @@ check("正常学生被拉进听课", teach_pull(201))
 student.hit_point = 10
 check("体力 < 30% 的学生不拉（她自己决策时走 721 缺课）", not teach_pull(201))
 student.hit_point = 100
-class_ai.roll_skip_class = lambda cid, now_time=None: True
+class_ai.roll_skip_class = lambda character_id, now_time=None: True
 check("本节掷中翘课的学生不拉", not teach_pull(201))
 class_ai.roll_skip_class = _orig_roll
 student.work.work_type = 21
@@ -1489,11 +1523,27 @@ sex_class_handle.set_temp_class(
 )
 move_to(101, SCENE_DORM)
 set_time(_pending_time)
-_moves = []
+_moves: list[list[str]] = []
 _orig_move = sm_default.general_movement_module
-sm_default.general_movement_module = lambda cid, target: _moves.append(
-    list(target)
-)
+
+
+def record_move(
+    character_id: int, target_scene: list, show_info_flag: bool = True
+) -> bool:
+  """
+  general_movement_module 的桩：只记下移动目标，不真的移动
+  Keyword arguments:
+  character_id -- 角色id
+  target_scene -- 目标场景路径
+  show_info_flag -- 是否显示移动信息
+  Return arguments:
+  bool -- 恒为 True
+  """
+  _moves.append(list(target_scene))
+  return True
+
+
+sm_default.general_movement_module = record_move
 constant.handle_state_machine_data[SM.MOVE_TO_CLASS_ROOM](101)
 sm_default.general_movement_module = _orig_move
 check(
@@ -1713,7 +1763,8 @@ sex_class_handle.set_temp_class(
 check(
     "被点名必修到每周课表空着的实践教室：覆盖层给出格子，照样 ATTEND 并指向那间教室",
     class_ai.get_course_stage(201) == E.COURSE_STAGE_ATTEND
-    and schedule_handle.get_now_course(201)["classroom"] == ROOM_P,
+    and (must_course := schedule_handle.get_now_course(201)) is not None
+    and must_course["classroom"] == ROOM_P,
 )
 cache.rhodes_island.temp_sex_class = {}
 schedule_handle.set_selected_course(201, 0, 1, E.COURSE_TYPE_PRACTICE, ROOM_P)
@@ -1749,9 +1800,7 @@ for _room in LOCKED_THEORY:
 set_time(period_time(1) + datetime.timedelta(minutes=15))
 move_to(201, SCENE_DORM)
 _moves = []
-sm_default.general_movement_module = lambda cid, target: _moves.append(
-    list(target)
-)
+sm_default.general_movement_module = record_move
 for _seed in range(12):
   random.seed(_seed)
   constant.handle_state_machine_data[SM.MOVE_TO_CLASS_ROOM](201)
@@ -1829,7 +1878,7 @@ check(
     sm,
 )
 student.hit_point = 100
-class_ai.get_skip_class_rate = lambda cid: 1.0
+class_ai.get_skip_class_rate = lambda character_id: 1.0
 move_to(201, SCENE_DORM)
 sm = dispatch(201)
 check(
@@ -1979,7 +2028,7 @@ check(
 cache.rhodes_island.book_borrow_dict.update(_saved_borrow)
 # 判定与执行之间书被别人借走：716 等 1 分钟、不记出勤
 _orig_borrow = borrow_book_panel.check_random_borrow_book
-borrow_book_panel.check_random_borrow_book = lambda cid: 0
+borrow_book_panel.check_random_borrow_book = lambda character_id: 0
 growth_handle.get_child_growth(201).last_attend_period = []
 _attend = growth_handle.get_child_growth(201).attend_class_count
 constant.handle_state_machine_data[SM.EDUCATION_DO_COURSE](201)
@@ -2043,15 +2092,15 @@ for _p in range(8):
   schedule_handle.set_selected_course(201, 0, _p, E.COURSE_TYPE_PE, _("木桩房"))
 schedule_handle.set_class_cell(ROOM1, 0, 8, 45, 101)
 schedule_handle.set_selected_course(201, 0, 8, E.COURSE_TYPE_THEORY, ROOM1)
-_pe_place = schedule_handle.get_course_place(
-    schedule_handle.get_now_course(201)
-)
+_pe_course = schedule_handle.get_now_course(201)
+assert _pe_course is not None
+_pe_place = schedule_handle.get_course_place(_pe_course)
 _g.skip_class_flag = False
 _g.skip_caught_day = 0
 _g.last_absent_period = []
 _g.last_attend_period = []
 _absent, _skip = _g.absent_count, _g.skip_count
-class_ai.get_skip_class_rate = lambda cid: 1.0
+class_ai.get_skip_class_rate = lambda character_id: 1.0
 move_to(201, classroom_path(ROOM1))
 sm = dispatch(201)
 check(
@@ -2077,7 +2126,7 @@ check(
     "同一节再派 714 不重复记",
     _g.absent_count == _absent + 1 and _g.skip_count == _skip + 1,
 )
-class_ai.get_skip_class_rate = lambda cid: 0.0
+class_ai.get_skip_class_rate = lambda character_id: 0.0
 _g.skip_class_flag = True
 # 翘课 flag 认日期（Plan 31 §3.6）：今天挂上的才算
 _g.skip_class_day = DEFAULT_TIME.date().toordinal()
@@ -2100,7 +2149,7 @@ check(
     and _g.skip_count == _skip + 3,
 )
 student.hit_point = 100
-class_ai.get_skip_class_rate = lambda cid: 1.0
+class_ai.get_skip_class_rate = lambda character_id: 1.0
 move_to(201, SCENE_DORM)
 sm = dispatch(201, period_time(3) + datetime.timedelta(minutes=30))
 check(
@@ -2110,7 +2159,7 @@ check(
     and _g.skip_count == _skip + 3,
     (sm, _g.absent_count - _absent, _g.skip_count - _skip),
 )
-class_ai.get_skip_class_rate = lambda cid: 0.0
+class_ai.get_skip_class_rate = lambda character_id: 0.0
 student.hit_point = 10
 move_to(201, _pe_place)
 dispatch(201, period_time(4))
@@ -2131,7 +2180,7 @@ check(
     "下一节照常记出勤",
     sm == SM.EDUCATION_DO_COURSE and _g.attend_class_count == _attend + 1,
 )
-class_ai.get_skip_class_rate = lambda cid: 1.0
+class_ai.get_skip_class_rate = lambda character_id: 1.0
 set_time(period_time(6))
 _g.skip_class_flag = True
 constant.settle_second_behavior_effect_data[
@@ -2172,7 +2221,7 @@ section(
     "Plan 31 §3.4（M3）：空气催眠的教师只在人已在本节教室时能到岗，木头人一律来不了"
 )
 # 本轮各段都把翘课概率钉成 0：上一段的 623 给她加了抑郁与恐怖，照原表会随机翘课
-class_ai.get_skip_class_rate = lambda cid: 0.0
+class_ai.get_skip_class_rate = lambda character_id: 0.0
 DAY31 = DEFAULT_TIME.date().toordinal()
 """ 本轮各段的「今天」：DEFAULT_TIME 那天的日期序数 """
 ROOM2 = _("理论教室二")
@@ -2461,9 +2510,9 @@ section(
 )
 from Script.Design import character_behavior, instuct_judege  # noqa: E402
 
-H1_SM_LOG = []
+H1_SM_LOG: list[tuple[int, int, datetime.datetime, str]] = []
 """ 行为循环里的状态机派发记录：(角色id, 状态机id, 派发后的行为开始时刻, 所在场景名) """
-H1_GAIN_LOG = []
+H1_GAIN_LOG: list[tuple[int, datetime.datetime, int, bool]] = []
 """ 教室课结算记录：(学生id, 结算时她的行为开始时刻, 节次, 是否真的结算了) """
 _orig_gain = growth_handle.settle_student_class_gain
 
@@ -2804,7 +2853,7 @@ set_time(DEFAULT_TIME)
 #    M4（住院判定）的断言在前面的「教师可用性」「见学：母亲有效性」两段，L29（CLASS_SM_SET）在文件开头
 # ---------------------------------------------------------------------------
 # 本轮各段都把翘课概率钉成 0：前面 623 给 201 加了抑郁与恐怖，照原表会随机翘课
-class_ai.get_skip_class_rate = lambda cid: 0.0
+class_ai.get_skip_class_rate = lambda character_id: 0.0
 g32 = growth_handle.get_child_growth(201)
 """ 学生 201 的养成数据（与 g31 是同一个对象） """
 T_MON_10 = DEFAULT_TIME.replace(hour=10)
@@ -2824,7 +2873,7 @@ student.work.work_type = E.STUDENT_WORK_TYPE
 student.entertainment.entertainment_type = [TEND] * 3
 move_to(201, SCENE_DORM)
 
-RT32_LOG = []
+RT32_LOG: list[tuple[int, str, datetime.datetime, int, int]] = []
 """ 实时结算记录：(角色id, 行为id, 行为开始时刻, 行为时长, 这次结算的分钟数) """
 _orig_true_add = realtime_settle.get_true_add_time
 
@@ -3149,6 +3198,7 @@ check(
     and sex_class_handle.judge_can_join_sex_class(201, check_course=False),
     _course202,
 )
+assert _course202 is not None
 check(
     "L10 开课前（玩家还没开讲）：不够格的选修生判「教师来不了」（此前判能到岗、坐下听课，557 对授课者 0 直接返回，整节零收益、不计出勤）",
     handle_premise.handle_premise("self_course_teacher_available", 202) == 0
@@ -3345,9 +3395,9 @@ from Script.Design import update  # noqa: E402
 
 GHOST_START = period_time(0) + datetime.timedelta(minutes=5)
 """ 9:05：第 1 节（9:00~9:45）刚开始，幽灵课堂与她的常规课都落在这一节 """
-GHOST_PROBE = []
+GHOST_PROBE: list[tuple[bool, bool]] = []
 """ NPC 阶段第一次处理 NPC 时（玩家阶段刚走完）的现场：(课堂模式是否开着, 是否还有 running 的实操课) """
-GHOST_FLOW_CALL = []
+GHOST_FLOW_CALL: list[tuple[int, str]] = []
 """ 行为循环里嵌套调到 update.game_update_flow 的记录：(步进分钟数, 当时玩家的行为id) """
 _orig_character_behavior = character_behavior.character_behavior
 _orig_game_update_flow = update.game_update_flow
@@ -3583,7 +3633,7 @@ _orig_see_h = constant.handle_state_machine_data[SM.SEE_H_AND_MOVE_TO_DORMITORY]
 constant.handle_state_machine_data[SM.SEE_H_AND_MOVE_TO_DORMITORY] = (
     lambda character_id: None
 )
-class_ai.get_skip_class_rate = lambda cid: 0.0
+class_ai.get_skip_class_rate = lambda character_id: 0.0
 _T500 = "default500"
 """ 目击 H 的目标行（type 0，排在工作链之前）；构建时 cid 带文件夹名前缀 """
 _NOT_HERE = "self_not_attend_sex_class_here"
@@ -3667,14 +3717,11 @@ check(
     and handle_premise.handle_premise(_NOT_HERE, 301) == 0,
     sm,
 )
+move_to(301, SCENE_DORM)
+set_time(_late)
 check(
     "§8.1 对照：同一名学生不在那间教室时新前提判 1（只认人已在课堂里的）",
-    (
-        move_to(301, SCENE_DORM),
-        set_time(_late),
-        handle_premise.handle_premise(_NOT_HERE, 301),
-    )[2]
-    == 1,
+    handle_premise.handle_premise(_NOT_HERE, 301) == 1,
 )
 remove_character(301)
 # 对照三：待赴的那节被玩家提前开讲（Plan 26 §3.5），教室里已有别的学生在课堂 H 里

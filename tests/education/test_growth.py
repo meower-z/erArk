@@ -64,12 +64,10 @@ check(
 check(
     "自习也减半", abs(growth_handle.get_class_adjust(45, 201, -1) - 0.5) < 1e-9
 )
+teacher.talent[28] = 1
 check(
     "教师自己停滞不影响教学",
-    (
-        teacher.talent.__setitem__(28, 1),
-        abs(growth_handle.get_class_adjust(45, 202, 101) - 2.0) < 1e-9,
-    )[1],
+    abs(growth_handle.get_class_adjust(45, 202, 101) - 2.0) < 1e-9,
 )
 teacher.talent[28] = 0
 student.talent[28] = 0
@@ -99,11 +97,13 @@ check(
     ),
     exp_gain,
 )
-check("记了一节出勤", student.child_growth.attend_class_count == 1)
+student_growth = student.child_growth
+assert student_growth is not None
+check("记了一节出勤", student_growth.attend_class_count == 1)
 check(
     "记下了本节的去重标记",
-    student.child_growth.last_attend_period == [period_time(0).toordinal(), 0],
-    student.child_growth.last_attend_period,
+    student_growth.last_attend_period == [period_time(0).toordinal(), 0],
+    student_growth.last_attend_period,
 )
 # 同一节再结算一次：广播（512）与学生侧补结算（557）都会走到这里，第二次必须是空操作（第五轮）
 exp_before = student.experience.get(exp_id, 0)
@@ -117,10 +117,10 @@ check(
 check(
     "同一节不重复发收益与出勤",
     student.experience.get(exp_id, 0) == exp_before
-    and student.child_growth.attend_class_count == 1,
+    and student_growth.attend_class_count == 1,
 )
 # 以下几条都在同一节里验数值，每次先清掉去重标记
-student.child_growth.last_attend_period = []
+student_growth.last_attend_period = []
 student.talent[28] = 1
 exp_before = student.experience.get(exp_id, 0)
 growth_handle.settle_student_class_gain(
@@ -137,7 +137,7 @@ check(
     ),
 )
 student.talent[28] = 0
-student.child_growth.last_attend_period = []
+student_growth.last_attend_period = []
 exp_before = student.experience.get(exp_id, 0)
 growth_handle.settle_student_class_gain(
     201, 101, 45, education_constant.COURSE_TYPE_THEORY, 0
@@ -145,7 +145,7 @@ growth_handle.settle_student_class_gain(
 check(
     "add_time=0 不结算",
     student.experience.get(exp_id, 0) == exp_before
-    and student.child_growth.attend_class_count == 2,
+    and student_growth.attend_class_count == 2,
 )
 exp_before = student.experience.get(exp_id, 0)
 growth_handle.settle_student_class_gain(
@@ -156,7 +156,7 @@ check(
     student.experience.get(exp_id, 0) - exp_before
     == education_constant.SELF_STUDY_EXP_BASE,
 )
-student.child_growth.last_attend_period = []
+student_growth.last_attend_period = []
 exp_before = student.experience.get(exp_id, 0)
 growth_handle.settle_student_class_gain(
     201, -1, 45, education_constant.COURSE_TYPE_INTERN, 45
@@ -172,8 +172,8 @@ check(
         // 2,
     ),
 )
-student.child_growth.last_attend_period = []
-attend_before = student.child_growth.attend_class_count
+student_growth.last_attend_period = []
+attend_before = student_growth.attend_class_count
 exp_before = student.experience.get(exp_id, 0)
 growth_handle.settle_student_class_gain(
     201, -1, 45, education_constant.COURSE_TYPE_THEORY, 45, count_attend=False
@@ -181,10 +181,10 @@ growth_handle.settle_student_class_gain(
 check(
     "count_attend=False：给收益不计出勤",
     student.experience.get(exp_id, 0) > exp_before
-    and student.child_growth.attend_class_count == attend_before,
+    and student_growth.attend_class_count == attend_before,
 )
 set_time(period_time(0).replace(hour=12, minute=30))
-attend_before = student.child_growth.attend_class_count
+attend_before = student_growth.attend_class_count
 growth_handle.settle_student_class_gain(
     201, 101, 45, education_constant.COURSE_TYPE_THEORY, 45
 )
@@ -193,7 +193,7 @@ growth_handle.settle_student_class_gain(
 )
 check(
     "节次外（玩家午休手动授课）不去重",
-    student.child_growth.attend_class_count == attend_before + 2,
+    student_growth.attend_class_count == attend_before + 2,
 )
 set_time(period_time(0))
 
@@ -452,7 +452,9 @@ check(
         for e in real_sex_exp
     ),
 )
-theory_student.child_growth.last_attend_period = []
+theory_growth = theory_student.child_growth
+assert theory_growth is not None
+theory_growth.last_attend_period = []
 learn_before = theory_student.status_data.get(E6.LEARN_STATE_ID, 0)
 exp_snapshot = dict(theory_student.experience)
 growth_handle.settle_student_class_gain(205, 101, 76, E6.COURSE_TYPE_THEORY, 45)
@@ -909,10 +911,12 @@ check(
     and "COURSE_EXP_BASE[education_constant.COURSE_TYPE_THEORY]"
     in _class_gain_src,
 )
+_class_gain_doc = growth_handle.settle_student_class_gain.__doc__
+assert _class_gain_doc is not None
 check(
     "L27 557 的说明改为「学生坐下听课时，本节教师判能到岗即结算」，不再写「晚到的学生」",
-    "晚到的学生" not in growth_handle.settle_student_class_gain.__doc__
-    and "本节教师判能到岗" in growth_handle.settle_student_class_gain.__doc__,
+    "晚到的学生" not in _class_gain_doc
+    and "本节教师判能到岗" in _class_gain_doc,
 )
 
 section("Plan 32 实施复审补：M1 count_play_day 的起点落在非季月")
@@ -981,7 +985,7 @@ for _month in game_time.SEASON_MONTH_LIST:
   for _day in range(1, game_time.SEASON_DAY + 1):
     baby.pregnancy.born_time = GT(2026, _month, _day, 6, 0)
     cache.game_time = GT(2026, _month, _day, 0, 5)
-    _first = {50: None, 60: None}
+    _first: dict[int, datetime.datetime | None] = {50: None, 60: None}
     for _step in range(pregnancy_constant.REARING_COMPLETE_DAY + 10):
       game_time.sub_time_now(day=1)
       _grow_day = pregnancy_handle.get_child_grow_day(203)

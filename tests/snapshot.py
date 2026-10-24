@@ -45,7 +45,12 @@ import os
 import pickle
 import re
 import sys
+from typing import TYPE_CHECKING
 import uuid
+
+if TYPE_CHECKING:
+  from collections.abc import Iterable
+  from typing import Any
 
 ABSENT = None
 """ 比较时，一边没有的名字或步记作这个值（记录的值不会是 None） """
@@ -226,7 +231,9 @@ def _leaf(value):
   return None
 
 
-def flatten(prefix: str, value, state: dict, skipped: dict = None):
+def flatten(
+    prefix: str, value, state: dict, skipped: dict[str, str] | None = None
+):
   """
   把一个值按对象的属性、字典的键逐层展开，叶子记进 state
   Keyword arguments:
@@ -251,6 +258,7 @@ def flatten(prefix: str, value, state: dict, skipped: dict = None):
     if leaf:
       state[prefix] = leaf
     return
+  items: Iterable[tuple[object, object]]
   if isinstance(value, dict):
     items = value.items()
   elif isinstance(value, (list, tuple)):
@@ -284,9 +292,9 @@ class ActionLog:
     Return arguments:
     无
     """
-    self.talk = []
+    self.talk: list[list[int | str]] = []
     """ 这一步交去显示的口上 """
-    self.event = []
+    self.event: list[list[int | str]] = []
     """ 这一步触发的事件 """
 
   def install(self):
@@ -368,7 +376,11 @@ class ActionLog:
     return taken
 
 
-def capture(cache, log: ActionLog = None, memo: dict = None) -> dict:
+def capture(
+    cache,
+    log: ActionLog | None = None,
+    memo: dict[int, tuple[bytes | None, dict[str, object]]] | None = None,
+) -> dict:
   """
   取当前游戏状态的一份快照
   Keyword arguments:
@@ -382,7 +394,9 @@ def capture(cache, log: ActionLog = None, memo: dict = None) -> dict:
       罗德岛的字段按 WORLD_AREAS 分区）；有人的场景里的角色，关着门的场景的关门状态；口上与事件的id。
       memo 只省时间：pickle 字节相同的对象状态相同，展开结果也相同；字节不同时照常展开。
   """
-  state = {"clock": cache.game_time.strftime("%Y-%m-%d %H:%M")}
+  state: dict[str, object] = {
+      "clock": cache.game_time.strftime("%Y-%m-%d %H:%M")
+  }
   for cid in sorted(cache.character_data):
     character = cache.character_data[cid]
     pickled = pickle.dumps(character, protocol=4) if memo is not None else None
@@ -394,7 +408,7 @@ def capture(cache, log: ActionLog = None, memo: dict = None) -> dict:
         f"{prefix}.{field}": why
         for field, why in SKIPPED_CHARACTER_FIELDS.items()
     }
-    names = {}
+    names: dict[str, object] = {}
     flatten(prefix, character, names, skipped)
     state.update(names)
     if memo is not None:
@@ -433,11 +447,11 @@ class Recorder:
     Return arguments:
     无
     """
-    self.lines = []
+    self.lines: list[tuple[str, str, str]] = []
     """ 已记下的行：(步, 名字, 值的 JSON) """
-    self._last = {}
+    self._last: dict[str, object] = {}
     """ 上一步的全部状态 """
-    self._steps = set()
+    self._steps: set[str] = set()
     """ 已记下的步 """
 
   def record(self, step: str, state: dict) -> None:
@@ -507,8 +521,8 @@ def load(path: str) -> dict:
   Return arguments:
   dict[str, dict[str, object]] -- 步: (名字: 值)，按文件里的顺序
   """
-  steps = {}
-  state = {}
+  steps: dict[str, dict[str, object]] = {}
+  state: dict[str, object] = {}
   with _open_text(path) as f:
     for number, line in enumerate(f, 1):
       parts = line.rstrip("\n").split("\t")
@@ -723,7 +737,7 @@ class Report:
     Return arguments:
     list[str] -- 每个角色一行：角色、差异数、最早的步、涉及的字段（最多 8 个）
     """
-    groups = {}
+    groups: dict[str, list[Any]] = {}
     for step, name, _old, _value in differences:
       match = CHARA_NAME.match(name)
       if not match:
@@ -752,7 +766,7 @@ class Report:
     Return arguments:
     list[str] -- 每个字段一行：字段、差异数、最早的步、涉及的角色（最多 8 个）
     """
-    groups = {}
+    groups: dict[str, list[Any]] = {}
     for step, name, _old, _value in differences:
       match = CHARA_NAME.match(name)
       field = f"chara.*.{match.group(2)}" if match else name

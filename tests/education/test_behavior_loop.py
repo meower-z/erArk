@@ -167,7 +167,7 @@ check(
 )
 # 心情翘课的随机在本测试里关掉，只验课表链
 _orig_rate = class_ai.get_skip_class_rate
-class_ai.get_skip_class_rate = lambda cid: 0.0
+class_ai.get_skip_class_rate = lambda character_id: 0.0
 
 section("带护栏的行为循环")
 
@@ -385,8 +385,8 @@ section(
 # 读档会重建全部角色对象（save_handle.input_load_save），_bootstrap 里的 pl 已不是存档里的玩家 cache.character_data[0]，
 #    它的开始时刻不能当这一步的起点：这一段不经 run_one_round，自己把起点显式传给 NPC 阶段；
 #    NPC 阶段只让挑出的那名女儿参加（别的角色与本题无关），翘课概率钉成 0（她翘了课，跨天那一段的 flag 断言就随机了）
-class_ai.get_skip_class_rate = lambda cid: 0.0
-L4_RT_LOG = []
+class_ai.get_skip_class_rate = lambda character_id: 0.0
+L4_RT_LOG: list[tuple[str, datetime.datetime, int, int]] = []
 """ 挑出的那名女儿的实时结算记录：(行为id, 行为开始时刻, 行为时长, 这次结算的分钟数) """
 _orig_true_add = realtime_settle.get_true_add_time
 
@@ -519,7 +519,7 @@ if l4_id != -1:
 check("L4 前提：有一间已开放的理论教室可排课", l4_room != "", l4_room)
 l4_week_day = cache.game_time.weekday()
 """ 给她排课的星期：今天 """
-l4_home = []
+l4_home: list[str] = []
 """ 她过家家的地点：她宿舍的场景路径，宿舍不在场景表里时用教育区入口 """
 if l4_id != -1 and l4_room:
   l4_dorm = cache.character_data[l4_id].dormitory
