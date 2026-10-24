@@ -1,5 +1,7 @@
 """生产流水线管理面板，以及流水线效率的计算与生产结算"""
 
+from __future__ import annotations
+
 from typing import Tuple, Dict, List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
@@ -7,6 +9,11 @@ from Script.Design import attr_calculation, basement, handle_ability
 from Script.UI.Moudle import draw, panel
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import Callable
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -81,7 +88,9 @@ def calculate_assembly_line_efficiency(line_id: int) -> Tuple[str, float]:
   return detail_str, ri.assembly_line[line_id][2]
 
 
-def settle_assembly_line(newdayflag=False, draw_flag=True):
+def settle_assembly_line(
+    newdayflag: bool = False, draw_flag: bool = True
+) -> tuple[bool, str]:
   """
   结算流水线的生产\n
   Keyword arguments:\n
@@ -273,7 +282,7 @@ class Manage_Assembly_Line_Panel:
         _("基建"): False,
     }
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     title_text = _("产品生产")
     title_draw = draw.TitleLineDraw(title_text, self.width)
@@ -385,7 +394,7 @@ class Manage_Assembly_Line_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def select_npc_position(self):
+  def select_npc_position(self) -> None:
     """生产工人管理(任命各线主生产工人 & 管理副工人列表)"""
     ri = cache.rhodes_island
     from Script.UI.Panel import manage_basement_panel
@@ -432,7 +441,7 @@ class Manage_Assembly_Line_Panel:
         )
         row.draw()
 
-        def _make(lid):
+        def _make(lid: int) -> Callable[[], None]:
           return lambda: self._appoint_main_worker(lid)
 
         appoint_btn = draw.CenterButton(
@@ -481,7 +490,7 @@ class Manage_Assembly_Line_Panel:
       if yrn == back.return_text:
         break
 
-  def _appoint_main_worker(self, line_id: int):
+  def _appoint_main_worker(self, line_id: int) -> None:
     """任命主生产工人(重复选择撤销)"""
     ri = cache.rhodes_island
     from Script.UI.Panel import common_select_NPC
@@ -498,7 +507,7 @@ class Manage_Assembly_Line_Panel:
     )
     select_state = {}
 
-    def _handler(chara_id):
+    def _handler(chara_id: int) -> None:
       if chara_id not in ri.production_worker_ids:
         return
       # 选择了当前主生产工人则撤销，否则任命
@@ -531,7 +540,7 @@ class Manage_Assembly_Line_Panel:
       if yrn == _("返回"):
         break
 
-  def select_assembly_line_produce(self, assembly_line_id):
+  def select_assembly_line_produce(self, assembly_line_id: int) -> None:
     """选择流水线生产的产品"""
     while 1:
 
@@ -638,7 +647,9 @@ class Manage_Assembly_Line_Panel:
       if yrn in return_list and yrn not in resouce_list:
         break
 
-  def change_assembly_line_produce(self, assembly_line_id, formula_cid):
+  def change_assembly_line_produce(
+      self, assembly_line_id: int, formula_cid: int
+  ) -> None:
     """更改流水线生产的产品"""
     if (
         cache.rhodes_island.assembly_line[assembly_line_id][0] != 0
@@ -649,15 +660,15 @@ class Manage_Assembly_Line_Panel:
     else:
       cache.rhodes_island.assembly_line[assembly_line_id][0] = formula_cid
 
-  def settle_npc_id(self, chara_id):
+  def settle_npc_id(self, chara_id: int) -> None:
     """结算干员的id变更"""
     self.now_chara_id = chara_id
 
-  def settle_assembly_line_id(self, assembly_line_id):
+  def settle_assembly_line_id(self, assembly_line_id: int) -> None:
     """结算流水线的id变更"""
     self.target_position = assembly_line_id
 
-  def settle_show_resource_type(self, resouce_type):
+  def settle_show_resource_type(self, resouce_type: str) -> None:
     """设置显示的资源类型"""
     self.show_resource_type_dict[resouce_type] = (
         not self.show_resource_type_dict[resouce_type]

@@ -39,7 +39,7 @@ class Originium_Arts_Panel:
     self.pl_character_data = cache.character_data[0]
     """ 玩家的属性 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("源石技艺")
@@ -220,7 +220,7 @@ class Originium_Arts_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def to_do(self, n):
+  def to_do(self, n: object) -> None:
     """暂未实装"""
 
     now_draw = draw.WaitDraw()
@@ -228,7 +228,7 @@ class Originium_Arts_Panel:
     now_draw.text = _("\n暂未实装\n")
     now_draw.draw()
 
-  def arts_show(self, ability_type):
+  def arts_show(self, ability_type: int) -> None:
     """源石技艺展示"""
     # 催眠系
     if ability_type == 3:
@@ -583,11 +583,13 @@ class Originium_Arts_Panel:
       if yrn == back_draw.return_text:
         break
 
-  def change_hypnosis_type(self, hypnosis_type_cid):
+  def change_hypnosis_type(self, hypnosis_type_cid: int) -> None:
     """改变当前的催眠类型"""
     self.pl_character_data.pl_ability.hypnosis_type = hypnosis_type_cid
 
-  def gain_and_upgrade_ability_which(self, cid, no_cost_flag=False):
+  def gain_and_upgrade_ability_which(
+      self, cid: int, no_cost_flag: bool = False
+  ) -> None:
     """获得或升级能力"""
     talent_of_arts_data = game_config.config_talent_of_arts[cid]
     talent_id = talent_of_arts_data.talent_id
@@ -654,7 +656,7 @@ class Down_Negative_Talent_Panel:
     self.draw_list: List[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("降低负面素质")
@@ -711,7 +713,7 @@ class Down_Negative_Talent_Panel:
       if yrn == back_draw.return_text:
         break
 
-  def choice_down_which(self, chara_id):
+  def choice_down_which(self, chara_id: int) -> None:
     """选择降低哪一个"""
     character_data = cache.character_data[chara_id]
     self.chara_id = chara_id
@@ -761,7 +763,7 @@ class Down_Negative_Talent_Panel:
       if yrn == back_draw.return_text:
         break
 
-  def settle_down(self, ability_id):
+  def settle_down(self, ability_id: int) -> None:
     """结算刻印降低"""
     info_draw = draw.NormalDraw()
     character_data = cache.character_data[self.chara_id]
@@ -776,7 +778,7 @@ class Down_Negative_Talent_Panel:
       if not cache.debug_mode:
 
         # 先统计每种内裤的数量
-        pan_counts = {}
+        pan_counts: dict[int, int] = {}
         for pan in pl_character_data.pl_collection.npc_panties[self.chara_id]:
           pan_counts[pan] = pan_counts.get(pan, 0) + 1
         # 遍历全部内裤，优先删除重复款式的内裤，如果删除的数量不够5个，则从前往后删除

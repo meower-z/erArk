@@ -167,7 +167,7 @@ class Building_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def change_panel(self, building_type: str):
+  def change_panel(self, building_type: str) -> None:
     """
     切换当前面板显示
     Keyword arguments:
@@ -176,7 +176,7 @@ class Building_Panel:
 
     self.now_panel = building_type
 
-  def level_up_info(self, facility_cid: int):
+  def level_up_info(self, facility_cid: int) -> None:
     """
     显示建筑升级的详细信息
     Keyword arguments:
@@ -344,7 +344,7 @@ class Building_Panel:
       if yrn in return_list and yrn != button_draw.return_text:
         break
 
-  def level_up(self, facility_cid: int):
+  def level_up(self, facility_cid: int) -> None:
     """
     显示建筑升级的详细信息
     Keyword arguments:
@@ -373,7 +373,7 @@ class Building_Panel:
         info_draw.draw()
         break
 
-  def build_trade_sub_panel(self, facility_cid: int):
+  def build_trade_sub_panel(self, facility_cid: int) -> None:
     """
     显示建筑升级的详细信息
     Keyword arguments:
@@ -421,7 +421,7 @@ class Building_Panel:
       if yrn == back_draw.return_text or yrn in return_list:
         break
 
-  def sure_build_trade(self, facility_open_cid: int):
+  def sure_build_trade(self, facility_open_cid: int) -> None:
     """
     确定是否要升级设施
     Keyword arguments:
@@ -459,7 +459,7 @@ class Building_Panel:
       if yrn == back_draw.return_text or yrn in return_list:
         break
 
-  def build_trade(self, facility_open_cid: int):
+  def build_trade(self, facility_open_cid: int) -> None:
     """
     确定是否要升级设施
     Keyword arguments:

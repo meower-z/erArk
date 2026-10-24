@@ -35,7 +35,7 @@ class Manage_Library_Panel:
     self.draw_list: List[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("管理图书馆")
@@ -123,7 +123,7 @@ class Manage_Library_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def urge_return_book_list(self):
+  def urge_return_book_list(self) -> None:
     """催还书的大列表"""
 
     while 1:
@@ -176,7 +176,7 @@ class Manage_Library_Panel:
       if yrn == back_draw.return_text:
         break
 
-  def return_book(self, chara_id):
+  def return_book(self, chara_id: int) -> None:
     """角色还书"""
 
     character_data = cache.character_data[chara_id]
@@ -191,7 +191,7 @@ class Manage_Library_Panel:
     )
     now_draw.draw()
 
-  def get_new_book(self):
+  def get_new_book(self) -> None:
     """图书进货"""
 
     now_draw = draw.WaitDraw()
@@ -235,7 +235,7 @@ class Manage_Library_Panel:
       if yrn == back_draw.return_text:
         break
 
-  def reading_party(self):
+  def reading_party(self) -> None:
     """读书会"""
 
     while 1:
@@ -282,7 +282,7 @@ class Manage_Library_Panel:
       if yrn == back_draw.return_text:
         break
 
-  def choice_read_party(self, week_day):
+  def choice_read_party(self, week_day: int) -> None:
     """选择读书会之日"""
 
     party_entertain_id = cache.rhodes_island.party_day_of_week[week_day]
@@ -377,7 +377,7 @@ class Manage_Library_Panel:
         if yrn == _("返回"):
           break
 
-  def show_character_history(self, character_id: int):
+  def show_character_history(self, character_id: int) -> None:
     """显示指定角色的借阅历史"""
 
     character_data = cache.character_data[character_id]
@@ -530,13 +530,13 @@ class SelectRecommendBookButton:
     """ 绘制的对象 """
     self.now_draw = name_draw
 
-  def button_0(self):
+  def button_0(self) -> None:
     """选项1"""
     if self.book_type_id in cache.rhodes_island.recommend_book_type_set:
       cache.rhodes_island.recommend_book_type_set.remove(self.book_type_id)
     elif 3 - len(cache.rhodes_island.recommend_book_type_set):
       cache.rhodes_island.recommend_book_type_set.add(self.book_type_id)
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.now_draw.draw()

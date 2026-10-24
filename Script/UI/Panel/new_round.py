@@ -67,7 +67,7 @@ class New_Round_Handle:
     self.show_world_setting = False
     """ 显示世界设定面板 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     while 1:
       title_text = _("周目点数结算")
@@ -94,7 +94,7 @@ class New_Round_Handle:
         button_text += "▼"
       else:
         button_text += "▶"
-      button = draw.LeftButton(
+      button: draw.CenterButton | draw.LeftButton = draw.LeftButton(
           button_text,
           button_text,
           len(button_text) * 2,
@@ -609,13 +609,13 @@ class New_Round_Handle:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def show_npc_change(self):
+  def show_npc_change(self) -> None:
     """
     显示或隐藏陷落干员
     """
     self.show_npc_flag = not self.show_npc_flag
 
-  def show_panel_change(self, type: int):
+  def show_panel_change(self, type: int) -> None:
     """
     显示或隐藏面板
     Keyword arguments:
@@ -623,7 +623,7 @@ class New_Round_Handle:
     """
     self.show_panel_flag_list[type] = not self.show_panel_flag_list[type]
 
-  def calculate_originium_arts_cost(self):
+  def calculate_originium_arts_cost(self) -> int:
     """
     计算源石技艺消耗
     """
@@ -650,7 +650,7 @@ class New_Round_Handle:
           all_cost += 120
       return all_cost
 
-  def calculate_pl_extra_growth_count(self):
+  def calculate_pl_extra_growth_count(self) -> int:
     """
     计算玩家属性上限成长消耗\n
     每50点hp、mp消耗1点\n
@@ -690,7 +690,7 @@ class New_Round_Handle:
       all_cost += int(semen_extra_grouth)
       return all_cost
 
-  def value_change_buton(self, value: int, type: int):
+  def value_change_buton(self, value: int, type: int) -> None:
     """
     提高或降低继承等级
     Keyword arguments:
@@ -775,7 +775,7 @@ class New_Round_Handle:
             len(game_config.config_new_round_inherit_type_data[6]) - 1
         )
 
-  def farewell_npc_change(self):
+  def farewell_npc_change(self) -> None:
     """
     更改送别干员
     """
@@ -824,7 +824,7 @@ class New_Round_Handle:
       if yrn in return_list:
         break
 
-  def farewell_npc_change_confirm(self, chara_id: int):
+  def farewell_npc_change_confirm(self, chara_id: int) -> None:
     """
     确认送别干员
     Keyword arguments:
@@ -832,13 +832,13 @@ class New_Round_Handle:
     """
     self.farewell_npc_id = chara_id
 
-  def toggle_world_setting(self):
+  def toggle_world_setting(self) -> None:
     """
     切换世界设定面板的显示状态
     """
     self.show_world_setting = not self.show_world_setting
 
-  def start_new_round(self):
+  def start_new_round(self) -> None:
     """
     开始新的周目
     """
@@ -887,7 +887,7 @@ class New_Round_Handle:
         achievement_panel.achievement_flow(_("周目"))
         break
 
-  def build_new_character_data(self, character_id: int):
+  def build_new_character_data(self, character_id: int) -> None:
     """
     构建新的角色数据
     Keyword arguments:
@@ -897,7 +897,7 @@ class New_Round_Handle:
         character_id, cache.npc_tem_data[character_id]
     )
 
-  def inherit_player_data(self):
+  def inherit_player_data(self) -> None:
     """
     继承玩家数据
     """
@@ -1030,7 +1030,7 @@ class New_Round_Handle:
     info_draw.text = info_draw_text
     info_draw.draw()
 
-  def inherit_npc_data(self):
+  def inherit_npc_data(self) -> None:
     """
     继承干员数据
     """
@@ -1138,7 +1138,7 @@ class New_Round_Handle:
     info_draw.text = info_draw_text
     info_draw.draw()
 
-  def reset_game_data(self):
+  def reset_game_data(self) -> None:
     """
     重置游戏数据
     """
@@ -1293,7 +1293,7 @@ class CharacterabiText:
         new_draw_n.width = 1
         self.draw_list.append(new_draw_n)
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     line_feed_draw.draw()
     for value in self.draw_list:
@@ -1375,7 +1375,7 @@ class CharacterExperienceText:
     now_draw.set(experience_text_list, self.width, self.column)
     self.draw_list.extend(now_draw.draw_list)
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     # title_draw = draw.TitleLineDraw(_("人物状态"), self.width)
     # title_draw.draw()

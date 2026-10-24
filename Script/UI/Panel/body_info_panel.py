@@ -289,7 +289,7 @@ class CharacterBodyText:
     now_draw.set(body_text_list, self.width, self.column)
     self.draw_list.extend(now_draw.draw_list)
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     line_feed.draw()
     for label in self.draw_list:

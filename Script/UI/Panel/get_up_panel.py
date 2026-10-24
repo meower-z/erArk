@@ -45,7 +45,7 @@ class GetUpPanel_1:
     self.character_id: int = character_id
     """ 要绘制的角色id """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     while 1:
       title_draw = draw.TitleLineDraw(_("主页"), self.width)
@@ -64,7 +64,7 @@ class GetUpPanel_1:
       name_draw.draw()
       flow_handle.askfor_all([name_draw.return_text])
 
-  def see_character(self):
+  def see_character(self) -> None:
     """绘制角色属性"""
     attr_panel = see_character_info_panel.SeeCharacterInfoPanel(
         self.character_id, self.width
@@ -109,7 +109,7 @@ class GetUpPanel:
         cmd_func=self.now_character_panel.draw,
     )
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
 
     old_button_draw = draw.CenterButton(
@@ -143,12 +143,12 @@ class GetUpPanel:
       if yrn == self.back_draw.return_text:
         break
 
-  def old_character(self):
+  def old_character(self) -> None:
     """切换显示上一人"""
     # now_index = self.character_list.index(self.character_id)
     # self.character_id = self.character_list[now_index - 1]
 
-  def next_character(self):
+  def next_character(self) -> None:
     """切换显示下一人"""
     # now_index = self.character_list.index(self.character_id) + 1
     # if now_index > len(self.character_list) - 1:

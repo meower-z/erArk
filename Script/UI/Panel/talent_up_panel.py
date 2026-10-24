@@ -63,7 +63,7 @@ class Character_talent_show_Text:
     cond_draw.draw()
     return is_met
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.return_list = []
     # 绘制标题#
@@ -296,7 +296,7 @@ class Character_talent_show_Text:
       self.return_list.append(yes_draw.return_text)
       line_feed.draw()
 
-  def level_up(self, talent_id):
+  def level_up(self, talent_id: int) -> None:
     """
     提示选择成功，以手动获得类型结算该素质
     再让玩家等待1分钟并推进游戏时间以输出结果

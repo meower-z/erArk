@@ -24,7 +24,7 @@ window_width: int = normal_config.config_normal.text_width
 
 def build_csv_config(
     file_path: str, file_name: str, chara_adv_id: int, character_talk_data: dict
-):
+) -> None:
   """
   输入：
       file_path (str): 文件路径
@@ -107,7 +107,7 @@ def build_csv_config(
     character_talk_data[type_text]["gettext"] = get_text_data
 
 
-def build_chara_talk(chara_adv_id: int = 0):
+def build_chara_talk(chara_adv_id: int = 0) -> None:
   """ "
   "构建角色对话数据"
   """
@@ -365,7 +365,9 @@ class TALK_QUICK_TEST:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def test_single_talk(self, target_chara_id: int, talk_id: int):
+  def test_single_talk(
+      self, target_chara_id: int, talk_id: int
+  ) -> tuple[str, bool]:
     """
     测试单条角色口上并返回文本化的测试报告
     Keyword arguments:
@@ -494,7 +496,7 @@ class TALK_QUICK_TEST:
 
   def run_batch_talk_test_in_groups(
       self, target_chara_id: int, talk_id_list: List[int]
-  ):
+  ) -> None:
     """
     按每10条一组分批测试口上，每组显示后等待用户手动选择是否继续
     Keyword arguments:
@@ -677,7 +679,7 @@ class TALK_QUICK_TEST:
     now_draw.text = draw_text
     now_draw.draw()
 
-  def nothing(self):
+  def nothing(self) -> None:
     """[002] 与 [003] 两个测试按钮的点击回调，不做任何事"""
     pass
 
@@ -926,7 +928,7 @@ class Debug_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def change_panel(self, department_type: str):
+  def change_panel(self, department_type: str) -> None:
     """
     切换当前面板显示
     Keyword arguments:
@@ -2410,7 +2412,7 @@ class ChangeWorkButtonList:
     """ 绘制的对象 """
     self.now_draw = name_draw
 
-  def button_0(self):
+  def button_0(self) -> None:
     """选项1"""
 
     while 1:
@@ -2464,11 +2466,11 @@ class ChangeWorkButtonList:
       if yrn in return_list:
         break
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.now_draw.draw()
 
-  def select_new_work(self, work_id: int):
+  def select_new_work(self, work_id: int) -> None:
     """赋予新的工作id"""
     target_data: game_type.Character = cache.character_data[self.NPC_id]
     target_data.work.work_type = work_id

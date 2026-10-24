@@ -237,19 +237,19 @@ class All_Npc_Position_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def call_all(self):
+  def call_all(self) -> None:
     """一键全跟随"""
     for npc_id in cache.npc_id_got:
       if npc_id != 0:
         character_data = cache.character_data[npc_id]
         character_data.sp_flag.is_follow = 1
 
-  def move_type_change(self, new_type: int):
+  def move_type_change(self, new_type: int) -> None:
     """移动类型切换"""
     self.move_type = new_type
     cache.all_npc_position_panel_move_type = new_type
 
-  def select_type_change(self, new_type: int):
+  def select_type_change(self, new_type: int) -> None:
     """筛选类型切换"""
     self.select_type = new_type
     cache.all_npc_position_panel_select_type = new_type
@@ -361,11 +361,11 @@ class MoveSonPanel:
     self.button_return = name_draw.return_text
     self.now_draw = name_draw
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.now_draw.draw()
 
-  def move(self, character_id: int):
+  def move(self, character_id: int) -> None:
     """移动"""
     from Script.Design import character_move
 

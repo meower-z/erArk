@@ -126,7 +126,7 @@ class Take_Care_Baby_Panel:
     self.draw_list: List[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("照顾婴儿")
@@ -173,7 +173,7 @@ class Take_Care_Baby_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def choice_take_care(self, chara_id):
+  def choice_take_care(self, chara_id: int) -> None:
     """选择照顾的方式"""
     self.target_chara_id = chara_id
     name = cache.character_data[self.target_chara_id].name
@@ -219,7 +219,7 @@ class Take_Care_Baby_Panel:
       if yrn == back_draw.return_text:
         break
 
-  def settle_take_care(self, instruct_id):
+  def settle_take_care(self, instruct_id: int) -> None:
     """结算照顾指令"""
     instuct_judege.init_character_behavior_start_time(0, cache.game_time)
     character_data: game_type.Character = cache.character_data[0]
@@ -264,7 +264,7 @@ class Chose_First_bonus_ability_Panel:
     self.chose_ability_id = 0
     """ 选择的能力ID """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     while 1:
@@ -308,7 +308,7 @@ class Chose_First_bonus_ability_Panel:
       if yrn in return_list:
         break
 
-  def chose_this_ability(self, ability_id):
+  def chose_this_ability(self, ability_id: int) -> None:
     """选项1"""
     self.chose_ability_id = ability_id
     cache.first_bonus[21] = ability_id
@@ -326,7 +326,7 @@ class Fridge_Panel:
     self.width: int = width
     """ 绘制的最大宽度 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("冰箱")
@@ -398,7 +398,7 @@ class Fridge_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def take_milk(self, character_id: int):
+  def take_milk(self, character_id: int) -> None:
     """拿走母乳并放进玩家背包"""
     from Script.System.Cooking_System import cooking
 
@@ -420,7 +420,7 @@ class Fridge_Panel:
     now_draw.text = draw_text
     now_draw.draw()
 
-  def turn_milk(self, character_id: int):
+  def turn_milk(self, character_id: int) -> None:
     """转化母乳为资源【鲜母乳】"""
     character_data = cache.character_data[character_id]
 
@@ -456,7 +456,7 @@ class Order_Hotel_Room_Panel:
     self.draw_list: List[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("预订房间")
@@ -519,7 +519,7 @@ class Order_Hotel_Room_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def order_room(self, room_id):
+  def order_room(self, room_id: int) -> None:
     """预订房间"""
     room_price = [2, 10, 100]
     room_name = [_("标间"), _("情趣主题房"), _("顶级套房")]

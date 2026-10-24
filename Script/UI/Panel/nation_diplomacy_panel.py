@@ -20,7 +20,7 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def update_nation_data():
+def update_nation_data() -> None:
   """
   重置矿石病感染率数据
   """
@@ -157,7 +157,7 @@ def judge_diplomatic_policy():
   info_draw.draw()
 
 
-def settle_all_country_infection_rate():
+def settle_all_country_infection_rate() -> None:
   """
   结算全国度的源石病感染率变化
   """
@@ -436,7 +436,7 @@ class Nation_Diplomacy_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def change_panel(self, building_type: str):
+  def change_panel(self, building_type: str) -> None:
     """
     切换当前面板显示
     Keyword arguments:
@@ -445,7 +445,7 @@ class Nation_Diplomacy_Panel:
 
     self.now_panel = building_type
 
-  def nation_info(self, nation_id: int):
+  def nation_info(self, nation_id: int) -> None:
     """
     显示势力详细信息
     Keyword arguments:
@@ -595,7 +595,7 @@ class Nation_Diplomacy_Panel:
       if yrn == back_draw.return_text:
         break
 
-  def adjust_NPC(self, nation_id: int):
+  def adjust_NPC(self, nation_id: int) -> None:
     """
     调整负责外交官
     Keyword arguments:
@@ -671,7 +671,7 @@ class Nation_Diplomacy_Panel:
       if yrn in return_list:
         break
 
-  def sure_NPC(self, character_id: int, country_id: int):
+  def sure_NPC(self, character_id: int, country_id: int) -> None:
     """
     确认负责外交官
     Keyword arguments:
@@ -752,7 +752,7 @@ class Nation_Diplomacy_Panel:
       info_draw.width = window_width
       info_draw.draw()
 
-  def adjust_diplomatic_policy(self, nation_id: int):
+  def adjust_diplomatic_policy(self, nation_id: int) -> None:
     """
     调整外交方针
     Keyword arguments:
@@ -829,7 +829,9 @@ class Nation_Diplomacy_Panel:
       if yrn in return_list:
         break
 
-  def sure_diplomatic_policy(self, diplomatic_policy_id: int, country_id: int):
+  def sure_diplomatic_policy(
+      self, diplomatic_policy_id: int, country_id: int
+  ) -> None:
     """
     确认外交方针
     Keyword arguments:

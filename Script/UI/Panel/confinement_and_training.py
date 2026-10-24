@@ -21,7 +21,7 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def settle_prisoners():
+def settle_prisoners() -> None:
   """
   囚犯结算，先计算逃脱概率的增加，再判断是否能逃脱，最后处理失败与成功的情况。\n
   """
@@ -159,7 +159,7 @@ def judge_can_escape(character_id: int) -> Tuple[bool, float, float]:
   return False, escape_value, warden_value
 
 
-def escape_success(character_id: int):
+def escape_success(character_id: int) -> None:
   """
   逃脱成功处理。\n
   Keyword arguments:\n
@@ -192,7 +192,7 @@ def escape_success(character_id: int):
   field_commission_function.create_capture_fugitive_commission(character_id)
 
 
-def escape_fail(character_id: int):
+def escape_fail(character_id: int) -> None:
   """
   逃脱失败处理。\n
   Keyword arguments:\n
@@ -212,7 +212,7 @@ def escape_fail(character_id: int):
   cache.rhodes_island.current_prisoners[character_id][1] = 0
 
 
-def chara_become_prisoner(character_id: int):
+def chara_become_prisoner(character_id: int) -> None:
   """
   角色成为囚犯，不含位置和上线结算\n
   Keyword arguments:\n
@@ -291,7 +291,7 @@ def get_unused_prison_dormitory() -> str:
   return ""
 
 
-def prepare_training():
+def prepare_training() -> None:
   """
   玩家、玩家交互对象、监狱长三个人移动到调教室\n
   监狱长对交互对象完成调教前准备工作\n
@@ -622,7 +622,7 @@ class Confinement_And_Training_Manage_Panel:
     self.done_training_status_id_set = set()
     """ 已经调教过的状态id集合 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("监禁调教管理")
@@ -788,7 +788,7 @@ class Confinement_And_Training_Manage_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def draw_info(self, cid: int):
+  def draw_info(self, cid: int) -> None:
     """绘制设置的详细信息"""
     line = draw.LineDraw("-", self.width)
     line.draw()
@@ -802,20 +802,20 @@ class Confinement_And_Training_Manage_Panel:
     line = draw.LineDraw("-", self.width)
     line.draw()
 
-  def change_setting(self, cid, option_len):
+  def change_setting(self, cid: int, option_len: int) -> None:
     """修改设置"""
     if cache.rhodes_island.confinement_training_setting[cid] < option_len - 1:
       cache.rhodes_island.confinement_training_setting[cid] += 1
     else:
       cache.rhodes_island.confinement_training_setting[cid] = 0
 
-  def change_pre_training_cleaning(self):
+  def change_pre_training_cleaning(self) -> None:
     """切换是否进行污浊清洗"""
     cache.rhodes_island.pre_training_cleaning = (
         not cache.rhodes_island.pre_training_cleaning
     )
 
-  def change_pre_training_lubrication(self):
+  def change_pre_training_lubrication(self) -> None:
     """切换是否使用润滑液提前润滑"""
     cache.rhodes_island.pre_training_lubrication = (
         not cache.rhodes_island.pre_training_lubrication
@@ -909,14 +909,14 @@ class Confinement_And_Training_Manage_Panel:
       if yrn == back_draw.return_text:
         break
 
-  def change_pre_training_tool(self, tool_id: int):
+  def change_pre_training_tool(self, tool_id: int) -> None:
     """切换是否使用道具"""
     if cache.rhodes_island.pre_training_tool_dict[tool_id]:
       cache.rhodes_island.pre_training_tool_dict[tool_id] = 0
     else:
       cache.rhodes_island.pre_training_tool_dict[tool_id] = 1
 
-  def adjust_sex_assistant_instruct_list(self, ban_flag: bool = False):
+  def adjust_sex_assistant_instruct_list(self, ban_flag: bool = False) -> None:
     """调整调教助手指令列表"""
     new_status_id_list = get_all_can_use_behavior_id_for_sex_assistant()
     while 1:
@@ -975,7 +975,9 @@ class Confinement_And_Training_Manage_Panel:
       if yrn == back_draw.return_text:
         break
 
-  def change_select_instruct(self, instruct_id: int, ban_flag: bool = False):
+  def change_select_instruct(
+      self, instruct_id: int, ban_flag: bool = False
+  ) -> None:
     """
     切换调教助手指令选择状态
     Keyword arguments:

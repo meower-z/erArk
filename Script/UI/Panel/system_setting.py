@@ -50,13 +50,13 @@ class System_Setting_Panel:
     self.type_show = {_("基础"): True, _("难度"): False, _("绘制"): False}
     """ 当前显示的设置类型 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("系统设置")
     title_draw = draw.TitleLineDraw(title_text, self.width)
     while 1:
-      return_list = []
+      return_list: list[str] = []
       title_draw.draw()
 
       # 输出提示信息
@@ -105,25 +105,25 @@ class System_Setting_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def change_type_show(self, type_name):
+  def change_type_show(self, type_name: str) -> None:
     """改变当前显示的设置类型"""
     self.type_show[type_name] = not self.type_show[type_name]
 
-  def chat_ai_setting_panel_draw(self):
+  def chat_ai_setting_panel_draw(self) -> None:
     """绘制文本生成AI设置面板"""
     from Script.UI.Panel import chat_ai_setting
 
     now_panel = chat_ai_setting.Chat_Ai_Setting_Panel(self.width)
     now_panel.draw()
 
-  def chat_filter_panel_draw(self):
+  def chat_filter_panel_draw(self) -> None:
     """绘制指令过滤面板"""
     from Script.UI.Panel import instruct_filter_panel
 
     now_panel = instruct_filter_panel.Instruct_filter_Panel(self.width)
     now_panel.draw()
 
-  def draw_option(self, type_name: str, return_list: List[str]):
+  def draw_option(self, type_name: str, return_list: List[str]) -> list[str]:
     """绘制选项"""
     if type_name == _("基础"):
       setting_data = game_config.config_system_setting
@@ -283,7 +283,7 @@ class System_Setting_Panel:
 
     return return_list
 
-  def option_name_info(self, type_name: str, cid: int):
+  def option_name_info(self, type_name: str, cid: int) -> None:
     """绘制选项介绍信息"""
     line = draw.LineDraw("-", self.width)
     line.draw()
@@ -303,7 +303,9 @@ class System_Setting_Panel:
     line = draw.LineDraw("-", self.width)
     line.draw()
 
-  def change_setting_value(self, type_name: str, cid: int, option_len: int):
+  def change_setting_value(
+      self, type_name: str, cid: int, option_len: int
+  ) -> None:
     """修改选项设置"""
     if type_name == _("基础"):
       # 如果是第12项，则显示需要在诊疗病人面板中修改
@@ -365,7 +367,7 @@ class System_Setting_Panel:
           new_num = 99
         cache.all_system_setting.draw_setting[cid] = new_num
 
-  def change_font_size(self):
+  def change_font_size(self) -> None:
     """修改字体大小"""
     line_feed.draw()
     line_draw = draw.LineDraw("-", self.width)
@@ -407,7 +409,7 @@ class System_Setting_Panel:
     now_draw.style = "gold_enrod"
     now_draw.draw()
 
-  def change_dpi_size(self):
+  def change_dpi_size(self) -> None:
     """修改DPI缩放大小"""
     line_feed.draw()
     line_draw = draw.LineDraw("-", self.width)
@@ -442,7 +444,7 @@ class System_Setting_Panel:
     now_draw.style = "gold_enrod"
     now_draw.draw()
 
-  def birth_type_setting_panel_draw(self):
+  def birth_type_setting_panel_draw(self) -> None:
     """绘制生殖方式开关子面板，逐个开关多胎胎生、带壳卵生、无壳卵生三种生殖方式"""
     while 1:
       return_list = []
@@ -514,7 +516,7 @@ class System_Setting_Panel:
       if yrn == back_draw.return_text:
         break
 
-  def birth_type_name_info(self, birth_type: int):
+  def birth_type_name_info(self, birth_type: int) -> None:
     """
     绘制某个生殖方式的详细说明
     Keyword arguments:
@@ -532,7 +534,7 @@ class System_Setting_Panel:
     line = draw.LineDraw("-", self.width)
     line.draw()
 
-  def change_birth_type_setting(self, birth_type: int):
+  def change_birth_type_setting(self, birth_type: int) -> None:
     """
     切换某个生殖方式的开关，由开启改为关闭时进行二次确认并立即清除该生殖方式的存量数据
     Keyword arguments:
@@ -596,7 +598,7 @@ class System_Setting_Panel:
       elif yrn == no_draw.return_text:
         return False
 
-  def change_ban_list(self):
+  def change_ban_list(self) -> None:
     """修改已禁止干员列表"""
     while 1:
       now_set = cache.forbidden_npc_id
@@ -642,7 +644,7 @@ class System_Setting_Panel:
       if yrn == back_draw.return_text:
         break
 
-  def change_ban_list_cmd(self, npc_id):
+  def change_ban_list_cmd(self, npc_id: int) -> None:
     """修改已禁止干员列表"""
     from Script.Settle import default
 
@@ -681,7 +683,7 @@ class Game_Basic_Settings_Panel:
     self.return_list: List[str] = []
     """ 当前面板监听的按钮列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     title_text = _("游戏基础设置")
     title_draw = draw.TitleLineDraw(title_text, window_width)
@@ -790,7 +792,7 @@ class Game_Basic_Settings_Panel:
       if yrn == back_draw.return_text:
         break
 
-  def change_draw_mode_cmd(self, new_mode: int):
+  def change_draw_mode_cmd(self, new_mode: int) -> None:
     """修改绘制模式设置"""
     # 修改config.ini文件中的web_draw设置
     config_ini_path = normal_config.get_config_ini_path()
@@ -813,7 +815,7 @@ class Game_Basic_Settings_Panel:
     now_draw.style = "gold_enrod"
     now_draw.draw()
 
-  def change_language_cmd(self, lang_code: str):
+  def change_language_cmd(self, lang_code: str) -> None:
     """修改语言设置"""
     # 修改配置中的语言
     normal_config.config_normal.language = lang_code

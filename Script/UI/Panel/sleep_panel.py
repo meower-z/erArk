@@ -75,7 +75,7 @@ class Sleep_Panel:
     self.morning_service_time_text = ""
     """ 早安服务时间文本 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     # 计算回复时间，然后向上取整，且最小为1
@@ -295,7 +295,7 @@ class Sleep_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def input_sleep_time(self):
+  def input_sleep_time(self) -> None:
     """输入睡眠时间"""
     while 1:
       user_input = flow_handle.askfor_str(
@@ -314,12 +314,12 @@ class Sleep_Panel:
         self.sleep_time_min = user_input * 60
         break
 
-  def fast_choice_sleep_time(self, sleep_time):
+  def fast_choice_sleep_time(self, sleep_time: int) -> None:
     """快速选择睡眠时间"""
     self.sleep_time_hour = sleep_time
     self.sleep_time_min = sleep_time * 60
 
-  def get_time_to_morning_service(self):
+  def get_time_to_morning_service(self) -> None:
     """计算睡到早安服务的时间"""
     # 计算时间差
     self.min_to_moring_service_min = judge_time_to_pl_awake(
@@ -337,21 +337,21 @@ class Sleep_Panel:
         str(wake_time_hour).rjust(2, "0"), str(wake_time_minute).rjust(2, "0")
     )
 
-  def sleep_to_morning_service(self):
+  def sleep_to_morning_service(self) -> None:
     """睡到早安服务时间"""
     self.sleep_time_min = max(self.min_to_moring_service_min, 60)
     self.sleep_time_hour = self.min_to_moring_service_hour
 
-  def close_door_switch(self):
+  def close_door_switch(self) -> None:
     """关门开关"""
     self.close_door_flag = not self.close_door_flag
 
-  def show_diary(self):
+  def show_diary(self) -> None:
     """显示日记"""
     now_draw = diary_panel.Diary_Panel(window_width)
     now_draw.draw()
 
-  def assistant_sleep_settle(self):
+  def assistant_sleep_settle(self) -> None:
     """助理的睡眠结算"""
     # 如果没有助理则直接返回
     if self.pl_character_data.assistant_character_id == 0:

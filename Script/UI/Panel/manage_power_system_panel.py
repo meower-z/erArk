@@ -12,6 +12,11 @@ from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation, handle_ability
 from Script.UI.Moudle import draw, panel
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import Callable
+
 cache: game_type.Cache = cache_control.cache
 _: FunctionType = get_text._
 window_width: int = normal_config.config_normal.text_width
@@ -44,7 +49,7 @@ UI 说明：
 
 
 # ---------------------------- 数据初始化辅助 ---------------------------- #
-def _init_power_runtime_fields():
+def _init_power_runtime_fields() -> None:
   """确保动力系统运行期字段存在"""
   ri = cache.rhodes_island
   if not hasattr(ri, "power_supply_strategy"):
@@ -103,7 +108,7 @@ def _get_operator_power_bonus(type: int = -1) -> float:
   return round(total, 1)
 
 
-def _recalc_battery_capacity():
+def _recalc_battery_capacity() -> None:
   """根据电池数量重算最大储能"""
   ri = cache.rhodes_island
   # 动态从配置读取电池容量
@@ -342,7 +347,7 @@ def get_theoretical_fire_generation(
   op_bonus = _get_operator_power_bonus(0) + 1  # 火力调控员加成(含1.0基线)
 
   # 从配置中读取燃料效率
-  def _pg(cat: str, lv: int, default: float = 0.0):
+  def _pg(cat: str, lv: int, default: float = 0.0) -> float:
     try:
       cid = game_config.config_power_generation_level_index.get(cat, {}).get(lv)
       if cid:
@@ -624,7 +629,7 @@ class Manage_Power_System_Panel:
     _init_power_runtime_fields()
 
   # ---------- 主绘制 ---------- #
-  def draw(self):
+  def draw(self) -> None:
     """
     循环绘制动力系统概览与四个子界面按钮（供电策略、调控员、发电设施、蓄电池）
     选择返回时把当前面板设为主场景并退出
@@ -739,7 +744,7 @@ class Manage_Power_System_Panel:
         break
 
   # ---------- 供电策略子界面 ---------- #
-  def _panel_supply_strategy(self):
+  def _panel_supply_strategy(self) -> None:
     """供电策略调整子界面"""
     _init_power_runtime_fields()
     ri = cache.rhodes_island
@@ -796,12 +801,12 @@ class Manage_Power_System_Panel:
         row_draw.draw()
 
         # 按钮
-        def make_dec(cid_inner):
+        def make_dec(cid_inner: int) -> "Callable[[], None]":
           return lambda: self._set_strategy(
               cid_inner, (ri.power_supply_strategy.get(cid_inner, 0) - 1) % 5
           )
 
-        def make_inc(cid_inner):
+        def make_inc(cid_inner: int) -> "Callable[[], None]":
           return lambda: self._set_strategy(
               cid_inner, (ri.power_supply_strategy.get(cid_inner, 0) + 1) % 5
           )
@@ -827,13 +832,13 @@ class Manage_Power_System_Panel:
       if yrn == back.return_text:
         break
 
-  def _cycle_strategy(self, cid: int):
+  def _cycle_strategy(self, cid: int) -> None:
     """循环切换某区块的供电策略"""
     ri = cache.rhodes_island
     now = ri.power_supply_strategy.get(cid, 0)
     ri.power_supply_strategy[cid] = (now + 1) % 5
 
-  def _set_strategy(self, cid: int, value: int):
+  def _set_strategy(self, cid: int, value: int) -> None:
     """
     设置某区块的供电策略
     Keyword arguments:
@@ -846,7 +851,7 @@ class Manage_Power_System_Panel:
     ri.power_supply_strategy[cid] = value
 
   # ---------- 调控员管理 ---------- #
-  def _panel_operator(self):
+  def _panel_operator(self) -> None:
     """调控员管理子界面"""
     ri = cache.rhodes_island
     from Script.UI.Panel import manage_basement_panel
@@ -896,7 +901,7 @@ class Manage_Power_System_Panel:
         main_draw.draw()
 
         # 任命按钮
-        def _make_appoint(i):
+        def _make_appoint(i: int) -> "Callable[[], None]":
           return lambda: self._appoint_main_operator(i)
 
         btn = draw.CenterButton(
@@ -941,7 +946,7 @@ class Manage_Power_System_Panel:
       if yrn == back.return_text:
         break
 
-  def _appoint_main_operator(self, type_idx: int):
+  def _appoint_main_operator(self, type_idx: int) -> None:
     """
     任命某类型主调控员
     Keyword arguments:
@@ -952,7 +957,7 @@ class Manage_Power_System_Panel:
     type_name = [_("源石反应炉"), _("水力"), _("风能"), _("光伏")]
     return_list = []
 
-    def _make_appoint(c_id):
+    def _make_appoint(c_id: int) -> None:
       self._do_appoint_main_operator(type_idx, c_id)
 
     from Script.UI.Panel import common_select_NPC
@@ -999,7 +1004,7 @@ class Manage_Power_System_Panel:
       if yrn == _("返回"):
         break
 
-  def _do_appoint_main_operator(self, type_idx: int, chara_id: int):
+  def _do_appoint_main_operator(self, type_idx: int, chara_id: int) -> None:
     """执行任命某类型主调控员"""
     ri = cache.rhodes_island
     if chara_id not in ri.power_operator_ids_list:
@@ -1019,7 +1024,7 @@ class Manage_Power_System_Panel:
       ri.main_power_facility_operator_ids[type_idx] = chara_id
 
   # ---------- 发电设施管理 ---------- #
-  def _panel_facilities(self):
+  def _panel_facilities(self) -> None:
     """发电设施管理子界面"""
     ri = cache.rhodes_island
     fac_lv = ri.facility_level.get(1, 1)
@@ -1098,7 +1103,7 @@ class Manage_Power_System_Panel:
       )
       head.draw()
       # 主反应炉
-      main_lv = ri.orundum_reactor_list[0]
+      main_lv: int | str = ri.orundum_reactor_list[0]
       main_lv = str(main_lv).rjust(2, " ")
       # 读取当前等级单位燃料效率
       cid_eff = game_config.config_power_generation_level_index[_("主反应炉")][
@@ -1120,7 +1125,7 @@ class Manage_Power_System_Panel:
       # btn = draw.CenterButton(_("[升级]"), _("升级主源石反应炉"), 10, cmd_func=up_main); btn.draw(); return_list.append(btn.return_text)
       line_feed.draw()
       # 副反应炉
-      aux = ri.orundum_reactor_list[1]
+      aux: int | str = ri.orundum_reactor_list[1]
       aux = str(aux).rjust(2, " ")
       # 副反应炉燃料增量(统一使用等级1配置数值作为单台每日燃料)
       cid_aux = game_config.config_power_generation_level_index[_("副反应炉")][
@@ -1146,13 +1151,13 @@ class Manage_Power_System_Panel:
       # 反应炉增减按钮
       else:
 
-        def add_aux():
+        def add_aux() -> None:
           ri.orundum_reactor_list[1] = min(
               ri.orundum_reactor_list[1] + 1,
               base_power_facility_by_fac_lv + ri.materials_resouce[51],
           )
 
-        def sub_aux():
+        def sub_aux() -> None:
           if ri.orundum_reactor_list[1] > 0:
             ri.orundum_reactor_list[1] -= 1
 
@@ -1182,7 +1187,7 @@ class Manage_Power_System_Panel:
       ]
       for idx in range(4):
         if idx >= len(ri.other_power_facility_list):
-          num = 0
+          num: int | str = 0
         else:
           num = ri.other_power_facility_list[idx]
         num = str(num).rjust(2, " ")
@@ -1227,10 +1232,10 @@ class Manage_Power_System_Panel:
           continue
 
         # 增减按钮
-        def _make_add(i):
+        def _make_add(i: int) -> "Callable[[], None]":
           return lambda: self._inc_clean(i, +1)
 
-        def _make_sub(i):
+        def _make_sub(i: int) -> "Callable[[], None]":
           return lambda: self._inc_clean(i, -1)
 
         btn_add = draw.CenterButton(
@@ -1254,7 +1259,7 @@ class Manage_Power_System_Panel:
       if yrn == back.return_text:
         break
 
-  def _inc_clean(self, idx: int, delta: int):
+  def _inc_clean(self, idx: int, delta: int) -> None:
     """增加或减少某类清洁能源设施"""
     ri = cache.rhodes_island
     lv = ri.facility_level.get(1, 1)
@@ -1285,7 +1290,7 @@ class Manage_Power_System_Panel:
     )
 
   # ---------- 蓄电池管理 ---------- #
-  def _panel_battery(self):
+  def _panel_battery(self) -> None:
     """蓄电池管理子界面"""
     ri = cache.rhodes_island
     fac_lv = ri.facility_level.get(1, 1)
@@ -1368,10 +1373,10 @@ class Manage_Power_System_Panel:
           limit_draw.draw()
           continue
 
-        def make_add(i):
+        def make_add(i: int) -> "Callable[[], None]":
           return lambda: self._change_battery(i, +1)
 
-        def make_sub(i):
+        def make_sub(i: int) -> "Callable[[], None]":
           return lambda: self._change_battery(i, -1)
 
         btn_add = draw.CenterButton(
@@ -1395,7 +1400,7 @@ class Manage_Power_System_Panel:
       if yrn == back.return_text:
         break
 
-  def _change_battery(self, level: int, delta: int):
+  def _change_battery(self, level: int, delta: int) -> None:
     """
     增加或减少1个某等级的蓄电池，再重算最大储能与已使用的扩展位
     增加时若蓄电池总数已达上限，只绘制提示并返回；减少时该等级数量为0则数量不变
@@ -1432,7 +1437,7 @@ class Manage_Power_System_Panel:
     )
 
   # ---------- 小提示 ---------- #
-  def _hint(self, text: str):
+  def _hint(self, text: str) -> None:
     """
     绘制一条前后带空行的提示文本，并等待玩家确认
     Keyword arguments:

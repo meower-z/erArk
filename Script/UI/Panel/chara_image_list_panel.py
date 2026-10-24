@@ -38,7 +38,7 @@ class CharacterImageListDraw:
     self.return_list: List[str] = []
     """ 返回的按钮列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制列表"""
     head_width = len(self.character_list) * 16
     head_width = min(head_width, 160)  # 最多修正十个人
@@ -116,7 +116,7 @@ class CharacterImageListDraw:
       now_button.draw()
       self.return_list.append(now_button.return_text)
 
-  def next_page(self):
+  def next_page(self) -> None:
     """跳到下一页"""
     if cache.npc_image_index + 10 <= len(self.character_list):
       cache.npc_image_index += 10
@@ -141,7 +141,7 @@ class CharacterImageButton:
     self.return_text = ""
     """ 返回的按钮 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制图片对象"""
     character_data: game_type.Character = cache.character_data[
         self.character_id
@@ -158,7 +158,7 @@ class CharacterImageButton:
     now_draw.draw()
     self.return_text = character_data.name + "头像"
 
-  def change_target(self):
+  def change_target(self) -> None:
     """改变玩家当前交互对象"""
     player_data: game_type.Character = cache.character_data[0]
     if self.character_id:

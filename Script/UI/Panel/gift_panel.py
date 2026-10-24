@@ -29,7 +29,7 @@ window_width = normal_config.config_normal.text_width
 """ 屏幕宽度 """
 
 
-def handle_drug_use_effect(character_id: int, drug_id: int):
+def handle_drug_use_effect(character_id: int, drug_id: int) -> None:
   """
   处理药物使用效果
   Keyword arguments:
@@ -228,7 +228,7 @@ class Gift_Panel:
     self.show_drug_gift: bool = False
     # 药物类礼物展开/收起标志，默认为收起
 
-  def toggle_drug_gift(self):
+  def toggle_drug_gift(self) -> None:
     """
     切换药物类礼物的展开/收起状态
     参数：无
@@ -236,7 +236,7 @@ class Gift_Panel:
     """
     self.show_drug_gift = not self.show_drug_gift
 
-  def draw(self):
+  def draw(self) -> None:
     """
     绘制对象
     参数：无
@@ -318,7 +318,7 @@ class Gift_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def select_gift(self, gift_id):
+  def select_gift(self, gift_id: int) -> None:
     """礼物的确认选择"""
     from Script.System.Instruct_System import handle_instruct
 
@@ -423,7 +423,7 @@ class Gift_Panel:
         return False
       return True
 
-  def select_egg_id(self, egg_id: int):
+  def select_egg_id(self, egg_id: int) -> None:
     """
     选卵按钮回调：把选中的卵编号写入玩家行为数据\n
     Keyword arguments:\n
@@ -501,7 +501,7 @@ class Gift_Panel:
         return False
       return True
 
-  def select_child_id(self, child_id: int):
+  def select_child_id(self, child_id: int) -> None:
     """
     选婴儿按钮回调：把选中的婴儿角色id写入玩家行为数据\n
     Keyword arguments:\n

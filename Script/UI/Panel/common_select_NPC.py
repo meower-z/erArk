@@ -56,7 +56,7 @@ def common_select_npc_button_list_func(
     }
 
   # 内部回调函数，通过返回值更新状态
-  def inner_select_type_change(new_type: int):
+  def inner_select_type_change(new_type: int) -> None:
     # 调用新的筛选类型切换函数，并更新局部状态
     new_state = select_type_change(new_type)
     select_state["type"] = new_state[0]
@@ -385,6 +385,6 @@ class CommonSelectNPCButtonList:
     self.now_draw = name_draw
     self.draw_text = button_text
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.now_draw.draw()

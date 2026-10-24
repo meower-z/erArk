@@ -23,7 +23,7 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def settle_health_check():
+def settle_health_check() -> None:
   """
   结算体检
   """
@@ -234,7 +234,7 @@ class Physical_Check_And_Manage_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def settle_finish_physical_check(self, target_character_id: int):
+  def settle_finish_physical_check(self, target_character_id: int) -> None:
     """结算完成的体检"""
     # 如果已经体检了
     if len(self.done_check_behavior_id_set) > 0:
@@ -409,7 +409,7 @@ class Physical_Check_And_Manage_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def settle_target_physical_status(self, behavior_id: str):
+  def settle_target_physical_status(self, behavior_id: str) -> None:
     """结算目标角色的身体状态"""
     behavior_data = game_config.config_behavior[behavior_id]
     self.done_check_behavior_id_set.add(behavior_id)
@@ -545,7 +545,9 @@ class Physical_Check_And_Manage_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def judge_manage_requirement(self, manage_cid: int, target_character_id: int):
+  def judge_manage_requirement(
+      self, manage_cid: int, target_character_id: int
+  ) -> tuple[bool, str]:
     """判断是否满足身体管理的要求"""
     body_manage_data = game_config.config_body_manage_requirement[manage_cid]
     body_manage_second_behavior_id = body_manage_data.second_behavior_id
@@ -786,7 +788,7 @@ class Physical_Check_And_Manage_Panel:
 
   def settle_target_physical_manage(
       self, manage_cid: int, target_character_id: int
-  ):
+  ) -> None:
     """结算目标角色的身体管理"""
     from Script.Design import basement, second_behavior
 
@@ -899,7 +901,7 @@ class Physical_Check_And_Manage_Panel:
       if yrn == _("返回"):
         break
 
-  def cancle_physical_manage(self, target_character_id: int):
+  def cancle_physical_manage(self, target_character_id: int) -> None:
     """取消目标角色的身体管理"""
     target_character_data = cache.character_data[target_character_id]
     # 取消所有的身体管理
@@ -911,7 +913,7 @@ class Physical_Check_And_Manage_Panel:
     info_draw.text = info_text
     info_draw.draw()
 
-  def adjust_physical_check_schedule(self):
+  def adjust_physical_check_schedule(self) -> None:
     """调整体检日程"""
     title_text = _("调整体检日程")
     title_draw = draw.TitleLineDraw(title_text, self.width)
@@ -945,7 +947,7 @@ class Physical_Check_And_Manage_Panel:
         # 选项名
         button_text = f"  [{physical_exam_setting_data.name}]： "
         button_len = max(len(button_text) * 2, 60)
-        button_draw = draw.LeftButton(
+        button_draw: draw.CenterButton | draw.LeftButton = draw.LeftButton(
             button_text,
             button_text,
             button_len,
@@ -1024,7 +1026,7 @@ class Physical_Check_And_Manage_Panel:
       if yrn == back_draw.return_text:
         break
 
-  def check_physcial_report(self):
+  def check_physcial_report(self) -> None:
     """查看检查报告"""
 
     level_text_dict = {
@@ -1322,7 +1324,7 @@ class Physical_Check_And_Manage_Panel:
     # 结算成就
     achievement_panel.achievement_flow(_("体检报告"))
 
-  def draw_info(self, cid: int):
+  def draw_info(self, cid: int) -> None:
     """绘制体检设置的详细信息"""
     line = draw.LineDraw("-", self.width)
     line.draw()
@@ -1335,7 +1337,7 @@ class Physical_Check_And_Manage_Panel:
     line = draw.LineDraw("-", self.width)
     line.draw()
 
-  def change_setting(self, cid, option_len):
+  def change_setting(self, cid: int, option_len: int) -> None:
     """修改设置"""
     # 调整每天抽取体检人数的选项单独处理
     if cid == 6:
@@ -1408,7 +1410,7 @@ class Physical_Check_And_Manage_Panel:
       if yrn == _("返回"):
         break
 
-  def switch_chara_in_target_list(self, character_id: int):
+  def switch_chara_in_target_list(self, character_id: int) -> None:
     """切换体检对象名单中的角色"""
     if character_id in cache.rhodes_island.manually_selected_exam_operator_ids:
       cache.rhodes_island.manually_selected_exam_operator_ids.remove(
@@ -1417,7 +1419,7 @@ class Physical_Check_And_Manage_Panel:
     else:
       cache.rhodes_island.manually_selected_exam_operator_ids.add(character_id)
 
-  def adjust_physical_exam_date(self):
+  def adjust_physical_exam_date(self) -> None:
     """调整体检日期"""
     week_data = game_config.config_week_day
 
@@ -1464,7 +1466,7 @@ class Physical_Check_And_Manage_Panel:
       if yrn == back_draw.return_text:
         break
 
-  def set_physical_exam_date(self, week_id: int):
+  def set_physical_exam_date(self, week_id: int) -> None:
     """设置体检日期"""
     if week_id in cache.rhodes_island.manually_selected_exam_week_day_list:
       cache.rhodes_island.manually_selected_exam_week_day_list.remove(week_id)

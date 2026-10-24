@@ -1,5 +1,7 @@
 """招募面板，以及招募栏位的刷新、招募线效率与新干员的招募"""
 
+from __future__ import annotations
+
 from typing import List, Tuple
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
@@ -8,6 +10,13 @@ from Script.UI.Moudle import draw, panel
 from Script.Config import game_config, normal_config
 
 import random
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import Callable
+  from collections.abc import Mapping
+  from Script.Config import config_def
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -21,7 +30,7 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def recruit_new_chara():
+def recruit_new_chara() -> bool:
   """
   招募新干员\n
   输入：无\n
@@ -117,7 +126,7 @@ def find_recruitable_npc() -> List[int]:
   return recruitable_npc_id_list
 
 
-def update_recruit():
+def update_recruit() -> None:
   """刷新招募栏位"""
 
   from Script.UI.Panel import recruit_panel
@@ -377,14 +386,14 @@ class Recruit_Panel:
     self.show_detail_line: int = -1
     """ 当前展开详情的招募线编号 """
 
-  def toggle_detail(self, line_id: int):
+  def toggle_detail(self, line_id: int) -> None:
     """展开或收起招募详情"""
     if self.show_detail_line == line_id:
       self.show_detail_line = -1
     else:
       self.show_detail_line = line_id
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     # 刷新一下
     basement.get_base_updata()
@@ -626,7 +635,7 @@ class Recruit_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def select_recruitment_strategy(self, recruit_line_id):
+  def select_recruitment_strategy(self, recruit_line_id: int) -> None:
     """选择招募策略"""
     while 1:
       line = draw.LineDraw("-", window_width)
@@ -733,7 +742,7 @@ class Recruit_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def select_npc_position(self):
+  def select_npc_position(self) -> None:
     """招聘专员管理(任命各线主招聘专员)"""
     ri = cache.rhodes_island
     from Script.UI.Panel import manage_basement_panel
@@ -743,11 +752,11 @@ class Recruit_Panel:
     items_per_page = 10
 
     # 輔助：固定寬度對齊
-    def fmt(text, width):
+    def fmt(text: str, width: int) -> str:
       return attr_calculation.pad_display_width(str(text), width)
 
     # 輔助：建立每一行的文字
-    def build_row_text(role, chara_id, is_main):
+    def build_row_text(role: str, chara_id: int, is_main: bool) -> str:
       if chara_id == 0:
         return (
             "  "
@@ -783,7 +792,17 @@ class Recruit_Panel:
       abi_lv = chara.ability.get(40, 0)
       abi_str = f"{attr_calculation.judge_grade(abi_lv)} {abi_lv}"
 
-      def safe_get(cfg, key):
+      def safe_get(
+          cfg: Mapping[
+              int,
+              config_def.Nation
+              | config_def.Birthplace
+              | config_def.Profession
+              | config_def.Race
+              | config_def.Talent,
+          ],
+          key: int,
+      ) -> str:
         return cfg[key].name if key in cfg else "-"
 
       nation = safe_get(game_config.config_nation, chara.relationship.nation)
@@ -896,7 +915,7 @@ class Recruit_Panel:
         role_str = _("主召聘专员({0}号)").format(line_id + 1)
         row_text = build_row_text(role_str, main_id, True)
 
-        def _make(line_idx):
+        def _make(line_idx: int) -> Callable[[], None]:
           return lambda: self._appoint_main_hr(line_idx)
 
         # 整排按钮，按下等同原 [任命]
@@ -959,11 +978,11 @@ class Recruit_Panel:
       # 副招聘专员翻页按钮
       if max_page > 0:
 
-        def prev_p():
+        def prev_p() -> None:
           nonlocal page
           page -= 1
 
-        def next_p():
+        def next_p() -> None:
           nonlocal page
           page += 1
 
@@ -1002,7 +1021,7 @@ class Recruit_Panel:
       if yrn == back.return_text:
         break
 
-  def _appoint_main_hr(self, line_id: int):
+  def _appoint_main_hr(self, line_id: int) -> None:
     """任命某条招募线主招聘专员(重复选择同一人可撤销)"""
     ri = cache.rhodes_island
     from Script.UI.Panel import common_select_NPC
@@ -1019,7 +1038,7 @@ class Recruit_Panel:
     )
     select_state = {}
 
-    def _make(chara_id):
+    def _make(chara_id: int) -> None:
       self._do_appoint_main_hr(line_id, chara_id)
 
     while 1:
@@ -1041,7 +1060,7 @@ class Recruit_Panel:
       if yrn == _("返回"):
         break
 
-  def _do_appoint_main_hr(self, line_id: int, chara_id: int):
+  def _do_appoint_main_hr(self, line_id: int, chara_id: int) -> None:
     """
     任命或撤销招募线的主招聘专员：该干员已是该线主招聘专员时撤销，否则先清除其在其他线的主招聘专员身份，再任命为该线主招聘专员，不在招聘专员名单中的干员不处理
     Keyword arguments:
@@ -1062,17 +1081,17 @@ class Recruit_Panel:
       ri.recruit_line[line_id][2] = chara_id
 
   def change_recruit_line_produce(
-      self, asrecruit_line_id, recruitment_strategy_cid
-  ):
+      self, asrecruit_line_id: int, recruitment_strategy_cid: int
+  ) -> None:
     """更改招募线的策略"""
     cache.rhodes_island.recruit_line[asrecruit_line_id][
         1
     ] = recruitment_strategy_cid
 
-  def settle_npc_id(self, chara_id):
+  def settle_npc_id(self, chara_id: int) -> None:
     """结算干员的id变更"""
     self.now_chara_id = chara_id
 
-  def settle_assembly_line_id(self, asrecruit_line_id):
+  def settle_assembly_line_id(self, asrecruit_line_id: int) -> None:
     """结算流水线的id变更"""
     self.target_position = asrecruit_line_id

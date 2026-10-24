@@ -19,7 +19,7 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def update_basement_vehicle_data():
+def update_basement_vehicle_data() -> None:
   """
   更新基地载具数据
   """
@@ -86,7 +86,7 @@ class Manage_Vehicle_Panel:
     self.items_per_page = 10  # 设定中间固定行数（每页最大载具数）
 
   # === 切换排序条件 ===
-  def change_sort_by(self, sort_by_type: str):
+  def change_sort_by(self, sort_by_type: str) -> None:
     """
     切换载具列表的排序条件，并回到第一页
     Keyword arguments:
@@ -96,13 +96,13 @@ class Manage_Vehicle_Panel:
     self.current_page = 1
 
   # === 切换升降序 ===
-  def change_sort_order(self):
+  def change_sort_order(self) -> None:
     """切换载具列表的升序与降序，并回到第一页"""
     self.is_ascending = not self.is_ascending
     self.current_page = 1
 
   # === 切换页数 ===
-  def change_page(self, target_page: int):
+  def change_page(self, target_page: int) -> None:
     """
     切换载具列表当前所在的页数
     Keyword arguments:
@@ -259,7 +259,7 @@ class Manage_Vehicle_Panel:
         all_vehicle_list.append(cid)
 
       # === 对列表进行排序逻辑处理 ===
-      def get_sort_key(cid_key):
+      def get_sort_key(cid_key: int) -> int:
         if self.sort_by == _("持有量"):
           return cache.rhodes_island.vehicles[cid_key][0]
         elif self.sort_by == _("价钱"):
@@ -402,7 +402,7 @@ class Manage_Vehicle_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def change_panel(self, building_type: str):
+  def change_panel(self, building_type: str) -> None:
     """
     切换当前面板显示
     Keyword arguments:
@@ -411,7 +411,7 @@ class Manage_Vehicle_Panel:
 
     self.now_panel = building_type
 
-  def vehicle_info(self, vehicle_id: int):
+  def vehicle_info(self, vehicle_id: int) -> None:
     """
     显示载具详细信息
     Keyword arguments:
@@ -553,7 +553,7 @@ class Manage_Vehicle_Panel:
       if yrn == back_draw.return_text:
         break
 
-  def buy_vehicle(self, vehicle_id: int):
+  def buy_vehicle(self, vehicle_id: int) -> None:
     """
     购买载具
     Keyword arguments:
@@ -580,7 +580,7 @@ class Manage_Vehicle_Panel:
     # 结算成就
     achievement_panel.achievement_flow(_("载具"))
 
-  def sell_vehicle(self, vehicle_id: int):
+  def sell_vehicle(self, vehicle_id: int) -> None:
     """
     出售载具
     Keyword arguments:

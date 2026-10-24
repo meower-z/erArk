@@ -42,7 +42,7 @@ def get_equipment_condition_name(value: float) -> str:
   return result_name
 
 
-def show_damaged_equipment():
+def show_damaged_equipment() -> None:
   """
   显示所有装备损坏（equipment_condition < 0）的干员及其装备情况
   输入/输出：无
@@ -76,7 +76,7 @@ def show_damaged_equipment():
       break
 
 
-def show_maintained_equipment():
+def show_maintained_equipment() -> None:
   """
   显示所有装备保养（equipment_condition > 0）的干员及其装备情况
   输入/输出：无
@@ -408,7 +408,7 @@ class Equipment_Maintain_Panel:
     self.draw_list: List[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """
     绘制装备维护主界面
     """
@@ -476,7 +476,7 @@ class Equipment_Maintain_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def select_maintain_strategy(self):
+  def select_maintain_strategy(self) -> None:
     """
     选择装备维护策略和保养目标（基于配置表）
     """
@@ -506,7 +506,7 @@ class Equipment_Maintain_Panel:
         # 选项名
         button_text = f"  [{equipment_maintain_setting_data.name}]： "
         button_len = max(len(button_text) * 2, 60)
-        button_draw = draw.LeftButton(
+        button_draw: draw.CenterButton = draw.LeftButton(
             button_text,
             button_text,
             button_len,
@@ -568,7 +568,7 @@ class Equipment_Maintain_Panel:
       if yrn == back_draw.return_text:
         break
 
-  def draw_info(self, cid: int):
+  def draw_info(self, cid: int) -> None:
     """绘制设置的详细信息"""
     line = draw.LineDraw("-", self.width)
     line.draw()
@@ -581,7 +581,7 @@ class Equipment_Maintain_Panel:
     line = draw.LineDraw("-", self.width)
     line.draw()
 
-  def change_setting(self, cid, option_len):
+  def change_setting(self, cid: int, option_len: int) -> None:
     """修改设置"""
     if cache.rhodes_island.equipment_maintain_setting[cid] < option_len - 1:
       cache.rhodes_island.equipment_maintain_setting[cid] += 1
@@ -632,7 +632,7 @@ class Equipment_Maintain_Panel:
       if yrn == _("返回"):
         break
 
-  def switch_chara_in_target_list(self, character_id: int):
+  def switch_chara_in_target_list(self, character_id: int) -> None:
     """切换对象名单中的角色"""
     if character_id in cache.rhodes_island.equipment_maintain_operator_ids:
       cache.rhodes_island.equipment_maintain_operator_ids.remove(character_id)

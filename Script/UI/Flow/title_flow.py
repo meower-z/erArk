@@ -61,7 +61,11 @@ def title_panel():
   if now_key == now_list[0]:
     cache.now_panel_id = constant.Panel.CREATOR_CHARACTER
   elif now_key == now_list[1]:
-    now_panel = see_save_info_panel.SeeSaveListPanel(width, False)
+    now_panel: (
+        see_save_info_panel.SeeSaveListPanel
+        | system_setting.Game_Basic_Settings_Panel
+        | mod_panel.ModManagePanel
+    ) = see_save_info_panel.SeeSaveListPanel(width, False)
     now_panel.draw()
   elif now_key == now_list[2]:
     now_panel = system_setting.Game_Basic_Settings_Panel(width)
@@ -73,7 +77,7 @@ def title_panel():
     os._exit(0)
 
 
-def draw_logo():
+def draw_logo() -> None:
   """绘制logo"""
   logo_text = []
   logo_text.append("┌------------------------------┐")

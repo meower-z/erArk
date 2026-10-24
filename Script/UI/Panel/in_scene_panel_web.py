@@ -67,7 +67,7 @@ class InScenePanelWeb:
     # 当前交互对象ID
     self._current_target_id: int = -1
 
-  def draw(self):
+  def draw(self) -> None:
     """
     绘制对象
     在Web模式下，此方法收集数据并通过WebSocket推送到前端
@@ -149,7 +149,7 @@ class InScenePanelWeb:
       # 等待前端输入（通过按钮点击）
       flow_handle.askfor_all(ask_list)
 
-  def _enter_sub_panel_mode(self):
+  def _enter_sub_panel_mode(self) -> None:
     """
     进入子面板模式
 
@@ -227,7 +227,7 @@ class InScenePanelWeb:
 
     return ask_list
 
-  def _handle_refresh_signal(self):
+  def _handle_refresh_signal(self) -> None:
     """
     处理刷新信号
 
@@ -236,7 +236,7 @@ class InScenePanelWeb:
     """
     pass
 
-  def _handle_return_to_main_panel(self):
+  def _handle_return_to_main_panel(self) -> None:
     """
     处理返回主面板的操作
 
@@ -406,7 +406,7 @@ class InScenePanelWeb:
 
     return diff
 
-  def _push_state_to_frontend(self, state: Dict):
+  def _push_state_to_frontend(self, state: Dict) -> None:
     """
     推送状态到前端
 
@@ -456,7 +456,7 @@ class InScenePanelWeb:
 
     return elements
 
-  def handle_target_switch(self, character_id: int):
+  def handle_target_switch(self, character_id: int) -> None:
     """
     处理交互对象切换
 
@@ -471,7 +471,7 @@ class InScenePanelWeb:
     self.interaction_handler.clear_selection()
     self.body_part_button.clear()
 
-  def clear_cache(self):
+  def clear_cache(self) -> None:
     """清除所有缓存"""
     self._last_state = {}
     self.scene_renderer.clear_cache()

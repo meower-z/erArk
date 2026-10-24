@@ -332,7 +332,7 @@ def get_resouce_price(
   return int(price), percent
 
 
-def daily_supply_demand_fluctuation():
+def daily_supply_demand_fluctuation() -> None:
   """
   每日供需关系自然波动
   输入: 无
@@ -840,7 +840,7 @@ class Resource_Exchange_Line_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def execute_trade(self, buy_or_sell_flag: bool = None):
+  def execute_trade(self, buy_or_sell_flag: bool = None) -> None:
     """
     执行资源交易
     输入: 无
@@ -893,7 +893,7 @@ class Resource_Exchange_Line_Panel:
     line_feed.draw()
     self.quantity_of_resouce = 0
 
-  def manage_trade_operator(self):
+  def manage_trade_operator(self) -> None:
     """交易员管理界面"""
 
     from Script.Design import basement
@@ -1001,12 +1001,12 @@ class Resource_Exchange_Line_Panel:
       if choice == back_button.return_text:
         break
 
-  def clear_main_trader(self, res_type: str):
+  def clear_main_trader(self, res_type: str) -> None:
     """清空指定资源类型的主交易员"""
 
     cache.rhodes_island.resource_type_main_trader[res_type] = 0
 
-  def assign_main_trader(self, res_type: str):
+  def assign_main_trader(self, res_type: str) -> None:
     """任命指定资源类型的主交易员"""
 
     from Script.Design import basement
@@ -1019,7 +1019,7 @@ class Resource_Exchange_Line_Panel:
         target_type, 0
     )
 
-    def _make(chara_id: int):
+    def _make(chara_id: int) -> None:
       self._do_assign_main_trader(target_type, chara_id)
 
     npc_panel: panel.PageHandlePanel = panel.PageHandlePanel(
@@ -1063,7 +1063,7 @@ class Resource_Exchange_Line_Panel:
           target_type, 0
       )
 
-  def _do_assign_main_trader(self, res_type: str, chara_id: int):
+  def _do_assign_main_trader(self, res_type: str, chara_id: int) -> None:
     """执行主交易员任命/撤销操作"""
 
     if chara_id not in cache.rhodes_island.trade_operator_ids_list:
@@ -1074,7 +1074,7 @@ class Resource_Exchange_Line_Panel:
     else:
       cache.rhodes_island.resource_type_main_trader[res_type] = chara_id
 
-  def auto_trade_setting(self, res_id: int):
+  def auto_trade_setting(self, res_id: int) -> None:
     """调整指定资源类型的自动交易设置"""
 
     target_type = _get_resource_type_key(res_id)
@@ -1320,7 +1320,7 @@ class Resource_Exchange_Line_Panel:
       if choice == back_button.return_text:
         break
 
-  def toggle_auto_trade(self, res_id: int, key: str):
+  def toggle_auto_trade(self, res_id: int, key: str) -> None:
     """切换自动交易配置的开关状态"""
 
     settings = _ensure_trade_setting(res_id)
@@ -1333,7 +1333,7 @@ class Resource_Exchange_Line_Panel:
       delta: int,
       is_percent: bool = False,
       reset: bool = False,
-  ):
+  ) -> None:
     """调整自动交易配置的单个数值"""
 
     settings = _ensure_trade_setting(res_id)
@@ -1352,7 +1352,7 @@ class Resource_Exchange_Line_Panel:
         new_value = min(max_capacity, new_value)
     settings[key] = new_value
 
-  def select_exchange_resouce(self):
+  def select_exchange_resouce(self) -> None:
     """选择交易资源"""
     while 1:
 
@@ -1461,11 +1461,11 @@ class Resource_Exchange_Line_Panel:
       if yrn in return_list and yrn not in resouce_list:
         break
 
-  def settle_now_select_resouce_id(self, resouce_id):
+  def settle_now_select_resouce_id(self, resouce_id: int) -> None:
     """结算要交易的资源"""
     self.now_select_resouce_id = resouce_id
 
-  def settle_quantity(self, button_text):
+  def settle_quantity(self, button_text: str) -> None:
     """结算交易数量变更"""
     add_num = int(button_text[2:-2])
     self.quantity_of_resouce += add_num
@@ -1485,7 +1485,7 @@ class Resource_Exchange_Line_Panel:
     if self.quantity_of_resouce < -now_stock:
       self.quantity_of_resouce = -now_stock
 
-  def settle_max_buy(self):
+  def settle_max_buy(self) -> None:
     """结算最大买入数量"""
     resouce_data = game_config.config_resouce[self.now_select_resouce_id]
     # 如果是不可购买的商品则直接跳过
@@ -1507,7 +1507,7 @@ class Resource_Exchange_Line_Panel:
     if self.quantity_of_resouce < 0:
       self.quantity_of_resouce = 0
 
-  def settle_max_sell(self):
+  def settle_max_sell(self) -> None:
     """结算最大卖出数量"""
     self.quantity_of_resouce = -cache.rhodes_island.materials_resouce[
         self.now_select_resouce_id
@@ -1515,15 +1515,15 @@ class Resource_Exchange_Line_Panel:
 
   def reset_quantity(
       self,
-  ):
+  ) -> None:
     """重置资源交易数量"""
     self.quantity_of_resouce = 0
 
-  def settle_buy_or_sell(self):
+  def settle_buy_or_sell(self) -> None:
     """切换买入和卖出"""
     self.buy_or_sell_flag = not self.buy_or_sell_flag
 
-  def settle_show_resource_type(self, resouce_type):
+  def settle_show_resource_type(self, resouce_type: str) -> None:
     """设置显示的资源类型"""
     self.show_resource_type_dict[resouce_type] = (
         not self.show_resource_type_dict[resouce_type]

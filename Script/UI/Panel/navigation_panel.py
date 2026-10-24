@@ -29,7 +29,7 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def judge_arrive():
+def judge_arrive() -> bool:
   """
   判断是否抵达指定地点
   Keyword arguments:
@@ -93,7 +93,7 @@ class Base_function_class:
   用于导航的基础功能类
   """
 
-  def move_judge(self, scene_path: List, sp_flag: int = 0):
+  def move_judge(self, scene_path: List, sp_flag: int = 0) -> None:
     """
     判断基地是否移动至指定场景
     Keyword arguments:
@@ -154,7 +154,9 @@ class Base_function_class:
       now_draw.width = window_width
       now_draw.draw()
 
-  def move_to_scene(self, scene_name: str, need_fuel: int, need_time: int):
+  def move_to_scene(
+      self, scene_name: str, need_fuel: int, need_time: int
+  ) -> None:
     """
     移动至指定场景
     Keyword arguments:
@@ -194,7 +196,7 @@ class Navigation_Panel(Base_function_class):
     self.now_map: List[str] = ["泰拉"]
     """ 当前查看的地图坐标 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     move_menu_panel_data = {
         0: MapSceneNameDraw(self.now_map, self.width),
@@ -219,7 +221,7 @@ class Navigation_Panel(Base_function_class):
       if cache.rhodes_island.move_target_and_time[0] != 0:
         target_scene_id = cache.rhodes_island.move_target_and_time[0]
         target_scene_name = game_config.config_birthplace[target_scene_id].name
-        now_draw = draw.NormalDraw()
+        now_draw: draw.Button | draw.NormalDraw = draw.NormalDraw()
         now_draw.text = _("\n罗德岛正在移动至{0}，预计抵达时间为{1}\n").format(
             target_scene_name,
             game_time.get_date_until_day(
@@ -413,7 +415,7 @@ class MoveMenuPanel:
     self.draw_list.append(menu_draw)
     self.return_list.extend(menu_draw.return_list)
 
-  def change_type(self, to_type: str):
+  def change_type(self, to_type: str) -> None:
     """
     改变当前快捷移动菜单类型
     Keyword arguments:
@@ -422,7 +424,7 @@ class MoveMenuPanel:
     self.now_type = self.move_type_id_data[to_type]
     py_cmd.clr_cmd()
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     for now_draw in self.draw_list:
       now_draw.draw()
@@ -454,7 +456,7 @@ class MapSceneNameDraw(Base_function_class):
     self.end_index: int = 0
     """ 结束按钮id """
 
-  def update(self, now_map: List[str], start_index: int):
+  def update(self, now_map: List[str], start_index: int) -> None:
     """
     更新当前面板对象
     Keyword arguments:

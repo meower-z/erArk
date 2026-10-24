@@ -20,7 +20,7 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def cloth_off_after_settle(character_id: int):
+def cloth_off_after_settle(character_id: int) -> None:
   """
   结算后的脱衣服操作
   Keyword arguments:
@@ -238,7 +238,7 @@ class SeeCharacterClothPanel:
     rich_text_draw_list = rich_text.get_rich_text_draw_list(now_text)
     self.draw_list.extend(rich_text_draw_list)
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     for label in self.draw_list:
       if isinstance(label, list):
@@ -428,7 +428,7 @@ class SeeUndressButtonList:
     """ 绘制的对象 """
     self.now_draw = name_draw
 
-  def chose_button(self):
+  def chose_button(self) -> None:
     """玩家点击了选项"""
     instuct_judege.init_character_behavior_start_time(0, cache.game_time)
     character_data = cache.character_data[0]
@@ -476,7 +476,7 @@ class SeeUndressButtonList:
     # print(f"debug target_data.cloth.cloth_wear = {target_data.cloth.cloth_wear}")
     # print(f"debug target_data.cloth.cloth_off = {target_data.cloth.cloth_off}")
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.now_draw.draw()
 
@@ -682,7 +682,7 @@ class SwitchCharacterClothPanel:
       self.draw_list.extend(off_row)
       self.draw_list.append(line_feed)
 
-  def draw(self):
+  def draw(self) -> None:
     """
     绘制面板
     """
@@ -744,7 +744,7 @@ class SwitchClothButton(draw.LeftButton):
         btn_text, str(cloth_id), btn_width, cmd_func=self.switch_cloth
     )
 
-  def switch_cloth(self):
+  def switch_cloth(self) -> None:
     """
     切换衣服穿脱状态
     """
