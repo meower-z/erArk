@@ -1067,7 +1067,6 @@ def main():
         parts.append(sep)
         parts.append(img)
       comparison_focus = np.hstack(parts)
-      top3_names = '+'.join(top3)
       save_image(
           os.path.join(output_dir, f'{char_name}_TOP3+集成对比.png'),
           comparison_focus,

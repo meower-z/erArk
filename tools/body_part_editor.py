@@ -445,7 +445,7 @@ class BodyPartEditor:
     输出：无
     功能：递归查找所有*_body.json文件
     """
-    for root, dirs, files in os.walk(folder):
+    for root, __, files in os.walk(folder):
       for filename in files:
         if filename.endswith("_body.json"):
           json_path = os.path.join(root, filename)
@@ -809,7 +809,7 @@ class BodyPartEditor:
       return
 
     # 检查是否点击了关键点
-    for lm_id, (oval_id, text_id, source_id) in self.point_items.items():
+    for lm_id, (oval_id, __, __) in self.point_items.items():
       coords = self.canvas.coords(oval_id)
       if coords:
         x1, y1, x2, y2 = coords
@@ -919,7 +919,7 @@ class BodyPartEditor:
     landmark_map = {lm["id"]: lm for lm in self.landmarks}
 
     # 找到与该点相关的连线并更新
-    for start_id, end_id, color in SKELETON_CONNECTIONS:
+    for start_id, end_id, __ in SKELETON_CONNECTIONS:
       if start_id == lm_id or end_id == lm_id:
         if start_id in landmark_map and end_id in landmark_map:
           start = landmark_map[start_id]
@@ -1211,7 +1211,7 @@ class BodyPartEditor:
     if not self.files:
       return
 
-    json_path, png_path, data, modified = self.files[self.current_index]
+    __, __, data, __ = self.files[self.current_index]
 
     # 更新landmarks数据
     # 将手动修改的点的source_model标记为"Z"
@@ -1339,7 +1339,7 @@ def main():
   except:
     pass
 
-  app = BodyPartEditor(root)
+  BodyPartEditor(root)
   root.mainloop()
 
 

@@ -197,7 +197,7 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
       str -- 挑中的目标id
       """
       with mock.patch.object(handle_npc_ai, "set", set_type, create=True):
-        target, weight, judge, premise_data = handle_npc_ai.search_target(
+        target, __, __, __ = handle_npc_ai.search_target(
             operator_id, all_targets, set(), {}, {}
         )
       return target
@@ -223,9 +223,7 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
       Return arguments:
       str -- 挑中的口上id
       """
-      talk_text, talk_id, common_behavior_id = talk.choice_talk_from_talk_data(
-          {1: set_type(talk_ids)}
-      )
+      __, talk_id, __ = talk.choice_talk_from_talk_data({1: set_type(talk_ids)})
       return talk_id
 
     self.assert_same_picks(pick)

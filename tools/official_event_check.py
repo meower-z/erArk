@@ -651,7 +651,7 @@ class Checker:
       for one in re.findall(
           r"CVE_A1_Growth\|(1[0-3])_([GL])_([\d.]+)", effect_text
       ):
-        pair_id, operator_text, value = one
+        pair_id, operator_text, __ = one
         now_stat = file_stat["personality"].setdefault(pair_id, [0, 0])
         now_stat[0 if operator_text == "G" else 1] += 1
       for one in re.findall(r"CVE_A1_F_([GL])_(\d+)", effect_text):

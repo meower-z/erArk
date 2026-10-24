@@ -35,7 +35,7 @@ async def test_mcp_server():
   try:
     # 创建MCP服务器实例
     print("🔧 创建MCP服务器实例...")
-    mcp_server = PRTSMCPServer()
+    PRTSMCPServer()
     print("✅ MCP服务器实例创建成功")
 
     # 测试下载器功能

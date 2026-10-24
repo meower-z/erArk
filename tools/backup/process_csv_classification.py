@@ -23,7 +23,7 @@ def process_csv_file(csv_file_path):
     reader = csv.reader(file)
 
     # 跳过前5行（索引0-4）
-    for i in range(5):
+    for __ in range(5):
       next(reader, None)
 
     # 从第6行开始处理（索引5开始）

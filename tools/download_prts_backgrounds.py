@@ -165,7 +165,7 @@ def download_prts_backgrounds():
 
       # 等待所有任务完成并收集结果
       for future in as_completed(future_to_url):
-        success, filename, error = future.result()
+        success, __, __ = future.result()
         if success:
           success_count += 1
         else:

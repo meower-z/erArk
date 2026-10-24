@@ -75,7 +75,7 @@ def batch_process_directory(directory):
   返回:
       None
   """
-  for root, dirs, files in os.walk(directory):
+  for root, __, files in os.walk(directory):
     for filename in files:
       if filename.lower().endswith('.csv'):
         file_path = os.path.join(root, filename)

@@ -211,7 +211,7 @@ def extract_story_script_from_url(url, story_name):
     scripts = soup.find_all('script')
 
     # 查找包含剧情脚本的标签
-    for i, script in enumerate(scripts):
+    for __, script in enumerate(scripts):
       if not script.string:
         continue
 
@@ -493,9 +493,7 @@ def main():
 
   # 执行下载
   try:
-    success, total = download_activity_stories_enhanced(
-        activity_name, output_dir
-    )
+    success, __ = download_activity_stories_enhanced(activity_name, output_dir)
 
     if success > 0:
       print(f'\n✓ 下载成功！共下载了 {success} 个剧情脚本')
