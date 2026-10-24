@@ -1,3 +1,9 @@
+"""
+结算效果 id 常量：BehaviorEffect 是行为结算效果，SecondEffect 在其后结算；
+buildata.py 由 BehaviorEffect 的常量与说明生成 ArkEditor 的结算表
+"""
+
+
 class BehaviorEffect:
   """行为结算效果函数"""
 

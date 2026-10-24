@@ -1,4 +1,10 @@
-﻿class Premise:
+﻿"""
+前提 id 常量：类 Premise 的每个常量是一个前提的 id，下一行的说明写分类与描述；
+buildata.py 由这些常量与说明生成 ArkEditor 的前提表
+"""
+
+
+class Premise:
   """前提id"""
 
   DEBUG_MODE_SETTING_ON = "debug_mode_setting_on"
