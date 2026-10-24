@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Optional, Tuple
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.UI.Moudle import draw
@@ -43,7 +43,7 @@ def update_field_commission() -> None:
 
 def get_commission_demand_and_reward(
     commission_id: int,
-    send_npc_list: list[int] = [],
+    send_npc_list: Optional[list[int]] = None,
     demand_or_reward: bool = False,
     deduction_or_increase: bool = False,
 ) -> Tuple[bool, str, str]:
@@ -79,7 +79,7 @@ def get_commission_demand_and_reward(
         now_text,
         demand_or_reward,
         deduction_or_increase,
-        send_npc_list,
+        send_npc_list or [],
         type_text,
         full_text,
         satify_flag,

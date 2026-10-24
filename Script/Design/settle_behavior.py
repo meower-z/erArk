@@ -172,6 +172,8 @@ def handle_settle_behavior(
       and now_character_data.position != player_character_data.position
   ):
     return
+  # 交互对象一方的角色数据：互换输出时是发起交互的NPC，不互换时在下面逐个交互对象取
+  target_data = now_character_data
   # 当NPC对玩家交互时，互相替换双方的输出内容
   if character_id != 0 and now_character_data.target_character_id == 0:
     exchange_flag = True
@@ -184,7 +186,7 @@ def handle_settle_behavior(
     # 开始互换
     # print(f"debug 前target_change.hit_point = {target_change.hit_point}")
     change_data, target_change = target_change, change_data
-    now_character_data, target_data = player_character_data, now_character_data
+    now_character_data = player_character_data
     character_id = 0
     # print(f"debug 后target_change.hit_point = {target_change.hit_point}")
   # elif character_id:
@@ -942,25 +944,17 @@ def handle_comprehensive_value_effect(
   # print(f"debug character_id = {character_id}, effect_all_value_list = {effect_all_value_list}")
 
   # 进行主体A的判别，A1为自己，A2为交互对象，A3为指定id角色(格式为A3|15)
-  if effect_all_value_list[0] == "A1":
-    final_character_data = character_data
-    final_change_data = change_data
-    final_character_id = character_id
-  elif effect_all_value_list[0] == "A2":
+  # A2、A3 的变化记在结算记录里该角色的交互对象一栏
+  final_character_id = character_id
+  final_change_data = change_data
+  if effect_all_value_list[0] == "A2":
     # # 如果没有交互对象，则返回0
     # if character_data.target_character_id == character_id:
     #     return 0
-    final_character_data = cache.character_data[
-        character_data.target_character_id
-    ]
-    change_data.target_change.setdefault(
-        character_data.target_character_id, game_type.TargetChange()
-    )
-    target_change: game_type.TargetChange = change_data.target_change[
-        character_data.target_character_id
-    ]
-    final_change_data = target_change
     final_character_id = character_data.target_character_id
+    final_change_data = change_data.target_change.setdefault(
+        final_character_id, game_type.TargetChange()
+    )
   elif effect_all_value_list[0][:2] == "A3":
     final_character_adv = int(effect_all_value_list[0][3:])
     final_character_id = character.get_character_id_from_adv(
@@ -969,9 +963,13 @@ def handle_comprehensive_value_effect(
     # 如果还没拥有该角色，则返回0
     if final_character_id not in cache.npc_id_got:
       return 0
-    final_character_data = cache.character_data[final_character_id]
+    final_change_data = change_data.target_change.setdefault(
+        final_character_id, game_type.TargetChange()
+    )
+  final_character_data = cache.character_data[final_character_id]
 
   # 进行数值B的判别,A能力,T素质,J宝珠,E经验,S状态,F好感度,X信赖
+  type_son_id = 0
   if len(effect_all_value_list[1]) > 1:
     type_son_id = int(effect_all_value_list[1].split("|")[1])
 

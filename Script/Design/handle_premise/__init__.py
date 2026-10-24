@@ -452,10 +452,9 @@ def handle_comprehensive_value_premise(
     )
 
   # 进行主体A的判别，A1为自己，A2为交互对象，A3为指定id角色(格式为A3|15)
-  if premise_all_value_list[0] == "A1":
-    final_character_id = character_id
-    final_character_data = character_data
-  elif premise_all_value_list[0] == "A2":
+  final_character_id = character_id
+  final_character_data = character_data
+  if premise_all_value_list[0] == "A2":
     # （已废弃）如果没有交互对象，则返回0
     # if character_data.target_character_id == character_id:
     #     return 0
@@ -474,6 +473,7 @@ def handle_comprehensive_value_premise(
       return 0
 
   # 进行数值B的判别,A能力,T素质,Time时间,J宝珠,E经验,S状态,F好感度,Flag作者用flag,X信赖,G攻略程度,Instruct指令,Son子嵌套事件,OtherChara其他角色在场,Dirty污浊,Bondage绳子捆绑,Roleplay角色扮演,PenisPos阴茎位置,ShootPos射精位置,Relationship身份关系,Course当前课程科目,CourseType当前课型,CourseShowOff待炫耀的已升级科目,Growth养成数值
+  type_son_id = 0
   if (
       len(premise_all_value_list[1]) > 1
       and "Time" not in premise_all_value_list[1]
@@ -486,8 +486,9 @@ def handle_comprehensive_value_premise(
     type_son_id = int(premise_all_value_list[1].split("|")[1])
   if "Son" in premise_all_value_list[1]:
     return 0
+  final_value: float = 0
   if premise_all_value_list[1][0] == "A":
-    final_value: float = final_character_data.ability.get(type_son_id, 0)
+    final_value = final_character_data.ability.get(type_son_id, 0)
   elif premise_all_value_list[1][0] == "T":
     if "Time" in premise_all_value_list[1]:
       final_value = final_character_data.behavior.start_time.hour
@@ -594,7 +595,8 @@ def handle_comprehensive_value_premise(
         target_character_data = cache.character_data[
             final_character_data.target_character_id
         ]
-      elif target_character_type == "是指定id角色的":
+      # 是指定id角色的
+      else:
         target_character_adv = int(premise_all_value_list[3])
         target_character_id = character.get_character_id_from_adv(
             target_character_adv
