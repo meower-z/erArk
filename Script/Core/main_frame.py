@@ -596,7 +596,7 @@ def _read_queue_drain() -> None:
       if cmd_nums == "all":
         io_clear_cmd()
       else:
-        io_clear_cmd(tuple(cmd_nums))
+        io_clear_cmd(*cmd_nums)
     if "bgcolor" in json_data:
       set_background(json_data["bgcolor"])
     if "set_style" in json_data:

@@ -601,7 +601,7 @@ def print_cmd(
   return cmd_str
 
 
-def cmd_clear(*numbers: int | str | tuple[int | str, ...]) -> None:
+def cmd_clear(*numbers: int | str) -> None:
   """
   清除绑定命令
 
