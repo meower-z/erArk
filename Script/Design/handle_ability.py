@@ -160,7 +160,7 @@ def gain_ability(character_id: int) -> None:
 
 def extra_ability_check(
     ability_id: int, character_id: int, draw_flag: bool = True
-):
+) -> int:
   """
   能力升级的额外条件检查
   参数:

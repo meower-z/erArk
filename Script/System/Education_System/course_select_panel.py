@@ -419,7 +419,9 @@ class Course_Select_Panel:
         character_id, week_day, period, course_type, target
     )
 
-  def _select_course(self, character_id: int, week_day: int, period: int):
+  def _select_course(
+      self, character_id: int, week_day: int, period: int
+  ) -> tuple[int, object] | str | None:
     """
     选课第一屏：本节可上的教室课 + 三类个人式课型入口
     输入类型: character_id(int), week_day(int), period(int)

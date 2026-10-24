@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.UI.Moudle import draw
@@ -120,14 +120,14 @@ def get_commission_demand_and_reward(
 
 
 def process_commission_text(
-    now_text,
-    demand_or_reward,
-    deduction_or_increase,
-    send_npc_list,
-    type_text,
-    full_text,
-    satify_flag,
-):
+    now_text: str,
+    demand_or_reward: bool,
+    deduction_or_increase: bool,
+    send_npc_list: List[int],
+    type_text: str,
+    full_text: str,
+    satify_flag: bool,
+) -> Tuple[str, str, bool]:
   """
   处理委托文本\n
   Keyword arguments:\n

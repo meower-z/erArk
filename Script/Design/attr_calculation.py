@@ -78,7 +78,7 @@ def get_confinement_training_setting_zero() -> dict:
   return confinement_training_setting_list
 
 
-def get_ability_zero(ability_dict) -> dict:
+def get_ability_zero(ability_dict: dict[int, int]) -> dict[int, int]:
   """
   检查初始能力，将为空的项补为0
   """
@@ -124,7 +124,9 @@ def get_pregnancy_zero() -> game_type.PREGNANCY:
   return pregnancy_data
 
 
-def get_relationship_zero(relationship_dict) -> dict:
+def get_relationship_zero(
+    relationship_dict: game_type.RELATIONSHIP,
+) -> game_type.RELATIONSHIP:
   """
   检查初始关系，将为空的项补为0
   """
@@ -135,7 +137,7 @@ def get_relationship_zero(relationship_dict) -> dict:
   return relationship_data
 
 
-def get_status_zero(status_dict) -> dict:
+def get_status_zero(status_dict: dict[int, int]) -> dict[int, int]:
   """
   检查初始状态，将为空的项补为0
   """
@@ -146,7 +148,7 @@ def get_status_zero(status_dict) -> dict:
   return status_list
 
 
-def get_talent_zero(talent_dict) -> dict:
+def get_talent_zero(talent_dict: dict[int, int]) -> dict[int, int]:
   """
   检查初始素质，将为空的项补为0
   """
@@ -157,7 +159,7 @@ def get_talent_zero(talent_dict) -> dict:
   return talent_list
 
 
-def get_experience_zero(experience_dict) -> dict:
+def get_experience_zero(experience_dict: dict[int, int]) -> dict[int, int]:
   """
   检查初始经验，将为空的项补为0
   """
@@ -168,7 +170,7 @@ def get_experience_zero(experience_dict) -> dict:
   return experience_list
 
 
-def get_juel_zero(juel_dict) -> dict:
+def get_juel_zero(juel_dict: dict[int, int]) -> dict[int, int]:
   """
   检查初始宝珠，将为空的项补为0
   """
@@ -211,7 +213,9 @@ def get_body_manage_zero() -> dict:
   return body_manage
 
 
-def get_second_behavior_zero(second_behavior_dict) -> dict:
+def get_second_behavior_zero(
+    second_behavior_dict: dict[str, int],
+) -> dict[str, int]:
   """
   将二段行为全项归零，读取配置文件中的二段行为，将其归零
   """
@@ -228,7 +232,7 @@ def get_time_zero() -> datetime.datetime:
   return cache.game_time
 
 
-def get_token_zero(token_dict) -> dict:
+def get_token_zero(token_dict: dict[int, bool]) -> dict[int, bool]:
   """
   直接将初始信物归为全员0
   """
@@ -483,7 +487,7 @@ def get_collection_zero() -> game_type.PLAYER_COLLECTION:
   return collection_data
 
 
-def get_item_zero(item_dict) -> dict:
+def get_item_zero(item_dict: dict[int, int]) -> dict[int, int]:
   """
   检查初始道具，将为空的项补为0
   """
@@ -494,7 +498,7 @@ def get_item_zero(item_dict) -> dict:
   return item_list
 
 
-def get_Dr_talent_zero(juel_dict) -> dict:
+def get_Dr_talent_zero(juel_dict: dict[int, int]) -> dict[int, int]:
   """
   检查是否是0号角色，将特定项补为0
   """
@@ -504,7 +508,7 @@ def get_Dr_talent_zero(juel_dict) -> dict:
   return juel_list
 
 
-def get_rand_npc_birthday(age: int):
+def get_rand_npc_birthday(age: int) -> datetime.datetime:
   """
   随机生成npc生日
   Keyword arguments:
@@ -655,7 +659,7 @@ def get_juel(value: int) -> int:
   return juel
 
 
-def get_pain_adjust(value: int, level_flag=False) -> float:
+def get_pain_adjust(value: int, level_flag: bool = False) -> float:
   """
   按润滑程度修正苦痛值比例
   Keyword arguments:
@@ -815,7 +819,7 @@ def get_tired_level(value: int) -> int:
     return 3
 
 
-def get_sleep_level(value: float):
+def get_sleep_level(value: float) -> tuple[int, str]:
   """
   按当前熟睡值返回当前睡眠等级的str\n
   Keyword arguments:\n
@@ -833,7 +837,7 @@ def get_sleep_level(value: float):
   return 3, game_config.config_sleep_level[3].name
 
 
-def get_food_quality(value: int):
+def get_food_quality(value: int) -> tuple[int, str]:
   """
   按当前食物质量返回当前质量等级的str
   Keyword arguments:
@@ -851,7 +855,7 @@ def get_food_quality(value: int):
   return 4, game_config.config_food_quality[4].name
 
 
-def get_favorability_level(value: int):
+def get_favorability_level(value: int) -> tuple[int, int]:
   """
   按当前好感度返回当前好感等级的str
   Keyword arguments:
@@ -875,7 +879,7 @@ def get_favorability_level(value: int):
   return max_cid, max_data.judge_add
 
 
-def get_trust_level(value: float):
+def get_trust_level(value: float) -> tuple[int, int]:
   """
   按当前信赖度返回当前信赖等级的str
   Keyword arguments:
@@ -899,7 +903,7 @@ def get_trust_level(value: float):
   return max_cid, max_data.judge_add
 
 
-def get_reputation_level(value: float):
+def get_reputation_level(value: float) -> tuple[int, str]:
   """
   按当前声望值返回当前声望等级的str
   Keyword arguments:
@@ -959,8 +963,10 @@ def get_character_fall_level(
 
 
 def judge_require(
-    judge_text_list, character_id, hypnosis_replace_trust_flag=False
-):
+    judge_text_list: list[str],
+    character_id: int,
+    hypnosis_replace_trust_flag: bool = False,
+) -> tuple[int, str]:
   """
   判断角色是否满足文本列表里的全部需求\n
   Keyword arguments:\n

@@ -458,7 +458,7 @@ class Make_food_Panel:
         0,
     )
 
-  def choice_seasoning(self, seasoning_cid):
+  def choice_seasoning(self, seasoning_cid: int) -> None:
     """选择味道"""
     # 如果当前调味为该调味则取消选择
     if self.special_seasoning == seasoning_cid:

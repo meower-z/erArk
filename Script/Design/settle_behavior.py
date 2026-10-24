@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import datetime
 import random
 from functools import wraps
 from types import FunctionType
-from typing import Protocol, TypeVar
+from typing import TYPE_CHECKING, Callable, ParamSpec, Protocol, TypeVar
 from Script.Core import cache_control, constant, game_type, get_text, text_handle, rich_text
 from Script.Core.web_server import emit_realtime_text
 from Script.Design import attr_text, attr_calculation, handle_premise, talk, game_time, second_behavior
@@ -10,6 +12,9 @@ from Script.Config import game_config, normal_config
 from Script.System.First_Record_System import first_record_handle
 from Script.System.Instruct_System import handle_instruct
 from Script.UI.Panel import hypnosis_panel
+
+if TYPE_CHECKING:
+  from Script.UI.Moudle import panel
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -20,6 +25,10 @@ _: FunctionType = get_text._
 
 ValueNum = TypeVar("ValueNum", int, float)
 """ 被综合数值结算改动的属性值：好感、能力等为整数，信赖为浮点数 """
+SettleParams = ParamSpec("SettleParams")
+""" 结算函数的参数 """
+SettleReturn = TypeVar("SettleReturn")
+""" 结算函数的返回值 """
 
 
 class ValueOperation(Protocol):
@@ -38,8 +47,8 @@ class ValueOperation(Protocol):
 
 
 def handle_settle_behavior(
-    character_id: int, now_time: datetime.datetime, event_flag=1
-):
+    character_id: int, now_time: datetime.datetime, event_flag: int = 1
+) -> panel.LeftDrawTextListPanel | None:
   """
   处理结算角色行为并输出对应文本
   Keyword arguments:
@@ -687,16 +696,24 @@ def handle_event_data(
   return change_data
 
 
-def add_settle_behavior_effect(behavior_effect_id: int):
+def add_settle_behavior_effect(
+    behavior_effect_id: int,
+) -> Callable[
+    [Callable[SettleParams, SettleReturn]], Callable[SettleParams, SettleReturn]
+]:
   """
   添加行为结算处理
   Keyword arguments:
   behavior_id -- 行为id
   """
 
-  def decorator(func):
+  def decorator(
+      func: Callable[SettleParams, SettleReturn],
+  ) -> Callable[SettleParams, SettleReturn]:
     @wraps(func)
-    def return_wrapper(*args, **kwargs):
+    def return_wrapper(
+        *args: SettleParams.args, **kwargs: SettleParams.kwargs
+    ) -> SettleReturn:
       return func(*args, **kwargs)
 
     constant.settle_behavior_effect_data[behavior_effect_id] = return_wrapper
@@ -705,16 +722,24 @@ def add_settle_behavior_effect(behavior_effect_id: int):
   return decorator
 
 
-def add_settle_second_behavior_effect(second_behavior_effect_id: int):
+def add_settle_second_behavior_effect(
+    second_behavior_effect_id: int,
+) -> Callable[
+    [Callable[SettleParams, SettleReturn]], Callable[SettleParams, SettleReturn]
+]:
   """
   添加二段行为结算处理
   Keyword arguments:
   second_behavior_effect_id -- 二段行为id
   """
 
-  def decorator(func):
+  def decorator(
+      func: Callable[SettleParams, SettleReturn],
+  ) -> Callable[SettleParams, SettleReturn]:
     @wraps(func)
-    def return_wrapper(*args, **kwargs):
+    def return_wrapper(
+        *args: SettleParams.args, **kwargs: SettleParams.kwargs
+    ) -> SettleReturn:
       return func(*args, **kwargs)
 
     constant.settle_second_behavior_effect_data[second_behavior_effect_id] = (

@@ -636,7 +636,7 @@ def wrap_draw_method(
 # 包装所有绘制类的draw方法
 
 
-def apply_web_adapters():
+def apply_web_adapters() -> None:
   """
   应用Web适配器到所有绘制类
 

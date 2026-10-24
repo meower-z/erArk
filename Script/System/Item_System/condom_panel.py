@@ -75,7 +75,7 @@ class Condom_Select_Panel:
       )
     return 1
 
-  def select_condoms(self):
+  def select_condoms(self) -> List[int] | int:
     """
     绘制存量池多选页面\n
     Return arguments:\n
@@ -129,7 +129,9 @@ class Condom_Select_Panel:
       else:
         self.select_index_set.add(index)
 
-  def select_decoration(self, target_character_id: int):
+  def select_decoration(
+      self, target_character_id: int
+  ) -> List[Tuple[tuple, int]] | int:
     """
     绘制对方身上装饰的多选页面\n
     Keyword arguments:\n
@@ -189,7 +191,7 @@ class Condom_Select_Panel:
       else:
         self.select_index_set.add(entry_index)
 
-  def select_part(self, target_character_id: int):
+  def select_part(self, target_character_id: int) -> Tuple[int, int] | int:
     """
     绘制目标部位单选页面\n
     Keyword arguments:\n

@@ -53,9 +53,9 @@ def calculation_instuct_judege(
     character_id: int,
     target_character_id: int,
     instruct_name: str,
-    not_draw_flag=False,
+    not_draw_flag: bool = False,
     settle_hypnosis: bool = True,
-):
+) -> list[float]:
   """
   根据角色和目标角色的各属性来计算总实行值\n
   Keyword arguments:\n

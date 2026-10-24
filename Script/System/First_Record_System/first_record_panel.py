@@ -1,10 +1,15 @@
-from typing import List
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, List
 from types import FunctionType
 from Script.UI.Moudle import draw
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config, normal_config
 from Script.Design import attr_text, game_time
 from Script.UI.Panel import character_info_head, hypnosis_panel
+
+if TYPE_CHECKING:
+  import datetime
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -108,7 +113,7 @@ def _toggle_fold(fold_key: str, default_expand: bool) -> None:
   _fold_state[fold_key] = not _fold_state.get(fold_key, default_expand)
 
 
-def _format_time(now_time) -> str:
+def _format_time(now_time: datetime.datetime | None) -> str:
   """
   格式化履历时间文本（切掉"时间:"前缀的全库惯例，对异常时间数据做防御）
   Keyword arguments:

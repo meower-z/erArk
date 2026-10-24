@@ -279,7 +279,7 @@ def get_multiple_birth_range(character_id: int) -> tuple:
   return (min_num, max_num)
 
 
-def get_fertilization_rate(character_id: int):
+def get_fertilization_rate(character_id: int) -> tuple[float, str]:
   """
   根据当前V精液量计算受精概率
   返回：
@@ -358,7 +358,7 @@ def get_fertilization_rate(character_id: int):
   return now_rate, draw_text
 
 
-def check_fertilization(character_id: int):
+def check_fertilization(character_id: int) -> int | None:
   """
   根据受精概率并判断是否受精
   """
@@ -927,7 +927,7 @@ def update_reproduction_period(character_id: int) -> None:
       character_data.hypnosis.force_ovulation = False
 
 
-def chest_grow(character_id: int, print_flag=False):
+def chest_grow(character_id: int, print_flag: bool = False) -> str:
   """
   进行胸部生长判定
   """
@@ -989,7 +989,7 @@ def chest_grow(character_id: int, print_flag=False):
   return now_text
 
 
-def body_part_grow(character_id: int, print_flag=False):
+def body_part_grow(character_id: int, print_flag: bool = False) -> str:
   """
   进行除胸部外其他部位的生长判定
   """
