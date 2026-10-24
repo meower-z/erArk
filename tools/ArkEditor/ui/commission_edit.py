@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QWidget, QFormLayout, QLineEdit, QTextEdit, QSpinB
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QFont
 import cache_control
+import game_type
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -97,7 +98,7 @@ def explain_commission_text(text: str) -> str:
         flag = parts[2]
         chara_name = (
             cache_control.now_chara_data.Name
-            if hasattr(cache_control.now_chara_data, "Name")
+            if isinstance(cache_control.now_chara_data, game_type.Chara_Data)
             else f"ID{chara_id}"
         )
         if flag == "1":
@@ -124,11 +125,11 @@ def explain_commission_text(text: str) -> str:
       parts = item.split("_")
       if len(parts) == 3:
         nation_id = parts[1]
-        value = float(parts[2]) * 0.01
+        prestige_value = float(parts[2]) * 0.01
         nation_name = cache_control.nation_data.get(nation_id, f"ID{nation_id}")
         if nation_id == "0":
           nation_name = "当前国家"
-        result.append(f"声望[{nation_name}]{value}")
+        result.append(f"声望[{nation_name}]{prestige_value}")
       else:
         result.append(item)
     # 特产类 特产_出生地ID_数量
@@ -155,7 +156,7 @@ def explain_commission_text(text: str) -> str:
         value = parts[2]
         chara_name = (
             cache_control.now_chara_data.Name
-            if hasattr(cache_control.now_chara_data, "Name")
+            if isinstance(cache_control.now_chara_data, game_type.Chara_Data)
             else f"ID{chara_id}"
         )
         result.append(f"好感[{chara_name}]增加{value}")
@@ -169,7 +170,7 @@ def explain_commission_text(text: str) -> str:
         value = parts[2]
         chara_name = (
             cache_control.now_chara_data.Name
-            if hasattr(cache_control.now_chara_data, "Name")
+            if isinstance(cache_control.now_chara_data, game_type.Chara_Data)
             else f"ID{chara_id}"
         )
         result.append(f"信赖[{chara_name}]增加{value}")
@@ -183,7 +184,7 @@ def explain_commission_text(text: str) -> str:
         value = parts[2]
         chara_name = (
             cache_control.now_chara_data.Name
-            if hasattr(cache_control.now_chara_data, "Name")
+            if isinstance(cache_control.now_chara_data, game_type.Chara_Data)
             else f"ID{chara_id}"
         )
         result.append(f"[{chara_name}]攻略等级为{value}")
@@ -197,7 +198,7 @@ def explain_commission_text(text: str) -> str:
         flag = parts[2]
         chara_name = (
             cache_control.now_chara_data.Name
-            if hasattr(cache_control.now_chara_data, "Name")
+            if isinstance(cache_control.now_chara_data, game_type.Chara_Data)
             else f"ID{chara_id}"
         )
         if flag == "1":
@@ -230,7 +231,7 @@ class CommissionEditWidget(QWidget):
     parent -- 父控件
     """
     super().__init__(parent)
-    self.commission = None
+    self.commission: "Commission | None" = None
     self.init_ui()
 
   def init_ui(self) -> None:

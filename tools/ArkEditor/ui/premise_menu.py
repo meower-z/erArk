@@ -214,6 +214,7 @@ class PremiseMenu(QDialog):
     if "cid" not in item.__dict__:
       return
 
+    data: "Event | Talk"
     if cache_control.now_edit_type_flag == 1:
       data = cache_control.now_event_data[cache_control.now_select_id]
     elif cache_control.now_edit_type_flag == 0:
@@ -229,7 +230,8 @@ class PremiseMenu(QDialog):
       item.setCheckState(0, Qt.Checked)
       self.add_premise(item, data)
 
-    cache_control.item_premise_list.update()
+    if cache_control.item_premise_list is not None:
+      cache_control.item_premise_list.update()
 
   def search(self) -> None:
     """搜索前提"""

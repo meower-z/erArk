@@ -5,6 +5,7 @@
 from PySide6.QtWidgets import QVBoxLayout, QSplitter, QPushButton, QHBoxLayout, QWidget, QTextEdit, QLabel, QSizePolicy, QComboBox, QScrollArea
 from PySide6.QtGui import QFont, QPalette, QColor
 import cache_control
+import game_type
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -254,6 +255,9 @@ class CharaList(QWidget):
 
   def save_csv(self) -> None:
     """保存csv文件"""
+    # 载入属性文件之前这里还是类本身，属性面板在载入之后才显示
+    if not isinstance(cache_control.now_chara_data, game_type.Chara_Data):
+      return
     # 如果是使用的模板，那就新建一个文件
     if cache_control.now_file_path == "999_模板人物属性文件.csv":
       chara_id = cache_control.now_chara_data.AdvNpc
@@ -461,7 +465,7 @@ class CharaList(QWidget):
 
   def update_chara_clothing(self) -> None:
     """根据文本编辑框更新当前的角色服装"""
-    now_clothing_dict = {}
+    now_clothing_dict: dict[int, list[str]] = {}
     for item in self.clothing_widget.items:
       key = int(
           list(cache_control.clothing_data.keys())[
@@ -486,6 +490,9 @@ class CharaList(QWidget):
 
   def update(self) -> None:
     """更新"""
+    # 载入属性文件之前这里还是类本身，属性面板在载入之后才显示
+    if not isinstance(cache_control.now_chara_data, game_type.Chara_Data):
+      return
     now_AdvNpc = cache_control.now_chara_data.AdvNpc
     self.chara_id_text_edit.setText(str(now_AdvNpc))
     now_Name = cache_control.now_chara_data.Name
@@ -614,7 +621,7 @@ class MenuWidget(QWidget):
     self.buttonLayout.addWidget(self.removeButton)
 
     self.type_flag = type_flag
-    self.items = []
+    self.items: list[tuple[QHBoxLayout, QComboBox, QTextEdit]] = []
     self.items_per_layout = 0  # 新增属性来跟踪每个水平布局中的项目数量
 
   def addItems(self) -> None:

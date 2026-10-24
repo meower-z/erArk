@@ -119,8 +119,10 @@ def mark_modified() -> None:
   is_modified = True
   update_window_title()
   # 文件已修改时，保存按钮显示星号
-  if hasattr(cache_control, "item_text_edit") and hasattr(
-      cache_control.item_text_edit, "save_button"
+  if (
+      hasattr(cache_control, "item_text_edit")
+      and cache_control.item_text_edit is not None
+      and hasattr(cache_control.item_text_edit, "save_button")
   ):
     cache_control.item_text_edit.save_button.setText("保存*")
 
@@ -131,8 +133,10 @@ def mark_saved() -> None:
   is_modified = False
   update_window_title()
   # 文件已保存时，保存按钮不显示星号
-  if hasattr(cache_control, "item_text_edit") and hasattr(
-      cache_control.item_text_edit, "save_button"
+  if (
+      hasattr(cache_control, "item_text_edit")
+      and cache_control.item_text_edit is not None
+      and hasattr(cache_control.item_text_edit, "save_button")
   ):
     cache_control.item_text_edit.save_button.setText("保存")
 
@@ -402,7 +406,7 @@ def load_talk_data_to_cache() -> None:
 
     # 类型名转化
     if "context" in value:
-      now_talk.text = now_talk.context
+      now_talk.text = value["context"]
     else:
       now_talk.text = ""
     now_talk.behavior_id = str(now_talk.behavior_id)
@@ -410,7 +414,7 @@ def load_talk_data_to_cache() -> None:
 
     # 前提转化
     delete_premise_list = []
-    premise_list = now_talk.premise.split("&")
+    premise_list = value["premise"].split("&")
     now_talk.premise = {}
     for premise in premise_list:
       now_talk.premise[premise] = 1

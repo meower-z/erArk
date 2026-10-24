@@ -136,7 +136,8 @@ class EffectMenu(QDialog):
       cache_control.now_event_data[cache_control.now_select_id].effect[
           item.cid
       ] = 1
-    cache_control.item_effect_list.update()
+    if cache_control.item_effect_list is not None:
+      cache_control.item_effect_list.update()
 
   def search(self) -> None:
     """搜索结算器"""

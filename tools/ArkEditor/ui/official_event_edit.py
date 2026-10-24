@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QFont
 import cache_control
+import game_type
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -46,7 +47,7 @@ ONCE_TEXT = {0: "0 普通", 1: "1 里程碑（仅标注）"}
 """ once 列的下拉项。它已经不影响触发：所有事件都对同一个角色只发生一次 """
 
 
-class SelectorShim:
+class SelectorShim(game_type.Event):
   """
   给既有前提/结算选择器用的临时载体
   输入：
@@ -65,6 +66,7 @@ class SelectorShim:
     premise -- 前提集合
     effect -- 结算集合
     """
+    super().__init__()
     self.text = text
     self.premise = premise
     self.effect = effect
@@ -122,7 +124,9 @@ class OfficialEventEditWidget(QWidget):
   event_saved = Signal(object)
 
   def __init__(
-      self, department_name_data: dict = None, parent: QWidget | None = None
+      self,
+      department_name_data: dict[int, str] | None = None,
+      parent: QWidget | None = None,
   ) -> None:
     """
     初始化控件，此时还没有要编辑的事件
@@ -131,7 +135,7 @@ class OfficialEventEditWidget(QWidget):
     parent -- 父控件
     """
     super().__init__(parent)
-    self.now_event = None
+    self.now_event: "OfficialEvent | None" = None
     """ 当前编辑的事件 """
     self.department_name_data = department_name_data or {}
     """ 部门id -> 部门名 """

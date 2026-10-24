@@ -202,7 +202,8 @@ class CVEMenu(QDialog):
       cache_control.now_event_data[cache_control.now_select_id].effect[
           cve_value_str
       ] = 1
-    cache_control.item_effect_list.update()
+    if cache_control.item_effect_list is not None:
+      cache_control.item_effect_list.update()
     # self.close()
 
   def cancel(self) -> None:

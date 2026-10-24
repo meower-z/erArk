@@ -71,7 +71,7 @@ class Window(QMainWindow):
     self.setCentralWidget(widget)
 
   def set_dynamic_title(
-      self, filename: str = None, modified: bool = False
+      self, filename: str | None = None, modified: bool = False
   ) -> None:
     """
     设置动态窗口标题，显示当前文件名和修改状态

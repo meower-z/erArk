@@ -27,11 +27,11 @@ class Event:
     """初始化事件对象"""
     self.uid: str = ""
     """ 事件唯一id """
-    self.adv_id: str = ""
+    self.adv_id: str | int = ""
     """ 事件所属advnpcid """
     self.behavior_id: str = ""
     """ 事件所属状态id """
-    self.start: bool = 0
+    self.start: int = 0
     """ 是否是状态开始时的事件 """
     self.type: int = 1
     """ 事件类型(0跳过指令，1指令前事件后，2事件前指令后) """
@@ -52,23 +52,23 @@ class Chara_Data:
 
   def __init__(self) -> None:
     """初始化事件对象"""
-    self.AdvNpc: int = 0
+    self.AdvNpc: int | str = 0
     """ 干员编号 """
     self.Name: str = ""
     """ 干员名称 """
-    self.Sex: int = 0
+    self.Sex: int | str = 0
     """ 性别 """
-    self.Profession: int = 1
+    self.Profession: int | str = 1
     """ 职业 """
-    self.Race: int = 1
+    self.Race: int | str = 1
     """ 种族 """
-    self.Nation: int = 0
+    self.Nation: int | str = 0
     """ 势力 """
-    self.Birthplace: int = 0
+    self.Birthplace: int | str = 0
     """ 出身地 """
-    self.Hp: int = 0
+    self.Hp: int | str = 0
     """ 初始体力 """
-    self.Mp: int = 0
+    self.Mp: int | str = 0
     """ 初始气力 """
     self.Dormitory: str = ""
     """ 初始宿舍 """

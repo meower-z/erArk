@@ -229,7 +229,8 @@ class CVPMenu(QDialog):
       cache_control.now_talk_data[cache_control.now_select_id].premise[
           cvp_value_str
       ] = 1
-    cache_control.item_premise_list.update()
+    if cache_control.item_premise_list is not None:
+      cache_control.item_premise_list.update()
     # self.close()
 
   def cancel(self) -> None:

@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
   from PySide6.QtCore import QModelIndex, QPoint
+  from game_type import Event, Talk
 
 font = QFont()
 font.setPointSize(cache_control.now_font_size)
@@ -82,7 +83,9 @@ class ItemPremiseList(QWidget):
     title_layout.addLayout(button_layout3)
 
     # 快速插入按钮区（多行，每行最多4个按钮）
-    self.quick_insert_button_layouts = []  # 存储所有快速插入按钮行
+    self.quick_insert_button_layouts: list[QHBoxLayout] = (
+        []
+    )  # 存储所有快速插入按钮行
     self.quick_insert_button_area = QVBoxLayout()
     title_layout.addLayout(self.quick_insert_button_area)
     self.refresh_quick_insert_buttons()  # 初始化时刷新
@@ -222,6 +225,7 @@ class ItemPremiseList(QWidget):
           premise_cid = premise
           break
       # 获取data对象
+      data: "Event | Talk | None"
       if cache_control.now_edit_type_flag == 1:
         data = cache_control.now_event_data[cache_control.now_select_id]
       elif cache_control.now_edit_type_flag == 0:
@@ -247,7 +251,7 @@ class ItemPremiseList(QWidget):
       # 显示菜单，等待用户选择操作
       action = menu.exec_(self.item_list.mapToGlobal(pos))
       # 删除
-      if action == delete_action:
+      if action == delete_action and data is not None:
         self.item_list.takeItem(self.item_list.row(item))
         # 根据cid删除前提
         if premise_cid in data.premise:
@@ -257,7 +261,7 @@ class ItemPremiseList(QWidget):
         # 复制当前项文本，复制后的内容存入 cache_control.now_copied_premise
         cache_control.now_copied_premise = premise_cid
       # 粘贴
-      elif action == paste_action:
+      elif action == paste_action and data is not None:
         premise_cid = cache_control.now_copied_premise
         # 检查全局复制变量是否有内容，如果有则判断列表中不存在该前提，再创建一个新的列表项并显示
         if premise_cid != "":
@@ -324,6 +328,7 @@ class ItemPremiseList(QWidget):
     拖拽移动前提条目后，更新数据顺序
     """
     if cache_control.now_select_id != "":
+      data: "Event | Talk"
       if cache_control.now_edit_type_flag == 0:
         # 口上
         data = cache_control.now_talk_data[cache_control.now_select_id]
@@ -360,6 +365,7 @@ class ItemPremiseList(QWidget):
     if cache_control.now_select_id == "":
       return
     # 根据编辑类型获取当前数据对象
+    data: "Event | Talk"
     if cache_control.now_edit_type_flag == 1:
       data = cache_control.now_event_data[cache_control.now_select_id]
     elif cache_control.now_edit_type_flag == 0:

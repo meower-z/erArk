@@ -35,10 +35,12 @@ class UndoSnapshotManager:
     建立空的撤销栈、重做栈与监听器列表，撤销栈最大深度为 100
     """
     # 撤销栈，每个元素为一个快照字典
-    self.snapshot_stack = []  # 存放“修改前”状态
-    self.redo_stack = []  # 存放“撤销前(修改后)”状态，用于 Ctrl+Y 重做
+    self.snapshot_stack: list['_Snapshot'] = []  # 存放“修改前”状态
+    self.redo_stack: list['_Snapshot'] = (
+        []
+    )  # 存放“撤销前(修改后)”状态，用于 Ctrl+Y 重做
     self.max_depth = 100  # 默认最大深度
-    self._listeners = []  # 状态监听回调列表
+    self._listeners: list['Callable[[int, int], None]'] = []  # 状态监听回调列表
 
   def _make_snapshot(self) -> '_Snapshot':
     """生成当前全量数据快照（内部使用）。"""

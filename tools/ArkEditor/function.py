@@ -232,7 +232,7 @@ def save_data() -> None:
         now_data = {}
         for k in cache_control.now_event_data:
           now_data[k] = cache_control.now_event_data[k].__dict__
-        json.dump(now_data, event_data_file, ensure_ascii=0)
+        json.dump(now_data, event_data_file, ensure_ascii=False)
 
     # 保存口上
     elif cache_control.now_edit_type_flag == 0:

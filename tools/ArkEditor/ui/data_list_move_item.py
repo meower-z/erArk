@@ -293,15 +293,17 @@ def on_rows_moved(
     for i in range(self.list_widget.count()):
       item = self.list_widget.item(i)
       new_order.append(item.uid)
-    new_data = {uid: cache_control.now_talk_data[uid] for uid in new_order}
-    cache_control.now_talk_data = new_data
+    new_talk_data = {uid: cache_control.now_talk_data[uid] for uid in new_order}
+    cache_control.now_talk_data = new_talk_data
   elif cache_control.now_edit_type_flag == 1:
     # 事件模式
     new_order = []
     for i in range(self.list_widget.count()):
       item = self.list_widget.item(i)
       new_order.append(item.uid)
-    new_data = {uid: cache_control.now_event_data[uid] for uid in new_order}
-    cache_control.now_event_data = new_data
+    new_event_data = {
+        uid: cache_control.now_event_data[uid] for uid in new_order
+    }
+    cache_control.now_event_data = new_event_data
   # 刷新界面
   self.update()
