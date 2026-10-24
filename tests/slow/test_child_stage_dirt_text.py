@@ -32,7 +32,7 @@ PANEL_WIDTH = 100
 class ChildStageDirtTextTest(SlowTestCase):
   """幼女与学员的精液污浊文字与没有差分文本的婴儿相同"""
 
-  def setUp(self):
+  def setUp(self) -> None:
     """
     开新游戏，博士的交互对象是 id 最小的干员，脱光她的衣服，开启完整污浊文本
     Keyword arguments:
@@ -70,7 +70,7 @@ class ChildStageDirtTextTest(SlowTestCase):
         text_list.append(getattr(value, "text", ""))
     return "".join(text_list)
 
-  def test_child_and_trainee_use_common_text(self):
+  def test_child_and_trainee_use_common_text(self) -> None:
     """每个污浊等级下，幼女与学员的面板文字都与婴儿相同，少女的不同"""
     from Script.Config import game_config
 

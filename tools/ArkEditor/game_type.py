@@ -6,7 +6,7 @@
 class Talk:
   """口上对象"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化事件对象"""
     self.cid: str = ""
     """ 口上id """
@@ -23,7 +23,7 @@ class Talk:
 class Event:
   """事件对象"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化事件对象"""
     self.uid: str = ""
     """ 事件唯一id """
@@ -50,7 +50,7 @@ class Event:
 class Chara_Data:
   """角色属性对象"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化事件对象"""
     self.AdvNpc: int = 0
     """ 干员编号 """
@@ -172,7 +172,7 @@ class OfficialEvent:
 
   OPTION_SUFFIX = ["", "_premise", "_reason", "_tip", "_effect"]
 
-  def __init__(self, row: dict, file_name: str = ""):
+  def __init__(self, row: dict, file_name: str = "") -> None:
     """
     从 csv 的一行读入公务事件：department、subject、sub_key、once、weight 转成 int，
     四个选项各收成一个字典放进 options

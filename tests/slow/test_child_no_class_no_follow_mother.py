@@ -38,7 +38,7 @@ CLASS_TIME = datetime.datetime(2020, 12, 22, 10, 0)
 class ChildStagesOfflineTest(SlowTestCase):
   """婴儿与幼女离线、幼女不上学、女儿不跟随母亲见学"""
 
-  def setUp(self):
+  def setUp(self) -> None:
     """
     开新游戏，取 id 最小的两名干员，第一名当母亲
     Keyword arguments:
@@ -66,7 +66,7 @@ class ChildStagesOfflineTest(SlowTestCase):
         if character_id in scene.character_list
     ]
 
-  def test_child_offline_until_trainee(self):
+  def test_child_offline_until_trainee(self) -> None:
     """出生后与长成幼女后不在任何场景、不在 npc_id_got、不上学；长成学员后上线、成年、上学"""
     from Script.Design import character_handle, talk
     from Script.System.Education_System import education_constant, growth_handle
@@ -139,7 +139,7 @@ class ChildStagesOfflineTest(SlowTestCase):
         child_id, growth_handle.get_student_candidate_list(), "学员在养成名单里"
     )
 
-  def test_offline_child_growth_event(self):
+  def test_offline_child_growth_event(self) -> None:
     """
     离线的幼女照样派得到养成事件：每日派发会挑她当主体，挑一条选项会改她养成数值的事件入队，
     经 settle_official_event_option 结算那个选项后，她的照料值或性格倾向变了
@@ -217,7 +217,7 @@ class ChildStagesOfflineTest(SlowTestCase):
         f"结算 {uid} 的选项 {option_index} 后照料值或性格倾向变了",
     )
 
-  def test_follow_mother_never_starts(self):
+  def test_follow_mother_never_starts(self) -> None:
     """工作日上课节次内、母亲在别的场景时，幼女与学员女儿的 AI 都不派见学的状态机，行为也不是跟随母亲见学"""
     from Script.Core import constant
     from Script.Design import game_time, handle_npc_ai, map_handle

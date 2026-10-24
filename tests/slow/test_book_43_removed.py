@@ -45,7 +45,7 @@ USER_SAVE_ID = "99"
 class Book43RemovedTest(SlowTestCase):
   """图书馆不列出 43 号书；旧存档里的 43 号书不妨碍读档、借书与读书"""
 
-  def setUp(self):
+  def setUp(self) -> None:
     """
     开新游戏，测试结束时删掉测试用的存档
     Keyword arguments:
@@ -56,7 +56,7 @@ class Book43RemovedTest(SlowTestCase):
     super().setUp()
     self.addCleanup(shutil.rmtree, os.path.join("save", SAVE_ID), True)
 
-  def save_and_load(self):
+  def save_and_load(self) -> None:
     """
     把当前游戏存到磁盘再读回，与玩家在存档面板里读档后的状态相同
     Keyword arguments:
@@ -106,7 +106,7 @@ class Book43RemovedTest(SlowTestCase):
     player_input.check_done()
     return "".join(player_input.screen) + "".join(button_text_list)
 
-  def test_library_lists_no_book_of_removed_type(self):
+  def test_library_lists_no_book_of_removed_type(self) -> None:
     """借阅书籍面板的色情类书籍里有书，没有类型为「萝莉」的书"""
     text = self.library_text("色情类书籍")
     self.assertTrue("(可借阅)" in text, "色情类书籍页列出了可借阅的书")
@@ -114,7 +114,7 @@ class Book43RemovedTest(SlowTestCase):
         BOOK_TYPE_LABEL in text, "色情类书籍页没有类型为「萝莉」的书"
     )
 
-  def test_old_save_player_holds_book(self):
+  def test_old_save_player_holds_book(self) -> None:
     """博士借着 43 号书、阅读推荐里有它的类型：读档后读书面板、借阅书籍面板与阅读推荐都照常显示，不算这本书"""
     from Script.UI.Panel import borrow_book_panel, manage_library, read_book_panel
 
@@ -149,7 +149,7 @@ class Book43RemovedTest(SlowTestCase):
         "阅读推荐显示还能选 3 个",
     )
 
-  def read_as_entertainment(self, character_id: int):
+  def read_as_entertainment(self, character_id: int) -> None:
     """
     让干员走一次娱乐读书（状态机 ENTERTAIN_READ），与她的行为循环选中这项娱乐时相同
     Keyword arguments:
@@ -164,7 +164,7 @@ class Book43RemovedTest(SlowTestCase):
         constant.StateMachine.ENTERTAIN_READ, character_id
     )
 
-  def test_old_save_nobody_holds_book(self):
+  def test_old_save_nobody_holds_book(self) -> None:
     """43 号书在借阅表里、没人借：读档时借阅表去掉这一项、其余每项不变，再存再读一次不变；每个干员照常判定借书、走娱乐读书，读的书都在书籍配置里"""
     from Script.Config import game_config
     from Script.Core import constant
@@ -310,7 +310,7 @@ class Book43RemovedTest(SlowTestCase):
     character_data.behavior.duration = READ_MINUTES
     return character_id
 
-  def test_old_save_loaned_book_passes_island_21(self):
+  def test_old_save_loaned_book_passes_island_21(self) -> None:
     """干员借着、正读着 43 号书，阅读推荐与图书馆展示列表里有它：打开游戏状态自检时读档，借书一致性自检 ISLAND-21 随即通过，存档里没有对 43 号书与类型 43 的引用；再存再读一次，借阅表不变"""
     from Script.Test.Static_Check.checks import check_island
 
@@ -353,7 +353,7 @@ class Book43RemovedTest(SlowTestCase):
         "再存再读一次，借阅表不变",
     )
 
-  def test_user_save_99_drops_unknown_books(self):
+  def test_user_save_99_drops_unknown_books(self) -> None:
     """用户存档 99：读档后借阅表里没有书籍配置里没有的书，其余每项仍在、借阅者不变或读档时还了书；再存再读一次，借阅表不变"""
     from Script.Config import game_config
     from Script.Core import constant, save_handle

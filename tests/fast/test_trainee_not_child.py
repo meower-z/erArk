@@ -33,7 +33,7 @@ PANEL_WIDTH = 100
 class TraineeNotChildTest(FastTestCase):
   """学员不满足只给幼女的聊天口上的前提，成长药对幼女与学员都有效"""
 
-  def setUp(self):
+  def setUp(self) -> None:
     """
     博士（id 0）与女儿（id 1）在同一场景，博士的交互对象是女儿，女儿饥饿
     Keyword arguments:
@@ -48,7 +48,7 @@ class TraineeNotChildTest(FastTestCase):
     self.daughter.hunger_point = HUNGRY_POINT
     self.pl.target_character_id = 1
 
-  def set_stage(self, talent_id: int):
+  def set_stage(self, talent_id: int) -> None:
     """
     把女儿的成长阶段素质换成 talent_id
     Keyword arguments:
@@ -85,7 +85,7 @@ class TraineeNotChildTest(FastTestCase):
         )[0]
     }
 
-  def test_child_chat_talk_only_for_child(self):
+  def test_child_chat_talk_only_for_child(self) -> None:
     """挂着 t_child_or_loli_1 的聊天口上：女儿是幼女时整条前提成立，是学员时不成立"""
     self.set_stage(CHILD)
     self.assertTrue(
@@ -96,7 +96,7 @@ class TraineeNotChildTest(FastTestCase):
         self.child_chat_talk(), set(), "女儿是学员时，这类口上的整条前提不成立"
     )
 
-  def test_growth_stop_drugs_for_child_and_trainee(self):
+  def test_growth_stop_drugs_for_child_and_trainee(self) -> None:
     """幼女与学员女儿：没停滞时成长停滞药有效，停滞时成长继续药有效"""
     for talent_id in (CHILD, TRAINEE):
       self.set_stage(talent_id)

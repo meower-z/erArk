@@ -25,7 +25,7 @@ font.setFamily(cache_control.now_font_name)
 class CSEMenu(QDialog):
   """综合指令状态结算选择对象"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化综合指令状态结算复选框"""
     super(CSEMenu, self).__init__()
     if cache_control.now_edit_type_flag == 1:
@@ -117,7 +117,7 @@ class CSEMenu(QDialog):
     self.setLayout(self.layout)
 
   # 将change_status_menu函数定义为一个实例方法
-  def change_status_menu(self, action: QWidgetAction):
+  def change_status_menu(self, action: QWidgetAction) -> None:
     """
     更新状态菜单
     Keyword arguments:
@@ -141,7 +141,7 @@ class CSEMenu(QDialog):
       self.status_menu.addMenu(status_menu)
     status_group.triggered.connect(self.change_status_menu)
 
-  def ok(self):
+  def ok(self) -> None:
     """点击确定按钮"""
     # 获得当前abcd的值
     cse_a = self.cse_a.currentText()
@@ -176,11 +176,11 @@ class CSEMenu(QDialog):
     cache_control.item_effect_list.update()
     self.close()
 
-  def cancel(self):
+  def cancel(self) -> None:
     """点击取消按钮"""
     self.close()
 
-  def change_a2(self, index: int):
+  def change_a2(self, index: int) -> None:
     """改变a2的选项"""
     if index == 2:
       self.cse_a2.setVisible(True)

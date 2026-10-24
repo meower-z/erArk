@@ -301,7 +301,7 @@ def write_mapping(new_rows, mapping, group_info):
   )
 
 
-def main():
+def main() -> None:
   """脚本入口"""
   header, rows = read_target()
   print("读入 %d 行数据" % len(rows))

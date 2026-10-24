@@ -22,14 +22,14 @@ ROOM = ["中枢", "博士房间"]
 class WorldTest(FastTestCase):
   """MinimalWorld 的造人、场景与复原"""
 
-  def test_default_chara_dressed_and_normal(self):
+  def test_default_chara_dressed_and_normal(self) -> None:
     """默认角色不是大致全裸，normal_all 为 1"""
     self.world.chara(0, "博士")
     self.world.chara(1, "干员")
     self.assertEqual(handle_premise.handle_cloth_most_off(1), 0)
     self.assertEqual(handle_premise.handle_normal_all(1), 1)
 
-  def test_naked_chara_on_request(self):
+  def test_naked_chara_on_request(self) -> None:
     """naked=True 的角色全裸，只有异常位4异常"""
     self.world.chara(0, "博士")
     self.world.chara(1, "干员", naked=True)
@@ -42,17 +42,17 @@ class WorldTest(FastTestCase):
         [1, 1, 1, 0, 1, 1, 1],
     )
 
-  def test_npc_before_player_refused(self):
+  def test_npc_before_player_refused(self) -> None:
     """先造 NPC 再造玩家时抛 FixtureError"""
     with self.assertRaises(FixtureError):
       self.world.chara(1, "干员")
 
-  def test_unknown_scene_refused(self):
+  def test_unknown_scene_refused(self) -> None:
     """不存在的场景路径抛 FixtureError"""
     with self.assertRaises(FixtureError):
       self.world.scene(["没有", "这里"])
 
-  def test_reset_restores_state(self):
+  def test_reset_restores_state(self) -> None:
     """复原后角色、场景、游戏时间、角色模板都回到基线，缓存对象不变"""
     cache = self.cache
     game_time = cache.game_time
@@ -69,7 +69,7 @@ class WorldTest(FastTestCase):
     self.assertEqual(cache.game_time, game_time)
     self.assertNotIn(-1, cache.npc_tem_data)
 
-  def test_reset_reseeds_random(self):
+  def test_reset_reseeds_random(self) -> None:
     """每次复原后 random、numpy.random 与 uuid.uuid4 给出同一串值"""
     first = (random.random(), numpy.random.random(), uuid.uuid4())
     self.world.reset()
@@ -77,7 +77,7 @@ class WorldTest(FastTestCase):
         (random.random(), numpy.random.random(), uuid.uuid4()), first
     )
 
-  def test_forbidden_import_refused(self):
+  def test_forbidden_import_refused(self) -> None:
     """查找受禁模块时抛 FastLayerImportError（find_spec 只查找、不执行模块）"""
     for name in sorted(FORBIDDEN):
       with self.subTest(name=name), self.assertRaises(FastLayerImportError):

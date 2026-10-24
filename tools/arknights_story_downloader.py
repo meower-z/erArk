@@ -465,7 +465,7 @@ def download_activity_stories_enhanced(activity_name, output_dir=None):
   return success_count, total_count
 
 
-def main():
+def main() -> None:
   """
   主函数
   功能描述:

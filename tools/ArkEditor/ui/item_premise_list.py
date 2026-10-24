@@ -23,7 +23,7 @@ class ItemPremiseList(QWidget):
 
   QUICK_INSERT_FILE = "快速插入前提.csv"
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化前提表单主体"""
     super(ItemPremiseList, self).__init__()
     self.font = font
@@ -107,7 +107,7 @@ class ItemPremiseList(QWidget):
     self.item_list.setSelectionMode(QListWidget.SingleSelection)
     self.item_list.model().rowsMoved.connect(self.on_rows_moved)
 
-  def update(self):
+  def update(self) -> None:
     """更新前提列表"""
     self.item_list.clear()
     add_now_talk_weight, final_weight = 0, 1
@@ -160,13 +160,13 @@ class ItemPremiseList(QWidget):
         draw_text += f"，最终权重：{final_weight}"
     self.info_label.setText(draw_text)
 
-  def CVP(self):
+  def CVP(self) -> None:
     """展开CVP菜单"""
     if cache_control.now_select_id != "":
       menu = CVPMenu()
       menu.exec()
 
-  def change(self):
+  def change(self) -> None:
     """展开前提菜单"""
     if cache_control.now_select_id != "":
       menu = PremiseMenu()
@@ -199,7 +199,7 @@ class ItemPremiseList(QWidget):
     # 展开前提菜单
     self.change()
 
-  def reset(self):
+  def reset(self) -> None:
     """清零前提列表"""
     if cache_control.now_select_id != "":
       if cache_control.now_edit_type_flag == 1:
@@ -277,7 +277,7 @@ class ItemPremiseList(QWidget):
         # 快速插入按钮区需要刷新
         self.refresh_quick_insert_buttons()
 
-  def add_group(self):
+  def add_group(self) -> None:
     """将当前的所有前提设为新前提组"""
     # 获得新的前提组cid
     new_cid_int = 1
@@ -335,7 +335,7 @@ class ItemPremiseList(QWidget):
       new_premise = {cid: data.premise[cid] for cid in new_order}
       data.premise = new_premise
 
-  def toggle_premise(self, premise_cid: str):
+  def toggle_premise(self, premise_cid: str) -> None:
     """
     切换指定前提（sys_0、sys_1、sys_4、sys_5 及快速插入）
     参数：
@@ -385,7 +385,7 @@ class ItemPremiseList(QWidget):
       print(f"读取快速插入前提csv失败: {e}")
     return result
 
-  def add_to_quick_insert(self, cid: str):
+  def add_to_quick_insert(self, cid: str) -> None:
     """
     将指定前提cid加入快速插入csv文件。
     参数：
@@ -402,7 +402,7 @@ class ItemPremiseList(QWidget):
     except Exception as e:
       print(f"写入快速插入前提csv失败: {e}")
 
-  def remove_from_quick_insert(self, cid: str):
+  def remove_from_quick_insert(self, cid: str) -> None:
     """
     从快速插入csv文件中移除指定前提cid。
     参数：
@@ -430,7 +430,7 @@ class ItemPremiseList(QWidget):
     """
     return cid in self.read_quick_insert_list()
 
-  def refresh_quick_insert_buttons(self):
+  def refresh_quick_insert_buttons(self) -> None:
     """
     刷新快速插入按钮区，根据csv文件内容动态生成按钮。
     每行最多4个按钮，超出则换行。

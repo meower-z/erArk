@@ -41,7 +41,7 @@ SOURCE_DIRS = (
 class _ListedScandir:
   """os.scandir 的替身：按给定顺序给出目录项，与 os.scandir 一样可迭代、可当上下文管理器"""
 
-  def __init__(self, entries: list):
+  def __init__(self, entries: list) -> None:
     """
     Keyword arguments:
     entries -- 排好顺序的目录项
@@ -86,7 +86,7 @@ class _ListedScandir:
     """
     self.close()
 
-  def close(self):
+  def close(self) -> None:
     """
     丢弃余下的目录项
     Keyword arguments:
@@ -184,7 +184,7 @@ def run_build(script: str, reverse: bool) -> dict:
 class BuildSameForAnyListingOrderTest(SlowTestCase):
   """列目录按文件名正序或倒序，构建产物与地图载入的结果都相同"""
 
-  def test_build_outputs_same(self):
+  def test_build_outputs_same(self) -> None:
     """两个构建脚本各跑两次（正序、倒序），写出的文件集合相同，每个文件逐字节相同（po 文件头的生成时间除外）"""
     for script in BUILD_SCRIPTS:
       ascending = run_build(script, reverse=False)

@@ -62,7 +62,7 @@ def _wrap_draw_method(cls, key: str, bar_cell_count: bool = False):
   cls.draw = _timed_draw
 
 
-def sample_text_index_cache():
+def sample_text_index_cache() -> None:
   """
   采样 get_text_index 的 lru_cache 命中统计
   参数：无
@@ -83,7 +83,7 @@ def sample_text_index_cache():
   )
 
 
-def apply_flow_draw_patches():
+def apply_flow_draw_patches() -> None:
   """
   应用全部 flow 侧排版计时补丁
   参数：无

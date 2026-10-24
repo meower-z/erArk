@@ -29,7 +29,7 @@ gift_items_path = "csv/Gift_Items.csv"
 resource_path = "csv/Resource.csv"
 
 
-def load_config():
+def load_config() -> None:
   """载入配置文件"""
   with open(premise_path, encoding="utf-8") as now_file:
     now_read = csv.DictReader(now_file)

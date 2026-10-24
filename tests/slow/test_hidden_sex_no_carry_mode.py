@@ -58,7 +58,7 @@ class HiddenSexNoCarryModeTest(SlowTestCase):
     player_input.check_done()
     return button_text_list, "".join(player_input.screen)
 
-  def test_no_carry_mode(self):
+  def test_no_carry_mode(self) -> None:
     """两种打开方式下都只列出四个模式按钮，没有携带模式"""
     self.cache.debug_mode = True
     for sex_be_discovered_flag in (False, True):

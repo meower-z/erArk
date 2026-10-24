@@ -19,7 +19,7 @@ CORRIDOR = ["中枢", "走廊"]
 class LockedRoomEntryTest(SlowTestCase):
   """被召集的干员走进博士锁着的房间；门外的博士走进自己锁着的房间"""
 
-  def test_summoned_operator_walks_into_locked_room(self):
+  def test_summoned_operator_walks_into_locked_room(self) -> None:
     """杜宾被召集后一小时内走进博士锁着的会议室，门仍锁着"""
     from Script.Core import constant
 
@@ -38,7 +38,7 @@ class LockedRoomEntryTest(SlowTestCase):
     )
     self.assertEqual(room.close_flag, 1)
 
-  def test_doctor_walks_into_own_locked_rooms(self):
+  def test_doctor_walks_into_own_locked_rooms(self) -> None:
     """门锁着、博士在走廊：博士办公室和博士房间走得进去，会议室走不进去"""
     pl = self.cache.character_data[0]
     for path, enters in ((DR_OFFICE, True), (DR_ROOM, True), (ROOM, False)):

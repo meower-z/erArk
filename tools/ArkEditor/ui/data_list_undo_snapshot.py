@@ -13,7 +13,7 @@ class UndoSnapshotManager:
   用于保存和恢复所有条目的快照。
   """
 
-  def __init__(self):
+  def __init__(self) -> None:
     """
     建立空的撤销栈、重做栈与监听器列表，撤销栈最大深度为 100
     """
@@ -34,7 +34,7 @@ class UndoSnapshotManager:
         'now_edit_type_flag': copy.deepcopy(cache_control.now_edit_type_flag),
     }
 
-  def save_snapshot(self):
+  def save_snapshot(self) -> None:
     """
     保存当前所有条目的快照
     输入：无
@@ -112,7 +112,7 @@ class UndoSnapshotManager:
     if callback in self._listeners:
       self._listeners.remove(callback)
 
-  def _notify(self):
+  def _notify(self) -> None:
     """
     以撤销栈与重做栈的长度调用每个监听器，忽略监听器抛出的异常
     Return arguments:

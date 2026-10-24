@@ -140,7 +140,7 @@ def save_results_to_csv(results: List[dict], output_file: str) -> None:
   print(f'共发现 {len(results)} 个过长句子')
 
 
-def main():
+def main() -> None:
   """
   主函数：执行完整的检测流程
 

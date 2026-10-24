@@ -30,7 +30,7 @@ LAST_RUN = os.path.join(
 class SmokeNewGameTest(SlowTestCase):
   """新开局跑几个游戏小时，静态自检全部通过"""
 
-  def test_hours_pass_static_checks(self):
+  def test_hours_pass_static_checks(self) -> None:
     """10:00 到 16:00 有干员吃饭，每个整点的全部静态自检都通过；逐步录下行为快照"""
     from Script.Core import constant
     from Script.Test import Static_Check
@@ -49,7 +49,7 @@ class SmokeNewGameTest(SlowTestCase):
     failures = []
     """ 失败的自检：「整点 检查编号 检查名: 说明」 """
 
-    def run_checks():
+    def run_checks() -> None:
       """
       跑一遍全部静态自检，失败记进 failures
       Keyword arguments:

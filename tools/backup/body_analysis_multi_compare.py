@@ -705,7 +705,7 @@ def run_rtmo_inference(model, image):
   return None, None
 
 
-def main():
+def main() -> None:
   """
   主函数：运行多模型+集成对比测试
 

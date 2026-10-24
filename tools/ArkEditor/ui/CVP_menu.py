@@ -23,7 +23,7 @@ font.setFamily(cache_control.now_font_name)
 class CVPMenu(QDialog):
   """综合型基础数值前提选择对象"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化综合型基础数值前提复选框"""
     super(CVPMenu, self).__init__()
     self.setWindowTitle("综合型基础数值前提")
@@ -124,7 +124,7 @@ class CVPMenu(QDialog):
 
     self.setLayout(self.layout)
 
-  def ok(self):
+  def ok(self) -> None:
     """点击确定按钮"""
     # 获得当前abcd的值
     cvp_a = self.cvp_a.currentText()
@@ -228,18 +228,18 @@ class CVPMenu(QDialog):
     cache_control.item_premise_list.update()
     # self.close()
 
-  def cancel(self):
+  def cancel(self) -> None:
     """点击取消按钮"""
     self.close()
 
-  def change_a2(self, index: int):
+  def change_a2(self, index: int) -> None:
     """改变a2的选项"""
     if index == 2:
       self.cvp_a2.setVisible(True)
     else:
       self.cvp_a2.setVisible(False)
 
-  def reset_option(self):
+  def reset_option(self) -> None:
     """重置选项"""
     self.cvp_a.setVisible(True)
     items_count = self.cvp_a.count()
@@ -260,7 +260,7 @@ class CVPMenu(QDialog):
 
     self.cvp_d.setVisible(True)
 
-  def change_b2(self, index: int):
+  def change_b2(self, index: int) -> None:
     """改变b2的选项"""
     self.reset_option()
     if index == 0:

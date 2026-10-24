@@ -23,7 +23,7 @@ font.setFamily(cache_control.now_font_name)
 class DataList(DataListIdEditMixin, QWidget):
   """表单主体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化表单主体"""
     super(DataList, self).__init__()
     self.layout = QGridLayout(self)
@@ -298,7 +298,7 @@ class DataList(DataListIdEditMixin, QWidget):
         menu.addAction(move_cancel_action)
     menu.exec(position)
 
-  def buton_add(self):
+  def buton_add(self) -> None:
     """新增条目"""
     # 新建前保存快照
     undo_snapshot_manager.save_snapshot()
@@ -308,7 +308,7 @@ class DataList(DataListIdEditMixin, QWidget):
       self.create_talk()
     function.save_data()
 
-  def copy_text(self):
+  def copy_text(self) -> None:
     """复制条目"""
     old_item = self.list_widget.currentItem()
     if old_item is None:
@@ -321,7 +321,7 @@ class DataList(DataListIdEditMixin, QWidget):
       self.copy_talk()
     function.save_data()
 
-  def delete_text(self):
+  def delete_text(self) -> None:
     """删除条目"""
     # 删除前保存快照
     undo_snapshot_manager.save_snapshot()
@@ -330,7 +330,7 @@ class DataList(DataListIdEditMixin, QWidget):
     elif cache_control.now_edit_type_flag == 0:
       self.talk_delete()
 
-  def text_search(self):
+  def text_search(self) -> None:
     """文本搜索"""
     search_text = self.text_search_edit.toPlainText()
     if not search_text:
@@ -339,13 +339,13 @@ class DataList(DataListIdEditMixin, QWidget):
     self.text_search_flag = 1
     self.update()
 
-  def text_search_reset(self):
+  def text_search_reset(self) -> None:
     """重置文本搜索"""
     self.text_search_edit.setText("")
     self.text_search_flag = 0
     self.update()
 
-  def premise_search(self):
+  def premise_search(self) -> None:
     """前提搜索"""
     search_text = self.premise_search_edit.toPlainText()
     if not search_text:
@@ -354,13 +354,13 @@ class DataList(DataListIdEditMixin, QWidget):
     self.premise_search_flag = 1
     self.update()
 
-  def premise_search_reset(self):
+  def premise_search_reset(self) -> None:
     """重置前提搜索"""
     self.premise_search_edit.setText("")
     self.premise_search_flag = 0
     self.update()
 
-  def select_now_instruct(self):
+  def select_now_instruct(self) -> None:
     """只显示当前指令"""
     if self.select_now_instruct_check_box.isChecked():
       self.select_now_instruct_flag = 1
@@ -368,7 +368,7 @@ class DataList(DataListIdEditMixin, QWidget):
       self.select_now_instruct_flag = 0
     self.update()
 
-  def create_event(self):
+  def create_event(self) -> None:
     """新增事件"""
     # 数据变更前保存快照（方法内部也会再次调用的可去重，但保证安全）
     # 注意：外层按钮已保存，这里留作直接调用时的保护
@@ -401,7 +401,7 @@ class DataList(DataListIdEditMixin, QWidget):
     self.undo_stack.append({"type": "event_add", "uid": event.uid, "row": row})
     self.update()
 
-  def event_delete(self):
+  def event_delete(self) -> None:
     """
     删除事件，并支持撤销（Ctrl+Z）
     无参数，无返回值。
@@ -431,7 +431,7 @@ class DataList(DataListIdEditMixin, QWidget):
       del cache_control.now_event_data[item.uid]
     self.list_widget.takeItem(event_index)
 
-  def copy_event(self):
+  def copy_event(self) -> None:
     """复制事件"""
     if (
         not undo_snapshot_manager.snapshot_stack
@@ -464,7 +464,7 @@ class DataList(DataListIdEditMixin, QWidget):
     )
     self.update()
 
-  def create_talk(self):
+  def create_talk(self) -> None:
     """新增口上"""
     if (
         not undo_snapshot_manager.snapshot_stack
@@ -493,7 +493,7 @@ class DataList(DataListIdEditMixin, QWidget):
     self.undo_stack.append({"type": "talk_add", "uid": talk.cid, "row": row})
     self.update()
 
-  def talk_delete(self):
+  def talk_delete(self) -> None:
     """
     删除口上，并支持撤销（Ctrl+Z）
     无参数，无返回值。
@@ -522,7 +522,7 @@ class DataList(DataListIdEditMixin, QWidget):
       del cache_control.now_talk_data[item.uid]
     self.list_widget.takeItem(talk_index)
 
-  def copy_talk(self):
+  def copy_talk(self) -> None:
     """复制口上
     无参数，无返回值。
     新条目插入到符合其cid编号的顺序位置。
@@ -578,7 +578,7 @@ class DataList(DataListIdEditMixin, QWidget):
     )
     self.update()
 
-  def update_menu_min_width(self):
+  def update_menu_min_width(self) -> None:
     """重新计算并设置菜单栏的最小宽度（在菜单标题变化后调用）。"""
     fm = self.menu_bar.fontMetrics()
     try:
@@ -593,7 +593,7 @@ class DataList(DataListIdEditMixin, QWidget):
     menu_bar_min_width = max(status_menu_width, type_menu_width) + padding
     self.menu_bar.setMinimumWidth(menu_bar_min_width)
 
-  def update_text_id(self):
+  def update_text_id(self) -> None:
     """根据文本编辑框更新当前的条目序号"""
     now_text_id = self.text_id_text_edit.toPlainText()
     # 如果不是int，弹出提示
@@ -616,7 +616,7 @@ class DataList(DataListIdEditMixin, QWidget):
       return
     self.update()
 
-  def undo_delete(self):
+  def undo_delete(self) -> None:
     """
     快照式撤销（Ctrl+Z）
     无参数，无返回值。
@@ -625,13 +625,13 @@ class DataList(DataListIdEditMixin, QWidget):
       self.update()
     self.update()
 
-  def redo_delete(self):
+  def redo_delete(self) -> None:
     """快照式重做（Ctrl+Y）。无参数，无返回值。"""
     if hasattr(undo_snapshot_manager, "redo") and undo_snapshot_manager.redo():
       self.update()
     self.update()
 
-  def update(self):
+  def update(self) -> None:
     """根据选项刷新当前绘制的列表"""
     self.edited_item = None
     self.list_widget.clear()

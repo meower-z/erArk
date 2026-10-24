@@ -3360,7 +3360,7 @@ _ghost_pl_point = (
 """ 玩家原来的体力 / 气力（上限与当前值），本段跑完还原 """
 
 
-def ghost_flow_stub(add_time: int):
+def ghost_flow_stub(add_time: int) -> None:
   """
   update.game_update_flow 的桩：只记下调用，不进真实主循环
   Keyword arguments:

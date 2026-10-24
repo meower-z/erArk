@@ -53,7 +53,7 @@ class FootClothFillsLockerSemenTest(SlowTestCase):
     self.settle(default_cloth.handle_foot_cloth_to_shower_locker, cid)
     return cd, socks, shoes
 
-  def test_locker_table_complete(self):
+  def test_locker_table_complete(self) -> None:
     """脱鞋袜进衣柜后：鞋袜与鞋上的精液进了衣柜，衣柜精液表覆盖全部服装部位，BODY-10 不报告失败"""
     import Script.Test.Static_Check  # noqa: F401  导入即注册全部检查
     from Script.Config import game_config
@@ -80,7 +80,7 @@ class FootClothFillsLockerSemenTest(SlowTestCase):
     )
     self.assertEqual([f.message for f in get_all_checks()["BODY-10"][1]()], [])
 
-  def test_back_on_with_semen(self):
+  def test_back_on_with_semen(self) -> None:
     """脱鞋袜进衣柜后再穿回：鞋袜回到身上，鞋上的精液回到鞋上"""
     from Script.Settle import default_cloth
 

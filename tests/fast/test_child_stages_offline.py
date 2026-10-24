@@ -54,7 +54,7 @@ def set_stage(character, talent_id: int):
 class ChildStagesOfflineTest(FastTestCase):
   """婴儿与幼女离线，乱伦H指令对她们不可用"""
 
-  def setUp(self):
+  def setUp(self) -> None:
     """
     博士（id 0）与女儿（id 1）在同一场景，博士的交互对象是女儿
     Keyword arguments:
@@ -69,14 +69,14 @@ class ChildStagesOfflineTest(FastTestCase):
     self.daughter.target_character_id = 1
     self.pl.target_character_id = 1
 
-  def test_child_stage_is_offline(self):
+  def test_child_stage_is_offline(self) -> None:
     """婴儿与幼女的异常位7为异常（离线），学员正常"""
     for talent_id, expected in ((BABY, 0), (CHILD, 0), (TRAINEE, 1)):
       with self.subTest(talent_id=talent_id):
         set_stage(self.daughter, talent_id)
         self.assertEqual(handle_premise.handle_normal_7(1), expected)
 
-  def test_daughter_h_instruct_gated_offline(self):
+  def test_daughter_h_instruct_gated_offline(self) -> None:
     """
     两条乱伦H指令的前提里，都有一条在交互对象是婴儿或幼女时不成立、同一女儿换成学员时成立：
     这条前提挡住了离线的女儿，指令对她不可用
@@ -107,7 +107,7 @@ class ChildStagesOfflineTest(FastTestCase):
               gate_list, f"指令 {cid} 没有挡住离线女儿的前提：{offline_result}"
           )
 
-  def test_play_with_child_and_child_entertainments_deleted(self):
+  def test_play_with_child_and_child_entertainments_deleted(self) -> None:
     """指令 3004、娱乐 151 与 154、行为 play_with_child 与 free_play 在配置里都不存在"""
     self.assertNotIn(DELETED_INSTRUCT_CID, game_config.config_instruct)
     self.assertNotIn("play_with_child", game_config.config_instruct_by_id)
@@ -119,7 +119,7 @@ class ChildStagesOfflineTest(FastTestCase):
         self.assertNotIn(behavior, game_config.config_behavior)
         self.assertNotIn(behavior, game_config.config_behavior_effect_data)
 
-  def test_child_underwear_never_h(self):
+  def test_child_underwear_never_h(self) -> None:
     """幼女攻略等级 2 以上、博士有情趣内衣收藏加成时，换 60 次胸衣与内裤都不挑到情趣内衣"""
     set_stage(self.daughter, CHILD)
     h_id_set = {

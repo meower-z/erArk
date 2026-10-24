@@ -306,7 +306,7 @@ def download_character_image_api(character_name, save_dir="downloaded_images"):
   return False
 
 
-def main():
+def main() -> None:
   """主函数"""
   # 设置要下载的角色名称列表
   characters = [

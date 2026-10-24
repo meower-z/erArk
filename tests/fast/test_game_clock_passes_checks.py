@@ -41,7 +41,7 @@ def messages(failures):
 class GameClockPassesChecksTest(FastTestCase):
   """BEHAV-02 与 BEHAV-07 接受 GameTime；类型判定通过后其他条件照旧生效"""
 
-  def setUp(self):
+  def setUp(self) -> None:
     """
     开局时钟：玩家 7:00 开始发呆 5 分钟，游戏时间 7:03
     Keyword arguments:
@@ -61,14 +61,14 @@ class GameClockPassesChecksTest(FastTestCase):
     )
     self.cache.pre_game_time = self.cache.game_time
 
-  def test_checks_accept_game_time(self):
+  def test_checks_accept_game_time(self) -> None:
     """时钟与起时都是 GameTime，BEHAV-02 与 BEHAV-07 不报告失败"""
     self.assertIs(type(self.cache.game_time), game_time.GameTime)
     self.assertIs(type(self.player.behavior.start_time), game_time.GameTime)
     self.assertEqual(messages(run("BEHAV-02")), [])
     self.assertEqual(messages(run("BEHAV-07")), [])
 
-  def test_start_time_after_clock_reported(self):
+  def test_start_time_after_clock_reported(self) -> None:
     """类型判定通过后，BEHAV-11 报告晚于游戏时间的起时"""
     self.player.behavior.start_time = game_time.to_game_time(
         datetime.datetime(2020, 9, 10, 8, 0)
@@ -78,7 +78,7 @@ class GameClockPassesChecksTest(FastTestCase):
         [f.check_id for f in failures], ["BEHAV-11"], messages(failures)
     )
 
-  def test_clock_with_seconds_reported(self):
+  def test_clock_with_seconds_reported(self) -> None:
     """BEHAV-02 只报告带秒数的 game_time"""
     self.cache.game_time = game_time.to_game_time(
         datetime.datetime(2020, 9, 10, 7, 3, 30)

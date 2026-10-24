@@ -25,12 +25,12 @@ WORKFLOW = os.path.join(ROOT, ".github", "workflows", "python-app.yml")
 class InactiveImagesNotLoadedTest(FastTestCase):
   """image 下没有重名图片；停用图片在 image 之外，发布流程不复制它们"""
 
-  def test_no_duplicate_names_under_image(self):
+  def test_no_duplicate_names_under_image(self) -> None:
     """image 目录下没有重名图片"""
     _, duplicates = image_path_index.build_image_path_index(IMAGE_DIR)
     self.assertEqual(sorted(duplicates), [])
 
-  def test_inactive_folder_outside_image(self):
+  def test_inactive_folder_outside_image(self) -> None:
     """image_inactive 里有 png，且不在 image 目录里"""
     inactive_pngs = [
         file
@@ -45,7 +45,7 @@ class InactiveImagesNotLoadedTest(FastTestCase):
         )
     )
 
-  def test_release_copies_neither_inactive_nor_root(self):
+  def test_release_copies_neither_inactive_nor_root(self) -> None:
     """发布流程有复制命令，复制来源里没有 image_inactive，也没有整个仓库根目录"""
     with open(WORKFLOW, encoding="utf-8") as f:
       copy_sources = re.findall(r"Copy-Item\s+(\"[^\"]+\"|\S+)", f.read())

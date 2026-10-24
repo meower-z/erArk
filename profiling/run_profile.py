@@ -154,7 +154,7 @@ def patch_for_benchmark(no_patch_io=False):
 
     if hasattr(draw, "WaitDraw"):
 
-      def fast_wait(self):
+      def fast_wait(self) -> None:
         return
 
       draw.WaitDraw.draw = fast_wait
@@ -223,7 +223,7 @@ def try_load_save(save_id: str) -> bool:
 
 
 # ------------------------- 新建游戏最小初始化 -------------------------
-def new_game_minimal_init():
+def new_game_minimal_init() -> None:
   """
   参考 creator_character_flow.creator_character_panel / game_start 的关键步骤，
   但剔除用户交互与 UI 绘制，仅构造可供 AI 行为循环使用的最小数据环境。
@@ -443,7 +443,7 @@ def load_premise_profiler(args):
 
 
 # ------------------------- Tick 驱动 -------------------------
-def run_ticks(ticks: int, minutes_per_tick: int):
+def run_ticks(ticks: int, minutes_per_tick: int) -> None:
   """
   调用 update.game_update_flow 推进游戏 ticks 次，并按进度打日志
   Keyword arguments:
@@ -581,7 +581,7 @@ def export_premise_stats(pmod, path):
 
 
 # ------------------------- 主入口 -------------------------
-def main():
+def main() -> None:
   """
   解析参数并初始化游戏环境，按参数替换输入输出函数、挂上主循环结构统计补丁，
   采集 profile 后按参数导出前提统计与主循环结构统计，最后用 os._exit(0) 结束进程

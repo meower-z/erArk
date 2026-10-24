@@ -159,7 +159,7 @@ def write_new_behavior_effect(
         next_cid += 1
 
 
-def main():
+def main() -> None:
   """
   主函数，执行数据刷新流程
 

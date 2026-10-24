@@ -44,7 +44,7 @@ def define(name, module="tests.fast.fake_check_module", func="check"):
 class CheckReregisterTest(FastTestCase):
   """同一函数再次注册替换原条目，不同函数注册同一id抛 ValueError"""
 
-  def tearDown(self):
+  def tearDown(self) -> None:
     """
     从注册表移除本测试的检查项
     Keyword arguments:
@@ -54,13 +54,13 @@ class CheckReregisterTest(FastTestCase):
     """
     check_registry._check_registry.pop(CHECK_ID, None)
 
-  def test_same_function_replaces_entry(self):
+  def test_same_function_replaces_entry(self) -> None:
     """同一模块、同一 __qualname__ 的函数再次注册不抛错，注册表里换成新的名称与函数"""
     define("第一次")
     second = define("第二次")
     self.assertEqual(get_all_checks()[CHECK_ID], ("第二次", second))
 
-  def test_different_function_raises(self):
+  def test_different_function_raises(self) -> None:
     """同一模块的另一个函数、另一个模块的同名函数注册同一id都抛 ValueError，注册表保留原条目"""
     for other in (
         {"func": "check_copy"},

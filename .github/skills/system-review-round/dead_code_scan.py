@@ -214,7 +214,7 @@ def count_name_tokens(root: str):
   return prod, test
 
 
-def main():
+def main() -> None:
   """
   命令行入口：扫描并打印报告
   Keyword arguments:
@@ -274,7 +274,7 @@ def main():
       f"生产代码零引用：注册式 {len(registered)}、只有测试引用 {len(test_only)}、完全无引用 {len(unused)}"
   )
 
-  def show(title: str, items: list):
+  def show(title: str, items: list) -> None:
     """
     打印一组定义
     Keyword arguments:

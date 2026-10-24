@@ -148,7 +148,7 @@ def create_converted_file(
   )
 
 
-def main():
+def main() -> None:
   """
   主函数
   """

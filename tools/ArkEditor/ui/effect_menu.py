@@ -39,7 +39,7 @@ class TreeItem(QTreeWidgetItem):
 class EffectMenu(QDialog):
   """事件效果选择对象"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化事件效果复选框"""
     super(EffectMenu, self).__init__()
     self.setWindowTitle(
@@ -113,7 +113,7 @@ class EffectMenu(QDialog):
     self.layout.addLayout(self.tree_layout)
     self.setLayout(self.layout)
 
-  def click_item(self, item: TreeItem, column: int):
+  def click_item(self, item: TreeItem, column: int) -> None:
     """
     点击选项时勾选选框并更新事件效果
     Keyword arguments:
@@ -138,7 +138,7 @@ class EffectMenu(QDialog):
       ] = 1
     cache_control.item_effect_list.update()
 
-  def search(self):
+  def search(self) -> None:
     """搜索结算器"""
     search_text = self.search_text.text()  # QLineEdit 获取文本用 text()
     if not len(search_text):
@@ -157,7 +157,7 @@ class EffectMenu(QDialog):
         # 如果没有任何子项可见，则隐藏该type（root）
         root.setHidden(not has_visible_child)
 
-  def reset(self):
+  def reset(self) -> None:
     """清零前提列表"""
     self.search_text.setText("")
     for tree in self.tree_list:

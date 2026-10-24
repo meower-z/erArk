@@ -78,7 +78,7 @@ font.setBold(cache_control.now_font_bold)
 is_modified = False
 
 
-def update_window_title():
+def update_window_title() -> None:
   """根据当前文件和编辑状态刷新窗口标题"""
   main_window.set_dynamic_title(
       cache_control.now_file_path
@@ -89,7 +89,7 @@ def update_window_title():
 
 
 # 保存字体和路径到配置
-def save_editor_config():
+def save_editor_config() -> None:
   """
   把上次打开的目录与字体名、字号、是否加粗写进 editor_config.ini 的 Editor 节
   Return arguments:
@@ -113,7 +113,7 @@ def save_editor_config():
 # os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = 'D:\venvforqt\Lib\site-packages\PyQt5\Qt5\plugins\platforms'
 
 
-def mark_modified():
+def mark_modified() -> None:
   """标记为已编辑并刷新标题"""
   global is_modified
   is_modified = True
@@ -125,7 +125,7 @@ def mark_modified():
     cache_control.item_text_edit.save_button.setText("保存*")
 
 
-def mark_saved():
+def mark_saved() -> None:
   """标记为已保存并刷新标题"""
   global is_modified
   is_modified = False
@@ -158,7 +158,7 @@ def backup_file(file_path):
   shutil.copy2(file_path, backup_path)
 
 
-def load_event_data():
+def load_event_data() -> None:
   """载入事件文件"""
   global last_open_dir, is_modified
   now_file = QFileDialog.getOpenFileName(
@@ -208,7 +208,7 @@ def load_event_data():
     update_window_title()
 
 
-def create_event_data():
+def create_event_data() -> None:
   """新建事件文件"""
   global last_open_dir, is_modified
   cache_control.now_edit_type_flag = 1
@@ -229,7 +229,7 @@ def create_event_data():
     update_window_title()
 
 
-def create_chara_data():
+def create_chara_data() -> None:
   """新建属性文件"""
   cache_control.now_file_path = "0999_模板人物属性文件.csv"
   load_chara_data_to_cache()
@@ -258,7 +258,7 @@ def load_chara_data(path=""):
     update_window_title()
 
 
-def load_chara_data_to_cache():
+def load_chara_data_to_cache() -> None:
   """将属性数据传输到缓存中"""
   file_path = cache_control.now_file_path
   cache_control.now_talk_data = {}
@@ -334,7 +334,7 @@ def load_chara_data_to_cache():
   main_window.completed_layout()
 
 
-def load_talk_data():
+def load_talk_data() -> None:
   """载入口上文件"""
   global last_open_dir, is_modified
   csv_file = QFileDialog.getOpenFileName(
@@ -352,7 +352,7 @@ def load_talk_data():
     update_window_title()
 
 
-def load_talk_data_to_cache():
+def load_talk_data_to_cache() -> None:
   """将口上数据传输到缓存中"""
 
   file_path = cache_control.now_file_path
@@ -432,7 +432,7 @@ def load_talk_data_to_cache():
   update_status_menu()
 
 
-def create_talk_data():
+def create_talk_data() -> None:
   """新建口上文件"""
   global last_open_dir, is_modified
   dialog: QFileDialog = QFileDialog(menu_bar)
@@ -455,12 +455,12 @@ def create_talk_data():
       update_window_title()
 
 
-def exit_editor():
+def exit_editor() -> None:
   """关闭编辑器"""
   os._exit(0)
 
 
-def update_status_menu():
+def update_status_menu() -> None:
   """更新状态菜单"""
   data_list.status_menu.clear()
   status_group = QActionGroup(data_list.status_menu)
@@ -482,7 +482,7 @@ def update_status_menu():
   status_group.triggered.connect(change_status_menu)
 
 
-def change_status_menu(action: QWidgetAction):
+def change_status_menu(action: QWidgetAction) -> None:
   """
   更新状态菜单
   Keyword arguments:
@@ -535,7 +535,7 @@ def change_status_menu(action: QWidgetAction):
     data_list.menu_bar.setFixedWidth(status_menu_width)
 
 
-def change_type_menu(action: QWidgetAction):
+def change_type_menu(action: QWidgetAction) -> None:
   """
   更新类型分类菜单
   Keyword arguments:
@@ -563,7 +563,7 @@ def change_type_menu(action: QWidgetAction):
       break
 
 
-def update_premise_and_settle_list(model_index: QModelIndex):
+def update_premise_and_settle_list(model_index: QModelIndex) -> None:
   """
   更新前提和结算器列表
   Keyword arguments:
@@ -581,7 +581,7 @@ def update_premise_and_settle_list(model_index: QModelIndex):
     mark_saved()
 
 
-def font_update():
+def font_update() -> None:
   """更新字体"""
   function.show_setting()
   font.setPointSize(cache_control.now_font_size)
@@ -599,7 +599,7 @@ def font_update():
   save_editor_config()
 
 
-def load_commission_data():
+def load_commission_data() -> None:
   """
   载入外勤委托CSV文件并显示在编辑器中
   参数: 无
@@ -651,7 +651,7 @@ def load_commission_data():
   update_window_title()
 
 
-def load_official_event_data():
+def load_official_event_data() -> None:
   """
   载入公务事件目录并显示在编辑器中（Plan 23）
   参数: 无
@@ -697,7 +697,7 @@ def load_official_event_data():
   official_event_list = OfficialEventListWidget(event_list, file_name_list)
   official_event_edit = OfficialEventEditWidget(department_name_data)
 
-  def save_one_file(file_name: str):
+  def save_one_file(file_name: str) -> None:
     """把某个文件里的全部事件写回磁盘"""
     csv_name = file_name + ".csv"
     if csv_name not in head_data:
@@ -814,7 +814,7 @@ item_effect_list.findChild(QPushButton, "btn_reset_all").clicked.connect(
 # 保存操作：保存时调用 mark_saved
 
 
-def save_data_and_mark():
+def save_data_and_mark() -> None:
   """
   按当前编辑类型保存事件或口上文件，有当前文件路径时备份该文件，再标记为已保存
   Return arguments:
@@ -827,7 +827,7 @@ def save_data_and_mark():
   mark_saved()
 
 
-def save_talk_data_and_mark():
+def save_talk_data_and_mark() -> None:
   """
   保存口上文件，有当前文件路径时备份该文件，再标记为已保存
   Return arguments:

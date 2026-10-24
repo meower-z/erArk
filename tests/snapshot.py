@@ -277,7 +277,7 @@ class ActionLog:
   只记id：口上记 [角色id, 口上id（纸娃娃地文为它的行为id）, 二段行为id]，事件记 [角色id, 行为id, 事件id]，不记文本。
   """
 
-  def __init__(self):
+  def __init__(self) -> None:
     """
     Keyword arguments:
     无
@@ -426,7 +426,7 @@ def capture(cache, log: ActionLog = None, memo: dict = None) -> dict:
 class Recorder:
   """逐步收集快照，写成「步<TAB>名字<TAB>值」的文件，只写每步变了、新出现或消失的名字"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """
     Keyword arguments:
     无
@@ -440,7 +440,7 @@ class Recorder:
     self._steps = set()
     """ 已记下的步 """
 
-  def record(self, step: str, state: dict):
+  def record(self, step: str, state: dict) -> None:
     """
     记下一步：写出与上一步相比变了、新出现或消失的名字，消失的名字值为 null
     Keyword arguments:
@@ -468,7 +468,7 @@ class Recorder:
       )
     self._last = dict(state)
 
-  def write(self, path: str):
+  def write(self, path: str) -> None:
     """
     写出快照文件；文件名以 .gz 结尾时写成 gzip（不带时间戳，同样的内容写出同样的字节）
     Keyword arguments:
@@ -646,7 +646,7 @@ class Report:
   把差异写成人能读的报告：每条差异带上步的游戏时间与角色的名字，另有按角色、按字段的汇总
   """
 
-  def __init__(self, baseline: dict, new: dict):
+  def __init__(self, baseline: dict, new: dict) -> None:
     """
     Keyword arguments:
     baseline -- load() 读出的基准

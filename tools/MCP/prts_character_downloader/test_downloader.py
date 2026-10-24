@@ -93,7 +93,7 @@ def test_batch_download():
   return success_count > 0
 
 
-def main():
+def main() -> None:
   """
   主测试函数
 

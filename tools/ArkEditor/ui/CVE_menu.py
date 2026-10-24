@@ -23,7 +23,7 @@ font.setFamily(cache_control.now_font_name)
 class CVEMenu(QDialog):
   """综合型基础数值结算选择对象"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化综合型基础数值结算复选框"""
     super(CVEMenu, self).__init__()
     if cache_control.now_edit_type_flag == 1:
@@ -120,7 +120,7 @@ class CVEMenu(QDialog):
 
     self.setLayout(self.layout)
 
-  def ok(self):
+  def ok(self) -> None:
     """点击确定按钮"""
     # 获得当前abcd的值
     cve_a = self.cve_a.currentText()
@@ -205,18 +205,18 @@ class CVEMenu(QDialog):
     cache_control.item_effect_list.update()
     # self.close()
 
-  def cancel(self):
+  def cancel(self) -> None:
     """点击取消按钮"""
     self.close()
 
-  def change_a2(self, index: int):
+  def change_a2(self, index: int) -> None:
     """改变a2的选项"""
     if index == 2:
       self.cve_a2.setVisible(True)
     else:
       self.cve_a2.setVisible(False)
 
-  def reset_c(self):
+  def reset_c(self) -> None:
     """重置c的选项"""
     self.cve_c.clear()
     self.cve_c.addItems(["增加", "减少", "变为"])
@@ -224,7 +224,7 @@ class CVEMenu(QDialog):
     self.cve_c.setFont(self.font)
     self.cve_c.setVisible(True)
 
-  def reset_option(self):
+  def reset_option(self) -> None:
     """重置选项"""
     self.cve_a.setVisible(True)
     items_count = self.cve_a.count()
@@ -244,7 +244,7 @@ class CVEMenu(QDialog):
     self.cve_d.setPlainText("0")
     self.cve_d.setVisible(True)
 
-  def change_b2(self, index: int):
+  def change_b2(self, index: int) -> None:
     """改变b2的选项"""
     self.reset_option()
     if index == 0:

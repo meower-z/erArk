@@ -16,7 +16,7 @@ font.setFamily(cache_control.now_font_name)
 class ItemTextEdit(QWidget):
   """文本编辑框主体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化文本编辑框主体"""
     super(ItemTextEdit, self).__init__()
     self.font = font
@@ -114,7 +114,7 @@ class ItemTextEdit(QWidget):
         self.show_right_click_menu
     )
 
-  def create_right_click_menu(self):
+  def create_right_click_menu(self) -> None:
     """创建右键菜单"""
     # 创建四个一级菜单
     # 将子菜单和其项的显示字体统一为编辑器当前字体，避免系统默认样式导致不一致
@@ -477,7 +477,7 @@ class ItemTextEdit(QWidget):
     """显示右键菜单（修正方法名避免遮盖）"""
     self.right_click_menu.exec_(self.label_text.mapToGlobal(pos))
 
-  def toggle_preview(self, checked: bool):
+  def toggle_preview(self, checked: bool) -> None:
     """切换编辑/预览模式；预览时把当前文本渲染为 HTML 显示在 preview_edit 中"""
     if checked:
       # 切换到预览模式
@@ -507,7 +507,7 @@ class ItemTextEdit(QWidget):
       self.italic_button.setEnabled(True)
       self.underline_button.setEnabled(True)
 
-  def apply_inline_tag(self, tag_name: str):
+  def apply_inline_tag(self, tag_name: str) -> None:
     """在选中文本两侧插入左右标签；若无选区则插入完整标签并把光标移到中间。
 
     示例:
@@ -536,7 +536,7 @@ class ItemTextEdit(QWidget):
     """右键菜单插入文本"""
     self.label_text.insertPlainText(text)
 
-  def update(self):
+  def update(self) -> None:
     """更新文本内容"""
     if cache_control.now_edit_type_flag == 1:
       # 事件模式，显示注释栏
@@ -571,7 +571,7 @@ class ItemTextEdit(QWidget):
         f"右键菜单可插入更多文本，当前最长行字符总长度为{self.max_length}，建议不要超过100"
     )
 
-  def save(self):
+  def save(self) -> None:
     """保存文本内容"""
     now_text = self.label_text.toPlainText()
     # 检测里面的","，换成"，"，防止csv文件解析出错

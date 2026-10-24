@@ -351,7 +351,7 @@ def dump(run_dir, out_path):
   print("已写", out_path, "：", len(data), "份结果")
 
 
-def main():
+def main() -> None:
   """入口：解析参数，按模式分派"""
   parser = argparse.ArgumentParser(description="检查 Workflow 运行有没有停住")
   parser.add_argument("run_dir", help="运行目录 subagents/workflows/wf_xxx")

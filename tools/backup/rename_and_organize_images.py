@@ -17,7 +17,7 @@ from pathlib import Path
 DIFF_DIR = "image/立绘/干员/差分"
 
 
-def rename_half_body_images():
+def rename_half_body_images() -> None:
   """
   重命名半身图
   在每个角色文件夹中找到不含下划线的png文件，重命名为 {角色名}_半身.png
@@ -84,7 +84,7 @@ def rename_half_body_images():
   print("=" * 50)
 
 
-def download_full_body_images():
+def download_full_body_images() -> None:
   """
   下载全身图
   使用 download_prts_character_image.py 脚本下载
@@ -175,7 +175,7 @@ def download_full_body_images():
     print("请确保 download_prts_character_image.py 存在于 tools 目录中")
 
 
-def check_image_status():
+def check_image_status() -> None:
   """
   检查图片状态
   """

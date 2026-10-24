@@ -221,7 +221,7 @@ def read_CSE(cse_value_str: str):
   return cse_str
 
 
-def save_data():
+def save_data() -> None:
   """保存文件"""
   if len(cache_control.now_file_path):
     # 保存事件
@@ -239,7 +239,7 @@ def save_data():
       save_talk_data()
 
 
-def save_talk_data():
+def save_talk_data() -> None:
   """保存口上文件"""
   if len(cache_control.now_file_path):
     # 通用开头
@@ -270,7 +270,7 @@ def save_talk_data():
       f.close()
 
 
-def show_talk_introduce():
+def show_talk_introduce() -> None:
   """显示口上的说明对话框"""
   dialog = QDialog()
   text_edit = QTextEdit(dialog)
@@ -317,7 +317,7 @@ def show_talk_introduce():
   dialog.exec_()
 
 
-def show_event_introduce():
+def show_event_introduce() -> None:
   """显示事件的说明对话框"""
   dialog = QDialog()
   text_edit = QTextEdit(dialog)
@@ -352,7 +352,7 @@ def show_event_introduce():
   dialog.exec_()
 
 
-def show_chara_introduce():
+def show_chara_introduce() -> None:
   """显示角色属性的说明对话框"""
   dialog = QDialog()
   text_edit = QTextEdit(dialog)
@@ -379,10 +379,10 @@ def show_chara_introduce():
   dialog.exec_()
 
 
-def show_setting():
+def show_setting() -> None:
   """显示和修改编辑器的各种设置"""
 
-  def save_font(font_name: str, font_size: int):
+  def save_font(font_name: str, font_size: int) -> None:
     """保存字体设置"""
     cache_control.now_font_name = font_name
     cache_control.now_font_size = font_size

@@ -467,7 +467,7 @@ def run(world, state_name: str):
   recorder.record("0000", capture(world.cache, log, memo))
   step = 0
 
-  def record():
+  def record() -> None:
     """
     录下一步
     Keyword arguments:

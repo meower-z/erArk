@@ -14,7 +14,7 @@ font.setFamily(cache_control.now_font_name)
 class CharaList(QWidget):
   """表单主体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化表单主体"""
     super(CharaList, self).__init__()
 
@@ -225,7 +225,7 @@ class CharaList(QWidget):
       combo_box.addItem(initial_text)
     return combo_box
 
-  def apply_changes(self):
+  def apply_changes(self) -> None:
     """应用更改"""
     self.update_adv_id()
     self.update_chara_name()
@@ -246,7 +246,7 @@ class CharaList(QWidget):
     self.update_chara_clothing()
     self.save_csv()
 
-  def save_csv(self):
+  def save_csv(self) -> None:
     """保存csv文件"""
     # 如果是使用的模板，那就新建一个文件
     if cache_control.now_file_path == "999_模板人物属性文件.csv":
@@ -306,36 +306,36 @@ class CharaList(QWidget):
     else:
       print(f"debug 未保存文件")
 
-  def reset_values(self):
+  def reset_values(self) -> None:
     """重置值"""
     self.update()
 
-  def update_adv_id(self):
+  def update_adv_id(self) -> None:
     """根据文本编辑框更新当前的角色id"""
     now_adv_id = self.chara_id_text_edit.toPlainText()
     cache_control.now_chara_data.AdvNpc = now_adv_id
 
-  def update_chara_name(self):
+  def update_chara_name(self) -> None:
     """根据文本编辑框更新当前的角色姓名"""
     now_chara_name = self.chara_name_text_edit.toPlainText()
     cache_control.now_chara_data.Name = now_chara_name
 
-  def update_chara_sex(self):
+  def update_chara_sex(self) -> None:
     """根据文本编辑框更新当前的角色性别"""
     now_chara_sex = 1
     cache_control.now_chara_data.Sex = now_chara_sex
 
-  def update_profession(self):
+  def update_profession(self) -> None:
     """根据文本编辑框更新当前的角色职业"""
     now_profession = self.profession_combo_box.currentIndex()
     cache_control.now_chara_data.Profession = now_profession
 
-  def update_race(self):
+  def update_race(self) -> None:
     """根据文本编辑框更新当前的角色种族"""
     now_race = self.race_combo_box.currentIndex()
     cache_control.now_chara_data.Race = now_race
 
-  def update_nation(self):
+  def update_nation(self) -> None:
     """根据文本编辑框更新当前的角色势力"""
     key = int(
         list(cache_control.nation_data.keys())[
@@ -346,7 +346,7 @@ class CharaList(QWidget):
     )
     cache_control.now_chara_data.Nation = key
 
-  def update_birthplace(self):
+  def update_birthplace(self) -> None:
     """根据文本编辑框更新当前的角色出身地"""
     key = int(
         list(cache_control.birthplace_data.keys())[
@@ -357,22 +357,22 @@ class CharaList(QWidget):
     )
     cache_control.now_chara_data.Birthplace = key
 
-  def update_chara_hp(self):
+  def update_chara_hp(self) -> None:
     """根据文本编辑框更新当前的角色初始体力"""
     now_chara_hp = self.chara_hp_text_edit.toPlainText()
     cache_control.now_chara_data.Hp = now_chara_hp
 
-  def update_chara_mp(self):
+  def update_chara_mp(self) -> None:
     """根据文本编辑框更新当前的角色初始气力"""
     now_chara_mp = self.chara_mp_text_edit.toPlainText()
     cache_control.now_chara_data.Mp = now_chara_mp
 
-  def update_chara_dormitory(self):
+  def update_chara_dormitory(self) -> None:
     """根据文本编辑框更新当前的角色初始宿舍"""
     now_chara_dormitory = self.chara_dormitory_text_edit.toPlainText()
     cache_control.now_chara_data.Dormitory = now_chara_dormitory
 
-  def update_chara_token(self):
+  def update_chara_token(self) -> None:
     """根据文本编辑框更新当前的角色信物"""
     now_chara_token = self.chara_token_text_edit.toPlainText()
     # 检测里面的","，换成"，"，防止csv文件解析出错
@@ -383,7 +383,7 @@ class CharaList(QWidget):
     now_chara_token = now_chara_token.replace('"', "")
     cache_control.now_chara_data.Token = now_chara_token
 
-  def update_chara_introduce(self):
+  def update_chara_introduce(self) -> None:
     """根据文本编辑框更新当前的角色介绍"""
     now_chara_introduce = self.chara_introduce_text_edit.toPlainText()
     # 检测里面的","，换成"，"，防止csv文件解析出错
@@ -394,7 +394,7 @@ class CharaList(QWidget):
     now_chara_introduce = now_chara_introduce.replace('"', "")
     cache_control.now_chara_data.Introduce_1 = now_chara_introduce
 
-  def update_chara_textcolor(self):
+  def update_chara_textcolor(self) -> None:
     """根据文本编辑框更新当前的角色字体颜色"""
     now_chara_textcolor = self.chara_textcolor_text_edit.toPlainText()
     cache_control.now_chara_data.TextColor = now_chara_textcolor
@@ -407,7 +407,7 @@ class CharaList(QWidget):
 
     self.chara_textcolor_text_edit.setPalette(palette)
 
-  def update_chara_ability(self):
+  def update_chara_ability(self) -> None:
     """根据文本编辑框更新当前的角色能力"""
     now_ability_dict = {}
     for item in self.ability_widget.items:
@@ -423,7 +423,7 @@ class CharaList(QWidget):
     cache_control.now_chara_data.Ability = now_ability_dict
     # print(f"debug 更新了角色能力，cache_control.now_chara_data.Ability = {cache_control.now_chara_data.Ability}")
 
-  def update_chara_experience(self):
+  def update_chara_experience(self) -> None:
     """根据文本编辑框更新当前的角色经验"""
     now_experience_dict = {}
     for item in self.exprience_widget.items:
@@ -438,7 +438,7 @@ class CharaList(QWidget):
       now_experience_dict[key] = value
     cache_control.now_chara_data.Experience = now_experience_dict
 
-  def update_chara_talent(self):
+  def update_chara_talent(self) -> None:
     """根据文本编辑框更新当前的角色素质"""
     now_talent_dict = {}
     for item in self.talent_widget.items:
@@ -453,7 +453,7 @@ class CharaList(QWidget):
       now_talent_dict[key] = value
     cache_control.now_chara_data.Talent = now_talent_dict
 
-  def update_chara_clothing(self):
+  def update_chara_clothing(self) -> None:
     """根据文本编辑框更新当前的角色服装"""
     now_clothing_dict = {}
     for item in self.clothing_widget.items:
@@ -478,7 +478,7 @@ class CharaList(QWidget):
     cache_control.now_chara_data.Cloth = now_clothing_dict
     # print(f"debug 更新了角色服装，cache_control.now_chara_data.Cloth = {cache_control.now_chara_data.Cloth}")
 
-  def update(self):
+  def update(self) -> None:
     """更新"""
     now_AdvNpc = cache_control.now_chara_data.AdvNpc
     self.chara_id_text_edit.setText(str(now_AdvNpc))
@@ -611,7 +611,7 @@ class MenuWidget(QWidget):
     self.items = []
     self.items_per_layout = 0  # 新增属性来跟踪每个水平布局中的项目数量
 
-  def addItems(self):
+  def addItems(self) -> None:
     """
     新增一项：按 type_flag 列出选项的下拉框，加一个初值为 1 的文本框；
     服装每项单独一行，其他类型每行最多 4 项
@@ -671,7 +671,7 @@ class MenuWidget(QWidget):
     self.items.append((layout, comboBox, textEdit))
     self.items_per_layout += 1  # 增加项目数量
 
-  def removeItems(self):
+  def removeItems(self) -> None:
     """
     删除最后加入的一项：把它所在的水平布局从主布局移除，并删除它的控件；
     这一项的元组长度不是 3 或 4 时抛出 ValueError
@@ -699,7 +699,7 @@ class MenuWidget(QWidget):
         extraTextEdit.deleteLater()
       self.items_per_layout -= 1  # 减少项目数量
 
-  def reset(self):
+  def reset(self) -> None:
     """重置"""
     while self.items:
       self.removeItems()

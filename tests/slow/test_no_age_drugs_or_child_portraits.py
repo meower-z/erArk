@@ -29,7 +29,7 @@ AGE_TALENT_IDS = (102, 103, 104, 105, 106, 107)
 class NoAgeDrugsOrChildPortraitsTest(SlowTestCase):
   """外表年龄药与铜化方舟设定不在配置里；立绘查找不返回「_小」差分；没有立绘的女儿不报错"""
 
-  def test_age_drugs_and_setting_absent(self):
+  def test_age_drugs_and_setting_absent(self) -> None:
     """道具 31、32 不在道具表与礼物表；设定 1 不在世界设定表；world_setting[1] 为 1 时开局设定不改干员的素质 102~107"""
     from Script.Config import game_config
     from Script.Design import character_handle
@@ -64,7 +64,7 @@ class NoAgeDrugsOrChildPortraitsTest(SlowTestCase):
     }
     self.assertEqual(after, before)
 
-  def test_portrait_lookup_never_child_variant(self):
+  def test_portrait_lookup_never_child_variant(self) -> None:
     """image 目录与图片索引里没有「_小」差分；带素质 102、103 的干员、母亲是 MOTHER_NAME 的女儿，查找结果都不含「_小」段"""
     from Script.Core import era_image
     from Script.Design import character_image
@@ -119,7 +119,7 @@ class NoAgeDrugsOrChildPortraitsTest(SlowTestCase):
         )
     )
 
-  def test_daughter_without_art_has_no_portrait(self):
+  def test_daughter_without_art_has_no_portrait(self) -> None:
     """母亲的种族没有女儿图时，女儿的立绘查找结果不在图片索引里，web 渲染器的三个图层路径都为空"""
     from Script.Core import era_image
     from Script.Design import character_image

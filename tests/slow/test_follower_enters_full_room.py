@@ -18,7 +18,7 @@ RECRUITS = 10
 class FollowerEntersFullRoomTest(SlowTestCase):
   """智能跟随的干员跟着博士走进满员的房间"""
 
-  def test_follower_enters_full_office(self):
+  def test_follower_enters_full_office(self) -> None:
     """博士走进满员的博士办公室，智能跟随的杜宾也进去了"""
     from Script.Core import constant
     from Script.Design import character_handle, map_handle

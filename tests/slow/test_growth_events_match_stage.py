@@ -38,7 +38,7 @@ SAVE_ID = "test_growth_events_match_stage"
 class GrowthEventsMatchStageTest(SlowTestCase):
   """候选池按成长阶段分桶；存档里事件表没有的事件读档后无害"""
 
-  def tearDown(self):
+  def tearDown(self) -> None:
     """
     删掉本测试写入的存档
     Keyword arguments:
@@ -95,7 +95,7 @@ class GrowthEventsMatchStageTest(SlowTestCase):
     )
     return mother_id, elder_id, younger_id
 
-  def check_pool(self, character_id: int, stage: int):
+  def check_pool(self, character_id: int, stage: int) -> None:
     """
     候选不为空，每条候选的 sub_key 都是孩子此刻的阶段或通用桶
     Keyword arguments:
@@ -125,7 +125,7 @@ class GrowthEventsMatchStageTest(SlowTestCase):
     )
     self.assertEqual(wrong, [], f"阶段 {stage} 的候选里有别的阶段桶的事件")
 
-  def test_candidate_pool_matches_stage(self):
+  def test_candidate_pool_matches_stage(self) -> None:
     """婴儿、幼女、学员的候选池都不为空，候选都来自本阶段桶或通用桶"""
     from Script.System.Pregnancy_System import pregnancy_constant, pregnancy_handle
 
@@ -141,7 +141,7 @@ class GrowthEventsMatchStageTest(SlowTestCase):
       pregnancy_handle.check_rearing_complete(mother_id)
     self.check_pool(younger_id, CHILD)
 
-  def test_old_save_with_unknown_event(self):
+  def test_old_save_with_unknown_event(self) -> None:
     """存档的公务队列与养成履历里有事件表没有的事件：读档后静态检查通过，队列里那一条被静默清掉，养成总览照常画出"""
     import datetime
 

@@ -34,7 +34,7 @@ PANEL_WIDTH = 100
 class GrowthDrugStageNamesTest(SlowTestCase):
   """成长加速药的提示、选婴儿按钮、下一阶段名与长大时的提示按幼女、学员称呼两个阶段"""
 
-  def setUp(self):
+  def setUp(self) -> None:
     """
     开新游戏，取 id 最小的干员当母亲，给她生两个婴儿，博士走进育儿室、交互对象是母亲
     Keyword arguments:
@@ -64,7 +64,7 @@ class GrowthDrugStageNamesTest(SlowTestCase):
     self.world.move(0, map_handle.get_map_system_path_for_str(nursery))
     self.cache.character_data[0].target_character_id = self.mother_id
 
-  def assert_stage_text(self, label: str, text: str, stage_list: tuple):
+  def assert_stage_text(self, label: str, text: str, stage_list: tuple) -> None:
     """
     text 写着 stage_list 里每个阶段的名称，没有 UNUSED_NAMES
     Keyword arguments:
@@ -83,7 +83,7 @@ class GrowthDrugStageNamesTest(SlowTestCase):
     for name in UNUSED_NAMES:
       self.assertNotIn(name, text, f"{label}里有「{name}」：{text}")
 
-  def set_born_day(self, day: int):
+  def set_born_day(self, day: int) -> None:
     """
     把两个婴儿的出生时间设为 day 天前
     Keyword arguments:
@@ -98,7 +98,7 @@ class GrowthDrugStageNamesTest(SlowTestCase):
           game_time.get_sub_date(day=-day, old_date=self.cache.game_time)
       )
 
-  def test_growth_accelerate_drug_tip(self):
+  def test_growth_accelerate_drug_tip(self) -> None:
     """两个婴儿都快长成幼女时，成长加速药的无效提示写着幼女"""
     from Script.System.Pregnancy_System import pregnancy_constant, pregnancy_handle
     from Script.UI.Panel import gift_panel
@@ -169,7 +169,7 @@ class GrowthDrugStageNamesTest(SlowTestCase):
     for text in button_text_list:
       self.assert_stage_text("选婴儿按钮", text, (102,))
 
-  def test_next_stage_name(self):
+  def test_next_stage_name(self) -> None:
     """婴儿、幼女与学员的下一阶段名依次是幼女、学员、少女"""
     from Script.System.Pregnancy_System import pregnancy_handle
 
@@ -183,7 +183,7 @@ class GrowthDrugStageNamesTest(SlowTestCase):
           f"素质 {talent_id} 的下一阶段名",
       )
 
-  def test_grow_up_texts(self):
+  def test_grow_up_texts(self) -> None:
     """婴儿长成幼女、幼女长成学员时画出的提示写着两个阶段的名称"""
     from Script.System.Pregnancy_System import pregnancy_constant, pregnancy_handle
 
