@@ -151,7 +151,7 @@ def patch_for_benchmark(no_patch_io: bool = False) -> None:
     from Script.Core import py_cmd
 
     py_cmd.focus_cmd = lambda: None
-    py_cmd.clr_cmd = lambda: None
+    py_cmd.clr_cmd = lambda *number, clr_default_flow=True: None
   except Exception as e:
     log(f"补丁 py_cmd 失败: {e}")
 
@@ -163,7 +163,7 @@ def patch_for_benchmark(no_patch_io: bool = False) -> None:
       def fast_wait(self: draw.WaitDraw) -> None:
         return
 
-      draw.WaitDraw.draw = fast_wait
+      setattr(draw.WaitDraw, "draw", fast_wait)
   except Exception as e:
     log(f"补丁 WaitDraw.draw 失败: {e}")
 
@@ -612,11 +612,12 @@ def main() -> None:
   patch_for_benchmark(no_patch_io=args.no_patch_io)
 
   # 可选：主循环/NPC AI 结构统计补丁（需在 profile 运行前应用）
-  loop_stats_mod = None
+  loop_stats_mod: ModuleType | None = None
   if args.loop_stats:
     try:
-      from profiling import loop_stats_patch as loop_stats_mod
+      from profiling import loop_stats_patch
 
+      loop_stats_mod = loop_stats_patch
       loop_stats_mod.apply_loop_stats_patch()
       log("主循环结构统计补丁已应用。")
     except Exception as e:

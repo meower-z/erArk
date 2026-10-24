@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import ast
 import collections
+import io
 import os
 import sys
 import tokenize
@@ -208,8 +209,8 @@ def count_name_tokens(
   Return arguments:
   tuple[Counter, Counter] -- (生产代码计数, 测试代码计数)
   """
-  prod = collections.Counter()
-  test = collections.Counter()
+  prod: collections.Counter[str] = collections.Counter()
+  test: collections.Counter[str] = collections.Counter()
   for path in iter_py_files(root):
     counter = test if is_test_file(path, root) else prod
     try:
@@ -230,6 +231,8 @@ def main() -> None:
   Return arguments:
   无
   """
+  # 从终端、管道或重定向文件运行时 sys.stdout 都是 TextIOWrapper
+  assert isinstance(sys.stdout, io.TextIOWrapper)
   sys.stdout.reconfigure(encoding="utf-8", errors="replace")
   parser = argparse.ArgumentParser(
       description="按代码 token 统计引用的死代码扫描"

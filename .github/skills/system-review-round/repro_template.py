@@ -16,8 +16,25 @@
     - 立项要求：改前全部成立；改后「问题命中」全部不再成立，其余照旧
 """
 
+from __future__ import annotations
+
 import os
 import sys
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import TypedDict
+
+  class ReproResult(TypedDict):
+    """RESULTS 里的一项登记结果，字段与 R() 的同名参数一致"""
+
+    group: str
+    idx: int
+    desc: str
+    holds: bool
+    after: str
+    category: str
+
 
 ROOT = os.environ.get("ERARK_ROOT") or os.getcwd()
 """ 仓库根目录：默认当前工作目录，也可用环境变量 ERARK_ROOT 指定 """
@@ -38,7 +55,7 @@ AFTER_VALUES = ("不再成立", "照旧", "随口径")
 """ 改后预期的三种取值 """
 PHASE = os.environ.get("REPRO_PHASE", "before")
 """ before：改前立项；after：改后按 after 核对 """
-RESULTS = []
+RESULTS: list[ReproResult] = []
 """ 全部检查项的登记结果 """
 
 

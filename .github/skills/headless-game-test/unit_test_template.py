@@ -19,16 +19,19 @@ erArk 无头**函数级单元测试** harness 模板
 """
 
 import datetime
+import io
 import os
 import random
 import sys
 
 sys.path.insert(0, os.getcwd())
+# 从终端、管道或重定向文件运行时 sys.stdout 都是 TextIOWrapper
+assert isinstance(sys.stdout, io.TextIOWrapper)
 sys.stdout.reconfigure(
     encoding="utf-8", errors="replace"
 )  # Windows GBK 控制台防乱码
 
-FAIL = []
+FAIL: list[str] = []
 PASS = 0
 
 
@@ -109,7 +112,7 @@ flow_handle.askfor_all = (
 flow_handle.askfor_wait = lambda *a, **k: None
 
 # 记录 WaitDraw 文本，供「某段提示是否被绘制」类断言使用
-messages = []
+messages: list[str] = []
 
 
 def record_draw(self: draw.WaitDraw, *a: object, **k: object) -> None:
@@ -124,7 +127,7 @@ def record_draw(self: draw.WaitDraw, *a: object, **k: object) -> None:
     messages.append(str(self.text))
 
 
-draw.WaitDraw.draw = record_draw
+setattr(draw.WaitDraw, "draw", record_draw)
 
 print("初始化完成，游戏时间 =", cache.game_time)
 
@@ -270,7 +273,7 @@ class RandStub:
     return self.seq.pop(0) if self.seq else b
 
 
-calls = []
+calls: list[tuple[int, int]] = []
 random.randint = RandStub([1, 100])
 check(
     "randint 桩按序返回",

@@ -61,7 +61,7 @@ def _wrap_draw_method(
 
   _timed_draw.__name__ = getattr(original, "__name__", "draw")
   _timed_draw.__doc__ = getattr(original, "__doc__", None)
-  cls.draw = _timed_draw
+  setattr(cls, "draw", _timed_draw)
 
 
 def sample_text_index_cache() -> None:
@@ -144,7 +144,7 @@ def apply_flow_draw_patches() -> None:
           )
           sample_text_index_cache()
 
-      in_scene_panel.InScenePanel.draw = _timed_scene_draw
+      setattr(in_scene_panel.InScenePanel, "draw", _timed_scene_draw)
   except Exception:
     # 主场景面板导入失败不影响其余补丁
     pass

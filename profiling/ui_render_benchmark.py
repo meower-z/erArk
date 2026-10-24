@@ -26,6 +26,22 @@ import time
 import traceback
 from datetime import datetime
 from types import SimpleNamespace
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import TypedDict
+
+  from Script.UI.Panel import in_scene_panel, see_map_panel
+
+  class BenchmarkState(TypedDict):
+    """基准运行状态：已完成屏数、每屏等待耗时（秒）、是否已在预热后清屏、是否超时中止"""
+
+    screens_done: int
+    screen_wall_times: list[float]
+    warmup_wall_times: list[float]
+    warmup_cleared: bool
+    aborted: bool
+
 
 PROFILE_DIR = "profiling_output"
 os.makedirs(PROFILE_DIR, exist_ok=True)
@@ -136,7 +152,7 @@ def main() -> None:
   log(f"存档已加载：NPC 数量 = {len(cache.npc_id_got)}")
 
   # 基准运行状态
-  state = {
+  state: BenchmarkState = {
       "screens_done": 0,
       "screen_wall_times": [],
       "warmup_wall_times": [],
@@ -225,6 +241,7 @@ def main() -> None:
           f"开始基准：面板={args.panel}，{args.screens} 屏完整重绘，文本宽度 {width}"
       )
       t_total = time.perf_counter()
+      panel: see_map_panel.SeeMapPanel | in_scene_panel.InScenePanel
       if args.panel == "map":
         # 查看地图界面：SeeMapPanel 的 while-1 循环同样以 now_panel_id 为退出条件
         cache.now_panel_id = constant.Panel.SEE_MAP

@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import glob
+import io
 import json
 import os
 import re
@@ -41,12 +42,14 @@ if TYPE_CHECKING:
     id: str
     age_min: float
     lines: int
-    pending: list[tuple[str, str, float | None]]
+    pending: list[tuple[str | None, str, float | None]]
     recent: list[str]
 
 
 # 控制台默认 GBK，统一改成 UTF-8，免得中文乱码
 try:
+  # 从终端、管道或重定向文件运行时 sys.stdout 都是 TextIOWrapper
+  assert isinstance(sys.stdout, io.TextIOWrapper)
   sys.stdout.reconfigure(encoding="utf-8")
 except Exception:
   pass
@@ -254,7 +257,7 @@ def snapshot(run_dir: str, stale: float) -> tuple[
   """
   now = time.time()
   labels, results, _ = read_journal(run_dir)
-  rows = []
+  rows: list[tuple[str, str, str, AgentInfo | None]] = []
   seen = set()
   for path in sorted(glob.glob(os.path.join(run_dir, "agent-*.jsonl"))):
     info = scan_agent(path, now)
@@ -325,7 +328,7 @@ def watch(run_dir: str, stale: float, interval: float, expect: int) -> None:
   参数：run_dir (str)；stale (float) 阈值分钟；interval (float) 轮询秒数；expect (int) 预期交卷数，0 为不自动退出
   返回：无
   """
-  previous = {}
+  previous: dict[str, str] = {}
   while True:
     _, results, rows = snapshot(run_dir, stale)
     stamp = datetime.datetime.now().strftime("%H:%M")

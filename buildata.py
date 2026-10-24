@@ -106,6 +106,7 @@ def constand_2_handle() -> str:
   """
 
   # 判断数据编号
+  data_index: int | str
   if datetype == "A":
     datetype_str = "ability"
     for config_data_index in game_config.config_ability:

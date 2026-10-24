@@ -24,8 +24,27 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
   import datetime
+  from typing import TypedDict
 
-loop_stats = {
+  class LoopStats(TypedDict):
+    """loop_stats 的各项计数与累计耗时（秒）"""
+
+    ticks: int
+    npc_count: int
+    tick_times: list[float]
+    character_behavior_calls_player: int
+    character_behavior_calls_npc: int
+    character_behavior_time: float
+    find_target_calls: int
+    find_target_time: float
+    search_target_calls: int
+    search_target_time: float
+    search_target_list_len_sum: int
+    search_target_list_len_max: int
+    search_target_full_scans: int
+
+
+loop_stats: LoopStats = {
     "ticks": 0,
     "npc_count": 0,
     "tick_times": [],
