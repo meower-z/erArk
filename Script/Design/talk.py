@@ -31,7 +31,7 @@ def handle_talk(character_id: int):
   ]
   behavior_id = character_data.behavior.behavior_id
   # 已计算过的前提字典
-  calculated_premise_dict = {}
+  calculated_premise_dict: dict[str, float] = {}
   # 和玩家不在同一位置的NPC不显示文本
   if (
       character_id != 0
@@ -99,7 +99,7 @@ def handle_second_talk(character_id: int, behavior_id: str = "share_blankly"):
   """
   character_data: game_type.Character = cache.character_data[character_id]
   # 已计算过的前提字典
-  calculated_premise_dict = {}
+  calculated_premise_dict: dict[str, float] = {}
   # 检测是否是收藏模式#
   if cache.is_collection and character_id:
     player_data: game_type.Character = cache.character_data[0]
@@ -220,7 +220,7 @@ def handle_talk_sub(
           target_data.adv
       ][target_version]
   # 正式口上数据
-  now_talk_data = {}
+  now_talk_data: dict[float, set[str]] = {}
   # 遍历口上列表
   for talk_id in tem_talk_list:
     talk_config = game_config.config_talk[talk_id]
@@ -466,7 +466,7 @@ def handle_talk_draw(
     tem_text, special_code = special_code_judge(talk_text)
     # 检测并绘制图片
     talk_text = talk_image.draw_image_in_talk(talk_text)
-    now_draw = draw.LineFeedWaitDraw()
+    now_draw: draw.NormalDraw = draw.LineFeedWaitDraw()
     # 跳过每次的等待
     if special_code[0]:
       now_draw = draw.NormalDraw()
@@ -616,7 +616,7 @@ def must_show_talk_check(character_id: int):
   """
   character_data: game_type.Character = cache.character_data[character_id]
   # 已计算过的前提字典
-  calculated_premise_dict = {}
+  calculated_premise_dict: dict[str, float] = {}
   # 遍历所有必须显示的二段行为
   for behavior_id in character_data.must_show_second_behavior_id_list:
     # 跳过值为0的行为
@@ -909,7 +909,7 @@ def talk_common_judge_one_pass(now_talk: str, character_id: int) -> str:
   pl_character_id = 0
   pl_character_data: game_type.Character = cache.character_data[0]
   # 已计算过的前提字典
-  calculated_premise_dict = {}
+  calculated_premise_dict: dict[str, float] = {}
   # 遍历所有通用占位符的 key 和对应的 cid 集合
   for key, cid_list in game_config.config_talk_common_cid_list_by_type.items():
     # 构造匹配 "{key}" 的正则表达式

@@ -32,6 +32,8 @@ def handle_settle_behavior(
 
   now_character_data: game_type.Character = cache.character_data[character_id]
   player_character_data: game_type.Character = cache.character_data[0]
+  # NPC对玩家交互时，下面会与玩家一侧的记录对象互换，故两种记录类型都可能
+  change_data: game_type.CharacterStatusChange | game_type.TargetChange
   change_data = game_type.CharacterStatusChange()
   start_time = now_character_data.behavior.start_time
   add_time = int((now_time - start_time).seconds / 60)
@@ -174,7 +176,9 @@ def handle_settle_behavior(
   if character_id != 0 and now_character_data.target_character_id == 0:
     exchange_flag = True
     change_data.target_change.setdefault(0, game_type.TargetChange())
-    target_change: game_type.TargetChange = change_data.target_change[0]
+    target_change: game_type.CharacterStatusChange | game_type.TargetChange = (
+        change_data.target_change[0]
+    )
     target_change.target_change[character_id] = change_data
 
     # 开始互换
@@ -333,12 +337,8 @@ def handle_settle_behavior(
         # 当NPC对玩家交互时，直接使用互相替换完的双方数据
         judge = 0
         if not exchange_flag:
-          target_change: game_type.TargetChange = change_data.target_change[
-              target_character_id
-          ]
-          target_data: game_type.Character = cache.character_data[
-              target_character_id
-          ]
+          target_change = change_data.target_change[target_character_id]
+          target_data = cache.character_data[target_character_id]
         else:
           judge = 1
         name = f"\n{target_data.name}"
@@ -852,7 +852,7 @@ def get_favorability_social(favorability: int) -> int:
 
 def extra_exp_settle(
     character_id: int,
-    change_data: game_type.CharacterStatusChange,
+    change_data: game_type.CharacterStatusChange | game_type.TargetChange,
 ) -> None:
   """
   处理额外经验结算
@@ -920,7 +920,9 @@ def extra_exp_settle(
 def handle_comprehensive_value_effect(
     character_id: int,
     effect_all_value_list: list,
-    change_data: game_type.CharacterStatusChange = game_type.CharacterStatusChange(),
+    change_data: (
+        game_type.CharacterStatusChange | game_type.TargetChange
+    ) = game_type.CharacterStatusChange(),
 ) -> int:
   """
   综合型基础数值结算
@@ -1148,7 +1150,8 @@ def handle_comprehensive_value_effect(
 
 
 def collect_web_value_changes(
-    change_data: game_type.CharacterStatusChange, character_id: int
+    change_data: game_type.CharacterStatusChange | game_type.TargetChange,
+    character_id: int,
 ) -> None:
   """
   收集结算过程中的数值变化，用于Web模式的浮动文本显示

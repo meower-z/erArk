@@ -17,7 +17,7 @@ _: FunctionType = get_text._
 """ 翻译api """
 width: int = normal_config.config_normal.text_width
 """ 屏幕宽度 """
-instruct_queue = queue.Queue()
+instruct_queue: queue.Queue[str] = queue.Queue()
 """ 待处理的指令队列 """
 
 
@@ -92,11 +92,11 @@ SUB_TYPE_MAP = {
 
 def add_instruct(
     instruct_id: str,
-    instruct_type: int = None,
-    name: str = None,
-    premise_set: Set = None,
-    behavior_id: str = None,
-    sub_type: int = None,
+    instruct_type: Optional[int] = None,
+    name: Optional[str] = None,
+    premise_set: Optional[Set] = None,
+    behavior_id: Optional[str] = None,
+    sub_type: Optional[int] = None,
 ):
   """
   添加指令处理
@@ -226,7 +226,7 @@ def add_instruct(
     # ========== Web模式分类数据注册（从CSV数据库读取）==========
     major_type = None
     minor_type = None
-    body_parts = []
+    body_parts: List[str] = []
     category = None
 
     if csv_config:
@@ -1552,8 +1552,8 @@ def handle_unconscious_h(type_name: str = "") -> None:
   if cache.scene_data[
       now_scene_str
   ].close_flag == 0 and handle_premise.handle_time_stop_off(0):
-    now_draw = normal_panel.Close_Door_Panel(width)
-    door_return = now_draw.draw()
+    close_door_panel = normal_panel.Close_Door_Panel(width)
+    door_return = close_door_panel.draw()
     if door_return == -1:
       return
   target_data.action_info.last_unconscious_h_time = cache.game_time

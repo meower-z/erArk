@@ -17,13 +17,13 @@ def two_bit_array_to_dict(array: tuple) -> dict:
   return dict(array)
 
 
-def get_rand_value_for_value_region(value_list: List[int]) -> int:
+def get_rand_value_for_value_region(value_list: List[float]) -> float:
   """
   以列表中每个元素的值作为权重随机获取一个元素
   Keyword arguments:
   value_list -- 要计算的列表
   Return arguments:
-  int -- 获得的元素
+  float -- 获得的元素
   """
   return random.choices(value_list, weights=value_list)[0]
   # key_list = [math.ceil(i) for i in value_list]

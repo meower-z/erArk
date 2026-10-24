@@ -1,4 +1,4 @@
-from typing import List
+from typing import Tuple
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.UI.Moudle import draw
@@ -46,7 +46,7 @@ def get_commission_demand_and_reward(
     send_npc_list: list[int] = [],
     demand_or_reward: bool = False,
     deduction_or_increase: bool = False,
-) -> List[str]:
+) -> Tuple[bool, str, str]:
   """
   获取委托需求或奖励\n
   Keyword arguments:\n
@@ -55,7 +55,7 @@ def get_commission_demand_and_reward(
   demand_or_reward -- False为需求，True为奖励，默认为False\n
   deduction_or_increase -- 是否扣除或增加资源，默认为False\n
   Return arguments:\n
-  return_list -- [是否满足, 需求类型文本, 需求全文]
+  return_list -- (是否满足, 需求类型文本, 需求全文)
   """
   commission_data = game_config.config_commission[commission_id]
   # 获取需求或奖励文本
@@ -115,7 +115,7 @@ def get_commission_demand_and_reward(
             now_time=cache.game_time,
         )
 
-  return_list = [satify_flag, type_text, full_text]
+  return_list = (satify_flag, type_text, full_text)
   return return_list
 
 

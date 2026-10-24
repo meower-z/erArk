@@ -822,13 +822,18 @@ class SeeFoodListByFoodNameDraw:
     self.last_confirm_result: str = ""
     """ 记录二级确认面板最后一次操作结果（如：取消） """
 
+    name_draw: (
+        draw.NormalDraw | draw.CenterDraw | draw.LeftButton | draw.CenterButton
+    )
     # 如果是用来占位的空白项，绘制一个固定宽度的空白文本
     if self.cid == "-1":
       self.draw_text = " "
       name_draw = draw.CenterDraw()
       name_draw.text = " "
       name_draw.width = self.width
-      self.now_draw = name_draw
+      self.now_draw: draw.NormalDraw | draw.LeftButton | draw.CenterButton = (
+          name_draw
+      )
       return
 
     # 延迟创建：此处仅根据菜谱id读取菜谱信息，不创建食物对象

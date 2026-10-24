@@ -12,7 +12,7 @@ from Script.Core import (
 from Script.Config import normal_config
 from Script.Design import handle_premise, map_handle
 
-panel_info_data = {}
+panel_info_data: dict[str, object] = {}
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """

@@ -527,6 +527,7 @@ def handle_last_cmd_normal_sex(character_id: int) -> int:
     if last_cmd == str(constant.Instruct.NORMAL_SEX):
       return 1
     return 0
+  return 0
 
 
 @add_premise(constant_promise.Premise.LAST_CMD_BACK_SEX)
@@ -546,6 +547,7 @@ def handle_last_cmd_back_sex(character_id: int) -> int:
     if last_cmd == str(constant.Instruct.BACK_SEX):
       return 1
     return 0
+  return 0
 
 
 @add_premise(constant_promise.Premise.LAST_CMD_RIDING_SEX)
@@ -565,6 +567,7 @@ def handle_last_cmd_riding_sex(character_id: int) -> int:
     if last_cmd == str(constant.Instruct.RIDING_SEX):
       return 1
     return 0
+  return 0
 
 
 @add_premise(constant_promise.Premise.LAST_CMD_FACE_SEAT_SEX)
@@ -584,6 +587,7 @@ def handle_last_cmd_face_seat_sex(character_id: int) -> int:
     if last_cmd == str(constant.Instruct.FACE_SEAT_SEX):
       return 1
     return 0
+  return 0
 
 
 @add_premise(constant_promise.Premise.LAST_CMD_BACK_SEAT_SEX)
@@ -603,6 +607,7 @@ def handle_last_cmd_back_seat_sex(character_id: int) -> int:
     if last_cmd == str(constant.Instruct.BACK_SEAT_SEX):
       return 1
     return 0
+  return 0
 
 
 @add_premise(constant_promise.Premise.LAST_CMD_FACE_STAND_SEX)
@@ -622,6 +627,7 @@ def handle_last_cmd_face_stand_sex(character_id: int) -> int:
     if last_cmd == str(constant.Instruct.FACE_STAND_SEX):
       return 1
     return 0
+  return 0
 
 
 @add_premise(constant_promise.Premise.LAST_CMD_BACK_STAND_SEX)
@@ -641,6 +647,7 @@ def handle_last_cmd_back_stand_sex(character_id: int) -> int:
     if last_cmd == str(constant.Instruct.BACK_STAND_SEX):
       return 1
     return 0
+  return 0
 
 
 @add_premise(constant_promise.Premise.LAST_CMD_STIMULATE_G_POINT)
@@ -747,6 +754,7 @@ def handle_last_cmd_penis_position(character_id: int) -> int:
     if last_cmd in sex:
       return 1
     return 0
+  return 0
 
 
 @add_premise(constant_promise.Premise.LAST_CMD_BLOWJOB_OR_HANDJOB)
@@ -847,6 +855,7 @@ def handle_last_cmd_sex(character_id: int) -> int:
     if last_cmd in sex:
       return 1
     return 0
+  return 0
 
 
 @add_premise(constant_promise.Premise.LAST_CMD_W_SEX)
@@ -894,6 +903,7 @@ def handle_last_cmd_w_sex(character_id: int) -> int:
     if last_cmd in sex:
       return 1
     return 0
+  return 0
 
 
 @add_premise(constant_promise.Premise.LAST_CMD_SEX_OR_W_SEX)
@@ -946,6 +956,7 @@ def handle_last_cmd_a_sex(character_id: int) -> int:
     if last_cmd in sex:
       return 1
     return 0
+  return 0
 
 
 @add_premise(constant_promise.Premise.LAST_CMD_U_SEX)
@@ -981,6 +992,7 @@ def handle_last_cmd_u_sex(character_id: int) -> int:
     if last_cmd in sex:
       return 1
     return 0
+  return 0
 
 
 @add_premise(constant_promise.Premise.LAST_CMD_BREAST_CARESS_TYPE)

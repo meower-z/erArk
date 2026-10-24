@@ -68,7 +68,7 @@ def get_stature_text(character_id: int) -> str:
   descript_data = {}
   for descript in game_config.config_stature_description_text:
     descript_tem = game_config.config_stature_description_text[descript]
-    now_weight = 0
+    now_weight: float = 0
     if descript in game_config.config_stature_description_premise_data:
       for premise in game_config.config_stature_description_premise_data[
           descript

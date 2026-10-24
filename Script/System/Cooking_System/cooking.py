@@ -215,7 +215,7 @@ def init_food_shop_data(
     while 1:
       recipes_id_list = list(cache.recipe_data.keys())
       recipes_id = random.choice(recipes_id_list)
-      food_list = {}
+      food_list: Dict[str, Food] = {}
       now_recipe_data = cache.recipe_data[recipes_id]
       # 只能制作预制菜
       if now_recipe_data.type != 5:
@@ -358,7 +358,7 @@ def get_character_food_bag_type_list_buy_food_type(
   Return arguments:
   Dict -- 食物名字数据 食物名字:uid集合
   """
-  food_list = {}
+  food_list: Dict[str, Set[uuid.UUID]] = {}
   character_data = cache.character_data[character_id]
   for food_uid in character_data.food_bag:
     food_data: Food = character_data.food_bag[food_uid]
@@ -371,7 +371,7 @@ def get_character_food_bag_type_list_buy_food_type(
 
 def get_food_list_from_food_shop(
     food_type: str, restaurant_id: int = -1
-) -> Dict[uuid.UUID, str]:
+) -> Dict[str, str]:
   """
   获取餐馆内指定类型的食物种类
   Keyword arguments:
@@ -403,9 +403,9 @@ def get_food_list_from_food_shop(
       now_food_uid = list(
           cache.rhodes_island.restaurant_data[restaurant_id][food_id].keys()
       )[0]
-      now_food: game_type.Food = cache.rhodes_island.restaurant_data[
-          restaurant_id
-      ][food_id][now_food_uid]
+      now_food = cache.rhodes_island.restaurant_data[restaurant_id][food_id][
+          now_food_uid
+      ]
       if now_food.recipe != -1:
         food_list[food_id] = cache.recipe_data[int(food_id)].name
   # 地摊小贩的食物
@@ -416,9 +416,7 @@ def get_food_list_from_food_shop(
       now_food_uid = list(
           cache.rhodes_island.stall_vendor_data[0][food_id].keys()
       )[0]
-      now_food: game_type.Food = cache.rhodes_island.stall_vendor_data[0][
-          food_id
-      ][now_food_uid]
+      now_food = cache.rhodes_island.stall_vendor_data[0][food_id][now_food_uid]
       if now_food.recipe != -1:
         food_list[food_id] = cache.recipe_data[int(food_id)].name
   return food_list
@@ -426,7 +424,7 @@ def get_food_list_from_food_shop(
 
 def get_cook_from_makefood_data_by_food_type(
     food_type: str,
-) -> Dict[uuid.UUID, str]:
+) -> Dict[str, str]:
   """
   按食物种类从做饭区获取可以烹饪的的食物列表
   Keyword arguments:

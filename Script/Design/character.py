@@ -225,7 +225,7 @@ def input_name_func(ask_text: str) -> str:
 #     return favorability
 
 
-def judge_character_time_over_24(character_id: int) -> bool:
+def judge_character_time_over_24(character_id: int) -> int:
   """
   校验角色的时间是否已过24点
   Keyword arguments:

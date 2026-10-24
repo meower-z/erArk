@@ -324,6 +324,7 @@ class Manage_Dormitory_Panel:
         continue
       unassigned_managers.append(character_data.name)
 
+    now_draw: draw.NormalDraw | draw.LeftButton
     if unassigned_managers:
       now_draw = draw.NormalDraw()
       now_draw.width = self.width
@@ -761,6 +762,7 @@ class Manage_Dormitory_Panel:
     功能: 清空层管理员并将原管理员岗位重置为无
     """
     manager_id = cache.rhodes_island.dormitory_managers.get(layer, 0)
+    info_draw: draw.WaitDraw | draw.NormalDraw
     if not manager_id:
       info_draw = draw.WaitDraw()
       info_draw.width = self.width

@@ -101,7 +101,7 @@ class MedicalPlayerDiagnosePanel:
       self._prepare_new_patient_session(initial_patient)
     else:
       # 未成功分配病人时保持面板闲置状态，便于界面直接提示
-      self.patient = None
+      self.patient: Optional[medical_constant.MedicalPatient] = None
       self.session_active = False
 
   def _reset_runtime_flags(self) -> None:
@@ -121,15 +121,15 @@ class MedicalPlayerDiagnosePanel:
     self.session_active = False
     self.patient = None
     self.feedback_text = ""
-    self.last_check_results = []
-    self.treatment_result = None
+    self.last_check_results: List[Dict[str, object]] = []
+    self.treatment_result: Optional[Dict[str, object]] = None
     self._should_close = False
     self._treatment_committed = False
     self._abort_requested = False
     self._awaiting_treatment_confirmation = False
     self.menu_expanded = False
-    self.expanded_system_id = None
-    self.expanded_part_id = None
+    self.expanded_system_id: Optional[int] = None
+    self.expanded_part_id: Optional[int] = None
     self._pending_continue_after_treatment = False
     # 重置能力快照，避免沿用上一位病人的等级数据
     self.player_med_level = 0
@@ -139,7 +139,7 @@ class MedicalPlayerDiagnosePanel:
     self.executed_complication_ids: List[int] = []
 
     # 重置检查目录与目标计数，后续会根据具体病人重新填充
-    self.check_catalog = {}
+    self.check_catalog: Dict[int, Dict[str, object]] = {}
     self.target_complication_count = 0
     self.max_parallel = 1
     self.max_checks = 1

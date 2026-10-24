@@ -9,6 +9,7 @@ from google.genai import types as genai_types
 import os
 import httpx
 import re
+from typing import Any, Callable, Iterable, Optional, TypedDict
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -20,6 +21,23 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
+
+
+class DirectModeResult(TypedDict):
+  """直接对话模式下从AI返回文本里解析出的结果"""
+
+  time: int
+  """ 行动耗时 """
+  tired: int
+  """ 体力气力消耗档位 """
+  relationship: int
+  """ 关系变化档位 """
+  character_state: int | list[int]
+  """ 角色状态id，一个或多个，-1为无 """
+  experience: int | list[int]
+  """ 经验id，一个或多个，-1为无 """
+  text: str
+  """ 对话文本 """
 
 
 def judge_use_text_ai(
@@ -104,7 +122,7 @@ def judge_use_text_ai(
   # print(f"debug AI文本生成返回文本 = {ai_result}")
 
   # 处理直接对话模式的返回值
-  if direct_mode:
+  if isinstance(ai_result, dict):
     ai_gererate_text = ai_result["text"]
     settle_direct_instruct(ai_result)
   else:
@@ -283,7 +301,7 @@ def build_user_prompt(
   ].name
 
   # 关系
-  ave_text = 0
+  ave_text: int | str = 0
   if tem_send_data_flags[11]:
     favorability = npc_character_data.favorability[0]
     favorability_lv, tem = attr_calculation.get_favorability_level(favorability)
@@ -478,13 +496,13 @@ def build_user_prompt(
   return user_prompt
 
 
-def create_tem_sned_data_flags(npc_character_id: int) -> list:
+def create_tem_sned_data_flags(npc_character_id: int) -> dict[int, bool]:
   """
   创建临时发送数据标志列表
   参数:
       npc_character_id: int 角色ID
   返回:
-      tem_send_data_flags: list -- 临时发送数据标志列表
+      tem_send_data_flags: dict -- 临时发送数据标志，键为数据项id
   功能描述:
       根据角色ID和游戏配置中的预设数据，创建一个包含各个数据项是否需要处理的布尔值的列表。
       该列表用于在生成用户提示词时判断哪些数据需要被包含在内。
@@ -563,7 +581,7 @@ def text_ai(
     original_text: str,
     translator: bool = False,
     direct_mode: bool = False,
-) -> dict:
+) -> DirectModeResult | str:
   """
   文本生成AI\n\n
   Keyword arguments:
@@ -796,7 +814,7 @@ def text_ai(
     # 解析AI返回的格式化文本
     # print(f"ai_gererate_text = {ai_gererate_text}")
     lines = ai_gererate_text.split("\n")
-    result = {
+    result: DirectModeResult = {
         "time": 5,  # 默认值
         "tired": 2,  # 默认值
         "relationship": 2,  # 默认值
@@ -885,7 +903,10 @@ def text_ai(
 
 
 def process_stream_response(
-    stream: object, direct_mode: bool, extractor: object
+    # chunk 是 openai 或 google-genai 流式返回的对象，跑 mypy 的环境不装这两个包，故为 Any
+    stream: Iterable[Any],
+    direct_mode: bool,
+    extractor: Callable[[Any], Optional[str]],
 ) -> str:
   """
   处理流式输出的返回数据，并绘制返回结果
@@ -907,7 +928,7 @@ def process_stream_response(
   try:
     for chunk in stream:
       # 提取当前chunk中的文本
-      chunk_text: str = extractor(chunk)
+      chunk_text: Optional[str] = extractor(chunk)
       if chunk_text is None or not chunk_text:
         continue
       ai_generate_text += chunk_text
@@ -1060,7 +1081,7 @@ def direct_chat_with_ai() -> str:
   return reply_text
 
 
-def settle_direct_instruct(ai_result: dict) -> None:
+def settle_direct_instruct(ai_result: DirectModeResult) -> None:
   """
   处理直接对话模式下的AI返回结果\n
   参数:
@@ -1113,15 +1134,17 @@ def settle_direct_instruct(ai_result: dict) -> None:
     # 如果是列表，则遍历添加
     if isinstance(ai_result["experience"], list):
       for exp_id in ai_result["experience"]:
-        effect_id = f"CVE_A2_E|{exp_id}_G_1"
+        exp_effect_id = f"CVE_A2_E|{exp_id}_G_1"
         game_config.config_behavior_effect_data[tem_behavior_id].append(
-            effect_id
+            exp_effect_id
         )
     # 否则直接添加
     else:
       exp_id = ai_result["experience"]
-      effect_id = f"CVE_A2_E|{exp_id}_G_1"
-      game_config.config_behavior_effect_data[tem_behavior_id].append(effect_id)
+      exp_effect_id = f"CVE_A2_E|{exp_id}_G_1"
+      game_config.config_behavior_effect_data[tem_behavior_id].append(
+          exp_effect_id
+      )
   # 执行结算
   chara_handle_instruct_common_settle(
       tem_behavior_id, duration=new_duration, force_taget_wait=True

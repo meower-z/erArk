@@ -14,6 +14,24 @@ force-exclude = '^/Script/Config/config_def\.py$'
 explicit_package_bases = true
 follow_imports = "silent"
 
+# lint 用的虚拟环境不装游戏运行所需的这些第三方包，mypy 找不到它们或它们的类型存根
+[[tool.mypy.overrides]]
+module = [
+  "cv2",
+  "dateutil",
+  "ephem",
+  "google",
+  "google.genai",
+  "httpx",
+  "numpy",
+  "openai",
+  "pandas",
+  "PIL",
+  "rtmlib",
+  "ultralytics",
+]
+ignore_missing_imports = true
+
 # lint 棘轮：基线文件、排除的文件与模块行数（超过 soft 行警告，超过 hard 行算违规）
 [tool.lint-ratchet]
 baseline = ".lint-baseline.tsv"

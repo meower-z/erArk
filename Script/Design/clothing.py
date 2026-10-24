@@ -61,13 +61,13 @@ CLOTH_LOCKER_ATTR_NAME = {
 """ 衣柜类型对应的CLOTH属性名 """
 
 
-def get_cloth_locker_type_by_scene(scene_tag: str) -> int:
+def get_cloth_locker_type_by_scene(scene_tag: list[str]) -> int:
   """
   根据场景标签判断该场景使用哪个衣柜
   博士房间没有独立衣柜：同居助理的宿舍地址已被改写为博士房间，
   因此那里用的就是她的宿舍衣柜
   Keyword arguments:
-  scene_tag -- 场景标签字符串
+  scene_tag -- 场景标签列表
   Return arguments:
   int -- 衣柜类型（2大浴场更衣室/3宿舍）
   """
@@ -764,7 +764,7 @@ def get_exposed_body_parts(
   character_data = cache.character_data[character_id]
 
   # 身体部位所对应的服装部位，-1表示无对应部位，列表表示多个对应部位
-  body_cloth_list = [
+  body_cloth_list: list[int | list[int]] = [
       0,
       4,
       4,

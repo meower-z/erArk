@@ -1,4 +1,5 @@
 from types import FunctionType
+from typing import Dict, List, Tuple
 from Script.Core import cache_control, game_type, get_text, text_handle
 from Script.System.Pregnancy_System import pregnancy_constant
 
@@ -204,13 +205,14 @@ def _expand_person(
   Return arguments:
   dict -- 节点字典 {"chara_id", "more_flag", "boxes": [夫妇框]}
   """
-  node = {"chara_id": person_id, "more_flag": False, "boxes": []}
+  node_boxes: List[dict] = []
+  node = {"chara_id": person_id, "more_flag": False, "boxes": node_boxes}
   if not expand_flag or depth >= pregnancy_constant.DOWN_GEN:
     # 到达显示深度下限：有孩子未显示时标记省略号
     node["more_flag"] = chara_has_children(person_id)
     return node
   group_order = []
-  group_data = {}
+  group_data: Dict[int, List[int]] = {}
   for child_id in get_valid_children(person_id):
     if child_id in placed_set:
       continue
@@ -244,7 +246,7 @@ def _expand_person(
         "right_more": other_id != -1 and chara_has_parents(other_id),
         "children": children_nodes,
     }
-    node["boxes"].append(box)
+    node_boxes.append(box)
   return node
 
 
@@ -587,7 +589,7 @@ def paginate_family_blocks(
   list -- 分页列表，每页为家族块列表
   """
   pages = []
-  now_page_blocks = []
+  now_page_blocks: List[dict] = []
   now_page_width = 0
   for block in blocks:
     block_width = _measure_block(block, center_id)
@@ -644,8 +646,8 @@ def build_family_tree_chart(
     hidden_count = _fit_family_block(page_blocks[0], max_width, center_id)
 
   # 放置当前页的各家族块并收集名字行/排版行
-  names_cells = {}
-  link_chars = {}
+  names_cells: Dict[int, List[Tuple[int, dict]]] = {}
+  link_chars: Dict[int, Dict[int, str]] = {}
   cursor_col = 0
   for block in page_blocks:
     if block["kind"] == "box":

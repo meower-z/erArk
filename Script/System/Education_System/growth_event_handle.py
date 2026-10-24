@@ -506,9 +506,12 @@ def drop_stale_stage_event(character_id: int) -> int:
   for one in queue:
     if isinstance(one, dict) and one.get("chara_id") == character_id:
       uid = one.get("uid")
-      event_data = official_event_handle.get_event_data(uid)
+      event_data = (
+          official_event_handle.get_event_data(uid) if uid is not None else None
+      )
       if (
-          event_data is not None
+          uid is not None
+          and event_data is not None
           and official_event_handle.get_event_department(uid)
           == education_constant.GROWTH_EVENT_DEPARTMENT
       ):

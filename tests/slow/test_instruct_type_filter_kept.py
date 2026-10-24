@@ -79,13 +79,13 @@ class InstructTypeFilterKeptTest(SlowTestCase):
         instruct_type
     )
 
-  def obscenity_panel_shown(self) -> int:
+  def obscenity_panel_shown(self) -> float:
     """
     前提 obscenity_panel_show 对博士的结果
     Keyword arguments:
     无
     Return arguments:
-    int -- 前提的结果
+    float -- 前提的结果
     """
     from Script.Design import handle_premise
 

@@ -9,7 +9,8 @@ cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
 scene_path_edge_path = os.path.join("data", "ScenePath")
 """ 寻路路径配置文件路径 """
-scene_path_edge = {}
+# 值是 [本次移动到的位置, 移动耗时] 两项列表，两项类型不同，故不写元素类型
+scene_path_edge: dict[str, dict[str, list]] = {}
 """ 寻路路径 """
 width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
@@ -219,7 +220,7 @@ def get_common_map_for_scene_path(
   scene_aPath -- 场景A路径
   scene_bpath -- 场景B路径
   """
-  hierarchy = []
+  hierarchy: list[str] = []
   if scene_a_path[:-1] == [] or scene_b_path[:-1] == []:
     return hierarchy
   else:
@@ -601,7 +602,7 @@ def init_scene_edge_path_data() -> None:
 
 def difference_map_move(
     now_position: list, target_scene: list
-) -> tuple[str, list, list, int]:
+) -> tuple[str, game_type.TargetPath, list, int]:
   """
   角色跨地图层级移动
   Keyword arguments:
@@ -666,7 +667,7 @@ def identical_map_move(
     now_map: list,
     now_map_scene_id: str,
     target_map_scene_id: str,
-) -> tuple[str, list, list, int]:
+) -> tuple[str, game_type.TargetPath, list, int]:
   """
   角色在相同地图层级内移动
   Keyword arguments:

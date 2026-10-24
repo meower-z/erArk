@@ -86,7 +86,9 @@ class CharacterRenderer:
     if character_id <= 0:
       return {}
 
-    character_data: game_type.Character = cache.character_data.get(character_id)
+    character_data: Optional[game_type.Character] = cache.character_data.get(
+        character_id
+    )
     if not character_data:
       return self._get_empty_image_data()
 

@@ -302,6 +302,7 @@ class Pregnancy_Overview_Panel:
     info_draw = draw.NormalDraw()
     info_draw.text = _("阶段筛选：")
     info_draw.draw()
+    now_draw: draw.NormalDraw | draw.LeftButton
     for stage_id in range(len(pregnancy_constant.STAGE_NAME_LIST)):
       if stage_id == cache.pregnancy_panel_filter_type:
         now_draw = draw.NormalDraw()

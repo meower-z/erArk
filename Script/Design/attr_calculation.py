@@ -3,6 +3,7 @@
 以及按数值评定等级、宝珠、修正比例与等级文本等的计算函数
 """
 
+import datetime
 import random
 from types import FunctionType
 from Script.Core import (
@@ -88,7 +89,7 @@ def get_ability_zero(ability_dict) -> dict:
   return ability_list
 
 
-def get_event_zero() -> dict:
+def get_event_zero() -> game_type.Chara_Event:
   """
   初始化事件结构体
   """
@@ -96,7 +97,7 @@ def get_event_zero() -> dict:
   return event_data
 
 
-def get_work_zero() -> dict:
+def get_work_zero() -> game_type.CHARA_WORK:
   """
   初始化工作结构体
   """
@@ -104,7 +105,7 @@ def get_work_zero() -> dict:
   return work_data
 
 
-def get_entertainment_zero() -> dict:
+def get_entertainment_zero() -> game_type.CHARA_ENTERTAINMENT:
   """
   初始化娱乐结构体
   """
@@ -113,7 +114,7 @@ def get_entertainment_zero() -> dict:
   return entertainment_data
 
 
-def get_pregnancy_zero() -> dict:
+def get_pregnancy_zero() -> game_type.PREGNANCY:
   """
   初始化受精怀孕情况数据结构体
   """
@@ -220,7 +221,7 @@ def get_second_behavior_zero(second_behavior_dict) -> dict:
   return second_behavior_dict
 
 
-def get_time_zero() -> dict:
+def get_time_zero() -> datetime.datetime:
   """
   时间归为游戏初始时间
   """
@@ -600,7 +601,7 @@ def get_status_level(value: int) -> int:
   return now_data.level
 
 
-def get_mark_debuff_adjust(value: int) -> int:
+def get_mark_debuff_adjust(value: int) -> float:
   """
   按刻印等级负面修正比例参数
   Keyword arguments:
@@ -610,7 +611,7 @@ def get_mark_debuff_adjust(value: int) -> int:
   """
   level = value
   if level == 0:
-    just = 1
+    just: float = 1
   elif level == 1:
     just = 1.5
   elif level == 2:
@@ -668,7 +669,7 @@ def get_pain_adjust(value: int, level_flag=False) -> float:
   else:
     level = get_status_level(value)
   if level <= -4:
-    just = 50
+    just: float = 50
   elif level == -3:
     just = 20
   elif level == -2:
@@ -714,7 +715,7 @@ def get_angry_level(value: int) -> int:
     return 0
   elif 30 < value and value <= 50:
     return -1
-  elif value > 50:
+  else:
     return -3
 
 
@@ -732,7 +733,7 @@ def get_angry_text(value: int) -> str:
     return _("普通")
   elif 30 < value and value <= 50:
     return _("不爽")
-  elif value > 50:
+  else:
     return _("愤怒")
 
 

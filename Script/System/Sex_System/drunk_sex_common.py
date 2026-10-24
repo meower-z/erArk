@@ -19,7 +19,7 @@ def get_drunk_level(character_id: int) -> tuple[int, str]:
   str -- 醉酒等级名,清醒-烂醉
   """
   character_data = cache.character_data[character_id]
-  value = character_data.drunk_point
+  value: float = character_data.drunk_point
   # 如果角色千杯不醉，则醉酒值*0.1
   if handle_premise.handle_self_have_never_drunk(character_id):
     value *= 0.1

@@ -44,7 +44,9 @@ def is_child_stage(character_id: int) -> bool:
   """
   if character_id == 0:
     return False
-  character_data: game_type.Character = cache.character_data.get(character_id)
+  character_data: game_type.Character | None = cache.character_data.get(
+      character_id
+  )
   if character_data is None:
     return False
   return any(
