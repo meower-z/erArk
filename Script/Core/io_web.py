@@ -6,12 +6,18 @@ Web模式下的IO操作适配器
 用于替换原有的tkinter界面IO操作
 """
 
+from __future__ import annotations
+
 import threading
 import json
 import copy
 from typing import Dict, Any
 from Script.Core import cache_control
 from Script.Core.web_server import update_game_state, emit_realtime_text
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from collections.abc import Callable
 
 # 全局变量
 cache = cache_control.cache
@@ -198,7 +204,7 @@ input_event = threading.Event()
 _order_queue = []  # 命令队列
 
 
-def _input_event_set(order):
+def _input_event_set(order: str) -> None:
   """
   推送一个命令到队列
 
@@ -210,7 +216,7 @@ def _input_event_set(order):
   put_order(order)
 
 
-def get_order():
+def get_order() -> str | None:
   """
   从队列中获取一个命令
 
@@ -222,7 +228,7 @@ def get_order():
   return None
 
 
-def run(open_func):
+def run(open_func: Callable[[], object]) -> None:
   """
   在Web模式下运行游戏
 
@@ -235,7 +241,7 @@ def run(open_func):
   open_func()
 
 
-def put_order(message):
+def put_order(message: str) -> None:
   """
   向命令队列中推送信息
 
@@ -250,7 +256,7 @@ def put_order(message):
 # 以下函数处理文本输出，在Web模式下将输出转换为HTML元素
 
 
-def clear_screen():
+def clear_screen() -> None:
   """
   清空屏幕
 
@@ -272,7 +278,7 @@ def clear_screen():
   update_game_state(cache.current_draw_elements, None)
 
 
-def clear_screen_and_history():
+def clear_screen_and_history() -> None:
   """
   清空屏幕和历史记录
 
@@ -292,7 +298,7 @@ def clear_screen_and_history():
   update_game_state(cache.current_draw_elements, None)
 
 
-def clear_sub_panel_content():
+def clear_sub_panel_content() -> None:
   """
   清空子面板当前绘制内容
 
@@ -318,7 +324,9 @@ def clear_sub_panel_content():
   # 这样可以避免闪烁，同时减少不必要的数据传输
 
 
-def era_print(string, style="standard", tooltip: str = ""):
+def era_print(
+    string: str, style: str | tuple[str, ...] = "standard", tooltip: str = ""
+) -> None:
   """
   输出文本
 
@@ -342,12 +350,12 @@ def era_print(string, style="standard", tooltip: str = ""):
 
 
 def io_print_cmd(
-    cmd_str,
-    cmd_number,
-    normal_style="standard",
-    on_style="onbutton",
+    cmd_str: str,
+    cmd_number: str | int,
+    normal_style: str = "standard",
+    on_style: str = "onbutton",
     tooltip: str = "",
-):
+) -> None:
   """
   打印一个命令按钮
 
@@ -374,7 +382,7 @@ def io_print_cmd(
   append_current_draw_element(button_element, record_history=False)
 
 
-def set_background(color):
+def set_background(color: str) -> None:
   """
   设置背景颜色
 
@@ -387,7 +395,7 @@ def set_background(color):
   pass
 
 
-def clear_order():
+def clear_order() -> None:
   """
   清除已设置的命令
 
@@ -402,7 +410,7 @@ def clear_order():
     ]
 
 
-def init_style():
+def init_style() -> None:
   """
   初始化样式
 

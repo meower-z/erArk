@@ -17,7 +17,7 @@ _: FunctionType = get_text._
 """ 翻译api """
 
 
-def init_character_tem_data():
+def init_character_tem_data() -> None:
   """初始化预设角色数据"""
   global character_config_data
   character_config_data = json_handle.load_json(character_config_file)
@@ -89,7 +89,7 @@ def init_character_tem_data():
     character_tem_list[now_tem.AdvNpc] = now_tem
 
 
-def find_files_and_get_size(directory, character):
+def find_files_and_get_size(directory: str, character: str) -> dict[str, int]:
   """
   在指定目录中查找文件名中的角色名与指定角色相同的文件，并在 data/event/chara 中查找该角色的事件文件（有多个时只取 glob 列出的最后一个），返回这些文件的大小
   Keyword arguments:
@@ -149,7 +149,7 @@ def find_files_and_get_size(directory, character):
 
 def add_cloth_data_to_config_data(
     cloth_list: List[int], AdvNpc: int, cloth_count: int
-):
+) -> int:
   """将服装数据加入服装模板数据"""
   # print(f"debug cloth_list = {cloth_list}")
   # 新增服装数据到config_clothing_tem
@@ -183,7 +183,7 @@ def add_cloth_data_to_config_data(
   return now_cloth.cid
 
 
-def add_text_color_data_to_config_data(text_color_list: List[str]):
+def add_text_color_data_to_config_data(text_color_list: List[str]) -> None:
   """将口上颜色加入角色模板数据"""
   character_id, character_name, text_color = (
       text_color_list[0],

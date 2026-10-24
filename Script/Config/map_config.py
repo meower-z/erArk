@@ -20,7 +20,7 @@ all_map_data_path = os.path.join("data", "MapData")
 """ 预处理的所有地图数据路径 """
 
 
-def init_map_data():
+def init_map_data() -> None:
   """载入地图和场景数据"""
   if (
       os.path.exists(all_scene_data_path)
@@ -46,7 +46,7 @@ def init_map_data():
     map_handle.init_scene_edge_path_data()
 
 
-def load_dir_now(data_path: str):
+def load_dir_now(data_path: str) -> None:
   """
   获取路径下的地图数据
   Keyword arguments:

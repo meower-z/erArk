@@ -45,7 +45,7 @@ def _is_finite_number(v) -> bool:
   return type(v) in (int, float) and math.isfinite(v)
 
 
-def _chara_name(chara) -> str:
+def _chara_name(chara: object) -> str:
   """
   参数:
       chara: 角色对象
@@ -57,7 +57,7 @@ def _chara_name(chara) -> str:
   return getattr(chara, "name", "?")
 
 
-def _dict_field_ok(chara, field: str) -> bool:
+def _dict_field_ok(chara: object, field: str) -> bool:
   """
   参数:
       chara: 角色对象

@@ -20,6 +20,8 @@ _behavior_type_ok()对同一角色重做一次同源判定，字段类型损坏�
 避免把领域失败(类型损坏本身已由BEHAV-07单独报告)降级成时间比较抛异常、被框架记成"检查器自身异常"。
 """
 
+from __future__ import annotations
+
 import datetime
 from typing import List
 
@@ -28,8 +30,13 @@ from Script.Config import game_config
 from Script.Design import game_time
 from ..check_registry import CheckFailure, register_check, make_failure
 
+from typing import TYPE_CHECKING
 
-def _live_ids(cache) -> set:
+if TYPE_CHECKING:
+  from Script.Core import game_type
+
+
+def _live_ids(cache: game_type.Cache) -> set:
   """
   参数:
       cache -- 全局缓存对象
@@ -45,7 +52,7 @@ def _live_ids(cache) -> set:
   return ({0} | set(npc_id_got)) & set(character_data)
 
 
-def _end(chara) -> datetime.datetime:
+def _end(chara: game_type.Character) -> datetime.datetime:
   """
   参数:
       chara -- 角色对象
@@ -61,7 +68,7 @@ def _end(chara) -> datetime.datetime:
   )
 
 
-def _behavior_type_ok(chara) -> bool:
+def _behavior_type_ok(chara: game_type.Character) -> bool:
   """
   参数:
       chara -- 角色对象

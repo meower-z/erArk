@@ -1863,7 +1863,7 @@ class Character:
     """ 欲望值 数值为百分比，100为最大 """
     self.drunk_point: int = 0
     """ 醉酒度 数值为百分比，100为最大 """
-    self.state: int = 0
+    self.state: int | str = 0
     """ 角色当前状态 """
     self.last_behavior_id_list: List = [0]
     """ 角色之前的行为列表 """

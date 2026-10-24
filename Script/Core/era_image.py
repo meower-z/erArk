@@ -19,7 +19,7 @@ _font_scaling = None
 _image_load_lock = threading.Lock()
 
 
-def _get_font_scaling():
+def _get_font_scaling() -> float:
   """
   获取字体缩放比例（缓存结果避免重复计算）
   """
@@ -41,7 +41,7 @@ def _get_font_scaling():
   return _font_scaling
 
 
-def _decode_image(image_name):
+def _decode_image(image_name: str) -> PhotoImage | None:
   """
   从磁盘解码一张图片，按字体缩放比例缩放后转换为 PhotoImage
 
@@ -68,7 +68,7 @@ def _decode_image(image_name):
     return None
 
 
-def index_images_from_directory(directory):
+def index_images_from_directory(directory: str) -> None:
   """
   建立目录下全部图片的名字 -> 路径索引与角色索引，不解码图片
 
@@ -114,7 +114,7 @@ class _LazyImageDict(dict):
   解码失败的图片保存为 1x1 的透明图片，tk 显示空白
   """
 
-  def __getitem__(self, key):
+  def __getitem__(self, key: str) -> PhotoImage:
     # 已解码的直接返回
     if super().__contains__(key):
       return super().__getitem__(key)
@@ -131,11 +131,11 @@ class _LazyImageDict(dict):
       super().__setitem__(key, photo_image)
       return photo_image
 
-  def __contains__(self, key):
+  def __contains__(self, key: object) -> bool:
     # 只查索引，不解码
     return key in image_path_data
 
-  def get(self, key, default=None):
+  def get(self, key: str, default: object = None) -> object:
     try:
       return self[key]
     except KeyError:

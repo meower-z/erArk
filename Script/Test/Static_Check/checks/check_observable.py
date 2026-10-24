@@ -18,12 +18,19 @@
 7. 一个检查先收集全部失配，再合并为一条 failure，避免检查级日志去重吞掉同次快照中的其余证据。
 """
 
+from __future__ import annotations
+
 from typing import Iterator, List, Optional, Tuple
 
 from Script.Config import normal_config
 from Script.Core import cache_control, constant
 from Script.Design import attr_calculation, map_handle
 from ..check_registry import CheckFailure, make_failure, register_check
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from Script.Core import game_type
 
 try:
   from Script.Config import game_config
@@ -44,7 +51,7 @@ _BATH_BEHAVIOR_TAGS = {
 }
 
 
-def _character_data(cache) -> Optional[dict]:
+def _character_data(cache: game_type.Cache) -> Optional[dict]:
   """
   参数: cache 全局缓存对象
   返回值: Optional[dict] 角色字典；结构异常时返回 None
@@ -54,7 +61,7 @@ def _character_data(cache) -> Optional[dict]:
   return data if isinstance(data, dict) else None
 
 
-def _pl(cache):
+def _pl(cache: game_type.Cache) -> game_type.Character | None:
   """
   参数: cache 全局缓存对象
   返回值: 玩家角色对象；角色字典未初始化或缺少 cid=0 时返回 None
@@ -64,7 +71,7 @@ def _pl(cache):
   return data.get(0) if data is not None else None
 
 
-def _iter_npcs(cache) -> Iterator[Tuple[int, object]]:
+def _iter_npcs(cache: game_type.Cache) -> Iterator[Tuple[int, object]]:
   """
   参数: cache 全局缓存对象
   返回值: Iterator[Tuple[int, object]]，依次产出已获得且存在的非玩家角色
@@ -79,7 +86,7 @@ def _iter_npcs(cache) -> Iterator[Tuple[int, object]]:
       yield cid, data[cid]
 
 
-def _iter_live(cache) -> Iterator[Tuple[int, object]]:
+def _iter_live(cache: game_type.Cache) -> Iterator[Tuple[int, object]]:
   """
   参数: cache 全局缓存对象
   返回值: Iterator[Tuple[int, object]]，依次产出玩家和已获得 NPC
@@ -91,7 +98,7 @@ def _iter_live(cache) -> Iterator[Tuple[int, object]]:
   yield from _iter_npcs(cache)
 
 
-def _name(chara) -> str:
+def _name(chara: object) -> str:
   """
   参数: chara 角色对象
   返回值: str 角色名，缺失时返回问号
@@ -100,7 +107,7 @@ def _name(chara) -> str:
   return str(getattr(chara, "name", "?"))
 
 
-def _sp(chara):
+def _sp(chara: object) -> game_type.SPECIAL_FLAG | None:
   """
   参数: chara 角色对象
   返回值: 角色 sp_flag 对象，缺失时返回 None
@@ -109,7 +116,7 @@ def _sp(chara):
   return getattr(chara, "sp_flag", None)
 
 
-def _hs(chara):
+def _hs(chara: object) -> game_type.BODY_H_STATE | None:
   """
   参数: chara 角色对象
   返回值: 角色 h_state 对象，缺失时返回 None
@@ -118,7 +125,7 @@ def _hs(chara):
   return getattr(chara, "h_state", None)
 
 
-def _behavior(chara):
+def _behavior(chara: object) -> game_type.Behavior | None:
   """
   参数: chara 角色对象
   返回值: 角色 behavior 对象，缺失时返回 None
@@ -127,7 +134,7 @@ def _behavior(chara):
   return getattr(chara, "behavior", None)
 
 
-def _fully_out_of_h(chara) -> bool:
+def _fully_out_of_h(chara: object) -> bool:
   """
   参数: chara 角色对象
   返回值: bool，角色完全脱离普通H、无意识H、隐奸与露出时为 True
@@ -142,7 +149,7 @@ def _fully_out_of_h(chara) -> bool:
   )
 
 
-def _scene(cache, position):
+def _scene(cache: game_type.Cache, position: object) -> game_type.Scene | None:
   """
   参数: cache 全局缓存对象；position 期望为字符串列表
   返回值: 对应场景对象；路径或场景结构异常时返回 None
@@ -159,7 +166,7 @@ def _scene(cache, position):
   return scene_data.get(_P(position))
 
 
-def _sleep_level(chara) -> Optional[int]:
+def _sleep_level(chara: object) -> Optional[int]:
   """
   参数: chara 角色对象
   返回值: Optional[int] 睡眠等级；配置未载入或字段不可计算时返回 None
@@ -178,7 +185,7 @@ def _sleep_level(chara) -> Optional[int]:
     return None
 
 
-def _positive_number(value) -> bool:
+def _positive_number(value: object) -> bool:
   """
   参数: value 任意字段值
   返回值: bool，value 是非 bool 数值且大于零时为 True
@@ -191,7 +198,7 @@ def _positive_number(value) -> bool:
   )
 
 
-def _offline_context(chara) -> str:
+def _offline_context(chara: object) -> str:
   """
   参数: chara 角色对象
   返回值: str 离线来源标记摘要

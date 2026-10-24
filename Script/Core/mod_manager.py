@@ -11,6 +11,10 @@ import importlib
 import traceback
 from typing import Dict, List, Any, Callable, Optional
 from Script.Core import cache_control, game_type
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from types import ModuleType
 
 # mod相关的全局变量
 _mod_folder = "mod"
@@ -55,7 +59,7 @@ class ModManager:
   _instance = None
   _initialized = False
 
-  def __new__(cls):
+  def __new__(cls) -> "ModManager":
     """
     创建mod管理器，已有实例时返回已有实例
     Return arguments:
@@ -119,7 +123,7 @@ class ModManager:
 
     return list(self.mods.values())
 
-  def _load_mod_config(self):
+  def _load_mod_config(self) -> None:
     """加载mod配置文件"""
     config_path = os.path.join(self.get_mod_folder_path(), _mod_config_file)
     if not os.path.exists(config_path):
@@ -139,7 +143,7 @@ class ModManager:
     except Exception as e:
       print(f"[Mod] 加载mod配置失败:  {e}")
 
-  def save_mod_config(self):
+  def save_mod_config(self) -> None:
     """保存mod配置文件"""
     config_path = os.path.join(self.get_mod_folder_path(), _mod_config_file)
     config = {"enabled_mods": self.enabled_mods, "load_order": self.load_order}
@@ -177,7 +181,7 @@ class ModManager:
     self.save_mod_config()
     return True
 
-  def set_load_order(self, order: List[str]):
+  def set_load_order(self, order: List[str]) -> None:
     """设置mod加载顺序"""
     self.load_order = order
     self.save_mod_config()
@@ -244,7 +248,7 @@ class ModManager:
 
     return errors
 
-  def _load_single_mod(self, mod_info: ModInfo):
+  def _load_single_mod(self, mod_info: ModInfo) -> None:
     """加载单个mod"""
     # 1. 加载素材
     self._load_mod_assets(mod_info)
@@ -253,7 +257,7 @@ class ModManager:
     for script_config in mod_info.scripts:
       self._load_mod_script(mod_info, script_config)
 
-  def _load_mod_assets(self, mod_info: ModInfo):
+  def _load_mod_assets(self, mod_info: ModInfo) -> None:
     """加载mod素材"""
     global _mod_assets
 
@@ -279,7 +283,7 @@ class ModManager:
         )
         _mod_assets[alias] = file_path
 
-  def _merge_data_file(self, data_config: dict, file_path: str):
+  def _merge_data_file(self, data_config: dict, file_path: str) -> None:
     """合并数据文件到游戏配置"""
     import csv
     from Script.Config import game_config
@@ -313,7 +317,7 @@ class ModManager:
     except Exception as e:
       print(f"[Mod] 合并数据文件失败:  {file_path}, 错误: {e}")
 
-  def _load_mod_script(self, mod_info: ModInfo, script_config: dict):
+  def _load_mod_script(self, mod_info: ModInfo, script_config: dict) -> None:
     """加载mod脚本文件"""
     script_file = script_config.get("file", "")
     script_path = os.path.join(mod_info.mod_path, script_file)
@@ -379,7 +383,7 @@ class ModManager:
 
   def _register_function(
       self, mod_info: ModInfo, namespace: dict, func_config: dict
-  ):
+  ) -> None:
     """注册mod函数"""
     global _original_functions, _mod_functions
 
@@ -433,7 +437,7 @@ class ModManager:
         except Exception as e:
           print(f"[Mod] 注册函数到模块失败: {key}, 错误: {e}")
 
-  def _import_module(self, module_path: str):
+  def _import_module(self, module_path: str) -> "ModuleType":
     """动态导入模块"""
     # 清理模块路径中可能的空格
     clean_path = module_path.strip().replace(" ", "")
@@ -493,8 +497,8 @@ def get_original_function(
 
 
 def call_original_function(
-    module_path: str, function_name: str, *args, **kwargs
-):
+    module_path: str, function_name: str, *args: object, **kwargs: object
+) -> Any:
   """
   调用被替换的原函数
 
@@ -517,7 +521,7 @@ def get_mod_function(key: str) -> Optional[Callable]:
   return _mod_functions.get(key, None)
 
 
-def init_mod_system():
+def init_mod_system() -> bool:
   """初始化mod系统"""
   manager = get_mod_manager()
   manager.scan_mods()

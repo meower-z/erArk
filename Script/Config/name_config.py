@@ -27,7 +27,7 @@ family_data: Dict[str, int] = {}
 """
 
 
-def init_name_data():
+def init_name_data() -> None:
   """载入json内姓名配置数据"""
   global man_name_data
   global woman_name_data
@@ -39,7 +39,7 @@ def init_name_data():
   init_name_region(family_data, 2)
 
 
-def init_name_region(name_data: Dict[str, int], man_judge: int):
+def init_name_region(name_data: Dict[str, int], man_judge: int) -> None:
   """
   初始化性别名字随机权重
   Keyword arguments:

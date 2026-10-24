@@ -7,6 +7,8 @@
 排序约定：BODY-01/10/31 为形状前置条件，后续检查在形状不成立时跳过对应条目而非二次报错。
 """
 
+from __future__ import annotations
+
 import datetime
 import math
 from typing import List, Optional, Tuple
@@ -14,8 +16,14 @@ from typing import List, Optional, Tuple
 from Script.Core import cache_control
 from ..check_registry import CheckFailure, register_check, make_failure
 
+from typing import TYPE_CHECKING
 
-def _num(x) -> bool:
+if TYPE_CHECKING:
+  from typing import Iterator
+  from Script.Core import game_type
+
+
+def _num(x: object) -> bool:
   """
   参数:
       x: 任意值
@@ -54,7 +62,7 @@ def _get_config_sets() -> Tuple[Optional[set], Optional[set], Optional[dict]]:
   return ct, bp, tem
 
 
-def _iter_charas():
+def _iter_charas() -> Iterator[tuple[int, game_type.Character]]:
   """
   参数:
       无
@@ -72,7 +80,7 @@ def _iter_charas():
     yield cid, chara
 
 
-def _name(chara) -> str:
+def _name(chara: object) -> str:
   """
   参数:
       chara: 角色对象
@@ -84,7 +92,7 @@ def _name(chara) -> str:
   return str(getattr(chara, "name", "?"))
 
 
-def _cloth_locs(chara) -> Optional[List[Tuple[str, dict]]]:
+def _cloth_locs(chara: object) -> Optional[List[Tuple[str, dict]]]:
   """
   参数:
       chara: 角色对象
@@ -110,7 +118,7 @@ def _cloth_locs(chara) -> Optional[List[Tuple[str, dict]]]:
   return locs
 
 
-def _talent_get(chara, talent_id: int) -> int:
+def _talent_get(chara: object, talent_id: int) -> int:
   """
   参数:
       chara: 角色对象
@@ -127,7 +135,7 @@ def _talent_get(chara, talent_id: int) -> int:
   return value if isinstance(value, int) and not isinstance(value, bool) else 0
 
 
-def _dirty_tables(chara) -> Optional[List[Tuple[str, dict]]]:
+def _dirty_tables(chara: object) -> Optional[List[Tuple[str, dict]]]:
   """
   参数:
       chara: 角色对象
@@ -148,7 +156,7 @@ def _dirty_tables(chara) -> Optional[List[Tuple[str, dict]]]:
   return tables
 
 
-def _semen_entry_ok(v) -> bool:
+def _semen_entry_ok(v: object) -> bool:
   """
   参数:
       v: 污浊表条目

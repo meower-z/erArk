@@ -13,6 +13,8 @@ MO-03、NO-01、NO-03、NO-05、PO-02）。各检查以文档字符串完整表�
    无前缀的是错误级（无合法反例，命中即代表真实状态损坏）。
 """
 
+from __future__ import annotations
+
 from types import FunctionType
 from typing import List
 
@@ -21,13 +23,18 @@ from Script.Config import game_config
 from Script.Design import map_handle
 from ..check_registry import CheckFailure, register_check, make_failure
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from Script.Core import game_type
+
 # 场景路径列表 -> map_handle路径字符串；内部用os.sep拼接，禁止自己写分隔符
 P = map_handle.get_map_system_path_str_for_list
 # 翻译api，SUPP-02判定"客房"名称时需要与basement.py同样按本地化后的名称比对
 _: FunctionType = get_text._
 
 
-def _eff(ri, facility_cid: int):
+def _eff(ri: game_type.Rhodes_Island, facility_cid: int) -> int | None:
   """
   参数:
       ri: cache.rhodes_island 罗德岛数据对象
@@ -57,7 +64,7 @@ def _eff(ri, facility_cid: int):
     return None
 
 
-def _all_current_effect_cids(ri) -> List[int]:
+def _all_current_effect_cids(ri: game_type.Rhodes_Island) -> List[int]:
   """
   参数:
       ri: cache.rhodes_island 罗德岛数据对象

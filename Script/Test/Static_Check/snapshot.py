@@ -4,8 +4,16 @@
 将调用方传入的cache递归转换为JSON可序列化的数据结构，供检查失败时随日志一并落盘，方便事后调试。
 """
 
+from __future__ import annotations
+
 import datetime
 import json
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import Any
+  from Script.Core import game_type
 
 # 快照时排除的Cache顶层字段名单
 # 这些字段要么是静态配置数据（游戏启动后不再随玩家操作变化，快照价值低且体积巨大），
@@ -54,7 +62,7 @@ def _is_excluded_top_level_field(field_name: str) -> bool:
   return field_name.startswith(EXCLUDED_FIELD_PREFIXES)
 
 
-def _to_json_safe(value, depth: int, visited: set):
+def _to_json_safe(value: object, depth: int, visited: set) -> Any:
   """
   参数:
       value (Any): 待转换的任意对象
@@ -124,7 +132,10 @@ def _to_json_safe(value, depth: int, visited: set):
     return "<不可repr对象>"
 
 
-def build_snapshot(cache, involved_character_ids=None) -> dict:
+def build_snapshot(
+    cache: game_type.Cache,
+    involved_character_ids: list[int] | set[int] | None = None,
+) -> dict:
   """
   参数:
       cache: 当前游戏缓存对象
@@ -182,7 +193,7 @@ def build_snapshot(cache, involved_character_ids=None) -> dict:
   return snapshot
 
 
-def _json_default_fallback(obj):
+def _json_default_fallback(obj: object) -> str:
   """
   参数:
       obj (Any): json.dumps遇到的无法直接序列化的对象
@@ -198,7 +209,10 @@ def _json_default_fallback(obj):
     return "<不可序列化对象>"
 
 
-def dump_snapshot_json(cache, involved_character_ids=None) -> str:
+def dump_snapshot_json(
+    cache: game_type.Cache,
+    involved_character_ids: list[int] | set[int] | None = None,
+) -> str:
   """
   参数:
       cache: 当前游戏缓存对象

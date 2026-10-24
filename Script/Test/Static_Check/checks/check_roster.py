@@ -10,6 +10,8 @@
 全部访客排除一律写 vistor != 1，vistor == 2(前访客)是合法的招募/邀请目标，不得写成 vistor == 0。
 """
 
+from __future__ import annotations
+
 import collections
 import datetime
 import math
@@ -20,10 +22,15 @@ from Script.Config import game_config
 from Script.Core import cache_control
 from ..check_registry import CheckFailure, register_check, make_failure
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from Script.Core import game_type
+
 # ------------------------------- 共用小工具 -------------------------------
 
 
-def _spath(pos) -> str:
+def _spath(pos: object) -> str:
   """
   参数: pos -- 形如["区域","房间"]的位置列表
   返回值: str -- 用os.sep拼接得到的场景路径字符串；pos形状不合法时返回空串
@@ -34,7 +41,7 @@ def _spath(pos) -> str:
   return ""
 
 
-def _prison_dorms(cache) -> Set[str]:
+def _prison_dorms(cache: game_type.Cache) -> Set[str]:
   """
   参数: cache -- 全局缓存
   返回值: Set[str] -- 全部带Prison标签的场景路径集合(关押/牢1..牢8)
@@ -47,7 +54,7 @@ def _prison_dorms(cache) -> Set[str]:
   }
 
 
-def _guest_rooms(cache) -> Set[str]:
+def _guest_rooms(cache: game_type.Cache) -> Set[str]:
   """
   参数: cache -- 全局缓存
   返回值: Set[str] -- 全部带Guest_Room标签的场景路径集合(访客/客房N)
@@ -69,7 +76,7 @@ def _warden_dorm() -> str:
   return _spath(["关押", "休息室"])
 
 
-def _scene_membership(cache) -> Dict[int, List[str]]:
+def _scene_membership(cache: game_type.Cache) -> Dict[int, List[str]]:
   """
   参数: cache -- 全局缓存
   返回值: Dict[int, List[str]] -- 角色id到其出现的全部场景路径列表的反向索引(正常应恰好一条)
@@ -83,7 +90,7 @@ def _scene_membership(cache) -> Dict[int, List[str]]:
   return membership
 
 
-def _invite_target(ri) -> int:
+def _invite_target(ri: game_type.Rhodes_Island) -> int:
   """
   参数: ri -- cache.rhodes_island
   返回值: int -- invite_visitor[0](邀请目标id)，形状不合法(旧存档/未初始化)时按0(无目标)处理
@@ -93,7 +100,7 @@ def _invite_target(ri) -> int:
   return iv[0] if len(iv) >= 1 and type(iv[0]) is int else 0
 
 
-def _sev(cache, declared_warning: bool) -> str:
+def _sev(cache: game_type.Cache, declared_warning: bool) -> str:
   """
   参数: cache -- 全局缓存; declared_warning -- 该检查项在不变式文档中声明的severity是否为warning
   返回值: str -- 需拼在失败信息最前面的前缀，declared_warning为True或cache.debug_mode为True时为"[warning] "，否则空串

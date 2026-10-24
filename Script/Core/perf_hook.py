@@ -45,7 +45,7 @@ _session_start = time.time()
 """ 会话开始的墙钟时间 """
 
 
-def hook_time(key: str, dt: float):
+def hook_time(key: str, dt: float) -> None:
   """
   累计一段耗时
   参数:
@@ -67,7 +67,7 @@ def hook_time(key: str, dt: float):
         rec[2] = dt
 
 
-def hook_count(key: str, n: int = 1):
+def hook_count(key: str, n: int = 1) -> None:
   """
   累计一个计数
   参数:
@@ -82,7 +82,7 @@ def hook_count(key: str, n: int = 1):
     _count_data[key] = _count_data.get(key, 0) + n
 
 
-def hook_value(key: str, value):
+def hook_value(key: str, value: float) -> None:
   """
   记录一个瞬时采样值
   参数:
@@ -97,7 +97,7 @@ def hook_value(key: str, value):
     _value_data[key] = value
 
 
-def mark(key: str):
+def mark(key: str) -> None:
   """
   记录一个时间戳标记
   参数:
@@ -124,7 +124,7 @@ def get_mark(key: str) -> float:
     return _mark_data.get(key, 0.0)
 
 
-def clear_mark(key: str):
+def clear_mark(key: str) -> None:
   """
   清除一个时间戳标记
   参数:
@@ -154,7 +154,7 @@ def _ensure_output_path() -> str:
   return _output_path
 
 
-def flush_screen_report(extra: dict = None):
+def flush_screen_report(extra: dict = None) -> None:
   """
   输出本屏性能报告并清零屏内累计
   参数:

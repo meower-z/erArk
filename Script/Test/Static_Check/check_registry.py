@@ -53,7 +53,11 @@ class CheckFailure:
 _check_registry: Dict[str, Tuple[str, Callable[[], List[CheckFailure]]]] = {}
 
 
-def register_check(check_id: str, check_name: str):
+def register_check(
+    check_id: str, check_name: str
+) -> Callable[
+    [Callable[[], List[CheckFailure]]], Callable[[], List[CheckFailure]]
+]:
   """
   检查项注册装饰器
   参数:

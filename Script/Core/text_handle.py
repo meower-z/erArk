@@ -10,7 +10,11 @@ _STYLE_PATTERN = None
 
 
 def align(
-    text: str, just="left", only_fix=False, columns=1, text_width=None
+    text: str,
+    just: str = "left",
+    only_fix: bool | int = False,
+    columns: int = 1,
+    text_width: int | float | str | None = None,
 ) -> str:
   """
   文本对齐处理函数
@@ -49,7 +53,7 @@ def align(
   return ""
 
 
-def _build_style_pattern():
+def _build_style_pattern() -> None:
   """构建匹配样式标签（<样式名> 与 </样式名>）的正则并存入 _STYLE_PATTERN，没有样式名时置为 None"""
   global _STYLE_PATTERN
   # 样式名来自 config_font_data 的 key，形如 <name> 与 </name>

@@ -1,12 +1,19 @@
 # -*- coding: UTF-8 -*-
 """静态检查系统 - 生育开关、关闭后的卵生存量与烹饪记忆。"""
 
+from __future__ import annotations
+
 from typing import List
 
 from Script.Core import cache_control
 from Script.Config import game_config
 from Script.System.Pregnancy_System import pregnancy_constant
 from ..check_registry import CheckFailure, register_check, make_failure
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from Script.Core import game_type
 
 
 @register_check("BIRTH-01", "生育开关")
@@ -142,7 +149,14 @@ def check_birth_02() -> List[CheckFailure]:
   return failures
 
 
-def _check_cook_memory(ri, field, check_id, name, low, high):
+def _check_cook_memory(
+    ri: game_type.Rhodes_Island | None,
+    field: str,
+    check_id: str,
+    name: str,
+    low: int,
+    high: int,
+) -> list[CheckFailure]:
   """参数: ri(罗德岛对象)、field/check_id/name(str)、low/high(int)；返回值: List[CheckFailure]；功能: 校验烹饪记忆字典的页签与数值范围。"""
   if ri is None:
     return []

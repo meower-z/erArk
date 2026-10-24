@@ -10,7 +10,7 @@ cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
 
 
-def _set_history_order(history_index: int):
+def _set_history_order(history_index: int) -> None:
   """
   设置历史命令并同步回溯定位
   Keyword arguments:
@@ -20,7 +20,7 @@ def _set_history_order(history_index: int):
   main_frame.set_order(cache.input_cache[history_index])
 
 
-def _get_previous_distinct_index(history_index: int):
+def _get_previous_distinct_index(history_index: int) -> int:
   """
   获取向上浏览时的上一条不同命令索引
   Keyword arguments:
@@ -37,7 +37,7 @@ def _get_previous_distinct_index(history_index: int):
   return previous_index
 
 
-def _get_next_distinct_index(history_index: int):
+def _get_next_distinct_index(history_index: int) -> int:
   """
   获取向下浏览时的下一条不同命令索引
   Keyword arguments:
@@ -57,7 +57,7 @@ def _get_next_distinct_index(history_index: int):
   return next_index
 
 
-def on_wframe_listion():
+def on_wframe_listion() -> None:
   """
   对按键事件进行绑定
   """
@@ -69,7 +69,7 @@ def on_wframe_listion():
   wframe.bind("<Down>", key_down)
 
 
-def mouse_left_check(event: Event):
+def mouse_left_check(event: Event) -> None:
   """
   鼠标左键事件处理
   Keyword arguments:
@@ -89,7 +89,7 @@ def mouse_left_check(event: Event):
     mouse_check_push(event)
 
 
-def mouse_right_check(event: Event):
+def mouse_right_check(event: Event) -> None:
   """
   鼠标右键事件处理
   Keyword arguments:
@@ -108,7 +108,7 @@ def mouse_right_check(event: Event):
     mouse_check_push(event)
 
 
-def key_up(event: Event):
+def key_up(event: Event) -> None:
   """
   键盘上键事件处理
   Keyword arguments:
@@ -135,7 +135,7 @@ def key_up(event: Event):
       _set_history_order(cache.input_position)
 
 
-def key_down(event: Event):
+def key_down(event: Event) -> None:
   """
   键盘下键事件处理
   Keyword arguments:
@@ -161,7 +161,7 @@ def key_down(event: Event):
     cache.input_cache_draft = ""
 
 
-def set_wframe_up():
+def set_wframe_up() -> None:
   """
   修正逐字输出状态为nowait
   """
@@ -169,7 +169,7 @@ def set_wframe_up():
   cache.wframe_mouse.w_frame_lines_up = 1
 
 
-def mouse_check_push(event: Event = None):
+def mouse_check_push(event: Event = None) -> None:
   """
   点击时现场判断落点是否命中指令按钮 tag，据此决定是否推进"按任意键继续"等待
   Keyword arguments:

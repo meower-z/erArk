@@ -15,6 +15,8 @@
   getattr/.get 加默认值，避免老存档缺字段时检查函数自身抛出未被期望的异常掩盖真实问题。
 """
 
+from __future__ import annotations
+
 from collections import Counter
 from typing import Any, Dict, List
 
@@ -23,8 +25,13 @@ from Script.Config import game_config
 from Script.System.Dormitory_System import common as dorm_common
 from ..check_registry import CheckFailure, register_check, make_failure
 
+from typing import TYPE_CHECKING
 
-def _eff(ri, facility_cid: int):
+if TYPE_CHECKING:
+  from Script.Core import game_type
+
+
+def _eff(ri: game_type.Rhodes_Island, facility_cid: int) -> int | None:
   """
   参数:
       ri: cache.rhodes_island 罗德岛数据对象
@@ -54,7 +61,7 @@ def _eff(ri, facility_cid: int):
     return None
 
 
-def _chara_name(cd: Dict[int, Any], cid) -> str:
+def _chara_name(cd: Dict[int, Any], cid: int) -> str:
   """
   参数:
       cd (Dict[int, Any]): cache.character_data 角色数据字典
@@ -671,7 +678,7 @@ def check_island_14_agriculture_and_recruit_line_structure() -> (
   ri = cache.rhodes_island
   failures = []
 
-  def _check_line(field: str, allowed_types) -> None:
+  def _check_line(field: str, allowed_types: tuple[int, ...]) -> None:
     line = getattr(ri, field, None)
     if not isinstance(line, dict):
       return

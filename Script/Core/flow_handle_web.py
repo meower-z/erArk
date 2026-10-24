@@ -5,10 +5,16 @@
 重新实现流程控制函数，适配Web UI
 """
 
+from __future__ import annotations
+
 from Script.Core import cache_control, io_init, constant
 from Script.Core.web_server import get_button_response, get_wait_response, get_input_response, update_game_state, update_input_request, emit_settlement_buttons, get_settlement_button_response, clear_settlement_button_response
 import time
 from typing import List, Optional
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from collections.abc import Callable
 
 # 获取全局缓存
 cache = cache_control.cache
@@ -30,7 +36,9 @@ class PanelChangeException(Exception):
   pass
 
 
-def _handle_sub_panel_mode_on_panel_change(initial_panel_id, current_panel_id):
+def _handle_sub_panel_mode_on_panel_change(
+    initial_panel_id: int | None, current_panel_id: int | None
+) -> None:
   """
   处理面板切换时的子面板模式
 
@@ -68,7 +76,7 @@ def _handle_sub_panel_mode_on_panel_change(initial_panel_id, current_panel_id):
     exit_sub_panel_mode()
 
 
-def _get_sub_panel_info(panel_id):
+def _get_sub_panel_info(panel_id: int | None) -> tuple[str, str]:
   """
   根据面板ID获取子面板的指令ID和名称
 
@@ -90,7 +98,7 @@ def _get_sub_panel_info(panel_id):
   return f"panel_{panel_id}", f"面板{panel_id}"
 
 
-def _clear_sub_panel_before_return():
+def _clear_sub_panel_before_return() -> None:
   """
   在子面板模式下返回响应前清除上一批绘制内容
 
@@ -542,7 +550,7 @@ def bind_cmd(
 def print_cmd(
     cmd_str: str,
     cmd_number: str,
-    cmd_func=None,
+    cmd_func: Callable[..., object] | None = None,
     arg: tuple = (),
     kw: dict | None = None,
     normal_style: str = "standard",
@@ -588,7 +596,7 @@ def print_cmd(
   return cmd_str
 
 
-def cmd_clear(*numbers) -> None:
+def cmd_clear(*numbers: int | str | tuple[int | str, ...]) -> None:
   """
   清除绑定命令
 

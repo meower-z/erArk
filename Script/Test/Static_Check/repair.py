@@ -12,17 +12,27 @@
 - cache.debug_mode开启时全部跳过（与相应检查的debug豁免一致，debug面板改出的值视为有意为之）。
 """
 
+from __future__ import annotations
+
 from typing import Callable, Dict, List, Tuple
 
 from Script.Config import game_config
 
 from . import check_log
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import Iterator
+  from Script.Core import game_type
+
 # 修复注册表：check_id -> (修复名, 修复函数)。修复函数接收cache，返回修复记录列表（每条含check_id/target/field/old_value/new_value）
 _repair_registry: Dict[str, Tuple[str, Callable[[object], List[dict]]]] = {}
 
 
-def register_repair(check_id: str, repair_name: str):
+def register_repair(
+    check_id: str, repair_name: str
+) -> Callable[[Callable[[object], List[dict]]], Callable[[object], List[dict]]]:
   """
   参数:
       check_id (str): 该修复对应的检查id（与check_registry中注册的检查一一对应）
@@ -34,7 +44,9 @@ def register_repair(check_id: str, repair_name: str):
       替换原条目，其他函数注册已有check_id时抛ValueError（导入期即暴露配置错误）
   """
 
-  def decorator(func: Callable[[object], List[dict]]):
+  def decorator(
+      func: Callable[[object], List[dict]],
+  ) -> Callable[[object], List[dict]]:
     registered = _repair_registry.get(check_id)
     if registered is not None:
       old_func = registered[1]
@@ -50,7 +62,7 @@ def register_repair(check_id: str, repair_name: str):
 
 
 def _record(
-    check_id: str, target: str, field: str, old_value, new_value
+    check_id: str, target: str, field: str, old_value: object, new_value: object
 ) -> dict:
   """
   参数:
@@ -73,7 +85,7 @@ def _record(
   }
 
 
-def _chara_label(cid, chara) -> str:
+def _chara_label(cid: int | None, chara: object) -> str:
   """
   参数:
       cid: 角色id
@@ -140,7 +152,9 @@ def repair_angry_point_lower_bound(cache) -> List[dict]:
   return records
 
 
-def _iter_cloth_containers(chara):
+def _iter_cloth_containers(
+    chara: object,
+) -> Iterator[tuple[str, dict[int, list[int]]]]:
   """
   参数:
       chara: 角色对象
@@ -370,7 +384,7 @@ def repair_main_power_operator_slots(cache) -> List[dict]:
   ]
 
 
-def _permanent_dormitory_attr(chara) -> str:
+def _permanent_dormitory_attr(chara: object) -> str:
   """
   参数:
       chara: 角色对象
@@ -544,7 +558,7 @@ def repair_overcrowded_dormitory_room(cache) -> List[dict]:
   return records
 
 
-def apply_all_repairs(cache) -> List[dict]:
+def apply_all_repairs(cache: game_type.Cache) -> List[dict]:
   """
   参数:
       cache: 当前游戏缓存对象
