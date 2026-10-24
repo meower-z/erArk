@@ -941,9 +941,7 @@ def extra_exp_settle(
 def handle_comprehensive_value_effect(
     character_id: int,
     effect_all_value_list: list,
-    change_data: (
-        game_type.CharacterStatusChange | game_type.TargetChange
-    ) = game_type.CharacterStatusChange(),
+    change_data: game_type.CharacterStatusChange | game_type.TargetChange,
 ) -> int:
   """
   综合型基础数值结算
