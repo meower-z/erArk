@@ -52,7 +52,7 @@ class ImageProcessor:
       cls._instance = super().__new__(cls)
     return cls._instance
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化图片处理器"""
     if self._initialized:
       return

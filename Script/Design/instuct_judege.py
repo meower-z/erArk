@@ -36,7 +36,7 @@ window_width: int = normal_config.config_normal.text_width
 
 def init_character_behavior_start_time(
     character_id: int, now_time: datetime.datetime
-):
+) -> None:
   """
   将角色的行动开始时间同步为指定时间
   Keyword arguments:

@@ -116,7 +116,7 @@ class TabMenu:
   - 子面板模式下，当前面板作为临时选项卡显示（如果不在已有选项卡中）
   """
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化选项卡菜单管理器"""
     # 当前激活的选项卡ID，默认为主面板
     self._active_tab: str = MAIN_PANEL_TAB_ID

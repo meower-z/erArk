@@ -26,7 +26,7 @@ class Field_Commission_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -222,7 +222,7 @@ class CommissionDraw:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.commission_id: int = commission_id
     """ 委托编号 """

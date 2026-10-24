@@ -28,7 +28,7 @@ class Condom_Select_Panel:
   mode -- 操作类型，hang=挂装饰，take_back=取回装饰，drink=饮用，squeeze=挤出
   """
 
-  def __init__(self, width: int, mode: str):
+  def __init__(self, width: int, mode: str) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """

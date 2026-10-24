@@ -91,7 +91,7 @@ class Official_Event_Draw:
   width -- 绘制宽度
   """
 
-  def __init__(self, queue_data: dict, width: int):
+  def __init__(self, queue_data: dict, width: int) -> None:
     """初始化绘制对象"""
     self.queue_data: dict = queue_data
     """ 队列元素 """

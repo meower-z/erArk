@@ -37,7 +37,7 @@ class Schedule_Template_Panel:
   功能: 列出全部模板与其三个时段的活动，可编辑模板、批量套用到多个孩子
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     self.template_id_by_return: Dict[str, int] = {}

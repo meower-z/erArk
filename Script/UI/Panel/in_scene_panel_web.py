@@ -47,7 +47,7 @@ class InScenePanelWeb:
   width -- 绘制宽度（保留兼容性，Web模式不使用）
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """

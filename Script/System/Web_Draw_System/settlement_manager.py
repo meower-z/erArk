@@ -93,7 +93,7 @@ class SettlementManager:
   负责管理结算流程中的对话和数值变化显示
   """
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化结算管理器"""
     self.phase: SettlementPhase = SettlementPhase.IDLE
     """ 当前结算阶段 """

@@ -102,7 +102,7 @@ class FoodBagPanel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int, food_type: str = ""):
+  def __init__(self, width: int, food_type: str = "") -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -113,7 +113,7 @@ class FoodBagPanel:
     self.handle_panel_special: panel.PageHandlePanel
     """ 特殊调味食物列表控制面板 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     title_draw = draw.TitleLineDraw(_("食物背包"), self.width)
     if self.now_panel == "":
@@ -147,6 +147,7 @@ class FoodBagPanel:
       return_list = []
       for food_type in food_type_list:
         if food_type == self.now_panel:
+          now_draw: draw.NormalDraw | draw.CenterButton
           now_draw = draw.CenterDraw()
           now_draw.text = f"[{food_type}]"
           now_draw.style = "onbutton"
@@ -177,7 +178,7 @@ class FoodBagPanel:
       now_draw.draw()
       line_feed.draw()
 
-      character_data: game_type.Character = cache.character_data[0]
+      character_data = cache.character_data[0]
       target_character_data: game_type.Character = cache.character_data[
           character_data.target_character_id
       ]
@@ -336,7 +337,7 @@ class FoodBagPanel:
 
     return group_normal, group_special
 
-  def change_panel(self, food_type: str):
+  def change_panel(self, food_type: str) -> None:
     """
     切换当前面板显示的食物类型
     Keyword arguments:
@@ -363,7 +364,7 @@ class FoodGroupDraw:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     group_key, uid_list = text
     recipe_id, special_seasoning = group_key
@@ -489,11 +490,11 @@ class FoodGroupDraw:
     self.now_draw = name_draw
     """ 绘制的对象 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.now_draw.draw()
 
-  def see_food_group_list(self):
+  def see_food_group_list(self) -> None:
     """展开显示该分组下的所有食物，供玩家选择食用"""
     title_draw = draw.TitleLineDraw(self.food_name, window_width)
 
@@ -562,7 +563,7 @@ class FoodGroupDraw:
       if yrn in return_list:
         break
 
-  def eat_food(self, uid: UUID):
+  def eat_food(self, uid: UUID) -> None:
     """食用指定uid的食物"""
     from Script.System.Cooking_System import cooking
     from Script.UI.Panel import achievement_panel

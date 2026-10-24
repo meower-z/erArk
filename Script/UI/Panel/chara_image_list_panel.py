@@ -29,7 +29,7 @@ class CharacterImageListDraw:
   character_list -- 绘制的角色列表
   """
 
-  def __init__(self, width: int, character_list: List[int]):
+  def __init__(self, width: int, character_list: List[int]) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 最大绘制宽度 """
@@ -132,7 +132,7 @@ class CharacterImageButton:
   width -- 绘制宽度
   """
 
-  def __init__(self, character_id: int, width: int):
+  def __init__(self, character_id: int, width: int) -> None:
     """初始化绘制对象"""
     self.character_id: int = character_id
     """ 角色id """

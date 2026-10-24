@@ -610,7 +610,7 @@ class CharacterInfoHead:
   width -- 最大宽度
   """
 
-  def __init__(self, character_id: int, width: int):
+  def __init__(self, character_id: int, width: int) -> None:
     """初始化绘制对象"""
     self.character_id: int = character_id
     """ 要绘制的角色id """

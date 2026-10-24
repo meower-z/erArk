@@ -67,7 +67,7 @@ class MedicalPlayerDiagnosePanel:
   避免在其他模块中散落处理流程的细节。
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化面板实例并尝试创建诊疗会话。
 
     参数:

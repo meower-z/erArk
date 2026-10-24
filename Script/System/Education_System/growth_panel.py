@@ -36,7 +36,7 @@ class Growth_Panel:
   功能: 按孩子展示成长状态
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     self.now_student: int = -1

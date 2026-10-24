@@ -19,7 +19,7 @@ _: FunctionType = get_text._
 """ 翻译api """
 
 
-def handle_talk(character_id: int):
+def handle_talk(character_id: int) -> None:
   """
   处理行为结算对话\n
   Keyword arguments:\n
@@ -90,7 +90,9 @@ def handle_talk(character_id: int):
         )
 
 
-def handle_second_talk(character_id: int, behavior_id: str = "share_blankly"):
+def handle_second_talk(
+    character_id: int, behavior_id: str = "share_blankly"
+) -> None:
   """
   处理二段行为结算对话\n
   Keyword arguments:\n
@@ -608,7 +610,7 @@ def handle_talk_draw(
       wait_draw.draw()
 
 
-def must_show_talk_check(character_id: int):
+def must_show_talk_check(character_id: int) -> None:
   """
   检查是否有必须显示的二段行为文本
   Keyword arguments:

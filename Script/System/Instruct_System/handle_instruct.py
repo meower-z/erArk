@@ -1941,7 +1941,7 @@ def ask_for_sex_class_ability() -> int:
 
 
 @add_instruct(constant.Instruct.END_SEX_CLASS)
-def handle_end_sex_class():
+def handle_end_sex_class() -> None:
   """处理结束性技实操课（下课）指令"""
   instuct_judege.init_character_behavior_start_time(0, cache.game_time)
   character_data: game_type.Character = cache.character_data[0]

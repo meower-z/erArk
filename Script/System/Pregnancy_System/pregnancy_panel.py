@@ -203,7 +203,7 @@ class Pregnancy_Overview_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
