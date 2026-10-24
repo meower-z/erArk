@@ -503,7 +503,7 @@ def profile_run(ticks, minutes_per_tick, warmup, profile_name, top_n):
   stats = pstats.Stats(pr)
   func_stats = []
   for func, stat in getattr(stats, "stats", {}).items():
-    cc, nc, tt, ct, callers = stat  # primitive, total, tottime, cumtime
+    cc, nc, tt, ct, __ = stat  # primitive, total, tottime, cumtime
     filename, line, funcname = func
     func_stats.append(
         {

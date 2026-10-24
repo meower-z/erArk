@@ -395,7 +395,7 @@ def load_talk_data_to_cache():
   # print(f"debug now_data = {now_data}")
 
   # 将读取的数据存入cache_control
-  for idnex, value in enumerate(now_data):
+  for __, value in enumerate(now_data):
     now_talk: game_type.Talk = game_type.Talk()
     now_talk.__dict__ = value
     # print(f"debug now_talk = {now_talk.__dict__}")

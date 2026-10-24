@@ -622,7 +622,6 @@ class MenuWidget(QWidget):
     textEdit = QTextEdit(self)
 
     # 赋予下拉框初始值
-    have_text_flag = True
     cloth_flag = False
     initial_text_list = []
     if self.type_flag == 0:
@@ -638,7 +637,6 @@ class MenuWidget(QWidget):
       initial_text_list = [
           cache_control.talent_data[i] for i in cache_control.talent_data
       ]
-      have_text_flag = False
     elif self.type_flag == 3:
       initial_text_list = [
           cache_control.clothing_data[i] for i in cache_control.clothing_data

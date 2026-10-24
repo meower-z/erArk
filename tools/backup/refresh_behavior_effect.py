@@ -74,7 +74,7 @@ def read_behavior_effect(file_path: str) -> Tuple[List[str], Dict[str, str]]:
     reader = csv.reader(file)
 
     # 读取前3行标题
-    for i in range(3):
+    for __ in range(3):
       header_lines.append(next(reader))
 
     # 读取数据行

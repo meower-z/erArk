@@ -101,7 +101,7 @@ def scan_directory_for_csv_files(directory: str) -> List[str]:
   csv_files = []
 
   # 遍历目录及其子目录
-  for root, dirs, files in os.walk(directory):
+  for root, __, files in os.walk(directory):
     for file in files:
       # 检查文件扩展名是否为.csv
       if file.lower().endswith('.csv'):
