@@ -110,7 +110,7 @@ def clr_cmd(*number: str | int, clr_default_flow: bool = True) -> None:
   if clr_default_flow:
     clear_default_flow()
   if number:
-    flow_handle.cmd_clear(number)
+    flow_handle.cmd_clear(*number)
   else:
     global unused_cmd_num
     unused_cmd_num = 500
