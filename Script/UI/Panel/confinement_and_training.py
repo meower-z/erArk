@@ -493,7 +493,7 @@ def get_all_can_use_behavior_id_for_sex_assistant(
           ):
             continue
         pl_character_data = cache.character_data[0]
-        if pl_character_data.target_character_id == 0:
+        if pl_character_data.target_character_id != 0:
           target_character_data = cache.character_data[
               pl_character_data.target_character_id
           ]
