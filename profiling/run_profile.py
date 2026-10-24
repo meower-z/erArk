@@ -36,6 +36,8 @@ erArk 专用性能基准 & 函数级 cProfile 采集脚本 (升级版)
    snakeviz profiling_output/<name>.prof
 """
 
+from __future__ import annotations
+
 import argparse
 import cProfile
 import json
@@ -44,13 +46,17 @@ import pstats
 import sys
 import time
 from datetime import datetime
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from types import ModuleType, SimpleNamespace
 
 PROFILE_DIR = "profiling_output"
 os.makedirs(PROFILE_DIR, exist_ok=True)
 
 
 # ------------------------- 参数解析 -------------------------
-def parse_args():
+def parse_args() -> argparse.Namespace:
   """
   解析命令行参数
   Return arguments:
@@ -116,7 +122,7 @@ def parse_args():
 
 
 # ------------------------- 日志工具 -------------------------
-def log(msg):
+def log(msg: str) -> None:
   """
   打印一行带 [run_profile] 前缀的日志
   Keyword arguments:
@@ -128,7 +134,7 @@ def log(msg):
 
 
 # ------------------------- IO / 等待补丁 -------------------------
-def patch_for_benchmark(no_patch_io=False):
+def patch_for_benchmark(no_patch_io: bool = False) -> None:
   """
   替换输入与界面函数：py_cmd.focus_cmd、py_cmd.clr_cmd 与 WaitDraw.draw 换成什么也不做的函数，
   flow_handle.askfor_all 换成返回第一个选项的函数，该选项是有效命令时先分发它；某项替换失败时只打日志
@@ -145,7 +151,7 @@ def patch_for_benchmark(no_patch_io=False):
     from Script.Core import py_cmd
 
     py_cmd.focus_cmd = lambda: None
-    py_cmd.clr_cmd = lambda: None
+    py_cmd.clr_cmd = lambda *number, clr_default_flow=True: None
   except Exception as e:
     log(f"补丁 py_cmd 失败: {e}")
 
@@ -154,10 +160,10 @@ def patch_for_benchmark(no_patch_io=False):
 
     if hasattr(draw, "WaitDraw"):
 
-      def fast_wait(self) -> None:
+      def fast_wait(self: draw.WaitDraw) -> None:
         return
 
-      draw.WaitDraw.draw = fast_wait
+      setattr(draw.WaitDraw, "draw", fast_wait)
   except Exception as e:
     log(f"补丁 WaitDraw.draw 失败: {e}")
 
@@ -167,7 +173,9 @@ def patch_for_benchmark(no_patch_io=False):
   try:
     from Script.Core import flow_handle
 
-    def benchmark_askfor_all(input_list, print_order=False):
+    def benchmark_askfor_all(
+        input_list: list, print_order: bool = False
+    ) -> str:
       if not input_list:
         return ""
       order = str(input_list[0])
@@ -337,7 +345,9 @@ def new_game_minimal_init() -> None:
 
 
 # ------------------------- 游戏核心初始化（顺序修复） -------------------------
-def init_game_environment(args):
+def init_game_environment(
+    args: argparse.Namespace | SimpleNamespace,
+) -> ModuleType | None:
   """
   修复顺序：
   1. 先初始化 normal_config / cache
@@ -417,7 +427,9 @@ def init_game_environment(args):
 
 
 # ------------------------- 前提统计补丁检测 -------------------------
-def load_premise_profiler(args):
+def load_premise_profiler(
+    args: argparse.Namespace | SimpleNamespace,
+) -> ModuleType | None:
   """
   开启了 --with-premise-profiler 时载入前提统计补丁模块
   Keyword arguments:
@@ -470,7 +482,13 @@ def run_ticks(ticks: int, minutes_per_tick: int) -> None:
 
 
 # ------------------------- Profile 执行 -------------------------
-def profile_run(ticks, minutes_per_tick, warmup, profile_name, top_n):
+def profile_run(
+    ticks: int,
+    minutes_per_tick: int,
+    warmup: int,
+    profile_name: str,
+    top_n: int,
+) -> tuple[str, str]:
   """
   先推进预热的 tick，再在 cProfile 下推进 ticks 次，
   把原始数据写成 .prof，把按累计耗时与自身耗时各取前 top_n 的函数写成汇总 json
@@ -538,7 +556,7 @@ def profile_run(ticks, minutes_per_tick, warmup, profile_name, top_n):
 
 
 # ------------------------- 前提统计导出 -------------------------
-def export_premise_stats(pmod, path):
+def export_premise_stats(pmod: ModuleType | None, path: str) -> None:
   """
   导出前提统计：补丁模块有 export_premise_profile 时交给它，
   否则把 premise_profile_stats 里调用过的前提按总耗时降序写成 json；出错时只打日志
@@ -594,11 +612,12 @@ def main() -> None:
   patch_for_benchmark(no_patch_io=args.no_patch_io)
 
   # 可选：主循环/NPC AI 结构统计补丁（需在 profile 运行前应用）
-  loop_stats_mod = None
+  loop_stats_mod: ModuleType | None = None
   if args.loop_stats:
     try:
-      from profiling import loop_stats_patch as loop_stats_mod
+      from profiling import loop_stats_patch
 
+      loop_stats_mod = loop_stats_patch
       loop_stats_mod.apply_loop_stats_patch()
       log("主循环结构统计补丁已应用。")
     except Exception as e:

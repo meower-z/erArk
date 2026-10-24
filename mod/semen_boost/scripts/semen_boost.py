@@ -8,9 +8,30 @@
 4. 替换精液量前提函数，绕过绝顶结算中的无精液高潮分支（2026-07起新增的射精前置判断）
 """
 
+from __future__ import annotations
+
 import os
 import csv
 import random
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from collections.abc import Callable
+  from typing import Protocol
+
+  from Script.Config import game_config
+  from Script.Core.cache_control import cache
+  from Script.Core.get_text import _
+
+  # mod 系统注入的 get_mod_asset：素材别名 -> 实际路径，找不到时为 None
+  get_mod_asset: Callable[[str], str | None]
+
+  class _SemenConfig(Protocol):
+    """_load_mod_semen_data 用 type() 现造的射精量数据对象"""
+
+    cid: int
+    base_semen_amount: int
+
 
 # ===== 以下变量由mod系统自动注入 =====
 # cache - 游戏缓存数据
@@ -22,7 +43,7 @@ import random
 
 # ===== Mod自带的射精量数据 =====
 # 在mod加载时读取自带的CSV数据文件
-_mod_semen_config = {}
+_mod_semen_config: dict[int, _SemenConfig] = {}
 
 
 def _load_mod_semen_data() -> None:
@@ -127,7 +148,7 @@ def modded_handle_pl_semen_le_2(character_id: int) -> int:
 
 
 # ===== 替换函数：修改后的通用射精结算 =====
-def modded_common_ejaculation():
+def modded_common_ejaculation() -> tuple[str, int]:
   """
   修改后的通用射精结算函数
 
@@ -163,6 +184,7 @@ def modded_common_ejaculation():
   # 现在使用 _mod_semen_config（基础值为原版两倍）
 
   # 基础射精值，小中多射精区分
+  semen_count: float
   if character_data.second_behavior["p_orgasm_strong"] == 1:
     base_amount = _mod_semen_config[2].base_semen_amount
     semen_count = int(base_amount * random_weight) * (

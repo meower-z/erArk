@@ -26,12 +26,28 @@ import time
 import traceback
 from datetime import datetime
 from types import SimpleNamespace
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import TypedDict
+
+  from Script.UI.Panel import in_scene_panel, see_map_panel
+
+  class BenchmarkState(TypedDict):
+    """基准运行状态：已完成屏数、每屏等待耗时（秒）、是否已在预热后清屏、是否超时中止"""
+
+    screens_done: int
+    screen_wall_times: list[float]
+    warmup_wall_times: list[float]
+    warmup_cleared: bool
+    aborted: bool
+
 
 PROFILE_DIR = "profiling_output"
 os.makedirs(PROFILE_DIR, exist_ok=True)
 
 
-def log(msg):
+def log(msg: str) -> None:
   """
   输出带前缀的日志
   参数:
@@ -42,7 +58,7 @@ def log(msg):
   print(f"[ui_benchmark] {msg}", flush=True)
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
   """
   解析命令行参数
   参数：无
@@ -97,7 +113,7 @@ def parse_args():
   return ap.parse_args()
 
 
-def main():
+def main() -> None:
   """
   基准主入口
   参数：无
@@ -136,7 +152,7 @@ def main():
   log(f"存档已加载：NPC 数量 = {len(cache.npc_id_got)}")
 
   # 基准运行状态
-  state = {
+  state: BenchmarkState = {
       "screens_done": 0,
       "screen_wall_times": [],
       "warmup_wall_times": [],
@@ -145,7 +161,7 @@ def main():
   }
   total_screens = args.screens + args.warmup_screens
 
-  def benchmark_askfor_all(input_list, print_order=False):
+  def benchmark_askfor_all(input_list: list, print_order: bool = False) -> str:
     """
     askfor_all 的基准替身
     参数:
@@ -225,6 +241,7 @@ def main():
           f"开始基准：面板={args.panel}，{args.screens} 屏完整重绘，文本宽度 {width}"
       )
       t_total = time.perf_counter()
+      panel: see_map_panel.SeeMapPanel | in_scene_panel.InScenePanel
       if args.panel == "map":
         # 查看地图界面：SeeMapPanel 的 while-1 循环同样以 now_panel_id 为退出条件
         cache.now_panel_id = constant.Panel.SEE_MAP

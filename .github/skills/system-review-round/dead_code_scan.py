@@ -17,12 +17,19 @@
 通过字符串反射调用（getattr(obj, "name")）的不算引用，这类要人工确认。
 """
 
+from __future__ import annotations
+
 import argparse
 import ast
 import collections
+import io
 import os
 import sys
 import tokenize
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from collections.abc import Iterator
 
 SKIP_DIRS = {
     ".git",
@@ -58,7 +65,7 @@ def find_root(start: str) -> str:
     path = parent
 
 
-def iter_py_files(base: str):
+def iter_py_files(base: str) -> Iterator[str]:
   """
   遍历目录下的全部 .py 文件（跳过 SKIP_DIRS）
   Keyword arguments:
@@ -192,7 +199,9 @@ def collect_definitions(target: str, root: str) -> list:
   return result
 
 
-def count_name_tokens(root: str):
+def count_name_tokens(
+    root: str,
+) -> tuple[collections.Counter[str], collections.Counter[str]]:
   """
   统计全仓库 .py 的 NAME token 出现次数，按生产 / 测试分开
   Keyword arguments:
@@ -200,8 +209,8 @@ def count_name_tokens(root: str):
   Return arguments:
   tuple[Counter, Counter] -- (生产代码计数, 测试代码计数)
   """
-  prod = collections.Counter()
-  test = collections.Counter()
+  prod: collections.Counter[str] = collections.Counter()
+  test: collections.Counter[str] = collections.Counter()
   for path in iter_py_files(root):
     counter = test if is_test_file(path, root) else prod
     try:
@@ -222,6 +231,8 @@ def main() -> None:
   Return arguments:
   无
   """
+  # 从终端、管道或重定向文件运行时 sys.stdout 都是 TextIOWrapper
+  assert isinstance(sys.stdout, io.TextIOWrapper)
   sys.stdout.reconfigure(encoding="utf-8", errors="replace")
   parser = argparse.ArgumentParser(
       description="按代码 token 统计引用的死代码扫描"

@@ -30,7 +30,7 @@ _time_data: Dict[str, List[float]] = {}
 """ 分类计时累计：key -> [调用次数, 总耗时秒, 单次最大耗时秒] """
 _count_data: Dict[str, int] = {}
 """ 分类计数累计：key -> 次数 """
-_value_data: Dict[str, float] = {}
+_value_data: Dict[str, float | Dict[str, int]] = {}
 """ 最新采样值：key -> 数值（如 tag 总数等瞬时量） """
 _mark_data: Dict[str, float] = {}
 """ 时间戳标记：key -> perf_counter 时间戳（用于跨线程配对） """
@@ -83,7 +83,7 @@ def hook_count(key: str, n: int = 1) -> None:
     _count_data[key] = _count_data.get(key, 0) + n
 
 
-def hook_value(key: str, value: float) -> None:
+def hook_value(key: str, value: float | Dict[str, int]) -> None:
   """
   记录一个瞬时采样值
   参数:

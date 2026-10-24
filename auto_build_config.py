@@ -4,10 +4,23 @@
 data/ 下已有 Character_Talk.json 或 Talk_Common.json 时跳过对应口上的构建
 """
 
+from __future__ import annotations
+
 import csv
 import os
 import json
 import ast
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import Any, TypedDict
+
+  class ConfigTable(TypedDict, total=False):
+    """一张配置表：data 是每行数据，列值的类型由 CSV 的类型行决定，只能写 Any；gettext 是每列是否提取翻译文本"""
+
+    data: list[dict[str, Any]]
+    gettext: dict[str, int]
+
 
 # 文件路径
 config_dir = os.path.join("data", "csv")
@@ -42,17 +55,17 @@ talk_common_data_path = os.path.join("data", "Talk_Common.json")
 config_path = os.path.join("Script", "Config", "config_def.py")
 
 # 全局变量
-config_data = {}
-cook_question_data = {}
-character_data = {}
-ui_text_data = {}
-character_talk_data = {}
-character_event_data = {}
-official_event_data = {}
-talk_common_data = {}
+config_data: dict[str, ConfigTable] = {}
+cook_question_data: dict[str, ConfigTable] = {}
+character_data: dict[str, dict[str, object]] = {}
+ui_text_data: dict[str, dict[str, str]] = {}
+character_talk_data: dict[str, ConfigTable] = {}
+character_event_data: dict[str, ConfigTable] = {}
+official_event_data: dict[str, ConfigTable] = {}
+talk_common_data: dict[str, ConfigTable] = {}
 built = set()
 msgData = set()
-class_data = set()
+class_data: set[str] = set()
 config_def_str = ""
 # 使用列表累积 PO 行，减少大量字符串拼接导致的性能损耗
 config_po_lines = []
@@ -86,10 +99,10 @@ try:
     character_talk_data = {}
     character_event_data = {}
   else:
-    with open(character_talk_data_path, "r", encoding="utf-8") as f:
-      character_talk_data = json.load(f)
-    with open(character_event_data_path, "r", encoding="utf-8") as f:
-      character_event_data = json.load(f)
+    with open(character_talk_data_path, "r", encoding="utf-8") as json_file:
+      character_talk_data = json.load(json_file)
+    with open(character_event_data_path, "r", encoding="utf-8") as json_file:
+      character_event_data = json.load(json_file)
     # 如果指定了特定角色，则将该角色重置
     for key in character_talk_data["Talk"]["data"].copy():
       if key["adv_id"] == BUILD_CHARA_ID:
@@ -173,6 +186,8 @@ def build_csv_config(
       config_data.setdefault(type_text, {})
       config_data[type_text].setdefault("data", [])
       config_data[type_text].setdefault("gettext", {})
+    # 列值按类型行转成 int、str 或 float，同一行里各列类型不同
+    row: dict[str, Any]
     for row in now_read:
       # 获得当前的行数
       now_index = now_read.line_num
@@ -348,7 +363,7 @@ def build_config_po(
     built.add(message)
 
 
-def build_scene_config(data_path):
+def build_scene_config(data_path: str) -> None:
   """
   输入：
       data_path: 场景数据路径
@@ -393,7 +408,7 @@ def build_character_config(file_path: str, file_name: str) -> None:
   with open(file_path, encoding="utf-8", newline="") as now_file:
     now_read = csv.DictReader(now_file)
     file_id = file_name.split(".")[0]
-    now_data = {}
+    now_data: dict[str, object] = {}
     # now_type_data = {}
     i = 0
     for row in now_read:
@@ -451,7 +466,7 @@ def build_ui_text(file_path: str, file_name: str) -> None:
     ui_text_data[file_id] = now_data
 
 
-def build_po_text():
+def build_po_text() -> str:
   """
   输入：
       po: 原始po字符串

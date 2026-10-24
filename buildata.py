@@ -100,12 +100,13 @@ def class_end_index(line_list: list, class_name: str) -> int:
   return end_index
 
 
-def constand_2_handle():
+def constand_2_handle() -> str:
   """
   输出constand_promise里的标准格式，以及把前提处理函数接到 handle_premise 包里 premise_module 模块的末尾
   """
 
   # 判断数据编号
+  data_index: int | str
   if datetype == "A":
     datetype_str = "ability"
     for config_data_index in game_config.config_ability:
@@ -283,7 +284,7 @@ def build_promise_csv_text(line_list: list) -> str:
   return out_str
 
 
-def constand_promise_2_csv():
+def constand_promise_2_csv() -> str:
   """
   前提文件转csv（mode 2）：读 constant_promise.py，重新生成 ArkEditor 的前提表
   Keyword arguments:
@@ -311,7 +312,7 @@ def constand_promise_2_csv():
   return out_str
 
 
-def csv_2_constand():
+def csv_2_constand() -> str:
   with open(
       os.path.join("tools", "csv", "premise.csv"), "r", encoding="utf-8"
   ) as f:
@@ -345,7 +346,7 @@ def csv_2_constand():
   return out_str
 
 
-def constand_effect_2_csv():
+def constand_effect_2_csv() -> str:
   with open(
       os.path.join("Script", "Core", "constant_effect.py"),
       "r",
@@ -390,7 +391,7 @@ def constand_effect_2_csv():
   return out_str
 
 
-def csv_2_constand_effect():
+def csv_2_constand_effect() -> str:
   with open(
       os.path.join("tools", "csv", "Effect.csv"), "r", encoding="utf-8"
   ) as f:

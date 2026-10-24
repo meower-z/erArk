@@ -71,9 +71,8 @@ if __name__ == "__main__":
   game_time.init_time()
 
   # 性能监控开关：config.ini 中 perf_monitor = 1 时启用 TK 渲染性能埋点与排版补丁
-  if not now_web_mode and getattr(
-      normal_config.config_normal, "perf_monitor", 0
-  ):
+  perf_monitor: int = getattr(normal_config.config_normal, "perf_monitor", 0)
+  if not now_web_mode and perf_monitor:
     from Script.Core import perf_hook
 
     perf_hook.enabled = True

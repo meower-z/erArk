@@ -12,10 +12,19 @@ erArk 无头测试 harness 模板
   - 本脚本为只读诊断：只读存档入内存，不写任何文件；不要调用 establish_save / game_update_flow
 """
 
+from __future__ import annotations
+
+import io
 import os
 import sys
 import random
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+  import datetime
+
+# 从终端、管道或重定向文件运行时 sys.stdout 都是 TextIOWrapper
+assert isinstance(sys.stdout, io.TextIOWrapper)
 sys.stdout.reconfigure(
     encoding="utf-8", errors="replace"
 )  # Windows GBK 控制台防乱码
@@ -55,11 +64,11 @@ character_handle.init_character_tem()
 game_time.init_time()
 
 # ==== 2. 屏蔽UI：所有绘制无操作化 + 记录感兴趣的文本 ====
-captured_messages = []
+captured_messages: list[str] = []
 CAPTURE_KEYWORD = "吵醒"  # 改成要断言的文本关键词；不需要捕获则设为 None
 
 
-def record_draw(self, *a, **k):
+def record_draw(self: draw.WaitDraw, *a: object, **k: object) -> None:
   """
   记录型绘制桩，不绘制任何内容：CAPTURE_KEYWORD 非空且绘制对象的 text 含该关键词时，
   把去掉首尾空白的 text 追加到 captured_messages
@@ -83,7 +92,8 @@ for _cls_name in dir(draw):
       _cls.draw = lambda self, *a, **k: None
     except Exception:
       pass
-draw.WaitDraw.draw = record_draw  # WaitDraw 常用于关键提示，用记录型 stub
+# WaitDraw 常用于关键提示，用记录型 stub
+setattr(draw.WaitDraw, "draw", record_draw)
 flow_handle.askfor_all = lambda *a, **k: ""
 flow_handle.askfor_wait = lambda *a, **k: None
 
@@ -156,20 +166,20 @@ ENABLE_PROBE = True
 if ENABLE_PROBE and WATCH:
   _orig_find = handle_npc_ai.find_character_target
 
-  def _wrap_find(cid, now_time):
+  def _wrap_find(character_id: int, now_time: datetime.datetime) -> None:
     """
     调用原来的 find_character_target，角色在 WATCH 里时打印其行为 id、时长与状态
     Keyword arguments:
-    cid -- 角色id
+    character_id -- 角色id
     now_time -- 原样传给原函数的时间
     Return arguments:
     None
     """
-    _orig_find(cid, now_time)
-    if cid in WATCH:
-      cd = cache.character_data[cid]
+    _orig_find(character_id, now_time)
+    if character_id in WATCH:
+      cd = cache.character_data[character_id]
       print(
-          f"    [find后] cid={cid} bhv={cd.behavior.behavior_id} dur={cd.behavior.duration} state={cd.state}"
+          f"    [find后] cid={character_id} bhv={cd.behavior.behavior_id} dur={cd.behavior.duration} state={cd.state}"
       )
 
   handle_npc_ai.find_character_target = _wrap_find
@@ -177,23 +187,23 @@ if ENABLE_PROBE and WATCH:
 
   _orig_int = handle_npc_ai.judge_interrupt_character_behavior
 
-  def _wrap_int(cid):
+  def _wrap_int(character_id: int) -> int:
     """
     调用原来的 judge_interrupt_character_behavior，角色在 WATCH 里时打印调用前后的行为 id 与时长和返回值
     Keyword arguments:
-    cid -- 角色id
+    character_id -- 角色id
     Return arguments:
     int -- 原函数的返回值
     """
     pre = (
-        cache.character_data[cid].behavior.behavior_id,
-        cache.character_data[cid].behavior.duration,
+        cache.character_data[character_id].behavior.behavior_id,
+        cache.character_data[character_id].behavior.duration,
     )
-    r = _orig_int(cid)
-    if cid in WATCH:
-      cd = cache.character_data[cid]
+    r = _orig_int(character_id)
+    if character_id in WATCH:
+      cd = cache.character_data[character_id]
       print(
-          f"    [中断判定] cid={cid} 前={pre} 返回={r} 后=({cd.behavior.behavior_id},{cd.behavior.duration})"
+          f"    [中断判定] cid={character_id} 前={pre} 返回={r} 后=({cd.behavior.behavior_id},{cd.behavior.duration})"
       )
     return r
 
@@ -205,19 +215,19 @@ if ENABLE_PROBE and WATCH:
   # 学生赶去上课的截短（Plan 32 起）走 judge_student_leave_truncate，在实时结算之前调，不在 judge_interrupt_character_behavior 里
   _orig_trunc = handle_npc_ai.judge_student_leave_truncate
 
-  def _wrap_trunc(cid):
+  def _wrap_trunc(character_id: int) -> bool:
     """
     调用原来的 judge_student_leave_truncate，角色在 WATCH 里且原函数返回真值时打印调用前后的行为时长
     Keyword arguments:
-    cid -- 角色id
+    character_id -- 角色id
     Return arguments:
     bool -- 原函数的返回值
     """
-    pre = cache.character_data[cid].behavior.duration
-    r = _orig_trunc(cid)
-    if cid in WATCH and r:
+    pre = cache.character_data[character_id].behavior.duration
+    r = _orig_trunc(character_id)
+    if character_id in WATCH and r:
       print(
-          f"    [学生截短] cid={cid} 时长 {pre} → {cache.character_data[cid].behavior.duration}"
+          f"    [学生截短] cid={character_id} 时长 {pre} → {cache.character_data[character_id].behavior.duration}"
       )
     return r
 
