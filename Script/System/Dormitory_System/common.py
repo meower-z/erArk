@@ -382,17 +382,19 @@ def init_character_dormitory() -> None:
   角色分配到csv里所写的宿舍名所对应的房间坐标
   """
   cache = cache_control.cache
-  dormitory = {
+  dormitory_place_data = {
       key: constant.place_data[key]
       for key in constant.place_data
       if "Dormitory" in key
   }
   dormitory = {
       x: 0
-      for j in [k[1] for k in sorted(dormitory.items(), key=lambda x: x[0])]
+      for j in [
+          k[1] for k in sorted(dormitory_place_data.items(), key=lambda x: x[0])
+      ]
       for x in j
   }
-  special_dormitory = {
+  special_dormitory_place_data = {
       key: constant.place_data[key]
       for key in constant.place_data
       if "Special_Dormitory" in key
@@ -400,7 +402,10 @@ def init_character_dormitory() -> None:
   special_dormitory = {
       x: 0
       for j in [
-          k[1] for k in sorted(special_dormitory.items(), key=lambda x: x[0])
+          k[1]
+          for k in sorted(
+              special_dormitory_place_data.items(), key=lambda x: x[0]
+          )
       ]
       for x in j
   }
@@ -413,9 +418,9 @@ def init_character_dormitory() -> None:
     # print(f"{character_data.name}：{character_data.dormitory}")
     # 普通干员每两个人住一个房间
     if character_data.dormitory == "无":
-      n = npc_count // 2
-      # print(f"debug n :{n}, len(dormitory) :{len(dormitory)}")
-      now_room = list(dormitory.keys())[n]
+      room_index = npc_count // 2
+      # print(f"debug room_index :{room_index}, len(dormitory) :{len(dormitory)}")
+      now_room = list(dormitory.keys())[room_index]
       # print(f"debug now_room = {now_room}")
       character_data.dormitory = now_room
       npc_count += 1

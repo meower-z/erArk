@@ -24,8 +24,8 @@ class SceneRenderer:
 
   def __init__(self) -> None:
     """初始化场景渲染器"""
-    self._cached_scene_name = None
-    self._cached_background_path = None
+    self._cached_scene_name: str | None = None
+    self._cached_background_path: str | None = None
 
   def get_scene_background(self, scene_name: str = "") -> dict:
     """

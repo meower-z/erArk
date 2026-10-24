@@ -147,6 +147,7 @@ class FoodBagPanel:
       return_list = []
       for food_type in food_type_list:
         if food_type == self.now_panel:
+          now_draw: draw.NormalDraw | draw.CenterButton
           now_draw = draw.CenterDraw()
           now_draw.text = f"[{food_type}]"
           now_draw.style = "onbutton"
@@ -177,7 +178,7 @@ class FoodBagPanel:
       now_draw.draw()
       line_feed.draw()
 
-      character_data: game_type.Character = cache.character_data[0]
+      character_data = cache.character_data[0]
       target_character_data: game_type.Character = cache.character_data[
           character_data.target_character_id
       ]

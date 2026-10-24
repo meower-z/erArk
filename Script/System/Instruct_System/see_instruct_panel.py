@@ -12,7 +12,7 @@ from Script.Core import (
     py_cmd,
 )
 from Script.Design import handle_premise, talk, child_stage_gate
-from Script.Config import game_config
+from Script.Config import config_def, game_config
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -152,6 +152,10 @@ class SeeInstructPanel:
     self.return_list = []
 
     # 根据是否是显示H指令，进行指令类型过滤相关变量的区分
+    now_instruct_config: (
+        dict[int, config_def.InstructType]
+        | dict[int, config_def.Instruct_Sex_Type]
+    )
     if handle_premise.handle_now_show_h_instruct(0):
       instruct_type_len = len(cache.instruct_sex_type_filter) + 1
       now_instruct_type_list = cache.instruct_sex_type_filter
@@ -202,7 +206,7 @@ class SeeInstructPanel:
     line = draw.LineDraw("~..", self.width)
     line.draw()
     now_instruct_list = []
-    now_premise_data = {}
+    now_premise_data: dict[str, float] = {}
     # 遍历指令过滤
     for now_type in cache.instruct_type_filter:
       # 玩家关闭了该类，或交互对象临盆、产后、处于幼年阶段而隐藏该类时，跳过该类
@@ -254,6 +258,7 @@ class SeeInstructPanel:
         cid = constant.instruct_id_to_cid.get(instruct_id, 0)
         id_text = text_handle.id_index(cid)
         now_text = f"{id_text}{instruct_name}"
+        now_draw: draw.LeftButton | panel.DrawTextListPanel
         now_draw = draw.LeftButton(
             now_text,
             str(cid),  # 返回值使用数字 cid

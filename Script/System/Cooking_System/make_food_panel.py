@@ -108,6 +108,7 @@ class Make_food_Panel:
       return_list = []
       for food_type in food_type_list:
         if food_type == self.now_panel:
+          now_draw: draw.NormalDraw | draw.CenterButton
           now_draw = draw.CenterDraw()
           now_draw.text = f"[{food_type}]"
           now_draw.style = "onbutton"
@@ -266,6 +267,7 @@ class Make_food_Panel:
       mode_title.draw()
       # 标准模式行
       if self.cook_mode == 0:
+        std_draw: draw.CenterDraw | draw.CenterButton
         std_draw = draw.CenterDraw()
         std_draw.text = _("[标准模式]")
         std_draw.style = "gold_enrod"
@@ -288,6 +290,7 @@ class Make_food_Panel:
       std_info.draw()
       # 精细模式行
       if self.cook_mode == 1:
+        fine_draw: draw.CenterDraw | draw.CenterButton
         fine_draw = draw.CenterDraw()
         fine_draw.text = _("[精细模式]")
         fine_draw.style = "gold_enrod"
@@ -781,6 +784,9 @@ class SeeFoodListByFoodNameDraw:
   num_button -- 绘制数字按钮
   button_id -- 数字按钮id
   """
+
+  last_confirm_result: str
+  """ 二级确认面板最后一次操作的结果（确认或取消），经类对象读写 """
 
   def __init__(
       self,

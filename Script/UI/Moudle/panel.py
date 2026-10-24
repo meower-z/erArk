@@ -339,11 +339,11 @@ class DrawTextListPanel:
     """ 面板宽度 """
     self.column: int = 0
     """ 每行最大元素数 """
-    self.draw_list: List[List[draw.NormalDraw]] = []
+    self.draw_list: List[List[draw.Drawable]] = []
     """ 绘制列表 """
 
   def set(
-      self, info_list: List[draw.NormalDraw], width: int, column: int
+      self, info_list: Sequence[draw.Drawable], width: int, column: int
   ) -> None:
     """
     设置绘制信息
@@ -354,7 +354,7 @@ class DrawTextListPanel:
     """
     self.width = width
     self.column = column
-    self.draw_list = value_handle.list_of_groups(info_list, column)
+    self.draw_list = value_handle.list_of_groups(list(info_list), column)
 
   def draw(self) -> None:
     """绘制面板"""

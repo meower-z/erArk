@@ -20,6 +20,8 @@
    - 效果：创建临时选项卡面板，在面板中选择后再结算，结算后退出临时选项卡
 """
 
+from typing import TypedDict
+
 
 class InstructCategory:
   """
@@ -213,9 +215,19 @@ HEAD_SUB_PARTS = [
     BodyPart.HORN,  # 兽角（需要角色有兽角特征）
 ]
 
+
+class ComputedBodyPart(TypedDict):
+  """部位中心位置的配置：所列关键点的平均位置加上偏移"""
+
+  keypoints: list[int]
+  """ 参与计算的 COCO 关键点序号 """
+  offset: tuple[float, float]
+  """ 中心位置偏移（横、纵，按图像宽高的比例） """
+
+
 # 需要通过多个关键点计算中心位置的部位
 # 格式: {部位: [(关键点1, 关键点2, ...), 位置偏移]}
-COMPUTED_BODY_PARTS = {
+COMPUTED_BODY_PARTS: dict[str, ComputedBodyPart] = {
     BodyPart.HEAD: {
         "keypoints": [1, 2],  # 基于左眼(1)和右眼(2)中间
         "offset": (0, -0.03),  # 向上偏移图像高度的3%（双眼中间偏上一点）
