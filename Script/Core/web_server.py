@@ -2523,17 +2523,21 @@ def send_full_game_state() -> None:
   try:
     # 导入必要的模块
     from Script.Design import web_interaction_manager
-    from Script.System.Instruct_System import instruct_meta
+    from Script.System.Web_Draw_System import TabMenu
 
     # 构建完整游戏状态
     full_state = {}
 
-    # 基础状态（旧API兼容）
+    # 基础状态（旧API兼容）与子面板模式数据，取自 game_state
+    # 子面板模式下前端按 sub_panel_data 在子面板上方画场景信息栏与选项卡栏
     with state_lock:
       full_state['text_content'] = game_state.get('text_content', [])
       full_state['buttons'] = game_state.get('buttons', [])
       full_state['panel_id'] = game_state.get('panel_id')
       full_state['skip_wait'] = game_state.get('skip_wait', False)
+      full_state['sub_panel_mode'] = game_state.get('sub_panel_mode', False)
+      if 'sub_panel_data' in game_state:
+        full_state['sub_panel_data'] = game_state['sub_panel_data']
 
     # 玩家信息
     if hasattr(cache, 'character_data') and 0 in cache.character_data:
@@ -2585,18 +2589,8 @@ def send_full_game_state() -> None:
           web_interaction_manager.get_available_minor_types(current_major)
       )
 
-    # 面板选项卡（系统面板类指令）
-    panel_instructs = instruct_meta.get_system_panel_instructs()
-    full_state['panel_tabs'] = [
-        {
-            'instruct_id': iid,
-            'name': constant.handle_instruct_name_data.get(iid, ''),
-            'active': cache.now_panel_id
-            == constant.instruct_panel_id_data.get(iid),
-        }
-        for iid in panel_instructs
-        if iid in constant.instruct_panel_id_data
-    ]
+    # 面板选项卡：与主界面和子面板的选项卡栏一样由 TabMenu 生成
+    full_state['panel_tabs'] = TabMenu().get_panel_tabs()
 
     # 对话框状态
     from Script.System.Web_Draw_System.dialog_box import get_dialog_state
