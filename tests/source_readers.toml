@@ -739,10 +739,13 @@ import sys, types
 stub = types.ModuleType("Script.Config.game_config")
 stub.init = lambda: None
 sys.modules["Script.Config.game_config"] = stub
-import buildata
+import buildata, hashlib
 for path in ["Script/Core/constant_promise.py", "Script/Core/constant_effect.py"]:
-    lines = open(path, encoding="utf-8").readlines()
-    print(path, len(lines), len(buildata.skip_module_docstring(lines)))
+    lines = open(path, "r", encoding="utf-8").readlines()
+    kept = buildata.skip_module_docstring(lines)
+    # 文件开头的 BOM 在有模块 docstring 时随 docstring 那行一起去掉，不算留下的行的内容
+    text = "".join(kept).removeprefix("\ufeff")
+    print(path, len(kept), hashlib.sha256(text.encode("utf-8")).hexdigest())
 ''']
 outputs = []
 
