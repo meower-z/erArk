@@ -1144,19 +1144,33 @@ class Debug_Panel:
           info_draw.text = info_text
           info_draw.draw()
           line_feed.draw()
-          change_value_panel = panel.AskForOneMessage()
-          change_value_panel.set(_("输入改变后的值"), 100)
-          new_value = int(change_value_panel.draw())
-          cache.rhodes_island.party_day_of_week = new_value
+          value_index_panel = panel.AskForOneMessage()
+          value_index_panel.set(
+              _(
+                  "输入改变的项目，如果是列表则输入要改变第几号数据，以及这一项变成几，中间用英文小写逗号隔开"
+              ),
+              100,
+          )
+          # 输入「星期,娱乐id」，改这一天的派对娱乐
+          week_day, entertainment_id = map(
+              int, value_index_panel.draw().split(",")
+          )
+          cache.rhodes_island.party_day_of_week[week_day] = entertainment_id
         elif key_index == 8:
           info_text = f"[008]:当前招募进度：{cache.rhodes_island.recruit_line}"
           info_draw.text = info_text
           info_draw.draw()
           line_feed.draw()
-          change_value_panel = panel.AskForOneMessage()
-          change_value_panel.set(_("输入改变后的值"), 100)
-          new_value = int(change_value_panel.draw())
-          cache.rhodes_island.recruit_line = new_value
+          value_index_panel = panel.AskForOneMessage()
+          value_index_panel.set(
+              _(
+                  "输入改变的项目，如果是列表则输入要改变第几号数据，以及这一项变成几，中间用英文小写逗号隔开"
+              ),
+              100,
+          )
+          # 输入「招募线id,招募进度」，改这条招募线的招募进度
+          line_id, progress = map(int, value_index_panel.draw().split(","))
+          cache.rhodes_island.recruit_line[line_id][0] = progress
         elif key_index == 9:
           info_text = (
               f"[009]:已招募待确认的干员id：{cache.rhodes_island.recruited_id}"
@@ -1167,7 +1181,7 @@ class Debug_Panel:
           change_value_panel = panel.AskForOneMessage()
           change_value_panel.set(_("输入改变后的值"), 100)
           new_value = int(change_value_panel.draw())
-          cache.rhodes_island.recruited_id = new_value
+          cache.rhodes_island.recruited_id = {new_value}
 
       elif self.now_panel == "常用更改":
 
@@ -1283,7 +1297,7 @@ class Debug_Panel:
           for all_cid in cache.rhodes_island.facility_level:
             cache.rhodes_island.facility_level[all_cid] = 5
             for cid in cache.rhodes_island.facility_open:
-              cache.rhodes_island.facility_open[cid] = 1
+              cache.rhodes_island.facility_open[cid] = True
             basement.get_base_updata()
         # 重置全角色特殊flag
         elif key_index == 11:
@@ -1897,7 +1911,9 @@ class Debug_Panel:
           elif value_index[0] == 5:
             target_data.h_state.orgasm_level[value_index[1]] = new_value
           elif value_index[0] == 6:
-            target_data.h_state.orgasm_count[value_index[1]] = new_value
+            target_data.h_state.orgasm_count[value_index[1]][
+                value_index[2]
+            ] = new_value
 
           # 接着刷新一遍显示新内容
           change_draw_flag = False
