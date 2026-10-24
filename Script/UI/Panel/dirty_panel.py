@@ -88,7 +88,7 @@ class SeeCharacterBodyPanel:
       column: int,
       type_number: int,
       center_status: bool = True,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.character_id = character_id
     """ 要绘制的角色id """

@@ -24,7 +24,7 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def draw_q(val: int):
+def draw_q(val: int) -> None:
   """
   绘制品质预测文本
   Keyword arguments:
@@ -45,7 +45,7 @@ class Make_food_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int, make_food_type: int = 0):
+  def __init__(self, width: int, make_food_type: int = 0) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -78,7 +78,7 @@ class Make_food_Panel:
     return cache.rhodes_island.makefood_cook_mode.get(self.make_food_type, 0)
 
   @cook_mode.setter
-  def cook_mode(self, cook_mode: int):
+  def cook_mode(self, cook_mode: int) -> None:
     """
     设置烹饪模式并写回罗德岛缓存，使下次打开同类型面板时沿用
     Keyword arguments:
@@ -86,7 +86,7 @@ class Make_food_Panel:
     """
     cache.rhodes_island.makefood_cook_mode[self.make_food_type] = cook_mode
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     character_data: game_type.Character = cache.character_data[0]
     title_draw = draw.TitleLineDraw(_("制作食物"), self.width)
@@ -405,7 +405,7 @@ class Make_food_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def change_panel(self, food_type: str):
+  def change_panel(self, food_type: str) -> None:
     """
     切换当前面板显示的食物类型
     Keyword arguments:
@@ -463,7 +463,7 @@ class Make_food_Panel:
     else:
       self.special_seasoning = seasoning_cid
 
-  def change_cook_mode(self, cook_mode: int):
+  def change_cook_mode(self, cook_mode: int) -> None:
     """
     切换烹饪模式
     Keyword arguments:
@@ -537,7 +537,7 @@ class Make_food_Panel:
 
     return filter_text, sort_text
 
-  def open_filter_panel(self):
+  def open_filter_panel(self) -> None:
     """
     打开筛选设置面板
     """
@@ -660,34 +660,34 @@ class Make_food_Panel:
       elif yrn == clear_button.return_text:
         self.clear_filter()
 
-  def toggle_filter_type(self, type_id: int):
+  def toggle_filter_type(self, type_id: int) -> None:
     """切换类型筛选"""
     if type_id in cache.rhodes_island.makefood_filter_type:
       cache.rhodes_island.makefood_filter_type.remove(type_id)
     else:
       cache.rhodes_island.makefood_filter_type.append(type_id)
 
-  def set_filter_difficulty(self, difficulty: int):
+  def set_filter_difficulty(self, difficulty: int) -> None:
     """设置难度筛选"""
     cache.rhodes_island.makefood_filter_difficulty = difficulty
 
-  def set_filter_time(self, time_level: int):
+  def set_filter_time(self, time_level: int) -> None:
     """设置时间筛选"""
     cache.rhodes_island.makefood_filter_time = time_level
 
-  def clear_filter(self):
+  def clear_filter(self) -> None:
     """清除所有筛选"""
     cache.rhodes_island.makefood_filter_type = []
     cache.rhodes_island.makefood_filter_difficulty = -1
     cache.rhodes_island.makefood_filter_time = -1
 
-  def clear_filter_and_sort(self):
+  def clear_filter_and_sort(self) -> None:
     """清除筛选和排序"""
     self.clear_filter()
     cache.rhodes_island.makefood_sort_type = 0
     cache.rhodes_island.makefood_sort_order = 0
 
-  def open_sort_panel(self):
+  def open_sort_panel(self) -> None:
     """
     打开排序设置面板
     """
@@ -762,11 +762,11 @@ class Make_food_Panel:
       if yrn == back_button.return_text:
         break
 
-  def set_sort_type(self, sort_type: int):
+  def set_sort_type(self, sort_type: int) -> None:
     """设置排序维度"""
     cache.rhodes_island.makefood_sort_type = sort_type
 
-  def set_sort_order(self, sort_order: int):
+  def set_sort_order(self, sort_order: int) -> None:
     """设置排序顺序"""
     cache.rhodes_island.makefood_sort_order = sort_order
 
@@ -789,7 +789,7 @@ class SeeFoodListByFoodNameDraw:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.cid: str = text[0]
     """ 菜谱id字符串 """
@@ -876,7 +876,7 @@ class SeeFoodListByFoodNameDraw:
     self.now_draw = name_draw
     """ 绘制的对象 """
 
-  def make_food_for_sure(self):
+  def make_food_for_sure(self) -> None:
     """确认是否制作食物，并选择制作数量"""
     from Script.Design import basement
     from Script.Design import handle_premise
@@ -1017,7 +1017,7 @@ class SeeFoodListByFoodNameDraw:
         SeeFoodListByFoodNameDraw.last_confirm_result = _("取消")
         break
 
-  def make_food(self, new_make_food_time: int = 0, make_count: int = 1):
+  def make_food(self, new_make_food_time: int = 0, make_count: int = 1) -> None:
     """
     玩家制作食物
     Keyword arguments:
@@ -1104,6 +1104,6 @@ class SeeFoodListByFoodNameDraw:
     # 结算成就
     achievement_panel.achievement_flow(_("烹饪"))
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     self.now_draw.draw()

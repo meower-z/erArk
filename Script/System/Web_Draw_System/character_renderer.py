@@ -62,7 +62,7 @@ class CharacterRenderer:
   # 全部立绘子目录的缓存
   _portrait_sub_dirs_cache: Optional[List[str]] = None
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化角色渲染器"""
     self._body_parts_cache: Dict[int, dict] = {}
 

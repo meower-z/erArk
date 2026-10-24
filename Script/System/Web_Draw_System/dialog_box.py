@@ -280,7 +280,7 @@ class DialogBox:
   核心状态存储在cache.web_dialog_*字段中
   """
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化对话框管理器"""
     pass  # 状态现在由cache全局管理
 

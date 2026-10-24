@@ -63,7 +63,7 @@ def check_upgrade_requirements(
   return True, jule_dict
 
 
-def gain_ability(character_id: int):
+def gain_ability(character_id: int) -> None:
   """
   结算可以获得的能力
   参数:

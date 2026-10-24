@@ -37,7 +37,7 @@ class SeeSaveListPanel:
   write_save -- 是否存储存档
   """
 
-  def __init__(self, width: int, write_save: bool = True):
+  def __init__(self, width: int, write_save: bool = True) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 最大绘制宽度 """
@@ -116,7 +116,7 @@ class SaveInfoDraw:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.text: str = str(text[0])
     """ 存档id """

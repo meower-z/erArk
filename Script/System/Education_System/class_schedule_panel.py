@@ -134,7 +134,7 @@ class Education_Manage_Panel:
   功能: 三个子页的页签容器——全局课表 / 个人课表 / 养成总览
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     # course_select_panel 在自己的模块顶层反向 import 本模块（取 get_period_time_text），
     #    所以只能在函数内 import，提到文件顶层会循环导入。
@@ -258,7 +258,7 @@ class Class_Schedule_Panel:
   功能: 一次展示一间教室的周表，可逐格排课
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     self.now_room: str = ""

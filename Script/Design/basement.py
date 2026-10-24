@@ -116,7 +116,7 @@ def init_dormitory_managers(base_data: game_type.Rhodes_Island) -> None:
       base_data.dormitory_managers[layer_id] = 0
 
 
-def get_base_updata():
+def get_base_updata() -> None:
   """
   遍历基地情况结构体，根据设施等级更新全部数值
   """

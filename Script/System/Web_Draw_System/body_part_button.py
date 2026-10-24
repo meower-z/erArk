@@ -35,7 +35,7 @@ class BodyPartButton:
   5. 条件部位显示：兽耳作为独立部位，需满足交互对象有兽耳才显示
   """
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化身体部位按钮管理器"""
     # 原始的COCO关键点数据 (17个点)
     self._coco_keypoints: List[Tuple[float, float]] = []
@@ -73,7 +73,7 @@ class BodyPartButton:
     self._image_size = image_size
     self._calculate_body_parts()
 
-  def _calculate_body_parts(self):
+  def _calculate_body_parts(self) -> None:
     """
     根据COCO关键点计算所有身体部位的位置
     成对的部位（手、腿、脚、腋、耳）分开显示为左右两个按钮

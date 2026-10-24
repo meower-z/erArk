@@ -29,7 +29,7 @@ line_feed.width = 1
 class Medical_Department_Panel:
   """医疗部总面板，负责导航至各子页面"""
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化面板并建立即插即用的子面板
 
     参数:
@@ -113,7 +113,7 @@ class Medical_Department_Panel:
 class _BaseSubPanel:
   """子面板基类，提供统一接口"""
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     self.width = width
 
   def draw(self) -> List[str]:
@@ -219,7 +219,7 @@ class OverviewSubPanel(_BaseSubPanel):
 class DoctorManagementSubPanel(_BaseSubPanel):
   """医生管理子面板，提供手动调配与分科"""
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     super().__init__(width)
     self.feedback_text: str = ""
 
@@ -522,7 +522,7 @@ class DoctorManagementSubPanel(_BaseSubPanel):
 class PriceSettingSubPanel(_BaseSubPanel):
   """收费设置子面板，维护医疗价格与预测信息"""
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     super().__init__(width)
     self.feedback_text: str = ""
 

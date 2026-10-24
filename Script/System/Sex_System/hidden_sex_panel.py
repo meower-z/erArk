@@ -314,7 +314,7 @@ class See_Hidden_Sex_InfoPanel:
       column: int,
       type_number: int,
       center_status: bool = True,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.character_id = character_id
     """ 要绘制的角色id """
@@ -404,7 +404,7 @@ class Select_Hidden_Sex_Mode_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int, sex_be_discovered_flag: bool = False):
+  def __init__(self, width: int, sex_be_discovered_flag: bool = False) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """

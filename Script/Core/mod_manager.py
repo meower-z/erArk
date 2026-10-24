@@ -28,7 +28,7 @@ _mod_assets: Dict[str, str] = {}  # mod素材路径映射
 class ModInfo:
   """Mod信息类"""
 
-  def __init__(self, mod_id: str, info_dict: dict, mod_path: str):
+  def __init__(self, mod_id: str, info_dict: dict, mod_path: str) -> None:
     """
     初始化mod信息
     Keyword arguments:

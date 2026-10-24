@@ -376,7 +376,7 @@ def check_have_move_target_room_key(
   return check_have_target_dormitory_layer_key(character_id, target_layer)
 
 
-def init_character_dormitory():
+def init_character_dormitory() -> None:
   """
   分配角色宿舍
   角色分配到csv里所写的宿舍名所对应的房间坐标

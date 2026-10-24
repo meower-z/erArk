@@ -23,7 +23,7 @@ class CheckFailure:
       check_name: str,
       message: str,
       involved_character_ids: Optional[List[int]] = None,
-  ):
+  ) -> None:
     """
     初始化静态检查失败记录
     参数:

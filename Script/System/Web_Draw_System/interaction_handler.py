@@ -29,7 +29,7 @@ class InteractionHandler:
   - 支持大类切换记忆功能
   """
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化交互处理器"""
     self._current_interaction_type: Optional[str] = None
     self._available_body_parts: List[str] = []

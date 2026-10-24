@@ -28,7 +28,7 @@ class Manage_Dormitory_Panel:
   功能: 提供宿舍总览、干员宿舍调整、宿舍管理员调整三个子页
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     self.now_panel: str = _("宿舍总览")
@@ -254,7 +254,7 @@ class Manage_Dormitory_Panel:
     """
     self.show_dormitory_detail = not self.show_dormitory_detail
 
-  def _prompt_select_character_for_dormitory(self):
+  def _prompt_select_character_for_dormitory(self) -> None:
     """
     弹出通用干员选择面板并进入宿舍调整
     输入类型: 无

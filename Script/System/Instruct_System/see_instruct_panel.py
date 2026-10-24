@@ -111,7 +111,7 @@ class SeeInstructPanel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 最大绘制宽度 """
@@ -144,7 +144,7 @@ class SeeInstructPanel:
         for instruct in constant.instruct_type_data[now_type]:
           cache.instruct_index_filter[instruct] = True
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制操作菜单面板"""
     SINGLE_LINE_INSTRUCT_NUM = (
         int(cache.all_system_setting.draw_setting[11]) + 1

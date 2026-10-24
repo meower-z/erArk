@@ -22,7 +22,7 @@ class SceneRenderer:
   # 背景图片目录
   BACKGROUND_DIR = "image/场景"
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化场景渲染器"""
     self._cached_scene_name = None
     self._cached_background_path = None

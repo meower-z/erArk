@@ -74,7 +74,7 @@ class Born_Panel:
       mother_character_id: int,
       egg_mode: bool = False,
       egg_id_list: Optional[list] = None,
-  ):
+  ) -> None:
     """
     初始化绘制对象
     Keyword arguments:

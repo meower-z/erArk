@@ -805,7 +805,7 @@ class UnnormalFlagMask:
   MAX_INDEX = 7
   ALL_BITS = (1 << MAX_INDEX) - 1
 
-  def __init__(self, initial: Any = None):
+  def __init__(self, initial: Any = None) -> None:
     """
     初始化异常状态位掩码对象，可由字典或整数初始值还原
     Keyword arguments:

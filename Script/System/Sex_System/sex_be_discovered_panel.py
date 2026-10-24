@@ -42,7 +42,7 @@ class Sex_Be_Discovered_Panel:
       width: int,
       character_id: int = 0,
       from_hidden_sex_flag: bool = False,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.width = width
     """ 绘制宽度 """

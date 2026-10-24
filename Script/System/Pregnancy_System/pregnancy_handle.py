@@ -535,7 +535,7 @@ def check_fertilization(character_id: int):
       achievement_panel.achievement_flow(_("生育"), 708)
 
 
-def check_pregnancy(character_id: int):
+def check_pregnancy(character_id: int) -> None:
   """
   判断是否由受精变为怀孕
   """
@@ -575,7 +575,7 @@ def check_pregnancy(character_id: int):
       now_draw.draw()
 
 
-def check_near_born(character_id: int):
+def check_near_born(character_id: int) -> None:
   """
   判断是否开始临盆
   """
@@ -611,7 +611,7 @@ def check_near_born(character_id: int):
       now_draw.draw()
 
 
-def check_born(character_id: int):
+def check_born(character_id: int) -> None:
   """
   判断是否开始生产
   """
@@ -629,7 +629,7 @@ def check_born(character_id: int):
       draw_panel.draw()
 
 
-def check_rearing(character_id: int):
+def check_rearing(character_id: int) -> None:
   """
   判断是否开始育儿
   """
@@ -668,7 +668,7 @@ def check_rearing(character_id: int):
       now_draw.draw()
 
 
-def _settle_baby_grow_up(character_id: int, child_id: int):
+def _settle_baby_grow_up(character_id: int, child_id: int) -> None:
   """
   结算一名婴儿成长为幼女：素质101→102；母亲名下再无婴儿时同时结束育儿
   幼女与婴儿一样离线：不进任何场景、不进 npc_id_got，长成学员时才上线（check_grow_to_loli）
@@ -721,7 +721,7 @@ def _settle_baby_grow_up(character_id: int, child_id: int):
   now_draw.draw()
 
 
-def check_rearing_complete(character_id: int):
+def check_rearing_complete(character_id: int) -> None:
   """
   判断是否完成育儿：逐个检查母亲名下的全部婴儿，有效成长天数满30天的婴儿各自成长为幼女
   """
@@ -736,7 +736,7 @@ def check_rearing_complete(character_id: int):
         _settle_baby_grow_up(character_id, child_id)
 
 
-def check_grow_to_loli(character_id: int):
+def check_grow_to_loli(character_id: int) -> None:
   """
   判断是否成长为学员：素质102→103，孩子上线、置为学生岗，开始在教育区上课
   """
@@ -802,7 +802,7 @@ def check_grow_to_loli(character_id: int):
       now_draw.draw()
 
 
-def check_grow_to_girl(character_id: int):
+def check_grow_to_girl(character_id: int) -> None:
   """
   判断是否成长为少女
   """
@@ -865,7 +865,7 @@ def check_grow_to_girl(character_id: int):
       now_draw.draw()
 
 
-def check_all_pregnancy(character_id: int):
+def check_all_pregnancy(character_id: int) -> None:
   """
   进行受精怀孕的全流程检查
   \n\n包括刷新受精概率、是否受精、是否由受精变为怀孕、是否结束怀孕
@@ -893,7 +893,7 @@ def check_all_pregnancy(character_id: int):
   check_grow_to_girl(character_id)
 
 
-def check_all_child_grow_to_loli():
+def check_all_child_grow_to_loli() -> None:
   """
   检查玩家的全部女儿里有没有该长成学员的幼女（睡眠结算时调用一次）
   幼女离线、不在 npc_id_got 里，逐角色的 check_all_pregnancy 轮不到她，所以从玩家的子女名单里找
@@ -903,7 +903,7 @@ def check_all_child_grow_to_loli():
       check_grow_to_loli(child_id)
 
 
-def update_reproduction_period(character_id: int):
+def update_reproduction_period(character_id: int) -> None:
   """
   刷新生理周期（每日0点逐角色调用），推进到排卵日时挂起本周期的排卵日事件待办标记
   """

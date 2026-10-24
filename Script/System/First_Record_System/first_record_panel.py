@@ -500,7 +500,7 @@ class FirstRecordText:
   width -- 绘制宽度
   """
 
-  def __init__(self, character_id: int, width: int):
+  def __init__(self, character_id: int, width: int) -> None:
     """初始化绘制对象"""
     self.character_id = character_id
     """ 要绘制的角色id """
@@ -623,7 +623,7 @@ class See_Character_First_Record_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, character_id: int, width: int):
+  def __init__(self, character_id: int, width: int) -> None:
     """初始化绘制对象"""
     head_draw = character_info_head.CharacterInfoHead(character_id, width)
     record_draw = FirstRecordText(character_id, width)

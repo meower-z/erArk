@@ -22,7 +22,7 @@ class StatusPanel:
   负责获取和格式化角色状态信息
   """
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化状态面板管理器"""
     pass
 
