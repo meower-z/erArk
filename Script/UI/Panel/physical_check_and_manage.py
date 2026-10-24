@@ -1,6 +1,6 @@
 """身体检查与管理面板与体检结算"""
 
-from typing import List
+from typing import List, Set
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant, py_cmd
 from Script.Design import handle_premise, attr_calculation, game_time, attr_text
@@ -90,7 +90,7 @@ class Physical_Check_And_Manage_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -100,10 +100,10 @@ class Physical_Check_And_Manage_Panel:
     """ 绘制的文本列表 """
     self.pl_character_data = cache.character_data[0]
     """ 玩家的角色数据 """
-    self.done_check_behavior_id_set = set()
+    self.done_check_behavior_id_set: Set[str] = set()
     """ 已经检查过的行为id集合 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("身体检查与管理")
@@ -130,6 +130,7 @@ class Physical_Check_And_Manage_Panel:
             ]
         )
         button1_text = _("[001]检查身体情况（今日已体检）")
+        button1_draw: draw.NormalDraw | draw.LeftButton
         button1_draw = draw.NormalDraw()
         button1_draw.text = button1_text
         button1_draw.style = "deep_gray"
@@ -161,6 +162,7 @@ class Physical_Check_And_Manage_Panel:
         button2_text = _("[002]对{0}进行身体管理").format(
             target_character_data.name
         )
+        button2_draw: draw.LeftButton | draw.NormalDraw
         button2_draw = draw.LeftButton(
             _(button2_text),
             _("2"),
@@ -205,6 +207,7 @@ class Physical_Check_And_Manage_Panel:
 
       if len(self.done_check_behavior_id_set) > 0:
         button11_text = _("[011]查看检查报告")
+        button11_draw: draw.LeftButton | draw.NormalDraw
         button11_draw = draw.LeftButton(
             _(button11_text),
             _("11"),
@@ -256,7 +259,7 @@ class Physical_Check_And_Manage_Panel:
             target_character_id
         )
 
-  def check_target_physical(self, target_character_id: int):
+  def check_target_physical(self, target_character_id: int) -> None:
     """查看目标角色的身体情况"""
     target_character_data = cache.character_data[target_character_id]
 
@@ -379,6 +382,7 @@ class Physical_Check_And_Manage_Panel:
           cant_flag = True
         # 绘制按钮
         if cant_flag:
+          status_draw: draw.NormalDraw | draw.LeftButton
           status_draw = draw.NormalDraw()
           status_draw.text = behavior_text
           status_draw.style = "deep_gray"
@@ -441,7 +445,7 @@ class Physical_Check_And_Manage_Panel:
       # 结算成就
       achievement_panel.achievement_flow(_("身体检查"), 1046)
 
-  def manage_target_physical(self, target_character_id: int):
+  def manage_target_physical(self, target_character_id: int) -> None:
     """对目标角色进行身体管理"""
     target_character_data = cache.character_data[target_character_id]
 
@@ -517,6 +521,7 @@ class Physical_Check_And_Manage_Panel:
           # 如果已进行该身体管理，则显示进行中
           if target_character_data.body_manage[manage_cid]:
             manage_text += _("(进行中)")
+          manage_draw: draw.LeftButton | draw.NormalDraw
           manage_draw = draw.LeftButton(
               _(manage_text),
               str(count),
@@ -858,7 +863,7 @@ class Physical_Check_And_Manage_Panel:
     info_draw.text = info_text
     info_draw.draw()
 
-  def cancle_physical_manage_panel(self):
+  def cancle_physical_manage_panel(self) -> None:
     """取消身体管理"""
 
     info_text = _("请选择要取消身体管理的干员，将取消其全部管理：\n")
@@ -875,7 +880,7 @@ class Physical_Check_And_Manage_Panel:
         False,
         0,
     )
-    select_state = {}
+    select_state: dict[str, int | str] = {}
     while 1:
       final_list = []
       # 遍历角色id
@@ -1364,7 +1369,7 @@ class Physical_Check_And_Manage_Panel:
       else:
         cache.rhodes_island.physical_examination_setting[cid] = 0
 
-  def adjust_target_list(self):
+  def adjust_target_list(self) -> None:
     """调整体检对象名单"""
     from Script.UI.Panel import common_select_NPC
 
@@ -1378,7 +1383,7 @@ class Physical_Check_And_Manage_Panel:
         False,
         0,
     )
-    select_state = {}
+    select_state: dict[str, int | str] = {}
     while 1:
       npc_id_got_list = sorted(cache.npc_id_got)
       # 已选择的角色id列表

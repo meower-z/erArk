@@ -430,7 +430,7 @@ def count_play_day(
   return max(0, count_day_for_datetime(start_date, end_date))
 
 
-def get_duration_text(day: int) -> str:
+def get_duration_text(day: float) -> str:
   """
   把一段天数换成玩家看的时长文本：满一个季月（30天）的写成「X季月Y天」（Y为0时只写「X季月」），不满一个季月的写成「Y天」
   Keyword arguments:

@@ -34,7 +34,7 @@ class SeeMapPanel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -44,9 +44,11 @@ class SeeMapPanel:
     )
     """ 当前查看的地图坐标 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
-    move_menu_panel_data = {
+    move_menu_panel_data: Dict[
+        int, MapSceneNameDraw | CollectionSceneNamePanel
+    ] = {
         0: MapSceneNameDraw(self.now_map, self.width),
         1: CollectionSceneNamePanel(self.now_map, self.width),
         # 1: UsefulSceneNamePanel(self.now_map, self.width),
@@ -145,6 +147,7 @@ class SeeMapPanel:
                   map_handle.judge_scene_accessible(full_scene_str, 0, False)
                   == "open"
               ):
+                now_draw: draw.Button | draw.NormalDraw
                 now_draw = draw.Button(
                     draw_text.text,
                     draw_text.text,
@@ -336,7 +339,7 @@ class MoveMenuPanel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 最大绘制宽度 """
@@ -344,7 +347,7 @@ class MoveMenuPanel:
     """ 监听的按钮列表 """
     self.now_type: int = 0
     """ 当前的移动菜单类型 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: List[draw.Drawable] = []
     """ 绘制的对象列表 """
     self.move_type_id_data: Dict[str, int] = {
         game_config.config_move_menu_type[i].name: i
@@ -352,7 +355,7 @@ class MoveMenuPanel:
     }
     """ 移动类型名字对应配表id """
 
-  def update(self):
+  def update(self) -> None:
     """更新绘制面板"""
     line = draw.LineDraw(".", self.width)
     self.draw_list = []
@@ -400,7 +403,7 @@ class MapSceneNameDraw:
   width -- 绘制宽度
   """
 
-  def __init__(self, now_map: List[str], width: int):
+  def __init__(self, now_map: List[str], width: int) -> None:
     """
     初始化地图场景名列表绘制对象
     Keyword arguments:
@@ -425,7 +428,7 @@ class MapSceneNameDraw:
     """
     self.now_map = now_map
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     self.return_list = []
     map_path_str = map_handle.get_map_system_path_str_for_list(self.now_map)
@@ -463,6 +466,7 @@ class MapSceneNameDraw:
 
         # 绘制
         if text_flag:
+          now_draw: draw.LeftDraw | draw.LeftButton
           now_draw = draw.LeftDraw()
           now_draw.text = now_id_text
           now_draw.width = self.width
@@ -510,7 +514,7 @@ class UsefulSceneNamePanel:
   width -- 绘制宽度
   """
 
-  def __init__(self, now_map: List[str], width: int):
+  def __init__(self, now_map: List[str], width: int) -> None:
     """
     初始化功能地点快捷寻路按钮列表，并创建按场景路径分页的绘制面板
     Keyword arguments:
@@ -526,7 +530,7 @@ class UsefulSceneNamePanel:
     self.end_index: int = 0
     """ 结束按钮id """
     self.handle_panel = panel.PageHandlePanel(
-        self.get_path_list(), ScenePathNameMoveDraw, 20, 3, self.width, 1
+        self.get_path_list(), ScenePathNameMoveDraw, 20, 3, self.width, True
     )
     self.end_index = self.handle_panel.end_index
 
@@ -550,7 +554,7 @@ class UsefulSceneNamePanel:
     # music_class_room_path = ["1", "4", "1"]
     # shop_path = ["11"]
     # dormitory_path = map_handle.get_map_system_path_for_str(character_data.dormitory)
-    path_list = [
+    path_list: List[List[str]] = [
         # dormitory_path,
         # class_room_path,
         # office_room_path,
@@ -603,7 +607,7 @@ class ScenePathNameMoveDraw:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.draw_text = ""
     """ 场景路径绘制的文本 """
@@ -710,7 +714,7 @@ class SocialSceneNameDraw:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.draw_text = ""
     """ 场景路径绘制文本 """
@@ -764,7 +768,7 @@ class CollectionSceneNamePanel:
   width -- 绘制宽度
   """
 
-  def __init__(self, now_map: List[str], width: int):
+  def __init__(self, now_map: List[str], width: int) -> None:
     """
     初始化绘制对象，记下绘制宽度与地图路径
     Keyword arguments:
@@ -802,7 +806,7 @@ class CollectionSceneNamePanel:
     # self.handle_panel.update()
     # self.end_index = self.handle_panel.end_index
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     # self.handle_panel.draw()
     # self.return_list = self.handle_panel.return_list
@@ -828,6 +832,7 @@ class CollectionSceneNamePanel:
         # 绘制
         draw_text = f"→{scene_position_str}"
         if text_flag:
+          collect_scene_name_draw: draw.LeftDraw | draw.LeftButton
           collect_scene_name_draw = draw.LeftDraw()
           collect_scene_name_draw.text = _(draw_text)
           collect_scene_name_draw.width = self.width
@@ -863,7 +868,7 @@ class CollectionSceneNamePanel:
         btn_text: str = _(" [取消收藏当前地点] ")
         collect_flag = False
       else:
-        btn_text: str = _(" [收藏当前地点] ")
+        btn_text = _(" [收藏当前地点] ")
         collect_flag = True
       # 绘制按钮
       draw_collection_button = draw.CenterButton(

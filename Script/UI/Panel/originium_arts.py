@@ -28,7 +28,7 @@ class Originium_Arts_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -276,9 +276,12 @@ class Originium_Arts_Panel:
         if yrn in return_list:
           break
 
-  def draw_lv_up_button(self, condition, draw_text, cid, return_list):
+  def draw_lv_up_button(
+      self, condition: bool, draw_text: str, cid: int, return_list: List[str]
+  ) -> List[str]:
     """绘制升级按钮"""
     # 如果满足条件则绘制按钮，否则绘制灰色文本
+    now_draw: draw.LeftButton | draw.NormalDraw
     if condition:
       now_draw = draw.LeftButton(
           _(draw_text),
@@ -297,10 +300,10 @@ class Originium_Arts_Panel:
     line_feed.draw()
     return return_list
 
-  def gain_and_upgrade_ability(self):
+  def gain_and_upgrade_ability(self) -> None:
     """能力获得与升级"""
     while 1:
-      return_list = []
+      return_list: List[str] = []
       line_draw = draw.LineDraw("-", self.width)
       line_draw.draw()
       info_draw = draw.NormalDraw()
@@ -312,6 +315,7 @@ class Originium_Arts_Panel:
       info_draw.text = _(info_text)
       info_draw.draw()
       # 遍历输出该能力的全素质
+      now_draw: draw.NormalDraw | draw.LeftButton
       for cid in game_config.config_talent_of_arts:
         talent_of_arts_data = game_config.config_talent_of_arts[cid]
         # 检查是否已经获得
@@ -556,7 +560,7 @@ class Originium_Arts_Panel:
           need_exp = up_data.pl_experience
           now_exp = self.pl_character_data.experience[122]
           need_degree = up_data.npc_hypnosis_degree
-          now_degree = 0
+          now_degree: float = 0
           # 计算全获得干员的催眠深度
           for chara_id in cache.npc_id_got:
             character_data = cache.character_data[chara_id]
@@ -607,7 +611,7 @@ class Originium_Arts_Panel:
     info_draw.text = _(info_text)
     info_draw.draw()
 
-  def new_round_for_sure(self):
+  def new_round_for_sure(self) -> None:
     """确认开始新的周目"""
     from Script.UI.Panel import new_round
 
@@ -645,7 +649,7 @@ class Down_Negative_Talent_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """

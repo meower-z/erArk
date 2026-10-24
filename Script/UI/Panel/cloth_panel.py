@@ -55,7 +55,7 @@ class SeeCharacterClothPanel:
       column: int,
       type_number: int,
       center_status: bool = True,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.character_id = character_id
     """ 要绘制的角色id """
@@ -63,7 +63,7 @@ class SeeCharacterClothPanel:
     """ 面板最大宽度 """
     self.column = column
     """ 每行状态最大个数 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: List[draw.Drawable] = []
     """ 绘制的文本列表 """
     self.return_list: List[str] = []
     """ 当前面板监听的按钮列表 """
@@ -256,21 +256,21 @@ class Undress_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
     self.now_panel = _("脱衣服")
     """ 当前绘制的面板类型 """
-    self.handle_panel: panel.PageHandlePanel = None
+    self.handle_panel: panel.PageHandlePanel | None = None
     """ 当前名字列表控制面板 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     title_draw = draw.TitleLineDraw(_("脱衣服"), self.width)
 
     self.handle_panel = panel.PageHandlePanel(
-        [], SeeUndressButtonList, 10, 1, self.width, 1, 1, 0
+        [], SeeUndressButtonList, 10, 1, self.width, True, True, 0
     )
     while 1:
       py_cmd.clr_cmd()
@@ -317,7 +317,7 @@ class SeeUndressButtonList:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
 
     self.button_name_text: str = text
@@ -339,7 +339,7 @@ class SeeUndressButtonList:
     ]
 
     # 按钮绘制
-    name_draw = draw.NormalDraw()
+    name_draw: draw.NormalDraw | draw.LeftButton = draw.NormalDraw()
     text_flag = False
 
     index_text = text_handle.id_index(button_id)
@@ -502,7 +502,7 @@ class SwitchCharacterClothPanel:
       column: int,
       type_number: int,
       center_status: bool = True,
-  ):
+  ) -> None:
     """
     初始化面板对象
     参数:
@@ -519,12 +519,12 @@ class SwitchCharacterClothPanel:
     self.column = column
     self.type_number = type_number
     self.center_status = center_status
-    self.draw_list: List[draw.NormalDraw] = []  # 绘制对象列表
+    self.draw_list: List[draw.Drawable] = []  # 绘制对象列表
     self.button_list: List[SwitchClothButton] = []  # 衣服按钮对象列表
     self.return_list: List[str] = []  # 按钮返回值列表
     self._refresh_panel()
 
-  def _refresh_panel(self):
+  def _refresh_panel(self) -> None:
     """
     刷新面板内容，重建按钮和文本，显示逻辑与SeeCharacterClothPanel一致。
     """
@@ -537,7 +537,7 @@ class SwitchCharacterClothPanel:
     # 添加标题
     type_line = draw.LittleTitleLineDraw(_("服装"), self.width, ":")
     self.draw_list.append(type_line)
-    now_row: List[draw.NormalDraw] = []  # 当前行的绘制对象
+    now_row: List[draw.Drawable] = []  # 当前行的绘制对象
     # 遍历全部衣服类型
     for clothing_type in game_config.config_clothing_type:
       type_name = game_config.config_clothing_type[clothing_type].name
@@ -658,7 +658,7 @@ class SwitchCharacterClothPanel:
     off_title.width = self.width
     off_cloth_count = 0
     off_draw_count = 0
-    off_row: List[draw.NormalDraw] = []
+    off_row: List[draw.Drawable] = []
     for cloth_type in target_character_data.cloth.cloth_off:
       for cloth_id in target_character_data.cloth.cloth_off[cloth_type]:
         btn = SwitchClothButton(cloth_id, cloth_type, False, self)
@@ -714,7 +714,7 @@ class SwitchClothButton(draw.LeftButton):
       clothing_type: int,
       is_wear: bool,
       panel: SwitchCharacterClothPanel,
-  ):
+  ) -> None:
     """
     初始化按钮
     参数:

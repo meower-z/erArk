@@ -66,7 +66,7 @@ class Manage_Vehicle_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -74,7 +74,7 @@ class Manage_Vehicle_Panel:
     """ 当前绘制的页面 """
     self.draw_list: List[draw.NormalDraw] = []
     """ 绘制的文本列表 """
-    self.send_npc_list = []
+    self.send_npc_list: List[int] = []
     """ 派遣人员列表 """
     self.vehicle_count = 0
     """ 当前拥有载具数量 """
@@ -110,7 +110,7 @@ class Manage_Vehicle_Panel:
     """
     self.current_page = target_page
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     from Script.Design import attr_calculation
 
@@ -126,6 +126,7 @@ class Manage_Vehicle_Panel:
       title_draw.draw()
 
       # 绘制面板类型切换
+      now_draw: draw.CenterDraw | draw.CenterButton
       for commission_type in commission_type_list:
         if commission_type == self.now_panel:
           now_draw = draw.CenterDraw()
@@ -498,6 +499,7 @@ class Manage_Vehicle_Panel:
           and self.vehicle_count < int(vehicle_num_limit)
           and money_left >= 0
       )
+      buy_vehicle_draw: draw.CenterButton | draw.CenterDraw
       if buy_condition:
         buy_vehicle_draw = draw.CenterButton(
             _("【购买载具】"),
@@ -522,6 +524,7 @@ class Manage_Vehicle_Panel:
           - cache.rhodes_island.vehicles[vehicle_id][1]
           > 0
       )
+      sell_vehicle_draw: draw.CenterButton | draw.CenterDraw
       if sell_condition:
         sell_vehicle_draw = draw.CenterButton(
             _("【出售载具】"),

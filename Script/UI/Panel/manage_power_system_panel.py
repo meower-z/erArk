@@ -82,7 +82,7 @@ def _get_operator_power_bonus(type: int = -1) -> float:
   type: 发电类型，-1=全部，0=火力，1=水力，2=风力，3=太阳能
   """
   ri = cache.rhodes_island
-  total = 0
+  total: float = 0
   for chara_id in ri.power_operator_ids_list:
     try:
       # 获取角色数据
@@ -619,7 +619,7 @@ def settle_power_system(draw_flag: bool = True) -> Tuple[float, str]:
 class Manage_Power_System_Panel:
   """动力系统管理面板"""
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """
     初始化面板，并确保动力系统运行期字段存在
     Keyword arguments:
@@ -955,7 +955,7 @@ class Manage_Power_System_Panel:
 
     ri = cache.rhodes_island
     type_name = [_("源石反应炉"), _("水力"), _("风能"), _("光伏")]
-    return_list = []
+    return_list: List[str] = []
 
     def _make_appoint(c_id: int) -> None:
       self._do_appoint_main_operator(type_idx, c_id)
@@ -972,7 +972,7 @@ class Manage_Power_System_Panel:
         False,
         0,
     )
-    select_state = {}
+    select_state: dict[str, int | str] = {}
 
     while 1:
       info_text = _("请选择一名调控员担任{0}主调控员:\n").format(

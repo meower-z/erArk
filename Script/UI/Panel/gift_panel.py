@@ -14,7 +14,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import game_time, handle_premise
 from Script.System.Pregnancy_System import pregnancy_constant
 
-panel_info_data = {}
+panel_info_data: dict[str, object] = {}
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -149,7 +149,7 @@ def handle_drug_use_effect(character_id: int, drug_id: int) -> None:
   elif drug_id == 39:  # 成长加速药
     from Script.System.Pregnancy_System import pregnancy_handle, pregnancy_panel
 
-    pl_character_data: game_type.Character = cache.character_data[0]
+    pl_character_data = cache.character_data[0]
     if pregnancy_handle.is_growth_drug_self_target(character_id):
       # 幼女/学员阶段的女儿：对收礼者本人生效
       child_id = character_id
@@ -213,7 +213,7 @@ class Gift_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """
     初始化绘制对象
     参数：

@@ -121,7 +121,7 @@ class Collection_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -130,7 +130,7 @@ class Collection_Panel:
     self.draw_list: List[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     pl_character_data: game_type.Character = cache.character_data[0]
@@ -141,13 +141,13 @@ class Collection_Panel:
 
     title_draw = draw.TitleLineDraw(title_text, self.width)
     handle_token_panel = panel.PageHandlePanel(
-        [], Token_Draw, 10, 1, self.width, 1, 1, 0
+        [], Token_Draw, 10, 1, self.width, True, True, 0
     )
     handle_pan_panel = panel.PageHandlePanel(
-        [], Pan_Draw, 10, 1, self.width, 1, 1, 0
+        [], Pan_Draw, 10, 1, self.width, True, True, 0
     )
     handle_socks_panel = panel.PageHandlePanel(
-        [], Socks_Draw, 10, 1, self.width, 1, 1, 0
+        [], Socks_Draw, 10, 1, self.width, True, True, 0
     )
     while 1:
       return_list = []
@@ -156,6 +156,7 @@ class Collection_Panel:
       # 绘制主面板
       for collection_type in collection_type_list:
         if collection_type == self.now_panel:
+          now_draw: draw.CenterDraw | draw.CenterButton
           now_draw = draw.CenterDraw()
           now_draw.text = f"[{collection_type}]"
           now_draw.style = "onbutton"
@@ -175,7 +176,7 @@ class Collection_Panel:
       line = draw.LineDraw("+", self.width)
       line.draw()
 
-      bonus_draw = draw.NormalDraw()
+      bonus_draw: draw.NormalDraw | draw.LeftButton = draw.NormalDraw()
       bonus_text = _("\n收集解锁要素：")
       bonus_draw.text = bonus_text
       bonus_draw.width = self.width
@@ -410,7 +411,7 @@ class Token_Draw:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.character_id: int = character_id
     """ 角色id """
@@ -454,7 +455,7 @@ class Pan_Draw:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.character_id: int = character_id
     """ 角色id """
@@ -485,7 +486,7 @@ class Pan_Draw:
     # 常规胖次
     if self.character_id in pl_character_data.pl_collection.npc_panties:
       # 通过字典统计，输出每种内裤的数量
-      pan_counts = {}
+      pan_counts: dict[str, int] = {}
       for pan in pl_character_data.pl_collection.npc_panties[self.character_id]:
         pan_counts[pan] = pan_counts.get(pan, 0) + 1
 
@@ -519,7 +520,7 @@ class Socks_Draw:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.character_id: int = character_id
     """ 角色id """
@@ -541,7 +542,7 @@ class Socks_Draw:
     # 常规胖次
     if self.character_id in pl_character_data.pl_collection.npc_socks:
       # 通过字典统计，输出每种袜子的数量
-      sock_counts = {}
+      sock_counts: dict[str, int] = {}
       for sock in pl_character_data.pl_collection.npc_socks[self.character_id]:
         sock_counts[sock] = sock_counts.get(sock, 0) + 1
       for sock, count in sock_counts.items():

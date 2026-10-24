@@ -18,7 +18,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation, handle_premise, handle_ability, second_behavior
 
-panel_info_data = {}
+panel_info_data: dict[str, object] = {}
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -80,7 +80,7 @@ class Characterabi_show_Text:
   width -- 最大宽度
   """
 
-  def __init__(self, character_id: int, width: int):
+  def __init__(self, character_id: int, width: int) -> None:
     """初始化绘制对象"""
     self.character_id = character_id
     """ 绘制的角色id """
@@ -659,7 +659,7 @@ class Characterabi_cmd_Text:
   ability_id -- 能力id
   """
 
-  def __init__(self, character_id: int, width: int, ability_id: int):
+  def __init__(self, character_id: int, width: int, ability_id: int) -> None:
     """初始化绘制对象"""
     self.character_id = character_id
     """ 绘制的角色id """
@@ -874,7 +874,7 @@ class Character_abi_up_main_Handle:
   character_list -- 角色id列表
   """
 
-  def __init__(self, character_id: int, width: int):
+  def __init__(self, character_id: int, width: int) -> None:
     """初始化绘制对象"""
     self.character_id: int = character_id
     """ 要绘制的角色id """
@@ -916,7 +916,7 @@ class Character_abi_up_sub_Handle:
   width -- 绘制宽度
   """
 
-  def __init__(self, character_id: int, width: int):
+  def __init__(self, character_id: int, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -980,7 +980,7 @@ class Character_abi_up_main_panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, character_id: int, width: int):
+  def __init__(self, character_id: int, width: int) -> None:
     """初始化绘制对象"""
     head_draw = character_info_head.CharacterInfoHead(character_id, width)
     Juel_draw = see_character_info_panel.CharacterJuelText(
@@ -999,7 +999,7 @@ class Character_abi_up_main_panel:
           abi_draw,
       ]
     else:
-      self.draw_list: List = [
+      self.draw_list = [
           head_draw,
           Juel_draw,
           Experience_draw,

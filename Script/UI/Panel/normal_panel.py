@@ -13,7 +13,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.Design import update, map_handle, instuct_judege, game_time
 
-panel_info_data = {}
+panel_info_data: dict[str, object] = {}
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -35,16 +35,16 @@ class Close_Door_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
     self.now_panel = _("关门")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: List[draw.Drawable] = []
     """ 绘制的文本列表 """
 
-  def draw(self):
+  def draw(self) -> int:
     """绘制对象"""
 
     character_data: game_type.Character = cache.character_data[0]
@@ -58,13 +58,13 @@ class Close_Door_Panel:
 
     title_draw = draw.TitleLineDraw(title_text, self.width)
     while 1:
-      return_list = []
+      return_list: List[str] = []
       title_draw.draw()
 
       now_position = character_data.position
       now_scene_str = map_handle.get_map_system_path_str_for_list(now_position)
       now_scene_data = cache.scene_data[now_scene_str]
-      now_draw = panel.LeftDrawTextListPanel()
+      now_draw_list: List[draw.Drawable] = []
 
       # 地点关门判定的三个分支
       if now_scene_data.close_type == 0:
@@ -83,11 +83,11 @@ class Close_Door_Panel:
       askfor_panel.set(askfor_list, _(info_text), 0)
       askfor_panel_return_list = askfor_panel.get_return_list()
       return_list.extend(askfor_panel_return_list.keys())
-      now_draw.draw_list.append(askfor_panel)
+      now_draw_list.append(askfor_panel)
 
-      self.draw_list: List[draw.NormalDraw] = []
+      self.draw_list = []
       """ 绘制的文本列表 """
-      self.draw_list.extend(now_draw.draw_list)
+      self.draw_list.extend(now_draw_list)
 
       for label in self.draw_list:
         if isinstance(label, list):
@@ -117,7 +117,7 @@ class Take_Care_Baby_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -257,7 +257,7 @@ class Chose_First_bonus_ability_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -321,7 +321,7 @@ class Fridge_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -447,7 +447,7 @@ class Order_Hotel_Room_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """

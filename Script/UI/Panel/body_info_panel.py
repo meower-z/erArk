@@ -10,7 +10,7 @@ from Script.Core import (
 )
 from Script.Config import game_config, normal_config
 
-panel_info_data = {}
+panel_info_data: dict[str, object] = {}
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -62,7 +62,7 @@ class CharacterBodyText:
       width: int,
       column: int,
       center_status: bool = True,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.character_id = character_id
     """ 要绘制的角色id """
@@ -282,6 +282,7 @@ class CharacterBodyText:
         now_text += _("该姿势的性交经验为：{0} 次\n").format(experience_count)
       now_text += "\n"
       body_text_list.append(now_text)
+    now_draw: panel.CenterDrawTextListPanel | panel.LeftDrawTextListPanel
     if self.center_status:
       now_draw = panel.CenterDrawTextListPanel()
     else:

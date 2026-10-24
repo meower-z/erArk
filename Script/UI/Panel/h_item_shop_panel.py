@@ -66,12 +66,12 @@ class HItemShopPanel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     title_draw = draw.TitleLineDraw(_("成人用品商店"), self.width)
     now_level = cache.rhodes_island.facility_level[11]  # 获取设施等级
@@ -193,7 +193,7 @@ class BuyItemByItemNameDraw:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.text = text
     """ 道具id """
@@ -209,7 +209,7 @@ class BuyItemByItemNameDraw:
     """ 按钮返回值 """
     self.character_data: game_type.Character = cache.character_data[0]
     """ 人物属性 """
-    self.now_draw = draw.NormalDraw()
+    self.now_draw: draw.NormalDraw | draw.LeftButton = draw.NormalDraw()
     item_config = game_config.config_item[self.text]
     index_text = text_handle.id_index(button_id)
     # print("debug self.text = ",self.text,"  self.character_data.item, = ",self.character_data.item)
@@ -238,7 +238,7 @@ class BuyItemByItemNameDraw:
             draw_style = "dark_green"
         else:
           button_text += _("(未持有)")
-        name_draw = draw.LeftButton(
+        name_draw: draw.LeftButton | draw.LeftDraw = draw.LeftButton(
             button_text,
             self.button_return,
             self.width,

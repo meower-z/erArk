@@ -47,13 +47,15 @@ def update_nation_data() -> None:
       )
 
 
-def judge_diplomatic_policy():
+def judge_diplomatic_policy() -> None:
   """
   结算外交方针
   """
 
   from Script.Settle import common_default
 
+  all_reputation: float
+  all_infection_rate: float
   all_reputation, all_infection_rate = 0, 0
   # 遍历所有势力
   for country_id in cache.rhodes_island.diplomat_of_country:
@@ -250,7 +252,7 @@ class Nation_Diplomacy_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -261,7 +263,7 @@ class Nation_Diplomacy_Panel:
     self.show_draw_width = 7
     """ 收起显示按钮的宽度 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("势力外交")
@@ -280,6 +282,7 @@ class Nation_Diplomacy_Panel:
       # 绘制面板类型切换
       for commission_type in commission_type_list:
         if commission_type == self.now_panel:
+          now_draw: draw.CenterDraw | draw.CenterButton
           now_draw = draw.CenterDraw()
           now_draw.text = f"[{commission_type}]"
           now_draw.style = "onbutton"
@@ -637,7 +640,7 @@ class Nation_Diplomacy_Panel:
         # 如果已经选择，则绘制为金色
         if character_id == now_diplomat_chara_id:
           draw_style = "gold_enrod"
-        character_data: game_type.Character = cache.character_data[character_id]
+        character_data = cache.character_data[character_id]
         character_name = character_data.name
         character_adv = character_data.adv
         character_ability_lv = character_data.ability[40]

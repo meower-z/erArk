@@ -19,7 +19,7 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def chara_talk_info():
+def chara_talk_info() -> None:
   """
   干员口上信息
   """
@@ -63,16 +63,16 @@ class Prts_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
     # self.now_panel = _("部门总概况")
     # """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: List[draw.Drawable] = []
     """ 绘制的文本列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("普瑞赛斯")
@@ -85,7 +85,7 @@ class Prts_Panel:
       info_draw = draw.NormalDraw()
       info_draw.width = self.width
       return_list = []
-      now_draw = panel.LeftDrawTextListPanel()
+      now_draw_list: List[draw.Drawable] = []
 
       pl_name = cache.character_data[0].name
       info_text = _("身份验证通过，最高权限账户——管理员账户\n\n")
@@ -117,14 +117,13 @@ class Prts_Panel:
             cmd_func=self.select_question,
             args=i,
         )
-        now_draw.draw_list.append(button_draw)
-        now_draw.width += len(button_draw.text)
-        now_draw.draw_list.append(line_feed)
+        now_draw_list.append(button_draw)
+        now_draw_list.append(line_feed)
         return_list.append(button_draw.return_text)
 
-      self.draw_list: List[draw.NormalDraw] = []
+      self.draw_list = []
       """ 绘制的文本列表 """
-      self.draw_list.extend(now_draw.draw_list)
+      self.draw_list.extend(now_draw_list)
 
       for label in self.draw_list:
         if isinstance(label, list):
@@ -238,7 +237,7 @@ class ShowCharaNameDraw:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.chara_adv_id: int = chara_adv_id
     """ 角色adv_id """
@@ -265,7 +264,7 @@ class ShowCharaNameDraw:
       tip_chara_data = game_config.config_tip_chara_data[0]
       now_text = _("[0000]通用文本  by {0}").format(tip_chara_data.writer_name)
       # 绘制
-      button_draw = draw.LeftButton(
+      button_draw: draw.LeftButton | draw.CenterButton = draw.LeftButton(
           _(now_text),
           _(now_text),
           self.width,
@@ -347,7 +346,7 @@ class ShowCharaNameDraw:
     self.info_draw.draw()
     self.now_draw.draw()
 
-  def get_chara_version_sizes(self) -> dict:
+  def get_chara_version_sizes(self) -> Dict[int, int]:
     """
     计算当前 self.chara_adv_id 在 data/talk/chara 和 data/event/chara 下每个版本的总大小（字节），
     并返回以 version_id 为键、KB（向上取整）为值的字典。
@@ -371,7 +370,7 @@ class ShowCharaNameDraw:
     except Exception:
       find_name = str(self.chara_adv_id)
 
-    per_version_sizes = {}
+    per_version_sizes: Dict[int, int] = {}
     for f in files:
       base = os.path.basename(f).split(".")[0]
       parts = base.split("_")

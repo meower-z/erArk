@@ -60,7 +60,7 @@ class DrawEventTextPanel(draw.LineFeedWaitDraw):
   character_id -- 触发事件的角色id
   """
 
-  def __init__(self, event_id: str, character_id: int, event_type: int):
+  def __init__(self, event_id: str, character_id: int, event_type: int) -> None:
     """初始化绘制对象"""
     self.width: int = window_width
     """ 绘制的最大宽度 """
@@ -118,9 +118,9 @@ class DrawEventTextPanel(draw.LineFeedWaitDraw):
       now_event_text: str = "\n" + event_data.text.split("|")[1]
     # diy事件的文本里去掉选项和行动事件内容
     elif self.diy_event_flag and "|" in event_data.text:
-      now_event_text: str = "\n" + event_data.text.split("|")[2]
+      now_event_text = "\n" + event_data.text.split("|")[2]
     else:
-      now_event_text: str = "\n" + event_data.text
+      now_event_text = "\n" + event_data.text
 
     # 代码词语
     now_event_text = talk.code_text_to_draw_text(now_event_text, character_id)
@@ -128,7 +128,7 @@ class DrawEventTextPanel(draw.LineFeedWaitDraw):
 
     # 口上颜色
     if event_data.adv_id not in {"", "0", 0}:
-      character_data: game_type.Character = cache.character_data[character_id]
+      character_data = cache.character_data[character_id]
       target_character_data: game_type.Character = cache.character_data[
           character_data.target_character_id
       ]

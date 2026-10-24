@@ -139,7 +139,7 @@ class Gomoku_Cache:
     return self.map.get(key, None)
 
   # 设置或插入一个值
-  def put(self, key, value):
+  def put(self, key: int, value: object) -> bool | None:
     """
     缓存开关打开时写入或更新某个键的值
     Keyword arguments:
@@ -157,6 +157,7 @@ class Gomoku_Cache:
     if key not in self.map:
       self.gomoku_cache.append(key)  # 将新键添加到cache数组
     self.map[key] = value  # 更新或设置键值
+    return None
 
   # 检查缓存中是否存在某个键
   def has(self, key: int) -> bool:
@@ -821,7 +822,13 @@ class Evaluate:
             break
     PERFORMANCE['updateTime'] += PERFORMANCE['updateTime'] - start
 
-  def update_single_point(self, x, y, role, direction=None):
+  def update_single_point(
+      self,
+      x: int,
+      y: int,
+      role: int,
+      direction: tuple[int, int] | None = None,
+  ) -> float | None:
     """
     重算某点对指定一方的形状缓存与得分
     Keyword arguments:
@@ -833,7 +840,7 @@ class Evaluate:
     int | float | None -- 该点得分，该点已有棋子时为 None
     """
     if self.board[x + 1, y + 1] != 0:
-      return
+      return None
 
     self.board[x + 1, y + 1] = role
 
@@ -843,7 +850,7 @@ class Evaluate:
     for ox, oy in directions:
       shape_cache[direction2index(ox, oy)][x][y] = SHAPES['NONE']
 
-    score = 0
+    score: float = 0
     block_four_count = three_count = two_count = 0
     for int_direction in range(4):
       shape = shape_cache[int_direction][x][y]
@@ -1079,7 +1086,7 @@ def get_real_shape_score(shape: int) -> float:
     return 0
 
 
-def direction2index(ox, oy):
+def direction2index(ox: int, oy: int) -> int:
   """
   将方向向量转换为方向序号
   Keyword arguments:
@@ -1094,8 +1101,7 @@ def direction2index(ox, oy):
     return 1  # -
   if ox == oy:
     return 2  # \
-  if ox != oy:
-    return 3  # /
+  return 3  # /
 
 
 # 坐标转换函数
@@ -1526,9 +1532,9 @@ class GomokuPanel:
     self.game_over = False
     """ 游戏是否结束 """
     # 初始化AI相关变量
-    self.list1 = []  # AI的棋子位置
-    self.list2 = []  # 人类玩家的棋子位置
-    self.list3 = []  # 所有棋子的位置
+    self.list1: list[tuple[int, int]] = []  # AI的棋子位置
+    self.list2: list[tuple[int, int]] = []  # 人类玩家的棋子位置
+    self.list3: list[tuple[int, int]] = []  # 所有棋子的位置
     self.next_point = [0, 0]  # AI下一步最应该下的位置
     self.ratio = 1  # 进攻的系数
     self.DEPTH = 2  # 搜索深度

@@ -1236,7 +1236,7 @@ class PLAYER_ABILITY:
     """ 今日已消耗的理智值 """
     self.hypnosis_type: int = 0
     """ 催眠类型 """
-    self.air_hypnosis_position: str = ""
+    self.air_hypnosis_position: List[str] | str = ""
     """ 空气催眠地点 """
     self.carry_chara_id_in_time_stop: int = 0
     """ 时停中正在搬运的角色id，已废弃，由 action_info.carry_chara_id 代替 """

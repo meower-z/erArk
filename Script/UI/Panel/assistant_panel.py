@@ -43,7 +43,7 @@ def get_assistant_candidates() -> list[int]:
   return candidates
 
 
-def chose_assistant():
+def chose_assistant() -> None:
   """选择助理"""
   from Script.UI.Panel import common_select_NPC
 
@@ -53,11 +53,11 @@ def chose_assistant():
       80,
       8,
       window_width,
-      1,
-      0,
+      True,
+      False,
       0,
   )
-  select_state = {}
+  select_state: dict[str, int | str] = {}
   while 1:
     # 显示当前助手
     character_data: game_type.Character = cache.character_data[0]
@@ -169,7 +169,7 @@ def assistant_replace(new_assistant_id: int) -> None:
   # 正常情况下，设置新助理
   else:
     character_data.assistant_character_id = new_assistant_id
-    new_assistant_data: game_type.Character = cache.character_data[
+    new_assistant_data = cache.character_data[
         character_data.assistant_character_id
     ]
     new_assistant_data.sp_flag.is_follow = 1
@@ -213,7 +213,7 @@ class Assistant_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -701,7 +701,7 @@ class SeeNPCButtonList:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
 
     self.chara_id: int = chara_id

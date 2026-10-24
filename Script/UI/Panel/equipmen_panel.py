@@ -137,7 +137,7 @@ def settle_equipment_damage_in_commission(commision_id: int) -> str:
     random_damage_rate = random.random()
     # 根据装备损坏概率获取损坏等级
     damage_lv = 0
-    count_damage_rate = 0
+    count_damage_rate: float = 0
     for i, rate in enumerate(damage_rate_list):
       count_damage_rate += rate
       if random_damage_rate < count_damage_rate:
@@ -399,7 +399,7 @@ class Equipment_Maintain_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -588,7 +588,7 @@ class Equipment_Maintain_Panel:
     else:
       cache.rhodes_island.equipment_maintain_setting[cid] = 0
 
-  def adjust_target_list(self):
+  def adjust_target_list(self) -> None:
     """调整装备维护名单"""
     from Script.UI.Panel import common_select_NPC
 
@@ -602,7 +602,7 @@ class Equipment_Maintain_Panel:
         False,
         0,
     )
-    select_state = {}
+    select_state: dict[str, int | str] = {}
     while 1:
       npc_id_got_list = sorted(cache.npc_id_got)
       # 已选择的角色id列表

@@ -1,6 +1,6 @@
 """食物商店界面面板与自制食物放入食堂的处理"""
 
-from typing import Tuple
+from typing import Literal, Tuple
 from types import FunctionType
 from uuid import UUID
 from Script.Core import cache_control, game_type, get_text, flow_handle, text_handle, constant, py_cmd
@@ -72,16 +72,16 @@ class FoodShopPanel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
     self.now_panel = _("主食")
     """ 当前绘制的食物类型 """
-    self.handle_panel: panel.PageHandlePanel = None
+    self.handle_panel: panel.PageHandlePanel | None = None
     """ 当前名字列表控制面板 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     scene_position = cache.character_data[0].position
     scene_position_str = map_handle.get_map_system_path_str_for_list(
@@ -143,6 +143,7 @@ class FoodShopPanel:
       return_list = []
       for food_type in food_type_list:
         if food_type == self.now_panel:
+          now_draw: draw.CenterDraw | draw.CenterButton
           now_draw = draw.CenterDraw()
           now_draw.text = f"[{food_type}]"
           now_draw.style = "onbutton"
@@ -185,7 +186,14 @@ class FoodShopPanel:
         cooking.get_food_list_from_food_shop(self.now_panel).items()
     )
     self.handle_panel = panel.PageHandlePanel(
-        food_name_list, SeeFoodListByFoodNameDraw, 10, 5, self.width, 1, 1, 0
+        food_name_list,
+        SeeFoodListByFoodNameDraw,
+        10,
+        5,
+        self.width,
+        True,
+        True,
+        0,
     )
 
 
@@ -207,7 +215,7 @@ class SeeFoodListByFoodNameDraw:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.text = text[1]
     """ 食物名字 """
@@ -221,7 +229,7 @@ class SeeFoodListByFoodNameDraw:
     """ 绘制数字按钮 """
     self.button_id: int = button_id
     """ 数字按钮的id """
-    self.button_return: str = str(button_id)
+    self.button_return: str | Tuple[str, str] = str(button_id)
     """ 按钮返回值 """
 
     # 获取当前位置
@@ -232,7 +240,7 @@ class SeeFoodListByFoodNameDraw:
     scene_tag = cache.scene_data[scene_position_str].scene_tag
 
     # 找到当前场景对应的食物商店
-    self.now_restaurant_id = None
+    self.now_restaurant_id: int | Literal["Stall_Vendor"] | None = None
     for restaurant_id in game_config.config_restaurant:
       if game_config.config_restaurant[restaurant_id].tag_name in scene_tag:
         self.now_restaurant_id = restaurant_id
@@ -279,13 +287,11 @@ class SeeFoodListByFoodNameDraw:
             now_cid
         ][now_uid]
       elif self.now_restaurant_id == "Stall_Vendor":
-        food_data: game_type.Food = cache.rhodes_island.stall_vendor_data[0][
+        food_data = cache.rhodes_island.stall_vendor_data[0][now_cid][now_uid]
+      else:
+        food_data = cache.rhodes_island.restaurant_data[self.now_restaurant_id][
             now_cid
         ][now_uid]
-      else:
-        food_data: game_type.Food = cache.rhodes_island.restaurant_data[
-            self.now_restaurant_id
-        ][now_cid][now_uid]
       # 检查是否有制作者
       if food_data.maker != "":
         maker_flag = True
@@ -311,7 +317,7 @@ class SeeFoodListByFoodNameDraw:
       quality_text = ""
 
     # 绘制食物类名字按钮
-    name_draw = draw.NormalDraw()
+    name_draw: draw.NormalDraw | draw.CenterButton = draw.NormalDraw()
     if is_button:
       if num_button:
         index_text = text_handle.id_index(button_id)
@@ -349,7 +355,7 @@ class SeeFoodListByFoodNameDraw:
       return
     self.now_draw.draw()
 
-  def see_food_shop_food_list(self):
+  def see_food_shop_food_list(self) -> None:
     """按食物名字显示食物商店的食物列表"""
     title_draw = draw.TitleLineDraw(self.text, window_width)
     title_draw.draw()
@@ -371,11 +377,9 @@ class SeeFoodListByFoodNameDraw:
               now_cid
           ][now_uid]
         elif self.now_restaurant_id == "Stall_Vendor":
-          food_data: game_type.Food = cache.rhodes_island.stall_vendor_data[0][
-              now_cid
-          ][now_uid]
+          food_data = cache.rhodes_island.stall_vendor_data[0][now_cid][now_uid]
         else:
-          food_data: game_type.Food = cache.rhodes_island.restaurant_data[
+          food_data = cache.rhodes_island.restaurant_data[
               self.now_restaurant_id
           ][now_cid][now_uid]
         self.food_name = ""
@@ -418,7 +422,12 @@ class SeeFoodListByFoodNameDraw:
         break
       cache.rhodes_island.dining_hall_data.setdefault(self.cid, {})
 
-  def buy_food(self, cid: str, uid: UUID, restaurant_id: int = None) -> None:
+  def buy_food(
+      self,
+      cid: str,
+      uid: UUID,
+      restaurant_id: int | Literal["Stall_Vendor"] | None = None,
+  ) -> None:
     """玩家购买食物"""
     # 将食物放入背包，并从食物商店中删除
     if restaurant_id is None:

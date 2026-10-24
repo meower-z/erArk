@@ -1,6 +1,6 @@
 """管理罗德岛的基建界面面板与干员工作岗位的调整"""
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.Design import basement, attr_calculation, handle_premise, game_time
@@ -20,7 +20,9 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def change_npc_work_out(width, target_work_type_id=None):
+def change_npc_work_out(
+    width: int, target_work_type_id: Optional[List[int]] = None
+) -> None:
   """
   调整干员的工作岗位
   """
@@ -35,7 +37,7 @@ class Manage_Basement_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -78,7 +80,7 @@ class Manage_Basement_Panel:
 
     self.choosing_sort_mode = 0  # 0:无, 1:主排序, 2:副排序
 
-  def change_chara_page(self, amount: int):
+  def change_chara_page(self, amount: int) -> None:
     """
     翻页干员列表
     Keyword arguments:
@@ -86,7 +88,7 @@ class Manage_Basement_Panel:
     """
     self.chara_list_page += amount
 
-  def change_info_category(self, target_index: int):
+  def change_info_category(self, target_index: int) -> None:
     """
     切换信息分类页
     Keyword arguments:
@@ -94,7 +96,7 @@ class Manage_Basement_Panel:
     """
     self.current_category_index = target_index
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("管理罗德岛")
@@ -134,6 +136,7 @@ class Manage_Basement_Panel:
       # 绘制主面板
       for now_panel in panel_list:
         if now_panel == self.now_panel:
+          now_draw: draw.CenterDraw | draw.CenterButton
           now_draw = draw.CenterDraw()
           now_draw.text = f"[{now_panel}]"
           now_draw.style = "onbutton"
@@ -180,7 +183,7 @@ class Manage_Basement_Panel:
             draw_text = f" ▼[{resouce}]"
           else:
             draw_text = f" ▶[{resouce}]"
-          button_draw = draw.LeftButton(
+          button_draw: draw.CenterButton = draw.LeftButton(
               f"{draw_text}",
               f"{resouce}",
               len(draw_text) * 2,
@@ -327,7 +330,7 @@ class Manage_Basement_Panel:
         # 局部导入状态标识获取函数
         from Script.UI.Panel.character_info_head import get_character_status_list
 
-        def pass_func():
+        def pass_func() -> None:
           pass
 
         # 安全初始化新增的变量 (避免 __init__ 没更新到导致报错)
@@ -346,7 +349,7 @@ class Manage_Basement_Panel:
         current_category = self.info_category_list[self.current_category_index]
 
         # 动态读取能力CSV并根据类型分类
-        cat_columns = {
+        cat_columns: Dict[str, List[Tuple[str, int]]] = {
             _("【感度类】"): [],
             _("【扩张类】"): [],
             _("【刻印类】"): [],
@@ -378,10 +381,11 @@ class Manage_Basement_Panel:
             cat_columns[cat_name].append((col_name, tem_ability_cid))
 
         # ================= 1. 绘制顶部：分类切换页 =================
-        cat_line_list = []
+        cat_line_list: List[draw.Drawable] = []
         for i, cat_name in enumerate(self.info_category_list):
           if i == self.current_category_index:
             # 当前分类：高亮、不可点击
+            btn: draw.NormalDraw | draw.LeftButton
             btn = draw.NormalDraw()
             btn.text = f" {cat_name} "
             btn.style = "gold_enrod"
@@ -667,7 +671,7 @@ class Manage_Basement_Panel:
 
             all_charas.append(npc_id)
 
-          def get_sort_val(nid, key):
+          def get_sort_val(nid: int, key: str) -> float:
             if key == _("无"):
               return 0
             c = cache.character_data[nid]
@@ -923,6 +927,7 @@ class Manage_Basement_Panel:
           line.draw()
 
           if self.chara_list_page > 0:
+            prev_page_btn: draw.LeftButton | draw.NormalDraw
             prev_page_btn = draw.LeftButton(
                 _("[888]上一页"),
                 "888",
@@ -946,6 +951,7 @@ class Manage_Basement_Panel:
           page_info.draw()
 
           if self.chara_list_page < total_pages - 1:
+            next_page_btn: draw.LeftButton | draw.NormalDraw
             next_page_btn = draw.LeftButton(
                 _("[222]下一页"),
                 "222",
@@ -1018,7 +1024,7 @@ class Manage_Basement_Panel:
         self.choosing_sort_mode = 0
         self.chara_list_page = 0
 
-  def change_panel(self, now_panel: str):
+  def change_panel(self, now_panel: str) -> None:
     """
     切换当前面板显示
     Keyword arguments:
@@ -1027,7 +1033,7 @@ class Manage_Basement_Panel:
 
     self.now_panel = now_panel
 
-  def jump_to_son_panel(self, son_panel: str):
+  def jump_to_son_panel(self, son_panel: str) -> None:
     """
     跳转子面板
     Keyword arguments:
@@ -1041,7 +1047,7 @@ class Manage_Basement_Panel:
     from Script.System.Cooking_System import make_food_panel
 
     if son_panel == _("[基建系统]"):
-      now_panel = building_panel.Building_Panel(self.width)
+      now_panel: draw.Drawable = building_panel.Building_Panel(self.width)
     elif son_panel == _("[能源系统]"):
       now_panel = manage_power_system_panel.Manage_Power_System_Panel(
           self.width
@@ -1128,7 +1134,7 @@ class Manage_Basement_Panel:
       return
     now_panel.draw()
 
-  def show_department(self, department: str):
+  def show_department(self, department: str) -> None:
     """
     显示部门情况
     Keyword arguments:
@@ -1274,13 +1280,13 @@ class Manage_Basement_Panel:
       if yrn == back_draw.return_text:
         break
 
-  def settle_show_resource_type(self, resouce_type):
+  def settle_show_resource_type(self, resouce_type: str) -> None:
     """设置显示的资源类型"""
     self.show_resource_type_dict[resouce_type] = (
         not self.show_resource_type_dict[resouce_type]
     )
 
-  def see_attr(self, character_id: int):
+  def see_attr(self, character_id: int) -> None:
     """
     查看指定干员的角色属性面板，可在除玩家外的已获得干员间翻页，返回后面板回到场景互动界面
     Keyword arguments:
@@ -1311,7 +1317,9 @@ class Change_Npc_Work_Panel:
   button_id -- 数字按钮id
   """
 
-  def __init__(self, width: int, target_work_type_id: Optional[List] = None):
+  def __init__(
+      self, width: int, target_work_type_id: Optional[List] = None
+  ) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 最大宽度 """
@@ -1327,7 +1335,7 @@ class Change_Npc_Work_Panel:
     for work_type_id in self.target_work_type_id_list:
       self.work_type_state[work_type_id] = True
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("调整干员工作岗位")
@@ -1361,7 +1369,7 @@ class Change_Npc_Work_Panel:
       line_feed.draw()
 
       # 定义一个字典，用来表示各工作类型id下的干员id列表
-      self.work_type_npc_dict = {}
+      self.work_type_npc_dict: Dict[int, List[int]] = {}
       for work_type_id in game_config.config_work_type:
         self.work_type_npc_dict[work_type_id] = []
 
@@ -1493,7 +1501,7 @@ class Change_Npc_Work_Panel:
     for key in self.work_type_state:
       self.work_type_state[key] = False
 
-  def button_0(self, character_id: int):
+  def button_0(self, character_id: int) -> None:
     """选项1"""
     while 1:
 
@@ -1629,7 +1637,7 @@ class Change_Npc_Work_Panel:
       if yrn in return_list:
         break
 
-  def select_new_work(self, work_id: int, character_id: int):
+  def select_new_work(self, work_id: int, character_id: int) -> None:
     """赋予新的工作id"""
     target_data: game_type.Character = cache.character_data[character_id]
     # 如果原工作是性爱练习生的话，则重置性爱练习

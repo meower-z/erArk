@@ -310,7 +310,7 @@ class Invite_Visitor_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -319,7 +319,7 @@ class Invite_Visitor_Panel:
     self.draw_list: List[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("邀请访客")
@@ -365,7 +365,7 @@ class Invite_Visitor_Panel:
         now_text += _(" 无")
       else:
         chara_id = cache.rhodes_island.invite_visitor[0]
-        character_data: game_type.Character = cache.character_data[chara_id]
+        character_data = cache.character_data[chara_id]
         now_text += f" [{chara_id}]{character_data.name}"
 
         # 邀请进度
@@ -373,7 +373,7 @@ class Invite_Visitor_Panel:
             cache.rhodes_island.invite_visitor[1]
         )
         # 邀请效率加成
-        all_effect = 0
+        all_effect: float = 0
         now_text += _("\n 邀请效率加成：")
 
         # 去掉玩家
@@ -385,10 +385,10 @@ class Invite_Visitor_Panel:
             if i not in cache.rhodes_island.visitor_info
         ]
         for chara_id in id_list:
-          character_data: game_type.Character = cache.character_data[chara_id]
+          character_data = cache.character_data[chara_id]
           # 找到职业是外交官的
           if character_data.work.work_type == 131:
-            character_data: game_type.Character = cache.character_data[chara_id]
+            character_data = cache.character_data[chara_id]
             character_effect = 5 * handle_ability.get_ability_adjust(
                 character_data.ability[40]
             )
@@ -449,7 +449,7 @@ class Invite_Visitor_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def select_target(self):
+  def select_target(self) -> None:
     """选择邀请目标"""
 
     while 1:
@@ -485,7 +485,7 @@ class Invite_Visitor_Panel:
       now_country_id = cache.rhodes_island.current_location[0]
       now_country_name = game_config.config_birthplace[now_country_id].name
       if now_level == 2:
-        now_invitation_range = now_country_name
+        now_invitation_range: str | list[str] = now_country_name
         now_text += _(" 可邀请范围：{0}\n\n").format(now_invitation_range)
       elif now_level == 3:
         # 临近地点
@@ -543,7 +543,7 @@ class Invite_Visitor_Panel:
         chara_id_count = 0
         for chara_id in target_id_list:
           chara_id_count += 1
-          character_data: game_type.Character = cache.character_data[chara_id]
+          character_data = cache.character_data[chara_id]
           # 均绘制为可选按钮
           button_text = (
               f" [{str(character_data.adv).rjust(4,'0')}]{character_data.name}"

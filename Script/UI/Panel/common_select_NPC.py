@@ -30,7 +30,7 @@ def common_select_npc_button_list_func(
     title_text: str = "",
     info_text: str = "",
     select_state: Optional[dict] = None,
-) -> list:
+) -> tuple[List[str], List[str], dict[str, int | str]]:
   """
   通用npc选择按钮列表函数\n
   Keyword arguments:\n
@@ -81,8 +81,8 @@ def common_select_npc_button_list_func(
     info_draw.width = window_width
     info_draw.draw()
     line_feed.draw()
-  return_list = []
-  other_return_list = []
+  return_list: List[str] = []
+  other_return_list: List[str] = []
 
   # 添加筛选功能
   select_type_list = [
@@ -103,6 +103,7 @@ def common_select_npc_button_list_func(
   info_draw.text = info_text
   info_draw.draw()
 
+  now_draw: draw.NormalDraw | draw.LeftButton
   for select_type_id in range(len(select_type_list)):
     # 每五个换行
     if select_type_id % 5 == 0 and select_type_id != 0:
@@ -338,7 +339,7 @@ class CommonSelectNPCButtonList:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
 
     self.chara_id: int = chara_info[0]

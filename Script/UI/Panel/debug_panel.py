@@ -1,6 +1,6 @@
 """debug 界面面板，以及口上快速测试和数据重建工具"""
 
-from typing import Dict, List
+from typing import Any, Dict, List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant, py_cmd
 from Script.Design import basement, character_handle, handle_premise, attr_calculation, clothing, map_handle
@@ -134,15 +134,15 @@ def build_chara_talk(chara_adv_id: int = 0) -> None:
     if os.path.isdir(now_dir):
       # 如果是目录，则递归遍历子目录
       for root, _dirs, files in os.walk(now_dir):
-        for f in files:
-          now_f = os.path.join(root, f)
-          build_csv_config(now_f, f, chara_adv_id, character_talk_data)
+        for talk_file in files:
+          now_f = os.path.join(root, talk_file)
+          build_csv_config(now_f, talk_file, chara_adv_id, character_talk_data)
     else:
       # 如果不是目录，直接处理文件
       build_csv_config(now_dir, i, chara_adv_id, character_talk_data)
   # 写入 talk 数据
   with open(character_talk_data_path, "w", encoding="utf-8") as talk_data_file:
-    json.dump(character_talk_data, talk_data_file, ensure_ascii=0)
+    json.dump(character_talk_data, talk_data_file, ensure_ascii=False)
 
 
 class TALK_QUICK_TEST:
@@ -152,7 +152,7 @@ class TALK_QUICK_TEST:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -161,7 +161,7 @@ class TALK_QUICK_TEST:
     self.draw_list: List[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("快速测试口上")
@@ -466,8 +466,10 @@ class TALK_QUICK_TEST:
         # 综合数值前提判定
         if "CVP" in premise:
           premise_all_value_list = premise.split("_")[1:]
-          now_add_weight = handle_premise.handle_comprehensive_value_premise(
-              start_chara_id, premise_all_value_list
+          now_add_weight: float = (
+              handle_premise.handle_comprehensive_value_premise(
+                  start_chara_id, premise_all_value_list
+              )
           )
         # 其他正常口上判定
         else:
@@ -607,7 +609,7 @@ class TALK_QUICK_TEST:
     Return arguments:
     List[int] -- 去重后的口上id列表
     """
-    result = []
+    result: List[int] = []
     for part in input_text.replace("，", ",").split(","):
       part = part.strip()
       if not part:
@@ -635,7 +637,7 @@ class TALK_QUICK_TEST:
         output_list.append(talk_id)
     return output_list
 
-  def refresh_talk_file(self):
+  def refresh_talk_file(self) -> None:
     """刷新口上文件"""
 
     # 要求输入角色的id
@@ -649,7 +651,7 @@ class TALK_QUICK_TEST:
     draw_text = _("\n\n开始刷新口上文件，请稍等\n")
     now_draw.text = draw_text
     now_draw.draw()
-    for i in range(5):
+    for _i in range(5):
       line_feed.draw()
 
     # 构建角色口上数据
@@ -687,16 +689,16 @@ class Debug_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
     self.now_panel = _("常用更改")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: List[draw.Drawable] = []
     """ 绘制的文本列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = "debug面板"
@@ -715,21 +717,21 @@ class Debug_Panel:
       # 绘制主面板
       for department_type in department_type_list:
         if department_type == self.now_panel:
-          now_draw = draw.CenterDraw()
-          now_draw.text = f"[{department_type}]"
-          now_draw.style = "onbutton"
-          now_draw.width = self.width / len(department_type_list)
-          now_draw.draw()
+          tab_draw = draw.CenterDraw()
+          tab_draw.text = f"[{department_type}]"
+          tab_draw.style = "onbutton"
+          tab_draw.width = self.width / len(department_type_list)
+          tab_draw.draw()
         else:
-          now_draw = draw.CenterButton(
+          tab_button = draw.CenterButton(
               f"[{department_type}]",
               f"\n{department_type}",
               self.width / len(department_type_list),
               cmd_func=self.change_panel,
               args=(department_type,),
           )
-          now_draw.draw()
-          return_list.append(now_draw.return_text)
+          tab_button.draw()
+          return_list.append(tab_button.return_text)
       line_feed.draw()
       line = draw.LineDraw("+", self.width)
       line.draw()
@@ -740,7 +742,8 @@ class Debug_Panel:
       # facility_draw.width = self.width
       # facility_draw.draw()
 
-      now_draw = panel.LeftDrawTextListPanel()
+      # 本页依次绘制的单个绘制对象
+      draw_items: List[draw.Drawable] = []
 
       # 全局变量
       if self.now_panel == _("全局变量"):
@@ -749,11 +752,9 @@ class Debug_Panel:
         all_info_text = _("全局变量一览：")
         all_info_draw.text = all_info_text
         all_info_draw.width = self.width
-        now_draw.draw_list.append(all_info_draw)
-        now_draw.width += len(all_info_draw.text)
+        draw_items.append(all_info_draw)
 
-        now_draw.draw_list.append(line_feed)
-        now_draw.width += line_feed.width
+        draw_items.append(line_feed)
 
         # 要输出的变量名称以及注释
         draw_text_list = []
@@ -789,9 +790,8 @@ class Debug_Panel:
               cmd_func=self.change_value,
               args=i,
           )
-          now_draw.draw_list.append(button_draw)
-          now_draw.width += len(button_draw.text)
-          now_draw.draw_list.append(line_feed)
+          draw_items.append(button_draw)
+          draw_items.append(line_feed)
           return_list.append(button_draw.return_text)
 
       elif self.now_panel == _("常用更改"):
@@ -803,11 +803,9 @@ class Debug_Panel:
         all_info_text += _("玩家的各项属性")
         all_info_draw.text = all_info_text
         all_info_draw.width = self.width
-        now_draw.draw_list.append(all_info_draw)
-        now_draw.width += len(all_info_draw.text)
+        draw_items.append(all_info_draw)
 
-        now_draw.draw_list.append(line_feed)
-        now_draw.width += line_feed.width
+        draw_items.append(line_feed)
 
         # 要输出的变量名称以及注释
         draw_text_list = []
@@ -855,9 +853,8 @@ class Debug_Panel:
               cmd_func=self.change_value,
               args=i,
           )
-          now_draw.draw_list.append(button_draw)
-          now_draw.width += len(button_draw.text)
-          now_draw.draw_list.append(line_feed)
+          draw_items.append(button_draw)
+          draw_items.append(line_feed)
           return_list.append(button_draw.return_text)
 
       elif self.now_panel == _("NPC角色"):
@@ -866,11 +863,9 @@ class Debug_Panel:
         all_info_text = "选择角色："
         all_info_draw.text = all_info_text
         all_info_draw.width = self.width
-        now_draw.draw_list.append(all_info_draw)
-        now_draw.width += len(all_info_draw.text)
+        draw_items.append(all_info_draw)
 
-        now_draw.draw_list.append(line_feed)
-        now_draw.width += line_feed.width
+        draw_items.append(line_feed)
 
         id_list = list(cache.npc_tem_data.keys())
         id_list.append(0)
@@ -896,17 +891,16 @@ class Debug_Panel:
               args=NPC_id,
               normal_style=draw_style,
           )
-          now_draw.draw_list.append(button_draw)
-          now_draw.width += len(button_draw.text)
+          draw_items.append(button_draw)
           return_list.append(button_draw.return_text)
           npc_count += 1
           if npc_count % 6 == 0:
-            now_draw.draw_list.append(line_feed)
-        now_draw.draw_list.append(line_feed)
+            draw_items.append(line_feed)
+        draw_items.append(line_feed)
 
-      self.draw_list: List[draw.NormalDraw] = []
+      self.draw_list = []
       """ 绘制的文本列表 """
-      self.draw_list.extend(now_draw.draw_list)
+      self.draw_list.extend(draw_items)
 
       for label in self.draw_list:
         if isinstance(label, list):
@@ -933,7 +927,7 @@ class Debug_Panel:
 
     self.now_panel = department_type
 
-  def change_target_character(self, NPC_id):
+  def change_target_character(self, NPC_id: int) -> None:
     """
     选择目标角色
     """
@@ -946,7 +940,8 @@ class Debug_Panel:
       info_draw = draw.NormalDraw()
       info_draw.width = self.width
       return_list = []
-      now_draw = panel.LeftDrawTextListPanel()
+      # 本页依次绘制的单个绘制对象
+      draw_items: List[draw.Drawable] = []
 
       target_data: game_type.Character = cache.character_data[
           self.target_character_id
@@ -991,14 +986,13 @@ class Debug_Panel:
             cmd_func=self.change_target_value,
             args=i,
         )
-        now_draw.draw_list.append(button_draw)
-        now_draw.width += len(button_draw.text)
-        now_draw.draw_list.append(line_feed)
+        draw_items.append(button_draw)
+        draw_items.append(line_feed)
         return_list.append(button_draw.return_text)
 
-      self.draw_list: List[draw.NormalDraw] = []
+      self.draw_list = []
       """ 绘制的文本列表 """
-      self.draw_list.extend(now_draw.draw_list)
+      self.draw_list.extend(draw_items)
 
       for label in self.draw_list:
         if isinstance(label, list):
@@ -1015,7 +1009,7 @@ class Debug_Panel:
       if yrn == back_draw.return_text:
         break
 
-  def change_value(self, key_index):
+  def change_value(self, key_index: int) -> None:
     """
     调整该变量的值
     """
@@ -1041,7 +1035,9 @@ class Debug_Panel:
               _("输入改变第几项，如果是带子项的项的话，中间用英文小写逗号隔开"),
               100,
           )
-          value_index = value_index_panel.draw()
+          # 先是输入的字符串，再按有无逗号转成 int 列表或 int；
+          # 各项分支按提示要求的格式取用它，实际类型随玩家输入而定，故用 Any
+          value_index: Any = value_index_panel.draw()
           if "," in value_index:  # 转成全int的list
             value_index = list(map(int, value_index.split(",")))
           else:
@@ -1362,7 +1358,7 @@ class Debug_Panel:
       #     break
       break
 
-  def change_target_value(self, key_index):
+  def change_target_value(self, key_index: int) -> None:
     """
     调整目标角色变量的值
     """
@@ -1438,7 +1434,9 @@ class Debug_Panel:
               _("输入改变第几项，如果是带子项的项的话，中间用英文小写逗号隔开"),
               100,
           )
-          value_index = value_index_panel.draw()
+          # 先是输入的字符串，再按有无逗号转成 int 列表或 int；
+          # 各项分支按提示要求的格式取用它，实际类型随玩家输入而定，故用 Any
+          value_index: Any = value_index_panel.draw()
           if "," in value_index:  # 转成全int的list
             value_index = list(map(int, value_index.split(",")))
           else:
@@ -1496,10 +1494,10 @@ class Debug_Panel:
       elif key_index == 4:
         draw_text_list = []
         info_text = f"\n"
-        for cid in target_data.second_behavior:
-          name = game_config.config_behavior[cid].name
-          info_text += f"({cid}){name}:{target_data.second_behavior[cid]}  "
-          if cid % 5 == 0:
+        for behavior_cid in target_data.second_behavior:
+          name = game_config.config_behavior[behavior_cid].name
+          info_text += f"({behavior_cid}){name}:{target_data.second_behavior[behavior_cid]}  "
+          if behavior_cid % 5 == 0:
             info_text += "\n"
         draw_text_list.append(f"[000]:二段行为列表：\n{info_text}")
 
@@ -2376,7 +2374,7 @@ class ChangeWorkButtonList:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
 
     self.NPC_id: int = NPC_id

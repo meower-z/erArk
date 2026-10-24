@@ -33,12 +33,12 @@ class InScenePanel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     title_draw = draw.TitleLineDraw(_("场景"), self.width)
     # 场景角色数据
@@ -48,8 +48,8 @@ class InScenePanel:
         20,
         10,
         self.width,
-        1,
-        0,
+        True,
+        False,
         999,
     )
     while 1:
@@ -103,7 +103,7 @@ class InScenePanel:
       #     continue
       # print("character_handle_panel.text_list :",character_handle_panel.text_list)
       # 游戏时间
-      game_time_draw = game_info_panel.GameTimeInfoPanel(self.width / 2)
+      game_time_draw = game_info_panel.GameTimeInfoPanel(int(self.width / 2))
       # game_time_draw.now_draw.width = len(game_time_draw)
       game_time_draw.draw()
       # 当前位置
@@ -268,11 +268,11 @@ class InScenePanel:
       if pl_character_data.target_character_id and cache.scene_panel_show[0]:
         character_status_draw = (
             see_character_info_panel.SeeCharacterStatusPanel(
-                pl_character_data.cid, self.width / 2, 7, 0, 0
+                pl_character_data.cid, int(self.width / 2), 7, 0, False
             )
         )
         target_status_draw = see_character_info_panel.SeeCharacterStatusPanel(
-            pl_character_data.target_character_id, self.width, 7, 0, 0
+            pl_character_data.target_character_id, self.width, 7, 0, False
         )
         now_line = len(character_status_draw.draw_list)
         if len(target_status_draw.draw_list) > now_line:
@@ -327,13 +327,16 @@ class InScenePanel:
       if cache.scene_panel_show[1] and pl_character_data.target_character_id:
         # 如果是在H中，则切换为按钮型的点选服装穿脱面板
         if handle_premise.handle_is_h(0):
-          character_cloth_draw = cloth_panel.SwitchCharacterClothPanel(
-              pl_character_data.cid, self.width, 20, 0, 0
+          character_cloth_draw: (
+              cloth_panel.SwitchCharacterClothPanel
+              | cloth_panel.SeeCharacterClothPanel
+          ) = cloth_panel.SwitchCharacterClothPanel(
+              pl_character_data.cid, self.width, 20, 0, False
           )
         # 否则为正常文本绘制服装面板
         else:
           character_cloth_draw = cloth_panel.SeeCharacterClothPanel(
-              pl_character_data.cid, self.width, 20, 0, 0
+              pl_character_data.cid, self.width, 20, 0, False
           )
         character_cloth_draw.draw()
         ask_list.extend(character_cloth_draw.return_list)
@@ -341,7 +344,7 @@ class InScenePanel:
       # ↓以下为身体栏的内容↓#
       if cache.scene_panel_show[2] and pl_character_data.target_character_id:
         character_body_draw = dirty_panel.SeeCharacterBodyPanel(
-            pl_character_data.cid, self.width, 9, 0, 0
+            pl_character_data.cid, self.width, 9, 0, False
         )
         character_body_draw.draw()
 
@@ -350,7 +353,7 @@ class InScenePanel:
         from Script.System.Sex_System import group_sex_panel
 
         character_group_sex_draw = group_sex_panel.SeeGroupSexInfoPanel(
-            pl_character_data.cid, self.width, 9, 0, 0
+            pl_character_data.cid, self.width, 9, 0, False
         )
         character_group_sex_draw.draw()
 
@@ -359,7 +362,7 @@ class InScenePanel:
         from Script.System.Sex_System import hidden_sex_panel
 
         character_hidden_sex_draw = hidden_sex_panel.See_Hidden_Sex_InfoPanel(
-            pl_character_data.cid, self.width, 9, 0, 0
+            pl_character_data.cid, self.width, 9, 0, False
         )
         character_hidden_sex_draw.draw()
 
