@@ -26,7 +26,7 @@ line_feed.width = 1
 def calculate_food_effects(
     character_id: int,
     add_time: int,
-):
+) -> Tuple[int, int]:
   """
   食物结算，计算食物对角色的状态值和体力气力的影响\n
   Keyword arguments:
@@ -268,7 +268,7 @@ class FoodBagPanel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def get_food_group(self):
+  def get_food_group(self) -> Tuple[dict, dict]:
     """
     获取当前面板下的食物分组，按(recipe, special_seasoning)分组\n
     Return arguments:

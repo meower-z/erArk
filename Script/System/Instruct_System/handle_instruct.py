@@ -2,7 +2,7 @@ import time
 import queue
 import datetime
 from functools import wraps
-from typing import Set, List, Optional, Union
+from typing import Callable, Set, List, Optional, ParamSpec, TypeVar, Union
 from types import FunctionType
 from threading import Thread
 from Script.Core import constant, constant_promise, cache_control, game_type, get_text, flow_handle
@@ -19,6 +19,10 @@ width: int = normal_config.config_normal.text_width
 """ 屏幕宽度 """
 instruct_queue: queue.Queue[str] = queue.Queue()
 """ 待处理的指令队列 """
+InstructParams = ParamSpec("InstructParams")
+""" 指令处理函数的参数 """
+InstructReturn = TypeVar("InstructReturn")
+""" 指令处理函数的返回值 """
 
 
 def init_instruct_handle_thread() -> None:
@@ -97,7 +101,10 @@ def add_instruct(
     premise_set: Optional[Set] = None,
     behavior_id: Optional[str] = None,
     sub_type: Optional[int] = None,
-):
+) -> Callable[
+    [Callable[InstructParams, InstructReturn]],
+    Callable[InstructParams, InstructReturn],
+]:
   """
   添加指令处理
 
@@ -112,9 +119,13 @@ def add_instruct(
   sub_type -- 指令子类型（可选，不传则从CSV读取）
   """
 
-  def decorator(func: FunctionType):
+  def decorator(
+      func: Callable[InstructParams, InstructReturn],
+  ) -> Callable[InstructParams, InstructReturn]:
     @wraps(func)
-    def return_wrapper(*args, **kwargs):
+    def return_wrapper(
+        *args: InstructParams.args, **kwargs: InstructParams.kwargs
+    ) -> InstructReturn:
       return func(*args, **kwargs)
 
     # 从CSV配置读取参数（如果未在装饰器中指定）
@@ -362,7 +373,7 @@ def chara_handle_instruct_common_settle(
     judge: str = "",
     game_update_flag: bool = False,
     force_taget_wait: bool = False,
-):
+) -> Optional[int]:
   """
   角色处理指令通用结算函数\n
   Keyword arguments:\n
@@ -438,6 +449,7 @@ def chara_handle_instruct_common_settle(
   # 仅在玩家指令时更新游戏流程
   if character_id == 0 or game_update_flag:
     update.game_update_flow(duration)
+  return None
 
 
 def handle_comprehensive_state_effect(
@@ -446,7 +458,7 @@ def handle_comprehensive_state_effect(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-):
+) -> Optional[int]:
   """
   综合指令行为结算
   Keyword arguments:
@@ -457,7 +469,7 @@ def handle_comprehensive_state_effect(
   now_time -- 结算的时间
   """
   if not add_time:
-    return
+    return None
   # print(f"debug effect_all_value_list:{effect_all_value_list}")
   character_data: game_type.Character = cache.character_data[0]
   # 进行主体A的判别，A1为自己，A2为交互对象，A3为指定id角色(格式为A3|15)
@@ -483,6 +495,7 @@ def handle_comprehensive_state_effect(
       target_character_id=target_character_id,
       game_update_flag=True,
   )
+  return None
 
 
 @add_instruct(constant.Instruct.REST)

@@ -38,7 +38,7 @@ _handle_npc_ai_in_h = None
 """ handle_npc_ai_in_h 模块的延迟导入缓存（规避循环导入，同时消除每角色每轮重复导入的开销） """
 
 
-def judge_character_tired_sleep(character_id: int):
+def judge_character_tired_sleep(character_id: int) -> str | None:
   """
   校验角色是否疲劳或困倦
   Keyword arguments:
@@ -131,6 +131,7 @@ def judge_character_tired_sleep(character_id: int):
         from Script.System.Instruct_System import handle_instruct
 
         handle_instruct.handle_h_end()
+  return None
 
 
 def run_npc_pre_behavior_checks(

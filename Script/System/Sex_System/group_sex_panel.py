@@ -388,7 +388,7 @@ class SeeGroupSexInfoPanel:
       column: int,
       type_number: int,
       center_status: bool = True,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.character_id = character_id
     """ 要绘制的角色id """
@@ -472,7 +472,7 @@ class Edit_Group_Sex_Temple_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -900,7 +900,7 @@ class Edit_Group_Sex_Temple_Panel:
     info_draw.width = self.width
     info_draw.draw()
 
-  def show_invite_npc_panel(self):
+  def show_invite_npc_panel(self) -> None:
     """绘制可邀请的NPC列表"""
     from Script.Design import instuct_judege
     from Script.UI.Panel import common_select_NPC
@@ -922,7 +922,7 @@ class Edit_Group_Sex_Temple_Panel:
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     now_scene_character_list = scene_data.character_list
-    select_state = {}
+    select_state: dict[str, int | str] = {}
 
     while 1:
       npc_id_got_list = sorted(cache.npc_id_got)

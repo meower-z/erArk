@@ -153,8 +153,8 @@ def handle_talk_sub(
     character_id: int,
     behavior_id: str,
     calculated_premise_dict: dict,
-    unconscious_pass_flag=False,
-):
+    unconscious_pass_flag: bool = False,
+) -> tuple[dict[float, set[str]], dict]:
   """
   处理行为结算对话的内置循环部分
   Keyword arguments:
@@ -375,8 +375,8 @@ def handle_special_talk_weight(character_id: int, talk_premise_set: set) -> int:
 
 
 def choice_talk_from_talk_data(
-    now_talk_data: dict, behavior_id="share_blankly"
-):
+    now_talk_data: dict, behavior_id: str = "share_blankly"
+) -> tuple[str, str, str | None]:
   """
   处理行为结算对话的输出
   Keyword arguments:
@@ -424,9 +424,9 @@ def handle_talk_draw(
     character_id: int,
     talk_text: str,
     now_talk_id: str,
-    second_behavior_id="",
+    second_behavior_id: str = "",
     common_behavior_id: str | None = None,
-):
+) -> None:
   """
   处理行为结算对话的输出
   Keyword arguments:
@@ -648,7 +648,9 @@ def must_show_talk_check(character_id: int) -> None:
   character_data.must_show_second_behavior_id_list = []
 
 
-def second_behavior_info_text(character_id: int, second_behavior_id: str):
+def second_behavior_info_text(
+    character_id: int, second_behavior_id: str
+) -> str:
   """
   二段行为结算的信息文本
   Keyword arguments:
@@ -787,7 +789,7 @@ def second_behavior_info_text(character_id: int, second_behavior_id: str):
 
 def check_not_draw_talk(
     character_id: int, now_behavior_id: str, unusual_talk_flag: int
-):
+) -> bool:
   """
   检测是否需要跳过
   Keyword arguments:
@@ -852,7 +854,7 @@ def check_not_draw_talk(
   return False
 
 
-def special_code_judge(now_talk: str):
+def special_code_judge(now_talk: str) -> tuple[str, list[bool]]:
   """
   将文本中的代码转化为对应的文本 \n
   Keyword arguments: \n
@@ -943,7 +945,9 @@ def talk_common_judge_one_pass(now_talk: str, character_id: int) -> str:
             part_dict["A"] += common_s_A_list
 
         # 定义替换函数：每次匹配都随机挑选每个部位一条文本进行拼接
-        def _part_replacer(match, part_dict=part_dict, key=key):
+        def _part_replacer(
+            match: re.Match[str], part_dict: dict = part_dict, key: str = key
+        ) -> str:
           """
           部位占位符替换函数，每次匹配都随机挑选每个部位一条文本进行拼接
           参数:
@@ -1050,7 +1054,9 @@ def talk_common_judge_one_pass(now_talk: str, character_id: int) -> str:
         # 如果有可替换的候选文本
         if now_talk_data:
           # 定义替换函数：每次匹配都随机挑选一条文本
-          def _replacer(match, now_talk_data=now_talk_data):
+          def _replacer(
+              match: re.Match[str], now_talk_data: dict = now_talk_data
+          ) -> str:
             """
             非部位占位符替换函数，每次匹配都随机挑选一条文本
             参数:
@@ -1072,7 +1078,7 @@ def talk_common_judge_one_pass(now_talk: str, character_id: int) -> str:
 
 def code_text_to_draw_text(
     talk_text: str, character_id: int, common_talk_flag: bool = False
-):
+) -> str:
   """
   将文本中的代码转化为对应的文本 \n
   Keyword arguments: \n

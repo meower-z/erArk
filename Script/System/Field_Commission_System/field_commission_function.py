@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.UI.Moudle import draw
@@ -120,14 +120,14 @@ def get_commission_demand_and_reward(
 
 
 def process_commission_text(
-    now_text,
-    demand_or_reward,
-    deduction_or_increase,
-    send_npc_list,
-    type_text,
-    full_text,
-    satify_flag,
-):
+    now_text: str,
+    demand_or_reward: bool,
+    deduction_or_increase: bool,
+    send_npc_list: List[int],
+    type_text: str,
+    full_text: str,
+    satify_flag: bool,
+) -> Tuple[str, str, bool]:
   """
   处理委托文本\n
   Keyword arguments:\n
@@ -155,15 +155,17 @@ def process_commission_text(
   # 处理文本
   text_list = now_text.split("_")
   item_id = int(text_list[1])
-  item_num = int(text_list[2])
+  item_num: float = int(text_list[2])
   item_type = ""
   item_name = ""
+  # 奖励干员时代替数量显示的文字
+  item_num_text = ""
 
   # 资源
   if text_list[0] == "r":
     item_name = game_config.config_resouce[item_id].name
     item_type = game_config.config_resouce[item_id].type
-    now_have_item_num = cache.rhodes_island.materials_resouce[item_id]
+    now_have_item_num: float = cache.rhodes_island.materials_resouce[item_id]
   # 能力
   elif text_list[0] == "a":
     item_name = game_config.config_ability[item_id].name
@@ -238,7 +240,7 @@ def process_commission_text(
     # 如果是奖励，直接修改显示文本
     if demand_or_reward:
       item_name = need_chara_name
-      item_num = _("成为干员")
+      item_num_text = _("成为干员")
     else:
       # 如果是需求，则按照出勤要求显示
       item_name = f"[{item_id}]{need_chara_name}"
@@ -385,7 +387,7 @@ def process_commission_text(
         ):
           cache.rhodes_island.recruited_id.add(chara_id)
         item_name = cache.character_data[chara_id].name
-        item_num = _("成为干员")
+        item_num_text = _("成为干员")
       # 特产
       elif text_list[0] == "特产":
         cache.rhodes_island.materials_resouce[item_id] += int(item_num)
@@ -417,8 +419,8 @@ def process_commission_text(
     type_text += f"{item_type}　"
 
   # 添加全文
-  display_now_have_item_num = now_have_item_num
-  display_item_num = item_num
+  display_now_have_item_num: float | str = now_have_item_num
+  display_item_num: float | str = item_num_text or item_num
   if text_list[0] == "声望":
     display_now_have_item_num = format_commission_reputation_for_display(
         now_have_item_num
