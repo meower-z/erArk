@@ -244,7 +244,7 @@ def get_status_id_list_from_group_sex_body_part(body_part: str) -> list[str]:
         status_data = game_config.config_behavior[status_id]
         status_tag_list = status_data.tag.split("|")
         pl_character_data = cache.character_data[0]
-        if pl_character_data.target_character_id == 0:
+        if pl_character_data.target_character_id != 0:
           target_character_data = cache.character_data[
               pl_character_data.target_character_id
           ]
