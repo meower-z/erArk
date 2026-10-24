@@ -21,11 +21,6 @@ import time
 from typing import Callable, Dict
 from Script.Core import constant
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-  from types import FunctionType
-
 premise_profile_stats: Dict[str, Dict] = {}
 
 
@@ -98,13 +93,15 @@ def activate_profiler() -> None:
   constant.handle_premise_data = proxy
 
 
-def add_premise(premise_id: str) -> Callable[[FunctionType], FunctionType]:
+def add_premise(
+    premise_id: str,
+) -> Callable[[Callable[[int], float]], Callable[[int], float]]:
   """
   兼容用：若某处显式使用了本模块的 add_premise，则仍可工作。
   更推荐方式是使用 activate_profiler() + 代理字典拦截。
   """
 
-  def decorator(func: FunctionType) -> FunctionType:
+  def decorator(func: Callable[[int], float]) -> Callable[[int], float]:
     # 确保已激活
     activate_profiler()
     constant.handle_premise_data[premise_id] = func  # 会被代理自动包裹

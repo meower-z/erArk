@@ -1,29 +1,12 @@
 from functools import wraps
 from types import FunctionType
 from Script.Core import cache_control, constant, constant_promise, game_type, get_text
+from Script.Design.handle_premise.premise_registry import add_premise
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
-
-
-def add_premise(premise: str) -> FunctionType:
-  """
-  添加前提
-  Keyword arguments:
-  premise -- 前提id
-  Return arguments:
-  FunctionType -- 前提处理函数对象
-  """
-
-  def decoraror(func: FunctionType) -> FunctionType:
-    # 直接注册原函数：原先的 return_wrapper 只做纯转发，
-    # 每次前提判定都要白付一层函数调用（热路径每百tick百万次级），故移除
-    constant.handle_premise_data[premise] = func
-    return func
-
-  return decoraror
 
 
 @add_premise(constant_promise.Premise.HAVE_WORK)

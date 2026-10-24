@@ -232,7 +232,7 @@ class SexInstructSubType:
 #         i += 1
 
 
-handle_premise_data: Dict[str, FunctionType] = {}
+handle_premise_data: Dict[str, Callable[[int], float]] = {}
 """ 前提处理数据 """
 handle_instruct_data: Dict[str, Callable[..., object]] = {}
 """ 指令处理数据（键为指令id字符串） """
