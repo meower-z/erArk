@@ -246,18 +246,24 @@ def string_input() -> Response:
   参数：无（从request.json获取数据）
 
   返回值类型：JSON
-  功能描述：接收前端提交的字符串输入并返回处理结果
+  功能描述：游戏在等文字输入时收下前端提交的字符串，否则不收并回复失败
   """
   global input_response
 
   data = request.json or {}
   value = data.get('value')
 
-  # 保存用户输入的字符串
+  # 只在游戏等文字输入时保存，没人等的文字不留给之后的输入
   with state_lock:
-    input_response = value
+    waiting = 'input_request' in game_state
+    if waiting:
+      input_response = value
 
-  logging.info(f'字符串输入: {value}')
+  if not waiting:
+    logging.info('游戏没有在等文字输入，不收字符串输入: %s', value)
+    return jsonify({'success': False, 'error': '游戏没有在等文字输入'})
+
+  logging.info('字符串输入: %s', value)
 
   return jsonify({'success': True})
 
@@ -270,22 +276,30 @@ def integer_input() -> Response:
   参数：无（从request.json获取数据）
 
   返回值类型：JSON
-  功能描述：接收前端提交的整数输入并返回处理结果
+  功能描述：游戏在等文字输入时收下前端提交的整数，否则不收并回复失败
   """
   global input_response
 
   data = request.json or {}
   value = data.get('value')
 
-  # 保存用户输入的整数
+  # 转不成整数的值记为 0
   try:
-    with state_lock:
-      input_response = int(value) if value is not None else 0
+    number = int(value) if value is not None else 0
   except (ValueError, TypeError):
-    with state_lock:
-      input_response = 0
+    number = 0
 
-  logging.info(f'整数输入: {input_response}')
+  # 只在游戏等文字输入时保存，没人等的数字不留给之后的输入
+  with state_lock:
+    waiting = 'input_request' in game_state
+    if waiting:
+      input_response = number
+
+  if not waiting:
+    logging.info('游戏没有在等文字输入，不收整数输入: %s', number)
+    return jsonify({'success': False, 'error': '游戏没有在等文字输入'})
+
+  logging.info('整数输入: %s', number)
 
   return jsonify({'success': True})
 
@@ -2762,13 +2776,15 @@ def get_input_response() -> str | int | None:
   参数：无
 
   返回值类型：str、int或None
-  功能描述：返回用户输入的内容，获取后清空
+  功能描述：返回用户输入的内容，获取后清空；取到内容时，这次输入请求已答完，从 game_state 去掉 input_request
   """
   global input_response
 
   with state_lock:
     response = input_response
     input_response = None
+    if response is not None:
+      game_state.pop('input_request', None)
 
   return response
 
