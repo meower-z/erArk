@@ -221,7 +221,6 @@
   - [x] `InteractionMajorType`：大类型（MOUTH='mouth', HAND='hand', SEX='sex', PENIS='penis', TOOL='tool', ARTS='arts', OTHER='other'）
   - [x] `InteractionMinorType`：小类型（MOUTH_TALK='mouth_talk', SEX_START_END='sex_start_end', SEX_BASE='sex_base', PENIS_INSERT='penis_insert' 等）
   - [x] 提供大类/小类的映射和工具函数
-- [x] 在 `Script/System/Instruct_System/instruct_meta.py` 中更新 `InstructMeta` 类
 - [x] 在 `Script/Core/constant/__init__.py` 中更新指令元数据字典：
   - [x] `instruct_category_data` - 指令分类（三类）
   - [x] `instruct_panel_id_data` - 系统面板类的面板ID
@@ -264,12 +263,10 @@
 - [x] 为关键角色交互指令手动补充详细分类信息：
   - [x] 添加 `web_major_type` 和 `web_minor_type` 对应的类型（在 CSV 中配置）
   - [x] 添加 `body_parts` 关联的部位列表
-  - [x] ~~`single_part`~~ 已移除，改用 `InstructMeta.is_single_part` 属性自动判断
 
 **实施记录（2026年1月更新）**：
 - 交互类型配置现在通过 CSV 的 `web_major_type` 和 `web_minor_type` 字段完成
 - `handle_instruct.py` 的 `add_instruct` 装饰器自动读取 CSV 配置并写入 constant 字典
-- `InstructMeta` 类的 `is_single_part` 属性通过检查 `len(body_parts) == 1` 自动判断
 
 **实施说明**：
 - 通过 `add_instruct` 装饰器的自动推断逻辑，所有指令在注册时会自动获得三类分类
@@ -299,22 +296,6 @@
   - 道具类 → TOOL_ITEM ('tool','tool_item')
 
 **注意**：旧的 `instruct_web_config.py` 配置文件已删除，不再使用。
-
-#### 2.2.4 创建指令查询辅助函数
-- [x] 实现 `get_system_panel_instructs()` - 获取所有系统面板类指令
-- [x] 实现 `get_character_instructs()` - 获取所有角色交互类指令
-- [x] 实现 `get_character_panel_instructs()` - 获取所有角色交互面板类指令
-- [x] 实现 `get_all_character_interaction_instructs()` - 获取所有角色交互相关指令
-- [x] 实现 `get_instructs_by_interaction_type(type)` - 按交互子类型获取指令
-- [x] 实现 `get_instructs_by_body_part(part)` - 按部位获取相关指令
-- [x] 实现 `get_instructs_by_type_and_part(type, part)` - 按类型和部位获取指令
-- [x] 实现 `get_available_interaction_types()` - 获取可用交互类型（按预定义顺序）
-- [x] 实现 `get_instruct_meta(instruct_id)` - 获取单个指令元数据
-
-**实施记录（更新于2026年1月17日）**：
-- 所有查询函数已在 `Script/System/Instruct_System/instruct_meta.py` 中实现
-- 查询结果按 `INTERACTION_TYPE_ORDER` 排序
-- 同时在 `Script/Core/constant/__init__.py` 中提供直接通过字典查询的能力
 
 ---
 

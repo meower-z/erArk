@@ -223,64 +223,6 @@ class Character_creat_Handle:
         self.return_list.extend(label.return_list)
 
 
-class Character_Sex:
-  """
-  角色性别面板
-  Keyword arguments:
-  character_id -- 角色id
-  width -- 最大宽度
-  """
-
-  def __init__(self, width: int) -> None:
-    """初始化绘制对象"""
-    self.width: int = width
-    """ 当前最大可绘制宽度 """
-    self.return_list: List[str] = []
-    """ 监听的按钮列表 """
-
-    character_data: game_type.Character = cache.character_data[0]
-    sex_text = game_config.config_sex_tem[character_data.sex].name
-    now_draw_list: List[draw.Drawable] = []
-
-    sex_draw = draw.LeftDraw()
-    # sex_draw.width = 1
-    sex_draw.text = _("\n 性别：{0}      ").format(sex_text)
-    now_draw_list.append(sex_draw)
-
-    button_text = _("    [改变性别]")
-    sex_button_draw = draw.LeftButton(
-        _(button_text),
-        _("改变性别"),
-        int(self.width / 10),
-        cmd_func=self.change,
-    )
-    self.return_list.append(sex_button_draw.return_text)
-
-    now_draw_list.append(sex_button_draw)
-
-    self.draw_list: List[draw.Drawable] = []
-    """ 绘制的文本列表 """
-    self.draw_list.extend(now_draw_list)
-
-  def draw(self) -> None:
-    """绘制面板"""
-    for label in self.draw_list:
-      if isinstance(label, list):
-        for value in label:
-          value.draw()
-        line_feed_draw.draw()
-      else:
-        label.draw()
-
-  def change(self) -> None:
-    """性别改变"""
-    character_data: game_type.Character = cache.character_data[0]
-    if character_data.sex:
-      character_data.sex = 0
-    else:
-      character_data.sex = 1
-
-
 class Character_JJ:
   """
   角色阴茎面板

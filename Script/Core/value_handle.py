@@ -2,25 +2,11 @@
 
 import random
 import bisect
-import itertools
 import numpy
-from typing import Dict, Iterable, List, TypeVar
+from typing import Dict, List, TypeVar
 
 Key = TypeVar("Key")
 """ 字典键的类型 """
-Value = TypeVar("Value")
-""" 字典值的类型 """
-
-
-def two_bit_array_to_dict(
-    array: Iterable[tuple[Key, Value]],
-) -> dict[Key, Value]:
-  """
-  将二维数组转换为字典
-  Keyword arguments:
-  array -- 要转换的二维数组
-  """
-  return dict(array)
 
 
 def get_rand_value_for_value_region(value_list: List[float]) -> float:
@@ -32,25 +18,6 @@ def get_rand_value_for_value_region(value_list: List[float]) -> float:
   float -- 获得的元素
   """
   return random.choices(value_list, weights=value_list)[0]
-
-
-def get_region_list(now_data: Dict[Key, int]) -> dict[int, Key]:
-  """
-  按dict中每个value的值对key进行排序，并计算权重区域列表
-  Keyword arguments:
-  now_data -- 需要进行计算权重的dict数据
-  """
-  sort_data = sorted_dict_for_values(now_data)
-  return dict(zip(itertools.accumulate(sort_data.values()), sort_data.keys()))
-
-
-def sorted_dict_for_values(old_dict: Dict[Key, int]) -> dict[Key, int]:
-  """
-  按dict中每个value的值对key进行排序生成新dict
-  Keyword arguments:
-  old_dict -- 需要进行排序的数据
-  """
-  return two_bit_array_to_dict(sorted(old_dict.items(), key=lambda x: x[1]))
 
 
 def get_random_for_weight(data: Dict[Key, int]) -> Key:

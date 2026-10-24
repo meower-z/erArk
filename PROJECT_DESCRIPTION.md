@@ -153,7 +153,6 @@ Script/
 │   ├── game_config.py      # data/*.json -> 运行时配置字典/对象
 │   ├── character_config.py # Character.json -> NpcTem 模板
 │   ├── map_config.py       # 地图 JSON -> cache.scene_data/cache.map_data
-│   ├── name_config.py      # 随机姓名（当前入口被注释）
 │   └── config_def.py       # 【自动生成】每张 CSV 一个带中文注释的类
 ├── Core/                   # 引擎层
 │   ├── cache_control.py    # 全局 cache 句柄
@@ -415,7 +414,7 @@ Script/
 全局唯一 `cache_control.cache`，关键字段分组：
 
 - **渲染/输入**：`web_mode`, `current_draw_elements`, `web_*` 系列（交互状态/文本回溯/子面板/数值变化等）, `input_cache`, `cmd_data`, `now_panel_id`, `font_size`
-- **角色世界**：`character_data`（角色ID -> Character）, `npc_tem_data`, `npc_id_got`, `forbidden_npc_id`, `npc_name_data`, `random_npc_list`
+- **角色世界**：`character_data`（角色ID -> Character）, `npc_tem_data`, `npc_id_got`, `forbidden_npc_id`, `npc_name_data`
 - **时间**：`game_time`, `pre_game_time`, `sun_phase`, `moon_phase`
 - **地图**：`map_data`, `scene_data`, `now_init_map_id`, `collect_position_list`
 - **行为循环**：`over_behavior_character`, `pl_sleep_save_flag`, `time_stop_mode`, `group_sex_mode`

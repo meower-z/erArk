@@ -30,7 +30,7 @@ if __name__ == "__main__":
   normal_config.init_normal_config()
 
   from Script.Core import get_text
-  from Script.Config import game_config, name_config, character_config
+  from Script.Config import game_config, character_config
 
   _: FunctionType = get_text._
   """ 翻译api """
@@ -49,8 +49,6 @@ if __name__ == "__main__":
   # 读取Web模式标志
   now_web_mode = normal_config.config_normal.web_draw
   cache_control.cache.web_mode = now_web_mode
-  # 载入姓名配置，暂时去掉
-  # name_config.init_name_data()
   # 初始化角色人物卡数据
   character_config.init_character_tem_data()
 
