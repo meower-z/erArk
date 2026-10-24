@@ -5,6 +5,8 @@
 Web服务器模块，用于启动Flask服务器并处理请求
 """
 
+from __future__ import annotations
+
 # 重要: 在其他任何导入之前进行monkey patching
 # 设置环境变量，禁用socket重用以避免端口冲突
 import os
@@ -28,6 +30,13 @@ from flask_socketio import SocketIO
 
 # 导入游戏核心模块
 from Script.Core import cache_control, constant, game_type
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import Any
+  from collections.abc import Sequence
+  from flask import Response
+  from Script.System.Web_Draw_System.settlement_manager import SettlementManager
 
 # 获取全局缓存
 cache = cache_control.cache
@@ -90,7 +99,7 @@ game_state = {
 _settlement_manager = None
 
 
-def get_settlement_manager():
+def get_settlement_manager() -> SettlementManager:
   """
   获取结算管理器实例（单例模式）
 
@@ -126,7 +135,7 @@ state_lock = threading.Lock()
 
 
 @app.route('/')
-def index():
+def index() -> str | tuple[str, int]:
   """
   渲染主页
 
@@ -147,7 +156,7 @@ def index():
 
 
 @app.route('/api/get_state')
-def get_state():
+def get_state() -> Response:
   """
   获取当前游戏状态
 
@@ -161,7 +170,7 @@ def get_state():
 
 
 @app.route('/api/button_click', methods=['POST'])
-def button_click():
+def button_click() -> Response:
   """
   处理按钮点击事件
 
@@ -186,7 +195,7 @@ def button_click():
 
 
 @app.route('/api/wait_response', methods=['POST'])
-def wait_response():
+def wait_response() -> Response:
   """
   处理等待响应
 
@@ -208,7 +217,7 @@ def wait_response():
 
 
 @app.route('/api/skip_wait', methods=['POST'])
-def skip_wait():
+def skip_wait() -> Response:
   """处理跳过等待的请求"""
   global wait_response_triggered
 
@@ -229,7 +238,7 @@ def skip_wait():
 
 
 @app.route('/api/string_input', methods=['POST'])
-def string_input():
+def string_input() -> Response:
   """
   处理字符串输入
 
@@ -253,7 +262,7 @@ def string_input():
 
 
 @app.route('/api/integer_input', methods=['POST'])
-def integer_input():
+def integer_input() -> Response:
   """
   处理整数输入
 
@@ -281,7 +290,7 @@ def integer_input():
 
 
 @app.route('/api/toggle_extra_info_section', methods=['POST'])
-def toggle_extra_info_section():
+def toggle_extra_info_section() -> Response:
   """
   切换交互对象附加信息栏位的展开/收起状态
 
@@ -319,7 +328,7 @@ def toggle_extra_info_section():
 
 
 @app.route('/api/toggle_detailed_dirty', methods=['POST'])
-def toggle_detailed_dirty():
+def toggle_detailed_dirty() -> Response:
   """
   切换详细污浊显示状态
 
@@ -358,7 +367,7 @@ def toggle_detailed_dirty():
 
 
 @app.route('/api/toggle_all_body_parts', methods=['POST'])
-def toggle_all_body_parts():
+def toggle_all_body_parts() -> Response:
   """
   切换全部位显示状态
 
@@ -402,7 +411,7 @@ def toggle_all_body_parts():
 
 
 @app.route('/api/quick_use_drug', methods=['POST'])
-def quick_use_drug():
+def quick_use_drug() -> Response:
   """
   快速使用药剂（理智药或精力剂）
 
@@ -516,7 +525,7 @@ def quick_use_drug():
 
 
 @app.route('/api/toggle_cloth', methods=['POST'])
-def toggle_cloth():
+def toggle_cloth() -> Response:
   """
   切换衣服穿脱状态
 
@@ -578,7 +587,7 @@ def toggle_cloth():
 
 
 @app.route('/api/get_image_paths')
-def get_image_paths():
+def get_image_paths() -> Response:
   """
   获取游戏所有图片文件的路径
 
@@ -621,7 +630,7 @@ def get_image_paths():
 
 
 @app.route('/favicon.ico')
-def favicon():
+def favicon() -> Response:
   """
   提供网站图标
 
@@ -654,7 +663,7 @@ def favicon():
 
 
 @app.route('/image/<path:filename>')
-def serve_image(filename):
+def serve_image(filename: str) -> Response:
   """
   提供游戏图片文件
 
@@ -690,7 +699,7 @@ def serve_image(filename):
 
 
 @app.route('/api/cropped_image/<path:filename>')
-def serve_cropped_image(filename):
+def serve_cropped_image(filename: str) -> Response:
   """
   提供裁切透明区域后的游戏图片文件
 
@@ -854,7 +863,7 @@ def serve_avatar_image(character_name):
 
 
 @app.route('/api/get_font_config')
-def get_font_config():
+def get_font_config() -> Response:
   """
   获取游戏所有字体配置数据
 
@@ -899,7 +908,7 @@ def get_font_config():
 
 # SocketIO事件处理器
 @socketio.on('connect')
-def handle_connect():
+def handle_connect() -> None:
   """
   处理客户端连接事件
 
@@ -920,7 +929,7 @@ def handle_connect():
 
 
 @socketio.on('disconnect')
-def handle_disconnect():
+def handle_disconnect() -> None:
   """
   处理客户端断开连接事件
 
@@ -933,7 +942,7 @@ def handle_disconnect():
 
 
 @socketio.on('refresh_state')
-def handle_refresh_state(data=None):
+def handle_refresh_state(data: dict[str, Any] | None = None) -> None:
   """
   处理刷新游戏状态请求事件
 
@@ -954,7 +963,7 @@ def handle_refresh_state(data=None):
 
 
 @socketio.on('request_game_state')
-def handle_request_game_state(data=None):
+def handle_request_game_state(data: dict[str, Any] | None = None) -> None:
   """
   处理游戏状态请求事件（Web新UI）
 
@@ -1285,7 +1294,7 @@ WEB_REFRESH_SIGNAL = '__WEB_REFRESH__'
 
 
 @socketio.on('execute_instruct')
-def handle_execute_instruct(data):
+def handle_execute_instruct(data: dict[str, Any]) -> None:
   """
   处理指令执行事件（Web新UI）
 
@@ -1345,7 +1354,7 @@ def handle_execute_instruct(data):
 
 
 @socketio.on('switch_target')
-def handle_switch_target(data):
+def handle_switch_target(data: dict[str, Any]) -> None:
   """
   处理切换交互对象事件（Web新UI）
 
@@ -1462,7 +1471,7 @@ def handle_switch_target(data):
 
 
 @socketio.on('click_panel_tab')
-def handle_click_panel_tab(data):
+def handle_click_panel_tab(data: dict[str, Any]) -> None:
   """
   处理面板选项卡点击事件（Web新UI）
 
@@ -1514,7 +1523,7 @@ def handle_click_panel_tab(data):
 
 
 @socketio.on('get_interaction_types')
-def handle_get_interaction_types(data):
+def handle_get_interaction_types(data: dict[str, Any]) -> None:
   """
   获取可用的交互类型列表（Web新UI）
 
@@ -1595,7 +1604,7 @@ def handle_get_panel_instructs(data):
 
 
 @socketio.on('get_major_types')
-def handle_get_major_types(data):
+def handle_get_major_types(data: dict[str, Any]) -> None:
   """
   获取可用的交互大类型列表（Web新UI）
 
@@ -1745,7 +1754,7 @@ def handle_select_minor_type(data):
 
 
 @socketio.on('clear_interaction_selection')
-def handle_clear_interaction_selection(data):
+def handle_clear_interaction_selection(data: dict[str, Any]) -> None:
   """
   清空交互类型选择（Web新UI）
 
@@ -1785,7 +1794,7 @@ def handle_clear_interaction_selection(data):
 
 
 @socketio.on('get_drug_list')
-def handle_get_drug_list(data):
+def handle_get_drug_list(data: dict[str, Any]) -> None:
   """
   获取药物列表（Web新UI - 道具大类专用）
 
@@ -1816,7 +1825,7 @@ def handle_get_drug_list(data):
 
 
 @socketio.on('get_item_list')
-def handle_get_item_list(data):
+def handle_get_item_list(data: dict[str, Any]) -> None:
   """
   获取道具列表（Web新UI - 道具大类专用）
 
@@ -1901,7 +1910,7 @@ def handle_select_item(data):
 
 
 @socketio.on('get_interaction_state')
-def handle_get_interaction_state(data):
+def handle_get_interaction_state(data: dict[str, Any]) -> None:
   """
   获取当前交互状态（Web新UI）
 
@@ -1927,7 +1936,7 @@ def handle_get_interaction_state(data):
 
 
 @socketio.on('get_all_scene_characters')
-def handle_get_all_scene_characters(data):
+def handle_get_all_scene_characters(data: dict[str, Any]) -> None:
   """
   获取场景内所有角色信息（Web新UI）
 
@@ -1964,7 +1973,7 @@ def handle_get_all_scene_characters(data):
 
 
 @socketio.on('advance_dialog')
-def handle_advance_dialog(data):
+def handle_advance_dialog(data: dict[str, Any]) -> None:
   """
   处理对话推进事件（Web新UI）
 
@@ -2004,7 +2013,7 @@ def handle_advance_dialog(data):
 
 
 @socketio.on('skip_all_dialogs')
-def handle_skip_all_dialogs(data):
+def handle_skip_all_dialogs(data: dict[str, Any]) -> None:
   """
   跳过所有剩余对话（Web新UI）
 
@@ -2032,7 +2041,7 @@ def handle_skip_all_dialogs(data):
 
 
 @socketio.on('event_option_selected')
-def handle_event_option_selected(data):
+def handle_event_option_selected(data: dict[str, Any]) -> None:
   """
   处理事件选项选择
 
@@ -2065,7 +2074,7 @@ def handle_event_option_selected(data):
 
 
 @socketio.on('settlement_button_selected')
-def handle_settlement_button_selected(data):
+def handle_settlement_button_selected(data: dict[str, Any]) -> None:
   """
   处理结算选项按钮选择
 
@@ -2097,7 +2106,7 @@ def handle_settlement_button_selected(data):
 
 
 @socketio.on('get_settlement_state')
-def handle_get_settlement_state(data):
+def handle_get_settlement_state(data: dict[str, Any]) -> None:
   """
   获取当前结算状态（Web新UI）
 
@@ -2120,7 +2129,7 @@ def handle_get_settlement_state(data):
 
 
 @socketio.on('get_character_dialog')
-def handle_get_character_dialog(data):
+def handle_get_character_dialog(data: dict[str, Any]) -> None:
   """
   获取指定角色的完整对话（Web新UI）
 
@@ -2163,7 +2172,7 @@ def handle_get_character_dialog(data):
     socketio.emit('character_dialog', {'success': False, 'error': str(e)})
 
 
-def push_game_state(state_data: dict, diff_only: bool = True):
+def push_game_state(state_data: dict, diff_only: bool = True) -> None:
   """
   推送游戏状态到前端（Web新UI专用）
 
@@ -2193,7 +2202,7 @@ def push_game_state(state_data: dict, diff_only: bool = True):
 
 
 @app.errorhandler(404)
-def handle_not_found(e):
+def handle_not_found(e: Exception) -> tuple[Response, int]:
   """
   404错误处理器 - 静默处理
 
@@ -2211,7 +2220,7 @@ def handle_not_found(e):
 
 
 @app.errorhandler(Exception)
-def handle_exception(e):
+def handle_exception(e: Exception) -> tuple[Response, int]:
   """
   全局异常处理器
 
@@ -2234,7 +2243,7 @@ def handle_exception(e):
   return jsonify({'error': str(e), 'traceback': traceback.format_exc()}), 500
 
 
-def find_free_port(start_port=5000, max_attempts=50):
+def find_free_port(start_port: int = 5000, max_attempts: int = 50) -> int:
   """
   查找可用的端口号
 
@@ -2288,7 +2297,9 @@ def find_free_port(start_port=5000, max_attempts=50):
   return fallback_port
 
 
-def check_port_usage(port):
+def check_port_usage(
+    port: int,
+) -> tuple[bool, dict[str, str | int | None] | None]:
   """
   检查指定端口的占用情况
 
@@ -2437,7 +2448,7 @@ def update_game_state(elements, panel_id=None):
   )
 
 
-def _get_sub_panel_mode_data():
+def _get_sub_panel_mode_data() -> dict[str, Any]:
   """
   获取子面板模式所需的数据
 
@@ -2448,7 +2459,7 @@ def _get_sub_panel_mode_data():
   from Script.Design import attr_text, game_time, handle_premise
   from Script.Config import game_config
 
-  data = {}
+  data: dict[str, Any] = {}
 
   # 获取场景信息栏数据
   if hasattr(cache, 'character_data') and 0 in cache.character_data:
@@ -2602,7 +2613,7 @@ def send_full_game_state():
       socketio.emit('game_state_update', game_state)
 
 
-def _emit_game_state_update():
+def _emit_game_state_update() -> None:
   """
   发送游戏状态更新到前端
 
@@ -2613,7 +2624,7 @@ def _emit_game_state_update():
   """
   # 创建一个本地副本，避免长时间持有锁
   with state_lock:
-    local_state = game_state.copy()
+    local_state: dict[str, Any] = game_state.copy()
 
   # 添加对话框状态
   try:
@@ -2655,7 +2666,7 @@ def _emit_game_state_update():
     logging.error(f'推送游戏状态失败: {str(e)}')
 
 
-def emit_settlement_status(is_settling: bool):
+def emit_settlement_status(is_settling: bool) -> None:
   """
   发送结算状态到前端
 
@@ -2673,7 +2684,7 @@ def emit_settlement_status(is_settling: bool):
     logging.error(f'发送结算状态失败: {str(e)}')
 
 
-def emit_realtime_text(text: str, text_type: str = 'other'):
+def emit_realtime_text(text: str, text_type: str = 'other') -> None:
   """
   实时推送单条文本到前端
 
@@ -2693,7 +2704,7 @@ def emit_realtime_text(text: str, text_type: str = 'other'):
     logging.error(f'实时推送文本失败: {str(e)}')
 
 
-def get_button_response():
+def get_button_response() -> str | None:
   """
   获取按钮点击响应
 
@@ -2728,7 +2739,7 @@ def get_button_response():
   return response
 
 
-def get_wait_response():
+def get_wait_response() -> bool:
   """
   获取等待响应状态
 
@@ -2766,8 +2777,10 @@ def get_input_response():
 
 
 def emit_event_options(
-    options, event_text: str = '', event_style: str = 'standard'
-):
+    options: list[dict[str, Any]] | None,
+    event_text: str = '',
+    event_style: str = 'standard',
+) -> None:
   """
   发送事件选项到前端
 
@@ -2808,7 +2821,7 @@ def emit_event_options(
     logging.error(f'发送事件选项失败: {str(e)}')
 
 
-def get_event_option_response():
+def get_event_option_response() -> dict[str, Any] | None:
   """
   获取事件选项响应
 
@@ -2826,7 +2839,7 @@ def get_event_option_response():
   return response
 
 
-def clear_event_option_response():
+def clear_event_option_response() -> None:
   """
   清空事件选项响应
 
@@ -2841,7 +2854,9 @@ def clear_event_option_response():
     event_option_response = None
 
 
-def emit_settlement_buttons(buttons, description_text: str = ''):
+def emit_settlement_buttons(
+    buttons: list[dict[str, str]] | None, description_text: str = ''
+) -> None:
   """
   发送结算选项按钮到前端
 
@@ -2875,7 +2890,7 @@ def emit_settlement_buttons(buttons, description_text: str = ''):
     logging.error(f'发送结算选项按钮失败: {str(e)}')
 
 
-def get_settlement_button_response():
+def get_settlement_button_response() -> str | None:
   """
   获取结算选项按钮响应
 
@@ -2893,7 +2908,7 @@ def get_settlement_button_response():
   return response
 
 
-def clear_settlement_button_response():
+def clear_settlement_button_response() -> None:
   """
   清空结算选项按钮响应
 
@@ -2908,7 +2923,7 @@ def clear_settlement_button_response():
     settlement_button_response = None
 
 
-def start_server():
+def start_server() -> int:
   """
   启动Web服务器
 
@@ -2945,7 +2960,7 @@ def start_server():
       server_port = find_free_port(start_port=5000 + attempt * 10)
 
       # 创建一个单独的线程启动服务器
-      def run_server():
+      def run_server() -> None:
         """
         内部函数：运行服务器
 
@@ -2992,7 +3007,7 @@ def start_server():
         )
 
         # 获取并显示局域网IP地址
-        def get_lan_ip():
+        def get_lan_ip() -> Sequence[str | int]:
           """获取局域网IP地址"""
           import platform
           import subprocess
@@ -3105,7 +3120,7 @@ def start_server():
   raise Exception('无法启动Web服务器，请检查端口占用情况或系统防火墙设置')
 
 
-def stop_server():
+def stop_server() -> None:
   """
   停止Web服务器
 

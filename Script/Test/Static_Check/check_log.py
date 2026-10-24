@@ -16,6 +16,8 @@ LOG_PATH/OLD_LOG_PATH/SEEN_STATE_PATH是一组联动的相对路径常量。同�
 必须同时重置前两个模块变量并成组改向三个路径常量，避免测试状态互相污染。
 """
 
+from __future__ import annotations
+
 import datetime
 import json
 import os
@@ -25,6 +27,11 @@ from typing import List, Optional
 from Script.Config import normal_config, game_config
 from . import snapshot as snapshot_module
 from .check_registry import CheckFailure, get_all_checks
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from Script.Core import game_type
 
 # 日志文件路径：与error.log同一约定，使用相对于游戏进程工作目录（即仓库根目录）的相对路径
 LOG_PATH = os.path.join("static_check_error.log")
@@ -160,7 +167,7 @@ def _init_if_needed() -> None:
     _seen_check_ids = _load_seen_state()
 
 
-def _build_recent_input_text(cache) -> str:
+def _build_recent_input_text(cache: game_type.Cache) -> str:
   """
   参数:
       cache: 当前游戏缓存对象
@@ -177,7 +184,7 @@ def _build_recent_input_text(cache) -> str:
   return str(recent_inputs)
 
 
-def _build_recent_behavior_text(cache) -> str:
+def _build_recent_behavior_text(cache: game_type.Cache) -> str:
   """
   参数:
       cache: 当前游戏缓存对象
@@ -199,7 +206,7 @@ def _build_recent_behavior_text(cache) -> str:
 
 
 def _build_involved_character_text(
-    cache, involved_character_ids: List[int]
+    cache: game_type.Cache, involved_character_ids: List[int]
 ) -> str:
   """
   参数:
@@ -245,7 +252,9 @@ def _log_size_exceeded() -> bool:
   return False
 
 
-def _build_entry_header_lines(cache, now_text: str) -> List[str]:
+def _build_entry_header_lines(
+    cache: game_type.Cache, now_text: str
+) -> List[str]:
   """
   参数:
       cache: 当前游戏缓存对象
@@ -272,7 +281,7 @@ def _build_entry_header_lines(cache, now_text: str) -> List[str]:
 
 
 def write_error_log(
-    failures: List[CheckFailure], cache, context: dict = None
+    failures: List[CheckFailure], cache: game_type.Cache, context: dict = None
 ) -> bool:
   """
   参数:
@@ -336,7 +345,9 @@ def write_error_log(
   return True
 
 
-def write_repair_log(repair_records: List[dict], cache) -> None:
+def write_repair_log(
+    repair_records: List[dict], cache: game_type.Cache
+) -> None:
   """
   参数:
       repair_records (List[dict]): 修复记录列表，每条含check_id、target(修复对象描述)、field(字段路径)、

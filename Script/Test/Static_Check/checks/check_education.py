@@ -1,6 +1,8 @@
 # -*- coding: UTF-8 -*-
 """静态检查系统 - 养成值、课表与学期快照。只读现有 child_growth，不创建养成数据。"""
 
+from __future__ import annotations
+
 import math
 from typing import List
 
@@ -8,6 +10,12 @@ from Script.Core import cache_control
 from Script.Config import game_config
 from Script.System.Education_System import education_constant
 from ..check_registry import CheckFailure, register_check, make_failure
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import Iterator, Any
+  from Script.Core import game_type
 
 # 检查名供注册与逐元素诊断共用。
 _NAMES = {
@@ -26,13 +34,15 @@ _NAMES = {
 }
 
 
-def _characters(cache):
+def _characters(cache: game_type.Cache) -> dict[int, game_type.Character]:
   """参数: cache(缓存对象)；返回值: dict；功能: 只读取角色表，缺失或类型错误时跳过。"""
   data = getattr(cache, "character_data", None)
   return data if isinstance(data, dict) else {}
 
 
-def _growths(cache):
+def _growths(
+    cache: game_type.Cache,
+) -> Iterator[tuple[int, game_type.CHILD_GROWTH]]:
   """参数: cache(缓存对象)；返回值: 迭代器(cid,养成对象)；功能: 遍历已有养成数据，绝不惰性创建。"""
   for cid, character in _characters(cache).items():
     growth = getattr(character, "child_growth", None)
@@ -40,17 +50,24 @@ def _growths(cache):
       yield cid, growth
 
 
-def _finite(value):
+def _finite(value: object) -> bool:
   """参数: value(任意值)；返回值: bool；功能: 接受有限整数或浮点数，排除布尔值与非有限浮点。"""
   return type(value) is int or (type(value) is float and math.isfinite(value))
 
 
-def _int_range(value, low, high=None):
+def _int_range(value: object, low: int, high: int | None = None) -> bool:
   """参数: value(任意值)、low(int)、high(int或None)；返回值: bool；功能: 检查整数及闭区间。"""
   return type(value) is int and value >= low and (high is None or value <= high)
 
 
-def _failure(check_id, cid, key, value, rule, warning=False):
+def _failure(
+    check_id: str,
+    cid: int | None,
+    key: str,
+    value: object,
+    rule: str,
+    warning: bool = False,
+) -> CheckFailure:
   """参数: check_id/ key/ rule(str)、cid(角色id或None)、value(任意值)、warning(bool)；返回值: CheckFailure；功能: 给出元素定位与原值。"""
   return make_failure(
       check_id,
@@ -60,7 +77,13 @@ def _failure(check_id, cid, key, value, rule, warning=False):
   )
 
 
-def _cells(table, check_id, cid, prefix, failures):
+def _cells(
+    table: object,
+    check_id: str,
+    cid: int | None,
+    prefix: str,
+    failures: list[CheckFailure],
+) -> Iterator[tuple[str, list[Any]]]:
   """参数: table(dict)、check_id/prefix(str)、cid(角色id或None)、failures(list)；返回值: 迭代器；功能: 校验星期与节次，返回结构完好的格子。"""
   if not isinstance(table, dict):
     return
@@ -362,7 +385,9 @@ def check_edu_09() -> List[CheckFailure]:
   return failures
 
 
-def _check_slots(slots, cid, prefix, failures):
+def _check_slots(
+    slots: object, cid: int | None, prefix: str, failures: list[CheckFailure]
+) -> None:
   """参数: slots(dict)、cid(角色id或None)、prefix(str)、failures(list)；返回值: None；功能: 检查模板与覆盖表的时段及活动id。"""
   if not isinstance(slots, dict):
     return

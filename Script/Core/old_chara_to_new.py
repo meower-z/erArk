@@ -1,5 +1,7 @@
 """存档载入时对旧存档角色数据的迁移与修正，以及幼年角色相关数据的清理"""
 
+from __future__ import annotations
+
 import datetime
 from types import FunctionType
 from Script.Core import (
@@ -11,6 +13,10 @@ from Script.Core import (
 )
 from Script.Config import game_config
 from Script.Design import attr_calculation, character_handle, child_stage_gate
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import Any
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -19,7 +25,9 @@ _: FunctionType = get_text._
 """ 翻译api """
 
 
-def _remap_first_record_ids(first_record, id_map: dict) -> None:
+def _remap_first_record_ids(
+    first_record: game_type.FIRST_RECORD, id_map: dict
+) -> None:
   """
   重映射FIRST_RECORD实例中的角色ID（平铺字段与first_part_sex_dict）
   Keyword arguments:
@@ -49,7 +57,7 @@ def _remap_first_record_ids(first_record, id_map: dict) -> None:
       part_record['id'] = id_map.get(part_record['id'], part_record['id'])
 
 
-def normalize_single_character_id(raw_value, default: int = 0) -> int:
+def normalize_single_character_id(raw_value: Any, default: int = 0) -> int:
   """
   将旧存档中的单角色id字段归一化为int
   Keyword arguments:
@@ -86,7 +94,7 @@ def normalize_single_character_id(raw_value, default: int = 0) -> int:
 
 
 def normalize_line_chara_id_data(
-    line_data, chara_index: int, min_length: int
+    line_data: Any, chara_index: int, min_length: int
 ) -> list:
   """
   将旧存档中的产线/招募线数据归一化为标准列表结构
@@ -113,7 +121,7 @@ def normalize_line_chara_id_data(
   return line_data
 
 
-def migrate_old_save_data(loaded_dict) -> int:
+def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
   """
   将旧版存档的角色ID从顺序排列迁移到基于adv的格式
 
@@ -1671,7 +1679,7 @@ def migrate_character_replacement(
   return migrated_count
 
 
-def update_tem_character(loaded_dict):
+def update_tem_character(loaded_dict: dict[str, Any]) -> int:
   """
   更新角色预设
   Keyword arguments:
@@ -1752,7 +1760,7 @@ def update_tem_character(loaded_dict):
   return update_count
 
 
-def fix_wrong_character(loaded_dict):
+def fix_wrong_character(loaded_dict: dict[str, Any]) -> int:
   """
   修正编号错误的角色数据
   Keyword arguments:
@@ -1791,7 +1799,7 @@ def fix_wrong_character(loaded_dict):
   return update_count
 
 
-def update_character_config_data(value):
+def update_character_config_data(value: game_type.Character) -> int:
   """
   更新角色属性数据
   Keyword arguments:
@@ -1950,7 +1958,9 @@ def update_character_config_data(value):
   return update_count
 
 
-def update_chara_cloth(value, tem_character):
+def update_chara_cloth(
+    value: game_type.Character, tem_character: game_type.NpcTem
+) -> int:
   """
   更新角色服装数据
   Keyword arguments:
@@ -2021,7 +2031,7 @@ def update_chara_cloth(value, tem_character):
   return 0
 
 
-def update_new_character(loaded_dict):
+def update_new_character(loaded_dict: dict[str, Any]) -> int:
   """
   更新新角色
   Keyword arguments:
@@ -2096,7 +2106,7 @@ KEEP_PREGNANCY_ATTR_SET = {
 """ 101/102阶段的孩子读档时保留的 PREGNANCY 字段：生殖周期、出生时间、成长加速天数、奶量上限 """
 
 
-def _is_young_child(character) -> bool:
+def _is_young_child(character: game_type.Character) -> bool:
   """
   判断角色是否处于幼年阶段（与 child_stage_gate 同口径，按存档里的角色数据判断）
   Keyword arguments:
@@ -2110,7 +2120,7 @@ def _is_young_child(character) -> bool:
   )
 
 
-def _is_player_daughter(character) -> bool:
+def _is_player_daughter(character: game_type.Character) -> bool:
   """
   判断角色是否为玩家的女儿（与前提 SELF_IS_PLAYER_DAUGHTER 同口径）
   Keyword arguments:
@@ -2121,7 +2131,7 @@ def _is_player_daughter(character) -> bool:
   return character.cid != 0 and character.relationship.father_id == 0
 
 
-def _clear_minor_talent(character) -> int:
+def _clear_minor_talent(character: game_type.Character) -> int:
   """
   去掉角色的未初潮与未成年素质
   Keyword arguments:
@@ -2137,7 +2147,9 @@ def _clear_minor_talent(character) -> int:
   return count
 
 
-def _migrate_static_talent(character, world_setting_shrink: bool) -> int:
+def _migrate_static_talent(
+    character: game_type.Character, world_setting_shrink: bool
+) -> int:
   """
   静态干员（非玩家、非女儿的角色）的素质：去掉未初潮与未成年；持有成长阶段素质时去掉它，换成体型素质
   Keyword arguments:
@@ -2175,7 +2187,7 @@ def _migrate_static_talent(character, world_setting_shrink: bool) -> int:
   return count
 
 
-def _reset_behavior_to_idle(character) -> None:
+def _reset_behavior_to_idle(character: game_type.Character) -> None:
   """
   把角色的当前行为换成1分钟的发呆，交互对象换回自己
   Keyword arguments:
@@ -2216,7 +2228,7 @@ def _clear_missing_interest_course(selected_course: dict) -> int:
   return count
 
 
-def _clear_child_activity(character) -> int:
+def _clear_child_activity(character: game_type.Character) -> int:
   """
   清掉角色身上的见学状态、行为表里已没有的行为、娱乐表里已没有的娱乐；101/102阶段的孩子再清掉课表、日程与上课状态
   Keyword arguments:
@@ -2276,7 +2288,9 @@ def _clear_child_activity(character) -> int:
   return count
 
 
-def _replace_if_changed(owner, attr_name: str, default_value) -> int:
+def _replace_if_changed(
+    owner: object, attr_name: str, default_value: object
+) -> int:
   """
   属性值与默认值不同时换成默认值
   Keyword arguments:
@@ -2310,7 +2324,7 @@ def _get_new_dirty() -> game_type.DIRTY:
   return dirty_data
 
 
-def _clear_young_child_h_state(character) -> int:
+def _clear_young_child_h_state(character: game_type.Character) -> int:
   """
   101/102阶段的孩子：污浊、H状态与身体道具、H相关标记与后续链、泌乳、妊娠与卵，换成新角色的默认值
   Keyword arguments:
@@ -2343,7 +2357,9 @@ def _clear_young_child_h_state(character) -> int:
   return count
 
 
-def _clear_young_child_egg_index(player, young_child_id_set: set) -> int:
+def _clear_young_child_egg_index(
+    player: game_type.Character, young_child_id_set: set
+) -> int:
   """
   从玩家收藏品中删掉指向101/102阶段孩子的持有卵索引，以及她们排出的体外无壳卵
   Keyword arguments:
@@ -2371,7 +2387,9 @@ def _clear_young_child_egg_index(player, young_child_id_set: set) -> int:
   return count
 
 
-def _remove_from_group_sex_template(character, young_child_id_set: set) -> int:
+def _remove_from_group_sex_template(
+    character: game_type.Character, young_child_id_set: set
+) -> int:
   """
   从角色的群交部位模板（A、B）里去掉101/102阶段的孩子：单部位的交互对象换回 [-1, -1]，阴茎侍奉的对象列表里删掉她们
   Keyword arguments:
@@ -2419,7 +2437,7 @@ def _remove_from_group_sex_template(character, young_child_id_set: set) -> int:
   return count
 
 
-def _discard_id(container, young_child_id_set: set) -> int:
+def _discard_id(container: object, young_child_id_set: set) -> int:
   """
   从角色id的集合或列表里删掉101/102阶段的孩子
   Keyword arguments:
@@ -2438,7 +2456,9 @@ def _discard_id(container, young_child_id_set: set) -> int:
   return len(hit_list)
 
 
-def _clear_young_child_reference(loaded_dict, young_child_id_set: set) -> int:
+def _clear_young_child_reference(
+    loaded_dict: dict[str, Any], young_child_id_set: set
+) -> int:
   """
   清掉存档里其他结构对101/102阶段孩子的引用：时停自由活动对象、装袋对象、交互中对象、拒绝群交名单、
      玩家收藏品里她的胖次、袜子、乳汁与圣水，冷库里她的母乳与圣水，囚犯、外勤委托、实操课必修名单、体检名单、借书，
@@ -2534,7 +2554,9 @@ def _clear_young_child_reference(loaded_dict, young_child_id_set: set) -> int:
   return count
 
 
-def _cancel_empty_field_commission(rhodes_island) -> int:
+def _cancel_empty_field_commission(
+    rhodes_island: game_type.Rhodes_Island,
+) -> int:
   """
   取消没有成员的外勤委托：从进行中的委托里移除，派出的载具收回
   Keyword arguments:
@@ -2565,7 +2587,9 @@ def _cancel_empty_field_commission(rhodes_island) -> int:
   return count
 
 
-def _take_young_child_off_line(loaded_dict, young_child_id_set: set) -> int:
+def _take_young_child_off_line(
+    loaded_dict: dict[str, Any], young_child_id_set: set
+) -> int:
   """
   让101/102阶段的孩子离线：离开所有场景与当前干员列表，位置换成离线位置 ["0", "0"]，交互对象换成自己，
      行为不是发呆或带着移动路线时换成默认行为（发呆），跟随关闭；
@@ -2656,7 +2680,7 @@ def _take_young_child_off_line(loaded_dict, young_child_id_set: set) -> int:
   return count
 
 
-def _clear_age_drug_item(character) -> int:
+def _clear_age_drug_item(character: game_type.Character) -> int:
   """
   从角色道具栏中删掉外表年龄药（道具表里没有这两项）
   Keyword arguments:
@@ -2672,7 +2696,9 @@ def _clear_age_drug_item(character) -> int:
   return count
 
 
-def _find_young_child_session(loaded_dict, young_child_id_set: set) -> dict:
+def _find_young_child_session(
+    loaded_dict: dict[str, Any], young_child_id_set: set
+) -> dict:
   """
   找出有101/102阶段的孩子参与、读档后要结束的会话
   Keyword arguments:
@@ -2812,7 +2838,9 @@ def end_young_child_session(session: dict) -> None:
     )
 
 
-def migrate_age_and_body_type(loaded_dict, session: dict = None) -> int:
+def migrate_age_and_body_type(
+    loaded_dict: dict[str, Any], session: dict = None
+) -> int:
   """
   读档时整理成长阶段、体型、见学与上课、行为表与娱乐表里已没有的编号、101/102阶段的H与身体状态和离线、外表年龄药相关的数据；对整理过的存档再读一次，这些数据不变
   Keyword arguments:

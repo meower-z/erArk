@@ -530,7 +530,7 @@ def reload_talk_data():
   load_talk()
 
 
-def translate_data(data: dict):
+def translate_data(data: dict) -> None:
   """
   按指定字段翻译数据
   Keyword arguments:
@@ -565,14 +565,14 @@ def _parse_special_medicine_template(template_str: str) -> Dict[int, float]:
   return result
 
 
-def translate_ui_text():
+def translate_ui_text() -> None:
   """翻译ui文本数据"""
   for file in ui_text_data:
     for key in ui_text_data[file]:
       ui_text_data[file][key] = get_text._(ui_text_data[file][key])
 
 
-def load_ability_type():
+def load_ability_type() -> None:
   """载入能力类型具体配置数据（按能力类型分类）"""
   now_data = config_data["AbilityType"]
   translate_data(now_data)
@@ -582,7 +582,7 @@ def load_ability_type():
     config_ability_type[now_tem.cid] = now_tem
 
 
-def load_ability_type_data():
+def load_ability_type_data() -> None:
   """载入能力类型配置数据"""
   now_data = config_data["Ability"]
   translate_data(now_data)
@@ -604,7 +604,7 @@ def load_ability_type_data():
 #         config_ability_up_type[now_tem.cid] = now_tem
 
 
-def load_ability_up_data():
+def load_ability_up_data() -> None:
   """载入根据编号来判断具体的能力升级的具体数据"""
   now_data = config_data["AbilityUp"]
   translate_data(now_data)
@@ -655,7 +655,7 @@ def load_ability_up_data():
     # print()
 
 
-def load_talent_gain_data():
+def load_talent_gain_data() -> None:
   """载入获得素质数据"""
   now_data = config_data["TalentGain"]
   translate_data(now_data)
@@ -666,7 +666,7 @@ def load_talent_gain_data():
     config_talent_gain_data[now_tem.talent_id] = now_tem
 
 
-def load_mark_up_data():
+def load_mark_up_data() -> None:
   """载入刻印升级数据"""
   now_data = config_data["Mark_Up"]
   translate_data(now_data)
@@ -722,7 +722,7 @@ def load_mark_up_data():
       )
 
 
-def load_mark_down_data():
+def load_mark_down_data() -> None:
   """载入刻印升级数据"""
   now_data = config_data["Mark_Down"]
   translate_data(now_data)
@@ -736,7 +736,7 @@ def load_mark_down_data():
     ] = now_tem.cid
 
 
-def load_instruct_judge_data():
+def load_instruct_judge_data() -> None:
   """每个指令的实行值判定数据"""
   now_data = config_data["InstructJudge"]
   translate_data(now_data)
@@ -746,7 +746,7 @@ def load_instruct_judge_data():
     config_instruct_judge_data[now_tem.cid] = now_tem
 
 
-def load_experience():
+def load_experience() -> None:
   """载入经验数据"""
   now_data = config_data["Experience"]
   translate_data(now_data)
@@ -756,7 +756,7 @@ def load_experience():
     config_experience[now_tem.cid] = now_tem
 
 
-def load_experience_relations():
+def load_experience_relations() -> None:
   """载入快感经验之间的关系数据"""
   now_data = config_data["Experience_Relations"]
   translate_data(now_data)
@@ -766,7 +766,7 @@ def load_experience_relations():
     config_experience_relations[now_tem.base_exp_id] = now_tem
 
 
-def load_experience_types():
+def load_experience_types() -> None:
   """载入经验类型数据"""
   now_data = config_data["Experience_Types"]
   translate_data(now_data)
@@ -776,7 +776,7 @@ def load_experience_types():
     config_experience_types[now_tem.type_id] = now_tem
 
 
-def load_juel():
+def load_juel() -> None:
   """载入宝珠数据"""
   now_data = config_data["Juel"]
   translate_data(now_data)
@@ -786,7 +786,7 @@ def load_juel():
     config_juel[now_tem.cid] = now_tem
 
 
-def load_profession():
+def load_profession() -> None:
   """载入职业数据"""
   now_data = config_data["Profession"]
   translate_data(now_data)
@@ -796,7 +796,7 @@ def load_profession():
     config_profession[now_tem.cid] = now_tem
 
 
-def load_race():
+def load_race() -> None:
   """载入职业数据"""
   now_data = config_data["Race"]
   translate_data(now_data)
@@ -806,7 +806,7 @@ def load_race():
     config_race[now_tem.cid] = now_tem
 
 
-def load_birthplace():
+def load_birthplace() -> None:
   """载入出生地数据"""
   now_data = config_data["Birthplace"]
   translate_data(now_data)
@@ -816,7 +816,7 @@ def load_birthplace():
     config_birthplace[now_tem.cid] = now_tem
 
 
-def load_nation():
+def load_nation() -> None:
   """载入势力数据"""
   now_data = config_data["Nation"]
   translate_data(now_data)
@@ -843,7 +843,7 @@ def load_nation():
       config_nation_data_of_country_subordinate[now_cid] = []
 
 
-def load_diplomatic_policy():
+def load_diplomatic_policy() -> None:
   """载入外交方针配置"""
   now_data = config_data["Diplomatic_Policy"]
   translate_data(now_data)
@@ -853,7 +853,7 @@ def load_diplomatic_policy():
     config_diplomatic_policy[now_tem.cid] = now_tem
 
 
-def load_restaurant():
+def load_restaurant() -> None:
   """载入餐馆数据"""
   now_data = config_data["Restaurant"]
   translate_data(now_data)
@@ -863,7 +863,7 @@ def load_restaurant():
     config_restaurant[now_tem.cid] = now_tem
 
 
-def load_city():
+def load_city() -> None:
   """载入城市数据"""
   now_data = config_data["City"]
   translate_data(now_data)
@@ -875,7 +875,7 @@ def load_city():
     config_city_of_country[now_tem.country_id].add(now_tem.cid)
 
 
-def load_talent_type():
+def load_talent_type() -> None:
   """载入素质类型具体配置数据（按能力类型分类）"""
   now_data = config_data["TalentType"]
   translate_data(now_data)
@@ -885,7 +885,7 @@ def load_talent_type():
     config_talent_type[now_tem.cid] = now_tem
 
 
-def load_talent_type_data():
+def load_talent_type_data() -> None:
   """载入素质类型配置数据"""
   now_data = config_data["Talent"]
   translate_data(now_data)
@@ -897,7 +897,7 @@ def load_talent_type_data():
     config_talent_type_data[now_tem.Talent_type].append(now_tem.cid)
 
 
-def load_bar_data():
+def load_bar_data() -> None:
   """载入比例条配置数据"""
   now_data = config_data["BarConfig"]
   translate_data(now_data)
@@ -910,7 +910,7 @@ def load_bar_data():
     config_bar_data[now_bar.name] = now_bar.cid
 
 
-def load_behavior_effect_data():
+def load_behavior_effect_data() -> None:
   """载入行为结算器配置"""
   now_data = config_data["Behavior_Effect"]
   translate_data(now_data)
@@ -949,7 +949,7 @@ def load_behavior_effect_data():
       config_behavior_must_show_cid_list.append(now_tem.behavior_id)
 
 
-def load_book_data():
+def load_book_data() -> None:
   """载入书籍配置数据"""
   now_data = config_data["Book"]
   translate_data(now_data)
@@ -961,7 +961,7 @@ def load_book_data():
     config_book_type_data[now_tem.type].add(now_tem.cid)
 
 
-def load_book_type():
+def load_book_type() -> None:
   """载入书籍种类配置数据"""
   now_data = config_data["BookType"]
   translate_data(now_data)
@@ -975,7 +975,7 @@ def load_book_type():
     )
 
 
-def load_book_excerpt():
+def load_book_excerpt() -> None:
   """载入书籍摘录配置数据"""
   now_data = config_data["Book_Excerpt"]
   translate_data(now_data)
@@ -991,7 +991,7 @@ def load_book_excerpt():
     config_book_excerpt_list[now_tem.cid].append(now_tem.excerpt5)
 
 
-def load_board_game():
+def load_board_game() -> None:
   """载入桌游类型数据"""
   now_data = config_data["Board_Game"]
   translate_data(now_data)
@@ -1001,7 +1001,7 @@ def load_board_game():
     config_board_game[now_type.cid] = now_type
 
 
-def load_character_state_data():
+def load_character_state_data() -> None:
   """载入角色状态属性配表数据"""
   now_data = config_data["CharacterState"]
   translate_data(now_data)
@@ -1013,7 +1013,7 @@ def load_character_state_data():
     config_character_state_type_data[now_tem.type].append(now_tem.cid)
 
 
-def load_character_state_type_data():
+def load_character_state_type_data() -> None:
   """载入角色状态类型配表数据"""
   now_data = config_data["CharacterStateType"]
   translate_data(now_data)
@@ -1023,7 +1023,7 @@ def load_character_state_type_data():
     config_character_state_type[now_tem.cid] = now_tem
 
 
-def load_character_state_level():
+def load_character_state_level() -> None:
   """载入角色状态等级配置"""
   now_data = config_data["Character_State_Level"]
   translate_data(now_data)
@@ -1033,7 +1033,7 @@ def load_character_state_level():
     config_character_state_level[now_tem.cid] = now_tem
 
 
-def load_pleasure_relations():
+def load_pleasure_relations() -> None:
   """载入快感关系配置数据"""
   now_data = config_data["Pleasure_Relations"]
   translate_data(now_data)
@@ -1056,7 +1056,7 @@ def load_pleasure_relations():
 #         config_clothing_suit_data[now_tem.suit_type][now_tem.sex].add(now_tem.clothing_id)
 
 
-def load_clothing_tem():
+def load_clothing_tem() -> None:
   """载入服装模板配置数据"""
   now_data = config_data["ClothingTem"]
   translate_data(now_data)
@@ -1066,7 +1066,7 @@ def load_clothing_tem():
     config_clothing_tem[now_tem.cid] = now_tem
 
 
-def load_clothing_type():
+def load_clothing_type() -> None:
   """载入衣服种类配置数据"""
   now_data = config_data["ClothingType"]
   translate_data(now_data)
@@ -1076,7 +1076,9 @@ def load_clothing_type():
     config_clothing_type[now_type.cid] = now_type
 
     # 流通表
-    def update_config_flow(flow_str, config_dict, cid):
+    def update_config_flow(
+        flow_str: str, config_dict: dict[int, list[str]], cid: int
+    ) -> None:
       if flow_str == "无":
         config_dict[cid] = []
       elif "+" in flow_str:
@@ -1097,7 +1099,7 @@ def load_clothing_type():
   # print(f"debug config_clothing_type_volume = {config_clothing_type_volume}\n config_cloth_part_normal_flow = {config_cloth_part_normal_flow}\n config_cloth_part_full_flow = {config_cloth_part_full_flow}\n config_cloth_part_extra_flow = {config_cloth_part_extra_flow}")
 
 
-def load_clothing_use_type():
+def load_clothing_use_type() -> None:
   """载入衣服用途配置数据"""
   now_data = config_data["ClothingUseType"]
   translate_data(now_data)
@@ -1107,7 +1109,7 @@ def load_clothing_use_type():
     config_clothing_use_type[now_type.cid] = now_type
 
 
-def load_work_type():
+def load_work_type() -> None:
   """载入工作种类配置数据"""
   now_data = config_data["WorkType"]
   translate_data(now_data)
@@ -1117,7 +1119,7 @@ def load_work_type():
     config_work_type[now_type.cid] = now_type
 
 
-def load_entertainment():
+def load_entertainment() -> None:
   """载入娱乐配置数据"""
   now_data = config_data["Entertainment"]
   translate_data(now_data)
@@ -1127,7 +1129,7 @@ def load_entertainment():
     config_entertainment[now_type.cid] = now_type
 
 
-def load_reproduction_period():
+def load_reproduction_period() -> None:
   """载入生理周期数据"""
   now_data = config_data["Reproduction_period"]
   translate_data(now_data)
@@ -1137,7 +1139,7 @@ def load_reproduction_period():
     config_reproduction_period[now_type.cid] = now_type
 
 
-def load_body_part():
+def load_body_part() -> None:
   """载入身体部位配置数据"""
   now_data = config_data["BodyPart"]
   translate_data(now_data)
@@ -1147,7 +1149,9 @@ def load_body_part():
     config_body_part[now_type.cid] = now_type
 
     # 流通表
-    def update_config_flow(flow_str, config_dict, cid):
+    def update_config_flow(
+        flow_str: str, config_dict: dict[int, list[str]], cid: int
+    ) -> None:
       if flow_str == "无":
         config_dict[cid] = []
       elif "+" in flow_str:
@@ -1167,7 +1171,7 @@ def load_body_part():
     )
 
 
-def load_collection_bonus_data():
+def load_collection_bonus_data() -> None:
   """载入收藏品奖励数据"""
   now_data = config_data["Collection_bouns"]
   translate_data(now_data)
@@ -1177,7 +1181,7 @@ def load_collection_bonus_data():
     config_collection_bonus_data[now_type.cid] = now_type
 
 
-def load_facility():
+def load_facility() -> None:
   """载入设施列表数据"""
   now_data = config_data["Facility"]
   translate_data(now_data)
@@ -1187,7 +1191,7 @@ def load_facility():
     config_facility[now_tem.cid] = now_tem
 
 
-def load_facility_effect():
+def load_facility_effect() -> None:
   """载入设施效果数据"""
   now_data = config_data["Facility_effect"]
   translate_data(now_data)
@@ -1204,7 +1208,7 @@ def load_facility_effect():
   # print(f"debug config_facility_effect_data = {config_facility_effect_data}")
 
 
-def load_facility_open():
+def load_facility_open() -> None:
   """载入设施开放数据"""
   now_data = config_data["Facility_open"]
   translate_data(now_data)
@@ -1216,7 +1220,7 @@ def load_facility_open():
     config_facility_open_name_to_cid[now_tem.name] = now_tem.cid
 
 
-def load_resouce():
+def load_resouce() -> None:
   """载入资源数据"""
   now_data = config_data["Resource"]
   translate_data(now_data)
@@ -1230,7 +1234,7 @@ def load_resouce():
       config_resouce_data_of_nation[now_tem.specialty].append(now_tem.cid)
 
 
-def load_first_record_special():
+def load_first_record_special() -> None:
   """载入特殊履历配置数据"""
   now_data = config_data["FirstRecordSpecial"]
   translate_data(now_data)
@@ -1240,7 +1244,7 @@ def load_first_record_special():
     config_first_record_special[now_tem.cid] = now_tem
 
 
-def load_font_data():
+def load_font_data() -> None:
   """载入字体配置数据"""
   now_data = config_data["FontConfig"]
   translate_data(now_data)
@@ -1251,7 +1255,7 @@ def load_font_data():
     config_font_data[now_font.name] = now_font.cid
 
 
-def load_instruct_type():
+def load_instruct_type() -> None:
   """载入指令类型配置数据"""
   now_data = config_data["InstructType"]
   translate_data(now_data)
@@ -1261,7 +1265,7 @@ def load_instruct_type():
     config_instruct_type[now_tem.cid] = now_tem
 
 
-def load_instruct_sex_type():
+def load_instruct_sex_type() -> None:
   """载入性爱指令类型配置数据"""
   now_data = config_data["Instruct_Sex_Type"]
   translate_data(now_data)
@@ -1271,7 +1275,7 @@ def load_instruct_sex_type():
     config_instruct_sex_type[now_tem.cid] = now_tem
 
 
-def load_medical_body_system():
+def load_medical_body_system() -> None:
   """载入医疗生理系统部位配置"""
   config_medical_body_system.clear()
   config_medical_body_system_by_system.clear()
@@ -1300,7 +1304,7 @@ def load_medical_body_system():
     ] = now_type
 
 
-def load_medical_severity():
+def load_medical_severity() -> None:
   """载入医疗系统病情等级配置"""
   if "Medical_Severity" not in config_data:
     return
@@ -1320,7 +1324,7 @@ def load_medical_severity():
     )
 
 
-def load_medical_complication():
+def load_medical_complication() -> None:
   """载入医疗系统并发症配置"""
   if "Medical_Complication" not in config_data:
     return
@@ -1366,7 +1370,7 @@ def load_medical_complication():
           )
 
 
-def load_medical_hospital_level():
+def load_medical_hospital_level() -> None:
   """载入医疗部等级配置"""
   if "Medical_Hospital_Level" not in config_data:
     return
@@ -1379,7 +1383,7 @@ def load_medical_hospital_level():
     config_medical_hospital_level[now_type.facility_level] = now_type
 
 
-def load_item():
+def load_item() -> None:
   """载入道具配置数据"""
   now_data = config_data["Item"]
   translate_data(now_data)
@@ -1391,7 +1395,7 @@ def load_item():
     config_item_tag_data[now_tem.tag].add(now_tem.cid)
 
 
-def load_moon():
+def load_moon() -> None:
   """载入月相配置"""
   now_data = config_data["Moon"]
   translate_data(now_data)
@@ -1403,7 +1407,7 @@ def load_moon():
     config_moon_data[now_tem.type].add(now_tem.cid)
 
 
-def load_move_menu_type():
+def load_move_menu_type() -> None:
   """载入移动菜单过滤类型配置"""
   now_data = config_data["MoveMenuType"]
   translate_data(now_data)
@@ -1413,7 +1417,7 @@ def load_move_menu_type():
     config_move_menu_type[now_tem.cid] = now_tem
 
 
-def load_organ_data():
+def load_organ_data() -> None:
   """载入器官种类配置"""
   now_data = config_data["Organ"]
   translate_data(now_data)
@@ -1425,7 +1429,7 @@ def load_organ_data():
     config_organ_data[now_tem.organ_type].add(now_tem.cid)
 
 
-def load_recipes():
+def load_recipes() -> None:
   """载入菜谱配置数据"""
   now_data = config_data["Recipes"]
   translate_data(now_data)
@@ -1435,7 +1439,7 @@ def load_recipes():
     config_recipes[now_tem.cid] = now_tem
 
 
-def load_season():
+def load_season() -> None:
   """载入季节配置"""
   now_data = config_data["Season"]
   translate_data(now_data)
@@ -1445,7 +1449,7 @@ def load_season():
     config_season[now_tem.cid] = now_tem
 
 
-def load_sex_tem():
+def load_sex_tem() -> None:
   """载入性别对应描述和性别器官模板数据"""
   now_data = config_data["SexTem"]
   translate_data(now_data)
@@ -1456,7 +1460,7 @@ def load_sex_tem():
     config_random_npc_sex_region[now_tem.cid] = now_tem.region
 
 
-def load_jj_tem():
+def load_jj_tem() -> None:
   """载入阴茎模板数据"""
   now_data = config_data["JJ"]
   translate_data(now_data)
@@ -1466,7 +1470,7 @@ def load_jj_tem():
     config_jj_tem[now_tem.cid] = now_tem
 
 
-def load_tip():
+def load_tip() -> None:
   """载入提示数据"""
   now_data = config_data["Tip"]
   translate_data(now_data)
@@ -1479,7 +1483,7 @@ def load_tip():
       config_tip_data_by_facility[now_tem.facility_id].append(now_tem.cid)
 
 
-def load_tip_chara():
+def load_tip_chara() -> None:
   """载入角色提示数据"""
   now_data = config_data["Tip_Chara"]
   translate_data(now_data)
@@ -1491,7 +1495,7 @@ def load_tip_chara():
     config_tip_chara_data_by_adv[now_tem.chara_adv_id].append(now_tem.cid)
 
 
-def load_solar_period():
+def load_solar_period() -> None:
   """载入节气配置"""
   now_data = config_data["SolarPeriod"]
   translate_data(now_data)
@@ -1501,7 +1505,7 @@ def load_solar_period():
     config_solar_period[now_tem.cid] = now_tem
 
 
-def load_behavior():
+def load_behavior() -> None:
   """载入行为数据"""
   now_data = config_data["Behavior_Data"]
   translate_data(now_data)
@@ -1527,7 +1531,7 @@ def load_behavior():
         break
 
 
-def load_sun_time():
+def load_sun_time() -> None:
   """载入太阳时间配置"""
   now_data = config_data["SunTime"]
   translate_data(now_data)
@@ -1537,7 +1541,7 @@ def load_sun_time():
     config_sun_time[now_tem.cid] = now_tem
 
 
-def load_talk():
+def load_talk() -> None:
   """载入口上配置"""
   now_data = character_talk_data["Talk"]
   translate_data(now_data)
@@ -1567,7 +1571,7 @@ def load_talk():
         config_talk_premise_data[now_tem.cid].add(premise)
 
 
-def load_talk_common():
+def load_talk_common() -> None:
   """载入通用文本配置"""
   now_data = talk_common_data["Talk_Common"]
   translate_data(now_data)
@@ -1613,7 +1617,7 @@ def load_talk_common():
 #         config_talk_premise_data[now_tem.talk_id].add(now_tem.premise)
 
 
-def load_target():
+def load_target() -> None:
   """载入目标配置"""
   now_data = config_data["Target"]
   translate_data(now_data)
@@ -1637,7 +1641,7 @@ def load_target():
     config_target_type_index[now_tem.type].append(now_tem.cid)
 
 
-def load_target_type():
+def load_target_type() -> None:
   """载入目标类型配置"""
   now_data = config_data["Target_Type"]
   translate_data(now_data)
@@ -1647,7 +1651,7 @@ def load_target_type():
     config_target_type[now_tem.cid] = now_tem
 
 
-def load_target_effect():
+def load_target_effect() -> None:
   """载入目标效果配置"""
   now_data = config_data["TargetEffect"]
   translate_data(now_data)
@@ -1661,7 +1665,7 @@ def load_target_effect():
     config_effect_target_data[now_tem.effect_id].add(now_tem.target_id)
 
 
-def load_week_day():
+def load_week_day() -> None:
   """载入星期描述文本配置数据"""
   now_data = config_data["WeekDay"]
   translate_data(now_data)
@@ -1703,7 +1707,7 @@ def load_event_target():
       config_event_effect_target_data[effect].add(now_tem.uid)
 
 
-def load_sleep_level():
+def load_sleep_level() -> None:
   """载入睡眠等级数据"""
   now_data = config_data["Sleep_Level"]
   translate_data(now_data)
@@ -1713,7 +1717,7 @@ def load_sleep_level():
     config_sleep_level[now_tem.cid] = now_tem
 
 
-def load_drunk_level():
+def load_drunk_level() -> None:
   """载入醉酒等级数据"""
   now_data = config_data["Drunk_Level"]
   translate_data(now_data)
@@ -1723,7 +1727,7 @@ def load_drunk_level():
     config_drunk_level[now_tem.cid] = now_tem
 
 
-def load_alcohol_level():
+def load_alcohol_level() -> None:
   """载入酒精等级数据"""
   now_data = config_data["Alcohol_Level"]
   translate_data(now_data)
@@ -1733,7 +1737,7 @@ def load_alcohol_level():
     config_alcohol_level[now_tem.cid] = now_tem
 
 
-def load_hidden_level():
+def load_hidden_level() -> None:
   """载入隐蔽等级数据"""
   now_data = config_data["Hidden_Level"]
   translate_data(now_data)
@@ -1743,7 +1747,7 @@ def load_hidden_level():
     config_hidden_level[now_tem.cid] = now_tem
 
 
-def load_food_quality():
+def load_food_quality() -> None:
   """载入食物质量数据"""
   now_data = config_data["Food_Quality"]
   translate_data(now_data)
@@ -1753,7 +1757,7 @@ def load_food_quality():
     config_food_quality[now_tem.cid] = now_tem
 
 
-def load_cook_question():
+def load_cook_question() -> None:
   """载入烹饪问题库数据（按 食物id -> 烹饪阶段 -> 问题列表 建索引）"""
   # 若尚未生成任何题库csv，则该表不存在，直接返回
   if "Cook_Question" not in cook_question_data:
@@ -1770,7 +1774,7 @@ def load_cook_question():
     )
 
 
-def load_official_event():
+def load_official_event() -> None:
   """载入公务事件数据（Plan 23，按 部门 与 (部门, 子桶键) 两级建索引）"""
   # 若尚未生成事件表，则该表不存在，直接返回
   if "Official_Event" not in official_event_data:
@@ -1792,7 +1796,7 @@ def load_official_event():
     ).append(uid)
 
 
-def load_favorability_level():
+def load_favorability_level() -> None:
   """载入好感度等级数据"""
   now_data = config_data["Favorability_Level"]
   translate_data(now_data)
@@ -1802,7 +1806,7 @@ def load_favorability_level():
     config_favorability_level[now_tem.cid] = now_tem
 
 
-def load_trust_level():
+def load_trust_level() -> None:
   """载入信赖等级数据"""
   now_data = config_data["Trust_Level"]
   translate_data(now_data)
@@ -1812,7 +1816,7 @@ def load_trust_level():
     config_trust_level[now_tem.cid] = now_tem
 
 
-def load_seasoning():
+def load_seasoning() -> None:
   """载入调味数据"""
   now_data = config_data["Seasoning"]
   translate_data(now_data)
@@ -1822,7 +1826,7 @@ def load_seasoning():
     config_seasoning[now_tem.cid] = now_tem
 
 
-def load_first_bonus():
+def load_first_bonus() -> None:
   """载入初始奖励数据"""
   now_data = config_data["First_Bouns"]
   translate_data(now_data)
@@ -1832,7 +1836,7 @@ def load_first_bonus():
     config_first_bonus[now_tem.cid] = now_tem
 
 
-def load_visitor_stay_attitude():
+def load_visitor_stay_attitude() -> None:
   """载入访客停留态度数据"""
   now_data = config_data["Visitor_Stay_Attitude"]
   translate_data(now_data)
@@ -1842,7 +1846,7 @@ def load_visitor_stay_attitude():
     config_visitor_stay_attitude[now_tem.cid] = now_tem
 
 
-def load_recruitment_strategy():
+def load_recruitment_strategy() -> None:
   """载入招募策略数据"""
   now_data = config_data["Recruitment_Strategy"]
   translate_data(now_data)
@@ -1852,7 +1856,7 @@ def load_recruitment_strategy():
     config_recruitment_strategy[now_tem.cid] = now_tem
 
 
-def load_world_setting():
+def load_world_setting() -> None:
   """载入世界设定数据"""
   now_data = config_data["World_Setting"]
   translate_data(now_data)
@@ -1862,7 +1866,7 @@ def load_world_setting():
     config_world_setting[now_tem.cid] = now_tem
 
 
-def load_hypnosis_type():
+def load_hypnosis_type() -> None:
   """载入催眠类型"""
   now_data = config_data["Hypnosis_Type"]
   translate_data(now_data)
@@ -1872,7 +1876,7 @@ def load_hypnosis_type():
     config_hypnosis_type[now_tem.cid] = now_tem
 
 
-def load_hypnosis_sub_type():
+def load_hypnosis_sub_type() -> None:
   """载入催眠子类型"""
   now_data = config_data["Hypnosis_Sub_Type"]
   translate_data(now_data)
@@ -1883,7 +1887,7 @@ def load_hypnosis_sub_type():
     config_hypnosis_sub_type_by_behaivor[now_tem.behavior_id] = now_tem.cid
 
 
-def load_hypnosis_talent_of_npc():
+def load_hypnosis_talent_of_npc() -> None:
   """载入催眠npc素质"""
   now_data = config_data["Hypnosis_Talent_Of_Npc"]
   translate_data(now_data)
@@ -1893,7 +1897,7 @@ def load_hypnosis_talent_of_npc():
     config_hypnosis_talent_of_npc[now_tem.cid] = now_tem
 
 
-def load_hypnosis_talent_of_player():
+def load_hypnosis_talent_of_player() -> None:
   """载入催眠玩家素质"""
   now_data = config_data["Hypnosis_Talent_Of_Pl"]
   translate_data(now_data)
@@ -1903,7 +1907,7 @@ def load_hypnosis_talent_of_player():
     config_hypnosis_talent_of_pl[now_tem.cid] = now_tem
 
 
-def load_talent_of_arts():
+def load_talent_of_arts() -> None:
   """载入源石技艺素质"""
   now_data = config_data["Talent_Of_Arts"]
   translate_data(now_data)
@@ -1913,7 +1917,7 @@ def load_talent_of_arts():
     config_talent_of_arts[now_tem.cid] = now_tem
 
 
-def load_roleplay():
+def load_roleplay() -> None:
   """载入角色扮演数据"""
   now_data = config_data["Roleplay"]
   translate_data(now_data)
@@ -1923,7 +1927,7 @@ def load_roleplay():
     config_roleplay[now_tem.cid] = now_tem
 
 
-def load_product_formula():
+def load_product_formula() -> None:
   """载入产品配方"""
   now_data = config_data["ProductFormula"]
   translate_data(now_data)
@@ -1946,7 +1950,7 @@ def load_product_formula():
       config_productformula_data[now_tem.cid][need_type] = need_value
 
 
-def load_aromatherapy_recipes():
+def load_aromatherapy_recipes() -> None:
   """载入香薰疗愈"""
   now_data = config_data["Aromatherapy_Recipes"]
   translate_data(now_data)
@@ -1969,7 +1973,7 @@ def load_aromatherapy_recipes():
       config_aromatherapy_recipes_data[now_tem.cid][need_type] = need_value
 
 
-def load_chara_setting():
+def load_chara_setting() -> None:
   """载入角色设置"""
   now_data = config_data["CharaSetting"]
   translate_data(now_data)
@@ -1987,7 +1991,7 @@ def load_chara_setting():
       config_chara_setting_option[now_tem.cid] = option_text.split("|")
 
 
-def load_system_setting():
+def load_system_setting() -> None:
   """载入系统设置"""
   now_data = config_data["System_Setting"]
   translate_data(now_data)
@@ -2034,7 +2038,7 @@ def load_system_setting():
         config_birth_type_setting_option[now_tem.cid] = option_text.split("|")
 
 
-def load_ai_chat_setting():
+def load_ai_chat_setting() -> None:
   """载入文本生成AI设置"""
   now_data = config_data["Ai_Chat_Setting"]
   translate_data(now_data)
@@ -2052,7 +2056,7 @@ def load_ai_chat_setting():
       config_ai_chat_setting_option[now_tem.cid] = option_text.split("|")
 
 
-def load_ai_chat_send_data():
+def load_ai_chat_send_data() -> None:
   """载入文本生成AI发送数据"""
   now_data = config_data["Ai_Chat_Send_Data"]
   translate_data(now_data)
@@ -2062,7 +2066,7 @@ def load_ai_chat_send_data():
     config_ai_chat_send_data[now_tem.cid] = now_tem
 
 
-def load_physical_exam_setting():
+def load_physical_exam_setting() -> None:
   """载入体检设置"""
   now_data = config_data["Physical_Exam_Setting"]
   translate_data(now_data)
@@ -2080,7 +2084,7 @@ def load_physical_exam_setting():
       config_physical_exam_setting_option[now_tem.cid] = option_text.split("|")
 
 
-def load_assistant_services():
+def load_assistant_services() -> None:
   """载入助理服务"""
   now_data = config_data["AssistantServices"]
   translate_data(now_data)
@@ -2104,7 +2108,7 @@ def load_assistant_services():
       config_assistant_services_option[now_tem.cid][1] = require_text.split("#")
 
 
-def load_confinement_training_setting():
+def load_confinement_training_setting() -> None:
   """载入监禁调教设置"""
   now_data = config_data["Confinement_Training_Setting"]
   translate_data(now_data)
@@ -2126,7 +2130,7 @@ def load_confinement_training_setting():
       )
 
 
-def load_body_manage_requirement():
+def load_body_manage_requirement() -> None:
   """载入身体管理需求"""
   now_data = config_data["Body_Manage_Requirement"]
   translate_data(now_data)
@@ -2136,7 +2140,7 @@ def load_body_manage_requirement():
     config_body_manage_requirement[now_tem.cid] = now_tem
 
 
-def load_prts():
+def load_prts() -> None:
   """载入教程数据"""
   now_data = config_data["Prts"]
   translate_data(now_data)
@@ -2153,7 +2157,7 @@ def load_prts():
       config_prts_data[now_tem.fater_type][now_tem.son_type][1] = now_tem
 
 
-def load_new_round_inherit():
+def load_new_round_inherit() -> None:
   """新周目继承"""
   now_data = config_data["New_Round_Inherit"]
   translate_data(now_data)
@@ -2168,7 +2172,7 @@ def load_new_round_inherit():
     ] = now_tem.cid
 
 
-def load_commission():
+def load_commission() -> None:
   """载入委托数据"""
   now_data = config_data["Commission"]
   translate_data(now_data)
@@ -2181,7 +2185,7 @@ def load_commission():
     config_commission_id_by_country[now_tem.country_id].append(now_tem.cid)
 
 
-def load_vehicle():
+def load_vehicle() -> None:
   """载入载具数据"""
   now_data = config_data["Vehicle"]
   translate_data(now_data)
@@ -2191,7 +2195,7 @@ def load_vehicle():
     config_vehicle[now_tem.cid] = now_tem
 
 
-def load_reputation_level():
+def load_reputation_level() -> None:
   """载入声望等级数据"""
   now_data = config_data["Reputation_Level"]
   translate_data(now_data)
@@ -2201,7 +2205,7 @@ def load_reputation_level():
     config_reputation_level[now_tem.cid] = now_tem
 
 
-def load_bondage():
+def load_bondage() -> None:
   """载入绳子捆绑数据"""
   now_data = config_data["Bondage"]
   translate_data(now_data)
@@ -2211,7 +2215,7 @@ def load_bondage():
     config_bondage[now_tem.cid] = now_tem
 
 
-def load_body_item():
+def load_body_item() -> None:
   """载入身体道具数据"""
   now_data = config_data["Body_Item"]
   translate_data(now_data)
@@ -2221,7 +2225,7 @@ def load_body_item():
     config_body_item[now_tem.cid] = now_tem
 
 
-def load_gift_items():
+def load_gift_items() -> None:
   """载入礼物数据"""
   now_data = config_data["Gift_Items"]
   translate_data(now_data)
@@ -2231,7 +2235,7 @@ def load_gift_items():
     config_gift_items[now_tem.cid] = now_tem
 
 
-def load_equipment_condition():
+def load_equipment_condition() -> None:
   """载入装备情况数据"""
   now_data = config_data["Equipment_Condition"]
   translate_data(now_data)
@@ -2241,7 +2245,7 @@ def load_equipment_condition():
     config_equipment_condition[now_tem.cid] = now_tem
 
 
-def load_equipment_damage_rate():
+def load_equipment_damage_rate() -> None:
   """载入装备损坏概率数据"""
   now_data = config_data["Equipment_Damage_Rate"]
   translate_data(now_data)
@@ -2251,7 +2255,7 @@ def load_equipment_damage_rate():
     config_equipment_damage_rate[now_tem.cid] = now_tem
 
 
-def load_equipment_maintain_setting():
+def load_equipment_maintain_setting() -> None:
   """载入装备维护设置数据"""
   now_data = config_data["Equipment_Maintain_Setting"]
   translate_data(now_data)
@@ -2271,7 +2275,7 @@ def load_equipment_maintain_setting():
       )
 
 
-def load_achievement():
+def load_achievement() -> None:
   """载入成就数据"""
   now_data = config_data["Achievement"]
   translate_data(now_data)
@@ -2284,7 +2288,7 @@ def load_achievement():
       config_achievement_id_relation[now_tem.pre_id] = now_tem.cid
 
 
-def load_supply_strategy():
+def load_supply_strategy() -> None:
   """载入供电策略数据"""
   now_data = config_data["Supply_Strategy"]
   translate_data(now_data)
@@ -2294,7 +2298,7 @@ def load_supply_strategy():
     config_supply_strategy[now_tem.cid] = now_tem
 
 
-def load_power_generation():
+def load_power_generation() -> None:
   """载入发电数据
 
   数据来源: Power_Generation.csv → json 构建后 config_data["Power_Generation"]\n
@@ -2317,7 +2321,7 @@ def load_power_generation():
     ] = now_tem.cid
 
 
-def load_power_storage():
+def load_power_storage() -> None:
   """载入蓄电数据
 
   数据来源: Power_Storage.csv → json 构建后 config_data["Power_Storage"]\n
@@ -2338,7 +2342,7 @@ def load_power_storage():
     ] = now_tem.cid
 
 
-def load_semen_shoot_amount():
+def load_semen_shoot_amount() -> None:
   """载入射精量数据"""
   now_data = config_data["Semen_Shoot_Amount"]
   translate_data(now_data)
@@ -2348,7 +2352,7 @@ def load_semen_shoot_amount():
     config_semen_shoot_amount[now_tem.cid] = now_tem
 
 
-def load_abiity_lv_adjust():
+def load_abiity_lv_adjust() -> None:
   """载入能力等级调整数据"""
   now_data = config_data["Ability_Lv_Adjust"]
   translate_data(now_data)
@@ -2358,7 +2362,7 @@ def load_abiity_lv_adjust():
     config_ability_lv_adjust[now_tem.cid] = now_tem
 
 
-def load_sex_position():
+def load_sex_position() -> None:
   """载入性交姿势数据"""
   now_data = config_data["Sex_Position"]
   translate_data(now_data)
@@ -2368,7 +2372,7 @@ def load_sex_position():
     config_sex_position_data[now_tem.cid] = now_tem
 
 
-def load_instruct_config():
+def load_instruct_config() -> None:
   """载入指令完整配置数据"""
   if "InstructConfig" not in config_data:
     return
@@ -2381,7 +2385,7 @@ def load_instruct_config():
     config_instruct_by_id[now_tem.instruct_id] = now_tem.cid
 
 
-def init():
+def init() -> None:
   """初始化游戏配置数据"""
   load_data_json()
   translate_ui_text()

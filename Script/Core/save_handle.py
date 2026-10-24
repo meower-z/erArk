@@ -1,5 +1,7 @@
 """存档的读写、载入时的数据迁移与补全，以及存档信息文件的读写"""
 
+from __future__ import annotations
+
 import os
 import pickle
 import shutil
@@ -18,6 +20,10 @@ from Script.Design import attr_calculation, character_handle, map_handle
 from Script.UI.Moudle import draw
 from Script.System.Pregnancy_System import pregnancy_constant
 import json
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import Any
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -53,7 +59,7 @@ def judge_save_file_exist(save_id: str) -> bool:
   return True
 
 
-def establish_save(save_id: str):
+def establish_save(save_id: str) -> None:
   """
   将游戏数据存入指定id的存档内
   Keyword arguments:
@@ -63,7 +69,7 @@ def establish_save(save_id: str):
   return
 
 
-def establish_save_linux(save_id: str):
+def establish_save_linux(save_id: str) -> None:
   """
   针对linux的并行自动存档函数
   笔记:得益于unix的fork机制,子进程直接复制了一份内存,效率高,且不用创建传参管道,数据进程安全,不受玩家操作影响
@@ -106,7 +112,7 @@ def load_save_info_head(save_id: str) -> dict:
     return pickle.load(f)
 
 
-def write_save_data(save_id: str, data_id: str, write_data: dict):
+def write_save_data(save_id: str, data_id: str, write_data: dict) -> None:
   """
   将存档数据写入文件
   Keyword arguments:
@@ -128,7 +134,7 @@ _ENTERTAINMENT_CID_MIGRATE = {175: 152, 176: 153, 177: 154, 178: 155}
     存档里存娱乐编号的三处（日程模板的时段、单孩覆盖、当天的三个娱乐槽位）读档时都过一遍 _migrate_entertainment_cid """
 
 
-def _migrate_entertainment_cid(value):
+def _migrate_entertainment_cid(value: Any) -> Any:
   """
   把存档里的旧娱乐编号换成新编号
   Keyword arguments:
@@ -152,7 +158,9 @@ def _migrate_entertainment_cid(value):
   return value
 
 
-def _migrate_child_schedule_template(rhodes_island_data) -> int:
+def _migrate_child_schedule_template(
+    rhodes_island_data: game_type.Rhodes_Island,
+) -> int:
   """
   把罗德岛数据里日程模板各时段存的旧娱乐编号换成新编号
   Keyword arguments:
@@ -282,7 +290,7 @@ def _drop_unknown_books(loaded_dict: dict) -> int:
   return count
 
 
-def _normalize_save_path(path_text):
+def _normalize_save_path(path_text: Any) -> Any:
   """
   将存档中的路径文本转换为当前系统的路径格式
   Keyword arguments:
@@ -296,7 +304,7 @@ def _normalize_save_path(path_text):
   return path_text
 
 
-def _normalize_save_path_keys(path_dict):
+def _normalize_save_path_keys(path_dict: Any) -> Any:
   """
   归一化以场景或地图路径为键的存档字典
   Keyword arguments:
@@ -311,7 +319,7 @@ def _normalize_save_path_keys(path_dict):
   return {_normalize_save_path(key): value for key, value in path_dict.items()}
 
 
-def _migrate_first_record_flat_fields(character) -> None:
+def _migrate_first_record_flat_fields(character: game_type.Character) -> None:
   """
   将旧存档FIRST_RECORD中的平铺处女字段迁移进first_part_sex_dict
   Keyword arguments:
@@ -656,7 +664,7 @@ def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
         maintenance_place[character_id] = _normalize_save_path(place)
 
 
-def _load_save_datetime(*args) -> datetime.datetime:
+def _load_save_datetime(*args: Any) -> datetime.datetime:
   """
   读存档时还原存档里的普通 datetime：旧版本存的游戏时间都是普通 datetime，按游戏日历规整成 GameTime（不在游戏日历上的时间按下一个季月的1日0时算）
   公元1年的缺省占位时间规整后仍在公元1年，各处按 year <= 1 判断未设置
@@ -673,7 +681,7 @@ def _load_save_datetime(*args) -> datetime.datetime:
 class SaveUnpickler(pickle.Unpickler):
   """读存档用的 Unpickler：把存档里的普通 datetime 换成游戏时间 GameTime，兼容旧存档"""
 
-  def find_class(self, module: str, name: str):
+  def find_class(self, module: str, name: str) -> Any:
     """
     按模块名与类名取类，普通 datetime 换成 _load_save_datetime
     Keyword arguments:
@@ -703,7 +711,7 @@ def load_save(save_id: str) -> game_type.Cache:
   return loaded_cache
 
 
-def input_load_save(save_id: str):
+def input_load_save(save_id: str) -> None:
   """
   载入存档存档id对应数据，覆盖当前游戏内存
   Keyword arguments:
@@ -1028,7 +1036,9 @@ def input_load_save(save_id: str):
     static_check_system.run_load_repair()
 
 
-def update_dict_with_default(loaded_dict, default_dict):
+def update_dict_with_default(
+    loaded_dict: dict[str, Any], default_dict: dict[str, Any]
+) -> int:
   """
   递归地赋值字典
   Keyword arguments:
@@ -1083,7 +1093,7 @@ def update_dict_with_default(loaded_dict, default_dict):
   return update_count
 
 
-def recursive_update(target, source):
+def recursive_update(target: object, source: object) -> None:
   """
   递归更新字典
   Keyword arguments:
@@ -1104,7 +1114,7 @@ def recursive_update(target, source):
       target.__dict__[key] = value
 
 
-def update_map(loaded_dict):
+def update_map(loaded_dict: dict[str, Any]) -> int:
   """
   更新地图
   Keyword arguments:
@@ -1203,7 +1213,7 @@ def update_map(loaded_dict):
   return update_count
 
 
-def update_settings(loaded_dict):
+def update_settings(loaded_dict: dict[str, Any]) -> int:
   """
   更新设置
   Keyword arguments:
@@ -1334,7 +1344,7 @@ def update_settings(loaded_dict):
   return update_count
 
 
-def remove_save(save_id: str):
+def remove_save(save_id: str) -> None:
   """
   删除存档id对应存档
   Keyword arguments:

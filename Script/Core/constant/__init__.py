@@ -1,5 +1,7 @@
 """常量包：面板id、指令类型等常量类与全局数据表，并汇入各行为、状态机、指令常量类"""
 
+from __future__ import annotations
+
 from typing import Dict, List, Set
 from types import FunctionType
 from Script.Core import get_text
@@ -32,6 +34,11 @@ from Script.System.Instruct_System.interaction_types import (
     get_minor_type_name,
     get_major_type_name,
 )
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import Callable
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -227,7 +234,7 @@ class SexInstructSubType:
 
 handle_premise_data: Dict[str, FunctionType] = {}
 """ 前提处理数据 """
-handle_instruct_data: Dict[str, FunctionType] = {}
+handle_instruct_data: Dict[str, Callable[..., object]] = {}
 """ 指令处理数据（键为指令id字符串） """
 instruct_id_to_cid: Dict[str, int] = {}
 """ 指令字符串ID到数字ID的映射，用于显示和键盘输入 """
@@ -262,7 +269,7 @@ instruct_minor_type_data: Dict[str, str] = {}
 """ 指令的小类型数据（Web模式新分类），指令id:小类型字符串标识符（如'mouth_talk'/'hand_touch'等）"""
 # =========================================
 
-handle_state_machine_data: Dict[int, FunctionType] = {}
+handle_state_machine_data: Dict[int, Callable[..., object]] = {}
 """ 角色状态机函数 """
 family_region_list: Dict[int, str] = {}
 """ 姓氏区间数据 """
@@ -276,7 +283,7 @@ boys_region_int_list: List[int] = []
 """ 男孩名字权重区间数据 """
 girls_region_int_list: List[int] = []
 """ 女孩名字权重区间数据 """
-panel_data: Dict[int, FunctionType] = {}
+panel_data: Dict[int, Callable[..., object]] = {}
 """
 面板id对应的面板绘制函数集合
 面板id:面板绘制函数对象
@@ -285,9 +292,9 @@ place_data: Dict[str, List[str]] = {}
 """ 按房间类型分类的场景列表 场景标签:场景路径列表 """
 cmd_map: Dict[int, FunctionType] = {}
 """ cmd存储 """
-settle_behavior_effect_data: Dict[int, FunctionType] = {}
+settle_behavior_effect_data: Dict[int, Callable[..., object]] = {}
 """ 角色行为结算处理器 处理器id:处理器 """
-settle_second_behavior_effect_data: Dict[int, FunctionType] = {}
+settle_second_behavior_effect_data: Dict[int, Callable[..., object]] = {}
 """ 角色二段行为结算处理器 处理器id:处理器 """
 
 first_NPC_name_set = {

@@ -1,6 +1,8 @@
 # -*- coding: UTF-8 -*-
 """Tk 主窗口：字体加载、文本框与输入框、命令按钮及悬浮提示的绘制"""
 
+from __future__ import annotations
+
 import os
 import json
 import time
@@ -53,7 +55,7 @@ cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
 
 
-def close_window():
+def close_window() -> None:
   """
   关闭游戏，会终止当前进程和所有子进程
   """
@@ -386,7 +388,7 @@ inputbox = Entry(
 inputbox.grid(column=1, row=0, sticky=(N, E, S))
 
 
-def _return_focus_to_inputbox(event=None):
+def _return_focus_to_inputbox(event: Event | None = None) -> None:
   """
   将键盘焦点交还给底部输入框。
   输入：event —— Tk 事件对象，可为 None；返回值：None。
@@ -423,6 +425,12 @@ _arm_after_id = None
 
 
 from Script.Core import era_image
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from collections.abc import Callable
+  from tkinter import Event
+  from queue import Queue
 
 
 def send_input(*args):
@@ -464,7 +472,7 @@ _defer_see_end = False
 _see_end_pending = False
 
 
-def _do_arm():
+def _do_arm() -> None:
   """
   真正执行输入上膛
 
@@ -498,7 +506,7 @@ def _do_arm():
     perf_hook.clear_mark("flow.screen_first_msg")
 
 
-def read_queue():
+def read_queue() -> None:
   """
   从队列中获取在前端显示的信息。
   一次调度会排空整条输出队列；期间开启批末合并滚动，
@@ -670,7 +678,7 @@ def _read_queue_drain():
     perf_hook.hook_count("gui.msg_total", _batch_msg_count)
 
 
-def run():
+def run() -> None:
   """
   启动屏幕
   """
@@ -678,7 +686,7 @@ def run():
   root.mainloop()
 
 
-def see_end():
+def see_end() -> None:
   """
   滚动到输出末尾，无输入参数，无返回值。
   批末合并滚动开启时（_defer_see_end 为真），仅记录待滚动标志并返回，
@@ -697,7 +705,7 @@ def see_end():
   textbox.see(END)
 
 
-def set_background(color):
+def set_background(color: str) -> None:
   """
   设置背景颜色
   Keyword arguments:
@@ -716,7 +724,7 @@ def set_background(color):
 main_queue = None
 
 
-def bind_return(func):
+def bind_return(func: Callable[[str], None]) -> None:
   """
   绑定输入处理函数
   Keyword arguments:
@@ -726,7 +734,7 @@ def bind_return(func):
   input_event_func = func
 
 
-def bind_queue(q):
+def bind_queue(q: Queue[str]) -> None:
   """
   绑定信息队列
   Keyword arguments:
@@ -742,7 +750,9 @@ def bind_queue(q):
 sys_print = print
 
 
-def now_print(string, style=("standard",), tooltip: str = ""):
+def now_print(
+    string: str, style: tuple[str, ...] | str = ("standard",), tooltip: str = ""
+) -> None:
   """
   输出文本
   Keyword arguments:
@@ -768,16 +778,16 @@ def now_print(string, style=("standard",), tooltip: str = ""):
       tag_name = f"text_tooltip_{uuid.uuid4().hex}"
       textbox.tag_add(tag_name, start_index, end_index)
 
-      def enter_func(event=None):
+      def enter_func(event: Event | None = None) -> None:
         """鼠标进入文本范围时展示提示。"""
         coords = (event.x_root, event.y_root) if event is not None else None
         _schedule_tooltip(tooltip_text, coords)
 
-      def leave_func(event=None):
+      def leave_func(event: Event | None = None) -> None:
         """鼠标离开文本范围时隐藏提示。"""
         _hide_tooltip()
 
-      def motion_func(event=None):
+      def motion_func(event: Event | None = None) -> None:
         """鼠标移动时更新提示位置。"""
         if event is not None:
           _update_tooltip_coords((event.x_root, event.y_root))
@@ -795,7 +805,9 @@ def now_print(string, style=("standard",), tooltip: str = ""):
   see_end()
 
 
-def print_cmd(string, style=("standard",)):
+def print_cmd(
+    string: str, style: tuple[str, ...] | str = ("standard",)
+) -> None:
   """
   输出文本
   Keyword arguments:
@@ -806,7 +818,7 @@ def print_cmd(string, style=("standard",)):
   see_end()
 
 
-def _cleanup_tooltip_tags():
+def _cleanup_tooltip_tags() -> None:
   """
   回收已无文本范围的 tooltip tag
 
@@ -826,7 +838,7 @@ def _cleanup_tooltip_tags():
       textbox.tag_delete(tag_name)
 
 
-def clear_screen():
+def clear_screen() -> None:
   """
   清屏
   """
@@ -850,7 +862,7 @@ def frame_style_def(
     bold: str,
     under_line: str,
     italic: str,
-):
+) -> None:
   """
   定义样式
   Keyword arguments:
@@ -885,21 +897,21 @@ def frame_style_def(
 # 输入处理函数
 
 
-def get_order():
+def get_order() -> str:
   """
   获取命令框中的内容
   """
   return order.get()
 
 
-def set_order(order_str: str):
+def set_order(order_str: str) -> None:
   """
   设置命令框中内容
   """
   order.set(order_str)
 
 
-def clear_order():
+def clear_order() -> None:
   """
   清空命令框
   """
@@ -914,7 +926,7 @@ tooltip_coords = (0, 0)  # 鼠标进入时记录的屏幕坐标，用于定位�
 TOOLTIP_DELAY_MS = 350  # 提示延迟显示的时长，毫秒
 
 
-def _cancel_tooltip_schedule():
+def _cancel_tooltip_schedule() -> None:
   """取消已经注册的 tooltip 定时任务，无输入，返回值为 None。"""
   global tooltip_after_id
   if tooltip_after_id is not None and textbox.winfo_exists():
@@ -925,7 +937,7 @@ def _cancel_tooltip_schedule():
   tooltip_after_id = None
 
 
-def _destroy_tooltip():
+def _destroy_tooltip() -> None:
   """销毁已有的 tooltip 顶层窗口，无输入，返回值为 None。"""
   global tooltip_window
   if tooltip_window is not None:
@@ -936,7 +948,7 @@ def _destroy_tooltip():
   tooltip_window = None
 
 
-def _position_tooltip():
+def _position_tooltip() -> None:
   """按照记录的屏幕坐标重新定位 tooltip，无输入，返回值为 None。"""
   if tooltip_window is None:
     return
@@ -944,7 +956,7 @@ def _position_tooltip():
   tooltip_window.wm_geometry(f"+{x + 12}+{y + 18}")
 
 
-def _show_tooltip():
+def _show_tooltip() -> None:
   """显示 tooltip 浮窗，无输入且无返回值。"""
   global tooltip_window, tooltip_after_id
   tooltip_after_id = None
@@ -981,7 +993,7 @@ def _show_tooltip():
   _position_tooltip()
 
 
-def _schedule_tooltip(text: str, coords=None):
+def _schedule_tooltip(text: str, coords: tuple[int, int] | None = None) -> None:
   """
   注册 tooltip 的延迟显示任务。
   输入：text 为提示内容字符串，coords 为可选的 (x, y) 坐标；
@@ -1000,7 +1012,7 @@ def _schedule_tooltip(text: str, coords=None):
   tooltip_after_id = textbox.after(TOOLTIP_DELAY_MS, _show_tooltip)
 
 
-def _hide_tooltip():
+def _hide_tooltip() -> None:
   """立即隐藏 tooltip，输入输出均为空。"""
   global tooltip_text_cache
   tooltip_text_cache = ""
@@ -1008,7 +1020,7 @@ def _hide_tooltip():
   _destroy_tooltip()
 
 
-def _update_tooltip_coords(coords):
+def _update_tooltip_coords(coords: tuple[int, int]) -> None:
   """
   更新 tooltip 的参考坐标。
   输入：coords 为 (x, y) 元组，表示最新的屏幕坐标；输出：None。
@@ -1022,10 +1034,10 @@ def _update_tooltip_coords(coords):
 def io_print_cmd(
     cmd_str: str,
     cmd_number: int,
-    normal_style="standard",
-    on_style="onbutton",
+    normal_style: str = "standard",
+    on_style: str = "onbutton",
     tooltip: str = "",
-):
+) -> None:
   """
   打印一条指令
   Keyword arguments:
@@ -1054,7 +1066,7 @@ def io_print_cmd(
     _hide_tooltip()
     send_input(order)
 
-  def enter_func(event=None):
+  def enter_func(event: Event | None = None) -> None:
     """响应鼠标进入事件，输入 event 为 Tk 事件对象；无返回值。"""
     # 进入文本按钮时切换高亮样式，并根据需求准备 tooltip
     textbox.tag_remove(
@@ -1071,7 +1083,7 @@ def io_print_cmd(
       coords = (event.x_root, event.y_root) if event is not None else None
       _schedule_tooltip(tooltip_text, coords)
 
-  def leave_func(event=None):
+  def leave_func(event: Event | None = None) -> None:
     """响应鼠标离开事件，输入 event 为 Tk 事件对象；无返回值。"""
     # 鼠标离开时恢复原样式并关闭 tooltip
     textbox.tag_add(
@@ -1087,7 +1099,7 @@ def io_print_cmd(
     textbox.configure(cursor="")
     _hide_tooltip()
 
-  def motion_func(event=None):
+  def motion_func(event: Event | None = None) -> None:
     """响应鼠标移动事件，输入 event 为 Tk 事件对象；无返回值。"""
     # 鼠标在按钮上移动时更新 tooltip 的屏幕坐标
     if tooltip_text and event is not None:
@@ -1100,7 +1112,9 @@ def io_print_cmd(
   print_cmd(cmd_str, style=(cmd_tag_name, normal_style))
 
 
-def io_print_image_cmd(cmd_str: str, cmd_number: int, tooltip: str = ""):
+def io_print_image_cmd(
+    cmd_str: str, cmd_number: int, tooltip: str = ""
+) -> None:
   """
   打印一个图片按钮
   Keyword arguments:
@@ -1129,19 +1143,19 @@ def io_print_image_cmd(cmd_str: str, cmd_number: int, tooltip: str = ""):
     _hide_tooltip()
     send_input(order)
 
-  def enter_func(event=None):
+  def enter_func(event: Event | None = None) -> None:
     """响应鼠标进入图片按钮事件，输入 event 为 Tk 事件对象；无返回值。"""
     # 鼠标进入图片按钮时安排 tooltip 延迟显示
     if tooltip_text:
       coords = (event.x_root, event.y_root) if event is not None else None
       _schedule_tooltip(tooltip_text, coords)
 
-  def leave_func(event=None):
+  def leave_func(event: Event | None = None) -> None:
     """响应鼠标离开图片按钮事件，输入 event 为 Tk 事件对象；无返回值。"""
     # 鼠标离开图片按钮时立即隐藏 tooltip
     _hide_tooltip()
 
-  def motion_func(event=None):
+  def motion_func(event: Event | None = None) -> None:
     """响应鼠标在图片按钮内移动事件，输入 event 为 Tk 事件对象；无返回值。"""
     # 鼠标在图片按钮上移动时刷新 tooltip 位置
     if tooltip_text and event is not None:
@@ -1158,7 +1172,7 @@ def io_print_image_cmd(cmd_str: str, cmd_number: int, tooltip: str = ""):
 
 
 # 清除命令函数
-def io_clear_cmd(*cmd_numbers: list):
+def io_clear_cmd(*cmd_numbers: list) -> None:
   """
   清除命令
   Keyword arguments:

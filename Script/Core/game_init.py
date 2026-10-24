@@ -22,7 +22,7 @@ _main_flow = None
 error_path = os.path.join("error.log")
 
 
-def init(main_flow: object):
+def init(main_flow: object) -> None:
   """
   游戏流程初始化
   Keyword argument:
@@ -118,20 +118,20 @@ def init(main_flow: object):
         os._exit(0)
 
 
-def run(main_func: object):
+def run(main_func: object) -> None:
   """
   执行游戏主流程
   Keyword arguments:
   main_func -- 游戏主流程
   """
 
-  def _init():
+  def _init() -> None:
     init(main_func)
 
   io_init.run(_init)
 
 
-def console_log(string: str):
+def console_log(string: str) -> None:
   """
   向后台打印日志
   Keyword arguments:

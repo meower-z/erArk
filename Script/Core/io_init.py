@@ -1,12 +1,19 @@
 # -*- coding: UTF-8 -*-
 """输入输出接口层：命令与文本的队列收发、文本样式设置与图片打印，Tk 与 Web 两种模式共用"""
 
+from __future__ import annotations
+
 import threading
 import queue
 import json
 import time
 from Script.Config import game_config, normal_config
 from Script.Core import cache_control, perf_hook
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import Any
+  from types import ModuleType
 
 # 获取全局缓存
 cache = cache_control.cache
@@ -24,7 +31,7 @@ _main_frame_load_attempted = False
 """ 是否已尝试加载main_frame模块 """
 
 
-def _get_main_frame():
+def _get_main_frame() -> ModuleType | None:
   """
   延迟获取main_frame模块
 
@@ -106,7 +113,7 @@ _main_frame_bound = False
 """ 是否已绑定main_frame """
 
 
-def _ensure_main_frame_bound():
+def _ensure_main_frame_bound() -> None:
   """
   确保tkinter模式下main_frame已绑定
   只在非Web模式下执行绑定
@@ -158,7 +165,7 @@ def get_order():
     return _order_queue.get()
 
 
-def _get_input_event():
+def _get_input_event() -> threading.Event:
   """
   获取输入事件锁
 
@@ -198,7 +205,7 @@ def run(open_func: object):
     main_frame.run()
 
 
-def put_queue(message: str):
+def put_queue(message: str) -> None:
   """
   向输出队列中推送信息
 
@@ -219,7 +226,7 @@ def put_queue(message: str):
     _send_queue.put_nowait(message)
 
 
-def arm_input():
+def arm_input() -> None:
   """
   向输出队列推送一个"输入上膛"标记
 
@@ -238,7 +245,7 @@ def arm_input():
     _send_queue.put_nowait(json.dumps({"input_arm": True}))
 
 
-def put_order(message: str):
+def put_order(message: str) -> None:
   """
   向命令队列中推送信息
 
@@ -261,7 +268,7 @@ def put_order(message: str):
 # json 构建函数
 
 
-def new_json():
+def new_json() -> dict[str, Any]:
   """
   定义一个通用json结构
 
@@ -270,12 +277,14 @@ def new_json():
   返回值类型：dict
   功能描述：创建一个基本的JSON结构
   """
-  flow_json = {}
+  flow_json: dict[str, Any] = {}
   flow_json["content"] = []
   return flow_json
 
 
-def text_json(string: str, style: tuple or str, tooltip: str = ""):
+def text_json(
+    string: str, style: tuple or str, tooltip: str = ""
+) -> dict[str, Any]:
   """
   定义一个文本json
 
@@ -303,7 +312,7 @@ def cmd_json(
     normal_style: tuple or str,
     on_style: tuple or str,
     tooltip: str = "",
-):
+) -> dict[str, Any]:
   """
   定义一个命令json
 
@@ -341,7 +350,7 @@ def style_json(
     bold: str,
     underline: str,
     italic: str,
-):
+) -> dict[str, str]:
   """
   定义一个样式json
 
@@ -374,7 +383,9 @@ def style_json(
 # 输出格式化
 
 
-def era_print(string: str, style="standard", tooltip: str = ""):
+def era_print(
+    string: str, style: str | tuple[str, ...] = "standard", tooltip: str = ""
+) -> None:
   """
   输出命令
 
@@ -405,7 +416,7 @@ def era_print(string: str, style="standard", tooltip: str = ""):
     put_queue(json.dumps(json_str, ensure_ascii=False))
 
 
-def image_print(image_name: str):
+def image_print(image_name: str) -> None:
   """
   图片输出命令
 
@@ -430,7 +441,7 @@ def image_print(image_name: str):
     put_queue(json.dumps(json_str, ensure_ascii=False))
 
 
-def image_list_print(image_name_list: list):
+def image_list_print(image_name_list: list) -> None:
   """
   批量图片输出命令
 
@@ -461,7 +472,7 @@ def image_list_print(image_name_list: list):
   put_queue(json.dumps(json_str, ensure_ascii=False))
 
 
-def warm_up_text_metrics():
+def warm_up_text_metrics() -> None:
   """
   预热 Tk 文本行度量
 
@@ -483,7 +494,7 @@ def warm_up_text_metrics():
   #    抽取部分真实行保留行结构（制表符对齐是地图界面度量成本的大头），
   #    其余行的字形并入去重字形集，保证全部地图的字形都被覆盖
   sample_lines = []
-  glyph_set = set()
+  glyph_set: set[str] = set()
   try:
     raw_line_quota = 40
     for map_data in cache.map_data.values():
@@ -610,7 +621,7 @@ def frame_style_def(
     bold: str,
     underline: str,
     italic: str,
-):
+) -> None:
   """
   推送一条在前端定义样式的信息
 
@@ -643,7 +654,7 @@ def frame_style_def(
     put_queue(json.dumps(json_str, ensure_ascii=False))
 
 
-def set_background(color: str):
+def set_background(color: str) -> None:
   """
   设置前端背景颜色
 
@@ -687,10 +698,10 @@ def clear_order():
 def io_print_cmd(
     cmd_str: str,
     cmd_number: int,
-    normal_style="standard",
-    on_style="onbutton",
+    normal_style: str = "standard",
+    on_style: str = "onbutton",
     tooltip: str = "",
-):
+) -> None:
   """
   打印一条指令
 
@@ -719,7 +730,9 @@ def io_print_cmd(
     put_queue(json.dumps(json_str, ensure_ascii=False))
 
 
-def io_print_image_cmd(cmd_str: str, cmd_number: int, tooltip: str = ""):
+def io_print_image_cmd(
+    cmd_str: str, cmd_number: int, tooltip: str = ""
+) -> None:
   """
   打印图片指令
 
@@ -743,7 +756,7 @@ def io_print_image_cmd(cmd_str: str, cmd_number: int, tooltip: str = ""):
     put_queue(json.dumps(json_str, ensure_ascii=False))
 
 
-def io_clear_cmd(*cmd_numbers: int):
+def io_clear_cmd(*cmd_numbers: int) -> None:
   """
   清除命令
 
@@ -767,7 +780,7 @@ def io_clear_cmd(*cmd_numbers: int):
     put_queue(json.dumps(json_str, ensure_ascii=False))
 
 
-def style_def():
+def style_def() -> None:
   """
   样式定义占位函数
 

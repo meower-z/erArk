@@ -15,12 +15,19 @@
    （PLACE-20 的服务值域上界、PLACE-11 的房间档位等均为不变量文档中给出的字面枚举值），因此无需对配置表缺失做降级处理。
 """
 
+from __future__ import annotations
+
 import collections
 from typing import List
 
 from Script.Core import cache_control
 from Script.Design import map_handle
 from ..check_registry import CheckFailure, register_check, make_failure
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from Script.Core import game_type
 
 # 列表路径 -> 场景/地图键；内部用os.sep拼接，禁止自己写'/'.join
 P = map_handle.get_map_system_path_str_for_list
@@ -31,7 +38,9 @@ _ASSISTANT_SERVICE_MAX = {2: 1, 3: 1, 4: 3, 5: 3, 6: 3, 7: 1, 8: 1, 9: 4, 10: 1}
 _ASSISTANT_SERVICE_KEYS = {2, 3, 4, 5, 6, 7, 8, 9, 10}
 
 
-def _valid_scene_path(value, scene_data) -> bool:
+def _valid_scene_path(
+    value: object, scene_data: dict[str, game_type.Scene]
+) -> bool:
   """
   参数:
       value: 待校验的路径字段原始值（期望是字符串列表）
@@ -48,7 +57,9 @@ def _valid_scene_path(value, scene_data) -> bool:
   )
 
 
-def _valid_scene_path_or_empty(value, scene_data) -> bool:
+def _valid_scene_path_or_empty(
+    value: object, scene_data: dict[str, game_type.Scene]
+) -> bool:
   """
   参数:
       value: 待校验的路径字段原始值（期望是字符串列表）
@@ -65,7 +76,7 @@ def _valid_scene_path_or_empty(value, scene_data) -> bool:
   )
 
 
-def _live_ids(cache) -> set:
+def _live_ids(cache: game_type.Cache) -> set:
   """
   参数:
       cache: 全局状态缓存对象
@@ -77,7 +88,7 @@ def _live_ids(cache) -> set:
   return set(getattr(cache, "npc_id_got", set()) or set()) | {0}
 
 
-def _permanent_dormitory(chara) -> str:
+def _permanent_dormitory(chara: object) -> str:
   """
   参数:
       chara: 角色对象
@@ -93,7 +104,7 @@ def _permanent_dormitory(chara) -> str:
   )
 
 
-def _offline_flags(sp_flag) -> bool:
+def _offline_flags(sp_flag: object) -> bool:
   """
   参数:
       sp_flag: 角色的SPECIAL_FLAG对象，可能为None
@@ -1236,7 +1247,7 @@ def check_permanent_dormitory_is_valid_normal_room() -> List[CheckFailure]:
 
 
 # 教育场景只校验静态标签和名称，不以设施开放状态筛选。
-def _education_tags():
+def _education_tags() -> set[str]:
   """参数: 无；返回值: set[str]；功能: 从教育常量取班级教室与体育场地标签，不硬编码房间数量。"""
   from Script.System.Education_System import education_constant
 
@@ -1245,7 +1256,7 @@ def _education_tags():
   }
 
 
-def _has_scene_tag(scene, tag):
+def _has_scene_tag(scene: object, tag: str) -> bool:
   """参数: scene(场景对象)、tag(str)；返回值: bool；功能: 防御式读取场景标签列表。"""
   tags = getattr(scene, "scene_tag", None)
   return isinstance(tags, (list, tuple, set)) and tag in tags
@@ -1293,7 +1304,14 @@ def check_place_30() -> List[CheckFailure]:
   return failures
 
 
-def _check_room_name(scenes, tags, name, cid, key, failures):
+def _check_room_name(
+    scenes: dict[str, game_type.Scene],
+    tags: set[str],
+    name: object,
+    cid: int | None,
+    key: str,
+    failures: list[CheckFailure],
+) -> None:
   """参数: scenes(dict)、tags(标签集合)、name(场景名)、cid(角色id或None)、key(str)、failures(list)；返回值: None；功能: 检查一次名称引用是否唯一解析。"""
   paths = [
       path

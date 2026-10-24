@@ -26,7 +26,7 @@ def get_config_ini_path() -> str:
   return candidate_paths[0]
 
 
-def init_normal_config():
+def init_normal_config() -> None:
   """初始化游戏通用配置数据"""
   ini_config = configparser.ConfigParser()
   ini_config.read(get_config_ini_path(), encoding="utf8")

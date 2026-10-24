@@ -1,11 +1,17 @@
 """命令按钮的打印与清除接口，封装 flow_handle 中的命令操作"""
 
+from __future__ import annotations
+
 from Script.Core import (
     flow_handle,
     cache_control,
     game_type,
 )
 from Script.Config import normal_config
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from collections.abc import Callable
 
 # 清除命令
 clear_default_flow = flow_handle.clear_default_flow
@@ -19,13 +25,13 @@ cache: game_type.Cache = cache_control.cache
 def pcmd(
     cmd_str: str,
     cmd_id: str,
-    cmd_func=flow_handle.null_func,
-    arg=(),
-    kw=None,
-    normal_style="standard",
-    on_style="onbutton",
+    cmd_func: Callable[..., object] | None = flow_handle.null_func,
+    arg: object = (),
+    kw: dict[str, object] | None = None,
+    normal_style: str = "standard",
+    on_style: str = "onbutton",
     tooltip: str = "",
-):
+) -> None:
   """
   打印一条指令
   Keyword arguments:
@@ -56,11 +62,11 @@ def pcmd(
 def pimagecmd(
     cmd_str: str,
     cmd_id: str,
-    cmd_func=flow_handle.null_func,
-    arg=(),
-    kw=None,
+    cmd_func: Callable[..., object] | None = flow_handle.null_func,
+    arg: object = (),
+    kw: dict[str, object] | None = None,
     tooltip: str = "",
-):
+) -> None:
   """
   打印图片按钮
   Keyword arguments:
@@ -82,7 +88,7 @@ def pimagecmd(
 unused_cmd_num = 500
 
 
-def get_unused_cmd_num():
+def get_unused_cmd_num() -> int:
   """
   获得一个没有使用的命令编号，从500开始
   """
@@ -92,7 +98,7 @@ def get_unused_cmd_num():
 
 
 # 清除命令，没有参数则清除所有命令
-def clr_cmd(*number, clr_default_flow=True):
+def clr_cmd(*number: str | int, clr_default_flow: bool = True) -> None:
   """
   清除绑定命令和默认处理函数
   Keyword arguments:
@@ -109,7 +115,7 @@ def clr_cmd(*number, clr_default_flow=True):
     flow_handle.cmd_clear()
 
 
-def focus_cmd():
+def focus_cmd() -> None:
   """
   使光标聚焦在命令输出框上
   """

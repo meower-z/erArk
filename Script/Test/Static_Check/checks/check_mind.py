@@ -15,14 +15,22 @@
 5. 全部字段访问一律使用 getattr/dict.get 加默认值防御，绝不能因为老存档缺字段或类型不符而让检查器自身抛异常。
 """
 
+from __future__ import annotations
+
 from typing import List, Optional
 
 from Script.Core import cache_control
 from Script.Design import map_handle
 from ..check_registry import CheckFailure, register_check, make_failure
 
+from typing import TYPE_CHECKING
 
-def _name(chara) -> str:
+if TYPE_CHECKING:
+  from typing import Iterator
+  from Script.Core import game_type
+
+
+def _name(chara: object) -> str:
   """
   参数: chara 角色对象
   返回值: str 角色名，取不到时返回"?"
@@ -31,7 +39,7 @@ def _name(chara) -> str:
   return str(getattr(chara, "name", "?"))
 
 
-def _pl():
+def _pl() -> game_type.Character | None:
   """
   参数: 无
   返回值: 玩家角色对象，cache未初始化或0号角色不存在时返回None
@@ -45,7 +53,7 @@ def _pl():
   return cache.character_data.get(0)
 
 
-def _iter_npcs():
+def _iter_npcs() -> Iterator[tuple[int, game_type.Character]]:
   """
   参数: 无
   返回值: 迭代器，依次产出(角色id, 角色对象)
@@ -62,7 +70,7 @@ def _iter_npcs():
       yield cid, cache.character_data[cid]
 
 
-def _iter_all():
+def _iter_all() -> Iterator[tuple[int, game_type.Character]]:
   """
   参数: 无
   返回值: 迭代器，依次产出(角色id, 角色对象)
@@ -77,7 +85,7 @@ def _iter_all():
     yield cid, chara
 
 
-def _iter_pl_and_npcs():
+def _iter_pl_and_npcs() -> Iterator[tuple[int, game_type.Character]]:
   """
   参数: 无
   返回值: 迭代器，依次产出(角色id, 角色对象)，玩家(若存在)排在最前
@@ -89,7 +97,7 @@ def _iter_pl_and_npcs():
   yield from _iter_npcs()
 
 
-def _talent_get(chara, talent_id: int) -> int:
+def _talent_get(chara: object, talent_id: int) -> int:
   """
   参数:
       chara: 角色对象
@@ -106,7 +114,7 @@ def _talent_get(chara, talent_id: int) -> int:
   return value if isinstance(value, int) and not isinstance(value, bool) else 0
 
 
-def _u(chara) -> int:
+def _u(chara: object) -> int:
   """
   参数: chara 角色对象
   返回值: int sp_flag.unconscious_h取值，结构缺失时返回-1（不落在任何合法值域内，交由调用方处理）
@@ -115,7 +123,7 @@ def _u(chara) -> int:
   return getattr(getattr(chara, "sp_flag", None), "unconscious_h", -1)
 
 
-def _behavior_id(chara) -> str:
+def _behavior_id(chara: object) -> str:
   """
   参数: chara 角色对象
   返回值: str 当前行为id，结构缺失时返回"?"
@@ -124,7 +132,7 @@ def _behavior_id(chara) -> str:
   return getattr(getattr(chara, "behavior", None), "behavior_id", "?")
 
 
-def _scene_key(position) -> Optional[str]:
+def _scene_key(position: object) -> Optional[str]:
   """
   参数: position 角色/玩家的position字段
   返回值: Optional[str] 场景key字符串；position不是"全字符串的list"形状时返回None
@@ -140,7 +148,7 @@ def _scene_key(position) -> Optional[str]:
   return map_handle.get_map_system_path_str_for_list(position)
 
 
-def _num(x) -> bool:
+def _num(x: object) -> bool:
   """
   参数: x 任意值
   返回值: bool x为非bool的int/float时返回True
@@ -1144,7 +1152,7 @@ def check_sleep_plan_time_shape() -> List[CheckFailure]:
     sleep_t = getattr(action_info, "plan_to_sleep_time", None)
     wake_t = getattr(action_info, "plan_to_wake_time", None)
 
-    def _time_ok(t) -> bool:
+    def _time_ok(t: object) -> bool:
       """检查单个[时,分]字段是否合法"""
       return (
           isinstance(t, list)

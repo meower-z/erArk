@@ -26,10 +26,19 @@ final_invariants_h_group.md（H-xx + HS-xx 不变式清单）。
    检查器自身抛异常——异常本身会被框架转成"检查异常"记录，但这会掩盖真正的不变量证据。
 """
 
+from __future__ import annotations
+
 from typing import List, Optional, Set
 
 from Script.Core import cache_control
 from ..check_registry import CheckFailure, register_check, make_failure
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from Script.Core import game_type
+  from Script.Config import config_def
+  from typing import Any
 
 try:
   from Script.Config import game_config
@@ -42,7 +51,7 @@ except Exception:  # pragma: no cover - 独立运行环境下Config包本身也�
 # ---------------------------------------------------------------------------
 
 
-def _pl(cache):
+def _pl(cache: game_type.Cache) -> game_type.Character | None:
   """
   参数: cache 全局缓存对象
   返回值: 玩家角色对象(cid=0)，cache未初始化或0号角色不存在时返回None
@@ -56,7 +65,7 @@ def _pl(cache):
   return cd.get(0)
 
 
-def _npcs(cache) -> Set[int]:
+def _npcs(cache: game_type.Cache) -> Set[int]:
   """
   参数: cache 全局缓存对象
   返回值: Set[int] 已获得的非玩家角色id集合，即npc_id_got - {0}
@@ -68,7 +77,7 @@ def _npcs(cache) -> Set[int]:
   return set(got) - {0}
 
 
-def _all(cache) -> Set[int]:
+def _all(cache: game_type.Cache) -> Set[int]:
   """
   参数: cache 全局缓存对象
   返回值: Set[int] 已获得的全部角色id集合(含玩家)，即npc_id_got | {0}
@@ -79,7 +88,7 @@ def _all(cache) -> Set[int]:
   return base | {0}
 
 
-def _name(chara) -> str:
+def _name(chara: object) -> str:
   """
   参数: chara 角色对象
   返回值: str 角色名，取不到时返回"?"
@@ -88,7 +97,7 @@ def _name(chara) -> str:
   return str(getattr(chara, "name", "?"))
 
 
-def _behavior_id(chara) -> Optional[str]:
+def _behavior_id(chara: object) -> Optional[str]:
   """
   参数: chara 角色对象，允许为None
   返回值: Optional[str] 角色当前行为的behavior_id，取不到时返回None
@@ -100,7 +109,7 @@ def _behavior_id(chara) -> Optional[str]:
   return getattr(b, "behavior_id", None) if b is not None else None
 
 
-def _pre_instr(cache) -> list:
+def _pre_instr(cache: game_type.Cache) -> list:
   """
   参数: cache 全局缓存对象
   返回值: list 最近3条玩家行为指令(id)，字段缺失或非list时返回空列表
@@ -116,7 +125,7 @@ def _pre_instr(cache) -> list:
   return lst[-3:]
 
 
-def _tpl_dict(pl):
+def _tpl_dict(pl: object) -> dict[str, list[Any]] | None:
   """
   参数: pl 玩家角色对象
   返回值: 玩家h_state.group_sex_body_template_dict，结构异常(非dict)时返回None
@@ -930,7 +939,7 @@ def check_hgroup_15() -> List[CheckFailure]:
     if getattr(c.sp_flag, "hidden_sex_mode", 0) > 0:
       hidden.append(c)
 
-  def _ctx():
+  def _ctx() -> str:
     detail = [
         f"cid={h.cid} name={_name(h)} position={h.position} mode={h.sp_flag.hidden_sex_mode} is_h={h.sp_flag.is_h} behavior_id={_behavior_id(h)}"
         for h in hidden
@@ -1164,7 +1173,7 @@ def check_hgroup_19() -> List[CheckFailure]:
     if getattr(c.sp_flag, "exhibitionism_sex_mode", 0) > 0:
       ex.append(c)
 
-  def _ctx():
+  def _ctx() -> str:
     detail = [
         f"cid={x.cid} name={_name(x)} position={x.position} mode={x.sp_flag.exhibitionism_sex_mode} is_h={x.sp_flag.is_h}"
         for x in ex

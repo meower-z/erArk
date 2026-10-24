@@ -67,7 +67,7 @@ def _is_web_mode():
   return web_mode and _web_module_loaded
 
 
-def null_func():
+def null_func() -> None:
   """
   占位用空函数
 
@@ -111,7 +111,7 @@ def set_default_flow(func, arg=(), kw=None):
     default_flow = null_func
     return
 
-  def run_func():
+  def run_func() -> None:
     func(*arg, **kw)
 
   default_flow = run_func
@@ -161,7 +161,7 @@ def clear_default_flow():
 cmd_map = constant.cmd_map
 
 
-def default_tail_deal_cmd_func(order):
+def default_tail_deal_cmd_func(order: str | int) -> None:
   """
   结尾命令处理空函数，用于占位
 
@@ -247,7 +247,7 @@ def bind_cmd(cmd_number, cmd_func, arg=(), kw=None):
     cmd_map[cmd_number] = null_func
     return
 
-  def run_func():
+  def run_func() -> None:
     cmd_func(*arg, **kw)
 
   cmd_map[cmd_number] = run_func
