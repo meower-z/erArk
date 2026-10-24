@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.UI.Moudle import draw, panel
@@ -34,9 +34,9 @@ class Field_Commission_Panel:
     """ 当前绘制的页面 """
     self.draw_list: List[draw.NormalDraw] = []
     """ 绘制的文本列表 """
-    self.send_npc_list = []
+    self.send_npc_list: List[int] = []
     """ 派遣人员列表 """
-    self.send_vehicle_dict = {}
+    self.send_vehicle_dict: Dict[int, int] = {}
     """ 派遣载具字典 """
 
   def draw(self) -> None:
@@ -238,9 +238,9 @@ class CommissionDraw:
     """ 绘制文本 """
     self.button_return: str = ""
     """ 按钮返回文本 """
-    self.send_npc_list = []
+    self.send_npc_list: List[int] = []
     """ 派遣人员列表 """
-    self.send_vehicle_dict = {}
+    self.send_vehicle_dict: Dict[int, int] = {}
     """ 派遣载具字典 """
 
     info_text_list = [
@@ -300,6 +300,7 @@ class CommissionDraw:
     commision_text = f"{commission_level}{commission_type}{commission_name}{commission_people_and_time}{commission_demand}{commision_reward}"
 
     # 可以进行的，绘制为按钮
+    commision_draw: draw.LeftButton | draw.NormalDraw
     if self.commission_id not in cache.rhodes_island.ongoing_field_commissions:
       commision_draw = draw.LeftButton(
           commision_text,
@@ -482,19 +483,19 @@ class CommissionDraw:
       # 使用底层原生函数动态解析每一个需求（包含金钱、能力、限定角色等所有类型）
       demand_str = str(commision_data.demand)
       if not demand_str or demand_str == "无" or demand_str == "-1":
-        d = draw.NormalDraw()
-        d.text = _("无")
-        d.style = "spring_green"
-        d.draw()
+        demand_part_draw = draw.NormalDraw()
+        demand_part_draw.text = _("无")
+        demand_part_draw.style = "spring_green"
+        demand_part_draw.draw()
       else:
         for part in demand_str.split("&"):
           _temp_type, t_full, t_sat = process_commission_text(
               part, False, False, self.send_npc_list, "", "", True
           )
-          d = draw.NormalDraw()
-          d.text = f"[{t_full.strip()}] "
-          d.style = "spring_green" if t_sat else "red"
-          d.draw()
+          demand_part_draw = draw.NormalDraw()
+          demand_part_draw.text = f"[{t_full.strip()}] "
+          demand_part_draw.style = "spring_green" if t_sat else "red"
+          demand_part_draw.draw()
 
       line_feed.draw()
 
@@ -532,6 +533,7 @@ class CommissionDraw:
       line.draw()
 
       # --- 执行委托按钮 (满足变绿且可点，不满足变灰不可点，占满单行) ---
+      yes_draw: draw.CenterButton | draw.CenterDraw
       if all_satisfy:
         yes_draw = draw.CenterButton(
             _("[执行委托]"),
@@ -678,10 +680,10 @@ class CommissionDraw:
           _temp_type, t_full, t_sat = process_commission_text(
               part, False, False, self.send_npc_list, "", "", True
           )
-          d = draw.NormalDraw()
-          d.text = f"[{t_full.strip()}] "
-          d.style = "spring_green" if t_sat else "red"
-          d.draw()
+          demand_part_draw = draw.NormalDraw()
+          demand_part_draw.text = f"[{t_full.strip()}] "
+          demand_part_draw.style = "spring_green" if t_sat else "red"
+          demand_part_draw.draw()
 
       line_feed.draw()
 
@@ -1031,6 +1033,7 @@ class CommissionDraw:
       line_feed.draw()
       line.draw()
 
+      prev_page_btn: draw.LeftButton | draw.NormalDraw
       if chara_list_page > 0:
         prev_page_btn = draw.LeftButton(
             _("[888]上一页"), "888", 12, cmd_func=pass_func
@@ -1050,6 +1053,7 @@ class CommissionDraw:
       )
       page_info.draw()
 
+      next_page_btn: draw.LeftButton | draw.NormalDraw
       if chara_list_page < total_pages - 1:
         next_page_btn = draw.LeftButton(
             _("[222]下一页"), "222", 12, cmd_func=pass_func

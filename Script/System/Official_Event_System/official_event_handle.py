@@ -216,7 +216,7 @@ def get_premise_set(premise_text: str) -> set:
 
 def judge_premise_pass(
     premise_text: str, character_id: int = 0, partner_id: int = 0
-) -> int:
+) -> float:
   """
   判定一组前提是否成立，返回总权重
 
@@ -228,7 +228,7 @@ def judge_premise_pass(
   character_id -- 主体角色id，无主体的部门事件传0（即以博士为判定主体）
   partner_id -- 互动对象角色id，默认0为玩家
   Return arguments:
-  int -- 总权重，0为不通过
+  float -- 总权重，0为不通过
   """
   from Script.Design import handle_premise
 

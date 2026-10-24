@@ -14,7 +14,7 @@ from Script.Design import handle_premise, instuct_judege
 from Script.Settle import default
 from Script.UI.Panel import achievement_panel
 
-panel_info_data = {}
+panel_info_data: dict[str, object] = {}
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """

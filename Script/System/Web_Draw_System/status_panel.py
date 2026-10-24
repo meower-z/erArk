@@ -33,7 +33,7 @@ class StatusPanel:
     Returns:
     dict -- 玩家信息数据
     """
-    pl_data: game_type.Character = cache.character_data.get(0)
+    pl_data: Optional[game_type.Character] = cache.character_data.get(0)
     if not pl_data:
       return self._get_empty_player_info()
 
@@ -101,7 +101,9 @@ class StatusPanel:
     if character_id <= 0:
       return {}
 
-    char_data: game_type.Character = cache.character_data.get(character_id)
+    char_data: Optional[game_type.Character] = cache.character_data.get(
+        character_id
+    )
     if not char_data:
       return self._get_empty_target_info()
 
@@ -208,7 +210,9 @@ class StatusPanel:
     )
 
     # 首先获取角色立绘中实际存在的部位
-    char_data: game_type.Character = cache.character_data.get(character_id)
+    char_data: Optional[game_type.Character] = cache.character_data.get(
+        character_id
+    )
     portrait_parts = {}  # {中文显示名: {id, name, base_part}}
 
     if char_data:
@@ -382,8 +386,10 @@ class StatusPanel:
     Returns:
     List[dict] -- 特殊状态标记列表，每个元素包含 text 和 style
     """
-    states = []
-    char_data: game_type.Character = cache.character_data.get(character_id)
+    states: List[dict] = []
+    char_data: Optional[game_type.Character] = cache.character_data.get(
+        character_id
+    )
     if not char_data:
       return states
 
@@ -415,8 +421,10 @@ class StatusPanel:
     Returns:
     List[dict] -- 快感状态列表，每个元素包含 name, value, max_value, level
     """
-    states = []
-    char_data: game_type.Character = cache.character_data.get(character_id)
+    states: List[dict] = []
+    char_data: Optional[game_type.Character] = cache.character_data.get(
+        character_id
+    )
     if not char_data:
       return states
 
@@ -506,8 +514,10 @@ class StatusPanel:
     Returns:
     List[dict] -- 其他状态列表，每个元素包含 name, value, max_value, level
     """
-    states = []
-    char_data: game_type.Character = cache.character_data.get(character_id)
+    states: List[dict] = []
+    char_data: Optional[game_type.Character] = cache.character_data.get(
+        character_id
+    )
     if not char_data:
       return states
 
@@ -838,7 +848,8 @@ class StatusPanel:
       if visual_flag <= 1 and i in {7, 9, 15}:
         continue
 
-      part_info = {"id": i, "name": part_name, "texts": []}
+      part_texts: List[Dict[str, str]] = []
+      part_info = {"id": i, "name": part_name, "texts": part_texts}
 
       # 爱液文本
       if i == 6 and target_data.status_data[8]:
@@ -858,7 +869,7 @@ class StatusPanel:
         else:
           text = game_config.ui_text_data.get("dirty", {}).get(text_index, "")
         if text:
-          part_info["texts"].append({"type": "love_juice", "text": text})
+          part_texts.append({"type": "love_juice", "text": text})
 
       # 处子血判定
       if i == 6 and visual_flag >= 2:
@@ -875,7 +886,7 @@ class StatusPanel:
                 dirty_text_cid, ""
             )
           if text:
-            part_info["texts"].append({"type": "virgin_blood", "text": text})
+            part_texts.append({"type": "virgin_blood", "text": text})
 
       # 精液污浊判定
       if target_data.dirty.body_semen[i][2]:
@@ -892,7 +903,7 @@ class StatusPanel:
               dirty_text_cid, ""
           )
         if text:
-          part_info["texts"].append({"type": "semen", "text": text})
+          part_texts.append({"type": "semen", "text": text})
 
       # 头发上挂着的避孕套装饰
       if i == 0:
@@ -916,9 +927,7 @@ class StatusPanel:
                 str(decoration_count)
             )
           if decoration_text:
-            part_info["texts"].append(
-                {"type": "semen", "text": decoration_text}
-            )
+            part_texts.append({"type": "semen", "text": decoration_text})
 
       if part_info["texts"]:
         parts.append(part_info)
@@ -1032,14 +1041,14 @@ class StatusPanel:
           0
       ].items():
         if state_id != -1:
-          target_chara_name = cache.character_data.get(target_chara_id, {})
-          if hasattr(target_chara_name, "name"):
-            target_chara_name = target_chara_name.name
+          target_chara_data = cache.character_data.get(target_chara_id)
+          if target_chara_data is not None:
+            target_chara_name = target_chara_data.name
           else:
             target_chara_name = ""
-          state_name = game_config.config_behavior.get(state_id, {})
-          if hasattr(state_name, "name"):
-            state_name = state_name.name
+          state_data = game_config.config_behavior.get(state_id)
+          if state_data is not None:
+            state_name = state_data.name
           else:
             state_name = ""
           body_part_name = body_part_name_dict.get(body_part, body_part)
@@ -1058,12 +1067,12 @@ class StatusPanel:
         if state_id != -1 and -1 not in target_chara_id_list:
           target_names = []
           for tid in target_chara_id_list:
-            tc = cache.character_data.get(tid, {})
-            if hasattr(tc, "name"):
+            tc = cache.character_data.get(tid)
+            if tc is not None:
               target_names.append(tc.name)
-          state_name = game_config.config_behavior.get(state_id, {})
-          if hasattr(state_name, "name"):
-            state_name = state_name.name
+          state_data = game_config.config_behavior.get(state_id)
+          if state_data is not None:
+            state_name = state_data.name
           else:
             state_name = ""
           body_parts.append(
@@ -1115,9 +1124,9 @@ class StatusPanel:
         break
     if not hidden_text:
       hidden_level = 3
-      hidden_text = game_config.config_hidden_level.get(3, {})
-      if hasattr(hidden_text, "name"):
-        hidden_text = hidden_text.name
+      hidden_level_data = game_config.config_hidden_level.get(3)
+      if hidden_level_data is not None:
+        hidden_text = hidden_level_data.name
       else:
         hidden_text = ""
 

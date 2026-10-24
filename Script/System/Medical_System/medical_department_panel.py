@@ -415,7 +415,7 @@ class DoctorManagementSubPanel(_BaseSubPanel):
     from Script.UI.Moudle import panel
 
     select_panel = panel.PageHandlePanel(
-        cast(List[Any], []),
+        [],
         common_select_NPC.CommonSelectNPCButtonList,
         50,
         5,

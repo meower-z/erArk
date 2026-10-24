@@ -47,7 +47,7 @@ def _split_text_to_pages(
   # 计算每行的估算显示行数（用于分页计算）
   # 但保持原始行完整，不截断词语
   pages = []
-  current_page_lines = []
+  current_page_lines: List[str] = []
   current_estimated_lines = 0
 
   for line in raw_lines:

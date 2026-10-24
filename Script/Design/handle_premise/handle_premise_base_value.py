@@ -836,13 +836,13 @@ def handle_hunger_le_79(character_id: int) -> int:
 
 
 @add_premise(constant_promise.Premise.HUNGER_GE_80)
-def handle_hunger_ge_80(character_id: int) -> int:
+def handle_hunger_ge_80(character_id: int) -> float:
   """
   饥饿值≥80%，需要吃饭
   Keyword arguments:
   character_id -- 角色id
   Return arguments:
-  int -- 权重
+  float -- 权重
   """
   character_data = cache.character_data[character_id]
 

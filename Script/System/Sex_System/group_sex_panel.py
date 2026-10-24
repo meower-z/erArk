@@ -1,4 +1,4 @@
-from typing import List
+from typing import Collection, List, Optional
 from types import FunctionType
 from Script.UI.Moudle import draw, panel
 from Script.Core import (
@@ -11,7 +11,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle
 
-panel_info_data = {}
+panel_info_data: dict[str, object] = {}
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -210,7 +210,7 @@ def get_status_id_list_from_group_sex_body_part(body_part: str) -> list[str]:
   """
   from Script.System.Instruct_System import see_instruct_panel
 
-  new_status_id_list = []
+  new_status_id_list: List[str] = []
   # 获取状态id列表
   if body_part == "mouth":
     status_id_list = game_config.config_behavior_id_list_of_group_sex_body_part[
@@ -233,7 +233,7 @@ def get_status_id_list_from_group_sex_body_part(body_part: str) -> list[str]:
         "肛"
     ]
   # 遍历状态id
-  now_premise_data = {}
+  now_premise_data: dict[str, float] = {}
   new_status_id_list = []
   for status_id in status_id_list:
     if status_id in constant.behavior_id_to_instruct_id:
@@ -251,7 +251,6 @@ def get_status_id_list_from_group_sex_body_part(body_part: str) -> list[str]:
       # 去掉有破处判定且当前为处的
       if filter_judge:
         status_data = game_config.config_behavior[status_id]
-        status_tag_list = status_data.tag
         status_tag_list = status_data.tag.split("|")
         pl_character_data = cache.character_data[0]
         if pl_character_data.target_character_id == 0:
@@ -406,7 +405,9 @@ class SeeGroupSexInfoPanel:
     """ 面板最大宽度 """
     self.column = column
     """ 每行状态最大个数 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: List[
+        draw.LittleTitleLineDraw | draw.NormalDraw | List[draw.LeftDraw]
+    ] = []
     """ 绘制的文本列表 """
     self.return_list: List[str] = []
     """ 当前面板监听的按钮列表 """
@@ -488,7 +489,7 @@ class Edit_Group_Sex_Temple_Panel:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
-    self.handle_panel: panel.PageHandlePanel = None
+    self.handle_panel: Optional[panel.PageHandlePanel] = None
     """ 当前名字列表控制面板 """
     self.pl_character_data = cache.character_data[0]
     """ 玩家角色数据 """
@@ -733,7 +734,7 @@ class Edit_Group_Sex_Temple_Panel:
         self.pl_character_data.position
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-    all_character_list = scene_data.character_list
+    all_character_list: Collection[int] = scene_data.character_list
     # 全模板中的角色id列表
     group_sex_chara_id_list = count_group_sex_character_list()
     # 获取已选的角色id

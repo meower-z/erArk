@@ -341,9 +341,9 @@ def find_character_target(
   character_data: game_type.Character = cache.character_data[character_id]
   start_time = character_data.behavior.start_time
   all_target_list = list(game_config.config_target.keys())
-  premise_data = {}
-  target_weight_data = {}
-  null_target_set = set()
+  premise_data: dict[str, float] = {}
+  target_weight_data: dict[str, float] = {}
+  null_target_set: set[str] = set()
 
   # 如果该NPC在H模式
   if character_data.sp_flag.is_h:
@@ -637,10 +637,10 @@ def search_target(
     character_id: int,
     target_list: list,
     null_target: set,
-    premise_data: Dict[int, int],
-    target_weight_data: Dict[int, int],
+    premise_data: Dict[str, float],
+    target_weight_data: Dict[str, float],
     get_first_only: bool = False,
-) -> tuple[str, int, int, Dict[int, int]]:
+) -> tuple[str, float, int, Dict[str, float]]:
   """
   查找可用目标\n
   Keyword arguments:\n
@@ -652,11 +652,11 @@ def search_target(
   get_first_only -- 是否只获取第一个符合条件的目标，默认False\n
   Return arguments:\n
   int -- 目标id\n
-  int -- 目标权重\n
+  float -- 目标权重\n
   bool -- 前提是否能够被满足\n
-  Dict[int, int] -- 新的前提数据\n
+  Dict[str, float] -- 新的前提数据\n
   """
-  target_data = {}
+  target_data: dict[float, set[str]] = {}
   for target in target_list:
     if target in null_target:
       continue
@@ -670,10 +670,10 @@ def search_target(
       target_data[1].add(target)
       continue
     target_premise_list = game_config.config_target_premise_data[target]
-    now_weight = 0
+    now_weight: float = 0
     now_target_pass_judge = 0
-    now_target_data = {}
-    premise_judge = 1
+    now_target_data: dict[float, set[str]] = {}
+    premise_judge: float = 1
     # 按前提id排序后判断，使判断前提时抽的随机数不随集合的遍历顺序变化。
     for premise in sorted(target_premise_list):
       premise_judge = 0
@@ -748,10 +748,10 @@ def search_target(
 
 def npc_auto_work_or_entertainment(
     character_id: int,
-    premise_data: Dict[int, int],
+    premise_data: Dict[str, float],
     move_flag: bool,
     work_flag: bool,
-) -> tuple[int, Dict[int, int]]:
+) -> tuple[int, Dict[str, float]]:
   """
   NPC自动工作或娱乐\n
   Keyword arguments:\n
@@ -761,7 +761,7 @@ def npc_auto_work_or_entertainment(
   work_flag -- 是否工作\n
   Return arguments:\n
   int -- 状态机id\n
-  Dict[int, int] -- 新的前提数据\n
+  Dict[str, float] -- 新的前提数据\n
   """
   character_data: game_type.Character = cache.character_data[character_id]
 
@@ -805,7 +805,7 @@ def npc_auto_work_or_entertainment(
   judge = True
   # 开始遍历前提。按前提id排序后判断，使判断前提时抽的随机数不随集合的遍历顺序变化。
   for premise in sorted(tem_premise_data):
-    premise_judge = 0
+    premise_judge: float = 0
     if premise in premise_data:
       premise_judge = premise_data[premise]
     else:

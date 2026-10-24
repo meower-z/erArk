@@ -153,7 +153,7 @@ def get_instructs_by_minor_type(
     return []
 
   result = []
-  premise_cache = {}  # 前提缓存，避免重复判断
+  premise_cache: dict[str, float] = {}  # 前提缓存，避免重复判断
   for (
       instruct_id,
       stored_minor_type,
@@ -179,7 +179,7 @@ def get_instructs_by_minor_type(
 
 def get_instructs_by_body_part(
     body_part: str, minor_type: Optional[int] = None, check_premise: bool = True
-) -> List[int]:
+) -> List[str]:
   """
   获取指定身体部位关联的指令列表
 
@@ -192,7 +192,7 @@ def get_instructs_by_body_part(
   List[str] -- 指令id列表，按照 Instruct.py 中的定义顺序排序
   """
   result = []
-  premise_cache = {}  # 前提缓存，避免重复判断
+  premise_cache: dict[str, float] = {}  # 前提缓存，避免重复判断
 
   for instruct_id, body_parts in constant.instruct_body_parts_data.items():
     if body_part in body_parts:

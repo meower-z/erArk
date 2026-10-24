@@ -202,7 +202,7 @@ def get_season_month(month: int) -> int:
   return month
 
 
-def get_date_text(game_time_data: datetime.datetime = None) -> str:
+def get_date_text(game_time_data: datetime.datetime | None = None) -> str:
   """
   获取时间信息描述文本
   Keyword arguments:
@@ -219,7 +219,7 @@ def get_date_text(game_time_data: datetime.datetime = None) -> str:
   )
 
 
-def get_date_until_day(game_time_data: datetime.datetime = None) -> str:
+def get_date_until_day(game_time_data: datetime.datetime | None = None) -> str:
   """
   获取到日为止的时间信息描述文本
   Keyword arguments:
@@ -234,7 +234,7 @@ def get_date_until_day(game_time_data: datetime.datetime = None) -> str:
   )
 
 
-def get_year_text(game_time_data: datetime.datetime = None) -> str:
+def get_year_text(game_time_data: datetime.datetime | None = None) -> str:
   """
   获取年份描述文本
   Keyword arguments:
@@ -247,7 +247,7 @@ def get_year_text(game_time_data: datetime.datetime = None) -> str:
   )
 
 
-def get_month_text(game_time_data: datetime.datetime = None) -> str:
+def get_month_text(game_time_data: datetime.datetime | None = None) -> str:
   """
   获取月份描述文本
   Keyword arguments:
@@ -270,7 +270,9 @@ def get_month_text(game_time_data: datetime.datetime = None) -> str:
   )
 
 
-def get_day_and_time_text(game_time_data: datetime.datetime = None) -> str:
+def get_day_and_time_text(
+    game_time_data: datetime.datetime | None = None,
+) -> str:
   """
   获取日和时间描述文本
   Keyword arguments:
@@ -296,7 +298,7 @@ def get_week_day_text() -> str:
 
 def sub_time_now(
     minute: int = 0, hour: int = 0, day: int = 0, month: int = 0, year: int = 0
-) -> datetime.datetime:
+) -> None:
   """
   增加当前游戏时间
   Keyword arguments:
@@ -312,10 +314,10 @@ def sub_time_now(
 def get_sub_date(
     minute: int = 0,
     hour: int = 0,
-    day: int = 0,
+    day: float = 0,
     month: int = 0,
     year: int = 0,
-    old_date: datetime.datetime = None,
+    old_date: datetime.datetime | None = None,
 ) -> datetime.datetime:
   """
   获取旧日期增加指定时间后得到的新日期
@@ -369,7 +371,7 @@ def get_rand_day_for_year(year: int) -> datetime.datetime:
   return get_rand_day_for_date(start, end)
 
 
-def timetuple_to_datetime(t: datetime.datetime.timetuple) -> datetime.datetime:
+def timetuple_to_datetime(t: time.struct_time) -> datetime.datetime:
   """
   将timetulp类型数据转换为datetime类型
   Keyword arguments:
@@ -491,7 +493,7 @@ def get_solar_period(now_time: datetime.datetime) -> int:
 
 def get_old_solar_period_time(
     now_time: datetime.datetime,
-) -> (datetime.datetime, int):
+) -> tuple[datetime.datetime, int]:
   """
   根据日期计算上个节气的开始日期
   Keyword arguments:
@@ -501,7 +503,7 @@ def get_old_solar_period_time(
   """
   s1 = get_solar_period(now_time)
   s0 = s1
-  dt = 1
+  dt: float = 1
   new_time = now_time
   while True:
     new_time = get_sub_date(day=-dt, old_date=new_time)
@@ -516,7 +518,7 @@ def get_old_solar_period_time(
 
 def get_next_solar_period_time(
     now_time: datetime.datetime,
-) -> (datetime.datetime, int):
+) -> tuple[datetime.datetime, int]:
   """
   根据日期计算下个节气的开始日期
   Keyword arguments:
@@ -526,7 +528,7 @@ def get_next_solar_period_time(
   """
   s1 = get_solar_period(now_time)
   s0 = s1
-  dt = 1
+  dt: float = 1
   new_time = now_time
   while True:
     new_time = get_sub_date(day=dt, old_date=new_time)
@@ -539,13 +541,13 @@ def get_next_solar_period_time(
   return new_time, s0
 
 
-def judge_datetime_solar_period(now_time: datetime.datetime) -> (bool, int):
+def judge_datetime_solar_period(now_time: datetime.datetime) -> tuple[int, int]:
   """
   校验日期是否是节气以及获取节气id
   Keyword arguments:
   now_time -- 日期
   Return arguments:
-  bool -- 校验结果
+  int -- 校验结果，1为是节气
   int -- 节气id
   """
   new_time, solar_period = get_old_solar_period_time(now_time)
@@ -649,7 +651,7 @@ def get_moon_phase(now_time: datetime.datetime) -> int:
   return cache.moon_phase[now_date_str]
 
 
-def judge_work_today(character_id: int) -> bool:
+def judge_work_today(character_id: int) -> int:
   """
   校验角色今日是否需要工作
   Keyword arguments:

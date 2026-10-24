@@ -26,7 +26,7 @@ from Script.Design.handle_premise.handle_premise_body_manage import *
 from Script.Design.handle_premise.handle_premise_work import *
 from Script.Design.handle_premise.handle_premise_food import *
 
-cache: game_type.Cache = cache_control.cache
+cache = cache_control.cache
 """ 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
@@ -107,14 +107,14 @@ def add_premise(premise: str) -> FunctionType:
   return decoraror
 
 
-def handle_premise(premise: str, character_id: int) -> int:
+def handle_premise(premise: str, character_id: int) -> float:
   """
   调用前提id对应的前提处理函数
   Keyword arguments:
   premise -- 前提id
   character_id -- 角色id
   Return arguments:
-  int -- 前提权重加成
+  float -- 前提权重加成
   """
   handler = constant.handle_premise_data.get(premise)
   if handler is not None:
@@ -130,10 +130,10 @@ def handle_premise(premise: str, character_id: int) -> int:
 def get_weight_from_premise_dict(
     talk_premise_dict: set,
     character_id: int,
-    calculated_premise_dict: dict,
+    calculated_premise_dict: dict[str, float],
     weight_all_to_1_flag: bool = False,
     unconscious_pass_flag: bool = False,
-) -> tuple[int, dict]:
+) -> tuple[float, dict[str, float]]:
   """
   遍历前提字典，计算总权重
   Keyword arguments:
@@ -143,14 +143,14 @@ def get_weight_from_premise_dict(
   weight_all_to_1_flag -- 将所有非high的前提权重转换为1，默认为False
   unconscious_h_pass_flag -- 跳过无意识判定，默认为false，不可以跳过
   Return arguments:
-  now_weight -- int，总权重
+  now_weight -- float，总权重
   """
 
   character_data: game_type.Character = cache.character_data[character_id]
   target_character_id = character_data.target_character_id
   target_character_data = cache.character_data[target_character_id]
   behavior_id = character_data.behavior.behavior_id
-  now_weight = 0  # 总权重
+  now_weight: float = 0  # 总权重
   now_premise_data = {}  # 记录已经计算过的前提
   if calculated_premise_dict:
     # 如果有已计算的前提，则直接使用
@@ -488,7 +488,7 @@ def handle_comprehensive_value_premise(
   if "Son" in premise_all_value_list[1]:
     return 0
   if premise_all_value_list[1][0] == "A":
-    final_value = final_character_data.ability.get(type_son_id, 0)
+    final_value: float = final_character_data.ability.get(type_son_id, 0)
   elif premise_all_value_list[1][0] == "T":
     if "Time" in premise_all_value_list[1]:
       final_value = final_character_data.behavior.start_time.hour

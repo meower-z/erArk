@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from Script.Core import cache_control, game_type
 
@@ -341,7 +341,7 @@ def settle_squeeze(
 
 
 def remove_cloth_decoration(
-    character_id: int, part_cid_list: List[int] = None
+    character_id: int, part_cid_list: Optional[List[int]] = None
 ) -> None:
   """
   去除指定角色服装部位上的装饰避孕套记录（换衣/洗衣时调用），头发（身体部位）上的不受影响\n

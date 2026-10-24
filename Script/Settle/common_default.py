@@ -68,8 +68,8 @@ def base_chara_hp_mp_common_settle(
       1: [3, 6],
       2: [5, 10],
   }
-  hp_adjust = dregree_dict[degree][0]
-  mp_adjust = dregree_dict[degree][1]
+  hp_adjust: float = dregree_dict[degree][0]
+  mp_adjust: float = dregree_dict[degree][1]
   # 群交中消耗减少
   if handle_premise.handle_self_is_h(
       character_id
@@ -126,21 +126,21 @@ def base_chara_hp_mp_common_settle(
         change_data_to_target_change.target_change.setdefault(
             character_id, game_type.TargetChange()
         )
-        target_change: game_type.TargetChange = (
-            change_data_to_target_change.target_change[character_id]
-        )
+        target_change = change_data_to_target_change.target_change[character_id]
         target_change.hit_point += mp_value
       character_data.hit_point = max(1, character_data.hit_point)
       handle_npc_ai.judge_character_tired_sleep(character_id)
     # 交互对象也同样
-    if target_flag and target_character_id != character_id:
+    if (
+        target_flag
+        and change_data is not None
+        and target_character_id != character_id
+    ):
       # 结算信息记录
       change_data.target_change.setdefault(
           target_character_id, game_type.TargetChange()
       )
-      target_change: game_type.TargetChange = change_data.target_change[
-          target_character_id
-      ]
+      target_change = change_data.target_change[target_character_id]
       # 进行结算
       target_character_data.mana_point += mp_value
       target_change.mana_point += mp_value
@@ -168,9 +168,7 @@ def base_chara_hp_mp_common_settle(
       change_data_to_target_change.target_change.setdefault(
           character_id, game_type.TargetChange()
       )
-      target_change: game_type.TargetChange = (
-          change_data_to_target_change.target_change[character_id]
-      )
+      target_change = change_data_to_target_change.target_change[character_id]
       target_change.hit_point += hp_value_last
     # 最小为1，最大为上限
     character_data.hit_point = max(1, character_data.hit_point)
@@ -180,7 +178,11 @@ def base_chara_hp_mp_common_settle(
     # 检测hp1导致的疲劳
     handle_npc_ai.judge_character_tired_sleep(character_id)
     # 交互对象也同样
-    if target_flag and target_character_id != character_id:
+    if (
+        target_flag
+        and change_data is not None
+        and target_character_id != character_id
+    ):
       if target_character_data.mana_point == 0 and hp_value < 0:
         hp_value_last = hp_value * 3
       else:
@@ -189,9 +191,7 @@ def base_chara_hp_mp_common_settle(
       change_data.target_change.setdefault(
           target_character_id, game_type.TargetChange()
       )
-      target_change: game_type.TargetChange = change_data.target_change[
-          target_character_id
-      ]
+      target_change = change_data.target_change[target_character_id]
       # 进行结算
       target_character_data.hit_point += hp_value_last
       target_change.hit_point += hp_value_last
@@ -494,7 +494,7 @@ def chara_base_state_adjust(
   ability_level = max(0, ability_level)
 
   # 系数加成
-  final_adjust = 0
+  final_adjust: float = 0
   # 能力修正
   if state_id in [13, 15, 17, 18, 20]:  # 与刻印相关的角色状态id
     feel_adjust = attr_calculation.get_mark_debuff_adjust(ability_level)
@@ -547,7 +547,7 @@ def chara_base_state_adjust(
     final_adjust -= 0.4
   # 信物修正
   now_token = pl_character_data.pl_collection.eqip_token[1]
-  token_adjust = 0
+  token_adjust: float = 0
   if len(now_token):
     # 信物干员的基础调整为0.5
     if character_id in now_token:
@@ -623,8 +623,10 @@ def extra_feel_settle(
     character_id: int,
     state_id: int,
     final_value: float,
-    change_data: game_type.CharacterStatusChange,
-    change_data_to_target_change: game_type.CharacterStatusChange,
+    change_data: Optional[
+        Union[game_type.CharacterStatusChange, game_type.TargetChange]
+    ],
+    change_data_to_target_change: Optional[game_type.CharacterStatusChange],
 ) -> None:
   """
   顺从对恭顺、露出对羞耻、施虐对先导、受虐对苦痛而产生的额外快感
@@ -746,8 +748,10 @@ def base_chara_favorability_and_trust_common_settle(
   target_data: game_type.Character = cache.character_data[target_character_id]
 
   # 防止重复结算
-  if character_id != target_character_id and (
-      character_id != 0 or target_character_id != 0
+  if (
+      change_data is not None
+      and character_id != target_character_id
+      and (character_id != 0 or target_character_id != 0)
   ):
     if character_data.dead:
       return
@@ -762,7 +766,7 @@ def base_chara_favorability_and_trust_common_settle(
 
     # 信物调整值
     now_token = pl_character_data.pl_collection.eqip_token[1]
-    token_adjust = 0
+    token_adjust: float = 0
     if len(now_token):
       # 信物干员的基础调整为0.1
       if character_id in now_token or target_character_id in now_token:
@@ -771,7 +775,7 @@ def base_chara_favorability_and_trust_common_settle(
       token_adjust += len(now_token) * 0.01
 
     # 连续重复指令减值
-    continuous_adjust = 1
+    continuous_adjust: float = 1
     # 判断是否为连续指令
     if (
         len(cache.pl_pre_behavior_instruce) >= 2
@@ -808,7 +812,7 @@ def base_chara_favorability_and_trust_common_settle(
       add_favorability = base_value + calculation_favorability(
           character_id, target_character_id, add_time
       )
-      final_adjust = 1
+      final_adjust: float = 1
 
       # 额外调整
       if extra_adjust != 0:
@@ -1290,16 +1294,14 @@ def base_chara_experience_common_settle(
     change_data.target_change.setdefault(
         final_character_id, game_type.TargetChange()
     )
-    final_change_data: game_type.TargetChange = change_data.target_change[
-        final_character_id
-    ]
+    final_change_data = change_data.target_change[final_character_id]
   elif change_data_to_target_change != None:
     change_data_to_target_change.target_change.setdefault(
         final_character_id, game_type.TargetChange()
     )
-    final_change_data: game_type.TargetChange = (
-        change_data_to_target_change.target_change[final_character_id]
-    )
+    final_change_data = change_data_to_target_change.target_change[
+        final_character_id
+    ]
 
   # 结算信息记录对象增加经验
   if final_change_data != None:

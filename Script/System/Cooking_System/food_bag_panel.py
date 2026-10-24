@@ -56,7 +56,7 @@ def calculate_food_effects(
         game_config.config_recipes[now_food.recipe].difficulty, 1
     )
   # 时间加成
-  add_time_adjust = 1
+  add_time_adjust: float = 1
 
   # 检测是否是手制的食物
   if now_food is not None:
@@ -473,6 +473,7 @@ class FoodGroupDraw:
         ):
           draw_button_flag = False
 
+    name_draw: draw.LeftButton | draw.LeftDraw
     if draw_button_flag:
       return_text = f"\ngroup_{self.food_name}_{str(uid_list[0])[:3]}"
       name_draw = draw.LeftButton(

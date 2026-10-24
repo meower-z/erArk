@@ -277,7 +277,7 @@ def get_available_interaction_types() -> List[Dict]:
   List[Dict] -- 交互类型信息列表，每个元素包含 id、name 和 major_type
   """
   # 收集所有已注册指令中实际使用的交互小类型
-  used_minor_types: Set[int] = set()
+  used_minor_types: Set[str] = set()
   for meta in _instruct_meta_data.values():
     if meta.category in (
         InstructCategory.CHARACTER,
@@ -342,7 +342,7 @@ def get_instruct_category_name(category: int) -> str:
   return "未知"
 
 
-def get_interaction_type_name(interaction_type: int) -> str:
+def get_interaction_type_name(interaction_type: str) -> str:
   """
   获取交互类型的中文名称（使用新系统的 MinorType）
 
@@ -416,12 +416,12 @@ def batch_register_character_instructs(instruct_configs: List[Dict]) -> None:
 # 这些函数直接访问 add_instruct 装饰器注册的数据
 
 
-def get_panel_instructs_from_constant() -> List[int]:
+def get_panel_instructs_from_constant() -> List[str]:
   """
   从 constant 字典获取所有面板类指令的ID列表
 
   Returns:
-  List[int] -- 面板类指令ID列表
+  List[str] -- 面板类指令ID列表
   """
   from Script.Core import constant
 
@@ -432,12 +432,12 @@ def get_panel_instructs_from_constant() -> List[int]:
   ]
 
 
-def get_character_instructs_from_constant() -> List[int]:
+def get_character_instructs_from_constant() -> List[str]:
   """
   从 constant 字典获取所有角色交互类指令的ID列表
 
   Returns:
-  List[int] -- 角色交互类指令ID列表
+  List[str] -- 角色交互类指令ID列表
   """
   from Script.Core import constant
 
@@ -449,8 +449,8 @@ def get_character_instructs_from_constant() -> List[int]:
 
 
 def get_instructs_by_interaction_type_from_constant(
-    interaction_type: int,
-) -> List[int]:
+    interaction_type: str,
+) -> List[str]:
   """
   从 constant 字典根据交互小类型获取指令列表
 
@@ -458,7 +458,7 @@ def get_instructs_by_interaction_type_from_constant(
   interaction_type -- 交互小类型（InteractionMinorType）
 
   Returns:
-  List[int] -- 符合条件的指令ID列表
+  List[str] -- 符合条件的指令ID列表
   """
   from Script.Core import constant
 
@@ -469,7 +469,7 @@ def get_instructs_by_interaction_type_from_constant(
   ]
 
 
-def get_instructs_by_body_part_from_constant(body_part: str) -> List[int]:
+def get_instructs_by_body_part_from_constant(body_part: str) -> List[str]:
   """
   从 constant 字典根据身体部位获取相关指令列表
 
@@ -477,7 +477,7 @@ def get_instructs_by_body_part_from_constant(body_part: str) -> List[int]:
   body_part -- 身体部位名称
 
   Returns:
-  List[int] -- 关联该部位的指令ID列表
+  List[str] -- 关联该部位的指令ID列表
   """
   from Script.Core import constant
 
@@ -488,7 +488,7 @@ def get_instructs_by_body_part_from_constant(body_part: str) -> List[int]:
   ]
 
 
-def get_web_instruct_info(instruct_id: int) -> Optional[Dict]:
+def get_web_instruct_info(instruct_id: str) -> Optional[Dict]:
   """
   获取单个指令的Web模式分类信息
 
@@ -545,7 +545,7 @@ def get_available_interaction_types_from_constant() -> List[Dict]:
   from Script.Core import constant
 
   # 收集所有已注册指令中实际使用的交互小类型
-  used_minor_types: Set[int] = set()
+  used_minor_types: Set[str] = set()
   for instruct_id, category in constant.instruct_category_data.items():
     if category == InstructCategory.CHARACTER:
       minor_type = constant.instruct_minor_type_data.get(
@@ -571,7 +571,7 @@ def get_available_interaction_types_from_constant() -> List[Dict]:
 
 
 def get_body_parts_for_interaction_type_from_constant(
-    interaction_type: int,
+    interaction_type: str,
 ) -> List[str]:
   """
   从 constant 字典获取某个交互小类型涉及的所有身体部位

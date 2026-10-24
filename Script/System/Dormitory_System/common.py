@@ -31,7 +31,9 @@ def _get_base_open_room_upper_no() -> int:
   功能: 从1级宿舍区效果文案解析“1区的XXX室”，失败时默认106
   """
   facility_name = game_config.config_facility[4].name
-  level_data = game_config.config_facility_effect_data.get(facility_name, {})
+  level_data: list | dict = game_config.config_facility_effect_data.get(
+      facility_name, {}
+  )
 
   level1_effect_cid = 0
   if isinstance(level_data, dict):
@@ -202,7 +204,7 @@ def pick_dormitory_room(
   for room_path, count in room_occupancy.items():
     if count < 2:
       return room_path
-  return min(room_occupancy, key=room_occupancy.get)
+  return min(room_occupancy, key=lambda room_path: room_occupancy[room_path])
 
 
 def get_residence_type(character_id: int) -> str:

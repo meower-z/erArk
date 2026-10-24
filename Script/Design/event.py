@@ -8,7 +8,7 @@ cache: game_type.Cache = cache_control.cache
 
 _handle_premise = None
 """ handle_premise 模块的延迟导入缓存（规避循环导入，同时消除每次事件判定重复导入的开销） """
-_event_index = {}
+_event_index: dict[str, dict] = {}
 """ 事件预索引缓存：behavior_id -> 按角色专属性分桶的事件id列表（配置在游戏运行期不变，惰性构建一次） """
 
 
@@ -53,15 +53,14 @@ def _get_event_index(behavior_id: str) -> dict:
 
 def handle_event(
     character_id: int, event_before_instrust_flag: bool = False
-) -> (draw_event_text_panel.DrawEventTextPanel, str):
+) -> draw_event_text_panel.DrawEventTextPanel | None:
   """
   处理状态触发事件
   Keyword arguments:
   character_id -- 角色id
   event_before_instrust_flag -- 是否是事件在前，指令在后（或跳过指令）
   Return arguments:
-  draw.LineFeedWaitDraw -- 事件绘制文本
-  str -- 事件id
+  DrawEventTextPanel -- 事件绘制面板，没有触发事件时为None
   """
   # 延迟导入并缓存，避免循环导入且不在热路径反复执行导入机制
   global _handle_premise
@@ -75,9 +74,9 @@ def handle_event(
   target_character_data = cache.character_data[target_character_id]
   behavior_id = character_data.behavior.behavior_id
   weighted_event_ids: list[str] = []
-  weighted_values: list[int] = []
+  weighted_values: list[float] = []
   # 已计算过的前提字典
-  calculated_premise_dict = {}
+  calculated_premise_dict: dict[str, float] = {}
   if behavior_id in game_config.config_event_status_data:
     # 从预索引中直接取出本角色/交互对象相关的候选事件，
     # 替代原先"遍历该行为全部事件后逐个做 adv 过滤"（约九成事件是其他角色的专属事件）
@@ -141,3 +140,4 @@ def handle_event(
     return draw_event_text_panel.DrawEventTextPanel(
         now_event_id, character_id, event_config.type
     )
+  return None

@@ -1,4 +1,4 @@
-from typing import Tuple, List
+from typing import Tuple, List, Optional
 from types import FunctionType
 from Script.UI.Moudle import draw, panel
 from Script.Core import (
@@ -14,7 +14,7 @@ import random
 
 from Script.UI.Panel import achievement_panel
 
-panel_info_data = {}
+panel_info_data: dict[str, object] = {}
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -73,7 +73,7 @@ class Born_Panel:
       self,
       mother_character_id: int,
       egg_mode: bool = False,
-      egg_id_list: list = None,
+      egg_id_list: Optional[list] = None,
   ):
     """
     初始化绘制对象

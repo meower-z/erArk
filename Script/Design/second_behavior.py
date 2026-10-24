@@ -125,7 +125,7 @@ def character_get_second_behavior(
 
 def check_second_effect(
     character_id: int,
-    change_data: game_type.CharacterStatusChange,
+    change_data: game_type.CharacterStatusChange | game_type.TargetChange,
     pl_to_npc: bool = False,
 ) -> None:
   """
@@ -141,7 +141,7 @@ def check_second_effect(
   # print("进入第二结算")
   orgasm_list = []
   mark_list = []
-  item_list = []
+  item_list: list[str] = []
   character_data: game_type.Character = cache.character_data[character_id]
   # 仅在存在激活的二段行为时才构建分类列表：
   # 无激活行为时，下游 second_behavior_effect 会因"无任何二段行为"直接返回，
@@ -216,7 +216,7 @@ def check_second_effect(
 
 def second_behavior_effect(
     character_id: int,
-    change_data: game_type.CharacterStatusChange,
+    change_data: game_type.CharacterStatusChange | game_type.TargetChange,
     second_behavior_list: list | None = None,
     orgasm_settle_flag: bool = False,
 ) -> None:
@@ -251,7 +251,7 @@ def second_behavior_effect(
     return
 
   # 高潮结算调用时，先按部位统计本次待结算的部位绝顶行为，记录每个部位的最高绝顶程度
-  part_max_degree_dict = {}
+  part_max_degree_dict: dict[str, int] = {}
   if orgasm_settle_flag:
     for (
         second_behavior_id,
@@ -467,7 +467,8 @@ def judge_child_growth_second_behavior(character_id: int) -> None:
 
 
 def insert_position_effect(
-    character_id: int, change_data: game_type.CharacterStatusChange
+    character_id: int,
+    change_data: game_type.CharacterStatusChange | game_type.TargetChange,
 ) -> None:
   """
   处理第二结算中的阴茎位置结算
@@ -620,7 +621,8 @@ def get_now_juel_all_value_and_text_from_mark_down_data(
 
 
 def mark_effect(
-    character_id: int, change_data: game_type.CharacterStatusChange
+    character_id: int,
+    change_data: game_type.CharacterStatusChange | game_type.TargetChange,
 ) -> None:
   """
   处理第二结算中的刻印结算

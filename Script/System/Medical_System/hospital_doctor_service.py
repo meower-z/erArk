@@ -359,7 +359,7 @@ def conduct_ward_round(
       doctor_character, rhodes_island, require_surgery=False
   )
   if patient is None:
-    work_data = doctor_character.work
+    work_data: Optional[game_type.CHARA_WORK] = doctor_character.work
     if work_data is not None:
       work_data.medical_patient_id = 0
     return {"handled": False, "patient": None, "result": "no_candidate"}

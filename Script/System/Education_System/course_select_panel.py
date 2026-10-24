@@ -159,7 +159,7 @@ class Course_Select_Panel:
     head_draw.text = _("  节次        ")
     head_draw.draw()
     for name in education_constant.WEEK_NAME:
-      now_draw = draw.CenterDraw()
+      now_draw: draw.CenterDraw | draw.CenterButton = draw.CenterDraw()
       now_draw.width = cell_width
       now_draw.text = name
       now_draw.draw()
@@ -450,6 +450,7 @@ class Course_Select_Panel:
     head_draw.text = _("  本节各教室的课（选中即去上这节课）：\n")
     head_draw.draw()
     class_count = 0
+    now_draw: draw.LeftDraw | draw.LeftButton | draw.CenterButton
     # 逐间走 get_class_cell（全局课表的唯一读取入口），但不叠加临时实操课：这里选的是**每周循环**的个人课表，
     #    一次性的临时课列出来让人选，下周同一节就变成「已停课」（2026-09-12 第五轮）
     for classroom in schedule_handle.get_classroom_list():
@@ -569,6 +570,7 @@ class Course_Select_Panel:
     # 每行6个：190/6=31列，6×31=186≤190
     cell_width = int(self.width / 6)
     index = 0
+    now_draw: draw.LeftDraw | draw.LeftButton | draw.NormalDraw
 
     # 体育课：四处训练场地点
     if course_type == education_constant.COURSE_TYPE_PE:

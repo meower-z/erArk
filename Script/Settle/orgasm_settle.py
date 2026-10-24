@@ -170,7 +170,7 @@ def orgasm_judge(
 
 def orgasm_settle_in_second_behavior(
     character_id: int,
-    change_data: game_type.CharacterStatusChange,
+    change_data: game_type.CharacterStatusChange | game_type.TargetChange,
     normal_orgasm_dict: dict | None = None,
     extra_orgasm_dict: dict | None = None,
     un_count_orgasm_dict: dict | None = None,
@@ -445,7 +445,10 @@ def orgasm_settle_in_second_behavior(
       store_power_by_human_power(part_count + 3, character_id, draw_flag)
 
 
-def release_orgasm_edge_now(character_id: int, change_data) -> None:
+def release_orgasm_edge_now(
+    character_id: int,
+    change_data: game_type.CharacterStatusChange | game_type.TargetChange,
+) -> None:
   """
   将该角色累计的寸止计数解放为绝顶，清零寸止计数后，在当前H阶段内立即结算本次新增绝顶的口上与数值
   Keyword arguments:

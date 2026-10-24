@@ -400,7 +400,9 @@ def add_favorability(
     character_id: int,
     target_id: int,
     now_add_favorability: int,
-    change_data: Optional[game_type.CharacterStatusChange],
+    change_data: Optional[
+        game_type.CharacterStatusChange | game_type.TargetChange
+    ],
     target_change: Optional[game_type.TargetChange],
 ) -> None:
   """

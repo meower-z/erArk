@@ -293,6 +293,7 @@ class Class_Schedule_Panel:
     # 教室页签：只列已开放的。
     # constant.place_data 装的是**全部**教室（配置载入期由 data/map/ 的目录树静态构建），
     #    开放与否由 schedule_handle.get_classroom_list() 里的 judge_classroom_open 另查 facility_open
+    now_draw: draw.CenterDraw | draw.CenterButton
     for room in self.room_list:
       room_width = max(1, int(self.width / max(1, len(self.room_list))))
       if room == self.now_room:
@@ -377,6 +378,7 @@ class Class_Schedule_Panel:
     head_draw.width = head_width
     head_draw.text = _("  节次        ")
     head_draw.draw()
+    now_draw: draw.CenterDraw | draw.CenterButton
     for name in education_constant.WEEK_NAME:
       now_draw = draw.CenterDraw()
       now_draw.width = cell_width
@@ -884,7 +886,7 @@ class Class_Schedule_Panel:
     overlay_flag = (
         temp_class is not None and temp_class.get("classroom", "") == classroom
     )
-    if overlay_flag:
+    if overlay_flag and temp_class is not None:
       from Script.System.Education_System import sex_class_handle
 
       week_cell = schedule_handle.get_class_cell(
@@ -1018,6 +1020,7 @@ class Class_Schedule_Panel:
       # 每行6个：190/6=31列，6×31=186≤190
       teacher_width = int(self.width / 6)
       count = 0
+      now_draw: draw.LeftDraw | draw.LeftButton
       for teacher_id in teacher_list:
         teacher_data: game_type.Character = cache.character_data[teacher_id]
         level = int(teacher_data.ability.get(ability_id, 0))

@@ -15,7 +15,7 @@ from Script.UI.Panel import dirty_panel
 
 import random
 
-panel_info_data = {}
+panel_info_data: dict[str, object] = {}
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -184,7 +184,7 @@ def settle_hidden_value_by_action(
   if now_duration == 0:
     now_duration = character_data.behavior.duration
   # 模式
-  mode_adjust = 1
+  mode_adjust: float = 1
   # 双不隐容易被发现
   if handle_premise.handle_hidden_sex_mode_1(character_id):
     mode_adjust = 2

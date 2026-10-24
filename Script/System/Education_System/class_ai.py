@@ -326,7 +326,9 @@ def get_next_sex_class(character_id: int, now_time: datetime.datetime) -> tuple:
     ):
       break
     temp_class = sex_class_handle.get_active_temp_class(date_ordinal, period)
-    if judge_sex_class_is_mine(character_id, temp_class, week_day, period):
+    if temp_class is not None and judge_sex_class_is_mine(
+        character_id, temp_class, week_day, period
+    ):
       return temp_class, temp_class.get("classroom", "")
   return None, ""
 
@@ -794,7 +796,9 @@ def get_student_leave_time(character_id: int) -> datetime.datetime | None:
     # 这一节是按规则 A（待赴实操课）截的：人已在那间教室时不截，与规则 B 的「人已在上课地点」分开处理
     by_sex_class = False
     temp_class = sex_class_handle.get_active_temp_class(date_ordinal, period)
-    if judge_sex_class_is_mine(character_id, temp_class, week_day, period):
+    if temp_class is not None and judge_sex_class_is_mine(
+        character_id, temp_class, week_day, period
+    ):
       leave_time = class_start - pre_arrive
       to_place = schedule_handle.get_classroom_position(
           temp_class.get("classroom", "")
