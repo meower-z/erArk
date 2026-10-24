@@ -533,6 +533,7 @@ def check_fertilization(character_id: int) -> int | None:
     # 育儿中的角色受精怀孕
     if handle_premise.handle_rearing_1(character_id):
       achievement_panel.achievement_flow(_("生育"), 708)
+  return None
 
 
 def check_pregnancy(character_id: int) -> None:

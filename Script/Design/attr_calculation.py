@@ -238,7 +238,7 @@ def get_token_zero(token_dict: dict[int, bool]) -> dict[int, bool]:
   """
   token_list = token_dict
   for i in range(len(cache.npc_tem_data) + 1):
-    token_list[i] = 0
+    token_list[i] = False
   return token_list
 
 

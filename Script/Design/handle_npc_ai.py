@@ -131,6 +131,7 @@ def judge_character_tired_sleep(character_id: int) -> str | None:
         from Script.System.Instruct_System import handle_instruct
 
         handle_instruct.handle_h_end()
+  return None
 
 
 def run_npc_pre_behavior_checks(

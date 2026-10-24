@@ -922,7 +922,7 @@ class Edit_Group_Sex_Temple_Panel:
     )
     scene_data: game_type.Scene = cache.scene_data[scene_path_str]
     now_scene_character_list = scene_data.character_list
-    select_state = {}
+    select_state: dict[str, int | str] = {}
 
     while 1:
       npc_id_got_list = sorted(cache.npc_id_got)

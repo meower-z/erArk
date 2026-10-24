@@ -411,7 +411,7 @@ class Course_Select_Panel:
     result = self._select_course(character_id, week_day, period)
     if result is None:
       return
-    if result == "CLEAR":
+    if isinstance(result, str):
       schedule_handle.clear_selected_course(character_id, week_day, period)
       return
     course_type, target = result
@@ -421,7 +421,7 @@ class Course_Select_Panel:
 
   def _select_course(
       self, character_id: int, week_day: int, period: int
-  ) -> tuple[int, object] | str | None:
+  ) -> tuple[int, str | int] | str | None:
     """
     选课第一屏：本节可上的教室课 + 三类个人式课型入口
     输入类型: character_id(int), week_day(int), period(int)
@@ -551,7 +551,7 @@ class Course_Select_Panel:
 
   def _select_target(
       self, character_id: int, week_day: int, period: int, course_type: int
-  ) -> object:
+  ) -> str | int | None:
     """
     选个人式课型的具体目标
     输入类型: character_id(int), week_day(int), period(int), course_type(int)
@@ -567,7 +567,7 @@ class Course_Select_Panel:
         self.width,
     ).draw()
     return_list: List[str] = []
-    target_by_return: Dict[str, object] = {}
+    target_by_return: Dict[str, str | int] = {}
     empty_flag = True
     # 每行6个：190/6=31列，6×31=186≤190
     cell_width = int(self.width / 6)

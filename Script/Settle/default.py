@@ -71,7 +71,7 @@ def handle_nothing(
 def handle_add_small_hit_point(
     character_id: int,
     add_time: int,
-    change_data: game_type.CharacterStatusChange,
+    change_data: game_type.CharacterStatusChange | game_type.TargetChange,
     now_time: datetime.datetime,
 ) -> None:
   """
@@ -106,7 +106,7 @@ def handle_add_small_hit_point(
 def handle_add_small_mana_point(
     character_id: int,
     add_time: int,
-    change_data: game_type.CharacterStatusChange,
+    change_data: game_type.CharacterStatusChange | game_type.TargetChange,
     now_time: datetime.datetime,
 ) -> None:
   """
@@ -5663,7 +5663,7 @@ def handle_shower_flag_to_4(
 def handle_eat_food_flag_to_0(
     character_id: int,
     add_time: int,
-    change_data: game_type.CharacterStatusChange,
+    change_data: game_type.CharacterStatusChange | game_type.TargetChange,
     now_time: datetime.datetime,
 ) -> None:
   """
@@ -11947,7 +11947,7 @@ def handle_target_urinate_point_zero(
 def handle_hunger_point_zero(
     character_id: int,
     add_time: int,
-    change_data: game_type.CharacterStatusChange,
+    change_data: game_type.CharacterStatusChange | game_type.TargetChange,
     now_time: datetime.datetime,
 ) -> None:
   """
@@ -12045,7 +12045,7 @@ def handle_target_sleep_point_zero(
 def handle_add_small_urinate_point(
     character_id: int,
     add_time: int,
-    change_data: game_type.CharacterStatusChange,
+    change_data: game_type.CharacterStatusChange | game_type.TargetChange,
     now_time: datetime.datetime,
 ) -> None:
   """

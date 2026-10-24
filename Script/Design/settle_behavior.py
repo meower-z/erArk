@@ -199,7 +199,7 @@ def handle_settle_behavior(
       character_id != 0
       and now_character_data.position != player_character_data.position
   ):
-    return
+    return None
   # 交互对象一方的角色数据：互换输出时是发起交互的NPC，不互换时在下面逐个交互对象取
   target_data = now_character_data
   # 当NPC对玩家交互时，互相替换双方的输出内容
@@ -220,7 +220,7 @@ def handle_settle_behavior(
   # elif character_id:
   #     return
   if change_data is None:
-    return
+    return None
   if change_data.mana_point:
     now_judge = True
     PC_information_flag = 1
@@ -562,6 +562,7 @@ def handle_settle_behavior(
       emit_realtime_text(now_text, "instruct")
 
     return now_panel
+  return None
 
 
 def handle_instruct_data(

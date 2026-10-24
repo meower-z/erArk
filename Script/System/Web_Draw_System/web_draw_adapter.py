@@ -654,79 +654,123 @@ def apply_web_adapters() -> None:
   )
 
   # 包装普通文本绘制类
-  draw.NormalDraw.draw = wrap_draw_method(
-      draw.NormalDraw, WebDrawAdapter.adapt_normal_draw
+  setattr(
+      draw.NormalDraw,
+      "draw",
+      wrap_draw_method(draw.NormalDraw, WebDrawAdapter.adapt_normal_draw),
   )
 
   # 包装居中文本绘制类
-  draw.CenterDraw.draw = wrap_draw_method(
-      draw.CenterDraw, WebDrawAdapter.adapt_center_draw
+  setattr(
+      draw.CenterDraw,
+      "draw",
+      wrap_draw_method(draw.CenterDraw, WebDrawAdapter.adapt_center_draw),
   )
   # 包装右对齐文本绘制类
-  draw.RightDraw.draw = wrap_draw_method(
-      draw.RightDraw, WebDrawAdapter.adapt_right_draw
+  setattr(
+      draw.RightDraw,
+      "draw",
+      wrap_draw_method(draw.RightDraw, WebDrawAdapter.adapt_right_draw),
   )
 
   # 包装按钮绘制类
-  draw.Button.draw = wrap_draw_method(draw.Button, WebDrawAdapter.adapt_button)
-  draw.CenterButton.draw = wrap_draw_method(
-      draw.CenterButton, WebDrawAdapter.adapt_button
+  setattr(
+      draw.Button,
+      "draw",
+      wrap_draw_method(draw.Button, WebDrawAdapter.adapt_button),
   )
-  draw.LeftButton.draw = wrap_draw_method(
-      draw.LeftButton, WebDrawAdapter.adapt_button
+  setattr(
+      draw.CenterButton,
+      "draw",
+      wrap_draw_method(draw.CenterButton, WebDrawAdapter.adapt_button),
+  )
+  setattr(
+      draw.LeftButton,
+      "draw",
+      wrap_draw_method(draw.LeftButton, WebDrawAdapter.adapt_button),
   )
 
   # 包装线条绘制类
-  draw.LineDraw.draw = wrap_draw_method(
-      draw.LineDraw, WebDrawAdapter.adapt_line_draw
+  setattr(
+      draw.LineDraw,
+      "draw",
+      wrap_draw_method(draw.LineDraw, WebDrawAdapter.adapt_line_draw),
   )
 
   # 包装标题线绘制类
-  draw.TitleLineDraw.draw = wrap_draw_method(
-      draw.TitleLineDraw, WebDrawAdapter.adapt_title_line_draw
+  setattr(
+      draw.TitleLineDraw,
+      "draw",
+      wrap_draw_method(
+          draw.TitleLineDraw, WebDrawAdapter.adapt_title_line_draw
+      ),
   )
 
   # 包装等待绘制类
-  draw.WaitDraw.draw = wrap_draw_method(
-      draw.WaitDraw, WebDrawAdapter.adapt_wait_draw
+  setattr(
+      draw.WaitDraw,
+      "draw",
+      wrap_draw_method(draw.WaitDraw, WebDrawAdapter.adapt_wait_draw),
   )
-  draw.LineFeedWaitDraw.draw = wrap_draw_method(
-      draw.LineFeedWaitDraw, WebDrawAdapter.adapt_line_feed_wait_draw
+  setattr(
+      draw.LineFeedWaitDraw,
+      "draw",
+      wrap_draw_method(
+          draw.LineFeedWaitDraw, WebDrawAdapter.adapt_line_feed_wait_draw
+      ),
   )
 
   # 包装图片绘制类
-  draw.ImageDraw.draw = wrap_draw_method(
-      draw.ImageDraw, WebDrawAdapter.adapt_image_draw
+  setattr(
+      draw.ImageDraw,
+      "draw",
+      wrap_draw_method(draw.ImageDraw, WebDrawAdapter.adapt_image_draw),
   )
 
   # 包装比例条绘制类
-  draw.BarDraw.draw = wrap_draw_method(
-      draw.BarDraw, WebDrawAdapter.adapt_bar_draw
+  setattr(
+      draw.BarDraw,
+      "draw",
+      wrap_draw_method(draw.BarDraw, WebDrawAdapter.adapt_bar_draw),
   )
 
   # 包装人物图片绘制类
-  draw.CharaDraw.draw = wrap_draw_method(
-      draw.CharaDraw, WebDrawAdapter.adapt_chara_draw
+  setattr(
+      draw.CharaDraw,
+      "draw",
+      wrap_draw_method(draw.CharaDraw, WebDrawAdapter.adapt_chara_draw),
   )
 
   # 包装带有文本和数值描述的比例条绘制类
-  draw.InfoBarDraw.draw = wrap_draw_method(
-      draw.InfoBarDraw, WebDrawAdapter.adapt_info_bar_draw
+  setattr(
+      draw.InfoBarDraw,
+      "draw",
+      wrap_draw_method(draw.InfoBarDraw, WebDrawAdapter.adapt_info_bar_draw),
   )
 
   # 包装带有文本的人物图像绘制类
-  draw.InfoCharaDraw.draw = wrap_draw_method(
-      draw.InfoCharaDraw, WebDrawAdapter.adapt_info_chara_draw
+  setattr(
+      draw.InfoCharaDraw,
+      "draw",
+      wrap_draw_method(
+          draw.InfoCharaDraw, WebDrawAdapter.adapt_info_chara_draw
+      ),
   )
 
   # 包装图片按钮绘制类
-  draw.ImageButton.draw = wrap_draw_method(
-      draw.ImageButton, WebDrawAdapter.adapt_image_button
+  setattr(
+      draw.ImageButton,
+      "draw",
+      wrap_draw_method(draw.ImageButton, WebDrawAdapter.adapt_image_button),
   )
 
   # 包装居中图片绘制类
-  draw.CenterDrawImage.draw = wrap_draw_method(
-      draw.CenterDrawImage, WebDrawAdapter.adapt_center_draw_image
+  setattr(
+      draw.CenterDrawImage,
+      "draw",
+      wrap_draw_method(
+          draw.CenterDrawImage, WebDrawAdapter.adapt_center_draw_image
+      ),
   )
 
   print("已应用Web绘制适配器到所有绘制类")

@@ -205,7 +205,7 @@ def calculation_instuct_judege(
     calculation_text += _("+女儿(+") + str(judge_daughter) + ")"
 
   # 醉酒修正
-  drunk_level, __ = drunk_sex_common.get_drunk_level(target_data.cid)
+  drunk_level, _drunk_name = drunk_sex_common.get_drunk_level(target_data.cid)
   if drunk_level:
     # 醉酒等级 1~3 的修正值
     judge_drunk = {1: 20, 2: 100, 3: 500}[drunk_level]

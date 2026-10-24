@@ -49,13 +49,13 @@ class Condom_Select_Panel:
     # 取回装饰模式下选择的是对方身上的装饰，其他模式选择的是存量池
     if self.mode == "take_back":
       select_result = self.select_decoration(target_character_id)
-      if select_result == -1:
+      if isinstance(select_result, int):
         return -1
       condom_handle.settle_take_back(target_character_id, select_result)
       return 1
 
     condom_index_list = self.select_condoms()
-    if condom_index_list == -1:
+    if isinstance(condom_index_list, int):
       return -1
     # 饮用模式无需选择部位，确认后直接结算
     if self.mode == "drink":
@@ -63,7 +63,7 @@ class Condom_Select_Panel:
       return 1
     # 挂装饰与挤出模式需要二级选择目标部位，确认后直接结算
     part_result = self.select_part(target_character_id)
-    if part_result == -1:
+    if isinstance(part_result, int):
       return -1
     if self.mode == "hang":
       condom_handle.settle_hang(

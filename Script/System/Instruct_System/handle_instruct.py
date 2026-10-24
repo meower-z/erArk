@@ -449,6 +449,7 @@ def chara_handle_instruct_common_settle(
   # 仅在玩家指令时更新游戏流程
   if character_id == 0 or game_update_flag:
     update.game_update_flow(duration)
+  return None
 
 
 def handle_comprehensive_state_effect(
@@ -468,7 +469,7 @@ def handle_comprehensive_state_effect(
   now_time -- 结算的时间
   """
   if not add_time:
-    return
+    return None
   # print(f"debug effect_all_value_list:{effect_all_value_list}")
   character_data: game_type.Character = cache.character_data[0]
   # 进行主体A的判别，A1为自己，A2为交互对象，A3为指定id角色(格式为A3|15)
@@ -494,6 +495,7 @@ def handle_comprehensive_state_effect(
       target_character_id=target_character_id,
       game_update_flag=True,
   )
+  return None
 
 
 @add_instruct(constant.Instruct.REST)
