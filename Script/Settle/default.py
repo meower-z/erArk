@@ -9068,8 +9068,10 @@ def handle_read_add_adjust(
       character_data.entertainment.read_book_progress[book_id] = 100
       # 如果是技能书籍，则增加对应技能的经验
       if exp_id != 0:
-        if book_difficulty <= 1:
+        if book_difficulty == 0:
           add_value = 5
+        elif book_difficulty == 1:
+          add_value = 10
         elif book_difficulty == 2:
           add_value = 20
         else:
