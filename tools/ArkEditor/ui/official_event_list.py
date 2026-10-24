@@ -13,6 +13,10 @@ from PySide6.QtCore import Signal, Qt
 from PySide6.QtGui import QCursor, QFont
 import game_type
 import cache_control
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from PySide6.QtCore import QPoint
 
 font = QFont()
 font.setPointSize(cache_control.now_font_size)
@@ -36,7 +40,12 @@ class OfficialEventListWidget(QWidget):
   event_selected = Signal(object)
   event_changed = Signal(str)
 
-  def __init__(self, event_list, file_name_list, parent=None):
+  def __init__(
+      self,
+      event_list: list[game_type.OfficialEvent],
+      file_name_list: list[str],
+      parent: QWidget | None = None,
+  ) -> None:
     """
     建立文件筛选下拉框、关键字搜索栏、重置按钮与带右键菜单的列表，并显示全部事件
     Keyword arguments:
@@ -83,7 +92,7 @@ class OfficialEventListWidget(QWidget):
       widget.setFont(font)
     self.refresh_list()
 
-  def get_item_text(self, event) -> str:
+  def get_item_text(self, event: game_type.OfficialEvent) -> str:
     """
     取一条事件在列表里显示的文字
     参数:
@@ -137,7 +146,7 @@ class OfficialEventListWidget(QWidget):
     self.file_box.setCurrentIndex(0)
     self.refresh_filter()
 
-  def on_item_clicked(self, item):
+  def on_item_clicked(self, item: QListWidgetItem) -> None:
     """
     点击条目时把该事件发出去
     参数:
@@ -194,7 +203,7 @@ class OfficialEventListWidget(QWidget):
     self.event_changed.emit(file_name)
     self.event_selected.emit(event)
 
-  def copy_event(self, event):
+  def copy_event(self, event: game_type.OfficialEvent) -> None:
     """
     复制一条事件
     参数:
@@ -224,7 +233,7 @@ class OfficialEventListWidget(QWidget):
     self.event_changed.emit(event.file_name)
     self.event_selected.emit(new_event)
 
-  def delete_event(self, event):
+  def delete_event(self, event: game_type.OfficialEvent) -> None:
     """
     删除一条事件
     参数:
@@ -237,7 +246,7 @@ class OfficialEventListWidget(QWidget):
     self.refresh_filter()
     self.event_changed.emit(event.file_name)
 
-  def show_context_menu(self, pos):
+  def show_context_menu(self, pos: "QPoint") -> None:
     """
     右键菜单：新增、复制、删除
     参数:

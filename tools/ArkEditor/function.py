@@ -13,7 +13,7 @@ font.setPointSize(cache_control.now_font_size)
 font.setFamily(cache_control.now_font_name)
 
 
-def read_CVP(cvp_value_str: str):
+def read_CVP(cvp_value_str: str) -> str:
   """读取CVP字符串 A能力,T素质,J宝珠,E经验,S状态,F好感度,X信赖"""
   cvp_str_list = cvp_value_str.split("_")
   # 如果"Instruct"在cvp_str_list[2]中，则将该部分的字符串连接起来，合并为一个字符串代替cvp_str_list[2]，其他部分的序号跟着变动
@@ -127,7 +127,7 @@ def read_CVP(cvp_value_str: str):
   return cvp_str
 
 
-def read_CVE(cve_value_str: str):
+def read_CVE(cve_value_str: str) -> str:
   """读取CVE字符串 A能力,T素质,J宝珠,E经验,S状态,F好感度,X信赖"""
   # 用下划线分割字符串
   cve_str_list = cve_value_str.split("_")
@@ -195,7 +195,7 @@ def read_CVE(cve_value_str: str):
   return cve_str
 
 
-def read_CSE(cse_value_str: str):
+def read_CSE(cse_value_str: str) -> str:
   """读取CSE字符串"""
   cse_str_list = cse_value_str.split("_")
   # print(f"cse_str_list = {cse_str_list}")
@@ -232,7 +232,7 @@ def save_data() -> None:
         now_data = {}
         for k in cache_control.now_event_data:
           now_data[k] = cache_control.now_event_data[k].__dict__
-        json.dump(now_data, event_data_file, ensure_ascii=0)
+        json.dump(now_data, event_data_file, ensure_ascii=False)
 
     # 保存口上
     elif cache_control.now_edit_type_flag == 0:

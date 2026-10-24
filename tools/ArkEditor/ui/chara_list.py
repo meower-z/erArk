@@ -5,6 +5,11 @@
 from PySide6.QtWidgets import QVBoxLayout, QSplitter, QPushButton, QHBoxLayout, QWidget, QTextEdit, QLabel, QSizePolicy, QComboBox, QScrollArea
 from PySide6.QtGui import QFont, QPalette, QColor
 import cache_control
+import game_type
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from PySide6.QtGui import QResizeEvent
 
 font = QFont()
 font.setPointSize(cache_control.now_font_size)
@@ -186,7 +191,7 @@ class CharaList(QWidget):
     self.layout.addWidget(self.apply_button)
     self.layout.addWidget(self.reset_button)
 
-  def resizeEvent(self, event):
+  def resizeEvent(self, event: "QResizeEvent") -> None:
     """
     处理窗口大小变化，并把分割器的两栏设为各占一半宽度
     Keyword arguments:
@@ -199,7 +204,7 @@ class CharaList(QWidget):
     width = self.width() / 2
     self.splitter.setSizes([width, width])
 
-  def create_label(self, text, width=100):
+  def create_label(self, text: str, width: int = 100) -> QLabel:
     """创建一个带有固定宽度和大小策略的标签"""
     label = QLabel(text)
     label.setFixedWidth(width)  # 设置固定宽度
@@ -208,14 +213,16 @@ class CharaList(QWidget):
     )  # 设置大小策略
     return label
 
-  def create_text_edit(self, initial_text, width=400, height=32):
+  def create_text_edit(
+      self, initial_text: str, width: int = 400, height: int = 32
+  ) -> QTextEdit:
     """创建一个文本编辑框"""
     text_edit = QTextEdit(initial_text)
     text_edit.setFixedHeight(height)
     text_edit.setFixedWidth(width)
     return text_edit
 
-  def create_qcombo_box(self, initial_text_list):
+  def create_qcombo_box(self, initial_text_list: list[str]) -> QComboBox:
     """创建一个下拉框"""
     combo_box = QComboBox()
     # combo_box.setFixedHeight(30)
@@ -248,6 +255,9 @@ class CharaList(QWidget):
 
   def save_csv(self) -> None:
     """保存csv文件"""
+    # 载入属性文件之前这里还是类本身，属性面板在载入之后才显示
+    if not isinstance(cache_control.now_chara_data, game_type.Chara_Data):
+      return
     # 如果是使用的模板，那就新建一个文件
     if cache_control.now_file_path == "999_模板人物属性文件.csv":
       chara_id = cache_control.now_chara_data.AdvNpc
@@ -455,7 +465,7 @@ class CharaList(QWidget):
 
   def update_chara_clothing(self) -> None:
     """根据文本编辑框更新当前的角色服装"""
-    now_clothing_dict = {}
+    now_clothing_dict: dict[int, list[str]] = {}
     for item in self.clothing_widget.items:
       key = int(
           list(cache_control.clothing_data.keys())[
@@ -480,6 +490,9 @@ class CharaList(QWidget):
 
   def update(self) -> None:
     """更新"""
+    # 载入属性文件之前这里还是类本身，属性面板在载入之后才显示
+    if not isinstance(cache_control.now_chara_data, game_type.Chara_Data):
+      return
     now_AdvNpc = cache_control.now_chara_data.AdvNpc
     self.chara_id_text_edit.setText(str(now_AdvNpc))
     now_Name = cache_control.now_chara_data.Name
@@ -586,7 +599,7 @@ class CharaList(QWidget):
 
 class MenuWidget(QWidget):
 
-  def __init__(self, type_flag=0):
+  def __init__(self, type_flag: int = 0) -> None:
     """
     建立添加、删除两个按钮，并记下条目类型
     Keyword arguments:
@@ -608,7 +621,7 @@ class MenuWidget(QWidget):
     self.buttonLayout.addWidget(self.removeButton)
 
     self.type_flag = type_flag
-    self.items = []
+    self.items: list[tuple[QHBoxLayout, QComboBox, QTextEdit]] = []
     self.items_per_layout = 0  # 新增属性来跟踪每个水平布局中的项目数量
 
   def addItems(self) -> None:

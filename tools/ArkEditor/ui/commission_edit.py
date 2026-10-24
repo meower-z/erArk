@@ -10,6 +10,11 @@ from PySide6.QtWidgets import QWidget, QFormLayout, QLineEdit, QTextEdit, QSpinB
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QFont
 import cache_control
+import game_type
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from game_type import Commission
 
 
 def explain_commission_text(text: str) -> str:
@@ -93,7 +98,7 @@ def explain_commission_text(text: str) -> str:
         flag = parts[2]
         chara_name = (
             cache_control.now_chara_data.Name
-            if hasattr(cache_control.now_chara_data, "Name")
+            if isinstance(cache_control.now_chara_data, game_type.Chara_Data)
             else f"ID{chara_id}"
         )
         if flag == "1":
@@ -120,11 +125,11 @@ def explain_commission_text(text: str) -> str:
       parts = item.split("_")
       if len(parts) == 3:
         nation_id = parts[1]
-        value = float(parts[2]) * 0.01
+        prestige_value = float(parts[2]) * 0.01
         nation_name = cache_control.nation_data.get(nation_id, f"ID{nation_id}")
         if nation_id == "0":
           nation_name = "当前国家"
-        result.append(f"声望[{nation_name}]{value}")
+        result.append(f"声望[{nation_name}]{prestige_value}")
       else:
         result.append(item)
     # 特产类 特产_出生地ID_数量
@@ -151,7 +156,7 @@ def explain_commission_text(text: str) -> str:
         value = parts[2]
         chara_name = (
             cache_control.now_chara_data.Name
-            if hasattr(cache_control.now_chara_data, "Name")
+            if isinstance(cache_control.now_chara_data, game_type.Chara_Data)
             else f"ID{chara_id}"
         )
         result.append(f"好感[{chara_name}]增加{value}")
@@ -165,7 +170,7 @@ def explain_commission_text(text: str) -> str:
         value = parts[2]
         chara_name = (
             cache_control.now_chara_data.Name
-            if hasattr(cache_control.now_chara_data, "Name")
+            if isinstance(cache_control.now_chara_data, game_type.Chara_Data)
             else f"ID{chara_id}"
         )
         result.append(f"信赖[{chara_name}]增加{value}")
@@ -179,7 +184,7 @@ def explain_commission_text(text: str) -> str:
         value = parts[2]
         chara_name = (
             cache_control.now_chara_data.Name
-            if hasattr(cache_control.now_chara_data, "Name")
+            if isinstance(cache_control.now_chara_data, game_type.Chara_Data)
             else f"ID{chara_id}"
         )
         result.append(f"[{chara_name}]攻略等级为{value}")
@@ -193,7 +198,7 @@ def explain_commission_text(text: str) -> str:
         flag = parts[2]
         chara_name = (
             cache_control.now_chara_data.Name
-            if hasattr(cache_control.now_chara_data, "Name")
+            if isinstance(cache_control.now_chara_data, game_type.Chara_Data)
             else f"ID{chara_id}"
         )
         if flag == "1":
@@ -219,14 +224,14 @@ class CommissionEditWidget(QWidget):
 
   commission_saved = Signal(object)
 
-  def __init__(self, parent=None):
+  def __init__(self, parent: QWidget | None = None) -> None:
     """
     初始化控件，此时还没有要编辑的委托
     Keyword arguments:
     parent -- 父控件
     """
     super().__init__(parent)
-    self.commission = None
+    self.commission: "Commission | None" = None
     self.init_ui()
 
   def init_ui(self) -> None:
@@ -345,7 +350,7 @@ class CommissionEditWidget(QWidget):
     text = self.reward_edit.text()
     self.reward_explain.setPlainText(explain_commission_text(text))
 
-  def set_commission(self, commission):
+  def set_commission(self, commission: "Commission") -> None:
     """
     显示当前委托属性
     """
@@ -431,7 +436,7 @@ class CommissionItemAddDialog(QDialog):
       提供类型、子项、数值的选择与输入，生成格式化字符串
   """
 
-  def __init__(self, parent=None):
+  def __init__(self, parent: QWidget | None = None) -> None:
     """
     建立类型下拉框、子项控件、数值输入框（初值 1）与确定按钮，并按当前类型填好子项
     Keyword arguments:
@@ -514,7 +519,7 @@ class CommissionItemAddDialog(QDialog):
     self.type_combo.currentTextChanged.connect(self.update_sub_items)
     self.update_sub_items(self.type_combo.currentText())
 
-  def update_sub_items(self, type_name):
+  def update_sub_items(self, type_name: str) -> None:
     """
     移除当前的子项控件，换成与类型对应的控件：能力、资源、经验、宝珠、素质、声望与特产用列出对应数据的下拉框，
     特产的下拉框第一项为当前国家，其他类型用文本输入框
@@ -595,7 +600,7 @@ class CommissionItemAddDialog(QDialog):
       h_layout.insertWidget(3, self.sub_edit)
       self.current_sub_widget = self.sub_edit
 
-  def get_result(self):
+  def get_result(self) -> str:
     """
     按所选类型、子项与数值生成需求/奖励项字符串，格式为「前缀_子项_数值」
     Return arguments:

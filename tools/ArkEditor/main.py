@@ -119,8 +119,10 @@ def mark_modified() -> None:
   is_modified = True
   update_window_title()
   # 文件已修改时，保存按钮显示星号
-  if hasattr(cache_control, "item_text_edit") and hasattr(
-      cache_control.item_text_edit, "save_button"
+  if (
+      hasattr(cache_control, "item_text_edit")
+      and cache_control.item_text_edit is not None
+      and hasattr(cache_control.item_text_edit, "save_button")
   ):
     cache_control.item_text_edit.save_button.setText("保存*")
 
@@ -131,13 +133,15 @@ def mark_saved() -> None:
   is_modified = False
   update_window_title()
   # 文件已保存时，保存按钮不显示星号
-  if hasattr(cache_control, "item_text_edit") and hasattr(
-      cache_control.item_text_edit, "save_button"
+  if (
+      hasattr(cache_control, "item_text_edit")
+      and cache_control.item_text_edit is not None
+      and hasattr(cache_control.item_text_edit, "save_button")
   ):
     cache_control.item_text_edit.save_button.setText("保存")
 
 
-def backup_file(file_path):
+def backup_file(file_path: str) -> None:
   """
   备份指定文件到根目录下的'备份'文件夹，文件名加上当天日期。
   输入: file_path(str) - 需要备份的文件路径
@@ -238,7 +242,7 @@ def create_chara_data() -> None:
   update_window_title()
 
 
-def load_chara_data(path=""):
+def load_chara_data(path: str | bool = "") -> None:
   """载入属性文件"""
   global last_open_dir, is_modified
   if path != "":
@@ -402,7 +406,7 @@ def load_talk_data_to_cache() -> None:
 
     # 类型名转化
     if "context" in value:
-      now_talk.text = now_talk.context
+      now_talk.text = value["context"]
     else:
       now_talk.text = ""
     now_talk.behavior_id = str(now_talk.behavior_id)
@@ -410,7 +414,7 @@ def load_talk_data_to_cache() -> None:
 
     # 前提转化
     delete_premise_list = []
-    premise_list = now_talk.premise.split("&")
+    premise_list = value["premise"].split("&")
     now_talk.premise = {}
     for premise in premise_list:
       now_talk.premise[premise] = 1
@@ -629,13 +633,13 @@ def load_commission_data() -> None:
   commission_edit = CommissionEditWidget()
 
   # 选中委托时，右侧显示属性
-  def on_select(commission):
+  def on_select(commission: game_type.Commission) -> None:
     commission_edit.set_commission(commission)
 
   commission_list.commission_selected.connect(on_select)
 
   # 保存修改时，写回CSV
-  def on_save(commission):
+  def on_save(commission: game_type.Commission) -> None:
     load_csv.save_commission_csv(file_path, commissions)
 
   commission_edit.commission_saved.connect(on_save)
@@ -711,7 +715,7 @@ def load_official_event_data() -> None:
   # 右键增删也立刻落盘：外勤委托页要再点一次保存才写文件，很容易丢改动
   official_event_list.event_changed.connect(save_one_file)
 
-  def on_event_saved(event):
+  def on_event_saved(event: game_type.OfficialEvent) -> None:
     """保存一条事件后重写它所属的文件并刷新列表"""
     save_one_file(event.file_name)
     official_event_list.refresh_filter()

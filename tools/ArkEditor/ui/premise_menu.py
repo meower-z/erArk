@@ -15,6 +15,10 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QFont, Qt
 import cache_control
 import function
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from game_type import Event, Talk
 
 font = QFont()
 font.setPointSize(cache_control.now_font_size)
@@ -24,7 +28,7 @@ font.setFamily(cache_control.now_font_name)
 class TreeItem(QTreeWidgetItem):
   """树选框对象"""
 
-  def __init__(self, any):
+  def __init__(self, any: QTreeWidgetItem) -> None:
     """初始化树选框对象"""
     super(TreeItem, self).__init__(any)
     self.cid = ""
@@ -172,7 +176,7 @@ class PremiseMenu(QDialog):
     self.layout.addLayout(self.tree_layout)
     self.setLayout(self.layout)
 
-  def update_premise(self, item, data):
+  def update_premise(self, item: TreeItem, data: "Event | Talk") -> None:
     """
     删除前提
     Keyword arguments:
@@ -187,7 +191,7 @@ class PremiseMenu(QDialog):
       if item.cid in data.premise:
         del data.premise[item.cid]
 
-  def add_premise(self, item, data):
+  def add_premise(self, item: TreeItem, data: "Event | Talk") -> None:
     """
     添加前提
     Keyword arguments:
@@ -210,6 +214,7 @@ class PremiseMenu(QDialog):
     if "cid" not in item.__dict__:
       return
 
+    data: "Event | Talk"
     if cache_control.now_edit_type_flag == 1:
       data = cache_control.now_event_data[cache_control.now_select_id]
     elif cache_control.now_edit_type_flag == 0:
@@ -225,7 +230,8 @@ class PremiseMenu(QDialog):
       item.setCheckState(0, Qt.Checked)
       self.add_premise(item, data)
 
-    cache_control.item_premise_list.update()
+    if cache_control.item_premise_list is not None:
+      cache_control.item_premise_list.update()
 
   def search(self) -> None:
     """搜索前提"""
@@ -267,7 +273,7 @@ class PremiseMenu(QDialog):
   #     delete_action.triggered.connect(lambda: self.delete_group(item))
   #     menu.exec_(event.globalPos())
 
-  def delete_group(self, item):
+  def delete_group(self, item: object) -> None:
     """删除前提组"""
     # 找到前提群cid
     premise_group_cid = ""

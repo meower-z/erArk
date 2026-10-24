@@ -11,6 +11,10 @@ from PySide6.QtCore import Signal, Qt
 from PySide6.QtGui import QCursor, QFont
 import game_type
 import cache_control
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from PySide6.QtCore import QModelIndex, QPoint
 
 font = QFont()
 font.setPointSize(cache_control.now_font_size)
@@ -31,7 +35,11 @@ class CommissionListWidget(QWidget):
   commission_copy = Signal(object)  # 复制条目信号
   commission_delete = Signal(object)  # 删除条目信号
 
-  def __init__(self, commissions, parent=None):
+  def __init__(
+      self,
+      commissions: list[game_type.Commission],
+      parent: QWidget | None = None,
+  ) -> None:
     """
     建立搜索栏与可拖动排序、带右键菜单的列表，并显示全部委托
     Keyword arguments:
@@ -119,7 +127,7 @@ class CommissionListWidget(QWidget):
     self.filtered_commissions = self.commissions.copy()
     self.refresh_list()
 
-  def on_item_clicked(self, item):
+  def on_item_clicked(self, item: QListWidgetItem) -> None:
     """
     处理点击事件，发出选中信号
     """
@@ -156,7 +164,7 @@ class CommissionListWidget(QWidget):
     self.list_widget.setCurrentRow(0)
     self.commission_selected.emit(new_commission)
 
-  def copy_commission(self, commission):
+  def copy_commission(self, commission: game_type.Commission) -> None:
     """
     复制当前选中委托，插入到其下方
     """
@@ -185,7 +193,7 @@ class CommissionListWidget(QWidget):
     self.list_widget.setCurrentRow(idx + 1)
     self.commission_selected.emit(new_commission)
 
-  def delete_commission(self, commission):
+  def delete_commission(self, commission: game_type.Commission) -> None:
     """
     删除当前选中委托
     """
@@ -200,7 +208,7 @@ class CommissionListWidget(QWidget):
         self.list_widget.setCurrentRow(new_idx)
         self.commission_selected.emit(self.commissions[new_idx])
 
-  def show_context_menu(self, pos):
+  def show_context_menu(self, pos: "QPoint") -> None:
     """
     右键菜单，包含新增、复制、删除，直接调用内部操作
     """
@@ -221,7 +229,7 @@ class CommissionListWidget(QWidget):
       delete_action.setEnabled(False)
     menu.exec(QCursor.pos())
 
-  def update_commissions(self, commissions):
+  def update_commissions(self, commissions: list[game_type.Commission]) -> None:
     """
     外部数据变动时可调用此方法刷新数据
     """
@@ -229,7 +237,14 @@ class CommissionListWidget(QWidget):
     self.filtered_commissions = commissions.copy()
     self.refresh_list()
 
-  def on_rows_moved(self, parent, start, end, dest, row):
+  def on_rows_moved(
+      self,
+      parent: "QModelIndex",
+      start: int,
+      end: int,
+      dest: "QModelIndex",
+      row: int,
+  ) -> None:
     """
     拖拽移动条目后，更新self.commissions和self.filtered_commissions的顺序
     参数:

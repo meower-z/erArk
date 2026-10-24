@@ -5,6 +5,10 @@
 import os
 import csv
 import cache_control
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from game_type import Commission, OfficialEvent
 
 premise_path = "csv/Premise.csv"
 premise_group_path = "csv/PremiseGroup.csv"
@@ -264,7 +268,7 @@ def load_config() -> None:
         cache_control.specialty_data[i["specialty"]].append(new_cid)
 
 
-def load_commission_csv(file_path):
+def load_commission_csv(file_path: str) -> "list[Commission]":
   """
   读取外勤委托CSV文件
   参数:
@@ -306,7 +310,9 @@ def load_commission_csv(file_path):
   return commissions
 
 
-def save_commission_csv(file_path, commissions):
+def save_commission_csv(
+    file_path: str, commissions: "list[Commission]"
+) -> None:
   """
   保存外勤委托CSV文件
   参数:
@@ -360,7 +366,9 @@ OFFICIAL_EVENT_HEAD_ROW = 5
 """ 公务事件表的表头行数（列名/中文说明/类型/是否翻译/表名） """
 
 
-def load_official_event_dir(dir_path):
+def load_official_event_dir(
+    dir_path: str,
+) -> "tuple[list[OfficialEvent], dict[str, list[list[str]]]]":
   """
   读取整个公务事件目录（Plan 23）
   参数:
@@ -397,7 +405,12 @@ def load_official_event_dir(dir_path):
   return event_list, head_data
 
 
-def save_official_event_csv(dir_path, file_name, head_rows, event_list):
+def save_official_event_csv(
+    dir_path: str,
+    file_name: str,
+    head_rows: list[list[str]],
+    event_list: "list[OfficialEvent]",
+) -> None:
   """
   把一个部门的事件写回 CSV（Plan 23）
   参数:

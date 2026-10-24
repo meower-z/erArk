@@ -7,6 +7,10 @@ from PySide6.QtWidgets import QTextEdit, QWidget, QVBoxLayout, QLabel, QPushButt
 from PySide6.QtGui import QFont, QAction
 from PySide6.QtCore import Qt
 import cache_control
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from PySide6.QtCore import QPoint
 
 font = QFont()
 font.setPointSize(cache_control.now_font_size)
@@ -473,7 +477,7 @@ class ItemTextEdit(QWidget):
         action.triggered.connect(item["slot"])
         menu.addAction(action)
 
-  def show_right_click_menu_event(self, pos):
+  def show_right_click_menu_event(self, pos: "QPoint") -> None:
     """显示右键菜单（修正方法名避免遮盖）"""
     self.right_click_menu.exec_(self.label_text.mapToGlobal(pos))
 
@@ -532,7 +536,7 @@ class ItemTextEdit(QWidget):
       cursor.setPosition(insert_pos + len(left_tag))
       te.setTextCursor(cursor)
 
-  def insert_text(self, text):
+  def insert_text(self, text: str) -> None:
     """右键菜单插入文本"""
     self.label_text.insertPlainText(text)
 
@@ -596,7 +600,7 @@ class ItemTextEdit(QWidget):
     # 检测英文双引号，直接删除，防止csv文件解析出错
     now_text = now_text.replace('"', "")
 
-  def show_right_click_menu(self, pos):
+  def show_right_click_menu(self, pos: "QPoint") -> None:
     """显示右键菜单"""
     self.right_click_menu.exec_(self.label_text.mapToGlobal(pos))
 

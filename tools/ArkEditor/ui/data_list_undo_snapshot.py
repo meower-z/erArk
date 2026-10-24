@@ -5,6 +5,23 @@ undo_snapshot.py
 
 import copy
 import cache_control
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from collections.abc import Callable
+  from typing import ParamSpec, TypedDict, TypeVar
+  import game_type
+
+  _P = ParamSpec('_P')
+  _R = TypeVar('_R')
+
+  class _Snapshot(TypedDict):
+    """一份快照：口上数据、事件数据、选中的条目 id 与编辑类型"""
+
+    now_talk_data: dict[str, game_type.Talk]
+    now_event_data: dict[str, game_type.Event]
+    now_select_id: str
+    now_edit_type_flag: int
 
 
 class UndoSnapshotManager:
@@ -18,12 +35,14 @@ class UndoSnapshotManager:
     建立空的撤销栈、重做栈与监听器列表，撤销栈最大深度为 100
     """
     # 撤销栈，每个元素为一个快照字典
-    self.snapshot_stack = []  # 存放“修改前”状态
-    self.redo_stack = []  # 存放“撤销前(修改后)”状态，用于 Ctrl+Y 重做
+    self.snapshot_stack: list['_Snapshot'] = []  # 存放“修改前”状态
+    self.redo_stack: list['_Snapshot'] = (
+        []
+    )  # 存放“撤销前(修改后)”状态，用于 Ctrl+Y 重做
     self.max_depth = 100  # 默认最大深度
-    self._listeners = []  # 状态监听回调列表
+    self._listeners: list['Callable[[int, int], None]'] = []  # 状态监听回调列表
 
-  def _make_snapshot(self):
+  def _make_snapshot(self) -> '_Snapshot':
     """生成当前全量数据快照（内部使用）。"""
     import copy
 
@@ -51,7 +70,7 @@ class UndoSnapshotManager:
     self._notify()
     # print("快照已保存，当前撤销栈大小:", len(self.snapshot_stack))
 
-  def undo(self):
+  def undo(self) -> bool:
     """
     撤销到上一个快照
     输入：无
@@ -74,7 +93,7 @@ class UndoSnapshotManager:
     # print("撤销成功")
     return True
 
-  def redo(self):
+  def redo(self) -> bool:
     """
     重做到被撤销前的状态（Ctrl+Y）
     输入：无
@@ -96,12 +115,12 @@ class UndoSnapshotManager:
     return True
 
   # ---------------- 新增：监听与包装 ---------------
-  def add_listener(self, callback):
+  def add_listener(self, callback: 'Callable[[int, int], None]') -> None:
     """添加一个监听器，在撤销/重做/保存快照后调用。"""
     if callback not in self._listeners:
       self._listeners.append(callback)
 
-  def remove_listener(self, callback):
+  def remove_listener(self, callback: 'Callable[[int, int], None]') -> None:
     """
     移除一个监听器，未添加过时什么也不做
     Keyword arguments:
@@ -124,15 +143,20 @@ class UndoSnapshotManager:
       except Exception:
         pass
 
-  def undoable(self, func=None, *, auto_snapshot=True):
+  def undoable(
+      self,
+      func: 'Callable[_P, _R] | None' = None,
+      *,
+      auto_snapshot: bool = True,
+  ) -> 'Callable[_P, _R] | Callable[[Callable[_P, _R]], Callable[_P, _R]]':
     """
     装饰器/包装器：在执行修改逻辑前自动保存快照，并可清理 redo。
     使用：@undo_snapshot_manager.undoable
     或：wrapped = undo_snapshot_manager.undoable(fn)
     """
 
-    def decorator(inner_func):
-      def wrapper(*args, **kwargs):
+    def decorator(inner_func: 'Callable[_P, _R]') -> 'Callable[_P, _R]':
+      def wrapper(*args: '_P.args', **kwargs: '_P.kwargs') -> '_R':
         if auto_snapshot:
           self.save_snapshot()
         return inner_func(*args, **kwargs)

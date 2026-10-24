@@ -11,6 +11,10 @@ from ui.list_item import ListItem
 import cache_control
 import game_type
 import function
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from PySide6.QtCore import QPoint
 from .data_list_change_chara_id import DataListIdEditMixin
 from .data_list_move_item import move_item, move_to_up, move_to_down, move_cancel, refresh_item_flags, on_rows_moved
 from .data_list_undo_snapshot import undo_snapshot_manager  # 导入快照式撤销管理器
@@ -194,7 +198,7 @@ class DataList(DataListIdEditMixin, QWidget):
 
     # 撤销功能：用于存储最近操作的条目信息的栈
     # 每个元素为字典，包含type、item、数据对象、原始索引等
-    self.undo_stack = []
+    self.undo_stack: list[dict[str, object]] = []
 
     # 快捷键Ctrl+Z绑定撤销操作
     from PySide6.QtGui import QKeySequence, QShortcut
@@ -209,14 +213,14 @@ class DataList(DataListIdEditMixin, QWidget):
     self.redo_shortcut.activated.connect(self.redo_delete)
 
     # 注册监听器，实时更新撤销/重做步数
-    def _update_undo_redo(undo_len, redo_len):
+    def _update_undo_redo(undo_len: int, redo_len: int) -> None:
       self.undo_redo_label.setText(f"撤销:{undo_len} | 重做:{redo_len}")
 
     undo_snapshot_manager.add_listener(_update_undo_redo)
 
   # 保留原手动调用 save_snapshot 策略，避免动态覆写导致类型检查问题
 
-  def update_font(self, font):
+  def update_font(self, font: QFont) -> None:
     """
     打印传入的字体，把它记为当前字体并设给全部子控件
     Keyword arguments:
@@ -229,7 +233,7 @@ class DataList(DataListIdEditMixin, QWidget):
     for widget in self.findChildren(QWidget):
       widget.setFont(font)
 
-  def right_button_menu(self, old_position):
+  def right_button_menu(self, old_position: "QPoint") -> None:
     """
     右键菜单
     Keyword arguments:
@@ -263,16 +267,16 @@ class DataList(DataListIdEditMixin, QWidget):
         cache_control.now_edit_type_flag == 0
         and self.now_in_moving_flag == False
     ):
-      create_action: QWidgetAction = QWidgetAction(self)
+      create_action = QWidgetAction(self)
       create_action.setText("新增口上")
       create_action.triggered.connect(self.create_talk)
       menu.addAction(create_action)
       if self.list_widget.itemAt(old_position):
-        copy_action: QWidgetAction = QWidgetAction(self)
+        copy_action = QWidgetAction(self)
         copy_action.setText("复制口上")
         copy_action.triggered.connect(self.copy_talk)
         menu.addAction(copy_action)
-        delete_action: QWidgetAction = QWidgetAction(self)
+        delete_action = QWidgetAction(self)
         delete_action.setText("删除口上")
         delete_action.triggered.connect(self.talk_delete)
         menu.addAction(delete_action)
@@ -674,7 +678,7 @@ class DataList(DataListIdEditMixin, QWidget):
             cache_control.now_select_id
         ].behavior_id
         status_text = cache_control.behavior_data[status_cid]
-        chara_id = cache_control.now_talk_data[
+        chara_id: str | int = cache_control.now_talk_data[
             cache_control.now_select_id
         ].adv_id
         cache_control.now_adv_id = chara_id

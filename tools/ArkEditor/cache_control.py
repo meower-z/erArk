@@ -3,8 +3,14 @@
 以及从 csv 读入的前提、行为、结算与各类属性配置
 """
 
-from typing import Dict, Set, List
+from typing import Dict, Set, List, TYPE_CHECKING
 import game_type
+
+if TYPE_CHECKING:
+  from ui.item_effect_list import ItemEffectList
+  from ui.item_premise_list import ItemPremiseList
+  from ui.item_text_edit import ItemTextEdit
+  from ui.official_event_edit import DummyItemList
 
 # 当前字体
 now_font_name: str = "等距更纱黑体 SC"
@@ -24,7 +30,9 @@ now_talk_data: Dict[str, game_type.Talk] = {}
 """ 当前口上数据 """
 tem_talk_data: Dict[str, game_type.Talk] = {}
 """ 临时口上数据 """
-now_chara_data: game_type.Chara_Data = game_type.Chara_Data
+now_chara_data: type[game_type.Chara_Data] | game_type.Chara_Data = (
+    game_type.Chara_Data
+)
 """ 当前角色属性数据 """
 
 
@@ -50,15 +58,15 @@ now_type: str = "跳过指令"
 """ 当前事件类型 """
 start_status: str = "开始"
 """ 当前事件开始类型 """
-now_adv_id: str = 0
+now_adv_id: str | int = 0
 """ 当前事件角色id """
 now_select_id: str = ""
 """ 当前选择的项目id """
-item_premise_list = None
+item_premise_list: "ItemPremiseList | DummyItemList | None" = None
 """ 事件前提列表 """
-item_effect_list = None
+item_effect_list: "ItemEffectList | DummyItemList | None" = None
 """ 事件结算列表 """
-item_text_edit = None
+item_text_edit: "ItemTextEdit | None" = None
 """ 事件文本编辑框 """
 effect_data: dict = {}
 """ 结算数据 """
