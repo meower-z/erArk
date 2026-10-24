@@ -42,7 +42,7 @@ def get_rich_text_draw_list(
   base_style -- 无富文本样式时的默认样式，默认为 "standard"
   wait_flag -- 是否需要等待绘制，默认为False
   """
-  rich_text_draw_list = []
+  rich_text_draw_list: list[draw.NormalDraw] = []
   # 如果文本为空则直接返回空列表
   if not now_text:
     return rich_text_draw_list
@@ -144,7 +144,7 @@ def get_rich_text_print(text_message: str, default_style: str) -> list:
   # 使用两个栈来维护当前打开的样式：基础样式栈和修饰符栈。
   # 初始为默认样式与空修饰符集合
   base_stack = [default_style]
-  modifier_stack = [set()]
+  modifier_stack: list[set[str]] = [set()]
 
   i = 0
   L = len(text_message)

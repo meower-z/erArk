@@ -109,7 +109,7 @@ def check_official_02() -> List[CheckFailure]:
   for cid, prefix, history in histories:
     if not isinstance(history, dict):
       continue
-    ids = [cid] if type(cid) is int else []
+    ids: List[int] = [cid] if type(cid) is int else []
     for uid, entry in history.items():
       key = f"{prefix}[{uid!r}]"
       if not isinstance(entry, dict):

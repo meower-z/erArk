@@ -410,7 +410,7 @@ normal_font = font.Font(
 )
 
 
-input_event_func = None
+input_event_func: Callable[[str], None] | None = None
 send_order_state = False
 # when false, send 'skip'; when true, send cmd
 
@@ -420,7 +420,7 @@ send_order_state = False
 #        且 Tk 事件队列中批处理期间滞留的事件已全部派发完毕（经 after_idle 保证），界面已定型可接受输入。
 # 门是一次性的：每接受一次输入即撤膛，下一次 order_deal 入口的标记重新上膛。
 input_armed = False
-_arm_after_id = None
+_arm_after_id: str | None = None
 """ 挂起未执行的 after_idle 上膛回调 id，None 表示无挂起回调 """
 
 
@@ -433,7 +433,7 @@ if TYPE_CHECKING:
   from queue import Queue
 
 
-def send_input(*args):
+def send_input(*args: object) -> None:
   """
   发送一条指令
   """
@@ -457,6 +457,8 @@ def send_input(*args):
       cache.input_position = 0
   cache.input_cache_draft = ""
   cache.input_cache_browsing = False
+  # 上膛只发生在 io_init.run 已绑定输入处理函数、启动 flow 线程之后，故此处已绑定
+  assert input_event_func is not None
   input_event_func(order)
   clear_order()
 
@@ -529,7 +531,7 @@ def read_queue() -> None:
   root.after(1, read_queue)
 
 
-def _read_queue_drain():
+def _read_queue_drain() -> None:
   """
   排空输出队列并逐条渲染的内部实现，无输入参数，无返回值。
   独立成函数，供 read_queue 用 try/finally 包裹以实现批末合并滚动逻辑。
@@ -540,6 +542,8 @@ def _read_queue_drain():
   if _perf:
     _batch_start = time.perf_counter()
     _batch_msg_count = 0
+  # read_queue 只由 main_frame.run 调度，而 main_frame.run 只由 io_init.run 在绑定消息队列之后调用，故此处已绑定
+  assert main_queue is not None
   while not main_queue.empty():
     quene_str = main_queue.get()
     if _perf:
@@ -566,7 +570,7 @@ def _read_queue_drain():
     if json_data.get("metrics_sync"):
       _sync_start = time.perf_counter()
       try:
-        textbox.tk.call(textbox._w, "sync")
+        textbox.tk.call(str(textbox), "sync")
       except Exception:
         # 旧版 Tk 无 sync 子命令时静默跳过（预热退化为仅字形绘制）
         pass
@@ -721,7 +725,7 @@ def set_background(color: str) -> None:
 # ######################################################################
 # 双框架公共函数
 
-main_queue = None
+main_queue: Queue[str] | None = None
 
 
 def bind_return(func: Callable[[str], None]) -> None:
@@ -876,20 +880,19 @@ def frame_style_def(
   italic -- 斜体
   """
   style_name = style_name.replace(" ", "")
-  font_list = []
-  font_list.append(font)
-  font_list.append(font_size)
+  font_list: list[str] = []
   if bold == "1":
     font_list.append("bold")
   if under_line == "1":
     font_list.append("underline")
   if italic == "1":
     font_list.append("italic")
+  font_spec: tuple[str, int, *tuple[str, ...]] = (font, font_size, *font_list)
   textbox.tag_configure(
       style_name,
       foreground=foreground,
       background=background,
-      font=tuple(font_list),
+      font=font_spec,
   )
 
 
@@ -918,7 +921,7 @@ def clear_order() -> None:
   order.set("")
 
 
-cmd_tag_map = {}
+cmd_tag_map: dict[int, str] = {}
 tooltip_window = None  # 当前悬浮提示所使用的顶层窗口引用
 tooltip_after_id = None  # 利用 after() 注册的延时任务编号，用于取消定时器
 tooltip_text_cache = ""  # 待显示的提示文本缓存
@@ -1057,11 +1060,11 @@ def io_print_cmd(
 
   tooltip_text = tooltip or ""
 
-  def send_cmd(event=None):
+  def send_cmd(event: Event | None = None) -> None:
     """处理按钮点击事件，输入 event 为 Tk 事件对象，可为 None；无返回值。"""
     global send_order_state
     send_order_state = True
-    order.set(cmd_number)
+    order.set(str(cmd_number))
     textbox.configure(cursor="")
     _hide_tooltip()
     send_input(order)
@@ -1134,11 +1137,11 @@ def io_print_image_cmd(
 
   tooltip_text = tooltip or ""
 
-  def send_cmd(event=None):
+  def send_cmd(event: Event | None = None) -> None:
     """处理图片按钮点击事件，输入 event 为 Tk 事件对象，可为 None；无返回值。"""
     global send_order_state
     send_order_state = True
-    order.set(cmd_number)
+    order.set(str(cmd_number))
     textbox.configure(cursor="")
     _hide_tooltip()
     send_input(order)
@@ -1172,7 +1175,7 @@ def io_print_image_cmd(
 
 
 # 清除命令函数
-def io_clear_cmd(*cmd_numbers: list) -> None:
+def io_clear_cmd(*cmd_numbers: int) -> None:
   """
   清除命令
   Keyword arguments:

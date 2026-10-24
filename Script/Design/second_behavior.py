@@ -168,9 +168,9 @@ def check_second_effect(
     change_data.target_change.setdefault(
         character_data.target_character_id, game_type.TargetChange()
     )
-    target_change: game_type.TargetChange = change_data.target_change[
-        character_data.target_character_id
-    ]
+    target_change: game_type.TargetChange | game_type.CharacterStatusChange = (
+        change_data.target_change[character_data.target_character_id]
+    )
     mark_effect(character_data.target_character_id, target_change)
     # 单独遍历结算刻印
     second_behavior_effect(

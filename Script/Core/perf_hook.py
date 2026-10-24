@@ -19,23 +19,24 @@ import json
 import os
 import threading
 import time
+from typing import Dict, List, Optional
 
 enabled = False
 """ 总开关：False 时所有钩子为空操作 """
 
 _lock = threading.Lock()
 """ 保护累计数据的线程锁 """
-_time_data = {}
+_time_data: Dict[str, List[float]] = {}
 """ 分类计时累计：key -> [调用次数, 总耗时秒, 单次最大耗时秒] """
-_count_data = {}
+_count_data: Dict[str, int] = {}
 """ 分类计数累计：key -> 次数 """
-_value_data = {}
+_value_data: Dict[str, float] = {}
 """ 最新采样值：key -> 数值（如 tag 总数等瞬时量） """
-_mark_data = {}
+_mark_data: Dict[str, float] = {}
 """ 时间戳标记：key -> perf_counter 时间戳（用于跨线程配对） """
-_total_time_data = {}
+_total_time_data: Dict[str, List[float]] = {}
 """ 会话级累计计时（跨屏不清零），结构同 _time_data """
-_total_count_data = {}
+_total_count_data: Dict[str, int] = {}
 """ 会话级累计计数（跨屏不清零） """
 _screen_index = 0
 """ 已 flush 的屏数 """
@@ -154,7 +155,7 @@ def _ensure_output_path() -> str:
   return _output_path
 
 
-def flush_screen_report(extra: dict = None) -> None:
+def flush_screen_report(extra: Optional[dict] = None) -> None:
   """
   输出本屏性能报告并清零屏内累计
   参数:
@@ -199,8 +200,8 @@ def flush_screen_report(extra: dict = None) -> None:
         rec[1] += v[1]
         if v[2] > rec[2]:
           rec[2] = v[2]
-    for k, v in _count_data.items():
-      _total_count_data[k] = _total_count_data.get(k, 0) + v
+    for k, count in _count_data.items():
+      _total_count_data[k] = _total_count_data.get(k, 0) + count
     _time_data.clear()
     _count_data.clear()
     path = _ensure_output_path()

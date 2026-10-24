@@ -4,7 +4,7 @@
 提供 CheckFailure 数据结构、检查项注册表与 register_check 装饰器，供各领域检查模块使用。
 """
 
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 
 class CheckFailure:
@@ -22,7 +22,7 @@ class CheckFailure:
       check_id: str,
       check_name: str,
       message: str,
-      involved_character_ids: List[int] = None,
+      involved_character_ids: Optional[List[int]] = None,
   ):
     """
     初始化静态检查失败记录
@@ -112,7 +112,7 @@ def make_failure(
     check_id: str,
     check_name: str,
     message: str,
-    involved_character_ids: List[int] = None,
+    involved_character_ids: Optional[List[int]] = None,
 ) -> CheckFailure:
   """
   参数:

@@ -28,7 +28,7 @@ final_invariants_h_group.md（H-xx + HS-xx 不变式清单）。
 
 from __future__ import annotations
 
-from typing import List, Optional, Set
+from typing import Dict, List, Optional, Set, Tuple
 
 from Script.Core import cache_control
 from ..check_registry import CheckFailure, register_check, make_failure
@@ -36,12 +36,16 @@ from ..check_registry import CheckFailure, register_check, make_failure
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+  from types import ModuleType
   from Script.Core import game_type
   from Script.Config import config_def
   from typing import Any
 
+game_config: Optional[ModuleType]
 try:
-  from Script.Config import game_config
+  from Script.Config import game_config as _game_config_module
+
+  game_config = _game_config_module
 except Exception:  # pragma: no cover - 独立运行环境下Config包本身也可能不可导入
   game_config = None
 
@@ -139,7 +143,10 @@ def _tpl_dict(pl: object) -> dict[str, list[Any]] | None:
   return tpls if isinstance(tpls, dict) else None
 
 
-def _group_sex_body_part_groups():
+def _group_sex_body_part_groups() -> Tuple[
+    Optional[Dict[str, List]],
+    Optional[Dict[str, config_def.Behavior_Data]],
+]:
   """
   参数: 无
   返回值: (分组表, 行为配置表) 二元组；game_config包不可导入或对应数据未载入(独立脚本环境)时返回(None, None)
@@ -606,7 +613,8 @@ def check_hgroup_09() -> List[CheckFailure]:
   if pl is None:
     return []
   g, cb = _group_sex_body_part_groups()
-  if g is None:
+  # 辅助函数只会同时返回两个None或两个非空表，两者任一为None都表示配置未加载
+  if g is None or cb is None:
     return []  # 配置未加载，降级为跳过
   tpls = _tpl_dict(pl)
   if tpls is None:
@@ -1715,7 +1723,8 @@ def check_hgroup_30() -> List[CheckFailure]:
         getattr(hs, "current_womb_sex_position", None),
     )
     if vals != (-1, -1, 0):
-      t = cache.character_data.get(getattr(c, "target_character_id", None))
+      target_id = getattr(c, "target_character_id", None)
+      t = cache.character_data.get(target_id) if target_id is not None else None
       insert_pos = (
           getattr(t.h_state, "insert_position", None) if t is not None else None
       )

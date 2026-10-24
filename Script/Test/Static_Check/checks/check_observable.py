@@ -30,10 +30,14 @@ from ..check_registry import CheckFailure, make_failure, register_check
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+  from types import ModuleType
   from Script.Core import game_type
 
+game_config: Optional[ModuleType]
 try:
-  from Script.Config import game_config
+  from Script.Config import game_config as _game_config_module
+
+  game_config = _game_config_module
 except Exception:  # pragma: no cover - 独立运行环境下配置包可能尚未载入
   game_config = None
 
@@ -747,7 +751,11 @@ def check_observable_16() -> List[CheckFailure]:
   details = []
   for cid, chara in _iter_npcs(cache):
     behavior_id = getattr(_behavior(chara), "behavior_id", None)
-    expected = _BATH_BEHAVIOR_TAGS.get(behavior_id)
+    expected = (
+        _BATH_BEHAVIOR_TAGS.get(behavior_id)
+        if behavior_id is not None
+        else None
+    )
     if expected is None:
       continue
     scene = _scene(cache, getattr(chara, "position", None))

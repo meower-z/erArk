@@ -20,6 +20,8 @@ module = [
   "cv2",
   "dateutil",
   "ephem",
+  "flask",
+  "flask_socketio",
   "google",
   "google.genai",
   "httpx",
@@ -27,8 +29,12 @@ module = [
   "openai",
   "pandas",
   "PIL",
+  "PIL.ImageTk",
+  "psutil",
   "rtmlib",
   "ultralytics",
+  "wcwidth",
+  "werkzeug.exceptions",
 ]
 ignore_missing_imports = true
 

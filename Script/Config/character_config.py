@@ -1,14 +1,15 @@
 """预设角色模板数据的读取，以及随之写入的服装模板与口上颜色数据"""
 
 import os, glob
-from typing import List, Dict
+from typing import Any, Dict, Tuple
 from types import FunctionType
 from Script.Core import json_handle, game_type, get_text
 from Script.Config import game_config, config_def
 
 character_config_file = os.path.join("data", "Character.json")
 """ 角色模板配置文件路径 """
-character_config_data = {}
+# 字段值来自 json，既有整数也有字符串，故值类型用 Any
+character_config_data: Dict[str, Dict[str, Any]] = {}
 """ 原始角色模板数据 """
 character_tem_list: Dict[int, game_type.NpcTem] = {}
 """ 角色模板数据字典，键为AdvNpc """
@@ -57,7 +58,7 @@ def init_character_tem_data() -> None:
         if now_k in [5999, 8999]:
           now_cloth_cid = now_k
         else:
-          cloth_list = [v, now_k]
+          cloth_list = (v, now_k)
           # print(f"debug : cloth_list = {cloth_list}")
           now_cloth_cid = add_cloth_data_to_config_data(
               cloth_list, now_data["AdvNpc"], cloth_count
@@ -68,7 +69,7 @@ def init_character_tem_data() -> None:
       elif k == "TextColor":
         chara_id = now_data["AdvNpc"]
         chara_name = now_data["Name"]
-        text_color_list = [chara_id, chara_name, v]
+        text_color_list = (chara_id, chara_name, v)
         add_text_color_data_to_config_data(text_color_list)
         now_tem.__dict__[k] = v
       # TODO 为了解决部分角色的初始宿舍是特殊地点的问题，在处理完路径之前，先将宿舍翻译回中文
@@ -148,7 +149,7 @@ def find_files_and_get_size(directory: str, character: str) -> dict[str, int]:
 
 
 def add_cloth_data_to_config_data(
-    cloth_list: List[int], AdvNpc: int, cloth_count: int
+    cloth_list: Tuple[str, int], AdvNpc: int, cloth_count: int
 ) -> int:
   """将服装数据加入服装模板数据"""
   # print(f"debug cloth_list = {cloth_list}")
@@ -183,7 +184,9 @@ def add_cloth_data_to_config_data(
   return now_cloth.cid
 
 
-def add_text_color_data_to_config_data(text_color_list: List[str]) -> None:
+def add_text_color_data_to_config_data(
+    text_color_list: Tuple[int, str, str],
+) -> None:
   """将口上颜色加入角色模板数据"""
   character_id, character_name, text_color = (
       text_color_list[0],

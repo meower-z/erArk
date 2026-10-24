@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Tuple
 
 from Script.Core import cache_control
 from Script.Config import game_config
@@ -401,7 +401,7 @@ def check_island_08_all_work_npc_set_self_consistent() -> List[CheckFailure]:
   actual_keys = set(all_work_npc_set)
   key_diff_missing = sorted(config_keys - actual_keys)
   key_diff_extra = sorted(actual_keys - config_keys)
-  violations = []
+  violations: List[Tuple[Any, Any, str, Optional[int]]] = []
   for wid, ids in all_work_npc_set.items():
     for cid in ids:
       if cid not in cd:
@@ -1304,8 +1304,8 @@ def check_island_25_vehicle_usage_consistency() -> List[CheckFailure]:
   if not isinstance(ongoing, dict) or not isinstance(vehicles, dict):
     return []
   failures = []
-  used = Counter()
-  used_by = {}
+  used: Counter[int] = Counter()
+  used_by: Dict[int, List[int]] = {}
   for com_id, c in ongoing.items():
     if not (isinstance(c, list) and len(c) >= 3 and isinstance(c[2], list)):
       failures.append(
@@ -1626,12 +1626,13 @@ def check_island_29_warden_and_prisoners() -> List[CheckFailure]:
   ):
     actual_wardens = [cid for cid, ch in cd.items() if ch.work.work_type == 191]
     ch = cd.get(warden_id)
+    ch_work = getattr(ch, "work", None)
     failures.append(
         make_failure(
             "ISLAND-29",
             "监狱长引用与囚犯数据自洽",
             f"ri.current_warden_id={warden_id}({_chara_name(cd, warden_id)})不是合法监狱长引用，"
-            f"实际work_type={getattr(ch, 'work', None) and ch.work.work_type}，{_sp_flag_brief(ch)}，"
+            f"实际work_type={ch_work and ch_work.work_type}，{_sp_flag_brief(ch)}，"
             f"实际work_type==191的角色列表={actual_wardens}",
             [warden_id],
         )

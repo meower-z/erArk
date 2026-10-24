@@ -281,7 +281,9 @@ def _build_entry_header_lines(
 
 
 def write_error_log(
-    failures: List[CheckFailure], cache: game_type.Cache, context: dict = None
+    failures: List[CheckFailure],
+    cache: game_type.Cache,
+    context: Optional[dict] = None,
 ) -> bool:
   """
   参数:
@@ -302,6 +304,8 @@ def write_error_log(
   _init_if_needed()
   if _log_size_exceeded():
     return False
+  # _init_if_needed正常返回时必已把_seen_check_ids赋为集合（异常会直接中断，不会走到这里）
+  assert _seen_check_ids is not None
 
   # 检查级去重：只保留本版本尚未详写过的检查，每条检查取其首个失败instance
   new_failures = {}

@@ -112,7 +112,7 @@ def load_save_info_head(save_id: str) -> dict:
     return pickle.load(f)
 
 
-def write_save_data(save_id: str, data_id: str, write_data: dict) -> None:
+def write_save_data(save_id: str, data_id: str, write_data: object) -> None:
   """
   将存档数据写入文件
   Keyword arguments:
@@ -836,11 +836,11 @@ def input_load_save(save_id: str) -> None:
     ):
       # print(f"debug value.name = {value.name}，tem_character.TextColor = {tem_character.TextColor}，value.text_color = {value.text_color}")
       new_character_data.text_color = tem_character.TextColor
-      text_color_list = [
+      text_color_list = (
           new_character_data.adv,
           new_character_data.name,
           tem_character.TextColor,
-      ]
+      )
       character_config.add_text_color_data_to_config_data(text_color_list)
       update_count += 1
       color_update_count += 1
@@ -934,7 +934,7 @@ def input_load_save(save_id: str) -> None:
   # 教育区娱乐改编号（2026-09-09）：日程模板各时段里存的旧编号换成新编号
   update_count += _migrate_child_schedule_template(loaded_dict["rhodes_island"])
   # 成长阶段与体型素质、见学与上课状态、表里没有的行为与娱乐编号、101/102阶段的H与身体状态和离线、外表年龄药、世界设定1
-  young_child_session = {}
+  young_child_session: old_chara_to_new.YoungChildSession = {}
   update_count += old_chara_to_new.migrate_age_and_body_type(
       loaded_dict, young_child_session
   )
@@ -1013,10 +1013,10 @@ def input_load_save(save_id: str) -> None:
   medical_service.update_medical_save_data_structure(loaded_dict)
 
   # 最后输出
-  now_draw = draw.NormalDraw()
+  finish_draw = draw.NormalDraw()
   draw_text = _("\n检测完毕，共有{0}条数据完成了更新\n").format(update_count)
-  now_draw.text = draw_text
-  now_draw.draw()
+  finish_draw.text = draw_text
+  finish_draw.draw()
 
   # 使用 update() 方法来更新 cache 的字典
   cache.__dict__.update(loaded_dict)

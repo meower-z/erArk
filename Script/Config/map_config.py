@@ -157,7 +157,7 @@ def get_print_map_data(map_draw: str) -> game_type.MapDraw:
       elif not set_map_button and map_x_list[i : i + 11] == "<mapbutton>":
         # 如果当前不在设置地图按钮状态，并且检测到"<mapbutton>"标签
         i += 10  # 跳过"<mapbutton>"标签
-        set_map_button = 1  # 标记为开始设置地图按钮
+        set_map_button = True  # 标记为开始设置地图按钮
         if len(new_x_list):
           # 如果new_x_list不为空
           # now_rich_draw_list: List[game_type.MapDraw] = []  # 初始化富文本绘制列表
@@ -214,7 +214,7 @@ def get_print_map_data(map_draw: str) -> game_type.MapDraw:
       elif set_map_button and map_x_list[i : i + 12] != "</mapbutton>":
         now_cmd += map_x_list[i]
       else:
-        set_map_button = 0
+        set_map_button = False
         now_draw = game_type.MapDrawText()
         now_draw.text = now_cmd
         now_draw.is_button = True
@@ -410,7 +410,7 @@ def get_sorted_map_path_data(
   Return arguments:
   Dict[int,Dict[int,game_type.TargetPath]] -- 最短路径数据 当前节点:目标节点:路径对象
   """
-  sorted_path_data = {}
+  sorted_path_data: Dict[str, Dict[str, game_type.TargetPath]] = {}
   for node in map_data:
     node_path = dijkstra.dijkstra(map_data, node)
     sorted_path_data.setdefault(node, {})

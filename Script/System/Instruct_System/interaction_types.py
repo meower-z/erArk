@@ -270,11 +270,17 @@ def get_minor_types(major_type: str) -> List[str]:
   return MAJOR_TO_MINOR_TYPES.get(major_type, [InteractionMinorType.OTHER_MISC])
 
 
-def get_minor_type_name(minor_type: str) -> str:
+def get_minor_type_name(minor_type: Optional[str]) -> str:
   """获取小类的中文名称"""
+  # 没有小类（None）时与表里查不到时一样返回未知
+  if minor_type is None:
+    return "未知"
   return MINOR_TYPE_NAMES.get(minor_type, "未知")
 
 
-def get_major_type_name(major_type: str) -> str:
+def get_major_type_name(major_type: Optional[str]) -> str:
   """获取大类的中文名称"""
+  # 没有大类（None）时与表里查不到时一样返回未知
+  if major_type is None:
+    return "未知"
   return MAJOR_TYPE_NAMES.get(major_type, "未知")

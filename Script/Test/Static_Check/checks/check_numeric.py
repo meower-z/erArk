@@ -31,7 +31,7 @@ _NUMERIC_DICT_FIELDS = (
 )
 
 
-def _is_finite_number(v) -> bool:
+def _is_finite_number(v: object) -> bool:
   """
   参数:
       v: 任意待检测值
@@ -42,7 +42,7 @@ def _is_finite_number(v) -> bool:
       直接调用math.isfinite触发TypeError；同时type(...) in (int, float)正确排除bool（bool是int子类会被isinstance
       误判，但这里用的是type()精确匹配，不受影响）
   """
-  return type(v) in (int, float) and math.isfinite(v)
+  return (type(v) is int or type(v) is float) and math.isfinite(v)
 
 
 def _chara_name(chara: object) -> str:
@@ -829,7 +829,7 @@ def check_num_20_hit_point_range() -> List[CheckFailure]:
     hp_max = getattr(chara, "hit_point_max", None)
     if (
         type(hp) is not int
-        or type(hp_max) not in (int, float)
+        or (type(hp_max) is not int and type(hp_max) is not float)
         or not (1 <= hp <= hp_max)
     ):
       failures.append(
@@ -865,7 +865,7 @@ def check_num_21_mana_point_range() -> List[CheckFailure]:
     mp_max = getattr(chara, "mana_point_max", None)
     if (
         type(mp) is not int
-        or type(mp_max) not in (int, float)
+        or (type(mp_max) is not int and type(mp_max) is not float)
         or not (0 <= mp <= mp_max)
     ):
       failures.append(
@@ -902,7 +902,7 @@ def check_num_22_sanity_point_range() -> List[CheckFailure]:
     sp_max = getattr(chara, "sanity_point_max", None)
     if (
         type(sp) is not int
-        or type(sp_max) not in (int, float)
+        or (type(sp_max) is not int and type(sp_max) is not float)
         or not (0 <= sp <= sp_max)
     ):
       extra = ""
@@ -938,7 +938,7 @@ def check_num_23_eja_point_non_negative() -> List[CheckFailure]:
   failures = []
   for cid, chara in cache.character_data.items():
     eja = getattr(chara, "eja_point", None)
-    if not (type(eja) in (int, float) and eja >= 0):
+    if not ((type(eja) is int or type(eja) is float) and eja >= 0):
       h_state = getattr(chara, "h_state", None)
       sp_flag = getattr(chara, "sp_flag", None)
       failures.append(
@@ -976,7 +976,7 @@ def check_num_24_semen_point_range() -> List[CheckFailure]:
     ok = (
         type(semen) is int
         and type(tem_extra) is int
-        and type(semen_max) in (int, float)
+        and (type(semen_max) is int or type(semen_max) is float)
         and 0 <= semen <= semen_max
         and 0 <= tem_extra <= semen_max * 4
     )
@@ -1174,7 +1174,7 @@ def check_num_29_urinate_point_upper_bound() -> List[CheckFailure]:
   failures = []
   for cid, chara in cache.character_data.items():
     urinate = getattr(chara, "urinate_point", None)
-    if type(urinate) in (int, float) and urinate > 300:
+    if (type(urinate) is int or type(urinate) is float) and urinate > 300:
       failures.append(
           make_failure(
               "NUM-29",

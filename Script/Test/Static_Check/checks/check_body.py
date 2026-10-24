@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import datetime
 import math
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, TypeGuard
 
 from Script.Core import cache_control
 from ..check_registry import CheckFailure, register_check, make_failure
@@ -156,7 +156,7 @@ def _dirty_tables(chara: object) -> Optional[List[Tuple[str, dict]]]:
   return tables
 
 
-def _semen_entry_ok(v: object) -> bool:
+def _semen_entry_ok(v: object) -> TypeGuard[list]:
   """
   参数:
       v: 污浊表条目

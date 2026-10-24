@@ -12,6 +12,7 @@ from Script.Core import cache_control, perf_hook
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+  from collections.abc import Callable
   from typing import Any
   from types import ModuleType
 
@@ -21,7 +22,7 @@ cache = cache_control.cache
 # Web模式相关的延迟导入状态
 _web_module_loaded = False
 """ 是否已加载Web IO模块 """
-web_io = None
+web_io: ModuleType | None = None
 """ Web版IO模块的引用（延迟导入） """
 
 # Tkinter main_frame 延迟导入状态（解决无显示环境下的导入问题）
@@ -69,7 +70,7 @@ def _get_main_frame() -> ModuleType | None:
     return None
 
 
-def _is_web_mode():
+def _is_web_mode() -> bool:
   """
   动态检查是否在Web模式下运行
 
@@ -103,10 +104,25 @@ def _is_web_mode():
   return web_mode and _web_module_loaded
 
 
+def _web_io() -> ModuleType | None:
+  """
+  取Web版IO模块
+
+  参数：无
+  返回值类型：ModuleType | None
+  功能描述：Web模式下返回已加载的Web版IO模块，非Web模式返回None
+  """
+  if _is_web_mode():
+    return web_io
+  return None
+
+
 input_evnet = threading.Event()
-_send_queue = queue.Queue()
-_order_queue = queue.Queue()
+_send_queue: queue.Queue[str] = queue.Queue()
+_order_queue: queue.Queue[str] = queue.Queue()
 order_swap = None
+_flowthread: threading.Thread
+""" 运行开场流程的线程，由 run 创建 """
 
 # tkinter模式下的绑定（延迟到首次使用时判断）
 _main_frame_bound = False
@@ -127,7 +143,7 @@ def _ensure_main_frame_bound() -> None:
       _main_frame_bound = True
 
 
-def _input_evnet_set(order):
+def _input_evnet_set(order: str) -> None:
   """
   推送一个命令
 
@@ -138,15 +154,16 @@ def _input_evnet_set(order):
   功能描述：将命令推送到队列中
   """
   # 检查是否在Web模式下
-  if _is_web_mode():
+  web_io_module = _web_io()
+  if web_io_module is not None:
     # 使用Web版IO的推送命令函数
-    web_io._input_event_set(order)
+    web_io_module._input_event_set(order)
   else:
     # 原始逻辑
     put_order(order)
 
 
-def get_order():
+def get_order() -> str:
   """
   获取一个命令
 
@@ -156,9 +173,10 @@ def get_order():
   功能描述：从命令队列中获取一个命令
   """
   # 检查是否在Web模式下
-  if _is_web_mode():
+  web_io_module = _web_io()
+  if web_io_module is not None:
     # 使用Web版IO的获取命令函数
-    return web_io.get_order()
+    return web_io_module.get_order()
   else:
     # 原始逻辑
     _ensure_main_frame_bound()
@@ -178,7 +196,7 @@ def _get_input_event() -> threading.Event:
   return input_evnet
 
 
-def run(open_func: object):
+def run(open_func: Callable[[], object]) -> None:
   """
   运行游戏
 
@@ -189,9 +207,10 @@ def run(open_func: object):
   功能描述：启动游戏主流程
   """
   # 检查是否在Web模式下
-  if _is_web_mode():
+  web_io_module = _web_io()
+  if web_io_module is not None:
     # 使用Web版IO的运行函数
-    return web_io.run(open_func)
+    return web_io_module.run(open_func)
   else:
     # 原始逻辑
     _ensure_main_frame_bound()
@@ -256,9 +275,10 @@ def put_order(message: str) -> None:
   功能描述：将命令推送到命令队列中
   """
   # 检查是否在Web模式下
-  if _is_web_mode():
+  web_io_module = _web_io()
+  if web_io_module is not None:
     # 使用Web版IO的put_order函数
-    web_io.put_order(message)
+    web_io_module.put_order(message)
   else:
     # 原始逻辑
     _order_queue.put_nowait(message)
@@ -283,7 +303,7 @@ def new_json() -> dict[str, Any]:
 
 
 def text_json(
-    string: str, style: tuple or str, tooltip: str = ""
+    string: str, style: tuple | str, tooltip: str = ""
 ) -> dict[str, Any]:
   """
   定义一个文本json
@@ -295,7 +315,7 @@ def text_json(
   返回值类型：dict
   功能描述：创建一个文本JSON对象
   """
-  re = {}
+  re: dict[str, object] = {}
   re["type"] = "text"
   re["text"] = string
   if isinstance(style, tuple):
@@ -308,9 +328,9 @@ def text_json(
 
 def cmd_json(
     cmd_str: str,
-    cmd_num: int,
-    normal_style: tuple or str,
-    on_style: tuple or str,
+    cmd_num: int | str,
+    normal_style: tuple | str,
+    on_style: tuple | str,
     tooltip: str = "",
 ) -> dict[str, Any]:
   """
@@ -318,14 +338,14 @@ def cmd_json(
 
   参数:
   cmd_str (str) -- 命令文本
-  cmd_num (int) -- 命令数字
+  cmd_num (int | str) -- 命令数字
   normal_style (tuple或str) -- 正常显示样式
   on_style (tuple或str) -- 鼠标在其上时显示样式
 
   返回值类型：dict
   功能描述：创建一个命令JSON对象
   """
-  re = {}
+  re: dict[str, object] = {}
   re["type"] = "cmd"
   re["text"] = cmd_str
   re["num"] = cmd_num
@@ -346,11 +366,11 @@ def style_json(
     foreground: str,
     background: str,
     font: str,
-    fontsize: str,
-    bold: str,
-    underline: str,
-    italic: str,
-) -> dict[str, str]:
+    fontsize: int,
+    bold: bool | str,
+    underline: bool | str,
+    italic: bool | str,
+) -> dict[str, str | int | bool]:
   """
   定义一个样式json
 
@@ -359,15 +379,15 @@ def style_json(
   foreground (str) -- 前景色/字体颜色
   background (str) -- 背景色
   font (str) -- 字体
-  fontsize (str) -- 字号
-  bold (str) -- 加粗
-  underline (str) -- 下划线
-  italic (str) -- 斜体
+  fontsize (int) -- 字号
+  bold (bool 或 str) -- 加粗
+  underline (bool 或 str) -- 下划线
+  italic (bool 或 str) -- 斜体
 
   返回值类型：dict
   功能描述：创建一个样式JSON对象
   """
-  re = {}
+  re: dict[str, str | int | bool] = {}
   re["style_name"] = style_name
   re["foreground"] = foreground
   re["background"] = background
@@ -397,9 +417,10 @@ def era_print(
   功能描述：输出格式化文本到界面
   """
   # 检查是否在Web模式下
-  if _is_web_mode():
+  web_io_module = _web_io()
+  if web_io_module is not None:
     # 使用Web版IO的era_print函数
-    web_io.era_print(string, style, tooltip=tooltip)
+    web_io_module.era_print(string, style, tooltip=tooltip)
   else:
     # 原始逻辑
     if perf_hook.enabled:
@@ -427,9 +448,10 @@ def image_print(image_name: str) -> None:
   功能描述：输出图片到界面
   """
   # 检查是否在Web模式下
-  if _is_web_mode() and hasattr(web_io, "image_print"):
+  web_io_module = _web_io()
+  if web_io_module is not None and hasattr(web_io_module, "image_print"):
     # 使用Web版IO的image_print函数
-    web_io.image_print(image_name)
+    web_io_module.image_print(image_name)
   else:
     # 原始逻辑
     if perf_hook.enabled:
@@ -457,10 +479,11 @@ def image_list_print(image_name_list: list) -> None:
   if not image_name_list:
     return
   # 检查是否在Web模式下（Tk模式的比例条绘制已被Web适配器整体替换，此处仅为兜底）
-  if _is_web_mode():
-    if hasattr(web_io, "image_print"):
+  web_io_module = _web_io()
+  if web_io_module is not None:
+    if hasattr(web_io_module, "image_print"):
       for image_name in image_name_list:
-        web_io.image_print(image_name)
+        web_io_module.image_print(image_name)
     return
   # 原始逻辑：单条消息携带整组图片名
   if perf_hook.enabled:
@@ -572,7 +595,7 @@ def warm_up_text_metrics() -> None:
   clear_screen()
 
 
-def clear_screen():
+def clear_screen() -> None:
   """
   清屏
 
@@ -582,9 +605,10 @@ def clear_screen():
   功能描述：清空显示界面
   """
   # 检查是否在Web模式下
-  if _is_web_mode():
+  web_io_module = _web_io()
+  if web_io_module is not None:
     # 使用Web版IO的clear_screen函数
-    web_io.clear_screen()
+    web_io_module.clear_screen()
   else:
     # 原始逻辑
     json_str = new_json()
@@ -592,7 +616,7 @@ def clear_screen():
     put_queue(json.dumps(json_str, ensure_ascii=False))
 
 
-def clear_screen_and_history():
+def clear_screen_and_history() -> None:
   """
   清屏并清空历史记录（仅Web模式有效）
 
@@ -602,9 +626,10 @@ def clear_screen_and_history():
   功能描述：彻底清空显示界面和历史记录，用于进入主界面等需要完全清空屏幕的场景
   """
   # 检查是否在Web模式下
-  if _is_web_mode():
+  web_io_module = _web_io()
+  if web_io_module is not None:
     # 使用Web版IO的clear_screen_and_history函数
-    web_io.clear_screen_and_history()
+    web_io_module.clear_screen_and_history()
   else:
     # 非Web模式下与clear_screen相同
     json_str = new_json()
@@ -617,10 +642,10 @@ def frame_style_def(
     foreground: str,
     background: str,
     font: str,
-    fontsize: str,
-    bold: str,
-    underline: str,
-    italic: str,
+    fontsize: int,
+    bold: bool | str,
+    underline: bool | str,
+    italic: bool | str,
 ) -> None:
   """
   推送一条在前端定义样式的信息
@@ -630,10 +655,10 @@ def frame_style_def(
   foreground (str) -- 前景色/字体颜色
   background (str) -- 背景色
   font (str) -- 字体
-  fontsize (str) -- 字号
-  bold (str) -- 加粗， 用1表示使用
-  underline (str) -- 下划线，用1表示使用
-  italic (str) -- 斜体，用1表示使用
+  fontsize (int) -- 字号
+  bold (bool 或 str) -- 加粗， 用1表示使用
+  underline (bool 或 str) -- 下划线，用1表示使用
+  italic (bool 或 str) -- 斜体，用1表示使用
 
   返回值类型：无
   功能描述：定义一个样式并推送到前端
@@ -665,9 +690,10 @@ def set_background(color: str) -> None:
   功能描述：设置界面的背景颜色
   """
   # 检查是否在Web模式下
-  if _is_web_mode() and hasattr(web_io, "set_background"):
+  web_io_module = _web_io()
+  if web_io_module is not None and hasattr(web_io_module, "set_background"):
     # 使用Web版IO的set_background函数
-    web_io.set_background(color)
+    web_io_module.set_background(color)
   else:
     # 原始逻辑
     json_str = new_json()
@@ -675,7 +701,7 @@ def set_background(color: str) -> None:
     put_queue(json.dumps(json_str, ensure_ascii=False))
 
 
-def clear_order():
+def clear_order() -> None:
   """
   清除前端已经设置的命令
 
@@ -685,9 +711,10 @@ def clear_order():
   功能描述：清除界面上的所有命令按钮
   """
   # 检查是否在Web模式下
-  if _is_web_mode():
+  web_io_module = _web_io()
+  if web_io_module is not None:
     # 使用Web版IO的clear_order函数
-    web_io.clear_order()
+    web_io_module.clear_order()
   else:
     # 原始逻辑
     json_str = new_json()
@@ -697,7 +724,7 @@ def clear_order():
 
 def io_print_cmd(
     cmd_str: str,
-    cmd_number: int,
+    cmd_number: int | str,
     normal_style: str = "standard",
     on_style: str = "onbutton",
     tooltip: str = "",
@@ -707,7 +734,7 @@ def io_print_cmd(
 
   参数:
   cmd_str (str) -- 命令文本
-  cmd_number (int) -- 命令数字
+  cmd_number (int | str) -- 命令数字
   normal_style (str) -- 正常显示样式
   on_style (str) -- 鼠标在其上时显示样式
 
@@ -715,9 +742,12 @@ def io_print_cmd(
   功能描述：在界面上显示一个可点击的命令按钮
   """
   # 检查是否在Web模式下
-  if _is_web_mode():
+  web_io_module = _web_io()
+  if web_io_module is not None:
     # 使用Web版IO的io_print_cmd函数
-    web_io.io_print_cmd(cmd_str, cmd_number, normal_style, on_style, tooltip)
+    web_io_module.io_print_cmd(
+        cmd_str, cmd_number, normal_style, on_style, tooltip
+    )
   else:
     # 原始逻辑
     if perf_hook.enabled:
@@ -731,14 +761,14 @@ def io_print_cmd(
 
 
 def io_print_image_cmd(
-    cmd_str: str, cmd_number: int, tooltip: str = ""
+    cmd_str: str, cmd_number: int | str, tooltip: str = ""
 ) -> None:
   """
   打印图片指令
 
   参数:
   cmd_str (str) -- 命令文本
-  cmd_number (int) -- 命令数字
+  cmd_number (int | str) -- 命令数字
 
   返回值类型：无
   功能描述：在界面上显示一个图片按钮
@@ -746,7 +776,7 @@ def io_print_image_cmd(
   # Web模式下暂不支持图片命令
   if not _is_web_mode():
     json_str = new_json()
-    data = {}
+    data: dict[str, object] = {}
     data["type"] = "image_cmd"
     data["text"] = cmd_str
     data["num"] = cmd_number
@@ -756,20 +786,21 @@ def io_print_image_cmd(
     put_queue(json.dumps(json_str, ensure_ascii=False))
 
 
-def io_clear_cmd(*cmd_numbers: int) -> None:
+def io_clear_cmd(*cmd_numbers: int | str) -> None:
   """
   清除命令
 
   参数:
-  cmd_numbers (int) -- 命令数字，不输入则清除当前已有的全部命令
+  cmd_numbers (int | str) -- 命令数字，不输入则清除当前已有的全部命令
 
   返回值类型：无
   功能描述：清除指定的命令按钮，或者所有命令按钮
   """
   # 检查是否在Web模式下
-  if _is_web_mode() and hasattr(web_io, "io_clear_cmd"):
+  web_io_module = _web_io()
+  if web_io_module is not None and hasattr(web_io_module, "io_clear_cmd"):
     # 使用Web版IO的io_clear_cmd函数
-    web_io.io_clear_cmd(*cmd_numbers)
+    web_io_module.io_clear_cmd(*cmd_numbers)
   else:
     # 原始逻辑
     json_str = new_json()
@@ -780,11 +811,28 @@ def io_clear_cmd(*cmd_numbers: int) -> None:
     put_queue(json.dumps(json_str, ensure_ascii=False))
 
 
-def style_def() -> None:
+def style_def(
+    style_name: str,
+    foreground: str,
+    background: str,
+    font: str,
+    fontsize: int,
+    bold: bool | str,
+    underline: bool | str,
+    italic: bool | str,
+) -> None:
   """
   样式定义占位函数
 
-  参数：无
+  参数：
+  style_name (str) -- 样式名称
+  foreground (str) -- 前景色/字体颜色
+  background (str) -- 背景色
+  font (str) -- 字体
+  fontsize (int) -- 字号
+  bold (bool 或 str) -- 加粗，用1表示使用
+  underline (bool 或 str) -- 下划线，用1表示使用
+  italic (bool 或 str) -- 斜体，用1表示使用
 
   返回值类型：无
   功能描述：提供一个样式定义的占位函数，会在init_style中被覆盖
@@ -792,7 +840,7 @@ def style_def() -> None:
   pass
 
 
-def init_style():
+def init_style() -> None:
   """
   富文本样式初始化
 
@@ -802,25 +850,26 @@ def init_style():
   功能描述：初始化所有游戏中使用的样式
   """
   # 检查是否在Web模式下
-  if _is_web_mode():
+  web_io_module = _web_io()
+  if web_io_module is not None:
     # 使用Web版IO的init_style函数
-    if hasattr(web_io, "init_style"):
-      web_io.init_style()
+    if hasattr(web_io_module, "init_style"):
+      web_io_module.init_style()
     return
 
   # 原始逻辑
   global style_def
 
   def new_style_def(
-      style_name,
-      foreground,
-      background,
-      font,
-      fontsize,
-      bold,
-      underline,
-      italic,
-  ):
+      style_name: str,
+      foreground: str,
+      background: str,
+      font: str,
+      fontsize: int,
+      bold: bool | str,
+      underline: bool | str,
+      italic: bool | str,
+  ) -> None:
     frame_style_def(
         style_name,
         foreground,

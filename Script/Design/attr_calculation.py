@@ -815,7 +815,7 @@ def get_tired_level(value: int) -> int:
     return 3
 
 
-def get_sleep_level(value: int):
+def get_sleep_level(value: float):
   """
   按当前熟睡值返回当前睡眠等级的str\n
   Keyword arguments:\n

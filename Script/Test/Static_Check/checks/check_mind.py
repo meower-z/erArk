@@ -17,7 +17,7 @@
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import List, Optional, TypeGuard
 
 from Script.Core import cache_control
 from Script.Design import map_handle
@@ -148,7 +148,7 @@ def _scene_key(position: object) -> Optional[str]:
   return map_handle.get_map_system_path_str_for_list(position)
 
 
-def _num(x: object) -> bool:
+def _num(x: object) -> TypeGuard[int | float]:
   """
   参数: x 任意值
   返回值: bool x为非bool的int/float时返回True

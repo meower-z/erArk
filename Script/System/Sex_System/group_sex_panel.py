@@ -409,7 +409,6 @@ class SeeGroupSexInfoPanel:
 
     type_line = draw.LittleTitleLineDraw(_("群交"), width, ":")
     # print("type_data.name :",type_data.name)
-    now_draw = panel.LeftDrawTextListPanel()
     text_draw = draw.NormalDraw()
 
     character_data = cache.character_data[0]
@@ -453,10 +452,7 @@ class SeeGroupSexInfoPanel:
       all_part_text = character_data.name + " " + all_part_text + "\n"
       self.draw_list.append(type_line)
     text_draw.text = all_part_text
-    now_draw.draw_list.append(text_draw)
-    now_draw.width += len(text_draw.text)
-
-    self.draw_list.extend(now_draw.draw_list)
+    self.draw_list.append(text_draw)
 
   def draw(self) -> None:
     """绘制面板"""
