@@ -2511,6 +2511,19 @@ def _get_sub_panel_mode_data() -> dict[str, Any]:
   return data
 
 
+def _copy_game_state() -> dict[str, Any]:
+  """
+  取 game_state 的浅拷贝，常规更新与完整游戏状态都以它为底
+
+  参数：无
+
+  返回值类型：dict[str, Any]
+  功能描述：在锁内拷贝 game_state 的全部字段，之后不必长时间持有锁
+  """
+  with state_lock:
+    return game_state.copy()
+
+
 def send_full_game_state() -> None:
   """
   发送完整的游戏状态到前端（包含新UI所需的所有数据）
@@ -2525,19 +2538,8 @@ def send_full_game_state() -> None:
     from Script.Design import web_interaction_manager
     from Script.System.Web_Draw_System import TabMenu
 
-    # 构建完整游戏状态
-    full_state = {}
-
-    # 基础状态（旧API兼容）与子面板模式数据，取自 game_state
-    # 子面板模式下前端按 sub_panel_data 在子面板上方画场景信息栏与选项卡栏
-    with state_lock:
-      full_state['text_content'] = game_state.get('text_content', [])
-      full_state['buttons'] = game_state.get('buttons', [])
-      full_state['panel_id'] = game_state.get('panel_id')
-      full_state['skip_wait'] = game_state.get('skip_wait', False)
-      full_state['sub_panel_mode'] = game_state.get('sub_panel_mode', False)
-      if 'sub_panel_data' in game_state:
-        full_state['sub_panel_data'] = game_state['sub_panel_data']
+    # 构建完整游戏状态：以 game_state 的全部字段为底，与常规更新相同
+    full_state = _copy_game_state()
 
     # 玩家信息
     if hasattr(cache, 'character_data') and 0 in cache.character_data:
@@ -2619,9 +2621,7 @@ def _emit_game_state_update() -> None:
   返回值类型：无
   功能描述：通过WebSocket将游戏状态推送给所有连接的客户端
   """
-  # 创建一个本地副本，避免长时间持有锁
-  with state_lock:
-    local_state: dict[str, Any] = game_state.copy()
+  local_state = _copy_game_state()
 
   # 添加对话框状态
   try:
