@@ -367,11 +367,6 @@ class InScenePanel:
       if len(character_list) and cache.scene_panel_show[4]:
         line_draw = draw.LineDraw("-.-", self.width)
         line_draw.draw()
-        # fix_draw = draw.CharaDraw()
-        # fix_draw.width = 10
-        # fix_draw.set(1)
-        # fix_draw.draw()
-        # line_feed.draw()
         character_image_list_draw = (
             chara_image_list_panel.CharacterImageListDraw(
                 self.width, now_draw_character_list

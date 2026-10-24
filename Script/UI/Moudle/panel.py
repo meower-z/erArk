@@ -25,7 +25,7 @@ cache: game_type.Cache = cache_control.cache
 class SingleColumnButton:
   """标准单列按钮监听响应"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化绘制对象"""
     self.button_list: List[draw.Button] = []
     """ 绘制的按钮列表 """
@@ -63,14 +63,6 @@ class SingleColumnButton:
         self.button_list.append(draw_button)
       self.return_list[return_list[i]] = button_list[i]
 
-  def get_width(self) -> int:
-    """
-    获取按钮列表的最大宽度
-    Return arguments:
-    int -- 最大宽度
-    """
-    return max(self.button_list)
-
   def get_height(self) -> int:
     """
     获取按钮列表的长度:
@@ -89,11 +81,11 @@ class SingleColumnButton:
 class OneMessageAndSingleColumnButton:
   """标准单条消息+单列数字id响应按钮监听面板"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化绘制对象"""
-    self.message: draw.RichTextDraw = None
+    self.message: draw.NormalDraw = draw.NormalDraw()
     """ 消息 """
-    self.button_panel: SingleColumnButton = None
+    self.button_panel: SingleColumnButton = SingleColumnButton()
     """ 按钮监听列表 """
 
   def set(
@@ -142,9 +134,9 @@ class OneMessageAndSingleColumnButton:
 class AskForOneMessage:
   """标准单条消息+等待玩家输入任意字符面板"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化绘制对象"""
-    self.message: draw.RichTextDraw = None
+    self.message: draw.NormalDraw = draw.NormalDraw()
     """ 消息 """
     self.input_max: int = 0
     """ 玩家输入文本的最大长度 """
@@ -170,7 +162,7 @@ class AskForOneMessage:
     return_text = ""
     while 1:
       self.message.draw()
-      return_text = flow_handle.askfor_str(1, 1)
+      return_text = str(flow_handle.askfor_str(True, True))
       text_index = text_handle.get_text_index(return_text)
       if text_index <= self.input_max:
         break
@@ -186,7 +178,7 @@ class AskForOneMessage:
 class TitleAndRightInfoListPanel:
   """绘制一个标题和一串靠右对齐的列表组合的面板"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化绘制对象"""
     self.title = ""
     """ 文本标题 """
@@ -194,7 +186,7 @@ class TitleAndRightInfoListPanel:
     """ 面板宽度 """
     self.info_list: List[str] = []
     """ 信息列表 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: List[draw.Drawable] = []
     """ 绘制列表 """
 
   def set(self, title_text: str, info_list: List[str], width: int) -> None:
@@ -229,7 +221,7 @@ class TitleAndRightInfoListPanel:
 class CenterDrawTextListPanel:
   """绘制一个列表并居中每个元素"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化绘制对象"""
     self.width: int = 0
     """ 面板宽度 """
@@ -270,7 +262,7 @@ class CenterDrawTextListPanel:
 class LeftDrawTextListPanel:
   """绘制一个列表并左对齐每个元素"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化绘制对象"""
     self.width: int = 0
     """ 面板宽度 """
@@ -341,7 +333,7 @@ class LeftDrawTextListWaitPanel(LeftDrawTextListPanel):
 class DrawTextListPanel:
   """绘制一个对象列表"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化绘制对象"""
     self.width: int = 0
     """ 面板宽度 """
@@ -379,7 +371,7 @@ class VerticalDrawTextListGroup:
   width -- 最大绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 当前最大绘制宽度 """
@@ -404,13 +396,13 @@ class VerticalDrawTextListGroup:
 class CenterDrawButtonListPanel:
   """绘制一个按钮列表并居中每个元素"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化绘制对象"""
     self.width = 0
     """ 面板宽度 """
     self.column = 0
     """ 每行最大元素数 """
-    self.draw_list: List[List[draw.Button]] = []
+    self.draw_list: List[List[draw.Drawable]] = []
     """ 绘制按钮列表 """
     self.return_list: List[str] = []
     """
@@ -443,10 +435,10 @@ class CenterDrawButtonListPanel:
     new_text_list = value_handle.list_of_groups(text_list, column)
     index = 0
     self.return_list = return_list
-    self.draw_list: List[List[draw.Button]] = []
+    self.draw_list = []
     for now_text_list in new_text_list:
       now_width = int(width / len(now_text_list))
-      now_list = []
+      now_list: List[draw.Drawable] = []
       for now_text in now_text_list:
         if now_text != null_text:
           now_button = draw.CenterButton(
@@ -477,7 +469,7 @@ class CenterDrawButtonListPanel:
 class LeftDrawIDButtonListPanel:
   """绘制一个被编号的按钮列表并左对齐每个元素"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化绘制对象"""
     self.width = 0
     """ 面板宽度 """
@@ -485,7 +477,7 @@ class LeftDrawIDButtonListPanel:
     """ 每行最大元素数 """
     self.start_id = 0
     """ 编号的启始id """
-    self.draw_list: List[List[draw.Button]] = []
+    self.draw_list: List[List[draw.Drawable]] = []
     """ 绘制按钮列表 """
     self.return_list: List[str] = []
     """
@@ -518,10 +510,10 @@ class LeftDrawIDButtonListPanel:
     new_text_list = value_handle.list_of_groups(text_list, column)
     index = start_id
     now_index = 0
-    self.draw_list: List[List[draw.Button]] = []
+    self.draw_list = []
     for now_text_list in new_text_list:
       now_width = int(width / len(now_text_list))
-      now_list = []
+      now_list: List[draw.Drawable] = []
       for now_text in now_text_list:
         if now_text != null_text:
           now_text = text_handle.id_index(index) + now_text
@@ -580,7 +572,7 @@ class PageHandleDrawType:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.text: str = text
     """ 未处理的绘制的文本id """
@@ -630,8 +622,8 @@ class PageHandlePanel:
       button_start_id: int = 0,
       row_septal_lines: str = "",
       col_septal_lines: str = "",
-      null_button_text: str = "",
-  ):
+      null_button_text: object = "",
+  ) -> None:
     """初始化绘制对象"""
     # 元素交给 draw_type 构造绘制对象，类型随 draw_type 而定（文本，或通用选人面板的 [角色id, 回调, 已选列表]），这里不限定
     self.text_list: list = text_list
@@ -663,14 +655,14 @@ class PageHandlePanel:
     self.button_start_id: int = button_start_id
     """ 数字按钮的开始id """
     self.draw_type = draw_type
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: List[draw.Drawable] = []
     """ 绘制的对象列表 """
-    self.null_button_text: str = null_button_text
+    self.null_button_text: object = null_button_text
     """ 不作为按钮绘制的文本 """
     self.end_index: int = 0
     """ 结束时按钮id """
 
-  def update(self):
+  def update(self) -> None:
     """更新绘制对象"""
     self.return_list = []
     start_id = self.now_page * self.limit
@@ -678,13 +670,13 @@ class PageHandlePanel:
     if start_id >= len(self.text_list):
       self.now_page = total_page
       start_id = self.now_page * self.limit
-    now_page_list = []
+    now_page_list: list = []
     for i in range(start_id, len(self.text_list)):
       if len(now_page_list) >= self.limit:
         break
       now_page_list.append(self.text_list[i])
     draw_text_group = value_handle.list_of_groups(now_page_list, self.column)
-    draw_list: List[draw.NormalDraw] = []
+    draw_list: List[draw.Drawable] = []
     self.end_index = self.button_start_id
     index = self.button_start_id
     line_feed = draw.NormalDraw()
