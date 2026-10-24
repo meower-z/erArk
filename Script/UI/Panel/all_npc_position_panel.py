@@ -25,7 +25,7 @@ class All_Npc_Position_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -42,13 +42,13 @@ class All_Npc_Position_Panel:
     self.move_type = 0
     """ 当前移动类型 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     title_draw = draw.TitleLineDraw("干员位置一览", self.width)
 
     # 非中文则每行只显示两个
     if normal_config.config_normal.language != "zh_CN":
-      self.handle_panel: panel.PageHandlePanel = panel.PageHandlePanel(
+      self.handle_panel = panel.PageHandlePanel(
           [], MoveSonPanel, 40, 2, window_width, True, False, 0
       )
     select_type_list = [
@@ -125,15 +125,15 @@ class All_Npc_Position_Panel:
         else:
           draw_text = f"  {select_type_list[select_type_id]}    "
           now_draw_width = min(len(draw_text) * 2, self.width / 2.5)
-          now_draw = draw.LeftButton(
+          type_button = draw.LeftButton(
               draw_text,
               select_type_list[select_type_id],
               int(now_draw_width),
               cmd_func=self.select_type_change,
               args=(select_type_id,),
           )
-          now_draw.draw()
-          return_list.append(now_draw.return_text)
+          type_button.draw()
+          return_list.append(type_button.return_text)
       line_feed.draw()
 
       # 移动类型切换按钮
@@ -157,15 +157,15 @@ class All_Npc_Position_Panel:
         else:
           draw_text = f"  {move_type_text}  "
           now_draw_width = min(len(draw_text) * 2, self.width / 3)
-          now_draw = draw.LeftButton(
+          type_button = draw.LeftButton(
               draw_text,
               move_type_text,
               int(now_draw_width),
               cmd_func=self.move_type_change,
               args=(move_type_id,),
           )
-          now_draw.draw()
-          return_list.append(now_draw.return_text)
+          type_button.draw()
+          return_list.append(type_button.return_text)
       line_feed.draw()
       line_feed.draw()
 
@@ -279,7 +279,7 @@ class MoveSonPanel:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
 
     self.chara_id: int = text_list[0]

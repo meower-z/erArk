@@ -26,7 +26,7 @@ class Manage_Library_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -199,7 +199,7 @@ class Manage_Library_Panel:
     now_draw.text = _("\n暂未实装\n")
     now_draw.draw()
 
-  def read_recommend(self):
+  def read_recommend(self) -> None:
     """阅读推荐"""
 
     self.handle_panel = panel.PageHandlePanel(
@@ -304,7 +304,7 @@ class Manage_Library_Panel:
       # 再把指定日子变成读书会
       cache.rhodes_island.party_day_of_week[week_day] = 101
 
-  def borrowing_history(self):
+  def borrowing_history(self) -> None:
     """借阅历史记录查看"""
 
     # 创建角色列表，包含所有有借阅历史的角色
@@ -353,7 +353,7 @@ class Manage_Library_Panel:
           False,
           0,
       )
-      select_state = {}
+      select_state: dict[str, int | str] = {}
 
       while 1:
         info_text = _("以下角色拥有借阅历史记录：\n\n")
@@ -494,7 +494,7 @@ class SelectRecommendBookButton:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
 
     self.book_type_id: int = book_type_id
@@ -512,7 +512,7 @@ class SelectRecommendBookButton:
 
     type_data = game_config.config_book_type[self.book_type_id]
     button_text = f"[{str(type_data.cid).rjust(2,'0')}]：{type_data.father_type_name}-{type_data.son_type_name}"
-    name_draw = draw.LeftDraw()
+    name_draw: draw.LeftDraw | draw.LeftButton = draw.LeftDraw()
     if self.book_type_id in cache.rhodes_island.recommend_book_type_set:
       button_text += _(" (已推荐)")
       name_draw = draw.LeftButton(

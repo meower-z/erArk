@@ -169,7 +169,7 @@ class SeeCharacterItemBagPanel:
   width -- 绘制宽度
   """
 
-  def __init__(self, character_id: int, width: int):
+  def __init__(self, character_id: int, width: int) -> None:
     """初始化绘制对象"""
     self.character_id: int = character_id
     """ 绘制的角色id """
@@ -219,7 +219,7 @@ class SeeCharacterItemBagPanel:
     self.handle_panel = item_panel
     """ 页面控制对象 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     title_draw = draw.TitleLineDraw(_("人物道具"), self.width)
     item_list_type = [
@@ -302,7 +302,7 @@ class ItemNameDraw:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.item_id: int = int(text)
     """ 道具的配表id """
@@ -435,7 +435,7 @@ class ItemInfoDraw:
   width -- 最大绘制宽度
   """
 
-  def __init__(self, cid: int, width: int):
+  def __init__(self, cid: int, width: int) -> None:
     """初始化绘制对象"""
     self.cid: int = int(cid)
     """ 道具的配表id """

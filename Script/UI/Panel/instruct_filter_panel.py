@@ -24,7 +24,7 @@ class Instruct_filter_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -84,7 +84,7 @@ class HandleFilterButtonList:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
 
     self.index: str = index
@@ -101,7 +101,7 @@ class HandleFilterButtonList:
     """ 按钮返回值 """
 
     # 按钮绘制
-    name_draw = draw.NormalDraw()
+    name_draw: draw.NormalDraw | draw.LeftButton = draw.NormalDraw()
 
     instruct_name = constant.handle_instruct_name_data[self.index]
     # 显示的指令名如果超过了四个字符，则只显示前四个字符，第五个字符显示为省略号

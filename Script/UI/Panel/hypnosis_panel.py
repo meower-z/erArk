@@ -76,7 +76,7 @@ def hypnosis_degree_calculation(target_character_id: int) -> float:
   base_addition = 1
 
   # 根据玩家的催眠能力，计算催眠增长系数
-  hypnosis_degree_adjust = 2
+  hypnosis_degree_adjust: float = 2
   if pl_character_data.talent[334]:
     hypnosis_degree_adjust = 6
   elif pl_character_data.talent[333]:
@@ -151,7 +151,7 @@ def evaluate_hypnosis_completion(character_id: int) -> int:
       now_scene_str = map_handle.get_map_system_path_str_for_list(now_position)
       now_scene_data = cache.scene_data[now_scene_str]
       if now_scene_data.close_type != 1:
-        now_draw = draw.WaitDraw()
+        now_draw: draw.NormalDraw = draw.WaitDraw()
         draw_text = _("\n当前地点不能锁门，无法进行空气催眠\n")
         now_draw.text = draw_text
         now_draw.draw()
@@ -216,7 +216,7 @@ class Chose_Hypnosis_Type_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int, instruct_flag: bool = False):
+  def __init__(self, width: int, instruct_flag: bool = False) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -480,7 +480,7 @@ class Chose_Roleplay_Type_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """
     初始化绘制对象
     参数：
@@ -531,7 +531,7 @@ class Chose_Roleplay_Type_Panel:
     if len(target_data.hypnosis.roleplay):
       self.selected_roleplay_cache = target_data.hypnosis.roleplay[:]
 
-  def draw(self):
+  def draw(self) -> None:
     """
     绘制对象
     输入：无
@@ -575,7 +575,7 @@ class Chose_Roleplay_Type_Panel:
       line_feed.draw()
 
       # 构建type到cid的映射，特殊类单独处理
-      type_dict = {}
+      type_dict: dict[str, List[int]] = {}
       special_type = self.special_type
       for t in self.type_list:
         type_dict[t] = []
@@ -825,7 +825,7 @@ class Chose_Roleplay_Type_Panel:
           break
     return can_select
 
-  def choose_this_type(self, cid):
+  def choose_this_type(self, cid: int) -> None:
     """
     选择该类型
     参数：

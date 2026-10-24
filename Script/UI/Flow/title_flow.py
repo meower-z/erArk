@@ -16,7 +16,7 @@ cache: game_type.Cache = cache_control.cache
 
 
 @handle_panel.add_panel(constant.Panel.TITLE)
-def title_panel():
+def title_panel() -> None:
   """绘制游戏标题菜单"""
   clear_screen = panel.ClearScreenPanel()
   clear_screen.draw()
@@ -55,7 +55,7 @@ def title_panel():
   button_panel.set(now_list, "", 0)
   button_panel.draw()
   return_list = button_panel.get_return_list()
-  ans = flow_handle.askfor_all(return_list.keys())
+  ans = flow_handle.askfor_all(list(return_list.keys()))
   py_cmd.clr_cmd()
   now_key = return_list[ans]
   if now_key == now_list[0]:

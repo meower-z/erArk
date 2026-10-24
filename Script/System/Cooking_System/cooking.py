@@ -370,7 +370,7 @@ def get_character_food_bag_type_list_buy_food_type(
 
 
 def get_food_list_from_food_shop(
-    food_type: str, restaurant_id: int = -1
+    food_type: str, restaurant_id: int | str = -1
 ) -> Dict[str, str]:
   """
   获取餐馆内指定类型的食物种类

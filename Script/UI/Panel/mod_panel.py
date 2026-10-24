@@ -18,7 +18,7 @@ config_normal = normal_config.config_normal
 class ModManagePanel:
   """Mod管理面板"""
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """
     初始化面板
 
@@ -29,7 +29,7 @@ class ModManagePanel:
     self.mod_manager = get_mod_manager()
     self.current_page = 0
     self.page_size = 10
-    self.selected_mod_id = None
+    self.selected_mod_id: str | None = None
 
   def draw(self) -> None:
     """绘制面板"""

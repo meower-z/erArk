@@ -19,7 +19,7 @@ class GameTimeInfoPanel:
   width -- 最大宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width = width
     """ 面板的最大宽度 """
@@ -88,7 +88,7 @@ class GameTimeInfoPanel:
     now_width += len(work_ro_rest_draw)
     self.width = now_width
     now_draw.width = self.width
-    self.now_draw: draw.NormalDraw = now_draw
+    self.now_draw: draw.CenterMergeDraw = now_draw
     """ 当前面板绘制对象 """
 
   def __len__(self) -> int:

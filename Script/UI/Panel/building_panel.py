@@ -4,7 +4,7 @@ from typing import Tuple, List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.Design import basement
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw
 from Script.UI.Panel import manage_power_system_panel
 from Script.Config import game_config, normal_config
 
@@ -27,16 +27,16 @@ class Building_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
     self.now_panel = _("区块总览")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: List[draw.Drawable] = []
     """ 绘制的文本列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     basement.get_base_updata()
@@ -56,6 +56,7 @@ class Building_Panel:
       )
 
       # 绘制主面板
+      now_draw: draw.CenterDraw | draw.CenterButton
       for building_type in building_type_list:
         if building_type == self.now_panel:
           now_draw = draw.CenterDraw()
@@ -99,10 +100,7 @@ class Building_Panel:
       facility_draw.draw()
 
       # 开始区块总览信息
-      now_draw = panel.LeftDrawTextListPanel()
-
-      now_draw.draw_list.append(line_feed)
-      now_draw.width += 1
+      building_draw_list: List[draw.Drawable] = [line_feed]
 
       # 遍历全设施
       for all_cid in game_config.config_facility:
@@ -141,14 +139,12 @@ class Building_Panel:
               args=(facility_cid,),
           )
           return_list.append(button_building_draw.return_text)
-          now_draw.draw_list.append(button_building_draw)
-          now_draw.width += len(button_building_draw.text)
-          now_draw.draw_list.append(line_feed)
-          now_draw.width += 1
+          building_draw_list.append(button_building_draw)
+          building_draw_list.append(line_feed)
 
-      self.draw_list: List[draw.NormalDraw] = []
+      self.draw_list = []
       """ 绘制的文本列表 """
-      self.draw_list.extend(now_draw.draw_list)
+      self.draw_list.extend(building_draw_list)
 
       for label in self.draw_list:
         if isinstance(label, list):

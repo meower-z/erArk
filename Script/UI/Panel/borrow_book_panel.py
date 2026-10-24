@@ -3,7 +3,7 @@
 from typing import Tuple, List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 
 import random
@@ -20,13 +20,13 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def settle_library_book():
+def settle_library_book() -> None:
   """
   刷新图书馆的可借阅书籍
   """
 
   for book_type_cid in game_config.config_book_type:
-    game_config.config_book_type_data.setdefault(book_type_cid, [])
+    game_config.config_book_type_data.setdefault(book_type_cid, set())
     level = cache.rhodes_island.facility_level[10]
     now_choose_list = []
     # 遍历书籍
@@ -82,7 +82,7 @@ def check_return_book(character_id: int) -> int:
     return 0
 
 
-def check_random_borrow_book(character_id):
+def check_random_borrow_book(character_id: int) -> int:
   """
   检查角色是否有借书，有的话跳过，没有的话随机借一本书
   returns:
@@ -326,16 +326,16 @@ class Borrow_Book_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
     self.now_panel = _("技能类书籍")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: List[draw.Drawable] = []
     """ 绘制的文本列表 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("借阅书籍")
@@ -352,6 +352,7 @@ class Borrow_Book_Panel:
       # 绘制主面板
       for book_fater_type in book_father_type_list:
         if book_fater_type == self.now_panel:
+          now_draw: draw.CenterDraw | draw.CenterButton
           now_draw = draw.CenterDraw()
           now_draw.text = f"[{book_fater_type}]"
           now_draw.style = "onbutton"
@@ -385,10 +386,9 @@ class Borrow_Book_Panel:
       borrow_limit_draw.draw()
 
       # 书籍总览信息
-      now_draw = panel.LeftDrawTextListPanel()
+      book_draw_list: List[draw.Drawable] = []
 
-      now_draw.draw_list.append(line_feed)
-      now_draw.width += 1
+      book_draw_list.append(line_feed)
 
       # 初始化变量
       book_count = 0
@@ -441,6 +441,7 @@ class Borrow_Book_Panel:
               button_flag = False
 
             if button_flag:
+              button_draw: draw.LeftButton | draw.NormalDraw
               button_draw = draw.LeftButton(
                   _(book_text),
                   _(str(book_count)),
@@ -457,10 +458,8 @@ class Borrow_Book_Panel:
               button_draw.style = book_style
 
             # print(f"debug button_draw.text = {button_draw.text},button_draw.normal_style = {button_draw.normal_style}")
-            now_draw.draw_list.append(button_draw)
-            now_draw.width += len(button_draw.text)
-            now_draw.draw_list.append(line_feed)
-            now_draw.width += 1
+            book_draw_list.append(button_draw)
+            book_draw_list.append(line_feed)
 
       resouce_draw = draw.NormalDraw()
       resouce_text = _("\n当前藏书情况：")
@@ -471,9 +470,9 @@ class Borrow_Book_Panel:
       resouce_draw.width = self.width
       resouce_draw.draw()
 
-      self.draw_list: List[draw.NormalDraw] = []
+      self.draw_list = []
       """ 绘制的文本列表 """
-      self.draw_list.extend(now_draw.draw_list)
+      self.draw_list.extend(book_draw_list)
 
       for label in self.draw_list:
         if isinstance(label, list):
@@ -556,6 +555,7 @@ class Borrow_Book_Panel:
           button_draw_flag = False
 
       if button_draw_flag:
+        borrow_button: draw.CenterButton | draw.NormalDraw
         borrow_button = draw.CenterButton(
             borrow_buttin_text,
             borrow_buttin_text,

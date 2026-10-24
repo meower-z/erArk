@@ -1,6 +1,6 @@
 from functools import wraps
 from types import FunctionType
-from typing import Callable, Iterable, Optional
+from typing import Callable, Collection, Iterable, Optional
 from Script.Core import cache_control, constant, game_type, get_text
 from Script.Design import attr_calculation, character, instuct_judege
 from Script.Config import game_config
@@ -111,7 +111,7 @@ def handle_premise(premise: str, character_id: int) -> float:
 
 
 def get_weight_from_premise_dict(
-    talk_premise_dict: set,
+    talk_premise_dict: Collection[str],
     character_id: int,
     calculated_premise_dict: dict[str, float],
     weight_all_to_1_flag: bool = False,

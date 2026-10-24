@@ -297,7 +297,7 @@ def get_resouce_price(
   功能: 返回价格和供需波动百分比
   """
   resouce_data = game_config.config_resouce[resouce_id]
-  base_price = resouce_data.price
+  base_price: float = resouce_data.price
   # 非本地特产的价格为1.5倍
   if (
       resouce_data.type == _("特产")
@@ -374,7 +374,7 @@ class Resource_Exchange_Line_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -398,7 +398,7 @@ class Resource_Exchange_Line_Panel:
     self.quantity_of_resouce = 0
     """ 交易数量，默认为0。正数代表买入，负数代表卖出 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
 
     title_text = _("资源交易")
@@ -839,7 +839,7 @@ class Resource_Exchange_Line_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def execute_trade(self, buy_or_sell_flag: bool = None) -> None:
+  def execute_trade(self, buy_or_sell_flag: bool | None = None) -> None:
     """
     执行资源交易
     输入: 无
@@ -1030,7 +1030,7 @@ class Resource_Exchange_Line_Panel:
         False,
         0,
     )
-    select_state = {}
+    select_state: dict[str, int | str] = {}
 
     while 1:
       info_text = _("请选择一名交易员担任【{0}】的主交易员：\n").format(

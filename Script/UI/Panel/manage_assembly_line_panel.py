@@ -73,7 +73,7 @@ def calculate_assembly_line_efficiency(line_id: int) -> Tuple[str, float]:
       continue
     if cid in main_ids:
       continue
-    char_data: game_type.Character = cache.character_data[cid]
+    char_data = cache.character_data[cid]
     base_effect = 2 * handle_ability.get_ability_adjust(
         char_data.ability.get(48, 0)
     )
@@ -267,7 +267,7 @@ class Manage_Assembly_Line_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -505,7 +505,7 @@ class Manage_Assembly_Line_Panel:
         False,
         0,
     )
-    select_state = {}
+    select_state: dict[str, int | str] = {}
 
     def _handler(chara_id: int) -> None:
       if chara_id not in ri.production_worker_ids:

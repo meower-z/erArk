@@ -388,9 +388,11 @@ def calculate_semen_flow(
   if character_id != 0:
     character_data: game_type.Character = cache.character_data[character_id]
     # 创建精液流通情况字典
-    all_flow_dict = {}
-    all_flow_dict["source"] = {"type": part_type, "id": part_cid}
-    all_flow_dict["targets"] = []
+    flow_targets: list[dict[str, int]] = []
+    all_flow_dict = {
+        "source": {"type": part_type, "id": part_cid},
+        "targets": flow_targets,
+    }
 
     # 判断部位类型，0为身体部位，1为服装部位
     if part_type == 0:
@@ -421,7 +423,7 @@ def calculate_semen_flow(
       flow_cid = int(flow_str[1:].split("-")[0])
       flow_rate = int(flow_str[1:].split("-")[1])
       # 创建流动情况字典
-      now_flow_dict = {}
+      now_flow_dict: dict[str, int] = {}
       # 判断流动类型，0为身体部位，1为服装部位，2为环境滴落
       if flow_type == "B":
         now_flow_dict["type"] = 0
@@ -435,7 +437,7 @@ def calculate_semen_flow(
           1, int(semen_count * flow_rate / 100)
       )
       # 添加到精液流通情况字典中
-      all_flow_dict["targets"].append(now_flow_dict)
+      flow_targets.append(now_flow_dict)
 
     # 添加到目标角色的精液流通情况列表中
     character_data.dirty.semen_flow.append(all_flow_dict)
@@ -578,7 +580,7 @@ class Ejaculation_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """

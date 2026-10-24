@@ -30,14 +30,14 @@ class Check_locker_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
-    self.handle_panel: panel.PageHandlePanel = None
+    self.handle_panel: panel.PageHandlePanel | None = None
     """ 当前名字列表控制面板 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     pl_data: game_type.Character = cache.character_data[0]
 
@@ -49,7 +49,7 @@ class Check_locker_Panel:
     title_draw = draw.TitleLineDraw(_("{0}的衣柜").format(map_name), self.width)
 
     self.handle_panel = panel.PageHandlePanel(
-        [], FindDraw, 20, 8, self.width, 1, 1, 0
+        [], FindDraw, 20, 8, self.width, True, True, 0
     )
     while 1:
       py_cmd.clr_cmd()
@@ -148,7 +148,9 @@ class Check_locker_Panel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def steal_all_pan(self, npc_id_list, map_data) -> None:
+  def steal_all_pan(
+      self, npc_id_list: List[int], map_data: game_type.Scene
+  ) -> None:
     """结算：偷取所有内裤"""
     pl_data: game_type.Character = cache.character_data[0]
     count = 0
@@ -179,7 +181,9 @@ class Check_locker_Panel:
     ).format(count)
     now_draw.draw()
 
-  def steal_all_socks(self, npc_id_list, map_data) -> None:
+  def steal_all_socks(
+      self, npc_id_list: List[int], map_data: game_type.Scene
+  ) -> None:
     """结算：偷取所有袜子"""
     pl_data: game_type.Character = cache.character_data[0]
     count = 0
@@ -229,7 +233,7 @@ class FindDraw:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.npc_id = npc_id
     """ 角色id """
@@ -262,7 +266,7 @@ class FindDraw:
         self.npc_id, clothing.get_cloth_locker_type_by_scene(map_data.scene_tag)
     )
 
-    name_draw = draw.NormalDraw()
+    name_draw: draw.NormalDraw | draw.LeftButton = draw.NormalDraw()
     # print("text :",text)
     if is_button:
       if num_button:
@@ -284,10 +288,10 @@ class FindDraw:
     """绘制对象"""
     self.now_draw.draw()
 
-  def check_cloth(self):
+  def check_cloth(self) -> None:
     """点击后进入衣服操作子界面"""
     # title_draw = draw.TitleLineDraw(self.text, window_width)
-    return_list = []
+    return_list: List[str] = []
     # title_draw.draw()
     cloth_show_draw = draw.NormalDraw()
     self.pl_data.target_character_id = self.npc_id
@@ -452,11 +456,11 @@ class FindDraw:
     )
     now_draw.draw()
 
-  def shoot_in_cloth(self):
+  def shoot_in_cloth(self) -> None:
     """射在衣服上"""
 
     shoot_in_cloth_panel = panel.PageHandlePanel(
-        [], Ejaculation_NameDraw, 20, 1, window_width, 1, 1, 0
+        [], Ejaculation_NameDraw, 20, 1, window_width, True, True, 0
     )
 
     while 1:
@@ -505,7 +509,7 @@ class Ejaculation_NameDraw:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.index = text[0]
     """ 部位id """
@@ -555,7 +559,7 @@ class Ejaculation_NameDraw:
           button_text += _(" ({0}ml精液)").format(
               str(target_data.dirty.cloth_locker_semen[self.index][1])
           )
-        name_draw = draw.LeftButton(
+        name_draw: draw.CenterButton = draw.LeftButton(
             button_text,
             self.button_return,
             self.width,

@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import time
-from typing import List, Optional
-from types import MethodType
+from typing import List, Protocol
 
 from Script.Core import (
     text_handle,
@@ -30,15 +29,33 @@ window_width = normal_config.config_normal.text_width
 """ 屏幕宽度 """
 
 
+class Drawable(Protocol):
+  """能绘制自身的对象，面板的绘制列表里放的就是这种对象"""
+
+  def draw(self) -> None:
+    """绘制对象"""
+
+
+class SizedDrawable(Drawable, Protocol):
+  """能绘制自身、并能用 len() 取绘制宽度的对象"""
+
+  def __len__(self) -> int:
+    """
+    获取绘制宽度
+    Return arguments:
+    int -- 绘制宽度
+    """
+
+
 class NormalDraw:
   """通用文本绘制类型"""
 
   style: str = "standard"
   """ 文本的样式 """
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化绘制对象"""
-    self.width: int = 0
+    self.width: float = 0
     """ 当前最大可绘制宽度 """
     self.text = ""
     """ 当前要绘制的文本 """
@@ -202,7 +219,7 @@ class ImageDraw:
   image_path -- 图片所在路径 (default '')
   """
 
-  def __init__(self, image_name: str):
+  def __init__(self, image_name: str) -> None:
     """初始化绘制对象"""
     self.image_name = image_name
     """ 图片id """
@@ -221,7 +238,7 @@ class ImageDraw:
 class BarDraw:
   """比例条绘制"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化绘制对象"""
     self.width = 0
     """ 比例条最大长度 """
@@ -274,7 +291,7 @@ class BarDraw:
 class CharaDraw:
   """人物图片绘制"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化绘制对象"""
     self.width = 0
     """ 人物最大长度 """
@@ -282,25 +299,6 @@ class CharaDraw:
     """ 人物类型id """
     self.draw_list: List[ImageDraw] = []
     """ 人物绘制对象列表 """
-
-  def set(self, chara_id: int) -> None:
-    """
-    设置人物数据
-    Keyword arguments:
-    chara_id -- 人物id
-    max_value -- 最大数值
-    value -- 当前数值
-    """
-    if self.width > 0:
-      # print("chara_id =",chara_id)
-      # print("game_config.config_image_data[chara_id] =",game_config.config_image_data[chara_id])
-      # print("game_config.config_image[game_config.config_image_data[chara_id]] =",game_config.config_image[game_config.config_image_data[chara_id]])
-      style_data = game_config.config_image[
-          game_config.config_image_data[chara_id]
-      ]
-      now_draw = ImageDraw(style_data.image_name)
-      now_draw.width = style_data.width
-      self.draw_list.append(now_draw)
 
   def draw(self) -> None:
     """绘制人物"""
@@ -319,7 +317,7 @@ class CharaDraw:
 class InfoBarDraw:
   """带有文本和数值描述的比例条 例: 生命:[图片](2000/2000)"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化绘制对象"""
     self.width: int = 0
     """ 比例条最大长度 """
@@ -327,7 +325,7 @@ class InfoBarDraw:
     """ 比例条类型id """
     self.text: str = ""
     """ 比例条描述文本 """
-    self.draw_list: List = []
+    self.draw_list: List[Drawable] = []
     """ 比例条绘制对象列表 """
     self.scale: float = 1
     """ 比例条绘制区域占比 """
@@ -418,7 +416,7 @@ class InfoBarDraw:
 class InfoCharaDraw:
   """带有文本的人物图像 例: [阿米娅]:[图片]"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化绘制对象"""
     self.width: int = 0
     """ 比例条最大长度 """
@@ -426,7 +424,7 @@ class InfoCharaDraw:
     """ 比例条类型id """
     self.text: str = ""
     """ 比例条描述文本 """
-    self.draw_list: List = []
+    self.draw_list: List[Drawable] = []
     """ 比例条绘制对象列表 """
     self.scale: float = 1
     """ 比例条绘制区域占比 """
@@ -487,13 +485,13 @@ class Button:
       self,
       text: str,
       return_text: str,
-      normal_style="standard",
-      on_mouse_style="onbutton",
-      cmd_func=None,
-      args=(),
-      web_type="",
+      normal_style: str = "standard",
+      on_mouse_style: str = "onbutton",
+      cmd_func: Callable[..., object] | None = None,
+      args: object = (),
+      web_type: str = "",
       tooltip: str = "",
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.text: str = text
     """ 按钮文本 """
@@ -505,7 +503,7 @@ class Button:
     """ 鼠标悬停时样式 """
     self.width: int = 0
     """ 按钮文本的最大宽度 """
-    self.cmd_func: Optional[MethodType] = cmd_func
+    self.cmd_func = cmd_func
     """ 按钮响应事件函数 """
     self.args = args
     """ 传给事件响应函数的参数列表 """
@@ -586,10 +584,10 @@ class ImageButton:
       text: str,
       return_text: str,
       width: int,
-      cmd_func=None,
-      args=(),
+      cmd_func: Callable[..., object] | None = None,
+      args: object = (),
       tooltip: str = "",
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.text: str = text
     """ 按钮文本 """
@@ -597,7 +595,7 @@ class ImageButton:
     """ 点击按钮响应文本 """
     self.width: int = 0
     """ 按钮文本的最大宽度 """
-    self.cmd_func: Optional[MethodType] = cmd_func
+    self.cmd_func = cmd_func
     """ 按钮响应事件函数 """
     self.args = args
     """ 传给事件响应函数的参数列表 """
@@ -644,7 +642,7 @@ class CenterButton:
       self,
       text: str,
       return_text: str,
-      width: int,
+      width: float,
       fix_text: str = " ",
       normal_style: str = "standard",
       on_mouse_style: str = "onbutton",
@@ -664,7 +662,7 @@ class CenterButton:
     """ 按钮默认样式 """
     self.on_mouse_style: str = on_mouse_style
     """ 鼠标悬停时样式 """
-    self.width: int = width
+    self.width: float = width
     """ 按钮文本的最大宽度 """
     self.cmd_func = cmd_func
     """ 按钮响应事件函数 """
@@ -1035,11 +1033,11 @@ class CenterMergeDraw:
   width -- 最大宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 最大宽度 """
-    self.draw_list: List[NormalDraw] = []
+    self.draw_list: List[SizedDrawable] = []
     """ 绘制列表 """
 
   def __len__(self) -> int:
@@ -1082,18 +1080,18 @@ class LeftMergeDraw:
   width -- 最大宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: float) -> None:
     """初始化绘制对象"""
-    self.width: int = width
+    self.width: float = width
     """ 最大宽度 """
-    self.draw_list: List[NormalDraw] = []
+    self.draw_list: List[SizedDrawable] = []
     """ 绘制列表 """
     self.column: int = 0
     """ 每行最大元素数 """
 
   def __len__(self) -> int:
     """获取当前绘制对象宽度"""
-    return self.width
+    return int(self.width)
 
   def __gt__(self, other: Sized) -> int:
     """
@@ -1202,7 +1200,7 @@ class ExpLevelDraw:
   experience -- 经验值
   """
 
-  def __init__(self, experience: int):
+  def __init__(self, experience: int) -> None:
     """初始化绘制对象"""
     from Script.Design import attr_calculation
 
@@ -1236,7 +1234,7 @@ class StatusLevelDraw:
   text -- 要绘制的文本
   """
 
-  def __init__(self, value: int, text: str = ""):
+  def __init__(self, value: int, text: str = "") -> None:
     """初始化绘制对象"""
     from Script.Design import attr_calculation
 

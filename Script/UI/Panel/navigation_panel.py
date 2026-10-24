@@ -118,7 +118,7 @@ class Base_function_class:
         now_draw.draw()
       else:
         while 1:
-          ask_list = []
+          ask_list: List[str] = []
           askfor_panel = panel.OneMessageAndSingleColumnButton()
           askfor_list = [_("是"), _("否")]
           askfor_panel.set(
@@ -189,7 +189,7 @@ class Navigation_Panel(Base_function_class):
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -374,7 +374,7 @@ class MoveMenuPanel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 最大绘制宽度 """
@@ -382,7 +382,7 @@ class MoveMenuPanel:
     """ 监听的按钮列表 """
     self.now_type: int = 0
     """ 当前的移动菜单类型 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: List[draw.Drawable] = []
     """ 绘制的对象列表 """
     self.move_type_id_data: Dict[str, int] = {
         game_config.config_move_menu_type[i].name: i
@@ -390,7 +390,7 @@ class MoveMenuPanel:
     }
     """ 移动类型名字对应配表id """
 
-  def update(self):
+  def update(self) -> None:
     """更新绘制面板"""
     line = draw.LineDraw(".", self.width)
     self.draw_list = []
@@ -438,7 +438,7 @@ class MapSceneNameDraw(Base_function_class):
   width -- 绘制宽度
   """
 
-  def __init__(self, now_map: List[str], width: int):
+  def __init__(self, now_map: List[str], width: int) -> None:
     """
     初始化地图场景名列表绘制对象
     Keyword arguments:
@@ -463,7 +463,7 @@ class MapSceneNameDraw(Base_function_class):
     """
     self.now_map = now_map
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制面板"""
     self.return_list = []
 
@@ -486,7 +486,7 @@ class MapSceneNameDraw(Base_function_class):
     near_scene_path_name_list = list(scene_path.keys())
 
     if len(near_scene_path_name_list):
-      draw_list = []
+      draw_list: List[draw.LeftButton] = []
       for scene_name in near_scene_path_name_list:
         # print(f"debug scene_id = {scene_id}")
         load_scene_data = map_handle.get_scene_data_for_map(
@@ -514,12 +514,12 @@ class MapSceneNameDraw(Base_function_class):
         draw_list.append(now_draw)
       draw_group = value_handle.list_of_groups(draw_list, 8)
       now_width_index = 1
-      for now_draw_list in draw_group:
-        if len(now_draw_list) > now_width_index:
-          now_width_index = len(now_draw_list)
+      for now_draw_group in draw_group:
+        if len(now_draw_group) > now_width_index:
+          now_width_index = len(now_draw_group)
       now_width = self.width / now_width_index
-      for now_draw_list in draw_group:
-        for now_draw in now_draw_list:
+      for now_draw_group in draw_group:
+        for now_draw in now_draw_group:
           now_draw.width = now_width
           now_draw.draw()
         line_feed.draw()

@@ -164,7 +164,7 @@ def get_target_chara_diy_instruct(
             target_character_data.adv
         ]
         # 已计算过的前提字典
-        calculated_premise_dict = {}
+        calculated_premise_dict: dict[str, float] = {}
         # 遍历事件列表
         for event_id in target_diy_instruct_event_list:
           event_config = game_config.config_event[event_id]
@@ -202,7 +202,7 @@ def check_son_event_list_from_event_list(
   """
   son_event_list = []  # 子事件列表
   # 已计算过的前提字典
-  calculated_premise_dict = {}
+  calculated_premise_dict: dict[str, float] = {}
 
   # 开始遍历当前行为的事件表
   for event_id in event_list:
@@ -243,16 +243,16 @@ class Event_option_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, character_id: int, width: int):
+  def __init__(self, character_id: int, width: int) -> None:
     """初始化绘制对象"""
     self.character_id = character_id
     """ 绘制的角色id """
     self.width: int = width
     """ 绘制的最大宽度 """
-    self.handle_panel: panel.PageHandlePanel = None
+    self.handle_panel: panel.PageHandlePanel | None = None
     """ 当前名字列表控制面板 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     character_data: game_type.Character = cache.character_data[
         self.character_id
@@ -300,7 +300,7 @@ class Event_option_Panel:
     # 非 Web 模式，使用传统绘制方式
     line_feed.draw()
     self.handle_panel = panel.PageHandlePanel(
-        [], SonEventDraw, 20, 1, self.width, 1, 1, 0
+        [], SonEventDraw, 20, 1, self.width, True, True, 0
     )
 
     while 1:
@@ -330,7 +330,7 @@ class multi_layer_event_option_Panel:
       width: int,
       event_parent_chid_id: int,
       event_parent_value: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.character_id = character_id
     """ 绘制的角色id """
@@ -341,11 +341,11 @@ class multi_layer_event_option_Panel:
     self.event_parent_value = event_parent_value
     """ 嵌套父子事件的值 """
     self.handle_panel: panel.PageHandlePanel = panel.PageHandlePanel(
-        [], SonEventDraw, 20, 1, self.width, 1, 1, 0
+        [], SonEventDraw, 20, 1, self.width, True, True, 0
     )
     """ 当前名字列表控制面板 """
 
-  def draw(self):
+  def draw(self) -> None:
     """绘制对象"""
     character_data: game_type.Character = cache.character_data[
         self.character_id
@@ -435,7 +435,7 @@ class SonEventDraw:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
     self.event_id = value_list[0]
     """ 事件id """
@@ -453,7 +453,7 @@ class SonEventDraw:
     """ 数字按钮的id """
     self.button_return: str = str(button_id)
     """ 按钮返回值 """
-    name_draw = draw.NormalDraw()
+    name_draw: draw.NormalDraw | draw.CenterButton = draw.NormalDraw()
     # print("text :",text)
     option_text = self.son_event.text.split('|')[0]
     option_text = talk.code_text_to_draw_text(option_text, self.character_id)

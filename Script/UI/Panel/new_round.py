@@ -32,7 +32,7 @@ class New_Round_Handle:
   Keyword arguments:
   """
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化绘制对象"""
     self.width = normal_config.config_normal.text_width
     """ 屏幕宽度 """
@@ -60,7 +60,7 @@ class New_Round_Handle:
     """ 干员显示 """
     self.show_panel_flag_list = [False, False, False, False, False, False]
     """ 面板显示列表 """
-    self.all_fall_chara_list = []
+    self.all_fall_chara_list: List[int] = []
     """ 所有陷落干员列表 """
     self.farewell_npc_id = 0
     """ 送别干员id """
@@ -1209,7 +1209,7 @@ class CharacterabiText:
   width -- 最大宽度
   """
 
-  def __init__(self, character_id: int, width: int, rate: int):
+  def __init__(self, character_id: int, width: int, rate: int) -> None:
     """初始化绘制对象"""
     self.character_id = character_id
     """ 绘制的角色id """
@@ -1223,7 +1223,7 @@ class CharacterabiText:
     # """ 每行状态最大个数 """
     character_data = cache.character_data[self.character_id]
     """ 角色数据 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: List[draw.Drawable] = []
     """ 绘制对象列表 """
     self.title_list: List[draw.NormalDraw] = []
     """ 绘制标题列表 """
@@ -1309,7 +1309,9 @@ class CharacterExperienceText:
   type_number -- 显示的状态类型
   """
 
-  def __init__(self, character_id: int, width: int, column: int, rate: int):
+  def __init__(
+      self, character_id: int, width: int, column: int, rate: int
+  ) -> None:
     """初始化绘制对象"""
     self.character_id = character_id
     """ 要绘制的角色id """
@@ -1319,7 +1321,7 @@ class CharacterExperienceText:
     """ 每行状态最大个数 """
     self.rate = rate
     """ 继承比例 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: List[draw.Drawable | List[draw.LeftDraw]] = []
     """ 绘制的文本列表 """
     self.return_list: List[str] = []
     """ 当前面板监听的按钮列表 """

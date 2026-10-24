@@ -35,7 +35,7 @@ class Character_talent_show_Text:
   width -- 最大宽度
   """
 
-  def __init__(self, character_id: int, width: int):
+  def __init__(self, character_id: int, width: int) -> None:
     """初始化绘制对象"""
     self.character_id = character_id
     """ 绘制的角色id """
@@ -177,7 +177,7 @@ class Character_talent_show_Text:
         next_id = 211 if obey_level == 0 else 210 + obey_level + 1
         self.show_gain_need(next_id, obey_judge)
 
-  def show_gain_need(self, talent_id, judge):
+  def show_gain_need(self, talent_id: int, judge: int) -> None:
     """具体显示需要什么"""
 
     need_all = game_config.config_talent_gain_data[talent_id]

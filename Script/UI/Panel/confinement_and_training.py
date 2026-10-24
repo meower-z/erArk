@@ -149,7 +149,7 @@ def judge_can_escape(character_id: int) -> Tuple[bool, float, float]:
 
   # 监狱长的对抗值
   warden_data = cache.character_data[warden_id]
-  warden_value = warden_data.ability[42]
+  warden_value: float = warden_data.ability[42]
   warden_value *= warden_data.hit_point / 100
   warden_value *= warden_data.mana_point / 100
 
@@ -455,7 +455,7 @@ def get_all_can_use_behavior_id_for_sex_assistant(
   # 去重
   behavior_id_list = list(set(behavior_id_list))
   # 遍历状态id
-  now_premise_data = {}
+  now_premise_data: dict[str, float] = {}
   new_behavior_id_list = []
   for behavior_id in behavior_id_list:
     if behavior_id in constant.behavior_id_to_instruct_id:
@@ -474,7 +474,7 @@ def get_all_can_use_behavior_id_for_sex_assistant(
       # 进一步检查是否可用
       if filter_judge:
         behavior_data = game_config.config_behavior[behavior_id]
-        behavior_tag_list = behavior_data.tag
+        behavior_tag_list: str | list[str] = behavior_data.tag
         behavior_tag_list = behavior_data.tag.split("|")
         # 跳过仅玩家可用的指令
         if behavior_data.trigger == "pl":
@@ -609,7 +609,7 @@ class Confinement_And_Training_Manage_Panel:
   width -- 绘制宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
@@ -619,7 +619,7 @@ class Confinement_And_Training_Manage_Panel:
     """ 绘制的文本列表 """
     self.pl_character_data = cache.character_data[0]
     """ 玩家的角色数据 """
-    self.done_training_status_id_set = set()
+    self.done_training_status_id_set: set[int] = set()
     """ 已经调教过的状态id集合 """
 
   def draw(self) -> None:
@@ -820,7 +820,7 @@ class Confinement_And_Training_Manage_Panel:
         not cache.rhodes_island.pre_training_lubrication
     )
 
-  def adjust_tool_list(self):
+  def adjust_tool_list(self) -> None:
     """调整道具使用"""
     from Script.UI.Panel import h_item_shop_panel
 
@@ -874,6 +874,7 @@ class Confinement_And_Training_Manage_Panel:
         name_draw.draw()
 
         # 如果数量为0，则绘制灰色不可选按钮
+        button_draw: draw.NormalDraw | draw.LeftButton
         if item_num <= 0:
           cache.rhodes_island.pre_training_tool_dict[i] = 0
           button_text = _(" [不使用] ")

@@ -5,7 +5,7 @@
 
 import random
 from functools import wraps
-from typing import List
+from typing import Dict, List
 from types import FunctionType
 from Script.Core import get_text, constant, game_type, cache_control, flow_handle, py_cmd, io_init
 
@@ -182,7 +182,7 @@ class Character_creat_Handle:
   Keyword arguments:
   """
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化绘制对象"""
     from Script.UI.Panel import character_info_head
 
@@ -231,7 +231,7 @@ class Character_Sex:
   width -- 最大宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 当前最大可绘制宽度 """
@@ -240,13 +240,12 @@ class Character_Sex:
 
     character_data: game_type.Character = cache.character_data[0]
     sex_text = game_config.config_sex_tem[character_data.sex].name
-    now_draw = panel.LeftDrawTextListPanel()
+    now_draw_list: List[draw.Drawable] = []
 
     sex_draw = draw.LeftDraw()
     # sex_draw.width = 1
     sex_draw.text = _("\n 性别：{0}      ").format(sex_text)
-    now_draw.draw_list.append(sex_draw)
-    now_draw.width += len(sex_draw.text)
+    now_draw_list.append(sex_draw)
 
     button_text = _("    [改变性别]")
     sex_button_draw = draw.LeftButton(
@@ -257,13 +256,11 @@ class Character_Sex:
     )
     self.return_list.append(sex_button_draw.return_text)
 
-    now_draw.draw_list.append(sex_button_draw)
-    now_draw.width += len(sex_button_draw.text)
-    # now_draw.draw_list.append(line_feed_draw)
+    now_draw_list.append(sex_button_draw)
 
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: List[draw.Drawable] = []
     """ 绘制的文本列表 """
-    self.draw_list.extend(now_draw.draw_list)
+    self.draw_list.extend(now_draw_list)
 
   def draw(self) -> None:
     """绘制面板"""
@@ -292,7 +289,7 @@ class Character_JJ:
   width -- 最大宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 当前最大可绘制宽度 """
@@ -301,13 +298,12 @@ class Character_JJ:
 
     character_data: game_type.Character = cache.character_data[0]
     jj_text = game_config.config_jj_tem[character_data.pl_ability.jj_size].name
-    now_draw = panel.LeftDrawTextListPanel()
+    now_draw_list: List[draw.Drawable] = []
 
     jj_draw = draw.LeftDraw()
     # jj_draw.width = 1
     jj_draw.text = _("\n 阴茎大小：{0}      ").format(jj_text)
-    now_draw.draw_list.append(jj_draw)
-    now_draw.width += len(jj_draw.text)
+    now_draw_list.append(jj_draw)
 
     button_text = _("    [改变大小]")
     jj_button_draw = draw.LeftButton(
@@ -318,12 +314,11 @@ class Character_JJ:
     )
     self.return_list.append(jj_button_draw.return_text)
 
-    now_draw.draw_list.append(jj_button_draw)
-    now_draw.width += len(jj_button_draw.text)
+    now_draw_list.append(jj_button_draw)
 
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: List[draw.Drawable] = []
     """ 绘制的文本列表 """
-    self.draw_list.extend(now_draw.draw_list)
+    self.draw_list.extend(now_draw_list)
 
   def draw(self) -> None:
     """绘制面板"""
@@ -353,18 +348,18 @@ class Character_Debug:
   width -- 最大宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 当前最大可绘制宽度 """
     self.return_list: List[str] = []
     """ 监听的按钮列表 """
 
-    now_draw = panel.LeftDrawTextListPanel()
+    now_draw_list: List[draw.Drawable] = []
 
     # debug按钮
     if normal_config.config_normal.debug:
-      now_draw.draw_list.append(line_feed_draw)
+      now_draw_list.append(line_feed_draw)
       if cache.debug_mode:
         button_text = _("【关闭debug模式】")
       else:
@@ -374,12 +369,11 @@ class Character_Debug:
       )
       self.return_list.append(button_draw.return_text)
 
-      now_draw.draw_list.append(button_draw)
-      now_draw.width += len(button_draw.text)
+      now_draw_list.append(button_draw)
 
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: List[draw.Drawable] = []
     """ 绘制的文本列表 """
-    self.draw_list.extend(now_draw.draw_list)
+    self.draw_list.extend(now_draw_list)
 
   def draw(self) -> None:
     """绘制面板"""
@@ -404,7 +398,7 @@ class Character_FirstNPC:
   width -- 最大宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 当前最大可绘制宽度 """
@@ -428,19 +422,22 @@ class Character_FirstNPC:
     """ 是否显示特殊干员选择面板 """
     self.id_list = list(cache.npc_tem_data.keys())
     """ 当前显示的NPC列表 """
-    self.talk_character_list = []
+    self.talk_character_list: List[int] = []
     """ 口上干员列表 """
-    self.special_chara_list = []
+    self.special_chara_list: List[int] = []
     """ 特殊干员列表 """
     self.name_filter_flag = False
     """ 姓名筛选标记 """
     self.show_chara_attributes_flag = False
     """ 显示干员属性标记 """
-    self.chest_filter_flag, self.chest_filter_id_dict = 0, {}
+    self.chest_filter_flag = 0
+    self.chest_filter_id_dict: Dict[str, List[int]] = {}
     """ 胸围筛选标记与ID字典 """
-    self.age_filter_flag, self.age_filter_id_dict = 0, {}
+    self.age_filter_flag = 0
+    self.age_filter_id_dict: Dict[str, List[int]] = {}
     """ 年龄筛选标记与ID字典 """
-    self.race_filter_flag, self.race_filter_id_dict = 0, {}
+    self.race_filter_flag = 0
+    self.race_filter_id_dict: Dict[str, List[int]] = {}
     """ 种族筛选标记与ID字典 """
 
     from Script.UI.Panel import manage_basement_panel
@@ -451,11 +448,11 @@ class Character_FirstNPC:
         self.id_list.remove(chara_id)
         self.special_chara_list.append(chara_id)
 
-    now_draw = panel.LeftDrawTextListPanel()
-    now_draw.draw_list.append(line_feed_draw)
-    now_draw.draw_list.append(line_feed_draw)
+    now_draw_list: List[draw.Drawable] = []
+    now_draw_list.append(line_feed_draw)
+    now_draw_list.append(line_feed_draw)
     line = draw.LineDraw("↘", 1)
-    now_draw.draw_list.append(line)
+    now_draw_list.append(line)
 
     info_draw = draw.LeftDraw()
     # info_draw.width = 1
@@ -472,10 +469,8 @@ class Character_FirstNPC:
       if npc_character_data.name not in constant.first_NPC_name_set:
         info_draw.text += f" ●{npc_character_data.name}"
 
-    now_draw.draw_list.append(info_draw)
-    now_draw.width += len(info_draw.text)
-    now_draw.draw_list.append(line_feed_draw)
-    now_draw.width += 1
+    now_draw_list.append(info_draw)
+    now_draw_list.append(line_feed_draw)
 
     button_text = _("[选择初期干员]")
     button_select_draw = draw.CenterButton(
@@ -485,8 +480,7 @@ class Character_FirstNPC:
         cmd_func=self.select_npc,
     )
     self.return_list.append(button_select_draw.return_text)
-    now_draw.draw_list.append(button_select_draw)
-    now_draw.width += len(button_select_draw.text)
+    now_draw_list.append(button_select_draw)
 
     button_text = _("[指派干员工作]")
     button_select_draw = draw.CenterButton(
@@ -497,11 +491,9 @@ class Character_FirstNPC:
         args=self.width,
     )
     self.return_list.append(button_select_draw.return_text)
-    now_draw.draw_list.append(button_select_draw)
-    now_draw.width += len(button_select_draw.text)
+    now_draw_list.append(button_select_draw)
 
-    now_draw.draw_list.append(line_feed_draw)
-    now_draw.width += 1
+    now_draw_list.append(line_feed_draw)
 
     info_last_draw = draw.LeftDraw()
     # info_last_draw.width = 1
@@ -525,12 +517,11 @@ class Character_FirstNPC:
         work_people_now, people_max
     )
 
-    now_draw.draw_list.append(info_last_draw)
-    now_draw.width += len(info_last_draw.text)
+    now_draw_list.append(info_last_draw)
 
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: List[draw.Drawable] = []
     """ 绘制的文本列表 """
-    self.draw_list.extend(now_draw.draw_list)
+    self.draw_list.extend(now_draw_list)
 
   def draw(self) -> None:
     """绘制面板"""
@@ -542,7 +533,7 @@ class Character_FirstNPC:
       else:
         label.draw()
 
-  def select_npc(self):
+  def select_npc(self) -> None:
     """选择初期干员"""
 
     # 过滤器相关变量定义
@@ -924,7 +915,7 @@ class Character_FirstNPC:
         npc_character_data = cache.character_data[character_id]
         if (
             npc_character_data.name not in constant.first_NPC_name_set
-            and user_input in npc_character_data.name
+            and str(user_input) in npc_character_data.name
         ):
           npc_name_filter_id.append(character_id)
       self.id_list = npc_name_filter_id
@@ -1067,7 +1058,7 @@ class SelectFirstNPCButton:
       is_button: bool,
       num_button: bool,
       button_id: int,
-  ):
+  ) -> None:
     """初始化绘制对象"""
 
     self.NPC_id: int = NPC_id
@@ -1102,6 +1093,7 @@ class SelectFirstNPCButton:
     else:
       now_style = "standard"
 
+    name_draw: draw.LeftDraw | draw.LeftButton
     name_draw = draw.LeftDraw()
     if self.NPC_id in cache.npc_id_got:
       if target_data.name in constant.first_NPC_name_set:
@@ -1170,7 +1162,7 @@ class Character_Bonus:
   width -- 最大宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 当前最大可绘制宽度 """
@@ -1179,11 +1171,11 @@ class Character_Bonus:
 
     character_data: game_type.Character = cache.character_data[0]
     bonus_all = 0
-    now_draw = panel.LeftDrawTextListPanel()
-    now_draw.draw_list.append(line_feed_draw)
-    now_draw.draw_list.append(line_feed_draw)
+    now_draw_list: List[draw.Drawable] = []
+    now_draw_list.append(line_feed_draw)
+    now_draw_list.append(line_feed_draw)
     line = draw.LineDraw("↘", 1)
-    now_draw.draw_list.append(line)
+    now_draw_list.append(line)
 
     # 提供的点数
     bonus_all += cache.game_round * 20
@@ -1197,8 +1189,7 @@ class Character_Bonus:
     info_talent_draw.text += _(
         "  （未选择的源石能力均可在游戏中满足特定条件解锁）\n"
     )
-    now_draw.draw_list.append(info_talent_draw)
-    now_draw.width += len(info_talent_draw.text)
+    now_draw_list.append(info_talent_draw)
 
     bonus_use_text = ""
 
@@ -1241,10 +1232,8 @@ class Character_Bonus:
           args=cid,
       )
       self.return_list.append(button_draw.return_text)
-      now_draw.draw_list.append(button_draw)
-      now_draw.width += len(button_text)
-      now_draw.draw_list.append(line_feed_draw)
-      now_draw.width += 1
+      now_draw_list.append(button_draw)
+      now_draw_list.append(line_feed_draw)
 
     info_draw = draw.LeftDraw()
     # info_draw.width = 1
@@ -1254,12 +1243,11 @@ class Character_Bonus:
     if cache.debug_mode:
       info_draw.text += _(" + [debug(999)]")
     info_draw.text += f"{bonus_use_text}\n"
-    now_draw.draw_list.append(info_draw)
-    now_draw.width += len(info_draw.text)
+    now_draw_list.append(info_draw)
 
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: List[draw.Drawable] = []
     """ 绘制的文本列表 """
-    self.draw_list.extend(now_draw.draw_list)
+    self.draw_list.extend(now_draw_list)
 
   def draw(self) -> None:
     """绘制面板"""
@@ -1343,11 +1331,11 @@ class Character_Bonus:
 
           # 在这里处理好感和信赖的增加
           if pl_character_data.assistant_character_id:
-            target_data: game_type.Character = cache.character_data[
+            new_assistant_data: game_type.Character = cache.character_data[
                 pl_character_data.assistant_character_id
             ]
-            target_data.favorability[0] = 1000
-            target_data.trust = 50
+            new_assistant_data.favorability[0] = 1000
+            new_assistant_data.trust = 50
             cache.first_bonus[first_bonus_id] = (
                 pl_character_data.assistant_character_id
             )
@@ -1371,17 +1359,17 @@ class World_Setting:
   width -- 最大宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 当前最大可绘制宽度 """
     self.return_list: List[str] = []
     """ 监听的按钮列表 """
 
-    now_draw = panel.LeftDrawTextListPanel()
-    now_draw.draw_list.append(line_feed_draw)
+    now_draw_list: List[draw.Drawable] = []
+    now_draw_list.append(line_feed_draw)
     line = draw.LineDraw("↘", 1)
-    now_draw.draw_list.append(line)
+    now_draw_list.append(line)
 
     setting_info_draw = draw.LeftDraw()
     # setting_info_draw.width = 1
@@ -1393,8 +1381,7 @@ class World_Setting:
         "   ●基础角色设定：NPC为纯女性角色（伪娘、扶她均不存在，女性小车存在），且全员处女\n"
     )
     setting_info_draw.text = draw_text
-    now_draw.draw_list.append(setting_info_draw)
-    now_draw.width += len(setting_info_draw.text)
+    now_draw_list.append(setting_info_draw)
 
     # 遍历可选设定
     for cid in game_config.config_world_setting:
@@ -1421,14 +1408,12 @@ class World_Setting:
           args=cid,
       )
       self.return_list.append(button_draw.return_text)
-      now_draw.draw_list.append(button_draw)
-      now_draw.width += len(button_text)
-      now_draw.draw_list.append(line_feed_draw)
-      now_draw.width += 1
+      now_draw_list.append(button_draw)
+      now_draw_list.append(line_feed_draw)
 
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: List[draw.Drawable] = []
     """ 绘制的文本列表 """
-    self.draw_list.extend(now_draw.draw_list)
+    self.draw_list.extend(now_draw_list)
 
   def draw(self) -> None:
     """绘制面板"""
@@ -1453,7 +1438,7 @@ class Other_Settings:
   width -- 最大宽度
   """
 
-  def __init__(self, width: int):
+  def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 当前最大可绘制宽度 """
@@ -1461,17 +1446,16 @@ class Other_Settings:
     """ 监听的按钮列表 """
     from Script.UI.Panel import prts_panel
 
-    now_draw = panel.LeftDrawTextListPanel()
-    now_draw.draw_list.append(line_feed_draw)
+    now_draw_list: List[draw.Drawable] = []
+    now_draw_list.append(line_feed_draw)
     line = draw.LineDraw("↘", 1)
-    now_draw.draw_list.append(line)
+    now_draw_list.append(line)
 
     setting_info_draw = draw.LeftDraw()
     # setting_info_draw.width = 1
     draw_text = _(" 其他设定：\n")
     setting_info_draw.text = draw_text
-    now_draw.draw_list.append(setting_info_draw)
-    now_draw.width += len(setting_info_draw.text)
+    now_draw_list.append(setting_info_draw)
 
     # 绘制按钮
     button_text = _(" [系统设定] ")
@@ -1482,8 +1466,7 @@ class Other_Settings:
         cmd_func=self.system_setting_draw,
     )
     self.return_list.append(button_draw.return_text)
-    now_draw.draw_list.append(button_draw)
-    now_draw.width += len(button_text)
+    now_draw_list.append(button_draw)
 
     button_text = _(" [口上版本设定] ")
     button_draw = draw.CenterButton(
@@ -1493,14 +1476,12 @@ class Other_Settings:
         cmd_func=prts_panel.chara_talk_info,
     )
     self.return_list.append(button_draw.return_text)
-    now_draw.draw_list.append(button_draw)
-    now_draw.width += len(button_text)
-    now_draw.draw_list.append(line_feed_draw)
-    now_draw.width += 1
+    now_draw_list.append(button_draw)
+    now_draw_list.append(line_feed_draw)
 
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: List[draw.Drawable] = []
     """ 绘制的文本列表 """
-    self.draw_list.extend(now_draw.draw_list)
+    self.draw_list.extend(now_draw_list)
 
   def system_setting_draw(self) -> None:
     """系统设定"""
