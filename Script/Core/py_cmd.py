@@ -20,6 +20,8 @@ bind_cmd = flow_handle.bind_cmd
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
+last_char: str
+""" 最近打印的命令文字的末字符，由 pcmd 与 pimagecmd 写入 """
 
 
 def pcmd(

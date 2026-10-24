@@ -332,7 +332,9 @@ def add_favorability(
     change_data: Optional[
         game_type.CharacterStatusChange | game_type.TargetChange
     ],
-    target_change: Optional[game_type.TargetChange],
+    target_change: Optional[
+        game_type.TargetChange | game_type.CharacterStatusChange
+    ],
 ) -> None:
   """
   增加目标角色对当前角色的好感

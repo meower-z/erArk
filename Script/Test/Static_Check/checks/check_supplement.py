@@ -16,7 +16,7 @@ MO-03、NO-01、NO-03、NO-05、PO-02）。各检查以文档字符串完整表�
 from __future__ import annotations
 
 from types import FunctionType
-from typing import List
+from typing import List, Set
 
 from Script.Core import cache_control, get_text
 from Script.Config import game_config
@@ -264,7 +264,7 @@ def check_time_stop_unconscious_survives_off_list() -> List[CheckFailure]:
   if cache is None or getattr(cache, "time_stop_mode", False):
     return []
   character_data = getattr(cache, "character_data", {}) or {}
-  npc_id_got = getattr(cache, "npc_id_got", set()) or set()
+  npc_id_got: Set[int] = getattr(cache, "npc_id_got", set()) or set()
   failures = []
   for cid, c in character_data.items():
     sp_flag = getattr(c, "sp_flag", None)

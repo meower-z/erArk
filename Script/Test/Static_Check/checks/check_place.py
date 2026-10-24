@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 import collections
-from typing import List
+from typing import List, Set, TypeGuard
 
 from Script.Core import cache_control
 from Script.Design import map_handle
@@ -40,7 +40,7 @@ _ASSISTANT_SERVICE_KEYS = {2, 3, 4, 5, 6, 7, 8, 9, 10}
 
 def _valid_scene_path(
     value: object, scene_data: dict[str, game_type.Scene]
-) -> bool:
+) -> TypeGuard[list[str]]:
   """
   参数:
       value: 待校验的路径字段原始值（期望是字符串列表）
@@ -232,7 +232,7 @@ def check_character_position_is_existing_scene() -> List[CheckFailure]:
   failures = []
   character_data = getattr(cache, "character_data", {}) or {}
   scene_data = getattr(cache, "scene_data", {}) or {}
-  npc_id_got = getattr(cache, "npc_id_got", set()) or set()
+  npc_id_got: Set[int] = getattr(cache, "npc_id_got", set()) or set()
   for cid, c in character_data.items():
     position = getattr(c, "position", None)
     if _valid_scene_path(position, scene_data):
@@ -268,7 +268,7 @@ def check_character_to_scene_direction_consistency() -> List[CheckFailure]:
   failures = []
   character_data = getattr(cache, "character_data", {}) or {}
   scene_data = getattr(cache, "scene_data", {}) or {}
-  npc_id_got = getattr(cache, "npc_id_got", set()) or set()
+  npc_id_got: Set[int] = getattr(cache, "npc_id_got", set()) or set()
   for cid in _live_ids(cache):
     c = character_data.get(cid)
     if c is None:
@@ -377,7 +377,7 @@ def check_character_not_in_multiple_scenes() -> List[CheckFailure]:
   failures = []
   character_data = getattr(cache, "character_data", {}) or {}
   scene_data = getattr(cache, "scene_data", {}) or {}
-  counter = collections.Counter()
+  counter: collections.Counter[int] = collections.Counter()
   cid_to_scenes = collections.defaultdict(list)
   for path, sc in scene_data.items():
     for cid in getattr(sc, "character_list", None) or []:
@@ -414,7 +414,7 @@ def check_scene_roster_only_registered_and_offline_must_exit() -> (
   failures = []
   character_data = getattr(cache, "character_data", {}) or {}
   scene_data = getattr(cache, "scene_data", {}) or {}
-  npc_id_got = getattr(cache, "npc_id_got", set()) or set()
+  npc_id_got: Set[int] = getattr(cache, "npc_id_got", set()) or set()
 
   cid_to_scenes = collections.defaultdict(list)
   for path, sc in scene_data.items():
@@ -617,7 +617,7 @@ def check_collect_position_list_valid() -> List[CheckFailure]:
       否则地图收藏面板点一下就会跳进不存在的场景
   """
   cache = cache_control.cache
-  failures = []
+  failures: List[CheckFailure] = []
   scene_data = getattr(cache, "scene_data", {}) or {}
   collect_list = getattr(cache, "collect_position_list", None)
   if not isinstance(collect_list, list):
@@ -799,9 +799,9 @@ def check_current_assistant_valid_and_online() -> List[CheckFailure]:
       且不带任何离线标记。短路顺序：先查存在再解引用，避免持有id损坏时抛KeyError
   """
   cache = cache_control.cache
-  failures = []
+  failures: List[CheckFailure] = []
   character_data = getattr(cache, "character_data", {}) or {}
-  npc_id_got = getattr(cache, "npc_id_got", set()) or set()
+  npc_id_got: Set[int] = getattr(cache, "npc_id_got", set()) or set()
   pl = character_data.get(0)
   if pl is None:
     return failures
@@ -919,7 +919,7 @@ def check_cohabitation_service_matches_dormitory() -> List[CheckFailure]:
       （Character.dormitory初值即""，该子句守不住任何真实约束）
   """
   cache = cache_control.cache
-  failures = []
+  failures: List[CheckFailure] = []
   character_data = getattr(cache, "character_data", {}) or {}
   pl = character_data.get(0)
   if pl is None:
@@ -997,7 +997,7 @@ def check_player_not_following_self() -> List[CheckFailure]:
       （唯一能写坏的是debug面板，这正是本条想抓的对象），cache.debug_mode为True时将消息降级为warning
   """
   cache = cache_control.cache
-  failures = []
+  failures: List[CheckFailure] = []
   character_data = getattr(cache, "character_data", {}) or {}
   pl = character_data.get(0)
   if pl is None:
@@ -1036,7 +1036,7 @@ def check_follower_must_be_registered_alive_online() -> List[CheckFailure]:
   cache = cache_control.cache
   failures = []
   character_data = getattr(cache, "character_data", {}) or {}
-  npc_id_got = getattr(cache, "npc_id_got", set()) or set()
+  npc_id_got: Set[int] = getattr(cache, "npc_id_got", set()) or set()
   rhodes_island = getattr(cache, "rhodes_island", None)
   visitor_info = getattr(rhodes_island, "visitor_info", {}) or {}
   for cid, c in character_data.items():
@@ -1082,10 +1082,10 @@ def check_bagging_consistency() -> List[CheckFailure]:
       "position==['0','0']"单独不具区分力（那是真实场景"罗德岛出口"），与"不在任何场景名册"合取后才有效
   """
   cache = cache_control.cache
-  failures = []
+  failures: List[CheckFailure] = []
   character_data = getattr(cache, "character_data", {}) or {}
   scene_data = getattr(cache, "scene_data", {}) or {}
-  npc_id_got = getattr(cache, "npc_id_got", set()) or set()
+  npc_id_got: Set[int] = getattr(cache, "npc_id_got", set()) or set()
   pl = character_data.get(0)
   if pl is None:
     return failures
@@ -1340,7 +1340,7 @@ def check_place_31() -> List[CheckFailure]:
   scenes = getattr(cache, "scene_data", None)
   if not isinstance(scenes, dict):
     return []
-  failures = []
+  failures: List[CheckFailure] = []
   classroom_tags = set(education_constant.CLASSROOM_TAG_BY_COURSE_TYPE.values())
   schedule = getattr(
       getattr(cache, "rhodes_island", None), "class_schedule", None

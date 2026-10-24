@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import math
-from typing import List
+from typing import List, TypeGuard
 
 from Script.Core import cache_control
 from Script.Config import game_config
@@ -50,12 +50,14 @@ def _growths(
       yield cid, growth
 
 
-def _finite(value: object) -> bool:
+def _finite(value: object) -> TypeGuard[int | float]:
   """参数: value(任意值)；返回值: bool；功能: 接受有限整数或浮点数，排除布尔值与非有限浮点。"""
   return type(value) is int or (type(value) is float and math.isfinite(value))
 
 
-def _int_range(value: object, low: int, high: int | None = None) -> bool:
+def _int_range(
+    value: object, low: int, high: int | None = None
+) -> TypeGuard[int]:
   """参数: value(任意值)、low(int)、high(int或None)；返回值: bool；功能: 检查整数及闭区间。"""
   return type(value) is int and value >= low and (high is None or value <= high)
 
@@ -287,7 +289,7 @@ def check_edu_07() -> List[CheckFailure]:
       for key in ("year", "month", "attend", "absent", "rate"):
         value = entry.get(key)
         valid = type(value) is int
-        if valid:
+        if type(value) is int:
           if key == "month":
             valid = value in (3, 6, 9, 12)
           elif key == "year":
@@ -318,7 +320,7 @@ def check_edu_08() -> List[CheckFailure]:
     return []
   abilities = getattr(game_config, "config_ability", None)
   characters = getattr(cache, "character_data", None)
-  failures = []
+  failures: List[CheckFailure] = []
   for room, table in schedule.items():
     for key, cell in _cells(
         table, "EDU-08", None, f"class_schedule[{room!r}]", failures
@@ -350,7 +352,7 @@ def check_edu_08() -> List[CheckFailure]:
 def check_edu_09() -> List[CheckFailure]:
   """参数: 无；返回值: List[CheckFailure]；功能: 个人课表按课型检查场景名、娱乐配置id或岗位配置id。"""
   cache = cache_control.cache
-  failures = []
+  failures: List[CheckFailure] = []
   for cid, growth in _growths(cache):
     for key, cell in _cells(
         getattr(growth, "selected_course", None),
@@ -413,7 +415,7 @@ def _check_slots(
 def check_edu_10() -> List[CheckFailure]:
   """参数: 无；返回值: List[CheckFailure]；功能: 校验模板slot和角色覆盖表，空模板合法。"""
   cache = cache_control.cache
-  failures = []
+  failures: List[CheckFailure] = []
   templates = getattr(
       getattr(cache, "rhodes_island", None), "child_schedule_template", None
   )

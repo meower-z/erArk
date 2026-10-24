@@ -339,12 +339,12 @@ def check_imprisonment_flag_partition_completeness() -> List[CheckFailure]:
         )
     )
   for cid in union - imp:
-    c = cd.get(cid)
+    maybe_c = cd.get(cid)
     failures.append(
         make_failure(
             "ROSTER-05",
             "监禁flag的来源分区完整",
-            f"{warn}角色cid={cid} name={getattr(c, 'name', '?')!r} 在current_prisoners或escaping中，但sp_flag.imprisonment为False；"
+            f"{warn}角色cid={cid} name={getattr(maybe_c, 'name', '?')!r} 在current_prisoners或escaping中，但sp_flag.imprisonment为False；"
             f"current_prisoners.get={ri.current_prisoners.get(cid)}",
             [cid],
         )
@@ -1537,7 +1537,7 @@ def check_vehicle_busy_count_conservation() -> List[CheckFailure]:
   ri = cache.rhodes_island
   warn = _sev(cache, False)
   failures: List[CheckFailure] = []
-  used = collections.Counter()
+  used: collections.Counter[int] = collections.Counter()
   for r in ri.ongoing_field_commissions.values():
     if isinstance(r, list) and len(r) == 3 and isinstance(r[2], list):
       used.update(r[2])
@@ -1861,12 +1861,12 @@ def check_bagging_pair_consistency() -> List[CheckFailure]:
         )
     )
   for cid in expected - bagged:
-    c = cd.get(cid)
+    maybe_c = cd.get(cid)
     failures.append(
         make_failure(
             "ROSTER-33",
             "装袋双方记录双向一致",
-            f"{warn}玩家bagging_chara_id={b}指向cid={cid}，但该角色sp_flag.be_bagged不为True；name={getattr(c, 'name', '?')!r}",
+            f"{warn}玩家bagging_chara_id={b}指向cid={cid}，但该角色sp_flag.be_bagged不为True；name={getattr(maybe_c, 'name', '?')!r}",
             [cid],
         )
     )

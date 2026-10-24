@@ -18,13 +18,15 @@ if TYPE_CHECKING:
 
 # 获取全局缓存
 cache = cache_control.cache
-cmd_map = constant.cmd_map  # 命令映射字典
+cmd_map: dict[int | str, tuple[Callable[..., object] | None, tuple, dict]] = {}
+""" Web模式的命令映射：命令数字 -> (命令函数, 顺序参数, 字典参数) """
 
 # 刷新信号常量，与 in_scene_panel_web.py 和 web_server.py 保持一致
 WEB_REFRESH_SIGNAL = "__WEB_REFRESH__"
 
 # 初始化尾处理命令函数变量
-tail_deal_cmd_func = None  # 保存尾处理命令函数，全局变量
+# 保存尾处理命令函数，全局变量
+tail_deal_cmd_func: Callable[[], object] | None = None
 
 # 面板切换标记，用于通知当前面板应该退出循环
 PANEL_CHANGE_SIGNAL = "__PANEL_CHANGE__"
@@ -344,7 +346,7 @@ def askfor_all(return_list: List[str]) -> str:
   return response
 
 
-def _cmd_deal(order_number):
+def _cmd_deal(order_number: int | str) -> None:
   """
   执行命令
 
@@ -362,7 +364,7 @@ def _cmd_deal(order_number):
       cmd_func(*args, **kwargs)
 
 
-def _cmd_valid(order_number):
+def _cmd_valid(order_number: int | str) -> bool:
   """
   判断命令数字是否有效
 
@@ -393,7 +395,7 @@ def askfor_wait() -> None:
     time.sleep(0.1)
 
 
-def askfor_str(message: str, default_str: str = "") -> str:
+def askfor_str(message: str, default_str: str = "") -> str | int:
   """
   请求用户输入字符串
 
@@ -401,7 +403,7 @@ def askfor_str(message: str, default_str: str = "") -> str:
   message (str): 提示信息
   default_str (str): 默认字符串
 
-  返回值类型：str
+  返回值类型：str | int（经整数输入接口提交时为 int）
   返回用户输入的字符串
   """
   # Web版本中，创建输入请求元素
@@ -428,7 +430,7 @@ def askfor_str(message: str, default_str: str = "") -> str:
   return response if response is not None else default_str
 
 
-def askfor_int(message: str, default_int: int = 0) -> int:
+def askfor_int(message: str, default_int: int = 0) -> str | int:
   """
   请求用户输入整数
 
@@ -436,7 +438,7 @@ def askfor_int(message: str, default_int: int = 0) -> int:
   message (str): 提示信息
   default_int (int): 默认整数
 
-  返回值类型：int
+  返回值类型：str | int（经字符串输入接口提交时为 str）
   返回用户输入的整数
   """
   # Web版本中，创建输入请求元素
@@ -479,7 +481,7 @@ def order_deal(
     flag: str = "order",
     print_order: bool = True,
     donot_return_null_str: bool = True,
-) -> str:
+) -> str | int:
   """
   处理命令函数 - Web版本
 
@@ -488,7 +490,7 @@ def order_deal(
   print_order (bool): 是否将输入的order输出到屏幕上
   donot_return_null_str (bool): 不接受输入空字符串
 
-  返回值类型：str
+  返回值类型：str | int（经整数输入接口提交时为 int）
   返回用户输入的命令
 
   这个函数替代了原始flow_handle中的order_deal，解决了死循环问题
@@ -501,7 +503,7 @@ def order_deal(
   }
 
   # 修复死循环：使用轮询机制获取响应，而不是等待队列
-  response = None
+  response: str | int | None = None
 
   # 如果为按钮命令，等待按钮点击响应
   if flag == "order":
@@ -530,7 +532,10 @@ exit_flag = False
 
 
 def bind_cmd(
-    cmd_number: str, cmd_func: callable, arg: tuple = (), kw: dict | None = None
+    cmd_number: int | str,
+    cmd_func: Callable[..., object] | None,
+    arg: tuple = (),
+    kw: dict | None = None,
 ) -> None:
   """
   绑定命令数字与命令函数
@@ -638,7 +643,7 @@ def cmd_clear(*numbers: int | str | tuple[int | str, ...]) -> None:
     ]
 
 
-def set_tail_deal_cmd_func(func: callable) -> None:
+def set_tail_deal_cmd_func(func: Callable[[], object]) -> None:
   """
   设置尾处理命令函数
   参数:
@@ -650,7 +655,9 @@ def set_tail_deal_cmd_func(func: callable) -> None:
   tail_deal_cmd_func = func  # 设置尾处理命令函数
 
 
-def deco_set_tail_deal_cmd_func(func: callable) -> callable:
+def deco_set_tail_deal_cmd_func(
+    func: Callable[[], object],
+) -> Callable[[], object]:
   """
   装饰器，用于设置尾处理命令函数
   参数:

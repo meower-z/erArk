@@ -521,11 +521,11 @@ def init_scene_edge_path_data() -> None:
         target_map_scene_id = get_map_scene_id_for_scene_path(
             map_path, target_scene
         )
-        __, __, now_move_target, now_move_time = identical_map_move(
+        _move_type, _path, now_move_target, now_move_time = identical_map_move(
             now_position, map_path, now_map_scene_id, target_map_scene_id
         )
       else:
-        __, __, now_move_target, now_move_time = difference_map_move(
+        _move_type, _path, now_move_target, now_move_time = difference_map_move(
             now_position, target_scene
         )
       scene_path_edge[now_position_str][target_scene_str] = [

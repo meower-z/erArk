@@ -201,7 +201,7 @@ def append_current_draw_element(
 
 
 input_event = threading.Event()
-_order_queue = []  # 命令队列
+_order_queue: list[str] = []  # 命令队列
 
 
 def _input_event_set(order: str) -> None:

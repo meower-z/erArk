@@ -4,6 +4,7 @@
 import os
 import traceback
 from types import FunctionType
+from typing import Callable, Optional
 from Script.Core import flow_handle, io_init, cache_control, game_type, constant, py_cmd, get_text, save_handle
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import panel
@@ -18,11 +19,11 @@ NO_EVENT_FUNC = "no_event_func"
 
 # 系统函数#############################################################
 # 初始化函数
-_main_flow = None
+_main_flow: Optional[Callable[[], object]] = None
 error_path = os.path.join("error.log")
 
 
-def init(main_flow: object) -> None:
+def init(main_flow: Callable[[], object]) -> None:
   """
   游戏流程初始化
   Keyword argument:
@@ -51,7 +52,7 @@ def init(main_flow: object) -> None:
 
   _have_run = False
 
-  def run_main_flow():
+  def run_main_flow() -> None:
     nonlocal _have_run
     while True:
       if not _have_run:
@@ -99,7 +100,7 @@ def init(main_flow: object) -> None:
       )
       save_handle.establish_save("99")
       # 输出选择面板
-      ask_list = []
+      ask_list: list[str] = []
       askfor_panel = panel.OneMessageAndSingleColumnButton()
       askfor_list = [(_("回到标题画面")), (_("退出游戏"))]
       askfor_panel.set(askfor_list, (error_text), 0)
@@ -118,7 +119,7 @@ def init(main_flow: object) -> None:
         os._exit(0)
 
 
-def run(main_func: object) -> None:
+def run(main_func: Callable[[], object]) -> None:
   """
   执行游戏主流程
   Keyword arguments:

@@ -8,7 +8,8 @@ from Script.Core import get_text
 from dataclasses import dataclass, field
 from enum import Enum
 from itertools import count
-from typing import Tuple, Dict, List, Any, Optional, ClassVar, Mapping, Iterable, cast
+from collections.abc import Buffer
+from typing import Tuple, Dict, List, Any, Optional, ClassVar, Mapping, Iterable, Protocol, SupportsIndex, SupportsInt, cast, runtime_checkable
 
 _: FunctionType = get_text._
 """ 翻译函数 """
@@ -300,6 +301,19 @@ DISPLAY_NAME_MAPPING: Dict[str, str] = {
 """字段展现用的中文名称映射，供 UI 友好展示使用。"""
 
 
+@runtime_checkable
+class _SupportsTrunc(Protocol):
+  """有 __trunc__ 的对象：int() 也接受它（Python 3.12 下会给出弃用警告）"""
+
+  def __trunc__(self) -> int:
+    """
+    向零取整
+    Return arguments:
+    int -- 取整结果
+    """
+    ...
+
+
 @dataclass
 class MedicalDailyCounters:
   """医疗系统当日统计结构体，统一维护所有计数项"""
@@ -549,11 +563,13 @@ class MedicalDailyCounters:
       except ValueError:
         return 0
 
-    # --- 其他无法转换的类型统一回退为零，保证调用方稳定 ---
-    try:
-      return int(value)  # type: ignore[arg-type]
-    except (TypeError, ValueError):
-      return 0
+    # --- int() 接受的其他对象（有 __int__、__index__ 或 __trunc__，或支持缓冲区协议）交给 int()，其余类型回退为零，保证调用方稳定 ---
+    if isinstance(value, (SupportsInt, SupportsIndex, _SupportsTrunc, Buffer)):
+      try:
+        return int(value)
+      except (TypeError, ValueError):
+        return 0
+    return 0
 
   @staticmethod
   def _coerce_float(value: object) -> float:

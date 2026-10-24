@@ -21,19 +21,21 @@ cook_question_path = os.path.join("data", "Cook_Question.json")
 """ 原始烹饪问题库数据文件路径 """
 official_event_path = os.path.join("data", "Official_Event.json")
 """ 原始养成事件数据文件路径（Plan 22 三期） """
-config_data = {}
+config_data: Dict[str, dict] = {}
 """ 原始json数据 """
-character_data = {}
+character_data: Dict[str, dict] = {}
 """ 原始角色数据 """
-character_talk_data = {}
+character_talk_data: Dict[str, dict] = {}
 """ 原始角色口上数据 """
-talk_common_data = {}
+character_event_data: Dict[str, dict] = {}
+""" 原始角色事件数据 """
+talk_common_data: Dict[str, dict] = {}
 """ 原始通用文本数据 """
-ui_text_data = {}
+ui_text_data: Dict[str, dict] = {}
 """ 原始ui文本数据 """
-cook_question_data = {}
+cook_question_data: Dict[str, dict] = {}
 """ 原始烹饪问题库数据 """
-official_event_data = {}
+official_event_data: Dict[str, dict] = {}
 """ 原始养成事件数据（Plan 22 三期） """
 config_bar: Dict[int, config_def.BarConfig] = {}
 """ 比例条配置数据 """
@@ -501,7 +503,7 @@ config_instruct_by_id: Dict[str, int] = {}
 """ 指令完整配置数据（按指令ID索引）instruct_id(str) -> 指令cid(int) """
 
 
-def load_data_json():
+def load_data_json() -> None:
   """载入data.json、character.json与ui_text.json内配置数据"""
   global config_data, character_data, ui_text_data, character_talk_data, character_event_data, talk_common_data, cook_question_data, official_event_data
   config_data = json_handle.load_json(data_path)
@@ -522,7 +524,7 @@ def load_data_json():
     official_event_data = {}
 
 
-def reload_talk_data():
+def reload_talk_data() -> None:
   """重新载入口上配置数据"""
   global character_talk_data, character_event_data, config_talk, config_talk_data, config_talk_data_by_chara_adv, config_talk_premise_data
   character_talk_data = json_handle.load_json(character_talk_path)
@@ -1675,7 +1677,7 @@ def load_week_day() -> None:
     config_week_day[now_tem.cid] = now_tem
 
 
-def load_event():
+def load_event() -> None:
   """载入事件配置"""
   now_data = character_event_data["Event"]
   # translate_data(now_data)
@@ -1694,7 +1696,7 @@ def load_event():
     ].append(now_tem.uid)
 
 
-def load_event_target():
+def load_event_target() -> None:
   """载入事件目标配置"""
   now_data = character_event_data["Event_Target"]
   translate_data(now_data)

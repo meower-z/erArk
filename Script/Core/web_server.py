@@ -88,7 +88,8 @@ socketio = SocketIO(
 )
 
 # 游戏状态数据
-game_state = {
+# 各键的值类型不同（列表、布尔、字典、None），运行中还会新增键，故值类型用 Any
+game_state: dict[str, Any] = {
     'text_content': [],  # 当前面板的文本内容
     'buttons': [],  # 当前面板的按钮
     'panel_id': None,  # 当前面板ID
@@ -117,7 +118,7 @@ def get_settlement_manager() -> SettlementManager:
 # 用于存储按钮点击响应
 button_click_response = None
 wait_response_triggered = False
-input_response = None
+input_response: str | int | None = None
 
 # 用于存储事件选项响应
 event_option_response = None
@@ -782,7 +783,7 @@ def serve_cropped_image(filename: str) -> Response:
 
 
 @app.route('/api/avatar_image/<character_name>')
-def serve_avatar_image(character_name):
+def serve_avatar_image(character_name: str) -> Response:
   """
   提供角色头像图片
 
@@ -842,7 +843,7 @@ def serve_avatar_image(character_name):
   result = crop_head_from_fullbody(full_body_path, nose_x, nose_y)
 
   if result is None:
-    abort(500)
+    return abort(500)
 
   image_bytes, metadata = result
 
@@ -987,7 +988,7 @@ def handle_request_game_state(data: dict[str, Any] | None = None) -> None:
 
 
 @socketio.on('select_interaction_type')
-def handle_select_interaction_type(data):
+def handle_select_interaction_type(data: dict[str, Any]) -> None:
   """
   处理交互类型选择事件（Web新UI）
 
@@ -1051,7 +1052,7 @@ def handle_select_interaction_type(data):
 
 
 @socketio.on('click_body_part')
-def handle_click_body_part(data):
+def handle_click_body_part(data: dict[str, Any]) -> None:
   """
   处理身体部位点击事件（Web新UI）
 
@@ -1074,7 +1075,7 @@ def handle_click_body_part(data):
   )
   from Script.Design import web_interaction_manager
 
-  part_name = data.get('part_name')
+  part_name: str = data['part_name']
   from_sub_menu = data.get('from_sub_menu', False)  # 是否来自子菜单点击
   logging.info(f'点击身体部位: {part_name}, 来自子菜单: {from_sub_menu}')
 
@@ -1086,7 +1087,7 @@ def handle_click_body_part(data):
   if (part_name == BodyPart.HIP or part_name == '臀部') and not from_sub_menu:
     if current_minor_type is not None:
       # 已选择小类时，收集该小类下所有臀部子部位的可用指令
-      all_instructs = []
+      all_instructs: list[dict[str, str]] = []
       hip_sub_parts = list(HIP_SUB_PARTS) + [BodyPart.CROTCH]  # 包含胯部
 
       for sub_part in hip_sub_parts:
@@ -1556,7 +1557,7 @@ def handle_get_interaction_types(data: dict[str, Any]) -> None:
 
 
 @socketio.on('get_panel_instructs')
-def handle_get_panel_instructs(data):
+def handle_get_panel_instructs(data: dict[str, Any]) -> None:
   """
   获取面板类指令列表（Web新UI）
 
@@ -1637,7 +1638,7 @@ def handle_get_major_types(data: dict[str, Any]) -> None:
 
 
 @socketio.on('select_major_type')
-def handle_select_major_type(data):
+def handle_select_major_type(data: dict[str, Any]) -> None:
   """
   选择交互大类型（Web新UI）
 
@@ -1684,7 +1685,7 @@ def handle_select_major_type(data):
 
 
 @socketio.on('select_minor_type')
-def handle_select_minor_type(data):
+def handle_select_minor_type(data: dict[str, Any]) -> None:
   """
   选择交互小类型（Web新UI）
 
@@ -1856,7 +1857,7 @@ def handle_get_item_list(data: dict[str, Any]) -> None:
 
 
 @socketio.on('select_drug')
-def handle_select_drug(data):
+def handle_select_drug(data: dict[str, Any]) -> None:
   """
   选择药物（Web新UI - 道具大类专用）
 
@@ -1883,7 +1884,7 @@ def handle_select_drug(data):
 
 
 @socketio.on('select_item')
-def handle_select_item(data):
+def handle_select_item(data: dict[str, Any]) -> None:
   """
   选择道具（Web新UI - 道具大类专用）
 
@@ -2335,7 +2336,7 @@ def check_port_usage(
     return False, None
 
 
-def update_input_request(current_input_request):
+def update_input_request(current_input_request: dict[str, Any]) -> None:
   """
   更新输入请求状态并向前端推送更新
 
@@ -2364,7 +2365,9 @@ def update_input_request(current_input_request):
   logging.debug(f'输入请求已更新: {current_input_request}')
 
 
-def update_game_state(elements, panel_id=None):
+def update_game_state(
+    elements: list[dict[str, Any]] | None, panel_id: str | None = None
+) -> None:
   """
   更新游戏状态并向前端推送更新
 
@@ -2508,7 +2511,7 @@ def _get_sub_panel_mode_data() -> dict[str, Any]:
   return data
 
 
-def send_full_game_state():
+def send_full_game_state() -> None:
   """
   发送完整的游戏状态到前端（包含新UI所需的所有数据）
 
@@ -2758,7 +2761,7 @@ def get_wait_response() -> bool:
     return False
 
 
-def get_input_response():
+def get_input_response() -> str | int | None:
   """
   获取输入响应
 

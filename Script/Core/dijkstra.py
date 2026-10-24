@@ -1,17 +1,17 @@
 """Dijkstra 最短路径算法，以及最短路径与各段路程数据的整理"""
 
 import heapq
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 
 class SortedPathData:
   """最短路径数据"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化最短路径数据"""
     self.node_id: str = ""
     """ 节点id """
-    self.distance: int = 0
+    self.distance: float = 0
     """ 总路程 """
     self.path: List[str] = []
     """ 通往本节点的路径列表 """
@@ -30,8 +30,8 @@ def dijkstra(
   Return arguments:
   Dict[str, SortedPathData] -- 从起点到各个节点的最短路径数据
   """
-  distances = {vertex: float("infinity") for vertex in graph}
-  previous_nodes = {vertex: None for vertex in graph}
+  distances: Dict[str, float] = {vertex: float("infinity") for vertex in graph}
+  previous_nodes: Dict[str, Optional[str]] = {vertex: None for vertex in graph}
   distances[start] = 0
   priority_queue = [(0, start)]
   while priority_queue:
@@ -44,7 +44,7 @@ def dijkstra(
         distances[neighbor] = distance
         previous_nodes[neighbor] = current_vertex
         heapq.heappush(priority_queue, (distance, neighbor))
-  paths_data = {}
+  paths_data: Dict[str, SortedPathData] = {}
   for vertex in graph:
     path_data = SortedPathData()
     path_data.node_id = vertex
@@ -57,7 +57,7 @@ def dijkstra(
 
 
 def get_path_and_times(
-    previous_nodes: Dict[str, str],
+    previous_nodes: Dict[str, Optional[str]],
     graph: Dict[str, Dict[str, int]],
     vertex: str,
 ) -> Tuple[List[str], List[int]]:
@@ -70,11 +70,13 @@ def get_path_and_times(
   Return arguments:
   Tuple[List[str], List[str]]从起始节点到目标节点的路径和时间列表。
   """
-  path = []
+  path: List[str] = []
   path_times = [0]
-  while vertex is not None:
-    path.append(vertex)
-    if previous_nodes[vertex] is not None:
-      path_times.append(graph[previous_nodes[vertex]][vertex])
-    vertex = previous_nodes[vertex]
+  current: Optional[str] = vertex
+  while current is not None:
+    path.append(current)
+    previous = previous_nodes[current]
+    if previous is not None:
+      path_times.append(graph[previous][current])
+    current = previous
   return path[::-1], path_times

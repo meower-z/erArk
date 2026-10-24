@@ -37,7 +37,7 @@ class WFrameMouse:
 class NpcTem:
   """npc模板用结构体对象"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化npc模板对象"""
     self.Name: str = ""
     """ npc名字 """
@@ -121,7 +121,7 @@ class NpcTem:
 class Food:
   """食物数据结构体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化食物对象"""
     self.id: str = ""
     """ 食物配置表id """
@@ -148,7 +148,7 @@ class Food:
 class Recipes:
   """菜谱数据结构体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化菜谱对象"""
     self.name: str = ""
     """ 菜谱名字 """
@@ -262,7 +262,7 @@ class NormalConfig:
 class DIRTY:
   """污浊情况数据结构体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化污浊情况对象"""
     # 人类正常一次射精量在2～6ml
 
@@ -316,7 +316,7 @@ class DIRTY:
 class PREGNANCY:
   """受精怀孕情况数据结构体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化受精怀孕情况对象"""
 
     self.fertilization_rate: float = 0
@@ -379,7 +379,7 @@ class CHILD_GROWTH:
   不要在别处直接 new，以免出现"有的角色有、有的角色没有"的不一致。
   """
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化生长养成数据对象"""
 
     self.personality_point: dict = {}
@@ -457,7 +457,7 @@ class CHILD_GROWTH:
 class RELATIONSHIP:
   """社交关系数据结构体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化社交关系对象"""
 
     self.father_id: int = -1
@@ -477,7 +477,7 @@ class RELATIONSHIP:
 class HYPNOSIS:
   """催眠数据结构体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化催眠数据对象"""
 
     self.hypnosis_degree: float = 0
@@ -500,7 +500,7 @@ class CLOTH:
 
   # 鞋子比靴子低，前面的是帮，低帮在脚踝下，中帮脚踝一半，高帮盖过脚踝
   # 靴子低筒不过小腿肚，中筒过小腿肚，高筒过膝盖
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化角色服装数据对象"""
     self.clothing_tem: List = []
     """ 角色个人服装模板 编号"""
@@ -525,7 +525,7 @@ class CLOTH:
 class BODY_H_STATE:
   """H状态结构体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化H状态对象"""
     self.body_item: dict = {}
     """ 身体道具情况    
@@ -634,7 +634,7 @@ class BODY_H_STATE:
 class FIRST_RECORD:
   """初次状态记录结构体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化初次状态记录对象"""
     self.first_meet: int = 1
     """ 第一次见面，1为未见面过，0为已见面过 """
@@ -712,7 +712,7 @@ class FIRST_RECORD:
 class ACTION_INFO:
   """角色的行动信息结构体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化角色行动信息对象"""
     self.talk_count: int = 0
     """ 角色聊天次数计数器 """
@@ -754,7 +754,7 @@ class ACTION_INFO:
     """ 角色退房时间 """
     self.eat_food_restaurant: int = -1
     """ 要去吃饭的餐厅，见Restaurant.csv """
-    self.ask_group_sex_refuse_chara_id_list = []
+    self.ask_group_sex_refuse_chara_id_list: List[int] = []
     """ 拒绝群P的角色id列表 """
     self.ask_close_door_flag: bool = False
     """ 询问当前地点是否关门的标记，true的话则已询问过，每次玩家移动时重置 """
@@ -764,7 +764,11 @@ class ACTION_INFO:
     """ 角色在本次行动中已经显示过等待的文本 """
     self.health_check_today: int = 0
     """ 角色今天体检的时间，0不需要，1上午，2下午，3新干员立刻体检 """
-    self.interacting_character_end_info = [-1, datetime.datetime(1, 1, 1)]
+    # 两项类型不同的定长列表（存档里就是列表），list 无法逐项标注类型，故用 Any
+    self.interacting_character_end_info: List[Any] = [
+        -1,
+        datetime.datetime(1, 1, 1),
+    ]
     """ 正在对自己进行交互的对方角色信息，0对方角色id，1对方行动结束时间 """
     self.past_move_position_list: List = []
     """ 角色的过去移动位置记录，list类型，最大长度为10 """
@@ -781,7 +785,7 @@ class ACTION_INFO:
 class AUTHOR_FLAG:
   """角色作者变量结构体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化角色作者变量对象"""
     self.chara_int_flag_dict: dict = {}
     """ 角色的int类型flag字典，最大长度为50，默认值为0 """
@@ -987,7 +991,7 @@ class UnnormalFlagMask:
 class SPECIAL_FLAG:
   """特殊的flag"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化特殊flag对象"""
     self.unnormal_flag: UnnormalFlagMask = UnnormalFlagMask()
     """
@@ -1085,7 +1089,7 @@ class SPECIAL_FLAG:
 class CHARA_WORK:
   """角色的工作信息结构体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化角色工作信息对象"""
     self.work_type: int = 0
     """ 角色工作的类型 """
@@ -1104,7 +1108,7 @@ class CHARA_WORK:
 class CHARA_ENTERTAINMENT:
   """角色的娱乐信息结构体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化角色娱乐信息对象"""
     self.entertainment_type: list = [0, 0, 0]
     """ 角色娱乐活动的类型 """
@@ -1123,7 +1127,7 @@ class CHARA_ENTERTAINMENT:
 class PLAYER_COLLECTION:
   """玩家收集品结构体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化玩家收集品对象"""
     self.collection_bonus: Dict[int, bool] = {}
     """ 收藏品的解锁奖励 """
@@ -1167,7 +1171,7 @@ class PLAYER_COLLECTION:
 class ACHIEVEMENT:
   """成就结构体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化成就对象"""
     self.achievement_dict: Dict[int, bool] = {}
     """ 成就字典，键为成就编号，值为是否完成 """
@@ -1216,7 +1220,7 @@ class ACHIEVEMENT:
 class PLAYER_ABILITY:
   """玩家能力结构体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化玩家能力对象"""
     self.follow_count: int = 1
     """ 最大同时跟随人数 """
@@ -1259,7 +1263,7 @@ class PLAYER_ABILITY:
 class Behavior:
   """角色行为状态数据"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化角色行为状态对象"""
     self.start_time: datetime.datetime = datetime.datetime(1, 1, 1)
     """ 行为开始时间 """
@@ -1308,7 +1312,7 @@ class Behavior:
 class Chara_Event:
   """角色事件状态数据"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化角色事件状态对象"""
     self.event_id: str = ""
     """ 角色当前事件id """
@@ -1323,7 +1327,7 @@ class Chara_Event:
 class Map:
   """地图数据"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化地图数据对象"""
     self.map_path: str = ""
     """ 地图路径 """
@@ -1346,7 +1350,7 @@ class Map:
 class MapDraw:
   """地图绘制数据"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化地图绘制数据对象"""
     self.draw_text: List[MapDrawLine] = []
     """ 绘制行对象列表 """
@@ -1357,7 +1361,7 @@ class MapDraw:
 class MapDrawLine:
   """地图绘制行数据"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化地图绘制行数据对象"""
     self.width: int = 0
     """ 总行宽 """
@@ -1368,7 +1372,7 @@ class MapDrawLine:
 class MapDrawText:
   """地图绘制文本数据"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化地图绘制文本数据对象"""
     self.text: str = ""
     """ 要绘制的文本 """
@@ -1381,7 +1385,7 @@ class MapDrawText:
 class TargetPath:
   """寻路目标路径数据"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化寻路目标路径对象"""
     self.path: List[str] = []
     """ 寻路路径节点列表 """
@@ -1392,7 +1396,7 @@ class TargetPath:
 class Scene:
   """场景数据"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化场景数据对象"""
     self.scene_path: str = ""
     """ 场景路径 """
@@ -1421,7 +1425,7 @@ class Scene:
 class Rhodes_Island:
   """罗德岛相关属性"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化罗德岛相关属性对象"""
     self.facility_level: Dict[int, int] = {}
     """ 基地当前所有设施的等级 """
@@ -1480,7 +1484,7 @@ class Rhodes_Island:
     """ 基地移动目标和时间, [0国家id,1城市id,2抵达时间] """
     self.office_work: float = 0
     """ 需要处理的公务 """
-    self.effectiveness: int = 0
+    self.effectiveness: float = 0
     """ 基地效率 """
 
     # 动力区
@@ -1653,7 +1657,7 @@ class Rhodes_Island:
     """ 推荐的阅读类别 """
 
     # 贸易区
-    self.shop_open_list = []
+    self.shop_open_list: List[str] = []
     """ 商店开放列表 """
     self.love_hotel_room_lv: int = 0
     """ 在爱情旅馆中的房间级别，0未入住，1标间，2情趣主题房，3顶级套房 """
@@ -1756,7 +1760,7 @@ class Rhodes_Island:
 class Country:
   """大地图国家数据"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化大地图国家数据对象"""
     self.nation_reputation: Dict[int, float] = {}
     """ 势力声望 """
@@ -1771,7 +1775,7 @@ class Country:
 class System_Setting:
   """系统设置"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化系统设置对象"""
     self.base_setting: Dict[int, int] = {}
     """ 基础系统设定，即base类 """
@@ -1792,7 +1796,7 @@ class System_Setting:
 class Ai_Setting:
   """AI设置"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化AI设置对象"""
     self.ai_chat_setting: Dict[int, Any] = {}
     """ ai聊天设定，见Ai_Chat_Setting.csv """
@@ -1813,7 +1817,7 @@ class Ai_Setting:
 class Character:
   """角色数据结构体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化角色数据对象"""
     self.cid: int = 0
     """ 角色id """
@@ -1841,7 +1845,7 @@ class Character:
     """ 角色当前理智 """
     self.eja_point_max: int = 0
     """ 角色最大射精槽 """
-    self.eja_point: int = 0
+    self.eja_point: float = 0
     """ 角色当前射精槽 """
     self.semen_point_max: int = 0
     """ 角色最大精液槽 """
@@ -1991,7 +1995,7 @@ class Character:
 class Cache:
   """游戏缓存数据结构体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化游戏缓存数据对象"""
     self.back_save_panel: bool = False
     """ 退出存档面板 """
@@ -2007,7 +2011,7 @@ class Cache:
     """ web文本历史累计行数 """
     self.current_return_list: List = []
     """ 当前返回的元素列表 """
-    self.current_input_request: List = []
+    self.current_input_request: List | Dict[str, object] = []
     """ 当前输入请求列表 """
     # ========== Web新UI模式专用字段 ==========
     self.current_interaction_type: Optional[str] = None
@@ -2129,7 +2133,7 @@ class Cache:
     """ 离开场景面板前在场景中查看的角色id """
     self.npc_image_index: int = 0
     """ 当前绘制人物列表的开始值 """
-    self.text_wait: int = 0
+    self.text_wait: float = 0
     """ 绘制文本输出等待时间 """
     self.scene_panel_show: List = [True, True, True, True, True]
     """ 场景面板中的子面板显示情况,0状态,1服装,2身体,3暂无,4图片 """
@@ -2200,7 +2204,7 @@ class Cache:
 class TargetChange:
   """交互对象角色变化结构体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化交互对象角色变化对象"""
     self.hit_point: int = 0
     """ hp变化 """
@@ -2214,7 +2218,7 @@ class TargetChange:
     """ 好感度变化 """
     self.trust: float = 0
     """ 信赖度变化 """
-    self.target_change: Dict[int, TargetChange] = {}
+    self.target_change: Dict[int, TargetChange | CharacterStatusChange] = {}
     """ 互动目标状态变化 """
     self.ability: Dict[int, int] = {}
     """ 能力变化 """
@@ -2229,7 +2233,7 @@ class TargetChange:
 class CharacterStatusChange:
   """角色属性状态变更结构体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化角色属性状态变更对象"""
     self.hit_point: int = 0
     """ hp变化 """
@@ -2264,7 +2268,7 @@ class CharacterStatusChange:
 class Event:
   """事件数据结构体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化事件对象"""
     self.uid: str = ""
     """ 事件唯一id """
@@ -2289,7 +2293,7 @@ class Event:
 class Target:
   """目标数据结构体"""
 
-  def __init__(self):
+  def __init__(self) -> None:
     """初始化口上对象"""
     self.uid: str = ""
     """ 目标唯一id """

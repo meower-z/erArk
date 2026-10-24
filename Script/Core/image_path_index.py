@@ -42,7 +42,7 @@ def build_image_path_index(directory: str) -> tuple:
   dict -- 重名的图片名 -> 按取舍顺序排好的全部文件路径，第一个即取中的文件
   """
   # 按图片名收集全部同名文件
-  candidates = {}
+  candidates: dict[str, list[str]] = {}
   for root, dirs, files in os.walk(directory):
     for file in files:
       if file.endswith(".png"):

@@ -215,6 +215,9 @@ def check_pre_game_time_not_after_game_time() -> List[CheckFailure]:
   cache = cache_control.cache
   game_t = getattr(cache, "game_time", None)
   pre_t = getattr(cache, "pre_game_time", None)
+  # 任一时间缺失时无从比较，跳过本检查
+  if game_t is None or pre_t is None:
+    return []
   try:
     ok = pre_t <= game_t
   except Exception:
@@ -255,6 +258,9 @@ def check_daily_refresh_completed() -> List[CheckFailure]:
     return []
   game_t = getattr(cache, "game_time", None)
   pre_t = getattr(cache, "pre_game_time", None)
+  # 任一时间缺失时无从比较日期，跳过本检查
+  if game_t is None or pre_t is None:
+    return []
   try:
     ok = game_t.date() == pre_t.date()
   except Exception:
@@ -525,6 +531,9 @@ def check_no_stale_expired_behavior() -> List[CheckFailure]:
   character_data = getattr(cache, "character_data", None) or {}
   game_t = getattr(cache, "game_time", None)
   group_sex_mode = getattr(cache, "group_sex_mode", None)
+  # game_time缺失时无从判断行为是否过期，跳过本检查
+  if game_t is None:
+    return []
   failures = []
   for cid in _live_ids(cache):
     chara = character_data.get(cid)
@@ -604,7 +613,13 @@ def check_move_behavior_has_executable_path() -> List[CheckFailure]:
       problems.append(f"move_target非法: {move_target!r}")
     if not (is_h or (type(duration) is int and duration > 0)):
       problems.append(f"非H角色但duration不为正: duration={duration!r}")
-    if target_ok and move_target[-1] == "0" and len(move_target) < 2:
+    # target_ok为真即已确认move_target是list，这里重复判断只为让类型收窄
+    if (
+        target_ok
+        and isinstance(move_target, list)
+        and move_target[-1] == "0"
+        and len(move_target) < 2
+    ):
       problems.append(
           f"move_target末项为哨兵'0'且长度不足2，取[-2]会IndexError: move_target={move_target!r}"
       )
@@ -612,7 +627,12 @@ def check_move_behavior_has_executable_path() -> List[CheckFailure]:
       src_ok = isinstance(move_src, list) and len(move_src) >= 1
       if not src_ok:
         problems.append(f"玩家move_src非法: {move_src!r}")
-      elif move_src[-1] == "0" and len(move_src) < 2:
+      # src_ok为真即已确认move_src是list，这里重复判断只为让类型收窄
+      elif (
+          isinstance(move_src, list)
+          and move_src[-1] == "0"
+          and len(move_src) < 2
+      ):
         problems.append(
             f"玩家move_src末项为哨兵'0'且长度不足2: move_src={move_src!r}"
         )

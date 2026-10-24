@@ -449,7 +449,7 @@ def get_character_instructs_from_constant() -> List[str]:
 
 
 def get_instructs_by_interaction_type_from_constant(
-    interaction_type: str,
+    interaction_type: Optional[str],
 ) -> List[str]:
   """
   从 constant 字典根据交互小类型获取指令列表
@@ -571,7 +571,7 @@ def get_available_interaction_types_from_constant() -> List[Dict]:
 
 
 def get_body_parts_for_interaction_type_from_constant(
-    interaction_type: str,
+    interaction_type: Optional[str],
 ) -> List[str]:
   """
   从 constant 字典获取某个交互小类型涉及的所有身体部位

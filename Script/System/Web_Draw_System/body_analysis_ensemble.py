@@ -53,7 +53,7 @@ if TYPE_CHECKING:
 _site_packages = os.path.join(
     os.path.dirname(sys.executable), 'Lib', 'site-packages', 'nvidia'
 )
-if os.path.isdir(_site_packages):
+if sys.platform == 'win32' and os.path.isdir(_site_packages):
   for _sub in os.listdir(_site_packages):
     _bin = os.path.join(_site_packages, _sub, 'bin')
     if os.path.isdir(_bin):

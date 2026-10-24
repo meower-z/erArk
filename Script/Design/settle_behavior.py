@@ -2,6 +2,7 @@ import datetime
 import random
 from functools import wraps
 from types import FunctionType
+from typing import Protocol, TypeVar
 from Script.Core import cache_control, constant, game_type, get_text, text_handle, rich_text
 from Script.Core.web_server import emit_realtime_text
 from Script.Design import attr_text, attr_calculation, handle_premise, talk, game_time, second_behavior
@@ -16,6 +17,24 @@ width = normal_config.config_normal.text_width
 """ 屏幕宽度 """
 _: FunctionType = get_text._
 """ 翻译api """
+
+ValueNum = TypeVar("ValueNum", int, float)
+""" 被综合数值结算改动的属性值：好感、能力等为整数，信赖为浮点数 """
+
+
+class ValueOperation(Protocol):
+  """综合数值结算的数值操作：以原属性值与结算数值算出新属性值"""
+
+  def __call__(self, x: ValueNum, y: int, /) -> ValueNum:
+    """
+    计算新属性值
+    Keyword arguments:
+    x -- 原属性值
+    y -- 结算数值
+    Return arguments:
+    ValueNum -- 新属性值
+    """
+    ...
 
 
 def handle_settle_behavior(
@@ -181,7 +200,7 @@ def handle_settle_behavior(
     target_change: game_type.CharacterStatusChange | game_type.TargetChange = (
         change_data.target_change[0]
     )
-    target_change.target_change[character_id] = change_data
+    change_data.target_change[0].target_change[character_id] = change_data
 
     # 开始互换
     # print(f"debug 前target_change.hit_point = {target_change.hit_point}")
@@ -990,14 +1009,14 @@ def handle_comprehensive_value_effect(
       "Growth": "child_growth",
   }
 
-  # 创建一个字典来映射操作
-  operation_mapping = {
+  # 创建一个字典来映射数值操作
+  operation_mapping: dict[str, ValueOperation] = {
       "G": lambda x, y: x + y,
       "L": lambda x, y: x - y,
       "E": lambda x, y: y,
-      "寻路": None,
-      "瞬移": None,
   }
+  # 移动操作没有数值运算，移动属性的分支按操作名寻路或瞬移
+  move_operation_set = {"寻路", "瞬移"}
 
   # 获取属性名和操作
   if "|" in effect_all_value_list[1]:
@@ -1007,10 +1026,11 @@ def handle_comprehensive_value_effect(
   operation = effect_all_value_list[2]
 
   # 检查属性名和操作是否在映射字典中
-  if attribute in attribute_mapping and operation in operation_mapping:
-    # 获取属性和操作
+  if attribute in attribute_mapping and (
+      operation in operation_mapping or operation in move_operation_set
+  ):
+    # 获取属性名
     attribute_name = attribute_mapping[attribute]
-    operation_func = operation_mapping[operation]
     # print(f"debug attribute_name = {attribute_name}, operation = {operation}")
 
     # 特殊处理
@@ -1033,11 +1053,13 @@ def handle_comprehensive_value_effect(
         )
     # 好感
     elif attribute_name == "favorability":
+      operation_func = operation_mapping[operation]
       final_character_data.favorability[0] = operation_func(
           final_character_data.favorability[0], int(effect_all_value_list[3])
       )
     # 信赖
     elif attribute_name == "trust":
+      operation_func = operation_mapping[operation]
       final_character_data.trust = operation_func(
           final_character_data.trust, int(effect_all_value_list[3])
       )
@@ -1054,6 +1076,7 @@ def handle_comprehensive_value_effect(
       )
     # 角色口上flag
     elif attribute_name == "flag":
+      operation_func = operation_mapping[operation]
       final_character_data.author_flag.chara_int_flag_dict.setdefault(
           type_son_id, 0
       )
@@ -1119,6 +1142,7 @@ def handle_comprehensive_value_effect(
       return 0
     else:
       # 对属性进行操作
+      operation_func = operation_mapping[operation]
 
       # 获取属性值
       attribute_value = getattr(final_character_data, attribute_name)

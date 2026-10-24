@@ -13,7 +13,7 @@ from Script.Core import (
 )
 from Script.Config import game_config
 from Script.Design import attr_calculation, character_handle, child_stage_gate
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 if TYPE_CHECKING:
   from typing import Any
@@ -2696,9 +2696,22 @@ def _clear_age_drug_item(character: game_type.Character) -> int:
   return count
 
 
+class YoungChildSession(TypedDict, total=False):
+  """有101/102阶段的孩子参与、读档后要结束的会话信息，读档整理前为空字典"""
+
+  group: bool
+  """ 群交是否要结束 """
+  time_stop: bool
+  """ 时停是否要结束 """
+  single_partner_id_set: set[int]
+  """ 与孩子单人H的角色id集合 """
+  child_id_set: set[int]
+  """ 孩子的角色id集合 """
+
+
 def _find_young_child_session(
     loaded_dict: dict[str, Any], young_child_id_set: set
-) -> dict:
+) -> YoungChildSession:
   """
   找出有101/102阶段的孩子参与、读档后要结束的会话
   Keyword arguments:
@@ -2712,7 +2725,7 @@ def _find_young_child_session(
   """
   character_data = loaded_dict['character_data']
   player = character_data.get(0)
-  session = {
+  session: YoungChildSession = {
       'group': False,
       'time_stop': False,
       'single_partner_id_set': set(),
@@ -2779,7 +2792,7 @@ def _find_young_child_session(
   return session
 
 
-def end_young_child_session(session: dict) -> None:
+def end_young_child_session(session: YoungChildSession) -> None:
   """
   存档载入缓存后，有101/102阶段的孩子参与的会话各按自己的结束结算收尾，奖励类结算不调用
   Keyword arguments:
@@ -2839,7 +2852,7 @@ def end_young_child_session(session: dict) -> None:
 
 
 def migrate_age_and_body_type(
-    loaded_dict: dict[str, Any], session: dict = None
+    loaded_dict: dict[str, Any], session: YoungChildSession | None = None
 ) -> int:
   """
   读档时整理成长阶段、体型、见学与上课、行为表与娱乐表里已没有的编号、101/102阶段的H与身体状态和离线、外表年龄药相关的数据；对整理过的存档再读一次，这些数据不变

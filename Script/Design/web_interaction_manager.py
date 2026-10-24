@@ -53,7 +53,7 @@ def get_current_minor_type() -> Optional[str]:
   return cache.web_current_minor_type
 
 
-def select_major_type(major_type: str) -> Optional[str]:
+def select_major_type(major_type: Optional[str]) -> Optional[str]:
   """
   选择大类型
 
@@ -71,7 +71,7 @@ def select_major_type(major_type: str) -> Optional[str]:
   return None
 
 
-def select_minor_type(minor_type: str) -> None:
+def select_minor_type(minor_type: Optional[str]) -> None:
   """
   选择小类型
 
@@ -178,7 +178,7 @@ def get_instructs_by_minor_type(
 
 
 def get_instructs_by_body_part(
-    body_part: str, minor_type: Optional[int] = None, check_premise: bool = True
+    body_part: str, minor_type: Optional[str] = None, check_premise: bool = True
 ) -> List[str]:
   """
   获取指定身体部位关联的指令列表
@@ -256,12 +256,12 @@ def get_item_list() -> List[Dict]:
   return result
 
 
-def select_drug(drug_id: int) -> None:
+def select_drug(drug_id: Optional[int]) -> None:
   """选择药物"""
   cache.web_selected_drug_id = drug_id
 
 
-def select_item(item_id: int) -> None:
+def select_item(item_id: Optional[int]) -> None:
   """选择道具"""
   cache.web_selected_item_id = item_id
 

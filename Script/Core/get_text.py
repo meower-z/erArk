@@ -4,6 +4,7 @@
 import gettext
 import os
 from types import FunctionType
+from typing import Dict, List, Optional, cast
 from Script.Config import normal_config
 
 po_data = os.path.join("data", "po")
@@ -17,7 +18,7 @@ now_language = (
 # print(now_language)
 
 # 创建一个字典来存储原始字符串和它们的翻译
-translation_dict = {}
+translation_dict: Dict[str, str] = {}
 
 # 可能每种语言都有多个.mo文件，这里是.mo文件的名称列表
 mo_files_per_language = {
@@ -27,7 +28,9 @@ mo_files_per_language = {
 
 
 # 接受一个语言和对应的.mo文件列表，然后为这些文件创建一个GNUTranslations实例链
-def create_translation_chain(language, mo_files):
+def create_translation_chain(
+    language: str, mo_files: List[str]
+) -> Optional[gettext.GNUTranslations]:
   """
   按顺序加载指定语言的 .mo 文件，第一个加载到的作为主翻译，其余依次加为它的回退翻译，不存在的 .mo 文件跳过
   Keyword arguments:
@@ -52,13 +55,18 @@ def create_translation_chain(language, mo_files):
 
 # 根据当前语言，创建翻译链
 if now_language in mo_files_per_language:
-  translation = create_translation_chain(
+  translation_chain = create_translation_chain(
       now_language, mo_files_per_language[now_language]
   )
+  # 仓库为 en_US 与 ko_KR 都带有编译好的 .mo 文件，翻译链至少加载到一个，不会为 None
+  assert translation_chain is not None
+  translation = translation_chain
 
   def _translation_gettext(
-      message, skip_translation=False, revert_translation=False
-  ):
+      message: str,
+      skip_translation: bool = False,
+      revert_translation: bool = False,
+  ) -> str:
     """
     翻译文本，可跳过翻译或由译文还原原文
     Keyword arguments:
@@ -83,12 +91,15 @@ if now_language in mo_files_per_language:
       translation_dict[message] = translated
       return translated
 
-  translation_values = set(translation._catalog.values())
+  # _catalog 是 GNUTranslations 解析 .mo 后存放译文的字典，类型存根没有声明这个私有属性
+  translation_values = set(getattr(translation, "_catalog").values())
 else:
 
   def _translation_gettext(
-      message, skip_translation=False, revert_translation=False
-  ):
+      message: str,
+      skip_translation: bool = False,
+      revert_translation: bool = False,
+  ) -> str:
     """
     没有对应语言的翻译时的翻译函数，直接返回传入的文本
     Keyword arguments:
@@ -102,5 +113,6 @@ else:
 
   translation_values = set()
 
-_: FunctionType = _translation_gettext
+# 两个分支定义的 _translation_gettext 都是 def 函数，运行时即 FunctionType；mypy 不把 def 函数当作 FunctionType
+_: FunctionType = cast(FunctionType, _translation_gettext)
 """ 翻译api """

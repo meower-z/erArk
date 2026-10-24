@@ -290,7 +290,7 @@ panel_data: Dict[int, Callable[..., object]] = {}
 """
 place_data: Dict[str, List[str]] = {}
 """ 按房间类型分类的场景列表 场景标签:场景路径列表 """
-cmd_map: Dict[int, FunctionType] = {}
+cmd_map: Dict[int | str, Callable[[], object]] = {}
 """ cmd存储 """
 settle_behavior_effect_data: Dict[int, Callable[..., object]] = {}
 """ 角色行为结算处理器 处理器id:处理器 """

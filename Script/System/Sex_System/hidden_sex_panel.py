@@ -333,7 +333,6 @@ class See_Hidden_Sex_InfoPanel:
 
     type_line = draw.LittleTitleLineDraw(_("隐奸"), width, ":")
     # print("type_data.name :",type_data.name)
-    now_draw = panel.LeftDrawTextListPanel()
     text_draw = draw.NormalDraw()
 
     pl_character_data = cache.character_data[0]
@@ -385,10 +384,7 @@ class See_Hidden_Sex_InfoPanel:
       all_text = all_text + "\n"
       self.draw_list.append(type_line)
     text_draw.text = all_text
-    now_draw.draw_list.append(text_draw)
-    now_draw.width += len(text_draw.text)
-
-    self.draw_list.extend(now_draw.draw_list)
+    self.draw_list.append(text_draw)
 
   def draw(self) -> None:
     """绘制面板"""
