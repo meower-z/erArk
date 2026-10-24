@@ -18,6 +18,8 @@
 判据与处理见 tools/Workflow编排.md「运行中：怎么判断停没停住」
 """
 
+from __future__ import annotations
+
 import argparse
 import datetime
 import glob
@@ -27,6 +29,21 @@ import re
 import subprocess
 import sys
 import time
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import Any, TypedDict
+
+  # json.loads 读出的一条记录：字段与取值类型随记录种类变化，只能是 Any
+  JsonRecord = dict[str, Any]
+
+  class AgentInfo(TypedDict):
+    id: str
+    age_min: float
+    lines: int
+    pending: list[tuple[str, str, float | None]]
+    recent: list[str]
+
 
 # 控制台默认 GBK，统一改成 UTF-8，免得中文乱码
 try:
@@ -35,7 +52,7 @@ except Exception:
   pass
 
 
-def load_lines(path):
+def load_lines(path: str) -> list[JsonRecord]:
   """
   读 jsonl，坏行（含正在写的半行）跳过
   参数：path (str) 文件路径
@@ -57,7 +74,7 @@ def load_lines(path):
   return out
 
 
-def short(value, limit=150):
+def short(value: object, limit: int = 150) -> str:
   """
   压成一行并截断
   参数：value 任意值；limit (int) 最长字符数
@@ -67,7 +84,7 @@ def short(value, limit=150):
   return text if len(text) <= limit else text[:limit] + "…"
 
 
-def parse_ts(text):
+def parse_ts(text: str | None) -> float | None:
   """
   解析记录里的 ISO 时间戳
   参数：text (str)
@@ -83,7 +100,7 @@ def parse_ts(text):
     return None
 
 
-def tool_result_text(block):
+def tool_result_text(block: JsonRecord) -> str:
   """
   取 tool_result 块的文本
   参数：block (dict)
@@ -97,7 +114,9 @@ def tool_result_text(block):
   return str(content)
 
 
-def read_journal(run_dir):
+def read_journal(
+    run_dir: str,
+) -> tuple[dict[str, str], dict[str, JsonRecord], list[JsonRecord]]:
   """
   读 journal，分出每个代理的标签与交卷记录
   参数：run_dir (str) 运行目录
@@ -116,7 +135,7 @@ def read_journal(run_dir):
   return labels, results, entries
 
 
-def scan_agent(path, now):
+def scan_agent(path: str, now: float) -> AgentInfo:
   """
   读一个子代理的记录，找出未回结果的工具调用与最近几步
   参数：path (str) agent-*.jsonl；now (float) 当前时间戳
@@ -162,7 +181,7 @@ def scan_agent(path, now):
   }
 
 
-def list_old_python(min_age_min):
+def list_old_python(min_age_min: float) -> list[str]:
   """
   列出已经跑了 min_age_min 分钟以上的 python 进程（Windows，借 PowerShell 查），用来找挂住的测试或构建
   参数：min_age_min (float)
@@ -204,7 +223,9 @@ def list_old_python(min_age_min):
   return rows
 
 
-def classify(info, results, stale):
+def classify(
+    info: AgentInfo, results: dict[str, JsonRecord], stale: float
+) -> str:
   """
   判一个代理的状态
   参数：info (dict) scan_agent 的结果；results (dict) 已交卷的代理；stale (float) 阈值分钟
@@ -221,7 +242,11 @@ def classify(info, results, stale):
   return "进行中"
 
 
-def snapshot(run_dir, stale):
+def snapshot(run_dir: str, stale: float) -> tuple[
+    dict[str, str],
+    dict[str, JsonRecord],
+    list[tuple[str, str, str, AgentInfo | None]],
+]:
   """
   给整个运行目录拍一次快照
   参数：run_dir (str)；stale (float) 阈值分钟
@@ -251,7 +276,7 @@ def snapshot(run_dir, stale):
   return labels, results, rows
 
 
-def report(run_dir, stale):
+def report(run_dir: str, stale: float) -> None:
   """
   一次性检查：打印每个代理的状态、未回结果的调用与最近几步；有可疑的代理时列出跑了很久的 python 进程
   参数：run_dir (str)；stale (float) 阈值分钟
@@ -294,7 +319,7 @@ def report(run_dir, stale):
       print("  ", row)
 
 
-def watch(run_dir, stale, interval, expect):
+def watch(run_dir: str, stale: float, interval: float, expect: int) -> None:
   """
   持续监视（给 Monitor 用）：某个代理状态变化时打一行，交卷数达到 expect 后退出
   参数：run_dir (str)；stale (float) 阈值分钟；interval (float) 轮询秒数；expect (int) 预期交卷数，0 为不自动退出
@@ -330,7 +355,7 @@ def watch(run_dir, stale, interval, expect):
     time.sleep(interval)
 
 
-def dump(run_dir, out_path):
+def dump(run_dir: str, out_path: str) -> None:
   """
   把 journal 里的交卷结果写成 UTF-8 JSON，便于主代理逐条核对
   参数：run_dir (str)；out_path (str) 输出文件

@@ -12,9 +12,15 @@ erArk 无头测试 harness 模板
   - 本脚本为只读诊断：只读存档入内存，不写任何文件；不要调用 establish_save / game_update_flow
 """
 
+from __future__ import annotations
+
 import os
 import sys
 import random
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  import datetime
 
 sys.stdout.reconfigure(
     encoding="utf-8", errors="replace"
@@ -59,7 +65,7 @@ captured_messages = []
 CAPTURE_KEYWORD = "吵醒"  # 改成要断言的文本关键词；不需要捕获则设为 None
 
 
-def record_draw(self, *a, **k):
+def record_draw(self: draw.WaitDraw, *a: object, **k: object) -> None:
   """
   记录型绘制桩，不绘制任何内容：CAPTURE_KEYWORD 非空且绘制对象的 text 含该关键词时，
   把去掉首尾空白的 text 追加到 captured_messages
@@ -156,7 +162,7 @@ ENABLE_PROBE = True
 if ENABLE_PROBE and WATCH:
   _orig_find = handle_npc_ai.find_character_target
 
-  def _wrap_find(cid, now_time):
+  def _wrap_find(cid: int, now_time: datetime.datetime) -> None:
     """
     调用原来的 find_character_target，角色在 WATCH 里时打印其行为 id、时长与状态
     Keyword arguments:
@@ -177,7 +183,7 @@ if ENABLE_PROBE and WATCH:
 
   _orig_int = handle_npc_ai.judge_interrupt_character_behavior
 
-  def _wrap_int(cid):
+  def _wrap_int(cid: int) -> int:
     """
     调用原来的 judge_interrupt_character_behavior，角色在 WATCH 里时打印调用前后的行为 id 与时长和返回值
     Keyword arguments:
@@ -205,7 +211,7 @@ if ENABLE_PROBE and WATCH:
   # 学生赶去上课的截短（Plan 32 起）走 judge_student_leave_truncate，在实时结算之前调，不在 judge_interrupt_character_behavior 里
   _orig_trunc = handle_npc_ai.judge_student_leave_truncate
 
-  def _wrap_trunc(cid):
+  def _wrap_trunc(cid: int) -> bool:
     """
     调用原来的 judge_student_leave_truncate，角色在 WATCH 里且原函数返回真值时打印调用前后的行为时长
     Keyword arguments:

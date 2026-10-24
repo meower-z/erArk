@@ -28,7 +28,9 @@ _patched = False
 """ 防止重复打补丁的标志 """
 
 
-def _wrap_draw_method(cls, key: str, bar_cell_count: bool = False):
+def _wrap_draw_method(
+    cls: type, key: str, bar_cell_count: bool = False
+) -> None:
   """
   包裹一个绘制类的 draw 方法进行计时
   参数:
@@ -43,7 +45,7 @@ def _wrap_draw_method(cls, key: str, bar_cell_count: bool = False):
     # 该类没有自己定义 draw（继承自父类），跳过以免重复计时
     return
 
-  def _timed_draw(self, *args, **kwargs):
+  def _timed_draw(self: object, *args: object, **kwargs: object) -> None:
     # 性能开关关闭时直通，避免额外开销
     if not perf_hook.enabled:
       return original(self, *args, **kwargs)
@@ -127,7 +129,9 @@ def apply_flow_draw_patches() -> None:
     original_scene_draw = in_scene_panel.InScenePanel.__dict__.get("draw")
     if original_scene_draw is not None:
 
-      def _timed_scene_draw(self, *args, **kwargs):
+      def _timed_scene_draw(
+          self: in_scene_panel.InScenePanel, *args: object, **kwargs: object
+      ) -> None:
         # 性能开关关闭时直通
         if not perf_hook.enabled:
           return original_scene_draw(self, *args, **kwargs)

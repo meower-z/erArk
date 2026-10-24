@@ -46,10 +46,10 @@ def R(
     group: str,
     idx: int,
     desc: str,
-    cond,
+    cond: object,
     after: str,
     category: str = "问题命中",
-    extra="",
+    extra: object = "",
 ) -> bool:
   """
   登记一项复现检查

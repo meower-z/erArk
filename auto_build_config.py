@@ -348,7 +348,7 @@ def build_config_po(
     built.add(message)
 
 
-def build_scene_config(data_path):
+def build_scene_config(data_path: str) -> None:
   """
   输入：
       data_path: 场景数据路径
@@ -451,7 +451,7 @@ def build_ui_text(file_path: str, file_name: str) -> None:
     ui_text_data[file_id] = now_data
 
 
-def build_po_text():
+def build_po_text() -> str:
   """
   输入：
       po: 原始po字符串

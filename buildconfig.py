@@ -352,7 +352,7 @@ def build_config_po(
     built.add(message)
 
 
-def build_scene_config(data_path):
+def build_scene_config(data_path: str) -> None:
   """
   输入：
       data_path: 场景数据路径
@@ -455,7 +455,7 @@ def build_ui_text(file_path: str, file_name: str) -> None:
     ui_text_data[file_id] = now_data
 
 
-def build_po_text():
+def build_po_text() -> str:
   """
   输入：
       po: 原始po字符串
@@ -554,7 +554,7 @@ if BUILD_OFFICIAL_EVENT and os.path.isdir(official_event_dir):
 
 
 # 递归统计 talk 与 talk_common 目录及其子目录下的csv文件总数和总大小
-def count_csv_files_and_size(dir_path):
+def count_csv_files_and_size(dir_path: str) -> tuple[int, int]:
   """
   输入：
       dir_path (str): 目录路径
@@ -581,7 +581,7 @@ if BUILD_TALK:
   talk_file_list = sorted(os.listdir(talk_dir))
 
   # 递归统计talk目录及其所有子目录下的csv文件总数
-  def count_csv_files(dir_path):
+  def count_csv_files(dir_path: str) -> int:
     """
     输入：
         dir_path (str): 目录路径

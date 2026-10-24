@@ -127,7 +127,7 @@ def modded_handle_pl_semen_le_2(character_id: int) -> int:
 
 
 # ===== 替换函数：修改后的通用射精结算 =====
-def modded_common_ejaculation():
+def modded_common_ejaculation() -> tuple[str, int]:
   """
   修改后的通用射精结算函数
 

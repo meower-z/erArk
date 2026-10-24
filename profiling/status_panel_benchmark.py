@@ -2,12 +2,21 @@
 # -*- coding: utf-8 -*-
 """状态面板绘制性能基准脚本"""
 
+from __future__ import annotations
+
 import argparse
 import json
 import os
 import sys
 from time import perf_counter
 from types import SimpleNamespace
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from collections.abc import Callable
+
+  from Script.Core import game_type
+  from Script.UI.Panel import see_character_info_panel
 
 
 def parse_args() -> argparse.Namespace:
@@ -98,7 +107,9 @@ def ensure_environment(args: argparse.Namespace) -> None:
   init_game_environment(env_args)
 
 
-def resolve_character_id(cache, character_id: int, character_name: str) -> int:
+def resolve_character_id(
+    cache: game_type.Cache, character_id: int, character_name: str
+) -> int:
   """根据参数确定目标角色 id"""
   if character_name:
     for cid, char_data in cache.character_data.items():
@@ -112,7 +123,7 @@ def resolve_character_id(cache, character_id: int, character_name: str) -> int:
   return 0
 
 
-def consume_draw(label) -> None:
+def consume_draw(label: object) -> None:
   """递归执行 draw() 以模拟真实渲染"""
   if isinstance(label, (list, tuple)):
     for item in label:
@@ -123,7 +134,11 @@ def consume_draw(label) -> None:
     draw_method()
 
 
-def run_iterations(factory, iterations: int, draw_output: bool) -> None:
+def run_iterations(
+    factory: Callable[[], see_character_info_panel.SeeCharacterStatusPanel],
+    iterations: int,
+    draw_output: bool,
+) -> None:
   """执行预热循环"""
   for _ in range(iterations):
     panel = factory()
@@ -131,7 +146,11 @@ def run_iterations(factory, iterations: int, draw_output: bool) -> None:
       consume_draw(panel.draw_list)
 
 
-def measure_iterations(factory, iterations: int, draw_output: bool) -> float:
+def measure_iterations(
+    factory: Callable[[], see_character_info_panel.SeeCharacterStatusPanel],
+    iterations: int,
+    draw_output: bool,
+) -> float:
   """测量循环耗时"""
   start = perf_counter()
   for _ in range(iterations):

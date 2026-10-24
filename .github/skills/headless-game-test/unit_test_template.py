@@ -32,7 +32,7 @@ FAIL = []
 PASS = 0
 
 
-def check(name, cond, extra=""):
+def check(name: str, cond: object, extra: object = "") -> None:
   """
   记录一条断言结果
   Keyword arguments:
@@ -112,7 +112,7 @@ flow_handle.askfor_wait = lambda *a, **k: None
 messages = []
 
 
-def record_draw(self, *a, **k):
+def record_draw(self: draw.WaitDraw, *a: object, **k: object) -> None:
   """
   记录型 WaitDraw 桩：把绘制文本收进 messages
   Keyword arguments:
@@ -130,7 +130,9 @@ print("初始化完成，游戏时间 =", cache.game_time)
 
 
 # ==== 4. 角色 fixture ====
-def new_chara(cid, name="测试干员", adv=0, race=0):
+def new_chara(
+    cid: int, name: str = "测试干员", adv: int = 0, race: int = 0
+) -> game_type.Character:
   """
   构造一个能跑通结算/前提/口上的最小角色对象
   Keyword arguments:
@@ -247,7 +249,7 @@ class RandStub:
       按阈值探测概率：第 i 轮返回 int(p_i) 应命中、int(p_i)+1 应不命中
   """
 
-  def __init__(self, seq):
+  def __init__(self, seq: list[int]) -> None:
     """
     把依次返回的值序列复制成列表记下
     Keyword arguments:
@@ -255,7 +257,7 @@ class RandStub:
     """
     self.seq = list(seq)
 
-  def __call__(self, a, b):
+  def __call__(self, a: int, b: int) -> int:
     """
     把 (a, b) 追加到模块级的 calls，返回序列里的下一个值，序列耗尽后返回 b
     Keyword arguments:

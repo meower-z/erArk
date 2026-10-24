@@ -16,8 +16,14 @@
     - 需在 profile 运行前调用 apply_loop_stats_patch()，结束后 export_loop_stats()。
 """
 
+from __future__ import annotations
+
 import json
 import time
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  import datetime
 
 loop_stats = {
     "ticks": 0,
@@ -40,7 +46,7 @@ _applied = False
 """ 防止重复打补丁的标志 """
 
 
-def apply_loop_stats_patch():
+def apply_loop_stats_patch() -> None:
   """
   应用主循环结构统计补丁
   参数：无
@@ -65,7 +71,7 @@ def apply_loop_stats_patch():
   # ---- tick 级：每 tick 耗时 + NPC 数 ----
   original_game_update_flow = update.game_update_flow
 
-  def _timed_game_update_flow(add_time):
+  def _timed_game_update_flow(add_time: int) -> None:
     # 记录单 tick 墙钟耗时与当前 NPC 规模
     t0 = time.perf_counter()
     original_game_update_flow(add_time)
@@ -78,7 +84,12 @@ def apply_loop_stats_patch():
   # ---- 角色级：character_behavior 调用规模（重扫放大系数的分子） ----
   original_character_behavior = character_behavior.character_behavior
 
-  def _counted_character_behavior(character_id, now_time, *args, **kwargs):
+  def _counted_character_behavior(
+      character_id: int,
+      now_time: datetime.datetime,
+      *args: datetime.datetime,
+      **kwargs: datetime.datetime,
+  ) -> None:
     # 玩家与 NPC 分开计数，便于算"每 NPC 每 tick 平均被扫多少轮"
     if character_id == 0:
       loop_stats["character_behavior_calls_player"] += 1
@@ -96,7 +107,12 @@ def apply_loop_stats_patch():
   # ---- AI 决策级：find_character_target / search_target ----
   original_find_target = handle_npc_ai.find_character_target
 
-  def _timed_find_target(character_id, now_time, *args, **kwargs):
+  def _timed_find_target(
+      character_id: int,
+      now_time: datetime.datetime,
+      *args: object,
+      **kwargs: object,
+  ) -> None:
     loop_stats["find_target_calls"] += 1
     t0 = time.perf_counter()
     result = original_find_target(character_id, now_time, *args, **kwargs)
@@ -108,14 +124,14 @@ def apply_loop_stats_patch():
   original_search_target = handle_npc_ai.search_target
 
   def _timed_search_target(
-      character_id,
-      target_list,
-      null_target,
-      premise_data,
-      target_weight_data,
-      *args,
-      **kwargs
-  ):
+      character_id: int,
+      target_list: list,
+      null_target: set,
+      premise_data: dict[str, float],
+      target_weight_data: dict[str, float],
+      *args: bool,
+      **kwargs: bool,
+  ) -> tuple[str, float, int, dict[str, float]]:
     # 记录检索列表规模：list_len 逼近全量即为兜底扫描
     list_len = len(target_list)
     loop_stats["search_target_calls"] += 1
@@ -132,7 +148,7 @@ def apply_loop_stats_patch():
         premise_data,
         target_weight_data,
         *args,
-        **kwargs
+        **kwargs,
     )
     loop_stats["search_target_time"] += time.perf_counter() - t0
     return result
@@ -140,7 +156,7 @@ def apply_loop_stats_patch():
   handle_npc_ai.search_target = _timed_search_target
 
 
-def export_loop_stats(path: str):
+def export_loop_stats(path: str) -> None:
   """
   导出结构统计结果
   参数:

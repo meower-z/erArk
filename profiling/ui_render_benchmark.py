@@ -31,7 +31,7 @@ PROFILE_DIR = "profiling_output"
 os.makedirs(PROFILE_DIR, exist_ok=True)
 
 
-def log(msg):
+def log(msg: str) -> None:
   """
   输出带前缀的日志
   参数:
@@ -42,7 +42,7 @@ def log(msg):
   print(f"[ui_benchmark] {msg}", flush=True)
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
   """
   解析命令行参数
   参数：无
@@ -97,7 +97,7 @@ def parse_args():
   return ap.parse_args()
 
 
-def main():
+def main() -> None:
   """
   基准主入口
   参数：无
@@ -145,7 +145,7 @@ def main():
   }
   total_screens = args.screens + args.warmup_screens
 
-  def benchmark_askfor_all(input_list, print_order=False):
+  def benchmark_askfor_all(input_list: list, print_order: bool = False) -> str:
     """
     askfor_all 的基准替身
     参数:
