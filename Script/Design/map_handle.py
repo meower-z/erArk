@@ -1,6 +1,6 @@
 import os
 import json
-from Script.Core import cache_control, value_handle, game_type, get_text, constant
+from Script.Core import cache_control, game_type, get_text, constant
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from types import FunctionType
@@ -169,46 +169,6 @@ def get_path_finding(
         "",
         cache.map_data[map_path_str].sorted_path[now_node][target_node],
     )
-
-
-def get_scene_to_scene_map_list(
-    now_scene_path: list, target_scene_path: list
-) -> tuple[str, list]:
-  """
-  获取场景到场景之间需要经过的地图列表
-  如果两个场景属于同一地图并在同一层级，则返回common
-  Keyword arguments:
-  now_scene_path -- 当前场景路径
-  target_scene_path -- 目标场景路径
-  Return arguments:
-  str:common -- 两个场景在同一层级
-  list -- 场景层级路径列表
-  """
-  scene_affiliation = judge_scene_affiliation(now_scene_path, target_scene_path)
-  if scene_affiliation == "common":
-    return "common", []
-  elif scene_affiliation == "subordinate":
-    return (
-        "",
-        get_map_hierarchy_list_for_scene_path(
-            now_scene_path, target_scene_path
-        ),
-    )
-  elif scene_affiliation == "nobelonged":
-    common_map = get_common_map_for_scene_path(
-        now_scene_path, target_scene_path
-    )
-    now_scene_to_common_map = get_map_hierarchy_list_for_scene_path(
-        now_scene_path, common_map
-    )
-    target_scene_to_common_map = get_map_hierarchy_list_for_scene_path(
-        target_scene_path, common_map
-    )
-    common_map_to_target_scene = value_handle.reverse_array_list(
-        target_scene_to_common_map
-    )
-    return "", now_scene_to_common_map + common_map_to_target_scene[1:]
-  return "", []
 
 
 def get_common_map_for_scene_path(
@@ -418,30 +378,6 @@ def get_scene_path_for_true(scene_path: list) -> list:
   else:
     scene_path.append("0")
     return get_scene_path_for_true(scene_path)
-
-
-def get_map_door_data_for_scene_path(scene_path: list) -> dict:
-  """
-  从场景路径获取当前地图到其他地图的门数据
-  Keyword arguments:
-  scene_path -- 场景路径
-  """
-  map_path = get_map_for_path(scene_path)
-  map_path_str = get_map_system_path_str_for_list(map_path)
-  return get_map_door_data(map_path_str)
-
-
-def get_map_door_data(map_path_str: str) -> dict:
-  """
-  获取地图下通往其他地图的门数据
-  Keyword arguments:
-  map_path -- 地图路径
-  """
-  map_data = cache.map_data[map_path_str]
-  if "MapDoor" in map_data:
-    return map_data["MapDoor"]
-  else:
-    return {}
 
 
 def get_chara_now_scene_all_chara_id_list(

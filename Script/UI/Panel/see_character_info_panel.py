@@ -280,7 +280,6 @@ class SeeCharacterMainAttrPanel:
   def __init__(self, character_id: int, width: int):
     """初始化绘制对象"""
     head_draw = character_info_head.CharacterInfoHead(character_id, width)
-    # stature_draw = CharacterStatureText(character_id, width)
     room_draw = CharacterRoomText(character_id, width)
     birthday_draw = CharacterBirthdayText(character_id, width)
     # sture_info_draw = CharacterStatureInfoText(character_id, width)
@@ -460,40 +459,6 @@ class SeeCharacterStatusPanel:
         line_feed.draw()
       else:
         label.draw()
-
-
-class CharacterStatureText:
-  """
-  身材描述信息面板
-  Keyword arguments:
-  character_id -- 角色id
-  width -- 最大宽度
-  """
-
-  def __init__(self, character_id: int, width: int):
-    """初始化绘制对象"""
-    self.character_id = character_id
-    """ 要绘制的角色id """
-    self.width = width
-    """ 当前最大可绘制宽度 """
-    player_data = cache.character_data[0]
-    description = attr_text.get_stature_text(character_id)
-    description = description.format(
-        Name=player_data.name,
-        NickName=player_data.nick_name,
-    )
-    self.description = description
-    """ 身材描述文本 """
-
-  def draw(self) -> None:
-    """绘制面板"""
-    line = draw.LineDraw(":", self.width)
-    line.draw()
-    info_draw = draw.CenterDraw()
-    info_draw.text = self.description
-    info_draw.width = self.width
-    info_draw.draw()
-    line_feed.draw()
 
 
 class CharacterRoomText:
