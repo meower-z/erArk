@@ -11,7 +11,13 @@ from Script.Config import game_config
 """
 
 
-# 1单条前提生成到三个文件里,2前提文件转csv,3csv转前提文件,4结算文件转csv,5csv转结算文件,6前提文件转在线表格,7行为文件转status
+# 运行模式：
+# 1 生成一条前提：处理函数接到 handle_premise 包里 premise_module 模块的末尾，
+#   constant_promise 的常量与说明行只打印出来
+# 2 前提文件转 csv：constant_promise.py 转成 ArkEditor 的前提表
+# 3 csv 转前提文件：tools/csv/premise.csv 接到 constant_promise.py 末尾
+# 4 结算文件转 csv：constant_effect.py 里二段结算之前的部分转成 ArkEditor 的结算表
+# 5 csv 转结算文件：tools/csv/Effect.csv 接到 constant_effect.py 的 BehaviorEffect 类末尾
 mode = 2
 command_str = "lactation_1"
 capital_command = command_str.upper()
@@ -270,8 +276,7 @@ def build_promise_csv_text(line_list: list) -> str:
         # docstring 行：取三引号中间的「分类 描述」
         promise_text = line.split('"')[-4].strip()
         if promise_text != "前提id":
-          # 按第一个空格切一刀（Plan 31 §3.16）：分类里没有空格，描述里的空格原样保留；
-          #    此前按每个空格切、只取第二段，描述带出处括注（如「Plan 22 三期」）的会截断在「（Plan」
+          # 按第一个空格切一刀：分类里没有空格，描述里的空格原样保留
           part_list = promise_text.split(" ", 1)
           promise_type = part_list[0]
           promise_info = part_list[1] if len(part_list) > 1 else ""
