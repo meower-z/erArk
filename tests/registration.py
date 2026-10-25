@@ -8,6 +8,7 @@ tests/fast/test_registration.py 用它检查快速层；慢速层由同一文件
 本模块顶部只导入标准库与 tests.world；以 python -m 运行时再导入 tests.slow.base。
 """
 
+from fnmatch import fnmatchcase
 import json
 import os
 import sys
@@ -78,7 +79,22 @@ def has_tests(cls: type, loader: unittest.TestLoader) -> bool:
   """
   if issubclass(cls, unittest.TestCase):
     return loader.loadTestsFromTestCase(cls).countTestCases() > 0
-  return bool(loader.getTestCaseNames(cls))
+  # 与 unittest.TestLoader.getTestCaseNames 取同样的名字：以 testMethodPrefix 开头、可调用、合 testNamePatterns
+  patterns = loader.testNamePatterns
+  return any(
+      name.startswith(loader.testMethodPrefix)
+      and callable(getattr(cls, name))
+      and (
+          patterns is None
+          or any(
+              fnmatchcase(
+                  f"{cls.__module__}.{cls.__qualname__}.{name}", pattern
+              )
+              for pattern in patterns
+          )
+      )
+      for name in dir(cls)
+  )
 
 
 def module_classes(module: "ModuleType") -> list:
