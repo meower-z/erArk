@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
   from PySide6.QtCore import QModelIndex, QPoint
+  from game_type import Event
 
 font = QFont()
 font.setPointSize(cache_control.now_font_size)
@@ -79,40 +80,50 @@ class ItemEffectList(QWidget):
   def update(self) -> None:
     """更新结算列表"""
     self.item_list.clear()
-    if cache_control.now_edit_type_flag == 1:
-      for effect in cache_control.now_event_data[
-          cache_control.now_select_id
-      ].effect:
+    data = self.selected_event()
+    if data is not None:
+      for effect in data.effect:
         item = QListWidgetItem(cache_control.effect_data[effect])
         item.setToolTip(item.text())
         self.item_list.addItem(item)
 
+  def selected_event(self) -> "Event | None":
+    """
+    取当前选中的事件；口上没有结算，编辑的不是事件文件或没有选中事件时为 None
+    返回:
+        Event | None: 当前选中的事件
+    """
+    if cache_control.now_edit_type_flag != 1:
+      return None
+    return cache_control.now_event_data.get(cache_control.now_select_id)
+
   def change(self) -> None:
     """展开结算菜单"""
-    menu = EffectMenu()
-    menu.exec()
+    if self.selected_event() is not None:
+      menu = EffectMenu()
+      menu.exec()
 
   def change_this_item(self, item: QListWidgetItem) -> None:
     """删除该结算并展开结算菜单"""
+    data = self.selected_event()
+    if data is None:
+      return
     self.item_list.takeItem(self.item_list.row(item))
     for effect in cache_control.effect_data:
       if cache_control.effect_data[effect] == item.text():
         effect_cid = effect
         break
-    if (
-        effect_cid
-        in cache_control.now_event_data[cache_control.now_select_id].effect
-    ):
-      del cache_control.now_event_data[cache_control.now_select_id].effect[
-          effect_cid
-      ]
+    if effect_cid in data.effect:
+      del data.effect[effect_cid]
     menu = EffectMenu()
     menu.exec()
 
   def reset(self) -> None:
     """清零结算列表"""
-    cache_control.now_event_data[cache_control.now_select_id].effect = {}
-    self.item_list.clear()
+    data = self.selected_event()
+    if data is not None:
+      data.effect = {}
+      self.item_list.clear()
 
   def show_context_menu(self, pos: "QPoint") -> None:
     """右键菜单：删除、复制、粘贴结算
@@ -129,14 +140,8 @@ class ItemEffectList(QWidget):
         if cache_control.effect_data[effect] == item.text():
           effect_cid = effect
           break
-      # 根据当前编辑类型获取对应的数据对象
-      if cache_control.now_edit_type_flag == 1:
-        data = cache_control.now_event_data[cache_control.now_select_id]
-      elif cache_control.now_edit_type_flag == 0:
-        data = cache_control.now_talk_data[cache_control.now_select_id]
-      else:
-        # 人物属性模式下没有选中的口上或事件
-        data = None
+      # 结算数据只在选中的事件上
+      data = self.selected_event()
       # 创建右键菜单
       menu = QMenu(self)
       delete_action = menu.addAction("删除")  # 添加“删除”按钮，删除当前结算
@@ -144,13 +149,13 @@ class ItemEffectList(QWidget):
       paste_action = menu.addAction(
           "粘贴"
       )  # 添加“粘贴”按钮，将复制的结算粘贴到列表中
-      # 没有口上或事件数据时，删除与粘贴不可选
+      # 没有选中事件时，删除与粘贴不可选
       delete_action.setEnabled(data is not None)
       paste_action.setEnabled(data is not None)
       # 显示菜单并等待用户选择操作
       action = menu.exec_(self.item_list.mapToGlobal(pos))
       # 如果选择删除操作
-      if action == delete_action:
+      if action == delete_action and data is not None:
         # 从列表中删除该项
         self.item_list.takeItem(self.item_list.row(item))
         # 根据cid删除数据对象中的结算
@@ -161,7 +166,7 @@ class ItemEffectList(QWidget):
         # 将当前结算的cid存入全局复制变量
         cache_control.now_copied_effect = effect_cid
       # 如果选择粘贴操作
-      elif action == paste_action:
+      elif action == paste_action and data is not None:
         # 从全局复制变量中获取结算cid
         effect_cid = cache_control.now_copied_effect
         # 检查复制变量是否有内容
@@ -180,13 +185,13 @@ class ItemEffectList(QWidget):
 
   def CVE(self) -> None:
     """展开CVE菜单"""
-    if cache_control.now_select_id != "":
+    if self.selected_event() is not None:
       menu = CVEMenu()
       menu.exec()
 
   def CSE(self) -> None:
     """展开CSE菜单"""
-    if cache_control.now_select_id != "":
+    if self.selected_event() is not None:
       menu = CSEMenu()
       menu.exec()
 
@@ -201,11 +206,8 @@ class ItemEffectList(QWidget):
     """
     拖拽移动结算条目后，更新数据顺序
     """
-    if (
-        cache_control.now_edit_type_flag == 1
-        and cache_control.now_select_id != ""
-    ):
-      data = cache_control.now_event_data[cache_control.now_select_id]
+    data = self.selected_event()
+    if data is not None:
       # 重新按界面顺序排列effect
       new_order = []
       for i in range(self.item_list.count()):
