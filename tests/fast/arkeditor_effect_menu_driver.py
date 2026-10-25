@@ -1,0 +1,265 @@
+"""
+ArkEditor 结算列表的离屏驱动脚本，由 test_arkeditor_effect_menu.py 在子进程里运行
+==============================================================================
+用法：python arkeditor_effect_menu_driver.py <编辑器目录> <事件文件> <口上文件> <场景>
+在编辑器目录里载入编辑器（不进入事件循环），按场景依次打开事件文件与口上文件、点选条目、在结算列表上右键，
+文件对话框返回给定路径，右键菜单与结算选择窗口不弹出：菜单只记下各项与是否可选并按场景选一项，窗口只记下类名。
+最后在标准输出打印一行 JSON：各步之后的选中条目、前提与结算列表的文字、事件数据里的结算、弹出的菜单与窗口、
+以及槽函数抛出的异常。
+场景：
+  event_then_talk  先开事件文件并点选第一条事件，再开口上文件，右键删除结算；新增口上后再右键删除，
+                   再按结算列表的整体清零、整体修改、综合指令状态结算按钮
+  talk_then_event  先开口上文件并点选第一条口上，再开事件文件并点选第一条事件，右键删除第一条结算
+"""
+
+import importlib
+import json
+import os
+import sys
+import traceback
+from types import TracebackType
+from typing import Any
+
+
+def list_texts(list_widget: Any) -> list[str]:
+  """
+  取列表控件里每一项的文字
+  Keyword arguments:
+  list_widget -- QListWidget
+  Return arguments:
+  list[str] -- 各项文字，按列表顺序
+  """
+  return [list_widget.item(i).text() for i in range(list_widget.count())]
+
+
+class EditorDriver:
+  """在编辑器目录里载入编辑器，替换文件对话框、右键菜单与窗口的弹出，提供各步操作并记下观察结果"""
+
+  def __init__(self, editor_dir: str) -> None:
+    """
+    载入编辑器，不进入事件循环
+    Keyword arguments:
+    editor_dir -- 编辑器目录（tools/ArkEditor 的副本）
+    """
+    os.environ["QT_QPA_PLATFORM"] = "offscreen"
+    os.chdir(editor_dir)
+    sys.path.insert(0, editor_dir)
+    self.result: dict[str, Any] = {"errors": [], "menus": [], "dialogs": []}
+    self.path = ""
+    self.action_text = ""
+    sys.excepthook = self.record_error
+    self.qt_widgets = importlib.import_module("PySide6.QtWidgets")
+    self.qt_widgets.QApplication.exec = lambda app: 0
+    self.qt_widgets.QFileDialog.getOpenFileName = staticmethod(
+        lambda *args, **kwargs: (self.path, "")
+    )
+    # 普通函数挂到类上才会收到菜单与窗口本身
+    self.qt_widgets.QMenu.exec_ = lambda menu, *args: self.fake_menu_exec(menu)
+    self.qt_widgets.QDialog.exec = lambda dialog, *args: self.fake_dialog_exec(
+        dialog
+    )
+    self.editor = importlib.import_module("main")
+    self.cache_control = importlib.import_module("cache_control")
+
+  def record_error(
+      self,
+      exc_type: type[BaseException],
+      exc: BaseException,
+      tb: TracebackType | None,
+  ) -> None:
+    """
+    记下槽函数里抛出的异常
+    Keyword arguments:
+    exc_type -- 异常类型
+    exc -- 异常
+    tb -- 回溯
+    Return arguments:
+    无
+    """
+    self.result["errors"].append(
+        "".join(traceback.format_exception(exc_type, exc, tb))
+    )
+
+  def fake_menu_exec(self, menu: Any) -> Any:
+    """
+    代替右键菜单的弹出：记下菜单各项与是否可选，返回场景要选的那一项
+    Keyword arguments:
+    menu -- QMenu
+    Return arguments:
+    QAction | None -- 选中的项
+    """
+    actions = menu.actions()
+    self.result["menus"].append({a.text(): a.isEnabled() for a in actions})
+    for action in actions:
+      if action.text() == self.action_text and action.isEnabled():
+        return action
+    return None
+
+  def fake_dialog_exec(self, dialog: Any) -> int:
+    """
+    代替结算选择窗口的弹出：记下窗口类名
+    Keyword arguments:
+    dialog -- QDialog
+    Return arguments:
+    int -- 0，同关闭窗口
+    """
+    self.result["dialogs"].append(type(dialog).__name__)
+    return 0
+
+  def snapshot(self, name: str) -> None:
+    """
+    记下当前的选中条目、前提与结算列表的文字、事件数据里的结算
+    Keyword arguments:
+    name -- 这一步的名字
+    Return arguments:
+    无
+    """
+    self.result[name] = {
+        "select_id": self.cache_control.now_select_id,
+        "premise_list": list_texts(self.editor.item_premise_list.item_list),
+        "effect_list": list_texts(self.editor.item_effect_list.item_list),
+        "event_effects": {
+            uid: dict(event.effect)
+            for uid, event in self.cache_control.now_event_data.items()
+        },
+    }
+
+  def open_event_file(self, path: str) -> None:
+    """
+    从菜单打开事件文件
+    Keyword arguments:
+    path -- 文件对话框返回的路径
+    Return arguments:
+    无
+    """
+    self.path = path
+    self.editor.menu_bar.select_event_file_action.trigger()
+
+  def open_talk_file(self, path: str) -> None:
+    """
+    从菜单打开口上文件
+    Keyword arguments:
+    path -- 文件对话框返回的路径
+    Return arguments:
+    无
+    """
+    self.path = path
+    self.editor.menu_bar.select_talk_file_action.trigger()
+
+  def click_row(self, row: int) -> None:
+    """
+    在左侧条目列表里点选一行
+    Keyword arguments:
+    row -- 行号
+    Return arguments:
+    无
+    """
+    data_list = self.editor.data_list.list_widget
+    data_list.clicked.emit(data_list.model().index(row, 0))
+
+  def right_click(self, action_text: str) -> None:
+    """
+    在结算列表第一行的位置右键，并在菜单里选一项
+    Keyword arguments:
+    action_text -- 要选的菜单项文字
+    Return arguments:
+    无
+    """
+    self.action_text = action_text
+    effect_list = self.editor.item_effect_list.item_list
+    rect = effect_list.visualRect(effect_list.model().index(0, 0))
+    effect_list.customContextMenuRequested.emit(rect.center())
+
+  def press(self, text: str) -> None:
+    """
+    按下结算列表上文字为 text 的按钮
+    Keyword arguments:
+    text -- 按钮文字
+    Return arguments:
+    无
+    """
+    buttons = self.editor.item_effect_list.findChildren(
+        self.qt_widgets.QPushButton
+    )
+    for button in buttons:
+      if button.text() == text:
+        button.click()
+        return
+    raise LookupError(text)
+
+  def add_entry(self) -> None:
+    """
+    按左侧条目列表的新增条目按钮
+    Keyword arguments:
+    无
+    Return arguments:
+    无
+    """
+    self.editor.data_list.new_text_button.click()
+
+
+def event_then_talk(
+    driver: EditorDriver, event_path: str, talk_path: str
+) -> None:
+  """
+  先开事件文件并点选第一条事件，再开口上文件，在结算列表上右键删除、新增口上、按结算按钮
+  Keyword arguments:
+  driver -- 编辑器驱动
+  event_path -- 事件文件路径
+  talk_path -- 口上文件路径
+  Return arguments:
+  无
+  """
+  driver.open_event_file(event_path)
+  driver.click_row(0)
+  driver.snapshot("event_selected")
+  driver.open_talk_file(talk_path)
+  driver.snapshot("talk_opened")
+  driver.right_click("删除")
+  driver.snapshot("talk_deleted")
+  driver.add_entry()
+  driver.snapshot("talk_added")
+  driver.right_click("删除")
+  driver.snapshot("talk_added_deleted")
+  for text in ("整体清零", "整体修改", "综合指令状态结算"):
+    driver.press(text)
+  driver.snapshot("talk_buttons")
+
+
+def talk_then_event(
+    driver: EditorDriver, event_path: str, talk_path: str
+) -> None:
+  """
+  先开口上文件并点选第一条口上，再开事件文件并点选第一条事件，右键删除第一条结算
+  Keyword arguments:
+  driver -- 编辑器驱动
+  event_path -- 事件文件路径
+  talk_path -- 口上文件路径
+  Return arguments:
+  无
+  """
+  driver.open_talk_file(talk_path)
+  driver.click_row(0)
+  driver.snapshot("talk_selected")
+  driver.open_event_file(event_path)
+  driver.snapshot("event_opened")
+  driver.click_row(0)
+  driver.snapshot("event_selected")
+  driver.right_click("删除")
+  driver.snapshot("event_deleted")
+
+
+SCENARIOS = {
+    "event_then_talk": event_then_talk,
+    "talk_then_event": talk_then_event,
+}
+""" 场景名到场景函数 """
+
+
+if __name__ == "__main__":
+  DRIVER = EditorDriver(sys.argv[1])
+  SCENARIOS[sys.argv[4]](DRIVER, sys.argv[2], sys.argv[3])
+  print(json.dumps(DRIVER.result, ensure_ascii=False))
+  sys.stdout.flush()
+  # 编辑器在导入时建好 QApplication，直接结束进程
+  os._exit(0)
