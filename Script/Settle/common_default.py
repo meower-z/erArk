@@ -1,3 +1,5 @@
+"""通用结算函数：体力与气力、状态与快感、好感与信赖、绝顶与经验的基础结算"""
+
 from types import FunctionType
 from typing import Optional, Union
 from Script.Design import (

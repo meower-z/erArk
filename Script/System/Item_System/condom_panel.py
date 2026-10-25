@@ -1,3 +1,5 @@
+"""避孕套选择面板，以及装饰部位的显示名称"""
+
 from typing import Dict, List, Tuple
 from types import FunctionType
 

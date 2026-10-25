@@ -1,3 +1,5 @@
+"""露出H模式的更新与选择面板"""
+
 from typing import List
 from types import FunctionType
 from Script.System.Instruct_System import handle_instruct

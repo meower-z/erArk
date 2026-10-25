@@ -1,3 +1,5 @@
+"""生育方式与卵：判断角色的生育方式，卵的新增、鉴定、孵化与破壳，以及排卵与育儿室的相关判定"""
+
 import random
 from types import FunctionType
 from typing import Optional

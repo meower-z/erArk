@@ -1,3 +1,5 @@
+"""随行为时间推进的实时结算：玩家实时数据、角色随时间自动变化的数值、精液流动与吸收、疲劳、休息与睡眠等"""
+
 import random
 import datetime
 from types import FunctionType

@@ -1,3 +1,5 @@
+"""二段结算中的高潮结算：解析部位绝顶行为，判断高潮的次数与程度，处理寸止的判定与解放"""
+
 import random
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text

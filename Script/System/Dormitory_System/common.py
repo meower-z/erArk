@@ -1,3 +1,5 @@
+"""宿舍的通用函数：开放的层与房间、入住统计与分配、特殊住宿的登记与恢复、宿舍钥匙的检查、角色宿舍的初始化与分配"""
+
 import os
 import re
 from types import FunctionType

@@ -1,3 +1,5 @@
+"""角色状态机函数（各自用 add_state_machine 按 id 注册），以及通用移动模块 general_movement_module 与放弃当天体检的 give_up_today_health_check"""
+
 import os
 import random
 from types import FunctionType

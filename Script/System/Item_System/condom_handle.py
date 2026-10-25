@@ -1,3 +1,5 @@
+"""避孕套的存量池与装饰：旧存档字段补全、存量池的增减与清空、装饰的挂上与取回，以及饮用与挤出的结算"""
+
 from typing import Dict, List, Optional, Tuple
 
 from Script.Core import cache_control, game_type

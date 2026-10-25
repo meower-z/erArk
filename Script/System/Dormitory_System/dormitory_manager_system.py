@@ -1,3 +1,5 @@
+"""宿舍管理员的状态机与相关函数：前往舍管房、整理宿舍意见、选择并移动至目标宿舍、处理宿舍问题，以及要求复制钥匙时给予玩家对应层的钥匙"""
+
 import re
 import random
 from types import FunctionType

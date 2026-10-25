@@ -1,3 +1,5 @@
+"""行为结算效果函数（各自用 add_settle_behavior_effect 按 id 注册），以及部位交初体验的记录函数 record_first_part_sex"""
+
 import datetime
 import random, math
 from types import FunctionType

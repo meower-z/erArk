@@ -1,3 +1,5 @@
+"""精细模式烹饪的答题流程"""
+
 import random
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, py_cmd, text_handle

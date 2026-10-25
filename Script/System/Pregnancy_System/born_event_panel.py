@@ -1,3 +1,5 @@
+"""生孩子事件的面板（胎生生产与卵生破壳共用），以及事件开始时把母亲与玩家瞬移到医疗部住院区"""
+
 from typing import Tuple, List, Optional
 from types import FunctionType
 from Script.UI.Moudle import draw, panel

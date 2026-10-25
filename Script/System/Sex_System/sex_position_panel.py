@@ -1,3 +1,5 @@
+"""性交姿势选择面板"""
+
 from types import FunctionType
 from Script.UI.Moudle import draw
 from Script.Core import (

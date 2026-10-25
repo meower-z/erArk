@@ -1,3 +1,5 @@
+"""烹饪系统：菜谱与食物的创建、食物品质、特殊调味与烹饪问题库、烹饪、食物商店与做饭区的数据、食物变质"""
+
 import random
 import uuid
 from types import FunctionType

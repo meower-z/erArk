@@ -1,3 +1,5 @@
+"""性行为履历的读取与记录：部位初体验、特殊履历与H模式初体验"""
+
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Design import map_handle
