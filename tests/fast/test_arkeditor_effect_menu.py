@@ -1,13 +1,16 @@
 # -*- coding: UTF-8 -*-
 """
-ArkEditor 在事件文件与口上文件之间切换后的前提、结算列表与结算列表的右键菜单，以及综合指令状态结算窗口
+ArkEditor 在事件文件与口上文件之间切换后的前提、结算列表与结算列表的右键菜单，综合指令状态结算窗口，
+以及综合型基础数值结算、前提窗口
 ====================================================================================================
 把 tools/ArkEditor 复制到临时目录，写一份两条事件的事件文件与一条口上的口上文件，
 在子进程里由 arkeditor_effect_menu_driver.py 离屏驱动编辑器：
 先开事件文件再开口上文件时，前提与结算列表为空，右键、新增口上与结算列表的按钮都不抛异常、不改事件数据；
 先开口上文件再开事件文件时，右键删除的是当前事件的结算；
 从综合指令状态结算窗口加入的结算与保存后重新打开的结算，在结算列表里都显示所选行为的名字；
-在这个窗口里不选行为按确定时不抛异常、不改事件的结算。
+在这个窗口里不选行为按确定时不抛异常、不改事件的结算；
+综合型基础数值结算、前提窗口里属性留在待选择按确定时不改事件的结算与前提；
+从综合型基础数值结算窗口加入的结算与保存后重新打开的结算，在结算列表里的文字相同，判定值里的下划线留着。
 PySide6 在本机无法导入时跳过。
 """
 
@@ -80,7 +83,7 @@ def behavior_name(behavior_id: str) -> str:
 
 
 class ArkEditorEffectMenuTest(FastTestCase):
-  """编辑器切换文件后，前提、结算列表与结算列表的右键菜单只作用于当前文件；综合指令状态结算窗口加入的结算"""
+  """编辑器切换文件后，前提、结算列表与结算列表的右键菜单只作用于当前文件；综合指令状态结算、综合型基础数值结算与前提窗口加入的结算与前提"""
 
   def setUp(self) -> None:
     """
@@ -214,3 +217,32 @@ class ArkEditorEffectMenuTest(FastTestCase):
         result["cse_picked_ok"]["event_effects"][FIRST_EVENT],
         {"0": 1, "1": 1, "CSE_A1_chat": 1},
     )
+
+  def test_cv_ok_without_attribute(self) -> None:
+    """综合型基础数值结算、前提窗口里属性留在待选择按确定时不改结算与前提；之后选了属性再按确定照常加入"""
+    result = self.drive("cv_empty_ok")
+    self.assertEqual(result["errors"], [])
+    empty = result["cv_empty_ok"]
+    self.assertEqual(empty["event_effects"][FIRST_EVENT], {"0": 1, "1": 1})
+    self.assertEqual(empty["event_premises"][FIRST_EVENT], {"sys_0": 1})
+    picked = result["cv_picked_ok"]
+    self.assertEqual(
+        picked["event_effects"][FIRST_EVENT],
+        {"0": 1, "1": 1, "CVE_A1_F_G_0": 1},
+    )
+    self.assertEqual(
+        picked["event_premises"][FIRST_EVENT],
+        {"sys_0": 1, "CVP_A1_F_G_0": 1},
+    )
+
+  def test_cve_added_and_reopened_text(self) -> None:
+    """从综合型基础数值结算窗口加入的结算与保存后重新打开的结算，在结算列表里的文字相同，判定值里的下划线留着"""
+    result = self.drive("cve_add_and_reopen")
+    self.assertEqual(result["errors"], [])
+    self.assertEqual(
+        result["saved_effects"][FIRST_EVENT],
+        {"0": 1, "1": 1, "CVE_A1_F_G_0": 1, "CVE_A1_Move|0_寻路_Dr_room": 1},
+    )
+    texts = ["综合数值结算  自己好感增加0", "综合数值结算  自己移动寻路Dr_room"]
+    for step in ("cve_added", "cve_reopened"):
+      self.assertEqual(result[step]["effect_list"][2:], texts, step)
