@@ -719,12 +719,6 @@ symbol = "module_problems"
 pattern = "__file__"
 why = "用测试模块的 __file__ 算出相对路径写进提示，不读源码内容"
 
-[[allow]]
-file = "tests/registration.py"
-symbol = "layer_problems"
-pattern = "__file__"
-why = "用已加载测试模块的 __file__ 列出哪些文件已导入，不读源码内容"
-
 [[reader]]
 id = "R33"
 file = "buildata.py"
