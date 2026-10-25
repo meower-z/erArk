@@ -7,7 +7,7 @@
     set_time() / move_to() / open_all_classroom() / clear_schedules() 等环境工具。
 
 铁律（详见 .claude/skills/headless-game-test/SKILL.md）：
-    1. 导入链会起非守护线程，脚本末尾必须 finish() → os._exit()
+    1. 脚本末尾必须 finish() → os._exit()
     2. 含中文的脚本一律写成文件跑，不要走 heredoc / stdin（GBK 会把中文喂坏）
     3. 只读：绝不调用 save_handle.establish_save()，不 inline 调用 init_character_behavior()
 """
@@ -71,7 +71,7 @@ def section(title: str) -> None:
 
 def finish() -> None:
   """
-  打印汇总并强制退出进程（导入链里的非守护线程会让进程不自行结束）
+  打印汇总并强制退出进程
   Keyword arguments:
   无
   Return arguments:
@@ -426,7 +426,6 @@ def _exit_on_exception(
 ) -> "NoReturn":
   """
   未捕获异常时打印回溯并强制退出
-  导入链起的非守护线程会让崩溃的测试进程挂住，直到运行它的测试超时才被杀掉
   """
   import traceback
 
