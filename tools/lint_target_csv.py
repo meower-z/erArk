@@ -17,14 +17,15 @@ target.csv 编号规范校验（Plan 08 的常驻检查）
 R5/R6 需要载入游戏配置，比较慢；加 --fast 可跳过这两条只做纯文本检查。
 
 用法：
-    .conda/python.exe tools/lint_target_csv.py
-    .conda/python.exe tools/lint_target_csv.py --fast
+    python tools/lint_target_csv.py
+    python tools/lint_target_csv.py --fast
 """
 
 import io
 import os
 import sys
 import collections
+import traceback
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -266,4 +267,21 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-  sys.exit(main())
+  # check_registry 导入 Script.StateMachine.default 时会间接导入 handle_instruct。
+  # handle_instruct 在导入时启动一个永不结束的非守护线程，解释器正常退出会一直等它。
+  # 所以 main 返回或抛出异常后，都先刷新输出，再用 os._exit 结束进程。
+  # 退出码：main 正常返回时取它的返回值；抛出异常时为 1，并先打印调用栈。
+  # 刷新输出失败（例如管道读端已关闭）时退出码为 120，与解释器正常退出时刷新失败相同。
+  exit_code = 1
+  try:
+    exit_code = main()
+  finally:
+    try:
+      if sys.exc_info()[0] is not None:
+        traceback.print_exc()
+      sys.stdout.flush()
+      sys.stderr.flush()
+    except OSError:
+      exit_code = 120
+    finally:
+      os._exit(exit_code)
