@@ -11,7 +11,7 @@ from Script.Core import (
     flow_handle,
 )
 from Script.Config import game_config, normal_config
-from Script.Design import handle_premise, map_handle
+from Script.Design import handle_premise, map_handle, virgin_break_gate
 
 panel_info_data: dict[str, object] = {}
 
@@ -251,34 +251,8 @@ def get_status_id_list_from_group_sex_body_part(body_part: str) -> list[str]:
               pl_character_data.target_character_id
           ]
           # 如果NPC为处，则跳过破处类
-          if (
-              target_character_data.talent[0]
-              and "V" in status_tag_list
-              and "破处" in status_tag_list
-          ):
-            continue
-          if (
-              target_character_data.talent[1]
-              and "A" in status_tag_list
-              and "破处" in status_tag_list
-          ):
-            continue
-          if (
-              target_character_data.talent[2]
-              and "U" in status_tag_list
-              and "破处" in status_tag_list
-          ):
-            continue
-          if (
-              target_character_data.talent[3]
-              and "W" in status_tag_list
-              and "破处" in status_tag_list
-          ):
-            continue
-          if (
-              target_character_data.talent[4]
-              and "N" in status_tag_list
-              and "破处" in status_tag_list
+          if virgin_break_gate.takes_kept_virginity(
+              status_tag_list, target_character_data.talent
           ):
             continue
 

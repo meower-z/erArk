@@ -4,7 +4,13 @@ import os
 from typing import List, Tuple
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
-from Script.Design import basement, handle_premise, attr_calculation, map_handle
+from Script.Design import (
+    basement,
+    handle_premise,
+    attr_calculation,
+    map_handle,
+    virgin_break_gate,
+)
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 import random
@@ -498,34 +504,8 @@ def get_all_can_use_behavior_id_for_sex_assistant(
               pl_character_data.target_character_id
           ]
           # 如果NPC为处，则跳过破处类
-          if (
-              target_character_data.talent[0]
-              and "V" in behavior_tag_list
-              and "破处" in behavior_tag_list
-          ):
-            continue
-          if (
-              target_character_data.talent[1]
-              and "A" in behavior_tag_list
-              and "破处" in behavior_tag_list
-          ):
-            continue
-          if (
-              target_character_data.talent[2]
-              and "U" in behavior_tag_list
-              and "破处" in behavior_tag_list
-          ):
-            continue
-          if (
-              target_character_data.talent[3]
-              and "W" in behavior_tag_list
-              and "破处" in behavior_tag_list
-          ):
-            continue
-          if (
-              target_character_data.talent[4]
-              and "N" in behavior_tag_list
-              and "破处" in behavior_tag_list
+          if virgin_break_gate.takes_kept_virginity(
+              behavior_tag_list, target_character_data.talent
           ):
             continue
 
