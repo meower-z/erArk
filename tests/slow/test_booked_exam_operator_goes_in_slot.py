@@ -15,7 +15,7 @@ from tests.slow.health_check import EXAM_ROOM, MOVE_TO_EXAM, SLOT_START, HealthC
 class BookedExamOperatorGoesInSlotTest(HealthCheckTestCase):
   """排了体检的干员在自己的时段去体检科"""
 
-  def test_goes_to_exam_room_in_her_slot(self):
+  def test_goes_to_exam_room_in_her_slot(self) -> None:
     """可露希尔时段前不去体检科，进入时段后先去体检科"""
     operator_id = self.book_daily_exam("可露希尔")
     operator = self.cache.character_data[operator_id]
@@ -31,7 +31,7 @@ class BookedExamOperatorGoesInSlotTest(HealthCheckTestCase):
         f"{slot_time} 前她不去体检科",
     )
 
-    def in_slot():
+    def in_slot() -> list:
       """
       时段开始之后她执行的状态机
       Keyword arguments:

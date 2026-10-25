@@ -56,7 +56,7 @@ class ChildStageHGateTest(SlowTestCase):
     pl = self.cache.character_data[0]
     child_id = self.make_child(stage, "杜宾")
     # 监禁让 imprisonment_h 的「合作或监禁」或分支成立
-    self.cache.character_data[child_id].sp_flag.imprisonment = 1
+    self.cache.character_data[child_id].sp_flag.imprisonment = True
     pl.target_character_id = child_id
     listed = {
         "Tk面板": [

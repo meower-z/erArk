@@ -9,14 +9,18 @@ BEHAV-10/11/12/22 与 BEHAV-07 共用同一个类型判定，类型判定通过�
 """
 
 import datetime
+from typing import TYPE_CHECKING
 
 import Script.Test.Static_Check  # noqa: F401  导入即注册全部检查
 from Script.Design import game_time
 from Script.Test.Static_Check.check_registry import get_all_checks
 from tests.fast.base import FastTestCase
 
+if TYPE_CHECKING:
+  from Script.Test.Static_Check.check_registry import CheckFailure
 
-def run(check_id):
+
+def run(check_id: str) -> "list[CheckFailure]":
   """
   运行一条已注册的自检
   Keyword arguments:
@@ -27,7 +31,7 @@ def run(check_id):
   return get_all_checks()[check_id][1]()
 
 
-def messages(failures):
+def messages(failures: "list[CheckFailure]") -> list[str]:
   """
   取失败记录的说明文字，供断言失败时打印
   Keyword arguments:

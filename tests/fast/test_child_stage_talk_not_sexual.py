@@ -23,9 +23,13 @@ import json
 import os
 import re
 import subprocess
+from typing import TYPE_CHECKING
 
 from tests.fast.base import FastTestCase
 from tests.world import ROOT
+
+if TYPE_CHECKING:
+  from collections.abc import Iterator, Sequence
 
 CHILD_TALENTS = (101, 102, 103)
 """ 儿童阶段素质：婴儿、幼女与旧的萝莉阶段 """
@@ -271,7 +275,7 @@ SEX_SKILL_ABILITIES = load_sex_skill_abilities()
 """ 性技能力 id """
 
 
-def child_keys(premises) -> set:
+def child_keys(premises: list[str]) -> set:
   """
   取出前提里选中儿童阶段的条件
   Keyword arguments:
@@ -311,7 +315,7 @@ def is_h_premise(premise: str) -> bool:
   return not re.search(r"not|_off$|_0$", key)
 
 
-def selects_sex_skill(premises) -> bool:
+def selects_sex_skill(premises: list[str]) -> bool:
   """
   前提里是否有选中性技能力的条件
   Keyword arguments:
@@ -360,8 +364,8 @@ def is_sexual_common_type(type_id: str) -> bool:
 def classify(
     kind: str,
     behavior_or_type: str,
-    premises,
-    effects=(),
+    premises: list[str],
+    effects: "Sequence[str]" = (),
     child_bucket: bool = False,
     path: str = "",
 ) -> str:
@@ -412,7 +416,7 @@ def expand_ranges(text: str) -> set:
   return cids
 
 
-def tracked_files(*paths) -> list:
+def tracked_files(*paths: str) -> list:
   """
   列出 git 跟踪的文件
   Keyword arguments:
@@ -430,7 +434,7 @@ def tracked_files(*paths) -> list:
   return [path for path in result.stdout.split("\n") if path]
 
 
-def iter_rows():
+def iter_rows() -> "Iterator[tuple[str, str, str]]":
   """
   逐行给出口上、通用文本与事件的分类
   Keyword arguments:

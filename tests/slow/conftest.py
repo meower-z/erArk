@@ -15,7 +15,7 @@ HAS_FORK = hasattr(os, "fork")
 """ 本系统有没有 os.fork """
 
 
-def pytest_configure(config):
+def pytest_configure(config: pytest.Config) -> None:
   """
   检查 --forked，设定用时列表
   Keyword arguments:
@@ -35,7 +35,9 @@ def pytest_configure(config):
     config.option.durations_min = 0.0
 
 
-def pytest_collection_modifyitems(config, items):
+def pytest_collection_modifyitems(
+    config: pytest.Config, items: list[pytest.Item]
+) -> None:
   """
   没有 os.fork 时把慢速层的测试全部标为跳过
   Keyword arguments:

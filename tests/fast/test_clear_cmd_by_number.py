@@ -16,9 +16,9 @@ from tests.fast.base import FastTestCase
 class ClearCmdByNumberTest(FastTestCase):
   """clr_cmd 按编号清除：只动给出的编号"""
 
-  def test_clear_one_of_two_commands(self):
+  def test_clear_one_of_two_commands(self) -> None:
     """绑定 "5" 与 "6" 后清除 "5"：只有 "5" 解除绑定，清除消息只列出 "5" """
-    messages = []
+    messages: list[str] = []
     with mock.patch.dict(flow_handle.cmd_map, clear=True), mock.patch.object(
         io_init, "put_queue", messages.append
     ):

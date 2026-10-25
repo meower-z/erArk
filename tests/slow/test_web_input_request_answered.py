@@ -12,7 +12,12 @@ Web 模式下答完文字输入后，状态不带输入请求，没人等的文�
 import threading
 import time
 
+from typing import TYPE_CHECKING
+
 from tests.slow.base import SlowTestCase
+
+if TYPE_CHECKING:
+  from collections.abc import Callable
 
 WAIT_LIMIT = 30
 """ 等游戏线程发出更新或拿到输入的时限，秒 """
@@ -21,7 +26,7 @@ WAIT_LIMIT = 30
 class WebInputRequestAnsweredTest(SlowTestCase):
   """玩家答完文字输入后，常规更新不带输入请求，没人等时送上的文字不留给下一次输入"""
 
-  def setUp(self):
+  def setUp(self) -> None:
     """
     开新游戏，切到 Web 模式，玩家的页面连上 Web 服务器；游戏线程开始走两次输入姓名、中间一个按钮面板
     Keyword arguments:
@@ -39,9 +44,9 @@ class WebInputRequestAnsweredTest(SlowTestCase):
     self.player_page = web_server.socketio.test_client(web_server.app)
     self.player_page.get_received()
     self.http = web_server.app.test_client()
-    self.names = []
+    self.names: list[str] = []
 
-    def play():
+    def play() -> None:
       """依次输入姓名、读免责声明、再输入姓名"""
       self.names.append(character.input_name_func("姓名？"))
       creator_character_flow.confirm_game_info_panel()
@@ -50,7 +55,7 @@ class WebInputRequestAnsweredTest(SlowTestCase):
     self.game_thread = threading.Thread(target=play, daemon=True)
     self.game_thread.start()
 
-  def next_state(self, wanted) -> dict:
+  def next_state(self, wanted: "Callable[[dict], bool]") -> dict:
     """
     等玩家的页面收到满足条件的 game_state_update
     Keyword arguments:
@@ -87,7 +92,7 @@ class WebInputRequestAnsweredTest(SlowTestCase):
     """
     return self.next_state(lambda state: bool(state.get("buttons")))
 
-  def test_update_after_answer(self):
+  def test_update_after_answer(self) -> None:
     """送上姓名后，下一个面板的常规更新与 /api/get_state 都不带输入请求"""
     self.assertTrue(self.submit_name("Testdoc")["success"])
     disclaimer = self.wait_disclaimer()
@@ -97,7 +102,7 @@ class WebInputRequestAnsweredTest(SlowTestCase):
         "input_request", self.http.get("/api/get_state").get_json()
     )
 
-  def test_text_while_no_input_wait(self):
+  def test_text_while_no_input_wait(self) -> None:
     """免责声明面板等按钮时送上的文字被拒，第二次输入姓名拿到玩家在那里送上的姓名"""
     self.submit_name("Testdoc")
     disclaimer = self.wait_disclaimer()

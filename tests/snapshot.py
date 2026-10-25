@@ -36,6 +36,8 @@
 没被放行的差异、没有用上的放行都让比较失败（退出码 1）；放行了的差异照样列出。
 """
 
+from __future__ import annotations
+
 import argparse
 import datetime
 import enum
@@ -50,7 +52,10 @@ import uuid
 
 if TYPE_CHECKING:
   from collections.abc import Iterable
-  from typing import Any
+  from typing import Any, TextIO
+
+  from Script.Core import game_type
+  from Script.UI.Panel import draw_event_text_panel
 
 ABSENT = None
 """ 比较时，一边没有的名字或步记作这个值（记录的值不会是 None） """
@@ -149,7 +154,7 @@ EXACT_TYPES = (bool, int, str)
 """ 值相等即 JSON 文本相同的标量类型（浮点的 0.0 与 -0.0 相等而文本不同） """
 
 
-def same(a, b) -> bool:
+def same(a: object, b: object) -> bool:
   """
   两个快照值是否相同：等同于比较它们的 JSON 文本，所以 true 与 1、1 与 1.0、0.0 与 -0.0 算不同
   Keyword arguments:
@@ -166,6 +171,7 @@ def same(a, b) -> bool:
     return a == b
   if (
       isinstance(a, list)
+      and isinstance(b, list)
       and len(a) == len(b)
       and all(
           type(x) is type(y) and type(x) in EXACT_TYPES for x, y in zip(a, b)
@@ -177,7 +183,7 @@ def same(a, b) -> bool:
   )
 
 
-def canonical(value):
+def canonical(value: object) -> bool | int | float | str | list | dict:
   """
   把值转成只含 JSON 数据的形式：集合排序成列表，元组转列表，字典的键转成字符串并排序
   Keyword arguments:
@@ -198,7 +204,7 @@ def canonical(value):
   raise TypeError(f"快照不收 {type(value).__name__} 类型的值：{value!r}")
 
 
-def _leaf(value):
+def _leaf(value: object) -> object | None:
   """
   把一个叶子值转成快照值；不是叶子时返回 None
   Keyword arguments:
@@ -232,8 +238,11 @@ def _leaf(value):
 
 
 def flatten(
-    prefix: str, value, state: dict, skipped: dict[str, str] | None = None
-):
+    prefix: str,
+    value: object,
+    state: dict,
+    skipped: dict[str, str] | None = None,
+) -> None:
   """
   把一个值按对象的属性、字典的键逐层展开，叶子记进 state
   Keyword arguments:
@@ -297,7 +306,7 @@ class ActionLog:
     self.event: list[list[int | str]] = []
     """ 这一步触发的事件 """
 
-  def install(self):
+  def install(self) -> None:
     """
     包住显示口上与选事件的两个函数，记下它们的id后照常执行；口上在进 handle_talk_draw 时就记下，不管它随后的显示判断是否挡下
     Keyword arguments:
@@ -313,12 +322,12 @@ class ActionLog:
     real_handle_event = event.handle_event
 
     def handle_talk_draw(
-        character_id,
-        talk_text,
-        now_talk_id,
-        second_behavior_id="",
-        common_behavior_id=None,
-    ):
+        character_id: int,
+        talk_text: str,
+        now_talk_id: str,
+        second_behavior_id: str = "",
+        common_behavior_id: str | None = None,
+    ) -> None:
       """
       记下口上id后照常交给原函数显示
       Keyword arguments:
@@ -341,7 +350,9 @@ class ActionLog:
           common_behavior_id,
       )
 
-    def handle_event(character_id, *args, **kwargs):
+    def handle_event(
+        character_id: int, *args: bool, **kwargs: bool
+    ) -> draw_event_text_panel.DrawEventTextPanel | None:
       """
       照常选事件，选中时记下事件id
       Keyword arguments:
@@ -377,7 +388,7 @@ class ActionLog:
 
 
 def capture(
-    cache,
+    cache: game_type.Cache,
     log: ActionLog | None = None,
     memo: dict[int, tuple[bytes | None, dict[str, object]]] | None = None,
 ) -> dict:
@@ -500,7 +511,7 @@ class Recorder:
         f.write(text)
 
 
-def _open_text(path: str):
+def _open_text(path: str) -> TextIO:
   """
   打开快照文件读文本；.gz 结尾的按 gzip 读
   Keyword arguments:
@@ -640,7 +651,7 @@ def compare(baseline: dict, new: dict, allowances: list) -> tuple:
   return unexpected, allowed, unused
 
 
-def _show(value) -> str:
+def _show(value: object) -> str:
   """
   差异里的值的显示形式
   Keyword arguments:
@@ -824,7 +835,7 @@ class Report:
     return lines
 
 
-def main(argv=None) -> int:
+def main(argv: list[str] | None = None) -> int:
   """
   命令行入口：compare <基准文件> <新文件> [--allow <放行文件>] [--limit N]
   Keyword arguments:

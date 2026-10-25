@@ -84,12 +84,14 @@ class SameNameImagePickTest(FastTestCase):
         },
     )
 
-  def test_walk_order_does_not_matter(self):
+  def test_walk_order_does_not_matter(self) -> None:
     """文件系统的遍历顺序反过来，取舍结果与重名清单都不变"""
     index, duplicates = image_path_index.build_image_path_index(self.root)
     real_walk = os.walk
 
-    def reversed_walk(directory):
+    def reversed_walk(
+        directory: str,
+    ) -> list[tuple[str, list[str], list[str]]]:
       """
       反序版 os.walk：目录与每个目录里的文件都倒过来
       Keyword arguments:

@@ -9,13 +9,18 @@ Web 模式下新客户端连接时收到的完整游戏状态，带着与常规�
 前端靠这两项在子面板上方画场景信息栏与选项卡栏；完整状态的两份选项卡都与常规更新的相同。
 """
 
+from typing import TYPE_CHECKING
+
 from tests.slow.base import SlowTestCase
+
+if TYPE_CHECKING:
+  from flask_socketio import SocketIOTestClient
 
 
 class WebFullStatePanelTabsTest(SlowTestCase):
   """新客户端连接时的完整游戏状态与常规更新带同样的面板选项卡"""
 
-  def setUp(self):
+  def setUp(self) -> None:
     """
     开新游戏，玩家的页面连上 Web 服务器
     Keyword arguments:
@@ -30,7 +35,7 @@ class WebFullStatePanelTabsTest(SlowTestCase):
     self.player_page = web_server.socketio.test_client(web_server.app)
     self.player_page.get_received()
 
-  def states(self, client) -> list:
+  def states(self, client: "SocketIOTestClient") -> list:
     """
     取出客户端新收到的 game_state_update 消息
     Keyword arguments:
@@ -72,7 +77,7 @@ class WebFullStatePanelTabsTest(SlowTestCase):
     self.assertEqual(len(received), 1)
     return received[0]
 
-  def assert_named_tabs(self, tabs: list):
+  def assert_named_tabs(self, tabs: list) -> None:
     """
     选项卡里有主面板，系统面板选项卡至少一个，且各自的名字是对应指令的名字
     Keyword arguments:
@@ -90,14 +95,14 @@ class WebFullStatePanelTabsTest(SlowTestCase):
           tab["name"], constant.handle_instruct_name_data[tab["id"]]
       )
 
-  def test_main_scene(self):
+  def test_main_scene(self) -> None:
     """主界面：完整状态列出主面板与系统面板选项卡，不在子面板模式"""
     self.regular_update()
     full = self.full_state()
     self.assert_named_tabs(full["panel_tabs"])
     self.assertFalse(full["sub_panel_mode"])
 
-  def test_sub_panel(self):
+  def test_sub_panel(self) -> None:
     """打开系统面板后：完整状态的子面板数据与选项卡与常规更新的相同"""
     from Script.System.Web_Draw_System import TabMenu, enter_sub_panel_mode
 

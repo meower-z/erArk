@@ -24,9 +24,13 @@
 
 import functools
 import random
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
+
+if TYPE_CHECKING:
+  from collections.abc import Callable, Iterable, Iterator
 
 SEEDS = range(12)
 """ 随机挑选的比较用的种子 """
@@ -36,7 +40,7 @@ ROOM = ["中枢", "会议室"]
 class InsertionOrderSet(set):
   """按加入顺序遍历的集合（只支持 add、in 与遍历，被测代码只用到这些）"""
 
-  def __init__(self, iterable=()):
+  def __init__(self, iterable: "Iterable[str]" = ()) -> None:
     """
     建空集合，再按顺序加入 iterable 的元素
     Keyword arguments:
@@ -45,12 +49,12 @@ class InsertionOrderSet(set):
     无
     """
     super().__init__()
-    self.order = []
+    self.order: list[str] = []
     """ 元素第一次加入的顺序 """
     for item in iterable:
       self.add(item)
 
-  def add(self, item):
+  def add(self, item: str) -> None:
     """
     加入元素，并记下第一次加入的顺序
     Keyword arguments:
@@ -62,7 +66,7 @@ class InsertionOrderSet(set):
       self.order.append(item)
     super().add(item)
 
-  def __iter__(self):
+  def __iter__(self) -> "Iterator[str]":
     """
     按加入顺序遍历
     Keyword arguments:
@@ -76,7 +80,7 @@ class InsertionOrderSet(set):
 class ReversedOrderSet(InsertionOrderSet):
   """按加入顺序倒过来遍历的集合"""
 
-  def __iter__(self):
+  def __iter__(self) -> "Iterator[str]":
     """
     按加入顺序倒过来遍历
     Keyword arguments:
@@ -90,7 +94,9 @@ class ReversedOrderSet(InsertionOrderSet):
 class RandomPickIgnoresSetOrderTest(SlowTestCase):
   """同一个随机状态在两种集合遍历顺序下得出同一个结果"""
 
-  def assert_same_picks(self, pick):
+  def assert_same_picks(
+      self, pick: "Callable[[type[InsertionOrderSet]], object]"
+  ) -> None:
     """
     对每个种子设好 random 后，两种遍历顺序下各调用一次 pick：每个种子挑中的都相同，且挑中的不止一种
     Keyword arguments:
@@ -98,7 +104,7 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
     Return arguments:
     无
     """
-    result = {}
+    result: dict[type[InsertionOrderSet], list[object]] = {}
     for set_type in (InsertionOrderSet, ReversedOrderSet):
       result[set_type] = []
       for seed in SEEDS:
@@ -112,7 +118,9 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
     )
     self.assertEqual(forward, result[ReversedOrderSet])
 
-  def draws(self, judge) -> tuple:
+  def draws(
+      self, judge: "Callable[[type[InsertionOrderSet]], object]"
+  ) -> tuple:
     """
     两种遍历顺序下各从种子 0 调用一次 judge
     Keyword arguments:
@@ -126,7 +134,9 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
     backward = (judge(ReversedOrderSet), random.getstate())
     return forward, backward
 
-  def assert_same_draws(self, judge, name: str):
+  def assert_same_draws(
+      self, judge: "Callable[[type[InsertionOrderSet]], object]", name: str
+  ) -> None:
     """
     两种遍历顺序下各从种子 0 调用一次 judge：结果与之后的随机状态都相同
     Keyword arguments:
@@ -141,7 +151,9 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
         forward[1] == backward[1], f"{name}：两种判断顺序抽的随机数不同"
     )
 
-  def premise_set(self, set_type, character_id: int):
+  def premise_set(
+      self, set_type: "type[InsertionOrderSet]", character_id: int
+  ) -> "InsertionOrderSet":
     """
     「场景内有可交互对象」与「在音乐室」两个前提，放进 set_type；先确认前者此刻抽随机数、后者不成立
     Keyword arguments:
@@ -180,7 +192,7 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
         self.npc("阿米娅"), self.cache.character_data[character_id].position
     )
 
-  def test_npc_target(self):
+  def test_npc_target(self) -> None:
     """凯尔希检索全部目标时，同一随机状态挑中同一个目标"""
     from Script.Config import game_config
     from Script.Design import handle_npc_ai
@@ -188,7 +200,7 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
     operator_id = self.npc("凯尔希")
     all_targets = list(game_config.config_target.keys())
 
-    def pick(set_type):
+    def pick(set_type: "type[InsertionOrderSet]") -> str:
       """
       search_target 里新建的集合换成 set_type，检索全部目标
       Keyword arguments:
@@ -197,14 +209,14 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
       str -- 挑中的目标id
       """
       with mock.patch.object(handle_npc_ai, "set", set_type, create=True):
-        target, __, __, __ = handle_npc_ai.search_target(
-            operator_id, all_targets, set(), {}, {}
+        target, _weight, _satisfied, _premise_data = (
+            handle_npc_ai.search_target(operator_id, all_targets, set(), {}, {})
         )
       return target
 
     self.assert_same_picks(pick)
 
-  def test_talk(self):
+  def test_talk(self) -> None:
     """同权重的五句口上，同一随机状态挑中同一句"""
     from Script.Config import game_config
     from Script.Design import talk
@@ -215,7 +227,7 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
         if game_config.config_talk[talk_id].adv_id == 0
     ][:5]
 
-    def pick(set_type):
+    def pick(set_type: "type[InsertionOrderSet]") -> str:
       """
       同权重的口上id放进 set_type，挑一句
       Keyword arguments:
@@ -223,12 +235,14 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
       Return arguments:
       str -- 挑中的口上id
       """
-      __, talk_id, __ = talk.choice_talk_from_talk_data({1: set_type(talk_ids)})
+      _talk_text, talk_id, _common_behavior_id = (
+          talk.choice_talk_from_talk_data({1: set_type(talk_ids)})
+      )
       return talk_id
 
     self.assert_same_picks(pick)
 
-  def test_sex_assistant(self):
+  def test_sex_assistant(self) -> None:
     """博士爱抚杜宾胸部时，调教助手在同一随机状态挑中同一个行为"""
     from Script.Core import constant
     from Script.UI.Panel import confinement_and_training
@@ -250,7 +264,7 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
         constant.Behavior.BREAST_CARESS
     )
 
-    def pick(set_type):
+    def pick(set_type: "type[InsertionOrderSet]") -> str:
       """
       去重用的集合换成 set_type，挑一个行为
       Keyword arguments:
@@ -265,7 +279,7 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
 
     self.assert_same_picks(pick)
 
-  def test_target_premises(self):
+  def test_target_premises(self) -> None:
     """凯尔希检索一个要求「场景内有可交互对象」与「在音乐室」的目标，两种前提顺序抽的随机数相同"""
     from Script.Config import game_config
     from Script.Core import constant_promise
@@ -283,7 +297,7 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
         if need <= premises
     )
 
-    def judge(set_type):
+    def judge(set_type: "type[InsertionOrderSet]") -> tuple[str, float, int]:
       """
       目标的前提集合换成只含两个前提的 set_type，检索这一个目标
       Keyword arguments:
@@ -301,14 +315,14 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
 
     self.assert_same_draws(judge, "search_target")
 
-  def test_talk_premises(self):
+  def test_talk_premises(self) -> None:
     """口上与事件的前提权重：两种前提顺序抽的随机数相同"""
     from Script.Design import handle_premise
 
     operator_id = self.npc("凯尔希")
     self.beside(operator_id)
 
-    def judge(set_type):
+    def judge(set_type: "type[InsertionOrderSet]") -> float:
       """
       对两个前提的 set_type 计算前提权重
       Keyword arguments:
@@ -322,7 +336,7 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
 
     self.assert_same_draws(judge, "get_weight_from_premise_dict")
 
-  def test_instruct_premises(self):
+  def test_instruct_premises(self) -> None:
     """博士的指令过滤（Tk 与 Web 两种界面）：两种前提顺序抽的随机数相同"""
     from Script.Core import constant
     from Script.Design import web_interaction_manager
@@ -348,7 +362,9 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
         ),
     }
 
-    def judge(check, set_type):
+    def judge(
+        check: "Callable[[], bool]", set_type: "type[InsertionOrderSet]"
+    ) -> bool:
       """
       指令的前提集合换成两个前提的 set_type，用 check 判断指令能否显示
       Keyword arguments:

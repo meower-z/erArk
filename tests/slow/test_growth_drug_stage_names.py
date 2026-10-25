@@ -11,9 +11,15 @@
 配置文字、养成事件抬头与另两种成长药的提示在 tests/fast/test_child_stage_names.py。
 """
 
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
+
+if TYPE_CHECKING:
+  from typing import Any
+
+  from Script.UI.Moudle import draw
 
 STAGE_NAME = {102: "幼女", 103: "学员"}
 """ 素质 102、103 的名称 """
@@ -126,7 +132,7 @@ class GrowthDrugStageNamesTest(SlowTestCase):
     self.assertIn(self.mother.name, tip_text, "画出了无效提示")
     self.assert_stage_text("成长加速药的无效提示", tip_text, (102,))
 
-  def test_select_baby_buttons(self):
+  def test_select_baby_buttons(self) -> None:
     """两个婴儿刚出生时，选婴儿的两个按钮写着幼女，按下第一个按钮选中第一个婴儿"""
     from Script.System.Pregnancy_System import pregnancy_handle
     from Script.UI.Moudle import draw
@@ -142,7 +148,9 @@ class GrowthDrugStageNamesTest(SlowTestCase):
     button_text_list = []
     real_left_button = draw.LeftButton
 
-    def record_left_button(text, *args, **kwargs):
+    def record_left_button(
+        text: str, *args: "Any", **kwargs: "Any"
+    ) -> "draw.LeftButton":
       """
       记下按钮文字后照常造按钮
       Keyword arguments:

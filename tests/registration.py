@@ -17,6 +17,7 @@ import unittest
 from tests.world import ROOT
 
 if TYPE_CHECKING:
+  from collections.abc import Mapping
   from types import ModuleType
 
 FAST_LAYER = "tests/fast/"
@@ -39,7 +40,9 @@ class RecordingLoader(unittest.TestLoader):
     super().__init__()
     self.modules: list[ModuleType] = []
 
-  def loadTestsFromModule(self, module, *args, **kwargs):
+  def loadTestsFromModule(
+      self, module: "ModuleType", *args: str | None, **kwargs: str | None
+  ) -> unittest.TestSuite:
     """
     记下模块，再照常收集其中的测试
     Keyword arguments:
@@ -78,7 +81,7 @@ def has_tests(cls: type, loader: unittest.TestLoader) -> bool:
   return bool(loader.getTestCaseNames(cls))
 
 
-def module_classes(module) -> list:
+def module_classes(module: "ModuleType") -> list:
   """
   模块命名空间里的类
   Keyword arguments:
@@ -93,7 +96,7 @@ def module_classes(module) -> list:
   )
 
 
-def pytest_classes(module) -> list:
+def pytest_classes(module: "ModuleType") -> list:
   """
   pytest 收集的类：名字以 Test 开头（pytest 的默认设置）、__test__ 不为假的类，不是 TestCase 的还要 __init__ 与 __new__ 都沿用 object 的；
   先找模块里的，再找其中不是 TestCase 的类与它的基类里的，逐层往下；类与基类里同名的只看最先找到的那个（与 pytest 相同）
@@ -103,11 +106,13 @@ def pytest_classes(module) -> list:
   list[type] -- 类，不重复
   """
   found: list[type] = []
-  owners = [module]
+  owners: list[ModuleType | type] = [module]
   while owners:
     owner = owners.pop()
     if isinstance(owner, type):
-      namespaces = [vars(klass) for klass in owner.__mro__]
+      namespaces: "list[Mapping[str, object]]" = [
+          vars(klass) for klass in owner.__mro__
+      ]
     else:
       namespaces = [vars(owner)]
     seen = set()
@@ -130,7 +135,7 @@ def pytest_classes(module) -> list:
   return found
 
 
-def collected_cases(module, loader: unittest.TestLoader) -> list:
+def collected_cases(module: "ModuleType", loader: unittest.TestLoader) -> list:
   """
   模块里会被收集的测试类：模块命名空间里有测试的 TestCase 子类
   Keyword arguments:
@@ -147,7 +152,10 @@ def collected_cases(module, loader: unittest.TestLoader) -> list:
 
 
 def module_problems(
-    module, base: type, loader: unittest.TestLoader, layer_cases: list
+    module: "ModuleType",
+    base: type,
+    loader: unittest.TestLoader,
+    layer_cases: list,
 ) -> list:
   """
   查一个已导入的测试模块，列出不合登记规则的测试
@@ -163,6 +171,7 @@ def module_problems(
       只有在是这一层某个会被收集的测试类的基类（如混入类）时，它的测试才会运行。类里嵌套的类：本模块里定义的类的属性所引用的、本模块定义的类（含别名，逐层往下）。
       pytest 还收集 pytest_classes 列出的类，不是 TestCase 的也单独运行，所以其中不继承 base 的类即使被测试类继承也报出。
   """
+  assert module.__file__ is not None
   path = os.path.relpath(module.__file__, ROOT).replace(os.sep, "/")
   base_name = f"{base.__module__}.{base.__qualname__}"
   cases = collected_cases(module, loader)

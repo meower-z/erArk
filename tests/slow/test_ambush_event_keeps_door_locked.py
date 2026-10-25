@@ -12,7 +12,14 @@
 - move：博士先锁门，再在「干员位置一览」里把杜宾召集到自己当前位置，杜宾走进锁着的会议室时触发事件。
 """
 
+from typing import TYPE_CHECKING
+
 from tests.slow.base import SlowTestCase
+
+if TYPE_CHECKING:
+  from typing import Any
+
+  from Script.Core import game_type
 
 ROOM = ["中枢", "会议室"]
 
@@ -20,7 +27,7 @@ ROOM = ["中枢", "会议室"]
 class AmbushEventKeepsDoorLockedTest(SlowTestCase):
   """「逆来顺受」选项不解开博士锁上的门"""
 
-  def setUp(self):
+  def setUp(self) -> None:
     """
     博士走进会议室；杜宾要找博士逆推；记录结算过的事件
     Keyword arguments:
@@ -35,11 +42,13 @@ class AmbushEventKeepsDoorLockedTest(SlowTestCase):
     self.operator_id = self.npc("杜宾")
     self.operator = self.cache.character_data[self.operator_id]
     self.operator.sp_flag.npc_masturebate_for_player = True
-    self.settled_events = []
+    self.settled_events: list[str] = []
     """ handle_event_data 结算过的事件id """
     real_handle = settle_behavior.handle_event_data
 
-    def record_handle(event_id, *args, **kwargs):
+    def record_handle(
+        event_id: str, *args: "Any", **kwargs: "Any"
+    ) -> "game_type.CharacterStatusChange":
       """
       记录型包装：记下事件id，照常结算
       Keyword arguments:

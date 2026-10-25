@@ -59,7 +59,7 @@ ALL_BITS = [
 """ 异常位1~7的判定 """
 
 
-def full_bit3(cid):
+def full_bit3(cid: int) -> bool:
   """
   位3的完整定义：助理、跟随、体检行动链任一成立即异常
   Keyword arguments:
@@ -74,7 +74,7 @@ def full_bit3(cid):
   )
 
 
-def full_bit4(cid):
+def full_bit4(cid: int) -> bool:
   """
   位4的完整定义：全裸或大致全裸即异常
   Keyword arguments:
@@ -85,7 +85,7 @@ def full_bit4(cid):
   return bool(HP.handle_cloth_off(cid) or HP.handle_cloth_most_off(cid))
 
 
-def full_bit5(cid):
+def full_bit5(cid: int) -> bool:
   """
   位5的完整定义：睡眠半梦半醒（且在睡觉或睡眠无意识）、醉酒、平然任一成立即异常
   Keyword arguments:
@@ -103,7 +103,7 @@ def full_bit5(cid):
   )
 
 
-def full_bit6(cid):
+def full_bit6(cid: int) -> bool:
   """
   位6的完整定义：睡眠等级≥1（且在睡觉或睡眠无意识）、空气、烂醉、时停任一成立即异常
   Keyword arguments:

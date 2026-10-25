@@ -7,10 +7,16 @@
 """
 
 import signal
+from typing import TYPE_CHECKING
 import unittest
 
 from tests.slow import remove_parent_guard
 from tests.world import FullWorld
+
+if TYPE_CHECKING:
+  from collections.abc import Callable
+  from types import FrameType
+  from typing import NoReturn
 
 TIME_LIMIT = 300
 """ 每个测试（含启动与开局）的默认时限，秒；测试类可用 time_limit 另设 """
@@ -43,7 +49,7 @@ class SlowTestCase(unittest.TestCase):
     self.cache = self.world.cache
     self.world.new_game(self.first_bonus)
 
-  def _time_up(self, signum, frame):
+  def _time_up(self, signum: int, frame: "FrameType | None") -> "NoReturn":
     """
     SIGALRM 的处理函数：抛 SlowTestTimeout，测试以失败结束而不是卡住整批
     Keyword arguments:
@@ -64,7 +70,7 @@ class SlowTestCase(unittest.TestCase):
     """
     signal.alarm(0)
 
-  def subTest(self, msg=None, **params):
+  def subTest(self, msg: object = None, **params: object) -> "NoReturn":
     """
     慢速层不用子测试，调用即抛 TypeError：pytest-forked 只把测试本身的报告带回父进程，子测试的失败会丢失
     Keyword arguments:
@@ -125,7 +131,7 @@ class SlowTestCase(unittest.TestCase):
 
     constant.panel_data[self.cache.now_panel_id]()
 
-  def wait_until(self, done, minutes: int) -> bool:
+  def wait_until(self, done: "Callable[[], bool]", minutes: int) -> bool:
     """
     反复用「等待五分钟」指令推进时间，直到 done() 为真或已等满 minutes 分钟
     Keyword arguments:

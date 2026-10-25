@@ -33,7 +33,7 @@ class FollowerEntersFullRoomTest(FastTestCase):
     room_name = self.world.scene(ROOM).scene_name
     self.cache.rhodes_island.facility_open[
         game_config.config_facility_open_name_to_cid[room_name]
-    ] = 1
+    ] = True
     self.pl = self.world.chara(0, "博士", position=DOOR)
     self.follower = self.world.chara(1, "跟随者", position=DOOR)
     self.world.chara(2, "路人", position=DOOR)

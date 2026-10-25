@@ -37,7 +37,7 @@ class LockedRoomEntryTest(FastTestCase):
       if scene_name in game_config.config_facility_open_name_set:
         self.cache.rhodes_island.facility_open[
             game_config.config_facility_open_name_to_cid[scene_name]
-        ] = 1
+        ] = True
     self.pl = self.world.chara(0, "博士", position=CORRIDOR)
     self.assistant = self.world.chara(1, "助理", position=CORRIDOR)
     self.other = self.world.chara(2, "干员", position=CORRIDOR)

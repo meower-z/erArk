@@ -50,7 +50,7 @@ class _ListedScandir:
     """
     self._entries = iter(entries)
 
-  def __iter__(self):
+  def __iter__(self) -> "_ListedScandir":
     """
     Keyword arguments:
     无
@@ -59,7 +59,7 @@ class _ListedScandir:
     """
     return self
 
-  def __next__(self):
+  def __next__(self) -> "os.DirEntry[str]":
     """
     Keyword arguments:
     无
@@ -68,7 +68,7 @@ class _ListedScandir:
     """
     return next(self._entries)
 
-  def __enter__(self):
+  def __enter__(self) -> "_ListedScandir":
     """
     Keyword arguments:
     无
@@ -77,7 +77,7 @@ class _ListedScandir:
     """
     return self
 
-  def __exit__(self, *exc_info):
+  def __exit__(self, *exc_info: object) -> None:
     """
     Keyword arguments:
     exc_info -- 异常信息
@@ -97,7 +97,9 @@ class _ListedScandir:
     self._entries = iter(())
 
 
-def listing_order(reverse: bool):
+def listing_order(
+    reverse: bool,
+) -> "contextlib.AbstractContextManager[object]":
   """
   让 os.listdir 与 os.scandir 按文件名正序或倒序列目录
   Keyword arguments:
@@ -107,7 +109,7 @@ def listing_order(reverse: bool):
   """
   real_listdir, real_scandir = os.listdir, os.scandir
 
-  def ordered_listdir(path="."):
+  def ordered_listdir(path: str = ".") -> list[str]:
     """
     按文件名排序的 os.listdir
     Keyword arguments:
@@ -117,7 +119,7 @@ def listing_order(reverse: bool):
     """
     return sorted(real_listdir(path), reverse=reverse)
 
-  def ordered_scandir(path="."):
+  def ordered_scandir(path: str = ".") -> _ListedScandir:
     """
     按文件名排序的 os.scandir
     Keyword arguments:
@@ -198,7 +200,7 @@ class BuildSameForAnyListingOrderTest(SlowTestCase):
           changed, [], f"{script} 在两种列目录顺序下写出的这些文件不同"
       )
 
-  def test_map_order_same(self):
+  def test_map_order_same(self) -> None:
     """地图载入两次（正序、倒序），场景字典、地图字典与地点标签（标签及其场景列表）的顺序相同"""
     from Script.Config import map_config
     from Script.Core import constant

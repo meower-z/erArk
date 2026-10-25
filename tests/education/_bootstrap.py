@@ -17,6 +17,11 @@ import io
 import os
 import random
 import sys
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from types import TracebackType
+  from typing import NoReturn
 
 ROOT = os.path.abspath(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
@@ -33,7 +38,7 @@ FAIL: list[str] = []
 """ 失败的断言名列表 """
 
 
-def check(name: str, cond, extra="") -> bool:
+def check(name: str, cond: object, extra: object = "") -> bool:
   """
   记录一条断言结果
   Keyword arguments:
@@ -130,7 +135,7 @@ drawn_text: list[str] = []
 """ 全部绘制类 draw() 时的文本记录，断言「某段提示是否被画出」时用；测试可自行 clear() """
 
 
-def _record_draw(self, *args, **kwargs):
+def _record_draw(self: object, *args: object, **kwargs: object) -> None:
   """
   记录型绘制桩
   Keyword arguments:
@@ -263,7 +268,7 @@ def make_character(
     daughter: bool = False,
     stage: int = 0,
     mother_id: int = -1,
-    position=None,
+    position: list[str] | None = None,
     born_days: int = 30,
 ) -> game_type.Character:
   """
@@ -414,7 +419,11 @@ pl = make_character(0, "博士")
 """ 玩家 """
 
 
-def _exit_on_exception(exc_type, exc_value, exc_traceback):
+def _exit_on_exception(
+    exc_type: type[BaseException],
+    exc_value: BaseException,
+    exc_traceback: "TracebackType | None",
+) -> "NoReturn":
   """
   未捕获异常时打印回溯并强制退出
   导入链起的非守护线程会让崩溃的测试进程挂住，直到运行它的测试超时才被杀掉

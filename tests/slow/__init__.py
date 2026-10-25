@@ -13,6 +13,11 @@
 
 import importlib.abc
 import sys
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from collections.abc import Sequence
+  from types import ModuleType
 
 if "tests.fast" in sys.modules:
   raise RuntimeError(
@@ -27,7 +32,12 @@ class SlowLayerImportError(ImportError):
 class ParentImportGuard(importlib.abc.MetaPathFinder):
   """导入 Script 下的模块时抛 SlowLayerImportError；本身不负责查找模块"""
 
-  def find_spec(self, fullname, path, target=None):
+  def find_spec(
+      self,
+      fullname: str,
+      path: "Sequence[str] | None",
+      target: "ModuleType | None" = None,
+  ) -> None:
     """
     游戏模块抛错，其他模块交给后面的查找器
     Keyword arguments:

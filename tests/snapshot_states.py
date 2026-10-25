@@ -26,8 +26,17 @@ family_commission -- 孕产、各阶段的孩子、上课与外勤委托。构�
 每次运行把睡醒时的自动存档换成只记下调用（run），不往检出目录的 save/ 写文件。
 """
 
+from __future__ import annotations
+
 import contextlib
+from typing import TYPE_CHECKING
 from unittest import mock
+
+if TYPE_CHECKING:
+  from collections.abc import Iterator
+
+  from tests.snapshot import Recorder
+  from tests.world import FullWorld
 
 FIRST_BONUS = ("窄域时停", "启动资金", "助理干员", "阿米娅")
 """ 两个状态开局时选的初期奖励：初级时停素质、启动资金、助理阿米娅（好感 1000、信赖 50%） """
@@ -50,7 +59,7 @@ class PlanError(AssertionError):
   """动作表里的指令此刻不会出现在主界面，或安排的按钮没有用掉"""
 
 
-def instruct(world, instruct_id: str, presses: tuple = ()):
+def instruct(world: FullWorld, instruct_id: str, presses: tuple = ()) -> None:
   """
   像玩家在主界面点下指令一样执行它：先安排之后要按的按钮，确认指令的前提都成立，交给 handle_instruct；
   指令打开了面板时显示面板（与 start_flow.start_frame 每一轮做的相同）
@@ -108,7 +117,7 @@ def instruct_ready(instruct_id: str) -> bool:
   )
 
 
-def walk(world, path: list):
+def walk(world: FullWorld, path: list) -> None:
   """
   像玩家在地图上点选目的地一样让博士走过去，每一段路都经主循环结算
   Keyword arguments:
@@ -123,7 +132,7 @@ def walk(world, path: list):
   character_move.own_charcter_move(list(path))
 
 
-def npc_id(world, name: str) -> int:
+def npc_id(world: FullWorld, name: str) -> int:
   """
   按名字找本局已有的干员
   Keyword arguments:
@@ -142,7 +151,7 @@ def npc_id(world, name: str) -> int:
   return found[0]
 
 
-def summon(world, name: str):
+def summon(world: FullWorld, name: str) -> None:
   """
   在「干员位置一览」里把干员召集到博士所在的场景，等她走到，再在场景里点选她
   Keyword arguments:
@@ -170,7 +179,7 @@ def summon(world, name: str):
   pl.target_character_id = cid
 
 
-def build_time_stop_h(world):
+def build_time_stop_h(world: FullWorld) -> None:
   """
   构建 time_stop_h：召集阿米娅到博士房间，开时停，时停奸
   Keyword arguments:
@@ -207,7 +216,7 @@ def build_time_stop_h(world):
 
 
 @contextlib.contextmanager
-def days_passed(day: int):
+def days_passed(day: int) -> Iterator[None]:
   """
   在 with 块里，孕期天数与孩子的成长天数都按 day 天计
   Keyword arguments:
@@ -225,7 +234,7 @@ def days_passed(day: int):
     yield
 
 
-def fertilize(world, mother_id: int):
+def fertilize(world: FullWorld, mother_id: int) -> None:
   """
   让母亲受精：射精到子宫，生理周期推进到排卵日，走受精结算
   Keyword arguments:
@@ -251,7 +260,7 @@ def fertilize(world, mother_id: int):
     raise PlanError(f"{mother.name} 没有受精")
 
 
-def give_birth(world, mother_id: int, name: str) -> list:
+def give_birth(world: FullWorld, mother_id: int, name: str) -> list:
   """
   受精的母亲转妊娠、临盆、生产，给每个孩子取名，产后转育儿
   Keyword arguments:
@@ -281,7 +290,7 @@ def give_birth(world, mother_id: int, name: str) -> list:
   return [cid for cid in mother.relationship.child_id_list if cid not in before]
 
 
-def build_family_commission(world):
+def build_family_commission(world: FullWorld) -> None:
   """
   构建 family_commission：孕产与孩子的成长，安排教师与课表，升级机库、买载具、派外勤委托
   Keyword arguments:
@@ -441,7 +450,7 @@ BUILDERS = {
 """ 状态名: 构建函数 """
 
 
-def run(world, state_name: str):
+def run(world: FullWorld, state_name: str) -> Recorder:
   """
   构建状态并按动作表推进，每一步录一份快照
   Keyword arguments:

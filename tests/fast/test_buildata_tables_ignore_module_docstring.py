@@ -15,11 +15,15 @@ import io
 import os
 import re
 import tempfile
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from Script.Config import game_config
 from tests.fast.base import FastTestCase
 from tests.world import ROOT
+
+if TYPE_CHECKING:
+  from types import ModuleType
 
 DOCSTRINGS = {
     "单行": '"""常量定义"""\n',
@@ -65,7 +69,9 @@ def compared_texts(file_text: str, constant_name: str) -> tuple:
   return bom + body, documented_texts
 
 
-def run_table(buildata, table: tuple, root: str, text: str) -> str:
+def run_table(
+    buildata: "ModuleType", table: tuple, root: str, text: str
+) -> str:
   """
   在临时目录里摆出常量文件，在那里运行 buildata 的生成函数，读回写出的表
   Keyword arguments:

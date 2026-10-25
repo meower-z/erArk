@@ -7,7 +7,12 @@
 体检科要医疗部升到 2 级才开放，这里按已开放处理。
 """
 
+from typing import TYPE_CHECKING
+
 from tests.slow.base import SlowTestCase
+
+if TYPE_CHECKING:
+  from collections.abc import Callable
 
 EXAM_ROOM = ["医疗", "体检科"]
 DR_OFFICE = ["中枢", "博士办公室"]
@@ -39,7 +44,7 @@ class HealthCheckTestCase(SlowTestCase):
     scene_name = self.world.scene(EXAM_ROOM).scene_name
     self.cache.rhodes_island.facility_open[
         game_config.config_facility_open_name_to_cid[scene_name]
-    ] = 1
+    ] = True
     self.walk(EXAM_ROOM)
     self.world.player.press(
         "调整体检日程",
@@ -115,7 +120,9 @@ class HealthCheckTestCase(SlowTestCase):
     picks = []
     character_data = self.cache.character_data[cid]
 
-    def recorder(state_machine_id, run):
+    def recorder(
+        state_machine_id: int, run: "Callable[..., object]"
+    ) -> "Callable[[int], None]":
       """
       包装一个状态机：记下该角色的执行，照常运行
       Keyword arguments:
@@ -125,7 +132,7 @@ class HealthCheckTestCase(SlowTestCase):
       function -- 包装后的状态机函数
       """
 
-      def wrapped(character_id):
+      def wrapped(character_id: int) -> None:
         """
         记录型状态机
         Keyword arguments:

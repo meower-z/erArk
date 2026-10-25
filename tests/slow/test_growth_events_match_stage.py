@@ -51,7 +51,7 @@ class GrowthEventsMatchStageTest(SlowTestCase):
     shutil.rmtree(save_handle.get_save_dir_path(SAVE_ID), ignore_errors=True)
     super().tearDown()
 
-  def make_daughters(self):
+  def make_daughters(self) -> tuple[int, int, int]:
     """
     生出学员姐姐，再生出婴儿妹妹
     Keyword arguments:
@@ -189,9 +189,11 @@ class GrowthEventsMatchStageTest(SlowTestCase):
     self.assertEqual(
         [one.check_id for one in failure_list], [], "公务事件的静态检查没有失败"
     )
+    elder_growth = self.cache.character_data[elder_id].child_growth
+    assert elder_growth is not None
     self.assertIn(
         UNKNOWN_EVENT_UID,
-        self.cache.character_data[elder_id].child_growth.event_history,
+        elder_growth.event_history,
         "读档后履历里还留着这条事件",
     )
     self.assertEqual(

@@ -17,6 +17,8 @@ FullWorld 另有：
 每次复原都重设全部随机源（random、numpy.random、uuid.uuid4），见 seed_everything；启动时让列目录的顺序固定，见 pin_listing_order。
 """
 
+from __future__ import annotations
+
 import contextlib
 import copy
 import datetime
@@ -25,6 +27,13 @@ import os
 import random
 import sys
 import uuid
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import Any, Self
+
+  from Script.Core import game_type
+  from Script.UI.Moudle import draw
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 """ erArk 仓库根目录 """
@@ -83,7 +92,7 @@ def seed_everything(seed: int = SEED) -> None:
   uuid.uuid4 = _seeded_uuid4
 
 
-def pin_listing_order():
+def pin_listing_order() -> None:
   """
   让 os.listdir 与 glob.glob 按文件名排序返回，可重复调用
   Keyword arguments:
@@ -99,7 +108,7 @@ def pin_listing_order():
     return
   real_listdir, real_glob = os.listdir, glob.glob
 
-  def sorted_listdir(*args, **kwargs):
+  def sorted_listdir(*args: str, **kwargs: str) -> list[str]:
     """
     排好序的 os.listdir
     Keyword arguments:
@@ -109,7 +118,7 @@ def pin_listing_order():
     """
     return sorted(real_listdir(*args, **kwargs))
 
-  def sorted_glob(*args, **kwargs):
+  def sorted_glob(*args: str, **kwargs: Any) -> list[str]:
     """
     排好序的 glob.glob
     Keyword arguments:
@@ -119,9 +128,9 @@ def pin_listing_order():
     """
     return sorted(real_glob(*args, **kwargs))
 
-  sorted_listdir.sorted_listing = True
-  os.listdir = sorted_listdir
-  glob.glob = sorted_glob
+  setattr(sorted_listdir, "sorted_listing", True)
+  setattr(os, "listdir", sorted_listdir)
+  setattr(glob, "glob", sorted_glob)
 
 
 def _mute_ui() -> list:
@@ -139,7 +148,9 @@ def _mute_ui() -> list:
 
   wait_texts = []
 
-  def record_wait_draw(self, *args, **kwargs):
+  def record_wait_draw(
+      self: draw.WaitDraw, *args: object, **kwargs: object
+  ) -> None:
     """
     记录型 WaitDraw 桩：把绘制文本收进 wait_texts
     Keyword arguments:
@@ -171,7 +182,7 @@ class MinimalWorld:
   同一进程只能载入一个世界；用 MinimalWorld.load() 取得它
   """
 
-  _loaded = None
+  _loaded: MinimalWorld | None = None
   """ 本进程已载入的世界 """
 
   def __init__(self) -> None:
@@ -189,7 +200,7 @@ class MinimalWorld:
     self.reset()
 
   @classmethod
-  def load(cls):
+  def load(cls) -> Self:
     """
     取得本进程的世界，第一次调用时载入
     Keyword arguments:
@@ -322,7 +333,7 @@ class MinimalWorld:
     self.wait_texts.clear()
     seed_everything()
 
-  def scene(self, path: list):
+  def scene(self, path: list) -> game_type.Scene:
     """
     取一个场景，路径必须是真实场景
     Keyword arguments:
@@ -362,7 +373,7 @@ class MinimalWorld:
       naked: bool = False,
       race: int = 0,
       adv: int = 0,
-  ):
+  ) -> game_type.Character:
     """
     造一个角色并登记进缓存与所在场景，然后核对她的状态
     Keyword arguments:
@@ -507,7 +518,7 @@ class PlayerInput:
     io_init.io_clear_cmd = self._clear_cmd
     io_init.clear_screen = self._clear_cmd
     io_init.clear_screen_and_history = self._clear_cmd
-    flow_handle.order_deal = self._order_deal
+    setattr(flow_handle, "order_deal", self._order_deal)
 
   def press(self, *labels: str) -> None:
     """
@@ -542,7 +553,12 @@ class PlayerInput:
           f"安排的输入没有用掉：{self.planned}；最近的文字：{self.screen[-5:]}"
       )
 
-  def _print(self, string, style="standard", tooltip=""):
+  def _print(
+      self,
+      string: str,
+      style: str | tuple[str, ...] = "standard",
+      tooltip: str = "",
+  ) -> None:
     """
     替换 io_init.era_print：记下文字
     Keyword arguments:
@@ -556,7 +572,9 @@ class PlayerInput:
       self.screen.append(str(string))
       del self.screen[: -self.SCREEN_LIMIT]
 
-  def _print_cmd(self, cmd_str, cmd_number, *args, **kwargs):
+  def _print_cmd(
+      self, cmd_str: str, cmd_number: int | str, *args: str, **kwargs: str
+  ) -> None:
     """
     替换 io_init.io_print_cmd：记下按钮（命令已由 flow_handle.print_cmd 绑定）
     Keyword arguments:
@@ -568,7 +586,7 @@ class PlayerInput:
     self._clear_cmd(cmd_number)
     self.buttons.append((str(cmd_str), str(cmd_number)))
 
-  def _clear_cmd(self, *cmd_numbers):
+  def _clear_cmd(self, *cmd_numbers: int | str) -> None:
     """
     替换 io_init.io_clear_cmd、clear_screen 与 clear_screen_and_history：忘掉按钮
     Keyword arguments:
@@ -585,8 +603,11 @@ class PlayerInput:
     ]
 
   def _order_deal(
-      self, flag="order", print_order=True, donot_return_null_str=True
-  ):
+      self,
+      flag: str = "order",
+      print_order: bool = True,
+      donot_return_null_str: bool = True,
+  ) -> str | None:
     """
     替换 flow_handle.order_deal：给出下一项安排的输入
     Keyword arguments:

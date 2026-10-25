@@ -16,9 +16,13 @@
 import datetime
 import os
 import shutil
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
+
+if TYPE_CHECKING:
+  from typing import Any
 
 BOOK = 43
 """ 不在游戏里的书 """
@@ -87,7 +91,7 @@ class Book43RemovedTest(SlowTestCase):
     button_text_list = []
     real_print_cmd = io_init.io_print_cmd
 
-    def record_print_cmd(cmd_str, *args, **kwargs):
+    def record_print_cmd(cmd_str: str, *args: "Any", **kwargs: "Any") -> None:
       """
       记下按钮文字后照常交给 PlayerInput
       Keyword arguments:
@@ -206,7 +210,7 @@ class Book43RemovedTest(SlowTestCase):
         )
     self.assertTrue(reader_count, "有干员借到书在读")
 
-  def test_old_save_npc_reads_book(self):
+  def test_old_save_npc_reads_book(self) -> None:
     """干员借着 43 号书、存档时正读着它：读档后她手上没有 43 号书、正读着的书号归零，读完配置里所有书时判定借不到书；她读满这一段，再走娱乐读书时读的是书籍配置里的书，借书卡上 43 号书记为已还"""
     from Script.Config import game_config
     from Script.Core import constant
