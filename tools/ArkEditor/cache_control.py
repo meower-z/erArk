@@ -19,6 +19,8 @@ now_font_size: int = 13
 
 now_file_path: str = ""
 """ 当前事件数据文件路径 """
+CHARA_TEMPLATE_PATH = "0999_模板人物属性文件.csv"
+""" 新建属性文件时读入的模板人物属性文件，相对编辑器的工作目录 """
 now_edit_type_flag = 1
 """ 当前编辑器编辑类型，0为口上，1为事件，2为属性 """
 now_copied_premise: str = ""

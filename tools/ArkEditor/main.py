@@ -164,13 +164,21 @@ def backup_file(file_path: str) -> None:
 
 def clear_item_lists() -> None:
   """
-  载入新文件后清掉上一个文件的选中条目，清空前提与结算列表
+  载入新文件后清掉上一个文件的选中条目，清空前提与结算列表、文本框与事件注释框，并退出文本预览
   Return arguments:
   None
   """
   cache_control.now_select_id = ""
   item_premise_list.item_list.clear()
   item_effect_list.item_list.clear()
+  # 清空文本框不算编辑，不经 textChanged 标记为已修改
+  item_text_edit.label_text.blockSignals(True)
+  item_text_edit.label_text.clear()
+  item_text_edit.label_text.blockSignals(False)
+  item_text_edit.comment_edit.clear()
+  # 预览里显示的是上一个文件的文本，回到编辑模式
+  item_text_edit.preview_button.setChecked(False)
+  item_text_edit.toggle_preview(False)
 
 
 def load_event_data() -> None:
@@ -247,7 +255,7 @@ def create_event_data() -> None:
 
 def create_chara_data() -> None:
   """新建属性文件"""
-  cache_control.now_file_path = "0999_模板人物属性文件.csv"
+  cache_control.now_file_path = cache_control.CHARA_TEMPLATE_PATH
   load_chara_data_to_cache()
   global is_modified
   is_modified = False
@@ -344,6 +352,7 @@ def load_chara_data_to_cache() -> None:
   cache_control.now_chara_data = now_chara_data
   # print(f"debug Cloth = {cache_control.now_chara_data.Cloth}")
   cache_control.now_edit_type_flag = 2
+  clear_item_lists()
   chara_list.update()
 
   main_window.add_grid_chara_data_layout(chara_list)

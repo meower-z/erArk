@@ -167,52 +167,51 @@ class ItemPremiseList(QWidget):
         draw_text += f"，最终权重：{final_weight}"
     self.info_label.setText(draw_text)
 
+  def selected_data(self) -> "Event | Talk | None":
+    """
+    取当前选中的事件或口上；编辑的是属性文件、没有选中条目或选中的条目已删除时为 None
+    返回:
+        Event | Talk | None: 当前选中的事件或口上
+    """
+    if cache_control.now_edit_type_flag == 1:
+      return cache_control.now_event_data.get(cache_control.now_select_id)
+    if cache_control.now_edit_type_flag == 0:
+      return cache_control.now_talk_data.get(cache_control.now_select_id)
+    return None
+
   def CVP(self) -> None:
     """展开CVP菜单"""
-    if cache_control.now_select_id != "":
+    if self.selected_data() is not None:
       menu = CVPMenu()
       menu.exec()
 
   def change(self) -> None:
     """展开前提菜单"""
-    if cache_control.now_select_id != "":
+    if self.selected_data() is not None:
       menu = PremiseMenu()
       menu.exec()
 
   def change_this_item(self, item: QListWidgetItem) -> None:
     """删除该前提并展开前提菜单"""
+    data = self.selected_data()
+    if data is None:
+      return
     # 先遍历找到cid
     for premise in cache_control.premise_data:
       if cache_control.premise_data[premise] == item.text():
         premise_cid = premise
         break
     # 根据cid删除前提
-    if cache_control.now_edit_type_flag == 1:
-      if (
-          premise_cid
-          in cache_control.now_event_data[cache_control.now_select_id].premise
-      ):
-        del cache_control.now_event_data[cache_control.now_select_id].premise[
-            premise_cid
-        ]
-    elif cache_control.now_edit_type_flag == 0:
-      if (
-          premise_cid
-          in cache_control.now_talk_data[cache_control.now_select_id].premise
-      ):
-        del cache_control.now_talk_data[cache_control.now_select_id].premise[
-            premise_cid
-        ]
+    if premise_cid in data.premise:
+      del data.premise[premise_cid]
     # 展开前提菜单
     self.change()
 
   def reset(self) -> None:
     """清零前提列表"""
-    if cache_control.now_select_id != "":
-      if cache_control.now_edit_type_flag == 1:
-        cache_control.now_event_data[cache_control.now_select_id].premise = {}
-      elif cache_control.now_edit_type_flag == 0:
-        cache_control.now_talk_data[cache_control.now_select_id].premise = {}
+    data = self.selected_data()
+    if data is not None:
+      data.premise = {}
       self.item_list.clear()
 
   def show_context_menu(self, pos: "QPoint") -> None:
@@ -225,14 +224,7 @@ class ItemPremiseList(QWidget):
           premise_cid = premise
           break
       # 获取data对象
-      data: "Event | Talk | None"
-      if cache_control.now_edit_type_flag == 1:
-        data = cache_control.now_event_data[cache_control.now_select_id]
-      elif cache_control.now_edit_type_flag == 0:
-        data = cache_control.now_talk_data[cache_control.now_select_id]
-      else:
-        # 人物属性模式下没有选中的口上或事件
-        data = None
+      data = self.selected_data()
       # 创建右键菜单
       menu = QMenu(self)
       delete_action = menu.addAction("删除")
@@ -287,6 +279,9 @@ class ItemPremiseList(QWidget):
 
   def add_group(self) -> None:
     """将当前的所有前提设为新前提组"""
+    data = self.selected_data()
+    if data is None:
+      return
     # 获得新的前提组cid
     new_cid_int = 1
     new_cid = f"g_{new_cid_int}"
@@ -294,19 +289,7 @@ class ItemPremiseList(QWidget):
       new_cid_int += 1
       new_cid = f"g_{new_cid_int}"
     # 获得当前所有前提
-    premise_list = []
-    if cache_control.now_edit_type_flag == 1:
-      premise_list = list(
-          cache_control.now_event_data[
-              cache_control.now_select_id
-          ].premise.keys()
-      )
-    elif cache_control.now_edit_type_flag == 0:
-      premise_list = list(
-          cache_control.now_talk_data[
-              cache_control.now_select_id
-          ].premise.keys()
-      )
+    premise_list = list(data.premise.keys())
     premise_list.sort()
     # 添加前提组
     cache_control.premise_group_data[new_cid] = premise_list
@@ -327,17 +310,8 @@ class ItemPremiseList(QWidget):
     """
     拖拽移动前提条目后，更新数据顺序
     """
-    if cache_control.now_select_id != "":
-      data: "Event | Talk"
-      if cache_control.now_edit_type_flag == 0:
-        # 口上
-        data = cache_control.now_talk_data[cache_control.now_select_id]
-      elif cache_control.now_edit_type_flag == 1:
-        # 事件
-        data = cache_control.now_event_data[cache_control.now_select_id]
-      else:
-        # 人物属性模式下没有选中的口上或事件，不改数据
-        return
+    data = self.selected_data()
+    if data is not None:
       # 重新按界面顺序排列premise
       new_order = []
       for i in range(self.item_list.count()):
@@ -361,16 +335,9 @@ class ItemPremiseList(QWidget):
     功能：
         如果当前条目已有该前提，则移除；否则添加。操作后刷新前提列表。
     """
-    # 判断当前是否有选中条目
-    if cache_control.now_select_id == "":
-      return
-    # 根据编辑类型获取当前数据对象
-    data: "Event | Talk"
-    if cache_control.now_edit_type_flag == 1:
-      data = cache_control.now_event_data[cache_control.now_select_id]
-    elif cache_control.now_edit_type_flag == 0:
-      data = cache_control.now_talk_data[cache_control.now_select_id]
-    else:
+    # 没有选中的口上或事件时不改数据
+    data = self.selected_data()
+    if data is None:
       return
     # 若为前提组，需特殊处理（此处只处理单前提）
     # 切换前提：有则删，无则加
