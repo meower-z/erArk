@@ -13,7 +13,9 @@ from urllib.parse import quote
 from bs4 import BeautifulSoup
 
 
-def get_activity_story_list_enhanced(activity_name):
+def get_activity_story_list_enhanced(
+    activity_name: str,
+) -> list[tuple[str, str, str, str, str]]:
   """
   获取活动的所有剧情列表（增强版，支持多种格式）
   参数:
@@ -136,7 +138,9 @@ def get_activity_story_list_enhanced(activity_name):
     return []
 
 
-def parse_story_info(story_code, full_name):
+def parse_story_info(
+    story_code: str, full_name: str
+) -> tuple[str, str, str, str, str] | None:
   """
   解析剧情信息
   参数:
@@ -182,7 +186,7 @@ def parse_story_info(story_code, full_name):
     return None
 
 
-def extract_story_script_from_url(url, story_name):
+def extract_story_script_from_url(url: str, story_name: str) -> str | None:
   """
   从URL提取剧情脚本
   参数:
@@ -255,7 +259,7 @@ def extract_story_script_from_url(url, story_name):
     return None
 
 
-def extract_pure_story_script(script_content):
+def extract_pure_story_script(script_content: str) -> str | None:
   """
   从JavaScript代码中提取纯剧情脚本
   参数:
@@ -332,8 +336,12 @@ def extract_pure_story_script(script_content):
 
 
 def save_story_script(
-    story_code, story_name, story_type, script_content, output_dir
-):
+    story_code: str,
+    story_name: str,
+    story_type: str,
+    script_content: str,
+    output_dir: str,
+) -> bool:
   """
   保存剧情脚本到文件
   参数:
@@ -379,7 +387,9 @@ def save_story_script(
     return False
 
 
-def download_activity_stories_enhanced(activity_name, output_dir=None):
+def download_activity_stories_enhanced(
+    activity_name: str, output_dir: str | None = None
+) -> tuple[int, int]:
   """
   下载指定活动的所有剧情（增强版）
   参数:

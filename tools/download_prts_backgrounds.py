@@ -14,7 +14,13 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 
 
-def download_single_image(img_url, output_dir, headers, index, total):
+def download_single_image(
+    img_url: str,
+    output_dir: Path,
+    headers: dict[str, str],
+    index: int,
+    total: int,
+) -> tuple[bool, str, str | None]:
   """
   下载单个图片
 
@@ -165,7 +171,7 @@ def download_prts_backgrounds() -> None:
 
       # 等待所有任务完成并收集结果
       for future in as_completed(future_to_url):
-        success, __, __ = future.result()
+        success, _filename, _error_msg = future.result()
         if success:
           success_count += 1
         else:
