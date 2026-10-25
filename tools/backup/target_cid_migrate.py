@@ -24,10 +24,27 @@ target.csv 编号体系一次性迁移脚本（Plan 08）
     .conda/python.exe tools/target_cid_migrate.py
 """
 
+from __future__ import annotations
+
 import io
 import os
 import sys
 import collections
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import TypedDict
+
+  class TargetRow(TypedDict):
+    """target.csv 的一行数据，line 是它在文件里的行号"""
+
+    line: int
+    cid: int
+    state_machine_id: str
+    premise_id: str
+    type: int
+    remarks: str
+
 
 sys.stdout = io.TextIOWrapper(
     sys.stdout.buffer, encoding="utf-8", errors="replace"
@@ -71,7 +88,7 @@ CHAIN_BY_OLD_CID = [
 """ 旧 cid 区间 → 行为链名。用于把连续同链的行归进同一个组 """
 
 
-def chain_of(old_cid):
+def chain_of(old_cid: int) -> str | None:
   """
   查出旧 cid 属于哪条行为链
   Keyword arguments:
@@ -85,7 +102,7 @@ def chain_of(old_cid):
   return None
 
 
-def read_target():
+def read_target() -> tuple[list[str], list[TargetRow]]:
   """
   读入 target.csv，拆出表头与数据行
   Return arguments:
@@ -115,7 +132,9 @@ def read_target():
   return header, rows
 
 
-def build_mapping(rows):
+def build_mapping(
+    rows: list[TargetRow],
+) -> tuple[dict[int, int], dict[int, tuple[int, str]]]:
   """
   为每一行算出新 cid，并记录它所在的组
   Keyword arguments:
@@ -158,7 +177,9 @@ def build_mapping(rows):
   return mapping, group_info
 
 
-def self_check(rows, mapping):
+def self_check(
+    rows: list[TargetRow], mapping: dict[int, int]
+) -> list[TargetRow]:
   """
   写盘前自检 R1~R5，任何一条不通过都直接中止
   Keyword arguments:
@@ -204,7 +225,9 @@ def self_check(rows, mapping):
   return new_rows
 
 
-def write_target(header, new_rows, mapping):
+def write_target(
+    header: list[str], new_rows: list[TargetRow], mapping: dict[int, int]
+) -> None:
   """
   按新 cid 升序、type 分区（空行分隔）写回 target.csv
   Keyword arguments:
@@ -237,7 +260,7 @@ def write_target(header, new_rows, mapping):
   )
 
 
-def update_effect(mapping):
+def update_effect(mapping: dict[int, int]) -> int:
   """
   同步改写 effect.csv 的 target_id
   Keyword arguments:
@@ -270,7 +293,11 @@ def update_effect(mapping):
   return changed
 
 
-def write_mapping(new_rows, mapping, group_info):
+def write_mapping(
+    new_rows: list[TargetRow],
+    mapping: dict[int, int],
+    group_info: dict[int, tuple[int, str]],
+) -> None:
   """
   输出新旧编号对照表留档
   Keyword arguments:

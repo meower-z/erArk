@@ -29,6 +29,8 @@ API 密钥读取顺序：环境变量 OPENAI_API_KEY > 仓库根目录 ai_chat_a
 生成结果默认保存到 tools/output/立绘生成/<角色名>/，不会直接写入 image/立绘
 """
 
+from __future__ import annotations
+
 import argparse
 import base64
 import csv
@@ -40,9 +42,26 @@ import time
 import urllib.parse
 import urllib.request
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import openai
 from PIL import Image
+
+if TYPE_CHECKING:
+  from collections.abc import Sequence
+  from typing import TypedDict
+
+  class CharacterInfo(TypedDict):
+    """load_character_info 读出的角色外貌信息"""
+
+    name: str
+    sex: str
+    race: str
+    profession: str
+    introduce: str
+    body_traits: list[str]
+    clothes: list[str]
+
 
 # 仓库根目录
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -107,7 +126,7 @@ CHILD_FEATURE_LINES = [
 ]
 
 
-def load_name_table(csv_path, name_col):
+def load_name_table(csv_path: Path, name_col: int) -> dict[int, str]:
   """
   读取配置表，建立编号到名字的映射
   参数：
@@ -126,7 +145,7 @@ def load_name_table(csv_path, name_col):
   return table
 
 
-def load_config_tables():
+def load_config_tables() -> dict[str, dict[int, str]]:
   """
   读取拼提示词要用到的各张配置表
   参数：无
@@ -140,7 +159,7 @@ def load_config_tables():
   }
 
 
-def find_character_csv(key):
+def find_character_csv(key: str) -> Path | None:
   """
   根据角色名或编号查找角色 CSV 文件
   参数：
@@ -161,7 +180,7 @@ def find_character_csv(key):
   return None
 
 
-def lookup_name(table, value):
+def lookup_name(table: dict[int, str], value: str) -> str:
   """
   按编号在配置表里查名字
   参数：
@@ -172,7 +191,9 @@ def lookup_name(table, value):
   return table.get(int(value), "") if value.isdigit() else ""
 
 
-def load_character_info(csv_path, tables):
+def load_character_info(
+    csv_path: Path, tables: dict[str, dict[int, str]]
+) -> CharacterInfo:
   """
   从角色 CSV 中提取生成立绘所需的外貌信息
   参数：
@@ -227,7 +248,7 @@ def load_character_info(csv_path, tables):
   return info
 
 
-def find_existing_portrait(name):
+def find_existing_portrait(name: str) -> Path | None:
   """
   在 image/立绘 下查找该角色已有的立绘，用作参考图
   参数：
@@ -240,7 +261,9 @@ def find_existing_portrait(name):
   return None
 
 
-def build_prompt(info, variant, extra, transparent):
+def build_prompt(
+    info: CharacterInfo, variant: str, extra: str, transparent: bool
+) -> str:
   """
   拼接图像生成提示词
   参数：
@@ -283,7 +306,7 @@ def build_prompt(info, variant, extra, transparent):
   return "\n".join(lines)
 
 
-def display_path(path):
+def display_path(path: Path) -> str:
   """
   把路径转成便于阅读的形式
   参数：
@@ -296,7 +319,7 @@ def display_path(path):
     return str(path)
 
 
-def resolve_child_source(key):
+def resolve_child_source(key: str) -> tuple[Path, str] | None:
   """
   解析儿童版模式的原图
   参数：
@@ -316,7 +339,7 @@ def resolve_child_source(key):
   return (existing, key) if existing else None
 
 
-def load_flat_image(path, crop=False):
+def load_flat_image(path: Path, crop: bool = False) -> Image.Image:
   """
   读取图片并铺到白底上，去掉透明通道（部分 PNG 的透明像素里残留着杂色，接口若丢弃 alpha 通道就会被模型看到）
   参数：
@@ -339,7 +362,7 @@ def load_flat_image(path, crop=False):
   return canvas.convert("RGB")
 
 
-def resize_to_height(image, height):
+def resize_to_height(image: Image.Image, height: int) -> Image.Image:
   """
   按比例把图片缩放到指定高度
   参数：
@@ -351,7 +374,7 @@ def resize_to_height(image, height):
   return image.resize((width, height), Image.Resampling.LANCZOS)
 
 
-def image_to_png_bytes(image):
+def image_to_png_bytes(image: Image.Image) -> bytes:
   """
   把图片编码为 PNG 二进制，用于直接上传
   参数：
@@ -363,7 +386,7 @@ def image_to_png_bytes(image):
   return buffer.getvalue()
 
 
-def build_child_ref_sheet(paths):
+def build_child_ref_sheet(paths: list[Path]) -> Image.Image:
   """
   把儿童参考图裁出人物、统一身高后拼成一张白底比例对照表
   参数：
@@ -400,7 +423,9 @@ def build_child_ref_sheet(paths):
   return sheet
 
 
-def prepare_child_ref_sheet(args):
+def prepare_child_ref_sheet(
+    args: argparse.Namespace,
+) -> tuple[Path, Image.Image | None]:
   """
   读取参考目录中已拼好的儿童参考对照表；指定 --rebuild-child-ref-sheet 时先用目录中的参考图重新拼接并覆盖保存
   参数：
@@ -441,7 +466,7 @@ def prepare_child_ref_sheet(args):
   return sheet_path, sheet
 
 
-def child_head_ratio(age):
+def child_head_ratio(age: int) -> str:
   """
   按目标年龄给出头身比的写法
   参数：
@@ -455,7 +480,15 @@ def child_head_ratio(age):
   return "约5头身"
 
 
-def build_child_prompt(name, race, sex, age, has_sheet, extra, transparent):
+def build_child_prompt(
+    name: str,
+    race: str,
+    sex: str,
+    age: int,
+    has_sheet: bool,
+    extra: str,
+    transparent: bool,
+) -> str:
   """
   拼接儿童版提示词：画风、外貌、服装、姿势以第1张原图为准，第2张对照表只用于理解儿童的年龄感与身体比例
   参数：
@@ -533,7 +566,7 @@ def build_child_prompt(name, race, sex, age, has_sheet, extra, transparent):
   return "\n".join(lines)
 
 
-def save_compare_image(images, save_path):
+def save_compare_image(images: list[Image.Image], save_path: Path) -> None:
   """
   把若干张白底图等高横向拼接成对比图（图与图之间用灰色细缝隔开），便于并排验收
   参数：
@@ -551,7 +584,7 @@ def save_compare_image(images, save_path):
   canvas.save(save_path)
 
 
-def load_api_config(cli_base_url):
+def load_api_config(cli_base_url: str | None) -> tuple[str, str | None]:
   """
   读取 API 密钥与接口地址
   参数：
@@ -583,7 +616,12 @@ def load_api_config(cli_base_url):
   return api_key, base_url
 
 
-def request_images(client, args, prompt, inputs):
+def request_images(
+    client: openai.OpenAI,
+    args: argparse.Namespace,
+    prompt: str,
+    inputs: Sequence[Path | tuple[str, bytes, str]],
+) -> list[bytes]:
   """
   调用图像接口生成图片；有输入图片时走 images.edit，否则走 images.generate
   参数：
@@ -622,7 +660,13 @@ def request_images(client, args, prompt, inputs):
   return results
 
 
-def call_image_api(client, args, name, prompt, inputs):
+def call_image_api(
+    client: openai.OpenAI,
+    args: argparse.Namespace,
+    name: str,
+    prompt: str,
+    inputs: Sequence[Path | tuple[str, bytes, str]],
+) -> list[bytes]:
   """
   调用图像接口并处理失败情况
   参数：
@@ -647,7 +691,13 @@ def call_image_api(client, args, name, prompt, inputs):
   return images
 
 
-def save_results(save_dir, base_name, prompt_text, images, name):
+def save_results(
+    save_dir: Path,
+    base_name: str,
+    prompt_text: str,
+    images: list[bytes],
+    name: str,
+) -> list[Path]:
   """
   保存生成的图片与提示词
   参数：
@@ -671,7 +721,12 @@ def save_results(save_dir, base_name, prompt_text, images, name):
   return saved_paths
 
 
-def generate_for_character(client, args, key, tables):
+def generate_for_character(
+    client: openai.OpenAI | None,
+    args: argparse.Namespace,
+    key: str,
+    tables: dict[str, dict[int, str]],
+) -> bool:
   """
   为单个角色生成立绘并保存
   参数：
@@ -740,7 +795,14 @@ def generate_for_character(client, args, key, tables):
   return True
 
 
-def generate_child_portrait(client, args, key, tables, sheet_path, ref_sheet):
+def generate_child_portrait(
+    client: openai.OpenAI | None,
+    args: argparse.Namespace,
+    key: str,
+    tables: dict[str, dict[int, str]],
+    sheet_path: Path,
+    ref_sheet: Image.Image | None,
+) -> bool:
   """
   把一张原图改画成该角色儿童时期的全身立绘，并保存结果、提示词与白底对比图
   参数：
@@ -828,7 +890,7 @@ def generate_child_portrait(client, args, key, tables, sheet_path, ref_sheet):
   return True
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
   """
   解析命令行参数
   参数：无
@@ -936,7 +998,7 @@ def parse_args():
   return args
 
 
-def main():
+def main() -> int:
   """
   主函数：逐个角色生成立绘
   参数：无

@@ -11,7 +11,7 @@ csv_path = 'output.csv'
 
 
 # 读取txt文件并按行存入列表
-def read_txt_to_list(txt_path):
+def read_txt_to_list(txt_path: str) -> list[str]:
   """
   按空行把文本文件分段：每段去掉首尾空白，段内换行转写成反斜杠加 n 两个字符
   Keyword arguments:
@@ -49,7 +49,7 @@ def read_txt_to_list(txt_path):
 
 
 # 将列表数据保存到csv文件
-def save_list_to_csv(data, csv_path):
+def save_list_to_csv(data: list[str], csv_path: str) -> None:
   """
   把每段写成 csv 的一行：从 1 起的序号、101、1、high_1、该段；覆盖原有文件
   Keyword arguments:

@@ -12,7 +12,7 @@ BODY_PART_DIR = r"data\talk_common\body_part"
 COMMON_FILE = "common_s_A.csv"
 
 
-def get_common_contexts(common_file_path):
+def get_common_contexts(common_file_path: str) -> set[str]:
   """
   功能：读取common_s_A.csv文件，收集所有context列的内容
   输入参数：
@@ -33,7 +33,7 @@ def get_common_contexts(common_file_path):
   return common_contexts
 
 
-def clean_csv_file(file_path, common_contexts):
+def clean_csv_file(file_path: str, common_contexts: set[str]) -> None:
   """
   功能：删除csv文件中context列在common_contexts中的行，并覆盖原文件。
   输入参数：

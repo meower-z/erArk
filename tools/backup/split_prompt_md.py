@@ -14,12 +14,31 @@ MD提示词文件拆分工具
     python split_prompt_md.py .github/prompts/角色素质/指令前提分支_全陷落(带陌生).md --output ./output
 """
 
+from __future__ import annotations
+
 import argparse
 import re
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import TypedDict
+
+  class MdSection(TypedDict):
+    """一个分支：分支名与含标题行的完整内容"""
+
+    name: str
+    content: str
+
+  class ParsedMd(TypedDict):
+    """parse_md_file 的解析结果"""
+
+    header: str
+    split_level: int
+    sections: list[MdSection]
 
 
-def get_header_level(line):
+def get_header_level(line: str) -> int:
   """
   获取标题的层级（#的数量）
 
@@ -36,7 +55,7 @@ def get_header_level(line):
   return 0
 
 
-def parse_md_file(file_path):
+def parse_md_file(file_path: str) -> ParsedMd | None:
   """
   解析MD文件，提取文件头和各个分支内容
 
@@ -121,7 +140,7 @@ def parse_md_file(file_path):
   return result
 
 
-def sanitize_filename(name):
+def sanitize_filename(name: str) -> str:
   """
   清理文件名，移除不合法字符
 
@@ -140,7 +159,7 @@ def sanitize_filename(name):
   return name
 
 
-def split_md_file(input_file, output_dir=None):
+def split_md_file(input_file: str, output_dir: str | None = None) -> None:
   """
   拆分MD文件到多个单文件
 

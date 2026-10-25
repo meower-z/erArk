@@ -26,12 +26,50 @@ ENSEMBLE: 对每个关键点，取所有模型中归一化置信度最高的结�
 输出：每个角色生成对比可视化图片，保存在 image/立绘/模型测试用/多模型对比结果/
 """
 
+from __future__ import annotations
+
 import os
 import json
 import cv2
 import numpy as np
 import time
 import traceback
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import TypedDict
+
+  from rtmlib import RTMO, Body, BodyWithFeet, Custom, Wholebody
+  from ultralytics import YOLO
+
+  class ModelInfo(TypedDict):
+    """main 里 models 的一项：模型实例与它的显示名、推理接口类型"""
+
+    name: str
+    full_name: str
+    model: Wholebody | Body | BodyWithFeet | RTMO | Custom | YOLO
+    type: str
+    extract_17: bool
+
+  class ModelResult(TypedDict):
+    """一个模型在一张图上的识别结果"""
+
+    kps: np.ndarray
+    scores: np.ndarray
+    norm_scores: np.ndarray
+    avg: float
+    norm_avg: float
+
+  class EnsembleResult(TypedDict):
+    """build_ensemble 的集成结果"""
+
+    kps: np.ndarray
+    scores: np.ndarray
+    raw_scores: np.ndarray
+    norm_scores: np.ndarray
+    source_models: list[str]
+    avg: float
+
 
 # COCO 17 关键点名称（索引 0-16 对应身体部位）
 COCO_KEYPOINTS = [
@@ -146,7 +184,7 @@ MODEL_COLORS = {
 }
 
 
-def sigmoid(x):
+def sigmoid(x: np.ndarray) -> np.ndarray:
   """
   Sigmoid函数，将logit值转为0-1概率
 
@@ -156,7 +194,7 @@ def sigmoid(x):
   return 1.0 / (1.0 + np.exp(-np.clip(x, -20, 20)))
 
 
-def load_image(image_path):
+def load_image(image_path: str) -> np.ndarray | None:
   """
   加载图像（支持中文路径）
 
@@ -168,7 +206,7 @@ def load_image(image_path):
   return image
 
 
-def save_image(path, image):
+def save_image(path: str, image: np.ndarray) -> bool:
   """
   保存图像到指定路径（支持中文路径）
 
@@ -185,8 +223,12 @@ def save_image(path, image):
 
 
 def draw_keypoints_on_image(
-    image, keypoints_17, scores_17, model_name, threshold=0.3
-):
+    image: np.ndarray,
+    keypoints_17: np.ndarray,
+    scores_17: np.ndarray,
+    model_name: str,
+    threshold: float = 0.3,
+) -> np.ndarray:
   """
   在图像上绘制COCO 17关键点和骨架
 
@@ -315,7 +357,9 @@ def draw_keypoints_on_image(
   return img
 
 
-def normalize_scores(scores, model_key, needs_sigmoid_keys):
+def normalize_scores(
+    scores: np.ndarray, model_key: str, needs_sigmoid_keys: set[str]
+) -> np.ndarray:
   """
   归一化分数：对RTMW系列模型应用sigmoid，其他保持不变
 
@@ -330,7 +374,9 @@ def normalize_scores(scores, model_key, needs_sigmoid_keys):
   return scores.copy()
 
 
-def build_ensemble(results, needs_sigmoid_keys):
+def build_ensemble(
+    results: dict[str, ModelResult], needs_sigmoid_keys: set[str]
+) -> EnsembleResult:
   """
   构建集成结果：对每个关键点，取归一化置信度最高的模型的坐标和分数
 
@@ -382,8 +428,12 @@ def build_ensemble(results, needs_sigmoid_keys):
 
 
 def create_score_table_image(
-    results, models, char_name, needs_sigmoid_keys, ensemble_result=None
-):
+    results: dict[str, ModelResult],
+    models: dict[str, ModelInfo],
+    char_name: str,
+    needs_sigmoid_keys: set[str],
+    ensemble_result: EnsembleResult | None = None,
+) -> np.ndarray:
   """
   生成所有模型的归一化置信度对比表格图
 
@@ -664,7 +714,9 @@ def create_score_table_image(
   return summary
 
 
-def run_yolo11_inference(model, image):
+def run_yolo11_inference(
+    model: YOLO, image: np.ndarray
+) -> tuple[np.ndarray, np.ndarray] | tuple[None, None]:
   """
   使用YOLO11-pose模型进行推理
 
@@ -690,7 +742,9 @@ def run_yolo11_inference(model, image):
   return None, None
 
 
-def run_rtmo_inference(model, image):
+def run_rtmo_inference(
+    model: RTMO, image: np.ndarray
+) -> tuple[np.ndarray, np.ndarray] | tuple[None, None]:
   """
   使用RTMO单阶段模型进行推理
 
