@@ -648,8 +648,8 @@ def main() -> None:
 
   log("全部完成。可使用 snakeviz / py-spy / scalene 进行进一步分析。")
 
-  # 退出：导入链中的 handle_instruct 起了非守护线程 init_instruct_handle_thread，
-  # 现有代码里这个线程不结束，解释器正常退出会一直等它，所以用 os._exit 强制结束进程
+  # 退出：导入链中的 handle_instruct 起的 init_instruct_handle_thread 是守护线程，
+  # 解释器正常退出不等它；这里仍用 os._exit 直接结束进程，不做解释器的退出清理
   sys.stdout.flush()
   os._exit(0)
 
