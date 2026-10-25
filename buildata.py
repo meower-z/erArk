@@ -331,7 +331,6 @@ def csv_2_constand() -> str:
       os.path.join("tools", "csv", "premise.csv"), "r", encoding="utf-8"
   ) as f:
     a = f.readlines()
-    # print(a)
     f.close()
 
   indent = class_indent(os.path.join("Script", "Core", "constant_promise.py"))
@@ -387,7 +386,6 @@ def constand_effect_2_csv() -> str:
       if line[-3] == '"' and " " in line:
         effect_text = line.split('"')[-4].strip().split(" ")
         if len(effect_text) == 2:
-          # print(f"debug effect_text = {effect_text}")
           out_str += f"{effect_text[0]},{effect_text[1]}\n"
         else:
           out_str += f"二段结算,{str(effect_text)[2:-2]}\n"
@@ -395,7 +393,6 @@ def constand_effect_2_csv() -> str:
         effect_name = line.split('"')[-1].strip().split(" ")[0]
         effect_cid = line.split('"')[-1].strip().split(" ")[-1]
         out_str += f"{effect_cid},{effect_name},"
-        # print(f"debug {effect_cid},{effect_name},")
     elif len(line) == 1:
       out_str += "\n"
 
@@ -424,14 +421,12 @@ def csv_2_constand_effect() -> str:
       os.path.join("tools", "csv", "Effect.csv"), "r", encoding="utf-8"
   ) as f:
     a = f.readlines()
-    # print(a)
     f.close()
 
   indent = class_indent(os.path.join("Script", "Core", "constant_effect.py"))
   out_str = "\n"
   for line in a:
     effect_text = line.strip().split(",")
-    # print(f"debug promise_text = {promise_text}")
     if len(effect_text) == 1:
       out_str += "\n"
     elif effect_text[0] != "cid":
