@@ -1,3 +1,5 @@
+"""场景地址、地图地址、数值与年龄素质的显示文本"""
+
 from types import FunctionType
 from typing import List
 from Script.Core import (

@@ -1,3 +1,5 @@
+"""其他通用前提的处理函数"""
+
 import datetime
 from functools import wraps
 from types import FunctionType

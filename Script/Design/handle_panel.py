@@ -1,3 +1,5 @@
+"""面板注册装饰器 add_panel"""
+
 from functools import wraps
 from typing import Callable, ParamSpec, TypeVar
 from Script.Core import constant

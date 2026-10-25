@@ -1,3 +1,5 @@
+"""角色移动：主角寻路、通用角色移动控制、撤销移动计划与移动到私密房间的结算"""
+
 from Script.Core import cache_control, constant, game_type, get_text
 from Script.Design import map_handle, update
 from Script.UI.Moudle import draw

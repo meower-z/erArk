@@ -1,3 +1,5 @@
+"""角色服装：换装、穿脱衣物、衣柜的读写与衣物精液，以及玩家获得角色的内裤与袜子"""
+
 import random
 from types import FunctionType
 from Script.Core import (

@@ -1,3 +1,5 @@
+"""绘制口上文本里图片标签对应的图片，并把标签从文本中去掉"""
+
 from Script.UI.Moudle import draw
 import re
 

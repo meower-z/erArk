@@ -1,3 +1,5 @@
+"""二段行为：获得二段行为、第二结算（高潮、阴茎位置、刻印、道具）与二段行为的口上和效果"""
+
 from __future__ import annotations
 
 from types import FunctionType

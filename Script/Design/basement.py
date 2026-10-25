@@ -1,3 +1,5 @@
+"""罗德岛基地的数据刷新与结算：设施数值与效率、每日资源、工作干员、母乳与精液转化、公务、粉红凭证、待办事项与设施损坏"""
+
 import random
 from types import FunctionType
 from typing import Dict, Optional

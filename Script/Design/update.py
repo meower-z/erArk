@@ -1,3 +1,5 @@
+"""游戏流程刷新：推进游戏时间并运行角色行为循环"""
+
 import logging
 from Script.Design import character_behavior, game_time
 from Script.Core import py_cmd, cache_control

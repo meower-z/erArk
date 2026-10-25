@@ -1,3 +1,5 @@
+"""地图与场景：地图数据与场景路径的查询、寻路、场景内角色的查询与角色移动"""
+
 import os
 import json
 from Script.Core import cache_control, game_type, get_text, constant

@@ -1,3 +1,5 @@
+"""素质的获得、查询与结算"""
+
 from types import FunctionType
 from Script.Design import attr_calculation, handle_premise
 from Script.System.First_Record_System import first_record_handle

@@ -1,3 +1,5 @@
+"""前提与结算代码的开发辅助脚本：按顶部的 mode 生成前提处理函数，或在 constant_promise.py、constant_effect.py 与 csv 表之间互转"""
+
 import ast
 import os
 import re
@@ -313,6 +315,13 @@ def constand_promise_2_csv() -> str:
 
 
 def csv_2_constand() -> str:
+  """
+  csv转前提文件（mode 3）：读 tools/csv/premise.csv，把每个前提写成常量与说明行，接到 constant_promise.py 末尾
+  Keyword arguments:
+  无
+  Return arguments:
+  str -- 接到文件末尾的文本
+  """
   with open(
       os.path.join("tools", "csv", "premise.csv"), "r", encoding="utf-8"
   ) as f:
@@ -347,6 +356,13 @@ def csv_2_constand() -> str:
 
 
 def constand_effect_2_csv() -> str:
+  """
+  结算文件转csv（mode 4）：读 constant_effect.py 里第一处「二段结算」之前的部分，重新生成 ArkEditor 的结算表 Effect.csv
+  Keyword arguments:
+  无
+  Return arguments:
+  str -- 写入的结算表文本
+  """
   with open(
       os.path.join("Script", "Core", "constant_effect.py"),
       "r",
@@ -392,6 +408,13 @@ def constand_effect_2_csv() -> str:
 
 
 def csv_2_constand_effect() -> str:
+  """
+  csv转结算文件（mode 5）：读 tools/csv/Effect.csv，把每个结算写成常量与说明行，接到 constant_effect.py 里 BehaviorEffect 类的末尾
+  Keyword arguments:
+  无
+  Return arguments:
+  str -- 接到类末尾的文本
+  """
   with open(
       os.path.join("tools", "csv", "Effect.csv"), "r", encoding="utf-8"
   ) as f:
