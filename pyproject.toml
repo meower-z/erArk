@@ -16,6 +16,7 @@ follow_imports = "silent"
 # 编辑器 tools/ArkEditor 以自己的目录为脚本目录运行，按顶层模块名导入同目录的模块（如 cache_control、ui.window）
 # tests/education 的脚本按顶层模块名导入 _bootstrap 与 official_event_check，tests/_mypy_stubs 的存根把这两个名字指到真实模块
 # tools/MCP/prts_character_downloader 的脚本按顶层模块名导入同目录的 downloader 与 server，tools/backup/rename_and_organize_images.py 把 tools 目录加进 sys.path 后导入 download_prts_character_image，tests/_mypy_stubs 里同名的存根也把这三个名字指到真实模块
+# tests/fast/arkeditor_file_load_driver.py 作为脚本运行，按顶层模块名导入同目录的 arkeditor_effect_menu_driver，tests/_mypy_stubs 里同名的存根把它指到真实模块
 mypy_path = ["tools/ArkEditor", "tests/_mypy_stubs"]
 
 # lint 用的虚拟环境不装游戏、测试与工具脚本运行所需的这些第三方包，mypy 找不到它们或它们的类型存根
