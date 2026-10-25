@@ -1,13 +1,11 @@
 # -*- coding: UTF-8 -*-
 """
-ArkEditor 载入文件后的面板状态、前提列表在没有选中条目时的操作、新建属性文件
+ArkEditor 的离屏测试：载入文件后的面板、没有选中条目时的前提列表、新建属性文件、前提组的保存、官方事件编辑之后的主窗口列表、新增与复制条目后的面板
 ==========================================================================
-把 tools/ArkEditor 复制到临时目录，写两份事件文件、一份口上文件与一份属性文件，
-在子进程里由 arkeditor_file_load_driver.py 离屏驱动编辑器：
-载入任一文件后不再显示上一个文件的条目、退出文本预览，新增条目并保存时不写入上一个文件的文本；
-没有选中条目、或选中的条目已删除时，前提列表的各操作不抛异常、不改数据也不写文件；
-新建属性文件读入模板，应用并保存时另存为新文件，模板不变。
-PySide6 在本机无法导入时跳过。
+setUp 把 tools/ArkEditor 复制到临时目录。setUp 在数据目录里写三个事件文件和口上文件 talk.csv。属性文件
+chara.csv 复制自 example 下的模板。官方事件目录 official_event 复制自 data/official_event。
+各测试在子进程里运行 arkeditor_file_load_driver.py 或 arkeditor_entry_edit_driver.py，
+由它们离屏驱动编辑器。各测试都检查驱动没有记下槽函数抛出的异常。PySide6.QtWidgets 无法导入时跳过。
 """
 
 import json
@@ -23,6 +21,10 @@ from tests.world import ROOT
 
 DRIVER = os.path.join(ROOT, "tests", "fast", "arkeditor_file_load_driver.py")
 """ 离屏驱动编辑器的脚本 """
+ENTRY_DRIVER = os.path.join(
+    ROOT, "tests", "fast", "arkeditor_entry_edit_driver.py"
+)
+""" 第二个驱动脚本，运行 premise_group、official_selector 与 add_copy 三个场景 """
 CHARA_TEMPLATE = "0999_模板人物属性文件.csv"
 """ 新建属性文件读入的模板文件名 """
 EVENTS = {
@@ -62,6 +64,24 @@ OTHER_EVENTS = {
     },
 }
 """ 第二个事件文件：一条事件 """
+CVE_EVENTS = {
+    "event-c": {
+        "uid": "event-c",
+        "adv_id": "0",
+        "behavior_id": "share_blankly",
+        "start": 0,
+        "type": 0,
+        "text": "带综合数值结算与前提的事件",
+        "premise": {"sys_0": 1, "CVP_A1_Flag|0_G_5": 1},
+        "effect": {"0": 1, "CVE_A1_Flag|0_G_5": 1},
+    },
+}
+""" 第三个事件文件 event_cve.json：事件 event-c 的第二个前提与第二个结算是口上用flag的综合型基础数值前提与结算 """
+PREMISE_GROUP_FILES = (
+    "PremiseGroup.csv",
+    os.path.join("csv", "PremiseGroup.csv"),
+)
+""" 编辑器目录下的两个前提组文件：根目录下的 PremiseGroup.csv 与编辑器启动时读入的 csv/PremiseGroup.csv """
 TALK_CSV = (
     "cid,behavior_id,adv_id,premise,context\n"
     "口上id,触发口上的行为id,口上限定的剧情npcid,前提id,口上内容\n"
@@ -106,6 +126,7 @@ class ArkEditorFileLoadTest(FastTestCase):
     for name, events in (
         ("event1.json", EVENTS),
         ("event2.json", OTHER_EVENTS),
+        ("event_cve.json", CVE_EVENTS),
     ):
       with open(
           os.path.join(self.data_dir, name), "w", encoding="utf-8"
@@ -119,20 +140,35 @@ class ArkEditorFileLoadTest(FastTestCase):
         os.path.join(ROOT, "example", CHARA_TEMPLATE),
         os.path.join(self.data_dir, "chara.csv"),
     )
+    shutil.copytree(
+        os.path.join(ROOT, "data", "official_event"),
+        os.path.join(self.data_dir, "official_event"),
+    )
+    # 各前提组文件原有的文字，文件不存在时为 None
+    self.premise_group_files: dict[str, str | None] = {}
+    for name in PREMISE_GROUP_FILES:
+      path = os.path.join(self.editor_dir, name)
+      self.premise_group_files[name] = None
+      if os.path.exists(path):
+        with open(path, encoding="utf-8") as group_file:
+          self.premise_group_files[name] = group_file.read()
 
-  def drive(self, scenario: str, variant: str = "") -> dict[str, Any]:
+  def drive(
+      self, scenario: str, variant: str = "", driver: str = DRIVER
+  ) -> dict[str, Any]:
     """
-    在子进程里运行驱动脚本的一个场景
+    在子进程里运行驱动脚本的一个场景。子进程的返回码不为 0 时测试失败。
     Keyword arguments:
-    scenario -- 场景名
-    variant -- 场景参数
+    scenario -- str，场景名
+    variant -- str，场景参数，默认为空字符串
+    driver -- str，驱动脚本的路径，默认为 DRIVER
     Return arguments:
-    dict[str, Any] -- 驱动脚本打印的观察结果
+    dict[str, Any] -- 驱动脚本输出的最后一行 JSON
     """
     done = subprocess.run(
         [
             sys.executable,
-            DRIVER,
+            driver,
             self.editor_dir,
             self.data_dir,
             scenario,
@@ -168,10 +204,10 @@ class ArkEditorFileLoadTest(FastTestCase):
     self.assertEqual(after_buttons, dict(opened, save_button=""))
     self.assertEqual(result["event_premises_after"], result["event_premises"])
     self.assertEqual(result["dialogs"], [])
-    self.assertIsNone(result["premise_group_file"])
+    self.assertEqual(result["premise_group_files"], self.premise_group_files)
 
   def test_new_entry_after_other_file(self) -> None:
-    """先开事件文件、点选事件并打开文本预览，再开口上文件或另一个事件文件：回到编辑模式，文本框与注释框为空，新增条目并保存后新条目的文本为空"""
+    """开第二个文件后回到编辑模式。文本框与注释框为空。新增条目保存后是默认文本。"""
     for second in ("talk", "event"):
       with self.subTest(second=second):
         result = self.drive("new_entry_after_event", second)
@@ -190,14 +226,14 @@ class ArkEditorFileLoadTest(FastTestCase):
           self.assertEqual(events["event-3"]["text"], "另一个文件的事件")
           new_events = [v for k, v in events.items() if k != "event-3"]
           self.assertEqual(len(new_events), 1)
-          self.assertEqual(new_events[0]["text"], "")
+          self.assertEqual(new_events[0]["text"], "空事件")
           self.assertEqual(new_events[0]["comment"], "")
         else:
           # 前五行是表头，之后每行一条口上，最后一列是口上内容
           rows = [row.split(",") for row in saved.splitlines()[5:]]
           self.assertEqual([row[0] for row in rows], ["1", "2", "3"])
           self.assertEqual(rows[1][-1], "第二条口上")
-          self.assertEqual(rows[2][-1], "")
+          self.assertEqual(rows[2][-1], "空口上")
 
   def test_premise_list_without_selected_entry(self) -> None:
     """未选条目、或删除了选中的条目时，前提列表的各操作不抛异常、不改数据、不开窗口；选中剩下的条目后右键删除照常删掉前提"""
@@ -214,7 +250,9 @@ class ArkEditorFileLoadTest(FastTestCase):
         self.assertEqual(deleted, {remaining_id: remaining_premises})
         self.assertEqual(result["premises_after_deleted"], deleted)
         self.assertEqual(result["dialogs_after_deleted"], [])
-        self.assertIsNone(result["premise_group_file"])
+        self.assertEqual(
+            result["premise_group_files"], self.premise_group_files
+        )
         # 删除了选中的条目后，右键菜单的删除与粘贴不可选
         self.assertEqual(
             result["menus"][:3],
@@ -256,3 +294,88 @@ class ArkEditorFileLoadTest(FastTestCase):
         self.assertEqual(result["template_after"], result["template_before"])
         self.assertIn("AdvNpc,int,8002,", result["new_file"])
         self.assertIn("Name,str,测试新角色,", result["new_file"])
+
+  def test_premise_group_saved_to_loaded_file(self) -> None:
+    """新前提组追加到 csv/PremiseGroup.csv 末尾。根目录下的 PremiseGroup.csv 不变。重开编辑器后读得到新组。"""
+    result = self.drive("premise_group", "add", ENTRY_DRIVER)
+    self.assertEqual(result["errors"], [])
+    start = result["groups_at_start"]
+    added = {
+        cid: premises
+        for cid, premises in result["groups_after_add"].items()
+        if cid not in start
+    }
+    self.assertEqual(list(added.values()), [["sys_0", "sys_4"]])
+    cid = list(added)[0]
+    loaded_file = PREMISE_GROUP_FILES[1]
+    self.assertEqual(
+        result["premise_group_files"],
+        dict(
+            self.premise_group_files,
+            **{
+                loaded_file: f"{self.premise_group_files[loaded_file]}"
+                f"{cid},sys_0&sys_4\n"
+            },
+        ),
+    )
+    restart = self.drive("premise_group", "restart", ENTRY_DRIVER)
+    self.assertEqual(restart["errors"], [])
+    self.assertEqual(restart["groups_at_start"], result["groups_after_add"])
+
+  def test_main_lists_after_official_selector(self) -> None:
+    """官方事件编辑建过口上用flag的结算或前提后，主窗口列表每行的文字都在文字表里。右键复制记下这一项。右键删除、双击与拖动改动事件的数据。"""
+    for which, other in (("effect", "0"), ("premise", "sys_0")):
+      key = {"effect": "CVE_A1_Flag|0_G_5", "premise": "CVP_A1_Flag|0_G_5"}[
+          which
+      ]
+      for act in ("copy", "delete", "double", "drag"):
+        with self.subTest(which=which, act=act):
+          result = self.drive(
+              "official_selector", f"{which}:{act}", ENTRY_DRIVER
+          )
+          self.assertEqual(result["errors"], [])
+          self.assertEqual(len(result["after_selector"]), 2)
+          self.assertEqual(result["after_selector_known"], [True, True])
+          ids = result["entry"][which]
+          shown = result["after_selector"]
+          if act == "copy":
+            self.assertEqual(result["copied"][which], key)
+            self.assertEqual(ids, [other, key])
+          elif act == "drag":
+            self.assertEqual(ids, [key, other])
+            self.assertEqual(result["after_action"], [shown[1], shown[0]])
+          else:
+            self.assertEqual(ids, [other])
+          if act == "delete" or (act == "double" and which == "effect"):
+            # 双击前提行删掉前提后会打开前提窗口，由这个窗口重画列表。驱动不运行这个窗口，所以这里不查前提列表。
+            self.assertEqual(result["after_action"], [shown[0]])
+
+  def test_panels_after_add_or_copy(self) -> None:
+    """新增或复制条目后，面板显示新条目。保存前后条目数据相同。保存的文件里新条目是自己的文本。"""
+    for kind in ("event", "talk"):
+      for act in ("add", "copy"):
+        for entry_point in ("button", "menu"):
+          with self.subTest(kind=kind, act=act, entry_point=entry_point):
+            result = self.drive(
+                "add_copy", f"{kind}:{act}:{entry_point}", ENTRY_DRIVER
+            )
+            self.assertEqual(result["errors"], [])
+            after = result["after_act"]
+            self.assertNotEqual(
+                after["select_id"], result["selected"]["select_id"]
+            )
+            for name, value in result["expected_panels"].items():
+              self.assertEqual(after[name], value, name)
+            self.assertEqual(after["save_button"], "保存*")
+            entries = result["entries_after_act"]
+            self.assertEqual(result["entries_after_save"], entries)
+            new_entry = entries[after["select_id"]]
+            if kind == "event":
+              saved = json.loads(result["saved"])[after["select_id"]]
+              self.assertEqual(saved["text"], new_entry["text"])
+              self.assertEqual(saved["comment"], new_entry["comment"])
+            else:
+              # 新口上在保存的 CSV 的最后一行。这一行的最后一列是口上内容。
+              row = result["saved"].splitlines()[-1].split(",")
+              self.assertEqual(row[0], after["select_id"])
+              self.assertEqual(row[-1], new_entry["text"])

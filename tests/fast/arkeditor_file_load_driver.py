@@ -30,6 +30,13 @@ PREMISE_BUTTONS = (
     "玩家触发的该指令",
 )
 """ 前提列表上要按的按钮 """
+PREMISE_GROUP_FILES = (
+    "PremiseGroup.csv",
+    os.path.join("csv", "PremiseGroup.csv"),
+)
+"""
+场景记下文字的两个前提组文件，路径相对编辑器目录：根目录下的 PremiseGroup.csv 与编辑器启动时读入的 csv/PremiseGroup.csv
+"""
 
 
 class FileLoadDriver(EditorDriver):
@@ -229,7 +236,9 @@ def chara_after_event(driver: FileLoadDriver, data_dir: str, _: str) -> None:
   driver.press_premise_buttons("chara:")
   driver.result["chara_after_buttons"] = driver.observe()
   driver.result["event_premises_after"] = driver.data_premises()
-  driver.result["premise_group_file"] = file_text_or_none("PremiseGroup.csv")
+  driver.result["premise_group_files"] = {
+      name: file_text_or_none(name) for name in PREMISE_GROUP_FILES
+  }
 
 
 def new_entry_after_event(
@@ -294,7 +303,9 @@ def premise_list_actions(
   driver.press_premise_buttons("deleted:")
   driver.result["premises_after_deleted"] = driver.data_premises()
   driver.result["dialogs_after_deleted"] = list(driver.result["dialogs"])
-  driver.result["premise_group_file"] = file_text_or_none("PremiseGroup.csv")
+  driver.result["premise_group_files"] = {
+      name: file_text_or_none(name) for name in PREMISE_GROUP_FILES
+  }
   driver.select_row(0)
   driver.result["remaining_selected"] = driver.observe()
   driver.step("remaining:删除", lambda: driver.premise_right_click("删除"))
