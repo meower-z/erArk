@@ -29,6 +29,10 @@ from PySide6.QtCore import Signal
 from PySide6.QtGui import QFont
 import cache_control
 import game_type
+from ui.premise_menu import PremiseMenu
+from ui.CVP_menu import CVPMenu
+from ui.effect_menu import EffectMenu
+from ui.CVE_menu import CVEMenu
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -258,15 +262,13 @@ class OfficialEventEditWidget(QWidget):
       dialog_maker: "Callable[[], QDialog]",
   ) -> None:
     """
-    用临时载体顶替全局数据，打开一个既有的选择器弹窗，关闭后把结果写回输入框
+    让一个既有的选择器弹窗编辑输入框 edit 里的前提或结算。弹窗运行期间，cache_control 的五个属性是临时值。
+    弹窗关闭或抛出异常后，本方法换回这些属性的原值，原值为 None 的列表面板除外。
     参数:
         edit: QLineEdit 要写回的输入框
-        is_premise: bool 操作的是前提还是结算
-        dialog_maker: Callable 造弹窗的函数（在载体装好之后才调用）
+        is_premise: bool 为 True 时编辑前提，为 False 时编辑结算
+        dialog_maker: Callable[[], QDialog] 造选择器弹窗的无参函数，在临时载体装好之后才调用
     返回: 无
-    功能:
-        五个全局都要存下来再还原：选择器认的是
-           now_edit_type_flag / now_event_data / now_select_id 与两个列表面板
     """
     old_flag = cache_control.now_edit_type_flag
     old_event_data = cache_control.now_event_data
@@ -290,10 +292,16 @@ class OfficialEventEditWidget(QWidget):
       cache_control.now_edit_type_flag = old_flag
       cache_control.now_event_data = old_event_data
       cache_control.now_select_id = old_select_id
+      # 选择器弹窗可能改写 cache_control.premise_data 或 cache_control.effect_data
+      # 里共用的显示文字。主窗口的列表按这段文字反查一行的 id，因此换回列表后要重画它们。
+      # 前提列表的 update() 直接索引当前选中的条目。因此本方法在 selected_data() 不为 None 时才重画前提列表。
       if old_premise_list is not None:
         cache_control.item_premise_list = old_premise_list
+        if old_premise_list.selected_data() is not None:
+          old_premise_list.update()
       if old_effect_list is not None:
         cache_control.item_effect_list = old_effect_list
+        old_effect_list.update()
     edit.setText(dict_to_text(shim.premise if is_premise else shim.effect))
 
   def open_premise_menu(self, edit: QLineEdit) -> None:
@@ -303,8 +311,6 @@ class OfficialEventEditWidget(QWidget):
         edit: QLineEdit 要写回的输入框
     返回: 无
     """
-    from ui.premise_menu import PremiseMenu
-
     self.run_with_shim(edit, True, PremiseMenu)
 
   def open_cvp_menu(self, edit: QLineEdit) -> None:
@@ -314,8 +320,6 @@ class OfficialEventEditWidget(QWidget):
         edit: QLineEdit 要写回的输入框
     返回: 无
     """
-    from ui.CVP_menu import CVPMenu
-
     self.run_with_shim(edit, True, CVPMenu)
 
   def open_effect_menu(self, edit: QLineEdit) -> None:
@@ -325,8 +329,6 @@ class OfficialEventEditWidget(QWidget):
         edit: QLineEdit 要写回的输入框
     返回: 无
     """
-    from ui.effect_menu import EffectMenu
-
     self.run_with_shim(edit, False, EffectMenu)
 
   def open_cve_menu(self, edit: QLineEdit) -> None:
@@ -336,8 +338,6 @@ class OfficialEventEditWidget(QWidget):
         edit: QLineEdit 要写回的输入框
     返回: 无
     """
-    from ui.CVE_menu import CVEMenu
-
     self.run_with_shim(edit, False, CVEMenu)
 
   def set_event(self, event: "OfficialEvent | None") -> None:

@@ -8,6 +8,7 @@ from PySide6.QtGui import QFont
 from PySide6.QtCore import Qt
 import cache_control
 import function
+import load_csv
 from ui.premise_menu import PremiseMenu
 from ui.CVP_menu import CVPMenu
 import os
@@ -293,8 +294,8 @@ class ItemPremiseList(QWidget):
     premise_list.sort()
     # 添加前提组
     cache_control.premise_group_data[new_cid] = premise_list
-    # 保存前提组到文件
-    with open("PremiseGroup.csv", "a", encoding="utf-8") as now_file:
+    # 编辑器启动时，load_csv.load_config 从 load_csv.premise_group_path 读入前提组。
+    with open(load_csv.premise_group_path, "a", encoding="utf-8") as now_file:
       now_file.write(f"{new_cid},{'&'.join(premise_list)}\n")
     # 更新前提列表
     self.update()
@@ -439,8 +440,6 @@ class ItemPremiseList(QWidget):
         # 如果text等于cid且cid中包含CVP，尝试用read_CVP获取
         if text == cid and "CVP" in cid:
           try:
-            import function  # 避免循环引用
-
             text = function.read_CVP(cid)
           except Exception:
             text = cid  # 若解析失败则回退为cid
