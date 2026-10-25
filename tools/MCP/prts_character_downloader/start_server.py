@@ -15,7 +15,7 @@ import os
 import asyncio
 
 
-def check_mcp_available():
+def check_mcp_available() -> bool:
   """
   检查MCP库是否可用
 

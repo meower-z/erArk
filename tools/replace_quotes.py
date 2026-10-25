@@ -7,7 +7,7 @@
 import os
 
 
-def replace_english_quotes(text):
+def replace_english_quotes(text: str) -> str:
   """
   替换文本中的英文双引号为中文双引号
   参数:
@@ -29,7 +29,7 @@ def replace_english_quotes(text):
   return ''.join(result)
 
 
-def replace_english_single_quotes(text):
+def replace_english_single_quotes(text: str) -> str:
   """
   替换文本中的英文单引号为中文单引号
   参数:
@@ -51,7 +51,7 @@ def replace_english_single_quotes(text):
   return ''.join(result)
 
 
-def process_csv_file(filepath):
+def process_csv_file(filepath: str) -> None:
   """
   读取CSV文件内容并替换英文双引号，然后写回文件
   参数:
@@ -67,7 +67,7 @@ def process_csv_file(filepath):
     f.write(new_content)
 
 
-def batch_process_directory(directory):
+def batch_process_directory(directory: str) -> None:
   """
   批量处理指定目录及子目录下的所有CSV文件
   参数:

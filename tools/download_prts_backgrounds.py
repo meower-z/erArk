@@ -14,7 +14,13 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 
 
-def download_single_image(img_url, output_dir, headers, index, total):
+def download_single_image(
+    img_url: str,
+    output_dir: Path,
+    headers: dict[str, str],
+    index: int,
+    total: int,
+) -> tuple[bool, str, str | None]:
   """
   下载单个图片
 

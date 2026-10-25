@@ -25,6 +25,18 @@ import io
 import os
 import sys
 import collections
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import TypedDict
+
+  class TargetRow(TypedDict):
+    line: int
+    cid: int
+    state_machine_id: int
+    premise_id: str
+    type: int
+
 
 sys.stdout = io.TextIOWrapper(
     sys.stdout.buffer, encoding="utf-8", errors="replace"
@@ -43,7 +55,7 @@ problems = collections.OrderedDict()
 """ 规则名 → 问题描述列表 """
 
 
-def report(rule, message):
+def report(rule: str, message: str) -> None:
   """
   记录一条违规
   Keyword arguments:
@@ -55,7 +67,7 @@ def report(rule, message):
   problems.setdefault(rule, []).append(message)
 
 
-def load_rows():
+def load_rows() -> "list[TargetRow]":
   """
   读入 target.csv 的数据行，顺便做 R8 检查
   Return arguments:
@@ -98,7 +110,7 @@ def load_rows():
   return rows
 
 
-def check_numbering(rows):
+def check_numbering(rows: "list[TargetRow]") -> None:
   """
   R1~R4：编号唯一性、顺序与结构
   Keyword arguments:
@@ -155,7 +167,7 @@ def check_numbering(rows):
       )
 
 
-def check_effect(rows):
+def check_effect(rows: "list[TargetRow]") -> None:
   """
   R7：effect.csv 的 target_id 不能悬空
   Keyword arguments:
@@ -187,7 +199,7 @@ def check_effect(rows):
       )
 
 
-def check_registry(rows):
+def check_registry(rows: "list[TargetRow]") -> None:
   """
   R5/R6：前提名与状态机必须能在运行时解析（需要载入游戏配置，较慢）
   Keyword arguments:
@@ -225,7 +237,7 @@ def check_registry(rows):
       )
 
 
-def main():
+def main() -> int:
   """脚本入口"""
   fast = "--fast" in sys.argv
   rows = load_rows()

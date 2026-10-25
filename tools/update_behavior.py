@@ -21,7 +21,7 @@ import os
 import re
 
 
-def read_behavior_data(csv_path):
+def read_behavior_data(csv_path: str) -> list[tuple[str, str, str]]:
   """
   读取行为数据CSV文件
 
@@ -54,7 +54,9 @@ def read_behavior_data(csv_path):
   return behavior_data
 
 
-def update_behavior_file(behavior_py_path, behavior_data):
+def update_behavior_file(
+    behavior_py_path: str, behavior_data: list[tuple[str, str, str]]
+) -> bool:
   """
   更新Behavior.py文件
 

@@ -60,7 +60,7 @@ class PRTSMCPServer:
     self.downloader = PRTSCharacterDownloader()
     self._setup_handlers()
 
-  def _setup_handlers(self):
+  def _setup_handlers(self) -> None:
     """
     设置MCP服务器的处理器
 

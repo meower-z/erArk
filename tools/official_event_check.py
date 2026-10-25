@@ -716,7 +716,7 @@ class Checker:
         print(f"    性格倾向：{'｜'.join(text_list)}")
 
 
-def main():
+def main() -> int:
   """
   入口：校验并按结果设置退出码
   Keyword arguments:

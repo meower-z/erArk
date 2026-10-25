@@ -21,7 +21,7 @@ SKIP_DIRS = {
 READ_ENCODINGS = ('utf-8', 'utf-8-sig', 'gbk', 'latin-1')
 
 
-def read_lines_with_fallback(file_path: str):
+def read_lines_with_fallback(file_path: str) -> tuple[list[str], str]:
   """
   输入：file_path(str)
   输出：tuple[list[str], str]，分别为文件行与读取所用编码

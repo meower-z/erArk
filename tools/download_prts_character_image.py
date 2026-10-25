@@ -16,7 +16,7 @@ import re
 from html.parser import HTMLParser
 
 
-def get_image_url_from_api(character_name):
+def get_image_url_from_api(character_name: str) -> str | None:
   """
   通过MediaWiki API查询图片的实际URL
 
@@ -69,7 +69,7 @@ def get_image_url_from_api(character_name):
   return None
 
 
-def get_image_from_story_page(character_name):
+def get_image_from_story_page(character_name: str) -> str | None:
   """
   从剧情角色一览页面查找图片（改进版）
 
@@ -161,7 +161,7 @@ def get_image_from_story_page(character_name):
   return None
 
 
-def get_special_character_url(character_name):
+def get_special_character_url(character_name: str) -> str | None:
   """
   获取特殊角色的图片URL
   """
@@ -174,7 +174,9 @@ def get_special_character_url(character_name):
   return special_characters.get(character_name, None)
 
 
-def download_character_image_api(character_name, save_dir="downloaded_images"):
+def download_character_image_api(
+    character_name: str, save_dir: str = "downloaded_images"
+) -> bool:
   """
   通过多种方式下载角色立绘
 

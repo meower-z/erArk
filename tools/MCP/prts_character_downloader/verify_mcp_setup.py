@@ -25,7 +25,7 @@ except ImportError as e:
   sys.exit(1)
 
 
-async def test_mcp_server():
+async def test_mcp_server() -> bool:
   """
   测试MCP服务器功能
 
@@ -58,7 +58,7 @@ async def test_mcp_server():
     return False
 
 
-def test_downloader_basic():
+def test_downloader_basic() -> bool:
   """
   测试下载器基础功能
 

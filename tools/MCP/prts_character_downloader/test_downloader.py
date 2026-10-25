@@ -18,7 +18,7 @@ sys.path.insert(0, current_dir)
 from downloader import PRTSCharacterDownloader
 
 
-def test_single_download():
+def test_single_download() -> bool:
   """
   测试单个角色下载
 
@@ -41,7 +41,7 @@ def test_single_download():
   return success
 
 
-def test_url_search():
+def test_url_search() -> bool:
   """
   测试URL搜索功能
 
@@ -64,7 +64,7 @@ def test_url_search():
     return False
 
 
-def test_batch_download():
+def test_batch_download() -> bool:
   """
   测试批量下载功能
 
