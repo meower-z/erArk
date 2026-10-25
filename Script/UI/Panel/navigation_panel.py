@@ -472,7 +472,6 @@ class MapSceneNameDraw(Base_function_class):
     map_name = attr_text.get_map_path_text(self.now_map)
     title_draw = draw.TitleLineDraw(map_name, self.width)
     title_draw.draw()
-    now_draw_list: game_type.MapDraw = map_data.map_draw
     # 当前位置
     now_country_id = cache.rhodes_island.current_location[0]
     now_country_name = game_config.config_birthplace[now_country_id].name

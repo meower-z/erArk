@@ -396,21 +396,6 @@ def init_character_dormitory() -> None:
       ]
       for x in j
   }
-  special_dormitory_place_data = {
-      key: constant.place_data[key]
-      for key in constant.place_data
-      if "Special_Dormitory" in key
-  }
-  special_dormitory = {
-      x: 0
-      for j in [
-          k[1]
-          for k in sorted(
-              special_dormitory_place_data.items(), key=lambda x: x[0]
-          )
-      ]
-      for x in j
-  }
   # print("dormitory :",dormitory)
   # print("cache.scene_data[list(Dr_room.keys())[0]].scene_name :",cache.scene_data[list(Dr_room.keys())[0]].scene_name)
   npc_count = 0
