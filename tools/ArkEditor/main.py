@@ -162,6 +162,17 @@ def backup_file(file_path: str) -> None:
   shutil.copy2(file_path, backup_path)
 
 
+def clear_item_lists() -> None:
+  """
+  载入新文件后清掉上一个文件的选中条目，清空前提与结算列表
+  Return arguments:
+  None
+  """
+  cache_control.now_select_id = ""
+  item_premise_list.item_list.clear()
+  item_effect_list.item_list.clear()
+
+
 def load_event_data() -> None:
   """载入事件文件"""
   global last_open_dir, is_modified
@@ -203,6 +214,7 @@ def load_event_data() -> None:
         del now_event.effect[effect]
       cache_control.now_event_data[k] = now_event
     cache_control.now_edit_type_flag = 1
+    clear_item_lists()
     data_list.update()
     main_window.add_grid_event_layout(
         data_list, item_premise_list, item_effect_list, item_text_edit
@@ -428,6 +440,7 @@ def load_talk_data_to_cache() -> None:
       del now_talk.premise[premise]
     cache_control.now_talk_data[now_talk.cid] = now_talk
   cache_control.now_edit_type_flag = 0
+  clear_item_lists()
   data_list.update()
 
   main_window.add_grid_talk_layout(data_list, item_premise_list, item_text_edit)
