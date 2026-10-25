@@ -670,33 +670,34 @@ def npc_active_h():
     ):
       continue
     # 如果NPC为处，则跳过破处类
+    # 带 W 的破处行为结算时也会夺走阴道处女
     if (
-        part_id == 21
-        and target_character_data.talent[4]
+        target_character_data.talent[0]
+        and ("V" in behavior_tag_list or "W" in behavior_tag_list)
         and "破处" in behavior_tag_list
     ):
       continue
     if (
-        part_id == 4
-        and target_character_data.talent[0]
+        target_character_data.talent[1]
+        and "A" in behavior_tag_list
         and "破处" in behavior_tag_list
     ):
       continue
     if (
-        part_id == 5
-        and target_character_data.talent[1]
+        target_character_data.talent[2]
+        and "U" in behavior_tag_list
         and "破处" in behavior_tag_list
     ):
       continue
     if (
-        part_id == 6
-        and target_character_data.talent[2]
+        target_character_data.talent[3]
+        and "W" in behavior_tag_list
         and "破处" in behavior_tag_list
     ):
       continue
     if (
-        part_id == 7
-        and target_character_data.talent[3]
+        target_character_data.talent[4]
+        and "N" in behavior_tag_list
         and "破处" in behavior_tag_list
     ):
       continue
