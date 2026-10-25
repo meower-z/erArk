@@ -179,8 +179,6 @@ def new_chara(
   )  # 只有 reset 版，要把旧对象传进去
   cd.body_manage = attr_calculation.get_body_manage_zero()  # 无参
   cd.favorability = {0: 0}  # 好感/信赖类前提会直接取 [0]
-  cd.social_contact = {}
-  cd.social_contact_data = {}
   cd.position = list(SCENE)
   cd.race = race
   cd.talent[121] = (

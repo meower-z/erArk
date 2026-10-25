@@ -5,6 +5,7 @@ world 夹具自身的测试
 默认角色穿着衣服、异常位全部正常；裸体角色须写明；复原后游戏状态与随机源回到同一起点；快速层拒绝导入受禁模块。
 """
 
+import datetime
 import importlib.util
 import random
 import uuid
@@ -59,7 +60,7 @@ class WorldTest(FastTestCase):
     self.world.chara(0, "博士", position=ROOM)
     room = self.world.scene(ROOM)
     room.close_flag = 1
-    cache.game_time = None
+    cache.game_time = game_time + datetime.timedelta(days=1)
     cache.npc_tem_data[-1] = cache.npc_tem_data[1]
     self.world.reset()
     self.assertIs(self.cache, cache)

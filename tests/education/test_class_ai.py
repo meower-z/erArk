@@ -2993,9 +2993,9 @@ _movie_cid = next(
         )
         == constant.Behavior.WATCH_MOVIE
     ),
-    None,
+    -1,
 )
-""" 兴趣课「看电影」的娱乐编号（按行为判，不写死编号）；取不到时为 None，由下面的「L3 前提」报出来，不让进程崩掉 """
+""" 兴趣课「看电影」的娱乐编号（按行为判，不写死编号）；取不到时为不是娱乐编号的 -1，由下面的「L3 前提」报出来，不让进程崩掉 """
 schedule_handle.set_selected_course(
     201, 0, 0, E.COURSE_TYPE_INTEREST, _movie_cid
 )
