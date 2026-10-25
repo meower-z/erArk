@@ -642,7 +642,7 @@ def create_score_table_image(
       )
 
     # 找最佳（排除ENS，因为ENS本身就是最佳的组合）
-    best_key = max(norm_scores_map, key=lambda k: norm_scores_map[k])
+    best_key = max(norm_scores_map, key=norm_scores_map.__getitem__)
     model_wins[best_key] = model_wins.get(best_key, 0) + 1
     best_color = MODEL_COLORS.get(best_key, (200, 200, 200))
     x_best = kp_col_w + (len(keys) + (1 if ensemble_result else 0)) * col_w + 10
@@ -1126,7 +1126,7 @@ def main() -> None:
         for k, v in valid_results.items()
     }
     sorted_models = sorted(
-        mean_scores, key=lambda k: mean_scores[k], reverse=True
+        mean_scores, key=mean_scores.__getitem__, reverse=True
     )
     top3 = sorted_models[:3]
     focus_keys = top3 + ['ENS']
@@ -1189,7 +1189,7 @@ def main() -> None:
       line += f' {ens_score:>8.4f}   {ens_src}'
 
       # 统计胜出（在单模型间）
-      best_key = max(norm_map, key=lambda k: norm_map[k])
+      best_key = max(norm_map, key=norm_map.__getitem__)
       total_stats[best_key]['wins'] += 1
       print(line)
 
