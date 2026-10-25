@@ -648,7 +648,8 @@ def main() -> None:
 
   log("全部完成。可使用 snakeviz / py-spy / scalene 进行进一步分析。")
 
-  # 退出：用 os._exit 强制结束，避免图片管理器等非守护线程阻塞进程退出
+  # 退出：导入链中的 handle_instruct 起了非守护线程 init_instruct_handle_thread，
+  # 现有代码里这个线程不结束，解释器正常退出会一直等它，所以用 os._exit 强制结束进程
   sys.stdout.flush()
   os._exit(0)
 
