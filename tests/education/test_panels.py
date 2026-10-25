@@ -45,7 +45,7 @@ def fake_askfor(input_list, print_order=False):
   替换 flow_handle.askfor_all 的桩：把可选项记到 captured["rl"]，返回「返回」
   Keyword arguments:
   input_list -- 可选项列表
-  print_order -- 是否把输入的 order 输出到屏幕上
+  print_order -- 原函数的同名参数，本桩不用
   Return arguments:
   str -- 翻译后的「返回」
   """
@@ -137,7 +137,7 @@ def scripted_askfor(input_list, print_order=False):
   有选项满足的判断函数，把它从 answers 移除并返回满足它的第一个选项，都不满足时返回最后一个选项
   Keyword arguments:
   input_list -- 可选项列表
-  print_order -- 是否把输入的 order 输出到屏幕上
+  print_order -- 原函数的同名参数，本桩不用
   Return arguments:
   str -- 选中的选项
   """

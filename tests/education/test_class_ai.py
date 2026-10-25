@@ -1535,7 +1535,7 @@ def record_move(
   Keyword arguments:
   character_id -- 角色id
   target_scene -- 目标场景路径
-  show_info_flag -- 是否显示移动信息
+  show_info_flag -- 原函数的同名参数，本桩不用
   Return arguments:
   bool -- 恒为 True
   """
