@@ -1,4 +1,6 @@
 # -*- coding: UTF-8 -*-
+"""游戏主流程：循环运行当前面板id对应的面板"""
+
 from Script.Core import py_cmd, constant, cache_control, game_type
 
 cache: game_type.Cache = cache_control.cache

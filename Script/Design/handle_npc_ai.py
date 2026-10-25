@@ -1,3 +1,5 @@
+"""NPC行为AI：行动前的检查、查找并选择目标活动、自动工作或娱乐、打断当前行动的判断"""
+
 import random
 import datetime
 from types import FunctionType

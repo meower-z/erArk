@@ -1,3 +1,5 @@
+"""游戏时间：游戏日历上的时间换算与加减、GameTime 类、日期文本、节气、太阳位置与月相、工作娱乐时段与课程节次"""
+
 from __future__ import annotations
 
 import datetime

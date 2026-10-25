@@ -1,3 +1,5 @@
+"""前提系统入口：汇总各前提模块，按前提id调用处理函数、计算前提权重，并含综合数值前提等前提处理函数"""
+
 from functools import wraps
 from types import FunctionType
 from typing import Callable, Collection, Iterable, Optional

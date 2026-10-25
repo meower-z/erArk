@@ -1,3 +1,5 @@
+"""状态触发事件：按行为建立事件预索引，处理角色的事件触发"""
+
 import random
 from Script.Core import cache_control, game_type
 from Script.UI.Panel import draw_event_text_panel

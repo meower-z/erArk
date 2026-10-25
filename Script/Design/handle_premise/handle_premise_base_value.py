@@ -1,3 +1,5 @@
+"""基础数值相关的前提处理函数"""
+
 import datetime
 from functools import wraps
 from types import FunctionType

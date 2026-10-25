@@ -25,6 +25,11 @@ premise_profile_stats: Dict[str, Dict] = {}
 
 
 def _init_premise_stat(pid: str) -> None:
+  """
+  为前提建立一条全为初始值的统计记录
+  Keyword arguments:
+  pid -- 前提id
+  """
   premise_profile_stats[pid] = {
       "calls": 0,
       "total_time": 0.0,
@@ -35,6 +40,14 @@ def _init_premise_stat(pid: str) -> None:
 
 
 def _wrap(pid: str, func: Callable) -> Callable:
+  """
+  包裹前提处理函数，每次调用时记入该前提的调用次数、耗时与非零返回次数
+  Keyword arguments:
+  pid -- 前提id
+  func -- 前提处理函数
+  Return arguments:
+  Callable -- 包裹后的函数
+  """
   if pid not in premise_profile_stats:
     _init_premise_stat(pid)
   stat = premise_profile_stats[pid]
@@ -111,6 +124,11 @@ def add_premise(
 
 
 def export_premise_profile(path: str) -> None:
+  """
+  把调用过的前提的统计按总耗时从高到低写成 json 文件
+  Keyword arguments:
+  path -- 输出文件路径
+  """
   rows = []
   for pid, s in premise_profile_stats.items():
     calls = s["calls"]

@@ -1,3 +1,5 @@
+"""角色数据的生成与初始化：NPC列表、角色模板、新生孩子、初始位置、娱乐、开放设施与工作，以及获得新角色与增加好感"""
+
 import copy
 import random
 from types import FunctionType

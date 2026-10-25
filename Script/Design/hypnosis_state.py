@@ -1,3 +1,5 @@
+"""清理角色的催眠行为模式与催眠子状态"""
+
 from Script.Core import cache_control, game_type
 
 cache: game_type.Cache = cache_control.cache

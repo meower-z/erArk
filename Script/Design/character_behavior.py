@@ -1,3 +1,5 @@
+"""角色行为主循环：推进玩家与NPC的行为，结算角色状态并判断行为是否结束"""
+
 import datetime
 from types import FunctionType
 from Script.Core import (

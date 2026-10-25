@@ -1,3 +1,5 @@
+"""行为结算：结算指令与事件带来的数值变化并输出文本，以及结算效果的注册装饰器"""
+
 from __future__ import annotations
 
 import datetime

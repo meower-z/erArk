@@ -1,3 +1,5 @@
+"""角色属性的初始化、输入角色名、校验角色时间是否过24点与按剧情id查角色id"""
+
 import random
 import datetime
 from types import FunctionType

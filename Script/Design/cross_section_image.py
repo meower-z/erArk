@@ -1,3 +1,5 @@
+"""选择并绘制断面图"""
+
 from Script.UI.Moudle import draw
 from Script.Core import (
     cache_control,

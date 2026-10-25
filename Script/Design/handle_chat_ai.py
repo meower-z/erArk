@@ -1,3 +1,5 @@
+"""文本生成AI：判断是否启用、构造提示词、调用接口生成文本、流式输出、保存对话记录与直接对话模式"""
+
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, constant, flow_handle
 from Script.UI.Moudle import draw, panel
