@@ -386,7 +386,7 @@ class Character_FirstNPC:
 
     # 去掉特殊干员
     for chara_id in self.id_list.copy():
-      if cache.character_data[chara_id].name in constant.ban_NPC_name_set:
+      if cache.character_data[chara_id].adv in constant.ban_NPC_adv_set:
         self.id_list.remove(chara_id)
         self.special_chara_list.append(chara_id)
 
@@ -403,12 +403,12 @@ class Character_FirstNPC:
     npc_id_got_list = sorted(cache.npc_id_got)
     for character_id in npc_id_got_list:
       npc_character_data = cache.character_data[character_id]
-      if npc_character_data.name in constant.first_NPC_name_set:
+      if npc_character_data.adv in constant.first_NPC_adv_set:
         info_draw.text += f" ●{npc_character_data.name}"
     info_draw.text += _("\n   自选:")
     for character_id in cache.npc_id_got:
       npc_character_data = cache.character_data[character_id]
-      if npc_character_data.name not in constant.first_NPC_name_set:
+      if npc_character_data.adv not in constant.first_NPC_adv_set:
         info_draw.text += f" ●{npc_character_data.name}"
 
     now_draw_list.append(info_draw)
@@ -521,7 +521,7 @@ class Character_FirstNPC:
       now_npc_draw.text += _("\n 当前已选干员：")
       for character_id in cache.npc_id_got:
         npc_character_data = cache.character_data[character_id]
-        if npc_character_data.name not in constant.first_NPC_name_set:
+        if npc_character_data.adv not in constant.first_NPC_adv_set:
           now_npc_draw.text += f" ●{npc_character_data.name}"
       now_npc_draw.text += _("\n 当前剩余可选干员数量 = {0}\n").format(
           self.npc_select_now
@@ -856,7 +856,7 @@ class Character_FirstNPC:
       for character_id in cache.character_data:
         npc_character_data = cache.character_data[character_id]
         if (
-            npc_character_data.name not in constant.first_NPC_name_set
+            npc_character_data.adv not in constant.first_NPC_adv_set
             and str(user_input) in npc_character_data.name
         ):
           npc_name_filter_id.append(character_id)
@@ -922,8 +922,8 @@ class Character_FirstNPC:
     now_select_npc_ld_list = [
         character_id
         for character_id in cache.npc_id_got
-        if cache.character_data[character_id].name
-        not in constant.first_NPC_name_set
+        if cache.character_data[character_id].adv
+        not in constant.first_NPC_adv_set
     ]
     # 从列表中移除
     for character_id in now_select_npc_ld_list:
@@ -937,7 +937,7 @@ class Character_FirstNPC:
     # 去掉特殊干员
     self.special_chara_list = []
     for chara_id in self.id_list.copy():
-      if cache.character_data[chara_id].name in constant.ban_NPC_name_set:
+      if cache.character_data[chara_id].adv in constant.ban_NPC_adv_set:
         self.id_list.remove(chara_id)
         self.special_chara_list.append(chara_id)
     self.prepare_filter()
@@ -1038,7 +1038,7 @@ class SelectFirstNPCButton:
     name_draw: draw.LeftDraw | draw.LeftButton
     name_draw = draw.LeftDraw()
     if self.NPC_id in cache.npc_id_got:
-      if target_data.name in constant.first_NPC_name_set:
+      if target_data.adv in constant.first_NPC_adv_set:
         button_text += _("(基础)")
         # 查看属性模式下基础干员也可点击查看属性
         if SelectFirstNPCButton.show_attributes_mode:
