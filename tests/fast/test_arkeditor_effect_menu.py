@@ -1,14 +1,17 @@
 # -*- coding: UTF-8 -*-
 """
-ArkEditor 在事件文件与口上文件之间切换后的前提、结算列表与结算列表的右键菜单
-==========================================================================
+ArkEditor 在事件文件与口上文件之间切换后的前提、结算列表与结算列表的右键菜单，以及综合指令状态结算窗口
+====================================================================================================
 把 tools/ArkEditor 复制到临时目录，写一份两条事件的事件文件与一条口上的口上文件，
 在子进程里由 arkeditor_effect_menu_driver.py 离屏驱动编辑器：
 先开事件文件再开口上文件时，前提与结算列表为空，右键、新增口上与结算列表的按钮都不抛异常、不改事件数据；
-先开口上文件再开事件文件时，右键删除的是当前事件的结算。
+先开口上文件再开事件文件时，右键删除的是当前事件的结算；
+从综合指令状态结算窗口加入的结算与保存后重新打开的结算，在结算列表里都显示所选行为的名字；
+在这个窗口里不选行为按确定时不抛异常、不改事件的结算。
 PySide6 在本机无法导入时跳过。
 """
 
+import csv
 import json
 import os
 import shutil
@@ -60,8 +63,24 @@ TALK_CSV = (
 """ 口上文件的内容：一条口上 """
 
 
+def behavior_name(behavior_id: str) -> str:
+  """
+  从编辑器的行为表里取行为的名字
+  Keyword arguments:
+  behavior_id -- 行为 id（行为表的 en_name 列）
+  Return arguments:
+  str -- 行为的名字
+  """
+  path = os.path.join(ROOT, "tools", "ArkEditor", "csv", "Behavior_Data.csv")
+  with open(path, encoding="utf-8") as behavior_file:
+    for row in csv.DictReader(behavior_file):
+      if row["en_name"] == behavior_id:
+        return row["name"]
+  raise LookupError(behavior_id)
+
+
 class ArkEditorEffectMenuTest(FastTestCase):
-  """编辑器切换文件后，前提、结算列表与结算列表的右键菜单只作用于当前文件"""
+  """编辑器切换文件后，前提、结算列表与结算列表的右键菜单只作用于当前文件；综合指令状态结算窗口加入的结算"""
 
   def setUp(self) -> None:
     """
@@ -162,3 +181,36 @@ class ArkEditorEffectMenuTest(FastTestCase):
         {FIRST_EVENT: {"1": 1}, SECOND_EVENT: {"9999": 1}},
     )
     self.assertNotIn(first_text, deleted["effect_list"])
+
+  def test_cse_added_and_reopened_text(self) -> None:
+    """从综合指令状态结算窗口加入的结算与保存后重新打开的结算，在结算列表里都显示所选行为的名字"""
+    result = self.drive("cse_add_and_reopen")
+    self.assertEqual(result["errors"], [])
+    # 驱动脚本依次加入的两个行为 id：带下划线与不带的各一个
+    behavior_ids = ("share_blankly", "chat")
+    self.assertEqual(
+        result["saved_effects"],
+        {
+            FIRST_EVENT: {"0": 1, "1": 1}
+            | {f"CSE_A1_{behavior_id}": 1 for behavior_id in behavior_ids},
+            SECOND_EVENT: {"9999": 1},
+        },
+    )
+    texts = [
+        f"综合指令状态结算 玩家对自己 进行 {behavior_name(behavior_id)}"
+        for behavior_id in behavior_ids
+    ]
+    for step in ("cse_reopened", "cse_added"):
+      self.assertEqual(result[step]["effect_list"][2:], texts, step)
+
+  def test_cse_ok_without_behavior(self) -> None:
+    """综合指令状态结算窗口里不选行为按确定时不抛异常、不改结算；之后选了行为再按确定照常加入"""
+    result = self.drive("cse_empty_ok")
+    self.assertEqual(result["errors"], [])
+    self.assertEqual(
+        result["cse_empty_ok"]["event_effects"][FIRST_EVENT], {"0": 1, "1": 1}
+    )
+    self.assertEqual(
+        result["cse_picked_ok"]["event_effects"][FIRST_EVENT],
+        {"0": 1, "1": 1, "CSE_A1_chat": 1},
+    )

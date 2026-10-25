@@ -197,7 +197,8 @@ def read_CVE(cve_value_str: str) -> str:
 
 def read_CSE(cse_value_str: str) -> str:
   """读取CSE字符串"""
-  cse_str_list = cse_value_str.split("_")
+  # 行为 id 可以带下划线，只按前两个下划线切分
+  cse_str_list = cse_value_str.split("_", 2)
   # print(f"cse_str_list = {cse_str_list}")
   cse_str_list[0] = cse_str_list[0].replace("CSE", "综合指令状态结算 玩家对")
   cse_str_list[1] = cse_str_list[1].replace("A1", "自己")
@@ -210,12 +211,11 @@ def read_CSE(cse_value_str: str) -> str:
   # print(f"debug cse_str = {cse_str}, cse_str_list = {cse_str_list}")
   # 处理A3部分
   if "A3" in cse_str:
-    a3_value = cse_str.split("A3|")[1].split("_")[0]
+    a3_value = cse_str_list[1].split("A3|")[1]
     cse_str = cse_str.replace(f"A3|{a3_value}", f"角色id为{a3_value}")
   # 然后处理B属性部分，B是第二个下划线之后的所有内容
   # print(f"debug cse_str_list[2] = {cse_str_list[2]}")
-  b_str = cse_value_str.split("_", 2)[2]
-  cse_b_value = cache_control.behavior_data[b_str]
+  cse_b_value = cache_control.behavior_data[cse_str_list[2]]
   cse_str = cse_str.replace(f"{cse_str_list[2]}", f" 进行 {cse_b_value}")
   # print(f"debug cse_str = {cse_str}")
   return cse_str
