@@ -21,7 +21,7 @@ target.csv 编号体系一次性迁移脚本（Plan 08）
 4. 写盘前自检 R1~R5，任何一条不通过就中止
 
 用法：
-    .conda/python.exe tools/target_cid_migrate.py
+    python tools/backup/target_cid_migrate.py
 """
 
 from __future__ import annotations

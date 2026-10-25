@@ -17,8 +17,8 @@ target.csv 编号规范校验（Plan 08 的常驻检查）
 R5/R6 需要载入游戏配置，比较慢；加 --fast 可跳过这两条只做纯文本检查。
 
 用法：
-    .conda/python.exe tools/lint_target_csv.py
-    .conda/python.exe tools/lint_target_csv.py --fast
+    python tools/lint_target_csv.py
+    python tools/lint_target_csv.py --fast
 """
 
 import io
