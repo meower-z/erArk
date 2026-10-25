@@ -480,7 +480,7 @@ def new_character_get_dormitory(character_id: int) -> None:
       for room_full_path in guest_room_sorted:
         if (
             game_config.config_facility_open[room_id].name
-            == room_full_path.split(os.sep)[-1]
+            == cache.scene_data[room_full_path].scene_name
         ):
           final_room_list.append(room_full_path)
 
