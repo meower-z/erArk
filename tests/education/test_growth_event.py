@@ -3,6 +3,7 @@
 
 from _bootstrap import DEFAULT_TIME, _, cache, character_handle, check, class_ai, clear_schedules, constant, constant_promise, datetime, education_constant, finish, game_config, game_time, growth_event_handle, growth_handle, handle_premise, make_character, open_all_classroom, period_time, pl, random, remove_character, schedule_handle, schedule_template_handle, section, semester_handle, set_time
 from Script.System.Official_Event_System import official_event_handle
+from typing import Any
 
 open_all_classroom()
 clear_schedules()
@@ -1245,6 +1246,7 @@ check(
     and JP(_birthday_premise + "&CVP_A1_T|101_E_1", 218) is False,
 )
 _weight_token = "CVP_A1_Weight|0_E_50"
+_weight_direct: float | str
 try:
   _weight_direct = handle_premise.handle_premise(_weight_token, 218)
 except Exception as error:
@@ -1257,7 +1259,7 @@ check(
     and JP(_weight_token + "&CVP_A1_T|101_E_1", 218) is False,
     _weight_direct,
 )
-_high_calls = []
+_high_calls: list[int] = []
 """ high_5 前提被求值时记下的主体 """
 
 
@@ -1358,7 +1360,7 @@ _od_order = set()
 """ 连续弹出同一条事件时出现过的显示顺序（元素为选项原序号的元组） """
 _od_pick_list = []
 """ 每次决断（桩固定选第一个按钮）返回的选项原序号，应当等于该次显示顺序的第一项 """
-for _ in range(60):
+for _round in range(60):
   _od_shuffle = official_event_panel.Official_Event_Draw(_od_queue_data, 120)
   _od_order.add(tuple(one["index"] for one in _od_shuffle.draw_option_list))
   _od_pick_list.append(
@@ -1381,17 +1383,19 @@ check(
     [one["index"] for one in _od.option_list] == [1, 2, 3, 4],
     [one["index"] for one in _od.option_list],
 )
-_od_wait = []
+_od_wait: list[str] = []
 """ 本段记下的 WaitDraw 文本 """
 _orig_wait_draw = _draw_module.WaitDraw.draw
-_draw_module.WaitDraw.draw = lambda self, *args, **kwargs: _od_wait.append(
-    self.text
+setattr(
+    _draw_module.WaitDraw,
+    "draw",
+    lambda self, *args, **kwargs: _od_wait.append(self.text),
 )
 try:
   _od.draw_result(2)
   _od.draw_result(9)
 finally:
-  _draw_module.WaitDraw.draw = _orig_wait_draw
+  setattr(_draw_module.WaitDraw, "draw", _orig_wait_draw)
 check(
     "§8.2 draw_result：选定第 2 个选项后画一个 WaitDraw，写出选了什么（选项文本）与它的后果提示；序号对不上时什么都不画",
     len(_od_wait) == 1
@@ -1403,7 +1407,7 @@ check(
 cache.rhodes_island.official_event_queue = []
 growth_handle.get_child_growth(201).event_history.pop(_od_uid, None)
 official_event_handle.push_official_event(_od_uid, 201)
-_od_seq = []
+_od_seq: list[tuple[str, Any]] = []
 """ 结算与 WaitDraw 的先后：("settle", 选项序号) / ("wait", 文本) """
 _orig_settle_option = official_event_handle.settle_official_event_option
 
@@ -1426,14 +1430,16 @@ def od_settle_spy(
 
 
 official_event_handle.settle_official_event_option = od_settle_spy
-_draw_module.WaitDraw.draw = lambda self, *args, **kwargs: _od_seq.append(
-    ("wait", self.text)
+setattr(
+    _draw_module.WaitDraw,
+    "draw",
+    lambda self, *args, **kwargs: _od_seq.append(("wait", self.text)),
 )
 try:
   official_event_panel.handle_official_event_queue(120)
 finally:
   official_event_handle.settle_official_event_option = _orig_settle_option
-  _draw_module.WaitDraw.draw = _orig_wait_draw
+  setattr(_draw_module.WaitDraw, "draw", _orig_wait_draw)
 # 选项顺序随机之后，桩选中的「画面上第一个」不再固定是原序号 1，改为按实际结算到的那一项来对照
 _od_choice = _od_seq[0][1] if _od_seq and _od_seq[0][0] == "settle" else 0
 _od_choice_tip = {
@@ -1504,27 +1510,29 @@ _raw_draw_spec = _importlib_util.spec_from_file_location(
     "_raw_draw_module_for_test",
     _test_os.path.join(_boot.ROOT, "Script", "UI", "Moudle", "draw.py"),
 )
+assert _raw_draw_spec is not None and _raw_draw_spec.loader is not None
 _raw_draw_module = _importlib_util.module_from_spec(_raw_draw_spec)
 _raw_draw_spec.loader.exec_module(_raw_draw_module)
 _title_text = "【公务事件】AMA11 · 婴儿期第 8 天"
 """ 用户截图里那条抬头：本身就有 33 个半角宽 """
-_title_piece = []
+_title_piece: list[str] = []
 """ 画出来的每一段文本 """
 _orig_era_print = _test_io_init.era_print
 
 
 def title_era_print_spy(
-    text: str = "", style: str = "standard", *args, **kwargs
-):
+    string: str, style: str | tuple[str, ...] = "standard", tooltip: str = ""
+) -> None:
   """
   收集绘制文本的 era_print 桩（不碰 Tk）
   Keyword arguments:
-  text -- 要绘制的文本
+  string -- 要绘制的文本
   style -- 文本样式
+  tooltip -- 悬停提示
   Return arguments:
   无
   """
-  _title_piece.append(text)
+  _title_piece.append(string)
 
 
 def draw_title_line(title: str, width: int, count_title_width: bool) -> int:

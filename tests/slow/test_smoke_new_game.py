@@ -64,9 +64,10 @@ class SmokeNewGameTest(SlowTestCase):
         )
 
     recorder = Recorder()
-    log, memo = ActionLog(), {}
+    log = ActionLog()
+    memo: dict[int, tuple[bytes | None, dict[str, object]]] = {}
     log.install()
-    npc_behaviors = set()
+    npc_behaviors: set[str] = set()
     """ 干员在各步结束时的行为id """
     start = self.cache.game_time
     recorder.record("0000", capture(self.cache, log, memo))

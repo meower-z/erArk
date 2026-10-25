@@ -172,13 +172,8 @@ check(
     and HP("CVP_A1_CourseType|1_E_1", 201) == 0,
 )
 check("A2 视角：交互对象的课", HP("CVP_A2_Course|43_G_0", 0) == 1)
-check(
-    "不在节次内不成立",
-    (set_time(DEFAULT_TIME.replace(hour=13)), HP("CVP_A1_Course|43_G_0", 201))[
-        1
-    ]
-    == 0,
-)
+set_time(DEFAULT_TIME.replace(hour=13))
+check("不在节次内不成立", HP("CVP_A1_Course|43_G_0", 201) == 0)
 set_time(period_time(0))
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_PE, _("木桩房"))
 check(
@@ -350,9 +345,9 @@ schedule_handle.set_selected_course(
     201, cache.game_time.weekday(), 0, E.COURSE_TYPE_INTERN, intern_work
 )
 set_time(period_time(0))
-intern_place = schedule_handle.get_course_place(
-    schedule_handle.get_now_course(201)
-)
+intern_course = schedule_handle.get_now_course(201)
+assert intern_course is not None
+intern_place = schedule_handle.get_course_place(intern_course)
 mentor = make_character(103, "带教", intern_work, position=intern_place)
 move_to(201, intern_place)
 student.behavior.behavior_id = constant.Behavior.INTERN_CLASS
@@ -1101,18 +1096,22 @@ for _one in (_l20_student, _l20_worker):
   for _exp_id in list(_one.experience):
     _one.experience[_exp_id] = 10**7
   handle_ability.gain_ability(_one.cid)
+_l20_student_growth = _l20_student.child_growth
+assert _l20_student_growth is not None
+_l20_worker_growth = _l20_worker.child_growth
+assert _l20_worker_growth is not None
 check(
     "L20 对照：学生岗的萝莉女儿，升了级的科目记进待炫耀",
-    len(_l20_student.child_growth.show_off_ability) > 0,
-    _l20_student.child_growth.show_off_ability,
+    len(_l20_student_growth.show_off_ability) > 0,
+    _l20_student_growth.show_off_ability,
 )
 check(
     "L20 改了岗的萝莉女儿：科目照样升级，但不记待炫耀（此前照记，下次见面炫耀课堂与老师）",
-    _l20_worker.child_growth.show_off_ability == {}
+    _l20_worker_growth.show_off_ability == {}
     and any(
         _l20_worker.ability.get(_aid, 0) > 0 for _aid in E.SUBJECT_ABILITY_LIST
     ),
-    _l20_worker.child_growth.show_off_ability,
+    _l20_worker_growth.show_off_ability,
 )
 for _cid in (207, 208):
   remove_character(_cid)

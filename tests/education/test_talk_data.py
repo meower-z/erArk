@@ -55,7 +55,7 @@ talk_list = [
 ]
 # 教育相关口上共 1168 条
 check("教育相关口上总量 ≥ 1168 条", len(talk_list) >= 1168, len(talk_list))
-count_by_behavior = {}
+count_by_behavior: dict[str, int] = {}
 for talk in talk_list:
   count_by_behavior[talk.behavior_id] = (
       count_by_behavior.get(talk.behavior_id, 0) + 1
@@ -135,7 +135,7 @@ check(
     all(talk.behavior_id in game_config.config_behavior for talk in talk_list),
 )
 bad_premise = []
-bad_token = []
+bad_token: list[tuple[str, ...]] = []
 seen_token = set()
 set_time(period_time(0))
 for talk in talk_list:
@@ -312,7 +312,7 @@ premise_name_set = {
     for key, value in vars(constant_promise.Premise).items()
     if key.isupper() and isinstance(value, str)
 }
-bad_event_token = []
+bad_event_token: list[tuple[str, ...]] = []
 for expect_dict in EVENT_PREMISE_EXPECT.values():
   for uid, premise_text in expect_dict.items():
     for token in premise_text.split("&"):
@@ -771,11 +771,12 @@ check(
 )
 import ast  # noqa: E402
 import re  # noqa: E402
+from typing import Any  # noqa: E402
 
 # buildata.py 顶层会调 game_config.init()，测试进程里不能 import 它（会把配置再载一遍）：只用 ast 取出纯函数 build_promise_csv_text 单独执行
 with open("buildata.py", encoding="utf-8") as _buildata_file:
   _buildata_tree = ast.parse(_buildata_file.read())
-_builder_node_list = [
+_builder_node_list: list[ast.stmt] = [
     node
     for node in _buildata_tree.body
     if isinstance(node, ast.FunctionDef)
@@ -786,7 +787,7 @@ check(
     len(_builder_node_list) == 1,
 )
 if _builder_node_list:
-  _builder_scope = {}
+  _builder_scope: dict[str, Any] = {}
   exec(
       compile(
           ast.Module(body=_builder_node_list, type_ignores=[]),
@@ -880,7 +881,6 @@ check(
 )
 
 section("Plan 32 §3.14：事件表的前提与正文（M2、L22、L23、L26）")
-from Script.Design import talk  # noqa: E402
 from Script.System.Official_Event_System import official_event_handle  # noqa: E402
 
 PLAN32_EVENT_PREMISE_EXPECT = {
@@ -912,7 +912,7 @@ for finding, expect_dict in PLAN32_EVENT_PREMISE_EXPECT.items():
         now_premise == premise_text,
         now_premise,
     )
-_bad_token_32 = []
+_bad_token_32: list[tuple[str, ...]] = []
 for expect_dict in PLAN32_EVENT_PREMISE_EXPECT.values():
   for uid, premise_text in expect_dict.items():
     for token in premise_text.split("&"):
@@ -1053,10 +1053,10 @@ _growth_by_cid = {
     202: growth_handle.get_child_growth(202),
 }
 """ 夹具孩子的养成数据：角色id -> CHILD_GROWTH """
-for _cid, _growth in _growth_by_cid.items():
+for _growth_cid, _growth in _growth_by_cid.items():
   _growth.selected_course = {}
   schedule_handle.set_selected_course(
-      _cid, 0, 0, E.COURSE_TYPE_THEORY, _("理论教室一")
+      _growth_cid, 0, 0, E.COURSE_TYPE_THEORY, _("理论教室一")
   )
   _growth.attend_class_count = 20
   _growth.report_card_history = [{"grade": E.REPORT_GRADE_GOOD}]

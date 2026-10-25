@@ -13,6 +13,7 @@
 """
 
 import datetime
+import io
 import os
 import random
 import sys
@@ -23,11 +24,12 @@ ROOT = os.path.abspath(
 os.chdir(ROOT)
 if ROOT not in sys.path:
   sys.path.insert(0, ROOT)
+assert isinstance(sys.stdout, io.TextIOWrapper)
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 PASS = 0
 """ 已通过的断言数 """
-FAIL = []
+FAIL: list[str] = []
 """ 失败的断言名列表 """
 
 
@@ -124,7 +126,7 @@ for _book_cid in game_config.config_book:
   cache.rhodes_island.book_borrow_dict.setdefault(_book_cid, -1)
 
 # ==== 3. 屏蔽 UI，并把绘制文本收进 drawn_text ====
-drawn_text = []
+drawn_text: list[str] = []
 """ 全部绘制类 draw() 时的文本记录，断言「某段提示是否被画出」时用；测试可自行 clear() """
 
 
@@ -301,8 +303,6 @@ def make_character(
   cd.h_state = attr_calculation.get_h_state_reset(cd.h_state)
   cd.body_manage = attr_calculation.get_body_manage_zero()
   cd.favorability = {0: 0}
-  cd.social_contact = {}
-  cd.social_contact_data = {}
   cd.assistant_services = (
       attr_calculation.get_assistant_services_zero()
   )  # 实行值计算会读助理服务[8]
@@ -392,7 +392,9 @@ def classroom_path(classroom: str) -> list:
   return schedule_handle.get_classroom_position(classroom)
 
 
-def period_time(period: int, day: datetime.date = None) -> datetime.datetime:
+def period_time(
+    period: int, day: datetime.date | None = None
+) -> datetime.datetime:
   """
   取某天某节次的开始时刻
   Keyword arguments:

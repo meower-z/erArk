@@ -11,9 +11,13 @@ tests/fast/test_registration.py 用它检查快速层；慢速层由同一文件
 import json
 import os
 import sys
+from typing import TYPE_CHECKING, cast
 import unittest
 
 from tests.world import ROOT
+
+if TYPE_CHECKING:
+  from types import ModuleType
 
 FAST_LAYER = "tests/fast/"
 """ 快速层的目录 """
@@ -33,7 +37,7 @@ class RecordingLoader(unittest.TestLoader):
     无
     """
     super().__init__()
-    self.modules = []
+    self.modules: list[ModuleType] = []
 
   def loadTestsFromModule(self, module, *args, **kwargs):
     """
@@ -98,7 +102,7 @@ def pytest_classes(module) -> list:
   Return arguments:
   list[type] -- 类，不重复
   """
-  found = []
+  found: list[type] = []
   owners = [module]
   while owners:
     owner = owners.pop()
@@ -234,7 +238,7 @@ def layer_problems(layer: str, base: type) -> list:
     sys.path[:] = saved_path
   problems = []
   failed = set()
-  for error in loader.errors:
+  for error in cast(list[str], loader.errors):
     lines = error.strip().splitlines()
     name = lines[0].rsplit(" ", 1)[-1]
     failed.add(name)
@@ -242,9 +246,9 @@ def layer_problems(layer: str, base: type) -> list:
         f"模块 {name} 导入出错（{lines[-1]}）：修好导入，其中的测试才查得到"
     )
   loaded = {
-      os.path.realpath(module.__file__)
+      os.path.realpath(module_file)
       for module in loader.modules
-      if getattr(module, "__file__", None)
+      if (module_file := getattr(module, "__file__", None))
   }
   for folder, dirs, files in os.walk(os.path.join(ROOT, layer)):
     dirs[:] = [name for name in dirs if name != "__pycache__"]

@@ -157,7 +157,7 @@ def _mute_ui() -> list:
         cls.draw = lambda self, *args, **kwargs: None
       except (AttributeError, TypeError):
         pass
-  draw.WaitDraw.draw = record_wait_draw
+  setattr(draw.WaitDraw, "draw", record_wait_draw)
   flow_handle.askfor_all = (
       lambda return_list, *args, **kwargs: return_list[0] if return_list else ""
   )
@@ -357,7 +357,7 @@ class MinimalWorld:
       self,
       cid: int,
       name: str = "测试干员",
-      position: list = None,
+      position: list[str] | None = None,
       *,
       naked: bool = False,
       race: int = 0,
@@ -416,8 +416,6 @@ class MinimalWorld:
     cd.body_manage = attr_calculation.get_body_manage_zero()
     cd.assistant_services = attr_calculation.get_assistant_services_zero()
     cd.favorability = {0: 0}
-    cd.social_contact = {}
-    cd.social_contact_data = {}
     cd.talent[121] = 1
     cd.hit_point_max = cd.hit_point = 100
     cd.mana_point_max = cd.mana_point = 100
@@ -485,11 +483,11 @@ class PlayerInput:
     Return arguments:
     无
     """
-    self.buttons = []
+    self.buttons: list[tuple[str, str]] = []
     """ 可以按的按钮：(按钮文字, 命令id)；几个按钮都含安排的文字时按最后画出的那个 """
-    self.screen = []
+    self.screen: list[str] = []
     """ 最近输出的文字 """
-    self.planned = []
+    self.planned: list[tuple[str, str]] = []
     """ 还没用掉的输入：("press", 按钮文字的一部分) 或 ("type", 输入的文字) """
 
   def install(self) -> None:

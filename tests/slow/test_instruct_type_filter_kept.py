@@ -57,7 +57,7 @@ class InstructTypeFilterKeptTest(SlowTestCase):
         for instruct_type, instruct_ids in constant.instruct_type_data.items()
         for instruct_id in instruct_ids
     }
-    listed = {}
+    listed: dict[int, list[str]] = {}
     for return_text in panel.return_list:
       cid = int(return_text) if str(return_text).isdigit() else None
       if cid in constant.cid_to_instruct_id:

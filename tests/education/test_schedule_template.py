@@ -29,22 +29,22 @@ check(
     "四套预设", schedule_template_handle.get_all_template_id() == [1, 2, 3, 4]
 )
 balanced = schedule_template_handle.get_template_data(T.TEMPLATE_BALANCED)
+assert balanced is not None
 check(
     "均衡 = 上课 / 下棋 / 看电影",
     balanced["slot"] == {0: SELF_STUDY, 1: CHESS, 2: MOVIE},
     balanced,
 )
 academic = schedule_template_handle.get_template_data(T.TEMPLATE_ACADEMIC)
+assert academic is not None
 check(
     "学业优先 = 上课 / 上课 / 读书",
     academic["slot"] == {0: SELF_STUDY, 1: SELF_STUDY, 2: READ},
     academic,
 )
-check(
-    "自定义三个时段全空",
-    schedule_template_handle.get_template_data(T.TEMPLATE_CUSTOM)["slot"]
-    == {0: 0, 1: 0, 2: 0},
-)
+custom = schedule_template_handle.get_template_data(T.TEMPLATE_CUSTOM)
+assert custom is not None
+check("自定义三个时段全空", custom["slot"] == {0: 0, 1: 0, 2: 0})
 check(
     "不存在的模板为 None",
     schedule_template_handle.get_template_data(99) is None,
@@ -55,11 +55,9 @@ check(
     and not schedule_template_handle.judge_template_is_preset(5),
 )
 schedule_template_handle.set_template_slot(T.TEMPLATE_CUSTOM, 1, CHESS)
-check(
-    "改模板时段",
-    schedule_template_handle.get_template_data(T.TEMPLATE_CUSTOM)["slot"][1]
-    == CHESS,
-)
+custom_after = schedule_template_handle.get_template_data(T.TEMPLATE_CUSTOM)
+assert custom_after is not None
+check("改模板时段", custom_after["slot"][1] == CHESS)
 schedule_template_handle.set_template_slot(99, 1, CHESS)
 check("改不存在的模板不报错", True)
 saved = {
@@ -81,18 +79,23 @@ new_id = schedule_template_handle.create_template("")
 check(
     "新建编号顺延且自动命名",
     new_id == 5
-    and schedule_template_handle.get_template_data(5)["name"]
-    == _("模板{0}").format(5),
+    and (new_template := schedule_template_handle.get_template_data(5))
+    is not None
+    and new_template["name"] == _("模板{0}").format(5),
 )
 check(
     "改名",
     schedule_template_handle.rename_template(5, "  夜猫子 ")
-    and schedule_template_handle.get_template_data(5)["name"] == "夜猫子",
+    and (new_template := schedule_template_handle.get_template_data(5))
+    is not None
+    and new_template["name"] == "夜猫子",
 )
 check(
     "空名不改",
     not schedule_template_handle.rename_template(5, "  ")
-    and schedule_template_handle.get_template_data(5)["name"] == "夜猫子",
+    and (new_template := schedule_template_handle.get_template_data(5))
+    is not None
+    and new_template["name"] == "夜猫子",
 )
 check(
     "改不存在的模板 False",
@@ -110,32 +113,36 @@ check(
     schedule_template_handle.delete_template(5)
     and 5 not in cache.rhodes_island.child_schedule_template,
 )
+loli_growth = loli.child_growth
+assert loli_growth is not None
 check(
     "删前解开引用它的孩子",
-    loli.child_growth.schedule_template_id == 0
-    and loli.child_growth.schedule_override == {},
+    loli_growth.schedule_template_id == 0
+    and loli_growth.schedule_override == {},
 )
 check("删不存在的 False", not schedule_template_handle.delete_template(5))
 # 编号取「现存最大 + 1」：删掉的正是最大号时会被复用；靠删除时的解引用保证不串日程
 reused_id = schedule_template_handle.create_template("再来一套")
 check(
     "删掉最大号后新模板复用该编号，且原先套它的孩子仍是未套用",
-    reused_id == 5 and loli.child_growth.schedule_template_id == 0,
+    reused_id == 5 and loli_growth.schedule_template_id == 0,
 )
 schedule_template_handle.apply_template(202, reused_id)
 schedule_template_handle.create_template("第七套")
+child_growth = child.child_growth
+assert child_growth is not None
 check(
     "中间空缺号不被补",
     schedule_template_handle.delete_template(reused_id)
     and schedule_template_handle.create_template("再一套") == 7
-    and child.child_growth.schedule_template_id == 0,
+    and child_growth.schedule_template_id == 0,
 )
 
 section("套用与覆盖")
 schedule_template_handle.apply_template(201, T.TEMPLATE_BALANCED)
 check(
     "套用写入编号",
-    loli.child_growth.schedule_template_id == T.TEMPLATE_BALANCED,
+    loli_growth.schedule_template_id == T.TEMPLATE_BALANCED,
 )
 schedule_template_handle.set_child_override(201, 1, READ)
 check(
@@ -150,7 +157,7 @@ check(
 )
 schedule_template_handle.set_child_override(201, 2, READ)
 schedule_template_handle.apply_template(201, T.TEMPLATE_ACADEMIC)
-check("换模板清空覆盖", loli.child_growth.schedule_override == {})
+check("换模板清空覆盖", loli_growth.schedule_override == {})
 schedule_template_handle.apply_template(201, T.TEMPLATE_ACADEMIC)
 check("重复套用同一模板不动覆盖", True)
 check(
@@ -365,8 +372,8 @@ _orig_layer, _orig_need = (
     egg_handle.is_egg_layer,
     egg_handle.have_need_tend_eggs,
 )
-egg_handle.is_egg_layer = lambda cid: True
-egg_handle.have_need_tend_eggs = lambda cid: True
+egg_handle.is_egg_layer = lambda character_id: True
+egg_handle.have_need_tend_eggs = lambda character_id: True
 adult_student.entertainment.entertainment_type = [11, 12, 13]
 egg_handle.replace_entertainment_for_eggs(301)
 _tend_slot = (
@@ -421,13 +428,15 @@ check(
     schedule_template_handle.get_template_use_count(_l17_id),
 )
 check("L17 删掉这套模板", schedule_template_handle.delete_template(_l17_id))
+away_growth = away.child_growth
+assert away_growth is not None
 check(
     "L17 离线的女儿一并解开：编号归 0、单项覆盖清空（此前仍指着被删的编号）",
-    away.child_growth.schedule_template_id == 0
-    and away.child_growth.schedule_override == {},
+    away_growth.schedule_template_id == 0
+    and away_growth.schedule_override == {},
     (
-        away.child_growth.schedule_template_id,
-        away.child_growth.schedule_override,
+        away_growth.schedule_template_id,
+        away_growth.schedule_override,
     ),
 )
 _l17_reused = schedule_template_handle.create_template("复用这个编号的新模板")
@@ -465,9 +474,11 @@ check(
     adult_student.entertainment.entertainment_type == [11, 12, 13],
     adult_student.entertainment.entertainment_type,
 )
+adult_growth = adult_student.child_growth
+assert adult_growth is not None
 check(
     "L18 模板本身保留：她仍指着这套模板",
-    adult_student.child_growth.schedule_template_id == _l18_id,
+    adult_growth.schedule_template_id == _l18_id,
 )
 adult_student.work.work_type = 152
 schedule_template_handle.apply_schedule_for_child(301)

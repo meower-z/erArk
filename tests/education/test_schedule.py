@@ -181,10 +181,8 @@ check(
         "period": 0,
     },
 )
-check(
-    "学生没排课的节次为 None",
-    (set_time(period_time(1)), schedule_handle.get_now_course(201))[1] is None,
-)
+set_time(period_time(1))
+check("学生没排课的节次为 None", schedule_handle.get_now_course(201) is None)
 set_time(DEFAULT_TIME.replace(hour=13, minute=0))
 check(
     "不在节次内为 None",
@@ -225,6 +223,7 @@ check(
 
 section("上课地点解析")
 pe_course = schedule_handle.get_now_course(201)
+assert pe_course is not None
 pe_place = schedule_handle.get_course_place(pe_course)
 check(
     "体育课：木桩房精确到那间房",
@@ -240,9 +239,9 @@ interest_cid = next(
 schedule_handle.set_selected_course(
     201, 0, 0, education_constant.COURSE_TYPE_INTEREST, interest_cid
 )
-interest_place = schedule_handle.get_course_place(
-    schedule_handle.get_now_course(201)
-)
+interest_now_course = schedule_handle.get_now_course(201)
+assert interest_now_course is not None
+interest_place = schedule_handle.get_course_place(interest_now_course)
 check(
     "兴趣课：按 Entertainment.csv 的地点标签解析出场景",
     bool(interest_place),
@@ -260,18 +259,18 @@ intern_work = next(
 schedule_handle.set_selected_course(
     201, 0, 0, education_constant.COURSE_TYPE_INTERN, intern_work
 )
-intern_place = schedule_handle.get_course_place(
-    schedule_handle.get_now_course(201)
-)
+intern_course = schedule_handle.get_now_course(201)
+assert intern_course is not None
+intern_place = schedule_handle.get_course_place(intern_course)
 check(
     "实习课：按 WorkType.csv 的地点标签解析出场景",
     bool(intern_place),
     intern_work,
 )
 mentor = make_character(103, "在岗干员", intern_work, position=intern_place)
-intern_place_2 = schedule_handle.get_course_place(
-    schedule_handle.get_now_course(201)
-)
+intern_course_2 = schedule_handle.get_now_course(201)
+assert intern_course_2 is not None
+intern_place_2 = schedule_handle.get_course_place(intern_course_2)
 check(
     "实习课优先去在岗干员所在的那间房",
     intern_place_2 == mentor.position,
@@ -306,10 +305,11 @@ schedule_handle.set_selected_course(
 )
 # 教室课要在全局课表上有这一格，空格子按「已停课」算没课（Plan 27 §3.3）
 schedule_handle.set_class_cell(ROOM1, 0, 0, 45, 101)
+room_course = schedule_handle.get_now_course(201)
+assert room_course is not None
 check(
     "教室课地点 = 教室场景路径",
-    schedule_handle.get_course_place(schedule_handle.get_now_course(201))
-    == room_path,
+    schedule_handle.get_course_place(room_course) == room_path,
 )
 
 section("行为cid反查")
@@ -503,8 +503,8 @@ check(
 cache.rhodes_island.facility_open[pool_open_cid] = True
 check(
     "解锁后照常是一节课",
-    schedule_handle.get_now_course(201) is not None
-    and schedule_handle.get_now_course(201)["target"] == pool,
+    (pool_course := schedule_handle.get_now_course(201)) is not None
+    and pool_course["target"] == pool,
 )
 schedule_handle.set_selected_course(
     201, _wd, 0, education_constant.COURSE_TYPE_INTERN, intern_work

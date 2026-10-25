@@ -463,7 +463,7 @@ def run(world, state_name: str):
   log = ActionLog()
   log.install()
   recorder = Recorder()
-  memo = {}
+  memo: dict[int, tuple[bytes | None, dict[str, object]]] = {}
   recorder.record("0000", capture(world.cache, log, memo))
   step = 0
 

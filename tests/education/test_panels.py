@@ -3,6 +3,10 @@
 
 from _bootstrap import DEFAULT_TIME, SCENE_DORM, _, auto_schedule, cache, check, classroom_path, clear_schedules, constant, datetime, draw, drawn_text, education_constant, finish, flow_handle, game_config, growth_handle, make_character, move_to, open_all_classroom, period_time, pl, schedule_handle, section, semester_handle, set_time, sex_class_handle
 from Script.System.Education_System import class_schedule_panel, course_select_panel, growth_panel, schedule_template_panel
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from collections.abc import Callable
 
 open_all_classroom()
 clear_schedules()
@@ -33,18 +37,19 @@ E = education_constant
 W = 190
 
 section("页签容器")
-captured = {}
+captured: dict[str, list[str]] = {}
 
 
-def fake_askfor(return_list, *a, **k):
+def fake_askfor(input_list, print_order=False):
   """
   替换 flow_handle.askfor_all 的桩：把可选项记到 captured["rl"]，返回「返回」
   Keyword arguments:
-  return_list -- 可选项列表
+  input_list -- 可选项列表
+  print_order -- 原函数的同名参数，本桩不用
   Return arguments:
   str -- 翻译后的「返回」
   """
-  captured["rl"] = list(return_list)
+  captured["rl"] = list(input_list)
   return _("返回")
 
 
@@ -123,25 +128,26 @@ check(
     ),
 )
 # 编辑一格：脚本化的 askfor —— 选科目 → 选教师
-answers = []
+answers: "list[Callable[[str], bool]]" = []
 
 
-def scripted_askfor(return_list, *a, **k):
+def scripted_askfor(input_list, print_order=False):
   """
   替换 flow_handle.askfor_all 的桩：把可选项记到 captured["rl"]；按 answers 的顺序找第一个
   有选项满足的判断函数，把它从 answers 移除并返回满足它的第一个选项，都不满足时返回最后一个选项
   Keyword arguments:
-  return_list -- 可选项列表
+  input_list -- 可选项列表
+  print_order -- 原函数的同名参数，本桩不用
   Return arguments:
   str -- 选中的选项
   """
-  captured["rl"] = list(return_list)
+  captured["rl"] = list(input_list)
   for want in list(answers):
-    for option in return_list:
+    for option in input_list:
       if want(option):
         answers.remove(want)
         return option
-  return return_list[-1]
+  return input_list[-1]
 
 
 flow_handle.askfor_all = scripted_askfor
@@ -212,7 +218,7 @@ check(
     "MUST_301" not in captured["rl"] and "MUST_201" in captured["rl"],
     captured["rl"],
 )
-instuct_judege.calculation_instuct_judege = lambda *a, **k: (1, 0, "")
+instuct_judege.calculation_instuct_judege = lambda *a, **k: [1, 0, 0.0]
 answers[:] = [lambda o: o == "DONE"]
 panel._select_must_attend([], ROOM_P, 2, 3)
 check(
@@ -571,10 +577,11 @@ check(
 )
 answers[:] = [lambda o: o == "OK"]
 panel._edit_sex_class(ROOM_P, 2, 6)
+moved_class = sex_class_handle.get_temp_class(_date, 6)
+assert moved_class is not None
 check(
     "确定后那一节改到本教室、必修名单沿用",
-    sex_class_handle.get_temp_class(_date, 6)["classroom"] == ROOM_P
-    and sex_class_handle.get_temp_class(_date, 6)["must_attend"] == [201],
+    moved_class["classroom"] == ROOM_P and moved_class["must_attend"] == [201],
 )
 flow_handle.askfor_all = fake_askfor
 clear_schedules()
@@ -597,19 +604,24 @@ section("Plan 26 §3.3：课堂模式下的邀请名单按实操课门槛筛")
 from Script.System.Sex_System import group_sex_panel  # noqa: E402
 from Script.UI.Panel import common_select_NPC  # noqa: E402
 
-_invite_captured = {}
+_invite_captured: dict[str, list[object]] = {}
 _orig_select_func = common_select_NPC.common_select_npc_button_list_func
 
 
-def capture_invite(now_panel, *a, **k):
+def capture_invite(
+    now_draw_panel, title_text="", info_text="", select_state=None
+):
   """
   记下邀请名单并直接返回，让面板的 while 循环在 fake_askfor 返回「返回」后退出
   Keyword arguments:
-  now_panel -- 面板的名单控制对象
+  now_draw_panel -- 面板的名单控制对象
+  title_text -- 标题文本
+  info_text -- 说明文本
+  select_state -- 选择状态
   Return arguments:
   tuple -- (return_list, other_return_list, select_state)
   """
-  _invite_captured["list"] = [one[0] for one in now_panel.text_list]
+  _invite_captured["list"] = [one[0] for one in now_draw_panel.text_list]
   return [_("返回")], [], {}
 
 
@@ -938,7 +950,7 @@ check(
     and "女儿02" not in _count_line,
     (_no_course_line, _blocked_line),
 )
-instuct_judege.calculation_instuct_judege = lambda *a, **k: (1, 0, "")
+instuct_judege.calculation_instuct_judege = lambda *a, **k: [1, 0, 0.0]
 _count_line, _blocked_line, _no_course_line = draw_sex_class_page()
 instuct_judege.calculation_instuct_judege = _orig_judge
 check(
@@ -972,7 +984,7 @@ schedule_handle.set_class_cell(ROOM1, _l6_day, 1, 45, 104)
 schedule_handle.set_class_cell(ROOM1, _l6_day, 2, 45, 105)
 teacher_b.work.work_type = 21  # 教师乙改了岗
 cache.npc_id_got.discard(104)  # 教师丙不在岛上（外勤等离线时移出 npc_id_got）
-_button_log = []
+_button_log: list[tuple[str, str, str]] = []
 _orig_center_draw = draw.CenterButton.draw
 _orig_left_draw = draw.LeftButton.draw
 
@@ -991,8 +1003,8 @@ def record_button(self, *a, **k):
   _orig_center_draw(self, *a, **k)
 
 
-draw.CenterButton.draw = record_button
-draw.LeftButton.draw = record_button
+setattr(draw.CenterButton, "draw", record_button)
+setattr(draw.LeftButton, "draw", record_button)
 _l6_panel = class_schedule_panel.Class_Schedule_Panel(W)
 _l6_panel.now_room = ROOM1
 _l6_panel.draw_page([])
@@ -1102,8 +1114,8 @@ check(
     [one for one in _button_log if _name45 in one[0]],
 )
 teacher_b.name = _l6_saved_name
-draw.CenterButton.draw = _orig_center_draw
-draw.LeftButton.draw = _orig_left_draw
+setattr(draw.CenterButton, "draw", _orig_center_draw)
+setattr(draw.LeftButton, "draw", _orig_left_draw)
 teacher_b.work.work_type = 151
 cache.npc_id_got.add(104)
 clear_schedules()
@@ -1127,13 +1139,13 @@ check(
     ),
 )
 _button_log.clear()
-draw.CenterButton.draw = record_button
-draw.LeftButton.draw = record_button
+setattr(draw.CenterButton, "draw", record_button)
+setattr(draw.LeftButton, "draw", record_button)
 _l21_panel = class_schedule_panel.Class_Schedule_Panel(W)
 _l21_panel.now_room = ROOM1
 _l21_panel.draw_page([])
-draw.CenterButton.draw = _orig_center_draw
-draw.LeftButton.draw = _orig_left_draw
+setattr(draw.CenterButton, "draw", _orig_center_draw)
+setattr(draw.LeftButton, "draw", _orig_left_draw)
 _l21_cell = next(
     (
         one
@@ -1344,9 +1356,9 @@ set_time(period_time(0))
 schedule_handle.set_selected_course(
     201, _st_day, 0, E.COURSE_TYPE_PE, _("木桩房")
 )
-move_to(
-    201, schedule_handle.get_course_place(schedule_handle.get_now_course(201))
-)
+_st_course = schedule_handle.get_now_course(201)
+assert _st_course is not None
+move_to(201, schedule_handle.get_course_place(_st_course))
 _st.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
 _tip = character_info_head.get_now_class_tip(201)
 check(
@@ -1474,14 +1486,14 @@ from Script.System.Web_Draw_System import web_draw_adapter
 web_draw_adapter.apply_web_adapters()
 cache.current_draw_elements = []
 problem = []
-for name, panel in (
+for name, web_panel in (
     ("全局课表", class_schedule_panel.Class_Schedule_Panel(W)),
     ("个人课表", course_select_panel.Course_Select_Panel(W)),
     ("养成总览", growth_panel.Growth_Panel(W)),
     ("日程模板", schedule_template_panel.Schedule_Template_Panel(W)),
 ):
   try:
-    panel.draw_page([])
+    web_panel.draw_page([])
   except Exception as error:
     problem.append((name, repr(error)))
 check("Web 模式下四个子页都能画", not problem, problem)

@@ -14,9 +14,10 @@ force-exclude = '^/Script/Config/config_def\.py$'
 explicit_package_bases = true
 follow_imports = "silent"
 # 编辑器 tools/ArkEditor 以自己的目录为脚本目录运行，按顶层模块名导入同目录的模块（如 cache_control、ui.window）
-mypy_path = "tools/ArkEditor"
+# tests/education 的脚本按顶层模块名导入 _bootstrap 与 official_event_check，tests/_mypy_stubs 的存根把这两个名字指到真实模块
+mypy_path = ["tools/ArkEditor", "tests/_mypy_stubs"]
 
-# lint 用的虚拟环境不装游戏运行所需的这些第三方包，mypy 找不到它们或它们的类型存根
+# lint 用的虚拟环境不装游戏与测试运行所需的这些第三方包，mypy 找不到它们或它们的类型存根
 [[tool.mypy.overrides]]
 module = [
   "cv2",
@@ -37,6 +38,7 @@ module = [
   "PySide6.QtCore",
   "PySide6.QtGui",
   "PySide6.QtWidgets",
+  "pytest",
   "rtmlib",
   "ultralytics",
   "wcwidth",

@@ -405,7 +405,7 @@ def expand_ranges(text: str) -> set:
   Return arguments:
   set -- cid 字符串集合
   """
-  cids = set()
+  cids: set[str] = set()
   for part in text.split(","):
     start, _, end = part.partition("-")
     cids.update(str(cid) for cid in range(int(start), int(end or start) + 1))
@@ -500,6 +500,8 @@ def iter_rows():
 
 class ChildStageTalkNotSexualTest(FastTestCase):
   """挂在儿童阶段的口上与事件里没有 H 内容，也没有无法判定的行"""
+
+  rows: list[tuple[str, str, str]]
 
   @classmethod
   def setUpClass(cls) -> None:

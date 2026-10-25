@@ -79,7 +79,7 @@ class DecodeOnFirstUseTest(SlowTestCase):
     self.assertEqual(self.opened_at_start, [])
     expected_index, _ = image_path_index.build_image_path_index("image")
     self.assertEqual(self.era_image.image_path_data, expected_index)
-    expected_by_chara = {}
+    expected_by_chara: dict[str, set[str]] = {}
     for name in expected_index:
       if "_" in name:
         expected_by_chara.setdefault(name.split("_")[0], set()).add(name)
