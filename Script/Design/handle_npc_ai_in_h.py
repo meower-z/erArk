@@ -18,6 +18,7 @@ from Script.Design import (
     attr_calculation,
     map_handle,
     child_stage_gate,
+    virgin_break_gate,
 )
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
@@ -672,35 +673,8 @@ def npc_active_h() -> int | None:
     ):
       continue
     # 如果NPC为处，则跳过破处类
-    # 带 W 的破处行为结算时也会夺走阴道处女
-    if (
-        target_character_data.talent[0]
-        and ("V" in behavior_tag_list or "W" in behavior_tag_list)
-        and "破处" in behavior_tag_list
-    ):
-      continue
-    if (
-        target_character_data.talent[1]
-        and "A" in behavior_tag_list
-        and "破处" in behavior_tag_list
-    ):
-      continue
-    if (
-        target_character_data.talent[2]
-        and "U" in behavior_tag_list
-        and "破处" in behavior_tag_list
-    ):
-      continue
-    if (
-        target_character_data.talent[3]
-        and "W" in behavior_tag_list
-        and "破处" in behavior_tag_list
-    ):
-      continue
-    if (
-        target_character_data.talent[4]
-        and "N" in behavior_tag_list
-        and "破处" in behavior_tag_list
+    if virgin_break_gate.takes_kept_virginity(
+        behavior_tag_list, target_character_data.talent
     ):
       continue
 
