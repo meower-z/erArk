@@ -26,12 +26,73 @@ ENSEMBLE: 对每个关键点，取所有模型中归一化置信度最高的结�
 输出：每个角色生成对比可视化图片，保存在 image/立绘/模型测试用/多模型对比结果/
 """
 
+from __future__ import annotations
+
 import os
 import json
 import cv2
 import numpy as np
 import time
 import traceback
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import NotRequired, TypedDict
+
+  from rtmlib import RTMO, Body, BodyWithFeet, Custom, Wholebody
+  from ultralytics import YOLO
+
+  class ModelInfo(TypedDict):
+    """main 里 models 的一项：模型实例与它的显示名、推理接口类型"""
+
+    name: str
+    full_name: str
+    model: Wholebody | Body | BodyWithFeet | RTMO | Custom | YOLO
+    type: str
+    extract_17: bool
+
+  class ModelResult(TypedDict):
+    """一个模型在一张图上的识别结果"""
+
+    kps: np.ndarray
+    scores: np.ndarray
+    norm_scores: np.ndarray
+    avg: float
+    norm_avg: float
+
+  class EnsembleResult(TypedDict):
+    """build_ensemble 的集成结果"""
+
+    kps: np.ndarray
+    scores: np.ndarray
+    raw_scores: np.ndarray
+    norm_scores: np.ndarray
+    source_models: list[str]
+    avg: float
+
+  class ModelStats(TypedDict):
+    """main 里 total_stats 的一项：一个模型在全部角色上的累计统计"""
+
+    wins: int
+    total_norm_scores: list[float]
+    per_char_avg: list[float]
+
+  class PerModelStats(TypedDict):
+    """统计报告里一个模型的汇总，集成结果没有 keypoint_wins"""
+
+    avg_normalized_score: float
+    keypoint_wins: NotRequired[int]
+    per_char_avg: list[float]
+
+  class ComparisonReport(TypedDict):
+    """写入 comparison_report.json 的统计报告"""
+
+    test_characters: list[str]
+    models: dict[str, dict[str, str]]
+    sigmoid_models: list[str]
+    per_model_stats: dict[str, PerModelStats]
+    ensemble_source_count: dict[str, int]
+
 
 # COCO 17 关键点名称（索引 0-16 对应身体部位）
 COCO_KEYPOINTS = [
@@ -146,7 +207,7 @@ MODEL_COLORS = {
 }
 
 
-def sigmoid(x):
+def sigmoid(x: np.ndarray) -> np.ndarray:
   """
   Sigmoid函数，将logit值转为0-1概率
 
@@ -156,7 +217,7 @@ def sigmoid(x):
   return 1.0 / (1.0 + np.exp(-np.clip(x, -20, 20)))
 
 
-def load_image(image_path):
+def load_image(image_path: str) -> np.ndarray | None:
   """
   加载图像（支持中文路径）
 
@@ -168,7 +229,7 @@ def load_image(image_path):
   return image
 
 
-def save_image(path, image):
+def save_image(path: str, image: np.ndarray) -> bool:
   """
   保存图像到指定路径（支持中文路径）
 
@@ -185,8 +246,12 @@ def save_image(path, image):
 
 
 def draw_keypoints_on_image(
-    image, keypoints_17, scores_17, model_name, threshold=0.3
-):
+    image: np.ndarray,
+    keypoints_17: np.ndarray,
+    scores_17: np.ndarray,
+    model_name: str,
+    threshold: float = 0.3,
+) -> np.ndarray:
   """
   在图像上绘制COCO 17关键点和骨架
 
@@ -315,7 +380,9 @@ def draw_keypoints_on_image(
   return img
 
 
-def normalize_scores(scores, model_key, needs_sigmoid_keys):
+def normalize_scores(
+    scores: np.ndarray, model_key: str, needs_sigmoid_keys: set[str]
+) -> np.ndarray:
   """
   归一化分数：对RTMW系列模型应用sigmoid，其他保持不变
 
@@ -330,7 +397,9 @@ def normalize_scores(scores, model_key, needs_sigmoid_keys):
   return scores.copy()
 
 
-def build_ensemble(results, needs_sigmoid_keys):
+def build_ensemble(
+    results: dict[str, ModelResult], needs_sigmoid_keys: set[str]
+) -> EnsembleResult:
   """
   构建集成结果：对每个关键点，取归一化置信度最高的模型的坐标和分数
 
@@ -382,8 +451,12 @@ def build_ensemble(results, needs_sigmoid_keys):
 
 
 def create_score_table_image(
-    results, models, char_name, needs_sigmoid_keys, ensemble_result=None
-):
+    results: dict[str, ModelResult],
+    models: dict[str, ModelInfo],
+    char_name: str,
+    needs_sigmoid_keys: set[str],
+    ensemble_result: EnsembleResult | None = None,
+) -> np.ndarray:
   """
   生成所有模型的归一化置信度对比表格图
 
@@ -569,7 +642,7 @@ def create_score_table_image(
       )
 
     # 找最佳（排除ENS，因为ENS本身就是最佳的组合）
-    best_key = max(norm_scores_map, key=norm_scores_map.get)
+    best_key = max(norm_scores_map, key=lambda k: norm_scores_map[k])
     model_wins[best_key] = model_wins.get(best_key, 0) + 1
     best_color = MODEL_COLORS.get(best_key, (200, 200, 200))
     x_best = kp_col_w + (len(keys) + (1 if ensemble_result else 0)) * col_w + 10
@@ -664,7 +737,9 @@ def create_score_table_image(
   return summary
 
 
-def run_yolo11_inference(model, image):
+def run_yolo11_inference(
+    model: YOLO, image: np.ndarray
+) -> tuple[np.ndarray, np.ndarray] | tuple[None, None]:
   """
   使用YOLO11-pose模型进行推理
 
@@ -690,7 +765,9 @@ def run_yolo11_inference(model, image):
   return None, None
 
 
-def run_rtmo_inference(model, image):
+def run_rtmo_inference(
+    model: RTMO, image: np.ndarray
+) -> tuple[np.ndarray, np.ndarray] | tuple[None, None]:
   """
   使用RTMO单阶段模型进行推理
 
@@ -737,7 +814,7 @@ def main() -> None:
   needs_sigmoid_keys = set()
 
   # ===== 模型定义 =====
-  models = {}
+  models: dict[str, ModelInfo] = {}
   model_init_start = time.time()
 
   # --- A: Wholebody balanced (基线) ---
@@ -890,7 +967,7 @@ def main() -> None:
   print(f'\n测试角色 ({len(characters)}): {characters}\n')
 
   # 总体统计
-  total_stats = {
+  total_stats: dict[str, ModelStats] = {
       k: {'wins': 0, 'total_norm_scores': [], 'per_char_avg': []}
       for k in models
   }
@@ -920,7 +997,7 @@ def main() -> None:
     print(f'  图像尺寸: {w}x{h}')
 
     # 对每个模型运行推理
-    results = {}
+    results: dict[str, ModelResult | None] = {}
     for key in sorted(models.keys()):
       minfo = models[key]
       name = minfo['name']
@@ -1048,7 +1125,9 @@ def main() -> None:
         k: float(np.mean(normalize_scores(v['scores'], k, needs_sigmoid_keys)))
         for k, v in valid_results.items()
     }
-    sorted_models = sorted(mean_scores, key=mean_scores.get, reverse=True)
+    sorted_models = sorted(
+        mean_scores, key=lambda k: mean_scores[k], reverse=True
+    )
     top3 = sorted_models[:3]
     focus_keys = top3 + ['ENS']
     imgs_focus = []
@@ -1110,7 +1189,7 @@ def main() -> None:
       line += f' {ens_score:>8.4f}   {ens_src}'
 
       # 统计胜出（在单模型间）
-      best_key = max(norm_map, key=norm_map.get)
+      best_key = max(norm_map, key=lambda k: norm_map[k])
       total_stats[best_key]['wins'] += 1
       print(line)
 
@@ -1169,7 +1248,7 @@ def main() -> None:
   print(f'\n所有对比结果已保存到：{output_dir}')
 
   # ===== 保存JSON统计结果 =====
-  report = {
+  report: ComparisonReport = {
       'test_characters': characters,
       'models': {
           k: {'name': models[k]['name'], 'full_name': models[k]['full_name']}

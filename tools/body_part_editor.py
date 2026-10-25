@@ -15,6 +15,8 @@
 日期：2026-02-12
 """
 
+from __future__ import annotations
+
 import os
 import sys
 import json
@@ -22,7 +24,23 @@ import copy
 import threading
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
+from typing import TYPE_CHECKING
 from PIL import Image, ImageTk
+
+if TYPE_CHECKING:
+  from typing import Any, Literal, TypedDict
+
+  # json.load 读出的一个关键点：id 是整数，x、y 是 0~1 的浮点数，另有 name、source_model 等字段，写回时原样保留，只能是 Any
+  Landmark = dict[str, Any]
+  # self.files 的一项：[JSON 路径, 图片路径, JSON 数据, 是否已修改]，按位置读写、各位置类型不同，只能是 Any
+  FileEntry = list[Any]
+
+  class UndoEntry(TypedDict):
+    """撤销历史的一步：所属文件下标与修改前的关键点"""
+
+    file_index: int
+    landmarks: list[Landmark]
+
 
 # COCO 17 关键点名称
 COCO_KEYPOINTS = [
@@ -119,7 +137,7 @@ KEYPOINT_COLORS = {
 class BodyPartEditor:
   """身体部位编辑器主类"""
 
-  def __init__(self, root):
+  def __init__(self, root: tk.Tk) -> None:
     """
     初始化编辑器
 
@@ -134,14 +152,20 @@ class BodyPartEditor:
     self.root.state("zoomed")
 
     # 数据存储
-    self.files = []  # [(json_path, png_path, data, modified), ...]
+    self.files: list[FileEntry] = (
+        []
+    )  # [(json_path, png_path, data, modified), ...]
     self.current_index = 0
-    self.current_image = None
-    self.photo_image = None
-    self.landmarks = []  # 当前文件的landmarks
-    self.dragging_point = None  # 正在拖动的点的ID
-    self.point_items = {}  # {landmark_id: (oval_id, text_id, source_id)}
-    self.line_items = {}  # {(start_id, end_id): line_id} - 骨架线條字典
+    self.current_image: Image.Image | None = None
+    self.photo_image: ImageTk.PhotoImage | None = None
+    self.landmarks: list[Landmark] = []  # 当前文件的landmarks
+    self.dragging_point: int | None = None  # 正在拖动的点的ID
+    self.point_items: dict[int, tuple[int, int, int]] = (
+        {}
+    )  # {landmark_id: (oval_id, text_id, source_id)}
+    self.line_items: dict[tuple[int, int], int] = (
+        {}
+    )  # {(start_id, end_id): line_id} - 骨架线條字典
     self.scale_factor = 1.0  # 图片缩放比例
     self.offset_x = 0  # 图片在画布上的X偏移
     self.offset_y = 0  # 图片在画布上的Y偏移
@@ -149,9 +173,11 @@ class BodyPartEditor:
     self.image_height = 0
 
     # 撤销历史记录
-    self.undo_history = []  # [{file_index: landmarks_copy}, ...]
+    self.undo_history: list[UndoEntry] = (
+        []
+    )  # [{file_index: landmarks_copy}, ...]
     self.max_undo_steps = 50  # 最大撤销步数
-    self.drag_start_snapshot = None  # 拖动开始时的快照
+    self.drag_start_snapshot: list[Landmark] | None = None  # 拖动开始时的快照
 
     # 显示模式
     self.show_landmarks = True  # 是否显示关键点
@@ -160,17 +186,19 @@ class BodyPartEditor:
     self.max_zoom = 4.0
 
     # 性能优化相关缓存
-    self._image_cache = {}  # {png_path: 解码后的PIL图片}
+    self._image_cache: dict[str, Image.Image] = (
+        {}
+    )  # {png_path: 解码后的PIL图片}
     self._image_cache_lock = (
         threading.Lock()
     )  # 图片缓存锁（后台预取线程会访问）
-    self._photo_cache = (
+    self._photo_cache: dict[tuple[str | None, int, int], ImageTk.PhotoImage] = (
         {}
     )  # {(png_path, w, h): ImageTk.PhotoImage} - 缩放结果缓存
-    self._current_png_path = None  # 当前显示的图片路径（缓存key用）
+    self._current_png_path: str | None = None  # 当前显示的图片路径（缓存key用）
     self._last_canvas_size = (0, 0)  # 上次画布尺寸（过滤无效Configure事件）
-    self._resize_after_id = None  # 窗口变化防抖定时器
-    self._hq_redraw_after_id = None  # 高质量重绘防抖定时器
+    self._resize_after_id: str | None = None  # 窗口变化防抖定时器
+    self._hq_redraw_after_id: str | None = None  # 高质量重绘防抖定时器
 
     # 创建界面
     self._create_menu()
@@ -437,7 +465,7 @@ class BodyPartEditor:
             "未找到文件", "该文件夹中没有找到 *_body.json 文件"
         )
 
-  def _scan_folder(self, folder):
+  def _scan_folder(self, folder: str) -> None:
     """
     递归扫描文件夹查找body.json文件
 
@@ -451,7 +479,7 @@ class BodyPartEditor:
           json_path = os.path.join(root, filename)
           self._load_json_file(json_path)
 
-  def _load_json_file(self, json_path):
+  def _load_json_file(self, json_path: str) -> None:
     """
     加载单个JSON文件
 
@@ -533,7 +561,7 @@ class BodyPartEditor:
     # 后台预取相邻文件的图片，加速左右切换
     self._prefetch_neighbors()
 
-  def _get_image(self, png_path):
+  def _get_image(self, png_path: str) -> Image.Image:
     """
     获取解码后的PIL图片（带缓存）
 
@@ -582,7 +610,7 @@ class BodyPartEditor:
 
     threading.Thread(target=work, daemon=True).start()
 
-  def _redraw(self, fast=False):
+  def _redraw(self, fast: bool = False) -> None:
     """
     重新绘制画布内容
 
@@ -646,7 +674,7 @@ class BodyPartEditor:
     # 绘制骨架线和关键点覆盖层
     self._redraw_overlay(clear=False)
 
-  def _redraw_overlay(self, clear=True):
+  def _redraw_overlay(self, clear: bool = True) -> None:
     """
     重新绘制关键点与骨架覆盖层（不重绘底图）
 
@@ -737,7 +765,7 @@ class BodyPartEditor:
 
     for landmark in self.landmarks:
       lm_id = landmark["id"]
-      name = landmark.get(
+      name: str = landmark.get(
           "name",
           COCO_KEYPOINTS[lm_id]
           if lm_id < len(COCO_KEYPOINTS)
@@ -766,7 +794,7 @@ class BodyPartEditor:
       # 根据位置决定标签方向
       text_offset_x = 15
       text_offset_y = -5
-      anchor = tk.W
+      anchor: Literal["w", "e"] = tk.W
 
       # 如果点在右侧，标签放左边
       if landmark["x"] > 0.7:
@@ -796,7 +824,7 @@ class BodyPartEditor:
 
       self.point_items[lm_id] = (oval_id, text_id, source_id)
 
-  def _on_canvas_click(self, event):
+  def _on_canvas_click(self, event: tk.Event[tk.Canvas]) -> None:
     """
     画布点击事件
 
@@ -822,7 +850,7 @@ class BodyPartEditor:
     self.dragging_point = None
     self.drag_start_snapshot = None
 
-  def _on_canvas_drag(self, event):
+  def _on_canvas_drag(self, event: tk.Event[tk.Canvas]) -> None:
     """
     画布拖动事件
 
@@ -859,7 +887,9 @@ class BodyPartEditor:
     # 优化：只更新被拖动的点和相关连线的位置，而非完全重绘
     self._update_point_position(self.dragging_point, canvas_x, canvas_y)
 
-  def _update_point_position(self, lm_id, canvas_x, canvas_y):
+  def _update_point_position(
+      self, lm_id: int, canvas_x: float, canvas_y: float
+  ) -> None:
     """
     更新单个关键点的位置（不重绘整个画布）
 
@@ -908,7 +938,7 @@ class BodyPartEditor:
     # 更新相关的骨架线
     self._update_skeleton_lines(lm_id)
 
-  def _update_skeleton_lines(self, lm_id):
+  def _update_skeleton_lines(self, lm_id: int) -> None:
     """
     更新与指定关键点相关的骨架线
 
@@ -937,7 +967,7 @@ class BodyPartEditor:
           if line_key in self.line_items:
             self.canvas.coords(self.line_items[line_key], x1, y1, x2, y2)
 
-  def _on_canvas_release(self, event):
+  def _on_canvas_release(self, event: tk.Event[tk.Canvas]) -> None:
     """
     画布释放事件
 
@@ -973,7 +1003,7 @@ class BodyPartEditor:
     self.dragging_point = None
     self.drag_start_snapshot = None
 
-  def _on_resize(self, event):
+  def _on_resize(self, event: tk.Event[tk.Canvas]) -> None:
     """
     画布大小变化事件
 
@@ -1001,7 +1031,7 @@ class BodyPartEditor:
     self._resize_after_id = None
     self._redraw()
 
-  def _undo(self, event):
+  def _undo(self, event: tk.Event[tk.Misc] | None) -> None:
     """
     撤销操作
 
@@ -1165,7 +1195,7 @@ class BodyPartEditor:
     percent = int(self.zoom_level * 100)
     self.zoom_label.config(text=f"{percent}%")
 
-  def _on_mouse_wheel(self, event):
+  def _on_mouse_wheel(self, event: tk.Event[tk.Canvas]) -> None:
     """
     鼠标滚轮缩放（Ctrl+滚轮）
 
@@ -1178,7 +1208,7 @@ class BodyPartEditor:
     else:
       self._zoom_out()
 
-  def _prev_file(self, event):
+  def _prev_file(self, event: tk.Event[tk.Misc] | None) -> None:
     """
     切换到上一个文件
 
@@ -1189,7 +1219,7 @@ class BodyPartEditor:
       self.current_index -= 1
       self._display_current()
 
-  def _next_file(self, event):
+  def _next_file(self, event: tk.Event[tk.Misc] | None) -> None:
     """
     切换到下一个文件
 
@@ -1200,7 +1230,7 @@ class BodyPartEditor:
       self.current_index += 1
       self._display_current()
 
-  def _save_current(self, event):
+  def _save_current(self, event: tk.Event[tk.Misc] | None) -> None:
     """
     保存当前文件
 
@@ -1244,7 +1274,7 @@ class BodyPartEditor:
           else None,
       )
 
-  def _write_file(self, index):
+  def _write_file(self, index: int) -> bool:
     """
     将指定文件的数据写入磁盘
 
@@ -1332,12 +1362,13 @@ def main() -> None:
   root = tk.Tk()
 
   # 设置DPI感知（Windows高分屏支持）
-  try:
-    from ctypes import windll
+  if sys.platform == "win32":
+    try:
+      from ctypes import windll
 
-    windll.shcore.SetProcessDpiAwareness(1)
-  except:
-    pass
+      windll.shcore.SetProcessDpiAwareness(1)
+    except:
+      pass
 
   BodyPartEditor(root)
   root.mainloop()

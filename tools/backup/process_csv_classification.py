@@ -8,7 +8,7 @@ from collections import defaultdict
 from pathlib import Path
 
 
-def process_csv_file(csv_file_path):
+def process_csv_file(csv_file_path: Path) -> defaultdict[str, list[int]]:
   """
   处理CSV文件并统计第2列的分类信息
 

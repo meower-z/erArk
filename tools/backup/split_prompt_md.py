@@ -14,12 +14,31 @@ MD提示词文件拆分工具
     python split_prompt_md.py .github/prompts/角色素质/指令前提分支_全陷落(带陌生).md --output ./output
 """
 
+from __future__ import annotations
+
 import argparse
 import re
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from typing import TypedDict
+
+  class MdSection(TypedDict):
+    """一个分支：分支名与含标题行的完整内容"""
+
+    name: str
+    content: str
+
+  class ParsedMd(TypedDict):
+    """parse_md_file 的解析结果"""
+
+    header: str
+    split_level: int
+    sections: list[MdSection]
 
 
-def get_header_level(line):
+def get_header_level(line: str) -> int:
   """
   获取标题的层级（#的数量）
 
@@ -36,7 +55,7 @@ def get_header_level(line):
   return 0
 
 
-def parse_md_file(file_path):
+def parse_md_file(file_path: str) -> ParsedMd | None:
   """
   解析MD文件，提取文件头和各个分支内容
 
@@ -74,7 +93,7 @@ def parse_md_file(file_path):
   split_level = max(header_levels)
   print(f'识别到最次级标题层级: {split_level} 级')
 
-  result = {'header': '', 'split_level': split_level, 'sections': []}
+  result: ParsedMd = {'header': '', 'split_level': split_level, 'sections': []}
 
   # 找到第一个非一级标题之前的部分作为header
   header_lines = []
@@ -90,8 +109,8 @@ def parse_md_file(file_path):
   result['header'] = '\n'.join(header_lines).strip()
 
   # 解析各个section（以最次级标题为分割）
-  current_section = None
-  current_section_lines = []
+  current_section: MdSection | None = None
+  current_section_lines: list[str] = []
 
   for i in range(content_start, len(lines)):
     line = lines[i]
@@ -121,7 +140,7 @@ def parse_md_file(file_path):
   return result
 
 
-def sanitize_filename(name):
+def sanitize_filename(name: str) -> str:
   """
   清理文件名，移除不合法字符
 
@@ -140,7 +159,7 @@ def sanitize_filename(name):
   return name
 
 
-def split_md_file(input_file, output_dir=None):
+def split_md_file(input_file: str, output_dir: str | None = None) -> None:
   """
   拆分MD文件到多个单文件
 
@@ -158,13 +177,13 @@ def split_md_file(input_file, output_dir=None):
 
   # 确定输出目录
   if output_dir is None:
-    output_dir = input_path.parent
+    output_root = input_path.parent
   else:
-    output_dir = Path(output_dir)
+    output_root = Path(output_dir)
 
   # 创建输出子目录（以原文件名命名，去掉.md扩展名）
   base_name = input_path.stem
-  output_folder = output_dir / base_name
+  output_folder = output_root / base_name
   output_folder.mkdir(parents=True, exist_ok=True)
 
   print(f'解析文件: {input_file}')

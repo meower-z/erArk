@@ -52,7 +52,7 @@ def process_csv_file(file_path: str) -> List[dict]:
   返回值:
       List[dict]: 包含过长句子信息的字典列表
   """
-  results = []
+  results: List[dict] = []
 
   try:
     # 读取CSV文件

@@ -9,7 +9,7 @@
 import os
 
 
-def read_behavior_data(file_path):
+def read_behavior_data(file_path: str) -> dict[int, str]:
   """
   读取Behavior_Data.csv文件，构建id到en_name的映射
 
@@ -64,8 +64,8 @@ def read_behavior_data(file_path):
 
 
 def create_converted_file(
-    behavior_data_path, behavior_effect_path, output_path
-):
+    behavior_data_path: str, behavior_effect_path: str, output_path: str
+) -> None:
   """
   创建转换后的BehaviorEffect.csv文件
 
