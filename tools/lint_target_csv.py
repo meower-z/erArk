@@ -75,7 +75,7 @@ def load_rows() -> "list[TargetRow]":
   """
   rows: list[TargetRow] = []
   raw = io.open(TARGET_PATH, encoding="utf-8", newline="").read()
-  for index, line in enumerate(raw.split("\r\n"), 1):
+  for index, line in enumerate(raw.splitlines(), 1):
     if index <= HEADER_LINES or not line.strip():
       continue
     parts = line.split(",", 4)
@@ -179,7 +179,7 @@ def check_effect(rows: "list[TargetRow]") -> None:
     return
   known = {row["cid"] for row in rows}
   raw = io.open(EFFECT_PATH, encoding="utf-8", newline="").read()
-  for index, line in enumerate(raw.split("\r\n"), 1):
+  for index, line in enumerate(raw.splitlines(), 1):
     if index <= HEADER_LINES or not line.strip():
       continue
     parts = line.split(",")
