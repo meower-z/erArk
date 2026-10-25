@@ -129,8 +129,8 @@ def read_CVP(cvp_value_str: str) -> str:
 
 def read_CVE(cve_value_str: str) -> str:
   """读取CVE字符串 A能力,T素质,J宝珠,E经验,S状态,F好感度,X信赖"""
-  # 用下划线分割字符串
-  cve_str_list = cve_value_str.split("_")
+  # 用下划线分割字符串，判定值（如移动的 SceneTag）可以带下划线，只按前四个下划线切分
+  cve_str_list = cve_value_str.split("_", 4)
   # print(f"cve_str_list = {cve_str_list}")
   # 对基本的字符串进行替换
   cve_str_list[0] = cve_str_list[0].replace("CVE", "综合数值结算  ")
@@ -190,8 +190,6 @@ def read_CVE(cve_value_str: str) -> str:
     # 去掉c和d的部分
     cve_str = cve_str.replace(cve_str_list[3], "")
     cve_str = cve_str.replace(cve_str_list[4], "")
-  # 最后去掉所有的下划线
-  cve_str = cve_str.replace("_", "")
   return cve_str
 
 
