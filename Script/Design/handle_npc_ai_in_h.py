@@ -1,3 +1,5 @@
+"""H 中的 NPC AI：无意识 H 的判断与结算、NPC 逆推、群交中的行动与抢占"""
+
 import random
 import datetime
 from types import FunctionType
@@ -625,7 +627,7 @@ def evaluate_npc_body_part_prefs(character_id: int) -> int:
   return part_id
 
 
-def npc_active_h():
+def npc_active_h() -> int | None:
   """
   判断NPC的逆推ai\n
   Return arguments:
@@ -652,7 +654,7 @@ def npc_active_h():
 
   # 遍历全状态
   all_stastus_list = []
-  now_premise_data = {}
+  now_premise_data: dict[str, float] = {}
   for behavior_id in game_config.config_behavior:
     behavior_data = game_config.config_behavior[behavior_id]
     # 跳过只能玩家使用的状态
@@ -753,6 +755,7 @@ def npc_active_h():
   pl_character_data.state = behavior_id
   pl_character_data.behavior.duration = 10
   update.game_update_flow(10)
+  return None
 
 
 def npc_ai_in_group_sex(character_id: int) -> None:

@@ -1,3 +1,5 @@
+"""群交的结算、模板统计与清理，以及群交信息面板和群交行动编辑面板"""
+
 from typing import Collection, List, Optional
 from types import FunctionType
 from Script.UI.Moudle import draw, panel
