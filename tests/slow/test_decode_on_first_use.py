@@ -48,7 +48,7 @@ class DecodeOnFirstUseTest(SlowTestCase):
     """
     from PIL import Image
 
-    self.opened = []
+    self.opened: list[str] = []
     """ Image.open 打开过的文件 """
     real_open = Image.open
 
@@ -76,9 +76,9 @@ class DecodeOnFirstUseTest(SlowTestCase):
 
     self.era_image = era_image
     for name, value in (("PhotoImage", FakePhotoImage), ("_font_scaling", 1.5)):
-      patcher = mock.patch.object(era_image, name, value)
-      patcher.start()
-      self.addCleanup(patcher.stop)
+      era_image_patcher = mock.patch.object(era_image, name, value)
+      era_image_patcher.start()
+      self.addCleanup(era_image_patcher.stop)
 
   def test_start_indexes_without_decoding(self) -> None:
     """启动游戏、开新游戏不打开任何图片；索引与 image_path_index 的取舍结果一致，角色索引按文件名首段收录"""

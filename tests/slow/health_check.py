@@ -44,7 +44,7 @@ class HealthCheckTestCase(SlowTestCase):
     scene_name = self.world.scene(EXAM_ROOM).scene_name
     self.cache.rhodes_island.facility_open[
         game_config.config_facility_open_name_to_cid[scene_name]
-    ] = 1
+    ] = True
     self.walk(EXAM_ROOM)
     self.world.player.press(
         "调整体检日程",

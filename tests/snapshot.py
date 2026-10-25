@@ -171,6 +171,7 @@ def same(a: object, b: object) -> bool:
     return a == b
   if (
       isinstance(a, list)
+      and isinstance(b, list)
       and len(a) == len(b)
       and all(
           type(x) is type(y) and type(x) in EXACT_TYPES for x, y in zip(a, b)

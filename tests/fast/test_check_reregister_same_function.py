@@ -14,6 +14,7 @@ from tests.fast.base import FastTestCase
 
 if TYPE_CHECKING:
   from collections.abc import Callable
+  from typing import Any
 
   from Script.Test.Static_Check.check_registry import CheckFailure
 
@@ -40,7 +41,7 @@ def define(
   Return arguments:
   function -- 本次执行生成的检查函数
   """
-  namespace = {
+  namespace: "dict[str, Any]" = {
       "__name__": module,
       "register_check": register_check,
       "CHECK_ID": CHECK_ID,

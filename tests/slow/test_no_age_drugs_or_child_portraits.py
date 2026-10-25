@@ -138,6 +138,7 @@ class NoAgeDrugsOrChildPortraitsTest(SlowTestCase):
         None,
     )
     self.assertIsNotNone(mother_id, "没有种族缺女儿图的角色，用例不成立")
+    assert mother_id is not None
     daughter = self.world.chara(
         max(self.cache.character_data) + 1,
         "测试女儿",

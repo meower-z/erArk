@@ -135,7 +135,7 @@ class ChildStagesOfflineTest(FastTestCase):
     }
     self.assertTrue(h_id_set, "服装表里有情趣内衣")
     self.pl.pl_collection = attr_calculation.get_collection_zero()
-    self.pl.pl_collection.collection_bonus[H_UNDERWEAR_BONUS_ID] = 1
+    self.pl.pl_collection.collection_bonus[H_UNDERWEAR_BONUS_ID] = True
     picked = set()
     with mock.patch.object(
         attr_calculation, "get_character_fall_level", return_value=2

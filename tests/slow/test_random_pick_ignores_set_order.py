@@ -49,7 +49,7 @@ class InsertionOrderSet(set):
     无
     """
     super().__init__()
-    self.order = []
+    self.order: list[str] = []
     """ 元素第一次加入的顺序 """
     for item in iterable:
       self.add(item)
@@ -104,7 +104,7 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
     Return arguments:
     无
     """
-    result = {}
+    result: dict[type[InsertionOrderSet], list[object]] = {}
     for set_type in (InsertionOrderSet, ReversedOrderSet):
       result[set_type] = []
       for seed in SEEDS:
@@ -209,8 +209,8 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
       str -- 挑中的目标id
       """
       with mock.patch.object(handle_npc_ai, "set", set_type, create=True):
-        target, __, __, __ = handle_npc_ai.search_target(
-            operator_id, all_targets, set(), {}, {}
+        target, _weight, _satisfied, _premise_data = (
+            handle_npc_ai.search_target(operator_id, all_targets, set(), {}, {})
         )
       return target
 
@@ -235,7 +235,9 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
       Return arguments:
       str -- 挑中的口上id
       """
-      __, talk_id, __ = talk.choice_talk_from_talk_data({1: set_type(talk_ids)})
+      _talk_text, talk_id, _common_behavior_id = (
+          talk.choice_talk_from_talk_data({1: set_type(talk_ids)})
+      )
       return talk_id
 
     self.assert_same_picks(pick)

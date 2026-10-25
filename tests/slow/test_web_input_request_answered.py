@@ -44,7 +44,7 @@ class WebInputRequestAnsweredTest(SlowTestCase):
     self.player_page = web_server.socketio.test_client(web_server.app)
     self.player_page.get_received()
     self.http = web_server.app.test_client()
-    self.names = []
+    self.names: list[str] = []
 
     def play() -> None:
       """依次输入姓名、读免责声明、再输入姓名"""

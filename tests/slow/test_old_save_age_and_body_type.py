@@ -12,8 +12,12 @@
 """
 
 import shutil
+from typing import TYPE_CHECKING
 
 from tests.slow.base import SlowTestCase
+
+if TYPE_CHECKING:
+  from typing import Any
 
 SAVE_ID = "test_old_save_age_and_body_type"
 """ 本测试写入 save/ 的存档id，测试结束时删掉 """
@@ -133,7 +137,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
     )
     cache.character_data[0].item[32] = 2
     mother_id = min(cid for cid in cache.npc_id_got if cid in static_id_list)
-    id_dict = {
+    id_dict: "dict[str, Any]" = {
         "minor": minor_id,
         "shrink": shrink_id,
         "shrunk": {
@@ -272,6 +276,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         FOLLOW_MOTHER_ENTERTAINMENT,
         0,
     ]
+    assert child.child_growth is not None
     child.child_growth.follow_mother_flag = True
     child.child_growth.selected_course = {0: {0: [0, "理论教室一"]}}
     child.child_growth.schedule_template_id = 1
@@ -289,6 +294,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
     # 103的学员：未初潮、未成年、在见学，有课表；毕业的女儿：有听课与成绩单记录
     student = cache.character_data[id_dict["d103"]]
     student.talent[6] = 1
+    assert student.child_growth is not None
     student.child_growth.follow_mother_flag = True
     student.child_growth.selected_course = {
         1: {2: [0, "理论教室一"], 3: [4, MISSING_ENTERTAINMENT]}
@@ -300,6 +306,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
     student.child_growth.schedule_override = {1: MISSING_ENTERTAINMENT}
     cache.character_data[minor_id].behavior.behavior_id = MISSING_BEHAVIOR
     graduate = cache.character_data[id_dict["d104"]]
+    assert graduate.child_growth is not None
     graduate.child_growth.attend_class_count = 30
     graduate.child_growth.report_card_history = [{"semester": [2020, 6]}]
     # 101的婴儿：有污浊、H状态与身体道具、H标记与后续链、泌乳、妊娠与卵；母亲在产后、育儿、泌乳
@@ -318,7 +325,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         )
     ] = [3, 3]
     baby.sp_flag.is_h = True
-    baby.sp_flag.milk = 1
+    baby.sp_flag.milk = True
     baby.sp_flag.masturebate = 1
     baby.sp_flag.go_to_join_group_sex = True
     baby.target_character_id = 0
@@ -370,7 +377,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
        罗德岛里的冷库、囚犯、外勤、实操课、体检与借书数据，以及场景面板记着的角色
     """
     collection = self.cache.character_data[0].pl_collection
-    snapshot = {
+    snapshot: "dict[str | int, object]" = {
         "world_setting": dict(self.cache.world_setting),
         "template": repr(self.cache.rhodes_island.child_schedule_template),
         "eggs": repr((collection.held_eggs, collection.soft_eggs)),
@@ -561,6 +568,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         ([], 1),
         "毕业的女儿保持少女",
     )
+    assert graduate.child_growth is not None
     self.assertEqual(
         (
             graduate.child_growth.attend_class_count,
@@ -576,6 +584,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         "102的孩子应在发呆",
     )
     growth = child.child_growth
+    assert growth is not None
     self.assertEqual(
         (
             growth.selected_course,
@@ -588,6 +597,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         "102的孩子应没有课表、日程与翘课标记",
     )
     student = cache.character_data[id_dict["d103"]]
+    assert student.child_growth is not None
     self.assertEqual(
         student.child_growth.selected_course,
         {1: {2: [0, "理论教室一"]}},

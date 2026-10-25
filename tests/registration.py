@@ -17,6 +17,7 @@ import unittest
 from tests.world import ROOT
 
 if TYPE_CHECKING:
+  from collections.abc import Mapping
   from types import ModuleType
 
 FAST_LAYER = "tests/fast/"
@@ -105,11 +106,13 @@ def pytest_classes(module: "ModuleType") -> list:
   list[type] -- 类，不重复
   """
   found: list[type] = []
-  owners = [module]
+  owners: list[ModuleType | type] = [module]
   while owners:
     owner = owners.pop()
     if isinstance(owner, type):
-      namespaces = [vars(klass) for klass in owner.__mro__]
+      namespaces: "list[Mapping[str, object]]" = [
+          vars(klass) for klass in owner.__mro__
+      ]
     else:
       namespaces = [vars(owner)]
     seen = set()
@@ -168,6 +171,7 @@ def module_problems(
       只有在是这一层某个会被收集的测试类的基类（如混入类）时，它的测试才会运行。类里嵌套的类：本模块里定义的类的属性所引用的、本模块定义的类（含别名，逐层往下）。
       pytest 还收集 pytest_classes 列出的类，不是 TestCase 的也单独运行，所以其中不继承 base 的类即使被测试类继承也报出。
   """
+  assert module.__file__ is not None
   path = os.path.relpath(module.__file__, ROOT).replace(os.sep, "/")
   base_name = f"{base.__module__}.{base.__qualname__}"
   cases = collected_cases(module, loader)

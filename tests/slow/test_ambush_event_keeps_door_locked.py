@@ -42,7 +42,7 @@ class AmbushEventKeepsDoorLockedTest(SlowTestCase):
     self.operator_id = self.npc("杜宾")
     self.operator = self.cache.character_data[self.operator_id]
     self.operator.sp_flag.npc_masturebate_for_player = True
-    self.settled_events = []
+    self.settled_events: list[str] = []
     """ handle_event_data 结算过的事件id """
     real_handle = settle_behavior.handle_event_data
 

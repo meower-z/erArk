@@ -14,6 +14,7 @@ from tests.fast.base import FastTestCase
 
 if TYPE_CHECKING:
   from collections.abc import Callable
+  from typing import Any
 
   from Script.Core import game_type
 
@@ -42,7 +43,7 @@ def define(
   Return arguments:
   function -- 本次执行生成的修复函数
   """
-  namespace = {
+  namespace: "dict[str, Any]" = {
       "__name__": module,
       "register_repair": register_repair,
       "CHECK_ID": CHECK_ID,

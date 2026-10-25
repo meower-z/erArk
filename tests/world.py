@@ -128,9 +128,9 @@ def pin_listing_order() -> None:
     """
     return sorted(real_glob(*args, **kwargs))
 
-  sorted_listdir.sorted_listing = True
-  os.listdir = sorted_listdir
-  glob.glob = sorted_glob
+  setattr(sorted_listdir, "sorted_listing", True)
+  setattr(os, "listdir", sorted_listdir)
+  setattr(glob, "glob", sorted_glob)
 
 
 def _mute_ui() -> list:
@@ -182,7 +182,7 @@ class MinimalWorld:
   同一进程只能载入一个世界；用 MinimalWorld.load() 取得它
   """
 
-  _loaded = None
+  _loaded: MinimalWorld | None = None
   """ 本进程已载入的世界 """
 
   def __init__(self) -> None:
@@ -518,7 +518,7 @@ class PlayerInput:
     io_init.io_clear_cmd = self._clear_cmd
     io_init.clear_screen = self._clear_cmd
     io_init.clear_screen_and_history = self._clear_cmd
-    flow_handle.order_deal = self._order_deal
+    setattr(flow_handle, "order_deal", self._order_deal)
 
   def press(self, *labels: str) -> None:
     """
