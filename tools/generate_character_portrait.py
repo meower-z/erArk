@@ -134,7 +134,7 @@ def load_name_table(csv_path: Path, name_col: int) -> dict[int, str]:
       name_col (int): 名字所在列的下标
   返回值：dict[int, str] - 编号 -> 名字
   """
-  table = {}
+  table: dict[int, str] = {}
   if not csv_path.exists():
     return table
   with open(csv_path, "r", encoding="utf-8-sig") as f:
@@ -201,7 +201,7 @@ def load_character_info(
       tables (dict[str, dict[int, str]]): load_config_tables 返回的配置表
   返回值：dict - 包含 name / sex / race / profession / introduce / body_traits / clothes 的字典
   """
-  info = {
+  info: CharacterInfo = {
       "name": "",
       "sex": "",
       "race": "",

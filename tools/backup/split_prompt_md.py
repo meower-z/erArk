@@ -93,7 +93,7 @@ def parse_md_file(file_path: str) -> ParsedMd | None:
   split_level = max(header_levels)
   print(f'识别到最次级标题层级: {split_level} 级')
 
-  result = {'header': '', 'split_level': split_level, 'sections': []}
+  result: ParsedMd = {'header': '', 'split_level': split_level, 'sections': []}
 
   # 找到第一个非一级标题之前的部分作为header
   header_lines = []
@@ -109,8 +109,8 @@ def parse_md_file(file_path: str) -> ParsedMd | None:
   result['header'] = '\n'.join(header_lines).strip()
 
   # 解析各个section（以最次级标题为分割）
-  current_section = None
-  current_section_lines = []
+  current_section: MdSection | None = None
+  current_section_lines: list[str] = []
 
   for i in range(content_start, len(lines)):
     line = lines[i]
@@ -177,13 +177,13 @@ def split_md_file(input_file: str, output_dir: str | None = None) -> None:
 
   # 确定输出目录
   if output_dir is None:
-    output_dir = input_path.parent
+    output_root = input_path.parent
   else:
-    output_dir = Path(output_dir)
+    output_root = Path(output_dir)
 
   # 创建输出子目录（以原文件名命名，去掉.md扩展名）
   base_name = input_path.stem
-  output_folder = output_dir / base_name
+  output_folder = output_root / base_name
   output_folder.mkdir(parents=True, exist_ok=True)
 
   print(f'解析文件: {input_file}')

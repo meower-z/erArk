@@ -55,7 +55,9 @@ def read_behavior_data(file_path: str) -> List[Tuple[str, str, bool]]:
   return behavior_data
 
 
-def read_behavior_effect(file_path: str) -> Tuple[List[str], Dict[str, str]]:
+def read_behavior_effect(
+    file_path: str,
+) -> Tuple[List[List[str]], Dict[str, str]]:
   """
   读取行为效果文件
 
@@ -92,7 +94,7 @@ def read_behavior_effect(file_path: str) -> Tuple[List[str], Dict[str, str]]:
 
 def write_new_behavior_effect(
     file_path: str,
-    header_lines: List[str],
+    header_lines: List[List[str]],
     behavior_data: List[Tuple[str, str, bool]],
     effect_data: Dict[str, str],
 ) -> None:

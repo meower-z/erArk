@@ -27,6 +27,7 @@ spec = importlib.util.spec_from_file_location(
         "downloader.py",
     ),
 )
+assert spec is not None and spec.loader is not None
 downloader_module = importlib.util.module_from_spec(spec)
 sys.modules["downloader"] = downloader_module
 spec.loader.exec_module(downloader_module)

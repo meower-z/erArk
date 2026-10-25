@@ -23,7 +23,7 @@ def read_txt_to_list(txt_path: str) -> list[str]:
     lines = file.readlines()
 
   result = []
-  current_element = []
+  current_element: list[str] = []
 
   for line in lines:
     # 如果读到完全空行，将当前元素加入结果列表

@@ -112,7 +112,7 @@ def read_target() -> tuple[list[str], list[TargetRow]]:
   raw = io.open(TARGET_PATH, encoding="utf-8", newline="").read()
   lines = raw.split("\r\n")
   header = lines[:HEADER_LINES]
-  rows = []
+  rows: list[TargetRow] = []
   for index, line in enumerate(lines[HEADER_LINES:], HEADER_LINES + 1):
     if not line.strip():
       continue
@@ -145,9 +145,11 @@ def build_mapping(
   """
   mapping = {}
   group_info = {}
-  next_group = collections.Counter()
-  last_chain = {}
-  bucket = collections.OrderedDict()
+  next_group: collections.Counter[int] = collections.Counter()
+  last_chain: dict[int, str] = {}
+  bucket: collections.OrderedDict[tuple[int, int], list[TargetRow]] = (
+      collections.OrderedDict()
+  )
 
   for row in rows:
     chain = chain_of(row["cid"])
@@ -349,7 +351,9 @@ def main() -> None:
   print(
       "%-6s %-5s %-22s %-5s %s" % ("type", "组", "行为链", "行数", "新cid区间")
   )
-  bucket = collections.OrderedDict()
+  bucket: collections.OrderedDict[tuple[int, int], list[TargetRow]] = (
+      collections.OrderedDict()
+  )
   for row in new_rows:
     bucket.setdefault((row["type"], group_info[row["cid"]][0]), []).append(row)
   for (now_type, group), group_rows in bucket.items():
