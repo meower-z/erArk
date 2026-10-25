@@ -863,9 +863,9 @@ def frame_style_def(
     background: str,
     font: str,
     font_size: int,
-    bold: str,
-    under_line: str,
-    italic: str,
+    bold: bool,
+    under_line: bool,
+    italic: bool,
 ) -> None:
   """
   定义样式
@@ -881,11 +881,11 @@ def frame_style_def(
   """
   style_name = style_name.replace(" ", "")
   font_list: list[str] = []
-  if bold == "1":
+  if bold:
     font_list.append("bold")
-  if under_line == "1":
+  if under_line:
     font_list.append("underline")
-  if italic == "1":
+  if italic:
     font_list.append("italic")
   font_spec: tuple[str, int, *tuple[str, ...]] = (font, font_size, *font_list)
   textbox.tag_configure(

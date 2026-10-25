@@ -367,9 +367,9 @@ def style_json(
     background: str,
     font: str,
     fontsize: int,
-    bold: bool | str,
-    underline: bool | str,
-    italic: bool | str,
+    bold: bool,
+    underline: bool,
+    italic: bool,
 ) -> dict[str, str | int | bool]:
   """
   定义一个样式json
@@ -380,9 +380,9 @@ def style_json(
   background (str) -- 背景色
   font (str) -- 字体
   fontsize (int) -- 字号
-  bold (bool 或 str) -- 加粗
-  underline (bool 或 str) -- 下划线
-  italic (bool 或 str) -- 斜体
+  bold (bool) -- 加粗
+  underline (bool) -- 下划线
+  italic (bool) -- 斜体
 
   返回值类型：dict
   功能描述：创建一个样式JSON对象
@@ -643,9 +643,9 @@ def frame_style_def(
     background: str,
     font: str,
     fontsize: int,
-    bold: bool | str,
-    underline: bool | str,
-    italic: bool | str,
+    bold: bool,
+    underline: bool,
+    italic: bool,
 ) -> None:
   """
   推送一条在前端定义样式的信息
@@ -656,9 +656,9 @@ def frame_style_def(
   background (str) -- 背景色
   font (str) -- 字体
   fontsize (int) -- 字号
-  bold (bool 或 str) -- 加粗， 用1表示使用
-  underline (bool 或 str) -- 下划线，用1表示使用
-  italic (bool 或 str) -- 斜体，用1表示使用
+  bold (bool) -- 加粗
+  underline (bool) -- 下划线
+  italic (bool) -- 斜体
 
   返回值类型：无
   功能描述：定义一个样式并推送到前端
@@ -817,9 +817,9 @@ def style_def(
     background: str,
     font: str,
     fontsize: int,
-    bold: bool | str,
-    underline: bool | str,
-    italic: bool | str,
+    bold: bool,
+    underline: bool,
+    italic: bool,
 ) -> None:
   """
   样式定义占位函数
@@ -830,9 +830,9 @@ def style_def(
   background (str) -- 背景色
   font (str) -- 字体
   fontsize (int) -- 字号
-  bold (bool 或 str) -- 加粗，用1表示使用
-  underline (bool 或 str) -- 下划线，用1表示使用
-  italic (bool 或 str) -- 斜体，用1表示使用
+  bold (bool) -- 加粗
+  underline (bool) -- 下划线
+  italic (bool) -- 斜体
 
   返回值类型：无
   功能描述：提供一个样式定义的占位函数，会在init_style中被覆盖
@@ -866,9 +866,9 @@ def init_style() -> None:
       background: str,
       font: str,
       fontsize: int,
-      bold: bool | str,
-      underline: bool | str,
-      italic: bool | str,
+      bold: bool,
+      underline: bool,
+      italic: bool,
   ) -> None:
     frame_style_def(
         style_name,
@@ -891,15 +891,16 @@ def init_style() -> None:
         style.__dict__[k] = standard_data.__dict__[k]
     if "font" not in style.__dict__ or style.font == "":
       style.font = normal_config.config_normal.font
+    # data.json 里 bool 列存的是 0/1 整数（buildconfig.py 把 bool 列写成 int），转成 bool 再送出
     style_def(
         style.name,
         style.foreground,
         style.background,
         style.font,
         normal_config.config_normal.font_size,
-        style.bold,
-        style.underline,
-        style.italic,
+        bool(style.bold),
+        bool(style.underline),
+        bool(style.italic),
     )
   # 额外注册三个通用修饰符 tag，便于在文本中单独使用或与基础样式组合：
   # 这些 tag 注册时不改变前景色/背景色/字体，只设置字体属性（bold/underline/italic）
@@ -907,11 +908,13 @@ def init_style() -> None:
   modifier_font = normal_config.config_normal.font
   modifier_size = normal_config.config_normal.font_size
   # bold
-  style_def("bold", "", "", modifier_font, modifier_size, "1", "0", "0")
+  style_def("bold", "", "", modifier_font, modifier_size, True, False, False)
   # underline
-  style_def("underline", "", "", modifier_font, modifier_size, "0", "1", "0")
+  style_def(
+      "underline", "", "", modifier_font, modifier_size, False, True, False
+  )
   # italic
-  style_def("italic", "", "", modifier_font, modifier_size, "0", "0", "1")
+  style_def("italic", "", "", modifier_font, modifier_size, False, False, True)
   # 为了让修饰符与基础样式组合时也能生效，预先为每个基础样式注册所有修饰符的组合样式。
   # 组合名采用 base_mod1_mod2 形式，例如 "green_bold_italic"，不会包含空格，方便前端作为 tag 使用。
   modifier_names = ["bold", "underline", "italic"]
@@ -934,9 +937,9 @@ def init_style() -> None:
     for r in range(1, len(modifier_names) + 1):
       for combo in combinations(modifier_names, r):
         combo_name = base + "_" + "_".join(combo)
-        bold_flag = "1" if "bold" in combo else "0"
-        underline_flag = "1" if "underline" in combo else "0"
-        italic_flag = "1" if "italic" in combo else "0"
+        bold_flag = "bold" in combo
+        underline_flag = "underline" in combo
+        italic_flag = "italic" in combo
         style_def(
             combo_name,
             style_obj.foreground,
