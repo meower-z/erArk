@@ -742,9 +742,9 @@ def check_semen_list_aliasing() -> List[CheckFailure]:
   返回值:
       List[CheckFailure]: 失败记录列表（聚合为至多一条）
   功能:
-      校验cloth_semen[t]与cloth_locker_semen[t]不是同一个list对象。已知真实别名缺陷：
-      脱袜子鞋子进浴场时直接赋值不拷贝，会在10/11槽稳定命中；此后改一处会静默连带改另一处。
-      聚合上报避免刷屏
+      校验cloth_semen与cloth_locker_semen不是同一个dict，
+      且cloth_semen[t]与cloth_locker_semen[t]不是同一个list对象；
+      共享时改一处会静默连带改另一处。聚合上报避免刷屏
   """
   ct, _, _ = _get_config_sets()
   if ct is None:
@@ -772,11 +772,12 @@ def check_semen_list_aliasing() -> List[CheckFailure]:
   if not hits:
     return []
   sample = "; ".join(f"cid={h[0]} {h[1]}" for h in hits[:5])
+  more = " ..." if len(hits) > 5 else ""
   return [
       make_failure(
           "BODY-14",
           "衣柜精液与在穿精液不得共享list对象",
-          f"[warning] 共{len(hits)}处发现别名共享(已知脱袜入浴场路径缺陷): {sample}{' ...' if len(hits) > 5 else ''}",
+          f"[warning] 共{len(hits)}处发现别名共享: {sample}{more}",
           sorted({h[0] for h in hits}),
       )
   ]

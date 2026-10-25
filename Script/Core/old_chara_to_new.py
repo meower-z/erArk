@@ -1990,6 +1990,12 @@ def update_chara_cloth(
       game_config.config_clothing_type
   ):
     value.dirty.cloth_locker_semen = empty_dirty_data.cloth_locker_semen
+  # 衣柜精液表换成自己的 dict 与列表：存档里它可能与穿着的表是同一个 dict 或共用列表，
+  # 上面两表都重置时也取自同一个 get_zero_dirty() 的结果，各部位共用同一个列表
+  value.dirty.cloth_locker_semen = {
+      clothing_type: list(semen_list)
+      for clothing_type, semen_list in value.dirty.cloth_locker_semen.items()
+  }
 
   # 跳过玩家
   if value.cid == 0:
