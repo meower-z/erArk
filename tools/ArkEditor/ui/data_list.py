@@ -372,16 +372,32 @@ class DataList(DataListIdEditMixin, QWidget):
       self.select_now_instruct_flag = 0
     self.update()
 
+  def show_selected_item(self) -> None:
+    """
+    本方法先重画左侧的条目列表。随后本方法重画前提列表、结算列表与文本框。
+    重画后这三个面板显示当前选中的条目（cache_control.now_select_id）。
+    cache_control 里值为 None 的面板不重画。create_event、copy_event、create_talk
+    与 copy_talk 在末尾调用本方法。
+    Return arguments:
+    None
+    """
+    self.update()
+    for item_list in (
+        cache_control.item_premise_list,
+        cache_control.item_effect_list,
+    ):
+      if item_list is not None:
+        item_list.update()
+    text_edit = cache_control.item_text_edit
+    if text_edit is not None:
+      # 文本框经 textChanged 把文件标记为已修改。显示条目自己的文本不是编辑。
+      text_edit.label_text.blockSignals(True)
+      text_edit.update()
+      text_edit.label_text.blockSignals(False)
+
   def create_event(self) -> None:
     """新增事件"""
-    # 数据变更前保存快照（方法内部也会再次调用的可去重，但保证安全）
-    # 注意：外层按钮已保存，这里留作直接调用时的保护
-    if (
-        not undo_snapshot_manager.snapshot_stack
-        or undo_snapshot_manager.snapshot_stack[-1]["now_select_id"]
-        != cache_control.now_select_id
-    ):
-      undo_snapshot_manager.save_snapshot()
+    undo_snapshot_manager.save_snapshot_if_selection_changed()
     item = ListItem("空事件")
     item.uid = str(uuid.uuid4())
     event = game_type.Event()
@@ -403,7 +419,7 @@ class DataList(DataListIdEditMixin, QWidget):
     # 新增：将新增操作推入撤销栈
     row = self.list_widget.count() - 1
     self.undo_stack.append({"type": "event_add", "uid": event.uid, "row": row})
-    self.update()
+    self.show_selected_item()
 
   def event_delete(self) -> None:
     """
@@ -437,12 +453,7 @@ class DataList(DataListIdEditMixin, QWidget):
 
   def copy_event(self) -> None:
     """复制事件"""
-    if (
-        not undo_snapshot_manager.snapshot_stack
-        or undo_snapshot_manager.snapshot_stack[-1]["now_select_id"]
-        != cache_control.now_select_id
-    ):
-      undo_snapshot_manager.save_snapshot()
+    undo_snapshot_manager.save_snapshot_if_selection_changed()
     event_index = self.list_widget.currentRow()
     old_item = self.list_widget.item(event_index)
     old_event = cache_control.now_event_data[old_item.uid]
@@ -466,16 +477,11 @@ class DataList(DataListIdEditMixin, QWidget):
     self.undo_stack.append(
         {"type": "event_copy", "uid": event.uid, "row": insert_row}
     )
-    self.update()
+    self.show_selected_item()
 
   def create_talk(self) -> None:
     """新增口上"""
-    if (
-        not undo_snapshot_manager.snapshot_stack
-        or undo_snapshot_manager.snapshot_stack[-1]["now_select_id"]
-        != cache_control.now_select_id
-    ):
-      undo_snapshot_manager.save_snapshot()
+    undo_snapshot_manager.save_snapshot_if_selection_changed()
     item = ListItem("空口上")
     # 计算一个可用的整数 cid，然后以字符串形式存入 item.uid 与 talk.cid
     new_cid = 1
@@ -495,7 +501,7 @@ class DataList(DataListIdEditMixin, QWidget):
     # 新增：将新增操作推入撤销栈
     row = self.list_widget.count() - 1
     self.undo_stack.append({"type": "talk_add", "uid": talk.cid, "row": row})
-    self.update()
+    self.show_selected_item()
 
   def talk_delete(self) -> None:
     """
@@ -531,12 +537,7 @@ class DataList(DataListIdEditMixin, QWidget):
     无参数，无返回值。
     新条目插入到符合其cid编号的顺序位置。
     """
-    if (
-        not undo_snapshot_manager.snapshot_stack
-        or undo_snapshot_manager.snapshot_stack[-1]["now_select_id"]
-        != cache_control.now_select_id
-    ):
-      undo_snapshot_manager.save_snapshot()
+    undo_snapshot_manager.save_snapshot_if_selection_changed()
     talk_index = self.list_widget.currentRow()
     old_item = self.list_widget.item(talk_index)
     old_talk = cache_control.now_talk_data[old_item.uid]
@@ -580,7 +581,7 @@ class DataList(DataListIdEditMixin, QWidget):
     self.undo_stack.append(
         {"type": "talk_copy", "uid": talk.cid, "row": insert_index}
     )
-    self.update()
+    self.show_selected_item()
 
   def update_menu_min_width(self) -> None:
     """重新计算并设置菜单栏的最小宽度（在菜单标题变化后调用）。"""

@@ -70,6 +70,21 @@ class UndoSnapshotManager:
     self._notify()
     # print("快照已保存，当前撤销栈大小:", len(self.snapshot_stack))
 
+  def save_snapshot_if_selection_changed(self) -> None:
+    """
+    撤销栈为空时，本方法调用 save_snapshot 保存一份快照。栈顶快照的 now_select_id 与
+    cache_control.now_select_id 不同时，本方法也保存一份快照。DataList 的 create_event、
+    copy_event、create_talk 与 copy_talk 在开头调用本方法。
+    输入：无
+    输出：无
+    """
+    if (
+        not self.snapshot_stack
+        or self.snapshot_stack[-1]['now_select_id']
+        != cache_control.now_select_id
+    ):
+      self.save_snapshot()
+
   def undo(self) -> bool:
     """
     撤销到上一个快照
