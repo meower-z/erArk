@@ -141,7 +141,8 @@ class CVEMenu(QDialog):
       cve_b2 = ""
     cve_b_value = ""
     if cve_b1 == "待选择":
-      cve_b_value = ""
+      # 还没选属性时不加结算，窗口留着
+      return
     elif cve_b1 == "好感":
       cve_b_value = "F"
     elif cve_b1 == "信赖":

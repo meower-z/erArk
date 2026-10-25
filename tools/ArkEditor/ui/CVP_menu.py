@@ -149,7 +149,8 @@ class CVPMenu(QDialog):
       cvp_b2 = ""
     cvp_b_value = ""
     if cvp_b1 == "待选择":
-      cvp_b_value = ""
+      # 还没选属性时不加前提，窗口留着
+      return
     elif cvp_b1 == "好感":
       cvp_b_value = "F"
     elif cvp_b1 == "信赖":
