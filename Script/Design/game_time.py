@@ -9,6 +9,7 @@ import math
 import ephem
 import time
 from types import FunctionType
+from typing import overload
 from dateutil import relativedelta
 from Script.Core import (
     cache_control,
@@ -120,7 +121,17 @@ class GameTime(datetime.datetime):
 
   __radd__ = __add__
 
-  def __sub__(self, other):
+  # typeshed 的 date.__sub__ 有 (datetime) -> Never 重载，减 datetime 有返回值的子类都对不上它，
+  # typeshed 自己的 datetime.__sub__ 也带同样的 ignore；本类还可减任意 datetime（基类只收 Self）
+  @overload  # type: ignore[override]
+  def __sub__(self, other: datetime.datetime) -> datetime.timedelta:
+    ...
+
+  @overload
+  def __sub__(self, other: datetime.timedelta) -> GameTime:
+    ...
+
+  def __sub__(self, other: object) -> GameTime | datetime.timedelta:
     """
     游戏时间减去一段时长（得到更早的游戏时间），或减去另一个时间（得到游戏日历上经过的时长）
     Keyword arguments:
