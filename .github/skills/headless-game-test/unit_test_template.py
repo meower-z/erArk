@@ -15,7 +15,7 @@ erArk 无头**函数级单元测试** harness 模板
 注意：
   - 必须用 ./.conda/python.exe（裸 python 是商店空壳别名，exit 49 无输出）
   - 结尾的 os._exit() 会主动结束进程；若删掉它，需要外层 timeout 兜底
-    （游戏导入链的 Flask 非守护线程会让进程跑完后不退出）
+    （游戏导入链中 handle_instruct 起的非守护线程 init_instruct_handle_thread 目前会让进程跑完后不退出）
 """
 
 import datetime

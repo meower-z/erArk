@@ -394,7 +394,7 @@
 
 1. **`behavior.start_time` 不能设成 `None`**——`get_class_period` 读它时 `None` 会回落
    `cache.game_time` 没问题，但 `get_character_status_list:211` 直接取 `.hour`，`None` 会崩。
-2. **脚本末尾必须 `os._exit()`**——导入链会起 Web 服务的非守护线程，
+2. **脚本末尾必须 `os._exit()`**——导入链中的 handle_instruct 会起非守护线程 `init_instruct_handle_thread`，
    断言跑完、`print` 也打完了，进程却不会自己结束。串跑两个脚本时表现为第二个「一直没输出」，很容易误判成第二个脚本卡死。
 
 #### 尚未覆盖的验证
