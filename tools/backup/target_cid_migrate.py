@@ -102,15 +102,29 @@ def chain_of(old_cid: int) -> str | None:
   return None
 
 
-def read_target() -> tuple[list[str], list[TargetRow]]:
+def split_lines(raw: str) -> tuple[list[str], str]:
+  """
+  按文件自己的行尾拆行；含 CRLF 的按 CRLF 拆，否则按 LF 拆
+  Keyword arguments:
+  raw -- 不做换行转换读入的文件内容
+  Return arguments:
+  list -- 各行文本（以行尾结尾的文件，最后一项是空串）
+  str -- 文件的行尾，写回时沿用
+  """
+  line_end = "\r\n" if "\r\n" in raw else "\n"
+  return raw.split(line_end), line_end
+
+
+def read_target() -> tuple[list[str], list[TargetRow], str]:
   """
   读入 target.csv，拆出表头与数据行
   Return arguments:
   list -- 表头行文本列表
   list -- 数据行字典列表
+  str -- target.csv 的行尾
   """
   raw = io.open(TARGET_PATH, encoding="utf-8", newline="").read()
-  lines = raw.split("\r\n")
+  lines, line_end = split_lines(raw)
   header = lines[:HEADER_LINES]
   rows: list[TargetRow] = []
   for index, line in enumerate(lines[HEADER_LINES:], HEADER_LINES + 1):
@@ -129,7 +143,7 @@ def read_target() -> tuple[list[str], list[TargetRow]]:
             "remarks": parts[4],
         }
     )
-  return header, rows
+  return header, rows, line_end
 
 
 def build_mapping(
@@ -228,7 +242,10 @@ def self_check(
 
 
 def write_target(
-    header: list[str], new_rows: list[TargetRow], mapping: dict[int, int]
+    header: list[str],
+    new_rows: list[TargetRow],
+    mapping: dict[int, int],
+    line_end: str,
 ) -> None:
   """
   按新 cid 升序、type 分区（空行分隔）写回 target.csv
@@ -236,6 +253,7 @@ def write_target(
   header -- 表头行文本列表
   new_rows -- 按新cid升序排好的数据行
   mapping -- 旧cid到新cid的映射
+  line_end -- 读入时 target.csv 的行尾
   Return arguments:
   无
   """
@@ -258,7 +276,7 @@ def write_target(
         )
     )
   io.open(TARGET_PATH, "w", encoding="utf-8", newline="").write(
-      "\r\n".join(out)
+      line_end.join(out)
   )
 
 
@@ -271,7 +289,7 @@ def update_effect(mapping: dict[int, int]) -> int:
   int -- 改写的行数
   """
   raw = io.open(EFFECT_PATH, encoding="utf-8", newline="").read()
-  lines = raw.split("\r\n")
+  lines, line_end = split_lines(raw)
   changed = 0
   for index in range(HEADER_LINES, len(lines)):
     line = lines[index]
@@ -290,7 +308,7 @@ def update_effect(mapping: dict[int, int]) -> int:
     lines[index] = ",".join(parts)
     changed += 1
   io.open(EFFECT_PATH, "w", encoding="utf-8", newline="").write(
-      "\r\n".join(lines)
+      line_end.join(lines)
   )
   return changed
 
@@ -332,14 +350,14 @@ def write_mapping(
 
 def main() -> None:
   """脚本入口"""
-  header, rows = read_target()
+  header, rows, line_end = read_target()
   print("读入 %d 行数据" % len(rows))
 
   mapping, group_info = build_mapping(rows)
   new_rows = self_check(rows, mapping)
   print("自检 R1~R5 全部通过")
 
-  write_target(header, new_rows, mapping)
+  write_target(header, new_rows, mapping, line_end)
   effect_changed = update_effect(mapping)
   write_mapping(new_rows, mapping, group_info)
 
