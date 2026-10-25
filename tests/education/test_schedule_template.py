@@ -2,6 +2,10 @@
 """schedule_template_handle：预设模板、增删改、套用与覆盖、每日改写"""
 
 from _bootstrap import _, attr_calculation, cache, check, clear_schedules, education_constant, finish, game_config, make_character, open_all_classroom, remove_character, schedule_handle, schedule_template_handle, section
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from types import ModuleType
 
 clear_schedules()
 mother = make_character(102, "母亲", 0)
@@ -545,7 +549,7 @@ check(
 )
 
 
-def literal_hit_list(module, word_set: set) -> list:
+def literal_hit_list(module: "ModuleType", word_set: set) -> list:
   """
   找出模块源码里取值落在 word_set 里的字符串常量（跳过 docstring 与属性说明这类单独成句的字符串）
   Keyword arguments:

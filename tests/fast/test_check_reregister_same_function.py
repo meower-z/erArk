@@ -6,9 +6,16 @@
 不同函数注册同一id抛 ValueError：这通常是复制检查后忘了改id。
 """
 
+from typing import TYPE_CHECKING
+
 from Script.Test.Static_Check import check_registry
 from Script.Test.Static_Check.check_registry import get_all_checks, register_check
 from tests.fast.base import FastTestCase
+
+if TYPE_CHECKING:
+  from collections.abc import Callable
+
+  from Script.Test.Static_Check.check_registry import CheckFailure
 
 CHECK_ID = "TEST-REREG-01"
 """ 本测试注册的检查项id，不与真实检查项重复 """
@@ -21,7 +28,9 @@ def {func}():
 """ 一个带装饰器的检查函数定义，{func} 为函数名；每次 exec 都生成新的函数对象 """
 
 
-def define(name, module="tests.fast.fake_check_module", func="check"):
+def define(
+    name: str, module: str = "tests.fast.fake_check_module", func: str = "check"
+) -> "Callable[[], list[CheckFailure]]":
   """
   在名为 module 的模块命名空间里执行一次 SOURCE
   Keyword arguments:

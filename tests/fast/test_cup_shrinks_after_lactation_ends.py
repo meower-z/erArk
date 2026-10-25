@@ -7,9 +7,14 @@
 断言都落在 handle_talent.npc_b_talent_change_for_lactation_flag（行为循环每轮经 gain_talent 调用它）结算后的罩杯素质与涨奶标记上。
 """
 
+from typing import TYPE_CHECKING
+
 from Script.Design import handle_talent
 from Script.UI.Panel import gift_panel
 from tests.fast.base import FastTestCase
+
+if TYPE_CHECKING:
+  from Script.Core import game_type
 
 CUPS = [121, 122, 123, 124, 125]
 """ 罩杯素质：绝壁、贫乳、普乳、巨乳、爆乳 """
@@ -31,7 +36,7 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
     super().setUp()
     self.world.chara(0, "博士")
 
-  def make(self, cid, cup):
+  def make(self, cid: int, cup: int) -> "game_type.Character":
     """
     造一个指定罩杯、没有泌乳的干员
     Keyword arguments:
@@ -47,7 +52,7 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
     cd.pregnancy.milk_max = 190
     return cd
 
-  def engorge(self, cid, cup):
+  def engorge(self, cid: int, cup: int) -> "game_type.Character":
     """
     造一个指定罩杯的干员，用泌乳药并把奶量加满，跑一次结算使她涨奶
     Keyword arguments:
@@ -62,7 +67,7 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
     self.settle(cid)
     return cd
 
-  def settle(self, cid):
+  def settle(self, cid: int) -> tuple[list[int], bool]:
     """
     跑一次涨奶罩杯结算，返回结算后的罩杯与涨奶标记
     Keyword arguments:

@@ -8,7 +8,15 @@
 本测试对开局的阿米娅直接调用这两个结算函数。
 """
 
+from typing import TYPE_CHECKING
+
 from tests.slow.base import SlowTestCase
+
+if TYPE_CHECKING:
+  import datetime
+  from collections.abc import Callable
+
+  from Script.Core import game_type
 
 SHOE_SEMEN = 30
 """ 脱鞋前鞋上的精液量（ml） """
@@ -17,7 +25,11 @@ SHOE_SEMEN = 30
 class FootClothFillsLockerSemenTest(SlowTestCase):
   """衣柜精液表为空的干员脱鞋袜进衣柜：表覆盖全部服装部位，BODY-10 通过；穿回鞋袜时鞋上的精液回到鞋上"""
 
-  def settle(self, effect, cid):
+  def settle(
+      self,
+      effect: "Callable[[int, int, game_type.CharacterStatusChange, datetime.datetime], None]",
+      cid: int,
+  ) -> None:
     """
     对干员跑一次行为效果结算（结算时间 5 分钟）
     Keyword arguments:
@@ -30,7 +42,9 @@ class FootClothFillsLockerSemenTest(SlowTestCase):
 
     effect(cid, 5, game_type.CharacterStatusChange(), self.cache.game_time)
 
-  def foot_cloth_to_locker(self):
+  def foot_cloth_to_locker(
+      self,
+  ) -> "tuple[game_type.Character, list[int], list[int]]":
     """
     开局的阿米娅鞋上有 30ml 精液时，跑一次脱鞋袜进大浴场衣柜的结算
     Keyword arguments:

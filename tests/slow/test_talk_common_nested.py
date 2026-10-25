@@ -23,7 +23,7 @@ MOUTH = 21
 class TalkCommonNestedTest(SlowTestCase):
   """处理顺序倒过来时，高潮的通用口上里嵌套的占位符都被替换"""
 
-  def test_reversed_order_climax_line(self):
+  def test_reversed_order_climax_line(self) -> None:
     """倒序时杜宾的口喉高潮渲染出通用口上，文本里不留通用占位符"""
     from Script.Config import game_config
     from Script.Core import constant
@@ -50,7 +50,7 @@ class TalkCommonNestedTest(SlowTestCase):
     """ talk_common_judge 每次的输入与输出 """
     real_judge = talk.talk_common_judge
 
-    def record_judge(now_talk, character_id):
+    def record_judge(now_talk: str, character_id: int) -> str:
       """
       记录型包装：照常替换，并把输入与输出收进 rendered
       Keyword arguments:

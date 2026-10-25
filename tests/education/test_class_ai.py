@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
   from collections.abc import Callable
+  from typing import Any
 
 open_all_classroom()
 clear_schedules()
@@ -2517,7 +2518,9 @@ H1_GAIN_LOG: list[tuple[int, datetime.datetime, int, bool]] = []
 _orig_gain = growth_handle.settle_student_class_gain
 
 
-def h1_gain_spy(student_id: int, teacher_id: int, *args, **kwargs) -> bool:
+def h1_gain_spy(
+    student_id: int, teacher_id: int, *args: "Any", **kwargs: "Any"
+) -> bool:
   """
   教室课结算的记录包装（512 / 548 / 557 都经 growth_handle.settle_student_class_gain）
   Keyword arguments:
@@ -2539,7 +2542,9 @@ def h1_gain_spy(student_id: int, teacher_id: int, *args, **kwargs) -> bool:
   return result
 
 
-def h1_wrap_sm(sid: int, func):
+def h1_wrap_sm(
+    sid: int, func: "Callable[..., object]"
+) -> "Callable[[int], object]":
   """
   给一个状态机套上派发记录
   Keyword arguments:
@@ -2549,7 +2554,7 @@ def h1_wrap_sm(sid: int, func):
   function -- 包装后的函数
   """
 
-  def wrapper(cid: int):
+  def wrapper(cid: int) -> object:
     """
     先照常执行状态机，再记下派发后的行为开始时刻与所在场景
     Keyword arguments:
@@ -3427,7 +3432,7 @@ def ghost_probe_spy(
     character_id: int,
     now_time: datetime.datetime,
     pl_start_time: datetime.datetime,
-):
+) -> None:
   """
   行为循环里 character_behavior 的记录包装：NPC 阶段第一次处理 NPC 时记下课堂模式与实操课的状态，再照常执行
   Keyword arguments:

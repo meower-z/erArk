@@ -6,9 +6,13 @@
 从邀请隐奸打开、从被发现面板打开两种情况下，面板都列出 [1]~[4] 四个模式按钮，按钮与文字里都没有携带模式。
 """
 
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
+
+if TYPE_CHECKING:
+  from typing import Any
 
 PANEL_WIDTH = 100
 """ 面板的绘制宽度 """
@@ -37,7 +41,7 @@ class HiddenSexNoCarryModeTest(SlowTestCase):
     button_text_list = []
     real_print_cmd = io_init.io_print_cmd
 
-    def record_print_cmd(cmd_str, *args, **kwargs):
+    def record_print_cmd(cmd_str: str, *args: "Any", **kwargs: "Any") -> None:
       """
       记下按钮文字后照常交给 PlayerInput
       Keyword arguments:

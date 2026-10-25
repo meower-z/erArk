@@ -51,7 +51,7 @@ class GrowthEventsMatchStageTest(SlowTestCase):
     shutil.rmtree(save_handle.get_save_dir_path(SAVE_ID), ignore_errors=True)
     super().tearDown()
 
-  def make_daughters(self):
+  def make_daughters(self) -> tuple[int, int, int]:
     """
     生出学员姐姐，再生出婴儿妹妹
     Keyword arguments:

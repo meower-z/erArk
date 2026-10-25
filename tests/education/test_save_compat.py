@@ -156,7 +156,7 @@ OLD_REPORT_UID_SET = frozenset(save_handle._OFFICIAL_EVENT_UID_MIGRATE)
 """ Plan 32 L22 挪进期末桶的三条旧 uid（萝莉 1 / 20 / 26） """
 
 
-def find_old_report_uid_left(label) -> list:
+def find_old_report_uid_left(label: str) -> list:
   """
   找出缓存里还留着的旧 uid 履历：罗德岛全局履历的键是「uid@角色id」（没有主体时就是 uid），孩子的 event_history 以 uid 为键
   Keyword arguments:

@@ -46,7 +46,7 @@ settle_default.character_behavior.judge_character_status = (
 )
 
 
-def reset_mark(*character_id_list):
+def reset_mark(*character_id_list: int) -> None:
   """
   清掉学生的「本节已结算」去重标记：同一节里要连着验好几种结算时用（第五轮加的去重）
   Keyword arguments:

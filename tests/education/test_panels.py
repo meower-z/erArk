@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
   from collections.abc import Callable
 
+  from Script.UI.Moudle.panel import PageHandlePanel
+
 open_all_classroom()
 clear_schedules()
 ROOM1 = _("理论教室一")
@@ -40,7 +42,7 @@ section("页签容器")
 captured: dict[str, list[str]] = {}
 
 
-def fake_askfor(input_list, print_order=False):
+def fake_askfor(input_list: list, print_order: bool = False) -> str:
   """
   替换 flow_handle.askfor_all 的桩：把可选项记到 captured["rl"]，返回「返回」
   Keyword arguments:
@@ -131,7 +133,7 @@ check(
 answers: "list[Callable[[str], bool]]" = []
 
 
-def scripted_askfor(input_list, print_order=False):
+def scripted_askfor(input_list: list, print_order: bool = False) -> str:
   """
   替换 flow_handle.askfor_all 的桩：把可选项记到 captured["rl"]；按 answers 的顺序找第一个
   有选项满足的判断函数，把它从 answers 移除并返回满足它的第一个选项，都不满足时返回最后一个选项
@@ -609,8 +611,11 @@ _orig_select_func = common_select_NPC.common_select_npc_button_list_func
 
 
 def capture_invite(
-    now_draw_panel, title_text="", info_text="", select_state=None
-):
+    now_draw_panel: "PageHandlePanel",
+    title_text: str = "",
+    info_text: str = "",
+    select_state: dict | None = None,
+) -> tuple[list[str], list[str], dict[str, int | str]]:
   """
   记下邀请名单并直接返回，让面板的 while 循环在 fake_askfor 返回「返回」后退出
   Keyword arguments:
@@ -989,7 +994,7 @@ _orig_center_draw = draw.CenterButton.draw
 _orig_left_draw = draw.LeftButton.draw
 
 
-def record_button(self, *a, **k):
+def record_button(self: draw.CenterButton, *a: object, **k: object) -> None:
   """
   记下按钮的文本、默认样式与悬停提示，再照常记进 drawn_text（样式与提示不进 drawn_text，要单独断言）
   Keyword arguments:

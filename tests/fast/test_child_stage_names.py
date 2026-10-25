@@ -10,10 +10,15 @@
 成长加速药的提示、选婴儿按钮、下一阶段名与长大时的提示要启动游戏，在 tests/slow/test_growth_drug_stage_names.py。
 """
 
+from typing import TYPE_CHECKING
+
 from Script.Config import game_config
 from Script.System.Education_System import growth_event_handle
 from Script.UI.Panel import gift_panel
 from tests.fast.base import FastTestCase
+
+if TYPE_CHECKING:
+  from Script.Core import game_type
 
 STAGE_NAME = {102: "幼女", 103: "学员"}
 """ 素质 102、103 的名称 """
@@ -45,7 +50,7 @@ PANEL_WIDTH = 100
 """ 礼物面板的绘制宽度 """
 
 
-def set_stage(character, talent_id: int):
+def set_stage(character: "game_type.Character", talent_id: int) -> None:
   """
   把角色的成长阶段素质换成 talent_id
   Keyword arguments:
@@ -91,7 +96,7 @@ class ChildStageNamesTest(FastTestCase):
     for name in UNUSED_NAMES:
       self.assertNotIn(name, text, f"{label}里有「{name}」：{text}")
 
-  def make_daughter(self, cid: int, talent_id: int):
+  def make_daughter(self, cid: int, talent_id: int) -> "game_type.Character":
     """
     造博士的女儿并设好成长阶段
     Keyword arguments:

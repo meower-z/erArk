@@ -9,11 +9,15 @@ PYTHONHASHSEED 只能在解释器启动前设定，它决定字符串集合的�
 import os
 import subprocess
 import sys
+from typing import TYPE_CHECKING
 
 from tests.world import SEED
 
+if TYPE_CHECKING:
+  import pytest
 
-def pytest_configure(config):
+
+def pytest_configure(config: "pytest.Config") -> None:
   """
   PYTHONHASHSEED 不是固定值时，带上它重新执行同一条命令，并以子进程的退出码结束
   Keyword arguments:

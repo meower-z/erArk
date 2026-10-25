@@ -9,12 +9,16 @@
 幼女不上学、不跟随母亲见学的部分在 tests/slow/test_child_no_class_no_follow_mother.py。
 """
 
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from Script.Config import game_config
 from Script.Core import constant_promise
 from Script.Design import attr_calculation, clothing, handle_premise
 from tests.fast.base import FastTestCase
+
+if TYPE_CHECKING:
+  from Script.Core import game_type
 
 BABY = 101
 """ 婴儿素质 """
@@ -38,7 +42,7 @@ DAUGHTER_INSTRUCT_CID_LIST = (5204, 6003)
 """ 交互对象为玩家女儿的乱伦H指令在 InstructConfig.csv 的 cid：5204 邀请乱伦H、6003 结束乱伦H """
 
 
-def set_stage(character, talent_id: int):
+def set_stage(character: "game_type.Character", talent_id: int) -> None:
   """
   把角色的成长阶段素质换成 talent_id
   Keyword arguments:

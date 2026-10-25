@@ -12,7 +12,12 @@ Web 模式下游戏等玩家输入文字时，有页面连上后各页面收到�
 import threading
 import time
 
+from typing import TYPE_CHECKING
+
 from tests.slow.base import SlowTestCase
+
+if TYPE_CHECKING:
+  from flask_socketio import SocketIOTestClient
 
 ONE_SHOT_FIELDS = {"instruct_texts", "other_texts"}
 """ 常规更新从缓存取走、发出一次就清空的回溯文本字段 """
@@ -24,7 +29,7 @@ WAIT_LIMIT = 30
 class WebFullStateInputWaitTest(SlowTestCase):
   """游戏等输入文字时，完整游戏状态与常规更新一样带着输入请求"""
 
-  def setUp(self):
+  def setUp(self) -> None:
     """
     开新游戏，切到 Web 模式，玩家的页面连上 Web 服务器
     Keyword arguments:
@@ -40,7 +45,7 @@ class WebFullStateInputWaitTest(SlowTestCase):
     self.player_page = web_server.socketio.test_client(web_server.app)
     self.player_page.get_received()
 
-  def states(self, client) -> list:
+  def states(self, client: "SocketIOTestClient") -> list:
     """
     取出客户端新收到的 game_state_update 消息
     Keyword arguments:
@@ -89,7 +94,7 @@ class WebFullStateInputWaitTest(SlowTestCase):
     self.assertEqual(self.states(self.player_page), received)
     return received[0]
 
-  def test_name_input(self):
+  def test_name_input(self) -> None:
     """开局输入姓名时：完整状态与常规更新相同，提交的姓名送到游戏线程"""
     from Script.Design import character
 

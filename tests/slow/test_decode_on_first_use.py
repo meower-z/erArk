@@ -11,15 +11,21 @@ PhotoImage 换成记录尺寸的替身，所以不需要 Tk 窗口；字体缩�
 
 import os
 import tempfile
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
+
+if TYPE_CHECKING:
+  from typing import Any
+
+  from PIL import Image
 
 
 class FakePhotoImage:
   """PhotoImage 的替身：只记下传入图片的尺寸"""
 
-  def __init__(self, pil_image):
+  def __init__(self, pil_image: "Image.Image") -> None:
     """
     Keyword arguments:
     pil_image -- PIL.Image.Image，要转换的图片
@@ -32,7 +38,7 @@ class FakePhotoImage:
 class DecodeOnFirstUseTest(SlowTestCase):
   """启动时只建索引；首次取图时解码一次，之后返回同一个对象；解码失败的图片得到 1x1 的替代图片"""
 
-  def setUp(self):
+  def setUp(self) -> None:
     """
     数着 Image.open 的调用启动游戏、开新游戏，再换上 PhotoImage 的替身并固定字体缩放比例
     Keyword arguments:
@@ -46,7 +52,9 @@ class DecodeOnFirstUseTest(SlowTestCase):
     """ Image.open 打开过的文件 """
     real_open = Image.open
 
-    def counting_open(path, *args, **kwargs):
+    def counting_open(
+        path: str, *args: "Any", **kwargs: "Any"
+    ) -> "Image.Image":
       """
       记录型 Image.open：记下文件，再调用真实的 Image.open
       Keyword arguments:

@@ -15,6 +15,11 @@
 
 import importlib.abc
 import sys
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from collections.abc import Sequence
+  from types import ModuleType
 
 FORBIDDEN = frozenset(
     {"Script.Core.era_image", "Script.Core.web_server", "Script.Core.game_init"}
@@ -29,7 +34,12 @@ class FastLayerImportError(ImportError):
 class FastLayerImportGuard(importlib.abc.MetaPathFinder):
   """导入 FORBIDDEN 中的模块时抛 FastLayerImportError；本身不负责查找模块"""
 
-  def find_spec(self, fullname, path, target=None):
+  def find_spec(
+      self,
+      fullname: str,
+      path: "Sequence[str] | None",
+      target: "ModuleType | None" = None,
+  ) -> None:
     """
     受禁模块抛错，其他模块交给后面的查找器
     Keyword arguments:

@@ -10,9 +10,13 @@
 """
 
 import re
+from typing import TYPE_CHECKING
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
+
+if TYPE_CHECKING:
+  from typing import Any
 
 AMIYA_ID = 1
 """ 阿米娅的角色id """
@@ -135,7 +139,7 @@ class VirginTargetBreakBehaviorsTest(SlowTestCase):
     shown: list[str] = []
     order_deal = flow_handle.order_deal
 
-    def record_buttons(*args, **kwargs):
+    def record_buttons(*args: "Any", **kwargs: "Any") -> str | int | None:
       """记下按钮再照常等输入"""
       shown[:] = [text for text, __ in self.world.player.buttons]
       return order_deal(*args, **kwargs)
@@ -151,7 +155,7 @@ class VirginTargetBreakBehaviorsTest(SlowTestCase):
         if match and match.group(1) in game_config.config_behavior
     ]
 
-  def test_group_sex_panel(self):
+  def test_group_sex_panel(self) -> None:
     """凯尔希无接吻经验时，口与侍奉两栏不列出 N 的破处类行为；有了接吻经验就列出"""
     kaltsit = self.cache.character_data[KALTSIT_ID]
     self.assertIn("N", self.virgin_parts(KALTSIT_ID), "开局时凯尔希无接吻经验")
@@ -169,7 +173,7 @@ class VirginTargetBreakBehaviorsTest(SlowTestCase):
           f"凯尔希有接吻经验后，{body_part} 栏应列出 N 的破处类行为",
       )
 
-  def test_sex_assistant(self):
+  def test_sex_assistant(self) -> None:
     """阿米娅为交互对象：她还是处的部位，调教助手不列出该部位的破处类行为；破处之后就列出"""
     from Script.UI.Panel import confinement_and_training
 

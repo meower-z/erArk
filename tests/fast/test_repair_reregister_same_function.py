@@ -6,9 +6,16 @@
 不同函数注册同一id抛 ValueError：这通常是复制修复后忘了改id。
 """
 
+from typing import TYPE_CHECKING
+
 from Script.Test.Static_Check import repair
 from Script.Test.Static_Check.repair import register_repair
 from tests.fast.base import FastTestCase
+
+if TYPE_CHECKING:
+  from collections.abc import Callable
+
+  from Script.Core import game_type
 
 CHECK_ID = "TEST-REREG-01"
 """ 本测试注册的修复对应的检查项id，不与真实修复重复 """
@@ -21,7 +28,11 @@ def {func}(cache):
 """ 一个带装饰器的修复函数定义，{func} 为函数名；每次 exec 都生成新的函数对象 """
 
 
-def define(name, module="tests.fast.fake_repair_module", func="repair"):
+def define(
+    name: str,
+    module: str = "tests.fast.fake_repair_module",
+    func: str = "repair",
+) -> "Callable[[game_type.Cache], list[dict]]":
   """
   在名为 module 的模块命名空间里执行一次 SOURCE
   Keyword arguments:
