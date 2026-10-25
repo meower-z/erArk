@@ -51,7 +51,7 @@ EFFECT_PATH = os.path.join("data", "target", "default", "effect.csv")
 HEADER_LINES = 5
 """ target.csv 前 5 行是表头 """
 
-problems = collections.OrderedDict()
+problems: collections.OrderedDict[str, list[str]] = collections.OrderedDict()
 """ 规则名 → 问题描述列表 """
 
 
@@ -73,7 +73,7 @@ def load_rows() -> "list[TargetRow]":
   Return arguments:
   list -- 数据行字典列表（保持物理行序）
   """
-  rows = []
+  rows: list[TargetRow] = []
   raw = io.open(TARGET_PATH, encoding="utf-8", newline="").read()
   for index, line in enumerate(raw.split("\r\n"), 1):
     if index <= HEADER_LINES or not line.strip():
@@ -119,7 +119,7 @@ def check_numbering(rows: "list[TargetRow]") -> None:
   无
   """
   # R1 唯一
-  seen = {}
+  seen: dict[int, int] = {}
   for row in rows:
     if row["cid"] in seen:
       report(

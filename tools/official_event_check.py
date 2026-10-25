@@ -18,10 +18,12 @@
 
 import csv
 import glob
+import io
 import os
 import re
 import sys
 
+assert isinstance(sys.stdout, io.TextIOWrapper)
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 EVENT_DIR = os.path.join("data", "official_event")
@@ -602,8 +604,8 @@ class Checker:
       if not rows:
         continue
       head = rows[0]
-      cid_set = set()
-      text_set = set()
+      cid_set: set[str] = set()
+      text_set: set[str] = set()
       file_stat = {
           "count": 0,
           "weight": [],
