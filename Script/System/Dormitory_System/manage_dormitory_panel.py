@@ -1,3 +1,5 @@
+"""宿舍管理系统主面板"""
+
 import os
 import re
 from types import FunctionType

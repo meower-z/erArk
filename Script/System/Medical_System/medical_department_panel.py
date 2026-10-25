@@ -114,6 +114,13 @@ class _BaseSubPanel:
   """子面板基类，提供统一接口"""
 
   def __init__(self, width: int) -> None:
+    """
+    初始化子面板
+    Keyword arguments:
+    width -- 绘制宽度
+    Return arguments:
+    无
+    """
     self.width = width
 
   def draw(self) -> List[str]:

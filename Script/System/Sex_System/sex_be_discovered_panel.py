@@ -1,3 +1,5 @@
+"""H中被发现后的选择面板"""
+
 from typing import List
 from types import FunctionType
 from Script.System.Instruct_System import handle_instruct

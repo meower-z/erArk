@@ -1,3 +1,5 @@
+"""性行为履历面板：按分组构建履历文本，切换查看的周目与折叠分组"""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, List

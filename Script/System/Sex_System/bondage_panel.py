@@ -1,3 +1,5 @@
+"""绳子的面板对象"""
+
 from typing import List
 from types import FunctionType
 from Script.UI.Moudle import draw

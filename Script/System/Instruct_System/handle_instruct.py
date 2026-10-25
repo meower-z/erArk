@@ -1,3 +1,5 @@
+"""指令处理：指令处理线程与执行入口、指令注册装饰器 add_instruct，以及用它注册的各指令处理函数"""
+
 import time
 import queue
 import datetime

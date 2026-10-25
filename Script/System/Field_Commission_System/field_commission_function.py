@@ -1,3 +1,5 @@
+"""外勤委托：数据刷新、需求与奖励、委托文本、完成的判定与结算、新干员招募、势力委托的查找与临时委托的创建"""
+
 from typing import List, Optional, Tuple
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text

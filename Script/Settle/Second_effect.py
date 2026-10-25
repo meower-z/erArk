@@ -1,3 +1,5 @@
+"""二段结算效果函数，各自用 add_settle_second_behavior_effect 按 id 注册"""
+
 from types import FunctionType
 from Script.Design import (
     settle_behavior,

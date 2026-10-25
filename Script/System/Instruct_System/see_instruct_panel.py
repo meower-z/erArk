@@ -1,3 +1,5 @@
+"""查看操作菜单面板，以及单个指令是否通过过滤的判断"""
+
 from typing import List
 from types import FunctionType
 from Script.System.Instruct_System import handle_instruct

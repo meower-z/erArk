@@ -1,3 +1,5 @@
+"""玩家睡觉时的刷新、角色状态结算为珠、自动存档、理智值自然成长与临时最大精液量刷新"""
+
 import random
 from types import FunctionType
 from Script.Core import (

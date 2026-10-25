@@ -1,3 +1,5 @@
+"""生育谱系图：查询角色的父母与孩子，构建、排版并分页家族谱系图"""
+
 from types import FunctionType
 from typing import Dict, List, Tuple
 from Script.Core import cache_control, game_type, get_text, text_handle

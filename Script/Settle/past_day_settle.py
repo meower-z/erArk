@@ -1,3 +1,5 @@
+"""新一天的刷新，以及陷落角色给予粉红凭证"""
+
 import random
 from types import FunctionType
 from Script.Core import (

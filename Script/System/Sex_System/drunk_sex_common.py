@@ -1,3 +1,5 @@
+"""醉酒：醉酒等级、醉酒值的增减、是否接受酒类食物与品酒"""
+
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config

@@ -1,3 +1,5 @@
+"""隐奸：整体流程、隐蔽值与隐蔽等级、隐奸对象与附近角色、被发现的判定与结算，以及隐奸信息面板与模式选择面板"""
+
 from typing import List
 from types import FunctionType
 from Script.System.Instruct_System import handle_instruct

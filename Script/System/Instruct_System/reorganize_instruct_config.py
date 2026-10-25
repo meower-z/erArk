@@ -10,6 +10,13 @@ import os
 
 
 def reorganize_csv() -> pd.DataFrame:
+  """
+  重组 data/csv/InstructConfig.csv：重命名并重排列，按 instruct_type 与 instruct_sub_type 重新分配 cid，原文件改名为 InstructConfig_backup.csv 后写入新文件
+  Keyword arguments:
+  无
+  Return arguments:
+  pd.DataFrame -- 重组后按 cid 排序的指令配置表
+  """
   csv_path = 'data/csv/InstructConfig.csv'
 
   # 读取CSV，跳过前5行元数据（第1行列名，第2-5行是描述和配置行）

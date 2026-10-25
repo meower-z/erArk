@@ -1,3 +1,5 @@
+"""服装相关的行为结算效果函数，各自用 add_settle_behavior_effect 按 id 注册"""
+
 import datetime
 from types import FunctionType
 from Script.Design import (

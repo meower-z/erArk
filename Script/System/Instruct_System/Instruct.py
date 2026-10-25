@@ -1,3 +1,6 @@
+"""指令id常量类 Instruct"""
+
+
 class Instruct:
   """指令id"""
 

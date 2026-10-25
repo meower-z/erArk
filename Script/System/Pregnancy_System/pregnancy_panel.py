@@ -1,3 +1,5 @@
+"""怀孕总览面板（总览页与生育谱系图页），以及怀孕阶段与关键时间的文本"""
+
 import datetime
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant, py_cmd
