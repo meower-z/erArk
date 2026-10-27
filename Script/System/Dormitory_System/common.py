@@ -86,49 +86,57 @@ def get_dormitory_max_open_layer() -> int:
   return int(fallback.get(dormitory_level, 9))
 
 
+def _get_dormitory_room_no(scene_path: str) -> int:
+  """
+  获取宿舍场景的房号
+  输入类型: scene_path(str)
+  输出类型: int
+  功能: 场景带 Dormitory 标签且路径最后一段是数字时，返回这个数字。其他路径返回0。
+  """
+  if scene_path not in cache.scene_data:
+    return 0
+  if "Dormitory" not in cache.scene_data[scene_path].scene_tag:
+    return 0
+  room_dir_name = scene_path.split(os.sep)[-1]
+  if not room_dir_name.isdecimal():
+    return 0
+  return int(room_dir_name)
+
+
 def get_open_dormitory_rooms_by_layer() -> Dict[int, List[Tuple[str, str]]]:
   """
   统计已开放宿舍房间
   输入类型: 无
   输出类型: Dict[int, List[Tuple[str,str]]]
-  功能: 返回已开放房间，key=层号，value=[(房间名, 场景路径)]
+  功能: 返回已开放房间，key=层号（房号的百位），value=按房号排列的[(房间名, 场景路径)]
   """
   result: Dict[int, List[Tuple[str, str]]] = defaultdict(list)
-  scene_name_to_path = {}
-  for scene_path in cache.scene_data:
-    scene_name_to_path[cache.scene_data[scene_path].scene_name] = scene_path
-
   max_open_layer = get_dormitory_max_open_layer()
   dormitory_level = _get_dormitory_level()
   base_open_room_upper_no = _get_base_open_room_upper_no()
+  # 宿舍房间在 Facility_open.csv 里的设施名，与它的场景名是同一段中文。
+  # 翻译只按中文原文查译文，所以两个名字的译名也相等。
+  open_facility_name_set = {
+      open_data.name
+      for open_cid, open_data in game_config.config_facility_open.items()
+      if cache.rhodes_island.facility_open.get(open_cid, False)
+  }
 
-  for open_cid, open_data in game_config.config_facility_open.items():
-    room_name = open_data.name
-    if not cache.rhodes_island.facility_open.get(open_cid, False):
-      continue
-    # 严格按宿舍房间命名格式过滤，避免受语言翻译文本影响。
-    match = re.fullmatch(r"宿舍(\d)\d{2}房", room_name)
-    if not match:
-      continue
-    layer = int(match.group(1))
+  for room_path in sorted(
+      constant.place_data.get("Dormitory", []), key=_get_dormitory_room_no
+  ):
+    room_no = _get_dormitory_room_no(room_path)
+    layer = room_no // 100
     if layer <= 0 or layer > max_open_layer:
       continue
-    room_path = scene_name_to_path.get(room_name, "")
-    if room_path:
+    room_name = cache.scene_data[room_path].scene_name
+    # 101 号到 _get_base_open_room_upper_no() 号的房间不在 Facility_open.csv 里。
+    # 宿舍区 1 级起，这些房间就开放。
+    is_base_room = (
+        dormitory_level >= 1 and 101 <= room_no <= base_open_room_upper_no
+    )
+    if is_base_room or room_name in open_facility_name_set:
       result[layer].append((room_name, room_path))
-
-  # 等级1时，101-106为基础默认开放房，未配置在 Facility_open 中，需补齐。
-  if dormitory_level >= 1 and max_open_layer >= 1:
-    for room_no in range(101, base_open_room_upper_no + 1):
-      room_name = f"宿舍{room_no}房"
-      room_path = scene_name_to_path.get(room_name, "")
-      if room_path:
-        result[1].append((room_name, room_path))
-
-  for layer in result:
-    # 去重后排序，避免基础补齐与配置项发生重复。
-    unique_room = {name: path for name, path in result[layer]}
-    result[layer] = sorted(unique_room.items(), key=lambda x: x[0])
   return dict(result)
 
 
@@ -177,7 +185,7 @@ def get_open_dormitory_room_occupancy() -> Dict[str, int]:
   获取开放普通宿舍的占用表
   输入类型: 无
   输出类型: Dict[str, int]
-  功能: 按层号升序、层内房名升序列出全部开放普通宿舍的场景路径，并按宿舍统计角色集合的宿舍归属统计各房当前居住人数，返回保持该顺序的{房间路径: 人数}表
+  功能: 按层号升序、层内房号升序列出全部开放普通宿舍的场景路径，并按宿舍统计角色集合的宿舍归属统计各房当前居住人数，返回保持该顺序的{房间路径: 人数}表
   """
   open_rooms_by_layer = get_open_dormitory_rooms_by_layer()
   room_occupancy: Dict[str, int] = {}
@@ -333,15 +341,9 @@ def get_layer_by_dormitory_path(dormitory_path: str) -> int:
   从宿舍场景路径中解析层号
   输入类型: dormitory_path(str)
   输出类型: int
-  功能: 从宿舍场景路径对应的场景名中解析层号，失败时返回0
+  功能: 返回 _get_dormitory_room_no 给出的房号的百位。
   """
-  if dormitory_path == "" or dormitory_path not in cache.scene_data:
-    return 0
-  room_name = cache.scene_data[dormitory_path].scene_name
-  match = re.search(r"宿舍(\d)\d{2}房", room_name)
-  if not match:
-    return 0
-  return int(match.group(1))
+  return _get_dormitory_room_no(dormitory_path) // 100
 
 
 def check_have_target_dormitory_layer_key(
