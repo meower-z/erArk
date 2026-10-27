@@ -601,7 +601,7 @@ def check_observable_09() -> List[CheckFailure]:
 
 
 # OBS-11（已删除，2026-08-28）：曾断言"异地智能跟随者必须正在赶路或门外等待"（is_follow==1 且异地却处于
-# SHARE_BLANKLY 即报）。sol 调查 + opus 复核确认该单帧断言结构性不成立：(1) 行为结束重置
+# SHARE_BLANKLY 即报）。该单帧断言结构性不成立：(1) 行为结束重置
 # （character_behavior.py:327-350，time_judge==2）在采样点（指令面板绘制后）必然产生临时 SHARE_BLANKLY；
 # (2) 合法"门外等待"WAIT 结束同样重置为同一形态；(3) is_follow==1 本就由 AI 目标表驱动而非每回合直接派发
 # （is_follow==2 才是），断言"恒驱动 MOVE/WAIT"对 1 结构性错。真正的滞留（跟随目标丢失、寻路卡死）几乎必然
