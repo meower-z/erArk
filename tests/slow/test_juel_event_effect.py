@@ -2,14 +2,14 @@
 """
 事件的综合数值结算改变宝珠（J）
 ==============================
-开新游戏，以星熊为玩家的交互对象，经事件结算结算星熊的拥抱子事件，
+开新游戏，以星熊为玩家的交互对象，经事件结算结算星熊的子事件，
 其效果为交互对象的状态12加10、经验0加1、宝珠0加1；结算后宝珠0多1，状态12多10，经验0增加。
 """
 
 from tests.slow.base import SlowTestCase
 
 EVENT_ID = "108c4126-9c89-4fb5-9de3-b56a94de9d5e"
-""" 星熊的拥抱子事件，效果含 CVE_A2_J|0_G_1 """
+""" 星熊的子事件，效果含 CVE_A2_J|0_G_1 """
 ADV_ID = 136
 """ 星熊的干员编号 """
 
@@ -18,7 +18,7 @@ class JuelEventEffectTest(SlowTestCase):
   """事件效果里的宝珠增加改变交互对象的宝珠"""
 
   def test_event_adds_juel(self) -> None:
-    """结算星熊的拥抱子事件：她的宝珠0多1，状态12多10，经验0增加"""
+    """结算星熊的子事件：她的宝珠0多1，状态12多10，经验0增加"""
     from Script.Core import game_type
     from Script.Design import settle_behavior
 
