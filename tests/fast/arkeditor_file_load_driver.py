@@ -193,7 +193,7 @@ class FileLoadDriver(EditorDriver):
       self.step(prefix + text, lambda t=text: self.press_premise_button(t))
 
 
-def read_text(path: str) -> str | None:
+def file_text_or_none(path: str) -> str | None:
   """
   读文件的全部文字，文件不存在时为 None
   Keyword arguments:
@@ -229,7 +229,7 @@ def chara_after_event(driver: FileLoadDriver, data_dir: str, _: str) -> None:
   driver.press_premise_buttons("chara:")
   driver.result["chara_after_buttons"] = driver.observe()
   driver.result["event_premises_after"] = driver.data_premises()
-  driver.result["premise_group_file"] = read_text("PremiseGroup.csv")
+  driver.result["premise_group_file"] = file_text_or_none("PremiseGroup.csv")
 
 
 def new_entry_after_event(
@@ -257,7 +257,7 @@ def new_entry_after_event(
   driver.result["second_opened"] = driver.observe()
   driver.step("add_entry", driver.add_entry)
   driver.step("save", driver.editor.item_text_edit.save_button.click)
-  driver.result["second_saved"] = read_text(second_path)
+  driver.result["second_saved"] = file_text_or_none(second_path)
 
 
 def premise_list_actions(
@@ -294,7 +294,7 @@ def premise_list_actions(
   driver.press_premise_buttons("deleted:")
   driver.result["premises_after_deleted"] = driver.data_premises()
   driver.result["dialogs_after_deleted"] = list(driver.result["dialogs"])
-  driver.result["premise_group_file"] = read_text("PremiseGroup.csv")
+  driver.result["premise_group_file"] = file_text_or_none("PremiseGroup.csv")
   driver.select_row(0)
   driver.result["remaining_selected"] = driver.observe()
   driver.step("remaining:删除", lambda: driver.premise_right_click("删除"))
@@ -311,7 +311,7 @@ def new_chara(driver: FileLoadDriver, _: str, template: str) -> None:
   Return arguments:
   无
   """
-  driver.result["template_before"] = read_text(template)
+  driver.result["template_before"] = file_text_or_none(template)
   driver.step("new_chara", driver.editor.menu_bar.new_chara_file_action.trigger)
   if driver.result["step_errors"]["new_chara"]:
     return
@@ -320,8 +320,8 @@ def new_chara(driver: FileLoadDriver, _: str, template: str) -> None:
   chara_list.chara_id_text_edit.setText("8002")
   chara_list.chara_name_text_edit.setText("测试新角色")
   driver.step("apply", chara_list.apply_button.click)
-  driver.result["template_after"] = read_text(template)
-  driver.result["new_file"] = read_text("8002_测试新角色.csv")
+  driver.result["template_after"] = file_text_or_none(template)
+  driver.result["new_file"] = file_text_or_none("8002_测试新角色.csv")
 
 
 SCENARIOS = {
