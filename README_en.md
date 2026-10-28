@@ -64,7 +64,7 @@ Recommend to download through:
 Repo Explanation
 ----
 Daily backup at master branch, also submit pr to this branch \
-Code style was automatically completed with black, line width as 200
+Code is formatted with pyink. pyink indents with 2 spaces. pyink's line length is set to 80 columns.
 
 Font
 ----
