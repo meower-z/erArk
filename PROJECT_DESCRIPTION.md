@@ -93,8 +93,8 @@ python buildpo.py
 # 将 zh_CN 以外每个语言的全部 PO 编译成 MO（--out DIR 写到别的目录）
 python buildmo.py
 
-# 代码格式化（项目约定）
-black --line-length 200 .
+# 代码格式化使用 pyink。下面的命令在仓库根目录运行。pyink 的缩进设为 2 空格。pyink 的行宽设为 80 列。
+pyink .
 ```
 
 ### 3.3 构建链注意事项
@@ -910,7 +910,7 @@ GitHub Actions `.github/workflows/python-app.yml`（push/PR 到 master，windows
 - 注释和文档使用中文
 - 每个函数必须有中文文档字符串：输入参数与类型、返回值与类型、功能说明
 - 每小段代码需有注释说明作用
-- 格式化：Black，行宽 200
+- 格式化：pyink。pyink 的缩进设为 2 空格。pyink 的行宽设为 80 列。
 - 不得手改生成文件：`data/*.json`、`Script/Config/config_def.py`、`.mo`、地图 pickle
 - 修改 CSV/口上/事件/角色后必须运行构建（或直接运行 `game.py` 触发增量构建）
 - UI 输出统一走抽象 draw 类或 `era_print`，不要直接操作 Tk/HTML；新 UI 需双模式验证
