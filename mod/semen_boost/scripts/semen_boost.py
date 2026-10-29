@@ -41,6 +41,11 @@ if TYPE_CHECKING:
 # get_mod_asset - 获取mod素材路径的函数
 # call_original - 调用原函数的方法
 
+cache = globals()["cache"]
+game_config = globals()["game_config"]
+_ = globals()["_"]
+get_mod_asset = globals()["get_mod_asset"]
+
 # ===== Mod自带的射精量数据 =====
 # 在mod加载时读取自带的CSV数据文件
 _mod_semen_config: dict[int, _SemenConfig] = {}

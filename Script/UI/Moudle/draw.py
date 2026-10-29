@@ -18,7 +18,7 @@ from Script.Config import game_config, normal_config
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-  from typing import Sized, Callable
+  from collections.abc import Sized, Callable
 
 bar_list = set(game_config.config_bar_data.keys())
 chara_list = set(game_config.config_image_data.keys())
