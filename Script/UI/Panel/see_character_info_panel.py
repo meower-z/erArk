@@ -6,7 +6,7 @@
 import os
 from typing import List
 from types import FunctionType
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, merge_draw, panel
 from Script.Core import (
     cache_control,
     get_text,
@@ -605,7 +605,7 @@ class CharacterabiText:
             ability_data.name, 10
         )
         now_draw.tooltip = ability_data.info
-        new_draw = draw.LeftMergeDraw(int(self.width / 16))
+        new_draw = merge_draw.LeftMergeDraw(int(self.width / 16))
         # 同类能力里在八个前补个换行
         if ability_id == 48 or ability_id == 101:
           new_draw_n = draw.NormalDraw()

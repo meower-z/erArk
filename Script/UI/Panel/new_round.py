@@ -6,7 +6,7 @@ from typing import List
 from types import FunctionType
 from Script.Core import get_text, flow_handle, game_type, cache_control, constant
 
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, merge_draw, panel
 from Script.UI.Panel import see_character_info_panel
 from Script.Config import normal_config, game_config
 from Script.Design import handle_talent, character_handle
@@ -1264,7 +1264,7 @@ class CharacterabiText:
           now_draw_value.text = str(now_exp)
         # ↑
         level_draw = draw.ExpLevelDraw(now_exp)
-        new_draw = draw.LeftMergeDraw(self.width / 10)
+        new_draw = merge_draw.LeftMergeDraw(self.width / 10)
         # 技能类能力里在八个前补个换行
         if ability_id == 48:
           new_draw_n = draw.NormalDraw()

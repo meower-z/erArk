@@ -37,7 +37,7 @@
 - `WaitDraw`：绘制完成后调用 `flow_handle.askfor_wait()`；用于需要暂停的剧情输出。
 - `LineFeedWaitDraw`：以 `\n` 分段并逐行等待，底层利用 `cache.wframe_mouse` 控制跳过逻辑。
 - `CenterDraw`/`RightDraw`/`LeftDraw`：对齐变种，内部调用 `text_handle.align()`。
-- `CenterMergeDraw`/`LeftMergeDraw`：合并多个 `NormalDraw` 并控制整体宽度。
+- `CenterMergeDraw`/`Script.UI.Moudle.merge_draw.LeftMergeDraw`：合并多个 `NormalDraw` 并控制整体宽度。
 
 ### 4.2 图形类
 - `ImageDraw`：透传图片 ID 给 `io_init.image_print`。
