@@ -886,16 +886,6 @@ class New_Round_Handle:
         achievement_panel.achievement_flow(_("周目"))
         break
 
-  def build_new_character_data(self, character_id: int) -> None:
-    """
-    构建新的角色数据
-    Keyword arguments:
-    character_id -- 角色id
-    """
-    character_handle.init_character(
-        character_id, cache.npc_tem_data[character_id]
-    )
-
   def inherit_player_data(self) -> None:
     """
     继承玩家数据
