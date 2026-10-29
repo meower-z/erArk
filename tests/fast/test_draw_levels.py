@@ -1,7 +1,5 @@
 """
-本模块测试 ExpLevelDraw 的等级绘制。
-本模块测试 StatusLevelDraw 的等级绘制。
-测试输入包含等级边界值。
+测试 ExpLevelDraw 和 StatusLevelDraw 生成的等级标签属性。
 """
 
 from Script.UI.Moudle import draw
@@ -10,14 +8,14 @@ from tests.fast.base import FastTestCase
 
 class LevelDrawTest(FastTestCase):
   """
-  本测试类检查 ExpLevelDraw 与 StatusLevelDraw 在不同输入值下的绘制结果。
+  等级绘制类的快速测试类。
   """
 
   def test_experience_grades(self) -> None:
     """
-    检查 ExpLevelDraw 在各经验值下的等级文本。
-    检查 grade_draw 的样式名称按等级取值。
-    检查 grade_draw 宽度与对象长度都等于等级文本的字符数。
+    按 11 个经验值检查 ExpLevelDraw 生成的 grade_draw 属性。
+    实例长度应等于等级字符串长度。
+    返回 (None)：无返回值。
     """
     for experience, grade in (
         (-1, "G"),
@@ -41,9 +39,10 @@ class LevelDrawTest(FastTestCase):
 
   def test_status_grades_preserve_label(self) -> None:
     """
-    检查 StatusLevelDraw 的 grade_draw 文本保持传入的标签。
-    检查 grade_draw 的样式名称与宽度按状态值所属等级取值。
-    检查对象长度受等级宽度限制。
+    按 14 个数值检查 StatusLevelDraw 生成的 grade_draw 属性。
+    传入的标签 'lv ' 应保留为 grade_draw.text。
+    实例长度应等于等级字符串长度。
+    返回 (None)：无返回值。
     """
     for value, grade in (
         (0, "G"),
