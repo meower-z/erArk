@@ -1,5 +1,5 @@
 """
-测试 mod_manager 加载已启用模组的行为。
+测试 mod_manager 对已启用模组的加载。
 """
 
 from pathlib import Path
@@ -26,9 +26,9 @@ class RecordingModManager(mod_manager.ModManager):
   ) -> dict[str, Any]:
     """
     调用父类方法创建模组命名空间。
-    该命名空间的浅拷贝会存入 self.injected。
+    该命名空间的浅拷贝存入 self.injected。
     参数 mod_info (mod_manager.ModInfo)：模组信息。
-    返回 (dict[str, Any])：父类创建的命名空间字典。
+    返回 (dict[str, Any])：父类方法创建的命名空间字典。
     """
     namespace = super()._create_mod_namespace(mod_info)
     self.injected = namespace.copy()
@@ -37,14 +37,13 @@ class RecordingModManager(mod_manager.ModManager):
 
 class ModLoaderTest(FastTestCase):
   """
-  模组加载器的快速测试类。
+  模组加载器的测试类。
   """
 
   def setUp(self) -> None:
     """
     用补丁隔离模组管理器的全局状态。
-    测试结束后这些补丁会自动撤销。
-    新建的 RecordingModManager 实例存入 self.manager。
+    测试结束后这些补丁会被撤销。
     返回 (None)：无返回值。
     """
     super().setUp()
@@ -59,8 +58,7 @@ class ModLoaderTest(FastTestCase):
 
   def test_semen_mod_loads_and_settles_with_injected_objects(self) -> None:
     """
-    验证 semen_boost 模组的替换函数使用加载器注入的对象。
-    验证该替换函数能完成一次射精结算。
+    验证 semen_boost 模组加载后，替换后的 common_ejaculation 能完成一次结算。
     被替换的目标模块由测试构造的模块代替。
     返回 (None)：无返回值。
     """
@@ -119,9 +117,8 @@ class ModLoaderTest(FastTestCase):
 
   def test_replacement_calls_saved_original_with_arguments(self) -> None:
     """
-    验证替换函数通过 call_original 调用被替换的原函数。
-    测试检查传给原函数的参数。
-    测试检查包装后的返回值。
+    验证替换函数能通过 call_original 调用被替换的原函数。
+    被替换的原函数位于测试构造的模块中。
     返回 (None)：无返回值。
     """
     target = ModuleType("mod_loader_target")

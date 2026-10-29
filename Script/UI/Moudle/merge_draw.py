@@ -16,42 +16,41 @@ if TYPE_CHECKING:
 
 class LeftMergeDraw:
   """
-  按左对齐方式顺序绘制 draw_list 中的绘制对象。
-  参数 width (float)：左对齐的目标宽度。
+  按列表顺序绘制 draw_list 中的绘制对象。
+  随后绘制一段左对齐补位文本。
   """
 
   def __init__(self, width: float) -> None:
     """
-    初始化左对齐合并绘制实例。
+    创建左对齐合并绘制实例。
     参数 width (float)：左对齐的目标宽度。
     返回 (None)：无返回值。
     """
     self.width: float = width
     """
-    左对齐的目标宽度。
-    绘制对象的总宽度可以超过该值。
+    左对齐补位所依据的目标宽度。
     """
     self.draw_list: list[SizedDrawable] = []
     """
-    待绘制的绘制对象列表。
-    列表元素需支持 draw() 和 len()。
+    draw() 依次绘制的绘制对象列表。
     """
     self.column: int = 0
     """
-    当前绘制逻辑未使用的列数属性。
+    列数属性。
+    本类的方法不读取该属性。
     """
 
   def __len__(self) -> int:
     """
-    以目标宽度作为本对象的长度。
-    返回 (int)：int(self.width)。
+    把目标宽度的整数值作为本对象的长度。
+    返回 (int)：int(self.width) 的结果。
     """
     return int(self.width)
 
   def __gt__(self, other: Sized) -> int:
     """
     判断本对象的长度是否大于 other 的长度。
-    参数 other (Sized)：支持 len() 的对象。
+    参数 other (Sized)：可用 len() 取长度的对象。
     返回 (bool)：比较结果。
     """
     return int(len(self)) > int(len(other))
@@ -59,7 +58,7 @@ class LeftMergeDraw:
   def draw(self) -> None:
     """
     按列表顺序绘制 draw_list 中的绘制对象。
-    随后绘制一段左对齐补位空格。
+    随后用 NormalDraw 绘制一段补位文本。
     返回 (None)：无返回值。
     """
     now_width = 0
