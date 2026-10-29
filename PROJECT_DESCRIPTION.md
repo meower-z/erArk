@@ -751,7 +751,7 @@ init_character_behavior()
 
 ### 19.1 抽象绘制层
 
-`Script/UI/Moudle/draw.py` 提供所有 UI 组件基类：
+`Script/UI/Moudle/draw.py` 与 `Script/UI/Moudle/merge_draw.py` 提供所有 UI 组件基类：
 
 - 文本：`NormalDraw`, `FullDraw`, `WaitDraw`, `LineFeedWaitDraw`, `CenterDraw`, `RightDraw`, `LeftDraw`, `CenterMergeDraw`, `Script.UI.Moudle.merge_draw.LeftMergeDraw`, `ExpLevelDraw`, `StatusLevelDraw`
 - 图形：`ImageDraw`, `BarDraw`, `CharaDraw`, `InfoBarDraw`, `InfoCharaDraw`

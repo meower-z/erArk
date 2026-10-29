@@ -27,7 +27,7 @@
 - **样式初始化**：`init_style()` 遍历 `game_config.config_font`，调用 `frame_style_def()` 将样式注册为 Tk `Text` tag；同时额外生成 `bold/underline/italic` 及其与基础样式的组合标记。
 - **命令输入**：`get_order()` 读取 `_order_queue` 中的指令；`put_order()` 在 Tk 模式下直接入队，被 `flow_handle.order_deal()` 消费。
 
-## 4. 绘制组件层（`Script.UI.Moudle.draw`）
+## 4. 绘制组件层（`Script.UI.Moudle.draw`、`Script.UI.Moudle.merge_draw`）
 
 > 这里定义了所有可复用的绘制原件，面板层只负责装配。
 
@@ -37,7 +37,7 @@
 - `WaitDraw`：绘制完成后调用 `flow_handle.askfor_wait()`；用于需要暂停的剧情输出。
 - `LineFeedWaitDraw`：以 `\n` 分段并逐行等待，底层利用 `cache.wframe_mouse` 控制跳过逻辑。
 - `CenterDraw`/`RightDraw`/`LeftDraw`：对齐变种，内部调用 `text_handle.align()`。
-- `CenterMergeDraw`/`Script.UI.Moudle.merge_draw.LeftMergeDraw`：合并多个 `NormalDraw` 并控制整体宽度。
+- `CenterMergeDraw`/`Script.UI.Moudle.merge_draw.LeftMergeDraw`：按顺序绘制 `draw_list` 中的 `SizedDrawable`（能用 `draw()` 绘制自身、能用 `len()` 取绘制宽度的对象）。两个类还根据 `self.width` 与这些对象的总宽度绘制对齐用的空格。
 
 ### 4.2 图形类
 - `ImageDraw`：透传图片 ID 给 `io_init.image_print`。
