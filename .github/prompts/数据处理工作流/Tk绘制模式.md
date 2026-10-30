@@ -37,7 +37,7 @@
 - `WaitDraw`：绘制完成后调用 `flow_handle.askfor_wait()`；用于需要暂停的剧情输出。
 - `LineFeedWaitDraw`：以 `\n` 分段并逐行等待，底层利用 `cache.wframe_mouse` 控制跳过逻辑。
 - `CenterDraw`/`RightDraw`/`LeftDraw`：对齐变种，内部调用 `text_handle.align()`。
-- `CenterMergeDraw` 定义于 `Script/UI/Moudle/draw.py`。`LeftMergeDraw` 定义于 `Script/UI/Moudle/merge_draw.py`。这两个类的 `draw_list` 属性的类型注解是 `SizedDrawable` 对象的列表。`SizedDrawable` 对象的 `draw()` 方法执行绘制。`SizedDrawable` 对象的 `__len__()` 方法返回绘制宽度。这两个类的 `draw()` 方法按列表顺序依次绘制 `draw_list` 中的对象。
+- `CenterMergeDraw` 定义在 `Script/UI/Moudle/draw.py` 中。`LeftMergeDraw` 定义在 `Script/UI/Moudle/merge_draw.py` 中。这两个类的 `draw_list` 属性的类型注解是 `SizedDrawable` 列表。`SizedDrawable` 协议要求对象提供 `draw()` 和 `__len__()` 两个方法。这两个类的 `draw()` 方法按列表顺序绘制 `draw_list` 中的对象。这两个 `draw()` 方法还用 `text_handle.align` 生成一段由空格组成的补位文本。补位文本的用途是按 `width` 控制合并输出的整体宽度。`CenterMergeDraw.draw()` 在绘制 `draw_list` 之前绘制一次补位文本。`CenterMergeDraw.draw()` 在绘制 `draw_list` 之后再绘制一次补位文本。`LeftMergeDraw.draw()` 在绘制 `draw_list` 之后绘制补位文本。
 
 ### 4.2 图形类
 - `ImageDraw`：透传图片 ID 给 `io_init.image_print`。
