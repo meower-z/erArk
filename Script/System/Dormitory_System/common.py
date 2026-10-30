@@ -415,8 +415,10 @@ def init_character_dormitory() -> None:
       npc_count += 1
     # 有单独宿舍的干员住在对应宿舍
     else:
+      # scene_name 是场景名的译文，所以模板的中文场景名也先经过 _ 再比较
+      template_scene_name = _(character_data.dormitory)
       for n in list(dormitory.keys()):
-        if cache.scene_data[n].scene_name == character_data.dormitory:
+        if cache.scene_data[n].scene_name == template_scene_name:
           # 如果要住宿舍的话，那先检测宿舍是否已经有人住了
           if "宿舍" in character_data.dormitory:
             already_live = False
