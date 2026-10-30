@@ -13,6 +13,7 @@ from __future__ import annotations
 import os
 import csv
 import random
+from contextlib import suppress
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -31,6 +32,19 @@ if TYPE_CHECKING:
 
     cid: int
     base_semen_amount: int
+
+else:
+  # globals() 返回 Mod 加载器用 exec 运行本脚本时传入的字典。
+  # 本分支在运行时把 cache、game_config、_ 和 get_mod_asset 绑定为该字典中的同名值。
+  # 该字典缺少某个名字时，suppress(KeyError) 让这个名字保持未绑定。
+  with suppress(KeyError):
+    cache = globals()["cache"]
+  with suppress(KeyError):
+    game_config = globals()["game_config"]
+  with suppress(KeyError):
+    _ = globals()["_"]
+  with suppress(KeyError):
+    get_mod_asset = globals()["get_mod_asset"]
 
 
 # ===== 以下变量由mod系统自动注入 =====
