@@ -133,9 +133,7 @@ class CVPMenu(QDialog):
     # 获得当前abcd的值
     cvp_a = self.cvp_a.currentText()
     cvp_a_value = "A1"
-    if cvp_a == "自己":
-      cvp_a_value = "A1"
-    elif cvp_a == "交互对象":
+    if cvp_a == "交互对象":
       cvp_a_value = "A2"
     elif cvp_a == "角色id为":
       cvp_a_value = "A3|" + self.cvp_a2.toPlainText()
@@ -148,8 +146,10 @@ class CVPMenu(QDialog):
     else:
       cvp_b2 = ""
     cvp_b_value = ""
-    if cvp_b1 == "待选择":
-      # 还没选属性时不加前提，窗口留着
+    value_missing = not self.cvp_d.isHidden() and not self.cvp_d.toPlainText()
+    if cvp_b1 == "待选择" or cvp_a_value == "A3|" or value_missing:
+      # 对象是角色id为且 cvp_a2 为空时，cvp_a_value 为 "A3|"。
+      # 属性为待选择、此 id 为空或显示着的判定值框为空时不写入前提。
       return
     elif cvp_b1 == "好感":
       cvp_b_value = "F"

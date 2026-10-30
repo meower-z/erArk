@@ -140,8 +140,9 @@ class CVEMenu(QDialog):
     else:
       cve_b2 = ""
     cve_b_value = ""
-    if cve_b1 == "待选择":
-      # 还没选属性时不加结算，窗口留着
+    if cve_b1 == "待选择" or cve_a_value == "A3|":
+      # 对象是角色id为且 cve_a2 为空时，cve_a_value 为 "A3|"。
+      # 属性为待选择或此 id 为空时不写入结算。
       return
     elif cve_b1 == "好感":
       cve_b_value = "F"
