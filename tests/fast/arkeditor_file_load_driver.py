@@ -12,6 +12,7 @@ ArkEditor 载入文件后各面板状态的离屏驱动脚本，由 test_arkedit
   premise_list_actions   开事件文件或口上文件，未选条目时按前提列表的各按钮；
                          点选第一条后删除该条目，再右键、拖动、双击前提并按各按钮；最后点选剩下的一条右键删除前提
   new_chara              新建属性文件，改角色 id 与姓名后应用并保存
+  talk_premise_texts     从菜单打开数据目录里名为场景参数的口上文件。逐行点选条目。记下选中条目各前提 id 在前提列表里的文字。
 """
 
 import importlib
@@ -324,11 +325,42 @@ def new_chara(driver: FileLoadDriver, _: str, template: str) -> None:
   driver.result["new_file"] = file_text_or_none("8002_测试新角色.csv")
 
 
+def talk_premise_texts(
+    driver: FileLoadDriver, data_dir: str, name: str
+) -> None:
+  """
+  从菜单打开数据目录里名为 name 的口上文件。记下载入的条目数与左侧列表的行数。逐行点选左侧条目。
+  每选一行，记下选中条目各前提 id 在前提列表里显示的文字。
+  Keyword arguments:
+  driver -- FileLoadDriver，编辑器驱动
+  data_dir -- str，数据目录
+  name -- str，口上文件名
+  Return arguments:
+  None -- 无
+  """
+  driver.step(
+      "open_talk", lambda: driver.open_talk_file(os.path.join(data_dir, name))
+  )
+  driver.result["entries"] = len(driver.cache_control.now_talk_data)
+  list_rows = driver.editor.data_list.list_widget.count()
+  driver.result["list_rows"] = list_rows
+  premise_texts: dict[str, str] = {}
+  for row in range(list_rows):
+    driver.select_row(row)
+    talk = driver.cache_control.now_talk_data[
+        driver.cache_control.now_select_id
+    ]
+    texts = list_texts(driver.editor.item_premise_list.item_list)
+    premise_texts.update(zip(talk.premise, texts))
+  driver.result["premise_texts"] = premise_texts
+
+
 SCENARIOS = {
     "chara_after_event": chara_after_event,
     "new_entry_after_event": new_entry_after_event,
     "premise_list_actions": premise_list_actions,
     "new_chara": new_chara,
+    "talk_premise_texts": talk_premise_texts,
 }
 """ 场景名到场景函数 """
 
