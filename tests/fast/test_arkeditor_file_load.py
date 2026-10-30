@@ -7,11 +7,16 @@ ArkEditor 载入文件后的面板状态、前提列表在没有选中条目时�
 载入任一文件后不再显示上一个文件的条目、退出文本预览，新增条目并保存时不写入上一个文件的文本；
 没有选中条目、或选中的条目已删除时，前提列表的各操作不抛异常、不改数据也不写文件；
 新建属性文件读入模板，应用并保存时另存为新文件，模板不变。
+打开 GAME_TABLE_TALK_FILES 所列口上文件的副本并逐行点选条目时不抛异常。
+引用该常量所列角色扮演或能力 id 的前提，
+在前提列表里显示的文字含有该 id 在 data/csv 下对应表里的名字。
 PySide6 在本机无法导入时跳过。
 """
 
+import csv
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -72,6 +77,52 @@ TALK_CSV = (
     "2,share_blankly,0,high_1&sys_1,第二条口上\n"
 )
 """ 口上文件：两条口上各带前提 """
+GAME_TABLE_TALK_FILES = (
+    (
+        os.path.join("data", "talk", "arts", "roleplay.csv"),
+        "Roleplay",
+        "Roleplay",
+        "角色扮演",
+        ("25", "26", "27", "109", "110"),
+    ),
+    (
+        os.path.join(
+            "data", "talk", "sex", "sex_class", "sex_class_main_77.csv"
+        ),
+        "Ability",
+        "A",
+        "能力",
+        ("77",),
+    ),
+)
+""" 每组依次为仓库里的口上文件路径、data/csv 表名、前提 id 里的属性名、前提列表里名字前的文字、要核对的 id """
+
+
+def game_table_names(table: str) -> dict[str, str]:
+  """
+  取 data/csv 下一张表第 6 行起各行的 cid 与 name。
+  Keyword arguments:
+  table -- str，data/csv 下的表文件名，不带 .csv
+  Return arguments:
+  dict[str, str] -- 各行的 cid 到 name
+  """
+  path = os.path.join(ROOT, "data", "csv", table + ".csv")
+  with open(path, encoding="utf-8", newline="") as table_file:
+    rows = list(csv.DictReader(table_file))[4:]
+  return {row["cid"]: row["name"] for row in rows}
+
+
+def talk_file_cids(path: str) -> set[str]:
+  """
+  取口上文件第 6 条记录起、至少一格不为空的各条记录首列的 cid。
+  Keyword arguments:
+  path -- str，口上文件路径
+  Return arguments:
+  set[str] -- cid 集合
+  """
+  with open(path, encoding="utf-8", newline="") as talk_file:
+    records = list(csv.reader(talk_file))[5:]
+  return {record[0] for record in records if any(record)}
 
 
 class ArkEditorFileLoadTest(FastTestCase):
@@ -256,3 +307,26 @@ class ArkEditorFileLoadTest(FastTestCase):
         self.assertEqual(result["template_after"], result["template_before"])
         self.assertIn("AdvNpc,int,8002,", result["new_file"])
         self.assertIn("Name,str,测试新角色,", result["new_file"])
+
+  def test_talk_file_with_game_table_ids(self) -> None:
+    """打开 GAME_TABLE_TALK_FILES 的口上文件并点选各条目不抛异常。引用所列 id 的前提文字含 data/csv 里的名字。"""
+    for path, table, attribute, label, ids in GAME_TABLE_TALK_FILES:
+      with self.subTest(path=path):
+        name = os.path.basename(path)
+        shutil.copy(os.path.join(ROOT, path), os.path.join(self.data_dir, name))
+        result = self.drive("talk_premise_texts", name)
+        self.assertEqual(result["errors"], [])
+        cids = talk_file_cids(os.path.join(ROOT, path))
+        self.assertEqual(result["entries"], len(cids))
+        self.assertEqual(result["list_rows"], len(cids))
+        names = game_table_names(table)
+        for table_id in ids:
+          pattern = re.compile(rf"CVP_A\d_{attribute}\|{table_id}_")
+          texts = [
+              text
+              for premise, text in result["premise_texts"].items()
+              if pattern.match(premise)
+          ]
+          self.assertNotEqual(texts, [], table_id)
+          for text in texts:
+            self.assertIn(label + names[table_id], text)
