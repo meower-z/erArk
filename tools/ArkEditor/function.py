@@ -152,44 +152,43 @@ def read_CVE(cve_value_str: str) -> str:
   for i in cve_str_list:
     cve_str += i
   # print(f"debug cve_str = {cve_str}, cve_str_list = {cve_str_list}")
-  # 处理A3部分
-  if "A3" in cve_str:
-    a3_value = cve_str.split("A3|")[1].split("_")[0]
+  # 只按对象段判断对象是不是角色id为
+  if cve_str_list[1].startswith("A3|"):
+    a3_value = cve_str_list[1].split("A3|")[1]
     cve_str = cve_str.replace(f"A3|{a3_value}", f"角色id为{a3_value}")
-  # 然后处理B属性部分
-  if "A" in cve_str:
+  # 只按属性段开头的类型标记（如 A|、T|）选属性分支
+  if cve_str_list[2].startswith("A|"):
     b2_value = cve_str_list[2].split("A|")[1]
     b2_name = cache_control.ability_data[b2_value]
     cve_str = cve_str.replace(f"A|{b2_value}", f"能力{b2_name}")
-  elif "T" in cve_str:
+  elif cve_str_list[2].startswith("T|"):
     b2_value = cve_str_list[2].split("T|")[1]
     b2_name = cache_control.talent_data[b2_value]
     cve_str = cve_str.replace(f"T|{b2_value}", f"素质{b2_name}")
-  elif "J" in cve_str:
+  elif cve_str_list[2].startswith("J|"):
     b2_value = cve_str_list[2].split("J|")[1]
     b2_name = cache_control.juel_data[b2_value]
     cve_str = cve_str.replace(f"J|{b2_value}", f"宝珠{b2_name}")
-  elif "E" in cve_str:
+  elif cve_str_list[2].startswith("E|"):
     b2_value = cve_str_list[2].split("E|")[1]
     b2_name = cache_control.experience_data[b2_value]
     cve_str = cve_str.replace(f"E|{b2_value}", f"经验{b2_name}")
-  elif "S" in cve_str:
+  elif cve_str_list[2].startswith("S|"):
     b2_value = cve_str_list[2].split("S|")[1]
     b2_name = cache_control.state_data[b2_value]
     cve_str = cve_str.replace(f"S|{b2_value}", f"状态{b2_name}")
-  elif "Climax" in cve_str:
+  elif cve_str_list[2].startswith("Climax|"):
     b2_value = cve_str_list[2].split("Climax|")[1]
     b2_name = cache_control.organ_data[b2_value]
     cve_str = cve_str.replace(f"Climax|{b2_value}", f"绝顶{b2_name}")
-  elif "指定角色id为交互对象" in cve_str:
+  elif cve_str_list[2].startswith("指定角色id为交互对象|"):
     b2_value = cve_str_list[2].split("指定角色id为交互对象|")[1]
     b2_name = cache_control.organ_data[b2_value]
     cve_str = cve_str.replace(
         f"指定角色id为交互对象|{b2_value}", f"指定角色id为交互对象"
     )
-    # 去掉c和d的部分
-    cve_str = cve_str.replace(cve_str_list[3], "")
-    cve_str = cve_str.replace(cve_str_list[4], "")
+    # 只去掉文字末尾的运算段和判定值段
+    cve_str = cve_str.removesuffix(cve_str_list[3] + cve_str_list[4])
   return cve_str
 
 
