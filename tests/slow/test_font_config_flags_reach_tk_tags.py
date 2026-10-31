@@ -6,7 +6,6 @@
 样式定义经输出队列送到 main_frame，main_frame.read_queue 读出后注册成文本框的标签。
 每个字体配置样式的标签字体所带的修饰词（bold、underline、italic）就是它在字体配置里设为真的那几个标志；
 三个修饰符标签与每个样式的修饰符组合标签各带名字里的修饰词。
-导入 main_frame 时就创建 Tk 窗口并把它最大化；X11 的 Tk 不认最大化用的 "zoomed" 状态，测试导入时跳过这一步。
 没有可用的显示时跳过测试。不开新游戏。
 """
 
@@ -14,7 +13,6 @@ import queue
 import signal
 import tkinter
 from itertools import combinations
-from unittest import mock
 
 from tests.slow import remove_parent_guard
 from tests.slow.base import SlowTestCase
@@ -42,26 +40,8 @@ class FontConfigFlagsReachTkTagsTest(SlowTestCase):
     self.cache = self.world.cache
     from Script.Core import io_init
 
-    original_state = tkinter.Wm.state
-
-    def state_without_zoom(
-        window: tkinter.Wm, newstate: str | None = None
-    ) -> str | None:
-      """
-      替换 Wm.state：要求 "zoomed" 时不改窗口状态，其余照原样
-      Keyword arguments:
-      window -- 窗口
-      newstate -- 目标状态，None 表示只查询
-      Return arguments:
-      str | None -- 原 Wm.state 的返回值；要求 "zoomed" 时为 None
-      """
-      if newstate == "zoomed":
-        return None
-      return original_state(window, newstate)
-
     try:
-      with mock.patch.object(tkinter.Wm, "state", state_without_zoom):
-        from Script.Core import main_frame
+      from Script.Core import main_frame
     except tkinter.TclError as error:
       self.skipTest(f"没有可用的显示，无法创建 Tk 窗口：{error}")
     messages: queue.Queue[str] = queue.Queue()

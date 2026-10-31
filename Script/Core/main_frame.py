@@ -291,7 +291,12 @@ x = root.winfo_screenwidth() // 2 - win_width // 2
 y = root.winfo_screenheight() // 2 - win_height // 2
 # 从窗口改为最大化
 # root.geometry("{}x{}+{}+{}".format(width, height, x, y))
-root.state("zoomed")
+# Tk 的 zoomed 窗口状态只适用于 Windows 和 macOS。
+# X11 上用 -zoomed 窗口属性请求最大化。
+if root.tk.call("tk", "windowingsystem") == "x11":
+  root.attributes("-zoomed", True)
+else:
+  root.state("zoomed")
 # 隐藏窗口
 root.deiconify()
 root.columnconfigure(0, weight=1)
