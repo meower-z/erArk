@@ -92,7 +92,7 @@ def init_character_tem_data() -> None:
 
 def find_files_and_get_size(directory: str, character: str) -> dict[str, int]:
   """
-  在指定目录中查找文件名中的角色名与指定角色相同的文件，并在 data/event/chara 中查找该角色的事件文件（有多个时只取 glob 列出的最后一个），返回这些文件的大小
+  在指定目录中查找文件名里角色名与指定角色相同的全部文件，再在 data/event/chara 中查找该角色的事件文件，返回这些文件的大小。该角色有多个事件文件时，只取按文件名排序后排在最后的一个。
   Keyword arguments:
   directory -- 要查找的目录，目录中的文件名形如 前缀_角色名_版本.扩展名
   character -- 角色名
@@ -130,7 +130,7 @@ def find_files_and_get_size(directory: str, character: str) -> dict[str, int]:
   # 同理获得查找事件文件的大小
   event_directory = "data/event/chara"
   event_path = os.path.join(event_directory, "*")
-  event_files = glob.glob(event_path)
+  event_files = sorted(glob.glob(event_path))
   all_event_chara_name = [
       os.path.basename(file).split(".")[0].split("_")[1] for file in event_files
   ]
