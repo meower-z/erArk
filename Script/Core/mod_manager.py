@@ -92,12 +92,21 @@ class ModManager:
     return os.path.join(base_path, self.mod_folder)
 
   def scan_mods(self) -> List[ModInfo]:
-    """扫描mod文件夹，获取所有mod信息"""
+    """
+    扫描mod文件夹，获取所有mod信息
+    同一 mod_id 已有记录时，新记录沿用旧记录的加载状态与错误信息
+
+    返回:
+        List[ModInfo] -- 扫描到的所有mod信息
+    """
     mod_path = self.get_mod_folder_path()
     if not os.path.exists(mod_path):
       os.makedirs(mod_path)
       return []
 
+    # load_all_enabled_mods 把加载状态与错误信息写在 ModInfo 上。
+    # 重新扫描会新建 ModInfo。同一 mod_id 的新记录因此从旧记录沿用这两项。
+    previous = dict(self.mods)
     self.mods.clear()
 
     for item in os.listdir(mod_path):
@@ -114,6 +123,9 @@ class ModManager:
           info_dict = json.load(f)
         mod_id = info_dict.get("mod_id", item)
         mod_info = ModInfo(mod_id, info_dict, item_path)
+        if mod_id in previous:
+          mod_info.loaded = previous[mod_id].loaded
+          mod_info.error_message = previous[mod_id].error_message
         self.mods[mod_id] = mod_info
       except Exception as e:
         print(f"[Mod] 读取mod信息失败: {item}, 错误: {e}")
