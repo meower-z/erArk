@@ -37,8 +37,8 @@ def init_instruct_handle_thread() -> None:
     time.sleep(1)
 
 
-instruct_handle_thread = Thread(target=init_instruct_handle_thread)
-""" 指令处理线程 """
+instruct_handle_thread = Thread(target=init_instruct_handle_thread, daemon=True)
+""" 指令处理线程：模块导入时启动的守护线程。解释器退出时不等它结束。 """
 instruct_handle_thread.start()
 
 

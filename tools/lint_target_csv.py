@@ -267,9 +267,7 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-  # check_registry 导入 Script.StateMachine.default 时会间接导入 handle_instruct。
-  # handle_instruct 在导入时启动一个永不结束的非守护线程，解释器正常退出会一直等它。
-  # 所以 main 返回或抛出异常后，都先刷新输出，再用 os._exit 结束进程。
+  # main 返回或抛出异常后，都先刷新输出，再用 os._exit 结束进程。
   # 退出码：main 正常返回时取它的返回值；抛出异常时为 1，并先打印调用栈。
   # 刷新输出失败（例如管道读端已关闭）时退出码为 120，与解释器正常退出时刷新失败相同。
   exit_code = 1
