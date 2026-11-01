@@ -8,7 +8,9 @@
 每升一级，子进程记下 get_open_dormitory_rooms_by_layer 按层列出的房间。
 子进程还记下 get_layer_by_dormitory_path 给每个房间算出的层号。
 翻译函数在 get_text 首次导入时选定语言，所以每种语言要用单独的进程。
-地图预处理文件不按语言区分，所以每个子进程在自己的临时目录里重建它们。
+SceneData、MapData、PlaceData 三个地图预处理文件里记着写入时的游戏语言。
+载入地图时，若文件里的语言与当前语言不同，游戏就重建这些文件。
+所以每个子进程在自己临时目录的 data/ 里重建它们，以免改写仓库 data/ 下的这些文件。
 """
 
 import json
