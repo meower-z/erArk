@@ -366,7 +366,62 @@ def talk_premise_texts(
   driver.result["premise_texts"] = premise_texts
 
 
+FAILED_OPEN_FILES = {
+    "talk": ("talk.csv", "bad_talk.csv"),
+    "event": ("event1.json", "bad_event.json"),
+    "chara": ("chara.csv", "bad_chara.csv"),
+}
+""" 占位说明：各文件类型的可读文件与读不了的文件 """
+
+
+def save_after_failed_open(
+    driver: FileLoadDriver, data_dir: str, variant: str
+) -> None:
+  """
+  占位说明：先开可读文件或不开，再开读不了的文件，按保存，记下前后状态与文件
+  Keyword arguments:
+  driver -- FileLoadDriver，编辑器驱动
+  data_dir -- str，数据目录
+  variant -- str，形如 talk:same 或 talk:none
+  Return arguments:
+  None -- 无
+  """
+  kind, prior = variant.split(":")
+  good_name, bad_name = FAILED_OPEN_FILES[kind]
+  open_file = {
+      "talk": driver.open_talk_file,
+      "event": driver.open_event_file,
+      "chara": driver.open_chara_file,
+  }[kind]
+  if prior == "same":
+    open_file(os.path.join(data_dir, good_name))
+    if kind != "chara":
+      driver.select_row(0)
+  bad_path = os.path.join(data_dir, bad_name)
+  driver.result["bad_before"] = file_text_or_none(bad_path)
+
+  def state() -> dict[str, Any]:
+    """占位说明：当前打开的文件、各面板与条目数据"""
+    chara_data = driver.cache_control.now_chara_data
+    return {
+        "file_path": driver.cache_control.now_file_path,
+        "list_rows": driver.editor.data_list.list_widget.count(),
+        "entries": driver.data_premises(),
+        "chara_name": getattr(chara_data, "Name", None),
+        **driver.observe(),
+    }
+
+  driver.result["before"] = state()
+  driver.step("open_bad", lambda: open_file(bad_path))
+  driver.result["after"] = state()
+  driver.step("save", driver.editor.item_text_edit.save_button.click)
+  if kind == "chara" and prior == "same":
+    driver.step("apply", driver.editor.chara_list.apply_button.click)
+  driver.result["bad_after"] = file_text_or_none(bad_path)
+
+
 SCENARIOS = {
+    "save_after_failed_open": save_after_failed_open,
     "chara_after_event": chara_after_event,
     "new_entry_after_event": new_entry_after_event,
     "premise_list_actions": premise_list_actions,

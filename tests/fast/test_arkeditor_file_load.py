@@ -234,6 +234,53 @@ class ArkEditorFileLoadTest(FastTestCase):
     result: dict[str, Any] = json.loads(done.stdout.strip().splitlines()[-1])
     return result
 
+  def write_failed_open_files(self) -> None:
+    """
+    占位说明：在数据目录里重写三种可读文件与三种读不了的文件
+    Keyword arguments:
+    无
+    Return arguments:
+    None -- 无
+    """
+    with open(
+        os.path.join(ROOT, "example", CHARA_TEMPLATE), encoding="utf-8"
+    ) as template_file:
+      chara = template_file.read()
+    for name, text in (
+        ("talk.csv", TALK_CSV),
+        (
+            "bad_talk.csv",
+            TALK_CSV + "3,share_blankly,第三条,high_1,第三条口上\n",
+        ),
+        ("event1.json", json.dumps(EVENTS, ensure_ascii=False)),
+        (
+            "bad_event.json",
+            json.dumps(
+                dict(EVENTS, **{"event-x": {"uid": "event-x", "premise": {}}}),
+                ensure_ascii=False,
+            ),
+        ),
+        ("chara.csv", chara),
+        ("bad_chara.csv", chara.replace("Sex,int,1,", "Sex,int,女,", 1)),
+    ):
+      with open(
+          os.path.join(self.data_dir, name), "w", encoding="utf-8"
+      ) as data_file:
+        data_file.write(text)
+
+  def test_save_after_failed_open(self) -> None:
+    """占位说明：打开读不了的文件后，编辑器仍停在之前的文件上，按保存不改读不了的文件"""
+    for kind in ("talk", "event", "chara"):
+      for prior in ("same", "none"):
+        with self.subTest(kind=kind, prior=prior):
+          self.write_failed_open_files()
+          result = self.drive("save_after_failed_open", f"{kind}:{prior}")
+          self.assertNotEqual(result["step_errors"]["open_bad"], [])
+          self.assertEqual(result["bad_after"], result["bad_before"])
+          self.assertEqual(result["after"], result["before"])
+          self.assertEqual(result["step_errors"]["save"], [])
+          self.assertEqual(result["step_errors"].get("apply", []), [])
+
   def test_chara_file_after_event_file(self) -> None:
     """先开事件文件、点选事件，再开属性文件：面板里没有事件的内容，前提列表的按钮不改事件、不写前提组文件"""
     result = self.drive("chara_after_event")
