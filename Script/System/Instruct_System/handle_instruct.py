@@ -1,12 +1,9 @@
-"""指令处理：指令处理线程与执行入口、指令注册装饰器 add_instruct，以及用它注册的各指令处理函数"""
+"""指令处理：执行入口 handle_instruct、指令注册装饰器 add_instruct，以及用 add_instruct 注册的各指令处理函数"""
 
-import time
-import queue
 import datetime
 from functools import wraps
 from typing import Callable, Set, List, Optional, ParamSpec, TypeVar, Union
 from types import FunctionType
-from threading import Thread
 from Script.Core import constant, constant_promise, cache_control, game_type, get_text, flow_handle
 from Script.Design import handle_ability, update, map_handle, character_behavior, instuct_judege, handle_npc_ai_in_h, handle_premise, game_time, child_stage_gate
 from Script.UI.Panel import achievement_panel, normal_panel
@@ -19,27 +16,10 @@ _: FunctionType = get_text._
 """ 翻译api """
 width: int = normal_config.config_normal.text_width
 """ 屏幕宽度 """
-instruct_queue: queue.Queue[str] = queue.Queue()
-""" 待处理的指令队列 """
 InstructParams = ParamSpec("InstructParams")
 """ 指令处理函数的参数 """
 InstructReturn = TypeVar("InstructReturn")
 """ 指令处理函数的返回值 """
-
-
-def init_instruct_handle_thread() -> None:
-  """初始化指令处理线程"""
-  while 1:
-    if not instruct_queue.empty():
-      instruct_queue.get()
-      # 注释掉自动存档机制来解决卡顿问题
-      # save_handle.establish_save("auto")
-    time.sleep(1)
-
-
-instruct_handle_thread = Thread(target=init_instruct_handle_thread)
-""" 指令处理线程 """
-instruct_handle_thread.start()
 
 
 def handle_instruct(instruct: str) -> None:
@@ -48,7 +28,6 @@ def handle_instruct(instruct: str) -> None:
   Keyword arguments:
   instruct -- 指令id（字符串）
   """
-  instruct_queue.put(instruct)
   # 交互对象处于幼年阶段时不执行H类指令
   if child_stage_gate.blocks_instruct(instruct):
     return
