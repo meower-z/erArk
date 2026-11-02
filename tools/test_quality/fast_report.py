@@ -18,7 +18,7 @@
 `git -C <checkout> clean -fdX data/` 清理 data/。
 
 每一步打印一行摘要，完整报告写到 --report 给的文件（默认是缓存目录里的 report.md）。缓存目录是
-~/.cache/era-lint/<checkout 路径的哈希>/，存放覆盖率数据和变异测试的缓存。本脚本自己的代码不往 checkout 里写东西，
+~/.cache/era-lint/<checkout 路径的哈希>/，存放覆盖率数据和变异测试的结果，每次运行开始时清掉上一次的。本脚本自己的代码不往 checkout 里写东西，
 但快速测试层运行的游戏代码可能生成 data/ 下被忽略的文件，那样下一次运行会拒绝，直到再清理 data/。
 
 不论规则查出什么，退出码都是 0，规则崩溃或超时也一样。只有参数错误和 data/ 检查拒绝时退出码是 2。
@@ -33,8 +33,6 @@ import hashlib
 import json
 import os
 import pathlib
-import shlex
-import subprocess
 import sys
 import time
 import tomllib
@@ -44,19 +42,14 @@ from typing import Any
 from lint import cli
 from lint import config
 from lint import core
-from lint.rules import mutation_engine
-from lint.rules import mutation_rule
+
+import data_check
+import fast_suite
 
 SETTINGS_TABLE = 'test-quality'
 FAST_DIR = 'tests/fast'
 # 按这个顺序运行；tests-mutation 之前按它自己的测试文件重测一次执行过的行
 RULE_IDS = ('tests-coverage', 'tests-assertions', 'tests-mutation')
-# 拒绝运行时最多列出 data/ 下多少个被忽略的文件
-SAMPLE_SIZE = 5
-
-
-class DataCheckError(Exception):
-  """git 列不出 checkout 的 data/ 下被忽略的文件。"""
 
 
 @dataclasses.dataclass
@@ -123,94 +116,6 @@ def run_step(step: Step, fn: Callable[[], Any]) -> Any:
     step.seconds = time.monotonic() - start
 
 
-def _test_rels(ctx: core.Context, rc: config.RuleConfig) -> list[str]:
-  """返回 tests-mutation 导入的测试模块。"""
-  globs = rc.strs('test_globs')
-  return [f for f in ctx.repo_files() if core.matches_any(f, globs)]
-
-
-def measure_suite(ctx: core.Context, rc: config.RuleConfig) -> dict[str, Any]:
-  """在本进程里载入快速测试层，并给整套测试计一次时。
-
-  导入 tests/fast 时，每个进程载入一次 erArk 的 MinimalWorld。之后 tests-mutation
-  从 sys.modules 取同样的模块，它 fork 出的工作进程继承这个世界，不再各自载入。
-  计时用的运行器与 tests-mutation 每个变异体用的相同，时限远高于任何一次整套运行：
-  这一步只量时间，不下判断。
-  """
-  if str(ctx.root) not in sys.path:
-    sys.path.insert(0, str(ctx.root))
-  start = time.monotonic()
-  suites = mutation_engine.load_test_suites_fn(_test_rels(ctx, rc))
-  load_s = time.monotonic() - start
-  suite = suites('')
-  start = time.monotonic()
-  passed = mutation_engine.suite_passes(suite, 600.0)
-  return {
-      'tests': suite.countTestCases(),
-      'load_s': load_s,
-      'suite_s': time.monotonic() - start,
-      'passed': passed,
-  }
-
-
-def _covered_lines(ctx: core.Context) -> dict[str, set[int]]:
-  """返回 tests-coverage 记下的每个源文件执行过的行。"""
-  data = json.loads((ctx.cache_dir / 'coverage.json').read_text('utf-8'))
-  return {
-      rel: set(info.get('executed_lines', []))
-      for rel, info in data.get('files', {}).items()
-      if isinstance(info, dict)
-  }
-
-
-def remeasure_for_mutation(
-    ctx: core.Context, cov_rc: config.RuleConfig, mut_rc: config.RuleConfig
-) -> None:
-  """只用 tests-mutation 的测试文件重测一次覆盖率，覆盖缓存里的 coverage.json。
-
-  tests-mutation 只变异 coverage.json 里执行过的行。那份数据来自整个 tests/fast；
-  只有没列进 tests-mutation 的测试才执行的行上，变异体不可能被杀掉，会算成存活。
-
-  Raises:
-    subprocess.CalledProcessError: coverage 运行失败。
-  """
-  cov = ctx.tool('coverage')
-  modules = [
-      rel[: -len('.py')].replace('/', '.') for rel in _test_rels(ctx, mut_rc)
-  ]
-  env = dict(
-      os.environ, COVERAGE_FILE=str(ctx.cache_dir / '.coverage-mutation')
-  )
-  source = ','.join(cov_rc.strs('source'))
-  for argv in (
-      [*cov, 'run', f'--source={source}', '-m', 'unittest', *modules],
-      [*cov, 'json', '-o', str(ctx.cache_dir / 'coverage.json'), '-q'],
-  ):
-    subprocess.run(argv, cwd=ctx.root, env=env, capture_output=True, check=True)
-
-
-def mutation_totals(ctx: core.Context, rc: config.RuleConfig) -> dict[str, Any]:
-  """把 tests-mutation 各目标文件在变异缓存里的当前条目加起来。
-
-  目标文件有当前的缓存条目就算查过，没变异的整套测试失败、一个变异体也没跑的也算。
-  """
-  t_sha = mutation_rule.tests_sha(ctx.root, _test_rels(ctx, rc))
-  targets = mutation_rule._targets(ctx, rc, _covered_lines(ctx), t_sha)
-  cache_p = ctx.cache_dir / 'mutation_cache.json'
-  cache = json.loads(cache_p.read_text('utf-8')) if cache_p.is_file() else {}
-  done = [
-      cache[t[1]] for t in targets if (cache.get(t[1]) or {}).get('sha') == t[4]
-  ]
-  return {
-      'files': len(targets),
-      'evaluated_files': len(done),
-      'killed': sum(int(r['killed']) for r in done),
-      'total': sum(int(r['total']) for r in done),
-      'survived': [s for r in done for s in r['survived']],
-      'baseline_failed': sum(1 for r in done if r.get('baseline_failed')),
-  }
-
-
 def _coverage_notes(ctx: core.Context, rc: config.RuleConfig) -> list[str]:
   """返回总覆盖率与规则的阈值。"""
   data = json.loads((ctx.cache_dir / 'coverage.json').read_text('utf-8'))
@@ -239,7 +144,7 @@ def _fast_notes(fast: dict[str, Any], rc: config.RuleConfig) -> list[str]:
 
 def _mutation_notes(ctx: core.Context, rc: config.RuleConfig) -> list[str]:
   """返回击杀率与阈值，再列出每个存活的变异体。"""
-  totals = mutation_totals(ctx, rc)
+  totals = fast_suite.mutation_totals(ctx, rc)
   total = totals['total']
   pct = 100.0 * totals['killed'] / total if total else 0.0
   return [
@@ -309,59 +214,6 @@ def _parse(argv: list[str]) -> tuple[pathlib.Path, pathlib.Path, pathlib.Path]:
   return checkout, cache_dir, report
 
 
-def ignored_data_files(checkout: pathlib.Path) -> list[str]:
-  """返回 checkout 的 data/ 下被 git 忽略的未跟踪文件。
-
-  只运行 `git ls-files`，它不改动 checkout。传入 GIT_OPTIONAL_LOCKS=0，git 就跳过要加锁的可选步骤，
-  这项检查不会占着 checkout 里别的 git 命令在等的锁。
-
-  Args:
-    checkout: erArk checkout 的根目录。
-
-  Returns:
-    这些文件相对 checkout 的路径，按 git 给出的顺序。
-
-  Raises:
-    DataCheckError: git 不存在、出错或超时，例如 checkout 不在 git 仓库里。
-  """
-  ls_files = ['ls-files', '--others', '--ignored', '--exclude-standard']
-  cmd = ['git', '-C', str(checkout), *ls_files, '--', 'data/']
-  env = dict(os.environ, GIT_OPTIONAL_LOCKS='0')
-  try:
-    proc = subprocess.run(
-        cmd, env=env, capture_output=True, text=True, check=False, timeout=60
-    )
-  except (OSError, subprocess.TimeoutExpired) as exc:
-    raise DataCheckError(f'{type(exc).__name__}: {exc}') from exc
-  if proc.returncode != 0:
-    detail = proc.stderr.strip() or proc.stdout.strip()
-    raise DataCheckError(f'git ls-files exited {proc.returncode}: {detail}')
-  return proc.stdout.splitlines()
-
-
-def refuse_reason(checkout: pathlib.Path) -> str:
-  """返回不能开始运行的原因；data/ 干净时返回空串。"""
-  data = checkout / 'data'
-  try:
-    files = ignored_data_files(checkout)
-  except DataCheckError as exc:
-    return (
-        f'refused: cannot check {data}/ for build output, so the run did not'
-        f' start: {exc}'
-    )
-  if not files:
-    return ''
-  sample = ', '.join(files[:SAMPLE_SIZE])
-  more = ', ...' if len(files) > SAMPLE_SIZE else ''
-  return (
-      f'refused: {len(files)} git-ignored untracked files under {data}/'
-      f' ({sample}{more}). The game reads these prebuilt files instead of'
-      ' running the code that builds them, so the run would measure fewer'
-      ' mutants. Clean them first, then rerun:\n'
-      f'  git -C {shlex.quote(str(checkout))} clean -fdX data/'
-  )
-
-
 class FastRun:
   """一次运行：各步、它们的结果和报告文件。"""
 
@@ -418,13 +270,13 @@ class FastRun:
   def measure(self, step: Step) -> dict[str, Any]:
     """在本进程里载入快速测试层，并给整套测试计一次时。"""
     rc = self.rcs['tests-mutation']
-    fast = measure_suite(self.ctx, rc)
+    fast = fast_suite.measure_suite(self.ctx, rc)
     step.notes += _fast_notes(fast, rc)
     return fast
 
   def mutation(self, step: Step) -> None:
     """按 tests-mutation 的测试文件重测执行过的行，再运行 tests-mutation。"""
-    remeasure_for_mutation(
+    fast_suite.remeasure_for_mutation(
         self.ctx, self.rcs['tests-coverage'], self.rcs['tests-mutation']
     )
     self.rule(step, _mutation_notes)
@@ -458,7 +310,7 @@ def main(argv: list[str], quiet: bool = False) -> int:
     参数错误时 argparse 以 2 退出，同样在任何一步之前。
   """
   checkout, cache_dir, report = _parse(argv)
-  reason = refuse_reason(checkout)
+  reason = data_check.refuse_reason(checkout)
   if reason:
     print(f'fast_report.py: {reason}', file=sys.stderr)
     return 2
@@ -467,8 +319,10 @@ def main(argv: list[str], quiet: bool = False) -> int:
   os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
   cache_dir.mkdir(parents=True, exist_ok=True)
   report.parent.mkdir(parents=True, exist_ok=True)
-  # 留着旧的 coverage.json，tests-mutation 就可能按上一次运行的行来跑
-  (cache_dir / 'coverage.json').unlink(missing_ok=True)
+  # 留着旧的 coverage.json，tests-mutation 就可能按上一次运行的行来跑；
+  # 变异缓存的键不含执行过的行，留着它，执行过的行变了也会沿用上一次的结果
+  for name in ('coverage.json', 'mutation_cache.json'):
+    (cache_dir / name).unlink(missing_ok=True)
   fast_run = FastRun(checkout, cache_dir, report)
   fast_run.run()
   if not quiet:
