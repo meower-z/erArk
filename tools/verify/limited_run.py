@@ -6,7 +6,10 @@
 每次运行放进一个独立的 systemd scope，内存上限（MemoryMax，禁用 swap）与运行时限（RuntimeMaxSec）由内核和 systemd 强制执行，
 超限时只杀这一组进程。全机共有 SLOTS 个槽位，每个代表 SLOT_SIZE 内存；一次运行占 ceil(内存上限 / SLOT_SIZE) 个，web 模式的运行占全部槽位。
 run() 对每个槽位的锁文件持有 flock，进程死掉时内核自动放开；哪次运行活着只看 /proc/locks 里槽位锁的真实持有者，状态文件只是线索。槽位不够、同一 checkout 已有运行、或有不属于任何运行的 era-game scope 时以退出码 75 拒绝，不等待。
-调用 run() 的进程被中断时，run() 会停掉它的 scope。每次运行用 mkdtemp 建一个自己的临时目录，在运行结束、启动的进程已结束且 scope 确认已停后删掉；没来得及删的（例如启动进程被 SIGKILL），之后启动的运行只在它 SWEEP_MIN_AGE_S 秒没改动、且不属于正在运行的实例或存活 scope 时清掉；删不掉的文件留下。
+调用 run() 的进程被中断时，run() 会停掉它的 scope。
+每次运行用 mkdtemp 建一个自己的临时目录。运行结束、启动的进程已结束且 scope 确认已停后，删掉这个目录。
+没来得及删的目录（例如启动进程被 SIGKILL）由之后启动的运行清掉，条件是它 SWEEP_MIN_AGE_S 秒没改动，且不属于正在运行的实例或存活 scope。
+删不掉的文件留下。
 
 用法（在 erArk checkout 的根目录，用 .venv 的 python 运行本脚本）：
   limited_run.py [--mem 2G] [--timeout 600] -- <命令...>
@@ -1009,7 +1012,7 @@ def stop_orphan(unit):
 
 def cmd_stop(target=None):
   """
-  停掉一次运行：请求它的启动进程（limited_run.py 或 tk_game.py）停掉 scope，并等它放开槽位。
+  停掉一次运行：请求它的启动进程（limited_run.py、tk_game.py 或 arkeditor.py）停掉 scope，并等它放开槽位。
   给了槽位编号或 pid 时只停那一次；没给时只在恰好有一次运行时停它，不核对它是谁启动的；有几次运行时不默认停任何一个。
   参数：
       target (str | None): 小于 SLOTS 的数是槽位编号，其他数是 pid；None 表示没给
