@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-fast_report.py 的测试：设置取自 pyproject.toml、缓存目录、变异测试的统计、只出报告的退出码、data/ 检查；不启动游戏
+fast_report.py 的测试：设置取自 pyproject.toml、缓存目录、变异测试的统计、只出报告的退出码；
+不启动游戏
 
 要能导入 lint 引擎的 lint 包，用法：
     PYTHONPATH=<含 lint 的目录> python3 tools/test_quality/test_fast_report.py
@@ -13,84 +14,21 @@ import hashlib
 import json
 import os
 import pathlib
-import re
 import subprocess
 import sys
-import tempfile
 import unittest
 from unittest import mock
 
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from checkout_fixture import make_checkout
+from checkout_fixture import PASSING_TEST
+from checkout_fixture import REPO
+from checkout_fixture import run_adapter
 from lint import cli
 from lint import core
 from lint.rules import mutation_engine
 from lint.rules import mutation_rule
-import data_check
 import fast_report
 import fast_suite
-
-_REPO = pathlib.Path(__file__).resolve().parents[2]
-_ADAPTER = pathlib.Path(fast_report.__file__)
-_PASSING_TEST = (
-    'import unittest\nclass T(unittest.TestCase):\n'
-    '  def test_ok(self):\n    self.assertEqual(1, 1)\n'
-)
-
-
-def _make_checkout(case: unittest.TestCase, test_src: str) -> pathlib.Path:
-  """建一个提交过的 git checkout，tests/fast/test_a.py 的内容是 test_src。"""
-  tmp = tempfile.TemporaryDirectory()
-  case.addCleanup(tmp.cleanup)
-  root = pathlib.Path(tmp.name).resolve() / 'checkout'
-  files = {
-      'tests/__init__.py': '',
-      'tests/fast/__init__.py': '',
-      'tests/fast/test_a.py': test_src,
-      'tests/slow/test_b.py': _PASSING_TEST,
-      'Script/__init__.py': '',
-      'Script/m.py': 'def f(x):\n  return x + 1\n',
-      # 与 erArk 一样，data/ 里有已跟踪的文件，生成的文件被忽略
-      '.gitignore': 'data/*.json\n',
-      'data/a.csv': 'id\n',
-  }
-  for rel, text in files.items():
-    (root / rel).parent.mkdir(parents=True, exist_ok=True)
-    (root / rel).write_text(text, encoding='utf-8')
-  # 仓库的设置只列出真实的测试文件；这里的 checkout 只有 test_a.py，变异测试改看整个 tests/fast
-  settings = (_REPO / 'pyproject.toml').read_text(encoding='utf-8')
-  mutation = '[tool.test-quality.rules.tests-mutation]'
-  head, tail = settings.split(mutation)
-  tail = re.sub(
-      r'test_globs = \[.*?\]',
-      'test_globs = ["tests/fast/test_*.py"]',
-      tail,
-      count=1,
-      flags=re.S,
-  )
-  (root / 'pyproject.toml').write_text(head + mutation + tail, encoding='utf-8')
-  for cmd in (
-      ['git', 'init', '-q'],
-      ['git', 'add', '-A'],
-      ['git', '-c', 'user.name=t', '-c', 'user.email=t@t']
-      + ['commit', '-qm', 'init'],
-  ):
-    subprocess.run(cmd, cwd=root, check=True, capture_output=True)
-  return root
-
-
-def _run_adapter(
-    home: pathlib.Path, *args: str
-) -> subprocess.CompletedProcess[str]:
-  """在子进程里运行本脚本，HOME 设为 home。"""
-  env = dict(os.environ, HOME=str(home))
-  return subprocess.run(
-      [sys.executable, str(_ADAPTER), *args],
-      env=env,
-      capture_output=True,
-      text=True,
-      check=False,
-      timeout=120,
-  )
 
 
 class ConfigTest(unittest.TestCase):
@@ -98,7 +36,7 @@ class ConfigTest(unittest.TestCase):
 
   def test_rules_point_at_fast_layer_only(self) -> None:
     """覆盖率与变异测试只看 tests/fast 和 Script，不看 tests/slow。"""
-    cfg = fast_report.build_config(_REPO, pathlib.Path('/c/era-lint/x'))
+    cfg = fast_report.build_config(REPO, pathlib.Path('/c/era-lint/x'))
     rules = cfg['rules']
     self.assertEqual(rules['tests-coverage']['start_dir'], 'tests/fast')
     self.assertEqual(rules['tests-coverage']['source'], ['Script'])
@@ -117,7 +55,7 @@ class ConfigTest(unittest.TestCase):
 
   def test_thresholds_stay_at_rule_defaults(self) -> None:
     """设置里不定阈值，所以用规则的默认值。"""
-    cfg = fast_report.build_config(_REPO, pathlib.Path('/c/era-lint/x'))
+    cfg = fast_report.build_config(REPO, pathlib.Path('/c/era-lint/x'))
     registry = cli.load_rules()
     ctx = core.Context(pathlib.Path('/c/checkout'), cfg)
     for rid, keys in (
@@ -136,7 +74,7 @@ class ConfigTest(unittest.TestCase):
       two = fast_report.cache_dir_for(pathlib.Path('/w/b'))
     self.assertEqual(one.parent, pathlib.Path('/h/.cache/era-lint'))
     self.assertNotEqual(one, two)
-    cfg = fast_report.build_config(_REPO, one)
+    cfg = fast_report.build_config(REPO, one)
     ctx = core.Context(pathlib.Path('/w/a'), cfg)
     self.assertEqual(ctx.cache_dir, one)
 
@@ -146,7 +84,7 @@ class MutationNotesTest(unittest.TestCase):
 
   def test_not_scored_files_count_as_evaluated_only(self) -> None:
     """没变异的整套测试失败的文件算查过、不计分；过期的条目两样都不算。"""
-    checkout = _make_checkout(self, _PASSING_TEST)
+    checkout = make_checkout(self, PASSING_TEST)
     for name in ('n', 'o'):
       (checkout / f'Script/{name}.py').write_text('def g():\n  return 1\n')
     cache_dir = checkout.parent / 'cache'
@@ -176,14 +114,14 @@ class MutationNotesTest(unittest.TestCase):
         'Script/o.py': {'sha': 'stale', 'killed': 9, 'total': 9},
     }
     (cache_dir / 'mutation_cache.json').write_text(json.dumps(cache))
-    notes = fast_report._mutation_notes(ctx, rc)
+    notes = fast_report.mutation_notes(ctx, rc)
     self.assertIn('kill rate 50.0% (1/2)', notes[0])
     self.assertIn('2 of 3 files evaluated, 1 of them not scored', notes[0])
     self.assertEqual(notes[1:], ['survived: Script/m.py:2 (f:x)'])
 
   def test_remeasure_uses_only_the_mutation_test_files(self) -> None:
     """只有没列进 tests-mutation 的测试执行的行，不算变异测试要查的行。"""
-    checkout = _make_checkout(
+    checkout = make_checkout(
         self,
         'import unittest\nfrom Script import m\n'
         'class T(unittest.TestCase):\n'
@@ -213,7 +151,7 @@ class MutationNotesTest(unittest.TestCase):
 
   def test_remeasure_failure_keeps_the_test_output(self) -> None:
     """列出的测试失败时，抛出的错误里带着 unittest 的输出。"""
-    checkout = _make_checkout(
+    checkout = make_checkout(
         self,
         'import unittest\nclass T(unittest.TestCase):\n'
         '  def test_bad(self):\n    self.assertEqual(1, 2)\n',
@@ -247,7 +185,7 @@ class ReportOnlyTest(unittest.TestCase):
       del ctx, rc
       return core.Outcome(['Absolute coverage: 1.0%'])
 
-    checkout = _make_checkout(self, _PASSING_TEST)
+    checkout = make_checkout(self, PASSING_TEST)
     home = checkout.parent / 'home'
     stubs = {
         'tests-coverage': core.Rule('stub', 'slow', ok, {}, ''),
@@ -275,7 +213,7 @@ class ReportOnlyTest(unittest.TestCase):
 
   def test_report_is_replaced_before_the_first_step(self) -> None:
     """在某一步里被杀掉的运行，留下的是它自己未完成的报告。"""
-    checkout = _make_checkout(self, _PASSING_TEST)
+    checkout = make_checkout(self, PASSING_TEST)
     home = checkout.parent / 'home'
     seen: list[str] = []
 
@@ -300,9 +238,9 @@ class ReportOnlyTest(unittest.TestCase):
 
   def test_end_to_end_with_broken_test_file(self) -> None:
     """测试文件有语法错误时规则崩溃，退出码仍是 0。"""
-    checkout = _make_checkout(self, 'def test_x(:\n')
+    checkout = make_checkout(self, 'def test_x(:\n')
     home = checkout.parent / 'home'
-    proc = _run_adapter(home, str(checkout))
+    proc = run_adapter(home, str(checkout))
     self.assertEqual(proc.returncode, 0, proc.stderr)
     self.assertIn('SyntaxError', proc.stdout)
     reports = list((home / '.cache' / 'era-lint').glob('*/report.md'))
@@ -318,88 +256,15 @@ class ReportOnlyTest(unittest.TestCase):
 
   def test_bad_arguments_exit_two(self) -> None:
     """checkout 不存在、或报告路径在 checkout 里时，退出码 2。"""
-    checkout = _make_checkout(self, _PASSING_TEST)
+    checkout = make_checkout(self, PASSING_TEST)
     home = checkout.parent / 'home'
-    missing = _run_adapter(home, str(checkout.parent / 'nope'))
-    inside = _run_adapter(
+    missing = run_adapter(home, str(checkout.parent / 'nope'))
+    inside = run_adapter(
         home, str(checkout), '--report', str(checkout / 'r.md')
     )
     self.assertEqual((missing.returncode, inside.returncode), (2, 2))
     self.assertFalse((checkout / 'r.md').exists())
     self.assertFalse(home.exists())
-
-
-class DataCheckTest(unittest.TestCase):
-  """data/ 下有被忽略的生成文件、或 git 出错时，拒绝运行。"""
-
-  def test_ignored_file_under_data_is_refused(self) -> None:
-    """在写任何东西之前以退出码 2 退出，并给出清理命令。"""
-    checkout = _make_checkout(self, _PASSING_TEST)
-    home = checkout.parent / 'home'
-    built = checkout / 'data' / 'Character.json'
-    built.write_text('{}', encoding='utf-8')
-    proc = _run_adapter(home, str(checkout))
-    self.assertEqual(proc.returncode, 2, proc.stderr)
-    self.assertIn('1 git-ignored untracked files', proc.stderr)
-    self.assertIn('data/Character.json', proc.stderr)
-    self.assertIn(f'git -C {checkout} clean -fdX data/', proc.stderr)
-    self.assertEqual(proc.stdout, '')
-    self.assertTrue(built.exists())
-    self.assertFalse(home.exists())
-
-  def test_refusal_names_a_sample(self) -> None:
-    """文件多时只列 SAMPLE_SIZE 个名字，个数照实数。"""
-    checkout = _make_checkout(self, _PASSING_TEST)
-    for i in range(data_check.SAMPLE_SIZE + 2):
-      (checkout / 'data' / f'f{i}.json').write_text('{}', encoding='utf-8')
-    reason = data_check.refuse_reason(checkout)
-    self.assertIn(f'{data_check.SAMPLE_SIZE + 2} git-ignored', reason)
-    self.assertIn('data/f4.json, ...', reason)
-    self.assertNotIn('data/f5.json', reason)
-
-  def test_hint_quotes_the_checkout_path(self) -> None:
-    """清理命令里的路径按 shell 规则加了引号，照打印出来的样子就能运行。"""
-    checkout = _make_checkout(self, _PASSING_TEST)
-    spaced = checkout.parent / 'my checkout'
-    checkout.rename(spaced)
-    (spaced / 'data' / 'Character.json').write_text('{}', encoding='utf-8')
-    hint = data_check.refuse_reason(spaced).splitlines()[-1].strip()
-    self.assertEqual(hint, f"git -C '{spaced}' clean -fdX data/")
-    subprocess.run(hint, shell=True, check=True, capture_output=True)
-    self.assertEqual(data_check.refuse_reason(spaced), '')
-
-  def test_clean_data_passes(self) -> None:
-    """已跟踪的文件和没被忽略的未跟踪文件不会让它拒绝。"""
-    checkout = _make_checkout(self, _PASSING_TEST)
-    (checkout / 'data' / 'b.csv').write_text('id\n', encoding='utf-8')
-    self.assertEqual(data_check.ignored_data_files(checkout), [])
-    self.assertEqual(data_check.refuse_reason(checkout), '')
-
-  def test_not_a_git_repo_is_refused(self) -> None:
-    """git 出错时以退出码 2 拒绝，这项检查从不跳过。"""
-    tmp = tempfile.TemporaryDirectory()
-    self.addCleanup(tmp.cleanup)
-    root = pathlib.Path(tmp.name).resolve()
-    checkout = root / 'checkout'
-    (checkout / 'tests' / 'fast').mkdir(parents=True)
-    home = root / 'home'
-    env = {'GIT_CEILING_DIRECTORIES': str(root)}
-    with mock.patch.dict(os.environ, env):
-      proc = _run_adapter(home, str(checkout))
-    self.assertEqual(proc.returncode, 2, proc.stderr)
-    self.assertIn('cannot check', proc.stderr)
-    self.assertIn('git ls-files exited', proc.stderr)
-    self.assertFalse(home.exists())
-
-  def test_missing_git_is_refused(self) -> None:
-    """git 启动不了时，与 git 出错一样拒绝。"""
-    checkout = _make_checkout(self, _PASSING_TEST)
-    with mock.patch.object(
-        subprocess, 'run', side_effect=FileNotFoundError('git')
-    ):
-      reason = data_check.refuse_reason(checkout)
-    self.assertIn('cannot check', reason)
-    self.assertIn('FileNotFoundError', reason)
 
 
 if __name__ == '__main__':

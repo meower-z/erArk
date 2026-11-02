@@ -3,9 +3,13 @@
 """
 只出报告：在游戏的快速测试层 tests/fast 上跑三条测试质量规则。
 
-三条规则是 lint 引擎的 tests-coverage（覆盖率）、tests-assertions（断言是否真的在检查）与 tests-mutation（变异测试的击杀率），
-设置在被查的 checkout 的 pyproject.toml 的 [tool.test-quality]。变异测试只用设置里列出的测试文件，开始前按这些文件重测一次执行过的行。lint 引擎是可选的本机工具，不随仓库提供（见 CONTRIBUTING.md）。
-用游戏的 venv 的 python 运行，它要装 coverage，并且要能导入 lint 引擎的 lint 包（例如用 PYTHONPATH 指向含 lint 的目录）。
+三条规则是 lint 引擎的 tests-coverage（覆盖率）、
+tests-assertions（断言是否真的在检查）与 tests-mutation（变异测试的击杀率），
+设置在被查的 checkout 的 pyproject.toml 的 [tool.test-quality]。
+变异测试只用设置里列出的测试文件，开始前按这些文件重测一次执行过的行。
+lint 引擎是可选的本机工具，不随仓库提供（见 CONTRIBUTING.md）。
+用游戏的 venv 的 python 运行，它要装 coverage，
+并且要能导入 lint 引擎的 lint 包（例如用 PYTHONPATH 指向含 lint 的目录）。
 在 checkout 根目录经 tools/verify/limited_run.py 运行，命令里的 python 指游戏的 venv：
 
   PYTHONPATH=<含 lint 的目录> python tools/verify/limited_run.py \\
@@ -18,7 +22,8 @@
 `git -C <checkout> clean -fdX data/` 清理 data/。
 
 每一步打印一行摘要，完整报告写到 --report 给的文件（默认是缓存目录里的 report.md）。缓存目录是
-~/.cache/era-lint/<checkout 路径的哈希>/，存放覆盖率数据和变异测试的结果，每次运行开始时清掉上一次的。本脚本自己的代码不往 checkout 里写东西，
+~/.cache/era-lint/<checkout 路径的哈希>/，存放覆盖率数据和变异测试的结果，
+每次运行开始时清掉上一次的。本脚本自己的代码不往 checkout 里写东西，
 但快速测试层运行的游戏代码可能生成 data/ 下被忽略的文件，那样下一次运行会拒绝，直到再清理 data/。
 
 不论规则查出什么，退出码都是 0，规则崩溃或超时也一样。只有参数错误和 data/ 检查拒绝时退出码是 2。
@@ -37,6 +42,7 @@ import sys
 import time
 import tomllib
 import traceback
+import types
 from typing import Any
 
 from lint import cli
@@ -91,7 +97,39 @@ def build_config(
           'coverage': [sys.executable, '-m', 'coverage'],
       },
   }
-  return config.deep_merge(cfg, over)
+  merged: dict[str, Any] = config.deep_merge(cfg, over)
+  return merged
+
+
+@dataclasses.dataclass
+class _CrashRecorder:
+  """with 块的用时记在 step.seconds 上；块里的异常记在 step.crash 上并接住。
+
+  KeyboardInterrupt 照常抛出。erArk 不许用 `# pylint:` 注释，
+  所以接住所有异常写成 __exit__，不写成 except BaseException。
+  """
+
+  step: Step
+  start: float = 0.0
+
+  def __enter__(self) -> None:
+    """记下开始时间。"""
+    self.start = time.monotonic()
+
+  def __exit__(
+      self,
+      exc_type: type[BaseException] | None,
+      exc: BaseException | None,
+      tb: types.TracebackType | None,
+  ) -> bool:
+    """记下用时；有异常且不是 KeyboardInterrupt 时记下它，返回 True 接住它。"""
+    self.step.seconds = time.monotonic() - self.start
+    if exc is None or isinstance(exc, KeyboardInterrupt):
+      return False
+    lines = traceback.format_exception(exc_type, exc, tb)
+    tail = ''.join(lines).strip().splitlines()[-6:]
+    self.step.crash = '\n'.join([f'{type(exc).__name__}: {exc}', *tail])
+    return True
 
 
 def run_step(step: Step, fn: Callable[[], Any]) -> Any:
@@ -103,17 +141,10 @@ def run_step(step: Step, fn: Callable[[], Any]) -> Any:
   Returns:
     fn 的返回值；fn 抛出异常时返回 None。
   """
-  start = time.monotonic()
-  try:
-    return fn()
-  except KeyboardInterrupt:
-    raise
-  except BaseException as exc:
-    tail = traceback.format_exc().strip().splitlines()[-6:]
-    step.crash = '\n'.join([f'{type(exc).__name__}: {exc}', *tail])
-    return None
-  finally:
-    step.seconds = time.monotonic() - start
+  value = None
+  with _CrashRecorder(step):
+    value = fn()
+  return value
 
 
 def _coverage_notes(ctx: core.Context, rc: config.RuleConfig) -> list[str]:
@@ -142,7 +173,7 @@ def _fast_notes(fast: dict[str, Any], rc: config.RuleConfig) -> list[str]:
   return notes
 
 
-def _mutation_notes(ctx: core.Context, rc: config.RuleConfig) -> list[str]:
+def mutation_notes(ctx: core.Context, rc: config.RuleConfig) -> list[str]:
   """返回击杀率与阈值，再列出每个存活的变异体。"""
   totals = fast_suite.mutation_totals(ctx, rc)
   total = totals['total']
@@ -223,6 +254,7 @@ class FastRun:
       cache_dir: pathlib.Path,
       report: pathlib.Path,
   ) -> None:
+    """读设置、载入规则，准备好报告的开头。"""
     cfg = build_config(checkout, cache_dir)
     self.registry = cli.load_rules()
     self.ctx = core.Context(checkout, cfg)
@@ -279,7 +311,7 @@ class FastRun:
     fast_suite.remeasure_for_mutation(
         self.ctx, self.rcs['tests-coverage'], self.rcs['tests-mutation']
     )
-    self.rule(step, _mutation_notes)
+    self.rule(step, mutation_notes)
 
   def run(self) -> None:
     """按顺序运行每一步；哪一步失败都不挡后面的步。"""
