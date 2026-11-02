@@ -177,7 +177,7 @@ def wait_for_probe_change(state, before, limit=3.0):
 
 def describe_keys(probe):
   """
-  把等待列表与可见按钮写成一行说明
+  把等待列表与可见按钮写成两行说明
   参数：
       probe (dict): 探针内容
   返回：
