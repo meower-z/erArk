@@ -32,6 +32,7 @@ LAYERS = (FAST_LAYER, SLOW_LAYER)
 """ 两层的目录 """
 NOT_IN_LAYERS = {
     "tests/education/": "生长养成系统的脚本，由慢速层的 test_education_suite.py 运行",
+    "tools/verify/": "验证脚本自己的单元测试，测的是启动与复现脚本，不是游戏",
     "tools/MCP/prts_character_downloader/test_downloader.py": "PRTS 立绘下载器的手动脚本，从网上下载图片，不是游戏的测试",
 }
 """ 可以不在两层里的 test_*.py：路径（以 / 结尾的是目录）: 原因 """
