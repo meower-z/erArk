@@ -68,7 +68,8 @@ REASON_EXIT = {
 }
 EXIT_BUSY = 75
 EXIT_NO_HEADROOM = 76
-# 清理只删这么多秒内没改动过的临时目录：比正常运行的时限加余量还长，免得删掉启动它的运行已退出、而 systemd-run 还没建好 scope 的目录
+# 清理只删这么多秒内没改动过的临时目录；这个时长比正常运行的时限加余量还长。
+# 启动进程可能已经退出，而 systemd-run 还没建好 scope；这样的目录还会被用到，不能删
 SWEEP_MIN_AGE_S = 7200
 
 
