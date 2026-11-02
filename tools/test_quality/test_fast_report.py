@@ -13,7 +13,7 @@ import hashlib
 import json
 import os
 import pathlib
-import shutil
+import re
 import subprocess
 import sys
 import tempfile
@@ -54,7 +54,18 @@ def _make_checkout(case: unittest.TestCase, test_src: str) -> pathlib.Path:
   for rel, text in files.items():
     (root / rel).parent.mkdir(parents=True, exist_ok=True)
     (root / rel).write_text(text, encoding='utf-8')
-  shutil.copy(_REPO / 'pyproject.toml', root / 'pyproject.toml')
+  # 仓库的设置只列出真实的测试文件；这里的 checkout 只有 test_a.py，变异测试改看整个 tests/fast
+  settings = (_REPO / 'pyproject.toml').read_text(encoding='utf-8')
+  mutation = '[tool.test-quality.rules.tests-mutation]'
+  head, tail = settings.split(mutation)
+  tail = re.sub(
+      r'test_globs = \[.*?\]',
+      'test_globs = ["tests/fast/test_*.py"]',
+      tail,
+      count=1,
+      flags=re.S,
+  )
+  (root / 'pyproject.toml').write_text(head + mutation + tail, encoding='utf-8')
   for cmd in (
       ['git', 'init', '-q'],
       ['git', 'add', '-A'],
@@ -90,8 +101,11 @@ class ConfigTest(unittest.TestCase):
     self.assertEqual(rules['tests-coverage']['start_dir'], 'tests/fast')
     self.assertEqual(rules['tests-coverage']['source'], ['Script'])
     self.assertEqual(rules['tests-coverage'].get('omit', []), [])
-    for rid in ('tests-assertions', 'tests-mutation'):
-      self.assertEqual(rules[rid]['test_globs'], ['tests/fast/test_*.py'])
+    self.assertEqual(
+        rules['tests-assertions']['test_globs'], ['tests/fast/test_*.py']
+    )
+    for glob in rules['tests-mutation']['test_globs']:
+      self.assertTrue(glob.startswith('tests/fast/test_'), glob)
     self.assertEqual(rules['tests-mutation']['mutant_timeout'], 2.0)
     self.assertLessEqual(rules['tests-mutation']['max_workers'], 3)
     self.assertEqual(cfg['tools']['python'], [sys.executable])
