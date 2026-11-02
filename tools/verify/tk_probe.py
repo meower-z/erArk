@@ -6,7 +6,7 @@ Tk 取证启动器与只读探针。不要直接运行，由 tk_game.py 调用�
 固定随机种子，记录游戏当前等待的输入，然后运行当前目录（erArk checkout 根目录）的 game.py。
 每 300ms 把下列内容原子地写到 ERARK_PROBE_JSON：
   buttons   可见按钮 {返回值: [x, y]}，取按钮首字符的中心，换算成游戏窗口内坐标
-  awaiting  游戏当前等待的输入：askfor_all 与 askfor_int 的选项列表、askfor_wait 时为 "wait"（包括它内部调用的 askfor_str）、其余 askfor_str 时为 "text"、尚未进入等待时为 null
+  awaiting  游戏当前等待的输入：askfor_all 与 askfor_int 的选项列表、askfor_wait 时为 "wait"（包括它内部调用的 askfor_str）、其余 askfor_str 时为 "text"、当前没有记录到等待输入时为 null（包括首次等待之前和两次等待之间）
   input     输入框中心的窗口内坐标
   ts        写入时间
 探针只读取控件位置和等待列表，不改动任何游戏状态；同一种子下，有探针与没有探针的运行仍可对照。

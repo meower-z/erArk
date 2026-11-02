@@ -2,7 +2,8 @@
 """
 erArk 无头行为循环诊断模板（模式 B）
 ===================================
-读档入内存、复刻一条玩家指令、带护栏地跑一轮真实的行为循环 init_character_behavior，可逐轮内窥指定角色、在内存里模拟候选修复。
+读档入内存、复刻一条玩家指令，再带护栏地跑一轮真实的行为循环 init_character_behavior。
+运行中可以逐轮查看指定角色，也可以在内存里模拟候选修复。
 游戏世界取自被测 checkout 的 tests/world.py：FullWorld 完整启动游戏（结算器、状态机、界面流程），玩家输入由 world.player 给出。
 本脚本不存档：循环里会写文件的两处（玩家睡觉时的自动存档、临时外勤委托追加写 Commission.csv）被替换掉；
 但 FullWorld 启动时的 import auto_build_config 会在 CSV 变动时增量重建 data/ 下的生成物。
