@@ -5,7 +5,9 @@
 
 每次运行放进一个独立的 systemd scope，内存上限（MemoryMax，禁用 swap）与运行时限（RuntimeMaxSec）由内核和 systemd 强制执行，
 超限时只杀这一组进程。全机共有 SLOTS 个槽位，每个代表 SLOT_SIZE 内存；一次运行占 ceil(内存上限 / SLOT_SIZE) 个，web 模式的运行占全部槽位。
-run() 对每个槽位的锁文件持有 flock，进程死掉时内核自动放开；哪次运行活着只看 /proc/locks 里槽位锁的真实持有者，状态文件只是线索。槽位不够、同一 checkout 已有运行、或有不属于任何运行的 era-game scope 时以退出码 75 拒绝，不等待。
+run() 对每个槽位的锁文件持有 flock，进程死掉时内核自动放开。
+哪次运行活着只看 /proc/locks 里槽位锁的真实持有者，状态文件只是线索。
+槽位不够、同一 checkout 已有运行、或有不属于任何运行的 era-game scope 时以退出码 75 拒绝，不等待。
 调用 run() 的进程被中断时，run() 会停掉它的 scope。
 每次运行用 mkdtemp 建一个自己的临时目录。运行结束、启动的进程已结束且 scope 确认已停后，删掉这个目录。
 没来得及删的目录（例如启动进程被 SIGKILL）由之后启动的运行清掉，条件是它 SWEEP_MIN_AGE_S 秒没改动，且不属于正在运行的实例或存活 scope。
@@ -1017,7 +1019,7 @@ def cmd_stop(target=None):
   参数：
       target (str | None): 小于 SLOTS 的数是槽位编号，其他数是 pid；None 表示没给
   返回：
-      int: 停下（含直接停掉启动进程已不在的遗留 scope）时为 0；没有可停的、目标不明或不存在时为 1；30 秒内没停下时为 2
+      int: 停下（含直接停掉启动进程已不在的遗留 scope）时为 0；没有可停的、目标不明或不存在时为 1；30 秒内没停下，或遗留 scope 没能停掉时为 2
   """
   runs = live_runs()
   orphans = orphan_units(runs)
