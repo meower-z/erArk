@@ -25,7 +25,9 @@ from lint import cli
 from lint import core
 from lint.rules import mutation_engine
 from lint.rules import mutation_rule
+import data_check
 import fast_report
+import fast_suite
 
 _REPO = pathlib.Path(__file__).resolve().parents[2]
 _ADAPTER = pathlib.Path(fast_report.__file__)
@@ -199,7 +201,7 @@ class MutationNotesTest(unittest.TestCase):
     cfg['rules']['tests-mutation']['test_globs'] = ['tests/fast/test_a.py']
     ctx = core.Context(checkout, cfg)
     registry = cli.load_rules()
-    fast_report.remeasure_for_mutation(
+    fast_suite.remeasure_for_mutation(
         ctx,
         ctx.rule_config(registry['tests-coverage']),
         ctx.rule_config(registry['tests-mutation']),
@@ -208,6 +210,24 @@ class MutationNotesTest(unittest.TestCase):
     files = data['files']
     self.assertEqual(files['Script/m.py']['executed_lines'], [1, 2])
     self.assertNotIn(2, files.get('Script/n.py', {}).get('executed_lines', []))
+
+  def test_remeasure_failure_keeps_the_test_output(self) -> None:
+    """列出的测试失败时，抛出的错误里带着 unittest 的输出。"""
+    checkout = _make_checkout(
+        self,
+        'import unittest\nclass T(unittest.TestCase):\n'
+        '  def test_bad(self):\n    self.assertEqual(1, 2)\n',
+    )
+    cache_dir = checkout.parent / 'cache'
+    cache_dir.mkdir()
+    ctx = core.Context(checkout, fast_report.build_config(checkout, cache_dir))
+    registry = cli.load_rules()
+    with self.assertRaisesRegex(RuntimeError, r'(?s)exited 1:.*test_bad'):
+      fast_suite.remeasure_for_mutation(
+          ctx,
+          ctx.rule_config(registry['tests-coverage']),
+          ctx.rule_config(registry['tests-mutation']),
+      )
 
 
 class ReportOnlyTest(unittest.TestCase):
@@ -237,7 +257,7 @@ class ReportOnlyTest(unittest.TestCase):
     with (
         mock.patch.dict(os.environ, {'HOME': str(home)}),
         mock.patch.object(cli, 'load_rules', return_value=stubs),
-        mock.patch.object(fast_report, 'measure_suite') as measure,
+        mock.patch.object(fast_suite, 'measure_suite') as measure,
     ):
       measure.side_effect = SystemExit(5)
       code = fast_report.main([str(checkout)], quiet=True)
@@ -330,10 +350,10 @@ class DataCheckTest(unittest.TestCase):
   def test_refusal_names_a_sample(self) -> None:
     """文件多时只列 SAMPLE_SIZE 个名字，个数照实数。"""
     checkout = _make_checkout(self, _PASSING_TEST)
-    for i in range(fast_report.SAMPLE_SIZE + 2):
+    for i in range(data_check.SAMPLE_SIZE + 2):
       (checkout / 'data' / f'f{i}.json').write_text('{}', encoding='utf-8')
-    reason = fast_report.refuse_reason(checkout)
-    self.assertIn(f'{fast_report.SAMPLE_SIZE + 2} git-ignored', reason)
+    reason = data_check.refuse_reason(checkout)
+    self.assertIn(f'{data_check.SAMPLE_SIZE + 2} git-ignored', reason)
     self.assertIn('data/f4.json, ...', reason)
     self.assertNotIn('data/f5.json', reason)
 
@@ -343,17 +363,17 @@ class DataCheckTest(unittest.TestCase):
     spaced = checkout.parent / 'my checkout'
     checkout.rename(spaced)
     (spaced / 'data' / 'Character.json').write_text('{}', encoding='utf-8')
-    hint = fast_report.refuse_reason(spaced).splitlines()[-1].strip()
+    hint = data_check.refuse_reason(spaced).splitlines()[-1].strip()
     self.assertEqual(hint, f"git -C '{spaced}' clean -fdX data/")
     subprocess.run(hint, shell=True, check=True, capture_output=True)
-    self.assertEqual(fast_report.refuse_reason(spaced), '')
+    self.assertEqual(data_check.refuse_reason(spaced), '')
 
   def test_clean_data_passes(self) -> None:
     """已跟踪的文件和没被忽略的未跟踪文件不会让它拒绝。"""
     checkout = _make_checkout(self, _PASSING_TEST)
     (checkout / 'data' / 'b.csv').write_text('id\n', encoding='utf-8')
-    self.assertEqual(fast_report.ignored_data_files(checkout), [])
-    self.assertEqual(fast_report.refuse_reason(checkout), '')
+    self.assertEqual(data_check.ignored_data_files(checkout), [])
+    self.assertEqual(data_check.refuse_reason(checkout), '')
 
   def test_not_a_git_repo_is_refused(self) -> None:
     """git 出错时以退出码 2 拒绝，这项检查从不跳过。"""
@@ -377,7 +397,7 @@ class DataCheckTest(unittest.TestCase):
     with mock.patch.object(
         subprocess, 'run', side_effect=FileNotFoundError('git')
     ):
-      reason = fast_report.refuse_reason(checkout)
+      reason = data_check.refuse_reason(checkout)
     self.assertIn('cannot check', reason)
     self.assertIn('FileNotFoundError', reason)
 
