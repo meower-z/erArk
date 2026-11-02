@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import subprocess
@@ -98,14 +99,23 @@ def mutation_totals(ctx: core.Context, rc: config.RuleConfig) -> dict[str, Any]:
   目标文件有当前的缓存条目就算查过，没变异的整套测试失败、一个变异体也没跑的也算。
   """
   t_sha = mutation_rule.tests_sha(ctx.root, test_rels(ctx, rc))
-  targets = mutation_rule._targets(ctx, rc, covered_lines(ctx), t_sha)
+  covered = covered_lines(ctx)
+  sources = set(ctx.targets(rc, sorted(covered)))
+  # 目标文件和缓存键的算法与 tests-mutation 选文件、记缓存的相同
+  keys = {}
+  for rel, lines in sorted(covered.items()):
+    path = ctx.root / rel
+    if rel in sources and lines and path.is_file():
+      keys[rel] = f'{hashlib.sha256(path.read_bytes()).hexdigest()}:{t_sha}'
   cache_p = ctx.cache_dir / 'mutation_cache.json'
   cache = json.loads(cache_p.read_text('utf-8')) if cache_p.is_file() else {}
   done = [
-      cache[t[1]] for t in targets if (cache.get(t[1]) or {}).get('sha') == t[4]
+      cache[rel]
+      for rel, key in keys.items()
+      if (cache.get(rel) or {}).get('sha') == key
   ]
   return {
-      'files': len(targets),
+      'files': len(keys),
       'evaluated_files': len(done),
       'killed': sum(int(r['killed']) for r in done),
       'total': sum(int(r['total']) for r in done),
