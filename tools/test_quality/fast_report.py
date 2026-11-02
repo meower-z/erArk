@@ -4,7 +4,7 @@
 只出报告：在游戏的快速测试层 tests/fast 上跑三条测试质量规则。
 
 三条规则是 lint 引擎的 tests-coverage（覆盖率）、tests-assertions（断言是否真的在检查）与 tests-mutation（变异测试的击杀率），
-设置在被查的 checkout 的 pyproject.toml 的 [tool.test-quality]。lint 引擎是可选的本机工具，不随仓库提供（见 CONTRIBUTING.md）。
+设置在被查的 checkout 的 pyproject.toml 的 [tool.test-quality]。变异测试只用设置里列出的测试文件，开始前按这些文件重测一次执行过的行。lint 引擎是可选的本机工具，不随仓库提供（见 CONTRIBUTING.md）。
 用游戏的 venv 的 python 运行，它要装 coverage，并且要能导入 lint 引擎的 lint 包（例如用 PYTHONPATH 指向含 lint 的目录）。
 在 checkout 根目录经 tools/verify/limited_run.py 运行，命令里的 python 指游戏的 venv：
 
@@ -49,7 +49,7 @@ from lint.rules import mutation_rule
 
 SETTINGS_TABLE = 'test-quality'
 FAST_DIR = 'tests/fast'
-# 按这个顺序运行：tests-mutation 要读 tests-coverage 的数据
+# 按这个顺序运行；tests-mutation 之前按它自己的测试文件重测一次执行过的行
 RULE_IDS = ('tests-coverage', 'tests-assertions', 'tests-mutation')
 # 拒绝运行时最多列出 data/ 下多少个被忽略的文件
 SAMPLE_SIZE = 5
@@ -161,6 +161,32 @@ def _covered_lines(ctx: core.Context) -> dict[str, set[int]]:
       for rel, info in data.get('files', {}).items()
       if isinstance(info, dict)
   }
+
+
+def remeasure_for_mutation(
+    ctx: core.Context, cov_rc: config.RuleConfig, mut_rc: config.RuleConfig
+) -> None:
+  """只用 tests-mutation 的测试文件重测一次覆盖率，覆盖缓存里的 coverage.json。
+
+  tests-mutation 只变异 coverage.json 里执行过的行。那份数据来自整个 tests/fast；
+  只有没列进 tests-mutation 的测试才执行的行上，变异体不可能被杀掉，会算成存活。
+
+  Raises:
+    subprocess.CalledProcessError: coverage 运行失败。
+  """
+  cov = ctx.tool('coverage')
+  modules = [
+      rel[: -len('.py')].replace('/', '.') for rel in _test_rels(ctx, mut_rc)
+  ]
+  env = dict(
+      os.environ, COVERAGE_FILE=str(ctx.cache_dir / '.coverage-mutation')
+  )
+  source = ','.join(cov_rc.strs('source'))
+  for argv in (
+      [*cov, 'run', f'--source={source}', '-m', 'unittest', *modules],
+      [*cov, 'json', '-o', str(ctx.cache_dir / 'coverage.json'), '-q'],
+  ):
+    subprocess.run(argv, cwd=ctx.root, env=env, capture_output=True, check=True)
 
 
 def mutation_totals(ctx: core.Context, rc: config.RuleConfig) -> dict[str, Any]:
@@ -396,13 +422,20 @@ class FastRun:
     step.notes += _fast_notes(fast, rc)
     return fast
 
+  def mutation(self, step: Step) -> None:
+    """按 tests-mutation 的测试文件重测执行过的行，再运行 tests-mutation。"""
+    remeasure_for_mutation(
+        self.ctx, self.rcs['tests-coverage'], self.rcs['tests-mutation']
+    )
+    self.rule(step, _mutation_notes)
+
   def run(self) -> None:
     """按顺序运行每一步；哪一步失败都不挡后面的步。"""
     self.write_report(finished=False)
     self.step('tests-coverage', lambda s: self.rule(s, _coverage_notes))
     self.step('tests-assertions', lambda s: self.rule(s, lambda c, r: []))
     self.step('fast-layer load', self.measure)
-    self.step('tests-mutation', lambda s: self.rule(s, _mutation_notes))
+    self.step('tests-mutation', self.mutation)
     self.write_report(finished=True)
 
   def print_summary(self) -> None:
