@@ -61,3 +61,22 @@ baseline = ".lint-baseline.tsv"
 exclude = ["Script/Config/config_def.py"]
 soft = 300
 hard = 400
+
+# tools/test_quality/fast_report.py 在快速测试层 tests/fast 上跑的三条测试质量规则；不设阈值，用规则的默认值，报告里列出测到的数和阈值
+[tool.test-quality.rules.tests-coverage]
+# 与 `python -m unittest discover -s tests/fast -t .` 找测试的方式相同
+start_dir = "tests/fast"
+top_dir = "."
+pattern = "test_*.py"
+source = ["Script"]
+
+[tool.test-quality.rules.tests-assertions]
+test_globs = ["tests/fast/test_*.py"]
+
+[tool.test-quality.rules.tests-mutation]
+# 变异体只拿 tests/fast 来查，不用 tests/slow
+test_globs = ["tests/fast/test_*.py"]
+# 这是整套快速测试跑一次的时限，不是单个测试的。世界载入后整套跑一次要 0.45 到 0.95 秒，默认的 0.25 秒会让每个文件在跑任何变异体之前就失败；2 秒给忙的机器留了余地
+mutant_timeout = 2.0
+# 并行查变异体的工作进程数，给同时运行的游戏和其他程序留出 CPU
+max_workers = 3
