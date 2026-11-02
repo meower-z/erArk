@@ -179,6 +179,36 @@ class MutationNotesTest(unittest.TestCase):
     self.assertIn('2 of 3 files evaluated, 1 of them not scored', notes[0])
     self.assertEqual(notes[1:], ['survived: Script/m.py:2 (f:x)'])
 
+  def test_remeasure_uses_only_the_mutation_test_files(self) -> None:
+    """只有没列进 tests-mutation 的测试执行的行，不算变异测试要查的行。"""
+    checkout = _make_checkout(
+        self,
+        'import unittest\nfrom Script import m\n'
+        'class T(unittest.TestCase):\n'
+        '  def test_f(self):\n    self.assertEqual(m.f(1), 2)\n',
+    )
+    (checkout / 'Script/n.py').write_text('def g():\n  return 1\n')
+    (checkout / 'tests/fast/test_c.py').write_text(
+        'import unittest\nfrom Script import n\n'
+        'class C(unittest.TestCase):\n'
+        '  def test_g(self):\n    self.assertEqual(n.g(), 1)\n'
+    )
+    cache_dir = checkout.parent / 'cache'
+    cache_dir.mkdir()
+    cfg = fast_report.build_config(checkout, cache_dir)
+    cfg['rules']['tests-mutation']['test_globs'] = ['tests/fast/test_a.py']
+    ctx = core.Context(checkout, cfg)
+    registry = cli.load_rules()
+    fast_report.remeasure_for_mutation(
+        ctx,
+        ctx.rule_config(registry['tests-coverage']),
+        ctx.rule_config(registry['tests-mutation']),
+    )
+    data = json.loads((cache_dir / 'coverage.json').read_text('utf-8'))
+    files = data['files']
+    self.assertEqual(files['Script/m.py']['executed_lines'], [1, 2])
+    self.assertNotIn(2, files.get('Script/n.py', {}).get('executed_lines', []))
+
 
 class ReportOnlyTest(unittest.TestCase):
   """不论规则怎样，退出码都是 0；参数错误退出码 2。"""
