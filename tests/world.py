@@ -651,7 +651,6 @@ class FullWorld(MinimalWorld):
   完整的无头世界：小世界之外再注册结算器、状态机与界面流程，初始化角色模板，供慢速层用
   绘制照常执行，玩家输入由 self.player（PlayerInput）给出；new_game() 走一遍开新游戏的界面流程。
   不做复原：慢速层每个测试一个新进程。
-  导入链中的 handle_instruct 在导入时起一个非守护的指令处理线程，进程正常返回也不会自行退出，须以 os._exit 结束
   """
 
   PLAYER_NAME = "多克特"

@@ -21,7 +21,7 @@ python -u tests/education/test_semester.py                       # 单跑一个�
 
 | 文件 | 覆盖 |
 | --- | --- |
-| `_bootstrap.py` | 公共引导：初始化链、屏蔽绘制并记录文本（`drawn_text`）、`askfor_all` 桩、`check / section / finish`、`make_character` fixture、`set_time / move_to / open_all_classroom / clear_schedules`；未捕获异常时 `os._exit(2)`（否则非守护线程会让崩溃的进程挂住） |
+| `_bootstrap.py` | 公共引导：初始化链、屏蔽绘制并记录文本（`drawn_text`）、`askfor_all` 桩、`check / section / finish`、`make_character` fixture、`set_time / move_to / open_all_classroom / clear_schedules`；未捕获异常时打印回溯，以退出码 2 结束进程 |
 | `_skip.py` | `skip()`：整份脚本跳过时打印原因、以 `SKIP_EXIT` 退出，慢速层的测试据此报告跳过；只用标准库，脚本以 `from tests.education._skip import skip` 导入 |
 | `test_schedule.py` | 教室列表与开放、格子读写、临时课覆盖层（含 `include_temp=False`、一键选课不选临时课）、教师反查与冲突、个人课表、`get_now_course / get_now_teaching`、上课地点、实习导师；Plan 26：撞课判定照每周课表（被临时课顶掉的教师照样判撞课）、`get_now_teaching(0)` 只在玩家就在那间教室时返回临时课、上课地点过滤未开放的场所（`judge_scene_open`）、`judge_course_need_pass`、`get_upcoming_course` 不再收 `now_time`；Plan 27：全局课表那一格清空即视为没课（`get_course_at` 为 None），格子在、教师为 -1 仍是一节课，临时课覆盖层给出的格子（预约 / 必修）照算；Plan 28：个人式课这一节上不成（少女的过家家、未解锁的游泳池）视为没课（`judge_personal_course_valid`、`get_course_at` 为 None），实习课无人在岗仍是课、必修覆盖不受影响，非法目标的兴趣课同样视为没课；Plan 29：兴趣课读书借不到书视为没课（`judge_interest_course_is_read_book` / `judge_personal_course_valid`：书库有书、全被借走、手上有书、只剩读完的、只剩读不了的、判定不写数据）；Plan 31：`get_course_at` 只对学生岗生效（改岗后本节 / 下一节 / 个人式课 / 必修覆盖都为 None，个人课表原样保留，改回恢复）、教师反查只认教师岗（`judge_schedule_teacher`：前教师改当学生后 `get_now_teaching` / `get_upcoming_teaching` 为 None，`get_teacher_cell` 与撞课判定照旧，玩家不看岗位）、`get_now_course` 的返回说明；Plan 32：教师候选排除被监禁的教师，一键排课不再把她排进空格子（L21） |
 | `test_auto_schedule.py` | 一键排课的幂等 / 可复现 / 无教师冲突 / 周末不排 / 实践教室科目约束；一键选课 |

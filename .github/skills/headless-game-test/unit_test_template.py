@@ -14,8 +14,7 @@ erArk 无头**函数级单元测试** harness 模板
 
 注意：
   - 必须用 ./.conda/python.exe（裸 python 是商店空壳别名，exit 49 无输出）
-  - 结尾的 os._exit() 会主动结束进程；若删掉它，需要外层 timeout 兜底
-    （游戏导入链中 handle_instruct 起的非守护线程 init_instruct_handle_thread 目前会让进程跑完后不退出）
+  - 结尾的 os._exit() 按断言结果设退出码：全部通过时为 0，有失败时为 1
 """
 
 import datetime
@@ -292,4 +291,4 @@ print(f"通过 {PASS} 项，失败 {len(FAIL)} 项")
 for f in FAIL:
   print("  失败:", f)
 print("=" * 50)
-os._exit(0 if not FAIL else 1)  # 主动退出，绕开残留的非守护线程
+os._exit(0 if not FAIL else 1)  # 按断言结果设退出码

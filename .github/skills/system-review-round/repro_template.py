@@ -100,7 +100,7 @@ def R(
 
 def summary() -> None:
   """
-  打印汇总并强制退出（导入链里的非守护线程会让进程不自行结束）
+  打印汇总并结束进程：本阶段各项都符合预期时退出码为 0，否则为 1
   Keyword arguments:
   无
   Return arguments:

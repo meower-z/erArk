@@ -19,7 +19,7 @@ description: 在不启动图形界面的情况下无头运行 erArk：加载游�
 ## 铁律（每条都是踩过的坑）
 
 1. **必须用 `./.conda/python.exe`**，裸 `python` 是 Windows 商店空壳别名（exit 49、无任何输出）。
-2. **外层必须加 `timeout N`**（bash 的 timeout 命令）。游戏导入链会导入 `Script/System/Instruct_System/handle_instruct.py`，它在导入时启动非守护的指令处理线程 `init_instruct_handle_thread`。现有代码里这个线程不结束，所以**测试跑完后进程也不会自行退出**。`EXIT=124` 且结果已全部打印 = 正常结束，不是测试失败。也可在脚本末尾 `os._exit(0)` 主动退出。
+2. **外层必须加 `timeout N`**（`timeout` 命令）。`timeout` 在 N 秒后终止仍在运行的进程。卡住的脚本（例如第 5 条说的死循环）因此不会一直跑下去。`EXIT=124` 表示进程跑满 N 秒后被 `timeout` 终止。原因可能是脚本卡住，也可能是 N 给小了。
 3. **加 `-u` 取消缓冲**，且脚本开头 `sys.stdout.reconfigure(encoding='utf-8', errors='replace')`（Windows 控制台是 GBK，中文会乱码/报错）。
 4. **绝不用 `| tail` / `| head` 观察可能长时间运行的进程**。管道会攒住全部输出直到进程结束，看起来和「卡死」一模一样——包括 `buildconfig.py`、`tools/lint_target_csv.py` 这类跑几分钟的脚本，以及所有 harness。正确做法是**重定向到文件再读**：
    ```bash
@@ -198,7 +198,6 @@ rm -f data/Character_Talk.json
 | 断言全过但数值没变 | `add_time` 传了 0 |
 | 新前提/新口上"没注册" | 漏跑 `buildconfig.py`，或新口上没删 `Character_Talk.json` |
 | 进程"卡死"、看不到任何输出 | 用了 `| tail` 管道，见铁律 4 |
-| `EXIT=124` 但结果已打印完整 | 正常，见铁律 2 |
 | `SyntaxError: invalid syntax`，报错行里有 `��` | heredoc/stdin 里的中文被 GBK 解码，改写成脚本文件，见铁律 7 |
 | `UnboundLocalError` 出现在 `chest_grow` / 乳汁上限 | fixture 没有罩杯素质，加 `talent[121] = 1` |
 | `KeyError: 1` 出现在 `achievement_panel.achievement_flow` | 成就结算读 `rhodes_island.materials_resouce`，打桩 `achievement_flow` |
@@ -428,7 +427,7 @@ timeout 300 ./.conda/python.exe -u "<scratchpad>/my_test.py" > "$LOG" 2>&1
 echo "EXIT=$?"; tail -40 "$LOG"
 ```
 
-`EXIT=124` 但结果已打印完整 = 正常（handle_instruct 残留的非守护线程 `init_instruct_handle_thread` 被 timeout 回收）；想要干净的 0/1 退出码，就在脚本末尾 `os._exit(0 if not FAIL else 1)`。
+`EXIT=124` 表示进程被 `timeout` 终止，见铁律 2。`unit_test_template.py` 末尾调用 `os._exit(0 if not FAIL else 1)`。断言全部通过时它以退出码 0 结束，有断言失败时以 1 结束。不设退出码的脚本正常跑完时，退出码为 0，与断言结果无关。要让自己脚本的退出码反映断言结果，就在脚本末尾也这样调用。
 
 **读中文输出**：Git Bash 的 `cat`/`grep` 在 GBK 控制台下会把中文显示成乱码（文件本身没问题）。要看清楚就转一道：
 

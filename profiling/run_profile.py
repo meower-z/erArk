@@ -43,7 +43,6 @@ import cProfile
 import json
 import os
 import pstats
-import sys
 import time
 from datetime import datetime
 from typing import TYPE_CHECKING
@@ -601,8 +600,10 @@ def export_premise_stats(pmod: ModuleType | None, path: str) -> None:
 # ------------------------- 主入口 -------------------------
 def main() -> None:
   """
-  解析参数并初始化游戏环境，按参数替换输入输出函数、挂上主循环结构统计补丁，
-  采集 profile 后按参数导出前提统计与主循环结构统计，最后用 os._exit(0) 结束进程
+  解析参数并初始化游戏环境。按参数替换输入与界面函数，并按参数挂上主循环结构统计补丁。
+  在 cProfile 下采集后，按参数导出前提统计与主循环结构统计。
+  Keyword arguments:
+  无
   Return arguments:
   None
   """
@@ -647,11 +648,6 @@ def main() -> None:
       log(f"导出主循环结构统计失败: {e}")
 
   log("全部完成。可使用 snakeviz / py-spy / scalene 进行进一步分析。")
-
-  # 退出：导入链中的 handle_instruct 起了非守护线程 init_instruct_handle_thread，
-  # 现有代码里这个线程不结束，解释器正常退出会一直等它，所以用 os._exit 强制结束进程
-  sys.stdout.flush()
-  os._exit(0)
 
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ erArk 无头测试 harness 模板
     或以 heredoc 方式内联运行（<<'EOF' ... EOF）
 注意：
   - 必须用 ./.conda/python.exe（裸 python 是商店空壳别名）
-  - 外层必须加 timeout：游戏导入链的非守护线程会让进程跑完后不退出（EXIT=124 且结果已打印 = 正常）
+  - 外层必须加 timeout。timeout 到时限会终止仍在运行的进程，例如陷入死循环的脚本。被 timeout 终止时 EXIT=124。
   - 本脚本为只读诊断：只读存档入内存，不写任何文件；不要调用 establish_save / game_update_flow
 """
 
