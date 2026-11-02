@@ -74,9 +74,35 @@ source = ["Script"]
 test_globs = ["tests/fast/test_*.py"]
 
 [tool.test-quality.rules.tests-mutation]
-# 变异体只拿 tests/fast 来查，不用 tests/slow
-test_globs = ["tests/fast/test_*.py"]
-# 这是整套快速测试跑一次的时限，不是单个测试的。世界载入后整套跑一次要 0.45 到 0.95 秒，默认的 0.25 秒会让每个文件在跑任何变异体之前就失败；2 秒给忙的机器留了余地
+# 变异体只拿 tests/fast 来查，不用 tests/slow。查变异体时 subprocess.run 被拦下，
+# 所以会启动子进程的测试文件不列进来：它们在不变异时就失败，整套测试一失败，哪个文件都打不了分
+test_globs = [
+    "tests/fast/test_buildata_tables_ignore_module_docstring.py",
+    "tests/fast/test_check_reregister_same_function.py",
+    "tests/fast/test_child_stage_names.py",
+    "tests/fast/test_child_stages_offline.py",
+    "tests/fast/test_clear_cmd_by_number.py",
+    "tests/fast/test_climax_line_names_operator.py",
+    "tests/fast/test_commission_edit_save.py",
+    "tests/fast/test_cup_shrinks_after_lactation_ends.py",
+    "tests/fast/test_follower_enters_full_room.py",
+    "tests/fast/test_game_clock_passes_checks.py",
+    "tests/fast/test_inactive_images_not_loaded.py",
+    "tests/fast/test_load_same_for_any_listing_order.py",
+    "tests/fast/test_location_dir_names_translate.py",
+    "tests/fast/test_locked_room_entry.py",
+    "tests/fast/test_locked_room_stays_locked.py",
+    "tests/fast/test_mod_load_state.py",
+    "tests/fast/test_mod_loader.py",
+    "tests/fast/test_offline_bit_self_is_baby.py",
+    "tests/fast/test_repair_reregister_same_function.py",
+    "tests/fast/test_same_name_image_pick.py",
+    "tests/fast/test_static_operator_minor_talents.py",
+    "tests/fast/test_trainee_not_child.py",
+    "tests/fast/test_unnormal_bits_same_meaning.py",
+    "tests/fast/test_world.py",
+]
+# 这是整套快速测试跑一次的时限，不是单个测试的。世界载入后，上面列出的测试整套跑一次约 1 秒，默认的 0.25 秒会让每个文件在跑任何变异体之前就失败；2 秒给忙的机器留了余地
 mutant_timeout = 2.0
 # 并行查变异体的工作进程数，给同时运行的游戏和其他程序留出 CPU
 max_workers = 3
