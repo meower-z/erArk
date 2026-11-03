@@ -24,7 +24,7 @@ import random
 import sys
 import traceback
 
-# ==== 0. 断言与收尾：现有代码里 handle_instruct 的非守护线程 init_instruct_handle_thread 永不结束，进程只能以 os._exit 结束 ====
+# ==== 0. 断言与收尾：finish() 打印断言汇总并以对应的退出码结束进程 ====
 FAILED = []
 PASSED = []
 
@@ -169,7 +169,7 @@ DURATION = max(game_config.config_behavior[BEHAVIOR].duration, 1)
 
 # 处理函数不调 chara_handle_instruct_common_settle、自己赋值时（如 handle_teach 设 STATUS_TEACH、拉学生听课），把下面四行换成它的赋值
 instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-pl.state = BEHAVIOR  # handle_instruct.py:425 chara_handle_instruct_common_settle 把 state 设为 behavior_id
+pl.state = BEHAVIOR  # chara_handle_instruct_common_settle 也把 state 设为行为id
 pl.behavior.behavior_id = BEHAVIOR
 pl.behavior.duration = DURATION
 game_time.sub_time_now(

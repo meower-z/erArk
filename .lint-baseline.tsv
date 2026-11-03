@@ -5186,7 +5186,7 @@ tools/verify/arkeditor.py	vnc_ready	line-too-long	count=1,max=81
 tools/verify/game_runner_guard.py	<module>	line-too-long	count=2,max=97
 tools/verify/game_runner_guard.py	GameRunnerGuard.find_spec	mypy:no-untyped-def	count=1
 tools/verify/headless_harness_template.py	<module>	invalid-name	count=1
-tools/verify/headless_harness_template.py	<module>	line-too-long	count=14,max=178
+tools/verify/headless_harness_template.py	<module>	line-too-long	count=12,max=178
 tools/verify/headless_harness_template.py	<module>	mypy:attr-defined	count=1
 tools/verify/headless_harness_template.py	<module>	mypy:var-annotated	count=5
 tools/verify/headless_harness_template.py	<module>	wrong-import-position	count=5
@@ -5210,7 +5210,7 @@ tools/verify/headless_harness_template.py	skip_file_write	mypy:no-untyped-def	co
 tools/verify/headless_harness_template.py	skip_file_write	unspecified-encoding	count=1
 tools/verify/headless_harness_template.py	skip_save	mypy:no-untyped-def	count=1
 tools/verify/headless_unit_template.py	<module>	invalid-name	count=1
-tools/verify/headless_unit_template.py	<module>	line-too-long	count=3,max=102
+tools/verify/headless_unit_template.py	<module>	line-too-long	count=2,max=102
 tools/verify/headless_unit_template.py	<module>	mypy:var-annotated	count=2
 tools/verify/headless_unit_template.py	<module>	unused-import	count=1
 tools/verify/headless_unit_template.py	<module>	wrong-import-position	count=5

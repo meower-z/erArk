@@ -18,7 +18,7 @@ import sys
 import traceback
 from unittest import mock
 
-# ==== 0. 断言与收尾：现有代码里 handle_instruct 的非守护线程 init_instruct_handle_thread 永不结束，进程只能以 os._exit 结束 ====
+# ==== 0. 断言与收尾：finish() 打印断言汇总并以对应的退出码结束进程 ====
 FAILED = []
 PASSED = []
 
