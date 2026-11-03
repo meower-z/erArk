@@ -229,7 +229,6 @@ def load_event_data() -> None:
 def create_event_data() -> None:
   """新建事件文件"""
   global last_open_dir, is_modified
-  cache_control.now_edit_type_flag = 1
   now_file = QFileDialog.getSaveFileName(
       menu_bar, "选择文件", last_open_dir, "*.json"
   )
@@ -239,9 +238,9 @@ def create_event_data() -> None:
     save_editor_config()
     if not file_path.endswith(".json"):
       file_path += ".json"
-    cache_control.now_file_path = file_path
-    # 自动打开文件
-    function.save_data()
+    # 新文件直接写入没有事件的 {}，不受内存里的条目和编辑类型影响
+    with open(file_path, "w", encoding="utf-8") as event_file:
+      event_file.write("{}")
     load_event_data()
     is_modified = False
     update_window_title()
@@ -471,7 +470,7 @@ def create_talk_data() -> None:
       if not file_path.endswith(".csv"):
         file_path += ".csv"
       cache_control.now_file_path = file_path
-      cache_control.now_edit_type_flag = 0
+      cache_control.now_talk_data = {}
       function.save_talk_data()
       load_talk_data_to_cache(file_path)
       is_modified = False
