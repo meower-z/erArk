@@ -25,9 +25,9 @@ class ToolsBar(QMenuBar):
     self.status_menu: QMenu = QMenu(
         cache_control.behavior_data[cache_control.now_behavior], self
     )
-    self.status_menu.setFont(self.font)
+    self.status_menu.setFont(font)
     self.addMenu(self.status_menu)
     self.type_menu: QMenu = QMenu(cache_control.now_type, self)
-    self.type_menu.setFont(self.font)
+    self.type_menu.setFont(font)
     self.addMenu(self.type_menu)
-    self.setFont(self.font)
+    self.setFont(font)

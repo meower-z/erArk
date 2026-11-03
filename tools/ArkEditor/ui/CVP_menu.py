@@ -38,17 +38,17 @@ class CVPMenu(QDialog):
 
     # 一段说明文字，用来介绍各个功能，位置在最上面的第一行
     self.cvp_text = QLabel("用于实现数值方面的综合型万用前提")
-    self.cvp_text.setFont(self.font)
+    self.cvp_text.setFont(font)
     self.layout.addWidget(self.cvp_text)
 
     # A数值为对象，仅在"角色id为"时出现a2文本框
     self.cvp_a = QComboBox()
     self.cvp_a.addItems(["自己", "交互对象", "角色id为"])
     self.cvp_a.setCurrentIndex(0)
-    self.cvp_a.setFont(self.font)
+    self.cvp_a.setFont(font)
     self.ABCD_button_layout.addWidget(self.cvp_a)
     self.cvp_a2 = QTextEdit("0")
-    self.cvp_a2.setFont(self.font)
+    self.cvp_a2.setFont(font)
     self.cvp_a2.setFixedHeight(32)
     self.cvp_a2.setFixedWidth(50)
     self.cvp_a2.setVisible(False)
@@ -84,14 +84,14 @@ class CVPMenu(QDialog):
         ]
     )
     self.cvp_b1.setCurrentIndex(0)
-    self.cvp_b1.setFont(self.font)
+    self.cvp_b1.setFont(font)
     self.ABCD_button_layout.addWidget(self.cvp_b1)
 
     # b2根据b1会出现不同的选项
     self.cvp_b2 = QComboBox()
     self.cvp_b2.addItems([""])
     self.cvp_b2.setCurrentIndex(0)
-    self.cvp_b2.setFont(self.font)
+    self.cvp_b2.setFont(font)
     self.cvp_b2.setVisible(False)
     self.cvp_b1.currentIndexChanged.connect(self.change_b2)
     self.ABCD_button_layout.addWidget(self.cvp_b2)
@@ -102,12 +102,12 @@ class CVPMenu(QDialog):
         ["大于", "小于", "等于", "大于等于", "小于等于", "不等于"]
     )
     self.cvp_c.setCurrentIndex(0)
-    self.cvp_c.setFont(self.font)
+    self.cvp_c.setFont(font)
     self.ABCD_button_layout.addWidget(self.cvp_c)
 
     # D数值为判定值
     self.cvp_d = QTextEdit("0")
-    self.cvp_d.setFont(self.font)
+    self.cvp_d.setFont(font)
     self.cvp_d.setFixedHeight(32)
     self.cvp_d.setFixedWidth(50)
     self.ABCD_button_layout.addWidget(self.cvp_d)
@@ -118,11 +118,11 @@ class CVPMenu(QDialog):
     self.button_layout = QHBoxLayout()
     self.ok_button = QPushButton("确定")
     self.ok_button.clicked.connect(self.ok)
-    self.ok_button.setFont(self.font)
+    self.ok_button.setFont(font)
     self.button_layout.addWidget(self.ok_button)
     self.cancel_button = QPushButton("取消")
     self.cancel_button.clicked.connect(self.cancel)
-    self.cancel_button.setFont(self.font)
+    self.cancel_button.setFont(font)
     self.button_layout.addWidget(self.cancel_button)
     self.layout.addLayout(self.button_layout)
 
@@ -261,7 +261,7 @@ class CVPMenu(QDialog):
         ["大于", "小于", "等于", "大于等于", "小于等于", "不等于"]
     )
     self.cvp_c.setCurrentIndex(0)
-    self.cvp_c.setFont(self.font)
+    self.cvp_c.setFont(font)
     self.cvp_c.setVisible(True)
 
     self.cvp_d.setVisible(True)

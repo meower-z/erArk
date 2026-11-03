@@ -29,7 +29,7 @@ class MenuBar(QMenuBar):
     self.talk_introduce_action = QAction("口上说明", self)
     self.talk_introduce_action.triggered.connect(function.show_talk_introduce)
     self.font = font
-    self.setFont(self.font)
+    self.setFont(font)
     talk_menu.addActions(
         [
             self.new_talk_file_action,
@@ -38,7 +38,7 @@ class MenuBar(QMenuBar):
             self.talk_introduce_action,
         ]
     )
-    talk_menu.setFont(self.font)
+    talk_menu.setFont(font)
     self.addMenu(talk_menu)
 
     # 事件菜单
@@ -59,7 +59,7 @@ class MenuBar(QMenuBar):
             self.event_introduce_action,
         ]
     )
-    event_menu.setFont(self.font)
+    event_menu.setFont(font)
     self.addMenu(event_menu)
 
     # 角色菜单
@@ -77,7 +77,7 @@ class MenuBar(QMenuBar):
             self.chara_introduce_action,
         ]
     )
-    chara_menu.setFont(self.font)
+    chara_menu.setFont(font)
     self.addMenu(chara_menu)
 
     # 外勤委托菜单
@@ -88,7 +88,7 @@ class MenuBar(QMenuBar):
     self.commission_path_info_action = QWidgetAction(self)
     self.commission_path_info_action.setText("外勤委托文件路径说明")
     commission_menu.addAction(self.commission_path_info_action)
-    commission_menu.setFont(self.font)
+    commission_menu.setFont(font)
     self.addMenu(commission_menu)
 
     # 绑定说明弹窗
@@ -98,7 +98,7 @@ class MenuBar(QMenuBar):
       layout = QVBoxLayout(dialog)
       text = QTextEdit(dialog)
       text.setReadOnly(True)
-      text.setFont(self.font)
+      text.setFont(font)
       text.setPlainText(
           "外勤委托文件路径为游戏本体目录下，\\data\\csv\\Commission.csv。"
       )
@@ -119,7 +119,7 @@ class MenuBar(QMenuBar):
     self.official_event_path_info_action = QWidgetAction(self)
     self.official_event_path_info_action.setText("公务事件目录说明")
     official_event_menu.addAction(self.official_event_path_info_action)
-    official_event_menu.setFont(self.font)
+    official_event_menu.setFont(font)
     self.addMenu(official_event_menu)
 
     def show_official_event_path_info() -> None:
@@ -129,7 +129,7 @@ class MenuBar(QMenuBar):
       layout = QVBoxLayout(dialog)
       text = QTextEdit(dialog)
       text.setReadOnly(True)
-      text.setFont(self.font)
+      text.setFont(font)
       text.setPlainText(
           "公务事件目录为游戏本体目录下的 \\data\\official_event，"
           "选择这个目录即可一次读入全部部门的事件表。\n"
@@ -149,5 +149,5 @@ class MenuBar(QMenuBar):
     setting_menu = QMenu("设置", self)
     self.setting_action = QAction("设置", self)
     setting_menu.addAction(self.setting_action)
-    setting_menu.setFont(self.font)
+    setting_menu.setFont(font)
     self.addMenu(setting_menu)

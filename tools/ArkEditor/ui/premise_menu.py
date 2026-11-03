@@ -55,7 +55,7 @@ class PremiseMenu(QDialog):
     # 增加一个搜索框，确定键，重置键，三个合在一起，放在最上面作为一个横向的搜索栏
     # 将搜索框改为 QLineEdit，便于回车直接触发搜索
     self.search_text = QLineEdit()
-    self.search_text.setFont(self.font)
+    self.search_text.setFont(font)
     self.search_text.setFixedHeight(32)
     self.search_text.setFixedWidth(200)
     self.search_text.returnPressed.connect(self.search)  # 回车直接触发搜索
@@ -170,7 +170,7 @@ class PremiseMenu(QDialog):
         root_list.append(now_root)
       tree.addTopLevelItems(root_list)
       tree.itemClicked.connect(self.click_item)
-      tree.setFont(self.font)
+      tree.setFont(font)
       self.tree_list.append(tree)
       self.tree_layout.addWidget(tree)  # 将 tree 添加到 QHBoxLayout 中
     self.layout.addLayout(self.tree_layout)

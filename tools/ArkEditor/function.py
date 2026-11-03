@@ -322,7 +322,7 @@ def show_talk_introduce() -> None:
   font_metrics = QFontMetrics(text_edit.font())
   text_edit.setFixedWidth(1000)
   line_count = text.count("\n") + 1
-  text_edit.setFixedHeight(font_metrics.lineSpacing() * line_count * 1.2)
+  text_edit.setFixedHeight(int(font_metrics.lineSpacing() * line_count * 1.2))
 
   scroll_area = QScrollArea()  # 创建滚动区域
   scroll_area.setFixedWidth(1020)
@@ -362,7 +362,7 @@ def show_event_introduce() -> None:
   font_metrics = QFontMetrics(text_edit.font())
   text_edit.setFixedWidth(1000)
   line_count = text.count("\n") + 1
-  text_edit.setFixedHeight(font_metrics.lineSpacing() * line_count * 1.5)
+  text_edit.setFixedHeight(int(font_metrics.lineSpacing() * line_count * 1.5))
 
   layout = QVBoxLayout(dialog)
   layout.addWidget(text_edit)
@@ -389,7 +389,7 @@ def show_chara_introduce() -> None:
   font_metrics = QFontMetrics(text_edit.font())
   text_edit.setFixedWidth(1000)
   line_count = text.count("\n") + 1
-  text_edit.setFixedHeight(font_metrics.lineSpacing() * line_count * 1.5)
+  text_edit.setFixedHeight(int(font_metrics.lineSpacing() * line_count * 1.5))
 
   layout = QVBoxLayout(dialog)
   layout.addWidget(text_edit)

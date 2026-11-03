@@ -46,11 +46,11 @@ class CSEMenu(QDialog):
     self.cse_text = QLabel(
         "用于实现指令状态方面的综合型万用结算，目前仅支持触发玩家的指令"
     )
-    self.cse_text.setFont(self.font)
+    self.cse_text.setFont(font)
     self.layout.addWidget(self.cse_text)
 
     self.text_label = QLabel("玩家对")
-    self.text_label.setFont(self.font)
+    self.text_label.setFont(font)
     self.ABCD_button_layout.addWidget(self.text_label)
 
     # A数值为对象，仅在"角色id为"时出现a2文本框
@@ -58,10 +58,10 @@ class CSEMenu(QDialog):
     # self.cse_a.addItems(["自己", "交互对象", "角色id为"])
     self.cse_a.addItems(["自己", "交互对象"])
     self.cse_a.setCurrentIndex(0)
-    self.cse_a.setFont(self.font)
+    self.cse_a.setFont(font)
     self.ABCD_button_layout.addWidget(self.cse_a)
     self.cse_a2 = QTextEdit("0")
-    self.cse_a2.setFont(self.font)
+    self.cse_a2.setFont(font)
     self.cse_a2.setFixedHeight(32)
     self.cse_a2.setFixedWidth(50)
     self.cse_a2.setVisible(False)
@@ -70,14 +70,14 @@ class CSEMenu(QDialog):
 
     # 在ABCD_button_layout中加入一个文本的空白label，用来占位
     self.text_label = QLabel(" 使用指令 ")
-    self.text_label.setFont(self.font)
+    self.text_label.setFont(font)
     self.ABCD_button_layout.addWidget(self.text_label)
 
     # 加入菜单，用来选择B的数值
     self.menu_bar = QMenuBar(self)
-    self.menu_bar.setFont(self.font)  # 设置菜单栏的字体
+    self.menu_bar.setFont(font)  # 设置菜单栏的字体
     self.status_menu: QMenu = QMenu("待选择", self)
-    self.status_menu.setFont(self.font)  # 设置菜单的字体
+    self.status_menu.setFont(font)  # 设置菜单的字体
     self.menu_bar.addMenu(self.status_menu)
     self.ABCD_button_layout.addWidget(self.menu_bar)
 
@@ -98,7 +98,7 @@ class CSEMenu(QDialog):
         now_action.setActionGroup(status_group)
         now_action.setData(cid)
         status_menu.addAction(now_action)
-        status_menu.setFont(self.font)
+        status_menu.setFont(font)
       self.status_menu.addMenu(status_menu)
 
     self.layout.addLayout(self.ABCD_button_layout)
@@ -107,11 +107,11 @@ class CSEMenu(QDialog):
     self.button_layout = QHBoxLayout()
     self.ok_button = QPushButton("确定")
     self.ok_button.clicked.connect(self.ok)
-    self.ok_button.setFont(self.font)
+    self.ok_button.setFont(font)
     self.button_layout.addWidget(self.ok_button)
     self.cancel_button = QPushButton("取消")
     self.cancel_button.clicked.connect(self.cancel)
-    self.cancel_button.setFont(self.font)
+    self.cancel_button.setFont(font)
     self.button_layout.addWidget(self.cancel_button)
     self.layout.addLayout(self.button_layout)
 
@@ -138,7 +138,7 @@ class CSEMenu(QDialog):
         now_action.setActionGroup(status_group)
         now_action.setData(cid)
         status_menu.addAction(now_action)
-        status_menu.setFont(self.font)
+        status_menu.setFont(font)
       self.status_menu.addMenu(status_menu)
     status_group.triggered.connect(self.change_status_menu)
 

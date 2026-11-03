@@ -24,7 +24,7 @@ class ItemTextEdit(QWidget):
     """初始化文本编辑框主体"""
     super(ItemTextEdit, self).__init__()
     self.font = font
-    self.setFont(self.font)
+    self.setFont(font)
     label_layout = QVBoxLayout()
     # 加入标题
     self.info_label = QLabel()
@@ -95,7 +95,7 @@ class ItemTextEdit(QWidget):
     self.comment_label = QLabel("事件注释（仅事件模式可编辑）：")
     self.comment_edit = QTextEdit()
     self.comment_edit.setPlaceholderText("可填写事件注释，支持多行")
-    self.comment_edit.setFont(self.font)
+    self.comment_edit.setFont(font)
     self.comment_edit.setVisible(False)  # 默认隐藏，事件模式下显示
     self.comment_label.setVisible(False)
     self.comment_edit.setFixedHeight(
@@ -109,7 +109,7 @@ class ItemTextEdit(QWidget):
 
     # 创建右键菜单
     self.right_click_menu = QMenu(self)
-    self.right_click_menu.setFont(self.font)
+    self.right_click_menu.setFont(font)
     # 创建菜单项
     self.create_right_click_menu()
     # 将右键菜单绑定到文本编辑框上
@@ -123,21 +123,21 @@ class ItemTextEdit(QWidget):
     # 创建四个一级菜单
     # 将子菜单和其项的显示字体统一为编辑器当前字体，避免系统默认样式导致不一致
     chara_menu = self.right_click_menu.addMenu("角色名")
-    chara_menu.setFont(self.font)
+    chara_menu.setFont(font)
     chara_nick_menu = self.right_click_menu.addMenu("角色称呼")
-    chara_nick_menu.setFont(self.font)
+    chara_nick_menu.setFont(font)
     common_text_menu = self.right_click_menu.addMenu("纸娃娃文本")
-    common_text_menu.setFont(self.font)
+    common_text_menu.setFont(font)
     clothing_menu = self.right_click_menu.addMenu("服装名")
-    clothing_menu.setFont(self.font)
+    clothing_menu.setFont(font)
     scene_menu = self.right_click_menu.addMenu("场景名")
-    scene_menu.setFont(self.font)
+    scene_menu.setFont(font)
     food_menu = self.right_click_menu.addMenu("食物名")
-    food_menu.setFont(self.font)
+    food_menu.setFont(font)
     other_menu = self.right_click_menu.addMenu("其他")
-    other_menu.setFont(self.font)
+    other_menu.setFont(font)
     draw_menu = self.right_click_menu.addMenu("绘制")
-    draw_menu.setFont(self.font)
+    draw_menu.setFont(font)
 
     # 角色名菜单项
     chara_items = [
@@ -473,7 +473,7 @@ class ItemTextEdit(QWidget):
     # 遍历菜单项，添加到对应的菜单中
     for menu, items in menu_items:
       for item in items:
-        action = QAction(item["text"], self)
+        action = QAction(str(item["text"]), self)
         action.triggered.connect(item["slot"])
         menu.addAction(action)
 
