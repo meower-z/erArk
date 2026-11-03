@@ -14,7 +14,6 @@ from google import genai
 import concurrent.futures
 import os
 import csv
-import httpx
 
 from typing import TYPE_CHECKING
 
@@ -781,21 +780,11 @@ class Chat_Ai_Setting_Panel:
         )
       # 自定义代理
       if cache.ai_setting.ai_chat_setting[11] == 1:
-        if len(cache.ai_setting.now_ai_chat_proxy[1]) == 0:
-          client = client.with_options(
-              http_client=openai.DefaultHttpxClient(
-                  proxies=cache.ai_setting.now_ai_chat_proxy[0]
-              )
-          )
-        else:
-          client = client.with_options(
-              http_client=openai.DefaultHttpxClient(
-                  proxies=cache.ai_setting.now_ai_chat_proxy[0],
-                  transport=httpx.HTTPTransport(
-                      local_address=cache.ai_setting.now_ai_chat_proxy[1]
-                  ),
-              )
-          )
+        client = client.with_options(
+            http_client=openai.DefaultHttpxClient(
+                proxy=cache.ai_setting.now_ai_chat_proxy[0]
+            )
+        )
     elif now_key_type == "GEMINI_API_KEY":
       # 构建http_options参数
       api_version_val = (
