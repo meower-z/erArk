@@ -14,7 +14,7 @@ FullWorld 另有：
     world.player.press(...) / type(...)    -- 安排玩家接下来按的按钮与输入的文字（PlayerInput）
 
 游戏模块在导入时就绑定 cache = cache_control.cache，所以缓存对象只建一次，复原时原地改写它的内容。
-每次复原都重设全部随机源（random、numpy.random、uuid.uuid4），见 seed_everything；启动时让列目录的顺序固定，见 pin_listing_order。
+每次复原都重设全部随机源（random、numpy.random、uuid.uuid4），见 seed_everything。
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ import uuid
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-  from typing import Any, Self
+  from typing import Self
 
   from Script.Core import game_type
   from Script.UI.Moudle import draw
@@ -90,47 +90,6 @@ def seed_everything(seed: int = SEED) -> None:
   numpy.random.seed(seed % (2**32))
   _uuid_rng.seed(seed)
   uuid.uuid4 = _seeded_uuid4
-
-
-def pin_listing_order() -> None:
-  """
-  让 os.listdir 与 glob.glob 按文件名排序返回，可重复调用
-  Keyword arguments:
-  无
-  Return arguments:
-  无
-  功能描述:
-      两者的顺序随文件系统而变；游戏读角色口上与事件文件（character_config.find_files_and_get_size）、读模组目录时用它们。
-  """
-  import glob
-
-  if getattr(os.listdir, "sorted_listing", False):
-    return
-  real_listdir, real_glob = os.listdir, glob.glob
-
-  def sorted_listdir(*args: str, **kwargs: str) -> list[str]:
-    """
-    排好序的 os.listdir
-    Keyword arguments:
-    同 os.listdir
-    Return arguments:
-    list -- 排序后的文件名
-    """
-    return sorted(real_listdir(*args, **kwargs))
-
-  def sorted_glob(*args: str, **kwargs: Any) -> list[str]:
-    """
-    排好序的 glob.glob
-    Keyword arguments:
-    同 glob.glob
-    Return arguments:
-    list -- 排序后的路径
-    """
-    return sorted(real_glob(*args, **kwargs))
-
-  setattr(sorted_listdir, "sorted_listing", True)
-  setattr(os, "listdir", sorted_listdir)
-  setattr(glob, "glob", sorted_glob)
 
 
 def _mute_ui() -> list:
@@ -228,7 +187,6 @@ class MinimalWorld:
       sys.path.insert(0, ROOT)
     # 游戏用相对路径读 data/ 与 config.ini
     os.chdir(ROOT)
-    pin_listing_order()
     seed_everything()
     self._load_game()
 
@@ -241,7 +199,6 @@ class MinimalWorld:
     无
     功能描述:
         顺序同 game.py：缓存先于配置建好；构建与配置载入的打印被收起。
-        data/SceneData 等地图预处理文件存在时游戏直接读入它们，其中的顺序取决于写出它们的版本，这里把场景字典与场景标签列表排好序。
     """
     with contextlib.redirect_stdout(io.StringIO()):
       import auto_build_config  # noqa: F401
@@ -253,7 +210,6 @@ class MinimalWorld:
 
     normal_config.init_normal_config()
     from Script.Config import character_config, game_config, map_config
-    from Script.Core import constant
 
     with contextlib.redirect_stdout(io.StringIO()):
       game_config.init()
@@ -264,9 +220,6 @@ class MinimalWorld:
     self.cache = cache_control.cache
     """ 游戏缓存（对象一直不变，复原时原地改写） """
     cache = self.cache
-    cache.scene_data = dict(sorted(cache.scene_data.items()))
-    for scene_list in constant.place_data.values():
-      scene_list.sort()
     cache.npc_tem_data = dict(character_config.character_tem_list)
     cache.game_time = cache.pre_game_time = game_time.to_game_time(
         datetime.datetime(*START_TIME)
