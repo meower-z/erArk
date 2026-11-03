@@ -17,7 +17,7 @@ dirname = os.path.dirname(PySide6.__file__)
 plugin_path = os.path.join(dirname, "plugins", "platforms")
 os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = plugin_path
 
-from PySide6.QtWidgets import QApplication, QFileDialog, QWidgetAction, QMenu, QPushButton
+from PySide6.QtWidgets import QApplication, QFileDialog, QWidgetAction, QMenu, QPushButton, QMessageBox
 from PySide6.QtGui import QActionGroup, QKeySequence, QShortcut
 from PySide6.QtCore import QModelIndex
 from PySide6.QtGui import QFont
@@ -104,13 +104,6 @@ def save_editor_config() -> None:
   config["Editor"]["font_bold"] = str(cache_control.now_font_bold)
   with open(CONFIG_FILE, "w", encoding="utf-8") as f:
     config.write(f)
-
-
-# envpath = '/home/diyun/anaconda3/envs/transformer_py38/lib/python3.8/site-packages/cv2/qt/plugins/platforms'
-# os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = envpath
-
-
-# os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = 'D:\venvforqt\Lib\site-packages\PyQt5\Qt5\plugins\platforms'
 
 
 def mark_modified() -> None:
@@ -365,6 +358,15 @@ def load_talk_data() -> None:
   )
   file_path = csv_file[0]
   if file_path:
+    with open(file_path, encoding="utf-8") as now_file:
+      if "type_id" in next(csv.reader(now_file), []):
+        QMessageBox.warning(
+            menu_bar,
+            "不能打开这个文件",
+            f"{os.path.basename(file_path)} 是 data/talk_common 的通用口上组件文件。"
+            "编辑器只编辑 data/talk 的口上文件，不编辑这种格式。",
+        )
+        return
     last_open_dir = os.path.dirname(file_path)
     save_editor_config()
     # 读取前先备份
@@ -398,7 +400,6 @@ def load_talk_data_to_cache(file_path: str) -> None:
         continue
       for k in now_type_data:
         now_type = now_type_data[k]
-        # print(f"debug row = {row}, k = {k}, now_type = {now_type}")
         if row[k] is None or not len(row[k]):
           del row[k]
           continue
@@ -411,13 +412,11 @@ def load_talk_data_to_cache(file_path: str) -> None:
         elif now_type == "float":
           row[k] = float(row[k])
       now_data.append(row)
-  # print(f"debug now_data = {now_data}")
 
   # 将读取的数据存入cache_control
   for value in now_data:
     now_talk: game_type.Talk = game_type.Talk()
     now_talk.__dict__ = value
-    # print(f"debug now_talk = {now_talk.__dict__}")
 
     # 类型名转化
     if "context" in value:
