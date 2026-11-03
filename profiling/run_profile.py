@@ -40,6 +40,7 @@ from __future__ import annotations
 
 import argparse
 import cProfile
+import importlib
 import json
 import os
 import pstats
@@ -50,6 +51,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
   from types import ModuleType, SimpleNamespace
 
+importlib.import_module("auto_build_config")  # 导入即构建游戏数据，同 game.py
 PROFILE_DIR = "profiling_output"
 os.makedirs(PROFILE_DIR, exist_ok=True)
 
@@ -380,8 +382,6 @@ def init_game_environment(
         if callable(activate):
           activate()
           # 强制导入以触发所有装饰器注册到代理字典
-          import importlib
-
           importlib.import_module("Script.Design.handle_premise")
           log("前提统计代理已激活并完成注册拦截。")
     except Exception as e:
