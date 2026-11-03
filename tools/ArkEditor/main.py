@@ -778,10 +778,8 @@ if cache_control.now_edit_type_flag == 1:
 
 menu_bar.select_event_file_action.triggered.connect(load_event_data)
 menu_bar.new_event_file_action.triggered.connect(create_event_data)
-menu_bar.save_event_action.triggered.connect(function.save_data)
 menu_bar.select_talk_file_action.triggered.connect(load_talk_data)
 menu_bar.new_talk_file_action.triggered.connect(create_talk_data)
-menu_bar.save_talk_action.triggered.connect(function.save_data)
 menu_bar.select_chara_file_action.triggered.connect(load_chara_data)
 menu_bar.new_chara_file_action.triggered.connect(create_chara_data)
 menu_bar.setting_action.triggered.connect(font_update)
@@ -865,9 +863,8 @@ def save_talk_data_and_mark() -> None:
 menu_bar.save_event_action.triggered.connect(save_data_and_mark)
 menu_bar.save_talk_action.triggered.connect(save_data_and_mark)
 item_text_edit.save_button.clicked.connect(save_data_and_mark)
-# 将文本编辑器的保存键绑定到口上事件列表的更新与文件的更新
+# 保存键把文本存进条目后，重画左侧列表，让列表显示新文本
 item_text_edit.save_button.clicked.connect(data_list.update)
-item_text_edit.save_button.clicked.connect(function.save_data)
 # 新增：保存后刷新编辑状态和标题
 item_text_edit.save_button.clicked.connect(mark_saved)
 
