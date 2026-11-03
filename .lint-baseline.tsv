@@ -4314,10 +4314,10 @@ profiling/run_profile.py	<module>	line-too-long	count=1,max=81
 profiling/run_profile.py	<module>	module-lines	lines=654
 profiling/run_profile.py	export_premise_stats	broad-exception-caught	count=1
 profiling/run_profile.py	init_game_environment	broad-exception-caught	count=1
-profiling/run_profile.py	init_game_environment	import-outside-toplevel	count=13
+profiling/run_profile.py	init_game_environment	import-outside-toplevel	count=12
 profiling/run_profile.py	init_game_environment	reimported	count=1
-profiling/run_profile.py	init_game_environment	too-many-locals	locals=22
-profiling/run_profile.py	init_game_environment	too-many-statements	statements=44
+profiling/run_profile.py	init_game_environment	too-many-locals	locals=21
+profiling/run_profile.py	init_game_environment	too-many-statements	statements=43
 profiling/run_profile.py	init_game_environment	unused-import	count=8
 profiling/run_profile.py	load_premise_profiler	broad-exception-caught	count=1
 profiling/run_profile.py	load_premise_profiler	import-outside-toplevel	count=1
