@@ -14,8 +14,10 @@ lint 引擎是可选的本机工具，不随仓库提供（见 CONTRIBUTING.md�
 在 checkout 根目录经 tools/verify/limited_run.py 运行，命令里的 python 指游戏的 venv：
 
   PYTHONPATH=<含 lint 的目录> python tools/verify/limited_run.py \\
-      --mem 4G --timeout 1800 -- python -u \\
+      --mem 4G --timeout 1800 -- python -B -u \\
       tools/test_quality/fast_report.py . [--report 文件]
+
+-B 让 Python 不给导入的任何模块写字节码，checkout 里就不会出现 __pycache__ 目录。
 
 任何一步运行之前，先列出 checkout 的 data/ 下被 git 忽略的未跟踪文件。有这样的文件、或 git 列不出来时拒绝运行：
 把原因打印到 stderr（有文件时附上清理命令），不写报告，退出码 2。游戏会直接读 data/ 里已生成的文件，不再运行生成它们的代码，
@@ -24,7 +26,7 @@ lint 引擎是可选的本机工具，不随仓库提供（见 CONTRIBUTING.md�
 
 每一步打印一行摘要，完整报告写到 --report 给的文件（默认是缓存目录里的 report.md）。缓存目录是
 ~/.cache/era-lint/<checkout 路径的哈希>/，存放覆盖率数据和变异测试的结果，
-每次运行开始时清掉上一次的。本脚本自己的代码不往 checkout 里写东西，
+每次运行开始时清掉上一次的。按上面的命令带 -B 运行时，本脚本自己的代码不往 checkout 里写东西。
 但快速测试层运行的游戏代码可能生成 data/ 下被忽略的文件，那样下一次运行会拒绝，直到再清理 data/。
 
 不论规则查出什么，退出码都是 0，规则崩溃或超时也一样。只有参数错误和 data/ 检查拒绝时退出码是 2。
@@ -347,7 +349,8 @@ def main(argv: list[str], quiet: bool = False) -> int:
   if reason:
     print(f'fast_report.py: {reason}', file=sys.stderr)
     return 2
-  # 不让 checkout 里出现 __pycache__ 目录，本进程和 coverage 的子进程都一样
+  # 从这里起导入的模块和子进程（例如 tests-coverage 运行的 coverage）都不写字节码
+  # 本脚本自己的模块在这之前已经导入，它们靠命令里的 -B 不写字节码
   sys.dont_write_bytecode = True
   os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
   cache_dir.mkdir(parents=True, exist_ok=True)
