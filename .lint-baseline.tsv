@@ -4822,7 +4822,7 @@ tools/ArkEditor/load_csv.py	save_official_event_csv	redefined-outer-name	count=1
 tools/ArkEditor/load_csv.py	save_official_event_csv	reimported	count=1
 tools/ArkEditor/main.py	<module>	invalid-name	count=1
 tools/ArkEditor/main.py	<module>	line-too-long	count=3,max=110
-tools/ArkEditor/main.py	<module>	module-lines	lines=903
+tools/ArkEditor/main.py	<module>	module-lines	lines=901
 tools/ArkEditor/main.py	<module>	wrong-import-position	count=17
 tools/ArkEditor/main.py	change_type_menu	redefined-builtin	count=1
 tools/ArkEditor/main.py	change_type_menu	redefined-outer-name	count=5

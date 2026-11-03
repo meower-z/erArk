@@ -193,8 +193,7 @@ def load_event_data() -> None:
     save_editor_config()
     # 读取前先备份
     backup_file(file_path)
-    cache_control.now_event_data = {}
-    cache_control.now_file_path = file_path
+    now_event_data: dict[str, game_type.Event] = {}
     now_data = json_handle.load_json(file_path)
     for k in now_data:
       now_event: game_type.Event = game_type.Event()
@@ -220,7 +219,9 @@ def load_event_data() -> None:
           delete_effect_list.append(effect)
       for effect in delete_effect_list:
         del now_event.effect[effect]
-      cache_control.now_event_data[k] = now_event
+      now_event_data[k] = now_event
+    cache_control.now_file_path = file_path
+    cache_control.now_event_data = now_event_data
     cache_control.now_edit_type_flag = 1
     clear_item_lists()
     data_list.update()
@@ -255,8 +256,7 @@ def create_event_data() -> None:
 
 def create_chara_data() -> None:
   """新建属性文件"""
-  cache_control.now_file_path = cache_control.CHARA_TEMPLATE_PATH
-  load_chara_data_to_cache()
+  load_chara_data_to_cache(cache_control.CHARA_TEMPLATE_PATH)
   global is_modified
   is_modified = False
   update_window_title()
@@ -276,17 +276,13 @@ def load_chara_data(path: str | bool = "") -> None:
   else:
     file_path = path
   if file_path:
-    cache_control.now_file_path = file_path
-    load_chara_data_to_cache()
+    load_chara_data_to_cache(file_path)
     is_modified = False
     update_window_title()
 
 
-def load_chara_data_to_cache() -> None:
-  """将属性数据传输到缓存中"""
-  file_path = cache_control.now_file_path
-  cache_control.now_talk_data = {}
-
+def load_chara_data_to_cache(file_path: str) -> None:
+  """读 file_path 处的属性文件，整个文件读完后才设为当前文件并刷新窗口"""
   # 读取文件路径中的数据
   with open(file_path, encoding="utf-8") as now_file:
     now_chara_data: game_type.Chara_Data = game_type.Chara_Data()
@@ -349,6 +345,8 @@ def load_chara_data_to_cache() -> None:
         now_chara_data.Cloth.setdefault(sub_key, [])
         now_chara_data.Cloth[sub_key].append(now_value)
       # print(f"debug now_key = {now_key}, sub_key = {sub_key}, now_value = {now_value}")
+  cache_control.now_file_path = file_path
+  cache_control.now_talk_data = {}
   cache_control.now_chara_data = now_chara_data
   # print(f"debug Cloth = {cache_control.now_chara_data.Cloth}")
   cache_control.now_edit_type_flag = 2
@@ -371,18 +369,14 @@ def load_talk_data() -> None:
     save_editor_config()
     # 读取前先备份
     backup_file(file_path)
-    cache_control.now_file_path = file_path
-    load_talk_data_to_cache()
+    load_talk_data_to_cache(file_path)
     is_modified = False
     update_window_title()
 
 
-def load_talk_data_to_cache() -> None:
-  """将口上数据传输到缓存中"""
-
-  file_path = cache_control.now_file_path
-  cache_control.now_talk_data = {}
-
+def load_talk_data_to_cache(file_path: str) -> None:
+  """读 file_path 处的口上文件，整个文件读完后才设为当前文件并刷新窗口"""
+  now_talk_data: dict[str, game_type.Talk] = {}
   # 读取文件路径中的数据
   with open(file_path, encoding="utf-8") as now_file:
     now_type_data = {}
@@ -420,7 +414,7 @@ def load_talk_data_to_cache() -> None:
   # print(f"debug now_data = {now_data}")
 
   # 将读取的数据存入cache_control
-  for __, value in enumerate(now_data):
+  for value in now_data:
     now_talk: game_type.Talk = game_type.Talk()
     now_talk.__dict__ = value
     # print(f"debug now_talk = {now_talk.__dict__}")
@@ -447,7 +441,11 @@ def load_talk_data_to_cache() -> None:
         delete_premise_list.append(premise)
     for premise in delete_premise_list:
       del now_talk.premise[premise]
-    cache_control.now_talk_data[now_talk.cid] = now_talk
+    now_talk_data[now_talk.cid] = now_talk
+  cache_control.now_file_path, cache_control.now_talk_data = (
+      file_path,
+      now_talk_data,
+  )
   cache_control.now_edit_type_flag = 0
   clear_item_lists()
   data_list.update()
@@ -476,7 +474,7 @@ def create_talk_data() -> None:
       cache_control.now_file_path = file_path
       cache_control.now_edit_type_flag = 0
       function.save_talk_data()
-      load_talk_data_to_cache()
+      load_talk_data_to_cache(file_path)
       is_modified = False
       update_window_title()
 
