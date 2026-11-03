@@ -80,8 +80,8 @@ class DataList(DataListIdEditMixin, QWidget):
     # 条目列表
     self.list_widget = QListWidget()
     self.font = font
-    self.setFont(self.font)
-    self.list_widget.setFont(self.font)
+    self.setFont(font)
+    self.list_widget.setFont(font)
     self.close_flag = 1
     self.delet_text_id_flag = 1  # 是否删除条目序号相关的控件
     self.edited_item = self.list_widget.currentItem()
@@ -99,8 +99,8 @@ class DataList(DataListIdEditMixin, QWidget):
     self.type_menu = QMenu(cache_control.now_type, self)
     self.menu_bar.addMenu(self.status_menu)
     self.menu_bar.addMenu(self.type_menu)
-    self.status_menu.setFont(self.font)
-    self.type_menu.setFont(self.font)
+    self.status_menu.setFont(font)
+    self.type_menu.setFont(font)
 
     # 修改当前角色id、修改全部角色id
     self.change_current_chara_id_button = QPushButton("修改当前角色id")
@@ -242,7 +242,7 @@ class DataList(DataListIdEditMixin, QWidget):
     menu = QMenu()
     if not len(cache_control.now_file_path):
       return
-    menu.setFont(self.font)
+    menu.setFont(font)
     position = QCursor.pos()
 
     # 移动状态下不显示移动以外的选项
@@ -687,7 +687,7 @@ class DataList(DataListIdEditMixin, QWidget):
         self.status_menu.setTitle(status_text)
         # 标题变动后重新计算菜单最小宽度
         self.update_menu_min_width()
-        self.chara_id_text_edit.setText(chara_id)
+        self.chara_id_text_edit.setText(str(chara_id))
         self.text_id_text_edit.setText(cache_control.now_select_id)
         # self.text_id_text_edit.setText(cache_control.now_talk_data[cache_control.now_select_id].cid)
 

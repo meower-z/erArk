@@ -33,7 +33,7 @@ class ItemPremiseList(QWidget):
     """初始化前提表单主体"""
     super(ItemPremiseList, self).__init__()
     self.font = font
-    self.setFont(self.font)
+    self.setFont(font)
     main_layout = QVBoxLayout()  # 主布局
     # 标题布局
     title_layout = QVBoxLayout()

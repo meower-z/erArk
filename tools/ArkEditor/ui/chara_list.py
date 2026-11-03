@@ -50,7 +50,7 @@ class CharaList(QWidget):
 
     # 条目列表
     self.font = font
-    self.setFont(self.font)
+    self.setFont(font)
 
     self.first_layouts = [QHBoxLayout() for _ in range(14)]
     self.second_layouts = [QHBoxLayout() for _ in range(5)]
@@ -201,7 +201,7 @@ class CharaList(QWidget):
     """
     super(CharaList, self).resizeEvent(event)
 
-    width = self.width() / 2
+    width = self.width() // 2
     self.splitter.setSizes([width, width])
 
   def create_label(self, text: str, width: int = 100) -> QLabel:

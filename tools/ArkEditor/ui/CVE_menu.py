@@ -41,17 +41,17 @@ class CVEMenu(QDialog):
 
     # 一段说明文字，用来介绍各个功能，位置在最上面的第一行
     self.cve_text = QLabel("用于实现数值方面的综合型万用结算")
-    self.cve_text.setFont(self.font)
+    self.cve_text.setFont(font)
     self.layout.addWidget(self.cve_text)
 
     # A数值为对象，仅在"角色id为"时出现a2文本框
     self.cve_a = QComboBox()
     self.cve_a.addItems(["自己", "交互对象", "角色id为"])
     self.cve_a.setCurrentIndex(0)
-    self.cve_a.setFont(self.font)
+    self.cve_a.setFont(font)
     self.ABCD_button_layout.addWidget(self.cve_a)
     self.cve_a2 = QTextEdit("0")
-    self.cve_a2.setFont(self.font)
+    self.cve_a2.setFont(font)
     self.cve_a2.setFixedHeight(32)
     self.cve_a2.setFixedWidth(50)
     self.cve_a2.setVisible(False)
@@ -78,14 +78,14 @@ class CVEMenu(QDialog):
         ]
     )
     self.cve_b1.setCurrentIndex(0)
-    self.cve_b1.setFont(self.font)
+    self.cve_b1.setFont(font)
     self.ABCD_button_layout.addWidget(self.cve_b1)
 
     # b2根据b1会出现不同的选项
     self.cve_b2 = QComboBox()
     self.cve_b2.addItems([""])
     self.cve_b2.setCurrentIndex(0)
-    self.cve_b2.setFont(self.font)
+    self.cve_b2.setFont(font)
     self.cve_b2.setVisible(False)
     self.cve_b1.currentIndexChanged.connect(self.change_b2)
     self.ABCD_button_layout.addWidget(self.cve_b2)
@@ -94,12 +94,12 @@ class CVEMenu(QDialog):
     self.cve_c = QComboBox()
     self.cve_c.addItems(["增加", "减少", "变为"])
     self.cve_c.setCurrentIndex(0)
-    self.cve_c.setFont(self.font)
+    self.cve_c.setFont(font)
     self.ABCD_button_layout.addWidget(self.cve_c)
 
     # D数值为判定值
     self.cve_d = QTextEdit("0")
-    self.cve_d.setFont(self.font)
+    self.cve_d.setFont(font)
     self.cve_d.setFixedHeight(32)
     self.cve_d.setFixedWidth(50)
     self.ABCD_button_layout.addWidget(self.cve_d)
@@ -110,11 +110,11 @@ class CVEMenu(QDialog):
     self.button_layout = QHBoxLayout()
     self.ok_button = QPushButton("确定")
     self.ok_button.clicked.connect(self.ok)
-    self.ok_button.setFont(self.font)
+    self.ok_button.setFont(font)
     self.button_layout.addWidget(self.ok_button)
     self.cancel_button = QPushButton("取消")
     self.cancel_button.clicked.connect(self.cancel)
-    self.cancel_button.setFont(self.font)
+    self.cancel_button.setFont(font)
     self.button_layout.addWidget(self.cancel_button)
     self.layout.addLayout(self.button_layout)
 
@@ -224,7 +224,7 @@ class CVEMenu(QDialog):
     self.cve_c.clear()
     self.cve_c.addItems(["增加", "减少", "变为"])
     self.cve_c.setCurrentIndex(0)
-    self.cve_c.setFont(self.font)
+    self.cve_c.setFont(font)
     self.cve_c.setVisible(True)
 
   def reset_option(self) -> None:
@@ -241,7 +241,7 @@ class CVEMenu(QDialog):
     self.cve_c.clear()
     self.cve_c.addItems(["增加", "减少", "变为"])
     self.cve_c.setCurrentIndex(0)
-    self.cve_c.setFont(self.font)
+    self.cve_c.setFont(font)
     self.cve_c.setVisible(True)
 
     self.cve_d.setPlainText("0")
