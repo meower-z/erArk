@@ -46,7 +46,7 @@ class ConfigTest(unittest.TestCase):
     )
     for glob in rules['tests-mutation']['test_globs']:
       self.assertTrue(glob.startswith('tests/fast/test_'), glob)
-    self.assertEqual(rules['tests-mutation']['mutant_timeout'], 2.0)
+    self.assertEqual(rules['tests-mutation']['mutant_timeout'], 10.0)
     self.assertLessEqual(rules['tests-mutation']['max_workers'], 3)
     self.assertEqual(cfg['tools']['python'], [sys.executable])
     self.assertEqual(
