@@ -4,9 +4,9 @@
 只出报告：在游戏的快速测试层 tests/fast 上跑三条测试质量规则。
 
 三条规则是 lint 引擎的 tests-coverage（覆盖率）、
-tests-assertions（断言是否真的在检查）与 tests-mutation（变异测试的击杀率），
+tests-assertions（测试函数自己的代码里有没有断言）与 tests-mutation（变异测试的击杀率），
 设置在被查的 checkout 的 pyproject.toml 的 [tool.test-quality]。
-变异测试只用设置里列出的测试文件。载入快速测试层之后，本进程把这些测试整套跑一次，
+变异测试只用设置里列出的测试文件。本进程载入这些文件之后，把其中的测试整套跑一次，
 记下执行到的行。变异测试只改这些行。
 lint 引擎是可选的本机工具，不随仓库提供（见 CONTRIBUTING.md）。
 用游戏的 venv 的 python 运行，它要装 coverage，
@@ -303,7 +303,7 @@ class FastRun:
     step.notes += notes(self.ctx, rc)
 
   def measure(self, step: Step) -> dict[str, Any]:
-    """在本进程里载入快速测试层，并给整套测试计一次时。"""
+    """在本进程里载入 tests-mutation 列出的测试文件，并给其中的测试整套计一次时。"""
     rc = self.rcs['tests-mutation']
     fast = fast_suite.measure_suite(self.ctx, rc)
     step.notes += _fast_notes(fast, rc)

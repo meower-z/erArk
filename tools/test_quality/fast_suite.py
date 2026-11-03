@@ -25,7 +25,7 @@ def test_rels(ctx: core.Context, rc: config.RuleConfig) -> list[str]:
 
 
 def measure_suite(ctx: core.Context, rc: config.RuleConfig) -> dict[str, Any]:
-  """在本进程里载入快速测试层，并给整套测试计一次时。
+  """在本进程里载入 tests-mutation 列出的测试文件，并给其中的测试整套计一次时。
 
   导入 tests/fast 时，每个进程载入一次 erArk 的 MinimalWorld。之后 tests-mutation
   从 sys.modules 取同样的模块，它 fork 出的工作进程继承这个世界，不再各自载入。
