@@ -4759,16 +4759,14 @@ tests/snapshot_states.py	run	import-outside-toplevel	count=3
 tests/snapshot_states.py	run	too-many-locals	locals=18
 tests/snapshot_states.py	summon	import-outside-toplevel	count=1
 tests/snapshot_states.py	walk	import-outside-toplevel	count=1
-tests/world.py	<module>	line-too-long	count=1,max=96
-tests/world.py	<module>	module-lines	lines=724
+tests/world.py	<module>	module-lines	lines=677
 tests/world.py	FullWorld.__init__	super-init-not-called	count=1
 tests/world.py	FullWorld._load_game	import-outside-toplevel	count=5
 tests/world.py	FullWorld._load_game	unused-import	count=1
 tests/world.py	FullWorld.new_game	import-outside-toplevel	count=2
 tests/world.py	MinimalWorld._check_chara	import-outside-toplevel	count=1
-tests/world.py	MinimalWorld._load_game	import-outside-toplevel	count=6
+tests/world.py	MinimalWorld._load_game	import-outside-toplevel	count=5
 tests/world.py	MinimalWorld._load_game	pointless-string-statement	count=1
-tests/world.py	MinimalWorld._load_game	too-many-locals	locals=17
 tests/world.py	MinimalWorld._load_game	unused-import	count=1
 tests/world.py	MinimalWorld.chara	import-outside-toplevel	count=2
 tests/world.py	MinimalWorld.chara	too-many-arguments	args=6
@@ -4782,8 +4780,6 @@ tests/world.py	PlayerInput._order_deal	line-too-long	count=1,max=89
 tests/world.py	PlayerInput._order_deal	protected-access	count=1
 tests/world.py	PlayerInput.install	import-outside-toplevel	count=1
 tests/world.py	_mute_ui	import-outside-toplevel	count=2
-tests/world.py	pin_listing_order	import-outside-toplevel	count=1
-tests/world.py	pin_listing_order	line-too-long	count=1,max=84
 tests/world.py	seed_everything	import-outside-toplevel	count=1
 tests/world.py	seed_everything	line-too-long	count=1,max=90
 tools/ArkEditor/cache_control.py	<module>	invalid-name	count=17
