@@ -119,8 +119,48 @@ class MutationNotesTest(unittest.TestCase):
     self.assertIn('2 of 3 files evaluated, 1 of them not scored', notes[0])
     self.assertEqual(notes[1:], ['survived: Script/m.py:2 (f:x)'])
 
-  def test_remeasure_uses_only_the_mutation_test_files(self) -> None:
-    """只有没列进 tests-mutation 的测试执行的行，不算变异测试要查的行。"""
+
+class MutationLinesTest(unittest.TestCase):
+  """变异测试要改的行只是列出的测试在载入之后执行到的行。"""
+
+  def lines_after_run(self, checkout: pathlib.Path) -> dict[str, list[int]]:
+    """提交 checkout 里新加的文件，跑完 fast_report.py 并确认退出码是 0。
+
+    Returns:
+      缓存里 coverage.json 记下的每个文件执行到的行，键是相对 checkout 的路径。
+    """
+    for cmd in (['add', '-A'], ['commit', '-qm', 'more']):
+      subprocess.run(
+          ['git', '-c', 'user.name=t', '-c', 'user.email=t@t', *cmd],
+          cwd=checkout,
+          check=True,
+          capture_output=True,
+      )
+    home = checkout.parent / 'home'
+    proc = run_adapter(home, str(checkout))
+    self.assertEqual(proc.returncode, 0, proc.stderr)
+    cache = next((home / '.cache' / 'era-lint').iterdir())
+    data = json.loads((cache / 'coverage.json').read_text('utf-8'))
+    return {rel: v['executed_lines'] for rel, v in data['files'].items()}
+
+  def test_lines_run_only_at_import_are_not_targets(self) -> None:
+    """只在导入时执行的行，不算变异测试要改的行。"""
+    checkout = make_checkout(
+        self,
+        'import unittest\nfrom Script import build\nfrom Script import m\n'
+        'class T(unittest.TestCase):\n'
+        '  def test_f(self):\n    self.assertEqual(m.f(1), 2)\n'
+        "    self.assertEqual(build.TABLE, {'a': 1})\n",
+    )
+    (checkout / 'Script/build.py').write_text(
+        "def build():\n  return {'a': 1}\nTABLE = build()\n"
+    )
+    lines = self.lines_after_run(checkout)
+    self.assertIn(2, lines['Script/m.py'])
+    self.assertNotIn(2, lines.get('Script/build.py', []))
+
+  def test_lines_run_only_by_unlisted_tests_are_not_targets(self) -> None:
+    """只有没列进 tests-mutation 的测试执行的行，不算变异测试要改的行。"""
     checkout = make_checkout(
         self,
         'import unittest\nfrom Script import m\n'
@@ -133,39 +173,17 @@ class MutationNotesTest(unittest.TestCase):
         'class C(unittest.TestCase):\n'
         '  def test_g(self):\n    self.assertEqual(n.g(), 1)\n'
     )
-    cache_dir = checkout.parent / 'cache'
-    cache_dir.mkdir()
-    cfg = fast_report.build_config(checkout, cache_dir)
-    cfg['rules']['tests-mutation']['test_globs'] = ['tests/fast/test_a.py']
-    ctx = core.Context(checkout, cfg)
-    registry = cli.load_rules()
-    fast_suite.remeasure_for_mutation(
-        ctx,
-        ctx.rule_config(registry['tests-coverage']),
-        ctx.rule_config(registry['tests-mutation']),
+    settings = checkout / 'pyproject.toml'
+    head, sep, tail = settings.read_text('utf-8').rpartition(
+        'test_globs = ["tests/fast/test_*.py"]'
     )
-    data = json.loads((cache_dir / 'coverage.json').read_text('utf-8'))
-    files = data['files']
-    self.assertEqual(files['Script/m.py']['executed_lines'], [1, 2])
-    self.assertNotIn(2, files.get('Script/n.py', {}).get('executed_lines', []))
-
-  def test_remeasure_failure_keeps_the_test_output(self) -> None:
-    """列出的测试失败时，抛出的错误里带着 unittest 的输出。"""
-    checkout = make_checkout(
-        self,
-        'import unittest\nclass T(unittest.TestCase):\n'
-        '  def test_bad(self):\n    self.assertEqual(1, 2)\n',
+    settings.write_text(
+        head + 'test_globs = ["tests/fast/test_a.py"]' + tail, 'utf-8'
     )
-    cache_dir = checkout.parent / 'cache'
-    cache_dir.mkdir()
-    ctx = core.Context(checkout, fast_report.build_config(checkout, cache_dir))
-    registry = cli.load_rules()
-    with self.assertRaisesRegex(RuntimeError, r'(?s)exited 1:.*test_bad'):
-      fast_suite.remeasure_for_mutation(
-          ctx,
-          ctx.rule_config(registry['tests-coverage']),
-          ctx.rule_config(registry['tests-mutation']),
-      )
+    self.assertTrue(sep)
+    lines = self.lines_after_run(checkout)
+    self.assertIn(2, lines['Script/m.py'])
+    self.assertNotIn(2, lines.get('Script/n.py', []))
 
 
 class ReportOnlyTest(unittest.TestCase):

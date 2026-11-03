@@ -6,7 +6,8 @@
 三条规则是 lint 引擎的 tests-coverage（覆盖率）、
 tests-assertions（断言是否真的在检查）与 tests-mutation（变异测试的击杀率），
 设置在被查的 checkout 的 pyproject.toml 的 [tool.test-quality]。
-变异测试只用设置里列出的测试文件，开始前按这些文件重测一次执行过的行。
+变异测试只用设置里列出的测试文件。载入快速测试层之后，本进程把这些测试整套跑一次，
+记下执行到的行。变异测试只改这些行。
 lint 引擎是可选的本机工具，不随仓库提供（见 CONTRIBUTING.md）。
 用游戏的 venv 的 python 运行，它要装 coverage，
 并且要能导入 lint 引擎的 lint 包（例如用 PYTHONPATH 指向含 lint 的目录）。
@@ -18,7 +19,7 @@ lint 引擎是可选的本机工具，不随仓库提供（见 CONTRIBUTING.md�
 
 任何一步运行之前，先列出 checkout 的 data/ 下被 git 忽略的未跟踪文件。有这样的文件、或 git 列不出来时拒绝运行：
 把原因打印到 stderr（有文件时附上清理命令），不写报告，退出码 2。游戏会直接读 data/ 里已生成的文件，不再运行生成它们的代码，
-所以在生成过的 data/ 上运行，测到的变异体会变少（某次 erArk 运行里是 658 个，而不是 715 个）。先用
+所以在生成过的 data/ 上运行，覆盖率那一步就记不到生成数据的代码执行过。先用
 `git -C <checkout> clean -fdX data/` 清理 data/。
 
 每一步打印一行摘要，完整报告写到 --report 给的文件（默认是缓存目录里的 report.md）。缓存目录是
@@ -54,7 +55,7 @@ import fast_suite
 
 SETTINGS_TABLE = 'test-quality'
 FAST_DIR = 'tests/fast'
-# 按这个顺序运行；tests-mutation 之前按它自己的测试文件重测一次执行过的行
+# 按这个顺序运行。tests-mutation 等本进程记下它的测试执行到的行之后才运行
 RULE_IDS = ('tests-coverage', 'tests-assertions', 'tests-mutation')
 
 
@@ -307,8 +308,8 @@ class FastRun:
     return fast
 
   def mutation(self, step: Step) -> None:
-    """按 tests-mutation 的测试文件重测执行过的行，再运行 tests-mutation。"""
-    fast_suite.remeasure_for_mutation(
+    """在本进程里记下 tests-mutation 的测试文件执行到的行，再运行 tests-mutation。"""
+    fast_suite.measure_mutation_lines(
         self.ctx, self.rcs['tests-coverage'], self.rcs['tests-mutation']
     )
     self.rule(step, mutation_notes)

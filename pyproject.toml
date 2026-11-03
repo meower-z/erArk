@@ -24,6 +24,7 @@ mypy_path = ["tools/ArkEditor", "tools/test_quality", "tests/_mypy_stubs"]
 [[tool.mypy.overrides]]
 module = [
   "bs4",
+  "coverage",
   "cv2",
   "dateutil",
   "ephem",
