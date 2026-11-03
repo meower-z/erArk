@@ -777,7 +777,7 @@ def generate_for_character(
     prompt += "\n参考图：保持参考图中角色的发型、发色、瞳色、服装配色与标志性特征一致。"
     print(f"[{name}] 参考图：" + "，".join(str(p) for p in ref_paths))
   print(f"[{name}] 提示词：\n{prompt}")
-  if args.dry_run:
+  if client is None:
     return True
 
   # 调用接口并保存
@@ -857,7 +857,7 @@ def generate_child_portrait(
   )
   record_text = "\n".join(record)
   print(f"[{name}] 提示词：\n{prompt}\n{record_text}")
-  if args.dry_run:
+  if client is None:
     return True
 
   # 原图和对照表都以内存中的白底 PNG 上传，文件名用 ASCII

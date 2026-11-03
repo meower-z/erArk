@@ -110,7 +110,7 @@ def download_prts_backgrounds() -> None:
     # 方法1: 查找所有 img 标签
     for img in soup.find_all('img'):
       src = img.get('src') or img.get('data-src')
-      if src:
+      if isinstance(src, str) and src:
         # 转换为完整 URL
         full_url = urljoin(url, src)
         # 过滤出背景图片（通常包含特定路径或尺寸）
@@ -125,7 +125,9 @@ def download_prts_backgrounds() -> None:
     # 方法2: 查找链接到图片文件的 a 标签
     for link in soup.find_all('a', href=True):
       href = link['href']
-      if any(ext in href.lower() for ext in ['.png', '.jpg', '.jpeg', '.webp']):
+      if isinstance(href, str) and any(
+          ext in href.lower() for ext in ['.png', '.jpg', '.jpeg', '.webp']
+      ):
         full_url = urljoin(url, href)
         image_urls.add(full_url)
 
@@ -136,7 +138,7 @@ def download_prts_backgrounds() -> None:
     for gallery in galleries:
       for img in gallery.find_all('img'):
         src = img.get('src') or img.get('data-src')
-        if src:
+        if isinstance(src, str) and src:
           full_url = urljoin(url, src)
           original_url = re.sub(r'/thumb(/.*?)/\d+px-.*?$', r'\1', full_url)
           image_urls.add(original_url if original_url != full_url else full_url)
