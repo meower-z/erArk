@@ -64,7 +64,7 @@ def make_checkout(case: unittest.TestCase, test_src: str) -> pathlib.Path:
 def run_adapter(
     home: pathlib.Path, *args: str
 ) -> subprocess.CompletedProcess[str]:
-  """在子进程里运行本脚本，HOME 设为 home。"""
+  """以 home 为 HOME，在子进程里运行 fast_report.py。"""
   env = dict(os.environ, HOME=str(home))
   return subprocess.run(
       [sys.executable, str(ADAPTER), *args],
