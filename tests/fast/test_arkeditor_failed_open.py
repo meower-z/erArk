@@ -5,12 +5,16 @@
 测试把 tools/ArkEditor 复制到临时目录，在临时数据目录里写入可读的口上、事件与属性文件，
 再各写一份读不了的：口上文件多一条 adv_id 为文字的口上，事件文件多一条没有 effect 的事件，
 属性文件的 Sex 为文字。编辑器副本里的属性模板也换成这份读不了的属性文件。
-口上、事件、属性三种文件从菜单打开读不了的那份；template 从菜单新建属性文件，读入模板。
-每种分先打开一个可读文件（template 时为事件文件）与不开文件两种，共 8 个子测试。
-每个子测试在子进程里由 arkeditor_failed_open_driver.py 打开读不了的文件，再按保存按钮；
+另写一份截短的事件文件 cut_event.json，内容是可读事件文件的文字去掉末尾 20 个字符。
+cut_event.json 不是合法的 JSON。
+文件类型有 talk、event、cut_event、chara 与 template 五种。
+talk、event、cut_event、chara 分别从菜单打开读不了的口上文件、事件文件、cut_event.json 与属性文件。
+template 从菜单新建属性文件，读入模板。
+每种分先打开一个可读文件（template 与 cut_event 时为事件文件）与不开文件两种，共 10 个子测试。
+每个子测试在子进程里由 arkeditor_failed_open_driver.py 打开读不了的文件，再按保存按钮。
 属性文件且先开过可读文件时再按应用并保存。
 打开读不了的文件要抛异常。打开后的当前文件、左侧列表行数、条目前提、角色姓名与各面板状态
-都要与打开前相同。保存与应用并保存不能抛异常，读不了的文件的文字要与打开前相同。
+都要与打开前相同。保存与应用并保存不能抛异常。读不了的文件最后的文字要与打开前相同。
 PySide6.QtWidgets 无法导入时跳过。
 """
 
@@ -63,7 +67,7 @@ class ArkEditorFailedOpenTest(FastTestCase):
 
   def write_files(self) -> None:
     """
-    在数据目录里写入可读与读不了的口上、事件、属性文件各一份，
+    在数据目录里写入可读与读不了的口上、事件、属性文件各一份，再写入截短的事件文件 cut_event.json，
     并把编辑器目录下的模板写成读不了的属性文件。每个子测试开始时调用，各子测试从同样的文件开始
     Keyword arguments:
     无
@@ -90,6 +94,10 @@ class ArkEditorFailedOpenTest(FastTestCase):
         (
             os.path.join(self.data_dir, "bad_event.json"),
             json.dumps(dict(file_load.EVENTS, **bad_event), ensure_ascii=False),
+        ),
+        (
+            os.path.join(self.data_dir, "cut_event.json"),
+            json.dumps(file_load.EVENTS, ensure_ascii=False)[:-20],
         ),
         (os.path.join(self.data_dir, "chara.csv"), chara),
         (os.path.join(self.data_dir, "bad_chara.csv"), bad_chara),
@@ -119,7 +127,7 @@ class ArkEditorFailedOpenTest(FastTestCase):
 
   def test_save_after_failed_open(self) -> None:
     """各子测试：打开读不了的文件时抛异常，编辑器状态不变，按保存后该文件不变"""
-    for kind in ("talk", "event", "chara", "template"):
+    for kind in ("talk", "event", "cut_event", "chara", "template"):
       for prior in ("same", "none"):
         with self.subTest(kind=kind, prior=prior):
           self.write_files()
