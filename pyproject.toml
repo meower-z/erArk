@@ -9,8 +9,28 @@ include = '^/((\.github|mod|profiling|Script|tests|tools)/.*)?[^/]+\.pyi?$'
 # config_def.py 由 buildconfig.py 生成
 force-exclude = '^/Script/Config/config_def\.py$'
 
-# mypy 默认参数，老模块用这一套；新模块的严格参数由可选的本机 lint 引擎运行时另加
+# 所有模块都按 mypy 的严格模式（strict）检查。
+# 另外打开 warn_unreachable 与 strict_equality_for_none 两个开关。
+# enable_error_code 里的错误码默认关闭，这里一并打开。
 [tool.mypy]
+strict = true
+warn_unreachable = true
+strict_equality_for_none = true
+enable_error_code = [
+  "deprecated",
+  "exhaustive-match",
+  "explicit-override",
+  "ignore-without-code",
+  "mutable-override",
+  "possibly-undefined",
+  "redundant-expr",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+  "unused-ignore",
+]
 explicit_package_bases = true
 follow_imports = "silent"
 # 编辑器 tools/ArkEditor 以自己的目录为脚本目录运行，按顶层模块名导入同目录的模块（如 cache_control、ui.window）
@@ -20,41 +40,10 @@ follow_imports = "silent"
 # tools/test_quality 的脚本也以自己的目录为脚本目录运行，按顶层模块名导入同目录的 data_check、fast_suite 与 checkout_fixture
 mypy_path = ["tools/ArkEditor", "tools/test_quality", "tests/_mypy_stubs"]
 
-# lint 用的虚拟环境不装游戏、测试与工具脚本运行所需的这些第三方包，mypy 找不到它们或它们的类型存根
+# lint 用的环境里，rtmlib 既不带类型信息，也没有类型存根。
+# 不设这一项，mypy 在导入 rtmlib 的地方报 import-untyped。
 [[tool.mypy.overrides]]
-module = [
-  "bs4",
-  "coverage",
-  "cv2",
-  "dateutil",
-  "ephem",
-  "flask",
-  "flask_socketio",
-  "google",
-  "google.genai",
-  "httpx",
-  "mcp",
-  "mcp.server",
-  "mcp.server.models",
-  "mcp.server.stdio",
-  "numpy",
-  "openai",
-  "pandas",
-  "PIL",
-  "PIL.ImageTk",
-  "polib",
-  "psutil",
-  "PySide6",
-  "PySide6.QtCore",
-  "PySide6.QtGui",
-  "PySide6.QtWidgets",
-  "pytest",
-  "requests",
-  "rtmlib",
-  "ultralytics",
-  "wcwidth",
-  "werkzeug.exceptions",
-]
+module = ["rtmlib"]
 ignore_missing_imports = true
 
 # tools/test_quality 的脚本导入的 lint 包是可选的本机 lint 引擎，不随仓库提供（见 CONTRIBUTING.md），mypy 找不到它

@@ -4,36 +4,22 @@
 [MAIN]
 jobs=0
 
+[TYPECHECK]
+# PySide6 的 QtCore、QtGui、QtWidgets 等模块是编译好的扩展模块。
+# pylint 读不到这些模块里的名字，会把存在的名字报成找不到。
+# mypy 读 PySide6 随包的 .pyi 类型存根，照样检查用到 PySide6 的代码。
+ignored-modules=PySide6
+
 [MESSAGES CONTROL]
-disable=R,
-        abstract-method,
-        arguments-differ,
-        attribute-defined-outside-init,
-        c-extension-no-member,
-        consider-using-enumerate,
-        fixme,
-        global-statement,
-        implicit-str-concat,
-        import-error,
-        import-self,
-        locally-disabled,
-        missing-class-docstring,
-        no-member,
-        no-name-in-module,
-        signature-differs,
-        suppressed-message,
-        trailing-newlines,
-        unnecessary-pass,
-        unused-argument,
-        useless-suppression,
-        wrong-import-order
-enable=too-many-lines,
-       too-many-statements,
-       too-many-branches,
-       too-many-locals,
-       too-many-arguments,
-       too-many-positional-arguments,
-       too-many-return-statements
+# too-few-public-methods 与 too-many-instance-attributes 不查。
+# cyclic-import 与 duplicate-code 要把多个模块放在一起比较。
+# lint 棘轮给每个文件单独启动一个 pylint 进程，这样的运行报不出这两条。
+# 所以这两条在这里关掉，要查它们就对整个仓库运行一次 pylint。
+disable=cyclic-import,
+        duplicate-code,
+        too-few-public-methods,
+        too-many-instance-attributes
+enable=too-many-lines
 
 [BASIC]
 good-names=main,_
