@@ -1,9 +1,9 @@
 """前提系统入口：汇总各前提模块，按前提id调用处理函数、计算前提权重，并含综合数值前提等前提处理函数"""
 
-from functools import wraps
 from types import FunctionType
 from typing import Callable, Collection, Iterable, Optional
 from Script.Core import cache_control, constant, game_type, get_text
+from Script.Core import constant_promise
 from Script.Design import attr_calculation, character, instuct_judege
 from Script.Config import game_config
 
