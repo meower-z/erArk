@@ -516,9 +516,9 @@ class CharaList(QWidget):
     # now_chara_sex = cache_control.now_chara_data.Sex
     # self.chara_sex_text_edit.setText(str(now_chara_sex))
     now_profession = cache_control.now_chara_data.Profession
-    self.profession_combo_box.setCurrentIndex(now_profession)
+    self.profession_combo_box.setCurrentIndex(int(now_profession))
     now_race = cache_control.now_chara_data.Race
-    self.race_combo_box.setCurrentIndex(now_race)
+    self.race_combo_box.setCurrentIndex(int(now_race))
     now_nation = cache_control.now_chara_data.Nation
     for i in range(self.nation_combo_box.count()):
       if (
