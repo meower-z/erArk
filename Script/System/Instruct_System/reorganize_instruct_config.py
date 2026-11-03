@@ -87,7 +87,7 @@ def reorganize_csv() -> pd.DataFrame:
   for itype in type_base_map.keys():
     type_df = df[df['instruct_type'] == itype]
     # 获取去重后的 instruct_sub_type，处理 NaN 和 '0'
-    subtypes = type_df['instruct_sub_type'].fillna('0').unique()
+    subtypes = list(type_df['instruct_sub_type'].fillna('0').unique())
     # 过滤掉 '0'，然后排序
     subtypes = sorted([st for st in subtypes if st != '0' and st != 0])
     # 把 '0' 放到最前面
