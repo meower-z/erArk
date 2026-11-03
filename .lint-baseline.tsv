@@ -1094,7 +1094,7 @@ Script/Design/handle_ability.py	gain_ability	consider-using-dict-items	count=2
 Script/Design/handle_ability.py	gain_ability	import-outside-toplevel	count=1
 Script/Design/handle_ability.py	gain_ability	too-many-branches	branches=13
 Script/Design/handle_ability.py	gain_ability	too-many-locals	locals=17
-Script/Design/handle_chat_ai.py	<module>	module-lines	lines=1153
+Script/Design/handle_chat_ai.py	<module>	module-lines	lines=1142
 Script/Design/handle_chat_ai.py	build_user_prompt	broad-exception-caught	count=1
 Script/Design/handle_chat_ai.py	build_user_prompt	consider-using-dict-items	count=2
 Script/Design/handle_chat_ai.py	build_user_prompt	invalid-name	count=5
@@ -1121,9 +1121,9 @@ Script/Design/handle_chat_ai.py	text_ai	consider-using-dict-items	count=1
 Script/Design/handle_chat_ai.py	text_ai	invalid-name	count=1
 Script/Design/handle_chat_ai.py	text_ai	line-too-long	count=1,max=144
 Script/Design/handle_chat_ai.py	text_ai	singleton-comparison	count=1
-Script/Design/handle_chat_ai.py	text_ai	too-many-branches	branches=48
+Script/Design/handle_chat_ai.py	text_ai	too-many-branches	branches=46
 Script/Design/handle_chat_ai.py	text_ai	too-many-locals	locals=28
-Script/Design/handle_chat_ai.py	text_ai	too-many-statements	statements=140
+Script/Design/handle_chat_ai.py	text_ai	too-many-statements	statements=137
 Script/Design/handle_chat_ai.py	text_ai	use-implicit-booleaness-not-len	count=1
 Script/Design/handle_npc_ai.py	<module>	invalid-name	count=1
 Script/Design/handle_npc_ai.py	<module>	module-lines	lines=1188
@@ -3383,7 +3383,7 @@ Script/UI/Panel/character_setting.py	CharacterSetting.draw	consider-using-dict-i
 Script/UI/Panel/character_setting.py	CharacterSetting.draw	line-too-long	count=1,max=91
 Script/UI/Panel/character_setting.py	CharacterSetting.draw	too-many-locals	locals=16
 Script/UI/Panel/character_setting.py	CharacterSetting.draw	too-many-statements	statements=45
-Script/UI/Panel/chat_ai_setting.py	<module>	module-lines	lines=871
+Script/UI/Panel/chat_ai_setting.py	<module>	module-lines	lines=860
 Script/UI/Panel/chat_ai_setting.py	<module>	ungrouped-imports	count=1
 Script/UI/Panel/chat_ai_setting.py	Chat_Ai_Setting_Panel	invalid-name	own=1
 Script/UI/Panel/chat_ai_setting.py	Chat_Ai_Setting_Panel.change_api_key	invalid-name	count=1
@@ -3403,8 +3403,8 @@ Script/UI/Panel/chat_ai_setting.py	Chat_Ai_Setting_Panel.select_send_data	too-ma
 Script/UI/Panel/chat_ai_setting.py	Chat_Ai_Setting_Panel.select_send_data	too-many-statements	statements=61
 Script/UI/Panel/chat_ai_setting.py	Chat_Ai_Setting_Panel.test_ai	broad-exception-caught	count=1
 Script/UI/Panel/chat_ai_setting.py	Chat_Ai_Setting_Panel.test_ai	invalid-name	count=1
-Script/UI/Panel/chat_ai_setting.py	Chat_Ai_Setting_Panel.test_ai	too-many-branches	branches=18
-Script/UI/Panel/chat_ai_setting.py	Chat_Ai_Setting_Panel.test_ai	too-many-statements	statements=66
+Script/UI/Panel/chat_ai_setting.py	Chat_Ai_Setting_Panel.test_ai	too-many-branches	branches=16
+Script/UI/Panel/chat_ai_setting.py	Chat_Ai_Setting_Panel.test_ai	too-many-statements	statements=63
 Script/UI/Panel/check_locker_panel.py	<module>	module-lines	lines=581
 Script/UI/Panel/check_locker_panel.py	<module>	unused-import	count=3
 Script/UI/Panel/check_locker_panel.py	Check_locker_Panel	invalid-name	own=1
