@@ -2,12 +2,12 @@
 ArkEditor 打开读不了的文件后按保存的离屏驱动脚本，由 test_arkeditor_failed_open.py 运行
 ========================================
 用法：python arkeditor_failed_open_driver.py <编辑器目录> <数据目录> <文件类型>:<之前打开的文件>
-文件类型为 talk、event、chara 或 template，各类型用到的文件见 FAILED_OPEN_FILES。
+文件类型为 talk、event、cut_event、chara 或 template，各类型用到的文件见 FAILED_OPEN_FILES。
 之前打开的文件为 same 时，先从菜单打开 FAILED_OPEN_FILES 里该类型的可读文件，
-除 chara 外再点选第一条；为 none 时不开文件。
+除 chara 外再点选第一条。为 none 时不开文件。
 在编辑器目录里载入编辑器（不进入事件循环），文件对话框返回给定路径。
 脚本从菜单打开读不了的文件，template 时从菜单新建属性文件，读入编辑器目录下的模板。
-然后按保存按钮；chara 且为 same 时再按应用并保存。
+然后按保存按钮。chara 且为 same 时再按应用并保存。
 最后在标准输出打印一行 JSON：打开前后的状态、读不了的文件在打开前与保存后的文字、
 以及各步里槽函数抛出的异常。
 """
@@ -23,6 +23,7 @@ from arkeditor_file_load_driver import FileLoadDriver, file_text_or_none
 FAILED_OPEN_FILES = {
     "talk": ("talk.csv", "bad_talk.csv"),
     "event": ("event1.json", "bad_event.json"),
+    "cut_event": ("event1.json", "cut_event.json"),
     "chara": ("chara.csv", "bad_chara.csv"),
     "template": ("event1.json", None),
 }
@@ -47,6 +48,7 @@ def save_after_failed_open(
   open_file = {
       "talk": driver.open_talk_file,
       "event": driver.open_event_file,
+      "cut_event": driver.open_event_file,
       "chara": driver.open_chara_file,
       "template": driver.open_event_file,
   }[kind]
