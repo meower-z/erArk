@@ -254,8 +254,11 @@ def act(state, description, label, before, input_sent=True):
   """
   wait_for_probe_change(state, before, input_sent)
   frame = shot(state, label)
+  # 描述里的换行、制表符等控制字符按 JSON 字符串内部的写法写成转义（如 \n、\t）。
+  # 这样每个动作在 actions.log 里正好是一行三列。
+  escaped = json.dumps(description, ensure_ascii=False)[1:-1]
   with open(Path(state["out"]) / "actions.log", "a", encoding="utf-8") as f:
-    f.write(f"{time.strftime('%H:%M:%S')}\t{description}\t{frame.name}\n")
+    f.write(f"{time.strftime('%H:%M:%S')}\t{escaped}\t{frame.name}\n")
   print(f"frame: {frame}")
   print(describe_keys(read_probe(state)))
 
