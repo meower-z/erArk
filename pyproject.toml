@@ -12,7 +12,8 @@ force-exclude = '^/Script/Config/config_def\.py$'
 # 棘轮对每个模块都按下面这一套参数运行 mypy。
 # mypy 也检查没有类型标注的函数的函数体。
 # 它还报出执行不到的代码、可能未赋值就用到的名字、永远不成立的比较、多余的 cast，以及没用上或没写错误码的 `# type: ignore`。
-# 这一套不要求代码写类型标注。
+# 这一套不要求函数写类型标注。
+# mypy 推断不出一个变量的类型时，仍要求给这个变量写类型标注。
 [tool.mypy]
 explicit_package_bases = true
 follow_imports = "silent"
