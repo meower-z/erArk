@@ -26,6 +26,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import limited_run
@@ -36,6 +37,10 @@ SCROLL_POINT = (1050, 550)
 MIN_WINDOW_WIDTH = 2000
 PROBE_MAX_AGE_S = 5
 MEMORY_WARN_RATIO = 0.97
+# wait_for_probe_change 的三个秒数：探针内容一直与动作前相同时的等待上限、总的等待上限、两次读探针的间隔
+CHANGE_LIMIT_S = 3.0
+SETTLE_LIMIT_S = 20.0
+POLL_INTERVAL_S = 0.1
 
 
 def load_state(slot=None, out=None):
@@ -155,24 +160,61 @@ def shot(state, label):
   return path
 
 
-def wait_for_probe_change(state, before, limit=3.0):
+def awaits_input(probe: dict[str, Any]) -> bool:
   """
-  等探针内容（按钮或等待列表）与动作前不同，最多 limit 秒，然后再等 0.5 秒让 Tk 画完
+  判断探针内容是否表明游戏正在等输入
+  参数：
+      probe (dict): 探针内容
+  返回：
+      bool: 等待提示（"wait"）、自由文本输入（"text"），或等待列表里至少一个返回值是可见按钮时为 True
+  """
+  awaiting = probe["awaiting"]
+  if awaiting in ("wait", "text"):
+    return True
+  # askfor_all 在自身内运行所选按钮的回调（如读档）。
+  # 回调运行中、回调里没有正在进行的等待时，awaiting 是该按钮所在面板的列表。
+  # 因此列表里的返回值没有一个是可见按钮时，不算游戏在等输入。
+  return isinstance(awaiting, list) and any(
+      key in probe["buttons"] for key in awaiting
+  )
+
+
+def wait_for_probe_change(state, before, input_sent=True):
+  """
+  动作后每 POLL_INTERVAL_S 秒读一次探针，下列任一条件成立时返回：
+  - 探针内容（awaiting 与 buttons）与动作前不同过，当前内容已从 ts 不同的两份探针里连续读到，
+    并且 input_sent 为 False 或当前内容通过 awaits_input
+  - 超过 CHANGE_LIMIT_S 秒仍没读到与动作前不同的内容
+  - 超过 SETTLE_LIMIT_S 秒
   参数：
       state (dict): 实例状态
       before (dict): 动作前的探针内容
-      limit (float): 最长等待秒数
+      input_sent (bool): 为 True 时第一个条件还要求当前内容通过 awaits_input
   """
-  deadline = time.monotonic() + limit
-  while time.monotonic() < deadline:
+  start = time.monotonic()
+  changed = False
+  # 读到当前内容的第一份探针，内容一变就换成新读到的那份。
+  # 之后读到的探针 ts 与它不同，说明探针又写出了一次相同的内容。
+  first_seen: dict[str, Any] | None = None
+  while True:
     now = read_probe(state)
-    if (
-        now["buttons"] != before["buttons"]
-        or now["awaiting"] != before["awaiting"]
+    view = (now["awaiting"], now["buttons"])
+    changed = changed or view != (before["awaiting"], before["buttons"])
+    if first_seen is None or view != (
+        first_seen["awaiting"],
+        first_seen["buttons"],
     ):
-      break
-    time.sleep(0.2)
-  time.sleep(0.5)
+      first_seen = now
+    elif (
+        changed
+        and now["ts"] != first_seen["ts"]
+        and (not input_sent or awaits_input(now))
+    ):
+      return
+    elapsed = time.monotonic() - start
+    if elapsed > SETTLE_LIMIT_S or (not changed and elapsed > CHANGE_LIMIT_S):
+      return
+    time.sleep(POLL_INTERVAL_S)
 
 
 def describe_keys(probe):
@@ -200,7 +242,7 @@ def describe_keys(probe):
   return f"{head}\nvisible ({len(visible)}): {' '.join(visible)}"
 
 
-def act(state, description, label, before):
+def act(state, description, label, before, input_sent=True):
   """
   动作之后的统一收尾：等重绘、截帧、记日志、打印帧与按键
   参数：
@@ -208,8 +250,9 @@ def act(state, description, label, before):
       description (str): 写进 actions.log 的动作描述
       label (str): 帧文件名标签
       before (dict): 动作前的探针内容
+      input_sent (bool): 传给 wait_for_probe_change。scroll 传 False，因为滚动可能把按钮全部移出画面
   """
-  wait_for_probe_change(state, before)
+  wait_for_probe_change(state, before, input_sent)
   frame = shot(state, label)
   with open(Path(state["out"]) / "actions.log", "a", encoding="utf-8") as f:
     f.write(f"{time.strftime('%H:%M:%S')}\t{description}\t{frame.name}\n")
@@ -326,6 +369,7 @@ def main():
         f"scroll {args.direction} {args.notches}",
         f"scroll-{args.direction}",
         probe,
+        input_sent=False,
     )
   elif args.action == "advance":
     click_at(state, *ADVANCE_POINT)
