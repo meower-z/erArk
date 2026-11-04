@@ -111,7 +111,7 @@ The game supports a web-based interface:
    - Return values and types
    - Function purpose
 3. **Code Sections**: Each code section should have comments explaining its purpose
-4. **Code Style**: pyink (`pyink .` at the repo root) with 2-space indent, 80 columns and majority quotes; the generated `Script/Config/config_def.py` is excluded. pylint (`.pylintrc`) and mypy (`pyproject.toml`) follow a ratchet rule: new code must be fully clean, changed code may never get worse than its entry in `.lint-baseline.tsv`, and the baseline only shrinks. The repo hooks on their own check only formatting; see `CONTRIBUTING.md`.
+4. **Code Style**: pyink (`pyink .` at the repo root) formats the code with 2-space indent, 80 columns and majority quotes. ruff (`[tool.ruff]` in `pyproject.toml`) and mypy (`[tool.mypy]` in `pyproject.toml`) check the code under a ratchet rule. New code must be fully clean. Changed code may never get worse than its entry in `.lint-baseline.tsv`. The generated `Script/Config/config_def.py` is neither formatted nor checked. The repo hooks on their own check only formatting. An optional local lint engine, not shipped with the repo, runs the ratchet check. See `CONTRIBUTING.md`.
 5. **Hooks setup**: `pip install -r requirements-dev.txt` and `git config core.hooksPath hooks`
 
 ## Key Configuration Files
