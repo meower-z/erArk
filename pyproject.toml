@@ -9,7 +9,10 @@ include = '^/((\.github|mod|profiling|Script|tests|tools)/.*)?[^/]+\.pyi?$'
 # config_def.py 由 buildconfig.py 生成
 force-exclude = '^/Script/Config/config_def\.py$'
 
-# mypy 默认参数，老模块用这一套；新模块的严格参数由可选的本机 lint 引擎运行时另加
+# mypy 的默认参数。
+# 老模块用这一套参数。
+# 老模块是 `.lint-baseline.tsv` 里 `# old-module` 行列出的模块。
+# 棘轮（见下面的 [tool.lint-ratchet]）查新模块时，在这一套之上再加 [tool.lint-ratchet.checkers.mypy] 的 strict_args。
 [tool.mypy]
 explicit_package_bases = true
 follow_imports = "silent"
@@ -62,12 +65,255 @@ ignore_missing_imports = true
 module = ["lint", "lint.rules"]
 ignore_missing_imports = true
 
-# lint 棘轮：基线文件、排除的文件与模块行数（超过 soft 行警告，超过 hard 行算违规）
+# 可选的本机 lint 引擎做棘轮检查时读这张表。
+# 这个引擎不随仓库提供。
+# 启用方法见 CONTRIBUTING.md。
+# exclude 里的文件不参与棘轮检查。
+# 模块行数超过 soft 时给警告。
+# 模块行数超过 hard 时算违规。
+# 下面每张 [tool.lint-ratchet.checkers.*] 表写一个检查工具，以及棘轮运行它的命令。
 [tool.lint-ratchet]
 baseline = ".lint-baseline.tsv"
 exclude = ["Script/Config/config_def.py"]
 soft = 300
 hard = 400
+# 棘轮运行 ruff 时带 `--ignore-noqa`，所以 `# noqa` 注释压不下棘轮报出的问题。
+# 因此这里不禁止 `# noqa` 注释。
+ban_noqa = false
+
+# 棘轮和手动运行的 `ruff check` 都用装了 requirements-dev.txt 的环境里的 ruff。
+# `.lint-baseline.tsv` 开头的 `# fingerprint` 行记着算基线时用的 ruff 版本。
+# 装的 ruff 与这个版本不同时，棘轮不要求重算基线。
+# 这时棘轮用装的 ruff 把合并基点也查一遍，再拦下这次改动新增的问题。
+# 所以 requirements-dev.txt 和这张表的 requires 都不固定 ruff 的版本。
+[tool.lint-ratchet.checkers.ruff]
+requires = ["ruff"]
+argv = ["ruff", "check", "--config=pyproject.toml", "--no-cache", "--ignore-noqa", "--output-format=json", "{files}"]
+json = { path = "filename", line = "location.row", rule = "code", message = "message" }
+per_file = true
+measure = { PLR0911 = "returns:max", PLR0912 = "branches:max", PLR0913 = "args:max", PLR0914 = "locals:max", PLR0915 = "statements:max", PLR0917 = "args:max", E501 = "max:max" }
+own_rules = ["N801", "N802"]
+rules_argv = ["ruff", "check", "--config=pyproject.toml", "--show-settings", "{files}"]
+rules_format = '^\t\S+ \((?P<rule>[A-Z]+[0-9]+)\),$'
+reads = ["pyproject.toml:tool.ruff"]
+
+[tool.lint-ratchet.checkers.mypy]
+requires = ["mypy==2.4.0"]
+argv = ["mypy", "--config-file=pyproject.toml", "--explicit-package-bases", "--follow-imports=silent", "--show-error-codes", "--no-error-summary", "--no-pretty", "--hide-error-context", "--cache-dir={cache}", "{files}"]
+strict_args = ["--check-untyped-defs", "--disallow-any-generics", "--disallow-incomplete-defs", "--disallow-subclassing-any", "--disallow-untyped-decorators", "--disallow-untyped-defs", "--extra-checks", "--no-implicit-reexport", "--strict-equality", "--warn-return-any", "--warn-unused-ignores"]
+format = '^(?P<path>.+?):(?P<line>\d+)(?::\d+)?(?::\d+:\d+)?: error: (?P<message>.*?)(?:  \[(?P<rule>[a-z0-9-]+)\])?$'
+reads = ["pyproject.toml:tool.mypy"]
+prefix = "mypy:"
+
+[tool.lint-ratchet.checkers.pyink]
+requires = ["pyink==26.5.1"]
+argv = ["pyink", "--check", "--verbose", "{files}"]
+stream = "stderr"
+per_file = true
+format = '^would (?P<message>reformat) (?P<path>.+)$'
+reads = ["pyproject.toml:tool.pyink"]
+clean = true
+
+# 在仓库根目录手动运行 `ruff check --ignore-noqa` 时，受 git 跟踪的 .py 文件得到的报告与棘轮运行 ruff 时相同。
+# 手动运行时 ruff 自己找要查的文件。
+# 它还会查没被 git 跟踪、也没被 .gitignore 忽略的 .py 文件。棘轮不查这些文件。
+# include 让 ruff 自己找文件时只收 .py 文件。
+# extend-exclude 让 ruff 自己找文件时跳过生成的 Script/Config/config_def.py。
+# 棘轮把文件列表直接交给 ruff，所以这两项不改变棘轮查哪些文件。
+[tool.ruff]
+line-length = 120
+preview = true
+include = ["*.py"]
+extend-exclude = ["Script/Config/config_def.py"]
+
+# select 只收对应某项 pylint 检查的 ruff 规则。
+# E902 是例外，它报出 ruff 读不了的文件。
+[tool.ruff.lint]
+select = [
+  "A001",
+  "A002",
+  "B002",
+  "B006",
+  "B012",
+  "B014",
+  "B018",
+  "B019",
+  "B023",
+  "B025",
+  "B033",
+  "B904",
+  "BLE001",
+  "D100",
+  "D102",
+  "D103",
+  "D104",
+  "D105",
+  "D107",
+  "D419",
+  "E401",
+  "E402",
+  "E501",
+  "E701",
+  "E702",
+  "E703",
+  "E711",
+  "E712",
+  "E713",
+  "E714",
+  "E721",
+  "E722",
+  "E731",
+  "E902",
+  "F401",
+  "F403",
+  "F404",
+  "F406",
+  "F407",
+  "F501",
+  "F502",
+  "F503",
+  "F504",
+  "F505",
+  "F506",
+  "F507",
+  "F508",
+  "F509",
+  "F521",
+  "F522",
+  "F523",
+  "F524",
+  "F525",
+  "F541",
+  "F601",
+  "F621",
+  "F622",
+  "F631",
+  "F634",
+  "F701",
+  "F702",
+  "F704",
+  "F706",
+  "F707",
+  "F811",
+  "F821",
+  "F822",
+  "F823",
+  "F841",
+  "F842",
+  "F901",
+  "G001",
+  "G002",
+  "G004",
+  "N801",
+  "N802",
+  "N803",
+  "N804",
+  "N805",
+  "N806",
+  "N816",
+  "N999",
+  "PLC0105",
+  "PLC0131",
+  "PLC0132",
+  "PLC0205",
+  "PLC0206",
+  "PLC0207",
+  "PLC0208",
+  "PLC0414",
+  "PLC0415",
+  "PLC1802",
+  "PLC2401",
+  "PLC2403",
+  "PLC2801",
+  "PLC3002",
+  "PLE0100",
+  "PLE0101",
+  "PLE0115",
+  "PLE0117",
+  "PLE0118",
+  "PLE0237",
+  "PLE0241",
+  "PLE0302",
+  "PLE0303",
+  "PLE0304",
+  "PLE0305",
+  "PLE0307",
+  "PLE0308",
+  "PLE0309",
+  "PLE0604",
+  "PLE0605",
+  "PLE0643",
+  "PLE0704",
+  "PLE1132",
+  "PLE1141",
+  "PLE1142",
+  "PLE1205",
+  "PLE1206",
+  "PLE1300",
+  "PLE1307",
+  "PLE1310",
+  "PLE1507",
+  "PLE1519",
+  "PLE1520",
+  "PLE1700",
+  "PLE2502",
+  "PLE2510",
+  "PLE2512",
+  "PLE2513",
+  "PLE2514",
+  "PLE2515",
+  "PLE4703",
+  "PLR0911",
+  "PLR0912",
+  "PLR0913",
+  "PLR0914",
+  "PLR0915",
+  "PLR0917",
+  "PLW0108",
+  "PLW0120",
+  "PLW0127",
+  "PLW0128",
+  "PLW0129",
+  "PLW0131",
+  "PLW0133",
+  "PLW0177",
+  "PLW0211",
+  "PLW0244",
+  "PLW0245",
+  "PLW0602",
+  "PLW0604",
+  "PLW0642",
+  "PLW0711",
+  "PLW1501",
+  "PLW1507",
+  "PLW1508",
+  "PLW1509",
+  "PLW1510",
+  "PLW1514",
+  "PLW2101",
+  "PLW3301",
+  "S102",
+  "S113",
+  "S307",
+  "SIM118",
+  "SIM201",
+  "SIM202",
+  "SLF001",
+  "T100",
+  "TRY002",
+  "TRY203",
+  "UP025",
+  "UP031",
+  "UP032",
+  "UP034",
+  "W291",
+  "W292",
+  "W293",
+  "W605",
+]
+
+[tool.ruff.lint.pylint]
+max-statements = 40
 
 # tools/test_quality/fast_report.py 在快速测试层 tests/fast 上跑的三条测试质量规则；不设阈值，用规则的默认值，报告里列出测到的数和阈值
 [tool.test-quality.rules.tests-coverage]

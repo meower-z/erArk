@@ -104,7 +104,7 @@ pip install -r requirements.txt
    - 返回值和类型
    - 函数功能
 3. **代码段**：每一小段代码都需要有注释说明其作用
-4. **代码风格**：pyink（在仓库根目录运行 `pyink .`），2 空格缩进、每行 80 列、引号随多数；生成的 `Script/Config/config_def.py` 不参与。pylint（`.pylintrc`）与 mypy（`pyproject.toml`）按棘轮规则：新代码必须完全达标，改到的代码不许比 `.lint-baseline.tsv` 里记的更差，基线只会变小。仓库自带的钩子本身只查格式；详见 `CONTRIBUTING.md`。
+4. **代码风格**：pyink（在仓库根目录运行 `pyink .`）按 2 空格缩进、每行 80 列、引号随多数排版。ruff（`pyproject.toml` 的 `[tool.ruff]`）与 mypy（`pyproject.toml` 的 `[tool.mypy]`）按棘轮规则检查代码。新代码必须完全达标。改到的代码不许比 `.lint-baseline.tsv` 里记的更差。生成的 `Script/Config/config_def.py` 不参与排版，也不参与检查。仓库自带的钩子本身只查格式。可选的本机 lint 引擎做棘轮检查，它不随仓库提供。详见 `CONTRIBUTING.md`。
 5. **钩子设置**：`pip install -r requirements-dev.txt` 与 `git config core.hooksPath hooks`
 
 ## 关键配置文件

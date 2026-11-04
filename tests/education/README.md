@@ -41,7 +41,7 @@ python -u tests/education/test_semester.py                       # 单跑一个�
 
 ## fixture 陷阱（本套件新增的，通用的见 `.github/skills/headless-game-test/SKILL.md`）
 
-- 脚本从 `_bootstrap` 逐个导入用到的名字（含翻译函数 `_`），不用 `from _bootstrap import *`：星号导入带来的名字 pylint 与 mypy 都认不出。
+- 脚本从 `_bootstrap` 逐个导入用到的名字（含翻译函数 `_`），不用 `from _bootstrap import *`，因为 ruff 的 F403 规则会报出星号导入的那一行。
 - `behavior.start_time` 默认是公元 1 年，`get_class_period` 读的就是它——改游戏时间一律用 `set_time()`，它会同步全部角色。
 - 实行值计算会读 `assistant_services[8]`，fixture 要 `get_assistant_services_zero()`。
 - `TitleLineDraw / LittleTitleLineDraw` 的文字在 `title` 属性上，不在 `text`。

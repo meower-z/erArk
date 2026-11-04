@@ -3,18 +3,31 @@
 ## 准备
 
 ```bash
-pip install -r requirements-dev.txt   # 固定版本的 pyink、pylint、astroid、mypy，只用于开发
+pip install -r requirements-dev.txt   # 只用于开发。pyink 与 mypy 固定版本，ruff 不固定版本
 git config core.hooksPath hooks       # 启用仓库自带的 git 钩子
 ```
 
-提交时 `hooks/pre-commit` 用 `pyink --check` 检查暂存的 `.py` 文件（pyink 版本与 `requirements-dev.txt` 不一致时跳过并提示）。用 `git config erark.lintEngine <路径>` 指向一个可选的本机 lint 引擎（不随仓库提供）时，钩子就运行它，由它加上下面的棘轮检查。
+提交时 `hooks/pre-commit` 用 `pyink --check` 检查暂存的 `.py` 文件。装的 pyink 版本与 `requirements-dev.txt` 不一致时，钩子跳过这项检查并给出提示。本机 lint 引擎是可选的，不随仓库提供。用 `git config erark.lintEngine <路径>` 指向它以后，钩子改为运行它，由它做下面的棘轮检查。
 
 ## 代码风格
 
 - 格式：pyink，2 空格缩进，每行 80 列，引号随文件里的多数。在仓库根目录运行 `pyink .`。生成的 `Script/Config/config_def.py` 不参与格式化，也不参与下面的各项检查。
-- pylint：配置在 `.pylintrc`。函数参数最多 5 个，分支最多 12 个，局部变量最多 15 个，return 最多 6 个，语句最多 40 条；模块和函数都要有文档字符串，函数不分长短与名字；命名按配置里的规则。
+- ruff：配置在 `pyproject.toml` 的 `[tool.ruff]`。启用的规则列在 `[tool.ruff.lint]` 的 `select` 里。在仓库根目录运行 `ruff check --ignore-noqa` 时，受 git 跟踪的 `.py` 文件得到的报告与棘轮运行 ruff 时相同。报告里也有基线里记着的老问题。手动运行的 ruff 还会查没被 git 跟踪、也没被 `.gitignore` 忽略的 `.py` 文件。棘轮不查这些文件。
+- 行长：ruff 按显示宽度查行长，一个汉字算 2 列。ruff 的行长上限是 120 列。pyink 按 80 列排版。
+- 体量：函数参数最多 5 个，位置参数最多 5 个，分支最多 12 个，局部变量最多 15 个，return 最多 6 个，语句最多 40 条。
 - 模块长度：超过 300 行警告，超过 400 行算违规。
-- mypy：配置在 `pyproject.toml` 的 `[tool.mypy]`。
+- 文档字符串：模块和包（`__init__.py`）要有文档字符串，没有代码的文件也要有。公开的函数要有文档字符串。公开的类里的公开方法也要有。`__init__` 和 `__eq__` 这类前后都有双下划线的方法也算公开方法。类不要求文档字符串。写了的文档字符串不能是空的。下面这些不要求文档字符串：
+  - 名字以 `_` 开头的模块和包，以及其中的一切。前后都有双下划线的模块和包（如 `__main__.py`）不在此列。
+  - 名字以 `_` 开头的类里的方法。
+  - 名字以 `_` 开头的函数和方法。前后都有双下划线的方法不在此列。
+  - 嵌套在函数里的函数。
+  - 带 `@overload` 装饰器的函数，即 typing 的重载声明。
+  - 带 `@override` 装饰器的方法。
+  - 属性的 setter，即带 `@x.setter` 装饰器的方法（x 是属性名）。
+  - 模块定义了 `__all__` 时，没列进 `__all__` 的函数和类，以及这些类里的方法。
+- 命名：类名用大驼峰。函数名、参数名和函数里的变量名用小写加下划线。模块级的变量名不用小驼峰（如 `myValue`）。包名和包里的模块名用小写加下划线。实例方法的第一个参数叫 `self`。类方法的第一个参数叫 `cls`。
+- `# noqa`：棘轮运行 ruff 时带 `--ignore-noqa`，所以 `# noqa` 注释压不下棘轮报出的问题。已有 `# noqa` 注释的行上的问题记在基线里。不带 `--ignore-noqa` 运行时，ruff 不报这些注释压下的问题。
+- mypy：配置在 `pyproject.toml` 的 `[tool.mypy]`。棘轮查老模块时运行 `[tool.lint-ratchet.checkers.mypy]` 的 `argv`。棘轮查新模块时再加上同一张表里的 `strict_args`。老模块与新模块见下文。
 - 注释与文档字符串用中文。
 
 ## 棘轮与基线
