@@ -2,6 +2,7 @@
 # -*- coding: UTF-8 -*-
 """
 tk_game.py 与 tk.py 的测试：经 limited_run.run 启动、传下的种子与默认内存、证据目录检查、拒绝 web 模式的 checkout、与无头运行共用槽位、tk.py 选择要操作的实例、tk.py doctor 的内存检查；不启动游戏
+另有 tk.py 动作后何时截帧的测试，同样不启动游戏
 
 用法：
     python3 tools/verify/test_tk_game.py
@@ -15,6 +16,7 @@ import sys
 import tempfile
 import time
 import unittest
+from typing import Any
 from unittest import mock
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
@@ -294,6 +296,103 @@ class TkDoctor(unittest.TestCase):
     self.assertFalse(ok)
     self.assertTrue(line.startswith("FAIL"), line)
     self.assertIn("读不到", line)
+
+
+class TkCapture(unittest.TestCase):
+  """tk.py 动作后何时截帧：换掉 load_state、xdo、time、read_probe 与 shot 后运行 tk.main"""
+
+  CONFIRM = {"awaiting": ["0", "1"], "buttons": {"0": [8, 750], "1": [8, 780]}}
+  # 读档回调运行时的探针内容：「[000]读取 [001]删除 [002]返回」面板的等待列表与空的按钮表
+  LOADING = {"awaiting": ["0", "1", "2"], "buttons": {}}
+  DRAWING = {"awaiting": None, "buttons": {"阿米娅": [300, 100]}}
+  MAIN = {
+      "awaiting": ["阿米娅", "日常", "1", "1001"],
+      "buttons": {
+          "阿米娅": [300, 100],
+          "日常": [180, 780],
+          "1": [8, 910],
+          "1001": [8, 830],
+      },
+  }
+
+  def capture(
+      self, timeline: list[tuple[float, dict[str, Any]]], *argv: str
+  ) -> tuple[float, dict[str, Any]]:
+    """
+    以 argv 为命令行参数运行一次 tk.main。timeline 里 0 秒时的探针内容就是动作前的内容
+    参数：timeline (list[tuple[float, dict[str, Any]]]) 各段的开始秒数与探针内容，按开始秒数排序，第一段从 0 秒开始
+          argv (str) 依次传给 tk.py 的命令行参数，不含程序名
+    返回：tuple[float, dict[str, Any]] 截帧时的秒数与当时的探针内容
+    """
+    clock = [0.0]
+
+    def written(at: float) -> dict[str, Any]:
+      """at 秒时假探针最近一次写出的内容，ts 为写出时的秒数"""
+      ts = int(at / 0.3) * 0.3
+      content = [probe for start, probe in timeline if start <= ts][-1]
+      return {"input": [700, 1050], **content, "ts": ts}
+
+    def sleep(seconds: float) -> None:
+      """把假时钟推进 seconds 秒，不真的等待"""
+      clock[0] += seconds
+
+    captured = []
+
+    def shot(state: dict[str, Any], label: str) -> pathlib.Path:
+      """代替 tk.shot：记下截帧时的秒数与探针内容，返回帧路径而不生成文件"""
+      captured.append((clock[0], written(clock[0])))
+      return pathlib.Path(state["out"]) / "frames" / f"001-{label}.png"
+
+    tmpdir = tempfile.TemporaryDirectory()
+    self.addCleanup(tmpdir.cleanup)
+    fake_time = mock.Mock(
+        monotonic=lambda: clock[0], sleep=sleep, strftime=time.strftime
+    )
+    with (
+        mock.patch.object(sys, "argv", ["tk.py", *argv]),
+        mock.patch.object(
+            tk,
+            "load_state",
+            return_value={"out": tmpdir.name, "window": "11", "display": ":51"},
+        ),
+        mock.patch.object(tk, "xdo", return_value=""),
+        mock.patch.object(tk, "time", fake_time),
+        mock.patch.object(tk, "read_probe", lambda state: written(clock[0])),
+        mock.patch.object(tk, "shot", shot),
+        contextlib.redirect_stdout(io.StringIO()),
+    ):
+      tk.main()
+    return captured[0]
+
+  def test_slow_load(self) -> None:
+    """确认读档后 5.1 秒主场景才出现时，截到的是主场景，不是读档途中的状态"""
+    at, probe = self.capture(
+        [
+            (0.0, self.CONFIRM),
+            (0.6, self.LOADING),
+            (4.8, self.DRAWING),
+            (5.1, self.MAIN),
+        ],
+        "type",
+        "0",
+    )
+    self.assertEqual(probe["awaiting"], self.MAIN["awaiting"])
+    self.assertGreaterEqual(at, 5.1)
+
+  def test_screen_unchanged(self) -> None:
+    """探针内容一直与动作前相同时，tk.py type 在 5 秒内截帧"""
+    at, probe = self.capture([(0.0, self.CONFIRM)], "type", "0")
+    self.assertEqual(probe["awaiting"], self.CONFIRM["awaiting"])
+    self.assertLess(at, 5)
+
+  def test_scroll_hides_buttons(self) -> None:
+    """scroll up 后等待的按钮全部移出画面时，tk.py 仍在 2 秒内截帧"""
+    scrolled = {"awaiting": self.MAIN["awaiting"], "buttons": {}}
+    at, probe = self.capture(
+        [(0.0, self.MAIN), (0.6, scrolled)], "scroll", "up", "3"
+    )
+    self.assertEqual(probe["buttons"], {})
+    self.assertLess(at, 2)
 
 
 if __name__ == "__main__":
