@@ -4,7 +4,7 @@
 提供 CheckFailure 数据结构、检查项注册表与 register_check 装饰器，供各领域检查模块使用。
 """
 
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable
 
 
 class CheckFailure:
@@ -22,7 +22,7 @@ class CheckFailure:
       check_id: str,
       check_name: str,
       message: str,
-      involved_character_ids: Optional[List[int]] = None,
+      involved_character_ids: list[int] | None = None,
   ) -> None:
     """
     初始化静态检查失败记录
@@ -42,7 +42,7 @@ class CheckFailure:
     """ 检查项中文名称 """
     self.message: str = message
     """ 失败详情描述文本 """
-    self.involved_character_ids: List[int] = (
+    self.involved_character_ids: list[int] = (
         involved_character_ids if involved_character_ids is not None else []
     )
     """ 涉及本次失败的角色id列表 """
@@ -50,13 +50,13 @@ class CheckFailure:
 
 # 检查项注册表，键为检查项id，值为 (检查项中文名称, 检查函数) 二元组
 # 使用普通dict即可保持插入顺序（Python3.7+字典有序），保证日志中检查项按注册顺序输出
-_check_registry: Dict[str, Tuple[str, Callable[[], List[CheckFailure]]]] = {}
+_check_registry: dict[str, tuple[str, Callable[[], list[CheckFailure]]]] = {}
 
 
 def register_check(
     check_id: str, check_name: str
 ) -> Callable[
-    [Callable[[], List[CheckFailure]]], Callable[[], List[CheckFailure]]
+    [Callable[[], list[CheckFailure]]], Callable[[], list[CheckFailure]]
 ]:
   """
   检查项注册装饰器
@@ -71,8 +71,8 @@ def register_check(
   """
 
   def decorator(
-      func: Callable[[], List[CheckFailure]],
-  ) -> Callable[[], List[CheckFailure]]:
+      func: Callable[[], list[CheckFailure]],
+  ) -> Callable[[], list[CheckFailure]]:
     """
     参数:
         func (Callable[[], List[CheckFailure]]): 待注册的检查函数
@@ -96,7 +96,7 @@ def register_check(
   return decorator
 
 
-def get_all_checks() -> Dict[str, Tuple[str, Callable[[], List[CheckFailure]]]]:
+def get_all_checks() -> dict[str, tuple[str, Callable[[], list[CheckFailure]]]]:
   """
   参数:
       无
@@ -112,7 +112,7 @@ def make_failure(
     check_id: str,
     check_name: str,
     message: str,
-    involved_character_ids: Optional[List[int]] = None,
+    involved_character_ids: list[int] | None = None,
 ) -> CheckFailure:
   """
   参数:

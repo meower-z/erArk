@@ -1,7 +1,6 @@
 """Tk 窗口的鼠标与键盘事件监听，包含输入历史的上下翻查"""
 
 from tkinter import Event
-from typing import Optional
 from Script.Core import main_frame, py_cmd, game_type, cache_control
 
 wframe = main_frame.root
@@ -170,7 +169,7 @@ def set_wframe_up() -> None:
   cache.wframe_mouse.w_frame_lines_up = 1
 
 
-def mouse_check_push(event: Optional[Event] = None) -> None:
+def mouse_check_push(event: Event | None = None) -> None:
   """
   点击时现场判断落点是否命中指令按钮 tag，据此决定是否推进"按任意键继续"等待
   Keyword arguments:

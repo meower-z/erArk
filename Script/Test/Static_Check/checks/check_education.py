@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import math
-from typing import List, TypeGuard
+from typing import TypeGuard
 
 from Script.Core import cache_control
 from Script.Config import game_config
@@ -115,7 +115,7 @@ def _cells(
 
 
 @register_check("EDU-01", _NAMES["EDU-01"])
-def check_edu_01() -> List[CheckFailure]:
+def check_edu_01() -> list[CheckFailure]:
   """参数: 无；返回值: List[CheckFailure]；功能: 照料值须为有限非负数。"""
   cache = cache_control.cache
   failures = []
@@ -129,7 +129,7 @@ def check_edu_01() -> List[CheckFailure]:
 
 
 @register_check("EDU-02", _NAMES["EDU-02"])
-def check_edu_02() -> List[CheckFailure]:
+def check_edu_02() -> list[CheckFailure]:
   """参数: 无；返回值: List[CheckFailure]；功能: 性格倾向须为dict，键为0–3，值有限，允许负值与缺键。"""
   cache = cache_control.cache
   failures = []
@@ -155,7 +155,7 @@ def check_edu_02() -> List[CheckFailure]:
 
 
 @register_check("EDU-03", _NAMES["EDU-03"])
-def check_edu_03() -> List[CheckFailure]:
+def check_edu_03() -> list[CheckFailure]:
   """参数: 无；返回值: List[CheckFailure]；功能: 检查全角色妊娠与已有养成记录的胎教值及常量上限。"""
   cache = cache_control.cache
   failures = []
@@ -182,7 +182,7 @@ def check_edu_03() -> List[CheckFailure]:
 
 
 @register_check("EDU-04", _NAMES["EDU-04"])
-def check_edu_04() -> List[CheckFailure]:
+def check_edu_04() -> list[CheckFailure]:
   """参数: 无；返回值: List[CheckFailure]；功能: 出勤、缺课和翘课累计为非负整数，翘课不超过缺课。"""
   cache = cache_control.cache
   failures = []
@@ -208,7 +208,7 @@ def check_edu_04() -> List[CheckFailure]:
 
 
 @register_check("EDU-05", _NAMES["EDU-05"])
-def check_edu_05() -> List[CheckFailure]:
+def check_edu_05() -> list[CheckFailure]:
   """参数: 无；返回值: List[CheckFailure]；功能: 学期出勤、缺课基线须为非负整数且不超过对应累计。"""
   cache = cache_control.cache
   failures = []
@@ -232,7 +232,7 @@ def check_edu_05() -> List[CheckFailure]:
 
 
 @register_check("EDU-06", _NAMES["EDU-06"])
-def check_edu_06() -> List[CheckFailure]:
+def check_edu_06() -> list[CheckFailure]:
   """参数: 无；返回值: List[CheckFailure]；功能: 学期号为空列表或[整数年,季月]，不要求等于当前学期。"""
   cache = cache_control.cache
   failures = []
@@ -259,7 +259,7 @@ def check_edu_06() -> List[CheckFailure]:
 
 
 @register_check("EDU-07", _NAMES["EDU-07"])
-def check_edu_07() -> List[CheckFailure]:
+def check_edu_07() -> list[CheckFailure]:
   """参数: 无；返回值: List[CheckFailure]；功能: 校验成绩单年份、季月、出缺勤与整数百分比，超出历史上限只警示。"""
   cache = cache_control.cache
   failures = []
@@ -310,7 +310,7 @@ def check_edu_07() -> List[CheckFailure]:
 
 
 @register_check("EDU-08", _NAMES["EDU-08"])
-def check_edu_08() -> List[CheckFailure]:
+def check_edu_08() -> list[CheckFailure]:
   """参数: 无；返回值: List[CheckFailure]；功能: 全局课表按星期、节次存[能力id,教师id]，教师可为-1，不要求在场或在岗。"""
   cache = cache_control.cache
   schedule = getattr(
@@ -320,7 +320,7 @@ def check_edu_08() -> List[CheckFailure]:
     return []
   abilities = getattr(game_config, "config_ability", None)
   characters = getattr(cache, "character_data", None)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   for room, table in schedule.items():
     for key, cell in _cells(
         table, "EDU-08", None, f"class_schedule[{room!r}]", failures
@@ -349,10 +349,10 @@ def check_edu_08() -> List[CheckFailure]:
 
 
 @register_check("EDU-09", _NAMES["EDU-09"])
-def check_edu_09() -> List[CheckFailure]:
+def check_edu_09() -> list[CheckFailure]:
   """参数: 无；返回值: List[CheckFailure]；功能: 个人课表按课型检查场景名、娱乐配置id或岗位配置id。"""
   cache = cache_control.cache
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   for cid, growth in _growths(cache):
     for key, cell in _cells(
         getattr(growth, "selected_course", None),
@@ -412,10 +412,10 @@ def _check_slots(
 
 
 @register_check("EDU-10", _NAMES["EDU-10"])
-def check_edu_10() -> List[CheckFailure]:
+def check_edu_10() -> list[CheckFailure]:
   """参数: 无；返回值: List[CheckFailure]；功能: 校验模板slot和角色覆盖表，空模板合法。"""
   cache = cache_control.cache
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   templates = getattr(
       getattr(cache, "rhodes_island", None), "child_schedule_template", None
   )
@@ -439,7 +439,7 @@ def check_edu_10() -> List[CheckFailure]:
 
 
 @register_check("EDU-11", _NAMES["EDU-11"])
-def check_edu_11() -> List[CheckFailure]:
+def check_edu_11() -> list[CheckFailure]:
   """参数: 无；返回值: List[CheckFailure]；功能: 角色模板引用须为0或当前模板表内的键。"""
   cache = cache_control.cache
   templates = getattr(
@@ -460,7 +460,7 @@ def check_edu_11() -> List[CheckFailure]:
 
 
 @register_check("EDU-12", _NAMES["EDU-12"])
-def check_edu_12() -> List[CheckFailure]:
+def check_edu_12() -> list[CheckFailure]:
   """参数: 无；返回值: List[CheckFailure]；功能: 出缺勤去重标记须为空列表或[正整数日期序数,0–8节次]。"""
   cache = cache_control.cache
   failures = []

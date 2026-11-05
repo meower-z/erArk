@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-from typing import List
 
 from Script.Core import cache_control
 from Script.Config import game_config
@@ -17,7 +16,7 @@ if TYPE_CHECKING:
 
 
 @register_check("BIRTH-01", "生育开关")
-def check_birth_01() -> List[CheckFailure]:
+def check_birth_01() -> list[CheckFailure]:
   """参数: 无；返回值: List[CheckFailure]；功能: 生育开关覆盖配置键，值为0/1，多余键仅警示。"""
   cache = cache_control.cache
   setting = getattr(cache, "all_system_setting", None)
@@ -69,7 +68,7 @@ def check_birth_01() -> List[CheckFailure]:
 
 
 @register_check("BIRTH-02", "已关闭卵生存量")
-def check_birth_02() -> List[CheckFailure]:
+def check_birth_02() -> list[CheckFailure]:
   """参数: 无；返回值: List[CheckFailure]；功能: 按原始种族生育方式检查关闭后的卵、无壳排卵机会与博士持卵索引，不检查胎数。"""
   cache = cache_control.cache
   values = getattr(
@@ -190,7 +189,7 @@ def _check_cook_memory(
 
 
 @register_check("COOK-01", "烹饪模式记忆")
-def check_cook_01() -> List[CheckFailure]:
+def check_cook_01() -> list[CheckFailure]:
   """参数: 无；返回值: List[CheckFailure]；功能: 烹饪模式字典只允许0–2页签，模式为0或1，允许缺键。"""
   cache = cache_control.cache
   return _check_cook_memory(
@@ -204,7 +203,7 @@ def check_cook_01() -> List[CheckFailure]:
 
 
 @register_check("COOK-02", "制作份数记忆")
-def check_cook_02() -> List[CheckFailure]:
+def check_cook_02() -> list[CheckFailure]:
   """参数: 无；返回值: List[CheckFailure]；功能: 制作份数字典只允许0–2页签，份数为1–10整数。"""
   cache = cache_control.cache
   return _check_cook_memory(

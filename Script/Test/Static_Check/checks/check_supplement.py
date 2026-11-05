@@ -16,7 +16,6 @@ MO-03、NO-01、NO-03、NO-05、PO-02）。各检查以文档字符串完整表�
 from __future__ import annotations
 
 from types import FunctionType
-from typing import List, Set
 
 from Script.Core import cache_control, get_text
 from Script.Config import game_config
@@ -64,7 +63,7 @@ def _eff(ri: game_type.Rhodes_Island, facility_cid: int) -> int | None:
     return None
 
 
-def _all_current_effect_cids(ri: game_type.Rhodes_Island) -> List[int]:
+def _all_current_effect_cids(ri: game_type.Rhodes_Island) -> list[int]:
   """
   参数:
       ri: cache.rhodes_island 罗德岛数据对象
@@ -92,7 +91,7 @@ def _all_current_effect_cids(ri: game_type.Rhodes_Island) -> List[int]:
 
 
 @register_check("SUPP-01", "供电策略合法性")
-def check_power_supply_strategy_validity() -> List[CheckFailure]:
+def check_power_supply_strategy_validity() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -139,7 +138,7 @@ def check_power_supply_strategy_validity() -> List[CheckFailure]:
 
 
 @register_check("SUPP-02", "生活娱乐/科研/士兵/访客上限派生一致")
-def check_facility_derived_max_consistency() -> List[CheckFailure]:
+def check_facility_derived_max_consistency() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -193,7 +192,7 @@ def check_facility_derived_max_consistency() -> List[CheckFailure]:
 
 
 @register_check("SUPP-03", "设施开放派生单调覆盖")
-def check_facility_open_monotonic_coverage() -> List[CheckFailure]:
+def check_facility_open_monotonic_coverage() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -250,7 +249,7 @@ def check_facility_open_monotonic_coverage() -> List[CheckFailure]:
 
 
 @register_check("SUPP-04", "时停无意识值跨名单残留")
-def check_time_stop_unconscious_survives_off_list() -> List[CheckFailure]:
+def check_time_stop_unconscious_survives_off_list() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -264,7 +263,7 @@ def check_time_stop_unconscious_survives_off_list() -> List[CheckFailure]:
   if cache is None or getattr(cache, "time_stop_mode", False):
     return []
   character_data = getattr(cache, "character_data", {}) or {}
-  npc_id_got: Set[int] = getattr(cache, "npc_id_got", set()) or set()
+  npc_id_got: set[int] = getattr(cache, "npc_id_got", set()) or set()
   failures = []
   for cid, c in character_data.items():
     sp_flag = getattr(c, "sp_flag", None)
@@ -286,7 +285,7 @@ def check_time_stop_unconscious_survives_off_list() -> List[CheckFailure]:
 
 
 @register_check("SUPP-05", "愤怒值下界")
-def check_angry_point_lower_bound() -> List[CheckFailure]:
+def check_angry_point_lower_bound() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -314,7 +313,7 @@ def check_angry_point_lower_bound() -> List[CheckFailure]:
 
 
 @register_check("SUPP-06", "模板对象别名")
-def check_no_template_object_aliasing() -> List[CheckFailure]:
+def check_no_template_object_aliasing() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -362,7 +361,7 @@ def check_no_template_object_aliasing() -> List[CheckFailure]:
 
 @register_check("SUPP-07", "仓储扩展模块使用数非负")
 def check_used_extra_warehouse_capacity_module_non_negative() -> (
-    List[CheckFailure]
+    list[CheckFailure]
 ):
   """
   参数: 无
@@ -393,7 +392,7 @@ def check_used_extra_warehouse_capacity_module_non_negative() -> (
 
 
 @register_check("SUPP-08", "办公室场景引用合法")
-def check_officeroom_reference_valid() -> List[CheckFailure]:
+def check_officeroom_reference_valid() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表

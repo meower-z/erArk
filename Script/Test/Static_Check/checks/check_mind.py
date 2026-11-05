@@ -17,7 +17,7 @@
 
 from __future__ import annotations
 
-from typing import List, Optional, TypeGuard
+from typing import TypeGuard
 
 from Script.Core import cache_control
 from Script.Design import map_handle
@@ -132,7 +132,7 @@ def _behavior_id(chara: object) -> str:
   return getattr(getattr(chara, "behavior", None), "behavior_id", "?")
 
 
-def _scene_key(position: object) -> Optional[str]:
+def _scene_key(position: object) -> str | None:
   """
   参数: position 角色/玩家的position字段
   返回值: Optional[str] 场景key字符串；position不是"全字符串的list"形状时返回None
@@ -161,7 +161,7 @@ def _num(x: object) -> TypeGuard[int | float]:
 
 
 @register_check("MIND-01", "时停开启时玩家处于时停无意识")
-def check_time_stop_player_unconscious() -> List[CheckFailure]:
+def check_time_stop_player_unconscious() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -191,7 +191,7 @@ def check_time_stop_player_unconscious() -> List[CheckFailure]:
 
 
 @register_check("MIND-02", "时停开启时已登场干员处于时停无意识")
-def check_time_stop_npc_unconscious() -> List[CheckFailure]:
+def check_time_stop_npc_unconscious() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -235,7 +235,7 @@ def check_time_stop_npc_unconscious() -> List[CheckFailure]:
 
 
 @register_check("MIND-03", "时停关闭后不得残留时停无意识")
-def check_time_stop_off_no_residual() -> List[CheckFailure]:
+def check_time_stop_off_no_residual() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -269,7 +269,7 @@ def check_time_stop_off_no_residual() -> List[CheckFailure]:
 
 
 @register_check("MIND-04", "时停开启需要玩家持有窄域时停素质")
-def check_time_stop_requires_talent_316() -> List[CheckFailure]:
+def check_time_stop_requires_talent_316() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -302,7 +302,7 @@ def check_time_stop_requires_talent_316() -> List[CheckFailure]:
 
 
 @register_check("MIND-05", "时停搬运/自由活动字段在正常游戏中恒为零")
-def check_time_stop_carry_free_fields_zero() -> List[CheckFailure]:
+def check_time_stop_carry_free_fields_zero() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -337,7 +337,7 @@ def check_time_stop_carry_free_fields_zero() -> List[CheckFailure]:
 
 
 @register_check("MIND-06", "时停开启时不应残留时停解放标记")
-def check_time_stop_no_residual_release_flag() -> List[CheckFailure]:
+def check_time_stop_no_residual_release_flag() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -382,7 +382,7 @@ def check_time_stop_no_residual_release_flag() -> List[CheckFailure]:
 
 
 @register_check("MIND-07", "被搬运的干员必须存在且与玩家同地点")
-def check_carry_target_valid_and_colocated() -> List[CheckFailure]:
+def check_carry_target_valid_and_colocated() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -432,7 +432,7 @@ def check_carry_target_valid_and_colocated() -> List[CheckFailure]:
 
 
 @register_check("MIND-08", "催眠深度值域")
-def check_hypnosis_degree_bound() -> List[CheckFailure]:
+def check_hypnosis_degree_bound() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -464,7 +464,7 @@ def check_hypnosis_degree_bound() -> List[CheckFailure]:
 
 
 @register_check("MIND-09", "催眠类无意识状态需要对应的催眠深度")
-def check_hypnosis_type_degree_threshold() -> List[CheckFailure]:
+def check_hypnosis_type_degree_threshold() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -501,7 +501,7 @@ def check_hypnosis_type_degree_threshold() -> List[CheckFailure]:
 
 
 @register_check("MIND-10", "被催眠素质不早于深度阈值")
-def check_hypnosis_talent_degree_order() -> List[CheckFailure]:
+def check_hypnosis_talent_degree_order() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -537,7 +537,7 @@ def check_hypnosis_talent_degree_order() -> List[CheckFailure]:
 
 
 @register_check("MIND-11", "被催眠素质需要玩家持有对应前置素质")
-def check_hypnosis_talent_requires_pl_prereq() -> List[CheckFailure]:
+def check_hypnosis_talent_requires_pl_prereq() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -576,7 +576,7 @@ def check_hypnosis_talent_requires_pl_prereq() -> List[CheckFailure]:
 
 
 @register_check("MIND-12", "玩家催眠/时停素质链自洽")
-def check_pl_talent_chain_consistency() -> List[CheckFailure]:
+def check_pl_talent_chain_consistency() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -613,7 +613,7 @@ def check_pl_talent_chain_consistency() -> List[CheckFailure]:
 
 
 @register_check("MIND-13", "三种催眠行为模式互斥")
-def check_hypnosis_behavior_mode_exclusive() -> List[CheckFailure]:
+def check_hypnosis_behavior_mode_exclusive() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -647,7 +647,7 @@ def check_hypnosis_behavior_mode_exclusive() -> List[CheckFailure]:
 
 
 @register_check("MIND-14", "体控无意识必须由木头人或逆推支撑")
-def check_body_control_unconscious_needs_mode() -> List[CheckFailure]:
+def check_body_control_unconscious_needs_mode() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -683,7 +683,7 @@ def check_body_control_unconscious_needs_mode() -> List[CheckFailure]:
 
 
 @register_check("MIND-15", "心控无意识必须有角色扮演项")
-def check_mind_control_unconscious_needs_roleplay() -> List[CheckFailure]:
+def check_mind_control_unconscious_needs_roleplay() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -716,7 +716,7 @@ def check_mind_control_unconscious_needs_roleplay() -> List[CheckFailure]:
 
 
 @register_check("MIND-16", "角色扮演列表的形状与内容合法")
-def check_roleplay_list_shape() -> List[CheckFailure]:
+def check_roleplay_list_shape() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -768,7 +768,7 @@ def check_roleplay_list_shape() -> List[CheckFailure]:
 
 
 @register_check("MIND-17", "体控/心控子项需要「被完全催眠」素质")
-def check_body_mind_control_sub_item_requires_talent_73() -> List[CheckFailure]:
+def check_body_mind_control_sub_item_requires_talent_73() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -814,7 +814,7 @@ def check_body_mind_control_sub_item_requires_talent_73() -> List[CheckFailure]:
 
 
 @register_check("MIND-18", "空气催眠者必须与玩家同处已记录的催眠地点")
-def check_air_hypnosis_colocated_with_anchor() -> List[CheckFailure]:
+def check_air_hypnosis_colocated_with_anchor() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -856,7 +856,7 @@ def check_air_hypnosis_colocated_with_anchor() -> List[CheckFailure]:
 
 
 @register_check("MIND-19", "空气催眠地点必须处于锁门状态")
-def check_air_hypnosis_scene_locked() -> List[CheckFailure]:
+def check_air_hypnosis_scene_locked() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -900,7 +900,7 @@ def check_air_hypnosis_scene_locked() -> List[CheckFailure]:
 
 
 @register_check("MIND-20", "空气催眠地点记录的形状可解析")
-def check_air_hypnosis_anchor_shape() -> List[CheckFailure]:
+def check_air_hypnosis_anchor_shape() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -942,7 +942,7 @@ def check_air_hypnosis_anchor_shape() -> List[CheckFailure]:
 
 
 @register_check("MIND-21", "玩家当前催眠类型合法且已解锁")
-def check_pl_hypnosis_type_valid() -> List[CheckFailure]:
+def check_pl_hypnosis_type_valid() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -983,7 +983,7 @@ def check_pl_hypnosis_type_valid() -> List[CheckFailure]:
 
 
 @register_check("MIND-22", "无意识状态取值域")
-def check_unconscious_h_range() -> List[CheckFailure]:
+def check_unconscious_h_range() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -1009,7 +1009,7 @@ def check_unconscious_h_range() -> List[CheckFailure]:
 
 
 @register_check("MIND-23", "睡眠行为与角色状态ID对齐")
-def check_sleep_behavior_state_alignment() -> List[CheckFailure]:
+def check_sleep_behavior_state_alignment() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -1040,7 +1040,7 @@ def check_sleep_behavior_state_alignment() -> List[CheckFailure]:
 
 
 @register_check("MIND-24", "熟睡值值域")
-def check_sleep_point_bound() -> List[CheckFailure]:
+def check_sleep_point_bound() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -1071,7 +1071,7 @@ def check_sleep_point_bound() -> List[CheckFailure]:
 
 
 @register_check("MIND-25", "睡眠无意识必须依附睡眠行为或装睡")
-def check_sleep_unconscious_needs_sleep_or_pretend() -> List[CheckFailure]:
+def check_sleep_unconscious_needs_sleep_or_pretend() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -1104,7 +1104,7 @@ def check_sleep_unconscious_needs_sleep_or_pretend() -> List[CheckFailure]:
 
 
 @register_check("MIND-28", "时停高潮计数结构合法")
-def check_time_stop_orgasm_count_shape() -> List[CheckFailure]:
+def check_time_stop_orgasm_count_shape() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -1136,7 +1136,7 @@ def check_time_stop_orgasm_count_shape() -> List[CheckFailure]:
 
 
 @register_check("MIND-29", "睡眠计划时分字段合法")
-def check_sleep_plan_time_shape() -> List[CheckFailure]:
+def check_sleep_plan_time_shape() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]
@@ -1178,7 +1178,7 @@ def check_sleep_plan_time_shape() -> List[CheckFailure]:
 
 
 @register_check("MIND-30", "装睡标记在当前版本不应出现")
-def check_pretend_sleep_should_be_unreachable() -> List[CheckFailure]:
+def check_pretend_sleep_should_be_unreachable() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]

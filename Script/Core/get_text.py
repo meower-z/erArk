@@ -4,7 +4,7 @@
 import gettext
 import os
 from types import FunctionType
-from typing import Dict, List, Optional, cast
+from typing import cast
 from Script.Config import normal_config
 
 po_data = os.path.join("data", "po")
@@ -18,7 +18,7 @@ now_language = (
 # print(now_language)
 
 # 创建一个字典来存储原始字符串和它们的翻译
-translation_dict: Dict[str, str] = {}
+translation_dict: dict[str, str] = {}
 
 # 可能每种语言都有多个.mo文件，这里是.mo文件的名称列表
 mo_files_per_language = {
@@ -29,8 +29,8 @@ mo_files_per_language = {
 
 # 接受一个语言和对应的.mo文件列表，然后为这些文件创建一个GNUTranslations实例链
 def create_translation_chain(
-    language: str, mo_files: List[str]
-) -> Optional[gettext.GNUTranslations]:
+    language: str, mo_files: list[str]
+) -> gettext.GNUTranslations | None:
   """
   按顺序加载指定语言的 .mo 文件，第一个加载到的作为主翻译，其余依次加为它的回退翻译，不存在的 .mo 文件跳过
   Keyword arguments:

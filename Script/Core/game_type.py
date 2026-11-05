@@ -2,7 +2,7 @@
 
 import uuid
 from uuid import UUID
-from typing import List, Dict, Set, Tuple, Any, Optional
+from typing import Tuple, Any
 import datetime
 
 
@@ -45,7 +45,7 @@ class NpcTem:
     """ npc性别 """
     # self.Age: str = ""
     # """ npc年龄模板 """
-    self.Position: List[int] = []
+    self.Position: list[int] = []
     """ npc出生位置(已废弃) """
     self.AdvNpc: int = 0
     """ 剧情npc校验 """
@@ -56,15 +56,15 @@ class NpcTem:
     # self.Chest: int = 0
     # """ 罩杯模板 """
     # 以下为新加
-    self.Favorability: Dict[int, int] = {0: 0}
+    self.Favorability: dict[int, int] = {0: 0}
     """ 好感度模板 """
     self.Trust: int = 0
     """ 信赖度模板 """
-    self.Ability: Dict[int, int] = {}
+    self.Ability: dict[int, int] = {}
     """ 能力预设 """
-    self.Experience: Dict[int, int] = {}
+    self.Experience: dict[int, int] = {}
     """ 经验预设 """
-    self.Juel: Dict[int, int] = {}
+    self.Juel: dict[int, int] = {}
     """ 宝珠预设 """
     self.Profession: int = 0
     """ 职业预设 """
@@ -74,7 +74,7 @@ class NpcTem:
     """ 势力预设 """
     self.Birthplace: int = 0
     """ 出生地预设 """
-    self.Talent: Dict[int, int] = {}
+    self.Talent: dict[int, int] = {}
     """ 素质预设 """
     self.Cloth: list = []
     """ 服装预设 """
@@ -307,7 +307,7 @@ class DIRTY:
     """ 阴茎的污浊属性 [semen精液, blood处子血] """
     self.absorbed_total_semen: int = 0
     """ 累计吸收的精液总量，int类 """
-    self.condom_decoration: Dict[tuple, List[int]] = {}
+    self.condom_decoration: dict[tuple, list[int]] = {}
     """ 挂在本角色身上作装饰的用过的避孕套
         键为(部位类型, 部位cid)元组：部位类型 0=身体（仅头发0可用），1=服装部位
         值为列表，每个元素为该避孕套内的精液量(ml) """
@@ -337,7 +337,7 @@ class PREGNANCY:
     """ 无意识妊娠flag，如果进行过有意识下的H就会被置为False """
     self.lactation_flag: bool = False
     """ 涨奶标记 """
-    self.eggs: Dict[int, Dict] = {}
+    self.eggs: dict[int, dict] = {}
     """ 带壳卵生角色排出的卵，键为卵编号（自增，取next_egg_id），值为卵数据字典：
             lay_time: datetime.datetime 排出时间（排卵日当天）
             identified: bool 是否已鉴定（未鉴定不可进入孵化）
@@ -464,9 +464,9 @@ class RELATIONSHIP:
     """ 父亲id """
     self.mother_id: int = -1
     """ 母亲id """
-    self.child_id_list: List = []
+    self.child_id_list: list = []
     """ 孩子id列表 """
-    self.firend_id_list: List = []
+    self.firend_id_list: list = []
     """ 朋友id列表 """
     self.birthplace: int = 0
     """ 出生地 """
@@ -502,17 +502,17 @@ class CLOTH:
   # 靴子低筒不过小腿肚，中筒过小腿肚，高筒过膝盖
   def __init__(self) -> None:
     """初始化角色服装数据对象"""
-    self.clothing_tem: List = []
+    self.clothing_tem: list = []
     """ 角色个人服装模板 编号"""
-    self.cloth_wear: Dict[int, List] = {}
+    self.cloth_wear: dict[int, list] = {}
     """ 角色穿着的服装 部位:衣服id"""
-    self.cloth_off: Dict[int, List] = {}
+    self.cloth_off: dict[int, list] = {}
     """ 角色脱下的服装 部位:衣服id"""
-    self.cloth_locker_in_shower: Dict[int, List] = {}
+    self.cloth_locker_in_shower: dict[int, list] = {}
     """ 角色放在大浴场衣柜里的服装 部位:衣服id"""
-    self.cloth_locker_in_dormitory: Dict[int, List] = {}
+    self.cloth_locker_in_dormitory: dict[int, list] = {}
     """ 角色放在宿舍衣柜里的服装 部位:衣服id"""
-    self.cloth_see: Dict[int, bool] = {}
+    self.cloth_see: dict[int, bool] = {}
     """ 角色穿着的服装能否被看见 部位:能否"""
     self.stolen_panties_in_unconscious: bool = False
     """ 角色在无意识中被偷走了内裤 """
@@ -581,19 +581,19 @@ class BODY_H_STATE:
     """ 刚才性交体位，仅博士有的数据，在姿势切换时记录，int，-1为无体位，1正常2后背3对面骑乘4背面骑乘5对面座6背面座7对面立8背面立9对面抱10背面抱11对面卧12背面卧 """
     self.current_womb_sex_position: int = 0
     """ 当前子宫性交位置，仅博士有的数据，int，0为未插入，1为子宫口插入，2为子宫奸"""
-    self.orgasm_level: Dict[int, int] = {}
+    self.orgasm_level: dict[int, int] = {}
     """ 高潮程度记录，部位id:前部位快感等级 """
-    self.orgasm_count: Dict[int, list] = {}
+    self.orgasm_count: dict[int, list] = {}
     """ 本次H里各部位的高潮次数计数，身体部位编号int:[当次计数int，总次计数int] """
-    self.orgasm_edge_count: Dict[int, int] = {}
+    self.orgasm_edge_count: dict[int, int] = {}
     """ 绝顶寸止次数 """
-    self.time_stop_orgasm_count: Dict[int, int] = {}
+    self.time_stop_orgasm_count: dict[int, int] = {}
     """ 时停中绝顶次数 """
-    self.extra_orgasm_feel: Dict[int, int] = {}
+    self.extra_orgasm_feel: dict[int, int] = {}
     """ 额外高潮快感记录，用于在10级快感后的额外高潮 """
     self.extra_orgasm_count: int = 0
     """ 额外高潮次数，用于在10级快感后的额外高潮 """
-    self.plural_orgasm_set: Set = set()
+    self.plural_orgasm_set: set = set()
     """ 多重高潮部位数据集合 """
     self.endure_not_shot_count: int = 0
     """ 忍住不射次数 """
@@ -605,7 +605,7 @@ class BODY_H_STATE:
     """ 当前为时停解放状态 """
     self.condom_info_show_flag: bool = False
     """ 避孕套信息输出标记 """
-    self.condom_count: List = [0, 0]
+    self.condom_count: list = [0, 0]
     """ 已使用的避孕套计数，[0总个数，1总精液量] """
     self.used_semen_energy_agent: bool = False
     """ 已使用精液精力剂，使下次射精量增加 """
@@ -648,13 +648,13 @@ class FIRST_RECORD:
     """ 初吻部位位置 -1为无，1为阴茎 """
     self.first_kiss_time: datetime.datetime = datetime.datetime(1, 1, 1)
     """ 初吻时间 """
-    self.first_kiss_place: List[str] = ["0"]
+    self.first_kiss_place: list[str] = ["0"]
     """ 初吻地点 """
     self.first_sex_id: int = -1
     """ 处女对象 -1为无（玩家童贞专用，NPC的V破处记录在first_part_sex_dict[6]） """
     self.first_sex_time: datetime.datetime = datetime.datetime(1, 1, 1)
     """ 处女时间（玩家童贞专用） """
-    self.first_sex_place: List[str] = ["0"]
+    self.first_sex_place: list[str] = ["0"]
     """ 处女地点（玩家童贞专用） """
     self.first_sex_posture: str = ""
     """ 处女姿势（玩家童贞专用） """
@@ -728,7 +728,7 @@ class ACTION_INFO:
     """ 角色上次有意识H的时间 """
     self.last_unconscious_h_time: datetime.datetime = datetime.datetime(1, 1, 1)
     """ 角色上次无意识H的时间 """
-    self.social_contact_last_time: Dict[int, datetime.datetime] = {}
+    self.social_contact_last_time: dict[int, datetime.datetime] = {}
     """ 指定角色最后与自己社交的时间 """
     self.sleep_time: datetime.datetime = datetime.datetime(1, 1, 1)
     """ 角色上次睡觉时间 """
@@ -742,7 +742,7 @@ class ACTION_INFO:
     """ 角色计划睡觉的时间，[0时,1分] """
     self.wake_time: datetime.datetime = datetime.datetime(1, 1, 1)
     """ 角色醒来时间 """
-    self.social_contact_last_cut_down_time: Dict[int, datetime.datetime] = {}
+    self.social_contact_last_cut_down_time: dict[int, datetime.datetime] = {}
     """ 指定角色上次扣除好感时间 """
     self.h_interrupt: int = 0
     """ 角色H被打断 """
@@ -754,7 +754,7 @@ class ACTION_INFO:
     """ 角色退房时间 """
     self.eat_food_restaurant: int = -1
     """ 要去吃饭的餐厅，见Restaurant.csv """
-    self.ask_group_sex_refuse_chara_id_list: List[int] = []
+    self.ask_group_sex_refuse_chara_id_list: list[int] = []
     """ 拒绝群P的角色id列表 """
     self.ask_close_door_flag: bool = False
     """ 询问当前地点是否关门的标记，true的话则已询问过，每次玩家移动时重置 """
@@ -765,18 +765,18 @@ class ACTION_INFO:
     self.health_check_today: int = 0
     """ 角色今天体检的时间，0不需要，1上午，2下午，3新干员立刻体检 """
     # 两项类型不同的定长列表（存档里就是列表），list 无法逐项标注类型，故用 Any
-    self.interacting_character_end_info: List[Any] = [
+    self.interacting_character_end_info: list[Any] = [
         -1,
         datetime.datetime(1, 1, 1),
     ]
     """ 正在对自己进行交互的对方角色信息，0对方角色id，1对方行动结束时间 """
-    self.past_move_position_list: List = []
+    self.past_move_position_list: list = []
     """ 角色的过去移动位置记录，list类型，最大长度为10 """
     self.last_gift_time: datetime.datetime = datetime.datetime(1, 1, 1)
     """ 角色上次被赠送好感礼物的时间 """
     self.day_first_shoot_semen: bool = True
     """ 角色睡醒后第一发精液，True为未射精，False为已射精 """
-    self.find_another_toilet: List = []
+    self.find_another_toilet: list = []
     """ 角色是否需要找一个非当前区块的厕所，需要的话则记录在这里 """
     self.carry_chara_id: int = 0
     """ 正在搬运的角色id """
@@ -922,7 +922,7 @@ class UnnormalFlagMask:
     """
     return (self._mask & mask) == (mask & self.ALL_BITS)
 
-  def set_mask(self, mask: int, known_bits: Optional[int] = None) -> None:
+  def set_mask(self, mask: int, known_bits: int | None = None) -> None:
     """
     整体写入位掩码与已知位，超出有效位的部分被丢弃
     Keyword arguments:
@@ -953,7 +953,7 @@ class UnnormalFlagMask:
     """
     return self._known_bits
 
-  def to_dict(self) -> Dict[int, bool]:
+  def to_dict(self) -> dict[int, bool]:
     """
     把全部异常位转成字典
     Return arguments:
@@ -1118,9 +1118,9 @@ class CHARA_ENTERTAINMENT:
     """ 角色归还当前阅读书籍的可能性比例 """
     self.board_game_settle_data: list = [0, 0]
     """ 桌游结算用数据，0桌游类型(0无，1五子棋)，1AI难度(0最简单，越高越难) """
-    self.read_book_progress: Dict[int, int] = {}
+    self.read_book_progress: dict[int, int] = {}
     """ 已阅读书籍进度记录，int键为书籍编号，int值为阅读进度，100为阅读完毕 """
-    self.borrow_book_history: List[Dict[str, Any]] = []
+    self.borrow_book_history: list[dict[str, Any]] = []
     """ 借书历史记录，每个记录包含：book_id, book_name, borrow_time, return_time, total_read_count """
 
 
@@ -1129,35 +1129,35 @@ class PLAYER_COLLECTION:
 
   def __init__(self) -> None:
     """初始化玩家收集品对象"""
-    self.collection_bonus: Dict[int, bool] = {}
+    self.collection_bonus: dict[int, bool] = {}
     """ 收藏品的解锁奖励 """
-    self.token_list: Dict[int, bool] = {}
+    self.token_list: dict[int, bool] = {}
     """ 获得的NPC信物 """
-    self.first_panties: Dict[int, str] = {}
+    self.first_panties: dict[int, str] = {}
     """ 获得的处子血胖次 """
-    self.npc_panties: Dict[int, list] = {}
+    self.npc_panties: dict[int, list] = {}
     """ 获得的角色胖次 """
-    self.npc_panties_tem: Dict[int, list] = {}
+    self.npc_panties_tem: dict[int, list] = {}
     """ 临时获得的角色胖次 """
-    self.npc_socks: Dict[int, list] = {}
+    self.npc_socks: dict[int, list] = {}
     """ 获得的角色袜子 """
-    self.npc_socks_tem: Dict[int, list] = {}
+    self.npc_socks_tem: dict[int, list] = {}
     """ 临时获得的角色袜子 """
-    self.eqip_token: List = [1, []]
+    self.eqip_token: list = [1, []]
     """ 装备的信物，0可装备数量int，1已装备信物的干员id列表list """
-    self.milk_total: Dict[int, int] = {}
+    self.milk_total: dict[int, int] = {}
     """ 收集的各角色总乳汁量，单位毫升 """
-    self.urine_total: Dict[int, int] = {}
+    self.urine_total: dict[int, int] = {}
     """ 收集的各角色总圣水量，单位毫升 """
-    self.used_condoms: List[int] = []
+    self.used_condoms: list[int] = []
     """ 用过的避孕套存量池，每个元素为该避孕套内的精液量(ml)，下一次H开始时清零 """
-    self.held_eggs: Dict[int, tuple] = {}
+    self.held_eggs: dict[int, tuple] = {}
     """ 玩家临时持有的卵（从被监禁角色处拿走的未鉴定卵），仅为索引数据：
             键为持有编号（自增，取next_held_egg_id），值为(角色id, 卵编号)元组，
             指向该角色pregnancy.eggs中的详细数据；鉴定后索引即消耗删除 """
     self.next_held_egg_id: int = 0
     """ 持有编号自增计数器 """
-    self.soft_eggs: Dict[int, Dict] = {}
+    self.soft_eggs: dict[int, dict] = {}
     """ 当前所有无壳卵生角色排出的体外无壳卵，键为卵编号（自增，取next_soft_egg_id），值为卵数据字典：
             mother_id: int 排出该卵的角色id
             lay_time: datetime.datetime 排出时间（自此起满1小时进行受精判定）
@@ -1173,9 +1173,9 @@ class ACHIEVEMENT:
 
   def __init__(self) -> None:
     """初始化成就对象"""
-    self.achievement_dict: Dict[int, bool] = {}
+    self.achievement_dict: dict[int, bool] = {}
     """ 成就字典，键为成就编号，值为是否完成 """
-    self.buy_item_count_list: List[int] = []
+    self.buy_item_count_list: list[int] = []
     """ 购买过道具种类列表 """
     self.field_commission_count: int = 0
     """ 累积完成的外勤委托数量 """
@@ -1197,21 +1197,21 @@ class ACHIEVEMENT:
     """ 累积赠送的礼物数量 """
     self.health_check_count: int = 0
     """ 累积进行的身体检查人数 """
-    self.body_report_chara_count_list: List[int] = []
+    self.body_report_chara_count_list: list[int] = []
     """ 出具过身体检查报告的干员id列表 """
     self.aromatherapy_count: int = 0
     """ 累积对别人进行香薰疗愈的次数 """
-    self.visited_nation_list: List[int] = []
+    self.visited_nation_list: list[int] = []
     """ 累积去过的国家id列表 """
-    self.group_sex_record: Dict[int, list] = {}
+    self.group_sex_record: dict[int, list] = {}
     """ 群交记录，1为对群交中被射精的干员的id列表，2为群交中绝顶的干员id列表 """
-    self.hidden_sex_record: Dict[int, int] = {}
+    self.hidden_sex_record: dict[int, int] = {}
     """ 隐奸记录，1为隐奸模式，2为在场其他干员人数，3为射精次数，4为隐奸干员绝顶次数 """
-    self.exhibitionism_sex_record: Dict[int, int] = {}
+    self.exhibitionism_sex_record: dict[int, int] = {}
     """ 露出记录，1为露出模式，2为在场其他干员人数，3为射精次数，4为露出干员绝顶次数 """
-    self.sleep_sex_record: Dict[int, int] = {}
+    self.sleep_sex_record: dict[int, int] = {}
     """ 睡奸记录，1为睡奸模式0正常1装睡，2为射精次数，3为被睡奸干员绝顶次数 """
-    self.drunk_sex_record: Dict[int, int] = {}
+    self.drunk_sex_record: dict[int, int] = {}
     """ 醉奸记录，1为醉奸模式0正常1装醉，2为射精次数，3为被醉奸干员绝顶次数 """
     self.h_with_daughter_count: int = 0
     """ 与女儿乱伦H的次数 """
@@ -1236,7 +1236,7 @@ class PLAYER_ABILITY:
     """ 今日已消耗的理智值 """
     self.hypnosis_type: int = 0
     """ 催眠类型 """
-    self.air_hypnosis_position: List[str] | str = ""
+    self.air_hypnosis_position: list[str] | str = ""
     """ 空气催眠地点 """
     self.carry_chara_id_in_time_stop: int = 0
     """ 时停中正在搬运的角色id，已废弃，由 action_info.carry_chara_id 代替 """
@@ -1271,11 +1271,11 @@ class Behavior:
     """ 行为持续时间(单位分钟) """
     self.behavior_id: str = "share_blankly"
     """ 行为id """
-    self.move_target: List[str] = []
+    self.move_target: list[str] = []
     """ 移动行为的目标坐标 """
-    self.move_src: List[str] = []
+    self.move_src: list[str] = []
     """ 移动行为的出发坐标 """
-    self.move_final_target: List[str] = []
+    self.move_final_target: list[str] = []
     """ 移动行为的最终目标坐标 """
     self.target_food: Food = Food()
     """ 行为的食物对象 """
@@ -1333,14 +1333,14 @@ class Map:
     """ 地图路径 """
     self.map_name: str = ""
     """ 地图名字 """
-    self.path_edge: Dict[str, Dict[str, int]] = {}
+    self.path_edge: dict[str, dict[str, int]] = {}
     """
         地图下场景通行路径
         场景id:可直达场景id:移动所需时间
         """
     self.map_draw: MapDraw = MapDraw()
     """ 地图绘制数据 """
-    self.sorted_path: Dict[str, Dict[str, TargetPath]] = {}
+    self.sorted_path: dict[str, dict[str, TargetPath]] = {}
     """
         地图下场景间寻路路径
         当前节点:目标节点:路径对象
@@ -1352,7 +1352,7 @@ class MapDraw:
 
   def __init__(self) -> None:
     """初始化地图绘制数据对象"""
-    self.draw_text: List[MapDrawLine] = []
+    self.draw_text: list[MapDrawLine] = []
     """ 绘制行对象列表 """
     self.max_width: int = 0
     """ 所有行中的最大显示宽度，用于居中计算 """
@@ -1365,7 +1365,7 @@ class MapDrawLine:
     """初始化地图绘制行数据对象"""
     self.width: int = 0
     """ 总行宽 """
-    self.draw_list: List[MapDrawText] = []
+    self.draw_list: list[MapDrawText] = []
     """ 绘制的对象列表 """
 
 
@@ -1387,9 +1387,9 @@ class TargetPath:
 
   def __init__(self) -> None:
     """初始化寻路目标路径对象"""
-    self.path: List[str] = []
+    self.path: list[str] = []
     """ 寻路路径节点列表 """
-    self.time: List[int] = []
+    self.time: list[int] = []
     """ 移动所需时间列表 """
 
 
@@ -1427,11 +1427,11 @@ class Rhodes_Island:
 
   def __init__(self) -> None:
     """初始化罗德岛相关属性对象"""
-    self.facility_level: Dict[int, int] = {}
+    self.facility_level: dict[int, int] = {}
     """ 基地当前所有设施的等级 """
-    self.facility_open: Dict[int, bool] = {}
+    self.facility_open: dict[int, bool] = {}
     """ 基地当前所有待开放设施的开放情况 """
-    self.all_work_npc_set: Dict[int, set] = {}
+    self.all_work_npc_set: dict[int, set] = {}
     """ 所有工作的所属的干员id合集,工作id:干员id的集合 """
     self.work_people_now: int = 0
     """ 当前工作干员人数 """
@@ -1439,13 +1439,13 @@ class Rhodes_Island:
     """ 干员人数上限 """
     self.all_income: int = 0
     """ 今日全部门总收入 """
-    self.party_day_of_week: Dict[int, int] = {}
+    self.party_day_of_week: dict[int, int] = {}
     """ 一周内的派对计划，周一0~周日6:娱乐id """
-    self.class_schedule: Dict[str, Dict[int, Dict[int, list]]] = {}
+    self.class_schedule: dict[str, dict[int, dict[int, list]]] = {}
     """ 全局课表（Plan 22） 键str:教室场景名(如"理论教室一") 值dict:{星期int(0~6): {节次int(0~8): [科目能力id int, 授课教师id int]}}
             未排的格子表示该教室该节次空闲；教师id为-1表示排了课但未指派教师（本节降级为自习）
             只存班级式的教室课；体育/兴趣/实习课存在各角色的 child_growth.selected_course 里 """
-    self.temp_sex_class: Dict[str, dict] = {}
+    self.temp_sex_class: dict[str, dict] = {}
     """ 临时性技实操课（Plan 22 四期 §4.3.2）
             键str:"日期序数-节次"(如"739510-3")  值dict:
             {"classroom": 教室场景名str, "ability_id": 性技科目能力id int(只填70~75、77，76腰技男性专属),
@@ -1456,7 +1456,7 @@ class Rhodes_Island:
              "ended": 预约的课下课后打的标记 bool（2026-09-12 第五轮：条目留到跨天清理，覆盖层与必修判定不再认它）}
             一次性课程，键含具体日期序数——不能并进 class_schedule（那里键是星期0~6，会每周重复上演）
             过期条目在跨天结算时清理，但 running 为真的那条要跳过（拖堂可跨天） """
-    self.child_schedule_template: Dict[int, dict] = {}
+    self.child_schedule_template: dict[int, dict] = {}
     """ 孩子日程模板（Plan 22） 键int:模板编号 值dict:{"name": 模板名str, "slot": {时段int(0~2): 活动id int}}
             活动id 复用 Entertainment 配置 id。本期只建字段，写入方在二期 """
     self.official_event_queue: list = []
@@ -1478,9 +1478,9 @@ class Rhodes_Island:
     """ 本周陷落干员提供的粉红凭证总数 """
 
     # 控制中枢
-    self.current_location: List[int] = []
+    self.current_location: list[int] = []
     """ 基地当前所在位置，[0国家id,1城市id] """
-    self.move_target_and_time: List = [0, 0, 0]
+    self.move_target_and_time: list = [0, 0, 0]
     """ 基地移动目标和时间, [0国家id,1城市id,2抵达时间] """
     self.office_work: float = 0
     """ 需要处理的公务 """
@@ -1496,63 +1496,63 @@ class Rhodes_Island:
     """ 当前储能 """
     self.power_storage_max: float = 0.0
     """ 最大可储能，由蓄电池数量与等级计算 """
-    self.power_operator_ids_list: List[int] = []
+    self.power_operator_ids_list: list[int] = []
     """ 供能调控员id列表 """
-    self.main_power_facility_operator_ids: List[int] = [0, 0, 0, 0]
+    self.main_power_facility_operator_ids: list[int] = [0, 0, 0, 0]
     """ 主力供能设施的调控员id列表，0~3分别为火水风光发电 """
-    self.orundum_reactor_list: List[int] = [1, 3]
+    self.orundum_reactor_list: list[int] = [1, 3]
     """ 源石反应炉的列表，0号为主反应炉等级，1为已启用的副反应炉数量 """
-    self.other_power_facility_list: List[int] = [0, 0, 0]
+    self.other_power_facility_list: list[int] = [0, 0, 0]
     """ 其他供能设施列表，0为水力发电机数量，1为风能发电机数量，2为太阳能发电机数量 """
-    self.battery_list: List[int] = [0, 0, 0]
+    self.battery_list: list[int] = [0, 0, 0]
     """ 蓄电池列表，0号为1级蓄电池数量，1号为2级蓄电池数量，2号为3级蓄电池数量 """
     self.now_used_extra_clean_energy_module_count: int = 0
     """ 当前正在使用的额外清洁能源模块数量的记录，用于在卖出等减少数量操作时防止超出 """
     self.now_used_extra_battery_count: int = 0
     """ 当前正在使用的额外蓄电池数量的记录，用于在卖出等减少数量操作时防止超出 """
-    self.power_supply_strategy: Dict[int, int] = {}
+    self.power_supply_strategy: dict[int, int] = {}
     """ 各主区块供电策略 facility_cid:策略id(见supply_strategy.csv) """
 
     # 工程部
-    self.maintenance_place: Dict[int, str] = {}
+    self.maintenance_place: dict[int, str] = {}
     """ 当前每个角色的待检修地点，角色id:地点 """
-    self.facility_damage_data: Dict[str, int] = {}
+    self.facility_damage_data: dict[str, int] = {}
     """ 设施损坏数据，地点名str:损坏值int """
-    self.equipment_maintain_setting: Dict[int, int] = {}
+    self.equipment_maintain_setting: dict[int, int] = {}
     """ 装备维护设置 设置id:设置值 """
-    self.equipment_maintain_operator_ids: List[int] = []
+    self.equipment_maintain_operator_ids: list[int] = []
     """ 手动选择的装备维护对象干员id列表 """
-    self.maintenance_equipment_chara_id: Dict[int, int] = {}
+    self.maintenance_equipment_chara_id: dict[int, int] = {}
     """ 当前每个角色正在维护中的装备的所属角色id，角色id:角色id """
 
     # 仓储区
     self.warehouse_capacity: int = 0
     """ 仓库容量 """
-    self.materials_resouce: Dict[int, int] = {}
+    self.materials_resouce: dict[int, int] = {}
     """ 素材资源 """
     self.used_extra_warehouse_capacity_module: int = 0
     """ 已使用的仓储空间扩展模块数量 """
 
     # 宿舍区
-    self.dormitory_managers: Dict[int, int] = {}
+    self.dormitory_managers: dict[int, int] = {}
     """ 各层宿舍管理员，输入类型:无，输出类型:Dict[int,int]，功能:key=层号(1-9), value=角色id(0表示未任命) """
 
     # 生活娱乐区
     self.life_zone_max: int = 0
     """ 生活娱乐区设施数量上限 """
-    self.milk_in_fridge: Dict[int, int] = {}
+    self.milk_in_fridge: dict[int, int] = {}
     """ 冰箱里每个干员的当日母乳存量，干员id:母乳ml存量 """
-    self.dining_hall_data: Dict[str, Dict[UUID, Food]] = {}
+    self.dining_hall_data: dict[str, dict[UUID, Food]] = {}
     """
         食堂内贩卖的食物数据
         食谱id(str):食物唯一id:食物对象
         """
-    self.makefood_data: Dict[str, int] = {}
+    self.makefood_data: dict[str, int] = {}
     """
         做饭区可制作的菜谱数据（延迟创建：仅记录可制作的菜谱id，食物对象在制作时才创建）
         食谱id(str):食谱id(int)
         """
-    self.makefood_filter_type: List[int] = []
+    self.makefood_filter_type: list[int] = []
     """ 做饭筛选：菜谱类型列表，空列表表示不筛选 """
     self.makefood_filter_difficulty: int = -1
     """ 做饭筛选：难度档位（-1不限，0简单0-3，1中等4-6，2困难7+） """
@@ -1562,15 +1562,15 @@ class Rhodes_Island:
     """ 做饭排序：排序维度（0无，1难度，2时间，3类型） """
     self.makefood_sort_order: int = 0
     """ 做饭排序：排序顺序（0升序，1降序） """
-    self.makefood_cook_mode: Dict[int, int] = {0: 0, 1: 0, 2: 0}
+    self.makefood_cook_mode: dict[int, int] = {0: 0, 1: 0, 2: 0}
     """ 做饭记忆：烹饪模式（0标准模式，1精细模式），键为做饭类型（0普通做饭/1泡咖啡/2调酒） """
-    self.makefood_make_count: Dict[int, int] = {0: 1, 1: 1, 2: 1}
+    self.makefood_make_count: dict[int, int] = {0: 1, 1: 1, 2: 1}
     """ 做饭记忆：制作数量，键为做饭类型（0普通做饭/1泡咖啡/2调酒） """
 
     # 医疗部
-    self.medical_patients_today: Dict[int, Any] = {}
+    self.medical_patients_today: dict[int, Any] = {}
     """ 当日待诊病人数据，patient_id:病人结构 """
-    self.medical_hospitalized: Dict[int, Any] = {}
+    self.medical_hospitalized: dict[int, Any] = {}
     """ 住院病人数据，patient_id:病人结构 """
     self.medical_price_ratio: float = 0.0
     """ 当前收费系数，0 表示尚未初始化 """
@@ -1580,9 +1580,9 @@ class Rhodes_Island:
     """ 医疗区床位上限（含加成） """
     self.used_hospital_bed_modules: int = 0
     """ 已使用的住院病房基建模块数量 """
-    self.medical_inventory_accumulator: Dict[int, float] = {}
+    self.medical_inventory_accumulator: dict[int, float] = {}
     """ 药物扣除累计器，资源id:累计小数 """
-    self.medical_surgery_records: List[Dict[str, Any]] = []
+    self.medical_surgery_records: list[dict[str, Any]] = []
     """ 今日手术记录列表 """
     self.medical_income_today: int = 0
     """ 今日医疗板块龙门币收入 """
@@ -1592,13 +1592,13 @@ class Rhodes_Island:
     """ 本周医疗区治疗加权量 """
     self.medical_daily_counters: Any = None
     """ 医疗系统当日统计数据容器，由初始化流程写入 """
-    self.medical_recent_reports: List[Dict[str, Any]] = []
+    self.medical_recent_reports: list[dict[str, Any]] = []
     """ 医疗系统近期经营日志 """
-    self.medical_clinic_doctor_ids: List[int] = []
+    self.medical_clinic_doctor_ids: list[int] = []
     """ 当前分配为门诊医生的干员id列表 """
     self.medical_clinic_doctor_power: float = 0.0
     """ 门诊医生医疗能力总和 """
-    self.medical_hospital_doctor_ids: List[int] = []
+    self.medical_hospital_doctor_ids: list[int] = []
     """ 当前分配为住院医生的干员id列表 """
     self.medical_hospital_doctor_power: float = 0.0
     """ 住院医生医疗能力总和 """
@@ -1606,25 +1606,25 @@ class Rhodes_Island:
     """ 医疗部病人接诊优先策略标记，由初始化流程写入 """
     self.medical_player_current_patient_id: int = 0
     """ 玩家诊疗面板当前占用的病人ID，0 表示无会话 """
-    self.player_examined_patient_ids: List[int] = []
+    self.player_examined_patient_ids: list[int] = []
     """ 玩家本次诊疗过的病人id列表 """
-    self.medical_doctor_specializations: Dict[str, Dict[str, List[int]]] = {}
+    self.medical_doctor_specializations: dict[str, dict[str, list[int]]] = {}
     """ 医生分科配置，按岗位分类记录各系统的医生id列表 """
 
-    self.urine_in_fridge: Dict[int, int] = {}
+    self.urine_in_fridge: dict[int, int] = {}
     """ 冷库里每个干员的当日圣水量，干员id:圣水ml存量 """
 
-    self.physical_examination_setting: Dict[int, int] = {}
+    self.physical_examination_setting: dict[int, int] = {}
     """ 体检设置 设置id:设置值 """
-    self.today_physical_examination_chara_id_dict: Dict[int, set] = {}
+    self.today_physical_examination_chara_id_dict: dict[int, set] = {}
     """ 今日已体检的干员数据 干员id:体检项目id集合 """
-    self.examined_operator_ids: Set[int] = set()
+    self.examined_operator_ids: set[int] = set()
     """ 本次体检周期内已体检过的干员id集合 """
-    self.waiting_for_exam_operator_ids: Set[int] = set()
+    self.waiting_for_exam_operator_ids: set[int] = set()
     """ 当前正在等待体检的干员id集合 """
-    self.manually_selected_exam_operator_ids: Set[int] = set()
+    self.manually_selected_exam_operator_ids: set[int] = set()
     """ 手动选择的体检对象干员id集合 """
-    self.manually_selected_exam_week_day_list: List[int] = []
+    self.manually_selected_exam_week_day_list: list[int] = []
     """ 手动选择的每周的体检日列表 """
 
     self.patient_now: int = 0
@@ -1637,58 +1637,58 @@ class Rhodes_Island:
     """ 已治疗的患者总人数（旧系统字段，已废弃） """
 
     # 文职区
-    self.recruit_line: Dict[int, List] = {}
+    self.recruit_line: dict[int, list] = {}
     """ 招募线数据: 招募线id:[0招募进度%, 1招募策略id, 2该线主招聘专员id(0为空缺), 3招募效率百分比(如20.5%)] """
-    self.hr_operator_ids_list: List[int] = []
+    self.hr_operator_ids_list: list[int] = []
     """ 招募专员id列表 """
-    self.recruited_id: Set = set()
+    self.recruited_id: set = set()
     """ 已招募待确认的干员id """
 
     # 训练场
 
     # 图书档案区
-    self.now_show_book_cid_of_type: Dict[int, List] = {}
+    self.now_show_book_cid_of_type: dict[int, list] = {}
     """ 当前展示的可借阅书籍，类别id：书籍id列表 """
-    self.book_borrow_dict: Dict[int, int] = {}
+    self.book_borrow_dict: dict[int, int] = {}
     """ 书籍借出情况 书籍id:借出人id(-1为未借出) """
     self.reader_now: int = 0
     """ 当前图书馆中的读者数量 """
-    self.recommend_book_type_set: Set = set()
+    self.recommend_book_type_set: set = set()
     """ 推荐的阅读类别 """
 
     # 贸易区
-    self.shop_open_list: List[str] = []
+    self.shop_open_list: list[str] = []
     """ 商店开放列表 """
     self.love_hotel_room_lv: int = 0
     """ 在爱情旅馆中的房间级别，0未入住，1标间，2情趣主题房，3顶级套房 """
-    self.restaurant_data: Dict[int, Dict] = {}
+    self.restaurant_data: dict[int, dict] = {}
     """
         餐馆内贩卖的食物数据
         餐馆id:食物名字:食物唯一id:食物对象
         """
-    self.stall_vendor_data: Dict[int, Dict] = {}
+    self.stall_vendor_data: dict[int, dict] = {}
     """
         地摊小贩的货物数据
         货物类型id（0为食物）:货物字典
         """
-    self.supply_demand_dict: Dict[int, float] = {}
+    self.supply_demand_dict: dict[int, float] = {}
     """
         供需关系字典
         货物类型id: 供需系数值
         """
-    self.today_trade_resource_count: Dict[int, int] = {}
+    self.today_trade_resource_count: dict[int, int] = {}
     """ 资源类型id: 今日买入卖出总量 """
-    self.trade_operator_ids_list: List[int] = []
+    self.trade_operator_ids_list: list[int] = []
     """ 资源交易员id列表 """
-    self.resource_type_main_trader: Dict[str, int] = {}
+    self.resource_type_main_trader: dict[str, int] = {}
     """ 各资源类型的主交易员 type_str:角色id """
-    self.resource_type_auto_trade_setting: Dict[int, Dict[str, Any]] = {}
+    self.resource_type_auto_trade_setting: dict[int, dict[str, Any]] = {}
     """ 自动交易设置 资源id:设置字典 """
 
     # 制造加工区
-    self.assembly_line: Dict[int, List] = {}
+    self.assembly_line: dict[int, list] = {}
     """ 流水线id: [0生产配方id(formula_id), 1主生产工人id(0为空缺), 2当前总效率百分比(浮点, 如 123.5), 3待切换配方id(次日生效, 0表示无), 4上次结算小时] """
-    self.production_worker_ids: List[int] = []
+    self.production_worker_ids: list[int] = []
     """ 生产工人id列表 """
 
     # 访客区
@@ -1696,35 +1696,35 @@ class Rhodes_Island:
     """ 访客人数上限 """
     self.base_move_visitor_flag: bool = False
     """ 因为基地移动而吸引访客 """
-    self.visitor_info: Dict[int, datetime.datetime] = {}
+    self.visitor_info: dict[int, datetime.datetime] = {}
     """ 访客统计数据 访客id:[0停留开始时间] """
     self.last_visitor_time: datetime.datetime = datetime.datetime(1, 1, 1)
     """ 上次访客到来时间 """
-    self.invite_visitor: List = []
+    self.invite_visitor: list = []
     """ 当前邀请进度 [0目标角色id, 1招募进度, 2招募效率百分比(如2.5)] """
-    self.diplomat_of_country: Dict[int, List] = {}
+    self.diplomat_of_country: dict[int, list] = {}
     """ 负责各的外交官 出身地国家id:[0外交官角色id, 1外交方针id] """
 
     # 机库
-    self.ongoing_field_commissions: Dict[int, List] = {}
+    self.ongoing_field_commissions: dict[int, list] = {}
     """ 进行中的外勤委托，委托id:0干员id列表List，1返回时间datetime，2使用的载具id列表List """
-    self.vehicles: Dict[int, List] = {}
+    self.vehicles: dict[int, list] = {}
     """ 载具id:[0数量int，1外勤中数量int] """
-    self.finished_field_commissions_set: Set = set()
+    self.finished_field_commissions_set: set = set()
     """ 已完成的外勤委托集合 """
-    self.shut_down_field_commissions_set: Set = set()
+    self.shut_down_field_commissions_set: set = set()
     """ 已禁止的外勤委托集合 """
 
     # 教育区
 
     # 疗养庭院
-    self.herb_garden_line: Dict[int, List] = {}
+    self.herb_garden_line: dict[int, list] = {}
     """ 药田生产情况 流水线id:[0生产类型id, 1主种植员id(0为空缺), 2总效率百分比(显示用, 如110), 3明日要变成的新生产类型, 4上次收菜的小时] """
-    self.herb_garden_operator_ids: List[int] = []
+    self.herb_garden_operator_ids: list[int] = []
     """ 药田种植员id列表 """
-    self.green_house_line: Dict[int, List] = {}
+    self.green_house_line: dict[int, list] = {}
     """ 温室生产情况 流水线id:[0生产类型id, 1主种植员id(0为空缺), 2总效率百分比(显示用, 如110), 3明日要变成的新生产类型, 4上次收菜的小时] """
-    self.green_house_operator_ids: List[int] = []
+    self.green_house_operator_ids: list[int] = []
     """ 花草种植员id列表 """
     self.remaining_aromatherapy_sessions_today: int = 0
     """ 今日剩余调香次数 """
@@ -1736,15 +1736,15 @@ class Rhodes_Island:
     # 关押区
     self.current_warden_id: int = 0
     """ 当前监狱长的干员id """
-    self.current_prisoners: Dict[int, List] = {}
+    self.current_prisoners: dict[int, list] = {}
     """ 当前囚犯干员的数据，干员id: [被关押的时间datetime, 逃脱的概率int] """
-    self.confinement_training_setting: Dict[int, int] = {}
+    self.confinement_training_setting: dict[int, int] = {}
     """ 监禁调教设置 设置id:设置值 """
     self.pre_training_cleaning: bool = False
     """ 调教前清洗准备 """
     self.pre_training_lubrication: bool = False
     """ 调教前润滑准备 """
-    self.pre_training_tool_dict: Dict[int, int] = {}
+    self.pre_training_tool_dict: dict[int, int] = {}
     """ 调教前道具使用，同BODY_H_STATE类的body_item """
     self.sex_assistant_ai_behavior_id_list: list = []
     """ 调教助手的AI行为列表 """
@@ -1762,11 +1762,11 @@ class Country:
 
   def __init__(self) -> None:
     """初始化大地图国家数据对象"""
-    self.nation_reputation: Dict[int, float] = {}
+    self.nation_reputation: dict[int, float] = {}
     """ 势力声望 """
-    self.country_infection_rate: Dict[int, float] = {}
+    self.country_infection_rate: dict[int, float] = {}
     """ 国家矿石病感染率 """
-    self.country_infection_patient_ratio: Dict[int, float] = {}
+    self.country_infection_patient_ratio: dict[int, float] = {}
     """ 国家矿石病人数量影响系数 """
     self.last_week_all_country_infection_rate: float = -1.0
     """ 上周所有国家矿石病感染率总和 """
@@ -1777,19 +1777,19 @@ class System_Setting:
 
   def __init__(self) -> None:
     """初始化系统设置对象"""
-    self.base_setting: Dict[int, int] = {}
+    self.base_setting: dict[int, int] = {}
     """ 基础系统设定，即base类 """
-    self.draw_setting: Dict[int, int] = {}
+    self.draw_setting: dict[int, int] = {}
     """ 绘制设定，即draw类 """
-    self.difficulty_setting: Dict[int, int] = {}
+    self.difficulty_setting: dict[int, int] = {}
     """ 难度设定，即difficulty类 """
-    self.birth_type_setting: Dict[int, int] = {}
+    self.birth_type_setting: dict[int, int] = {}
     """ 生殖方式设定，即birth类，键为生育方式编号（2多胎胎生/11带壳卵生/12无壳卵生），值为0关闭/1开启，关闭的生育方式一律按单胎胎生处理 """
     self.line_before_main_update: int = 3
     """ 主界面刷新前的行数 """
-    self.value_draw: Dict[str, bool] = {"pl": False, "npc": False}
+    self.value_draw: dict[str, bool] = {"pl": False, "npc": False}
     """ 数值绘制 """
-    self.character_text_version: Dict[int, int] = {}
+    self.character_text_version: dict[int, int] = {}
     """ 角色文本版本，adv_id:版本id """
 
 
@@ -1798,9 +1798,9 @@ class Ai_Setting:
 
   def __init__(self) -> None:
     """初始化AI设置对象"""
-    self.ai_chat_setting: Dict[int, Any] = {}
+    self.ai_chat_setting: dict[int, Any] = {}
     """ ai聊天设定，见Ai_Chat_Setting.csv """
-    self.ai_chat_api_key: Dict[str, str] = {}
+    self.ai_chat_api_key: dict[str, str] = {}
     """ ai聊天api key """
     self.now_ai_chat_model: str = ""
     """ 当前使用的ai聊天模型 """
@@ -1810,7 +1810,7 @@ class Ai_Setting:
     """ 当前使用的代理，[0代理ip,1代理端口] """
     self.ai_chat_translator_setting: int = 0
     """ 是否开启ai聊天翻译功能，0不开启，1仅翻译地文，2翻译地文和口上 """
-    self.send_data_flags: Dict[int, bool] = {}
+    self.send_data_flags: dict[int, bool] = {}
     """ 记录向AI发送哪些数据 """
 
 
@@ -1869,7 +1869,7 @@ class Character:
     """ 醉酒度 数值为百分比，100为最大 """
     self.state: int | str = 0
     """ 角色当前状态 """
-    self.last_behavior_id_list: List = [0]
+    self.last_behavior_id_list: list = [0]
     """ 角色之前的行为列表 """
     self.talk_size: int = 0
     """ 角色口上大小，单位kb """
@@ -1877,7 +1877,7 @@ class Character:
     """ 角色对话文本颜色 """
     # self.item: Set = set()
     # """ 旧：角色拥有的道具id集合 """
-    self.item: Dict[int, int] = {}
+    self.item: dict[int, int] = {}
     """ 角色拥有的道具 道具序号:数量"""
     # self.height: Height = Height()
     # """ 角色的身高数据 """
@@ -1887,19 +1887,19 @@ class Character:
     """ 角色的衣服数据 """
     self.behavior: Behavior = Behavior()
     """ 角色当前行为状态数据 """
-    self.second_behavior: Dict[str, int] = {}
+    self.second_behavior: dict[str, int] = {}
     """ 角色当前二段行为状态数据 """
-    self.must_settle_second_behavior_id_list: List[str] = []
+    self.must_settle_second_behavior_id_list: list[str] = []
     """ 角色必须结算的二段行为id列表 """
-    self.must_show_second_behavior_id_list: List[str] = []
+    self.must_show_second_behavior_id_list: list[str] = []
     """ 角色必须显示的二段行为id列表 """
     self.event: Chara_Event = Chara_Event()
     """ 角色当前事件状态数据 """
     # self.gold: int = 0
     # """ 角色所持金钱数据 """
-    self.position: List[str] = ["0", "0"]
+    self.position: list[str] = ["0", "0"]
     """ 角色当前坐标数据 """
-    self.officeroom: List[str] = []
+    self.officeroom: list[str] = []
     """ 角色所属办公室坐标 """
     self.dormitory: str = ""
     """ 角色宿舍坐标 """
@@ -1909,7 +1909,7 @@ class Character:
     """ 角色生日数据 """
     # self.chest_tem: int = 0
     # """ 角色罩杯模板 """
-    self.status_data: Dict[int, int] = {}
+    self.status_data: dict[int, int] = {}
     """ 角色状态数据 状态id:状态数值 """
     self.hit_point_tem: int = 1
     """ 角色HP模板 """
@@ -1919,11 +1919,11 @@ class Character:
     # """ 角色社交关系数据 关系类型:角色id集合 """
     # self.social_contact_data: Dict[int, int] = {}
     # """ 角色社交关系数据 角色id:关系类型 """
-    self.favorability: Dict[int, int] = {}
+    self.favorability: dict[int, int] = {}
     """ 角色好感度数据 角色id:好感度 """
     self.trust: float = 0
     """ 角色信赖度数据 """
-    self.food_bag: Dict[UUID, Food] = {}
+    self.food_bag: dict[UUID, Food] = {}
     """ 角色持有的食物数据 """
     self.target_character_id: int = 0
     """ 角色当前交互对象id """
@@ -1933,31 +1933,31 @@ class Character:
     # """ 是否不想穿衣服 """
     self.dead: bool = False
     """ 角色已死亡 """
-    self.collection_character: Set = set()
+    self.collection_character: set = set()
     """ 收藏的角色列表 """
     self.last_hunger_time: datetime.datetime = datetime.datetime(1, 1, 1)
     """ 最后一次结算饥饿的时间 """
-    self.ability: Dict[int, int] = {}
+    self.ability: dict[int, int] = {}
     """ 角色能力 """
-    self.experience: Dict[int, int] = {}
+    self.experience: dict[int, int] = {}
     """ 角色经验 """
-    self.juel: Dict[int, int] = {}
+    self.juel: dict[int, int] = {}
     """ 角色宝珠 """
     self.profession: int = 0
     """ 角色职业 """
     self.race: int = 0
     """ 角色种族 """
-    self.talent: Dict[int, int] = {}
+    self.talent: dict[int, int] = {}
     """ 角色素质 """
     self.token_text: str = ""
     """ 角色信物文本 """
     self.assistant_character_id: int = 0
     """ 助理角色id """
-    self.chara_setting: Dict[int, int] = {}
+    self.chara_setting: dict[int, int] = {}
     """ 角色的个人设置 """
-    self.assistant_services: Dict[int, int] = {}
+    self.assistant_services: dict[int, int] = {}
     """ 角色作为助理的情况 """
-    self.body_manage: Dict[int, int] = {}
+    self.body_manage: dict[int, int] = {}
     """ 角色的身体管理，见Body_Manage_Requirement.csv """
     self.first_record: FIRST_RECORD = FIRST_RECORD()
     """ 角色初次状态记录 """
@@ -1981,7 +1981,7 @@ class Character:
     """ 角色的娱乐与兴趣情况 """
     self.pregnancy: PREGNANCY = PREGNANCY()
     """ 角色的怀孕情况 """
-    self.child_growth: Optional[CHILD_GROWTH] = None
+    self.child_growth: CHILD_GROWTH | None = None
     """ 角色的生长养成数据（Plan 22）。默认None，由 growth_handle.get_child_growth() 惰性创建，
             只有孩子与选了课的干员才会有，避免给全部干员的存档都塞一份空结构体 """
     self.relationship: RELATIONSHIP = RELATIONSHIP()
@@ -2003,52 +2003,52 @@ class Cache:
     """ 主页监听控制流程用变量组 """
     self.web_mode: bool = False
     """ 是否为web模式 """
-    self.current_draw_elements: List = []
+    self.current_draw_elements: list = []
     """ 当前绘制的元素列表 """
-    self.web_draw_history: List = []
+    self.web_draw_history: list = []
     """ Web模式下的文本历史缓存 """
     self.web_draw_history_line_total: int = 0
     """ web文本历史累计行数 """
-    self.current_return_list: List = []
+    self.current_return_list: list = []
     """ 当前返回的元素列表 """
-    self.current_input_request: List | Dict[str, object] = []
+    self.current_input_request: list | dict[str, object] = []
     """ 当前输入请求列表 """
     # ========== Web新UI模式专用字段 ==========
-    self.current_interaction_type: Optional[str] = None
+    self.current_interaction_type: str | None = None
     """ Web模式当前选中的交互类型（字符串标识符） """
     self.web_game_state: dict = {}
     """ Web模式游戏状态数据（用于增量更新） """
-    self.web_current_major_type: Optional[str] = None
+    self.web_current_major_type: str | None = None
     """ Web模式当前选中的大类型（'mouth'/'hand'/'penis'/'tool'/'arts'/'stop'/'other'） """
-    self.web_current_minor_type: Optional[str] = None
+    self.web_current_minor_type: str | None = None
     """ Web模式当前选中的小类型（字符串标识符如'mouth_talk'/'hand_touch'等） """
-    self.web_major_type_memory: Dict[str, Optional[str]] = {}
+    self.web_major_type_memory: dict[str, str | None] = {}
     """ Web模式大类切换记忆：记录每个大类最近选择的小类id，键为大类字符串id，值为小类字符串id """
-    self.web_selected_drug_id: Optional[int] = None
+    self.web_selected_drug_id: int | None = None
     """ Web模式当前选中的药物id """
-    self.web_selected_item_id: Optional[int] = None
+    self.web_selected_item_id: int | None = None
     """ Web模式当前选中的道具id """
     self.web_need_full_refresh: bool = False
     """ Web模式是否需要完整刷新（切换交互对象后设置为True） """
-    self.web_value_changes: List[dict] = []
+    self.web_value_changes: list[dict] = []
     """ Web模式数值变化列表，每个元素包含 character_id, field, value, timestamp """
-    self.web_instruct_texts: List[str] = []
+    self.web_instruct_texts: list[str] = []
     """ Web模式指令文本列表（包括指令行动描述和指令行动结算），用于指令文本回溯显示 """
-    self.web_other_texts: List[str] = []
+    self.web_other_texts: list[str] = []
     """ Web模式其他文本列表（io_web.py中的其他文本），用于其他文本回溯显示 """
     self.web_text_recording_flag: bool = False
     """ Web模式文本记录标志，在角色行为循环期间为True，用于控制era_print的文本记录 """
     self.web_settlement_description: str = ""
     """ Web模式结算选项描述文本，在绘制结算按钮前设置，用于在结算选项弹窗中显示说明文本 """
-    self.pending_event_text: Optional[dict] = None
+    self.pending_event_text: dict | None = None
     """ 待显示的事件文本，由 draw_event_text_panel 保存，供 event_option_panel 使用 """
     self.web_instruct_executing: bool = False
     """ Web模式指令执行中标记：True表示SocketIO处理线程正在同步执行指令（含其内部嵌套的askfor_all），主循环线程的askfor_all在此期间不应消费button_click_response，避免与嵌套面板争抢用户输入 """
-    self.web_instruct_executing_thread_id: Optional[int] = None
+    self.web_instruct_executing_thread_id: int | None = None
     """ Web模式正在同步执行指令的SocketIO线程ID：用于在get_button_response中识别仅允许该线程消费按钮响应 """
     self.web_sub_panel_mode: bool = False
     """ Web模式子面板模式标记：True表示当前正在主界面内显示非主面板 """
-    self.web_sub_panel_id: Optional[str] = None
+    self.web_sub_panel_id: str | None = None
     """ Web模式子面板ID：当前显示的子面板指令ID """
     self.web_sub_panel_name: str = ""
     """ Web模式子面板名称：当前显示的子面板名称（用于临时选项卡） """
@@ -2061,49 +2061,49 @@ class Cache:
     """ Web对话框当前显示的文本 """
     self.web_dialog_text_color: str = "standard"
     """ Web对话框文本颜色样式 """
-    self.web_dialog_queue: List[dict] = []
+    self.web_dialog_queue: list[dict] = []
     """ Web对话框待显示的文本队列 """
     self.web_dialog_wait_input: bool = False
     """ Web对话框是否等待用户输入（点击推进） """
-    self.web_minor_dialog_queue: List[dict] = []
+    self.web_minor_dialog_queue: list[dict] = []
     """ Web小对话框队列（其他角色的台词） """
     # ==========================================
     # ==========================================
-    self.character_data: Dict[int, Character] = {}
+    self.character_data: dict[int, Character] = {}
     """ 角色对象数据缓存组 """
-    self.npc_tem_data: Dict[int, NpcTem] = {}
+    self.npc_tem_data: dict[int, NpcTem] = {}
     """ npc模板字典，键为AdvNpc """
-    self.npc_id_got: Set = set()
+    self.npc_id_got: set = set()
     """ 已拥有的干员id集合 """
-    self.forbidden_npc_id: Set = set()
+    self.forbidden_npc_id: set = set()
     """ 禁止出现的干员id集合 """
-    self.input_cache: List[str] = []
+    self.input_cache: list[str] = []
     """ 玩家指令输入记录（最大20）"""
     self.input_cache_draft: str = ""
     """ 玩家正在编辑但尚未发送的输入草稿 """
     self.input_cache_browsing: bool = False
     """ 玩家是否正在浏览输入历史 """
-    self.daily_intsruce: List[str] = []
+    self.daily_intsruce: list[str] = []
     """ 每日指令输入记录 """
-    self.pl_pre_behavior_instruce: List[str] = []
+    self.pl_pre_behavior_instruce: list[str] = []
     """ 玩家过去行为指令记录，最大长度为10 """
-    self.taiggered_event_record: Set = set()
+    self.taiggered_event_record: set = set()
     """ 触发过的事件记录 """
-    self.today_taiggered_event_record: Set = set()
+    self.today_taiggered_event_record: set = set()
     """ 今日触发过的事件记录 """
     self.now_init_map_id: str = ""
     """ 寻路算法用,当前节点所属的地图的id """
-    self.collect_position_list: List = []
+    self.collect_position_list: list = []
     """ 收藏地点合集 """
     self.input_position: int = 0
     """ 回溯输入记录用定位 """
-    self.instruct_type_filter: Dict[int, bool] = {}
+    self.instruct_type_filter: dict[int, bool] = {}
     """ 玩家操作指令面板指令过滤状态数据 指令类型:是否展示"""
-    self.instruct_sex_type_filter: Dict[int, bool] = {}
+    self.instruct_sex_type_filter: dict[int, bool] = {}
     """ 玩家操作指令面板中，H类的指令过滤状态数据 指令类型:是否展示"""
-    self.instruct_type_filter_cache: Dict[int, bool] = {}
+    self.instruct_type_filter_cache: dict[int, bool] = {}
     """ （已弃用）玩家操作指令面板指令过滤状态数据_的缓存 指令类型:是否展示"""
-    self.instruct_index_filter: Dict[str, bool] = {}
+    self.instruct_index_filter: dict[str, bool] = {}
     """ 玩家各编号指令过滤状态数据 指令编号:是否展示"""
     self.show_non_h_in_hidden_sex: bool = False
     """ 是否在隐奸中显示非H类指令 """
@@ -2113,7 +2113,7 @@ class Cache:
     """ 富文本回溯样式记录用定位 """
     # self.clothing_type_data: dict = {}
     # """ 存储服装类型数据 """
-    self.text_style_cache: List[str] = []
+    self.text_style_cache: list[str] = []
     """ 富文本样式记录 """
     self.text_one_by_one_rich_cache: dict = {}
     """ 富文本精确样式记录 """
@@ -2135,29 +2135,29 @@ class Cache:
     """ 当前绘制人物列表的开始值 """
     self.text_wait: float = 0
     """ 绘制文本输出等待时间 """
-    self.scene_panel_show: List = [True, True, True, True, True]
+    self.scene_panel_show: list = [True, True, True, True, True]
     """ 场景面板中的子面板显示情况,0状态,1服装,2身体,3暂无,4图片 """
-    self.map_data: Dict[str, Map] = {}
+    self.map_data: dict[str, Map] = {}
     """ 游戏地图数据 地图路径:地图数据 """
-    self.scene_data: Dict[str, Scene] = {}
+    self.scene_data: dict[str, Scene] = {}
     """ 游戏场景数据 场景路径:场景数据 """
     # self.wear_item_type_data: dict = {}
     # """ 可穿戴道具类型数据 """
-    self.over_behavior_character: Set = set()
+    self.over_behavior_character: set = set()
     """ 本次update中已结束结算的npc """
     self.game_update_flow_running: int = 0
     """ 游戏更新流程当前嵌套深度，用于限制递归调用层数 """
     self.pl_sleep_save_flag: bool = False
     """ 玩家睡觉，要进行存档 """
-    self.recipe_data: Dict[int, Recipes] = {}
+    self.recipe_data: dict[int, Recipes] = {}
     """ 菜谱数据 """
-    self.npc_name_data: Set = set()
+    self.npc_name_data: set = set()
     """ 已有的npc姓名集合 """
     self.is_collection: bool = False
     """ 启用收藏模式 """
-    self.sun_phase: Dict[str, Dict[int, Dict[int, int]]] = {}
+    self.sun_phase: dict[str, dict[int, dict[int, int]]] = {}
     """ 指定日期下每分钟太阳位置 日期:时:分:位置id """
-    self.moon_phase: Dict[str, int] = {}
+    self.moon_phase: dict[str, int] = {}
     """ 指定日期月相记录 日期:月相id """
     self.shoot_position: int = 0
     """ 记录射精位置 """
@@ -2183,9 +2183,9 @@ class Cache:
     """ 怀孕总览面板筛选类型（0全部，其余为阶段枚举值） """
     self.rhodes_island: Rhodes_Island = Rhodes_Island()
     """ 罗德岛相关属性 """
-    self.first_bonus: Dict[int, int] = {}
+    self.first_bonus: dict[int, int] = {}
     """ 初期奖励 """
-    self.world_setting: Dict[int, int] = {}
+    self.world_setting: dict[int, int] = {}
     """ 世界设定 """
     # self.system_setting: Dict[int, int] = {}
     # """ 系统设定，见System_Setting.csv """
@@ -2210,17 +2210,17 @@ class TargetChange:
     """ mp变化 """
     self.eja_point: int = 0
     """ 射精变化 """
-    self.status_data: Dict[int, int] = {}
+    self.status_data: dict[int, int] = {}
     """ 状态变化 """
     self.favorability: int = 0
     """ 好感度变化 """
     self.trust: float = 0
     """ 信赖度变化 """
-    self.target_change: Dict[int, TargetChange | CharacterStatusChange] = {}
+    self.target_change: dict[int, TargetChange | CharacterStatusChange] = {}
     """ 互动目标状态变化 """
-    self.ability: Dict[int, int] = {}
+    self.ability: dict[int, int] = {}
     """ 能力变化 """
-    self.experience: Dict[int, int] = {}
+    self.experience: dict[int, int] = {}
     """ 经验变化 """
     self.sanity_point: int = 0
     """ 理智变化 """
@@ -2239,23 +2239,23 @@ class CharacterStatusChange:
     """ mp变化 """
     self.eja_point: int = 0
     """ 射精变化 """
-    self.status_data: Dict[int, int] = {}
+    self.status_data: dict[int, int] = {}
     """ 状态变化 """
     self.favorability: int = 0
     """ 好感度变化 """
     self.trust: float = 0
     """ 信赖度变化 """
-    self.language: Dict[int, int] = {}
+    self.language: dict[int, int] = {}
     """ 语言技能经验变化 """
-    self.knowledge: Dict[int, int] = {}
+    self.knowledge: dict[int, int] = {}
     """ 知识技能经验变化 """
-    self.target_change: Dict[int, TargetChange] = {}
+    self.target_change: dict[int, TargetChange] = {}
     """ 互动目标状态变化 """
-    self.sex_experience: Dict[int, int] = {}
+    self.sex_experience: dict[int, int] = {}
     """ 性经验变化 """
-    self.ability: Dict[int, int] = {}
+    self.ability: dict[int, int] = {}
     """ 能力变化 """
-    self.experience: Dict[int, int] = {}
+    self.experience: dict[int, int] = {}
     """ 经验变化 """
     self.sanity_point: int = 0
     """ 理智变化 """

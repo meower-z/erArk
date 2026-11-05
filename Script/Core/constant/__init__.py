@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Dict, List, Set
 from types import FunctionType
 from Script.Core import get_text
 
@@ -232,60 +231,60 @@ class SexInstructSubType:
 #         i += 1
 
 
-handle_premise_data: Dict[str, Callable[[int], float]] = {}
+handle_premise_data: dict[str, Callable[[int], float]] = {}
 """ 前提处理数据 """
-handle_instruct_data: Dict[str, Callable[..., object]] = {}
+handle_instruct_data: dict[str, Callable[..., object]] = {}
 """ 指令处理数据（键为指令id字符串） """
-instruct_id_to_cid: Dict[str, int] = {}
+instruct_id_to_cid: dict[str, int] = {}
 """ 指令字符串ID到数字ID的映射，用于显示和键盘输入 """
-cid_to_instruct_id: Dict[int, str] = {}
+cid_to_instruct_id: dict[int, str] = {}
 """ 数字ID到指令字符串ID的映射，用于键盘输入处理 """
-handle_instruct_name_data: Dict[str, str] = {}
+handle_instruct_name_data: dict[str, str] = {}
 """ 指令对应文本 """
-instruct_type_data: Dict[int, Set] = {}
+instruct_type_data: dict[int, set] = {}
 """ 指令类型拥有的指令集合 """
-instruct_sub_type_data: Dict[str, int] = {}
+instruct_sub_type_data: dict[str, int] = {}
 """ 指令的子类型数据，指令id:子类id """
-behavior_id_to_instruct_id: Dict[str, str] = {}
+behavior_id_to_instruct_id: dict[str, str] = {}
 """ 从状态id获取指令id，状态id:指令id """
-instruct_premise_data: Dict[str, Set] = {}
+instruct_premise_data: dict[str, set] = {}
 """ 指令显示的所需前提集合 """
 
 # ========== Web模式指令分类数据 ==========
-instruct_category_data: Dict[str, int] = {}
+instruct_category_data: dict[str, int] = {}
 """
 指令的大类数据，指令id:大类id
 - InstructCategory.SYSTEM_PANEL: 系统面板类
 - InstructCategory.CHARACTER: 角色交互类
 - InstructCategory.CHARACTER_PANEL: 角色交互面板类
 """
-instruct_panel_id_data: Dict[str, int] = {}
+instruct_panel_id_data: dict[str, int] = {}
 """ 系统面板类指令对应的面板ID，指令id:Panel中的面板id """
-instruct_body_parts_data: Dict[str, List[str]] = {}
+instruct_body_parts_data: dict[str, list[str]] = {}
 """ 指令关联的身体部位数据，指令id:部位列表（当列表长度为1时自动判断为单部位交互）"""
-instruct_major_type_data: Dict[str, str] = {}
+instruct_major_type_data: dict[str, str] = {}
 """ 指令的大类型数据（Web模式新分类），指令id:大类型字符串标识符（如'mouth'/'hand'等）"""
-instruct_minor_type_data: Dict[str, str] = {}
+instruct_minor_type_data: dict[str, str] = {}
 """ 指令的小类型数据（Web模式新分类），指令id:小类型字符串标识符（如'mouth_talk'/'hand_touch'等）"""
 # =========================================
 
-handle_state_machine_data: Dict[int, Callable[..., object]] = {}
+handle_state_machine_data: dict[int, Callable[..., object]] = {}
 """ 角色状态机函数 """
-panel_data: Dict[int, Callable[..., object]] = {}
+panel_data: dict[int, Callable[..., object]] = {}
 """
 面板id对应的面板绘制函数集合
 面板id:面板绘制函数对象
 """
-place_data: Dict[str, List[str]] = {}
+place_data: dict[str, list[str]] = {}
 """ 按房间类型分类的场景列表 场景标签:场景路径列表 """
-cmd_map: Dict[int | str, Callable[[], object]] = {}
+cmd_map: dict[int | str, Callable[[], object]] = {}
 """ cmd存储 """
-settle_behavior_effect_data: Dict[int, Callable[..., object]] = {}
+settle_behavior_effect_data: dict[int, Callable[..., object]] = {}
 """ 角色行为结算处理器 处理器id:处理器 """
-settle_second_behavior_effect_data: Dict[int, Callable[..., object]] = {}
+settle_second_behavior_effect_data: dict[int, Callable[..., object]] = {}
 """ 角色二段行为结算处理器 处理器id:处理器 """
 
-first_NPC_adv_set: Set[int] = {
+first_NPC_adv_set: set[int] = {
     1,  # 阿米娅
     3,  # 凯尔希
     7,  # 可露希尔
@@ -295,7 +294,7 @@ first_NPC_adv_set: Set[int] = {
 }
 """ 初始就有的NPC的干员编号（AdvNpc） """
 
-ban_NPC_adv_set: Set[int] = {
+ban_NPC_adv_set: set[int] = {
     83,  # 普瑞赛斯
     6666,  # 炉芯终曲阿米娅
     1238,  # 老天师

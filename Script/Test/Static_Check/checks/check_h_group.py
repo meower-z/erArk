@@ -28,7 +28,6 @@ final_invariants_h_group.md（H-xx + HS-xx 不变式清单）。
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Set, Tuple
 
 from Script.Core import cache_control
 from ..check_registry import CheckFailure, register_check, make_failure
@@ -41,7 +40,7 @@ if TYPE_CHECKING:
   from Script.Config import config_def
   from typing import Any
 
-game_config: Optional[ModuleType]
+game_config: ModuleType | None
 try:
   from Script.Config import game_config as _game_config_module
 
@@ -69,7 +68,7 @@ def _pl(cache: game_type.Cache) -> game_type.Character | None:
   return cd.get(0)
 
 
-def _npcs(cache: game_type.Cache) -> Set[int]:
+def _npcs(cache: game_type.Cache) -> set[int]:
   """
   参数: cache 全局缓存对象
   返回值: Set[int] 已获得的非玩家角色id集合，即npc_id_got - {0}
@@ -81,7 +80,7 @@ def _npcs(cache: game_type.Cache) -> Set[int]:
   return set(got) - {0}
 
 
-def _all(cache: game_type.Cache) -> Set[int]:
+def _all(cache: game_type.Cache) -> set[int]:
   """
   参数: cache 全局缓存对象
   返回值: Set[int] 已获得的全部角色id集合(含玩家)，即npc_id_got | {0}
@@ -101,7 +100,7 @@ def _name(chara: object) -> str:
   return str(getattr(chara, "name", "?"))
 
 
-def _behavior_id(chara: object) -> Optional[str]:
+def _behavior_id(chara: object) -> str | None:
   """
   参数: chara 角色对象，允许为None
   返回值: Optional[str] 角色当前行为的behavior_id，取不到时返回None
@@ -143,9 +142,9 @@ def _tpl_dict(pl: object) -> dict[str, list[Any]] | None:
   return tpls if isinstance(tpls, dict) else None
 
 
-def _group_sex_body_part_groups() -> Tuple[
-    Optional[Dict[str, List]],
-    Optional[Dict[str, config_def.Behavior_Data]],
+def _group_sex_body_part_groups() -> tuple[
+    dict[str, list] | None,
+    dict[str, config_def.Behavior_Data] | None,
 ]:
   """
   参数: 无
@@ -169,7 +168,7 @@ def _group_sex_body_part_groups() -> Tuple[
 
 
 @register_check("HGROUP-01", "群交模式蕴含玩家在H")
-def check_hgroup_01() -> List[CheckFailure]:
+def check_hgroup_01() -> list[CheckFailure]:
   """
   参数:
       无
@@ -205,7 +204,7 @@ def check_hgroup_01() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-02", "群交模式需满足场内在H的NPC人数")
-def check_hgroup_02() -> List[CheckFailure]:
+def check_hgroup_02() -> list[CheckFailure]:
   """
   参数:
       无
@@ -258,7 +257,7 @@ def check_hgroup_02() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-03", "非群交时玩家群交模板必须为空")
-def check_hgroup_03() -> List[CheckFailure]:
+def check_hgroup_03() -> list[CheckFailure]:
   """
   参数:
       无
@@ -300,7 +299,7 @@ def check_hgroup_03() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-04", "群交模板结构固定")
-def check_hgroup_04() -> List[CheckFailure]:
+def check_hgroup_04() -> list[CheckFailure]:
   """
   参数:
       无
@@ -365,7 +364,7 @@ def check_hgroup_04() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-05", "模板槽位不得半填")
-def check_hgroup_05() -> List[CheckFailure]:
+def check_hgroup_05() -> list[CheckFailure]:
   """
   参数:
       无
@@ -425,7 +424,7 @@ def check_hgroup_05() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-06", "阴茎插入与侍奉互斥")
-def check_hgroup_06() -> List[CheckFailure]:
+def check_hgroup_06() -> list[CheckFailure]:
   """
   参数:
       无
@@ -468,7 +467,7 @@ def check_hgroup_06() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-07", "侍奉槽结构与去重（不含人数上限）")
-def check_hgroup_07() -> List[CheckFailure]:
+def check_hgroup_07() -> list[CheckFailure]:
   """
   参数:
       无
@@ -521,7 +520,7 @@ def check_hgroup_07() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-08", "模板中的角色必须是已获得NPC、在H、且同场景")
-def check_hgroup_08() -> List[CheckFailure]:
+def check_hgroup_08() -> list[CheckFailure]:
   """
   参数:
       无
@@ -597,7 +596,7 @@ def check_hgroup_08() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-09", "模板指令id必须存在且匹配所占部位")
-def check_hgroup_09() -> List[CheckFailure]:
+def check_hgroup_09() -> list[CheckFailure]:
   """
   参数:
       无
@@ -673,7 +672,7 @@ def check_hgroup_09() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-10", "群交控制字段的值域与所有权")
-def check_hgroup_10() -> List[CheckFailure]:
+def check_hgroup_10() -> list[CheckFailure]:
   """
   参数:
       无
@@ -736,7 +735,7 @@ def check_hgroup_10() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-11", "NPC自身的群交模板必须为空")
-def check_hgroup_11() -> List[CheckFailure]:
+def check_hgroup_11() -> list[CheckFailure]:
   """
   参数:
       无
@@ -779,7 +778,7 @@ def check_hgroup_11() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-12", "「群交自慰」标记的成立条件")
-def check_hgroup_12() -> List[CheckFailure]:
+def check_hgroup_12() -> list[CheckFailure]:
   """
   参数:
       无
@@ -834,7 +833,7 @@ def check_hgroup_12() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-13", "玩家不得带有「前往参与群交」标记")
-def check_hgroup_13() -> List[CheckFailure]:
+def check_hgroup_13() -> list[CheckFailure]:
   """
   参数:
       无
@@ -861,7 +860,7 @@ def check_hgroup_13() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-14", "「前往参与群交」标记的生命周期")
-def check_hgroup_14() -> List[CheckFailure]:
+def check_hgroup_14() -> list[CheckFailure]:
   """
   参数:
       无
@@ -920,7 +919,7 @@ def check_hgroup_14() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-15", "隐奸模式必须双向一致且至多一对")
-def check_hgroup_15() -> List[CheckFailure]:
+def check_hgroup_15() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1017,7 +1016,7 @@ def check_hgroup_15() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-16", "隐奸对象在H；模式1/2时玩家不在H")
-def check_hgroup_16() -> List[CheckFailure]:
+def check_hgroup_16() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1070,7 +1069,7 @@ def check_hgroup_16() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-17", "隐奸与群交互斥（玩家侧）")
-def check_hgroup_17() -> List[CheckFailure]:
+def check_hgroup_17() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1106,7 +1105,7 @@ def check_hgroup_17() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-18", "隐奸发现度：0..100，且只有玩家可能非0")
-def check_hgroup_18() -> List[CheckFailure]:
+def check_hgroup_18() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1156,7 +1155,7 @@ def check_hgroup_18() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-19", "露出模式必须双向一致且至多一对")
-def check_hgroup_19() -> List[CheckFailure]:
+def check_hgroup_19() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1246,7 +1245,7 @@ def check_hgroup_19() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-20", "露出与群交互斥（玩家侧）")
-def check_hgroup_20() -> List[CheckFailure]:
+def check_hgroup_20() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1275,7 +1274,7 @@ def check_hgroup_20() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-21", "隐奸/露出模式值域")
-def check_hgroup_21() -> List[CheckFailure]:
+def check_hgroup_21() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1320,7 +1319,7 @@ def check_hgroup_21() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-22", "在H的NPC必须与玩家同场景")
-def check_hgroup_22() -> List[CheckFailure]:
+def check_hgroup_22() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1361,7 +1360,7 @@ def check_hgroup_22() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-23", "玩家在H时场内必须有在H的NPC")
-def check_hgroup_23() -> List[CheckFailure]:
+def check_hgroup_23() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1416,7 +1415,7 @@ def check_hgroup_23() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-24", "逆推标记必须在H、同场景、且不在群交中")
-def check_hgroup_24() -> List[CheckFailure]:
+def check_hgroup_24() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1464,7 +1463,7 @@ def check_hgroup_24() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-25", "催眠行为模式互斥（木头人/逆推）")
-def check_hgroup_25() -> List[CheckFailure]:
+def check_hgroup_25() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1499,7 +1498,7 @@ def check_hgroup_25() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-26", "无意识H档位值域")
-def check_hgroup_26() -> List[CheckFailure]:
+def check_hgroup_26() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1533,7 +1532,7 @@ def check_hgroup_26() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-27", "时停开关与unconscious_h==3双向一致")
-def check_hgroup_27() -> List[CheckFailure]:
+def check_hgroup_27() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1584,7 +1583,7 @@ def check_hgroup_27() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-28", "装睡必须建立在睡奸醒来状态上")
-def check_hgroup_28() -> List[CheckFailure]:
+def check_hgroup_28() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1626,7 +1625,7 @@ def check_hgroup_28() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-29", "「为玩家逆推而自慰」与去洗手间/宿舍自慰互斥")
-def check_hgroup_29() -> List[CheckFailure]:
+def check_hgroup_29() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1662,7 +1661,7 @@ def check_hgroup_29() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-30", "体位字段的值域与「仅博士持有」")
-def check_hgroup_30() -> List[CheckFailure]:
+def check_hgroup_30() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1742,7 +1741,7 @@ def check_hgroup_30() -> List[CheckFailure]:
 
 
 @register_check("HGROUP-31", "完全脱离H的角色不应残留H局部状态")
-def check_hgroup_31() -> List[CheckFailure]:
+def check_hgroup_31() -> list[CheckFailure]:
   """
   参数:
       无

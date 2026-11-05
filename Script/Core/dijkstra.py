@@ -1,7 +1,6 @@
 """Dijkstra 最短路径算法，以及最短路径与各段路程数据的整理"""
 
 import heapq
-from typing import Dict, List, Optional, Tuple
 
 
 class SortedPathData:
@@ -13,15 +12,15 @@ class SortedPathData:
     """ 节点id """
     self.distance: float = 0
     """ 总路程 """
-    self.path: List[str] = []
+    self.path: list[str] = []
     """ 通往本节点的路径列表 """
-    self.path_times: List[int] = []
+    self.path_times: list[int] = []
     """ 通往本节点的路径中各节点路程列表 """
 
 
 def dijkstra(
-    graph: Dict[str, Dict[str, int]], start: str
-) -> Dict[str, SortedPathData]:
+    graph: dict[str, dict[str, int]], start: str
+) -> dict[str, SortedPathData]:
   """
   使用Dijkstra算法指定节点到其他节点的最短路径
   Keyword arguments:
@@ -30,8 +29,8 @@ def dijkstra(
   Return arguments:
   Dict[str, SortedPathData] -- 从起点到各个节点的最短路径数据
   """
-  distances: Dict[str, float] = {vertex: float("infinity") for vertex in graph}
-  previous_nodes: Dict[str, Optional[str]] = {vertex: None for vertex in graph}
+  distances: dict[str, float] = {vertex: float("infinity") for vertex in graph}
+  previous_nodes: dict[str, str | None] = {vertex: None for vertex in graph}
   distances[start] = 0
   priority_queue = [(0, start)]
   while priority_queue:
@@ -44,7 +43,7 @@ def dijkstra(
         distances[neighbor] = distance
         previous_nodes[neighbor] = current_vertex
         heapq.heappush(priority_queue, (distance, neighbor))
-  paths_data: Dict[str, SortedPathData] = {}
+  paths_data: dict[str, SortedPathData] = {}
   for vertex in graph:
     path_data = SortedPathData()
     path_data.node_id = vertex
@@ -57,10 +56,10 @@ def dijkstra(
 
 
 def get_path_and_times(
-    previous_nodes: Dict[str, Optional[str]],
-    graph: Dict[str, Dict[str, int]],
+    previous_nodes: dict[str, str | None],
+    graph: dict[str, dict[str, int]],
     vertex: str,
-) -> Tuple[List[str], List[int]]:
+) -> tuple[list[str], list[int]]:
   """
   根据前驱节点字典构建到指定节点的路径和时间列表。
   Keyword arguments:
@@ -70,9 +69,9 @@ def get_path_and_times(
   Return arguments:
   Tuple[List[str], List[str]]从起始节点到目标节点的路径和时间列表。
   """
-  path: List[str] = []
+  path: list[str] = []
   path_times = [0]
-  current: Optional[str] = vertex
+  current: str | None = vertex
   while current is not None:
     path.append(current)
     previous = previous_nodes[current]

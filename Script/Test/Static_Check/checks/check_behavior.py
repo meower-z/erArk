@@ -23,7 +23,6 @@ _behavior_type_ok()对同一角色重做一次同源判定，字段类型损坏�
 from __future__ import annotations
 
 import datetime
-from typing import List
 
 from Script.Core import cache_control
 from Script.Config import game_config
@@ -92,7 +91,7 @@ def _behavior_type_ok(chara: game_type.Character) -> bool:
 
 
 @register_check("BEHAV-01", "角色字典键与角色自身cid一致")
-def check_character_dict_key_matches_cid() -> List[CheckFailure]:
+def check_character_dict_key_matches_cid() -> list[CheckFailure]:
   """
   参数:
       无
@@ -127,7 +126,7 @@ def check_character_dict_key_matches_cid() -> List[CheckFailure]:
 
 
 @register_check("BEHAV-02", "全局时钟健全性")
-def check_global_clock_sanity() -> List[CheckFailure]:
+def check_global_clock_sanity() -> list[CheckFailure]:
   """
   参数:
       无
@@ -165,7 +164,7 @@ def check_global_clock_sanity() -> List[CheckFailure]:
 
 
 @register_check("BEHAV-03", "世界月份只能是四季月")
-def check_world_month_is_seasonal() -> List[CheckFailure]:
+def check_world_month_is_seasonal() -> list[CheckFailure]:
   """
   参数:
       无
@@ -201,7 +200,7 @@ def check_world_month_is_seasonal() -> List[CheckFailure]:
 
 
 @register_check("BEHAV-04", "上一循环时间不得晚于当前时间")
-def check_pre_game_time_not_after_game_time() -> List[CheckFailure]:
+def check_pre_game_time_not_after_game_time() -> list[CheckFailure]:
   """
   参数:
       无
@@ -241,7 +240,7 @@ def check_pre_game_time_not_after_game_time() -> List[CheckFailure]:
 
 
 @register_check("BEHAV-05", "跨日刷新已经完成")
-def check_daily_refresh_completed() -> List[CheckFailure]:
+def check_daily_refresh_completed() -> list[CheckFailure]:
   """
   参数:
       无
@@ -284,7 +283,7 @@ def check_daily_refresh_completed() -> List[CheckFailure]:
 
 
 @register_check("BEHAV-06", "更新流程嵌套深度必须归零")
-def check_update_flow_depth_zero() -> List[CheckFailure]:
+def check_update_flow_depth_zero() -> list[CheckFailure]:
   """
   参数:
       无
@@ -316,7 +315,7 @@ def check_update_flow_depth_zero() -> List[CheckFailure]:
 
 
 @register_check("BEHAV-07", "行为核心字段类型正确")
-def check_behavior_core_field_types() -> List[CheckFailure]:
+def check_behavior_core_field_types() -> list[CheckFailure]:
   """
   参数:
       无
@@ -350,7 +349,7 @@ def check_behavior_core_field_types() -> List[CheckFailure]:
 
 
 @register_check("BEHAV-08", "当前行为id必须已注册")
-def check_behavior_id_registered() -> List[CheckFailure]:
+def check_behavior_id_registered() -> list[CheckFailure]:
   """
   参数:
       无
@@ -389,7 +388,7 @@ def check_behavior_id_registered() -> List[CheckFailure]:
 
 
 @register_check("BEHAV-09", "运行中行为时长为非负整数")
-def check_behavior_duration_non_negative_int() -> List[CheckFailure]:
+def check_behavior_duration_non_negative_int() -> list[CheckFailure]:
   """
   参数:
       无
@@ -426,7 +425,7 @@ def check_behavior_duration_non_negative_int() -> List[CheckFailure]:
 
 
 @register_check("BEHAV-10", "活动角色的行为起时不得是哨兵")
-def check_behavior_start_time_not_sentinel() -> List[CheckFailure]:
+def check_behavior_start_time_not_sentinel() -> list[CheckFailure]:
   """
   参数:
       无
@@ -465,7 +464,7 @@ def check_behavior_start_time_not_sentinel() -> List[CheckFailure]:
 
 
 @register_check("BEHAV-11", "行为起时不得晚于游戏时间")
-def check_behavior_start_time_not_future() -> List[CheckFailure]:
+def check_behavior_start_time_not_future() -> list[CheckFailure]:
   """
   参数:
       无
@@ -511,7 +510,7 @@ def check_behavior_start_time_not_future() -> List[CheckFailure]:
 
 
 @register_check("BEHAV-12", "不得残留已过期的行为")
-def check_no_stale_expired_behavior() -> List[CheckFailure]:
+def check_no_stale_expired_behavior() -> list[CheckFailure]:
   """
   参数:
       无
@@ -574,7 +573,7 @@ def check_no_stale_expired_behavior() -> List[CheckFailure]:
 
 
 @register_check("BEHAV-14", "移动行为必须带着可执行的路径")
-def check_move_behavior_has_executable_path() -> List[CheckFailure]:
+def check_move_behavior_has_executable_path() -> list[CheckFailure]:
   """
   参数:
       无
@@ -652,7 +651,7 @@ def check_move_behavior_has_executable_path() -> List[CheckFailure]:
 
 
 @register_check("BEHAV-15", '"谁在跟我互动"的记录必须指向真实角色')
-def check_interacting_character_end_info_valid() -> List[CheckFailure]:
+def check_interacting_character_end_info_valid() -> list[CheckFailure]:
   """
   参数:
       无
@@ -691,7 +690,7 @@ def check_interacting_character_end_info_valid() -> List[CheckFailure]:
 
 
 @register_check("BEHAV-16", "生效中的身体道具不得已过期")
-def check_active_body_item_not_expired() -> List[CheckFailure]:
+def check_active_body_item_not_expired() -> list[CheckFailure]:
   """
   参数:
       无
@@ -749,7 +748,7 @@ def check_active_body_item_not_expired() -> List[CheckFailure]:
 
 
 @register_check("BEHAV-17", "二段行为取值与待结算id合法")
-def check_second_behavior_values_and_pending_ids() -> List[CheckFailure]:
+def check_second_behavior_values_and_pending_ids() -> list[CheckFailure]:
   """
   参数:
       无
@@ -817,7 +816,7 @@ def check_second_behavior_values_and_pending_ids() -> List[CheckFailure]:
 
 
 @register_check("BEHAV-18", "行为历史队列有界且条目可比")
-def check_last_behavior_id_list_bounded() -> List[CheckFailure]:
+def check_last_behavior_id_list_bounded() -> list[CheckFailure]:
   """
   参数:
       无
@@ -860,7 +859,7 @@ def check_last_behavior_id_list_bounded() -> List[CheckFailure]:
 
 
 @register_check("BEHAV-19", "时停中玩家必须处于时停无意识态")
-def check_time_stop_player_unconscious() -> List[CheckFailure]:
+def check_time_stop_player_unconscious() -> list[CheckFailure]:
   """
   参数:
       无
@@ -903,7 +902,7 @@ def check_time_stop_player_unconscious() -> List[CheckFailure]:
 
 
 @register_check("BEHAV-20", "群交模式必须有玩家在H中")
-def check_group_sex_mode_player_in_h() -> List[CheckFailure]:
+def check_group_sex_mode_player_in_h() -> list[CheckFailure]:
   """
   参数:
       无
@@ -945,7 +944,7 @@ def check_group_sex_mode_player_in_h() -> List[CheckFailure]:
 
 
 @register_check("BEHAV-21", "完成集合里只能是存在的角色id")
-def check_over_behavior_character_ids_exist() -> List[CheckFailure]:
+def check_over_behavior_character_ids_exist() -> list[CheckFailure]:
   """
   参数:
       无
@@ -989,7 +988,7 @@ def check_over_behavior_character_ids_exist() -> List[CheckFailure]:
 
 
 @register_check("BEHAV-22", "行为起时落在四季月上")
-def check_behavior_start_time_seasonal_month() -> List[CheckFailure]:
+def check_behavior_start_time_seasonal_month() -> list[CheckFailure]:
   """
   参数:
       无

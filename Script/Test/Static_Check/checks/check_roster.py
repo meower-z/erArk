@@ -16,7 +16,6 @@ import collections
 import datetime
 import math
 import os
-from typing import Dict, List, Set
 
 from Script.Config import game_config
 from Script.Core import cache_control
@@ -41,7 +40,7 @@ def _spath(pos: object) -> str:
   return ""
 
 
-def _prison_dorms(cache: game_type.Cache) -> Set[str]:
+def _prison_dorms(cache: game_type.Cache) -> set[str]:
   """
   参数: cache -- 全局缓存
   返回值: Set[str] -- 全部带Prison标签的场景路径集合(关押/牢1..牢8)
@@ -54,7 +53,7 @@ def _prison_dorms(cache: game_type.Cache) -> Set[str]:
   }
 
 
-def _guest_rooms(cache: game_type.Cache) -> Set[str]:
+def _guest_rooms(cache: game_type.Cache) -> set[str]:
   """
   参数: cache -- 全局缓存
   返回值: Set[str] -- 全部带Guest_Room标签的场景路径集合(访客/客房N)
@@ -76,13 +75,13 @@ def _warden_dorm() -> str:
   return _spath(["关押", "休息室"])
 
 
-def _scene_membership(cache: game_type.Cache) -> Dict[int, List[str]]:
+def _scene_membership(cache: game_type.Cache) -> dict[int, list[str]]:
   """
   参数: cache -- 全局缓存
   返回值: Dict[int, List[str]] -- 角色id到其出现的全部场景路径列表的反向索引(正常应恰好一条)
   功能: 遍历cache.scene_data建立场景成员关系反向索引，供在编/离线一致性类检查复用，避免重复遍历529个场景
   """
-  membership: Dict[int, List[str]] = {}
+  membership: dict[int, list[str]] = {}
   for path, scene in cache.scene_data.items():
     for cid in getattr(scene, "character_list", []):
       if cid != 0:
@@ -118,7 +117,7 @@ def _sev(cache: game_type.Cache, declared_warning: bool) -> str:
 
 
 @register_check("ROSTER-01", "在编名册id自洽")
-def check_roster_id_self_consistency() -> List[CheckFailure]:
+def check_roster_id_self_consistency() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -127,7 +126,7 @@ def check_roster_id_self_consistency() -> List[CheckFailure]:
   cache = cache_control.cache
   cd = cache.character_data
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   for cid in cache.npc_id_got:
     if cid not in cd:
       failures.append(
@@ -153,7 +152,7 @@ def check_roster_id_self_consistency() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-02", "玩家id不应长期留在NPC名册里")
-def check_player_id_not_lingering_in_roster() -> List[CheckFailure]:
+def check_player_id_not_lingering_in_roster() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -164,7 +163,7 @@ def check_player_id_not_lingering_in_roster() -> List[CheckFailure]:
   """
   cache = cache_control.cache
   warn = _sev(cache, True)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   if 0 not in cache.npc_id_got:
     return failures
   if getattr(cache, "game_round", 1) <= 1:
@@ -182,7 +181,7 @@ def check_player_id_not_lingering_in_roster() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-03", "在编干员与场景名册双向一致")
-def check_roster_scene_bidirectional_consistency() -> List[CheckFailure]:
+def check_roster_scene_bidirectional_consistency() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -192,7 +191,7 @@ def check_roster_scene_bidirectional_consistency() -> List[CheckFailure]:
   cache = cache_control.cache
   cd = cache.character_data
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   membership = _scene_membership(cache)
   for path, scene in cache.scene_data.items():
     for cid in getattr(scene, "character_list", []):
@@ -268,7 +267,7 @@ def check_roster_scene_bidirectional_consistency() -> List[CheckFailure]:
 
 @register_check("ROSTER-04", "离线来源flag必须对应真正的离线态")
 def check_offline_source_flag_matches_real_offline_state() -> (
-    List[CheckFailure]
+    list[CheckFailure]
 ):
   """
   参数: 无
@@ -279,7 +278,7 @@ def check_offline_source_flag_matches_real_offline_state() -> (
   cache = cache_control.cache
   cd = cache.character_data
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   membership = _scene_membership(cache)
   for cid, c in cd.items():
     if cid == 0:
@@ -311,7 +310,7 @@ def check_offline_source_flag_matches_real_offline_state() -> (
 
 
 @register_check("ROSTER-05", "监禁flag的来源分区完整")
-def check_imprisonment_flag_partition_completeness() -> List[CheckFailure]:
+def check_imprisonment_flag_partition_completeness() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -322,7 +321,7 @@ def check_imprisonment_flag_partition_completeness() -> List[CheckFailure]:
   cd = cache.character_data
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   imp = {cid for cid, c in cd.items() if cid != 0 and c.sp_flag.imprisonment}
   esc = {cid for cid, c in cd.items() if cid != 0 and c.sp_flag.escaping}
   prisoners = set(ri.current_prisoners)
@@ -364,7 +363,7 @@ def check_imprisonment_flag_partition_completeness() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-06", "囚犯名册条目结构合法且本人在编")
-def check_prisoner_record_shape_and_roster_membership() -> List[CheckFailure]:
+def check_prisoner_record_shape_and_roster_membership() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -375,7 +374,7 @@ def check_prisoner_record_shape_and_roster_membership() -> List[CheckFailure]:
   cd = cache.character_data
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   for cid, rec in ri.current_prisoners.items():
     if cid == 0 or cid not in cd:
       failures.append(
@@ -425,7 +424,7 @@ def check_prisoner_record_shape_and_roster_membership() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-07", "囚犯宿舍是互不重复的合法牢房")
-def check_prisoner_dormitory_uniqueness() -> List[CheckFailure]:
+def check_prisoner_dormitory_uniqueness() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -436,9 +435,9 @@ def check_prisoner_dormitory_uniqueness() -> List[CheckFailure]:
   cd = cache.character_data
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   prison_dorms = _prison_dorms(cache)
-  dorm_to_cids: Dict[str, List[int]] = {}
+  dorm_to_cids: dict[str, list[int]] = {}
   for cid in ri.current_prisoners:
     if cid not in cd:
       continue
@@ -471,7 +470,7 @@ def check_prisoner_dormitory_uniqueness() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-08", "囚犯留在关押区且不得同时被装袋")
-def check_prisoner_stays_in_prison_area_and_not_bagged() -> List[CheckFailure]:
+def check_prisoner_stays_in_prison_area_and_not_bagged() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -483,7 +482,7 @@ def check_prisoner_stays_in_prison_area_and_not_bagged() -> List[CheckFailure]:
   cd = cache.character_data
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   player = cd.get(0)
   for cid in ri.current_prisoners:
     if cid not in cd:
@@ -510,7 +509,7 @@ def check_prisoner_stays_in_prison_area_and_not_bagged() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-09", "逃跑者处于完整离线态")
-def check_escapee_full_offline_state() -> List[CheckFailure]:
+def check_escapee_full_offline_state() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -521,7 +520,7 @@ def check_escapee_full_offline_state() -> List[CheckFailure]:
   cd = cache.character_data
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   membership = _scene_membership(cache)
   for cid, c in cd.items():
     if cid == 0 or not c.sp_flag.escaping:
@@ -555,7 +554,7 @@ def check_escapee_full_offline_state() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-10", "逃跑者仍有一条可执行的追捕委托")
-def check_escapee_has_executable_capture_commission() -> List[CheckFailure]:
+def check_escapee_has_executable_capture_commission() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -567,14 +566,14 @@ def check_escapee_has_executable_capture_commission() -> List[CheckFailure]:
   cd = cache.character_data
   ri = cache.rhodes_island
   warn = _sev(cache, True)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   if not game_config.config_commission:
     return failures
   finished = ri.finished_field_commissions_set
   for cid, c in cd.items():
     if cid == 0 or not c.sp_flag.escaping:
       continue
-    target_reward = "追捕_{0}_1".format(cid)
+    target_reward = f"追捕_{cid}_1"
     candidates = [
         com_id
         for com_id, com in game_config.config_commission.items()
@@ -596,7 +595,7 @@ def check_escapee_has_executable_capture_commission() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-11", "监狱长缓存唯一且指向真实岗位")
-def check_warden_cache_unique_and_valid() -> List[CheckFailure]:
+def check_warden_cache_unique_and_valid() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -607,7 +606,7 @@ def check_warden_cache_unique_and_valid() -> List[CheckFailure]:
   cd = cache.character_data
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   wid = ri.current_warden_id
   if type(wid) is not int:
     failures.append(
@@ -658,7 +657,7 @@ def check_warden_cache_unique_and_valid() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-12", "监狱长身份软约束")
-def check_warden_identity_soft_constraints() -> List[CheckFailure]:
+def check_warden_identity_soft_constraints() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -669,7 +668,7 @@ def check_warden_identity_soft_constraints() -> List[CheckFailure]:
   cd = cache.character_data
   ri = cache.rhodes_island
   warn = _sev(cache, True)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   wid = ri.current_warden_id
   if not wid or wid not in cd:
     return failures
@@ -709,7 +708,7 @@ def check_warden_identity_soft_constraints() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-13", "监禁调教设置键齐全且取值在选项范围内")
-def check_confinement_training_setting_keys_and_range() -> List[CheckFailure]:
+def check_confinement_training_setting_keys_and_range() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -720,7 +719,7 @@ def check_confinement_training_setting_keys_and_range() -> List[CheckFailure]:
   cache = cache_control.cache
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   for cid in game_config.config_confinement_training_setting:
     option = game_config.config_confinement_training_setting_option.get(cid, [])
     if cid not in ri.confinement_training_setting:
@@ -757,7 +756,7 @@ def check_confinement_training_setting_keys_and_range() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-14", "访客名册与访客flag完全等价")
-def check_visitor_registry_and_flag_equivalence() -> List[CheckFailure]:
+def check_visitor_registry_and_flag_equivalence() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -768,7 +767,7 @@ def check_visitor_registry_and_flag_equivalence() -> List[CheckFailure]:
   cd = cache.character_data
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   vis_flag = {
       cid for cid, c in cd.items() if cid != 0 and c.sp_flag.vistor == 1
   }
@@ -808,7 +807,7 @@ def check_visitor_registry_and_flag_equivalence() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-15", "访客住在互不重复的客房")
-def check_visitor_room_uniqueness() -> List[CheckFailure]:
+def check_visitor_room_uniqueness() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -820,9 +819,9 @@ def check_visitor_room_uniqueness() -> List[CheckFailure]:
   cd = cache.character_data
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   guest_rooms = _guest_rooms(cache)
-  room_to_cids: Dict[str, List[int]] = {}
+  room_to_cids: dict[str, list[int]] = {}
   for cid in ri.visitor_info:
     if cid not in cd:
       failures.append(
@@ -863,7 +862,7 @@ def check_visitor_room_uniqueness() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-16", "访客人数不超过客房上限")
-def check_visitor_count_within_capacity() -> List[CheckFailure]:
+def check_visitor_count_within_capacity() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -873,7 +872,7 @@ def check_visitor_count_within_capacity() -> List[CheckFailure]:
   cache = cache_control.cache
   ri = cache.rhodes_island
   warn = _sev(cache, True)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   if len(ri.visitor_info) > ri.visitor_max:
     open_2000 = {k: v for k, v in ri.facility_open.items() if 2000 < k < 2100}
     failures.append(
@@ -889,7 +888,7 @@ def check_visitor_count_within_capacity() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-17", "没有严重逾期未结算的访客")
-def check_no_severely_overdue_visitors() -> List[CheckFailure]:
+def check_no_severely_overdue_visitors() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -899,7 +898,7 @@ def check_no_severely_overdue_visitors() -> List[CheckFailure]:
   cache = cache_control.cache
   ri = cache.rhodes_island
   warn = _sev(cache, True)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   for cid, end in ri.visitor_info.items():
     if not isinstance(end, datetime.datetime):
       failures.append(
@@ -927,7 +926,7 @@ def check_no_severely_overdue_visitors() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-18", "邀请栏结构完整、空目标必归零")
-def check_invite_visitor_shape_integrity() -> List[CheckFailure]:
+def check_invite_visitor_shape_integrity() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -939,7 +938,7 @@ def check_invite_visitor_shape_integrity() -> List[CheckFailure]:
   cd = cache.character_data
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   raw = ri.invite_visitor
   if not (isinstance(raw, list) and len(raw) == 3):
     failures.append(
@@ -986,7 +985,7 @@ def check_invite_visitor_shape_integrity() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-19", "邀请目标仍是合法的未入编候选")
-def check_invite_target_still_valid_candidate() -> List[CheckFailure]:
+def check_invite_target_still_valid_candidate() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -998,7 +997,7 @@ def check_invite_target_still_valid_candidate() -> List[CheckFailure]:
   cd = cache.character_data
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   t = _invite_target(ri)
   if not t:
     return failures
@@ -1048,7 +1047,7 @@ def check_invite_target_still_valid_candidate() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-20", "待确认招募名单合法")
-def check_recruited_id_pool_validity() -> List[CheckFailure]:
+def check_recruited_id_pool_validity() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -1059,7 +1058,7 @@ def check_recruited_id_pool_validity() -> List[CheckFailure]:
   cd = cache.character_data
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   for cid in ri.recruited_id:
     if cid == 0 or cid not in cd:
       failures.append(
@@ -1103,7 +1102,7 @@ def check_recruited_id_pool_validity() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-21", "当前访客与其它名册身份互斥")
-def check_visitor_identity_mutual_exclusion() -> List[CheckFailure]:
+def check_visitor_identity_mutual_exclusion() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -1114,12 +1113,12 @@ def check_visitor_identity_mutual_exclusion() -> List[CheckFailure]:
   cd = cache.character_data
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   V = set(ri.visitor_info)
   P = set(ri.recruited_id)
   t = _invite_target(ri)
   I = {t} if t else set()
-  C: Set[int] = set()
+  C: set[int] = set()
   for r in ri.ongoing_field_commissions.values():
     if isinstance(r, list) and r and isinstance(r[0], list):
       C |= set(r[0])
@@ -1150,7 +1149,7 @@ def check_visitor_identity_mutual_exclusion() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-22", "招募线记录形状与进度范围")
-def check_recruit_line_shape_and_progress_range() -> List[CheckFailure]:
+def check_recruit_line_shape_and_progress_range() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -1161,7 +1160,7 @@ def check_recruit_line_shape_and_progress_range() -> List[CheckFailure]:
   cache = cache_control.cache
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   strategy_ids = set(game_config.config_recruitment_strategy)
   for lid, rec in ri.recruit_line.items():
     problems = []
@@ -1216,7 +1215,7 @@ def check_recruit_line_shape_and_progress_range() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-23", "招募线主专员真实可用且不重复")
-def check_recruit_line_main_hr_validity_and_uniqueness() -> List[CheckFailure]:
+def check_recruit_line_main_hr_validity_and_uniqueness() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -1228,7 +1227,7 @@ def check_recruit_line_main_hr_validity_and_uniqueness() -> List[CheckFailure]:
   cd = cache.character_data
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   mains = [
       rec[2]
       for rec in ri.recruit_line.values()
@@ -1272,7 +1271,7 @@ def check_recruit_line_main_hr_validity_and_uniqueness() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-24", "招聘专员列表无重复、成员岗位正确、在编71全部在内")
-def check_hr_operator_list_integrity() -> List[CheckFailure]:
+def check_hr_operator_list_integrity() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -1284,7 +1283,7 @@ def check_hr_operator_list_integrity() -> List[CheckFailure]:
   cd = cache.character_data
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   hr = ri.hr_operator_ids_list
   dup = {cid for cid in hr if hr.count(cid) > 1}
   if dup:
@@ -1333,7 +1332,7 @@ def check_hr_operator_list_integrity() -> List[CheckFailure]:
 
 @register_check("ROSTER-25", "进行中委托记录结构合法、人员全局唯一")
 def check_ongoing_commission_shape_and_member_uniqueness() -> (
-    List[CheckFailure]
+    list[CheckFailure]
 ):
   """
   参数: 无
@@ -1343,8 +1342,8 @@ def check_ongoing_commission_shape_and_member_uniqueness() -> (
   cache = cache_control.cache
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
-  seen: Dict[int, int] = {}
+  failures: list[CheckFailure] = []
+  seen: dict[int, int] = {}
   for mid, r in ri.ongoing_field_commissions.items():
     problems = []
     if not (isinstance(mid, int) and mid != 0):
@@ -1366,7 +1365,7 @@ def check_ongoing_commission_shape_and_member_uniqueness() -> (
       problems.append(f"r[1]={ret_time!r}不是datetime")
     if not isinstance(vehicles, list):
       problems.append(f"r[2]={vehicles!r}不是list")
-    involved: List[int] = []
+    involved: list[int] = []
     if isinstance(members, list):
       if len(members) != len(set(members)):
         problems.append(f"r[0]内部有重复干员id: {members}")
@@ -1391,7 +1390,7 @@ def check_ongoing_commission_shape_and_member_uniqueness() -> (
 
 
 @register_check("ROSTER-26", "外勤名单与角色外勤flag双向一致")
-def check_field_commission_membership_flag_consistency() -> List[CheckFailure]:
+def check_field_commission_membership_flag_consistency() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -1403,9 +1402,9 @@ def check_field_commission_membership_flag_consistency() -> List[CheckFailure]:
   cd = cache.character_data
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   membership_scene = _scene_membership(cache)
-  membership: Dict[int, int] = {}
+  membership: dict[int, int] = {}
   for mid, r in ri.ongoing_field_commissions.items():
     if not (isinstance(r, list) and r and isinstance(r[0], list)):
       continue
@@ -1452,7 +1451,7 @@ def check_field_commission_membership_flag_consistency() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-27", "外勤人员不得兼任访客/囚犯/助理/监狱长/招募目标")
-def check_field_commission_member_identity_exclusion() -> List[CheckFailure]:
+def check_field_commission_member_identity_exclusion() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -1463,9 +1462,9 @@ def check_field_commission_member_identity_exclusion() -> List[CheckFailure]:
   cd = cache.character_data
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
-  C: Set[int] = set()
-  commission_of: Dict[int, int] = {}
+  failures: list[CheckFailure] = []
+  C: set[int] = set()
+  commission_of: dict[int, int] = {}
   for mid, r in ri.ongoing_field_commissions.items():
     if isinstance(r, list) and r and isinstance(r[0], list):
       for cid in r[0]:
@@ -1526,7 +1525,7 @@ def check_field_commission_member_identity_exclusion() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-28", "载具外勤中数与委托明细守恒")
-def check_vehicle_busy_count_conservation() -> List[CheckFailure]:
+def check_vehicle_busy_count_conservation() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -1536,7 +1535,7 @@ def check_vehicle_busy_count_conservation() -> List[CheckFailure]:
   cache = cache_control.cache
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   used: collections.Counter[int] = collections.Counter()
   for r in ri.ongoing_field_commissions.values():
     if isinstance(r, list) and len(r) == 3 and isinstance(r[2], list):
@@ -1593,7 +1592,7 @@ def check_vehicle_busy_count_conservation() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-29", "进行中委托id有效且未逾期")
-def check_ongoing_commission_id_valid_and_not_overdue() -> List[CheckFailure]:
+def check_ongoing_commission_id_valid_and_not_overdue() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -1604,7 +1603,7 @@ def check_ongoing_commission_id_valid_and_not_overdue() -> List[CheckFailure]:
   cache = cache_control.cache
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   config_loaded = bool(game_config.config_commission)
   for mid, r in ri.ongoing_field_commissions.items():
     if config_loaded and mid not in game_config.config_commission:
@@ -1654,7 +1653,7 @@ def check_ongoing_commission_id_valid_and_not_overdue() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-30", "外交官表与角色外派flag双向一致")
-def check_diplomat_registry_and_flag_consistency() -> List[CheckFailure]:
+def check_diplomat_registry_and_flag_consistency() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -1666,7 +1665,7 @@ def check_diplomat_registry_and_flag_consistency() -> List[CheckFailure]:
   cd = cache.character_data
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   current_country = (
       ri.current_location[0]
       if isinstance(ri.current_location, list) and ri.current_location
@@ -1751,7 +1750,7 @@ def check_diplomat_registry_and_flag_consistency() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-32", "助理身份互斥")
-def check_assistant_identity_exclusion() -> List[CheckFailure]:
+def check_assistant_identity_exclusion() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -1762,7 +1761,7 @@ def check_assistant_identity_exclusion() -> List[CheckFailure]:
   cd = cache.character_data
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   player = cd.get(0)
   if player is None:
     return failures
@@ -1822,7 +1821,7 @@ def check_assistant_identity_exclusion() -> List[CheckFailure]:
 
 
 @register_check("ROSTER-33", "装袋双方记录双向一致")
-def check_bagging_pair_consistency() -> List[CheckFailure]:
+def check_bagging_pair_consistency() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -1833,7 +1832,7 @@ def check_bagging_pair_consistency() -> List[CheckFailure]:
   cd = cache.character_data
   ri = cache.rhodes_island
   warn = _sev(cache, False)
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   player = cd.get(0)
   if player is None:
     return failures

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """
 重新实现流程控制函数，适配Web UI
@@ -10,7 +9,6 @@ from __future__ import annotations
 from Script.Core import cache_control, io_init, constant
 from Script.Core.web_server import get_button_response, get_wait_response, get_input_response, update_game_state, update_input_request, emit_settlement_buttons, get_settlement_button_response, clear_settlement_button_response
 import time
-from typing import List, Optional
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -116,8 +114,8 @@ def _clear_sub_panel_before_return() -> None:
 
 
 def _handle_settlement_buttons(
-    return_list: List[str], saved_other_texts: Optional[List[str]] = None
-) -> Optional[str]:
+    return_list: list[str], saved_other_texts: list[str] | None = None
+) -> str | None:
   """
   处理结算模式下的按钮显示
 
@@ -208,7 +206,7 @@ def _handle_settlement_buttons(
   return None
 
 
-def askfor_all(return_list: List[str]) -> str:
+def askfor_all(return_list: list[str]) -> str:
   """
   等待用户选择一个选项
 

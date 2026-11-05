@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """
 Web服务器模块，用于启动Flask服务器并处理请求
@@ -22,7 +21,6 @@ import sys
 import time
 import socket
 import psutil
-from typing import List
 
 # 导入Flask相关模块
 from flask import Flask, render_template, jsonify, request, current_app
@@ -2294,7 +2292,7 @@ def find_free_port(start_port: int = 5000, max_attempts: int = 50) -> int:
       else:
         print(f'端口 {port} 可用')
       return port
-    except socket.error:
+    except OSError:
       # 端口被占用，尝试下一个
       if port == start_port:
         pass  # 已经在上面显示了详细信息
@@ -3049,7 +3047,7 @@ def start_server() -> int:
                   host_name, None, socket.AF_INET, socket.SOCK_DGRAM
               )
               ips = list(set([addr[4][0] for addr in info]))
-              valid_ips: List[str] = []
+              valid_ips: list[str] = []
               for ip in ips:
                 ip_str = str(ip)
                 if (
