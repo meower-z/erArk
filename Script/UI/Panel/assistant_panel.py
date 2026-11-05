@@ -1,7 +1,7 @@
 """助理面板，以及助理候选、选择与替换的处理"""
 
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text, flow_handle, text_handle, constant, py_cmd
+from Script.Core import cache_control, game_type, get_text, flow_handle, constant, py_cmd
 from Script.Design import handle_premise, attr_calculation, map_handle, second_behavior
 from Script.UI.Moudle import draw, panel
 from Script.Config import game_config, normal_config

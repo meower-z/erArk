@@ -223,7 +223,6 @@ def askfor_all(return_list: list[str]) -> str:
 
   在Web UI中，这变成等待用户通过API发送选择
   """
-  from Script.Core import constant
 
   # 记录进入时的面板ID，用于检测面板切换
   initial_panel_id = getattr(cache, "now_panel_id", None)

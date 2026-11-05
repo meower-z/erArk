@@ -1,8 +1,6 @@
 """娱乐相关的前提处理函数"""
 
-from functools import wraps
-from types import FunctionType
-from Script.Core import cache_control, constant, constant_promise, game_type
+from Script.Core import cache_control, constant_promise, game_type
 from Script.Design import game_time, map_handle
 from Script.Design.handle_premise.premise_registry import add_premise
 

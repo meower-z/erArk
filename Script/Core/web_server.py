@@ -15,7 +15,6 @@ os.environ['EVENTLET_NO_GREENDNS'] = 'yes'
 # 导入标准库模块
 import threading
 import webbrowser
-import json
 import logging
 import sys
 import time
@@ -23,11 +22,11 @@ import socket
 import psutil
 
 # 导入Flask相关模块
-from flask import Flask, render_template, jsonify, request, current_app
+from flask import Flask, render_template, jsonify, request
 from flask_socketio import SocketIO
 
 # 导入游戏核心模块
-from Script.Core import cache_control, constant, game_type
+from Script.Core import cache_control, constant
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -548,7 +547,6 @@ def toggle_cloth() -> Response:
   功能描述：切换指定衣服的穿脱状态
   """
   from Script.Core import cache_control
-  from Script.Design import handle_premise
 
   cache = cache_control.cache
 

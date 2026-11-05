@@ -7,9 +7,7 @@
 - 小类（InteractionMinorType）：每个大类下的具体交互方式
 """
 
-from typing import Set
 from Script.Core import cache_control, game_type, constant
-from Script.Config import game_config
 from Script.Design import web_interaction_manager, handle_premise
 from Script.System.Instruct_System import interaction_types
 from Script.System.Instruct_System.instruct_category import HIP_SUB_PARTS, HEAD_SUB_PARTS, BodyPart

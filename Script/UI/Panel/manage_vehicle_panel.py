@@ -1,6 +1,5 @@
 """载具管理界面面板，以及基地载具数据的更新与损坏回收结算"""
 
-from typing import Tuple
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.UI.Moudle import draw

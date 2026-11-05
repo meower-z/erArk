@@ -15,8 +15,8 @@ from Script.Config import normal_config, game_config
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-  from typing import Any, Mapping
-  from collections.abc import Callable
+  from typing import Any
+  from collections.abc import Callable, Mapping
   from typing import Literal
 
 cache: game_type.Cache = cache_control.cache

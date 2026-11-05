@@ -15,7 +15,7 @@
 - 子面板模式下，其他选项卡会变灰且不可点击
 """
 
-from typing import Any, Optional
+from typing import Any
 from Script.Core import cache_control, game_type, constant
 from Script.Design import handle_premise, child_stage_gate
 

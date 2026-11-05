@@ -13,15 +13,11 @@
 
 from Script.System.Instruct_System.instruct_category import (
     InstructCategory,
-    BodyPart,
     BODY_PART_NAMES,
 )
 from Script.System.Instruct_System.interaction_types import (
-    InteractionMajorType,
     InteractionMinorType,
-    MAJOR_TYPE_NAMES,
     MAJOR_TYPE_ORDER,
-    MINOR_TYPE_NAMES,
     MAJOR_TO_MINOR_TYPES,
     get_major_type,
     get_minor_type_name,

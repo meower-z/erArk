@@ -277,7 +277,6 @@ def try_consume_medicine(
   返回:
       bool: 药物是否全部满足需求。
   """
-  from Script.System.Medical_System import medical_service
 
   # 无病人或基地对象时，无法扣药。
   if patient is None:

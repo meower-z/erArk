@@ -5,7 +5,6 @@
 该组件提供全局对话框管理功能，供talk.py等模块使用
 """
 
-from typing import Optional
 from Script.Core import cache_control, game_type
 
 cache: game_type.Cache = cache_control.cache

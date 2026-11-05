@@ -5,9 +5,8 @@ from Script.Core import (
     cache_control,
     game_path_config,
     game_type,
-    constant,
 )
-from Script.Config import game_config, normal_config
+from Script.Config import normal_config
 from Script.Design import handle_premise
 
 game_path = game_path_config.game_path

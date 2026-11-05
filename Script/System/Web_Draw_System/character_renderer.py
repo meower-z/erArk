@@ -6,7 +6,6 @@
 import os
 import json
 from Script.Core import cache_control, game_type, image_path_index
-from Script.Config import game_config
 from Script.System.Web_Draw_System.body_part_button import BodyPartButton
 from Script.System.Instruct_System.instruct_category import CLICKABLE_BODY_PARTS
 

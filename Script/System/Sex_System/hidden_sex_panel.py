@@ -2,7 +2,7 @@
 
 from types import FunctionType
 from Script.System.Instruct_System import handle_instruct
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw
 from Script.Core import (
     cache_control,
     get_text,

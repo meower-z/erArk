@@ -1,6 +1,5 @@
 """避孕套选择面板，以及装饰部位的显示名称"""
 
-from typing import Dict
 from types import FunctionType
 
 from Script.Core import cache_control, game_type, get_text, flow_handle

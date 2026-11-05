@@ -3,14 +3,9 @@
 from types import FunctionType
 from Script.UI.Moudle import draw
 from Script.UI.Panel import see_character_info_panel
-from typing import Tuple
 from Script.Design import game_time
 from Script.Core import get_text, cache_control, game_type, flow_handle
-from Script.Config import game_config, normal_config
-from Script.Core import (
-    value_handle,
-    text_handle,
-)
+from Script.Config import normal_config
 
 _: FunctionType = get_text._
 """ 翻译api """

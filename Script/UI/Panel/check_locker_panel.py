@@ -3,10 +3,9 @@
 可偷取全部内裤或袜子，或选择射在衣物上
 """
 
-from typing import Tuple, Dict
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, text_handle, constant, py_cmd
-from Script.Design import map_handle, attr_calculation, update, attr_text, handle_premise, clothing
+from Script.Design import map_handle, update, attr_text, handle_premise, clothing
 from Script.UI.Moudle import draw, panel
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import ejaculation_panel

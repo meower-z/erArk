@@ -733,7 +733,7 @@ def migrate_character_replacement(
   Returns:
       int: 成功迁移的角色数量
   """
-  from Script.Design import character_handle, attr_calculation
+  from Script.Design import attr_calculation
 
   migrated_count = 0
   character_data = loaded_dict.get('character_data', {})

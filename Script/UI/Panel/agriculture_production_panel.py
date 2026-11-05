@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-from typing import Dict
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.Design import handle_ability, basement

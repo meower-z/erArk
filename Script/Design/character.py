@@ -6,7 +6,6 @@ from types import FunctionType
 from Script.Core import (
     cache_control,
     get_text,
-    constant,
     game_type,
 )
 from Script.Design import (

@@ -7,7 +7,7 @@ Web绘制适配器，用于转换原有绘制类到Web界面
 from __future__ import annotations
 
 import time
-from typing import Any, Optional
+from typing import Any
 from Script.Core import cache_control, web_server, flow_handle, text_handle
 
 from typing import TYPE_CHECKING

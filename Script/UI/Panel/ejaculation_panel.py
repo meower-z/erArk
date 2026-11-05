@@ -5,7 +5,7 @@
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant, py_cmd
 from Script.Design import attr_calculation, handle_premise, map_handle, handle_ability
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 
 import random
