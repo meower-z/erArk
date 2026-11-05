@@ -94,7 +94,7 @@ def run_table(
   os.chdir(root)
   with contextlib.redirect_stdout(io.StringIO()):
     getattr(buildata, function_name)()
-  with open(os.path.join(csv_dir, output_name), "r", encoding="utf-8") as f:
+  with open(os.path.join(csv_dir, output_name), encoding="utf-8") as f:
     return f.read()
 
 
@@ -110,7 +110,6 @@ class BuildataTablesIgnoreModuleDocstringTest(FastTestCase):
     for table in TABLES:
       with open(
           os.path.join(ROOT, "Script", "Core", table[1]),
-          "r",
           encoding="utf-8",
           newline="",
       ) as f:

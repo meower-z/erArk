@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 fast_report.py 的测试：设置取自 pyproject.toml、缓存目录、变异测试的统计、只出报告的退出码；
 不启动游戏

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 target.csv 编号体系一次性迁移脚本（Plan 08）
 
@@ -123,7 +122,7 @@ def read_target() -> tuple[list[str], list[TargetRow], str]:
   list -- 数据行字典列表
   str -- target.csv 的行尾
   """
-  raw = io.open(TARGET_PATH, encoding="utf-8", newline="").read()
+  raw = open(TARGET_PATH, encoding="utf-8", newline="").read()
   lines, line_end = split_lines(raw)
   header = lines[:HEADER_LINES]
   rows: list[TargetRow] = []
@@ -275,9 +274,7 @@ def write_target(
             ]
         )
     )
-  io.open(TARGET_PATH, "w", encoding="utf-8", newline="").write(
-      line_end.join(out)
-  )
+  open(TARGET_PATH, "w", encoding="utf-8", newline="").write(line_end.join(out))
 
 
 def update_effect(mapping: dict[int, int]) -> int:
@@ -288,7 +285,7 @@ def update_effect(mapping: dict[int, int]) -> int:
   Return arguments:
   int -- 改写的行数
   """
-  raw = io.open(EFFECT_PATH, encoding="utf-8", newline="").read()
+  raw = open(EFFECT_PATH, encoding="utf-8", newline="").read()
   lines, line_end = split_lines(raw)
   changed = 0
   for index in range(HEADER_LINES, len(lines)):
@@ -307,7 +304,7 @@ def update_effect(mapping: dict[int, int]) -> int:
     parts[1] = str(mapping[old_target])
     lines[index] = ",".join(parts)
     changed += 1
-  io.open(EFFECT_PATH, "w", encoding="utf-8", newline="").write(
+  open(EFFECT_PATH, "w", encoding="utf-8", newline="").write(
       line_end.join(lines)
   )
   return changed
@@ -343,7 +340,7 @@ def write_mapping(
             row["remarks"].replace(",", "，"),
         )
     )
-  io.open(MAPPING_PATH, "w", encoding="utf-8", newline="").write(
+  open(MAPPING_PATH, "w", encoding="utf-8", newline="").write(
       "\r\n".join(out) + "\r\n"
   )
 

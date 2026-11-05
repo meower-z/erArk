@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 只出报告：在游戏的快速测试层 tests/fast 上跑三条测试质量规则。
 

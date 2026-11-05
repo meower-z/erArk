@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """fast_report.py 开始前的 data/ 检查：checkout 的 data/ 下有被 git 忽略的未跟踪文件就拒绝运行。"""
 
 from __future__ import annotations

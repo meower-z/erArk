@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Tk 取证启动器与只读探针。不要直接运行，由 tk_game.py 调用。
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 调用 OpenAI 图像模型（默认 gpt-image-2.5-sunburst）生成指定角色的立绘
 
@@ -137,7 +136,7 @@ def load_name_table(csv_path: Path, name_col: int) -> dict[int, str]:
   table: dict[int, str] = {}
   if not csv_path.exists():
     return table
-  with open(csv_path, "r", encoding="utf-8-sig") as f:
+  with open(csv_path, encoding="utf-8-sig") as f:
     # 表头下方的类型提示行（如 0,1,0,0）也以数字开头，但真实数据在其后，同编号会被覆盖掉
     for row in csv.reader(f):
       if len(row) > name_col and row[0].isdigit() and row[name_col]:
@@ -210,7 +209,7 @@ def load_character_info(
       "body_traits": [],
       "clothes": [],
   }
-  with open(csv_path, "r", encoding="utf-8-sig") as f:
+  with open(csv_path, encoding="utf-8-sig") as f:
     rows = list(csv.reader(f))[2:]
   for row in rows:
     if not row:
@@ -593,7 +592,7 @@ def load_api_config(cli_base_url: str | None) -> tuple[str, str | None]:
   """
   csv_values = {}
   if API_KEY_CSV.exists():
-    with open(API_KEY_CSV, "r", encoding="utf-8-sig") as f:
+    with open(API_KEY_CSV, encoding="utf-8-sig") as f:
       for row in csv.reader(f):
         if len(row) >= 2:
           csv_values[row[0].strip()] = row[1].strip()

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Web模式交互类型管理器
 处理大类/小类的选择、切换和记忆功能
@@ -12,14 +11,14 @@ Web模式交互类型管理器
 - 指令列表按照 Instruct.py 中定义的顺序排序，而非 handle_instruct.py 的装饰器执行顺序
 """
 
-from typing import Dict, List, Optional, Set, Union
+from typing import Set, Union
 from Script.Core import constant, cache_control, game_type
 from Script.Config import game_config
 from Script.System.Instruct_System.Instruct import Instruct
 
 # 生成指令ID到顺序的映射（基于 Instruct.py 中的定义顺序）
 # 使用 __dict__ 而非 dir() 以保持正确的定义顺序
-_INSTRUCT_ORDER_MAP: Dict[str, int] = {}
+_INSTRUCT_ORDER_MAP: dict[str, int] = {}
 _order_index = 0
 for attr_name, attr_value in Instruct.__dict__.items():
   if not attr_name.startswith("_") and isinstance(attr_value, str):
@@ -43,17 +42,17 @@ def _get_instruct_sort_key(instruct_id: str) -> int:
 cache: game_type.Cache = cache_control.cache
 
 
-def get_current_major_type() -> Optional[str]:
+def get_current_major_type() -> str | None:
   """获取当前选中的大类型（字符串标识符）"""
   return cache.web_current_major_type
 
 
-def get_current_minor_type() -> Optional[str]:
+def get_current_minor_type() -> str | None:
   """获取当前选中的小类型（字符串标识符）"""
   return cache.web_current_minor_type
 
 
-def select_major_type(major_type: Optional[str]) -> Optional[str]:
+def select_major_type(major_type: str | None) -> str | None:
   """
   选择大类型
 
@@ -71,7 +70,7 @@ def select_major_type(major_type: Optional[str]) -> Optional[str]:
   return None
 
 
-def select_minor_type(minor_type: Optional[str]) -> None:
+def select_minor_type(minor_type: str | None) -> None:
   """
   选择小类型
 
@@ -88,7 +87,7 @@ def clear_selection() -> None:
   cache.web_current_minor_type = None
 
 
-def get_available_major_types() -> List[Dict]:
+def get_available_major_types() -> list[dict]:
   """
   获取可用的大类型列表
 
@@ -107,7 +106,7 @@ def get_available_major_types() -> List[Dict]:
   return result
 
 
-def get_available_minor_types(major_type: Optional[str] = None) -> List[Dict]:
+def get_available_minor_types(major_type: str | None = None) -> list[dict]:
   """
   获取指定大类下可用的小类型列表
 
@@ -135,8 +134,8 @@ def get_available_minor_types(major_type: Optional[str] = None) -> List[Dict]:
 
 
 def get_instructs_by_minor_type(
-    minor_type: Optional[str] = None, check_premise: bool = True
-) -> List[str]:
+    minor_type: str | None = None, check_premise: bool = True
+) -> list[str]:
   """
   获取指定小类型下的指令列表
 
@@ -178,8 +177,8 @@ def get_instructs_by_minor_type(
 
 
 def get_instructs_by_body_part(
-    body_part: str, minor_type: Optional[str] = None, check_premise: bool = True
-) -> List[str]:
+    body_part: str, minor_type: str | None = None, check_premise: bool = True
+) -> list[str]:
   """
   获取指定身体部位关联的指令列表
 
@@ -214,7 +213,7 @@ def get_instructs_by_body_part(
   return result
 
 
-def get_drug_list() -> List[Dict]:
+def get_drug_list() -> list[dict]:
   """
   获取可用药物列表
 
@@ -235,7 +234,7 @@ def get_drug_list() -> List[Dict]:
   return result
 
 
-def get_item_list() -> List[Dict]:
+def get_item_list() -> list[dict]:
   """
   获取可用道具列表
 
@@ -256,17 +255,17 @@ def get_item_list() -> List[Dict]:
   return result
 
 
-def select_drug(drug_id: Optional[int]) -> None:
+def select_drug(drug_id: int | None) -> None:
   """选择药物"""
   cache.web_selected_drug_id = drug_id
 
 
-def select_item(item_id: Optional[int]) -> None:
+def select_item(item_id: int | None) -> None:
   """选择道具"""
   cache.web_selected_item_id = item_id
 
 
-def get_interaction_state() -> Dict:
+def get_interaction_state() -> dict:
   """
   获取当前交互状态（用于前端显示）
 
@@ -305,7 +304,7 @@ def get_interaction_state() -> Dict:
 
 
 def _check_single_instruct_premise(
-    instruct_id: str, premise_cache: Dict
+    instruct_id: str, premise_cache: dict
 ) -> bool:
   """
   检查单个指令的前提条件是否满足

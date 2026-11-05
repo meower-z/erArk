@@ -29,7 +29,7 @@ class CVPMenu(QDialog):
 
   def __init__(self) -> None:
     """初始化综合型基础数值前提复选框"""
-    super(CVPMenu, self).__init__()
+    super().__init__()
     self.setWindowTitle("综合型基础数值前提")
     self.font = font
     self.layout: QVBoxLayout = QVBoxLayout()

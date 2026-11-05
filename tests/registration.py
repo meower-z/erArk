@@ -126,7 +126,7 @@ def pytest_classes(module: "ModuleType") -> list:
   while owners:
     owner = owners.pop()
     if isinstance(owner, type):
-      namespaces: "list[Mapping[str, object]]" = [
+      namespaces: list[Mapping[str, object]] = [
           vars(klass) for klass in owner.__mro__
       ]
     else:

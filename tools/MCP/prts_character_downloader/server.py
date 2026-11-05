@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 PRTS角色立绘下载器 MCP服务器
@@ -11,7 +10,7 @@ PRTS角色立绘下载器 MCP服务器
 import asyncio
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from mcp import types
 from mcp.server import NotificationOptions, Server
@@ -74,7 +73,7 @@ class PRTSMCPServer:
     """
 
     @self.server.list_tools()
-    async def handle_list_tools() -> List[types.Tool]:
+    async def handle_list_tools() -> list[types.Tool]:
       """
       列出可用的工具
 
@@ -144,8 +143,8 @@ class PRTSMCPServer:
 
     @self.server.call_tool()
     async def handle_call_tool(
-        name: str, arguments: Dict[str, Any]
-    ) -> List[types.TextContent]:
+        name: str, arguments: dict[str, Any]
+    ) -> list[types.TextContent]:
       """
       处理工具调用
 

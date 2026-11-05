@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 行为效果数据刷新脚本
 
@@ -13,10 +12,9 @@
 
 import csv
 import os
-from typing import Dict, List, Tuple
 
 
-def read_behavior_data(file_path: str) -> List[Tuple[str, str, bool]]:
+def read_behavior_data(file_path: str) -> list[tuple[str, str, bool]]:
   """
   读取行为数据文件
 
@@ -29,7 +27,7 @@ def read_behavior_data(file_path: str) -> List[Tuple[str, str, bool]]:
   """
   behavior_data = []
 
-  with open(file_path, "r", encoding="utf-8") as file:
+  with open(file_path, encoding="utf-8") as file:
     reader = csv.reader(file)
 
     # 跳过前3行标题行
@@ -57,7 +55,7 @@ def read_behavior_data(file_path: str) -> List[Tuple[str, str, bool]]:
 
 def read_behavior_effect(
     file_path: str,
-) -> Tuple[List[List[str]], Dict[str, str]]:
+) -> tuple[list[list[str]], dict[str, str]]:
   """
   读取行为效果文件
 
@@ -72,7 +70,7 @@ def read_behavior_effect(
   header_lines = []
   effect_data = {}
 
-  with open(file_path, "r", encoding="utf-8") as file:
+  with open(file_path, encoding="utf-8") as file:
     reader = csv.reader(file)
 
     # 读取前3行标题
@@ -94,9 +92,9 @@ def read_behavior_effect(
 
 def write_new_behavior_effect(
     file_path: str,
-    header_lines: List[List[str]],
-    behavior_data: List[Tuple[str, str, bool]],
-    effect_data: Dict[str, str],
+    header_lines: list[list[str]],
+    behavior_data: list[tuple[str, str, bool]],
+    effect_data: dict[str, str],
 ) -> None:
   """
   写入新的行为效果文件

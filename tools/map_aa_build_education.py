@@ -46,7 +46,6 @@
 import os
 import re
 import sys
-from typing import List
 
 sys.path.append(os.getcwd())
 
@@ -129,7 +128,7 @@ def center(content: str, width: int = CELL) -> str:
   return S * left + content + S * (pad - left)
 
 
-def theory_room(name: str) -> List[str]:
+def theory_room(name: str) -> list[str]:
   """
   生成一间理论教室的 4 行内容（课桌 ▓ + 讲台 □）
   Keyword arguments:
@@ -146,7 +145,7 @@ def theory_room(name: str) -> List[str]:
   ]
 
 
-def practice_room(name: str) -> List[str]:
+def practice_room(name: str) -> list[str]:
   """
   生成一间实践教室的 4 行内容（操作台 ▣）
   Keyword arguments:
@@ -163,7 +162,7 @@ def practice_room(name: str) -> List[str]:
   ]
 
 
-def plain_room(name: str, deco: str = "") -> List[str]:
+def plain_room(name: str, deco: str = "") -> list[str]:
   """
   生成一间普通房间的 4 行内容
   Keyword arguments:
@@ -181,7 +180,7 @@ def plain_room(name: str, deco: str = "") -> List[str]:
   ]
 
 
-def toilet_room(name: str, mark: str) -> List[str]:
+def toilet_room(name: str, mark: str) -> list[str]:
   """
   生成一间洗手间的 4 行内容
   Keyword arguments:
@@ -198,7 +197,7 @@ def toilet_room(name: str, mark: str) -> List[str]:
   ]
 
 
-def build_lines() -> List[str]:
+def build_lines() -> list[str]:
   """
   按 U 单位拼装教育区地图的 15 行文本
   Keyword arguments:

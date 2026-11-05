@@ -29,7 +29,7 @@ class DataList(DataListIdEditMixin, QWidget):
 
   def __init__(self) -> None:
     """初始化表单主体"""
-    super(DataList, self).__init__()
+    super().__init__()
     self.layout = QGridLayout(self)
     self.top_layout = QHBoxLayout()
     self.second_layout = QHBoxLayout()

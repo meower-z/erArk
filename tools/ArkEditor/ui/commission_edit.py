@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 委托属性编辑UI组件
 功能：
@@ -231,7 +230,7 @@ class CommissionEditWidget(QWidget):
     parent -- 父控件
     """
     super().__init__(parent)
-    self.commission: "Commission | None" = None
+    self.commission: Commission | None = None
     self.init_ui()
 
   def init_ui(self) -> None:

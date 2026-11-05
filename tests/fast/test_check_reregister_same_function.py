@@ -41,7 +41,7 @@ def define(
   Return arguments:
   function -- 本次执行生成的检查函数
   """
-  namespace: "dict[str, Any]" = {
+  namespace: dict[str, Any] = {
       "__name__": module,
       "register_check": register_check,
       "CHECK_ID": CHECK_ID,

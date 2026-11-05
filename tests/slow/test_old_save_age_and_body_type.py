@@ -137,7 +137,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
     )
     cache.character_data[0].item[32] = 2
     mother_id = min(cid for cid in cache.npc_id_got if cid in static_id_list)
-    id_dict: "dict[str, Any]" = {
+    id_dict: dict[str, Any] = {
         "minor": minor_id,
         "shrink": shrink_id,
         "shrunk": {
@@ -377,7 +377,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
        罗德岛里的冷库、囚犯、外勤、实操课、体检与借书数据，以及场景面板记着的角色
     """
     collection = self.cache.character_data[0].pl_collection
-    snapshot: "dict[str | int, object]" = {
+    snapshot: dict[str | int, object] = {
         "world_setting": dict(self.cache.world_setting),
         "template": repr(self.cache.rhodes_island.child_schedule_template),
         "eggs": repr((collection.held_eggs, collection.soft_eggs)),

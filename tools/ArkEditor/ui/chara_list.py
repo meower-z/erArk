@@ -21,7 +21,7 @@ class CharaList(QWidget):
 
   def __init__(self) -> None:
     """初始化表单主体"""
-    super(CharaList, self).__init__()
+    super().__init__()
 
     # 创建一个QScrollArea
     self.scrollArea = QScrollArea(self)
@@ -199,7 +199,7 @@ class CharaList(QWidget):
     Return arguments:
     None
     """
-    super(CharaList, self).resizeEvent(event)
+    super().resizeEvent(event)
 
     width = self.width() // 2
     self.splitter.setSizes([width, width])

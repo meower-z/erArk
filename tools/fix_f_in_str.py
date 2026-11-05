@@ -30,7 +30,7 @@ def read_lines_with_fallback(file_path: str) -> tuple[list[str], str]:
   last_error = None
   for encoding in READ_ENCODINGS:
     try:
-      with open(file_path, 'r', encoding=encoding) as file:
+      with open(file_path, encoding=encoding) as file:
         return file.readlines(), encoding
     except UnicodeDecodeError as error:
       last_error = error

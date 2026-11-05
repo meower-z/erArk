@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 检查一次 Workflow 运行有没有停住（system-review-round 用，别的 Workflow 也能用）。
 

@@ -358,7 +358,7 @@ _title = growth_event_handle.get_growth_event_title({"chara_id": 204})
 check(
     "婴儿的抬头：名字 · 婴儿期第 N 天",
     _title.startswith("婴儿 · ")
-    and "{0}期第".format(E.STAGE_TALENT_NAME[101]) in _title,
+    and f"{E.STAGE_TALENT_NAME[101]}期第" in _title,
     _title,
 )
 
@@ -425,7 +425,7 @@ baby.pregnancy.born_time = cache.game_time - datetime.timedelta(days=5)
 check(
     "M1 萝莉本阶段已过 30 天：「萝莉期第 31 天」（不按出生以来的总天数写）",
     growth_event_handle.get_growth_event_title({"chara_id": 201})
-    == "{0} · {1}期第 31 天".format(loli.name, E.STAGE_TALENT_NAME[103]),
+    == f"{loli.name} · {E.STAGE_TALENT_NAME[103]}期第 31 天",
     growth_event_handle.get_growth_event_title({"chara_id": 201}),
 )
 check(
@@ -760,9 +760,7 @@ for _step_uid, _step_type, _step_target, _step_period in _loli_steps:
   _added.append(_step_uid)
   _now = candidate_uid_set(211)
   check(
-      "L11 再排一格{0}：{1}进候选，还没排的课型对应的事件仍不在".format(
-          E.COURSE_TYPE_NAME[_step_type], _step_uid
-      ),
+      f"L11 再排一格{E.COURSE_TYPE_NAME[_step_type]}：{_step_uid}进候选，还没排的课型对应的事件仍不在",
       all(uid in _now for uid in _added)
       and not any(uid in _now for uid in _step_uid_list if uid not in _added),
       sorted(set(_step_uid_list) & _now),

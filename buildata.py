@@ -52,7 +52,7 @@ def class_indent(path: str) -> str:
   Return arguments:
   str -- 缩进的空白；文件里没有缩进行时为 2 个空格
   """
-  with open(path, "r", encoding="utf-8") as f:
+  with open(path, encoding="utf-8") as f:
     for line in f:
       if line.strip() and line[0] in " \t":
         return line[: len(line) - len(line.lstrip())]
@@ -301,7 +301,6 @@ def constand_promise_2_csv() -> str:
   """
   with open(
       os.path.join("Script", "Core", "constant_promise.py"),
-      "r",
       encoding="utf-8",
   ) as f:
     line_list = skip_module_docstring(f.readlines())
@@ -327,9 +326,7 @@ def csv_2_constand() -> str:
   Return arguments:
   str -- 接到文件末尾的文本
   """
-  with open(
-      os.path.join("tools", "csv", "premise.csv"), "r", encoding="utf-8"
-  ) as f:
+  with open(os.path.join("tools", "csv", "premise.csv"), encoding="utf-8") as f:
     a = f.readlines()
     f.close()
 
@@ -369,7 +366,6 @@ def constand_effect_2_csv() -> str:
   """
   with open(
       os.path.join("Script", "Core", "constant_effect.py"),
-      "r",
       encoding="utf-8",
   ) as f:
     a = skip_module_docstring(f.readlines())
@@ -417,9 +413,7 @@ def csv_2_constand_effect() -> str:
   Return arguments:
   str -- 接到类末尾的文本
   """
-  with open(
-      os.path.join("tools", "csv", "Effect.csv"), "r", encoding="utf-8"
-  ) as f:
+  with open(os.path.join("tools", "csv", "Effect.csv"), encoding="utf-8") as f:
     a = f.readlines()
     f.close()
 
@@ -437,7 +431,7 @@ def csv_2_constand_effect() -> str:
 
   # 开始保存：接到 BehaviorEffect 类的末尾，类后面的内容原样保留
   effect_path = os.path.join("Script", "Core", "constant_effect.py")
-  with open(effect_path, "r", encoding="utf-8") as f:
+  with open(effect_path, encoding="utf-8") as f:
     line_list = f.readlines()
   insert_index = class_end_index(line_list, "BehaviorEffect")
   line_list.insert(insert_index, out_str)

@@ -28,7 +28,7 @@ class CSEMenu(QDialog):
 
   def __init__(self) -> None:
     """初始化综合指令状态结算复选框"""
-    super(CSEMenu, self).__init__()
+    super().__init__()
     if cache_control.now_edit_type_flag == 1:
       self.setWindowTitle(
           cache_control.now_event_data[cache_control.now_select_id].text

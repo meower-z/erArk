@@ -64,7 +64,7 @@ def get_play_time(date: datetime.datetime) -> datetime.timedelta:
   )
 
 
-def to_game_time(date: datetime.datetime) -> "GameTime":
+def to_game_time(date: datetime.datetime) -> GameTime:
   """
   把任意时间规整成游戏日历上的游戏时间（读旧存档、读配置、普通 datetime 参与推算时用）
   Keyword arguments:
@@ -86,7 +86,7 @@ class GameTime(datetime.datetime):
   __slots__ = ()
 
   @classmethod
-  def from_play_time(cls, play_time: datetime.timedelta) -> "GameTime":
+  def from_play_time(cls, play_time: datetime.timedelta) -> GameTime:
     """
     由游戏日历上的绝对时长（见 get_play_time）还原出游戏时间
     Keyword arguments:

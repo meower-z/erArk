@@ -3,7 +3,6 @@
 import random
 import datetime
 from types import FunctionType
-from typing import Dict
 from Script.Core import (
     cache_control,
     game_path_config,
@@ -640,10 +639,10 @@ def search_target(
     character_id: int,
     target_list: list,
     null_target: set,
-    premise_data: Dict[str, float],
-    target_weight_data: Dict[str, float],
+    premise_data: dict[str, float],
+    target_weight_data: dict[str, float],
     get_first_only: bool = False,
-) -> tuple[str, float, int, Dict[str, float]]:
+) -> tuple[str, float, int, dict[str, float]]:
   """
   查找可用目标\n
   Keyword arguments:\n
@@ -751,10 +750,10 @@ def search_target(
 
 def npc_auto_work_or_entertainment(
     character_id: int,
-    premise_data: Dict[str, float],
+    premise_data: dict[str, float],
     move_flag: bool,
     work_flag: bool,
-) -> tuple[int, Dict[str, float]]:
+) -> tuple[int, dict[str, float]]:
   """
   NPC自动工作或娱乐\n
   Keyword arguments:\n

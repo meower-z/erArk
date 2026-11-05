@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 经 limited_run 启动 erArk 的 ArkEditor（tools/ArkEditor/main.py），
 用真实的鼠标与键盘事件操作它，并在每个动作后存一帧整屏截图。

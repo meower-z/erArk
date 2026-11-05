@@ -16,7 +16,7 @@ class MenuBar(QMenuBar):
 
   def __init__(self) -> None:
     """初始化顶部菜单栏"""
-    super(MenuBar, self).__init__()
+    super().__init__()
 
     # 口上菜单
     talk_menu = QMenu("口上", self)

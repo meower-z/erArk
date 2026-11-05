@@ -17,7 +17,7 @@ class ToolsBar(QMenuBar):
 
   def __init__(self) -> None:
     """初始化顶部筛选栏"""
-    super(ToolsBar, self).__init__()
+    super().__init__()
     self.font = font
     self.npc_menu: QMenu = QMenu("0", self)
     self.npc_menu.setFixedWidth(50)

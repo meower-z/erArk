@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 data_check.py 的测试：data/ 下有被忽略的生成文件时拒绝运行，并给出清理命令；不启动游戏
 

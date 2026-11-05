@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 PRTS角色立绘下载器核心功能模块
@@ -15,7 +14,6 @@ import json
 import time
 import re
 import sys
-from typing import Optional, Dict, List
 
 
 class PRTSCharacterDownloader:
@@ -132,7 +130,7 @@ class PRTSCharacterDownloader:
     resolved_path = os.path.join(self.workspace_root, save_dir)
     return os.path.abspath(resolved_path)
 
-  def get_image_url_from_api(self, character_name: str) -> Optional[str]:
+  def get_image_url_from_api(self, character_name: str) -> str | None:
     """
     通过MediaWiki API查询图片的实际URL
 
@@ -182,7 +180,7 @@ class PRTSCharacterDownloader:
 
     return None
 
-  def get_image_from_story_page(self, character_name: str) -> Optional[str]:
+  def get_image_from_story_page(self, character_name: str) -> str | None:
     """
     从剧情角色一览页面查找图片
 
@@ -266,7 +264,7 @@ class PRTSCharacterDownloader:
 
     return None
 
-  def get_special_character_url(self, character_name: str) -> Optional[str]:
+  def get_special_character_url(self, character_name: str) -> str | None:
     """
     获取特殊角色的图片URL
 
@@ -278,7 +276,7 @@ class PRTSCharacterDownloader:
     """
     return self.special_characters.get(character_name, None)
 
-  def try_construct_direct_url(self, character_name: str) -> Optional[str]:
+  def try_construct_direct_url(self, character_name: str) -> str | None:
     """
     尝试直接构建图片URL
 
@@ -345,7 +343,7 @@ class PRTSCharacterDownloader:
 
     return None
 
-  def search_character_image_url(self, character_name: str) -> Optional[str]:
+  def search_character_image_url(self, character_name: str) -> str | None:
     """
     搜索角色立绘图片的URL（不下载）
 
@@ -466,10 +464,10 @@ class PRTSCharacterDownloader:
 
   def batch_download_characters(
       self,
-      character_names: List[str],
+      character_names: list[str],
       save_dir: str = "downloaded_images",
       delay_seconds: float = 1,
-  ) -> Dict[str, bool]:
+  ) -> dict[str, bool]:
     """
     批量下载多个角色的立绘图片
 

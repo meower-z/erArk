@@ -445,7 +445,7 @@ set_time(period_time(0))
 student.talent[103] = 0
 student.talent[104] = 1
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_INTEREST, 99999)
-_ct_interest = "CVP_A1_CourseType|{0}_E_1".format(E.COURSE_TYPE_INTEREST)
+_ct_interest = f"CVP_A1_CourseType|{E.COURSE_TYPE_INTEREST}_E_1"
 student.hit_point = 10
 check(
     "排着不存在的兴趣课：CVP CourseType 不成立，照常上课 / 体力缺课两个学生前提都为 0（此前都按有课判）",
@@ -932,7 +932,7 @@ student.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
 check(
     "L13 节次外、在理论教室一被拉来听课：CourseType 为理论课、Course|学识 成立（此前两项都是 -1，529 条听课口上一句不出）",
     HP("CVP_A1_CourseType|0_E_1", 201) == 1
-    and HP("CVP_A1_Course|{0}_G_0".format(_fallback), 201) == 1,
+    and HP(f"CVP_A1_Course|{_fallback}_G_0", 201) == 1,
 )
 move_to(0, classroom_path(ROOM_P))
 move_to(201, classroom_path(ROOM_P))
@@ -948,14 +948,14 @@ move_to(0, classroom_path(ROOM1))
 move_to(201, classroom_path(ROOM1))
 check(
     "L13 节次内、她的课表上是教师甲的料理：按玩家的授课读学识，料理不成立（此前口上写课表上的料理，实际发的是学识）",
-    HP("CVP_A1_Course|{0}_G_0".format(_fallback), 201) == 1
+    HP(f"CVP_A1_Course|{_fallback}_G_0", 201) == 1
     and HP("CVP_A1_Course|43_G_0", 201) == 0,
 )
 student.behavior.start_time = period_time(0) + datetime.timedelta(minutes=5)
 check(
     "L13 对照：开始时刻与玩家没对齐（她自己坐下听课，不是被拉来的）→ 按课表读料理",
     HP("CVP_A1_Course|43_G_0", 201) == 1
-    and HP("CVP_A1_Course|{0}_G_0".format(_fallback), 201) == 0,
+    and HP(f"CVP_A1_Course|{_fallback}_G_0", 201) == 0,
 )
 set_time(period_time(0))
 pl.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY

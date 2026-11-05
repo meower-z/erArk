@@ -19,7 +19,7 @@ def process_csv_file(csv_file_path: Path) -> defaultdict[str, list[int]]:
   classification = defaultdict(list)
 
   # 读取CSV文件
-  with open(csv_file_path, "r", encoding="utf-8") as file:
+  with open(csv_file_path, encoding="utf-8") as file:
     reader = csv.reader(file)
 
     # 跳过前5行（索引0-4）

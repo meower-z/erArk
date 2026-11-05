@@ -4,8 +4,6 @@
 指令的列表与执行、NPC状态机选出的行为据此避开幼年阶段的角色
 """
 
-from typing import Set
-
 from Script.Core import cache_control, constant, game_type
 from Script.Config import game_config
 
@@ -28,9 +26,9 @@ H_WEB_MINOR_TYPES = {
 H_BEHAVIOR_TAGS = {"性爱", "猥亵"}
 """ 属于H类的行为标签（Behavior_Data.csv 的 tag 列，该列不翻译） """
 
-_h_instruct_ids: Set[str] = set()
+_h_instruct_ids: set[str] = set()
 """ H类指令id集合，首次使用时由指令配置建立 """
-_h_behavior_ids: Set[str] = set()
+_h_behavior_ids: set[str] = set()
 """ H类行为id集合，首次使用时由指令配置与行为配置建立 """
 
 

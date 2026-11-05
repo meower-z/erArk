@@ -10,7 +10,7 @@ from google import genai
 from google.genai import types as genai_types
 import os
 import re
-from typing import Any, Callable, Iterable, Optional, TypedDict
+from typing import Any, Callable, Iterable, TypedDict
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -186,7 +186,7 @@ def save_ai_talk_record(
       f.write("0,0,0,0,1\n")
       f.write("口上配置数据,,,,\n")
   # 读取save_path文件的最后一行，获取其cid，然后加1
-  with open(save_path, "r", encoding="utf-8") as f:
+  with open(save_path, encoding="utf-8") as f:
     lines = f.readlines()
     last_line = lines[-1]
     last_cid = last_line.split(",")[0]
@@ -897,7 +897,7 @@ def process_stream_response(
     # chunk 是 openai 或 google-genai 流式返回的对象，跑 mypy 的环境不装这两个包，故为 Any
     stream: Iterable[Any],
     direct_mode: bool,
-    extractor: Callable[[Any], Optional[str]],
+    extractor: Callable[[Any], str | None],
 ) -> str:
   """
   处理流式输出的返回数据，并绘制返回结果
@@ -919,7 +919,7 @@ def process_stream_response(
   try:
     for chunk in stream:
       # 提取当前chunk中的文本
-      chunk_text: Optional[str] = extractor(chunk)
+      chunk_text: str | None = extractor(chunk)
       if chunk_text is None or not chunk_text:
         continue
       ai_generate_text += chunk_text

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """fast_report.py 对快速测试层的测量：载入并计时、在本进程里记下变异测试的测试执行到的行、汇总变异缓存。"""
 
 from __future__ import annotations

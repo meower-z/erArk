@@ -36,7 +36,6 @@
 import os
 import re
 import sys
-from typing import List
 
 sys.path.append(os.getcwd())
 
@@ -97,7 +96,7 @@ def unit_width(text: str) -> int:
   return sum(2 if ch in WIDE_CHARS else 1 for ch in text)
 
 
-def build_lines() -> List[str]:
+def build_lines() -> list[str]:
   """
   按 U 单位拼装训练场地图的 14 行文本
   Keyword arguments:

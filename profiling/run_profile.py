@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 erArk 专用性能基准 & 函数级 cProfile 采集脚本 (升级版)
 

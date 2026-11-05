@@ -395,9 +395,7 @@ def handle_settle_behavior(
                 now_unconscious_h
             )
           name += f"<{unconscious_color}>"
-          name += (" ({0}) ").format(
-              hypnosis_panel.unconscious_list[now_unconscious_h]
-          )
+          name += f" ({hypnosis_panel.unconscious_list[now_unconscious_h]}) "
           name += f"</{unconscious_color}>"
         # 完整角色名抬头
         now_text = name + f"<{color_name}>:</{color_name}>"

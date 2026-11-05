@@ -31,7 +31,7 @@ class ItemPremiseList(QWidget):
 
   def __init__(self) -> None:
     """初始化前提表单主体"""
-    super(ItemPremiseList, self).__init__()
+    super().__init__()
     self.font = font
     self.setFont(font)
     main_layout = QVBoxLayout()  # 主布局
@@ -361,7 +361,7 @@ class ItemPremiseList(QWidget):
       return []
     result = []
     try:
-      with open(self.QUICK_INSERT_FILE, "r", encoding="utf-8") as f:
+      with open(self.QUICK_INSERT_FILE, encoding="utf-8") as f:
         reader = csv.reader(f)
         for row in reader:
           if row and row[0]:

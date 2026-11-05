@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """状态面板绘制性能基准脚本"""
 
 from __future__ import annotations

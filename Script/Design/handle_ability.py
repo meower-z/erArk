@@ -3,7 +3,6 @@
 """
 
 from types import FunctionType
-from typing import Tuple
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
@@ -23,7 +22,7 @@ window_width = normal_config.config_normal.text_width
 
 def check_upgrade_requirements(
     need_list: list, character_id: int
-) -> Tuple[bool, dict]:
+) -> tuple[bool, dict]:
   """
   描述：判断角色是否满足能力升级的所有需求，并返回是否满足及需要消耗的珠。
   参数:

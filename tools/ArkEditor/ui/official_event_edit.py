@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 公务事件属性编辑UI组件（Plan 23）
 功能：
@@ -139,7 +138,7 @@ class OfficialEventEditWidget(QWidget):
     parent -- 父控件
     """
     super().__init__(parent)
-    self.now_event: "OfficialEvent | None" = None
+    self.now_event: OfficialEvent | None = None
     """ 当前编辑的事件 """
     self.department_name_data = department_name_data or {}
     """ 部门id -> 部门名 """
