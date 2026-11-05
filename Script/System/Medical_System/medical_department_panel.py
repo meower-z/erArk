@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Tuple, cast
+from typing import Any, cast
 from types import FunctionType
 
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant

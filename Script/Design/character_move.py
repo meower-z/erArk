@@ -102,7 +102,6 @@ def character_move(
   list -- 本次移动到的位置 \n
   int -- 本次移动花费的时间 \n
   """
-  from Script.Design import handle_premise
 
   character_data: game_type.Character = cache.character_data[character_id]
   now_position = character_data.position

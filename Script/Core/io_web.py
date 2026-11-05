@@ -8,7 +8,6 @@ Web模式下的IO操作适配器
 from __future__ import annotations
 
 import threading
-import json
 import copy
 from typing import Any
 from Script.Core import cache_control

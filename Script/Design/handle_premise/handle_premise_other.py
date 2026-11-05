@@ -1,7 +1,6 @@
 """其他通用前提的处理函数"""
 
 import datetime
-from functools import wraps
 from types import FunctionType
 from Script.Core import cache_control, constant, constant_promise, game_type, get_text
 from Script.Design import map_handle, game_time, attr_calculation, child_stage_gate

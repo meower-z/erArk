@@ -1,7 +1,6 @@
 """角色状态机：按状态机id执行状态机函数，以及注册状态机的装饰器"""
 
 from functools import wraps
-from types import FunctionType
 from typing import Concatenate, ParamSpec, TypeVar
 from collections.abc import Callable
 from Script.Core import constant

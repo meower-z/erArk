@@ -1,11 +1,8 @@
 """基础数值相关的前提处理函数"""
 
-import datetime
-from functools import wraps
 from types import FunctionType
-from Script.Core import cache_control, constant, constant_promise, game_type, get_text
-from Script.Design import map_handle, game_time, attr_calculation
-from Script.Config import normal_config, game_config
+from Script.Core import cache_control, constant_promise, game_type, get_text
+from Script.Design import attr_calculation
 from Script.Design.handle_premise.premise_registry import add_premise
 
 cache: game_type.Cache = cache_control.cache

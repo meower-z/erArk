@@ -1,6 +1,6 @@
 """debug 界面面板，以及口上快速测试和数据重建工具"""
 
-from typing import Any, Dict
+from typing import Any
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant, py_cmd
 from Script.Design import basement, character_handle, handle_premise, attr_calculation, clothing, map_handle

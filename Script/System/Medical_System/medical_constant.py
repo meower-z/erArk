@@ -8,8 +8,8 @@ from Script.Core import get_text
 from dataclasses import dataclass, field
 from enum import Enum
 from itertools import count
-from collections.abc import Buffer
-from typing import Any, ClassVar, Mapping, Iterable, Protocol, SupportsIndex, SupportsInt, cast, runtime_checkable
+from collections.abc import Buffer, Mapping, Iterable
+from typing import Any, Protocol, SupportsIndex, SupportsInt, cast, runtime_checkable
 
 _: FunctionType = get_text._
 """ 翻译函数 """

@@ -11,7 +11,6 @@ Web模式交互类型管理器
 - 指令列表按照 Instruct.py 中定义的顺序排序，而非 handle_instruct.py 的装饰器执行顺序
 """
 
-from typing import Set, Union
 from Script.Core import constant, cache_control, game_type
 from Script.Config import game_config
 from Script.System.Instruct_System.Instruct import Instruct

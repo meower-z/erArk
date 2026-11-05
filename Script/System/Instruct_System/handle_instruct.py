@@ -2,10 +2,10 @@
 
 import datetime
 from functools import wraps
-from typing import Callable, ParamSpec, TypeVar, Union
+from typing import Callable, ParamSpec, TypeVar
 from types import FunctionType
 from Script.Core import constant, constant_promise, cache_control, game_type, get_text, flow_handle
-from Script.Design import handle_ability, update, map_handle, character_behavior, instuct_judege, handle_npc_ai_in_h, handle_premise, game_time, child_stage_gate
+from Script.Design import handle_ability, update, map_handle, character_behavior, instuct_judege, handle_npc_ai_in_h, handle_premise, child_stage_gate
 from Script.UI.Panel import achievement_panel, normal_panel
 from Script.Config import normal_config, game_config
 from Script.UI.Moudle import draw

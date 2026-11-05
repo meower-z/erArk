@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 import math
-from typing import Dict
 
 from Script.Config import config_def, game_config
 from Script.Core import cache_control, game_type

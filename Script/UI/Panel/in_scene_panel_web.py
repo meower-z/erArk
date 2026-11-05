@@ -7,7 +7,6 @@ Web模式主场景面板
 """
 
 from types import FunctionType
-from typing import Optional
 from Script.Core import (
     get_text,
     cache_control,
@@ -15,7 +14,7 @@ from Script.Core import (
     flow_handle,
     constant,
 )
-from Script.Design import attr_text, map_handle, game_time, handle_premise
+from Script.Design import attr_text, game_time, handle_premise
 from Script.Config import game_config
 from Script.System.Web_Draw_System import (
     SceneRenderer,
@@ -77,7 +76,6 @@ class InScenePanelWeb:
     当从子面板返回时，会清除子面板模式。
     """
     from Script.Core import io_init
-    from Script.System.Instruct_System import handle_instruct as instruct_handler
     from Script.System.Web_Draw_System import exit_sub_panel_mode, is_in_sub_panel_mode
 
     # 如果从子面板返回，清除子面板模式

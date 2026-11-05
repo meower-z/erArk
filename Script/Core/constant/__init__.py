@@ -14,11 +14,8 @@ from Script.System.Instruct_System.Instruct import Instruct
 from Script.Core.constant.Behavior_Int import Behavior_Int
 from Script.System.Instruct_System.instruct_category import (
     InstructCategory,
-    BodyPart,
     BODY_PART_NAMES,
-    HIP_SUB_PARTS,
     COMPUTED_BODY_PARTS,
-    CLICKABLE_BODY_PARTS,
 )
 from Script.System.Instruct_System.interaction_types import (
     InteractionMajorType,
@@ -28,7 +25,6 @@ from Script.System.Instruct_System.interaction_types import (
     MINOR_TYPE_NAMES,
     MAJOR_TO_MINOR_TYPES,
     MINOR_TO_MAJOR_TYPE,
-    get_major_type,
     get_minor_types,
     get_minor_type_name,
     get_major_type_name,

@@ -2,7 +2,6 @@
 
 import random
 from types import FunctionType
-from typing import Dict, Optional
 from Script.Core import (
     cache_control,
     game_type,

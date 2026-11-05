@@ -1,12 +1,11 @@
 """日记界面面板"""
 
 from turtle import position
-from typing import Dict
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text, flow_handle, text_handle, constant, py_cmd
+from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.Design import game_time
 from Script.UI.Moudle import draw, panel
-from Script.Config import game_config, normal_config
+from Script.Config import normal_config
 import os
 
 cache: game_type.Cache = cache_control.cache

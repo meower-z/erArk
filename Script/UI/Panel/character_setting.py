@@ -1,8 +1,8 @@
 """显示角色设置的面板"""
 
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text, flow_handle
-from Script.UI.Moudle import panel, draw
+from Script.Core import cache_control, game_type, get_text
+from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation
 

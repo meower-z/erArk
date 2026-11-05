@@ -9,7 +9,7 @@ from Script.Design import (
     map_handle,
     handle_premise,
 )
-from Script.Core import cache_control, constant, constant_effect, game_type, get_text
+from Script.Core import cache_control, constant_effect, game_type, get_text
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 
