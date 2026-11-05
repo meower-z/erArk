@@ -14,8 +14,6 @@
    遍历的 cache.npc_id_got 是 set，直接用会让每次排课结果都不同。
 """
 
-from typing import Dict, List, Tuple
-
 from Script.Core import cache_control, game_type
 from Script.Design import game_time
 from Script.System.Education_System import education_constant, schedule_handle
@@ -24,7 +22,7 @@ cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
 
 
-def get_auto_subject_list() -> List[int]:
+def get_auto_subject_list() -> list[int]:
   """
   取自动排课可用的科目列表
   Keyword arguments:
@@ -61,7 +59,7 @@ def pick_best_teacher(
     week_day: int,
     period: int,
     classroom: str,
-    teacher_list: List[int],
+    teacher_list: list[int],
 ) -> int:
   """
   在本节空闲的教师里挑该科目等级最高的一个
@@ -91,7 +89,7 @@ def pick_best_teacher(
   return best_id
 
 
-def auto_fill_class_schedule() -> Tuple[int, int]:
+def auto_fill_class_schedule() -> tuple[int, int]:
   """
   一键把全部已开放教室的空格子排满
   Keyword arguments:
@@ -111,12 +109,12 @@ def auto_fill_class_schedule() -> Tuple[int, int]:
   subject_list = get_auto_subject_list()
   # 先建一次映射：get_course_type_by_classroom 每次调用都全扫 place_data，
   #    在 10教室×5天×9节=450 格的循环里逐格调会很慢
-  course_type_by_room: Dict[str, int] = {
+  course_type_by_room: dict[str, int] = {
       room: schedule_handle.get_course_type_by_classroom(room)
       for room in room_list
   }
   # 均衡的实现：记账每门科目已经被排了几次，每次都从排得最少的那门开始试
-  used_count: Dict[int, int] = {ability_id: 0 for ability_id in subject_list}
+  used_count: dict[int, int] = {ability_id: 0 for ability_id in subject_list}
 
   filled_count = 0
   skip_count = 0
@@ -163,7 +161,7 @@ def auto_fill_class_schedule() -> Tuple[int, int]:
   return filled_count, skip_count
 
 
-def auto_fill_selected_course(character_id: int) -> Tuple[int, int]:
+def auto_fill_selected_course(character_id: int) -> tuple[int, int]:
   """
   一键把某个孩子个人课表上的空节次选满
   Keyword arguments:
@@ -179,7 +177,7 @@ def auto_fill_selected_course(character_id: int) -> Tuple[int, int]:
   room_list = schedule_handle.get_classroom_list()
   if not room_list:
     return 0, 0
-  course_type_by_room: Dict[str, int] = {
+  course_type_by_room: dict[str, int] = {
       room: schedule_handle.get_course_type_by_classroom(room)
       for room in room_list
   }

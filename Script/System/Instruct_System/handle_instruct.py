@@ -2,7 +2,7 @@
 
 import datetime
 from functools import wraps
-from typing import Callable, Set, List, Optional, ParamSpec, TypeVar, Union
+from typing import Callable, ParamSpec, TypeVar, Union
 from types import FunctionType
 from Script.Core import constant, constant_promise, cache_control, game_type, get_text, flow_handle
 from Script.Design import handle_ability, update, map_handle, character_behavior, instuct_judege, handle_npc_ai_in_h, handle_premise, game_time, child_stage_gate
@@ -77,11 +77,11 @@ SUB_TYPE_MAP = {
 
 def add_instruct(
     instruct_id: str,
-    instruct_type: Optional[int] = None,
-    name: Optional[str] = None,
-    premise_set: Optional[Set] = None,
-    behavior_id: Optional[str] = None,
-    sub_type: Optional[int] = None,
+    instruct_type: int | None = None,
+    name: str | None = None,
+    premise_set: set | None = None,
+    behavior_id: str | None = None,
+    sub_type: int | None = None,
 ) -> Callable[
     [Callable[InstructParams, InstructReturn]],
     Callable[InstructParams, InstructReturn],
@@ -216,7 +216,7 @@ def add_instruct(
     # ========== Web模式分类数据注册（从CSV数据库读取）==========
     major_type = None
     minor_type = None
-    body_parts: List[str] = []
+    body_parts: list[str] = []
     category = None
 
     if csv_config:
@@ -352,7 +352,7 @@ def chara_handle_instruct_common_settle(
     judge: str = "",
     game_update_flag: bool = False,
     force_taget_wait: bool = False,
-) -> Optional[int]:
+) -> int | None:
   """
   角色处理指令通用结算函数\n
   Keyword arguments:\n
@@ -437,7 +437,7 @@ def handle_comprehensive_state_effect(
     add_time: int,
     change_data: game_type.CharacterStatusChange,
     now_time: datetime.datetime,
-) -> Optional[int]:
+) -> int | None:
   """
   综合指令行为结算
   Keyword arguments:

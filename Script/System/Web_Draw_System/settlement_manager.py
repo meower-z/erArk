@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 结算阶段管理器
 负责处理Web模式下的结算演出流程
@@ -12,7 +11,7 @@
 """
 
 from enum import IntEnum
-from typing import Dict, List, Optional, Callable
+from typing import Callable
 from dataclasses import dataclass, field
 from Script.Core import cache_control, game_type
 
@@ -58,7 +57,7 @@ class DialogEntry:
   is_player_or_target: bool = False
   """ 是否为玩家或交互对象（决定显示方式） """
 
-  text_lines: List[str] = field(default_factory=list)
+  text_lines: list[str] = field(default_factory=list)
   """ 拆分后的文本行 """
 
 
@@ -98,7 +97,7 @@ class SettlementManager:
     self.phase: SettlementPhase = SettlementPhase.IDLE
     """ 当前结算阶段 """
 
-    self.dialog_queue: List[DialogEntry] = []
+    self.dialog_queue: list[DialogEntry] = []
     """ 对话队列 """
 
     self.current_dialog_index: int = 0
@@ -107,18 +106,16 @@ class SettlementManager:
     self.current_line_index: int = 0
     """ 当前文本行索引 """
 
-    self.value_changes: List[ValueChangeEntry] = []
+    self.value_changes: list[ValueChangeEntry] = []
     """ 数值变化列表 """
 
-    self.other_characters_dialogs: Dict[int, DialogEntry] = {}
+    self.other_characters_dialogs: dict[int, DialogEntry] = {}
     """ 其他角色的简略对话（用于头像上方显示） """
 
     # 回调函数
-    self._on_phase_change: Optional[Callable[[SettlementPhase], None]] = None
-    self._on_dialog_update: Optional[Callable[[DialogEntry, int], None]] = None
-    self._on_value_change_show: Optional[Callable[[ValueChangeEntry], None]] = (
-        None
-    )
+    self._on_phase_change: Callable[[SettlementPhase], None] | None = None
+    self._on_dialog_update: Callable[[DialogEntry, int], None] | None = None
+    self._on_value_change_show: Callable[[ValueChangeEntry], None] | None = None
 
   def start_settlement(self, duration: int = 0) -> None:
     """
@@ -300,7 +297,7 @@ class SettlementManager:
     if self._on_phase_change:
       self._on_phase_change(self.phase)
 
-  def get_state(self) -> Dict:
+  def get_state(self) -> dict:
     """
     获取当前结算状态数据
 
@@ -358,7 +355,7 @@ class SettlementManager:
         ],
     }
 
-  def get_full_dialog(self, character_id: int) -> Optional[str]:
+  def get_full_dialog(self, character_id: int) -> str | None:
     """
     获取某个角色的完整对话（用于头像点击查看）
 

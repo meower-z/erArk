@@ -1,6 +1,6 @@
 """群交的结算、模板统计与清理，以及群交信息面板和群交行动编辑面板"""
 
-from typing import Collection, List, Optional
+from typing import Collection
 from types import FunctionType
 from Script.UI.Moudle import draw, panel
 from Script.Core import (
@@ -212,7 +212,7 @@ def get_status_id_list_from_group_sex_body_part(body_part: str) -> list[str]:
   """
   from Script.System.Instruct_System import see_instruct_panel
 
-  new_status_id_list: List[str] = []
+  new_status_id_list: list[str] = []
   # 获取状态id列表
   config_body_part = {
       "mouth": "口",
@@ -372,11 +372,11 @@ class SeeGroupSexInfoPanel:
     """ 面板最大宽度 """
     self.column = column
     """ 每行状态最大个数 """
-    self.draw_list: List[
-        draw.LittleTitleLineDraw | draw.NormalDraw | List[draw.LeftDraw]
+    self.draw_list: list[
+        draw.LittleTitleLineDraw | draw.NormalDraw | list[draw.LeftDraw]
     ] = []
     """ 绘制的文本列表 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 当前面板监听的按钮列表 """
     self.center_status: bool = center_status
     """ 居中绘制状态文本 """
@@ -452,7 +452,7 @@ class Edit_Group_Sex_Temple_Panel:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
-    self.handle_panel: Optional[panel.PageHandlePanel] = None
+    self.handle_panel: panel.PageHandlePanel | None = None
     """ 当前名字列表控制面板 """
     self.pl_character_data = cache.character_data[0]
     """ 玩家角色数据 """

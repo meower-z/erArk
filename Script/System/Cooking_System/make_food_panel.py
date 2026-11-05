@@ -3,7 +3,6 @@
 点击食谱名后确认制作数量并制作食物
 """
 
-from typing import Tuple
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, text_handle, constant, py_cmd
 from Script.Design import update, attr_calculation
@@ -133,7 +132,7 @@ class Make_food_Panel:
       info_draw.text = _("○筛选：\n")
       info_draw.draw()
       filter_text, __ = self.get_filter_sort_status_text()
-      filter_text = "[{0}]".format(filter_text)
+      filter_text = f"[{filter_text}]"
       empty_draw = draw.NormalDraw()
       empty_draw.text = "  "
       empty_draw.draw()
@@ -790,7 +789,7 @@ class SeeFoodListByFoodNameDraw:
 
   def __init__(
       self,
-      text: Tuple[str, str, int, int, int],
+      text: tuple[str, str, int, int, int],
       width: int,
       is_button: bool,
       num_button: bool,

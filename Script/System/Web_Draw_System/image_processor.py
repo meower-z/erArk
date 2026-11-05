@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 图片处理模块
 负责处理Web模式下的角色立绘图片裁切和缓存
@@ -14,7 +13,6 @@ from __future__ import annotations
 import io
 import os
 from collections import OrderedDict
-from typing import Optional, Tuple
 
 # 尝试导入PIL，如果失败则设置为不可用
 try:
@@ -60,7 +58,7 @@ class ImageProcessor:
     # LRU缓存：key=图片路径, value=(裁切后的图片字节数据, 原始尺寸, 裁切后尺寸, 裁切偏移量)
     # 使用OrderedDict来维护访问顺序
     self._cache: OrderedDict[
-        str, Tuple[bytes, Tuple[int, int], Tuple[int, int], Tuple[int, int]]
+        str, tuple[bytes, tuple[int, int], tuple[int, int], tuple[int, int]]
     ] = OrderedDict()
 
     self._initialized = True
@@ -68,7 +66,7 @@ class ImageProcessor:
         f"[图片处理器] 初始化完成, PIL可用: {PIL_AVAILABLE}, 最大缓存: {self.MAX_CACHE_SIZE}张"
     )
 
-  def get_cropped_image(self, image_path: str) -> Optional[Tuple[bytes, dict]]:
+  def get_cropped_image(self, image_path: str) -> tuple[bytes, dict] | None:
     """
     获取裁切透明区域后的图片
 
@@ -113,7 +111,7 @@ class ImageProcessor:
     result = self._crop_and_cache(normalized_path)
     return result
 
-  def _crop_and_cache(self, image_path: str) -> Optional[Tuple[bytes, dict]]:
+  def _crop_and_cache(self, image_path: str) -> tuple[bytes, dict] | None:
     """
     裁切图片并加入缓存
 
@@ -183,8 +181,8 @@ class ImageProcessor:
       return None
 
   def _get_non_transparent_bbox(
-      self, img: "Image.Image"
-  ) -> Optional[Tuple[int, int, int, int]]:
+      self, img: Image.Image
+  ) -> tuple[int, int, int, int] | None:
     """
     获取图片中非透明区域的边界框
 
@@ -208,9 +206,9 @@ class ImageProcessor:
       self,
       path: str,
       image_bytes: bytes,
-      original_size: Tuple[int, int],
-      cropped_size: Tuple[int, int],
-      offset: Tuple[int, int],
+      original_size: tuple[int, int],
+      cropped_size: tuple[int, int],
+      offset: tuple[int, int],
   ) -> None:
     """
     将图片添加到缓存中
@@ -267,7 +265,7 @@ class ImageProcessor:
 
   def crop_head_from_fullbody(
       self, image_path: str, nose_x: float, nose_y: float
-  ) -> Optional[Tuple[bytes, dict]]:
+  ) -> tuple[bytes, dict] | None:
     """
     从全身图中截取头像
 
@@ -405,7 +403,7 @@ class ImageProcessor:
 image_processor = ImageProcessor()
 
 
-def get_cropped_image(image_path: str) -> Optional[Tuple[bytes, dict]]:
+def get_cropped_image(image_path: str) -> tuple[bytes, dict] | None:
   """
   便捷函数：获取裁切后的图片
 
@@ -437,7 +435,7 @@ def is_image_processor_available() -> bool:
 
 def crop_head_from_fullbody(
     image_path: str, nose_x: float, nose_y: float
-) -> Optional[Tuple[bytes, dict]]:
+) -> tuple[bytes, dict] | None:
   """
   便捷函数：从全身图中截取头像
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 对话框组件
 负责处理Web模式下的对话框显示和文本推进
@@ -6,7 +5,7 @@
 该组件提供全局对话框管理功能，供talk.py等模块使用
 """
 
-from typing import Optional, List
+from typing import Optional
 from Script.Core import cache_control, game_type
 
 cache: game_type.Cache = cache_control.cache
@@ -21,7 +20,7 @@ def _split_text_to_pages(
     text: str,
     max_lines: int = MAX_LINES_PER_PAGE,
     max_chars_per_line: int = MAX_CHARS_PER_LINE,
-) -> List[str]:
+) -> list[str]:
   """
   将文本按行数分页
 
@@ -47,7 +46,7 @@ def _split_text_to_pages(
   # 计算每行的估算显示行数（用于分页计算）
   # 但保持原始行完整，不截断词语
   pages = []
-  current_page_lines: List[str] = []
+  current_page_lines: list[str] = []
   current_estimated_lines = 0
 
   for line in raw_lines:

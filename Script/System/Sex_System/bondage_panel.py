@@ -1,6 +1,5 @@
 """绳子的面板对象"""
 
-from typing import List
 from types import FunctionType
 from Script.UI.Moudle import draw
 from Script.Core import (
@@ -39,7 +38,7 @@ class Bondage_Panel:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
   def draw(self) -> None:

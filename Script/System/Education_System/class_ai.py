@@ -38,7 +38,6 @@ judge_student_pullable（玩家授课与教师 303 共用）/ judge_student_join
 from __future__ import annotations
 
 import random
-from typing import List, Tuple
 from Script.Config import game_config
 from Script.Core import cache_control, game_type, constant
 from Script.Design import attr_calculation, game_time, map_handle
@@ -183,7 +182,7 @@ def judge_course_teacher_available(student_id: int, course: dict) -> bool:
   )
 
 
-def get_teacher_duty(character_id: int) -> Tuple[int, str]:
+def get_teacher_duty(character_id: int) -> tuple[int, str]:
   """
   教师此刻的课表职责（Plan 24，供工作链的教师前提读取）
   Keyword arguments:
@@ -551,7 +550,7 @@ def judge_attend_running_sex_class_here(character_id: int) -> bool:
   return now_course is not None and now_course.get("classroom", "") == classroom
 
 
-def get_course_place_now_or_upcoming(character_id: int) -> List[str]:
+def get_course_place_now_or_upcoming(character_id: int) -> list[str]:
   """
   取本节课（不在节次内时为马上开始的那一节）的上课地点，与 715 移动状态机的取法一致
   Keyword arguments:

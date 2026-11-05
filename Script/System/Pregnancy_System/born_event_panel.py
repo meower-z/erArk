@@ -1,6 +1,6 @@
 """生孩子事件的面板（胎生生产与卵生破壳共用），以及事件开始时把母亲与玩家瞬移到医疗部住院区"""
 
-from typing import Tuple, List, Optional
+from typing import Tuple
 from types import FunctionType
 from Script.UI.Moudle import draw, panel
 from Script.Core import (
@@ -75,7 +75,7 @@ class Born_Panel:
       self,
       mother_character_id: int,
       egg_mode: bool = False,
-      egg_id_list: Optional[list] = None,
+      egg_id_list: list | None = None,
   ) -> None:
     """
     初始化绘制对象
@@ -98,7 +98,7 @@ class Born_Panel:
         for egg_id in self.egg_id_list
     )
     """ 是否为无壳卵孵化模式（文案与二段行为与带壳破壳区分） """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
   def _draw_born_event_content(self) -> None:

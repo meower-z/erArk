@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import math
 import random
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
+from typing import Any, Iterable
 from types import FunctionType
 
 from Script.Config import config_def, game_config
@@ -44,7 +44,7 @@ def create_patient_stub(
   return patient
 
 
-def pick_severity_level(facility_level: Optional[int] = None) -> Optional[int]:
+def pick_severity_level(facility_level: int | None = None) -> int | None:
   """按权重抽取一个病情等级 ID。
 
   参数:
@@ -90,8 +90,8 @@ def pick_severity_level(facility_level: Optional[int] = None) -> Optional[int]:
 
 def generate_patient(
     severity_level: int,
-    rhodes_island: Optional[game_type.Rhodes_Island],
-) -> Optional[medical_constant.MedicalPatient]:
+    rhodes_island: game_type.Rhodes_Island | None,
+) -> medical_constant.MedicalPatient | None:
   """生成单个门诊病人实体。
 
   参数:
@@ -169,7 +169,7 @@ def generate_patient(
 
 def _build_complications_for_patient(
     severity_config: config_def.Medical_Severity,
-) -> Tuple[List[config_def.Medical_Complication], float]:
+) -> tuple[list[config_def.Medical_Complication], float]:
   """基于病情等级配置生成并发症组合。
 
   参数:
@@ -180,7 +180,7 @@ def _build_complications_for_patient(
   """
 
   # 构建计划列表，0/1/2 分别代表轻/中/重并发症。
-  plan: List[int] = []
+  plan: list[int] = []
   plan.extend([0] * int(severity_config.minor_complication_count))
   plan.extend([1] * int(severity_config.moderate_complication_count))
   plan.extend([2] * int(severity_config.severe_complication_count))
@@ -188,7 +188,7 @@ def _build_complications_for_patient(
     return [], 0.0
 
   # 逐条生成并发症，同时累加普通药额外需求。
-  complications: List[config_def.Medical_Complication] = []
+  complications: list[config_def.Medical_Complication] = []
   bonus_total = 0.0
   for system_id, severity_list in _assign_complication_systems(
       plan, severity_config
@@ -208,9 +208,9 @@ def _build_complications_for_patient(
 
 
 def _assign_complication_systems(
-    plan: List[int],
+    plan: list[int],
     severity_config: config_def.Medical_Severity,
-) -> List[Tuple[int, List[int]]]:
+) -> list[tuple[int, list[int]]]:
   """将计划中的各等级并发症分配到生理系统。
 
   参数:
@@ -225,7 +225,7 @@ def _assign_complication_systems(
     return []
 
   # 危重情况需要将并发症拆分到两个系统中处理。
-  assignments: List[Tuple[int, List[int]]] = []
+  assignments: list[tuple[int, list[int]]] = []
   hazard_case = (
       int(severity_config.severe_complication_count) >= 2
       and int(severity_config.moderate_complication_count) >= 1
@@ -234,8 +234,8 @@ def _assign_complication_systems(
     system_a = _pick_system_id()
     if system_a is None:
       return []
-    severity_for_a: List[int] = []
-    severity_for_b: List[int] = []
+    severity_for_a: list[int] = []
+    severity_for_b: list[int] = []
     severe_assigned = 0
     moderate_assigned = 0
     for severity_level in plan:
@@ -267,8 +267,8 @@ def _assign_complication_systems(
 
 
 def _pick_system_id(
-    exclude_ids: Optional[Iterable[int]] = None,
-) -> Optional[int]:
+    exclude_ids: Iterable[int] | None = None,
+) -> int | None:
   """按 organ_priority 权重抽取一个系统 ID，可排除给定集合。
 
   参数:
@@ -279,7 +279,7 @@ def _pick_system_id(
 
   # 将需排除的系统整理成集合并构建候选权重表。
   exclude_set = set(exclude_ids or [])
-  candidates: Dict[int, int] = {}
+  candidates: dict[int, int] = {}
   for (
       system_id,
       part_map,
@@ -295,9 +295,7 @@ def _pick_system_id(
   return value_handle.get_random_for_weight(candidates)
 
 
-def _pick_part_id(
-    system_id: int, used_part_ids: Iterable[int]
-) -> Optional[int]:
+def _pick_part_id(system_id: int, used_part_ids: Iterable[int]) -> int | None:
   """在指定系统中抽取一个未被使用的部位 ID。
 
   参数:
@@ -312,7 +310,7 @@ def _pick_part_id(
   if not part_map:
     return None
   used_set = set(used_part_ids)
-  candidates: Dict[int, int] = {}
+  candidates: dict[int, int] = {}
   for part_id, part in part_map.items():
     if part_id in used_set:
       continue
@@ -331,7 +329,7 @@ def _pick_complication(
     system_id: int,
     part_id: int,
     severity_level: int,
-) -> Optional[config_def.Medical_Complication]:
+) -> config_def.Medical_Complication | None:
   """在指定系统/部位/等级下随机挑选一条并发症。
 
   参数:
@@ -374,7 +372,7 @@ def _pick_patient_race_id() -> int:
 
 def _resolve_patient_system_keys(
     patient: medical_constant.MedicalPatient,
-) -> Set[str]:
+) -> set[str]:
   """提取病人可能关联的系统键。
 
   参数:
@@ -383,7 +381,7 @@ def _resolve_patient_system_keys(
       Set[str]: 记录病人关联生理系统的字符串集合。
   """
 
-  system_keys: Set[str] = set()
+  system_keys: set[str] = set()
   if patient is None:
     return system_keys
 
@@ -407,7 +405,7 @@ def _resolve_patient_system_keys(
 
 
 def _resolve_triage_mode(
-    rhodes_island: Optional[game_type.Rhodes_Island],
+    rhodes_island: game_type.Rhodes_Island | None,
 ) -> medical_constant.MedicalPatientPriority:
   """解析基地当前的病人接诊优先策略。
 
@@ -440,9 +438,9 @@ def _resolve_triage_mode(
 
 
 def select_triage_candidate(
-    candidates: List[medical_constant.MedicalPatient],
-    rhodes_island: Optional[game_type.Rhodes_Island],
-) -> Optional[medical_constant.MedicalPatient]:
+    candidates: list[medical_constant.MedicalPatient],
+    rhodes_island: game_type.Rhodes_Island | None,
+) -> medical_constant.MedicalPatient | None:
   """在候选病人中挑选最优对象。
 
   参数:
@@ -486,9 +484,9 @@ def select_triage_candidate(
 
 
 def estimate_patient_diagnose_income(
-    patient: Optional[medical_constant.MedicalPatient],
+    patient: medical_constant.MedicalPatient | None,
     *,
-    target_base: Optional[game_type.Rhodes_Island] = None,
+    target_base: game_type.Rhodes_Island | None = None,
 ) -> int:
   """
   估算指定病人的诊疗阶段收益（不含药费）。
@@ -525,7 +523,7 @@ def advance_diagnose(
     patient_id: int,
     doctor_character: game_type.Character,
     *,
-    target_base: Optional[game_type.Rhodes_Island] = None,
+    target_base: game_type.Rhodes_Island | None = None,
 ) -> None:
   """推进病人的诊疗进度并在完成时发放诊疗收入。
 
@@ -611,8 +609,8 @@ def advance_diagnose(
 def finalize_patient_after_diagnose(
     patient: medical_constant.MedicalPatient,
     *,
-    target_base: Optional[game_type.Rhodes_Island] = None,
-) -> Dict[str, object]:
+    target_base: game_type.Rhodes_Island | None = None,
+) -> dict[str, object]:
   """
   病人诊疗完成后的结算处理，包括收入、状态、住院与药物结算。
 
@@ -735,9 +733,9 @@ def set_patient_state(
 
 def get_patient_table(
     *,
-    target_base: Optional[game_type.Rhodes_Island] = None,
+    target_base: game_type.Rhodes_Island | None = None,
     hospitalized: bool,
-) -> Dict[int, medical_constant.MedicalPatient]:
+) -> dict[int, medical_constant.MedicalPatient]:
   """获取指定状态下的病人表引用。
 
   参数:
@@ -760,7 +758,7 @@ def get_patient_table(
 
 def get_medical_price_ratio(
     *,
-    target_base: Optional[game_type.Rhodes_Island] = None,
+    target_base: game_type.Rhodes_Island | None = None,
 ) -> float:
   """读取当前医疗部收费系数，若未初始化则返回默认值。
 
@@ -784,7 +782,7 @@ def get_medical_price_ratio(
 def set_medical_price_ratio(
     price_ratio: float,
     *,
-    target_base: Optional[game_type.Rhodes_Island] = None,
+    target_base: game_type.Rhodes_Island | None = None,
 ) -> None:
   """设置待调整的医疗部收费系数，将在第二天结算时生效。
 
@@ -805,7 +803,7 @@ def set_medical_price_ratio(
 
 def get_new_medical_price_ratio(
     *,
-    target_base: Optional[game_type.Rhodes_Island] = None,
+    target_base: game_type.Rhodes_Island | None = None,
 ) -> float:
   """读取待调整的医疗部收费系数，若未设置则返回0。
 
@@ -823,7 +821,7 @@ def get_new_medical_price_ratio(
 
 def apply_new_medical_price_ratio(
     *,
-    target_base: Optional[game_type.Rhodes_Island] = None,
+    target_base: game_type.Rhodes_Island | None = None,
 ) -> bool:
   """应用待调整的收费系数，将其设置为当前收费系数并清空待调整值。
 
@@ -852,7 +850,7 @@ def apply_new_medical_price_ratio(
 
 
 def get_patient_priority_mode(
-    *, target_base: Optional[game_type.Rhodes_Island] = None
+    *, target_base: game_type.Rhodes_Island | None = None
 ) -> medical_constant.MedicalPatientPriority:
   """读取当前病人接诊优先策略，若缺失则回退为默认值。
 
@@ -870,7 +868,7 @@ def get_patient_priority_mode(
 def set_patient_priority_mode(
     priority_mode: str | medical_constant.MedicalPatientPriority,
     *,
-    target_base: Optional[game_type.Rhodes_Island] = None,
+    target_base: game_type.Rhodes_Island | None = None,
 ) -> medical_constant.MedicalPatientPriority:
   """更新病人接诊优先策略并返回实际生效的枚举值。
 
@@ -899,11 +897,11 @@ def set_patient_priority_mode(
 
 
 def predict_medical_patient_refresh(
-    price_ratio: Optional[float] = None,
-    level: Optional[int] = None,
+    price_ratio: float | None = None,
+    level: int | None = None,
     *,
-    target_base: Optional[game_type.Rhodes_Island] = None,
-) -> Dict[str, float]:
+    target_base: game_type.Rhodes_Island | None = None,
+) -> dict[str, float]:
   """预测在指定收费系数下的病人刷新数量与倍率。
 
   参数:
@@ -971,10 +969,10 @@ def predict_medical_patient_refresh(
 
 
 def refresh_medical_patients(
-    level: Optional[int] = None,
+    level: int | None = None,
     *,
-    target_base: Optional[game_type.Rhodes_Island] = None,
-) -> List[medical_constant.MedicalPatient]:
+    target_base: game_type.Rhodes_Island | None = None,
+) -> list[medical_constant.MedicalPatient]:
   """根据医疗部等级刷新当日病人列表。
 
   参数:
@@ -1007,7 +1005,7 @@ def refresh_medical_patients(
     return []
 
   # 循环生成病人并登记到门诊病人表。
-  new_patients: List[medical_constant.MedicalPatient] = []
+  new_patients: list[medical_constant.MedicalPatient] = []
   patient_table = get_patient_table(
       target_base=rhodes_island, hospitalized=False
   )

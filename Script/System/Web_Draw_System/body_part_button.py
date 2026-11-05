@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 身体部位按钮组件
 负责处理Web模式下角色立绘上的身体部位点击交互
@@ -11,7 +10,6 @@
 - 兽耳作为独立部位，分左右显示，需满足交互对象有兽耳的条件才显示
 """
 
-from typing import Dict, List, Optional, Tuple
 from Script.System.Instruct_System.instruct_category import (
     BodyPart,
     BODY_PART_NAMES,
@@ -38,13 +36,13 @@ class BodyPartButton:
   def __init__(self) -> None:
     """初始化身体部位按钮管理器"""
     # 原始的COCO关键点数据 (17个点)
-    self._coco_keypoints: List[Tuple[float, float]] = []
+    self._coco_keypoints: list[tuple[float, float]] = []
     # 计算后的部位位置数据
-    self._body_parts_data: Dict[str, dict] = {}
+    self._body_parts_data: dict[str, dict] = {}
     # 当前可见的部位列表
-    self._visible_parts: List[str] = []
+    self._visible_parts: list[str] = []
     # 当前悬停的部位
-    self._hovered_part: Optional[str] = None
+    self._hovered_part: str | None = None
     # 臀部是否展开
     self._hip_expanded: bool = False
     # 头部是否展开
@@ -54,10 +52,10 @@ class BodyPartButton:
     # 角色是否有兽角
     self._has_horn: bool = False
     # 图像尺寸
-    self._image_size: Tuple[int, int] = (0, 0)
+    self._image_size: tuple[int, int] = (0, 0)
 
   def load_coco_keypoints(
-      self, keypoints: List[Tuple[float, float]], image_size: Tuple[int, int]
+      self, keypoints: list[tuple[float, float]], image_size: tuple[int, int]
   ) -> None:
     """
     从COCO-WholeBody格式的关键点数据加载
@@ -255,7 +253,7 @@ class BodyPartButton:
     return int(base_size * ratio)
 
   def _calculate_hip_sub_parts(
-      self, hip_center: List[float], width: int, height: int
+      self, hip_center: list[float], width: int, height: int
   ) -> None:
     """
     计算臀部子部位的位置（环绕臀部中心排列）
@@ -312,7 +310,7 @@ class BodyPartButton:
       self._body_parts_data = body_parts_json.get("body_parts", {})
 
   def set_visible_parts(
-      self, parts: List[str], has_beast_ears: bool = False
+      self, parts: list[str], has_beast_ears: bool = False
   ) -> None:
     """
     设置可见的部位
@@ -356,7 +354,7 @@ class BodyPartButton:
 
     self._visible_parts = expanded_parts
 
-  def get_visible_parts(self) -> List[str]:
+  def get_visible_parts(self) -> list[str]:
     """
     获取当前可见的部位列表
 
@@ -418,7 +416,7 @@ class BodyPartButton:
 
     self._visible_parts = expanded_parts
 
-  def get_part_position(self, part_name: str) -> Optional[dict]:
+  def get_part_position(self, part_name: str) -> dict | None:
     """
     获取部位的位置和大小信息
 
@@ -452,7 +450,7 @@ class BodyPartButton:
     else:
       return BODY_PART_NAMES.get(part_name, part_name)
 
-  def get_image_size(self) -> Tuple[int, int]:
+  def get_image_size(self) -> tuple[int, int]:
     """
     获取图像尺寸
 
@@ -576,7 +574,7 @@ class BodyPartButton:
     self._has_horn = has_horn
     self._has_beast_ears = has_beast_ears
 
-  def get_buttons_data(self) -> List[dict]:
+  def get_buttons_data(self) -> list[dict]:
     """
     获取所有可见部位按钮的渲染数据
 
@@ -604,7 +602,7 @@ class BodyPartButton:
 
     return buttons
 
-  def set_hovered_part(self, part_name: Optional[str]) -> None:
+  def set_hovered_part(self, part_name: str | None) -> None:
     """
     设置当前悬停的部位
 
@@ -613,7 +611,7 @@ class BodyPartButton:
     """
     self._hovered_part = part_name
 
-  def get_hovered_part(self) -> Optional[str]:
+  def get_hovered_part(self) -> str | None:
     """
     获取当前悬停的部位
 
@@ -629,7 +627,7 @@ class BodyPartButton:
       scale: float = 1.0,
       offset_x: int = 0,
       offset_y: int = 0,
-  ) -> Optional[str]:
+  ) -> str | None:
     """
     检查点击位置是否命中某个部位
 

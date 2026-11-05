@@ -1,6 +1,5 @@
 """H中被发现后的选择面板"""
 
-from typing import List
 from types import FunctionType
 from Script.System.Instruct_System import handle_instruct
 from Script.UI.Moudle import draw
@@ -134,7 +133,7 @@ class Sex_Be_Discovered_Panel:
 
     while 1:
 
-      return_list: List[str] = []
+      return_list: list[str] = []
       title_draw.draw()
       info_draw = draw.NormalDraw()
       info_draw.text = find_text

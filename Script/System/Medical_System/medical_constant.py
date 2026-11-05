@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from itertools import count
 from collections.abc import Buffer
-from typing import Tuple, Dict, List, Any, Optional, ClassVar, Mapping, Iterable, Protocol, SupportsIndex, SupportsInt, cast, runtime_checkable
+from typing import Any, ClassVar, Mapping, Iterable, Protocol, SupportsIndex, SupportsInt, cast, runtime_checkable
 
 _: FunctionType = get_text._
 """ 翻译函数 """
@@ -29,7 +29,7 @@ SPECIALIZATION_ROLE_CLINIC: str = "clinic"
 SPECIALIZATION_ROLE_HOSPITAL: str = "hospital"
 """住院医生分科角色键值"""
 
-ROLE_DISPLAY_NAME: Dict[str, str] = {
+ROLE_DISPLAY_NAME: dict[str, str] = {
     SPECIALIZATION_ROLE_CLINIC: _("门诊医生"),
     SPECIALIZATION_ROLE_HOSPITAL: _("住院医生"),
 }
@@ -41,7 +41,7 @@ SPECIALIZATION_BONUS_PER_LEVEL: float = 0.04
 FLOAT_EPSILON: float = 1e-6
 """浮点数比较的通用安全阈值"""
 
-SURGERY_ABILITY_REQUIREMENT: Dict[int, int] = {2: 4, 3: 6}
+SURGERY_ABILITY_REQUIREMENT: dict[int, int] = {2: 4, 3: 6}
 """不同病情等级执行手术所需的最低医疗能力等级映射"""
 
 SURGERY_RESOURCE_MULTIPLIER: float = 1.6
@@ -59,7 +59,7 @@ HOSPITAL_DOCTOR_BED_BONUS: int = 2
 CRITICAL_SEVERITY_LEVEL: int = 3
 """危重病人在 Medical_Severity.csv 中的严重度等级编号"""
 
-SPECIALIZATION_ROLES: Tuple[str, str] = (
+SPECIALIZATION_ROLES: tuple[str, str] = (
     SPECIALIZATION_ROLE_CLINIC,
     SPECIALIZATION_ROLE_HOSPITAL,
 )
@@ -88,7 +88,7 @@ class MedicalPatientState(str, Enum):
   """已完成治疗出院"""
 
 
-STATE_DISPLAY_NAME: Dict[MedicalPatientState, str] = {
+STATE_DISPLAY_NAME: dict[MedicalPatientState, str] = {
     MedicalPatientState.REFRESHED: _("待诊"),
     MedicalPatientState.IN_TREATMENT: _("干员诊疗中"),
     MedicalPatientState.IN_TREATMENT_PLAYER: _("博士诊疗中"),
@@ -99,7 +99,7 @@ STATE_DISPLAY_NAME: Dict[MedicalPatientState, str] = {
 }
 """病人状态中文名称映射表"""
 
-WAITING_QUEUE_STATES: Tuple[MedicalPatientState, ...] = (
+WAITING_QUEUE_STATES: tuple[MedicalPatientState, ...] = (
     MedicalPatientState.REFRESHED,
     MedicalPatientState.IN_TREATMENT,
     MedicalPatientState.IN_TREATMENT_PLAYER,
@@ -168,13 +168,13 @@ class MedicalMedicineResource(Enum):
   """感染抑制剂浓缩液，重症/危重用"""
 
 
-ALL_MEDICINE_RESOURCE_IDS: Tuple[int, ...] = tuple(
+ALL_MEDICINE_RESOURCE_IDS: tuple[int, ...] = tuple(
     resource.value for resource in MedicalMedicineResource
 )
 """医疗系统使用的全部药物资源 ID 元组，用于遍历统一扣药"""
 
 
-def build_medicine_consumption_template() -> Dict[int, float]:
+def build_medicine_consumption_template() -> dict[int, float]:
   """构建药品消耗统计的默认模板字典。
 
   返回:
@@ -216,11 +216,11 @@ class MedicalPatient:
   """病人唯一编号（运行时自增生成）"""
   severity_level: int = 0
   """病情等级，来自 MedicalSeverity.csv"""
-  complications: List[int] = field(default_factory=list)
+  complications: list[int] = field(default_factory=list)
   """已抽取并发症 ID 列表"""
   diagnose_progress: float = 0.0
   """诊疗进度（工时单位）"""
-  need_resources: Dict[int, float] = field(default_factory=dict)
+  need_resources: dict[int, float] = field(default_factory=dict)
   """药物需求累计值，key=资源 ID，value=需求数量"""
   state: MedicalPatientState = MedicalPatientState.REFRESHED
   """病人当前状态"""
@@ -248,9 +248,9 @@ class MedicalPatient:
   """病情等级对应的名称标签，用于 UI 展示"""
   price_ratio: float = 1.0
   """刷新/接诊时记录的收费系数快照"""
-  complication_trace: List[Dict[str, Any]] = field(default_factory=list)
+  complication_trace: list[dict[str, Any]] = field(default_factory=list)
   """并发症追踪记录，包含系统/部位等辅助信息"""
-  system_keys: List[str] = field(default_factory=list)
+  system_keys: list[str] = field(default_factory=list)
   """病人关联的生理系统标签集合（字符串形式）"""
   player_session_active: bool = False
   """标记玩家诊疗会话是否处于激活状态"""
@@ -258,25 +258,25 @@ class MedicalPatient:
   """玩家介入前病人的原始状态字符串"""
   player_used_checks: int = 0
   """本次玩家诊疗流程已使用的检查次数"""
-  player_confirmed_complications: List[int] = field(default_factory=list)
+  player_confirmed_complications: list[int] = field(default_factory=list)
   """玩家诊疗流程中已确诊的并发症 ID 列表"""
-  player_check_records: List[Dict[str, Any]] = field(default_factory=list)
+  player_check_records: list[dict[str, Any]] = field(default_factory=list)
   """玩家诊疗流程中产生的检查记录摘要列表"""
-  player_pending_checks: List[Dict[str, Any]] = field(default_factory=list)
+  player_pending_checks: list[dict[str, Any]] = field(default_factory=list)
   """玩家诊疗流程中等待执行的检查计划列表"""
   last_surgery_result: str = ""
   """最近一次手术流程的结果标识"""
-  surgery_blocked_resource: Optional[int] = None
+  surgery_blocked_resource: int | None = None
   """导致手术阻塞的药物资源 ID，None 表示不存在阻塞"""
   state_label: str = ""
   """调试用途的最新状态字符串"""
-  medicine_recorded: Dict[int, float] = field(default_factory=dict)
+  medicine_recorded: dict[int, float] = field(default_factory=dict)
   """累计登记但尚未扣除的药品需求量"""
-  medicine_progress: Dict[int, float] = field(default_factory=dict)
+  medicine_progress: dict[int, float] = field(default_factory=dict)
   """住院每日用药进度缓存"""
-  medicine_consumed_units: Dict[int, int] = field(default_factory=dict)
+  medicine_consumed_units: dict[int, int] = field(default_factory=dict)
   """历史累计消耗的药物单位数"""
-  last_consumed_units: Dict[int, int] = field(default_factory=dict)
+  last_consumed_units: dict[int, int] = field(default_factory=dict)
   """最近一次用药操作实际消耗的资源记录"""
 
   def ensure_resource_keys(self) -> None:
@@ -286,7 +286,7 @@ class MedicalPatient:
       self.need_resources.setdefault(resource_id, 0.0)
 
 
-DISPLAY_NAME_MAPPING: Dict[str, str] = {
+DISPLAY_NAME_MAPPING: dict[str, str] = {
     "diagnose_completed_outpatient": _("门诊诊疗完成"),
     "diagnose_completed_hospital": _("住院诊疗完成"),
     "medicine_completed_outpatient": _("门诊发药完成"),
@@ -336,13 +336,13 @@ class MedicalDailyCounters:
   """今日完成出院的病人数"""
   surgeries_performed: int = 0
   """今日成功执行的手术次数"""
-  medicine_consumed: Dict[int, float] = field(
+  medicine_consumed: dict[int, float] = field(
       default_factory=build_medicine_consumption_template
   )
   """今日药品消耗统计，键为药剂资源 ID，值为对应的消耗单位数（支持小数）"""
 
   @classmethod
-  def from_mapping(cls, source: Optional[object]) -> "MedicalDailyCounters":
+  def from_mapping(cls, source: object | None) -> MedicalDailyCounters:
     """根据传入对象生成规范化的统计数据实例。
 
     参数:
@@ -426,7 +426,7 @@ class MedicalDailyCounters:
       else:
         setattr(self, field_name, 0)
 
-  def as_dict(self) -> Dict[str, Any]:
+  def as_dict(self) -> dict[str, Any]:
     """以字典形式返回统计数据。
 
     返回:
@@ -434,7 +434,7 @@ class MedicalDailyCounters:
     """
 
     # --- 将所有显性字段转写为纯整数字典，遇到异常值时安全回退为零 ---
-    result: Dict[str, Any] = {}
+    result: dict[str, Any] = {}
     for field_name in self.__dataclass_fields__:
       raw_value = getattr(self, field_name, 0)
       if field_name == "medicine_consumed":
@@ -443,7 +443,7 @@ class MedicalDailyCounters:
         result[field_name] = self._coerce_int(raw_value)
     return result
 
-  def items(self) -> Iterable[Tuple[str, Any]]:
+  def items(self) -> Iterable[tuple[str, Any]]:
     """返回可迭代的字段键值对，用于 UI 展示。
 
     返回:
@@ -477,7 +477,7 @@ class MedicalDailyCounters:
       self.medicine_consumed = build_medicine_consumption_template()
 
     # --- 累加每个资源 ID 的消耗值，并保留未知资源键 ---
-    updated: Dict[int, float] = dict(self.medicine_consumed)
+    updated: dict[int, float] = dict(self.medicine_consumed)
     for resource_id, amount in mapping.items():
       safe_id = self._coerce_resource_id(resource_id)
       if safe_id is None:
@@ -489,7 +489,7 @@ class MedicalDailyCounters:
     self.medicine_consumed = updated
 
   @classmethod
-  def _coerce_consumption_mapping(cls, value: object) -> Dict[int, float]:
+  def _coerce_consumption_mapping(cls, value: object) -> dict[int, float]:
     """将任意输入统一转换为药品消耗映射结构。
 
     参数:
@@ -529,7 +529,7 @@ class MedicalDailyCounters:
     return result
 
   @staticmethod
-  def _coerce_resource_id(resource_id: object) -> Optional[int]:
+  def _coerce_resource_id(resource_id: object) -> int | None:
     """尝试将任意对象转换为合法的资源 ID。"""
 
     try:

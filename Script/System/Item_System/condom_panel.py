@@ -1,6 +1,6 @@
 """避孕套选择面板，以及装饰部位的显示名称"""
 
-from typing import Dict, List, Tuple
+from typing import Dict
 from types import FunctionType
 
 from Script.Core import cache_control, game_type, get_text, flow_handle
@@ -77,7 +77,7 @@ class Condom_Select_Panel:
       )
     return 1
 
-  def select_condoms(self) -> List[int] | int:
+  def select_condoms(self) -> list[int] | int:
     """
     绘制存量池多选页面\n
     Return arguments:\n
@@ -133,7 +133,7 @@ class Condom_Select_Panel:
 
   def select_decoration(
       self, target_character_id: int
-  ) -> List[Tuple[tuple, int]] | int:
+  ) -> list[tuple[tuple, int]] | int:
     """
     绘制对方身上装饰的多选页面\n
     Keyword arguments:\n
@@ -193,7 +193,7 @@ class Condom_Select_Panel:
       else:
         self.select_index_set.add(entry_index)
 
-  def select_part(self, target_character_id: int) -> Tuple[int, int] | int:
+  def select_part(self, target_character_id: int) -> tuple[int, int] | int:
     """
     绘制目标部位单选页面\n
     Keyword arguments:\n
@@ -255,7 +255,7 @@ class Condom_Select_Panel:
       return part_list[part_index]
 
   def draw_confirm_and_cancel(
-      self, return_list: List[str], confirm_flag: bool = True
+      self, return_list: list[str], confirm_flag: bool = True
   ) -> str:
     """
     绘制确认与取消按钮并等待玩家输入\n

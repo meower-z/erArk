@@ -1,6 +1,5 @@
 """隐奸：整体流程、隐蔽值与隐蔽等级、隐奸对象与附近角色、被发现的判定与结算，以及隐奸信息面板与模式选择面板"""
 
-from typing import List
 from types import FunctionType
 from Script.System.Instruct_System import handle_instruct
 from Script.UI.Moudle import draw, panel
@@ -87,7 +86,7 @@ def get_hidden_level(value: int) -> tuple[int, str]:
   return 3, game_config.config_hidden_level[3].name
 
 
-def get_hidden_sex_targets(character_id: int) -> List[int]:
+def get_hidden_sex_targets(character_id: int) -> list[int]:
   """
   功能: 返回指定玩家的隐奸对象角色id列表
   参数:
@@ -100,7 +99,7 @@ def get_hidden_sex_targets(character_id: int) -> List[int]:
   position = cache.character_data[character_id].position
   scene_path = map_handle.get_map_system_path_str_for_list(position)
   scene_data: game_type.Scene = cache.scene_data[scene_path]
-  result: List[int] = []
+  result: list[int] = []
   # 遍历场景中所有角色
   for chara_id in scene_data.character_list:
     # 跳过玩家自身
@@ -114,7 +113,7 @@ def get_hidden_sex_targets(character_id: int) -> List[int]:
   return result
 
 
-def get_nearby_conscious_unfallen_characters(character_id: int) -> List[int]:
+def get_nearby_conscious_unfallen_characters(character_id: int) -> list[int]:
   """
   功能: 返回指定角色所在地点中，不在隐奸中，有意识且未睡眠的其他角色列表
   参数:
@@ -128,7 +127,7 @@ def get_nearby_conscious_unfallen_characters(character_id: int) -> List[int]:
   # 从缓存中取出该场景数据
   scene_data: game_type.Scene = cache.scene_data[scene_path]
 
-  result: List[int] = []
+  result: list[int] = []
   # 遍历场景中所有角色
   for chara_cid in scene_data.character_list:
     if chara_cid == character_id:
@@ -324,9 +323,9 @@ class See_Hidden_Sex_InfoPanel:
     """ 面板最大宽度 """
     self.column = column
     """ 每行状态最大个数 """
-    self.draw_list: List = []
+    self.draw_list: list = []
     """ 绘制的文本列表 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 当前面板监听的按钮列表 """
     self.center_status: bool = center_status
     """ 居中绘制状态文本 """
@@ -414,7 +413,7 @@ class Select_Hidden_Sex_Mode_Panel:
     """ 是否是从被发现面板跳转过来 """
     self.now_panel = _("选择隐奸模式")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
   def draw(self) -> None:

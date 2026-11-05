@@ -13,7 +13,6 @@
 
 import random
 from types import FunctionType
-from typing import List
 
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
@@ -39,7 +38,7 @@ def get_character_stage(character_id: int) -> int:
   return growth_handle.get_character_stage(character_id)
 
 
-def get_growth_event_character_list() -> List[int]:
+def get_growth_event_character_list() -> list[int]:
   """
   取本次入队要遍历的角色列表
 
@@ -77,7 +76,7 @@ def get_growth_event_character_list() -> List[int]:
   return result
 
 
-def get_sibling_child_list(character_id: int) -> List[int]:
+def get_sibling_child_list(character_id: int) -> list[int]:
   """
   取能一起玩的兄弟姐妹列表（只取幼女与学员；幼女离线、不在 npc_id_got 里，实际只找得到学员）
 
@@ -111,7 +110,7 @@ def get_sibling_child_list(character_id: int) -> List[int]:
   return result
 
 
-def get_classmate_list(character_id: int) -> List[int]:
+def get_classmate_list(character_id: int) -> list[int]:
   """
   取同班同学列表：个人课表上有重合节次的其他孩子
 
@@ -217,7 +216,7 @@ def judge_stage_pass(uid: str, character_id: int) -> bool:
   return sub_key == now_stage
 
 
-def get_candidate_event_list(character_id: int) -> List[list]:
+def get_candidate_event_list(character_id: int) -> list[list]:
   """
   列出这个孩子当前可触发的全部事件
   Keyword arguments:
@@ -257,7 +256,7 @@ def get_candidate_event_list(character_id: int) -> List[list]:
 @official_event_handle.register_provider(
     education_constant.GROWTH_EVENT_DEPARTMENT
 )
-def get_today_growth_event_pick_list() -> List[dict]:
+def get_today_growth_event_pick_list() -> list[dict]:
   """
   每日结算时给出今日的养成事件候选（已按女儿逐个节流）
 
@@ -372,7 +371,7 @@ def push_graduation_event(character_id: int) -> None:
     )
 
 
-def push_birthday_event() -> List[int]:
+def push_birthday_event() -> list[int]:
   """
   跨天结算时给今天过生日的女儿把生日事件插到队首（Plan 32 §3.3）
   Keyword arguments:
@@ -584,7 +583,7 @@ def push_semester_event(character_id: int) -> bool:
   )
 
 
-def push_semester_event_for_list(character_list: List[int]) -> int:
+def push_semester_event_for_list(character_list: list[int]) -> int:
   """
   给一批刚出了成绩单的孩子各推一条期末事件（只推学员）
   Keyword arguments:

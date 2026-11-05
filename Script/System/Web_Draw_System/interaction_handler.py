@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 交互处理组件
 负责处理Web模式下的用户交互逻辑
@@ -8,7 +7,7 @@
 - 小类（InteractionMinorType）：每个大类下的具体交互方式
 """
 
-from typing import Dict, List, Set, Optional
+from typing import Set
 from Script.Core import cache_control, game_type, constant
 from Script.Config import game_config
 from Script.Design import web_interaction_manager, handle_premise
@@ -31,17 +30,17 @@ class InteractionHandler:
 
   def __init__(self) -> None:
     """初始化交互处理器"""
-    self._current_interaction_type: Optional[str] = None
-    self._available_body_parts: List[str] = []
-    self._selected_body_part: Optional[str] = None
+    self._current_interaction_type: str | None = None
+    self._available_body_parts: list[str] = []
+    self._selected_body_part: str | None = None
 
   @property
-  def current_interaction_type(self) -> Optional[str]:
+  def current_interaction_type(self) -> str | None:
     """获取当前选中的交互类型"""
     return self._current_interaction_type
 
   @property
-  def available_body_parts(self) -> List[str]:
+  def available_body_parts(self) -> list[str]:
     """获取当前可用的身体部位列表"""
     return self._available_body_parts
 
@@ -116,7 +115,7 @@ class InteractionHandler:
 
   def _get_available_body_parts_by_minor_type(
       self, minor_type_id: str
-  ) -> List[str]:
+  ) -> list[str]:
     """
     根据小类型获取可用的身体部位
 
@@ -164,7 +163,7 @@ class InteractionHandler:
     # 同时清除web_interaction_manager中的选择状态
     web_interaction_manager.clear_selection()
 
-  def get_interaction_types(self) -> Dict:
+  def get_interaction_types(self) -> dict:
     """
     获取所有可用的交互类型（大类/小类嵌套结构）
 

@@ -3,7 +3,7 @@
 import os
 import re
 from types import FunctionType
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant, constant_promise
 from Script.Design import basement, handle_premise, map_handle
@@ -36,9 +36,9 @@ class Manage_Dormitory_Panel:
     self.now_panel: str = _("宿舍总览")
     self.show_dormitory_detail: bool = False
     """ 是否显示宿舍具体居住情况 """
-    self.temp_blank_character_ids: List[int] = []
+    self.temp_blank_character_ids: list[int] = []
     """ 临时空白位中的干员id列表 """
-    self.dormitory_select_state: Dict[str, Any] = {}
+    self.dormitory_select_state: dict[str, Any] = {}
     """ 干员选择面板的筛选状态 """
 
   def draw(self) -> None:
@@ -55,7 +55,7 @@ class Manage_Dormitory_Panel:
     while 1:
       basement.get_base_updata()
       basement.update_work_people()
-      return_list: List[str] = []
+      return_list: list[str] = []
 
       title_draw.draw()
       for now_panel in panel_list:
@@ -126,7 +126,7 @@ class Manage_Dormitory_Panel:
       return
     self.now_panel = now_panel
 
-  def _draw_overview_page(self, return_list: List[str]) -> None:
+  def _draw_overview_page(self, return_list: list[str]) -> None:
     """
     绘制宿舍总览
     输入类型: return_list(List[str])
@@ -301,7 +301,7 @@ class Manage_Dormitory_Panel:
       if yrn in return_list and yrn not in other_return_list:
         break
 
-  def _draw_manage_dormitory_manager_page(self, return_list: List[str]) -> None:
+  def _draw_manage_dormitory_manager_page(self, return_list: list[str]) -> None:
     """
     绘制宿舍管理员调整页
     输入类型: return_list(List[str])
@@ -405,7 +405,7 @@ class Manage_Dormitory_Panel:
     occupancy = self._get_room_occupancy()
     temp_blank_list = self._get_temp_blank_character_ids()
 
-    room_candidates: List[Tuple[int, str, str]] = []
+    room_candidates: list[tuple[int, str, str]] = []
     for layer in sorted(open_rooms_by_layer.keys()):
       for room_name, room_path in open_rooms_by_layer[layer]:
         room_count = occupancy.get(room_path, 0)
@@ -414,7 +414,7 @@ class Manage_Dormitory_Panel:
           room_candidates.append((layer, room_name, room_path))
 
     while 1:
-      return_list: List[str] = []
+      return_list: list[str] = []
       title_draw = draw.TitleLineDraw(
           _("调整宿舍：{0}").format(character_data.name), self.width
       )
@@ -540,7 +540,7 @@ class Manage_Dormitory_Panel:
 
     open_rooms_by_layer = self._get_open_rooms_by_layer()
     occupancy = self._get_room_occupancy()
-    free_slots: List[str] = []
+    free_slots: list[str] = []
 
     for layer in sorted(open_rooms_by_layer.keys()):
       for __, room_path in open_rooms_by_layer[layer]:
@@ -595,12 +595,12 @@ class Manage_Dormitory_Panel:
     功能: 每个超员宿舍保留前两人，其余角色汇总后按开放宿舍空位重新分配；若空位不足则不执行分配
     """
     open_rooms_by_layer = self._get_open_rooms_by_layer()
-    open_room_paths: List[str] = []
+    open_room_paths: list[str] = []
     for layer in sorted(open_rooms_by_layer.keys()):
       for __, room_path in open_rooms_by_layer[layer]:
         open_room_paths.append(room_path)
 
-    room_character_ids: Dict[str, List[int]] = {
+    room_character_ids: dict[str, list[int]] = {
         room_path: [] for room_path in open_room_paths
     }
     # 统一使用通用函数获取需要纳入统计的角色id集合（拥有干员 + 异常7离岛角色）
@@ -614,8 +614,8 @@ class Manage_Dormitory_Panel:
       if dormitory_path in room_character_ids:
         room_character_ids[dormitory_path].append(character_id)
 
-    need_redistribute_character_ids: List[int] = []
-    room_kept_count: Dict[str, int] = {}
+    need_redistribute_character_ids: list[int] = []
+    room_kept_count: dict[str, int] = {}
     for room_path in open_room_paths:
       room_ids = room_character_ids.get(room_path, [])
       if len(room_ids) > 2:
@@ -627,7 +627,7 @@ class Manage_Dormitory_Panel:
     if not len(need_redistribute_character_ids):
       return
 
-    free_slots: List[str] = []
+    free_slots: list[str] = []
     for room_path in open_room_paths:
       remain_capacity = max(0, 2 - room_kept_count.get(room_path, 0))
       for _slot_idx in range(remain_capacity):
@@ -659,7 +659,7 @@ class Manage_Dormitory_Panel:
     功能: 选择干员并更新 dormitory_managers 与工作岗位
     """
     while 1:
-      return_list: List[str] = []
+      return_list: list[str] = []
       title_draw = draw.TitleLineDraw(
           _("选择{0}层宿舍管理员").format(layer), self.width
       )
@@ -821,7 +821,7 @@ class Manage_Dormitory_Panel:
       basement.update_work_people()
     return reset_count
 
-  def _get_temp_blank_character_ids(self) -> List[int]:
+  def _get_temp_blank_character_ids(self) -> list[int]:
     """
     获取并清洗临时空白位干员列表
     输入类型: 无
@@ -875,7 +875,7 @@ class Manage_Dormitory_Panel:
     ).format(temp_count)
     info_draw.draw()
 
-  def _get_open_rooms_by_layer(self) -> Dict[int, List[Tuple[str, str]]]:
+  def _get_open_rooms_by_layer(self) -> dict[int, list[tuple[str, str]]]:
     """
     统计已开放宿舍房间
     输入类型: 无
@@ -884,14 +884,14 @@ class Manage_Dormitory_Panel:
     """
     return common.get_open_dormitory_rooms_by_layer()
 
-  def _get_room_occupancy(self) -> Dict[str, int]:
+  def _get_room_occupancy(self) -> dict[str, int]:
     """
     统计宿舍占用人数
     输入类型: 无
     输出类型: Dict[str,int]
     功能: 统计每个宿舍路径当前住了几名干员
     """
-    occupancy: Dict[str, int] = {}
+    occupancy: dict[str, int] = {}
     # 统一使用通用函数获取需要纳入统计的角色id集合（拥有干员 + 异常7离岛角色）
     for character_id in common.get_dormitory_resident_id_set():
       dormitory_path = cache.character_data[character_id].dormitory
@@ -900,7 +900,7 @@ class Manage_Dormitory_Panel:
     return dict(occupancy)
 
   def _get_room_capacity(
-      self, room_path: str, occupancy: Optional[Dict[str, int]] = None
+      self, room_path: str, occupancy: dict[str, int] | None = None
   ) -> int:
     """
     获取宿舍房间容量

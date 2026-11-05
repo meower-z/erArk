@@ -10,7 +10,7 @@
 
 import datetime
 from types import FunctionType
-from typing import Dict, List, Protocol
+from typing import Protocol
 
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant, text_handle
 from Script.Config import game_config, normal_config
@@ -41,9 +41,7 @@ def get_period_time_text(period: int) -> str:
   end_minute = minute + game_time.CLASS_PERIOD_MINUTE
   end_hour = hour + end_minute // 60
   end_minute = end_minute % 60
-  return "{0:02d}:{1:02d}~{2:02d}:{3:02d}".format(
-      hour, minute, end_hour, end_minute
-  )
+  return f"{hour:02d}:{minute:02d}~{end_hour:02d}:{end_minute:02d}"
 
 
 def get_teacher_absent_mark(teacher_id: int, short: bool = False) -> str:
@@ -105,7 +103,7 @@ class SubPanelProtocol(Protocol):
         又不必在文件顶层 import 三个子面板类——那会造成循环导入，见 Education_Manage_Panel.__init__ 里的说明
   """
 
-  def draw_page(self, return_list: List[str]) -> None:
+  def draw_page(self, return_list: list[str]) -> None:
     """
     绘制本页内容
     Keyword arguments:
@@ -143,7 +141,7 @@ class Education_Manage_Panel:
 
     self.width: int = width
     self.now_panel: str = _("全局课表")
-    self.panel_list: List[str] = [
+    self.panel_list: list[str] = [
         _("全局课表"),
         _("个人课表"),
         _("日程模板"),
@@ -152,7 +150,7 @@ class Education_Manage_Panel:
     """ 四个页签的显示名，同时也是 panel_map 的键 """
     # 子面板实例只创建一次并存起来：容器每轮 while 都会重画，
     #    如果每轮 new 一个，子面板里的选中态（当前教室 / 当前孩子）必然被重置
-    self.panel_map: Dict[str, SubPanelProtocol] = {
+    self.panel_map: dict[str, SubPanelProtocol] = {
         _("全局课表"): Class_Schedule_Panel(width),
         _("个人课表"): course_select_panel.Course_Select_Panel(width),
         _("日程模板"): schedule_template_panel.Schedule_Template_Panel(width),
@@ -175,8 +173,8 @@ class Education_Manage_Panel:
     while 1:
       # 按设施等级刷新各房间的开放状态，教室列表要靠它（照宿舍管理面板的写法）
       basement.get_base_updata()
-      return_list: List[str] = []
-      tab_return_map: Dict[str, str] = {}
+      return_list: list[str] = []
+      tab_return_map: dict[str, str] = {}
       title_draw.draw()
       self._draw_semester_head()
       for now_panel in self.panel_list:
@@ -227,7 +225,7 @@ class Education_Manage_Panel:
 
     head_draw = draw.NormalDraw()
     head_draw.width = self.width
-    head_draw.text = "  {0}".format(semester_handle.get_semester_head_text())
+    head_draw.text = f"  {semester_handle.get_semester_head_text()}"
     head_draw.draw()
     # 学期中途改课表是允许的，但要让玩家知道改动只在剩下的日子里生效，别以为整个学期都算数
     if semester_handle.judge_semester_half_passed():
@@ -263,12 +261,12 @@ class Class_Schedule_Panel:
     self.width: int = width
     self.now_room: str = ""
     """ 当前展示的教室场景名，空串表示尚未选择，由 draw_page 回落到第一间 """
-    self.room_list: List[str] = []
+    self.room_list: list[str] = []
     """ 本轮可排课的教室列表，每轮在 draw_page 里重算 """
-    self.cell_return: Dict[str, tuple] = {}
+    self.cell_return: dict[str, tuple] = {}
     """ 本轮课表格子按钮的返回值 → (星期, 节次)，由 draw_page 写、handle_yrn 读 """
 
-  def draw_page(self, return_list: List[str]) -> None:
+  def draw_page(self, return_list: list[str]) -> None:
     """
     绘制本页内容
     输入类型: return_list(List[str])，容器的共享返回值列表，本页的按钮往里加
@@ -360,7 +358,7 @@ class Class_Schedule_Panel:
         self.now_room = room
         return
 
-  def _draw_week_table(self, classroom: str) -> Dict[str, tuple]:
+  def _draw_week_table(self, classroom: str) -> dict[str, tuple]:
     """
     绘制一间教室的周表
     输入类型: classroom(str)
@@ -368,7 +366,7 @@ class Class_Schedule_Panel:
     功能: 9 行节次 × 7 列星期，每格显示"科目/教师"；
           教师已离岗 / 被监禁 / 不在岛上的格子名字后加标注、整格灰字（Plan 31 §3.10；监禁为 Plan 32 §3.13）
     """
-    cell_return: Dict[str, tuple] = {}
+    cell_return: dict[str, tuple] = {}
     head_width = 14
     cell_width = max(
         8, int((self.width - head_width) / len(education_constant.WEEK_NAME))
@@ -389,9 +387,7 @@ class Class_Schedule_Panel:
     for period in range(len(game_time.CLASS_PERIOD_START)):
       head_draw = draw.NormalDraw()
       head_draw.width = head_width
-      head_draw.text = "  {0} {1} ".format(
-          period + 1, get_period_time_text(period)[:5]
-      )
+      head_draw.text = f"  {period + 1} {get_period_time_text(period)[:5]} "
       head_draw.draw()
       for week_day in range(len(education_constant.WEEK_NAME)):
         cell = schedule_handle.get_class_cell(classroom, week_day, period)
@@ -423,8 +419,8 @@ class Class_Schedule_Panel:
                   temp_prefix + ability_name + "/" + absent_mark
               )
               teacher_name = fit_text_width(teacher_name, name_width)
-            cell_text = "{0}{1}/{2}{3}".format(
-                temp_prefix, ability_name, teacher_name, absent_mark
+            cell_text = (
+                f"{temp_prefix}{ability_name}/{teacher_name}{absent_mark}"
             )
           else:
             cell_text = "{0}{1}/{2}".format(
@@ -432,7 +428,7 @@ class Class_Schedule_Panel:
             )
         now_draw = draw.CenterButton(
             cell_text,
-            "\nCELL_{0}_{1}".format(week_day, period),
+            f"\nCELL_{week_day}_{period}",
             cell_width,
             normal_style="deep_gray" if absent_mark else "standard",
             tooltip=absent_tip,
@@ -574,8 +570,8 @@ class Class_Schedule_Panel:
           "  主修科目（这一门的相关动作有额外经验加成，其他动作照样能做）：\n"
       )
       subject_draw.draw()
-      return_list: List[str] = []
-      id_by_return: Dict[str, int] = {}
+      return_list: list[str] = []
+      id_by_return: dict[str, int] = {}
       for now_ability_id in education_constant.SEX_CLASS_ABILITY_LIST:
         ability_name = game_config.config_ability[now_ability_id].name
         if now_ability_id == ability_id:
@@ -740,8 +736,8 @@ class Class_Schedule_Panel:
         ability_id = id_by_return[yrn]
 
   def _select_must_attend(
-      self, must_attend: List[int], classroom: str, week_day: int, period: int
-  ) -> List[int]:
+      self, must_attend: list[int], classroom: str, week_day: int, period: int
+  ) -> list[int]:
     """
     指定必修这节实操课的学生
     输入类型: must_attend(List[int]) 当前名单, classroom(str), week_day(int), period(int)
@@ -764,8 +760,8 @@ class Class_Schedule_Panel:
       )
       tip_draw.draw()
 
-      return_list: List[str] = []
-      id_by_return: Dict[str, int] = {}
+      return_list: list[str] = []
+      id_by_return: dict[str, int] = {}
       replace_text_list = []
       # 人口来源：职业为学生的全部干员，含成年学生（Plan 25 §3.7），与个人课表名单同口径——
       #    课表只对学生岗生效（Plan 24 口径 1），改了岗的女儿点了名也不会来上课。
@@ -896,10 +892,10 @@ class Class_Schedule_Panel:
         week_text = _("未排课")
       elif week_cell[1] in cache.character_data:
         # 教师已离岗 / 不在岛上的标注与周表格子一致（Plan 31 §3.10）
-        week_text = "{0}/{1}{2}".format(
-            game_config.config_ability[week_cell[0]].name,
-            cache.character_data[week_cell[1]].name,
-            get_teacher_absent_mark(week_cell[1]),
+        week_text = (
+            f"{game_config.config_ability[week_cell[0]].name}/"
+            f"{cache.character_data[week_cell[1]].name}"
+            f"{get_teacher_absent_mark(week_cell[1])}"
         )
       else:
         week_text = "{0}/{1}".format(
@@ -917,8 +913,8 @@ class Class_Schedule_Panel:
       overlay_draw.draw()
     line_feed.draw()
 
-    return_list: List[str] = []
-    id_by_return: Dict[str, int] = {}
+    return_list: list[str] = []
+    id_by_return: dict[str, int] = {}
     for index, ability_id in enumerate(education_constant.SUBJECT_ABILITY_LIST):
       now_draw = draw.LeftButton(
           _("[{0}]{1}").format(
@@ -994,8 +990,8 @@ class Class_Schedule_Panel:
       ).format(ability_name)
       tip_draw.draw()
 
-      return_list: List[str] = []
-      id_by_return: Dict[str, int] = {}
+      return_list: list[str] = []
+      id_by_return: dict[str, int] = {}
       sort_draw = draw.CenterButton(
           _("[按{0}等级↓]").format(ability_name)
           if sort_desc
@@ -1032,8 +1028,8 @@ class Class_Schedule_Panel:
                 teacher_id
             ).values()
         )
-        level_text = "{0}{1}/{2}节".format(
-            attr_calculation.judge_grade(level), level, week_load
+        level_text = (
+            f"{attr_calculation.judge_grade(level)}{level}/{week_load}节"
         )
         conflict = schedule_handle.judge_teacher_conflict(
             teacher_id, week_day, period, classroom
@@ -1069,9 +1065,7 @@ class Class_Schedule_Panel:
         )
         if conflict:
           conflict_text_list.append(
-              "{0}（{1}）".format(
-                  cache.character_data[teacher_id].name, conflict
-              )
+              f"{cache.character_data[teacher_id].name}（{conflict}）"
           )
       if conflict_text_list:
         conflict_draw = draw.NormalDraw()

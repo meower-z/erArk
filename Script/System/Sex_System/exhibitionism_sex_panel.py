@@ -1,6 +1,5 @@
 """露出H模式的更新与选择面板"""
 
-from typing import List
 from types import FunctionType
 from Script.System.Instruct_System import handle_instruct
 from Script.UI.Moudle import draw
@@ -98,7 +97,7 @@ class Select_Exhibitionism_Sex_Mode_Panel:
     info_text = _("\n请选择要进行的露出H模式：\n\n")
 
     while 1:
-      return_list: List[str] = []
+      return_list: list[str] = []
       title_draw.draw()
 
       info_draw = draw.NormalDraw()

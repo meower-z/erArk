@@ -13,7 +13,6 @@
 """
 
 from types import FunctionType
-from typing import Dict, List
 
 from Script.Core import cache_control, game_type, get_text, flow_handle
 from Script.Design import attr_calculation
@@ -40,10 +39,10 @@ class Schedule_Template_Panel:
   def __init__(self, width: int) -> None:
     """初始化绘制对象"""
     self.width: int = width
-    self.template_id_by_return: Dict[str, int] = {}
+    self.template_id_by_return: dict[str, int] = {}
     """ 本轮模板行按钮的返回值 → 模板编号，由 draw_page 写、handle_yrn 读 """
 
-  def draw_page(self, return_list: List[str]) -> None:
+  def draw_page(self, return_list: list[str]) -> None:
     """
     绘制本页内容
     输入类型: return_list(List[str])，容器的共享返回值列表，本页的按钮往里加
@@ -113,14 +112,14 @@ class Schedule_Template_Panel:
     head_draw.style = "gold_enrod"
     head_draw.draw()
 
-  def _draw_template_table(self) -> Dict[str, int]:
+  def _draw_template_table(self) -> dict[str, int]:
     """
     绘制全部模板，每行是一个可点的按钮
     输入类型: 无
     输出类型: Dict[str, int]，按钮返回值 → 模板编号
     功能: 点某一行即进入该模板的编辑
     """
-    template_id_by_return: Dict[str, int] = {}
+    template_id_by_return: dict[str, int] = {}
     for template_id in schedule_template_handle.get_all_template_id():
       template_data = schedule_template_handle.get_template_data(template_id)
       if template_data is None:
@@ -172,8 +171,8 @@ class Schedule_Template_Panel:
     if template_data is None:
       return
     while 1:
-      return_list: List[str] = []
-      slot_by_return: Dict[str, int] = {}
+      return_list: list[str] = []
+      slot_by_return: dict[str, int] = {}
       draw.TitleLineDraw(
           _("编辑模板：{0}").format(
               template_data[education_constant.TEMPLATE_KEY_NAME]
@@ -291,8 +290,8 @@ class Schedule_Template_Panel:
     # 每行6个：190/6=31列，6×31=186≤190
     cell_width = int(self.width / 6)
     while 1:
-      return_list: List[str] = []
-      id_by_return: Dict[str, int] = {}
+      return_list: list[str] = []
+      id_by_return: dict[str, int] = {}
       draw.TitleLineDraw(_("选择活动"), self.width).draw()
 
       first_row, age_row, other_list = (
@@ -379,8 +378,8 @@ class Schedule_Template_Panel:
     # 多选：选中的孩子存在集合里，再点一次取消选中，最后一次性套用
     selected_set: set[int] = set()
     while 1:
-      return_list: List[str] = []
-      id_by_return: Dict[str, int] = {}
+      return_list: list[str] = []
+      id_by_return: dict[str, int] = {}
       template_data = schedule_template_handle.get_template_data(template_id)
       # 模板取不到（编号非法，或已被删掉）就直接退出，不画一个空面板
       if template_data is None:
@@ -452,8 +451,8 @@ class Schedule_Template_Panel:
           两个调用点都必须用 `is None` 判取消而不是判真假——
              0 是「不套用」这个有效选项，用真假判会把它当成取消给吞掉
     """
-    return_list: List[str] = []
-    id_by_return: Dict[str, int] = {}
+    return_list: list[str] = []
+    id_by_return: dict[str, int] = {}
     draw.TitleLineDraw(_("选择模板"), self.width).draw()
     # 每行6个：190/6=31列。原来整个循环没有换行，模板一多就会串行
     index = 0

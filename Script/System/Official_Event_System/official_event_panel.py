@@ -14,7 +14,6 @@
 
 import random
 from types import FunctionType
-from typing import List
 
 from Script.Core import cache_control, flow_handle, game_type, get_text, py_cmd, text_handle
 from Script.Config import game_config, normal_config
@@ -103,11 +102,11 @@ class Official_Event_Draw:
     """ 互动对象角色id，0为博士 """
     self.width: int = width
     """ 绘制宽度 """
-    self.option_list: List[dict] = official_event_handle.get_option_list(
+    self.option_list: list[dict] = official_event_handle.get_option_list(
         self.uid, self.character_id, self.partner_id
     )
     """ 本条事件的选项列表，按 CSV 原序（结算、履历与 draw_result 都认这个序） """
-    self.draw_option_list: List[dict] = list(self.option_list)
+    self.draw_option_list: list[dict] = list(self.option_list)
     """ 本条事件的选项显示顺序，每次弹出时重新洗牌（界面口径 4）。
             置灰的选项一起参与洗牌——只洗可选项的话，置灰项固定在原位，位置仍然泄露了原序 """
     random.shuffle(self.draw_option_list)
@@ -169,9 +168,7 @@ class Official_Event_Draw:
         continue
       button_index += 1
       # 选项上只写选项本身，不写后果提示（Plan 32 §8.2）：后果在玩家选定之后由 draw_result 单独显示
-      button_text = "{0}{1}".format(
-          text_handle.id_index(button_index), option_text
-      )
+      button_text = f"{text_handle.id_index(button_index)}{option_text}"
       return_text = f"\nOEVENT_{option['index']}"
       now_draw = draw.LeftButton(button_text, return_text, self.width)
       now_draw.draw()

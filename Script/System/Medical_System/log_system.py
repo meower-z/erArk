@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Mapping
+from typing import Any, Mapping
 from types import FunctionType
 
 from Script.Core import cache_control, game_type, get_text
@@ -20,7 +20,7 @@ _: FunctionType = get_text._
 
 def _ensure_storage(
     rhodes_island: game_type.Rhodes_Island,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
   """确保基地对象上存在医疗日志存储列表。
 
   参数:
@@ -30,7 +30,7 @@ def _ensure_storage(
   """
 
   # 优先读取现有列表，若缺失或类型异常则重建空列表。
-  storage: Optional[List[Dict[str, Any]]] = getattr(
+  storage: list[dict[str, Any]] | None = getattr(
       rhodes_island, "medical_recent_reports", None
   )
   if not isinstance(storage, list):
@@ -39,7 +39,7 @@ def _ensure_storage(
   return storage
 
 
-def _normalize_stage_counters(raw_stats: Dict[str, Any]) -> Dict[str, Any]:
+def _normalize_stage_counters(raw_stats: dict[str, Any]) -> dict[str, Any]:
   """将日志中的统计字段统一归一化。
 
   参数:
@@ -53,7 +53,7 @@ def _normalize_stage_counters(raw_stats: Dict[str, Any]) -> Dict[str, Any]:
   return counters.as_dict()
 
 
-def _normalize_consumption_map(value: object) -> Dict[int, float]:
+def _normalize_consumption_map(value: object) -> dict[int, float]:
   """将药品消耗字段转换为以资源 ID 为键的浮点映射。
 
   参数:
@@ -66,7 +66,7 @@ def _normalize_consumption_map(value: object) -> Dict[int, float]:
   coerced = medical_constant.MedicalDailyCounters._coerce_consumption_mapping(
       value
   )
-  normalized: Dict[int, float] = {}
+  normalized: dict[int, float] = {}
   for resource_id, amount in coerced.items():
     try:
       normalized[int(resource_id)] = float(amount or 0.0)
@@ -77,8 +77,8 @@ def _normalize_consumption_map(value: object) -> Dict[int, float]:
 
 def _format_medicine_consumption_details(
     consumption_map: Mapping[int, float],
-    inventory_detail: Optional[Mapping[int, Mapping[str, object]]] = None,
-) -> List[str]:
+    inventory_detail: Mapping[int, Mapping[str, object]] | None = None,
+) -> list[str]:
   """根据药品消耗与库存缺口生成可读的明细文本。
 
   参数:
@@ -90,7 +90,7 @@ def _format_medicine_consumption_details(
   """
 
   # 解析补充细节映射，便于后续统一读取字段
-  detail_map: Dict[int, Dict[str, float]] = {}
+  detail_map: dict[int, dict[str, float]] = {}
   if isinstance(inventory_detail, Mapping):
     for res_id, info in inventory_detail.items():
       try:
@@ -123,7 +123,7 @@ def _format_medicine_consumption_details(
       continue
   resource_ids.update(detail_map.keys())
 
-  detail_lines: List[str] = []
+  detail_lines: list[str] = []
   for resource_id in sorted(resource_ids):
     consumed_units = float(consumption_map.get(resource_id, 0.0) or 0.0)
     detail_entry = detail_map.get(resource_id)
@@ -162,7 +162,7 @@ def _format_medicine_consumption_details(
 
 
 def _format_medical_report_entry(
-    entry: Dict[str, Any], day_past_flag: bool = False
+    entry: dict[str, Any], day_past_flag: bool = False
 ) -> str:
   """将单条医疗经营日志格式化为可展示的文本块。
 
@@ -189,7 +189,7 @@ def _format_medical_report_entry(
   )
 
   # 合并日常消耗与药品累计器中的剩余需求，确保展示的消耗量覆盖全部待扣资源
-  accumulator_map: Dict[int, float] = {}
+  accumulator_map: dict[int, float] = {}
   rhodes_island = medical_core._get_rhodes_island(None)
   if rhodes_island is not None:
     accumulator_source = getattr(
@@ -203,7 +203,7 @@ def _format_medical_report_entry(
         except (TypeError, ValueError):
           continue
 
-  combined_consumption_map: Dict[int, float] = dict(medicine_consumption_map)
+  combined_consumption_map: dict[int, float] = dict(medicine_consumption_map)
   for resource_id, pending_units in accumulator_map.items():
     combined_consumption_map[resource_id] = float(
         combined_consumption_map.get(resource_id, 0.0) + pending_units
@@ -233,7 +233,7 @@ def _format_medical_report_entry(
 
   # 组装文本段落，保持与结算界面一致的语句风格
   title = str(entry.get("title", "")).strip()
-  lines: List[str] = []
+  lines: list[str] = []
   if title:
     lines.append(title)
   if not day_past_flag:
@@ -264,7 +264,7 @@ def _format_medical_report_entry(
       _(" - 药品消耗：今日总消耗 {0:.2f} 单位").format(medicine_consumed_total)
   )
   inventory_detail_raw = entry.get("inventory_detail") or entry.get("inventory")
-  adjusted_inventory_detail: Optional[Dict[int, Dict[str, float]]] = None
+  adjusted_inventory_detail: dict[int, dict[str, float]] | None = None
   if isinstance(inventory_detail_raw, Mapping):
     adjusted_inventory_detail = {}
     for resource_id, detail in inventory_detail_raw.items():
@@ -330,12 +330,12 @@ def _format_medical_report_entry(
 
 
 def render_medical_reports(
-    reports: List[Dict[str, Any]],
+    reports: list[dict[str, Any]],
     *,
     width: int,
     draw_flag: bool = True,
     day_past_flag: bool = False,
-    empty_message: Optional[str] = None,
+    empty_message: str | None = None,
 ) -> str:
   """统一渲染医疗经营日志列表，可复用在结算与面板。
 
@@ -377,10 +377,10 @@ def render_medical_reports(
 
 
 def append_medical_report(
-    report: Dict[str, Any],
+    report: dict[str, Any],
     *,
-    target_base: Optional[game_type.Rhodes_Island] = None,
-) -> Dict[str, Any]:
+    target_base: game_type.Rhodes_Island | None = None,
+) -> dict[str, Any]:
   """追加一条医疗经营日志记录并返回规范化后的数据。
 
   参数:
@@ -398,7 +398,7 @@ def append_medical_report(
   # 复制一份日志字典并补全时间戳/文本字段
   from Script.Design import game_time
 
-  entry: Dict[str, Any] = dict(report or {})
+  entry: dict[str, Any] = dict(report or {})
   entry.setdefault("time", cache_control.cache.game_time)
 
   time_obj = entry.get("time")
@@ -425,8 +425,8 @@ def append_medical_report(
 def get_recent_medical_reports(
     limit: int = 3,
     *,
-    target_base: Optional[game_type.Rhodes_Island] = None,
-) -> List[Dict[str, Any]]:
+    target_base: game_type.Rhodes_Island | None = None,
+) -> list[dict[str, Any]]:
   """按时间倒序返回最近的医疗经营日志列表。
 
   参数:
