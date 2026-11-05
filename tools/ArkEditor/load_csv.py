@@ -381,7 +381,6 @@ def load_official_event_dir(
       跳表头按**行号**跳前5行，不能照抄外勤委托那种「找表名行」的写法——
          这里每个文件第5行的表名各不相同。
   """
-  import os
   from game_type import OfficialEvent
 
   event_list = []
@@ -425,7 +424,6 @@ def save_official_event_csv(
       行尾统一 CRLF、编码 UTF-8 无 BOM——
       外勤委托那边表头用 f.write 数据行用 DictWriter，写出来是混合行尾，别照抄。
   """
-  import os
 
   file_path = os.path.join(dir_path, file_name)
   rows = [list(one) for one in head_rows]

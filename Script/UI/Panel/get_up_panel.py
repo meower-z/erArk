@@ -8,12 +8,8 @@ from Script.Design import game_time
 from Script.Core import get_text, cache_control, game_type, flow_handle
 from Script.Config import game_config, normal_config
 from Script.Core import (
-    cache_control,
-    get_text,
     value_handle,
-    game_type,
     text_handle,
-    flow_handle,
 )
 
 _: FunctionType = get_text._

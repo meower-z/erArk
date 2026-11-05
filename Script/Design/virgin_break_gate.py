@@ -7,7 +7,7 @@
 NPC 主动H、群交的行为列表与调教助手可用的行为都跳过判定为真的行为
 """
 
-from typing import Collection
+from collections.abc import Collection
 
 VIRGIN_TALENT_TAGS: dict[int, tuple[str, ...]] = {
     0: ("V", "W"),

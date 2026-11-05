@@ -4,7 +4,7 @@
 提供 CheckFailure 数据结构、检查项注册表与 register_check 装饰器，供各领域检查模块使用。
 """
 
-from typing import Callable
+from collections.abc import Callable
 
 
 class CheckFailure:

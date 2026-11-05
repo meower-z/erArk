@@ -26,7 +26,7 @@ from ..check_registry import CheckFailure, register_check, make_failure
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-  from typing import Iterator
+  from collections.abc import Iterator
   from Script.Core import game_type
 
 

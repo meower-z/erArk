@@ -11,7 +11,7 @@ import json
 import os
 from pathlib import Path
 import tempfile
-from typing import Iterator
+from collections.abc import Iterator
 from unittest.mock import patch
 
 from Script.Config import character_config

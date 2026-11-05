@@ -11,7 +11,7 @@
 """
 
 from enum import IntEnum
-from typing import Callable
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from Script.Core import cache_control, game_type
 

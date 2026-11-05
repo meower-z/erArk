@@ -44,7 +44,6 @@ class UndoSnapshotManager:
 
   def _make_snapshot(self) -> '_Snapshot':
     """生成当前全量数据快照（内部使用）。"""
-    import copy
 
     return {
         'now_talk_data': copy.deepcopy(cache_control.now_talk_data),

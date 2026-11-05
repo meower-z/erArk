@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-from typing import Iterator
+from collections.abc import Iterator
 
 from Script.Config import normal_config
 from Script.Core import cache_control, constant

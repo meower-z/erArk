@@ -13,7 +13,7 @@ from Script.Core import cache_control, web_server, flow_handle, text_handle
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-  from typing import Callable
+  from collections.abc import Callable
 
 line_wait_id_counter = 0
 from Script.UI.Moudle import draw

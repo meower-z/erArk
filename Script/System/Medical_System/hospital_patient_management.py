@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 import math
-from typing import Callable
+from collections.abc import Callable
 
 from Script.Config import config_def, game_config
 from Script.Core import game_type

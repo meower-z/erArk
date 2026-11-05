@@ -1321,7 +1321,6 @@ def handle_execute_instruct(data: dict[str, Any]) -> None:
   global button_click_response
 
   from Script.System.Instruct_System import handle_instruct as instruct_handler
-  from Script.Core import constant
 
   instruct_id = data.get('instruct_id')
   logging.info(f'执行指令: {instruct_id}')
@@ -1495,7 +1494,6 @@ def handle_click_panel_tab(data: dict[str, Any]) -> None:
   功能描述：接收前端的面板选项卡点击，执行对应的面板类指令
   """
   from Script.System.Instruct_System import handle_instruct as instruct_handler
-  from Script.Core import constant
 
   tab_id = data.get('tab_id')
   logging.info(f'点击面板选项卡: {tab_id}')
@@ -1580,7 +1578,6 @@ def handle_get_panel_instructs(data: dict[str, Any]) -> None:
   功能描述：返回所有面板类指令供顶部选项卡栏显示
   """
   from Script.System.Instruct_System import instruct_meta
-  from Script.Core import constant
 
   logging.info('获取面板类指令列表')
 
@@ -1661,7 +1658,6 @@ def handle_select_major_type(data: dict[str, Any]) -> None:
   功能描述：选择大类型，返回该大类下的小类型列表，并恢复之前记忆的小类选择
   """
   from Script.Design import web_interaction_manager
-  from Script.Core import constant
 
   major_type_id = data.get('major_type_id')
   # major_type_id 现在是字符串类型（如 'mouth', 'hand', 'arts', 'stop' 等）
@@ -1708,7 +1704,6 @@ def handle_select_minor_type(data: dict[str, Any]) -> None:
   功能描述：选择小类型，返回该小类型下可用的指令列表，同时返回更新后的target_info以刷新右侧面板
   """
   from Script.Design import web_interaction_manager
-  from Script.Core import constant
   from Script.System.Web_Draw_System.status_panel import StatusPanel
 
   minor_type_id = data.get('minor_type_id')

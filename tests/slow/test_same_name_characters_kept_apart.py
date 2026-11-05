@@ -15,7 +15,7 @@ import os
 import shutil
 import signal
 import traceback
-from typing import Callable
+from collections.abc import Callable
 
 from tests.slow import remove_parent_guard
 from tests.slow.base import SlowTestCase

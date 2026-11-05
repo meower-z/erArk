@@ -15,7 +15,7 @@ from Script.UI.Panel import achievement_panel
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-  from typing import Callable
+  from collections.abc import Callable
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """

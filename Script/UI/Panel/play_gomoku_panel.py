@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
   from typing import Any, Mapping
-  from typing import Callable
+  from collections.abc import Callable
   from typing import Literal
 
 cache: game_type.Cache = cache_control.cache

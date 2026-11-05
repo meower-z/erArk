@@ -21,7 +21,7 @@
 
 import random
 from types import FunctionType
-from typing import Callable
+from collections.abc import Callable
 
 from Script.Core import cache_control, constant, game_type, get_text
 from Script.Config import game_config

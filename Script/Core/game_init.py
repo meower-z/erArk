@@ -4,7 +4,7 @@
 import os
 import traceback
 from types import FunctionType
-from typing import Callable
+from collections.abc import Callable
 from Script.Core import flow_handle, io_init, cache_control, game_type, constant, py_cmd, get_text, save_handle
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import panel
