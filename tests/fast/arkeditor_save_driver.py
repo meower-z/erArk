@@ -17,7 +17,8 @@ import importlib
 import json
 import os
 import sys
-from typing import Any, Callable
+from typing import Any
+from collections.abc import Callable
 
 from arkeditor_file_load_driver import FileLoadDriver, file_text_or_none
 

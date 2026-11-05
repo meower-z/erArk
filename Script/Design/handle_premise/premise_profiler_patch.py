@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 import time
-from typing import Callable
+from collections.abc import Callable
 from Script.Core import constant
 
 premise_profile_stats: dict[str, dict] = {}

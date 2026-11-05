@@ -1,6 +1,6 @@
 # lint-baseline v2
 # fingerprint config=26f75f530f31 mypy=2.4.0 pyink=26.5.1 ruff=0.17.3
-# clean-rules A001,A002,B002,B003,B004,B005,B006,B008,B011,B012,B013,B014,B015,B016,B017,B018,B019,B020,B021,B022,B024,B025,B026,B027,B028,B029,B030,B031,B032,B033,B034,B035,B039,B911,B912,BLE001,D103,D105,D106,D419,E701,E702,E703,E714,E742,E743,E902,F402,F404,F406,F407,F501,F502,F503,F504,F505,F506,F507,F508,F509,F521,F522,F523,F524,F525,F601,F602,F621,F622,F631,F632,F633,F634,F701,F702,F704,F706,F707,F722,F821,F822,F841,F842,F901,G001,G002,G004,N801,N802,N803,N804,N805,N806,N816,N999,PLC0105,PLC0131,PLC0132,PLC0205,PLC0206,PLC0207,PLC0208,PLC0414,PLC0415,PLC1802,PLC2401,PLC2403,PLC2801,PLC3002,PLE0100,PLE0101,PLE0115,PLE0116,PLE0117,PLE0118,PLE0237,PLE0241,PLE0302,PLE0303,PLE0304,PLE0305,PLE0307,PLE0308,PLE0309,PLE0604,PLE0605,PLE0643,PLE0704,PLE1132,PLE1141,PLE1142,PLE1205,PLE1206,PLE1300,PLE1307,PLE1310,PLE1507,PLE1519,PLE1520,PLE1700,PLE2502,PLE2510,PLE2512,PLE2513,PLE2514,PLE2515,PLE4703,PLR0911,PLR0912,PLR0913,PLR0914,PLR0915,PLR0917,PLW0120,PLW0127,PLW0128,PLW0129,PLW0131,PLW0133,PLW0177,PLW0211,PLW0244,PLW0245,PLW0406,PLW0604,PLW0642,PLW0711,PLW1501,PLW1507,PLW1508,PLW1509,PLW1514,PLW1641,PLW2101,PLW3301,S102,S113,S307,SIM118,SIM201,SIM202,SLF001,T100,TRY002,TRY203,UP001,UP003,UP004,UP005,UP006,UP007,UP008,UP009,UP010,UP011,UP012,UP013,UP014,UP015,UP017,UP018,UP019,UP020,UP021,UP022,UP023,UP024,UP025,UP026,UP029,UP033,UP034,UP036,UP039,UP040,UP041,UP043,UP044,UP045,UP046,UP049,UP050,W191,W292,W293,W505,W605,abstract-class-instantiated,access-member-before-definition,anomalous-backslash-in-string,anomalous-unicode-escape-in-string,arguments-out-of-order,arguments-renamed,assert-on-string-literal,assert-on-tuple,assigning-non-slot,assignment-from-no-return,assignment-from-none,astroid-error,async-context-manager-with-regular-with,await-outside-async,bad-chained-comparison,bad-classmethod-argument,bad-configuration-section,bad-except-order,bad-exception-cause,bad-file-encoding,bad-format-character,bad-format-string,bad-format-string-key,bad-indentation,bad-mcs-classmethod-argument,bad-mcs-method-argument,bad-open-mode,bad-plugin-value,bad-reversed-sequence,bad-staticmethod-argument,bad-str-strip-call,bad-string-format-type,bad-super-call,bad-thread-instantiation,bare-except,bare-name-capture-pattern,bidirectional-unicode,binary-op-exception,break-in-finally,broad-exception-caught,broad-exception-raised,catching-non-exception,cell-var-from-loop,class-variable-slots-conflict,comparison-with-callable,config-parse-error,confusing-with-statement,consider-iterating-dictionary,consider-using-dict-items,consider-using-f-string,contextmanager-generator-missing-cleanup,continue-in-finally,dangerous-default-value,declare-non-slot,deprecated-argument,deprecated-attribute,deprecated-class,deprecated-decorator,deprecated-method,deprecated-module,dict-iter-missing-items,disallowed-name,duplicate-argument-name,duplicate-bases,duplicate-except,duplicate-key,duplicate-string-formatting-argument,duplicate-value,empty-docstring,eval-used,exec-used,expression-not-assigned,f-string-without-interpolation,fatal,fmt-off,forgotten-debug-statement,format-combined-specification,format-needs-mapping,format-string-without-interpolation,function-redefined,global-at-module-level,global-variable-undefined,implicit-flag-alias,import-outside-toplevel,inconsistent-mro,inconsistent-quotes,inherit-non-class,init-is-generator,invalid-all-format,invalid-all-object,invalid-bool-returned,invalid-bytes-returned,invalid-character-backspace,invalid-character-carriage-return,invalid-character-esc,invalid-character-nul,invalid-character-sub,invalid-character-zero-width-space,invalid-characters-in-docstring,invalid-class-object,invalid-enum-extension,invalid-envvar-default,invalid-envvar-value,invalid-field-call,invalid-format-index,invalid-format-returned,invalid-getnewargs-ex-returned,invalid-getnewargs-returned,invalid-hash-returned,invalid-index-returned,invalid-length-hint-returned,invalid-length-returned,invalid-match-args-definition,invalid-metaclass,invalid-overridden-method,invalid-repr-returned,invalid-sequence-index,invalid-slice-index,invalid-slice-step,invalid-slots,invalid-slots-object,invalid-star-assignment-target,invalid-str-returned,invalid-unary-operand-type,invalid-unicode-codec,isinstance-second-argument-not-valid-type,keyword-arg-before-vararg,kwarg-superseded-by-positional-arg,line-too-long,logging-format-interpolation,logging-format-truncated,logging-fstring-interpolation,logging-not-lazy,logging-too-few-args,logging-too-many-args,logging-unsupported-format,looping-through-iterator,lost-exception,method-cache-max-size-none,method-check-failed,method-hidden,misplaced-bare-raise,misplaced-format-function,misplaced-future,missing-final-newline,missing-format-argument-key,missing-format-attribute,missing-format-string-key,missing-function-docstring,missing-kwoa,missing-parentheses-for-call-in-test,missing-timeout,mixed-format-string,mixed-line-endings,modified-iterating-dict,modified-iterating-list,modified-iterating-set,multiple-class-sub-patterns,multiple-imports,multiple-statements,mypy-comment,mypy:arg-type,mypy:call-overload,mypy:func-returns-value,mypy:has-type,mypy:import-untyped,mypy:list-item,mypy:misc,mypy:name-defined,mypy:no-any-return,mypy:no-redef,mypy:no-untyped-def,mypy:redundant-cast,mypy:return,mypy:syntax,mypy:type-arg,mypy:used-before-def,mypy:valid-type,named-expr-without-context,nan-comparison,nested-min-max,no-method-argument,no-self-argument,no-value-for-parameter,non-ascii-file-name,non-ascii-module-import,non-ascii-name,non-iterator-returned,non-parent-init-called,non-str-assignment-to-dunder-name,nonexistent-operator,nonlocal-and-global,nonlocal-without-binding,not-a-mapping,not-an-iterable,not-async-context-manager,not-callable,not-context-manager,not-in-loop,notimplemented-raised,overridden-final-method,parse-error,pointless-exception-statement,pointless-statement,pointless-string-statement,positional-only-arguments-expected,possibly-unused-variable,possibly-used-before-assignment,potential-index-error,preferred-module,protected-access,raise-missing-from,raising-bad-type,raising-format-tuple,raising-non-exception,redeclared-assigned-name,redefined-builtin,redefined-outer-name,redefined-slots-in-subclass,redundant-keyword-arg,redundant-u-string-prefix,redundant-unittest-assert,reimported,relative-beyond-top-level,repeated-keyword,return-in-finally,return-in-init,return-outside-function,self-assigning-variable,self-cls-assignment,shadowed-import,shallow-copy-environ,single-string-used-for-slots,singledispatch-method,singledispatchmethod-function,singleton-comparison,star-needs-assignment-target,subclassed-final-class,subprocess-popen-preexec-fn,subprocess-run-check,super-init-not-called,super-without-brackets,superfluous-parens,syntax-error,too-few-format-args,too-many-arguments,too-many-branches,too-many-format-args,too-many-function-args,too-many-lines,too-many-locals,too-many-positional-arguments,too-many-positional-sub-patterns,too-many-return-statements,too-many-star-expressions,too-many-statements,trailing-whitespace,truncated-format-string,try-except-raise,typevar-double-variance,typevar-name-incorrect-variance,typevar-name-mismatch,unbalanced-dict-unpacking,unbalanced-tuple-unpacking,undefined-all-variable,undefined-loop-variable,undefined-variable,unexpected-keyword-arg,unexpected-line-ending-format,unexpected-special-method-signature,ungrouped-imports,unhashable-member,unidiomatic-typecheck,unknown-option-value,unnecessary-direct-lambda-call,unnecessary-dunder-call,unnecessary-ellipsis,unnecessary-lambda,unnecessary-lambda-assignment,unnecessary-negation,unnecessary-semicolon,unpacking-non-sequence,unreachable,unrecognized-inline-option,unrecognized-option,unspecified-encoding,unsubscriptable-object,unsupported-assignment-operation,unsupported-binary-operation,unsupported-delete-operation,unsupported-membership-test,unused-format-string-argument,unused-format-string-key,unused-import,unused-private-member,unused-variable,unused-wildcard-import,use-implicit-booleaness-not-comparison,use-implicit-booleaness-not-len,use-maxsplit-arg,use-sequence-for-iteration,used-before-assignment,used-prior-global-declaration,useless-else-on-loop,useless-import-alias,useless-parent-delegation,useless-with-lock,using-assignment-expression-in-unsupported-version,using-comprehension-unpacking-in-unsupported-version,using-constant-test,using-exception-groups-in-unsupported-version,using-f-string-in-unsupported-version,using-final-decorator-in-unsupported-version,using-generic-type-syntax-in-unsupported-version,using-positional-only-args-in-unsupported-version,wildcard-import,wrong-exception-operation,wrong-import-position,wrong-spelling-in-comment,wrong-spelling-in-docstring,yield-inside-async-function,yield-outside-function
+# clean-rules A001,A002,B002,B003,B004,B005,B006,B008,B011,B012,B013,B014,B015,B016,B017,B018,B019,B020,B021,B022,B024,B025,B026,B027,B028,B029,B030,B031,B032,B033,B034,B035,B039,B911,B912,BLE001,D103,D105,D106,D419,E701,E702,E703,E714,E742,E743,E902,F402,F404,F406,F407,F501,F502,F503,F504,F505,F506,F507,F508,F509,F521,F522,F523,F524,F525,F601,F602,F621,F622,F631,F632,F633,F634,F701,F702,F704,F706,F707,F722,F811,F821,F822,F841,F842,F901,G001,G002,G004,N801,N802,N803,N804,N805,N806,N816,N999,PLC0105,PLC0131,PLC0132,PLC0205,PLC0206,PLC0207,PLC0208,PLC0414,PLC0415,PLC1802,PLC2401,PLC2403,PLC2801,PLC3002,PLE0100,PLE0101,PLE0115,PLE0116,PLE0117,PLE0118,PLE0237,PLE0241,PLE0302,PLE0303,PLE0304,PLE0305,PLE0307,PLE0308,PLE0309,PLE0604,PLE0605,PLE0643,PLE0704,PLE1132,PLE1141,PLE1142,PLE1205,PLE1206,PLE1300,PLE1307,PLE1310,PLE1507,PLE1519,PLE1520,PLE1700,PLE2502,PLE2510,PLE2512,PLE2513,PLE2514,PLE2515,PLE4703,PLR0911,PLR0912,PLR0913,PLR0914,PLR0915,PLR0917,PLW0120,PLW0127,PLW0128,PLW0129,PLW0131,PLW0133,PLW0177,PLW0211,PLW0244,PLW0245,PLW0406,PLW0604,PLW0642,PLW0711,PLW1501,PLW1507,PLW1508,PLW1509,PLW1514,PLW1641,PLW2101,PLW3301,S102,S113,S307,SIM118,SIM201,SIM202,SLF001,T100,TRY002,TRY203,UP001,UP003,UP004,UP005,UP006,UP007,UP008,UP009,UP010,UP011,UP012,UP013,UP014,UP015,UP017,UP018,UP019,UP020,UP021,UP022,UP023,UP024,UP025,UP026,UP029,UP033,UP034,UP036,UP039,UP040,UP041,UP043,UP044,UP045,UP046,UP049,UP050,W191,W292,W293,W505,W605,abstract-class-instantiated,access-member-before-definition,anomalous-backslash-in-string,anomalous-unicode-escape-in-string,arguments-out-of-order,arguments-renamed,assert-on-string-literal,assert-on-tuple,assigning-non-slot,assignment-from-no-return,assignment-from-none,astroid-error,async-context-manager-with-regular-with,await-outside-async,bad-chained-comparison,bad-classmethod-argument,bad-configuration-section,bad-except-order,bad-exception-cause,bad-file-encoding,bad-format-character,bad-format-string,bad-format-string-key,bad-indentation,bad-mcs-classmethod-argument,bad-mcs-method-argument,bad-open-mode,bad-plugin-value,bad-reversed-sequence,bad-staticmethod-argument,bad-str-strip-call,bad-string-format-type,bad-super-call,bad-thread-instantiation,bare-except,bare-name-capture-pattern,bidirectional-unicode,binary-op-exception,break-in-finally,broad-exception-caught,broad-exception-raised,catching-non-exception,cell-var-from-loop,class-variable-slots-conflict,comparison-with-callable,config-parse-error,confusing-with-statement,consider-iterating-dictionary,consider-using-dict-items,consider-using-f-string,contextmanager-generator-missing-cleanup,continue-in-finally,dangerous-default-value,declare-non-slot,deprecated-argument,deprecated-attribute,deprecated-class,deprecated-decorator,deprecated-method,deprecated-module,dict-iter-missing-items,disallowed-name,duplicate-argument-name,duplicate-bases,duplicate-except,duplicate-key,duplicate-string-formatting-argument,duplicate-value,empty-docstring,eval-used,exec-used,expression-not-assigned,f-string-without-interpolation,fatal,fmt-off,forgotten-debug-statement,format-combined-specification,format-needs-mapping,format-string-without-interpolation,function-redefined,global-at-module-level,global-variable-undefined,implicit-flag-alias,import-outside-toplevel,inconsistent-mro,inconsistent-quotes,inherit-non-class,init-is-generator,invalid-all-format,invalid-all-object,invalid-bool-returned,invalid-bytes-returned,invalid-character-backspace,invalid-character-carriage-return,invalid-character-esc,invalid-character-nul,invalid-character-sub,invalid-character-zero-width-space,invalid-characters-in-docstring,invalid-class-object,invalid-enum-extension,invalid-envvar-default,invalid-envvar-value,invalid-field-call,invalid-format-index,invalid-format-returned,invalid-getnewargs-ex-returned,invalid-getnewargs-returned,invalid-hash-returned,invalid-index-returned,invalid-length-hint-returned,invalid-length-returned,invalid-match-args-definition,invalid-metaclass,invalid-overridden-method,invalid-repr-returned,invalid-sequence-index,invalid-slice-index,invalid-slice-step,invalid-slots,invalid-slots-object,invalid-star-assignment-target,invalid-str-returned,invalid-unary-operand-type,invalid-unicode-codec,isinstance-second-argument-not-valid-type,keyword-arg-before-vararg,kwarg-superseded-by-positional-arg,line-too-long,logging-format-interpolation,logging-format-truncated,logging-fstring-interpolation,logging-not-lazy,logging-too-few-args,logging-too-many-args,logging-unsupported-format,looping-through-iterator,lost-exception,method-cache-max-size-none,method-check-failed,method-hidden,misplaced-bare-raise,misplaced-format-function,misplaced-future,missing-final-newline,missing-format-argument-key,missing-format-attribute,missing-format-string-key,missing-function-docstring,missing-kwoa,missing-parentheses-for-call-in-test,missing-timeout,mixed-format-string,mixed-line-endings,modified-iterating-dict,modified-iterating-list,modified-iterating-set,multiple-class-sub-patterns,multiple-imports,multiple-statements,mypy-comment,mypy:arg-type,mypy:call-overload,mypy:func-returns-value,mypy:has-type,mypy:import-untyped,mypy:list-item,mypy:misc,mypy:name-defined,mypy:no-any-return,mypy:no-redef,mypy:no-untyped-def,mypy:redundant-cast,mypy:return,mypy:syntax,mypy:type-arg,mypy:used-before-def,mypy:valid-type,named-expr-without-context,nan-comparison,nested-min-max,no-method-argument,no-self-argument,no-value-for-parameter,non-ascii-file-name,non-ascii-module-import,non-ascii-name,non-iterator-returned,non-parent-init-called,non-str-assignment-to-dunder-name,nonexistent-operator,nonlocal-and-global,nonlocal-without-binding,not-a-mapping,not-an-iterable,not-async-context-manager,not-callable,not-context-manager,not-in-loop,notimplemented-raised,overridden-final-method,parse-error,pointless-exception-statement,pointless-statement,pointless-string-statement,positional-only-arguments-expected,possibly-unused-variable,possibly-used-before-assignment,potential-index-error,preferred-module,protected-access,raise-missing-from,raising-bad-type,raising-format-tuple,raising-non-exception,redeclared-assigned-name,redefined-builtin,redefined-outer-name,redefined-slots-in-subclass,redundant-keyword-arg,redundant-u-string-prefix,redundant-unittest-assert,reimported,relative-beyond-top-level,repeated-keyword,return-in-finally,return-in-init,return-outside-function,self-assigning-variable,self-cls-assignment,shadowed-import,shallow-copy-environ,single-string-used-for-slots,singledispatch-method,singledispatchmethod-function,singleton-comparison,star-needs-assignment-target,subclassed-final-class,subprocess-popen-preexec-fn,subprocess-run-check,super-init-not-called,super-without-brackets,superfluous-parens,syntax-error,too-few-format-args,too-many-arguments,too-many-branches,too-many-format-args,too-many-function-args,too-many-lines,too-many-locals,too-many-positional-arguments,too-many-positional-sub-patterns,too-many-return-statements,too-many-star-expressions,too-many-statements,trailing-whitespace,truncated-format-string,try-except-raise,typevar-double-variance,typevar-name-incorrect-variance,typevar-name-mismatch,unbalanced-dict-unpacking,unbalanced-tuple-unpacking,undefined-all-variable,undefined-loop-variable,undefined-variable,unexpected-keyword-arg,unexpected-line-ending-format,unexpected-special-method-signature,ungrouped-imports,unhashable-member,unidiomatic-typecheck,unknown-option-value,unnecessary-direct-lambda-call,unnecessary-dunder-call,unnecessary-ellipsis,unnecessary-lambda,unnecessary-lambda-assignment,unnecessary-negation,unnecessary-semicolon,unpacking-non-sequence,unreachable,unrecognized-inline-option,unrecognized-option,unspecified-encoding,unsubscriptable-object,unsupported-assignment-operation,unsupported-binary-operation,unsupported-delete-operation,unsupported-membership-test,unused-format-string-argument,unused-format-string-key,unused-import,unused-private-member,unused-variable,unused-wildcard-import,use-implicit-booleaness-not-comparison,use-implicit-booleaness-not-len,use-maxsplit-arg,use-sequence-for-iteration,used-before-assignment,used-prior-global-declaration,useless-else-on-loop,useless-import-alias,useless-parent-delegation,useless-with-lock,using-assignment-expression-in-unsupported-version,using-comprehension-unpacking-in-unsupported-version,using-constant-test,using-exception-groups-in-unsupported-version,using-f-string-in-unsupported-version,using-final-decorator-in-unsupported-version,using-generic-type-syntax-in-unsupported-version,using-positional-only-args-in-unsupported-version,wildcard-import,wrong-exception-operation,wrong-import-position,wrong-spelling-in-comment,wrong-spelling-in-docstring,yield-inside-async-function,yield-outside-function
 .github/skills/headless-game-test/harness_template.py	<module>	B010	count=1
 .github/skills/headless-game-test/harness_template.py	<module>	E402	count=11
 .github/skills/headless-game-test/harness_template.py	<module>	E501	count=1,max=129
@@ -16,7 +16,6 @@
 .github/skills/system-review-round/wf_watch.py	AgentInfo	D101	count=1
 .github/skills/system-review-round/wf_watch.py	list_old_python	PLW1510	count=1
 .github/skills/system-review-round/wf_watch.py	load_lines	PLW2901	count=1
-Script/Config/character_config.py	<module>	E401	count=1
 Script/Config/character_config.py	find_files_and_get_size	E501	count=1,max=182
 Script/Config/game_config.py	<module>	E501	count=2,max=271
 Script/Config/game_config.py	<module>	module-lines	lines=2509
@@ -37,7 +36,6 @@ Script/Core/constant/CharacterStatus.py	<module>	module-lines	lines=755
 Script/Core/constant/SecondBehavior.py	<module>	module-lines	lines=518
 Script/Core/constant/SecondBehavior_Int.py	<module>	module-lines	lines=517
 Script/Core/constant/__init__.py	<module>	F401	count=23
-Script/Core/constant/__init__.py	<module>	UP035	count=1
 Script/Core/constant_effect.py	<module>	module-lines	lines=1363
 Script/Core/constant_effect.py	BehaviorEffect	E501	count=5,max=299
 Script/Core/constant_promise.py	<module>	E501	count=1,max=121
@@ -52,7 +50,6 @@ Script/Core/flow_handle_web.py	<module>	module-lines	lines=678
 Script/Core/flow_handle_web.py	_cmd_deal	mypy:unreachable	count=1
 Script/Core/flow_handle_web.py	askfor_all	E401	count=1
 Script/Core/flow_handle_web.py	askfor_all	F401	count=1
-Script/Core/game_init.py	<module>	UP035	count=1
 Script/Core/game_init.py	init	PLW0602	count=1
 Script/Core/game_type.py	<module>	F401	count=1
 Script/Core/game_type.py	<module>	UP035	count=1
@@ -106,12 +103,10 @@ Script/Core/old_chara_to_new.py	migrate_character_replacement	PLW2901	count=4
 Script/Core/old_chara_to_new.py	migrate_old_save_data	PLW2901	count=4
 Script/Core/old_chara_to_new.py	update_character_config_data	mypy:comparison-overlap	count=1
 Script/Core/old_chara_to_new.py	update_character_config_data	mypy:unreachable	count=8
-Script/Core/save_handle.py	<module>	F401	count=1
-Script/Core/save_handle.py	<module>	module-lines	lines=1423
+Script/Core/save_handle.py	<module>	module-lines	lines=1421
 Script/Core/save_handle.py	_load_save_datetime	E501	count=1,max=145
 Script/Core/save_handle.py	_migrate_official_event_history	E501	count=1,max=137
 Script/Core/save_handle.py	_normalize_loaded_save_paths	E501	count=1,max=158
-Script/Core/save_handle.py	_normalize_loaded_save_paths	F811	count=1
 Script/Core/save_handle.py	input_load_save	E501	count=2,max=141
 Script/Core/save_handle.py	input_load_save	E712	count=1
 Script/Core/save_handle.py	update_dict_with_default	E711	count=1
@@ -120,15 +115,10 @@ Script/Core/save_handle.py	update_map	B007	count=2
 Script/Core/text_handle.py	_build_style_pattern	UP031	count=1
 Script/Core/value_handle.py	get_random_for_weight	UP047	count=1
 Script/Core/value_handle.py	list_of_groups	B905	count=1
-Script/Core/web_server.py	<module>	F401	count=4
-Script/Core/web_server.py	<module>	module-lines	lines=3157
+Script/Core/web_server.py	<module>	F401	count=3
+Script/Core/web_server.py	<module>	module-lines	lines=3152
 Script/Core/web_server.py	favicon	E722	count=1
 Script/Core/web_server.py	find_free_port	F541	count=1
-Script/Core/web_server.py	handle_click_panel_tab	F811	count=1
-Script/Core/web_server.py	handle_execute_instruct	F811	count=1
-Script/Core/web_server.py	handle_get_panel_instructs	F811	count=1
-Script/Core/web_server.py	handle_select_major_type	F811	count=1
-Script/Core/web_server.py	handle_select_minor_type	F811	count=1
 Script/Core/web_server.py	quick_use_drug	mypy:possibly-undefined	count=1
 Script/Core/web_server.py	skip_wait	B010	count=2
 Script/Core/web_server.py	start_server	E722	count=2
@@ -164,8 +154,7 @@ Script/Design/clothing.py	<module>	module-lines	lines=827
 Script/Design/clothing.py	chara_special_wear_cloth	mypy:possibly-undefined	count=1
 Script/Design/cross_section_image.py	<module>	F401	count=2
 Script/Design/event.py	handle_event	mypy:possibly-undefined	count=1
-Script/Design/game_time.py	<module>	F811	count=1
-Script/Design/game_time.py	<module>	module-lines	lines=766
+Script/Design/game_time.py	<module>	module-lines	lines=765
 Script/Design/game_time.py	GameTime.__sub__	type-ignore	count=1
 Script/Design/game_time.py	get_class_period	mypy:unreachable	count=1
 Script/Design/game_time.py	get_moon_phase	mypy:deprecated	count=1
@@ -192,9 +181,7 @@ Script/Design/handle_npc_ai_in_h.py	handle_unconscious_h_response	E501	count=1,m
 Script/Design/handle_npc_ai_in_h.py	npc_active_h	E712	count=2
 Script/Design/handle_npc_ai_in_h.py	npc_ai_in_group_sex	E712	count=1
 Script/Design/handle_npc_ai_in_h.py	npc_ai_in_group_sex_type_3	E712	count=1
-Script/Design/handle_panel.py	<module>	UP035	count=1
 Script/Design/handle_premise/__init__.py	<module>	F403	count=19
-Script/Design/handle_premise/__init__.py	<module>	UP035	count=1
 Script/Design/handle_premise/__init__.py	<module>	module-lines	lines=1870
 Script/Design/handle_premise/__init__.py	_sleep_counts	F405	count=2
 Script/Design/handle_premise/__init__.py	get_listen_manual_teach_course	E501	count=2,max=140
@@ -274,11 +261,8 @@ Script/Design/handle_premise/handle_premise_time.py	handle_not_night_salutation_
 Script/Design/handle_premise/handle_premise_time.py	handle_tired_ge_75_or_sleep_time	E501	count=1,max=163
 Script/Design/handle_premise/handle_premise_work.py	<module>	F401	count=1
 Script/Design/handle_premise/handle_premise_work.py	<module>	module-lines	lines=1390
-Script/Design/handle_premise/premise_profiler_patch.py	<module>	UP035	count=1
 Script/Design/handle_premise/premise_profiler_patch.py	activate_profiler	mypy:unreachable	count=1
-Script/Design/handle_premise/premise_registry.py	<module>	UP035	count=1
 Script/Design/handle_state_machine.py	<module>	F401	count=1
-Script/Design/handle_state_machine.py	<module>	UP035	count=1
 Script/Design/handle_state_machine.py	add_state_machine.<locals>.decorator	mypy:return-value	count=1
 Script/Design/handle_talent.py	<module>	module-lines	lines=507
 Script/Design/handle_talent.py	body_part_talent_update	UP030	count=1
@@ -305,7 +289,6 @@ Script/Design/talk.py	<module>	module-lines	lines=1348
 Script/Design/talk.py	handle_talk_sub	E501	count=1,max=125
 Script/Design/talk.py	talk_common_judge_one_pass	E501	count=1,max=159
 Script/Design/update.py	<module>	F401	count=1
-Script/Design/virgin_break_gate.py	<module>	UP035	count=1
 Script/Design/web_interaction_manager.py	<module>	F401	count=2
 Script/Design/web_interaction_manager.py	<module>	UP035	count=1
 Script/Settle/Second_effect.py	<module>	E501	count=4,max=207
@@ -341,10 +324,8 @@ Script/Settle/default.py	handle_skip_class_add_just	E501	count=1,max=128
 Script/Settle/default.py	handle_skip_class_add_just	mypy:unreachable	count=1
 Script/Settle/default.py	handle_taste_wine_add_adjust	F405	count=1
 Script/Settle/default.py	handle_teach_add_just	E501	count=1,max=140
-Script/Settle/default_cloth.py	<module>	F401	count=2
-Script/Settle/default_cloth.py	<module>	module-lines	lines=1046
-Script/Settle/default_cloth.py	handle_get_sleep_cloth	F811	count=1
-Script/Settle/default_cloth.py	handle_wear_to_dormitory_locker	F811	count=1
+Script/Settle/default_cloth.py	<module>	F401	count=1
+Script/Settle/default_cloth.py	<module>	module-lines	lines=1044
 Script/Settle/item_effect.py	<module>	module-lines	lines=2316
 Script/Settle/item_effect.py	handle_npc_make_food_to_shop	mypy:possibly-undefined	count=1
 Script/Settle/orgasm_settle.py	<module>	module-lines	lines=574
@@ -517,7 +498,6 @@ Script/System/Medical_System/hospital_doctor_service.py	<module>	module-lines	li
 Script/System/Medical_System/hospital_doctor_service.py	attempt_surgery	mypy:unreachable	count=1
 Script/System/Medical_System/hospital_doctor_service.py	consume_surgery_resources	mypy:unreachable	count=2
 Script/System/Medical_System/hospital_doctor_service.py	get_surgery_candidate_patient_ids	mypy:comparison-overlap	count=1
-Script/System/Medical_System/hospital_patient_management.py	<module>	UP035	count=1
 Script/System/Medical_System/hospital_patient_management.py	<module>	module-lines	lines=553
 Script/System/Medical_System/hospital_patient_management.py	try_consume_medicine	F401	count=1
 Script/System/Medical_System/hospital_patient_management.py	try_consume_medicine	mypy:unreachable	count=4
@@ -556,7 +536,6 @@ Script/System/Medical_System/medical_player_diagnose_panel.py	MedicalPlayerDiagn
 Script/System/Medical_System/medical_player_diagnose_panel.py	MedicalPlayerDiagnosePanel._toggle_hint	B010	count=1
 Script/System/Medical_System/medical_service.py	<module>	module-lines	lines=405
 Script/System/Official_Event_System/__init__.py	<module>	D104	count=1
-Script/System/Official_Event_System/official_event_handle.py	<module>	UP035	count=1
 Script/System/Official_Event_System/official_event_handle.py	<module>	module-lines	lines=700
 Script/System/Official_Event_System/official_event_handle.py	handle_effect_text	PLW2901	count=1
 Script/System/Official_Event_System/official_event_handle.py	handle_ri_effect	E501	count=1,max=131
@@ -579,7 +558,6 @@ Script/System/Pregnancy_System/pregnancy_panel.py	<module>	module-lines	lines=65
 Script/System/Pregnancy_System/pregnancy_panel.py	Pregnancy_Overview_Panel.draw_abnormal_daughter_page	E501	count=1,max=145
 Script/System/Pregnancy_System/pregnancy_panel.py	Pregnancy_Overview_Panel.draw_family_tree_page	E501	count=1,max=169
 Script/System/Pregnancy_System/soft_egg_handle.py	<module>	E501	count=1,max=132
-Script/System/Sex_System/group_sex_panel.py	<module>	UP035	count=1
 Script/System/Sex_System/group_sex_panel.py	<module>	module-lines	lines=1121
 Script/System/Sex_System/group_sex_panel.py	Edit_Group_Sex_Temple_Panel.draw	E712	count=1
 Script/System/Sex_System/group_sex_panel.py	Edit_Group_Sex_Temple_Panel.show_invite_npc_panel	E712	count=1
@@ -605,19 +583,13 @@ Script/System/Web_Draw_System/image_processor.py	ImageProcessor.crop_head_from_f
 Script/System/Web_Draw_System/image_processor.py	ImageProcessor.crop_head_from_fullbody	mypy:assignment	count=1
 Script/System/Web_Draw_System/interaction_handler.py	<module>	F401	count=2
 Script/System/Web_Draw_System/interaction_handler.py	<module>	UP035	count=1
-Script/System/Web_Draw_System/settlement_manager.py	<module>	UP035	count=1
-Script/System/Web_Draw_System/status_panel.py	<module>	F401	count=2
-Script/System/Web_Draw_System/status_panel.py	<module>	module-lines	lines=1210
-Script/System/Web_Draw_System/status_panel.py	StatusPanel._get_body_info	F811	count=1
-Script/System/Web_Draw_System/status_panel.py	StatusPanel._get_clothing_info	F811	count=1
-Script/System/Web_Draw_System/status_panel.py	StatusPanel._get_hidden_sex_info	F811	count=1
+Script/System/Web_Draw_System/status_panel.py	<module>	F401	count=1
+Script/System/Web_Draw_System/status_panel.py	<module>	module-lines	lines=1206
 Script/System/Web_Draw_System/status_panel.py	StatusPanel._get_special_states	B905	count=1
-Script/System/Web_Draw_System/status_panel.py	StatusPanel.get_target_extra_info	F811	count=1
 Script/System/Web_Draw_System/tab_menu.py	<module>	F401	count=1
 Script/System/Web_Draw_System/tab_menu.py	<module>	module-lines	lines=420
 Script/System/Web_Draw_System/web_draw_adapter.py	<module>	E402	count=3
 Script/System/Web_Draw_System/web_draw_adapter.py	<module>	F401	count=1
-Script/System/Web_Draw_System/web_draw_adapter.py	<module>	UP035	count=1
 Script/System/Web_Draw_System/web_draw_adapter.py	<module>	module-lines	lines=775
 Script/System/Web_Draw_System/web_draw_adapter.py	WebDrawAdapter.adapt_button	mypy:unreachable	count=2
 Script/System/Web_Draw_System/web_draw_adapter.py	WebDrawAdapter.adapt_line_feed_wait_draw.<locals>.emit_segment	E501	count=1,max=182
@@ -630,7 +602,6 @@ Script/Test/Static_Check/check_log.py	_build_entry_header_lines	E501	count=1,max
 Script/Test/Static_Check/check_log.py	_log_size_exceeded	E501	count=1,max=141
 Script/Test/Static_Check/check_log.py	write_repair_log	E501	count=1,max=172
 Script/Test/Static_Check/check_log.py	write_self_error_log	mypy:unreachable	count=1
-Script/Test/Static_Check/check_registry.py	<module>	UP035	count=1
 Script/Test/Static_Check/checks/check_behavior.py	<module>	module-lines	lines=1026
 Script/Test/Static_Check/checks/check_behavior.py	check_behavior_start_time_not_future	E501	count=1,max=136
 Script/Test/Static_Check/checks/check_behavior.py	check_behavior_start_time_not_sentinel	E501	count=1,max=128
@@ -638,7 +609,6 @@ Script/Test/Static_Check/checks/check_behavior.py	check_interacting_character_en
 Script/Test/Static_Check/checks/check_behavior.py	check_move_behavior_has_executable_path	E501	count=2,max=130
 Script/Test/Static_Check/checks/check_behavior.py	check_no_stale_expired_behavior	E501	count=2,max=126
 Script/Test/Static_Check/checks/check_behavior.py	check_time_stop_player_unconscious	E501	count=1,max=130
-Script/Test/Static_Check/checks/check_body.py	<module>	UP035	count=1
 Script/Test/Static_Check/checks/check_body.py	<module>	module-lines	lines=1562
 Script/Test/Static_Check/checks/check_body.py	_get_config_sets	E501	count=1,max=140
 Script/Test/Static_Check/checks/check_body.py	_iter_charas	UP028	count=1
@@ -708,7 +678,6 @@ Script/Test/Static_Check/checks/check_island.py	check_island_21_book_borrow_cons
 Script/Test/Static_Check/checks/check_island.py	check_island_24_auto_trade_setting	E501	count=1,max=127
 Script/Test/Static_Check/checks/check_island.py	check_island_28_main_power_operator_slots	E501	count=1,max=121
 Script/Test/Static_Check/checks/check_island.py	check_island_33_diplomat_mapping_consistency	E501	count=1,max=133
-Script/Test/Static_Check/checks/check_mind.py	<module>	UP035	count=1
 Script/Test/Static_Check/checks/check_mind.py	<module>	module-lines	lines=1208
 Script/Test/Static_Check/checks/check_mind.py	_iter_all	UP028	count=1
 Script/Test/Static_Check/checks/check_mind.py	check_air_hypnosis_anchor_shape	mypy:unreachable	count=1
@@ -744,7 +713,6 @@ Script/Test/Static_Check/checks/check_numeric.py	check_num_26_warehouse_capacity
 Script/Test/Static_Check/checks/check_numeric.py	check_num_27_fatigue_family_range	E501	count=1,max=133
 Script/Test/Static_Check/checks/check_numeric.py	check_num_29_urinate_point_upper_bound	E501	count=1,max=121
 Script/Test/Static_Check/checks/check_observable.py	<module>	E501	count=1,max=133
-Script/Test/Static_Check/checks/check_observable.py	<module>	UP035	count=1
 Script/Test/Static_Check/checks/check_observable.py	<module>	module-lines	lines=861
 Script/Test/Static_Check/checks/check_observable.py	_offline_context	E501	count=1,max=151
 Script/Test/Static_Check/checks/check_observable.py	check_observable_01	E501	count=3,max=235
@@ -806,7 +774,6 @@ Script/Test/Static_Check/checks/check_supplement.py	check_officeroom_reference_v
 Script/Test/Static_Check/checks/check_supplement.py	check_time_stop_unconscious_survives_off_list	E501	count=1,max=122
 Script/Test/Static_Check/checks/check_supplement.py	check_used_extra_warehouse_capacity_module_non_negative	E501	count=1,max=138
 Script/Test/Static_Check/repair.py	<module>	E501	count=1,max=132
-Script/Test/Static_Check/repair.py	<module>	UP035	count=2
 Script/Test/Static_Check/repair.py	<module>	module-lines	lines=585
 Script/Test/Static_Check/repair.py	repair_cloth_id_validity	mypy:unreachable	count=1
 Script/Test/Static_Check/snapshot.py	build_snapshot	mypy:unreachable	count=1
@@ -824,7 +791,6 @@ Script/UI/Moudle/draw.py	<module>	module-lines	lines=1268
 Script/UI/Moudle/draw.py	BarDraw.set	E501	count=1,max=138
 Script/UI/Moudle/draw.py	InfoBarDraw.set	mypy:possibly-undefined	count=2
 Script/UI/Moudle/draw.py	LineFeedWaitDraw.draw	B007	count=1
-Script/UI/Moudle/panel.py	<module>	UP035	count=2
 Script/UI/Moudle/panel.py	<module>	module-lines	lines=777
 Script/UI/Moudle/panel.py	LeftDrawIDButtonListPanel.set	PLW2901	count=2
 Script/UI/Moudle/panel.py	OneMessageAndSingleColumnButton.set	B905	count=1
@@ -833,7 +799,7 @@ Script/UI/Panel/ability_up_panel.py	<module>	module-lines	lines=1015
 Script/UI/Panel/ability_up_panel.py	Characterabi_show_Text.input_juel_count	E712	count=1
 Script/UI/Panel/achievement_panel.py	<module>	module-lines	lines=922
 Script/UI/Panel/agriculture_production_panel.py	<module>	F401	count=1
-Script/UI/Panel/agriculture_production_panel.py	<module>	UP035	count=2
+Script/UI/Panel/agriculture_production_panel.py	<module>	UP035	count=1
 Script/UI/Panel/agriculture_production_panel.py	<module>	module-lines	lines=720
 Script/UI/Panel/agriculture_production_panel.py	Agriculture_Production_Panel.select_agriculture_line_produce	F541	count=1
 Script/UI/Panel/agriculture_production_panel.py	settle_agriculture_line	E501	count=2,max=137
@@ -909,7 +875,6 @@ Script/UI/Panel/event_option_panel.py	<module>	module-lines	lines=492
 Script/UI/Panel/event_option_panel.py	_handle_web_event_options	E501	count=1,max=131
 Script/UI/Panel/food_shop_panel.py	<module>	module-lines	lines=455
 Script/UI/Panel/get_up_panel.py	<module>	F401	count=4
-Script/UI/Panel/get_up_panel.py	<module>	F811	count=4
 Script/UI/Panel/get_up_panel.py	<module>	UP035	count=1
 Script/UI/Panel/gift_panel.py	<module>	module-lines	lines=846
 Script/UI/Panel/gift_panel.py	Gift_Panel.check_gift_available	E712	count=1
@@ -927,15 +892,12 @@ Script/UI/Panel/in_scene_panel.py	InScenePanel.draw	F541	count=3
 Script/UI/Panel/in_scene_panel_web.py	<module>	F401	count=2
 Script/UI/Panel/in_scene_panel_web.py	<module>	module-lines	lines=479
 Script/UI/Panel/in_scene_panel_web.py	InScenePanelWeb.draw	F401	count=1
-Script/UI/Panel/invite_visitor_panel.py	<module>	E501	count=1,max=133
-Script/UI/Panel/invite_visitor_panel.py	<module>	F811	count=1
 Script/UI/Panel/invite_visitor_panel.py	<module>	module-lines	lines=625
 Script/UI/Panel/invite_visitor_panel.py	Invite_Visitor_Panel.draw	F541	count=1
 Script/UI/Panel/invite_visitor_panel.py	Invite_Visitor_Panel.select_target	F541	count=1
 Script/UI/Panel/invite_visitor_panel.py	Invite_Visitor_Panel.select_target	mypy:possibly-undefined	count=1
 Script/UI/Panel/invite_visitor_panel.py	judge_visitor_if_leave	mypy:possibly-undefined	count=1
 Script/UI/Panel/invite_visitor_panel.py	sort_guest_room_key	E722	count=1
-Script/UI/Panel/manage_assembly_line_panel.py	<module>	UP035	count=1
 Script/UI/Panel/manage_assembly_line_panel.py	<module>	module-lines	lines=674
 Script/UI/Panel/manage_assembly_line_panel.py	Manage_Assembly_Line_Panel.select_assembly_line_produce	F541	count=1
 Script/UI/Panel/manage_assembly_line_panel.py	Manage_Assembly_Line_Panel.select_assembly_line_produce	mypy:possibly-undefined	count=1
@@ -953,7 +915,7 @@ Script/UI/Panel/manage_basement_panel.py	Manage_Basement_Panel.jump_to_son_panel
 Script/UI/Panel/manage_library.py	<module>	module-lines	lines=541
 Script/UI/Panel/manage_library.py	Manage_Library_Panel.urge_return_book_list	E501	count=1,max=121
 Script/UI/Panel/manage_power_system_panel.py	<module>	F401	count=1
-Script/UI/Panel/manage_power_system_panel.py	<module>	UP035	count=2
+Script/UI/Panel/manage_power_system_panel.py	<module>	UP035	count=1
 Script/UI/Panel/manage_power_system_panel.py	<module>	module-lines	lines=1465
 Script/UI/Panel/manage_power_system_panel.py	FireGenerationDetail	D101	count=1
 Script/UI/Panel/manage_power_system_panel.py	Manage_Power_System_Panel._panel_facilities	E501	count=1,max=138
@@ -982,7 +944,7 @@ Script/UI/Panel/normal_panel.py	Take_Care_Baby_Panel.draw	PLW2901	count=1
 Script/UI/Panel/originium_arts.py	<module>	module-lines	lines=822
 Script/UI/Panel/originium_arts.py	Down_Negative_Talent_Panel.draw	E501	count=1,max=121
 Script/UI/Panel/physical_check_and_manage.py	<module>	module-lines	lines=1466
-Script/UI/Panel/play_gomoku_panel.py	<module>	UP035	count=2
+Script/UI/Panel/play_gomoku_panel.py	<module>	UP035	count=1
 Script/UI/Panel/play_gomoku_panel.py	<module>	module-lines	lines=2076
 Script/UI/Panel/play_gomoku_panel.py	Evaluate	D101	count=1
 Script/UI/Panel/play_gomoku_panel.py	GomokuPanel.choose_ai_difficulty	UP030	count=2
@@ -999,7 +961,6 @@ Script/UI/Panel/play_gomoku_panel.py	count_shape	E501	count=1,max=126
 Script/UI/Panel/play_gomoku_panel.py	get_shape_fast	E501	count=1,max=177
 Script/UI/Panel/prts_panel.py	<module>	module-lines	lines=533
 Script/UI/Panel/prts_panel.py	ShowCharaNameDraw.get_chara_version_sizes	E401	count=1
-Script/UI/Panel/recruit_panel.py	<module>	UP035	count=1
 Script/UI/Panel/recruit_panel.py	<module>	module-lines	lines=1094
 Script/UI/Panel/recruit_panel.py	Recruit_Panel.draw	F541	count=1
 Script/UI/Panel/resource_exchange_panel.py	<module>	module-lines	lines=1527
@@ -1145,7 +1106,6 @@ tests/fast/arkeditor_entry_edit_driver.py	official_selector	E501	count=1,max=125
 tests/fast/arkeditor_entry_edit_driver.py	premise_group	E501	count=2,max=131
 tests/fast/arkeditor_file_load_driver.py	<module>	E501	count=1,max=125
 tests/fast/arkeditor_file_load_driver.py	talk_premise_texts	B905	count=1
-tests/fast/arkeditor_save_driver.py	<module>	UP035	count=1
 tests/fast/test_arkeditor_file_load.py	<module>	E501	count=1,max=146
 tests/fast/test_arkeditor_file_load.py	<module>	module-lines	lines=455
 tests/fast/test_child_stage_names.py	<module>	E501	count=1,max=131
@@ -1160,7 +1120,6 @@ tests/fast/test_game_clock_passes_checks.py	<module>	F401	count=1
 tests/fast/test_inactive_images_not_loaded.py	<module>	E501	count=1,max=145
 tests/fast/test_lint_target_csv_line_ends.py	plant_errors	UP031	count=1
 tests/fast/test_load_same_for_any_listing_order.py	<module>	E501	count=1,max=267
-tests/fast/test_load_same_for_any_listing_order.py	<module>	UP035	count=1
 tests/fast/test_load_same_for_any_listing_order.py	LoadSameForAnyListingOrderTest.test_mod_scan_same	E501	count=1,max=217
 tests/fast/test_load_same_for_any_listing_order.py	LoadSameForAnyListingOrderTest.test_talk_files_same	E501	count=1,max=272
 tests/fast/test_locked_room_entry.py	<module>	E501	count=1,max=124
@@ -1192,7 +1151,6 @@ tests/slow/test_child_stage_h_gate.py	<module>	E501	count=2,max=127
 tests/slow/test_debug_panel_edits_keep_type.py	<module>	E501	count=1,max=121
 tests/slow/test_decode_on_first_use.py	<module>	E501	count=1,max=123
 tests/slow/test_decode_on_first_use.py	DecodeOnFirstUseTest.test_first_use_decodes_once	E501	count=1,max=150
-tests/slow/test_education_suite.py	<module>	UP035	count=1
 tests/slow/test_follower_skips_exam.py	<module>	E501	count=1,max=131
 tests/slow/test_foot_cloth_fills_locker_semen.py	<module>	E501	count=1,max=168
 tests/slow/test_foot_cloth_fills_locker_semen.py	FootClothFillsLockerSemenTest.test_locker_table_complete	F401	count=1
@@ -1214,7 +1172,6 @@ tests/slow/test_old_save_empty_field_commission.py	<module>	E501	count=2,max=134
 tests/slow/test_option_event_lists_child.py	OptionEventListsChildTest._record	B010	count=1
 tests/slow/test_option_event_lists_child.py	OptionEventListsChildTest.test_child_offered_and_settled	mypy:possibly-undefined	count=1
 tests/slow/test_random_pick_ignores_set_order.py	<module>	E501	count=4,max=141
-tests/slow/test_same_name_characters_kept_apart.py	<module>	UP035	count=1
 tests/slow/test_smoke_new_game.py	<module>	E501	count=2,max=158
 tests/slow/test_snapshot_states.py	<module>	E501	count=2,max=137
 tests/slow/test_tag_logic_same_in_english.py	<module>	UP035	count=1
@@ -1249,14 +1206,11 @@ tools/ArkEditor/function.py	show_event_introduce	mypy:attr-defined	count=1
 tools/ArkEditor/function.py	show_setting	mypy:union-attr	count=5
 tools/ArkEditor/function.py	show_talk_introduce	E501	count=8,max=628
 tools/ArkEditor/function.py	show_talk_introduce	mypy:attr-defined	count=1
-tools/ArkEditor/load_csv.py	<module>	F401	count=1
-tools/ArkEditor/load_csv.py	<module>	module-lines	lines=435
+tools/ArkEditor/load_csv.py	<module>	module-lines	lines=433
 tools/ArkEditor/load_csv.py	load_commission_csv	E712	count=1
 tools/ArkEditor/load_csv.py	load_config	E712	count=18
 tools/ArkEditor/load_csv.py	load_official_event_dir	B905	count=1
-tools/ArkEditor/load_csv.py	load_official_event_dir	F811	count=1
 tools/ArkEditor/load_csv.py	save_commission_csv	E501	count=1,max=447
-tools/ArkEditor/load_csv.py	save_official_event_csv	F811	count=1
 tools/ArkEditor/main.py	<module>	E402	count=17
 tools/ArkEditor/main.py	<module>	module-lines	lines=896
 tools/ArkEditor/main.py	<module>	mypy:union-attr	count=4
@@ -1329,8 +1283,6 @@ tools/ArkEditor/ui/data_list_move_item.py	move_to_up	mypy:attr-defined	count=6
 tools/ArkEditor/ui/data_list_move_item.py	move_to_up	mypy:unreachable	count=1
 tools/ArkEditor/ui/data_list_move_item.py	on_rows_moved	mypy:attr-defined	count=4
 tools/ArkEditor/ui/data_list_move_item.py	refresh_item_flags	mypy:attr-defined	count=4
-tools/ArkEditor/ui/data_list_undo_snapshot.py	<module>	F401	count=1
-tools/ArkEditor/ui/data_list_undo_snapshot.py	UndoSnapshotManager._make_snapshot	F811	count=1
 tools/ArkEditor/ui/effect_menu.py	<module>	F401	count=7
 tools/ArkEditor/ui/effect_menu.py	EffectMenu.__init__	mypy:assignment	count=2
 tools/ArkEditor/ui/effect_menu.py	EffectMenu.__init__	mypy:attr-defined	count=4
@@ -1362,7 +1314,6 @@ tools/ArkEditor/ui/item_text_edit.py	ItemTextEdit.__init__	mypy:assignment	count
 tools/ArkEditor/ui/item_text_edit.py	ItemTextEdit.__init__	mypy:attr-defined	count=1
 tools/ArkEditor/ui/item_text_edit.py	ItemTextEdit.__init__	mypy:method-assign	count=1
 tools/ArkEditor/ui/item_text_edit.py	ItemTextEdit.update	mypy:override	count=1
-tools/ArkEditor/ui/menu_bar.py	<module>	E401	count=1
 tools/ArkEditor/ui/menu_bar.py	<module>	F401	count=2
 tools/ArkEditor/ui/menu_bar.py	MenuBar.__init__	mypy:assignment	count=1
 tools/ArkEditor/ui/menu_bar.py	MenuBar.__init__	mypy:method-assign	count=1

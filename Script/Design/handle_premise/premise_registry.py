@@ -1,6 +1,7 @@
 """前提注册装饰器：handle_premise 包与其各子模块共用的 add_premise"""
 
-from typing import Callable, TypeVar
+from typing import TypeVar
+from collections.abc import Callable
 from Script.Core import constant
 
 PremiseFunc = TypeVar("PremiseFunc", bound=Callable[[int], float])

@@ -13,7 +13,7 @@ import random
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-  from typing import Callable
+  from collections.abc import Callable
   from collections.abc import Mapping
   from Script.Config import config_def
 

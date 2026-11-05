@@ -1,6 +1,7 @@
 """预设角色模板数据的读取，以及随之写入的服装模板与口上颜色数据"""
 
-import os, glob
+import os
+import glob
 from typing import Any
 from types import FunctionType
 from Script.Core import json_handle, game_type, get_text

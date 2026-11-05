@@ -554,7 +554,6 @@ class StatusPanel:
     当 character_id > 0 时，表示有交互对象
     当 character_id < 0 时，表示无效
     """
-    from Script.Design import handle_premise
 
     # 当没有交互对象时，返回空字典
     if character_id <= 0:
@@ -762,8 +761,6 @@ class StatusPanel:
         break
 
     # 获取脱下的衣服（仅在H中显示）
-    from Script.Design import handle_premise
-
     if handle_premise.handle_is_h(0):
       for cloth_type in target_data.cloth.cloth_off:
         for cloth_id in target_data.cloth.cloth_off[cloth_type]:
@@ -792,7 +789,7 @@ class StatusPanel:
     Returns:
     dict -- 身体信息数据
     """
-    from Script.Design import clothing, handle_premise
+    from Script.Design import clothing
 
     if not character_id or character_id not in cache.character_data:
       return {"parts": []}
@@ -1096,7 +1093,6 @@ class StatusPanel:
     Returns:
     dict -- 隐奸信息数据
     """
-    from Script.Design import handle_premise
     from Script.UI.Panel import dirty_panel
 
     if not handle_premise.handle_hidden_sex_mode_ge_1(0):

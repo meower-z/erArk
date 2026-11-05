@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 from Script.Config import game_config
 
@@ -23,7 +23,7 @@ from . import check_log
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-  from typing import Iterator
+  from collections.abc import Iterator
   from Script.Core import game_type
 
 # 修复注册表：check_id -> (修复名, 修复函数)。修复函数接收cache，返回修复记录列表（每条含check_id/target/field/old_value/new_value）

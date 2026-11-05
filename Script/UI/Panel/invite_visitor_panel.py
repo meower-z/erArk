@@ -3,7 +3,7 @@
 import os
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
-from Script.Design import attr_calculation, map_handle, game_time, character_handle, instuct_judege, character_handle, handle_ability
+from Script.Design import attr_calculation, map_handle, game_time, character_handle, instuct_judege, handle_ability
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import manage_basement_panel, recruit_panel

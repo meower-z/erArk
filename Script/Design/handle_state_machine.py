@@ -2,7 +2,8 @@
 
 from functools import wraps
 from types import FunctionType
-from typing import Callable, Concatenate, ParamSpec, TypeVar
+from typing import Concatenate, ParamSpec, TypeVar
+from collections.abc import Callable
 from Script.Core import constant
 from Script.Design import child_stage_gate
 

@@ -554,7 +554,6 @@ def handle_get_sleep_cloth(
   """
   if not add_time:
     return
-  from Script.Design import handle_premise
   # 管理中则全裸
   if handle_premise.handle_ask_not_wear_cloth_in_sleep(character_id):
     clothing.get_all_cloth_off(character_id)
@@ -833,7 +832,6 @@ def handle_wear_to_dormitory_locker(
   # 玩家没有换睡衣的流程，衣服不进衣柜，与clothing.get_sleep_cloth()的判定保持一致
   if not character_id:
     return
-  from Script.Design import handle_premise
 
   # 囚犯睡觉时不换睡衣，若把囚服转走会变成全裸睡觉，故跳过
   if handle_premise.handle_imprisonment_1(character_id):

@@ -1,7 +1,8 @@
 """面板注册装饰器 add_panel"""
 
 from functools import wraps
-from typing import Callable, ParamSpec, TypeVar
+from typing import ParamSpec, TypeVar
+from collections.abc import Callable
 from Script.Core import constant
 
 PanelParams = ParamSpec("PanelParams")

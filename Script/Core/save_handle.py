@@ -475,8 +475,6 @@ def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
 
   # 无壳卵生开关：本函数早于 update_settings 执行，且此时全局cache尚未被替换，只能从存档自身的设置对象里读
   # 旧存档没有该设置项，.get兜底为开启，正是旧存档迁移应有的行为
-  from Script.System.Pregnancy_System import pregnancy_constant
-
   loaded_setting = getattr(loaded_cache, "all_system_setting", None)
   loaded_birth_setting = (
       getattr(loaded_setting, "birth_type_setting", None)

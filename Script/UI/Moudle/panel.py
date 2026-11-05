@@ -5,7 +5,7 @@ from __future__ import annotations
 import itertools
 import math
 import time
-from typing import Sequence
+from collections.abc import Sequence
 from types import FunctionType
 from Script.UI.Moudle import draw
 from Script.Core import io_init, flow_handle, text_handle, get_text, value_handle, game_type, cache_control
@@ -14,7 +14,7 @@ from Script.Config import normal_config
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-  from typing import Callable
+  from collections.abc import Callable
 
 _: FunctionType = get_text._
 """ 翻译api """

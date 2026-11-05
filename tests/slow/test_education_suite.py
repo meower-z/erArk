@@ -14,7 +14,7 @@ import os
 import re
 import subprocess
 import sys
-from typing import Callable
+from collections.abc import Callable
 
 from tests.education._skip import SKIP_EXIT
 from tests.slow.base import SlowTestCase
