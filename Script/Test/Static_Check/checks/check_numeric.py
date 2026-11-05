@@ -14,7 +14,7 @@ TypeError而抛出未捕获异常，只会跟着报"结构不满足前置条件"
 """
 
 import math
-from typing import Dict, List
+from typing import Dict
 
 from Script.Core import cache_control
 from Script.Config import game_config
@@ -72,7 +72,7 @@ def _dict_field_ok(chara: object, field: str) -> bool:
 
 
 @register_check("NUM-01", "数值容器字段存在且为dict")
-def check_num_01_numeric_dict_fields_exist() -> List[CheckFailure]:
+def check_num_01_numeric_dict_fields_exist() -> list[CheckFailure]:
   """
   参数:
       无
@@ -106,7 +106,7 @@ def check_num_01_numeric_dict_fields_exist() -> List[CheckFailure]:
 
 
 @register_check("NUM-02", "能力字典键集覆盖配表且键为纯int")
-def check_num_02_ability_dict_keys() -> List[CheckFailure]:
+def check_num_02_ability_dict_keys() -> list[CheckFailure]:
   """
   参数:
       无
@@ -145,7 +145,7 @@ def check_num_02_ability_dict_keys() -> List[CheckFailure]:
 
 
 @register_check("NUM-03", "能力值必须是Ability_Lv_Adjust的合法键")
-def check_num_03_ability_value_valid_lv() -> List[CheckFailure]:
+def check_num_03_ability_value_valid_lv() -> list[CheckFailure]:
   """
   参数:
       无
@@ -198,7 +198,7 @@ _NUM04_UNCLAMPED_ABILITY = {71}
 
 
 @register_check("NUM-04", "能力等级不超过8（事件白名单除外）")
-def check_num_04_ability_level_upper_bound() -> List[CheckFailure]:
+def check_num_04_ability_level_upper_bound() -> list[CheckFailure]:
   """
   参数:
       无
@@ -248,7 +248,7 @@ def check_num_04_ability_level_upper_bound() -> List[CheckFailure]:
 
 
 @register_check("NUM-05", "感度/扩张类能力与角色性别一致")
-def check_num_05_ability_sex_consistency() -> List[CheckFailure]:
+def check_num_05_ability_sex_consistency() -> list[CheckFailure]:
   """
   参数:
       无
@@ -296,7 +296,7 @@ def check_num_05_ability_sex_consistency() -> List[CheckFailure]:
 
 
 @register_check("NUM-06", "角色性别取值域")
-def check_num_06_sex_domain() -> List[CheckFailure]:
+def check_num_06_sex_domain() -> list[CheckFailure]:
   """
   参数:
       无
@@ -323,7 +323,7 @@ def check_num_06_sex_domain() -> List[CheckFailure]:
 
 
 @register_check("NUM-07", "经验字典键集覆盖配表且键为纯int")
-def check_num_07_experience_dict_keys() -> List[CheckFailure]:
+def check_num_07_experience_dict_keys() -> list[CheckFailure]:
   """
   参数:
       无
@@ -361,7 +361,7 @@ def check_num_07_experience_dict_keys() -> List[CheckFailure]:
 
 
 @register_check("NUM-08", "经验为非负整数")
-def check_num_08_experience_non_negative() -> List[CheckFailure]:
+def check_num_08_experience_non_negative() -> list[CheckFailure]:
   """
   参数:
       无
@@ -394,7 +394,7 @@ def check_num_08_experience_non_negative() -> List[CheckFailure]:
 
 
 @register_check("NUM-09", "宝珠字典键集覆盖配表且键为纯int")
-def check_num_09_juel_dict_keys() -> List[CheckFailure]:
+def check_num_09_juel_dict_keys() -> list[CheckFailure]:
   """
   参数:
       无
@@ -431,7 +431,7 @@ def check_num_09_juel_dict_keys() -> List[CheckFailure]:
 
 
 @register_check("NUM-10", "宝珠为非负整数")
-def check_num_10_juel_non_negative() -> List[CheckFailure]:
+def check_num_10_juel_non_negative() -> list[CheckFailure]:
   """
   参数:
       无
@@ -462,7 +462,7 @@ def check_num_10_juel_non_negative() -> List[CheckFailure]:
 
 
 @register_check("NUM-11", "素质字典键集覆盖配表且值为int")
-def check_num_11_talent_dict_keys() -> List[CheckFailure]:
+def check_num_11_talent_dict_keys() -> list[CheckFailure]:
   """
   参数:
       无
@@ -502,7 +502,7 @@ def check_num_11_talent_dict_keys() -> List[CheckFailure]:
 
 
 @register_check("NUM-12", "状态值字典键集覆盖配表且键为纯int")
-def check_num_12_status_data_dict_keys() -> List[CheckFailure]:
+def check_num_12_status_data_dict_keys() -> list[CheckFailure]:
   """
   参数:
       无
@@ -540,7 +540,7 @@ def check_num_12_status_data_dict_keys() -> List[CheckFailure]:
 
 
 @register_check("NUM-13", "状态值为非负整数")
-def check_num_13_status_data_non_negative() -> List[CheckFailure]:
+def check_num_13_status_data_non_negative() -> list[CheckFailure]:
   """
   参数:
       无
@@ -576,7 +576,7 @@ def check_num_13_status_data_non_negative() -> List[CheckFailure]:
 
 
 @register_check("NUM-14", "状态值不超过99999")
-def check_num_14_status_data_upper_bound() -> List[CheckFailure]:
+def check_num_14_status_data_upper_bound() -> list[CheckFailure]:
   """
   参数:
       无
@@ -622,7 +622,7 @@ def check_num_14_status_data_upper_bound() -> List[CheckFailure]:
 
 
 @register_check("NUM-15", "好感键有效且必含玩家")
-def check_num_15_favorability_keys() -> List[CheckFailure]:
+def check_num_15_favorability_keys() -> list[CheckFailure]:
   """
   参数:
       无
@@ -658,7 +658,7 @@ def check_num_15_favorability_keys() -> List[CheckFailure]:
 
 
 @register_check("NUM-16", "好感值为整数")
-def check_num_16_favorability_type() -> List[CheckFailure]:
+def check_num_16_favorability_type() -> list[CheckFailure]:
   """
   参数:
       无
@@ -696,7 +696,7 @@ def check_num_16_favorability_type() -> List[CheckFailure]:
 
 
 @register_check("NUM-17", "信赖与催眠程度为有限实数")
-def check_num_17_trust_hypnosis_finite() -> List[CheckFailure]:
+def check_num_17_trust_hypnosis_finite() -> list[CheckFailure]:
   """
   参数:
       无
@@ -728,7 +728,7 @@ def check_num_17_trust_hypnosis_finite() -> List[CheckFailure]:
 
 
 @register_check("NUM-18", "体力/气力上限为正整数")
-def check_num_18_hp_mp_max_positive() -> List[CheckFailure]:
+def check_num_18_hp_mp_max_positive() -> list[CheckFailure]:
   """
   参数:
       无
@@ -765,7 +765,7 @@ def check_num_18_hp_mp_max_positive() -> List[CheckFailure]:
 
 
 @register_check("NUM-19", "玩家专属槽位上限为正整数")
-def check_num_19_player_only_max_fields() -> List[CheckFailure]:
+def check_num_19_player_only_max_fields() -> list[CheckFailure]:
   """
   参数:
       无
@@ -807,7 +807,7 @@ def check_num_19_player_only_max_fields() -> List[CheckFailure]:
 
 
 @register_check("NUM-20", "当前体力在[1,上限]")
-def check_num_20_hit_point_range() -> List[CheckFailure]:
+def check_num_20_hit_point_range() -> list[CheckFailure]:
   """
   参数:
       无
@@ -845,7 +845,7 @@ def check_num_20_hit_point_range() -> List[CheckFailure]:
 
 
 @register_check("NUM-21", "当前气力在[0,上限]")
-def check_num_21_mana_point_range() -> List[CheckFailure]:
+def check_num_21_mana_point_range() -> list[CheckFailure]:
   """
   参数:
       无
@@ -882,7 +882,7 @@ def check_num_21_mana_point_range() -> List[CheckFailure]:
 
 
 @register_check("NUM-22", "当前理智在[0,上限]")
-def check_num_22_sanity_point_range() -> List[CheckFailure]:
+def check_num_22_sanity_point_range() -> list[CheckFailure]:
   """
   参数:
       无
@@ -921,7 +921,7 @@ def check_num_22_sanity_point_range() -> List[CheckFailure]:
 
 
 @register_check("NUM-23", "射精槽非负且不设上限")
-def check_num_23_eja_point_non_negative() -> List[CheckFailure]:
+def check_num_23_eja_point_non_negative() -> list[CheckFailure]:
   """
   参数:
       无
@@ -954,7 +954,7 @@ def check_num_23_eja_point_non_negative() -> List[CheckFailure]:
 
 
 @register_check("NUM-24", "精液槽与临时精液槽范围")
-def check_num_24_semen_point_range() -> List[CheckFailure]:
+def check_num_24_semen_point_range() -> list[CheckFailure]:
   """
   参数:
       无
@@ -994,7 +994,7 @@ def check_num_24_semen_point_range() -> List[CheckFailure]:
 
 
 @register_check("NUM-25", "基地资源键集覆盖配表且为非负整数")
-def check_num_25_base_resource() -> List[CheckFailure]:
+def check_num_25_base_resource() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1044,7 +1044,7 @@ def check_num_25_base_resource() -> List[CheckFailure]:
 
 
 @register_check("NUM-26", "仓库容量为非负整数")
-def check_num_26_warehouse_capacity() -> List[CheckFailure]:
+def check_num_26_warehouse_capacity() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1076,7 +1076,7 @@ def check_num_26_warehouse_capacity() -> List[CheckFailure]:
 
 
 @register_check("NUM-27", "疲劳/饥饿/熟睡/醉酒在各自量程内")
-def check_num_27_fatigue_family_range() -> List[CheckFailure]:
+def check_num_27_fatigue_family_range() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1118,7 +1118,7 @@ def check_num_27_fatigue_family_range() -> List[CheckFailure]:
 
 
 @register_check("NUM-28", "尿意值非负且为整数")
-def check_num_28_urinate_point_non_negative() -> List[CheckFailure]:
+def check_num_28_urinate_point_non_negative() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1149,7 +1149,7 @@ def check_num_28_urinate_point_non_negative() -> List[CheckFailure]:
 
 
 @register_check("NUM-29", "角色尿意值不超过300")
-def check_num_29_urinate_point_upper_bound() -> List[CheckFailure]:
+def check_num_29_urinate_point_upper_bound() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1189,7 +1189,7 @@ def check_num_29_urinate_point_upper_bound() -> List[CheckFailure]:
 
 
 @register_check("NUM-30", "欲望值为非负整数且不设上限")
-def check_num_30_desire_point_non_negative() -> List[CheckFailure]:
+def check_num_30_desire_point_non_negative() -> list[CheckFailure]:
   """
   参数:
       无

@@ -4,7 +4,7 @@
 import os
 import traceback
 from types import FunctionType
-from typing import Callable, Optional
+from typing import Callable
 from Script.Core import flow_handle, io_init, cache_control, game_type, constant, py_cmd, get_text, save_handle
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import panel
@@ -19,7 +19,7 @@ NO_EVENT_FUNC = "no_event_func"
 
 # 系统函数#############################################################
 # 初始化函数
-_main_flow: Optional[Callable[[], object]] = None
+_main_flow: Callable[[], object] | None = None
 error_path = os.path.join("error.log")
 
 

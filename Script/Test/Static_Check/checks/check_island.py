@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from Script.Core import cache_control
 from Script.Config import game_config
@@ -61,7 +61,7 @@ def _eff(ri: game_type.Rhodes_Island, facility_cid: int) -> int | None:
     return None
 
 
-def _chara_name(cd: Dict[int, Any], cid: int) -> str:
+def _chara_name(cd: dict[int, Any], cid: int) -> str:
   """
   参数:
       cd (Dict[int, Any]): cache.character_data 角色数据字典
@@ -94,7 +94,7 @@ def _sp_flag_brief(ch: Any) -> str:
 
 
 @register_check("ISLAND-01", "干员名单引用完整性")
-def check_island_01_npc_id_got_ref() -> List[CheckFailure]:
+def check_island_01_npc_id_got_ref() -> list[CheckFailure]:
   """
   参数:
       无
@@ -132,7 +132,7 @@ def check_island_01_npc_id_got_ref() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-02", "设施等级键完整且落在配置区间")
-def check_island_02_facility_level_range() -> List[CheckFailure]:
+def check_island_02_facility_level_range() -> list[CheckFailure]:
   """
   参数:
       无
@@ -175,7 +175,7 @@ def check_island_02_facility_level_range() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-03", "非控制中枢设施等级不超过中枢等级+1")
-def check_island_03_facility_level_vs_core() -> List[CheckFailure]:
+def check_island_03_facility_level_vs_core() -> list[CheckFailure]:
   """
   参数:
       无
@@ -211,7 +211,7 @@ def check_island_03_facility_level_vs_core() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-04", "设施开放表键完整、值为0/1语义")
-def check_island_04_facility_open_values() -> List[CheckFailure]:
+def check_island_04_facility_open_values() -> list[CheckFailure]:
   """
   参数:
       无
@@ -254,7 +254,7 @@ def check_island_04_facility_open_values() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-05", "资源表键完整且库存为非负整数")
-def check_island_05_resource_stock() -> List[CheckFailure]:
+def check_island_05_resource_stock() -> list[CheckFailure]:
   """
   参数:
       无
@@ -298,7 +298,7 @@ def check_island_05_resource_stock() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-06", "仓库容量与干员上限是设施等级的派生值")
-def check_island_06_warehouse_and_people_max() -> List[CheckFailure]:
+def check_island_06_warehouse_and_people_max() -> list[CheckFailure]:
   """
   参数:
       无
@@ -347,7 +347,7 @@ def check_island_06_warehouse_and_people_max() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-07", "已招募干员的岗位id必须合法")
-def check_island_07_work_type_valid() -> List[CheckFailure]:
+def check_island_07_work_type_valid() -> list[CheckFailure]:
   """
   参数:
       无
@@ -380,7 +380,7 @@ def check_island_07_work_type_valid() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-08", "岗位集合键完整、成员合法且与自身键自洽")
-def check_island_08_all_work_npc_set_self_consistent() -> List[CheckFailure]:
+def check_island_08_all_work_npc_set_self_consistent() -> list[CheckFailure]:
   """
   参数:
       无
@@ -401,7 +401,7 @@ def check_island_08_all_work_npc_set_self_consistent() -> List[CheckFailure]:
   actual_keys = set(all_work_npc_set)
   key_diff_missing = sorted(config_keys - actual_keys)
   key_diff_extra = sorted(actual_keys - config_keys)
-  violations: List[Tuple[Any, Any, str, Optional[int]]] = []
+  violations: list[tuple[Any, Any, str, int | None]] = []
   for wid, ids in all_work_npc_set.items():
     for cid in ids:
       if cid not in cd:
@@ -422,7 +422,7 @@ def check_island_08_all_work_npc_set_self_consistent() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-09", "岗位集合与在编名单的逐人重算一致")
-def check_island_09_work_set_recompute() -> List[CheckFailure]:
+def check_island_09_work_set_recompute() -> list[CheckFailure]:
   """
   参数:
       无
@@ -467,7 +467,7 @@ def check_island_09_work_set_recompute() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-10", "在岗人数计数可由岗位集合重算")
-def check_island_10_work_people_now() -> List[CheckFailure]:
+def check_island_10_work_people_now() -> list[CheckFailure]:
   """
   参数:
       无
@@ -511,7 +511,7 @@ _WORK_LIST_FIELDS = (
 
 
 @register_check("ISLAND-11", "岗位人员列表引用合法、无重复、不漏在岗者")
-def check_island_11_work_lists_superset() -> List[CheckFailure]:
+def check_island_11_work_lists_superset() -> list[CheckFailure]:
   """
   参数:
       无
@@ -564,7 +564,7 @@ def check_island_11_work_lists_superset() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-12", "岗位人员列表的离线残留漂移")
-def check_island_12_work_lists_stale_members() -> List[CheckFailure]:
+def check_island_12_work_lists_stale_members() -> list[CheckFailure]:
   """
   参数:
       无
@@ -606,7 +606,7 @@ def check_island_12_work_lists_stale_members() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-13", "流水线结构、数量与配方id合法")
-def check_island_13_assembly_line() -> List[CheckFailure]:
+def check_island_13_assembly_line() -> list[CheckFailure]:
   """
   参数:
       无
@@ -663,7 +663,7 @@ def check_island_13_assembly_line() -> List[CheckFailure]:
 
 @register_check("ISLAND-14", "农业线与招募线结构、种植类型合法")
 def check_island_14_agriculture_and_recruit_line_structure() -> (
-    List[CheckFailure]
+    list[CheckFailure]
 ):
   """
   参数:
@@ -722,7 +722,7 @@ def check_island_14_agriculture_and_recruit_line_structure() -> (
 @register_check(
     "ISLAND-15", "各生产/招募/交易线主负责人有效、岗位匹配、同类不重复"
 )
-def check_island_15_line_main_operator() -> List[CheckFailure]:
+def check_island_15_line_main_operator() -> list[CheckFailure]:
   """
   参数:
       无
@@ -808,7 +808,7 @@ def check_island_15_line_main_operator() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-16", "宿舍管理员表结构与引用合法")
-def check_island_16_dormitory_managers_structure() -> List[CheckFailure]:
+def check_island_16_dormitory_managers_structure() -> list[CheckFailure]:
   """
   参数:
       无
@@ -854,7 +854,7 @@ def check_island_16_dormitory_managers_structure() -> List[CheckFailure]:
 
 @register_check("ISLAND-17", "宿舍管理员岗位联动与层键覆盖")
 def check_island_17_dormitory_manager_work_type_and_layers() -> (
-    List[CheckFailure]
+    list[CheckFailure]
 ):
   """
   参数:
@@ -902,7 +902,7 @@ def check_island_17_dormitory_manager_work_type_and_layers() -> (
 
 
 @register_check("ISLAND-18", "已关闭楼层不得保留管理员")
-def check_island_18_closed_layer_no_manager() -> List[CheckFailure]:
+def check_island_18_closed_layer_no_manager() -> list[CheckFailure]:
   """
   参数:
       无
@@ -941,7 +941,7 @@ def check_island_18_closed_layer_no_manager() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-19", "已招募干员的宿舍路径必须是合法场景")
-def check_island_19_dormitory_path_valid() -> List[CheckFailure]:
+def check_island_19_dormitory_path_valid() -> list[CheckFailure]:
   """
   参数:
       无
@@ -974,7 +974,7 @@ def check_island_19_dormitory_path_valid() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-20", "普通宿舍房间不超过2人")
-def check_island_20_dormitory_room_capacity() -> List[CheckFailure]:
+def check_island_20_dormitory_room_capacity() -> list[CheckFailure]:
   """
   参数:
       无
@@ -990,7 +990,7 @@ def check_island_20_dormitory_room_capacity() -> List[CheckFailure]:
     resident_ids = dorm_common.get_dormitory_resident_id_set()
   except Exception:
     return []
-  occ: Dict[str, List[int]] = {}
+  occ: dict[str, list[int]] = {}
   for cid in resident_ids:
     ch = cd.get(cid)
     if ch is None:
@@ -1023,7 +1023,7 @@ def check_island_20_dormitory_room_capacity() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-21", "借书记录双向一致且不超借阅上限")
-def check_island_21_book_borrow_consistency() -> List[CheckFailure]:
+def check_island_21_book_borrow_consistency() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1094,7 +1094,7 @@ def check_island_21_book_borrow_consistency() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-22", "一周派对排期键值合法且同一娱乐不占两天")
-def check_island_22_party_day_of_week() -> List[CheckFailure]:
+def check_island_22_party_day_of_week() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1165,7 +1165,7 @@ def check_island_22_party_day_of_week() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-23", "干员娱乐安排固定三项且id合法")
-def check_island_23_entertainment_type() -> List[CheckFailure]:
+def check_island_23_entertainment_type() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1215,7 +1215,7 @@ def check_island_23_entertainment_type() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-24", "自动交易设置键与阈值合法")
-def check_island_24_auto_trade_setting() -> List[CheckFailure]:
+def check_island_24_auto_trade_setting() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1286,7 +1286,7 @@ def check_island_24_auto_trade_setting() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-25", "载具在外数量与进行中委托占用一致")
-def check_island_25_vehicle_usage_consistency() -> List[CheckFailure]:
+def check_island_25_vehicle_usage_consistency() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1305,7 +1305,7 @@ def check_island_25_vehicle_usage_consistency() -> List[CheckFailure]:
     return []
   failures = []
   used: Counter[int] = Counter()
-  used_by: Dict[int, List[int]] = {}
+  used_by: dict[int, list[int]] = {}
   for com_id, c in ongoing.items():
     if not (isinstance(c, list) and len(c) >= 3 and isinstance(c[2], list)):
       failures.append(
@@ -1364,7 +1364,7 @@ def check_island_25_vehicle_usage_consistency() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-26", "外勤派遣名单与干员外勤标记一致")
-def check_island_26_field_commission_flag_consistency() -> List[CheckFailure]:
+def check_island_26_field_commission_flag_consistency() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1456,7 +1456,7 @@ def check_island_26_field_commission_flag_consistency() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-27", "储能与供能设施结构、绝对范围合法")
-def check_island_27_power_structure_and_range() -> List[CheckFailure]:
+def check_island_27_power_structure_and_range() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1559,7 +1559,7 @@ def check_island_27_power_structure_and_range() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-28", "主供能调控员槽位有效且不重复")
-def check_island_28_main_power_operator_slots() -> List[CheckFailure]:
+def check_island_28_main_power_operator_slots() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1606,7 +1606,7 @@ def check_island_28_main_power_operator_slots() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-29", "监狱长引用与囚犯数据自洽")
-def check_island_29_warden_and_prisoners() -> List[CheckFailure]:
+def check_island_29_warden_and_prisoners() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1659,7 +1659,7 @@ def check_island_29_warden_and_prisoners() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-30", "设施损坏数据与检修分派自洽")
-def check_island_30_facility_damage_and_maintenance() -> List[CheckFailure]:
+def check_island_30_facility_damage_and_maintenance() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1719,7 +1719,7 @@ def check_island_30_facility_damage_and_maintenance() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-31", "访客集合与待确认招募集合合法")
-def check_island_31_visitor_and_recruited_id() -> List[CheckFailure]:
+def check_island_31_visitor_and_recruited_id() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1768,7 +1768,7 @@ def check_island_31_visitor_and_recruited_id() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-32", "贸易子设施列表与开放表一致、不超上限、无重复")
-def check_island_32_shop_open_list() -> List[CheckFailure]:
+def check_island_32_shop_open_list() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1831,7 +1831,7 @@ def check_island_32_shop_open_list() -> List[CheckFailure]:
 
 
 @register_check("ISLAND-33", "外交官映射、岗位与外派标记三方一致")
-def check_island_33_diplomat_mapping_consistency() -> List[CheckFailure]:
+def check_island_33_diplomat_mapping_consistency() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1850,7 +1850,7 @@ def check_island_33_diplomat_mapping_consistency() -> List[CheckFailure]:
   if not isinstance(diplomat_of_country, dict):
     return []
   failures = []
-  seen: Dict[int, int] = {}
+  seen: dict[int, int] = {}
   for country, v in diplomat_of_country.items():
     if not (isinstance(v, list) and len(v) >= 2):
       failures.append(

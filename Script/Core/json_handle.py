@@ -22,7 +22,7 @@ def load_json(file_path: str) -> dict:
     ec = "utf-8-sig"
   else:
     ec = "utf-8"
-  with open(file_path, "r", encoding=ec) as f:
+  with open(file_path, encoding=ec) as f:
     try:
       json_data = json.loads(f.read())
       f.close()

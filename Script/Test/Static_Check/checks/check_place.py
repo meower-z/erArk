@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 import collections
-from typing import List, Set, TypeGuard
+from typing import TypeGuard
 
 from Script.Core import cache_control
 from Script.Design import map_handle
@@ -121,7 +121,7 @@ def _offline_flags(sp_flag: object) -> bool:
 
 
 @register_check("PLACE-01", "角色字典键与cid一致")
-def check_character_dict_key_matches_cid() -> List[CheckFailure]:
+def check_character_dict_key_matches_cid() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表，character_data每个键都等于角色自身cid时返回空列表
@@ -152,7 +152,7 @@ def check_character_dict_key_matches_cid() -> List[CheckFailure]:
 
 
 @register_check("PLACE-02", "场景/地图自描述键一致")
-def check_scene_and_map_self_key_consistency() -> List[CheckFailure]:
+def check_scene_and_map_self_key_consistency() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -188,7 +188,7 @@ def check_scene_and_map_self_key_consistency() -> List[CheckFailure]:
 
 
 @register_check("PLACE-03", "场景名册id必须存在")
-def check_scene_roster_ids_exist() -> List[CheckFailure]:
+def check_scene_roster_ids_exist() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -219,7 +219,7 @@ def check_scene_roster_ids_exist() -> List[CheckFailure]:
 
 
 @register_check("PLACE-04", "角色位置必须是现有场景")
-def check_character_position_is_existing_scene() -> List[CheckFailure]:
+def check_character_position_is_existing_scene() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -232,7 +232,7 @@ def check_character_position_is_existing_scene() -> List[CheckFailure]:
   failures = []
   character_data = getattr(cache, "character_data", {}) or {}
   scene_data = getattr(cache, "scene_data", {}) or {}
-  npc_id_got: Set[int] = getattr(cache, "npc_id_got", set()) or set()
+  npc_id_got: set[int] = getattr(cache, "npc_id_got", set()) or set()
   for cid, c in character_data.items():
     position = getattr(c, "position", None)
     if _valid_scene_path(position, scene_data):
@@ -255,7 +255,7 @@ def check_character_position_is_existing_scene() -> List[CheckFailure]:
 
 
 @register_check("PLACE-05", "角色→场景方向一致")
-def check_character_to_scene_direction_consistency() -> List[CheckFailure]:
+def check_character_to_scene_direction_consistency() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -268,7 +268,7 @@ def check_character_to_scene_direction_consistency() -> List[CheckFailure]:
   failures = []
   character_data = getattr(cache, "character_data", {}) or {}
   scene_data = getattr(cache, "scene_data", {}) or {}
-  npc_id_got: Set[int] = getattr(cache, "npc_id_got", set()) or set()
+  npc_id_got: set[int] = getattr(cache, "npc_id_got", set()) or set()
   for cid in _live_ids(cache):
     c = character_data.get(cid)
     if c is None:
@@ -314,7 +314,7 @@ def check_character_to_scene_direction_consistency() -> List[CheckFailure]:
 
 
 @register_check("PLACE-06", "场景→角色方向一致")
-def check_scene_to_character_direction_consistency() -> List[CheckFailure]:
+def check_scene_to_character_direction_consistency() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -365,7 +365,7 @@ def check_scene_to_character_direction_consistency() -> List[CheckFailure]:
 
 
 @register_check("PLACE-07", "角色不得同时出现在多个场景")
-def check_character_not_in_multiple_scenes() -> List[CheckFailure]:
+def check_character_not_in_multiple_scenes() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -400,7 +400,7 @@ def check_character_not_in_multiple_scenes() -> List[CheckFailure]:
 
 @register_check("PLACE-08", "场景名册只容纳在册角色/离线角色必须退出名册")
 def check_scene_roster_only_registered_and_offline_must_exit() -> (
-    List[CheckFailure]
+    list[CheckFailure]
 ):
   """
   参数: 无
@@ -414,7 +414,7 @@ def check_scene_roster_only_registered_and_offline_must_exit() -> (
   failures = []
   character_data = getattr(cache, "character_data", {}) or {}
   scene_data = getattr(cache, "scene_data", {}) or {}
-  npc_id_got: Set[int] = getattr(cache, "npc_id_got", set()) or set()
+  npc_id_got: set[int] = getattr(cache, "npc_id_got", set()) or set()
 
   cid_to_scenes = collections.defaultdict(list)
   for path, sc in scene_data.items():
@@ -457,7 +457,7 @@ def check_scene_roster_only_registered_and_offline_must_exit() -> (
 
 
 @register_check("PLACE-09", "空房间不该锁着门")
-def check_locked_room_not_empty() -> List[CheckFailure]:
+def check_locked_room_not_empty() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -485,7 +485,7 @@ def check_locked_room_not_empty() -> List[CheckFailure]:
 
 
 @register_check("PLACE-10", "门类型与门状态枚举合法")
-def check_door_type_and_flag_enum_valid() -> List[CheckFailure]:
+def check_door_type_and_flag_enum_valid() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -513,7 +513,7 @@ def check_door_type_and_flag_enum_valid() -> List[CheckFailure]:
 
 
 @register_check("PLACE-11", "房间容量档位枚举合法")
-def check_room_area_enum_valid() -> List[CheckFailure]:
+def check_room_area_enum_valid() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -539,7 +539,7 @@ def check_room_area_enum_valid() -> List[CheckFailure]:
 
 
 @register_check("PLACE-12", "移动路径字段必须是现有场景")
-def check_move_path_fields_are_existing_scenes() -> List[CheckFailure]:
+def check_move_path_fields_are_existing_scenes() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -576,7 +576,7 @@ def check_move_path_fields_are_existing_scenes() -> List[CheckFailure]:
 
 
 @register_check("PLACE-13", "移动历史长度与内容合法")
-def check_past_move_position_list_valid() -> List[CheckFailure]:
+def check_past_move_position_list_valid() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -608,7 +608,7 @@ def check_past_move_position_list_valid() -> List[CheckFailure]:
 
 
 @register_check("PLACE-14", "收藏地点必须是合法场景")
-def check_collect_position_list_valid() -> List[CheckFailure]:
+def check_collect_position_list_valid() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -617,7 +617,7 @@ def check_collect_position_list_valid() -> List[CheckFailure]:
       否则地图收藏面板点一下就会跳进不存在的场景
   """
   cache = cache_control.cache
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   scene_data = getattr(cache, "scene_data", {}) or {}
   collect_list = getattr(cache, "collect_position_list", None)
   if not isinstance(collect_list, list):
@@ -639,7 +639,7 @@ def check_collect_position_list_valid() -> List[CheckFailure]:
 
 
 @register_check("PLACE-15", "宿舍字段必须是合法场景或哨兵值")
-def check_dormitory_field_valid_or_sentinel() -> List[CheckFailure]:
+def check_dormitory_field_valid_or_sentinel() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -675,7 +675,7 @@ def check_dormitory_field_valid_or_sentinel() -> List[CheckFailure]:
 
 
 @register_check("PLACE-16", "交互对象id必须存在")
-def check_target_character_id_exists() -> List[CheckFailure]:
+def check_target_character_id_exists() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -706,7 +706,7 @@ def check_target_character_id_exists() -> List[CheckFailure]:
 
 
 @register_check("PLACE-17", "H状态角色的交互对象必须同场")
-def check_h_state_target_same_scene() -> List[CheckFailure]:
+def check_h_state_target_same_scene() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -757,7 +757,7 @@ def check_h_state_target_same_scene() -> List[CheckFailure]:
 
 
 @register_check("PLACE-18", "助理字段只属于玩家")
-def check_assistant_field_only_for_player() -> List[CheckFailure]:
+def check_assistant_field_only_for_player() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -790,7 +790,7 @@ def check_assistant_field_only_for_player() -> List[CheckFailure]:
 
 
 @register_check("PLACE-19", "当前助理必须有效且在线")
-def check_current_assistant_valid_and_online() -> List[CheckFailure]:
+def check_current_assistant_valid_and_online() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -799,9 +799,9 @@ def check_current_assistant_valid_and_online() -> List[CheckFailure]:
       且不带任何离线标记。短路顺序：先查存在再解引用，避免持有id损坏时抛KeyError
   """
   cache = cache_control.cache
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   character_data = getattr(cache, "character_data", {}) or {}
-  npc_id_got: Set[int] = getattr(cache, "npc_id_got", set()) or set()
+  npc_id_got: set[int] = getattr(cache, "npc_id_got", set()) or set()
   pl = character_data.get(0)
   if pl is None:
     return failures
@@ -839,7 +839,7 @@ def check_current_assistant_valid_and_online() -> List[CheckFailure]:
 
 
 @register_check("PLACE-20", "助理服务值域合法")
-def check_assistant_services_value_range() -> List[CheckFailure]:
+def check_assistant_services_value_range() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -878,7 +878,7 @@ def check_assistant_services_value_range() -> List[CheckFailure]:
 
 
 @register_check("PLACE-21", "助理服务键集完整")
-def check_assistant_services_key_set_complete() -> List[CheckFailure]:
+def check_assistant_services_key_set_complete() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -909,7 +909,7 @@ def check_assistant_services_key_set_complete() -> List[CheckFailure]:
 
 
 @register_check("PLACE-22", "同居服务与宿舍一致")
-def check_cohabitation_service_matches_dormitory() -> List[CheckFailure]:
+def check_cohabitation_service_matches_dormitory() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -919,7 +919,7 @@ def check_cohabitation_service_matches_dormitory() -> List[CheckFailure]:
       （Character.dormitory初值即""，该子句守不住任何真实约束）
   """
   cache = cache_control.cache
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   character_data = getattr(cache, "character_data", {}) or {}
   pl = character_data.get(0)
   if pl is None:
@@ -954,7 +954,7 @@ def check_cohabitation_service_matches_dormitory() -> List[CheckFailure]:
 
 
 @register_check("PLACE-23", "跟随模式取值合法")
-def check_follow_mode_value_valid() -> List[CheckFailure]:
+def check_follow_mode_value_valid() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -988,7 +988,7 @@ def check_follow_mode_value_valid() -> List[CheckFailure]:
 
 
 @register_check("PLACE-24", "玩家不跟随自己")
-def check_player_not_following_self() -> List[CheckFailure]:
+def check_player_not_following_self() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -997,7 +997,7 @@ def check_player_not_following_self() -> List[CheckFailure]:
       （唯一能写坏的是debug面板，这正是本条想抓的对象），cache.debug_mode为True时将消息降级为warning
   """
   cache = cache_control.cache
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   character_data = getattr(cache, "character_data", {}) or {}
   pl = character_data.get(0)
   if pl is None:
@@ -1024,7 +1024,7 @@ def check_player_not_following_self() -> List[CheckFailure]:
 
 
 @register_check("PLACE-25", "跟随者必须在册、活着、在线")
-def check_follower_must_be_registered_alive_online() -> List[CheckFailure]:
+def check_follower_must_be_registered_alive_online() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -1036,7 +1036,7 @@ def check_follower_must_be_registered_alive_online() -> List[CheckFailure]:
   cache = cache_control.cache
   failures = []
   character_data = getattr(cache, "character_data", {}) or {}
-  npc_id_got: Set[int] = getattr(cache, "npc_id_got", set()) or set()
+  npc_id_got: set[int] = getattr(cache, "npc_id_got", set()) or set()
   rhodes_island = getattr(cache, "rhodes_island", None)
   visitor_info = getattr(rhodes_island, "visitor_info", {}) or {}
   for cid, c in character_data.items():
@@ -1071,7 +1071,7 @@ def check_follower_must_be_registered_alive_online() -> List[CheckFailure]:
 
 
 @register_check("PLACE-27", "装袋搬运双向一致")
-def check_bagging_consistency() -> List[CheckFailure]:
+def check_bagging_consistency() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -1082,10 +1082,10 @@ def check_bagging_consistency() -> List[CheckFailure]:
       "position==['0','0']"单独不具区分力（那是真实场景"罗德岛出口"），与"不在任何场景名册"合取后才有效
   """
   cache = cache_control.cache
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   character_data = getattr(cache, "character_data", {}) or {}
   scene_data = getattr(cache, "scene_data", {}) or {}
-  npc_id_got: Set[int] = getattr(cache, "npc_id_got", set()) or set()
+  npc_id_got: set[int] = getattr(cache, "npc_id_got", set()) or set()
   pl = character_data.get(0)
   if pl is None:
     return failures
@@ -1170,7 +1170,7 @@ def check_bagging_consistency() -> List[CheckFailure]:
 
 
 @register_check("PLACE-28", "登记宿舍不得停留在与当前宿舍相同的值")
-def check_permanent_dormitory_not_equal_to_dormitory() -> List[CheckFailure]:
+def check_permanent_dormitory_not_equal_to_dormitory() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -1205,7 +1205,7 @@ def check_permanent_dormitory_not_equal_to_dormitory() -> List[CheckFailure]:
 
 
 @register_check("PLACE-29", "登记宿舍非空时必须是合法的普通宿舍房间")
-def check_permanent_dormitory_is_valid_normal_room() -> List[CheckFailure]:
+def check_permanent_dormitory_is_valid_normal_room() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]: 失败记录列表
@@ -1263,7 +1263,7 @@ def _has_scene_tag(scene: object, tag: str) -> bool:
 
 
 @register_check("PLACE-30", "教室标签索引")
-def check_place_30() -> List[CheckFailure]:
+def check_place_30() -> list[CheckFailure]:
   """参数: 无；返回值: List[CheckFailure]；功能: 教育标签索引内路径须存在且带该标签，场景带标签时也须出现在索引中。"""
   cache = cache_control.cache
   from Script.Core import constant
@@ -1332,7 +1332,7 @@ def _check_room_name(
 
 
 @register_check("PLACE-31", "教室名称无歧义")
-def check_place_31() -> List[CheckFailure]:
+def check_place_31() -> list[CheckFailure]:
   """参数: 无；返回值: List[CheckFailure]；功能: 全局课表与个人0–3课型的场景名须唯一对应匹配教育标签的场景，未开放或关闭不报错。"""
   cache = cache_control.cache
   from Script.System.Education_System import education_constant
@@ -1340,7 +1340,7 @@ def check_place_31() -> List[CheckFailure]:
   scenes = getattr(cache, "scene_data", None)
   if not isinstance(scenes, dict):
     return []
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   classroom_tags = set(education_constant.CLASSROOM_TAG_BY_COURSE_TYPE.values())
   schedule = getattr(
       getattr(cache, "rhodes_island", None), "class_schedule", None

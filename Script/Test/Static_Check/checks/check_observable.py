@@ -20,7 +20,7 @@
 
 from __future__ import annotations
 
-from typing import Iterator, List, Optional, Tuple
+from typing import Iterator
 
 from Script.Config import normal_config
 from Script.Core import cache_control, constant
@@ -33,7 +33,7 @@ if TYPE_CHECKING:
   from types import ModuleType
   from Script.Core import game_type
 
-game_config: Optional[ModuleType]
+game_config: ModuleType | None
 try:
   from Script.Config import game_config as _game_config_module
 
@@ -55,7 +55,7 @@ _BATH_BEHAVIOR_TAGS = {
 }
 
 
-def _character_data(cache: game_type.Cache) -> Optional[dict]:
+def _character_data(cache: game_type.Cache) -> dict | None:
   """
   参数: cache 全局缓存对象
   返回值: Optional[dict] 角色字典；结构异常时返回 None
@@ -75,7 +75,7 @@ def _pl(cache: game_type.Cache) -> game_type.Character | None:
   return data.get(0) if data is not None else None
 
 
-def _iter_npcs(cache: game_type.Cache) -> Iterator[Tuple[int, object]]:
+def _iter_npcs(cache: game_type.Cache) -> Iterator[tuple[int, object]]:
   """
   参数: cache 全局缓存对象
   返回值: Iterator[Tuple[int, object]]，依次产出已获得且存在的非玩家角色
@@ -90,7 +90,7 @@ def _iter_npcs(cache: game_type.Cache) -> Iterator[Tuple[int, object]]:
       yield cid, data[cid]
 
 
-def _iter_live(cache: game_type.Cache) -> Iterator[Tuple[int, object]]:
+def _iter_live(cache: game_type.Cache) -> Iterator[tuple[int, object]]:
   """
   参数: cache 全局缓存对象
   返回值: Iterator[Tuple[int, object]]，依次产出玩家和已获得 NPC
@@ -170,7 +170,7 @@ def _scene(cache: game_type.Cache, position: object) -> game_type.Scene | None:
   return scene_data.get(_P(position))
 
 
-def _sleep_level(chara: object) -> Optional[int]:
+def _sleep_level(chara: object) -> int | None:
   """
   参数: chara 角色对象
   返回值: Optional[int] 睡眠等级；配置未载入或字段不可计算时返回 None
@@ -216,7 +216,7 @@ def _offline_context(chara: object) -> str:
 
 
 @register_check("OBS-01", "玩家不在H时同场不得有在H的NPC")
-def check_observable_01() -> List[CheckFailure]:
+def check_observable_01() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]，没有同场 H 残留时为空
@@ -261,7 +261,7 @@ def check_observable_01() -> List[CheckFailure]:
 
 
 @register_check("OBS-02", "玩家有性交体位时场内必须真有人被对应插入")
-def check_observable_02() -> List[CheckFailure]:
+def check_observable_02() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]，玩家体位与场内插入状态一致时为空
@@ -335,7 +335,7 @@ def check_observable_02() -> List[CheckFailure]:
 
 
 @register_check("OBS-03", "完全脱离H的角色不得残留口球")
-def check_observable_03() -> List[CheckFailure]:
+def check_observable_03() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]，没有非H口球残留时为空
@@ -365,7 +365,7 @@ def check_observable_03() -> List[CheckFailure]:
 
 
 @register_check("OBS-04", "透视或信息素开关开启时玩家必须持有对应素质")
-def check_observable_04() -> List[CheckFailure]:
+def check_observable_04() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]，技艺开关均有基础素质支撑时为空
@@ -397,7 +397,7 @@ def check_observable_04() -> List[CheckFailure]:
 
 
 @register_check("OBS-05", "玩家的交互对象必须在当前场景名册里")
-def check_observable_05() -> List[CheckFailure]:
+def check_observable_05() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]，非装袋交互对象在玩家场景名册中时为空
@@ -438,7 +438,7 @@ def check_observable_05() -> List[CheckFailure]:
 
 
 @register_check("OBS-06", "同一角色不得同时处于隐奸模式与露出模式")
-def check_observable_06() -> List[CheckFailure]:
+def check_observable_06() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]，隐奸与露出模式互斥时为空
@@ -476,7 +476,7 @@ def check_observable_06() -> List[CheckFailure]:
 
 
 @register_check("OBS-07", "性爱助手结算必须满足监狱长约束")
-def check_observable_07() -> List[CheckFailure]:
+def check_observable_07() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]，性爱助手设置、监狱长与角色标记一致时为空
@@ -527,7 +527,7 @@ def check_observable_07() -> List[CheckFailure]:
 
 
 @register_check("OBS-08", "醉酒型无意识H不得在醉酒值耗尽后残留")
-def check_observable_08() -> List[CheckFailure]:
+def check_observable_08() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]，unconscious_h=2 均仍有正醉酒值支撑时为空
@@ -565,7 +565,7 @@ def check_observable_08() -> List[CheckFailure]:
 
 
 @register_check("OBS-09", "非群交下至多一名NPC处于阴茎插入中")
-def check_observable_09() -> List[CheckFailure]:
+def check_observable_09() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]，非群交快照中至多一名 NPC 有插入位置时为空
@@ -610,7 +610,7 @@ def check_observable_09() -> List[CheckFailure]:
 
 
 @register_check("OBS-12", "助理跟随服务开启时恢复正常的空闲助理必须在跟随")
-def check_observable_12() -> List[CheckFailure]:
+def check_observable_12() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]，已恢复正常的空闲助理与跟随服务设置一致时为空
@@ -691,7 +691,7 @@ def check_observable_12() -> List[CheckFailure]:
 
 
 @register_check("OBS-13", "非当前助理的角色助理服务位必须全为0")
-def check_observable_13() -> List[CheckFailure]:
+def check_observable_13() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]，只有当前助理持有已实装服务位时为空
@@ -734,7 +734,7 @@ def check_observable_13() -> List[CheckFailure]:
 
 
 @register_check("OBS-16", "洗浴和游泳类行为必须发生在对应设施")
-def check_observable_16() -> List[CheckFailure]:
+def check_observable_16() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]，六类行为均位于对应设施时为空
@@ -780,7 +780,7 @@ def check_observable_16() -> List[CheckFailure]:
 
 
 @register_check("OBS-17", "移动行为中的NPC必须带非空最终目的地")
-def check_observable_17() -> List[CheckFailure]:
+def check_observable_17() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]，所有移动中的 NPC 都带非空 move_final_target 时为空
@@ -820,7 +820,7 @@ def check_observable_17() -> List[CheckFailure]:
 
 
 @register_check("OBS-18", "绳缚值必须是合法配置键")
-def check_observable_18() -> List[CheckFailure]:
+def check_observable_18() -> list[CheckFailure]:
   """
   参数: 无
   返回值: List[CheckFailure]，所有非零 bondage 都能索引配置表时为空

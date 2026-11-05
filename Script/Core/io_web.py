@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """
 Web模式下的IO操作适配器
@@ -11,7 +10,7 @@ from __future__ import annotations
 import threading
 import json
 import copy
-from typing import Dict, Any
+from typing import Any
 from Script.Core import cache_control
 from Script.Core.web_server import update_game_state, emit_realtime_text
 from typing import TYPE_CHECKING
@@ -66,7 +65,7 @@ def _ensure_history_list() -> None:
     cache.web_draw_history_line_total = 0
 
 
-def _calculate_element_lines(element: Dict[str, Any]) -> int:
+def _calculate_element_lines(element: dict[str, Any]) -> int:
   """
   计算绘制元素占用的行数
 
@@ -101,7 +100,7 @@ def _calculate_element_lines(element: Dict[str, Any]) -> int:
   return 1
 
 
-def _record_history_element(element: Dict[str, Any]) -> None:
+def _record_history_element(element: dict[str, Any]) -> None:
   """
   记录历史绘制元素
 
@@ -129,7 +128,7 @@ def _record_history_element(element: Dict[str, Any]) -> None:
 
 
 def append_current_draw_element(
-    element: Dict[str, Any], record_history: bool = True
+    element: dict[str, Any], record_history: bool = True
 ) -> None:
   """
   添加绘制元素并根据需要记录历史

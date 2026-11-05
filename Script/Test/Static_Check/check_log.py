@@ -22,7 +22,6 @@ import datetime
 import json
 import os
 import traceback
-from typing import List, Optional
 
 from Script.Config import normal_config, game_config
 from . import snapshot as snapshot_module
@@ -48,7 +47,7 @@ _MAX_LOG_BYTES: int = 50 * 1024 * 1024
 _log_cap_notice_written: bool = False
 
 # 进程内缓存的已记录检查id集合；None表示尚未初始化（首次写入时从旁车文件加载）
-_seen_check_ids: Optional[set] = None
+_seen_check_ids: set | None = None
 
 
 def _get_version_text() -> str:
@@ -74,7 +73,7 @@ def _load_seen_state() -> set:
       任何异常（文件不存在、JSON损坏、版本不符）都走"当作全新开始"路径，代价只是重记一遍，无害
   """
   try:
-    with open(SEEN_STATE_PATH, "r", encoding="utf-8") as f:
+    with open(SEEN_STATE_PATH, encoding="utf-8") as f:
       state = json.load(f)
     if state.get("version") == _get_version_text() and isinstance(
         state.get("seen"), list
@@ -105,7 +104,7 @@ def _save_seen_state(seen: set) -> None:
     pass
 
 
-def _read_log_version() -> Optional[str]:
+def _read_log_version() -> str | None:
   """
   参数:
       无
@@ -115,7 +114,7 @@ def _read_log_version() -> Optional[str]:
       解析日志文件首行的版本头，供轮转判断使用
   """
   try:
-    with open(LOG_PATH, "r", encoding="utf-8") as f:
+    with open(LOG_PATH, encoding="utf-8") as f:
       first_line = f.readline().strip()
     if first_line.startswith(_VERSION_HEADER_PREFIX):
       return first_line[len(_VERSION_HEADER_PREFIX) :]
@@ -206,7 +205,7 @@ def _build_recent_behavior_text(cache: game_type.Cache) -> str:
 
 
 def _build_involved_character_text(
-    cache: game_type.Cache, involved_character_ids: List[int]
+    cache: game_type.Cache, involved_character_ids: list[int]
 ) -> str:
   """
   参数:
@@ -254,7 +253,7 @@ def _log_size_exceeded() -> bool:
 
 def _build_entry_header_lines(
     cache: game_type.Cache, now_text: str
-) -> List[str]:
+) -> list[str]:
   """
   参数:
       cache: 当前游戏缓存对象
@@ -281,9 +280,9 @@ def _build_entry_header_lines(
 
 
 def write_error_log(
-    failures: List[CheckFailure],
+    failures: list[CheckFailure],
     cache: game_type.Cache,
-    context: Optional[dict] = None,
+    context: dict | None = None,
 ) -> bool:
   """
   参数:
@@ -350,7 +349,7 @@ def write_error_log(
 
 
 def write_repair_log(
-    repair_records: List[dict], cache: game_type.Cache
+    repair_records: list[dict], cache: game_type.Cache
 ) -> None:
   """
   参数:

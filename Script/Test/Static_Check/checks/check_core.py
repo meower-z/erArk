@@ -4,14 +4,12 @@
 提供两个最基础的角色索引一致性检查，用于验证静态检查框架自身管线可用，后续领域检查模块可参照本文件的写法接入。
 """
 
-from typing import List
-
 from Script.Core import cache_control
 from ..check_registry import CheckFailure, register_check, make_failure
 
 
 @register_check("CORE-01", "角色索引一致性")
-def check_npc_id_got_consistency() -> List[CheckFailure]:
+def check_npc_id_got_consistency() -> list[CheckFailure]:
   """
   参数:
       无
@@ -37,7 +35,7 @@ def check_npc_id_got_consistency() -> List[CheckFailure]:
 
 
 @register_check("CORE-02", "交互对象有效性")
-def check_target_character_id_validity() -> List[CheckFailure]:
+def check_target_character_id_validity() -> list[CheckFailure]:
   """
   参数:
       无

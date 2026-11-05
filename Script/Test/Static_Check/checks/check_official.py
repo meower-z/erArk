@@ -2,14 +2,13 @@
 """静态检查系统 - 公务队列与事件履历。不要求历史uid仍在配置表中。"""
 
 from datetime import datetime
-from typing import List
 
 from Script.Core import cache_control
 from ..check_registry import CheckFailure, register_check, make_failure
 
 
 @register_check("OFFICIAL-01", "队列条目")
-def check_official_01() -> List[CheckFailure]:
+def check_official_01() -> list[CheckFailure]:
   """参数: 无；返回值: List[CheckFailure]；功能: 检查队列及字段类型；角色引用失效单独警示。部门id由写入方保存为int。"""
   cache = cache_control.cache
   ri = getattr(cache, "rhodes_island", None)
@@ -77,7 +76,7 @@ def check_official_01() -> List[CheckFailure]:
 
 
 @register_check("OFFICIAL-02", "事件履历")
-def check_official_02() -> List[CheckFailure]:
+def check_official_02() -> list[CheckFailure]:
   """参数: 无；返回值: List[CheckFailure]；功能: 全局与角色履历条目须为dict，time为datetime，choice为非负整数。"""
   cache = cache_control.cache
   histories = [
@@ -109,7 +108,7 @@ def check_official_02() -> List[CheckFailure]:
   for cid, prefix, history in histories:
     if not isinstance(history, dict):
       continue
-    ids: List[int] = [cid] if type(cid) is int else []
+    ids: list[int] = [cid] if type(cid) is int else []
     for uid, entry in history.items():
       key = f"{prefix}[{uid!r}]"
       if not isinstance(entry, dict):

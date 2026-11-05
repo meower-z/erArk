@@ -9,7 +9,7 @@ import sys
 import json
 import importlib
 import traceback
-from typing import Dict, List, Any, Callable, Optional
+from typing import Any, Callable
 from Script.Core import cache_control, game_type
 from typing import TYPE_CHECKING
 
@@ -19,10 +19,10 @@ if TYPE_CHECKING:
 # mod相关的全局变量
 _mod_folder = "mod"
 _mod_config_file = "mod_config.json"
-_loaded_mods: Dict[str, "ModInfo"] = {}
-_original_functions: Dict[str, Callable] = {}  # 保存被替换的原函数
-_mod_functions: Dict[str, Callable] = {}  # mod注册的新函数
-_mod_assets: Dict[str, str] = {}  # mod素材路径映射
+_loaded_mods: dict[str, "ModInfo"] = {}
+_original_functions: dict[str, Callable] = {}  # 保存被替换的原函数
+_mod_functions: dict[str, Callable] = {}  # mod注册的新函数
+_mod_assets: dict[str, str] = {}  # mod素材路径映射
 
 
 class ModInfo:
@@ -75,9 +75,9 @@ class ModManager:
       return
     self._initialized = True
     self.mod_folder = _mod_folder
-    self.mods: Dict[str, ModInfo] = {}
-    self.enabled_mods: List[str] = []
-    self.load_order: List[str] = []
+    self.mods: dict[str, ModInfo] = {}
+    self.enabled_mods: list[str] = []
+    self.load_order: list[str] = []
 
   def get_mod_folder_path(self) -> str:
     """获取mod文件夹的绝对路径"""
@@ -91,7 +91,7 @@ class ModManager:
       )
     return os.path.join(base_path, self.mod_folder)
 
-  def scan_mods(self) -> List[ModInfo]:
+  def scan_mods(self) -> list[ModInfo]:
     """
     扫描mod文件夹，获取所有mod信息
     同一 mod_id 已有记录时，新记录沿用旧记录的加载状态与错误信息
@@ -120,7 +120,7 @@ class ModManager:
         continue
 
       try:
-        with open(info_file, "r", encoding="utf-8") as f:
+        with open(info_file, encoding="utf-8") as f:
           info_dict = json.load(f)
         mod_id = info_dict.get("mod_id", item)
         mod_info = ModInfo(mod_id, info_dict, item_path)
@@ -143,7 +143,7 @@ class ModManager:
       return
 
     try:
-      with open(config_path, "r", encoding="utf-8") as f:
+      with open(config_path, encoding="utf-8") as f:
         config = json.load(f)
 
       self.enabled_mods = config.get("enabled_mods", [])
@@ -194,7 +194,7 @@ class ModManager:
     self.save_mod_config()
     return True
 
-  def set_load_order(self, order: List[str]) -> None:
+  def set_load_order(self, order: list[str]) -> None:
     """设置mod加载顺序"""
     self.load_order = order
     self.save_mod_config()
@@ -227,7 +227,7 @@ class ModManager:
     self.save_mod_config()
     return True
 
-  def get_sorted_enabled_mods(self) -> List[ModInfo]:
+  def get_sorted_enabled_mods(self) -> list[ModInfo]:
     """获取按加载顺序排序的已启用mod列表"""
     result = []
     # 先按load_order排序
@@ -240,7 +240,7 @@ class ModManager:
         result.append(self.mods[mod_id])
     return result
 
-  def load_all_enabled_mods(self) -> Dict[str, str]:
+  def load_all_enabled_mods(self) -> dict[str, str]:
     """
     加载所有已启用的mod
     返回:  {mod_id:  error_message} 加载失败的mod及错误信息
@@ -308,7 +308,7 @@ class ModManager:
       return
 
     try:
-      with open(file_path, "r", encoding="utf-8") as f:
+      with open(file_path, encoding="utf-8") as f:
         reader = csv.DictReader(f)
         rows = list(reader)
 
@@ -339,7 +339,7 @@ class ModManager:
       raise FileNotFoundError(f"脚本文件不存在: {script_path}")
 
     # 读取脚本内容
-    with open(script_path, "r", encoding="utf-8") as f:
+    with open(script_path, encoding="utf-8") as f:
       script_content = f.read()
 
     # 创建mod的执行命名空间
@@ -463,7 +463,7 @@ def get_mod_manager() -> ModManager:
   return ModManager()
 
 
-def get_mod_asset_path(mod_id: str, alias: str) -> Optional[str]:
+def get_mod_asset_path(mod_id: str, alias: str) -> str | None:
   """
   获取mod素材的实际路径
 
@@ -494,7 +494,7 @@ def get_mod_asset_path(mod_id: str, alias: str) -> Optional[str]:
 
 def get_original_function(
     module_path: str, function_name: str
-) -> Optional[Callable]:
+) -> Callable | None:
   """
   获取被替换的原函数
 
@@ -529,7 +529,7 @@ def call_original_function(
   return original(*args, **kwargs)
 
 
-def get_mod_function(key: str) -> Optional[Callable]:
+def get_mod_function(key: str) -> Callable | None:
   """获取mod注册的函数"""
   return _mod_functions.get(key, None)
 

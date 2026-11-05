@@ -3,13 +3,13 @@
 import random
 import bisect
 import numpy
-from typing import Dict, List, TypeVar
+from typing import TypeVar
 
 Key = TypeVar("Key")
 """ 字典键的类型 """
 
 
-def get_rand_value_for_value_region(value_list: List[float]) -> float:
+def get_rand_value_for_value_region(value_list: list[float]) -> float:
   """
   以列表中每个元素的值作为权重随机获取一个元素
   Keyword arguments:
@@ -20,7 +20,7 @@ def get_rand_value_for_value_region(value_list: List[float]) -> float:
   return random.choices(value_list, weights=value_list)[0]
 
 
-def get_random_for_weight(data: Dict[Key, int]) -> Key:
+def get_random_for_weight(data: dict[Key, int]) -> Key:
   """
   按权重随机获取dict中的一个key
   Keyword arguments:
@@ -31,7 +31,7 @@ def get_random_for_weight(data: Dict[Key, int]) -> Key:
   return random.choices(keys, weights=weights)[0]
 
 
-def get_old_value_for_list(now_int: int, int_list: List[int]) -> int:
+def get_old_value_for_list(now_int: int, int_list: list[int]) -> int:
   """
   获取列表中第一个比指定值小的数
   Keyword arguments:
@@ -44,7 +44,7 @@ def get_old_value_for_list(now_int: int, int_list: List[int]) -> int:
   return int_list[now_id - 1]
 
 
-def list_of_groups(init_list: list, children_list_len: int) -> List[list]:
+def list_of_groups(init_list: list, children_list_len: int) -> list[list]:
   """
   将列表分割为指定长度的列表集合
   Keyword arguments:

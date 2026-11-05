@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import datetime
 import math
-from typing import List, Optional, Tuple, TypeGuard
+from typing import TypeGuard
 
 from Script.Core import cache_control
 from ..check_registry import CheckFailure, register_check, make_failure
@@ -39,7 +39,7 @@ def _num(x: object) -> bool:
   )
 
 
-def _get_config_sets() -> Tuple[Optional[set], Optional[set], Optional[dict]]:
+def _get_config_sets() -> tuple[set | None, set | None, dict | None]:
   """
   参数:
       无
@@ -92,7 +92,7 @@ def _name(chara: object) -> str:
   return str(getattr(chara, "name", "?"))
 
 
-def _cloth_locs(chara: object) -> Optional[List[Tuple[str, dict]]]:
+def _cloth_locs(chara: object) -> list[tuple[str, dict]] | None:
   """
   参数:
       chara: 角色对象
@@ -135,7 +135,7 @@ def _talent_get(chara: object, talent_id: int) -> int:
   return value if isinstance(value, int) and not isinstance(value, bool) else 0
 
 
-def _dirty_tables(chara: object) -> Optional[List[Tuple[str, dict]]]:
+def _dirty_tables(chara: object) -> list[tuple[str, dict]] | None:
   """
   参数:
       chara: 角色对象
@@ -176,7 +176,7 @@ def _semen_entry_ok(v: object) -> TypeGuard[list]:
 
 
 @register_check("BODY-01", "服装四容器的部位键完整")
-def check_cloth_container_keys() -> List[CheckFailure]:
+def check_cloth_container_keys() -> list[CheckFailure]:
   """
   参数:
       无
@@ -236,7 +236,7 @@ def check_cloth_container_keys() -> List[CheckFailure]:
 
 
 @register_check("BODY-02", "服装id有效且在正确槽位")
-def check_cloth_id_validity() -> List[CheckFailure]:
+def check_cloth_id_validity() -> list[CheckFailure]:
   """
   参数:
       无
@@ -283,7 +283,7 @@ def check_cloth_id_validity() -> List[CheckFailure]:
 
 
 @register_check("BODY-03", "同一槽位内不得有重复服装id")
-def check_cloth_slot_duplicates() -> List[CheckFailure]:
+def check_cloth_slot_duplicates() -> list[CheckFailure]:
   """
   参数:
       无
@@ -317,7 +317,7 @@ def check_cloth_slot_duplicates() -> List[CheckFailure]:
 
 
 @register_check("BODY-04", "穿着与脱下不应相交")
-def check_wear_off_disjoint() -> List[CheckFailure]:
+def check_wear_off_disjoint() -> list[CheckFailure]:
   """
   参数:
       无
@@ -366,7 +366,7 @@ def check_wear_off_disjoint() -> List[CheckFailure]:
 
 
 @register_check("BODY-06", "角色专属服装不得出现在他人处")
-def check_exclusive_cloth_owner() -> List[CheckFailure]:
+def check_exclusive_cloth_owner() -> list[CheckFailure]:
   """
   参数:
       无
@@ -408,7 +408,7 @@ def check_exclusive_cloth_owner() -> List[CheckFailure]:
 
 
 @register_check("BODY-07", "内衣可见性字典形状")
-def check_cloth_see_shape() -> List[CheckFailure]:
+def check_cloth_see_shape() -> list[CheckFailure]:
   """
   参数:
       无
@@ -442,7 +442,7 @@ def check_cloth_see_shape() -> List[CheckFailure]:
 
 
 @register_check("BODY-08", "装备情况数值有界")
-def check_equipment_condition_bound() -> List[CheckFailure]:
+def check_equipment_condition_bound() -> list[CheckFailure]:
   """
   参数:
       无
@@ -471,7 +471,7 @@ def check_equipment_condition_bound() -> List[CheckFailure]:
 
 
 @register_check("BODY-09", "装饰避孕套挂点合法")
-def check_condom_decoration() -> List[CheckFailure]:
+def check_condom_decoration() -> list[CheckFailure]:
   """
   参数:
       无
@@ -539,7 +539,7 @@ def check_condom_decoration() -> List[CheckFailure]:
 
 
 @register_check("BODY-10", "精液记录表键集与条目形状")
-def check_semen_table_shape() -> List[CheckFailure]:
+def check_semen_table_shape() -> list[CheckFailure]:
   """
   参数:
       无
@@ -611,7 +611,7 @@ def check_semen_table_shape() -> List[CheckFailure]:
 
 
 @register_check("BODY-11", "精液量非负")
-def check_semen_non_negative() -> List[CheckFailure]:
+def check_semen_non_negative() -> list[CheckFailure]:
   """
   参数:
       无
@@ -651,7 +651,7 @@ def check_semen_non_negative() -> List[CheckFailure]:
 
 
 @register_check("BODY-12", "累计精液量不小于当前量")
-def check_semen_total_ge_current() -> List[CheckFailure]:
+def check_semen_total_ge_current() -> list[CheckFailure]:
   """
   参数:
       无
@@ -686,7 +686,7 @@ def check_semen_total_ge_current() -> List[CheckFailure]:
 
 
 @register_check("BODY-13", "精液等级与当前量同步")
-def check_semen_level_sync() -> List[CheckFailure]:
+def check_semen_level_sync() -> list[CheckFailure]:
   """
   参数:
       无
@@ -735,7 +735,7 @@ def check_semen_level_sync() -> List[CheckFailure]:
 
 
 @register_check("BODY-14", "衣柜精液与在穿精液不得共享list对象")
-def check_semen_list_aliasing() -> List[CheckFailure]:
+def check_semen_list_aliasing() -> list[CheckFailure]:
   """
   参数:
       无
@@ -784,7 +784,7 @@ def check_semen_list_aliasing() -> List[CheckFailure]:
 
 
 @register_check("BODY-15", "兽部有精液则须有对应兽部素质")
-def check_beast_part_semen_talent() -> List[CheckFailure]:
+def check_beast_part_semen_talent() -> list[CheckFailure]:
   """
   参数:
       无
@@ -815,7 +815,7 @@ def check_beast_part_semen_talent() -> List[CheckFailure]:
 
 
 @register_check("BODY-16", "灌肠状态与容量配对")
-def check_enema_state() -> List[CheckFailure]:
+def check_enema_state() -> list[CheckFailure]:
   """
   参数:
       无
@@ -852,7 +852,7 @@ def check_enema_state() -> List[CheckFailure]:
 
 
 @register_check("BODY-17", "精液流通表结构合法")
-def check_semen_flow_shape() -> List[CheckFailure]:
+def check_semen_flow_shape() -> list[CheckFailure]:
   """
   参数:
       无
@@ -918,7 +918,7 @@ def check_semen_flow_shape() -> List[CheckFailure]:
 
 
 @register_check("BODY-18", "玩家不应有精液流通")
-def check_player_no_semen_flow() -> List[CheckFailure]:
+def check_player_no_semen_flow() -> list[CheckFailure]:
   """
   参数:
       无
@@ -953,7 +953,7 @@ def check_player_no_semen_flow() -> List[CheckFailure]:
 
 
 @register_check("BODY-19", "无意识精液记录列表有效且去重")
-def check_unconscious_semen_lists() -> List[CheckFailure]:
+def check_unconscious_semen_lists() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1001,7 +1001,7 @@ def check_unconscious_semen_lists() -> List[CheckFailure]:
 
 
 @register_check("BODY-20", "阴茎污浊字典键值")
-def check_penis_dirty_dict() -> List[CheckFailure]:
+def check_penis_dirty_dict() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1033,7 +1033,7 @@ def check_penis_dirty_dict() -> List[CheckFailure]:
 
 
 @register_check("BODY-21", "生理周期日为配置内合法值")
-def check_reproduction_period() -> List[CheckFailure]:
+def check_reproduction_period() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1070,7 +1070,7 @@ def check_reproduction_period() -> List[CheckFailure]:
 
 
 @register_check("BODY-22", "受精/妊娠/临盆三阶段互斥")
-def check_pregnancy_stage_exclusive() -> List[CheckFailure]:
+def check_pregnancy_stage_exclusive() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1096,7 +1096,7 @@ def check_pregnancy_stage_exclusive() -> List[CheckFailure]:
 
 
 @register_check("BODY-23", "产后/育儿互斥且须有可追溯的孩子")
-def check_postpartum_child() -> List[CheckFailure]:
+def check_postpartum_child() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1141,7 +1141,7 @@ def check_postpartum_child() -> List[CheckFailure]:
 
 
 @register_check("BODY-24", "怀孕中须有有效受精时间")
-def check_fertilization_time() -> List[CheckFailure]:
+def check_fertilization_time() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1175,7 +1175,7 @@ def check_fertilization_time() -> List[CheckFailure]:
 
 
 @register_check("BODY-25", "孕肚素质与妊娠/临盆绑定")
-def check_pregnancy_belly_talent() -> List[CheckFailure]:
+def check_pregnancy_belly_talent() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1205,7 +1205,7 @@ def check_pregnancy_belly_talent() -> List[CheckFailure]:
 
 
 @register_check("BODY-26", "乳汁量有界且上限为正")
-def check_milk_bounds() -> List[CheckFailure]:
+def check_milk_bounds() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1237,7 +1237,7 @@ def check_milk_bounds() -> List[CheckFailure]:
 
 
 @register_check("BODY-27", "涨奶标记蕴含泌乳素质")
-def check_lactation_flag() -> List[CheckFailure]:
+def check_lactation_flag() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1263,7 +1263,7 @@ def check_lactation_flag() -> List[CheckFailure]:
 
 
 @register_check("BODY-28", "罩杯素质有且只有一个")
-def check_cup_talent_unique() -> List[CheckFailure]:
+def check_cup_talent_unique() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1291,7 +1291,7 @@ def check_cup_talent_unique() -> List[CheckFailure]:
 
 
 @register_check("BODY-29", "臀/腿/足素质各组至多一个")
-def check_body_part_talent_groups() -> List[CheckFailure]:
+def check_body_part_talent_groups() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1318,7 +1318,7 @@ def check_body_part_talent_groups() -> List[CheckFailure]:
 
 
 @register_check("BODY-30", "动态女儿年龄阶段素质有且只有一个")
-def check_age_stage_talent() -> List[CheckFailure]:
+def check_age_stage_talent() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1350,7 +1350,7 @@ def check_age_stage_talent() -> List[CheckFailure]:
 
 
 @register_check("BODY-31", "素质字典完整且取值为0/1")
-def check_talent_dict_shape() -> List[CheckFailure]:
+def check_talent_dict_shape() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1401,7 +1401,7 @@ def check_talent_dict_shape() -> List[CheckFailure]:
 
 
 @register_check("BODY-32", "精液流通源须仍有可扣减的容器")
-def check_semen_flow_source_container() -> List[CheckFailure]:
+def check_semen_flow_source_container() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1444,7 +1444,7 @@ def check_semen_flow_source_container() -> List[CheckFailure]:
 
 
 @register_check("BODY-33", "机械体妊娠须有生育模组")
-def check_mechanical_pregnancy() -> List[CheckFailure]:
+def check_mechanical_pregnancy() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1476,7 +1476,7 @@ def check_mechanical_pregnancy() -> List[CheckFailure]:
 
 
 @register_check("BODY-34", "产后/育儿所引用的孩子须有有效出生时间")
-def check_child_born_time() -> List[CheckFailure]:
+def check_child_born_time() -> list[CheckFailure]:
   """
   参数:
       无
@@ -1525,7 +1525,7 @@ def check_child_born_time() -> List[CheckFailure]:
 
 
 @register_check("BODY-35", "个人服装模板列表有效")
-def check_clothing_tem_list() -> List[CheckFailure]:
+def check_clothing_tem_list() -> list[CheckFailure]:
   """
   参数:
       无

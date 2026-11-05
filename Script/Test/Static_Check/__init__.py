@@ -11,7 +11,6 @@ run_all_checks() 只运行全部检查并返回失败列表；LOG_PATH 供游戏
 """
 
 import traceback
-from typing import List
 
 from Script.Core import cache_control
 
@@ -30,7 +29,7 @@ except Exception as _import_error:
   check_log.write_self_error_log(_import_error)
 
 
-def run_all_checks() -> List[CheckFailure]:
+def run_all_checks() -> list[CheckFailure]:
   """
   参数:
       无
@@ -40,7 +39,7 @@ def run_all_checks() -> List[CheckFailure]:
       对当前全局状态逐一执行全部已注册检查。每个检查函数单独隔离；检查内部异常会转换为一条带检查名的
       CheckFailure，不会中断其余检查项
   """
-  failures: List[CheckFailure] = []
+  failures: list[CheckFailure] = []
   for check_id, (check_name, check_func) in get_all_checks().items():
     try:
       failures.extend(check_func())
@@ -80,7 +79,7 @@ def run_turn_check() -> bool:
     return False
 
 
-def run_load_repair() -> List[dict]:
+def run_load_repair() -> list[dict]:
   """
   参数:
       无
