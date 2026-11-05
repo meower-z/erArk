@@ -13,7 +13,6 @@
 """
 
 from types import FunctionType
-from typing import Tuple
 
 from Script.Core import cache_control, game_type, get_text
 
@@ -53,7 +52,7 @@ EFFECTIVENESS_MAX = 200
 """ 基地效率的上限，与 basement.settle_office_work 的夹逼保持一致 """
 
 
-def parse_value_type(type_text: str) -> Tuple[str, int]:
+def parse_value_type(type_text: str) -> tuple[str, int]:
   """
   把 token 里的类型段拆成 (类型, 子id)
   Keyword arguments:

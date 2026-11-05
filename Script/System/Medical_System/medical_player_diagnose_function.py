@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Set
 from types import FunctionType
 
 from Script.Config import game_config
@@ -43,9 +42,9 @@ def _clear_player_session_state(
 
 
 def _acquire_patient_for_player(
-    doctor_character: Optional[game_type.Character],
-    rhodes_island: Optional[game_type.Rhodes_Island],
-) -> Optional[medical_constant.MedicalPatient]:
+    doctor_character: game_type.Character | None,
+    rhodes_island: game_type.Rhodes_Island | None,
+) -> medical_constant.MedicalPatient | None:
   """根据当前优先策略为玩家诊疗会话选定病人。
 
   参数:
@@ -69,7 +68,7 @@ def _acquire_patient_for_player(
       return patient
 
   # 过滤出符合状态与医生绑定条件的候选病人。
-  candidates: List[medical_constant.MedicalPatient] = []
+  candidates: list[medical_constant.MedicalPatient] = []
   for patient in rhodes_island.medical_patients_today.values():
     if patient.state not in medical_constant.WAITING_QUEUE_STATE_SET:
       continue
@@ -89,10 +88,10 @@ def _acquire_patient_for_player(
 
 
 def start_player_diagnose_session(
-    doctor_character: Optional[game_type.Character] = None,
+    doctor_character: game_type.Character | None = None,
     *,
-    target_base: Optional[game_type.Rhodes_Island] = None,
-) -> Optional[medical_constant.MedicalPatient]:
+    target_base: game_type.Rhodes_Island | None = None,
+) -> medical_constant.MedicalPatient | None:
   """
   初始化玩家诊疗会话。
 
@@ -145,10 +144,10 @@ def start_player_diagnose_session(
 
 
 def abort_player_diagnose_session(
-    doctor_character: Optional[game_type.Character] = None,
+    doctor_character: game_type.Character | None = None,
     *,
-    patient: Optional[medical_constant.MedicalPatient] = None,
-    target_base: Optional[game_type.Rhodes_Island] = None,
+    patient: medical_constant.MedicalPatient | None = None,
+    target_base: game_type.Rhodes_Island | None = None,
 ) -> None:
   """终止玩家诊疗会话并恢复病人原始状态。"""
 
@@ -191,11 +190,11 @@ def abort_player_diagnose_session(
 
 
 def commit_player_diagnose_session(
-    doctor_character: Optional[game_type.Character] = None,
+    doctor_character: game_type.Character | None = None,
     *,
-    patient: Optional[medical_constant.MedicalPatient] = None,
-    target_base: Optional[game_type.Rhodes_Island] = None,
-) -> Dict[str, object]:
+    patient: medical_constant.MedicalPatient | None = None,
+    target_base: game_type.Rhodes_Island | None = None,
+) -> dict[str, object]:
   """完成玩家诊疗流程并返回结算摘要"""
 
   # 校验基地上下文
@@ -276,11 +275,11 @@ def commit_player_diagnose_session(
 
 
 def execute_player_diagnose_checks(
-    selections: List[Dict[str, int]],
+    selections: list[dict[str, int]],
     *,
-    patient: Optional[medical_constant.MedicalPatient] = None,
-    target_base: Optional[game_type.Rhodes_Island] = None,
-) -> Dict[str, object]:
+    patient: medical_constant.MedicalPatient | None = None,
+    target_base: game_type.Rhodes_Island | None = None,
+) -> dict[str, object]:
   """执行玩家选择的检查条目并记录结果。"""
 
   # 验证基地上下文。
@@ -308,15 +307,15 @@ def execute_player_diagnose_checks(
   patient.player_used_checks = used_checks
 
   # 记录已确诊与实际存在的并发症集合，供比对使用。
-  confirmed_set: Set[int] = set(
+  confirmed_set: set[int] = set(
       int(cid) for cid in getattr(patient, "player_confirmed_complications", [])
   )
-  actual_complications: Set[int] = {
+  actual_complications: set[int] = {
       int(cid) for cid in getattr(patient, "complications", [])
   }
 
   # 将追踪信息转换成便于检索的列表结构。
-  trace_info: List[Dict[str, int]] = [
+  trace_info: list[dict[str, int]] = [
       {
           "system_id": int(entry.get("system_id", 0)),
           "part_id": int(entry.get("part_id", 0)),
@@ -327,7 +326,7 @@ def execute_player_diagnose_checks(
   ]
 
   # 预处理每个部位的最高严重程度，用于回诊提示。
-  highest_severity_by_part: Dict[int, int] = {}
+  highest_severity_by_part: dict[int, int] = {}
   for entry in trace_info:
     part_id = entry["part_id"]
     severity_level = entry["severity_level"]
@@ -335,7 +334,7 @@ def execute_player_diagnose_checks(
         highest_severity_by_part.get(part_id, -1), severity_level
     )
 
-  records: List[Dict[str, object]] = []
+  records: list[dict[str, object]] = []
   for option in selections:
     comp_id = int(option.get("cid", 0) or 0)
     system_id = int(option.get("system_id", 0) or 0)
@@ -396,7 +395,7 @@ def execute_player_diagnose_checks(
     records.append(record)
 
   # 将本次检查结果写入记录，并保留最近 30 条。
-  previous_records: List[Dict[str, object]] = list(
+  previous_records: list[dict[str, object]] = list(
       getattr(patient, "player_check_records", [])
   )
   previous_records.extend(records)
@@ -412,8 +411,8 @@ def execute_player_diagnose_checks(
 
 
 def build_player_check_catalog(
-    patient: Optional[medical_constant.MedicalPatient],
-) -> Dict[int, Dict[str, object]]:
+    patient: medical_constant.MedicalPatient | None,
+) -> dict[int, dict[str, object]]:
   """构建玩家诊疗用的系统/部位/并发症选择树。"""
 
   # 未指定病人时返回空目录。
@@ -421,7 +420,7 @@ def build_player_check_catalog(
     return {}
 
   # 按系统遍历配置，构建嵌套的选择结构。
-  catalog: Dict[int, Dict[str, object]] = {}
+  catalog: dict[int, dict[str, object]] = {}
   for system_id, part_map in sorted(
       game_config.config_medical_body_system_by_system.items()
   ):
@@ -435,14 +434,14 @@ def build_player_check_catalog(
         else f"System {system_id}"
     )
 
-    part_catalog: Dict[int, Dict[str, object]] = {}
+    part_catalog: dict[int, dict[str, object]] = {}
     for part_id, part_info in sorted(part_map.items()):
       if part_info is None:
         continue
       complication_map = game_config.config_medical_complication_detail.get(
           system_id, {}
       ).get(part_id, {})
-      options: List[Dict[str, object]] = []
+      options: list[dict[str, object]] = []
       for severity_level in sorted(complication_map.keys()):
         for comp in complication_map[severity_level]:
           # 将并发症配置映射为玩家可选择的条目。
@@ -476,10 +475,10 @@ def build_player_check_catalog(
 
 
 def estimate_patient_treatment_summary(
-    patient: Optional[medical_constant.MedicalPatient],
+    patient: medical_constant.MedicalPatient | None,
     *,
-    target_base: Optional[game_type.Rhodes_Island] = None,
-) -> Dict[str, object]:
+    target_base: game_type.Rhodes_Island | None = None,
+) -> dict[str, object]:
   """估算诊疗收益与资源需求摘要。
 
   参数:
@@ -516,7 +515,7 @@ def estimate_patient_treatment_summary(
   # 当前病情的的药费收益系数
   medicine_income_ratio = float(severity_config.medicine_income_ratio or 0.0)
   predicted_medicine_income = 0.0
-  resource_summary: List[Dict[str, object]] = []
+  resource_summary: list[dict[str, object]] = []
   # 遍历病人所需的药物资源，计算潜在收益并构造摘要
   for resource_id, amount in patient.need_resources.items():
     need_value = float(amount or 0.0)

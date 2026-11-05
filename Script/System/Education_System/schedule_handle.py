@@ -12,7 +12,6 @@
 from __future__ import annotations
 
 from types import FunctionType
-from typing import Dict, List, Optional, Tuple
 from Script.Core import cache_control, game_type, constant, get_text
 from Script.Config import game_config
 from Script.Design import game_time, map_handle
@@ -73,7 +72,7 @@ def get_classroom_sort_key(classroom: str) -> int:
   return len(education_constant.CLASSROOM_NUMBER_ORDER)
 
 
-def get_classroom_list(course_type: int = -1) -> List[str]:
+def get_classroom_list(course_type: int = -1) -> list[str]:
   """
   取可排课的教室场景名列表
   Keyword arguments:
@@ -121,7 +120,7 @@ def get_course_type_by_classroom(classroom: str) -> int:
   return -1
 
 
-def get_course_type_by_position(position: List[str]) -> int:
+def get_course_type_by_position(position: list[str]) -> int:
   """
   按所在位置判一节课的课型（玩家手动授课用，Plan 31 收拢）
   Keyword arguments:
@@ -141,7 +140,7 @@ def get_course_type_by_position(position: List[str]) -> int:
   return education_constant.COURSE_TYPE_THEORY
 
 
-def get_classroom_position(classroom: str) -> List[str]:
+def get_classroom_position(classroom: str) -> list[str]:
   """
   按教室场景名取它的场景路径，供移动使用
   Keyword arguments:
@@ -156,7 +155,7 @@ def get_classroom_position(classroom: str) -> List[str]:
   return []
 
 
-def get_today_temp_class(week_day: int, period: int) -> Optional[dict]:
+def get_today_temp_class(week_day: int, period: int) -> dict | None:
   """
   取覆盖层要用的临时性技实操课：只在查询的星期正好是今天时才有，且已下课（ended）的不算
   Keyword arguments:
@@ -179,7 +178,7 @@ def get_today_temp_class(week_day: int, period: int) -> Optional[dict]:
 
 def get_class_cell(
     classroom: str, week_day: int, period: int, include_temp: bool = True
-) -> Optional[List[int]]:
+) -> list[int] | None:
   """
   取全局课表上的一个格子
   Keyword arguments:
@@ -240,7 +239,7 @@ def clear_class_cell(classroom: str, week_day: int, period: int) -> None:
 
 def get_teacher_cell(
     teacher_id: int, week_day: int, period: int, include_temp: bool = True
-) -> Optional[Tuple[str, int]]:
+) -> tuple[str, int] | None:
   """
   反查某位教师在某节次要去哪间教室教什么（教师个人课表由全局课表反查，不另存字段）
   Keyword arguments:
@@ -292,7 +291,7 @@ def judge_schedule_teacher(character_id: int) -> bool:
 
 def get_upcoming_teaching(
     character_id: int, minute_limit: int = education_constant.UPCOMING_MINUTE
-) -> Optional[dict]:
+) -> dict | None:
   """
   取教师接下来 minute_limit 分钟内要开始的那一节课（到岗时间与课间用，2026-09-12 第五轮）
   Keyword arguments:
@@ -335,7 +334,7 @@ def get_upcoming_teaching(
 
 def get_teacher_week_schedule(
     teacher_id: int,
-) -> Dict[int, Dict[int, Tuple[str, int]]]:
+) -> dict[int, dict[int, tuple[str, int]]]:
   """
   反查某位教师的整周课表
   Keyword arguments:
@@ -343,7 +342,7 @@ def get_teacher_week_schedule(
   Return arguments:
   Dict[int, Dict[int, Tuple[str, int]]] -- {星期: {节次: (教室场景名, 科目能力id)}}
   """
-  result: Dict[int, Dict[int, Tuple[str, int]]] = {}
+  result: dict[int, dict[int, tuple[str, int]]] = {}
   for classroom, week_data in cache.rhodes_island.class_schedule.items():
     for week_day, period_data in week_data.items():
       for period, cell in period_data.items():
@@ -366,7 +365,7 @@ def get_teacher_week_schedule(
 
 def get_selected_course(
     character_id: int, week_day: int, period: int
-) -> Optional[List]:
+) -> list | None:
   """
   取某角色个人课表上的一个格子
   Keyword arguments:
@@ -459,7 +458,7 @@ def get_period_left_minute(
   return max(1, end_minute - (now_time.hour * 60 + now_time.minute))
 
 
-def get_now_course(character_id: int) -> Optional[dict]:
+def get_now_course(character_id: int) -> dict | None:
   """
   取角色当前这一节次要上的课（Plan 22 的统一入口，供 AI、结算与 <课> 状态标识共用）
   Keyword arguments:
@@ -483,7 +482,7 @@ def get_now_course(character_id: int) -> Optional[dict]:
 
 def get_upcoming_course(
     character_id: int, minute_limit: int = education_constant.UPCOMING_MINUTE
-) -> Optional[dict]:
+) -> dict | None:
   """
   取学生接下来 minute_limit 分钟内要开始的那一节课（到岗时间与课间用）
   Keyword arguments:
@@ -516,7 +515,7 @@ def get_upcoming_course(
 
 def get_course_at(
     character_id: int, now_time: datetime.datetime, period: int
-) -> Optional[dict]:
+) -> dict | None:
   """
   取角色在某一天某一节要上的课（get_now_course / get_upcoming_course 的共用实现）
   Keyword arguments:
@@ -585,7 +584,7 @@ def get_course_at(
   return result
 
 
-def get_now_teaching(character_id: int) -> Optional[dict]:
+def get_now_teaching(character_id: int) -> dict | None:
   """
   取角色当前这一节次要教的课（教师视角，由全局课表反查）
   Keyword arguments:
@@ -627,7 +626,7 @@ def get_now_teaching(character_id: int) -> Optional[dict]:
   }
 
 
-def get_teacher_candidate_list() -> List[int]:
+def get_teacher_candidate_list() -> list[int]:
   """
   取可被排进课表的教师候选列表（只有教师岗位的干员，不做临时调度）
   Keyword arguments:
@@ -697,7 +696,7 @@ def get_intern_mentor(character_id: int, work_type_id: int) -> int:
   return -1
 
 
-def get_course_place(now_course: dict) -> List[str]:
+def get_course_place(now_course: dict) -> list[str]:
   """
   取一节课该去的场景路径（六种课型统一入口，供AI与状态机共用）
   Keyword arguments:
@@ -846,7 +845,7 @@ def judge_interest_course_is_read_book(course: dict) -> bool:
   )
 
 
-_BEHAVIOR_NAME_BY_CID: Dict[int, str] = {}
+_BEHAVIOR_NAME_BY_CID: dict[int, str] = {}
 """ 行为cid → en_name 的反查缓存。config_behavior 是按 en_name 索引的，没有现成的反向表 """
 
 

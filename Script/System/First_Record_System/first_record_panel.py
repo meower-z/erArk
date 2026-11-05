@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 from types import FunctionType
 from Script.UI.Moudle import draw
 from Script.Core import cache_control, game_type, get_text
@@ -513,9 +513,9 @@ class FirstRecordText:
     """ 要绘制的角色id """
     self.width = width
     """ 面板最大宽度 """
-    self.draw_list: List = []
+    self.draw_list: list = []
     """ 绘制的对象列表 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 当前面板监听的按钮列表 """
 
     character_data = cache.character_data[character_id]
@@ -634,12 +634,12 @@ class See_Character_First_Record_Panel:
     """初始化绘制对象"""
     head_draw = character_info_head.CharacterInfoHead(character_id, width)
     record_draw = FirstRecordText(character_id, width)
-    self.draw_list: List = [
+    self.draw_list: list = [
         head_draw,
         record_draw,
     ]
     """ 绘制的面板列表 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 当前面板监听的按钮列表 """
 
   def draw(self) -> None:

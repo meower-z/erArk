@@ -18,7 +18,6 @@
 import datetime
 import random
 from types import FunctionType
-from typing import Optional, List, Tuple
 
 from Script.Core import cache_control, game_type, get_text
 from Script.Design import game_time, map_handle
@@ -63,7 +62,7 @@ def parse_class_key(class_key: str) -> tuple:
     return -1, -1
 
 
-def get_temp_class(date_ordinal: int, period: int) -> Optional[dict]:
+def get_temp_class(date_ordinal: int, period: int) -> dict | None:
   """
   取某天某节次的临时性技实操课
   Keyword arguments:
@@ -77,7 +76,7 @@ def get_temp_class(date_ordinal: int, period: int) -> Optional[dict]:
   )
 
 
-def get_active_temp_class(date_ordinal: int, period: int) -> Optional[dict]:
+def get_active_temp_class(date_ordinal: int, period: int) -> dict | None:
   """
   取某天某节次**还没下课**的临时性技实操课（课表覆盖层与必修判定用）
   Keyword arguments:
@@ -99,9 +98,9 @@ def set_temp_class(
     period: int,
     classroom: str,
     ability_id: int,
-    must_attend: Optional[List[int]] = None,
+    must_attend: list[int] | None = None,
     running: bool = False,
-    notified: Optional[list] = None,
+    notified: list | None = None,
 ) -> dict:
   """
   排一节临时性技实操课（已存在则覆盖）
@@ -150,7 +149,7 @@ def del_temp_class(date_ordinal: int, period: int) -> None:
   )
 
 
-def get_running_class() -> Optional[dict]:
+def get_running_class() -> dict | None:
   """
   取当前正在进行的那节实操课
   Keyword arguments:
@@ -194,7 +193,7 @@ def get_scene_name(scene_path: list) -> str:
 
 def find_reserved_class(
     classroom: str, now_time: datetime.datetime
-) -> Tuple[str, Optional[dict]]:
+) -> tuple[str, dict | None]:
   """
   在今天的临时课里找这间教室等着开讲的那节预约（Plan 26 §3.5）
   Keyword arguments:
@@ -238,7 +237,7 @@ def find_reserved_class(
 
 def find_class_to_start(
     classroom: str, now_time: datetime.datetime
-) -> Tuple[str, Optional[dict]]:
+) -> tuple[str, dict | None]:
   """
   取玩家此刻在这间教室开课时要沿用的临时课条目（开课结算与开课指令预读主修共用）
   Keyword arguments:
@@ -435,7 +434,7 @@ def judge_sex_class_state_ok(character_id: int) -> bool:
   return not cache.character_data[character_id].sp_flag.imprisonment
 
 
-def get_scene_student_list(scene_path: Optional[list] = None) -> List[int]:
+def get_scene_student_list(scene_path: list | None = None) -> list[int]:
   """
   取某场景内所有可参加实操课的学生
 
@@ -462,7 +461,7 @@ def get_scene_student_list(scene_path: Optional[list] = None) -> List[int]:
   ]
 
 
-def get_class_member_list() -> List[int]:
+def get_class_member_list() -> list[int]:
   """
   取已被拉进这节实操课（课堂 H）的人（Plan 32 §3.8 L9）
   Keyword arguments:
@@ -503,7 +502,7 @@ def get_class_member_list() -> List[int]:
 
 def get_selected_student_list(
     classroom: str, week_day: int, period: int
-) -> List[int]:
+) -> list[int]:
   """
   取选修了这一节次这间教室的学生
 
@@ -683,7 +682,7 @@ def get_subject_bonus(student_id: int) -> float:
 
 def get_period_start_time(
     date_ordinal: int, period: int
-) -> Optional[datetime.datetime]:
+) -> datetime.datetime | None:
   """
   取某天某节次的开始时刻
   Keyword arguments:
@@ -703,7 +702,7 @@ def get_period_start_time(
 
 def get_period_end_time(
     date_ordinal: int, period: int
-) -> Optional[datetime.datetime]:
+) -> datetime.datetime | None:
   """
   取某天某节次的结束时刻（即预定的下课时刻）
   Keyword arguments:
@@ -719,7 +718,7 @@ def get_period_end_time(
 
 
 def judge_time_crossed(
-    target_time: Optional[datetime.datetime],
+    target_time: datetime.datetime | None,
     last_time: datetime.datetime,
     now_time: datetime.datetime,
 ) -> bool:
@@ -760,7 +759,7 @@ def fix_notified(class_data: dict) -> list:
 
 def check_and_send_notify(
     last_time: datetime.datetime, now_time: datetime.datetime
-) -> List[str]:
+) -> list[str]:
   """
   检查第二、三次提醒里有没有该发的，返回要输出的文本
 
@@ -866,7 +865,7 @@ def get_today_class_notify_text() -> str:
 
 
 def start_sex_class(
-    ability_id: int, join_id_list: Optional[List[int]] = None
+    ability_id: int, join_id_list: list[int] | None = None
 ) -> dict:
   """
   开始一节性技实操课
@@ -1089,7 +1088,7 @@ def settle_attend(
 # ---------------------------------------------------------------------------
 
 
-def get_watcher_list() -> List[int]:
+def get_watcher_list() -> list[int]:
   """
   取本节课的旁观学生——已在这节课里（get_class_member_list：与玩家同场景、已进课堂H、学生岗或女儿），但没有占用群交模板任何部位的那些
 

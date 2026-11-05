@@ -11,7 +11,6 @@
 
 import datetime
 from types import FunctionType
-from typing import List
 
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
@@ -41,13 +40,13 @@ class Growth_Panel:
     self.width: int = width
     self.now_student: int = -1
     """ 当前展示的孩子角色id，-1表示尚未选择。不再回落到名单第一个：进面板先点「选择学生」挑人 """
-    self.student_list: List[int] = []
+    self.student_list: list[int] = []
     """ 本轮在养成中的孩子列表，每轮在 draw_page 里重算 """
     self.report_card_index: int = -1
     """ 成绩单历史当前翻到第几份（0起），-1表示尚未翻过、由 _draw_report_card 回落到最新那份。
             必须是面板的状态而不是局部变量：容器每轮 while 都重画，局部变量会被冲掉 """
 
-  def draw_page(self, return_list: List[str]) -> None:
+  def draw_page(self, return_list: list[str]) -> None:
     """
     绘制本页内容
     输入类型: return_list(List[str])，容器的共享返回值列表，本页的按钮往里加
@@ -268,7 +267,7 @@ class Growth_Panel:
     now_draw.draw()
 
   def _draw_report_card(
-      self, character_id: int, return_list: List[str]
+      self, character_id: int, return_list: list[str]
   ) -> None:
     """
     绘制历年成绩单，一次一份，可前后翻页
@@ -495,5 +494,5 @@ class Growth_Panel:
     for text in text_list:
       now_draw = draw.NormalDraw()
       now_draw.width = self.width
-      now_draw.text = "  ○{0}\n".format(text)
+      now_draw.text = f"  ○{text}\n"
       now_draw.draw()

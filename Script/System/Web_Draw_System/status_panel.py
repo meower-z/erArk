@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
 """
 状态面板组件
 负责处理Web模式下的角色状态信息显示
 """
 
-from typing import Dict, List, Optional
 from Script.Core import cache_control, game_type, get_text
 from Script.Design import attr_text, handle_premise, attr_calculation
 from Script.Config import game_config
@@ -33,7 +31,7 @@ class StatusPanel:
     Returns:
     dict -- 玩家信息数据
     """
-    pl_data: Optional[game_type.Character] = cache.character_data.get(0)
+    pl_data: game_type.Character | None = cache.character_data.get(0)
     if not pl_data:
       return self._get_empty_player_info()
 
@@ -101,7 +99,7 @@ class StatusPanel:
     if character_id <= 0:
       return {}
 
-    char_data: Optional[game_type.Character] = cache.character_data.get(
+    char_data: game_type.Character | None = cache.character_data.get(
         character_id
     )
     if not char_data:
@@ -183,8 +181,8 @@ class StatusPanel:
     }
 
   def _get_available_body_parts_for_display(
-      self, character_id: int, image_data: Optional[dict] = None
-  ) -> List[dict]:
+      self, character_id: int, image_data: dict | None = None
+  ) -> list[dict]:
     """
     获取用于显示的可选部位列表
 
@@ -210,7 +208,7 @@ class StatusPanel:
     )
 
     # 首先获取角色立绘中实际存在的部位
-    char_data: Optional[game_type.Character] = cache.character_data.get(
+    char_data: game_type.Character | None = cache.character_data.get(
         character_id
     )
     portrait_parts = {}  # {中文显示名: {id, name, base_part}}
@@ -375,7 +373,7 @@ class StatusPanel:
     else:
       return "E"
 
-  def _get_special_states(self, character_id: int) -> List[dict]:
+  def _get_special_states(self, character_id: int) -> list[dict]:
     """
     获取角色特殊状态标记
     使用 character_info_head.py 中的 get_character_status_list 函数
@@ -386,8 +384,8 @@ class StatusPanel:
     Returns:
     List[dict] -- 特殊状态标记列表，每个元素包含 text 和 style
     """
-    states: List[dict] = []
-    char_data: Optional[game_type.Character] = cache.character_data.get(
+    states: list[dict] = []
+    char_data: game_type.Character | None = cache.character_data.get(
         character_id
     )
     if not char_data:
@@ -410,7 +408,7 @@ class StatusPanel:
 
     return states
 
-  def _get_pleasure_states(self, character_id: int) -> List[dict]:
+  def _get_pleasure_states(self, character_id: int) -> list[dict]:
     """
     获取角色快感状态（状态类型0）
     参考 see_character_info_panel.py 的 SeeCharacterStatusPanel 类
@@ -421,8 +419,8 @@ class StatusPanel:
     Returns:
     List[dict] -- 快感状态列表，每个元素包含 name, value, max_value, level
     """
-    states: List[dict] = []
-    char_data: Optional[game_type.Character] = cache.character_data.get(
+    states: list[dict] = []
+    char_data: game_type.Character | None = cache.character_data.get(
         character_id
     )
     if not char_data:
@@ -453,7 +451,7 @@ class StatusPanel:
 
   def _get_status_info(
       self, char_data: game_type.Character, status_id: int
-  ) -> Optional[dict]:
+  ) -> dict | None:
     """
     获取单个状态的信息
 
@@ -503,7 +501,7 @@ class StatusPanel:
         "tooltip": state_config.info if hasattr(state_config, "info") else "",
     }
 
-  def _get_other_states(self, character_id: int) -> List[dict]:
+  def _get_other_states(self, character_id: int) -> list[dict]:
     """
     获取角色其他状态（状态类型1，排除润滑）
     参考 see_character_info_panel.py 的 SeeCharacterStatusPanel 类
@@ -514,8 +512,8 @@ class StatusPanel:
     Returns:
     List[dict] -- 其他状态列表，每个元素包含 name, value, max_value, level
     """
-    states: List[dict] = []
-    char_data: Optional[game_type.Character] = cache.character_data.get(
+    states: list[dict] = []
+    char_data: game_type.Character | None = cache.character_data.get(
         character_id
     )
     if not char_data:
@@ -848,7 +846,7 @@ class StatusPanel:
       if visual_flag <= 1 and i in {7, 9, 15}:
         continue
 
-      part_texts: List[Dict[str, str]] = []
+      part_texts: list[dict[str, str]] = []
       part_info = {"id": i, "name": part_name, "texts": part_texts}
 
       # 爱液文本

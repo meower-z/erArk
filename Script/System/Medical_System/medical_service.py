@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 import math
-from typing import Any, Dict, List, Optional
+from typing import Any
 from types import FunctionType
 
 from Script.Config import normal_config
@@ -100,7 +100,7 @@ render_medical_reports = log_system.render_medical_reports
 
 
 def init_medical_department_data(
-    target_base: Optional[game_type.Rhodes_Island] = None,
+    target_base: game_type.Rhodes_Island | None = None,
     *,
     reset_runtime: bool = True,
     migrate_legacy: bool = False,
@@ -181,7 +181,7 @@ def init_medical_department_data(
     refresh_medical_patients(target_base=rhodes_island)
 
 
-def update_medical_save_data_structure(cache_snapshot: Dict[str, Any]) -> None:
+def update_medical_save_data_structure(cache_snapshot: dict[str, Any]) -> None:
   """在读取旧存档时修复医疗系统相关字段。
 
   参数:
@@ -203,9 +203,9 @@ def update_medical_save_data_structure(cache_snapshot: Dict[str, Any]) -> None:
 
 def settle_medical_department(
     *,
-    target_base: Optional[game_type.Rhodes_Island] = None,
+    target_base: game_type.Rhodes_Island | None = None,
     draw_flag: bool = True,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
   """执行每日医疗经营结算并输出日志。
 
   参数:
@@ -228,7 +228,7 @@ def settle_medical_department(
 
   # 拉取显性日常计数器，确保结算阶段使用统一字段。
   counters = medical_core._obtain_daily_counters(rhodes_island)
-  stats: Dict[str, int] = counters.as_dict() if counters else {}
+  stats: dict[str, int] = counters.as_dict() if counters else {}
 
   # 拉取实收收入与收费系数，供结算描述使用。
   income_today = int(rhodes_island.medical_income_today or 0)
@@ -271,7 +271,7 @@ def settle_medical_department(
   }
 
   # 计算药品库存快照，便于日志输出消耗、缺口与库存
-  inventory_snapshot: Dict[int, Dict[str, float]] = {}
+  inventory_snapshot: dict[int, dict[str, float]] = {}
   inventory_map = {}
   if isinstance(getattr(rhodes_island, "materials_resouce", None), dict):
     inventory_map = dict(rhodes_island.materials_resouce)
@@ -333,8 +333,8 @@ def settle_medical_department(
   achievement_panel.achievement_flow(_("龙门币"))
 
   # --- 清理已完成流程的病人记录，避免缓存持续膨胀 ---
-  cleared_outpatient_ids: List[int] = []
-  cleared_hospitalized_ids: List[int] = []
+  cleared_outpatient_ids: list[int] = []
+  cleared_hospitalized_ids: list[int] = []
 
   # 门诊表中过滤已拿药治疗或已出院的病人，同时移除异常的空引用。
   outpatient_table = rhodes_island.medical_patients_today

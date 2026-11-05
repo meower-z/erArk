@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 角色图像渲染组件
 负责处理Web模式下的角色立绘显示和图层合成
@@ -6,7 +5,6 @@
 
 import os
 import json
-from typing import Dict, List, Optional, Tuple
 from Script.Core import cache_control, game_type, image_path_index
 from Script.Config import game_config
 from Script.System.Web_Draw_System.body_part_button import BodyPartButton
@@ -58,13 +56,13 @@ class CharacterRenderer:
 
   # 图像数据缓存，key为 (角色ID, 解析出的立绘名)
   # 使用类级缓存，让不同位置创建的渲染器实例共享结果，避免重复扫描目录
-  _image_path_cache: Dict[tuple, dict] = {}
+  _image_path_cache: dict[tuple, dict] = {}
   # 全部立绘子目录的缓存
-  _portrait_sub_dirs_cache: Optional[List[str]] = None
+  _portrait_sub_dirs_cache: list[str] | None = None
 
   def __init__(self) -> None:
     """初始化角色渲染器"""
-    self._body_parts_cache: Dict[int, dict] = {}
+    self._body_parts_cache: dict[int, dict] = {}
 
   def get_character_image_data(self, character_id: int) -> dict:
     """
@@ -86,7 +84,7 @@ class CharacterRenderer:
     if character_id <= 0:
       return {}
 
-    character_data: Optional[game_type.Character] = cache.character_data.get(
+    character_data: game_type.Character | None = cache.character_data.get(
         character_id
     )
     if not character_data:
@@ -161,7 +159,7 @@ class CharacterRenderer:
         "has_horn": False,
     }
 
-  def _get_portrait_sub_dirs(self) -> List[str]:
+  def _get_portrait_sub_dirs(self) -> list[str]:
     """
     获取全部立绘子目录（干员、特殊NPC、路人、女儿等）
 
@@ -479,13 +477,13 @@ class CharacterRenderer:
 
     if json_path:
       try:
-        with open(json_path, "r", encoding="utf-8") as f:
+        with open(json_path, encoding="utf-8") as f:
           raw_data = json.load(f)
           landmarks = raw_data.get("landmarks", [])
           for lm in landmarks:
             if lm.get("name") == "nose":
               return (lm.get("x", 0.5), lm.get("y", 0.25))
-      except (json.JSONDecodeError, IOError):
+      except (OSError, json.JSONDecodeError):
         pass
 
     # 默认位置：假设鼻子大约在图像中心偏左、上方1/4处
@@ -565,13 +563,13 @@ class CharacterRenderer:
 
     if json_path:
       try:
-        with open(json_path, "r", encoding="utf-8") as f:
+        with open(json_path, encoding="utf-8") as f:
           raw_data = json.load(f)
           body_data = self._convert_body_data(raw_data, has_beast_ears)
           # 关键点数据有效时直接返回，否则继续退化为默认布局
           if body_data.get("body_parts"):
             return body_data
-      except (json.JSONDecodeError, IOError):
+      except (OSError, json.JSONDecodeError):
         pass
 
     # 没有可用的关键点数据，退化为默认部位布局
@@ -669,7 +667,7 @@ class CharacterRenderer:
           landmark_map[name] = (x, y)
 
       # 按 COCO 顺序构建关键点列表
-      keypoints: List[Tuple[float, float]] = []
+      keypoints: list[tuple[float, float]] = []
       for name in coco_keypoint_names:
         if name in landmark_map:
           keypoints.append(landmark_map[name])
@@ -717,8 +715,8 @@ class CharacterRenderer:
     return result
 
   def get_scene_characters_avatars(
-      self, exclude_ids: Optional[List[int]] = None
-  ) -> List[dict]:
+      self, exclude_ids: list[int] | None = None
+  ) -> list[dict]:
     """
     获取场景内所有角色的头像信息（除指定排除的角色外）
 

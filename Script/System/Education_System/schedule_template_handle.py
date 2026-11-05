@@ -27,7 +27,6 @@
 """
 
 from types import FunctionType
-from typing import List, Optional, Tuple
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.System.Education_System import education_constant, growth_handle, schedule_handle
@@ -81,7 +80,7 @@ def init_default_template() -> None:
     }
 
 
-def get_template_data(template_id: int) -> Optional[dict]:
+def get_template_data(template_id: int) -> dict | None:
   """
   取一套模板的数据
   Keyword arguments:
@@ -93,7 +92,7 @@ def get_template_data(template_id: int) -> Optional[dict]:
   return cache.rhodes_island.child_schedule_template.get(template_id, None)
 
 
-def get_all_template_id() -> List[int]:
+def get_all_template_id() -> list[int]:
   """
   取全部模板编号，按编号升序
   Keyword arguments:
@@ -229,7 +228,7 @@ def apply_template(character_id: int, template_id: int) -> None:
   growth_data.schedule_template_id = template_id
 
 
-def batch_apply_template(character_id_list: List[int], template_id: int) -> int:
+def batch_apply_template(character_id_list: list[int], template_id: int) -> int:
   """
   把同一套模板批量套用到多个孩子（口径 4 的核心操作）
   Keyword arguments:
@@ -462,7 +461,7 @@ def get_template_use_count(template_id: int) -> int:
   return count
 
 
-def get_schedule_activity_candidate() -> List[int]:
+def get_schedule_activity_candidate() -> list[int]:
   """
   取可排进日程的娱乐候选表：全部娱乐（含教育区 15x 段的日程专用活动），去掉0号模板行与不可排的照料卵（Plan 28 §3.3）
   Keyword arguments:
@@ -492,7 +491,7 @@ def get_activity_name(entertainment_id: int) -> str:
   return "--"
 
 
-def get_activity_age_limit_talent_list(entertainment_id: int) -> List[int]:
+def get_activity_age_limit_talent_list(entertainment_id: int) -> list[int]:
   """
   从一项娱乐的 need 列里解出它要求的成长阶段素质（年龄限制）
   Keyword arguments:
@@ -545,7 +544,7 @@ def get_activity_age_limit_text(entertainment_id: int) -> str:
   )
 
 
-def get_schedule_activity_rows() -> Tuple[List[int], List[int], List[int]]:
+def get_schedule_activity_rows() -> tuple[list[int], list[int], list[int]]:
   """
   把可排进日程的活动分成「选择活动」面板的三组
   Keyword arguments:

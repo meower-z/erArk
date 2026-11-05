@@ -1,6 +1,5 @@
 """外勤委托：数据刷新、需求与奖励、委托文本、完成的判定与结算、新干员招募、势力委托的查找与临时委托的创建"""
 
-from typing import List, Optional, Tuple
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.UI.Moudle import draw
@@ -45,10 +44,10 @@ def update_field_commission() -> None:
 
 def get_commission_demand_and_reward(
     commission_id: int,
-    send_npc_list: Optional[list[int]] = None,
+    send_npc_list: list[int] | None = None,
     demand_or_reward: bool = False,
     deduction_or_increase: bool = False,
-) -> Tuple[bool, str, str]:
+) -> tuple[bool, str, str]:
   """
   获取委托需求或奖励\n
   Keyword arguments:\n
@@ -125,11 +124,11 @@ def process_commission_text(
     now_text: str,
     demand_or_reward: bool,
     deduction_or_increase: bool,
-    send_npc_list: List[int],
+    send_npc_list: list[int],
     type_text: str,
     full_text: str,
     satify_flag: bool,
-) -> Tuple[str, str, bool]:
+) -> tuple[str, str, bool]:
   """
   处理委托文本\n
   Keyword arguments:\n
@@ -634,7 +633,7 @@ def create_capture_fugitive_commission(fugitive_id: int) -> None:
       people=3,
       time=3,
       demand=demand_text,
-      reward="追捕_{0}_1".format(fugitive_id),
+      reward=f"追捕_{fugitive_id}_1",
       description=_("囚犯{0}从监狱逃跑了，请尽快将其抓回。").format(
           fugitive_character.name
       ),

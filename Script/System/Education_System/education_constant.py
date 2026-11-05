@@ -34,7 +34,6 @@
 """
 
 from types import FunctionType
-from typing import List
 
 from Script.Config import game_config
 from Script.Core import get_text
@@ -101,7 +100,7 @@ MALE_ONLY_SUBJECT_SET = {
 }
 """ 男性专属的科目（Ability.csv 的 sex_need 为0），目前只有76腰技。
     女学生排了它全场吃不到加成且不会报错（四期方案 §7-21），所以下面两张给女儿用的表都排掉它 """
-FEMALE_SUBJECT_LIST: List[int] = [
+FEMALE_SUBJECT_LIST: list[int] = [
     ability_id
     for ability_id in SUBJECT_ABILITY_LIST
     if ability_id not in MALE_ONLY_SUBJECT_SET
@@ -551,7 +550,7 @@ SEMESTER_EVENT_SUB_KEY = 200
     于是期末事件的**阶段区分只能写进 premise**（CVP_A1_T|102_E_1 等），
        不能像日常养成事件那样靠 sub_key 分桶 """
 STAGE_TALENT_PREMISE_SET = frozenset(
-    "CVP_A1_T|{0}_{1}_{2}".format(talent_id, operator_text, judge_value)
+    f"CVP_A1_T|{talent_id}_{operator_text}_{judge_value}"
     for talent_id in CHILD_TALENT_ID_LIST
     for operator_text in ("E", "NE", "G", "GE", "L", "LE")
     for judge_value in (0, 1)

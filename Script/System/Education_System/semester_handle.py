@@ -18,8 +18,6 @@
    玩家隔两天再看「同一份」成绩单会得到不一样的内容。
 """
 
-from typing import Dict, List, Tuple
-
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.Design import game_time, attr_calculation
@@ -116,7 +114,7 @@ def get_semester_head_text() -> str:
   )
 
 
-def get_semester_attend(character_id: int) -> Tuple[int, int]:
+def get_semester_attend(character_id: int) -> tuple[int, int]:
   """
   取某个孩子本学期的听课与缺课节数
   这是「本学期出勤」的唯一算口：累计减学期基线。
@@ -156,7 +154,7 @@ def get_semester_attend_rate(attend_count: int, absent_count: int) -> int:
   return int(attend_count * 100 / total_count)
 
 
-def get_semester_level_change(character_id: int) -> Dict[int, List[int]]:
+def get_semester_level_change(character_id: int) -> dict[int, list[int]]:
   """
   取某个孩子本学期涨了级的科目
   Keyword arguments:
@@ -164,7 +162,7 @@ def get_semester_level_change(character_id: int) -> Dict[int, List[int]]:
   Return arguments:
   Dict[int, List[int]] -- 键为科目能力id，值为[本学期开始时的等级, 现在的等级]，只含真涨了的
   """
-  result: Dict[int, List[int]] = {}
+  result: dict[int, list[int]] = {}
   if character_id not in cache.character_data:
     return result
   character_data: game_type.Character = cache.character_data[character_id]
@@ -180,7 +178,7 @@ def get_semester_level_change(character_id: int) -> Dict[int, List[int]]:
   return result
 
 
-def get_top_ability(character_id: int) -> Tuple[int, int]:
+def get_top_ability(character_id: int) -> tuple[int, int]:
   """
   取某个孩子当前等级最高的科目
   Keyword arguments:
@@ -358,7 +356,7 @@ def build_report_card(character_id: int) -> dict:
   }
 
 
-def get_report_card_history(character_id: int) -> List[dict]:
+def get_report_card_history(character_id: int) -> list[dict]:
   """
   取某个孩子的历年成绩单列表
   Keyword arguments:
@@ -409,7 +407,7 @@ def push_report_card(character_id: int, report_data: dict) -> None:
     ]
 
 
-def reset_semester_baseline(character_id: int, semester_id: List[int]) -> None:
+def reset_semester_baseline(character_id: int, semester_id: list[int]) -> None:
   """
   把某个孩子的学期基线重置为当前值，并记下现在是哪个学期
   Keyword arguments:
@@ -433,7 +431,7 @@ def reset_semester_baseline(character_id: int, semester_id: List[int]) -> None:
   growth_data.semester_base_work_type = character_data.work.work_type
 
 
-def settle_semester_change() -> List[int]:
+def settle_semester_change() -> list[int]:
   """
   学期切换的总入口：逐个孩子比对学期号，切了就出成绩单并重置基线
 
@@ -446,7 +444,7 @@ def settle_semester_change() -> List[int]:
   List[int] -- 本次新出了成绩单的孩子角色id列表，没有则为空
   """
   now_semester = list(game_time.get_now_semester())
-  report_list: List[int] = []
+  report_list: list[int] = []
   # 只遍历在学的女儿。普通干员也能选课攒听课数（口径24），但他们不出成绩单；
   #    改成遍历全角色会给全岛每个人惰性创建 CHILD_GROWTH 并写进存档
   for character_id in growth_handle.get_student_candidate_list():
@@ -475,7 +473,7 @@ def settle_semester_change() -> List[int]:
   return report_list
 
 
-def get_level_change_text(level_change: Dict[int, List[int]]) -> str:
+def get_level_change_text(level_change: dict[int, list[int]]) -> str:
   """
   把本学期的等级变化拼成一行文本
   Keyword arguments:
@@ -490,11 +488,9 @@ def get_level_change_text(level_change: Dict[int, List[int]]) -> str:
       continue
     old_level, new_level = level_change[ability_id]
     text_list.append(
-        "{0} {1}→{2}".format(
-            game_config.config_ability[ability_id].name,
-            attr_calculation.judge_grade(old_level),
-            attr_calculation.judge_grade(new_level),
-        )
+        f"{game_config.config_ability[ability_id].name} "
+        f"{attr_calculation.judge_grade(old_level)}→"
+        f"{attr_calculation.judge_grade(new_level)}"
     )
   return "、".join(text_list)
 
@@ -545,10 +541,7 @@ def get_report_card_text(
     now_level = int(character_data.ability.get(ability_id, 0))
     if now_level > 0:
       ability_text_list.append(
-          "{0}{1}".format(
-              game_config.config_ability[ability_id].name,
-              attr_calculation.judge_grade(now_level),
-          )
+          f"{game_config.config_ability[ability_id].name}{attr_calculation.judge_grade(now_level)}"
       )
   info_text += _("\n各科水平：{0}\n").format(
       "、".join(ability_text_list) if ability_text_list else _("尚无成绩")

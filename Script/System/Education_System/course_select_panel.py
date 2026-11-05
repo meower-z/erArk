@@ -9,7 +9,6 @@
 """
 
 from types import FunctionType
-from typing import Dict, List
 
 from Script.Core import cache_control, game_type, get_text, flow_handle
 from Script.Config import game_config
@@ -40,12 +39,12 @@ class Course_Select_Panel:
     self.width: int = width
     self.now_student: int = -1
     """ 当前展示的学生角色id，-1表示尚未选择。不再回落到名单第一个：进面板先点「选择学生」挑人 """
-    self.student_list: List[int] = []
+    self.student_list: list[int] = []
     """ 本轮可排课的学生列表，每轮在 draw_page 里重算 """
-    self.cell_return: Dict[str, tuple] = {}
+    self.cell_return: dict[str, tuple] = {}
     """ 本轮课表格子按钮的返回值 → (星期, 节次)，由 draw_page 写、handle_yrn 读 """
 
-  def draw_page(self, return_list: List[str]) -> None:
+  def draw_page(self, return_list: list[str]) -> None:
     """
     绘制本页内容
     输入类型: return_list(List[str])，容器的共享返回值列表，本页的按钮往里加
@@ -141,14 +140,14 @@ class Course_Select_Panel:
       week_day, period = self.cell_return[yrn]
       self._edit_cell(self.now_student, week_day, period)
 
-  def _draw_week_table(self, character_id: int) -> Dict[str, tuple]:
+  def _draw_week_table(self, character_id: int) -> dict[str, tuple]:
     """
     绘制一个学生的周表
     输入类型: character_id(int)
     输出类型: Dict[str, tuple]，按钮返回值 → (星期, 节次)
     功能: 班级式课显示"科目名/教室名"，个人式课显示"[课型缩写]目标"
     """
-    cell_return: Dict[str, tuple] = {}
+    cell_return: dict[str, tuple] = {}
     head_width = 14
     cell_width = max(
         8, int((self.width - head_width) / len(education_constant.WEEK_NAME))
@@ -168,14 +167,12 @@ class Course_Select_Panel:
     for period in range(len(game_time.CLASS_PERIOD_START)):
       head_draw = draw.NormalDraw()
       head_draw.width = head_width
-      head_draw.text = "  {0} {1} ".format(
-          period + 1, get_period_time_text(period)[:5]
-      )
+      head_draw.text = f"  {period + 1} {get_period_time_text(period)[:5]} "
       head_draw.draw()
       for week_day in range(len(education_constant.WEEK_NAME)):
         now_draw = draw.CenterButton(
             self._get_cell_text(character_id, week_day, period),
-            "\nMYCELL_{0}_{1}".format(week_day, period),
+            f"\nMYCELL_{week_day}_{period}",
             cell_width,
         )
         now_draw.draw()
@@ -206,9 +203,7 @@ class Course_Select_Panel:
       #    直接读 class_schedule 会漏掉临时性技实操课的覆盖层
       cell = schedule_handle.get_class_cell(target, week_day, period)
       if cell is not None and cell[0] in game_config.config_ability:
-        return "{0}/{1}".format(
-            game_config.config_ability[cell[0]].name, target
-        )
+        return f"{game_config.config_ability[cell[0]].name}/{target}"
       # 选了这间教室，但那节课后来被清掉了——照实显示，别让玩家以为还有课
       return _("{0}/已停课").format(target)
     short = education_constant.COURSE_TYPE_SHORT.get(course_type, "?")
@@ -217,7 +212,7 @@ class Course_Select_Panel:
       target_name = game_config.config_entertainment[target].name
     elif course_type == education_constant.COURSE_TYPE_INTERN:
       target_name = game_config.config_work_type[target].name
-    text = "[{0}]{1}".format(short, target_name)
+    text = f"[{short}]{target_name}"
     # 个人式课这一节上不成的照实标出，与教室课的「已停课」同一写法（Plan 28 §3.2）：上课判定起按没课处理，
     #    不标的话玩家看着课表以为这节有课。地点先判、活动条件后判，与选课页 _select_target 的顺序一致；
     #    最宽的「[兴]演奏传统乐器/条件不符」也恰好放得进一格（25列）
@@ -282,8 +277,8 @@ class Course_Select_Panel:
 
     template_panel = schedule_template_panel.Schedule_Template_Panel(self.width)
     while 1:
-      return_list: List[str] = []
-      slot_by_return: Dict[str, int] = {}
+      return_list: list[str] = []
+      slot_by_return: dict[str, int] = {}
       draw.TitleLineDraw(
           _("{0}的日程").format(cache.character_data[character_id].name),
           self.width,
@@ -351,7 +346,7 @@ class Course_Select_Panel:
               character_id, slot_by_return[yrn], entertainment_id
           )
 
-  def _copy_to_others(self, character_id: int, student_list: List[int]) -> None:
+  def _copy_to_others(self, character_id: int, student_list: list[int]) -> None:
     """
     把当前学生的课表整份复制给另一个学生
     输入类型: character_id(int), student_list(List[int])
@@ -360,8 +355,8 @@ class Course_Select_Panel:
           名单每行6个（190/6=31列）：成年学生也进名单之后一行一个会拉得很长
     """
     draw.TitleLineDraw(_("复制课表到"), self.width).draw()
-    return_list: List[str] = []
-    id_by_return: Dict[str, int] = {}
+    return_list: list[str] = []
+    id_by_return: dict[str, int] = {}
     count = 0
     for other_id in student_list:
       if other_id == character_id:
@@ -442,8 +437,8 @@ class Course_Select_Panel:
     )
     info_draw.draw()
 
-    return_list: List[str] = []
-    result_by_return: Dict[str, tuple] = {}
+    return_list: list[str] = []
+    result_by_return: dict[str, tuple] = {}
 
     # ---- 段一：本节各教室分别有什么课 ----
     head_draw = draw.NormalDraw()
@@ -507,7 +502,7 @@ class Course_Select_Panel:
     type_head_draw.style = "gold_enrod"
     type_head_draw.text = _("  不去教室，改上：\n")
     type_head_draw.draw()
-    type_by_return: Dict[str, int] = {}
+    type_by_return: dict[str, int] = {}
     for course_type in (
         education_constant.COURSE_TYPE_PE,
         education_constant.COURSE_TYPE_INTEREST,
@@ -566,8 +561,8 @@ class Course_Select_Panel:
         ),
         self.width,
     ).draw()
-    return_list: List[str] = []
-    target_by_return: Dict[str, str | int] = {}
+    return_list: list[str] = []
+    target_by_return: dict[str, str | int] = {}
     empty_flag = True
     # 每行6个：190/6=31列，6×31=186≤190
     cell_width = int(self.width / 6)

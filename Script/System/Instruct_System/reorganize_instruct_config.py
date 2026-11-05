@@ -162,7 +162,7 @@ def reorganize_csv() -> pd.DataFrame:
 
   # 4. 准备写回文件，需要加上元数据行
   # 读取原始文件的前5行作为元数据
-  with open(csv_path, 'r', encoding='utf-8-sig') as f:
+  with open(csv_path, encoding='utf-8-sig') as f:
     metadata_lines = [f.readline() for _ in range(5)]
 
   # 更新第一行的列名（因为列顺序和名称都变了）

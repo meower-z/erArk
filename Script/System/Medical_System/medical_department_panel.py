@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple, cast
+from typing import Any, Tuple, cast
 from types import FunctionType
 
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
@@ -39,7 +39,7 @@ class Medical_Department_Panel:
     """
 
     self.width = width
-    self.panel_order: List[str] = [
+    self.panel_order: list[str] = [
         _("经营概览"),
         _("医生管理"),
         _("收费设置"),
@@ -48,7 +48,7 @@ class Medical_Department_Panel:
         _("财务报表"),
     ]
     self.current_panel: str = self.panel_order[0]
-    self.sub_panels: Dict[str, _BaseSubPanel] = {
+    self.sub_panels: dict[str, _BaseSubPanel] = {
         self.panel_order[0]: OverviewSubPanel(width),
         self.panel_order[1]: DoctorManagementSubPanel(width),
         self.panel_order[2]: PriceSettingSubPanel(width),
@@ -63,7 +63,7 @@ class Medical_Department_Panel:
     title_draw = draw.TitleLineDraw(_("医疗经营系统"), self.width)
 
     while True:
-      return_list: List[str] = []
+      return_list: list[str] = []
       title_draw.draw()
 
       # 绘制导航标签
@@ -123,7 +123,7 @@ class _BaseSubPanel:
     """
     self.width = width
 
-  def draw(self) -> List[str]:
+  def draw(self) -> list[str]:
     """绘制子面板内容并返回交互按钮列表"""
 
     raise NotImplementedError()
@@ -132,8 +132,8 @@ class _BaseSubPanel:
 class OverviewSubPanel(_BaseSubPanel):
   """经营概览子面板，汇总医疗部关键指标"""
 
-  def draw(self) -> List[str]:
-    return_list: List[str] = []
+  def draw(self) -> list[str]:
+    return_list: list[str] = []
     ri = cache.rhodes_island
 
     outpatient_table = medical_service.get_patient_table(
@@ -187,7 +187,7 @@ class OverviewSubPanel(_BaseSubPanel):
 
     line_feed.draw()
 
-    state_counter: Dict[medical_constant.MedicalPatientState, int] = {
+    state_counter: dict[medical_constant.MedicalPatientState, int] = {
         state: 0 for state in medical_constant.MedicalPatientState
     }
     for patient in patients_today:
@@ -230,10 +230,10 @@ class DoctorManagementSubPanel(_BaseSubPanel):
     super().__init__(width)
     self.feedback_text: str = ""
 
-  def draw(self) -> List[str]:
+  def draw(self) -> list[str]:
     """绘制医生管理页面并返回所有按钮的返回值列表"""
 
-    return_list: List[str] = []
+    return_list: list[str] = []
     ri = cache.rhodes_island
 
     clinic_ids = medical_service.list_role_doctors(
@@ -341,7 +341,7 @@ class DoctorManagementSubPanel(_BaseSubPanel):
     return return_list
 
   def _draw_specialization_section(
-      self, role_key: str, return_list: List[str]
+      self, role_key: str, return_list: list[str]
   ) -> None:
     """绘制指定岗位的医生分科信息并提供分配按钮"""
 
@@ -431,7 +431,7 @@ class DoctorManagementSubPanel(_BaseSubPanel):
         False,
         0,
     )
-    select_state: Dict[str, Any] = {}
+    select_state: dict[str, Any] = {}
 
     overview = medical_service.get_doctor_specialization_overview(role_key)
     assigned_ids = set()
@@ -440,7 +440,7 @@ class DoctorManagementSubPanel(_BaseSubPanel):
         assigned_ids = set(category.get("doctor_ids", []))
         break
 
-    result_holder: Dict[str, bool] = {"done": False}
+    result_holder: dict[str, bool] = {"done": False}
 
     def _assign(doctor_id: int) -> None:
       result = medical_service.assign_doctor_specialization(
@@ -459,10 +459,10 @@ class DoctorManagementSubPanel(_BaseSubPanel):
       result_holder["done"] = True
 
     while True:
-      entries: List[List[Any]] = [
+      entries: list[list[Any]] = [
           [doctor_id, _assign, list(assigned_ids)] for doctor_id in doctor_ids
       ]
-      select_panel.text_list = cast(List[Any], entries)
+      select_panel.text_list = cast(list[Any], entries)
       info_text = get_text._("请选择一名{0}分配至「{1}」：\n").format(
           role_name, category_name
       )
@@ -533,10 +533,10 @@ class PriceSettingSubPanel(_BaseSubPanel):
     super().__init__(width)
     self.feedback_text: str = ""
 
-  def draw(self) -> List[str]:
+  def draw(self) -> list[str]:
     """绘制收费设置面板并返回交互按钮列表"""
 
-    return_list: List[str] = []
+    return_list: list[str] = []
     current_ratio = medical_service.get_medical_price_ratio()
     new_ratio = medical_service.get_new_medical_price_ratio()
     level = cache.rhodes_island.facility_level.get(6, 0)
@@ -629,13 +629,13 @@ class PriceSettingSubPanel(_BaseSubPanel):
 class MedicalDetailSubPanel(_BaseSubPanel):
   """医疗明细子面板，可查看病患分布与药品缓存"""
 
-  def draw(self) -> List[str]:
+  def draw(self) -> list[str]:
     """绘制医疗明细并返回交互按钮列表"""
 
-    return_list: List[str] = []
+    return_list: list[str] = []
     ri = cache.rhodes_island
 
-    state_counter: Dict[medical_constant.MedicalPatientState, int] = {
+    state_counter: dict[medical_constant.MedicalPatientState, int] = {
         state: 0 for state in medical_constant.MedicalPatientState
     }
     outpatient_table = medical_service.get_patient_table(
@@ -702,10 +702,10 @@ class MedicalDetailSubPanel(_BaseSubPanel):
 class SurgeryManagementSubPanel(_BaseSubPanel):
   """手术管理子面板，展示待手术与历史记录"""
 
-  def draw(self) -> List[str]:
+  def draw(self) -> list[str]:
     """绘制手术管理界面"""
 
-    return_list: List[str] = []
+    return_list: list[str] = []
     ri = cache.rhodes_island
 
     hospital_table = medical_service.get_patient_table(
@@ -759,10 +759,10 @@ class SurgeryManagementSubPanel(_BaseSubPanel):
 class FinanceReportSubPanel(_BaseSubPanel):
   """财务报表子面板，输出医疗收入与用药预估"""
 
-  def draw(self) -> List[str]:
+  def draw(self) -> list[str]:
     """绘制财务报表信息"""
 
-    return_list: List[str] = []
+    return_list: list[str] = []
     ri = cache.rhodes_island
 
     info_draw = draw.NormalDraw()
@@ -825,7 +825,7 @@ class FinanceReportSubPanel(_BaseSubPanel):
     need_draw = draw.NormalDraw()
     need_draw.width = self.width
     need_draw.text = _("待诊/住院病人尚需药品：\n")
-    aggregated: Dict[int, float] = {}
+    aggregated: dict[int, float] = {}
     outpatient_table = medical_service.get_patient_table(
         target_base=ri, hospitalized=False
     )

@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Set, Tuple, Mapping
+from typing import Any, Mapping
 from types import FunctionType
 
 from Script.Config import game_config, normal_config
@@ -77,7 +77,7 @@ class MedicalPlayerDiagnosePanel:
         None: 构造函数仅更新内部状态，不返回任何值。
     """
     self.width = width
-    self.player: Optional[game_type.Character] = cache.character_data.get(0)
+    self.player: game_type.Character | None = cache.character_data.get(0)
     self._checks_executed: int = 0
 
     # 统一重置面板运行期标记，确保每次创建或切换病人时都能获得干净状态
@@ -89,7 +89,7 @@ class MedicalPlayerDiagnosePanel:
     self._refresh_check_limit()
 
     # 若玩家处于可控状态，则尝试开启医疗会话并缓存病患信息
-    initial_patient: Optional[medical_constant.MedicalPatient] = None
+    initial_patient: medical_constant.MedicalPatient | None = None
     if self.player is not None:
       initial_patient = (
           medical_player_diagnose_function.start_player_diagnose_session(
@@ -101,7 +101,7 @@ class MedicalPlayerDiagnosePanel:
       self._prepare_new_patient_session(initial_patient)
     else:
       # 未成功分配病人时保持面板闲置状态，便于界面直接提示
-      self.patient: Optional[medical_constant.MedicalPatient] = None
+      self.patient: medical_constant.MedicalPatient | None = None
       self.session_active = False
 
   def _reset_runtime_flags(self) -> None:
@@ -121,25 +121,25 @@ class MedicalPlayerDiagnosePanel:
     self.session_active = False
     self.patient = None
     self.feedback_text = ""
-    self.last_check_results: List[Dict[str, object]] = []
-    self.treatment_result: Optional[Dict[str, object]] = None
+    self.last_check_results: list[dict[str, object]] = []
+    self.treatment_result: dict[str, object] | None = None
     self._should_close = False
     self._treatment_committed = False
     self._abort_requested = False
     self._awaiting_treatment_confirmation = False
     self.menu_expanded = False
-    self.expanded_system_id: Optional[int] = None
-    self.expanded_part_id: Optional[int] = None
+    self.expanded_system_id: int | None = None
+    self.expanded_part_id: int | None = None
     self._pending_continue_after_treatment = False
     # 重置能力快照，避免沿用上一位病人的等级数据
     self.player_med_level = 0
     self.player_talk_level = 0
 
     # 已执行检查的并发症 ID 列表，用于控制菜单灰显不可选状态
-    self.executed_complication_ids: List[int] = []
+    self.executed_complication_ids: list[int] = []
 
     # 重置检查目录与目标计数，后续会根据具体病人重新填充
-    self.check_catalog: Dict[int, Dict[str, object]] = {}
+    self.check_catalog: dict[int, dict[str, object]] = {}
     self.target_complication_count = 0
     self.max_parallel = 1
     self.max_checks = 1
@@ -301,7 +301,7 @@ class MedicalPlayerDiagnosePanel:
       self._refresh_check_limit()
       title_draw = draw.TitleLineDraw(_("医疗诊疗"), self.width)
       title_draw.draw()
-      return_list: List[str] = []
+      return_list: list[str] = []
 
       pending_checks = self._get_pending_checks()
       confirmed_complications = self._get_confirmed_complications()
@@ -394,7 +394,7 @@ class MedicalPlayerDiagnosePanel:
         race=race_name,
     )
 
-    complaint_lines: List[str] = []
+    complaint_lines: list[str] = []
     trace_list = getattr(self.patient, "complication_trace", [])
     for index, entry in enumerate(trace_list, start=1):
       comp_config = game_config.config_medical_complication.get(
@@ -425,7 +425,7 @@ class MedicalPlayerDiagnosePanel:
     info_draw.draw()
     line_feed.draw()
 
-  def _draw_hint_section(self, return_list: List[str]) -> None:
+  def _draw_hint_section(self, return_list: list[str]) -> None:
     """绘制诊疗提示状态及提示按钮。
 
     参数:
@@ -466,8 +466,8 @@ class MedicalPlayerDiagnosePanel:
 
   def _draw_check_status(
       self,
-      pending: List[Dict[str, int]],
-      confirmed: List[int],
+      pending: list[dict[str, int]],
+      confirmed: list[int],
       used_checks: int,
   ) -> None:
     """展示检查次数、待执行检查以及已确诊列表。
@@ -545,9 +545,9 @@ class MedicalPlayerDiagnosePanel:
 
   def _draw_check_menu(
       self,
-      return_list: List[str],
-      pending: List[Dict[str, int]],
-      confirmed: List[int],
+      return_list: list[str],
+      pending: list[dict[str, int]],
+      confirmed: list[int],
       used_checks: int,
   ) -> None:
     """绘制折叠式检查目录，允许逐级展开与勾选。
@@ -568,7 +568,7 @@ class MedicalPlayerDiagnosePanel:
         self._resolve_hint_highlight_targets()
     )
     # 已执行过的并发症检查集合，用于在菜单中灰显禁用
-    executed_complication_set: Set[int] = set(self.executed_complication_ids)
+    executed_complication_set: set[int] = set(self.executed_complication_ids)
 
     if not self._should_show_check_menu(confirmed, used_checks):
       self.menu_expanded = False
@@ -754,7 +754,7 @@ class MedicalPlayerDiagnosePanel:
     line_feed.draw()
 
   def _should_show_check_menu(
-      self, confirmed: List[int], used_checks: int
+      self, confirmed: list[int], used_checks: int
   ) -> bool:
     """根据会话状态判断是否展示检查菜单。
 
@@ -876,7 +876,7 @@ class MedicalPlayerDiagnosePanel:
     )
     self.patient.player_pending_checks = pending
 
-  def _resolve_inventory_snapshot(self) -> Dict[int, float]:
+  def _resolve_inventory_snapshot(self) -> dict[int, float]:
     """获取当前医疗仓库的药品库存快照。
 
     返回:
@@ -890,7 +890,7 @@ class MedicalPlayerDiagnosePanel:
     if not isinstance(inventory, dict):
       return {}
 
-    snapshot: Dict[int, float] = {}
+    snapshot: dict[int, float] = {}
     for resource_id, value in inventory.items():
       try:
         snapshot[int(resource_id)] = float(value or 0.0)
@@ -916,14 +916,14 @@ class MedicalPlayerDiagnosePanel:
 
   def _collect_patient_medicine_shortages(
       self, inventory_snapshot: Mapping[int, float]
-  ) -> List[str]:
+  ) -> list[str]:
     """针对当前病人整理药品缺口描述列表。"""
 
     if self.patient is None:
       return []
 
     requirement_map = getattr(self.patient, "need_resources", {}) or {}
-    shortage_lines: List[str] = []
+    shortage_lines: list[str] = []
     for resource_key, amount in requirement_map.items():
       try:
         resource_id = int(resource_key)
@@ -957,7 +957,7 @@ class MedicalPlayerDiagnosePanel:
     return shortage_lines
 
   def _draw_treatment_methods(
-      self, confirmed: List[int], used_checks: int
+      self, confirmed: list[int], used_checks: int
   ) -> None:
     """绘制治疗摘要或建议，用于引导下一步行为。
 
@@ -1016,18 +1016,18 @@ class MedicalPlayerDiagnosePanel:
 
     summary_draw = draw.NormalDraw()
     summary_draw.width = self.width
-    lines: List[str] = []
+    lines: list[str] = []
 
     # 计算未确诊并发症数量及调整比例
-    actual_complications: Set[int] = set()  # 真实并发症 ID 集合
+    actual_complications: set[int] = set()  # 真实并发症 ID 集合
     if getattr(self.patient, "complications", None):
       actual_complications = {
           int(cid) for cid in self.patient.complications if cid
       }
-    confirmed_set: Set[int] = {
+    confirmed_set: set[int] = {
         int(cid) for cid in confirmed
     }  # 已确诊并发症 ID 集合
-    missing_complications: Set[int] = set()  # 未确诊并发症 ID 集合
+    missing_complications: set[int] = set()  # 未确诊并发症 ID 集合
     if actual_complications:
       missing_complications = actual_complications - confirmed_set
 
@@ -1098,7 +1098,7 @@ class MedicalPlayerDiagnosePanel:
           )
       )
       resources_raw = preview.get("resources")
-      resources: List[Dict[str, Any]] = []
+      resources: list[dict[str, Any]] = []
       if isinstance(resources_raw, list):
         for entry in resources_raw:
           if isinstance(entry, dict):
@@ -1158,7 +1158,7 @@ class MedicalPlayerDiagnosePanel:
 
     line_feed.draw()
 
-  def _build_suspect_suggestions(self) -> List[str]:
+  def _build_suspect_suggestions(self) -> list[str]:
     """整理检查记录，生成可能的异常建议。
 
     参数:
@@ -1170,8 +1170,8 @@ class MedicalPlayerDiagnosePanel:
     if self.patient is None:
       return []
     records = getattr(self.patient, "player_check_records", [])
-    suggestions: List[str] = []
-    seen: Set[Tuple[int, int]] = set()
+    suggestions: list[str] = []
+    seen: set[tuple[int, int]] = set()
     # 逆序遍历记录，以便优先展示最新的再检建议
     for record in reversed(records):
       if not isinstance(record, dict) or record.get("result") != "recheck":
@@ -1222,7 +1222,7 @@ class MedicalPlayerDiagnosePanel:
 
   def _resolve_option_info(
       self, system_id: int, part_id: int, complication_id: int
-  ) -> Dict[str, Any]:
+  ) -> dict[str, Any]:
     """从检查目录中解析指定选项的详细信息。
 
     参数:
@@ -1292,9 +1292,9 @@ class MedicalPlayerDiagnosePanel:
 
   def _draw_operation_buttons(
       self,
-      return_list: List[str],
-      pending: List[Dict[str, int]],
-      confirmed: List[int],
+      return_list: list[str],
+      pending: list[dict[str, int]],
+      confirmed: list[int],
       used_checks: int,
   ) -> None:
     """根据当前状态绘制并注册所有操作按钮。
@@ -1412,13 +1412,13 @@ class MedicalPlayerDiagnosePanel:
     self._pending_continue_after_treatment = continue_after
 
     # 计算当前病人的实际并发症集合，用于判断是否存在未确诊条目
-    actual_complications: Set[int] = set()
+    actual_complications: set[int] = set()
     if getattr(self.patient, "complications", None):
       actual_complications = {
           int(cid) for cid in self.patient.complications if cid
       }
 
-    confirmed_set: Set[int] = {
+    confirmed_set: set[int] = {
         int(cid) for cid in self._get_confirmed_complications()
     }
 
@@ -1530,7 +1530,7 @@ class MedicalPlayerDiagnosePanel:
         shortage_notice = "\n" + _("药品库存不足，请补充后再试。")
       base_message += shortage_notice
 
-    next_patient: Optional[medical_constant.MedicalPatient] = None
+    next_patient: medical_constant.MedicalPatient | None = None
     if continue_after and self.player is not None:
       next_patient = (
           medical_player_diagnose_function.start_player_diagnose_session(
@@ -1630,7 +1630,7 @@ class MedicalPlayerDiagnosePanel:
       )
       return
     raw_results = result.get("results", [])
-    normalized: List[Dict[str, object]] = []
+    normalized: list[dict[str, object]] = []
     if isinstance(raw_results, list):
       for entry in raw_results:
         if isinstance(entry, dict):
@@ -1709,7 +1709,7 @@ class MedicalPlayerDiagnosePanel:
 
   # --- 工具方法 ---------------------------------------------------------
 
-  def _get_pending_checks(self) -> List[Dict[str, int]]:
+  def _get_pending_checks(self) -> list[dict[str, int]]:
     """读取并清洗患者结构中的待执行检查列表。
 
     参数:
@@ -1721,7 +1721,7 @@ class MedicalPlayerDiagnosePanel:
     if self.patient is None:
       return []
     data = getattr(self.patient, "player_pending_checks", [])
-    pending: List[Dict[str, int]] = []
+    pending: list[dict[str, int]] = []
     for item in data:
       if not isinstance(item, dict):
         continue
@@ -1736,7 +1736,7 @@ class MedicalPlayerDiagnosePanel:
       )
     return pending
 
-  def _get_confirmed_complications(self) -> List[int]:
+  def _get_confirmed_complications(self) -> list[int]:
     """获取当前会话已经确诊的并发症列表。
 
     参数:
@@ -1770,7 +1770,7 @@ class MedicalPlayerDiagnosePanel:
     duration = max(int(round(base_minutes / efficiency)), 5)
     return duration
 
-  def _resolve_hint_allowed_indices(self, total_options: int) -> List[int]:
+  def _resolve_hint_allowed_indices(self, total_options: int) -> list[int]:
     """根据玩家医疗等级推导可使用的提示等级索引集合。
 
     功能:
@@ -1789,8 +1789,8 @@ class MedicalPlayerDiagnosePanel:
       return [0]
 
     # 默认始终允许关闭选项（索引 0），其他选项需满足能力阈值
-    allowed_indices: Set[int] = {0}
-    unlock_thresholds: Tuple[Tuple[int, int], ...] = (
+    allowed_indices: set[int] = {0}
+    unlock_thresholds: tuple[tuple[int, int], ...] = (
         (1, 1),
         (2, 2),
         (3, 3),
@@ -1809,7 +1809,7 @@ class MedicalPlayerDiagnosePanel:
 
   def _fetch_hint_setting_context(
       self, *, enforce_bounds: bool
-  ) -> Tuple[int, List[int], List[str]]:
+  ) -> tuple[int, list[int], list[str]]:
     """拉取提示设置上下文并按需应用能力限制。
 
     功能:
@@ -1852,7 +1852,7 @@ class MedicalPlayerDiagnosePanel:
 
   def _resolve_hint_highlight_targets(
       self,
-  ) -> Tuple[Set[int], Set[Tuple[int, int]], Set[int]]:
+  ) -> tuple[set[int], set[tuple[int, int]], set[int]]:
     """根据玩家医疗等级确定需要高亮的系统、部位与并发症。"""
 
     if self.patient is None:
@@ -1871,11 +1871,11 @@ class MedicalPlayerDiagnosePanel:
       return set(), set(), set()
 
     # 【新增】获取当前已确诊的并发症，用于在下方过滤高亮
-    confirmed_set: Set[int] = set(self._get_confirmed_complications())
+    confirmed_set: set[int] = set(self._get_confirmed_complications())
 
-    system_targets: Set[int] = set()
-    part_targets: Set[Tuple[int, int]] = set()
-    complication_by_severity: Dict[int, Set[int]] = {}
+    system_targets: set[int] = set()
+    part_targets: set[tuple[int, int]] = set()
+    complication_by_severity: dict[int, set[int]] = {}
 
     for entry in trace_list:
       comp_id = int(entry.get("cid", entry.get("complication_id", 0)) or 0)
@@ -1907,7 +1907,7 @@ class MedicalPlayerDiagnosePanel:
     highlight_parts = part_targets if hint_value >= 2 else set()
 
     # 根据提示等级递增叠加不同严重度的并发症高亮范围
-    highlight_complications: Set[int] = set()
+    highlight_complications: set[int] = set()
     if hint_value >= 3:
       highlight_complications |= complication_by_severity.get(0, set())
     if hint_value >= 4:
@@ -1956,7 +1956,7 @@ class MedicalPlayerDiagnosePanel:
     return mapping.get(result, result)
 
   @staticmethod
-  def _summarize_check_results(results: List[Dict[str, object]]) -> str:
+  def _summarize_check_results(results: list[dict[str, object]]) -> str:
     """将原始检查结果列表整理为可阅读的段落。
 
     参数:
@@ -1967,7 +1967,7 @@ class MedicalPlayerDiagnosePanel:
     """
     if not results:
       return _("本次检查未获得有效结果。")
-    lines: List[str] = []
+    lines: list[str] = []
     for item in results:
       name = item.get("name", str(item.get("cid", "")))
       outcome = MedicalPlayerDiagnosePanel._translate_outcome(

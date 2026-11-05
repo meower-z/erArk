@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 import math
-from typing import Callable, Dict, Optional
+from typing import Callable
 
 from Script.Config import config_def, game_config
 from Script.Core import game_type
@@ -112,11 +112,11 @@ def process_hospitalized_patients(
 
 def process_single_hospitalized_patient(
     rhodes_island: game_type.Rhodes_Island,
-    patient: Optional[medical_constant.MedicalPatient],
+    patient: medical_constant.MedicalPatient | None,
     consume_medicine: Callable[[medical_constant.MedicalPatient], bool],
     *,
-    doctor: Optional[game_type.Character] = None,
-) -> Dict[str, object]:
+    doctor: game_type.Character | None = None,
+) -> dict[str, object]:
   """对单名住院病人执行一次巡诊流程。
 
   参数:
@@ -128,7 +128,7 @@ def process_single_hospitalized_patient(
       Dict[str, object]: 巡诊结果与收益统计。
   """
 
-  result: Dict[str, object] = {
+  result: dict[str, object] = {
       "handled": False,
       "success": False,
       "discharged": False,
@@ -471,7 +471,7 @@ def refresh_patient_hospital_needs(
 
 def _build_hospital_prescription(
     severity_config: config_def.Medical_Severity,
-) -> Dict[int, float]:
+) -> dict[int, float]:
   """依据病情等级生成住院用药模板。
 
   参数:
@@ -480,7 +480,7 @@ def _build_hospital_prescription(
       Dict[int, float]: 资源 ID 到推荐消耗量的映射。
   """
 
-  prescription: Dict[int, float] = {}
+  prescription: dict[int, float] = {}
   normal_amount = (
       float(severity_config.normal_medicine_min)
       + float(severity_config.normal_medicine_max)
@@ -499,7 +499,7 @@ def _build_hospital_prescription(
 
 def resolve_surgery_requirements(
     severity_config: config_def.Medical_Severity,
-) -> Dict[int, float]:
+) -> dict[int, float]:
   """根据病情等级生成手术所需药品需求表。
 
   参数:
@@ -510,7 +510,7 @@ def resolve_surgery_requirements(
 
   # 手术药品需求基于住院处方，并套用额外倍率。
   base = _build_hospital_prescription(severity_config)
-  result: Dict[int, float] = {}
+  result: dict[int, float] = {}
   for resource_id, amount in base.items():
     result[resource_id] = max(
         amount * medical_constant.SURGERY_RESOURCE_MULTIPLIER, 0.0

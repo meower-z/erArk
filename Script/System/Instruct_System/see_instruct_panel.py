@@ -1,6 +1,5 @@
 """查看操作菜单面板，以及单个指令是否通过过滤的判断"""
 
-from typing import List
 from types import FunctionType
 from Script.System.Instruct_System import handle_instruct
 from Script.UI.Moudle import draw, panel
@@ -117,7 +116,7 @@ class SeeInstructPanel:
     """初始化绘制对象"""
     self.width: int = width
     """ 最大绘制宽度 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 监听的按钮列表 """
 
     # 初始化指令类型过滤

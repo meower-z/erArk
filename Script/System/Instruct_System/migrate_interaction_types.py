@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 迁移脚本：将 InstructConfig.csv 中的 web_major_type 和 web_minor_type 从数字转换为字符串标识符
 
@@ -56,7 +55,7 @@ def migrate() -> bool:
 
   # 读取 CSV
   rows = []
-  with open(csv_path, "r", encoding="utf-8-sig") as f:
+  with open(csv_path, encoding="utf-8-sig") as f:
     reader = csv.reader(f)
     rows = list(reader)
 

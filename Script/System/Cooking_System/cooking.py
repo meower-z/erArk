@@ -3,7 +3,6 @@
 import random
 import uuid
 from types import FunctionType
-from typing import Dict, Set
 from Script.Core.game_type import Recipes, Food
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
@@ -15,7 +14,7 @@ _: FunctionType = get_text._
 """ 翻译api """
 
 
-def init_recipes() -> Dict[int, game_type.Recipes]:
+def init_recipes() -> dict[int, game_type.Recipes]:
   """初始化菜谱数据"""
   cache = cache_control.cache
   cache.recipe_data = {}
@@ -170,7 +169,7 @@ def has_cook_question_library(food_id: int) -> bool:
   return False
 
 
-def get_food_cook_questions(food_id: int) -> Dict[str, list]:
+def get_food_cook_questions(food_id: int) -> dict[str, list]:
   """
   获取指定食物的烹饪问题库（阶段 -> 问题列表）
   Keyword arguments:
@@ -182,7 +181,7 @@ def get_food_cook_questions(food_id: int) -> Dict[str, list]:
 
 
 def cook(
-    food_data: Dict[str, Food], recipe_id: int, cook_level: int, maker: str
+    food_data: dict[str, Food], recipe_id: int, cook_level: int, maker: str
 ) -> Food:
   """
   按食谱烹饪食物
@@ -217,7 +216,7 @@ def init_food_shop_data(
     while 1:
       recipes_id_list = list(cache.recipe_data.keys())
       recipes_id = random.choice(recipes_id_list)
-      food_list: Dict[str, Food] = {}
+      food_list: dict[str, Food] = {}
       now_recipe_data = cache.recipe_data[recipes_id]
       # 只能制作预制菜
       if now_recipe_data.type != 5:
@@ -351,7 +350,7 @@ def init_makefood_data() -> None:
 
 def get_character_food_bag_type_list_buy_food_type(
     character_id: int, food_type: str
-) -> Dict[str, Set]:
+) -> dict[str, set]:
   """
   获取角色背包内指定类型的食物种类
   Keyword arguments:
@@ -360,7 +359,7 @@ def get_character_food_bag_type_list_buy_food_type(
   Return arguments:
   Dict -- 食物名字数据 食物名字:uid集合
   """
-  food_list: Dict[str, Set[uuid.UUID]] = {}
+  food_list: dict[str, set[uuid.UUID]] = {}
   character_data = cache.character_data[character_id]
   for food_uid in character_data.food_bag:
     food_data: Food = character_data.food_bag[food_uid]
@@ -373,7 +372,7 @@ def get_character_food_bag_type_list_buy_food_type(
 
 def get_food_list_from_food_shop(
     food_type: str, restaurant_id: int | str = -1
-) -> Dict[str, str]:
+) -> dict[str, str]:
   """
   获取餐馆内指定类型的食物种类
   Keyword arguments:
@@ -426,7 +425,7 @@ def get_food_list_from_food_shop(
 
 def get_cook_from_makefood_data_by_food_type(
     food_type: str,
-) -> Dict[str, str]:
+) -> dict[str, str]:
   """
   按食物种类从做饭区获取可以烹饪的的食物列表
   Keyword arguments:

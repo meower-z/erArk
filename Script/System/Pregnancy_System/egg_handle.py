@@ -2,7 +2,6 @@
 
 import random
 from types import FunctionType
-from typing import Optional
 from Script.Core import (
     cache_control,
     game_type,
@@ -489,7 +488,7 @@ def check_ovulation(character_id: int) -> None:
 
 
 def npc_identify_eggs_settle(
-    character_id: int, identifier_id: Optional[int] = None
+    character_id: int, identifier_id: int | None = None
 ) -> None:
   """
   鉴定卵结算：一次揭示角色当前全部可鉴定的未鉴定卵

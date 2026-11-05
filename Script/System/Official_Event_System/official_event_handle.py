@@ -21,7 +21,7 @@
 
 import random
 from types import FunctionType
-from typing import Callable, Dict, List, Optional
+from typing import Callable
 
 from Script.Core import cache_control, constant, game_type, get_text
 from Script.Config import game_config
@@ -55,15 +55,15 @@ SUBJECT_CHARACTER = 1
 SUB_KEY_ANY = 0
 """ 分类内子桶键取0时表示「本分类的通用事件」，具体语义由该部门的提供者解释 """
 
-EVENT_PROVIDER: Dict[int, Callable] = {}
+EVENT_PROVIDER: dict[int, Callable] = {}
 """ 部门id -> 今日候选提供者。提供者自行节流，返回
     [{"uid": str, "chara_id": int, "partner_id": int}, ...]，本模块只负责汇总与封顶 """
 
-EVENT_CAPACITY: Dict[int, Callable] = {}
+EVENT_CAPACITY: dict[int, Callable] = {}
 """ 部门id -> 队列容量提供者，返回该部门需要的额外队列容量int。
     养成用它把上限随女儿数放宽——女儿多的时候队列本来就该更长 """
 
-EVENT_TITLE: Dict[int, Callable] = {}
+EVENT_TITLE: dict[int, Callable] = {}
 """ 部门id -> 事件抬头提供者，入参为队列元素dict，返回抬头str。未注册则画「公务事件·部门名」 """
 
 
@@ -129,7 +129,7 @@ def init_provider() -> None:
   from Script.System.Education_System import growth_event_handle  # noqa: F401  养成事件（教育区15）
 
 
-def get_event_data(uid: str) -> Optional[dict]:
+def get_event_data(uid: str) -> dict | None:
   """
   取一条公务事件的配置
   Keyword arguments:
@@ -396,7 +396,7 @@ def push_official_event(
   return True
 
 
-def get_default_department_pick_list() -> List[dict]:
+def get_default_department_pick_list() -> list[dict]:
   """
   默认提供者：给没有注册专属提供者的部门挑今日候选
 
@@ -524,7 +524,7 @@ def get_official_event_queue_count(character_id: int = -1) -> int:
   )
 
 
-def pop_official_event() -> Optional[dict]:
+def pop_official_event() -> dict | None:
   """
   取出队首的一条待处理事件
   Keyword arguments:
@@ -541,7 +541,7 @@ def pop_official_event() -> Optional[dict]:
 
 def get_option_list(
     uid: str, character_id: int = 0, partner_id: int = 0
-) -> List[dict]:
+) -> list[dict]:
   """
   取一条事件的选项列表，并判定各选项的前提
 
@@ -584,7 +584,7 @@ def get_option_list(
   return result
 
 
-def handle_ri_effect(effect_list: List[str]) -> None:
+def handle_ri_effect(effect_list: list[str]) -> None:
   """
   执行一条罗德岛全局数值的结算（CVE_RI_<类型>_<G/L/E>_<值>）
 

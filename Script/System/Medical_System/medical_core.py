@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 import math
-from typing import Dict, List, Optional, Tuple
+from typing import Dict
 
 from Script.Config import config_def, game_config
 from Script.Core import cache_control, game_type
@@ -16,7 +16,7 @@ from Script.System.Medical_System import medical_constant
 
 
 def _bump_daily_counter(
-    rhodes_island: Optional[game_type.Rhodes_Island],
+    rhodes_island: game_type.Rhodes_Island | None,
     key: str,
     value: object,
 ) -> None:
@@ -44,7 +44,7 @@ def _bump_daily_counter(
 
 
 def _apply_income_to_rhodes(
-    rhodes_island: Optional[game_type.Rhodes_Island],
+    rhodes_island: game_type.Rhodes_Island | None,
     income_value: int,
 ) -> None:
   """为罗德岛医疗系统入账指定收入。
@@ -70,8 +70,8 @@ def _apply_income_to_rhodes(
 
 
 def _get_rhodes_island(
-    target_base: Optional[game_type.Rhodes_Island],
-) -> Optional[game_type.Rhodes_Island]:
+    target_base: game_type.Rhodes_Island | None,
+) -> game_type.Rhodes_Island | None:
   """返回调用环境可用的罗德岛基地对象。
 
   参数:
@@ -89,8 +89,8 @@ def _get_rhodes_island(
 
 
 def _obtain_daily_counters(
-    rhodes_island: Optional[game_type.Rhodes_Island],
-) -> Optional[medical_constant.MedicalDailyCounters]:
+    rhodes_island: game_type.Rhodes_Island | None,
+) -> medical_constant.MedicalDailyCounters | None:
   """返回罗德岛对象上的医疗当日统计结构。
 
   参数:
@@ -116,7 +116,7 @@ def _obtain_daily_counters(
 def _locate_patient(
     patient_id: int,
     rhodes_island: game_type.Rhodes_Island,
-) -> Tuple[Optional[medical_constant.MedicalPatient], bool]:
+) -> tuple[medical_constant.MedicalPatient | None, bool]:
   """在门诊和住院列表中查找病人，返回病人对象与是否住院标记。
 
   参数:
@@ -157,7 +157,7 @@ def _get_medical_facility_level(rhodes_island: game_type.Rhodes_Island) -> int:
 
 def _pick_hospital_level_config(
     level: int,
-) -> Optional[config_def.Medical_Hospital_Level]:
+) -> config_def.Medical_Hospital_Level | None:
   """根据设施等级选取对应的医院等级配置。
 
   参数:
@@ -216,7 +216,7 @@ def _calculate_patient_refresh_count(
       else {}
   )
   # 获取当前国家 ID
-  current_country_id: Optional[int] = None
+  current_country_id: int | None = None
   if (
       isinstance(rhodes_island.current_location, (list, tuple))
       and rhodes_island.current_location
@@ -259,7 +259,7 @@ def _calculate_medical_bed_limit(rhodes_island: game_type.Rhodes_Island) -> int:
   return max(total_limit, current_occupancy)
 
 
-def _calculate_doctor_power(doctor_ids: Optional[list[int]]) -> float:
+def _calculate_doctor_power(doctor_ids: list[int] | None) -> float:
   """计算医生列表的医疗能力总和，用于缓存字段刷新。
 
   参数:
@@ -367,7 +367,7 @@ def _resolve_default_price_ratio() -> float:
 
 
 def clamp(
-    value: float, min_value: Optional[float], max_value: Optional[float]
+    value: float, min_value: float | None, max_value: float | None
 ) -> float:
   """带上下限的数值夹取，None 表示不限制。
 
@@ -389,7 +389,7 @@ def clamp(
   return result
 
 
-def _pick_price_config(price_ratio: float) -> List[float]:
+def _pick_price_config(price_ratio: float) -> list[float]:
   """根据收费系数计算刷新倍率与收入倍率。
 
   参数:

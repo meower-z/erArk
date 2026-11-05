@@ -11,7 +11,6 @@
 """
 
 from types import FunctionType
-from typing import Dict, List
 
 from Script.Core import cache_control, game_type, get_text, flow_handle
 from Script.Config import normal_config
@@ -30,7 +29,7 @@ window_width: int = normal_config.config_normal.text_width
 
 
 def draw_select_student_line(
-    width: int, now_student: int, return_list: List[str]
+    width: int, now_student: int, return_list: list[str]
 ) -> bool:
   """
   绘制选人行：已选人时是「当前学生：X」+ 居中的「[选择学生]」；没选人时不写「尚未选择」，「[选择学生]」直接顶在行首，再画一行提示
@@ -77,7 +76,7 @@ def draw_select_student_line(
 
 
 def select_student(
-    candidate_list: List[int], title_text: str, info_text: str, now_student: int
+    candidate_list: list[int], title_text: str, info_text: str, now_student: int
 ) -> int:
   """
   打开通用 NPC 选择面板让玩家从预筛好的名单里挑一个人
@@ -111,7 +110,7 @@ def select_student(
       0,
   )
   select_state: dict = {}
-  name_to_id: Dict[str, int] = {}
+  name_to_id: dict[str, int] = {}
   yrn = ""
   while 1:
     name_to_id = {}

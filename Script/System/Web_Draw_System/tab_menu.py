@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 选项卡菜单组件
 负责处理Web模式下的面板选项卡栏
@@ -16,7 +15,7 @@
 - 子面板模式下，其他选项卡会变灰且不可点击
 """
 
-from typing import List, Dict, Set, Any, Union, Optional
+from typing import Any, Optional
 from Script.Core import cache_control, game_type, constant
 from Script.Design import handle_premise, child_stage_gate
 
@@ -38,7 +37,7 @@ SUB_PANEL_TAB_NAME_MAP = {
 }
 
 
-def filter_instructs_by_premise(instruct_ids: Union[List, Set]) -> List[str]:
+def filter_instructs_by_premise(instruct_ids: list | set) -> list[str]:
   """
   过滤指令列表，只返回满足所有前提条件的指令
 
@@ -51,7 +50,7 @@ def filter_instructs_by_premise(instruct_ids: Union[List, Set]) -> List[str]:
   List[str] -- 满足所有前提条件的指令ID列表
   """
   result = []
-  premise_cache: Dict[str, Any] = {}  # 本次调用的前提缓存
+  premise_cache: dict[str, Any] = {}  # 本次调用的前提缓存
 
   for instruct_id in instruct_ids:
     # 确保 instruct_id 是字符串
@@ -65,7 +64,7 @@ def filter_instructs_by_premise(instruct_ids: Union[List, Set]) -> List[str]:
 
 
 def _check_single_instruct_premise(
-    instruct_id: str, premise_cache: Dict[str, Any]
+    instruct_id: str, premise_cache: dict[str, Any]
 ) -> bool:
   """
   检查单个指令的前提条件是否满足
@@ -121,7 +120,7 @@ class TabMenu:
     # 当前激活的选项卡ID，默认为主面板
     self._active_tab: str = MAIN_PANEL_TAB_ID
 
-  def get_panel_tabs(self) -> List[dict]:
+  def get_panel_tabs(self) -> list[dict]:
     """
     获取所有面板类选项卡
 
@@ -201,7 +200,7 @@ class TabMenu:
 
     return tabs
 
-  def _get_available_system_panel_instructs(self) -> List[dict]:
+  def _get_available_system_panel_instructs(self) -> list[dict]:
     """
     获取所有满足条件的系统面板类指令
 
@@ -307,7 +306,7 @@ def enter_sub_panel_mode(panel_id: str, panel_name: str = "") -> None:
 
 def enter_managed_sub_panel_mode(
     panel_id: str, panel_name: str = ""
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
   """
   以受管方式进入子面板模式
 
@@ -340,7 +339,7 @@ def enter_managed_sub_panel_mode(
   return context
 
 
-def enter_managed_sub_panel_mode_by_type(sub_panel_type: str) -> Dict[str, Any]:
+def enter_managed_sub_panel_mode_by_type(sub_panel_type: str) -> dict[str, Any]:
   """
   按子面板类型进入受管子面板模式
 

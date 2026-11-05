@@ -5,7 +5,6 @@
 import random
 from types import FunctionType
 from uuid import UUID
-from typing import Tuple, List
 from Script.Core import get_text, game_type, cache_control, constant, flow_handle
 from Script.UI.Moudle import panel, draw
 from Script.Design import attr_calculation, handle_premise
@@ -26,7 +25,7 @@ line_feed.width = 1
 def calculate_food_effects(
     character_id: int,
     add_time: int,
-) -> Tuple[int, int]:
+) -> tuple[int, int]:
   """
   食物结算，计算食物对角色的状态值和体力气力的影响\n
   Keyword arguments:
@@ -268,7 +267,7 @@ class FoodBagPanel:
         cache.now_panel_id = constant.Panel.IN_SCENE
         break
 
-  def get_food_group(self) -> Tuple[dict, dict]:
+  def get_food_group(self) -> tuple[dict, dict]:
     """
     获取当前面板下的食物分组，按(recipe, special_seasoning)分组\n
     Return arguments:
@@ -359,7 +358,7 @@ class FoodGroupDraw:
 
   def __init__(
       self,
-      text: Tuple,
+      text: tuple,
       width: int,
       is_button: bool,
       num_button: bool,
@@ -369,7 +368,7 @@ class FoodGroupDraw:
     group_key, uid_list = text
     recipe_id, special_seasoning = group_key
 
-    self.uid_list: List[UUID] = uid_list
+    self.uid_list: list[UUID] = uid_list
     """ 该分组下的食物uid列表 """
     self.draw_text: str = ""
     """ 绘制文本，供面板对齐处理使用 """

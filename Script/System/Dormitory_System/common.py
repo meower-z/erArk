@@ -4,7 +4,6 @@ import os
 import re
 from types import FunctionType
 from collections import defaultdict
-from typing import Dict, List, Set, Tuple
 
 from Script.Core import cache_control, game_type, constant, get_text
 from Script.Config import game_config
@@ -103,14 +102,14 @@ def _get_dormitory_room_no(scene_path: str) -> int:
   return int(room_dir_name)
 
 
-def get_open_dormitory_rooms_by_layer() -> Dict[int, List[Tuple[str, str]]]:
+def get_open_dormitory_rooms_by_layer() -> dict[int, list[tuple[str, str]]]:
   """
   统计已开放宿舍房间
   输入类型: 无
   输出类型: Dict[int, List[Tuple[str,str]]]
   功能: 返回已开放房间，key=层号（房号的百位），value=按房号排列的[(房间名, 场景路径)]
   """
-  result: Dict[int, List[Tuple[str, str]]] = defaultdict(list)
+  result: dict[int, list[tuple[str, str]]] = defaultdict(list)
   max_open_layer = get_dormitory_max_open_layer()
   dormitory_level = _get_dormitory_level()
   base_open_room_upper_no = _get_base_open_room_upper_no()
@@ -140,7 +139,7 @@ def get_open_dormitory_rooms_by_layer() -> Dict[int, List[Tuple[str, str]]]:
   return dict(result)
 
 
-def get_open_dormitory_room_paths_by_layer(layer: int) -> List[str]:
+def get_open_dormitory_room_paths_by_layer(layer: int) -> list[str]:
   """
   获取指定层可巡查的开放宿舍路径列表
   输入类型: layer(int)
@@ -157,7 +156,7 @@ def get_open_dormitory_room_paths_by_layer(layer: int) -> List[str]:
   return [room_path for _, room_path in open_rooms_by_layer[layer]]
 
 
-def get_dormitory_resident_id_set() -> Set[int]:
+def get_dormitory_resident_id_set() -> set[int]:
   """
   获取需要纳入宿舍统计的角色id集合
   输入类型: 无
@@ -166,7 +165,7 @@ def get_dormitory_resident_id_set() -> Set[int]:
   """
   from Script.Design.handle_premise import handle_normal_7
 
-  resident_id_set: Set[int] = set(cache.npc_id_got)
+  resident_id_set: set[int] = set(cache.npc_id_got)
   resident_id_set.discard(0)
   # 遍历所有角色，追加处于异常7(离岛)状态但不在拥有干员列表中的角色
   for character_id in cache.character_data:
@@ -180,7 +179,7 @@ def get_dormitory_resident_id_set() -> Set[int]:
   return resident_id_set
 
 
-def get_open_dormitory_room_occupancy() -> Dict[str, int]:
+def get_open_dormitory_room_occupancy() -> dict[str, int]:
   """
   获取开放普通宿舍的占用表
   输入类型: 无
@@ -188,7 +187,7 @@ def get_open_dormitory_room_occupancy() -> Dict[str, int]:
   功能: 按层号升序、层内房号升序列出全部开放普通宿舍的场景路径，并按宿舍统计角色集合的宿舍归属统计各房当前居住人数，返回保持该顺序的{房间路径: 人数}表
   """
   open_rooms_by_layer = get_open_dormitory_rooms_by_layer()
-  room_occupancy: Dict[str, int] = {}
+  room_occupancy: dict[str, int] = {}
   for layer in sorted(open_rooms_by_layer):
     for _room_name, room_path in open_rooms_by_layer[layer]:
       room_occupancy[room_path] = 0
@@ -200,7 +199,7 @@ def get_open_dormitory_room_occupancy() -> Dict[str, int]:
 
 
 def pick_dormitory_room(
-    room_occupancy: Dict[str, int], preferred_room: str = ""
+    room_occupancy: dict[str, int], preferred_room: str = ""
 ) -> str:
   """
   纯函数：按占用表挑选新入住者应分配的宿舍

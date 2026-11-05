@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """
 Web绘制适配器，用于转换原有绘制类到Web界面
@@ -8,7 +7,7 @@ Web绘制适配器，用于转换原有绘制类到Web界面
 from __future__ import annotations
 
 import time
-from typing import List, Dict, Any, Optional
+from typing import Any, Optional
 from Script.Core import cache_control, web_server, flow_handle, text_handle
 
 from typing import TYPE_CHECKING
@@ -238,7 +237,7 @@ class WebDrawAdapter:
     if len(text_parts) == 1:
       text_parts = raw_text.splitlines()
 
-    normalized_lines: List[str] = []
+    normalized_lines: list[str] = []
     for part in text_parts:
       if "\n" in part:
         sub_parts = part.split("\n")
@@ -268,7 +267,7 @@ class WebDrawAdapter:
         nonlocal segment_index, segment_total
         wait_id = WebDrawAdapter._next_line_wait_id()
         skip_wait_active = _should_skip_wait()
-        line_element: Dict[str, Any] = {
+        line_element: dict[str, Any] = {
             "type": "line_wait",
             "text": text_value,
             "font": style,

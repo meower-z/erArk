@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, Tuple, List
+from typing import Any
 
 from Script.Config import game_config
 from Script.Core import cache_control, game_type
@@ -27,10 +27,10 @@ class SurgeryPrecheckResult:
   reason: str = "unknown"
   """无法执行时的原因标签"""
 
-  resource_usage: Dict[int, int] = field(default_factory=dict)
+  resource_usage: dict[int, int] = field(default_factory=dict)
   """本次手术预计消耗的药品资源，key 为资源 ID，value 为整数单位"""
 
-  severity_config: Optional[Any] = None
+  severity_config: Any | None = None
   """当前病情等级的配置对象，用于后续计算"""
 
   doctor_level: int = 0
@@ -39,16 +39,16 @@ class SurgeryPrecheckResult:
   ability_requirement: int = 0
   """手术要求的最低医疗能力等级"""
 
-  details: Dict[str, Any] = field(default_factory=dict)
+  details: dict[str, Any] = field(default_factory=dict)
   """补充信息字典，例如缺药明细"""
 
 
 def _acquire_hospital_patient_for_doctor(
-    doctor_character: Optional[game_type.Character],
-    rhodes_island: Optional[game_type.Rhodes_Island],
+    doctor_character: game_type.Character | None,
+    rhodes_island: game_type.Rhodes_Island | None,
     *,
     require_surgery: bool = False,
-) -> Optional[medical_constant.MedicalPatient]:
+) -> medical_constant.MedicalPatient | None:
   """选择并返回一个符合条件的住院病人。
 
   参数:
@@ -115,7 +115,7 @@ def _acquire_hospital_patient_for_doctor(
 
   def _hospital_priority(
       target: medical_constant.MedicalPatient,
-  ) -> Tuple[int, int, int]:
+  ) -> tuple[int, int, int]:
     return (
         -int(getattr(target, "severity_level", 0) or 0),
         -int(getattr(target, "stay_days", 0) or 0),
@@ -131,9 +131,9 @@ def _acquire_hospital_patient_for_doctor(
 
 
 def evaluate_surgery_preconditions(
-    patient: Optional[medical_constant.MedicalPatient],
-    doctor_character: Optional[game_type.Character],
-    rhodes_island: Optional[game_type.Rhodes_Island],
+    patient: medical_constant.MedicalPatient | None,
+    doctor_character: game_type.Character | None,
+    rhodes_island: game_type.Rhodes_Island | None,
 ) -> SurgeryPrecheckResult:
   """判断指定医生是否可以为病人执行手术并给出资源需求。"""
   from Script.System.Medical_System import medical_service
@@ -173,7 +173,7 @@ def evaluate_surgery_preconditions(
   # 解析手术所需资源并检查库存是否充足
   resource_plan = medical_service.resolve_surgery_requirements(severity_config)
   inventory = getattr(rhodes_island, "materials_resouce", {}) or {}
-  resource_usage: Dict[int, int] = {}
+  resource_usage: dict[int, int] = {}
 
   for resource_id, amount in resource_plan.items():
     units = int(
@@ -205,8 +205,8 @@ def evaluate_surgery_preconditions(
 
 
 def consume_surgery_resources(
-    patient: Optional[medical_constant.MedicalPatient],
-    rhodes_island: Optional[game_type.Rhodes_Island],
+    patient: medical_constant.MedicalPatient | None,
+    rhodes_island: game_type.Rhodes_Island | None,
 ) -> bool:
   """直接扣除病人执行手术所需的药品资源。
 
@@ -244,7 +244,7 @@ def consume_surgery_resources(
 
   # 解析手术药品清单，并逐项确认库存是否充足。
   resource_plan = medical_service.resolve_surgery_requirements(severity_config)
-  resource_usage: Dict[int, int] = {}
+  resource_usage: dict[int, int] = {}
   for resource_id, amount in resource_plan.items():
     units = int(
         math.ceil(max(float(amount), 0.0) - medical_constant.FLOAT_EPSILON)
@@ -283,8 +283,8 @@ def consume_surgery_resources(
 
 def get_surgery_candidate_patient_ids(
     doctor_character: game_type.Character,
-    target_base: Optional[game_type.Rhodes_Island] = None,
-) -> List[medical_constant.MedicalPatient]:
+    target_base: game_type.Rhodes_Island | None = None,
+) -> list[medical_constant.MedicalPatient]:
   """
   返回指定医生角色所有可以进行手术的住院病人ID列表。
 
@@ -335,10 +335,10 @@ def get_surgery_candidate_patient_ids(
 
 
 def conduct_ward_round(
-    doctor_character: Optional[game_type.Character],
+    doctor_character: game_type.Character | None,
     *,
-    target_base: Optional[game_type.Rhodes_Island] = None,
-) -> Dict[str, object]:
+    target_base: game_type.Rhodes_Island | None = None,
+) -> dict[str, object]:
   """执行住院部查房流程。
 
   参数:
@@ -359,7 +359,7 @@ def conduct_ward_round(
       doctor_character, rhodes_island, require_surgery=False
   )
   if patient is None:
-    work_data: Optional[game_type.CHARA_WORK] = doctor_character.work
+    work_data: game_type.CHARA_WORK | None = doctor_character.work
     if work_data is not None:
       work_data.medical_patient_id = 0
     return {"handled": False, "patient": None, "result": "no_candidate"}
@@ -394,7 +394,7 @@ def attempt_surgery(
     patient_id: int,
     doctor_character: game_type.Character,
     *,
-    target_base: Optional[game_type.Rhodes_Island] = None,
+    target_base: game_type.Rhodes_Island | None = None,
 ) -> bool:
   """按病人 ID 结算一次手术结果。
 
@@ -550,7 +550,7 @@ def _record_surgery_attempt(
     doctor: game_type.Character,
     *,
     status: str,
-    extra: Optional[Dict[str, object]] = None,
+    extra: dict[str, object] | None = None,
 ) -> None:
   """记录一条手术执行结果。
 
@@ -565,7 +565,7 @@ def _record_surgery_attempt(
   """
 
   # 构造日志条目，记录核心字段。
-  record: Dict[str, object] = {
+  record: dict[str, object] = {
       "time": getattr(cache_control.cache, "game_time", None),
       "patient_id": patient.patient_id,
       "doctor_id": doctor.cid,

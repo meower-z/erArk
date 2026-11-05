@@ -1,7 +1,5 @@
 """避孕套的存量池与装饰：旧存档字段补全、存量池的增减与清空、装饰的挂上与取回，以及饮用与挤出的结算"""
 
-from typing import Dict, List, Optional, Tuple
-
 from Script.Core import cache_control, game_type
 
 cache: game_type.Cache = cache_control.cache
@@ -34,7 +32,7 @@ def check_dirty_data(character_id: int) -> None:
     dirty_data.condom_decoration = {}
 
 
-def get_used_condoms() -> List[int]:
+def get_used_condoms() -> list[int]:
   """
   获取玩家的用过的避孕套存量池\n
   Return arguments:\n
@@ -66,7 +64,7 @@ def clear_used_condoms() -> None:
   cache.character_data[0].pl_collection.used_condoms = []
 
 
-def get_decoration_dict(character_id: int) -> Dict[tuple, List[int]]:
+def get_decoration_dict(character_id: int) -> dict[tuple, list[int]]:
   """
   获取挂在指定角色身上的装饰避孕套字典（存储在该角色的污浊结构体中）\n
   Keyword arguments:\n
@@ -132,7 +130,7 @@ def move_to_decoration(
     character_id: int,
     part_type: int,
     part_cid: int,
-    condom_index_list: List[int],
+    condom_index_list: list[int],
 ) -> int:
   """
   将存量池中指定编号的避孕套转移为指定角色指定部位的装饰\n
@@ -158,7 +156,7 @@ def move_to_decoration(
 
 
 def take_back_decoration(
-    character_id: int, location_index_list: List[Tuple[tuple, int]]
+    character_id: int, location_index_list: list[tuple[tuple, int]]
 ) -> int:
   """
   将指定角色身上的装饰避孕套取回存量池\n
@@ -186,7 +184,7 @@ def take_back_decoration(
   return take_count
 
 
-def consume_condoms(condom_index_list: List[int]) -> List[int]:
+def consume_condoms(condom_index_list: list[int]) -> list[int]:
   """
   从存量池中消耗指定编号的避孕套（饮用/挤出时调用）\n
   Keyword arguments:\n
@@ -207,7 +205,7 @@ def settle_hang(
     target_character_id: int,
     part_type: int,
     part_cid: int,
-    condom_index_list: List[int],
+    condom_index_list: list[int],
 ) -> None:
   """
   挂上避孕套装饰的结算（由选择面板在确认时直接调用）\n
@@ -227,7 +225,7 @@ def settle_hang(
 
 
 def settle_take_back(
-    target_character_id: int, location_index_list: List[Tuple[tuple, int]]
+    target_character_id: int, location_index_list: list[tuple[tuple, int]]
 ) -> None:
   """
   取回避孕套装饰的结算（由选择面板在确认时直接调用）\n
@@ -248,7 +246,7 @@ def settle_take_back(
 
 
 def settle_drink(
-    target_character_id: int, condom_index_list: List[int]
+    target_character_id: int, condom_index_list: list[int]
 ) -> None:
   """
   饮用避孕套精液的结算（由选择面板在确认时直接调用）\n
@@ -306,7 +304,7 @@ def settle_squeeze(
     target_character_id: int,
     part_type: int,
     part_cid: int,
-    condom_index_list: List[int],
+    condom_index_list: list[int],
 ) -> None:
   """
   挤出避孕套精液的结算（由选择面板在确认时直接调用）\n
@@ -343,7 +341,7 @@ def settle_squeeze(
 
 
 def remove_cloth_decoration(
-    character_id: int, part_cid_list: Optional[List[int]] = None
+    character_id: int, part_cid_list: list[int] | None = None
 ) -> None:
   """
   去除指定角色服装部位上的装饰避孕套记录（换衣/洗衣时调用），头发（身体部位）上的不受影响\n

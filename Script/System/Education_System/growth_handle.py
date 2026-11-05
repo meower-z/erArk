@@ -19,7 +19,6 @@
 
 import datetime
 from types import FunctionType
-from typing import List
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.System.Education_System import education_constant
@@ -61,7 +60,7 @@ def get_character_stage(character_id: int) -> int:
   return 0
 
 
-def get_student_candidate_list() -> List[int]:
+def get_student_candidate_list() -> list[int]:
   """
   取养成中的女儿列表（养成总览、日程批量套用、学期结算共用）
   Keyword arguments:
@@ -94,7 +93,7 @@ def get_student_candidate_list() -> List[int]:
   return result
 
 
-def get_course_candidate_list() -> List[int]:
+def get_course_candidate_list() -> list[int]:
   """
   取可排个人课表的角色列表
   Keyword arguments:
