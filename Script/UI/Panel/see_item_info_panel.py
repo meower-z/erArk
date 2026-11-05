@@ -2,7 +2,6 @@
 角色道具背包面板与道具名、道具数据的绘制对象，以及药剂的使用
 """
 
-from typing import List
 from types import FunctionType
 from Script.Core import cache_control, text_handle, get_text, flow_handle, constant, py_cmd, game_type
 from Script.UI.Moudle import panel, draw
@@ -175,7 +174,7 @@ class SeeCharacterItemBagPanel:
     """ 绘制的角色id """
     self.width: int = width
     """ 最大绘制宽度 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 当前面板监听的按钮列表 """
     self.character_data = cache.character_data[character_id]
 

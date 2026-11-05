@@ -5,7 +5,6 @@
 
 import random
 from functools import wraps
-from typing import Dict, List
 from types import FunctionType
 from Script.Core import get_text, constant, game_type, cache_control, flow_handle, py_cmd, io_init
 
@@ -197,7 +196,7 @@ class Character_creat_Handle:
     other_settings_draw = Other_Settings(self.width)
     # abi_draw = see_character_info_panel.CharacterabiText(0, width)
     # tal_draw = see_character_info_panel.CharacterTalentText(0, width, 8, 0)
-    self.draw_list: List = [
+    self.draw_list: list = [
         info_draw,
         jj_draw,
         debug_draw,
@@ -209,7 +208,7 @@ class Character_creat_Handle:
         # tal_draw,
     ]
     """ 绘制的面板列表 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 当前面板监听的按钮列表 """
 
   def draw(self) -> None:
@@ -235,12 +234,12 @@ class Character_JJ:
     """初始化绘制对象"""
     self.width: int = width
     """ 当前最大可绘制宽度 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 监听的按钮列表 """
 
     character_data: game_type.Character = cache.character_data[0]
     jj_text = game_config.config_jj_tem[character_data.pl_ability.jj_size].name
-    now_draw_list: List[draw.Drawable] = []
+    now_draw_list: list[draw.Drawable] = []
 
     jj_draw = draw.LeftDraw()
     # jj_draw.width = 1
@@ -258,7 +257,7 @@ class Character_JJ:
 
     now_draw_list.append(jj_button_draw)
 
-    self.draw_list: List[draw.Drawable] = []
+    self.draw_list: list[draw.Drawable] = []
     """ 绘制的文本列表 """
     self.draw_list.extend(now_draw_list)
 
@@ -294,10 +293,10 @@ class Character_Debug:
     """初始化绘制对象"""
     self.width: int = width
     """ 当前最大可绘制宽度 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 监听的按钮列表 """
 
-    now_draw_list: List[draw.Drawable] = []
+    now_draw_list: list[draw.Drawable] = []
 
     # debug按钮
     if normal_config.config_normal.debug:
@@ -313,7 +312,7 @@ class Character_Debug:
 
       now_draw_list.append(button_draw)
 
-    self.draw_list: List[draw.Drawable] = []
+    self.draw_list: list[draw.Drawable] = []
     """ 绘制的文本列表 """
     self.draw_list.extend(now_draw_list)
 
@@ -344,7 +343,7 @@ class Character_FirstNPC:
     """初始化绘制对象"""
     self.width: int = width
     """ 当前最大可绘制宽度 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 监听的按钮列表 """
     self.npc_select_now = 3
     """ 当前还可以选择的NPC数量 """
@@ -364,22 +363,22 @@ class Character_FirstNPC:
     """ 是否显示特殊干员选择面板 """
     self.id_list = list(cache.npc_tem_data.keys())
     """ 当前显示的NPC列表 """
-    self.talk_character_list: List[int] = []
+    self.talk_character_list: list[int] = []
     """ 口上干员列表 """
-    self.special_chara_list: List[int] = []
+    self.special_chara_list: list[int] = []
     """ 特殊干员列表 """
     self.name_filter_flag = False
     """ 姓名筛选标记 """
     self.show_chara_attributes_flag = False
     """ 显示干员属性标记 """
     self.chest_filter_flag = 0
-    self.chest_filter_id_dict: Dict[str, List[int]] = {}
+    self.chest_filter_id_dict: dict[str, list[int]] = {}
     """ 胸围筛选标记与ID字典 """
     self.age_filter_flag = 0
-    self.age_filter_id_dict: Dict[str, List[int]] = {}
+    self.age_filter_id_dict: dict[str, list[int]] = {}
     """ 年龄筛选标记与ID字典 """
     self.race_filter_flag = 0
-    self.race_filter_id_dict: Dict[str, List[int]] = {}
+    self.race_filter_id_dict: dict[str, list[int]] = {}
     """ 种族筛选标记与ID字典 """
 
     from Script.UI.Panel import manage_basement_panel
@@ -390,7 +389,7 @@ class Character_FirstNPC:
         self.id_list.remove(chara_id)
         self.special_chara_list.append(chara_id)
 
-    now_draw_list: List[draw.Drawable] = []
+    now_draw_list: list[draw.Drawable] = []
     now_draw_list.append(line_feed_draw)
     now_draw_list.append(line_feed_draw)
     line = draw.LineDraw("↘", 1)
@@ -461,7 +460,7 @@ class Character_FirstNPC:
 
     now_draw_list.append(info_last_draw)
 
-    self.draw_list: List[draw.Drawable] = []
+    self.draw_list: list[draw.Drawable] = []
     """ 绘制的文本列表 """
     self.draw_list.extend(now_draw_list)
 
@@ -1108,12 +1107,12 @@ class Character_Bonus:
     """初始化绘制对象"""
     self.width: int = width
     """ 当前最大可绘制宽度 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 监听的按钮列表 """
 
     character_data: game_type.Character = cache.character_data[0]
     bonus_all = 0
-    now_draw_list: List[draw.Drawable] = []
+    now_draw_list: list[draw.Drawable] = []
     now_draw_list.append(line_feed_draw)
     now_draw_list.append(line_feed_draw)
     line = draw.LineDraw("↘", 1)
@@ -1187,7 +1186,7 @@ class Character_Bonus:
     info_draw.text += f"{bonus_use_text}\n"
     now_draw_list.append(info_draw)
 
-    self.draw_list: List[draw.Drawable] = []
+    self.draw_list: list[draw.Drawable] = []
     """ 绘制的文本列表 """
     self.draw_list.extend(now_draw_list)
 
@@ -1305,10 +1304,10 @@ class World_Setting:
     """初始化绘制对象"""
     self.width: int = width
     """ 当前最大可绘制宽度 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 监听的按钮列表 """
 
-    now_draw_list: List[draw.Drawable] = []
+    now_draw_list: list[draw.Drawable] = []
     now_draw_list.append(line_feed_draw)
     line = draw.LineDraw("↘", 1)
     now_draw_list.append(line)
@@ -1353,7 +1352,7 @@ class World_Setting:
       now_draw_list.append(button_draw)
       now_draw_list.append(line_feed_draw)
 
-    self.draw_list: List[draw.Drawable] = []
+    self.draw_list: list[draw.Drawable] = []
     """ 绘制的文本列表 """
     self.draw_list.extend(now_draw_list)
 
@@ -1384,11 +1383,11 @@ class Other_Settings:
     """初始化绘制对象"""
     self.width: int = width
     """ 当前最大可绘制宽度 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 监听的按钮列表 """
     from Script.UI.Panel import prts_panel
 
-    now_draw_list: List[draw.Drawable] = []
+    now_draw_list: list[draw.Drawable] = []
     now_draw_list.append(line_feed_draw)
     line = draw.LineDraw("↘", 1)
     now_draw_list.append(line)
@@ -1421,7 +1420,7 @@ class Other_Settings:
     now_draw_list.append(button_draw)
     now_draw_list.append(line_feed_draw)
 
-    self.draw_list: List[draw.Drawable] = []
+    self.draw_list: list[draw.Drawable] = []
     """ 绘制的文本列表 """
     self.draw_list.extend(now_draw_list)
 

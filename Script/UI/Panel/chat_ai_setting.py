@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-from typing import List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle
 from Script.UI.Moudle import draw, panel
@@ -45,7 +44,7 @@ class Chat_Ai_Setting_Panel:
     """ 绘制的最大宽度 """
     # self.now_panel = _("文本生成AI设置")
     # """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
     self.pl_character_data = cache.character_data[0]
     """ 玩家的属性 """
@@ -236,7 +235,7 @@ class Chat_Ai_Setting_Panel:
 
         # 查看当前目录下是否有api密钥文件
         try:
-          with open("ai_chat_api_key.csv", "r", encoding="utf-8") as f:
+          with open("ai_chat_api_key.csv", encoding="utf-8") as f:
             reader = csv.reader(f)
             for row in reader:
               if row[0] == "OPENAI_API_KEY":
@@ -713,7 +712,7 @@ class Chat_Ai_Setting_Panel:
         pass  # 创建一个空文件
 
     # 读取文件内容
-    with open(file_path, "r", newline="", encoding="utf-8") as f:
+    with open(file_path, newline="", encoding="utf-8") as f:
       reader = csv.reader(f)
       for row in reader:
         if row[0] == key_type:

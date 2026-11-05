@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Web模式主场景面板
 用于Web绘制模式的图形化交互界面
@@ -8,7 +7,7 @@ Web模式主场景面板
 """
 
 from types import FunctionType
-from typing import Dict, List, Optional
+from typing import Optional
 from Script.Core import (
     get_text,
     cache_control,
@@ -62,7 +61,7 @@ class InScenePanelWeb:
     self.body_part_button = BodyPartButton()
 
     # 状态缓存（用于增量更新）
-    self._last_state: Dict = {}
+    self._last_state: dict = {}
 
     # 当前交互对象ID
     self._current_target_id: int = -1
@@ -189,7 +188,7 @@ class InScenePanelWeb:
     # 设置子面板模式
     enter_sub_panel_mode(panel_id, panel_name)
 
-  def _bind_panel_tabs_and_get_ask_list(self) -> List[str]:
+  def _bind_panel_tabs_and_get_ask_list(self) -> list[str]:
     """
     绑定面板选项卡指令并返回可选列表
 
@@ -247,7 +246,7 @@ class InScenePanelWeb:
     # 更新选项卡状态
     self.tab_menu.set_active_tab(MAIN_PANEL_TAB_ID)
 
-  def _collect_game_state(self) -> Dict:
+  def _collect_game_state(self) -> dict:
     """
     收集当前游戏状态数据
 
@@ -288,7 +287,7 @@ class InScenePanelWeb:
 
     return state
 
-  def _get_scene_info_bar(self) -> Dict:
+  def _get_scene_info_bar(self) -> dict:
     """
     获取场景信息栏数据（顶部信息栏，显示场景名和游戏时间）
 
@@ -331,7 +330,7 @@ class InScenePanelWeb:
         "game_time": time_text,
     }
 
-  def _get_target_info(self, target_id: int) -> Dict:
+  def _get_target_info(self, target_id: int) -> dict:
     """
     获取交互对象的完整信息
 
@@ -361,7 +360,7 @@ class InScenePanelWeb:
 
     return basic_info
 
-  def _get_scene_characters(self) -> List[Dict]:
+  def _get_scene_characters(self) -> list[dict]:
     """
     获取场景内其他角色的头像信息
 
@@ -381,7 +380,7 @@ class InScenePanelWeb:
 
     return self.character_renderer.get_scene_characters_avatars(exclude_ids)
 
-  def _calculate_diff(self, new_state: Dict) -> Dict:
+  def _calculate_diff(self, new_state: dict) -> dict:
     """
     计算状态差异，用于增量更新
 
@@ -406,7 +405,7 @@ class InScenePanelWeb:
 
     return diff
 
-  def _push_state_to_frontend(self, state: Dict) -> None:
+  def _push_state_to_frontend(self, state: dict) -> None:
     """
     推送状态到前端
 
@@ -432,7 +431,7 @@ class InScenePanelWeb:
 
       logging.error(f"推送游戏状态失败: {e}")
 
-  def _convert_state_to_elements(self, state: Dict) -> List[Dict]:
+  def _convert_state_to_elements(self, state: dict) -> list[dict]:
     """
     将游戏状态转换为前端可渲染的元素列表
 

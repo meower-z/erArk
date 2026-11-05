@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from typing import Tuple, Dict, List
+from typing import Dict
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.Design import handle_ability, basement
@@ -31,7 +31,7 @@ window_width: int = normal_config.config_normal.text_width
 
 def calculate_agriculture_line_efficiency(
     line_id: int, agriculture_type: int
-) -> Tuple[str, float]:
+) -> tuple[str, float]:
   """
   计算某条农业生产线的效率加成，并返回描述字符串和效率倍率\n
   输入:\n
@@ -274,7 +274,7 @@ class Agriculture_Production_Panel:
     """ 绘制的最大宽度 """
     self.now_panel = _("农业生产")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
   def draw(self) -> None:
@@ -322,7 +322,7 @@ class Agriculture_Production_Panel:
 
         # 生产产品
         now_text = _("\n    当前生产：{0}").format(resouce_data.name)
-        now_text += ("({0}/d)      ").format(new_produce_value)
+        now_text += f"({new_produce_value}/d)      "
         all_info_draw.text = now_text
         all_info_draw.draw()
         button_text = _(" [生产调整] ")
@@ -362,7 +362,7 @@ class Agriculture_Production_Panel:
 
           # 生产产品
           now_text = _("\n    当前生产：{0}").format(resouce_data.name)
-          now_text += ("({0}/d)      ").format(new_produce_value)
+          now_text += f"({new_produce_value}/d)      "
           all_info_draw.text = now_text
           all_info_draw.draw()
           button_text = _(" [生产调整] ")

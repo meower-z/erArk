@@ -1,6 +1,5 @@
 """显示角色设置的面板"""
 
-from typing import List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle
 from Script.UI.Moudle import panel, draw
@@ -43,9 +42,9 @@ class CharacterSetting:
     """ 面板最大宽度 """
     self.column = column
     """ 每行状态最大个数 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 当前面板监听的按钮列表 """
     self.center_status: bool = center_status
     """ 居中绘制状态文本 """

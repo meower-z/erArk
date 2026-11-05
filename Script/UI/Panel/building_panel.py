@@ -1,6 +1,6 @@
 """基建界面面板"""
 
-from typing import Tuple, List
+from typing import Tuple
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.Design import basement
@@ -33,7 +33,7 @@ class Building_Panel:
     """ 绘制的最大宽度 """
     self.now_panel = _("区块总览")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.Drawable] = []
+    self.draw_list: list[draw.Drawable] = []
     """ 绘制的文本列表 """
 
   def draw(self) -> None:
@@ -100,7 +100,7 @@ class Building_Panel:
       facility_draw.draw()
 
       # 开始区块总览信息
-      building_draw_list: List[draw.Drawable] = [line_feed]
+      building_draw_list: list[draw.Drawable] = [line_feed]
 
       # 遍历全设施
       for all_cid in game_config.config_facility:
@@ -306,9 +306,7 @@ class Building_Panel:
         else:
           # 已修建的设施
           trade_draw_text += _("已修建的设施：")
-          trade_draw_text += "({0}/{1})：".format(
-              len(cache.rhodes_island.shop_open_list), facility_data_now.effect
-          )
+          trade_draw_text += f"({len(cache.rhodes_island.shop_open_list)}/{facility_data_now.effect})："
           for name in cache.rhodes_island.shop_open_list:
             trade_draw_text += f"  {name}"
         trade_draw.text = trade_draw_text
@@ -398,7 +396,7 @@ class Building_Panel:
           draw_text = f"[{facility_cid}]{open_data.name}"
           now_draw = draw.LeftButton(
               draw_text,
-              "\n{0}".format(open_data.name),
+              f"\n{open_data.name}",
               int(self.width / 6),
               cmd_func=self.sure_build_trade,
               args=(facility_open_cid),

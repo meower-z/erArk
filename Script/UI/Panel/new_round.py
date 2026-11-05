@@ -2,7 +2,6 @@
 新周目面板：选择继承到新周目的玩家与干员数据，并显示角色能力与经验
 """
 
-from typing import List
 from types import FunctionType
 from Script.Core import get_text, flow_handle, game_type, cache_control, constant
 
@@ -36,7 +35,7 @@ class New_Round_Handle:
     """初始化绘制对象"""
     self.width = normal_config.config_normal.text_width
     """ 屏幕宽度 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 当前面板监听的按钮列表 """
     self.pl_abi_and_exp_count = 0
     """ 继承玩家能力和经验 """
@@ -60,7 +59,7 @@ class New_Round_Handle:
     """ 干员显示 """
     self.show_panel_flag_list = [False, False, False, False, False, False]
     """ 面板显示列表 """
-    self.all_fall_chara_list: List[int] = []
+    self.all_fall_chara_list: list[int] = []
     """ 所有陷落干员列表 """
     self.farewell_npc_id = 0
     """ 送别干员id """
@@ -119,9 +118,7 @@ class New_Round_Handle:
           if self.show_npc_flag:
             # 用空格对齐
             draw_chara_name = now_character_data.name.rjust(6, "　")
-            now_chara_text = ("  {0}-{1}(+{2})").format(
-                draw_chara_name, talent_name, point_add
-            )
+            now_chara_text = f"  {draw_chara_name}-{talent_name}(+{point_add})"
             info_text += now_chara_text
             # 每8个换行
             if chara_count % 8 == 0:
@@ -570,9 +567,7 @@ class New_Round_Handle:
       # 选择送别干员
       info_text = _("\n○送别干员：")
       if self.farewell_npc_id:
-        info_text += "{0}".format(
-            cache.character_data[self.farewell_npc_id].name
-        )
+        info_text += f"{cache.character_data[self.farewell_npc_id].name}"
       else:
         info_text += _("未选择")
       info_text += "        "
@@ -1223,9 +1218,9 @@ class CharacterabiText:
     # """ 每行状态最大个数 """
     character_data = cache.character_data[self.character_id]
     """ 角色数据 """
-    self.draw_list: List[draw.Drawable] = []
+    self.draw_list: list[draw.Drawable] = []
     """ 绘制对象列表 """
-    self.title_list: List[draw.NormalDraw] = []
+    self.title_list: list[draw.NormalDraw] = []
     """ 绘制标题列表 """
     ability_list = game_config.config_ability_type_data
     title_text = _("能力")
@@ -1321,9 +1316,9 @@ class CharacterExperienceText:
     """ 每行状态最大个数 """
     self.rate = rate
     """ 继承比例 """
-    self.draw_list: List[draw.Drawable | List[draw.LeftDraw]] = []
+    self.draw_list: list[draw.Drawable | list[draw.LeftDraw]] = []
     """ 绘制的文本列表 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 当前面板监听的按钮列表 """
     character_data = cache.character_data[character_id]
     type_data = _("经验")

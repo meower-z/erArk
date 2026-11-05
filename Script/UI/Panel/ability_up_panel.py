@@ -2,7 +2,6 @@
 角色能力升级面板：显示能力升级需求，并消耗宝珠提升能力
 """
 
-from typing import Dict, List
 from types import FunctionType
 
 from Script.UI.Moudle import draw, panel
@@ -33,12 +32,12 @@ window_width = normal_config.config_normal.text_width
 """ 屏幕宽度 """
 
 
-def expand_juel_entries(juel_entries: List[str]) -> List[str]:
+def expand_juel_entries(juel_entries: list[str]) -> list[str]:
   """
   将可能包含占位符 '1' 的宝珠条目展开为具体的宝珠 id 字符串列表。
   保持原始字符串格式（'id' 或 'id|adjust' 或 '0'）
   """
-  result: List[str] = []
+  result: list[str] = []
   entries = list(juel_entries)
   if "1" in entries:
     entries = [x for x in entries if x != "1"]
@@ -51,7 +50,7 @@ def expand_juel_entries(juel_entries: List[str]) -> List[str]:
 
 
 def total_juel_value_from_entries(
-    character_data: game_type.Character, juel_entries: List[str]
+    character_data: game_type.Character, juel_entries: list[str]
 ) -> int:
   """
   给定角色数据和宝珠条目列表，计算角色使用所有对应宝珠后可提供的总值。
@@ -86,7 +85,7 @@ class Characterabi_show_Text:
     """ 绘制的角色id """
     self.width = width
     """ 当前最大可绘制宽度 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 监听的按钮列表 """
     self.character_data = cache.character_data[self.character_id]
     """ 角色数据 """
@@ -319,7 +318,7 @@ class Characterabi_show_Text:
     if "1" in juel_type_id_list:
       # 使用通用展开函数替换占位符
       juel_type_id_list = expand_juel_entries(juel_type_id_list)
-    self.jewel_use_dict: Dict[int, int] = {}
+    self.jewel_use_dict: dict[int, int] = {}
     # 关押区的等级效果
     now_level = cache.rhodes_island.facility_level[19]
     facility_cid = game_config.config_facility_effect_data[_("关押区")][
@@ -392,9 +391,7 @@ class Characterabi_show_Text:
         mark_down_data_all_value += now_jewel_value
         line_feed.draw()
       # 计算当前宝珠总值
-      juel_info_text = ("\n当前宝珠总值为：{0}\n").format(
-          mark_down_data_all_value
-      )
+      juel_info_text = f"\n当前宝珠总值为：{mark_down_data_all_value}\n"
       info_draw.text = juel_info_text
       info_draw.draw()
       line_feed.draw()
@@ -667,7 +664,7 @@ class Characterabi_cmd_Text:
     """ 当前最大可绘制宽度 """
     self.ability_id = ability_id
     """ 当前的能力id """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 监听的按钮列表 """
     self.character_data = cache.character_data[self.character_id]
     """ 角色数据 """
@@ -815,7 +812,7 @@ class Characterabi_cmd_Text:
     """
     judge = 1
     # 记录宝珠需求
-    jule_dict: Dict[int, int] = {}
+    jule_dict: dict[int, int] = {}
     # 遍历升级需求，并输出信息
     for need_text in need_list:
       # print(f"debug need_text = {need_text}")
@@ -848,7 +845,7 @@ class Characterabi_cmd_Text:
       now_draw.draw()
     return judge, jule_dict
 
-  def level_up(self, jule_dict: Dict[int, int]) -> None:
+  def level_up(self, jule_dict: dict[int, int]) -> None:
     """
     扣除升级所需的宝珠，把当前能力提升1级，并结算技能类成就
     Keyword arguments:
@@ -880,7 +877,7 @@ class Character_abi_up_main_Handle:
     """ 要绘制的角色id """
     self.width: int = width
     """ 面板最大宽度 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 当前面板监听的按钮列表 """
 
   def draw(self) -> None:
@@ -924,7 +921,7 @@ class Character_abi_up_sub_Handle:
     """ 当前的属性页id """
     self.character_id: int = character_id
     """ 要绘制的角色id """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 当前面板监听的按钮列表 """
     main_first_draw = Character_abi_up_main_panel(character_id, width)
     self.draw_data = {
@@ -992,7 +989,7 @@ class Character_abi_up_main_panel:
     abi_draw = Characterabi_show_Text(character_id, width)
     tal_draw = talent_up_panel.Character_talent_show_Text(character_id, width)
     if character_id == 0:
-      self.draw_list: List = [
+      self.draw_list: list = [
           head_draw,
           Juel_draw,
           Experience_draw,
@@ -1007,7 +1004,7 @@ class Character_abi_up_main_panel:
           tal_draw,
       ]
     """ 绘制的面板列表 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 当前面板监听的按钮列表 """
 
   def draw(self) -> None:

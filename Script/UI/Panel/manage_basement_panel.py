@@ -1,6 +1,5 @@
 """管理罗德岛的基建界面面板与干员工作岗位的调整"""
 
-from typing import Dict, List, Optional, Tuple
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.Design import basement, attr_calculation, handle_premise, game_time
@@ -21,7 +20,7 @@ window_width: int = normal_config.config_normal.text_width
 
 
 def change_npc_work_out(
-    width: int, target_work_type_id: Optional[List[int]] = None
+    width: int, target_work_type_id: list[int] | None = None
 ) -> None:
   """
   调整干员的工作岗位
@@ -43,9 +42,9 @@ class Manage_Basement_Panel:
     """ 绘制的最大宽度 """
     self.now_panel = _("罗德岛资源总览")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
-    self.show_resource_type_dict: Dict = {
+    self.show_resource_type_dict: dict = {
         _("货币"): True,
         _("材料"): False,
         _("药剂"): False,
@@ -349,7 +348,7 @@ class Manage_Basement_Panel:
         current_category = self.info_category_list[self.current_category_index]
 
         # 动态读取能力CSV并根据类型分类
-        cat_columns: Dict[str, List[Tuple[str, int]]] = {
+        cat_columns: dict[str, list[tuple[str, int]]] = {
             _("【感度类】"): [],
             _("【扩张类】"): [],
             _("【刻印类】"): [],
@@ -381,7 +380,7 @@ class Manage_Basement_Panel:
             cat_columns[cat_name].append((col_name, tem_ability_cid))
 
         # ================= 1. 绘制顶部：分类切换页 =================
-        cat_line_list: List[draw.Drawable] = []
+        cat_line_list: list[draw.Drawable] = []
         for i, cat_name in enumerate(self.info_category_list):
           if i == self.current_category_index:
             # 当前分类：高亮、不可点击
@@ -1318,18 +1317,18 @@ class Change_Npc_Work_Panel:
   """
 
   def __init__(
-      self, width: int, target_work_type_id: Optional[List] = None
+      self, width: int, target_work_type_id: list | None = None
   ) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 最大宽度 """
-    self.work_type_state: Dict[int, bool] = {
+    self.work_type_state: dict[int, bool] = {
         wt_id: False for wt_id in game_config.config_work_type
     }
     """ 工作类型id和是否展开的状态 """
     self.work_type_state[0] = True
     """ 默认展开第一个工作类型 """
-    self.target_work_type_id_list: List = target_work_type_id or []
+    self.target_work_type_id_list: list = target_work_type_id or []
     """ 目标工作类型id的列表 """
     # 如果目标工作类型id有效，则展开该工作类型
     for work_type_id in self.target_work_type_id_list:
@@ -1369,7 +1368,7 @@ class Change_Npc_Work_Panel:
       line_feed.draw()
 
       # 定义一个字典，用来表示各工作类型id下的干员id列表
-      self.work_type_npc_dict: Dict[int, List[int]] = {}
+      self.work_type_npc_dict: dict[int, list[int]] = {}
       for work_type_id in game_config.config_work_type:
         self.work_type_npc_dict[work_type_id] = []
 

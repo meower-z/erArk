@@ -1,6 +1,5 @@
 """资源交易面板，以及交易价格、供需波动与自动交易的计算"""
 
-from typing import Dict, List, Tuple, Optional
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.Design import attr_calculation
@@ -20,7 +19,7 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def _ensure_trade_setting(res_id: int) -> Dict[str, int]:
+def _ensure_trade_setting(res_id: int) -> dict[str, int]:
   """确保指定id资源的自动交易配置存在"""
 
   settings = cache.rhodes_island.resource_type_auto_trade_setting.setdefault(
@@ -56,10 +55,10 @@ def _get_resource_type_key(resouce_id: int) -> str:
   return res_type
 
 
-def get_trade_resource_types() -> List[str]:
+def get_trade_resource_types() -> list[str]:
   """获取所有可管理的资源类型列表"""
 
-  res_types: List[str] = []
+  res_types: list[str] = []
   seen_type: set = set()
   for res_id in game_config.config_resouce:
     if res_id == 0:
@@ -76,7 +75,7 @@ def get_trade_resource_types() -> List[str]:
 
 def calculate_trade_multiplier(
     resouce_id: int, buy_flag: bool
-) -> Tuple[float, float, float]:
+) -> tuple[float, float, float]:
   """
   计算交易价格乘数及主副交易员加成\n
   输入: resouce_id(int) 资源ID, buy_flag(bool) 买入(True)/卖出(False)]\n
@@ -145,7 +144,7 @@ def _adjust_supply_demand_after_trade(
 
 def perform_trade(
     resouce_id: int, quantity: int, buy_flag: bool
-) -> Optional[Dict[str, int]]:
+) -> dict[str, int] | None:
   """执行具体交易结算，返回实际成交情况"""
 
   # 数量为0或负数直接返回无效
@@ -207,7 +206,7 @@ def auto_trade_resources() -> None:
   if not cache.rhodes_island.trade_operator_ids_list:
     return
 
-  summary_lines: List[str] = []
+  summary_lines: list[str] = []
   for res_type in get_trade_resource_types():
     # 跳过无效或货币类资源
     if res_type in {"无", "货币"}:
@@ -286,7 +285,7 @@ def auto_trade_resources() -> None:
 
 def get_resouce_price(
     resouce_id: int, buy_or_sell_flag: bool, self_check: bool = True
-) -> Tuple[int, float]:
+) -> tuple[int, float]:
   """
   获取指定资源的交易价格及波动百分比
   输入:
@@ -380,9 +379,9 @@ class Resource_Exchange_Line_Panel:
     """ 绘制的最大宽度 """
     self.now_panel = _("资源交易")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
-    self.show_resource_type_dict: Dict = {
+    self.show_resource_type_dict: dict = {
         _("材料"): False,
         _("药剂"): False,
         _("乳制品"): False,

@@ -1,6 +1,5 @@
 """关门、照顾婴儿、初始奖励能力选择、冰箱与预订房间等日常小面板"""
 
-from typing import List
 from types import FunctionType
 from Script.UI.Moudle import draw, panel
 from Script.Core import (
@@ -41,7 +40,7 @@ class Close_Door_Panel:
     """ 绘制的最大宽度 """
     self.now_panel = _("关门")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.Drawable] = []
+    self.draw_list: list[draw.Drawable] = []
     """ 绘制的文本列表 """
 
   def draw(self) -> int:
@@ -58,13 +57,13 @@ class Close_Door_Panel:
 
     title_draw = draw.TitleLineDraw(title_text, self.width)
     while 1:
-      return_list: List[str] = []
+      return_list: list[str] = []
       title_draw.draw()
 
       now_position = character_data.position
       now_scene_str = map_handle.get_map_system_path_str_for_list(now_position)
       now_scene_data = cache.scene_data[now_scene_str]
-      now_draw_list: List[draw.Drawable] = []
+      now_draw_list: list[draw.Drawable] = []
 
       # 地点关门判定的三个分支
       if now_scene_data.close_type == 0:
@@ -123,7 +122,7 @@ class Take_Care_Baby_Panel:
     """ 绘制的最大宽度 """
     self.now_panel = _("照顾婴儿")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
   def draw(self) -> None:
@@ -453,7 +452,7 @@ class Order_Hotel_Room_Panel:
     """ 绘制的最大宽度 """
     self.now_panel = _("预订房间")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
   def draw(self) -> None:

@@ -1,6 +1,5 @@
 """身体检查与管理面板与体检结算"""
 
-from typing import List, Set
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant, py_cmd
 from Script.Design import handle_premise, attr_calculation, game_time, attr_text
@@ -96,11 +95,11 @@ class Physical_Check_And_Manage_Panel:
     """ 绘制的最大宽度 """
     self.now_panel = _("身体检查与管理")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
     self.pl_character_data = cache.character_data[0]
     """ 玩家的角色数据 """
-    self.done_check_behavior_id_set: Set[str] = set()
+    self.done_check_behavior_id_set: set[str] = set()
     """ 已经检查过的行为id集合 """
 
   def draw(self) -> None:
@@ -1128,24 +1127,18 @@ class Physical_Check_And_Manage_Panel:
 
     # 基础
     N_feel = target_character_data.ability[1]
-    report_text += (" {0}{1}\n").format(
-        base_ability_dict[0], level_text_dict[N_feel]
-    )
+    report_text += f" {base_ability_dict[0]}{level_text_dict[N_feel]}\n"
     # 扩张
     ave_resist = 0
     for ability_id in {9, 10, 11, 12}:
       ave_resist += target_character_data.ability[ability_id]
     ave_resist = int(ave_resist // 4)
-    report_text += (" {0}{1}\n").format(
-        base_ability_dict[1], level_text_dict[ave_resist]
-    )
+    report_text += f" {base_ability_dict[1]}{level_text_dict[ave_resist]}\n"
     # SM
     max_sm = 0
     for ability_id in {35, 36}:
       max_sm = max(max_sm, target_character_data.ability[ability_id])
-    report_text += (" {0}{1}\n").format(
-        base_ability_dict[2], level_text_dict[max_sm]
-    )
+    report_text += f" {base_ability_dict[2]}{level_text_dict[max_sm]}\n"
     # 受孕
     report_text += " " + base_ability_dict[3]
     # 当前怀孕进度
@@ -1204,9 +1197,7 @@ class Physical_Check_And_Manage_Panel:
       ability_id = cmd_ablility_dict[cmd_id][0]
       now_name = cmd_ablility_dict[cmd_id][1]
       ability_level = target_character_data.ability[ability_id]
-      report_text += (" {0}{1}\n").format(
-          now_name, level_text_dict[ability_level]
-      )
+      report_text += f" {now_name}{level_text_dict[ability_level]}\n"
     # 性器
     body_part_talent_id_list = list(range(111, 133))
     body_part_talent_text = " "
@@ -1216,9 +1207,7 @@ class Physical_Check_And_Manage_Panel:
           and target_character_data.talent[talent_id]
       ):
         body_part_talent_text += game_config.config_talent[talent_id].name + " "
-    report_text += (" {0}{1}\n").format(
-        base_ability_dict[5], body_part_talent_text
-    )
+    report_text += f" {base_ability_dict[5]}{body_part_talent_text}\n"
     # 特殊体质
     special_talent_id_list = list(range(61, 65)) + list(range(151, 180))
     special_talent_text = " "
@@ -1230,9 +1219,7 @@ class Physical_Check_And_Manage_Panel:
         special_talent_text += game_config.config_talent[talent_id].name + " "
     if special_talent_text == " ":
       special_talent_text = _("无")
-    report_text += (" {0}{1}\n").format(
-        base_ability_dict[6], special_talent_text
-    )
+    report_text += f" {base_ability_dict[6]}{special_talent_text}\n"
 
     # 性爱履历：
     report_text += _("\n性爱履历：\n")
@@ -1259,7 +1246,7 @@ class Physical_Check_And_Manage_Panel:
       if target_character_data.first_record.first_kiss_body_part == 1:
         now_text += _("的阴茎")
       now_text += _("献上了初吻")
-    report_text += (" {0}{1}\n").format(base_ability_dict[11], now_text)
+    report_text += f" {base_ability_dict[11]}{now_text}\n"
 
     # 处女（NPC的V破处记录在first_part_sex_dict[6]）
     now_text = ""
@@ -1278,7 +1265,7 @@ class Physical_Check_And_Manage_Panel:
             palce=attr_text.get_scene_path_text(record["place"]),
             posture=record["posture"],
         )
-    report_text += (" {0}{1}\n").format(base_ability_dict[12], now_text)
+    report_text += f" {base_ability_dict[12]}{now_text}\n"
 
     # A处女（NPC的A破处记录在first_part_sex_dict[8]）
     now_text = ""
@@ -1297,7 +1284,7 @@ class Physical_Check_And_Manage_Panel:
             palce=attr_text.get_scene_path_text(record["place"]),
             posture=record["posture"],
         )
-    report_text += (" {0}{1}\n").format(base_ability_dict[13], now_text)
+    report_text += f" {base_ability_dict[13]}{now_text}\n"
 
     # 检查人与时间
     report_text += _("\n检查人：Dr.{0}\n").format(self.pl_character_data.name)

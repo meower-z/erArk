@@ -3,7 +3,6 @@
 """
 
 import os, configparser
-from typing import List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.UI.Moudle import draw, panel
@@ -43,7 +42,7 @@ class System_Setting_Panel:
     """ 绘制的最大宽度 """
     # self.now_panel = _("系统设置")
     # """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
     self.pl_character_data = cache.character_data[0]
     """ 玩家的属性 """
@@ -123,7 +122,7 @@ class System_Setting_Panel:
     now_panel = instruct_filter_panel.Instruct_filter_Panel(self.width)
     now_panel.draw()
 
-  def draw_option(self, type_name: str, return_list: List[str]) -> list[str]:
+  def draw_option(self, type_name: str, return_list: list[str]) -> list[str]:
     """绘制选项"""
     if type_name == _("基础"):
       setting_data = game_config.config_system_setting
@@ -680,7 +679,7 @@ class Game_Basic_Settings_Panel:
     """初始化绘制对象"""
     self.width: int = width
     """ 最大绘制宽度 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 当前面板监听的按钮列表 """
 
   def draw(self) -> None:

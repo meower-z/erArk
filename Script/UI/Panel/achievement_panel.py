@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from types import FunctionType
-from typing import List
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.Design import handle_premise, map_handle
 from Script.UI.Moudle import draw, panel
@@ -732,7 +731,7 @@ class Achievement_Panel:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
   def draw(self) -> None:

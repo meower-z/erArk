@@ -1,7 +1,6 @@
 """游戏配置数据的存放与载入：从 data.json 等 json 文件读取各类配置，整理成按 cid 及各种分类索引的字典"""
 
 import os
-from typing import Dict, List, Set, Tuple
 from Script.Config import config_def
 from Script.Core import json_handle, get_text, game_type
 
@@ -21,59 +20,59 @@ cook_question_path = os.path.join("data", "Cook_Question.json")
 """ 原始烹饪问题库数据文件路径 """
 official_event_path = os.path.join("data", "Official_Event.json")
 """ 原始养成事件数据文件路径（Plan 22 三期） """
-config_data: Dict[str, dict] = {}
+config_data: dict[str, dict] = {}
 """ 原始json数据 """
-character_data: Dict[str, dict] = {}
+character_data: dict[str, dict] = {}
 """ 原始角色数据 """
-character_talk_data: Dict[str, dict] = {}
+character_talk_data: dict[str, dict] = {}
 """ 原始角色口上数据 """
-character_event_data: Dict[str, dict] = {}
+character_event_data: dict[str, dict] = {}
 """ 原始角色事件数据 """
-talk_common_data: Dict[str, dict] = {}
+talk_common_data: dict[str, dict] = {}
 """ 原始通用文本数据 """
-ui_text_data: Dict[str, dict] = {}
+ui_text_data: dict[str, dict] = {}
 """ 原始ui文本数据 """
-cook_question_data: Dict[str, dict] = {}
+cook_question_data: dict[str, dict] = {}
 """ 原始烹饪问题库数据 """
-official_event_data: Dict[str, dict] = {}
+official_event_data: dict[str, dict] = {}
 """ 原始养成事件数据（Plan 22 三期） """
-config_bar: Dict[int, config_def.BarConfig] = {}
+config_bar: dict[int, config_def.BarConfig] = {}
 """ 比例条配置数据 """
-config_bar_data: Dict[str, int] = {}
+config_bar_data: dict[str, int] = {}
 """ 比例条名字对应比例条id """
-config_image_data: Dict[int, int] = {}
+config_image_data: dict[int, int] = {}
 """ 人物图片对应图片id """
-config_behavior_effect: Dict[int, config_def.Behavior_Effect] = {}
+config_behavior_effect: dict[int, config_def.Behavior_Effect] = {}
 """ 行为结算器配置 """
-config_behavior_effect_data: Dict[str, List] = {}
+config_behavior_effect_data: dict[str, list] = {}
 """ 行为所包含的结算器id数据 """
-config_behavior_must_settle_cid_list: List[str] = []
+config_behavior_must_settle_cid_list: list[str] = []
 """ 必须计算的行为的cid集合 """
-config_behavior_must_show_cid_list: List[str] = []
+config_behavior_must_show_cid_list: list[str] = []
 """ 必须显示的行为的cid集合 """
-config_book: Dict[int, config_def.Book] = {}
+config_book: dict[int, config_def.Book] = {}
 """ 书籍配表数据 """
-config_book_type_data: Dict[int, Set] = {}
+config_book_type_data: dict[int, set] = {}
 """ 书籍各类型下的id集合数据 类型id:书籍id集合 """
-config_book_type: Dict[int, config_def.BookType] = {}
+config_book_type: dict[int, config_def.BookType] = {}
 """ 书籍类型配表数据 """
-config_book_type_name_data: Dict[str, Set] = {}
+config_book_type_name_data: dict[str, set] = {}
 """ 书籍类型配表数据集合 父类型名:子类型名 """
-config_book_excerpt_data: Dict[int, config_def.Book_Excerpt] = {}
+config_book_excerpt_data: dict[int, config_def.Book_Excerpt] = {}
 """ 书籍摘录数据 """
-config_book_excerpt_list: Dict[int, List] = {}
+config_book_excerpt_list: dict[int, list] = {}
 """ 书籍摘录的列表 """
-config_board_game: Dict[int, config_def.Board_Game] = {}
+config_board_game: dict[int, config_def.Board_Game] = {}
 """ 桌游类型数据 """
-config_character_state: Dict[int, config_def.CharacterState] = {}
+config_character_state: dict[int, config_def.CharacterState] = {}
 """ 角色状态属性配表数据 """
-config_character_state_type: Dict[int, config_def.CharacterStateType] = {}
+config_character_state_type: dict[int, config_def.CharacterStateType] = {}
 """ 角色状态类型配表数据 """
-config_character_state_type_data: Dict[int, List] = {}
+config_character_state_type_data: dict[int, list] = {}
 """ 角色状态类型下状态属性集合 类型id:属性集合 """
-config_character_state_level: Dict[int, config_def.Character_State_Level] = {}
+config_character_state_level: dict[int, config_def.Character_State_Level] = {}
 """ 角色状态等级配置 """
-config_pleasure_relations: Dict[int, config_def.Pleasure_Relations] = {}
+config_pleasure_relations: dict[int, config_def.Pleasure_Relations] = {}
 """ 快感关系配置数据 """
 # config_clothing_suit: Dict[int, config_def.ClothingSuit] = {}
 # """ 衣服套装配置列表 """
@@ -82,419 +81,419 @@ config_pleasure_relations: Dict[int, config_def.Pleasure_Relations] = {}
 # 衣服套装搭配数据
 # 套装编号:性别id:服装集合
 # """
-config_clothing_tem: Dict[int, config_def.ClothingTem] = {}
+config_clothing_tem: dict[int, config_def.ClothingTem] = {}
 """ 服装模板配置数据 """
-config_clothing_type: Dict[int, config_def.ClothingType] = {}
+config_clothing_type: dict[int, config_def.ClothingType] = {}
 """ 衣服种类配置数据 """
-config_clothing_type_volume: Dict[int, List] = {}
+config_clothing_type_volume: dict[int, list] = {}
 """ 衣服种类容积配置数据 """
-config_cloth_part_normal_flow: Dict[int, List] = {}
+config_cloth_part_normal_flow: dict[int, list] = {}
 """ 衣服部位正常流通配置数据 """
-config_cloth_part_full_flow: Dict[int, List] = {}
+config_cloth_part_full_flow: dict[int, list] = {}
 """ 衣服部位满溢流通配置数据 """
-config_cloth_part_extra_flow: Dict[int, List] = {}
+config_cloth_part_extra_flow: dict[int, list] = {}
 """ 衣服部位额外流通配置数据 """
-config_clothing_use_type: Dict[int, config_def.ClothingUseType] = {}
+config_clothing_use_type: dict[int, config_def.ClothingUseType] = {}
 """ 衣服用途配置数据 """
-config_work_type: Dict[int, config_def.WorkType] = {}
+config_work_type: dict[int, config_def.WorkType] = {}
 """ 工作种类配置数据 """
-config_entertainment: Dict[int, config_def.Entertainment] = {}
+config_entertainment: dict[int, config_def.Entertainment] = {}
 """ 娱乐配置数据 """
-config_reproduction_period: Dict[int, config_def.Reproduction_period] = {}
+config_reproduction_period: dict[int, config_def.Reproduction_period] = {}
 """ 生理周期数据 """
-config_body_part: Dict[int, config_def.BodyPart] = {}
+config_body_part: dict[int, config_def.BodyPart] = {}
 """ 身体部位配置数据 """
-config_body_part_volume: Dict[int, List] = {}
+config_body_part_volume: dict[int, list] = {}
 """ 身体部位容积数据 """
-config_body_part_normal_flow: Dict[int, List] = {}
+config_body_part_normal_flow: dict[int, list] = {}
 """ 身体部位正常流通数据 """
-config_body_part_full_flow: Dict[int, List] = {}
+config_body_part_full_flow: dict[int, list] = {}
 """ 身体部位满溢流通数据 """
-config_body_part_extra_flow: Dict[int, List] = {}
+config_body_part_extra_flow: dict[int, list] = {}
 """ 身体部位额外流通数据 """
-config_collection_bonus_data: Dict[int, config_def.Collection_bouns] = {}
+config_collection_bonus_data: dict[int, config_def.Collection_bouns] = {}
 """ 收藏品解锁数据 """
-config_facility: Dict[int, config_def.Facility] = {}
+config_facility: dict[int, config_def.Facility] = {}
 """ 设施列表数据 """
-config_facility_effect: Dict[int, config_def.Facility_effect] = {}
+config_facility_effect: dict[int, config_def.Facility_effect] = {}
 """ 设施效果总数据 """
-config_facility_effect_data: Dict[str, List] = {}
+config_facility_effect_data: dict[str, list] = {}
 """ 设施效果分类数据 """
-config_facility_open: Dict[int, config_def.Facility_open] = {}
+config_facility_open: dict[int, config_def.Facility_open] = {}
 """ 设施开放数据 """
-config_facility_open_name_set: Set = set()
+config_facility_open_name_set: set = set()
 """ 设施开放名称集合 """
-config_facility_open_name_to_cid: Dict[str, int] = {}
+config_facility_open_name_to_cid: dict[str, int] = {}
 """ 设施开放名称对应编号 """
-config_resouce: Dict[int, config_def.Resource] = {}
+config_resouce: dict[int, config_def.Resource] = {}
 """ 资源数据 """
-config_resouce_data_of_nation: Dict[int, List] = {}
+config_resouce_data_of_nation: dict[int, list] = {}
 """ 势力特产的资源数据 """
-config_first_record_special: Dict[int, config_def.FirstRecordSpecial] = {}
+config_first_record_special: dict[int, config_def.FirstRecordSpecial] = {}
 """ 特殊履历配置数据 """
-config_font: Dict[int, config_def.FontConfig] = {}
+config_font: dict[int, config_def.FontConfig] = {}
 """ 字体配置数据 """
-config_font_data: Dict[str, int] = {}
+config_font_data: dict[str, int] = {}
 """ 字体名字对应字体id """
-config_instruct_type: Dict[int, config_def.InstructType] = {}
+config_instruct_type: dict[int, config_def.InstructType] = {}
 """ 指令类型配置 """
-config_instruct_sex_type: Dict[int, config_def.Instruct_Sex_Type] = {}
+config_instruct_sex_type: dict[int, config_def.Instruct_Sex_Type] = {}
 """ 性爱指令类型配置 """
-config_medical_severity: Dict[int, config_def.Medical_Severity] = {}
+config_medical_severity: dict[int, config_def.Medical_Severity] = {}
 """ 医疗系统病情等级配置 """
-config_medical_complication: Dict[int, config_def.Medical_Complication] = {}
+config_medical_complication: dict[int, config_def.Medical_Complication] = {}
 """ 医疗系统并发症配置 """
-config_medical_hospital_level: Dict[int, config_def.Medical_Hospital_Level] = {}
+config_medical_hospital_level: dict[int, config_def.Medical_Hospital_Level] = {}
 """ 医疗部等级→刷新/床位配置 """
-config_medical_body_system: Dict[int, config_def.Medical_Body_System] = {}
+config_medical_body_system: dict[int, config_def.Medical_Body_System] = {}
 """ 医疗生理系统的部位配置，键为部位ID """
-config_medical_body_system_by_system: Dict[
-    int, Dict[int, config_def.Medical_Body_System]
+config_medical_body_system_by_system: dict[
+    int, dict[int, config_def.Medical_Body_System]
 ] = {}
 """ 医疗生理系统→部位的索引 """
-config_medical_complication_detail: Dict[
-    int, Dict[int, Dict[int, List[config_def.Medical_Complication]]]
+config_medical_complication_detail: dict[
+    int, dict[int, dict[int, list[config_def.Medical_Complication]]]
 ] = {}
 """ 并发症详情索引，system_id→part_id→severity_level """
-medical_severity_weight_table: List[Tuple[int, float]] = []
+medical_severity_weight_table: list[tuple[int, float]] = []
 """ 病情等级抽取用权重表 (severity_id, weight) """
-medical_severity_special_medicine: Dict[int, Dict[int, float]] = {}
+medical_severity_special_medicine: dict[int, dict[int, float]] = {}
 """ 病情等级需要的特效药模板，键为病情等级 """
 MEDICAL_COMPLICATION_SEVERITY_QUOTA = {0: 3, 1: 2, 2: 1}
 """ 各部位轻/中/重并发症数量配额 """
-config_item: Dict[int, config_def.Item] = {}
+config_item: dict[int, config_def.Item] = {}
 """ 道具配置数据 """
-config_item_tag_data: Dict[str, Set] = {}
+config_item_tag_data: dict[str, set] = {}
 """
 道具标签配置数据
 标签:道具id集合
 """
-config_moon: Dict[int, config_def.Moon] = {}
+config_moon: dict[int, config_def.Moon] = {}
 """ 月相配置 """
-config_moon_data: Dict[int, Set] = {}
+config_moon_data: dict[int, set] = {}
 """ 月相类型对应配置id集合 """
-config_move_menu_type: Dict[int, config_def.MoveMenuType] = {}
+config_move_menu_type: dict[int, config_def.MoveMenuType] = {}
 """ 移动菜单过滤类型配置 """
-config_organ: Dict[int, config_def.Organ] = {}
+config_organ: dict[int, config_def.Organ] = {}
 """ 器官种类配置 """
-config_organ_data: Dict[int, Set] = {}
+config_organ_data: dict[int, set] = {}
 """
 性别对应器官列表配置数据
 性别 0:女 1:男 2: 通用
 """
-config_ability_type: Dict[int, config_def.Ability] = {}
+config_ability_type: dict[int, config_def.Ability] = {}
 """ 能力种类配置 """
-config_ability_type_data: Dict[int, Set] = {}
+config_ability_type_data: dict[int, set] = {}
 """
 类型对应能力列表配置数据
 类型 0:感觉,1:扩张,2:刻印,3:基础
 """
-config_ability: Dict[int, config_def.Ability] = {}
+config_ability: dict[int, config_def.Ability] = {}
 """ 能力类型表 """
-config_experience: Dict[int, config_def.Experience] = {}
+config_experience: dict[int, config_def.Experience] = {}
 """ 经验配置 """
-config_experience_relations: Dict[int, config_def.Experience_Relations] = {}
+config_experience_relations: dict[int, config_def.Experience_Relations] = {}
 """ 快感经验之间的关系配置 """
-config_experience_types: Dict[int, config_def.Experience_Types] = {}
+config_experience_types: dict[int, config_def.Experience_Types] = {}
 """ 经验类型配置 """
-config_juel: Dict[int, config_def.Juel] = {}
+config_juel: dict[int, config_def.Juel] = {}
 """ 宝珠配置 """
-config_profession: Dict[int, config_def.Profession] = {}
+config_profession: dict[int, config_def.Profession] = {}
 """ 职业配置 """
-config_race: Dict[int, config_def.Race] = {}
+config_race: dict[int, config_def.Race] = {}
 """ 种族配置 """
-config_birthplace: Dict[int, config_def.Birthplace] = {}
+config_birthplace: dict[int, config_def.Birthplace] = {}
 """ 出生地配置 """
-config_nation: Dict[int, config_def.Nation] = {}
+config_nation: dict[int, config_def.Nation] = {}
 """ 势力配置 """
-config_nation_data_of_country_subordinate: Dict[int, List] = {}
+config_nation_data_of_country_subordinate: dict[int, list] = {}
 """ 国家势力所对应的附属势力表，势力cid：子势力id列表 """
-config_diplomatic_policy: Dict[int, config_def.Diplomatic_Policy] = {}
+config_diplomatic_policy: dict[int, config_def.Diplomatic_Policy] = {}
 """ 外交方针配置 """
-config_restaurant: Dict[int, config_def.Restaurant] = {}
+config_restaurant: dict[int, config_def.Restaurant] = {}
 """ 餐馆配置 """
-config_city: Dict[int, config_def.City] = {}
+config_city: dict[int, config_def.City] = {}
 """ 城市配置 """
-config_city_of_country: Dict[int, Set] = {}
+config_city_of_country: dict[int, set] = {}
 """ 大地点所属的城市配置 """
-config_talent_type: Dict[int, config_def.Talent] = {}
+config_talent_type: dict[int, config_def.Talent] = {}
 """ 素质种类配置 """
-config_talent_type_data: Dict[int, List] = {}
+config_talent_type_data: dict[int, list] = {}
 """
 类型对应素质列表配置数据
 类型 0:性素质,1:身体素质,2:精神素质,3:技术素质,4:其他素质
 """
-config_talent: Dict[int, config_def.Talent] = {}
+config_talent: dict[int, config_def.Talent] = {}
 """ 素质类型表 """
 # config_ability_up_type: Dict[int, config_def.AbilityUpType] = {}
 # """ 根据能力id和等级来判断升级的前提编号 """
-config_ability_up_data: Dict[int, Dict[int, List]] = {}
+config_ability_up_data: dict[int, dict[int, list]] = {}
 """
 能力升级数据
 能力id:当前等级:需求分项:需求内容
 """
-config_ability_up2_data: Dict[int, Dict[int, List]] = {}
+config_ability_up2_data: dict[int, dict[int, list]] = {}
 """
 能力升级备选数据
 能力id:当前等级:需求分项:需求内容
 """
-config_talent_gain: Dict[int, config_def.TalentGain] = {}
+config_talent_gain: dict[int, config_def.TalentGain] = {}
 """
 获得素质原数据
 条目cid:条目内容
 """
-config_talent_gain_data: Dict[int, config_def.TalentGain] = {}
+config_talent_gain_data: dict[int, config_def.TalentGain] = {}
 """
 获得素质_素质排列数据
 素质id:条目内容
 """
-config_mark_up_data: Dict[int, config_def.Mark_Up] = {}
+config_mark_up_data: dict[int, config_def.Mark_Up] = {}
 """ 刻印升级数据 """
-config_mark_up_data_by_ability: Dict[int, Dict] = {}
+config_mark_up_data_by_ability: dict[int, dict] = {}
 """ 根据刻印能力id和能力等级来获取的刻印升级数据id """
-config_mark_up_data_need_state_list: Dict[int, List] = {}
+config_mark_up_data_need_state_list: dict[int, list] = {}
 """ 刻印升级所需状态列表 """
-config_mark_down_data: Dict[int, config_def.Mark_Down] = {}
+config_mark_down_data: dict[int, config_def.Mark_Down] = {}
 """ 刻印降级数据 """
-config_mark_down_data_by_ability: Dict[int, Dict] = {}
+config_mark_down_data_by_ability: dict[int, dict] = {}
 """ 根据刻印能力id和能力等级来获取的刻印降级数据id """
-config_instruct_judge_data: Dict[int, config_def.InstructJudge] = {}
+config_instruct_judge_data: dict[int, config_def.InstructJudge] = {}
 """ 每个指令的实行值判定数据 """
-config_recipes: Dict[int, config_def.Recipes] = {}
+config_recipes: dict[int, config_def.Recipes] = {}
 """ 菜谱配置 """
-config_season: Dict[int, config_def.Season] = {}
+config_season: dict[int, config_def.Season] = {}
 """ 季节配置数据 """
-config_sex_tem: Dict[int, config_def.SexTem] = {}
+config_sex_tem: dict[int, config_def.SexTem] = {}
 """ 性别对应描述和性别器官模板 """
-config_jj_tem: Dict[int, config_def.JJ] = {}
+config_jj_tem: dict[int, config_def.JJ] = {}
 """ 阴茎对应描述 """
-config_tip_data: Dict[int, config_def.Tip] = {}
+config_tip_data: dict[int, config_def.Tip] = {}
 """ 提示对应描述 """
-config_tip_data_by_facility: Dict[int, List] = {}
+config_tip_data_by_facility: dict[int, list] = {}
 """ 设施对应提示 """
-config_tip_chara_data: Dict[int, config_def.Tip_Chara] = {}
+config_tip_chara_data: dict[int, config_def.Tip_Chara] = {}
 """ 角色文本说明数据 """
-config_tip_chara_data_by_adv: Dict[int, List] = {}
+config_tip_chara_data_by_adv: dict[int, list] = {}
 """ 按adv分类的角色文本说明数据的cid列表  """
-config_sun_time: Dict[int, config_def.SunTime] = {}
+config_sun_time: dict[int, config_def.SunTime] = {}
 """ 太阳时间配置 """
-config_solar_period: Dict[int, config_def.SolarPeriod] = {}
+config_solar_period: dict[int, config_def.SolarPeriod] = {}
 """ 节气配置数据 """
-config_behavior: Dict[str, config_def.Behavior_Data] = {}
+config_behavior: dict[str, config_def.Behavior_Data] = {}
 """ 角色行为数据 """
-config_behavior_id_list_of_group_sex_body_part: Dict[str, List] = {}
+config_behavior_id_list_of_group_sex_body_part: dict[str, list] = {}
 """ 群交时身体部位占用所对应的的行为id列表 """
-config_behavior_by_str: Dict[str, config_def.Behavior_Data] = {}
+config_behavior_by_str: dict[str, config_def.Behavior_Data] = {}
 """ 以英文名为键的角色行为数据 """
-config_behavior_by_cid: Dict[int, config_def.Behavior_Data] = {}
+config_behavior_by_cid: dict[int, config_def.Behavior_Data] = {}
 """ 以cid为键的角色行为数据 """
-config_talk: Dict[str, config_def.Talk] = {}
+config_talk: dict[str, config_def.Talk] = {}
 """ 口上配置 """
-config_talk_data: Dict[str, Set] = {}
+config_talk_data: dict[str, set] = {}
 """ 角色行为对应口上集合 状态id:口上id列表 """
-config_talk_data_by_chara_adv: Dict[str, Dict] = {}
+config_talk_data_by_chara_adv: dict[str, dict] = {}
 """ 角色行为对应口上集合再根据角色adv分类 状态id:角色adv:口上id列表 """
 # config_talk_premise: Dict[int, config_def.TalkPremise] = {}
 # """ 口上前提配置 """
-config_talk_premise_data: Dict[str, Set] = {}
+config_talk_premise_data: dict[str, set] = {}
 """ 口上前提配置数据 """
-config_talk_common_data: Dict[str, config_def.Talk_Common] = {}
+config_talk_common_data: dict[str, config_def.Talk_Common] = {}
 """ 通用口上配置数据 """
-config_talk_common_cid_list_by_type: Dict[str, List] = {}
+config_talk_common_cid_list_by_type: dict[str, list] = {}
 """ 根据类型获取的通用口上cid列表 """
-config_talk_common_cid_list_by_part: Dict[str, Dict] = {}
+config_talk_common_cid_list_by_part: dict[str, dict] = {}
 """ 根据分段的部分类型获取的通用口上cid集合 """
-config_talk_common_action_part_type_set: Set[str] = set()
+config_talk_common_action_part_type_set: set[str] = set()
 """ 动作类分段通用口上的类型名集合（即action_part_*，用于区分部位短词body_part_*） """
-config_talk_common_premise_data: Dict[str, Set] = {}
+config_talk_common_premise_data: dict[str, set] = {}
 """ 通用口上前提配置数据 """
-config_target: Dict[str, config_def.Target] = {}
+config_target: dict[str, config_def.Target] = {}
 """ 目标配置数据 """
-config_target_premise_data: Dict[str, Set] = {}
+config_target_premise_data: dict[str, set] = {}
 """ 目标前提配置数据 """
-config_target_type_index: Dict[int, List] = {}
+config_target_type_index: dict[int, list] = {}
 """ 目标配置数据的种类索引 """
-config_target_type: Dict[int, config_def.Target_Type] = {}
+config_target_type: dict[int, config_def.Target_Type] = {}
 """ 目标类型表 """
-config_target_effect: Dict[str, config_def.TargetEffect] = {}
+config_target_effect: dict[str, config_def.TargetEffect] = {}
 """ 目标效果配置 """
-config_target_effect_data: Dict[str, Set] = {}
+config_target_effect_data: dict[str, set] = {}
 """ 目标效果配置数据 """
-config_effect_target_data: Dict[str, Set] = {}
+config_effect_target_data: dict[str, set] = {}
 """ 能达成效果的目标集合 """
-config_week_day: Dict[int, config_def.WeekDay] = {}
+config_week_day: dict[int, config_def.WeekDay] = {}
 """ 星期描述文本配置数据 """
-config_event: Dict[str, game_type.Event] = {}
+config_event: dict[str, game_type.Event] = {}
 """ 事件配置数据 """
-config_event_status_data: Dict[str, List] = {}
+config_event_status_data: dict[str, list] = {}
 """
 各个状态下事件列表
 状态id:事件id列表
 """
-config_event_status_data_by_chara_adv: Dict[str, Dict] = {}
+config_event_status_data_by_chara_adv: dict[str, dict] = {}
 """
 各个状态下事件列表
 状态id:角色adv:事件id列表
 """
-config_event_target: Dict[str, game_type.Target] = {}
+config_event_target: dict[str, game_type.Target] = {}
 """ 目标配置数据 """
-config_event_effect_target_data: Dict[int, Set] = {}
+config_event_effect_target_data: dict[int, set] = {}
 """ 能达成效果的目标集合 """
-config_sleep_level: Dict[int, config_def.Sleep_Level] = {}
+config_sleep_level: dict[int, config_def.Sleep_Level] = {}
 """ 睡眠等级数据 """
-config_drunk_level: Dict[int, config_def.Drunk_Level] = {}
+config_drunk_level: dict[int, config_def.Drunk_Level] = {}
 """ 醉酒等级数据 """
-config_alcohol_level: Dict[int, config_def.Alcohol_Level] = {}
+config_alcohol_level: dict[int, config_def.Alcohol_Level] = {}
 """ 酒精等级数据 """
-config_hidden_level: Dict[int, config_def.Hidden_Level] = {}
+config_hidden_level: dict[int, config_def.Hidden_Level] = {}
 """ 隐蔽等级数据 """
-config_favorability_level: Dict[int, config_def.Favorability_Level] = {}
+config_favorability_level: dict[int, config_def.Favorability_Level] = {}
 """ 好感度等级数据 """
-config_trust_level: Dict[int, config_def.Trust_Level] = {}
+config_trust_level: dict[int, config_def.Trust_Level] = {}
 """ 信赖等级数据 """
-config_seasoning: Dict[int, config_def.Seasoning] = {}
+config_seasoning: dict[int, config_def.Seasoning] = {}
 """ 调味数据 """
-config_prts: Dict[int, config_def.Prts] = {}
+config_prts: dict[int, config_def.Prts] = {}
 """ 教程数据 """
-config_food_quality: Dict[int, config_def.Food_Quality] = {}
+config_food_quality: dict[int, config_def.Food_Quality] = {}
 """ 食物质量数据 """
-config_cook_question: Dict[int, Dict[str, list]] = {}
+config_cook_question: dict[int, dict[str, list]] = {}
 """ 烹饪问题库 食物id:烹饪阶段:[问题dict列表] """
-config_official_event: Dict[str, dict] = {}
+config_official_event: dict[str, dict] = {}
 """ 公务事件（Plan 23） 事件uid:事件原始dict。
     存的是原始dict不是config_def对象：CSV里空着的选项列在构建时会被整列删掉，
        用对象取属性会 AttributeError，用dict.get()才能安全地表达「这个选项不存在」 """
-config_official_event_by_department: Dict[int, list] = {}
+config_official_event_by_department: dict[int, list] = {}
 """ 公务事件按部门分桶 部门id(Facility.csv中type为-1的区块cid):[事件uid列表] """
-config_official_event_by_sub_key: Dict[tuple, list] = {}
+config_official_event_by_sub_key: dict[tuple, list] = {}
 """ 公务事件按 (部门id, 分类内子桶键) 分桶。养成事件的子桶键是成长阶段素质id(0通用/101~104) """
-config_prts_data: Dict[int, Dict[int, Dict[int, config_def.Prts]]] = {}
+config_prts_data: dict[int, dict[int, dict[int, config_def.Prts]]] = {}
 """ 教程数据的具体整理 父id:子id:0问1答:内容 """
-config_productformula: Dict[int, config_def.ProductFormula] = {}
+config_productformula: dict[int, config_def.ProductFormula] = {}
 """ 产品配方数据 条目cid:条目内容 """
-config_productformula_data: Dict[int, Dict[int, int]] = {}
+config_productformula_data: dict[int, dict[int, int]] = {}
 """ 产品配方具体数据 条目cid:[原料id:原料数量] """
-config_aromatherapy_recipes: Dict[int, config_def.Aromatherapy_Recipes] = {}
+config_aromatherapy_recipes: dict[int, config_def.Aromatherapy_Recipes] = {}
 """ 香薰疗愈配方数据 """
-config_aromatherapy_recipes_data: Dict[int, Dict[int, int]] = {}
+config_aromatherapy_recipes_data: dict[int, dict[int, int]] = {}
 """ 香薰疗愈配方具体数据 配方id:[原料id:原料数量] """
-config_first_bonus: Dict[int, config_def.First_Bouns] = {}
+config_first_bonus: dict[int, config_def.First_Bouns] = {}
 """ 初始奖励数据 奖励id:奖励内容 """
-config_chara_setting: Dict[int, config_def.CharaSetting] = {}
+config_chara_setting: dict[int, config_def.CharaSetting] = {}
 """ 角色设置数据 设置id:详细内容 """
-config_chara_setting_option: Dict[int, List] = {}
+config_chara_setting_option: dict[int, list] = {}
 """ 角色设置数据的选项数据 设置id:选项序号:选项内容 """
-config_system_setting: Dict[int, config_def.System_Setting] = {}
+config_system_setting: dict[int, config_def.System_Setting] = {}
 """ 系统设置数据 设置id:详细内容 """
-config_system_setting_option: Dict[int, List] = {}
+config_system_setting_option: dict[int, list] = {}
 """ 系统设置数据的选项数据 设置id:选项序号:选项内容 """
-config_draw_setting: Dict[int, config_def.System_Setting] = {}
+config_draw_setting: dict[int, config_def.System_Setting] = {}
 """ 绘制设置数据 设置id:详细内容 """
-config_draw_setting_option: Dict[int, List] = {}
+config_draw_setting_option: dict[int, list] = {}
 """ 绘制设置数据的选项数据 设置id:选项序号:选项内容 """
-config_difficulty_setting: Dict[int, config_def.System_Setting] = {}
+config_difficulty_setting: dict[int, config_def.System_Setting] = {}
 """ 难度设置数据 设置id:详细内容 """
-config_difficulty_setting_option: Dict[int, List] = {}
+config_difficulty_setting_option: dict[int, list] = {}
 """ 难度设置数据的选项数据 设置id:选项序号:选项内容 """
-config_birth_type_setting: Dict[int, config_def.System_Setting] = {}
+config_birth_type_setting: dict[int, config_def.System_Setting] = {}
 """ 生殖方式设置数据 生育方式id:详细内容（设置id直接取生育方式编号，2多胎胎生/11带壳卵生/12无壳卵生） """
-config_birth_type_setting_option: Dict[int, List] = {}
+config_birth_type_setting_option: dict[int, list] = {}
 """ 生殖方式设置数据的选项数据 生育方式id:选项序号:选项内容 """
-config_ai_chat_setting: Dict[int, config_def.Ai_Chat_Setting] = {}
+config_ai_chat_setting: dict[int, config_def.Ai_Chat_Setting] = {}
 """ 文本生成AI设置数据 设置id:详细内容 """
-config_ai_chat_setting_option: Dict[int, List] = {}
+config_ai_chat_setting_option: dict[int, list] = {}
 """ 文本生成AI设置数据的选项数据 设置id:选项序号:选项内容 """
-config_ai_chat_send_data: Dict[int, config_def.Ai_Chat_Send_Data] = {}
+config_ai_chat_send_data: dict[int, config_def.Ai_Chat_Send_Data] = {}
 """ 文本生成AI发送数据 设置id:详细内容 """
-config_physical_exam_setting: Dict[int, config_def.Physical_Exam_Setting] = {}
+config_physical_exam_setting: dict[int, config_def.Physical_Exam_Setting] = {}
 """ 体检设置数据 设置id:详细内容 """
-config_physical_exam_setting_option: Dict[int, List] = {}
+config_physical_exam_setting_option: dict[int, list] = {}
 """ 体检设置数据的选项数据 设置id:选项序号:选项内容 """
-config_assistant_services: Dict[int, config_def.AssistantServices] = {}
+config_assistant_services: dict[int, config_def.AssistantServices] = {}
 """ 助理服务数据 服务id:详细内容 """
-config_assistant_services_option: Dict[int, Dict[int, List]] = {}
+config_assistant_services_option: dict[int, dict[int, list]] = {}
 """ 角色设置数据的选项数据 设置id:选项序号:选项内容 """
-config_confinement_training_setting: Dict[
+config_confinement_training_setting: dict[
     int, config_def.Confinement_Training_Setting
 ] = {}
 """ 监禁调教设置数据 设置id:详细内容 """
-config_confinement_training_setting_option: Dict[int, List] = {}
+config_confinement_training_setting_option: dict[int, list] = {}
 """ 监禁调教设置数据的选项数据 设置id:选项序号:选项内容 """
-config_body_manage_requirement: Dict[
+config_body_manage_requirement: dict[
     int, config_def.Body_Manage_Requirement
 ] = {}
 """ 身体管理需求数据 """
-config_visitor_stay_attitude: Dict[int, config_def.Visitor_Stay_Attitude] = {}
+config_visitor_stay_attitude: dict[int, config_def.Visitor_Stay_Attitude] = {}
 """ 访客停留态度 """
-config_recruitment_strategy: Dict[int, config_def.Recruitment_Strategy] = {}
+config_recruitment_strategy: dict[int, config_def.Recruitment_Strategy] = {}
 """ 招募策略 """
-config_world_setting: Dict[int, config_def.World_Setting] = {}
+config_world_setting: dict[int, config_def.World_Setting] = {}
 """ 世界设定 """
-config_hypnosis_type: Dict[int, config_def.Hypnosis_Type] = {}
+config_hypnosis_type: dict[int, config_def.Hypnosis_Type] = {}
 """ 催眠类型 """
-config_hypnosis_sub_type: Dict[int, config_def.Hypnosis_Sub_Type] = {}
+config_hypnosis_sub_type: dict[int, config_def.Hypnosis_Sub_Type] = {}
 """ 催眠子类型 """
-config_hypnosis_sub_type_by_behaivor: Dict[str, int] = {}
+config_hypnosis_sub_type_by_behaivor: dict[str, int] = {}
 """ 催眠子类型按行为对应的数据id """
-config_hypnosis_talent_of_npc: Dict[int, config_def.Hypnosis_Talent_Of_Npc] = {}
+config_hypnosis_talent_of_npc: dict[int, config_def.Hypnosis_Talent_Of_Npc] = {}
 """ 干员获得被催眠素质 """
-config_hypnosis_talent_of_pl: Dict[int, config_def.Hypnosis_Talent_Of_Pl] = {}
+config_hypnosis_talent_of_pl: dict[int, config_def.Hypnosis_Talent_Of_Pl] = {}
 """ 玩家获得催眠素质 """
-config_talent_of_arts: Dict[int, config_def.Talent_Of_Arts] = {}
+config_talent_of_arts: dict[int, config_def.Talent_Of_Arts] = {}
 """ 源石技艺素质 """
-config_roleplay: Dict[int, config_def.Roleplay] = {}
+config_roleplay: dict[int, config_def.Roleplay] = {}
 """ 角色扮演 """
-config_new_round_inherit: Dict[int, config_def.New_Round_Inherit] = {}
+config_new_round_inherit: dict[int, config_def.New_Round_Inherit] = {}
 """ 新周目继承 """
-config_new_round_inherit_type_data: Dict[int, Dict] = {}
+config_new_round_inherit_type_data: dict[int, dict] = {}
 """ 新周目继承按类型和等级划分的数据 """
-config_commission: Dict[int, config_def.Commission] = {}
+config_commission: dict[int, config_def.Commission] = {}
 """ 委托数据 """
-config_commission_id_by_country: Dict[int, List] = {}
+config_commission_id_by_country: dict[int, list] = {}
 """ 按国家划分的委托id """
-config_vehicle: Dict[int, config_def.Vehicle] = {}
+config_vehicle: dict[int, config_def.Vehicle] = {}
 """ 载具数据 """
-config_reputation_level: Dict[int, config_def.Reputation_Level] = {}
+config_reputation_level: dict[int, config_def.Reputation_Level] = {}
 """ 声望等级数据 """
-config_bondage: Dict[int, config_def.Bondage] = {}
+config_bondage: dict[int, config_def.Bondage] = {}
 """ 绳子捆绑数据 """
-config_body_item: Dict[int, config_def.Body_Item] = {}
+config_body_item: dict[int, config_def.Body_Item] = {}
 """ 身体上装备的H道具数据 """
-config_gift_items: Dict[int, config_def.Gift_Items] = {}
+config_gift_items: dict[int, config_def.Gift_Items] = {}
 """ 礼物数据 """
-config_equipment_condition: Dict[int, config_def.Equipment_Condition] = {}
+config_equipment_condition: dict[int, config_def.Equipment_Condition] = {}
 """ 装备情况数据 """
-config_equipment_damage_rate: Dict[int, config_def.Equipment_Damage_Rate] = {}
+config_equipment_damage_rate: dict[int, config_def.Equipment_Damage_Rate] = {}
 """ 装备损坏概率数据 """
-config_equipment_maintain_setting: Dict[
+config_equipment_maintain_setting: dict[
     int, config_def.Equipment_Maintain_Setting
 ] = {}
 """ 装备维护设置数据 """
-config_equipment_maintain_setting_option: Dict[int, List] = {}
+config_equipment_maintain_setting_option: dict[int, list] = {}
 """ 装备维护设置数据的选项数据 设置id:选项序号:选项内容 """
-config_achievement: Dict[int, config_def.Achievement] = {}
+config_achievement: dict[int, config_def.Achievement] = {}
 """ 成就数据 """
-config_achievement_id_relation: Dict[int, int] = {}
+config_achievement_id_relation: dict[int, int] = {}
 """ 成就数据的id关联数据，int键为成就cid编号，int值为关联该成就的后置id """
-config_supply_strategy: Dict[int, config_def.Supply_Strategy] = {}
+config_supply_strategy: dict[int, config_def.Supply_Strategy] = {}
 """ 供电策略数据 """
-config_power_generation: Dict[int, config_def.Power_Generation] = {}
+config_power_generation: dict[int, config_def.Power_Generation] = {}
 """ 发电数据: cid -> 数据对象 """
-config_power_generation_level_index: Dict[str, Dict[int, int]] = {}
+config_power_generation_level_index: dict[str, dict[int, int]] = {}
 """ 发电数据索引: 发电类别 -> (等级/分类 -> cid) """
-config_power_storage: Dict[int, config_def.Power_Storage] = {}
+config_power_storage: dict[int, config_def.Power_Storage] = {}
 """ 蓄电数据: cid -> 数据对象 """
-config_power_storage_level_index: Dict[str, Dict[int, int]] = {}
+config_power_storage_level_index: dict[str, dict[int, int]] = {}
 """ 蓄电数据索引: 蓄电类别 -> (等级 -> cid) """
-config_semen_shoot_amount: Dict[int, config_def.Semen_Shoot_Amount] = {}
+config_semen_shoot_amount: dict[int, config_def.Semen_Shoot_Amount] = {}
 """ 精液射出量数据 """
-config_ability_lv_adjust: Dict[int, config_def.Ability_Lv_Adjust] = {}
+config_ability_lv_adjust: dict[int, config_def.Ability_Lv_Adjust] = {}
 """ 能力等级调整数据 """
-config_sex_position_data: Dict[int, config_def.Sex_Position] = {}
+config_sex_position_data: dict[int, config_def.Sex_Position] = {}
 """ 性交姿势数据 """
-config_instruct: Dict[int, config_def.InstructConfig] = {}
+config_instruct: dict[int, config_def.InstructConfig] = {}
 """ 指令完整配置数据 cid -> 配置对象 """
-config_instruct_by_id: Dict[str, int] = {}
+config_instruct_by_id: dict[str, int] = {}
 """ 指令完整配置数据（按指令ID索引）instruct_id(str) -> 指令cid(int) """
 
 
@@ -544,9 +543,9 @@ def translate_data(data: dict) -> None:
         now_data[key] = get_text._(now_data[key])
 
 
-def _parse_special_medicine_template(template_str: str) -> Dict[int, float]:
+def _parse_special_medicine_template(template_str: str) -> dict[int, float]:
   """解析病情等级配置中的特效药模板字符串"""
-  result: Dict[int, float] = {}
+  result: dict[int, float] = {}
   if not template_str:
     return result
   for chunk in template_str.split("|"):

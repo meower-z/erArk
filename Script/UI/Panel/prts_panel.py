@@ -1,6 +1,5 @@
 """教程（PRTS）界面面板与干员口上信息面板"""
 
-from typing import Dict, List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.Design import character, attr_calculation
@@ -69,7 +68,7 @@ class Prts_Panel:
     """ 绘制的最大宽度 """
     # self.now_panel = _("部门总概况")
     # """ 当前绘制的页面 """
-    self.draw_list: List[draw.Drawable] = []
+    self.draw_list: list[draw.Drawable] = []
     """ 绘制的文本列表 """
 
   def draw(self) -> None:
@@ -85,7 +84,7 @@ class Prts_Panel:
       info_draw = draw.NormalDraw()
       info_draw.width = self.width
       return_list = []
-      now_draw_list: List[draw.Drawable] = []
+      now_draw_list: list[draw.Drawable] = []
 
       pl_name = cache.character_data[0].name
       info_text = _("身份验证通过，最高权限账户——管理员账户\n\n")
@@ -294,13 +293,11 @@ class ShowCharaNameDraw:
           except Exception:
             vsize = None
           if vsize:
-            version_text = "by {0}({1}kb)".format(
-                tip_chara_data.writer_name, vsize
-            )
+            version_text = f"by {tip_chara_data.writer_name}({vsize}kb)"
           # 如果未找到，回退到 character_data.talk_size。
           else:
-            version_text = "by {0}({1}kb)".format(
-                tip_chara_data.writer_name, character_data.talk_size
+            version_text = (
+                f"by {tip_chara_data.writer_name}({character_data.talk_size}kb)"
             )
       # 使用独立函数计算显示宽度并补齐到指定宽度
       # 若该角色存在多个文本版本，在显示的版本信息后追加星号标记
@@ -346,7 +343,7 @@ class ShowCharaNameDraw:
     self.info_draw.draw()
     self.now_draw.draw()
 
-  def get_chara_version_sizes(self) -> Dict[int, int]:
+  def get_chara_version_sizes(self) -> dict[int, int]:
     """
     计算当前 self.chara_adv_id 在 data/talk/chara 和 data/event/chara 下每个版本的总大小（字节），
     并返回以 version_id 为键、KB（向上取整）为值的字典。
@@ -370,7 +367,7 @@ class ShowCharaNameDraw:
     except Exception:
       find_name = str(self.chara_adv_id)
 
-    per_version_sizes: Dict[int, int] = {}
+    per_version_sizes: dict[int, int] = {}
     for f in files:
       base = os.path.basename(f).split(".")[0]
       parts = base.split("_")

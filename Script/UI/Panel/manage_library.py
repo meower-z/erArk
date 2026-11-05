@@ -1,6 +1,5 @@
 """图书馆管理面板与推荐书籍类别的选择按钮"""
 
-from typing import List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.UI.Moudle import draw, panel
@@ -32,7 +31,7 @@ class Manage_Library_Panel:
     """ 绘制的最大宽度 """
     self.now_panel = _("管理图书馆")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
   def draw(self) -> None:

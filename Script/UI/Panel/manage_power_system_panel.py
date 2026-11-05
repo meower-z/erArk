@@ -3,7 +3,7 @@
 """
 
 import random
-from typing import Dict, List, Tuple, Union, overload, Literal, TypedDict
+from typing import Dict, overload, Literal, TypedDict
 from types import FunctionType
 
 # 依赖模块，与生产线面板保持一致的导入方式
@@ -135,7 +135,7 @@ def _recalc_battery_capacity() -> None:
 
 def _calculate_battery_self_discharge(
     ri_obj: game_type.Rhodes_Island,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
   """
   计算并应用蓄电池的自放电（按日）。
   规则：
@@ -153,8 +153,8 @@ def _calculate_battery_self_discharge(
     return 0.0, 0.0
 
   # 读取不同等级的单体容量与自放电率表
-  cap_table: List[float] = []
-  rate_table: List[float] = []
+  cap_table: list[float] = []
+  rate_table: list[float] = []
   for lv in (1, 2, 3):
     try:
       cid_cap = game_config.config_power_storage_level_index.get(
@@ -316,14 +316,14 @@ def get_theoretical_fire_generation(detail: Literal[False] = False) -> float:
 @overload
 def get_theoretical_fire_generation(
     detail: bool,
-) -> Union[float, FireGenerationDetail]:
+) -> float | FireGenerationDetail:
   ...
 
 
 # 实际实现
 def get_theoretical_fire_generation(
     detail: bool = False,
-) -> Union[float, FireGenerationDetail]:
+) -> float | FireGenerationDetail:
   """计算24h火力理论发电量(不考虑燃料库存)
   参数:
       detail: 若为 True，返回包含关键中间量的字典；否则返回浮点数的理论总量。
@@ -494,7 +494,7 @@ def get_theoretical_power_consumption() -> float:
 
 
 # ---------------------------- 结算逻辑 ---------------------------- #
-def settle_power_system(draw_flag: bool = True) -> Tuple[float, str]:
+def settle_power_system(draw_flag: bool = True) -> tuple[float, str]:
   """每天结算动力系统发电与储能（按日）
   参数:
       draw_flag: 是否即时绘制信息
@@ -955,7 +955,7 @@ class Manage_Power_System_Panel:
 
     ri = cache.rhodes_island
     type_name = [_("源石反应炉"), _("水力"), _("风能"), _("光伏")]
-    return_list: List[str] = []
+    return_list: list[str] = []
 
     def _make_appoint(c_id: int) -> None:
       self._do_appoint_main_operator(type_idx, c_id)

@@ -1,6 +1,6 @@
 """食物商店界面面板与自制食物放入食堂的处理"""
 
-from typing import Literal, Tuple
+from typing import Literal
 from types import FunctionType
 from uuid import UUID
 from Script.Core import cache_control, game_type, get_text, flow_handle, text_handle, constant, py_cmd
@@ -210,7 +210,7 @@ class SeeFoodListByFoodNameDraw:
 
   def __init__(
       self,
-      text: Tuple[str, str],
+      text: tuple[str, str],
       width: int,
       is_button: bool,
       num_button: bool,
@@ -229,7 +229,7 @@ class SeeFoodListByFoodNameDraw:
     """ 绘制数字按钮 """
     self.button_id: int = button_id
     """ 数字按钮的id """
-    self.button_return: str | Tuple[str, str] = str(button_id)
+    self.button_return: str | tuple[str, str] = str(button_id)
     """ 按钮返回值 """
 
     # 获取当前位置

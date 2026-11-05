@@ -2,7 +2,6 @@
 源石技艺面板，与降低负面素质的面板
 """
 
-from typing import List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.Design import handle_talent, handle_premise
@@ -34,7 +33,7 @@ class Originium_Arts_Panel:
     """ 绘制的最大宽度 """
     # self.now_panel = _("源石技艺")
     # """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
     self.pl_character_data = cache.character_data[0]
     """ 玩家的属性 """
@@ -277,8 +276,8 @@ class Originium_Arts_Panel:
           break
 
   def draw_lv_up_button(
-      self, condition: bool, draw_text: str, cid: int, return_list: List[str]
-  ) -> List[str]:
+      self, condition: bool, draw_text: str, cid: int, return_list: list[str]
+  ) -> list[str]:
     """绘制升级按钮"""
     # 如果满足条件则绘制按钮，否则绘制灰色文本
     now_draw: draw.LeftButton | draw.NormalDraw
@@ -303,7 +302,7 @@ class Originium_Arts_Panel:
   def gain_and_upgrade_ability(self) -> None:
     """能力获得与升级"""
     while 1:
-      return_list: List[str] = []
+      return_list: list[str] = []
       line_draw = draw.LineDraw("-", self.width)
       line_draw.draw()
       info_draw = draw.NormalDraw()
@@ -653,7 +652,7 @@ class Down_Negative_Talent_Panel:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
   def draw(self) -> None:

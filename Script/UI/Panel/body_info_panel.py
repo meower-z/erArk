@@ -1,6 +1,5 @@
 """显示角色肉体信息的面板与能力等级的界面文本"""
 
-from typing import List
 from types import FunctionType
 from Script.UI.Moudle import draw, panel
 from Script.Core import (
@@ -70,9 +69,9 @@ class CharacterBodyText:
     """ 面板最大宽度 """
     self.column = column
     """ 每行状态最大个数 """
-    self.draw_list: List = []
+    self.draw_list: list = []
     """ 绘制的文本列表 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 当前面板监听的按钮列表 """
     self.center_status: bool = center_status
     """ 居中绘制状态文本 """

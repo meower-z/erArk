@@ -1,6 +1,5 @@
 """角色服装、脱衣服及穿脱切换相关的面板"""
 
-from typing import List
 from types import FunctionType
 from Script.Core import game_type, cache_control, rich_text, get_text, constant, py_cmd, text_handle, flow_handle
 from Script.Config import game_config, normal_config
@@ -63,9 +62,9 @@ class SeeCharacterClothPanel:
     """ 面板最大宽度 """
     self.column = column
     """ 每行状态最大个数 """
-    self.draw_list: List[draw.Drawable] = []
+    self.draw_list: list[draw.Drawable] = []
     """ 绘制的文本列表 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 当前面板监听的按钮列表 """
     self.center_status: bool = center_status
     """ 居中绘制状态文本 """
@@ -126,9 +125,7 @@ class SeeCharacterClothPanel:
             semen_level = target_character_data.dirty.cloth_semen[
                 clothing_type
             ][2]
-            dirty_text_cid = "{0}精液污浊{1}".format(
-                _(type_name, revert_translation=True), str(semen_level)
-            )
+            dirty_text_cid = f"{_(type_name, revert_translation=True)}精液污浊{str(semen_level)}"
             # 是否显示完整污浊文本，仅在最后一件衣服上显示
             if (
                 cache.all_system_setting.draw_setting[10]
@@ -161,9 +158,7 @@ class SeeCharacterClothPanel:
             decoration_level = condom_handle.get_decoration_level(
                 decoration_count
             )
-            decoration_text_cid = "{0}避孕套装饰{1}".format(
-                _(type_name, revert_translation=True), str(decoration_level)
-            )
+            decoration_text_cid = f"{_(type_name, revert_translation=True)}避孕套装饰{str(decoration_level)}"
             decoration_text_context = game_config.ui_text_data["condom_dirty"][
                 decoration_text_cid
             ]
@@ -519,9 +514,9 @@ class SwitchCharacterClothPanel:
     self.column = column
     self.type_number = type_number
     self.center_status = center_status
-    self.draw_list: List[draw.Drawable] = []  # 绘制对象列表
-    self.button_list: List[SwitchClothButton] = []  # 衣服按钮对象列表
-    self.return_list: List[str] = []  # 按钮返回值列表
+    self.draw_list: list[draw.Drawable] = []  # 绘制对象列表
+    self.button_list: list[SwitchClothButton] = []  # 衣服按钮对象列表
+    self.return_list: list[str] = []  # 按钮返回值列表
     self._refresh_panel()
 
   def _refresh_panel(self) -> None:
@@ -537,7 +532,7 @@ class SwitchCharacterClothPanel:
     # 添加标题
     type_line = draw.LittleTitleLineDraw(_("服装"), self.width, ":")
     self.draw_list.append(type_line)
-    now_row: List[draw.Drawable] = []  # 当前行的绘制对象
+    now_row: list[draw.Drawable] = []  # 当前行的绘制对象
     # 遍历全部衣服类型
     for clothing_type in game_config.config_clothing_type:
       type_name = game_config.config_clothing_type[clothing_type].name
@@ -584,9 +579,7 @@ class SwitchCharacterClothPanel:
             semen_level = target_character_data.dirty.cloth_semen[
                 clothing_type
             ][2]
-            dirty_text_cid = "{0}精液污浊{1}".format(
-                _(type_name, revert_translation=True), str(semen_level)
-            )
+            dirty_text_cid = f"{_(type_name, revert_translation=True)}精液污浊{str(semen_level)}"
             # 只在最后一件衣服上显示完整污浊文本
             if (
                 cache.all_system_setting.draw_setting[10]
@@ -658,7 +651,7 @@ class SwitchCharacterClothPanel:
     off_title.width = self.width
     off_cloth_count = 0
     off_draw_count = 0
-    off_row: List[draw.Drawable] = []
+    off_row: list[draw.Drawable] = []
     for cloth_type in target_character_data.cloth.cloth_off:
       for cloth_id in target_character_data.cloth.cloth_off[cloth_type]:
         btn = SwitchClothButton(cloth_id, cloth_type, False, self)
