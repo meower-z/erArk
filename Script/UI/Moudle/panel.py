@@ -5,7 +5,7 @@ from __future__ import annotations
 import itertools
 import math
 import time
-from typing import List, Dict, Sequence, Tuple
+from typing import Sequence
 from types import FunctionType
 from Script.UI.Moudle import draw
 from Script.Core import io_init, flow_handle, text_handle, get_text, value_handle, game_type, cache_control
@@ -27,9 +27,9 @@ class SingleColumnButton:
 
   def __init__(self) -> None:
     """初始化绘制对象"""
-    self.button_list: List[draw.Button] = []
+    self.button_list: list[draw.Button] = []
     """ 绘制的按钮列表 """
-    self.return_list: Dict[str, str] = {}
+    self.return_list: dict[str, str] = {}
     """
         按钮返回的响应列表
         按钮返回值:按钮文本
@@ -41,8 +41,8 @@ class SingleColumnButton:
 
   def set(
       self,
-      button_list: List[str],
-      return_list: List[str],
+      button_list: list[str],
+      return_list: list[str],
       normal_style: str = "standard",
       onbutton_style: str = "onbutton",
   ) -> None:
@@ -89,7 +89,7 @@ class OneMessageAndSingleColumnButton:
     """ 按钮监听列表 """
 
   def set(
-      self, button_list: List[str], message: str, start_id: int = 0
+      self, button_list: list[str], message: str, start_id: int = 0
   ) -> None:
     """
     设置要绘制的信息
@@ -116,7 +116,7 @@ class OneMessageAndSingleColumnButton:
     self.button_panel.set(new_button_list, return_list)
     self.button_panel.return_list = dict(zip(return_list, button_list))
 
-  def get_return_list(self) -> Dict[str, str]:
+  def get_return_list(self) -> dict[str, str]:
     """
     获取按钮响应的id集合
     Return arguments:
@@ -184,12 +184,12 @@ class TitleAndRightInfoListPanel:
     """ 文本标题 """
     self.width = 0
     """ 面板宽度 """
-    self.info_list: List[str] = []
+    self.info_list: list[str] = []
     """ 信息列表 """
-    self.draw_list: List[draw.Drawable] = []
+    self.draw_list: list[draw.Drawable] = []
     """ 绘制列表 """
 
-  def set(self, title_text: str, info_list: List[str], width: int) -> None:
+  def set(self, title_text: str, info_list: list[str], width: int) -> None:
     """
     设置绘制信息
     Keyword arguments:
@@ -227,10 +227,10 @@ class CenterDrawTextListPanel:
     """ 面板宽度 """
     self.column: int = 0
     """ 每行最大元素数 """
-    self.draw_list: List[List[draw.CenterDraw]] = []
+    self.draw_list: list[list[draw.CenterDraw]] = []
     """ 绘制列表 """
 
-  def set(self, info_list: List[str], width: int, column: int) -> None:
+  def set(self, info_list: list[str], width: int, column: int) -> None:
     """
     设置绘制信息
     Keyword arguments:
@@ -268,10 +268,10 @@ class LeftDrawTextListPanel:
     """ 面板宽度 """
     self.column: int = 0
     """ 每行最大元素数 """
-    self.draw_list: List[List[draw.LeftDraw]] = []
+    self.draw_list: list[list[draw.LeftDraw]] = []
     """ 绘制列表 """
 
-  def set(self, info_list: List[str], width: int, column: int) -> None:
+  def set(self, info_list: list[str], width: int, column: int) -> None:
     """
     设置绘制信息
     Keyword arguments:
@@ -339,7 +339,7 @@ class DrawTextListPanel:
     """ 面板宽度 """
     self.column: int = 0
     """ 每行最大元素数 """
-    self.draw_list: List[List[draw.Drawable]] = []
+    self.draw_list: list[list[draw.Drawable]] = []
     """ 绘制列表 """
 
   def set(
@@ -375,7 +375,7 @@ class VerticalDrawTextListGroup:
     """初始化绘制对象"""
     self.width: int = width
     """ 当前最大绘制宽度 """
-    self.draw_list: List[List[draw.NormalDraw]] = []
+    self.draw_list: list[list[draw.NormalDraw]] = []
     """ 绘制的对象列表 """
 
   def draw(self) -> None:
@@ -402,9 +402,9 @@ class CenterDrawButtonListPanel:
     """ 面板宽度 """
     self.column = 0
     """ 每行最大元素数 """
-    self.draw_list: List[List[draw.Drawable]] = []
+    self.draw_list: list[list[draw.Drawable]] = []
     """ 绘制按钮列表 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """
         按钮返回的响应列表
         按钮返回值:响应文本
@@ -412,13 +412,13 @@ class CenterDrawButtonListPanel:
 
   def set(
       self,
-      text_list: List[str],
-      return_list: List[str],
+      text_list: list[str],
+      return_list: list[str],
       width: int,
       column: int,
       null_text: str = "",
       cmd_func: Callable[..., object] | None = None,
-      func_args: Sequence[Tuple] = (),
+      func_args: Sequence[tuple] = (),
   ) -> None:
     """
     设置绘制信息
@@ -438,7 +438,7 @@ class CenterDrawButtonListPanel:
     self.draw_list = []
     for now_text_list in new_text_list:
       now_width = int(width / len(now_text_list))
-      now_list: List[draw.Drawable] = []
+      now_list: list[draw.Drawable] = []
       for now_text in now_text_list:
         if now_text != null_text:
           now_button = draw.CenterButton(
@@ -477,9 +477,9 @@ class LeftDrawIDButtonListPanel:
     """ 每行最大元素数 """
     self.start_id = 0
     """ 编号的启始id """
-    self.draw_list: List[List[draw.Drawable]] = []
+    self.draw_list: list[list[draw.Drawable]] = []
     """ 绘制按钮列表 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """
         按钮返回的响应列表
         按钮返回值:响应文本
@@ -487,13 +487,13 @@ class LeftDrawIDButtonListPanel:
 
   def set(
       self,
-      text_list: List[str],
+      text_list: list[str],
       start_id: int,
       width: int,
       column: int,
       null_text: str = "",
       cmd_func: Callable[..., object] | None = None,
-      func_args: Sequence[Tuple] = (),
+      func_args: Sequence[tuple] = (),
   ) -> None:
     """
     设置绘制信息
@@ -513,7 +513,7 @@ class LeftDrawIDButtonListPanel:
     self.draw_list = []
     for now_text_list in new_text_list:
       now_width = int(width / len(now_text_list))
-      now_list: List[draw.Drawable] = []
+      now_list: list[draw.Drawable] = []
       for now_text in now_text_list:
         if now_text != null_text:
           now_text = text_handle.id_index(index) + now_text
@@ -642,7 +642,7 @@ class PageHandlePanel:
     """ 每行之间的间隔线,为空则不绘制 """
     self.col_septal_lines: str = col_septal_lines
     """ 每列之间的间隔线,为空则不绘制 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 按钮返回的id列表 """
     self.next_page_return: str = ""
     """ 切换下一页的按钮返回 """
@@ -655,7 +655,7 @@ class PageHandlePanel:
     self.button_start_id: int = button_start_id
     """ 数字按钮的开始id """
     self.draw_type = draw_type
-    self.draw_list: List[draw.Drawable] = []
+    self.draw_list: list[draw.Drawable] = []
     """ 绘制的对象列表 """
     self.null_button_text: object = null_button_text
     """ 不作为按钮绘制的文本 """
@@ -676,7 +676,7 @@ class PageHandlePanel:
         break
       now_page_list.append(self.text_list[i])
     draw_text_group = value_handle.list_of_groups(now_page_list, self.column)
-    draw_list: List[draw.Drawable] = []
+    draw_list: list[draw.Drawable] = []
     self.end_index = self.button_start_id
     index = self.button_start_id
     line_feed = draw.NormalDraw()

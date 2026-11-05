@@ -1,6 +1,6 @@
 """图书馆借书面板，以及借还书、借阅历史记录与读书条件的处理"""
 
-from typing import Tuple, List
+from typing import Tuple
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.UI.Moudle import draw
@@ -332,7 +332,7 @@ class Borrow_Book_Panel:
     """ 绘制的最大宽度 """
     self.now_panel = _("技能类书籍")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.Drawable] = []
+    self.draw_list: list[draw.Drawable] = []
     """ 绘制的文本列表 """
 
   def draw(self) -> None:
@@ -386,7 +386,7 @@ class Borrow_Book_Panel:
       borrow_limit_draw.draw()
 
       # 书籍总览信息
-      book_draw_list: List[draw.Drawable] = []
+      book_draw_list: list[draw.Drawable] = []
 
       book_draw_list.append(line_feed)
 

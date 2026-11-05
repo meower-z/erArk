@@ -1,6 +1,5 @@
 """角色信息面板头部，含角色状态标识与上课信息文本的生成"""
 
-from typing import List, Tuple
 from types import FunctionType
 from Script.UI.Moudle import draw
 from Script.Core import (
@@ -219,12 +218,12 @@ def get_course_text(now_course: dict) -> str:
     target = game_config.config_entertainment[target].name
   elif now_course["course_type"] == education_constant.COURSE_TYPE_INTERN:
     target = game_config.config_work_type[target].name
-  return "{0}·{1}".format(type_name, target)
+  return f"{type_name}·{target}"
 
 
 def get_character_status_list(
     character_id: int,
-) -> Tuple[List[draw.LeftDraw], List[str]]:
+) -> tuple[list[draw.LeftDraw], list[str]]:
   """
   获取角色的所有状态标识
 
@@ -616,7 +615,7 @@ class CharacterInfoHead:
     """ 要绘制的角色id """
     self.width: int = width
     """ 当前最大可绘制宽度 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 当前面板监听的按钮列表 """
     self.draw_title: bool = True
     """ 是否绘制面板标题 """
@@ -671,10 +670,7 @@ class CharacterInfoHead:
     status_list, status_text_list = get_character_status_list(character_id)
 
     if character_id:
-      message = ("{character_name} {favorability_and_trust}").format(
-          character_name=character_data.name,
-          favorability_and_trust=favorability_and_trust_text,
-      )
+      message = f"{character_data.name} {favorability_and_trust_text}"
     else:
       message = ("{character_name}{character_nick_name}{eja}").format(
           # character_id=character_id,
@@ -754,7 +750,7 @@ class CharacterInfoHead:
     None_draw = draw.CenterDraw()
     None_draw.width = 1
     None_draw.text = " "
-    self.draw_list: List = [
+    self.draw_list: list = [
         tuple([message_draw] + status_list + [hp_draw, None_draw, mp_draw]),
     ]
     if character_id == 0:

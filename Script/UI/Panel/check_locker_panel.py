@@ -3,7 +3,7 @@
 可偷取全部内裤或袜子，或选择射在衣物上
 """
 
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, text_handle, constant, py_cmd
 from Script.Design import map_handle, attr_calculation, update, attr_text, handle_premise, clothing
@@ -149,7 +149,7 @@ class Check_locker_Panel:
         break
 
   def steal_all_pan(
-      self, npc_id_list: List[int], map_data: game_type.Scene
+      self, npc_id_list: list[int], map_data: game_type.Scene
   ) -> None:
     """结算：偷取所有内裤"""
     pl_data: game_type.Character = cache.character_data[0]
@@ -182,7 +182,7 @@ class Check_locker_Panel:
     now_draw.draw()
 
   def steal_all_socks(
-      self, npc_id_list: List[int], map_data: game_type.Scene
+      self, npc_id_list: list[int], map_data: game_type.Scene
   ) -> None:
     """结算：偷取所有袜子"""
     pl_data: game_type.Character = cache.character_data[0]
@@ -251,7 +251,7 @@ class FindDraw:
     """ 数字按钮的id """
     self.button_return: str = str(button_id)
     """ 按钮返回值 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
     # 获得地图相关的数据
@@ -291,7 +291,7 @@ class FindDraw:
   def check_cloth(self) -> None:
     """点击后进入衣服操作子界面"""
     # title_draw = draw.TitleLineDraw(self.text, window_width)
-    return_list: List[str] = []
+    return_list: list[str] = []
     # title_draw.draw()
     cloth_show_draw = draw.NormalDraw()
     self.pl_data.target_character_id = self.npc_id

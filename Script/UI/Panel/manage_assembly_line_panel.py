@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Tuple, Dict, List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.Design import attr_calculation, basement, handle_ability
@@ -27,7 +26,7 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
-def calculate_assembly_line_efficiency(line_id: int) -> Tuple[str, float]:
+def calculate_assembly_line_efficiency(line_id: int) -> tuple[str, float]:
   """
   计算某条生产线当前总效率(百分比值), 同时更新缓存结构中 index2
   输入参数:
@@ -273,9 +272,9 @@ class Manage_Assembly_Line_Panel:
     """ 绘制的最大宽度 """
     self.now_panel = _("产品生产")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
-    self.show_resource_type_dict: Dict = {
+    self.show_resource_type_dict: dict = {
         _("药剂"): False,
         _("乳制品"): False,
         _("香水"): False,
@@ -338,7 +337,7 @@ class Manage_Assembly_Line_Panel:
         button_text = _(" [生产调整] ")
         button_draw = draw.CenterButton(
             _(button_text),
-            "{0}_{1}".format(button_text, assembly_line_id),
+            f"{button_text}_{assembly_line_id}",
             len(button_text) * 2,
             cmd_func=self.select_assembly_line_produce,
             args=assembly_line_id,

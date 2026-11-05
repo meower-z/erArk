@@ -2,7 +2,6 @@
 角色素质升级显示面板
 """
 
-from typing import List
 from types import FunctionType
 from Script.UI.Moudle import draw
 from Script.Core import (
@@ -41,7 +40,7 @@ class Character_talent_show_Text:
     """ 绘制的角色id """
     self.width = width
     """ 当前最大可绘制宽度 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 监听的按钮列表 """
     self.character_data = cache.character_data[self.character_id]
     """ 角色数据 """

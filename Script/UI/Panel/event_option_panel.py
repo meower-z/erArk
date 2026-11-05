@@ -208,9 +208,7 @@ def check_son_event_list_from_event_list(
   for event_id in event_list:
     event_config = game_config.config_event[event_id]
     # 需要含有综合数值前提中的子嵌套事件前提
-    son_premise = 'CVP_A1_Son|{0}_E_{1}'.format(
-        event_parent_chid_id, event_parent_value
-    )
+    son_premise = f'CVP_A1_Son|{event_parent_chid_id}_E_{event_parent_value}'
     # 需要有该子事件的前提
     if son_premise in event_config.premise:
       premise_dict = event_config.premise.copy()

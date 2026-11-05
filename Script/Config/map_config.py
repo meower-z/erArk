@@ -2,7 +2,7 @@
 
 import os
 import pickle
-from typing import Any, Dict, List, Tuple
+from typing import Any
 from Script.Core import game_type, json_handle, get_text, text_handle, cache_control, constant, rich_text, dijkstra
 from Script.Design import map_handle
 
@@ -23,13 +23,13 @@ all_map_data_path = os.path.join("data", "MapData")
 def init_map_data() -> None:
   """载入地图和场景数据：场景名与地图名经过翻译，三个 pickle 预处理文件在数据之后记着写出它们时的游戏语言；
   四个预处理文件齐全且三个记的都是当前语言时读入它们，否则由 data/map 重建并写出"""
-  pickle_paths: Tuple[str, str, str] = (
+  pickle_paths: tuple[str, str, str] = (
       all_scene_data_path,
       all_map_data_path,
       all_place_data_path,
   )
   # pickle.load 返回 Any：三个文件分别存场景、地图、地点标签三种数据
-  loaded: Dict[str, Any] = {}
+  loaded: dict[str, Any] = {}
   if all(
       os.path.exists(path) for path in (*pickle_paths, scene_path_edge_path)
   ):
@@ -45,10 +45,10 @@ def init_map_data() -> None:
     map_handle.scene_path_edge = json_handle.load_json(scene_path_edge_path)
   else:
     load_dir_now(map_data_path)
-    built: Tuple[
-        Dict[str, game_type.Scene],
-        Dict[str, game_type.Map],
-        Dict[str, List[str]],
+    built: tuple[
+        dict[str, game_type.Scene],
+        dict[str, game_type.Map],
+        dict[str, list[str]],
     ] = (cache.scene_data, cache.map_data, constant.place_data)
     for path, built_data in zip(pickle_paths, built):
       with open(path, "wb") as built_file:
@@ -102,7 +102,7 @@ def load_dir_now(data_path: str) -> None:
               get_map_system_path_for_path(now_path)
           )
           with open(
-              os.path.join(data_path, "Map"), "r", encoding="utf-8"
+              os.path.join(data_path, "Map"), encoding="utf-8"
           ) as now_read_file:
             draw_data = now_read_file.read()
             now_map_data.map_draw = get_print_map_data(draw_data)
@@ -117,7 +117,7 @@ def load_dir_now(data_path: str) -> None:
       load_dir_now(now_path)
 
 
-def get_map_system_path_for_path(now_path: str) -> List[str]:
+def get_map_system_path_for_path(now_path: str) -> list[str]:
   """
   从地图文件路径获取游戏地图系统路径
   Keyword arguments:
@@ -134,7 +134,7 @@ def get_map_system_path_for_path(now_path: str) -> List[str]:
   return map_system_path
 
 
-def get_map_system_path_str(now_path: List[str]) -> str:
+def get_map_system_path_str(now_path: list[str]) -> str:
   """
   将游戏地图系统路径转换为字符串
   Keyword arguments:
@@ -410,8 +410,8 @@ def _pad_map_lines_to_max_width(map_draw_data: game_type.MapDraw) -> None:
 
 
 def get_sorted_map_path_data(
-    map_data: Dict[str, Dict[str, int]],
-) -> Dict[str, Dict[str, game_type.TargetPath]]:
+    map_data: dict[str, dict[str, int]],
+) -> dict[str, dict[str, game_type.TargetPath]]:
   """
   获取地图下各节点到目标节点的最短路径数据
   Keyword arguments:
@@ -419,7 +419,7 @@ def get_sorted_map_path_data(
   Return arguments:
   Dict[int,Dict[int,game_type.TargetPath]] -- 最短路径数据 当前节点:目标节点:路径对象
   """
-  sorted_path_data: Dict[str, Dict[str, game_type.TargetPath]] = {}
+  sorted_path_data: dict[str, dict[str, game_type.TargetPath]] = {}
   for node in map_data:
     node_path = dijkstra.dijkstra(map_data, node)
     sorted_path_data.setdefault(node, {})

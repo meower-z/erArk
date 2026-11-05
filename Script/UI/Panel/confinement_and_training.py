@@ -1,7 +1,6 @@
 """监禁调教管理面板，以及囚犯的逃脱结算与调教助手的行为选择"""
 
 import os
-from typing import List, Tuple
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.Design import (
@@ -103,7 +102,7 @@ def calculate_escape_probability(character_id: int) -> float:
   return cache.rhodes_island.current_prisoners[character_id][1]
 
 
-def judge_can_escape(character_id: int) -> Tuple[bool, float, float]:
+def judge_can_escape(character_id: int) -> tuple[bool, float, float]:
   """
   判断指定角色是否能逃脱成功。\n
   逃脱成功条件：\n
@@ -437,7 +436,7 @@ def prepare_training() -> None:
 
 def get_all_can_use_behavior_id_for_sex_assistant(
     select_part: str = "", not_selet_part: str = ""
-) -> List[str]:
+) -> list[str]:
   """
   获取调教助手所有可用的行为id
   Keyword arguments:
@@ -595,7 +594,7 @@ class Confinement_And_Training_Manage_Panel:
     """ 绘制的最大宽度 """
     self.now_panel = _("监禁调教管理")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
     self.pl_character_data = cache.character_data[0]
     """ 玩家的角色数据 """

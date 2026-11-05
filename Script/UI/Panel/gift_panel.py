@@ -1,6 +1,5 @@
 """赠送礼物的面板与药物使用效果的处理"""
 
-from typing import List
 from types import FunctionType
 from Script.UI.Moudle import draw
 from Script.Core import (
@@ -223,7 +222,7 @@ class Gift_Panel:
     """
     self.width: int = width
     """ 绘制的最大宽度 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
     self.show_drug_gift: bool = False
     # 药物类礼物展开/收起标志，默认为收起

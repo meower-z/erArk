@@ -1,6 +1,5 @@
 """查看当前地图的面板、快捷移动菜单，以及场景名列表与各类快捷寻路按钮列表"""
 
-from typing import List, Dict
 from types import FunctionType
 from Script.UI.Moudle import draw, panel
 from Script.Core import (
@@ -39,14 +38,14 @@ class SeeMapPanel:
     self.width: int = width
     """ 绘制的最大宽度 """
     character_data: game_type.Character = cache.character_data[0]
-    self.now_map: List[str] = map_handle.get_map_for_path(
+    self.now_map: list[str] = map_handle.get_map_for_path(
         character_data.position
     )
     """ 当前查看的地图坐标 """
 
   def draw(self) -> None:
     """绘制对象"""
-    move_menu_panel_data: Dict[
+    move_menu_panel_data: dict[
         int, MapSceneNameDraw | CollectionSceneNamePanel
     ] = {
         0: MapSceneNameDraw(self.now_map, self.width),
@@ -311,7 +310,7 @@ class SeeMapPanel:
     now_panel = all_npc_position_panel.All_Npc_Position_Panel(self.width)
     now_panel.draw()
 
-  def move_now(self, scene_path: List[str]) -> None:
+  def move_now(self, scene_path: list[str]) -> None:
     """
     控制角色移动至指定场景
     Keyword arguments:
@@ -343,13 +342,13 @@ class MoveMenuPanel:
     """初始化绘制对象"""
     self.width: int = width
     """ 最大绘制宽度 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 监听的按钮列表 """
     self.now_type: int = 0
     """ 当前的移动菜单类型 """
-    self.draw_list: List[draw.Drawable] = []
+    self.draw_list: list[draw.Drawable] = []
     """ 绘制的对象列表 """
-    self.move_type_id_data: Dict[str, int] = {
+    self.move_type_id_data: dict[str, int] = {
         game_config.config_move_menu_type[i].name: i
         for i in game_config.config_move_menu_type
     }
@@ -403,7 +402,7 @@ class MapSceneNameDraw:
   width -- 绘制宽度
   """
 
-  def __init__(self, now_map: List[str], width: int) -> None:
+  def __init__(self, now_map: list[str], width: int) -> None:
     """
     初始化地图场景名列表绘制对象
     Keyword arguments:
@@ -412,14 +411,14 @@ class MapSceneNameDraw:
     """
     self.width: int = width
     """ 绘制的最大宽度 """
-    self.now_map: List[str] = now_map
+    self.now_map: list[str] = now_map
     """ 当前查看的地图坐标 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 当前面板的按钮返回 """
     self.end_index: int = 0
     """ 结束按钮id """
 
-  def update(self, now_map: List[str], start_index: int) -> None:
+  def update(self, now_map: list[str], start_index: int) -> None:
     """
     更新当前面板对象
     Keyword arguments:
@@ -494,7 +493,7 @@ class MapSceneNameDraw:
         line_feed.draw()
     self.end_index = len(scene_id_list) - 1
 
-  def move_now(self, scene_path: List[str]) -> None:
+  def move_now(self, scene_path: list[str]) -> None:
     """
     控制角色移动至指定场景
     Keyword arguments:
@@ -514,7 +513,7 @@ class UsefulSceneNamePanel:
   width -- 绘制宽度
   """
 
-  def __init__(self, now_map: List[str], width: int) -> None:
+  def __init__(self, now_map: list[str], width: int) -> None:
     """
     初始化功能地点快捷寻路按钮列表，并创建按场景路径分页的绘制面板
     Keyword arguments:
@@ -523,9 +522,9 @@ class UsefulSceneNamePanel:
     """
     self.width: int = width
     """ 绘制的最大宽度 """
-    self.now_map: List[str] = now_map
+    self.now_map: list[str] = now_map
     """ 当前查看的地图坐标 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 当前面板的按钮返回 """
     self.end_index: int = 0
     """ 结束按钮id """
@@ -554,7 +553,7 @@ class UsefulSceneNamePanel:
     # music_class_room_path = ["1", "4", "1"]
     # shop_path = ["11"]
     # dormitory_path = map_handle.get_map_system_path_for_str(character_data.dormitory)
-    path_list: List[List[str]] = [
+    path_list: list[list[str]] = [
         # dormitory_path,
         # class_room_path,
         # office_room_path,
@@ -570,7 +569,7 @@ class UsefulSceneNamePanel:
     path_list = [i for i in path_list if len(i)]
     return path_list
 
-  def update(self, now_map: List[str], start_index: int) -> None:
+  def update(self, now_map: list[str], start_index: int) -> None:
     """
     更新当前面板对象
     Keyword arguments:
@@ -602,7 +601,7 @@ class ScenePathNameMoveDraw:
 
   def __init__(
       self,
-      text: List[str],
+      text: list[str],
       width: int,
       is_button: bool,
       num_button: bool,
@@ -621,9 +620,9 @@ class ScenePathNameMoveDraw:
     """ 数字按钮的id """
     self.button_return: str = str(button_id)
     """ 按钮返回值 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的对象列表 """
-    self.scene_path: List[str] = text
+    self.scene_path: list[str] = text
     """ 对应场景路径 """
     path_text = attr_text.get_scene_path_text(text)
     button_text = f"[{path_text}]"
@@ -728,10 +727,10 @@ class SocialSceneNameDraw:
     """ 数字按钮的id """
     self.button_return: str = str(button_id)
     """ 按钮返回值 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的对象列表 """
     character_data: game_type.Character = cache.character_data[text]
-    self.scene_path: List[str] = character_data.position
+    self.scene_path: list[str] = character_data.position
     """ 角色所在场景 """
     path_text = attr_text.get_scene_path_text(self.scene_path)
     button_text = f"{character_data.name}:[{path_text}]"
@@ -768,7 +767,7 @@ class CollectionSceneNamePanel:
   width -- 绘制宽度
   """
 
-  def __init__(self, now_map: List[str], width: int) -> None:
+  def __init__(self, now_map: list[str], width: int) -> None:
     """
     初始化绘制对象，记下绘制宽度与地图路径
     Keyword arguments:
@@ -777,9 +776,9 @@ class CollectionSceneNamePanel:
     """
     self.width: int = width
     """ 绘制的最大宽度 """
-    self.now_map: List[str] = now_map
+    self.now_map: list[str] = now_map
     """ 当前查看的地图坐标 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 当前面板的按钮返回 """
     self.end_index: int = 0
     """ 结束按钮id """
@@ -794,7 +793,7 @@ class CollectionSceneNamePanel:
     # self.end_index = self.handle_panel.end_index
     """ 结束按钮id """
 
-  def update(self, now_map: List[str], start_index: int) -> None:
+  def update(self, now_map: list[str], start_index: int) -> None:
     """
     更新当前面板对象
     Keyword arguments:
@@ -884,7 +883,7 @@ class CollectionSceneNamePanel:
       )  # 添加按钮返回值到监听列表
       line_feed.draw()
 
-  def move_now(self, scene_path: List[str]) -> None:
+  def move_now(self, scene_path: list[str]) -> None:
     """
     控制角色移动至指定场景
     Keyword arguments:

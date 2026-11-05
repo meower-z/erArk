@@ -1,6 +1,6 @@
 """载具管理界面面板，以及基地载具数据的更新与损坏回收结算"""
 
-from typing import Tuple, List
+from typing import Tuple
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.UI.Moudle import draw
@@ -72,9 +72,9 @@ class Manage_Vehicle_Panel:
     """ 绘制的最大宽度 """
     self.now_panel = _("常规载具")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
-    self.send_npc_list: List[int] = []
+    self.send_npc_list: list[int] = []
     """ 派遣人员列表 """
     self.vehicle_count = 0
     """ 当前拥有载具数量 """

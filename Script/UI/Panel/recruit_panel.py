@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from typing import List, Tuple
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.Design import attr_calculation, basement, handle_premise, handle_talent, handle_ability
@@ -72,7 +71,7 @@ def recruit_new_chara() -> bool:
     return False
 
 
-def find_recruitable_npc() -> List[int]:
+def find_recruitable_npc() -> list[int]:
   """
   查找可招募的NPC\n
   Returns：\n
@@ -268,7 +267,7 @@ def update_recruit() -> None:
         cache.rhodes_island.recruit_line[recruit_line_id][1] = 11
 
 
-def calculate_recruit_line_efficiency(line_id: int) -> Tuple[str, float]:
+def calculate_recruit_line_efficiency(line_id: int) -> tuple[str, float]:
   """
   计算某条招募线的效率，并返回描述字符串和效率值
   Keyword arguments:
@@ -379,7 +378,7 @@ class Recruit_Panel:
     """ 绘制的最大宽度 """
     self.now_panel = _("招募")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
     self.show_detail_line: int = -1
     """ 当前展开详情的招募线编号 """

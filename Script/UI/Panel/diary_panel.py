@@ -1,7 +1,7 @@
 """日记界面面板"""
 
 from turtle import position
-from typing import Dict, List
+from typing import Dict
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, text_handle, constant, py_cmd
 from Script.Design import game_time
@@ -32,7 +32,7 @@ class Diary_Panel:
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
     self.time_text = game_time.get_date_until_day()
     """ 日期文本 """
@@ -54,12 +54,12 @@ class Diary_Panel:
       return_list = []
 
       info_text = ""
-      info_text += "{0}\n\n".format(self.time_text)
+      info_text += f"{self.time_text}\n\n"
       for i in cache.daily_intsruce:
         info_text += i
       info_text += "\n\n"
       if len(self.all_insert_text) > 0:
-        info_text += "{0}\n\n".format(self.all_insert_text)
+        info_text += f"{self.all_insert_text}\n\n"
       info_draw.text = info_text
       info_draw.draw()
 

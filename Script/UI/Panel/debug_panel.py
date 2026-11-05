@@ -1,6 +1,6 @@
 """debug 界面面板，以及口上快速测试和数据重建工具"""
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant, py_cmd
 from Script.Design import basement, character_handle, handle_premise, attr_calculation, clothing, map_handle
@@ -114,7 +114,7 @@ def build_chara_talk(chara_adv_id: int = 0) -> None:
     if chara_adv_id == 0:
       character_talk_data = {}
     else:
-      with open(character_talk_data_path, "r", encoding="utf-8") as f:
+      with open(character_talk_data_path, encoding="utf-8") as f:
         character_talk_data = json.load(f)
       # 如果指定了特定角色，则将该角色重置
       for key in character_talk_data["Talk"]["data"].copy():
@@ -158,7 +158,7 @@ class TALK_QUICK_TEST:
     """ 绘制的最大宽度 """
     self.now_panel = _("快速测试口上")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
   def draw(self) -> None:
@@ -493,7 +493,7 @@ class TALK_QUICK_TEST:
       )
 
   def run_batch_talk_test_in_groups(
-      self, target_chara_id: int, talk_id_list: List[int]
+      self, target_chara_id: int, talk_id_list: list[int]
   ) -> None:
     """
     按每10条一组分批测试口上，每组显示后等待用户手动选择是否继续
@@ -601,7 +601,7 @@ class TALK_QUICK_TEST:
     now_draw.text = "\n".join(summary_lines)
     now_draw.draw()
 
-  def parse_talk_id_list(self, input_text: str) -> List[int]:
+  def parse_talk_id_list(self, input_text: str) -> list[int]:
     """
     将输入解析为口上id列表
     Keyword arguments:
@@ -609,7 +609,7 @@ class TALK_QUICK_TEST:
     Return arguments:
     List[int] -- 去重后的口上id列表
     """
-    result: List[int] = []
+    result: list[int] = []
     for part in input_text.replace("，", ",").split(","):
       part = part.strip()
       if not part:
@@ -695,7 +695,7 @@ class Debug_Panel:
     """ 绘制的最大宽度 """
     self.now_panel = _("常用更改")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.Drawable] = []
+    self.draw_list: list[draw.Drawable] = []
     """ 绘制的文本列表 """
 
   def draw(self) -> None:
@@ -743,7 +743,7 @@ class Debug_Panel:
       # facility_draw.draw()
 
       # 本页依次绘制的单个绘制对象
-      draw_items: List[draw.Drawable] = []
+      draw_items: list[draw.Drawable] = []
 
       # 全局变量
       if self.now_panel == _("全局变量"):
@@ -941,7 +941,7 @@ class Debug_Panel:
       info_draw.width = self.width
       return_list = []
       # 本页依次绘制的单个绘制对象
-      draw_items: List[draw.Drawable] = []
+      draw_items: list[draw.Drawable] = []
 
       target_data: game_type.Character = cache.character_data[
           self.target_character_id

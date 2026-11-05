@@ -1,6 +1,5 @@
 """导航面板、快捷移动菜单与场景名列表的绘制，以及抵达判断"""
 
-from typing import List, Dict
 from types import FunctionType
 from Script.UI.Moudle import draw, panel
 from Script.Core import (
@@ -93,7 +92,7 @@ class Base_function_class:
   用于导航的基础功能类
   """
 
-  def move_judge(self, scene_path: List, sp_flag: int = 0) -> None:
+  def move_judge(self, scene_path: list, sp_flag: int = 0) -> None:
     """
     判断基地是否移动至指定场景
     Keyword arguments:
@@ -118,7 +117,7 @@ class Base_function_class:
         now_draw.draw()
       else:
         while 1:
-          ask_list: List[str] = []
+          ask_list: list[str] = []
           askfor_panel = panel.OneMessageAndSingleColumnButton()
           askfor_list = [_("是"), _("否")]
           askfor_panel.set(
@@ -193,7 +192,7 @@ class Navigation_Panel(Base_function_class):
     """初始化绘制对象"""
     self.width: int = width
     """ 绘制的最大宽度 """
-    self.now_map: List[str] = ["泰拉"]
+    self.now_map: list[str] = ["泰拉"]
     """ 当前查看的地图坐标 """
 
   def draw(self) -> None:
@@ -378,13 +377,13 @@ class MoveMenuPanel:
     """初始化绘制对象"""
     self.width: int = width
     """ 最大绘制宽度 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 监听的按钮列表 """
     self.now_type: int = 0
     """ 当前的移动菜单类型 """
-    self.draw_list: List[draw.Drawable] = []
+    self.draw_list: list[draw.Drawable] = []
     """ 绘制的对象列表 """
-    self.move_type_id_data: Dict[str, int] = {
+    self.move_type_id_data: dict[str, int] = {
         game_config.config_move_menu_type[i].name: i
         for i in game_config.config_move_menu_type
     }
@@ -438,7 +437,7 @@ class MapSceneNameDraw(Base_function_class):
   width -- 绘制宽度
   """
 
-  def __init__(self, now_map: List[str], width: int) -> None:
+  def __init__(self, now_map: list[str], width: int) -> None:
     """
     初始化地图场景名列表绘制对象
     Keyword arguments:
@@ -447,14 +446,14 @@ class MapSceneNameDraw(Base_function_class):
     """
     self.width: int = width
     """ 绘制的最大宽度 """
-    self.now_map: List[str] = now_map
+    self.now_map: list[str] = now_map
     """ 当前查看的地图坐标 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 当前面板的按钮返回 """
     self.end_index: int = 0
     """ 结束按钮id """
 
-  def update(self, now_map: List[str], start_index: int) -> None:
+  def update(self, now_map: list[str], start_index: int) -> None:
     """
     更新当前面板对象
     Keyword arguments:
@@ -485,7 +484,7 @@ class MapSceneNameDraw(Base_function_class):
     near_scene_path_name_list = list(scene_path.keys())
 
     if len(near_scene_path_name_list):
-      draw_list: List[draw.LeftButton] = []
+      draw_list: list[draw.LeftButton] = []
       for scene_name in near_scene_path_name_list:
         # print(f"debug scene_id = {scene_id}")
         load_scene_data = map_handle.get_scene_data_for_map(

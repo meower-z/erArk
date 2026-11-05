@@ -1,6 +1,6 @@
 """势力外交界面面板，以及外交方针与各国感染率的结算"""
 
-from typing import Tuple, List
+from typing import Tuple
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.UI.Moudle import draw
@@ -232,7 +232,7 @@ def settle_all_country_infection_rate() -> None:
   info_text += _("○源石病感染率统计报告：")
   info_text += _("本周各国源石病感染率平均总变化：")
   if total_change_rate != 0.0:
-    info_text += ("{0}%\n").format(round(total_change_rate, 2))
+    info_text += f"{round(total_change_rate, 2)}%\n"
   else:
     info_text += _("暂无数据\n")
   info_text += _("当前罗德岛所在国家为{0}，本周感染率变化：{1}%\n").format(
@@ -258,7 +258,7 @@ class Nation_Diplomacy_Panel:
     """ 绘制的最大宽度 """
     self.now_panel = _("国家及附属势力")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
     self.show_draw_width = 7
     """ 收起显示按钮的宽度 """

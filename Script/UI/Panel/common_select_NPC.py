@@ -1,6 +1,5 @@
 """通用的从列表中选择目标干员的按钮列表与筛选切换"""
 
-from typing import List, Optional
 from types import FunctionType
 from Script.UI.Moudle import draw, panel
 from Script.Core import (
@@ -29,8 +28,8 @@ def common_select_npc_button_list_func(
     now_draw_panel: panel.PageHandlePanel,
     title_text: str = "",
     info_text: str = "",
-    select_state: Optional[dict] = None,
-) -> tuple[List[str], List[str], dict[str, int | str]]:
+    select_state: dict | None = None,
+) -> tuple[list[str], list[str], dict[str, int | str]]:
   """
   通用npc选择按钮列表函数\n
   Keyword arguments:\n
@@ -81,8 +80,8 @@ def common_select_npc_button_list_func(
     info_draw.width = window_width
     info_draw.draw()
     line_feed.draw()
-  return_list: List[str] = []
-  other_return_list: List[str] = []
+  return_list: list[str] = []
+  other_return_list: list[str] = []
 
   # 添加筛选功能
   select_type_list = [
@@ -346,7 +345,7 @@ class CommonSelectNPCButtonList:
     """ 角色id """
     self.source_func = chara_info[1]
     """ 按钮调用的函数 """
-    self.chara_id_list: List[int] = chara_info[2] if len(chara_info) > 2 else []
+    self.chara_id_list: list[int] = chara_info[2] if len(chara_info) > 2 else []
     """ 已选择角色id列表 """
     self.draw_text: str = ""
     """ 绘制文本 """

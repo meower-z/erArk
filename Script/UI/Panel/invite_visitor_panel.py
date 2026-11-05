@@ -1,7 +1,6 @@
 """邀请访客面板，以及访客的抵达、离开与留下的结算"""
 
 import os
-from typing import List
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.Design import attr_calculation, map_handle, game_time, character_handle, instuct_judege, character_handle, handle_ability
@@ -316,7 +315,7 @@ class Invite_Visitor_Panel:
     """ 绘制的最大宽度 """
     self.now_panel = _("邀请访客")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
   def draw(self) -> None:

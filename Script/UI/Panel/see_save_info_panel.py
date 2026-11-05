@@ -3,7 +3,6 @@
 """
 
 import datetime
-from typing import List
 from types import FunctionType
 from Script.Core import (
     cache_control,
@@ -41,7 +40,7 @@ class SeeSaveListPanel:
     """初始化绘制对象"""
     self.width: int = width
     """ 最大绘制宽度 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 当前面板监听的按钮列表 """
     self.back_to_main: bool = write_save
     """ 是否返回主菜单 """
@@ -111,7 +110,7 @@ class SaveInfoDraw:
 
   def __init__(
       self,
-      text: List,
+      text: list,
       width: int,
       is_button: bool,
       num_button: bool,

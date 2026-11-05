@@ -1,6 +1,5 @@
 """查看角色图片列表的绘制对象与按钮"""
 
-from typing import List
 from types import FunctionType
 from Script.UI.Moudle import draw
 from Script.Core import (
@@ -29,13 +28,13 @@ class CharacterImageListDraw:
   character_list -- 绘制的角色列表
   """
 
-  def __init__(self, width: int, character_list: List[int]) -> None:
+  def __init__(self, width: int, character_list: list[int]) -> None:
     """初始化绘制对象"""
     self.width: int = width
     """ 最大绘制宽度 """
-    self.character_list: List[int] = character_list
+    self.character_list: list[int] = character_list
     """ 绘制的角色列表 """
-    self.return_list: List[str] = []
+    self.return_list: list[str] = []
     """ 返回的按钮列表 """
 
   def draw(self) -> None:

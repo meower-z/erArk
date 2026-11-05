@@ -1,6 +1,5 @@
 """催眠类型与角色扮演类型的选择面板，以及催眠的消耗、程度、上限与完成判定"""
 
-from typing import List
 from types import FunctionType
 import random
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
@@ -222,7 +221,7 @@ class Chose_Hypnosis_Type_Panel:
     """ 绘制的最大宽度 """
     self.instruct_flag: bool = instruct_flag
     """ 是否为指令模式 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
   def draw(self) -> None:
@@ -492,7 +491,7 @@ class Chose_Roleplay_Type_Panel:
     """
     self.width: int = width
     # 绘制的最大宽度
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     # 绘制的文本列表
     # 统计所有type类型，初始化展开标志为False（收起）
     self.type_expand_flag = {}
@@ -575,7 +574,7 @@ class Chose_Roleplay_Type_Panel:
       line_feed.draw()
 
       # 构建type到cid的映射，特殊类单独处理
-      type_dict: dict[str, List[int]] = {}
+      type_dict: dict[str, list[int]] = {}
       special_type = self.special_type
       for t in self.type_list:
         type_dict[t] = []

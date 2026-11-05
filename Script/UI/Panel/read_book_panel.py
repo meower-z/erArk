@@ -1,6 +1,5 @@
 """读书面板与书籍片段的绘制"""
 
-from typing import List
 from types import FunctionType
 from Script.UI.Moudle import draw
 from Script.Core import (
@@ -67,7 +66,7 @@ class Read_Book_Panel:
     """ 绘制的最大宽度 """
     self.now_panel = _("读书")
     """ 当前绘制的页面 """
-    self.draw_list: List[draw.NormalDraw] = []
+    self.draw_list: list[draw.NormalDraw] = []
     """ 绘制的文本列表 """
 
   def draw(self) -> None:

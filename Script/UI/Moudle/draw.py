@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import time
-from typing import List, Protocol
+from typing import Protocol
 
 from Script.Core import (
     text_handle,
@@ -244,7 +244,7 @@ class BarDraw:
     """ 比例条最大长度 """
     self.bar_id = ""
     """ 比例条类型id """
-    self.draw_list: List[ImageDraw] = []
+    self.draw_list: list[ImageDraw] = []
     """ 比例条绘制对象列表 """
 
   def set(self, bar_id: str, max_value: int, value: int) -> None:
@@ -297,7 +297,7 @@ class CharaDraw:
     """ 人物最大长度 """
     self.chara_id = ""
     """ 人物类型id """
-    self.draw_list: List[ImageDraw] = []
+    self.draw_list: list[ImageDraw] = []
     """ 人物绘制对象列表 """
 
   def draw(self) -> None:
@@ -325,7 +325,7 @@ class InfoBarDraw:
     """ 比例条类型id """
     self.text: str = ""
     """ 比例条描述文本 """
-    self.draw_list: List[Drawable] = []
+    self.draw_list: list[Drawable] = []
     """ 比例条绘制对象列表 """
     self.scale: float = 1
     """ 比例条绘制区域占比 """
@@ -424,7 +424,7 @@ class InfoCharaDraw:
     """ 比例条类型id """
     self.text: str = ""
     """ 比例条描述文本 """
-    self.draw_list: List[Drawable] = []
+    self.draw_list: list[Drawable] = []
     """ 比例条绘制对象列表 """
     self.scale: float = 1
     """ 比例条绘制区域占比 """
@@ -1037,7 +1037,7 @@ class CenterMergeDraw:
     """初始化绘制对象"""
     self.width: int = width
     """ 最大宽度 """
-    self.draw_list: List[SizedDrawable] = []
+    self.draw_list: list[SizedDrawable] = []
     """ 绘制列表 """
 
   def __len__(self) -> int:
@@ -1084,7 +1084,7 @@ class LeftMergeDraw:
     """初始化绘制对象"""
     self.width: float = width
     """ 最大宽度 """
-    self.draw_list: List[SizedDrawable] = []
+    self.draw_list: list[SizedDrawable] = []
     """ 绘制列表 """
     self.column: int = 0
     """ 每行最大元素数 """

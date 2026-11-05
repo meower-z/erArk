@@ -37,7 +37,7 @@ def init_normal_config() -> None:
     except:
       config_normal.__dict__[k] = ini_data[k]
   if os.path.exists(package_path):
-    with open(package_path, "r", encoding="utf-8") as package_file:
+    with open(package_path, encoding="utf-8") as package_file:
       version_data = json.load(package_file)
       config_normal.verson = version_data["version"]
   else:
