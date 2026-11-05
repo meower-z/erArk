@@ -26,7 +26,7 @@ class ItemEffectList(QWidget):
 
   def __init__(self) -> None:
     """初始化结算表单主体"""
-    super(ItemEffectList, self).__init__()
+    super().__init__()
     self.font = font
     self.setFont(font)
     main_layout = QVBoxLayout()  # 主布局

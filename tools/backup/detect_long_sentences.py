@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 CSV文件长句检测工具
 用于检测指定目录及其子目录下所有CSV文件中第5列文本的过长句子
@@ -8,12 +7,11 @@ CSV文件长句检测工具
 import os
 import csv
 import pandas as pd
-from typing import List, Tuple
 
 
 def detect_long_sentences_in_text(
     text: str, max_length: int = 110
-) -> List[Tuple[str, int]]:
+) -> list[tuple[str, int]]:
   """
   检测文本中的过长句子
 
@@ -42,7 +40,7 @@ def detect_long_sentences_in_text(
   return long_sentences
 
 
-def process_csv_file(file_path: str) -> List[dict]:
+def process_csv_file(file_path: str) -> list[dict]:
   """
   处理单个CSV文件，检测第5列中的过长句子
 
@@ -52,7 +50,7 @@ def process_csv_file(file_path: str) -> List[dict]:
   返回值:
       List[dict]: 包含过长句子信息的字典列表
   """
-  results: List[dict] = []
+  results: list[dict] = []
 
   try:
     # 读取CSV文件
@@ -88,7 +86,7 @@ def process_csv_file(file_path: str) -> List[dict]:
   return results
 
 
-def scan_directory_for_csv_files(directory: str) -> List[str]:
+def scan_directory_for_csv_files(directory: str) -> list[str]:
   """
   扫描指定目录及其子目录，查找所有CSV文件
 
@@ -111,7 +109,7 @@ def scan_directory_for_csv_files(directory: str) -> List[str]:
   return csv_files
 
 
-def save_results_to_csv(results: List[dict], output_file: str) -> None:
+def save_results_to_csv(results: list[dict], output_file: str) -> None:
   """
   将检测结果保存到CSV文件
 

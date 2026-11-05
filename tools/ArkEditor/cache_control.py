@@ -3,7 +3,7 @@
 以及从 csv 读入的前提、行为、结算与各类属性配置
 """
 
-from typing import Dict, Set, List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import game_type
 
 if TYPE_CHECKING:
@@ -28,9 +28,9 @@ now_copied_premise: str = ""
 now_copied_effect: str = ""
 """ 当前拷贝的结算数据 """
 
-now_talk_data: Dict[str, game_type.Talk] = {}
+now_talk_data: dict[str, game_type.Talk] = {}
 """ 当前口上数据 """
-tem_talk_data: Dict[str, game_type.Talk] = {}
+tem_talk_data: dict[str, game_type.Talk] = {}
 """ 临时口上数据 """
 now_chara_data: type[game_type.Chara_Data] | game_type.Chara_Data = (
     game_type.Chara_Data
@@ -40,19 +40,19 @@ now_chara_data: type[game_type.Chara_Data] | game_type.Chara_Data = (
 
 now_event_name: str = ""
 """ 当前事件名称 """
-now_event_data: Dict[str, game_type.Event] = {}
+now_event_data: dict[str, game_type.Event] = {}
 """ 当前事件数据 """
 premise_data: dict = {}
 """ 前提数据 """
-premise_type_data: Dict[str, Set] = {}
+premise_type_data: dict[str, set] = {}
 """ 前提类型数据 """
-premise_group_data: Dict[str, List] = {}
+premise_group_data: dict[str, list] = {}
 """ 前提组数据 """
 behavior_data: dict = {}
 """ 当前状态数据 """
 behavior_all_data: dict = {}
 """ 当前状态全部数据 """
-behavior_type_data: Dict[str, List] = {}
+behavior_type_data: dict[str, list] = {}
 """ 状态类型数据 """
 now_behavior: str = "share_blankly"
 """ 当前事件状态 """
@@ -72,9 +72,9 @@ item_text_edit: "ItemTextEdit | None" = None
 """ 事件文本编辑框 """
 effect_data: dict = {}
 """ 结算数据 """
-effect_type_data: Dict[str, Set] = {}
+effect_type_data: dict[str, set] = {}
 """ 结算类型数据 """
-effect_group_data: Dict[str, List] = {}
+effect_group_data: dict[str, list] = {}
 """ 结算组数据 """
 ability_data: dict = {}
 """ 能力数据 """

@@ -10,6 +10,6 @@ class ListItem(QListWidgetItem):
 
   def __init__(self, any: str) -> None:
     """初始化表单对象"""
-    super(ListItem, self).__init__(any)
+    super().__init__(any)
     self.uid = ""
     """ id """

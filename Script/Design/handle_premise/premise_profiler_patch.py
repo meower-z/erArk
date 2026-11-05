@@ -18,10 +18,10 @@
 from __future__ import annotations
 
 import time
-from typing import Callable, Dict
+from typing import Callable
 from Script.Core import constant
 
-premise_profile_stats: Dict[str, Dict] = {}
+premise_profile_stats: dict[str, dict] = {}
 
 
 def _init_premise_stat(pid: str) -> None:

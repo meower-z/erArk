@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """
 读取Behavior_Data.csv和BehaviorEffect.csv，创建一个新的BehaviorEffect_converted.csv文件
@@ -22,7 +21,7 @@ def read_behavior_data(file_path: str) -> dict[int, str]:
   id_to_name = {}
 
   # 直接读取文件内容
-  with open(file_path, "r", encoding="utf-8") as f:
+  with open(file_path, encoding="utf-8") as f:
     lines = f.readlines()
 
   # 跳过前5行（包括注释行、列名、中文名、类型、默认值）
@@ -86,7 +85,7 @@ def create_converted_file(
       print(f"  {bid} -> {id_to_name[bid]}")
 
   # 读取BehaviorEffect.csv文件
-  with open(behavior_effect_path, "r", encoding="utf-8") as f:
+  with open(behavior_effect_path, encoding="utf-8") as f:
     effect_lines = f.readlines()
 
   # 处理文件

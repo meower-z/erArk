@@ -6,7 +6,7 @@
 
 ## ✅ 前置条件
 
-1. ✅ Python 3.9+ 已安装
+1. ✅ Python 3.12 已安装
 2. ✅ VS Code 已安装
 3. ✅ GitHub Copilot 扩展已安装并激活
 4. ✅ MCP库已安装 (`pip install "mcp>=1.0.0,<2"`)

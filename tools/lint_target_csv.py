@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 target.csv 编号规范校验（Plan 08 的常驻检查）
 
@@ -74,7 +73,7 @@ def load_rows() -> "list[TargetRow]":
   list -- 数据行字典列表（保持物理行序）
   """
   rows: list[TargetRow] = []
-  raw = io.open(TARGET_PATH, encoding="utf-8", newline="").read()
+  raw = open(TARGET_PATH, encoding="utf-8", newline="").read()
   for index, line in enumerate(raw.splitlines(), 1):
     if index <= HEADER_LINES or not line.strip():
       continue
@@ -178,7 +177,7 @@ def check_effect(rows: "list[TargetRow]") -> None:
   if not os.path.isfile(EFFECT_PATH):
     return
   known = {row["cid"] for row in rows}
-  raw = io.open(EFFECT_PATH, encoding="utf-8", newline="").read()
+  raw = open(EFFECT_PATH, encoding="utf-8", newline="").read()
   for index, line in enumerate(raw.splitlines(), 1):
     if index <= HEADER_LINES or not line.strip():
       continue

@@ -97,7 +97,7 @@ def process_csv(
     shutil.copy2(file_path, bak_path)
 
   # 读取所有内容
-  with open(file_path, 'r', encoding='utf-8-sig', newline='') as f:
+  with open(file_path, encoding='utf-8-sig', newline='') as f:
     reader = csv.DictReader(f)
     fieldnames = reader.fieldnames
     if fieldnames is None:
@@ -126,7 +126,7 @@ def process_csv(
   shutil.move(tmp_path, file_path)
 
   # 将文件里的部分文本进行替换以修改错误的格式
-  with open(file_path, 'r', encoding='utf-8') as f:
+  with open(file_path, encoding='utf-8') as f:
     content = f.read()
   # 将,"替换为,
   content = content.replace(',"', ',')

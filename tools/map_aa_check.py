@@ -30,7 +30,6 @@ import re
 import sys
 import tkinter
 import tkinter.font
-from typing import Dict, List, Tuple
 
 # 允许从仓库根目录直接运行
 sys.path.append(os.getcwd())
@@ -59,7 +58,7 @@ def get_current_font_size() -> int:
   return int(cfg.window_width / cfg.text_width) * 2
 
 
-def load_map_lines(map_name: str) -> List[str]:
+def load_map_lines(map_name: str) -> list[str]:
   """
   读取指定地图的 AA 文本并剥掉 mapbutton 标签
   Keyword arguments:
@@ -68,7 +67,7 @@ def load_map_lines(map_name: str) -> List[str]:
   List[str] -- 剥标签并去掉行尾空白后的各行文本（与游戏内解析结果一致）
   """
   path = os.path.join(MAP_ROOT, map_name, "Map")
-  raw = open(path, "r", encoding="utf-8").read()
+  raw = open(path, encoding="utf-8").read()
   # 游戏侧 map_config.py:243 会对每行做 rstrip，这里保持一致
   return [
       re.sub(r"</?mapbutton>", "", line).rstrip() for line in raw.split("\n")
@@ -77,7 +76,7 @@ def load_map_lines(map_name: str) -> List[str]:
 
 def measure_line(
     font: tkinter.font.Font, line: str
-) -> Tuple[int, Tuple[int, ...]]:
+) -> tuple[int, tuple[int, ...]]:
   """
   计算一行文本的总像素宽度与其中各竖墙的像素位置
   Keyword arguments:
@@ -97,10 +96,10 @@ def measure_line(
 
 def check_map(
     map_name: str,
-    fonts: Dict[int, tkinter.font.Font],
+    fonts: dict[int, tkinter.font.Font],
     tolerance: int,
     verbose: bool,
-) -> Tuple[int, List[str]]:
+) -> tuple[int, list[str]]:
   """
   校验单张地图在各字号下的像素对齐情况
   Keyword arguments:
@@ -121,7 +120,7 @@ def check_map(
     font = fonts[size]
     widths = []
     # 按"这一行有几堵墙"分组，只有结构相同的行才有可比性
-    by_wall_count: Dict[int, List[Tuple[int, Tuple[int, ...]]]] = {}
+    by_wall_count: dict[int, list[tuple[int, tuple[int, ...]]]] = {}
     for idx, line in enumerate(lines):
       width, positions = measure_line(font, line)
       # 完全没有竖墙的行（纯标签行、纯装饰行）不参与对齐校验

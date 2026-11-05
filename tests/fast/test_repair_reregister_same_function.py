@@ -43,7 +43,7 @@ def define(
   Return arguments:
   function -- 本次执行生成的修复函数
   """
-  namespace: "dict[str, Any]" = {
+  namespace: dict[str, Any] = {
       "__name__": module,
       "register_repair": register_repair,
       "CHECK_ID": CHECK_ID,

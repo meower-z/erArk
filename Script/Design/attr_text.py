@@ -1,7 +1,6 @@
 """场景地址、地图地址、数值与年龄素质的显示文本"""
 
 from types import FunctionType
-from typing import List
 from Script.Core import (
     cache_control,
     game_type,
@@ -17,7 +16,7 @@ _: FunctionType = get_text._
 """ 翻译api """
 
 
-def get_scene_path_text(scene_path: List[str]) -> str:
+def get_scene_path_text(scene_path: list[str]) -> str:
   """
   从场景路径获取场景地址描述文本
   例:控制中枢-博士办公室
@@ -40,7 +39,7 @@ def get_scene_path_text(scene_path: List[str]) -> str:
   return scene_path_text + _(scene_name)
 
 
-def get_map_path_text(map_path: List[str]) -> str:
+def get_map_path_text(map_path: list[str]) -> str:
   """
   从地图路径获取地图地址描述文本
   例:控制中枢

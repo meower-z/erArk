@@ -436,7 +436,7 @@ def _exit_on_exception(
   import traceback
 
   traceback.print_exception(exc_type, exc_value, exc_traceback)
-  print("\nPASS={0} FAIL={1} (crashed)".format(PASS, len(FAIL) + 1))
+  print(f"\nPASS={PASS} FAIL={len(FAIL) + 1} (crashed)")
   sys.stdout.flush()
   os._exit(2)
 

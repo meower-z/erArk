@@ -19,7 +19,7 @@ def read_txt_to_list(txt_path: str) -> list[str]:
   Return arguments:
   list -- 各段的字符串
   """
-  with open(txt_path, 'r', encoding='utf-8') as file:
+  with open(txt_path, encoding='utf-8') as file:
     lines = file.readlines()
 
   result = []

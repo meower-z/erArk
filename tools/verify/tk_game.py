@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 在虚拟显示上启动 erArk 的 Tk 游戏窗口：起 Xvfb 与 openbox，用探针启动器 tk_probe.py 跑游戏，等窗口和 probe.json 出现后打印 ready 事件。
 

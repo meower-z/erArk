@@ -7,9 +7,9 @@
 NPC 主动H、群交的行为列表与调教助手可用的行为都跳过判定为真的行为
 """
 
-from typing import Collection, Dict
+from typing import Collection
 
-VIRGIN_TALENT_TAGS: Dict[int, tuple[str, ...]] = {
+VIRGIN_TALENT_TAGS: dict[int, tuple[str, ...]] = {
     0: ("V", "W"),
     1: ("A",),
     2: ("U",),
@@ -20,7 +20,7 @@ VIRGIN_TALENT_TAGS: Dict[int, tuple[str, ...]] = {
 
 
 def takes_kept_virginity(
-    tag_list: Collection[str], talent: Dict[int, int]
+    tag_list: Collection[str], talent: dict[int, int]
 ) -> bool:
   """
   按标签判断行为是否算作会夺走角色仍有的处女素质

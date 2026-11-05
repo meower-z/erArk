@@ -30,7 +30,7 @@ class TreeItem(QTreeWidgetItem):
 
   def __init__(self, any: QTreeWidgetItem) -> None:
     """初始化树选框对象"""
-    super(TreeItem, self).__init__(any)
+    super().__init__(any)
     self.cid = ""
     """ 对象配表id """
 
@@ -40,7 +40,7 @@ class PremiseMenu(QDialog):
 
   def __init__(self) -> None:
     """初始化前提复选框"""
-    super(PremiseMenu, self).__init__()
+    super().__init__()
     if cache_control.now_edit_type_flag == 1:
       self.setWindowTitle(
           cache_control.now_event_data[cache_control.now_select_id].text
@@ -214,7 +214,7 @@ class PremiseMenu(QDialog):
     if "cid" not in item.__dict__:
       return
 
-    data: "Event | Talk"
+    data: Event | Talk
     if cache_control.now_edit_type_flag == 1:
       data = cache_control.now_event_data[cache_control.now_select_id]
     elif cache_control.now_edit_type_flag == 0:

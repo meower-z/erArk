@@ -31,7 +31,7 @@ class TreeItem(QTreeWidgetItem):
 
   def __init__(self, any: QTreeWidgetItem) -> None:
     """初始化树选框对象"""
-    super(TreeItem, self).__init__(any)
+    super().__init__(any)
     self.cid = ""
     """ 对象配表id """
 
@@ -41,7 +41,7 @@ class EffectMenu(QDialog):
 
   def __init__(self) -> None:
     """初始化事件效果复选框"""
-    super(EffectMenu, self).__init__()
+    super().__init__()
     self.setWindowTitle(
         cache_control.now_event_data[cache_control.now_select_id].text
     )

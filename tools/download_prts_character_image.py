@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 从PRTS网站下载指定角色的立绘图片（最终优化版）

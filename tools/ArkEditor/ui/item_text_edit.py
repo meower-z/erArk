@@ -22,7 +22,7 @@ class ItemTextEdit(QWidget):
 
   def __init__(self) -> None:
     """初始化文本编辑框主体"""
-    super(ItemTextEdit, self).__init__()
+    super().__init__()
     self.font = font
     self.setFont(font)
     label_layout = QVBoxLayout()

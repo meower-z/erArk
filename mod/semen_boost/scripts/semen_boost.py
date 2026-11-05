@@ -71,7 +71,7 @@ def _load_mod_semen_data() -> None:
 
   if data_path and os.path.exists(data_path):
     try:
-      with open(data_path, "r", encoding="utf-8") as f:
+      with open(data_path, encoding="utf-8") as f:
         reader = csv.DictReader(f)
         # CSV格式：
         # 第1行(表头)：字段名 - 由DictReader自动处理
@@ -244,9 +244,7 @@ def modded_common_ejaculation() -> tuple[str, int]:
   # 如果施加了香薰疗愈-射精状态，则射精量翻倍
   if handle_premise.handle_aromatherapy_flag_7(0):
     semen_count *= 2
-    extra_text += ("（{0}+）").format(
-        game_config.config_aromatherapy_recipes[7].name
-    )
+    extra_text += f"（{game_config.config_aromatherapy_recipes[7].name}+）"
 
   # 如果当前的临时精液量大于等于最大精液量，则射精量翻倍
   if handle_premise.handle_pl_semen_tmp_ge_max(0):

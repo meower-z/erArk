@@ -99,9 +99,9 @@ try:
     character_talk_data = {}
     character_event_data = {}
   else:
-    with open(character_talk_data_path, "r", encoding="utf-8") as json_file:
+    with open(character_talk_data_path, encoding="utf-8") as json_file:
       character_talk_data = json.load(json_file)
-    with open(character_event_data_path, "r", encoding="utf-8") as json_file:
+    with open(character_event_data_path, encoding="utf-8") as json_file:
       character_event_data = json.load(json_file)
     # 如果指定了特定角色，则将该角色重置
     for key in character_talk_data["Talk"]["data"].copy():
@@ -375,7 +375,7 @@ def build_scene_config(data_path: str) -> None:
     now_path = os.path.join(data_path, i)
     if os.path.isfile(now_path):
       if i == "Scene.json":
-        with open(now_path, "r", encoding="utf-8") as now_file:
+        with open(now_path, encoding="utf-8") as now_file:
           scene_data = json.loads(now_file.read())
           scene_name = scene_data["SceneName"]
           if not scene_name in built:
@@ -384,7 +384,7 @@ def build_scene_config(data_path: str) -> None:
             config_po_lines.append('msgstr ""\n\n')
             built.add(scene_name)
       elif i == "Map.json":
-        with open(now_path, "r", encoding="utf-8") as now_file:
+        with open(now_path, encoding="utf-8") as now_file:
           map_data = json.loads(now_file.read())
           map_name = map_data["MapName"]
           if not map_name in built:
@@ -652,7 +652,7 @@ if BUILD_EVENT:
       if file.split(".")[-1] != "json":
         continue
       now_event_path = os.path.join(root, file)
-      with open(now_event_path, "r", encoding="utf-8") as event_file:
+      with open(now_event_path, encoding="utf-8") as event_file:
         now_event_data = json.loads(event_file.read())
         for event_id in now_event_data:
           now_event = now_event_data[event_id]

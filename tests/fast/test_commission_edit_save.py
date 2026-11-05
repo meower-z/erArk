@@ -86,7 +86,7 @@ class CommissionEditSaveTest(FastTestCase):
     Return arguments:
     list[str] -- 点击时槽函数抛出的异常类型名
     """
-    errors: "list[str]" = []
+    errors: list[str] = []
 
     def collect(
         exc_type: "type[BaseException]",

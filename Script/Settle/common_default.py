@@ -1,7 +1,6 @@
 """通用结算函数：体力与气力、状态与快感、好感与信赖、绝顶与经验的基础结算"""
 
 from types import FunctionType
-from typing import Optional, Union
 from Script.Design import (
     character_handle,
     map_handle,
@@ -35,10 +34,8 @@ def base_chara_hp_mp_common_settle(
     mp_value: int = 0,
     degree: int = 0,
     target_flag: bool = False,
-    change_data: Optional[game_type.CharacterStatusChange] = None,
-    change_data_to_target_change: Optional[
-        game_type.CharacterStatusChange
-    ] = None,
+    change_data: game_type.CharacterStatusChange | None = None,
+    change_data_to_target_change: game_type.CharacterStatusChange | None = None,
 ) -> None:
   """
   基础角色体力与气力通用结算函数\n
@@ -212,12 +209,10 @@ def base_chara_state_common_settle(
     ability_level: int = -1,
     extra_adjust: float = 0,
     tenths_add: bool = True,
-    change_data: Optional[
-        Union[game_type.CharacterStatusChange, game_type.TargetChange]
-    ] = None,
-    change_data_to_target_change: Optional[
-        game_type.CharacterStatusChange
-    ] = None,
+    change_data: (
+        game_type.CharacterStatusChange | game_type.TargetChange | None
+    ) = None,
+    change_data_to_target_change: game_type.CharacterStatusChange | None = None,
 ) -> None:
   """
   基础角色状态通用结算函数\n
@@ -623,10 +618,10 @@ def extra_feel_settle(
     character_id: int,
     state_id: int,
     final_value: float,
-    change_data: Optional[
-        Union[game_type.CharacterStatusChange, game_type.TargetChange]
-    ],
-    change_data_to_target_change: Optional[game_type.CharacterStatusChange],
+    change_data: (
+        game_type.CharacterStatusChange | game_type.TargetChange | None
+    ),
+    change_data_to_target_change: game_type.CharacterStatusChange | None,
 ) -> None:
   """
   顺从对恭顺、露出对羞耻、施虐对先导、受虐对苦痛而产生的额外快感
@@ -723,9 +718,9 @@ def base_chara_favorability_and_trust_common_settle(
     favorability_flag: bool,
     base_value: int = 0,
     extra_adjust: float = 0,
-    change_data: Optional[
-        Union[game_type.CharacterStatusChange, game_type.TargetChange]
-    ] = None,
+    change_data: (
+        game_type.CharacterStatusChange | game_type.TargetChange | None
+    ) = None,
     target_character_id: int = 0,
 ) -> None:
   """
@@ -1066,10 +1061,8 @@ def base_chara_climix_common_settle(
     base_value: int = 500,
     adjust: float = -1,
     degree: int = -1,
-    change_data: Optional[game_type.CharacterStatusChange] = None,
-    change_data_to_target_change: Optional[
-        game_type.CharacterStatusChange
-    ] = None,
+    change_data: game_type.CharacterStatusChange | None = None,
+    change_data_to_target_change: game_type.CharacterStatusChange | None = None,
 ) -> None:
   """
   基础角色绝顶通用结算函数\n
@@ -1159,12 +1152,12 @@ def base_chara_experience_common_settle(
     experience_id: int,
     base_value: int = 1,
     target_flag: bool = False,
-    change_data: Optional[
-        Union[game_type.CharacterStatusChange, game_type.TargetChange]
-    ] = None,
-    change_data_to_target_change: Optional[
-        Union[game_type.CharacterStatusChange, game_type.TargetChange]
-    ] = None,
+    change_data: (
+        game_type.CharacterStatusChange | game_type.TargetChange | None
+    ) = None,
+    change_data_to_target_change: (
+        game_type.CharacterStatusChange | game_type.TargetChange | None
+    ) = None,
 ) -> None:
   """
   基础角色经验通用结算函数\n

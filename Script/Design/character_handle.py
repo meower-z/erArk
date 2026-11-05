@@ -3,7 +3,6 @@
 import copy
 import random
 from types import FunctionType
-from typing import Optional
 from Script.Core import (
     cache_control,
     constant,
@@ -332,12 +331,12 @@ def add_favorability(
     character_id: int,
     target_id: int,
     now_add_favorability: int,
-    change_data: Optional[
-        game_type.CharacterStatusChange | game_type.TargetChange
-    ],
-    target_change: Optional[
-        game_type.TargetChange | game_type.CharacterStatusChange
-    ],
+    change_data: (
+        game_type.CharacterStatusChange | game_type.TargetChange | None
+    ),
+    target_change: (
+        game_type.TargetChange | game_type.CharacterStatusChange | None
+    ),
 ) -> None:
   """
   增加目标角色对当前角色的好感

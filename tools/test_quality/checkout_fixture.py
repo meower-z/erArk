@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """tools/test_quality 的测试共用的假 checkout 和运行 fast_report.py 的子进程。"""
 
 from __future__ import annotations

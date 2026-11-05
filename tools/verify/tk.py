@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 操作由 tk_game.py 启动的游戏窗口。
 

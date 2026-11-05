@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """
 更新行为常量脚本
@@ -33,7 +32,7 @@ def read_behavior_data(csv_path: str) -> list[tuple[str, str, str]]:
   """
   behavior_data = []
 
-  with open(csv_path, 'r', encoding='utf-8') as csvfile:
+  with open(csv_path, encoding='utf-8') as csvfile:
     # 跳过前4行（表头、中文说明、类型定义、值映射）
     for _ in range(4):
       next(csvfile)
@@ -71,7 +70,7 @@ def update_behavior_file(
     # 读取原文件的头部信息
     file_header = ''
     if os.path.exists(behavior_py_path):
-      with open(behavior_py_path, 'r', encoding='utf-8') as file:
+      with open(behavior_py_path, encoding='utf-8') as file:
         content = file.read()
         # 检查是否有文件头注释
         header_match = re.match(r'^(.*?)class\s+Behavior', content, re.DOTALL)

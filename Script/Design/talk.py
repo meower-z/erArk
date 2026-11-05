@@ -694,7 +694,7 @@ def second_behavior_info_text(
         orgasm_degree = _("超大量射精")
       else:
         orgasm_degree = _("射精")
-      info_text = "\n{0}{1}\n".format(chara_name, orgasm_degree)
+      info_text = f"\n{chara_name}{orgasm_degree}\n"
       info_draw.style = "semen"
     # NPC
     else:

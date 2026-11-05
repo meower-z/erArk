@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 输入类型 / 输出类型 / 功能：
 - 输入类型：命令行参数（CSV 文件路径: str，起始编号: int，起始行: int=6，列号: int=1 等）
@@ -18,7 +17,6 @@ import argparse
 import csv
 import shutil
 from pathlib import Path
-from typing import List
 
 
 def renumber_csv(
@@ -51,7 +49,7 @@ def renumber_csv(
     raise FileNotFoundError(f"找不到文件: {file_path}")
 
   # 读取所有行
-  rows: List[List[str]] = []
+  rows: list[list[str]] = []
   with file_path.open("r", encoding=encoding, newline="") as f:
     reader = csv.reader(f)
     for row in reader:
@@ -96,7 +94,7 @@ def renumber_csv(
     writer.writerows(rows)
 
   # 将文件里的部分文本进行替换以修改错误的格式
-  with open(file_path, "r", encoding=encoding) as f:
+  with open(file_path, encoding=encoding) as f:
     content = f.read()
   # 将,"替换为,
   content = content.replace(',"', ",")

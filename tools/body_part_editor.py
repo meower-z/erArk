@@ -488,7 +488,7 @@ class BodyPartEditor:
     功能：读取JSON数据并找到对应的PNG图片
     """
     try:
-      with open(json_path, "r", encoding="utf-8") as f:
+      with open(json_path, encoding="utf-8") as f:
         data = json.load(f)
 
       # 查找对应的PNG文件

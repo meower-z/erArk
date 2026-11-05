@@ -1,7 +1,7 @@
 """前提系统入口：汇总各前提模块，按前提id调用处理函数、计算前提权重，并含综合数值前提等前提处理函数"""
 
 from types import FunctionType
-from typing import Callable, Collection, Iterable, Optional
+from typing import Callable, Collection, Iterable
 from Script.Core import cache_control, constant, game_type, get_text
 from Script.Core import constant_promise
 from Script.Design import attr_calculation, character, instuct_judege
@@ -245,7 +245,7 @@ def get_weight_from_premise_dict(
   return now_weight, now_premise_data
 
 
-def get_player_manual_teach_course(character_id: int) -> Optional[tuple]:
+def get_player_manual_teach_course(character_id: int) -> tuple | None:
   """
   取玩家手动授课这一节的课型与科目（Plan 31 §3.13：CVP Course / CourseType 对玩家手动授课的回落）
   Keyword arguments:
@@ -270,7 +270,7 @@ def get_player_manual_teach_course(character_id: int) -> Optional[tuple]:
   )
 
 
-def get_listen_manual_teach_course(character_id: int) -> Optional[tuple]:
+def get_listen_manual_teach_course(character_id: int) -> tuple | None:
   """
   取正在听玩家手动授课的学生这一节的课型与科目（Plan 32 §3.9 / §3.10 L13：学生侧与 512 同口径）
   Keyword arguments:

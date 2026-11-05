@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 脚本用于批量处理指定目录及子目录下所有CSV文件，将英文双引号替换为中文双引号。
 """
@@ -59,7 +58,7 @@ def process_csv_file(filepath: str) -> None:
   返回:
       None
   """
-  with open(filepath, 'r', encoding='utf-8') as f:
+  with open(filepath, encoding='utf-8') as f:
     content = f.read()
   new_content = replace_english_quotes(content)
   # new_content = replace_english_single_quotes(new_content)

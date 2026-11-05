@@ -703,7 +703,7 @@ check(
     "体育课排在未解锁的游泳池：格子写「[体]游泳池/未开放」",
     _text_open
     == _("{0}/未开放").format(
-        "[{0}]{1}".format(E.COURSE_TYPE_SHORT[E.COURSE_TYPE_PE], pool)
+        f"[{E.COURSE_TYPE_SHORT[E.COURSE_TYPE_PE]}]{pool}"
     ),
     _text_open,
 )
@@ -711,30 +711,25 @@ cache.rhodes_island.facility_open[_pool_cid] = True
 check(
     "解锁后不再标注",
     cs._get_cell_text(201, 0, 0)
-    == "[{0}]{1}".format(E.COURSE_TYPE_SHORT[E.COURSE_TYPE_PE], pool),
+    == f"[{E.COURSE_TYPE_SHORT[E.COURSE_TYPE_PE]}]{pool}",
     cs._get_cell_text(201, 0, 0),
 )
 _too_wide = []
 for _cid in game_config.config_entertainment:
   if game_config.config_entertainment[_cid].class_ok:
     _one = _("{0}/条件不符").format(
-        "[{0}]{1}".format(
-            E.COURSE_TYPE_SHORT[E.COURSE_TYPE_INTEREST],
-            game_config.config_entertainment[_cid].name,
-        )
+        f"[{E.COURSE_TYPE_SHORT[E.COURSE_TYPE_INTEREST]}]{game_config.config_entertainment[_cid].name}"
     )
     if text_handle.get_text_index(_one) > _cell_width:
       _too_wide.append(_one)
 for _place in E.PE_PLACE_DATA:
   _one = _("{0}/未开放").format(
-      "[{0}]{1}".format(E.COURSE_TYPE_SHORT[E.COURSE_TYPE_PE], _place)
+      f"[{E.COURSE_TYPE_SHORT[E.COURSE_TYPE_PE]}]{_place}"
   )
   if text_handle.get_text_index(_one) > _cell_width:
     _too_wide.append(_one)
 check(
-    "全部兴趣课的「/条件不符」、全部体育场地的「/未开放」都放得进一格（{0} 列）".format(
-        _cell_width
-    ),
+    f"全部兴趣课的「/条件不符」、全部体育场地的「/未开放」都放得进一格（{_cell_width} 列）",
     not _too_wide,
     _too_wide,
 )
@@ -764,8 +759,7 @@ _pe_text = character_info_head.get_course_text(
 )
 check(
     "必修名单：排了体育课的学生标「*」，明细写「女儿01→体育课·木桩房」（此前只看教室课，不标）",
-    "[  女儿01*]" in drawn_text
-    and "女儿01→{0}".format(_pe_text) in _replace_line,
+    "[  女儿01*]" in drawn_text and f"女儿01→{_pe_text}" in _replace_line,
     (_replace_line, [t for t in drawn_text if "女儿01" in t]),
 )
 check(
@@ -776,7 +770,7 @@ check(
 check(
     "确有的教室课照标，明细写教室与科目",
     "[  女儿03*]" in drawn_text
-    and "女儿03→{0}的{1}".format(ROOM2, game_config.config_ability[45].name)
+    and f"女儿03→{ROOM2}的{game_config.config_ability[45].name}"
     in _replace_line,
     _replace_line,
 )
@@ -1016,9 +1010,9 @@ _l6_panel.draw_page([])
 _name45 = game_config.config_ability[45].name
 _button_by_text = {one[0]: one for one in _button_log}
 _l6_cells = [one for one in _button_log if _name45 in one[0]]
-_cell_b = _button_by_text.get("{0}/教师乙（离岗）".format(_name45))
-_cell_c = _button_by_text.get("{0}/教师丙（离岛）".format(_name45))
-_cell_d = _button_by_text.get("{0}/教师丁".format(_name45))
+_cell_b = _button_by_text.get(f"{_name45}/教师乙（离岗）")
+_cell_c = _button_by_text.get(f"{_name45}/教师丙（离岛）")
+_cell_d = _button_by_text.get(f"{_name45}/教师丁")
 check(
     "L6 全局课表：已离岗的教师名字后加短标注「（离岗）」、灰字，悬停提示写全称「（已离岗）」",
     _cell_b is not None
@@ -1046,16 +1040,14 @@ _l6_marks = (
 _l6_too_wide = [
     text
     for text in (
-        "{0}/四字教师{1}".format(game_config.config_ability[_aid].name, _mark)
+        f"{game_config.config_ability[_aid].name}/四字教师{_mark}"
         for _aid in E.SUBJECT_ABILITY_LIST
         for _mark in _l6_marks
     )
     if text_handle.get_text_index(text) > _l6_cell_width
 ]
 check(
-    "L6 全部科目 × 四个字的教师名加上短标注，都放得进周表的一格（{0} 列；全称会被截掉）".format(
-        _l6_cell_width
-    ),
+    f"L6 全部科目 × 四个字的教师名加上短标注，都放得进周表的一格（{_l6_cell_width} 列；全称会被截掉）",
     all(_l6_marks) and not _l6_too_wide,
     (_l6_marks, _l6_too_wide),
 )
@@ -1090,9 +1082,7 @@ flow_handle.askfor_all = fake_askfor
 check(
     "L6 被临时课顶替的格子：选科目页「每周课表这一格」里的教师同样标注",
     any(
-        "每周课表这一格：{0}/教师乙（已离岗）".format(
-            game_config.config_ability[43].name
-        )
+        f"每周课表这一格：{game_config.config_ability[43].name}/教师乙（已离岗）"
         in t
         for t in drawn_text
     ),
@@ -1332,8 +1322,8 @@ _tip = character_info_head.get_now_class_tip(201)
 check(
     "L13 节次内被玩家「授课」拉来：悬停写「授课：博士」与理论课·学识（此前写课表上的料理与教师甲，实际发的是学识）",
     _tip is not None
-    and "授课：{0}".format(pl.name) in _tip[1]
-    and "{0}·{1}".format(_theory_name, _fallback_name) in _tip[1]
+    and f"授课：{pl.name}" in _tip[1]
+    and f"{_theory_name}·{_fallback_name}" in _tip[1]
     and "教师甲" not in _tip[1]
     and "第1节" in _tip[1],
     _tip,
@@ -1349,9 +1339,7 @@ set_time(DEFAULT_TIME.replace(hour=20))
 _tip = character_info_head.get_now_class_tip(201)
 check(
     "L13 节次外被拉来：同样写「授课：博士」，不写第几节（此前只写「上课中」）",
-    _tip is not None
-    and "授课：{0}".format(pl.name) in _tip[1]
-    and "第" not in _tip[1],
+    _tip is not None and f"授课：{pl.name}" in _tip[1] and "第" not in _tip[1],
     _tip,
 )
 pl.behavior.behavior_id = _pl_saved[0]
