@@ -9,10 +9,11 @@ include = '^/((\.github|mod|profiling|Script|tests|tools)/.*)?[^/]+\.pyi?$'
 # config_def.py 由 buildconfig.py 生成
 force-exclude = '^/Script/Config/config_def\.py$'
 
-# mypy 的默认参数。
-# 老模块用这一套参数。
-# 老模块是 `.lint-baseline.tsv` 里 `# old-module` 行列出的模块。
-# 棘轮（见下面的 [tool.lint-ratchet]）查新模块时，在这一套之上再加 [tool.lint-ratchet.checkers.mypy] 的 strict_args。
+# 棘轮对每个模块都按下面这一套参数运行 mypy。
+# mypy 也检查没有类型标注的函数的函数体。
+# 它还报出执行不到的代码、可能未赋值就用到的名字、永远不成立的比较、多余的 cast，以及没用上或没写错误码的 `# type: ignore`。
+# 这一套不要求函数写类型标注。
+# mypy 推断不出一个变量的类型时，仍要求给这个变量写类型标注。
 [tool.mypy]
 explicit_package_bases = true
 follow_imports = "silent"
@@ -22,42 +23,18 @@ follow_imports = "silent"
 # tests/fast/arkeditor_file_load_driver.py 作为脚本运行，按顶层模块名导入 arkeditor_effect_menu_driver。tests/fast/arkeditor_entry_edit_driver.py 作为脚本运行，按顶层模块名导入 arkeditor_file_load_driver。tests/_mypy_stubs 里同名的存根让 mypy 把这两个名字解析到 tests/fast 里的真实模块。
 # tools/test_quality 的脚本也以自己的目录为脚本目录运行，按顶层模块名导入同目录的 data_check、fast_suite 与 checkout_fixture
 mypy_path = ["tools/ArkEditor", "tools/test_quality", "tests/_mypy_stubs"]
+check_untyped_defs = true
+strict_equality = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+extra_checks = true
+warn_unreachable = true
+enable_error_code = ["possibly-undefined", "ignore-without-code", "deprecated", "redundant-self", "truthy-iterable"]
 
-# lint 用的虚拟环境不装游戏、测试与工具脚本运行所需的这些第三方包，mypy 找不到它们或它们的类型存根
+# rtmlib 不带类型信息，也没有类型存根包。
+# 这一项让 mypy 不报 rtmlib 缺类型。
 [[tool.mypy.overrides]]
-module = [
-  "bs4",
-  "coverage",
-  "cv2",
-  "dateutil",
-  "ephem",
-  "flask",
-  "flask_socketio",
-  "google",
-  "google.genai",
-  "httpx",
-  "mcp",
-  "mcp.server",
-  "mcp.server.models",
-  "mcp.server.stdio",
-  "numpy",
-  "openai",
-  "pandas",
-  "PIL",
-  "PIL.ImageTk",
-  "polib",
-  "psutil",
-  "PySide6",
-  "PySide6.QtCore",
-  "PySide6.QtGui",
-  "PySide6.QtWidgets",
-  "pytest",
-  "requests",
-  "rtmlib",
-  "ultralytics",
-  "wcwidth",
-  "werkzeug.exceptions",
-]
+module = ["rtmlib"]
 ignore_missing_imports = true
 
 # tools/test_quality 的脚本导入的 lint 包是可选的本机 lint 引擎，不随仓库提供（见 CONTRIBUTING.md），mypy 找不到它
@@ -91,8 +68,7 @@ requires = ["ruff"]
 argv = ["ruff", "check", "--config=pyproject.toml", "--no-cache", "--ignore-noqa", "--output-format=json", "{files}"]
 json = { path = "filename", line = "location.row", rule = "code", message = "message" }
 per_file = true
-measure = { PLR0911 = "returns:max", PLR0912 = "branches:max", PLR0913 = "args:max", PLR0914 = "locals:max", PLR0915 = "statements:max", PLR0917 = "args:max", E501 = "max:max" }
-own_rules = ["N801", "N802"]
+measure = { E501 = "max:max" }
 rules_argv = ["ruff", "check", "--config=pyproject.toml", "--show-settings", "{files}"]
 rules_format = '^\t\S+ \((?P<rule>[A-Z]+[0-9]+)\),$'
 reads = ["pyproject.toml:tool.ruff"]
@@ -100,7 +76,7 @@ reads = ["pyproject.toml:tool.ruff"]
 [tool.lint-ratchet.checkers.mypy]
 requires = ["mypy==2.4.0"]
 argv = ["mypy", "--config-file=pyproject.toml", "--explicit-package-bases", "--follow-imports=silent", "--show-error-codes", "--no-error-summary", "--no-pretty", "--hide-error-context", "--cache-dir={cache}", "{files}"]
-strict_args = ["--check-untyped-defs", "--disallow-any-generics", "--disallow-incomplete-defs", "--disallow-subclassing-any", "--disallow-untyped-decorators", "--disallow-untyped-defs", "--extra-checks", "--no-implicit-reexport", "--strict-equality", "--warn-return-any", "--warn-unused-ignores"]
+strict_args = []
 format = '^(?P<path>.+?):(?P<line>\d+)(?::\d+)?(?::\d+:\d+)?: error: (?P<message>.*?)(?:  \[(?P<rule>[a-z0-9-]+)\])?$'
 reads = ["pyproject.toml:tool.mypy"]
 prefix = "mypy:"
@@ -122,198 +98,26 @@ clean = true
 # 棘轮把文件列表直接交给 ruff，所以这两项不改变棘轮查哪些文件。
 [tool.ruff]
 line-length = 120
-preview = true
+indent-width = 2
+target-version = "py312"
 include = ["*.py"]
 extend-exclude = ["Script/Config/config_def.py"]
 
-# select 只收对应某项 pylint 检查的 ruff 规则。
-# E902 是例外，它报出 ruff 读不了的文件。
+# 选用下面这些规则组。
+# F 是 pyflakes，查没用上的名字和没定义的名字等问题。
+# E4、E7 与 E9 是 pycodestyle 对导入、语句、语法错误和读文件错误的检查。
+# E501 查行长。
+# W 是 pycodestyle 的警告，查行尾空白和无效转义等问题。
+# B 是 bugbear，查容易出错的写法。
+# PLE 与 PLW 是 pylint 的错误与警告。
+# D1 查缺少的文档字符串。
+# D419 查空的文档字符串。
+# UP 是 pyupgrade，查能换成新写法的旧语法。
+# PLW0603 查 global 语句，留到以后再选。
+# 去掉 global 语句要改代码结构。
 [tool.ruff.lint]
-select = [
-  "A001",
-  "A002",
-  "B002",
-  "B006",
-  "B012",
-  "B014",
-  "B018",
-  "B019",
-  "B023",
-  "B025",
-  "B033",
-  "B904",
-  "BLE001",
-  "D100",
-  "D102",
-  "D103",
-  "D104",
-  "D105",
-  "D107",
-  "D419",
-  "E401",
-  "E402",
-  "E501",
-  "E701",
-  "E702",
-  "E703",
-  "E711",
-  "E712",
-  "E713",
-  "E714",
-  "E721",
-  "E722",
-  "E731",
-  "E902",
-  "F401",
-  "F403",
-  "F404",
-  "F406",
-  "F407",
-  "F501",
-  "F502",
-  "F503",
-  "F504",
-  "F505",
-  "F506",
-  "F507",
-  "F508",
-  "F509",
-  "F521",
-  "F522",
-  "F523",
-  "F524",
-  "F525",
-  "F541",
-  "F601",
-  "F621",
-  "F622",
-  "F631",
-  "F634",
-  "F701",
-  "F702",
-  "F704",
-  "F706",
-  "F707",
-  "F811",
-  "F821",
-  "F822",
-  "F823",
-  "F841",
-  "F842",
-  "F901",
-  "G001",
-  "G002",
-  "G004",
-  "N801",
-  "N802",
-  "N803",
-  "N804",
-  "N805",
-  "N806",
-  "N816",
-  "N999",
-  "PLC0105",
-  "PLC0131",
-  "PLC0132",
-  "PLC0205",
-  "PLC0206",
-  "PLC0207",
-  "PLC0208",
-  "PLC0414",
-  "PLC0415",
-  "PLC1802",
-  "PLC2401",
-  "PLC2403",
-  "PLC2801",
-  "PLC3002",
-  "PLE0100",
-  "PLE0101",
-  "PLE0115",
-  "PLE0117",
-  "PLE0118",
-  "PLE0237",
-  "PLE0241",
-  "PLE0302",
-  "PLE0303",
-  "PLE0304",
-  "PLE0305",
-  "PLE0307",
-  "PLE0308",
-  "PLE0309",
-  "PLE0604",
-  "PLE0605",
-  "PLE0643",
-  "PLE0704",
-  "PLE1132",
-  "PLE1141",
-  "PLE1142",
-  "PLE1205",
-  "PLE1206",
-  "PLE1300",
-  "PLE1307",
-  "PLE1310",
-  "PLE1507",
-  "PLE1519",
-  "PLE1520",
-  "PLE1700",
-  "PLE2502",
-  "PLE2510",
-  "PLE2512",
-  "PLE2513",
-  "PLE2514",
-  "PLE2515",
-  "PLE4703",
-  "PLR0911",
-  "PLR0912",
-  "PLR0913",
-  "PLR0914",
-  "PLR0915",
-  "PLR0917",
-  "PLW0108",
-  "PLW0120",
-  "PLW0127",
-  "PLW0128",
-  "PLW0129",
-  "PLW0131",
-  "PLW0133",
-  "PLW0177",
-  "PLW0211",
-  "PLW0244",
-  "PLW0245",
-  "PLW0602",
-  "PLW0604",
-  "PLW0642",
-  "PLW0711",
-  "PLW1501",
-  "PLW1507",
-  "PLW1508",
-  "PLW1509",
-  "PLW1510",
-  "PLW1514",
-  "PLW2101",
-  "PLW3301",
-  "S102",
-  "S113",
-  "S307",
-  "SIM118",
-  "SIM201",
-  "SIM202",
-  "SLF001",
-  "T100",
-  "TRY002",
-  "TRY203",
-  "UP025",
-  "UP031",
-  "UP032",
-  "UP034",
-  "W291",
-  "W292",
-  "W293",
-  "W605",
-]
-
-[tool.ruff.lint.pylint]
-max-statements = 40
+select = ["F", "E4", "E7", "E9", "E501", "W", "B", "PLE", "PLW", "D1", "D419", "UP"]
+ignore = ["PLW0603"]
 
 # tools/test_quality/fast_report.py 在快速测试层 tests/fast 上跑的三条测试质量规则；不设阈值，用规则的默认值，报告里列出测到的数和阈值
 [tool.test-quality.rules.tests-coverage]
