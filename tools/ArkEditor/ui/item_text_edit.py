@@ -23,7 +23,6 @@ class ItemTextEdit(QWidget):
   def __init__(self) -> None:
     """初始化文本编辑框主体"""
     super().__init__()
-    self.font = font
     self.setFont(font)
     label_layout = QVBoxLayout()
     # 加入标题
@@ -113,7 +112,7 @@ class ItemTextEdit(QWidget):
     # 创建菜单项
     self.create_right_click_menu()
     # 将右键菜单绑定到文本编辑框上
-    self.label_text.setContextMenuPolicy(Qt.CustomContextMenu)
+    self.label_text.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
     self.label_text.customContextMenuRequested.connect(
         self.show_right_click_menu
     )

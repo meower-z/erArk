@@ -310,7 +310,7 @@ class CommissionEditWidget(QWidget):
     # 设置表单label字体
     label_font = font
     for i in range(self.layout.rowCount()):
-      label_item = self.layout.itemAt(i, QFormLayout.LabelRole)
+      label_item = self.layout.itemAt(i, QFormLayout.ItemRole.LabelRole)
       if label_item is not None and label_item.widget() is not None:
         label_item.widget().setFont(label_font)
 

@@ -58,7 +58,7 @@ class CommissionListWidget(QWidget):
     self.commissions = commissions  # 原始数据
     self.filtered_commissions = commissions.copy()  # 搜索过滤后的数据
     # 主布局
-    self.layout = QVBoxLayout(self)
+    self.main_layout = QVBoxLayout(self)
     # 搜索栏布局
     self.search_layout = QHBoxLayout()
     self.search_edit = QTextEdit()
@@ -74,11 +74,13 @@ class CommissionListWidget(QWidget):
     self.search_layout.addWidget(self.search_name_btn)
     self.search_layout.addWidget(self.search_desc_btn)
     self.search_layout.addWidget(self.reset_btn)
-    self.layout.addLayout(self.search_layout)
+    self.main_layout.addLayout(self.search_layout)
     # 列表控件
     self.list_widget = QListWidget()
-    self.layout.addWidget(self.list_widget)
-    self.list_widget.setContextMenuPolicy(Qt.CustomContextMenu)
+    self.main_layout.addWidget(self.list_widget)
+    self.list_widget.setContextMenuPolicy(
+        Qt.ContextMenuPolicy.CustomContextMenu
+    )
     self.list_widget.customContextMenuRequested.connect(self.show_context_menu)
     self.list_widget.itemClicked.connect(self.on_item_clicked)
     self.refresh_list()
@@ -88,7 +90,7 @@ class CommissionListWidget(QWidget):
     self.search_desc_btn.setFont(font)
     self.reset_btn.setFont(font)
     # 启用拖拽移动功能
-    self.list_widget.setDragDropMode(QListWidget.InternalMove)
+    self.list_widget.setDragDropMode(QListWidget.DragDropMode.InternalMove)
     self.list_widget.model().rowsMoved.connect(self.on_rows_moved)
 
   def refresh_list(self) -> None:

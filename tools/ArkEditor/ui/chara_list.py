@@ -29,7 +29,7 @@ class CharaList(QWidget):
 
     # 创建一个新的QWidget，我们将把主要布局添加到这个QWidget
     self.scrollAreaWidgetContents = QWidget(self)
-    self.layout = QVBoxLayout(self.scrollAreaWidgetContents)
+    self.content_layout = QVBoxLayout(self.scrollAreaWidgetContents)
 
     # 将QWidget设置为QScrollArea的widget
     self.scrollArea.setWidget(self.scrollAreaWidgetContents)
@@ -49,7 +49,6 @@ class CharaList(QWidget):
     self.rightLayout = QVBoxLayout(self.rightColumn)
 
     # 条目列表
-    self.font = font
     self.setFont(font)
 
     self.first_layouts = [QHBoxLayout() for _ in range(14)]
@@ -185,11 +184,11 @@ class CharaList(QWidget):
 
     self.splitter.addWidget(self.leftColumn)
     self.splitter.addWidget(self.rightColumn)
-    self.layout.addWidget(self.splitter)
+    self.content_layout.addWidget(self.splitter)
 
     # 将按钮添加到布局中
-    self.layout.addWidget(self.apply_button)
-    self.layout.addWidget(self.reset_button)
+    self.content_layout.addWidget(self.apply_button)
+    self.content_layout.addWidget(self.reset_button)
 
   def resizeEvent(self, event: "QResizeEvent") -> None:
     """
@@ -209,7 +208,7 @@ class CharaList(QWidget):
     label = QLabel(text)
     label.setFixedWidth(width)  # 设置固定宽度
     label.setSizePolicy(
-        QSizePolicy.Fixed, QSizePolicy.Preferred
+        QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred
     )  # 设置大小策略
     return label
 
@@ -411,9 +410,9 @@ class CharaList(QWidget):
 
     # 设置字体颜色
     palette = self.chara_textcolor_text_edit.palette()
-    palette.setColor(QPalette.Text, QColor(now_chara_textcolor))
+    palette.setColor(QPalette.ColorRole.Text, QColor(now_chara_textcolor))
     # 设置背景颜色
-    palette.setColor(QPalette.Base, "#000")
+    palette.setColor(QPalette.ColorRole.Base, "#000")
 
     self.chara_textcolor_text_edit.setPalette(palette)
 

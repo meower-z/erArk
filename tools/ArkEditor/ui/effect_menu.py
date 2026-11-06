@@ -39,8 +39,7 @@ class EffectMenu(QDialog):
     self.setWindowTitle(
         cache_control.now_event_data[cache_control.now_select_id].text
     )
-    self.font = font
-    self.layout: QVBoxLayout = QVBoxLayout()
+    self.main_layout: QVBoxLayout = QVBoxLayout()
     self.resize(1000, 1000)
     # 增加一个搜索框，确定键，重置键，三个合在一起，放在最上面作为一个横向的搜索栏
     # 搜索框改为 QLineEdit，便于回车直接触发搜索
@@ -58,7 +57,7 @@ class EffectMenu(QDialog):
     self.search_layout.addWidget(self.search_text)
     self.search_layout.addWidget(self.search_button)
     self.search_layout.addWidget(self.reset_button)
-    self.layout.addLayout(self.search_layout)
+    self.main_layout.addLayout(self.search_layout)
     # 创建一个新的 QHBoxLayout，用于左右排列两个 tree
     self.tree_layout = QHBoxLayout()
     all_type_list = sorted(
@@ -76,8 +75,8 @@ class EffectMenu(QDialog):
       tree.setWordWrap(True)
       tree.adjustSize()
       index += 1
-      tree.setSelectionMode(QAbstractItemView.SingleSelection)
-      tree.setSelectionBehavior(QAbstractItemView.SelectRows)
+      tree.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+      tree.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
       root_list = []
       for now_type in type_list:
         now_root = QTreeWidgetItem(tree)
@@ -95,17 +94,17 @@ class EffectMenu(QDialog):
                   cache_control.now_select_id
               ].effect
           ):
-            effect_node.setCheckState(0, Qt.Checked)
+            effect_node.setCheckState(0, Qt.CheckState.Checked)
           else:
-            effect_node.setCheckState(0, Qt.Unchecked)
+            effect_node.setCheckState(0, Qt.CheckState.Unchecked)
         root_list.append(now_root)
       tree.addTopLevelItems(root_list)
       tree.itemClicked.connect(self.click_item)
       tree.setFont(font)
       self.tree_list.append(tree)
       self.tree_layout.addWidget(tree)  # 将 tree 添加到 QHBoxLayout 中
-    self.layout.addLayout(self.tree_layout)
-    self.setLayout(self.layout)
+    self.main_layout.addLayout(self.tree_layout)
+    self.setLayout(self.main_layout)
 
   def click_item(self, item: TreeItem, column: int) -> None:
     """
@@ -116,8 +115,8 @@ class EffectMenu(QDialog):
     """
     if "cid" not in item.__dict__:
       return
-    if item.checkState(column) == Qt.Checked:
-      item.setCheckState(0, Qt.Unchecked)
+    if item.checkState(column) == Qt.CheckState.Checked:
+      item.setCheckState(0, Qt.CheckState.Unchecked)
       if (
           item.cid
           in cache_control.now_event_data[cache_control.now_select_id].effect
@@ -126,7 +125,7 @@ class EffectMenu(QDialog):
             item.cid
         ]
     else:
-      item.setCheckState(0, Qt.Checked)
+      item.setCheckState(0, Qt.CheckState.Checked)
       cache_control.now_event_data[cache_control.now_select_id].effect[
           item.cid
       ] = 1

@@ -69,7 +69,7 @@ class OfficialEventListWidget(QWidget):
     """ 全部文件名（不含扩展名） """
     self.filtered_list = list(event_list)
     """ 筛选后的事件 """
-    self.layout = QVBoxLayout(self)
+    self.main_layout = QVBoxLayout(self)
     # 顶部：文件筛选 + 关键字搜索
     self.top_layout = QHBoxLayout()
     self.file_box = QComboBox()
@@ -85,11 +85,13 @@ class OfficialEventListWidget(QWidget):
     self.top_layout.addWidget(self.file_box)
     self.top_layout.addWidget(self.search_edit)
     self.top_layout.addWidget(self.reset_btn)
-    self.layout.addLayout(self.top_layout)
+    self.main_layout.addLayout(self.top_layout)
     # 列表
     self.list_widget = QListWidget()
-    self.layout.addWidget(self.list_widget)
-    self.list_widget.setContextMenuPolicy(Qt.CustomContextMenu)
+    self.main_layout.addWidget(self.list_widget)
+    self.list_widget.setContextMenuPolicy(
+        Qt.ContextMenuPolicy.CustomContextMenu
+    )
     self.list_widget.customContextMenuRequested.connect(self.show_context_menu)
     self.list_widget.itemClicked.connect(self.on_item_clicked)
     for widget in (
