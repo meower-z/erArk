@@ -22,7 +22,8 @@ def get_current_h_mode_text(character_id: int) -> str:
   if not handle_premise.handle_self_is_h(character_id):
     return _("非H")
   mode_text_list = []
-  # 无意识H按类型显示（hypnosis_panel延迟导入，规避 hypnosis_panel→handle_talent→first_record_handle 的导入链在启动期成环）
+  # 无意识H按类型显示（hypnosis_panel延迟导入，
+  # 规避 hypnosis_panel→handle_talent→first_record_handle 的导入链在启动期成环）
   if handle_premise.handle_unconscious_flag_ge_1(character_id):
     from Script.UI.Panel import hypnosis_panel
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 """
-tk_game.py 与 tk.py 的测试：经 limited_run.run 启动、传下的种子与默认内存、证据目录检查、拒绝 web 模式的 checkout、与无头运行共用槽位、tk.py 选择要操作的实例、tk.py doctor 的内存检查；不启动游戏
+tk_game.py 与 tk.py 的测试：经 limited_run.run 启动、传下的种子与默认内存、证据目录检查、拒绝 web 模式的 checkout、
+与无头运行共用槽位、tk.py 选择要操作的实例、tk.py doctor 的内存检查；不启动游戏
 另有 tk.py 动作后何时截帧的测试，同样不启动游戏
 
 用法：

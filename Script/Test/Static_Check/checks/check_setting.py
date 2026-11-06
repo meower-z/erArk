@@ -69,7 +69,8 @@ def check_birth_01() -> list[CheckFailure]:
 
 @register_check("BIRTH-02", "已关闭卵生存量")
 def check_birth_02() -> list[CheckFailure]:
-  """参数: 无；返回值: List[CheckFailure]；功能: 按原始种族生育方式检查关闭后的卵、无壳排卵机会与博士持卵索引，不检查胎数。"""
+  """参数: 无；返回值: List[CheckFailure]；功能: 按原始种族生育方式检查关闭后的卵、无壳排卵机会与博士持卵索引，
+  不检查胎数。"""
   cache = cache_control.cache
   values = getattr(
       getattr(cache, "all_system_setting", None), "birth_type_setting", None
@@ -156,7 +157,8 @@ def _check_cook_memory(
     low: int,
     high: int,
 ) -> list[CheckFailure]:
-  """参数: ri(罗德岛对象)、field/check_id/name(str)、low/high(int)；返回值: List[CheckFailure]；功能: 校验烹饪记忆字典的页签与数值范围。"""
+  """参数: ri(罗德岛对象)、field/check_id/name(str)、low/high(int)；返回值: List[CheckFailure]；
+  功能: 校验烹饪记忆字典的页签与数值范围。"""
   if ri is None:
     return []
   memory = getattr(ri, field, None)

@@ -5,7 +5,16 @@
     - 点击后发出信号，主窗口可根据选中项显示详细属性
 """
 
-from PySide6.QtWidgets import QListWidget, QListWidgetItem, QMenu, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTextEdit
+from PySide6.QtWidgets import (
+    QListWidget,
+    QListWidgetItem,
+    QMenu,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QTextEdit,
+)
 from PySide6.QtCore import Signal, Qt
 from PySide6.QtGui import QCursor, QFont
 import game_type

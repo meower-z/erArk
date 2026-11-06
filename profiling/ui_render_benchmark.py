@@ -233,7 +233,8 @@ def main() -> None:
         # 注：gui.metrics_sync 计时要到首个屏边界 flush 才进入会话汇总，无法轮询其出现
         time.sleep(8)
         log(
-            f"产品化预热完成（flow侧入队+等待GUI共 {(time.perf_counter() - t_prewarm) * 1000:.1f}ms，GUI侧耗时见 gui.metrics_sync）"
+            f"产品化预热完成（flow侧入队+等待GUI共 {(time.perf_counter() - t_prewarm) * 1000:.1f}ms，"
+            f"GUI侧耗时见 gui.metrics_sync）"
         )
       width = normal_config.config_normal.text_width
       log(

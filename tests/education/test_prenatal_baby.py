@@ -1,7 +1,27 @@
 # -*- coding: UTF-8 -*-
 """baby_growth_handle：胎教累积与出生折习得珠（Plan 26）；六个照料行为的效果串与 CVE；喂奶 556；胎教 555"""
 
-from _bootstrap import baby_growth_handle, cache, check, class_ai, clear_schedules, constant, constant_effect, datetime, education_constant, finish, game_config, game_type, growth_handle, make_character, open_all_classroom, pl, section, set_time, settle_behavior
+from _bootstrap import (
+    baby_growth_handle,
+    cache,
+    check,
+    class_ai,
+    clear_schedules,
+    constant,
+    constant_effect,
+    datetime,
+    education_constant,
+    finish,
+    game_config,
+    game_type,
+    growth_handle,
+    make_character,
+    open_all_classroom,
+    pl,
+    section,
+    set_time,
+    settle_behavior,
+)
 from Script.Design import basement, talk
 from Script.Settle import past_day_settle
 from Script.System.Official_Event_System import official_event_handle
@@ -295,7 +315,8 @@ skip_old.pregnancy.born_time = datetime.datetime(2025, 9, 20, 9, 0)
 birthday_girl.pregnancy.born_time = datetime.datetime(2025, 9, 8, 6, 0)
 _g_new = growth_handle.get_child_growth(206)
 _g_old = growth_handle.get_child_growth(207)
-# 玩家一步跨过午夜：NPC 阶段先跑完新一天的早上，549 挂上新一天的 flag（flag 与日期一起写，README 夹具陷阱）；另一个是前一天的残留
+# 玩家一步跨过午夜：NPC 阶段先跑完新一天的早上，549 挂上新一天的 flag（flag 与日期一起写，README 夹具陷阱）；
+# 另一个是前一天的残留
 _g_new.skip_class_flag, _g_new.skip_class_day = True, _new_day.toordinal()
 _g_old.skip_class_flag, _g_old.skip_class_day = True, _new_day.toordinal() - 1
 clear_schedules()

@@ -7,7 +7,17 @@
       （外勤委托那边右键增删不落盘，要再点一次保存，这里不继承那个毛病）
 """
 
-from PySide6.QtWidgets import QListWidget, QListWidgetItem, QMenu, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit, QComboBox
+from PySide6.QtWidgets import (
+    QListWidget,
+    QListWidgetItem,
+    QMenu,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QLineEdit,
+    QComboBox,
+)
 from PySide6.QtCore import Signal, Qt
 from PySide6.QtGui import QCursor, QFont
 import game_type

@@ -4,10 +4,12 @@
 ================================================================================
 开新游戏（开局时间为 tests.world.START_TIME，10:00）后，博士在原地反复用「等待五分钟」，主循环推进 HOURS 个小时，
 其间至少一名干员吃饭；每一步结束都记一份行为快照（tests/snapshot.py）。
-开局时和此后每个整点各跑一遍全部静态自检（Script.Test.Static_Check.run_all_checks，系统设置 14 打开时，游戏在主界面等待输入前经 run_turn_check 调用它），
+开局时和此后每个整点各跑一遍全部静态自检（Script.Test.Static_Check.run_all_checks，系统设置 14 打开时，
+游戏在主界面等待输入前经 run_turn_check 调用它），
 任何一条失败都让测试失败，失败信息写明整点与检查编号。
 
-快照写到 LAST_RUN；与提交在仓库里的基准比较：python -m tests.snapshot compare tests/snapshots/smoke_new_game.tsv.gz tests/snapshots/smoke_new_game.last.tsv.gz
+快照写到 LAST_RUN；与提交在仓库里的基准比较：
+python -m tests.snapshot compare tests/snapshots/smoke_new_game.tsv.gz tests/snapshots/smoke_new_game.last.tsv.gz
 行为有意改变时，把 LAST_RUN 复制成基准 tests/snapshots/smoke_new_game.tsv.gz，随改动一起提交。
 其他起始状态的快照在 tests/slow/test_snapshot_states.py。
 """

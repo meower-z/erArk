@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """
-在虚拟显示上启动 erArk 的 Tk 游戏窗口：起 Xvfb 与 openbox，用探针启动器 tk_probe.py 跑游戏，等窗口和 probe.json 出现后打印 ready 事件。
+在虚拟显示上启动 erArk 的 Tk 游戏窗口：起 Xvfb 与 openbox，用探针启动器 tk_probe.py 跑游戏，
+等窗口和 probe.json 出现后打印 ready 事件。
 
-内存上限、运行时限和游戏槽位都由 limited_run.run() 负责，本脚本不另做一份，所以 Tk 游戏与无头运行共用同一组槽位、同一张退出码表和同样的 JSON 事件行。
+内存上限、运行时限和游戏槽位都由 limited_run.run() 负责，本脚本不另做一份，所以 Tk 游戏与无头运行共用同一组槽位、
+同一张退出码表和同样的 JSON 事件行。
 每次 Tk 运行起自己的 Xvfb（-displayfd 选空闲的显示号），并发的 Tk 运行各用各的显示。status 与 stop 用 limited_run.py。
 checkout 的 config.ini 设了 web_draw = 1 时以 2 退出，不占槽位：web 模式的游戏不开 Tk 窗口。
 
@@ -23,7 +25,8 @@ import limited_run
 PROBE = Path(__file__).resolve().parent / "tk_probe.py"
 SCREEN = "2100x1100x24"
 
-# 默认内存上限。Tk 游戏启动峰值连文件缓存在内不到 2 GB，3G 留出余量，按 limited_run.SLOT_SIZE 占 ceil(3G / SLOT_SIZE) 个槽位；
+# 默认内存上限。Tk 游戏启动峰值连文件缓存在内不到 2 GB，3G 留出余量，
+# 按 limited_run.SLOT_SIZE 占 ceil(3G / SLOT_SIZE) 个槽位；
 # 图片首次显示时才解码并保留到进程结束（Script/Core/era_image.py），显示过很多图片的长时间运行需另传更大的 --mem
 DEFAULT_MEM = "3G"
 

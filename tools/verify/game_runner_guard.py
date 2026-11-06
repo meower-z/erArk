@@ -7,7 +7,8 @@
     Script.Core.era_image   -- 导入即建图片索引，Tk 显示过的图片都留在内存里直到进程结束
     Script.Core.web_server  -- 可启动 Web 游戏的服务器：其 start_server() 在 5000 起的端口上提供服务
     Script.Core.game_init   -- 启动 Tk 游戏，启动时不到 2 GB，显示的图片越多占用越大
-导入时连带导入这三个模块之一的模块同样被拦下，例如在模块顶部导入 web_server 的 Script.Design.talk 与 Script.Design.settle_behavior，
+导入时连带导入这三个模块之一的模块同样被拦下，
+例如在模块顶部导入 web_server 的 Script.Design.talk 与 Script.Design.settle_behavior，
 所以读档、跑行为结算的脚本也要经 limited_run.py 运行；不连带导入它们的模块照常导入。
 """
 

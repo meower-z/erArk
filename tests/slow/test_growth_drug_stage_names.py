@@ -2,11 +2,13 @@
 """
 成长阶段 102、103 的玩家可见名称（慢速层部分）
 ============================================
-素质 102 叫幼女、素质 103 叫学员（STAGE_NAME）。开新游戏后取本局 id 最小的干员（不含博士）当母亲，给她生两个婴儿，博士站在育儿室里。
+素质 102 叫幼女、素质 103 叫学员（STAGE_NAME）。开新游戏后取本局 id 最小的干员（不含博士）当母亲，给她生两个婴儿，
+博士站在育儿室里。
 下列文字写着所指阶段的这个名字，没有「幼儿」，也没有 103 的旧名「萝莉」：
 - 两个婴儿都到了长成幼女的前一天时，礼物面板说成长加速药对母亲无效的提示；
 - 两个婴儿刚出生时，礼物面板选婴儿的两个按钮（按下第一个按钮选中了她）；
-- 婴儿长成幼女（pregnancy_handle.check_rearing_complete）、幼女长成学员（pregnancy_handle.check_all_child_grow_to_loli）时画出的提示。
+- 婴儿长成幼女（pregnancy_handle.check_rearing_complete）、幼女长成学员（pregnancy_handle.check_all_child_grow_to_loli）
+  时画出的提示。
 另查婴儿、幼女与学员的下一阶段名（pregnancy_handle.get_child_next_stage_name）依次是幼女、学员、少女。
 配置文字、养成事件抬头与另两种成长药的提示在 tests/fast/test_child_stage_names.py。
 """

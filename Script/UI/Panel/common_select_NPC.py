@@ -34,7 +34,8 @@ def common_select_npc_button_list_func(
   通用npc选择按钮列表函数\n
   Keyword arguments:\n
   now_draw_panel -- 当前绘制面板，即CommonSelectNPCButtonList\n
-  now_draw_panel.text_list -- 最终按钮列表，每个子列表里\n：0号元素为角色id，1号元素为按钮要调用的函数source_func，2号元素为已选择角色id列表，默认值为空\n
+  now_draw_panel.text_list -- 最终按钮列表，每个子列表里\n：0号元素为角色id，1号元素为按钮要调用的函数source_func，
+  2号元素为已选择角色id列表，默认值为空\n
   title_text -- 标题文本\n
   info_text -- 信息文本\n
   return\n

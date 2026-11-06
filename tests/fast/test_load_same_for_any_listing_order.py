@@ -2,7 +2,9 @@
 """
 列目录的顺序不影响模组列表与角色口上大小的回归测试
 ==================================================
-文件系统列出目录项的顺序因文件系统和文件的创建先后而异。测试让 os.listdir 与 glob.glob 按名称正序、倒序各返回一次，检查两次的结果相同。受检的结果是 ModManager.scan_mods 扫到的模组顺序与每个模组的文件夹，以及 character_config.find_files_and_get_size 返回的文件与大小。
+文件系统列出目录项的顺序因文件系统和文件的创建先后而异。测试让 os.listdir 与 glob.glob 按名称正序、倒序各返回一次，
+检查两次的结果相同。受检的结果是 ModManager.scan_mods 扫到的模组顺序与每个模组的文件夹，
+以及 character_config.find_files_and_get_size 返回的文件与大小。
 """
 
 import contextlib
@@ -48,7 +50,9 @@ class LoadSameForAnyListingOrderTest(FastTestCase):
 
   def test_mod_scan_same(self) -> None:
     """
-    临时模组文件夹里有 alpha、beta 两个模组，另有 dup_a、dup_b 两个文件夹都声明 mod_id dup。列目录按文件名正序、倒序各扫描一次，两次得到的 (mod_id, 模组文件夹) 列表应相同。正序那次的 mod_id 应依次为 alpha、beta、dup。
+    临时模组文件夹里有 alpha、beta 两个模组，另有 dup_a、dup_b 两个文件夹都声明 mod_id dup。
+    列目录按文件名正序、倒序各扫描一次，两次得到的 (mod_id, 模组文件夹) 列表应相同。
+    正序那次的 mod_id 应依次为 alpha、beta、dup。
     """
     folder = Path(self.enterContext(tempfile.TemporaryDirectory()))
     for item, mod_id in (
@@ -84,7 +88,9 @@ class LoadSameForAnyListingOrderTest(FastTestCase):
 
   def test_talk_files_same(self) -> None:
     """
-    临时目录里有角色甲的一个 100 字节口上文件，data/event/chara 里有甲的两个事件文件，分别为 1000 与 3000 字节。工作目录切到临时目录，因为函数按相对路径 data/event/chara 查找事件文件。列目录按文件名正序、倒序各查找一次，两次返回的文件与大小应相同。正序那次应返回两个文件。
+    临时目录里有角色甲的一个 100 字节口上文件，data/event/chara 里有甲的两个事件文件，分别为 1000 与 3000 字节。
+    工作目录切到临时目录，因为函数按相对路径 data/event/chara 查找事件文件。列目录按文件名正序、倒序各查找一次，
+    两次返回的文件与大小应相同。正序那次应返回两个文件。
     """
     root = Path(self.enterContext(tempfile.TemporaryDirectory()))
     talk_dir = root / "talk"

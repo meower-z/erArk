@@ -109,7 +109,8 @@ class HealthCheckTestCase(SlowTestCase):
 
   def record_picks(self, cid: int) -> list:
     """
-    之后该角色每次执行状态机（constant.handle_state_machine_data 中的函数，AI 选出行动后调用它），都记下 (她的行为开始时间, 状态机id)
+    之后该角色每次执行状态机（constant.handle_state_machine_data 中的函数，AI 选出行动后调用它），
+    都记下 (她的行为开始时间, 状态机id)
     Keyword arguments:
     cid -- 角色id
     Return arguments:

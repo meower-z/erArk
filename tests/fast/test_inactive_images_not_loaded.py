@@ -4,7 +4,8 @@
 ================================
 游戏不显示的图片放在仓库根目录的 image_inactive 文件夹，它在游戏加载图片的 image 目录之外。
 本测试检查仓库里的文件，不检查游戏行为：image 目录下没有重名图片（启动时不打印「图片重名」提示）；
-image_inactive 里有 png，且不在 image 目录里；发布流程 .github/workflows/python-app.yml 的复制命令不复制 image_inactive，也不复制整个仓库根目录。
+image_inactive 里有 png，且不在 image 目录里；
+发布流程 .github/workflows/python-app.yml 的复制命令不复制 image_inactive，也不复制整个仓库根目录。
 """
 
 import os

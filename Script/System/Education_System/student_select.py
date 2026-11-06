@@ -32,7 +32,8 @@ def draw_select_student_line(
     width: int, now_student: int, return_list: list[str]
 ) -> bool:
   """
-  绘制选人行：已选人时是「当前学生：X」+ 居中的「[选择学生]」；没选人时不写「尚未选择」，「[选择学生]」直接顶在行首，再画一行提示
+  绘制选人行：已选人时是「当前学生：X」+ 居中的「[选择学生]」；没选人时不写「尚未选择」，「[选择学生]」直接顶在行首，
+  再画一行提示
   Keyword arguments:
   width -- 整行宽度
   now_student -- 当前选中的角色id，-1 为尚未选择

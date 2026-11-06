@@ -3,7 +3,8 @@
 慢速层测试的基类
 ================
 每个测试由 pytest --forked 放进自己的新进程。setUp 在其中完整启动游戏（FullWorld）并开新游戏，
-测试再用玩家指令（instruct）与走路（walk）推进：有行动时长的指令与走路都经游戏主循环 update.game_update_flow 结算时间；打开面板的指令只换面板，由 show_panel 显示。
+测试再用玩家指令（instruct）与走路（walk）推进：有行动时长的指令与走路都经游戏主循环 update.game_update_flow 结算时间；
+打开面板的指令只换面板，由 show_panel 显示。
 """
 
 import signal
@@ -121,7 +122,8 @@ class SlowTestCase(unittest.TestCase):
 
   def show_panel(self) -> None:
     """
-    显示指令打开的面板（如「干员位置一览」），与游戏主流程 start_flow.start_frame 每一轮做的相同；面板里的选择由 self.world.player 安排
+    显示指令打开的面板（如「干员位置一览」），与游戏主流程 start_flow.start_frame 每一轮做的相同；
+    面板里的选择由 self.world.player 安排
     Keyword arguments:
     无
     Return arguments:

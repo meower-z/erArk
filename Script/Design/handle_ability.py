@@ -202,7 +202,8 @@ def extra_ability_check(
           now_other_ability_level += character_data.ability[tem_ability_cid]
       info_text = _("\n○干员的技巧升级需要额外满足以下条件：\n")
       info_text += _(
-          "  全子性技的等级之和，即[指技]、[舌技]、[足技]、[胸技]、[膣技]、[肛技]、[隐蔽]能力等级之和大于等于技巧等级*3\n"
+          "  全子性技的等级之和，"
+          "即[指技]、[舌技]、[足技]、[胸技]、[膣技]、[肛技]、[隐蔽]能力等级之和大于等于技巧等级*3\n"
       )
       info_text += _("  当前技巧等级为{0}，当前全子性技的等级和为{1}\n").format(
           now_ability_level, now_other_ability_level

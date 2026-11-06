@@ -2,7 +2,8 @@
 """
 文本生成AI的自定义代理
 ======================
-在「文本生成AI设置」面板里开启自定义代理后，OpenAI 类模型的请求要经代理发出，聊天的地文显示生成的文本，面板的测试也要通过。
+在「文本生成AI设置」面板里开启自定义代理后，OpenAI 类模型的请求要经代理发出，聊天的地文显示生成的文本，
+面板的测试也要通过。
 
 每个测试在新游戏里让博士走到 NPC_NAME 指定的角色身边，再经面板的按钮与输入填好全部设置。
 代理是本进程里只监听 127.0.0.1 的假代理，它按聊天接口的格式回一段固定文本。
@@ -134,7 +135,8 @@ class ChatAiCustomProxyTest(SlowTestCase):
 
   def enter_settings(self, local_ip: str) -> None:
     """
-    经「文本生成AI设置」面板开启文本生成AI，设为对所有地文生成，并填模型名、自定义代理、本地绑定 IP、自定义接口地址与 API 密钥
+    经「文本生成AI设置」面板开启文本生成AI，设为对所有地文生成，并填模型名、自定义代理、本地绑定 IP、
+    自定义接口地址与 API 密钥
     Keyword arguments:
     local_ip -- 面板询问本地绑定 IP 时输入的文字
     Return arguments:
@@ -150,7 +152,8 @@ class ChatAiCustomProxyTest(SlowTestCase):
     )
     player.type(MODEL)
     # 几个按钮都含 [否] 时，press 按最后画出的那个。
-    # 此时显示 [否] 的按画出顺序是选项 10、11、13，所以第一下把选项 13 切成是，第二下才按到选项 11，面板随后询问代理与本地 IP。
+    # 此时显示 [否] 的按画出顺序是选项 10、11、13，所以第一下把选项 13 切成是，第二下才按到选项 11，
+    # 面板随后询问代理与本地 IP。
     player.press("[否]", "[否]")
     player.type(self.proxy_url)
     player.type(local_ip)
