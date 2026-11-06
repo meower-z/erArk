@@ -439,7 +439,7 @@ def get_child_schedule_text(character_id: int) -> str:
       get_child_slot_activity_text(character_id, slot)
       for slot in range(education_constant.SLOT_COUNT)
   ]
-  return "{0}（{1}）".format(template_name, " / ".join(slot_text_list))
+  return "{}（{}）".format(template_name, " / ".join(slot_text_list))
 
 
 def get_template_use_count(template_id: int) -> int:

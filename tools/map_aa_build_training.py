@@ -333,13 +333,11 @@ def main() -> None:
     if idx == 5:
       continue
     if width != 89:
-      bad.append("L%02d = %dU（应为 89U）" % (idx + 1, width))
+      bad.append(f"L{idx + 1:02d} = {width}U（应为 89U）")
     if re.search(r"<(?!/?mapbutton>)[^>]*>", line):
-      bad.append(
-          "L%02d 含裸尖括号，会被 rich_text.py:233 的正则吞掉" % (idx + 1)
-      )
+      bad.append(f"L{idx + 1:02d} 含裸尖括号，会被 rich_text.py:233 的正则吞掉")
     if " " in plain:
-      bad.append("L%02d 含 ASCII 空格，应改用 U+2002" % (idx + 1))
+      bad.append(f"L{idx + 1:02d} 含 ASCII 空格，应改用 U+2002")
 
   if bad:
     print("生成自检未通过：")
@@ -360,7 +358,7 @@ def main() -> None:
   # 与其余地图保持一致：UTF-8 无 BOM、CRLF、末尾不加换行
   data = "\r\n".join(lines).encode("utf-8")
   open(OUT_PATH, "wb").write(data)
-  print("已写入 %s：%d 字节，%d 行" % (OUT_PATH, len(data), len(lines)))
+  print(f"已写入 {OUT_PATH}：{len(data)} 字节，{len(lines)} 行")
   print("请接着执行： python tools/map_aa_check.py 训练 --tol 2")
 
 

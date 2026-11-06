@@ -121,8 +121,7 @@ def center(content: str, width: int = CELL) -> str:
   pad = width - unit_width(strip_tag(content))
   if pad < 0:
     raise ValueError(
-        "内容 %s 宽 %dU，超过格宽 %dU"
-        % (content, unit_width(strip_tag(content)), width)
+        f"内容 {content} 宽 {unit_width(strip_tag(content))}U，超过格宽 {width}U"
     )
   left = pad // 2
   return S * left + content + S * (pad - left)
@@ -271,13 +270,11 @@ def main() -> None:
     plain = strip_tag(line)
     width = unit_width(plain)
     if idx != label_row and width != TOTAL:
-      bad.append("L%02d = %dU（应为 %dU）" % (idx + 1, width, TOTAL))
+      bad.append(f"L{idx + 1:02d} = {width}U（应为 {TOTAL}U）")
     if re.search(r"<(?!/?mapbutton>)[^>]*>", line):
-      bad.append(
-          "L%02d 含裸尖括号，会被 rich_text.py:233 的正则吞掉" % (idx + 1)
-      )
+      bad.append(f"L{idx + 1:02d} 含裸尖括号，会被 rich_text.py:233 的正则吞掉")
     if " " in plain:
-      bad.append("L%02d 含 ASCII 空格，应改用 U+2002" % (idx + 1))
+      bad.append(f"L{idx + 1:02d} 含 ASCII 空格，应改用 U+2002")
 
   if bad:
     print("生成自检未通过：")
@@ -288,12 +285,12 @@ def main() -> None:
   text = "\r\n".join(lines)
   if dry_run:
     print(text)
-    print("\n自检通过：%d 行，每行 %dU" % (len(lines), TOTAL))
+    print(f"\n自检通过：{len(lines)} 行，每行 {TOTAL}U")
     return
 
   with open(OUT_PATH, "wb") as f:
     f.write(text.encode("utf-8"))
-  print("已写入 %s（%d 行，每行 %dU）" % (OUT_PATH, len(lines), TOTAL))
+  print(f"已写入 {OUT_PATH}（{len(lines)} 行，每行 {TOTAL}U）")
 
 
 if __name__ == "__main__":

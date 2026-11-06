@@ -131,7 +131,7 @@ class Official_Event_Draw:
     # 事件正文
     text_draw = draw.NormalDraw()
     text_draw.width = self.width
-    text_draw.text = "\n  {0}\n\n".format(
+    text_draw.text = "\n  {}\n\n".format(
         get_code_text(
             event_data.get("text", ""), self.character_id, self.partner_id
         )

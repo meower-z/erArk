@@ -53,7 +53,7 @@ def plant_errors(target: str, effect: str) -> tuple[str, str]:
       if line.split(",", 1)[0].isdigit()
   }
   target = target.rstrip("\n") + "\n" + lines[-1]
-  effect = effect.rstrip("\n") + "\n0,%d,0" % (max(known) + 1)
+  effect = effect.rstrip("\n") + f"\n0,{max(known) + 1},0"
   return target, effect
 
 

@@ -136,8 +136,7 @@ def check_map(
     worst = max(worst, width_gap)
     if width_gap > tolerance:
       problems.append(
-          "字号%d：竖墙行总宽相差 %dpx（%d~%d）"
-          % (size, width_gap, min(widths), max(widths))
+          f"字号{size}：竖墙行总宽相差 {width_gap}px（{min(widths)}~{max(widths)}）"
       )
 
     # 同结构行的每一堵墙都应落在同一像素位置
@@ -147,14 +146,13 @@ def check_map(
         gap = max(xs) - min(xs)
         worst = max(worst, gap)
         if gap > tolerance:
-          rows = ", ".join("L%02d" % (idx + 1) for idx, _ in group)
+          rows = ", ".join(f"L{idx + 1:02d}" for idx, _ in group)
           problems.append(
-              "字号%d：%d 堵墙的行（%s）第 %d 堵墙位置相差 %dpx"
-              % (size, wall_count, rows, col + 1, gap)
+              f"字号{size}：{wall_count} 堵墙的行（{rows}）第 {col + 1} 堵墙位置相差 {gap}px"
           )
 
     if verbose:
-      print("    字号 %2d：竖墙行总宽 %s px" % (size, sorted(set(widths))))
+      print(f"    字号 {size:2d}：竖墙行总宽 {sorted(set(widths))} px")
 
   return worst, problems
 
@@ -197,12 +195,10 @@ def main() -> None:
   unit = fonts[cur_size].measure("═")
   ascii_unit = fonts[cur_size].measure(" ")
   print(
-      "字体=%s  当前字号=%d（由 window_width=%d / text_width=%d 反算）"
-      % (cfg.font, cur_size, cfg.window_width, cfg.text_width)
+      f"字体={cfg.font}  当前字号={cur_size}（由 window_width={cfg.window_width} / text_width={cfg.text_width} 反算）"
   )
   print(
-      "当前字号下：框线 1U=%dpx，ASCII 空格=%dpx %s"
-      % (
+      "当前字号下：框线 1U={}px，ASCII 空格={}px {}".format(
           unit,
           ascii_unit,
           "（两族同宽，混用不会漂移）"
@@ -210,7 +206,7 @@ def main() -> None:
           else "（两族不同宽，混用会逐字符漂移）",
       )
   )
-  print("容差=%dpx，校验字号=%s" % (tolerance, CHECK_SIZES))
+  print(f"容差={tolerance}px，校验字号={CHECK_SIZES}")
   print()
 
   if not targets:
@@ -231,26 +227,27 @@ def main() -> None:
       failed += 1
 
   if list_bad:
-    print("%-10s %10s  %s" % ("地图", "最大错位", "状态"))
+    print("{:<10} {:>10}  {}".format("地图", "最大错位", "状态"))
     for worst, name, problems in sorted(results, reverse=True):
       print(
-          "%-10s %8dpx  %s" % (name, worst, "超出容差" if problems else "通过")
+          "{:<10} {:8d}px  {}".format(
+              name, worst, "超出容差" if problems else "通过"
+          )
       )
   else:
     for worst, name, problems in results:
       if problems:
-        print("[FAIL] %s  最大错位 %dpx" % (name, worst))
+        print(f"[FAIL] {name}  最大错位 {worst}px")
         for p in problems[:6]:
-          print("         %s" % p)
+          print(f"         {p}")
         if len(problems) > 6:
-          print("         ...另有 %d 条" % (len(problems) - 6))
+          print(f"         ...另有 {len(problems) - 6} 条")
       else:
-        print("[OK]   %s  最大错位 %dpx" % (name, worst))
+        print(f"[OK]   {name}  最大错位 {worst}px")
 
   print()
   print(
-      "结果：%d / %d 张地图在 %dpx 容差内通过"
-      % (len(results) - failed, len(results), tolerance)
+      f"结果：{len(results) - failed} / {len(results)} 张地图在 {tolerance}px 容差内通过"
   )
   root.destroy()
   sys.exit(1 if failed else 0)

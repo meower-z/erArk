@@ -64,7 +64,7 @@ def _build_style_pattern() -> None:
   # 对样式名做转义，避免正则特殊字符
   escaped = [re.escape(n) for n in style_names]
   # 形如 </?(name1|name2|...)>
-  _STYLE_PATTERN = re.compile(r"</?(?:%s)>" % "|".join(escaped))
+  _STYLE_PATTERN = re.compile(r"</?(?:{})>".format("|".join(escaped)))
 
 
 @functools.lru_cache(maxsize=256)

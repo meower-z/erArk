@@ -131,7 +131,7 @@ def read_target() -> tuple[list[str], list[TargetRow], str]:
       continue
     parts = line.split(",", 4)
     if len(parts) < 5:
-      raise SystemExit("第 %d 行不是 5 列：%s" % (index, line))
+      raise SystemExit(f"第 {index} 行不是 5 列：{line}")
     rows.append(
         {
             "line": index,
@@ -168,7 +168,7 @@ def build_mapping(
     chain = chain_of(row["cid"])
     if chain is None:
       raise SystemExit(
-          "cid %d 未归入任何行为链，请补 CHAIN_BY_OLD_CID" % row["cid"]
+          "cid {} 未归入任何行为链，请补 CHAIN_BY_OLD_CID".format(row["cid"])
       )
     now_type = row["type"]
     # 同一 type 内，行为链一变就开新组
@@ -177,15 +177,14 @@ def build_mapping(
       last_chain[now_type] = chain
     group = next_group[now_type]
     if group > 99:
-      raise SystemExit("type %d 的组号超过 99" % now_type)
+      raise SystemExit(f"type {now_type} 的组号超过 99")
     bucket.setdefault((now_type, group), []).append(row)
     group_info[row["cid"]] = (group, chain)
 
   for (now_type, group), group_rows in bucket.items():
     if len(group_rows) > 20:
       raise SystemExit(
-          "type %d 组 %d 有 %d 行，超过 20 个主位"
-          % (now_type, group, len(group_rows))
+          f"type {now_type} 组 {group} 有 {len(group_rows)} 行，超过 20 个主位"
       )
     for order, row in enumerate(group_rows):
       mapping[row["cid"]] = now_type * 10000 + group * 100 + order * 5
@@ -211,7 +210,9 @@ def self_check(
   for row in rows:
     if mapping[row["cid"]] // 10000 != row["type"]:
       raise SystemExit(
-          "R4 失败：cid %d 的 type 是 %d" % (mapping[row["cid"]], row["type"])
+          "R4 失败：cid {} 的 type 是 {}".format(
+              mapping[row["cid"]], row["type"]
+          )
       )
   # cid 0 保留给表头占位行
   if 0 in new_values:
@@ -227,15 +228,14 @@ def self_check(
     per_type[row["type"]].append(mapping[row["cid"]])
   for now_type, values in per_type.items():
     if values != sorted(values):
-      raise SystemExit("R2 失败：type %d 内 cid 逆序" % now_type)
+      raise SystemExit(f"R2 失败：type {now_type} 内 cid 逆序")
   # R5 各 type 内相对优先级顺序与重构前完全一致（行为等价性的核心保证）
   for now_type in per_type:
     old_seq = [r["cid"] for r in rows if r["type"] == now_type]
     new_seq = [r["cid"] for r in new_rows if r["type"] == now_type]
     if old_seq != new_seq:
       raise SystemExit(
-          "R5 失败：type %d 的相对顺序被改变\n  旧 %s\n  新 %s"
-          % (now_type, old_seq, new_seq)
+          f"R5 失败：type {now_type} 的相对顺序被改变\n  旧 {old_seq}\n  新 {new_seq}"
       )
   return new_rows
 
@@ -298,8 +298,7 @@ def update_effect(mapping: dict[int, int]) -> int:
     old_target = int(parts[1])
     if old_target not in mapping:
       raise SystemExit(
-          "effect.csv 第 %d 行引用了不存在的 target_id %d"
-          % (index + 1, old_target)
+          f"effect.csv 第 {index + 1} 行引用了不存在的 target_id {old_target}"
       )
     parts[1] = str(mapping[old_target])
     lines[index] = ",".join(parts)
@@ -330,8 +329,7 @@ def write_mapping(
   for row in new_rows:
     group, chain = group_info[row["cid"]]
     out.append(
-        "%d,%d,%d,%d,%s,%s"
-        % (
+        "{},{},{},{},{},{}".format(
             row["cid"],
             mapping[row["cid"]],
             row["type"],
@@ -348,7 +346,7 @@ def write_mapping(
 def main() -> None:
   """脚本入口"""
   header, rows, line_end = read_target()
-  print("读入 %d 行数据" % len(rows))
+  print(f"读入 {len(rows)} 行数据")
 
   mapping, group_info = build_mapping(rows)
   new_rows = self_check(rows, mapping)
@@ -359,12 +357,14 @@ def main() -> None:
   write_mapping(new_rows, mapping, group_info)
 
   print("target.csv 已重编号并按 type 分区重排")
-  print("effect.csv 改写 %d 行 target_id" % effect_changed)
-  print("对照表已写入 %s" % MAPPING_PATH)
+  print(f"effect.csv 改写 {effect_changed} 行 target_id")
+  print(f"对照表已写入 {MAPPING_PATH}")
 
   print("\n=== 组分配结果 ===")
   print(
-      "%-6s %-5s %-22s %-5s %s" % ("type", "组", "行为链", "行数", "新cid区间")
+      "{:<6} {:<5} {:<22} {:<5} {}".format(
+          "type", "组", "行为链", "行数", "新cid区间"
+      )
   )
   bucket: collections.OrderedDict[tuple[int, int], list[TargetRow]] = (
       collections.OrderedDict()
@@ -374,8 +374,7 @@ def main() -> None:
   for (now_type, group), group_rows in bucket.items():
     chain = group_info[group_rows[0]["cid"]][1]
     print(
-        "%-6d %-5d %-22s %-5d %d~%d"
-        % (
+        "{:<6d} {:<5d} {:<22} {:<5d} {}~{}".format(
             now_type,
             group,
             chain,

@@ -423,9 +423,7 @@ class Class_Schedule_Panel:
                 f"{temp_prefix}{ability_name}/{teacher_name}{absent_mark}"
             )
           else:
-            cell_text = "{0}{1}/{2}".format(
-                temp_prefix, ability_name, _("待定")
-            )
+            cell_text = "{}{}/{}".format(temp_prefix, ability_name, _("待定"))
         now_draw = draw.CenterButton(
             cell_text,
             f"\nCELL_{week_day}_{period}",
@@ -582,7 +580,7 @@ class Class_Schedule_Panel:
         # 动它会破坏全局的悬停一致性；文本上的 [x] / x 差异也保留——两者宽度刻意相等，不会跳动
         now_draw = draw.CenterButton(
             button_text,
-            "SUB_%d" % now_ability_id,
+            f"SUB_{now_ability_id}",
             int(self.width / 8),
             normal_style="gold_enrod"
             if now_ability_id == ability_id
@@ -820,7 +818,7 @@ class Class_Schedule_Panel:
           replace_text_list.append(replace_text)
         now_draw = draw.LeftButton(
             _("[{0}{1}{2}]").format(mark, character_data.name, replace_mark),
-            "MUST_%d" % character_id,
+            f"MUST_{character_id}",
             student_width,
         )
         now_draw.draw()
@@ -898,7 +896,7 @@ class Class_Schedule_Panel:
             f"{get_teacher_absent_mark(week_cell[1])}"
         )
       else:
-        week_text = "{0}/{1}".format(
+        week_text = "{}/{}".format(
             game_config.config_ability[week_cell[0]].name, _("待定")
         )
       overlay_draw = draw.NormalDraw()
