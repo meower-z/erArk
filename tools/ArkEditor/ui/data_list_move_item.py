@@ -249,10 +249,10 @@ def refresh_item_flags(self: 'DataList') -> None:
     item = self.list_widget.item(i)
     item.setFlags(
         item.flags()
-        | Qt.ItemIsDragEnabled
-        | Qt.ItemIsDropEnabled
-        | Qt.ItemIsSelectable
-        | Qt.ItemIsEnabled
+        | Qt.ItemFlag.ItemIsDragEnabled
+        | Qt.ItemFlag.ItemIsDropEnabled
+        | Qt.ItemFlag.ItemIsSelectable
+        | Qt.ItemFlag.ItemIsEnabled
     )
 
 

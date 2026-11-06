@@ -32,7 +32,6 @@ class ItemPremiseList(QWidget):
   def __init__(self) -> None:
     """初始化前提表单主体"""
     super().__init__()
-    self.font = font
     self.setFont(font)
     main_layout = QVBoxLayout()  # 主布局
     # 标题布局
@@ -102,7 +101,7 @@ class ItemPremiseList(QWidget):
     self.item_list = QListWidget()
     self.item_list.setWordWrap(True)
     self.item_list.adjustSize()
-    self.item_list.setContextMenuPolicy(Qt.CustomContextMenu)
+    self.item_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
     self.item_list.customContextMenuRequested.connect(self.show_context_menu)
     self.item_list.itemDoubleClicked.connect(self.change_this_item)
     list_layout.addWidget(self.item_list)
@@ -110,9 +109,9 @@ class ItemPremiseList(QWidget):
     main_layout.addLayout(list_layout)
     self.setLayout(main_layout)
     # 启用拖拽移动功能
-    self.item_list.setDragDropMode(QListWidget.InternalMove)
-    self.item_list.setDefaultDropAction(Qt.MoveAction)
-    self.item_list.setSelectionMode(QListWidget.SingleSelection)
+    self.item_list.setDragDropMode(QListWidget.DragDropMode.InternalMove)
+    self.item_list.setDefaultDropAction(Qt.DropAction.MoveAction)
+    self.item_list.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
     self.item_list.model().rowsMoved.connect(self.on_rows_moved)
 
   def update(self) -> None:

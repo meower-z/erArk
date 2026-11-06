@@ -49,8 +49,7 @@ class PremiseMenu(QDialog):
       self.setWindowTitle(
           cache_control.now_talk_data[cache_control.now_select_id].text
       )
-    self.font = font
-    self.layout: QVBoxLayout = QVBoxLayout()
+    self.main_layout: QVBoxLayout = QVBoxLayout()
     self.resize(1000, 1000)
     # 增加一个搜索框，确定键，重置键，三个合在一起，放在最上面作为一个横向的搜索栏
     # 将搜索框改为 QLineEdit，便于回车直接触发搜索
@@ -68,7 +67,7 @@ class PremiseMenu(QDialog):
     self.search_layout.addWidget(self.search_text)
     self.search_layout.addWidget(self.search_button)
     self.search_layout.addWidget(self.reset_button)
-    self.layout.addLayout(self.search_layout)
+    self.main_layout.addLayout(self.search_layout)
     # 创建一个新的 QHBoxLayout，用于左右排列两个 tree
     self.tree_layout = QHBoxLayout()
     all_type_list = sorted(list(cache_control.premise_type_data.keys()))
@@ -82,8 +81,8 @@ class PremiseMenu(QDialog):
       tree = QTreeWidget()
       tree.setHeaderLabel("前提列表" + str(index))
       index += 1
-      tree.setSelectionMode(QAbstractItemView.SingleSelection)
-      tree.setSelectionBehavior(QAbstractItemView.SelectRows)
+      tree.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+      tree.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
       tree.setWordWrap(True)  # 设置 wordWrap 属性为 True
       tree.adjustSize()
       # 设置列的宽度为一个固定的值
@@ -122,9 +121,9 @@ class PremiseMenu(QDialog):
                     cache_control.now_select_id
                 ].premise
             ):
-              premise_group_node.setCheckState(0, Qt.Checked)
+              premise_group_node.setCheckState(0, Qt.CheckState.Checked)
             else:
-              premise_group_node.setCheckState(0, Qt.Unchecked)
+              premise_group_node.setCheckState(0, Qt.CheckState.Unchecked)
           elif cache_control.now_edit_type_flag == 0:
             if (
                 premise_group
@@ -132,9 +131,9 @@ class PremiseMenu(QDialog):
                     cache_control.now_select_id
                 ].premise
             ):
-              premise_group_node.setCheckState(0, Qt.Checked)
+              premise_group_node.setCheckState(0, Qt.CheckState.Checked)
             else:
-              premise_group_node.setCheckState(0, Qt.Unchecked)
+              premise_group_node.setCheckState(0, Qt.CheckState.Unchecked)
         root_list.append(now_root)
       # 正常的前提type
       for now_type in type_list:
@@ -154,9 +153,9 @@ class PremiseMenu(QDialog):
                     cache_control.now_select_id
                 ].premise
             ):
-              premise_node.setCheckState(0, Qt.Checked)
+              premise_node.setCheckState(0, Qt.CheckState.Checked)
             else:
-              premise_node.setCheckState(0, Qt.Unchecked)
+              premise_node.setCheckState(0, Qt.CheckState.Unchecked)
           elif cache_control.now_edit_type_flag == 0:
             if (
                 premise
@@ -164,17 +163,17 @@ class PremiseMenu(QDialog):
                     cache_control.now_select_id
                 ].premise
             ):
-              premise_node.setCheckState(0, Qt.Checked)
+              premise_node.setCheckState(0, Qt.CheckState.Checked)
             else:
-              premise_node.setCheckState(0, Qt.Unchecked)
+              premise_node.setCheckState(0, Qt.CheckState.Unchecked)
         root_list.append(now_root)
       tree.addTopLevelItems(root_list)
       tree.itemClicked.connect(self.click_item)
       tree.setFont(font)
       self.tree_list.append(tree)
       self.tree_layout.addWidget(tree)  # 将 tree 添加到 QHBoxLayout 中
-    self.layout.addLayout(self.tree_layout)
-    self.setLayout(self.layout)
+    self.main_layout.addLayout(self.tree_layout)
+    self.setLayout(self.main_layout)
 
   def update_premise(self, item: TreeItem, data: "Event | Talk") -> None:
     """
@@ -223,11 +222,11 @@ class PremiseMenu(QDialog):
       # 人物属性模式下没有选中的口上或事件，不改数据
       return
 
-    if item.checkState(column) == Qt.Checked:
-      item.setCheckState(0, Qt.Unchecked)
+    if item.checkState(column) == Qt.CheckState.Checked:
+      item.setCheckState(0, Qt.CheckState.Unchecked)
       self.update_premise(item, data)
     else:
-      item.setCheckState(0, Qt.Checked)
+      item.setCheckState(0, Qt.CheckState.Checked)
       self.add_premise(item, data)
 
     if cache_control.item_premise_list is not None:

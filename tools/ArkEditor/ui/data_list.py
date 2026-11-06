@@ -30,7 +30,7 @@ class DataList(DataListIdEditMixin, QWidget):
   def __init__(self) -> None:
     """初始化表单主体"""
     super().__init__()
-    self.layout = QGridLayout(self)
+    self.main_layout = QGridLayout(self)
     self.top_layout = QHBoxLayout()
     self.second_layout = QHBoxLayout()
     self.chara_id_text_edit = QTextEdit("0")
@@ -54,7 +54,9 @@ class DataList(DataListIdEditMixin, QWidget):
         self.select_now_instruct
     )
     # 将复选框的指示器放到文本的后面（右侧）
-    self.select_now_instruct_check_box.setLayoutDirection(Qt.RightToLeft)
+    self.select_now_instruct_check_box.setLayoutDirection(
+        Qt.LayoutDirection.RightToLeft
+    )
     self.select_now_instruct_flag = 0
     # 文本搜索框
     self.text_search_edit = QTextEdit()
@@ -79,7 +81,6 @@ class DataList(DataListIdEditMixin, QWidget):
     self.premise_search_flag = 0
     # 条目列表
     self.list_widget = QListWidget()
-    self.font = font
     self.setFont(font)
     self.list_widget.setFont(font)
     self.close_flag = 1
@@ -164,23 +165,23 @@ class DataList(DataListIdEditMixin, QWidget):
     self.text_id_text_edit.setFixedWidth(100)
 
     # 总布局
-    self.layout.addLayout(self.top_layout, 0, 0, 1, -1)
-    self.layout.addLayout(self.second_layout, 1, 0, 1, -1)
-    self.layout.addWidget(self.new_text_button, 2, 0)
-    self.layout.addWidget(self.copy_text_button, 2, 1)
-    self.layout.addWidget(self.delete_text_button, 2, 2)
-    self.layout.addWidget(self.text_search_edit, 3, 0)
-    self.layout.addWidget(self.text_search_button, 3, 1)
-    self.layout.addWidget(self.text_search_reset_button, 3, 2)
-    self.layout.addWidget(self.premise_search_edit, 4, 0)
-    self.layout.addWidget(self.premise_search_button, 4, 1)
-    self.layout.addWidget(self.premise_search_reset_button, 4, 2)
-    self.layout.addWidget(self.list_widget, 5, 0, 1, 6)
+    self.main_layout.addLayout(self.top_layout, 0, 0, 1, -1)
+    self.main_layout.addLayout(self.second_layout, 1, 0, 1, -1)
+    self.main_layout.addWidget(self.new_text_button, 2, 0)
+    self.main_layout.addWidget(self.copy_text_button, 2, 1)
+    self.main_layout.addWidget(self.delete_text_button, 2, 2)
+    self.main_layout.addWidget(self.text_search_edit, 3, 0)
+    self.main_layout.addWidget(self.text_search_button, 3, 1)
+    self.main_layout.addWidget(self.text_search_reset_button, 3, 2)
+    self.main_layout.addWidget(self.premise_search_edit, 4, 0)
+    self.main_layout.addWidget(self.premise_search_button, 4, 1)
+    self.main_layout.addWidget(self.premise_search_reset_button, 4, 2)
+    self.main_layout.addWidget(self.list_widget, 5, 0, 1, 6)
 
     # 设置拉伸因子，保证新建条目、复制条目、搜索框的宽度相等
-    self.layout.setColumnStretch(0, 1)
-    self.layout.setColumnStretch(1, 1)
-    self.layout.setColumnStretch(2, 1)
+    self.main_layout.setColumnStretch(0, 1)
+    self.main_layout.setColumnStretch(1, 1)
+    self.main_layout.setColumnStretch(2, 1)
 
     # 绑定移动相关方法到实例
     self.move_item = move_item.__get__(self)
@@ -192,7 +193,7 @@ class DataList(DataListIdEditMixin, QWidget):
 
     # 启用条目拖拽移动功能
     self.list_widget.setDragDropMode(QAbstractItemView.InternalMove)
-    self.list_widget.setDefaultDropAction(Qt.MoveAction)
+    self.list_widget.setDefaultDropAction(Qt.DropAction.MoveAction)
     self.list_widget.setSelectionMode(QAbstractItemView.SingleSelection)
     self.list_widget.model().rowsMoved.connect(self.on_rows_moved)
 
@@ -206,7 +207,7 @@ class DataList(DataListIdEditMixin, QWidget):
     self.undo_shortcut = QShortcut(QKeySequence("Ctrl+Z"), self)
     self.undo_shortcut.activated.connect(self.undo_delete)
     # 绑定Delete键快捷键，按下时触发删除条目
-    self.delete_shortcut = QShortcut(QKeySequence(Qt.Key_Delete), self)
+    self.delete_shortcut = QShortcut(QKeySequence(Qt.Key.Key_Delete), self)
     self.delete_shortcut.activated.connect(self.delete_text)
     # 绑定 Ctrl+Y 为重做
     self.redo_shortcut = QShortcut(QKeySequence("Ctrl+Y"), self)
@@ -222,14 +223,13 @@ class DataList(DataListIdEditMixin, QWidget):
 
   def update_font(self, font: QFont) -> None:
     """
-    打印传入的字体，把它记为当前字体并设给全部子控件
+    让全部子控件使用传入的字体
     Keyword arguments:
     font -- 字体
     Return arguments:
     None
     """
     print(font)
-    self.font = font
     for widget in self.findChildren(QWidget):
       widget.setFont(font)
 
@@ -691,7 +691,7 @@ class DataList(DataListIdEditMixin, QWidget):
           # 如果 item 的 uid 等于 now_select_id，则将其滚动到可见区域的中心位置
           if item.uid == cache_control.now_select_id:
             self.list_widget.scrollToItem(
-                item, QAbstractItemView.PositionAtCenter
+                item, QAbstractItemView.ScrollHint.PositionAtCenter
             )
             # 设置 item 的背景色为淡蓝色
             item.setBackground(QColor("light blue"))
@@ -716,7 +716,7 @@ class DataList(DataListIdEditMixin, QWidget):
           # 如果有父级，尝试将其从父级中移除
           self.second_layout.setParent(None)
 
-        self.layout.addLayout(self.second_layout, 1, 1, 1, -1)
+        self.main_layout.addLayout(self.second_layout, 1, 1, 1, -1)
 
       type_text_list = ["跳过指令", "指令前置", "指令后置"]
       for uid in cache_control.now_event_data:
@@ -770,7 +770,7 @@ class DataList(DataListIdEditMixin, QWidget):
           # 如果 item 的 uid 等于 now_select_id，则将其滚动到可见区域的中心位置
           if item.uid == cache_control.now_select_id:
             self.list_widget.scrollToItem(
-                item, QAbstractItemView.PositionAtCenter
+                item, QAbstractItemView.ScrollHint.PositionAtCenter
             )
             # 设置 item 的背景色为淡蓝色
             item.setBackground(QColor("light blue"))

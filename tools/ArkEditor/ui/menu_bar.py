@@ -29,7 +29,6 @@ class MenuBar(QMenuBar):
     self.save_talk_action.setText("保存口上        Ctrl+S")
     self.talk_introduce_action = QAction("口上说明", self)
     self.talk_introduce_action.triggered.connect(function.show_talk_introduce)
-    self.font = font
     self.setFont(font)
     talk_menu.addActions(
         [

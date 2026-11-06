@@ -317,7 +317,7 @@ def show_talk_introduce() -> None:
   text_edit.setText(text)
   text_edit.setReadOnly(True)
   text_edit.setSizePolicy(
-      QSizePolicy.Expanding, QSizePolicy.Expanding
+      QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
   )  # 设置大小策略
   font_metrics = QFontMetrics(text_edit.font())
   text_edit.setFixedWidth(1000)
@@ -357,7 +357,7 @@ def show_event_introduce() -> None:
   text_edit.setText(text)
   text_edit.setReadOnly(True)
   text_edit.setSizePolicy(
-      QSizePolicy.Expanding, QSizePolicy.Expanding
+      QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
   )  # 设置大小策略
   font_metrics = QFontMetrics(text_edit.font())
   text_edit.setFixedWidth(1000)

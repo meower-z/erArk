@@ -37,8 +37,7 @@ class CSEMenu(QDialog):
       self.setWindowTitle(
           cache_control.now_talk_data[cache_control.now_select_id].text
       )
-    self.font = font
-    self.layout: QVBoxLayout = QVBoxLayout()
+    self.main_layout: QVBoxLayout = QVBoxLayout()
     self.ABCD_button_layout = QHBoxLayout()
     self.resize(1000, 50)
 
@@ -47,7 +46,7 @@ class CSEMenu(QDialog):
         "用于实现指令状态方面的综合型万用结算，目前仅支持触发玩家的指令"
     )
     self.cse_text.setFont(font)
-    self.layout.addWidget(self.cse_text)
+    self.main_layout.addWidget(self.cse_text)
 
     self.text_label = QLabel("玩家对")
     self.text_label.setFont(font)
@@ -101,7 +100,7 @@ class CSEMenu(QDialog):
         status_menu.setFont(font)
       self.status_menu.addMenu(status_menu)
 
-    self.layout.addLayout(self.ABCD_button_layout)
+    self.main_layout.addLayout(self.ABCD_button_layout)
 
     # 添加确定按钮与取消按钮
     self.button_layout = QHBoxLayout()
@@ -113,9 +112,9 @@ class CSEMenu(QDialog):
     self.cancel_button.clicked.connect(self.cancel)
     self.cancel_button.setFont(font)
     self.button_layout.addWidget(self.cancel_button)
-    self.layout.addLayout(self.button_layout)
+    self.main_layout.addLayout(self.button_layout)
 
-    self.setLayout(self.layout)
+    self.setLayout(self.main_layout)
 
   # 将change_status_menu函数定义为一个实例方法
   def change_status_menu(self, action: QWidgetAction) -> None:

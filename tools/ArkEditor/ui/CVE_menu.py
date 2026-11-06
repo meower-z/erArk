@@ -34,15 +34,14 @@ class CVEMenu(QDialog):
       self.setWindowTitle(
           cache_control.now_talk_data[cache_control.now_select_id].text
       )
-    self.font = font
-    self.layout: QVBoxLayout = QVBoxLayout()
+    self.main_layout: QVBoxLayout = QVBoxLayout()
     self.ABCD_button_layout = QHBoxLayout()
     self.resize(1000, 50)
 
     # 一段说明文字，用来介绍各个功能，位置在最上面的第一行
     self.cve_text = QLabel("用于实现数值方面的综合型万用结算")
     self.cve_text.setFont(font)
-    self.layout.addWidget(self.cve_text)
+    self.main_layout.addWidget(self.cve_text)
 
     # A数值为对象，仅在"角色id为"时出现a2文本框
     self.cve_a = QComboBox()
@@ -104,7 +103,7 @@ class CVEMenu(QDialog):
     self.cve_d.setFixedWidth(50)
     self.ABCD_button_layout.addWidget(self.cve_d)
 
-    self.layout.addLayout(self.ABCD_button_layout)
+    self.main_layout.addLayout(self.ABCD_button_layout)
 
     # 添加确定按钮与取消按钮
     self.button_layout = QHBoxLayout()
@@ -116,9 +115,9 @@ class CVEMenu(QDialog):
     self.cancel_button.clicked.connect(self.cancel)
     self.cancel_button.setFont(font)
     self.button_layout.addWidget(self.cancel_button)
-    self.layout.addLayout(self.button_layout)
+    self.main_layout.addLayout(self.button_layout)
 
-    self.setLayout(self.layout)
+    self.setLayout(self.main_layout)
 
   def ok(self) -> None:
     """点击确定按钮"""

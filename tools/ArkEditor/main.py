@@ -457,7 +457,7 @@ def create_talk_data() -> None:
   """新建口上文件"""
   global last_open_dir, is_modified
   dialog: QFileDialog = QFileDialog(menu_bar)
-  dialog.setFileMode(QFileDialog.AnyFile)
+  dialog.setFileMode(QFileDialog.FileMode.AnyFile)
   dialog.setDirectory(last_open_dir)
   dialog.setNameFilter("CSV (*.csv)")
   if dialog.exec():

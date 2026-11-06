@@ -31,15 +31,14 @@ class CVPMenu(QDialog):
     """初始化综合型基础数值前提复选框"""
     super().__init__()
     self.setWindowTitle("综合型基础数值前提")
-    self.font = font
-    self.layout: QVBoxLayout = QVBoxLayout()
+    self.main_layout: QVBoxLayout = QVBoxLayout()
     self.ABCD_button_layout = QHBoxLayout()
     self.resize(1000, 50)
 
     # 一段说明文字，用来介绍各个功能，位置在最上面的第一行
     self.cvp_text = QLabel("用于实现数值方面的综合型万用前提")
     self.cvp_text.setFont(font)
-    self.layout.addWidget(self.cvp_text)
+    self.main_layout.addWidget(self.cvp_text)
 
     # A数值为对象，仅在"角色id为"时出现a2文本框
     self.cvp_a = QComboBox()
@@ -112,7 +111,7 @@ class CVPMenu(QDialog):
     self.cvp_d.setFixedWidth(50)
     self.ABCD_button_layout.addWidget(self.cvp_d)
 
-    self.layout.addLayout(self.ABCD_button_layout)
+    self.main_layout.addLayout(self.ABCD_button_layout)
 
     # 添加确定按钮与取消按钮
     self.button_layout = QHBoxLayout()
@@ -124,9 +123,9 @@ class CVPMenu(QDialog):
     self.cancel_button.clicked.connect(self.cancel)
     self.cancel_button.setFont(font)
     self.button_layout.addWidget(self.cancel_button)
-    self.layout.addLayout(self.button_layout)
+    self.main_layout.addLayout(self.button_layout)
 
-    self.setLayout(self.layout)
+    self.setLayout(self.main_layout)
 
   def ok(self) -> None:
     """点击确定按钮"""
