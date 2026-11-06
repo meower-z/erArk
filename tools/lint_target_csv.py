@@ -30,6 +30,8 @@ if TYPE_CHECKING:
   from typing import TypedDict
 
   class TargetRow(TypedDict):
+    """target.csv 的一个数据行，记录物理行号（从 1 起）和前 4 列的值"""
+
     line: int
     cid: int
     state_machine_id: int
