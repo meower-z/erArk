@@ -387,12 +387,12 @@ class InScenePanel:
         line_feed.draw()
       # 以下为指令面板#
       mid_draw = time.time()
-      logging.debug(f"————————")
+      logging.debug("————————")
       logging.debug(f"截止到指令面板绘制前总时间为{mid_draw - start_draw}")
       instruct_panel = see_instruct_panel.SeeInstructPanel(self.width)
       instruct_panel.draw()
       ask_list.extend(instruct_panel.return_list)
-      logging.debug(f"————————")
+      logging.debug("————————")
       logging.debug(f"指令外，ask_list = {ask_list}")
       # 游戏状态自检（系统设置14号，默认关闭）：等待输入前检查一次游戏状态，发现异常只提示不中断
       if cache.all_system_setting.base_setting.get(14, 0):
@@ -409,7 +409,7 @@ class InScenePanel:
           )
       flow_handle.askfor_all(ask_list)
       mid_3_draw = time.time()
-      logging.debug(f"————————")
+      logging.debug("————————")
       logging.debug(
           f"指令外，中间时间3号，截至flow_handle总时间为 {mid_3_draw - mid_draw}"
       )

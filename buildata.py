@@ -167,9 +167,9 @@ def constand_2_handle() -> str:
   out_str += constant_line(command_str.upper(), f'"{command_str}"')
   out_str += f'  """ {premise_type} '
   if target_flag:
-    out_str += f"交互对象"
+    out_str += "交互对象"
   else:
-    out_str += f"自己"
+    out_str += "自己"
   out_str += f'{dataname}{operation}{command_list[-1]} """\n'
   print(out_str)
 
@@ -351,7 +351,7 @@ def csv_2_constand() -> str:
   ) as f:
     f.write(out_str)
     f.close()
-  print(f"已写入前提文件末尾")
+  print("已写入前提文件末尾")
 
   return out_str
 
@@ -400,7 +400,7 @@ def constand_effect_2_csv() -> str:
   ) as f:
     f.write(out_str)
     f.close()
-  print(f"已写入csv文件末尾")
+  print("已写入csv文件末尾")
 
   return out_str
 
@@ -437,7 +437,7 @@ def csv_2_constand_effect() -> str:
   line_list.insert(insert_index, out_str)
   with open(effect_path, "w", encoding="utf-8") as f:
     f.writelines(line_list)
-  print(f"已写入结算文件 BehaviorEffect 类末尾")
+  print("已写入结算文件 BehaviorEffect 类末尾")
 
   return out_str
 

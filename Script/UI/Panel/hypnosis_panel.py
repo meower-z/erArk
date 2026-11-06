@@ -304,7 +304,7 @@ class Chose_Hypnosis_Type_Panel:
         # 未解锁则绘制灰色文本
         else:
           now_draw = draw.NormalDraw()
-          draw_text += f"\n"
+          draw_text += "\n"
           now_draw.text = _(draw_text)
           now_draw.style = "deep_gray"
           now_draw.draw()

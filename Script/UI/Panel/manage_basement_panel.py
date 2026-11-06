@@ -315,7 +315,7 @@ class Manage_Basement_Panel:
 
         button_draw = draw.LeftButton(
             _("[001]调整干员岗位"),
-            f"\n1",
+            "\n1",
             self.width,
             cmd_func=change_npc_work_out,
             args=self.width,

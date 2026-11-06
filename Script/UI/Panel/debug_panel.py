@@ -760,7 +760,7 @@ class Debug_Panel:
         draw_text_list = []
         draw_text_list.append(f"[000]:游戏时间：{cache.game_time}")
         draw_text_list.append(f"[001]:已拥有的干员id列表：{cache.npc_id_got}")
-        draw_text_list.append(f"[002]:全干员id列表（太长了无法显示）")
+        draw_text_list.append("[002]:全干员id列表（太长了无法显示）")
         draw_text_list.append(
             f"[003]:龙门币：{cache.rhodes_island.materials_resouce[1]}"
         )
@@ -770,7 +770,7 @@ class Debug_Panel:
         draw_text_list.append(
             f"[005]:粉红凭证：{cache.rhodes_island.materials_resouce[4]}"
         )
-        draw_text_list.append(f"[006]:基地当前所有待开放设施的开放情况")
+        draw_text_list.append("[006]:基地当前所有待开放设施的开放情况")
         draw_text_list.append(
             f"[007]:一周内的派对计划，周一0~周日6:娱乐id：{cache.rhodes_island.party_day_of_week}"
         )
@@ -833,16 +833,16 @@ class Debug_Panel:
         draw_text_list.append(
             f"[007]:饥饿值 1m=1点，4h=240点(max)：{cache.character_data[0].hunger_point}"
         )
-        draw_text_list.append(f"[008]:全源石技艺全开，理智9999")
-        draw_text_list.append(f"[009]:资源全99999")
-        draw_text_list.append(f"[010]:设施全满级、全开放")
-        draw_text_list.append(f"[011]:重置全角色特殊flag")
-        draw_text_list.append(f"[012]:重置全角色服装")
-        draw_text_list.append(f"[013]:重置全角色位置至宿舍")
-        draw_text_list.append(f"[014]:重置文职部的招募数据")
-        draw_text_list.append(f"[015]:交互对象全部位快感增加")
-        draw_text_list.append(f"[016]:招募指定adv_id的干员")
-        draw_text_list.append(f"[017]:重置全角色娱乐")
+        draw_text_list.append("[008]:全源石技艺全开，理智9999")
+        draw_text_list.append("[009]:资源全99999")
+        draw_text_list.append("[010]:设施全满级、全开放")
+        draw_text_list.append("[011]:重置全角色特殊flag")
+        draw_text_list.append("[012]:重置全角色服装")
+        draw_text_list.append("[013]:重置全角色位置至宿舍")
+        draw_text_list.append("[014]:重置文职部的招募数据")
+        draw_text_list.append("[015]:交互对象全部位快感增加")
+        draw_text_list.append("[016]:招募指定adv_id的干员")
+        draw_text_list.append("[017]:重置全角色娱乐")
 
         for i in range(len(draw_text_list)):
 
@@ -954,28 +954,28 @@ class Debug_Panel:
 
       # 要输出的变量名称以及注释
       draw_text_list = []
-      draw_text_list.append(f"[000]:基础属性（已实装）")
-      draw_text_list.append(f"[001]:道具")
-      draw_text_list.append(f"[002]:衣服")
-      draw_text_list.append(f"[003]:当前行为状态")
-      draw_text_list.append(f"[004]:当前二段行为状态（已实装）")
-      draw_text_list.append(f"[005]:当前事件状态")
-      draw_text_list.append(f"[006]:状态（已实装）")
-      draw_text_list.append(f"[007]:能力（已实装）")
-      draw_text_list.append(f"[008]:经验（已实装）")
-      draw_text_list.append(f"[009]:宝珠（已实装）")
-      draw_text_list.append(f"[010]:素质（已实装）")
-      draw_text_list.append(f"[011]:初次状态记录")
-      draw_text_list.append(f"[012]:污浊（已实装）")
-      draw_text_list.append(f"[013]:本次H（已实装）")
-      draw_text_list.append(f"[014]:助理情况（已实装）")
-      draw_text_list.append(f"[015]:行动记录")
-      draw_text_list.append(f"[016]:工作")
-      draw_text_list.append(f"[017]:娱乐（已实装）")
-      draw_text_list.append(f"[018]:怀孕（已实装）")
-      draw_text_list.append(f"[019]:社会关系（已实装）")
-      draw_text_list.append(f"[020]:特殊flag（已实装）")
-      draw_text_list.append(f"[021]:催眠（已实装）")
+      draw_text_list.append("[000]:基础属性（已实装）")
+      draw_text_list.append("[001]:道具")
+      draw_text_list.append("[002]:衣服")
+      draw_text_list.append("[003]:当前行为状态")
+      draw_text_list.append("[004]:当前二段行为状态（已实装）")
+      draw_text_list.append("[005]:当前事件状态")
+      draw_text_list.append("[006]:状态（已实装）")
+      draw_text_list.append("[007]:能力（已实装）")
+      draw_text_list.append("[008]:经验（已实装）")
+      draw_text_list.append("[009]:宝珠（已实装）")
+      draw_text_list.append("[010]:素质（已实装）")
+      draw_text_list.append("[011]:初次状态记录")
+      draw_text_list.append("[012]:污浊（已实装）")
+      draw_text_list.append("[013]:本次H（已实装）")
+      draw_text_list.append("[014]:助理情况（已实装）")
+      draw_text_list.append("[015]:行动记录")
+      draw_text_list.append("[016]:工作")
+      draw_text_list.append("[017]:娱乐（已实装）")
+      draw_text_list.append("[018]:怀孕（已实装）")
+      draw_text_list.append("[019]:社会关系（已实装）")
+      draw_text_list.append("[020]:特殊flag（已实装）")
+      draw_text_list.append("[021]:催眠（已实装）")
 
       for i in range(len(draw_text_list)):
 
@@ -1060,11 +1060,11 @@ class Debug_Panel:
             cache.game_time = cache.game_time.replace(day=new_value)
 
         elif key_index == 1:
-          info_text = f"[001]:已拥有的干员id列表：\n"
+          info_text = "[001]:已拥有的干员id列表：\n"
           for chara_id in cache.npc_id_got:
             name = cache.character_data[chara_id].name
             info_text += f"{chara_id}:{name} "
-          info_text += f"\n\n全干员id列表：\n"
+          info_text += "\n\n全干员id列表：\n"
           for adv_id in cache.npc_tem_data.keys():
             chara_id = adv_id
             if chara_id not in cache.character_data:
@@ -1130,7 +1130,7 @@ class Debug_Panel:
           new_value = int(change_value_panel.draw())
           cache.rhodes_island.materials_resouce[4] = new_value
         elif key_index == 6:
-          info_text = f"[006]:基地当前所有待开放设施的开放情况"
+          info_text = "[006]:基地当前所有待开放设施的开放情况"
           info_text += f"{cache.rhodes_island.facility_open}"
           info_draw.text = info_text
           info_draw.draw()
@@ -1507,7 +1507,7 @@ class Debug_Panel:
       # 二段状态数据
       elif key_index == 4:
         draw_text_list = []
-        info_text = f"\n"
+        info_text = "\n"
         for behavior_cid in target_data.second_behavior:
           name = game_config.config_behavior[behavior_cid].name
           info_text += f"({behavior_cid}){name}:{target_data.second_behavior[behavior_cid]}  "
@@ -1546,7 +1546,7 @@ class Debug_Panel:
       # 状态数据
       elif key_index == 6:
         draw_text_list = []
-        info_text = f"\n"
+        info_text = "\n"
         for cid in game_config.config_character_state:
           name = game_config.config_character_state[cid].name
           info_text += f"{cid}:{name}={target_data.status_data[cid]} "
@@ -1583,7 +1583,7 @@ class Debug_Panel:
       # 能力数据
       elif key_index == 7:
         draw_text_list = []
-        info_text = f"\n"
+        info_text = "\n"
         for cid in game_config.config_ability:
           name = game_config.config_ability[cid].name
           info_text += f"{cid}:{name}={target_data.ability[cid]} "
@@ -1621,7 +1621,7 @@ class Debug_Panel:
       # 经验数据
       elif key_index == 8:
         draw_text_list = []
-        info_text = f"\n"
+        info_text = "\n"
         for cid in target_data.experience:
           # 如果不存在该id，则跳过
           if cid not in game_config.config_experience:
@@ -1662,7 +1662,7 @@ class Debug_Panel:
       # 宝珠数据
       elif key_index == 9:
         draw_text_list = []
-        info_text = f"\n"
+        info_text = "\n"
         for cid in target_data.juel:
           name = game_config.config_juel[cid].name
           info_text += f"{cid}:{name}={target_data.juel[cid]} "
@@ -1700,7 +1700,7 @@ class Debug_Panel:
       # 素质数据
       elif key_index == 10:
         draw_text_list = []
-        info_text = f"\n"
+        info_text = "\n"
         for cid in target_data.talent:
           name = game_config.config_talent[cid].name
           info_text += f"{cid}:{name}={target_data.talent[cid]} "
@@ -1751,18 +1751,18 @@ class Debug_Panel:
             f"\n[003]:A是否干净 [0脏污,1灌肠中,2已灌肠,3精液灌肠中,4已精液灌肠]：{target_data.dirty.a_clean}"
         )
         draw_text_list.append(
-            f"[004]:身体部位:当前精液量int，输入4,0,5即可把0号部位的精液量改为5"
+            "[004]:身体部位:当前精液量int，输入4,0,5即可把0号部位的精液量改为5"
         )
         draw_text_list.append(
-            f"[005]:身体部位:当前精液等级int，输入5,0,1即可把0号部位的精液等级改为1"
+            "[005]:身体部位:当前精液等级int，输入5,0,1即可把0号部位的精液等级改为1"
         )
         draw_text_list.append(
-            f"[006]:服装部位:当前精液量int，输入6,1,5即可把1号服装的精液量改为5"
+            "[006]:服装部位:当前精液量int，输入6,1,5即可把1号服装的精液量改为5"
         )
         draw_text_list.append(
-            f"[007]:服装部位:当前精液等级int，输入7,1,1即可把1号服装的精液等级改为1"
+            "[007]:服装部位:当前精液等级int，输入7,1,1即可把1号服装的精液等级改为1"
         )
-        draw_text_list.append(f"[008]:增加身体、服装、衣柜服装全部位精液量int")
+        draw_text_list.append("[008]:增加身体、服装、衣柜服装全部位精液量int")
 
         # 进行显示
         for i in range(len(draw_text_list)):
@@ -1922,7 +1922,7 @@ class Debug_Panel:
       # 助理数据
       elif key_index == 14:
         draw_text_list = []
-        info_text = f"\n"
+        info_text = "\n"
         for cid in target_data.assistant_services:
           name = game_config.config_assistant_services[cid].name
           info_text += f"{cid}:{name}={target_data.assistant_services[cid]} "
@@ -2024,8 +2024,8 @@ class Debug_Panel:
         draw_text_list.append(
             f"[004]:出生的时间：{target_data.pregnancy.born_time}      年月日分别为0,1,2"
         )
-        draw_text_list.append(f"[005]:一键触发生产事件")
-        draw_text_list.append(f"[006]:一键触发育儿+育儿完成事件")
+        draw_text_list.append("[005]:一键触发生产事件")
+        draw_text_list.append("[006]:一键触发育儿+育儿完成事件")
         draw_text_list.append(
             f"[007]:角色当前乳汁量：{target_data.pregnancy.milk}"
         )
@@ -2177,7 +2177,7 @@ class Debug_Panel:
 
       # 特殊flag数据
       elif key_index == 20:
-        info_text = f"1~7异常状态：正常为1"
+        info_text = "1~7异常状态：正常为1"
         info_text += f"    \n1:基础生理需求：睡觉、休息、解手、吃饭、沐浴（不含已洗澡）、挤奶、自慰：{handle_premise.handle_normal_1(self.target_character_id)}"
         info_text += f"    \n2:AI行动基本停止：临盆、产后、监禁：{handle_premise.handle_normal_2(self.target_character_id)}"
         info_text += f"    \n3:高优先级AI：助理、跟随、体检：{handle_premise.handle_normal_3(self.target_character_id)}"
@@ -2185,7 +2185,7 @@ class Debug_Panel:
         info_text += f"    \n5:意识模糊，或弱交互：醉酒，平然：{handle_premise.handle_normal_5(self.target_character_id)}"
         info_text += f"    \n6:完全意识不清醒，或无交互：睡眠（熟睡或完全深眠），时停，空气：{handle_premise.handle_normal_6(self.target_character_id)}"
         info_text += f"    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中：{handle_premise.handle_normal_7(self.target_character_id)}"
-        info_text += f"\n\n"
+        info_text += "\n\n"
         info_text += f"[000]:在H模式中：{target_data.sp_flag.is_h}\n"
         info_text += (
             f"[001]:AI行动里的原地发呆判定：{target_data.sp_flag.wait_flag}\n"
@@ -2309,7 +2309,7 @@ class Debug_Panel:
 
       # 催眠数据
       elif key_index == 21:
-        info_text = f""
+        info_text = ""
         info_text += f"[000]:催眠程度：{target_data.hypnosis.hypnosis_degree}\n"
         info_text += f"[001]:体控-敏感度提升：{target_data.hypnosis.increase_body_sensitivity}\n"
         info_text += (

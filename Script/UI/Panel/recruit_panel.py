@@ -427,7 +427,7 @@ class Recruit_Panel:
           now_text += (
               f" [{str(character_data.adv).rjust(4,'0')}]{character_data.name}"
           )
-        now_text += f"\n"
+        now_text += "\n"
 
       all_info_draw.text = now_text
       all_info_draw.draw()

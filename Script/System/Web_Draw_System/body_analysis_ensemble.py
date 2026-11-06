@@ -779,10 +779,10 @@ def main() -> None:
       )
       if ok:
         success_count += 1
-        print(f' OK')
+        print(' OK')
       else:
         fail_count += 1
-        print(f' 图像加载失败')
+        print(' 图像加载失败')
     except Exception as e:
       fail_count += 1
       print(f' 错误: {e}')
@@ -791,7 +791,7 @@ def main() -> None:
   total_time = time.time() - start_time
   process_time = time.time() - process_start
   print(f"\n{'=' * 70}")
-  print(f'批量处理完成')
+  print('批量处理完成')
   print(f"{'=' * 70}")
   print(f'总角色数: {len(characters)}')
   print(f'成功: {success_count}')

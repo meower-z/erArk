@@ -107,7 +107,7 @@ class CharacterImageListDraw:
     # 绘制下一页按钮
     if len(self.character_list) > 10:
       now_button = draw.CenterButton(
-          f"[下一页]",
+          "[下一页]",
           "下一页",
           8,
           cmd_func=self.next_page,

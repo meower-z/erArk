@@ -200,7 +200,7 @@ def download_character_image_api(
   # 方法1：检查是否是特殊角色
   image_url = get_special_character_url(character_name)
   if image_url:
-    print(f"使用预定义的特殊角色图片URL")
+    print("使用预定义的特殊角色图片URL")
 
   # 方法2：从API获取图片URL
   if not image_url:

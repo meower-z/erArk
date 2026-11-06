@@ -1140,13 +1140,13 @@ class Character_Bonus:
       # 判断是否已经选择，并输出对应前缀和预填消耗文本
       if cache.first_bonus[cid]:
         self.bonus_now -= first_bonus_data.consume
-        button_text += f"   ●"
+        button_text += "   ●"
         draw_style = "gold_enrod"
         bonus_use_text += (
             f" - [{first_bonus_data.name}({first_bonus_data.consume})])"
         )
       else:
-        button_text += f"   ○"
+        button_text += "   ○"
         draw_style = "standard"
       # 文本1
       button_text += f"{first_bonus_data.name}({first_bonus_data.consume})："
@@ -1329,10 +1329,10 @@ class World_Setting:
       world_setting_data = game_config.config_world_setting[cid]
       # 判断是否已经选择，并输出对应前缀和预填消耗文本
       if cache.world_setting[cid]:
-        button_text += f"   ●"
+        button_text += "   ●"
         draw_style = "gold_enrod"
       else:
-        button_text += f"   ○"
+        button_text += "   ○"
         draw_style = "standard"
       # 文本
       button_text += (

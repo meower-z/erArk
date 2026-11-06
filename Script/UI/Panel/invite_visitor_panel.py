@@ -349,7 +349,7 @@ class Invite_Visitor_Panel:
               live_room,
               leav_time,
           )
-        now_text += f"\n"
+        now_text += "\n"
 
       all_info_draw.text = now_text
       all_info_draw.width = self.width
@@ -503,7 +503,7 @@ class Invite_Visitor_Panel:
             if game_config.config_birthplace[country_id].name == country_name:
               all_country_id_list.append(country_id)
               break
-        now_text += f"\n\n"
+        now_text += "\n\n"
       elif now_level >= 4:
         now_invitation_range = _("全泰拉")
         now_text += _(" 可邀请范围：{0}\n\n").format(now_invitation_range)
