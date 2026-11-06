@@ -61,7 +61,7 @@ if __name__ == "__main__":
   import Script.Settle
   import Script.StateMachine
   import Script.System.Medical_System
-  from Script.Core import flow_handle, game_init, io_init
+  from Script.Core import game_init
   import Script.UI.Flow
 
   # 载入角色人物卡数据
@@ -86,13 +86,11 @@ if __name__ == "__main__":
 
   # 判定是否需要使用Web模式
   if now_web_mode:
-    import Script.UI.Flow
-
     print("正在初始化Web服务器...")
 
     # 导入Web服务器模块和Web版IO适配器
     # 注意：web_server模块中的eventlet已经在导入时根据需要执行了monkey_patch
-    from Script.Core.web_server import start_server, stop_server, server_port
+    from Script.Core.web_server import start_server, stop_server
     import Script.Core.io_web as io
 
     # 导入Web绘制适配器并应用到所有绘制类

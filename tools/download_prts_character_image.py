@@ -12,7 +12,6 @@ import urllib.parse
 import json
 import time
 import re
-from html.parser import HTMLParser
 
 
 def get_image_url_from_api(character_name: str) -> str | None:

@@ -3,15 +3,12 @@ PRTS Wiki 场景背景图片下载脚本
 从 https://prts.wiki/w/剧情资源概览/背景 下载所有场景图片到 image/全场景 目录
 """
 
-import os
 import re
-import time
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, unquote
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import threading
 
 
 def download_single_image(

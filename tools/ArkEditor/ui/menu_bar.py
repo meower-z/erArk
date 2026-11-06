@@ -2,8 +2,8 @@
 编辑器顶部菜单栏 MenuBar：口上、事件、角色属性、外勤委托、公务事件与设置菜单
 """
 
-from PySide6.QtWidgets import QMenuBar, QMenu, QWidgetAction, QDialog, QTextEdit, QVBoxLayout, QSizePolicy
-from PySide6.QtGui import QFont, QAction, QFontMetrics
+from PySide6.QtWidgets import QMenuBar, QMenu, QWidgetAction, QDialog, QTextEdit, QVBoxLayout
+from PySide6.QtGui import QFont, QAction
 import function
 import cache_control
 

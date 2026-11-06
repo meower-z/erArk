@@ -2080,7 +2080,6 @@ clear_schedules()
 section(
     "Plan 30 §3.1 / §3.4 / §3.5：翘课记缺课、同一节只落一种记录、被抓当天剩余节次不再翘"
 )
-from Script.Settle import Second_effect  # noqa: E402,F401  注册二段结算 623
 
 _rate_before = class_ai.get_skip_class_rate
 set_time(period_time(0))

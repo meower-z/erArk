@@ -11,7 +11,6 @@
 """
 
 import csv
-import os
 
 
 def read_behavior_data(file_path: str) -> list[tuple[str, str, bool]]:

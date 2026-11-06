@@ -8,9 +8,8 @@ PRTS角色立绘下载器 MCP服务器
 """
 
 import asyncio
-import json
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from mcp import types
 from mcp.server import NotificationOptions, Server
