@@ -4,7 +4,8 @@
 ================================
 干员涨奶（奶量超过上限的 80%）时罩杯变大一级并记下涨奶标记。
 失去泌乳素质（停乳药、育儿结束）后的第一次结算把罩杯缩小一级、清除涨奶标记，之后罩杯保持不变。
-断言都落在 handle_talent.npc_b_talent_change_for_lactation_flag（行为循环每轮经 gain_talent 调用它）结算后的罩杯素质与涨奶标记上。
+断言都落在 handle_talent.npc_b_talent_change_for_lactation_flag（行为循环每轮经 gain_talent 调用它）
+结算后的罩杯素质与涨奶标记上。
 """
 
 from typing import TYPE_CHECKING

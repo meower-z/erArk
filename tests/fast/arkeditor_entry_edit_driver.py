@@ -145,8 +145,10 @@ class EntryEditDriver(FileLoadDriver):
 
 def premise_group(driver: EntryEditDriver, data_dir: str, stage: str) -> None:
   """
-  两个阶段都先记下编辑器启动时读入的前提组，最后记下两个前提组文件的文字。add 阶段在其间打开 event1.json 并点选第一条事件。然后 add
-  阶段按「将当前的所有前提设为新前提组」，并记下按过之后的前提组。restart 阶段不做别的操作，测试用它核对重开编辑器后读入的前提组。
+  两个阶段都先记下编辑器启动时读入的前提组，最后记下两个前提组文件的文字。
+  add 阶段在其间打开 event1.json 并点选第一条事件。然后 add
+  阶段按「将当前的所有前提设为新前提组」，并记下按过之后的前提组。restart 阶段不做别的操作，
+  测试用它核对重开编辑器后读入的前提组。
   Keyword arguments:
   driver -- EntryEditDriver，编辑器驱动
   data_dir -- str，数据目录
@@ -173,7 +175,8 @@ def official_selector(
     driver: EntryEditDriver, data_dir: str, variant: str
 ) -> None:
   """
-  开 event_cve.json 并点选它的事件，再从菜单选官方事件目录 official_event，打开官方事件编辑页。在这一页按综合结算或综合前提，
+  开 event_cve.json 并点选它的事件，再从菜单选官方事件目录 official_event，打开官方事件编辑页。
+  在这一页按综合结算或综合前提，
   在弹出的窗口里选口上用flag并填判定值 5。之后对主窗口的结算列表或前提列表的第二行右键复制、右键删除、双击或拖到第一行。
   Keyword arguments:
   driver -- EntryEditDriver，编辑器驱动
@@ -235,7 +238,8 @@ def official_selector(
 
 def add_copy(driver: EntryEditDriver, data_dir: str, variant: str) -> None:
   """
-  开 event1.json 或 talk.csv 并点选第一条。再用按钮或左侧条目列表的右键菜单新增或复制条目，并记下面板与条目数据。最后按保存，
+  开 event1.json 或 talk.csv 并点选第一条。再用按钮或左侧条目列表的右键菜单新增或复制条目，并记下面板与条目数据。
+  最后按保存，
   记下保存后的条目数据与文件的文字。
   Keyword arguments:
   driver -- EntryEditDriver，编辑器驱动

@@ -1,7 +1,8 @@
 """
 本模块测试 Script.Core.mod_manager.ModManager 加载 Mod 的过程。
 其中两个测试用 ModManager 加载仓库 mod/ 目录下的 semen_boost Mod。
-另一个测试在临时目录中写入一个 Mod 脚本，并用该脚本替换一个替身模块中的函数。替身模块是测试自己创建并放入 sys.modules 的模块对象。
+另一个测试在临时目录中写入一个 Mod 脚本，并用该脚本替换一个替身模块中的函数。
+替身模块是测试自己创建并放入 sys.modules 的模块对象。
 """
 
 from pathlib import Path

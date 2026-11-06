@@ -4,7 +4,8 @@ erArk 无头行为循环诊断模板
 ==========================
 读档入内存、复刻一条玩家指令，再带护栏地跑一轮真实的行为循环 init_character_behavior。
 运行中可以逐轮查看指定角色，也可以在内存里模拟候选修复。
-游戏世界取自被测 checkout 的 tests/world.py：FullWorld 完整启动游戏（结算器、状态机、界面流程），玩家输入由 world.player 给出。
+游戏世界取自被测 checkout 的 tests/world.py：FullWorld 完整启动游戏（结算器、状态机、界面流程），
+玩家输入由 world.player 给出。
 本脚本不存档：循环里会写文件的两处（玩家睡觉时的自动存档、临时外勤委托追加写 Commission.csv）被替换掉；
 但 FullWorld 启动时的 import auto_build_config 会在 CSV 变动时增量重建 data/ 下的生成物。
 
@@ -13,7 +14,8 @@ erArk 无头行为循环诊断模板
     <venv>/bin/python tools/verify/limited_run.py --timeout 600 -- <venv>/bin/python -u <运行目录>/test.py
 需要存档：先把要读的存档装进 save/（`unzip -o <存档>.zip -d save/`），再把 SAVE_ID 改成它的编号。
 
-退出码：0 玩家阶段与 NPC 阶段都收敛；1 有阶段超过轮数上限（卡死）；2 未捕获异常（存档不存在、循环要玩家选择而没有安排输入，都落在这里）。
+退出码：0 玩家阶段与 NPC 阶段都收敛；1 有阶段超过轮数上限（卡死）；
+2 未捕获异常（存档不存在、循环要玩家选择而没有安排输入，都落在这里）。
 判读：玩家阶段通常 1 轮。读档后的第一轮循环要让 NPC 追平存档时刻，一次实测中 NPC 阶段约 20 轮；
       任一阶段达到 10 轮会打印提醒，是否异常以同一存档、同一指令的未修复基线轮数为准。
 """
@@ -82,7 +84,8 @@ from tests.world import FullWorld
 
 world = FullWorld.load()
 cache = world.cache
-# 循环里要玩家选择时，按 world.player.press("按钮文字的一部分") 事先安排；没安排就抛 UnplannedInput（退出码 2），并列出屏幕上的按钮
+# 循环里要玩家选择时，按 world.player.press("按钮文字的一部分") 事先安排；没安排就抛 UnplannedInput（退出码 2），
+# 并列出屏幕上的按钮
 
 from Script.Config import game_config
 from Script.Core import constant, io_init, save_handle
@@ -157,17 +160,21 @@ for _cid in [0, *sorted(WATCH)]:
 
 # ==== 2. 随机 ====
 random.seed(1)
-FORCE_RANDINT_MIN = False  # True：只把 randint(1, 100) 的结果固定为 1，抽到 1 就命中的判定必中（如 rate >= randint(1, 100) 在 rate 至少为 1 时）；其他范围的 randint 照常随机（全换成下界会让 born_new_character 找空 id 的循环永不结束）
+# True：只把 randint(1, 100) 的结果固定为 1，抽到 1 就命中的判定必中（如 rate >= randint(1, 100) 在 rate 至少为 1 时）；
+# 其他范围的 randint 照常随机（全换成下界会让 born_new_character 找空 id 的循环永不结束）
+FORCE_RANDINT_MIN = False
 if FORCE_RANDINT_MIN:
   _real_randint = random.randint
   random.randint = lambda a, b: 1 if (a, b) == (1, 100) else _real_randint(a, b)
 
 # ==== 3. 复刻玩家指令（不进真实主循环） ====
 BEHAVIOR = constant.Behavior.PLAY_INSTRUMENT
-# 指令处理函数给 chara_handle_instruct_common_settle 传了非 0 的 duration= 时填那个值（如等待五分钟是 5）；没传或传 0 时用查表值，与游戏一样不足 1 记 1
+# 指令处理函数给 chara_handle_instruct_common_settle 传了非 0 的 duration= 时填那个值（如等待五分钟是 5）；
+# 没传或传 0 时用查表值，与游戏一样不足 1 记 1
 DURATION = max(game_config.config_behavior[BEHAVIOR].duration, 1)
 
-# 处理函数不调 chara_handle_instruct_common_settle、自己赋值时（如 handle_teach 设 STATUS_TEACH、拉学生听课），把下面四行换成它的赋值
+# 处理函数不调 chara_handle_instruct_common_settle、自己赋值时（如 handle_teach 设 STATUS_TEACH、拉学生听课），
+# 把下面四行换成它的赋值
 instuct_judege.init_character_behavior_start_time(0, cache.game_time)
 pl.state = BEHAVIOR  # chara_handle_instruct_common_settle 也把 state 设为行为id
 pl.behavior.behavior_id = BEHAVIOR
@@ -252,7 +259,8 @@ def skip_save(save_id):
 
 def skip_file_write(path, mode="r", *args, **kwargs):
   """
-  替换 field_commission_function 模块里的 open：写模式丢进内存，读模式照常打开（临时委托会追加写 data/csv/Commission.csv）
+  替换 field_commission_function 模块里的 open：写模式丢进内存，
+  读模式照常打开（临时委托会追加写 data/csv/Commission.csv）
   Keyword arguments:
   path -- 文件路径
   mode -- 打开模式
@@ -274,7 +282,8 @@ real_character_behavior = character_behavior.character_behavior
 
 def guarded_character_behavior(cid, now_time, pl_start_time):
   """
-  包装 character_behavior：按角色计轮，跑满 PASS_LIMIT 轮仍要再跑时抛出 PassLimitReached；对 WATCH 中的 NPC 打印每轮前后状态
+  包装 character_behavior：按角色计轮，跑满 PASS_LIMIT 轮仍要再跑时抛出 PassLimitReached；
+  对 WATCH 中的 NPC 打印每轮前后状态
   Keyword arguments:
   cid -- 角色id
   now_time -- 当前时间
@@ -295,7 +304,8 @@ character_behavior.character_behavior = (
 )
 limit_error = None
 # 指令经 update.game_update_flow 进入行为循环：cache.game_update_flow_running >= 2 时它直接返回（update.py:15），
-# 否则加 1 再进入循环（update.py:19-20），结束后恢复（update.py:30）。所以指令的循环里计数是 1：嵌套的 game_update_flow 还会再跑一层循环，
+# 否则加 1 再进入循环（update.py:19-20），结束后恢复（update.py:30）。所以指令的循环里计数是 1：
+# 嵌套的 game_update_flow 还会再跑一层循环，
 # 那一层里再嵌套的直接返回。这里照样加 1，结束后恢复
 caller_depth = cache.game_update_flow_running
 cache.game_update_flow_running = caller_depth + 1

@@ -2,7 +2,8 @@
 """
 图片按需解码的回归测试
 ======================
-Script.Core.era_image 导入时只建立图片名 -> 路径索引，不解码图片；tk 首次取某张图片时才从磁盘解码，之后一直返回同一个对象。
+Script.Core.era_image 导入时只建立图片名 -> 路径索引，不解码图片；tk 首次取某张图片时才从磁盘解码，
+之后一直返回同一个对象。
 测试数 PIL.Image.open 的调用次数：启动游戏并开新游戏（其间导入 era_image）、in 检查、首次取图、再次取图各调用几次；
 另在索引里加一张解码会失败的图片，检查取到的替代图片与 in 的结果。
 PhotoImage 换成记录尺寸的替身，所以不需要 Tk 窗口；字体缩放比例固定为 1.5，检查缩放后的尺寸。
@@ -100,7 +101,8 @@ class DecodeOnFirstUseTest(SlowTestCase):
     )
 
   def test_first_use_decodes_once(self) -> None:
-    """in 检查不打开图片；首次取图打开它的文件一次并按缩放比例缩放；再次取图不打开文件、返回同一个对象；不存在的图片名 get 给默认值、[] 抛 KeyError"""
+    """in 检查不打开图片；首次取图打开它的文件一次并按缩放比例缩放；再次取图不打开文件、返回同一个对象；
+    不存在的图片名 get 给默认值、[] 抛 KeyError"""
     image_data = self.era_image.image_data
     path_data = self.era_image.image_path_data
     name = next(n for n in sorted(path_data) if n.endswith("_半身"))

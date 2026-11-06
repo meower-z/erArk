@@ -5,7 +5,8 @@
 开新游戏后，取本局 id 最小的干员（不含博士）当母亲。
 - 出生（character_handle.born_new_character）后、婴儿长成幼女（pregnancy_handle.check_rearing_complete）后，
   孩子都不在任何场景的角色名单里，也不在 npc_id_got 里；长成幼女时不置学生岗，不在养成名单里。
-  幼女长成学员（睡眠结算里的 pregnancy_handle.check_all_child_grow_to_loli）后，孩子进了 npc_id_got 和一个场景，没有未初潮与未成年，
+  幼女长成学员（睡眠结算里的 pregnancy_handle.check_all_child_grow_to_loli）后，孩子进了 npc_id_got 和一个场景，
+  没有未初潮与未成年，
   置为学生岗、进养成名单。
 - 离线的幼女照样被每日派发挑作养成事件的主体；以她为主体的事件入队、结算一个选项后，她的照料值或性格倾向变了。
 - 另取第二名干员当女儿：工作日上课节次内、母亲在别的场景时，幼女与学员女儿的 AI 都不派见学的两个状态机

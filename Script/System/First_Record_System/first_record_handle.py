@@ -78,7 +78,8 @@ def get_semen_source_text(character_id: int) -> str:
   Return arguments:
   str -- H中的精液记当时的H模式；精液食物记食物名称；两者都不是时记"非H"
   """
-  # H模式判定统一调用Sex_System的通用函数（函数内延迟导入，断开 handle_talent→本模块→handle_premise→instuct_judege→handle_talent 的启动期导入环）
+  # H模式判定统一调用Sex_System的通用函数（函数内延迟导入，
+  # 断开 handle_talent→本模块→handle_premise→instuct_judege→handle_talent 的启动期导入环）
   from Script.System.Sex_System import h_mode_common
   # H中的精液：记当时的H模式
   h_mode_text = h_mode_common.get_current_h_mode_text(character_id)

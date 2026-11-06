@@ -3,7 +3,8 @@
 通用占位符嵌套替换的回归测试
 ==========================
 通用口上（纸娃娃地文）的文本里会嵌套别的通用占位符（例如 m_orgasm_* 插入 {mouth}，{mouth} 再插入 {mouth_s}）。
-占位符的处理顺序是 game_config.config_talk_common_cid_list_by_type 的顺序，它来自构建时列出 data/talk_common 下文件的顺序。
+占位符的处理顺序是 game_config.config_talk_common_cid_list_by_type 的顺序，
+它来自构建时列出 data/talk_common 下文件的顺序。
 talk.talk_common_judge 不能依赖这个顺序：里层排在外层前面时，外层插入的里层占位符也必须被替换，
 否则 code_text_to_draw_text 的 str.format 抛 KeyError。
 

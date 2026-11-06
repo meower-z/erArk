@@ -229,7 +229,8 @@ def check_image_status() -> None:
       f"有头部图: {stats['has_head']} ({stats['has_head']*100//stats['total'] if stats['total'] else 0}%)"
   )
   print(
-      f"有部位JSON: {stats['has_body_parts_json']} ({stats['has_body_parts_json']*100//stats['total'] if stats['total'] else 0}%)"
+      f"有部位JSON: {stats['has_body_parts_json']} "
+      f"({stats['has_body_parts_json']*100//stats['total'] if stats['total'] else 0}%)"
   )
 
 

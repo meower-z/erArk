@@ -2,9 +2,11 @@
 """
 导入游戏逻辑模块的进程自行退出
 ==============================
-Python 进程退出前要等所有非守护线程结束。一个模块若在导入时启动不会结束的非守护线程，就会让进程在代码跑完后无法自行退出。
+Python 进程退出前要等所有非守护线程结束。一个模块若在导入时启动不会结束的非守护线程，
+就会让进程在代码跑完后无法自行退出。
 本测试在子进程里导入游戏逻辑模块，导入链中含指令处理模块 handle_instruct。子进程的代码里没有 os._exit 调用。
-测试要求子进程在 CHILD_TIME_LIMIT 秒内以退出码 0 退出。测试还要求输出含“导入完成 True”，这表明 handle_instruct 确实被导入了。
+测试要求子进程在 CHILD_TIME_LIMIT 秒内以退出码 0 退出。测试还要求输出含“导入完成 True”，
+这表明 handle_instruct 确实被导入了。
 setUp 先增量构建 data/ 下的生成物。子进程载入游戏配置时读取这些生成物。
 """
 
@@ -35,8 +37,10 @@ import Script.Settle
 print("导入完成", "Script.System.Instruct_System.handle_instruct" in sys.modules)
 """
 """
-子进程执行的代码。代码新建游戏缓存，载入游戏配置，再导入 Script.Design.update、Script.StateMachine.default 和 Script.Settle。
-最后一行打印“导入完成”和 handle_instruct 是否在 sys.modules 中。代码里没有 os._exit 调用。代码跑完后，进程靠解释器的正常退出流程结束。
+子进程执行的代码。代码新建游戏缓存，载入游戏配置，
+再导入 Script.Design.update、Script.StateMachine.default 和 Script.Settle。
+最后一行打印“导入完成”和 handle_instruct 是否在 sys.modules 中。代码里没有 os._exit 调用。
+代码跑完后，进程靠解释器的正常退出流程结束。
 """
 CHILD_TIME_LIMIT = 120
 """ 等待子进程退出的时限，单位为秒。子进程超时后被杀掉，测试判为失败。 """

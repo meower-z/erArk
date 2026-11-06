@@ -1,7 +1,21 @@
 # -*- coding: UTF-8 -*-
 """存档兼容：CHILD_GROWTH 字段回填、成绩单迁移、罗德岛新字段、真实存档只读载入"""
 
-from _bootstrap import ROOT, cache, check, finish, game_config, game_type, growth_handle, make_character, os, save_handle, scene_str, section, semester_handle
+from _bootstrap import (
+    ROOT,
+    cache,
+    check,
+    finish,
+    game_config,
+    game_type,
+    growth_handle,
+    make_character,
+    os,
+    save_handle,
+    scene_str,
+    section,
+    semester_handle,
+)
 from Script.System.Official_Event_System import official_event_handle
 
 section("CHILD_GROWTH 字段级回填")
@@ -158,7 +172,8 @@ OLD_REPORT_UID_SET = frozenset(save_handle._OFFICIAL_EVENT_UID_MIGRATE)
 
 def find_old_report_uid_left(label: str) -> list:
   """
-  找出缓存里还留着的旧 uid 履历：罗德岛全局履历的键是「uid@角色id」（没有主体时就是 uid），孩子的 event_history 以 uid 为键
+  找出缓存里还留着的旧 uid 履历：罗德岛全局履历的键是「uid@角色id」（没有主体时就是 uid），
+  孩子的 event_history 以 uid 为键
   Keyword arguments:
   label -- 写进结果里的来源标记（存档编号）
   Return arguments:
@@ -197,7 +212,8 @@ save_handle._migrate_official_event_history(
     cache.rhodes_island.official_event_history
 )
 check(
-    "L22 照读档的两处迁移（孩子走 _normalize_loaded_save_paths，罗德岛走 input_load_save 里的 _migrate_official_event_history）之后查不到残留",
+    "L22 照读档的两处迁移（孩子走 _normalize_loaded_save_paths，罗德岛走 input_load_save 里的 "
+    "_migrate_official_event_history）之后查不到残留",
     find_old_report_uid_left("本地") == [],
     find_old_report_uid_left("本地"),
 )
@@ -282,7 +298,12 @@ for save_id in candidate_list:
     problem.append((save_id, "semester", repr(error)))
   # 教育面板在真实存档上能画出来（不取输入）
   try:
-    from Script.System.Education_System import class_schedule_panel, course_select_panel, growth_panel, schedule_template_panel
+    from Script.System.Education_System import (
+        class_schedule_panel,
+        course_select_panel,
+        growth_panel,
+        schedule_template_panel,
+    )
 
     for panel in (
         class_schedule_panel.Class_Schedule_Panel(190),
@@ -304,7 +325,8 @@ section(
     "Plan 32 实施复审补：真实存档读档后，履历里挪了桶的旧 uid 都已改名（L22）"
 )
 check(
-    "L22 逐个存档读档后：罗德岛全局履历里没有以「萝莉1@」「萝莉20@」「萝莉26@」开头（或就是这三个 uid）的键，孩子的 event_history 里也没有这三个键（前提：配置里已没有这三个 uid）",
+    "L22 逐个存档读档后：罗德岛全局履历里没有以「萝莉1@」「萝莉20@」「萝莉26@」开头（或就是这三个 uid）的键，"
+    "孩子的 event_history 里也没有这三个键（前提：配置里已没有这三个 uid）",
     _old_report_uid_gone and not l22_left,
     (_old_report_uid_gone, l22_left[:6]),
 )

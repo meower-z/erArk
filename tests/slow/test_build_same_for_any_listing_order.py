@@ -6,7 +6,8 @@
 auto_build_config.py（游戏启动时的增量构建）与 buildconfig.py（完整构建）由 data/ 下的分文件构建出 data/*.json 等文件，
 map_config.load_dir_now 在运行时读入 data/map；这些产物里条目的顺序决定开局时随机数落到哪个角色身上。
 测试让 os.listdir 与 os.scandir（os.walk 经它列目录）按文件名正序与倒序各列一次：
-两个构建脚本各在临时目录里跑两次，写出的每个文件逐字节相同（buildconfig.py 写进 po 文件头的生成时间除外）；地图载入两次，场景、地图与地点标签的顺序相同。
+两个构建脚本各在临时目录里跑两次，写出的每个文件逐字节相同（buildconfig.py 写进 po 文件头的生成时间除外）；
+地图载入两次，场景、地图与地点标签的顺序相同。
 """
 
 import contextlib

@@ -70,7 +70,8 @@ def is_test_file(path: str) -> bool:
 
 def has_tests(cls: type, loader: unittest.TestLoader) -> bool:
   """
-  类里有没有测试：TestCase 子类按 unittest 自己的收集（test 方法；一个也没有而有 runTest 时为 runTest），其他类看有没有 test 方法
+  类里有没有测试：TestCase 子类按 unittest 自己的收集（test 方法；一个也没有而有 runTest 时为 runTest），
+  其他类看有没有 test 方法
   Keyword arguments:
   cls -- 类
   loader -- 用来收集测试的加载器
@@ -114,7 +115,8 @@ def module_classes(module: "ModuleType") -> list:
 
 def pytest_classes(module: "ModuleType") -> list:
   """
-  pytest 收集的类：名字以 Test 开头（pytest 的默认设置）、__test__ 不为假的类，不是 TestCase 的还要 __init__ 与 __new__ 都沿用 object 的；
+  pytest 收集的类：名字以 Test 开头（pytest 的默认设置）、__test__ 不为假的类，
+  不是 TestCase 的还要 __init__ 与 __new__ 都沿用 object 的；
   先找模块里的，再找其中不是 TestCase 的类与它的基类里的，逐层往下；类与基类里同名的只看最先找到的那个（与 pytest 相同）
   Keyword arguments:
   module -- 测试模块
@@ -183,9 +185,11 @@ def module_problems(
   Return arguments:
   list[str] -- 问题，每条写明文件、类或函数与改法
   功能描述:
-      本模块会被收集的测试类要是 base 的子类。模块有 load_tests 时由它决定 unittest 收集什么，所以也报出。其他有测试的类（不是 TestCase 的类、类里嵌套的类）
+      本模块会被收集的测试类要是 base 的子类。模块有 load_tests 时由它决定 unittest 收集什么，所以也报出。
+      其他有测试的类（不是 TestCase 的类、类里嵌套的类）
       只有在是这一层某个会被收集的测试类的基类（如混入类）时，它的测试才会运行。类里嵌套的类：本模块里定义的类的属性所引用的、本模块定义的类（含别名，逐层往下）。
-      pytest 还收集 pytest_classes 列出的类，不是 TestCase 的也单独运行，所以其中不继承 base 的类即使被测试类继承也报出。
+      pytest 还收集 pytest_classes 列出的类，不是 TestCase 的也单独运行，
+      所以其中不继承 base 的类即使被测试类继承也报出。
   """
   assert module.__file__ is not None
   path = os.path.relpath(module.__file__, ROOT).replace(os.sep, "/")
@@ -216,7 +220,8 @@ def module_problems(
         and not issubclass(cls, base)
     ):
       problems.append(
-          f"{path} 类 {cls.__qualname__}：名字以 Test 开头，pytest 会不经 {base_name} 单独运行它；测试类继承该基类，混入类改用不以 Test 开头的名字"
+          f"{path} 类 {cls.__qualname__}：名字以 Test 开头，pytest 会不经 {base_name} 单独运行它；测试类继承该基类，"
+          f"混入类改用不以 Test 开头的名字"
       )
     elif (
         cls not in cases

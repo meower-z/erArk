@@ -6,20 +6,24 @@
 同一个随机状态、同一个游戏状态，不论集合按什么顺序遍历，都必须得出同一个结果。
 
 每组断言把同一个调用跑两遍，两遍之间只差集合的遍历顺序：一遍按加入顺序，一遍按加入顺序倒过来。
-被测代码自己新建的集合，用 mock 把它所在模块的 set 换掉；配置里的集合，用 mock 把那一项换掉；作为参数的集合，直接传入两种。
+被测代码自己新建的集合，用 mock 把它所在模块的 set 换掉；配置里的集合，用 mock 把那一项换掉；
+作为参数的集合，直接传入两种。
 
-随机挑选：对 12 个种子逐个设好 random 再调用，每个种子两遍挑中的必须相同；12 个种子挑中的还要不止一种，证明候选确实有多个。
+随机挑选：对 12 个种子逐个设好 random 再调用，每个种子两遍挑中的必须相同；12 个种子挑中的还要不止一种，
+证明候选确实有多个。
 - NPC AI：handle_npc_ai.search_target 把同权重的目标id放进集合，再从中挑一个。开新游戏后对凯尔希检索全部目标。
 - 口上：talk.choice_talk_from_talk_data 从同权重的口上id集合里挑一句。
 - 调教助手：confinement_and_training.get_behavior_id_of_sex_assistant 把可用行为id经集合去重，再挑一个。
-  开新游戏后博士在会议室锁门时被杜宾逆推（与 test_talk_common_nested 的开场相同），调教助手设为与博士同部位，监狱长为凯尔希，博士在爱抚胸部。
+  开新游戏后博士在会议室锁门时被杜宾逆推（与 test_talk_common_nested 的开场相同），调教助手设为与博士同部位，
+  监狱长为凯尔希，博士在爱抚胸部。
 
 前提的判断顺序：前提集合里有「场景内有可交互对象」（判断时抽一次随机数）与「在音乐室」（此刻不成立），
 遇到不成立的前提就停，所以先判断哪个决定了抽不抽随机数。两遍都从种子 0 开始，结束时的结果与随机状态必须相同。
 先确认「场景内有可交互对象」此刻确实抽随机数：判断的角色身边放了另一名干员。
 - 目标的前提：配置里同时要求这两个前提的目标，把它的前提集合换成只含这两个前提，search_target 检索这一个目标（凯尔希）。
 - 口上与事件的前提：handle_premise.get_weight_from_premise_dict（凯尔希）。
-- 指令的前提：see_instruct_panel.judge_single_instruct_filter，以及 Web 模式的两个 _check_single_instruct_premise（博士）。
+- 指令的前提：see_instruct_panel.judge_single_instruct_filter，
+  以及 Web 模式的两个 _check_single_instruct_premise（博士）。
 """
 
 import functools

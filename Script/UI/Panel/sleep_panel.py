@@ -181,7 +181,8 @@ class Sleep_Panel:
       return_list.append(button_draw.return_text)
 
       now_draw_text = _(
-          "\n\n 预计回满体力和气力最少需要 {0} 小时，全状态完全回复(包括体力、气力、疲劳、理智、精液等)至少需要 {1} 小时\n"
+          "\n\n 预计回满体力和气力最少需要 {0} 小时，"
+          "全状态完全回复(包括体力、气力、疲劳、理智、精液等)至少需要 {1} 小时\n"
       ).format(hpmp_need_time, all_recover_time)
       # 早安服务模式下默认睡到早安时间
       if morning_service_flag:
@@ -285,7 +286,8 @@ class Sleep_Panel:
         )  # 记录醒来时间
         # 关闭玩家的透视
         self.pl_character_data.pl_ability.visual = False
-        # print(f"debug 玩家睡觉，睡觉时间 = {pl_character_data.action_info.sleep_time},醒来时间 = {pl_character_data.action_info.wake_time}")
+        # print(f"debug 玩家睡觉，睡觉时间 = {pl_character_data.action_info.sleep_time},
+        # 醒来时间 = {pl_character_data.action_info.wake_time}")
         # cache.wframe_mouse.w_frame_skip_wait_mouse = 1
         self.assistant_sleep_settle()
         update.game_update_flow(self.sleep_time_min)

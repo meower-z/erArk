@@ -6,7 +6,8 @@
 2. 与玩家同处一地时，性绝顶（普通及以上）按部位/程度概率触发二段行为 lay_soft_egg，消耗机会
 3. 二段结算生成一枚体外无壳卵（PLAYER_COLLECTION.soft_eggs），子宫与小穴八成精液转移到卵上
 4. 玩家可在同一地点射精时选择射在卵上；身体栏显示卵上的精液量
-5. 排出满1小时后进行无限轮衰减受精判定，受精卵逐枚回写母亲 pregnancy.eggs（identified=True, soft=True），之后走带壳卵生的孵化/破壳链
+5. 排出满1小时后进行无限轮衰减受精判定，受精卵逐枚回写母亲 pregnancy.eggs（identified=True, soft=True），
+   之后走带壳卵生的孵化/破壳链
 """
 
 import random

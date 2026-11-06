@@ -4,10 +4,12 @@
 ============================================================
 起始状态与玩家动作表在 tests/snapshot_states.py：
     time_stop_h        时停中的 H；时停结束后博士在岛上走动，夜里睡 8 小时，这一步跨过午夜；医疗部有坐诊与住院医生
-    family_commission  妊娠、101 与 102（离线）、103（在线上课）与 104 的孩子；教师开讲时把学生拉进听课，博士也授一次课；
+    family_commission  妊娠、101 与 102（离线）、103（在线上课）与 104 的孩子；教师开讲时把学生拉进听课，
+                       博士也授一次课；
                        两项带载具的外勤委托；跨过午夜，推进到委托返回之后
 每个测试开局选 tests.snapshot_states.FIRST_BONUS，构建一个状态，按动作表推进，每一步录一份快照（tests/snapshot.py），
-写到 tests/snapshots/<状态名>.last.tsv.gz（不提交）。动作表里的指令此刻不成立、安排的按钮没有用掉时测试失败；行为是否变了由比较命令判断：
+写到 tests/snapshots/<状态名>.last.tsv.gz（不提交）。动作表里的指令此刻不成立、安排的按钮没有用掉时测试失败；
+行为是否变了由比较命令判断：
     python -m tests.snapshot compare tests/snapshots/<状态名>.tsv.gz tests/snapshots/<状态名>.last.tsv.gz
 行为有意改变时，把 .last.tsv.gz 复制成基准 tests/snapshots/<状态名>.tsv.gz，随改动一起提交。
 """

@@ -3,7 +3,16 @@
 拖动后同步结算顺序
 """
 
-from PySide6.QtWidgets import QListWidgetItem, QListWidget, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QMenu
+from PySide6.QtWidgets import (
+    QListWidgetItem,
+    QListWidget,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QMenu,
+)
 from PySide6.QtGui import QFont
 from PySide6.QtCore import Qt
 import cache_control

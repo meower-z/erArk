@@ -8,7 +8,8 @@ import csv
 
 
 def collect_and_cut_rows(source_dir: Path, target_file: Path) -> None:
-  """输入类型: Path, Path / 输出类型: None / 功能: 将源目录及其子目录下各 CSV 的第 6 行起数据剪切到目标文件并清理第 5 列首尾双引号"""
+  """输入类型: Path, Path / 输出类型: None /
+  功能: 将源目录及其子目录下各 CSV 的第 6 行起数据剪切到目标文件并清理第 5 列首尾双引号"""
   target_file.parent.mkdir(parents=True, exist_ok=True)
 
   with target_file.open("a", encoding="utf-8-sig", newline="") as target_fp:

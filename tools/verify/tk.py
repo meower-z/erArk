@@ -60,7 +60,8 @@ def load_state(slot=None, out=None):
     ]
   if not runs:
     sys.exit(
-        "没有符合的 Tk 实例在运行。先用 tk_game.py --out <目录> 启动；--out 与 --slot 要与 limited_run.py status 列出的一致。"
+        "没有符合的 Tk 实例在运行。先用 tk_game.py --out <目录> 启动；"
+        "--out 与 --slot 要与 limited_run.py status 列出的一致。"
     )
   if len(runs) > 1:
     sys.exit(
@@ -140,7 +141,8 @@ def shot(state, label):
   """
   frames = Path(state["out"]) / "frames"
   frames.mkdir(exist_ok=True)
-  # 标签可能是 type 输入的任意文字：斜杠与空白换成下划线，免得斜杠被当成目录；只取前 40 个字符，免得文件名超长（全文在 actions.log 里）
+  # 标签可能是 type 输入的任意文字：斜杠与空白换成下划线，免得斜杠被当成目录；只取前 40 个字符，
+  # 免得文件名超长（全文在 actions.log 里）
   label = re.sub(r"[\s/]+", "_", label)[:40]
   path = frames / f"{len(list(frames.glob('*.png'))) + 1:03d}-{label}.png"
   subprocess.run(
