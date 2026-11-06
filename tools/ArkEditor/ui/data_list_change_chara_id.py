@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 
 
 class DataListIdEditMixin:
+  """DataList 的混入类，把输入框里的角色 id 写入选中条目，或写入当前模式下的全部条目"""
 
   def change_current_chara_id(self: '_IdEditHost') -> None:
     """
