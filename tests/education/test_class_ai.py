@@ -7,6 +7,10 @@ from Script.Settle import realtime_settle
 from Script.System.Medical_System import medical_constant
 from Script.System.Pregnancy_System import pregnancy_constant
 from typing import TYPE_CHECKING
+from Script.StateMachine import default as sm_default
+from Script.Design import character_behavior, instuct_judege
+from time import perf_counter
+from Script.Design import update
 
 if TYPE_CHECKING:
   from collections.abc import Callable
@@ -1514,7 +1518,6 @@ schedule_handle.clear_selected_course(201, 0, 0)
 clear_schedules()
 
 section("Plan 25 §3.6：561 预到岗只认学生岗")
-from Script.StateMachine import default as sm_default  # noqa: E402
 
 _pending_time = period_time(1) - datetime.timedelta(minutes=8)
 schedule_handle.set_class_cell(ROOM1, 0, 1, 45, 101)
@@ -2508,7 +2511,6 @@ clear_schedules()
 section(
     "Plan 31 §3.1（H1）：教师换教室晚到、玩家一步跨满一整节（实施文档 §2.0 R1 的行为循环）"
 )
-from Script.Design import character_behavior, instuct_judege  # noqa: E402
 
 H1_SM_LOG: list[tuple[int, int, datetime.datetime, str]] = []
 """ 行为循环里的状态机派发记录：(角色id, 状态机id, 派发后的行为开始时刻, 所在场景名) """
@@ -3393,9 +3395,6 @@ clear_schedules()
 section(
     "Plan 32 实施复审补：H1 走真实玩家分支与行为循环——幽灵课堂在玩家这一步收掉，学生不再被拉进没有博士的课堂"
 )
-from time import perf_counter  # noqa: E402
-
-from Script.Design import update  # noqa: E402
 
 GHOST_START = period_time(0) + datetime.timedelta(minutes=5)
 """ 9:05：第 1 节（9:00~9:45）刚开始，幽灵课堂与她的常规课都落在这一节 """

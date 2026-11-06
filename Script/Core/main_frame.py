@@ -50,6 +50,8 @@ from Script.Core import (
     perf_hook,
 )
 from Script.Config import normal_config, game_config
+from Script.Core import era_image
+from typing import TYPE_CHECKING
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -428,9 +430,6 @@ input_armed = False
 _arm_after_id: str | None = None
 """ 挂起未执行的 after_idle 上膛回调 id，None 表示无挂起回调 """
 
-
-from Script.Core import era_image
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
   from collections.abc import Callable

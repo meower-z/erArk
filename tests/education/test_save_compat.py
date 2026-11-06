@@ -2,6 +2,7 @@
 """存档兼容：CHILD_GROWTH 字段回填、成绩单迁移、罗德岛新字段、真实存档只读载入"""
 
 from _bootstrap import ROOT, cache, check, finish, game_config, game_type, growth_handle, make_character, os, save_handle, scene_str, section, semester_handle
+from Script.System.Official_Event_System import official_event_handle
 
 section("CHILD_GROWTH 字段级回填")
 mother = make_character(102, "母亲", 0)
@@ -108,7 +109,6 @@ cache.rhodes_island.child_schedule_template = {}
 section(
     "Plan 32 L22：挪了桶的养成事件，履历里的旧 uid 读档时改成新 uid（萝莉 1 / 20 / 26 → 期末 17 / 18 / 19）"
 )
-from Script.System.Official_Event_System import official_event_handle  # noqa: E402
 
 _record = {"time": cache.game_time, "choice": 2}
 ga.event_history = {

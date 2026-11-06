@@ -2,6 +2,7 @@
 """schedule_handle：教室、全局课表、个人课表、当前课程、上课地点、实习导师"""
 
 from _bootstrap import DEFAULT_TIME, SCENE_DORM, _, auto_schedule, cache, check, clear_schedules, constant, datetime, education_constant, finish, game_config, growth_handle, make_character, move_to, open_all_classroom, period_time, pl, remove_character, scene_str, schedule_handle, schedule_template_handle, section, set_time, sex_class_handle
+import inspect
 
 section("教室列表与开放判定")
 clear_schedules()
@@ -427,7 +428,6 @@ check(
     schedule_handle.judge_course_need_pass(210, pe_pool),
 )
 remove_character(210)
-import inspect  # noqa: E402
 
 check(
     "get_upcoming_course 删掉了无人传入的 now_time 参数（L8）",

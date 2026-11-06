@@ -3,6 +3,9 @@
 
 from _bootstrap import DEFAULT_TIME, SCENE_DORM, _, cache, check, class_ai, classroom_path, clear_schedules, constant, constant_effect, datetime, drawn_text, education_constant, finish, game_config, game_time, game_type, growth_handle, handle_premise, make_character, move_to, open_all_classroom, period_time, pl, remove_character, schedule_handle, schedule_template_handle, section, semester_handle, set_time, sex_class_handle
 from Script.Settle import default as settle_default
+from Script.Settle import common_default
+from Script.System.Instruct_System import handle_instruct
+from Script.Design import second_behavior
 
 open_all_classroom()
 clear_schedules()
@@ -341,7 +344,6 @@ check(
     "没翘课时被抓结算什么都不做", student_a.status_data.get(19, 0) == dep_before
 )
 student_a_growth.show_off_ability = {45: 3}
-from Script.Settle import common_default
 
 favor_calls = []
 _orig_favor = common_default.base_chara_favorability_and_trust_common_settle
@@ -644,7 +646,6 @@ pl.target_character_id = 0
 section(
     "Plan 27 §3.5 / §3.7：玩家手动授课拉来的学生截到本节下课，爆睡的学生不拉"
 )
-from Script.System.Instruct_System import handle_instruct  # noqa: E402
 
 _orig_flow = handle_instruct.update.game_update_flow
 handle_instruct.update.game_update_flow = lambda add_time: None
@@ -789,7 +790,6 @@ reset_mark(201)
 section(
     "Plan 31 §3.6（L2）：549 置翘课 flag 时记下行为开始那一天；前一天挂的 flag 不触发翘课被抓"
 )
-from Script.Design import second_behavior  # noqa: E402
 
 growth_a = growth_handle.get_child_growth(201)
 _late_start = DEFAULT_TIME.replace(hour=23, minute=40)

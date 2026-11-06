@@ -4,6 +4,12 @@
 import subprocess
 
 from _bootstrap import ROOT, _, check, classroom_path, clear_schedules, constant, constant_promise, education_constant, finish, game_config, game_type, growth_event_handle, growth_handle, handle_premise, make_character, open_all_classroom, os, period_time, pl, remove_character, schedule_handle, section, set_time, sys
+import csv
+from Script.System.Pregnancy_System import pregnancy_constant
+import ast
+import re
+from typing import Any
+from Script.System.Official_Event_System import official_event_handle
 
 open_all_classroom()
 mother = make_character(102, "母亲", 0)
@@ -217,8 +223,6 @@ check(
     >= 16,
 )
 # Plan 30 §3.2：期末事件在学期基线重置之后推送，前提不许读本学期的养成数值 4 / 5 / 6
-import csv  # noqa: E402
-
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 import official_event_check  # noqa: E402
 
@@ -614,7 +618,6 @@ check(
     )
     == 15,
 )
-from Script.System.Pregnancy_System import pregnancy_constant
 
 check(
     "教育区娱乐排在 15x 段：152 照料卵 / 155 上课",
@@ -769,9 +772,6 @@ check(
     not _truncated_line_list,
     _truncated_line_list,
 )
-import ast  # noqa: E402
-import re  # noqa: E402
-from typing import Any  # noqa: E402
 
 # buildata.py 顶层会调 game_config.init()，测试进程里不能 import 它（会把配置再载一遍）：只用 ast 取出纯函数 build_promise_csv_text 单独执行
 with open("buildata.py", encoding="utf-8") as _buildata_file:
@@ -881,7 +881,6 @@ check(
 )
 
 section("Plan 32 §3.14：事件表的前提与正文（M2、L22、L23、L26）")
-from Script.System.Official_Event_System import official_event_handle  # noqa: E402
 
 PLAN32_EVENT_PREMISE_EXPECT = {
     "L22": {

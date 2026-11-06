@@ -13,10 +13,6 @@ from datetime import datetime
 
 import PySide6
 
-dirname = os.path.dirname(PySide6.__file__)
-plugin_path = os.path.join(dirname, "plugins", "platforms")
-os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = plugin_path
-
 from PySide6.QtWidgets import QApplication, QFileDialog, QWidgetAction, QMenu, QPushButton, QMessageBox
 from PySide6.QtGui import QActionGroup, QKeySequence, QShortcut
 from PySide6.QtCore import QModelIndex
@@ -34,6 +30,10 @@ import json_handle
 import game_type
 import cache_control
 import function
+
+dirname = os.path.dirname(PySide6.__file__)
+plugin_path = os.path.join(dirname, "plugins", "platforms")
+os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = plugin_path
 
 load_csv.load_config()
 app = QApplication(sys.argv)

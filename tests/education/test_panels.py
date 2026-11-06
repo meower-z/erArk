@@ -4,6 +4,11 @@
 from _bootstrap import DEFAULT_TIME, SCENE_DORM, _, auto_schedule, cache, check, classroom_path, clear_schedules, constant, datetime, draw, drawn_text, education_constant, finish, flow_handle, game_config, growth_handle, make_character, move_to, open_all_classroom, period_time, pl, schedule_handle, section, semester_handle, set_time, sex_class_handle
 from Script.System.Education_System import class_schedule_panel, course_select_panel, growth_panel, schedule_template_panel
 from typing import TYPE_CHECKING
+from Script.Design import instuct_judege
+from Script.System.Education_System import student_select
+from Script.Core import text_handle
+from Script.System.Pregnancy_System import pregnancy_constant
+import inspect
 
 if TYPE_CHECKING:
   from collections.abc import Callable
@@ -209,7 +214,6 @@ check(
 flow_handle.askfor_all = fake_askfor
 
 section("必修名单含成年学生岗（Plan 25 §3.7）")
-from Script.Design import instuct_judege  # noqa: E402
 
 _orig_judge = instuct_judege.calculation_instuct_judege
 flow_handle.askfor_all = scripted_askfor
@@ -486,7 +490,6 @@ check(
 check("有新建与批量套用入口", len(rl) >= 5)
 
 section("student_select 组件")
-from Script.System.Education_System import student_select
 
 rl = []
 drawn_text.clear()
@@ -654,7 +657,6 @@ clear_schedules()
 section(
     "Plan 27 §3.1 / L5：选择活动面板的「未开放」标注、周日实习课只画一句提示"
 )
-from Script.Core import text_handle  # noqa: E402
 
 flow_handle.askfor_all = scripted_askfor
 answers[:] = []
@@ -690,7 +692,6 @@ section(
     "Plan 28：个人课表格子的「/条件不符」「/未开放」、必修名单的顶替标记、待处理写学期名、选择活动没有照料卵"
 )
 from Script.UI.Panel import character_info_head  # noqa: E402
-from Script.System.Pregnancy_System import pregnancy_constant  # noqa: E402
 
 clear_schedules()
 _pool_cid = game_config.config_facility_open_name_to_cid[pool]
@@ -1443,7 +1444,6 @@ clear_schedules()
 section(
     "Plan 32 L28：三个面板删掉不用的 window_width / normal_config 与函数内的重复导入；周日按一周天数推"
 )
-import inspect  # noqa: E402
 
 check(
     "L28 个人课表 / 养成总览 / 日程模板面板不再定义 window_width、不再导入 normal_config（全局课表的[返回]仍在用 window_width，保留）",
