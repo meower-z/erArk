@@ -34,7 +34,7 @@ def init_normal_config() -> None:
   for k in ini_data.keys():
     try:
       config_normal.__dict__[k] = int(ini_data[k])
-    except:
+    except BaseException:
       config_normal.__dict__[k] = ini_data[k]
   if os.path.exists(package_path):
     with open(package_path, encoding="utf-8") as package_file:

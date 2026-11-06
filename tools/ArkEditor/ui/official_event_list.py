@@ -232,6 +232,7 @@ class OfficialEventListWidget(QWidget):
                 "text",
             ],
             event.to_row()[:8],
+            strict=False,
         )
     )
     row["cid"] = self.get_new_cid(event.file_name)

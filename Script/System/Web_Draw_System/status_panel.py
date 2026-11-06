@@ -397,7 +397,7 @@ class StatusPanel:
     )
 
     # 转换为Web可用的格式
-    for draw_obj, text in zip(status_list, status_text_list):
+    for draw_obj, text in zip(status_list, status_text_list, strict=False):
       if text:  # 只添加非空的状态
         state_info = {
             "text": text,

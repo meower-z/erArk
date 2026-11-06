@@ -453,7 +453,7 @@ def iter_rows() -> "Iterator[tuple[str, str, str]]":
     for row in rows[5:]:
       if not row or not row[0].strip():
         continue
-      values = dict(zip(header, row))
+      values = dict(zip(header, row, strict=False))
       if path.startswith("data/official_event/"):
         premise_columns = ["premise"] + [
             f"option_{i}_premise" for i in range(1, 5)

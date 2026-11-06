@@ -58,7 +58,7 @@ class NamedCharacterValueEffectTest(SlowTestCase):
           npc.experience.get(experience_id, 0),
       ]
       record = change_data.target_change[npc_id]
-      return [new - old for old, new in zip(before, after)], {
+      return [new - old for old, new in zip(before, after, strict=False)], {
           "status_data": dict(record.status_data),
           "ability": dict(record.ability),
           "experience": dict(record.experience),

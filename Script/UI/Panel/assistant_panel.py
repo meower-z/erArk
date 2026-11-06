@@ -644,7 +644,7 @@ class Assistant_Panel:
       user_input = flow_handle.askfor_str(_(_("请输入小时(24小时制)：")))
       try:
         user_input = int(user_input)
-      except:
+      except BaseException:
         continue
       if morning_flag:
         if user_input <= 0:
@@ -669,7 +669,7 @@ class Assistant_Panel:
       user_input = flow_handle.askfor_str(_(_("请输入分钟：")))
       try:
         user_input = int(user_input)
-      except:
+      except BaseException:
         continue
       if user_input < 0:
         continue

@@ -305,7 +305,7 @@ class Sleep_Panel:
       )
       try:
         user_input = int(user_input)
-      except:
+      except BaseException:
         continue
       if user_input <= 0:
         continue

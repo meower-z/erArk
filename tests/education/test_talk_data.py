@@ -342,12 +342,12 @@ with open(
 ) as _event_file:
   _loli_rows = list(csv.reader(_event_file))
 _loli_row = {
-    r[0]: dict(zip(_loli_rows[0], r))
+    r[0]: dict(zip(_loli_rows[0], r, strict=False))
     for r in _loli_rows[5:]
     if r and r[0].strip()
 }
 _semester_row = {
-    r[0]: dict(zip(_event_rows[0], r))
+    r[0]: dict(zip(_event_rows[0], r, strict=False))
     for r in _event_rows[5:]
     if r and r[0].strip()
 }
@@ -425,7 +425,7 @@ with open(
 ) as _event_file:
   _common_rows = list(csv.reader(_event_file))
 _common_row = {
-    r[0]: dict(zip(_common_rows[0], r))
+    r[0]: dict(zip(_common_rows[0], r, strict=False))
     for r in _common_rows[5:]
     if r and r[0].strip()
 }

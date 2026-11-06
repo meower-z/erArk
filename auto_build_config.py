@@ -110,7 +110,7 @@ try:
     for key in character_event_data["Event"]["data"].copy():
       if key["adv_id"] == BUILD_CHARA_ID:
         character_event_data["Event"]["data"].remove(key)
-except:
+except BaseException:
   character_talk_data = {}
 
 

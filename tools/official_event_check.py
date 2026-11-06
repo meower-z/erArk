@@ -623,7 +623,7 @@ class Checker:
               path, index, f"字段数为 {len(raw_row)}，应为 {FIELD_COUNT}"
           )
           continue
-        row = dict(zip(head, raw_row))
+        row = dict(zip(head, raw_row, strict=False))
         self.check_row(path, index, row, cid_set, text_set)
         self.collect_stat(file_stat, row)
       self.stat[os.path.basename(path)] = file_stat

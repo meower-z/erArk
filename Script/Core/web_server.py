@@ -668,7 +668,7 @@ def favicon() -> Response:
   # 尝试提供logo.png作为网站图标
   try:
     return send_from_directory(image_dir, 'logo.png')
-  except:
+  except BaseException:
     # 如果文件不存在，返回204 No Content，避免404错误
     abort(204)
 
@@ -2991,7 +2991,7 @@ def start_server() -> int:
         try:
           socketio.stop()
           time.sleep(0.5)  # 给予服务器关闭的时间
-        except:
+        except BaseException:
           pass
 
       # 在专用线程中启动服务器
@@ -3026,7 +3026,7 @@ def start_server() -> int:
                 and not ip.startswith('198.18.')
             ):
               return [ip]
-          except:
+          except BaseException:
             pass
 
           # 方法2: 在Windows上使用更可靠的方法
@@ -3049,7 +3049,7 @@ def start_server() -> int:
                   valid_ips.append(ip_str)
               if valid_ips:
                 return valid_ips
-            except:
+            except BaseException:
               pass
 
           # 方法3: 尝试获取所有网络接口
@@ -3077,7 +3077,7 @@ def start_server() -> int:
                       ips.append(ip)
               if ips:
                 return ips
-          except:
+          except BaseException:
             pass
 
           return []
@@ -3097,7 +3097,7 @@ def start_server() -> int:
         try:
           print('正在尝试自动打开默认浏览器...')
           webbrowser.open(f'http://localhost:{server_port}')
-        except:
+        except BaseException:
           # 打开浏览器失败，不阻止程序运行
           pass
 

@@ -1367,7 +1367,7 @@ def main() -> None:
       from ctypes import windll
 
       windll.shcore.SetProcessDpiAwareness(1)
-    except:
+    except BaseException:
       pass
 
   BodyPartEditor(root)
