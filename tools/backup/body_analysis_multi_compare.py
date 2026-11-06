@@ -190,7 +190,7 @@ KP_TO_PART = {
 
 # 骨架连线对应的颜色
 SKELETON_COLORS = []
-for a, b in COCO_SKELETON:
+for a, _b in COCO_SKELETON:
   part = KP_TO_PART.get(a, 'head')
   SKELETON_COLORS.append(PART_COLORS[part])
 

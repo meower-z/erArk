@@ -29,7 +29,6 @@ def init(main_flow: Callable[[], object]) -> None:
   Keyword argument:
   main_flow -- 游戏主流程
   """
-  global def_style
   io_init.clear_screen()
   io_init.clear_order()
   flow_handle.cmd_clear()

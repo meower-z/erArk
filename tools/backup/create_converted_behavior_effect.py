@@ -28,8 +28,8 @@ def read_behavior_data(file_path: str) -> dict[int, str]:
   skip_count = 0
   data_section = False
 
-  for line in lines:
-    line = line.strip()
+  for raw_line in lines:
+    line = raw_line.strip()
 
     # 跳过注释行
     if line.startswith("//"):

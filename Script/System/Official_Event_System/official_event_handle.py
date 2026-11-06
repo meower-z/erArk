@@ -651,8 +651,8 @@ def handle_effect_text(
   character_data.target_character_id = partner_id
   change_data = game_type.CharacterStatusChange()
   try:
-    for effect in effect_text.split("&"):
-      effect = effect.strip()
+    for raw_effect in effect_text.split("&"):
+      effect = raw_effect.strip()
       if not effect:
         continue
       if effect.startswith("CVE"):

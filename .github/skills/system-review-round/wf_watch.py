@@ -63,8 +63,8 @@ def load_lines(path: str) -> list[JsonRecord]:
   out = []
   try:
     with open(path, encoding="utf-8", errors="replace") as f:
-      for line in f:
-        line = line.strip()
+      for raw_line in f:
+        line = raw_line.strip()
         if not line:
           continue
         try:

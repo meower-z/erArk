@@ -610,8 +610,8 @@ class TALK_QUICK_TEST:
     List[int] -- 去重后的口上id列表
     """
     result: list[int] = []
-    for part in input_text.replace("，", ",").split(","):
-      part = part.strip()
+    for raw_part in input_text.replace("，", ",").split(","):
+      part = raw_part.strip()
       if not part:
         continue
       if "-" in part:

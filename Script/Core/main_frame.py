@@ -441,7 +441,7 @@ def send_input(*args: object) -> None:
   """
   发送一条指令
   """
-  global input_event_func, input_armed
+  global input_armed
   # 渲染期输入门禁：未上膛时（界面尚在渲染/未定型）直接丢弃本次输入注入，
   # 拦截滞留点击命中新按钮触发的 send_cmd 命令注入，以及黑屏/渲染期回车的提前推进。
   if not input_armed:
@@ -1054,7 +1054,6 @@ def io_print_cmd(
   on_style -- 鼠标在其上时显示样式
   tooltip -- 鼠标悬停提示文本
   """
-  global cmd_tag_map
   cmd_tag_name = str(uuid.uuid1())
   textbox.tag_configure(cmd_tag_name)
 
@@ -1130,7 +1129,6 @@ def io_print_image_cmd(
   tooltip -- 鼠标悬停提示文本
   功能描述：图片名不在图片索引里时（例如没有立绘的女儿）不绘制按钮
   """
-  global cmd_tag_map
   if cmd_str not in era_image.image_data:
     return
   cmd_tag_name = str(uuid.uuid1())
@@ -1185,7 +1183,6 @@ def io_clear_cmd(*cmd_numbers: int) -> None:
   Keyword arguments:
   cmd_number -- 命令数字，不输入则清楚当前已有的全部命令
   """
-  global cmd_tag_map
   _perf = perf_hook.enabled
   if _perf:
     _t0 = time.perf_counter()

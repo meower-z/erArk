@@ -344,7 +344,6 @@ def build_config_po(
   返回：None
   功能：构建配置po文本
   """
-  global built, config_po_lines, talk_po_lines, common_talk_po_lines, cook_question_po_lines, event_po_lines
   if message not in built:
     lines = (
         talk_po_lines
@@ -370,7 +369,6 @@ def build_scene_config(data_path: str) -> None:
   返回：None
   功能：构建场景配置并提取文本
   """
-  global config_po_lines
   for i in sorted(os.listdir(data_path)):
     now_path = os.path.join(data_path, i)
     if os.path.isfile(now_path):
@@ -404,7 +402,6 @@ def build_character_config(file_path: str, file_name: str) -> None:
   返回：None
   功能：读取角色CSV并更新全局角色数据
   """
-  global config_po_lines, built
   with open(file_path, encoding="utf-8", newline="") as now_file:
     now_read = csv.DictReader(now_file)
     file_id = file_name.split(".")[0]
@@ -442,7 +439,6 @@ def build_ui_text(file_path: str, file_name: str) -> None:
   返回：None
   功能：读取UI文本CSV并更新全局UI数据
   """
-  global config_po_lines, built
   with open(file_path, encoding="utf-8", newline="") as now_file:
     now_read = csv.DictReader(now_file)
     file_id = file_name.split(".")[0]

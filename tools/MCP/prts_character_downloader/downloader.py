@@ -240,22 +240,22 @@ class PRTSCharacterDownloader:
                   and "base64" not in img_url
                   and "1px" not in img_url
               ):
-
+                full_url = img_url
                 # 处理相对URL
                 if img_url.startswith("//"):
-                  img_url = "https:" + img_url
+                  full_url = "https:" + img_url
                 elif img_url.startswith("/"):
-                  img_url = "https://prts.wiki" + img_url
+                  full_url = "https://prts.wiki" + img_url
 
                 # 如果是缩略图，获取原图
-                if "/thumb/" in img_url:
+                if "/thumb/" in full_url:
                   orig_pattern = r"/thumb(/[^/]+/[^/]+/[^/]+\.\w+)/\d+px-"
-                  orig_match = re.search(orig_pattern, img_url)
+                  orig_match = re.search(orig_pattern, full_url)
                   if orig_match:
-                    img_url = "https://media.prts.wiki" + orig_match.group(1)
+                    full_url = "https://media.prts.wiki" + orig_match.group(1)
 
-                print(f"找到匹配的图片URL: {img_url}", file=sys.stderr)
-                return img_url
+                print(f"找到匹配的图片URL: {full_url}", file=sys.stderr)
+                return full_url
 
       print(f"未能在表格中找到包含 '{character_name}' 的角色", file=sys.stderr)
 

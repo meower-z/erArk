@@ -579,8 +579,8 @@ class Manage_Basement_Panel:
             return_list.append(btn.return_text)
           line_feed.draw()
 
-          for cat_name, cols in cat_columns.items():
-            for col_name, col_id in cols:
+          for _cat_name, cols in cat_columns.items():
+            for col_name, _col_id in cols:
               btn = draw.LeftButton(
                   f"[{col_name}]",
                   f"select_sort_{col_name}",
@@ -598,7 +598,7 @@ class Manage_Basement_Panel:
             header_draw = draw.NormalDraw()
             header_text = " " * name_btn_width
             cols = cat_columns[current_category]
-            for col_name, col_id in cols:
+            for col_name, _col_id in cols:
               header_text += format_col_header(col_name)
             if current_category == _("【工作技能】"):
               header_text += _("装备|工作")
@@ -868,7 +868,7 @@ class Manage_Basement_Panel:
             else:
               # 绘制对齐的表格数据
               cols = cat_columns.get(current_category, [])
-              for col_name, col_id in cols:
+              for _col_name, col_id in cols:
                 val = abl.get(col_id, 0)
                 rank = attr_calculation.judge_grade(val)
                 rank_color = f"level{rank.lower()}"
@@ -917,7 +917,7 @@ class Manage_Basement_Panel:
             line_feed.draw()
 
           # 补充空行以固定列表显示高度
-          for i in range(chara_per_page - len(current_page_charas)):
+          for _i in range(chara_per_page - len(current_page_charas)):
             line_feed.draw()
 
           # ================= 6. 绘制底部：翻页操作区 =================

@@ -31,9 +31,9 @@ def detect_long_sentences_in_text(
   long_sentences = []
 
   # 检查每个句子的长度
-  for sentence in sentences:
+  for raw_sentence in sentences:
     # 去除首尾空白字符
-    sentence = sentence.strip()
+    sentence = raw_sentence.strip()
     if len(sentence) > max_length:
       long_sentences.append((sentence, len(sentence)))
 

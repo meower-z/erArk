@@ -1590,7 +1590,7 @@ class MedicalPlayerDiagnosePanel:
     base_setting = getattr(cache.all_system_setting, "base_setting", {})
     if not isinstance(base_setting, dict):
       base_setting = {}
-      setattr(cache.all_system_setting, "base_setting", base_setting)
+      cache.all_system_setting.base_setting = base_setting
     base_setting[12] = next_value
 
     # if 0 <= next_value < len(option_list):
@@ -1839,7 +1839,7 @@ class MedicalPlayerDiagnosePanel:
     base_setting = getattr(cache.all_system_setting, "base_setting", {})
     if not isinstance(base_setting, dict):
       base_setting = {}
-      setattr(cache.all_system_setting, "base_setting", base_setting)
+      cache.all_system_setting.base_setting = base_setting
 
     current_value = int(base_setting.get(12, 0) or 0)
 

@@ -68,7 +68,7 @@ class InScenePanel:
           cache.all_system_setting.draw_setting[1]
       ]
       len_line = int(len_str[:1])
-      for i in range(len_line):
+      for _i in range(len_line):
         line_feed.draw()
       # 绘制标题
       title_draw.draw()

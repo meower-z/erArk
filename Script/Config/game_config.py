@@ -520,7 +520,7 @@ def load_data_json() -> None:
 
 def reload_talk_data() -> None:
   """重新载入口上配置数据"""
-  global character_talk_data, character_event_data, config_talk, config_talk_data, config_talk_data_by_chara_adv, config_talk_premise_data
+  global character_talk_data, character_event_data
   character_talk_data = json_handle.load_json(character_talk_path)
   character_event_data = json_handle.load_json(character_event_path)
   load_talk()
