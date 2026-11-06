@@ -39,7 +39,7 @@ def process_csv_file(csv_file_path: Path) -> defaultdict[str, list[int]]:
   print("CSV文件分类统计结果")
   print("=" * 60)
   print(f"\n总分类数：{len(classification)}")
-  print(f"\n详细统计：\n")
+  print("\n详细统计：\n")
 
   # 按分类输出
   for idx, (type_id, rows) in enumerate(sorted(classification.items()), 1):

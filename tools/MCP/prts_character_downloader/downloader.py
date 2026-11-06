@@ -78,7 +78,7 @@ class PRTSCharacterDownloader:
       return workspace_root
 
     # 如果推断失败，回退到原来的逻辑
-    print(f"[DEBUG] 推断失败，回退到目录遍历方式", file=sys.stderr)
+    print("[DEBUG] 推断失败，回退到目录遍历方式", file=sys.stderr)
     current_dir = os.path.abspath(os.getcwd())
     print(
         f"[DEBUG] 开始查找工作区根目录，当前目录: {current_dir}",
@@ -358,7 +358,7 @@ class PRTSCharacterDownloader:
     # 方法1：检查是否是特殊角色
     image_url = self.get_special_character_url(character_name)
     if image_url:
-      print(f"使用预定义的特殊角色图片URL", file=sys.stderr)
+      print("使用预定义的特殊角色图片URL", file=sys.stderr)
       return image_url
 
     # 方法2：从API获取图片URL

@@ -2270,7 +2270,7 @@ def find_free_port(start_port: int = 5000, max_attempts: int = 50) -> int:
     print(f"  进程ID: {process_info['pid']}")
     if process_info['cmdline']:
       print(f"  命令行: {process_info['cmdline']}")
-    print(f'正在自动查找其他可用端口...')
+    print('正在自动查找其他可用端口...')
 
   for port in range(start_port + 1, start_port + max_attempts):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -3087,9 +3087,7 @@ def start_server() -> int:
         try:
           lan_ips = get_lan_ip()
           if lan_ips:
-            print(
-                f'已自动检测到局域网ip，同一局域网内的设备也可以访问以下地址:'
-            )
+            print('已自动检测到局域网ip，同一局域网内的设备也可以访问以下地址:')
             for ip in lan_ips:
               print(f'http://{ip}:{server_port}')
           else:

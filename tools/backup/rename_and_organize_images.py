@@ -76,7 +76,7 @@ def rename_half_body_images() -> None:
       error_count += 1
 
   print("=" * 50)
-  print(f"重命名完成！")
+  print("重命名完成！")
   print(f"  重命名文件: {renamed_count}")
   print(f"  跳过文件: {skipped_count}")
   print(f"  错误数量: {error_count}")
@@ -153,10 +153,10 @@ def download_full_body_images() -> None:
             print(f"    [完成] 已保存到 {target_path}")
             downloaded_count += 1
           else:
-            print(f"    [警告] 下载成功但未找到图片文件")
+            print("    [警告] 下载成功但未找到图片文件")
             skipped_count += 1
         else:
-          print(f"    [跳过] 未能下载")
+          print("    [跳过] 未能下载")
           skipped_count += 1
       except Exception as e:
         print(f"    [错误] {str(e)}")

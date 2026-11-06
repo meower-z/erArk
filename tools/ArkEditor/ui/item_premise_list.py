@@ -151,7 +151,7 @@ class ItemPremiseList(QWidget):
         item = QListWidgetItem(cache_control.premise_data[premise])
         item.setToolTip(item.text())
         self.item_list.addItem(item)
-    draw_text = f"○双击替换，右键展开删除、复制、粘贴菜单\n○指令(一段结算)需要区分触发者自己和交互对象\n○二段结算仅触发者自己，没有交互对象\n○当前该文本的出现权重="
+    draw_text = "○双击替换，右键展开删除、复制、粘贴菜单\n○指令(一段结算)需要区分触发者自己和交互对象\n○二段结算仅触发者自己，没有交互对象\n○当前该文本的出现权重="
     # 如果有固定权重，则显示固定权重
     if fixed_weight != 0:
       draw_text += f"固定值{fixed_weight}"
@@ -162,7 +162,7 @@ class ItemPremiseList(QWidget):
         final_weight += add_now_talk_weight
       # 是NPC的专属口上时，权重翻10倍
       if cache_control.now_adv_id != 0 and cache_control.now_adv_id != "0":
-        draw_text += f"，角色口上再乘10"
+        draw_text += "，角色口上再乘10"
         final_weight = final_weight * 10
       if final_weight != 1:
         draw_text += f"，最终权重：{final_weight}"

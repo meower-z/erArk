@@ -314,7 +314,7 @@ class CharaList(QWidget):
         f.write(out_data)
       print(f"debug 保存了文件{cache_control.now_file_path}")
     else:
-      print(f"debug 未保存文件")
+      print("debug 未保存文件")
 
   def reset_values(self) -> None:
     """重置值"""

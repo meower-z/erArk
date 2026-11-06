@@ -203,7 +203,7 @@ def settle_assembly_line(
               cache.rhodes_island.warehouse_capacity,
           )
           un_normal = True
-        now_text += f"\n"
+        now_text += "\n"
         return_text += now_text
         if draw_flag:
           now_draw = draw.WaitDraw()
@@ -554,7 +554,7 @@ class Manage_Assembly_Line_Panel:
       product_now_data = game_config.config_resouce[product_now_id]
       now_level = cache.rhodes_island.facility_level[12]
 
-      info_text = f""
+      info_text = ""
       # info_text = f" ○需要先结算然后才可以变动生产的产品\n\n"
       info_text += _(" {0}号流水线当前生产的产品为：{1}").format(
           assembly_line_id + 1, product_now_data.name

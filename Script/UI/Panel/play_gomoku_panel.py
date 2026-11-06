@@ -1695,7 +1695,7 @@ class GomokuPanel:
           cell = self.board_draw[row][col]
           # 选中单元格高亮
           if self.selected_col == col and self.selected_row == row:
-            row_cells += f'-[O]'
+            row_cells += '-[O]'
           # 标识上一步棋
           elif self.last_player_move == (row, col) or self.last_ai_move == (
               row,

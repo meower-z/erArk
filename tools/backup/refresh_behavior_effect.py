@@ -202,7 +202,7 @@ def main() -> None:
     unmatched_count = valid_behavior_count - matched_count
     empty_line_count = sum(1 for _, _, is_empty in behavior_data if is_empty)
 
-    print(f"\n统计信息:")
+    print("\n统计信息:")
     print(f"- 总数据行数: {len(behavior_data)}")
     print(f"- 有效行为数据: {valid_behavior_count}")
     print(f"- 空行数量: {empty_line_count}")

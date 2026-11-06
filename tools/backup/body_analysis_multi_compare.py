@@ -990,7 +990,7 @@ def main() -> None:
 
     image = load_image(full_body_path)
     if image is None:
-      print(f'  错误：无法加载图像')
+      print('  错误：无法加载图像')
       continue
 
     h, w = image.shape[:2]
@@ -1031,9 +1031,9 @@ def main() -> None:
           # 自动检测是否需要sigmoid（首次处理时）
           if not auto_sigmoid_checked and key == 'A':
             if raw_avg > 1.0:
-              print(f'    模型A分数>1.0，确认需要sigmoid归一化')
+              print('    模型A分数>1.0，确认需要sigmoid归一化')
             else:
-              print(f'    ✓ 模型A分数在0-1范围，移除sigmoid')
+              print('    ✓ 模型A分数在0-1范围，移除sigmoid')
               needs_sigmoid_keys.discard('A')
 
           results[key] = {
@@ -1058,7 +1058,7 @@ def main() -> None:
     valid_results = {k: v for k, v in results.items() if v is not None}
 
     if not valid_results:
-      print(f'  所有模型均未检测到人体，跳过')
+      print('  所有模型均未检测到人体，跳过')
       continue
 
     # ===== 构建集成结果 =====
@@ -1159,7 +1159,7 @@ def main() -> None:
         os.path.join(output_dir, f'{char_name}_分数对比表.png'), score_table
     )
 
-    print(f'  已保存所有可视化结果')
+    print('  已保存所有可视化结果')
 
     # ===== 打印逐点对比表（文字版） =====
     keys_print = sorted(valid_results.keys())
@@ -1210,7 +1210,7 @@ def main() -> None:
 
   # ===== 总体统计报告 =====
   print(f"\n{'=' * 80}")
-  print(f'总体统计报告')
+  print('总体统计报告')
   print(f"{'=' * 80}")
   print(f'测试角色数: {len(characters)}')
   print(f'模型数: {len(models)} + ENSEMBLE')
@@ -1234,7 +1234,7 @@ def main() -> None:
   )
   print(f"  {'ENSEMBLE':<18} {ens_avg:>12.4f}   ---")
 
-  print(f'\n集成来源统计（每个关键点由哪个模型贡献）:')
+  print('\n集成来源统计（每个关键点由哪个模型贡献）:')
   for k in sorted(
       ensemble_source_count.keys(),
       key=lambda x: ensemble_source_count.get(x, 0),

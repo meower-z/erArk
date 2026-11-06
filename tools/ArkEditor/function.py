@@ -205,7 +205,7 @@ def read_CVE(cve_value_str: str) -> str:
     b2_value = cve_str_list[2].split("指定角色id为交互对象|")[1]
     b2_name = cache_control.organ_data[b2_value]
     cve_str = cve_str.replace(
-        f"指定角色id为交互对象|{b2_value}", f"指定角色id为交互对象"
+        f"指定角色id为交互对象|{b2_value}", "指定角色id为交互对象"
     )
     # 只去掉文字末尾的运算段和判定值段
     cve_str = cve_str.removesuffix(cve_str_list[3] + cve_str_list[4])

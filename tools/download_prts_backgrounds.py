@@ -180,14 +180,14 @@ def download_prts_backgrounds() -> None:
           fail_count += 1
 
     print('\n' + '=' * 60)
-    print(f'下载完成！')
+    print('下载完成！')
     print(f'成功: {success_count} 个')
     print(f'失败: {fail_count} 个')
     print(f'保存位置: {output_dir.absolute()}')
     print('=' * 60)
 
   except Exception as e:
-    print(f'错误: 无法访问网页')
+    print('错误: 无法访问网页')
     print(f'详细信息: {e}')
     return
 

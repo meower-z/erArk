@@ -184,7 +184,7 @@ def settle_agriculture_line(draw_flag: bool = True) -> tuple[bool, str]:
               resouce_data.name, cache.rhodes_island.warehouse_capacity
           )
           un_normal = True
-        now_text += f"\n"
+        now_text += "\n"
         return_text += now_text
         if draw_flag:
           now_draw = draw.WaitDraw()
@@ -241,7 +241,7 @@ def settle_agriculture_line(draw_flag: bool = True) -> tuple[bool, str]:
               resouce_data.name, cache.rhodes_island.warehouse_capacity
           )
           un_normal = True
-        now_text += f"\n"
+        now_text += "\n"
         return_text += now_text
         if draw_flag:
           now_draw = draw.WaitDraw()
@@ -652,7 +652,7 @@ class Agriculture_Production_Panel:
       resouce_id = cache.rhodes_island.herb_garden_line[agriculture_line_id][0]
       resouce_data = game_config.config_resouce[resouce_id]
 
-      info_text = f""
+      info_text = ""
       info_text += _(" 当前种植的是：{0}").format(resouce_data.name)
 
       info_text += _("\n\n 当前可以种植的有：\n\n")

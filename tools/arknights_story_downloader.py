@@ -250,7 +250,7 @@ def extract_story_script_from_url(url: str, story_name: str) -> str | None:
         else:
           return script_content
 
-    print(f'    ✗ 未找到剧情脚本内容')
+    print('    ✗ 未找到剧情脚本内容')
     return None
 
   except Exception as e:
@@ -413,7 +413,7 @@ def download_activity_stories_enhanced(
     return 0, 0
 
   # 显示找到的剧情列表
-  print(f'\n找到以下剧情:')
+  print('\n找到以下剧情:')
   print('-' * 80)
   for i, (display_name, _, _, _, _) in enumerate(stories, 1):
     print(f'{i:2d}. {display_name}')
@@ -512,11 +512,11 @@ def main() -> None:
       if os.path.exists(output_dir):
         files = [f for f in os.listdir(output_dir) if f.endswith('.txt')]
         if files:
-          print(f'\n已下载的文件:')
+          print('\n已下载的文件:')
           for i, filename in enumerate(sorted(files), 1):
             print(f'  {i}. {filename}')
     else:
-      print(f'\n✗ 下载失败，请检查:')
+      print('\n✗ 下载失败，请检查:')
       print('  1. 网络连接是否正常')
       print('  2. 活动名称是否正确')
       print('  3. PRTS网站是否可以正常访问')
