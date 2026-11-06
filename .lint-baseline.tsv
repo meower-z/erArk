@@ -1304,7 +1304,6 @@ tools/official_event_check.py	Checker.check_premise_text	PLW2901	count=1
 tools/official_event_check.py	Checker.check_row	E501	count=1,max=131
 tools/official_event_check.py	Checker.check_semester_premise	E501	count=1,max=150
 tools/official_event_check.py	Checker.print_stat	E501	count=1,max=158
-tools/test_quality/fast_report.py	<module>	E501	count=1,max=124
 tools/verify/arkeditor.py	<module>	module-lines	lines=488
 tools/verify/arkeditor.py	<module>	mypy:import-not-found	count=1
 tools/verify/game_runner_guard.py	<module>	E501	count=1,max=132

@@ -19,7 +19,8 @@ lint 引擎是可选的本机工具，不随仓库提供（见 CONTRIBUTING.md�
 -B 让 Python 不给导入的任何模块写字节码，checkout 里就不会出现 __pycache__ 目录。
 
 任何一步运行之前，先列出 checkout 的 data/ 下被 git 忽略的未跟踪文件。有这样的文件、或 git 列不出来时拒绝运行：
-把原因打印到 stderr（有文件时附上清理命令），不写报告，退出码 2。游戏会直接读 data/ 里已生成的文件，不再运行生成它们的代码，
+把原因打印到 stderr（有文件时附上清理命令），不写报告，退出码 2。
+游戏会直接读 data/ 里已生成的文件，不再运行生成它们的代码，
 所以在生成过的 data/ 上运行，覆盖率那一步就记不到生成数据的代码执行过。先用
 `git -C <checkout> clean -fdX data/` 清理 data/。
 
@@ -107,8 +108,7 @@ def build_config(
 class _CrashRecorder:
   """with 块的用时记在 step.seconds 上；块里的异常记在 step.crash 上并接住。
 
-  KeyboardInterrupt 照常抛出。erArk 不许用 `# pylint:` 注释，
-  所以接住所有异常写成 __exit__，不写成 except BaseException。
+  KeyboardInterrupt 照常抛出。
   """
 
   step: Step
