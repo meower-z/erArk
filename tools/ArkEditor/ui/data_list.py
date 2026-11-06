@@ -246,10 +246,7 @@ class DataList(DataListIdEditMixin, QWidget):
     position = QCursor.pos()
 
     # 移动状态下不显示移动以外的选项
-    if (
-        cache_control.now_edit_type_flag == 1
-        and self.now_in_moving_flag == False
-    ):
+    if cache_control.now_edit_type_flag == 1 and not self.now_in_moving_flag:
       create_action: QWidgetAction = QWidgetAction(self)
       create_action.setText("新增事件")
       create_action.triggered.connect(self.create_event)
@@ -263,10 +260,7 @@ class DataList(DataListIdEditMixin, QWidget):
         delete_action.setText("删除事件")
         delete_action.triggered.connect(self.event_delete)
         menu.addAction(delete_action)
-    elif (
-        cache_control.now_edit_type_flag == 0
-        and self.now_in_moving_flag == False
-    ):
+    elif cache_control.now_edit_type_flag == 0 and not self.now_in_moving_flag:
       create_action = QWidgetAction(self)
       create_action.setText("新增口上")
       create_action.triggered.connect(self.create_talk)
@@ -282,7 +276,7 @@ class DataList(DataListIdEditMixin, QWidget):
         menu.addAction(delete_action)
     # 移动相关
     if self.list_widget.itemAt(old_position):
-      if self.now_in_moving_flag == False:
+      if not self.now_in_moving_flag:
         move_action: QWidgetAction = QWidgetAction(self)
         move_action.setText("移动该条目")
         move_action.triggered.connect(self.move_item)

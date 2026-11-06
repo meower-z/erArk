@@ -101,9 +101,9 @@ def base_chara_hp_mp_common_settle(
     # 进行结算
     character_data.mana_point += mp_value
     # 结算信息记录
-    if change_data != None:
+    if change_data is not None:
       change_data.mana_point += mp_value
-    if change_data_to_target_change != None:
+    if change_data_to_target_change is not None:
       change_data_to_target_change.target_change.setdefault(
           character_id, game_type.TargetChange()
       )
@@ -119,9 +119,9 @@ def base_chara_hp_mp_common_settle(
     # 如果气力为0则体力进行等值消耗
     if character_data.mana_point == 0 and mp_value < 0:
       character_data.hit_point += mp_value
-      if change_data != None:
+      if change_data is not None:
         change_data.hit_point += mp_value
-      if change_data_to_target_change != None:
+      if change_data_to_target_change is not None:
         change_data_to_target_change.target_change.setdefault(
             character_id, game_type.TargetChange()
         )
@@ -161,9 +161,9 @@ def base_chara_hp_mp_common_settle(
     # 进行结算
     character_data.hit_point += hp_value_last
     # 结算信息记录
-    if change_data != None:
+    if change_data is not None:
       change_data.hit_point += hp_value_last
-    if change_data_to_target_change != None:
+    if change_data_to_target_change is not None:
       change_data_to_target_change.target_change.setdefault(
           character_id, game_type.TargetChange()
       )
@@ -348,10 +348,10 @@ def base_chara_state_common_settle(
     )
 
   # 结算信息记录对象
-  if change_data != None:
+  if change_data is not None:
     change_data.status_data.setdefault(state_id, 0)
     change_data.status_data[state_id] += final_value
-  if change_data_to_target_change != None:
+  if change_data_to_target_change is not None:
     change_data_to_target_change.target_change.setdefault(
         character_id, game_type.TargetChange()
     )
@@ -890,7 +890,7 @@ def base_chara_favorability_and_trust_common_settle(
       else:
         character_data.trust += add_trust
         character_data.trust = min(300, character_data.trust)
-        if change_data != None:
+        if change_data is not None:
           change_data.trust += add_trust
 
   else:
@@ -1283,12 +1283,12 @@ def base_chara_experience_common_settle(
 
   # 确认结算信息记录对象
   final_change_data = change_data
-  if change_data != None and target_flag:
+  if change_data is not None and target_flag:
     change_data.target_change.setdefault(
         final_character_id, game_type.TargetChange()
     )
     final_change_data = change_data.target_change[final_character_id]
-  elif change_data_to_target_change != None:
+  elif change_data_to_target_change is not None:
     change_data_to_target_change.target_change.setdefault(
         final_character_id, game_type.TargetChange()
     )
@@ -1297,6 +1297,6 @@ def base_chara_experience_common_settle(
     ]
 
   # 结算信息记录对象增加经验
-  if final_change_data != None:
+  if final_change_data is not None:
     final_change_data.experience.setdefault(experience_id, 0)
     final_change_data.experience[experience_id] += base_value

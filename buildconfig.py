@@ -382,7 +382,7 @@ def build_scene_config(data_path: str) -> None:
         with open(now_path, encoding="utf-8") as now_file:
           scene_data = json.loads(now_file.read())
           scene_name = scene_data["SceneName"]
-          if not scene_name in built:
+          if scene_name not in built:
             config_po_lines.append(f"#: /'{now_path}:2\n")
             config_po_lines.append(f'msgid "{scene_name}"\n')
             config_po_lines.append('msgstr ""\n\n')
@@ -391,7 +391,7 @@ def build_scene_config(data_path: str) -> None:
         with open(now_path, encoding="utf-8") as now_file:
           map_data = json.loads(now_file.read())
           map_name = map_data["MapName"]
-          if not map_name in built:
+          if map_name not in built:
             config_po_lines.append(f"#: /'{now_path}:2\n")
             config_po_lines.append(f'msgid "{map_name}"\n')
             config_po_lines.append('msgstr ""\n\n')
@@ -777,7 +777,7 @@ if BUILD_EVENT:
           now_event = now_event_data[event_id]
           event_list.append(now_event)
           now_event_text = now_event["text"]
-          if now_event_text not in msgData and not now_event_text in built:
+          if now_event_text not in msgData and now_event_text not in built:
             event_po_lines.append(f"#: Event:{event_id}\n")
             event_po_lines.append(f'msgid "{now_event_text}"\n')
             event_po_lines.append('msgstr ""\n\n')

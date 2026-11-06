@@ -661,7 +661,7 @@ def judge_scene_accessible(
     ]
 
     # 如果该设施已开放，则正常通过，否则进入条件判断
-    if cache.rhodes_island.facility_open[open_cid] == False:
+    if not cache.rhodes_island.facility_open[open_cid]:
       # 是玩家的话输出提示信息
       if character_id == 0 and draw_flag:
         # 获取设施的解锁条件数据
@@ -758,7 +758,7 @@ def judge_scene_accessible(
 
   # 私密场所判断，仅限干员
   # 被邀请群交的角色可以进
-  if character_id and character_data.sp_flag.go_to_join_group_sex == False:
+  if character_id and not character_data.sp_flag.go_to_join_group_sex:
     # 博士房间
     if "Dr_room" in now_scene_data.scene_tag:
       # 助理可以进

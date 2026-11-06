@@ -52,7 +52,7 @@ def load_config() -> None:
     now_read = csv.DictReader(now_file)
     read_flag = False
     for i in now_read:
-      if read_flag == False:
+      if not read_flag:
         if i["cid"] != "状态描述配置":
           continue
         else:
@@ -73,7 +73,7 @@ def load_config() -> None:
     now_read = csv.DictReader(now_file)
     read_flag = False
     for i in now_read:
-      if read_flag == False:
+      if not read_flag:
         if i["cid"] != "能力对应类型和文字描述":
           continue
         else:
@@ -84,7 +84,7 @@ def load_config() -> None:
     now_read = csv.DictReader(now_file)
     read_flag = False
     for i in now_read:
-      if read_flag == False:
+      if not read_flag:
         if i["cid"] != "角色状态属性表":
           continue
         else:
@@ -95,7 +95,7 @@ def load_config() -> None:
     now_read = csv.DictReader(now_file)
     read_flag = False
     for i in now_read:
-      if read_flag == False:
+      if not read_flag:
         if i["cid"] != "经验名字":
           continue
         else:
@@ -106,7 +106,7 @@ def load_config() -> None:
     now_read = csv.DictReader(now_file)
     read_flag = False
     for i in now_read:
-      if read_flag == False:
+      if not read_flag:
         if i["cid"] != "珠名字":
           continue
         else:
@@ -117,7 +117,7 @@ def load_config() -> None:
     now_read = csv.DictReader(now_file)
     read_flag = False
     for i in now_read:
-      if read_flag == False:
+      if not read_flag:
         if i["cid"] != "素质对应类型和文字描述":
           continue
         else:
@@ -129,7 +129,7 @@ def load_config() -> None:
     now_read = csv.DictReader(now_file)
     read_flag = False
     for i in now_read:
-      if read_flag == False:
+      if not read_flag:
         if i["cid"] != "出生地列表":
           continue
         else:
@@ -140,7 +140,7 @@ def load_config() -> None:
     now_read = csv.DictReader(now_file)
     read_flag = False
     for i in now_read:
-      if read_flag == False:
+      if not read_flag:
         if i["cid"] != "势力列表":
           continue
         else:
@@ -151,7 +151,7 @@ def load_config() -> None:
     now_read = csv.DictReader(now_file)
     read_flag = False
     for i in now_read:
-      if read_flag == False:
+      if not read_flag:
         if i["cid"] != "职业类型名称":
           continue
         else:
@@ -162,7 +162,7 @@ def load_config() -> None:
     now_read = csv.DictReader(now_file)
     read_flag = False
     for i in now_read:
-      if read_flag == False:
+      if not read_flag:
         if i["cid"] != "种族类型名称":
           continue
         else:
@@ -173,7 +173,7 @@ def load_config() -> None:
     now_read = csv.DictReader(now_file)
     read_flag = False
     for i in now_read:
-      if read_flag == False:
+      if not read_flag:
         if i["cid"] != "身体部位表":
           continue
         else:
@@ -184,7 +184,7 @@ def load_config() -> None:
     now_read = csv.DictReader(now_file)
     read_flag = False
     for i in now_read:
-      if read_flag == False:
+      if not read_flag:
         if i["cid"] != "衣服种类配置":
           continue
         else:
@@ -195,7 +195,7 @@ def load_config() -> None:
     now_read = csv.DictReader(now_file)
     read_flag = False
     for i in now_read:
-      if read_flag == False:
+      if not read_flag:
         if i["cid"] != "器官对应性别限定和文字描述":
           continue
         else:
@@ -206,7 +206,7 @@ def load_config() -> None:
     now_read = csv.DictReader(now_file)
     read_flag = False
     for i in now_read:
-      if read_flag == False:
+      if not read_flag:
         if i["cid"] != "绳子捆绑":
           continue
         else:
@@ -217,7 +217,7 @@ def load_config() -> None:
     now_read = csv.DictReader(now_file)
     read_flag = False
     for i in now_read:
-      if read_flag == False:
+      if not read_flag:
         if i["cid"] != "角色扮演列表":
           continue
         else:
@@ -228,7 +228,7 @@ def load_config() -> None:
     now_read = csv.DictReader(now_file)
     read_flag = False
     for i in now_read:
-      if read_flag == False:
+      if not read_flag:
         if i["cid"] != "道具配置数据":
           continue
         else:
@@ -239,7 +239,7 @@ def load_config() -> None:
     now_read = csv.DictReader(now_file)
     read_flag = False
     for i in now_read:
-      if read_flag == False:
+      if not read_flag:
         if i["cid"] != "礼物物品":
           continue
         else:
@@ -255,7 +255,7 @@ def load_config() -> None:
     now_read = csv.DictReader(now_file)
     read_flag = False
     for i in now_read:
-      if read_flag == False:
+      if not read_flag:
         if i["cid"] != "各类基地使用资源一览":
           continue
         else:
@@ -285,7 +285,7 @@ def load_commission_csv(file_path: str) -> "list[Commission]":
     reader = csv.DictReader(f)
     read_flag = False
     for row in reader:
-      if read_flag == False:
+      if not read_flag:
         if row["cid"] != "委托任务表":
           continue
         else:

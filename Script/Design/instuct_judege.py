@@ -507,7 +507,7 @@ def calculation_instuct_judege(
           calculation_text += _("+催眠(+0,理智不足)")
 
   # debug模式修正
-  if cache.debug_mode == True:
+  if cache.debug_mode:
     judge += 99999
     calculation_text += _("+debug模式(+99999)")
 
@@ -544,7 +544,7 @@ def calculation_instuct_judege(
       # 避孕套、已显示过该信息，以上可直接通过
       if (
           character_data.h_state.body_item[13][1]
-          or target_data.h_state.condom_info_show_flag == False
+          or not target_data.h_state.condom_info_show_flag
       ):
         pass
       else:
@@ -655,7 +655,7 @@ def calculation_instuct_judege(
           handle_premise.handle_no_virgin(target_character_id)
           and (instruct_name == _("性交") or instruct_name == _("W性交"))
           and target_data.talent[13] == 0
-          and condom_flag == False
+          and not condom_flag
           and handle_premise.handle_reproduction_period_0(target_character_id)
       ):
         target_data.talent[13] = 1
@@ -667,7 +667,7 @@ def calculation_instuct_judege(
           handle_premise.handle_no_virgin(target_character_id)
           and (instruct_name == _("性交") or instruct_name == _("W性交"))
           and target_data.talent[14] == 0
-          and condom_flag == False
+          and not condom_flag
           and (
               handle_premise.handle_reproduction_period_2(target_character_id)
               or handle_premise.handle_reproduction_period_3(

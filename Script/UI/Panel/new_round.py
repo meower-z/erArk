@@ -1188,7 +1188,7 @@ class New_Round_Handle:
             now_scene_data.scene_name
         ]
         # 如果未开放，则开放
-        if cache.rhodes_island.facility_open[open_cid] == False:
+        if not cache.rhodes_island.facility_open[open_cid]:
           cache.rhodes_island.facility_open[open_cid] = True
 
     info_draw_text += _("继承数据覆盖完毕\n")

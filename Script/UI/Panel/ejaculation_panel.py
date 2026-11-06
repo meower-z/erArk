@@ -491,7 +491,7 @@ def ejaculation_flow(
       cache.achievement.sleep_sex_record.setdefault(2, 0)
       cache.achievement.sleep_sex_record[2] += 1
     # 正常射精时
-    if character_data.h_state.body_item[13][1] == False:
+    if not character_data.h_state.body_item[13][1]:
       # 射在体外无壳卵上
       if soft_egg_id >= 0:
         from Script.System.Pregnancy_System import soft_egg_handle

@@ -346,10 +346,7 @@ def character_move_to_foodshop(character_id: int) -> None:
     )
   move_success = general_movement_module(character_id, to_foodshop)
   # 如果没有去食堂且移动失败了，则将移动目标重定向为食堂
-  if (
-      character_data.action_info.eat_food_restaurant != -1
-      and move_success == False
-  ):
+  if character_data.action_info.eat_food_restaurant != -1 and not move_success:
     character_data.action_info.eat_food_restaurant = -1
     to_foodshop = map_handle.get_map_system_path_for_str(
         random.choice(constant.place_data["Take_Food_Area"])
@@ -1139,7 +1136,7 @@ def character_move_to_rest_room(character_id: int) -> None:
     )
     find_flag = True
   # 不使用专属休息室的话，检索当前角色所在的大场景里有没有休息室
-  if find_flag == False:
+  if not find_flag:
     now_position = character_data.position[0]
     for place in constant.place_data["Rest_Room"]:
       if place.split(os.sep)[0] == now_position:
@@ -1148,7 +1145,7 @@ def character_move_to_rest_room(character_id: int) -> None:
           find_flag = True
           break
   # 没有的话再随机选择其他区块
-  if find_flag == False:
+  if not find_flag:
     to_rest_room = map_handle.get_map_system_path_for_str(
         random.choice(constant.place_data["Rest_Room"])
     )

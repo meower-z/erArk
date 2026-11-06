@@ -642,8 +642,8 @@ def npc_active_h() -> int | None:
 
   # 如果对方不是主动H状态，则返回
   if (
-      target_character_data.hypnosis.active_h == False
-      and target_character_data.h_state.npc_active_h == False
+      not target_character_data.hypnosis.active_h
+      and not target_character_data.h_state.npc_active_h
   ):
     return 0
   # 对方处于幼年阶段时不逆推
@@ -754,7 +754,7 @@ def npc_ai_in_group_sex(character_id: int) -> None:
 
   # 如果不是H状态+群交，则返回
   if (
-      character_data.sp_flag.is_h == False
+      not character_data.sp_flag.is_h
       or handle_premise.handle_group_sex_mode_off(character_id)
   ):
     return
@@ -841,7 +841,7 @@ def npc_ai_in_group_sex_type_3() -> None:
       continue
     # 如果不是H状态+群交，则跳过
     if (
-        character_data.sp_flag.is_h == False
+        not character_data.sp_flag.is_h
         or handle_premise.handle_group_sex_mode_off(character_id)
     ):
       continue

@@ -458,7 +458,7 @@ def build_user_prompt(
   # 假定每项数据为字典，键包括 'cid' 和 'prompt'
   for cid in game_config.config_ai_chat_send_data:
     # 如果没有选择该数据，则跳过
-    if tem_send_data_flags[cid] == False:
+    if not tem_send_data_flags[cid]:
       continue
     ai_chat_send_data = game_config.config_ai_chat_send_data[cid]
 
@@ -519,7 +519,7 @@ def create_tem_sned_data_flags(npc_character_id: int) -> dict[int, bool]:
       else:
         tem_send_data_flags[cid] = False
     # 跳过已经是false的
-    if tem_send_data_flags[cid] == False:
+    if not tem_send_data_flags[cid]:
       continue
     # 饥饿
     if cid == 31:
@@ -797,7 +797,7 @@ def text_ai(
       ai_gererate_text = ""
 
   # 如果没有返回文本，则返回原文本
-  if ai_gererate_text == None or not len(ai_gererate_text):
+  if ai_gererate_text is None or not len(ai_gererate_text):
     ai_gererate_text = _("(生成失败，使用原文本)") + original_text
 
   # 处理直接对话模式下的返回格式

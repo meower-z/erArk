@@ -169,7 +169,7 @@ def settle_hidden_value_by_action(
   now_behavior_id = character_data.behavior.behavior_id
   behavior_data = game_config.config_behavior[now_behavior_id]
   # 如果没有指定，则根据行为类型判断是否需要增加隐蔽值
-  if add_flag == None:
+  if add_flag is None:
     add_flag = False
     for tag in {"猥亵", "性爱"}:
       if tag in behavior_data.tag:

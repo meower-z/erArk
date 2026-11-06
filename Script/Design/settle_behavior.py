@@ -585,7 +585,7 @@ def handle_instruct_data(
   # 进行一段结算
   if behavior_id in game_config.config_behavior_effect_data:
     # 先结算口上，并判断是否需要跳过，跳过来源于事件的特殊结算
-    if now_character_data.event.skip_instruct_talk == False:
+    if not now_character_data.event.skip_instruct_talk:
       talk.handle_talk(character_id)
     else:
       now_character_data.event.skip_instruct_talk = False

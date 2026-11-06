@@ -977,7 +977,7 @@ def input_load_save(save_id: str) -> None:
     if all_cid not in loaded_dict["rhodes_island"].facility_open:
       loaded_dict["rhodes_island"].facility_open[all_cid] = False
     # 已关闭的查询是否可以被已有角色开启
-    if loaded_dict["rhodes_island"].facility_open[all_cid] == False:
+    if not loaded_dict["rhodes_island"].facility_open[all_cid]:
       if game_config.config_facility_open[all_cid].NPC_id != 0:
         for chara_cid in loaded_dict["npc_id_got"]:
           character_data = loaded_dict["character_data"][chara_cid]
@@ -1075,10 +1075,10 @@ def update_dict_with_default(
       continue
     # 如果key的类型不同，且value不为None，类型也不为int或float时，将其设为默认值
     elif (
-        type(loaded_dict[key]) != type(default_dict[key])
-        and value != None
-        and type(value) != int
-        and type(value) != float
+        type(loaded_dict[key]) is not type(default_dict[key])
+        and value is not None
+        and type(value) is not int
+        and type(value) is not float
     ):
       loaded_dict[key] = value
       update_count += 1
