@@ -429,7 +429,7 @@ def change_character_persistent_state(character_id: int) -> None:
     for i in range(len(now_character_data.h_state.body_item)):
       if now_character_data.h_state.body_item[i][1]:
         end_time = now_character_data.h_state.body_item[i][2]
-        if end_time != None and game_time.judge_date_big_or_small(
+        if end_time is not None and game_time.judge_date_big_or_small(
             now_time, end_time
         ):
           now_character_data.h_state.body_item[i][1] = False
@@ -439,7 +439,7 @@ def change_character_persistent_state(character_id: int) -> None:
     for i in [8, 9]:
       if now_character_data.h_state.body_item[i][1]:
         end_time = now_character_data.h_state.body_item[i][2]
-        if end_time != None and game_time.judge_date_big_or_small(
+        if end_time is not None and game_time.judge_date_big_or_small(
             now_time, end_time
         ):
           now_character_data.h_state.body_item[i][1] = False

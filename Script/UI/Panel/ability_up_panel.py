@@ -457,7 +457,7 @@ class Characterabi_show_Text:
     # 获取输入
     get_text = ask_panel.draw()
     # 如果输入不是数字，则返回
-    if get_text.isdigit() == False:
+    if not get_text.isdigit():
       return
     new_num = int(get_text)
     if new_num < 0:

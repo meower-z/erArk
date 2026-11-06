@@ -1014,7 +1014,7 @@ class Manage_Basement_Panel:
       elif yrn == "toggle_sort_collection_first":
         self.sort_collection_first = not self.sort_collection_first
         self.chara_list_page = 0
-      elif type(yrn) == str and yrn.startswith("select_sort_"):
+      elif type(yrn) is str and yrn.startswith("select_sort_"):
         sort_key = yrn.replace("select_sort_", "")
         if self.choosing_sort_mode == 1:
           self.sort_main = sort_key

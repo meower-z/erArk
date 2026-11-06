@@ -620,7 +620,7 @@ class Edit_Group_Sex_Temple_Panel:
       info_draw.draw()
 
       now_lock_text = _("已锁定")
-      if self.pl_character_data.h_state.group_sex_lock_flag == False:
+      if not self.pl_character_data.h_state.group_sex_lock_flag:
         now_lock_text = _("未锁定")
       lock_change_button = draw.LeftButton(
           f"▶{now_lock_text}",
@@ -926,12 +926,9 @@ class Edit_Group_Sex_Temple_Panel:
           ):
             continue
         # 普通群交：判断群交实行值是否足够，不够的跳过
-        elif (
-            instuct_judege.calculation_instuct_judege(
-                0, chara_id, _("群交"), not_draw_flag=True
-            )[0]
-            == False
-        ):
+        elif not instuct_judege.calculation_instuct_judege(
+            0, chara_id, _("群交"), not_draw_flag=True
+        )[0]:
           continue
         # 力竭/疲劳/重度困倦者不再提供邀请
         if handle_premise.handle_self_exhausted(chara_id):

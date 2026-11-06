@@ -70,7 +70,7 @@ def judge_single_instruct_filter(
       for premise in sorted(constant.instruct_premise_data[instruct_id]):
         # 忽略子类时（即非主界面），NPC逆推模式下则忽略NPC逆推的相关前提
         if (
-            use_type_filter_flag == False
+            not use_type_filter_flag
             and handle_premise.handle_t_npc_active_h(0)
             and premise == "t_npc_not_active_h"
         ):

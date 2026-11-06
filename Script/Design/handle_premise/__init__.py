@@ -145,7 +145,7 @@ def get_weight_from_premise_dict(
   # 无意识模式判定
   # 平然催眠下目标仍正常与博士互动，口上照常放行
   if (
-      unconscious_pass_flag == False
+      not unconscious_pass_flag
       and handle_unconscious_flag_ge_1(target_character_id)
       and not handle_unconscious_flag_4(target_character_id)
   ):

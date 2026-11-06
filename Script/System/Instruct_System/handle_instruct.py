@@ -1648,12 +1648,9 @@ def handle_ask_group_sex() -> None:
       now_character_data.state = constant.CharacterStatus.STATUS_WAIT
       now_character_data.behavior.duration = 1
       # 开始判定，TODO 根据已同意人数而增加额外实行值加值
-      if (
-          instuct_judege.calculation_instuct_judege(
-              0, chara_id, _("群交"), not_draw_flag=True
-          )[0]
-          == False
-      ):
+      if not instuct_judege.calculation_instuct_judege(
+          0, chara_id, _("群交"), not_draw_flag=True
+      )[0]:
         h_flag = False
         refuse_chara_list.append(chara_id)
 

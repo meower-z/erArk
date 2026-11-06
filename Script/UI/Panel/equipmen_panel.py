@@ -196,18 +196,18 @@ def smith_maintain_equipment_once(
   # 先维修
   if repair_equipment_first:
     # 如果未指定维修成功，则随机选择维修
-    if repair_flag == False:
+    if not repair_flag:
       repair_flag, repair_text = repair_equipment(smith_chara_id)
     # 如果未维修，则进行保养
-    if repair_flag == False and maintain_flag == False:
+    if not repair_flag and not maintain_flag:
       maintain_flag, maintain_text = maintain_equipment(smith_chara_id)
   # 先保养
   else:
     # 如果未指定保养成功，则随机选择保养
-    if maintain_flag == False:
+    if not maintain_flag:
       maintain_flag, maintain_text = maintain_equipment(smith_chara_id)
     # 如果未保养，则进行维修
-    if maintain_flag == False and repair_flag == False:
+    if not maintain_flag and not repair_flag:
       repair_flag, repair_text = repair_equipment(smith_chara_id)
 
   # 绘制结果

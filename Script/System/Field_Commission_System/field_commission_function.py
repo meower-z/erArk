@@ -60,7 +60,7 @@ def get_commission_demand_and_reward(
   """
   commission_data = game_config.config_commission[commission_id]
   # 获取需求或奖励文本
-  if demand_or_reward == False:
+  if not demand_or_reward:
     all_text = commission_data.demand
   else:
     all_text = commission_data.reward
@@ -87,7 +87,7 @@ def get_commission_demand_and_reward(
     )
 
   # 特殊奖励单独处理
-  if demand_or_reward == True and deduction_or_increase == True:
+  if demand_or_reward and deduction_or_increase:
     if commission_id == 1104:
       cache.rhodes_island.vehicles[51][0] += 1
       info_draw = draw.WaitDraw()

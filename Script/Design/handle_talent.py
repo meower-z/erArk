@@ -341,7 +341,7 @@ def npc_b_talent_change_for_lactation_flag(character_id: int) -> None:
   if (
       lactating
       and handle_premise.handle_milk_ge_80(character_id)
-      and character_data.pregnancy.lactation_flag == False
+      and not character_data.pregnancy.lactation_flag
   ):
     if body_part_talent_update(
         character_id, [121, 122, 123, 124, 125], True, _("胸部")

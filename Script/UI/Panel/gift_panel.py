@@ -560,7 +560,7 @@ class Gift_Panel:
         return False
       elif (
           target_character_data.ability[18] == 0
-          and target_character_data.sp_flag.angry_with_player == False
+          and not target_character_data.sp_flag.angry_with_player
       ):
         now_draw = draw.WaitDraw()
         draw_text = _("\n  {0}没有生气，不需要赠送道歉礼物\n").format(

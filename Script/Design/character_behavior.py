@@ -237,7 +237,7 @@ def judge_character_status(character_id: int) -> int:
       character_id, event_before_instrust_flag=True
   )
   event_type_now = 1
-  if start_event_draw != None:
+  if start_event_draw is not None:
     event_id = start_event_draw.event_id
     character_data.event.event_id = event_id
     event_config = game_config.config_event[event_id]
@@ -256,7 +256,7 @@ def judge_character_status(character_id: int) -> int:
   #     print(f"debug 2 move_src = {character_data.behavior.move_src},position = {character_data.position}")
 
   end_event_draw = event.handle_event(character_id)
-  if end_event_draw != None and start_event_draw == None:
+  if end_event_draw is not None and start_event_draw is None:
     end_event_id = end_event_draw.event_id
     end_event_type = end_event_draw.event_type
     event_config = game_config.config_event[end_event_id]
@@ -275,7 +275,7 @@ def judge_character_status(character_id: int) -> int:
   #     print(f"debug 3 move_src = {character_data.behavior.move_src},position = {character_data.position}")
 
   # 绘制数值变化
-  if first_settle_panel != None and len(first_settle_panel.draw_list):
+  if first_settle_panel is not None and len(first_settle_panel.draw_list):
     # Web模式：不绘制结算面板，数值变化已通过collect_web_value_changes收集
     # 由前端以浮动文本形式在玩家信息栏和交互对象信息栏显示
     if cache.web_mode:
@@ -283,7 +283,7 @@ def judge_character_status(character_id: int) -> int:
     else:
       # TK模式：正常绘制结算信息
       first_settle_panel.draw()
-      if second_settle_panel != None:
+      if second_settle_panel is not None:
         second_settle_panel.draw()
       # 进行一次暂停以便玩家看输出信息，非玩家的信息显示由设置控制
       if character_id == 0 or cache.all_system_setting.draw_setting[19]:
