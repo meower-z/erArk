@@ -81,8 +81,7 @@ def _iter_all() -> Iterator[tuple[int, game_type.Character]]:
       getattr(cache, "character_data", None), dict
   ):
     return
-  for cid, chara in cache.character_data.items():
-    yield cid, chara
+  yield from cache.character_data.items()
 
 
 def _iter_pl_and_npcs() -> Iterator[tuple[int, game_type.Character]]:

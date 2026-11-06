@@ -3,10 +3,6 @@
 import random
 import bisect
 import numpy
-from typing import TypeVar
-
-Key = TypeVar("Key")
-""" 字典键的类型 """
 
 
 def get_rand_value_for_value_region(value_list: list[float]) -> float:
@@ -20,7 +16,7 @@ def get_rand_value_for_value_region(value_list: list[float]) -> float:
   return random.choices(value_list, weights=value_list)[0]
 
 
-def get_random_for_weight(data: dict[Key, int]) -> Key:
+def get_random_for_weight[Key](data: dict[Key, int]) -> Key:
   """
   按权重随机获取dict中的一个key
   Keyword arguments:

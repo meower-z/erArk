@@ -6,7 +6,7 @@ from types import FunctionType
 from Script.Core import get_text
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import Enum, StrEnum
 from itertools import count
 from collections.abc import Buffer, Mapping, Iterable
 from typing import Any, Protocol, SupportsIndex, SupportsInt, cast, runtime_checkable
@@ -69,7 +69,7 @@ PATIENT_ID_COUNTER = count(1)
 """病人 ID 自增生成器"""
 
 
-class MedicalPatientState(str, Enum):
+class MedicalPatientState(StrEnum):
   """病人在整个医疗流程中可能出现的状态枚举"""
 
   REFRESHED = "refreshed"
@@ -126,7 +126,7 @@ def get_state_display_name(state: MedicalPatientState) -> str:
   return STATE_DISPLAY_NAME.get(state, str(state))
 
 
-class MedicalPatientPersonality(str, Enum):
+class MedicalPatientPersonality(StrEnum):
   """刷新病人时使用的性格标识，影响自述文本与事件"""
 
   RATIONAL = "rational"
@@ -144,7 +144,7 @@ class MedicalDoctorProfession(Enum):
   """住院医生，负责病房管理"""
 
 
-class MedicalPatientPriority(str, Enum):
+class MedicalPatientPriority(StrEnum):
   """医疗部病人接诊优先策略枚举"""
 
   NORMAL = "normal"
@@ -451,8 +451,7 @@ class MedicalDailyCounters:
     """
 
     # --- 直接遍历字典形式的数据，以保持输出顺序稳定 ---
-    for key, value in self.as_dict().items():
-      yield key, value
+    yield from self.as_dict().items()
 
   def bump_medicine_consumption(self, delta: object) -> None:
     """累加药品消耗统计，支持一次写入多种资源的增量。

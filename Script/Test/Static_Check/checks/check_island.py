@@ -843,7 +843,7 @@ def check_island_16_dormitory_managers_structure() -> list[CheckFailure]:
             "ISLAND-16",
             "宿舍管理员表结构与引用合法",
             f"dormitory_managers全量={dormitory_managers}，非法层键={illegal_layers}，"
-            f"非法值={illegal_values}，重复管理员及其层号={[(m, [l for l, mm in non_zero if mm == m]) for m in dup_managers]}，"
+            f"非法值={illegal_values}，重复管理员及其层号={[(m, [n for n, mm in non_zero if mm == m]) for m in dup_managers]}，"
             f"不存在的cid={ghost_ids}",
             [m for m in manager_ids if m in dup_managers]
             + [m for _l, m in ghost_ids],

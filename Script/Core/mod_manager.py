@@ -9,9 +9,9 @@ import sys
 import json
 import importlib
 import traceback
-from typing import Any, Callable
+from collections.abc import Callable
 from Script.Core import cache_control, game_type
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
   from types import ModuleType

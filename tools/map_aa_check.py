@@ -110,7 +110,7 @@ def check_map(
   Return arguments:
   Tuple[int, List[str]] -- (最大错位像素数, 问题描述列表)
   """
-  lines = [l for l in load_map_lines(map_name) if l]
+  lines = [line for line in load_map_lines(map_name) if line]
   if not lines:
     return 0, ["地图为空"]
 
