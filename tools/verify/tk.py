@@ -11,7 +11,7 @@ type、click、scroll、advance 之后自动截一帧到证据目录的 frames/�
   tk.py type <返回值>    在输入框输入返回值并回车；只接受游戏当前等待的返回值，自由文本输入时接受任意文字
   tk.py click <返回值>   点击可见的按钮
   tk.py scroll up|down [格数]
-  tk.py advance          在日志区点一下，推进等待提示
+  tk.py advance          点一下输入框，推进等待提示
   tk.py shot [标签]      截当前画面
   tk.py keys             列出游戏当前等待的返回值与可见按钮
   tk.py doctor           体检：窗口尺寸、探针是否在更新、内存、字体
@@ -30,8 +30,6 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import limited_run
 
-# 日志文字列内的空白处：点这里推进等待提示；最右侧边距不在可点击区域内。坐标针对 tk_game.SCREEN 的 2100 宽窗口
-ADVANCE_POINT = (700, 550)
 SCROLL_POINT = (1050, 550)
 MIN_WINDOW_WIDTH = 2000
 PROBE_MAX_AGE_S = 5
@@ -374,7 +372,8 @@ def main():
         input_sent=False,
     )
   elif args.action == "advance":
-    click_at(state, *ADVANCE_POINT)
+    # 等待提示时，点中日志里按钮的左键不会结束等待。输入框在日志区外，上面没有按钮。
+    click_at(state, *probe["input"])
     act(state, "advance", "advance", probe)
 
 
