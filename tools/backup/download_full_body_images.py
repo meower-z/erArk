@@ -136,7 +136,7 @@ def main() -> None:
       # 取消注释以启用自动清理临时目录
       # shutil.rmtree(temp_dir)
       pass
-    except:
+    except BaseException:
       pass
 
   print("\n批量处理完成。")

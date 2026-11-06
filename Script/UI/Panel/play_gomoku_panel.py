@@ -255,7 +255,7 @@ class Gomoku_Board:
     list -- 空位坐标列表
     """
     print('get_valid_moves is deprecated. Use get_valuable_moves instead.')
-    return list(zip(*np.where(self.board == 0)))
+    return list(zip(*np.where(self.board == 0), strict=False))
 
   def put(self, i: int, j: int, role: int | None = None) -> bool:
     """

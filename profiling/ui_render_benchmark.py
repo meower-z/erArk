@@ -32,6 +32,8 @@ if TYPE_CHECKING:
 
   from Script.UI.Panel import in_scene_panel, see_map_panel
 
+  BenchmarkPanel = see_map_panel.SeeMapPanel | in_scene_panel.InScenePanel
+
   class BenchmarkState(TypedDict):
     """基准运行状态：已完成屏数、每屏等待耗时（秒）、是否已在预热后清屏、是否超时中止"""
 
@@ -241,7 +243,7 @@ def main() -> None:
           f"开始基准：面板={args.panel}，{args.screens} 屏完整重绘，文本宽度 {width}"
       )
       t_total = time.perf_counter()
-      panel: see_map_panel.SeeMapPanel | in_scene_panel.InScenePanel
+      panel: BenchmarkPanel
       if args.panel == "map":
         # 查看地图界面：SeeMapPanel 的 while-1 循环同样以 now_panel_id 为退出条件
         cache.now_panel_id = constant.Panel.SEE_MAP

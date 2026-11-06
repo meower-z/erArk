@@ -670,7 +670,7 @@ class Manage_Basement_Panel:
 
             all_charas.append(npc_id)
 
-          def get_sort_val(nid: int, key: str) -> float:
+          def get_sort_val(nid: int, key: str, columns=cat_columns) -> float:
             if key == _("无"):
               return 0
             c = cache.character_data[nid]
@@ -699,7 +699,7 @@ class Manage_Basement_Panel:
                 return -1
               return 0
 
-            for _cname, _cols in cat_columns.items():
+            for _cname, _cols in columns.items():
               for _col_name, _col_id in _cols:
                 if _col_name == key:
                   return c.ability.get(_col_id, 0)

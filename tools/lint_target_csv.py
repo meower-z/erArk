@@ -134,7 +134,7 @@ def check_numbering(rows: "list[TargetRow]") -> None:
   for row in rows:
     per_type[row["type"]].append(row)
   for now_type, type_rows in sorted(per_type.items()):
-    for before, after in zip(type_rows, type_rows[1:]):
+    for before, after in zip(type_rows, type_rows[1:], strict=False):
       if after["cid"] < before["cid"]:
         report(
             "R2 同type内cid逆序（会导致AI优先级错乱）",
@@ -148,7 +148,7 @@ def check_numbering(rows: "list[TargetRow]") -> None:
         )
 
   # R3 全局升序
-  for before, after in zip(rows, rows[1:]):
+  for before, after in zip(rows, rows[1:], strict=False):
     if after["cid"] < before["cid"]:
       report(
           "R3 全局cid逆序",

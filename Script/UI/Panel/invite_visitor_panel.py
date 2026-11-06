@@ -65,7 +65,7 @@ def sort_guest_room_key(room_path: str) -> int:
     try:
       room_number = int(room_name.replace("客房", ""))
       return room_number
-    except:
+    except BaseException:
       return 999  # 如果无法解析，返回一个大数字
   return 999
 

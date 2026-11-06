@@ -286,7 +286,9 @@ def doctor(state):
     memory = None
   memory_text = "读不到" if memory is None else f"{memory} MiB"
   cap = state["mem_max_mib"]
-  fonts = subprocess.run(["fc-list"], capture_output=True, text=True).stdout
+  fonts = subprocess.run(
+      ["fc-list"], capture_output=True, text=True, check=False
+  ).stdout
   checks = [
       (width >= MIN_WINDOW_WIDTH, f"窗口 {size}（需宽于 {MIN_WINDOW_WIDTH}）"),
       (

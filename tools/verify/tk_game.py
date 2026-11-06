@@ -70,6 +70,7 @@ def find_window(display):
       capture_output=True,
       text=True,
       env={**os.environ, "DISPLAY": display},
+      check=False,
   )
   return result.stdout.split("\n", 1)[0].strip()
 

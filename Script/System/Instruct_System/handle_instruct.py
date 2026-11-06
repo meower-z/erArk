@@ -192,7 +192,7 @@ def add_instruct(
       if actual_sub_type == sub_type_str:  # 如果没找到映射，尝试转为整数
         try:
           actual_sub_type = int(sub_type_str)
-        except:
+        except BaseException:
           actual_sub_type = 0
     if actual_sub_type is None:
       actual_sub_type = 0
@@ -248,14 +248,14 @@ def add_instruct(
       if category_val is not None and category_val != "":
         try:
           category = int(category_val)
-        except:
+        except BaseException:
           category = None
 
       panel_id = getattr(csv_config, "panel_id", None)
       if panel_id is not None and panel_id != "":
         try:
           panel_id = constant.Panel.__dict__[panel_id]
-        except:
+        except BaseException:
           panel_id = None
         if panel_id is not None:
           constant.instruct_panel_id_data[instruct_id] = panel_id
@@ -294,7 +294,7 @@ def add_instruct(
           actual_category = constant.InstructCategory.CHARACTER
         else:
           actual_category = constant.InstructCategory.CHARACTER
-      except:
+      except BaseException:
         # 无法获取源代码时使用默认推断
         if actual_instruct_type == constant.InstructType.SYSTEM:
           actual_category = constant.InstructCategory.SYSTEM_PANEL

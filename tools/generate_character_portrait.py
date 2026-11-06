@@ -413,7 +413,7 @@ def build_child_ref_sheet(paths: list[Path]) -> Image.Image:
   sheet = Image.new("RGB", sheet_size, (255, 255, 255))
   # 各行水平居中，所有人头顶和脚底对齐
   y = REF_SHEET_GAP
-  for row, row_width in zip(rows, row_widths):
+  for row, row_width in zip(rows, row_widths, strict=False):
     x = (sheet.width - row_width) // 2
     for figure in row:
       sheet.paste(figure, (x, y))

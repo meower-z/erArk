@@ -50,7 +50,7 @@ def init_map_data() -> None:
         dict[str, game_type.Map],
         dict[str, list[str]],
     ] = (cache.scene_data, cache.map_data, constant.place_data)
-    for path, built_data in zip(pickle_paths, built):
+    for path, built_data in zip(pickle_paths, built, strict=False):
       with open(path, "wb") as built_file:
         pickle.dump(built_data, built_file)
         pickle.dump(get_text.now_language, built_file)

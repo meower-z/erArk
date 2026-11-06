@@ -120,7 +120,7 @@ def build_chara_talk(chara_adv_id: int = 0) -> None:
       for key in character_talk_data["Talk"]["data"].copy():
         if key["adv_id"] == chara_adv_id:
           character_talk_data["Talk"]["data"].remove(key)
-  except:
+  except BaseException:
     character_talk_data = {}
 
   talk_file_list = os.listdir(talk_dir)
