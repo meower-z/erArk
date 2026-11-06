@@ -42,7 +42,7 @@ def get_class_key(date_ordinal: int, period: int) -> str:
   Return arguments:
   str -- 形如"739510-3"的键
   """
-  return "%d-%d" % (date_ordinal, period)
+  return f"{date_ordinal}-{period}"
 
 
 def parse_class_key(class_key: str) -> tuple:
@@ -427,9 +427,7 @@ def judge_sex_class_state_ok(character_id: int) -> bool:
   from Script.Design import handle_premise
 
   for normal_id in (2, 5, 6, 7):
-    if not getattr(handle_premise, "handle_normal_%d" % normal_id)(
-        character_id
-    ):
+    if not getattr(handle_premise, f"handle_normal_{normal_id}")(character_id):
       return False
   return not cache.character_data[character_id].sp_flag.imprisonment
 

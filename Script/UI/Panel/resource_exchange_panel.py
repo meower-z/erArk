@@ -1147,7 +1147,7 @@ class Resource_Exchange_Line_Panel:
       if settings["buy_on"]:
         # 买入库存
         stock_buy_draw = draw.NormalDraw()
-        stock_buy_draw.text = ("{0}：").format(
+        stock_buy_draw.text = ("{}：").format(
             attr_calculation.pad_display_width(
                 _("自动买入目标库存"), 20, align="center"
             )
@@ -1177,12 +1177,12 @@ class Resource_Exchange_Line_Panel:
 
         # 买入价格
         price_buy_draw = draw.NormalDraw()
-        price_buy_draw.text = ("{0}：").format(
+        price_buy_draw.text = ("{}：").format(
             attr_calculation.pad_display_width(
                 _("自动买入触发价格"), 20, align="center"
             )
         )
-        price_buy_draw.text += ("{0}%").format(settings["buy_price_percent"])
+        price_buy_draw.text += ("{}%").format(settings["buy_price_percent"])
         price_buy_draw.draw()
         for label, delta in price_buttons:
           button = draw.CenterButton(
@@ -1237,7 +1237,7 @@ class Resource_Exchange_Line_Panel:
       if settings["sell_on"]:
         # 卖出库存
         stock_sell_draw = draw.NormalDraw()
-        stock_sell_draw.text = ("{0}：").format(
+        stock_sell_draw.text = ("{}：").format(
             attr_calculation.pad_display_width(
                 _("自动卖出目标库存"), 20, align="center"
             )
@@ -1267,12 +1267,12 @@ class Resource_Exchange_Line_Panel:
 
         # 卖出价格
         price_sell_draw = draw.NormalDraw()
-        price_sell_draw.text = ("{0}：").format(
+        price_sell_draw.text = ("{}：").format(
             attr_calculation.pad_display_width(
                 _("自动卖出触发价格"), 20, align="center"
             )
         )
-        price_sell_draw.text += ("{0}%").format(settings["sell_price_percent"])
+        price_sell_draw.text += ("{}%").format(settings["sell_price_percent"])
         price_sell_draw.draw()
         for label, delta in price_buttons:
           button = draw.CenterButton(

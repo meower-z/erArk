@@ -208,10 +208,10 @@ def get_course_text(now_course: dict) -> str:
   if now_course["course_type"] in education_constant.CLASSROOM_COURSE_TYPE_SET:
     if now_course["ability_id"] > 0:
       ability_name = game_config.config_ability[now_course["ability_id"]].name
-      return "{0}·{1}｜{2}".format(
+      return "{}·{}｜{}".format(
           type_name, ability_name, now_course["classroom"]
       )
-    return "{0}｜{1}".format(type_name, now_course["classroom"])
+    return "{}｜{}".format(type_name, now_course["classroom"])
   # 个人式课：目标本身就是地点名或配置cid
   target = now_course["target"]
   if now_course["course_type"] == education_constant.COURSE_TYPE_INTEREST:
@@ -672,13 +672,7 @@ class CharacterInfoHead:
     if character_id:
       message = f"{character_data.name} {favorability_and_trust_text}"
     else:
-      message = ("{character_name}{character_nick_name}{eja}").format(
-          # character_id=character_id,
-          character_name=character_data.name,
-          character_nick_name=character_data.nick_name,
-          # sex_text=sex_text,
-          eja=eja_text,
-      )
+      message = f"{character_data.name}{character_data.nick_name}{eja_text}"
     message_draw = draw.CenterDraw()
     # 根据其他状态的长度来调整文本的长度，同时也保证了一个最小长度
     text_width = text_handle.get_text_index(message)

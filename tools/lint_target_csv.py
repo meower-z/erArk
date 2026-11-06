@@ -82,7 +82,7 @@ def load_rows() -> "list[TargetRow]":
     if len(parts) < 5:
       report(
           "R8 数据区存在非法行",
-          "第 %d 行只有 %d 列：%s" % (index, len(parts), line[:40]),
+          f"第 {index} 行只有 {len(parts)} 列：{line[:40]}",
       )
       continue
     try:
@@ -94,7 +94,7 @@ def load_rows() -> "list[TargetRow]":
     except ValueError:
       report(
           "R8 数据区存在非法行",
-          "第 %d 行的 cid/状态机/type 无法转为整数：%s" % (index, line[:40]),
+          f"第 {index} 行的 cid/状态机/type 无法转为整数：{line[:40]}",
       )
       continue
     rows.append(
@@ -123,8 +123,9 @@ def check_numbering(rows: "list[TargetRow]") -> None:
     if row["cid"] in seen:
       report(
           "R1 cid重复",
-          "cid %d 同时出现在第 %d 行和第 %d 行"
-          % (row["cid"], seen[row["cid"]], row["line"]),
+          "cid {} 同时出现在第 {} 行和第 {} 行".format(
+              row["cid"], seen[row["cid"]], row["line"]
+          ),
       )
     seen[row["cid"]] = row["line"]
 
@@ -137,8 +138,7 @@ def check_numbering(rows: "list[TargetRow]") -> None:
       if after["cid"] < before["cid"]:
         report(
             "R2 同type内cid逆序（会导致AI优先级错乱）",
-            "type%d：第%d行(cid %d) 之后是 第%d行(cid %d)"
-            % (
+            "type{}：第{}行(cid {}) 之后是 第{}行(cid {})".format(
                 now_type,
                 before["line"],
                 before["cid"],
@@ -152,8 +152,9 @@ def check_numbering(rows: "list[TargetRow]") -> None:
     if after["cid"] < before["cid"]:
       report(
           "R3 全局cid逆序",
-          "第%d行(cid %d) 之后是 第%d行(cid %d)"
-          % (before["line"], before["cid"], after["line"], after["cid"]),
+          "第{}行(cid {}) 之后是 第{}行(cid {})".format(
+              before["line"], before["cid"], after["line"], after["cid"]
+          ),
       )
 
   # R4 cid 编码 type
@@ -161,8 +162,9 @@ def check_numbering(rows: "list[TargetRow]") -> None:
     if row["cid"] // 10000 != row["type"]:
       report(
           "R4 cid未按 type*10000+组*100+序号*5 编码",
-          "第%d行 cid %d 的 type 是 %d"
-          % (row["line"], row["cid"], row["type"]),
+          "第{}行 cid {} 的 type 是 {}".format(
+              row["line"], row["cid"], row["type"]
+          ),
       )
 
 
@@ -187,14 +189,12 @@ def check_effect(rows: "list[TargetRow]") -> None:
     try:
       target_id = int(parts[1])
     except ValueError:
-      report(
-          "R7 effect.csv引用异常", "第 %d 行的 target_id 无法转为整数" % index
-      )
+      report("R7 effect.csv引用异常", f"第 {index} 行的 target_id 无法转为整数")
       continue
     if target_id not in known:
       report(
           "R7 effect.csv引用了不存在的target",
-          "第 %d 行引用 target_id %d" % (index, target_id),
+          f"第 {index} 行引用 target_id {target_id}",
       )
 
 
@@ -226,13 +226,14 @@ def check_registry(rows: "list[TargetRow]") -> None:
       if premise not in constant.handle_premise_data:
         report(
             "R5 前提名无法解析（该行永远不会被选中）",
-            "第%d行 cid %d 的前提 %s" % (row["line"], row["cid"], premise),
+            "第{}行 cid {} 的前提 {}".format(row["line"], row["cid"], premise),
         )
     if row["state_machine_id"] not in constant.handle_state_machine_data:
       report(
           "R6 状态机不存在（选中后会崩溃）",
-          "第%d行 cid %d 的状态机 %d"
-          % (row["line"], row["cid"], row["state_machine_id"]),
+          "第{}行 cid {} 的状态机 {}".format(
+              row["line"], row["cid"], row["state_machine_id"]
+          ),
       )
 
 
@@ -240,7 +241,7 @@ def main() -> int:
   """脚本入口"""
   fast = "--fast" in sys.argv
   rows = load_rows()
-  print("读入 %d 行数据" % len(rows))
+  print(f"读入 {len(rows)} 行数据")
 
   check_numbering(rows)
   check_effect(rows)
@@ -255,11 +256,11 @@ def main() -> int:
 
   print("")
   for rule, messages in problems.items():
-    print("【%s】%d 处" % (rule, len(messages)))
+    print(f"【{rule}】{len(messages)} 处")
     for message in messages[:10]:
       print("   " + message)
     if len(messages) > 10:
-      print("   ...（其余 %d 处省略）" % (len(messages) - 10))
+      print(f"   ...（其余 {len(messages) - 10} 处省略）")
     print("")
   return 1
 

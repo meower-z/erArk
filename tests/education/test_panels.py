@@ -1146,7 +1146,7 @@ _l21_cell = next(
     (
         one
         for one in _button_log
-        if one[0] == "{0}/教师乙{1}".format(_name45, _("（监禁）"))
+        if one[0] == "{}/教师乙{}".format(_name45, _("（监禁）"))
     ),
     None,
 )
@@ -1160,7 +1160,7 @@ check(
 _l21_too_wide = [
     text
     for text in (
-        "{0}/四字教师{1}".format(
+        "{}/四字教师{}".format(
             game_config.config_ability[_aid].name, _("（监禁）")
         )
         for _aid in E.SUBJECT_ABILITY_LIST
