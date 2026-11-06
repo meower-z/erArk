@@ -76,8 +76,7 @@ def _iter_charas() -> Iterator[tuple[int, game_type.Character]]:
       getattr(cache, "character_data", None), dict
   ):
     return
-  for cid, chara in cache.character_data.items():
-    yield cid, chara
+  yield from cache.character_data.items()
 
 
 def _name(chara: object) -> str:

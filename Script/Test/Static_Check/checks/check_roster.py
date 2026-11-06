@@ -1117,7 +1117,7 @@ def check_visitor_identity_mutual_exclusion() -> list[CheckFailure]:
   V = set(ri.visitor_info)
   P = set(ri.recruited_id)
   t = _invite_target(ri)
-  I = {t} if t else set()
+  invited = {t} if t else set()
   C: set[int] = set()
   for r in ri.ongoing_field_commissions.values():
     if isinstance(r, list) and r and isinstance(r[0], list):
@@ -1126,7 +1126,7 @@ def check_visitor_identity_mutual_exclusion() -> list[CheckFailure]:
   E = {cid for cid, c in cd.items() if cid != 0 and c.sp_flag.escaping}
   named = {
       "待确认招募(recruited_id)": P,
-      "邀请目标(invite_visitor)": I,
+      "邀请目标(invite_visitor)": invited,
       "外勤中(ongoing_field_commissions)": C,
       "囚犯(current_prisoners)": R,
       "逃跑者(escaping)": E,

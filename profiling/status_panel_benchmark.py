@@ -194,13 +194,14 @@ def main() -> None:
       f"参数: iterations={args.iterations} warmup={args.warmup} width={args.panel_width} column={args.column}"
   )
 
-  factory = lambda: see_character_info_panel.SeeCharacterStatusPanel(
-      character_id,
-      args.panel_width,
-      args.column,
-      args.type_number,
-      center_status,
-  )
+  def factory():
+    return see_character_info_panel.SeeCharacterStatusPanel(
+        character_id,
+        args.panel_width,
+        args.column,
+        args.type_number,
+        center_status,
+    )
 
   if args.warmup > 0:
     log("开始预热...")
