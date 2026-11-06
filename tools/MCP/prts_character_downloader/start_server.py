@@ -10,7 +10,6 @@ PRTS角色立绘下载器 MCP服务器启动脚本
 """
 
 import sys
-import os
 import asyncio
 
 

@@ -237,7 +237,7 @@ def new_game_minimal_init() -> None:
   但剔除用户交互与 UI 绘制，仅构造可供 AI 行为循环使用的最小数据环境。
   """
   log("执行新建游戏最小初始化...")
-  from Script.Core import cache_control, game_type, constant
+  from Script.Core import cache_control, game_type
   from Script.Design import (
       character_handle,
       character,
@@ -399,7 +399,7 @@ def init_game_environment(
   from Script.Design import start_flow, character_handle, game_time
   import Script.Settle
   import Script.StateMachine
-  from Script.Core import flow_handle, game_init, io_init
+  from Script.Core import game_init
   import Script.UI.Flow
 
   # 尝试存档逻辑

@@ -81,7 +81,6 @@ from Script.Design import (  # noqa: E402
 import Script.Settle  # noqa: F401,E402  注册全部结算器（缺了会 KeyError）
 import Script.StateMachine  # noqa: F401,E402  注册全部状态机
 from Script.Core import constant, constant_effect, flow_handle, save_handle  # noqa: F401,E402
-from Script.Settle import default as settle_default  # noqa: F401,E402
 from Script.UI.Moudle import draw  # noqa: E402
 
 character_handle.init_character_tem()

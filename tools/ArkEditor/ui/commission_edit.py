@@ -530,8 +530,6 @@ class CommissionItemAddDialog(QDialog):
     None
     """
     # 只移除当前插入的控件
-    from PySide6.QtWidgets import QHBoxLayout
-
     h_layout = self.layout().itemAt(0).layout()
     # 子项控件在h_layout的第3和第4个位置
     if (

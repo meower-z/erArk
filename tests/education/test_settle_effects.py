@@ -3,7 +3,6 @@
 
 from _bootstrap import DEFAULT_TIME, SCENE_DORM, _, cache, check, class_ai, classroom_path, clear_schedules, constant, constant_effect, datetime, drawn_text, education_constant, finish, game_config, game_time, game_type, growth_handle, handle_premise, make_character, move_to, open_all_classroom, period_time, pl, remove_character, schedule_handle, schedule_template_handle, section, semester_handle, set_time, sex_class_handle
 from Script.Settle import default as settle_default
-from Script.Settle import Second_effect  # noqa: F401  注册二段结算
 
 open_all_classroom()
 clear_schedules()

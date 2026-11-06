@@ -4,7 +4,7 @@
 """
 
 import uuid
-from PySide6.QtWidgets import QListWidget, QMenuBar, QWidgetAction, QListWidgetItem, QAbstractItemView, QPushButton, QHBoxLayout, QWidget, QTextEdit, QLabel, QGridLayout, QMenu, QCheckBox, QSizePolicy
+from PySide6.QtWidgets import QListWidget, QMenuBar, QWidgetAction, QAbstractItemView, QPushButton, QHBoxLayout, QWidget, QTextEdit, QLabel, QGridLayout, QMenu, QCheckBox, QSizePolicy
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont, QCursor, QColor
 from ui.list_item import ListItem

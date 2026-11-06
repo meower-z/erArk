@@ -9,16 +9,10 @@ from PySide6.QtWidgets import (
     QTreeWidgetItem,
     QAbstractItemView,
     QVBoxLayout,
-    QTextEdit,
     QPushButton,
-    QLabel,
-    QMenu,
-    QComboBox,
-    QMenuBar,
-    QWidgetAction,
     QLineEdit,  # 新增 QLineEdit
 )
-from PySide6.QtGui import QFont, Qt, QActionGroup
+from PySide6.QtGui import QFont, Qt
 import cache_control
 
 font = QFont()
