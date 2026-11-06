@@ -141,8 +141,8 @@ def add_instruct(
       actual_premise_set = set()
       premise_str = getattr(csv_config, "premise_set", None)
       if premise_str:
-        for premise_name in premise_str.split("|"):
-          premise_name = premise_name.strip()
+        for raw_premise_name in premise_str.split("|"):
+          premise_name = raw_premise_name.strip()
           if premise_name and hasattr(constant_promise.Premise, premise_name):
             actual_premise_set.add(
                 getattr(constant_promise.Premise, premise_name)

@@ -95,7 +95,6 @@ def save_editor_config() -> None:
   Return arguments:
   None
   """
-  global last_open_dir
   if "Editor" not in config:
     config["Editor"] = {}
   config["Editor"]["last_open_dir"] = last_open_dir

@@ -488,8 +488,8 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
 
     # assembly_line (Dict[int, List])
     if hasattr(ri, 'assembly_line'):
-      for line_id, line_data in ri.assembly_line.items():
-        line_data = normalize_line_chara_id_data(line_data, 1, 5)
+      for line_id, raw_line_data in ri.assembly_line.items():
+        line_data = normalize_line_chara_id_data(raw_line_data, 1, 5)
         ri.assembly_line[line_id] = line_data
         if line_data[1] != 0:
           line_data[1] = old_to_new_id.get(line_data[1], line_data[1])
@@ -533,8 +533,8 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
 
     # herb_garden_line (Dict[int, List])
     if hasattr(ri, 'herb_garden_line'):
-      for line_id, line_data in ri.herb_garden_line.items():
-        line_data = normalize_line_chara_id_data(line_data, 1, 5)
+      for line_id, raw_line_data in ri.herb_garden_line.items():
+        line_data = normalize_line_chara_id_data(raw_line_data, 1, 5)
         ri.herb_garden_line[line_id] = line_data
         if line_data[1] != 0:
           line_data[1] = old_to_new_id.get(line_data[1], line_data[1])
@@ -547,8 +547,8 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
 
     # green_house_line (Dict[int, List])
     if hasattr(ri, 'green_house_line'):
-      for line_id, line_data in ri.green_house_line.items():
-        line_data = normalize_line_chara_id_data(line_data, 1, 5)
+      for line_id, raw_line_data in ri.green_house_line.items():
+        line_data = normalize_line_chara_id_data(raw_line_data, 1, 5)
         ri.green_house_line[line_id] = line_data
         if line_data[1] != 0:
           line_data[1] = old_to_new_id.get(line_data[1], line_data[1])
@@ -631,8 +631,8 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
 
     # recruit_line (Dict[int, List]) - 招募线id:[0进度, 1策略id, 2主招聘专员id, 3效率]
     if hasattr(ri, 'recruit_line'):
-      for line_id, line_data in ri.recruit_line.items():
-        line_data = normalize_line_chara_id_data(line_data, 2, 4)
+      for line_id, raw_line_data in ri.recruit_line.items():
+        line_data = normalize_line_chara_id_data(raw_line_data, 2, 4)
         ri.recruit_line[line_id] = line_data
         if line_data[2] != 0:
           line_data[2] = old_to_new_id.get(line_data[2], line_data[2])
@@ -1267,7 +1267,7 @@ def migrate_character_replacement(
               old_to_new_id_map.get(oid, oid)
           ] = value
         for (
-            cid,
+            _cid,
             serve_data,
         ) in character.h_state.group_sex_body_template_dict.items():
           if (
@@ -1449,8 +1449,8 @@ def migrate_character_replacement(
 
     # assembly_line
     if hasattr(ri, 'assembly_line') and ri.assembly_line:
-      for line_id, line_data in ri.assembly_line.items():
-        line_data = normalize_line_chara_id_data(line_data, 1, 5)
+      for line_id, raw_line_data in ri.assembly_line.items():
+        line_data = normalize_line_chara_id_data(raw_line_data, 1, 5)
         ri.assembly_line[line_id] = line_data
         if line_data[1] != 0:
           line_data[1] = old_to_new_id_map.get(line_data[1], line_data[1])
@@ -1496,8 +1496,8 @@ def migrate_character_replacement(
 
     # herb_garden_line
     if hasattr(ri, 'herb_garden_line') and ri.herb_garden_line:
-      for line_id, line_data in ri.herb_garden_line.items():
-        line_data = normalize_line_chara_id_data(line_data, 1, 5)
+      for line_id, raw_line_data in ri.herb_garden_line.items():
+        line_data = normalize_line_chara_id_data(raw_line_data, 1, 5)
         ri.herb_garden_line[line_id] = line_data
         if line_data[1] != 0:
           line_data[1] = old_to_new_id_map.get(line_data[1], line_data[1])
@@ -1510,8 +1510,8 @@ def migrate_character_replacement(
 
     # green_house_line
     if hasattr(ri, 'green_house_line') and ri.green_house_line:
-      for line_id, line_data in ri.green_house_line.items():
-        line_data = normalize_line_chara_id_data(line_data, 1, 5)
+      for line_id, raw_line_data in ri.green_house_line.items():
+        line_data = normalize_line_chara_id_data(raw_line_data, 1, 5)
         ri.green_house_line[line_id] = line_data
         if line_data[1] != 0:
           line_data[1] = old_to_new_id_map.get(line_data[1], line_data[1])
@@ -1611,8 +1611,8 @@ def migrate_character_replacement(
 
     # recruit_line
     if hasattr(ri, 'recruit_line') and ri.recruit_line:
-      for line_id, line_data in ri.recruit_line.items():
-        line_data = normalize_line_chara_id_data(line_data, 2, 4)
+      for line_id, raw_line_data in ri.recruit_line.items():
+        line_data = normalize_line_chara_id_data(raw_line_data, 2, 4)
         ri.recruit_line[line_id] = line_data
         if line_data[2] != 0:
           line_data[2] = old_to_new_id_map.get(line_data[2], line_data[2])

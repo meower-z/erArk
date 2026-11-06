@@ -1152,12 +1152,12 @@ def update_map(loaded_dict: dict[str, Any]) -> int:
     # 在2024.7月的版本中将人气快餐开封菜改为了约翰老妈汉堡店
     if "贸易\\人气快餐开封菜" in loaded_dict["scene_data"]:
       # print("发现存档存在人气快餐开封菜")
-      for key, value in loaded_dict["character_data"].items():
+      for _key, value in loaded_dict["character_data"].items():
         if value.position[-1] == "人气快餐开封菜":
           value.position[-1] = "约翰老妈汉堡店"
           # print(f"已将{value.name}的位置从人气开封菜改为约翰老妈汉堡店")
-    for key, value in loaded_dict["scene_data"].copy().items():
-      # print(f"debug 地图数据: key = {key}, value = {value.scene_tag}")
+    for key, _value in loaded_dict["scene_data"].copy().items():
+      # print(f"debug 地图数据: key = {key}, value = {_value.scene_tag}")
       if key not in cache.scene_data:
         del loaded_dict["scene_data"][key]
         update_count += 1

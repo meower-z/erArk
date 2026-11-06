@@ -309,8 +309,8 @@ def extract_pure_story_script(script_content: str) -> str | None:
     lines = script_content.split('\n')
     story_lines = []
 
-    for line in lines:
-      line = line.strip()
+    for raw_line in lines:
+      line = raw_line.strip()
       # 跳过明显的JavaScript代码行
       if (
           line.startswith('var ')

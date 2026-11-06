@@ -982,7 +982,7 @@ class CommissionDraw:
         return_list.append(name_btn.return_text)
 
         # 渲染工作技能数值数据
-        for col_name, col_id in skill_columns:
+        for _col_name, col_id in skill_columns:
           val = get_eff_ability(npc_id, col_id)
           rank = attr_calculation.judge_grade(val)
           rank_color = f"level{rank.lower()}"

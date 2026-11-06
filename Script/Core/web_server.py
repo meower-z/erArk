@@ -224,8 +224,8 @@ def skip_wait() -> Response:
     wframe_mouse = getattr(cache, 'wframe_mouse', None)
     if wframe_mouse is not None:
       wframe_mouse.w_frame_skip_wait_mouse = 1
-      setattr(wframe_mouse, 'mouse_right', 1)
-    setattr(cache, 'text_wait', 0)
+      wframe_mouse.mouse_right = 1
+    cache.text_wait = 0
     wait_response_triggered = True
     game_state['skip_wait'] = True
 
@@ -2351,7 +2351,6 @@ def update_input_request(current_input_request: dict[str, Any]) -> None:
   返回值类型：无
   功能描述：更新游戏状态中的输入请求数据并通过WebSocket推送到前端
   """
-  global game_state
 
   # 使用线程锁保护状态更新
   with state_lock:
@@ -2387,7 +2386,6 @@ def update_game_state(
   当 cache.web_sub_panel_mode 为 True 时，表示当前正在主界面内显示子面板。
   此时会额外添加场景信息栏、选项卡等数据，让前端能够保留这些元素。
   """
-  global game_state
 
   highlight = []
   skip_wait_flag = bool(

@@ -514,9 +514,9 @@ class LeftDrawIDButtonListPanel:
     for now_text_list in new_text_list:
       now_width = int(width / len(now_text_list))
       now_list: list[draw.Drawable] = []
-      for now_text in now_text_list:
-        if now_text != null_text:
-          now_text = text_handle.id_index(index) + now_text
+      for raw_now_text in now_text_list:
+        if raw_now_text != null_text:
+          now_text = text_handle.id_index(index) + raw_now_text
           now_button = draw.LeftButton(
               now_text,
               str(index),
@@ -527,7 +527,7 @@ class LeftDrawIDButtonListPanel:
           now_list.append(now_button)
           self.return_list.append(str(index))
         else:
-          now_text = text_handle.id_index(index) + now_text
+          now_text = text_handle.id_index(index) + raw_now_text
           now_info_draw = draw.LeftDraw()
           now_info_draw.width = now_width
           now_info_draw.text = now_text

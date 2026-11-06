@@ -137,25 +137,25 @@ def get_image_from_story_page(character_name: str) -> str | None:
                 and "base64" not in img_url
                 and "1px" not in img_url
             ):
-
+              full_url = img_url
               # 处理相对URL
               if img_url.startswith("//"):
-                img_url = "https:" + img_url
+                full_url = "https:" + img_url
               elif img_url.startswith("/"):
-                img_url = "https://prts.wiki" + img_url
+                full_url = "https://prts.wiki" + img_url
 
               # 如果是缩略图，获取原图
-              if "/thumb/" in img_url:
+              if "/thumb/" in full_url:
                 # 从缩略图URL提取原图URL
                 # 例如: /thumb/c/c9/Avg_avg_npc_893_1-1$1.png/380px-Avg_avg_npc_893_1-1$1.png
                 # 转换为: /c/c9/Avg_avg_npc_893_1-1$1.png
                 orig_pattern = r"/thumb(/[^/]+/[^/]+/[^/]+\.\w+)/\d+px-"
-                orig_match = re.search(orig_pattern, img_url)
+                orig_match = re.search(orig_pattern, full_url)
                 if orig_match:
-                  img_url = "https://media.prts.wiki" + orig_match.group(1)
+                  full_url = "https://media.prts.wiki" + orig_match.group(1)
 
-              print(f"找到匹配的图片URL: {img_url}")
-              return img_url
+              print(f"找到匹配的图片URL: {full_url}")
+              return full_url
 
     print(f"未能在表格中找到包含 '{character_name}' 的角色")
 

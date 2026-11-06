@@ -149,8 +149,8 @@ for talk in talk_list:
   if not premise_text or premise_text == "0":
     bad_premise.append(talk.cid)
     continue
-  for token in premise_text.split("&"):
-    token = token.strip()
+  for raw_token in premise_text.split("&"):
+    token = raw_token.strip()
     if not token:
       continue
     if token in seen_token:

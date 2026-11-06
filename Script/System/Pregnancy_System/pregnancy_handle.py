@@ -1017,11 +1017,11 @@ def body_part_grow(character_id: int, print_flag: bool = False) -> str:
     now_talent_id_list = old_talent_id_list[i]
     old_talent_id = 0
     new_talent_id = 0
-    for i in now_talent_id_list:
-      if character_data.talent[i]:
-        old_talent_id = i
-      if mom_character_data.talent[i]:
-        new_talent_id = i
+    for talent_id in now_talent_id_list:
+      if character_data.talent[talent_id]:
+        old_talent_id = talent_id
+      if mom_character_data.talent[talent_id]:
+        new_talent_id = talent_id
     # 如果自己id不是0，则去掉旧的素质
     if old_talent_id != 0:
       character_data.talent[old_talent_id] = 0

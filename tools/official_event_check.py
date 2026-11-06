@@ -347,8 +347,8 @@ class Checker:
     """
     if not premise_text:
       return
-    for one in premise_text.split("&"):
-      one = one.strip()
+    for raw_one in premise_text.split("&"):
+      one = raw_one.strip()
       if not one:
         continue
       if one.startswith("CVP_"):
@@ -397,8 +397,8 @@ class Checker:
       return
     subject = row.get("subject", "1").strip()
     premise_text = row.get("premise", "")
-    for one in effect_text.split("&"):
-      one = one.strip()
+    for raw_one in effect_text.split("&"):
+      one = raw_one.strip()
       if not one:
         continue
       if one.isdigit():

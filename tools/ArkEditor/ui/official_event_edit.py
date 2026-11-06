@@ -97,8 +97,8 @@ def text_to_dict(text: str) -> dict:
       dict 键为token
   """
   result = {}
-  for one in text.split("&"):
-    one = one.strip()
+  for raw_one in text.split("&"):
+    one = raw_one.strip()
     if one:
       result[one] = 1
   return result

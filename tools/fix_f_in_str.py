@@ -79,7 +79,7 @@ for dirpath, dirnames, filenames in os.walk('.'):
               # 用于存放{}的位置
               positions = []
               # 用于存放{}的内容
-              for i in range(count):
+              for _i in range(count):
                 # 提取出{}中的内容
                 value = translation_copy.split('{')[1].split('}')[0]
                 values.append(value)

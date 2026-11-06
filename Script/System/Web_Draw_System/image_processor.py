@@ -128,10 +128,10 @@ class ImageProcessor:
         return None
 
       # 打开图片
-      with Image.open(image_path) as img:
+      with Image.open(image_path) as source_img:
         # 记录原始尺寸
-        original_size = img.size
-
+        original_size = source_img.size
+        img = source_img
         # 确保图片有alpha通道
         if img.mode != "RGBA":
           img = img.convert("RGBA")
@@ -322,9 +322,9 @@ class ImageProcessor:
         print(f"[图片处理器] 全身图文件不存在: {normalized_path}")
         return None
 
-      with Image.open(normalized_path) as img:
-        original_width, original_height = img.size
-
+      with Image.open(normalized_path) as source_img:
+        original_width, original_height = source_img.size
+        img = source_img
         # 确保图片有alpha通道
         if img.mode != "RGBA":
           img = img.convert("RGBA")

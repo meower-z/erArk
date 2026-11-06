@@ -30,8 +30,8 @@ def explain_commission_text(text: str) -> str:
   result = []
   # 多项用&分隔
   items = text.split("&")
-  for item in items:
-    item = item.strip()
+  for raw_item in items:
+    item = raw_item.strip()
     if not item:
       continue
     # 能力类 a_类型_数量

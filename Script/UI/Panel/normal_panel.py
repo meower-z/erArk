@@ -148,12 +148,12 @@ class Take_Care_Baby_Panel:
           continue
         if cache.character_data[chara_id].talent[101]:
           name = cache.character_data[chara_id].name
-          adv_id = cache.character_data[chara_id].adv
-          button_text = f"[{str(adv_id).rjust(4,'0')}]:{name} "
+          chara_adv_id = cache.character_data[chara_id].adv
+          button_text = f"[{str(chara_adv_id).rjust(4,'0')}]:{name} "
 
           button_draw = draw.LeftButton(
               _(button_text),
-              _(str(adv_id)),
+              _(str(chara_adv_id)),
               self.width,
               cmd_func=self.choice_take_care,
               args=(chara_id,),

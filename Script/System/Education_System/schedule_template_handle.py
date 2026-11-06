@@ -509,8 +509,8 @@ def get_activity_age_limit_talent_list(entertainment_id: int) -> list[int]:
     return []
   result = []
   for and_text in need_text.split(education_constant.TEMPLATE_NEED_SPLIT):
-    for one_text in and_text.split(education_constant.TEMPLATE_NEED_OR_SPLIT):
-      one_text = one_text.strip()
+    for raw_text in and_text.split(education_constant.TEMPLATE_NEED_OR_SPLIT):
+      one_text = raw_text.strip()
       if not one_text.startswith("T") or "|" not in one_text:
         continue
       talent_part, value_part = one_text[1:].split("|", 1)

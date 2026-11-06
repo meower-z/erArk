@@ -19,7 +19,7 @@ if os.path.exists(po_path):
 # 在当前目录及其子目录中查找所有的.py文件，并将这些文件的路径写入到一个名为POTFILES的文件中
 # 编码与不指定 encoding 时相同：UTF-8 模式下为 UTF-8，否则为区域设置的编码
 with open('POTFILES', 'w', encoding=io.text_encoding(None)) as f:
-  for dirpath, dirnames, filenames in os.walk('.'):
+  for dirpath, _dirnames, filenames in os.walk('.'):
     # 跳过.\.conda目录
     if '.conda' in dirpath:
       continue

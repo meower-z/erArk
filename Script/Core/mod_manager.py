@@ -272,7 +272,6 @@ class ModManager:
 
   def _load_mod_assets(self, mod_info: ModInfo) -> None:
     """加载mod素材"""
-    global _mod_assets
 
     assets = mod_info.assets
 
@@ -398,7 +397,6 @@ class ModManager:
       self, mod_info: ModInfo, namespace: dict, func_config: dict
   ) -> None:
     """注册mod函数"""
-    global _original_functions, _mod_functions
 
     func_name = func_config.get("name", "")
     func_type = func_config.get("type", "new")

@@ -191,7 +191,7 @@ class LineFeedWaitDraw(NormalDraw):
       while remain:
         now_text = ""
         # 逐字符累加，直到达到最大宽度
-        for i, ch in enumerate(remain):
+        for _i, ch in enumerate(remain):
           if text_handle.get_text_index(now_text + ch) > self.width:
             break
           now_text += ch

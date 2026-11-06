@@ -169,7 +169,6 @@ def clear_default_flow() -> None:
     return
 
   # 原始逻辑
-  global default_flow, null_func
   set_default_flow(null_func)
 
 
@@ -493,7 +492,6 @@ def order_deal(
           _cmd_deal(order)
           return None
         else:
-          global tail_deal_cmd_func
           tail_deal_cmd_func(int(order))
           return None
 
