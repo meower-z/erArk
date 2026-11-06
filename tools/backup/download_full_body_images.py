@@ -7,6 +7,7 @@ import os
 import sys
 import shutil
 import time
+import importlib.util
 
 # 将工作区根目录添加到 sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -15,8 +16,6 @@ sys.path.append(workspace_root)
 
 # 动态导入下载器模块
 # 由于目录结构原因,使用 importlib 直接加载模块而非普通 import
-import importlib.util
-
 spec = importlib.util.spec_from_file_location(
     "downloader",
     os.path.join(

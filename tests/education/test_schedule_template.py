@@ -3,6 +3,8 @@
 
 from _bootstrap import _, attr_calculation, cache, check, clear_schedules, education_constant, finish, game_config, make_character, open_all_classroom, remove_character, schedule_handle, schedule_template_handle, section
 from typing import TYPE_CHECKING
+import ast
+import inspect
 
 if TYPE_CHECKING:
   from types import ModuleType
@@ -508,8 +510,6 @@ schedule_template_handle.delete_template(_l18_id)
 section(
     "Plan 32 L28：模板键与 need 分隔符集中在 education_constant，模块与面板不写字面量"
 )
-import ast  # noqa: E402
-import inspect  # noqa: E402
 from Script.System.Education_System import schedule_template_panel  # noqa: E402
 
 check(

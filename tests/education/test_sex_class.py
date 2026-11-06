@@ -2,6 +2,10 @@
 """sex_class_handle：临时课程、提醒、开课下课、旁观结算"""
 
 from _bootstrap import DEFAULT_TIME, SCENE_DORM, SCENE_EDU_ENTRY, _, cache, check, class_ai, classroom_path, clear_schedules, constant, constant_promise, datetime, drawn_text, education_constant, finish, game_config, game_time, game_type, growth_handle, handle_premise, make_character, move_to, open_all_classroom, period_time, pl, random, remove_character, schedule_handle, section, set_time, sex_class_handle
+from Script.Design import instuct_judege
+from Script.Settle import realtime_settle
+from Script.Design import handle_npc_ai, update
+from Script.Settle import common_default
 
 open_all_classroom()
 clear_schedules()
@@ -621,7 +625,6 @@ cache.rhodes_island.temp_sex_class = {}
 section(
     "Plan 31 M1：实操课门槛的实行值只判不扣——门槛与前提求值多次，不扣理智、不累加今日消耗、不解除催眠"
 )
-from Script.Design import instuct_judege  # noqa: E402
 
 cache.sex_class_mode = False
 cache.group_sex_mode = False
@@ -834,7 +837,6 @@ _g201.last_absent_period = []
 cache.rhodes_island.temp_sex_class = {}
 
 section("Plan 32 H1：课堂 H 以别的方式结束（玩家已不在 H）时一并下课")
-from Script.Settle import realtime_settle  # noqa: E402
 
 EFFECT_DATA = constant.settle_behavior_effect_data
 BEHAVIOR_EFFECT = game_config.config_behavior_effect_data
@@ -1021,8 +1023,6 @@ check(
 #    场上已无仍在 H 的学生 → handle_group_sex_end 把玩家的行为改成「结束群交」并调 update.game_update_flow(5)。
 #    NPC 阶段跑在第 1 层 game_update_flow 里，这一次嵌套是第 2 层、照常重进玩家分支（到第 3 层才拒绝）；
 #    这里把 game_update_flow 桩成玩家这一步：结算玩家此刻行为的效果串，再做玩家的实时数据结算
-from Script.Design import handle_npc_ai, update  # noqa: E402
-
 _h1_class = open_class_for_h1(5)
 student_b.sp_flag.is_h = False  # 女儿B 已先力竭退出，只剩女儿A
 _h1_flow_call: list[tuple[int, str]] = []
@@ -1360,7 +1360,6 @@ cache.group_sex_mode = False
 section(
     "Plan 32 实施复审补：L11 主修加成只给课堂成员——经验写入段（common_default.base_chara_experience_common_settle）对非成员不乘加成"
 )
-from Script.Settle import common_default  # noqa: E402
 
 for _cid in (0, 201, 202, 204, 301, 303):
   cache.character_data[_cid].sp_flag.is_h = False

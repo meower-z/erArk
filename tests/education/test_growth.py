@@ -3,6 +3,9 @@
 
 from _bootstrap import DEFAULT_TIME, _, cache, check, clear_schedules, datetime, education_constant, finish, game_config, game_time, growth_handle, make_character, open_all_classroom, period_time, remove_character, schedule_handle, schedule_template_handle, section, set_time
 from Script.System.Pregnancy_System import pregnancy_constant  # noqa: E402
+from Script.Design import handle_ability
+import inspect
+from Script.System.Official_Event_System import official_event_handle
 
 open_all_classroom()
 clear_schedules()
@@ -370,7 +373,6 @@ check(
 student.work.work_type = education_constant.STUDENT_WORK_TYPE
 
 section("待炫耀只记课程科目、只记幼女/萝莉期的女儿（第五轮）")
-from Script.Design import handle_ability
 
 for one in (student, adult):
   growth_handle.get_child_growth(one.cid).show_off_ability = {}
@@ -699,9 +701,6 @@ remove_character(209)
 # ---------------------------------------------------------------------------
 # Plan 32（第十三轮复查）
 # ---------------------------------------------------------------------------
-import inspect  # noqa: E402
-
-from Script.System.Official_Event_System import official_event_handle  # noqa: E402
 from Script.System.Pregnancy_System import pregnancy_constant, pregnancy_handle  # noqa: E402
 
 DT = datetime.datetime

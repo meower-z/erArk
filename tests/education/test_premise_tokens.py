@@ -2,6 +2,8 @@
 """前提与结算 token：CVP Course / CourseType / CourseShowOff / Growth、CVE Growth、实操课与岗位前提、女儿前提"""
 
 from _bootstrap import DEFAULT_TIME, SCENE_DORM, SCENE_EDU_ENTRY, _, cache, check, class_ai, classroom_path, clear_schedules, constant, constant_promise, datetime, education_constant, finish, game_config, game_time, game_type, growth_handle, handle_premise, make_character, move_to, open_all_classroom, period_time, pl, remove_character, schedule_handle, schedule_template_handle, section, set_time, settle_behavior, sex_class_handle
+from Script.Design import second_behavior
+from Script.Design import handle_ability
 
 open_all_classroom()
 clear_schedules()
@@ -973,7 +975,6 @@ clear_schedules()
 section(
     "Plan 32 §3.10（L2）：今天翘过课的学生在 H 中、在实操课上、正要去上实操课时不判「翘课被抓」"
 )
-from Script.Design import second_behavior  # noqa: E402
 
 clear_schedules()
 set_time(period_time(0))
@@ -1069,7 +1070,6 @@ clear_schedules()
 set_time(period_time(0))
 
 section("Plan 32 §3.10（L20）：待炫耀只记学生岗（跑真实的 gain_ability）")
-from Script.Design import handle_ability  # noqa: E402
 
 _l20_student = make_character(
     207,

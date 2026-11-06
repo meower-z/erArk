@@ -15,11 +15,11 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
   from collections.abc import Callable
 
-line_wait_id_counter = 0
 from Script.UI.Moudle import draw
 from Script.Config import normal_config
 from Script.Core.io_web import append_current_draw_element
 
+line_wait_id_counter = 0
 # 获取全局缓存
 cache = cache_control.cache
 

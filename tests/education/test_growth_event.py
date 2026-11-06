@@ -4,6 +4,16 @@
 from _bootstrap import DEFAULT_TIME, _, cache, character_handle, check, class_ai, clear_schedules, constant, constant_promise, datetime, education_constant, finish, game_config, game_time, growth_event_handle, growth_handle, handle_premise, make_character, open_all_classroom, period_time, pl, random, remove_character, schedule_handle, schedule_template_handle, section, semester_handle, set_time
 from Script.System.Official_Event_System import official_event_handle
 from typing import Any
+from Script.System.Pregnancy_System import pregnancy_constant
+import inspect
+from Script.Design import talk
+from Script.Settle import past_day_settle
+import _bootstrap as _boot
+from Script.UI.Moudle import draw as _draw_module
+import importlib.util as _importlib_util
+import os as _test_os
+from Script.Core import io_init as _test_io_init
+from Script.Core import text_handle as _test_text_handle
 
 open_all_classroom()
 clear_schedules()
@@ -412,8 +422,6 @@ section(
     "Plan 29 §3.3 / L2：抬头写本阶段第几天（按游戏日历数）；改了岗的萝莉照推期末事件（用户拍板：成绩单照出并写明理由，推送不收窄）"
 )
 # 今天 2026-09-07 09:00（游戏时间）：萝莉与幼女的本阶段都从 30 天前（2026-06-07 09:00）起，婴儿 5 天前出生
-from Script.System.Pregnancy_System import pregnancy_constant  # noqa: E402
-
 set_time(DEFAULT_TIME)
 loli.pregnancy.born_time = cache.game_time - datetime.timedelta(
     days=pregnancy_constant.GROW_TO_LOLI_DAY + 30
@@ -564,7 +572,6 @@ growth_handle.get_child_growth(202).report_card_history = []
 section(
     "Plan 31 §3.11（L7）：同班同学只取幼女 / 萝莉，仍在学生岗的成年姐姐不算"
 )
-import inspect  # noqa: E402
 
 from Script.System.Pregnancy_System import pregnancy_constant, pregnancy_handle  # noqa: E402
 
@@ -912,8 +919,6 @@ clear_schedules()
 # ---------------------------------------------------------------------------
 # Plan 32（第十三轮复查）
 # ---------------------------------------------------------------------------
-from Script.Design import talk  # noqa: E402
-from Script.Settle import past_day_settle  # noqa: E402
 
 
 def queue_pair_list() -> list:
@@ -1312,9 +1317,7 @@ clear_schedules()
 section(
     "Plan 32 §8.2（追加调整）：公务事件的后果不写在选项上，玩家选定、结算之后单独用一个 WaitDraw 显示"
 )
-import _bootstrap as _boot  # noqa: E402
 from Script.System.Official_Event_System import official_event_panel  # noqa: E402
-from Script.UI.Moudle import draw as _draw_module  # noqa: E402
 
 cache.rhodes_island.official_event_queue = []
 set_time(period_time(0))
@@ -1498,12 +1501,6 @@ section(
 )
 # 绘制类在 _bootstrap 里已被整体换成记录桩，这里另外加载一份干净的 draw.py（不进 sys.modules，
 #    不影响其他用例），把 io_init.era_print 换成收集器，量一量真实画出来的总宽度
-import importlib.util as _importlib_util  # noqa: E402
-import os as _test_os  # noqa: E402
-
-from Script.Core import io_init as _test_io_init  # noqa: E402
-from Script.Core import text_handle as _test_text_handle  # noqa: E402
-
 _raw_draw_spec = _importlib_util.spec_from_file_location(
     "_raw_draw_module_for_test",
     _test_os.path.join(_boot.ROOT, "Script", "UI", "Moudle", "draw.py"),

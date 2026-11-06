@@ -2,6 +2,10 @@
 """baby_growth_handle：胎教累积与出生折习得珠（Plan 26）；六个照料行为的效果串与 CVE；喂奶 556；胎教 555"""
 
 from _bootstrap import baby_growth_handle, cache, check, class_ai, clear_schedules, constant, constant_effect, datetime, education_constant, finish, game_config, game_type, growth_handle, make_character, open_all_classroom, pl, section, set_time, settle_behavior
+from Script.Design import basement, talk
+from Script.Settle import past_day_settle
+from Script.System.Official_Event_System import official_event_handle
+from Script.System.Pregnancy_System import pregnancy_handle
 
 clear_schedules()
 mother = make_character(102, "母亲", 0)
@@ -240,11 +244,6 @@ check("add_time=0 不生效", baby_a.hit_point_max == hp_max)
 # ---------------------------------------------------------------------------
 # Plan 32（第十三轮复查）
 # ---------------------------------------------------------------------------
-from Script.Design import basement, talk  # noqa: E402
-from Script.Settle import past_day_settle  # noqa: E402
-from Script.System.Official_Event_System import official_event_handle  # noqa: E402
-from Script.System.Pregnancy_System import pregnancy_handle  # noqa: E402
-
 section(
     "Plan 32 L19 / L16：婴儿长成幼女（真实的 pregnancy_handle._settle_baby_grow_up）"
 )
