@@ -123,10 +123,10 @@ def assistant_replace(new_assistant_id: int) -> None:
   character_data: game_type.Character = cache.character_data[0]
 
   # 判断是否有旧助理
-  old_assistant_flag = True
+  old_assistant_data: game_type.Character | None = None
   if character_data.assistant_character_id != 0:
     # 去掉旧助理的跟随状态
-    old_assistant_data: game_type.Character = cache.character_data[
+    old_assistant_data = cache.character_data[
         character_data.assistant_character_id
     ]
     old_assistant_data.sp_flag.is_follow = 0
@@ -145,9 +145,6 @@ def assistant_replace(new_assistant_id: int) -> None:
     old_assistant_data.assistant_services = (
         attr_calculation.get_assistant_services_zero()
     )
-  # 没有旧助理
-  else:
-    old_assistant_flag = False
 
   line = draw.LineDraw("-", window_width)
   line.draw()
@@ -165,7 +162,7 @@ def assistant_replace(new_assistant_id: int) -> None:
     info_text += _("\n{0}的状态异常，无法任命为助理干员\n").format(
         new_assistant_data.name
     )
-    old_assistant_flag = False
+    old_assistant_data = None
   # 正常情况下，设置新助理
   else:
     character_data.assistant_character_id = new_assistant_id
@@ -184,14 +181,14 @@ def assistant_replace(new_assistant_id: int) -> None:
         new_assistant_data.name
     )
     # 同步换助理的选项
-    if old_assistant_flag:
+    if old_assistant_data is not None:
       if (
           10 in old_assistant_data.assistant_services
           and old_assistant_data.assistant_services[10] == 1
       ):
         new_assistant_data.assistant_services[10] = 1
   # 取消旧助理的结算
-  if old_assistant_flag:
+  if old_assistant_data is not None:
     second_behavior.character_get_second_behavior(
         new_assistant_id, "chosen_as_assistant", reset=True
     )

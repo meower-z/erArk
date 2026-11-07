@@ -459,10 +459,9 @@ class Nation_Diplomacy_Panel:
     nation_name = nation_data.name
     nation_introduction = nation_data.introduction
     nation_reputation = round(cache.country.nation_reputation[nation_id], 2)
-    if self.now_panel == _("国家及附属势力"):
-      nation_infected_rate = round(
-          cache.country.country_infection_rate[nation_data.country], 3
-      )
+    nation_infected_rate = round(
+        cache.country.country_infection_rate.get(nation_data.country, 0), 3
+    )
     # 势力特产
     nation_specialty_list = game_config.config_resouce_data_of_nation.get(
         nation_data.country, []

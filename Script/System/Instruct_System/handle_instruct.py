@@ -218,6 +218,7 @@ def add_instruct(
     minor_type = None
     body_parts: list[str] = []
     category = None
+    actual_panel_id: int | None = None
 
     if csv_config:
       # 从新的完整配置中读取web相关数据
@@ -228,8 +229,6 @@ def add_instruct(
         # 现在 major_type 是字符串，如 'mouth', 'hand' 等
         if isinstance(major_type_val, str) and not major_type_val.isdigit():
           major_type = major_type_val
-        else:
-          major_type = None
 
       minor_type_val = getattr(csv_config, "web_minor_type", None)
       if minor_type_val is not None and minor_type_val != "":
@@ -259,10 +258,10 @@ def add_instruct(
           panel_id = None
         if panel_id is not None:
           constant.instruct_panel_id_data[instruct_id] = panel_id
+      actual_panel_id = panel_id
 
     # 自动推断指令大类（基于指令类型和函数源代码分析）
     actual_category = category
-    actual_panel_id = panel_id
 
     if actual_category is None:
       # 尝试通过分析函数源代码自动推断
@@ -462,7 +461,7 @@ def handle_comprehensive_state_effect(
     if character_data.target_character_id == 0:
       return 0
     target_character_id = character_data.target_character_id
-  elif effect_all_value_list[0][:2] == "A3":
+  else:
     target_character_id = int(effect_all_value_list[0][3:])
     # 如果还没拥有该角色，则返回0
     if target_character_id not in cache.npc_id_got:

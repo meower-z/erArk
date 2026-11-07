@@ -385,14 +385,13 @@ class Chose_Hypnosis_Type_Panel:
         pl_character_data.target_character_id
     ]
     range_list = []
+    type_text = _("身体") if body_or_mind_flag == 0 else _("心灵")
     for behavbior_cid in game_config.config_behavior:
       behavior_data = game_config.config_behavior[behavbior_cid]
       if body_or_mind_flag == 0:
-        type_text = _("身体")
         if "体控" in behavior_data.tag:
           range_list.append(behavbior_cid)
       else:
-        type_text = _("心灵")
         if "心控" in behavior_data.tag:
           range_list.append(behavbior_cid)
     while 1:

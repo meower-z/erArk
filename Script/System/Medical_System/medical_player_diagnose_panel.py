@@ -501,8 +501,6 @@ class MedicalPlayerDiagnosePanel:
       catalog = self.check_catalog
       for option in pending:
         system_info = catalog.get(option["system_id"], {})
-        if not isinstance(system_info, dict):
-          system_info = {}
         part_map = (
             system_info.get("parts") if isinstance(system_info, dict) else {}
         )
@@ -1075,6 +1073,7 @@ class MedicalPlayerDiagnosePanel:
             self.patient
         )
     )
+    resources: list[dict[str, Any]] = []
     if preview.get("success"):
       # 成功获取预估信息，结合确诊进度动态调整收益与耗材数量
       diagnose_income = int(
@@ -1098,7 +1097,6 @@ class MedicalPlayerDiagnosePanel:
           )
       )
       resources_raw = preview.get("resources")
-      resources: list[dict[str, Any]] = []
       if isinstance(resources_raw, list):
         for entry in resources_raw:
           if isinstance(entry, dict):
@@ -1238,8 +1236,6 @@ class MedicalPlayerDiagnosePanel:
         if isinstance(self.check_catalog, dict)
         else {}
     )
-    if not isinstance(system_info, dict):
-      system_info = {}
     part_map = (
         system_info.get("parts", {}) if isinstance(system_info, dict) else {}
     )

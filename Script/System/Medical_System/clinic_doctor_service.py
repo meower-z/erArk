@@ -85,7 +85,7 @@ def _get_role_doctor_ids(
 
 
 def _ensure_specialization_structure(
-    rhodes_island: game_type.Rhodes_Island,
+    rhodes_island: game_type.Rhodes_Island | None,
 ) -> None:
   """对基地内的医生分科数据结构进行规范化。
 

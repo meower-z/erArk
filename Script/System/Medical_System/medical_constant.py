@@ -121,9 +121,7 @@ WAITING_QUEUE_STATE_SET = frozenset(WAITING_QUEUE_STATES)
 def get_state_display_name(state: MedicalPatientState) -> str:
   """根据状态枚举返回对应的中文名称"""
 
-  if isinstance(state, MedicalPatientState):
-    return STATE_DISPLAY_NAME.get(state, state.value)
-  return STATE_DISPLAY_NAME.get(state, str(state))
+  return STATE_DISPLAY_NAME.get(state, state.value)
 
 
 class MedicalPatientPersonality(StrEnum):

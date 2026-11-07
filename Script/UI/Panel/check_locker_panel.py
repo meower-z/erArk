@@ -279,7 +279,7 @@ class FindDraw:
             self.width,
             cmd_func=self.check_cloth,
         )
-      self.draw_text = button_text
+        self.draw_text = button_text
     self.now_draw = name_draw
     """ 绘制的对象 """
 

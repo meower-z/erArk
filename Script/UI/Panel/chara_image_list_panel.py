@@ -48,6 +48,7 @@ class CharacterImageListDraw:
     fix_draw.draw()
     self.return_list = []
 
+    player_data: game_type.Character = cache.character_data[0]
     # 优先绘制当前交互对象
     if len(self.character_list):
       text_draw = draw.NormalDraw()
@@ -55,7 +56,6 @@ class CharacterImageListDraw:
       text_draw.draw()
 
       # 绘制交互对象
-      player_data: game_type.Character = cache.character_data[0]
       if player_data.target_character_id != 0:
         now_draw = CharacterImageButton(
             player_data.target_character_id, self.width

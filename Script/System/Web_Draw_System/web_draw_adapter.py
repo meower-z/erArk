@@ -117,7 +117,7 @@ class WebDrawAdapter:
     append_current_draw_element(web_element, record_history=True)
 
   @staticmethod
-  def adapt_button(button: draw.Button) -> None:
+  def adapt_button(button: draw.Button | draw.CenterButton) -> None:
     """
     适配按钮绘制类
 

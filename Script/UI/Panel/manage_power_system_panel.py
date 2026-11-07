@@ -513,7 +513,7 @@ def settle_power_system(draw_flag: bool = True) -> tuple[float, str]:
   # ------------ 火力发电（使用理论值 + 实际燃料占比折算）------------ #
   fire_detail = get_theoretical_fire_generation(detail=True)
   # 明确类型便于静态检查
-  fire_d: FireGenerationDetail = fire_detail  # type: ignore[assignment]
+  fire_d: FireGenerationDetail = fire_detail
   fuel_plan: float = fire_d.get("fuel_daily_plan", 0.0)
   theory_total: float = fire_d.get("theory_total", 0.0)
 

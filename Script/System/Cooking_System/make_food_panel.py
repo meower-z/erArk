@@ -219,11 +219,6 @@ class Make_food_Panel:
         # 不再显示基础调味
         if seasoning_cid <= 10:
           continue
-          button_width = int(self.width / 16)
-          now_draw = draw.NormalDraw()
-          now_draw.text = _("\n  基础:    ")
-          # now_draw.width = 1
-          now_draw.draw()
         # 精液或下药则换行并加长文本宽度
         if seasoning_cid == 11:
           now_draw = draw.NormalDraw()
@@ -1057,6 +1052,7 @@ class SeeFoodListByFoodNameDraw:
           break
         character_data.item[self.special_seasoning] -= 1
       # 精液调味则每份扣除一次精液量，库存不足时停止制作
+      semen_count = 0
       if self.special_seasoning in {11, 12}:
         __, semen_count = ejaculation_panel.common_ejaculation()
         if semen_count <= 0:
@@ -1066,8 +1062,7 @@ class SeeFoodListByFoodNameDraw:
           "", int(self.food_cid), food_quality, character_data.name
       )
       new_food.special_seasoning = self.special_seasoning
-      if self.special_seasoning in {11, 12}:
-        new_food.special_seasoning_amount = semen_count
+      new_food.special_seasoning_amount = semen_count
       # 放到玩家背包里
       character_data.food_bag[new_food.uid] = new_food
       character_data.behavior.target_food = new_food

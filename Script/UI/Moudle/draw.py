@@ -365,12 +365,14 @@ class InfoBarDraw:
     info_draw.width = int(now_max_width / 3)
     info_draw.text = f"{text}["
     info_draw.tooltip = tooltip
+    lv_text = ""
+    status_list: list[Drawable] = []
     # 角色状态时则单独处理
     if self.chara_state:
       status_text = text.split("lv")[0]
       info_draw.text = status_text
       lv_text = "lv" + text.split("lv")[1] + " "
-      status_draw = StatusLevelDraw(value=value, text=lv_text)
+      status_list = [StatusLevelDraw(value=value, text=lv_text)]
     # 按需给标签(描述文本)上色
     if self.name_style:
       info_draw.style = self.name_style
@@ -395,17 +397,14 @@ class InfoBarDraw:
     fix_draw = NormalDraw()
     fix_draw.text = " " * fix_width
     fix_draw.width = fix_width
-    if self.chara_state:
-      self.draw_list = [
-          fix_draw,
-          info_draw,
-          status_draw,
-          bar_draw,
-          value_draw,
-          fix_draw,
-      ]
-    else:
-      self.draw_list = [fix_draw, info_draw, bar_draw, value_draw, fix_draw]
+    self.draw_list = [
+        fix_draw,
+        info_draw,
+        *status_list,
+        bar_draw,
+        value_draw,
+        fix_draw,
+    ]
 
   def draw(self) -> None:
     """绘制比例条"""

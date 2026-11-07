@@ -231,16 +231,12 @@ def consume_surgery_resources(
     patient.surgery_blocked_resource = None
     return False
 
-  # 准备库存引用并确保病人用药记录容器存在，避免后续写入报错。
+  # 准备库存引用，避免后续写入报错。
   inventory = getattr(rhodes_island, "materials_resouce", None)
   if not isinstance(inventory, dict):
     patient.surgery_blocked = True
     patient.surgery_blocked_resource = None
     return False
-  if not isinstance(patient.medicine_consumed_units, dict):
-    patient.medicine_consumed_units = {}
-  if not isinstance(patient.last_consumed_units, dict):
-    patient.last_consumed_units = {}
 
   # 解析手术药品清单，并逐项确认库存是否充足。
   resource_plan = medical_service.resolve_surgery_requirements(severity_config)
@@ -392,7 +388,7 @@ def conduct_ward_round(
 
 def attempt_surgery(
     patient_id: int,
-    doctor_character: game_type.Character,
+    doctor_character: game_type.Character | None,
     *,
     target_base: game_type.Rhodes_Island | None = None,
 ) -> bool:

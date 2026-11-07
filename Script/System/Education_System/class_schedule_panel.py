@@ -703,10 +703,10 @@ class Class_Schedule_Panel:
       ok_draw.draw()
       return_list.append(ok_draw.return_text)
       line_feed.draw()
+      del_draw = draw.CenterButton(
+          _("[删除本节临时课]"), "DEL", int(self.width / 3)
+      )
       if now_class is not None:
-        del_draw = draw.CenterButton(
-            _("[删除本节临时课]"), "DEL", int(self.width / 3)
-        )
         del_draw.draw()
         return_list.append(del_draw.return_text)
       back_draw = draw.CenterButton(_("[返回]"), "BACK", int(self.width / 3))

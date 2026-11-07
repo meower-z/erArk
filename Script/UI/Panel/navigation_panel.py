@@ -215,9 +215,9 @@ class Navigation_Panel(Base_function_class):
       # TODO 在处理好中文地图路径之后再改回来
       base_scene_name = _(now_country_name, revert_translation=True)
       # 移动中的目标地点
+      target_scene_id = cache.rhodes_island.move_target_and_time[0]
+      target_scene_name = game_config.config_birthplace[target_scene_id].name
       if cache.rhodes_island.move_target_and_time[0] != 0:
-        target_scene_id = cache.rhodes_island.move_target_and_time[0]
-        target_scene_name = game_config.config_birthplace[target_scene_id].name
         now_draw: draw.Button | draw.NormalDraw = draw.NormalDraw()
         now_draw.text = _("\n罗德岛正在移动至{0}，预计抵达时间为{1}\n").format(
             target_scene_name,

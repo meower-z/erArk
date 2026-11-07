@@ -308,9 +308,7 @@ def get_upcoming_teaching(
   if not judge_schedule_teacher(character_id):
     return None
   character_data: game_type.Character = cache.character_data[character_id]
-  now_time = character_data.behavior.start_time
-  if now_time is None:
-    now_time = cache.game_time
+  now_time = character_data.behavior.start_time or cache.game_time
   for period, (hour, minute) in enumerate(game_time.CLASS_PERIOD_START):
     start_time = now_time.replace(
         hour=hour, minute=minute, second=0, microsecond=0
@@ -447,9 +445,7 @@ def get_period_left_minute(
         把授课 / 听课 / 自习 / 个人式课的时长截到本节结束，下一节就能按时换教室
   """
   character_data: game_type.Character = cache.character_data[character_id]
-  now_time = character_data.behavior.start_time
-  if now_time is None:
-    now_time = cache.game_time
+  now_time = character_data.behavior.start_time or cache.game_time
   period = game_time.get_class_period_by_time(now_time)
   if period == -1:
     return default_minute
@@ -474,9 +470,7 @@ def get_now_course(character_id: int) -> dict | None:
   if period == -1:
     return None
   character_data: game_type.Character = cache.character_data[character_id]
-  now_time = character_data.behavior.start_time
-  if now_time is None:
-    now_time = cache.game_time
+  now_time = character_data.behavior.start_time or cache.game_time
   return get_course_at(character_id, now_time, period)
 
 
@@ -498,9 +492,7 @@ def get_upcoming_course(
   import datetime
 
   character_data: game_type.Character = cache.character_data[character_id]
-  now_time = character_data.behavior.start_time
-  if now_time is None:
-    now_time = cache.game_time
+  now_time = character_data.behavior.start_time or cache.game_time
   for period, (hour, minute) in enumerate(game_time.CLASS_PERIOD_START):
     start_time = now_time.replace(
         hour=hour, minute=minute, second=0, microsecond=0
@@ -600,9 +592,7 @@ def get_now_teaching(character_id: int) -> dict | None:
   if period == -1:
     return None
   character_data: game_type.Character = cache.character_data[character_id]
-  now_time = character_data.behavior.start_time
-  if now_time is None:
-    now_time = cache.game_time
+  now_time = character_data.behavior.start_time or cache.game_time
   cell = get_teacher_cell(character_id, now_time.weekday(), period)
   if cell is None:
     return None

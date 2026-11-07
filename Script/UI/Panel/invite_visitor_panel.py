@@ -246,13 +246,12 @@ def judge_visitor_if_leave(visitor_id: int) -> None:
       0, visitor_id, _("访客留下")
   )
   # 遍历所有留下态度
-  for attitude_id in game_config.config_visitor_stay_attitude:
-    attitude_data = game_config.config_visitor_stay_attitude[attitude_id]
-    if stay_posibility >= attitude_data.rate:
-      continue
-    # 获得留下态度对应的文本
-    stay_text = attitude_data.name
-    break
+  # 获得留下态度对应的文本
+  stay_text = next(
+      attitude_data.name
+      for attitude_data in game_config.config_visitor_stay_attitude.values()
+      if stay_posibility < attitude_data.rate
+  )
   now_draw.text = _(
       "\n 访客【{0}】预定的停留期限到了，她当前的留下意愿为：【{1}】"
   ).format(character_data.name, stay_text)
@@ -483,6 +482,7 @@ class Invite_Visitor_Panel:
       # 可邀请范围
       now_country_id = cache.rhodes_island.current_location[0]
       now_country_name = game_config.config_birthplace[now_country_id].name
+      all_country_id_list = []
       if now_level == 2:
         now_invitation_range: str | list[str] = now_country_name
         now_text += _(" 可邀请范围：{0}\n\n").format(now_invitation_range)
@@ -495,7 +495,6 @@ class Invite_Visitor_Panel:
         # 仅需要keys
         now_invitation_range = list(near_scene_path.keys())
         now_text += _(" 可邀请范围：")
-        all_country_id_list = []
         for country_name in now_invitation_range:
           now_text += f" {country_name}"
           # 寻找该国家的id
