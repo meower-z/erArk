@@ -1041,13 +1041,12 @@ class CharacterVisitorText:
         0, character_id, _("访客留下")
     )
     # 遍历所有留下态度
-    for attitude_id in game_config.config_visitor_stay_attitude:
-      attitude_data = game_config.config_visitor_stay_attitude[attitude_id]
-      if stay_posibility >= attitude_data.rate:
-        continue
-      # 获得留下态度对应的文本
-      stay_text = attitude_data.name
-      break
+    # 获得留下态度对应的文本
+    stay_text = next(
+        attitude_data.name
+        for attitude_data in game_config.config_visitor_stay_attitude.values()
+        if stay_posibility < attitude_data.rate
+    )
     leav_time = game_time.get_date_until_day(
         cache.rhodes_island.visitor_info[character_id]
     )
@@ -1657,8 +1656,6 @@ class SeeCharacterInfoByimageDrawInScene:
 
   def draw(self) -> None:
     """绘制对象"""
-    if isinstance(self.now_draw, draw.NormalDraw):
-      self.now_draw.style = "onbutton"
     self.now_draw.draw()
 
   def see_character(self) -> None:

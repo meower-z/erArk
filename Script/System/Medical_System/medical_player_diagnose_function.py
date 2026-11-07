@@ -18,7 +18,7 @@ _: FunctionType = get_text._
 
 
 def _clear_player_session_state(
-    patient: medical_constant.MedicalPatient,
+    patient: medical_constant.MedicalPatient | None,
 ) -> None:
   """清理玩家诊疗流程写入的临时状态字段。
 
@@ -436,8 +436,6 @@ def build_player_check_catalog(
 
     part_catalog: dict[int, dict[str, object]] = {}
     for part_id, part_info in sorted(part_map.items()):
-      if part_info is None:
-        continue
       complication_map = game_config.config_medical_complication_detail.get(
           system_id, {}
       ).get(part_id, {})

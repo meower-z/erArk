@@ -591,14 +591,14 @@ class Manage_Assembly_Line_Panel:
         # 遍历该类型的资源
         for material_id in cache.rhodes_island.materials_resouce:
           material_data = game_config.config_resouce[material_id]
-          formula_cid = 0
           if material_data.type == resouce:
             # 根据资源id来查找配方id
-            for cid in game_config.config_productformula.keys():
-              formula_data = game_config.config_productformula[cid]
+            for formula_data in game_config.config_productformula.values():
               if formula_data.product_id == material_id:
                 formula_cid = formula_data.cid
                 break
+            else:
+              continue
             # 如果没有配方id则跳过
             if formula_cid == 0:
               continue

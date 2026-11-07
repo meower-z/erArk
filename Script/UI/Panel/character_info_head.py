@@ -701,6 +701,12 @@ class CharacterInfoHead:
         _("气力"),
         tooltip=_("气力，精神上的耐力，最低为0时使体力的消耗增加"),
     )
+    None_draw = draw.CenterDraw()
+    None_draw.width = 1
+    None_draw.text = " "
+    self.draw_list: list = [
+        tuple([message_draw] + status_list + [hp_draw, None_draw, mp_draw]),
+    ]
     if character_id == 0:
       sanity_point_draw = draw.InfoBarDraw()
       sanity_point_draw.width = int(width / 7.5)
@@ -741,13 +747,6 @@ class CharacterInfoHead:
           args=11,
           tooltip=_("使用精力恢复剂快速恢复精力"),
       )
-    None_draw = draw.CenterDraw()
-    None_draw.width = 1
-    None_draw.text = " "
-    self.draw_list: list = [
-        tuple([message_draw] + status_list + [hp_draw, None_draw, mp_draw]),
-    ]
-    if character_id == 0:
       self.draw_list[0] = self.draw_list[0] + (
           None_draw,
           None_draw,

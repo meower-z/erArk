@@ -67,11 +67,7 @@ def get_dormitory_max_open_layer() -> int:
   effect_cid = 0
   if facility_name in game_config.config_facility_effect_data:
     level_data = game_config.config_facility_effect_data[facility_name]
-    if isinstance(level_data, dict):
-      effect_cid = int(level_data.get(dormitory_level, 0))
-    elif isinstance(level_data, list) and 0 <= dormitory_level < len(
-        level_data
-    ):
+    if 0 <= dormitory_level < len(level_data):
       effect_cid = int(level_data[dormitory_level])
 
   if effect_cid in game_config.config_facility_effect:

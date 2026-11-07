@@ -1121,7 +1121,7 @@ class Manage_Basement_Panel:
       from Script.System.Education_System import class_schedule_panel
 
       now_panel = class_schedule_panel.Education_Manage_Panel(self.width)
-    elif son_panel == _("[诊疗病人系统]"):
+    else:
       # 输出提示
       info_draw = draw.WaitDraw()
       info_draw.text = _(

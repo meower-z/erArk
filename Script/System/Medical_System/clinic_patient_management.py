@@ -371,7 +371,7 @@ def _pick_patient_race_id() -> int:
 
 
 def _resolve_patient_system_keys(
-    patient: medical_constant.MedicalPatient,
+    patient: medical_constant.MedicalPatient | None,
 ) -> set[str]:
   """提取病人可能关联的系统键。
 
@@ -521,7 +521,7 @@ def estimate_patient_diagnose_income(
 
 def advance_diagnose(
     patient_id: int,
-    doctor_character: game_type.Character,
+    doctor_character: game_type.Character | None,
     *,
     target_base: game_type.Rhodes_Island | None = None,
 ) -> None:
@@ -607,7 +607,7 @@ def advance_diagnose(
 
 
 def finalize_patient_after_diagnose(
-    patient: medical_constant.MedicalPatient,
+    patient: medical_constant.MedicalPatient | None,
     *,
     target_base: game_type.Rhodes_Island | None = None,
 ) -> dict[str, object]:
@@ -712,7 +712,7 @@ def finalize_patient_after_diagnose(
 
 
 def set_patient_state(
-    patient: medical_constant.MedicalPatient,
+    patient: medical_constant.MedicalPatient | None,
     state: medical_constant.MedicalPatientState,
 ) -> None:
   """更新病人的流程状态，并写入标签方便调试。

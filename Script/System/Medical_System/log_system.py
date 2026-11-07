@@ -97,8 +97,6 @@ def _format_medicine_consumption_details(
         safe_id = int(res_id)
       except (TypeError, ValueError):
         continue
-      if not isinstance(info, Mapping):
-        continue
       consumed = medical_constant.MedicalDailyCounters._coerce_float(
           info.get("consumed", 0)
       )

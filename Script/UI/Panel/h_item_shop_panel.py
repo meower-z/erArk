@@ -226,25 +226,24 @@ class BuyItemByItemNameDraw:
     if (flag_consumables and flag_not_max) or (
         not flag_consumables and not flag_have
     ):
-      if num_button:
-        button_text = f"{index_text}{item_config.name}：{item_config.price}"
-        button_text += _("凭证")
-        draw_style = "standard"
-        if flag_consumables:
-          button_text += (
-              _("(持有：") + str(self.character_data.item[self.text]) + ")"
-          )
-          if self.character_data.item[self.text] > 0:
-            draw_style = "dark_green"
-        else:
-          button_text += _("(未持有)")
-        name_draw: draw.LeftButton | draw.LeftDraw = draw.LeftButton(
-            button_text,
-            self.button_return,
-            self.width,
-            normal_style=draw_style,
-            cmd_func=self.show_item_info,
+      button_text = f"{index_text}{item_config.name}：{item_config.price}"
+      button_text += _("凭证")
+      draw_style = "standard"
+      if flag_consumables:
+        button_text += (
+            _("(持有：") + str(self.character_data.item[self.text]) + ")"
         )
+        if self.character_data.item[self.text] > 0:
+          draw_style = "dark_green"
+      else:
+        button_text += _("(未持有)")
+      name_draw: draw.LeftButton | draw.LeftDraw = draw.LeftButton(
+          button_text,
+          self.button_return,
+          self.width,
+          normal_style=draw_style,
+          cmd_func=self.show_item_info,
+      )
       self.draw_text = button_text
     else:
       name_draw = draw.LeftDraw()

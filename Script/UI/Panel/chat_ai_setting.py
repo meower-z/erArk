@@ -365,9 +365,8 @@ class Chat_Ai_Setting_Panel:
     now_draw = draw.WaitDraw()
     # 常规选项
     if cid <= 30:
-      ai_chat_setting_data = game_config.config_ai_chat_setting[cid]
-      info_text = f"\n {ai_chat_setting_data.info}\n"
-    elif cid == 31:
+      info_text = f"\n {game_config.config_ai_chat_setting[cid].info}\n"
+    else:
       info_text = _(" \n  本选项用于设置是否开启语言翻译功能\n")
       info_text += _(
           "  开启后，游戏中的文本将会被翻译成您设置的语言-[{0}]\n"
@@ -767,6 +766,7 @@ class Chat_Ai_Setting_Panel:
     API_KEY = cache.ai_setting.ai_chat_api_key[now_key_type]
     # CUSTOM_ENDPOINT = cache.ai_setting.now_ai_chat_api_endpoint[now_key_type]
 
+    client: openai.OpenAI | genai.Client
     if now_key_type == "OPENAI_API_KEY" or now_key_type == "DEEPSEEK_API_KEY":
       client = openai.OpenAI(api_key=API_KEY)
       # deepseek则调整base_url
@@ -784,7 +784,7 @@ class Chat_Ai_Setting_Panel:
                 proxy=cache.ai_setting.now_ai_chat_proxy[0]
             )
         )
-    elif now_key_type == "GEMINI_API_KEY":
+    else:
       # 构建http_options参数
       api_version_val = (
           "v1alpha" if cache.ai_setting.ai_chat_setting[12] == 1 else None

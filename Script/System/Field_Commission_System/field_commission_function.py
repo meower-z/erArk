@@ -159,6 +159,7 @@ def process_commission_text(
   item_num: float = int(text_list[2])
   item_type = ""
   item_name = ""
+  now_have_item_num: float = 0
   # 奖励干员时代替数量显示的文字
   item_num_text = ""
 
@@ -166,7 +167,7 @@ def process_commission_text(
   if text_list[0] == "r":
     item_name = game_config.config_resouce[item_id].name
     item_type = game_config.config_resouce[item_id].type
-    now_have_item_num: float = cache.rhodes_island.materials_resouce[item_id]
+    now_have_item_num = cache.rhodes_island.materials_resouce[item_id]
   # 能力
   elif text_list[0] == "a":
     item_name = game_config.config_ability[item_id].name
@@ -174,10 +175,6 @@ def process_commission_text(
     # 如果字符串里带"技能"，则删去
     if _("技能") in item_name:
       item_type = item_name.replace(_("技能"), "")
-    now_have_item_num = sum(
-        cache.character_data[character_id].ability[item_id]
-        for character_id in send_npc_list
-    )
     now_have_item_num = 0
     for character_id in send_npc_list:
       now_have_item_num += cache.character_data[character_id].ability[item_id]

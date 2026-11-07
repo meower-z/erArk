@@ -205,7 +205,7 @@ def run_yolo11_inference(
   if r.keypoints is not None and len(r.keypoints.data) > 0:
     if r.boxes is not None and len(r.boxes.data) > 0:
       confs = r.boxes.conf.cpu().numpy()
-      best_idx = np.argmax(confs)
+      best_idx = int(np.argmax(confs))
     else:
       best_idx = 0
     kp_data = r.keypoints.data[best_idx].cpu().numpy()
@@ -664,8 +664,8 @@ def main() -> None:
   )
   args = parser.parse_args()
 
-  if args.target_dir is not None:
-    target_dir = os.path.abspath(args.target_dir)
+  if (target_dir := args.target_dir) is not None:
+    target_dir = os.path.abspath(target_dir)
     if not os.path.isdir(target_dir):
       print(f'错误：目录不存在: {target_dir}')
       return

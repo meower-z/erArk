@@ -263,7 +263,7 @@ def process_single_hospitalized_patient(
 
 
 def try_consume_medicine(
-    patient: medical_constant.MedicalPatient,
+    patient: medical_constant.MedicalPatient | None,
     *,
     is_hospitalized: bool = False,
     target_base: game_type.Rhodes_Island | None = None,
@@ -295,12 +295,6 @@ def try_consume_medicine(
   # 准备运行期缓存，包括药品累加器与进度记录。
   accumulator = rhodes_island.medical_inventory_accumulator
   inventory = rhodes_island.materials_resouce
-  if not isinstance(patient.medicine_recorded, dict):
-    patient.medicine_recorded = {}
-  if not isinstance(patient.medicine_progress, dict):
-    patient.medicine_progress = {}
-  if not isinstance(patient.medicine_consumed_units, dict):
-    patient.medicine_consumed_units = {}
 
   recorded_map = patient.medicine_recorded
   progress_map = patient.medicine_progress
