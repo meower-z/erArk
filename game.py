@@ -84,6 +84,18 @@ if __name__ == "__main__":
       print(f"警告：性能监控排版补丁加载失败: {e}")
     print(f"性能监控已开启，每屏渲染耗时将写入 {perf_hook.get_output_path()}")
 
+  def cleanup() -> None:
+    """
+    退出前清理函数
+
+    参数：无
+
+    返回值类型：无
+    功能描述：确保程序退出时关闭Web服务器
+    """
+    print("正在关闭Web服务器...")
+    stop_server()
+
   # 判定是否需要使用Web模式
   if now_web_mode:
     print("正在初始化Web服务器...")
@@ -120,18 +132,6 @@ if __name__ == "__main__":
 
     # 添加退出处理函数
     import atexit
-
-    def cleanup() -> None:
-      """
-      退出前清理函数
-
-      参数：无
-
-      返回值类型：无
-      功能描述：确保程序退出时关闭Web服务器
-      """
-      print("正在关闭Web服务器...")
-      stop_server()
 
     # 注册退出处理函数
     atexit.register(cleanup)

@@ -64,8 +64,6 @@ def run_turn_check() -> bool:
   """
   try:
     cache = cache_control.cache
-    if cache is None:
-      return False
     if not cache.character_data:
       return False
     if 0 not in cache.character_data:
@@ -92,8 +90,6 @@ def run_load_repair() -> list[dict]:
   """
   try:
     cache = cache_control.cache
-    if cache is None:
-      return []
     if not cache.character_data:
       return []
     if 0 not in cache.character_data:

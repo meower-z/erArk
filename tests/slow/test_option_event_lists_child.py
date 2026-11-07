@@ -141,6 +141,7 @@ class OptionEventListsChildTest(SlowTestCase):
         game_config.config_event[CHILD_ID].text.split("|")[0], 0
     )
     fired, offered = self._record()
+    before = (npc.juel.get(0, 0), npc.experience.get(0, 0))
     for _ in range(TRIES):
       # 聊天次数超过上限时，聊天指令走聊天失败行为
       npc.action_info.talk_count = 0

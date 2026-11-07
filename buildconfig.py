@@ -140,10 +140,9 @@ def build_csv_config(
     now_type_data = {}
     get_text_data = {}
     file_id = file_name.split(".")[0]
-    if talk or target:
-      path_list = file_path.split(os.sep)
-      if talk:
-        file_id = path_list[-2] + "_" + file_id
+    path_list = file_path.split(os.sep)
+    if talk:
+      file_id = path_list[-2] + "_" + file_id
     i = 0
     class_text = ""
     type_text = file_id

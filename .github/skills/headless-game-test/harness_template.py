@@ -250,6 +250,7 @@ NPC_PASS_LIMIT = 25
 
 cache.over_behavior_character = set()
 g = 0
+pl_start = pl.behavior.start_time
 while 0 not in cache.over_behavior_character:
   g += 1
   if g > PLAYER_PASS_LIMIT:

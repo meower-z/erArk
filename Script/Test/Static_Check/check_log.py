@@ -394,12 +394,9 @@ def write_self_error_log(exc: Exception) -> None:
   try:
     now_text = datetime.datetime.now().isoformat()
     # 从异常对象本身取traceback，而非依赖"正处于except块中"这一调用环境假设
-    if exc is not None:
-      trace_text = "".join(
-          traceback.format_exception(type(exc), exc, exc.__traceback__)
-      )
-    else:
-      trace_text = traceback.format_exc()
+    trace_text = "".join(
+        traceback.format_exception(type(exc), exc, exc.__traceback__)
+    )
     with open(LOG_PATH, "a", encoding="utf-8") as f:
       f.write("=" * 80 + "\n")
       f.write(f"[静态检查] {now_text} 检查器自身异常:\n")
