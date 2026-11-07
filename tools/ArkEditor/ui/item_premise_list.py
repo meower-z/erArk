@@ -42,14 +42,14 @@ class ItemPremiseList(QWidget):
 
     # 按钮布局
     button_layout1 = QHBoxLayout()
-    change_button = QPushButton("整体修改")
-    change_button.setObjectName("btn_change_all")
-    change_button.clicked.connect(self.change)
-    button_layout1.addWidget(change_button)
-    reset_button = QPushButton("整体清零")
-    reset_button.setObjectName("btn_reset_all")
-    reset_button.clicked.connect(self.reset)
-    button_layout1.addWidget(reset_button)
+    self.change_button = QPushButton("整体修改")
+    self.change_button.setObjectName("btn_change_all")
+    self.change_button.clicked.connect(self.change)
+    button_layout1.addWidget(self.change_button)
+    self.reset_button = QPushButton("整体清零")
+    self.reset_button.setObjectName("btn_reset_all")
+    self.reset_button.clicked.connect(self.reset)
+    button_layout1.addWidget(self.reset_button)
     title_layout.addLayout(button_layout1)
 
     button_layout2 = QHBoxLayout()
@@ -197,10 +197,9 @@ class ItemPremiseList(QWidget):
     if data is None:
       return
     # 先遍历找到cid
-    for premise in cache_control.premise_data:
-      if cache_control.premise_data[premise] == item.text():
-        premise_cid = premise
-        break
+    premise_cid = next(
+        k for k, v in cache_control.premise_data.items() if v == item.text()
+    )
     # 根据cid删除前提
     if premise_cid in data.premise:
       del data.premise[premise_cid]
@@ -219,10 +218,9 @@ class ItemPremiseList(QWidget):
     item = self.item_list.itemAt(pos)
     if item is not None:
       # 先遍历找到cid
-      for premise in cache_control.premise_data:
-        if cache_control.premise_data[premise] == item.text():
-          premise_cid = premise
-          break
+      premise_cid = next(
+          k for k, v in cache_control.premise_data.items() if v == item.text()
+      )
       # 获取data对象
       data = self.selected_data()
       # 创建右键菜单
@@ -421,8 +419,7 @@ class ItemPremiseList(QWidget):
     """
     # 清空原有按钮行
     for layout in self.quick_insert_button_layouts:
-      while layout.count():
-        item = layout.takeAt(0)
+      while (item := layout.takeAt(0)) is not None:
         widget = item.widget()
         if widget:
           widget.deleteLater()

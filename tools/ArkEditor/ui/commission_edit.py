@@ -237,7 +237,7 @@ class CommissionEditWidget(QWidget):
     """
     初始化UI控件
     """
-    self.layout = QFormLayout(self)
+    self.main_layout = QFormLayout(self)
     # 获取全局字体设置
     font = QFont()
     font.setPointSize(cache_control.now_font_size)
@@ -288,31 +288,31 @@ class CommissionEditWidget(QWidget):
     self.reward_explain.setReadOnly(True)
     self.reward_explain.setFont(font)
     # 添加到表单
-    self.layout.addRow("ID", self.cid_edit)
-    self.layout.addRow("名称", self.name_edit)
-    self.layout.addRow("国家ID", self.country_id_edit)
-    self.layout.addRow("等级", self.level_edit)
-    self.layout.addRow("类型", self.type_edit)
-    self.layout.addRow("人数", self.people_edit)
-    self.layout.addRow("耗时(天)", self.time_edit)
-    self.layout.addRow("需求", self.demand_edit)
-    self.layout.addRow("需求说明", self.demand_explain)
-    self.layout.addRow("奖励", self.reward_edit)
-    self.layout.addRow("奖励说明", self.reward_explain)
-    self.layout.addRow("前置委托ID", self.related_id_edit)
-    self.layout.addRow("特殊委托", self.special_edit)
-    self.layout.addRow("描述", self.description_edit)
+    self.main_layout.addRow("ID", self.cid_edit)
+    self.main_layout.addRow("名称", self.name_edit)
+    self.main_layout.addRow("国家ID", self.country_id_edit)
+    self.main_layout.addRow("等级", self.level_edit)
+    self.main_layout.addRow("类型", self.type_edit)
+    self.main_layout.addRow("人数", self.people_edit)
+    self.main_layout.addRow("耗时(天)", self.time_edit)
+    self.main_layout.addRow("需求", self.demand_edit)
+    self.main_layout.addRow("需求说明", self.demand_explain)
+    self.main_layout.addRow("奖励", self.reward_edit)
+    self.main_layout.addRow("奖励说明", self.reward_explain)
+    self.main_layout.addRow("前置委托ID", self.related_id_edit)
+    self.main_layout.addRow("特殊委托", self.special_edit)
+    self.main_layout.addRow("描述", self.description_edit)
     # 保存按钮
     self.save_btn = QPushButton("保存修改")
     self.save_btn.setFont(font)
     self.save_btn.clicked.connect(self.save_commission)
-    self.layout.addRow(self.save_btn)
+    self.main_layout.addRow(self.save_btn)
     # 设置表单label字体
     label_font = font
-    for i in range(self.layout.rowCount()):
-      label_item = self.layout.itemAt(i, QFormLayout.ItemRole.LabelRole)
-      if label_item is not None and label_item.widget() is not None:
-        label_item.widget().setFont(label_font)
+    for i in range(self.main_layout.rowCount()):
+      label_item = self.main_layout.itemAt(i, QFormLayout.ItemRole.LabelRole)
+      if label_item is not None and (label := label_item.widget()) is not None:
+        label.setFont(label_font)
 
     # 需求和奖励输入变化时自动更新说明
     self.demand_edit.textChanged.connect(self.update_demand_explain)
@@ -322,16 +322,12 @@ class CommissionEditWidget(QWidget):
     self.demand_add_btn.setFont(font)
     self.reward_add_btn = QPushButton("添加")
     self.reward_add_btn.setFont(font)
-    self.layout.insertRow(
-        self.layout.getWidgetPosition(self.demand_edit)[0] + 1,
-        "",
-        self.demand_add_btn,
-    )
-    self.layout.insertRow(
-        self.layout.getWidgetPosition(self.reward_edit)[0] + 1,
-        "",
-        self.reward_add_btn,
-    )
+    demand_pos = self.main_layout.getWidgetPosition(self.demand_edit)
+    assert isinstance(demand_pos, tuple) and isinstance(demand_pos[0], int)
+    self.main_layout.insertRow(demand_pos[0] + 1, "", self.demand_add_btn)
+    reward_pos = self.main_layout.getWidgetPosition(self.reward_edit)
+    assert isinstance(reward_pos, tuple) and isinstance(reward_pos[0], int)
+    self.main_layout.insertRow(reward_pos[0] + 1, "", self.reward_add_btn)
     self.demand_add_btn.clicked.connect(self.add_demand_item)
     self.reward_add_btn.clicked.connect(self.add_reward_item)
 
@@ -454,7 +450,7 @@ class CommissionItemAddDialog(QDialog):
     # 主垂直布局
     main_layout = QVBoxLayout(self)
     # 横向布局用于放置类型、子项、数值
-    h_layout = QHBoxLayout()
+    self.h_layout = QHBoxLayout()
     # A: 类型选择下拉框
     self.type_combo = QComboBox()
     self.type_combo.setFont(font)
@@ -481,8 +477,8 @@ class CommissionItemAddDialog(QDialog):
     type_label = QLabel("类型", self)
     type_label.setFont(font)
     type_label.setMinimumWidth(40)
-    h_layout.addWidget(type_label)
-    h_layout.addWidget(self.type_combo)
+    self.h_layout.addWidget(type_label)
+    self.h_layout.addWidget(self.type_combo)
     # B: 子项选择/输入
     self.sub_combo = QComboBox()
     self.sub_combo.setFont(font)
@@ -490,13 +486,13 @@ class CommissionItemAddDialog(QDialog):
     self.sub_edit = QLineEdit()
     self.sub_edit.setFont(font)
     self.sub_edit.setMinimumWidth(160)
-    self.current_sub_widget = self.sub_combo  # 记录当前插入的控件
+    self.current_sub_widget: QWidget = self.sub_combo  # 记录当前插入的控件
     # 添加子项标签和控件
     sub_label = QLabel("子项", self)
     sub_label.setFont(font)
     sub_label.setMinimumWidth(40)
-    h_layout.addWidget(sub_label)
-    h_layout.addWidget(self.sub_combo)
+    self.h_layout.addWidget(sub_label)
+    self.h_layout.addWidget(self.sub_combo)
     # C: 数值输入框
     self.value_edit = QLineEdit()
     self.value_edit.setFont(font)
@@ -506,10 +502,10 @@ class CommissionItemAddDialog(QDialog):
     value_label = QLabel("数值", self)
     value_label.setFont(font)
     value_label.setMinimumWidth(40)
-    h_layout.addWidget(value_label)
-    h_layout.addWidget(self.value_edit)
+    self.h_layout.addWidget(value_label)
+    self.h_layout.addWidget(self.value_edit)
     # 添加横向布局到主布局
-    main_layout.addLayout(h_layout)
+    main_layout.addLayout(self.h_layout)
     # 确定按钮
     self.ok_btn = QPushButton("确定")
     self.ok_btn.setFont(font)
@@ -530,7 +526,7 @@ class CommissionItemAddDialog(QDialog):
     None
     """
     # 只移除当前插入的控件
-    h_layout = self.layout().itemAt(0).layout()
+    h_layout = self.h_layout
     # 子项控件在h_layout的第3和第4个位置
     if (
         hasattr(self, "current_sub_widget")
@@ -591,7 +587,7 @@ class CommissionItemAddDialog(QDialog):
         if int(k) == 0:
           continue
         self.sub_combo.addItem(f"{v}", int(k))
-      self.layout().itemAt(0).layout().insertWidget(3, self.sub_combo)
+      h_layout.insertWidget(3, self.sub_combo)
       self.current_sub_widget = self.sub_combo
     else:
       self.sub_edit = QLineEdit()

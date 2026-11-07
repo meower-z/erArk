@@ -413,11 +413,11 @@ def show_setting() -> None:
   font_dialog.setFont(font)
   font_dialog.setFixedWidth(300)
   font_dialog.setFixedHeight(200)
-  font_dialog.setLayout(QVBoxLayout())
+  font_dialog.setLayout(font_layout := QVBoxLayout())
   # 当前的字体名字
   font_name_label = QLabel(font_dialog)
   font_name_label.setText("当前字体：" + cache_control.now_font_name)
-  font_dialog.layout().addWidget(font_name_label)
+  font_layout.addWidget(font_name_label)
   # 创建下拉框来选择字体
   font_combobox = QComboBox(font_dialog)
   font_combobox.addItems(QFontDatabase().families())
@@ -425,11 +425,11 @@ def show_setting() -> None:
   font_combobox.currentTextChanged.connect(
       lambda text: font_name_label.setText("当前字体：" + text)
   )
-  font_dialog.layout().addWidget(font_combobox)
+  font_layout.addWidget(font_combobox)
   # 当前的字体大小
   font_size_label = QLabel(font_dialog)
   font_size_label.setText("当前字号：" + str(cache_control.now_font_size))
-  font_dialog.layout().addWidget(font_size_label)
+  font_layout.addWidget(font_size_label)
   # 创建文本框来输入字号
   font_size_text = QTextEdit(font_dialog)
   font_size_text.setText(str(cache_control.now_font_size))
@@ -440,7 +440,7 @@ def show_setting() -> None:
           "当前字号：" + font_size_text.toPlainText()
       )
   )
-  font_dialog.layout().addWidget(font_size_text)
+  font_layout.addWidget(font_size_text)
   # 保存按钮
   save_button = QPushButton("保存")
   save_button.clicked.connect(
@@ -448,5 +448,5 @@ def show_setting() -> None:
           font_combobox.currentText(), int(font_size_text.toPlainText())
       )
   )
-  font_dialog.layout().addWidget(save_button)
+  font_layout.addWidget(save_button)
   font_dialog.exec_()
