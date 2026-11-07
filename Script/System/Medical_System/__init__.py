@@ -24,3 +24,17 @@ from Script.System.Medical_System import medical_service
 from Script.System.Medical_System import medical_department_panel
 from Script.System.Medical_System import medical_player_diagnose_function
 from Script.System.Medical_System import medical_player_diagnose_panel
+
+__all__ = [
+    "medical_constant",
+    "medical_core",
+    "log_system",
+    "clinic_patient_management",
+    "hospital_patient_management",
+    "clinic_doctor_service",
+    "hospital_doctor_service",
+    "medical_service",
+    "medical_department_panel",
+    "medical_player_diagnose_function",
+    "medical_player_diagnose_panel",
+]

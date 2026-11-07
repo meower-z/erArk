@@ -14,26 +14,27 @@ Web模式专用UI组件包
 - image_processor: 图片处理组件（透明区域裁切和缓存）
 """
 
-from Script.System.Web_Draw_System.scene_renderer import SceneRenderer
-from Script.System.Web_Draw_System.character_renderer import CharacterRenderer
-from Script.System.Web_Draw_System.interaction_handler import InteractionHandler
+# 下面的导入供其他模块经本包使用。同名别名「名字 as 名字」表明这些导入是有意留下的，不是未用的导入。
+from Script.System.Web_Draw_System.scene_renderer import SceneRenderer as SceneRenderer
+from Script.System.Web_Draw_System.character_renderer import CharacterRenderer as CharacterRenderer
+from Script.System.Web_Draw_System.interaction_handler import InteractionHandler as InteractionHandler
 from Script.System.Web_Draw_System.dialog_box import (
-    DialogBox,
+    DialogBox as DialogBox,
 )
-from Script.System.Web_Draw_System.status_panel import StatusPanel
+from Script.System.Web_Draw_System.status_panel import StatusPanel as StatusPanel
 from Script.System.Web_Draw_System.tab_menu import (
-    TabMenu,
-    MAIN_PANEL_TAB_ID,
-    SEX_POSITION_PANEL_TAB_ID,
-    BORN_EVENT_PANEL_TAB_ID,
-    enter_sub_panel_mode,
-    enter_managed_sub_panel_mode_by_type,
-    exit_sub_panel_mode,
-    cleanup_managed_sub_panel_mode,
-    is_in_sub_panel_mode,
+    TabMenu as TabMenu,
+    MAIN_PANEL_TAB_ID as MAIN_PANEL_TAB_ID,
+    SEX_POSITION_PANEL_TAB_ID as SEX_POSITION_PANEL_TAB_ID,
+    BORN_EVENT_PANEL_TAB_ID as BORN_EVENT_PANEL_TAB_ID,
+    enter_sub_panel_mode as enter_sub_panel_mode,
+    enter_managed_sub_panel_mode_by_type as enter_managed_sub_panel_mode_by_type,
+    exit_sub_panel_mode as exit_sub_panel_mode,
+    cleanup_managed_sub_panel_mode as cleanup_managed_sub_panel_mode,
+    is_in_sub_panel_mode as is_in_sub_panel_mode,
 )
-from Script.System.Web_Draw_System.body_part_button import BodyPartButton
-from Script.System.Web_Draw_System.settlement_manager import SettlementManager
+from Script.System.Web_Draw_System.body_part_button import BodyPartButton as BodyPartButton
+from Script.System.Web_Draw_System.settlement_manager import SettlementManager as SettlementManager
 from Script.System.Web_Draw_System.image_processor import (
-    image_processor,
+    image_processor as image_processor,
 )

@@ -25,7 +25,6 @@ Script/Core/constant/Behavior_Int.py	<module>	module-lines	lines=764
 Script/Core/constant/CharacterStatus.py	<module>	module-lines	lines=755
 Script/Core/constant/SecondBehavior.py	<module>	module-lines	lines=518
 Script/Core/constant/SecondBehavior_Int.py	<module>	module-lines	lines=517
-Script/Core/constant/__init__.py	<module>	F401	count=19
 Script/Core/constant_effect.py	<module>	module-lines	lines=1363
 Script/Core/constant_effect.py	BehaviorEffect	E501	count=5,max=299
 Script/Core/constant_promise.py	<module>	E501	count=1,max=121
@@ -310,7 +309,6 @@ Script/System/Instruct_System/handle_instruct.py	handle_teach	E501	count=2,max=1
 Script/System/Instruct_System/instruct_category.py	InstructCategory	W291	count=1
 Script/System/Instruct_System/see_instruct_panel.py	<module>	module-lines	lines=428
 Script/System/Instruct_System/see_instruct_panel.py	SeeInstructPanel.handle_instruct	mypy:unreachable	count=2
-Script/System/Medical_System/__init__.py	<module>	F401	count=11
 Script/System/Medical_System/clinic_doctor_service.py	<module>	module-lines	lines=704
 Script/System/Medical_System/clinic_patient_management.py	<module>	UP035	count=1
 Script/System/Medical_System/clinic_patient_management.py	<module>	module-lines	lines=1024
@@ -349,7 +347,6 @@ Script/System/Pregnancy_System/pregnancy_panel.py	Pregnancy_Overview_Panel.draw_
 Script/System/Pregnancy_System/pregnancy_panel.py	Pregnancy_Overview_Panel.draw_family_tree_page	E501	count=1,max=169
 Script/System/Sex_System/group_sex_panel.py	<module>	module-lines	lines=1118
 Script/System/Sex_System/hidden_sex_panel.py	<module>	module-lines	lines=656
-Script/System/Web_Draw_System/__init__.py	<module>	F401	count=17
 Script/System/Web_Draw_System/body_analysis_ensemble.py	<module>	E501	count=1,max=121
 Script/System/Web_Draw_System/body_analysis_ensemble.py	<module>	module-lines	lines=807
 Script/System/Web_Draw_System/body_analysis_ensemble.py	main	E501	count=1,max=125
