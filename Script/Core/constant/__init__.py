@@ -5,29 +5,30 @@ from __future__ import annotations
 from types import FunctionType
 from Script.Core import get_text
 
-from Script.Core.constant.CharacterStatus import CharacterStatus
+# 下面写成「名字 as 名字」的导入供其他模块经本包使用。同名别名表明这些导入是有意留下的，不是未用的导入。
+from Script.Core.constant.CharacterStatus import CharacterStatus as CharacterStatus
 from Script.Core.constant.Behavior import Behavior
-from Script.Core.constant.StateMachine import StateMachine
-from Script.Core.constant.SecondBehavior import SecondBehavior
-from Script.Core.constant.SecondBehavior_Int import SecondBehavior_Int
-from Script.System.Instruct_System.Instruct import Instruct
-from Script.Core.constant.Behavior_Int import Behavior_Int
+from Script.Core.constant.StateMachine import StateMachine as StateMachine
+from Script.Core.constant.SecondBehavior import SecondBehavior as SecondBehavior
+from Script.Core.constant.SecondBehavior_Int import SecondBehavior_Int as SecondBehavior_Int
+from Script.System.Instruct_System.Instruct import Instruct as Instruct
+from Script.Core.constant.Behavior_Int import Behavior_Int as Behavior_Int
 from Script.System.Instruct_System.instruct_category import (
-    InstructCategory,
-    BODY_PART_NAMES,
-    COMPUTED_BODY_PARTS,
+    InstructCategory as InstructCategory,
+    BODY_PART_NAMES as BODY_PART_NAMES,
+    COMPUTED_BODY_PARTS as COMPUTED_BODY_PARTS,
 )
 from Script.System.Instruct_System.interaction_types import (
-    InteractionMajorType,
-    InteractionMinorType,
-    MAJOR_TYPE_NAMES,
-    MAJOR_TYPE_ORDER,
-    MINOR_TYPE_NAMES,
-    MAJOR_TO_MINOR_TYPES,
-    MINOR_TO_MAJOR_TYPE,
-    get_minor_types,
-    get_minor_type_name,
-    get_major_type_name,
+    InteractionMajorType as InteractionMajorType,
+    InteractionMinorType as InteractionMinorType,
+    MAJOR_TYPE_NAMES as MAJOR_TYPE_NAMES,
+    MAJOR_TYPE_ORDER as MAJOR_TYPE_ORDER,
+    MINOR_TYPE_NAMES as MINOR_TYPE_NAMES,
+    MAJOR_TO_MINOR_TYPES as MAJOR_TO_MINOR_TYPES,
+    MINOR_TO_MAJOR_TYPE as MINOR_TO_MAJOR_TYPE,
+    get_minor_types as get_minor_types,
+    get_minor_type_name as get_minor_type_name,
+    get_major_type_name as get_major_type_name,
 )
 
 from typing import TYPE_CHECKING
