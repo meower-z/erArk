@@ -517,9 +517,9 @@ def slot_holders():
     if len(parts) < 6 or parts[1] != "FLOCK":
       continue
     major, minor, inode = parts[5].split(":")
-    slot = keys.get((int(major, 16), int(minor, 16), int(inode)))
-    if slot is not None:
-      holders[slot] = int(parts[4])
+    held_slot = keys.get((int(major, 16), int(minor, 16), int(inode)))
+    if held_slot is not None:
+      holders[held_slot] = int(parts[4])
   return holders
 
 

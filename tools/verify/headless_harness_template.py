@@ -27,8 +27,8 @@ import sys
 import traceback
 
 # ==== 0. 断言与收尾：finish() 打印断言汇总并以对应的退出码结束进程 ====
-FAILED = []
-PASSED = []
+FAILED: list[str] = []
+PASSED: list[str] = []
 
 
 def check(name, cond, extra=""):
@@ -96,7 +96,7 @@ from Script.System.Field_Commission_System import field_commission_function
 SAVE_ID = "<存档编号>"  # 存档目录 save/<SAVE_ID>/
 WATCH_NAME = "阿米娅"  # 重点观察的角色名；None 则不观察
 CAPTURE_KEYWORD = "吵醒"  # 结果里只打印含此关键词的屏幕文字；None 则全部打印
-captured_texts = []
+captured_texts: list[str] = []
 """输出时就收下的屏幕文字（world.player.screen 只留最近 400 段，循环跑完再筛会漏掉早先的文字）"""
 player_print = (
     io_init.era_print
@@ -245,7 +245,7 @@ class PassLimitReached(Exception):
   """某个角色跑满 PASS_LIMIT 轮仍未完成，由护栏抛出以中止真实循环"""
 
 
-saved_ids = []
+saved_ids: list[str] = []
 
 
 def skip_save(save_id):
@@ -275,7 +275,7 @@ def skip_file_write(path, mode="r", *args, **kwargs):
 save_handle.establish_save = skip_save
 field_commission_function.open = skip_file_write
 
-pass_count = {}
+pass_count: dict[int, int] = {}
 """每个角色已被 character_behavior 结算的轮数；真实循环每轮对每个未完成的角色各调用一次"""
 real_character_behavior = character_behavior.character_behavior
 
