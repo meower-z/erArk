@@ -206,15 +206,11 @@ def scene_str(path: list) -> str:
 
 def _scene_list_add(scene_path_str: str, character_id: int) -> None:
   """
-  把角色登记进场景的角色名单（兼容 set 与 list 两种容器）
+  把角色登记进场景的角色名单
   """
   if scene_path_str not in cache.scene_data:
     return
-  char_list = cache.scene_data[scene_path_str].character_list
-  if isinstance(char_list, set):
-    char_list.add(character_id)
-  elif character_id not in char_list:
-    char_list.append(character_id)
+  cache.scene_data[scene_path_str].character_list.add(character_id)
 
 
 def _scene_list_remove(scene_path_str: str, character_id: int) -> None:
@@ -223,11 +219,7 @@ def _scene_list_remove(scene_path_str: str, character_id: int) -> None:
   """
   if scene_path_str not in cache.scene_data:
     return
-  char_list = cache.scene_data[scene_path_str].character_list
-  if isinstance(char_list, set):
-    char_list.discard(character_id)
-  elif character_id in char_list:
-    char_list.remove(character_id)
+  cache.scene_data[scene_path_str].character_list.discard(character_id)
 
 
 def move_to(character_id: int, path: list) -> None:

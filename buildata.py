@@ -133,7 +133,7 @@ def constand_2_handle() -> str:
       if game_config.config_talent[config_data_index].name == dataname:
         data_index = config_data_index
         break
-  elif datetype == "X":
+  else:
     datetype_str, data_index = "数据类型", "数据序号"
   print(f"数据名 = {dataname}，类型 = {datetype_str}，id = {data_index}")
 

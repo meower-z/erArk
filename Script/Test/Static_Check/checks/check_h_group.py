@@ -60,8 +60,6 @@ def _pl(cache: game_type.Cache) -> game_type.Character | None:
   返回值: 玩家角色对象(cid=0)，cache未初始化或0号角色不存在时返回None
   功能: 统一获取玩家角色对象
   """
-  if cache is None:
-    return None
   cd = getattr(cache, "character_data", None)
   if not isinstance(cd, dict):
     return None
@@ -746,8 +744,6 @@ def check_hgroup_11() -> list[CheckFailure]:
       即为串写或旧状态未清。串写哨兵，成本低，唯一潜在写入者是旧存档迁移
   """
   cache = cache_control.cache
-  if cache is None:
-    return []
   npcs = _npcs(cache)
   failures = []
   for cid in npcs:
@@ -1285,8 +1281,6 @@ def check_hgroup_21() -> list[CheckFailure]:
       mod写入/迁移越界；成本极低故保留
   """
   cache = cache_control.cache
-  if cache is None:
-    return []
   all_ids = _all(cache)
   failures = []
   for cid in all_ids:
@@ -1474,8 +1468,6 @@ def check_hgroup_25() -> list[CheckFailure]:
       不可能同时为真。普通H结束不动hypnosis结构，也造不出二者同真
   """
   cache = cache_control.cache
-  if cache is None:
-    return []
   all_ids = _all(cache)
   failures = []
   for cid in all_ids:
@@ -1509,8 +1501,6 @@ def check_hgroup_26() -> list[CheckFailure]:
       哨兵，主要防debug面板与存档迁移写入越界值
   """
   cache = cache_control.cache
-  if cache is None:
-    return []
   all_ids = _all(cache)
   failures = []
   for cid in all_ids:
@@ -1544,8 +1534,6 @@ def check_hgroup_27() -> list[CheckFailure]:
       迭代范围必须正好是cache.npc_id_got | {0}，与写入侧的集合一致
   """
   cache = cache_control.cache
-  if cache is None:
-    return []
   all_ids = _all(cache)
   ts = getattr(cache, "time_stop_mode", False)
   pl_behavior_id = (
@@ -1597,8 +1585,6 @@ def check_hgroup_28() -> list[CheckFailure]:
       (原始不变式给出的检查体本身未加该豁免)
   """
   cache = cache_control.cache
-  if cache is None:
-    return []
   all_ids = _all(cache)
   failures = []
   for cid in all_ids:
@@ -1637,8 +1623,6 @@ def check_hgroup_29() -> list[CheckFailure]:
       StateMachine/default.py的if/else上，对应值1/2
   """
   cache = cache_control.cache
-  if cache is None:
-    return []
   all_ids = _all(cache)
   failures = []
   for cid in all_ids:
@@ -1754,8 +1738,6 @@ def check_hgroup_31() -> list[CheckFailure]:
       unconscious_h==3，本条在时停回合自动静默，无需额外守卫
   """
   cache = cache_control.cache
-  if cache is None:
-    return []
   all_ids = _all(cache)
   failures = []
   for cid in all_ids:

@@ -278,15 +278,8 @@ def new_game_minimal_init() -> None:
   from Script.Core import constant as core_constant
 
   base_adv_set = core_constant.first_NPC_adv_set
-  # cache.npc_tem_data 在不同场景可能是 dict 或 list，兼容两者
-  npc_tem_data = cache.npc_tem_data
-  if isinstance(npc_tem_data, dict):
-    iterator = npc_tem_data.items()
-  else:
-    # 假定为 list 或其他可迭代序列，使用 enumerate 提供 cid
-    iterator = enumerate(npc_tem_data)
 
-  for cid, npc_tem in iterator:
+  for cid, npc_tem in cache.npc_tem_data.items():
     # npc_tem 是模板；正式实例化后会进入 character_data?
     # character_handle.init_character_list() 已创建模板，下面实例化/加入?
     # 简化：如果模板的干员编号在基础集合里，就确保加入 npc_id_got

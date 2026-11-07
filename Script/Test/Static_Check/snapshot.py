@@ -148,8 +148,6 @@ def build_snapshot(
       而排查一次失败通常只需要涉事角色的数据），未传入时全量保留；
       scene_data字段仅保留角色集合非空的场景（角色所在位置是排查问题的关键信息，空场景则无排查价值）
   """
-  if cache is None:
-    return {}
   snapshot = {}
   for field_name, field_value in vars(cache).items():
     if _is_excluded_top_level_field(field_name):

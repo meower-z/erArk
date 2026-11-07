@@ -79,7 +79,7 @@ def check_official_01() -> list[CheckFailure]:
 def check_official_02() -> list[CheckFailure]:
   """参数: 无；返回值: List[CheckFailure]；功能: 全局与角色履历条目须为dict，time为datetime，choice为非负整数。"""
   cache = cache_control.cache
-  histories = [
+  histories: list[tuple[int | None, str, object]] = [
       (
           None,
           "official_event_history",

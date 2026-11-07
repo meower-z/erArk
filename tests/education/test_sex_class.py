@@ -1158,7 +1158,7 @@ check(
 sex_class_handle.end_sex_class()
 _g201.last_absent_period = []
 _g201.last_attend_period = []
-cache.rhodes_island.temp_sex_class = {}
+_absent = _g201.absent_count
 # 跨单元整链（U2 单元复审补）：U1 的 settle_attend 按 get_attend_judge_time 那一节写出勤标记，U2 的 settle_absent 按她此刻所在的节次读；
 #    本节内提前下课、体力跌破 30% 回到 AI 派 721 时调的就是 settle_absent，两边的节次要对得上。按时开讲与提前 5 分钟开讲预约的课各验一遍
 for _open_time, _period, _label in (

@@ -392,8 +392,6 @@ def check_carry_target_valid_and_colocated() -> list[CheckFailure]:
       被搬运的睡眠干员自然睡醒后异常6即为"正常"，而搬运不会自动停止，纳入会误报
   """
   cache = cache_control.cache
-  if cache is None:
-    return []
   pl = _pl()
   if pl is None:
     return []
@@ -824,9 +822,6 @@ def check_air_hypnosis_colocated_with_anchor() -> list[CheckFailure]:
       耗尽只清当前交互对象状态却把共享锚点整个置""，剩下的人立刻违反本式；该状态会在玩家离开该地点时
       自愈，故为warning。迭代范围有意不限于npc_id_got，访客也可能被催眠
   """
-  cache = cache_control.cache
-  if cache is None:
-    return []
   pl = _pl()
   if pl is None:
     return []
@@ -865,8 +860,6 @@ def check_air_hypnosis_scene_locked() -> list[CheckFailure]:
       H结束效果会开门却不解除空气催眠，命中时应向游戏侧提缺口，故为warning而非直接放宽
   """
   cache = cache_control.cache
-  if cache is None:
-    return []
   scene_data = getattr(cache, "scene_data", None)
   if not isinstance(scene_data, dict):
     return []
@@ -909,8 +902,6 @@ def check_air_hypnosis_anchor_shape() -> list[CheckFailure]:
       的路径还会让MIND-19取场景时KeyError。有意不写len(air)==2——场景路径不是固定两段
   """
   cache = cache_control.cache
-  if cache is None:
-    return []
   pl = _pl()
   if pl is None:
     return []

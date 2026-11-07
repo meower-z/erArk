@@ -422,8 +422,6 @@ def build_ensemble(
     best_raw = 0
 
     for key, res in results.items():
-      if res is None or res['scores'] is None:
-        continue
       raw_score = res['scores'][kp_idx]
       norm_score = normalize_scores(
           np.array([raw_score]), key, needs_sigmoid_keys
@@ -749,12 +747,12 @@ def run_yolo11_inference(
   输出：tuple(ndarray, ndarray) - (关键点坐标(17,2), 置信度(17,)) 或 (None, None)
   """
   results = model(image, verbose=False)
-  r = results[0]
+  r = next(iter(results))
   if r.keypoints is not None and len(r.keypoints.data) > 0:
     # 取置信度最高的检测
     if r.boxes is not None and len(r.boxes.data) > 0:
       confs = r.boxes.conf.cpu().numpy()
-      best_idx = np.argmax(confs)
+      best_idx = int(np.argmax(confs))
     else:
       best_idx = 0
 
@@ -1013,8 +1011,8 @@ def main() -> None:
           # rtmlib标准接口
           kps, scores = minfo['model'](image)
           if kps is not None and len(kps) > 0:
-            kps_17 = kps[0][:17]
-            scores_17 = scores[0][:17]
+            kps_17 = np.asarray(kps[0][:17])
+            scores_17 = np.asarray(scores[0][:17])
           else:
             kps_17, scores_17 = None, None
 
