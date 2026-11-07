@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
     QComboBox,
 )
 from PySide6.QtCore import Signal, Qt
-from PySide6.QtGui import QCursor, QFont
+from PySide6.QtGui import QAction, QCursor, QFont
 import game_type
 import cache_control
 from typing import TYPE_CHECKING
@@ -274,12 +274,12 @@ class OfficialEventListWidget(QWidget):
     if item is not None:
       copy_action = menu.addAction("复制该事件")
       delete_action = menu.addAction("删除该事件")
-    action = menu.exec(QCursor.pos())
+    action: QAction | None = menu.exec(QCursor.pos())
     if action is None:
       return
     if action == add_action:
       self.add_event()
-    elif copy_action is not None and action == copy_action:
+    elif item is not None and action == copy_action:
       self.copy_event(item.data(1000))
-    elif delete_action is not None and action == delete_action:
+    elif item is not None and action == delete_action:
       self.delete_event(item.data(1000))

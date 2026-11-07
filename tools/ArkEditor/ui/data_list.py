@@ -7,7 +7,7 @@ import uuid
 from PySide6.QtWidgets import QListWidget, QMenuBar, QWidgetAction, QAbstractItemView, QPushButton, QHBoxLayout, QWidget, QTextEdit, QLabel, QGridLayout, QMenu, QCheckBox, QSizePolicy
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont, QCursor, QColor
-from ui.list_item import ListItem
+from ui.list_item import ListItem, list_item
 import cache_control
 import game_type
 import function
@@ -85,7 +85,7 @@ class DataList(DataListIdEditMixin, QWidget):
     self.list_widget.setFont(font)
     self.close_flag = 1
     self.delet_text_id_flag = 1  # 是否删除条目序号相关的控件
-    self.edited_item = self.list_widget.currentItem()
+    self.edited_item: ListItem | None = None
     self.list_widget.setSelectionMode(QAbstractItemView.SingleSelection)
     self.list_widget.setContextMenuPolicy(Qt.CustomContextMenu)
     self.list_widget.customContextMenuRequested.connect(self.right_button_menu)
@@ -309,7 +309,7 @@ class DataList(DataListIdEditMixin, QWidget):
   def copy_text(self) -> None:
     """复制条目"""
     old_item = self.list_widget.currentItem()
-    if old_item is None:
+    if not isinstance(old_item, ListItem):
       return
     # 复制前保存快照
     undo_snapshot_manager.save_snapshot()
@@ -422,7 +422,7 @@ class DataList(DataListIdEditMixin, QWidget):
     """
     event_index = self.list_widget.currentRow()
     item = self.list_widget.item(event_index)
-    if item is None:
+    if not isinstance(item, ListItem):
       return
     # 记录删除前的事件数据到撤销栈
     if not self.update_clear:
@@ -449,7 +449,7 @@ class DataList(DataListIdEditMixin, QWidget):
     """复制事件"""
     undo_snapshot_manager.save_snapshot_if_selection_changed()
     event_index = self.list_widget.currentRow()
-    old_item = self.list_widget.item(event_index)
+    old_item = list_item(self.list_widget.item(event_index))
     old_event = cache_control.now_event_data[old_item.uid]
     new_item = ListItem(old_item.text() + "(复制)")
     new_item.uid = str(uuid.uuid4())
@@ -504,7 +504,7 @@ class DataList(DataListIdEditMixin, QWidget):
     """
     talk_index = self.list_widget.currentRow()
     item = self.list_widget.item(talk_index)
-    if item is None:
+    if not isinstance(item, ListItem):
       return
     # 记录删除前的口上数据到撤销栈
     if not self.update_clear:
@@ -533,7 +533,7 @@ class DataList(DataListIdEditMixin, QWidget):
     """
     undo_snapshot_manager.save_snapshot_if_selection_changed()
     talk_index = self.list_widget.currentRow()
-    old_item = self.list_widget.item(talk_index)
+    old_item = list_item(self.list_widget.item(talk_index))
     old_talk = cache_control.now_talk_data[old_item.uid]
     new_item = ListItem(old_item.text() + "(复制)")
     # 计算新cid（使用整型局部变量，最后以字符串保存）
@@ -687,7 +687,7 @@ class DataList(DataListIdEditMixin, QWidget):
 
         # 遍历 list_widget 中的所有 item
         for i in range(self.list_widget.count()):
-          item = self.list_widget.item(i)
+          item = list_item(self.list_widget.item(i))
           # 如果 item 的 uid 等于 now_select_id，则将其滚动到可见区域的中心位置
           if item.uid == cache_control.now_select_id:
             self.list_widget.scrollToItem(
@@ -766,7 +766,7 @@ class DataList(DataListIdEditMixin, QWidget):
 
         # 遍历 list_widget 中的所有 item
         for i in range(self.list_widget.count()):
-          item = self.list_widget.item(i)
+          item = list_item(self.list_widget.item(i))
           # 如果 item 的 uid 等于 now_select_id，则将其滚动到可见区域的中心位置
           if item.uid == cache_control.now_select_id:
             self.list_widget.scrollToItem(

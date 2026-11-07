@@ -6,6 +6,7 @@ move_item_utils.py
 from PySide6.QtGui import QColor
 import cache_control
 from collections import OrderedDict
+from ui.list_item import ListItem, list_item
 from ui.data_list_undo_snapshot import undo_snapshot_manager  # 导入快照式撤销管理器
 from typing import TYPE_CHECKING
 
@@ -32,13 +33,14 @@ def move_item(self: 'DataList') -> None:
   self.update()
   # 设置移动标志
   self.now_in_moving_flag = True
-  self.edited_item = self.list_widget.currentItem()
+  current = self.list_widget.currentItem()
+  self.edited_item = current if isinstance(current, ListItem) else None
   if self.edited_item is not None:
     self.edited_item.setBackground(QColor('light green'))
   # 记录移动前顺序到撤销栈
   if cache_control.now_edit_type_flag == 0:
     order = [
-        item.uid
+        list_item(item).uid
         for item in [
             self.list_widget.item(i) for i in range(self.list_widget.count())
         ]
@@ -46,7 +48,7 @@ def move_item(self: 'DataList') -> None:
     self.undo_stack.append({'type': 'talk_move', 'order': order})
   elif cache_control.now_edit_type_flag == 1:
     order = [
-        item.uid
+        list_item(item).uid
         for item in [
             self.list_widget.item(i) for i in range(self.list_widget.count())
         ]
@@ -63,7 +65,7 @@ def move_to_up(self: 'DataList') -> None:
   """
   if self.edited_item is None:
     return
-  current_select_cid = self.list_widget.currentItem().uid
+  current_select_cid = list_item(self.list_widget.currentItem()).uid
   need_move_cid = self.edited_item.uid
   if current_select_cid == need_move_cid:
     return
@@ -109,7 +111,7 @@ def move_to_up(self: 'DataList') -> None:
     current_select_item = self.list_widget.currentItem()
     if not current_select_item:
       return
-    current_select_uid = current_select_item.uid
+    current_select_uid = list_item(current_select_item).uid
     new_event_data = {}
     for uid in cache_control.now_event_data:
       if uid == need_move_uid:
@@ -124,7 +126,7 @@ def move_to_up(self: 'DataList') -> None:
   # 记录移动前顺序到撤销栈
   if cache_control.now_edit_type_flag == 0:
     order = [
-        item.uid
+        list_item(item).uid
         for item in [
             self.list_widget.item(i) for i in range(self.list_widget.count())
         ]
@@ -132,7 +134,7 @@ def move_to_up(self: 'DataList') -> None:
     self.undo_stack.append({'type': 'talk_move', 'order': order})
   elif cache_control.now_edit_type_flag == 1:
     order = [
-        item.uid
+        list_item(item).uid
         for item in [
             self.list_widget.item(i) for i in range(self.list_widget.count())
         ]
@@ -150,7 +152,7 @@ def move_to_down(self: 'DataList') -> None:
   """
   if self.edited_item is None:
     return
-  current_select_cid = self.list_widget.currentItem().uid
+  current_select_cid = list_item(self.list_widget.currentItem()).uid
   need_move_cid = self.edited_item.uid
   if current_select_cid == need_move_cid:
     return
@@ -208,7 +210,7 @@ def move_to_down(self: 'DataList') -> None:
   # 记录移动前顺序到撤销栈
   if cache_control.now_edit_type_flag == 0:
     order = [
-        item.uid
+        list_item(item).uid
         for item in [
             self.list_widget.item(i) for i in range(self.list_widget.count())
         ]
@@ -216,7 +218,7 @@ def move_to_down(self: 'DataList') -> None:
     self.undo_stack.append({'type': 'talk_move', 'order': order})
   elif cache_control.now_edit_type_flag == 1:
     order = [
-        item.uid
+        list_item(item).uid
         for item in [
             self.list_widget.item(i) for i in range(self.list_widget.count())
         ]
@@ -233,6 +235,7 @@ def move_cancel(self: 'DataList') -> None:
   功能描述：取消条目移动，恢复背景色。
   """
   self.now_in_moving_flag = False
+  assert self.edited_item is not None
   self.edited_item.setBackground(QColor('white'))
 
 
@@ -273,7 +276,7 @@ def on_rows_moved(
   # 记录拖拽前顺序到撤销栈
   if cache_control.now_edit_type_flag == 0:
     order = [
-        item.uid
+        list_item(item).uid
         for item in [
             self.list_widget.item(i) for i in range(self.list_widget.count())
         ]
@@ -281,7 +284,7 @@ def on_rows_moved(
     self.undo_stack.append({'type': 'talk_move', 'order': order})
   elif cache_control.now_edit_type_flag == 1:
     order = [
-        item.uid
+        list_item(item).uid
         for item in [
             self.list_widget.item(i) for i in range(self.list_widget.count())
         ]
@@ -292,7 +295,7 @@ def on_rows_moved(
     new_order = []
     for i in range(self.list_widget.count()):
       item = self.list_widget.item(i)
-      new_order.append(item.uid)
+      new_order.append(list_item(item).uid)
     new_talk_data = {uid: cache_control.now_talk_data[uid] for uid in new_order}
     cache_control.now_talk_data = new_talk_data
   elif cache_control.now_edit_type_flag == 1:
@@ -300,7 +303,7 @@ def on_rows_moved(
     new_order = []
     for i in range(self.list_widget.count()):
       item = self.list_widget.item(i)
-      new_order.append(item.uid)
+      new_order.append(list_item(item).uid)
     new_event_data = {
         uid: cache_control.now_event_data[uid] for uid in new_order
     }

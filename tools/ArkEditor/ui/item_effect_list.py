@@ -45,14 +45,14 @@ class ItemEffectList(QWidget):
     title_layout.addWidget(label)
     # 按钮布局
     button_layout1 = QHBoxLayout()
-    change_button = QPushButton("整体修改")
-    change_button.setObjectName("btn_change_all")
-    change_button.clicked.connect(self.change)
-    button_layout1.addWidget(change_button)
-    reset_button = QPushButton("整体清零")
-    reset_button.setObjectName("btn_reset_all")
-    reset_button.clicked.connect(self.reset)
-    button_layout1.addWidget(reset_button)
+    self.change_button = QPushButton("整体修改")
+    self.change_button.setObjectName("btn_change_all")
+    self.change_button.clicked.connect(self.change)
+    button_layout1.addWidget(self.change_button)
+    self.reset_button = QPushButton("整体清零")
+    self.reset_button.setObjectName("btn_reset_all")
+    self.reset_button.clicked.connect(self.reset)
+    button_layout1.addWidget(self.reset_button)
     title_layout.addLayout(button_layout1)
     main_layout.addLayout(title_layout)
 
@@ -117,10 +117,9 @@ class ItemEffectList(QWidget):
     if data is None:
       return
     self.item_list.takeItem(self.item_list.row(item))
-    for effect in cache_control.effect_data:
-      if cache_control.effect_data[effect] == item.text():
-        effect_cid = effect
-        break
+    effect_cid = next(
+        k for k, v in cache_control.effect_data.items() if v == item.text()
+    )
     if effect_cid in data.effect:
       del data.effect[effect_cid]
     menu = EffectMenu()
@@ -144,10 +143,9 @@ class ItemEffectList(QWidget):
     item = self.item_list.itemAt(pos)
     if item is not None:
       # 遍历寻找当前结算的cid，匹配结算文本
-      for effect in cache_control.effect_data:
-        if cache_control.effect_data[effect] == item.text():
-          effect_cid = effect
-          break
+      effect_cid = next(
+          k for k, v in cache_control.effect_data.items() if v == item.text()
+      )
       # 结算数据只在选中的事件上
       data = self.selected_event()
       # 创建右键菜单

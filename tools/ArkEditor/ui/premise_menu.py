@@ -240,9 +240,11 @@ class PremiseMenu(QDialog):
     for tree in self.tree_list:
       for root_index in range(tree.topLevelItemCount()):
         root = tree.topLevelItem(root_index)
+        assert root is not None
         has_visible_child = False  # 标记该type下是否有可见子项
         for child_index in range(root.childCount()):
           child = root.child(child_index)
+          assert child is not None
           if search_text in child.text(0):
             child.setHidden(False)
             has_visible_child = True
@@ -257,9 +259,11 @@ class PremiseMenu(QDialog):
     for tree in self.tree_list:
       for root_index in range(tree.topLevelItemCount()):
         root = tree.topLevelItem(root_index)
+        assert root is not None
         root.setHidden(False)  # 重置时显示所有type
         for child_index in range(root.childCount()):
           child = root.child(child_index)
+          assert child is not None
           child.setHidden(False)
 
   # def contextMenuEvent(self, event):

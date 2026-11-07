@@ -6,6 +6,8 @@ DataList 的混入类：把当前条目或全部条目的角色 id 设为输入�
 
 from typing import TYPE_CHECKING
 
+from ui.list_item import list_item
+
 if TYPE_CHECKING:
   from typing import Protocol
 
@@ -44,12 +46,12 @@ class DataListIdEditMixin:
         import cache_control
       if cache_control.now_edit_type_flag == 0:
         # 口上模式
-        cid = self.list_widget.currentItem().uid
+        cid = list_item(self.list_widget.currentItem()).uid
         if cid in cache_control.now_talk_data:
           cache_control.now_talk_data[cid].adv_id = new_id
       elif cache_control.now_edit_type_flag == 1:
         # 事件模式
-        uid = self.list_widget.currentItem().uid
+        uid = list_item(self.list_widget.currentItem()).uid
         if uid in cache_control.now_event_data:
           cache_control.now_event_data[uid].adv_id = new_id
     # 刷新界面

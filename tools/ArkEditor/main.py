@@ -13,13 +13,14 @@ from datetime import datetime
 
 import PySide6
 
-from PySide6.QtWidgets import QApplication, QFileDialog, QWidgetAction, QMenu, QPushButton, QMessageBox
+from PySide6.QtWidgets import QApplication, QFileDialog, QWidgetAction, QMenu, QMessageBox
 from PySide6.QtGui import QActionGroup, QKeySequence, QShortcut
 from PySide6.QtCore import QModelIndex
 from PySide6.QtGui import QFont
 from ui.window import Window
 from ui.menu_bar import MenuBar
 from ui.data_list import DataList
+from ui.list_item import ListItem
 from ui.tools_bar import ToolsBar
 from ui.chara_list import CharaList
 from ui.item_premise_list import ItemPremiseList
@@ -545,7 +546,7 @@ def change_status_menu(action: QWidgetAction) -> None:
     data_list.label3_text.setText(info_text)
 
     # 根据文字长度设置菜单栏宽度
-    status_menu_width = (
+    status_menu_width: float = (
         data_list.status_menu.fontMetrics()
         .boundingRect(cache_control.behavior_data[cache_control.now_behavior])
         .width()
@@ -553,7 +554,7 @@ def change_status_menu(action: QWidgetAction) -> None:
     status_menu_width = max(status_menu_width * 1.5, 100)
     if cache_control.now_edit_type_flag == 1:
       status_menu_width = max(status_menu_width * 1.5, 160)
-    data_list.menu_bar.setFixedWidth(status_menu_width)
+    data_list.menu_bar.setFixedWidth(int(status_menu_width))
 
 
 def change_type_menu(action: QWidgetAction) -> None:
@@ -591,7 +592,7 @@ def update_premise_and_settle_list(model_index: QModelIndex) -> None:
   model_index -- 事件序号
   """
   item = data_list.list_widget.item(model_index.row())
-  if item is not None:
+  if isinstance(item, ListItem):
     cache_control.now_select_id = item.uid
     if cache_control.now_edit_type_flag == 0:
       cache_control.now_select_id = str(cache_control.now_select_id)
@@ -814,20 +815,12 @@ chara_list.apply_button.clicked.connect(mark_modified)
 # 前提/结算列表：双击编辑、拖拽移动、整体修改/清零
 item_premise_list.item_list.itemDoubleClicked.connect(mark_modified)
 item_premise_list.item_list.model().rowsMoved.connect(mark_modified)
-item_premise_list.findChild(QPushButton, "btn_change_all").clicked.connect(
-    mark_modified
-)
-item_premise_list.findChild(QPushButton, "btn_reset_all").clicked.connect(
-    mark_modified
-)
+item_premise_list.change_button.clicked.connect(mark_modified)
+item_premise_list.reset_button.clicked.connect(mark_modified)
 item_effect_list.item_list.itemDoubleClicked.connect(mark_modified)
 item_effect_list.item_list.model().rowsMoved.connect(mark_modified)
-item_effect_list.findChild(QPushButton, "btn_change_all").clicked.connect(
-    mark_modified
-)
-item_effect_list.findChild(QPushButton, "btn_reset_all").clicked.connect(
-    mark_modified
-)
+item_effect_list.change_button.clicked.connect(mark_modified)
+item_effect_list.reset_button.clicked.connect(mark_modified)
 # ...如有其它可编辑控件，均应绑定 mark_modified
 
 # 保存操作：保存时调用 mark_saved
