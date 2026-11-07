@@ -109,8 +109,6 @@ def _record_history_element(element: dict[str, Any]) -> None:
   返回值类型：无
   功能描述：按类型过滤并维护固定长度的历史缓存
   """
-  if not isinstance(element, dict):
-    return
   if element.get("type") not in HISTORY_ELEMENT_TYPES:
     return
   _ensure_history_list()

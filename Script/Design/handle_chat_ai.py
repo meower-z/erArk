@@ -722,7 +722,7 @@ def text_ai(
             stream=True,
         )
         # 调用流式处理函数获取返回的文本
-        ai_gererate_text = process_stream_response(
+        ai_gererate_text: str | None = process_stream_response(
             stream=completion,  # 流式返回数据的迭代器，类型为object
             direct_mode=direct_mode,  # 是否为直接对话模式，类型为bool
             extractor=lambda chunk: chunk.choices[
@@ -731,7 +731,7 @@ def text_ai(
         )
       # 非流式输出
       else:
-        completion = client.chat.completions.create(
+        openai_response = client.chat.completions.create(
             model=cache.ai_setting.ai_chat_setting[5],
             messages=[
                 {"role": "system", "content": system_promote},
@@ -739,12 +739,12 @@ def text_ai(
             ],
         )
         # 获取返回的文本
-        ai_gererate_text = completion.choices[0].message.content
+        ai_gererate_text = openai_response.choices[0].message.content
     except Exception:
       # 如果发生异常，将返回的文本设为空
       ai_gererate_text = ""
   # 调用Gemini
-  elif now_key_type == "GEMINI_API_KEY":
+  else:
     # 构建http_options参数
     api_version_val = (
         "v1alpha" if cache.ai_setting.ai_chat_setting[12] == 1 else None
@@ -756,19 +756,19 @@ def text_ai(
     )
     # 创建client
     if api_version_val or base_url_val:
-      client = genai.Client(
+      gemini_client = genai.Client(
           api_key=API_KEY,
           http_options=genai.types.HttpOptions(
               api_version=api_version_val, base_url=base_url_val
           ),
       )
     else:
-      client = genai.Client(api_key=API_KEY)
+      gemini_client = genai.Client(api_key=API_KEY)
     try:
       # 发送请求
       # 流式输出
       if cache.ai_setting.ai_chat_setting[14] == 1:
-        completion = client.models.generate_content_stream(
+        gemini_stream = gemini_client.models.generate_content_stream(
             model=model,
             contents=user_prompt,
             config=genai_types.GenerateContentConfig(
@@ -777,13 +777,13 @@ def text_ai(
         )
         # 调用流式处理函数获取返回的文本
         ai_gererate_text = process_stream_response(
-            stream=completion,  # 流式返回数据的迭代器，类型为object
+            stream=gemini_stream,  # 流式返回数据的迭代器，类型为object
             direct_mode=direct_mode,  # 是否为直接对话模式，类型为bool
             extractor=lambda chunk: chunk.text,  # 提取chunk中的文本，返回值为str
         )
       # 非流式输出
       else:
-        completion = client.models.generate_content(
+        gemini_response = gemini_client.models.generate_content(
             model=model,
             contents=user_prompt,
             config=genai_types.GenerateContentConfig(
@@ -791,7 +791,7 @@ def text_ai(
             ),
         )
         # 获取返回的文本
-        ai_gererate_text = completion.text
+        ai_gererate_text = gemini_response.text
     except Exception:
       # 如果发生异常，将返回的文本设为空
       ai_gererate_text = ""

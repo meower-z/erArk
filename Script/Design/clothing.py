@@ -641,10 +641,10 @@ def chara_special_wear_cloth(character_id: int) -> list[int]:
   Return arguments:
   无
   """
+  return_list = []
   if character_id:
     character_data = cache.character_data[character_id]
     # print(f"debug name = {character_data.name}")
-    return_list = []
 
     # 阿米娅必须戴抑制戒指
     if character_data.adv == 1:

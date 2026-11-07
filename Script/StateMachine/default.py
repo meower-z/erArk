@@ -265,20 +265,21 @@ def character_move_to_toilet(character_id: int) -> None:
     to_toilet = map_handle.get_map_system_path_for_str(
         random.choice(constant.place_data["Toilet_Male"])
     )
-  elif character_data.sex == 1:
+  else:
     # 如果是助理，且开启了同居服务
-    if handle_premise.handle_is_assistant(
-        character_id
-    ) and handle_premise.handle_assistant_live_together_on(character_id):
-      # 如果当前在控制中枢
-      if now_position == "中枢" or now_position == "控制中枢":
-        # 优先去博士房间
-        to_toilet = map_handle.get_map_system_path_for_str(
-            random.choice(constant.place_data["Dr_room"])
-        )
-        find_flag = True
+    # 如果当前在控制中枢
+    if (
+        handle_premise.handle_is_assistant(character_id)
+        and handle_premise.handle_assistant_live_together_on(character_id)
+        and now_position in {"中枢", "控制中枢"}
+    ):
+      # 优先去博士房间
+      to_toilet = map_handle.get_map_system_path_for_str(
+          random.choice(constant.place_data["Dr_room"])
+      )
+      find_flag = True
     # 其他正常情况
-    if not find_flag:
+    else:
       # 遍历所有女厕所，寻找当前大场景内的厕所
       for place in constant.place_data["Toilet_Female"]:
         if place.split(os.sep)[0] == now_position:
@@ -286,18 +287,17 @@ def character_move_to_toilet(character_id: int) -> None:
           find_flag = True
           break
       # 如果是在宿舍区的话，则寻找自己的宿舍
-      if not find_flag and handle_premise.handle_in_dormitory_zone(
-          character_id
-      ):
-        to_toilet = map_handle.get_map_system_path_for_str(
-            character_data.dormitory
-        )
-        find_flag = True
-    # 如果还是没找到的话就随机选择一个女厕所
-    if not find_flag:
-      to_toilet = map_handle.get_map_system_path_for_str(
-          random.choice(constant.place_data["Toilet_Female"])
-      )
+      else:
+        if handle_premise.handle_in_dormitory_zone(character_id):
+          to_toilet = map_handle.get_map_system_path_for_str(
+              character_data.dormitory
+          )
+          find_flag = True
+        # 如果还是没找到的话就随机选择一个女厕所
+        else:
+          to_toilet = map_handle.get_map_system_path_for_str(
+              random.choice(constant.place_data["Toilet_Female"])
+          )
   # print(f"debug constant.place_data[\"Toilet_Female\"] = ",constant.place_data["Toilet_Female"])
   move_success = general_movement_module(character_id, to_toilet)
   # 如果成功移动到了厕所，则将该厕所记录在角色数据里，方便下次优先选择
@@ -377,13 +377,11 @@ def character_move_to_clinic(character_id: int) -> None:
   character_id -- 角色id
   """
   # 判断是否存在没有人的门诊室，存在的话优先去没有人的
-  empty_flag = False
   for Clinic_place in constant.place_data["Clinic"]:
     if list(cache.scene_data[Clinic_place].character_list) == []:
-      empty_flag = True
       to_clinic = map_handle.get_map_system_path_for_str(Clinic_place)
       break
-  if not empty_flag:
+  else:
     to_clinic = map_handle.get_map_system_path_for_str(
         random.choice(constant.place_data["Clinic"])
     )
@@ -1119,7 +1117,6 @@ def character_move_to_rest_room(character_id: int) -> None:
   """
   character_data: game_type.Character = cache.character_data[character_id]
   special_rest_room_list = []
-  find_flag = False
   # 首先检测角色所属的势力与出身地是否有专属休息室
   chara_nation = character_data.relationship.nation
   nation_rest_room_tag = "Nation_" + str(chara_nation)
@@ -1134,21 +1131,19 @@ def character_move_to_rest_room(character_id: int) -> None:
     to_rest_room = map_handle.get_map_system_path_for_str(
         random.choice(special_rest_room_list)
     )
-    find_flag = True
   # 不使用专属休息室的话，检索当前角色所在的大场景里有没有休息室
-  if not find_flag:
+  else:
     now_position = character_data.position[0]
     for place in constant.place_data["Rest_Room"]:
       if place.split(os.sep)[0] == now_position:
         if map_handle.judge_scene_accessible(place, character_id) == "open":
           to_rest_room = map_handle.get_map_system_path_for_str(place)
-          find_flag = True
           break
-  # 没有的话再随机选择其他区块
-  if not find_flag:
-    to_rest_room = map_handle.get_map_system_path_for_str(
-        random.choice(constant.place_data["Rest_Room"])
-    )
+    # 没有的话再随机选择其他区块
+    else:
+      to_rest_room = map_handle.get_map_system_path_for_str(
+          random.choice(constant.place_data["Rest_Room"])
+      )
 
   general_movement_module(character_id, to_rest_room)
 
@@ -1166,13 +1161,11 @@ def character_move_to_restaurant(character_id: int) -> None:
 
   # 检索当前角色所在的大场景里有没有餐馆，没有的话再随机选择其他区块
   now_position = character_data.position[0]
-  find_flag = False
   for place in constant.place_data["Restaurant"]:
     if place.split(os.sep)[0] == now_position:
       to_rest_room = map_handle.get_map_system_path_for_str(place)
-      find_flag = True
       break
-  if not find_flag:
+  else:
     to_rest_room = map_handle.get_map_system_path_for_str(
         random.choice(constant.place_data["Restaurant"])
     )
@@ -1212,15 +1205,14 @@ def character_move_to_production_workshop(character_id: int) -> None:
   """
 
   # 如果已经属于某个车间，则直接选择该车间
-  need_allocated_flag = True
+  target_scene_str = ""
   for assembly_line_id in cache.rhodes_island.assembly_line:
     if character_id == cache.rhodes_island.assembly_line[assembly_line_id][1]:
       target_scene_name = f"assembly_line_{(str(assembly_line_id))}"
       target_scene_str = random.choice(constant.place_data[target_scene_name])
-      need_allocated_flag = False
 
   # 如果没有被分配到某个生产车间，则优先去没有人的，如果没有，则随机选择一个
-  if need_allocated_flag:
+  if not target_scene_str:
     empty_flag = False
     for target_scene_str in constant.place_data["Production_Workshop"]:
       close_type = map_handle.judge_scene_accessible(
@@ -1327,13 +1319,11 @@ def character_move_to_bath_room(character_id: int) -> None:
 
   # 检索当前角色所在的大场景里有没有淋浴室，没有的话再随机选择其他区块
   now_position = character_data.position[0]
-  find_flag = False
   for place in constant.place_data["Bathroom"]:
     if place.split(os.sep)[0] == now_position:
       to_bath_room = map_handle.get_map_system_path_for_str(place)
-      find_flag = True
       break
-  if not find_flag:
+  else:
     to_bath_room = map_handle.get_map_system_path_for_str(
         random.choice(constant.place_data["Bathroom"])
     )
@@ -3234,9 +3224,7 @@ def character_education_wait_next_period(character_id: int) -> None:
 
   character_data: game_type.Character = cache.character_data[character_id]
   character_data.target_character_id = character_id
-  now_time = character_data.behavior.start_time
-  if now_time is None:
-    now_time = cache.game_time
+  now_time = character_data.behavior.start_time or cache.game_time
   duration = 30
   for hour, minute in game_time.CLASS_PERIOD_START:
     start_time = now_time.replace(
@@ -3346,8 +3334,7 @@ def character_work_library_2(character_id: int) -> None:
       character_data.behavior.duration = 1
       character_data.state = constant.CharacterStatus.STATUS_WAIT
       return
-    for book_id_all in character_data.entertainment.borrow_book_id_set:
-      book_id = book_id_all
+    book_id = list(character_data.entertainment.borrow_book_id_set)[-1]
     book_data = game_config.config_book[book_id]
     character_data.behavior.behavior_id = constant.Behavior.READ_BOOK
     character_data.state = constant.CharacterStatus.STATUS_READ_BOOK

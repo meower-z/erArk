@@ -1346,8 +1346,8 @@ def handle_npc_make_food_to_shop(
     cache.rhodes_island.dining_hall_data[str(recipes_id)][
         new_food.uid
     ] = new_food
-  # 记录最近制作的食物对象
-  character_data.behavior.target_food = new_food
+    # 记录最近制作的食物对象
+    character_data.behavior.target_food = new_food
 
 
 @settle_behavior.add_settle_behavior_effect(

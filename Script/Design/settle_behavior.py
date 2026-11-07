@@ -64,7 +64,8 @@ def handle_settle_behavior(
   player_character_data: game_type.Character = cache.character_data[0]
   # NPC对玩家交互时，下面会与玩家一侧的记录对象互换，故两种记录类型都可能
   change_data: game_type.CharacterStatusChange | game_type.TargetChange
-  change_data = game_type.CharacterStatusChange()
+  target_change: game_type.CharacterStatusChange | game_type.TargetChange
+  change_data = target_change = game_type.CharacterStatusChange()
   start_time = now_character_data.behavior.start_time
   add_time = int((now_time - start_time).seconds / 60)
 
@@ -208,9 +209,7 @@ def handle_settle_behavior(
   if character_id != 0 and now_character_data.target_character_id == 0:
     exchange_flag = True
     change_data.target_change.setdefault(0, game_type.TargetChange())
-    target_change: game_type.CharacterStatusChange | game_type.TargetChange = (
-        change_data.target_change[0]
-    )
+    target_change = change_data.target_change[0]
     change_data.target_change[0].target_change[character_id] = change_data
 
     # 开始互换
@@ -221,8 +220,6 @@ def handle_settle_behavior(
     # print(f"debug 后target_change.hit_point = {target_change.hit_point}")
   # elif character_id:
   #     return
-  if change_data is None:
-    return None
   if change_data.mana_point:
     now_judge = True
     PC_information_flag = 1

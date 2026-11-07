@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 # 获取全局缓存
 cache = cache_control.cache
-cmd_map: dict[int | str, tuple[Callable[..., object] | None, tuple, dict]] = {}
+cmd_map: dict[int | str, tuple[Callable[..., object] | None, object, dict]] = {}
 """ Web模式的命令映射：命令数字 -> (命令函数, 顺序参数, 字典参数) """
 
 # 刷新信号常量，与 in_scene_panel_web.py 和 web_server.py 保持一致
@@ -531,7 +531,7 @@ exit_flag = False
 def bind_cmd(
     cmd_number: int | str,
     cmd_func: Callable[..., object] | None,
-    arg: tuple = (),
+    arg: object = (),
     kw: dict | None = None,
 ) -> None:
   """
@@ -553,7 +553,7 @@ def print_cmd(
     cmd_str: str,
     cmd_number: str,
     cmd_func: Callable[..., object] | None = None,
-    arg: tuple = (),
+    arg: object = (),
     kw: dict | None = None,
     normal_style: str = "standard",
     on_style: str = "onbutton",

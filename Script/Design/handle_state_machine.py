@@ -1,13 +1,11 @@
 """角色状态机：按状态机id执行状态机函数，以及注册状态机的装饰器"""
 
 from functools import wraps
-from typing import Concatenate, ParamSpec, TypeVar
+from typing import TypeVar
 from collections.abc import Callable
 from Script.Core import constant
 from Script.Design import child_stage_gate
 
-StateMachineParams = ParamSpec("StateMachineParams")
-""" 状态机函数在角色id之后的参数 """
 StateMachineReturn = TypeVar("StateMachineReturn")
 """ 状态机函数的返回值 """
 
@@ -26,8 +24,7 @@ def handle_state_machine(state_machine_id: int, character_id: int) -> None:
 def add_state_machine(
     state_machine_id: int,
 ) -> Callable[
-    [Callable[Concatenate[int, StateMachineParams], StateMachineReturn]],
-    Callable[Concatenate[int, StateMachineParams], StateMachineReturn],
+    [Callable[[int], StateMachineReturn]], Callable[[int], StateMachineReturn]
 ]:
   """
   添加角色状态机函数
@@ -36,15 +33,11 @@ def add_state_machine(
   """
 
   def decorator(
-      func: Callable[Concatenate[int, StateMachineParams], StateMachineReturn],
-  ) -> Callable[Concatenate[int, StateMachineParams], StateMachineReturn]:
+      func: Callable[[int], StateMachineReturn],
+  ) -> Callable[[int], StateMachineReturn]:
     @wraps(func)
-    def return_wrapper(
-        character_id: int,
-        *args: StateMachineParams.args,
-        **kwargs: StateMachineParams.kwargs,
-    ) -> StateMachineReturn:
-      result = func(character_id, *args, **kwargs)
+    def return_wrapper(character_id: int) -> StateMachineReturn:
+      result = func(character_id)
       # 状态机选出的H类行为若涉及幼年阶段角色，则换成发呆
       if child_stage_gate.blocks_behavior(character_id):
         child_stage_gate.reset_to_idle(character_id)
