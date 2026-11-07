@@ -19,8 +19,8 @@ import traceback
 from unittest import mock
 
 # ==== 0. 断言与收尾：finish() 打印断言汇总并以对应的退出码结束进程 ====
-FAILED = []
-PASSED = []
+FAILED: list[str] = []
+PASSED: list[str] = []
 
 
 def check(name, cond, extra=""):

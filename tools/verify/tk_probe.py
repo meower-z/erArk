@@ -116,6 +116,7 @@ class _FlowHandleHook(importlib.abc.MetaPathFinder):
       return None
     sys.meta_path.remove(self)
     spec = importlib.util.find_spec(name)
+    assert spec is not None and spec.loader is not None
     exec_module = spec.loader.exec_module
 
     def exec_and_record(module):

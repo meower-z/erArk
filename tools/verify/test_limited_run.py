@@ -141,8 +141,8 @@ class SlotCase(unittest.TestCase):
     self.patch(limited_run, "STATE_DIR", self.tmp / "state")
     self.units = self.patch(limited_run, "active_game_units", return_value=[])
     # 槽位编号到假运行进程号；只改写本进程真持有的槽位
-    self.fake = {}
-    self.handles = {}
+    self.fake: dict[int, int] = {}
+    self.handles: dict[int, list[tuple[int, io.TextIOWrapper]]] = {}
     self.patch(limited_run, "slot_holders", side_effect=self.holders)
     self.checkout = self.make_checkout("mine")
     self.addCleanup(os.chdir, os.getcwd())
@@ -441,9 +441,9 @@ class Slots(SlotCase):
         )[len("TMPDIR=") :]
     )
     self.assertEqual(tmpdir.parent, limited_run.STATE_DIR / "tmp")
-    self.assertEqual(
-        limited_run.TMPDIR_PATTERN.match(tmpdir.name).group(1), unit
-    )
+    found = limited_run.TMPDIR_PATTERN.match(tmpdir.name)
+    assert found is not None
+    self.assertEqual(found.group(1), unit)
     resets = [
         call.args[0]
         for call in self.systemctl.call_args_list
@@ -460,7 +460,7 @@ class TmpDirs(SlotCase):
     """记下本次运行的 scope 名称；临时目录由 mkdtemp 建，名字运行中才知道"""
     super().setUp()
     self.unit = f"era-game-{os.getpid()}"
-    self.own = None
+    self.own: pathlib.Path
 
   def tmpdir_of_launch(self) -> pathlib.Path:
     """
@@ -565,9 +565,9 @@ class TmpDirs(SlotCase):
       )
     self.assertNotEqual(dirs[0], dirs[1])
     for path in dirs:
-      self.assertEqual(
-          limited_run.TMPDIR_PATTERN.match(path.name).group(1), self.unit
-      )
+      found = limited_run.TMPDIR_PATTERN.match(path.name)
+      assert found is not None
+      self.assertEqual(found.group(1), self.unit)
       self.assertNotEqual(path, stale)
     self.assertTrue(stale.is_dir())
 
@@ -681,12 +681,12 @@ class TmpDirs(SlotCase):
     dead = limited_run.STATE_DIR / "tmp" / "era-game-4242-x"
     dead.mkdir(parents=True)
     self.age(dead)
-    real_scope_dir = limited_run.scope_dir
-    self.patch(
-        limited_run,
-        "scope_dir",
-        side_effect=lambda unit: (dead.rmdir(), real_scope_dir(unit))[1],
-    )
+
+    def remove_dead(unit, real_scope_dir=limited_run.scope_dir):
+      dead.rmdir()
+      return real_scope_dir(unit)
+
+    self.patch(limited_run, "scope_dir", side_effect=remove_dead)
     limited_run.sweep_tmpdirs(self.unit)
     self.assertFalse(dead.exists())
 
@@ -839,11 +839,11 @@ class RealLocks(unittest.TestCase):
     )
     patcher.start()
     self.addCleanup(patcher.stop)
-    patcher = mock.patch.object(
+    units_patcher = mock.patch.object(
         limited_run, "active_game_units", return_value=[]
     )
-    self.units = patcher.start()
-    self.addCleanup(patcher.stop)
+    self.units = units_patcher.start()
+    self.addCleanup(units_patcher.stop)
 
   def child(self, body: str = "pass") -> subprocess.Popen:
     """
@@ -1215,11 +1215,11 @@ class Headroom(unittest.TestCase):
     self.assertIsNone(limited_run.earlyoom_headroom())
     self.assertEqual(limited_run.memory_headroom()[0], 10 * GIB)
 
-  def check(self, mem_max: int) -> tuple[int | None, str]:
+  def check(self, mem_max: int) -> tuple[str | int | None, str]:
     """
-    运行一次启动前的内存检查
+    运行一次启动前的内存检查 check_headroom
     参数：mem_max (int) 内存上限，字节
-    返回：tuple[int | None, str] 退出码（放行时为 None）与标准错误
+    返回：tuple[str | int | None, str] 检查退出时 SystemExit 的 code（放行时为 None），以及写到标准错误的文字
     """
     stderr = io.StringIO()
     with mock.patch("sys.stderr", stderr), mock.patch.object(
