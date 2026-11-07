@@ -469,7 +469,7 @@ def quick_use_drug() -> Response:
       auto_use_sanity_drug()
       message = '已使用理智药'
 
-    elif drug_type == 'semen':
+    else:
       # 使用精力剂（ID=11）
       if pl_data.item.get(11, 0) <= 0:
         return jsonify({'success': False, 'message': '没有精力剂'})

@@ -97,10 +97,7 @@ def activate_profiler() -> None:
   old = constant.handle_premise_data
   proxy = _PremiseDictProxy()
   for k, v in list(old.items()):
-    if callable(v):
-      proxy[k] = _wrap(k, v)
-    else:
-      proxy[k] = v
+    proxy[k] = _wrap(k, v)
 
   # 2) 替换为代理
   constant.handle_premise_data = proxy

@@ -543,15 +543,13 @@ def _read_queue_drain() -> None:
   """
   global input_armed, _arm_after_id
   _perf = perf_hook.enabled
-  if _perf:
-    _batch_start = time.perf_counter()
-    _batch_msg_count = 0
+  _batch_start = time.perf_counter() if _perf else 0.0
+  _batch_msg_count = 0
   # read_queue 只由 main_frame.run 调度，而 main_frame.run 只由 io_init.run 在绑定消息队列之后调用，故此处已绑定
   assert main_queue is not None
   while not main_queue.empty():
     quene_str = main_queue.get()
-    if _perf:
-      _t0 = time.perf_counter()
+    _t0 = time.perf_counter() if _perf else 0.0
     json_data = json.loads(quene_str)
     if _perf:
       perf_hook.hook_time("gui.json_loads", time.perf_counter() - _t0)
@@ -616,8 +614,7 @@ def _read_queue_drain() -> None:
           temp["italic"],
       )
     if "image" in json_data:
-      if _perf:
-        _t0 = time.perf_counter()
+      _t0 = time.perf_counter() if _perf else 0.0
       textbox.image_create(
           "end", image=era_image.image_data[json_data["image"]["image_name"]]
       )
@@ -625,8 +622,7 @@ def _read_queue_drain() -> None:
         perf_hook.hook_time("gui.image_create", time.perf_counter() - _t0)
     if "image_list" in json_data:
       # 批量图片消息（如整条比例条），一条消息内逐格嵌入
-      if _perf:
-        _t0 = time.perf_counter()
+      _t0 = time.perf_counter() if _perf else 0.0
       image_data_dict = era_image.image_data
       for image_name in json_data["image_list"]:
         textbox.image_create("end", image=image_data_dict[image_name])
@@ -636,8 +632,7 @@ def _read_queue_drain() -> None:
     for c in json_data["content"]:
       if c["type"] == "text":
         c["style"][0] = c["style"][0].replace(" ", "")
-        if _perf:
-          _t0 = time.perf_counter()
+        _t0 = time.perf_counter() if _perf else 0.0
         now_print(
             c["text"], style=tuple(c["style"]), tooltip=c.get("tooltip", "")
         )
@@ -646,8 +641,7 @@ def _read_queue_drain() -> None:
       if c["type"] == "cmd":
         c["normal_style"][0] = c["normal_style"][0].replace(" ", "")
         c["on_style"][0] = c["on_style"][0].replace(" ", "")
-        if _perf:
-          _t0 = time.perf_counter()
+        _t0 = time.perf_counter() if _perf else 0.0
         io_print_cmd(
             c["text"],
             c["num"],
@@ -658,14 +652,12 @@ def _read_queue_drain() -> None:
         if _perf:
           perf_hook.hook_time("gui.cmd_render", time.perf_counter() - _t0)
       if c["type"] == "image_cmd":
-        if _perf:
-          _t0 = time.perf_counter()
+        _t0 = time.perf_counter() if _perf else 0.0
         io_print_image_cmd(c["text"], c["num"], c.get("tooltip", ""))
         if _perf:
           perf_hook.hook_time("gui.image_cmd_render", time.perf_counter() - _t0)
       if "\n" in c["text"]:
-        if _perf:
-          _t0 = time.perf_counter()
+        _t0 = time.perf_counter() if _perf else 0.0
         # 用 end-1c 的行号索引取当前总行数（Tk 内部 O(1)），
         # 避免旧实现把整个缓冲区拷贝成字符串再数换行（O(缓冲区长度)，且随历史增长变慢）
         if (
@@ -774,8 +766,7 @@ def now_print(
   if tooltip_text and string:
     # 记录插入前的位置，便于为新增文本打标签
     start_index = textbox.index("end-1c")
-  if _perf:
-    _t0 = time.perf_counter()
+  _t0 = time.perf_counter() if _perf else 0.0
   textbox.insert("end", string, style)
   if _perf:
     perf_hook.hook_time("gui.text_insert", time.perf_counter() - _t0)
@@ -926,8 +917,10 @@ def clear_order() -> None:
 
 
 cmd_tag_map: dict[int, str] = {}
-tooltip_window = None  # 当前悬浮提示所使用的顶层窗口引用
-tooltip_after_id = None  # 利用 after() 注册的延时任务编号，用于取消定时器
+tooltip_window: Toplevel | None = None  # 当前悬浮提示所使用的顶层窗口引用
+tooltip_after_id: str | None = (
+    None  # 利用 after() 注册的延时任务编号，用于取消定时器
+)
 tooltip_text_cache = ""  # 待显示的提示文本缓存
 tooltip_coords = (0, 0)  # 鼠标进入时记录的屏幕坐标，用于定位提示窗口
 TOOLTIP_DELAY_MS = 350  # 提示延迟显示的时长，毫秒
@@ -1184,9 +1177,8 @@ def io_clear_cmd(*cmd_numbers: int) -> None:
   cmd_number -- 命令数字，不输入则清楚当前已有的全部命令
   """
   _perf = perf_hook.enabled
-  if _perf:
-    _t0 = time.perf_counter()
-    _clear_count = len(cmd_numbers) if cmd_numbers else len(cmd_tag_map)
+  _t0 = time.perf_counter() if _perf else 0.0
+  _clear_count = len(cmd_numbers) if cmd_numbers else len(cmd_tag_map)
   if cmd_numbers:
     for num in cmd_numbers:
       if num in cmd_tag_map:

@@ -51,7 +51,7 @@ def init_character_behavior() -> None:
 
     web_server.emit_settlement_status(True)
   cache.over_behavior_character = set()
-  new_day_flag = True
+  new_day_flag, pl_start_time, pl_duration = True, cache.game_time, 0
   while 1:
     # 先结算玩家部分
     while 0 not in cache.over_behavior_character:

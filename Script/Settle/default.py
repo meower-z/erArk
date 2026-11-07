@@ -9358,9 +9358,7 @@ def handle_skip_class_add_just(
   # 翘课 flag 认日期（Plan 31 §3.6）：记下挂上 flag 的那一天，取行为开始时刻（now_time 是行为结束时刻）。
   #    flag 只在这一天有效，读的地方一律走 class_ai.judge_skip_class_today：跨天结算在 NPC 阶段之后才清 flag、离线的人跨天不清，
   #    认了日期就不会把翘课带进另一天
-  start_time = character_data.behavior.start_time
-  if start_time is None:
-    start_time = cache.game_time
+  start_time = character_data.behavior.start_time or cache.game_time
   growth_data.skip_class_day = start_time.toordinal()
   # 翘课换来的那点轻松：抑郁小幅回落。不给任何学习收益，这是翘课的代价
   if 19 in character_data.status_data:

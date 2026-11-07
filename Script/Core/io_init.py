@@ -26,7 +26,7 @@ web_io: ModuleType | None = None
 """ Web版IO模块的引用（延迟导入） """
 
 # Tkinter main_frame 延迟导入状态（解决无显示环境下的导入问题）
-_main_frame_module = None
+_main_frame_module: ModuleType | None = None
 """ main_frame模块的引用（延迟导入） """
 _main_frame_load_attempted = False
 """ 是否已尝试加载main_frame模块 """

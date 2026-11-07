@@ -79,16 +79,14 @@ def calculation_instuct_judege(
   if target_character_id == 0:
     return [1, 1, 1.0]
 
-  for judge_id in game_config.config_instruct_judge_data:
-    # 匹配到能力的id与能力等级对应的前提#
-    if (
-        game_config.config_instruct_judge_data[judge_id].instruct_name
-        == instruct_name
-    ):
-      judge_data = game_config.config_instruct_judge_data[judge_id]
-      judge_data_type = judge_data.need_type
-      judge_data_value = judge_data.value
-      break
+  # 匹配到能力的id与能力等级对应的前提#
+  judge_data = next(
+      now_judge
+      for now_judge in game_config.config_instruct_judge_data.values()
+      if now_judge.instruct_name == instruct_name
+  )
+  judge_data_type = judge_data.need_type
+  judge_data_value = judge_data.value
 
   calculation_text = ""
   if judge_data_type == "D":
