@@ -355,9 +355,9 @@ Script/System/Web_Draw_System/character_renderer.py	<module>	module-lines	lines=
 Script/System/Web_Draw_System/image_processor.py	<module>	module-lines	lines=450
 Script/System/Web_Draw_System/status_panel.py	<module>	module-lines	lines=1206
 Script/System/Web_Draw_System/tab_menu.py	<module>	module-lines	lines=420
-Script/System/Web_Draw_System/web_draw_adapter.py	<module>	module-lines	lines=775
+Script/System/Web_Draw_System/web_draw_adapter.py	<module>	module-lines	lines=677
 Script/System/Web_Draw_System/web_draw_adapter.py	WebDrawAdapter.adapt_line_feed_wait_draw.<locals>.emit_segment	E501	count=1,max=182
-Script/System/Web_Draw_System/web_draw_adapter.py	apply_web_adapters	B010	count=17
+Script/System/Web_Draw_System/web_draw_adapter.py	apply_web_adapters	B010	count=1
 Script/Test/Static_Check/__init__.py	<module>	F401	count=1
 Script/Test/Static_Check/check_log.py	<module>	module-lines	lines=406
 Script/Test/Static_Check/check_log.py	_build_entry_header_lines	E501	count=1,max=135
