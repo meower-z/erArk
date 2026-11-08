@@ -163,9 +163,9 @@ def constand_2_handle() -> str:
       break
 
   # 生成constant_promise的out_str
-  out_str = "\n"
-  out_str += constant_line(command_str.upper(), f'"{command_str}"')
-  out_str += f'  """ {premise_type} '
+  indent = class_indent(os.path.join("Script", "Core", "constant_promise.py"))
+  out_str = "\n" + constant_line(capital_command, f'"{command_str}"', indent)
+  out_str += f'{indent}""" {premise_type} '
   if target_flag:
     out_str += "交互对象"
   else:

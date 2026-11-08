@@ -69,6 +69,7 @@ def update_behavior_file(
   try:
     # 读取原文件的头部信息
     file_header = ''
+    indent = '  '
     if os.path.exists(behavior_py_path):
       with open(behavior_py_path, encoding='utf-8') as file:
         content = file.read()
@@ -76,19 +77,27 @@ def update_behavior_file(
         header_match = re.match(r'^(.*?)class\s+Behavior', content, re.DOTALL)
         if header_match:
           file_header = header_match.group(1)
+        # 照原文件 class Behavior 下第一条非空行的缩进写类体，使重写的类与文件原有的缩进一致
+        indent_match = re.search(
+            r'^class\s+Behavior.*\n(?:[ \t]*\n)*([ \t]+)\S', content, re.M
+        )
+        if indent_match:
+          indent = indent_match.group(1)
 
     # 生成新的类代码
-    code = 'class Behavior:\n  """行为id字符串常量"""\n\n'
+    code = f'class Behavior:\n{indent}"""行为id字符串常量"""\n\n'
 
     for _, en_name, description in behavior_data:
       if en_name and en_name.strip():
         constant_name = en_name.upper()
-        line = f'  {constant_name} = "{en_name}"'
+        line = f'{indent}{constant_name} = "{en_name}"'
         # 整行超过 80 列、值本身放得进折行时，照 pyink 的样子折成三行
-        if len(line) > 80 and len(en_name) + 2 <= 74:
-          line = f'  {constant_name} = (\n      "{en_name}"\n  )'
+        if len(line) > 80 and len(indent) + 4 + len(en_name) + 2 <= 80:
+          line = (
+              f'{indent}{constant_name} = (\n{indent}    "{en_name}"\n{indent})'
+          )
         code += line + '\n'
-        code += f'  """ {description} """\n'
+        code += f'{indent}""" {description} """\n'
 
     # 写入文件
     with open(behavior_py_path, 'w', encoding='utf-8') as file:

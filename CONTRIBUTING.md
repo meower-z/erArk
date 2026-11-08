@@ -8,7 +8,7 @@ git config core.hooksPath hooks        # 启用仓库自带的 git 钩子
 pip install -r requirements-lint.txt   # 可选，做棘轮检查时装。它也装上 requirements-dev.txt 里的包
 ```
 
-提交时 `hooks/pre-commit` 用 `pyink --check` 检查暂存的 `.py` 文件。装的 pyink 版本与 `requirements-dev.txt` 不一致时，钩子跳过这项检查并给出提示。本机 lint 引擎是可选的，不随仓库提供。用 `git config erark.lintEngine <路径>` 指向它以后，钩子改为运行它，由它做下面的棘轮检查。
+仓库自带的钩子本身不检查也不改动代码格式。本机 lint 引擎是可选的，不随仓库提供。用 `git config erark.lintEngine <路径>` 指向它以后，提交时 `hooks/pre-commit` 运行它。合并提交时 `hooks/pre-merge-commit` 也运行它。它做下面的棘轮检查。没配 lint 引擎时，钩子跳过棘轮检查，打印一行提示。
 
 ## 代码风格
 
