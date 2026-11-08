@@ -120,6 +120,72 @@ extend-exclude = ["Script/Config/config_def.py"]
 select = ["F", "E4", "E7", "E9", "E501", "W", "B", "PLE", "PLW", "D1", "D419", "UP"]
 ignore = ["PLW0603"]
 
+# 每一项写一个文件，以及 ruff 在这个文件里跳过的规则。
+# 每一项只列这个文件需要跳过的规则。
+# 每组上方的注释写这组写法为什么保留。
+[tool.ruff.lint.per-file-ignores]
+# 这些文件导入某些模块，只为执行模块载入时的代码。
+# 被导入的模块在载入时构建游戏数据，或者注册面板、检查、官方事件的提供函数与状态机。
+"game.py" = ["F401"]
+"Script/System/Official_Event_System/official_event_handle.py" = ["F401"]
+"Script/Test/Static_Check/__init__.py" = ["F401"]
+"tests/fast/test_game_clock_passes_checks.py" = ["F401"]
+"tests/slow/test_foot_cloth_fills_locker_semen.py" = ["F401"]
+"tests/slow/test_lint_target_csv_full_check.py" = ["F401"]
+"tools/lint_target_csv.py" = ["F401"]
+# 写在 try 里的这个导入只用来判断是否装了 mcp 包。
+"tools/MCP/prts_character_downloader/start_server.py" = ["F401"]
+# 有些导入只为执行模块载入时的代码，例如构建游戏数据或完成注册。
+# ruff 认不出这里在运行时生成的 __all__，看不出其余导入是给 tests/education 的测试脚本用的。
+# 这里的导入按 game.py 的初始化顺序，穿插在初始化代码之间。
+"tests/education/_bootstrap.py" = ["F401", "E402"]
+# 这两个文件用 import * 把其他模块的名字放到自己名下。
+# 调用方通过 handle_premise.名字 与 default.名字 使用这些名字。
+"Script/Design/handle_premise/__init__.py" = ["F403", "F405"]
+"Script/Settle/default.py" = ["F403", "F405"]
+# 这些文件要先运行一段代码，再导入后面的模块。
+# 这段代码初始化缓存与配置，或者改动 sys.path、sys.meta_path。
+"init_data.py" = ["E402"]
+"tests/fast/__init__.py" = ["E402"]
+"tests/education/test_talk_data.py" = ["E402"]
+"tools/MCP/prts_character_downloader/test_downloader.py" = ["E402"]
+# 这些测试脚本从上往下分节运行。
+# 每节在开头导入本节用到的模块。
+"tests/education/test_class_ai.py" = ["E402"]
+"tests/education/test_growth.py" = ["E402"]
+"tests/education/test_growth_event.py" = ["E402", "B010"]
+"tests/education/test_panels.py" = ["E402", "B010"]
+"tests/education/test_premise_tokens.py" = ["E402"]
+"tests/education/test_schedule_template.py" = ["E402"]
+"tests/education/test_sex_class.py" = ["E402"]
+# 模板按 game.py 的初始化顺序导入模块，或者在改动 sys.path 之后才导入。
+# 模板里没用上的导入只为构建数据或注册，或者留给复制模板的人在自己的测试里用。
+# repro_template 用 import * 取得 _bootstrap 的初始化与辅助函数。
+".github/skills/headless-game-test/harness_template.py" = ["F401", "E402", "B010"]
+".github/skills/headless-game-test/unit_test_template.py" = ["F401", "E402", "B010"]
+".github/skills/system-review-round/repro_template.py" = ["E402", "F403", "F405"]
+"tools/verify/headless_harness_template.py" = ["E402"]
+"tools/verify/headless_unit_template.py" = ["F401", "E402"]
+# 这两个文件按 game.py 的顺序初始化游戏。
+# 其中没用上的导入只为载入模块，让模块完成注册或启动时的准备。
+"profiling/run_profile.py" = ["F401", "B010"]
+"tests/world.py" = ["F401", "B010"]
+# 这些 setattr 调用替换方法或类，或者给对象加上类里没有声明的属性。
+# 改写成普通的属性赋值后，mypy 会对每一处报错。
+# 上面几组里的 B010 也是这个原因。
+"profiling/ui_perf_patch.py" = ["B010"]
+"tests/education/test_save_compat.py" = ["B010"]
+"tests/fast/arkeditor_entry_edit_driver.py" = ["B010"]
+"tests/fast/test_mod_loader.py" = ["B010"]
+"tests/slow/test_move_option_event_lists_child.py" = ["B010"]
+"tests/slow/test_option_event_lists_child.py" = ["B010"]
+"Script/System/Web_Draw_System/web_draw_adapter.py" = ["B010"]
+# 这里改写成属性访问时，mypy 报 GNUTranslations 没有 _catalog 属性。
+"Script/Core/get_text.py" = ["B009"]
+# 这两处 raise 改成带 from 的写法，会改变启动时显示的报错追溯文字。
+# 这两个 lambda 换成被包装的函数，会改变调用方可用的关键字参数名。
+"Script/Core/mod_manager.py" = ["B904", "PLW0108"]
+
 # tools/test_quality/fast_report.py 在快速测试层 tests/fast 上跑的三条测试质量规则；不设阈值，用规则的默认值，报告里列出测到的数和阈值
 [tool.test-quality.rules.tests-coverage]
 # 与 `python -m unittest discover -s tests/fast -t .` 找测试的方式相同
