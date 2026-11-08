@@ -82,15 +82,6 @@ format = '^(?P<path>.+?):(?P<line>\d+)(?::\d+)?(?::\d+:\d+)?: error: (?P<message
 reads = ["pyproject.toml:tool.mypy"]
 prefix = "mypy:"
 
-[tool.lint-ratchet.checkers.pyink]
-requires = ["pyink==26.5.1"]
-argv = ["pyink", "--check", "--verbose", "{files}"]
-stream = "stderr"
-per_file = true
-format = '^would (?P<message>reformat) (?P<path>.+)$'
-reads = ["pyproject.toml:tool.pyink"]
-clean = true
-
 # 在仓库根目录手动运行 `ruff check --ignore-noqa` 时，受 git 跟踪的 .py 文件得到的报告与棘轮运行 ruff 时相同。
 # 手动运行时 ruff 自己找要查的文件。
 # 它还会查没被 git 跟踪、也没被 .gitignore 忽略的 .py 文件。棘轮不查这些文件。
