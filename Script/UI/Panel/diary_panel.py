@@ -1,6 +1,5 @@
 """日记界面面板"""
 
-from turtle import position
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, flow_handle, constant
 from Script.Design import game_time

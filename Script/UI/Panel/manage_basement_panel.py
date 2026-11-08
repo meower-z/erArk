@@ -1043,7 +1043,6 @@ class Manage_Basement_Panel:
     from Script.System.Medical_System import medical_department_panel
     from Script.System.Field_Commission_System import field_commission_panel
     from Script.System.Dormitory_System import manage_dormitory_panel
-    from Script.System.Cooking_System import make_food_panel
 
     if son_panel == _("[基建系统]"):
       now_panel: draw.Drawable = building_panel.Building_Panel(self.width)
