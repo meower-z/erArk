@@ -1,5 +1,5 @@
 # 只用于开发与 lint 检查，游戏运行不需要：pip install -r requirements-dev.txt
-pyink==26.5.1
+black==26.5.1
 mypy==2.4.0
 ruff
 # buildmo.py 在 PATH 里没有 msgfmt 时用它编译 MO

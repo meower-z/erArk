@@ -66,7 +66,7 @@ python3.12
 Repo说明
 ----
 日常开发备份在master分支中进行,pr也请提交至此分支 \
-代码格式化使用 pyink。pyink 的缩进设为 2 空格。pyink 的行宽设为 80 列。
+代码格式化使用 black。black 的行宽设为 80 列。black 的缩进固定是 4 空格。
 
 字体
 ----

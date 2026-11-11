@@ -50,18 +50,18 @@ def class_indent(path: str) -> str:
     Keyword arguments:
     path -- 代码文件路径
     Return arguments:
-    str -- 缩进的空白；文件里没有缩进行时为 2 个空格
+    str -- 缩进的空白，文件里没有缩进行时是 4 个空格
     """
     with open(path, encoding="utf-8") as f:
         for line in f:
             if line.strip() and line[0] in " \t":
                 return line[: len(line) - len(line.lstrip())]
-    return "  "
+    return "    "
 
 
-def constant_line(name: str, value: str, indent: str = "  ") -> str:
+def constant_line(name: str, value: str, indent: str = "    ") -> str:
     """
-    生成一条类常量赋值；整行超过 80 列、值本身放得进折行时，照 pyink 的样子折成三行
+    生成一条类常量赋值。整行超过 80 列、缩进后的值不超过 80 列时，按 black 的排法折成「常量名 = (」「值」「)」三行
     Keyword arguments:
     name -- 常量名
     value -- 值的源码文字（带引号的字符串或整数）
@@ -77,7 +77,7 @@ def constant_line(name: str, value: str, indent: str = "  ") -> str:
 
 def appended_block(text: str) -> str:
     """
-    整理要接到常量文件末尾或类末尾的一段代码，使其与 pyink 的格式一致：和原有内容隔一个空行，连续空行并成一个，末尾不留空行
+    整理要接到常量文件末尾或类末尾的一段代码，使空行合乎 black 的格式：开头留一个空行，连续空行并成一个，末尾不留空行
     Keyword arguments:
     text -- 要接上的代码
     Return arguments:
@@ -269,7 +269,7 @@ def build_promise_csv_text(line_list: list) -> str:
     """
     import re  # 本函数会被单独取出来跑，用到的模块在函数里导入
 
-    # pyink 把超过 80 列的常量赋值折成「常量名 = (」「值」「)」三行，先并回一行
+    # black 把超过 80 列的常量赋值折成「常量名 = (」「值」「)」三行，这里先把它并回一行
     line_list = re.sub(
         r'= \(\n\s*("[^"\n]*")\n\s*\)\n', r"= \1\n", "".join(line_list)
     ).splitlines(True)
@@ -379,7 +379,7 @@ def constand_effect_2_csv() -> str:
     ) as f:
         a = skip_module_docstring(f.readlines())
         f.close()
-    # pyink 把超过 80 列的常量赋值折成「常量名 = (」「值」「)」三行，先并回一行
+    # black 把超过 80 列的常量赋值折成「常量名 = (」「值」「)」三行，这里先把它并回一行
     a = re.sub(r"= \(\n\s*(\d+)\n\s*\)\n", r"= \1\n", "".join(a)).splitlines(
         True
     )
