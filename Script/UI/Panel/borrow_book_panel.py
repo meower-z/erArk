@@ -431,7 +431,10 @@ class Borrow_Book_Panel:
                     for book_cid in now_choose_list:
                         book_data = game_config.config_book[book_cid]
                         book_count += 1
-                        book_text = f"  [{str(book_count).rjust(3,'0')}]({book_type_data.son_type_name}){book_data.name}"
+                        book_text = (
+                            f"  [{str(book_count).rjust(3,'0')}]("
+                            f"{book_type_data.son_type_name}){book_data.name}"
+                        )
                         # 书籍难度说明
                         if book_data.difficulty == 1:
                             book_text += _("(简单)")

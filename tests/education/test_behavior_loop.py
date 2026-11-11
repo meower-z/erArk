@@ -287,7 +287,8 @@ for index, minute in enumerate((40, 45, 45, 45, 45, 45)):
         else:
             now_scene = map_handle.get_map_system_path_str_for_list(cd.position)
             print(
-                f"    教师 {cid}{cd.name} 应在{teaching['classroom']}，实际在 {now_scene} 做 {cd.behavior.behavior_id}（{cd.behavior.start_time} +{cd.behavior.duration}）"
+                f"    教师 {cid}{cd.name} 应在{teaching['classroom']}，实际在 {now_scene} 做 "
+                f"{cd.behavior.behavior_id}（{cd.behavior.start_time} +{cd.behavior.duration}）"
             )
     teacher_log.append((right_room_count, teaching_count))
     stuck_text = ""
@@ -297,7 +298,8 @@ for index, minute in enumerate((40, 45, 45, 45, 45, 45)):
             for cid in stuck[:6]
         )
     print(
-        f"  第 {index + 1} 轮 {cache.game_time}: 玩家 {pl_round} 轮 / NPC {npc_pass} 轮 / 未收敛 {len(stuck)} / 女儿在课 {in_class}/{len(daughter_list)}"
+        f"  第 {index + 1} 轮 {cache.game_time}: 玩家 {pl_round} 轮 / NPC {npc_pass} 轮 / 未收敛 {len(stuck)} / "
+        f"女儿在课 {in_class}/{len(daughter_list)}"
         f" / 教师在对的教室授课 {right_room_count}/{teaching_count}{stuck_text}"
     )
 check("六轮循环没有抛异常", not error_list, error_list)
@@ -374,12 +376,14 @@ for minute in (
     pre_round_log.append(run_one_round(minute))
 arrived = [cid for cid in must_list if class_ai.judge_in_scene(cid, sex_room)]
 print(
-    f"  {cache.game_time}: 必修生在{sex_room} {len(arrived)}/{len(must_list)}，两轮 {[(r[0], r[1], len(r[2])) for r in pre_round_log]}"
+    f"  {cache.game_time}: 必修生在{sex_room} {len(arrived)}/{len(must_list)}，两轮 "
+    f"{[(r[0], r[1], len(r[2])) for r in pre_round_log]}"
 )
 for cid in must_list:
     cd = cache.character_data[cid]
     print(
-        f"    {cid}{cd.name} 在 {map_handle.get_map_system_path_str_for_list(cd.position)} 做 {cd.behavior.behavior_id}（{cd.behavior.start_time} +{cd.behavior.duration}）"
+        f"    {cid}{cd.name} 在 {map_handle.get_map_system_path_str_for_list(cd.position)} 做 "
+        f"{cd.behavior.behavior_id}（{cd.behavior.start_time} +{cd.behavior.duration}）"
         f" 目标 {cd.behavior.move_final_target} 最近 {cd.last_behavior_id_list[-5:]}"
     )
 check(
@@ -574,7 +578,10 @@ if l4_id != -1 and l4_room:
     )
     pass1, over1, log1 = run_l4_step(60, 7)
     check(
-        "L4 16:15 有课、15:45 起过家家：在实时结算之前就截到 15:55（开课前 20 分钟），这一段只结算 10 分钟（此前先按 60 分钟结算、再截短）",
+        (
+            "L4 16:15 有课、15:45 起过家家：在实时结算之前就截到 15:55（开课前 20 分钟），这一段只结算 10 "
+            "分钟（此前先按 60 分钟结算、再截短）"
+        ),
         bool(log1)
         and log1[0][0] == constant.Behavior.PLAY_HOUSE
         and log1[0][2] == 10
@@ -582,7 +589,10 @@ if l4_id != -1 and l4_room:
         l4_log_text(log1),
     )
     check(
-        "L4 这一步收敛，她的实时结算合计 60 分钟、与玩家这一步等长（此前 110：15:55~16:45 那一段饥饿、尿意、疲劳算了两遍）",
+        (
+            "L4 这一步收敛，她的实时结算合计 60 分钟、与玩家这一步等长（此前 110：15:55~16:45 那一段饥饿、尿意、"
+            "疲劳算了两遍）"
+        ),
         over1 and sum(one[3] for one in log1) == 60,
         (pass1, l4_log_text(log1)),
     )

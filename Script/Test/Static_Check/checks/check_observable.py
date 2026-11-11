@@ -213,7 +213,8 @@ def _offline_context(chara: object) -> str:
     sp = _sp(chara)
     return (
         f"be_bagged={getattr(sp, 'be_bagged', None)}, field_commission={getattr(sp, 'field_commission', None)}, "
-        f"in_diplomatic_visit={getattr(sp, 'in_diplomatic_visit', None)}, escaping={getattr(sp, 'escaping', None)}, vistor={getattr(sp, 'vistor', None)}"
+        f"in_diplomatic_visit={getattr(sp, 'in_diplomatic_visit', None)}, escaping={getattr(sp, 'escaping', None)}, "
+        f"vistor={getattr(sp, 'vistor', None)}"
     )
 
 
@@ -249,14 +250,21 @@ def check_observable_01() -> list[CheckFailure]:
     if not bad:
         return []
     details = [
-        f"cid={cid}({_name(cache.character_data[cid])}) target={getattr(cache.character_data[cid], 'target_character_id', None)}"
+        (
+            f"cid={cid}({_name(cache.character_data[cid])}) "
+            f"target={getattr(cache.character_data[cid], 'target_character_id', None)}"
+        )
         for cid in bad
     ]
     return [
         make_failure(
             "OBS-01",
             "玩家不在H时同场不得有在H的NPC",
-            f"[warning] 已知缺陷机制：效果404按执行时target重置双方，错对象收尾会让真伙伴同场残留is_h；玩家已不在H但同场NPC仍在H：{details}；玩家target={getattr(pl, 'target_character_id', None)} position={getattr(pl, 'position', None)}",
+            (
+                f"[warning] 已知缺陷机制：效果404按执行时target重置双方，错对象收尾会让真伙伴同场残留is_h；"
+                f"玩家已不在H但同场NPC仍在H：{details}；玩家target={getattr(pl, 'target_character_id', None)} "
+                f"position={getattr(pl, 'position', None)}"
+            ),
             [0] + bad,
         )
     ]
@@ -437,7 +445,12 @@ def check_observable_05() -> list[CheckFailure]:
         make_failure(
             "OBS-05",
             "玩家的交互对象必须在当前场景名册里",
-            f"[warning] 已知缺陷机制：Web目标卡缺少Tk侧的在场归一化；target cid={target_id}({_name(target)})不在玩家当前场景名册，web_draw={web_draw}，pl.position={getattr(pl, 'position', None)}，target.position={getattr(target, 'position', None)}，离线来源={_offline_context(target)}，上一玩家指令={last_pre}",
+            (
+                f"[warning] 已知缺陷机制：Web目标卡缺少Tk侧的在场归一化；target cid={target_id}({_name(target)})不在玩"
+                f"家当前场景名册，web_draw={web_draw}，pl.position={getattr(pl, 'position', None)}，"
+                f"target.position={getattr(target, 'position', None)}，离线来源={_offline_context(target)}，"
+                f"上一玩家指令={last_pre}"
+            ),
             [0, target_id],
         )
     ]
@@ -467,7 +480,8 @@ def check_observable_06() -> list[CheckFailure]:
         ):
             bad.append(cid)
             details.append(
-                f"cid={cid}({_name(chara)}) hidden={hidden} exhibitionism={exhibitionism}({'玩家侧已知可达' if cid == 0 else 'NPC侧模式泄漏'})"
+                f"cid={cid}({_name(chara)}) hidden={hidden} "
+                f"exhibitionism={exhibitionism}({'玩家侧已知可达' if cid == 0 else 'NPC侧模式泄漏'})"
             )
     if not bad:
         return []
@@ -595,7 +609,10 @@ def check_observable_09() -> list[CheckFailure]:
     if len(bad) < 2:
         return []
     details = [
-        f"cid={cid}({_name(cache.character_data[cid])}) insert_position={getattr(_hs(cache.character_data[cid]), 'insert_position', None)}"
+        (
+            f"cid={cid}({_name(cache.character_data[cid])}) "
+            f"insert_position={getattr(_hs(cache.character_data[cid]), 'insert_position', None)}"
+        )
         for cid in bad
     ]
     return [
@@ -692,7 +709,11 @@ def check_observable_12() -> list[CheckFailure]:
         make_failure(
             "OBS-12",
             "助理跟随服务开启时恢复正常的空闲助理必须在跟随",
-            f"[warning] 已知缺陷机制：疲劳/困倦会清is_follow，而白天恢复后没有重挂路径，只有跨日睡眠恢复；助理cid={assistant_id}({_name(assistant)}) services[2]={services.get(2)!r} is_follow={follow} sleep_level={sleep_level}",
+            (
+                f"[warning] 已知缺陷机制：疲劳/困倦会清is_follow，而白天恢复后没有重挂路径，只有跨日睡眠恢复；"
+                f"助理cid={assistant_id}({_name(assistant)}) services[2]={services.get(2)!r} is_follow={follow} "
+                f"sleep_level={sleep_level}"
+            ),
             [0, assistant_id],
         )
     ]
@@ -775,7 +796,8 @@ def check_observable_16() -> list[CheckFailure]:
         if expected not in tags:
             bad.append(cid)
             details.append(
-                f"cid={cid}({_name(chara)}) behavior={behavior_id} position={getattr(chara, 'position', None)} scene_tags={tags} 期望={expected}"
+                f"cid={cid}({_name(chara)}) behavior={behavior_id} position={getattr(chara, 'position', None)} "
+                f"scene_tags={tags} 期望={expected}"
             )
     if not bad:
         return []
@@ -813,8 +835,10 @@ def check_observable_17() -> list[CheckFailure]:
         ):
             bad.append(cid)
             details.append(
-                f"cid={cid}({_name(chara)}) position={getattr(chara, 'position', None)} move_src={getattr(behavior, 'move_src', None)} "
-                f"move_target={getattr(behavior, 'move_target', None)} duration={getattr(behavior, 'duration', None)} start_time={getattr(behavior, 'start_time', None)} "
+                f"cid={cid}({_name(chara)}) position={getattr(chara, 'position', None)} "
+                f"move_src={getattr(behavior, 'move_src', None)} "
+                f"move_target={getattr(behavior, 'move_target', None)} duration={getattr(behavior, 'duration', None)} "
+                f"start_time={getattr(behavior, 'start_time', None)} "
                 f"is_follow={getattr(_sp(chara), 'is_follow', None)} is_h={getattr(_sp(chara), 'is_h', None)}"
             )
     if not bad:

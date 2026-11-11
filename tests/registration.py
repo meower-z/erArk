@@ -227,7 +227,8 @@ def module_problems(
             and not issubclass(cls, base)
         ):
             problems.append(
-                f"{path} 类 {cls.__qualname__}：名字以 Test 开头，pytest 会不经 {base_name} 单独运行它；测试类继承该基类，"
+                f"{path} 类 {cls.__qualname__}：名字以 Test 开头，pytest 会不经 {base_name} 单独运行它；"
+                f"测试类继承该基类，"
                 f"混入类改用不以 Test 开头的名字"
             )
         elif (

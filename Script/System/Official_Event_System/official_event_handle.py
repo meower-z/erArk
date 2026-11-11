@@ -622,7 +622,8 @@ def handle_ri_effect(effect_list: list[str]) -> None:
         ri_value.set_ri_value(type_text, value)
     else:
         print(
-            f"\ndebug 公务事件的全局结算{effect_list}的运算符{operator_text}不支持（目标数值：{ri_value.get_value_name(type_text)}）\n"
+            f"\ndebug 公务事件的全局结算{effect_list}的运算符{operator_text}不支持（目标数值："
+            f"{ri_value.get_value_name(type_text)}）\n"
         )
 
 

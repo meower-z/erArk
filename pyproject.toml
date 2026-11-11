@@ -53,7 +53,7 @@ baseline = ".lint-baseline.tsv"
 exclude = ["Script/Config/config_def.py"]
 soft = 300
 hard = 400
-reset = "black 26.5.1 line-length 80"
+reset = "long code strings split into adjacent literals"
 # 棘轮运行 ruff 时带 `--ignore-noqa`，所以 `# noqa` 注释压不下棘轮报出的问题。
 # 因此这里不禁止 `# noqa` 注释。
 ban_noqa = false

@@ -787,7 +787,8 @@ class Report:
                 f" 等 {len(fields)} 个字段" if len(fields) > 8 else ""
             )
             lines.append(
-                f"按角色\tchara.{self.chara_label(cid, first)}\t{count} 处\t最早 步 {first}（{self.clock(first)}）\t{shown}"
+                f"按角色\tchara.{self.chara_label(cid, first)}\t{count} 处\t最早 步 {first}（{self.clock(first)}）"
+                f"\t{shown}"
             )
         return lines
 
@@ -847,7 +848,8 @@ class Report:
             lines.append(f"{self.line('已放行', difference)}\t{reason}")
         for allowance in unused:
             lines.append(
-                f"未用的放行\t步 {allowance['step']}\t{allowance['name']}\t{_show(allowance['baseline'])} -> {_show(allowance['new'])}"
+                f"未用的放行\t步 {allowance['step']}\t{allowance['name']}\t{_show(allowance['baseline'])} -> "
+                f"{_show(allowance['new'])}"
             )
         lines += self.by_chara(unexpected)
         lines += self.by_field(unexpected)

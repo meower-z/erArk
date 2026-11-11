@@ -662,7 +662,8 @@ if BUILD_TALK:
                     ):
                         percent = processed_files / total_files * 100
                         print(
-                            f"[进度] 已处理 {processed_files}/{total_files} 个文件 ({percent:.2f}%)，已处理 {processed_bytes/1024/1024:.2f}/{total_bytes/1024/1024:.2f} MB"
+                            f"[进度] 已处理 {processed_files}/{total_files} 个文件 ({percent:.2f}%)，已处理 "
+                            f"{processed_bytes/1024/1024:.2f}/{total_bytes/1024/1024:.2f} MB"
                         )
                         last_print_time = now_time
         else:
@@ -683,7 +684,8 @@ if BUILD_TALK:
                 ):
                     percent = processed_files / total_files * 100
                     print(
-                        f"[进度] 已处理 {processed_files}/{total_files} 个文件 ({percent:.2f}%)，已处理 {processed_bytes/1024/1024:.2f}/{total_bytes/1024/1024:.2f} MB"
+                        f"[进度] 已处理 {processed_files}/{total_files} 个文件 ({percent:.2f}%)，已处理 "
+                        f"{processed_bytes/1024/1024:.2f}/{total_bytes/1024/1024:.2f} MB"
                     )
                     last_print_time = now_time
     # 写入 talk 数据
@@ -736,7 +738,8 @@ if BUILD_TALK_COMMON:
                             else 100
                         )
                         print(
-                            f"[进度] 已处理 {processed_files}/{total_files} 个文件 ({percent:.2f}%)，已处理 {processed_bytes/1024/1024:.2f}/{total_bytes/1024/1024:.2f} MB"
+                            f"[进度] 已处理 {processed_files}/{total_files} 个文件 ({percent:.2f}%)，已处理 "
+                            f"{processed_bytes/1024/1024:.2f}/{total_bytes/1024/1024:.2f} MB"
                         )
                         last_print_time = now_time
         else:
@@ -759,7 +762,8 @@ if BUILD_TALK_COMMON:
                         else 100
                     )
                     print(
-                        f"[进度] 已处理 {processed_files}/{total_files} 个文件 ({percent:.2f}%)，已处理 {processed_bytes/1024/1024:.2f}/{total_bytes/1024/1024:.2f} MB"
+                        f"[进度] 已处理 {processed_files}/{total_files} 个文件 ({percent:.2f}%)，已处理 "
+                        f"{processed_bytes/1024/1024:.2f}/{total_bytes/1024/1024:.2f} MB"
                     )
                     last_print_time = now_time
     with open(

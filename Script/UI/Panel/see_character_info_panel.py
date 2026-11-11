@@ -69,7 +69,11 @@ class SeeCharacterInfoPanel:
         main_third_draw = SeeCharacterThirdPanel(character_id, width)
         setting_draw = See_Character_Setting_Panel(character_id, width)
         if character_id == 0:
-            self.draw_data: "dict[str, See_Character_Base_Attributes_Panel | See_Character_Detailed_Attributes_Panel | SeeCharacterThirdPanel | See_Character_Setting_Panel | first_record_panel.See_Character_First_Record_Panel]" = {
+            self.draw_data: (
+                "dict[str, See_Character_Base_Attributes_Panel | See_Character_Detailed_Attributes_Panel | "
+                "SeeCharacterThirdPanel | See_Character_Setting_Panel | first_record_panel.See_Character_First_Record_P"
+                "anel]"
+            ) = {
                 _("基础属性"): base_attributes_draw,
                 _("能力、经验与宝珠"): detailed_attributes_draw,
                 _("玩家能力"): main_third_draw,

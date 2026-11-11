@@ -642,7 +642,10 @@ check(
 schedule_handle.set_class_cell(ROOM1, 1, 2, 45, 101)
 schedule_handle.set_selected_course(201, 1, 2, E.COURSE_TYPE_THEORY, ROOM1)
 check(
-    "L11 只排理论课：只有 self_have_theory_course 成立（此前点名体育 / 实习 / 兴趣 / 实践课的事件只挂 self_have_any_course，照样抽得到）",
+    (
+        "L11 只排理论课：只有 self_have_theory_course 成立（此前点名体育 / 实习 / 兴趣 / 实践课的事件只挂 "
+        "self_have_any_course，照样抽得到）"
+    ),
     course_type_hit(201) == [E.COURSE_TYPE_THEORY],
     course_type_hit(201),
 )
@@ -964,7 +967,10 @@ move_to(0, classroom_path(ROOM1))
 move_to(201, classroom_path(ROOM1))
 student.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
 check(
-    "L13 节次外、在理论教室一被拉来听课：CourseType 为理论课、Course|学识 成立（此前两项都是 -1，529 条听课口上一句不出）",
+    (
+        "L13 节次外、在理论教室一被拉来听课：CourseType 为理论课、Course|学识 成立（此前两项都是 -1，529 "
+        "条听课口上一句不出）"
+    ),
     HP("CVP_A1_CourseType|0_E_1", 201) == 1
     and HP(f"CVP_A1_Course|{_fallback}_G_0", 201) == 1,
 )

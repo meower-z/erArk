@@ -326,7 +326,10 @@ class CommissionDraw:
             reward_return_list[1], text_width, "center"
         )
         # 最终文本
-        commision_text = f"{commission_level}{commission_type}{commission_name}{commission_people_and_time}{commission_demand}{commision_reward}"
+        commision_text = (
+            f"{commission_level}{commission_type}{commission_name}{commission_people_and_time}{commission_demand}"
+            f"{commision_reward}"
+        )
 
         # 可以进行的，绘制为按钮
         commision_draw: draw.LeftButton | draw.NormalDraw

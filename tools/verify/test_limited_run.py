@@ -378,7 +378,11 @@ class Slots(SlotCase):
 
     def test_crash_releases(self) -> None:
         """拿着槽位的进程被 SIGKILL 杀掉后，内核放开它的锁，槽位又空了"""
-        script = "import pathlib, sys, time; sys.path.insert(0, sys.argv[1]); import limited_run; limited_run.STATE_DIR = pathlib.Path(sys.argv[2]); held = limited_run.take_slots(2); print(held is not None, flush=True); time.sleep(60)"
+        script = (
+            "import pathlib, sys, time; sys.path.insert(0, sys.argv[1]); import limited_run; limited_run.STATE_DIR = "
+            "pathlib.Path(sys.argv[2]); held = limited_run.take_slots(2); print(held is not None, flush=True); "
+            "time.sleep(60)"
+        )
         child = subprocess.Popen(
             [
                 sys.executable,
@@ -849,7 +853,11 @@ class Refusals(SlotCase):
 class RealLocks(unittest.TestCase):
     """用真进程和本机真实的 /proc/locks 判断哪次运行活着：状态文件只是线索，锁的真实持有者才算数"""
 
-    CHILD = "import pathlib, sys, time; sys.path.insert(0, sys.argv[1]); import limited_run; limited_run.STATE_DIR = pathlib.Path(sys.argv[2]); held = limited_run.take_slots(1); {body}; print(held[0][0], flush=True); time.sleep(60)"
+    CHILD = (
+        "import pathlib, sys, time; sys.path.insert(0, sys.argv[1]); import limited_run; limited_run.STATE_DIR = "
+        "pathlib.Path(sys.argv[2]); held = limited_run.take_slots(1); {body}; print(held[0][0], flush=True); "
+        "time.sleep(60)"
+    )
 
     def setUp(self) -> None:
         """状态目录换成临时目录，scope 列表换成可设的假列表"""
@@ -908,7 +916,8 @@ class RealLocks(unittest.TestCase):
     def test_zombie_launcher(self) -> None:
         """启动进程被 SIGKILL 后成了没回收的僵尸、它的槽位已被别的进程接手：僵尸的状态不算活着的运行，它的 scope 算遗留"""
         launcher = self.child(
-            "limited_run.write_state({'unit': 'era-game-%d' % __import__('os').getpid(), 'mode': 'headless', 'pid': __import__('os').getpid(), 'slots': [0], 'cwd': '/c/z', 'mem_max_mib': 2048, 'command': 'job-z'})"
+            "limited_run.write_state({'unit': 'era-game-%d' % __import__('os').getpid(), 'mode': 'headless', 'pid': "
+            "__import__('os').getpid(), 'slots': [0], 'cwd': '/c/z', 'mem_max_mib': 2048, 'command': 'job-z'})"
         )
         os.kill(launcher.pid, signal.SIGKILL)
         for _ in range(100):
@@ -969,7 +978,8 @@ class RealLocks(unittest.TestCase):
         self.addCleanup(lambda: __import__("shutil").rmtree(proc))
         (proc / "self").mkdir()
         (proc / "self" / "mountinfo").write_text(
-            "1 0 0:47 / / rw - btrfs /dev/x rw\n2 1 0:99 / /tmp rw - tmpfs none rw\n3 2 0:98 / /tmp/elsewhere rw - tmpfs none rw\n"
+            "1 0 0:47 / / rw - btrfs /dev/x rw\n2 1 0:99 / /tmp rw - tmpfs none rw\n3 2 0:98 / /tmp/elsewhere rw - "
+            "tmpfs none rw\n"
         )
         (proc / "locks").write_text(
             f"1: FLOCK  ADVISORY  WRITE 7777 00:2f:{inode} 0 EOF\n"

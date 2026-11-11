@@ -195,7 +195,10 @@ class SeeCharacterClothPanel:
                         decoration_level = condom_handle.get_decoration_level(
                             decoration_count
                         )
-                        decoration_text_cid = f"{_(type_name, revert_translation=True)}避孕套装饰{str(decoration_level)}"
+                        decoration_text_cid = (
+                            f"{_(type_name, revert_translation=True)}避"
+                            f"孕套装饰{str(decoration_level)}"
+                        )
                         decoration_text_context = game_config.ui_text_data[
                             "condom_dirty"
                         ][decoration_text_cid]

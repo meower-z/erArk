@@ -49,7 +49,10 @@ class ParentImportGuard(importlib.abc.MetaPathFinder):
         """
         if fullname == "Script" or fullname.startswith("Script."):
             raise SlowLayerImportError(
-                f"慢速层的测试模块不能在顶部导入 {fullname}：游戏要在每个测试自己的进程里启动，在测试方法或 setUp 里导入",
+                (
+                    f"慢速层的测试模块不能在顶部导入 {fullname}：游戏要在每个测试自己的进程里启动，在测试方法或 setUp "
+                    f"里导入"
+                ),
                 name=fullname,
             )
         return None

@@ -453,7 +453,10 @@ class Nation_Diplomacy_Panel:
                     now_diplomat_name, text_width, "center"
                 )
                 # 外交方针
-                nation_text = f"{nation_name}{now_nation_reputation_str}{now_country_treatment_progress}{now_diplomat_name}"
+                nation_text = (
+                    f"{nation_name}{now_nation_reputation_str}"
+                    f"{now_country_treatment_progress}{now_diplomat_name}"
+                )
 
                 # 可以进行的，绘制为按钮
                 draw_style = "standard"
@@ -585,7 +588,10 @@ class Nation_Diplomacy_Panel:
                             now_diplomat_ability_lv
                         )
                     )
-                    now_diplomat_text = f"\n  [{str(now_diplomat_adv).rjust(4,'0')}]{now_diplomat_name}  {ability_name}lv{now_diplomat_ability_lv}：{now_diplomat_ability_effect}%"
+                    now_diplomat_text = (
+                        f"\n  [{str(now_diplomat_adv).rjust(4,'0')}]{now_diplomat_name}  "
+                        f"{ability_name}lv{now_diplomat_ability_lv}：{now_diplomat_ability_effect}%"
+                    )
                 else:
                     now_diplomat_text = _("  无")
                 info_draw = draw.NormalDraw()
@@ -875,7 +881,10 @@ class Nation_Diplomacy_Panel:
                     == cache.rhodes_island.diplomat_of_country[country_id][1]
                 ):
                     draw_style = "gold_enrod"
-                draw_text = f"[{diplomatic_policy_id}]{diplomatic_policy_data.name.ljust(15,'　')}：{diplomatic_policy_data.info}"
+                draw_text = (
+                    f"[{diplomatic_policy_id}]{diplomatic_policy_data.name.ljust(15,'　')}："
+                    f"{diplomatic_policy_data.info}"
+                )
 
                 # 绘制按钮
                 button_draw = draw.LeftButton(

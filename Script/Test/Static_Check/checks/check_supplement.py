@@ -182,7 +182,10 @@ def check_facility_derived_max_consistency() -> list[CheckFailure]:
                     "生活娱乐/科研/士兵/访客上限派生一致",
                     f"[warning] ri.{field_name}={actual}，重算期望值={expected}"
                     + (
-                        f"（_eff({facility_cid})，facility_level[{facility_cid}]={getattr(ri, 'facility_level', {}).get(facility_cid)}）"
+                        (
+                            f"（_eff({facility_cid})，"
+                            f"facility_level[{facility_cid}]={getattr(ri, 'facility_level', {}).get(facility_cid)}）"
+                        )
                         if facility_cid is not None
                         else "（当前开放客房数）"
                     )
@@ -242,8 +245,12 @@ def check_facility_open_monotonic_coverage() -> list[CheckFailure]:
                 make_failure(
                     "SUPP-03",
                     "设施开放派生单调覆盖",
-                    f"[warning] 待开放项open_cid={open_cid}({getattr(room, 'name', '')})要求的zone_cid={zone_cid}已被当前设施等级效果覆盖，"
-                    f"但facility_open.get({open_cid})={facility_open.get(open_cid, False)}，疑似开放派生表未刷新或get_base_updata()漏项",
+                    (
+                        f"[warning] 待开放项open_cid={open_cid}({getattr(room, 'name', '')})要求的zone_cid={zone_cid}已"
+                        f"被当前设施等级效果覆盖，"
+                        f"但facility_open.get({open_cid})={facility_open.get(open_cid, False)}，"
+                        f"疑似开放派生表未刷新或get_base_updata()漏项"
+                    ),
                     [],
                 )
             )
@@ -275,11 +282,15 @@ def check_time_stop_unconscious_survives_off_list() -> list[CheckFailure]:
             make_failure(
                 "SUPP-04",
                 "时停无意识值跨名单残留",
-                f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的sp_flag.unconscious_h=3，但当前time_stop_mode=False；"
-                f"是否在npc_id_got中={cid in npc_id_got}，field_commission={getattr(sp_flag, 'field_commission', None)}，"
-                f"escaping={getattr(sp_flag, 'escaping', None)}，be_bagged={getattr(sp_flag, 'be_bagged', None)}，"
-                f"vistor={getattr(sp_flag, 'vistor', None)}，position={getattr(c, 'position', None)}，"
-                f"疑似TIME_STOP_OFF清理范围漏掉了时停中已离开名单的角色",
+                (
+                    f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的sp_flag.unconscious_h=3，"
+                    f"但当前time_stop_mode=False；"
+                    f"是否在npc_id_got中={cid in npc_id_got}，"
+                    f"field_commission={getattr(sp_flag, 'field_commission', None)}，"
+                    f"escaping={getattr(sp_flag, 'escaping', None)}，be_bagged={getattr(sp_flag, 'be_bagged', None)}，"
+                    f"vistor={getattr(sp_flag, 'vistor', None)}，position={getattr(c, 'position', None)}，"
+                    f"疑似TIME_STOP_OFF清理范围漏掉了时停中已离开名单的角色"
+                ),
                 [cid],
             )
         )
@@ -356,8 +367,12 @@ def check_no_template_object_aliasing() -> list[CheckFailure]:
                 make_failure(
                     "SUPP-06",
                     "模板对象别名",
-                    f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的字段{hit_fields}与某个NPC模板的对应字典共享对象identity，"
-                    f"adv={getattr(c, 'adv', None)}；该角色的成长会原地修改并污染进程级模板，导致后续新角色/新周目继承脏数据",
+                    (
+                        f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的字段{hit_fields}与某个NPC模板的对应字典"
+                        f"共享对象identity，"
+                        f"adv={getattr(c, 'adv', None)}；该角色的成长会原地修改并污染进程级模板，"
+                        f"导致后续新角色/新周目继承脏数据"
+                    ),
                     [cid],
                 )
             )
@@ -388,8 +403,11 @@ def check_used_extra_warehouse_capacity_module_non_negative() -> (
             make_failure(
                 "SUPP-07",
                 "仓储扩展模块使用数非负",
-                f"cache.rhodes_island.used_extra_warehouse_capacity_module={used}，类型或值不满足type是int且>=0；"
-                f"warehouse_capacity={getattr(ri, 'warehouse_capacity', None)}，facility_level[3]={getattr(ri, 'facility_level', {}).get(3)}",
+                (
+                    f"cache.rhodes_island.used_extra_warehouse_capacity_module={used}，类型或值不满足type是int且>=0；"
+                    f"warehouse_capacity={getattr(ri, 'warehouse_capacity', None)}，"
+                    f"facility_level[3]={getattr(ri, 'facility_level', {}).get(3)}"
+                ),
                 [],
             )
         ]
@@ -424,8 +442,11 @@ def check_officeroom_reference_valid() -> list[CheckFailure]:
                 make_failure(
                     "SUPP-08",
                     "办公室场景引用合法",
-                    f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的officeroom={officeroom}非空但不是cache.scene_data的合法键，"
-                    f"打开该角色信息面板时get_scene_path_text会索引失败；position={getattr(c, 'position', None)}",
+                    (
+                        f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的officeroom={officeroom}非空但不是cache."
+                        f"scene_data的合法键，"
+                        f"打开该角色信息面板时get_scene_path_text会索引失败；position={getattr(c, 'position', None)}"
+                    ),
                     [cid],
                 )
             )

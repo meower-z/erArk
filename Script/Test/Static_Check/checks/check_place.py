@@ -170,7 +170,10 @@ def check_scene_and_map_self_key_consistency() -> list[CheckFailure]:
                 make_failure(
                     "PLACE-02",
                     "场景/地图自描述键一致",
-                    f"scene_data字典键={k}，但场景对象自身scene_path={scene_path}，scene_name={getattr(v, 'scene_name', '')}",
+                    (
+                        f"scene_data字典键={k}，但场景对象自身scene_path={scene_path}，"
+                        f"scene_name={getattr(v, 'scene_name', '')}"
+                    ),
                 )
             )
     map_data = getattr(cache, "map_data", {}) or {}
@@ -243,11 +246,17 @@ def check_character_position_is_existing_scene() -> list[CheckFailure]:
             make_failure(
                 "PLACE-04",
                 "角色位置必须是现有场景",
-                f"[warning] 角色位置未指向现有场景；角色id={cid} name={getattr(c, 'name', '')}，"
-                f"position={position}，是否在npc_id_got中={cid in npc_id_got}，behavior_id={getattr(behavior, 'behavior_id', None)}，"
-                f"move_src={getattr(behavior, 'move_src', None)}，move_target={getattr(behavior, 'move_target', None)}，"
-                f"move_final_target={getattr(behavior, 'move_final_target', None)}，be_bagged={getattr(sp_flag, 'be_bagged', None)}，"
-                f"field_commission={getattr(sp_flag, 'field_commission', None)}，escaping={getattr(sp_flag, 'escaping', None)}",
+                (
+                    f"[warning] 角色位置未指向现有场景；角色id={cid} name={getattr(c, 'name', '')}，"
+                    f"position={position}，是否在npc_id_got中={cid in npc_id_got}，"
+                    f"behavior_id={getattr(behavior, 'behavior_id', None)}，"
+                    f"move_src={getattr(behavior, 'move_src', None)}，"
+                    f"move_target={getattr(behavior, 'move_target', None)}，"
+                    f"move_final_target={getattr(behavior, 'move_final_target', None)}，"
+                    f"be_bagged={getattr(sp_flag, 'be_bagged', None)}，"
+                    f"field_commission={getattr(sp_flag, 'field_commission', None)}，"
+                    f"escaping={getattr(sp_flag, 'escaping', None)}"
+                ),
                 [cid],
             )
         )
@@ -287,7 +296,10 @@ def check_character_to_scene_direction_consistency() -> list[CheckFailure]:
                 make_failure(
                     "PLACE-05",
                     "角色→场景方向一致",
-                    f"角色id={cid} name={getattr(c, 'name', '')}的position={position}不是合法场景键（另见PLACE-04），无法核对名册方向一致性",
+                    (
+                        f"角色id={cid} name={getattr(c, 'name', '')}的position={position}不是合法场景键（另见PLACE-04）"
+                        f"，无法核对名册方向一致性"
+                    ),
                     [cid],
                 )
             )
@@ -302,11 +314,16 @@ def check_character_to_scene_direction_consistency() -> list[CheckFailure]:
                 make_failure(
                     "PLACE-05",
                     "角色→场景方向一致",
-                    f"角色id={cid} name={getattr(c, 'name', '')}的position={position}指向场景{path}，但该场景character_list="
-                    f"{sorted(character_list)}中不含该id；behavior_id={getattr(behavior, 'behavior_id', None)}，"
-                    f"move_src={getattr(behavior, 'move_src', None)}，move_target={getattr(behavior, 'move_target', None)}，"
-                    f"be_bagged={getattr(sp_flag, 'be_bagged', None)}，field_commission={getattr(sp_flag, 'field_commission', None)}，"
-                    f"escaping={getattr(sp_flag, 'escaping', None)}，是否在npc_id_got中={cid in npc_id_got}",
+                    (
+                        f"角色id={cid} name={getattr(c, 'name', '')}的position={position}指向场景{path}，"
+                        f"但该场景character_list="
+                        f"{sorted(character_list)}中不含该id；behavior_id={getattr(behavior, 'behavior_id', None)}，"
+                        f"move_src={getattr(behavior, 'move_src', None)}，"
+                        f"move_target={getattr(behavior, 'move_target', None)}，"
+                        f"be_bagged={getattr(sp_flag, 'be_bagged', None)}，"
+                        f"field_commission={getattr(sp_flag, 'field_commission', None)}，"
+                        f"escaping={getattr(sp_flag, 'escaping', None)}，是否在npc_id_got中={cid in npc_id_got}"
+                    ),
                     [cid],
                 )
             )
@@ -354,10 +371,15 @@ def check_scene_to_character_direction_consistency() -> list[CheckFailure]:
                 make_failure(
                     "PLACE-06",
                     "场景→角色方向一致",
-                    f"场景{path}的character_list中含角色id={cid} name={getattr(c, 'name', '')}，但其position={position}并不指回该场景，"
-                    f"实际出现在的全部场景={cid_to_scenes.get(cid, [])}；behavior_id={getattr(behavior, 'behavior_id', None)}，"
-                    f"move_src={getattr(behavior, 'move_src', None)}，move_target={getattr(behavior, 'move_target', None)}，"
-                    f"pl.sp_flag.bagging_chara_id={bagging_id}",
+                    (
+                        f"场景{path}的character_list中含角色id={cid} name={getattr(c, 'name', '')}，"
+                        f"但其position={position}并不指回该场景，"
+                        f"实际出现在的全部场景={cid_to_scenes.get(cid, [])}；"
+                        f"behavior_id={getattr(behavior, 'behavior_id', None)}，"
+                        f"move_src={getattr(behavior, 'move_src', None)}，"
+                        f"move_target={getattr(behavior, 'move_target', None)}，"
+                        f"pl.sp_flag.bagging_chara_id={bagging_id}"
+                    ),
                     [cid],
                 )
             )
@@ -390,8 +412,11 @@ def check_character_not_in_multiple_scenes() -> list[CheckFailure]:
                 make_failure(
                     "PLACE-07",
                     "角色不得同时出现在多个场景",
-                    f"角色id={cid} name={getattr(c, 'name', '') if c else '?'}同时出现在{count}个场景的character_list中: "
-                    f"{cid_to_scenes[cid]}，position={getattr(c, 'position', None) if c else None}",
+                    (
+                        f"角色id={cid} name={getattr(c, 'name', '') if c else '?'}同时出现在{count}个场景的character_li"
+                        f"st中: "
+                        f"{cid_to_scenes[cid]}，position={getattr(c, 'position', None) if c else None}"
+                    ),
                     [cid],
                 )
             )
@@ -430,10 +455,15 @@ def check_scene_roster_only_registered_and_offline_must_exit() -> (
                 make_failure(
                     "PLACE-08",
                     "场景名册只容纳在册角色/离线角色必须退出名册",
-                    f"角色id={cid} name={getattr(c, 'name', '') if c else '?'}出现在场景名册{paths}中，但既非玩家也不在npc_id_got中；"
-                    f"position={getattr(c, 'position', None) if c else None}，be_bagged={getattr(sp_flag, 'be_bagged', None)}，"
-                    f"field_commission={getattr(sp_flag, 'field_commission', None)}，escaping={getattr(sp_flag, 'escaping', None)}，"
-                    f"vistor={getattr(sp_flag, 'vistor', None)}",
+                    (
+                        f"角色id={cid} name={getattr(c, 'name', '') if c else '?'}出现在场景名册{paths}中，"
+                        f"但既非玩家也不在npc_id_got中；"
+                        f"position={getattr(c, 'position', None) if c else None}，"
+                        f"be_bagged={getattr(sp_flag, 'be_bagged', None)}，"
+                        f"field_commission={getattr(sp_flag, 'field_commission', None)}，"
+                        f"escaping={getattr(sp_flag, 'escaping', None)}，"
+                        f"vistor={getattr(sp_flag, 'vistor', None)}"
+                    ),
                     [cid],
                 )
             )
@@ -446,10 +476,15 @@ def check_scene_roster_only_registered_and_offline_must_exit() -> (
                 make_failure(
                     "PLACE-08",
                     "场景名册只容纳在册角色/离线角色必须退出名册",
-                    f"角色id={cid} name={getattr(c, 'name', '')}带有离线标记(be_bagged={getattr(sp_flag, 'be_bagged', None)}，"
-                    f"field_commission={getattr(sp_flag, 'field_commission', None)}，escaping={getattr(sp_flag, 'escaping', None)})，"
-                    f"但仍在npc_id_got中；position={getattr(c, 'position', None)}，所在场景名册={cid_to_scenes.get(cid, [])}，"
-                    f"vistor={getattr(sp_flag, 'vistor', None)}",
+                    (
+                        f"角色id={cid} name={getattr(c, 'name', '')}带有离线标记(be_bagged="
+                        f"{getattr(sp_flag, 'be_bagged', None)}，"
+                        f"field_commission={getattr(sp_flag, 'field_commission', None)}，"
+                        f"escaping={getattr(sp_flag, 'escaping', None)})，"
+                        f"但仍在npc_id_got中；position={getattr(c, 'position', None)}，"
+                        f"所在场景名册={cid_to_scenes.get(cid, [])}，"
+                        f"vistor={getattr(sp_flag, 'vistor', None)}"
+                    ),
                     [cid],
                 )
             )
@@ -476,9 +511,13 @@ def check_locked_room_not_empty() -> list[CheckFailure]:
                 make_failure(
                     "PLACE-09",
                     "空房间不该锁着门",
-                    f"场景{getattr(sc, 'scene_path', '?')}({getattr(sc, 'scene_name', '')})的close_flag={close_flag}非0，"
-                    f"但character_list为空；close_type={getattr(sc, 'close_type', None)}，scene_tag={getattr(sc, 'scene_tag', None)}，"
-                    f"room_area={getattr(sc, 'room_area', None)}",
+                    (
+                        f"场景{getattr(sc, 'scene_path', '?')}({getattr(sc, 'scene_name', '')})的close_flag="
+                        f"{close_flag}非0，"
+                        f"但character_list为空；close_type={getattr(sc, 'close_type', None)}，"
+                        f"scene_tag={getattr(sc, 'scene_tag', None)}，"
+                        f"room_area={getattr(sc, 'room_area', None)}"
+                    ),
                 )
             )
     return failures
@@ -504,9 +543,14 @@ def check_door_type_and_flag_enum_valid() -> list[CheckFailure]:
                 make_failure(
                     "PLACE-10",
                     "门类型与门状态枚举合法",
-                    f"场景{getattr(sc, 'scene_path', '?')}({getattr(sc, 'scene_name', '')})的close_type={close_type}，"
-                    f"close_flag={close_flag}不满足close_type∈{{0,1,2}}且close_flag∈{{0,close_type}}；"
-                    f"room_area={getattr(sc, 'room_area', None)}，character_list={sorted(getattr(sc, 'character_list', None) or [])}",
+                    (
+                        f"场景{getattr(sc, 'scene_path', '?')}("
+                        f"{getattr(sc, 'scene_name', '')})的close_type="
+                        f"{close_type}，"
+                        f"close_flag={close_flag}不满足close_type∈{{0,1,2}}且close_flag∈{{0,close_type}}；"
+                        f"room_area={getattr(sc, 'room_area', None)}，"
+                        f"character_list={sorted(getattr(sc, 'character_list', None) or [])}"
+                    ),
                 )
             )
     return failures
@@ -531,8 +575,11 @@ def check_room_area_enum_valid() -> list[CheckFailure]:
                 make_failure(
                     "PLACE-11",
                     "房间容量档位枚举合法",
-                    f"场景{getattr(sc, 'scene_path', '?')}({getattr(sc, 'scene_name', '')})的room_area={room_area}不在合法枚举{{0,1,2,3}}中；"
-                    f"当前人数={len(getattr(sc, 'character_list', None) or [])}",
+                    (
+                        f"场景{getattr(sc, 'scene_path', '?')}({getattr(sc, 'scene_name', '')})的room_area={room_area}"
+                        f"不在合法枚举{{0,1,2,3}}中；"
+                        f"当前人数={len(getattr(sc, 'character_list', None) or [])}"
+                    ),
                 )
             )
     return failures
@@ -564,11 +611,18 @@ def check_move_path_fields_are_existing_scenes() -> list[CheckFailure]:
                 make_failure(
                     "PLACE-12",
                     "移动路径字段必须是现有场景",
-                    f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的behavior.{field_name}={value}既非空列表也不是合法场景路径；"
-                    f"position={getattr(c, 'position', None)}，behavior_id={getattr(behavior, 'behavior_id', None)}，"
-                    f"move_src={getattr(behavior, 'move_src', None)}，move_target={getattr(behavior, 'move_target', None)}，"
-                    f"move_final_target={getattr(behavior, 'move_final_target', None)}，start_time={getattr(behavior, 'start_time', None)}，"
-                    f"duration={getattr(behavior, 'duration', None)}",
+                    (
+                        f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的behavior.{field_name}={value}既非空列表"
+                        f"也不是合法场景路径；"
+                        f"position={getattr(c, 'position', None)}，"
+                        f"behavior_id={getattr(behavior, 'behavior_id', None)}"
+                        f"，"
+                        f"move_src={getattr(behavior, 'move_src', None)}，"
+                        f"move_target={getattr(behavior, 'move_target', None)}，"
+                        f"move_final_target={getattr(behavior, 'move_final_target', None)}，"
+                        f"start_time={getattr(behavior, 'start_time', None)}，"
+                        f"duration={getattr(behavior, 'duration', None)}"
+                    ),
                     [cid],
                 )
             )
@@ -601,8 +655,11 @@ def check_past_move_position_list_valid() -> list[CheckFailure]:
                 make_failure(
                     "PLACE-13",
                     "移动历史长度与内容合法",
-                    f"角色id={cid} name={getattr(c, 'name', '')}的action_info.past_move_position_list长度={len(past_list)}"
-                    f"（应≤10），其中非法项={bad_items}；position={getattr(c, 'position', None)}",
+                    (
+                        f"角色id={cid} name={getattr(c, 'name', '')}的action_info.past_move_position_list长度="
+                        f"{len(past_list)}"
+                        f"（应≤10），其中非法项={bad_items}；position={getattr(c, 'position', None)}"
+                    ),
                     [cid],
                 )
             )
@@ -667,9 +724,13 @@ def check_dormitory_field_valid_or_sentinel() -> list[CheckFailure]:
             make_failure(
                 "PLACE-15",
                 "宿舍字段必须是合法场景或哨兵值",
-                f"角色id={cid} name={getattr(c, 'name', '')}的dormitory={dormitory!r}既不是合法场景键也不是哨兵值('' / '无')；"
-                f"permanent_dormitory={getattr(c, 'permanent_dormitory', None)!r}，position={getattr(c, 'position', None)}，"
-                f"work_type={getattr(work, 'work_type', None)}，是否为访客={cid in visitor_info}",
+                (
+                    f"角色id={cid} name={getattr(c, 'name', '')}的dormitory={dormitory!r}既不是合法场景键也不是哨兵值('"
+                    f"' / '无')；"
+                    f"permanent_dormitory={getattr(c, 'permanent_dormitory', None)!r}，"
+                    f"position={getattr(c, 'position', None)}，"
+                    f"work_type={getattr(work, 'work_type', None)}，是否为访客={cid in visitor_info}"
+                ),
                 [cid],
             )
         )
@@ -697,10 +758,13 @@ def check_target_character_id_exists() -> list[CheckFailure]:
                 make_failure(
                     "PLACE-16",
                     "交互对象id必须存在",
-                    f"角色id={cid} name={getattr(c, 'name', '')}的target_character_id={target_id}在character_data中不存在"
-                    f"（自指=无交互对象、0=以玩家为交互对象均合法，此处既非自指也非现存id）；"
-                    f"behavior_id={getattr(behavior, 'behavior_id', None)}，is_h={getattr(sp_flag, 'is_h', None)}，"
-                    f"position={getattr(c, 'position', None)}",
+                    (
+                        f"角色id={cid} name={getattr(c, 'name', '')}的target_character_id={target_id}在character_data中"
+                        f"不存在"
+                        f"（自指=无交互对象、0=以玩家为交互对象均合法，此处既非自指也非现存id）；"
+                        f"behavior_id={getattr(behavior, 'behavior_id', None)}，is_h={getattr(sp_flag, 'is_h', None)}，"
+                        f"position={getattr(c, 'position', None)}"
+                    ),
                     [cid],
                 )
             )
@@ -749,9 +813,13 @@ def check_h_state_target_same_scene() -> list[CheckFailure]:
             make_failure(
                 "PLACE-17",
                 "H状态角色的交互对象必须同场",
-                f"[warning] 角色id={cid} name={getattr(c, 'name', '')}处于sp_flag.is_h=True，其target_character_id={target_id}"
-                f"{target_desc}，自身position={getattr(c, 'position', None)}；behavior_id={getattr(behavior, 'behavior_id', None)}，"
-                f"unconscious_h={getattr(sp_flag, 'unconscious_h', None)}，pl.sp_flag.bagging_chara_id={bagging_id}",
+                (
+                    f"[warning] 角色id={cid} name={getattr(c, 'name', '')}处于sp_flag.is_h=True，"
+                    f"其target_character_id={target_id}"
+                    f"{target_desc}，自身position={getattr(c, 'position', None)}；"
+                    f"behavior_id={getattr(behavior, 'behavior_id', None)}，"
+                    f"unconscious_h={getattr(sp_flag, 'unconscious_h', None)}，pl.sp_flag.bagging_chara_id={bagging_id}"
+                ),
                 [cid] + ([target_id] if target is not None else []),
             )
         )
@@ -783,8 +851,11 @@ def check_assistant_field_only_for_player() -> list[CheckFailure]:
                 make_failure(
                     "PLACE-18",
                     "助理字段只属于玩家",
-                    f"非玩家角色id={cid} name={getattr(c, 'name', '')}的assistant_character_id={aid}非0（该字段仅玩家使用）；"
-                    f"玩家自身assistant_character_id={pl_aid}",
+                    (
+                        f"非玩家角色id={cid} name={getattr(c, 'name', '')}的assistant_character_id={aid}非0（该字段仅玩"
+                        f"家使用）；"
+                        f"玩家自身assistant_character_id={pl_aid}"
+                    ),
                     [cid],
                 )
             )
@@ -816,7 +887,10 @@ def check_current_assistant_valid_and_online() -> list[CheckFailure]:
             make_failure(
                 "PLACE-19",
                 "当前助理必须有效且在线",
-                f"玩家assistant_character_id={aid}指向的角色不在character_data中；玩家position={getattr(pl, 'position', None)}",
+                (
+                    f"玩家assistant_character_id={aid}指向的角色不在character_data中；"
+                    f"玩家position={getattr(pl, 'position', None)}"
+                ),
                 [aid],
             )
         )
@@ -830,10 +904,14 @@ def check_current_assistant_valid_and_online() -> list[CheckFailure]:
             make_failure(
                 "PLACE-19",
                 "当前助理必须有效且在线",
-                f"玩家当前助理id={aid} name={getattr(assistant, 'name', '')} position={getattr(assistant, 'position', None)}，"
-                f"是否在npc_id_got中={in_got}，dead={dead}，be_bagged={getattr(sp_flag, 'be_bagged', None)}，"
-                f"field_commission={getattr(sp_flag, 'field_commission', None)}，escaping={getattr(sp_flag, 'escaping', None)}，"
-                f"玩家position={getattr(pl, 'position', None)}",
+                (
+                    f"玩家当前助理id={aid} name={getattr(assistant, 'name', '')} "
+                    f"position={getattr(assistant, 'position', None)}，"
+                    f"是否在npc_id_got中={in_got}，dead={dead}，be_bagged={getattr(sp_flag, 'be_bagged', None)}，"
+                    f"field_commission={getattr(sp_flag, 'field_commission', None)}，"
+                    f"escaping={getattr(sp_flag, 'escaping', None)}，"
+                    f"玩家position={getattr(pl, 'position', None)}"
+                ),
                 [aid],
             )
         )
@@ -871,8 +949,12 @@ def check_assistant_services_value_range() -> list[CheckFailure]:
                 make_failure(
                     "PLACE-20",
                     "助理服务值域合法",
-                    f"角色id={cid} name={getattr(c, 'name', '')}的assistant_services中以下键值超出合法范围: {out_of_range}"
-                    f"（上界表{_ASSISTANT_SERVICE_MAX}），完整assistant_services={services}，是否为当前助理={cid == pl_aid}",
+                    (
+                        f"角色id={cid} name={getattr(c, 'name', '')}的assistant_services中以下键值超出合法范围: "
+                        f"{out_of_range}"
+                        f"（上界表{_ASSISTANT_SERVICE_MAX}），完整assistant_services={services}，"
+                        f"是否为当前助理={cid == pl_aid}"
+                    ),
                     [cid],
                 )
             )
@@ -901,9 +983,12 @@ def check_assistant_services_key_set_complete() -> list[CheckFailure]:
                 make_failure(
                     "PLACE-21",
                     "助理服务键集完整",
-                    f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的assistant_services键集合与期望不符："
-                    f"缺失键={sorted(_ASSISTANT_SERVICE_KEYS - keys)}，多余键={sorted(keys - _ASSISTANT_SERVICE_KEYS)}，"
-                    f"完整assistant_services={services}",
+                    (
+                        f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的assistant_services键集合与期望不符："
+                        f"缺失键={sorted(_ASSISTANT_SERVICE_KEYS - keys)}，"
+                        f"多余键={sorted(keys - _ASSISTANT_SERVICE_KEYS)}，"
+                        f"完整assistant_services={services}"
+                    ),
                     [cid],
                 )
             )
@@ -946,9 +1031,14 @@ def check_cohabitation_service_matches_dormitory() -> list[CheckFailure]:
             make_failure(
                 "PLACE-22",
                 "同居服务与宿舍一致",
-                f"[warning] 当前助理id={aid} name={getattr(assistant, 'name', '')}已开启同居服务(assistant_services[7]=1)，"
-                f"但dormitory={dormitory}（期望{expected_dormitory}），permanent_dormitory={getattr(assistant, 'permanent_dormitory', None)}，"
-                f"work_type={getattr(work, 'work_type', None)}，current_warden_id={getattr(rhodes_island, 'current_warden_id', None)}",
+                (
+                    f"[warning] 当前助理id={aid} name={getattr(assistant, 'name', '')}已开启同居服务(assistant_services"
+                    f"[7]=1)，"
+                    f"但dormitory={dormitory}（期望{expected_dormitory}），"
+                    f"permanent_dormitory={getattr(assistant, 'permanent_dormitory', None)}，"
+                    f"work_type={getattr(work, 'work_type', None)}，"
+                    f"current_warden_id={getattr(rhodes_island, 'current_warden_id', None)}"
+                ),
                 [aid],
             )
         )
@@ -981,8 +1071,11 @@ def check_follow_mode_value_valid() -> list[CheckFailure]:
                 make_failure(
                     "PLACE-23",
                     "跟随模式取值合法",
-                    f"角色id={cid} name={getattr(c, 'name', '')}的sp_flag.is_follow={is_follow}超出合法范围[0,4]；"
-                    f"是否为当前助理={cid == pl_aid}，assistant_services[2]={services.get(2)}，behavior_id={getattr(behavior, 'behavior_id', None)}",
+                    (
+                        f"角色id={cid} name={getattr(c, 'name', '')}的sp_flag.is_follow={is_follow}超出合法范围[0,4]；"
+                        f"是否为当前助理={cid == pl_aid}，assistant_services[2]={services.get(2)}，"
+                        f"behavior_id={getattr(behavior, 'behavior_id', None)}"
+                    ),
                     [cid],
                 )
             )
@@ -1018,9 +1111,13 @@ def check_player_not_following_self() -> list[CheckFailure]:
             make_failure(
                 "PLACE-24",
                 "玩家不跟随自己",
-                f"{prefix}玩家(id 0)的sp_flag.is_follow={is_follow}，应恒为0；position={getattr(pl, 'position', None)}，"
-                f"behavior_id={getattr(behavior, 'behavior_id', None)}，move_target={getattr(behavior, 'move_target', None)}，"
-                f"debug_mode={debug_mode}",
+                (
+                    f"{prefix}玩家(id 0)的sp_flag.is_follow={is_follow}，应恒为0；"
+                    f"position={getattr(pl, 'position', None)}，"
+                    f"behavior_id={getattr(behavior, 'behavior_id', None)}，"
+                    f"move_target={getattr(behavior, 'move_target', None)}，"
+                    f"debug_mode={debug_mode}"
+                ),
                 [0],
             )
         )
@@ -1063,11 +1160,16 @@ def check_follower_must_be_registered_alive_online() -> list[CheckFailure]:
             make_failure(
                 "PLACE-25",
                 "跟随者必须在册、活着、在线",
-                f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的sp_flag.is_follow={is_follow}非0，但是否为玩家自身={cid == 0}，"
-                f"是否在npc_id_got中={in_got}，dead={dead}，position={getattr(c, 'position', None)}，"
-                f"be_bagged={getattr(sp_flag, 'be_bagged', None)}，field_commission={getattr(sp_flag, 'field_commission', None)}，"
-                f"escaping={getattr(sp_flag, 'escaping', None)}，vistor={vistor}，是否在rhodes_island.visitor_info中={cid in visitor_info}"
-                f"{known_bug_note}",
+                (
+                    f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的sp_flag.is_follow={is_follow}非0，"
+                    f"但是否为玩家自身={cid == 0}，"
+                    f"是否在npc_id_got中={in_got}，dead={dead}，position={getattr(c, 'position', None)}，"
+                    f"be_bagged={getattr(sp_flag, 'be_bagged', None)}，"
+                    f"field_commission={getattr(sp_flag, 'field_commission', None)}，"
+                    f"escaping={getattr(sp_flag, 'escaping', None)}，vistor={vistor}，"
+                    f"是否在rhodes_island.visitor_info中={cid in visitor_info}"
+                    f"{known_bug_note}"
+                ),
                 [cid],
             )
         )
@@ -1105,7 +1207,10 @@ def check_bagging_consistency() -> list[CheckFailure]:
                 make_failure(
                     "PLACE-27",
                     "装袋搬运双向一致",
-                    f"非玩家角色id={cid} name={getattr(c, 'name', '')}的sp_flag.bagging_chara_id={bagging_id}非0，只有玩家可持有该字段",
+                    (
+                        f"非玩家角色id={cid} name={getattr(c, 'name', '')}的sp_flag.bagging_chara_id={bagging_id}非0，"
+                        f"只有玩家可持有该字段"
+                    ),
                     [cid],
                 )
             )
@@ -1125,8 +1230,13 @@ def check_bagging_consistency() -> list[CheckFailure]:
             make_failure(
                 "PLACE-27",
                 "装袋搬运双向一致",
-                f"玩家sp_flag.bagging_chara_id={pl_bagging_id}，理论被搬者集合应为{sorted(expected_ids)}，但实际be_bagged=True的角色"
-                f"集合为{sorted(be_bagged_ids)}（name: {[(cid, getattr(character_data.get(cid), 'name', '?')) for cid in sorted(be_bagged_ids)]}）",
+                (
+                    f"玩家sp_flag.bagging_chara_id={pl_bagging_id}，"
+                    f"理论被搬者集合应为{sorted(expected_ids)}，"
+                    f"但实际be_bagged=True的角色"
+                    f"集合为{sorted(be_bagged_ids)}（name: "
+                    f"{[(cid, getattr(character_data.get(cid), 'name', '?')) for cid in sorted(be_bagged_ids)]}）"
+                ),
                 sorted(be_bagged_ids | expected_ids),
             )
         )
@@ -1140,7 +1250,10 @@ def check_bagging_consistency() -> list[CheckFailure]:
                 make_failure(
                     "PLACE-27",
                     "装袋搬运双向一致",
-                    f"玩家sp_flag.bagging_chara_id={bid}指向的角色不在character_data中，pl.position={getattr(pl, 'position', None)}",
+                    (
+                        f"玩家sp_flag.bagging_chara_id={bid}指向的角色不在character_data中，"
+                        f"pl.position={getattr(pl, 'position', None)}"
+                    ),
                     [bid],
                 )
             )
@@ -1164,9 +1277,13 @@ def check_bagging_consistency() -> list[CheckFailure]:
                     make_failure(
                         "PLACE-27",
                         "装袋搬运双向一致",
-                        f"被装袋角色id={bid} name={getattr(target, 'name', '')}未完成离线三件套：be_bagged={be_bagged}，"
-                        f"是否仍在npc_id_got中={in_got}，position={position}，仍出现在场景名册={scenes_with_bid}"
-                        f"（已知隐患：Script/Settle/default.py的handle_t_be_bagged效果id 451在Behavior_Effect.csv中无引用，是死代码）",
+                        (
+                            f"被装袋角色id={bid} name={getattr(target, 'name', '')}未完成离线三件套："
+                            f"be_bagged={be_bagged}，"
+                            f"是否仍在npc_id_got中={in_got}，position={position}，仍出现在场景名册={scenes_with_bid}"
+                            f"（已知隐患：Script/Settle/default.py的handle_t_be_bagged效果id "
+                            f"451在Behavior_Effect.csv中无引用，是死代码）"
+                        ),
                         [bid],
                     )
                 )
@@ -1301,7 +1418,10 @@ def check_place_30() -> list[CheckFailure]:
                     make_failure(
                         "PLACE-30",
                         "教室标签索引",
-                        f"cid=None key=scene_data[{path!r}].scene_tag value={getattr(scene, 'scene_tag', None)!r}；place_data[{tag!r}]漏列此路径",
+                        (
+                            f"cid=None key=scene_data[{path!r}].scene_tag value={getattr(scene, 'scene_tag', None)!r}；"
+                            f"place_data[{tag!r}]漏列此路径"
+                        ),
                         [],
                     )
                 )

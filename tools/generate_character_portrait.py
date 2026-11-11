@@ -449,13 +449,15 @@ def prepare_child_ref_sheet(
             sheet = build_child_ref_sheet(ref_paths)
             sheet.save(sheet_path)
             print(
-                f"已用 {len(ref_paths)} 张参考图重新拼接对照表（{sheet.width}x{sheet.height}）：{display_path(sheet_path)}"
+                f"已用 {len(ref_paths)} 张参考图重新拼接对照表（{sheet.width}x{sheet.height}）："
+                f"{display_path(sheet_path)}"
             )
             return sheet_path, sheet
         print(f"未在 {ref_dir} 找到儿童参考图，无法重新拼接对照表")
     if not sheet_path.is_file():
         print(
-            f"未找到儿童参考对照表 {sheet_path}，只用提示词里的儿童特征总结（可加 --rebuild-child-ref-sheet 用参考图重新拼接）"
+            f"未找到儿童参考对照表 {sheet_path}，只用提示词里的儿童特征总结（可加 --rebuild-child-ref-sheet "
+            f"用参考图重新拼接）"
         )
         return sheet_path, None
     sheet = load_flat_image(sheet_path)
@@ -855,7 +857,8 @@ def generate_child_portrait(
     if ref_sheet is not None:
         record.append(f"2. 儿童参考对照表：{display_path(sheet_path)}")
     record.append(
-        f"[参数] model={args.model} size={args.size} quality={args.quality} background={args.background} n={args.n} age={args.age} input_fidelity={args.input_fidelity or '未指定'}"
+        f"[参数] model={args.model} size={args.size} quality={args.quality} background={args.background} n={args.n} "
+        f"age={args.age} input_fidelity={args.input_fidelity or '未指定'}"
     )
     record_text = "\n".join(record)
     print(f"[{name}] 提示词：\n{prompt}\n{record_text}")

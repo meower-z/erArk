@@ -724,7 +724,10 @@ _m1_joinable = [
     for _index in range(3)
 ]
 check(
-    "M1 口上前提 self_in_sex_class 与她自己决策时的入课判定（judge_pending_class_joinable）各求值 3 次都成立，理智仍不变",
+    (
+        "M1 口上前提 self_in_sex_class 与她自己决策时的入课判定（judge_pending_class_joinable）各求值 3 次都成立，"
+        "理智仍不变"
+    ),
     all(_m1_in_class)
     and all(_m1_joinable)
     and pl.sanity_point == 2000
@@ -966,13 +969,19 @@ check(
     and _h1_class["running"],
 )
 check(
-    "H1 课上「结束群交」6008 不再显示（前提加了 SEX_CLASS_MODE_OFF，此前与 6021 并排显示），「结束性技实操课」6021 照常显示",
+    (
+        "H1 课上「结束群交」6008 不再显示（前提加了 SEX_CLASS_MODE_OFF，此前与 6021 并排显示），「结束性技实操课」6021 "
+        "照常显示"
+    ),
     not judge_instruct_show("group_sex_end")
     and judge_instruct_show("end_sex_class"),
 )
 run_effect_list([407, 10011])
 check(
-    "H1 结束群交（371 效果串里的 407 / 10011）之后：群交模式已关、玩家与学生都已不在 H，课堂模式此刻还开着（效果串里没有 10015）",
+    (
+        "H1 结束群交（371 效果串里的 407 / 10011）之后：群交模式已关、玩家与学生都已不在 H，"
+        "课堂模式此刻还开着（效果串里没有 10015）"
+    ),
     not cache.group_sex_mode
     and not pl.sp_flag.is_h
     and not student_a.sp_flag.is_h
@@ -1084,7 +1093,10 @@ try:
 finally:
     update.game_update_flow = _saved_game_update_flow
 check(
-    "H1 复审补：最后一名学生力竭退出（commit_group_sex_tired_exit 的真实调用链）→ 结束群交 → 同一步里下课：课堂模式已关、那节课打上 ended、学生已不在 H",
+    (
+        "H1 复审补：最后一名学生力竭退出（commit_group_sex_tired_exit 的真实调用链）→ 结束群交 → 同一步里下课："
+        "课堂模式已关、那节课打上 ended、学生已不在 H"
+    ),
     _h1_flow_call == [(5, constant.Behavior.GROUP_SEX_END)]
     and not cache.sex_class_mode
     and sex_class_handle.get_running_class() is None
@@ -1336,7 +1348,10 @@ check(
 # 课堂 H 中玩家开时停（U1 单元复审补）：成员名单按身份认，旁观名单另判状态那一层（judge_sex_class_state_ok）。
 cache.time_stop_mode = True
 check(
-    "L9 复审补：时停中（全体 NPC 判意识不清）旁观名单为空：被冻结的学生不拿观摩收益、不派旁观口上（L9 按身份认之后此前照拿）",
+    (
+        "L9 复审补：时停中（全体 NPC 判意识不清）旁观名单为空：被冻结的学生不拿观摩收益、不派旁观口上（L9 "
+        "按身份认之后此前照拿）"
+    ),
     sex_class_handle.get_watcher_list() == [],
     sex_class_handle.get_watcher_list(),
 )
@@ -1361,7 +1376,10 @@ group_sex_panel.Edit_Group_Sex_Temple_Panel(190).show_target_chara_list(
 )
 _l11_text = list(drawn_text)
 check(
-    "L11 课堂模式：只列已在课堂 H 里的学生（女儿A、成年学生），不列跟随进教室的成年干员与没进 H 的学生（此前场上任何人都能选进模板）",
+    (
+        "L11 课堂模式：只列已在课堂 H 里的学生（女儿A、成年学生），不列跟随进教室的成年干员与没进 H "
+        "的学生（此前场上任何人都能选进模板）"
+    ),
     "[0000]女儿A" in _l11_text
     and "[0000]成年学生" in _l11_text
     and "[0000]成年干员" not in _l11_text
@@ -1394,7 +1412,8 @@ cache.sex_class_mode = False
 cache.group_sex_mode = False
 
 section(
-    "Plan 32 实施复审补：L11 主修加成只给课堂成员——经验写入段（common_default.base_chara_experience_common_settle）对非成员不乘加成"
+    "Plan 32 实施复审补：L11 主修加成只给课堂成员——经验写入段（common_default.base_chara_experience_common_settle）"
+    "对非成员不乘加成"
 )
 
 for _cid in (0, 201, 202, 204, 301, 303):
@@ -1423,8 +1442,11 @@ _l11_other_exp = growth_handle.get_subject_exp_id(72)
 _l11_members = sex_class_handle.get_class_member_list()
 _l11_bonus = sex_class_handle.get_subject_bonus(201)
 check(
-    "L11 前提：课堂模式开着、主修指技（主修经验 = 手交经验）；女儿A 被 10014 拉进课堂 H、是课堂成员；开课效果 464 把玩家的交互对象（非学生岗的成年干员）拉进了 H，"
-    "她在玩家场景、在 H 里却不是成员；在宿舍 H 里的女儿B 不在玩家场景、也不是成员",
+    (
+        "L11 前提：课堂模式开着、主修指技（主修经验 = 手交经验）；女儿A 被 10014 拉进课堂 H、是课堂成员；开课效果 464 "
+        "把玩家的交互对象（非学生岗的成年干员）拉进了 H，"
+        "她在玩家场景、在 H 里却不是成员；在宿舍 H 里的女儿B 不在玩家场景、也不是成员"
+    ),
     cache.sex_class_mode
     and cache.group_sex_mode
     and _l11_exp == growth_handle.get_subject_exp_id(70) > 0
@@ -1437,7 +1459,10 @@ check(
     (_l11_members, adult.sp_flag.is_h, adult.position),
 )
 check(
-    "L11 前提：主修加成倍率大于 1（为 1 时下面几条「不乘」恒真），对成年干员算出的倍率同样大于 1（挡住她的是成员判定，不是倍率）；别门性技的经验 id 与主修不同",
+    (
+        "L11 前提：主修加成倍率大于 1（为 1 时下面几条「不乘」恒真），对成年干员算出的倍率同样大于 "
+        "1（挡住她的是成员判定，不是倍率）；别门性技的经验 id 与主修不同"
+    ),
     _l11_bonus > 1
     and sex_class_handle.get_subject_bonus(301) > 1
     and _l11_other_exp not in (0, _l11_exp),

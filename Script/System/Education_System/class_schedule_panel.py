@@ -980,7 +980,8 @@ class Class_Schedule_Panel:
             overlay_draw.width = self.width
             overlay_draw.style = "gold_enrod"
             overlay_draw.text = _(
-                "  今天这一节由临时实操课（主修{0}）顶替；每周课表这一格：{1}\n  下面选科目、清空改的都是每周课表这一格；临时课请从「排一节性技实操课」进去修改或删除\n"
+                "  今天这一节由临时实操课（主修{0}）顶替；每周课表这一格：{1}\n  下面选科目、"
+                "清空改的都是每周课表这一格；临时课请从「排一节性技实操课」进去修改或删除\n"
             ).format(
                 sex_class_handle.get_ability_name(
                     temp_class.get("ability_id", -1)

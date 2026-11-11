@@ -69,7 +69,16 @@ class Chat_Ai_Setting_Panel:
                 # 输出提示信息
                 now_draw = draw.NormalDraw()
                 info_text = _(
-                    " \n ○文本生成AI是一个试验性的功能，存在相当多的风险，所以需要您确认以下所有免责事项才可以使用\n\n\n 1.该功能需要您自行准备好OpenAI/Gemini的API密钥，并保证电脑的网络环境可以正常访问该API，本游戏不会为您提供相关的获取方法，请自行准备\n\n\n   2.文本生成AI以及网络环境的使用会产生一定的费用，该费用需自己承担，与开发者没有任何关系\n\n\n 3.文本生成AI的使用可能会产生一定的风险，包括但不限于：聊天内容不当、聊天内容不符合社会规范等，开发者不对生成的内容负责，也不代表开发者同意或反对其中的任何观点\n\n\n 4.不恰当的使用过程或生成内容有可能会导致模型提供商对您的api和相关账号提出警告或进一步的停止服务等举措，请牢记该风险，相关的直接或间接损失均需您自己承担，与开发者无关\n\n\n 5.本声明的解释权归开发者所有，且在版本更新中声明内容可能有所变更，请以最新版本为准。\n\n\n 6.基于以上又叠了这么多层buff，明确知道自己在做什么，并且愿意承担费用和风险的人再来点击下一步吧\n\n\n"
+                    " \n ○文本生成AI是一个试验性的功能，存在相当多的风险，所以需要您确认以下所有免责事项才可以使用\n\n"
+                    "\n 1.该功能需要您自行准备好OpenAI/Gemini的API密钥，并保证电脑的网络环境可以正常访问该API，"
+                    "本游戏不会为您提供相关的获取方法，请自行准备\n\n\n   2.文本生成AI以及网络环境的使用会产生一定的费"
+                    "用，该费用需自己承担，与开发者没有任何关系\n\n\n 3.文本生成AI的使用可能会产生一定的风险，"
+                    "包括但不限于：聊天内容不当、聊天内容不符合社会规范等，开发者不对生成的内容负责，"
+                    "也不代表开发者同意或反对其中的任何观点\n\n\n 4.不恰当的使用过程或生成内容有可能会导致模型提供商对"
+                    "您的api和相关账号提出警告或进一步的停止服务等举措，请牢记该风险，"
+                    "相关的直接或间接损失均需您自己承担，与开发者无关\n\n\n 5.本声明的解释权归开发者所有，"
+                    "且在版本更新中声明内容可能有所变更，请以最新版本为准。\n\n\n 6.基于以上又叠了这么多层buff，"
+                    "明确知道自己在做什么，并且愿意承担费用和风险的人再来点击下一步吧\n\n\n"
                 )
                 now_draw.text = info_text
                 now_draw.width = self.width
@@ -114,13 +123,15 @@ class Chat_Ai_Setting_Panel:
                 "   开启本功能后，受网络连接速度和模型的文本生成速度影响，在生成文本时会有明显的延迟\n"
             )
             info_text += _(
-                "   系统提示词文件路径为 data/ui_text/text_ai_system_promote.csv ，可以根据自己的需要进行调整，调整后需重启游戏\n"
+                "   系统提示词文件路径为 data/ui_text/text_ai_system_promote.csv ，可以根据自己的需要进行调整，"
+                "调整后需重启游戏\n"
             )
             info_text += _(
                 "   如需对模型进行破甲/破限/越狱，同样也是将相关内容添加到上述系统提示词文件中\n"
             )
             info_text += _(
-                "   包含调用、输送数据在内的完整代码，见游戏源码文件路径 Script/UI/Panel/chat_ai_setting.py ，可以根据自己的需要进行调整，调整后需自行打包\n"
+                "   包含调用、输送数据在内的完整代码，见游戏源码文件路径 Script/UI/Panel/chat_ai_setting.py ，"
+                "可以根据自己的需要进行调整，调整后需自行打包\n"
             )
             now_draw.text = info_text
             now_draw.width = self.width
@@ -415,7 +426,8 @@ class Chat_Ai_Setting_Panel:
                 "  deepseek模型示例：deepseek-chat,deepseek-reasoner\n"
             )
             ask_text += _(
-                "  gemini模型示例：gemini-1.5-pro, gemini-1.5-flash，gemini-2.0-flash-exp, gemini-2.5-flash, gemini-2.5-pro\n"
+                "  gemini模型示例：gemini-1.5-pro, gemini-1.5-flash，gemini-2.0-flash-exp, gemini-2.5-flash, "
+                "gemini-2.5-pro\n"
             )
             ask_panel = panel.AskForOneMessage()
             ask_panel.set(ask_text, 99)
@@ -663,7 +675,8 @@ class Chat_Ai_Setting_Panel:
             # 输出提示信息
             now_draw = draw.NormalDraw()
             info_text = _(
-                " \n ○请在下方输入您的{0}，输入完成后点击[确定]即可保存，保存后会在当前目录下创建一个文件，请注意保管密钥文件，谨防泄露\n\n\n"
+                " \n ○请在下方输入您的{0}，输入完成后点击[确定]即可保存，保存后会在当前目录下创建一个文件，"
+                "请注意保管密钥文件，谨防泄露\n\n\n"
             ).format(key_type)
             now_draw.text = info_text
             now_draw.width = self.width

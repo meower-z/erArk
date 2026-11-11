@@ -338,10 +338,13 @@ def check_behavior_core_field_types() -> list[CheckFailure]:
             make_failure(
                 "BEHAV-07",
                 "行为核心字段类型正确",
-                f"角色cid={cid}(name={getattr(chara, 'name', '?')!r})的behavior字段类型损坏："
-                f"behavior类型={type(behavior).__name__}, behavior_id={getattr(behavior, 'behavior_id', None)!r}, "
-                f"start_time={getattr(behavior, 'start_time', None)!r}, duration={getattr(behavior, 'duration', None)!r}；"
-                f"类型损坏必须先于时间比较类检查被识别，BEHAV-10/11/12/22对该角色本轮跳过判定",
+                (
+                    f"角色cid={cid}(name={getattr(chara, 'name', '?')!r})的behavior字段类型损坏："
+                    f"behavior类型={type(behavior).__name__}, behavior_id={getattr(behavior, 'behavior_id', None)!r}, "
+                    f"start_time={getattr(behavior, 'start_time', None)!r}, "
+                    f"duration={getattr(behavior, 'duration', None)!r}；"
+                    f"类型损坏必须先于时间比较类检查被识别，BEHAV-10/11/12/22对该角色本轮跳过判定"
+                ),
                 [cid],
             )
         )
@@ -456,9 +459,12 @@ def check_behavior_start_time_not_sentinel() -> list[CheckFailure]:
             make_failure(
                 "BEHAV-10",
                 "活动角色的行为起时不得是哨兵",
-                f"角色cid={cid}(name={getattr(chara, 'name', '?')!r})的behavior.start_time仍是哨兵0001-01-01，"
-                f"说明该角色被主循环跳过未处理；behavior_id={behavior.behavior_id!r}, "
-                f"game_time={getattr(cache, 'game_time', None)!r}, cid in over_behavior_character={cid in over_behavior_character}",
+                (
+                    f"角色cid={cid}(name={getattr(chara, 'name', '?')!r})的behavior.start_time仍是哨兵0001-01-01，"
+                    f"说明该角色被主循环跳过未处理；behavior_id={behavior.behavior_id!r}, "
+                    f"game_time={getattr(cache, 'game_time', None)!r}, cid in "
+                    f"over_behavior_character={cid in over_behavior_character}"
+                ),
                 [cid],
             )
         )
@@ -502,9 +508,13 @@ def check_behavior_start_time_not_future() -> list[CheckFailure]:
             make_failure(
                 "BEHAV-11",
                 "行为起时不得晚于游戏时间",
-                f"角色cid={cid}(name={getattr(chara, 'name', '?')!r})的behavior.start_time={behavior.start_time!r}"
-                f"晚于cache.game_time={game_t!r}；behavior_id={behavior.behavior_id!r}, duration={behavior.duration!r}, "
-                f"time_stop_mode={getattr(cache, 'time_stop_mode', None)}, cid in over_behavior_character={cid in over_behavior_character}",
+                (
+                    f"角色cid={cid}(name={getattr(chara, 'name', '?')!r})的behavior.start_time={behavior.start_time!r}"
+                    f"晚于cache.game_time={game_t!r}；behavior_id={behavior.behavior_id!r}, "
+                    f"duration={behavior.duration!r}, "
+                    f"time_stop_mode={getattr(cache, 'time_stop_mode', None)}, cid in "
+                    f"over_behavior_character={cid in over_behavior_character}"
+                ),
                 [cid],
             )
         )
@@ -557,11 +567,15 @@ def check_no_stale_expired_behavior() -> list[CheckFailure]:
             make_failure(
                 "BEHAV-12",
                 "不得残留已过期的行为",
-                f"角色cid={cid}(name={getattr(chara, 'name', '?')!r})的行为已过期未被结算：behavior_id={behavior.behavior_id!r}, "
-                f"start_time={behavior.start_time!r}, duration={behavior.duration!r}, END={end_time!r} < game_time={game_t!r}；"
-                f"is_h={getattr(sp_flag, 'is_h', None)}, unconscious_h={getattr(sp_flag, 'unconscious_h', None)}, "
-                f"time_stop_mode={getattr(cache, 'time_stop_mode', None)}, group_sex_mode={group_sex_mode}, "
-                f"target_character_id={getattr(chara, 'target_character_id', None)}",
+                (
+                    f"角色cid={cid}(name={getattr(chara, 'name', '?')!r})的行为已过期未被结算："
+                    f"behavior_id={behavior.behavior_id!r}, "
+                    f"start_time={behavior.start_time!r}, duration={behavior.duration!r}, END={end_time!r} < "
+                    f"game_time={game_t!r}；"
+                    f"is_h={getattr(sp_flag, 'is_h', None)}, unconscious_h={getattr(sp_flag, 'unconscious_h', None)}, "
+                    f"time_stop_mode={getattr(cache, 'time_stop_mode', None)}, group_sex_mode={group_sex_mode}, "
+                    f"target_character_id={getattr(chara, 'target_character_id', None)}"
+                ),
                 [cid],
             )
         )
@@ -643,9 +657,13 @@ def check_move_behavior_has_executable_path() -> list[CheckFailure]:
             make_failure(
                 "BEHAV-14",
                 "移动行为必须带着可执行的路径",
-                f"角色cid={cid}(name={getattr(chara, 'name', '?')!r})的move行为快照非法：{'; '.join(problems)}；"
-                f"position={getattr(chara, 'position', None)!r}, move_final_target={getattr(behavior, 'move_final_target', None)!r}, "
-                f"duration={duration!r}, state={getattr(chara, 'state', None)!r}, is_follow={getattr(sp_flag, 'is_follow', None)!r}",
+                (
+                    f"角色cid={cid}(name={getattr(chara, 'name', '?')!r})的move行为快照非法：{'; '.join(problems)}；"
+                    f"position={getattr(chara, 'position', None)!r}, "
+                    f"move_final_target={getattr(behavior, 'move_final_target', None)!r}, "
+                    f"duration={duration!r}, state={getattr(chara, 'state', None)!r}, "
+                    f"is_follow={getattr(sp_flag, 'is_follow', None)!r}"
+                ),
                 [cid],
             )
         )
@@ -682,9 +700,12 @@ def check_interacting_character_end_info_valid() -> list[CheckFailure]:
             make_failure(
                 "BEHAV-15",
                 '"谁在跟我互动"的记录必须指向真实角色',
-                f"角色cid={cid}(name={getattr(chara, 'name', '?')!r})的action_info.interacting_character_end_info="
-                f"{info!r}指向的角色id={other_id!r}既不是哨兵-1也不在character_data中；"
-                f"game_time={getattr(cache, 'game_time', None)!r}, character_data键(前20个)={sorted(character_data.keys())[:20]}",
+                (
+                    f"角色cid={cid}(name={getattr(chara, 'name', '?')!r})的action_info.interacting_character_end_info="
+                    f"{info!r}指向的角色id={other_id!r}既不是哨兵-1也不在character_data中；"
+                    f"game_time={getattr(cache, 'game_time', None)!r}, "
+                    f"character_data键(前20个)={sorted(character_data.keys())[:20]}"
+                ),
                 [cid],
             )
         )
@@ -795,10 +816,13 @@ def check_second_behavior_values_and_pending_ids() -> list[CheckFailure]:
                 make_failure(
                     "BEHAV-17",
                     "二段行为取值与待结算id合法",
-                    f"角色cid={cid}(name={getattr(chara, 'name', '?')!r})的second_behavior存在非法取值v={v!r}"
-                    f"(type={type(v).__name__})，要求type是int且取值只能是0或1；"
-                    f"must_settle_second_behavior_id_list={must_settle!r}, must_show_second_behavior_id_list={must_show!r}, "
-                    f"behavior_id={behavior_id!r}, is_h={is_h}",
+                    (
+                        f"角色cid={cid}(name={getattr(chara, 'name', '?')!r})的second_behavior存在非法取值v={v!r}"
+                        f"(type={type(v).__name__})，要求type是int且取值只能是0或1；"
+                        f"must_settle_second_behavior_id_list={must_settle!r}, must_show_second_behavior_id_list="
+                        f"{must_show!r}, "
+                        f"behavior_id={behavior_id!r}, is_h={is_h}"
+                    ),
                     [cid],
                 )
             )
@@ -901,9 +925,13 @@ def check_time_stop_player_unconscious() -> list[CheckFailure]:
         make_failure(
             "BEHAV-19",
             "时停中玩家必须处于时停无意识态",
-            f"[warning] time_stop_mode=True但0号玩家sp_flag.unconscious_h={getattr(sp_flag, 'unconscious_h', None)!r}"
-            f"!=3，时停开关可能只跑了一半；is_h={getattr(sp_flag, 'is_h', None)}, "
-            f"已置3的NPC样本(至多10个)={unconscious_npcs}, time_stop_duration={getattr(achievement, 'time_stop_duration', None)!r}",
+            (
+                f"[warning] time_stop_mode=True但0号玩家sp_flag.unconscious"
+                f"_h={getattr(sp_flag, 'unconscious_h', None)!r}"
+                f"!=3，时停开关可能只跑了一半；is_h={getattr(sp_flag, 'is_h', None)}, "
+                f"已置3的NPC样本(至多10个)={unconscious_npcs}, "
+                f"time_stop_duration={getattr(achievement, 'time_stop_duration', None)!r}"
+            ),
             [0],
         )
     ]

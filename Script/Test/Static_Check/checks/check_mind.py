@@ -184,8 +184,11 @@ def check_time_stop_player_unconscious() -> list[CheckFailure]:
         make_failure(
             "MIND-01",
             "时停开启时玩家处于时停无意识",
-            f"时停开启(time_stop_mode=True)但玩家sp_flag.unconscious_h={u}(应为3)，"
-            f"behavior_id={_behavior_id(pl)}，累计时停时长={getattr(getattr(cache, 'achievement', None), 'time_stop_duration', '?')}",
+            (
+                f"时停开启(time_stop_mode=True)但玩家sp_flag.unconscious_h={u}(应为3)，"
+                f"behavior_id={_behavior_id(pl)}，"
+                f"累计时停时长={getattr(getattr(cache, 'achievement', None), 'time_stop_duration', '?')}"
+            ),
             [0],
         )
     ]
@@ -459,7 +462,10 @@ def check_hypnosis_degree_bound() -> list[CheckFailure]:
             make_failure(
                 "MIND-08",
                 "催眠深度值域",
-                f"[warning] 角色id={cid}({_name(chara)})的hypnosis.hypnosis_degree越界: {degree!r}(类型{type(degree).__name__}，合法范围[0,200])，玩家talent[331-334]={talents}",
+                (
+                    f"[warning] 角色id={cid}({_name(chara)})的hypnosis.hypnosis_degree越界: "
+                    f"{degree!r}(类型{type(degree).__name__}，合法范围[0,200])，玩家talent[331-334]={talents}"
+                ),
                 [cid],
             )
         )
@@ -494,9 +500,13 @@ def check_hypnosis_type_degree_threshold() -> list[CheckFailure]:
             make_failure(
                 "MIND-09",
                 "催眠类无意识状态需要对应的催眠深度",
-                f"[warning] 角色id={cid}({_name(chara)})unconscious_h={u}但hypnosis_degree={degree!r}未达门槛{thresholds[u]}，"
-                f"玩家hypnosis_type={getattr(getattr(pl, 'pl_ability', None), 'hypnosis_type', '?') if pl is not None else '?'}，"
-                f"talent[71/72/73]={ {tid: _talent_get(chara, tid) for tid in (71, 72, 73)} }",
+                (
+                    f"[warning] 角色id={cid}({_name(chara)})unconscious_h={u}但hypnosis_degree={degree!r}未达门槛"
+                    f"{thresholds[u]}，"
+                    f"玩家hypnosis_type="
+                    f"{getattr(getattr(pl, 'pl_ability', None), 'hypnosis_type', '?') if pl is not None else '?'}，"
+                    f"talent[71/72/73]={ {tid: _talent_get(chara, tid) for tid in (71, 72, 73)} }"
+                ),
                 [cid],
             )
         )
@@ -532,7 +542,10 @@ def check_hypnosis_talent_degree_order() -> list[CheckFailure]:
                 make_failure(
                     "MIND-10",
                     "被催眠素质不早于深度阈值",
-                    f"[warning] 角色id={cid}({_name(chara)})的被催眠素质与深度失序: talent[71/72/73]={talents} hypnosis_degree={d!r}",
+                    (
+                        f"[warning] 角色id={cid}({_name(chara)})的被催眠素质与深度失序: talent[71/72/73]={talents} "
+                        f"hypnosis_degree={d!r}"
+                    ),
                     [cid],
                 )
             )
@@ -571,7 +584,10 @@ def check_hypnosis_talent_requires_pl_prereq() -> list[CheckFailure]:
                 make_failure(
                     "MIND-11",
                     "被催眠素质需要玩家持有对应前置素质",
-                    f"[warning] 角色id={cid}({_name(chara)})的talent[71/72/73]={talents}但玩家talent[331/332/334]={pl_talents}",
+                    (
+                        f"[warning] 角色id={cid}({_name(chara)})的talent[71/72/73]={talents}但玩家talent[331/332/334]="
+                        f"{pl_talents}"
+                    ),
                     [cid],
                 )
             )
@@ -641,8 +657,11 @@ def check_hypnosis_behavior_mode_exclusive() -> list[CheckFailure]:
                 make_failure(
                     "MIND-13",
                     "三种催眠行为模式互斥",
-                    f"[warning] 角色id={cid}({_name(chara)})同时命中多个催眠行为模式: blockhead={modes[0]} active_h={modes[1]} roleplay非空={modes[2]}，"
-                    f"unconscious_h={_u(chara)} behavior_id={_behavior_id(chara)}",
+                    (
+                        f"[warning] 角色id={cid}({_name(chara)})同时命中多个催眠行为模式: blockhead={modes[0]} "
+                        f"active_h={modes[1]} roleplay非空={modes[2]}，"
+                        f"unconscious_h={_u(chara)} behavior_id={_behavior_id(chara)}"
+                    ),
                     [cid],
                 )
             )
@@ -675,10 +694,16 @@ def check_body_control_unconscious_needs_mode() -> list[CheckFailure]:
             make_failure(
                 "MIND-14",
                 "体控无意识必须由木头人或逆推支撑",
-                f"角色id={cid}({_name(chara)})unconscious_h=6但blockhead={getattr(h, 'blockhead', '?')} active_h={getattr(h, 'active_h', '?')} "
-                f"roleplay={getattr(h, 'roleplay', '?')} h_state.npc_active_h={getattr(h_state, 'npc_active_h', '?')} "
-                f"sp_flag.is_h={getattr(getattr(chara, 'sp_flag', None), 'is_h', '?')} time_stop_mode={getattr(cache, 'time_stop_mode', '?')} "
-                f"behavior_id={_behavior_id(chara)}",
+                (
+                    f"角色id={cid}({_name(chara)})unconscious_h=6但blockhead={getattr(h, 'blockhead', '?')} "
+                    f"active_h={getattr(h, 'active_h', '?')} "
+                    f"roleplay={getattr(h, 'roleplay', '?')} "
+                    f"h_state.npc_active_h="
+                    f"{getattr(h_state, 'npc_active_h', '?')} "
+                    f"sp_flag.is_h={getattr(getattr(chara, 'sp_flag', None), 'is_h', '?')} "
+                    f"time_stop_mode={getattr(cache, 'time_stop_mode', '?')} "
+                    f"behavior_id={_behavior_id(chara)}"
+                ),
                 [cid],
             )
         )
@@ -710,8 +735,11 @@ def check_mind_control_unconscious_needs_roleplay() -> list[CheckFailure]:
             make_failure(
                 "MIND-15",
                 "心控无意识必须有角色扮演项",
-                f"角色id={cid}({_name(chara)})unconscious_h=7但hypnosis.roleplay={getattr(h, 'roleplay', '?')!r}(应非空)，"
-                f"blockhead={getattr(h, 'blockhead', '?')} active_h={getattr(h, 'active_h', '?')}",
+                (
+                    f"角色id={cid}({_name(chara)})unconscious_h=7但hypnosis.roleplay={getattr(h, 'roleplay', '?')!r}(应"
+                    f"非空)，"
+                    f"blockhead={getattr(h, 'blockhead', '?')} active_h={getattr(h, 'active_h', '?')}"
+                ),
                 [cid],
             )
         )
@@ -764,8 +792,11 @@ def check_roleplay_list_shape() -> list[CheckFailure]:
                 make_failure(
                     "MIND-16",
                     "角色扮演列表的形状与内容合法",
-                    f"[warning] 角色id={cid}({_name(chara)})的roleplay含非法内容: 非正整数项{bad_type} 重复项{dup} 不在config_roleplay中的编号{bad_id}，"
-                    f"unconscious_h={_u(chara)}",
+                    (
+                        f"[warning] 角色id={cid}({_name(chara)})的roleplay含非法内容: 非正整数项{bad_type} 重复项{dup} "
+                        f"不在config_roleplay中的编号{bad_id}，"
+                        f"unconscious_h={_u(chara)}"
+                    ),
                     [cid],
                 )
             )
@@ -808,10 +839,13 @@ def check_body_mind_control_sub_item_requires_talent_73() -> list[CheckFailure]:
             make_failure(
                 "MIND-17",
                 "体控/心控子项需要「被完全催眠」素质",
-                f"角色id={cid}({_name(chara)})缺素质73但已开启子项{[k for k, v in sub_items.items() if v]}，"
-                f"talent[71/72/73]={ {tid: _talent_get(chara, tid) for tid in (71, 72, 73)} }，"
-                f"hypnosis_degree={getattr(h, 'hypnosis_degree', '?')}，"
-                f"玩家hypnosis_type={getattr(getattr(pl, 'pl_ability', None), 'hypnosis_type', '?') if pl is not None else '?'}",
+                (
+                    f"角色id={cid}({_name(chara)})缺素质73但已开启子项{[k for k, v in sub_items.items() if v]}，"
+                    f"talent[71/72/73]={ {tid: _talent_get(chara, tid) for tid in (71, 72, 73)} }，"
+                    f"hypnosis_degree={getattr(h, 'hypnosis_degree', '?')}，"
+                    f"玩家hypnosis_type="
+                    f"{getattr(getattr(pl, 'pl_ability', None), 'hypnosis_type', '?') if pl is not None else '?'}"
+                ),
                 [cid],
             )
         )
@@ -850,8 +884,11 @@ def check_air_hypnosis_colocated_with_anchor() -> list[CheckFailure]:
         make_failure(
             "MIND-18",
             "空气催眠者必须与玩家同处已记录的催眠地点",
-            f"[warning] 玩家position={pl_pos} air_hypnosis_position={air!r}，共{len(hits)}名unconscious_h=5的角色锚点/位置不一致"
-            f"(已知成因:集体催眠+单体解除清空共享锚点): {sample}{' ...' if len(hits) > 5 else ''}",
+            (
+                f"[warning] 玩家position={pl_pos} air_hypnosis_position={air!r}，共{len(hits)}名unconscious_h=5的角色锚"
+                f"点/位置不一致"
+                f"(已知成因:集体催眠+单体解除清空共享锚点): {sample}{' ...' if len(hits) > 5 else ''}"
+            ),
             [h[0] for h in hits],
         )
     ]
@@ -971,7 +1008,10 @@ def check_pl_hypnosis_type_valid() -> list[CheckFailure]:
         make_failure(
             "MIND-21",
             "玩家当前催眠类型合法且已解锁",
-            f"[warning] 玩家pl_ability.hypnosis_type={t!r}(类型{type(t).__name__})非法或未解锁对应前置素质，talent[331-334]={talents}",
+            (
+                f"[warning] 玩家pl_ability.hypnosis_type={t!r}(类型{type(t).__name__})非法或未解锁对应前置素质，"
+                f"talent[331-334]={talents}"
+            ),
             [0],
         )
     ]
@@ -998,8 +1038,11 @@ def check_unconscious_h_range() -> list[CheckFailure]:
                 make_failure(
                     "MIND-22",
                     "无意识状态取值域",
-                    f"[warning] 角色id={cid}({_name(chara)})的sp_flag.unconscious_h越界: {u!r}，"
-                    f"is_h={getattr(getattr(chara, 'sp_flag', None), 'is_h', '?')} behavior_id={_behavior_id(chara)} state={getattr(chara, 'state', '?')}",
+                    (
+                        f"[warning] 角色id={cid}({_name(chara)})的sp_flag.unconscious_h越界: {u!r}，"
+                        f"is_h={getattr(getattr(chara, 'sp_flag', None), 'is_h', '?')} "
+                        f"behavior_id={_behavior_id(chara)} state={getattr(chara, 'state', '?')}"
+                    ),
                     [cid],
                 )
             )
@@ -1029,8 +1072,12 @@ def check_sleep_behavior_state_alignment() -> list[CheckFailure]:
             make_failure(
                 "MIND-23",
                 "睡眠行为与角色状态ID对齐",
-                f"角色id={cid}({_name(chara)})behavior_id=sleep但state={state!r}(类型{type(state).__name__}，应为111)，"
-                f"start_time={getattr(behavior, 'start_time', '?')} duration={getattr(behavior, 'duration', '?')} sleep_point={getattr(chara, 'sleep_point', '?')}",
+                (
+                    f"角色id={cid}({_name(chara)})behavior_id=sleep但state="
+                    f"{state!r}(类型{type(state).__name__}，应为111)，"
+                    f"start_time={getattr(behavior, 'start_time', '?')} duration={getattr(behavior, 'duration', '?')} "
+                    f"sleep_point={getattr(chara, 'sleep_point', '?')}"
+                ),
                 [cid],
             )
         )
@@ -1060,8 +1107,11 @@ def check_sleep_point_bound() -> list[CheckFailure]:
             make_failure(
                 "MIND-24",
                 "熟睡值值域",
-                f"角色id={cid}({_name(chara)})的sleep_point越界: {sp!r}(合法范围[0,100])，"
-                f"tired_point={getattr(chara, 'tired_point', '?')} behavior_id={_behavior_id(chara)} unconscious_h={_u(chara)}",
+                (
+                    f"角色id={cid}({_name(chara)})的sleep_point越界: {sp!r}(合法范围[0,100])，"
+                    f"tired_point={getattr(chara, 'tired_point', '?')} behavior_id={_behavior_id(chara)} "
+                    f"unconscious_h={_u(chara)}"
+                ),
                 [cid],
             )
         )
@@ -1092,9 +1142,13 @@ def check_sleep_unconscious_needs_sleep_or_pretend() -> list[CheckFailure]:
             make_failure(
                 "MIND-25",
                 "睡眠无意识必须依附睡眠行为或装睡",
-                f"角色id={cid}({_name(chara)})unconscious_h=1但既不在sleep行为中也未装睡: behavior_id={_behavior_id(chara)} "
-                f"pretend_sleep={getattr(getattr(chara, 'h_state', None), 'pretend_sleep', '?')} sleep_h_awake={getattr(sp_flag, 'sleep_h_awake', '?')} "
-                f"sleep_point={getattr(chara, 'sleep_point', '?')} state={getattr(chara, 'state', '?')}",
+                (
+                    f"角色id={cid}({_name(chara)})unconscious_h=1但既不在sleep行为中也未装睡: "
+                    f"behavior_id={_behavior_id(chara)} "
+                    f"pretend_sleep={getattr(getattr(chara, 'h_state', None), 'pretend_sleep', '?')} "
+                    f"sleep_h_awake={getattr(sp_flag, 'sleep_h_awake', '?')} "
+                    f"sleep_point={getattr(chara, 'sleep_point', '?')} state={getattr(chara, 'state', '?')}"
+                ),
                 [cid],
             )
         )
@@ -1125,8 +1179,11 @@ def check_time_stop_orgasm_count_shape() -> list[CheckFailure]:
                 make_failure(
                     "MIND-28",
                     "时停高潮计数结构合法",
-                    f"[warning] 角色id={cid}({_name(chara)})的h_state.time_stop_orgasm_count结构非法: {d!r}，"
-                    f"time_stop_release={getattr(h_state, 'time_stop_release', '?')} time_stop_mode={getattr(cache, 'time_stop_mode', '?') if cache is not None else '?'}",
+                    (
+                        f"[warning] 角色id={cid}({_name(chara)})的h_state.time_stop_orgasm_count结构非法: {d!r}，"
+                        f"time_stop_release={getattr(h_state, 'time_stop_release', '?')} "
+                        f"time_stop_mode={getattr(cache, 'time_stop_mode', '?') if cache is not None else '?'}"
+                    ),
                     [cid],
                 )
             )
@@ -1167,8 +1224,12 @@ def check_sleep_plan_time_shape() -> list[CheckFailure]:
             make_failure(
                 "MIND-29",
                 "睡眠计划时分字段合法",
-                f"[warning] 角色id={cid}({_name(chara)})的睡眠计划时分字段非法: plan_to_sleep_time={sleep_t!r} plan_to_wake_time={wake_t!r}，"
-                f"sleep_time={getattr(action_info, 'sleep_time', '?')} wake_time={getattr(action_info, 'wake_time', '?')}",
+                (
+                    f"[warning] 角色id={cid}({_name(chara)})的睡眠计划时分字段非法: plan_to_sleep_time={sleep_t!r} "
+                    f"plan_to_wake_time={wake_t!r}，"
+                    f"sleep_time={getattr(action_info, 'sleep_time', '?')} "
+                    f"wake_time={getattr(action_info, 'wake_time', '?')}"
+                ),
                 [cid],
             )
         )
@@ -1197,9 +1258,12 @@ def check_pretend_sleep_should_be_unreachable() -> list[CheckFailure]:
             make_failure(
                 "MIND-30",
                 "装睡标记在当前版本不应出现",
-                f"[warning] 角色id={cid}({_name(chara)})的h_state.pretend_sleep=True(当前版本该写入路径应不可达，属死代码复活警报): "
-                f"is_h={getattr(sp_flag, 'is_h', '?')} unconscious_h={_u(chara)} behavior_id={_behavior_id(chara)} "
-                f"sleep_h_awake={getattr(sp_flag, 'sleep_h_awake', '?')}",
+                (
+                    f"[warning] 角色id={cid}({_name(chara)})的h_state.pretend_sleep=True(当前版本该写入路径应不可达，"
+                    f"属死代码复活警报): "
+                    f"is_h={getattr(sp_flag, 'is_h', '?')} unconscious_h={_u(chara)} behavior_id={_behavior_id(chara)} "
+                    f"sleep_h_awake={getattr(sp_flag, 'sleep_h_awake', '?')}"
+                ),
                 [cid],
             )
         )
