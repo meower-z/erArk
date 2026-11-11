@@ -162,15 +162,19 @@ class Born_Panel:
                 if self.soft_egg_mode:
                     if len(self.egg_id_list) >= 2:
                         info_draw.text = _(
-                            "\n 得知了{0}在育儿室悉心孵化的{1}颗受精卵粒即将孵化的消息后，你第一时间赶到了医疗部住院区，看着她小心翼翼地捧着那团凝胶里微微搏动的卵粒，静候新生命的到来\n"
+                            "\n 得知了{0}在育儿室悉心孵化的{1}颗受精卵粒即将孵化的消息后，"
+                            "你第一时间赶到了医疗部住院区，看着她小心翼翼地捧着那团凝胶里微微搏动的卵粒，"
+                            "静候新生命的到来\n"
                         ).format(mom_character_data.name, len(self.egg_id_list))
                     else:
                         info_draw.text = _(
-                            "\n 得知了{0}在育儿室悉心孵化的受精卵粒即将孵化的消息后，你第一时间赶到了医疗部住院区，看着她小心翼翼地捧着那团凝胶里微微搏动的卵粒，静候新生命的到来\n"
+                            "\n 得知了{0}在育儿室悉心孵化的受精卵粒即将孵化的消息后，你第一时间赶到了医疗部住院区，"
+                            "看着她小心翼翼地捧着那团凝胶里微微搏动的卵粒，静候新生命的到来\n"
                         ).format(mom_character_data.name)
                 elif self.egg_mode:
                     info_draw.text = _(
-                        "\n 得知了{0}在育儿室悉心孵化的卵即将破壳的消息后，你第一时间赶到了医疗部住院区，看着她小心翼翼地捧着微微颤动的卵，静候新生命的到来\n"
+                        "\n 得知了{0}在育儿室悉心孵化的卵即将破壳的消息后，你第一时间赶到了医疗部住院区，"
+                        "看着她小心翼翼地捧着微微颤动的卵，静候新生命的到来\n"
                     ).format(mom_character_data.name)
                 else:
                     info_draw.text = _(
@@ -212,28 +216,32 @@ class Born_Panel:
                 if self.soft_egg_mode:
                     if born_count >= 2:
                         info_draw.text = _(
-                            " 在{0}的看护下，凝胶里的卵粒一颗颗地胀大、变得透亮，包裹着它们的胶质终于相继化开，{1}个小小的身影先后从凝胶中挣脱出来，此起彼伏地发出了响亮的啼哭\n"
+                            " 在{0}的看护下，凝胶里的卵粒一颗颗地胀大、变得透亮，包裹着它们的胶质终于相继化开，"
+                            "{1}个小小的身影先后从凝胶中挣脱出来，此起彼伏地发出了响亮的啼哭\n"
                         ).format(doctor_character_data.name, born_count)
                         info_draw.text += _(
                             " {0}把刚刚脱出凝胶的{1}个婴儿一一擦拭干净抱在怀里，对着你微微一笑，催促你逐个给孩子起名\n"
                         ).format(mom_character_data.name, born_count)
                     else:
                         info_draw.text = _(
-                            " 在{0}的看护下，凝胶里那颗受精的卵粒一点点胀大、变得透亮，包裹着它的胶质终于化开，一个小小的身影从凝胶中挣脱出来，发出了响亮的啼哭\n"
+                            " 在{0}的看护下，凝胶里那颗受精的卵粒一点点胀大、变得透亮，包裹着它的胶质终于化开，"
+                            "一个小小的身影从凝胶中挣脱出来，发出了响亮的啼哭\n"
                         ).format(doctor_character_data.name)
                         info_draw.text += _(
                             " {0}把刚刚脱出凝胶的婴儿擦拭干净抱在怀里，对着你微微一笑，催促你给孩子起名\n"
                         ).format(mom_character_data.name)
                 elif self.egg_mode:
                     info_draw.text = _(
-                        " 在{0}的看护下，蛋壳上的裂纹越来越多，终于随着一声清脆的破裂声，一个小小的身影从蛋壳中探出头来，发出了响亮的啼哭\n"
+                        " 在{0}的看护下，蛋壳上的裂纹越来越多，终于随着一声清脆的破裂声，"
+                        "一个小小的身影从蛋壳中探出头来，发出了响亮的啼哭\n"
                     ).format(doctor_character_data.name)
                     info_draw.text += _(
                         " {0}轻轻抱起了刚刚破壳而出的婴儿，对着你微微一笑，催促你给孩子起名\n"
                     ).format(mom_character_data.name)
                 elif identical_twins_flag:
                     info_draw.text = _(
-                        " 经过了漫长的等待之后，随着响亮的哭声，{0}推开产房的门，告诉你{1}生了一对同卵双胞胎女儿，母女平安\n"
+                        " 经过了漫长的等待之后，随着响亮的哭声，{0}推开产房的门，告诉你{1}生了一对同卵双胞胎女儿，"
+                        "母女平安\n"
                     ).format(
                         doctor_character_data.name, mom_character_data.name
                     )
@@ -242,7 +250,8 @@ class Born_Panel:
                     ).format(mom_character_data.name)
                 elif born_count >= 2:
                     info_draw.text = _(
-                        " 经过了漫长的等待之后，随着此起彼伏的哭声，{0}推开产房的门，告诉你{1}生了{2}个可爱的女儿，母女平安\n"
+                        " 经过了漫长的等待之后，随着此起彼伏的哭声，{0}推开产房的门，告诉你{1}生了{2}个可爱的女儿，"
+                        "母女平安\n"
                     ).format(
                         doctor_character_data.name,
                         mom_character_data.name,
@@ -253,7 +262,8 @@ class Born_Panel:
                     ).format(mom_character_data.name, born_count)
                 else:
                     info_draw.text = _(
-                        " 经过了漫长的等待之后，随着响亮的哭声，{0}推开产房的门，告诉你{1}生了一个可爱的女儿，母女平安\n"
+                        " 经过了漫长的等待之后，随着响亮的哭声，{0}推开产房的门，告诉你{1}生了一个可爱的女儿，"
+                        "母女平安\n"
                     ).format(
                         doctor_character_data.name, mom_character_data.name
                     )

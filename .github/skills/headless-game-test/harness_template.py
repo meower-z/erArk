@@ -179,7 +179,8 @@ if ENABLE_PROBE and WATCH:
         if character_id in WATCH:
             cd = cache.character_data[character_id]
             print(
-                f"    [find后] cid={character_id} bhv={cd.behavior.behavior_id} dur={cd.behavior.duration} state={cd.state}"
+                f"    [find后] cid={character_id} bhv={cd.behavior.behavior_id} dur={cd.behavior.duration} "
+                f"state={cd.state}"
             )
 
     handle_npc_ai.find_character_target = _wrap_find
@@ -205,7 +206,8 @@ if ENABLE_PROBE and WATCH:
         if character_id in WATCH:
             cd = cache.character_data[character_id]
             print(
-                f"    [中断判定] cid={character_id} 前={pre} 返回={r} 后=({cd.behavior.behavior_id},{cd.behavior.duration})"
+                f"    [中断判定] cid={character_id} 前={pre} 返回={r} 后=({cd.behavior.behavior_id},"
+                f"{cd.behavior.duration})"
             )
         return r
 

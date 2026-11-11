@@ -1298,7 +1298,10 @@ _must_line = next(
     (t for t in drawn_text if "必修（无论原本排了什么都来" in t), ""
 )
 check(
-    "L12 复审补：点名之后被监禁的必修女儿02 仍列在必修行，同时列进「此刻进不了课堂」（此前 L12 把必修生从三份名单去掉后这一行漏了她）",
+    (
+        "L12 复审补：点名之后被监禁的必修女儿02 仍列在必修行，同时列进「此刻进不了课堂」（此前 L12 "
+        "把必修生从三份名单去掉后这一行漏了她）"
+    ),
     "女儿02" in _must_line
     and "另有 1 人会到场，但此刻进不了课堂" in _blocked_line
     and "女儿02" in _blocked_line
@@ -1332,7 +1335,10 @@ move_to(201, classroom_path(ROOM1))
 _st.behavior.behavior_id = constant.Behavior.SELF_STUDY
 _tip = character_info_head.get_now_class_tip(201)
 check(
-    "L15 本节没排教师、在自习：悬停写「本节无教师，按自习收益」，不再写「经验减半」（自习经验是理论课的 1/3、实践课的 1/5）",
+    (
+        "L15 本节没排教师、在自习：悬停写「本节无教师，按自习收益」，不再写「经验减半」（自习经验是理论课的 1/3、"
+        "实践课的 1/5）"
+    ),
     _tip is not None
     and not _tip[0]
     and "本节无教师，按自习收益" in _tip[1]
@@ -1479,7 +1485,10 @@ section(
 )
 
 check(
-    "L28 个人课表 / 养成总览 / 日程模板面板不再定义 window_width、不再导入 normal_config（全局课表的[返回]仍在用 window_width，保留）",
+    (
+        "L28 个人课表 / 养成总览 / 日程模板面板不再定义 window_width、不再导入 normal_config（全局课表的[返回]仍在用 "
+        "window_width，保留）"
+    ),
     not any(
         hasattr(module, name)
         for module in (

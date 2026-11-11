@@ -459,7 +459,11 @@ def check_island_09_work_set_recompute() -> list[CheckFailure]:
         if not extra and not missing:
             continue
         detail = [
-            f"cid={cid},name={_chara_name(cd, cid)},work_type={getattr(cd.get(cid), 'work', None) and cd[cid].work.work_type},{_sp_flag_brief(cd.get(cid))}"
+            (
+                f"cid={cid},name={_chara_name(cd, cid)},"
+                f"work_type={getattr(cd.get(cid), 'work', None) and cd[cid].work.work_type},"
+                f"{_sp_flag_brief(cd.get(cid))}"
+            )
             for cid in sorted(extra | missing)
         ]
         failures.append(
@@ -783,7 +787,10 @@ def check_island_15_line_main_operator() -> list[CheckFailure]:
         if dup or illegal:
             dup_lines = sorted(line_id for line_id, m in mains if m in dup)
             detail = [
-                f"line_id={lid},m={m},{_chara_name(cd, m)},work_type={cd[m].work.work_type if m in cd else None},{_sp_flag_brief(cd.get(m))}"
+                (
+                    f"line_id={lid},m={m},{_chara_name(cd, m)},work_type={cd[m].work.work_type if m in cd else None},"
+                    f"{_sp_flag_brief(cd.get(m))}"
+                )
                 for lid, m in illegal
             ]
             failures.append(
@@ -853,9 +860,12 @@ def check_island_16_dormitory_managers_structure() -> list[CheckFailure]:
             make_failure(
                 "ISLAND-16",
                 "宿舍管理员表结构与引用合法",
-                f"dormitory_managers全量={dormitory_managers}，非法层键={illegal_layers}，"
-                f"非法值={illegal_values}，重复管理员及其层号={[(m, [n for n, mm in non_zero if mm == m]) for m in dup_managers]}，"
-                f"不存在的cid={ghost_ids}",
+                (
+                    f"dormitory_managers全量={dormitory_managers}，非法层键={illegal_layers}，"
+                    f"非法值={illegal_values}，"
+                    f"重复管理员及其层号={[(m, [n for n, mm in non_zero if mm == m]) for m in dup_managers]}，"
+                    f"不存在的cid={ghost_ids}"
+                ),
                 [m for m in manager_ids if m in dup_managers]
                 + [m for _l, m in ghost_ids],
             )
@@ -1076,8 +1086,11 @@ def check_island_21_book_borrow_consistency() -> list[CheckFailure]:
                 make_failure(
                     "ISLAND-21",
                     "借书记录双向一致且不超借阅上限",
-                    f"book_id={book}({book_name})记录holder={holder}({_chara_name(cd, holder)})，"
-                    f"但其borrow_book_id_set={cd[holder].entertainment.borrow_book_id_set if holder in cd else '(角色不存在)'}中不含该书",
+                    (
+                        f"book_id={book}({book_name})记录holder={holder}({_chara_name(cd, holder)})，"
+                        f"但其borrow_book_id_set="
+                        f"{cd[holder].entertainment.borrow_book_id_set if holder in cd else '(角色不存在)'}中不含该书"
+                    ),
                     [holder] if holder in cd else [],
                 )
             )
@@ -1170,7 +1183,10 @@ def check_island_22_party_day_of_week() -> list[CheckFailure]:
             make_failure(
                 "ISLAND-22",
                 "一周派对排期键值合法且同一娱乐不占两天",
-                f"重复出现的娱乐id与对应天={dup_days}，当前weekday={getattr(cache.game_time, 'weekday', lambda: '?')()}",
+                (
+                    f"重复出现的娱乐id与对应天={dup_days}，"
+                    f"当前weekday={getattr(cache.game_time, 'weekday', lambda: '?')()}"
+                ),
                 [],
             )
         )
@@ -1267,8 +1283,12 @@ def check_island_24_auto_trade_setting() -> list[CheckFailure]:
                 make_failure(
                     "ISLAND-24",
                     "自动交易设置键与阈值合法",
-                    f"resource_id={rid}({game_config.config_resouce[rid].name if rid in game_config.config_resouce else '不存在'})，"
-                    f"完整setting字典={s}，缺失的键={sorted(keys_required - set(s)) if isinstance(s, dict) else '(非dict)'}",
+                    (
+                        f"resource_id={rid}("
+                        f"{game_config.config_resouce[rid].name if rid in game_config.config_resouce else '不存在'})，"
+                        f"完整setting字典={s}，"
+                        f"缺失的键={sorted(keys_required - set(s)) if isinstance(s, dict) else '(非dict)'}"
+                    ),
                     [],
                 )
             )
@@ -1606,7 +1626,10 @@ def check_island_28_main_power_operator_slots() -> list[CheckFailure]:
     ]
     if dup or illegal:
         detail = [
-            f"cid={m},{_chara_name(cd, m)},work_type={cd[m].work.work_type if m in cd else None},{_sp_flag_brief(cd.get(m))}"
+            (
+                f"cid={m},{_chara_name(cd, m)},work_type={cd[m].work.work_type if m in cd else None},"
+                f"{_sp_flag_brief(cd.get(m))}"
+            )
             for m in sorted(set(dup) | set(illegal))
         ]
         return [
@@ -1932,9 +1955,12 @@ def check_island_33_diplomat_mapping_consistency() -> list[CheckFailure]:
                     make_failure(
                         "ISLAND-33",
                         "外交官映射、岗位与外派标记三方一致",
-                        f"[warning] 角色cid={cid}({ch.name})的sp_flag.in_diplomatic_visit={ch.sp_flag.in_diplomatic_visit}，"
-                        f"但diplomat_of_country[{ch.sp_flag.in_diplomatic_visit}]未指回该角色"
-                        f"(实际映射到seen.get(cid)={seen.get(cid)})",
+                        (
+                            f"[warning] 角色cid={cid}({ch.name})的sp_flag.in_diplomatic_visit="
+                            f"{ch.sp_flag.in_diplomatic_visit}，"
+                            f"但diplomat_of_country[{ch.sp_flag.in_diplomatic_visit}]未指回该角色"
+                            f"(实际映射到seen.get(cid)={seen.get(cid)})"
+                        ),
                         [cid],
                     )
                 )

@@ -25,7 +25,10 @@ class PRTSCharacterDownloader:
 
         功能描述：设置下载器的基本配置和用户代理
         """
-        self.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        self.user_agent = (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 "
+            "Safari/537.36"
+        )
 
         # 特殊角色的预定义映射
         self.special_characters = {

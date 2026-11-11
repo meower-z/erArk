@@ -149,7 +149,10 @@ class Manage_Library_Panel:
                     book_data = game_config.config_book[book_cid]
                     if cache.rhodes_island.book_borrow_dict[book_cid] > 0:
                         book_count += 1
-                        book_text = f"  [{str(book_count).rjust(3,'0')}]({book_type_data.son_type_name}){book_data.name}"
+                        book_text = (
+                            f"  [{str(book_count).rjust(3,'0')}]("
+                            f"{book_type_data.son_type_name}){book_data.name}"
+                        )
                         borrow_npc_id = cache.rhodes_island.book_borrow_dict[
                             book_cid
                         ]

@@ -612,7 +612,10 @@ def describe_run(run):
         str: 说明
     """
     out = f" out {run['out']}" if run.get("out") else ""
-    return f"槽位 {run['slots']} pid {run['pid']} {run['mode']} 内存上限 {run['mem_max_mib']} MiB cwd {run['cwd']}{out}：{run['command']}"
+    return (
+        f"槽位 {run['slots']} pid {run['pid']} {run['mode']} 内存上限 {run['mem_max_mib']} MiB cwd {run['cwd']}{out}："
+        f"{run['command']}"
+    )
 
 
 def emit(event):
@@ -633,7 +636,10 @@ def refuse_busy(count, runs, orphans):
         orphans (list[str]): 不属于任何运行的存活 scope
     """
     if orphans:
-        head = f"有不属于任何运行的 era-game scope 还活着：{' '.join(orphans)}。启动它的进程已不在；它占的内存不归任何槽位管，所以先不启动新的。"
+        head = (
+            f"有不属于任何运行的 era-game scope 还活着：{' '.join(orphans)}。启动它的进程已不在；"
+            f"它占的内存不归任何槽位管，所以先不启动新的。"
+        )
     else:
         free = SLOTS - len(slot_holders())
         head = f"槽位不够：这次需要 {count} 个，空着 {free} 个（全机 {SLOTS} 个，每个 {SLOT_SIZE}）。"
@@ -689,8 +695,12 @@ def check_headroom(mem_max):
     print(
         f"内存余量不足，拒绝启动：需要 {mib(mem_max)} MiB，只剩 {mib(headroom)} MiB。\n"
         + early_line
-        + f"容器余量 {mib(container)} MiB：限速线 memory.high = {mib(high)} MiB；已用 anon {mib(stat['anon'])} MiB、shmem {mib(stat['shmem'])} MiB（/dev/shm 里的文件）、kernel {mib(stat['kernel'])} MiB。\n"
-        "占用最多的进程：\n" + "\n".join(top),
+        + (
+            f"容器余量 {mib(container)} MiB：限速线 memory.high = {mib(high)} MiB；已用 anon {mib(stat['anon'])} MiB、"
+            f"shmem {mib(stat['shmem'])} MiB（/dev/shm 里的文件）、kernel {mib(stat['kernel'])} MiB。\n"
+            "占用最多的进程：\n"
+        )
+        + "\n".join(top),
         file=sys.stderr,
     )
     sys.exit(EXIT_NO_HEADROOM)
@@ -803,7 +813,10 @@ def run(
     count = slots_needed(mem_max, Path(cwd))
     if count > SLOTS:
         print(
-            f"内存上限 {mib(mem_max)} MiB 要占 {count} 个槽位，超过全机的 {SLOTS} 个（每个 {SLOT_SIZE}），等多久都启动不了。把 --mem 降到 {SLOTS} × {SLOT_SIZE} 以内。",
+            (
+                f"内存上限 {mib(mem_max)} MiB 要占 {count} 个槽位，超过全机的 {SLOTS} 个（每个 {SLOT_SIZE}），"
+                f"等多久都启动不了。把 --mem 降到 {SLOTS} × {SLOT_SIZE} 以内。"
+            ),
             file=sys.stderr,
         )
         sys.exit(2)
@@ -1042,7 +1055,10 @@ def cmd_stop(target=None):
             return 1
         if len(runs) + len(orphans) > 1:
             print(
-                f"有不止一次运行，不默认停任何一个。用 `limited_run.py stop <槽位|pid>` 指定，只停你自己启动的：\n{listing}",
+                (
+                    f"有不止一次运行，不默认停任何一个。用 `limited_run.py stop <槽位|pid>` 指定，只停你自己启动的：\n"
+                    f"{listing}"
+                ),
                 file=sys.stderr,
             )
             return 1
@@ -1115,8 +1131,14 @@ def main(argv=None):
         return cmd_stop(*argv[1:])
     parser = argparse.ArgumentParser(
         prog="limited_run.py",
-        usage=f"%(prog)s [--mem {DEFAULT_MEM}] [--timeout 600] -- <命令...>\n       %(prog)s status\n       %(prog)s stop [槽位|pid]",
-        description=f"在内存上限、运行时限和全机 {SLOTS} 个游戏槽位（每个 {SLOT_SIZE}）下运行一条命令；status 列出正在运行的实例，stop 停掉其中一个",
+        usage=(
+            f"%(prog)s [--mem {DEFAULT_MEM}] [--timeout 600] -- <命令...>\n       %(prog)s status\n       %(prog)s "
+            f"stop [槽位|pid]"
+        ),
+        description=(
+            f"在内存上限、运行时限和全机 {SLOTS} 个游戏槽位（每个 {SLOT_SIZE}）下运行一条命令；status "
+            f"列出正在运行的实例，stop 停掉其中一个"
+        ),
     )
     parser.add_argument(
         "--mem",

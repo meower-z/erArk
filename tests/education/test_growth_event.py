@@ -448,7 +448,8 @@ check(
 )
 
 section(
-    "Plan 29 §3.3 / L2：抬头写本阶段第几天（按游戏日历数）；改了岗的萝莉照推期末事件（用户拍板：成绩单照出并写明理由，推送不收窄）"
+    "Plan 29 §3.3 / L2：抬头写本阶段第几天（按游戏日历数）；改了岗的萝莉照推期末事件（用户拍板：成绩单照出并写明理由，"
+    "推送不收窄）"
 )
 # 今天 2026-09-07 09:00（游戏时间）：萝莉与幼女的本阶段都从 30 天前（2026-06-07 09:00）起，婴儿 5 天前出生
 set_time(DEFAULT_TIME)
@@ -823,7 +824,10 @@ check(
 )
 _now = candidate_uid_set(211)
 check(
-    "L10 / Plan 32 L22 听过 20 节课、有课、有同胞，没有待查看的新成绩单：原萝莉 1 / 20 / 26 与期末 17 / 18 / 19 都不在日常候选里",
+    (
+        "L10 / Plan 32 L22 听过 20 节课、有课、有同胞，没有待查看的新成绩单：原萝莉 1 / 20 / 26 与期末 17 / 18 / 19 "
+        "都不在日常候选里"
+    ),
     not (_report_uid & _now),
     sorted(_report_uid & _now),
 )
@@ -987,7 +991,10 @@ check(
 official_event_handle.push_official_event(loli_bucket[0], 201)
 _pushed = growth_event_handle.push_birthday_event()
 check(
-    "M2 今天过生日的萝莉：通用 3 插在队首、主体是她；成年姐姐不在日常派发名单里、不推（此前只能靠每晚 70% 再按权重抽中，约 1.6%）",
+    (
+        "M2 今天过生日的萝莉：通用 3 插在队首、主体是她；成年姐姐不在日常派发名单里、不推（此前只能靠每晚 70% "
+        "再按权重抽中，约 1.6%）"
+    ),
     _pushed == [211]
     and queue_pair_list()
     == [(E.BIRTHDAY_EVENT_UID, 211), (loli_bucket[0], 201)],
@@ -1069,7 +1076,10 @@ check(
     sorted(_marker_used - E.STAGE_TALENT_PREMISE_SET),
 )
 check(
-    "L16 judge_stage_marker_pass：前提不写阶段记号的恒成立，写了的按当前阶段判（通用 27 不派萝莉、期末 3 只派萝莉），事件不存在的不成立",
+    (
+        "L16 judge_stage_marker_pass：前提不写阶段记号的恒成立，写了的按当前阶段判（通用 27 不派萝莉、期末 3 只派萝莉）"
+        "，事件不存在的不成立"
+    ),
     growth_event_handle.judge_stage_marker_pass("通用16", 201)
     and growth_event_handle.judge_stage_marker_pass("通用27", 202)
     and not growth_event_handle.judge_stage_marker_pass("通用27", 201)
@@ -1094,7 +1104,10 @@ growing.talent[101], growing.talent[102] = 0, 1
 _dropped = growth_event_handle.drop_stale_stage_event(215)
 _left = queue_pair_list()
 check(
-    "L16 婴儿→幼女：她的婴儿 5 清掉（1 条）；通用 27（前提写着不派萝莉，幼女照派）、通用 16（前提为空）与期末 1 照留，别的孩子的不动",
+    (
+        "L16 婴儿→幼女：她的婴儿 5 清掉（1 条）；通用 27（前提写着不派萝莉，幼女照派）、通用 16（前提为空）与期末 1 "
+        "照留，别的孩子的不动"
+    ),
     _dropped == 1
     and _left
     == [
@@ -1153,7 +1166,10 @@ for _uid in (child_bucket[0], "通用27", "通用16"):
     official_event_handle.push_official_event(_uid, 216)
 pregnancy_handle.check_grow_to_loli(216)
 check(
-    "L16 幼女长成萝莉（pregnancy_handle.check_grow_to_loli）：素质已换成萝莉，幼女桶的与前提写着不派萝莉的通用 27 清掉，通用 16 照留",
+    (
+        "L16 幼女长成萝莉（pregnancy_handle.check_grow_to_loli）：素质已换成萝莉，幼女桶的与前提写着不派萝莉的通用 27 "
+        "清掉，通用 16 照留"
+    ),
     to_loli.talent[103] == 1
     and to_loli.talent[102] == 0
     and queue_pair_list() == [("通用16", 216)],
@@ -1171,7 +1187,10 @@ pregnancy_handle.check_grow_to_girl(217)
 talk.must_show_talk_check = _orig_must_show
 _left_217 = [one[0] for one in queue_pair_list() if one[1] == 217]
 check(
-    "L16 萝莉成年（pregnancy_handle.check_grow_to_girl）：残留的萝莉桶、通用桶与前提写着只派萝莉的期末 3 清掉，期末 1 照留；毕业典礼在队首、成年纪念紧随，通用 59 / 60 在队尾",
+    (
+        "L16 萝莉成年（pregnancy_handle.check_grow_to_girl）：残留的萝莉桶、通用桶与前提写着只派萝莉的期末 3 清掉，"
+        "期末 1 照留；毕业典礼在队首、成年纪念紧随，通用 59 / 60 在队尾"
+    ),
     to_girl.talent[104] == 1
     and queue_pair_list()[0] == (E.GRADUATION_EVENT_UID, 217)
     and _left_217
@@ -1250,7 +1269,10 @@ check(
 )
 _pushed = growth_event_handle.push_birthday_event()
 check(
-    "M2 姐姐被塞着口球：生日事件照样推入（逐条判前提、不带口上的口球判定），两人仍按 id 升序排在队首（此前她一辈子仅此一次的生日就错过了）",
+    (
+        "M2 姐姐被塞着口球：生日事件照样推入（逐条判前提、不带口上的口球判定），两人仍按 id "
+        "升序排在队首（此前她一辈子仅此一次的生日就错过了）"
+    ),
     _pushed == [218, 219] and queue_pair_list()[:2] == _twin_head,
     (_pushed, queue_pair_list()),
 )
@@ -1288,7 +1310,10 @@ try:
 except Exception as error:
     _weight_direct = repr(error)
 check(
-    "M2 judge_premise_all_pass：CVP 的 Weight|0 只管权重、跳过不判（直接当条件求值不成立：返回 0 或抛异常），同串的别的前提照判",
+    (
+        "M2 judge_premise_all_pass：CVP 的 Weight|0 只管权重、跳过不判（直接当条件求值不成立：返回 0 或抛异常），"
+        "同串的别的前提照判"
+    ),
     (isinstance(_weight_direct, str) or not _weight_direct)
     and JP(_weight_token, 218) is True
     and JP(_weight_token + "&" + _birthday_premise, 218) is True
@@ -1325,19 +1350,28 @@ finally:
             _orig_high_5
         )
 check(
-    "M2 judge_premise_all_pass：high_ 开头的权重前提跳过不判（high_5 已注册；换成返回 0 的记录桩后一次都没被调到，整组照样成立）",
+    (
+        "M2 judge_premise_all_pass：high_ 开头的权重前提跳过不判（high_5 已注册；换成返回 0 的记录桩后一次都没被调到，"
+        "整组照样成立）"
+    ),
     _orig_high_5 is not None and _high_pass is True and _high_calls == [],
     _high_calls,
 )
 _target_premise = constant_promise.Premise.TARGET_IS_PLAYER_DAUGHTER
 twin_a.target_character_id = 102
 check(
-    "M2 judge_premise_all_pass：判定期间交互对象指向 partner_id——指向妹妹 219 时 target_is_player_daughter 成立，判完交互对象还原为原来的 102（母亲）",
+    (
+        "M2 judge_premise_all_pass：判定期间交互对象指向 partner_id——指向妹妹 219 时 target_is_player_daughter 成立，"
+        "判完交互对象还原为原来的 102（母亲）"
+    ),
     JP(_target_premise, 218, 219) is True and twin_a.target_character_id == 102,
     twin_a.target_character_id,
 )
 check(
-    "M2 judge_premise_all_pass：指向博士（0）时不成立、中途返回 False，交互对象同样还原为 102；原交互对象（母亲）本身判不过这条前提",
+    (
+        "M2 judge_premise_all_pass：指向博士（0）时不成立、中途返回 False，交互对象同样还原为 102；原交互对象（母亲）"
+        "本身判不过这条前提"
+    ),
     JP(_target_premise, 218, 0) is False
     and twin_a.target_character_id == 102
     and not HP(_target_premise, 218),
@@ -1435,7 +1469,10 @@ try:
 finally:
     setattr(_draw_module.WaitDraw, "draw", _orig_wait_draw)
 check(
-    "§8.2 draw_result：选定第 2 个选项后画一个 WaitDraw，写出选了什么（选项文本）与它的后果提示；序号对不上时什么都不画",
+    (
+        "§8.2 draw_result：选定第 2 个选项后画一个 WaitDraw，写出选了什么（选项文本）与它的后果提示；"
+        "序号对不上时什么都不画"
+    ),
     len(_od_wait) == 1
     and _od_text[1] in _od_wait[0]
     and _od_tip[1] in _od_wait[0],
@@ -1485,7 +1522,10 @@ _od_choice_tip = {
     for one in _od_option
 }.get(_od_choice, "")
 check(
-    "§8.2 处理公务（handle_official_event_queue）：选了画面上的第一个选项 → 先结算、记进履历，再弹一个写着它的后果的 WaitDraw；队列清空",
+    (
+        "§8.2 处理公务（handle_official_event_queue）：选了画面上的第一个选项 → 先结算、记进履历，"
+        "再弹一个写着它的后果的 WaitDraw；队列清空"
+    ),
     [one[0] for one in _od_seq] == ["settle", "wait"]
     and _od_choice in (1, 2, 3, 4)
     and _od_choice_tip
@@ -1595,7 +1635,10 @@ def draw_title_line(title: str, width: int, count_title_width: bool) -> int:
 _title_width = draw_title_line(_title_text, 190, True)
 _title_drawn = "".join(_title_piece)
 check(
-    "抬头 + 线条 = 绘制宽度：33 个半角宽的公务事件抬头画在 190 宽里，总宽正好 190，与同宽的 LineDraw 对齐（此前标题不计宽，整行画成 190 + 33，尾巴上的线条被挤到第二行）",
+    (
+        "抬头 + 线条 = 绘制宽度：33 个半角宽的公务事件抬头画在 190 宽里，总宽正好 190，与同宽的 LineDraw "
+        "对齐（此前标题不计宽，整行画成 190 + 33，尾巴上的线条被挤到第二行）"
+    ),
     _title_width == 190 and _title_text in _title_drawn,
     (_title_width, _title_drawn[:40]),
 )
@@ -1606,7 +1649,10 @@ check(
     _title_piece,
 )
 check(
-    "不影响其他地方：不传 count_title_width 时仍是旧口径（线条自己就有 190，整行为 190 + 标题宽），养成面板等几十处小标题的样子原样不动",
+    (
+        "不影响其他地方：不传 count_title_width 时仍是旧口径（线条自己就有 190，整行为 190 + 标题宽），"
+        "养成面板等几十处小标题的样子原样不动"
+    ),
     draw_title_line(_title_text, 190, False)
     == 190 + _test_text_handle.get_text_index(_title_text)
     and draw_title_line("出勤", 190, False)

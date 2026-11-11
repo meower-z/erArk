@@ -878,7 +878,8 @@ growth_a.skip_class_day = 0
 move_to(0, SCENE_DORM)
 
 section(
-    "Plan 32 L6：512 广播只发给听课节次与教师开讲节次相同的学生（她下一节是玩家的临时实操课、已坐在这间教室等，上一节的教师晚到开讲）"
+    "Plan 32 L6：512 广播只发给听课节次与教师开讲节次相同的学生（她下一节是玩家的临时实操课、已坐在这间教室等，"
+    "上一节的教师晚到开讲）"
 )
 clear_schedules()
 _l6_week = period_time(0).weekday()
@@ -911,7 +912,10 @@ student_a_growth.last_absent_period = []
 student_b_growth.last_absent_period = []
 _l6_course = schedule_handle.get_now_course(201)
 check(
-    "L6 前置：教师开讲在第 0 节；女儿A 的听课在第 1 节，那一格是玩家的临时实操课（教师为 0：557 不结算、也不写去重标记）",
+    (
+        "L6 前置：教师开讲在第 0 节；女儿A 的听课在第 1 节，那一格是玩家的临时实操课（教师为 0：557 不结算、"
+        "也不写去重标记）"
+    ),
     game_time.get_class_period(101) == 0
     and _l6_course is not None
     and _l6_course["period"] == 1
@@ -924,7 +928,10 @@ _l6_attend_b = student_b_growth.attend_class_count
 _l6_exp_a = student_a.experience.get(exp_45, 0)
 EFFECT[512](101, 45, change, cache.game_time)
 check(
-    "L6 教师晚到开讲：听课节次不同的女儿A 不拿收益、不记出勤、不写去重标记（此前按她下一节的节次多记一节出勤、发上一节的科目收益）",
+    (
+        "L6 教师晚到开讲：听课节次不同的女儿A 不拿收益、不记出勤、不写去重标记（此前按她下一节的节次多记一节出勤、"
+        "发上一节的科目收益）"
+    ),
     student_a_growth.attend_class_count == _l6_attend_a
     and student_a.experience.get(exp_45, 0) == _l6_exp_a
     and student_a_growth.last_attend_period == [],
@@ -959,7 +966,8 @@ reset_mark(201, 202)
 move_to(0, SCENE_DORM)
 
 section(
-    "Plan 32 实施复审补：L6 被跳过的学生体力不变——512 不再手动结算她下一节的听课行为（这一段走真实的 judge_character_status）"
+    "Plan 32 实施复审补：L6 被跳过的学生体力不变——512 不再手动结算她下一节的听课行为（这一段走真实的 "
+    "judge_character_status）"
 )
 clear_schedules()
 for _cid in (101, 201, 202):
@@ -1002,7 +1010,10 @@ try:
 finally:
     settle_default.character_behavior.judge_character_status = _stub_judge
 check(
-    "L6 复审补：教师晚到开讲，512 跳过听课节次不同的女儿A，没有手动结算她下一节的听课行为——体力不变、也没写去重标记（此前体力 100 → 1）",
+    (
+        "L6 复审补：教师晚到开讲，512 跳过听课节次不同的女儿A，没有手动结算她下一节的听课行为——体力不变、"
+        "也没写去重标记（此前体力 100 → 1）"
+    ),
     student_a.hit_point == 100 and student_a_growth.last_attend_period == [],
     (student_a.hit_point, student_a_growth.last_attend_period),
 )
@@ -1013,7 +1024,10 @@ check(
 )
 _real_judge_character_status(201)
 check(
-    "L6 复审补对照：对女儿A 直接跑一遍真实的 judge_character_status（改前 512 对她做的事），体力就会掉——上面的「体力不变」不是恒真",
+    (
+        "L6 复审补对照：对女儿A 直接跑一遍真实的 judge_character_status（改前 512 对她做的事），"
+        "体力就会掉——上面的「体力不变」不是恒真"
+    ),
     student_a.hit_point < 100,
     student_a.hit_point,
 )
@@ -1102,7 +1116,10 @@ for _l13_room, _l13_type in (
             _saved_favor
         )
     check(
-        f"L13 {_l13_room} 节次外 12:30 手动授课：handle_teach 把她拉成听课，512 按学识给了收益，并在结算她的那一刻调了 judge_character_status",
+        (
+            f"L13 {_l13_room} 节次外 12:30 手动授课：handle_teach 把她拉成听课，512 按学识给了收益，"
+            f"并在结算她的那一刻调了 judge_character_status"
+        ),
         student_a.behavior.behavior_id == constant.Behavior.ATTENT_CLASS
         and student_a.experience.get(exp_45, 0) > _l13_exp
         and [one[0] for one in L13_LOG] == [201],
@@ -1113,8 +1130,11 @@ for _l13_room, _l13_type in (
         ),
     )
     check(
-        f"L13 {_l13_room}：那一刻她自己的课表取不到课（节次外），科目回落学识 45、课型按教室取{E.COURSE_TYPE_NAME[_l13_type]}，"
-        "CVP Course|45 与 CourseType 两个前提都成立（此前两项都是 -1，听课口上一句不出）",
+        (
+            f"L13 {_l13_room}：那一刻她自己的课表取不到课（节次外），科目回落学识 45、"
+            f"课型按教室取{E.COURSE_TYPE_NAME[_l13_type]}，"
+            "CVP Course|45 与 CourseType 两个前提都成立（此前两项都是 -1，听课口上一句不出）"
+        ),
         bool(L13_LOG)
         and L13_LOG[0][1] is None
         and L13_LOG[0][2] == 45

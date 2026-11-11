@@ -133,7 +133,10 @@ JUDGED_DELETED = {
     "data/talk/system/second_fall/obey_2.csv": "1000-1009",
     "data/talk/system/second_fall/obey_3.csv": "1000-1009",
     "data/talk/system/second_fall/obey_4.csv": "1000-1009",
-    "data/talk/system/second_pregnancy.csv": "2-3,2001-2008,2029-2038,2064-2073,2099-2108,2134-2143,2169-2178,2204-2213,2239-2248,2274-2283,2309-2318,2344-2353,2394-2403,2434-2443,2474-2483",
+    "data/talk/system/second_pregnancy.csv": (
+        "2-3,2001-2008,2029-2038,2064-2073,2099-2108,2134-2143,2169-2178,2204-2213,2239-2248,2274-2283,2309-2318,"
+        "2344-2353,2394-2403,2434-2443,2474-2483"
+    ),
     "data/talk/system/second_show_off_study/show_off_combat.csv": "1002-1003",
     "data/talk/system/second_show_off_study/show_off_command.csv": "1003",
     "data/talk/system/second_show_off_study/show_off_cooking.csv": "1003",

@@ -597,7 +597,8 @@ class PlayerInput:
                 return ""
             shown = [text for text, _ in self.buttons]
             raise UnplannedInput(
-                f"游戏在等玩家选择，安排的下一步是 {value or '（没有）'!r}；屏幕上的按钮：{shown}；最近的文字：{self.screen[-5:]}"
+                f"游戏在等玩家选择，安排的下一步是 {value or '（没有）'!r}；屏幕上的按钮：{shown}；最近的文字："
+                f"{self.screen[-5:]}"
             )
         self.planned.pop(0)
         self.buttons.clear()

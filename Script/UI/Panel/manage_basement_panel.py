@@ -212,7 +212,10 @@ class Manage_Basement_Panel:
                     for material_id in cache.rhodes_island.materials_resouce:
                         material_data = game_config.config_resouce[material_id]
                         if material_data.type == resouce:
-                            all_info_draw.text += f"\n  {material_data.name}：{cache.rhodes_island.materials_resouce[material_id]}"
+                            all_info_draw.text += (
+                                f"\n  {material_data.name}："
+                                f"{cache.rhodes_island.materials_resouce[material_id]}"
+                            )
                     all_info_draw.text += "\n"
                     all_info_draw.draw()
                     line_feed.draw()
@@ -302,7 +305,10 @@ class Manage_Basement_Panel:
                     for all_cid in game_config.config_work_type:
                         work_data = game_config.config_work_type[all_cid]
                         if work_data.department == department:
-                            all_info_draw.text += f"  {work_data.name} — {len(cache.rhodes_island.all_work_npc_set[all_cid])}"
+                            all_info_draw.text += (
+                                f"  {work_data.name} — "
+                                f"{len(cache.rhodes_island.all_work_npc_set[all_cid])}"
+                            )
                     if department == _("机库"):
                         field_people_now = 0
                         for (
@@ -1282,7 +1288,10 @@ class Manage_Basement_Panel:
                     # 每行显示3个
                     if now_count % 3 == 0:
                         facility_damage_text += "\n"
-                    facility_damage_text += f"    {scene_path_str}-{cache.rhodes_island.facility_damage_data[scene_path_str]}"
+                    facility_damage_text += (
+                        f"    {scene_path_str}-"
+                        f"{cache.rhodes_island.facility_damage_data[scene_path_str]}"
+                    )
                     now_count += 1
                 if facility_damage_text == "":
                     facility_damage_text = _("\n    无")

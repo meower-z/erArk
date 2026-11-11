@@ -569,8 +569,11 @@ class Checker:
             self.error(
                 path,
                 line,
-                f"成年桶只有成年结算显式推入的事件会出现：{file_name}{cid} 不在 {sorted(ADULT_EVENT_UID_SET)} 里"
-                "（要加成年事件，先登记进 education_constant.ADULT_EXTRA_EVENT_UID_LIST 与本工具的 ADULT_EVENT_UID_SET）",
+                (
+                    f"成年桶只有成年结算显式推入的事件会出现：{file_name}{cid} 不在 {sorted(ADULT_EVENT_UID_SET)} 里"
+                    "（要加成年事件，先登记进 education_constant.ADULT_EXTRA_EVENT_UID_LIST 与本工具的 "
+                    "ADULT_EVENT_UID_SET）"
+                ),
             )
         self.check_premise_text(
             path, line, "事件前提", row.get("premise", "").strip()
@@ -613,8 +616,11 @@ class Checker:
                     self.error(
                         path,
                         line,
-                        f"{field} 读了养成数值 {value_id}：期末事件在学期基线重置之后推送，养成数值 4 / 5 / 6 读的是新学期、9 推送当天恒为 0、23 推送时恒为 1；"
-                        "看刚结束的学期用编号 7 / 8",
+                        (
+                            f"{field} 读了养成数值 {value_id}：期末事件在学期基线重置之后推送，养成数值 4 / 5 / 6 "
+                            f"读的是新学期、9 推送当天恒为 0、23 推送时恒为 1；"
+                            "看刚结束的学期用编号 7 / 8"
+                        ),
                     )
 
     def check_dir(self) -> None:
@@ -739,7 +745,8 @@ class Checker:
                 f"{min(weight_list)}~{max(weight_list)}" if weight_list else "-"
             )
             print(
-                f"[{name}] 事件 {one['count']} 条｜权重 {weight_text}｜里程碑标注 {one['once']} 条｜带互动对象 {one['partner']} 条｜净好感 {one['favorability']:+d}"
+                f"[{name}] 事件 {one['count']} 条｜权重 {weight_text}｜里程碑标注 {one['once']} 条｜带互动对象 "
+                f"{one['partner']} 条｜净好感 {one['favorability']:+d}"
             )
             print(f"    子桶分布：{one['sub_key']}")
             if one["personality"]:

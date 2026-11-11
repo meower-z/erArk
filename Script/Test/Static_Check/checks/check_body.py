@@ -231,7 +231,10 @@ def check_cloth_container_keys() -> list[CheckFailure]:
                     make_failure(
                         "BODY-01",
                         "服装四容器的部位键完整",
-                        f"角色id={cid}({_name(chara)})的{attr_name}键集异常: 缺失{sorted(missing)} 多余{sorted(extra)} 非list值槽位{sorted(bad_values)}",
+                        (
+                            f"角色id={cid}({_name(chara)})的{attr_name}键集异常: 缺失{sorted(missing)} "
+                            f"多余{sorted(extra)} 非list值槽位{sorted(bad_values)}"
+                        ),
                         [cid],
                     )
                 )
@@ -278,7 +281,11 @@ def check_cloth_id_validity() -> list[CheckFailure]:
                             make_failure(
                                 "BODY-02",
                                 "服装id有效且在正确槽位",
-                                f"角色id={cid}({_name(chara)})的{attr_name}[{t}]中服装id={c}({getattr(tem[c], 'name', '?')})的clothing_type={getattr(tem[c], 'clothing_type', None)}与槽位不符",
+                                (
+                                    f"角色id={cid}({_name(chara)})的{attr_name}[{t}]中服装id={c}("
+                                    f"{getattr(tem[c], 'name', '?')})的clothing_type="
+                                    f"{getattr(tem[c], 'clothing_type', None)}与槽位不符"
+                                ),
                                 [cid],
                             )
                         )
@@ -355,7 +362,10 @@ def check_wear_off_disjoint() -> list[CheckFailure]:
                     make_failure(
                         "BODY-04",
                         "穿着与脱下不应相交",
-                        f"[warning] 角色id={cid}({_name(chara)})槽位{t}的穿着与脱下同时含有{sorted(inter)}: wear={lst_w} off={lst_o}",
+                        (
+                            f"[warning] 角色id={cid}({_name(chara)})槽位{t}的穿着与脱下同时含有{sorted(inter)}: "
+                            f"wear={lst_w} off={lst_o}"
+                        ),
                         [cid],
                     )
                 )
@@ -407,7 +417,10 @@ def check_exclusive_cloth_owner() -> list[CheckFailure]:
                                 make_failure(
                                     "BODY-06",
                                     "角色专属服装不得出现在他人处",
-                                    f"[warning] 角色id={cid}({_name(chara)}, adv={adv})的{attr_name}[{t}]持有专属于npc={owner}的服装id={c}({getattr(tem[c], 'name', '?')})",
+                                    (
+                                        f"[warning] 角色id={cid}({_name(chara)}, adv={adv})的{attr_name}[{t}]持有专属于"
+                                        f"npc={owner}的服装id={c}({getattr(tem[c], 'name', '?')})"
+                                    ),
                                     [cid],
                                 )
                             )
@@ -582,7 +595,10 @@ def check_semen_table_shape() -> list[CheckFailure]:
                 make_failure(
                     "BODY-10",
                     "精液记录表键集与条目形状",
-                    f"角色id={cid}({_name(chara)})的body_semen缺失身体部位键{sorted(bp - set(table_dict['body_semen']))}",
+                    (
+                        f"角色id={cid}({_name(chara)})的body_semen缺失身体部位键"
+                        f"{sorted(bp - set(table_dict['body_semen']))}"
+                    ),
                     [cid],
                 )
             )
@@ -591,7 +607,10 @@ def check_semen_table_shape() -> list[CheckFailure]:
                 make_failure(
                     "BODY-10",
                     "精液记录表键集与条目形状",
-                    f"角色id={cid}({_name(chara)})的cloth_semen缺失服装部位键{sorted(ct - set(table_dict['cloth_semen']))}",
+                    (
+                        f"角色id={cid}({_name(chara)})的cloth_semen缺失服装部位键"
+                        f"{sorted(ct - set(table_dict['cloth_semen']))}"
+                    ),
                     [cid],
                 )
             )
@@ -601,7 +620,10 @@ def check_semen_table_shape() -> list[CheckFailure]:
                 make_failure(
                     "BODY-10",
                     "精液记录表键集与条目形状",
-                    f"角色id={cid}({_name(chara)})的cloth_locker_semen半初始化(非空但缺键{sorted(ct - set(locker))})，裸下标访问会KeyError",
+                    (
+                        f"角色id={cid}({_name(chara)})的cloth_locker_semen半初始化(非空但缺键{sorted(ct - set(locker))}"
+                        f")，裸下标访问会KeyError"
+                    ),
                     [cid],
                 )
             )
@@ -690,7 +712,10 @@ def check_semen_total_ge_current() -> list[CheckFailure]:
         make_failure(
             "BODY-12",
             "累计精液量不小于当前量",
-            f"[warning] 共{len(hits)}处累计量小于当前量(已知衣柜并回路径缺陷的特征): {sample}{' ...' if len(hits) > 5 else ''}",
+            (
+                f"[warning] 共{len(hits)}处累计量小于当前量(已知衣柜并回路径缺陷的特征): "
+                f"{sample}{' ...' if len(hits) > 5 else ''}"
+            ),
             sorted({h[0] for h in hits}),
         )
     ]
@@ -740,7 +765,10 @@ def check_semen_level_sync() -> list[CheckFailure]:
                         make_failure(
                             "BODY-13",
                             "精液等级与当前量同步",
-                            f"角色id={cid}({_name(chara)})的{table_name}[{p}]等级失步: 量={v[1]} 记录等级={v[2]} 期望等级={expect}",
+                            (
+                                f"角色id={cid}({_name(chara)})的{table_name}[{p}]等级失步: 量={v[1]} 记录等级={v[2]} "
+                                f"期望等级={expect}"
+                            ),
                             [cid],
                         )
                     )
@@ -1085,7 +1113,10 @@ def check_reproduction_period() -> list[CheckFailure]:
                 make_failure(
                     "BODY-21",
                     "生理周期日为配置内合法值",
-                    f"角色id={cid}({_name(chara)})的reproduction_period非法: {period!r} (配置键{sorted(period_config)})",
+                    (
+                        f"角色id={cid}({_name(chara)})的reproduction_period非法: {period!r} "
+                        f"(配置键{sorted(period_config)})"
+                    ),
                     [cid],
                 )
             )
@@ -1470,7 +1501,10 @@ def check_semen_flow_source_container() -> list[CheckFailure]:
         make_failure(
             "BODY-32",
             "精液流通源须仍有可扣减的容器",
-            f"[warning] 共{len(hits)}条流通的服装源槽位已无衣服(扣量将落空、凭空复制): {sample}{' ...' if len(hits) > 5 else ''}",
+            (
+                f"[warning] 共{len(hits)}条流通的服装源槽位已无衣服(扣量将落空、凭空复制): "
+                f"{sample}{' ...' if len(hits) > 5 else ''}"
+            ),
             sorted({h[0] for h in hits}),
         )
     ]
@@ -1552,7 +1586,10 @@ def check_child_born_time() -> list[CheckFailure]:
                 make_failure(
                     "BODY-34",
                     "产后/育儿所引用的孩子须有有效出生时间",
-                    f"[warning] 角色id={cid}({_name(chara)})的末位孩子id={child_list[-1]}({_name(child)})的born_time无效: {born_time!r} (game_time={game_time})",
+                    (
+                        f"[warning] 角色id={cid}({_name(chara)})的末位孩子id={child_list[-1]}({_name(child)})的born_tim"
+                        f"e无效: {born_time!r} (game_time={game_time})"
+                    ),
                     [cid, child_list[-1]],
                 )
             )
@@ -1590,7 +1627,10 @@ def check_clothing_tem_list() -> list[CheckFailure]:
                 make_failure(
                     "BODY-35",
                     "个人服装模板列表有效",
-                    f"[warning] 角色id={cid}({_name(chara)}, adv={getattr(chara, 'adv', '?')})的clothing_tem含无效项: {bad!r}",
+                    (
+                        f"[warning] 角色id={cid}({_name(chara)}, adv={getattr(chara, 'adv', '?')})的clothing_tem含无效"
+                        f"项: {bad!r}"
+                    ),
                     [cid],
                 )
             )

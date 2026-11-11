@@ -328,7 +328,8 @@ class Course_Select_Panel:
             tip_draw = draw.NormalDraw()
             tip_draw.width = self.width
             tip_draw.text = _(
-                "  点某个时段可单独指定活动；选「自由选择娱乐活动」即取消单独指定、回到模板的安排；不符合条件的活动会退回自由选择\n"
+                "  点某个时段可单独指定活动；选「自由选择娱乐活动」即取消单独指定、回到模板的安排；"
+                "不符合条件的活动会退回自由选择\n"
             )
             tip_draw.style = "deep_gray"
             tip_draw.draw()

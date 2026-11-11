@@ -341,7 +341,8 @@ def second_behavior_effect(
                         not in constant.settle_second_behavior_effect_data
                     ):
                         print(
-                            f"debug second_behavior_id = {second_behavior_id}，effect_id = {effect_id}没有找到对应的结算效果"
+                            f"debug second_behavior_id = {second_behavior_id}，effect_id = "
+                            f"{effect_id}没有找到对应的结算效果"
                         )
                         continue
                     constant.settle_second_behavior_effect_data[effect_id](

@@ -329,7 +329,10 @@ class Manage_Vehicle_Panel:
                 )
 
                 # 文本中加入 vehicle_price
-                vehicle_text = f"{vehicle_name}{vehicle_count_str}{vehicle_price}{vehicle_speed}{vehicle_capacity}{vehicle_special}"
+                vehicle_text = (
+                    f"{vehicle_name}{vehicle_count_str}{vehicle_price}{vehicle_speed}{vehicle_capacity}"
+                    f"{vehicle_special}"
+                )
 
                 # 可以进行的，绘制为按钮
                 vehicle_draw = draw.LeftButton(

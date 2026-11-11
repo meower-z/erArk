@@ -380,7 +380,10 @@ _semester_row = {
 _row_17 = _semester_row.get("17", {})
 _row_18 = _semester_row.get("18", {})
 check(
-    "L10 萝莉 1（Plan 32 L22 挪成期末 17）的正文与选项 2 不再点名「学识」「战斗」（成绩单只记涨了的科目，点名的科目她未必上过）",
+    (
+        "L10 萝莉 1（Plan 32 L22 挪成期末 17）的正文与选项 2 不再点名「学识」「战斗」（成绩单只记涨了的科目，"
+        "点名的科目她未必上过）"
+    ),
     bool(_row_17)
     and all(
         word not in _row_17.get("text", "") + _row_17.get("option_2", "")
@@ -679,14 +682,20 @@ INSTRUCT_TYPE_SEGMENT = {
     "SEX": 6,
 }
 check(
-    "全部指令的 cid 都落在自己类型的段内（系统 1~99、日常 1xxx、工作 2xxx、娱乐 3xxx、技艺 4xxx、猥亵 5xxx、性爱 6xxx）",
+    (
+        "全部指令的 cid 都落在自己类型的段内（系统 1~99、日常 1xxx、工作 2xxx、娱乐 3xxx、技艺 4xxx、猥亵 5xxx、性爱 "
+        "6xxx）"
+    ),
     all(
         cfg.cid // 1000 == INSTRUCT_TYPE_SEGMENT.get(cfg.instruct_type, -1)
         for cfg in game_config.config_instruct.values()
     ),
 )
 check(
-    "养成相关指令编号：1036 检查成绩单 / 2010 授课 / 2039 教育管理系统 / 3031~3033 胎教 / 5209 性技实操课 / 6021 结束性技实操课",
+    (
+        "养成相关指令编号：1036 检查成绩单 / 2010 授课 / 2039 教育管理系统 / 3031~3033 胎教 / 5209 性技实操课 / 6021 "
+        "结束性技实操课"
+    ),
     [
         game_config.config_instruct_by_id.get(k)
         for k in (
@@ -958,7 +967,10 @@ for expect_dict in PLAN32_EVENT_PREMISE_EXPECT.values():
             ):
                 _bad_token_32.append((uid, token))
 check(
-    "L22 / L23 / L26 改过的事件前提逐个 token 校验：前提名与 constant_promise 拼写一致且已注册（含新前提 self_have_public_course），CVP 可解析",
+    (
+        "L22 / L23 / L26 改过的事件前提逐个 token 校验：前提名与 constant_promise 拼写一致且已注册（含新前提 "
+        "self_have_public_course），CVP 可解析"
+    ),
     not _bad_token_32,
     _bad_token_32,
 )
@@ -973,7 +985,10 @@ check(
     (_birthday_data.get("department"), _birthday_data.get("sub_key")),
 )
 check(
-    "M2 通用 3 的正文开头改为「{Name}的生日到了。」，不再写死「今天是{Name}的生日」（插了队首，玩家隔几天才处理公务时也不矛盾）",
+    (
+        "M2 通用 3 的正文开头改为「{Name}的生日到了。」，不再写死「今天是{Name}的生日」（插了队首，"
+        "玩家隔几天才处理公务时也不矛盾）"
+    ),
     _birthday_text.startswith("{Name}的生日到了。")
     and "今天是{Name}的生日" not in _birthday_text,
     _birthday_text,
@@ -990,7 +1005,10 @@ _moved_old_hit = sorted(
     set(MOVED_REPORT_EVENT.values()) & set(game_config.config_official_event)
 )
 check(
-    "L22 萝莉 1 / 20 / 26 已从萝莉桶删去（学期切换那一夜期末事件刚入队，日常派发还抽得到它们，两三条「交成绩单」叠在一起）",
+    (
+        "L22 萝莉 1 / 20 / 26 已从萝莉桶删去（学期切换那一夜期末事件刚入队，日常派发还抽得到它们，两三条「交成绩单」"
+        "叠在一起）"
+    ),
     not _moved_old_hit,
     _moved_old_hit,
 )
@@ -1013,8 +1031,11 @@ check(
     and "的成绩单同一天发下来" in _semester_row.get("19", {}).get("text", ""),
 )
 check(
-    "L22 三条的配置权重取 2：抽取按「配置权重 × 前提条数」算，三条前提乘出 6 分，落在其余期末事件的 4~8 分之间"
-    "（原萝莉桶的 15 / 9 / 10 放进期末池会压过其余期末事件；取 4 时一条 12 分，三条合计约占萝莉期末池的一半，实施复审补）",
+    (
+        "L22 三条的配置权重取 2：抽取按「配置权重 × 前提条数」算，三条前提乘出 6 分，落在其余期末事件的 4~8 分之间"
+        "（原萝莉桶的 15 / 9 / 10 放进期末池会压过其余期末事件；取 4 时一条 12 分，三条合计约占萝莉期末池的一半，"
+        "实施复审补）"
+    ),
     all(
         official_event_handle.get_event_weight(uid) == 2
         for uid in MOVED_REPORT_EVENT
@@ -1228,7 +1249,10 @@ _growth_203.report_card_history = [{"grade": E.REPORT_GRADE_NO_CLASS}]
 _growth_203.report_card_flag = True
 pl.target_character_id = 203
 check(
-    "L25 检查成绩单新增 2 条成年女儿的档位 3 口上：前提照 1014~1017 的写法（交互对象是女儿、档位 3、成绩单待查看），阶段换成 104",
+    (
+        "L25 检查成绩单新增 2 条成年女儿的档位 3 口上：前提照 1014~1017 的写法（交互对象是女儿、档位 3、成绩单待查看）"
+        "，阶段换成 104"
+    ),
     all(
         talk_premise(cid)
         == "target_is_player_daughter&CVP_A2_T|104_E_1&CVP_A2_Growth|7_E_3&CVP_A2_Growth|23_E_1"
@@ -1253,7 +1277,10 @@ _report_pass_list = [
     cid for cid in _report_talk_cid_list if premise_all(talk_premise(cid), 0)
 ]
 check(
-    "L25 成年女儿拿着档位 3 的新成绩单：成立的正好是新增的两条（改前一条都没有：1004 / 1005 排除档位 3，1014~1017 只写幼女 / 萝莉）",
+    (
+        "L25 成年女儿拿着档位 3 的新成绩单：成立的正好是新增的两条（改前一条都没有：1004 / 1005 排除档位 3，1014~1017 "
+        "只写幼女 / 萝莉）"
+    ),
     _report_pass_list == sorted(ADULT_NO_CLASS_TALK),
     _report_pass_list,
 )

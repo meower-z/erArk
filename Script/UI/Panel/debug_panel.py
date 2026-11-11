@@ -2089,7 +2089,11 @@ class Debug_Panel:
             elif key_index == 17:
                 info_text = f"[000]:娱乐活动的类型：{target_data.entertainment.entertainment_type}\n"
                 info_text += f"[001]:借的书的id：{target_data.entertainment.borrow_book_id_set}\n"
-                info_text += f"[002]:归还当前阅读书籍的可能性比例：{target_data.entertainment.book_return_possibility}\n"
+                info_text += (
+                    f"[002]:归还当前阅读书籍的可能性比例："
+                    f"{target_data.entertainment.book_return_possibility}"
+                    f"\n"
+                )
                 info_draw.text = info_text
                 info_draw.draw()
                 line_feed.draw()
@@ -2334,17 +2338,41 @@ class Debug_Panel:
             # 特殊flag数据
             elif key_index == 20:
                 info_text = "1~7异常状态：正常为1"
-                info_text += f"    \n1:基础生理需求：睡觉、休息、解手、吃饭、沐浴（不含已洗澡）、挤奶、自慰：{handle_premise.handle_normal_1(self.target_character_id)}"
-                info_text += f"    \n2:AI行动基本停止：临盆、产后、监禁：{handle_premise.handle_normal_2(self.target_character_id)}"
-                info_text += f"    \n3:高优先级AI：助理、跟随、体检：{handle_premise.handle_normal_3(self.target_character_id)}"
-                info_text += f"    \n4:服装异常：大致全裸、全裸：{handle_premise.handle_normal_4(self.target_character_id)}"
-                info_text += f"    \n5:意识模糊，或弱交互：醉酒，平然：{handle_premise.handle_normal_5(self.target_character_id)}"
-                info_text += f"    \n6:完全意识不清醒，或无交互：睡眠（熟睡或完全深眠），时停，空气：{handle_premise.handle_normal_6(self.target_character_id)}"
-                info_text += f"    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中：{handle_premise.handle_normal_7(self.target_character_id)}"
+                info_text += (
+                    f"    \n1:基础生理需求：睡觉、休息、解手、吃饭、沐浴（不含已洗澡）、挤奶、自慰："
+                    f"{handle_premise.handle_normal_1(self.target_character_id)}"
+                )
+                info_text += (
+                    f"    \n2:AI行动基本停止：临盆、产后、监禁："
+                    f"{handle_premise.handle_normal_2(self.target_character_id)}"
+                )
+                info_text += (
+                    f"    \n3:高优先级AI：助理、跟随、体检："
+                    f"{handle_premise.handle_normal_3(self.target_character_id)}"
+                )
+                info_text += (
+                    f"    \n4:服装异常：大致全裸、全裸："
+                    f"{handle_premise.handle_normal_4(self.target_character_id)}"
+                )
+                info_text += (
+                    f"    \n5:意识模糊，或弱交互：醉酒，平然："
+                    f"{handle_premise.handle_normal_5(self.target_character_id)}"
+                )
+                info_text += (
+                    f"    \n6:完全意识不清醒，或无交互：睡眠（熟睡或完全深眠），时停，空气："
+                    f"{handle_premise.handle_normal_6(self.target_character_id)}"
+                )
+                info_text += (
+                    f"    \n7:角色离线：装袋搬走、外勤、婴儿、幼女、他国外交访问、逃跑中："
+                    f"{handle_premise.handle_normal_7(self.target_character_id)}"
+                )
                 info_text += "\n\n"
                 info_text += f"[000]:在H模式中：{target_data.sp_flag.is_h}\n"
                 info_text += f"[001]:AI行动里的原地发呆判定：{target_data.sp_flag.wait_flag}\n"
-                info_text += f"[002]:跟随玩家，int [0不跟随,1智能跟随,2强制跟随,3前往博士办公室,4前往博士当前位置]：{target_data.sp_flag.is_follow}\n"
+                info_text += (
+                    f"[002]:跟随玩家，int [0不跟随,1智能跟随,2强制跟随,3前往博士办公室,4前往博士当前位置]："
+                    f"{target_data.sp_flag.is_follow}\n"
+                )
                 info_text += (
                     f"[003]:疲劳状态（HP=1）：{target_data.sp_flag.tired}\n"
                 )
@@ -2359,7 +2387,10 @@ class Debug_Panel:
                 info_text += (
                     f"[008]:被监禁状态：{target_data.sp_flag.imprisonment}\n"
                 )
-                info_text += f"[009]:洗澡状态，int [0无,1要更衣,2要洗澡,3要披浴巾,4洗完澡]：{target_data.sp_flag.shower}\n"
+                info_text += (
+                    f"[009]:洗澡状态，int [0无,1要更衣,2要洗澡,3要披浴巾,"
+                    f"4洗完澡]：{target_data.sp_flag.shower}\n"
+                )
                 info_text += f"[010]:吃饭状态，int [0无,1要取餐,2要吃饭]：{target_data.sp_flag.eat_food}\n"
                 info_text += f"[011]:要睡觉状态：{target_data.sp_flag.sleep}\n"
                 info_text += f"[012]:要休息状态：{target_data.sp_flag.rest}\n"
@@ -2367,21 +2398,42 @@ class Debug_Panel:
                 info_text += f"[014]:发现食物不对劲：{target_data.sp_flag.find_food_weird}\n"
                 info_text += f"[015]:游泳状态，int [0无,1要换泳衣,2要游泳]：{target_data.sp_flag.swim}\n"
                 info_text += f"[016]:要检修状态：{target_data.sp_flag.work_maintenance}\n"
-                info_text += f"[017]:帮忙买午饭状态，int [0无,1要买饭,2要买第二份饭,3要送饭]：{target_data.sp_flag.help_buy_food}\n"
+                info_text += (
+                    f"[017]:帮忙买午饭状态，int [0无,1要买饭,2要买第二份饭,3要送饭]："
+                    f"{target_data.sp_flag.help_buy_food}\n"
+                )
                 info_text += f"[018]:帮忙做饭状态，int [0无,1要做饭,2要送饭]：{target_data.sp_flag.help_make_food}\n"
-                info_text += f"[019]:早安问候状态，int [0无,1要问候,2已问候]：{target_data.sp_flag.morning_salutation}\n"
+                info_text += (
+                    f"[019]:早安问候状态，int [0无,1要问候,2已问候]："
+                    f"{target_data.sp_flag.morning_salutation}\n"
+                )
                 info_text += f"[020]:晚安问候状态，int [0无,1要问候,2已问候]：{target_data.sp_flag.night_salutation}\n"
-                info_text += f"[021]:大浴场娱乐状态，int [0无,1要更衣,2要娱乐]：{target_data.sp_flag.bathhouse_entertainment}\n"
+                info_text += (
+                    f"[021]:大浴场娱乐状态，int [0无,1要更衣,2要娱乐]："
+                    f"{target_data.sp_flag.bathhouse_entertainment}\n"
+                )
                 info_text += f"[022]:要挤奶状态：{target_data.sp_flag.milk}\n"
                 info_text += (
                     f"[023]:要自慰状态：{target_data.sp_flag.masturebate}\n"
                 )
                 info_text += f"[024]:访客状态，int [0无,1访问中,2访问过]：{target_data.sp_flag.vistor}\n"
-                info_text += f"[025]:香薰疗愈状态，int [0无,1回复,2习得,3反感,4快感,5好感,6催眠]：{target_data.sp_flag.aromatherapy}\n"
-                info_text += f"[026]:外勤委托状态，0为未外勤，否则为对应外勤委托编号：{target_data.sp_flag.field_commission}\n"
+                info_text += (
+                    f"[025]:香薰疗愈状态，int [0无,1回复,2习得,3反感,4快感,5好感,6催眠]："
+                    f"{target_data.sp_flag.aromatherapy}\n"
+                )
+                info_text += (
+                    f"[026]:外勤委托状态，0为未外勤，否则为对应外勤委托编号"
+                    f"：{target_data.sp_flag.field_commission}\n"
+                )
                 info_text += f"[027]:要找玩家逆推来自慰的状态：{target_data.sp_flag.npc_masturebate_for_player}\n"
-                info_text += f"[028]:正在等待体检状态（仅查看，无法修改）：{self.target_character_id in cache.rhodes_island.waiting_for_exam_operator_ids}\n"
-                info_text += f"[029]:今天体检时间，[0不需要，1上午，2下午，3新干员立刻体检]：{target_data.action_info.health_check_today}\n"
+                info_text += (
+                    f"[028]:正在等待体检状态（仅查看，无法修改）："
+                    f"{self.target_character_id in cache.rhodes_island.waiting_for_exam_operator_ids}\n"
+                )
+                info_text += (
+                    f"[029]:今天体检时间，[0不需要，1上午，2下午，3新干员立刻体检]："
+                    f"{target_data.action_info.health_check_today}\n"
+                )
                 info_draw.text = info_text
                 info_draw.draw()
                 line_feed.draw()

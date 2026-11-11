@@ -228,7 +228,10 @@ check(
 )
 schedule_handle.clear_class_cell(ROOM1, 0, 0)
 check(
-    "全局课表那一格被清掉（个人课表显示「已停课」）：视为这节没课（Plan 27 §3.3，此前科目 / 教师为 -1、照样去自习记出勤）",
+    (
+        "全局课表那一格被清掉（个人课表显示「已停课」）：视为这节没课（Plan 27 §3.3，此前科目 / 教师为 -1、"
+        "照样去自习记出勤）"
+    ),
     schedule_handle.get_now_course(201) is None
     and schedule_handle.get_course_at(201, period_time(0), 0) is None,
 )
@@ -792,7 +795,10 @@ check(
 )
 teacher_b.sp_flag.imprisonment = True
 check(
-    "L21 被监禁的教师不在候选里（此前在岛、在岗照列，一键排课与选教师页会把她排进空格子，关着的这段时间每节都降级自习）",
+    (
+        "L21 被监禁的教师不在候选里（此前在岛、在岗照列，一键排课与选教师页会把她排进空格子，"
+        "关着的这段时间每节都降级自习）"
+    ),
     sorted(schedule_handle.get_teacher_candidate_list()) == [101],
     sorted(schedule_handle.get_teacher_candidate_list()),
 )

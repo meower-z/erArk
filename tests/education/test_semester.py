@@ -435,7 +435,10 @@ set_time(datetime.datetime(2027, 9, 1, 9, 0))
 report_list = semester_handle.settle_semester_change()
 _g207 = growth_handle.get_child_growth(207)
 check(
-    "成年且整学期不在学生岗：不出成绩单、不置待查看、不进学期结束名单，只把基线挪到新学期（此前每学期一份 0/0「本学期改任了」）",
+    (
+        "成年且整学期不在学生岗：不出成绩单、不置待查看、不进学期结束名单，只把基线挪到新学期（此前每学期一份 "
+        "0/0「本学期改任了」）"
+    ),
     207 not in report_list
     and _g207.report_card_history == []
     and not _g207.report_card_flag

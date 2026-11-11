@@ -409,7 +409,8 @@ class Pregnancy_Overview_Panel:
         return_list.append(reset_draw.return_text)
         info_draw = draw.NormalDraw()
         info_draw.text = _(
-            '　显示上{0}代+下{1}代共4代　夫妇以╤相连并连线到子女　玩家名按父本位置重复显示　超宽时按家族分页　"…"表示尚有成员/更深代数未显示　点击图中角色可以其为中心重绘\n'
+            '　显示上{0}代+下{1}代共4代　夫妇以╤相连并连线到子女　玩家名按父本位置重复显示　超宽时按家族分页　"…"表示尚'
+            "有成员/更深代数未显示　点击图中角色可以其为中心重绘\n"
         ).format(pregnancy_constant.UP_GEN, pregnancy_constant.DOWN_GEN)
         info_draw.draw()
         line_feed.draw()
@@ -598,7 +599,8 @@ class Pregnancy_Overview_Panel:
         info_draw = draw.NormalDraw()
         info_draw.text = _(
             "　此处排查因旧版本存档BUG而误入本存档的女儿。\n"
-            "　博士亲生的每个女儿都会登记进血缘名单；被标记为博士女儿、却不在名单中的，即为其他周目/存档误入的女儿，她们也不会出现在生育谱系图里。\n"
+            "　博士亲生的每个女儿都会登记进血缘名单；被标记为博士女儿、却不在名单中的，即为其他周目/存档误入的女儿，"
+            "她们也不会出现在生育谱系图里。\n"
             "　请确认无误后再移除，移除不可撤销。\n"
         )
         info_draw.width = self.width

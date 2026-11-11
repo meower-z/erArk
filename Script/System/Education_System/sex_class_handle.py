@@ -806,7 +806,8 @@ def check_and_send_notify(
                     notified[1] = True
                     result.append(
                         _(
-                            "\n【课程提醒】还有半小时，你安排在{0}的性技实操课就要开始了，选修与点名必修的学生会在开课前 {1} 分钟动身赶来。\n"
+                            "\n【课程提醒】还有半小时，你安排在{0}的性技实操课就要开始了，"
+                            "选修与点名必修的学生会在开课前 {1} 分钟动身赶来。\n"
                         ).format(
                             class_data.get("classroom", ""),
                             education_constant.PRE_ARRIVE_MINUTE,

@@ -229,7 +229,10 @@ def check_roster_scene_bidirectional_consistency() -> list[CheckFailure]:
                     make_failure(
                         "ROSTER-03",
                         "在编干员与场景名册双向一致",
-                        f"{warn}在编角色cid={cid} name={c.name!r} position={pos!r}形状异常(应为非空且元素全为str的list)；{ctx}",
+                        (
+                            f"{warn}在编角色cid={cid} name={c.name!r} position={pos!r}形状异常(应为非空且元素全为str的l"
+                            f"ist)；{ctx}"
+                        ),
                         [cid],
                     )
                 )
@@ -240,7 +243,10 @@ def check_roster_scene_bidirectional_consistency() -> list[CheckFailure]:
                     make_failure(
                         "ROSTER-03",
                         "在编干员与场景名册双向一致",
-                        f"{warn}在编角色cid={cid} name={c.name!r} position={pos}对应路径{expected!r}不存在于scene_data中；{ctx}",
+                        (
+                            f"{warn}在编角色cid={cid} name={c.name!r} position={pos}对应路径{expected!r}不存在于scene_d"
+                            f"ata中；{ctx}"
+                        ),
                         [cid],
                     )
                 )
@@ -250,7 +256,10 @@ def check_roster_scene_bidirectional_consistency() -> list[CheckFailure]:
                     make_failure(
                         "ROSTER-03",
                         "在编干员与场景名册双向一致",
-                        f"{warn}在编角色cid={cid} name={c.name!r} position={pos}(期望仅出现在{expected!r})，实际出现在场景{paths}中；{ctx}",
+                        (
+                            f"{warn}在编角色cid={cid} name={c.name!r} position={pos}(期望仅出现在{expected!r})，"
+                            f"实际出现在场景{paths}中；{ctx}"
+                        ),
                         [cid],
                     )
                 )
@@ -302,9 +311,12 @@ def check_offline_source_flag_matches_real_offline_state() -> (
                 make_failure(
                     "ROSTER-04",
                     "离线来源flag必须对应真正的离线态",
-                    f"{warn}角色cid={cid} name={c.name!r} 三源flag(field_commission={sp.field_commission}, escaping={sp.escaping}, "
-                    f"be_bagged={sp.be_bagged})指示应离线，但{'; '.join(problems)}；state={c.state}，"
-                    f"behavior.behavior_id={c.behavior.behavior_id!r}",
+                    (
+                        f"{warn}角色cid={cid} name={c.name!r} 三源flag(field_commission={sp.field_commission}, "
+                        f"escaping={sp.escaping}, "
+                        f"be_bagged={sp.be_bagged})指示应离线，但{'; '.join(problems)}；state={c.state}，"
+                        f"behavior.behavior_id={c.behavior.behavior_id!r}"
+                    ),
                     [cid],
                 )
             )
@@ -334,8 +346,11 @@ def check_imprisonment_flag_partition_completeness() -> list[CheckFailure]:
             make_failure(
                 "ROSTER-05",
                 "监禁flag的来源分区完整",
-                f"{warn}角色cid={cid} name={c.name!r} sp_flag.imprisonment为True，但既不在current_prisoners也不escaping；"
-                f"position={c.position}，dormitory={c.dormitory!r}，permanent_dormitory={c.permanent_dormitory!r}",
+                (
+                    f"{warn}角色cid={cid} name={c.name!r} sp_flag.imprisonment为True，"
+                    f"但既不在current_prisoners也不escaping；"
+                    f"position={c.position}，dormitory={c.dormitory!r}，permanent_dormitory={c.permanent_dormitory!r}"
+                ),
                 [cid],
             )
         )
@@ -345,8 +360,11 @@ def check_imprisonment_flag_partition_completeness() -> list[CheckFailure]:
             make_failure(
                 "ROSTER-05",
                 "监禁flag的来源分区完整",
-                f"{warn}角色cid={cid} name={getattr(maybe_c, 'name', '?')!r} 在current_prisoners或escaping中，但sp_flag.imprisonment为False；"
-                f"current_prisoners.get={ri.current_prisoners.get(cid)}",
+                (
+                    f"{warn}角色cid={cid} name={getattr(maybe_c, 'name', '?')!r} 在current_prisoners或escaping中，"
+                    f"但sp_flag.imprisonment为False；"
+                    f"current_prisoners.get={ri.current_prisoners.get(cid)}"
+                ),
                 [cid],
             )
         )
@@ -420,9 +438,12 @@ def check_prisoner_record_shape_and_roster_membership() -> list[CheckFailure]:
                 make_failure(
                     "ROSTER-06",
                     "囚犯名册条目结构合法且本人在编",
-                    f"{warn}囚犯cid={cid} name={c.name!r} 存在问题: {'; '.join(problems)}；record={rec!r}，game_time={cache.game_time}，"
-                    f"ability[42]={c.ability.get(42)}，ability[45]={c.ability.get(45)}，"
-                    f"confinement_training_setting[4]={ri.confinement_training_setting.get(4)}",
+                    (
+                        f"{warn}囚犯cid={cid} name={c.name!r} 存在问题: {'; '.join(problems)}；record={rec!r}，"
+                        f"game_time={cache.game_time}，"
+                        f"ability[42]={c.ability.get(42)}，ability[45]={c.ability.get(45)}，"
+                        f"confinement_training_setting[4]={ri.confinement_training_setting.get(4)}"
+                    ),
                     [cid],
                 )
             )
@@ -508,8 +529,11 @@ def check_prisoner_stays_in_prison_area_and_not_bagged() -> list[CheckFailure]:
                 make_failure(
                     "ROSTER-08",
                     "囚犯留在关押区且不得同时被装袋",
-                    f"{warn}囚犯cid={cid} name={c.name!r} {'; '.join(problems)}；position={c.position}，dormitory={c.dormitory!r}，"
-                    f"is_h={c.sp_flag.is_h}，玩家position={getattr(player, 'position', None)}",
+                    (
+                        f"{warn}囚犯cid={cid} name={c.name!r} {'; '.join(problems)}；position={c.position}，"
+                        f"dormitory={c.dormitory!r}，"
+                        f"is_h={c.sp_flag.is_h}，玩家position={getattr(player, 'position', None)}"
+                    ),
                     [cid],
                 )
             )
@@ -637,7 +661,10 @@ def check_warden_cache_unique_and_valid() -> list[CheckFailure]:
             make_failure(
                 "ROSTER-11",
                 "监狱长缓存唯一且指向真实岗位",
-                f"{warn}存在{len(wardens)}名在编工作类型191(监狱长)的角色，超过唯一上限: {details}，current_warden_id={wid}",
+                (
+                    f"{warn}存在{len(wardens)}名在编工作类型191(监狱长)的角色，超过唯一上限: {details}，"
+                    f"current_warden_id={wid}"
+                ),
                 list(wardens),
             )
         )
@@ -657,7 +684,10 @@ def check_warden_cache_unique_and_valid() -> list[CheckFailure]:
                 make_failure(
                     "ROSTER-11",
                     "监狱长缓存唯一且指向真实岗位",
-                    f"{warn}current_warden_id={wid}与另外在编191岗位角色冲突: {[(cid, cd[cid].name) for cid in others]}",
+                    (
+                        f"{warn}current_warden_id={wid}与另外在编191岗位角色冲突: "
+                        f"{[(cid, cd[cid].name) for cid in others]}"
+                    ),
                     [wid] + others,
                 )
             )
@@ -707,8 +737,11 @@ def check_warden_identity_soft_constraints() -> list[CheckFailure]:
             make_failure(
                 "ROSTER-12",
                 "监狱长身份软约束",
-                f"{warn}监狱长wid={wid} name={w.name!r} 偏离期望状态: {'; '.join(problems)}；permanent_dormitory={w.permanent_dormitory!r}，"
-                f"玩家bagging_chara_id={getattr(getattr(player, 'sp_flag', None), 'bagging_chara_id', None)}",
+                (
+                    f"{warn}监狱长wid={wid} name={w.name!r} 偏离期望状态: {'; '.join(problems)}；"
+                    f"permanent_dormitory={w.permanent_dormitory!r}，"
+                    f"玩家bagging_chara_id={getattr(getattr(player, 'sp_flag', None), 'bagging_chara_id', None)}"
+                ),
                 [wid],
             )
         )
@@ -799,7 +832,10 @@ def check_visitor_registry_and_flag_equivalence() -> list[CheckFailure]:
             make_failure(
                 "ROSTER-14",
                 "访客名册与访客flag完全等价",
-                f"{warn}cid={cid} name={c.name!r} sp_flag.vistor==1，但不在ri.visitor_info名册中，dormitory={c.dormitory!r}",
+                (
+                    f"{warn}cid={cid} name={c.name!r} sp_flag.vistor==1，但不在ri.visitor_info名册中，"
+                    f"dormitory={c.dormitory!r}"
+                ),
                 [cid],
             )
         )
@@ -990,8 +1026,11 @@ def check_invite_visitor_shape_integrity() -> list[CheckFailure]:
             make_failure(
                 "ROSTER-18",
                 "邀请栏结构完整、空目标必归零",
-                f"{warn}ri.invite_visitor={raw!r}存在问题: {'; '.join(problems)}；facility_level[13]={ri.facility_level.get(13)}，"
-                f"game_time={cache.game_time}，目标是否存在于character_data={exists}",
+                (
+                    f"{warn}ri.invite_visitor={raw!r}存在问题: {'; '.join(problems)}；"
+                    f"facility_level[13]={ri.facility_level.get(13)}，"
+                    f"game_time={cache.game_time}，目标是否存在于character_data={exists}"
+                ),
                 [target] if target else [],
             )
         )
@@ -1079,7 +1118,10 @@ def check_recruited_id_pool_validity() -> list[CheckFailure]:
                 make_failure(
                     "ROSTER-20",
                     "待确认招募名单合法",
-                    f"{warn}recruited_id中的cid={cid}非法(0号玩家或不存在于character_data)，全量recruited_id={sorted(x for x in ri.recruited_id if isinstance(x, int))}",
+                    (
+                        f"{warn}recruited_id中的cid={cid}非法(0号玩家或不存在于character_data)，"
+                        f"全量recruited_id={sorted(x for x in ri.recruited_id if isinstance(x, int))}"
+                    ),
                     [cid] if isinstance(cid, int) else [],
                 )
             )
@@ -1220,8 +1262,11 @@ def check_recruit_line_shape_and_progress_range() -> list[CheckFailure]:
                 make_failure(
                     "ROSTER-22",
                     "招募线记录形状与进度范围",
-                    f"{warn}招募线lid={lid} record={rec!r} {'; '.join(problems)}；facility_level[7]={ri.facility_level.get(7)}，"
-                    f"game_time={cache.game_time}",
+                    (
+                        f"{warn}招募线lid={lid} record={rec!r} {'; '.join(problems)}；"
+                        f"facility_level[7]={ri.facility_level.get(7)}，"
+                        f"game_time={cache.game_time}"
+                    ),
                     [],
                 )
             )
@@ -1256,7 +1301,10 @@ def check_recruit_line_main_hr_validity_and_uniqueness() -> list[CheckFailure]:
             make_failure(
                 "ROSTER-23",
                 "招募线主专员真实可用且不重复",
-                f"{warn}以下角色同时是多条招募线的主专员(重复): {sorted(dup)}；完整recruit_line={dict(ri.recruit_line)}",
+                (
+                    f"{warn}以下角色同时是多条招募线的主专员(重复): {sorted(dup)}；"
+                    f"完整recruit_line={dict(ri.recruit_line)}"
+                ),
                 sorted(dup),
             )
         )
@@ -1439,9 +1487,12 @@ def check_field_commission_membership_flag_consistency() -> list[CheckFailure]:
                     make_failure(
                         "ROSTER-26",
                         "外勤名单与角色外勤flag双向一致",
-                        f"{warn}委托mid={mid}人员cid={cid} name={c.name!r} 的sp_flag.field_commission={c.sp_flag.field_commission}"
-                        f"与所属委托不一致；cid in npc_id_got={cid in cache.npc_id_got}，position={c.position}，"
-                        f"命中场景={membership_scene.get(cid, [])}",
+                        (
+                            f"{warn}委托mid={mid}人员cid={cid} name={c.name!r} "
+                            f"的sp_flag.field_commission={c.sp_flag.field_commission}"
+                            f"与所属委托不一致；cid in npc_id_got={cid in cache.npc_id_got}，position={c.position}，"
+                            f"命中场景={membership_scene.get(cid, [])}"
+                        ),
                         [cid],
                     )
                 )
@@ -1455,9 +1506,12 @@ def check_field_commission_membership_flag_consistency() -> list[CheckFailure]:
             make_failure(
                 "ROSTER-26",
                 "外勤名单与角色外勤flag双向一致",
-                f"{warn}角色cid={cid} name={c.name!r} sp_flag.field_commission={c.sp_flag.field_commission}非零，"
-                f"但未出现在任何委托记录的人员列表中；cid in npc_id_got={cid in cache.npc_id_got}，position={c.position}，"
-                f"命中场景={membership_scene.get(cid, [])}",
+                (
+                    f"{warn}角色cid={cid} name={c.name!r} sp_flag.field_commission={c.sp_flag.field_commission}非零，"
+                    f"但未出现在任何委托记录的人员列表中；cid in npc_id_got={cid in cache.npc_id_got}，"
+                    f"position={c.position}，"
+                    f"命中场景={membership_scene.get(cid, [])}"
+                ),
                 [cid],
             )
         )
@@ -1512,9 +1566,13 @@ def check_field_commission_member_identity_exclusion() -> list[CheckFailure]:
                 make_failure(
                     "ROSTER-27",
                     "外勤人员不得兼任访客/囚犯/助理/监狱长/招募目标",
-                    f"{warn}外勤中cid={cid} name={getattr(c, 'name', '?')!r}(委托mid={commission_of.get(cid)}) 同时命中身份集合: {hit}；"
-                    f"work.work_type={getattr(getattr(c, 'work', None), 'work_type', None)}，current_warden_id={ri.current_warden_id}，"
-                    f"assistant_character_id={assistant}，dormitory={getattr(c, 'dormitory', None)}",
+                    (
+                        f"{warn}外勤中cid={cid} name={getattr(c, 'name', '?')!r}(委托mid={commission_of.get(cid)}) "
+                        f"同时命中身份集合: {hit}；"
+                        f"work.work_type={getattr(getattr(c, 'work', None), 'work_type', None)}，"
+                        f"current_warden_id={ri.current_warden_id}，"
+                        f"assistant_character_id={assistant}，dormitory={getattr(c, 'dormitory', None)}"
+                    ),
                     [cid],
                 )
             )
@@ -1524,7 +1582,10 @@ def check_field_commission_member_identity_exclusion() -> list[CheckFailure]:
                     make_failure(
                         "ROSTER-27",
                         "外勤人员不得兼任访客/囚犯/助理/监狱长/招募目标",
-                        f"{warn}外勤中cid={cid} name={c.name!r}(委托mid={commission_of.get(cid)}) sp_flag.vistor==1(当前在岛访客)",
+                        (
+                            f"{warn}外勤中cid={cid} name={c.name!r}(委托mid={commission_of.get(cid)}) "
+                            f"sp_flag.vistor==1(当前在岛访客)"
+                        ),
                         [cid],
                     )
                 )
@@ -1533,7 +1594,10 @@ def check_field_commission_member_identity_exclusion() -> list[CheckFailure]:
                     make_failure(
                         "ROSTER-27",
                         "外勤人员不得兼任访客/囚犯/助理/监狱长/招募目标",
-                        f"{warn}外勤中cid={cid} name={c.name!r}(委托mid={commission_of.get(cid)}) sp_flag.imprisonment为True",
+                        (
+                            f"{warn}外勤中cid={cid} name={c.name!r}(委托mid={commission_of.get(cid)}) "
+                            f"sp_flag.imprisonment为True"
+                        ),
                         [cid],
                     )
                 )
@@ -1883,7 +1947,10 @@ def check_bagging_pair_consistency() -> list[CheckFailure]:
             make_failure(
                 "ROSTER-33",
                 "装袋双方记录双向一致",
-                f"{warn}玩家bagging_chara_id={b}指向cid={cid}，但该角色sp_flag.be_bagged不为True；name={getattr(maybe_c, 'name', '?')!r}",
+                (
+                    f"{warn}玩家bagging_chara_id={b}指向cid={cid}，但该角色sp_flag.be_bagged不为True；"
+                    f"name={getattr(maybe_c, 'name', '?')!r}"
+                ),
                 [cid],
             )
         )

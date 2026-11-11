@@ -698,7 +698,10 @@ def check_num_16_favorability_type() -> list[CheckFailure]:
                 make_failure(
                     "NUM-16",
                     "好感值为整数",
-                    f"角色cid={cid} name={_chara_name(chara)} 非int好感值={bad} 观测(>100000,非失败条件)={observe_over}",
+                    (
+                        f"角色cid={cid} name={_chara_name(chara)} 非int好感值={bad} 观测(>100000,"
+                        f"非失败条件)={observe_over}"
+                    ),
                     [cid],
                 )
             )
@@ -848,8 +851,11 @@ def check_num_20_hit_point_range() -> list[CheckFailure]:
                 make_failure(
                     "NUM-20",
                     "当前体力在[1,上限]",
-                    f"角色cid={cid} name={_chara_name(chara)} hit_point={hp!r} hit_point_max={hp_max!r} "
-                    f"dead={getattr(chara, 'dead', '?')} behavior_id={getattr(getattr(chara, 'behavior', None), 'behavior_id', '?')}",
+                    (
+                        f"角色cid={cid} name={_chara_name(chara)} hit_point={hp!r} hit_point_max={hp_max!r} "
+                        f"dead={getattr(chara, 'dead', '?')} "
+                        f"behavior_id={getattr(getattr(chara, 'behavior', None), 'behavior_id', '?')}"
+                    ),
                     [cid],
                 )
             )
@@ -957,8 +963,12 @@ def check_num_23_eja_point_non_negative() -> list[CheckFailure]:
                 make_failure(
                     "NUM-23",
                     "射精槽非负且不设上限",
-                    f"角色cid={cid} name={_chara_name(chara)} eja_point={eja!r} eja_point_max={getattr(chara, 'eja_point_max', '?')} "
-                    f"endure_not_shot_count={getattr(h_state, 'endure_not_shot_count', '?')} is_h={getattr(sp_flag, 'is_h', '?')}",
+                    (
+                        f"角色cid={cid} name={_chara_name(chara)} eja_point={eja!r} "
+                        f"eja_point_max={getattr(chara, 'eja_point_max', '?')} "
+                        f"endure_not_shot_count={getattr(h_state, 'endure_not_shot_count', '?')} "
+                        f"is_h={getattr(sp_flag, 'is_h', '?')}"
+                    ),
                     [cid],
                 )
             )
@@ -1048,8 +1058,11 @@ def check_num_25_base_resource() -> list[CheckFailure]:
             make_failure(
                 "NUM-25",
                 "基地资源键集覆盖配表且为非负整数",
-                f"资源缺键={missing} 键类型合法={key_type_ok} 非法值={value_bad} 涉及资源名={detail_names} "
-                f"game_time={getattr(cache, 'game_time', '?')} warehouse_capacity={getattr(rhodes_island, 'warehouse_capacity', '?')}",
+                (
+                    f"资源缺键={missing} 键类型合法={key_type_ok} 非法值={value_bad} 涉及资源名={detail_names} "
+                    f"game_time={getattr(cache, 'game_time', '?')} "
+                    f"warehouse_capacity={getattr(rhodes_island, 'warehouse_capacity', '?')}"
+                ),
             )
         )
     return failures
@@ -1080,9 +1093,12 @@ def check_num_26_warehouse_capacity() -> list[CheckFailure]:
         make_failure(
             "NUM-26",
             "仓库容量为非负整数",
-            f"warehouse_capacity={capacity!r} facility_level[3]={getattr(rhodes_island, 'facility_level', {}).get(3) if isinstance(getattr(rhodes_island, 'facility_level', None), dict) else '?'} "
-            f"used_extra_warehouse_capacity_module={getattr(rhodes_island, 'used_extra_warehouse_capacity_module', '?')} "
-            f"materials_resouce[31]={materials.get(31)} materials_resouce[12]={materials.get(12)}",
+            (
+                f"warehouse_capacity={capacity!r} facility_level[3]={getattr(rhodes_island, 'facility_level', {}).get(3) if isinstance(getattr(rhodes_island, 'facility_level', None), dict) else '?'} "
+                f"used_extra_warehouse_capacity_module="
+                f"{getattr(rhodes_island, 'used_extra_warehouse_capacity_module', '?')} "
+                f"materials_resouce[31]={materials.get(31)} materials_resouce[12]={materials.get(12)}"
+            ),
         )
     ]
 
@@ -1120,9 +1136,12 @@ def check_num_27_fatigue_family_range() -> list[CheckFailure]:
                 make_failure(
                     "NUM-27",
                     "疲劳/饥饿/熟睡/醉酒在各自量程内",
-                    f"角色cid={cid} name={_chara_name(chara)} 越界字段={bad_fields} "
-                    f"behavior_id={getattr(getattr(chara, 'behavior', None), 'behavior_id', '?')} "
-                    f"state={getattr(chara, 'state', '?')} unconscious_h={getattr(getattr(chara, 'sp_flag', None), 'unconscious_h', '?')}",
+                    (
+                        f"角色cid={cid} name={_chara_name(chara)} 越界字段={bad_fields} "
+                        f"behavior_id={getattr(getattr(chara, 'behavior', None), 'behavior_id', '?')} "
+                        f"state={getattr(chara, 'state', '?')} "
+                        f"unconscious_h={getattr(getattr(chara, 'sp_flag', None), 'unconscious_h', '?')}"
+                    ),
                     [cid],
                 )
             )
@@ -1191,9 +1210,12 @@ def check_num_29_urinate_point_upper_bound() -> list[CheckFailure]:
                 make_failure(
                     "NUM-29",
                     "角色尿意值不超过300",
-                    f"[warning] 角色cid={cid} name={_chara_name(chara)} urinate_point={urinate!r} "
-                    f"behavior_id={getattr(getattr(chara, 'behavior', None), 'behavior_id', '?')} "
-                    f"difficulty_setting[11]={difficulty_setting.get(11)} difficulty_setting[12]={difficulty_setting.get(12)}",
+                    (
+                        f"[warning] 角色cid={cid} name={_chara_name(chara)} urinate_point={urinate!r} "
+                        f"behavior_id={getattr(getattr(chara, 'behavior', None), 'behavior_id', '?')} "
+                        f"difficulty_setting[11]={difficulty_setting.get(11)} "
+                        f"difficulty_setting[12]={difficulty_setting.get(12)}"
+                    ),
                     [cid],
                 )
             )

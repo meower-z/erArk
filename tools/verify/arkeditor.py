@@ -233,7 +233,8 @@ def find_run(out_dir: Path) -> dict[str, object]:
     ]
     if not runs:
         sys.exit(
-            f"没有以 --out {out_dir} 启动、仍在运行的编辑器。先用 start 启动；limited_run.py status 列出正在运行的实例。"
+            f"没有以 --out {out_dir} 启动、仍在运行的编辑器。先用 start 启动；limited_run.py status "
+            f"列出正在运行的实例。"
         )
     return dict(runs[0])
 

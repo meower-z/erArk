@@ -89,7 +89,10 @@ class CharaList(QWidget):
         # 新增介绍文本
         intro_labels_text = []
         intro_labels_text.append(
-            "角色编号：prts的wiki里，干员页面里右上角的[查看源代码]，干员id里的数字\nHP（体力）基础1500，可上下浮动最多1000\nMP（气力）基础1000，可上下浮动最多1000\n初始宿舍默认为无，自动分配到宿舍，有特殊需求的请联系作者\n字体颜色为16进制颜色代码，如#ffffff为白色\n角色立绘：将150*300像素，PNG格式的角色立绘图片放在 image 文件夹中"
+            "角色编号：prts的wiki里，干员页面里右上角的[查看源代码]，干员id里的数字\nHP（体力）基础1500，"
+            "可上下浮动最多1000\nMP（气力）基础1000，可上下浮动最多1000\n初始宿舍默认为无，自动分配到宿舍，"
+            "有特殊需求的请联系作者\n字体颜色为16进制颜色代码，如#ffffff为白色\n角色立绘：将150*300像素，"
+            "PNG格式的角色立绘图片放在 image 文件夹中"
         )
         intro_labels_text.append(
             "能力最高为8级，除极端人设外，一般初始能力最高不超过3级\n每1经验对应1次相应指令，除极端人设外，一般初始经验最高不超过200\n默认都有的基础素质是处女、A处女和无接吻经验，必选的素质有年龄素质，以及胸部、屁股、腿、脚四个部位的素质\n单个部位的服装可以有多个\n胸衣和内裤如果空缺则每日随机生成，非空缺则固定为该服装"
@@ -293,10 +296,22 @@ class CharaList(QWidget):
             out_data += (
                 f"Sex,int,{cache_control.now_chara_data.Sex},0,角色性别\n"
             )
-            out_data += f"Profession,int,{cache_control.now_chara_data.Profession},0,角色职业为{cache_control.profession_data[str(cache_control.now_chara_data.Profession)]}\n"
-            out_data += f"Race,int,{cache_control.now_chara_data.Race},0,角色种族为{cache_control.race_data[str(cache_control.now_chara_data.Race)]}\n"
-            out_data += f"Nation,int,{cache_control.now_chara_data.Nation},0,角色势力为{cache_control.nation_data[str(cache_control.now_chara_data.Nation)]}\n"
-            out_data += f"Birthplace,int,{cache_control.now_chara_data.Birthplace},0,角色出身地为{cache_control.birthplace_data[str(cache_control.now_chara_data.Birthplace)]}\n"
+            out_data += (
+                f"Profession,int,{cache_control.now_chara_data.Profession},0,"
+                f"角色职业为{cache_control.profession_data[str(cache_control.now_chara_data.Profession)]}\n"
+            )
+            out_data += (
+                f"Race,int,{cache_control.now_chara_data.Race},0,"
+                f"角色种族为{cache_control.race_data[str(cache_control.now_chara_data.Race)]}\n"
+            )
+            out_data += (
+                f"Nation,int,{cache_control.now_chara_data.Nation},0,"
+                f"角色势力为{cache_control.nation_data[str(cache_control.now_chara_data.Nation)]}\n"
+            )
+            out_data += (
+                f"Birthplace,int,{cache_control.now_chara_data.Birthplace},0,"
+                f"角色出身地为{cache_control.birthplace_data[str(cache_control.now_chara_data.Birthplace)]}\n"
+            )
             out_data += (
                 f"Hp,int,{cache_control.now_chara_data.Hp},0,角色初始体力\n"
             )
@@ -312,28 +327,49 @@ class CharaList(QWidget):
                 len(cache_control.now_chara_data.TextColor) == 7
                 and cache_control.now_chara_data.TextColor[0] == "#"
             ):
-                out_data += f"TextColor,str,{cache_control.now_chara_data.TextColor},1,角色字体颜色为{cache_control.now_chara_data.TextColor}\n"
+                out_data += (
+                    f"TextColor,str,{cache_control.now_chara_data.TextColor},1,"
+                    f"角色字体颜色为{cache_control.now_chara_data.TextColor}\n"
+                )
             if len(cache_control.now_chara_data.Ability):
                 for key in cache_control.now_chara_data.Ability:
-                    out_data += f"A|{key},int,{cache_control.now_chara_data.Ability[key]},0,角色{cache_control.ability_data[str(key)]}为{cache_control.now_chara_data.Ability[key]}\n"
+                    out_data += (
+                        f"A|{key},int,{cache_control.now_chara_data.Ability[key]},0,"
+                        f"角色{cache_control.ability_data[str(key)]}为{cache_control.now_chara_data.Ability[key]}\n"
+                    )
             if len(cache_control.now_chara_data.Experience):
                 for key in cache_control.now_chara_data.Experience:
-                    out_data += f"E|{key},int,{cache_control.now_chara_data.Experience[key]},0,角色{cache_control.experience_data[str(key)]}为{cache_control.now_chara_data.Experience[key]}\n"
+                    out_data += (
+                        f"E|{key},int,{cache_control.now_chara_data.Experience[key]},0,"
+                        f"角色{cache_control.experience_data[str(key)]}为{cache_control.now_chara_data.Experience[key]}"
+                        f"\n"
+                    )
             if len(cache_control.now_chara_data.Talent):
                 for key in cache_control.now_chara_data.Talent:
-                    out_data += f"T|{key},int,{cache_control.now_chara_data.Talent[key]},0,角色有{cache_control.talent_data[str(key)]}素质\n"
+                    out_data += (
+                        f"T|{key},int,{cache_control.now_chara_data.Talent[key]},0,"
+                        f"角色有{cache_control.talent_data[str(key)]}素质\n"
+                    )
             if len(cache_control.now_chara_data.Cloth):
                 for key in cache_control.now_chara_data.Cloth:
                     if len(cache_control.now_chara_data.Cloth[key]) <= 1:
                         for i in range(
                             len(cache_control.now_chara_data.Cloth[key])
                         ):
-                            out_data += f"C|{key},str,{cache_control.now_chara_data.Cloth[key][i]},1,角色{cache_control.clothing_data[str(key)]}为{cache_control.now_chara_data.Cloth[key][i]}\n"
+                            out_data += (
+                                f"C|{key},str,{cache_control.now_chara_data.Cloth[key][i]},1,"
+                                f"角色{cache_control.clothing_data[str(key)]}为"
+                                f"{cache_control.now_chara_data.Cloth[key][i]}\n"
+                            )
                     else:
                         for i in range(
                             len(cache_control.now_chara_data.Cloth[key])
                         ):
-                            out_data += f"C|{key}-{i},str,{cache_control.now_chara_data.Cloth[key][i]},1,角色{cache_control.clothing_data[str(key)]}为{cache_control.now_chara_data.Cloth[key][i]}\n"
+                            out_data += (
+                                f"C|{key}-{i},str,{cache_control.now_chara_data.Cloth[key][i]},1,"
+                                f"角色{cache_control.clothing_data[str(key)]}为"
+                                f"{cache_control.now_chara_data.Cloth[key][i]}\n"
+                            )
 
             # 写入文件
             with open(cache_control.now_file_path, "w", encoding="utf-8") as f:

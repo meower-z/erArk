@@ -1384,7 +1384,8 @@ def load_medical_complication() -> None:
                 now_count = len(severity_map.get(severity_level, []))
                 if now_count != require_count:
                     raise ValueError(
-                        f"部位 {system_id}-{part_id} 的严重等级 {severity_level} 数量应为 {require_count}，当前为 {now_count}"
+                        f"部位 {system_id}-{part_id} 的严重等级 {severity_level} 数量应为 {require_count}，当前为 "
+                        f"{now_count}"
                     )
 
 

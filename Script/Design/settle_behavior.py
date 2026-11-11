@@ -371,7 +371,10 @@ def handle_settle_behavior(
         if len(change_data.experience):
             for experience_id in change_data.experience:
                 experience_name = f"{game_config.config_experience[experience_id].name.ljust(6,'　')}"
-                now_text += f"\n  <medium_spring_green>{experience_name}{attr_text.get_value_text(int(change_data.experience[experience_id]))}</medium_spring_green>"
+                now_text += (
+                    f"\n  <medium_spring_green>{experience_name}"
+                    f"{attr_text.get_value_text(int(change_data.experience[experience_id]))}</medium_spring_green>"
+                )
 
         # 非常见结算输出
         # if status_data.money:

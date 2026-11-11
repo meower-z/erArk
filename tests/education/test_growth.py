@@ -851,7 +851,10 @@ official_event_handle.settle_official_event_option(
     E6.GRADUATION_EVENT_UID, 210, 0, 2
 )
 check(
-    "M3 毕业典礼选「坐在台下，看着她自己走完全程」（提示「倾向：坚强」，+4）：倾向 -1 → 3，坚强落上、脆弱清掉（此前只加倾向值，素质仍是脆弱）",
+    (
+        "M3 毕业典礼选「坐在台下，看着她自己走完全程」（提示「倾向：坚强」，+4）：倾向 -1 → 3，坚强落上、"
+        "脆弱清掉（此前只加倾向值，素质仍是脆弱）"
+    ),
     _g_grown.personality_point.get(1) == 3.0
     and grown.talent[274] == 1
     and grown.talent[273] == 0,
@@ -873,7 +876,10 @@ check(
 )
 official_event_handle.settle_official_event_option("萝莉38", 210, 0, 1)
 check(
-    "M3 成年前入队、成年后才处理的萝莉 38（旧档队列里的残留）选「不问，让她自己去买」（倾向：坚强 +3）：倾向 -2 → 1，坚强落上",
+    (
+        "M3 成年前入队、成年后才处理的萝莉 38（旧档队列里的残留）选「不问，让她自己去买」（倾向：坚强 +3）：倾向 -2 → "
+        "1，坚强落上"
+    ),
     _g_grown.personality_point.get(1) == 1.0
     and grown.talent[274] == 1
     and grown.talent[273] == 0,
@@ -903,7 +909,10 @@ check(
 )
 no_growth_m3 = make_character(211, "没有养成数据的干员", 21)
 check(
-    "M3 settle_personality_pair：返回写上的素质 id；性格对不存在、没有养成数据、角色不存在都返回 0，且不惰性创建养成数据",
+    (
+        "M3 settle_personality_pair：返回写上的素质 id；性格对不存在、没有养成数据、角色不存在都返回 0，"
+        "且不惰性创建养成数据"
+    ),
     growth_handle.settle_personality_pair(210, 1) == 274
     and growth_handle.settle_personality_pair(210, 9) == 0
     and growth_handle.settle_personality_pair(211, 0) == 0
@@ -1033,7 +1042,10 @@ _expect_gap = [
     for line in (50, 60)
 ]
 check(
-    "M1 婴儿期：120 个出生日期里，阶段进度 ≥ 50（婴儿 4「断奶的日子到了」）首次成立的日子都严格早于 ≥ 60（婴儿 50「断奶之后」）",
+    (
+        "M1 婴儿期：120 个出生日期里，阶段进度 ≥ 50（婴儿 4「断奶的日子到了」）首次成立的日子都严格早于 ≥ 60（婴儿 "
+        "50「断奶之后」）"
+    ),
     len(_first_gap) == 120 and all(_first_gap.values()),
     sorted(key for key, one in _first_gap.items() if not one)[:10],
 )
@@ -1131,7 +1143,10 @@ check(
 )
 growth_handle.change_growth_value(213, V.GROWTH_VALUE_PERSONALITY_BASE + 1, 4.0)
 check(
-    "M3 只重选改写的那一对：坚强 / 脆弱一对 -1 → +3，落上坚强；倾向 +2 的勤劳 / 懒散、-3 的热情 / 孤僻两对素质仍为 0（原「其余三对都没动」在它们本就为 0、倾向也为 0 时恒真）",
+    (
+        "M3 只重选改写的那一对：坚强 / 脆弱一对 -1 → +3，落上坚强；倾向 +2 的勤劳 / 懒散、-3 的热情 / 孤僻两对素质仍为 "
+        "0（原「其余三对都没动」在它们本就为 0、倾向也为 0 时恒真）"
+    ),
     grown_b.talent[_pair_talent[1][0]] == 1
     and grown_b.talent[_pair_talent[1][1]] == 0
     and all(

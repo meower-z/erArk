@@ -592,7 +592,8 @@ def settle_recruit_new_chara(commision_id: int) -> str:
             cache.rhodes_island.recruited_id.add(choice_id)
             # 绘制招募信息
             recruited_text = _(
-                "※ 在进行委托时队员们意外遇到了一个同行的路人{0}，在短暂的相处中，她对罗德岛产生了兴趣，愿意加入我们成为一名新的干员（请前往博士办公室确认） ※\n\n"
+                "※ 在进行委托时队员们意外遇到了一个同行的路人{0}，在短暂的相处中，她对罗德岛产生了兴趣，"
+                "愿意加入我们成为一名新的干员（请前往博士办公室确认） ※\n\n"
             ).format(cache.character_data[choice_id].name)
 
     return recruited_text
@@ -650,7 +651,10 @@ def create_temp_commission(
         commission_id
     )
     # 对路径data\csv\Commission.csv进行更新，在最后一行加入新的委托数据
-    new_commission_data = f"{commission_id},{name},{country_id},{level},{type},{people},{time},{demand},{reward},{related_id},{special},{description}\n"
+    new_commission_data = (
+        f"{commission_id},{name},{country_id},{level},{type},{people},{time},{demand},{reward},{related_id},{special},"
+        f"{description}\n"
+    )
     with open("data/csv/Commission.csv", "a", encoding="utf-8") as f:
         f.write(new_commission_data)
 

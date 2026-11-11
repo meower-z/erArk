@@ -246,7 +246,8 @@ def _log_size_exceeded() -> bool:
                 _log_cap_notice_written = True
                 with open(LOG_PATH, "a", encoding="utf-8") as f:
                     f.write(
-                        f"[静态检查] 日志已超过{_MAX_LOG_BYTES // (1024 * 1024)}MB体积上限，本进程停止写入。如需继续记录请清空或另存本文件后重启游戏\n"
+                        f"[静态检查] 日志已超过{_MAX_LOG_BYTES // (1024 * 1024)}MB体积上限，本进程停止写入。"
+                        f"如需继续记录请清空或另存本文件后重启游戏\n"
                     )
             return True
     except Exception:
@@ -271,7 +272,8 @@ def _build_entry_header_lines(
     lines = []
     lines.append("=" * 80)
     lines.append(
-        f"[静态检查] 现实时间: {now_text} | 游戏时间: {game_time_text} | 周目: {game_round_text} | 已注册检查项: {len(get_all_checks())}"
+        f"[静态检查] 现实时间: {now_text} | 游戏时间: {game_time_text} | 周目: {game_round_text} | 已注册检查项: "
+        f"{len(get_all_checks())}"
     )
     lines.append(
         f"最近输入(input_cache 末尾10条): {_build_recent_input_text(cache)}"
@@ -377,7 +379,8 @@ def write_repair_log(
     )
     for record in repair_records:
         lines.append(
-            f"  * [{record.get('check_id', '?')}] {record.get('target', '?')} 字段={record.get('field', '?')} 旧值={record.get('old_value')!r} 新值={record.get('new_value')!r}"
+            f"  * [{record.get('check_id', '?')}] {record.get('target', '?')} 字段={record.get('field', '?')} "
+            f"旧值={record.get('old_value')!r} 新值={record.get('new_value')!r}"
         )
     with open(LOG_PATH, "a", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
