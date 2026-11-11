@@ -218,7 +218,7 @@ def load_premise_categories() -> dict:
         encoding="utf-8",
     ) as f:
         text = f.read()
-    # pyink 把超过 80 列的常量赋值折成「常量名 = (」「值」「)」三行，先并回一行
+    # black 把超过 80 列的常量赋值折成「常量名 = (」「值」「)」三行，这里先把它并回一行
     lines = re.sub(r'= \(\n\s*("[^"\n]*")\n\s*\)\n', r"= \1\n", text).split(
         "\n"
     )

@@ -8,13 +8,13 @@ git config core.hooksPath hooks        # 启用仓库自带的 git 钩子
 pip install -r requirements-lint.txt   # 可选，做棘轮检查时装。它也装上 requirements-dev.txt 里的包
 ```
 
-仓库自带的钩子本身不检查也不改动代码格式。本机 lint 引擎是可选的，不随仓库提供。用 `git config erark.lintEngine <路径>` 指向它以后，提交时 `hooks/pre-commit` 运行它。合并提交时 `hooks/pre-merge-commit` 也运行它。它做下面的棘轮检查。没配 lint 引擎时，钩子跳过棘轮检查，打印一行提示。
+装的 black 与 `requirements-dev.txt` 固定的版本相同时，`hooks/pre-commit` 在提交前用 black 排版暂存的 `.py` 与 `.pyi` 文件。black 改过的文件由钩子写回工作区并重新暂存，提交照常进行。black 要改的文件还有没暂存的改动时，钩子不写回这个文件，列出它并中止提交。提交用的是 `git commit <路径>` 时，钩子同样不写回，列出文件并中止提交。这两种情况下，用 black 排版列出的文件，暂存整个文件后再提交。合并提交时 `hooks/pre-merge-commit` 做同样的排版，写回文件后中止合并，这时运行 `git commit` 完成合并。没装 black 或装的版本不同时，钩子跳过排版，打印一行提示。本机 lint 引擎是可选的，不随仓库提供。用 `git config erark.lintEngine <路径>` 指向它以后，提交时 `hooks/pre-commit` 在排版之后运行它。合并提交时 `hooks/pre-merge-commit` 也在排版之后运行它。它做下面的棘轮检查。没配 lint 引擎时，钩子跳过棘轮检查，打印一行提示。
 
 ## 代码风格
 
-- 格式：pyink，2 空格缩进，每行 80 列，引号随文件里的多数。在仓库根目录运行 `pyink .`。生成的 `Script/Config/config_def.py` 不参与格式化，也不参与下面的各项检查。
+- 格式：black，4 空格缩进，每行 80 列，引号优先用双引号。在仓库根目录运行 `black .`。棘轮用 `black --check` 检查格式，没排好的文件算违规，不记进基线。生成的 `Script/Config/config_def.py` 不参与格式化，也不参与下面的各项检查。
 - ruff：配置在 `pyproject.toml` 的 `[tool.ruff]`。`[tool.ruff.lint]` 选用这些规则组：pyflakes（F），pycodestyle 的 E4、E7、E9、E501 与 W，bugbear（B），pylint 的错误与警告（PLE、PLW，不含查 `global` 语句的 PLW0603），缺文档字符串（D1）与空文档字符串（D419），pyupgrade（UP）。在仓库根目录运行 `ruff check --ignore-noqa` 时，受 git 跟踪的 `.py` 文件得到的报告与棘轮运行 ruff 时相同。报告里也有基线里记着的老问题。手动运行的 ruff 还会查没被 git 跟踪、也没被 `.gitignore` 忽略的 `.py` 文件。棘轮不查这些文件。
-- 行长：ruff 按显示宽度查行长，一个汉字算 2 列。ruff 的行长上限是 120 列。pyink 按 80 列排版。
+- 行长：ruff 按显示宽度查行长，一个汉字算 2 列。ruff 的行长上限是 120 列。black 按 80 列排版。
 - 模块长度：超过 300 行警告，超过 400 行算违规。
 - 文档字符串：模块和包（`__init__.py`）要有文档字符串，没有代码的文件也要有。公开的类和公开的函数要有文档字符串。公开的类里的公开方法和公开的嵌套类也要有。`__init__` 和 `__eq__` 这类前后都有双下划线的方法也算公开方法。写了的文档字符串不能是空的。下面这些不要求文档字符串：
   - 名字以 `_` 开头的模块和包，以及其中的一切。前后都有双下划线的模块和包（如 `__main__.py`）不在此列。

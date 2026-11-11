@@ -4,7 +4,7 @@ buildata.py 生成的 ArkEditor 前提表与结算表不受常量文件开头的
 ==============================================================================
 把 constant_promise.py 与 constant_effect.py 复制进临时目录：
 不带 docstring 的一份从第一个顶格的 class 行开始（文件已有的模块 docstring 不复制，开头的 BOM 照留）；
-带 docstring 的几份是文件原样，以及在不带的那份开头加上模块 docstring 及 pyink 要求的两个空行；
+带 docstring 的几份是文件原样，以及在不带的那份开头加上模块 docstring 和 black 要求的两个空行。
 在各份目录里分别运行 buildata 的 constand_promise_2_csv 与 constand_effect_2_csv，
 比较写出的 Premise.csv 与 Effect.csv。
 """

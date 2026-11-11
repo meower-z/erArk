@@ -69,7 +69,7 @@ def update_behavior_file(
     try:
         # 读取原文件的头部信息
         file_header = ""
-        indent = "  "
+        indent = "    "
         if os.path.exists(behavior_py_path):
             with open(behavior_py_path, encoding="utf-8") as file:
                 content = file.read()
@@ -95,7 +95,7 @@ def update_behavior_file(
             if en_name and en_name.strip():
                 constant_name = en_name.upper()
                 line = f'{indent}{constant_name} = "{en_name}"'
-                # 整行超过 80 列、值本身放得进折行时，照 pyink 的样子折成三行
+                # 整行超过 80 列、缩进后的值不超过 80 列时，按 black 的排法折成「常量名 = (」「值」「)」三行
                 if len(line) > 80 and len(indent) + 4 + len(en_name) + 2 <= 80:
                     line = f'{indent}{constant_name} = (\n{indent}    "{en_name}"\n{indent})'
                 code += line + "\n"
