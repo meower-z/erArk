@@ -65,71 +65,73 @@ print(json.dumps({
 
 
 def make_data_dir(root: str) -> None:
-  """
-  在 root 下创建 data/ 目录。再为仓库 data/ 中除 MAP_CACHE_FILES 以外的每个
-  条目，在这个目录里建一个同名软链接。
-  Keyword arguments:
-  root: str -- 子进程的工作目录路径
-  Return arguments:
-  None -- 无
-  """
-  os.makedirs(os.path.join(root, "data"))
-  for name in os.listdir(os.path.join(ROOT, "data")):
-    if name not in MAP_CACHE_FILES:
-      os.symlink(
-          os.path.join(ROOT, "data", name), os.path.join(root, "data", name)
-      )
-
-
-def assign_dormitory(root: str, language: str) -> dict[str, Any]:
-  """
-  在工作目录 root 下，以游戏语言 language 运行子进程脚本 ASSIGN_DORMITORY。
-  Keyword arguments:
-  root: str -- 子进程的工作目录路径，其下已有 data/
-  language: str -- 子进程使用的游戏语言代码
-  Return arguments:
-  dict[str, Any] -- 子进程标准输出末行的 JSON，含生效语言与分房结果
-  """
-  result = subprocess.run(
-      [sys.executable, "-c", ASSIGN_DORMITORY, ROOT, language],
-      cwd=root,
-      check=True,
-      capture_output=True,
-      text=True,
-      timeout=300,
-  )
-  assigned: dict[str, Any] = json.loads(result.stdout.splitlines()[-1])
-  return assigned
-
-
-class TemplateDormitoryEveryLanguageTest(FastTestCase):
-  """检验三种语言下模板 Dormitory 不是「无」的干员分到的场景路径"""
-
-  def test_same_scene_path_in_every_language(self) -> None:
     """
-    断言每个子进程实际生效的语言等于传入的语言代码。断言中文下至少有一名
-    模板 Dormitory 不是「无」的干员。断言中文下每名此类干员的宿舍都是
-    cache.scene_data 的键。断言英文和韩文下的分房结果与中文下相同。
+    在 root 下创建 data/ 目录。再为仓库 data/ 中除 MAP_CACHE_FILES 以外的每个
+    条目，在这个目录里建一个同名软链接。
     Keyword arguments:
-    无
+    root: str -- 子进程的工作目录路径
     Return arguments:
     None -- 无
     """
-    assigned: dict[str, dict[str, Any]] = {}
-    with tempfile.TemporaryDirectory() as temp_dir:
-      for language in LANGUAGES:
-        root = os.path.join(temp_dir, language)
-        make_data_dir(root)
-        assigned[language] = assign_dormitory(root, language)
-        self.assertEqual(assigned[language]["language"], language)
-    self.assertTrue(assigned["zh_CN"]["dormitory"])
-    for chara_id, (dormitory, is_scene_path) in assigned["zh_CN"][
-        "dormitory"
-    ].items():
-      with self.subTest(language="zh_CN", chara_id=chara_id):
-        self.assertTrue(is_scene_path, dormitory)
-    for language in LANGUAGES[1:]:
-      with self.subTest(language=language):
-        self.assertEqual(
-            assigned[language]["dormitory"], assigned["zh_CN"]["dormitory"]
-        )
+    os.makedirs(os.path.join(root, "data"))
+    for name in os.listdir(os.path.join(ROOT, "data")):
+        if name not in MAP_CACHE_FILES:
+            os.symlink(
+                os.path.join(ROOT, "data", name),
+                os.path.join(root, "data", name),
+            )
+
+
+def assign_dormitory(root: str, language: str) -> dict[str, Any]:
+    """
+    在工作目录 root 下，以游戏语言 language 运行子进程脚本 ASSIGN_DORMITORY。
+    Keyword arguments:
+    root: str -- 子进程的工作目录路径，其下已有 data/
+    language: str -- 子进程使用的游戏语言代码
+    Return arguments:
+    dict[str, Any] -- 子进程标准输出末行的 JSON，含生效语言与分房结果
+    """
+    result = subprocess.run(
+        [sys.executable, "-c", ASSIGN_DORMITORY, ROOT, language],
+        cwd=root,
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=300,
+    )
+    assigned: dict[str, Any] = json.loads(result.stdout.splitlines()[-1])
+    return assigned
+
+
+class TemplateDormitoryEveryLanguageTest(FastTestCase):
+    """检验三种语言下模板 Dormitory 不是「无」的干员分到的场景路径"""
+
+    def test_same_scene_path_in_every_language(self) -> None:
+        """
+        断言每个子进程实际生效的语言等于传入的语言代码。断言中文下至少有一名
+        模板 Dormitory 不是「无」的干员。断言中文下每名此类干员的宿舍都是
+        cache.scene_data 的键。断言英文和韩文下的分房结果与中文下相同。
+        Keyword arguments:
+        无
+        Return arguments:
+        None -- 无
+        """
+        assigned: dict[str, dict[str, Any]] = {}
+        with tempfile.TemporaryDirectory() as temp_dir:
+            for language in LANGUAGES:
+                root = os.path.join(temp_dir, language)
+                make_data_dir(root)
+                assigned[language] = assign_dormitory(root, language)
+                self.assertEqual(assigned[language]["language"], language)
+        self.assertTrue(assigned["zh_CN"]["dormitory"])
+        for chara_id, (dormitory, is_scene_path) in assigned["zh_CN"][
+            "dormitory"
+        ].items():
+            with self.subTest(language="zh_CN", chara_id=chara_id):
+                self.assertTrue(is_scene_path, dormitory)
+        for language in LANGUAGES[1:]:
+            with self.subTest(language=language):
+                self.assertEqual(
+                    assigned[language]["dormitory"],
+                    assigned["zh_CN"]["dormitory"],
+                )

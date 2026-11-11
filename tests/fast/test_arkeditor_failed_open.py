@@ -35,105 +35,116 @@ DRIVER = os.path.join(ROOT, "tests", "fast", "arkeditor_failed_open_driver.py")
 
 
 class ArkEditorFailedOpenTest(FastTestCase):
-  """编辑器打开读不了的文件后的状态与按保存后的文件"""
+    """编辑器打开读不了的文件后的状态与按保存后的文件"""
 
-  def setUp(self) -> None:
-    """
-    PySide6.QtWidgets 无法导入时跳过，否则在临时目录里准备编辑器副本与空的数据目录
-    Keyword arguments:
-    无
-    Return arguments:
-    无
-    """
-    super().setUp()
-    probe = subprocess.run(
-        [sys.executable, "-c", "import PySide6.QtWidgets"],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if probe.returncode:
-      self.skipTest(
-          "PySide6.QtWidgets 无法导入：" + probe.stderr.strip().splitlines()[-1]
-      )
-    self.tmp = tempfile.mkdtemp(prefix="arkeditor_test_")
-    self.addCleanup(shutil.rmtree, self.tmp)
-    # 编辑器打开口上与事件文件、按保存时，把备份写进自身目录上两级的「备份」文件夹，
-    # 副本放在临时目录里，备份就不会写进仓库
-    self.editor_dir = os.path.join(self.tmp, "tools", "ArkEditor")
-    shutil.copytree(os.path.join(ROOT, "tools", "ArkEditor"), self.editor_dir)
-    self.data_dir = os.path.join(self.tmp, "data")
-    os.makedirs(self.data_dir)
+    def setUp(self) -> None:
+        """
+        PySide6.QtWidgets 无法导入时跳过，否则在临时目录里准备编辑器副本与空的数据目录
+        Keyword arguments:
+        无
+        Return arguments:
+        无
+        """
+        super().setUp()
+        probe = subprocess.run(
+            [sys.executable, "-c", "import PySide6.QtWidgets"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if probe.returncode:
+            self.skipTest(
+                "PySide6.QtWidgets 无法导入："
+                + probe.stderr.strip().splitlines()[-1]
+            )
+        self.tmp = tempfile.mkdtemp(prefix="arkeditor_test_")
+        self.addCleanup(shutil.rmtree, self.tmp)
+        # 编辑器打开口上与事件文件、按保存时，把备份写进自身目录上两级的「备份」文件夹，
+        # 副本放在临时目录里，备份就不会写进仓库
+        self.editor_dir = os.path.join(self.tmp, "tools", "ArkEditor")
+        shutil.copytree(
+            os.path.join(ROOT, "tools", "ArkEditor"), self.editor_dir
+        )
+        self.data_dir = os.path.join(self.tmp, "data")
+        os.makedirs(self.data_dir)
 
-  def write_files(self) -> None:
-    """
-    在数据目录里写入可读与读不了的口上、事件、属性文件各一份，再写入截短的事件文件 cut_event.json，
-    并把编辑器目录下的模板写成读不了的属性文件。每个子测试开始时调用，各子测试从同样的文件开始
-    Keyword arguments:
-    无
-    Return arguments:
-    None -- 无
-    """
-    with open(
-        os.path.join(ROOT, "example", file_load.CHARA_TEMPLATE),
-        encoding="utf-8",
-    ) as template_file:
-      chara = template_file.read()
-    bad_chara = chara.replace("Sex,int,1,", "Sex,int,女,", 1)
-    bad_event = {"event-x": {"uid": "event-x", "premise": {}}}
-    for path, text in (
-        (os.path.join(self.data_dir, "talk.csv"), file_load.TALK_CSV),
-        (
-            os.path.join(self.data_dir, "bad_talk.csv"),
-            file_load.TALK_CSV + "3,share_blankly,第三条,high_1,第三条口上\n",
-        ),
-        (
-            os.path.join(self.data_dir, "event1.json"),
-            json.dumps(file_load.EVENTS, ensure_ascii=False),
-        ),
-        (
-            os.path.join(self.data_dir, "bad_event.json"),
-            json.dumps(dict(file_load.EVENTS, **bad_event), ensure_ascii=False),
-        ),
-        (
-            os.path.join(self.data_dir, "cut_event.json"),
-            json.dumps(file_load.EVENTS, ensure_ascii=False)[:-20],
-        ),
-        (os.path.join(self.data_dir, "chara.csv"), chara),
-        (os.path.join(self.data_dir, "bad_chara.csv"), bad_chara),
-        (os.path.join(self.editor_dir, file_load.CHARA_TEMPLATE), bad_chara),
-    ):
-      with open(path, "w", encoding="utf-8") as data_file:
-        data_file.write(text)
+    def write_files(self) -> None:
+        """
+        在数据目录里写入可读与读不了的口上、事件、属性文件各一份，再写入截短的事件文件 cut_event.json，
+        并把编辑器目录下的模板写成读不了的属性文件。每个子测试开始时调用，各子测试从同样的文件开始
+        Keyword arguments:
+        无
+        Return arguments:
+        None -- 无
+        """
+        with open(
+            os.path.join(ROOT, "example", file_load.CHARA_TEMPLATE),
+            encoding="utf-8",
+        ) as template_file:
+            chara = template_file.read()
+        bad_chara = chara.replace("Sex,int,1,", "Sex,int,女,", 1)
+        bad_event = {"event-x": {"uid": "event-x", "premise": {}}}
+        for path, text in (
+            (os.path.join(self.data_dir, "talk.csv"), file_load.TALK_CSV),
+            (
+                os.path.join(self.data_dir, "bad_talk.csv"),
+                file_load.TALK_CSV
+                + "3,share_blankly,第三条,high_1,第三条口上\n",
+            ),
+            (
+                os.path.join(self.data_dir, "event1.json"),
+                json.dumps(file_load.EVENTS, ensure_ascii=False),
+            ),
+            (
+                os.path.join(self.data_dir, "bad_event.json"),
+                json.dumps(
+                    dict(file_load.EVENTS, **bad_event), ensure_ascii=False
+                ),
+            ),
+            (
+                os.path.join(self.data_dir, "cut_event.json"),
+                json.dumps(file_load.EVENTS, ensure_ascii=False)[:-20],
+            ),
+            (os.path.join(self.data_dir, "chara.csv"), chara),
+            (os.path.join(self.data_dir, "bad_chara.csv"), bad_chara),
+            (
+                os.path.join(self.editor_dir, file_load.CHARA_TEMPLATE),
+                bad_chara,
+            ),
+        ):
+            with open(path, "w", encoding="utf-8") as data_file:
+                data_file.write(text)
 
-  def drive(self, variant: str) -> dict[str, Any]:
-    """
-    在子进程里运行驱动脚本，子进程退出码不为 0 时测试失败
-    Keyword arguments:
-    variant -- str，<文件类型>:<之前打开的文件>，如 talk:same 或 template:none
-    Return arguments:
-    dict[str, Any] -- 驱动脚本最后一行输出里的观察结果
-    """
-    done = subprocess.run(
-        [sys.executable, DRIVER, self.editor_dir, self.data_dir, variant],
-        capture_output=True,
-        text=True,
-        timeout=120,
-        check=False,
-    )
-    self.assertEqual(done.returncode, 0, done.stderr)
-    result: dict[str, Any] = json.loads(done.stdout.strip().splitlines()[-1])
-    return result
+    def drive(self, variant: str) -> dict[str, Any]:
+        """
+        在子进程里运行驱动脚本，子进程退出码不为 0 时测试失败
+        Keyword arguments:
+        variant -- str，<文件类型>:<之前打开的文件>，如 talk:same 或 template:none
+        Return arguments:
+        dict[str, Any] -- 驱动脚本最后一行输出里的观察结果
+        """
+        done = subprocess.run(
+            [sys.executable, DRIVER, self.editor_dir, self.data_dir, variant],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
+        self.assertEqual(done.returncode, 0, done.stderr)
+        result: dict[str, Any] = json.loads(
+            done.stdout.strip().splitlines()[-1]
+        )
+        return result
 
-  def test_save_after_failed_open(self) -> None:
-    """各子测试：打开读不了的文件时抛异常，编辑器状态不变，按保存后该文件不变"""
-    for kind in ("talk", "event", "cut_event", "chara", "template"):
-      for prior in ("same", "none"):
-        with self.subTest(kind=kind, prior=prior):
-          self.write_files()
-          result = self.drive(f"{kind}:{prior}")
-          self.assertNotEqual(result["step_errors"]["open_bad"], [])
-          self.assertEqual(result["bad_after"], result["bad_before"])
-          self.assertEqual(result["after"], result["before"])
-          self.assertEqual(result["step_errors"]["save"], [])
-          self.assertEqual(result["step_errors"].get("apply", []), [])
+    def test_save_after_failed_open(self) -> None:
+        """各子测试：打开读不了的文件时抛异常，编辑器状态不变，按保存后该文件不变"""
+        for kind in ("talk", "event", "cut_event", "chara", "template"):
+            for prior in ("same", "none"):
+                with self.subTest(kind=kind, prior=prior):
+                    self.write_files()
+                    result = self.drive(f"{kind}:{prior}")
+                    self.assertNotEqual(result["step_errors"]["open_bad"], [])
+                    self.assertEqual(result["bad_after"], result["bad_before"])
+                    self.assertEqual(result["after"], result["before"])
+                    self.assertEqual(result["step_errors"]["save"], [])
+                    self.assertEqual(result["step_errors"].get("apply", []), [])

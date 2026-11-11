@@ -16,37 +16,37 @@ RECRUITS = 10
 
 
 class FollowerEntersFullRoomTest(SlowTestCase):
-  """智能跟随的干员跟着博士走进满员的房间"""
+    """智能跟随的干员跟着博士走进满员的房间"""
 
-  def test_follower_enters_full_office(self) -> None:
-    """博士走进满员的博士办公室，智能跟随的杜宾也进去了"""
-    from Script.Core import constant
-    from Script.Design import character_handle, map_handle
+    def test_follower_enters_full_office(self) -> None:
+        """博士走进满员的博士办公室，智能跟随的杜宾也进去了"""
+        from Script.Core import constant
+        from Script.Design import character_handle, map_handle
 
-    self.walk(CORRIDOR)
-    recruits = sorted(
-        cid
-        for cid in self.cache.character_data
-        if cid and cid not in self.cache.npc_id_got
-    )[:RECRUITS]
-    for cid in recruits:
-      character_handle.get_new_character(cid)
-    office_str = map_handle.get_map_system_path_str_for_list(DR_OFFICE)
-    self.assertTrue(map_handle.judge_scene_is_full(office_str))
-    follower_id = self.npc("杜宾")
-    follower = self.cache.character_data[follower_id]
-    self.world.move(follower_id, CORRIDOR)
-    # 在场景里点选杜宾，再点「邀请同行」
-    self.cache.character_data[0].target_character_id = follower_id
-    self.instruct(constant.Instruct.FOLLOW)
-    self.assertEqual(follower.sp_flag.is_follow, 1)
-    self.walk(DR_OFFICE)
-    self.assertEqual(self.cache.character_data[0].position, DR_OFFICE)
-    self.assertEqual(follower.position, DR_OFFICE)
-    self.assertEqual(
-        sum(
-            self.cache.character_data[cid].position == DR_OFFICE
-            for cid in recruits
-        ),
-        RECRUITS,
-    )
+        self.walk(CORRIDOR)
+        recruits = sorted(
+            cid
+            for cid in self.cache.character_data
+            if cid and cid not in self.cache.npc_id_got
+        )[:RECRUITS]
+        for cid in recruits:
+            character_handle.get_new_character(cid)
+        office_str = map_handle.get_map_system_path_str_for_list(DR_OFFICE)
+        self.assertTrue(map_handle.judge_scene_is_full(office_str))
+        follower_id = self.npc("杜宾")
+        follower = self.cache.character_data[follower_id]
+        self.world.move(follower_id, CORRIDOR)
+        # 在场景里点选杜宾，再点「邀请同行」
+        self.cache.character_data[0].target_character_id = follower_id
+        self.instruct(constant.Instruct.FOLLOW)
+        self.assertEqual(follower.sp_flag.is_follow, 1)
+        self.walk(DR_OFFICE)
+        self.assertEqual(self.cache.character_data[0].position, DR_OFFICE)
+        self.assertEqual(follower.position, DR_OFFICE)
+        self.assertEqual(
+            sum(
+                self.cache.character_data[cid].position == DR_OFFICE
+                for cid in recruits
+            ),
+            RECRUITS,
+        )

@@ -325,14 +325,14 @@ _orig_base_newday = basement.update_base_resouce_newday
 basement.update_base_resouce_newday = lambda: None
 _new_day_error = ""
 try:
-  past_day_settle.update_new_day()
+    past_day_settle.update_new_day()
 except Exception as now_error:
-  import traceback  # noqa: E402
+    import traceback  # noqa: E402
 
-  traceback.print_exc()
-  _new_day_error = repr(now_error)
+    traceback.print_exc()
+    _new_day_error = repr(now_error)
 finally:
-  basement.update_base_resouce_newday = _orig_base_newday
+    basement.update_base_resouce_newday = _orig_base_newday
 check("跨天结算在夹具里跑通", not _new_day_error, _new_day_error)
 check(
     "L5 新一天挂上的翘课 flag 跨天后仍在，今天仍算已翘课（此前被无条件清掉，当天余下节次重新掷翘课）",

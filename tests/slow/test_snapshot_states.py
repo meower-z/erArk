@@ -25,28 +25,28 @@ SNAPSHOT_DIR = os.path.join(ROOT, "tests", "snapshots")
 
 
 class SnapshotStatesTest(SlowTestCase):
-  """每个起始状态各录一份快照"""
+    """每个起始状态各录一份快照"""
 
-  time_limit = 600
-  """ 构建与推进几百步，比默认时限长 """
-  first_bonus = snapshot_states.FIRST_BONUS
-  """ 开局选的初期奖励 """
+    time_limit = 600
+    """ 构建与推进几百步，比默认时限长 """
+    first_bonus = snapshot_states.FIRST_BONUS
+    """ 开局选的初期奖励 """
 
-  def record(self, state_name: str) -> None:
-    """
-    构建状态、按动作表推进并写出快照；动作表里的指令不成立、安排的按钮没用掉时抛 PlanError
-    Keyword arguments:
-    state_name -- 状态名
-    Return arguments:
-    无
-    """
-    recorder = snapshot_states.run(self.world, state_name)
-    recorder.write(os.path.join(SNAPSHOT_DIR, f"{state_name}.last.tsv.gz"))
+    def record(self, state_name: str) -> None:
+        """
+        构建状态、按动作表推进并写出快照；动作表里的指令不成立、安排的按钮没用掉时抛 PlanError
+        Keyword arguments:
+        state_name -- 状态名
+        Return arguments:
+        无
+        """
+        recorder = snapshot_states.run(self.world, state_name)
+        recorder.write(os.path.join(SNAPSHOT_DIR, f"{state_name}.last.tsv.gz"))
 
-  def test_time_stop_h(self) -> None:
-    """时停中的 H：构建、推进并录下快照"""
-    self.record("time_stop_h")
+    def test_time_stop_h(self) -> None:
+        """时停中的 H：构建、推进并录下快照"""
+        self.record("time_stop_h")
 
-  def test_family_commission(self) -> None:
-    """孕产、各阶段的孩子与外勤委托：构建、推进并录下快照"""
-    self.record("family_commission")
+    def test_family_commission(self) -> None:
+        """孕产、各阶段的孩子与外勤委托：构建、推进并录下快照"""
+        self.record("family_commission")

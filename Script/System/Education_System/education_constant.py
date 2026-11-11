@@ -43,9 +43,9 @@ _: FunctionType = get_text._
 """ 翻译api """
 
 if not game_config.config_ability:
-  print(
-      "\ndebug education_constant 在 game_config.init() 之前被导入了，从配置现算的常量会是空表\n"
-  )
+    print(
+        "\ndebug education_constant 在 game_config.init() 之前被导入了，从配置现算的常量会是空表\n"
+    )
 
 # ==== 1. 成长阶段与教育区 ====
 CHILD_TALENT_ID_LIST = (101, 102, 103, 104)

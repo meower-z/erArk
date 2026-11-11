@@ -1,7 +1,39 @@
 # -*- coding: UTF-8 -*-
 """sex_class_handle：临时课程、提醒、开课下课、旁观结算"""
 
-from _bootstrap import DEFAULT_TIME, SCENE_DORM, SCENE_EDU_ENTRY, _, cache, check, class_ai, classroom_path, clear_schedules, constant, constant_promise, datetime, drawn_text, education_constant, finish, game_config, game_time, game_type, growth_handle, handle_premise, make_character, move_to, open_all_classroom, period_time, pl, random, remove_character, schedule_handle, section, set_time, sex_class_handle
+from _bootstrap import (
+    DEFAULT_TIME,
+    SCENE_DORM,
+    SCENE_EDU_ENTRY,
+    _,
+    cache,
+    check,
+    class_ai,
+    classroom_path,
+    clear_schedules,
+    constant,
+    constant_promise,
+    datetime,
+    drawn_text,
+    education_constant,
+    finish,
+    game_config,
+    game_time,
+    game_type,
+    growth_handle,
+    handle_premise,
+    make_character,
+    move_to,
+    open_all_classroom,
+    period_time,
+    pl,
+    random,
+    remove_character,
+    schedule_handle,
+    section,
+    set_time,
+    sex_class_handle,
+)
 from Script.Design import instuct_judege
 from Script.Settle import realtime_settle
 from Script.Design import handle_npc_ai, update
@@ -160,10 +192,12 @@ student_a.dead = True
 check("死亡不算", not sex_class_handle.judge_can_join_sex_class(201))
 student_a.dead = False
 try:
-  adult_ok = sex_class_handle.judge_can_join_sex_class(301)
-  check("成年干员走实行值判定（无实行值 → 不能）", adult_ok is False, adult_ok)
+    adult_ok = sex_class_handle.judge_can_join_sex_class(301)
+    check(
+        "成年干员走实行值判定（无实行值 → 不能）", adult_ok is False, adult_ok
+    )
 except Exception as error:
-  check("成年干员实行值判定不抛异常", False, repr(error))
+    check("成年干员实行值判定不抛异常", False, repr(error))
 move_to(0, classroom_path(ROOM_P))
 move_to(201, classroom_path(ROOM_P))
 move_to(202, classroom_path(ROOM_P))
@@ -655,10 +689,10 @@ check(
 pl.talent[332] = 1  # 中级催眠：对深层催眠的目标，实行值不足的部分由理智折算补上
 _m1_list = []
 for _index in range(4):
-  _m1_list.append(sex_class_handle.judge_can_join_sex_class(305))
-  _m1_list.append(
-      bool(handle_premise.handle_premise("scene_have_sex_class_student", 0))
-  )
+    _m1_list.append(sex_class_handle.judge_can_join_sex_class(305))
+    _m1_list.append(
+        bool(handle_premise.handle_premise("scene_have_sex_class_student", 0))
+    )
 check(
     "M1 理智够时门槛照样成立（催眠补正照算）：门槛与指令 5209 的前提 scene_have_sex_class_student 各求值 4 次都成立",
     all(_m1_list),
@@ -843,61 +877,63 @@ BEHAVIOR_EFFECT = game_config.config_behavior_effect_data
 
 
 def run_effect_list(effect_id_list: list) -> None:
-  """
-  以玩家为结算主体、按顺序结算一串效果（结算时长 5 分钟）
-  Keyword arguments:
-  effect_id_list -- 效果id列表
-  Return arguments:
-  无
-  """
-  for effect_id in effect_id_list:
-    EFFECT_DATA[effect_id](
-        0, 5, game_type.CharacterStatusChange(), cache.game_time
-    )
+    """
+    以玩家为结算主体、按顺序结算一串效果（结算时长 5 分钟）
+    Keyword arguments:
+    effect_id_list -- 效果id列表
+    Return arguments:
+    无
+    """
+    for effect_id in effect_id_list:
+        EFFECT_DATA[effect_id](
+            0, 5, game_type.CharacterStatusChange(), cache.game_time
+        )
 
 
 def judge_instruct_show(instruct_id: str) -> bool:
-  """
-  按 InstructConfig.csv 的原始前提串逐个求值（以玩家为主体），判断某条指令此刻显示与否
-  Keyword arguments:
-  instruct_id -- 指令id（InstructConfig 第二列）
-  Return arguments:
-  bool -- 前提全部成立为 True
-  """
-  instruct_config = game_config.config_instruct[
-      game_config.config_instruct_by_id[instruct_id]
-  ]
-  return all(
-      handle_premise.handle_premise(getattr(constant_promise.Premise, name), 0)
-      for name in instruct_config.premise_set.split("|")
-      if name
-  )
+    """
+    按 InstructConfig.csv 的原始前提串逐个求值（以玩家为主体），判断某条指令此刻显示与否
+    Keyword arguments:
+    instruct_id -- 指令id（InstructConfig 第二列）
+    Return arguments:
+    bool -- 前提全部成立为 True
+    """
+    instruct_config = game_config.config_instruct[
+        game_config.config_instruct_by_id[instruct_id]
+    ]
+    return all(
+        handle_premise.handle_premise(
+            getattr(constant_promise.Premise, name), 0
+        )
+        for name in instruct_config.premise_set.split("|")
+        if name
+    )
 
 
 def open_class_for_h1(period: int, reserved: bool = True) -> dict:
-  """
-  在实践教室一开一节实操课并进入课堂 H：照开课指令的顺序先 start_sex_class 记出勤，再结算效果 10014 把学生拉进 H；
-  玩家自己进 H 是开课效果串里 462 的事，这里直接置位
-  Keyword arguments:
-  period -- 今天的第几节
-  reserved -- 是否先预约再开（False 为当场开课）
-  Return arguments:
-  dict -- 本节课的数据
-  """
-  cache.rhodes_island.temp_sex_class = {}
-  cache.sex_class_mode = False
-  cache.group_sex_mode = False
-  for chara_id in (0, 201, 202):
-    move_to(chara_id, classroom_path(ROOM_P))
-    cache.character_data[chara_id].sp_flag.is_h = False
-  set_time(period_time(period) + datetime.timedelta(minutes=5))
-  if reserved:
-    sex_class_handle.set_temp_class(today, period, ROOM_P, 70)
-  now_class = sex_class_handle.start_sex_class(70, [201, 202])
-  pl.sp_flag.is_h = True
-  pl.target_character_id = 201
-  EFFECT_DATA[10014](0, 5, game_type.CharacterStatusChange(), cache.game_time)
-  return now_class
+    """
+    在实践教室一开一节实操课并进入课堂 H：照开课指令的顺序先 start_sex_class 记出勤，再结算效果 10014 把学生拉进 H；
+    玩家自己进 H 是开课效果串里 462 的事，这里直接置位
+    Keyword arguments:
+    period -- 今天的第几节
+    reserved -- 是否先预约再开（False 为当场开课）
+    Return arguments:
+    dict -- 本节课的数据
+    """
+    cache.rhodes_island.temp_sex_class = {}
+    cache.sex_class_mode = False
+    cache.group_sex_mode = False
+    for chara_id in (0, 201, 202):
+        move_to(chara_id, classroom_path(ROOM_P))
+        cache.character_data[chara_id].sp_flag.is_h = False
+    set_time(period_time(period) + datetime.timedelta(minutes=5))
+    if reserved:
+        sex_class_handle.set_temp_class(today, period, ROOM_P, 70)
+    now_class = sex_class_handle.start_sex_class(70, [201, 202])
+    pl.sp_flag.is_h = True
+    pl.target_character_id = 201
+    EFFECT_DATA[10014](0, 5, game_type.CharacterStatusChange(), cache.game_time)
+    return now_class
 
 
 check(
@@ -1029,24 +1065,24 @@ _h1_flow_call: list[tuple[int, str]] = []
 
 
 def fake_game_update_flow(add_time: int) -> None:
-  """
-  update.game_update_flow 的桩：只跑玩家这一步（结算玩家此刻行为的效果串，再做玩家的实时数据结算）
-  Keyword arguments:
-  add_time -- 游戏步进的时间
-  Return arguments:
-  无
-  """
-  _h1_flow_call.append((add_time, pl.behavior.behavior_id))
-  run_effect_list(BEHAVIOR_EFFECT.get(pl.behavior.behavior_id, []))
-  realtime_settle.judge_pl_real_time_data()
+    """
+    update.game_update_flow 的桩：只跑玩家这一步（结算玩家此刻行为的效果串，再做玩家的实时数据结算）
+    Keyword arguments:
+    add_time -- 游戏步进的时间
+    Return arguments:
+    无
+    """
+    _h1_flow_call.append((add_time, pl.behavior.behavior_id))
+    run_effect_list(BEHAVIOR_EFFECT.get(pl.behavior.behavior_id, []))
+    realtime_settle.judge_pl_real_time_data()
 
 
 _saved_game_update_flow = update.game_update_flow
 update.game_update_flow = fake_game_update_flow
 try:
-  handle_npc_ai.commit_group_sex_tired_exit(201)
+    handle_npc_ai.commit_group_sex_tired_exit(201)
 finally:
-  update.game_update_flow = _saved_game_update_flow
+    update.game_update_flow = _saved_game_update_flow
 check(
     "H1 复审补：最后一名学生力竭退出（commit_group_sex_tired_exit 的真实调用链）→ 结束群交 → 同一步里下课：课堂模式已关、那节课打上 ended、学生已不在 H",
     _h1_flow_call == [(5, constant.Behavior.GROUP_SEX_END)]
@@ -1097,7 +1133,7 @@ cache.rhodes_island.temp_sex_class = {}
 cache.sex_class_mode = False
 cache.group_sex_mode = False
 for _cid in (0, 201, 202):
-  cache.character_data[_cid].sp_flag.is_h = False
+    cache.character_data[_cid].sp_flag.is_h = False
 
 section(
     "Plan 32 L7：实操课记出勤时一并写「这一节已结算」标记（同一节只落一种记录的另一个方向）"
@@ -1169,25 +1205,25 @@ for _open_time, _period, _label in (
         "提前 5 分钟开讲预约的第 5 节",
     ),
 ):
-  cache.rhodes_island.temp_sex_class = {}
-  if _period == 5:
-    sex_class_handle.set_temp_class(today, 5, ROOM_P, 70)
-  set_time(_open_time)
-  _g201.last_absent_period = []
-  _g201.last_attend_period = []
-  _attend, _absent = _g201.attend_class_count, _g201.absent_count
-  sex_class_handle.start_sex_class(70, [201])
-  sex_class_handle.end_sex_class()
-  set_time(period_time(_period) + datetime.timedelta(minutes=20))
-  _recorded = class_ai.settle_absent(201)
-  check(
-      f"L7 跨单元整链（{_label}）：开课记出勤、本节内下课，本节后来回到 AI 派 721（调 settle_absent）不再记缺课",
-      _g201.attend_class_count == _attend + 1
-      and not _recorded
-      and _g201.absent_count == _absent
-      and _g201.last_absent_period == [],
-      (_g201.last_attend_period, _recorded, _g201.last_absent_period),
-  )
+    cache.rhodes_island.temp_sex_class = {}
+    if _period == 5:
+        sex_class_handle.set_temp_class(today, 5, ROOM_P, 70)
+    set_time(_open_time)
+    _g201.last_absent_period = []
+    _g201.last_attend_period = []
+    _attend, _absent = _g201.attend_class_count, _g201.absent_count
+    sex_class_handle.start_sex_class(70, [201])
+    sex_class_handle.end_sex_class()
+    set_time(period_time(_period) + datetime.timedelta(minutes=20))
+    _recorded = class_ai.settle_absent(201)
+    check(
+        f"L7 跨单元整链（{_label}）：开课记出勤、本节内下课，本节后来回到 AI 派 721（调 settle_absent）不再记缺课",
+        _g201.attend_class_count == _attend + 1
+        and not _recorded
+        and _g201.absent_count == _absent
+        and _g201.last_absent_period == [],
+        (_g201.last_attend_period, _recorded, _g201.last_absent_period),
+    )
 set_time(period_time(6) + datetime.timedelta(minutes=20))
 check(
     "L7 跨单元整链对照：下一节没记出勤，settle_absent 照常记缺课",
@@ -1258,7 +1294,7 @@ schedule_handle.set_selected_course(
     303, _l9_day, 8, education_constant.COURSE_TYPE_PRACTICE, ROOM_P
 )
 for _cid in (0, 201, 202, 301, 303):
-  move_to(_cid, classroom_path(ROOM_P))
+    move_to(_cid, classroom_path(ROOM_P))
 pl.talent[332] = 0
 check(
     "L9 前置：成年学生排过性技教室课，但 H 模式实行值不足（好感为 0、玩家没有催眠补正），此刻过不了入课门槛",
@@ -1348,7 +1384,7 @@ check(
     sex_class_handle.get_class_member_list() == [],
 )
 for _cid in (0, 201, 202, 301, 303):
-  cache.character_data[_cid].sp_flag.is_h = False
+    cache.character_data[_cid].sp_flag.is_h = False
 move_to(301, SCENE_DORM)
 move_to(303, SCENE_DORM)
 schedule_handle.clear_class_cell(ROOM_P, _l9_day, 8)
@@ -1362,11 +1398,11 @@ section(
 )
 
 for _cid in (0, 201, 202, 204, 301, 303):
-  cache.character_data[_cid].sp_flag.is_h = False
+    cache.character_data[_cid].sp_flag.is_h = False
 for _cid in (0, 201, 301):
-  move_to(_cid, classroom_path(ROOM_P))
+    move_to(_cid, classroom_path(ROOM_P))
 for _cid in (202, 204, 303):
-  move_to(_cid, SCENE_DORM)
+    move_to(_cid, SCENE_DORM)
 set_time(period_time(3) + datetime.timedelta(minutes=5))
 sex_class_handle.start_sex_class(70, [201])
 pl.sp_flag.is_h = (
@@ -1410,22 +1446,22 @@ check(
 
 
 def l11_exp_gain(character_id: int, experience_id: int) -> int:
-  """
-  以角色自己为主体走一次经验写入（基础值 10），返回实际加上的经验
-  Keyword arguments:
-  character_id -- 角色id
-  experience_id -- 经验id
-  Return arguments:
-  int -- 这次加上的经验
-  """
-  before = cache.character_data[character_id].experience.get(experience_id, 0)
-  common_default.base_chara_experience_common_settle(
-      character_id, experience_id, base_value=10
-  )
-  return (
-      cache.character_data[character_id].experience.get(experience_id, 0)
-      - before
-  )
+    """
+    以角色自己为主体走一次经验写入（基础值 10），返回实际加上的经验
+    Keyword arguments:
+    character_id -- 角色id
+    experience_id -- 经验id
+    Return arguments:
+    int -- 这次加上的经验
+    """
+    before = cache.character_data[character_id].experience.get(experience_id, 0)
+    common_default.base_chara_experience_common_settle(
+        character_id, experience_id, base_value=10
+    )
+    return (
+        cache.character_data[character_id].experience.get(experience_id, 0)
+        - before
+    )
 
 
 _l11_gain = l11_exp_gain(201, _l11_exp)
@@ -1453,7 +1489,7 @@ cache.rhodes_island.temp_sex_class = {}
 cache.sex_class_mode = False
 cache.group_sex_mode = False
 for _cid in (0, 201, 202, 301):
-  cache.character_data[_cid].sp_flag.is_h = False
+    cache.character_data[_cid].sp_flag.is_h = False
 pl.target_character_id = 0
 move_to(301, SCENE_DORM)
 

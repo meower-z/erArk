@@ -1,7 +1,39 @@
 # -*- coding: UTF-8 -*-
 """前提与结算 token：CVP Course / CourseType / CourseShowOff / Growth、CVE Growth、实操课与岗位前提、女儿前提"""
 
-from _bootstrap import DEFAULT_TIME, SCENE_DORM, SCENE_EDU_ENTRY, _, cache, check, class_ai, classroom_path, clear_schedules, constant, constant_promise, datetime, education_constant, finish, game_config, game_time, game_type, growth_handle, handle_premise, make_character, move_to, open_all_classroom, period_time, pl, remove_character, schedule_handle, schedule_template_handle, section, set_time, settle_behavior, sex_class_handle
+from _bootstrap import (
+    DEFAULT_TIME,
+    SCENE_DORM,
+    SCENE_EDU_ENTRY,
+    _,
+    cache,
+    check,
+    class_ai,
+    classroom_path,
+    clear_schedules,
+    constant,
+    constant_promise,
+    datetime,
+    education_constant,
+    finish,
+    game_config,
+    game_time,
+    game_type,
+    growth_handle,
+    handle_premise,
+    make_character,
+    move_to,
+    open_all_classroom,
+    period_time,
+    pl,
+    remove_character,
+    schedule_handle,
+    schedule_template_handle,
+    section,
+    set_time,
+    settle_behavior,
+    sex_class_handle,
+)
 from Script.Design import second_behavior
 from Script.Design import handle_ability
 
@@ -81,7 +113,7 @@ for name in (
     "self_course_teacher_available",
     "self_course_teacher_unavailable",
 ):
-  check(f"前提 {name} 已注册", name in constant.handle_premise_data)
+    check(f"前提 {name} 已注册", name in constant.handle_premise_data)
 
 section("岗位与女儿前提")
 check(
@@ -371,7 +403,7 @@ for name in (
     "in_education_classroom",
     "student_not_study_in_classroom",
 ):
-  check(f"前提 {name} 已注册", name in constant.handle_premise_data)
+    check(f"前提 {name} 已注册", name in constant.handle_premise_data)
 check(
     "死前提 teacher_teaching_in_classroom 已删除",
     "teacher_teaching_in_classroom" not in constant.handle_premise_data,
@@ -383,8 +415,8 @@ for room in (
     ROOM_P,
     schedule_handle.get_classroom_list(E.COURSE_TYPE_PUBLIC)[0],
 ):
-  move_to(0, classroom_path(room))
-  check(f"在{room}：在教育区教室", HP("in_education_classroom", 0) == 1)
+    move_to(0, classroom_path(room))
+    check(f"在{room}：在教育区教室", HP("in_education_classroom", 0) == 1)
 move_to(0, SCENE_EDU_ENTRY)
 move_to(201, classroom_path(ROOM1))
 move_to(202, SCENE_DORM)
@@ -574,7 +606,7 @@ _new_premise_list = (
     P.SELF_BIRTHDAY_TODAY,
 )
 for name in _new_premise_list:
-  check(f"L11 / L13 前提 {name} 已注册", name in constant.handle_premise_data)
+    check(f"L11 / L13 前提 {name} 已注册", name in constant.handle_premise_data)
 clear_schedules()
 set_time(period_time(0))
 growth_handle.get_child_growth(201).selected_course = {}
@@ -588,18 +620,18 @@ _type_premise = {
 
 
 def course_type_hit(cid: int) -> list:
-  """
-  取五个课型前提里对某角色成立的课型
-  Keyword arguments:
-  cid -- 角色id
-  Return arguments:
-  list -- 成立的课型编号，升序
-  """
-  return sorted(
-      course_type
-      for course_type, premise_name in _type_premise.items()
-      if HP(premise_name, cid)
-  )
+    """
+    取五个课型前提里对某角色成立的课型
+    Keyword arguments:
+    cid -- 角色id
+    Return arguments:
+    list -- 成立的课型编号，升序
+    """
+    return sorted(
+        course_type
+        for course_type, premise_name in _type_premise.items()
+        if HP(premise_name, cid)
+    )
 
 
 check(
@@ -670,8 +702,8 @@ for _now_time in (
     datetime.datetime(2026, 12, 30, 9, 0),
     datetime.datetime(2027, 3, 1, 9, 0),
 ):
-  set_time(_now_time)
-  _last_day_birthday.append(HP(P.SELF_BIRTHDAY_TODAY, 201))
+    set_time(_now_time)
+    _last_day_birthday.append(HP(P.SELF_BIRTHDAY_TODAY, 201))
 check(
     "L13 季月最后一天（12/30）出生：每年 12/30 成立、下一天 3/1 不成立（游戏日历每年都有这一天）",
     _last_day_birthday == [1, 0],
@@ -696,16 +728,16 @@ move_to(101, classroom_path(ROOM1))
 
 
 def teacher_premise_pair() -> tuple:
-  """
-  取学生 201 的「教师能到岗 / 来不了」两个前提
-  Keyword arguments:
-  无
-  Return arguments:
-  tuple -- (self_course_teacher_available, self_course_teacher_unavailable)
-  """
-  return HP("self_course_teacher_available", 201), HP(
-      "self_course_teacher_unavailable", 201
-  )
+    """
+    取学生 201 的「教师能到岗 / 来不了」两个前提
+    Keyword arguments:
+    无
+    Return arguments:
+    tuple -- (self_course_teacher_available, self_course_teacher_unavailable)
+    """
+    return HP("self_course_teacher_available", 201), HP(
+        "self_course_teacher_unavailable", 201
+    )
 
 
 check(
@@ -992,19 +1024,19 @@ move_to(201, SCENE_DORM)
 
 
 def caught_dispatch() -> tuple:
-  """
-  清掉两个养成二段行为后，跑一次孩子与玩家同场景时的养成二段判定
-  Keyword arguments:
-  无
-  Return arguments:
-  tuple -- (是否派出翘课被抓, 是否派出炫耀)
-  """
-  student.second_behavior["caught_skip_class"] = 0
-  student.second_behavior["show_off_study"] = 0
-  second_behavior.judge_child_growth_second_behavior(201)
-  return bool(student.second_behavior.get("caught_skip_class", 0)), bool(
-      student.second_behavior.get("show_off_study", 0)
-  )
+    """
+    清掉两个养成二段行为后，跑一次孩子与玩家同场景时的养成二段判定
+    Keyword arguments:
+    无
+    Return arguments:
+    tuple -- (是否派出翘课被抓, 是否派出炫耀)
+    """
+    student.second_behavior["caught_skip_class"] = 0
+    student.second_behavior["show_off_study"] = 0
+    second_behavior.judge_child_growth_second_behavior(201)
+    return bool(student.second_behavior.get("caught_skip_class", 0)), bool(
+        student.second_behavior.get("show_off_study", 0)
+    )
 
 
 _r = caught_dispatch()
@@ -1090,12 +1122,12 @@ _l20_worker = make_character(
     born_days=300,
 )
 for _one in (_l20_student, _l20_worker):
-  growth_handle.get_child_growth(_one.cid).show_off_ability = {}
-  for _juel_id in list(_one.juel):
-    _one.juel[_juel_id] = 10**7
-  for _exp_id in list(_one.experience):
-    _one.experience[_exp_id] = 10**7
-  handle_ability.gain_ability(_one.cid)
+    growth_handle.get_child_growth(_one.cid).show_off_ability = {}
+    for _juel_id in list(_one.juel):
+        _one.juel[_juel_id] = 10**7
+    for _exp_id in list(_one.experience):
+        _one.experience[_exp_id] = 10**7
+    handle_ability.gain_ability(_one.cid)
 _l20_student_growth = _l20_student.child_growth
 assert _l20_student_growth is not None
 _l20_worker_growth = _l20_worker.child_growth
@@ -1114,8 +1146,8 @@ check(
     _l20_worker_growth.show_off_ability,
 )
 for _cid in (207, 208):
-  remove_character(_cid)
-  if _cid in mother.relationship.child_id_list:
-    mother.relationship.child_id_list.remove(_cid)
+    remove_character(_cid)
+    if _cid in mother.relationship.child_id_list:
+        mother.relationship.child_id_list.remove(_cid)
 
 finish()

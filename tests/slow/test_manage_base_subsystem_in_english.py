@@ -14,24 +14,26 @@ from tests.slow.test_tag_logic_same_in_english import ENGLISH, LanguageRun
 
 
 class ManageBaseSubsystemInEnglishTest(SlowTestCase):
-  """en_US 下，管理罗德岛面板的外勤委托系统按钮打开外勤委托面板"""
+    """en_US 下，管理罗德岛面板的外勤委托系统按钮打开外勤委托面板"""
 
-  def setUp(self) -> None:
-    """只设时限；游戏在测试里以 en_US 启动"""
-    signal.signal(signal.SIGALRM, self._time_up)
-    signal.alarm(self.time_limit)
-    remove_parent_guard()
+    def setUp(self) -> None:
+        """只设时限；游戏在测试里以 en_US 启动"""
+        signal.signal(signal.SIGALRM, self._time_up)
+        signal.alarm(self.time_limit)
+        remove_parent_guard()
 
-  def test_field_commission_button(self) -> None:
-    """按「外勤委托系统」打开外勤委托面板，返回后回到主界面"""
-    run = LanguageRun(ENGLISH)
-    from Script.Core import constant
-    from tests import snapshot_states
+    def test_field_commission_button(self) -> None:
+        """按「外勤委托系统」打开外勤委托面板，返回后回到主界面"""
+        run = LanguageRun(ENGLISH)
+        from Script.Core import constant
+        from tests import snapshot_states
 
-    snapshot_states.walk(run.world, snapshot_states.DOCTOR_OFFICE)
-    presses = tuple(
-        run.translate(text)
-        for text in ("各部门工作概况", "[外勤委托系统]", "返回", "返回")
-    )
-    run.instruct(constant.Instruct.MANAGE_BASEMENT, presses)
-    self.assertIn(run.translate("常规外勤"), "".join(run.world.player.screen))
+        snapshot_states.walk(run.world, snapshot_states.DOCTOR_OFFICE)
+        presses = tuple(
+            run.translate(text)
+            for text in ("各部门工作概况", "[外勤委托系统]", "返回", "返回")
+        )
+        run.instruct(constant.Instruct.MANAGE_BASEMENT, presses)
+        self.assertIn(
+            run.translate("常规外勤"), "".join(run.world.player.screen)
+        )

@@ -28,114 +28,118 @@ SHOT = 15
 
 
 class TestLoadSplitsSharedClothSemen(SlowTestCase):
-  """存档里穿着与衣柜的服装精液表共用 dict 或列表、或两表都缺部位时，读档后两表分开"""
+    """存档里穿着与衣柜的服装精液表共用 dict 或列表、或两表都缺部位时，读档后两表分开"""
 
-  def tearDown(self) -> None:
-    """
-    删掉本测试写入的存档
-    Keyword arguments:
-    无
-    Return arguments:
-    无
-    """
-    from Script.Core import save_handle
+    def tearDown(self) -> None:
+        """
+        删掉本测试写入的存档
+        Keyword arguments:
+        无
+        Return arguments:
+        无
+        """
+        from Script.Core import save_handle
 
-    shutil.rmtree(save_handle.get_save_dir_path(SAVE_ID), ignore_errors=True)
-    super().tearDown()
+        shutil.rmtree(
+            save_handle.get_save_dir_path(SAVE_ID), ignore_errors=True
+        )
+        super().tearDown()
 
-  def _save_and_load(self) -> None:
-    """
-    写盘再读档
-    Keyword arguments:
-    无
-    Return arguments:
-    无
-    """
-    from Script.Core import save_handle
+    def _save_and_load(self) -> None:
+        """
+        写盘再读档
+        Keyword arguments:
+        无
+        Return arguments:
+        无
+        """
+        from Script.Core import save_handle
 
-    save_handle.establish_save(SAVE_ID)
-    self.assertTrue(
-        save_handle.judge_save_file_exist(SAVE_ID), "存档应已写到盘上"
-    )
-    save_handle.input_load_save(SAVE_ID)
+        save_handle.establish_save(SAVE_ID)
+        self.assertTrue(
+            save_handle.judge_save_file_exist(SAVE_ID), "存档应已写到盘上"
+        )
+        save_handle.input_load_save(SAVE_ID)
 
-  def _semen(self, cid: int) -> tuple[dict[int, int], dict[int, int]]:
-    """
-    两表各部位的当前精液量
-    Keyword arguments:
-    cid -- 角色id
-    Return arguments:
-    tuple -- ({部位: 穿着的量}, {部位: 衣柜的量})
-    """
-    dirty = self.cache.character_data[cid].dirty
-    return (
-        {t: v[1] for t, v in dirty.cloth_semen.items()},
-        {t: v[1] for t, v in dirty.cloth_locker_semen.items()},
-    )
+    def _semen(self, cid: int) -> tuple[dict[int, int], dict[int, int]]:
+        """
+        两表各部位的当前精液量
+        Keyword arguments:
+        cid -- 角色id
+        Return arguments:
+        tuple -- ({部位: 穿着的量}, {部位: 衣柜的量})
+        """
+        dirty = self.cache.character_data[cid].dirty
+        return (
+            {t: v[1] for t, v in dirty.cloth_semen.items()},
+            {t: v[1] for t, v in dirty.cloth_locker_semen.items()},
+        )
 
-  def test_tables_split_after_load(self) -> None:
-    """三种存档读档后：精液量按读档规则保留或清零，射在穿着的袜子上只改穿着的表，BODY-14 通过，再存读一次不变"""
-    from Script.Config import game_config
-    from Script.Test.Static_Check.checks.check_body import (
-        check_semen_list_aliasing,
-    )
-    from Script.UI.Panel import ejaculation_panel
+    def test_tables_split_after_load(self) -> None:
+        """三种存档读档后：精液量按读档规则保留或清零，射在穿着的袜子上只改穿着的表，BODY-14 通过，再存读一次不变"""
+        from Script.Config import game_config
+        from Script.Test.Static_Check.checks.check_body import (
+            check_semen_list_aliasing,
+        )
+        from Script.UI.Panel import ejaculation_panel
 
-    all_types = sorted(game_config.config_clothing_type)
-    whole_dict_id = self.npc("阿米娅")
-    shared_list_id, short_id = sorted(
-        cid
-        for cid in self.cache.npc_id_got
-        if cid not in (0, whole_dict_id)
-        and self.cache.character_data[cid].cloth.cloth_wear[SOCKS]
-    )[:2]
-    for cid in (whole_dict_id, shared_list_id, short_id):
-      self.assertTrue(
-          self.cache.character_data[cid].cloth.cloth_wear[SOCKS],
-          f"{cid} 穿着袜子",
-      )
-      ejaculation_panel.update_semen_dirty(cid, SOCKS, 1, SOCKS_SEMEN)
-    whole = self.cache.character_data[whole_dict_id].dirty
-    whole.cloth_locker_semen = whole.cloth_semen
-    shared = self.cache.character_data[shared_list_id].dirty
-    shared.cloth_locker_semen = dict(shared.cloth_semen)
-    short = self.cache.character_data[short_id].dirty
-    short.cloth_locker_semen = {
-        t: list(v) for t, v in short.cloth_semen.items()
-    }
-    for table in (short.cloth_semen, short.cloth_locker_semen):
-      del table[all_types[-1]]
-    expected = {
-        cid: self._semen(cid) for cid in (whole_dict_id, shared_list_id)
-    }
-    zero = {t: 0 for t in all_types}
-    expected[short_id] = (zero, zero)
-    for cid in (whole_dict_id, shared_list_id):
-      self.assertEqual(
-          (expected[cid][0][SOCKS], expected[cid][1][SOCKS]),
-          (SOCKS_SEMEN, SOCKS_SEMEN),
-          f"{cid} 写盘前两表袜子上的精液",
-      )
+        all_types = sorted(game_config.config_clothing_type)
+        whole_dict_id = self.npc("阿米娅")
+        shared_list_id, short_id = sorted(
+            cid
+            for cid in self.cache.npc_id_got
+            if cid not in (0, whole_dict_id)
+            and self.cache.character_data[cid].cloth.cloth_wear[SOCKS]
+        )[:2]
+        for cid in (whole_dict_id, shared_list_id, short_id):
+            self.assertTrue(
+                self.cache.character_data[cid].cloth.cloth_wear[SOCKS],
+                f"{cid} 穿着袜子",
+            )
+            ejaculation_panel.update_semen_dirty(cid, SOCKS, 1, SOCKS_SEMEN)
+        whole = self.cache.character_data[whole_dict_id].dirty
+        whole.cloth_locker_semen = whole.cloth_semen
+        shared = self.cache.character_data[shared_list_id].dirty
+        shared.cloth_locker_semen = dict(shared.cloth_semen)
+        short = self.cache.character_data[short_id].dirty
+        short.cloth_locker_semen = {
+            t: list(v) for t, v in short.cloth_semen.items()
+        }
+        for table in (short.cloth_semen, short.cloth_locker_semen):
+            del table[all_types[-1]]
+        expected = {
+            cid: self._semen(cid) for cid in (whole_dict_id, shared_list_id)
+        }
+        zero = {t: 0 for t in all_types}
+        expected[short_id] = (zero, zero)
+        for cid in (whole_dict_id, shared_list_id):
+            self.assertEqual(
+                (expected[cid][0][SOCKS], expected[cid][1][SOCKS]),
+                (SOCKS_SEMEN, SOCKS_SEMEN),
+                f"{cid} 写盘前两表袜子上的精液",
+            )
 
-    self._save_and_load()
-    for cid in expected:
-      self.assertEqual(
-          self._semen(cid), expected[cid], f"{cid} 读档后两表的精液量"
-      )
+        self._save_and_load()
+        for cid in expected:
+            self.assertEqual(
+                self._semen(cid), expected[cid], f"{cid} 读档后两表的精液量"
+            )
 
-    for cid in expected:
-      ejaculation_panel.update_semen_dirty(cid, SOCKS, 1, SHOT)
-      worn, locker = self._semen(cid)
-      self.assertEqual(
-          (worn[SOCKS], locker),
-          (expected[cid][0][SOCKS] + SHOT, expected[cid][1]),
-          f"{cid} 射在穿着的袜子上：穿着的表加上射精量，衣柜的表不变",
-      )
-    self.assertEqual([f.message for f in check_semen_list_aliasing()], [])
+        for cid in expected:
+            ejaculation_panel.update_semen_dirty(cid, SOCKS, 1, SHOT)
+            worn, locker = self._semen(cid)
+            self.assertEqual(
+                (worn[SOCKS], locker),
+                (expected[cid][0][SOCKS] + SHOT, expected[cid][1]),
+                f"{cid} 射在穿着的袜子上：穿着的表加上射精量，衣柜的表不变",
+            )
+        self.assertEqual([f.message for f in check_semen_list_aliasing()], [])
 
-    after_shot = {cid: self._semen(cid) for cid in expected}
-    self._save_and_load()
-    for cid in expected:
-      self.assertEqual(
-          self._semen(cid), after_shot[cid], f"{cid} 再存读一次两表的精液量"
-      )
+        after_shot = {cid: self._semen(cid) for cid in expected}
+        self._save_and_load()
+        for cid in expected:
+            self.assertEqual(
+                self._semen(cid),
+                after_shot[cid],
+                f"{cid} 再存读一次两表的精液量",
+            )

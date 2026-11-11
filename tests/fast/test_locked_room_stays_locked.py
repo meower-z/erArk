@@ -14,37 +14,37 @@ CORRIDOR = ["中枢", "走廊"]
 
 
 class LockedRoomStaysLockedTest(FastTestCase):
-  """character_move_scene 只在旧场景里已没有玩家时解锁"""
+    """character_move_scene 只在旧场景里已没有玩家时解锁"""
 
-  def setUp(self) -> None:
-    """
-    博士和两名干员都在博士房间里，门已上锁
-    Keyword arguments:
-    无
-    Return arguments:
-    无
-    """
-    super().setUp()
-    self.world.chara(0, "博士", position=ROOM)
-    self.world.chara(1, "助理", position=ROOM)
-    self.world.chara(2, "干员", position=ROOM)
-    self.room = self.world.scene(ROOM)
-    self.room.close_flag = 1
+    def setUp(self) -> None:
+        """
+        博士和两名干员都在博士房间里，门已上锁
+        Keyword arguments:
+        无
+        Return arguments:
+        无
+        """
+        super().setUp()
+        self.world.chara(0, "博士", position=ROOM)
+        self.world.chara(1, "助理", position=ROOM)
+        self.world.chara(2, "干员", position=ROOM)
+        self.room = self.world.scene(ROOM)
+        self.room.close_flag = 1
 
-  def test_npc_leaving_with_player_inside_keeps_lock(self) -> None:
-    """玩家在屋内时，NPC 离开后房间仍上锁"""
-    self.world.move(1, CORRIDOR)
-    self.assertEqual(self.room.close_flag, 1)
+    def test_npc_leaving_with_player_inside_keeps_lock(self) -> None:
+        """玩家在屋内时，NPC 离开后房间仍上锁"""
+        self.world.move(1, CORRIDOR)
+        self.assertEqual(self.room.close_flag, 1)
 
-  def test_player_leaving_unlocks(self) -> None:
-    """玩家离开后房间解锁"""
-    self.world.move(0, CORRIDOR)
-    self.assertEqual(self.room.close_flag, 0)
+    def test_player_leaving_unlocks(self) -> None:
+        """玩家离开后房间解锁"""
+        self.world.move(0, CORRIDOR)
+        self.assertEqual(self.room.close_flag, 0)
 
-  def test_npc_leaving_without_player_unlocks(self) -> None:
-    """屋里只有 NPC、没有玩家时，其中一个离开后房间解锁"""
-    self.world.move(0, CORRIDOR)
-    self.room.close_flag = 1
-    self.world.move(2, CORRIDOR)
-    self.assertEqual(self.room.close_flag, 0)
-    self.assertEqual(self.room.character_list, {1})
+    def test_npc_leaving_without_player_unlocks(self) -> None:
+        """屋里只有 NPC、没有玩家时，其中一个离开后房间解锁"""
+        self.world.move(0, CORRIDOR)
+        self.room.close_flag = 1
+        self.world.move(2, CORRIDOR)
+        self.assertEqual(self.room.close_flag, 0)
+        self.assertEqual(self.room.character_list, {1})

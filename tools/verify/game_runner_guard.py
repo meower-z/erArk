@@ -44,20 +44,20 @@ WHY = {
 
 
 class GameRunnerGuard(importlib.abc.MetaPathFinder):
-  """在导入受保护模块前检查 USE_GAME_RUNNER；本身不负责查找模块"""
+    """在导入受保护模块前检查 USE_GAME_RUNNER；本身不负责查找模块"""
 
-  def find_spec(self, fullname, path, target=None):
-    """
-    受保护模块且没有启动器标记时结束进程，否则交给后面的查找器
-    参数：fullname (str) 模块全名；path、target 由导入系统传入，不使用
-    返回：None，总是让导入系统继续用其他查找器
-    """
-    if fullname in GUARDED and os.environ.get("USE_GAME_RUNNER") != "1":
-      sys.stderr.write(MESSAGE.format(name=fullname, why=WHY[fullname]))
-      sys.stderr.flush()
-      os._exit(3)
-    return None
+    def find_spec(self, fullname, path, target=None):
+        """
+        受保护模块且没有启动器标记时结束进程，否则交给后面的查找器
+        参数：fullname (str) 模块全名；path、target 由导入系统传入，不使用
+        返回：None，总是让导入系统继续用其他查找器
+        """
+        if fullname in GUARDED and os.environ.get("USE_GAME_RUNNER") != "1":
+            sys.stderr.write(MESSAGE.format(name=fullname, why=WHY[fullname]))
+            sys.stderr.flush()
+            os._exit(3)
+        return None
 
 
 if not any(isinstance(finder, GameRunnerGuard) for finder in sys.meta_path):
-  sys.meta_path.insert(0, GameRunnerGuard())
+    sys.meta_path.insert(0, GameRunnerGuard())

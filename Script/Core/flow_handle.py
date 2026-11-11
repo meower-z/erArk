@@ -35,61 +35,61 @@ flow_handle_web: ModuleType | None = None
 
 
 def _is_web_mode() -> bool:
-  """
-  动态检查是否在Web模式下运行
+    """
+    动态检查是否在Web模式下运行
 
-  参数：无
-  返回值类型：bool
-  功能描述：检查cache.web_mode的当前值，并在首次检测到Web模式时加载相关模块
+    参数：无
+    返回值类型：bool
+    功能描述：检查cache.web_mode的当前值，并在首次检测到Web模式时加载相关模块
 
-  注意：此函数必须使用动态检查而非模块级变量，因为：
-  1. 模组加载可能在cache.web_mode设置之前导入此模块
-  2. 模组加载过程中会导入ejaculation_panel等模块，间接导入flow_handle
-  3. 如果使用静态变量，会导致WEB_MODE被错误地设置为False
-  """
-  global _web_module_loaded, flow_handle_web
+    注意：此函数必须使用动态检查而非模块级变量，因为：
+    1. 模组加载可能在cache.web_mode设置之前导入此模块
+    2. 模组加载过程中会导入ejaculation_panel等模块，间接导入flow_handle
+    3. 如果使用静态变量，会导致WEB_MODE被错误地设置为False
+    """
+    global _web_module_loaded, flow_handle_web
 
-  # 动态获取当前的web_mode设置
-  web_mode = getattr(cache, "web_mode", False)
+    # 动态获取当前的web_mode设置
+    web_mode = getattr(cache, "web_mode", False)
 
-  if web_mode and not _web_module_loaded:
-    try:
-      # 导入Web版flow_handle模块
-      from Script.Core import flow_handle_web as _flow_handle_web
+    if web_mode and not _web_module_loaded:
+        try:
+            # 导入Web版flow_handle模块
+            from Script.Core import flow_handle_web as _flow_handle_web
 
-      flow_handle_web = _flow_handle_web
-      # 设置加载标志
-      _web_module_loaded = True
-      print("已启用Web模式，使用Web版本的流程控制函数")
-    except ImportError as e:
-      print(f"警告：无法导入Web版flow_handle模块: {e}")
-      return False
+            flow_handle_web = _flow_handle_web
+            # 设置加载标志
+            _web_module_loaded = True
+            print("已启用Web模式，使用Web版本的流程控制函数")
+        except ImportError as e:
+            print(f"警告：无法导入Web版flow_handle模块: {e}")
+            return False
 
-  return web_mode and _web_module_loaded
+    return web_mode and _web_module_loaded
 
 
 def _web_flow() -> ModuleType | None:
-  """
-  取Web版flow_handle模块
+    """
+    取Web版flow_handle模块
 
-  参数：无
-  返回值类型：ModuleType | None
-  功能描述：Web模式下返回已加载的Web版flow_handle模块，非Web模式返回None
-  """
-  if _is_web_mode():
-    return flow_handle_web
-  return None
+    参数：无
+    返回值类型：ModuleType | None
+    功能描述：Web模式下返回已加载的Web版flow_handle模块，非Web模式返回None
+    """
+    if _is_web_mode():
+        return flow_handle_web
+    return None
 
 
 def null_func() -> None:
-  """
-  占位用空函数
+    """
+    占位用空函数
 
-  参数：无
-  返回值类型：无
-  功能描述：提供一个什么都不做的函数作为占位符
-  """
-  return
+    参数：无
+    返回值类型：无
+    功能描述：提供一个什么都不做的函数作为占位符
+    """
+    return
 
 
 # 管理flow
@@ -101,142 +101,142 @@ def set_default_flow(
     arg: object = (),
     kw: dict[str, object] | None = None,
 ) -> None:
-  """
-  设置默认流程
+    """
+    设置默认流程
 
-  参数：
-  func (function) -- 对应的流程函数
-  arg (tuple) -- 传给func的顺序参数
-  kw (dict | None) -- 传给func的字典参数，None 视为空字典
+    参数：
+    func (function) -- 对应的流程函数
+    arg (tuple) -- 传给func的顺序参数
+    kw (dict | None) -- 传给func的字典参数，None 视为空字典
 
-  返回值类型：无
-  功能描述：设置默认的流程函数，供后续调用
-  """
-  kw = {} if kw is None else kw
-  # 检查是否在Web模式下
-  web_flow = _web_flow()
-  if web_flow is not None:
-    if hasattr(web_flow, "set_default_flow"):
-      web_flow.set_default_flow(func, arg, kw)
-    return
+    返回值类型：无
+    功能描述：设置默认的流程函数，供后续调用
+    """
+    kw = {} if kw is None else kw
+    # 检查是否在Web模式下
+    web_flow = _web_flow()
+    if web_flow is not None:
+        if hasattr(web_flow, "set_default_flow"):
+            web_flow.set_default_flow(func, arg, kw)
+        return
 
-  # 原始逻辑
-  global default_flow
-  if not isinstance(arg, tuple):
-    arg = (arg,)
-  if func is null_func:
-    default_flow = null_func
-    return
+    # 原始逻辑
+    global default_flow
+    if not isinstance(arg, tuple):
+        arg = (arg,)
+    if func is null_func:
+        default_flow = null_func
+        return
 
-  def run_func() -> None:
-    func(*arg, **kw)
+    def run_func() -> None:
+        func(*arg, **kw)
 
-  default_flow = run_func
+    default_flow = run_func
 
 
 def call_default_flow() -> None:
-  """
-  运行默认流程函数
+    """
+    运行默认流程函数
 
-  参数：无
-  返回值类型：无
-  功能描述：调用之前设置的默认流程函数
-  """
-  # 检查是否在Web模式下
-  web_flow = _web_flow()
-  if web_flow is not None:
-    if hasattr(web_flow, "call_default_flow"):
-      web_flow.call_default_flow()
-    return
+    参数：无
+    返回值类型：无
+    功能描述：调用之前设置的默认流程函数
+    """
+    # 检查是否在Web模式下
+    web_flow = _web_flow()
+    if web_flow is not None:
+        if hasattr(web_flow, "call_default_flow"):
+            web_flow.call_default_flow()
+        return
 
-  # 原始逻辑
-  default_flow()
+    # 原始逻辑
+    default_flow()
 
 
 def clear_default_flow() -> None:
-  """
-  清除当前默认流程函数，并设置为空函数
+    """
+    清除当前默认流程函数，并设置为空函数
 
-  参数：无
-  返回值类型：无
-  功能描述：清除当前默认流程函数
-  """
-  # 检查是否在Web模式下
-  web_flow = _web_flow()
-  if web_flow is not None:
-    if hasattr(web_flow, "clear_default_flow"):
-      web_flow.clear_default_flow()
-    return
+    参数：无
+    返回值类型：无
+    功能描述：清除当前默认流程函数
+    """
+    # 检查是否在Web模式下
+    web_flow = _web_flow()
+    if web_flow is not None:
+        if hasattr(web_flow, "clear_default_flow"):
+            web_flow.clear_default_flow()
+        return
 
-  # 原始逻辑
-  set_default_flow(null_func)
+    # 原始逻辑
+    set_default_flow(null_func)
 
 
 cmd_map = constant.cmd_map
 
 
 def default_tail_deal_cmd_func(order: str | int) -> None:
-  """
-  结尾命令处理空函数，用于占位
+    """
+    结尾命令处理空函数，用于占位
 
-  参数：
-  order (str) -- 命令文本
+    参数：
+    order (str) -- 命令文本
 
-  返回值类型：无
-  功能描述：默认的结尾命令处理函数，什么都不做
-  """
-  # 在Web模式下没有特别处理
-  return
+    返回值类型：无
+    功能描述：默认的结尾命令处理函数，什么都不做
+    """
+    # 在Web模式下没有特别处理
+    return
 
 
 tail_deal_cmd_func: Callable[[int], object] = default_tail_deal_cmd_func
 
 
 def set_tail_deal_cmd_func(func: Callable[[int], object]) -> None:
-  """
-  设置结尾命令处理函数
+    """
+    设置结尾命令处理函数
 
-  参数：
-  func (function) -- 结尾命令处理函数
+    参数：
+    func (function) -- 结尾命令处理函数
 
-  返回值类型：无
-  功能描述：设置用于处理结尾命令的函数
-  """
-  # 检查是否在Web模式下
-  web_flow = _web_flow()
-  if web_flow is not None:
-    # 将func保存到Web版flow_handle中
-    if hasattr(web_flow, "set_tail_deal_cmd_func"):
-      web_flow.set_tail_deal_cmd_func(func)
-    return
+    返回值类型：无
+    功能描述：设置用于处理结尾命令的函数
+    """
+    # 检查是否在Web模式下
+    web_flow = _web_flow()
+    if web_flow is not None:
+        # 将func保存到Web版flow_handle中
+        if hasattr(web_flow, "set_tail_deal_cmd_func"):
+            web_flow.set_tail_deal_cmd_func(func)
+        return
 
-  # 原始逻辑
-  global tail_deal_cmd_func
-  tail_deal_cmd_func = func
+    # 原始逻辑
+    global tail_deal_cmd_func
+    tail_deal_cmd_func = func
 
 
 def deco_set_tail_deal_cmd_func(
     func: Callable[[int], object],
 ) -> Callable[[int], object]:
-  """
-  为结尾命令设置函数提供装饰器功能
+    """
+    为结尾命令设置函数提供装饰器功能
 
-  参数：
-  func (function) -- 结尾命令处理函数
+    参数：
+    func (function) -- 结尾命令处理函数
 
-  返回值类型：function
-  功能描述：作为装饰器使用，设置结尾命令处理函数
-  """
-  # 检查是否在Web模式下
-  web_flow = _web_flow()
-  if web_flow is not None:
-    # 调用Web版的装饰器函数
-    if hasattr(web_flow, "deco_set_tail_deal_cmd_func"):
-      return web_flow.deco_set_tail_deal_cmd_func(func)
+    返回值类型：function
+    功能描述：作为装饰器使用，设置结尾命令处理函数
+    """
+    # 检查是否在Web模式下
+    web_flow = _web_flow()
+    if web_flow is not None:
+        # 调用Web版的装饰器函数
+        if hasattr(web_flow, "deco_set_tail_deal_cmd_func"):
+            return web_flow.deco_set_tail_deal_cmd_func(func)
 
-  # 原始逻辑
-  set_tail_deal_cmd_func(func)
-  return func
+    # 原始逻辑
+    set_tail_deal_cmd_func(func)
+    return func
 
 
 def bind_cmd(
@@ -245,36 +245,36 @@ def bind_cmd(
     arg: object = (),
     kw: dict[str, object] | None = None,
 ) -> None:
-  """
-  绑定命令数字与命令函数
+    """
+    绑定命令数字与命令函数
 
-  参数：
-  cmd_number (str/int) -- 命令数字
-  cmd_func (function) -- 命令函数
-  arg (tuple) -- 传给命令函数的顺序参数
-  kw (dict | None) -- 传给命令函数的字典参数，None 视为空字典
+    参数：
+    cmd_number (str/int) -- 命令数字
+    cmd_func (function) -- 命令函数
+    arg (tuple) -- 传给命令函数的顺序参数
+    kw (dict | None) -- 传给命令函数的字典参数，None 视为空字典
 
-  返回值类型：无
-  功能描述：将命令ID与对应的处理函数绑定
-  """
-  kw = {} if kw is None else kw
-  # 检查是否在Web模式下
-  web_flow = _web_flow()
-  if web_flow is not None:
-    # 调用Web版的绑定函数
-    return web_flow.bind_cmd(cmd_number, cmd_func, arg, kw)
+    返回值类型：无
+    功能描述：将命令ID与对应的处理函数绑定
+    """
+    kw = {} if kw is None else kw
+    # 检查是否在Web模式下
+    web_flow = _web_flow()
+    if web_flow is not None:
+        # 调用Web版的绑定函数
+        return web_flow.bind_cmd(cmd_number, cmd_func, arg, kw)
 
-  # 原始逻辑
-  if not isinstance(arg, tuple):
-    arg = (arg,)
-  if cmd_func is null_func or cmd_func is None:
-    cmd_map[cmd_number] = null_func
-    return
+    # 原始逻辑
+    if not isinstance(arg, tuple):
+        arg = (arg,)
+    if cmd_func is null_func or cmd_func is None:
+        cmd_map[cmd_number] = null_func
+        return
 
-  def run_func() -> None:
-    cmd_func(*arg, **kw)
+    def run_func() -> None:
+        cmd_func(*arg, **kw)
 
-  cmd_map[cmd_number] = run_func
+    cmd_map[cmd_number] = run_func
 
 
 def print_cmd(
@@ -287,34 +287,41 @@ def print_cmd(
     on_style: str = "onbutton",
     tooltip: str = "",
 ) -> str:
-  """
-  输出命令数字
+    """
+    输出命令数字
 
-  参数：
-  cmd_str (str) -- 命令对应文字
-  cmd_number (str/int) -- 命令数字
-  cmd_func (function) -- 命令函数
-  arg (tuple) -- 传给命令函数的顺序参数
-  kw (dict | None) -- 传给命令函数的字典参数，None 视为空字典
-  normal_style (str) -- 正常状态下命令显示样式
-  on_style (str) -- 鼠标在其上的时候命令显示样式
+    参数：
+    cmd_str (str) -- 命令对应文字
+    cmd_number (str/int) -- 命令数字
+    cmd_func (function) -- 命令函数
+    arg (tuple) -- 传给命令函数的顺序参数
+    kw (dict | None) -- 传给命令函数的字典参数，None 视为空字典
+    normal_style (str) -- 正常状态下命令显示样式
+    on_style (str) -- 鼠标在其上的时候命令显示样式
 
-  返回值类型：str
-  功能描述：创建一个可点击的命令按钮
-  """
-  kw = {} if kw is None else kw
-  # 检查是否在Web模式下
-  web_flow = _web_flow()
-  if web_flow is not None:
-    # 使用Web版的print_cmd函数
-    return web_flow.print_cmd(
-        cmd_str, cmd_number, cmd_func, arg, kw, normal_style, on_style, tooltip
-    )
+    返回值类型：str
+    功能描述：创建一个可点击的命令按钮
+    """
+    kw = {} if kw is None else kw
+    # 检查是否在Web模式下
+    web_flow = _web_flow()
+    if web_flow is not None:
+        # 使用Web版的print_cmd函数
+        return web_flow.print_cmd(
+            cmd_str,
+            cmd_number,
+            cmd_func,
+            arg,
+            kw,
+            normal_style,
+            on_style,
+            tooltip,
+        )
 
-  # 原始逻辑
-  bind_cmd(cmd_number, cmd_func, arg, kw)
-  io_init.io_print_cmd(cmd_str, cmd_number, normal_style, on_style, tooltip)
-  return cmd_str
+    # 原始逻辑
+    bind_cmd(cmd_number, cmd_func, arg, kw)
+    io_init.io_print_cmd(cmd_str, cmd_number, normal_style, on_style, tooltip)
+    return cmd_str
 
 
 def print_image_cmd(
@@ -325,99 +332,99 @@ def print_image_cmd(
     kw: dict[str, object] | None = None,
     tooltip: str = "",
 ) -> str:
-  """
-  绘制图片按钮
+    """
+    绘制图片按钮
 
-  参数：
-  cmd_str (str) -- 命令对应文字
-  cmd_number (str/int) -- 命令数字
-  cmd_func (function) -- 命令函数
-  arg (tuple) -- 传给命令函数的顺序参数
-  kw (dict | None) -- 传给命令函数的字典参数，None 视为空字典
+    参数：
+    cmd_str (str) -- 命令对应文字
+    cmd_number (str/int) -- 命令数字
+    cmd_func (function) -- 命令函数
+    arg (tuple) -- 传给命令函数的顺序参数
+    kw (dict | None) -- 传给命令函数的字典参数，None 视为空字典
 
-  返回值类型：str
-  功能描述：创建一个图片按钮
-  """
-  kw = {} if kw is None else kw
-  # 检查是否在Web模式下
-  web_flow = _web_flow()
-  if web_flow is not None and hasattr(web_flow, "print_image_cmd"):
-    # 使用Web版的print_image_cmd函数
-    return web_flow.print_image_cmd(
-        cmd_str, cmd_number, cmd_func, arg, kw, tooltip
-    )
+    返回值类型：str
+    功能描述：创建一个图片按钮
+    """
+    kw = {} if kw is None else kw
+    # 检查是否在Web模式下
+    web_flow = _web_flow()
+    if web_flow is not None and hasattr(web_flow, "print_image_cmd"):
+        # 使用Web版的print_image_cmd函数
+        return web_flow.print_image_cmd(
+            cmd_str, cmd_number, cmd_func, arg, kw, tooltip
+        )
 
-  # 原始逻辑
-  bind_cmd(cmd_number, cmd_func, arg, kw)
-  io_init.io_print_image_cmd(cmd_str, cmd_number, tooltip)
-  return cmd_str
+    # 原始逻辑
+    bind_cmd(cmd_number, cmd_func, arg, kw)
+    io_init.io_print_image_cmd(cmd_str, cmd_number, tooltip)
+    return cmd_str
 
 
 def cmd_clear(*number: int | str) -> None:
-  """
-  清除绑定命令
+    """
+    清除绑定命令
 
-  参数：
-  number (tuple) -- 清除绑定命令数字，不提供则清除所有
+    参数：
+    number (tuple) -- 清除绑定命令数字，不提供则清除所有
 
-  返回值类型：无
-  功能描述：清除指定或所有的命令绑定
-  """
-  # 检查是否在Web模式下
-  web_flow = _web_flow()
-  if web_flow is not None:
-    # 使用Web版的cmd_clear函数
-    return web_flow.cmd_clear(*number)
+    返回值类型：无
+    功能描述：清除指定或所有的命令绑定
+    """
+    # 检查是否在Web模式下
+    web_flow = _web_flow()
+    if web_flow is not None:
+        # 使用Web版的cmd_clear函数
+        return web_flow.cmd_clear(*number)
 
-  # 原始逻辑
-  set_tail_deal_cmd_func(default_tail_deal_cmd_func)
-  if number:
-    for num in number:
-      del cmd_map[num]
-      io_init.io_clear_cmd(num)
-  else:
-    cmd_map.clear()
-    io_init.io_clear_cmd()
+    # 原始逻辑
+    set_tail_deal_cmd_func(default_tail_deal_cmd_func)
+    if number:
+        for num in number:
+            del cmd_map[num]
+            io_init.io_clear_cmd(num)
+    else:
+        cmd_map.clear()
+        io_init.io_clear_cmd()
 
 
 def _cmd_deal(order_number: int | str) -> None:
-  """
-  执行命令
+    """
+    执行命令
 
-  参数：
-  order_number (str/int) -- 对应命令数字
+    参数：
+    order_number (str/int) -- 对应命令数字
 
-  返回值类型：无
-  功能描述：执行与命令ID绑定的函数
-  """
-  # 检查是否在Web模式下
-  web_flow = _web_flow()
-  if web_flow is not None and hasattr(web_flow, "_cmd_deal"):
-    # 使用Web版的_cmd_deal函数
-    return web_flow._cmd_deal(order_number)
+    返回值类型：无
+    功能描述：执行与命令ID绑定的函数
+    """
+    # 检查是否在Web模式下
+    web_flow = _web_flow()
+    if web_flow is not None and hasattr(web_flow, "_cmd_deal"):
+        # 使用Web版的_cmd_deal函数
+        return web_flow._cmd_deal(order_number)
 
-  # 原始逻辑
-  cmd_map[order_number]()
+    # 原始逻辑
+    cmd_map[order_number]()
 
 
 def _cmd_valid(order_number: int | str) -> bool:
-  """
-  判断命令数字是否有效
+    """
+    判断命令数字是否有效
 
-  参数：
-  order_number (str/int) -- 对应命令数字
+    参数：
+    order_number (str/int) -- 对应命令数字
 
-  返回值类型：bool
-  功能描述：判断命令ID是否有效
-  """
-  # 检查是否在Web模式下
-  web_flow = _web_flow()
-  if web_flow is not None and hasattr(web_flow, "_cmd_valid"):
-    # 使用Web版的_cmd_valid函数
-    return web_flow._cmd_valid(order_number)
+    返回值类型：bool
+    功能描述：判断命令ID是否有效
+    """
+    # 检查是否在Web模式下
+    web_flow = _web_flow()
+    if web_flow is not None and hasattr(web_flow, "_cmd_valid"):
+        # 使用Web版的_cmd_valid函数
+        return web_flow._cmd_valid(order_number)
 
-  # 原始逻辑
-  return cmd_map.get(order_number) not in (null_func, None)
+    # 原始逻辑
+    return cmd_map.get(order_number) not in (null_func, None)
 
 
 __skip_flag__ = False
@@ -430,8 +437,7 @@ def order_deal(
     flag: Literal["str"],
     print_order: bool = True,
     donot_return_null_str: bool = True,
-) -> str | int:
-  ...
+) -> str | int: ...
 
 
 @overload
@@ -439,8 +445,7 @@ def order_deal(
     flag: str = "order",
     print_order: bool = True,
     donot_return_null_str: bool = True,
-) -> str | int | None:
-  ...
+) -> str | int | None: ...
 
 
 def order_deal(
@@ -448,192 +453,193 @@ def order_deal(
     print_order: bool = True,
     donot_return_null_str: bool = True,
 ) -> str | int | None:
-  """
-  处理命令函数
+    """
+    处理命令函数
 
-  参数：
-  flag (str) -- 类型，默认为order，如果为console，会执行输入得到的内容
-  print_order (bool) -- 是否将输入的order输出到屏幕上
-  donot_return_null_str (bool) -- 不接受输入空字符串
+    参数：
+    flag (str) -- 类型，默认为order，如果为console，会执行输入得到的内容
+    print_order (bool) -- 是否将输入的order输出到屏幕上
+    donot_return_null_str (bool) -- 不接受输入空字符串
 
-  返回值类型：str | int | None（Tk 下：允许空输入且 wframe_mouse.w_frame_up 已置位时返回空串，否则 str 类返回输入的字符串、order 类返回 None；Web 模式下由 Web 版 order_deal 返回，可能是 int）
-  功能描述：处理用户输入的命令
-  """
-  # 检查是否在Web模式下
-  web_flow = _web_flow()
-  if web_flow is not None:
-    # 使用Web版的order_deal函数
-    return web_flow.order_deal(flag, print_order, donot_return_null_str)
+    返回值类型：str | int | None（Tk 下：允许空输入且 wframe_mouse.w_frame_up 已置位时返回空串，否则 str 类返回输入的字符串、order 类返回 None；Web 模式下由 Web 版 order_deal 返回，可能是 int）
+    功能描述：处理用户输入的命令
+    """
+    # 检查是否在Web模式下
+    web_flow = _web_flow()
+    if web_flow is not None:
+        # 使用Web版的order_deal函数
+        return web_flow.order_deal(flag, print_order, donot_return_null_str)
 
-  # 原始逻辑 - tkinter模式
-  global __skip_flag__
-  __skip_flag__ = False
-  # 渲染期输入门禁：本次输入等待的一屏内容此时已全部入队，在进入轮询前 push 一次上膛标记。
-  # 该标记恒排在本屏内容之后，read_queue 处理到它时才置为已上膛。每次进入 order_deal 只 push 一次，
-  # 绝不放进下方轮询循环，避免渲染队列被标记刷屏；askfor_all/askfor_wait 因无效输入重进本函数时
-  # 会再次 push，即"重新上膛"，是允许且正确的。
-  io_init.arm_input()
-  while True:
-    time.sleep(0.01)
-    if not donot_return_null_str and cache.wframe_mouse.w_frame_up:
-      return ""
-    while not io_init._order_queue.empty():
-      order = io_init.get_order()
-      if print_order and order != "":
-        io_init.era_print("\n" + order + "\n")
-      if flag == "str":
-        if order.isdigit():
-          order = str(int(order))
-        return order
-      if flag == "console":
-        exec(order)
-      if flag == "order":
-        if _cmd_valid(order):
-          _cmd_deal(order)
-          return None
-        else:
-          tail_deal_cmd_func(int(order))
-          return None
+    # 原始逻辑 - tkinter模式
+    global __skip_flag__
+    __skip_flag__ = False
+    # 渲染期输入门禁：本次输入等待的一屏内容此时已全部入队，在进入轮询前 push 一次上膛标记。
+    # 该标记恒排在本屏内容之后，read_queue 处理到它时才置为已上膛。每次进入 order_deal 只 push 一次，
+    # 绝不放进下方轮询循环，避免渲染队列被标记刷屏；askfor_all/askfor_wait 因无效输入重进本函数时
+    # 会再次 push，即"重新上膛"，是允许且正确的。
+    io_init.arm_input()
+    while True:
+        time.sleep(0.01)
+        if not donot_return_null_str and cache.wframe_mouse.w_frame_up:
+            return ""
+        while not io_init._order_queue.empty():
+            order = io_init.get_order()
+            if print_order and order != "":
+                io_init.era_print("\n" + order + "\n")
+            if flag == "str":
+                if order.isdigit():
+                    order = str(int(order))
+                return order
+            if flag == "console":
+                exec(order)
+            if flag == "order":
+                if _cmd_valid(order):
+                    _cmd_deal(order)
+                    return None
+                else:
+                    tail_deal_cmd_func(int(order))
+                    return None
 
 
 def askfor_str(
     donot_return_null_str: bool = True, print_order: bool = False
 ) -> str | int:
-  """
-  用于请求一个字符串为结果的输入
+    """
+    用于请求一个字符串为结果的输入
 
-  参数：
-  donot_return_null_str (bool) -- 不接受输入空字符串
-  print_order (bool) -- 是否将输入的order输出到屏幕上
+    参数：
+    donot_return_null_str (bool) -- 不接受输入空字符串
+    print_order (bool) -- 是否将输入的order输出到屏幕上
 
-  返回值类型：str | int（Web 模式下由 Web 版 askfor_str 返回，可能是 int）
-  功能描述：获取用户输入的字符串
-  """
-  # 检查是否在Web模式下
-  web_flow = _web_flow()
-  if web_flow is not None:
-    # 使用Web版的askfor_str函数
-    message = "请输入文本："  # 在Web模式下需要提供提示信息
-    return web_flow.askfor_str(message, "")
+    返回值类型：str | int（Web 模式下由 Web 版 askfor_str 返回，可能是 int）
+    功能描述：获取用户输入的字符串
+    """
+    # 检查是否在Web模式下
+    web_flow = _web_flow()
+    if web_flow is not None:
+        # 使用Web版的askfor_str函数
+        message = "请输入文本："  # 在Web模式下需要提供提示信息
+        return web_flow.askfor_str(message, "")
 
-  # 原始逻辑
-  while True:
-    if not donot_return_null_str and cache.wframe_mouse.w_frame_up:
-      cache.wframe_mouse.w_frame_up = 0
-      return ""
-    order = order_deal("str", print_order, donot_return_null_str)
-    if donot_return_null_str and order != "":
-      return order
-    elif not donot_return_null_str:
-      return order
+    # 原始逻辑
+    while True:
+        if not donot_return_null_str and cache.wframe_mouse.w_frame_up:
+            cache.wframe_mouse.w_frame_up = 0
+            return ""
+        order = order_deal("str", print_order, donot_return_null_str)
+        if donot_return_null_str and order != "":
+            return order
+        elif not donot_return_null_str:
+            return order
 
 
 def askfor_all(input_list: list, print_order: bool = False) -> str:
-  """
-  用于请求一个位于列表中的输入，如果输入没有在列表中，则告知用户出错。
+    """
+    用于请求一个位于列表中的输入，如果输入没有在列表中，则告知用户出错。
 
-  参数：
-  input_list (list) -- 用于判断的列表内容
-  print_order (bool) -- 是否将输入的order输出到屏幕上
+    参数：
+    input_list (list) -- 用于判断的列表内容
+    print_order (bool) -- 是否将输入的order输出到屏幕上
 
-  返回值类型：str
-  功能描述：获取用户在指定列表中选择的输入
-  """
-  # 检查是否在Web模式下
-  web_flow = _web_flow()
-  if web_flow is not None:
-    # 使用Web版的askfor_all函数
-    return web_flow.askfor_all(input_list)
+    返回值类型：str
+    功能描述：获取用户在指定列表中选择的输入
+    """
+    # 检查是否在Web模式下
+    web_flow = _web_flow()
+    if web_flow is not None:
+        # 使用Web版的askfor_all函数
+        return web_flow.askfor_all(input_list)
 
-  # 原始逻辑
-  while 1:
-    order = order_deal("str", print_order)
-    # 非 Web 模式下 order_deal 走 Tk 分支，str 类输入总返回字符串
-    assert isinstance(order, str)
-    if order in input_list:
-      io_init.era_print(order + "\n")
-      if _cmd_valid(order):
-        _cmd_deal(order)
-      elif order == "999":
-        from Script.Core import save_handle
-        # 保存到自动存档
-        save_handle.establish_save("auto")
-        # 退出游戏
-        parent = psutil.Process(os.getpid())
-        children = parent.children(recursive=True)
-        for process in children:
-          process.send_signal(signal.SIGTERM)
-        os._exit(0)
-      return order
-    elif order == "":
-      continue
-    else:
-      io_init.era_print(order + "\n")
-      io_init.era_print(_("您输入的选项无效，请重试\n"))
-      continue
+    # 原始逻辑
+    while 1:
+        order = order_deal("str", print_order)
+        # 非 Web 模式下 order_deal 走 Tk 分支，str 类输入总返回字符串
+        assert isinstance(order, str)
+        if order in input_list:
+            io_init.era_print(order + "\n")
+            if _cmd_valid(order):
+                _cmd_deal(order)
+            elif order == "999":
+                from Script.Core import save_handle
+
+                # 保存到自动存档
+                save_handle.establish_save("auto")
+                # 退出游戏
+                parent = psutil.Process(os.getpid())
+                children = parent.children(recursive=True)
+                for process in children:
+                    process.send_signal(signal.SIGTERM)
+                os._exit(0)
+            return order
+        elif order == "":
+            continue
+        else:
+            io_init.era_print(order + "\n")
+            io_init.era_print(_("您输入的选项无效，请重试\n"))
+            continue
 
 
 def askfor_int(list: list, print_order: bool = False) -> str | int:
-  """
-  用于请求位于列表中的整数的输入，如果输入没有在列表中，则告知用户出错。
+    """
+    用于请求位于列表中的整数的输入，如果输入没有在列表中，则告知用户出错。
 
-  参数：
-  list (list) -- 用于判断的列表内容
-  print_order (bool) -- 是否将输入的order输出到屏幕上
+    参数：
+    list (list) -- 用于判断的列表内容
+    print_order (bool) -- 是否将输入的order输出到屏幕上
 
-  返回值类型：str | int（Web 模式下由 Web 版 askfor_int 返回）
-  功能描述：获取用户在指定整数列表中的选择
-  """
-  # 检查是否在Web模式下
-  web_flow = _web_flow()
-  if web_flow is not None:
-    # 使用Web版的askfor_int函数
-    message = "请输入数字："  # 在Web模式下需要提供提示信息
-    return web_flow.askfor_int(message, 0)
+    返回值类型：str | int（Web 模式下由 Web 版 askfor_int 返回）
+    功能描述：获取用户在指定整数列表中的选择
+    """
+    # 检查是否在Web模式下
+    web_flow = _web_flow()
+    if web_flow is not None:
+        # 使用Web版的askfor_int函数
+        message = "请输入数字："  # 在Web模式下需要提供提示信息
+        return web_flow.askfor_int(message, 0)
 
-  # 原始逻辑
-  while True:
-    order = order_deal("str", print_order)
-    # 非 Web 模式下 order_deal 走 Tk 分支，str 类输入总返回字符串
-    assert isinstance(order, str)
-    order = text_handle.full_to_half_text(order)
-    if order in list:
-      io_init.era_print(order + "\n\n")
-      return order
-    elif order == "":
-      continue
-    else:
-      io_init.era_print(order + "\n")
-      io_init.era_print(_("您输入的选项无效，请重试\n"))
-      continue
+    # 原始逻辑
+    while True:
+        order = order_deal("str", print_order)
+        # 非 Web 模式下 order_deal 走 Tk 分支，str 类输入总返回字符串
+        assert isinstance(order, str)
+        order = text_handle.full_to_half_text(order)
+        if order in list:
+            io_init.era_print(order + "\n\n")
+            return order
+        elif order == "":
+            continue
+        else:
+            io_init.era_print(order + "\n")
+            io_init.era_print(_("您输入的选项无效，请重试\n"))
+            continue
 
 
 def askfor_wait() -> None:
-  """
-  用于请求一个暂停动作，输入任何数都可以继续
+    """
+    用于请求一个暂停动作，输入任何数都可以继续
 
-  参数：无
-  返回值类型：无
-  功能描述：等待用户任意输入后继续
-  """
-  # 检查是否在Web模式下
-  web_flow = _web_flow()
-  if web_flow is not None:
-    # 使用Web版的askfor_wait函数
-    return web_flow.askfor_wait()
+    参数：无
+    返回值类型：无
+    功能描述：等待用户任意输入后继续
+    """
+    # 检查是否在Web模式下
+    web_flow = _web_flow()
+    if web_flow is not None:
+        # 使用Web版的askfor_wait函数
+        return web_flow.askfor_wait()
 
-  # 原始逻辑
-  # 基准模式下直接跳过等待，避免自动化流程阻塞
-  if getattr(cache, "benchmark_mode", False):
-    return
+    # 原始逻辑
+    # 基准模式下直接跳过等待，避免自动化流程阻塞
+    if getattr(cache, "benchmark_mode", False):
+        return
 
-  cache.wframe_mouse.w_frame_up = 0
-  while not cache.wframe_mouse.w_frame_up:
-    re = askfor_str(donot_return_null_str=False)
-    if re == "":
-      break
-  # 等待结束后必须把标志位恢复为1
-  # 否则用回车结束等待时 w_frame_up 会遗留为0并跨界面残留（置1的唯一入口在鼠标路径上）
-  # 之后一次点在空白处的左键会被 mouse_left_check 的 w==0 分支误判为"推进等待"：
-  # 消耗掉一次性的输入许可却不产生任何指令，askfor_all 从此永远收不到输入，游戏静默卡死
-  cache.wframe_mouse.w_frame_up = 1
+    cache.wframe_mouse.w_frame_up = 0
+    while not cache.wframe_mouse.w_frame_up:
+        re = askfor_str(donot_return_null_str=False)
+        if re == "":
+            break
+    # 等待结束后必须把标志位恢复为1
+    # 否则用回车结束等待时 w_frame_up 会遗留为0并跨界面残留（置1的唯一入口在鼠标路径上）
+    # 之后一次点在空白处的左键会被 mouse_left_check 的 w==0 分支误判为"推进等待"：
+    # 消耗掉一次性的输入许可却不产生任何指令，askfor_all 从此永远收不到输入，游戏静默卡死
+    cache.wframe_mouse.w_frame_up = 1

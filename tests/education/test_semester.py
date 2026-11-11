@@ -1,7 +1,25 @@
 # -*- coding: UTF-8 -*-
 """semester_handle：学期时间、本学期出勤、成绩档位、学期切换、成绩单历史"""
 
-from _bootstrap import DEFAULT_TIME, _, check, class_ai, clear_schedules, datetime, education_constant, finish, game_config, game_time, growth_handle, make_character, period_time, remove_character, section, semester_handle, set_time
+from _bootstrap import (
+    DEFAULT_TIME,
+    _,
+    check,
+    class_ai,
+    clear_schedules,
+    datetime,
+    education_constant,
+    finish,
+    game_config,
+    game_time,
+    growth_handle,
+    make_character,
+    period_time,
+    remove_character,
+    section,
+    semester_handle,
+    set_time,
+)
 
 clear_schedules()
 mother = make_character(102, "母亲", 0)
@@ -169,9 +187,9 @@ check("新学期听课 3 节", semester_handle.get_semester_attend(201) == (3, 0
 
 section("成绩单历史")
 for index in range(10):
-  semester_handle.push_report_card(
-      201, {"year": 2020, "month": 3, "grade": index}
-  )
+    semester_handle.push_report_card(
+        201, {"year": 2020, "month": 3, "grade": index}
+    )
 check("历史上限 8 份", len(g.report_card_history) == E.REPORT_CARD_HISTORY_MAX)
 check(
     "留的是最近的",
@@ -293,8 +311,8 @@ g.last_attend_period = []
 _skip_before = g.skip_count
 growth_handle.settle_course_attend(201)
 for _p in (1, 2, 3):
-  set_time(period_time(_p, _day))
-  class_ai.settle_absent(201, by_skip=True)
+    set_time(period_time(_p, _day))
+    class_ai.settle_absent(201, by_skip=True)
 card = semester_handle.build_report_card(201)
 check(
     "上 1 节、翘 3 节：出勤 1 / 缺课 3、25%、待努力（此前翘课不计缺课，出勤率 100%、良好）",
@@ -319,20 +337,20 @@ _w21 = game_config.config_work_type[21].name
 def reason_of(
     base_work_type: int, now_work_type: int, have_record: bool
 ) -> str:
-  """
-  按「学期初岗位 / 结算时岗位 / 本学期有无出勤记录」取理由
-  Keyword arguments:
-  base_work_type -- 学期初的岗位，-1 为未知
-  now_work_type -- 结算时的岗位
-  have_record -- 本学期是否有一节出勤
-  Return arguments:
-  str -- 理由文本
-  """
-  g.semester_base_work_type = base_work_type
-  student.work.work_type = now_work_type
-  g.semester_base_attend = g.attend_class_count - (1 if have_record else 0)
-  g.semester_base_absent = g.absent_count
-  return semester_handle.get_report_incomplete_reason(201)
+    """
+    按「学期初岗位 / 结算时岗位 / 本学期有无出勤记录」取理由
+    Keyword arguments:
+    base_work_type -- 学期初的岗位，-1 为未知
+    now_work_type -- 结算时的岗位
+    have_record -- 本学期是否有一节出勤
+    Return arguments:
+    str -- 理由文本
+    """
+    g.semester_base_work_type = base_work_type
+    student.work.work_type = now_work_type
+    g.semester_base_attend = g.attend_class_count - (1 if have_record else 0)
+    g.semester_base_absent = g.absent_count
+    return semester_handle.get_report_incomplete_reason(201)
 
 
 check(

@@ -30,67 +30,69 @@ LAST_RUN = os.path.join(
 
 
 class SmokeNewGameTest(SlowTestCase):
-  """新开局跑几个游戏小时，静态自检全部通过"""
+    """新开局跑几个游戏小时，静态自检全部通过"""
 
-  def test_hours_pass_static_checks(self) -> None:
-    """10:00 到 16:00 有干员吃饭，每个整点的全部静态自检都通过；逐步录下行为快照"""
-    from Script.Core import constant
-    from Script.Test import Static_Check
-    from Script.Test.Static_Check import checks
-    from tests.snapshot import ActionLog, Recorder, capture
+    def test_hours_pass_static_checks(self) -> None:
+        """10:00 到 16:00 有干员吃饭，每个整点的全部静态自检都通过；逐步录下行为快照"""
+        from Script.Core import constant
+        from Script.Test import Static_Check
+        from Script.Test.Static_Check import checks
+        from tests.snapshot import ActionLog, Recorder, capture
 
-    checks_dir = os.path.dirname(checks.__file__)
-    modules = sorted(
-        name[:-3]
-        for name in os.listdir(checks_dir)
-        if name.startswith("check_") and name.endswith(".py")
-    )
-    missing = [name for name in modules if not hasattr(checks, name)]
-    self.assertEqual(missing, [], "这些检查模块没有载入，它们的检查没有注册")
-
-    failures = []
-    """ 失败的自检：「整点 检查编号 检查名: 说明」 """
-
-    def run_checks() -> None:
-      """
-      跑一遍全部静态自检，失败记进 failures
-      Keyword arguments:
-      无
-      Return arguments:
-      无
-      """
-      hour = self.cache.game_time.strftime("%m-%d %H:%M")
-      for f in Static_Check.run_all_checks():
-        failures.append(
-            f"{hour} {f.check_id} {f.check_name}: {f.message[:300]}"
+        checks_dir = os.path.dirname(checks.__file__)
+        modules = sorted(
+            name[:-3]
+            for name in os.listdir(checks_dir)
+            if name.startswith("check_") and name.endswith(".py")
+        )
+        missing = [name for name in modules if not hasattr(checks, name)]
+        self.assertEqual(
+            missing, [], "这些检查模块没有载入，它们的检查没有注册"
         )
 
-    recorder = Recorder()
-    log = ActionLog()
-    memo: dict[int, tuple[bytes | None, dict[str, object]]] = {}
-    log.install()
-    npc_behaviors: set[str] = set()
-    """ 干员在各步结束时的行为id """
-    start = self.cache.game_time
-    recorder.record("0000", capture(self.cache, log, memo))
-    run_checks()
-    for index in range(1, HOURS * 60 // STEP_MINUTES + 1):
-      self.instruct(constant.Instruct.WAIT)
-      now = self.cache.game_time
-      recorder.record(f"{index:04d}", capture(self.cache, log, memo))
-      npc_behaviors.update(
-          self.cache.character_data[cid].behavior.behavior_id
-          for cid in self.cache.npc_id_got
-      )
-      if now.minute == 0:
+        failures = []
+        """ 失败的自检：「整点 检查编号 检查名: 说明」 """
+
+        def run_checks() -> None:
+            """
+            跑一遍全部静态自检，失败记进 failures
+            Keyword arguments:
+            无
+            Return arguments:
+            无
+            """
+            hour = self.cache.game_time.strftime("%m-%d %H:%M")
+            for f in Static_Check.run_all_checks():
+                failures.append(
+                    f"{hour} {f.check_id} {f.check_name}: {f.message[:300]}"
+                )
+
+        recorder = Recorder()
+        log = ActionLog()
+        memo: dict[int, tuple[bytes | None, dict[str, object]]] = {}
+        log.install()
+        npc_behaviors: set[str] = set()
+        """ 干员在各步结束时的行为id """
+        start = self.cache.game_time
+        recorder.record("0000", capture(self.cache, log, memo))
         run_checks()
-    os.makedirs(os.path.dirname(LAST_RUN), exist_ok=True)
-    recorder.write(LAST_RUN)
-    self.assertEqual(
-        (self.cache.game_time - start).total_seconds(),
-        HOURS * 3600,
-        "主循环推进的时间",
-    )
-    self.assertIn(constant.Behavior.EAT, npc_behaviors, "没有干员吃饭")
-    self.maxDiff = None
-    self.assertEqual(failures, [])
+        for index in range(1, HOURS * 60 // STEP_MINUTES + 1):
+            self.instruct(constant.Instruct.WAIT)
+            now = self.cache.game_time
+            recorder.record(f"{index:04d}", capture(self.cache, log, memo))
+            npc_behaviors.update(
+                self.cache.character_data[cid].behavior.behavior_id
+                for cid in self.cache.npc_id_got
+            )
+            if now.minute == 0:
+                run_checks()
+        os.makedirs(os.path.dirname(LAST_RUN), exist_ok=True)
+        recorder.write(LAST_RUN)
+        self.assertEqual(
+            (self.cache.game_time - start).total_seconds(),
+            HOURS * 3600,
+            "主循环推进的时间",
+        )
+        self.assertIn(constant.Behavior.EAT, npc_behaviors, "没有干员吃饭")
+        self.maxDiff = None
+        self.assertEqual(failures, [])

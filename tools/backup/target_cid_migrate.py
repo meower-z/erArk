@@ -32,17 +32,17 @@ import collections
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-  from typing import TypedDict
+    from typing import TypedDict
 
-  class TargetRow(TypedDict):
-    """target.csv 的一行数据，line 是它在文件里的行号"""
+    class TargetRow(TypedDict):
+        """target.csv 的一行数据，line 是它在文件里的行号"""
 
-    line: int
-    cid: int
-    state_machine_id: str
-    premise_id: str
-    type: int
-    remarks: str
+        line: int
+        cid: int
+        state_machine_id: str
+        premise_id: str
+        type: int
+        remarks: str
 
 
 sys.stdout = io.TextIOWrapper(
@@ -88,156 +88,158 @@ CHAIN_BY_OLD_CID = [
 
 
 def chain_of(old_cid: int) -> str | None:
-  """
-  查出旧 cid 属于哪条行为链
-  Keyword arguments:
-  old_cid -- 旧的目标cid
-  Return arguments:
-  str -- 行为链名，未归类时返回None
-  """
-  for (low, high), name in CHAIN_BY_OLD_CID:
-    if low <= old_cid <= high:
-      return name
-  return None
+    """
+    查出旧 cid 属于哪条行为链
+    Keyword arguments:
+    old_cid -- 旧的目标cid
+    Return arguments:
+    str -- 行为链名，未归类时返回None
+    """
+    for (low, high), name in CHAIN_BY_OLD_CID:
+        if low <= old_cid <= high:
+            return name
+    return None
 
 
 def split_lines(raw: str) -> tuple[list[str], str]:
-  """
-  按文件自己的行尾拆行；含 CRLF 的按 CRLF 拆，否则按 LF 拆
-  Keyword arguments:
-  raw -- 不做换行转换读入的文件内容
-  Return arguments:
-  list -- 各行文本（以行尾结尾的文件，最后一项是空串）
-  str -- 文件的行尾，写回时沿用
-  """
-  line_end = "\r\n" if "\r\n" in raw else "\n"
-  return raw.split(line_end), line_end
+    """
+    按文件自己的行尾拆行；含 CRLF 的按 CRLF 拆，否则按 LF 拆
+    Keyword arguments:
+    raw -- 不做换行转换读入的文件内容
+    Return arguments:
+    list -- 各行文本（以行尾结尾的文件，最后一项是空串）
+    str -- 文件的行尾，写回时沿用
+    """
+    line_end = "\r\n" if "\r\n" in raw else "\n"
+    return raw.split(line_end), line_end
 
 
 def read_target() -> tuple[list[str], list[TargetRow], str]:
-  """
-  读入 target.csv，拆出表头与数据行
-  Return arguments:
-  list -- 表头行文本列表
-  list -- 数据行字典列表
-  str -- target.csv 的行尾
-  """
-  raw = open(TARGET_PATH, encoding="utf-8", newline="").read()
-  lines, line_end = split_lines(raw)
-  header = lines[:HEADER_LINES]
-  rows: list[TargetRow] = []
-  for index, line in enumerate(lines[HEADER_LINES:], HEADER_LINES + 1):
-    if not line.strip():
-      continue
-    parts = line.split(",", 4)
-    if len(parts) < 5:
-      raise SystemExit(f"第 {index} 行不是 5 列：{line}")
-    rows.append(
-        {
-            "line": index,
-            "cid": int(parts[0]),
-            "state_machine_id": parts[1],
-            "premise_id": parts[2],
-            "type": int(parts[3]),
-            "remarks": parts[4],
-        }
-    )
-  return header, rows, line_end
+    """
+    读入 target.csv，拆出表头与数据行
+    Return arguments:
+    list -- 表头行文本列表
+    list -- 数据行字典列表
+    str -- target.csv 的行尾
+    """
+    raw = open(TARGET_PATH, encoding="utf-8", newline="").read()
+    lines, line_end = split_lines(raw)
+    header = lines[:HEADER_LINES]
+    rows: list[TargetRow] = []
+    for index, line in enumerate(lines[HEADER_LINES:], HEADER_LINES + 1):
+        if not line.strip():
+            continue
+        parts = line.split(",", 4)
+        if len(parts) < 5:
+            raise SystemExit(f"第 {index} 行不是 5 列：{line}")
+        rows.append(
+            {
+                "line": index,
+                "cid": int(parts[0]),
+                "state_machine_id": parts[1],
+                "premise_id": parts[2],
+                "type": int(parts[3]),
+                "remarks": parts[4],
+            }
+        )
+    return header, rows, line_end
 
 
 def build_mapping(
     rows: list[TargetRow],
 ) -> tuple[dict[int, int], dict[int, tuple[int, str]]]:
-  """
-  为每一行算出新 cid，并记录它所在的组
-  Keyword arguments:
-  rows -- 数据行字典列表（保持物理行序）
-  Return arguments:
-  dict -- 旧cid到新cid的映射
-  dict -- 旧cid到(组号, 行为链名)的映射
-  """
-  mapping = {}
-  group_info = {}
-  next_group: collections.Counter[int] = collections.Counter()
-  last_chain: dict[int, str] = {}
-  bucket: collections.OrderedDict[tuple[int, int], list[TargetRow]] = (
-      collections.OrderedDict()
-  )
+    """
+    为每一行算出新 cid，并记录它所在的组
+    Keyword arguments:
+    rows -- 数据行字典列表（保持物理行序）
+    Return arguments:
+    dict -- 旧cid到新cid的映射
+    dict -- 旧cid到(组号, 行为链名)的映射
+    """
+    mapping = {}
+    group_info = {}
+    next_group: collections.Counter[int] = collections.Counter()
+    last_chain: dict[int, str] = {}
+    bucket: collections.OrderedDict[tuple[int, int], list[TargetRow]] = (
+        collections.OrderedDict()
+    )
 
-  for row in rows:
-    chain = chain_of(row["cid"])
-    if chain is None:
-      raise SystemExit(
-          "cid {} 未归入任何行为链，请补 CHAIN_BY_OLD_CID".format(row["cid"])
-      )
-    now_type = row["type"]
-    # 同一 type 内，行为链一变就开新组
-    if last_chain.get(now_type) != chain:
-      next_group[now_type] += 1
-      last_chain[now_type] = chain
-    group = next_group[now_type]
-    if group > 99:
-      raise SystemExit(f"type {now_type} 的组号超过 99")
-    bucket.setdefault((now_type, group), []).append(row)
-    group_info[row["cid"]] = (group, chain)
+    for row in rows:
+        chain = chain_of(row["cid"])
+        if chain is None:
+            raise SystemExit(
+                "cid {} 未归入任何行为链，请补 CHAIN_BY_OLD_CID".format(
+                    row["cid"]
+                )
+            )
+        now_type = row["type"]
+        # 同一 type 内，行为链一变就开新组
+        if last_chain.get(now_type) != chain:
+            next_group[now_type] += 1
+            last_chain[now_type] = chain
+        group = next_group[now_type]
+        if group > 99:
+            raise SystemExit(f"type {now_type} 的组号超过 99")
+        bucket.setdefault((now_type, group), []).append(row)
+        group_info[row["cid"]] = (group, chain)
 
-  for (now_type, group), group_rows in bucket.items():
-    if len(group_rows) > 20:
-      raise SystemExit(
-          f"type {now_type} 组 {group} 有 {len(group_rows)} 行，超过 20 个主位"
-      )
-    for order, row in enumerate(group_rows):
-      mapping[row["cid"]] = now_type * 10000 + group * 100 + order * 5
-  return mapping, group_info
+    for (now_type, group), group_rows in bucket.items():
+        if len(group_rows) > 20:
+            raise SystemExit(
+                f"type {now_type} 组 {group} 有 {len(group_rows)} 行，超过 20 个主位"
+            )
+        for order, row in enumerate(group_rows):
+            mapping[row["cid"]] = now_type * 10000 + group * 100 + order * 5
+    return mapping, group_info
 
 
 def self_check(
     rows: list[TargetRow], mapping: dict[int, int]
 ) -> list[TargetRow]:
-  """
-  写盘前自检 R1~R5，任何一条不通过都直接中止
-  Keyword arguments:
-  rows -- 原始数据行（物理行序）
-  mapping -- 旧cid到新cid的映射
-  Return arguments:
-  list -- 按新cid升序排好的数据行
-  """
-  new_values = list(mapping.values())
-  # R1 新 cid 唯一
-  if len(set(new_values)) != len(new_values):
-    raise SystemExit("R1 失败：新 cid 出现重复")
-  # R4 cid // 10000 == type
-  for row in rows:
-    if mapping[row["cid"]] // 10000 != row["type"]:
-      raise SystemExit(
-          "R4 失败：cid {} 的 type 是 {}".format(
-              mapping[row["cid"]], row["type"]
-          )
-      )
-  # cid 0 保留给表头占位行
-  if 0 in new_values:
-    raise SystemExit("R4 失败：新 cid 不能取 0（该值保留给表头占位行）")
+    """
+    写盘前自检 R1~R5，任何一条不通过都直接中止
+    Keyword arguments:
+    rows -- 原始数据行（物理行序）
+    mapping -- 旧cid到新cid的映射
+    Return arguments:
+    list -- 按新cid升序排好的数据行
+    """
+    new_values = list(mapping.values())
+    # R1 新 cid 唯一
+    if len(set(new_values)) != len(new_values):
+        raise SystemExit("R1 失败：新 cid 出现重复")
+    # R4 cid // 10000 == type
+    for row in rows:
+        if mapping[row["cid"]] // 10000 != row["type"]:
+            raise SystemExit(
+                "R4 失败：cid {} 的 type 是 {}".format(
+                    mapping[row["cid"]], row["type"]
+                )
+            )
+    # cid 0 保留给表头占位行
+    if 0 in new_values:
+        raise SystemExit("R4 失败：新 cid 不能取 0（该值保留给表头占位行）")
 
-  new_rows = sorted(rows, key=lambda r: mapping[r["cid"]])
-  # R3 全局新 cid 升序 == 新行序
-  if [mapping[r["cid"]] for r in new_rows] != sorted(new_values):
-    raise SystemExit("R3 失败：全局 cid 升序与行序不一致")
-  # R2 同 type 内新 cid 升序 == 新行序
-  per_type = collections.defaultdict(list)
-  for row in new_rows:
-    per_type[row["type"]].append(mapping[row["cid"]])
-  for now_type, values in per_type.items():
-    if values != sorted(values):
-      raise SystemExit(f"R2 失败：type {now_type} 内 cid 逆序")
-  # R5 各 type 内相对优先级顺序与重构前完全一致（行为等价性的核心保证）
-  for now_type in per_type:
-    old_seq = [r["cid"] for r in rows if r["type"] == now_type]
-    new_seq = [r["cid"] for r in new_rows if r["type"] == now_type]
-    if old_seq != new_seq:
-      raise SystemExit(
-          f"R5 失败：type {now_type} 的相对顺序被改变\n  旧 {old_seq}\n  新 {new_seq}"
-      )
-  return new_rows
+    new_rows = sorted(rows, key=lambda r: mapping[r["cid"]])
+    # R3 全局新 cid 升序 == 新行序
+    if [mapping[r["cid"]] for r in new_rows] != sorted(new_values):
+        raise SystemExit("R3 失败：全局 cid 升序与行序不一致")
+    # R2 同 type 内新 cid 升序 == 新行序
+    per_type = collections.defaultdict(list)
+    for row in new_rows:
+        per_type[row["type"]].append(mapping[row["cid"]])
+    for now_type, values in per_type.items():
+        if values != sorted(values):
+            raise SystemExit(f"R2 失败：type {now_type} 内 cid 逆序")
+    # R5 各 type 内相对优先级顺序与重构前完全一致（行为等价性的核心保证）
+    for now_type in per_type:
+        old_seq = [r["cid"] for r in rows if r["type"] == now_type]
+        new_seq = [r["cid"] for r in new_rows if r["type"] == now_type]
+        if old_seq != new_seq:
+            raise SystemExit(
+                f"R5 失败：type {now_type} 的相对顺序被改变\n  旧 {old_seq}\n  新 {new_seq}"
+            )
+    return new_rows
 
 
 def write_target(
@@ -246,67 +248,69 @@ def write_target(
     mapping: dict[int, int],
     line_end: str,
 ) -> None:
-  """
-  按新 cid 升序、type 分区（空行分隔）写回 target.csv
-  Keyword arguments:
-  header -- 表头行文本列表
-  new_rows -- 按新cid升序排好的数据行
-  mapping -- 旧cid到新cid的映射
-  line_end -- 读入时 target.csv 的行尾
-  Return arguments:
-  无
-  """
-  out = list(header)
-  last_type = None
-  for row in new_rows:
-    # 分区之间插空行；不能写 # 注释行，构建器会把它当数据行写进表里
-    if last_type is not None and row["type"] != last_type:
-      out.append("")
-    last_type = row["type"]
-    out.append(
-        ",".join(
-            [
-                str(mapping[row["cid"]]),
-                row["state_machine_id"],
-                row["premise_id"],
-                str(row["type"]),
-                row["remarks"],
-            ]
+    """
+    按新 cid 升序、type 分区（空行分隔）写回 target.csv
+    Keyword arguments:
+    header -- 表头行文本列表
+    new_rows -- 按新cid升序排好的数据行
+    mapping -- 旧cid到新cid的映射
+    line_end -- 读入时 target.csv 的行尾
+    Return arguments:
+    无
+    """
+    out = list(header)
+    last_type = None
+    for row in new_rows:
+        # 分区之间插空行；不能写 # 注释行，构建器会把它当数据行写进表里
+        if last_type is not None and row["type"] != last_type:
+            out.append("")
+        last_type = row["type"]
+        out.append(
+            ",".join(
+                [
+                    str(mapping[row["cid"]]),
+                    row["state_machine_id"],
+                    row["premise_id"],
+                    str(row["type"]),
+                    row["remarks"],
+                ]
+            )
         )
+    open(TARGET_PATH, "w", encoding="utf-8", newline="").write(
+        line_end.join(out)
     )
-  open(TARGET_PATH, "w", encoding="utf-8", newline="").write(line_end.join(out))
 
 
 def update_effect(mapping: dict[int, int]) -> int:
-  """
-  同步改写 effect.csv 的 target_id
-  Keyword arguments:
-  mapping -- 旧cid到新cid的映射
-  Return arguments:
-  int -- 改写的行数
-  """
-  raw = open(EFFECT_PATH, encoding="utf-8", newline="").read()
-  lines, line_end = split_lines(raw)
-  changed = 0
-  for index in range(HEADER_LINES, len(lines)):
-    line = lines[index]
-    if not line.strip():
-      continue
-    parts = line.split(",")
-    if len(parts) < 3:
-      continue
-    old_target = int(parts[1])
-    if old_target not in mapping:
-      raise SystemExit(
-          f"effect.csv 第 {index + 1} 行引用了不存在的 target_id {old_target}"
-      )
-    parts[1] = str(mapping[old_target])
-    lines[index] = ",".join(parts)
-    changed += 1
-  open(EFFECT_PATH, "w", encoding="utf-8", newline="").write(
-      line_end.join(lines)
-  )
-  return changed
+    """
+    同步改写 effect.csv 的 target_id
+    Keyword arguments:
+    mapping -- 旧cid到新cid的映射
+    Return arguments:
+    int -- 改写的行数
+    """
+    raw = open(EFFECT_PATH, encoding="utf-8", newline="").read()
+    lines, line_end = split_lines(raw)
+    changed = 0
+    for index in range(HEADER_LINES, len(lines)):
+        line = lines[index]
+        if not line.strip():
+            continue
+        parts = line.split(",")
+        if len(parts) < 3:
+            continue
+        old_target = int(parts[1])
+        if old_target not in mapping:
+            raise SystemExit(
+                f"effect.csv 第 {index + 1} 行引用了不存在的 target_id {old_target}"
+            )
+        parts[1] = str(mapping[old_target])
+        lines[index] = ",".join(parts)
+        changed += 1
+    open(EFFECT_PATH, "w", encoding="utf-8", newline="").write(
+        line_end.join(lines)
+    )
+    return changed
 
 
 def write_mapping(
@@ -314,76 +318,78 @@ def write_mapping(
     mapping: dict[int, int],
     group_info: dict[int, tuple[int, str]],
 ) -> None:
-  """
-  输出新旧编号对照表留档
-  Keyword arguments:
-  new_rows -- 按新cid升序排好的数据行
-  mapping -- 旧cid到新cid的映射
-  group_info -- 旧cid到(组号, 行为链名)的映射
-  Return arguments:
-  无
-  """
-  if not os.path.isdir(os.path.dirname(MAPPING_PATH)):
-    os.makedirs(os.path.dirname(MAPPING_PATH))
-  out = ["old_cid,new_cid,type,group,chain,remark"]
-  for row in new_rows:
-    group, chain = group_info[row["cid"]]
-    out.append(
-        "{},{},{},{},{},{}".format(
-            row["cid"],
-            mapping[row["cid"]],
-            row["type"],
-            group,
-            chain,
-            row["remarks"].replace(",", "，"),
+    """
+    输出新旧编号对照表留档
+    Keyword arguments:
+    new_rows -- 按新cid升序排好的数据行
+    mapping -- 旧cid到新cid的映射
+    group_info -- 旧cid到(组号, 行为链名)的映射
+    Return arguments:
+    无
+    """
+    if not os.path.isdir(os.path.dirname(MAPPING_PATH)):
+        os.makedirs(os.path.dirname(MAPPING_PATH))
+    out = ["old_cid,new_cid,type,group,chain,remark"]
+    for row in new_rows:
+        group, chain = group_info[row["cid"]]
+        out.append(
+            "{},{},{},{},{},{}".format(
+                row["cid"],
+                mapping[row["cid"]],
+                row["type"],
+                group,
+                chain,
+                row["remarks"].replace(",", "，"),
+            )
         )
+    open(MAPPING_PATH, "w", encoding="utf-8", newline="").write(
+        "\r\n".join(out) + "\r\n"
     )
-  open(MAPPING_PATH, "w", encoding="utf-8", newline="").write(
-      "\r\n".join(out) + "\r\n"
-  )
 
 
 def main() -> None:
-  """脚本入口"""
-  header, rows, line_end = read_target()
-  print(f"读入 {len(rows)} 行数据")
+    """脚本入口"""
+    header, rows, line_end = read_target()
+    print(f"读入 {len(rows)} 行数据")
 
-  mapping, group_info = build_mapping(rows)
-  new_rows = self_check(rows, mapping)
-  print("自检 R1~R5 全部通过")
+    mapping, group_info = build_mapping(rows)
+    new_rows = self_check(rows, mapping)
+    print("自检 R1~R5 全部通过")
 
-  write_target(header, new_rows, mapping, line_end)
-  effect_changed = update_effect(mapping)
-  write_mapping(new_rows, mapping, group_info)
+    write_target(header, new_rows, mapping, line_end)
+    effect_changed = update_effect(mapping)
+    write_mapping(new_rows, mapping, group_info)
 
-  print("target.csv 已重编号并按 type 分区重排")
-  print(f"effect.csv 改写 {effect_changed} 行 target_id")
-  print(f"对照表已写入 {MAPPING_PATH}")
+    print("target.csv 已重编号并按 type 分区重排")
+    print(f"effect.csv 改写 {effect_changed} 行 target_id")
+    print(f"对照表已写入 {MAPPING_PATH}")
 
-  print("\n=== 组分配结果 ===")
-  print(
-      "{:<6} {:<5} {:<22} {:<5} {}".format(
-          "type", "组", "行为链", "行数", "新cid区间"
-      )
-  )
-  bucket: collections.OrderedDict[tuple[int, int], list[TargetRow]] = (
-      collections.OrderedDict()
-  )
-  for row in new_rows:
-    bucket.setdefault((row["type"], group_info[row["cid"]][0]), []).append(row)
-  for (now_type, group), group_rows in bucket.items():
-    chain = group_info[group_rows[0]["cid"]][1]
+    print("\n=== 组分配结果 ===")
     print(
-        "{:<6d} {:<5d} {:<22} {:<5d} {}~{}".format(
-            now_type,
-            group,
-            chain,
-            len(group_rows),
-            mapping[group_rows[0]["cid"]],
-            mapping[group_rows[-1]["cid"]],
+        "{:<6} {:<5} {:<22} {:<5} {}".format(
+            "type", "组", "行为链", "行数", "新cid区间"
         )
     )
+    bucket: collections.OrderedDict[tuple[int, int], list[TargetRow]] = (
+        collections.OrderedDict()
+    )
+    for row in new_rows:
+        bucket.setdefault((row["type"], group_info[row["cid"]][0]), []).append(
+            row
+        )
+    for (now_type, group), group_rows in bucket.items():
+        chain = group_info[group_rows[0]["cid"]][1]
+        print(
+            "{:<6d} {:<5d} {:<22} {:<5d} {}~{}".format(
+                now_type,
+                group,
+                chain,
+                len(group_rows),
+                mapping[group_rows[0]["cid"]],
+                mapping[group_rows[-1]["cid"]],
+            )
+        )
 
 
 if __name__ == "__main__":
-  main()
+    main()

@@ -44,169 +44,171 @@ VIRGIN_TALENT_TAGS = {
 
 
 class NpcActiveHVirginTest(SlowTestCase):
-  """NPC 主动H时，会夺走她处女素质的破处行为只在她没有该素质时选得出"""
+    """NPC 主动H时，会夺走她处女素质的破处行为只在她没有该素质时选得出"""
 
-  def start_npc_active_h(self) -> int:
-    """
-    博士与阿米娅进一间能锁门的空房间，经「邀请H」与「交给对方」让她主动H
-    Keyword arguments:
-    无
-    Return arguments:
-    int -- 她的角色id
-    """
-    from Script.Core import constant
-    from Script.Design import map_handle
+    def start_npc_active_h(self) -> int:
+        """
+        博士与阿米娅进一间能锁门的空房间，经「邀请H」与「交给对方」让她主动H
+        Keyword arguments:
+        无
+        Return arguments:
+        int -- 她的角色id
+        """
+        from Script.Core import constant
+        from Script.Design import map_handle
 
-    player = self.cache.character_data[0]
-    npc_id = self.npc(NPC_NAME)
-    npc = self.cache.character_data[npc_id]
-    room_key = next(
-        key
-        for key, scene in sorted(self.cache.scene_data.items())
-        if scene.close_type in (1, 2) and not scene.character_list
-    )
-    room = map_handle.get_map_system_path_for_str(room_key)
-    self.world.move(0, room)
-    self.world.move(npc_id, room)
-    npc.favorability[0] = FAVORABILITY
-    npc.trust = TRUST
-    player.target_character_id = npc_id
-    self.instruct(constant.Instruct.DO_H)
-    self.instruct(constant.Instruct.CHANGE_TOP_AND_BOTTOM)
-    self.assertTrue(npc.h_state.npc_active_h, f"{NPC_NAME}在主动H")
-    return npc_id
+        player = self.cache.character_data[0]
+        npc_id = self.npc(NPC_NAME)
+        npc = self.cache.character_data[npc_id]
+        room_key = next(
+            key
+            for key, scene in sorted(self.cache.scene_data.items())
+            if scene.close_type in (1, 2) and not scene.character_list
+        )
+        room = map_handle.get_map_system_path_for_str(room_key)
+        self.world.move(0, room)
+        self.world.move(npc_id, room)
+        npc.favorability[0] = FAVORABILITY
+        npc.trust = TRUST
+        player.target_character_id = npc_id
+        self.instruct(constant.Instruct.DO_H)
+        self.instruct(constant.Instruct.CHANGE_TOP_AND_BOTTOM)
+        self.assertTrue(npc.h_state.npc_active_h, f"{NPC_NAME}在主动H")
+        return npc_id
 
-  def picks_at_part(self, part_id: int) -> collections.Counter[str]:
-    """
-    部位喜好固定为 part_id，每个种子调一次 npc_active_h，数它赋给博士的各个行为
-    Keyword arguments:
-    part_id -- 固定的部位id
-    Return arguments:
-    collections.Counter[str] -- 行为id: 选中的次数
-    """
-    from Script.Design import handle_npc_ai_in_h, update
+    def picks_at_part(self, part_id: int) -> collections.Counter[str]:
+        """
+        部位喜好固定为 part_id，每个种子调一次 npc_active_h，数它赋给博士的各个行为
+        Keyword arguments:
+        part_id -- 固定的部位id
+        Return arguments:
+        collections.Counter[str] -- 行为id: 选中的次数
+        """
+        from Script.Design import handle_npc_ai_in_h, update
 
-    player = self.cache.character_data[0]
-    saved = (
-        player.behavior.behavior_id,
-        player.state,
-        player.behavior.duration,
-        player.behavior.start_time,
-    )
-    picks: collections.Counter[str] = collections.Counter()
-
-    def record(add_time: int) -> None:
-      """
-      主循环的替身：记下赋给博士的行为
-      Keyword arguments:
-      add_time -- 推进的分钟数，不使用
-      Return arguments:
-      无
-      """
-      picks[player.behavior.behavior_id] += 1
-
-    with mock.patch.object(
-        handle_npc_ai_in_h, "evaluate_npc_body_part_prefs", return_value=part_id
-    ), mock.patch.object(update, "game_update_flow", side_effect=record):
-      for seed in SEEDS:
-        random.seed(seed)
-        handle_npc_ai_in_h.npc_active_h()
-        (
+        player = self.cache.character_data[0]
+        saved = (
             player.behavior.behavior_id,
             player.state,
             player.behavior.duration,
             player.behavior.start_time,
-        ) = saved
-    self.assertEqual(
-        sum(picks.values()),
-        len(SEEDS),
-        f"部位{part_id}下每个种子都选出了一个行为",
-    )
-    return picks
+        )
+        picks: collections.Counter[str] = collections.Counter()
 
-  def break_behaviors(self, npc_id: int) -> set[str]:
-    """
-    会夺走她现有处女素质的破处行为：带「破处」，且带她仍有的某个素质对应的部位标签
-    Keyword arguments:
-    npc_id -- 她的角色id
-    Return arguments:
-    set[str] -- 行为id
-    """
-    from Script.Config import game_config
+        def record(add_time: int) -> None:
+            """
+            主循环的替身：记下赋给博士的行为
+            Keyword arguments:
+            add_time -- 推进的分钟数，不使用
+            Return arguments:
+            无
+            """
+            picks[player.behavior.behavior_id] += 1
 
-    talent = self.cache.character_data[npc_id].talent
-    tags = {
-        tag
-        for talent_id, talent_tags in VIRGIN_TALENT_TAGS.items()
-        if talent[talent_id]
-        for tag in talent_tags
-    }
-    return {
-        behavior_id
-        for behavior_id, behavior_data in game_config.config_behavior.items()
-        if "破处" in behavior_data.tag.split("|")
-        and tags & set(behavior_data.tag.split("|"))
-    }
+        with mock.patch.object(
+            handle_npc_ai_in_h,
+            "evaluate_npc_body_part_prefs",
+            return_value=part_id,
+        ), mock.patch.object(update, "game_update_flow", side_effect=record):
+            for seed in SEEDS:
+                random.seed(seed)
+                handle_npc_ai_in_h.npc_active_h()
+                (
+                    player.behavior.behavior_id,
+                    player.state,
+                    player.behavior.duration,
+                    player.behavior.start_time,
+                ) = saved
+        self.assertEqual(
+            sum(picks.values()),
+            len(SEEDS),
+            f"部位{part_id}下每个种子都选出了一个行为",
+        )
+        return picks
 
-  def test_virgin_npc_picks_no_break_behavior(self) -> None:
-    """她有素质0~4：部位 0 与 22 下选出的行为都不会夺走其中任一素质"""
-    npc_id = self.start_npc_active_h()
-    talent = self.cache.character_data[npc_id].talent
-    self.assertEqual(
-        [talent[talent_id] for talent_id in VIRGIN_TALENT_TAGS],
-        [1] * len(VIRGIN_TALENT_TAGS),
-        f"{NPC_NAME}有素质0~4",
-    )
-    break_behaviors = self.break_behaviors(npc_id)
-    picks = {part_id: self.picks_at_part(part_id) for part_id in PARTS}
-    self.assertEqual(
-        {
-            part_id: sorted(set(part_picks) & break_behaviors)
-            for part_id, part_picks in picks.items()
-        },
-        {part_id: [] for part_id in PARTS},
-        f"各部位选出的破处行为，全部选择：{picks}",
-    )
+    def break_behaviors(self, npc_id: int) -> set[str]:
+        """
+        会夺走她现有处女素质的破处行为：带「破处」，且带她仍有的某个素质对应的部位标签
+        Keyword arguments:
+        npc_id -- 她的角色id
+        Return arguments:
+        set[str] -- 行为id
+        """
+        from Script.Config import game_config
 
-  def test_npc_without_womb_virgin_picks_no_break_behavior(self) -> None:
-    """她只有素质0、1、4：部位 0、21、22 下选出的行为都不会夺走其中任一素质，包括带 W 的破处行为"""
-    npc_id = self.start_npc_active_h()
-    talent = self.cache.character_data[npc_id].talent
-    talent[2] = 0
-    talent[3] = 0
-    break_behaviors = self.break_behaviors(npc_id)
-    picks = {
-        part_id: self.picks_at_part(part_id)
-        for part_id in PARTS_WITHOUT_WOMB_VIRGIN
-    }
-    self.assertEqual(
-        {
-            part_id: sorted(set(part_picks) & break_behaviors)
-            for part_id, part_picks in picks.items()
-        },
-        {part_id: [] for part_id in PARTS_WITHOUT_WOMB_VIRGIN},
-        f"各部位选出的破处行为，全部选择：{picks}",
-    )
+        talent = self.cache.character_data[npc_id].talent
+        tags = {
+            tag
+            for talent_id, talent_tags in VIRGIN_TALENT_TAGS.items()
+            if talent[talent_id]
+            for tag in talent_tags
+        }
+        return {
+            behavior_id
+            for behavior_id, behavior_data in game_config.config_behavior.items()
+            if "破处" in behavior_data.tag.split("|")
+            and tags & set(behavior_data.tag.split("|"))
+        }
 
-  def test_npc_without_virgin_talents_picks_break_behavior(self) -> None:
-    """她素质0~4 都没有：部位 0 与 22 下仍会选出破处行为"""
-    from Script.Config import game_config
+    def test_virgin_npc_picks_no_break_behavior(self) -> None:
+        """她有素质0~4：部位 0 与 22 下选出的行为都不会夺走其中任一素质"""
+        npc_id = self.start_npc_active_h()
+        talent = self.cache.character_data[npc_id].talent
+        self.assertEqual(
+            [talent[talent_id] for talent_id in VIRGIN_TALENT_TAGS],
+            [1] * len(VIRGIN_TALENT_TAGS),
+            f"{NPC_NAME}有素质0~4",
+        )
+        break_behaviors = self.break_behaviors(npc_id)
+        picks = {part_id: self.picks_at_part(part_id) for part_id in PARTS}
+        self.assertEqual(
+            {
+                part_id: sorted(set(part_picks) & break_behaviors)
+                for part_id, part_picks in picks.items()
+            },
+            {part_id: [] for part_id in PARTS},
+            f"各部位选出的破处行为，全部选择：{picks}",
+        )
 
-    npc_id = self.start_npc_active_h()
-    for talent_id in VIRGIN_TALENT_TAGS:
-      self.cache.character_data[npc_id].talent[talent_id] = 0
-    break_tagged = {
-        behavior_id
-        for behavior_id, behavior_data in game_config.config_behavior.items()
-        if "破处" in behavior_data.tag.split("|")
-    }
-    picks = {part_id: self.picks_at_part(part_id) for part_id in PARTS}
-    self.assertEqual(
-        [
-            part_id
-            for part_id, part_picks in picks.items()
-            if not set(part_picks) & break_tagged
-        ],
-        [],
-        f"没有选出破处行为的部位，全部选择：{picks}",
-    )
+    def test_npc_without_womb_virgin_picks_no_break_behavior(self) -> None:
+        """她只有素质0、1、4：部位 0、21、22 下选出的行为都不会夺走其中任一素质，包括带 W 的破处行为"""
+        npc_id = self.start_npc_active_h()
+        talent = self.cache.character_data[npc_id].talent
+        talent[2] = 0
+        talent[3] = 0
+        break_behaviors = self.break_behaviors(npc_id)
+        picks = {
+            part_id: self.picks_at_part(part_id)
+            for part_id in PARTS_WITHOUT_WOMB_VIRGIN
+        }
+        self.assertEqual(
+            {
+                part_id: sorted(set(part_picks) & break_behaviors)
+                for part_id, part_picks in picks.items()
+            },
+            {part_id: [] for part_id in PARTS_WITHOUT_WOMB_VIRGIN},
+            f"各部位选出的破处行为，全部选择：{picks}",
+        )
+
+    def test_npc_without_virgin_talents_picks_break_behavior(self) -> None:
+        """她素质0~4 都没有：部位 0 与 22 下仍会选出破处行为"""
+        from Script.Config import game_config
+
+        npc_id = self.start_npc_active_h()
+        for talent_id in VIRGIN_TALENT_TAGS:
+            self.cache.character_data[npc_id].talent[talent_id] = 0
+        break_tagged = {
+            behavior_id
+            for behavior_id, behavior_data in game_config.config_behavior.items()
+            if "破处" in behavior_data.tag.split("|")
+        }
+        picks = {part_id: self.picks_at_part(part_id) for part_id in PARTS}
+        self.assertEqual(
+            [
+                part_id
+                for part_id, part_picks in picks.items()
+                if not set(part_picks) & break_tagged
+            ],
+            [],
+            f"没有选出破处行为的部位，全部选择：{picks}",
+        )

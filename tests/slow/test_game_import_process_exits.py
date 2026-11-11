@@ -47,39 +47,41 @@ CHILD_TIME_LIMIT = 120
 
 
 class GameImportProcessExitsTest(SlowTestCase):
-  """导入游戏逻辑模块的子进程在代码跑完后，须于 CHILD_TIME_LIMIT 秒内以退出码 0 自行退出"""
+    """导入游戏逻辑模块的子进程在代码跑完后，须于 CHILD_TIME_LIMIT 秒内以退出码 0 自行退出"""
 
-  def setUp(self) -> None:
-    """
-    导入 auto_build_config，增量构建 data/ 下的生成物。子进程载入游戏配置时读取这些生成物。本方法不启动游戏。
-    Keyword arguments:
-    无
-    Return arguments:
-    无
-    """
-    os.chdir(ROOT)
-    with contextlib.redirect_stdout(io.StringIO()):
-      importlib.import_module("auto_build_config")
+    def setUp(self) -> None:
+        """
+        导入 auto_build_config，增量构建 data/ 下的生成物。子进程载入游戏配置时读取这些生成物。本方法不启动游戏。
+        Keyword arguments:
+        无
+        Return arguments:
+        无
+        """
+        os.chdir(ROOT)
+        with contextlib.redirect_stdout(io.StringIO()):
+            importlib.import_module("auto_build_config")
 
-  def test_process_exits_after_script_ends(self) -> None:
-    """
-    用子进程运行 CHILD_CODE。子进程须在 CHILD_TIME_LIMIT 秒内以退出码 0 退出。子进程的输出须含“导入完成 True”。
-    """
-    try:
-      result = subprocess.run(
-          [sys.executable, "-u", "-c", CHILD_CODE],
-          cwd=ROOT,
-          stdout=subprocess.PIPE,
-          stderr=subprocess.STDOUT,
-          encoding="utf-8",
-          errors="replace",
-          timeout=CHILD_TIME_LIMIT,
-          check=False,
-      )
-    except subprocess.TimeoutExpired as error:
-      output = error.output
-      if isinstance(output, bytes):
-        output = output.decode("utf-8", "replace")
-      self.fail(f"脚本结束后进程 {CHILD_TIME_LIMIT} 秒内未退出，输出：{output}")
-    self.assertEqual(result.returncode, 0, result.stdout)
-    self.assertIn("导入完成 True", result.stdout)
+    def test_process_exits_after_script_ends(self) -> None:
+        """
+        用子进程运行 CHILD_CODE。子进程须在 CHILD_TIME_LIMIT 秒内以退出码 0 退出。子进程的输出须含“导入完成 True”。
+        """
+        try:
+            result = subprocess.run(
+                [sys.executable, "-u", "-c", CHILD_CODE],
+                cwd=ROOT,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                encoding="utf-8",
+                errors="replace",
+                timeout=CHILD_TIME_LIMIT,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as error:
+            output = error.output
+            if isinstance(output, bytes):
+                output = output.decode("utf-8", "replace")
+            self.fail(
+                f"脚本结束后进程 {CHILD_TIME_LIMIT} 秒内未退出，输出：{output}"
+            )
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("导入完成 True", result.stdout)

@@ -15,12 +15,12 @@ SKIP_EXIT = 77
 
 
 def skip(reason: str) -> NoReturn:
-  """
-  打印跳过的原因，以 SKIP_EXIT 结束进程
-  Keyword arguments:
-  reason -- 跳过的原因
-  Return arguments:
-  无（进程在这里结束）
-  """
-  print(f"SKIPPED: {reason}", flush=True)
-  os._exit(SKIP_EXIT)
+    """
+    打印跳过的原因，以 SKIP_EXIT 结束进程
+    Keyword arguments:
+    reason -- 跳过的原因
+    Return arguments:
+    无（进程在这里结束）
+    """
+    print(f"SKIPPED: {reason}", flush=True)
+    os._exit(SKIP_EXIT)

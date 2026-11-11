@@ -41,8 +41,8 @@ for name in (
     "skip_class_day",
     "sex_class_count",
 ):
-  delattr(ga, name)
-  delattr(gb, name)
+    delattr(ga, name)
+    delattr(gb, name)
 setattr(ga, "last_report_card", {"year": 2026, "month": 6, "grade": 1})
 del adult.child_growth
 del student_b.pregnancy.prenatal_point
@@ -171,25 +171,25 @@ OLD_REPORT_UID_SET = frozenset(save_handle._OFFICIAL_EVENT_UID_MIGRATE)
 
 
 def find_old_report_uid_left(label: str) -> list:
-  """
-  找出缓存里还留着的旧 uid 履历：罗德岛全局履历的键是「uid@角色id」（没有主体时就是 uid），
-  孩子的 event_history 以 uid 为键
-  Keyword arguments:
-  label -- 写进结果里的来源标记（存档编号）
-  Return arguments:
-  list -- [(来源, "rhodes" 或角色id, 键), ...]，没有残留时为空列表
-  """
-  result: list[tuple[str, str | int, str]] = []
-  for key in cache.rhodes_island.official_event_history:
-    if isinstance(key, str) and key.partition("@")[0] in OLD_REPORT_UID_SET:
-      result.append((label, "rhodes", key))
-  for cid, character_data in cache.character_data.items():
-    growth_data = getattr(character_data, "child_growth", None)
-    if growth_data is None:
-      continue
-    for key in sorted(set(growth_data.event_history) & OLD_REPORT_UID_SET):
-      result.append((label, cid, key))
-  return result
+    """
+    找出缓存里还留着的旧 uid 履历：罗德岛全局履历的键是「uid@角色id」（没有主体时就是 uid），
+    孩子的 event_history 以 uid 为键
+    Keyword arguments:
+    label -- 写进结果里的来源标记（存档编号）
+    Return arguments:
+    list -- [(来源, "rhodes" 或角色id, 键), ...]，没有残留时为空列表
+    """
+    result: list[tuple[str, str | int, str]] = []
+    for key in cache.rhodes_island.official_event_history:
+        if isinstance(key, str) and key.partition("@")[0] in OLD_REPORT_UID_SET:
+            result.append((label, "rhodes", key))
+    for cid, character_data in cache.character_data.items():
+        growth_data = getattr(character_data, "child_growth", None)
+        if growth_data is None:
+            continue
+        for key in sorted(set(growth_data.event_history) & OLD_REPORT_UID_SET):
+            result.append((label, cid, key))
+    return result
 
 
 section(
@@ -230,8 +230,8 @@ candidate_list = (
     else []
 )
 if not candidate_list:
-  print("  跳过：本机没有可读的存档（save 目录不存在或为空）")
-  finish()
+    print("  跳过：本机没有可读的存档（save 目录不存在或为空）")
+    finish()
 check("有可用的存档目录", bool(candidate_list), candidate_list)
 loaded = 0
 problem: list[tuple[object, ...]] = []
@@ -242,78 +242,82 @@ _old_report_uid_gone = not (
 l22_left = []
 """ 各存档读档后残留的旧 uid 履历（Plan 32 实施复审补） """
 for save_id in candidate_list:
-  if not save_handle.judge_save_file_exist(save_id):
-    continue
-  try:
-    save_handle.input_load_save(save_id)
-  except Exception as error:
-    problem.append((save_id, "load", repr(error)))
-    continue
-  loaded += 1
-  # Plan 32 L22（实施复审补）：读档时挪了桶的旧 uid 已改名，罗德岛全局履历与孩子的履历里都查不到
-  if _old_report_uid_gone:
-    l22_left.extend(find_old_report_uid_left(save_id))
-  for cid, character_data in cache.character_data.items():
-    if not hasattr(character_data, "child_growth"):
-      problem.append((save_id, cid, "no child_growth attr"))
-      break
-    if (
-        character_data.child_growth is not None
-        and set(vars(character_data.child_growth)) != default_names
+    if not save_handle.judge_save_file_exist(save_id):
+        continue
+    try:
+        save_handle.input_load_save(save_id)
+    except Exception as error:
+        problem.append((save_id, "load", repr(error)))
+        continue
+    loaded += 1
+    # Plan 32 L22（实施复审补）：读档时挪了桶的旧 uid 已改名，罗德岛全局履历与孩子的履历里都查不到
+    if _old_report_uid_gone:
+        l22_left.extend(find_old_report_uid_left(save_id))
+    for cid, character_data in cache.character_data.items():
+        if not hasattr(character_data, "child_growth"):
+            problem.append((save_id, cid, "no child_growth attr"))
+            break
+        if (
+            character_data.child_growth is not None
+            and set(vars(character_data.child_growth)) != default_names
+        ):
+            problem.append(
+                (
+                    save_id,
+                    cid,
+                    "growth fields",
+                    set(vars(character_data.child_growth)) ^ default_names,
+                )
+            )
+            break
+        if scene_str(character_data.position) not in cache.scene_data:
+            problem.append(
+                (save_id, cid, "dead scene", character_data.position)
+            )
+            break
+    for field in (
+        "class_schedule",
+        "temp_sex_class",
+        "child_schedule_template",
+        "official_event_queue",
+        "official_event_history",
     ):
-      problem.append(
-          (
-              save_id,
-              cid,
-              "growth fields",
-              set(vars(character_data.child_growth)) ^ default_names,
-          )
-      )
-      break
-    if scene_str(character_data.position) not in cache.scene_data:
-      problem.append((save_id, cid, "dead scene", character_data.position))
-      break
-  for field in (
-      "class_schedule",
-      "temp_sex_class",
-      "child_schedule_template",
-      "official_event_queue",
-      "official_event_history",
-  ):
-    if not hasattr(cache.rhodes_island, field):
-      problem.append((save_id, "rhodes", field))
-  # 课表结构：{教室: {星期: {节次: [科目, 教师]}}}
-  for room, week in cache.rhodes_island.class_schedule.items():
-    for day, cells in week.items():
-      for period, cell in cells.items():
-        if not (isinstance(cell, list) and len(cell) == 2):
-          problem.append((save_id, "class_schedule", room, day, period, cell))
-  # 学期结算在真实存档上幂等
-  try:
-    first = semester_handle.settle_semester_change()
-    second = semester_handle.settle_semester_change()
-    if second:
-      problem.append((save_id, "semester not idempotent", second))
-  except Exception as error:
-    problem.append((save_id, "semester", repr(error)))
-  # 教育面板在真实存档上能画出来（不取输入）
-  try:
-    from Script.System.Education_System import (
-        class_schedule_panel,
-        course_select_panel,
-        growth_panel,
-        schedule_template_panel,
-    )
+        if not hasattr(cache.rhodes_island, field):
+            problem.append((save_id, "rhodes", field))
+    # 课表结构：{教室: {星期: {节次: [科目, 教师]}}}
+    for room, week in cache.rhodes_island.class_schedule.items():
+        for day, cells in week.items():
+            for period, cell in cells.items():
+                if not (isinstance(cell, list) and len(cell) == 2):
+                    problem.append(
+                        (save_id, "class_schedule", room, day, period, cell)
+                    )
+    # 学期结算在真实存档上幂等
+    try:
+        first = semester_handle.settle_semester_change()
+        second = semester_handle.settle_semester_change()
+        if second:
+            problem.append((save_id, "semester not idempotent", second))
+    except Exception as error:
+        problem.append((save_id, "semester", repr(error)))
+    # 教育面板在真实存档上能画出来（不取输入）
+    try:
+        from Script.System.Education_System import (
+            class_schedule_panel,
+            course_select_panel,
+            growth_panel,
+            schedule_template_panel,
+        )
 
-    for panel in (
-        class_schedule_panel.Class_Schedule_Panel(190),
-        course_select_panel.Course_Select_Panel(190),
-        growth_panel.Growth_Panel(190),
-        schedule_template_panel.Schedule_Template_Panel(190),
-    ):
-      panel.draw_page([])
-  except Exception as error:
-    problem.append((save_id, "panel", repr(error)))
+        for panel in (
+            class_schedule_panel.Class_Schedule_Panel(190),
+            course_select_panel.Course_Select_Panel(190),
+            growth_panel.Growth_Panel(190),
+            schedule_template_panel.Schedule_Template_Panel(190),
+        ):
+            panel.draw_page([])
+    except Exception as error:
+        problem.append((save_id, "panel", repr(error)))
 check(f"载入了 {loaded} 个存档", loaded > 0)
 check(
     "全部存档：养成字段完整、无死场景、罗德岛新字段齐全、课表结构合法、学期结算幂等、四个面板可画",
