@@ -22,36 +22,36 @@ SETTLE_SECONDS = 5
 
 
 class TkWindowMaximizedTest(SlowTestCase):
-  """导入 Tk 主窗口模块后，主窗口宽度等于屏幕宽度"""
+    """导入 Tk 主窗口模块后，主窗口宽度等于屏幕宽度"""
 
-  def setUp(self) -> None:
-    """
-    设好时限，载入游戏，用一个临时 Tk 窗口确认有可用的显示
-    Keyword arguments:
-    无
-    Return arguments:
-    无
-    """
-    signal.signal(signal.SIGALRM, self._time_up)
-    signal.alarm(self.time_limit)
-    remove_parent_guard()
-    self.world = FullWorld.load()
-    try:
-      tkinter.Tk().destroy()
-    except tkinter.TclError as error:
-      self.skipTest(f"没有可用的显示，无法创建 Tk 窗口：{error}")
+    def setUp(self) -> None:
+        """
+        设好时限，载入游戏，用一个临时 Tk 窗口确认有可用的显示
+        Keyword arguments:
+        无
+        Return arguments:
+        无
+        """
+        signal.signal(signal.SIGALRM, self._time_up)
+        signal.alarm(self.time_limit)
+        remove_parent_guard()
+        self.world = FullWorld.load()
+        try:
+            tkinter.Tk().destroy()
+        except tkinter.TclError as error:
+            self.skipTest(f"没有可用的显示，无法创建 Tk 窗口：{error}")
 
-  def test_window_fills_screen_width(self) -> None:
-    """导入主窗口模块后，主窗口宽度在 SETTLE_SECONDS 秒内达到屏幕宽度"""
-    from Script.Core import main_frame
+    def test_window_fills_screen_width(self) -> None:
+        """导入主窗口模块后，主窗口宽度在 SETTLE_SECONDS 秒内达到屏幕宽度"""
+        from Script.Core import main_frame
 
-    root = main_frame.root
-    deadline = time.monotonic() + SETTLE_SECONDS
-    root.update()
-    while (
-        root.winfo_width() != root.winfo_screenwidth()
-        and time.monotonic() < deadline
-    ):
-      time.sleep(0.1)
-      root.update()
-    self.assertEqual(root.winfo_width(), root.winfo_screenwidth())
+        root = main_frame.root
+        deadline = time.monotonic() + SETTLE_SECONDS
+        root.update()
+        while (
+            root.winfo_width() != root.winfo_screenwidth()
+            and time.monotonic() < deadline
+        ):
+            time.sleep(0.1)
+            root.update()
+        self.assertEqual(root.winfo_width(), root.winfo_screenwidth())

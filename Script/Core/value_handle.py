@@ -6,68 +6,68 @@ import numpy
 
 
 def get_rand_value_for_value_region(value_list: list[float]) -> float:
-  """
-  以列表中每个元素的值作为权重随机获取一个元素
-  Keyword arguments:
-  value_list -- 要计算的列表
-  Return arguments:
-  float -- 获得的元素
-  """
-  return random.choices(value_list, weights=value_list)[0]
+    """
+    以列表中每个元素的值作为权重随机获取一个元素
+    Keyword arguments:
+    value_list -- 要计算的列表
+    Return arguments:
+    float -- 获得的元素
+    """
+    return random.choices(value_list, weights=value_list)[0]
 
 
 def get_random_for_weight[Key](data: dict[Key, int]) -> Key:
-  """
-  按权重随机获取dict中的一个key
-  Keyword arguments:
-  data -- 需要随机获取key的dict数据
-  """
-  keys = list(data.keys())
-  weights = list(data.values())
-  return random.choices(keys, weights=weights)[0]
+    """
+    按权重随机获取dict中的一个key
+    Keyword arguments:
+    data -- 需要随机获取key的dict数据
+    """
+    keys = list(data.keys())
+    weights = list(data.values())
+    return random.choices(keys, weights=weights)[0]
 
 
 def get_old_value_for_list(now_int: int, int_list: list[int]) -> int:
-  """
-  获取列表中第一个比指定值小的数
-  Keyword arguments:
-  now_int -- 作为获取参考的指定数值
-  int_list -- 用于取值的列表
-  Return arguments:
-  int -- 查询到的值
-  """
-  now_id = bisect.bisect_right(int_list, now_int)
-  return int_list[now_id - 1]
+    """
+    获取列表中第一个比指定值小的数
+    Keyword arguments:
+    now_int -- 作为获取参考的指定数值
+    int_list -- 用于取值的列表
+    Return arguments:
+    int -- 查询到的值
+    """
+    now_id = bisect.bisect_right(int_list, now_int)
+    return int_list[now_id - 1]
 
 
 def list_of_groups(init_list: list, children_list_len: int) -> list[list]:
-  """
-  将列表分割为指定长度的列表集合
-  Keyword arguments:
-  init_list -- 原始列表
-  children_list_len -- 指定长度
-  Return arguments:
-  List[list] -- 新列表
-  """
-  list_of_groups = zip(*(iter(init_list),) * children_list_len, strict=False)
-  end_list = [list(i) for i in list_of_groups]
-  count = len(init_list) % children_list_len
-  if count:
-    end_list.append(init_list[-count:])
-  return end_list
+    """
+    将列表分割为指定长度的列表集合
+    Keyword arguments:
+    init_list -- 原始列表
+    children_list_len -- 指定长度
+    Return arguments:
+    List[list] -- 新列表
+    """
+    list_of_groups = zip(*(iter(init_list),) * children_list_len, strict=False)
+    end_list = [list(i) for i in list_of_groups]
+    count = len(init_list) % children_list_len
+    if count:
+        end_list.append(init_list[-count:])
+    return end_list
 
 
 def get_gauss_rand(min_value: int, max_value: int) -> int:
-  """
-  通过正态分布获取两个值之间的随机值
-  Keyword arguments:
-  min_value -- 最小值
-  max_value -- 最大值
-  Return arguments:
-  int -- 获取的随机值
-  """
-  mu = (min_value + max_value) / 2
-  single = mu - min_value
-  value = numpy.random.normal(mu, single)
-  value = numpy.clip(value, min_value, max_value)
-  return int(value)
+    """
+    通过正态分布获取两个值之间的随机值
+    Keyword arguments:
+    min_value -- 最小值
+    max_value -- 最大值
+    Return arguments:
+    int -- 获取的随机值
+    """
+    mu = (min_value + max_value) / 2
+    single = mu - min_value
+    value = numpy.random.normal(mu, single)
+    value = numpy.clip(value, min_value, max_value)
+    return int(value)

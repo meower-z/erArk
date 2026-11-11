@@ -20,15 +20,15 @@ import sys
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-  from types import TracebackType
-  from typing import NoReturn
+    from types import TracebackType
+    from typing import NoReturn
 
 ROOT = os.path.abspath(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
 )
 os.chdir(ROOT)
 if ROOT not in sys.path:
-  sys.path.insert(0, ROOT)
+    sys.path.insert(0, ROOT)
 assert isinstance(sys.stdout, io.TextIOWrapper)
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
@@ -39,51 +39,51 @@ FAIL: list[str] = []
 
 
 def check(name: str, cond: object, extra: object = "") -> bool:
-  """
-  记录一条断言结果
-  Keyword arguments:
-  name -- 断言名
-  cond -- 断言条件
-  extra -- 失败时附带打印的实际值
-  Return arguments:
-  bool -- 断言是否通过
-  """
-  global PASS
-  if cond:
-    PASS += 1
-    print(f"  [OK] {name}")
-    return True
-  FAIL.append(name)
-  print(f"  [FAIL] {name} {extra}")
-  return False
+    """
+    记录一条断言结果
+    Keyword arguments:
+    name -- 断言名
+    cond -- 断言条件
+    extra -- 失败时附带打印的实际值
+    Return arguments:
+    bool -- 断言是否通过
+    """
+    global PASS
+    if cond:
+        PASS += 1
+        print(f"  [OK] {name}")
+        return True
+    FAIL.append(name)
+    print(f"  [FAIL] {name} {extra}")
+    return False
 
 
 def section(title: str) -> None:
-  """
-  打印一个分节标题
-  Keyword arguments:
-  title -- 标题
-  Return arguments:
-  无
-  """
-  print(f"\n==== {title} ====")
+    """
+    打印一个分节标题
+    Keyword arguments:
+    title -- 标题
+    Return arguments:
+    无
+    """
+    print(f"\n==== {title} ====")
 
 
 def finish() -> None:
-  """
-  打印汇总并结束进程：断言全部通过时退出码为 0，否则为 1
-  Keyword arguments:
-  无
-  Return arguments:
-  无
-  """
-  print()
-  print("=" * 50)
-  print(f"PASS={PASS} FAIL={len(FAIL)}")
-  for name in FAIL:
-    print("  -", name)
-  sys.stdout.flush()
-  os._exit(0 if not FAIL else 1)
+    """
+    打印汇总并结束进程：断言全部通过时退出码为 0，否则为 1
+    Keyword arguments:
+    无
+    Return arguments:
+    无
+    """
+    print()
+    print("=" * 50)
+    print(f"PASS={PASS} FAIL={len(FAIL)}")
+    for name in FAIL:
+        print("  -", name)
+    sys.stdout.flush()
+    os._exit(0 if not FAIL else 1)
 
 
 # ==== 1. 初始化链（照 game.py 的顺序，顺序不能乱） ====
@@ -110,7 +110,14 @@ from Script.Design import (  # noqa: E402
 )
 import Script.Settle  # noqa: F401,E402  注册全部结算器
 import Script.StateMachine  # noqa: F401,E402  注册全部状态机
-from Script.Core import constant, constant_effect, constant_promise, flow_handle, get_text, save_handle  # noqa: F401,E402
+from Script.Core import (
+    constant,
+    constant_effect,
+    constant_promise,
+    flow_handle,
+    get_text,
+    save_handle,
+)  # noqa: F401,E402
 from Script.UI.Moudle import draw  # noqa: E402
 
 _ = get_text._
@@ -125,10 +132,10 @@ cache: game_type.Cache = cache_control.cache
 cache.all_system_setting = attr_calculation.get_system_setting_zero()
 # 罗德岛设施：全部设施 Lv1，教育区另由测试按需调；facility_open 默认空（只开放三间基础教室）
 for _facility_cid in game_config.config_facility:
-  cache.rhodes_island.facility_level.setdefault(_facility_cid, 1)
+    cache.rhodes_island.facility_level.setdefault(_facility_cid, 1)
 # 书库：全部书籍在架、没被借走（与 basement 初始化一致）；兴趣课读书要先借书（Plan 29），空书库会让那一节视为没课
 for _book_cid in game_config.config_book:
-  cache.rhodes_island.book_borrow_dict.setdefault(_book_cid, -1)
+    cache.rhodes_island.book_borrow_dict.setdefault(_book_cid, -1)
 
 # ==== 3. 屏蔽 UI，并把绘制文本收进 drawn_text ====
 drawn_text: list[str] = []
@@ -136,29 +143,29 @@ drawn_text: list[str] = []
 
 
 def _record_draw(self: object, *args: object, **kwargs: object) -> None:
-  """
-  记录型绘制桩
-  Keyword arguments:
-  self -- 绘制对象
-  Return arguments:
-  无
-  """
-  # 标题线类（TitleLineDraw / LittleTitleLineDraw）的文字在 title 属性上
-  text = getattr(self, "text", None) or getattr(self, "title", None)
-  if text:
-    drawn_text.append(str(text))
+    """
+    记录型绘制桩
+    Keyword arguments:
+    self -- 绘制对象
+    Return arguments:
+    无
+    """
+    # 标题线类（TitleLineDraw / LittleTitleLineDraw）的文字在 title 属性上
+    text = getattr(self, "text", None) or getattr(self, "title", None)
+    if text:
+        drawn_text.append(str(text))
 
 
 for _cls_name in dir(draw):
-  _cls = getattr(draw, _cls_name)
-  if isinstance(_cls, type) and hasattr(_cls, "draw"):
-    try:
-      _cls.draw = _record_draw
-    except Exception:
-      pass
+    _cls = getattr(draw, _cls_name)
+    if isinstance(_cls, type) and hasattr(_cls, "draw"):
+        try:
+            _cls.draw = _record_draw
+        except Exception:
+            pass
 # askfor_all 默认返回第一个可选项，面板的按钮循环才退得出去；测试可自行替换
-flow_handle.askfor_all = (
-    lambda return_list, *a, **k: return_list[0] if return_list else ""
+flow_handle.askfor_all = lambda return_list, *a, **k: (
+    return_list[0] if return_list else ""
 )
 flow_handle.askfor_wait = lambda *a, **k: None
 
@@ -194,63 +201,63 @@ assert (
 
 
 def scene_str(path: list) -> str:
-  """
-  场景路径列表 → 场景路径字符串
-  Keyword arguments:
-  path -- 场景路径列表
-  Return arguments:
-  str -- 场景路径字符串
-  """
-  return map_handle.get_map_system_path_str_for_list(path)
+    """
+    场景路径列表 → 场景路径字符串
+    Keyword arguments:
+    path -- 场景路径列表
+    Return arguments:
+    str -- 场景路径字符串
+    """
+    return map_handle.get_map_system_path_str_for_list(path)
 
 
 def _scene_list_add(scene_path_str: str, character_id: int) -> None:
-  """
-  把角色登记进场景的角色名单
-  """
-  if scene_path_str not in cache.scene_data:
-    return
-  cache.scene_data[scene_path_str].character_list.add(character_id)
+    """
+    把角色登记进场景的角色名单
+    """
+    if scene_path_str not in cache.scene_data:
+        return
+    cache.scene_data[scene_path_str].character_list.add(character_id)
 
 
 def _scene_list_remove(scene_path_str: str, character_id: int) -> None:
-  """
-  把角色从场景的角色名单里移除
-  """
-  if scene_path_str not in cache.scene_data:
-    return
-  cache.scene_data[scene_path_str].character_list.discard(character_id)
+    """
+    把角色从场景的角色名单里移除
+    """
+    if scene_path_str not in cache.scene_data:
+        return
+    cache.scene_data[scene_path_str].character_list.discard(character_id)
 
 
 def move_to(character_id: int, path: list) -> None:
-  """
-  把角色直接放到某个场景（同步 position 与两边的场景名单，不走寻路）
-  Keyword arguments:
-  character_id -- 角色id
-  path -- 目标场景路径列表
-  Return arguments:
-  无
-  """
-  character_data: game_type.Character = cache.character_data[character_id]
-  _scene_list_remove(scene_str(character_data.position), character_id)
-  character_data.position = list(path)
-  _scene_list_add(scene_str(path), character_id)
+    """
+    把角色直接放到某个场景（同步 position 与两边的场景名单，不走寻路）
+    Keyword arguments:
+    character_id -- 角色id
+    path -- 目标场景路径列表
+    Return arguments:
+    无
+    """
+    character_data: game_type.Character = cache.character_data[character_id]
+    _scene_list_remove(scene_str(character_data.position), character_id)
+    character_data.position = list(path)
+    _scene_list_add(scene_str(path), character_id)
 
 
 def set_time(now_time: datetime.datetime) -> None:
-  """
-  设置游戏时间，并把全部角色的行为起始时间同步过去
-  get_class_period 等函数读的是 behavior.start_time（默认是公元1年），不同步会永远算成不在节次内
-  与真实游戏一致，游戏时间一律规整成 GameTime（按游戏日历计算）
-  Keyword arguments:
-  now_time -- 新的游戏时间
-  Return arguments:
-  无
-  """
-  now_time = game_time.to_game_time(now_time)
-  cache.game_time = now_time
-  for character_data in cache.character_data.values():
-    character_data.behavior.start_time = now_time
+    """
+    设置游戏时间，并把全部角色的行为起始时间同步过去
+    get_class_period 等函数读的是 behavior.start_time（默认是公元1年），不同步会永远算成不在节次内
+    与真实游戏一致，游戏时间一律规整成 GameTime（按游戏日历计算）
+    Keyword arguments:
+    now_time -- 新的游戏时间
+    Return arguments:
+    无
+    """
+    now_time = game_time.to_game_time(now_time)
+    cache.game_time = now_time
+    for character_data in cache.character_data.values():
+        character_data.behavior.start_time = now_time
 
 
 def make_character(
@@ -263,147 +270,147 @@ def make_character(
     position: list[str] | None = None,
     born_days: int = 30,
 ) -> game_type.Character:
-  """
-  造一个能跑通结算 / 前提 / 面板链路的最小角色 fixture，并登记进 cache
-  Keyword arguments:
-  cid -- 角色id（0 为玩家）
-  name -- 角色名
-  work_type -- 岗位id（151 教师 / 152 学生 / 153 保育员）
-  daughter -- 是否为玩家的女儿（father_id = 0）
-  stage -- 成长阶段素质id（101 婴儿 / 102 幼女 / 103 萝莉 / 104 少女），0 为成年干员；婴儿不进 npc_id_got（Plan 28）
-  mother_id -- 母亲的角色id
-  position -- 初始场景路径，默认宿舍
-  born_days -- 出生距今的游戏天数（成长天数用）
-  Return arguments:
-  game_type.Character -- 角色对象
-  """
-  cd = game_type.Character()
-  cd.cid = cid
-  cd.name = name
-  cd.adv = 0
-  cd.sex = 1
-  cd.race = 0
-  cd.cloth = attr_calculation.get_cloth_zero()
-  cd.cloth.cloth_locker_in_dormitory = (
-      attr_calculation.get_cloth_locker_in_dormitory_zero()
-  )
-  cd.cloth.cloth_locker_in_shower = (
-      attr_calculation.get_shower_cloth_locker_zero()
-  )
-  cd.dirty = attr_calculation.get_zero_dirty()
-  cd.talent = attr_calculation.get_talent_zero({})
-  cd.ability = attr_calculation.get_ability_zero({})
-  cd.status_data = attr_calculation.get_status_zero({})
-  cd.juel = attr_calculation.get_juel_zero({})
-  cd.experience = attr_calculation.get_experience_zero({})
-  cd.second_behavior = attr_calculation.get_second_behavior_zero({})
-  cd.h_state = attr_calculation.get_h_state_reset(cd.h_state)
-  cd.body_manage = attr_calculation.get_body_manage_zero()
-  cd.favorability = {0: 0}
-  cd.assistant_services = (
-      attr_calculation.get_assistant_services_zero()
-  )  # 实行值计算会读助理服务[8]
-  cd.talent[121] = 1
-  cd.hit_point_max = 100
-  cd.hit_point = 100
-  cd.mana_point_max = 100
-  cd.mana_point = 100
-  cd.work.work_type = work_type
-  cd.dormitory = scene_str(SCENE_DORM)
-  cd.behavior.start_time = cache.game_time
-  if stage:
-    cd.talent[stage] = 1
-    if stage != 104:
-      cd.talent[7] = 1  # 未成年
-  if daughter:
-    cd.relationship.father_id = 0
-    cd.relationship.mother_id = mother_id
-    cd.pregnancy.born_time = cache.game_time - datetime.timedelta(
-        days=born_days
+    """
+    造一个能跑通结算 / 前提 / 面板链路的最小角色 fixture，并登记进 cache
+    Keyword arguments:
+    cid -- 角色id（0 为玩家）
+    name -- 角色名
+    work_type -- 岗位id（151 教师 / 152 学生 / 153 保育员）
+    daughter -- 是否为玩家的女儿（father_id = 0）
+    stage -- 成长阶段素质id（101 婴儿 / 102 幼女 / 103 萝莉 / 104 少女），0 为成年干员；婴儿不进 npc_id_got（Plan 28）
+    mother_id -- 母亲的角色id
+    position -- 初始场景路径，默认宿舍
+    born_days -- 出生距今的游戏天数（成长天数用）
+    Return arguments:
+    game_type.Character -- 角色对象
+    """
+    cd = game_type.Character()
+    cd.cid = cid
+    cd.name = name
+    cd.adv = 0
+    cd.sex = 1
+    cd.race = 0
+    cd.cloth = attr_calculation.get_cloth_zero()
+    cd.cloth.cloth_locker_in_dormitory = (
+        attr_calculation.get_cloth_locker_in_dormitory_zero()
     )
-    if mother_id in cache.character_data:
-      mother_data = cache.character_data[mother_id]
-      if cid not in mother_data.relationship.child_id_list:
-        mother_data.relationship.child_id_list.append(cid)
-  cd.position = list(position if position is not None else SCENE_DORM)
-  cache.character_data[cid] = cd
-  # 婴儿不进 npc_id_got，与真实婴儿一致（Plan 28 §3.9）：character_handle.born_new_character 不加，
-  #    要到长成幼女、get_new_character 上线时才加。此前夹具把婴儿也放进去，婴儿期事件派不出来的 BUG 一直测不出
-  if cid and stage != 101:
-    cache.npc_id_got.add(cid)
-  _scene_list_add(scene_str(cd.position), cid)
-  return cd
+    cd.cloth.cloth_locker_in_shower = (
+        attr_calculation.get_shower_cloth_locker_zero()
+    )
+    cd.dirty = attr_calculation.get_zero_dirty()
+    cd.talent = attr_calculation.get_talent_zero({})
+    cd.ability = attr_calculation.get_ability_zero({})
+    cd.status_data = attr_calculation.get_status_zero({})
+    cd.juel = attr_calculation.get_juel_zero({})
+    cd.experience = attr_calculation.get_experience_zero({})
+    cd.second_behavior = attr_calculation.get_second_behavior_zero({})
+    cd.h_state = attr_calculation.get_h_state_reset(cd.h_state)
+    cd.body_manage = attr_calculation.get_body_manage_zero()
+    cd.favorability = {0: 0}
+    cd.assistant_services = (
+        attr_calculation.get_assistant_services_zero()
+    )  # 实行值计算会读助理服务[8]
+    cd.talent[121] = 1
+    cd.hit_point_max = 100
+    cd.hit_point = 100
+    cd.mana_point_max = 100
+    cd.mana_point = 100
+    cd.work.work_type = work_type
+    cd.dormitory = scene_str(SCENE_DORM)
+    cd.behavior.start_time = cache.game_time
+    if stage:
+        cd.talent[stage] = 1
+        if stage != 104:
+            cd.talent[7] = 1  # 未成年
+    if daughter:
+        cd.relationship.father_id = 0
+        cd.relationship.mother_id = mother_id
+        cd.pregnancy.born_time = cache.game_time - datetime.timedelta(
+            days=born_days
+        )
+        if mother_id in cache.character_data:
+            mother_data = cache.character_data[mother_id]
+            if cid not in mother_data.relationship.child_id_list:
+                mother_data.relationship.child_id_list.append(cid)
+    cd.position = list(position if position is not None else SCENE_DORM)
+    cache.character_data[cid] = cd
+    # 婴儿不进 npc_id_got，与真实婴儿一致（Plan 28 §3.9）：character_handle.born_new_character 不加，
+    #    要到长成幼女、get_new_character 上线时才加。此前夹具把婴儿也放进去，婴儿期事件派不出来的 BUG 一直测不出
+    if cid and stage != 101:
+        cache.npc_id_got.add(cid)
+    _scene_list_add(scene_str(cd.position), cid)
+    return cd
 
 
 def remove_character(cid: int) -> None:
-  """
-  把一个 fixture 角色从缓存里撤掉
-  Keyword arguments:
-  cid -- 角色id
-  Return arguments:
-  无
-  """
-  if cid in cache.character_data:
-    _scene_list_remove(scene_str(cache.character_data[cid].position), cid)
-    del cache.character_data[cid]
-  cache.npc_id_got.discard(cid)
+    """
+    把一个 fixture 角色从缓存里撤掉
+    Keyword arguments:
+    cid -- 角色id
+    Return arguments:
+    无
+    """
+    if cid in cache.character_data:
+        _scene_list_remove(scene_str(cache.character_data[cid].position), cid)
+        del cache.character_data[cid]
+    cache.npc_id_got.discard(cid)
 
 
 def open_all_classroom() -> None:
-  """
-  把 Facility_open.csv 里的全部房间置为已开放（10 间教室全开）
-  Keyword arguments:
-  无
-  Return arguments:
-  无
-  """
-  for open_cid in game_config.config_facility_open:
-    cache.rhodes_island.facility_open[open_cid] = True
+    """
+    把 Facility_open.csv 里的全部房间置为已开放（10 间教室全开）
+    Keyword arguments:
+    无
+    Return arguments:
+    无
+    """
+    for open_cid in game_config.config_facility_open:
+        cache.rhodes_island.facility_open[open_cid] = True
 
 
 def clear_schedules() -> None:
-  """
-  清空课表、临时实操课、日程模板与公务事件队列，供各组用例之间隔离
-  Keyword arguments:
-  无
-  Return arguments:
-  无
-  """
-  cache.rhodes_island.class_schedule = {}
-  cache.rhodes_island.temp_sex_class = {}
-  cache.rhodes_island.child_schedule_template = {}
-  cache.rhodes_island.official_event_queue = []
-  cache.rhodes_island.official_event_history = {}
-  cache.sex_class_mode = False
-  cache.group_sex_mode = False
+    """
+    清空课表、临时实操课、日程模板与公务事件队列，供各组用例之间隔离
+    Keyword arguments:
+    无
+    Return arguments:
+    无
+    """
+    cache.rhodes_island.class_schedule = {}
+    cache.rhodes_island.temp_sex_class = {}
+    cache.rhodes_island.child_schedule_template = {}
+    cache.rhodes_island.official_event_queue = []
+    cache.rhodes_island.official_event_history = {}
+    cache.sex_class_mode = False
+    cache.group_sex_mode = False
 
 
 def classroom_path(classroom: str) -> list:
-  """
-  教室场景名 → 场景路径
-  Keyword arguments:
-  classroom -- 教室场景名
-  Return arguments:
-  list -- 场景路径
-  """
-  return schedule_handle.get_classroom_position(classroom)
+    """
+    教室场景名 → 场景路径
+    Keyword arguments:
+    classroom -- 教室场景名
+    Return arguments:
+    list -- 场景路径
+    """
+    return schedule_handle.get_classroom_position(classroom)
 
 
 def period_time(
     period: int, day: datetime.date | None = None
 ) -> datetime.datetime:
-  """
-  取某天某节次的开始时刻
-  Keyword arguments:
-  period -- 节次0~8
-  day -- 日期，默认 DEFAULT_TIME 那天
-  Return arguments:
-  datetime.datetime -- 开始时刻
-  """
-  if day is None:
-    day = DEFAULT_TIME.date()
-  hour, minute = game_time.CLASS_PERIOD_START[period]
-  return datetime.datetime(day.year, day.month, day.day, hour, minute)
+    """
+    取某天某节次的开始时刻
+    Keyword arguments:
+    period -- 节次0~8
+    day -- 日期，默认 DEFAULT_TIME 那天
+    Return arguments:
+    datetime.datetime -- 开始时刻
+    """
+    if day is None:
+        day = DEFAULT_TIME.date()
+    hour, minute = game_time.CLASS_PERIOD_START[period]
+    return datetime.datetime(day.year, day.month, day.day, hour, minute)
 
 
 set_time(DEFAULT_TIME)
@@ -416,21 +423,21 @@ def _exit_on_exception(
     exc_value: BaseException,
     exc_traceback: "TracebackType | None",
 ) -> "NoReturn":
-  """
-  未捕获异常时打印回溯和崩溃汇总行，再以退出码 2 结束进程。退出码 2 与断言失败的退出码 1 区分开。
-  Keyword arguments:
-  exc_type -- 异常类型
-  exc_value -- 异常对象
-  exc_traceback -- 异常的回溯，没有时为 None
-  Return arguments:
-  不返回
-  """
-  import traceback
+    """
+    未捕获异常时打印回溯和崩溃汇总行，再以退出码 2 结束进程。退出码 2 与断言失败的退出码 1 区分开。
+    Keyword arguments:
+    exc_type -- 异常类型
+    exc_value -- 异常对象
+    exc_traceback -- 异常的回溯，没有时为 None
+    Return arguments:
+    不返回
+    """
+    import traceback
 
-  traceback.print_exception(exc_type, exc_value, exc_traceback)
-  print(f"\nPASS={PASS} FAIL={len(FAIL) + 1} (crashed)")
-  sys.stdout.flush()
-  os._exit(2)
+    traceback.print_exception(exc_type, exc_value, exc_traceback)
+    print(f"\nPASS={PASS} FAIL={len(FAIL) + 1} (crashed)")
+    sys.stdout.flush()
+    os._exit(2)
 
 
 sys.excepthook = _exit_on_exception

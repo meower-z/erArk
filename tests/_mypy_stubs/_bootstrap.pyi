@@ -21,7 +21,9 @@ from tests.education._bootstrap import flow_handle as flow_handle
 from tests.education._bootstrap import game_config as game_config
 from tests.education._bootstrap import game_time as game_time
 from tests.education._bootstrap import game_type as game_type
-from tests.education._bootstrap import growth_event_handle as growth_event_handle
+from tests.education._bootstrap import (
+    growth_event_handle as growth_event_handle,
+)
 from tests.education._bootstrap import growth_handle as growth_handle
 from tests.education._bootstrap import handle_premise as handle_premise
 from tests.education._bootstrap import make_character as make_character
@@ -40,7 +42,9 @@ from tests.education._bootstrap import SCENE_EDU_ENTRY as SCENE_EDU_ENTRY
 from tests.education._bootstrap import SCENE_NURSERY as SCENE_NURSERY
 from tests.education._bootstrap import scene_str as scene_str
 from tests.education._bootstrap import schedule_handle as schedule_handle
-from tests.education._bootstrap import schedule_template_handle as schedule_template_handle
+from tests.education._bootstrap import (
+    schedule_template_handle as schedule_template_handle,
+)
 from tests.education._bootstrap import section as section
 from tests.education._bootstrap import semester_handle as semester_handle
 from tests.education._bootstrap import set_time as set_time

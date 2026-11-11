@@ -74,74 +74,77 @@ print(json.dumps({"language": get_text.now_language, "levels": levels}))
 
 
 def make_data_dir(root: str) -> None:
-  """
-  在 root 下建 data/，地图预处理文件以外的条目都链到仓库的 data/
-  Keyword arguments:
-  root -- 子进程的工作目录
-  Return arguments:
-  无
-  """
-  os.makedirs(os.path.join(root, "data"))
-  for name in os.listdir(os.path.join(ROOT, "data")):
-    if name not in MAP_CACHE_FILES:
-      os.symlink(
-          os.path.join(ROOT, "data", name), os.path.join(root, "data", name)
-      )
-
-
-def list_rooms(root: str, language: str) -> dict[str, Any]:
-  """
-  在子进程里以给定语言列出每个宿舍区等级的开放宿舍房间
-  Keyword arguments:
-  root -- 子进程的工作目录，内有 data/
-  language -- 游戏语言
-  Return arguments:
-  dict -- 子进程打印的 JSON
-  """
-  result = subprocess.run(
-      [
-          sys.executable,
-          "-c",
-          LIST_ROOMS,
-          ROOT,
-          language,
-          json.dumps(START_TIME),
-      ],
-      cwd=root,
-      check=True,
-      capture_output=True,
-      text=True,
-      timeout=300,
-  )
-  listed: dict[str, Any] = json.loads(result.stdout.splitlines()[-1])
-  return listed
-
-
-class DormitoryRoomsEveryLanguageTest(FastTestCase):
-  """三种语言下的开放宿舍房间与房间层号"""
-
-  def test_open_rooms_same_in_every_language(self) -> None:
     """
-    中文下，每个等级都有开放房间，每个房间的层号等于它所在的层。
-    英文、韩文下，每个等级的结果与中文相同。
+    在 root 下建 data/，地图预处理文件以外的条目都链到仓库的 data/
     Keyword arguments:
-    无
+    root -- 子进程的工作目录
     Return arguments:
     无
     """
-    listed: dict[str, dict[str, Any]] = {}
-    with tempfile.TemporaryDirectory() as temp_dir:
-      for language in LANGUAGES:
-        root = os.path.join(temp_dir, language)
-        make_data_dir(root)
-        listed[language] = list_rooms(root, language)
-        self.assertEqual(listed[language]["language"], language)
-    for level, rooms_by_layer in listed["zh_CN"]["levels"].items():
-      with self.subTest(language="zh_CN", level=level):
-        self.assertTrue(rooms_by_layer)
-        for layer, room_list in rooms_by_layer.items():
-          for _room_path, room_layer in room_list:
-            self.assertEqual(room_layer, int(layer))
-    for language in LANGUAGES[1:]:
-      with self.subTest(language=language):
-        self.assertEqual(listed[language]["levels"], listed["zh_CN"]["levels"])
+    os.makedirs(os.path.join(root, "data"))
+    for name in os.listdir(os.path.join(ROOT, "data")):
+        if name not in MAP_CACHE_FILES:
+            os.symlink(
+                os.path.join(ROOT, "data", name),
+                os.path.join(root, "data", name),
+            )
+
+
+def list_rooms(root: str, language: str) -> dict[str, Any]:
+    """
+    在子进程里以给定语言列出每个宿舍区等级的开放宿舍房间
+    Keyword arguments:
+    root -- 子进程的工作目录，内有 data/
+    language -- 游戏语言
+    Return arguments:
+    dict -- 子进程打印的 JSON
+    """
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            LIST_ROOMS,
+            ROOT,
+            language,
+            json.dumps(START_TIME),
+        ],
+        cwd=root,
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=300,
+    )
+    listed: dict[str, Any] = json.loads(result.stdout.splitlines()[-1])
+    return listed
+
+
+class DormitoryRoomsEveryLanguageTest(FastTestCase):
+    """三种语言下的开放宿舍房间与房间层号"""
+
+    def test_open_rooms_same_in_every_language(self) -> None:
+        """
+        中文下，每个等级都有开放房间，每个房间的层号等于它所在的层。
+        英文、韩文下，每个等级的结果与中文相同。
+        Keyword arguments:
+        无
+        Return arguments:
+        无
+        """
+        listed: dict[str, dict[str, Any]] = {}
+        with tempfile.TemporaryDirectory() as temp_dir:
+            for language in LANGUAGES:
+                root = os.path.join(temp_dir, language)
+                make_data_dir(root)
+                listed[language] = list_rooms(root, language)
+                self.assertEqual(listed[language]["language"], language)
+        for level, rooms_by_layer in listed["zh_CN"]["levels"].items():
+            with self.subTest(language="zh_CN", level=level):
+                self.assertTrue(rooms_by_layer)
+                for layer, room_list in rooms_by_layer.items():
+                    for _room_path, room_layer in room_list:
+                        self.assertEqual(room_layer, int(layer))
+        for language in LANGUAGES[1:]:
+            with self.subTest(language=language):
+                self.assertEqual(
+                    listed[language]["levels"], listed["zh_CN"]["levels"]
+                )

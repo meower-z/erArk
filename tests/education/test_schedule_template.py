@@ -1,13 +1,28 @@
 # -*- coding: UTF-8 -*-
 """schedule_template_handle：预设模板、增删改、套用与覆盖、每日改写"""
 
-from _bootstrap import _, attr_calculation, cache, check, clear_schedules, education_constant, finish, game_config, make_character, open_all_classroom, remove_character, schedule_handle, schedule_template_handle, section
+from _bootstrap import (
+    _,
+    attr_calculation,
+    cache,
+    check,
+    clear_schedules,
+    education_constant,
+    finish,
+    game_config,
+    make_character,
+    open_all_classroom,
+    remove_character,
+    schedule_handle,
+    schedule_template_handle,
+    section,
+)
 from typing import TYPE_CHECKING
 import ast
 import inspect
 
 if TYPE_CHECKING:
-  from types import ModuleType
+    from types import ModuleType
 
 clear_schedules()
 mother = make_character(102, "母亲", 0)
@@ -336,7 +351,10 @@ schedule_template_handle.apply_template(202, 0)
 schedule_template_handle.apply_template(203, 0)
 
 section("Plan 28 §3.3：照料卵不能排进日程，持卵者当天的照料卵时段不被改写冲掉")
-from Script.System.Pregnancy_System import egg_handle, pregnancy_constant  # noqa: E402
+from Script.System.Pregnancy_System import (
+    egg_handle,
+    pregnancy_constant,
+)  # noqa: E402
 
 TEND = pregnancy_constant.TEND_EGGS_ENTERTAINMENT_ID
 check(
@@ -372,7 +390,7 @@ check(
 schedule_template_handle.apply_template(202, 0)
 full_tid = schedule_template_handle.create_template("三段都下棋")
 for _slot in range(3):
-  schedule_template_handle.set_template_slot(full_tid, _slot, CHESS)
+    schedule_template_handle.set_template_slot(full_tid, _slot, CHESS)
 schedule_template_handle.apply_template(301, full_tid)
 _orig_layer, _orig_need = (
     egg_handle.is_egg_layer,
@@ -456,14 +474,14 @@ check(
 schedule_template_handle.delete_template(_l17_reused)
 remove_character(204)
 if 204 in mother.relationship.child_id_list:
-  mother.relationship.child_id_list.remove(204)
+    mother.relationship.child_id_list.remove(204)
 
 section(
     "Plan 32 §3.12（L18）：成年非女儿干员离开学生岗后，当学生时套的日程不再改写"
 )
 _l18_id = schedule_template_handle.create_template("三段下棋（L18）")
 for _slot in range(3):
-  schedule_template_handle.set_template_slot(_l18_id, _slot, CHESS)
+    schedule_template_handle.set_template_slot(_l18_id, _slot, CHESS)
 schedule_template_handle.apply_template(301, _l18_id)
 adult_student.entertainment.entertainment_type = [11, 12, 13]
 schedule_template_handle.apply_schedule_for_child(301)
@@ -550,28 +568,28 @@ check(
 
 
 def literal_hit_list(module: "ModuleType", word_set: set) -> list:
-  """
-  找出模块源码里取值落在 word_set 里的字符串常量（跳过 docstring 与属性说明这类单独成句的字符串）
-  Keyword arguments:
-  module -- 模块对象
-  word_set -- 要找的字面量集合
-  Return arguments:
-  list -- (行号, 字面量) 列表，没有则为空表
-  """
-  tree = ast.parse(inspect.getsource(module))
-  skip_id_set = {
-      id(node.value)
-      for node in ast.walk(tree)
-      if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant)
-  }
-  return [
-      (node.lineno, node.value)
-      for node in ast.walk(tree)
-      if isinstance(node, ast.Constant)
-      and isinstance(node.value, str)
-      and node.value in word_set
-      and id(node) not in skip_id_set
-  ]
+    """
+    找出模块源码里取值落在 word_set 里的字符串常量（跳过 docstring 与属性说明这类单独成句的字符串）
+    Keyword arguments:
+    module -- 模块对象
+    word_set -- 要找的字面量集合
+    Return arguments:
+    list -- (行号, 字面量) 列表，没有则为空表
+    """
+    tree = ast.parse(inspect.getsource(module))
+    skip_id_set = {
+        id(node.value)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant)
+    }
+    return [
+        (node.lineno, node.value)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Constant)
+        and isinstance(node.value, str)
+        and node.value in word_set
+        and id(node) not in skip_id_set
+    ]
 
 
 # 「/」不查：get_activity_age_limit_text 用它拼「限幼女/萝莉」的显示文本，不是 need 的分隔符

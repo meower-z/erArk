@@ -23,13 +23,13 @@ COMBO_BOXES = (
 
 
 if __name__ == "__main__":
-  DRIVER = FileLoadDriver(sys.argv[1])
-  DRIVER.step("open_chara", lambda: DRIVER.open_chara_file(sys.argv[2]))
-  chara_list = DRIVER.editor.chara_list
-  DRIVER.result["combo_texts"] = {
-      name: getattr(chara_list, name).currentText() for name in COMBO_BOXES
-  }
-  print(json.dumps(DRIVER.result, ensure_ascii=False))
-  sys.stdout.flush()
-  # 编辑器在导入时建好 QApplication，所以这里直接结束进程
-  os._exit(0)
+    DRIVER = FileLoadDriver(sys.argv[1])
+    DRIVER.step("open_chara", lambda: DRIVER.open_chara_file(sys.argv[2]))
+    chara_list = DRIVER.editor.chara_list
+    DRIVER.result["combo_texts"] = {
+        name: getattr(chara_list, name).currentText() for name in COMBO_BOXES
+    }
+    print(json.dumps(DRIVER.result, ensure_ascii=False))
+    sys.stdout.flush()
+    # 编辑器在导入时建好 QApplication，所以这里直接结束进程
+    os._exit(0)

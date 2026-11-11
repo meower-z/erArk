@@ -21,7 +21,7 @@ import random
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-  import datetime
+    import datetime
 
 # 从终端、管道或重定向文件运行时 sys.stdout 都是 TextIOWrapper
 assert isinstance(sys.stdout, io.TextIOWrapper)
@@ -69,29 +69,29 @@ CAPTURE_KEYWORD = "吵醒"  # 改成要断言的文本关键词；不需要捕�
 
 
 def record_draw(self: draw.WaitDraw, *a: object, **k: object) -> None:
-  """
-  记录型绘制桩，不绘制任何内容：CAPTURE_KEYWORD 非空且绘制对象的 text 含该关键词时，
-  把去掉首尾空白的 text 追加到 captured_messages
-  Keyword arguments:
-  self -- 绘制对象
-  Return arguments:
-  None
-  """
-  if (
-      CAPTURE_KEYWORD
-      and getattr(self, "text", None)
-      and CAPTURE_KEYWORD in str(self.text)
-  ):
-    captured_messages.append(str(self.text).strip())
+    """
+    记录型绘制桩，不绘制任何内容：CAPTURE_KEYWORD 非空且绘制对象的 text 含该关键词时，
+    把去掉首尾空白的 text 追加到 captured_messages
+    Keyword arguments:
+    self -- 绘制对象
+    Return arguments:
+    None
+    """
+    if (
+        CAPTURE_KEYWORD
+        and getattr(self, "text", None)
+        and CAPTURE_KEYWORD in str(self.text)
+    ):
+        captured_messages.append(str(self.text).strip())
 
 
 for _cls_name in dir(draw):
-  _cls = getattr(draw, _cls_name)
-  if isinstance(_cls, type) and hasattr(_cls, "draw"):
-    try:
-      _cls.draw = lambda self, *a, **k: None
-    except Exception:
-      pass
+    _cls = getattr(draw, _cls_name)
+    if isinstance(_cls, type) and hasattr(_cls, "draw"):
+        try:
+            _cls.draw = lambda self, *a, **k: None
+        except Exception:
+            pass
 # WaitDraw 常用于关键提示，用记录型 stub
 setattr(draw.WaitDraw, "draw", record_draw)
 flow_handle.askfor_all = lambda *a, **k: ""
@@ -106,9 +106,9 @@ pl = cache.character_data[0]
 WATCH_NAME = "阿米娅"  # 重点观察的角色名；None 则不按名找
 watch_id = None
 for _cid, _cd in cache.character_data.items():
-  if WATCH_NAME and _cd.name == WATCH_NAME:
-    watch_id = _cid
-    break
+    if WATCH_NAME and _cd.name == WATCH_NAME:
+        watch_id = _cid
+        break
 WATCH = {watch_id} if watch_id is not None else set()
 
 print("== 存档体检 ==")
@@ -121,20 +121,20 @@ print(
     pl.target_character_id,
 )
 if watch_id is not None:
-  _c = cache.character_data[watch_id]
-  _lv, _ = drunk_sex_common.get_drunk_level(watch_id)
-  print(
-      f"{_c.name}(id{watch_id}): 位置={_c.position} bhv={_c.behavior.behavior_id} dur={_c.behavior.duration}"
-      f" start={_c.behavior.start_time} state={_c.state}"
-  )
-  print(
-      f"  tired={_c.tired_point} sleep={_c.sleep_point} hp={_c.hit_point}/{_c.hit_point_max}"
-      f" mp={_c.mana_point}/{_c.mana_point_max} 醉酒lv={_lv} 安眠药={_c.h_state.body_item[9][1]}"
-  )
-  print(
-      f"  sp_flag: sleep={_c.sp_flag.sleep} sleep_h_awake={_c.sp_flag.sleep_h_awake}"
-      f" unconscious_h={_c.sp_flag.unconscious_h} is_h={_c.sp_flag.is_h} is_follow={_c.sp_flag.is_follow}"
-  )
+    _c = cache.character_data[watch_id]
+    _lv, _ = drunk_sex_common.get_drunk_level(watch_id)
+    print(
+        f"{_c.name}(id{watch_id}): 位置={_c.position} bhv={_c.behavior.behavior_id} dur={_c.behavior.duration}"
+        f" start={_c.behavior.start_time} state={_c.state}"
+    )
+    print(
+        f"  tired={_c.tired_point} sleep={_c.sleep_point} hp={_c.hit_point}/{_c.hit_point_max}"
+        f" mp={_c.mana_point}/{_c.mana_point_max} 醉酒lv={_lv} 安眠药={_c.h_state.body_item[9][1]}"
+    )
+    print(
+        f"  sp_flag: sleep={_c.sp_flag.sleep} sleep_h_awake={_c.sp_flag.sleep_h_awake}"
+        f" unconscious_h={_c.sp_flag.unconscious_h} is_h={_c.sp_flag.is_h} is_follow={_c.sp_flag.is_follow}"
+    )
 
 # （可选）把玩家搬到观察角色所在场景：
 # map_handle.character_move_scene(pl.position, cache.character_data[watch_id].position, 0)
@@ -145,7 +145,7 @@ if watch_id is not None:
 random.seed(1)
 FORCE_RANDINT_MIN = True  # True=所有 randint 返回下界（概率判定必中）
 if FORCE_RANDINT_MIN:
-  random.randint = lambda a, b: a
+    random.randint = lambda a, b: a
 
 # ==== 5. 复刻玩家指令（不进真实主循环！） ====
 BEHAVIOR = constant.Behavior.PLAY_INSTRUMENT  # 要模拟的行为常量
@@ -164,75 +164,77 @@ print(
 # ==== 6. 逐轮内窥插桩（可选，排查轮内"赋予→掐死"时打开） ====
 ENABLE_PROBE = True
 if ENABLE_PROBE and WATCH:
-  _orig_find = handle_npc_ai.find_character_target
+    _orig_find = handle_npc_ai.find_character_target
 
-  def _wrap_find(character_id: int, now_time: datetime.datetime) -> None:
-    """
-    调用原来的 find_character_target，角色在 WATCH 里时打印其行为 id、时长与状态
-    Keyword arguments:
-    character_id -- 角色id
-    now_time -- 原样传给原函数的时间
-    Return arguments:
-    None
-    """
-    _orig_find(character_id, now_time)
-    if character_id in WATCH:
-      cd = cache.character_data[character_id]
-      print(
-          f"    [find后] cid={character_id} bhv={cd.behavior.behavior_id} dur={cd.behavior.duration} state={cd.state}"
-      )
+    def _wrap_find(character_id: int, now_time: datetime.datetime) -> None:
+        """
+        调用原来的 find_character_target，角色在 WATCH 里时打印其行为 id、时长与状态
+        Keyword arguments:
+        character_id -- 角色id
+        now_time -- 原样传给原函数的时间
+        Return arguments:
+        None
+        """
+        _orig_find(character_id, now_time)
+        if character_id in WATCH:
+            cd = cache.character_data[character_id]
+            print(
+                f"    [find后] cid={character_id} bhv={cd.behavior.behavior_id} dur={cd.behavior.duration} state={cd.state}"
+            )
 
-  handle_npc_ai.find_character_target = _wrap_find
-  character_behavior.handle_npc_ai.find_character_target = _wrap_find  # 双保险
-
-  _orig_int = handle_npc_ai.judge_interrupt_character_behavior
-
-  def _wrap_int(character_id: int) -> int:
-    """
-    调用原来的 judge_interrupt_character_behavior，角色在 WATCH 里时打印调用前后的行为 id 与时长和返回值
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 原函数的返回值
-    """
-    pre = (
-        cache.character_data[character_id].behavior.behavior_id,
-        cache.character_data[character_id].behavior.duration,
+    handle_npc_ai.find_character_target = _wrap_find
+    character_behavior.handle_npc_ai.find_character_target = (
+        _wrap_find  # 双保险
     )
-    r = _orig_int(character_id)
-    if character_id in WATCH:
-      cd = cache.character_data[character_id]
-      print(
-          f"    [中断判定] cid={character_id} 前={pre} 返回={r} 后=({cd.behavior.behavior_id},{cd.behavior.duration})"
-      )
-    return r
 
-  handle_npc_ai.judge_interrupt_character_behavior = _wrap_int
-  character_behavior.handle_npc_ai.judge_interrupt_character_behavior = (
-      _wrap_int
-  )
+    _orig_int = handle_npc_ai.judge_interrupt_character_behavior
 
-  # 学生赶去上课的截短（Plan 32 起）走 judge_student_leave_truncate，在实时结算之前调，不在 judge_interrupt_character_behavior 里
-  _orig_trunc = handle_npc_ai.judge_student_leave_truncate
+    def _wrap_int(character_id: int) -> int:
+        """
+        调用原来的 judge_interrupt_character_behavior，角色在 WATCH 里时打印调用前后的行为 id 与时长和返回值
+        Keyword arguments:
+        character_id -- 角色id
+        Return arguments:
+        int -- 原函数的返回值
+        """
+        pre = (
+            cache.character_data[character_id].behavior.behavior_id,
+            cache.character_data[character_id].behavior.duration,
+        )
+        r = _orig_int(character_id)
+        if character_id in WATCH:
+            cd = cache.character_data[character_id]
+            print(
+                f"    [中断判定] cid={character_id} 前={pre} 返回={r} 后=({cd.behavior.behavior_id},{cd.behavior.duration})"
+            )
+        return r
 
-  def _wrap_trunc(character_id: int) -> bool:
-    """
-    调用原来的 judge_student_leave_truncate，角色在 WATCH 里且原函数返回真值时打印调用前后的行为时长
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    bool -- 原函数的返回值
-    """
-    pre = cache.character_data[character_id].behavior.duration
-    r = _orig_trunc(character_id)
-    if character_id in WATCH and r:
-      print(
-          f"    [学生截短] cid={character_id} 时长 {pre} → {cache.character_data[character_id].behavior.duration}"
-      )
-    return r
+    handle_npc_ai.judge_interrupt_character_behavior = _wrap_int
+    character_behavior.handle_npc_ai.judge_interrupt_character_behavior = (
+        _wrap_int
+    )
 
-  handle_npc_ai.judge_student_leave_truncate = _wrap_trunc
-  character_behavior.handle_npc_ai.judge_student_leave_truncate = _wrap_trunc
+    # 学生赶去上课的截短（Plan 32 起）走 judge_student_leave_truncate，在实时结算之前调，不在 judge_interrupt_character_behavior 里
+    _orig_trunc = handle_npc_ai.judge_student_leave_truncate
+
+    def _wrap_trunc(character_id: int) -> bool:
+        """
+        调用原来的 judge_student_leave_truncate，角色在 WATCH 里且原函数返回真值时打印调用前后的行为时长
+        Keyword arguments:
+        character_id -- 角色id
+        Return arguments:
+        bool -- 原函数的返回值
+        """
+        pre = cache.character_data[character_id].behavior.duration
+        r = _orig_trunc(character_id)
+        if character_id in WATCH and r:
+            print(
+                f"    [学生截短] cid={character_id} 时长 {pre} → {cache.character_data[character_id].behavior.duration}"
+            )
+        return r
+
+    handle_npc_ai.judge_student_leave_truncate = _wrap_trunc
+    character_behavior.handle_npc_ai.judge_student_leave_truncate = _wrap_trunc
 
 # ==== 7. 内存模拟候选修复（可选：改源码前先验证收敛） ====
 # _orig_x = handle_npc_ai.judge_interrupt_character_behavior
@@ -252,12 +254,12 @@ cache.over_behavior_character = set()
 g = 0
 pl_start = pl.behavior.start_time
 while 0 not in cache.over_behavior_character:
-  g += 1
-  if g > PLAYER_PASS_LIMIT:
-    print("!! 玩家阶段卡死")
-    break
-  pl_start = pl.behavior.start_time
-  character_behavior.character_behavior(0, cache.game_time, pl_start)
+    g += 1
+    if g > PLAYER_PASS_LIMIT:
+        print("!! 玩家阶段卡死")
+        break
+    pl_start = pl.behavior.start_time
+    character_behavior.character_behavior(0, cache.game_time, pl_start)
 print("玩家阶段轮数:", g)
 
 id_list = cache.npc_id_got.copy()
@@ -265,40 +267,40 @@ id_list.discard(0)
 passes = 0
 stuck = False
 while len(cache.over_behavior_character) <= len(id_list):
-  passes += 1
-  if passes > NPC_PASS_LIMIT:
-    stuck = True
-    remain = [
-        (c, cache.character_data[c].name)
-        for c in id_list
-        if c not in cache.over_behavior_character
-    ]
-    print("!! NPC阶段死循环, 未完成(前8个):", remain[:8])
-    break
-  for cid in id_list:
-    if cid in cache.over_behavior_character:
-      continue
-    if cid in WATCH:
-      cd = cache.character_data[cid]
-      print(
-          f"[pass{passes}] 前: bhv={cd.behavior.behavior_id} dur={cd.behavior.duration}"
-          f" start={cd.behavior.start_time} state={cd.state}"
-      )
-    character_behavior.character_behavior(cid, cache.game_time, pl_start)
-    if cid in WATCH:
-      cd = cache.character_data[cid]
-      print(
-          f"[pass{passes}] 后: bhv={cd.behavior.behavior_id} dur={cd.behavior.duration}"
-          f" 完成={cid in cache.over_behavior_character}"
-      )
+    passes += 1
+    if passes > NPC_PASS_LIMIT:
+        stuck = True
+        remain = [
+            (c, cache.character_data[c].name)
+            for c in id_list
+            if c not in cache.over_behavior_character
+        ]
+        print("!! NPC阶段死循环, 未完成(前8个):", remain[:8])
+        break
+    for cid in id_list:
+        if cid in cache.over_behavior_character:
+            continue
+        if cid in WATCH:
+            cd = cache.character_data[cid]
+            print(
+                f"[pass{passes}] 前: bhv={cd.behavior.behavior_id} dur={cd.behavior.duration}"
+                f" start={cd.behavior.start_time} state={cd.state}"
+            )
+        character_behavior.character_behavior(cid, cache.game_time, pl_start)
+        if cid in WATCH:
+            cd = cache.character_data[cid]
+            print(
+                f"[pass{passes}] 后: bhv={cd.behavior.behavior_id} dur={cd.behavior.duration}"
+                f" 完成={cid in cache.over_behavior_character}"
+            )
 
 # ==== 9. 结果判读 ====
 print("NPC阶段轮数:", passes, "| 全部收敛:", not stuck)
 print("捕获文本:", captured_messages if captured_messages else "无")
 if watch_id is not None:
-  _c = cache.character_data[watch_id]
-  print(
-      f"{_c.name}最终: bhv={_c.behavior.behavior_id} dur={_c.behavior.duration} state={_c.state}"
-      f" 完成={watch_id in cache.over_behavior_character}"
-  )
+    _c = cache.character_data[watch_id]
+    print(
+        f"{_c.name}最终: bhv={_c.behavior.behavior_id} dur={_c.behavior.duration} state={_c.state}"
+        f" 完成={watch_id in cache.over_behavior_character}"
+    )
 # 判读标准：玩家阶段通常1轮；NPC阶段个位数轮全部收敛；超限即活锁，"未完成"名单即卡死角色。

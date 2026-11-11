@@ -25,76 +25,76 @@ SOURCE_LANGUAGE = "zh_CN"
 MSGFMT = shutil.which("msgfmt")
 """ msgfmt 的路径，PATH 里没有时为 None """
 try:
-  import polib
+    import polib
 except ImportError:
-  # polib 只在没有 msgfmt 时用到，游戏的依赖里没有它
-  HAS_POLIB = False
+    # polib 只在没有 msgfmt 时用到，游戏的依赖里没有它
+    HAS_POLIB = False
 else:
-  HAS_POLIB = True
+    HAS_POLIB = True
 
 
 def find_po_files(po_root: str) -> list[tuple[str, str]]:
-  """
-  列出要编译的 PO 文件
-  Keyword arguments:
-  po_root -- 各语言目录所在的目录
-  Return arguments:
-  list -- (语言, 文件名不带扩展名) 的列表，按语言与文件名排序，不含原文语言
-  """
-  po_files: list[tuple[str, str]] = []
-  for language in sorted(os.listdir(po_root)):
-    if language == SOURCE_LANGUAGE:
-      continue
-    messages_dir = os.path.join(po_root, language, "LC_MESSAGES")
-    if not os.path.isdir(messages_dir):
-      continue
-    for file_name in sorted(os.listdir(messages_dir)):
-      if file_name.endswith(".po"):
-        po_files.append((language, file_name[: -len(".po")]))
-  return po_files
+    """
+    列出要编译的 PO 文件
+    Keyword arguments:
+    po_root -- 各语言目录所在的目录
+    Return arguments:
+    list -- (语言, 文件名不带扩展名) 的列表，按语言与文件名排序，不含原文语言
+    """
+    po_files: list[tuple[str, str]] = []
+    for language in sorted(os.listdir(po_root)):
+        if language == SOURCE_LANGUAGE:
+            continue
+        messages_dir = os.path.join(po_root, language, "LC_MESSAGES")
+        if not os.path.isdir(messages_dir):
+            continue
+        for file_name in sorted(os.listdir(messages_dir)):
+            if file_name.endswith(".po"):
+                po_files.append((language, file_name[: -len(".po")]))
+    return po_files
 
 
 def compile_po(po_path: str, mo_path: str) -> None:
-  """
-  把一个 PO 文件编译成 MO 文件，有 msgfmt 时用 msgfmt，否则用 polib
-  Keyword arguments:
-  po_path -- PO 文件路径
-  mo_path -- 要写出的 MO 文件路径
-  Return arguments:
-  无
-  """
-  if MSGFMT is not None:
-    subprocess.run([MSGFMT, "-o", mo_path, po_path], check=True)
-  else:
-    polib.pofile(po_path).save_as_mofile(mo_path)
+    """
+    把一个 PO 文件编译成 MO 文件，有 msgfmt 时用 msgfmt，否则用 polib
+    Keyword arguments:
+    po_path -- PO 文件路径
+    mo_path -- 要写出的 MO 文件路径
+    Return arguments:
+    无
+    """
+    if MSGFMT is not None:
+        subprocess.run([MSGFMT, "-o", mo_path, po_path], check=True)
+    else:
+        polib.pofile(po_path).save_as_mofile(mo_path)
 
 
 def main() -> None:
-  """
-  读取命令行参数，编译每个语言的全部 PO 文件
-  Keyword arguments:
-  无
-  Return arguments:
-  无
-  """
-  parser = argparse.ArgumentParser(
-      description="把 data/po 下的 PO 文件编译成 MO 文件"
-  )
-  parser.add_argument("--out", help="MO 文件的输出目录，默认写在 PO 旁边")
-  args = parser.parse_args()
-  if MSGFMT is None and not HAS_POLIB:
-    sys.exit(
-        "需要 gettext 的 msgfmt 或 polib（pip install -r requirements-dev.txt）"
+    """
+    读取命令行参数，编译每个语言的全部 PO 文件
+    Keyword arguments:
+    无
+    Return arguments:
+    无
+    """
+    parser = argparse.ArgumentParser(
+        description="把 data/po 下的 PO 文件编译成 MO 文件"
     )
-  out_root = args.out if args.out else PO_ROOT
-  for language, name in find_po_files(PO_ROOT):
-    out_dir = os.path.join(out_root, language, "LC_MESSAGES")
-    os.makedirs(out_dir, exist_ok=True)
-    po_path = os.path.join(PO_ROOT, language, "LC_MESSAGES", name + ".po")
-    mo_path = os.path.join(out_dir, name + ".mo")
-    compile_po(po_path, mo_path)
-    print(mo_path)
+    parser.add_argument("--out", help="MO 文件的输出目录，默认写在 PO 旁边")
+    args = parser.parse_args()
+    if MSGFMT is None and not HAS_POLIB:
+        sys.exit(
+            "需要 gettext 的 msgfmt 或 polib（pip install -r requirements-dev.txt）"
+        )
+    out_root = args.out if args.out else PO_ROOT
+    for language, name in find_po_files(PO_ROOT):
+        out_dir = os.path.join(out_root, language, "LC_MESSAGES")
+        os.makedirs(out_dir, exist_ok=True)
+        po_path = os.path.join(PO_ROOT, language, "LC_MESSAGES", name + ".po")
+        mo_path = os.path.join(out_dir, name + ".mo")
+        compile_po(po_path, mo_path)
+        print(mo_path)
 
 
 if __name__ == "__main__":
-  main()
+    main()

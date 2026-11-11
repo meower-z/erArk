@@ -24,49 +24,49 @@ PASSED: list[str] = []
 
 
 def check(name, cond, extra=""):
-  """
-  记录并打印一条断言结果
-  Keyword arguments:
-  name -- 断言名
-  cond -- 断言条件
-  extra -- 失败时附带打印的实际值
-  Return arguments:
-  bool -- 断言是否通过
-  """
-  (PASSED if cond else FAILED).append(name)
-  print(f"  [OK] {name}" if cond else f"  [FAIL] {name} {extra}", flush=True)
-  return bool(cond)
+    """
+    记录并打印一条断言结果
+    Keyword arguments:
+    name -- 断言名
+    cond -- 断言条件
+    extra -- 失败时附带打印的实际值
+    Return arguments:
+    bool -- 断言是否通过
+    """
+    (PASSED if cond else FAILED).append(name)
+    print(f"  [OK] {name}" if cond else f"  [FAIL] {name} {extra}", flush=True)
+    return bool(cond)
 
 
 def finish(code=None):
-  """
-  打印断言汇总并结束进程：全过退出码 0，有失败退出码 1
-  Keyword arguments:
-  code -- 指定退出码；None 时按断言结果决定
-  Return arguments:
-  无（进程直接退出）
-  """
-  print(
-      f"\nPASS={len(PASSED)} FAIL={len(FAILED)}",
-      *[f"  - {name}" for name in FAILED],
-      sep="\n",
-      flush=True,
-  )
-  os._exit(code if code is not None else (1 if FAILED else 0))
+    """
+    打印断言汇总并结束进程：全过退出码 0，有失败退出码 1
+    Keyword arguments:
+    code -- 指定退出码；None 时按断言结果决定
+    Return arguments:
+    无（进程直接退出）
+    """
+    print(
+        f"\nPASS={len(PASSED)} FAIL={len(FAILED)}",
+        *[f"  - {name}" for name in FAILED],
+        sep="\n",
+        flush=True,
+    )
+    os._exit(code if code is not None else (1 if FAILED else 0))
 
 
 def crash(exc_type, exc, tb):
-  """
-  未捕获异常：打印堆栈与汇总，以退出码 2 结束进程
-  Keyword arguments:
-  exc_type -- 异常类型
-  exc -- 异常对象
-  tb -- 回溯对象
-  Return arguments:
-  无（进程直接退出）
-  """
-  traceback.print_exception(exc_type, exc, tb)
-  finish(2)
+    """
+    未捕获异常：打印堆栈与汇总，以退出码 2 结束进程
+    Keyword arguments:
+    exc_type -- 异常类型
+    exc -- 异常对象
+    tb -- 回溯对象
+    Return arguments:
+    无（进程直接退出）
+    """
+    traceback.print_exception(exc_type, exc, tb)
+    finish(2)
 
 
 sys.excepthook = crash
@@ -116,7 +116,7 @@ check("前提返回值符合预期", handle_premise.handle_high_1(101) == 1)
 
 # ==== 4. 固定随机：side_effect 依次给出每次 randint 的返回值，call_args_list 记下每次的参数 ====
 with mock.patch("random.randint", side_effect=[3]) as randint:
-  pregnancy = attr_calculation.get_pregnancy_zero()
+    pregnancy = attr_calculation.get_pregnancy_zero()
 check(
     "生理周期取自 randint",
     pregnancy.reproduction_period == 3,

@@ -45,136 +45,139 @@ game_config.init()
 
 
 def class_indent(path: str) -> str:
-  """
-  读代码文件里第一条缩进行的缩进，写进去的代码照它缩进
-  Keyword arguments:
-  path -- 代码文件路径
-  Return arguments:
-  str -- 缩进的空白；文件里没有缩进行时为 2 个空格
-  """
-  with open(path, encoding="utf-8") as f:
-    for line in f:
-      if line.strip() and line[0] in " \t":
-        return line[: len(line) - len(line.lstrip())]
-  return "  "
+    """
+    读代码文件里第一条缩进行的缩进，写进去的代码照它缩进
+    Keyword arguments:
+    path -- 代码文件路径
+    Return arguments:
+    str -- 缩进的空白；文件里没有缩进行时为 2 个空格
+    """
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            if line.strip() and line[0] in " \t":
+                return line[: len(line) - len(line.lstrip())]
+    return "  "
 
 
 def constant_line(name: str, value: str, indent: str = "  ") -> str:
-  """
-  生成一条类常量赋值；整行超过 80 列、值本身放得进折行时，照 pyink 的样子折成三行
-  Keyword arguments:
-  name -- 常量名
-  value -- 值的源码文字（带引号的字符串或整数）
-  indent -- 类成员的缩进
-  Return arguments:
-  str -- 赋值的源码，以换行结尾
-  """
-  line = f"{indent}{name} = {value}"
-  if len(line) > 80 and len(indent) + 4 + len(value) <= 80:
-    return f"{indent}{name} = (\n{indent}    {value}\n{indent})\n"
-  return line + "\n"
+    """
+    生成一条类常量赋值；整行超过 80 列、值本身放得进折行时，照 pyink 的样子折成三行
+    Keyword arguments:
+    name -- 常量名
+    value -- 值的源码文字（带引号的字符串或整数）
+    indent -- 类成员的缩进
+    Return arguments:
+    str -- 赋值的源码，以换行结尾
+    """
+    line = f"{indent}{name} = {value}"
+    if len(line) > 80 and len(indent) + 4 + len(value) <= 80:
+        return f"{indent}{name} = (\n{indent}    {value}\n{indent})\n"
+    return line + "\n"
 
 
 def appended_block(text: str) -> str:
-  """
-  整理要接到常量文件末尾或类末尾的一段代码，使其与 pyink 的格式一致：和原有内容隔一个空行，连续空行并成一个，末尾不留空行
-  Keyword arguments:
-  text -- 要接上的代码
-  Return arguments:
-  str -- 整理后的代码
-  """
-  return "\n" + re.sub(r"\n{3,}", "\n\n", text.strip("\n")) + "\n"
+    """
+    整理要接到常量文件末尾或类末尾的一段代码，使其与 pyink 的格式一致：和原有内容隔一个空行，连续空行并成一个，末尾不留空行
+    Keyword arguments:
+    text -- 要接上的代码
+    Return arguments:
+    str -- 整理后的代码
+    """
+    return "\n" + re.sub(r"\n{3,}", "\n\n", text.strip("\n")) + "\n"
 
 
 def class_end_index(line_list: list, class_name: str) -> int:
-  """
-  找到类的最后一行代码之后的位置，接在这里的代码仍属于这个类
-  Keyword arguments:
-  line_list -- 代码文件的全部行（readlines() 的结果）
-  class_name -- 类名
-  Return arguments:
-  int -- 类的最后一个非空行的下一行的下标
-  """
-  start_index = line_list.index(f"class {class_name}:\n")
-  end_index = len(line_list)
-  # 类体到下一个顶格的语句为止
-  for index in range(start_index + 1, len(line_list)):
-    if line_list[index].strip() and line_list[index][0] not in " \t":
-      end_index = index
-      break
-  # 退过类体末尾的空行
-  while not line_list[end_index - 1].strip():
-    end_index -= 1
-  return end_index
+    """
+    找到类的最后一行代码之后的位置，接在这里的代码仍属于这个类
+    Keyword arguments:
+    line_list -- 代码文件的全部行（readlines() 的结果）
+    class_name -- 类名
+    Return arguments:
+    int -- 类的最后一个非空行的下一行的下标
+    """
+    start_index = line_list.index(f"class {class_name}:\n")
+    end_index = len(line_list)
+    # 类体到下一个顶格的语句为止
+    for index in range(start_index + 1, len(line_list)):
+        if line_list[index].strip() and line_list[index][0] not in " \t":
+            end_index = index
+            break
+    # 退过类体末尾的空行
+    while not line_list[end_index - 1].strip():
+        end_index -= 1
+    return end_index
 
 
 def constand_2_handle() -> str:
-  """
-  输出constand_promise里的标准格式，以及把前提处理函数接到 handle_premise 包里 premise_module 模块的末尾
-  """
+    """
+    输出constand_promise里的标准格式，以及把前提处理函数接到 handle_premise 包里 premise_module 模块的末尾
+    """
 
-  # 判断数据编号
-  data_index: int | str
-  if datetype == "A":
-    datetype_str = "ability"
-    for config_data_index in game_config.config_ability:
-      if game_config.config_ability[config_data_index].name == dataname:
-        data_index = config_data_index
-        break
-  elif datetype == "S":
-    datetype_str = "status_data"
-    for config_data_index in game_config.config_character_state:
-      if game_config.config_character_state[config_data_index].name == dataname:
-        data_index = config_data_index
-        break
-  elif datetype == "T":
-    datetype_str = "talent"
-    for config_data_index in game_config.config_talent:
-      if game_config.config_talent[config_data_index].name == dataname:
-        data_index = config_data_index
-        break
-  else:
-    datetype_str, data_index = "数据类型", "数据序号"
-  print(f"数据名 = {dataname}，类型 = {datetype_str}，id = {data_index}")
+    # 判断数据编号
+    data_index: int | str
+    if datetype == "A":
+        datetype_str = "ability"
+        for config_data_index in game_config.config_ability:
+            if game_config.config_ability[config_data_index].name == dataname:
+                data_index = config_data_index
+                break
+    elif datetype == "S":
+        datetype_str = "status_data"
+        for config_data_index in game_config.config_character_state:
+            if (
+                game_config.config_character_state[config_data_index].name
+                == dataname
+            ):
+                data_index = config_data_index
+                break
+    elif datetype == "T":
+        datetype_str = "talent"
+        for config_data_index in game_config.config_talent:
+            if game_config.config_talent[config_data_index].name == dataname:
+                data_index = config_data_index
+                break
+    else:
+        datetype_str, data_index = "数据类型", "数据序号"
+    print(f"数据名 = {dataname}，类型 = {datetype_str}，id = {data_index}")
 
-  command_list = command_str.split("_")
+    command_list = command_str.split("_")
 
-  # 判断运算符号
-  operation = "=="
-  for str_part in command_list:
-    if str_part == "ge":
-      operation = ">="
-      break
-    elif str_part == "le":
-      operation = "<="
-      break
-    elif str_part == "g":
-      operation = ">"
-      break
-    elif str_part == "l":
-      operation = "<"
-      break
+    # 判断运算符号
+    operation = "=="
+    for str_part in command_list:
+        if str_part == "ge":
+            operation = ">="
+            break
+        elif str_part == "le":
+            operation = "<="
+            break
+        elif str_part == "g":
+            operation = ">"
+            break
+        elif str_part == "l":
+            operation = "<"
+            break
 
-  # 判断是否为交互对象
-  target_flag = False
-  for str_part in command_list:
-    if str_part == "t":
-      target_flag = True
-      break
+    # 判断是否为交互对象
+    target_flag = False
+    for str_part in command_list:
+        if str_part == "t":
+            target_flag = True
+            break
 
-  # 生成constant_promise的out_str
-  indent = class_indent(os.path.join("Script", "Core", "constant_promise.py"))
-  out_str = "\n" + constant_line(capital_command, f'"{command_str}"', indent)
-  out_str += f'{indent}""" {premise_type} '
-  if target_flag:
-    out_str += "交互对象"
-  else:
-    out_str += "自己"
-  out_str += f'{dataname}{operation}{command_list[-1]} """\n'
-  print(out_str)
+    # 生成constant_promise的out_str
+    indent = class_indent(os.path.join("Script", "Core", "constant_promise.py"))
+    out_str = "\n" + constant_line(capital_command, f'"{command_str}"', indent)
+    out_str += f'{indent}""" {premise_type} '
+    if target_flag:
+        out_str += "交互对象"
+    else:
+        out_str += "自己"
+    out_str += f'{dataname}{operation}{command_list[-1]} """\n'
+    print(out_str)
 
-  # 输出到constant_promise里，还没写出来
-  """
+    # 输出到constant_promise里，还没写出来
+    """
     break_flag = 0
     with open(os.path.join("Script", "Core", "constant_promise.py"), "r+",encoding="utf-8") as f:
         while 1:
@@ -193,263 +196,273 @@ def constand_2_handle() -> str:
     out_str = "\n"
     """
 
-  # 进行前提输出，函数体照目标模块的缩进
-  premise_path = os.path.join(
-      "Script", "Design", "handle_premise", premise_module
-  )
-  indent = class_indent(premise_path)
-  out_str = "\n\n"
-  out_str += f"@add_premise(constant_promise.Premise.{capital_command})\n"
-  out_str += f"def handle_{command_str}(character_id: int) -> int:\n"
-  out_str += f'{indent}"""\n'
-  if not target_flag:
-    out_str += f"{indent}校验角色是否{dataname}{operation}{command_list[-1]}\n"
-  else:
-    out_str += (
-        f"{indent}校验交互对象是否{dataname}{operation}{command_list[-1]}\n"
+    # 进行前提输出，函数体照目标模块的缩进
+    premise_path = os.path.join(
+        "Script", "Design", "handle_premise", premise_module
     )
-  out_str += f"{indent}Keyword arguments:\n"
-  out_str += f"{indent}character_id -- 角色id\n"
-  out_str += f"{indent}Return arguments:\n"
-  out_str += f"{indent}int -- 权重\n"
-  out_str += f'{indent}"""\n'
-  out_str += f"{indent}character_data = cache.character_data[character_id]\n"
-  if target_flag:
-    out_str += f"{indent}target_data = cache.character_data[character_data.target_character_id]\n"
-    out_str += f"{indent}if target_data.{datetype_str}[{data_index}] {operation} {command_list[-1]}:\n"
-  else:
-    out_str += f"{indent}if character_data.{datetype_str}[{data_index}] {operation} {command_list[-1]}:\n"
-  out_str += f"{indent}{indent}return 1\n"
-  out_str += f"{indent}return 0\n"
+    indent = class_indent(premise_path)
+    out_str = "\n\n"
+    out_str += f"@add_premise(constant_promise.Premise.{capital_command})\n"
+    out_str += f"def handle_{command_str}(character_id: int) -> int:\n"
+    out_str += f'{indent}"""\n'
+    if not target_flag:
+        out_str += (
+            f"{indent}校验角色是否{dataname}{operation}{command_list[-1]}\n"
+        )
+    else:
+        out_str += (
+            f"{indent}校验交互对象是否{dataname}{operation}{command_list[-1]}\n"
+        )
+    out_str += f"{indent}Keyword arguments:\n"
+    out_str += f"{indent}character_id -- 角色id\n"
+    out_str += f"{indent}Return arguments:\n"
+    out_str += f"{indent}int -- 权重\n"
+    out_str += f'{indent}"""\n'
+    out_str += f"{indent}character_data = cache.character_data[character_id]\n"
+    if target_flag:
+        out_str += f"{indent}target_data = cache.character_data[character_data.target_character_id]\n"
+        out_str += f"{indent}if target_data.{datetype_str}[{data_index}] {operation} {command_list[-1]}:\n"
+    else:
+        out_str += f"{indent}if character_data.{datetype_str}[{data_index}] {operation} {command_list[-1]}:\n"
+    out_str += f"{indent}{indent}return 1\n"
+    out_str += f"{indent}return 0\n"
 
-  # 开始保存
-  with open(premise_path, "a", encoding="utf-8") as f:
-    f.write(out_str)
-    f.close()
-  print(f"已写入{premise_path}末尾")
+    # 开始保存
+    with open(premise_path, "a", encoding="utf-8") as f:
+        f.write(out_str)
+        f.close()
+    print(f"已写入{premise_path}末尾")
 
-  return out_str
+    return out_str
 
 
 def skip_module_docstring(line_list: list) -> list:
-  """
-  去掉代码文件开头的模块 docstring 与紧随其后的空行，其余行原样保留
-  Keyword arguments:
-  line_list -- 代码文件的全部行（readlines() 的结果）
-  Return arguments:
-  list -- 去掉模块 docstring 后的行；没有模块 docstring 时返回 line_list 本身
-  """
-  # 按字节解析：文件开头的 BOM 在字符串里会被当成非法字符
-  tree = ast.parse("".join(line_list).encode("utf-8"))
-  if ast.get_docstring(tree, clean=False) is None:
-    return line_list
-  docstring_node = tree.body[0]
-  # ast.parse 解析出的语句节点都带结束行号
-  assert docstring_node.end_lineno is not None
-  end_index = docstring_node.end_lineno
-  while end_index < len(line_list) and not line_list[end_index].strip():
-    end_index += 1
-  return line_list[: docstring_node.lineno - 1] + line_list[end_index:]
+    """
+    去掉代码文件开头的模块 docstring 与紧随其后的空行，其余行原样保留
+    Keyword arguments:
+    line_list -- 代码文件的全部行（readlines() 的结果）
+    Return arguments:
+    list -- 去掉模块 docstring 后的行；没有模块 docstring 时返回 line_list 本身
+    """
+    # 按字节解析：文件开头的 BOM 在字符串里会被当成非法字符
+    tree = ast.parse("".join(line_list).encode("utf-8"))
+    if ast.get_docstring(tree, clean=False) is None:
+        return line_list
+    docstring_node = tree.body[0]
+    # ast.parse 解析出的语句节点都带结束行号
+    assert docstring_node.end_lineno is not None
+    end_index = docstring_node.end_lineno
+    while end_index < len(line_list) and not line_list[end_index].strip():
+        end_index += 1
+    return line_list[: docstring_node.lineno - 1] + line_list[end_index:]
 
 
 def build_promise_csv_text(line_list: list) -> str:
-  """
-  把 constant_promise.py 的全部行转成 ArkEditor 前提表（tools/ArkEditor/csv/Premise.csv）的文本
-  只做字符串处理、不读写文件：本模块顶层会调 game_config.init()，回归测试不 import 本模块，
-     而是用 ast 单独取出这个函数来跑（tests/education/test_talk_data.py）
-  Keyword arguments:
-  line_list -- constant_promise.py 的全部行（readlines() 的结果，每行带换行符）
-  Return arguments:
-  str -- 前提表的完整文本：表头 + 每个前提一行「前提id,常量名,分类,描述」
-  """
-  import re  # 本函数会被单独取出来跑，用到的模块在函数里导入
+    """
+    把 constant_promise.py 的全部行转成 ArkEditor 前提表（tools/ArkEditor/csv/Premise.csv）的文本
+    只做字符串处理、不读写文件：本模块顶层会调 game_config.init()，回归测试不 import 本模块，
+       而是用 ast 单独取出这个函数来跑（tests/education/test_talk_data.py）
+    Keyword arguments:
+    line_list -- constant_promise.py 的全部行（readlines() 的结果，每行带换行符）
+    Return arguments:
+    str -- 前提表的完整文本：表头 + 每个前提一行「前提id,常量名,分类,描述」
+    """
+    import re  # 本函数会被单独取出来跑，用到的模块在函数里导入
 
-  # pyink 把超过 80 列的常量赋值折成「常量名 = (」「值」「)」三行，先并回一行
-  line_list = re.sub(
-      r'= \(\n\s*("[^"\n]*")\n\s*\)\n', r"= \1\n", "".join(line_list)
-  ).splitlines(True)
-  out_str = "cid,premise_name,premise_type,premise\n"
-  for line in line_list:
-    # 只看以引号收尾、不带注释的行：常量行（NAME = "id"）与紧随其后的单行 docstring
-    if len(line) >= 3 and line[-2] == '"' and "#" not in line:
-      if line[-3] == '"':
-        # docstring 行：取三引号中间的「分类 描述」
-        promise_text = line.split('"')[-4].strip()
-        if promise_text != "前提id":
-          # 按第一个空格切一刀：分类里没有空格，描述里的空格原样保留
-          part_list = promise_text.split(" ", 1)
-          promise_type = part_list[0]
-          promise_info = part_list[1] if len(part_list) > 1 else ""
-          out_str += f"{promise_type},{promise_info}\n"
-      else:
-        # 常量行：先写前提id与常量名，分类与描述由下一行的 docstring 补齐
-        promise_cid = line.split('"')[-2].strip()
-        promise_name = line.split(" =")[0].strip()
-        out_str += f"{promise_cid},{promise_name},"
-    elif len(line) == 1:
-      out_str += "\n"
-  return out_str
+    # pyink 把超过 80 列的常量赋值折成「常量名 = (」「值」「)」三行，先并回一行
+    line_list = re.sub(
+        r'= \(\n\s*("[^"\n]*")\n\s*\)\n', r"= \1\n", "".join(line_list)
+    ).splitlines(True)
+    out_str = "cid,premise_name,premise_type,premise\n"
+    for line in line_list:
+        # 只看以引号收尾、不带注释的行：常量行（NAME = "id"）与紧随其后的单行 docstring
+        if len(line) >= 3 and line[-2] == '"' and "#" not in line:
+            if line[-3] == '"':
+                # docstring 行：取三引号中间的「分类 描述」
+                promise_text = line.split('"')[-4].strip()
+                if promise_text != "前提id":
+                    # 按第一个空格切一刀：分类里没有空格，描述里的空格原样保留
+                    part_list = promise_text.split(" ", 1)
+                    promise_type = part_list[0]
+                    promise_info = part_list[1] if len(part_list) > 1 else ""
+                    out_str += f"{promise_type},{promise_info}\n"
+            else:
+                # 常量行：先写前提id与常量名，分类与描述由下一行的 docstring 补齐
+                promise_cid = line.split('"')[-2].strip()
+                promise_name = line.split(" =")[0].strip()
+                out_str += f"{promise_cid},{promise_name},"
+        elif len(line) == 1:
+            out_str += "\n"
+    return out_str
 
 
 def constand_promise_2_csv() -> str:
-  """
-  前提文件转csv（mode 2）：读 constant_promise.py，重新生成 ArkEditor 的前提表
-  Keyword arguments:
-  无
-  Return arguments:
-  str -- 写入的前提表文本
-  """
-  with open(
-      os.path.join("Script", "Core", "constant_promise.py"),
-      encoding="utf-8",
-  ) as f:
-    line_list = skip_module_docstring(f.readlines())
-  out_str = build_promise_csv_text(line_list)
+    """
+    前提文件转csv（mode 2）：读 constant_promise.py，重新生成 ArkEditor 的前提表
+    Keyword arguments:
+    无
+    Return arguments:
+    str -- 写入的前提表文本
+    """
+    with open(
+        os.path.join("Script", "Core", "constant_promise.py"),
+        encoding="utf-8",
+    ) as f:
+        line_list = skip_module_docstring(f.readlines())
+    out_str = build_promise_csv_text(line_list)
 
-  # 开始保存
-  with open(
-      os.path.join("tools", "ArkEditor", "csv", "Premise.csv"),
-      "w",
-      encoding="utf-8",
-  ) as f:
-    f.write(out_str)
-  print("已写入csv文件末尾")
+    # 开始保存
+    with open(
+        os.path.join("tools", "ArkEditor", "csv", "Premise.csv"),
+        "w",
+        encoding="utf-8",
+    ) as f:
+        f.write(out_str)
+    print("已写入csv文件末尾")
 
-  return out_str
+    return out_str
 
 
 def csv_2_constand() -> str:
-  """
-  csv转前提文件（mode 3）：读 tools/csv/premise.csv，把每个前提写成常量与说明行，接到 constant_promise.py 末尾
-  Keyword arguments:
-  无
-  Return arguments:
-  str -- 接到文件末尾的文本
-  """
-  with open(os.path.join("tools", "csv", "premise.csv"), encoding="utf-8") as f:
-    a = f.readlines()
-    f.close()
+    """
+    csv转前提文件（mode 3）：读 tools/csv/premise.csv，把每个前提写成常量与说明行，接到 constant_promise.py 末尾
+    Keyword arguments:
+    无
+    Return arguments:
+    str -- 接到文件末尾的文本
+    """
+    with open(
+        os.path.join("tools", "csv", "premise.csv"), encoding="utf-8"
+    ) as f:
+        a = f.readlines()
+        f.close()
 
-  indent = class_indent(os.path.join("Script", "Core", "constant_promise.py"))
-  out_str = "\n"
-  for line in a:
-    promise_text = line.strip().split(",")
-    print(f"debug promise_text = {promise_text}")
-    if len(promise_text) == 1:
-      out_str += "\n"
-    elif promise_text[0] != "cid" and len(promise_text) == 4:
-      out_str += constant_line(promise_text[1], f'"{promise_text[0]}"', indent)
-      out_str += f'{indent}""" {promise_text[2]} {promise_text[3]} """\n'
+    indent = class_indent(os.path.join("Script", "Core", "constant_promise.py"))
+    out_str = "\n"
+    for line in a:
+        promise_text = line.strip().split(",")
+        print(f"debug promise_text = {promise_text}")
+        if len(promise_text) == 1:
+            out_str += "\n"
+        elif promise_text[0] != "cid" and len(promise_text) == 4:
+            out_str += constant_line(
+                promise_text[1], f'"{promise_text[0]}"', indent
+            )
+            out_str += f'{indent}""" {promise_text[2]} {promise_text[3]} """\n'
 
-  out_str = appended_block(out_str)
+    out_str = appended_block(out_str)
 
-  # 开始保存
-  with open(
-      os.path.join("Script", "Core", "constant_promise.py"),
-      "a",
-      encoding="utf-8",
-  ) as f:
-    f.write(out_str)
-    f.close()
-  print("已写入前提文件末尾")
+    # 开始保存
+    with open(
+        os.path.join("Script", "Core", "constant_promise.py"),
+        "a",
+        encoding="utf-8",
+    ) as f:
+        f.write(out_str)
+        f.close()
+    print("已写入前提文件末尾")
 
-  return out_str
+    return out_str
 
 
 def constand_effect_2_csv() -> str:
-  """
-  结算文件转csv（mode 4）：读 constant_effect.py 里第一处「二段结算」之前的部分，重新生成 ArkEditor 的结算表 Effect.csv
-  Keyword arguments:
-  无
-  Return arguments:
-  str -- 写入的结算表文本
-  """
-  with open(
-      os.path.join("Script", "Core", "constant_effect.py"),
-      encoding="utf-8",
-  ) as f:
-    a = skip_module_docstring(f.readlines())
-    f.close()
-  # pyink 把超过 80 列的常量赋值折成「常量名 = (」「值」「)」三行，先并回一行
-  a = re.sub(r"= \(\n\s*(\d+)\n\s*\)\n", r"= \1\n", "".join(a)).splitlines(True)
-  out_str = "cid,effect_name,effect_type,effect\n"
+    """
+    结算文件转csv（mode 4）：读 constant_effect.py 里第一处「二段结算」之前的部分，重新生成 ArkEditor 的结算表 Effect.csv
+    Keyword arguments:
+    无
+    Return arguments:
+    str -- 写入的结算表文本
+    """
+    with open(
+        os.path.join("Script", "Core", "constant_effect.py"),
+        encoding="utf-8",
+    ) as f:
+        a = skip_module_docstring(f.readlines())
+        f.close()
+    # pyink 把超过 80 列的常量赋值折成「常量名 = (」「值」「)」三行，先并回一行
+    a = re.sub(r"= \(\n\s*(\d+)\n\s*\)\n", r"= \1\n", "".join(a)).splitlines(
+        True
+    )
+    out_str = "cid,effect_name,effect_type,effect\n"
 
-  for line in a:
-    # 到二段结算则跳出
-    if "二段结算" in line:
-      break
-    if len(line) >= 3 and "#" not in line:
-      if line[-3] == '"' and " " in line:
-        effect_text = line.split('"')[-4].strip().split(" ")
-        if len(effect_text) == 2:
-          out_str += f"{effect_text[0]},{effect_text[1]}\n"
-        else:
-          out_str += f"二段结算,{str(effect_text)[2:-2]}\n"
-      elif "=" in line:
-        effect_name = line.split('"')[-1].strip().split(" ")[0]
-        effect_cid = line.split('"')[-1].strip().split(" ")[-1]
-        out_str += f"{effect_cid},{effect_name},"
-    elif len(line) == 1:
-      out_str += "\n"
+    for line in a:
+        # 到二段结算则跳出
+        if "二段结算" in line:
+            break
+        if len(line) >= 3 and "#" not in line:
+            if line[-3] == '"' and " " in line:
+                effect_text = line.split('"')[-4].strip().split(" ")
+                if len(effect_text) == 2:
+                    out_str += f"{effect_text[0]},{effect_text[1]}\n"
+                else:
+                    out_str += f"二段结算,{str(effect_text)[2:-2]}\n"
+            elif "=" in line:
+                effect_name = line.split('"')[-1].strip().split(" ")[0]
+                effect_cid = line.split('"')[-1].strip().split(" ")[-1]
+                out_str += f"{effect_cid},{effect_name},"
+        elif len(line) == 1:
+            out_str += "\n"
 
-  # 开始保存
-  with open(
-      os.path.join("tools", "ArkEditor", "csv", "Effect.csv"),
-      "w",
-      encoding="utf-8",
-  ) as f:
-    f.write(out_str)
-    f.close()
-  print("已写入csv文件末尾")
+    # 开始保存
+    with open(
+        os.path.join("tools", "ArkEditor", "csv", "Effect.csv"),
+        "w",
+        encoding="utf-8",
+    ) as f:
+        f.write(out_str)
+        f.close()
+    print("已写入csv文件末尾")
 
-  return out_str
+    return out_str
 
 
 def csv_2_constand_effect() -> str:
-  """
-  csv转结算文件（mode 5）：读 tools/csv/Effect.csv，把每个结算写成常量与说明行，接到 constant_effect.py 里 BehaviorEffect 类的末尾
-  Keyword arguments:
-  无
-  Return arguments:
-  str -- 接到类末尾的文本
-  """
-  with open(os.path.join("tools", "csv", "Effect.csv"), encoding="utf-8") as f:
-    a = f.readlines()
-    f.close()
+    """
+    csv转结算文件（mode 5）：读 tools/csv/Effect.csv，把每个结算写成常量与说明行，接到 constant_effect.py 里 BehaviorEffect 类的末尾
+    Keyword arguments:
+    无
+    Return arguments:
+    str -- 接到类末尾的文本
+    """
+    with open(
+        os.path.join("tools", "csv", "Effect.csv"), encoding="utf-8"
+    ) as f:
+        a = f.readlines()
+        f.close()
 
-  indent = class_indent(os.path.join("Script", "Core", "constant_effect.py"))
-  out_str = "\n"
-  for line in a:
-    effect_text = line.strip().split(",")
-    if len(effect_text) == 1:
-      out_str += "\n"
-    elif effect_text[0] != "cid":
-      out_str += constant_line(effect_text[1], effect_text[0], indent)
-      out_str += f'{indent}""" {effect_text[2]} {effect_text[3]} """\n'
+    indent = class_indent(os.path.join("Script", "Core", "constant_effect.py"))
+    out_str = "\n"
+    for line in a:
+        effect_text = line.strip().split(",")
+        if len(effect_text) == 1:
+            out_str += "\n"
+        elif effect_text[0] != "cid":
+            out_str += constant_line(effect_text[1], effect_text[0], indent)
+            out_str += f'{indent}""" {effect_text[2]} {effect_text[3]} """\n'
 
-  out_str = appended_block(out_str)
+    out_str = appended_block(out_str)
 
-  # 开始保存：接到 BehaviorEffect 类的末尾，类后面的内容原样保留
-  effect_path = os.path.join("Script", "Core", "constant_effect.py")
-  with open(effect_path, encoding="utf-8") as f:
-    line_list = f.readlines()
-  insert_index = class_end_index(line_list, "BehaviorEffect")
-  line_list.insert(insert_index, out_str)
-  with open(effect_path, "w", encoding="utf-8") as f:
-    f.writelines(line_list)
-  print("已写入结算文件 BehaviorEffect 类末尾")
+    # 开始保存：接到 BehaviorEffect 类的末尾，类后面的内容原样保留
+    effect_path = os.path.join("Script", "Core", "constant_effect.py")
+    with open(effect_path, encoding="utf-8") as f:
+        line_list = f.readlines()
+    insert_index = class_end_index(line_list, "BehaviorEffect")
+    line_list.insert(insert_index, out_str)
+    with open(effect_path, "w", encoding="utf-8") as f:
+        f.writelines(line_list)
+    print("已写入结算文件 BehaviorEffect 类末尾")
 
-  return out_str
+    return out_str
 
 
 if __name__ == "__main__":
-  if mode == 1:
-    out_str = constand_2_handle()
-  elif mode == 2:
-    constand_promise_2_csv()
-  elif mode == 3:
-    csv_2_constand()
-  elif mode == 4:
-    constand_effect_2_csv()
-  elif mode == 5:
-    csv_2_constand_effect()
+    if mode == 1:
+        out_str = constand_2_handle()
+    elif mode == 2:
+        constand_promise_2_csv()
+    elif mode == 3:
+        csv_2_constand()
+    elif mode == 4:
+        constand_effect_2_csv()
+    elif mode == 5:
+        csv_2_constand_effect()

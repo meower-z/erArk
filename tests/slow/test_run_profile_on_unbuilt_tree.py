@@ -25,53 +25,62 @@ UNLINKED_TOP = ("data", "profiling_output")
 
 
 def link_unbuilt_tree(temp_dir: str) -> None:
-  """
-  在空的 temp_dir 里搭出没有生成物的仓库目录
-  生成物是 data/ 下直接放的文件和 data/po/zh_CN，所以只链接三类条目：
-  仓库根目录下 UNLINKED_TOP 以外的条目、data/ 下 po 以外的子目录、
-  data/po/ 下 zh_CN 以外的条目
-  data/ 与 data/po/ 是本函数新建的目录，不是链接
-  Keyword arguments:
-  temp_dir -- 空的临时目录
-  Return arguments:
-  无
-  """
-  for name in os.listdir(ROOT):
-    if name not in UNLINKED_TOP:
-      os.symlink(os.path.join(ROOT, name), os.path.join(temp_dir, name))
-  os.makedirs(os.path.join(temp_dir, "data", "po"))
-  data_dir = os.path.join(ROOT, "data")
-  for name in os.listdir(data_dir):
-    if name != "po" and os.path.isdir(os.path.join(data_dir, name)):
-      os.symlink(
-          os.path.join(data_dir, name), os.path.join(temp_dir, "data", name)
-      )
-  po_dir = os.path.join(data_dir, "po")
-  for name in os.listdir(po_dir):
-    if name != "zh_CN":
-      os.symlink(
-          os.path.join(po_dir, name), os.path.join(temp_dir, "data", "po", name)
-      )
+    """
+    在空的 temp_dir 里搭出没有生成物的仓库目录
+    生成物是 data/ 下直接放的文件和 data/po/zh_CN，所以只链接三类条目：
+    仓库根目录下 UNLINKED_TOP 以外的条目、data/ 下 po 以外的子目录、
+    data/po/ 下 zh_CN 以外的条目
+    data/ 与 data/po/ 是本函数新建的目录，不是链接
+    Keyword arguments:
+    temp_dir -- 空的临时目录
+    Return arguments:
+    无
+    """
+    for name in os.listdir(ROOT):
+        if name not in UNLINKED_TOP:
+            os.symlink(os.path.join(ROOT, name), os.path.join(temp_dir, name))
+    os.makedirs(os.path.join(temp_dir, "data", "po"))
+    data_dir = os.path.join(ROOT, "data")
+    for name in os.listdir(data_dir):
+        if name != "po" and os.path.isdir(os.path.join(data_dir, name)):
+            os.symlink(
+                os.path.join(data_dir, name),
+                os.path.join(temp_dir, "data", name),
+            )
+    po_dir = os.path.join(data_dir, "po")
+    for name in os.listdir(po_dir):
+        if name != "zh_CN":
+            os.symlink(
+                os.path.join(po_dir, name),
+                os.path.join(temp_dir, "data", "po", name),
+            )
 
 
 class RunProfileOnUnbuiltTreeTest(SlowTestCase):
-  """在没有生成物的仓库目录里运行 run_profile"""
+    """在没有生成物的仓库目录里运行 run_profile"""
 
-  def test_run_profile_completes(self) -> None:
-    """脚本以退出码 0 结束，并写出 data/data.json"""
-    with tempfile.TemporaryDirectory() as temp_dir:
-      link_unbuilt_tree(temp_dir)
-      result = subprocess.run(
-          [sys.executable, "-u", "-m", "profiling.run_profile", "--ticks", "1"],
-          cwd=temp_dir,
-          stdout=subprocess.PIPE,
-          stderr=subprocess.STDOUT,
-          encoding="utf-8",
-          errors="replace",
-          timeout=CHILD_TIME_LIMIT,
-          check=False,
-      )
-      self.assertEqual(result.returncode, 0, result.stdout[-3000:])
-      self.assertTrue(
-          os.path.isfile(os.path.join(temp_dir, "data", "data.json"))
-      )
+    def test_run_profile_completes(self) -> None:
+        """脚本以退出码 0 结束，并写出 data/data.json"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            link_unbuilt_tree(temp_dir)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-u",
+                    "-m",
+                    "profiling.run_profile",
+                    "--ticks",
+                    "1",
+                ],
+                cwd=temp_dir,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                encoding="utf-8",
+                errors="replace",
+                timeout=CHILD_TIME_LIMIT,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout[-3000:])
+            self.assertTrue(
+                os.path.isfile(os.path.join(temp_dir, "data", "data.json"))
+            )

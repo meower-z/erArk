@@ -66,46 +66,48 @@ server.py 以 run_name='probe' 运行，不进入 __main__ 分支
 
 
 def write_mcp_stub(root: str) -> None:
-  """
-  在目录里写出 mcp 替身包
-  Keyword arguments:
-  root -- 目录，写完后加进子进程的 PYTHONPATH
-  Return arguments:
-  无
-  """
-  for relative_path, content in MCP_STUB_FILES.items():
-    path = os.path.join(root, relative_path)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-      f.write(content)
-
-
-class PrtsDownloaderStartImportsTest(FastTestCase):
-  """PRTS 立绘下载器的每种启动方式都能载入 server，且 server 用的下载器类就是同一方式下导入的 downloader 里的类"""
-
-  def test_every_start_way_imports_server(self) -> None:
     """
-    在各启动方式的工作目录里用子进程执行导入代码，检查退出码为 0
+    在目录里写出 mcp 替身包
     Keyword arguments:
-    无
+    root -- 目录，写完后加进子进程的 PYTHONPATH
     Return arguments:
     无
     """
-    with tempfile.TemporaryDirectory() as stub_root:
-      write_mcp_stub(stub_root)
-      env = dict(os.environ, PYTHONPATH=stub_root, PYTHONDONTWRITEBYTECODE="1")
-      for name, cwd, code in START_WAYS:
-        with self.subTest(way=name):
-          result = subprocess.run(
-              [sys.executable, "-c", code],
-              cwd=cwd,
-              env=env,
-              stdin=subprocess.DEVNULL,
-              capture_output=True,
-              text=True,
-              encoding="utf-8",
-              errors="replace",
-              timeout=60,
-              check=False,
-          )
-          self.assertEqual(result.returncode, 0, result.stderr)
+    for relative_path, content in MCP_STUB_FILES.items():
+        path = os.path.join(root, relative_path)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+
+
+class PrtsDownloaderStartImportsTest(FastTestCase):
+    """PRTS 立绘下载器的每种启动方式都能载入 server，且 server 用的下载器类就是同一方式下导入的 downloader 里的类"""
+
+    def test_every_start_way_imports_server(self) -> None:
+        """
+        在各启动方式的工作目录里用子进程执行导入代码，检查退出码为 0
+        Keyword arguments:
+        无
+        Return arguments:
+        无
+        """
+        with tempfile.TemporaryDirectory() as stub_root:
+            write_mcp_stub(stub_root)
+            env = dict(
+                os.environ, PYTHONPATH=stub_root, PYTHONDONTWRITEBYTECODE="1"
+            )
+            for name, cwd, code in START_WAYS:
+                with self.subTest(way=name):
+                    result = subprocess.run(
+                        [sys.executable, "-c", code],
+                        cwd=cwd,
+                        env=env,
+                        stdin=subprocess.DEVNULL,
+                        capture_output=True,
+                        text=True,
+                        encoding="utf-8",
+                        errors="replace",
+                        timeout=60,
+                        check=False,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stderr)

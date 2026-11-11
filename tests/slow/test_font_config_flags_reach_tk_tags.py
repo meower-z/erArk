@@ -23,81 +23,81 @@ MODIFIERS = ("bold", "underline", "italic")
 
 
 class FontConfigFlagsReachTkTagsTest(SlowTestCase):
-  """字体配置样式的标签字体带上它设为真的标志，修饰符标签与组合标签带上名字里的修饰词"""
+    """字体配置样式的标签字体带上它设为真的标志，修饰符标签与组合标签带上名字里的修饰词"""
 
-  def setUp(self) -> None:
-    """
-    设好时限，载入游戏，接上 Tk 文本框，照启动流程注册全部样式
-    Keyword arguments:
-    无
-    Return arguments:
-    无
-    """
-    signal.signal(signal.SIGALRM, self._time_up)
-    signal.alarm(self.time_limit)
-    remove_parent_guard()
-    self.world = FullWorld.load()
-    self.cache = self.world.cache
-    from Script.Core import io_init
+    def setUp(self) -> None:
+        """
+        设好时限，载入游戏，接上 Tk 文本框，照启动流程注册全部样式
+        Keyword arguments:
+        无
+        Return arguments:
+        无
+        """
+        signal.signal(signal.SIGALRM, self._time_up)
+        signal.alarm(self.time_limit)
+        remove_parent_guard()
+        self.world = FullWorld.load()
+        self.cache = self.world.cache
+        from Script.Core import io_init
 
-    try:
-      from Script.Core import main_frame
-    except tkinter.TclError as error:
-      self.skipTest(f"没有可用的显示，无法创建 Tk 窗口：{error}")
-    messages: queue.Queue[str] = queue.Queue()
+        try:
+            from Script.Core import main_frame
+        except tkinter.TclError as error:
+            self.skipTest(f"没有可用的显示，无法创建 Tk 窗口：{error}")
+        messages: queue.Queue[str] = queue.Queue()
 
-    def put_queue(message: str) -> None:
-      """
-      替换 io_init.put_queue：把消息放进接给 main_frame 的队列
-      Keyword arguments:
-      message -- 推送的信息
-      Return arguments:
-      无
-      """
-      messages.put_nowait(message)
+        def put_queue(message: str) -> None:
+            """
+            替换 io_init.put_queue：把消息放进接给 main_frame 的队列
+            Keyword arguments:
+            message -- 推送的信息
+            Return arguments:
+            无
+            """
+            messages.put_nowait(message)
 
-    io_init.put_queue = put_queue
-    main_frame.bind_queue(messages)
-    io_init.init_style()
-    main_frame.read_queue()
-    self.textbox = main_frame.textbox
+        io_init.put_queue = put_queue
+        main_frame.bind_queue(messages)
+        io_init.init_style()
+        main_frame.read_queue()
+        self.textbox = main_frame.textbox
 
-  def font_modifiers(self, tag: str) -> set[str]:
-    """
-    取文本框标签的字体里的修饰词
-    Keyword arguments:
-    tag -- 标签名
-    Return arguments:
-    set[str] -- 字体选项里出现的 MODIFIERS 中的词
-    """
-    font = self.textbox.tag_cget(tag, "font")
-    return set(self.textbox.tk.splitlist(font)) & set(MODIFIERS)
+    def font_modifiers(self, tag: str) -> set[str]:
+        """
+        取文本框标签的字体里的修饰词
+        Keyword arguments:
+        tag -- 标签名
+        Return arguments:
+        set[str] -- 字体选项里出现的 MODIFIERS 中的词
+        """
+        font = self.textbox.tag_cget(tag, "font")
+        return set(self.textbox.tk.splitlist(font)) & set(MODIFIERS)
 
-  def test_config_style_tags(self) -> None:
-    """带修饰词的字体配置样式标签，正是设了标志的样式，各带它设为真的标志；至少有一个样式设了标志"""
-    from Script.Config import game_config
+    def test_config_style_tags(self) -> None:
+        """带修饰词的字体配置样式标签，正是设了标志的样式，各带它设为真的标志；至少有一个样式设了标志"""
+        from Script.Config import game_config
 
-    expected: dict[tuple[int, str], set[str]] = {}
-    actual: dict[tuple[int, str], set[str]] = {}
-    for cid, style in game_config.config_font.items():
-      expected[cid, style.name] = {
-          name for name in MODIFIERS if getattr(style, name)
-      }
-      actual[cid, style.name] = self.font_modifiers(style.name)
-    flagged = {key: names for key, names in expected.items() if names}
-    self.assertTrue(flagged, "字体配置里没有设了标志的样式")
-    self.assertEqual(
-        {key: names for key, names in actual.items() if names}, flagged
-    )
+        expected: dict[tuple[int, str], set[str]] = {}
+        actual: dict[tuple[int, str], set[str]] = {}
+        for cid, style in game_config.config_font.items():
+            expected[cid, style.name] = {
+                name for name in MODIFIERS if getattr(style, name)
+            }
+            actual[cid, style.name] = self.font_modifiers(style.name)
+        flagged = {key: names for key, names in expected.items() if names}
+        self.assertTrue(flagged, "字体配置里没有设了标志的样式")
+        self.assertEqual(
+            {key: names for key, names in actual.items() if names}, flagged
+        )
 
-  def test_modifier_tags(self) -> None:
-    """三个修饰符标签与每个样式的修饰符组合标签（样式名_修饰词…）各带名字里的修饰词"""
-    from Script.Config import game_config
+    def test_modifier_tags(self) -> None:
+        """三个修饰符标签与每个样式的修饰符组合标签（样式名_修饰词…）各带名字里的修饰词"""
+        from Script.Config import game_config
 
-    expected: dict[str, set[str]] = {name: {name} for name in MODIFIERS}
-    for base in game_config.config_font_data:
-      for count in range(1, len(MODIFIERS) + 1):
-        for combo in combinations(MODIFIERS, count):
-          expected[base + "_" + "_".join(combo)] = set(combo)
-    actual = {tag: self.font_modifiers(tag) for tag in expected}
-    self.assertEqual(actual, expected)
+        expected: dict[str, set[str]] = {name: {name} for name in MODIFIERS}
+        for base in game_config.config_font_data:
+            for count in range(1, len(MODIFIERS) + 1):
+                for combo in combinations(MODIFIERS, count):
+                    expected[base + "_" + "_".join(combo)] = set(combo)
+        actual = {tag: self.font_modifiers(tag) for tag in expected}
+        self.assertEqual(actual, expected)

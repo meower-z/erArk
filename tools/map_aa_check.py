@@ -47,51 +47,51 @@ CHECK_SIZES = [12, 14, 16, 18, 20, 22, 24, 26, 30, 40]
 
 
 def get_current_font_size() -> int:
-  """
-  按 Script/Core/main_frame.py:248 的算法反算当前实际使用的字号
-  Keyword arguments:
-  无
-  Return arguments:
-  int -- 当前字号
-  """
-  cfg = normal_config.config_normal
-  return int(cfg.window_width / cfg.text_width) * 2
+    """
+    按 Script/Core/main_frame.py:248 的算法反算当前实际使用的字号
+    Keyword arguments:
+    无
+    Return arguments:
+    int -- 当前字号
+    """
+    cfg = normal_config.config_normal
+    return int(cfg.window_width / cfg.text_width) * 2
 
 
 def load_map_lines(map_name: str) -> list[str]:
-  """
-  读取指定地图的 AA 文本并剥掉 mapbutton 标签
-  Keyword arguments:
-  map_name -- 地图目录名，如 "训练"
-  Return arguments:
-  List[str] -- 剥标签并去掉行尾空白后的各行文本（与游戏内解析结果一致）
-  """
-  path = os.path.join(MAP_ROOT, map_name, "Map")
-  raw = open(path, encoding="utf-8").read()
-  # 游戏侧 map_config.py:243 会对每行做 rstrip，这里保持一致
-  return [
-      re.sub(r"</?mapbutton>", "", line).rstrip() for line in raw.split("\n")
-  ]
+    """
+    读取指定地图的 AA 文本并剥掉 mapbutton 标签
+    Keyword arguments:
+    map_name -- 地图目录名，如 "训练"
+    Return arguments:
+    List[str] -- 剥标签并去掉行尾空白后的各行文本（与游戏内解析结果一致）
+    """
+    path = os.path.join(MAP_ROOT, map_name, "Map")
+    raw = open(path, encoding="utf-8").read()
+    # 游戏侧 map_config.py:243 会对每行做 rstrip，这里保持一致
+    return [
+        re.sub(r"</?mapbutton>", "", line).rstrip() for line in raw.split("\n")
+    ]
 
 
 def measure_line(
     font: tkinter.font.Font, line: str
 ) -> tuple[int, tuple[int, ...]]:
-  """
-  计算一行文本的总像素宽度与其中各竖墙的像素位置
-  Keyword arguments:
-  font -- 已创建的 Tk 字体对象
-  line -- 单行文本（已剥标签）
-  Return arguments:
-  Tuple[int, Tuple[int, ...]] -- (该行总像素宽, 各竖墙的起始像素位置元组)
-  """
-  x = 0
-  positions = []
-  for char in line:
-    if char in WALL_CHARS:
-      positions.append(x)
-    x += font.measure(char)
-  return x, tuple(positions)
+    """
+    计算一行文本的总像素宽度与其中各竖墙的像素位置
+    Keyword arguments:
+    font -- 已创建的 Tk 字体对象
+    line -- 单行文本（已剥标签）
+    Return arguments:
+    Tuple[int, Tuple[int, ...]] -- (该行总像素宽, 各竖墙的起始像素位置元组)
+    """
+    x = 0
+    positions = []
+    for char in line:
+        if char in WALL_CHARS:
+            positions.append(x)
+        x += font.measure(char)
+    return x, tuple(positions)
 
 
 def check_map(
@@ -100,158 +100,162 @@ def check_map(
     tolerance: int,
     verbose: bool,
 ) -> tuple[int, list[str]]:
-  """
-  校验单张地图在各字号下的像素对齐情况
-  Keyword arguments:
-  map_name -- 地图目录名
-  fonts -- 字号到 Tk 字体对象的映射
-  tolerance -- 允许的像素容差
-  verbose -- 是否打印每个字号的明细
-  Return arguments:
-  Tuple[int, List[str]] -- (最大错位像素数, 问题描述列表)
-  """
-  lines = [line for line in load_map_lines(map_name) if line]
-  if not lines:
-    return 0, ["地图为空"]
+    """
+    校验单张地图在各字号下的像素对齐情况
+    Keyword arguments:
+    map_name -- 地图目录名
+    fonts -- 字号到 Tk 字体对象的映射
+    tolerance -- 允许的像素容差
+    verbose -- 是否打印每个字号的明细
+    Return arguments:
+    Tuple[int, List[str]] -- (最大错位像素数, 问题描述列表)
+    """
+    lines = [line for line in load_map_lines(map_name) if line]
+    if not lines:
+        return 0, ["地图为空"]
 
-  worst = 0
-  problems = []
-  for size in sorted(fonts):
-    font = fonts[size]
-    widths = []
-    # 按"这一行有几堵墙"分组，只有结构相同的行才有可比性
-    by_wall_count: dict[int, list[tuple[int, tuple[int, ...]]]] = {}
-    for idx, line in enumerate(lines):
-      width, positions = measure_line(font, line)
-      # 完全没有竖墙的行（纯标签行、纯装饰行）不参与对齐校验
-      if not positions:
-        continue
-      widths.append(width)
-      by_wall_count.setdefault(len(positions), []).append((idx, positions))
+    worst = 0
+    problems = []
+    for size in sorted(fonts):
+        font = fonts[size]
+        widths = []
+        # 按"这一行有几堵墙"分组，只有结构相同的行才有可比性
+        by_wall_count: dict[int, list[tuple[int, tuple[int, ...]]]] = {}
+        for idx, line in enumerate(lines):
+            width, positions = measure_line(font, line)
+            # 完全没有竖墙的行（纯标签行、纯装饰行）不参与对齐校验
+            if not positions:
+                continue
+            widths.append(width)
+            by_wall_count.setdefault(len(positions), []).append(
+                (idx, positions)
+            )
 
-    if not widths:
-      continue
+        if not widths:
+            continue
 
-    width_gap = max(widths) - min(widths)
-    worst = max(worst, width_gap)
-    if width_gap > tolerance:
-      problems.append(
-          f"字号{size}：竖墙行总宽相差 {width_gap}px（{min(widths)}~{max(widths)}）"
-      )
+        width_gap = max(widths) - min(widths)
+        worst = max(worst, width_gap)
+        if width_gap > tolerance:
+            problems.append(
+                f"字号{size}：竖墙行总宽相差 {width_gap}px（{min(widths)}~{max(widths)}）"
+            )
 
-    # 同结构行的每一堵墙都应落在同一像素位置
-    for wall_count, group in sorted(by_wall_count.items()):
-      for col in range(wall_count):
-        xs = [positions[col] for _, positions in group]
-        gap = max(xs) - min(xs)
-        worst = max(worst, gap)
-        if gap > tolerance:
-          rows = ", ".join(f"L{idx + 1:02d}" for idx, _ in group)
-          problems.append(
-              f"字号{size}：{wall_count} 堵墙的行（{rows}）第 {col + 1} 堵墙位置相差 {gap}px"
-          )
+        # 同结构行的每一堵墙都应落在同一像素位置
+        for wall_count, group in sorted(by_wall_count.items()):
+            for col in range(wall_count):
+                xs = [positions[col] for _, positions in group]
+                gap = max(xs) - min(xs)
+                worst = max(worst, gap)
+                if gap > tolerance:
+                    rows = ", ".join(f"L{idx + 1:02d}" for idx, _ in group)
+                    problems.append(
+                        f"字号{size}：{wall_count} 堵墙的行（{rows}）第 {col + 1} 堵墙位置相差 {gap}px"
+                    )
 
-    if verbose:
-      print(f"    字号 {size:2d}：竖墙行总宽 {sorted(set(widths))} px")
+        if verbose:
+            print(f"    字号 {size:2d}：竖墙行总宽 {sorted(set(widths))} px")
 
-  return worst, problems
+    return worst, problems
 
 
 def main() -> None:
-  """
-  命令行入口：解析参数并逐张校验地图
-  Keyword arguments:
-  无
-  Return arguments:
-  无（通过 sys.exit 返回退出码）
-  """
-  args = sys.argv[1:]
-  tolerance = 0
-  list_bad = False
-  targets = []
-  i = 0
-  while i < len(args):
-    if args[i] == "--tol":
-      tolerance = int(args[i + 1])
-      i += 2
-    elif args[i] == "--list-bad":
-      list_bad = True
-      i += 1
+    """
+    命令行入口：解析参数并逐张校验地图
+    Keyword arguments:
+    无
+    Return arguments:
+    无（通过 sys.exit 返回退出码）
+    """
+    args = sys.argv[1:]
+    tolerance = 0
+    list_bad = False
+    targets = []
+    i = 0
+    while i < len(args):
+        if args[i] == "--tol":
+            tolerance = int(args[i + 1])
+            i += 2
+        elif args[i] == "--list-bad":
+            list_bad = True
+            i += 1
+        else:
+            targets.append(args[i])
+            i += 1
+
+    normal_config.init_normal_config()
+    cfg = normal_config.config_normal
+    cur_size = get_current_font_size()
+
+    root = tkinter.Tk()
+    root.withdraw()
+    fonts = {
+        size: tkinter.font.Font(family=cfg.font, size=size)
+        for size in CHECK_SIZES
+    }
+
+    unit = fonts[cur_size].measure("═")
+    ascii_unit = fonts[cur_size].measure(" ")
+    print(
+        f"字体={cfg.font}  当前字号={cur_size}（由 window_width={cfg.window_width} / text_width={cfg.text_width} 反算）"
+    )
+    print(
+        "当前字号下：框线 1U={}px，ASCII 空格={}px {}".format(
+            unit,
+            ascii_unit,
+            (
+                "（两族同宽，混用不会漂移）"
+                if unit == ascii_unit
+                else "（两族不同宽，混用会逐字符漂移）"
+            ),
+        )
+    )
+    print(f"容差={tolerance}px，校验字号={CHECK_SIZES}")
+    print()
+
+    if not targets:
+        targets = sorted(
+            d
+            for d in os.listdir(MAP_ROOT)
+            if os.path.isfile(os.path.join(MAP_ROOT, d, "Map"))
+        )
+
+    results = []
+    failed = 0
+    for name in targets:
+        worst, problems = check_map(
+            name, fonts, tolerance, verbose=not list_bad and len(targets) == 1
+        )
+        results.append((worst, name, problems))
+        if problems:
+            failed += 1
+
+    if list_bad:
+        print("{:<10} {:>10}  {}".format("地图", "最大错位", "状态"))
+        for worst, name, problems in sorted(results, reverse=True):
+            print(
+                "{:<10} {:8d}px  {}".format(
+                    name, worst, "超出容差" if problems else "通过"
+                )
+            )
     else:
-      targets.append(args[i])
-      i += 1
+        for worst, name, problems in results:
+            if problems:
+                print(f"[FAIL] {name}  最大错位 {worst}px")
+                for p in problems[:6]:
+                    print(f"         {p}")
+                if len(problems) > 6:
+                    print(f"         ...另有 {len(problems) - 6} 条")
+            else:
+                print(f"[OK]   {name}  最大错位 {worst}px")
 
-  normal_config.init_normal_config()
-  cfg = normal_config.config_normal
-  cur_size = get_current_font_size()
-
-  root = tkinter.Tk()
-  root.withdraw()
-  fonts = {
-      size: tkinter.font.Font(family=cfg.font, size=size)
-      for size in CHECK_SIZES
-  }
-
-  unit = fonts[cur_size].measure("═")
-  ascii_unit = fonts[cur_size].measure(" ")
-  print(
-      f"字体={cfg.font}  当前字号={cur_size}（由 window_width={cfg.window_width} / text_width={cfg.text_width} 反算）"
-  )
-  print(
-      "当前字号下：框线 1U={}px，ASCII 空格={}px {}".format(
-          unit,
-          ascii_unit,
-          "（两族同宽，混用不会漂移）"
-          if unit == ascii_unit
-          else "（两族不同宽，混用会逐字符漂移）",
-      )
-  )
-  print(f"容差={tolerance}px，校验字号={CHECK_SIZES}")
-  print()
-
-  if not targets:
-    targets = sorted(
-        d
-        for d in os.listdir(MAP_ROOT)
-        if os.path.isfile(os.path.join(MAP_ROOT, d, "Map"))
+    print()
+    print(
+        f"结果：{len(results) - failed} / {len(results)} 张地图在 {tolerance}px 容差内通过"
     )
-
-  results = []
-  failed = 0
-  for name in targets:
-    worst, problems = check_map(
-        name, fonts, tolerance, verbose=not list_bad and len(targets) == 1
-    )
-    results.append((worst, name, problems))
-    if problems:
-      failed += 1
-
-  if list_bad:
-    print("{:<10} {:>10}  {}".format("地图", "最大错位", "状态"))
-    for worst, name, problems in sorted(results, reverse=True):
-      print(
-          "{:<10} {:8d}px  {}".format(
-              name, worst, "超出容差" if problems else "通过"
-          )
-      )
-  else:
-    for worst, name, problems in results:
-      if problems:
-        print(f"[FAIL] {name}  最大错位 {worst}px")
-        for p in problems[:6]:
-          print(f"         {p}")
-        if len(problems) > 6:
-          print(f"         ...另有 {len(problems) - 6} 条")
-      else:
-        print(f"[OK]   {name}  最大错位 {worst}px")
-
-  print()
-  print(
-      f"结果：{len(results) - failed} / {len(results)} 张地图在 {tolerance}px 容差内通过"
-  )
-  root.destroy()
-  sys.exit(1 if failed else 0)
+    root.destroy()
+    sys.exit(1 if failed else 0)
 
 
 if __name__ == "__main__":
-  main()
+    main()

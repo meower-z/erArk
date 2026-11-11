@@ -3,7 +3,32 @@
 
 import subprocess
 
-from _bootstrap import ROOT, _, check, classroom_path, clear_schedules, constant, constant_promise, education_constant, finish, game_config, game_type, growth_event_handle, growth_handle, handle_premise, make_character, open_all_classroom, os, period_time, pl, remove_character, schedule_handle, section, set_time, sys
+from _bootstrap import (
+    ROOT,
+    _,
+    check,
+    classroom_path,
+    clear_schedules,
+    constant,
+    constant_promise,
+    education_constant,
+    finish,
+    game_config,
+    game_type,
+    growth_event_handle,
+    growth_handle,
+    handle_premise,
+    make_character,
+    open_all_classroom,
+    os,
+    period_time,
+    pl,
+    remove_character,
+    schedule_handle,
+    section,
+    set_time,
+    sys,
+)
 import csv
 from Script.System.Pregnancy_System import pregnancy_constant
 import ast
@@ -63,45 +88,45 @@ talk_list = [
 check("教育相关口上总量 ≥ 1168 条", len(talk_list) >= 1168, len(talk_list))
 count_by_behavior: dict[str, int] = {}
 for talk in talk_list:
-  count_by_behavior[talk.behavior_id] = (
-      count_by_behavior.get(talk.behavior_id, 0) + 1
-  )
+    count_by_behavior[talk.behavior_id] = (
+        count_by_behavior.get(talk.behavior_id, 0) + 1
+    )
 for behavior in sorted(EDU_BEHAVIOR):
-  check(
-      f"{behavior} 有口上（{count_by_behavior.get(behavior, 0)} 条）",
-      count_by_behavior.get(behavior, 0) > 0,
-  )
+    check(
+        f"{behavior} 有口上（{count_by_behavior.get(behavior, 0)} 条）",
+        count_by_behavior.get(behavior, 0) > 0,
+    )
 check("翘课被抓有 ≥ 8 条", count_by_behavior.get("caught_skip_class", 0) >= 8)
 for behavior in ("teach", "attent_class", "self_study", "show_off_study"):
-  # M4（Plan 31）：炫耀只在科目升级成功后出，男性专属的腰技女儿永远升不上去，炫耀口上按女儿可学的 17 门覆盖；授课 / 听课 / 自习照旧 18 门
-  subject_list = (
-      E.FEMALE_SUBJECT_LIST
-      if behavior == "show_off_study"
-      else E.SUBJECT_ABILITY_LIST
-  )
-  # 性技科目只有授课口上，听课 / 自习 / 炫耀的覆盖只查其余科目
-  if behavior != "teach":
-    subject_list = [
-        ability_id
-        for ability_id in subject_list
-        if ability_id not in E.SEX_SKILL_SUBJECT_SET
-    ]
-  subject_hit = set()
-  for talk in talk_list:
-    if talk.behavior_id != behavior:
-      continue
-    premise = str(talk.premise)
-    for ability_id in subject_list:
-      if (
-          f"Course|{ability_id}_" in premise
-          or f"CourseShowOff|{ability_id}_" in premise
-      ):
-        subject_hit.add(ability_id)
-  check(
-      f"{behavior} 覆盖全部 {len(subject_list)} 门科目",
-      subject_hit == set(subject_list),
-      sorted(set(subject_list) - subject_hit),
-  )
+    # M4（Plan 31）：炫耀只在科目升级成功后出，男性专属的腰技女儿永远升不上去，炫耀口上按女儿可学的 17 门覆盖；授课 / 听课 / 自习照旧 18 门
+    subject_list = (
+        E.FEMALE_SUBJECT_LIST
+        if behavior == "show_off_study"
+        else E.SUBJECT_ABILITY_LIST
+    )
+    # 性技科目只有授课口上，听课 / 自习 / 炫耀的覆盖只查其余科目
+    if behavior != "teach":
+        subject_list = [
+            ability_id
+            for ability_id in subject_list
+            if ability_id not in E.SEX_SKILL_SUBJECT_SET
+        ]
+    subject_hit = set()
+    for talk in talk_list:
+        if talk.behavior_id != behavior:
+            continue
+        premise = str(talk.premise)
+        for ability_id in subject_list:
+            if (
+                f"Course|{ability_id}_" in premise
+                or f"CourseShowOff|{ability_id}_" in premise
+            ):
+                subject_hit.add(ability_id)
+    check(
+        f"{behavior} 覆盖全部 {len(subject_list)} 门科目",
+        subject_hit == set(subject_list),
+        sorted(set(subject_list) - subject_hit),
+    )
 male_only_show_off = [
     talk.cid
     for talk in talk_list
@@ -145,27 +170,27 @@ bad_token: list[tuple[str, ...]] = []
 seen_token = set()
 set_time(period_time(0))
 for talk in talk_list:
-  premise_text = str(getattr(talk, "premise", ""))
-  if not premise_text or premise_text == "0":
-    bad_premise.append(talk.cid)
-    continue
-  for raw_token in premise_text.split("&"):
-    token = raw_token.strip()
-    if not token:
-      continue
-    if token in seen_token:
-      continue
-    seen_token.add(token)
-    if token in constant.handle_premise_data:
-      continue
-    if not token.startswith("CVP_"):
-      bad_token.append((talk.cid, token))
-      continue
-    try:
-      handle_premise.handle_premise(token, 201)
-      handle_premise.handle_premise(token, 0)
-    except Exception as error:
-      bad_token.append((talk.cid, token, repr(error)))
+    premise_text = str(getattr(talk, "premise", ""))
+    if not premise_text or premise_text == "0":
+        bad_premise.append(talk.cid)
+        continue
+    for raw_token in premise_text.split("&"):
+        token = raw_token.strip()
+        if not token:
+            continue
+        if token in seen_token:
+            continue
+        seen_token.add(token)
+        if token in constant.handle_premise_data:
+            continue
+        if not token.startswith("CVP_"):
+            bad_token.append((talk.cid, token))
+            continue
+        try:
+            handle_premise.handle_premise(token, 201)
+            handle_premise.handle_premise(token, 0)
+        except Exception as error:
+            bad_token.append((talk.cid, token, repr(error)))
 check("没有前提为空的口上", not bad_premise, bad_premise[:10])
 check("全部前提 token 已注册或可解析", not bad_token, bad_token[:10])
 check(f"不同前提 token 共 {len(seen_token)} 个", len(seen_token) > 100)
@@ -173,9 +198,9 @@ check(f"不同前提 token 共 {len(seen_token)} 个", len(seen_token) > 100)
 section("正文卫生")
 bad_context = []
 for talk in talk_list:
-  context = str(getattr(talk, "context", ""))
-  if not context.strip() or "{}" in context or "{ Name}" in context:
-    bad_context.append(talk.cid)
+    context = str(getattr(talk, "context", ""))
+    if not context.strip() or "{}" in context or "{ Name}" in context:
+        bad_context.append(talk.cid)
 check("正文非空且无裸花括号", not bad_context, bad_context[:10])
 check(
     "正文占位符只用已知的几种",
@@ -231,7 +256,7 @@ with open(
     encoding="utf-8",
     newline="",
 ) as _event_file:
-  _event_rows = list(csv.reader(_event_file))
+    _event_rows = list(csv.reader(_event_file))
 _row_9 = dict(
     zip(_event_rows[0], next(r for r in _event_rows[5:] if r and r[0] == "9"))
 )
@@ -293,15 +318,15 @@ EVENT_PREMISE_EXPECT = {
 }
 """ Plan 31 方案 §4.3 改过前提的事件：发现编号 -> {事件uid: 新前提串}（其后 Plan 32 又改过的按现值写） """
 for finding, expect_dict in EVENT_PREMISE_EXPECT.items():
-  for uid, premise_text in expect_dict.items():
-    now_premise = game_config.config_official_event.get(uid, {}).get(
-        "premise", ""
-    )
-    check(
-        f"{finding} {uid} 的前提按方案 §4.3 改为 {premise_text}",
-        now_premise == premise_text,
-        now_premise,
-    )
+    for uid, premise_text in expect_dict.items():
+        now_premise = game_config.config_official_event.get(uid, {}).get(
+            "premise", ""
+        )
+        check(
+            f"{finding} {uid} 的前提按方案 §4.3 改为 {premise_text}",
+            now_premise == premise_text,
+            now_premise,
+        )
 check(
     "L11 / L13 事件表用到的 6 个新前提已注册（处理函数在 handle_premise_other，名字取自 constant_promise）",
     all(name in constant.handle_premise_data for name in NEW_PREMISE_LIST),
@@ -318,18 +343,18 @@ premise_name_set = {
 }
 bad_event_token: list[tuple[str, ...]] = []
 for expect_dict in EVENT_PREMISE_EXPECT.values():
-  for uid, premise_text in expect_dict.items():
-    for token in premise_text.split("&"):
-      if token.startswith("CVP_"):
-        try:
-          handle_premise.handle_premise(token, 201)
-        except Exception as error:
-          bad_event_token.append((uid, token, repr(error)))
-      elif (
-          token not in premise_name_set
-          or token not in constant.handle_premise_data
-      ):
-        bad_event_token.append((uid, token))
+    for uid, premise_text in expect_dict.items():
+        for token in premise_text.split("&"):
+            if token.startswith("CVP_"):
+                try:
+                    handle_premise.handle_premise(token, 201)
+                except Exception as error:
+                    bad_event_token.append((uid, token, repr(error)))
+            elif (
+                token not in premise_name_set
+                or token not in constant.handle_premise_data
+            ):
+                bad_event_token.append((uid, token))
 check(
     "L10 / L11 / L13 改过的事件前提逐个 token 校验：前提名与 constant_promise 拼写一致且已注册，CVP 可解析",
     not bad_event_token,
@@ -340,7 +365,7 @@ with open(
     encoding="utf-8",
     newline="",
 ) as _event_file:
-  _loli_rows = list(csv.reader(_event_file))
+    _loli_rows = list(csv.reader(_event_file))
 _loli_row = {
     r[0]: dict(zip(_loli_rows[0], r, strict=False))
     for r in _loli_rows[5:]
@@ -423,7 +448,7 @@ with open(
     encoding="utf-8",
     newline="",
 ) as _event_file:
-  _common_rows = list(csv.reader(_event_file))
+    _common_rows = list(csv.reader(_event_file))
 _common_row = {
     r[0]: dict(zip(_common_rows[0], r, strict=False))
     for r in _common_rows[5:]
@@ -450,7 +475,7 @@ check(
 )
 _checker = official_event_check.Checker()
 for _cid in ("1", "2", "59", "60"):
-  _checker.check_row("通用.csv", 0, dict(_common_row[_cid]), set(), set())
+    _checker.check_row("通用.csv", 0, dict(_common_row[_cid]), set(), set())
 check(
     "M2 对照：成年结算显式推入的通用 1 / 2 / 59 / 60 放在成年桶里不报错",
     _checker.error_list == [],
@@ -488,32 +513,35 @@ section("Plan 31 口上对齐")
 
 
 def talk_premise(talk_cid: str) -> str:
-  """
-  取一条口上的前提串（口上的 cid 在构建时拼成「上级目录名_文件名 + cid」，如 daily_check_report_card1014，见 buildconfig.build_csv_config）
-  Keyword arguments:
-  talk_cid -- 口上cid
-  Return arguments:
-  str -- 前提串，没有这条口上时为空串
-  """
-  talk_data = game_config.config_talk.get(talk_cid)
-  return str(getattr(talk_data, "premise", "")) if talk_data is not None else ""
+    """
+    取一条口上的前提串（口上的 cid 在构建时拼成「上级目录名_文件名 + cid」，如 daily_check_report_card1014，见 buildconfig.build_csv_config）
+    Keyword arguments:
+    talk_cid -- 口上cid
+    Return arguments:
+    str -- 前提串，没有这条口上时为空串
+    """
+    talk_data = game_config.config_talk.get(talk_cid)
+    return (
+        str(getattr(talk_data, "premise", "")) if talk_data is not None else ""
+    )
 
 
 def premise_all(premise_text: str, character_id: int) -> bool:
-  """
-  逐个 token 判一串 & 连接的前提，全部成立才算成立（与口上 / 事件的前提口径一致）
-  Keyword arguments:
-  premise_text -- & 连接的前提串
-  character_id -- 求值的角色id
-  Return arguments:
-  bool -- 是否全部成立；前提串为空时为 False，取不到口上时不会误判成立
-  """
-  token_list = [
-      token.strip() for token in premise_text.split("&") if token.strip()
-  ]
-  return bool(token_list) and all(
-      handle_premise.handle_premise(token, character_id) for token in token_list
-  )
+    """
+    逐个 token 判一串 & 连接的前提，全部成立才算成立（与口上 / 事件的前提口径一致）
+    Keyword arguments:
+    premise_text -- & 连接的前提串
+    character_id -- 求值的角色id
+    Return arguments:
+    bool -- 是否全部成立；前提串为空时为 False，取不到口上时不会误判成立
+    """
+    token_list = [
+        token.strip() for token in premise_text.split("&") if token.strip()
+    ]
+    return bool(token_list) and all(
+        handle_premise.handle_premise(token, character_id)
+        for token in token_list
+    )
 
 
 check(
@@ -596,17 +624,17 @@ check(
     placeholder_list,
 )
 for behavior in ("teach", "attent_class"):
-  with open(
-      os.path.join("data", "talk", "work", f"{behavior}.csv"),
-      encoding="utf-8",
-      newline="",
-  ) as _talk_file:
-    _talk_rows = list(csv.reader(_talk_file))
-  check(
-      f"L15 {behavior}.csv 只剩表头 5 行（正式口上在同名子目录里）",
-      len(_talk_rows) == 5,
-      len(_talk_rows),
-  )
+    with open(
+        os.path.join("data", "talk", "work", f"{behavior}.csv"),
+        encoding="utf-8",
+        newline="",
+    ) as _talk_file:
+        _talk_rows = list(csv.reader(_talk_file))
+    check(
+        f"L15 {behavior}.csv 只剩表头 5 行（正式口上在同名子目录里）",
+        len(_talk_rows) == 5,
+        len(_talk_rows),
+    )
 
 section("配置一致性")
 check(
@@ -756,7 +784,7 @@ check(
 with open(
     os.path.join("tools", "ArkEditor", "csv", "Premise.csv"), encoding="utf-8"
 ) as _premise_csv_file:
-  _premise_csv_line_list = _premise_csv_file.read().splitlines()
+    _premise_csv_line_list = _premise_csv_file.read().splitlines()
 check(
     "L11 / L13 ArkEditor 前提表已同步 6 个新前提",
     all(
@@ -775,7 +803,7 @@ check(
 
 # buildata.py 顶层会调 game_config.init()，测试进程里不能 import 它（会把配置再载一遍）：只用 ast 取出纯函数 build_promise_csv_text 单独执行
 with open("buildata.py", encoding="utf-8") as _buildata_file:
-  _buildata_tree = ast.parse(_buildata_file.read())
+    _buildata_tree = ast.parse(_buildata_file.read())
 _builder_node_list: list[ast.stmt] = [
     node
     for node in _buildata_tree.body
@@ -787,83 +815,87 @@ check(
     len(_builder_node_list) == 1,
 )
 if _builder_node_list:
-  _builder_scope: dict[str, Any] = {}
-  exec(
-      compile(
-          ast.Module(body=_builder_node_list, type_ignores=[]),
-          "buildata.py",
-          "exec",
-      ),
-      _builder_scope,
-  )
-  with open(
-      os.path.join("Script", "Core", "constant_promise.py"), encoding="utf-8"
-  ) as _promise_file:
-    _promise_line_list = _promise_file.readlines()
-  _generated_text = _builder_scope["build_promise_csv_text"](_promise_line_list)
-  # 期望值另从 constant_promise.py 直接取：常量行紧跟单行 docstring「分类 描述」时，生成器应产出「前提id,常量名,分类,描述」，
-  #    描述是 docstring 第一个空格之后的全部。按片段查而不是按行查：前面若有没带 docstring 的常量，行首会粘着别的前提（生成器的既有限制，与本条无关）
-  _expect_fragment = {}
-  _spaced_name_set = set()
-  # pyink 把超过 80 列的常量赋值折成「常量名 = (」「值」「)」三行，期望值按并回一行后的文字取
-  _joined_line_list = re.sub(
-      r'= \(\n\s*("[^"\n]*")\n\s*\)\n', r"= \1\n", "".join(_promise_line_list)
-  ).splitlines(True)
-  for _index, _line in enumerate(_joined_line_list[:-1]):
-    _doc_line = _joined_line_list[_index + 1]
-    _match = re.fullmatch(r'\s*([A-Z0-9_]+) = "([a-z0-9_]+)"\n', _line)
-    if (
-        not _match
-        or not _doc_line.endswith('"""\n')
-        or "#" in _doc_line
-        or _doc_line.count('"') != 6
-    ):
-      continue
-    _doc_text = _doc_line.strip().strip('"').strip()
-    if " " not in _doc_text:
-      continue
-    _doc_type, _doc_desc = _doc_text.split(" ", 1)
-    _expect_fragment[_match.group(2)] = (
-        f"{_match.group(2)},{_match.group(1)},{_doc_type},{_doc_desc}\n"
+    _builder_scope: dict[str, Any] = {}
+    exec(
+        compile(
+            ast.Module(body=_builder_node_list, type_ignores=[]),
+            "buildata.py",
+            "exec",
+        ),
+        _builder_scope,
     )
-    if " " in _doc_desc:
-      # 描述里本身带空格：改前按每个空格切、只取第二段，这些前提的描述都会截断
-      _spaced_name_set.add(_match.group(2))
-  _mismatch = [
-      name
-      for name in _spaced_name_set
-      if _expect_fragment[name] not in _generated_text
-  ]
-  check(
-      f"L17 生成器按第一个空格切一刀：描述里带空格的 {len(_spaced_name_set)} 个前提，生成的描述与 docstring 完全一致",
-      bool(_spaced_name_set) and not _mismatch,
-      _mismatch[:10],
-  )
-  _three_name = (
-      "self_have_sibling_child",
-      "self_mother_available",
-      "self_follow_mother",
-  )
-  check(
-      "L17 同上：同胞、母亲可跟随、跟随见学三行带着完整描述（改前截断在「（Plan」）",
-      all(
-          name in _expect_fragment and _expect_fragment[name] in _generated_text
-          for name in _three_name
-      ),
-      [_expect_fragment.get(name) for name in _three_name],
-  )
-  check(
-      "L17 同上：6 个新前提都生成了完整的行",
-      all(
-          name in _expect_fragment and _expect_fragment[name] in _generated_text
-          for name in NEW_PREMISE_LIST
-      ),
-  )
+    with open(
+        os.path.join("Script", "Core", "constant_promise.py"), encoding="utf-8"
+    ) as _promise_file:
+        _promise_line_list = _promise_file.readlines()
+    _generated_text = _builder_scope["build_promise_csv_text"](
+        _promise_line_list
+    )
+    # 期望值另从 constant_promise.py 直接取：常量行紧跟单行 docstring「分类 描述」时，生成器应产出「前提id,常量名,分类,描述」，
+    #    描述是 docstring 第一个空格之后的全部。按片段查而不是按行查：前面若有没带 docstring 的常量，行首会粘着别的前提（生成器的既有限制，与本条无关）
+    _expect_fragment = {}
+    _spaced_name_set = set()
+    # pyink 把超过 80 列的常量赋值折成「常量名 = (」「值」「)」三行，期望值按并回一行后的文字取
+    _joined_line_list = re.sub(
+        r'= \(\n\s*("[^"\n]*")\n\s*\)\n', r"= \1\n", "".join(_promise_line_list)
+    ).splitlines(True)
+    for _index, _line in enumerate(_joined_line_list[:-1]):
+        _doc_line = _joined_line_list[_index + 1]
+        _match = re.fullmatch(r'\s*([A-Z0-9_]+) = "([a-z0-9_]+)"\n', _line)
+        if (
+            not _match
+            or not _doc_line.endswith('"""\n')
+            or "#" in _doc_line
+            or _doc_line.count('"') != 6
+        ):
+            continue
+        _doc_text = _doc_line.strip().strip('"').strip()
+        if " " not in _doc_text:
+            continue
+        _doc_type, _doc_desc = _doc_text.split(" ", 1)
+        _expect_fragment[_match.group(2)] = (
+            f"{_match.group(2)},{_match.group(1)},{_doc_type},{_doc_desc}\n"
+        )
+        if " " in _doc_desc:
+            # 描述里本身带空格：改前按每个空格切、只取第二段，这些前提的描述都会截断
+            _spaced_name_set.add(_match.group(2))
+    _mismatch = [
+        name
+        for name in _spaced_name_set
+        if _expect_fragment[name] not in _generated_text
+    ]
+    check(
+        f"L17 生成器按第一个空格切一刀：描述里带空格的 {len(_spaced_name_set)} 个前提，生成的描述与 docstring 完全一致",
+        bool(_spaced_name_set) and not _mismatch,
+        _mismatch[:10],
+    )
+    _three_name = (
+        "self_have_sibling_child",
+        "self_mother_available",
+        "self_follow_mother",
+    )
+    check(
+        "L17 同上：同胞、母亲可跟随、跟随见学三行带着完整描述（改前截断在「（Plan」）",
+        all(
+            name in _expect_fragment
+            and _expect_fragment[name] in _generated_text
+            for name in _three_name
+        ),
+        [_expect_fragment.get(name) for name in _three_name],
+    )
+    check(
+        "L17 同上：6 个新前提都生成了完整的行",
+        all(
+            name in _expect_fragment
+            and _expect_fragment[name] in _generated_text
+            for name in NEW_PREMISE_LIST
+        ),
+    )
 # L18：校验工具 TEXT_DUP_LEN 的 docstring 归位
 with open(
     os.path.join("tools", "official_event_check.py"), encoding="utf-8"
 ) as _tool_file:
-  _tool_line_list = _tool_file.read().splitlines()
+    _tool_line_list = _tool_file.read().splitlines()
 _dup_index = next(
     (
         index
@@ -902,29 +934,29 @@ PLAN32_EVENT_PREMISE_EXPECT = {
     萝莉 51 的公开课前提替换掉被它蕴含的「有课」（实施复审补）：抽取权重按「配置权重 × 前提条数」算，留着被蕴含的旧前提只会平白抬权重。
     通用 5 的「非婴儿」照留：Plan 26 起写会走会说的孩子的 17 条通用事件一律显式排除婴儿（test_growth_event 锁着），实践课是新加的条件 """
 for finding, expect_dict in PLAN32_EVENT_PREMISE_EXPECT.items():
-  for uid, premise_text in expect_dict.items():
-    now_premise = game_config.config_official_event.get(uid, {}).get(
-        "premise", ""
-    )
-    check(
-        f"{finding} {uid} 的前提按 Plan 32 方案 §4.3 改为 {premise_text}",
-        now_premise == premise_text,
-        now_premise,
-    )
+    for uid, premise_text in expect_dict.items():
+        now_premise = game_config.config_official_event.get(uid, {}).get(
+            "premise", ""
+        )
+        check(
+            f"{finding} {uid} 的前提按 Plan 32 方案 §4.3 改为 {premise_text}",
+            now_premise == premise_text,
+            now_premise,
+        )
 _bad_token_32: list[tuple[str, ...]] = []
 for expect_dict in PLAN32_EVENT_PREMISE_EXPECT.values():
-  for uid, premise_text in expect_dict.items():
-    for token in premise_text.split("&"):
-      if token.startswith("CVP_"):
-        try:
-          handle_premise.handle_premise(token, 201)
-        except Exception as error:
-          _bad_token_32.append((uid, token, repr(error)))
-      elif (
-          token not in premise_name_set
-          or token not in constant.handle_premise_data
-      ):
-        _bad_token_32.append((uid, token))
+    for uid, premise_text in expect_dict.items():
+        for token in premise_text.split("&"):
+            if token.startswith("CVP_"):
+                try:
+                    handle_premise.handle_premise(token, 201)
+                except Exception as error:
+                    _bad_token_32.append((uid, token, repr(error)))
+            elif (
+                token not in premise_name_set
+                or token not in constant.handle_premise_data
+            ):
+                _bad_token_32.append((uid, token))
 check(
     "L22 / L23 / L26 改过的事件前提逐个 token 校验：前提名与 constant_promise 拼写一致且已注册（含新前提 self_have_public_course），CVP 可解析",
     not _bad_token_32,
@@ -991,9 +1023,13 @@ check(
 )
 _checker = official_event_check.Checker()
 for _cid in ("17", "18", "19"):
-  _checker.check_row(
-      "期末.csv", 0, dict(_semester_row.get(_cid, {"cid": _cid})), set(), set()
-  )
+    _checker.check_row(
+        "期末.csv",
+        0,
+        dict(_semester_row.get(_cid, {"cid": _cid})),
+        set(),
+        set(),
+    )
 check(
     "L22 校验工具：挪进期末桶的三行不报错（去掉了推送时恒为 1 的 Growth|23，选项不改能力、正文不写育儿室）",
     _checker.error_list == [],
@@ -1020,20 +1056,20 @@ check(
 )
 _daily_report_text = []
 for _file_name in ("通用", "婴儿", "幼女", "萝莉"):
-  with open(
-      os.path.join("data", "official_event", f"{_file_name}.csv"),
-      encoding="utf-8",
-      newline="",
-  ) as _event_file:
-    for _row in list(csv.reader(_event_file))[5:]:
-      # 只看养成部门的日常桶；通用.csv 里成年桶的四条不由日常派发推出
-      if (
-          len(_row) > 3
-          and _row[1] == str(E.GROWTH_EVENT_DEPARTMENT)
-          and _row[3] in {str(key) for key in _daily_sub_key_set}
-          and "成绩单" in "".join(_row)
-      ):
-        _daily_report_text.append(_file_name + _row[0])
+    with open(
+        os.path.join("data", "official_event", f"{_file_name}.csv"),
+        encoding="utf-8",
+        newline="",
+    ) as _event_file:
+        for _row in list(csv.reader(_event_file))[5:]:
+            # 只看养成部门的日常桶；通用.csv 里成年桶的四条不由日常派发推出
+            if (
+                len(_row) > 3
+                and _row[1] == str(E.GROWTH_EVENT_DEPARTMENT)
+                and _row[3] in {str(key) for key in _daily_sub_key_set}
+                and "成绩单" in "".join(_row)
+            ):
+                _daily_report_text.append(_file_name + _row[0])
 check(
     "L22 同上：日常桶的事件正文与选项都不再写成绩单",
     not _daily_report_text,
@@ -1053,43 +1089,43 @@ _growth_by_cid = {
 }
 """ 夹具孩子的养成数据：角色id -> CHILD_GROWTH """
 for _growth_cid, _growth in _growth_by_cid.items():
-  _growth.selected_course = {}
-  schedule_handle.set_selected_course(
-      _growth_cid, 0, 0, E.COURSE_TYPE_THEORY, _("理论教室一")
-  )
-  _growth.attend_class_count = 20
-  _growth.report_card_history = [{"grade": E.REPORT_GRADE_GOOD}]
-  _growth.report_card_flag = True
+    _growth.selected_course = {}
+    schedule_handle.set_selected_course(
+        _growth_cid, 0, 0, E.COURSE_TYPE_THEORY, _("理论教室一")
+    )
+    _growth.attend_class_count = 20
+    _growth.report_card_history = [{"grade": E.REPORT_GRADE_GOOD}]
+    _growth.report_card_flag = True
 
 
 def event_premise_pass(
     uid: str, character_id: int, drop_prefix: str = ""
 ) -> bool:
-  """
-  按养成事件派发的判法求一条事件对某个孩子成不成立：先挑互动对象（同胞 / 同学），判定期间把交互对象临时指过去再判前提，不入队
-  （与 growth_event_handle.get_candidate_event_list / push_semester_event 同一条路径，只是不做随机抽取）
-  Keyword arguments:
-  uid -- 事件uid
-  character_id -- 孩子角色id
-  drop_prefix -- 判定时略去以它开头的前提（如阶段进度 CVP_A1_Growth|3_，只看其余条件），空串为不略去
-  Return arguments:
-  bool -- 前提是否成立；事件不存在为 False
-  """
-  event_data = game_config.config_official_event.get(uid)
-  if event_data is None:
-    return False
-  token_list = [
-      token
-      for token in str(event_data.get("premise", "")).split("&")
-      if token and not (drop_prefix and token.startswith(drop_prefix))
-  ]
-  partner_id = growth_event_handle.get_event_partner(uid, character_id)
-  return (
-      official_event_handle.judge_premise_pass(
-          "&".join(token_list), character_id, partner_id
-      )
-      > 0
-  )
+    """
+    按养成事件派发的判法求一条事件对某个孩子成不成立：先挑互动对象（同胞 / 同学），判定期间把交互对象临时指过去再判前提，不入队
+    （与 growth_event_handle.get_candidate_event_list / push_semester_event 同一条路径，只是不做随机抽取）
+    Keyword arguments:
+    uid -- 事件uid
+    character_id -- 孩子角色id
+    drop_prefix -- 判定时略去以它开头的前提（如阶段进度 CVP_A1_Growth|3_，只看其余条件），空串为不略去
+    Return arguments:
+    bool -- 前提是否成立；事件不存在为 False
+    """
+    event_data = game_config.config_official_event.get(uid)
+    if event_data is None:
+        return False
+    token_list = [
+        token
+        for token in str(event_data.get("premise", "")).split("&")
+        if token and not (drop_prefix and token.startswith(drop_prefix))
+    ]
+    partner_id = growth_event_handle.get_event_partner(uid, character_id)
+    return (
+        official_event_handle.judge_premise_pass(
+            "&".join(token_list), character_id, partner_id
+        )
+        > 0
+    )
 
 
 check(
@@ -1240,7 +1276,7 @@ with open(
     encoding="utf-8",
     newline="",
 ) as _target_file:
-  _target_row = {r[0]: r for r in csv.reader(_target_file) if r}
+    _target_row = {r[0]: r for r in csv.reader(_target_file) if r}
 """ target.csv 按 cid 取行（列：cid、状态机id、前提、行动类型、备注） """
 UPCOMING_TARGET = {
     "210810": ("715", "self_not_in_course_place"),
@@ -1281,11 +1317,11 @@ check(
 )
 # 收尾：还原夹具
 for _growth in _growth_by_cid.values():
-  _growth.attend_class_count = 0
-  _growth.sex_class_count = 0
-  _growth.report_card_history = []
-  _growth.report_card_flag = False
-  _growth.selected_course = {}
+    _growth.attend_class_count = 0
+    _growth.sex_class_count = 0
+    _growth.report_card_history = []
+    _growth.report_card_flag = False
+    _growth.selected_course = {}
 remove_character(202)
 clear_schedules()
 
@@ -1295,7 +1331,7 @@ section(
 with open(
     os.path.join("tools", "ArkEditor", "csv", "Effect.csv"), encoding="utf-8"
 ) as _effect_csv_file:
-  _effect_csv_line_list = _effect_csv_file.read().splitlines()
+    _effect_csv_line_list = _effect_csv_file.read().splitlines()
 _effect_line_557 = next(
     (line for line in _effect_csv_line_list if line.startswith("557,")), ""
 )

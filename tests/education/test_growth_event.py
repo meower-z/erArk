@@ -1,7 +1,36 @@
 # -*- coding: UTF-8 -*-
 """growth_event_handle：候选人、同胞与同学、事件桶、入队、注册式容量与抬头"""
 
-from _bootstrap import DEFAULT_TIME, _, cache, character_handle, check, class_ai, clear_schedules, constant, constant_promise, datetime, education_constant, finish, game_config, game_time, growth_event_handle, growth_handle, handle_premise, make_character, open_all_classroom, period_time, pl, random, remove_character, schedule_handle, schedule_template_handle, section, semester_handle, set_time
+from _bootstrap import (
+    DEFAULT_TIME,
+    _,
+    cache,
+    character_handle,
+    check,
+    class_ai,
+    clear_schedules,
+    constant,
+    constant_promise,
+    datetime,
+    education_constant,
+    finish,
+    game_config,
+    game_time,
+    growth_event_handle,
+    growth_handle,
+    handle_premise,
+    make_character,
+    open_all_classroom,
+    period_time,
+    pl,
+    random,
+    remove_character,
+    schedule_handle,
+    schedule_template_handle,
+    section,
+    semester_handle,
+    set_time,
+)
 from Script.System.Official_Event_System import official_event_handle
 from typing import Any
 from Script.System.Pregnancy_System import pregnancy_constant
@@ -132,16 +161,16 @@ check(
     sibling_uid is not None and classmate_uid is not None,
 )
 if sibling_uid:
-  check(
-      "同胞事件的互动对象是兄弟姐妹",
-      growth_event_handle.get_event_partner(sibling_uid, 201)
-      in (202, 203, 204),
-  )
+    check(
+        "同胞事件的互动对象是兄弟姐妹",
+        growth_event_handle.get_event_partner(sibling_uid, 201)
+        in (202, 203, 204),
+    )
 if classmate_uid:
-  check(
-      "同学事件的互动对象是同学",
-      growth_event_handle.get_event_partner(classmate_uid, 201) == 203,
-  )
+    check(
+        "同学事件的互动对象是同学",
+        growth_event_handle.get_event_partner(classmate_uid, 201) == 203,
+    )
 check(
     "普通事件互动对象为博士",
     growth_event_handle.get_event_partner(any_bucket[0], 201) == 0
@@ -286,10 +315,10 @@ check(
 )
 cache.rhodes_island.official_event_queue = []
 for uid in semester_bucket:
-  growth_handle.get_child_growth(202).event_history[uid] = {
-      "time": cache.game_time,
-      "choice": 0,
-  }
+    growth_handle.get_child_growth(202).event_history[uid] = {
+        "time": cache.game_time,
+        "choice": 0,
+    }
 check(
     "池子抽干时返回 False 且不入队",
     not growth_event_handle.push_semester_event(202)
@@ -404,14 +433,14 @@ _baby_uid_list = sorted(
 _error_list = []
 _option_count = 0
 for _uid in _baby_uid_list:
-  for _option in official_event_handle.get_option_list(_uid, real_baby_id, 0):
-    _option_count += 1
-    try:
-      official_event_handle.settle_official_event_option(
-          _uid, real_baby_id, 0, _option["index"]
-      )
-    except Exception as now_error:
-      _error_list.append((_uid, _option["index"], repr(now_error)))
+    for _option in official_event_handle.get_option_list(_uid, real_baby_id, 0):
+        _option_count += 1
+        try:
+            official_event_handle.settle_official_event_option(
+                _uid, real_baby_id, 0, _option["index"]
+            )
+        except Exception as now_error:
+            _error_list.append((_uid, _option["index"], repr(now_error)))
 check(
     "婴儿桶与她可抽的通用事件逐条逐选项结算，都不报错（修好之后这些事件真的会派到婴儿身上）",
     bool(_baby_uid_list) and _option_count > 0 and not _error_list,
@@ -573,7 +602,10 @@ section(
     "Plan 31 §3.11（L7）：同班同学只取幼女 / 萝莉，仍在学生岗的成年姐姐不算"
 )
 
-from Script.System.Pregnancy_System import pregnancy_constant, pregnancy_handle  # noqa: E402
+from Script.System.Pregnancy_System import (
+    pregnancy_constant,
+    pregnancy_handle,
+)  # noqa: E402
 
 clear_schedules()
 set_time(period_time(0))
@@ -712,14 +744,14 @@ check(
 
 
 def candidate_uid_set(cid: int) -> set:
-  """
-  取某个孩子此刻的候选事件 uid 集合
-  Keyword arguments:
-  cid -- 角色id
-  Return arguments:
-  set -- 候选事件的 uid 集合
-  """
-  return {one[0] for one in growth_event_handle.get_candidate_event_list(cid)}
+    """
+    取某个孩子此刻的候选事件 uid 集合
+    Keyword arguments:
+    cid -- 角色id
+    Return arguments:
+    set -- 候选事件的 uid 集合
+    """
+    return {one[0] for one in growth_event_handle.get_candidate_event_list(cid)}
 
 
 section("Plan 31 §3.14（Q4 / L11）：点名课型的事件改挂按课型查课表的前提")
@@ -761,17 +793,17 @@ check(
 )
 _added = []
 for _step_uid, _step_type, _step_target, _step_period in _loli_steps:
-  schedule_handle.set_selected_course(
-      211, 0, _step_period, _step_type, _step_target
-  )
-  _added.append(_step_uid)
-  _now = candidate_uid_set(211)
-  check(
-      f"L11 再排一格{E.COURSE_TYPE_NAME[_step_type]}：{_step_uid}进候选，还没排的课型对应的事件仍不在",
-      all(uid in _now for uid in _added)
-      and not any(uid in _now for uid in _step_uid_list if uid not in _added),
-      sorted(set(_step_uid_list) & _now),
-  )
+    schedule_handle.set_selected_course(
+        211, 0, _step_period, _step_type, _step_target
+    )
+    _added.append(_step_uid)
+    _now = candidate_uid_set(211)
+    check(
+        f"L11 再排一格{E.COURSE_TYPE_NAME[_step_type]}：{_step_uid}进候选，还没排的课型对应的事件仍不在",
+        all(uid in _now for uid in _added)
+        and not any(uid in _now for uid in _step_uid_list if uid not in _added),
+        sorted(set(_step_uid_list) & _now),
+    )
 
 section(
     "Plan 31 §3.14（Q4 / L10）：写成绩单的事件要有待查看的新成绩单；萝莉 6 读本学期出勤"
@@ -922,16 +954,17 @@ clear_schedules()
 
 
 def queue_pair_list() -> list:
-  """
-  取公务队列里每一项的 (uid, 主体角色id)
-  Keyword arguments:
-  无
-  Return arguments:
-  list -- [(uid str, 角色id int), ...]，按队列顺序
-  """
-  return [
-      (one["uid"], one["chara_id"]) for one in official_event_handle.get_queue()
-  ]
+    """
+    取公务队列里每一项的 (uid, 主体角色id)
+    Keyword arguments:
+    无
+    Return arguments:
+    list -- [(uid str, 角色id int), ...]，按队列顺序
+    """
+    return [
+        (one["uid"], one["chara_id"])
+        for one in official_event_handle.get_queue()
+    ]
 
 
 section("Plan 32 M2：生日当天，跨天结算直接把生日事件（通用 3）插到队首")
@@ -945,7 +978,7 @@ _saved_born_other = {
     for cid in (201, 202, 212)
 }
 for _cid in _saved_born_other:
-  cache.character_data[_cid].pregnancy.born_time -= datetime.timedelta(days=1)
+    cache.character_data[_cid].pregnancy.born_time -= datetime.timedelta(days=1)
 check(
     "M2 前提：萝莉 C 与成年姐姐今天都过生日",
     HP(constant_promise.Premise.SELF_BIRTHDAY_TODAY, 211)
@@ -1011,7 +1044,7 @@ check(
     < _new_day_src.find("official_event_handle.check_new_day_official_event("),
 )
 for _cid, _born_time in _saved_born_other.items():
-  cache.character_data[_cid].pregnancy.born_time = _born_time
+    cache.character_data[_cid].pregnancy.born_time = _born_time
 set_time(period_time(0))
 
 section(
@@ -1054,7 +1087,7 @@ growing = make_character(
     born_days=5,
 )
 for _uid in ("婴儿5", "通用27", "通用16", "期末1"):
-  official_event_handle.push_official_event(_uid, 215)
+    official_event_handle.push_official_event(_uid, 215)
 official_event_handle.push_official_event("婴儿5", 204)
 official_event_handle.push_official_event(loli_bucket[0], 201)
 growing.talent[101], growing.talent[102] = 0, 1
@@ -1088,7 +1121,7 @@ check(
     (_dropped, _left_215),
 )
 for _uid in (loli_bucket[0], "期末3", E.GRADUATION_EVENT_UID):
-  official_event_handle.push_official_event(_uid, 215)
+    official_event_handle.push_official_event(_uid, 215)
 growing.talent[103], growing.talent[104] = 0, 1
 _dropped = growth_event_handle.drop_stale_stage_event(215)
 _left_215 = [one[0] for one in queue_pair_list() if one[1] == 215]
@@ -1117,7 +1150,7 @@ to_loli.pregnancy.born_time = cache.game_time - datetime.timedelta(
     days=pregnancy_constant.GROW_TO_LOLI_DAY + 10
 )  # 已过长成萝莉的阈值 10 天
 for _uid in (child_bucket[0], "通用27", "通用16"):
-  official_event_handle.push_official_event(_uid, 216)
+    official_event_handle.push_official_event(_uid, 216)
 pregnancy_handle.check_grow_to_loli(216)
 check(
     "L16 幼女长成萝莉（pregnancy_handle.check_grow_to_loli）：素质已换成萝莉，幼女桶的与前提写着不派萝莉的通用 27 清掉，通用 16 照留",
@@ -1133,7 +1166,7 @@ to_girl.pregnancy.born_time = cache.game_time - datetime.timedelta(
     days=pregnancy_constant.GROW_TO_GIRL_DAY + 13
 )  # 已过成年的阈值 13 天
 for _uid in (loli_bucket[0], "通用16", "期末1", "期末3"):
-  official_event_handle.push_official_event(_uid, 217)
+    official_event_handle.push_official_event(_uid, 217)
 pregnancy_handle.check_grow_to_girl(217)
 talk.must_show_talk_check = _orig_must_show
 _left_217 = [one[0] for one in queue_pair_list() if one[1] == 217]
@@ -1178,7 +1211,7 @@ twin_b = make_character(
     219, "双胞胎妹妹", 152, daughter=True, stage=103, mother_id=102
 )
 for _twin in (twin_a, twin_b):
-  _twin.pregnancy.born_time = datetime.datetime(2025, 9, 8, 6, 0)
+    _twin.pregnancy.born_time = datetime.datetime(2025, 9, 8, 6, 0)
 _birthday_premise = game_config.config_official_event[E.BIRTHDAY_EVENT_UID].get(
     "premise", ""
 )
@@ -1251,9 +1284,9 @@ check(
 _weight_token = "CVP_A1_Weight|0_E_50"
 _weight_direct: float | str
 try:
-  _weight_direct = handle_premise.handle_premise(_weight_token, 218)
+    _weight_direct = handle_premise.handle_premise(_weight_token, 218)
 except Exception as error:
-  _weight_direct = repr(error)
+    _weight_direct = repr(error)
 check(
     "M2 judge_premise_all_pass：CVP 的 Weight|0 只管权重、跳过不判（直接当条件求值不成立：返回 0 或抛异常），同串的别的前提照判",
     (isinstance(_weight_direct, str) or not _weight_direct)
@@ -1267,28 +1300,30 @@ _high_calls: list[int] = []
 
 
 def high_5_spy(character_id: int) -> int:
-  """
-  high_5 前提的记录桩：记下被求值的主体并返回 0（若被当成条件求值，整组就判不过）
-  Keyword arguments:
-  character_id -- 角色id
-  Return arguments:
-  int -- 0
-  """
-  _high_calls.append(character_id)
-  return 0
+    """
+    high_5 前提的记录桩：记下被求值的主体并返回 0（若被当成条件求值，整组就判不过）
+    Keyword arguments:
+    character_id -- 角色id
+    Return arguments:
+    int -- 0
+    """
+    _high_calls.append(character_id)
+    return 0
 
 
 _orig_high_5 = constant.handle_premise_data.get(constant_promise.Premise.HIGH_5)
 constant.handle_premise_data[constant_promise.Premise.HIGH_5] = high_5_spy
 try:
-  _high_pass = JP(
-      constant_promise.Premise.HIGH_5 + "&" + _birthday_premise, 218
-  )
+    _high_pass = JP(
+        constant_promise.Premise.HIGH_5 + "&" + _birthday_premise, 218
+    )
 finally:
-  if _orig_high_5 is None:
-    constant.handle_premise_data.pop(constant_promise.Premise.HIGH_5, None)
-  else:
-    constant.handle_premise_data[constant_promise.Premise.HIGH_5] = _orig_high_5
+    if _orig_high_5 is None:
+        constant.handle_premise_data.pop(constant_promise.Premise.HIGH_5, None)
+    else:
+        constant.handle_premise_data[constant_promise.Premise.HIGH_5] = (
+            _orig_high_5
+        )
 check(
     "M2 judge_premise_all_pass：high_ 开头的权重前提跳过不判（high_5 已注册；换成返回 0 的记录桩后一次都没被调到，整组照样成立）",
     _orig_high_5 is not None and _high_pass is True and _high_calls == [],
@@ -1317,7 +1352,9 @@ clear_schedules()
 section(
     "Plan 32 §8.2（追加调整）：公务事件的后果不写在选项上，玩家选定、结算之后单独用一个 WaitDraw 显示"
 )
-from Script.System.Official_Event_System import official_event_panel  # noqa: E402
+from Script.System.Official_Event_System import (
+    official_event_panel,
+)  # noqa: E402
 
 cache.rhodes_island.official_event_queue = []
 set_time(period_time(0))
@@ -1362,11 +1399,11 @@ _od_order = set()
 _od_pick_list = []
 """ 每次决断（桩固定选第一个按钮）返回的选项原序号，应当等于该次显示顺序的第一项 """
 for _round in range(60):
-  _od_shuffle = official_event_panel.Official_Event_Draw(_od_queue_data, 120)
-  _od_order.add(tuple(one["index"] for one in _od_shuffle.draw_option_list))
-  _od_pick_list.append(
-      (_od_shuffle.draw(), _od_shuffle.draw_option_list[0]["index"])
-  )
+    _od_shuffle = official_event_panel.Official_Event_Draw(_od_queue_data, 120)
+    _od_order.add(tuple(one["index"] for one in _od_shuffle.draw_option_list))
+    _od_pick_list.append(
+        (_od_shuffle.draw(), _od_shuffle.draw_option_list[0]["index"])
+    )
 check(
     "界面口径4 选项顺序每次随机：连续弹出同一条事件 60 次出现了多种显示顺序，每次都不重不漏地画出原有的四个选项",
     len(_od_order) > 1
@@ -1393,10 +1430,10 @@ setattr(
     lambda self, *args, **kwargs: _od_wait.append(self.text),
 )
 try:
-  _od.draw_result(2)
-  _od.draw_result(9)
+    _od.draw_result(2)
+    _od.draw_result(9)
 finally:
-  setattr(_draw_module.WaitDraw, "draw", _orig_wait_draw)
+    setattr(_draw_module.WaitDraw, "draw", _orig_wait_draw)
 check(
     "§8.2 draw_result：选定第 2 个选项后画一个 WaitDraw，写出选了什么（选项文本）与它的后果提示；序号对不上时什么都不画",
     len(_od_wait) == 1
@@ -1416,18 +1453,18 @@ _orig_settle_option = official_event_handle.settle_official_event_option
 def od_settle_spy(
     uid: str, character_id: int, partner_id: int, option_index: int
 ) -> None:
-  """
-  记下结算发生的时刻（与 WaitDraw 比先后），再照常结算
-  Keyword arguments:
-  uid -- 事件uid
-  character_id -- 主体角色id
-  partner_id -- 互动对象角色id
-  option_index -- 选定的选项序号
-  Return arguments:
-  无
-  """
-  _od_seq.append(("settle", option_index))
-  _orig_settle_option(uid, character_id, partner_id, option_index)
+    """
+    记下结算发生的时刻（与 WaitDraw 比先后），再照常结算
+    Keyword arguments:
+    uid -- 事件uid
+    character_id -- 主体角色id
+    partner_id -- 互动对象角色id
+    option_index -- 选定的选项序号
+    Return arguments:
+    无
+    """
+    _od_seq.append(("settle", option_index))
+    _orig_settle_option(uid, character_id, partner_id, option_index)
 
 
 official_event_handle.settle_official_event_option = od_settle_spy
@@ -1437,10 +1474,10 @@ setattr(
     lambda self, *args, **kwargs: _od_seq.append(("wait", self.text)),
 )
 try:
-  official_event_panel.handle_official_event_queue(120)
+    official_event_panel.handle_official_event_queue(120)
 finally:
-  official_event_handle.settle_official_event_option = _orig_settle_option
-  setattr(_draw_module.WaitDraw, "draw", _orig_wait_draw)
+    official_event_handle.settle_official_event_option = _orig_settle_option
+    setattr(_draw_module.WaitDraw, "draw", _orig_wait_draw)
 # 选项顺序随机之后，桩选中的「画面上第一个」不再固定是原序号 1，改为按实际结算到的那一项来对照
 _od_choice = _od_seq[0][1] if _od_seq and _od_seq[0][0] == "settle" else 0
 _od_choice_tip = {
@@ -1518,41 +1555,41 @@ _orig_era_print = _test_io_init.era_print
 def title_era_print_spy(
     string: str, style: str | tuple[str, ...] = "standard", tooltip: str = ""
 ) -> None:
-  """
-  收集绘制文本的 era_print 桩（不碰 Tk）
-  Keyword arguments:
-  string -- 要绘制的文本
-  style -- 文本样式
-  tooltip -- 悬停提示
-  Return arguments:
-  无
-  """
-  _title_piece.append(string)
+    """
+    收集绘制文本的 era_print 桩（不碰 Tk）
+    Keyword arguments:
+    string -- 要绘制的文本
+    style -- 文本样式
+    tooltip -- 悬停提示
+    Return arguments:
+    无
+    """
+    _title_piece.append(string)
 
 
 def draw_title_line(title: str, width: int, count_title_width: bool) -> int:
-  """
-  画一条小标题线并量出它实际占的宽度
-  Keyword arguments:
-  title -- 标题
-  width -- 绘制宽度
-  count_title_width -- 是否把标题宽度算进总长
-  Return arguments:
-  int -- 这一行实际画出的总宽（半角宽）
-  """
-  _title_piece.clear()
-  _test_io_init.era_print = title_era_print_spy
-  try:
-    _raw_draw_module.LittleTitleLineDraw(
-        title, width, count_title_width=count_title_width
-    ).draw()
-  finally:
-    _test_io_init.era_print = _orig_era_print
-  return sum(
-      _test_text_handle.get_text_index(one)
-      for one in _title_piece
-      if one.strip()
-  )
+    """
+    画一条小标题线并量出它实际占的宽度
+    Keyword arguments:
+    title -- 标题
+    width -- 绘制宽度
+    count_title_width -- 是否把标题宽度算进总长
+    Return arguments:
+    int -- 这一行实际画出的总宽（半角宽）
+    """
+    _title_piece.clear()
+    _test_io_init.era_print = title_era_print_spy
+    try:
+        _raw_draw_module.LittleTitleLineDraw(
+            title, width, count_title_width=count_title_width
+        ).draw()
+    finally:
+        _test_io_init.era_print = _orig_era_print
+    return sum(
+        _test_text_handle.get_text_index(one)
+        for one in _title_piece
+        if one.strip()
+    )
 
 
 _title_width = draw_title_line(_title_text, 190, True)

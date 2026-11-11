@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING
 import game_type
 
 if TYPE_CHECKING:
-  from ui.item_effect_list import ItemEffectList
-  from ui.item_premise_list import ItemPremiseList
-  from ui.item_text_edit import ItemTextEdit
-  from ui.official_event_edit import DummyItemList
+    from ui.item_effect_list import ItemEffectList
+    from ui.item_premise_list import ItemPremiseList
+    from ui.item_text_edit import ItemTextEdit
+    from ui.official_event_edit import DummyItemList
 
 # 当前字体
 now_font_name: str = "等距更纱黑体 SC"

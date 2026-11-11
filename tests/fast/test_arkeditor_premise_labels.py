@@ -28,32 +28,36 @@ EDITOR_MODULES = ("load_csv", "cache_control", "game_type")
 
 
 class ArkEditorPremiseLabelTest(FastTestCase):
-  """编辑器载入 Premise.csv 后的前提说明和前提分类的测试"""
+    """编辑器载入 Premise.csv 后的前提说明和前提分类的测试"""
 
-  def test_each_row_shows_own_label(self) -> None:
-    """
-    逐行核对编辑器保存的前提说明和前提分类是否与 Premise.csv 一致
-    Keyword arguments:
-    无
-    Return arguments:
-    无
-    """
-    for name in EDITOR_MODULES:
-      self.addCleanup(sys.modules.pop, name, None)
-    with mock.patch.object(sys, "path", [EDITOR_DIR, *sys.path]):
-      load_csv = importlib.import_module("load_csv")
-      cache_control = importlib.import_module("cache_control")
-    with contextlib.chdir(EDITOR_DIR):
-      load_csv.load_config()
-      with open(load_csv.premise_path, encoding="utf-8") as premise_file:
-        rows = [row for row in csv.DictReader(premise_file) if row["cid"]]
-    for row in rows:
-      cid = row["cid"]
-      with self.subTest(cid=cid, premise_name=row["premise_name"]):
-        self.assertEqual(cache_control.premise_data[cid], row["premise"])
-        types = {
-            premise_type
-            for premise_type, cids in cache_control.premise_type_data.items()
-            if cid in cids
-        }
-        self.assertEqual(types, {row["premise_type"]})
+    def test_each_row_shows_own_label(self) -> None:
+        """
+        逐行核对编辑器保存的前提说明和前提分类是否与 Premise.csv 一致
+        Keyword arguments:
+        无
+        Return arguments:
+        无
+        """
+        for name in EDITOR_MODULES:
+            self.addCleanup(sys.modules.pop, name, None)
+        with mock.patch.object(sys, "path", [EDITOR_DIR, *sys.path]):
+            load_csv = importlib.import_module("load_csv")
+            cache_control = importlib.import_module("cache_control")
+        with contextlib.chdir(EDITOR_DIR):
+            load_csv.load_config()
+            with open(load_csv.premise_path, encoding="utf-8") as premise_file:
+                rows = [
+                    row for row in csv.DictReader(premise_file) if row["cid"]
+                ]
+        for row in rows:
+            cid = row["cid"]
+            with self.subTest(cid=cid, premise_name=row["premise_name"]):
+                self.assertEqual(
+                    cache_control.premise_data[cid], row["premise"]
+                )
+                types = {
+                    premise_type
+                    for premise_type, cids in cache_control.premise_type_data.items()
+                    if cid in cids
+                }
+                self.assertEqual(types, {row["premise_type"]})

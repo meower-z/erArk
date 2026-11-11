@@ -22,17 +22,17 @@ VIRGIN_TALENT_TAGS: dict[int, tuple[str, ...]] = {
 def takes_kept_virginity(
     tag_list: Collection[str], talent: dict[int, int]
 ) -> bool:
-  """
-  按标签判断行为是否算作会夺走角色仍有的处女素质
-  Keyword arguments:
-  tag_list -- 行为的标签列表
-  talent -- 角色的素质数据，素质id: 素质值
-  Return arguments:
-  bool -- 标签含「破处」，且含角色仍有的某个处女素质对应的部位标签时为 True
-  """
-  if "破处" not in tag_list:
-    return False
-  return any(
-      talent[talent_id] and any(tag in tag_list for tag in tags)
-      for talent_id, tags in VIRGIN_TALENT_TAGS.items()
-  )
+    """
+    按标签判断行为是否算作会夺走角色仍有的处女素质
+    Keyword arguments:
+    tag_list -- 行为的标签列表
+    talent -- 角色的素质数据，素质id: 素质值
+    Return arguments:
+    bool -- 标签含「破处」，且含角色仍有的某个处女素质对应的部位标签时为 True
+    """
+    if "破处" not in tag_list:
+        return False
+    return any(
+        talent[talent_id] and any(tag in tag_list for tag in tags)
+        for talent_id, tags in VIRGIN_TALENT_TAGS.items()
+    )

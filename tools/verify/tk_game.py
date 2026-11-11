@@ -32,17 +32,17 @@ DEFAULT_MEM = "3G"
 
 
 def tk_command(root, out_dir, python):
-  """
-  拼出在 scope 里运行的脚本：起 Xvfb 与 openbox，再用探针启动器跑游戏，游戏退出后收掉显示服务
-  参数：
-      root (Path): erArk checkout 根目录
-      out_dir (Path): 证据目录，日志、display.txt、probe.json 都写在这里
-      python (str): 运行游戏用的 python
-  返回：
-      list[str]: argv
-  """
-  out = shlex.quote(str(out_dir))
-  script = f"""
+    """
+    拼出在 scope 里运行的脚本：起 Xvfb 与 openbox，再用探针启动器跑游戏，游戏退出后收掉显示服务
+    参数：
+        root (Path): erArk checkout 根目录
+        out_dir (Path): 证据目录，日志、display.txt、probe.json 都写在这里
+        python (str): 运行游戏用的 python
+    返回：
+        list[str]: argv
+    """
+    out = shlex.quote(str(out_dir))
+    script = f"""
 cd {out}
 Xvfb -displayfd 3 -screen 0 {SCREEN} -nolisten tcp 3>display.txt >xvfb.log 2>&1 &
 for i in $(seq 100); do [ -s display.txt ] && break; sleep 0.1; done
@@ -54,108 +54,108 @@ rc=$?
 kill $(jobs -p) 2>/dev/null
 exit $rc
 """
-  return ["bash", "-c", script]
+    return ["bash", "-c", script]
 
 
 def find_window(display):
-  """
-  在指定显示上找游戏窗口
-  参数：
-      display (str): 形如 :51
-  返回：
-      str: 窗口 id，找不到时为空字符串
-  """
-  result = subprocess.run(
-      ["xdotool", "search", "--onlyvisible", "--name", "^erArk "],
-      capture_output=True,
-      text=True,
-      env={**os.environ, "DISPLAY": display},
-      check=False,
-  )
-  return result.stdout.split("\n", 1)[0].strip()
+    """
+    在指定显示上找游戏窗口
+    参数：
+        display (str): 形如 :51
+    返回：
+        str: 窗口 id，找不到时为空字符串
+    """
+    result = subprocess.run(
+        ["xdotool", "search", "--onlyvisible", "--name", "^erArk "],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "DISPLAY": display},
+        check=False,
+    )
+    return result.stdout.split("\n", 1)[0].strip()
 
 
 def tk_ready(out_dir):
-  """
-  检查 Tk 实例是否就绪：显示已分配、窗口已出现、探针已写出第一份 probe.json
-  参数：
-      out_dir (Path): 证据目录
-  返回：
-      dict | None: 就绪时为要并入状态的字段，否则为 None
-  """
-  display_file, probe = out_dir / "display.txt", out_dir / "probe.json"
-  number = display_file.read_text().strip() if display_file.exists() else ""
-  if not number or not probe.exists():
-    return None
-  window = find_window(f":{number}")
-  return (
-      {"display": f":{number}", "window": window, "probe": str(probe)}
-      if window
-      else None
-  )
+    """
+    检查 Tk 实例是否就绪：显示已分配、窗口已出现、探针已写出第一份 probe.json
+    参数：
+        out_dir (Path): 证据目录
+    返回：
+        dict | None: 就绪时为要并入状态的字段，否则为 None
+    """
+    display_file, probe = out_dir / "display.txt", out_dir / "probe.json"
+    number = display_file.read_text().strip() if display_file.exists() else ""
+    if not number or not probe.exists():
+        return None
+    window = find_window(f":{number}")
+    return (
+        {"display": f":{number}", "window": window, "probe": str(probe)}
+        if window
+        else None
+    )
 
 
 def main(argv=None):
-  """
-  命令行入口
-  参数：
-      argv (list[str] | None): 命令行参数，不含脚本名；为 None 时读 sys.argv
-  返回：
-      int: 退出码
-  """
-  parser = argparse.ArgumentParser(
-      prog="tk_game.py",
-      description="经 limited_run 在虚拟显示上启动 Tk 游戏；status 与 stop 用 limited_run.py",
-  )
-  parser.add_argument(
-      "--mem",
-      type=limited_run.parse_size,
-      default=DEFAULT_MEM,
-      help=f"内存上限，默认 {DEFAULT_MEM}",
-  )
-  parser.add_argument(
-      "--timeout", type=int, default=600, help="运行时限（秒），默认 600"
-  )
-  parser.add_argument(
-      "--out", required=True, type=Path, help="证据目录，必须不存在或为空"
-  )
-  parser.add_argument(
-      "--ready-timeout",
-      type=int,
-      default=300,
-      help="等待窗口与 probe.json 出现的秒数，默认 300",
-  )
-  args = parser.parse_args(argv)
-  mem_max = args.mem
-  root = limited_run.game_checkout()
-  if limited_run.web_mode(root):
-    parser.exit(
-        2,
-        f"{root / 'config.ini'} 设了 web_draw = 1，游戏会起 web 服务器而不开 Tk 窗口。Tk 运行需要 web_draw = 0。\n",
+    """
+    命令行入口
+    参数：
+        argv (list[str] | None): 命令行参数，不含脚本名；为 None 时读 sys.argv
+    返回：
+        int: 退出码
+    """
+    parser = argparse.ArgumentParser(
+        prog="tk_game.py",
+        description="经 limited_run 在虚拟显示上启动 Tk 游戏；status 与 stop 用 limited_run.py",
     )
-  out_dir = args.out.expanduser().resolve()
-  if out_dir.exists() and any(out_dir.iterdir()):
-    parser.error(
-        f"{out_dir} 不是空目录。每次 Tk 运行用一个新目录，免得读到上一次的 probe.json 和帧。"
+    parser.add_argument(
+        "--mem",
+        type=limited_run.parse_size,
+        default=DEFAULT_MEM,
+        help=f"内存上限，默认 {DEFAULT_MEM}",
     )
-  out_dir.mkdir(parents=True, exist_ok=True)
-  seed = limited_run.seed()
-  extra = {
-      "ERARK_SEED": seed,
-      "PYTHONHASHSEED": seed,
-      "ERARK_PROBE_JSON": str(out_dir / "probe.json"),
-  }
-  return limited_run.run(
-      "tk",
-      tk_command(root, out_dir, sys.executable),
-      mem_max,
-      args.timeout,
-      extra,
-      out_dir,
-      lambda: tk_ready(out_dir),
-      args.ready_timeout,
-  )
+    parser.add_argument(
+        "--timeout", type=int, default=600, help="运行时限（秒），默认 600"
+    )
+    parser.add_argument(
+        "--out", required=True, type=Path, help="证据目录，必须不存在或为空"
+    )
+    parser.add_argument(
+        "--ready-timeout",
+        type=int,
+        default=300,
+        help="等待窗口与 probe.json 出现的秒数，默认 300",
+    )
+    args = parser.parse_args(argv)
+    mem_max = args.mem
+    root = limited_run.game_checkout()
+    if limited_run.web_mode(root):
+        parser.exit(
+            2,
+            f"{root / 'config.ini'} 设了 web_draw = 1，游戏会起 web 服务器而不开 Tk 窗口。Tk 运行需要 web_draw = 0。\n",
+        )
+    out_dir = args.out.expanduser().resolve()
+    if out_dir.exists() and any(out_dir.iterdir()):
+        parser.error(
+            f"{out_dir} 不是空目录。每次 Tk 运行用一个新目录，免得读到上一次的 probe.json 和帧。"
+        )
+    out_dir.mkdir(parents=True, exist_ok=True)
+    seed = limited_run.seed()
+    extra = {
+        "ERARK_SEED": seed,
+        "PYTHONHASHSEED": seed,
+        "ERARK_PROBE_JSON": str(out_dir / "probe.json"),
+    }
+    return limited_run.run(
+        "tk",
+        tk_command(root, out_dir, sys.executable),
+        mem_max,
+        args.timeout,
+        extra,
+        out_dir,
+        lambda: tk_ready(out_dir),
+        args.ready_timeout,
+    )
 
 
 if __name__ == "__main__":
-  sys.exit(main())
+    sys.exit(main())

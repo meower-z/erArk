@@ -1,7 +1,27 @@
 # -*- coding: UTF-8 -*-
 """growth_handle：速度曲线、教育区加成、成长停滞、上课/见学结算、成年结算、养成数值、候选名单"""
 
-from _bootstrap import DEFAULT_TIME, _, cache, check, clear_schedules, datetime, education_constant, finish, game_config, game_time, growth_handle, make_character, open_all_classroom, period_time, remove_character, schedule_handle, schedule_template_handle, section, set_time
+from _bootstrap import (
+    DEFAULT_TIME,
+    _,
+    cache,
+    check,
+    clear_schedules,
+    datetime,
+    education_constant,
+    finish,
+    game_config,
+    game_time,
+    growth_handle,
+    make_character,
+    open_all_classroom,
+    period_time,
+    remove_character,
+    schedule_handle,
+    schedule_template_handle,
+    section,
+    set_time,
+)
 from Script.System.Pregnancy_System import pregnancy_constant  # noqa: E402
 from Script.Design import handle_ability
 import inspect
@@ -375,12 +395,12 @@ student.work.work_type = education_constant.STUDENT_WORK_TYPE
 section("待炫耀只记课程科目、只记幼女/萝莉期的女儿（第五轮）")
 
 for one in (student, adult):
-  growth_handle.get_child_growth(one.cid).show_off_ability = {}
-  for juel_id in list(one.juel):
-    one.juel[juel_id] = 10**7
-  for exp_id_one in list(one.experience):
-    one.experience[exp_id_one] = 10**7
-  handle_ability.gain_ability(one.cid)
+    growth_handle.get_child_growth(one.cid).show_off_ability = {}
+    for juel_id in list(one.juel):
+        one.juel[juel_id] = 10**7
+    for exp_id_one in list(one.experience):
+        one.experience[exp_id_one] = 10**7
+    handle_ability.gain_ability(one.cid)
 student_show = growth_handle.get_child_growth(201).show_off_ability
 check(
     "学生岗的萝莉女儿：升了级的科目记进待炫耀",
@@ -642,7 +662,7 @@ schedule_handle.set_selected_course(
 )
 _saved_borrow = dict(cache.rhodes_island.book_borrow_dict)
 for _book_id in cache.rhodes_island.book_borrow_dict:
-  cache.rhodes_island.book_borrow_dict[_book_id] = 999
+    cache.rhodes_island.book_borrow_dict[_book_id] = 999
 check(
     "读书兴趣课：书库此刻借空仍算（是一时的状态；上课判定 judge_personal_course_valid 则判没课）",
     growth_handle.judge_selected_cell_real(201, 2, 6)
@@ -652,7 +672,7 @@ check(
 )
 cache.rhodes_island.book_borrow_dict.update(_saved_borrow)
 for _p in (3, 4, 5, 6):
-  schedule_handle.clear_selected_course(201, 2, _p)
+    schedule_handle.clear_selected_course(201, 2, _p)
 clear_schedules()
 
 section("Plan 31：养成数值 25、judge_have_course_type")
@@ -694,14 +714,17 @@ check(
     and no_growth.child_growth is None,
 )
 for _p in (0, 1):
-  schedule_handle.clear_selected_course(201, 3, _p)
+    schedule_handle.clear_selected_course(201, 3, _p)
 clear_schedules()
 remove_character(209)
 
 # ---------------------------------------------------------------------------
 # Plan 32（第十三轮复查）
 # ---------------------------------------------------------------------------
-from Script.System.Pregnancy_System import pregnancy_constant, pregnancy_handle  # noqa: E402
+from Script.System.Pregnancy_System import (
+    pregnancy_constant,
+    pregnancy_handle,
+)  # noqa: E402
 
 DT = datetime.datetime
 GT = game_time.GameTime
@@ -750,18 +773,18 @@ _saved_time = cache.game_time
 _saved_born = baby.pregnancy.born_time
 _new_count = {}
 for _month in game_time.SEASON_MONTH_LIST:
-  for _day in range(1, game_time.SEASON_DAY + 1):
-    # 06:00 出生，此后每天 00:05（跨天结算派养成事件的时刻）取样，直到有效成长天数满婴儿期（长成幼女）
-    baby.pregnancy.born_time = GT(2026, _month, _day, 6, 0)
-    cache.game_time = GT(2026, _month, _day, 0, 5)
-    _new_count[(_month, _day)] = 0
-    for _step in range(pregnancy_constant.REARING_COMPLETE_DAY + 10):
-      game_time.sub_time_now(day=1)
-      _grow_day = pregnancy_handle.get_child_grow_day(203)
-      if _grow_day >= pregnancy_constant.REARING_COMPLETE_DAY:
-        break
-      if 30 <= growth_handle.get_stage_progress(203) < 75:
-        _new_count[(_month, _day)] += 1
+    for _day in range(1, game_time.SEASON_DAY + 1):
+        # 06:00 出生，此后每天 00:05（跨天结算派养成事件的时刻）取样，直到有效成长天数满婴儿期（长成幼女）
+        baby.pregnancy.born_time = GT(2026, _month, _day, 6, 0)
+        cache.game_time = GT(2026, _month, _day, 0, 5)
+        _new_count[(_month, _day)] = 0
+        for _step in range(pregnancy_constant.REARING_COMPLETE_DAY + 10):
+            game_time.sub_time_now(day=1)
+            _grow_day = pregnancy_handle.get_child_grow_day(203)
+            if _grow_day >= pregnancy_constant.REARING_COMPLETE_DAY:
+                break
+            if 30 <= growth_handle.get_stage_progress(203) < 75:
+                _new_count[(_month, _day)] += 1
 _expect_count = sum(
     1
     for one in range(pregnancy_constant.REARING_COMPLETE_DAY)
@@ -947,20 +970,20 @@ _saved_time = cache.game_time
 _saved_born_loli = student.pregnancy.born_time
 _loli_ge70 = {}
 for _month in game_time.SEASON_MONTH_LIST:
-  for _day in range(1, game_time.SEASON_DAY + 1):
-    # 06:00 出生，此后每天 00:05（跨天结算派养成事件的时刻）取样；只数有效成长天数落在萝莉期的日子
-    student.pregnancy.born_time = GT(2026, _month, _day, 6, 0)
-    cache.game_time = GT(2026, _month, _day, 0, 5)
-    _loli_ge70[(_month, _day)] = 0
-    for _step in range(pregnancy_constant.GROW_TO_GIRL_DAY + 10):
-      game_time.sub_time_now(day=1)
-      _grow_day = pregnancy_handle.get_child_grow_day(201)
-      if _grow_day >= pregnancy_constant.GROW_TO_GIRL_DAY:
-        break
-      if _grow_day < pregnancy_constant.GROW_TO_LOLI_DAY:
-        continue
-      if growth_handle.get_stage_progress(201) >= 70:
-        _loli_ge70[(_month, _day)] += 1
+    for _day in range(1, game_time.SEASON_DAY + 1):
+        # 06:00 出生，此后每天 00:05（跨天结算派养成事件的时刻）取样；只数有效成长天数落在萝莉期的日子
+        student.pregnancy.born_time = GT(2026, _month, _day, 6, 0)
+        cache.game_time = GT(2026, _month, _day, 0, 5)
+        _loli_ge70[(_month, _day)] = 0
+        for _step in range(pregnancy_constant.GROW_TO_GIRL_DAY + 10):
+            game_time.sub_time_now(day=1)
+            _grow_day = pregnancy_handle.get_child_grow_day(201)
+            if _grow_day >= pregnancy_constant.GROW_TO_GIRL_DAY:
+                break
+            if _grow_day < pregnancy_constant.GROW_TO_LOLI_DAY:
+                continue
+            if growth_handle.get_stage_progress(201) >= 70:
+                _loli_ge70[(_month, _day)] += 1
 student.pregnancy.born_time = _saved_born_loli
 set_time(_saved_time)
 check(
@@ -981,24 +1004,24 @@ _saved_time = cache.game_time
 _saved_born_baby = baby.pregnancy.born_time
 _first_gap = {}
 for _month in game_time.SEASON_MONTH_LIST:
-  for _day in range(1, game_time.SEASON_DAY + 1):
-    baby.pregnancy.born_time = GT(2026, _month, _day, 6, 0)
-    cache.game_time = GT(2026, _month, _day, 0, 5)
-    _first: dict[int, datetime.datetime | None] = {50: None, 60: None}
-    for _step in range(pregnancy_constant.REARING_COMPLETE_DAY + 10):
-      game_time.sub_time_now(day=1)
-      _grow_day = pregnancy_handle.get_child_grow_day(203)
-      if _grow_day >= pregnancy_constant.REARING_COMPLETE_DAY:
-        break
-      _progress = growth_handle.get_stage_progress(203)
-      for _line in (50, 60):
-        if _first[_line] is None and _progress >= _line:
-          _first[_line] = cache.game_time
-    _first_gap[(_month, _day)] = (
-        game_time.count_play_day(_first[50], _first[60])
-        if _first[50] and _first[60] and _first[50] < _first[60]
-        else 0
-    )
+    for _day in range(1, game_time.SEASON_DAY + 1):
+        baby.pregnancy.born_time = GT(2026, _month, _day, 6, 0)
+        cache.game_time = GT(2026, _month, _day, 0, 5)
+        _first: dict[int, datetime.datetime | None] = {50: None, 60: None}
+        for _step in range(pregnancy_constant.REARING_COMPLETE_DAY + 10):
+            game_time.sub_time_now(day=1)
+            _grow_day = pregnancy_handle.get_child_grow_day(203)
+            if _grow_day >= pregnancy_constant.REARING_COMPLETE_DAY:
+                break
+            _progress = growth_handle.get_stage_progress(203)
+            for _line in (50, 60):
+                if _first[_line] is None and _progress >= _line:
+                    _first[_line] = cache.game_time
+        _first_gap[(_month, _day)] = (
+            game_time.count_play_day(_first[50], _first[60])
+            if _first[50] and _first[60] and _first[50] < _first[60]
+            else 0
+        )
 baby.pregnancy.born_time = _saved_born_baby
 set_time(_saved_time)
 _expect_gap = [
@@ -1095,8 +1118,8 @@ _g_grown_b = growth_handle.get_child_growth(213)
 _pair_talent = E6.PERSONALITY_PAIR_TALENT
 _g_grown_b.personality_point = {0: 2.0, 1: -1.0, 2: -3.0}
 for _pair_id in _pair_talent:
-  for _talent_id in _pair_talent[_pair_id]:
-    grown_b.talent[_talent_id] = 0
+    for _talent_id in _pair_talent[_pair_id]:
+        grown_b.talent[_talent_id] = 0
 check(
     "M3 前提：成年女儿乙四对素质都是 0；勤劳 / 懒散一对倾向 +2、热情 / 孤僻一对 -3（逐对选边的话这两对都会写上）",
     growth_handle.get_character_stage(213) == 104

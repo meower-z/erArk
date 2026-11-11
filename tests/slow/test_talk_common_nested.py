@@ -22,60 +22,62 @@ MOUTH = 21
 
 
 class TalkCommonNestedTest(SlowTestCase):
-  """处理顺序倒过来时，高潮的通用口上里嵌套的占位符都被替换"""
+    """处理顺序倒过来时，高潮的通用口上里嵌套的占位符都被替换"""
 
-  def test_reversed_order_climax_line(self) -> None:
-    """倒序时杜宾的口喉高潮渲染出通用口上，文本里不留通用占位符"""
-    from Script.Config import game_config
-    from Script.Core import constant
-    from Script.Design import talk
+    def test_reversed_order_climax_line(self) -> None:
+        """倒序时杜宾的口喉高潮渲染出通用口上，文本里不留通用占位符"""
+        from Script.Config import game_config
+        from Script.Core import constant
+        from Script.Design import talk
 
-    self.walk(ROOM)
-    operator_id = self.npc("杜宾")
-    operator = self.cache.character_data[operator_id]
-    self.world.move(operator_id, ROOM)
-    operator.sp_flag.npc_masturebate_for_player = True
-    self.world.player.press("逆来顺受")
-    self.instruct(constant.Instruct.DOOR_LOCK_INNER)
-    self.assertTrue(operator.sp_flag.is_h)
+        self.walk(ROOM)
+        operator_id = self.npc("杜宾")
+        operator = self.cache.character_data[operator_id]
+        self.world.move(operator_id, ROOM)
+        operator.sp_flag.npc_masturebate_for_player = True
+        self.world.player.press("逆来顺受")
+        self.instruct(constant.Instruct.DOOR_LOCK_INNER)
+        self.assertTrue(operator.sp_flag.is_h)
 
-    self.cache.all_system_setting.draw_setting[13] = 10
-    game_config.config_talk_common_cid_list_by_type = dict(
-        reversed(list(game_config.config_talk_common_cid_list_by_type.items()))
-    )
-    # 0 级的上限就是 1 级的下限
-    operator.status_data[MOUTH] = next(
-        iter(game_config.config_character_state_level.values())
-    ).max_value
-    rendered = []
-    """ talk_common_judge 每次的输入与输出 """
-    real_judge = talk.talk_common_judge
+        self.cache.all_system_setting.draw_setting[13] = 10
+        game_config.config_talk_common_cid_list_by_type = dict(
+            reversed(
+                list(game_config.config_talk_common_cid_list_by_type.items())
+            )
+        )
+        # 0 级的上限就是 1 级的下限
+        operator.status_data[MOUTH] = next(
+            iter(game_config.config_character_state_level.values())
+        ).max_value
+        rendered = []
+        """ talk_common_judge 每次的输入与输出 """
+        real_judge = talk.talk_common_judge
 
-    def record_judge(now_talk: str, character_id: int) -> str:
-      """
-      记录型包装：照常替换，并把输入与输出收进 rendered
-      Keyword arguments:
-      now_talk -- 原文本
-      character_id -- 角色id
-      Return arguments:
-      str -- 替换后的文本
-      """
-      result = real_judge(now_talk, character_id)
-      rendered.append((now_talk, result))
-      return result
+        def record_judge(now_talk: str, character_id: int) -> str:
+            """
+            记录型包装：照常替换，并把输入与输出收进 rendered
+            Keyword arguments:
+            now_talk -- 原文本
+            character_id -- 角色id
+            Return arguments:
+            str -- 替换后的文本
+            """
+            result = real_judge(now_talk, character_id)
+            rendered.append((now_talk, result))
+            return result
 
-    talk.talk_common_judge = record_judge
-    self.instruct(constant.Instruct.WAIT_5_MIN_IN_H)
+        talk.talk_common_judge = record_judge
+        self.instruct(constant.Instruct.WAIT_5_MIN_IN_H)
 
-    climax = [
-        result for text, result in rendered if text.startswith("{m_orgasm_")
-    ]
-    self.assertTrue(climax, "没有渲染口喉高潮的通用口上")
-    keys = [
-        "{" + key + "}"
-        for key in game_config.config_talk_common_cid_list_by_type
-    ]
-    left = sorted(
-        {key for _, result in rendered for key in keys if key in result}
-    )
-    self.assertEqual(left, [])
+        climax = [
+            result for text, result in rendered if text.startswith("{m_orgasm_")
+        ]
+        self.assertTrue(climax, "没有渲染口喉高潮的通用口上")
+        keys = [
+            "{" + key + "}"
+            for key in game_config.config_talk_common_cid_list_by_type
+        ]
+        left = sorted(
+            {key for _, result in rendered for key in keys if key in result}
+        )
+        self.assertEqual(left, [])

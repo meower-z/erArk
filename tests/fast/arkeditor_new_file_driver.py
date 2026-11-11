@@ -26,45 +26,45 @@ NEW_FILES = {
 def new_file_after_open(
     driver: FileLoadDriver, data_dir: str, kind: str
 ) -> None:
-  """
-  从菜单打开 kind 类型的文件并点选第一条，再从同一菜单新建文件。新建后的状态与打开的文件前后的文字记进 driver.result
-  Keyword arguments:
-  driver -- FileLoadDriver，编辑器驱动
-  data_dir -- str，数据目录
-  kind -- str，talk 或 event
-  Return arguments:
-  None -- 无
-  """
-  open_name, new_name = NEW_FILES[kind]
-  open_path = os.path.join(data_dir, open_name)
-  qt_dialog = driver.qt_widgets.QFileDialog
-  qt_dialog.getSaveFileName = staticmethod(
-      lambda *args, **kwargs: (driver.path, "")
-  )
-  qt_dialog.exec = lambda dialog, *args: 1
-  qt_dialog.selectedFiles = lambda dialog: [driver.path]
-  if kind == "talk":
-    driver.open_talk_file(open_path)
-    new_action = driver.editor.menu_bar.new_talk_file_action
-  else:
-    driver.open_event_file(open_path)
-    new_action = driver.editor.menu_bar.new_event_file_action
-  driver.select_row(0)
-  driver.result["open_before"] = file_text_or_none(open_path)
-  driver.path = os.path.join(data_dir, new_name)
-  driver.step("new", new_action.trigger)
-  driver.result["after"] = {
-      "file_path": driver.cache_control.now_file_path,
-      "list_rows": driver.editor.data_list.list_widget.count(),
-      "entries": driver.data_premises(),
-  }
-  driver.result["open_after"] = file_text_or_none(open_path)
+    """
+    从菜单打开 kind 类型的文件并点选第一条，再从同一菜单新建文件。新建后的状态与打开的文件前后的文字记进 driver.result
+    Keyword arguments:
+    driver -- FileLoadDriver，编辑器驱动
+    data_dir -- str，数据目录
+    kind -- str，talk 或 event
+    Return arguments:
+    None -- 无
+    """
+    open_name, new_name = NEW_FILES[kind]
+    open_path = os.path.join(data_dir, open_name)
+    qt_dialog = driver.qt_widgets.QFileDialog
+    qt_dialog.getSaveFileName = staticmethod(
+        lambda *args, **kwargs: (driver.path, "")
+    )
+    qt_dialog.exec = lambda dialog, *args: 1
+    qt_dialog.selectedFiles = lambda dialog: [driver.path]
+    if kind == "talk":
+        driver.open_talk_file(open_path)
+        new_action = driver.editor.menu_bar.new_talk_file_action
+    else:
+        driver.open_event_file(open_path)
+        new_action = driver.editor.menu_bar.new_event_file_action
+    driver.select_row(0)
+    driver.result["open_before"] = file_text_or_none(open_path)
+    driver.path = os.path.join(data_dir, new_name)
+    driver.step("new", new_action.trigger)
+    driver.result["after"] = {
+        "file_path": driver.cache_control.now_file_path,
+        "list_rows": driver.editor.data_list.list_widget.count(),
+        "entries": driver.data_premises(),
+    }
+    driver.result["open_after"] = file_text_or_none(open_path)
 
 
 if __name__ == "__main__":
-  DRIVER = FileLoadDriver(sys.argv[1])
-  new_file_after_open(DRIVER, sys.argv[2], sys.argv[3])
-  print(json.dumps(DRIVER.result, ensure_ascii=False))
-  sys.stdout.flush()
-  # 编辑器在导入时建好 QApplication，用 os._exit 结束进程，不做解释器的退出清理
-  os._exit(0)
+    DRIVER = FileLoadDriver(sys.argv[1])
+    new_file_after_open(DRIVER, sys.argv[2], sys.argv[3])
+    print(json.dumps(DRIVER.result, ensure_ascii=False))
+    sys.stdout.flush()
+    # 编辑器在导入时建好 QApplication，用 os._exit 结束进程，不做解释器的退出清理
+    os._exit(0)

@@ -107,15 +107,15 @@ check(
 # 三个教师同一节最多教三间教室：每个节次最多 3 格有课
 conflict_ok = True
 for day in range(5):
-  for p in range(period_count):
-    teacher_used = [
-        teacher_cell[1]
-        for room in room_list
-        if (teacher_cell := schedule_handle.get_class_cell(room, day, p))
-        is not None
-    ]
-    if len(teacher_used) != len(set(teacher_used)):
-      conflict_ok = False
+    for p in range(period_count):
+        teacher_used = [
+            teacher_cell[1]
+            for room in room_list
+            if (teacher_cell := schedule_handle.get_class_cell(room, day, p))
+            is not None
+        ]
+        if len(teacher_used) != len(set(teacher_used)):
+            conflict_ok = False
 check("同一节次没有教师被排进两间教室", conflict_ok)
 practice_ok = all(
     auto_schedule.judge_subject_fit_classroom(

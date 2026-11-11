@@ -21,6 +21,6 @@ PRTS角色立绘下载器 MCP服务器
 from .server import main
 
 if __name__ == "__main__":
-  import asyncio
+    import asyncio
 
-  asyncio.run(main())
+    asyncio.run(main())

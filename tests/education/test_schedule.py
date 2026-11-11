@@ -1,7 +1,33 @@
 # -*- coding: UTF-8 -*-
 """schedule_handle：教室、全局课表、个人课表、当前课程、上课地点、实习导师"""
 
-from _bootstrap import DEFAULT_TIME, SCENE_DORM, _, auto_schedule, cache, check, clear_schedules, constant, datetime, education_constant, finish, game_config, growth_handle, make_character, move_to, open_all_classroom, period_time, pl, remove_character, scene_str, schedule_handle, schedule_template_handle, section, set_time, sex_class_handle
+from _bootstrap import (
+    DEFAULT_TIME,
+    SCENE_DORM,
+    _,
+    auto_schedule,
+    cache,
+    check,
+    clear_schedules,
+    constant,
+    datetime,
+    education_constant,
+    finish,
+    game_config,
+    growth_handle,
+    make_character,
+    move_to,
+    open_all_classroom,
+    period_time,
+    pl,
+    remove_character,
+    scene_str,
+    schedule_handle,
+    schedule_template_handle,
+    section,
+    set_time,
+    sex_class_handle,
+)
 import inspect
 
 section("教室列表与开放判定")
@@ -381,47 +407,47 @@ cache.rhodes_island.facility_open[pool_open_cid] = True
 check("解锁后恢复", bool(schedule_handle.get_course_place(pe_pool)))
 lockable = None
 for _cid in game_config.config_entertainment:
-  _cfg = game_config.config_entertainment[_cid]
-  _names = (
-      [
-          cache.scene_data[s].scene_name
-          for s in constant.place_data.get(_cfg.place_tag, [])
-      ]
-      if _cfg.class_ok
-      else []
-  )
-  if _names and all(
-      n in game_config.config_facility_open_name_set for n in _names
-  ):
-    lockable = (_cid, _names)
-    break
+    _cfg = game_config.config_entertainment[_cid]
+    _names = (
+        [
+            cache.scene_data[s].scene_name
+            for s in constant.place_data.get(_cfg.place_tag, [])
+        ]
+        if _cfg.class_ok
+        else []
+    )
+    if _names and all(
+        n in game_config.config_facility_open_name_set for n in _names
+    ):
+        lockable = (_cid, _names)
+        break
 check("有地点全靠解锁的兴趣课", lockable is not None)
 if lockable is not None:
-  _cid, _names = lockable
-  interest_course = {
-      "course_type": education_constant.COURSE_TYPE_INTEREST,
-      "target": _cid,
-  }
-  for _name in _names:
+    _cid, _names = lockable
+    interest_course = {
+        "course_type": education_constant.COURSE_TYPE_INTEREST,
+        "target": _cid,
+    }
+    for _name in _names:
+        cache.rhodes_island.facility_open[
+            game_config.config_facility_open_name_to_cid[_name]
+        ] = False
+    check(
+        "兴趣课的场所全未开放：解析不出（此前取第一间，派人去门口空转）",
+        schedule_handle.get_course_place(interest_course) == [],
+        _names,
+    )
     cache.rhodes_island.facility_open[
-        game_config.config_facility_open_name_to_cid[_name]
-    ] = False
-  check(
-      "兴趣课的场所全未开放：解析不出（此前取第一间，派人去门口空转）",
-      schedule_handle.get_course_place(interest_course) == [],
-      _names,
-  )
-  cache.rhodes_island.facility_open[
-      game_config.config_facility_open_name_to_cid[_names[-1]]
-  ] = True
-  _place = schedule_handle.get_course_place(interest_course)
-  check(
-      "开放其中一间：解析到已开放的那间",
-      bool(_place)
-      and cache.scene_data[scene_str(_place)].scene_name == _names[-1],
-      _place,
-  )
-  open_all_classroom()
+        game_config.config_facility_open_name_to_cid[_names[-1]]
+    ] = True
+    _place = schedule_handle.get_course_place(interest_course)
+    check(
+        "开放其中一间：解析到已开放的那间",
+        bool(_place)
+        and cache.scene_data[scene_str(_place)].scene_name == _names[-1],
+        _place,
+    )
+    open_all_classroom()
 teen = make_character(210, "少女", 152, daughter=True, stage=104)
 check(
     "活动条件：体育课恒成立",
@@ -568,7 +594,7 @@ check(
 )
 _saved_borrow = dict(cache.rhodes_island.book_borrow_dict)
 for _book_id in cache.rhodes_island.book_borrow_dict:
-  cache.rhodes_island.book_borrow_dict[_book_id] = 999
+    cache.rhodes_island.book_borrow_dict[_book_id] = 999
 check(
     "书库全被借走：不成立，视为没课（此前照样是课，到了图书馆读 0 号书）",
     not schedule_handle.judge_personal_course_valid(201, read_course)
@@ -616,22 +642,22 @@ _hard_book = next(
 )
 check("书库里有难度 3 的技能书", _hard_book is not None)
 if _hard_book is not None:
-  cache.rhodes_island.book_borrow_dict[_hard_book] = -1
-  _hard_ability = game_config.config_book_type[
-      game_config.config_book[_hard_book].type
-  ].ability_id
-  _hard_level = _reader.ability.get(_hard_ability, 0)
-  _reader.ability[_hard_ability] = 0
-  check(
-      "只剩一本能力不够读的书：不成立（与 check_random_borrow_book 的筛选同口径）",
-      not schedule_handle.judge_personal_course_valid(201, read_course),
-  )
-  _reader.ability[_hard_ability] = 6
-  check(
-      "能力够了：成立",
-      schedule_handle.judge_personal_course_valid(201, read_course),
-  )
-  _reader.ability[_hard_ability] = _hard_level
+    cache.rhodes_island.book_borrow_dict[_hard_book] = -1
+    _hard_ability = game_config.config_book_type[
+        game_config.config_book[_hard_book].type
+    ].ability_id
+    _hard_level = _reader.ability.get(_hard_ability, 0)
+    _reader.ability[_hard_ability] = 0
+    check(
+        "只剩一本能力不够读的书：不成立（与 check_random_borrow_book 的筛选同口径）",
+        not schedule_handle.judge_personal_course_valid(201, read_course),
+    )
+    _reader.ability[_hard_ability] = 6
+    check(
+        "能力够了：成立",
+        schedule_handle.judge_personal_course_valid(201, read_course),
+    )
+    _reader.ability[_hard_ability] = _hard_level
 check(
     "判定不写数据：没借书、书库借出状态没被改",
     not _reader.entertainment.borrow_book_id_set

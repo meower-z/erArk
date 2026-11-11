@@ -13,20 +13,20 @@ font.setFamily(cache_control.now_font_name)
 
 
 class ToolsBar(QMenuBar):
-  """筛选表单用菜单栏"""
+    """筛选表单用菜单栏"""
 
-  def __init__(self) -> None:
-    """初始化顶部筛选栏"""
-    super().__init__()
-    self.npc_menu: QMenu = QMenu("0", self)
-    self.npc_menu.setFixedWidth(50)
-    self.addMenu(self.npc_menu)
-    self.status_menu: QMenu = QMenu(
-        cache_control.behavior_data[cache_control.now_behavior], self
-    )
-    self.status_menu.setFont(font)
-    self.addMenu(self.status_menu)
-    self.type_menu: QMenu = QMenu(cache_control.now_type, self)
-    self.type_menu.setFont(font)
-    self.addMenu(self.type_menu)
-    self.setFont(font)
+    def __init__(self) -> None:
+        """初始化顶部筛选栏"""
+        super().__init__()
+        self.npc_menu: QMenu = QMenu("0", self)
+        self.npc_menu.setFixedWidth(50)
+        self.addMenu(self.npc_menu)
+        self.status_menu: QMenu = QMenu(
+            cache_control.behavior_data[cache_control.now_behavior], self
+        )
+        self.status_menu.setFont(font)
+        self.addMenu(self.status_menu)
+        self.type_menu: QMenu = QMenu(cache_control.now_type, self)
+        self.type_menu.setFont(font)
+        self.addMenu(self.type_menu)
+        self.setFont(font)

@@ -20,26 +20,26 @@ SCENE_TAG_LIST = ("Power_Dispatch", "Onsen", "Golden_Game_Room")
 
 
 class LocationDirNamesTranslate(FastTestCase):
-  """en_US 下，按标签取出的场景的目录名查得到译文"""
+    """en_US 下，按标签取出的场景的目录名查得到译文"""
 
-  def test_scene_dir_names_translate(self) -> None:
-    """
-    每个标签恰好对应一个场景，场景路径最后一段的目录名在 en_US 翻译链里有不同于原文的译文
-    Keyword arguments:
-    无
-    Return arguments:
-    无
-    """
-    translation = get_text.create_translation_chain(
-        LANGUAGE, get_text.mo_files_per_language[LANGUAGE]
-    )
-    self.assertIsNotNone(translation)
-    assert translation is not None
-    for scene_tag in SCENE_TAG_LIST:
-      with self.subTest(scene_tag=scene_tag):
-        scene_path_list = constant.place_data[scene_tag]
-        self.assertEqual(len(scene_path_list), 1)
-        dir_name = map_handle.get_map_system_path_for_str(scene_path_list[0])[
-            -1
-        ]
-        self.assertNotEqual(translation.gettext(dir_name), dir_name)
+    def test_scene_dir_names_translate(self) -> None:
+        """
+        每个标签恰好对应一个场景，场景路径最后一段的目录名在 en_US 翻译链里有不同于原文的译文
+        Keyword arguments:
+        无
+        Return arguments:
+        无
+        """
+        translation = get_text.create_translation_chain(
+            LANGUAGE, get_text.mo_files_per_language[LANGUAGE]
+        )
+        self.assertIsNotNone(translation)
+        assert translation is not None
+        for scene_tag in SCENE_TAG_LIST:
+            with self.subTest(scene_tag=scene_tag):
+                scene_path_list = constant.place_data[scene_tag]
+                self.assertEqual(len(scene_path_list), 1)
+                dir_name = map_handle.get_map_system_path_for_str(
+                    scene_path_list[0]
+                )[-1]
+                self.assertNotEqual(translation.gettext(dir_name), dir_name)

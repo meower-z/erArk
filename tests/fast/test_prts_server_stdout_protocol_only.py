@@ -96,61 +96,63 @@ with open(sys.argv[1], 'w', encoding='utf-8') as f:
 
 
 def write_mcp_stub(root: str) -> None:
-  """
-  在目录里写出 mcp 替身包
-  Keyword arguments:
-  root -- 目录，写完后加进子进程的 PYTHONPATH
-  Return arguments:
-  无
-  """
-  for relative_path, content in MCP_STUB_FILES.items():
-    path = os.path.join(root, relative_path)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-      f.write(content)
-
-
-class PrtsServerStdoutProtocolOnlyTest(FastTestCase):
-  """PRTS 立绘下载器 MCP 服务器处理工具调用时不往标准输出写任何东西"""
-
-  def test_tool_calls_write_nothing_to_stdout(self) -> None:
     """
-    在子进程里调用下载与搜索两个工具，检查标准输出为空、日志与进度信息在标准错误上、调用结果正确
+    在目录里写出 mcp 替身包
     Keyword arguments:
-    无
+    root -- 目录，写完后加进子进程的 PYTHONPATH
     Return arguments:
     无
     """
-    with tempfile.TemporaryDirectory() as scratch:
-      stub_root = os.path.join(scratch, "stub")
-      write_mcp_stub(stub_root)
-      result_file = os.path.join(scratch, "result.json")
-      save_dir = os.path.join(scratch, "images")
-      env = dict(os.environ, PYTHONPATH=stub_root, PYTHONDONTWRITEBYTECODE="1")
-      result = subprocess.run(
-          [sys.executable, "-c", CHILD_CODE, result_file, save_dir],
-          cwd=PACKAGE_DIR,
-          env=env,
-          stdin=subprocess.DEVNULL,
-          capture_output=True,
-          text=True,
-          encoding="utf-8",
-          errors="replace",
-          timeout=60,
-          check=False,
-      )
-      self.assertEqual(result.returncode, 0, result.stderr)
-      self.assertEqual(result.stdout, "")
-      self.assertIn("开始下载角色立绘: 莱伊", result.stderr)
-      self.assertIn("图片已保存到", result.stderr)
-      self.assertIn("未能找到 无此人 的立绘图片URL", result.stderr)
-      with open(result_file, encoding="utf-8") as f:
-        texts = json.load(f)
-      self.assertEqual(
-          texts,
-          [
-              f"成功下载 莱伊 的立绘图片到 {save_dir} 目录",
-              "未能找到 无此人 的立绘图片URL",
-          ],
-      )
-      self.assertEqual(os.listdir(save_dir), ["莱伊_立绘.png"])
+    for relative_path, content in MCP_STUB_FILES.items():
+        path = os.path.join(root, relative_path)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+
+
+class PrtsServerStdoutProtocolOnlyTest(FastTestCase):
+    """PRTS 立绘下载器 MCP 服务器处理工具调用时不往标准输出写任何东西"""
+
+    def test_tool_calls_write_nothing_to_stdout(self) -> None:
+        """
+        在子进程里调用下载与搜索两个工具，检查标准输出为空、日志与进度信息在标准错误上、调用结果正确
+        Keyword arguments:
+        无
+        Return arguments:
+        无
+        """
+        with tempfile.TemporaryDirectory() as scratch:
+            stub_root = os.path.join(scratch, "stub")
+            write_mcp_stub(stub_root)
+            result_file = os.path.join(scratch, "result.json")
+            save_dir = os.path.join(scratch, "images")
+            env = dict(
+                os.environ, PYTHONPATH=stub_root, PYTHONDONTWRITEBYTECODE="1"
+            )
+            result = subprocess.run(
+                [sys.executable, "-c", CHILD_CODE, result_file, save_dir],
+                cwd=PACKAGE_DIR,
+                env=env,
+                stdin=subprocess.DEVNULL,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=60,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout, "")
+            self.assertIn("开始下载角色立绘: 莱伊", result.stderr)
+            self.assertIn("图片已保存到", result.stderr)
+            self.assertIn("未能找到 无此人 的立绘图片URL", result.stderr)
+            with open(result_file, encoding="utf-8") as f:
+                texts = json.load(f)
+            self.assertEqual(
+                texts,
+                [
+                    f"成功下载 莱伊 的立绘图片到 {save_dir} 目录",
+                    "未能找到 无此人 的立绘图片URL",
+                ],
+            )
+            self.assertEqual(os.listdir(save_dir), ["莱伊_立绘.png"])

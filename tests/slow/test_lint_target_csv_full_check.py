@@ -22,31 +22,31 @@ TOOL_TIME_LIMIT = 120
 
 
 class LintTargetCsvFullCheckTest(SlowTestCase):
-  """不带 --fast 运行校验脚本：在时限内退出，全部规则通过"""
+    """不带 --fast 运行校验脚本：在时限内退出，全部规则通过"""
 
-  def setUp(self) -> None:
-    """
-    不启动游戏，只增量构建 data/ 下的生成物：脚本在自己的进程里读入它们
-    Keyword arguments:
-    无
-    Return arguments:
-    无
-    """
-    os.chdir(ROOT)
-    with contextlib.redirect_stdout(io.StringIO()):
-      import auto_build_config  # noqa: F401
+    def setUp(self) -> None:
+        """
+        不启动游戏，只增量构建 data/ 下的生成物：脚本在自己的进程里读入它们
+        Keyword arguments:
+        无
+        Return arguments:
+        无
+        """
+        os.chdir(ROOT)
+        with contextlib.redirect_stdout(io.StringIO()):
+            import auto_build_config  # noqa: F401
 
-  def test_full_check_exits_and_passes(self) -> None:
-    """脚本在时限内以退出码 0 结束，输出全部规则通过"""
-    result = subprocess.run(
-        [sys.executable, "-u", TOOL],
-        cwd=ROOT,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        encoding="utf-8",
-        errors="replace",
-        timeout=TOOL_TIME_LIMIT,
-        check=False,
-    )
-    self.assertEqual(result.returncode, 0, result.stdout)
-    self.assertIn("全部规则通过", result.stdout)
+    def test_full_check_exits_and_passes(self) -> None:
+        """脚本在时限内以退出码 0 结束，输出全部规则通过"""
+        result = subprocess.run(
+            [sys.executable, "-u", TOOL],
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+            errors="replace",
+            timeout=TOOL_TIME_LIMIT,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("全部规则通过", result.stdout)

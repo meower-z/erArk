@@ -1,8 +1,41 @@
 # -*- coding: UTF-8 -*-
 """面板：页签容器、全局课表、个人课表、日程模板、养成总览、选人按钮（通用 NPC 选择面板）、临时课编辑、Web 适配器冒烟"""
 
-from _bootstrap import DEFAULT_TIME, SCENE_DORM, _, auto_schedule, cache, check, classroom_path, clear_schedules, constant, datetime, draw, drawn_text, education_constant, finish, flow_handle, game_config, growth_handle, make_character, move_to, open_all_classroom, period_time, pl, schedule_handle, section, semester_handle, set_time, sex_class_handle
-from Script.System.Education_System import class_schedule_panel, course_select_panel, growth_panel, schedule_template_panel
+from _bootstrap import (
+    DEFAULT_TIME,
+    SCENE_DORM,
+    _,
+    auto_schedule,
+    cache,
+    check,
+    classroom_path,
+    clear_schedules,
+    constant,
+    datetime,
+    draw,
+    drawn_text,
+    education_constant,
+    finish,
+    flow_handle,
+    game_config,
+    growth_handle,
+    make_character,
+    move_to,
+    open_all_classroom,
+    period_time,
+    pl,
+    schedule_handle,
+    section,
+    semester_handle,
+    set_time,
+    sex_class_handle,
+)
+from Script.System.Education_System import (
+    class_schedule_panel,
+    course_select_panel,
+    growth_panel,
+    schedule_template_panel,
+)
 from typing import TYPE_CHECKING
 from Script.Design import instuct_judege
 from Script.System.Education_System import student_select
@@ -11,9 +44,9 @@ from Script.System.Pregnancy_System import pregnancy_constant
 import inspect
 
 if TYPE_CHECKING:
-  from collections.abc import Callable
+    from collections.abc import Callable
 
-  from Script.UI.Moudle.panel import PageHandlePanel
+    from Script.UI.Moudle.panel import PageHandlePanel
 
 open_all_classroom()
 clear_schedules()
@@ -48,16 +81,16 @@ captured: dict[str, list[str]] = {}
 
 
 def fake_askfor(input_list: list, print_order: bool = False) -> str:
-  """
-  替换 flow_handle.askfor_all 的桩：把可选项记到 captured["rl"]，返回「返回」
-  Keyword arguments:
-  input_list -- 可选项列表
-  print_order -- 原函数的同名参数，本桩不用
-  Return arguments:
-  str -- 翻译后的「返回」
-  """
-  captured["rl"] = list(input_list)
-  return _("返回")
+    """
+    替换 flow_handle.askfor_all 的桩：把可选项记到 captured["rl"]，返回「返回」
+    Keyword arguments:
+    input_list -- 可选项列表
+    print_order -- 原函数的同名参数，本桩不用
+    Return arguments:
+    str -- 翻译后的「返回」
+    """
+    captured["rl"] = list(input_list)
+    return _("返回")
 
 
 flow_handle.askfor_all = fake_askfor
@@ -89,14 +122,14 @@ check(
 )
 check("学期抬头已画出", any("学期" in t for t in drawn_text))
 for tab in (_("个人课表"), _("日程模板"), _("养成总览")):
-  container.change_panel(tab)
-  drawn_text.clear()
-  container.draw()
-  rl = captured["rl"]
-  check(
-      f"页签「{tab}」可画且无重复 return",
-      len(rl) == len(set(rl)) and _("返回") in rl,
-  )
+    container.change_panel(tab)
+    drawn_text.clear()
+    container.draw()
+    rl = captured["rl"]
+    check(
+        f"页签「{tab}」可画且无重复 return",
+        len(rl) == len(set(rl)) and _("返回") in rl,
+    )
 
 section("全局课表面板")
 panel = class_schedule_panel.Class_Schedule_Panel(W)
@@ -139,22 +172,22 @@ answers: "list[Callable[[str], bool]]" = []
 
 
 def scripted_askfor(input_list: list, print_order: bool = False) -> str:
-  """
-  替换 flow_handle.askfor_all 的桩：把可选项记到 captured["rl"]；按 answers 的顺序找第一个
-  有选项满足的判断函数，把它从 answers 移除并返回满足它的第一个选项，都不满足时返回最后一个选项
-  Keyword arguments:
-  input_list -- 可选项列表
-  print_order -- 原函数的同名参数，本桩不用
-  Return arguments:
-  str -- 选中的选项
-  """
-  captured["rl"] = list(input_list)
-  for want in list(answers):
-    for option in input_list:
-      if want(option):
-        answers.remove(want)
-        return option
-  return input_list[-1]
+    """
+    替换 flow_handle.askfor_all 的桩：把可选项记到 captured["rl"]；按 answers 的顺序找第一个
+    有选项满足的判断函数，把它从 answers 移除并返回满足它的第一个选项，都不满足时返回最后一个选项
+    Keyword arguments:
+    input_list -- 可选项列表
+    print_order -- 原函数的同名参数，本桩不用
+    Return arguments:
+    str -- 选中的选项
+    """
+    captured["rl"] = list(input_list)
+    for want in list(answers):
+        for option in input_list:
+            if want(option):
+                answers.remove(want)
+                return option
+    return input_list[-1]
 
 
 flow_handle.askfor_all = scripted_askfor
@@ -424,18 +457,18 @@ check(
 cache.character_data[201].relationship.mother_id = 102
 g = growth_handle.get_child_growth(201)
 for index in range(3):
-  semester_handle.push_report_card(
-      201,
-      {
-          "year": 2026,
-          "month": 3 * (index + 1),
-          "attend": 5,
-          "absent": 0,
-          "rate": 100,
-          "level_change": {},
-          "grade": 1,
-      },
-  )
+    semester_handle.push_report_card(
+        201,
+        {
+            "year": 2026,
+            "month": 3 * (index + 1),
+            "attend": 5,
+            "absent": 0,
+            "rate": 100,
+            "level_change": {},
+            "grade": 1,
+        },
+    )
 rl = []
 gp.draw_page(rl)
 check(
@@ -619,18 +652,18 @@ def capture_invite(
     info_text: str = "",
     select_state: dict | None = None,
 ) -> tuple[list[str], list[str], dict[str, int | str]]:
-  """
-  记下邀请名单并直接返回，让面板的 while 循环在 fake_askfor 返回「返回」后退出
-  Keyword arguments:
-  now_draw_panel -- 面板的名单控制对象
-  title_text -- 标题文本
-  info_text -- 说明文本
-  select_state -- 选择状态
-  Return arguments:
-  tuple -- (return_list, other_return_list, select_state)
-  """
-  _invite_captured["list"] = [one[0] for one in now_draw_panel.text_list]
-  return [_("返回")], [], {}
+    """
+    记下邀请名单并直接返回，让面板的 while 循环在 fake_askfor 返回「返回」后退出
+    Keyword arguments:
+    now_draw_panel -- 面板的名单控制对象
+    title_text -- 标题文本
+    info_text -- 说明文本
+    select_state -- 选择状态
+    Return arguments:
+    tuple -- (return_list, other_return_list, select_state)
+    """
+    _invite_captured["list"] = [one[0] for one in now_draw_panel.text_list]
+    return [_("返回")], [], {}
 
 
 common_select_NPC.common_select_npc_button_list_func = capture_invite
@@ -717,18 +750,18 @@ check(
 )
 _too_wide = []
 for _cid in game_config.config_entertainment:
-  if game_config.config_entertainment[_cid].class_ok:
-    _one = _("{0}/条件不符").format(
-        f"[{E.COURSE_TYPE_SHORT[E.COURSE_TYPE_INTEREST]}]{game_config.config_entertainment[_cid].name}"
+    if game_config.config_entertainment[_cid].class_ok:
+        _one = _("{0}/条件不符").format(
+            f"[{E.COURSE_TYPE_SHORT[E.COURSE_TYPE_INTEREST]}]{game_config.config_entertainment[_cid].name}"
+        )
+        if text_handle.get_text_index(_one) > _cell_width:
+            _too_wide.append(_one)
+for _place in E.PE_PLACE_DATA:
+    _one = _("{0}/未开放").format(
+        f"[{E.COURSE_TYPE_SHORT[E.COURSE_TYPE_PE]}]{_place}"
     )
     if text_handle.get_text_index(_one) > _cell_width:
-      _too_wide.append(_one)
-for _place in E.PE_PLACE_DATA:
-  _one = _("{0}/未开放").format(
-      f"[{E.COURSE_TYPE_SHORT[E.COURSE_TYPE_PE]}]{_place}"
-  )
-  if text_handle.get_text_index(_one) > _cell_width:
-    _too_wide.append(_one)
+        _too_wide.append(_one)
 check(
     f"全部兴趣课的「/条件不符」、全部体育场地的「/未开放」都放得进一格（{_cell_width} 列）",
     not _too_wide,
@@ -739,7 +772,7 @@ schedule_handle.clear_selected_course(201, 0, 0)
 
 ROOM2 = _("理论教室二")
 for _cid in (201, 202, 203, 204, 205):
-  schedule_handle.clear_selected_course(_cid, 2, 3)
+    schedule_handle.clear_selected_course(_cid, 2, 3)
 schedule_handle.set_selected_course(201, 2, 3, E.COURSE_TYPE_PE, _("木桩房"))
 schedule_handle.set_selected_course(202, 2, 3, E.COURSE_TYPE_THEORY, ROOM1)
 schedule_handle.set_class_cell(ROOM2, 2, 3, 45, 101)
@@ -784,7 +817,7 @@ check(
 )
 clear_schedules()
 for _cid in (201, 202, 203, 205):
-  schedule_handle.clear_selected_course(_cid, 2, 3)
+    schedule_handle.clear_selected_course(_cid, 2, 3)
 
 _g201 = growth_handle.get_child_growth(201)
 _g201.report_card_flag = True
@@ -842,7 +875,7 @@ schedule_handle.set_selected_course(
 )
 _saved_borrow = dict(cache.rhodes_island.book_borrow_dict)
 for _book_id in cache.rhodes_island.book_borrow_dict:
-  cache.rhodes_island.book_borrow_dict[_book_id] = 999
+    cache.rhodes_island.book_borrow_dict[_book_id] = 999
 flow_handle.askfor_all = scripted_askfor
 answers[:] = [lambda o: o == "DONE"]
 drawn_text.clear()
@@ -892,43 +925,43 @@ section("Plan 31 L8：排实操课页的选修人数按实操课门槛分开")
 clear_schedules()
 _l8_day, _l8_period, _l8_sex_period = 4, 7, 8
 for _cid in [201 + i for i in range(11)] + [301]:
-  schedule_handle.clear_selected_course(_cid, _l8_day, _l8_period)
-  schedule_handle.clear_selected_course(_cid, _l8_day, _l8_sex_period)
+    schedule_handle.clear_selected_course(_cid, _l8_day, _l8_period)
+    schedule_handle.clear_selected_course(_cid, _l8_day, _l8_sex_period)
 # 这一节每周排的是料理（不是性技），另一节排膣技：女儿01 与成年学生两节都选了、算修过性技课，女儿02 只选了这一节
 schedule_handle.set_class_cell(ROOM_P, _l8_day, _l8_period, 43, -1)
 schedule_handle.set_class_cell(ROOM_P, _l8_day, _l8_sex_period, 74, -1)
 for _cid in (201, 301):
-  schedule_handle.set_selected_course(
-      _cid, _l8_day, _l8_period, E.COURSE_TYPE_PRACTICE, ROOM_P
-  )
-  schedule_handle.set_selected_course(
-      _cid, _l8_day, _l8_sex_period, E.COURSE_TYPE_PRACTICE, ROOM_P
-  )
+    schedule_handle.set_selected_course(
+        _cid, _l8_day, _l8_period, E.COURSE_TYPE_PRACTICE, ROOM_P
+    )
+    schedule_handle.set_selected_course(
+        _cid, _l8_day, _l8_sex_period, E.COURSE_TYPE_PRACTICE, ROOM_P
+    )
 schedule_handle.set_selected_course(
     202, _l8_day, _l8_period, E.COURSE_TYPE_PRACTICE, ROOM_P
 )
 
 
 def draw_sex_class_page() -> tuple:
-  """
-  画一次排实操课页（脚本化点[返回]退出），取出与选修人数有关的三行
-  Keyword arguments:
-  无
-  Return arguments:
-  tuple -- (「本节选修本教室的学生」行, 「此刻进不了课堂」行, 「没修过性技科目的课」行)，没画出来的行为空字符串
-  """
-  flow_handle.askfor_all = scripted_askfor
-  answers[:] = [lambda o: o == "BACK"]
-  drawn_text.clear()
-  class_schedule_panel.Class_Schedule_Panel(W)._edit_sex_class(
-      ROOM_P, _l8_day, _l8_period
-  )
-  flow_handle.askfor_all = fake_askfor
-  return (
-      next((t for t in drawn_text if "本节选修本教室的学生" in t), ""),
-      next((t for t in drawn_text if "此刻进不了课堂" in t), ""),
-      next((t for t in drawn_text if "没修过性技科目的课" in t), ""),
-  )
+    """
+    画一次排实操课页（脚本化点[返回]退出），取出与选修人数有关的三行
+    Keyword arguments:
+    无
+    Return arguments:
+    tuple -- (「本节选修本教室的学生」行, 「此刻进不了课堂」行, 「没修过性技科目的课」行)，没画出来的行为空字符串
+    """
+    flow_handle.askfor_all = scripted_askfor
+    answers[:] = [lambda o: o == "BACK"]
+    drawn_text.clear()
+    class_schedule_panel.Class_Schedule_Panel(W)._edit_sex_class(
+        ROOM_P, _l8_day, _l8_period
+    )
+    flow_handle.askfor_all = fake_askfor
+    return (
+        next((t for t in drawn_text if "本节选修本教室的学生" in t), ""),
+        next((t for t in drawn_text if "此刻进不了课堂" in t), ""),
+        next((t for t in drawn_text if "没修过性技科目的课" in t), ""),
+    )
 
 
 _count_line, _blocked_line, _no_course_line = draw_sex_class_page()
@@ -972,8 +1005,8 @@ check(
 )
 clear_schedules()
 for _cid in (201, 202, 301):
-  schedule_handle.clear_selected_course(_cid, _l8_day, _l8_period)
-  schedule_handle.clear_selected_course(_cid, _l8_day, _l8_sex_period)
+    schedule_handle.clear_selected_course(_cid, _l8_day, _l8_period)
+    schedule_handle.clear_selected_course(_cid, _l8_day, _l8_sex_period)
 
 section("Plan 31 L6：课表格子上的教师已离岗 / 不在岛上时名字后加标注、灰字")
 clear_schedules()
@@ -990,17 +1023,17 @@ _orig_left_draw = draw.LeftButton.draw
 
 
 def record_button(self: draw.CenterButton, *a: object, **k: object) -> None:
-  """
-  记下按钮的文本、默认样式与悬停提示，再照常记进 drawn_text（样式与提示不进 drawn_text，要单独断言）
-  Keyword arguments:
-  self -- 按钮绘制对象
-  Return arguments:
-  无
-  """
-  _button_log.append(
-      (self.text, self.normal_style, getattr(self, "tooltip", ""))
-  )
-  _orig_center_draw(self, *a, **k)
+    """
+    记下按钮的文本、默认样式与悬停提示，再照常记进 drawn_text（样式与提示不进 drawn_text，要单独断言）
+    Keyword arguments:
+    self -- 按钮绘制对象
+    Return arguments:
+    无
+    """
+    _button_log.append(
+        (self.text, self.normal_style, getattr(self, "tooltip", ""))
+    )
+    _orig_center_draw(self, *a, **k)
 
 
 setattr(draw.CenterButton, "draw", record_button)
@@ -1055,7 +1088,7 @@ check(
 _button_log.clear()
 _l6_select = course_select_panel.Course_Select_Panel(W)
 for _l6_period in range(3):
-  _l6_select._select_course(201, _l6_day, _l6_period)
+    _l6_select._select_course(201, _l6_day, _l6_period)
 _l6_type_name = E.COURSE_TYPE_NAME[
     schedule_handle.get_course_type_by_classroom(ROOM1)
 ]
@@ -1204,8 +1237,8 @@ clear_schedules()
 section("Plan 32 §3.8（L12）：排实操课页的三份选修名单去掉点名必修的人")
 clear_schedules()
 for _cid in (201, 202, 301):
-  schedule_handle.clear_selected_course(_cid, _l8_day, _l8_period)
-  schedule_handle.clear_selected_course(_cid, _l8_day, _l8_sex_period)
+    schedule_handle.clear_selected_course(_cid, _l8_day, _l8_period)
+    schedule_handle.clear_selected_course(_cid, _l8_day, _l8_sex_period)
 # 与 Plan 31 L8 那一段同样的布置：这一节每周排料理，另一节排膣技；女儿01 两节都选了（算修过性技课），女儿02 只选了这一节
 schedule_handle.set_class_cell(ROOM_P, _l8_day, _l8_period, 43, -1)
 schedule_handle.set_class_cell(ROOM_P, _l8_day, _l8_sex_period, 74, -1)
@@ -1275,8 +1308,8 @@ check(
 cache.character_data[202].sp_flag.imprisonment = False
 clear_schedules()
 for _cid in (201, 202):
-  schedule_handle.clear_selected_course(_cid, _l8_day, _l8_period)
-  schedule_handle.clear_selected_course(_cid, _l8_day, _l8_sex_period)
+    schedule_handle.clear_selected_course(_cid, _l8_day, _l8_period)
+    schedule_handle.clear_selected_course(_cid, _l8_day, _l8_sex_period)
 
 section(
     "Plan 32 §3.9：<课> / <翘> 状态标识（L15 自习悬停、L13 听玩家手动授课、L14 缺课休息、L1 翘课只在 SKIP 时亮）"
@@ -1485,10 +1518,10 @@ for name, web_panel in (
     ("养成总览", growth_panel.Growth_Panel(W)),
     ("日程模板", schedule_template_panel.Schedule_Template_Panel(W)),
 ):
-  try:
-    web_panel.draw_page([])
-  except Exception as error:
-    problem.append((name, repr(error)))
+    try:
+        web_panel.draw_page([])
+    except Exception as error:
+        problem.append((name, repr(error)))
 check("Web 模式下四个子页都能画", not problem, problem)
 check(
     "产生了 Web 元素",

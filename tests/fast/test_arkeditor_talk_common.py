@@ -35,88 +35,93 @@ COMMON_FILE = os.path.join(
 
 
 class ArkEditorTalkCommonTest(FastTestCase):
-  """从口上菜单打开通用口上组件文件时的警告框与编辑器状态，以及之后按保存时两个文件的文字"""
+    """从口上菜单打开通用口上组件文件时的警告框与编辑器状态，以及之后按保存时两个文件的文字"""
 
-  def setUp(self) -> None:
-    """
-    PySide6.QtWidgets 无法导入时跳过。能导入时在临时目录里准备编辑器副本与空的数据目录
-    Keyword arguments:
-    无
-    Return arguments:
-    None -- 无
-    """
-    super().setUp()
-    probe = subprocess.run(
-        [sys.executable, "-c", "import PySide6.QtWidgets"],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if probe.returncode:
-      self.skipTest(
-          "PySide6.QtWidgets 无法导入：" + probe.stderr.strip().splitlines()[-1]
-      )
-    self.tmp = tempfile.mkdtemp(prefix="arkeditor_test_")
-    self.addCleanup(shutil.rmtree, self.tmp)
-    # 编辑器打开或保存口上文件时，把它备份到编辑器目录上两级的「备份」文件夹。
-    # 副本放在临时目录下时，备份也落在临时目录里，不进仓库。
-    self.editor_dir = os.path.join(self.tmp, "tools", "ArkEditor")
-    shutil.copytree(os.path.join(ROOT, "tools", "ArkEditor"), self.editor_dir)
-    self.data_dir = os.path.join(self.tmp, "data")
-    os.makedirs(self.data_dir)
+    def setUp(self) -> None:
+        """
+        PySide6.QtWidgets 无法导入时跳过。能导入时在临时目录里准备编辑器副本与空的数据目录
+        Keyword arguments:
+        无
+        Return arguments:
+        None -- 无
+        """
+        super().setUp()
+        probe = subprocess.run(
+            [sys.executable, "-c", "import PySide6.QtWidgets"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if probe.returncode:
+            self.skipTest(
+                "PySide6.QtWidgets 无法导入："
+                + probe.stderr.strip().splitlines()[-1]
+            )
+        self.tmp = tempfile.mkdtemp(prefix="arkeditor_test_")
+        self.addCleanup(shutil.rmtree, self.tmp)
+        # 编辑器打开或保存口上文件时，把它备份到编辑器目录上两级的「备份」文件夹。
+        # 副本放在临时目录下时，备份也落在临时目录里，不进仓库。
+        self.editor_dir = os.path.join(self.tmp, "tools", "ArkEditor")
+        shutil.copytree(
+            os.path.join(ROOT, "tools", "ArkEditor"), self.editor_dir
+        )
+        self.data_dir = os.path.join(self.tmp, "data")
+        os.makedirs(self.data_dir)
 
-  def write_files(self) -> None:
-    """
-    在数据目录里写入 talk.csv，并把 COMMON_FILE 复制成 common.csv。
-    每个子测试开始时调用，让各子测试从同样的两个文件开始
-    Keyword arguments:
-    无
-    Return arguments:
-    None -- 无
-    """
-    with open(
-        os.path.join(self.data_dir, "talk.csv"), "w", encoding="utf-8"
-    ) as talk_file:
-      talk_file.write(file_load.TALK_CSV)
-    shutil.copyfile(
-        os.path.join(ROOT, COMMON_FILE),
-        os.path.join(self.data_dir, "common.csv"),
-    )
+    def write_files(self) -> None:
+        """
+        在数据目录里写入 talk.csv，并把 COMMON_FILE 复制成 common.csv。
+        每个子测试开始时调用，让各子测试从同样的两个文件开始
+        Keyword arguments:
+        无
+        Return arguments:
+        None -- 无
+        """
+        with open(
+            os.path.join(self.data_dir, "talk.csv"), "w", encoding="utf-8"
+        ) as talk_file:
+            talk_file.write(file_load.TALK_CSV)
+        shutil.copyfile(
+            os.path.join(ROOT, COMMON_FILE),
+            os.path.join(self.data_dir, "common.csv"),
+        )
 
-  def drive(self, prior: str) -> dict[str, Any]:
-    """
-    在子进程里运行驱动脚本，子进程退出码不为 0 时测试失败
-    Keyword arguments:
-    prior -- str，之前打开的文件，talk 或 none
-    Return arguments:
-    dict[str, Any] -- 驱动脚本最后一行输出的 JSON 解析成的字典
-    """
-    done = subprocess.run(
-        [sys.executable, DRIVER, self.editor_dir, self.data_dir, prior],
-        capture_output=True,
-        text=True,
-        timeout=120,
-        check=False,
-    )
-    self.assertEqual(done.returncode, 0, done.stderr)
-    result: dict[str, Any] = json.loads(done.stdout.strip().splitlines()[-1])
-    return result
+    def drive(self, prior: str) -> dict[str, Any]:
+        """
+        在子进程里运行驱动脚本，子进程退出码不为 0 时测试失败
+        Keyword arguments:
+        prior -- str，之前打开的文件，talk 或 none
+        Return arguments:
+        dict[str, Any] -- 驱动脚本最后一行输出的 JSON 解析成的字典
+        """
+        done = subprocess.run(
+            [sys.executable, DRIVER, self.editor_dir, self.data_dir, prior],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
+        self.assertEqual(done.returncode, 0, done.stderr)
+        result: dict[str, Any] = json.loads(
+            done.stdout.strip().splitlines()[-1]
+        )
+        return result
 
-  def test_open_talk_common(self) -> None:
-    """
-    各子测试从口上菜单打开 common.csv 再按保存，检查警告框、编辑器状态与两个文件的文字
-    Keyword arguments:
-    无
-    Return arguments:
-    None -- 无
-    """
-    for prior in ("talk", "none"):
-      with self.subTest(prior=prior):
-        self.write_files()
-        result = self.drive(prior)
-        self.assertEqual(result["step_errors"]["open_common"], [])
-        self.assertEqual(len(result["warnings"]), 1)
-        self.assertIn("common.csv", result["warnings"][0][1])
-        self.assertEqual(result["after"], result["before"])
-        self.assertEqual(result["step_errors"]["save"], [])
-        self.assertEqual(result["files_after"], result["files_before"])
+    def test_open_talk_common(self) -> None:
+        """
+        各子测试从口上菜单打开 common.csv 再按保存，检查警告框、编辑器状态与两个文件的文字
+        Keyword arguments:
+        无
+        Return arguments:
+        None -- 无
+        """
+        for prior in ("talk", "none"):
+            with self.subTest(prior=prior):
+                self.write_files()
+                result = self.drive(prior)
+                self.assertEqual(result["step_errors"]["open_common"], [])
+                self.assertEqual(len(result["warnings"]), 1)
+                self.assertIn("common.csv", result["warnings"][0][1])
+                self.assertEqual(result["after"], result["before"])
+                self.assertEqual(result["step_errors"]["save"], [])
+                self.assertEqual(result["files_after"], result["files_before"])
