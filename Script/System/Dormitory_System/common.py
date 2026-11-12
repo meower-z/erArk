@@ -317,7 +317,7 @@ def get_dormitory_occupants_text() -> str:
                 count += 1
                 tem_remove_id_set.add(npc_id)
         room_capacity = max(2, count)
-        dormitory_son_text += f"({count}/{room_capacity}) {str(dormitory_npc_name).ljust(15,'　')}"  # 对齐为15个全角字符
+        dormitory_son_text += f"({count}/{room_capacity}) {str(dormitory_npc_name).ljust(15,'　')}"
         # 在id集合中删掉本次已经出现过的id
         for npc_id in tem_remove_id_set:
             live_npc_id_set.discard(npc_id)
@@ -401,8 +401,6 @@ def init_character_dormitory() -> None:
         ]
         for x in j
     }
-    # print("dormitory :",dormitory)
-    # print("cache.scene_data[list(Dr_room.keys())[0]].scene_name :",cache.scene_data[list(Dr_room.keys())[0]].scene_name)
     npc_count = 0
     cache.npc_id_got.discard(0)
     for character_id in cache.npc_id_got:

@@ -415,8 +415,6 @@ class Class_Schedule_Panel:
                 cell = schedule_handle.get_class_cell(
                     classroom, week_day, period
                 )
-                # 格子上的教师已离岗 / 不在岛上：名字后加标注、整格灰字（Plan 31 §3.10），这一节每周都是自习，要玩家手动换人。
-                #    一格只有 25 列，格子里写短标注，悬停提示写全称与后果（见 get_teacher_absent_mark 的 short）
                 absent_mark = ""
                 absent_tip = ""
                 if cell is None:
@@ -444,7 +442,6 @@ class Class_Schedule_Panel:
                             ).format(
                                 teacher_name, get_teacher_absent_mark(cell[1])
                             )
-                            # 名字太长时先截名字、不截标注：整格超宽时 CenterButton 从尾部截成「~」，标注会被吃掉（Plan 31 §3.10）
                             name_width = (
                                 cell_width
                                 - text_handle.get_text_index(
@@ -643,15 +640,6 @@ class Class_Schedule_Panel:
             line_feed.draw()
             line_feed.draw()
 
-            # 这一行是必做项不是装饰：选课逻辑零改动的代价就是可能一个人都不来，
-            #    玩家必须在排课当场就看得到会有几个人
-            # 选修生分三份（Plan 31 §3.12）：
-            #    1. 没排过性技科目教室课的（前置修习，口径 63 宽松版）：会到场，但进不了实操课
-            #    2. 修过、但此刻进不了课堂的：成年学生 H 模式实行值不足，或状态异常（临盆 / 意识模糊 / 离线 / 监禁等），开课拉人时不收她们。
-            #       判据与开课拉人是同一个 judge_can_join_sex_class，它只判不扣（§3.3），画这一页不改任何数据
-            #    3. 其余才算「本节选修本教室的学生」，与同一页必修名单的门槛同口径
-            #    点名必修的人先从三份里去掉（Plan 32 §3.8 L12）：她只列在下面的必修行。此前三份名单不对照必修名单，
-            #       没修过性技理论的必修生同时列在「必修」与「不能参加（点名必修可豁免）」两行
             all_selected_list = [
                 cid
                 for cid in sex_class_handle.get_selected_student_list(
@@ -825,10 +813,6 @@ class Class_Schedule_Panel:
             return_list: list[str] = []
             id_by_return: dict[str, int] = {}
             replace_text_list = []
-            # 人口来源：职业为学生的全部干员，含成年学生（Plan 25 §3.7），与个人课表名单同口径——
-            #    课表只对学生岗生效（Plan 24 口径 1），改了岗的女儿点了名也不会来上课。
-            # judge_can_join_sex_class 保留作状态守卫（死亡/临盆/意识模糊/监禁等）；成年学生仍须满足 H 模式实行值（口径 63 第二层），
-            #    否则必修名单就成了绕开全部 H 前提的旁路
             student_width = int(self.width / 6)
             count = 0
             for character_id in growth_handle.get_course_candidate_list():
@@ -841,10 +825,6 @@ class Class_Schedule_Panel:
                 ):
                     continue
                 mark = "√" if character_id in must_attend else "  "
-                # 会顶掉她原本的哪一节——按钮里只放一个「*」，明细汇总到下方。
-                #    只标确有的课（Plan 28 §3.5）：必修覆盖顶掉的是这一节的任何课，体育 / 兴趣 / 实习课也一样；
-                #    每周课表上已停课的教室课、上不成的个人式课本来就算没课，不标。
-                #    个人式课不看书库此刻借没借空（Plan 30 §3.7）：顶掉的是排在某一天的那节课，那天借不借得到书排课时不知道
                 old_course = schedule_handle.get_selected_course(
                     character_id, week_day, period
                 )
@@ -953,7 +933,6 @@ class Class_Schedule_Panel:
             get_period_time_text(period),
         )
         info_draw.draw()
-        # 今天这一格被临时实操课顶替（Plan 26 §3.6）：格子上看到的是临时课，这一页改的、清的却是底下每周循环的那节，要写清楚
         temp_class = schedule_handle.get_today_temp_class(week_day, period)
         overlay_flag = (
             temp_class is not None

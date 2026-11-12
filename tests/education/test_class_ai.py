@@ -288,8 +288,6 @@ teacher.sp_flag.is_follow = 0
 teacher.sp_flag.sleep = True
 check("睡着不可用", not teacher_available())
 teacher.sp_flag.sleep = False
-# Plan 32 M4 改写：原先断言「住院不可用」，夹具按角色 id 作键建住院表，把错位掩盖了。
-#    住院表的键是医疗系统里抽象病人的编号（MedicalPatient.patient_id，每次启动从 1 自增），不关联任何角色，干员从不进这张表
 cache.rhodes_island.medical_hospitalized = {
     101: medical_constant.MedicalPatient(
         patient_id=101, state=medical_constant.MedicalPatientState.HOSPITALIZED
@@ -3595,16 +3593,12 @@ def setup_ghost() -> dict:
     )
     cache.sex_class_mode = True
     cache.group_sex_mode = True
-    # 群交模式开着时，玩家这一步的结算走群交分支（settle_behavior.handle_settle_behavior），要读监禁调教设置（性爱助手，键 12）；
-    #    夹具的罗德岛这张表是空的，照新建角色时的置零表补齐缺的键（不覆盖已有的值）
     for (
         key,
         value,
     ) in attr_calculation.get_confinement_training_setting_zero().items():
         cache.rhodes_island.confinement_training_setting.setdefault(key, value)
     pl.sp_flag.is_h = False
-    # 玩家的体力 / 气力也换成 2000：体力落到 1 时玩家分支的疲劳判定按「群交中玩家体力归零」调结束群交（handle_group_sex_end），
-    #    幽灵课堂的群交模式开着，就会经 update.game_update_flow 嵌套一层真实主循环（夹具跑不了，前面各段已把玩家体力耗到 1）
     pl.hit_point_max = pl.hit_point = 2000
     pl.mana_point_max = pl.mana_point = 2000
     child.sp_flag.is_h = False

@@ -261,9 +261,6 @@ class BarDraw:
                 value = min(value, max_value)  # 强制令长度不会超过100%
                 proportion = int(value / max_value * self.width)
             fix_bar = int(self.width - proportion)
-            # print("bar_id =",bar_id)
-            # print("game_config.config_bar_data[bar_id] =",game_config.config_bar_data[bar_id])
-            # print("game_config.config_bar[game_config.config_bar_data[bar_id]] =",game_config.config_bar[game_config.config_bar_data[bar_id]])
             style_data = game_config.config_bar[
                 game_config.config_bar_data[bar_id]
             ]

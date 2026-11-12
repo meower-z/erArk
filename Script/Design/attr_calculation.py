@@ -1074,7 +1074,6 @@ def judge_require(
                 reason += _("攻略等级>={0}  ").format(judge_value)
                 break
         elif judge_type == "W":
-            # 岗位条件 W<岗位id>|<要求值>：|1 要求当前岗位就是它，|0 要求不是它（2026-09-09 为「上课（无课时自习）」日程活动限学生岗加的）
             now_work_type = character_data.work.work_type
             work_name = (
                 game_config.config_work_type[judge_type_id].name

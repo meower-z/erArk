@@ -40,9 +40,6 @@ cache: game_type.Cache = cache_control.cache
 _: FunctionType = get_text._
 """ 翻译api """
 
-# 模板数据的两个键（TEMPLATE_KEY_NAME / TEMPLATE_KEY_SLOT）与 need 列的分隔符（TEMPLATE_NEED_*）集中在 education_constant（Plan 32 L28），
-#    本模块与日程模板面板一律用常量，不写字面量
-
 
 def get_entertainment_cid_by_name(name: str) -> int:
     """
@@ -394,9 +391,6 @@ def apply_schedule_for_child(character_id: int) -> None:
         and not growth_data.schedule_override
     ):
         return
-    # 不是女儿、又不在学生岗的不改写（Plan 32 §3.12 L18）：成年干员离开学生岗后，她既不在个人课表名单、也不在批量套用名单，
-    #    此前当学生时套的模板每天照写、面板上又解除不了，只能先改回学生岗。模板与覆盖都留着，改回学生岗照旧生效。
-    #    女儿不看岗位：改了岗的学员晚上照旧按日程走
     if (
         character_data.relationship.father_id != 0
         and character_data.work.work_type

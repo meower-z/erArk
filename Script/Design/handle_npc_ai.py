@@ -371,13 +371,6 @@ def find_character_target(
             cache.over_behavior_character.add(character_id)
             return
 
-    # 如果玩家在对该NPC交互，则等待flag=1，此操作暂时不进行
-    # safe_instruct = [constant.CharacterStatus.STATUS_WAIT,constant.CharacterStatus.STATUS_REST,constant.CharacterStatus.STATUS_SLEEP]
-    # if PC_character_data.target_character_id == character_id:
-    #     # print(f"debug character_id = {character_data.name}，state = {PC_character_data.state}")
-    #     if character_data.state not in safe_instruct:
-    #         character_data.sp_flag.wait_flag = 1
-
     # 首先判定是否有高优先级的行动
     type_0_target_list = game_config.config_target_type_index[0]
     target, __, judge, new_premise_data = search_target(
@@ -472,9 +465,6 @@ def find_character_target(
             )
             null_target_set.update(now_target_list)
             premise_data = new_premise_data
-    # 然后判断工作：只要有工作就进工作链，时间窗由各目标行自己的时间前提决定（Plan 24 §3.1）
-    #    既有的 21/22 行都带 to_work_time / work_time，自动 AI 路径自带 work_time；
-    #    教师 / 学生的课表行（target.csv 组 07 / 08）不看星期，周日排的课照常上；学生没课时没有行命中，照旧落到下面的娱乐链
     if judge == 0 and handle_premise.handle_have_work(character_id):
         # 当前工作数据
         work_type_id = character_data.work.work_type
@@ -635,17 +625,7 @@ def find_character_target(
             premise_data,
             target_weight_data,
         )
-        # if character_data.name == "阿米娅":
-        #     print(f"\ndebug 阿米娅的target = {target},weight = {weight},now_time = {now_time}")
-        #     if 5 <= int(target) <= 30:
-        #         print(f"debug position = {character_data.position},move_final_target = {character_data.behavior.move_final_target}")
     if judge:
-        # print(f"debug {character_data.name}")
-        # print(f"debug null_target_set = {null_target_set}")
-        # print(f"debug premise_data = {premise_data}")
-        # if character_data.name == "阿米娅":
-        #     print(f"debug {character_data.name}的target = {target},weight = {weight},judge = {judge},now_time = {now_time}")
-        # 正常行动
         if judge == 1:
             target_config = game_config.config_target[target]
             state_machine_id = target_config.state_machine_id
@@ -661,8 +641,6 @@ def find_character_target(
         # 若前提未变化则AI下一轮会重复选择同一行动，导致NPC行为循环永不收敛（死循环）
         if character_data.behavior.duration <= 0:
             character_data.behavior.duration = 1
-        # if character_data.name == "阿米娅":
-        #     print(f"debug 中：{character_data.name}，behavior_id = {game_config.config_status[character_data.state].name}，start_time = {character_data.behavior.start_time}, game_time = {now_time}")
     else:
         now_judge = game_time.judge_date_big_or_small(start_time, now_time)
         if now_judge:
@@ -979,7 +957,6 @@ def judge_interrupt_character_behavior(character_id: int) -> int:
                 new_duration = int(
                     (judge_wake_up_time - start_time).seconds / 60
                 )
-                # print(f"debug {character_data.name}早安问候服务开启中，今日未问候，将行动结束时间设为问候时间，玩家醒来时间={pl_character_data.action_info.wake_time}，角色行动结束时间={end_time},原行动时间={character_data.behavior.duration}分钟，新行动时间={new_duration}分钟")
                 character_data.behavior.duration = new_duration
 
         # ②睡觉中，疲劳归零，且HP、MP满值时，当前非睡觉时间，未醉酒，角色行动结束时间晚于游戏时间，则立刻结束睡觉
@@ -1063,8 +1040,6 @@ def judge_same_position_npc_follow() -> None:
                 character_data.behavior.behavior_id = constant.Behavior.WAIT
                 character_data.behavior.duration = 5
                 character_data.action_info.follow_wait_time += 5
-            # print(f"debug {character_data.name}跟随玩家，当前位置为{character_data.position}，当前目标位置为{move_path}，最终目标位置为{pl_character_data.behavior.move_final_target}，行动时间为{move_time}分钟, start_time = {character_data.behavior.start_time}")
-        # 隐奸携带模式中被携带的角色，直接同步移动到玩家本段移动的目的地（不使用移动行为，仅搬运位置）
         elif character_data.sp_flag.hidden_sex_mode == 5:
             if (
                 len(pl_character_data.behavior.move_target)

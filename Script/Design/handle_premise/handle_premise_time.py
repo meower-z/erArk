@@ -301,9 +301,6 @@ def handle_tired_ge_75_or_sleep_time(character_id: int) -> int:
     int -- 权重
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    # now_time = game_time.get_sun_time(character_data.behavior.start_time)
-    # return (now_time == 4) * 100
-    # print(f"debug {character_data.name}的疲劳条≥75%或到了睡觉的时间前提判定，当前时间为{character_data.behavior.start_time}，疲劳值为{character_data.tired_point}")
     if character_data.behavior.start_time.year > 1:
         if character_data.behavior.start_time.hour in {
             0,
@@ -617,7 +614,6 @@ def handle_morning_salutation_time(character_id: int) -> int:
         plan_to_wake_time[0],
         plan_to_wake_time[1],
     )
-    # print(f"debug {character_data.name}进行玩家的醒来前提判定，当前时间为{now_time}，计划醒来时间为{pl_character_data.action_info.plan_to_wake_time}")
     if now_time_hour > wake_time_hour or (
         now_time_hour == wake_time_hour and now_time_minute >= wake_time_minute
     ):
@@ -651,7 +647,6 @@ def handle_not_morning_salutation_time(character_id: int) -> int:
         plan_to_wake_time[0],
         plan_to_wake_time[1],
     )
-    # print(f"debug {character_data.name}进行玩家的醒来前提判定，当前时间为{now_time}，计划醒来时间为{pl_character_data.action_info.plan_to_wake_time}")
     if now_time_hour > wake_time_hour or (
         now_time_hour == wake_time_hour and now_time_minute >= wake_time_minute
     ):
@@ -682,7 +677,6 @@ def handle_before_morning_salutation_time(character_id: int) -> int:
         plan_to_wake_time[0],
         plan_to_wake_time[1],
     )
-    # print(f"debug {character_data.name}进行玩家的醒来前提判定，当前时间为{now_time}，计划醒来时间为{pl_character_data.action_info.plan_to_wake_time}")
     if now_time_hour < wake_time_hour or (
         now_time_hour == wake_time_hour and now_time_minute < wake_time_minute
     ):
@@ -710,7 +704,6 @@ def handle_night_salutation_time(character_id: int) -> int:
         plan_to_sleep_time[0],
         plan_to_sleep_time[1],
     )
-    # print(f"debug {character_data.name}进行玩家的睡觉前提判定，当前时间为{now_time}，计划睡觉时间为{pl_character_data.action_info.plan_to_sleep_time}")
     if now_time_hour > sleep_time_hour or (
         now_time_hour == sleep_time_hour
         and now_time_minute >= sleep_time_minute
@@ -740,7 +733,6 @@ def handle_not_night_salutation_time(character_id: int) -> int:
         plan_to_sleep_time[0],
         plan_to_sleep_time[1],
     )
-    # print(f"debug {character_data.name}进行玩家的睡觉前提判定，当前时间为{now_time}，计划睡觉时间为{pl_character_data.action_info.plan_to_sleep_time}")
     if sleep_time_hour > now_time_hour or (
         sleep_time_hour == now_time_hour
         and sleep_time_minute >= now_time_minute

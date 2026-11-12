@@ -474,7 +474,6 @@ def handle_comprehensive_value_premise(
         if final_character_id not in cache.npc_id_got:
             return 0
 
-    # 进行数值B的判别,A能力,T素质,Time时间,J宝珠,E经验,S状态,F好感度,Flag作者用flag,X信赖,G攻略程度,Instruct指令,Son子嵌套事件,OtherChara其他角色在场,Dirty污浊,Bondage绳子捆绑,Roleplay角色扮演,PenisPos阴茎位置,ShootPos射精位置,Relationship身份关系,Course当前课程科目,CourseType当前课型,CourseShowOff待炫耀的已升级科目,Growth养成数值
     type_son_id = 0
     if (
         len(premise_all_value_list[1]) > 1

@@ -451,7 +451,6 @@ class ArkEditorFileLoadTest(FastTestCase):
                     if act == "delete" or (
                         act == "double" and which == "effect"
                     ):
-                        # 双击前提行删掉前提后会打开前提窗口，由这个窗口重画列表。驱动不运行这个窗口，所以这里不查前提列表。
                         self.assertEqual(result["after_action"], [shown[0]])
 
     def test_panels_after_add_or_copy(self) -> None:

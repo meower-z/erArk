@@ -740,7 +740,6 @@ class Down_Negative_Talent_Panel:
                             cmd_func=self.choice_down_which,
                             args=(chara_id,),
                         )
-                        # print(f"debug button_draw.text = {button_draw.text},button_draw.normal_style = {button_draw.normal_style}")
                         return_list.append(button_draw.return_text)
                         button_draw.draw()
                         line_feed.draw()
@@ -799,7 +798,6 @@ class Down_Negative_Talent_Panel:
                         cmd_func=self.settle_down,
                         args=(ability_id,),
                     )
-                    # print(f"debug button_draw.text = {button_draw.text},button_draw.normal_style = {button_draw.normal_style}")
                     return_list.append(button_draw.return_text)
                     button_draw.draw()
                     line_feed.draw()

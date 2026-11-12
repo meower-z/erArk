@@ -565,7 +565,6 @@ class Checker:
                 line,
                 "幼女期起孩子住自己的宿舍，正文不该再出现育儿室（确实在写搬离育儿室的话，把 cid 加进 DORM_TEXT_ALLOW）",
             )
-        # 成年桶只收成年结算显式推入的事件（Plan 31 §3.2）：事件uid是「文件名 + cid」，日常派发不收成年女儿，别的事件写进来永远推不出来
         if (
             department == GROWTH_DEPARTMENT
             and sub_key == ADULT_SUB_KEY

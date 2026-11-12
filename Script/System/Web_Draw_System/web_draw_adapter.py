@@ -278,9 +278,6 @@ class WebDrawAdapter:
                     "await_input": not skip_wait_active,
                     "tooltip": getattr(line_wait_draw, "tooltip", "") or "",
                 }
-                # print(
-                #     f"[LineFeedWaitDraw] emit segment wait_id={wait_id} line_index={line_index} segment_index={segment_index} await_input={line_element['await_input']} text={text_value!r}"
-                # )
 
                 append_current_draw_element(line_element, record_history=True)
                 web_server.update_game_state(cache.current_draw_elements, None)

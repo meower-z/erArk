@@ -2482,9 +2482,7 @@ def update_game_state(
                     }
                 )
     if highlight:
-        print(
-            # f"[web_server] update_game_state panel={panel_id} wait_entries={highlight} total_elements={len(elements) if elements else 0}"
-        )
+        print()
     # 使用线程锁保护状态更新
     with state_lock:
         # 更新游戏状态数据

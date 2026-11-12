@@ -98,7 +98,6 @@ for behavior in sorted(EDU_BEHAVIOR):
     )
 check("翘课被抓有 ≥ 8 条", count_by_behavior.get("caught_skip_class", 0) >= 8)
 for behavior in ("teach", "attent_class", "self_study", "show_off_study"):
-    # M4（Plan 31）：炫耀只在科目升级成功后出，男性专属的腰技女儿永远升不上去，炫耀口上按女儿可学的 17 门覆盖；授课 / 听课 / 自习照旧 18 门
     subject_list = (
         E.FEMALE_SUBJECT_LIST
         if behavior == "show_off_study"
@@ -673,7 +672,6 @@ check(
     "日程专用一项不进随机池的集合与常量一致",
     E.SCHEDULE_ONLY_ENTERTAINMENT_SET == {155},
 )
-# 指令面板按 cid 排序并把 cid 显示为编号，段错了会排进别的类型（2026-09-09 第三轮把 2040 / 6906 / 6907 归位为 1036 / 5209 / 6021）
 INSTRUCT_TYPE_SEGMENT = {
     "SYSTEM": 0,
     "DAILY": 1,
@@ -812,7 +810,6 @@ check(
     _truncated_line_list,
 )
 
-# buildata.py 顶层会调 game_config.init()，测试进程里不能 import 它（会把配置再载一遍）：只用 ast 取出纯函数 build_promise_csv_text 单独执行
 with open("buildata.py", encoding="utf-8") as _buildata_file:
     _buildata_tree = ast.parse(_buildata_file.read())
 _builder_node_list: list[ast.stmt] = [
@@ -842,8 +839,6 @@ if _builder_node_list:
     _generated_text = _builder_scope["build_promise_csv_text"](
         _promise_line_list
     )
-    # 期望值另从 constant_promise.py 直接取：常量行紧跟单行 docstring「分类 描述」时，生成器应产出「前提id,常量名,分类,描述」，
-    #    描述是 docstring 第一个空格之后的全部。按片段查而不是按行查：前面若有没带 docstring 的常量，行首会粘着别的前提（生成器的既有限制，与本条无关）
     _expect_fragment = {}
     _spaced_name_set = set()
     # black 把超过 80 列的常量赋值折成「常量名 = (」「值」「)」三行，期望值从并回一行后的文字里取

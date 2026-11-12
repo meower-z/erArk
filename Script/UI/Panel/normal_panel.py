@@ -162,7 +162,6 @@ class Take_Care_Baby_Panel:
                         cmd_func=self.choice_take_care,
                         args=(chara_id,),
                     )
-                    # print(f"debug button_draw.text = {button_draw.text},button_draw.normal_style = {button_draw.normal_style}")
                     return_list.append(button_draw.return_text)
                     button_draw.draw()
                     line_feed.draw()

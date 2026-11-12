@@ -906,7 +906,6 @@ def start_sex_class(
     classroom = get_scene_name(pl_character_data.position)
     today = cache.game_time.date().toordinal()
     period = game_time.get_class_period_by_time(cache.game_time)
-    # 预约的那节课（含提前几分钟开讲的，Plan 26 §3.5）与同一节里下课后重开的：复用已有条目，保留玩家排课时定的主修科目与必修名单
     now_class = find_class_to_start(classroom, cache.game_time)[1]
     if now_class is None:
         # 当前节次的键被别的教室还没开讲的预约占着：临时课的键不含教室，另开当场课会静默覆盖那条预约。

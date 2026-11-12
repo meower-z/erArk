@@ -26,7 +26,6 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
     from Script.Core import game_type
 
-# 修复注册表：check_id -> (修复名, 修复函数)。修复函数接收cache，返回修复记录列表（每条含check_id/target/field/old_value/new_value）
 _repair_registry: dict[
     str, tuple[str, Callable[[game_type.Cache], list[dict]]]
 ] = {}

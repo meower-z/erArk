@@ -901,7 +901,6 @@ schedule_handle.set_selected_course(
 )
 set_time(period_time(1) + datetime.timedelta(minutes=2))
 sex_class_handle.set_temp_class(_l6_today, 1, ROOM_P, 70)
-# 各人按自己的时间线推进：教师换教室晚到，第 0 节末尾才开讲；女儿A 已走到第 1 节、坐在这间教室等玩家的课；女儿B 还在第 0 节听课
 teacher.behavior.behavior_id = constant.Behavior.TEACH
 teacher.behavior.start_time = period_time(0) + datetime.timedelta(minutes=40)
 student_a.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
@@ -973,7 +972,6 @@ section(
 clear_schedules()
 for _cid in (101, 201, 202):
     move_to(_cid, classroom_path(ROOM_P))
-# 现场照上面 L6 一段：第 0 节教师甲在实践教室一上课、两名学生都选了这一格；第 1 节玩家在同一间教室预约了临时实操课，女儿A 选修
 schedule_handle.set_class_cell(ROOM_P, _l6_week, 0, 45, 101)
 schedule_handle.set_selected_course(
     201, _l6_week, 0, E.COURSE_TYPE_PRACTICE, ROOM_P

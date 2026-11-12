@@ -548,7 +548,6 @@ class Select_Hidden_Sex_Mode_Panel:
             # 如果男不隐，则玩家取消H状态
             if mode_id in {1, 2}:
                 character_data.sp_flag.is_h = False
-            # 携带模式下玩家全程处于H状态中（携带H中移动即为H状态中的移动），并重置体位，随后的插入结算会将体位设为对面抱位
             if mode_id == 5:
                 character_data.sp_flag.is_h = True
                 character_data.h_state.current_sex_position = -1

@@ -327,7 +327,6 @@ class Gift_Panel:
                         cmd_func=self.select_gift,
                         args=(gift_id,),
                     )
-                    # print(f"debug button_draw.text = {button_draw.text},button_draw.normal_style = {button_draw.normal_style}")
                     return_list.append(button_draw.return_text)
                     button_draw.draw()
                 line_feed.draw()

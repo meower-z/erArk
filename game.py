@@ -16,9 +16,6 @@ if __name__ == "__main__":
     from Script.Config import normal_config
     from Script.Core import game_type, cache_control
 
-    # log输出等级
-    # logging.basicConfig(format='等级：%(levelname)s，函数名：%(funcName)s，信息为：%(message)s', level = logging.DEBUG)
-    # logging.basicConfig(format='等级：%(levelname)s，函数名：%(funcName)s，信息为：%(message)s', level = logging.INFO)
     logging.basicConfig(
         format="等级：%(levelname)s，函数名：%(funcName)s，信息为：%(message)s",
         level=logging.WARNING,

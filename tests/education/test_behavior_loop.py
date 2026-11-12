@@ -97,7 +97,6 @@ if not daughter_list:
             born_days=300,
             position=SCENE_EDU_ENTRY,
         )
-        # make_character 给的 100 点体力撑不过一节 45 分钟的自习，这里按游戏角色的量级给 1000；它造出的角色也没穿衣服，穿上内衣才过得了 normal_4
         cd.hit_point_max = cd.hit_point = 1000
         cd.mana_point_max = cd.mana_point = 1000
         clothing.get_underwear(9001 + index)
@@ -140,8 +139,6 @@ def clear_need(cid: int) -> None:
 
 teacher_list = schedule_handle.get_teacher_candidate_list()
 if len(teacher_list) < 2:
-    # 按「是不是玩家的女儿」筛而不按成长阶段筛：存档里的普通干员也可能带成长阶段素质（如 104 少女），按阶段筛会把她们全部跳过；
-    #    normal_2 不成立（临盆、产后、监禁）的干员 AI 行动基本停止、不会去授课，也不选
     for cid in sorted(cache.npc_id_got):
         cd = cache.character_data[cid]
         if (
@@ -341,8 +338,6 @@ check(
 section(
     "实操课预到岗：上一节在上课的必修生，开课时已在实操教室（Plan 25 §3.1）"
 )
-# 第 5 节（14:00）在别的教室上课、第 6 节（14:45）被点名必修的女儿：改前她们在第 5 节听课到 14:45 才动身，开课那一刻一个都不在；
-#    改后 14:35 被打断提前退场，到了实操教室原地等开课。需求（吃饭、上厕所）不打断，所以只要求至少一半到场
 sex_room = (
     schedule_handle.get_classroom_list(E.COURSE_TYPE_PRACTICE)
     + schedule_handle.get_classroom_list(E.COURSE_TYPE_PUBLIC)
@@ -565,7 +560,6 @@ if l4_id != -1 and l4_room:
         if l4_dorm in cache.scene_data
         else list(SCENE_EDU_ENTRY)
     )
-    # 14:45 起连跑两步：第一步没课作对照；第二步 16:15 有课，开课前 20 分钟（15:55）落在没课的第 7 节里，截短规则 B 截得到
     set_time(
         cache.game_time.replace(hour=14, minute=45, second=0, microsecond=0)
     )

@@ -105,7 +105,6 @@ class SeeMapPanel:
             character_scene_name = map_handle.get_map_scene_id_for_scene_path(
                 self.now_map, character_data.position
             )
-            # print(f"debug self.now_map = {self.now_map}, map_path_str = {map_path_str}，map_name = {map_name}, character_data.position = {character_data.position}, character_scene_id = {character_scene_name}")
             return_list = []
             index = 0
             # 使用地图最大行宽来计算统一的居中偏移，使所有行左对齐
@@ -148,7 +147,6 @@ class SeeMapPanel:
                                 scene_path
                             )
                         )
-                        # print(f"debug scene_path = {scene_path}，draw_text.text = {draw_text.text}, full_scene_str = {full_scene_str}")
 
                         # 如果不是玩家所在的地点，则绘制按钮
                         if draw_text.text != character_scene_name:
@@ -849,10 +847,6 @@ class CollectionSceneNamePanel:
                 text_flag = False
                 if collect_position == pl_character_data.position:
                     text_flag = True
-                # 获取收藏所在场景
-                # collect_scene_path = map_handle.get_map_for_path(collect_position)
-                # collect_scene_id = map_handle.get_map_scene_id_for_scene_path(collect_scene_path, collect_position)
-                # collect_scene_data = map_handle.get_scene_data_for_map(map_handle.get_map_system_path_str_for_list(collect_scene_path), collect_scene_id)
                 scene_position_str = (
                     map_handle.get_map_system_path_str_for_list(
                         collect_position

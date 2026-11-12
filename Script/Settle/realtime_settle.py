@@ -96,9 +96,6 @@ def judge_pl_real_time_data() -> None:
 
     soft_egg_handle.check_soft_eggs_fertilization()
 
-    # 课堂 H 以别的方式结束时一并下课（Plan 32 §3.1）：结束群交、玩家体力归零、学生全部力竭、群交中被撞见、转单人 H 后再结束 H，
-    #    效果串都只关群交、清全场 H 状态（407 / 404），课堂模式留着；玩家这一步的收尾检查里按「玩家已不在 H」下课。
-    #    函数内导入：Script/System/* 在本模块顶层导入会循环导入
     from Script.System.Education_System import sex_class_handle
 
     sex_class_handle.settle_orphan_class()
@@ -357,8 +354,6 @@ def settle_semen_flow(character_id: int, true_add_time: int) -> None:
                 all_real_flow += now_flow
                 now_flow_dict["remaining_volume"] -= now_flow
                 now_part_cid = now_flow_dict["id"]
-                # print(f"debug {now_character_data.name}，{now_flow_dict['type']}的{now_part_cid}部位，精液流动{now_flow}，剩余{now_flow_dict['remaining_volume']}")
-                # 目标部位的精液增加
                 ejaculation_panel.update_semen_dirty(
                     character_id=character_id,
                     part_cid=now_part_cid,

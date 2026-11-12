@@ -191,8 +191,6 @@ class Collection_Panel:
             bonus_draw.width = self.width
             bonus_draw.draw()
 
-            # print(f"debug character_data.pl_collection.collection_bonus = {character_data.pl_collection.collection_bonus}")
-
             # 遍历全部收集奖励
             for cid in game_config.config_collection_bonus_data:
 

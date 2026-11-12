@@ -104,7 +104,6 @@ section("过期清理")
 sex_class_handle.set_temp_class(today - 1, 1, ROOM_P, 70)
 sex_class_handle.set_temp_class(today - 2, 1, ROOM_P, 70, running=True)
 sex_class_handle.set_temp_class(today + 1, 1, ROOM_P, 70)
-# 运行中的那条只在课还真在上（课堂模式开着、玩家在 H 中，拖堂跨天）时保留（Plan 32 §3.1）；课已不在上的幽灵课堂见文末 H1 一段
 cache.sex_class_mode = True
 pl.sp_flag.is_h = True
 check(
@@ -1064,10 +1063,6 @@ check(
     and not pl.sp_flag.is_h
     and not student_a.sp_flag.is_h,
 )
-# 学生全部力竭，走 NPC 阶段的真实调用链（U1 单元复审补）：commit_group_sex_tired_exit 结算她的退出效果（403 清她的 H 状态）→
-#    场上已无仍在 H 的学生 → handle_group_sex_end 把玩家的行为改成「结束群交」并调 update.game_update_flow(5)。
-#    NPC 阶段跑在第 1 层 game_update_flow 里，这一次嵌套是第 2 层、照常重进玩家分支（到第 3 层才拒绝）；
-#    这里把 game_update_flow 桩成玩家这一步：结算玩家此刻行为的效果串，再做玩家的实时数据结算
 _h1_class = open_class_for_h1(5)
 student_b.sp_flag.is_h = False  # 女儿B 已先力竭退出，只剩女儿A
 _h1_flow_call: list[tuple[int, str]] = []
@@ -1207,8 +1202,6 @@ sex_class_handle.end_sex_class()
 _g201.last_absent_period = []
 _g201.last_attend_period = []
 _absent = _g201.absent_count
-# 跨单元整链（U2 单元复审补）：U1 的 settle_attend 按 get_attend_judge_time 那一节写出勤标记，U2 的 settle_absent 按她此刻所在的节次读；
-#    本节内提前下课、体力跌破 30% 回到 AI 派 721 时调的就是 settle_absent，两边的节次要对得上。按时开讲与提前 5 分钟开讲预约的课各验一遍
 for _open_time, _period, _label in (
     (period_time(2) + datetime.timedelta(minutes=5), 2, "按时开讲"),
     (

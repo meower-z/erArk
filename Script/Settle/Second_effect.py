@@ -3525,16 +3525,6 @@ def handle_bondage_effect(
     if handle_premise.handle_self_not_bondage(character_id):
         return
 
-    # 因为character_data.behavior.duration的数值为0，所以改为在Script\Design\character_behavior.py的character_aotu_change_value中进行结算
-    # bondage_id = character_data.h_state.bondage
-    # bondage_data = game_config.config_bondage[bondage_id]
-    # # 根据程度计算系数
-    # bondage_adjust = bondage_data.level * 0.5
-    # # 欲情
-    # base_chara_state_common_settle(character_id, add_time=character_data.behavior.duration, state_id=12, base_value=0, ability_level=character_data.ability[33], extra_adjust=bondage_adjust, tenths_add=False)
-    # # 苦痛
-    # base_chara_state_common_settle(character_id, add_time=character_data.behavior.duration, state_id=17, base_value=0, ability_level=character_data.ability[15], extra_adjust=bondage_adjust, tenths_add=False)
-
 
 @settle_behavior.add_settle_second_behavior_effect(
     constant_effect.SecondEffect.EXPOSED_ORGASM_SMALL_IN_HIDDEN_SEX
@@ -4279,8 +4269,6 @@ def handle_caught_skip_class(
     growth_data = character_data.child_growth
     if growth_data is None or not growth_data.skip_class_flag:
         return
-    # 被抓个正着：翘课到此为止，本日剩余节次重新按课表走。
-    #    只清 flag 的话之后每节照旧按概率掷，同一天里还会再翘；记下日期，class_ai.roll_skip_class 当天不再掷，次日自然失效
     growth_data.skip_class_flag = False
     growth_data.skip_caught_day = cache.game_time.toordinal()
     # 心虚与害怕，数值取一节课的量级（45分钟），与翘课本身给的抑郁回落大致相抵

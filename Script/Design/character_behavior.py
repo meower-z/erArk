@@ -76,9 +76,6 @@ def init_character_behavior() -> None:
                 if character_id in cache.over_behavior_character:
                     continue
                 character_behavior(character_id, cache.game_time, pl_start_time)
-                # logging.debug(f'当前已完成结算的角色有{cache.over_behavior_character}')
-        # 新一天刷新
-        # print(f"debug new_day_flag = {new_day_flag}， cache.game_time.day = {cache.game_time.day}， cache.pre_game_time.day = {cache.pre_game_time.day}")
         if cache.game_time.day != cache.pre_game_time.day and new_day_flag:
             new_day_flag = False
             past_day_settle.update_new_day()
@@ -186,9 +183,6 @@ def character_behavior(
 
     # 再处理NPC部分
     if character_id:
-        # if character_data.name == "阿米娅":
-        #     print(f"debug 前：{character_data.name}，behavior_id = {game_config.config_behavior[character_data.behavior.behavior_id].name}，start_time = {character_data.behavior.start_time}, game_time = {now_time}")
-        # 空闲状态下寻找、执行、结算可用行动
         if (
             character_data.behavior.behavior_id
             == constant.Behavior.SHARE_BLANKLY
@@ -220,8 +214,6 @@ def character_behavior(
         time_judge = judge_character_status_time_over(character_id, now_time)
         if time_judge:
             cache.over_behavior_character.add(character_id)
-        # if character_data.name == "阿米娅":
-        #     print(f"debug 后：{character_data.name}，time_judge = {time_judge}，behavior_id = {game_config.config_behavior[character_data.behavior.behavior_id].name}，start_time = {character_data.behavior.start_time}, game_time = {now_time}, duration = {character_data.behavior.duration}, end_time = {game_time.get_sub_date(minute=character_data.behavior.duration, old_date=character_data.behavior.start_time)}")
 
     # 自动获得对应素质和能力
     handle_talent.gain_talent(character_id, now_gain_type=0)
@@ -356,7 +348,6 @@ def judge_character_status_time_over(
         character_data.behavior.start_time = now_time
         character_data.behavior.duration = 1
         character_data.state = constant.CharacterStatus.STATUS_ARDER
-        # print(f"debug {character_data.name}的add_time = 0，已重置为当前时间：start_time = {character_data.behavior.start_time}")
         return 0
     if end_now:
         time_judge = end_now

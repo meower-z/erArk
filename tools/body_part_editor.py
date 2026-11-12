@@ -30,7 +30,6 @@ from PIL import Image, ImageTk
 if TYPE_CHECKING:
     from typing import Any, Literal, TypedDict
 
-    # json.load 读出的一个关键点：id 是整数，x、y 是 0~1 的浮点数，另有 name、source_model 等字段，写回时原样保留，只能是 Any
     Landmark = dict[str, Any]
     # self.files 的一项：[JSON 路径, 图片路径, JSON 数据, 是否已修改]，按位置读写、各位置类型不同，只能是 Any
     FileEntry = list[Any]

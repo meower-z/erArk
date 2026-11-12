@@ -25,7 +25,6 @@ font.setFamily(cache_control.now_font_name)
 def read_CVP(cvp_value_str: str) -> str:
     """读取CVP字符串 A能力,T素质,J宝珠,E经验,S状态,F好感度,X信赖"""
     cvp_str_list = cvp_value_str.split("_")
-    # 如果"Instruct"在cvp_str_list[2]中，则将该部分的字符串连接起来，合并为一个字符串代替cvp_str_list[2]，其他部分的序号跟着变动
     if "Instruct" in cvp_str_list[2]:
         # 处理前指令属性，b2_value 可能包含下划线，需要精确提取
         behavior_id_str = "_".join(cvp_str_list[2:-2])

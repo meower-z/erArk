@@ -85,7 +85,6 @@ def init_character(
     now_character.cloth.cloth_wear = attr_calculation.get_cloth_wear_zero()
     for cloth_id in character_tem.Cloth:
         type = game_config.config_clothing_tem[cloth_id].clothing_type
-        # print(f"debug {character_tem.Name} cloth_id = {cloth_id},name = {game_config.config_clothing_tem[cloth_id].name},type = {type}")
         now_character.cloth.clothing_tem.append(cloth_id)
         now_character.cloth.cloth_wear[type].append(cloth_id)
         # if type in [6,9] and len(now_character.cloth.cloth_wear[type]):

@@ -45,7 +45,6 @@ def get_npc_cloth(character_id: int) -> None:
         else:
             for cloth_id in tem_character.Cloth:
                 type = game_config.config_clothing_tem[cloth_id].clothing_type
-                # print(f"debug cloth_id = {cloth_id},name = {game_config.config_clothing_tem[cloth_id].name},type = {type}")
                 character_data.cloth.cloth_wear[type].append(cloth_id)
             get_underwear(character_id)
             chara_special_wear_cloth(character_id)

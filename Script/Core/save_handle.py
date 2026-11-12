@@ -646,7 +646,6 @@ def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
                     _migrate_entertainment_cid(one)
                     for one in entertainment_data.entertainment_type
                 ]
-            # 无壳卵生旧存档兼容：无壳卵生种族此前按单胎胎生运行，读档时一次性清除其正在进行的胎生孕程（受精/妊娠/临盆及伴生状态），产后/育儿/泌乳与已出生的孩子保留
             _clear_soft_egg_race_pregnancy(character, soft_egg_enabled)
             if pl_collection is not None and not hasattr(
                 pl_collection, "held_eggs"
@@ -867,7 +866,6 @@ def input_load_save(save_id: str) -> None:
             new_character_data.cid != 0
             and tem_character.TextColor != new_character_data.text_color
         ):
-            # print(f"debug value.name = {value.name}，tem_character.TextColor = {tem_character.TextColor}，value.text_color = {value.text_color}")
             new_character_data.text_color = tem_character.TextColor
             text_color_list = (
                 new_character_data.adv,
@@ -882,7 +880,6 @@ def input_load_save(save_id: str) -> None:
             new_character_data.cid != 0
             and tem_character.Talk_Size != new_character_data.talk_size
         ):
-            # print(f"debug value.name = {value.name}，tem_character.TextSize = {tem_character.TextSize}，value.text_size = {value.text_size}")
             new_character_data.talk_size = tem_character.Talk_Size
             update_count += 1
         # 更新角色势力与出身地
@@ -972,7 +969,6 @@ def input_load_save(save_id: str) -> None:
     update_count += _migrate_child_schedule_template(
         loaded_dict["rhodes_island"]
     )
-    # 成长阶段与体型素质、见学与上课状态、表里没有的行为与娱乐编号、101/102阶段的H与身体状态和离线、外表年龄药、世界设定1
     young_child_session: old_chara_to_new.YoungChildSession = {}
     update_count += old_chara_to_new.migrate_age_and_body_type(
         loaded_dict, young_child_session
@@ -1004,7 +1000,6 @@ def input_load_save(save_id: str) -> None:
     if not hasattr(loaded_dict["rhodes_island"], "official_event_history"):
         loaded_dict["rhodes_island"].official_event_history = {}
         update_count += 1
-    # 挪了桶的养成事件（Plan 32 L22）：没有养成数据的主体记在罗德岛的全局履历里（键为「uid@角色id」），旧uid同样改成新uid
     update_count += _migrate_official_event_history(
         loaded_dict["rhodes_island"].official_event_history
     )

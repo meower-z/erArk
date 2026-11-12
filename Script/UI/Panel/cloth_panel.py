@@ -103,10 +103,6 @@ class SeeCharacterClothPanel:
             if len(target_character_data.cloth.cloth_wear[clothing_type]):
                 # 正常情况下不显示胸部和内裤的服装,debug或该部位可以显示则显示
                 if clothing_type in {6, 9} and not cache.debug_mode:
-                    # print(f"debug {target_character_data.name}.cloth_see[clothing_type] = {target_character_data.cloth_see[clothing_type]}")
-                    # 以下情况自动显示：
-                    # 1.开启透视能力
-                    # 2.没穿对应部位外面的衣服
                     if (
                         character_data.pl_ability.visual
                         and character_data.talent[307]
@@ -240,7 +236,6 @@ class SeeCharacterClothPanel:
                 target_character_data.cloth.cloth_wear[clothing_type]
             ):
                 if not cache.debug_mode:
-                    # print(f"debug {target_character_data.name}.cloth.cloth_see[clothing_type] = {target_character_data.cloth.cloth_see[clothing_type]}")
                     if not target_character_data.cloth.cloth_see[clothing_type]:
                         continue
                 now_text += _("  [{0}]: 真空").format(type_name)

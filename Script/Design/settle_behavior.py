@@ -398,7 +398,6 @@ def handle_settle_behavior(
         # 交互对象的结算输出
         if len(change_data.target_change):
             for target_character_id in change_data.target_change:
-                # print(f"debug target_now_judge,character_id = {character_id},target_character_id = {target_character_id}")
                 if character_id and target_character_id:
                     continue
                 # 当NPC对玩家交互时，直接使用互相替换完的双方数据
@@ -1271,8 +1270,6 @@ def handle_comprehensive_value_effect(
                     attribute_name,
                     change_data_attribute_value,
                 )
-
-            # final_character_data[attribute_name][type_son_id] = operation_func(final_character_data[attribute_name][type_son_id], int(effect_all_value_list[3]))
 
         return 1
 

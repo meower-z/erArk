@@ -648,13 +648,6 @@ def load_ability_up_data() -> None:
                         now_tem.now_level
                     ].append(up_need2)
 
-        # print("tem_data :",tem_data)
-        # print("now_tem.cid :",now_tem.cid)
-        # print("now_tem.ability_id :",now_tem.ability_id)
-        # print("config_ability_up_data[now_tem.ability_id] :",config_ability_up_data[now_tem.ability_id])
-        # print("config_ability_up_data[now_tem.ability_id][now_tem.now_level] :",config_ability_up_data[now_tem.ability_id][now_tem.now_level])
-        # print()
-
 
 def load_talent_gain_data() -> None:
     """载入获得素质数据"""
@@ -1109,7 +1102,6 @@ def load_clothing_type() -> None:
             config_cloth_part_extra_flow,
             now_type.cid,
         )
-    # print(f"debug config_clothing_type_volume = {config_clothing_type_volume}\n config_cloth_part_normal_flow = {config_cloth_part_normal_flow}\n config_cloth_part_full_flow = {config_cloth_part_full_flow}\n config_cloth_part_extra_flow = {config_cloth_part_extra_flow}")
 
 
 def load_clothing_use_type() -> None:
