@@ -216,7 +216,6 @@ if ENABLE_PROBE and WATCH:
         _wrap_int
     )
 
-    # 学生赶去上课的截短（Plan 32 起）走 judge_student_leave_truncate，在实时结算之前调，不在 judge_interrupt_character_behavior 里
     _orig_trunc = handle_npc_ai.judge_student_leave_truncate
 
     def _wrap_trunc(character_id: int) -> bool:

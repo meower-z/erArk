@@ -195,7 +195,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         ]
         cache.character_data[0].target_character_id = id_dict["d102"]
         mother.target_character_id = id_dict["d102"]
-        # 玩家正在搬运她、以她为助理（她开着一项助理服务）；母亲的群交部位模板 A 的嘴、模板 B 的阴茎侍奉里有她（B 里还有玩家）
         player = cache.character_data[0]
         player.action_info.carry_chara_id = id_dict["d102"]
         player.assistant_character_id = id_dict["d102"]
@@ -208,7 +207,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             [id_dict["d102"], 0],
             3,
         ]
-        # 其他结构里对她的引用：时停自由活动、装袋、交互中、拒绝群交名单、收藏品、冷库、囚犯、外勤、实操课必修、体检、借书、场景面板
         child_id = id_dict["d102"]
         player.pl_ability.free_in_time_stop_chara_id = child_id
         player.sp_flag.bagging_chara_id = child_id
@@ -310,7 +308,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         student.child_growth.selected_course = {
             1: {2: [0, "理论教室一"], 3: [4, MISSING_ENTERTAINMENT]}
         }
-        # 103的学员与一名静态干员身上有配置表里没有的娱乐（含兴趣课的目标）与行为；毕业的女儿的娱乐槽位里有改编号前的旧编号176
         graduate_entertainment = cache.character_data[
             id_dict["d104"]
         ].entertainment

@@ -1291,7 +1291,6 @@ check(
     and not _blocked_line,
     (_count_line, _no_course_line, _blocked_line),
 )
-# 点名只豁免前置修习：点名之后才被监禁的必修生，开课拉人时照样不收（check_course=False 仍判状态），这一行要列出她（实施复审补）
 cache.character_data[202].sp_flag.imprisonment = True
 _count_line, _blocked_line, _no_course_line = draw_sex_class_page()
 _must_line = next(

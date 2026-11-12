@@ -131,11 +131,6 @@ def settle_character_juel(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     for status_id in game_config.config_character_state:
-        # print("status_type :",status_type)
-        # print("status_id :",status_id)
-        # print("game_config.config_character_state[status_id] :",game_config.config_character_state[status_id])
-        # print("game_config.config_character_state[status_id].name :",game_config.config_character_state[status_id].name)
-        # 去掉性别里不存在的状态
         if character_data.sex == 0:
             if status_id in {2, 4, 7, 8}:
                 continue

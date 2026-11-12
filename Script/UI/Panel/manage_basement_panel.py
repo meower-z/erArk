@@ -1534,9 +1534,6 @@ class Change_Npc_Work_Panel:
 
                 # 绘制工作类型按钮
                 symbol = "▼" if self.work_type_state[work_type_id] else "▶"
-                # 为了美观，在这里不显示工作类型的id
-                # button_text = f"{symbol}[{str(work_type_id).rjust(3,'0')}]{work_type_name}({len(self.work_type_npc_dict[work_type_id])}人)"
-                # 如果该工作类型是目标工作类型，则高亮
                 if work_type_id in self.target_work_type_id_list:
                     draw_style = "gold_enrod"
                 else:

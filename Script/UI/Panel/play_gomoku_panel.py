@@ -1465,7 +1465,6 @@ def get_shape_fast(
         else:
             return [SHAPES["BLOCK_FIVE"], self_count]
     if no_empty_self_count == 4:
-        # 注意这里的空位判断条件， 右边有有两种，分别是 XX空 和 XX空X,第二种情况下，虽然 right_empty 可能不是true，也是符合的，通过 one_empty_self_count > no_empty_self_count 来判断
         if (
             right_empty >= 1
             or right["one_empty_self_count"] > right["no_empty_self_count"]
@@ -1986,8 +1985,6 @@ class GomokuPanel:
                     )
                     current_value = -current_value
                     board.undo()
-                    # 迭代加深的过程中，除了能赢的棋，其他都不要
-                    # 原因是：除了必胜的，其他评估不准。比如必输的棋，由于走的步数偏少，也会变成没有输，比如 5步之后输了，但是1步肯定不会输，这时候1步的分数是不准确的，显然不能选择。
                     if current_value >= FIVE or d == depth:
                         # 必输的棋，也要挣扎一下，选择最长的路径
                         if (current_value > value) or (

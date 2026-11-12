@@ -301,8 +301,6 @@ def update_semen_dirty(
             return
         now_semen_data = character_data.dirty.cloth_locker_semen[part_cid]
 
-    # 进行统一结算
-    # 部位历史累计精液量为0且本次有精液进入时，记录该部位的初次被射精（semen_count>0守卫必须保留，精液流动会传负数扣减源部位）
     if (
         part_type == 0
         and semen_count > 0
@@ -387,7 +385,6 @@ def update_semen_dirty(
             # 如果为肛交，则清零阴茎状态
             if "A" in behavior_data.tag:
                 now_template_data[0]["penis"] = [-1, -1]
-    # print(f"debug update_semen_dirty name = {character_data.name}, part_cid = {part_cid}, part_type = {part_type}, semen_count = {semen_count}")
 
 
 def calculate_semen_flow(

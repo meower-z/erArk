@@ -295,7 +295,6 @@ def _build_family_blocks(center_id: int) -> list:
         placed_set.add(left_id)
         if right_id != -1:
             placed_set.add(right_id)
-        # 该代夫妇框的子辈：当前血亲节点 + 其同辈（连线语义要求同辈确实出自该夫妇，仅同父同母或同单亲的兄弟姐妹；同辈不向下展开）
         children_nodes = [now_node]
         for sibling_id in get_valid_children(left_id):
             if (

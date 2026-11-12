@@ -741,9 +741,6 @@ class Edit_Group_Sex_Temple_Panel:
             for chara_id in all_character_list
             if chara_id not in group_sex_chara_id_list
         ]
-        # 性技实操课上只列已在这节课里的学生（sex_class_handle.get_class_member_list，Plan 32 §3.8 L11）：
-        #    模板动作逐个目标结算、不查 is_h 与入课门槛，跟随进教室的干员、没过门槛的学生被选进模板就会被操作并吃主修加成，
-        #    绕过「课堂 H 只收学生岗」。普通群交不变
         if cache.sex_class_mode:
             class_member_set = set(sex_class_handle.get_class_member_list())
             all_character_list = [
@@ -931,8 +928,6 @@ class Edit_Group_Sex_Temple_Panel:
                 # 如果角色已在场景中，则跳过
                 if chara_id in now_scene_character_list:
                     continue
-                # 性技实操课按实操课的参加门槛筛（Plan 26 §3.3）：学生岗、状态正常、女儿零门槛、成年学生看 H 模式实行值、
-                #    没修过性技课的要被点名必修；受邀者到场后由状态机 722 走课堂的入课流程并记出勤（target 515）
                 if cache.sex_class_mode:
                     if not sex_class_handle.judge_can_join_sex_class(
                         chara_id, check_course=chara_id not in must_attend_set

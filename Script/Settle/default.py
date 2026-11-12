@@ -997,145 +997,6 @@ def handle_move_to_target_scene(
         )
 
 
-# @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_SOCIAL_FAVORABILITY)
-# def handle_add_social_favorability(
-#     character_id: int,
-#     add_time: int,
-#     change_data: game_type.CharacterStatusChange,
-#     now_time: datetime.datetime,
-# ):
-#     """
-#     增加社交关系好感
-#     Keyword arguments:
-#     character_id -- 角色id
-#     add_time -- 结算时间
-#     change_data -- 状态变更信息记录对象
-#     now_time -- 结算的时间
-#     """
-#     if not add_time:
-#         return
-#     character_data: game_type.Character = cache.character_data[character_id]
-#     if character_data.target_character_id != character_id and (not character_id or not character_data.target_character_id):
-#         target_data: game_type.Character = cache.character_data[character_data.target_character_id]
-#         if target_data.dead:
-#             return
-#         if (
-#             character_id in target_data.social_contact_data
-#             and target_data.social_contact_data[character_id]
-#         ):
-#             change_data.target_change.setdefault(target_data.cid, game_type.TargetChange())
-#             target_change = change_data.target_change[target_data.cid]
-#             add_favorability = character.calculation_favorability(character_id, target_data.cid, add_time)
-#             add_favorability *= target_data.social_contact_data[character_id]
-#             if add_favorability:
-#                 character_handle.add_favorability(
-#                     character_id, target_data.cid, add_favorability, change_data, target_change, now_time
-#                 )
-
-
-# @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_INTIMACY_FAVORABILITY)
-# def handle_add_intimacy_favorability(
-#     character_id: int,
-#     add_time: int,
-#     change_data: game_type.CharacterStatusChange,
-#     now_time: datetime.datetime,
-# ):
-#     """
-#     增加亲密行为好感
-#     Keyword arguments:
-#     character_id -- 角色id
-#     add_time -- 结算时间
-#     change_data -- 状态变更信息记录对象
-#     now_time -- 结算的时间
-#     """
-#     if not add_time:
-#         return
-#     character_data: game_type.Character = cache.character_data[character_id]
-#     if character_data.target_character_id != character_id and (not character_id or not character_data.target_character_id):
-#         target_data: game_type.Character = cache.character_data[character_data.target_character_id]
-#         if target_data.dead:
-#             return
-#         add_favorability = character.calculation_favorability(
-#             character_id, character_data.target_character_id, add_time * 1.5
-#         )
-#         add_favorability_coefficient = add_favorability / (add_time * 1.5)
-#         social = 0
-#         if character_id in target_data.social_contact_data:
-#             social = target_data.social_contact_data[character_id]
-#         change_data.target_change.setdefault(character_data.target_character_id, game_type.TargetChange())
-#         target_change = change_data.target_change[target_data.cid]
-#         if social >= 2:
-#             add_favorability += add_favorability_coefficient * social
-#             character_handle.add_favorability(
-#                 character_id, target_data.cid, add_favorability, change_data, target_change, now_time
-#             )
-#         else:
-#             add_favorability -= add_favorability_coefficient * social
-#             cal_social = social
-#             if not cal_social:
-#                 cal_social = 1
-#             add_disgust = (500 - add_favorability) / cal_social
-#             target_data.status.setdefault(12, 0)
-#             target_data.status[12] += add_disgust
-#             target_change.status.setdefault(12, 0)
-#             target_change.status[12] += add_disgust
-#             character_handle.add_favorability(
-#                 character_id, target_data.cid, add_favorability, change_data, target_change, now_time
-#             )
-
-
-# @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_INTIMATE_FAVORABILITY)
-# def handle_add_intimate_favorability(
-#     character_id: int,
-#     add_time: int,
-#     change_data: game_type.CharacterStatusChange,
-#     now_time: datetime.datetime,
-# ):
-#     """
-#     增加私密行为好感
-#     Keyword arguments:
-#     character_id -- 角色id
-#     add_time -- 结算时间
-#     change_data -- 状态变更信息记录对象
-#     now_time -- 结算的时间
-#     """
-#     if not add_time:
-#         return
-#     character_data: game_type.Character = cache.character_data[character_id]
-#     if character_data.target_character_id != character_id and (not character_id or not character_data.target_character_id):
-#         target_data: game_type.Character = cache.character_data[character_data.target_character_id]
-#         if target_data.dead:
-#             return
-#         add_favorability = character.calculation_favorability(
-#             character_id, character_data.target_character_id, add_time * 2
-#         )
-#         add_favorability_coefficient = add_favorability / (add_time * 2)
-#         social = 0
-#         if character_id in target_data.social_contact_data:
-#             social = target_data.social_contact_data[character_id]
-#         change_data.target_change.setdefault(character_data.target_character_id, game_type.TargetChange())
-#         target_change: game_type.TargetChange = change_data.target_change[target_data.cid]
-#         target_data: game_type.Character = cache.character_data[character_data.target_character_id]
-#         if social >= 3:
-#             add_favorability += add_favorability_coefficient * social
-#             character_handle.add_favorability(
-#                 character_id, target_data.cid, add_favorability, change_data, target_change, now_time
-#             )
-#         else:
-#             add_favorability -= add_favorability_coefficient * social
-#             cal_social = social
-#             if not cal_social:
-#                 cal_social = 1
-#             add_disgust = (1000 - add_favorability) / cal_social
-#             target_data.status.setdefault(12, 0)
-#             target_data.status[12] += add_disgust
-#             target_change.status.setdefault(12, 0)
-#             target_change.status[12] += add_disgust
-#             character_handle.add_favorability(
-#                 character_id, target_data.cid, add_favorability, change_data, target_change, now_time
-#             )
-
-
 @settle_behavior.add_settle_behavior_effect(
     constant_effect.BehaviorEffect.FIRST_KISS
 )
@@ -1248,15 +1109,6 @@ def handle_first_sex(
         character_data.first_record.first_sex_time = cache.game_time
         character_data.first_record.first_sex_place = character_data.position
         character_data.first_record.first_sex_posture = instruct_name
-        # if (not character_id) or (not target_data.cid):
-        # now_draw = draw.NormalDraw()
-        # now_draw.text = _("{character_name}博士于{sex_time}在{sex_palce}失去了童贞\n").format(
-        #     character_name=character_data.name,
-        #     sex_time = str(character_data.first_record.first_sex_time.month) + "月" + str (character_data.first_record.first_sex_time.day) + "日",
-        #     sex_palce = attr_text.get_scene_path_text(character_data.first_record.first_sex_place),
-        # )
-        # now_draw.width = window_width
-        # now_draw.draw()
     if target_data.talent[0] == 1:
         target_data.talent[0] = 0
         # NPC的V破处记录进部位交初体验dict（破处是权威事件，无条件覆盖通用挂钩先建的简版条目）
@@ -1355,15 +1207,6 @@ def handle_first_a_sex(
         character_data.first_record.first_sex_time = cache.game_time
         character_data.first_record.first_sex_place = character_data.position
         character_data.first_record.first_sex_posture = instruct_name
-        # if (not character_id) or (not target_data.cid):
-        # now_draw = draw.NormalDraw()
-        # now_draw.text = _("{character_name}博士于{sex_time}在{sex_palce}失去了童贞\n").format(
-        #     character_name=character_data.name,
-        #     sex_time = str(character_data.first_record.first_sex_time.month) + "月" + str (character_data.first_record.first_sex_time.day) + "日",
-        #     sex_palce = attr_text.get_scene_path_text(character_data.first_record.first_sex_place),
-        # )
-        # now_draw.width = window_width
-        # now_draw.draw()
     if target_data.talent[1] == 1:
         target_data.talent[1] = 0
         # NPC的A破处记录进部位交初体验dict（破处是权威事件，无条件覆盖通用挂钩先建的简版条目）
@@ -9257,8 +9100,6 @@ def handle_teach_add_just(
         ability_id = teaching["ability_id"]
         course_type = teaching["course_type"]
     else:
-        # 玩家手动发起的授课不在课表上：课型按所在教室判定，科目回落学识。
-        #    与 CVP 对玩家手动授课的回落（handle_premise.get_player_manual_teach_course）共用这两处定义，口上读到的与实际结算不会分叉（Plan 31）
         course_type = schedule_handle.get_course_type_by_position(
             character_data.position
         )
@@ -9292,8 +9133,6 @@ def handle_teach_add_just(
                     other_character_data.behavior.behavior_id
                     == constant.Behavior.ATTENT_CLASS
                 ):
-                    # NPC 教师只给自己的学生发（本节个人课表指向这间教室的人）；玩家手动授课照旧发给全场（Plan 22 第五轮）。
-                    #    同一间教室里偶有两位教师时，别的教师的学生不会被重复记一节
                     student_course = schedule_handle.get_now_course(chara_id)
                     scheduled_here = (
                         student_course is not None
@@ -9301,10 +9140,6 @@ def handle_teach_add_just(
                     )
                     if character_id != 0 and not scheduled_here:
                         continue
-                    # 各人按自己的时间线推进：她的听课行为（按她的开始时刻）落在别的节次，就不是这节课的学生（Plan 32 §3.8 L6）。
-                    #    典型是她下一节是玩家的临时实操课（格子教师为 0，557 不结算、也不写去重标记）、已坐在这间教室等，
-                    #    上一节的 NPC 教师换教室晚到才开讲：按她下一节的节次记出勤、发上一节的科目收益，玩家开课时又记一次。
-                    #    玩家手动授课不受影响
                     if (
                         character_id != 0
                         and student_course is not None
@@ -9383,8 +9218,6 @@ def handle_self_study_add_just(
     ability_id = education_constant.FALLBACK_SUBJECT_ABILITY
     if now_course is not None and now_course["ability_id"] > 0:
         ability_id = now_course["ability_id"]
-    # 教师id传-1即走自习分支：基础值降档、速度系数恒取1.0
-    # 只有课表排了课（教师缺席降级）的自习才计出勤；日程活动「上课（无课时自习）」照常给收益但不算上过课（Plan 22 第五轮）
     growth_handle.settle_student_class_gain(
         character_id,
         -1,
@@ -9443,7 +9276,6 @@ def handle_attent_class_add_just(
     classroom = now_course["classroom"]
     if not class_ai.judge_in_scene(character_id, classroom):
         return
-    # 教师这一节能不能到岗，与学生决定坐下听课 / 降级自习用的是同一个判据（传本节教室：空气催眠的教师只在人已在教室时算能到岗，Plan 31 §3.4）
     if not class_ai.judge_teacher_available(teacher_id, classroom):
         return
     growth_handle.settle_student_class_gain(
@@ -9480,9 +9312,6 @@ def handle_skip_class_add_just(
     growth_data = growth_handle.get_child_growth(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
     growth_data.skip_class_flag = True
-    # 翘课 flag 认日期（Plan 31 §3.6）：记下挂上 flag 的那一天，取行为开始时刻（now_time 是行为结束时刻）。
-    #    flag 只在这一天有效，读的地方一律走 class_ai.judge_skip_class_today：跨天结算在 NPC 阶段之后才清 flag、离线的人跨天不清，
-    #    认了日期就不会把翘课带进另一天
     start_time = character_data.behavior.start_time or cache.game_time
     growth_data.skip_class_day = start_time.toordinal()
     # 翘课换来的那点轻松：抑郁小幅回落。不给任何学习收益，这是翘课的代价
@@ -10260,8 +10089,6 @@ def handle_play_instrument_add_adjust(
         if character_data.ability[44] <= 2 and character_id == 0:
             good_flag = False
         adjust = handle_ability.get_ability_adjust(character_data.ability[44])
-
-        # print(f"debug 乐器，角色 = {character_data.name}，目标= {target_data.name}，good_flag = {good_flag}，add_favorability = {add_favorability}")
 
         # 对在场的全部角色起效
         for chara_id in cache.scene_data[
@@ -12083,9 +11910,6 @@ def handle_sleep_add_adjust(
         # 否则判定是否关门
         elif random.random() < 0.5:
             handle_door_close(character_id, add_time, change_data, now_time)
-            # print(F"debug : {cache.character_data[character_id].name} 在{cache.character_data[character_id].dormitory}关门睡觉")
-        # else:
-        # print(F"debug : {cache.character_data[character_id].name} 在{cache.character_data[character_id].dormitory}不关门睡觉")
 
 
 @settle_behavior.add_settle_behavior_effect(

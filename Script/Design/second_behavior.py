@@ -212,7 +212,6 @@ def check_second_effect(
         second_behavior_effect(
             character_id, change_data, orgasm_list, orgasm_settle_flag=True
         )
-        # 无壳卵生的体外排卵二段行为在高潮结算中才被赋予（不在进入本函数时构建的列表内），此处显式结算使其与本轮绝顶同步生效
         from Script.System.Pregnancy_System import pregnancy_constant
 
         if character_data.second_behavior.get(
@@ -473,12 +472,7 @@ def judge_child_growth_second_behavior(character_id: int) -> None:
         sex_class_handle,
     )
 
-    # 翘课被抓优先于炫耀：正翘着课的孩子不会先炫耀成绩。
-    #    翘课 flag 认日期（Plan 31 §3.6）：前一天挂上、跨天没清掉的（一步跨过午夜、翘课当天离线）不算今天翘课，不再触发被抓
     if class_ai.judge_skip_class_today(character_id):
-        # 她此刻正按设计去上 / 在上实操课时不算被抓（Plan 32 §3.10 L2）：在 H 中（课堂 H、被玩家带进 H）、身处正在进行的实操课、
-        #    或上课状态是待赴 / 加入实操课（SEX_PENDING / JOIN）。被抓口上多写「回教室 / 去上课」，她人就在课上或正往课上去。
-        #    这几种情形照旧不炫耀：翘课 flag 留着，下次在别处撞见照常算被抓
         on_sex_class = (
             character_data.sp_flag.is_h
             or sex_class_handle.judge_in_running_class(character_id)

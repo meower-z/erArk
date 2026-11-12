@@ -435,7 +435,6 @@ def handle_unconscious_h_response(
     # 退出奖励会连同角色的交互对象一起结算，而目标角色身上的交互对象可能是没有清理过的旧值，
     # 因此先把目标指向自己再发奖
     elif not can_continue:
-        # 先解放目标角色累积的寸止计数；该结算作用于调用者的交互对象、且须在H状态归零前进行，故以自己为调用者、交互对象指向目标角色
         character_data.target_character_id = target_character_id
         default.handle_orgasm_edge_release(
             character_id, 1, game_type.CharacterStatusChange(), cache.game_time
@@ -643,7 +642,6 @@ def evaluate_npc_body_part_prefs(character_id: int) -> int:
     part_id = random.choices(
         list(part_weight.keys()), weights=list(part_weight.values()), k=1
     )[0]
-    # print(f"debug {character_data.name}的逆推ai选择了{game_config.config_organ[part_id].name}部位，总权重为{part_weight}")
 
     # 以防万一，如果因为BUG选中了阴茎，则返回
     if part_id == 3:

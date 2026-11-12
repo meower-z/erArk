@@ -508,7 +508,6 @@ class Course_Select_Panel:
                 continue
             class_count += 1
             teacher_name = _("无教师（自习）")
-            # 教师已离岗 / 不在岛上时名字后加标注、整行灰字（Plan 31 §3.10）：这节课每周都会降级为自习，但仍可选，所以照旧是按钮
             absent_mark = ""
             if cell[1] in cache.character_data:
                 absent_mark = get_teacher_absent_mark(cell[1])

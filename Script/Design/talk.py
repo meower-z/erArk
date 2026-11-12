@@ -242,7 +242,6 @@ def handle_talk_sub(
         talk_config = game_config.config_talk[talk_id]
         # 角色专属口上则需要判定是否为该角色
         if talk_config.adv_id != 0:
-            # print(character_data.name,target_data.name,talk_config.context,character_data.adv,target_data.adv,talk_config.adv_id)
             if (
                 character_data.adv != talk_config.adv_id
                 and target_data.adv != talk_config.adv_id

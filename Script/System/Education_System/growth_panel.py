@@ -499,8 +499,6 @@ class Growth_Panel:
                     "、".join(name_list)
                 )
             )
-        # 翘课 flag 认日期（Plan 31 §3.6）：跨天结算在 NPC 阶段之后才清、离线的人跨天不清，只看布尔值会把前一天的翘课写成「今天」。
-        #    参照时刻取游戏时间：这里的「今天」是玩家看面板的这一天，不是她当前行为开始的那一刻
         if class_ai.judge_skip_class_today(character_id, cache.game_time):
             text_list.append(_("今天正在翘课"))
         # 队列是全岛共用的，这里只数这个孩子的那几条（Plan 23）

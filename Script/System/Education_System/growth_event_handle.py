@@ -143,7 +143,6 @@ def get_classmate_list(character_id: int) -> list[int]:
     for other_id in cache.npc_id_got:
         if other_id == character_id:
             continue
-        # 只取幼女与学员，与同胞同口径（幼女离线，实际只有学员）：仍在学生岗的已毕业姐姐不算同学；婴儿不上学，本就没有课表
         if (
             get_character_stage(other_id)
             not in education_constant.SIBLING_PLAY_STAGE_SET
@@ -416,7 +415,6 @@ def push_birthday_event() -> list[int]:
         if not judge_stage_pass(uid, character_id):
             continue
         partner_id = get_event_partner(uid, character_id)
-        # 逐条判前提、不带口上的口球判定（judge_premise_all_pass）：跨天那一刻她或博士被塞着口球时，按口上的判法整组判 0，这一次就永远错过了
         if not judge_premise_all_pass(
             event_data.get("premise", ""), character_id, partner_id
         ):

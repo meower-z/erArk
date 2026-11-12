@@ -1591,7 +1591,6 @@ def handle_in_dormitory(character_id: int) -> int:
         character_data.dormitory = map_handle.get_map_system_path_str_for_list(
             ["中枢", "博士房间"]
         )
-    # print(f"debug {character_data.name}的宿舍前提判定，当前位置为{now_position}，宿舍位置为{character_data.dormitory}")
     return now_position == character_data.dormitory
 
 
@@ -4697,8 +4696,6 @@ def handle_move_from_dormitory(character_id: int) -> int:
     )
     if character_id == 0 and src_scene_str != "":
         src_scene_data = cache.scene_data[src_scene_str]
-        # print(f"debug move_src = {character_data.behavior.move_src},place_name = {src_scene_data.scene_name},tag = {src_scene_data.scene_tag}")
-        # print(f"debug now_position = {now_position},place_name = {now_scene_data.scene_name},tag = {now_scene_data.scene_tag}")
         if "Dormitory" in src_scene_data.scene_tag:
             return 1
     return 0

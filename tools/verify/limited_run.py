@@ -883,8 +883,6 @@ def run(
         signal.signal(signum, end_signal)
     emit({"event": "started", **state})
 
-    # 每次运行一个自己的临时目录：用 tempfile 写固定文件名的脚本在并发运行间不会互相覆盖；运行结束时删掉，命令在结束后还要用的文件写到 TMPDIR 以外
-    # 用 mkdtemp 建，进程号被重用时新运行也拿到一个新目录，不会接手旧运行留下的
     (STATE_DIR / "tmp").mkdir(parents=True, exist_ok=True)
     tmpdir = Path(tempfile.mkdtemp(prefix=f"{unit}-", dir=STATE_DIR / "tmp"))
     env = scope_env({**extra_env, "TMPDIR": str(tmpdir)})
@@ -897,7 +895,8 @@ def run(
     try:
         while proc.poll() is None:
             time.sleep(0.2)
-            # memory.peak 含文件缓存，scope 到了内存上限时内核先回收文件缓存，所以它到了上限不一定会被杀；回收不了的部分内核不记峰值，每轮取样记下最大值
+            # memory.peak 含文件缓存。内核在 scope 到内存上限时先回收文件缓存，所以 memory.peak 到了上限不说明运行被杀。
+            # 内核不给回收不了的内存记峰值，所以这里每轮读 memory.stat 算出这部分，留下最大值 unreclaimable_peak。
             peak = max(peak, read_int(scope_dir(unit) / "memory.peak"))
             try:
                 unreclaimable_peak = max(
@@ -1170,7 +1169,6 @@ def main(argv=None):
     if args.command[:1] != ["--"] or len(args.command) < 2:
         parser.error("在 -- 之后给出要运行的命令，或者只写 status、stop")
     game_checkout()
-    # 固定字符串散列的种子，让 set、dict 里字符串的次序在两次运行间不变；random、numpy 等其他随机源由脚本自己定种子。调用方自己设了 PYTHONHASHSEED 就用调用方的
     return run(
         "headless",
         args.command[1:],

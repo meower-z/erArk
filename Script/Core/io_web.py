@@ -195,9 +195,6 @@ def append_current_draw_element(
         text_preview = element.get("text", "")
         if isinstance(text_preview, str) and len(text_preview) > 30:
             text_preview = text_preview[:27] + "..."
-        # print(
-        #     f"[io_web] appended element type={elem_type} wait_id={wait_id} record_history={record_history} text={text_preview!r}"
-        # )
     if record_history:
         _record_history_element(element)
 

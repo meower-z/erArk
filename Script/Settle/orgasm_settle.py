@@ -364,7 +364,6 @@ def orgasm_settle_in_second_behavior(
             tem_orgasm_set.add(orgasm)
             # 本部位本次结算的最高绝顶程度（供无壳卵生的体外排卵判定）
             max_degree = -1
-            # 解放状态（含寸止解放与时停解放）下每部位只结算一次绝顶：累计≥3次由下方超强/强分支结算并跳过掷骰循环，1-2次掷骰一次；其余状态按累计次数逐次掷骰
             release_flag = handle_premise.handle_self_orgasm_edge_relase_or_time_stop_orgasm_relase(
                 character_id
             )

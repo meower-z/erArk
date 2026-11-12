@@ -174,7 +174,6 @@ def settle_agriculture_line(draw_flag: bool = True) -> tuple[bool, str]:
             # 计算最大生产数
             produce_num_max = int(max_time * produce_effect)
             produce_num = produce_num_max
-            # print(f"debug 药田{agriculture_line_id},max_time = {max_time}，produce_effect = {produce_effect}，最大生产数为{produce_num_max}")
 
             # 结算实际生产
             if produce_num > 0:
@@ -240,7 +239,6 @@ def settle_agriculture_line(draw_flag: bool = True) -> tuple[bool, str]:
             # 计算最大生产数
             produce_num_max = int(max_time * produce_effect)
             produce_num = produce_num_max
-            # print(f"debug 温室{agriculture_line_id},max_time = {max_time}，produce_effect = {produce_effect}，最大生产数为{produce_num_max}")
 
             # 结算实际生产
             if produce_num > 0:

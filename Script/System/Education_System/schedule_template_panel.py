@@ -320,8 +320,6 @@ class Schedule_Template_Panel:
                         entertainment_id
                     )
                 )
-                # 地点还没开放的仍可选（Plan 27 §3.1）：模板长期有效，场所解锁之后自动生效，没开放的这段时间里那个时段退回自由选择。
-                #    带年龄限制又未开放的按钮最长，文字不能超过每格宽度 31 列
                 place_closed = bool(
                     entertainment_id
                 ) and not schedule_template_handle.judge_activity_place_open(

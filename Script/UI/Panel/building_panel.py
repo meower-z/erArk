@@ -226,7 +226,6 @@ class Building_Panel:
                 info_draw.text += _("\n  升级需要的龙门币：{0}\n").format(
                     facility_data_next.money_use
                 )
-                # info_draw.text += f"\n  升级需要的龙门币：{facility_data_next.money_use}\n  升级需要的基建材料：{facility_data_next.resouce_use}\n"
                 info_draw.width = self.width
                 info_draw.draw()
 

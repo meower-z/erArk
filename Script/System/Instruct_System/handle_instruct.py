@@ -418,7 +418,6 @@ def chara_handle_instruct_common_settle(
     """
     from Script.System.Sex_System import group_sex_panel
 
-    # print(f"debug 角色处理指令通用结算函数 state_id:{state_id} character_id:{character_id} behevior_id:{behevior_id} duration:{duration}")
     instuct_judege.init_character_behavior_start_time(
         character_id, cache.game_time
     )
@@ -699,9 +698,6 @@ def handle_teach() -> None:
                     other_character_data.behavior.start_time = (
                         character_data.behavior.start_time
                     )
-                    # 学生听到本节下课为止（Plan 27 §3.5），与 NPC 教师的 303 / 304 同口径：节次首尾相接，照满 45 分钟会压进下一节，
-                    #    下一节在别处有课的学生迟到半节；节次外（午休等）仍是 45 分钟。剩余分钟按行为开始时刻算，必须在对齐开始时刻之后取。
-                    #    玩家自己的授课仍是 45 分钟：收益在开讲这一刻已按全场结算，学生先走不影响收益与出勤
                     other_character_data.behavior.duration = (
                         schedule_handle.get_period_left_minute(chara_id)
                     )

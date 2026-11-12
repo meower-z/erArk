@@ -708,7 +708,6 @@ check(
 growth_handle.get_child_growth(214).event_history.pop(
     E.ADULT_EXTRA_EVENT_UID_LIST[0], None
 )
-# 队列已满：59 / 60 与毕业典礼、成年纪念一样不受容量上限约束（Plan 31 §3.2，实施时补）——成年桶没有别的入口，按普通入队会永远丢掉
 cache.rhodes_island.official_event_queue = [
     {
         "uid": loli_bucket[0],
@@ -812,8 +811,6 @@ section(
 _growth_211 = growth_handle.get_child_growth(211)
 _growth_211.attend_class_count = 20
 _growth_211.report_card_flag = False
-# Plan 32 L22：写成绩单的萝莉 1 / 20 / 26 挪进了期末桶（期末 17 / 18 / 19），学期切换时与其它期末事件同池抽，日常派发任何状态下都抽不到。
-#    期末侧的覆盖（良好档萝莉成立、档位 3 与幼女不成立）在 test_talk_data
 _report_uid = {"萝莉1", "萝莉20", "萝莉26", "期末17", "期末18", "期末19"}
 check(
     "Plan 32 L22 原萝莉 1 / 20 / 26 已从事件表删去",
@@ -976,7 +973,6 @@ clear_schedules()
 set_time(datetime.datetime(2026, 9, 7, 0, 5))
 mate.pregnancy.born_time = datetime.datetime(2025, 9, 7, 6, 0)
 big_sister.pregnancy.born_time = datetime.datetime(2024, 9, 7, 6, 0)
-# 游戏一年 120 天，出生恰好 120 天的萝莉 201、幼女 202、212 今天也过生日；把她们的出生日往前挪一天，只留萝莉 C 与成年姐姐（本段末还原）
 _saved_born_other = {
     cid: cache.character_data[cid].pregnancy.born_time
     for cid in (201, 202, 212)
@@ -1151,7 +1147,6 @@ _orig_must_show = talk.must_show_talk_check
 talk.must_show_talk_check = lambda character_id: None
 clear_schedules()
 set_time(period_time(0))
-# 长成学员时按学员重刷当天娱乐、查有没有教师；派对计划表与各岗位名单由新游戏的 basement 初始化铺满，最小 fixture 里没有，这里补上
 cache.rhodes_island.party_day_of_week = {day: 0 for day in range(7)}
 cache.rhodes_island.all_work_npc_set.setdefault(
     education_constant.TEACHER_WORK_TYPE, set()

@@ -299,7 +299,6 @@ class Chose_Hypnosis_Type_Panel:
                     hypnosis_type_data.hypnosis_degree,
                 )
                 draw_text += f"：{hypnosis_type_data.introduce}"
-                # 已解锁则绘制按钮，需要已有该能力，且当前交互对象是自己，或有交互对象且该对象催眠深度达到要求且交互对象不在临盆产后中
                 if pl_character_data.talent[hypnosis_type_data.talent_id] and (
                     pl_character_data.target_character_id == 0
                     or (
@@ -360,7 +359,6 @@ class Chose_Hypnosis_Type_Panel:
             now_draw.draw()
             # 如果当前有交互对象
             if self.instruct_flag and pl_character_data.target_character_id:
-                # 依当前催眠类型对目标结算并套用催眠状态；未通过（催眠深度不足、或空气催眠地点不可锁门）则中止，不再向下宣告切换结果
                 if not evaluate_hypnosis_completion(
                     pl_character_data.target_character_id
                 ):

@@ -79,8 +79,6 @@ def check_return_book(character_id: int) -> int:
     # 已借书则d100和还书概率比大小
     else:
         return_d100 = random.randint(1, 100)
-        # 小于还书概率则还书
-        # print(f"debug return_d100 = {return_d100},book_return_possibility = {character_data.entertainment.book_return_possibility}")
         if return_d100 < character_data.entertainment.book_return_possibility:
             for book_id in character_data.entertainment.borrow_book_id_set:
                 cache.rhodes_island.book_borrow_dict[book_id] = -1
@@ -496,7 +494,6 @@ class Borrow_Book_Panel:
                             button_draw.width = self.width
                             button_draw.style = book_style
 
-                        # print(f"debug button_draw.text = {button_draw.text},button_draw.normal_style = {button_draw.normal_style}")
                         book_draw_list.append(button_draw)
                         book_draw_list.append(line_feed)
 

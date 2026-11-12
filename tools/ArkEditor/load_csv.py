@@ -60,7 +60,6 @@ def load_config() -> None:
                     continue
             cache_control.behavior_data[i["en_name"]] = i["name"]
             cache_control.behavior_all_data[i["en_name"]] = i
-            # print(f"debug i[cid] = {i['cid']}, type = {type(i['cid'])}, status = {i['status']}, type = {type(i['status'])}")
             cache_control.behavior_type_data.setdefault(i["type"], [])
             cache_control.behavior_type_data[i["type"]].append(i["en_name"])
     with open(effect_path, encoding="utf-8") as now_file:

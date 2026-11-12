@@ -228,8 +228,6 @@ class BuyItemByItemNameDraw:
         flag_not_max = self.character_data.item[self.text] < 99
         flag_have = self.character_data.item[self.text] > 0
 
-        # print("debug flag_consumables = ",flag_consumables,"  flag_not_max = ",flag_not_max,"  flag_have = ",flag_have)
-
         # 可购买：1消耗品且数量小于99，2非消耗品且未持有
         if (flag_consumables and flag_not_max) or (
             not flag_consumables and not flag_have

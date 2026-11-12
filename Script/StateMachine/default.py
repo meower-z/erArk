@@ -560,9 +560,6 @@ def character_move_to_class_room(character_id: int) -> None:
     to_class_room = []
     if target_room:
         to_class_room = schedule_handle.get_classroom_position(target_room)
-    # 回落：课表没排或教室已不存在时（多是排了「上课（无课时自习）」的学生去自习），随机去一间**已开放**的理论教室（Plan 27 §3.2）。
-    #    Class_Room 标签装的是全部 6 间，理论教室二~六要教育区 2~5 级才解锁；挑中锁着的，寻路在门口返回 wait_open，
-    #    等 1 分钟后下一次决策又重新随机，在几间锁着的教室门口之间来回走
     if not to_class_room:
         open_room_list = schedule_handle.get_classroom_list(
             education_constant.COURSE_TYPE_THEORY
@@ -1401,8 +1398,6 @@ def character_move_to_player(character_id: int) -> None:
     move_flag = True  # flase的话就是等待
     if move_path == []:
         move_flag = False
-    #     print(f"debug {character_data.name} 无法移动至玩家位置，move_type = {move_type},当前位置 = {character_data.position},move_path = {move_path}")
-    # 进行私密跟随判断
     else:
         move_flag, _wait_flag = character_move.judge_character_move_to_private(
             character_id, move_path
@@ -1411,7 +1406,6 @@ def character_move_to_player(character_id: int) -> None:
     if move_flag:
         character_data.action_info.follow_wait_time = 0
         general_movement_module(character_id, to_dr)
-        # print(f"debug {character_data.name} 移动至玩家位置,move_final_target = {character_data.behavior.move_final_target}")
     else:
         character_data.state = constant.CharacterStatus.STATUS_WAIT
         character_data.behavior.behavior_id = constant.Behavior.WAIT

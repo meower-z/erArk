@@ -157,7 +157,6 @@ def settle_assembly_line(
             # 计算最大生产数
             produce_num_max = int(max_time * produce_effect)
             produce_num = produce_num_max
-            # print(f"debug 流水线{assembly_line_id},max_time = {max_time}，produce_effect = {produce_effect}，最大生产数为{produce_num_max}")
 
             # 遍历全部原料，判断是否足够
             for need_type in formula_data_now:

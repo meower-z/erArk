@@ -168,7 +168,6 @@ class Manage_Library_Panel:
                             cmd_func=self.return_book,
                             args=(borrow_npc_id,),
                         )
-                        # print(f"debug button_draw.text = {button_draw.text},button_draw.normal_style = {button_draw.normal_style}")
                         line_feed.draw()
                         button_draw.draw()
                         return_list.append(button_draw.return_text)
@@ -281,7 +280,6 @@ class Manage_Library_Panel:
                     cmd_func=self.choice_read_party,
                     args=(i,),
                 )
-                # print(f"debug button_draw.text = {button_draw.text},button_draw.normal_style = {button_draw.normal_style}")
                 line_feed.draw()
                 button_draw.draw()
                 return_list.append(button_draw.return_text)

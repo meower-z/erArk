@@ -49,13 +49,6 @@ def get_now_class_tip(character_id: int) -> tuple[bool, str] | None:
     character_data: game_type.Character = cache.character_data[character_id]
     period = game_time.get_class_period(character_id)
 
-    # 翘课中：本该上课的节次里挂着今天的翘课flag。
-    #    flag 只在挂上的那一天有效（Plan 31 §3.6）：跨天结算在 NPC 阶段之后才清 flag、离线的人跨天不清，
-    #    直接读 flag 会让前一天翘过课的女儿第二天整天挂着 <翘>。
-    #    只在上课状态判 SKIP 时亮（Plan 32 §3.9 L1）：本节有课、不是点名必修的实操课、体力够（不够是体力缺课）、也不是正要去上实操课。
-    #    此前不看这一节有没有课、在不在课上：没课的空节写「翘课中（第 N 节）」，被点名进了博士的实操课也写「本该上 实操课」。
-    #    人在 H 里（课堂 H、被玩家带进 H）同样不算在翘课。flag 挂着才调 get_course_stage，没翘课的人不多算一遍；
-    #    不亮时落到下面的 <课> 判定
     if (
         period != -1
         and not character_data.sp_flag.is_h
@@ -92,8 +85,6 @@ def get_now_class_tip(character_id: int) -> tuple[bool, str] | None:
         constant.Behavior.ATTENT_CLASS,
         constant.Behavior.SELF_STUDY,
     }:
-        # 在听玩家的手动授课（Plan 32 §3.9 L13）：被「授课」拉来的学生按玩家这一节的课型（按所在教室判）与学识写，与 512 的结算同口径。
-        #    此前按她自己的课表取：节次外只写「上课中」，节次内写课表上的那门课与那位 NPC 教师，实际发的是学识
         listen_course = handle_premise.get_listen_manual_teach_course(
             character_id
         )
@@ -125,8 +116,6 @@ def get_now_class_tip(character_id: int) -> tuple[bool, str] | None:
             )
         now_course = schedule_handle.get_now_course(character_id)
         if now_course is None:
-            # 此刻没课的自习是日程活动「上课（无课时自习）」：第五轮起不计出勤，本来就不算一节课（Plan 28 §3.7）。
-            #    节次外也会有（节次外照旧自习 45 分钟）。听课而此刻没课、又不是在听玩家的手动授课的（被拉来后玩家已换了行为等），仍算上课中
             if behavior_id == constant.Behavior.SELF_STUDY:
                 return False, _("自习中（日程安排，此刻没课）")
             return False, _("上课中")
@@ -165,9 +154,6 @@ def get_now_class_tip(character_id: int) -> tuple[bool, str] | None:
             and now_course["course_type"]
             not in education_constant.CLASSROOM_COURSE_TYPE_SET
         ):
-            # 体力不足缺这一节课（721 记缺课后原地休息）、或这一节已经记过缺课的不亮（Plan 32 §3.9 L14）：
-            #    此前只看「本节有这门课 + 人在地点」，她在体育课的地点缺课休息时照样显示在上课，与本函数开头的口径相反。
-            #    人在 H 里（在上课地点被玩家带进 H）同样不在上课（实施复审补）：<翘> 对在 H 里的人不亮，这里不挡就改亮 <课>
             now_time = character_data.behavior.start_time or cache.game_time
             if (
                 behavior_id == constant.Behavior.REST

@@ -191,7 +191,6 @@ class Born_Panel:
                 yrn = flow_handle.askfor_all(return_list)
                 if yrn in return_list:
                     break
-            # 本次生产的孩子数：带壳卵生恒为1、无壳卵生为同批到期的卵数；胎生取本次胎数（旧存档/单胎为0或1时按1处理），同卵双胞胎换用专属文案
             born_count = 1
             identical_twins_flag = False
             if self.egg_mode:

@@ -569,7 +569,6 @@ class MedicalDailyCounters:
             except ValueError:
                 return 0
 
-        # --- int() 接受的其他对象（有 __int__、__index__ 或 __trunc__，或支持缓冲区协议）交给 int()，其余类型回退为零，保证调用方稳定 ---
         if isinstance(
             value, (SupportsInt, SupportsIndex, _SupportsTrunc, Buffer)
         ):

@@ -1181,10 +1181,6 @@ class Manage_Power_System_Panel:
                 main_lv, eff_value_str, main_info
             )
             row.draw()
-            # 主反应炉升级按钮(与动力区等级同步，故取消)
-            # def up_main():
-            #     ri.orundum_reactor_list[0] = min(ri.orundum_reactor_list[0] + 1, 10)
-            # btn = draw.CenterButton(_("[升级]"), _("升级主源石反应炉"), 10, cmd_func=up_main); btn.draw(); return_list.append(btn.return_text)
             line_feed.draw()
             # 副反应炉
             aux: int | str = ri.orundum_reactor_list[1]

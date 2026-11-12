@@ -633,7 +633,6 @@ class PageHandlePanel:
         null_button_text: object = "",
     ) -> None:
         """初始化绘制对象"""
-        # 元素交给 draw_type 构造绘制对象，类型随 draw_type 而定（文本，或通用选人面板的 [角色id, 回调, 已选列表]），这里不限定
         self.text_list: list = text_list
         """ 绘制的文本列表 """
         self.draw_type: type = PageHandleDrawType
