@@ -242,7 +242,8 @@ def second_behavior_effect(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     second_behavior_list -- 仅计算该范围内的二段行为id列表，为空或None时不限范围，默认为None
-    orgasm_settle_flag -- 是否为高潮结算调用，为True时按部位统计部位绝顶行为，每个部位仅程度最高的触发口上，其余仅结算效果，默认为False
+    orgasm_settle_flag -- 是否为高潮结算调用，为True时按部位统计部位绝顶行为，每个部位仅程度最高的触发口上，
+    其余仅结算效果，默认为False
     """
     # 延迟导入，避免与Script.Settle包的循环导入
     orgasm_settle = _get_orgasm_settle()

@@ -2,7 +2,8 @@
 """
 静态检查系统 - 可观察矛盾检查
 
-本模块实现 OBS 组的14条不变量检查（OBS-01 ~ OBS-09、OBS-12、OBS-13、OBS-16 ~ OBS-18），覆盖玩家可直接从指令面板、角色标签、身体面板、
+本模块实现 OBS 组的14条不变量检查（OBS-01 ~ OBS-09、OBS-12、OBS-13、OBS-16 ~ OBS-18），覆盖玩家可直接从指令面板、
+角色标签、身体面板、
 位置面板与助理设置中观察到的状态矛盾。
 
 全流水线实现总则：
@@ -223,7 +224,8 @@ def check_observable_01() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]，没有同场 H 残留时为空
-    功能: 玩家完全退出普通H且不在隐奸/群交/时停时，同场 NPC 的 is_h 应已由结束链清零；健康存档的结束链对象一致，因此恒不命中。
+    功能: 玩家完全退出普通H且不在隐奸/群交/时停时，同场 NPC 的 is_h 应已由结束链清零；
+    健康存档的结束链对象一致，因此恒不命中。
     """
     cache = cache_control.cache
     pl = _pl(cache)
@@ -413,7 +415,8 @@ def check_observable_05() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]，非装袋交互对象在玩家场景名册中时为空
-    功能: 校验指令面板轴心 target 与场景名册一致；健康存档中 Tk 会归一化目标，Web 也应只保留在场目标，装袋搬运是唯一明确例外。
+    功能: 校验指令面板轴心 target 与场景名册一致；
+    健康存档中 Tk 会归一化目标，Web 也应只保留在场目标，装袋搬运是唯一明确例外。
     """
     cache = cache_control.cache
     pl = _pl(cache)
@@ -500,7 +503,8 @@ def check_observable_07() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]，性爱助手设置、监狱长与角色标记一致时为空
-    功能: 校验群交调教现场有非零监狱长，且 sex_assist 只落在该监狱长身上；健康存档的助手结算应只写当前监狱长，因此恒不命中。
+    功能: 校验群交调教现场有非零监狱长，且 sex_assist 只落在该监狱长身上；
+    健康存档的助手结算应只写当前监狱长，因此恒不命中。
     """
     cache = cache_control.cache
     if (
@@ -639,7 +643,8 @@ def check_observable_12() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]，已恢复正常的空闲助理与跟随服务设置一致时为空
-    功能: 检查服务2开启后，非疲劳、非困倦、无生理意图、非H的空闲在线助理不会丢失跟随；健康存档的服务承诺应维持 is_follow=1，因此恒不命中。
+    功能: 检查服务2开启后，非疲劳、非困倦、无生理意图、非H的空闲在线助理不会丢失跟随；
+    健康存档的服务承诺应维持 is_follow=1，因此恒不命中。
     """
     cache = cache_control.cache
     pl = _pl(cache)
@@ -769,7 +774,8 @@ def check_observable_16() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]，六类行为均位于对应设施时为空
-    功能: 校验 NPC 当前洗浴/游泳行为与场景标签匹配；健康存档只会在带目标设施前提的状态机中启动行为，移动又会替换行为，因此恒不命中。
+    功能: 校验 NPC 当前洗浴/游泳行为与场景标签匹配；
+    健康存档只会在带目标设施前提的状态机中启动行为，移动又会替换行为，因此恒不命中。
     """
     cache = cache_control.cache
     if (
@@ -816,7 +822,8 @@ def check_observable_17() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]，所有移动中的 NPC 都带非空 move_final_target 时为空
-    功能: 检查位置面板可见的移动行为拥有最终目的地；健康存档的寻路提交会同步填写该字段，抵达或取消时会退出移动行为，因此恒不命中。
+    功能: 检查位置面板可见的移动行为拥有最终目的地；
+    健康存档的寻路提交会同步填写该字段，抵达或取消时会退出移动行为，因此恒不命中。
     """
     cache = cache_control.cache
     if (
@@ -858,7 +865,8 @@ def check_observable_18() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]，所有非零 bondage 都能索引配置表时为空
-    功能: 防止 realtime_settle 以非法绳缚键直接索引 config_bondage 崩溃；健康存档只由绳缚面板写配置表中的合法键，因此恒不命中。
+    功能: 防止 realtime_settle 以非法绳缚键直接索引 config_bondage 崩溃；
+    健康存档只由绳缚面板写配置表中的合法键，因此恒不命中。
     """
     cache = cache_control.cache
     data = _character_data(cache)

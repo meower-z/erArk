@@ -203,7 +203,8 @@ def _migrate_official_event_history(history_data: dict) -> int:
     """
     把事件履历里挪了桶的事件的旧uid改成新uid
     Keyword arguments:
-    history_data -- 事件履历：CHILD_GROWTH.event_history 以uid为键，罗德岛的 official_event_history 以「uid@角色id」为键（无主体时就是uid）
+    history_data -- 事件履历：CHILD_GROWTH.event_history 以uid为键，罗德岛的 official_event_history
+    以「uid@角色id」为键（无主体时就是uid）
     Return arguments:
     int -- 改了名的条数
     功能: 只在旧uid已不在配置里、且新键还没有记录时才改（与 _migrate_entertainment_cid 同样的保护），重复读档是幂等的；
@@ -692,7 +693,8 @@ def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
 
 def _load_save_datetime(*args: Any) -> datetime.datetime:
     """
-    读存档时还原存档里的普通 datetime：旧版本存的游戏时间都是普通 datetime，按游戏日历规整成 GameTime（不在游戏日历上的时间按下一个季月的1日0时算）
+    读存档时还原存档里的普通 datetime：旧版本存的游戏时间都是普通 datetime，按游戏日历规整成
+    GameTime（不在游戏日历上的时间按下一个季月的1日0时算）
     公元1年的缺省占位时间规整后仍在公元1年，各处按 year <= 1 判断未设置
     Keyword arguments:
     args -- pickle 记录的 datetime 构造参数

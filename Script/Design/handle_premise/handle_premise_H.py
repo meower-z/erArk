@@ -2365,7 +2365,8 @@ def handle_self_in_sex_class(character_id: int) -> int:
     character_id -- 角色id
     Return arguments:
     int -- 权重
-    功能: 按身份认已被拉进这节课的人（sex_class_handle.get_class_member_list：课堂模式下与玩家同场景、已在 H 中、学生岗或女儿），
+    功能: 按身份认已被拉进这节课的人（sex_class_handle.get_class_member_list：课堂模式下与玩家同场景、已在 H 中、
+    学生岗或女儿），
           不再重算入课门槛（Plan 32 §3.8 L9）：成年学生的实行值随苦痛、露出、玩家理智在课中变化，一跌破门槛，
           她人还在课堂 H 里，在课的口上前提却判不过
     """

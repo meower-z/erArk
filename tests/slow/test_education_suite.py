@@ -38,7 +38,8 @@ class EducationSuiteTest(SlowTestCase):
 
     def run_script(self, path: str) -> None:
         """
-        在新进程里运行一份脚本，打印它的输出；整份跳过时报告跳过，否则要求退出码为 0，且汇总行里至少一条断言通过、没有失败
+        在新进程里运行一份脚本，打印它的输出；
+        整份跳过时报告跳过，否则要求退出码为 0，且汇总行里至少一条断言通过、没有失败
         Keyword arguments:
         path -- 脚本路径
         Return arguments:

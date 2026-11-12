@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
 """
-在内存上限、运行时限和全机共用的游戏槽位下运行一条命令。凡是会启动 erArk 游戏的进程（无头脚本、Tk 界面）都必须经由本脚本启动，Tk 界面经由 tk_game.py。
+在内存上限、运行时限和全机共用的游戏槽位下运行一条命令。
+凡是会启动 erArk 游戏的进程（无头脚本、Tk 界面）都必须经由本脚本启动，Tk 界面经由 tk_game.py。
 
-每次运行放进一个独立的 systemd scope，内存上限（MemoryMax，禁用 swap）与运行时限（RuntimeMaxSec）由内核和 systemd 强制执行，
-超限时只杀这一组进程。全机共有 SLOTS 个槽位，每个代表 SLOT_SIZE 内存；一次运行占 ceil(内存上限 / SLOT_SIZE) 个，web 模式的运行占全部槽位。
+每次运行放进一个独立的 systemd scope，内存上限（MemoryMax，禁用 swap）与运行时限（RuntimeMaxSec）由内核和
+systemd 强制执行，
+超限时只杀这一组进程。全机共有 SLOTS 个槽位，每个代表 SLOT_SIZE 内存；
+一次运行占 ceil(内存上限 / SLOT_SIZE) 个，web 模式的运行占全部槽位。
 run() 对每个槽位的锁文件持有 flock，进程死掉时内核自动放开。
 哪次运行活着只看 /proc/locks 里槽位锁的真实持有者，状态文件只是线索。
 槽位不够、同一 checkout 已有运行、或有不属于任何运行的 era-game scope 时以退出码 75 拒绝，不等待。
 调用 run() 的进程被中断时，run() 会停掉它的 scope。
 每次运行用 mkdtemp 建一个自己的临时目录。运行结束、启动的进程已结束且 scope 确认已停后，删掉这个目录。
-没来得及删的目录（例如启动进程被 SIGKILL）由之后启动的运行清掉，条件是它 SWEEP_MIN_AGE_S 秒没改动，且不属于正在运行的实例或存活 scope。
+没来得及删的目录（例如启动进程被 SIGKILL）由之后启动的运行清掉，条件是它 SWEEP_MIN_AGE_S 秒没改动，
+且不属于正在运行的实例或存活 scope。
 删不掉的文件留下。
 
 用法（在 erArk checkout 的根目录，用 .venv 的 python 运行本脚本）：
@@ -17,7 +21,8 @@ run() 对每个槽位的锁文件持有 flock，进程死掉时内核自动放�
   limited_run.py status
   limited_run.py stop [槽位|pid]
 
-需要免密 sudo 来调用 systemd-run。本机只供一个用户运行本脚本：STATE_DIR 与其中的槽位锁按第一次运行的用户的 umask 建立，别的用户打不开它们。
+需要免密 sudo 来调用 systemd-run。
+本机只供一个用户运行本脚本：STATE_DIR 与其中的槽位锁按第一次运行的用户的 umask 建立，别的用户打不开它们。
 """
 
 import argparse
@@ -149,7 +154,8 @@ def read_stat(path):
 
 def unreclaimable(stat):
     """
-    算出 cgroup 里回收不了的内存：anon、shmem（/dev/shm 里的文件）和内核内存（其中只有少量可回收）。文件缓存可以回收，不算在内
+    算出 cgroup 里回收不了的内存：anon、shmem（/dev/shm 里的文件）和内核内存（其中只有少量可回收）。
+    文件缓存可以回收，不算在内
     参数：
         stat (dict[str, int]): read_stat() 的结果
     返回：
@@ -223,7 +229,8 @@ def earlyoom_percent(args, mem_total_kib):
     """
     按 earlyoom 的参数算出它用 SIGTERM 杀进程的线：可用内存低于总内存的这个百分比时动手
     -m PERCENT[,KILL_PERCENT] 给百分比，-M SIZE[,KILL_SIZE] 给 KiB；KILL 值较高时 earlyoom 把 SIGTERM 线抬到它，
-    同一选项写了几次时用最后一次，-m 与 -M 都写了时用较低的一条，都没写时用默认值 10。earlyoom 还要求空闲 swap 低于 -s，这里不看，宁可多拒绝。
+    同一选项写了几次时用最后一次，-m 与 -M 都写了时用较低的一条，都没写时用默认值 10。
+    earlyoom 还要求空闲 swap 低于 -s，这里不看，宁可多拒绝。
     参数：
         args (list[str]): earlyoom 的命令行参数
         mem_total_kib (int): /proc/meminfo 的 MemTotal，KiB
@@ -359,7 +366,8 @@ def slot_file(slot, suffix):
 
 def stop_file(unit):
     """
-    返回对一次运行的停止请求文件。按 unit（含启动进程号）而不按槽位命名：槽位会被下一次运行接手，停止请求不能落到接手的运行头上
+    返回对一次运行的停止请求文件。
+    按 unit（含启动进程号）而不按槽位命名：槽位会被下一次运行接手，停止请求不能落到接手的运行头上
     参数：
         unit (str): scope 名称，形如 era-game-<pid>
     返回：
@@ -435,7 +443,8 @@ def web_mode(root):
 
 def slots_needed(mem_max, root):
     """
-    计算一次运行要占的槽位数：ceil(内存上限 / SLOT_SIZE)，至少一个；web 模式占全部 SLOTS 个，但内存上限超过全部槽位时照样返回超出的数
+    计算一次运行要占的槽位数：ceil(内存上限 / SLOT_SIZE)，至少一个；
+    web 模式占全部 SLOTS 个，但内存上限超过全部槽位时照样返回超出的数
     参数：
         mem_max (int): 内存上限，字节
         root (Path): checkout 根目录
@@ -572,9 +581,11 @@ def remove_tmpdir(path):
 
 def sweep_tmpdirs(unit):
     """
-    删掉已结束的运行留下的临时目录：STATE_DIR/tmp 下名字符合 TMPDIR_PATTERN、SWEEP_MIN_AGE_S 秒内没改动过的目录，且它所属的 scope 名称不是本次运行、
+    删掉已结束的运行留下的临时目录：STATE_DIR/tmp 下名字符合 TMPDIR_PATTERN、SWEEP_MIN_AGE_S 秒内没改动过的目录，
+    且它所属的 scope 名称不是本次运行、
     不属于任何正在运行的实例、systemd 没列出这个 scope、cgroup 目录也不在（systemctl 出错时列表为空，所以两样都看）。
-    每个目录都是 mkdtemp 建的，不会被新运行重用，所以开头读一次正在运行的实例与存活的 scope 就够；cgroup 目录逐个看。符号链接与普通文件不动。
+    每个目录都是 mkdtemp 建的，不会被新运行重用，所以开头读一次正在运行的实例与存活的 scope 就够；cgroup 目录逐个看。
+    符号链接与普通文件不动。
     参数：
         unit (str): 本次运行的 scope 名称
     """
@@ -804,7 +815,8 @@ def run(
         timeout (int): 运行时限，秒
         extra_env (dict[str, str]): 额外传给命令的环境变量
         out_dir (Path | None): tk 与 editor 模式的证据目录
-        ready_check (Callable[[], dict | None] | None): tk 与 editor 模式的就绪检查，就绪时返回要并入状态的字段；为 None 时不等就绪
+        ready_check (Callable[[], dict | None] | None): tk 与 editor 模式的就绪检查，就绪时返回要并入状态的字段；
+        为 None 时不等就绪
         ready_timeout (int): tk 与 editor 模式等待就绪的秒数
     返回：
         int: 退出码
@@ -1041,7 +1053,8 @@ def cmd_stop(target=None):
     参数：
         target (str | None): 小于 SLOTS 的数是槽位编号，其他数是 pid；None 表示没给
     返回：
-        int: 停下（含直接停掉启动进程已不在的遗留 scope）时为 0；没有可停的、目标不明或不存在时为 1；30 秒内没停下，或遗留 scope 没能停掉时为 2
+        int: 停下（含直接停掉启动进程已不在的遗留 scope）时为 0；没有可停的、目标不明或不存在时为 1；
+        30 秒内没停下，或遗留 scope 没能停掉时为 2
     """
     runs = live_runs()
     orphans = orphan_units(runs)

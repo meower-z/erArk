@@ -117,7 +117,8 @@ def pytest_classes(module: "ModuleType") -> list:
     """
     pytest 收集的类：名字以 Test 开头（pytest 的默认设置）、__test__ 不为假的类，
     不是 TestCase 的还要 __init__ 与 __new__ 都沿用 object 的；
-    先找模块里的，再找其中不是 TestCase 的类与它的基类里的，逐层往下；类与基类里同名的只看最先找到的那个（与 pytest 相同）
+    先找模块里的，再找其中不是 TestCase 的类与它的基类里的，逐层往下；
+    类与基类里同名的只看最先找到的那个（与 pytest 相同）
     Keyword arguments:
     module -- 测试模块
     Return arguments:

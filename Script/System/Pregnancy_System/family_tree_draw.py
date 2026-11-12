@@ -627,7 +627,8 @@ def build_family_tree_chart(
     center_id: int, max_width: int, page_index: int = 0
 ) -> dict:
     """
-    以某角色为中心构建带完整连线的传统家谱图（上 UP_GEN 代+中心+下 DOWN_GEN 代，默认上2代+中心+下4代共7代，代间夹排版行；超宽时按家族分页）
+    以某角色为中心构建带完整连线的传统家谱图（上 UP_GEN 代+中心+下 DOWN_GEN 代，默认上2代+中心+下4代共7代，
+    代间夹排版行；超宽时按家族分页）
     \n列位以 text_handle.get_text_index（wcwidth）为单位制，跨行对齐依赖等距更纱黑体的字符度量
     Keyword arguments:
     center_id -- 中心角色id

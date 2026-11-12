@@ -391,7 +391,8 @@ def push_birthday_event() -> list[int]:
     无
     Return arguments:
     List[int] -- 推入了生日事件的角色id列表，按id升序
-    功能: 生日按月、日比对，童年里只有第 120 天（满一个游戏年）那一次（学员期）；只靠每日随机派发的话，当天先要过每晚 70% 的概率、
+    功能: 生日按月、日比对，童年里只有第 120 天（满一个游戏年）那一次（学员期）；
+    只靠每日随机派发的话，当天先要过每晚 70% 的概率、
              再从几十条候选里按权重抽中，绝大多数女儿一辈子都见不到它。
           名单与日常派发相同（get_growth_event_character_list）；今天过生日（handle_self_birthday_today）、
              能入队（没经历过、不在队列里）、阶段与事件前提都成立的才推，与 get_candidate_event_list 同一套判定；
@@ -443,7 +444,8 @@ def judge_premise_all_pass(
              一辈子只推一次的生日事件、孩子长大时重判阶段记号却会因此错过或误清。
           这里逐条调前提处理函数（handle_premise.handle_premise，CVP 走 handle_comprehensive_value_premise）；
              权重类前提（high_ 开头的与 CVP 的 Weight|0）只管权重、不算条件，跳过。
-          判定期间照 judge_premise_pass 的写法把交互对象临时指向 partner_id（前提里的 A2 与 target_* 于是指向互动对象），判完立刻还原
+          判定期间照 judge_premise_pass 的写法把交互对象临时指向 partner_id（前提里的 A2 与 target_*
+          于是指向互动对象），判完立刻还原
     """
     from Script.Design import handle_premise
 

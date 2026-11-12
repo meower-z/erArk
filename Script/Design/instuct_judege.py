@@ -64,7 +64,8 @@ def calculation_instuct_judege(
     instruct_name -- 指令名字\n
     not_draw_flag -- 是否不输出文本\n
     settle_hypnosis -- 是否结算催眠补正的代价，默认结算：扣理智、累加今日消耗，理智不足时解除目标的催眠。\n
-                       传 False 时补正照算（理智够就加补正），但不写任何数据，供前提、门槛、名单这类只判不做的调用方用（Plan 31 §3.3）\n
+                       传 False 时补正照算（理智够就加补正），但不写任何数据，供前提、门槛、
+                       名单这类只判不做的调用方用（Plan 31 §3.3）\n
     Return arguments:\n
     int -- 1成功,0失败,-1无副作用返回\n
     int -- 实行值\n

@@ -864,17 +864,21 @@ def npc_auto_work_or_entertainment(
 
 def judge_student_leave_truncate(character_id: int) -> bool:
     """
-    学生岗赶去上课：把当前的工作 / 娱乐行为截到应离开的时刻（Plan 25 §3.1；Plan 32 §3.7 L4 自 judge_interrupt_character_behavior 抽出）
+    学生岗赶去上课：把当前的工作 / 娱乐行为截到应离开的时刻（Plan 25 §3.1；
+    Plan 32 §3.7 L4 自 judge_interrupt_character_behavior 抽出）
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
     bool -- 是否截短了当前行为
-    功能: 待赴实操课提前退场（口径 62），没课的节次到了下一节开课前收手，人已在上课地点或今天已翘课的截到开课那一刻，判据见 class_ai.get_student_leave_time。
+    功能: 待赴实操课提前退场（口径 62），没课的节次到了下一节开课前收手，人已在上课地点或今天已翘课的截到开课那一刻，
+    判据见 class_ai.get_student_leave_time。
           做法是把当前行为截到应离开的那一刻，而不是「现在就结束」：NPC 按自己的行为时刻推进，
              这里的 cache.game_time 是玩家这一步的结束时刻，一步跨过开课时刻时拿它判会整个错过。
-          character_behavior 的 NPC 分支在实时结算（realtime_settle.character_aotu_change_value）之前调它：实时结算按行为的结束时刻封顶，
+          character_behavior 的 NPC 分支在实时结算（realtime_settle.character_aotu_change_value）之前调它：
+          实时结算按行为的结束时刻封顶，
              此前先结算、后截短，截掉的那一段饥饿、尿意、疲劳、醉酒回落会在下一个行为（从离开时刻开始）里再算一遍。
-             这是唯一会把时间线落回玩家这一步之内的打断；休息、睡醒与工作 / 娱乐中到了淋浴时间的打断（都用 end_now=2 立即结束，
+             这是唯一会把时间线落回玩家这一步之内的打断；
+             休息、睡醒与工作 / 娱乐中到了淋浴时间的打断（都用 end_now=2 立即结束，
              下一个行为从 cache.game_time 开始）仍留在 judge_interrupt_character_behavior
     """
     character_data: game_type.Character = cache.character_data[character_id]

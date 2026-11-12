@@ -376,7 +376,8 @@ _semester_row = {
     for r in _event_rows[5:]
     if r and r[0].strip()
 }
-""" 期末.csv 按 cid 取行：Plan 32 L22 把萝莉 1 / 20 / 26 挪成了期末 17 / 18 / 19，Plan 31 L10 对这几条正文的断言跟着改读期末表 """
+""" 期末.csv 按 cid 取行：Plan 32 L22 把萝莉 1 / 20 / 26 挪成了期末 17 / 18 / 19，Plan 31 L10
+对这几条正文的断言跟着改读期末表 """
 _row_17 = _semester_row.get("17", {})
 _row_18 = _semester_row.get("18", {})
 check(
@@ -517,7 +518,8 @@ section("Plan 31 口上对齐")
 
 def talk_premise(talk_cid: str) -> str:
     """
-    取一条口上的前提串（口上的 cid 在构建时拼成「上级目录名_文件名 + cid」，如 daily_check_report_card1014，见 buildconfig.build_csv_config）
+    取一条口上的前提串（口上的 cid 在构建时拼成「上级目录名_文件名 + cid」，如 daily_check_report_card1014，见
+    buildconfig.build_csv_config）
     Keyword arguments:
     talk_cid -- 口上cid
     Return arguments:
@@ -939,9 +941,12 @@ PLAN32_EVENT_PREMISE_EXPECT = {
         "萝莉51": "self_have_public_course&CVP_A1_Growth|3_GE_50",
     },
 }
-""" Plan 32 方案 §4.3 改过前提的事件：发现编号 -> {事件uid: 新前提串}（期末 17 / 18 / 19 是原萝莉 1 / 20 / 26 挪进期末桶后的uid）。
-    萝莉 51 的公开课前提替换掉被它蕴含的「有课」（实施复审补）：抽取权重按「配置权重 × 前提条数」算，留着被蕴含的旧前提只会平白抬权重。
-    通用 5 的「非婴儿」照留：Plan 26 起写会走会说的孩子的 17 条通用事件一律显式排除婴儿（test_growth_event 锁着），实践课是新加的条件 """
+""" Plan 32 方案 §4.3 改过前提的事件：发现编号 -> {事件uid: 新前提串}（期末 17 / 18 / 19 是原萝莉 1 / 20 / 26
+挪进期末桶后的uid）。
+    萝莉 51 的公开课前提替换掉被它蕴含的「有课」（实施复审补）：抽取权重按「配置权重 × 前提条数」算，
+    留着被蕴含的旧前提只会平白抬权重。
+    通用 5 的「非婴儿」照留：Plan 26 起写会走会说的孩子的 17 条通用事件一律显式排除婴儿（test_growth_event 锁着），
+    实践课是新加的条件 """
 for finding, expect_dict in PLAN32_EVENT_PREMISE_EXPECT.items():
     for uid, premise_text in expect_dict.items():
         now_premise = game_config.config_official_event.get(uid, {}).get(
@@ -1123,7 +1128,8 @@ def event_premise_pass(
     uid: str, character_id: int, drop_prefix: str = ""
 ) -> bool:
     """
-    按养成事件派发的判法求一条事件对某个孩子成不成立：先挑互动对象（同胞 / 同学），判定期间把交互对象临时指过去再判前提，不入队
+    按养成事件派发的判法求一条事件对某个孩子成不成立：先挑互动对象（同胞 / 同学），
+    判定期间把交互对象临时指过去再判前提，不入队
     （与 growth_event_handle.get_candidate_event_list / push_semester_event 同一条路径，只是不做随机抽取）
     Keyword arguments:
     uid -- 事件uid

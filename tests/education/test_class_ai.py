@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
-"""class_ai：翘课概率与定种子掷骰、教师可用性、上课状态函数、工作链里的师生目标行（Plan 24）、normal 门槛、外层闸、见学回落链"""
+"""class_ai：翘课概率与定种子掷骰、教师可用性、上课状态函数、工作链里的师生目标行（Plan 24）、normal 门槛、
+外层闸、见学回落链"""
 
 from _bootstrap import (
     DEFAULT_TIME,
@@ -161,7 +162,8 @@ _CLASS_ROW_LIST = [
     + list(game_config.config_target_type_index.get(22, []))
     if t.startswith("default") and t[-6:].isdigit() and t[-4:-2] in ("07", "08")
 ]
-""" target.csv 组 07（教师）/ 08（学生）的全部目标行：cid 是「文件夹名 + 六位编号」（README 夹具陷阱），编号中间两位是组号 """
+""" target.csv 组 07（教师）/ 08（学生）的全部目标行：cid 是「文件夹名 + 六位编号」（README 夹具陷阱），
+编号中间两位是组号 """
 _CLASS_ROW_SM_SET = {
     game_config.config_target[t].state_machine_id for t in _CLASS_ROW_LIST
 }
@@ -1723,7 +1725,8 @@ check(
 
 section("Plan 26 §3.3：课堂模式下受邀到场走 515 → 722，普通群交走 505 → 96")
 _T505, _T515 = "default505", "default515"
-""" 构建时 target 的 cid 会带上所在文件夹名（buildconfig：path_list[-2] + cid），target.csv 在 data/target/default 下 """
+""" 构建时 target 的 cid 会带上所在文件夹名（buildconfig：path_list[-2] + cid），target.csv 在
+data/target/default 下 """
 check(
     "505 挂 sex_class_mode_off、515 挂 sex_class_mode_on 且指向 722",
     "sex_class_mode_off"
@@ -2662,7 +2665,8 @@ def clear_need(cid: int) -> None:
 
 def run_loop_round(minute: int, npc_order: list) -> tuple:
     """
-    复刻一次「玩家等待 minute 分钟」的行为循环（照 test_behavior_loop.run_one_round：先玩家阶段，再 NPC 阶段每一遍每人推进一个行为，护栏 60 遍）
+    复刻一次「玩家等待 minute 分钟」的行为循环（照 test_behavior_loop.run_one_round：先玩家阶段，再 NPC
+    阶段每一遍每人推进一个行为，护栏 60 遍）
     Keyword arguments:
     minute -- 玩家这一步的分钟数
     npc_order -- 参加循环的 NPC 与处理顺序：只让师生两人参加（夹具里别的角色与本题无关），处理顺序两种都验
@@ -2730,7 +2734,8 @@ def run_h1(minute_list: tuple, npc_order: list) -> list:
 
 def setup_h1(third_room: str) -> None:
     """
-    照实施文档 §2.0 R1 摆好 9:40 的现场：教师第 1 节在理论教室一、第 2 节在理论教室二（一键排课的常态，换教室要走两跳）；
+    照实施文档 §2.0 R1 摆好 9:40 的现场：教师第 1 节在理论教室一、第 2 节在理论教室二（一键排课的常态，
+    换教室要走两跳）；
     学生第 1、2 节在理论教室二、第 3 节在 third_room（那一格没排教师，去了自习）；两人都在上第 1 节，9:45 同时下课
     Keyword arguments:
     third_room -- 学生第 3 节的教室
@@ -2992,7 +2997,8 @@ def run_rt32(
     minute: int, behavior_id: str, start: datetime.datetime, place: list
 ) -> tuple:
     """
-    让 201 从 start 起在 place 做 behavior_id（时长 minute），跑一步「玩家走 minute 分钟」的真实行为循环（只让 201 参加），记下她的实时结算
+    让 201 从 start 起在 place 做 behavior_id（时长 minute），跑一步「玩家走 minute 分钟」的真实行为循环（只让 201
+    参加），记下她的实时结算
     Keyword arguments:
     minute -- 玩家这一步的分钟数，也是她这个行为的时长
     behavior_id -- 她这一步开头在做的行为
@@ -3072,7 +3078,8 @@ _movie_cid = next(
     ),
     -1,
 )
-""" 兴趣课「看电影」的娱乐编号（按行为判，不写死编号）；取不到时为不是娱乐编号的 -1，由下面的「L3 前提」报出来，不让进程崩掉 """
+""" 兴趣课「看电影」的娱乐编号（按行为判，不写死编号）；
+取不到时为不是娱乐编号的 -1，由下面的「L3 前提」报出来，不让进程崩掉 """
 schedule_handle.set_selected_course(
     201, 0, 0, E.COURSE_TYPE_INTEREST, _movie_cid
 )
@@ -3521,7 +3528,8 @@ def ghost_flow_stub(add_time: int) -> None:
     add_time -- 游戏步进的时间
     Return arguments:
     无
-    功能: 行为循环里嵌套的 game_update_flow 会再跑一遍 init_character_behavior，一路进到成就结算（夹具缺 materials_resouce）；
+    功能: 行为循环里嵌套的 game_update_flow 会再跑一遍 init_character_behavior，一路进到成就结算（夹具缺
+    materials_resouce）；
           幽灵课堂的群交模式开着时，玩家体力落到 1 就会经 handle_group_sex_end（群交中玩家体力归零）走到这里
     """
     GHOST_FLOW_CALL.append((add_time, pl.behavior.behavior_id))
@@ -3555,13 +3563,15 @@ def ghost_probe_spy(
 def setup_ghost() -> dict:
     """
     摆「幽灵课堂」的现场：课堂 H 已以别的方式结束（玩家不在 H、人在宿舍），课堂模式与群交模式却还开着，
-    实践教室一第 1 节挂着一条 running 的当场实操课；学生 201 本节是这间教室的常规课（膣技、没排教师）、人在教室里、正要决策
+    实践教室一第 1 节挂着一条 running 的当场实操课；
+    学生 201 本节是这间教室的常规课（膣技、没排教师）、人在教室里、正要决策
     Keyword arguments:
     无
     Return arguments:
     dict -- 那节 running 的临时实操课
     功能: 夹具设定照 setup_h1：体力 / 气力 2000、二段行为清空、交互对象设回自己；翘课概率已在本轮开头钉成 0。
-          她的常规课格子排的是性技科目（膣技 74）：个人课表里有性技教室课，改前的 JOIN 判定（judge_can_join_sex_class）才过得去
+          她的常规课格子排的是性技科目（膣技 74）：个人课表里有性技教室课，改前的 JOIN
+          判定（judge_can_join_sex_class）才过得去
     """
     clear_schedules()
     g32.selected_course = {}
@@ -3752,7 +3762,8 @@ class_ai.get_skip_class_rate = lambda character_id: 0.0
 _T500 = "default500"
 """ 目击 H 的目标行（type 0，排在工作链之前）；构建时 cid 带文件夹名前缀 """
 _NOT_HERE = "self_not_attend_sex_class_here"
-""" 本段要验的新前提：自己不是来这里上正在进行的性技实操课的学生（写成字面量，改前没有这个常量时本段照样能跑到派发那一步） """
+""" 本段要验的新前提：自己不是来这里上正在进行的性技实操课的学生（写成字面量，
+改前没有这个常量时本段照样能跑到派发那一步） """
 for _cid in (201, 202):
     _cd = cache.character_data[_cid]
     _cd.hit_point_max = _cd.hit_point = 100

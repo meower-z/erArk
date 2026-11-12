@@ -37,7 +37,8 @@ def judge_scene_open(scene_name: str) -> bool:
     bool -- 是否已开放
     功能: constant.place_data 装的是**全部**场景——它在配置载入期由 data/map/ 的目录树
              静态构建（map_config.load_dir_now），与存档、facility_level、facility_open 全都无关。
-             所以开放与否必须另查 Rhodes_Island.facility_open，与寻路的 wait_open 判定（map_handle.judge_scene_accessible）同口径。
+             所以开放与否必须另查 Rhodes_Island.facility_open，与寻路的 wait_open
+             判定（map_handle.judge_scene_accessible）同口径。
              理论教室一 / 实践教室一 / 大礼堂等 Lv1 基础设施压根不在 Facility_open.csv 里，
              不给它们兜底会被误判成未开放，面板直接空掉（宿舍区同样处理，见 Dormitory_System/common.py）
     """
@@ -129,7 +130,8 @@ def get_course_type_by_position(position: list[str]) -> int:
     position -- 场景路径
     Return arguments:
     int -- 所在场景是理论 / 实践教室、大礼堂时为对应课型，其余一律按理论课
-    功能: 玩家手动发起的授课不在课表上，结算 512 与 CVP 的回落（handle_premise.get_player_manual_teach_course）都按这里判课型，
+    功能: 玩家手动发起的授课不在课表上，结算 512 与 CVP
+    的回落（handle_premise.get_player_manual_teach_course）都按这里判课型，
           两处共用一个定义，口上读到的课型与实际结算不会分叉。只读
     """
     scene_path_str = map_handle.get_map_system_path_str_for_list(position)
@@ -498,7 +500,8 @@ def get_upcoming_course(
     Return arguments:
     Optional[dict] -- 与 get_now_course 同结构，窗口内没有节次开始、或那一节没排课则为None
     功能: 2026-09-12 第五轮为到岗时间（8:40~9:00、13:40~14:00）而加：学生岗不走工作链，没人再把她们送去第一节课的教室。
-          Plan 25 起节次内也看下一节，与教师的 get_upcoming_teaching 同口径：没课的节次里在娱乐的学生，下一节开课前也要先去上课地点。
+          Plan 25 起节次内也看下一节，与教师的 get_upcoming_teaching 同口径：没课的节次里在娱乐的学生，
+          下一节开课前也要先去上课地点。
           调用方都只在本节没课（get_now_course 为 None）时才问它，不会用下一节顶掉本节的课。
           参照时刻一律取角色的行为开始时刻（Plan 25 初稿为打断规则留的 now_time 参数从未被用上，Plan 26 删去）
     """
@@ -824,7 +827,8 @@ def judge_personal_course_valid(character_id: int, course: dict) -> bool:
           只读不写，前提路径上可以调用。实习课本节无人在岗时地点仍解析得出（回落到已开放的那间），照旧算一节课。
           兴趣课的行为是读书时再要求借得到书（手上有借着的书，或书库里有没被借走、读得了、没读完的书，Plan 29 §3.2）：
              借不到书的这一节视为没课，与 Plan 28 的口径相同；真正借书在状态机 716 里做，这里一行都不写。
-          必修名单的「*会顶替」、「有课」「同班同学」看的是排在课表上的那节课本身，改用不看借书的 judge_personal_course_real（Plan 30）
+          必修名单的「*会顶替」、「有课」「同班同学」看的是排在课表上的那节课本身，改用不看借书的
+          judge_personal_course_real（Plan 30）
     """
     if not judge_personal_course_real(character_id, course):
         return False

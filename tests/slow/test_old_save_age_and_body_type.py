@@ -105,7 +105,8 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         Keyword arguments:
         无
         Return arguments:
-        dict -- 各角色的id：minor、shrink（世界设定1缩小的、模板体型为大姐姐或熟女的干员）、shrunk（持有103的静态干员集合）、d101~d104、mother，
+        dict -- 各角色的id：minor、shrink（世界设定1缩小的、模板体型为大姐姐或熟女的干员）、
+        shrunk（持有103的静态干员集合）、d101~d104、mother，
            以及检查要用的婴儿出生时间、外勤委托id、书id、孩子脱下的衣服、快感状态id
         """
         from Script.Config import game_config
@@ -1044,7 +1045,8 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         摆出群交中的旧存档并检查读档：玩家、102的孩子与另一名干员同场景在群交；
            读档后群交按群交结束收尾，三人有效的交互对象，再写盘读档一次，数据不变
         Keyword arguments:
-        child_in_template -- True：玩家以孩子为交互对象，孩子在玩家的部位模板里；False：玩家以那名干员为交互对象，没有模板写着孩子
+        child_in_template -- True：玩家以孩子为交互对象，孩子在玩家的部位模板里；
+        False：玩家以那名干员为交互对象，没有模板写着孩子
         Return arguments:
         无
         """

@@ -347,7 +347,8 @@ SKIP_CLASS_RATE_MAX = 0.70
 #    同一时刻只会处于其中一个状态，保证 target.csv 组 07 / 08 的行两两互斥
 COURSE_STAGE_NONE = 0
 """ 学生此刻与课表无关：本节没课、20 分钟内也没有，或不是学生岗。
-    今天已翘课的（class_ai.judge_skip_class_today），本节没课、下一节马上开课也归这里（Plan 31 §3.5）：开课那一刻她照样判翘课，不去教室门口等 """
+    今天已翘课的（class_ai.judge_skip_class_today），本节没课、下一节马上开课也归这里（Plan 31 §3.5）：
+    开课那一刻她照样判翘课，不去教室门口等 """
 COURSE_STAGE_SEX_PENDING = 1
 """ 下一节是自己要上的性技实操课（必修或选修）且 PRE_ARRIVE_MINUTE 分钟内开始，优先于本节的一切 """
 COURSE_STAGE_ABSENT_HP = 2
@@ -357,7 +358,8 @@ COURSE_STAGE_SKIP = 3
 COURSE_STAGE_ATTEND = 4
 """ 本节有课且照常上课（必修实操课在体力不足、心情糟糕时也归入这里） """
 COURSE_STAGE_UPCOMING = 5
-""" 本节没课（含不在节次内），20 分钟内（schedule_handle.get_upcoming_course 的默认 minute_limit）开始的那一节有课（Plan 25 起节次内也看下一节）。
+""" 本节没课（含不在节次内），20 分钟内（schedule_handle.get_upcoming_course 的默认 minute_limit）开始的那一节有课（Plan
+25 起节次内也看下一节）。
     今天已翘课的不算，判 NONE（Plan 31 §3.5） """
 TEACHER_DUTY_NONE = 0
 """ 教师本节与 20 分钟内都没课，或不是教师岗 """
@@ -369,7 +371,8 @@ COURSE_STAGE_JOIN_SEX_CLASS = 6
 """ 本节的课所在教室正在上性技实操课、人已在教室、可以参加但还没进 H：走进来就加入课堂（Plan 25 §3.2）。
     判在本该返回 ATTEND 的地方，所以两道闸（必修生豁免）照常先过 """
 UPCOMING_MINUTE = 20
-""" 「马上开课」的提前量（分钟）：教师与学生都在下一节开始前这么多分钟内先去上课地点（今天已翘课的学生不去，Plan 31 §3.5）。
+""" 「马上开课」的提前量（分钟）：教师与学生都在下一节开始前这么多分钟内先去上课地点（今天已翘课的学生不去，
+Plan 31 §3.5）。
     get_upcoming_teaching / get_upcoming_course 的默认窗口与学生的打断规则共用它（Plan 25 §3.1） """
 
 # ==== 8. 性技实操课 ====
@@ -470,11 +473,13 @@ GROWTH_VALUE_EVENT_COUNT = 22
 """ 养成数值编号：已触发的养成事件条数 """
 GROWTH_VALUE_REPORT_PENDING = 23
 """ 养成数值编号：成绩单待查看（1 有未查看的新成绩单 / 0 没有）。
-    「检查成绩单」按档位分的口上用它挑出查看新成绩单的那一次：学期中途看的是截至目前的情况，只出通用口上（Plan 27 §3.6） """
+    「检查成绩单」按档位分的口上用它挑出查看新成绩单的那一次：学期中途看的是截至目前的情况，
+    只出通用口上（Plan 27 §3.6） """
 GROWTH_VALUE_SKIP = 24
 """ 养成数值编号：累计翘课节数（Plan 30）。翘掉的课同时记进累计缺课（编号 1）；要单看翘课的事件（如萝莉 2）读它 """
 GROWTH_VALUE_SEX_CLASS = 25
-""" 养成数值编号：累计实操课次数（Plan 31）。开课与开课后到场各记一次，与出勤同一处写入；口上里「第一次来 / 老学生」读它，不读含全部课型的编号 0 """
+""" 养成数值编号：累计实操课次数（Plan 31）。开课与开课后到场各记一次，与出勤同一处写入；
+口上里「第一次来 / 老学生」读它，不读含全部课型的编号 0 """
 
 # ==== 12. 学期与成绩单 ====
 SEMESTER_NAME = {
@@ -538,7 +543,8 @@ ADULT_EXTRA_EVENT_UID_LIST = ("通用59", "通用60")
     毕业桶（sub_key 104）只有显式推入的事件会出现：日常派发名单只收 101~103（第五轮），默认提供者又跳过部门 15。
     这是**数据键**，不能包 `_()`；tools/official_event_check.py 另抄一份，据此拦截成年桶里别的 uid """
 BIRTHDAY_EVENT_UID = "通用3"
-""" 生日事件的uid（Plan 32 §3.3）：跨天结算时对今天过生日的女儿直接插队首推入（growth_event_handle.push_birthday_event）。
+""" 生日事件的uid（Plan 32 §3.3）：
+跨天结算时对今天过生日的女儿直接插队首推入（growth_event_handle.push_birthday_event）。
     生日按月、日比对，童年里只有第 120 天（满一个游戏年）那一次，只靠每日随机派发时当天抽中的机会只有百分之一二。
     这是**数据键**，不能包 `_()` """
 SEMESTER_EVENT_SUB_KEY = 200
@@ -556,7 +562,8 @@ STAGE_TALENT_PREMISE_SET = frozenset(
     for judge_value in (0, 1)
 )
 """ 事件前提里的「阶段素质记号」（Plan 32 §3.11）：主体自己的四个年龄素质与 0 / 1 比较的 CVP，六种运算符全收。
-    期末桶的阶段区分（上面 SEMESTER_EVENT_SUB_KEY 的说明）、通用桶里的「不派婴儿 / 不派学员」都写成这种记号，sub_key 上看不出来。
+    期末桶的阶段区分（上面 SEMESTER_EVENT_SUB_KEY 的说明）、通用桶里的「不派婴儿 / 不派学员」都写成这种记号，
+    sub_key 上看不出来。
     孩子长大时 growth_event_handle.drop_stale_stage_event 只拿这些记号重判队列里的事件；
     别的前提（课型、好感、养成数值等）出队时照旧不复核 """
 SIBLING_PLAY_STAGE_SET = {102, 103}

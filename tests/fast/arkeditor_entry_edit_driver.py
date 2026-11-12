@@ -181,7 +181,8 @@ def official_selector(
     """
     开 event_cve.json 并点选它的事件，再从菜单选官方事件目录 official_event，打开官方事件编辑页。
     在这一页按综合结算或综合前提，
-    在弹出的窗口里选口上用flag并填判定值 5。之后对主窗口的结算列表或前提列表的第二行右键复制、右键删除、双击或拖到第一行。
+    在弹出的窗口里选口上用flag并填判定值 5。
+    之后对主窗口的结算列表或前提列表的第二行右键复制、右键删除、双击或拖到第一行。
     Keyword arguments:
     driver -- EntryEditDriver，编辑器驱动
     data_dir -- str，数据目录

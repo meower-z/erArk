@@ -72,7 +72,8 @@ def _failure(
     rule: str,
     warning: bool = False,
 ) -> CheckFailure:
-    """参数: check_id/ key/ rule(str)、cid(角色id或None)、value(任意值)、warning(bool)；返回值: CheckFailure；功能: 给出元素定位与原值。"""
+    """参数: check_id/ key/ rule(str)、cid(角色id或None)、value(任意值)、warning(bool)；返回值: CheckFailure；
+    功能: 给出元素定位与原值。"""
     return make_failure(
         check_id,
         _NAMES[check_id],
@@ -88,7 +89,8 @@ def _cells(
     prefix: str,
     failures: list[CheckFailure],
 ) -> Iterator[tuple[str, list[Any]]]:
-    """参数: table(dict)、check_id/prefix(str)、cid(角色id或None)、failures(list)；返回值: 迭代器；功能: 校验星期与节次，返回结构完好的格子。"""
+    """参数: table(dict)、check_id/prefix(str)、cid(角色id或None)、failures(list)；返回值: 迭代器；
+    功能: 校验星期与节次，返回结构完好的格子。"""
     if not isinstance(table, dict):
         return
     for day, periods in table.items():
@@ -335,7 +337,8 @@ def check_edu_07() -> list[CheckFailure]:
 
 @register_check("EDU-08", _NAMES["EDU-08"])
 def check_edu_08() -> list[CheckFailure]:
-    """参数: 无；返回值: List[CheckFailure]；功能: 全局课表按星期、节次存[能力id,教师id]，教师可为-1，不要求在场或在岗。"""
+    """参数: 无；返回值: List[CheckFailure]；
+    功能: 全局课表按星期、节次存[能力id,教师id]，教师可为-1，不要求在场或在岗。"""
     cache = cache_control.cache
     schedule = getattr(
         getattr(cache, "rhodes_island", None), "class_schedule", None
@@ -418,7 +421,8 @@ def check_edu_09() -> list[CheckFailure]:
 def _check_slots(
     slots: object, cid: int | None, prefix: str, failures: list[CheckFailure]
 ) -> None:
-    """参数: slots(dict)、cid(角色id或None)、prefix(str)、failures(list)；返回值: None；功能: 检查模板与覆盖表的时段及活动id。"""
+    """参数: slots(dict)、cid(角色id或None)、prefix(str)、failures(list)；返回值: None；
+    功能: 检查模板与覆盖表的时段及活动id。"""
     if not isinstance(slots, dict):
         return
     config = getattr(game_config, "config_entertainment", None)

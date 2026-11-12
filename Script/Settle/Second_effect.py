@@ -4268,7 +4268,8 @@ def handle_caught_skip_class(
     change_data: game_type.CharacterStatusChange,
 ) -> None:
     """
-    （翘课被抓用）翘课中的孩子与玩家同场景时被撞见，当场清掉翘课flag、记下被抓的日期（本日剩余节次回去上课、不再掷翘课，Plan 30），
+    （翘课被抓用）翘课中的孩子与玩家同场景时被撞见，当场清掉翘课flag、记下被抓的日期（本日剩余节次回去上课、
+    不再掷翘课，Plan 30），
     并按被抓的心虚加抑郁与恐怖
     Keyword arguments:
     character_id -- 角色id

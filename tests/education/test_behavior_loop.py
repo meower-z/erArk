@@ -118,7 +118,8 @@ section("环境：教师、教室、课表")
 
 def clear_need(cid: int) -> None:
     """
-    夹具控制：清掉生理需求（饥饿 / 尿意 / 疲劳 / 困意与对应标记），体力气力回满，只看课表链（照 test_class_ai.clear_need）
+    夹具控制：清掉生理需求（饥饿 / 尿意 / 疲劳 / 困意与对应标记），体力气力回满，只看课表链（照
+    test_class_ai.clear_need）
     Keyword arguments:
     cid -- 角色id
     Return arguments:
@@ -448,7 +449,8 @@ def l4_true_add_spy(
     pl_start_time: datetime.datetime,
 ) -> int:
     """
-    实时结算取「这次结算多少分钟」的记录包装（realtime_settle.character_aotu_change_value 经模块全局名调用它），只记挑出的那名女儿
+    实时结算取「这次结算多少分钟」的记录包装（realtime_settle.character_aotu_change_value 经模块全局名调用它），
+    只记挑出的那名女儿
     Keyword arguments:
     character_id -- 角色id
     now_time -- 当前时刻

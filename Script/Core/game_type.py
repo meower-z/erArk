@@ -324,7 +324,8 @@ class PREGNANCY:
         self.reproduction_period: int = 0
         """ 生殖周期的第几天(0安全1普通2危险3排卵，0011232) """
         self.ovulation_flag: bool = False
-        """ 本周期排卵日事件待处理标记（周期推进到排卵日时置位；胎生由受精判定消费，卵生由排卵结算消费；0点结算兜底保证玩家不睡觉也不会错过） """
+        """ 本周期排卵日事件待处理标记（周期推进到排卵日时置位；胎生由受精判定消费，卵生由排卵结算消费；
+        0点结算兜底保证玩家不睡觉也不会错过） """
         self.fertilization_time: datetime.datetime = datetime.datetime(1, 1, 1)
         """ 角色开始受精的时间 """
         self.born_time: datetime.datetime = datetime.datetime(1, 1, 1)
@@ -346,7 +347,8 @@ class PREGNANCY:
             father_id: int 父亲id（恒为0，预留）
             hatch_stage: int 孵化阶段展示值（按有效天数换算，面板显示用）
             held_by_player: bool 该卵是否已被玩家拿走（拿走后本人的照料卵/NPC鉴定不再计入该卵）
-            acceleration_days: float 孵化加速药对该卵累计的额外已加速时间（天），旧存档卵缺键时一律.get兜底为0；随卵删除自清；累计上限83 """
+            acceleration_days: float 孵化加速药对该卵累计的额外已加速时间（天），旧存档卵缺键时一律.get兜底为0；
+            随卵删除自清；累计上限83 """
         self.next_egg_id: int = 0
         """ 卵编号自增计数器 """
         self.acceleration_days: float = 0.0
@@ -354,13 +356,16 @@ class PREGNANCY:
             统计怀孕相关事件（受精转妊娠/临盆/生产概率/面板显示）时计入；
             受精时与生产结算时清零；累计上限83天 """
         self.growth_acceleration_days: float = 0.0
-        """ 成长加速药对本角色（作为孩子）累计的额外成长天数：float累计（每次为当前阶段剩余天数的30%）、参与天数换算时向下取整；
+        """ 成长加速药对本角色（作为孩子）累计的额外成长天数：float累计（每次为当前阶段剩余天数的30%）、
+        参与天数换算时向下取整；
             参与婴儿→幼女(30)/幼女→学员(90)/学员→少女(150)的天数换算与面板预计日期；
             由 pregnancy_handle.get_child_grow_day 统一读取；出生时为0，跨阶段不清零（成长为少女后不再消费） """
         self.fetus_count: int = 0
-        """ 本次胎生怀上的胎数：受精成功时写入（单胎种族写1、同卵双胞胎写2、多胎种族写成功受精的轮数），生产结算后清零；卵生不使用 """
+        """ 本次胎生怀上的胎数：受精成功时写入（单胎种族写1、同卵双胞胎写2、多胎种族写成功受精的轮数），生产结算后清零；
+        卵生不使用 """
         self.identical_twins: bool = False
-        """ 本次怀孕是否为单胎胎生种族的同卵双胞胎（受精成功时按概率置位，生产结算后清除；与多胎胎生的一次多卵区分显示） """
+        """ 本次怀孕是否为单胎胎生种族的同卵双胞胎（受精成功时按概率置位，生产结算后清除；
+        与多胎胎生的一次多卵区分显示） """
         self.external_ovulation_chance: bool = False
         """ 无壳卵生：本排卵日的体外排卵机会是否可用（周期推进到排卵日时置True，体外排卵触发或离开排卵日时置False） """
         self.prenatal_point: float = 0.0
@@ -384,9 +389,11 @@ class CHILD_GROWTH:
 
         self.personality_point: dict = {}
         """ 四对性格倾向的累积值 键int:性格对编号(0勤劳/懒散 1坚强/脆弱 2热情/孤僻 3开放/羞耻)
-            值float:倾向值，正数偏前者、负数偏后者，成年时按符号选边（对照表见 education_constant.PERSONALITY_PAIR_TALENT）。写入方在三期与四期 """
+            值float:倾向值，正数偏前者、负数偏后者，成年时按符号选边（对照表见
+            education_constant.PERSONALITY_PAIR_TALENT）。写入方在三期与四期 """
         self.prenatal_point: float = 0.0
-        """ 出生时由母亲侧转写来的胎教值（写入方在四期）；出生当时已按它折成习得珠（Plan 26），之后只作记录与养成数值 21 的读数 """
+        """ 出生时由母亲侧转写来的胎教值（写入方在四期）；
+        出生当时已按它折成习得珠（Plan 26），之后只作记录与养成数值 21 的读数 """
         self.care_point: float = 0.0
         """ 婴儿期早教与幼女期跟随的照料累积，影响性格倾向与身体发育判定。写入方在二期与四期 """
         self.selected_course: dict = {}
@@ -403,17 +410,22 @@ class CHILD_GROWTH:
         self.last_absent_period: list = []
         """ 上一次已计入缺课的 [日期序数int, 节次int]，防止同一节课被反复计数
             （休息行为只有30分钟，一节课45分钟，不做这层去重会重复累加）。
-            体力缺课与翘课共用这一个标记，同一节只落一次缺课；三个出勤写入点也读它，这一节已缺课的不再记出勤（Plan 30） """
+            体力缺课与翘课共用这一个标记，同一节只落一次缺课；
+            三个出勤写入点也读它，这一节已缺课的不再记出勤（Plan 30） """
         self.last_attend_period: list = []
         """ 上一次已结算过课堂收益与出勤的 [日期序数int, 节次int]，同一节课只结算一次（Plan 22 第五轮）。
-            学生坐下听课时自己这一侧的结算（557，本节教师判能到岗即结算，Plan 31）与教师开讲时的广播（512）都会走到，靠它去重；
+            学生坐下听课时自己这一侧的结算（557，本节教师判能到岗即结算，Plan
+            31）与教师开讲时的广播（512）都会走到，靠它去重；
             实操课记出勤时也写它（Plan 32），同一节不再另记缺课 """
         self.skip_count: int = 0
-        """ 累计翘课节数（终身累计，只增不减，Plan 30）。翘掉的那一节同时记一节缺课（absent_count），同一节只记一次，与体力缺课共用 last_absent_period """
+        """ 累计翘课节数（终身累计，只增不减，Plan 30）。
+        翘掉的那一节同时记一节缺课（absent_count），同一节只记一次，与体力缺课共用 last_absent_period """
         self.skip_caught_day: int = 0
-        """ 最近一次翘课被博士撞见那天的日期序数（date.toordinal()），0 为没有（Plan 30）。当天剩余节次不再掷翘课，次日自然失效 """
+        """ 最近一次翘课被博士撞见那天的日期序数（date.toordinal()），0 为没有（Plan 30）。
+        当天剩余节次不再掷翘课，次日自然失效 """
         self.sex_class_count: int = 0
-        """ 累计上过的实操课次数（终身累计，Plan 31）。与 attend_class_count 在同一处 +1（sex_class_handle.settle_attend），这一节已缺课的也不记 """
+        """ 累计上过的实操课次数（终身累计，Plan 31）。
+        与 attend_class_count 在同一处 +1（sex_class_handle.settle_attend），这一节已缺课的也不记 """
         self.event_history: dict = {}
         """ 已触发的养成事件记录 键str:事件uid 值dict:{"time": datetime, "choice": 玩家选项index int}
             写入方在三期 """
@@ -445,7 +457,8 @@ class CHILD_GROWTH:
         self.semester_base_ability: dict = {}
         """ 本学期开始时的18门科目等级 键int:能力id 值int:等级，用来算本学期的等级增量 """
         self.semester_base_work_type: int = -1
-        """ 本学期开始时的岗位（WorkType cid），-1 为未知：旧档、或还没在新学期立过基线（Plan 30）。成绩单按它与结算时的岗位写不全的理由 """
+        """ 本学期开始时的岗位（WorkType cid），-1 为未知：旧档、或还没在新学期立过基线（Plan 30）。
+        成绩单按它与结算时的岗位写不全的理由 """
         self.report_card_history: list = []
         """ 历年成绩单的**冻结快照**列表，学期切换时追加，最新的一份在末尾。
             单份结构见 semester_handle.build_report_card，条数上限见 REPORT_CARD_HISTORY_MAX。
@@ -530,7 +543,8 @@ class BODY_H_STATE:
         self.body_item: dict = {}
         """ 身体道具情况    
         编号int:[道具名str,当前有无bool,状态的结束时间datetime.datetime]    
-        部位顺序 [0"乳头夹",1"阴蒂夹",2"V震动棒",3"A震动棒",4"搾乳机",5"采尿器",6"眼罩",7"肛门拉珠",8"持续性利尿剂",9"安眠药",10"排卵促进药",11"事前避孕药",12"事后避孕药",13"避孕套",14"口球"]
+        部位顺序 [0"乳头夹",1"阴蒂夹",2"V震动棒",3"A震动棒",4"搾乳机",5"采尿器",6"眼罩",7"肛门拉珠",8"持续性利尿剂",
+        9"安眠药",10"排卵促进药",11"事前避孕药",12"事后避孕药",13"避孕套",14"口球"]
         """
 
         self.bondage: int = 0
@@ -576,9 +590,11 @@ class BODY_H_STATE:
         self.shoot_position_cloth: int = -1
         """ 衣服上的射精位置，int，-1为未射精，其他同衣服部位 """
         self.current_sex_position: int = -1
-        """ 当前性交体位，仅博士有的数据，int，-1为无体位，1正常2后背3对面骑乘4背面骑乘5对面座6背面座7对面立8背面立9对面抱10背面抱11对面卧12背面卧 """
+        """ 当前性交体位，仅博士有的数据，int，-1为无体位，
+        1正常2后背3对面骑乘4背面骑乘5对面座6背面座7对面立8背面立9对面抱10背面抱11对面卧12背面卧 """
         self.pre_sex_position: int = -1
-        """ 刚才性交体位，仅博士有的数据，在姿势切换时记录，int，-1为无体位，1正常2后背3对面骑乘4背面骑乘5对面座6背面座7对面立8背面立9对面抱10背面抱11对面卧12背面卧 """
+        """ 刚才性交体位，仅博士有的数据，在姿势切换时记录，int，-1为无体位，
+        1正常2后背3对面骑乘4背面骑乘5对面座6背面座7对面立8背面立9对面抱10背面抱11对面卧12背面卧 """
         self.current_womb_sex_position: int = 0
         """ 当前子宫性交位置，仅博士有的数据，int，0为未插入，1为子宫口插入，2为子宫奸"""
         self.orgasm_level: dict[int, int] = {}
@@ -620,7 +636,8 @@ class BODY_H_STATE:
         self.all_group_sex_temple_run: bool = False
         """ 运行全群交模板 """
         self.npc_ai_type_in_group_sex: int = 0
-        """ 未在模板中的NPC在群交中的AI逻辑，0为无行动，1为仅自慰，2为优先自动补位、无位则自慰，3为每次指令都重置位置后随机抢位 """
+        """ 未在模板中的NPC在群交中的AI逻辑，0为无行动，1为仅自慰，2为优先自动补位、无位则自慰，
+        3为每次指令都重置位置后随机抢位 """
         self.pretend_sleep: bool = False
         """ 睡奸中醒来但是装睡的状态 """
         self.sex_assist: bool = False
@@ -662,8 +679,10 @@ class FIRST_RECORD:
         """ 处女道具 -1为无，0为手指，1为振动棒（玩家童贞专用） """
         self.first_part_sex_dict: dict = {}
         """ 部位交/破处初体验记录（每周目一份）
-        键int：同 h_state.insert_position 的身体部位编号，0发交/1脸交/2口交/3乳交/4腋交/5手交/6V性交/7子宫性交/8A性交/9U性交/10腿交/11足交/12尾交/13兽角蹭/14兽耳蹭/15深喉
-        值dict：{"id": 对象角色id int(-1无), "time": datetime, "place": List[str], "posture": str(行为中文名,空串无), "item": int(-1无/0手指/1振动棒/2采尿器)} """
+        键int：同 h_state.insert_position 的身体部位编号，
+        0发交/1脸交/2口交/3乳交/4腋交/5手交/6V性交/7子宫性交/8A性交/9U性交/10腿交/11足交/12尾交/13兽角蹭/14兽耳蹭/15深喉
+        值dict：{"id": 对象角色id int(-1无), "time": datetime, "place": List[str], "posture": str(行为中文名,空串无),
+        "item": int(-1无/0手指/1振动棒/2采尿器)} """
         self.first_shoot_body_dict: dict = {}
         """ 各身体部位第一次被射精记录 部位id(同BodyPart.csv 0-18):[时间datetime, 地点List[str]] """
         self.first_strong_orgasm_dict: dict = {}
@@ -679,7 +698,8 @@ class FIRST_RECORD:
         self.first_h_mode_dict: dict = {}
         """ 各H模式初体验记录 模式键str:[时间, 地点, 附加数据str]
         模式键：unconscious_1~unconscious_7(按sp_flag.unconscious_h类型,1睡眠2醉酒3时停4平然5空气6体控7心控)、
-        group_sex(附加数据:当时场景内人数)、exhibitionism(附加数据:露出模式名)、hidden_sex(附加数据:隐奸模式名)、pretend_sleep """
+        group_sex(附加数据:当时场景内人数)、exhibitionism(附加数据:露出模式名)、
+        hidden_sex(附加数据:隐奸模式名)、pretend_sleep """
         self.first_special_record_dict: dict = {}
         """ 特殊履历记录 配表cid(FirstRecordSpecial.csv):[时间, 地点, 特殊数据str] """
 
@@ -1450,7 +1470,8 @@ class Rhodes_Island:
         self.party_day_of_week: dict[int, int] = {}
         """ 一周内的派对计划，周一0~周日6:娱乐id """
         self.class_schedule: dict[str, dict[int, dict[int, list]]] = {}
-        """ 全局课表（Plan 22） 键str:教室场景名(如"理论教室一") 值dict:{星期int(0~6): {节次int(0~8): [科目能力id int, 授课教师id int]}}
+        """ 全局课表（Plan 22） 键str:教室场景名(如"理论教室一") 值dict:{星期int(0~6): {节次int(0~8): [科目能力id int,
+        授课教师id int]}}
             未排的格子表示该教室该节次空闲；教师id为-1表示排了课但未指派教师（本节降级为自习）
             只存班级式的教室课；体育/兴趣/实习课存在各角色的 child_growth.selected_course 里 """
         self.temp_sex_class: dict[str, dict] = {}
@@ -1697,7 +1718,8 @@ class Rhodes_Island:
 
         # 制造加工区
         self.assembly_line: dict[int, list] = {}
-        """ 流水线id: [0生产配方id(formula_id), 1主生产工人id(0为空缺), 2当前总效率百分比(浮点, 如 123.5), 3待切换配方id(次日生效, 0表示无), 4上次结算小时] """
+        """ 流水线id: [0生产配方id(formula_id), 1主生产工人id(0为空缺), 2当前总效率百分比(浮点, 如 123.5),
+        3待切换配方id(次日生效, 0表示无), 4上次结算小时] """
         self.production_worker_ids: list[int] = []
         """ 生产工人id列表 """
 
@@ -1729,11 +1751,13 @@ class Rhodes_Island:
 
         # 疗养庭院
         self.herb_garden_line: dict[int, list] = {}
-        """ 药田生产情况 流水线id:[0生产类型id, 1主种植员id(0为空缺), 2总效率百分比(显示用, 如110), 3明日要变成的新生产类型, 4上次收菜的小时] """
+        """ 药田生产情况 流水线id:[0生产类型id, 1主种植员id(0为空缺), 2总效率百分比(显示用, 如110),
+        3明日要变成的新生产类型, 4上次收菜的小时] """
         self.herb_garden_operator_ids: list[int] = []
         """ 药田种植员id列表 """
         self.green_house_line: dict[int, list] = {}
-        """ 温室生产情况 流水线id:[0生产类型id, 1主种植员id(0为空缺), 2总效率百分比(显示用, 如110), 3明日要变成的新生产类型, 4上次收菜的小时] """
+        """ 温室生产情况 流水线id:[0生产类型id, 1主种植员id(0为空缺), 2总效率百分比(显示用, 如110),
+        3明日要变成的新生产类型, 4上次收菜的小时] """
         self.green_house_operator_ids: list[int] = []
         """ 花草种植员id列表 """
         self.remaining_aromatherapy_sessions_today: int = 0
@@ -1794,7 +1818,8 @@ class System_Setting:
         self.difficulty_setting: dict[int, int] = {}
         """ 难度设定，即difficulty类 """
         self.birth_type_setting: dict[int, int] = {}
-        """ 生殖方式设定，即birth类，键为生育方式编号（2多胎胎生/11带壳卵生/12无壳卵生），值为0关闭/1开启，关闭的生育方式一律按单胎胎生处理 """
+        """ 生殖方式设定，即birth类，键为生育方式编号（2多胎胎生/11带壳卵生/12无壳卵生），值为0关闭/1开启，
+        关闭的生育方式一律按单胎胎生处理 """
         self.line_before_main_update: int = 3
         """ 主界面刷新前的行数 """
         self.value_draw: dict[str, bool] = {"pl": False, "npc": False}
@@ -2053,7 +2078,8 @@ class Cache:
         self.pending_event_text: dict | None = None
         """ 待显示的事件文本，由 draw_event_text_panel 保存，供 event_option_panel 使用 """
         self.web_instruct_executing: bool = False
-        """ Web模式指令执行中标记：True表示SocketIO处理线程正在同步执行指令（含其内部嵌套的askfor_all），主循环线程的askfor_all在此期间不应消费button_click_response，避免与嵌套面板争抢用户输入 """
+        """ Web模式指令执行中标记：True表示SocketIO处理线程正在同步执行指令（含其内部嵌套的askfor_all），
+        主循环线程的askfor_all在此期间不应消费button_click_response，避免与嵌套面板争抢用户输入 """
         self.web_instruct_executing_thread_id: int | None = None
         """ Web模式正在同步执行指令的SocketIO线程ID：用于在get_button_response中识别仅允许该线程消费按钮响应 """
         self.web_sub_panel_mode: bool = False

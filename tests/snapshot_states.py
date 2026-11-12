@@ -12,9 +12,11 @@ time_stop_h -- 时停中的 H、跨午夜的睡眠、医疗部。
     动作表先做几样 H 指令（接吻、舔阴、爱抚胸部、插入后正常位）；理智用尽时时停与 H 一并结束，之后博士在岛上走动与等待，
     到能睡觉时在博士房间睡 8 小时：这一步里跨过午夜，跑完新一天的结算（含医疗部的每日结算），睡醒后再等一会儿。
 family_commission -- 孕产、各阶段的孩子、上课与外勤委托。构建：
-    - 受精：射精污浊函数（ejaculation_panel.update_semen_dirty）把精液记进子宫，生理周期（pregnancy_handle.update_reproduction_period）推进到排卵日，
+    - 受精：射精污浊函数（ejaculation_panel.update_semen_dirty）把精液记进子宫，
+    生理周期（pregnancy_handle.update_reproduction_period）推进到排卵日，
       再走受精结算（get_fertilization_rate、check_fertilization）；
-    - 之后的妊娠、临盆、生产（生产面板里按「焦急等待」并给每个孩子取名）、产后转育儿、婴儿长成幼女、幼女长成学员、学员长成少女，
+    - 之后的妊娠、临盆、生产（生产面板里按「焦急等待」并给每个孩子取名）、产后转育儿、婴儿长成幼女、
+    幼女长成学员、学员长成少女，
       都走 pregnancy_handle 的结算函数。这些函数按经过的天数判断，构建时用 unittest.mock 把两个数天数的函数
       （get_pregnancy_past_day、get_child_grow_day）换成刚好达到阈值的天数，代替真的过那么多天；构建完就换回，游戏时间不跳。
       结果：特蕾西娅妊娠中；凯尔希头胎的孩子长成少女（104，在线，仍是学生岗），二胎是婴儿（101，离线），凯尔希在育儿；
@@ -449,7 +451,8 @@ PLANS = {
     + waits(180),
 }
 """ 状态名: 玩家动作表。动作是 ("instruct", 指令id, 之后按下的按钮)、("walk", 目标场景路径)，
-或 ("until", 指令id, 之后按下的按钮, 最多等待的次数)：指令的前提不成立时「等待五分钟」再看，成立时执行它；每次等待与最后的指令各算一步 """
+或 ("until", 指令id, 之后按下的按钮, 最多等待的次数)：指令的前提不成立时「等待五分钟」再看，成立时执行它；
+每次等待与最后的指令各算一步 """
 
 BUILDERS = {
     "time_stop_h": build_time_stop_h,

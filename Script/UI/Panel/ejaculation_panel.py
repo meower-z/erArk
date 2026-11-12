@@ -478,7 +478,8 @@ def ejaculation_flow(
     part_type -- 部位类型，0为身体，1为穿着服装，2为浴场衣柜，3为宿舍衣柜
     target_character_id -- 目标角色id
     draw_flag -- 是否绘制射精文本
-    soft_egg_id -- 射在体外无壳卵上时的卵编号（-1为不射在卵上）；非避孕套时精液全部加到卵上，不更新任何部位污浊/精液流动/受精概率与射精部位记录
+    soft_egg_id -- 射在体外无壳卵上时的卵编号（-1为不射在卵上）；
+    非避孕套时精液全部加到卵上，不更新任何部位污浊/精液流动/受精概率与射精部位记录
     """
     character_data: game_type.Character = cache.character_data[0]
     # 如果没有赋值目标角色id，则默认为当前目标角色

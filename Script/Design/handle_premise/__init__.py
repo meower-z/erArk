@@ -252,10 +252,13 @@ def get_player_manual_teach_course(character_id: int) -> tuple | None:
     character_id -- 角色id
     Return arguments:
     Optional[tuple] -- (课型编号int, 科目能力id int)；不是玩家、或此刻的行为不是授课时为None
-    功能: 玩家手动发起的授课不在课表上（他从不出现在全局课表的教师位上），教师反查只取得到他人就在那间教室里的当天临时实操课。
+    功能: 玩家手动发起的授课不在课表上（他从不出现在全局课表的教师位上），
+    教师反查只取得到他人就在那间教室里的当天临时实操课。
              此前 CVP 两项都读成 -1，授课口上全判不过，只剩开发占位地文。
-          与结算 512（Settle/default.py 的授课结算）共用同两处定义：课型 schedule_handle.get_course_type_by_position（理论 / 实践教室、大礼堂，
-             不在这三类教室里按理论课），科目 education_constant.FALLBACK_SUBJECT_ABILITY（学识）。调用方只在 get_now_teaching 取不到时才问它。只读
+          与结算 512（Settle/default.py 的授课结算）共用同两处定义：课型
+          schedule_handle.get_course_type_by_position（理论 / 实践教室、大礼堂，
+             不在这三类教室里按理论课），科目 education_constant.FALLBACK_SUBJECT_ABILITY（学识）。
+             调用方只在 get_now_teaching 取不到时才问它。只读
     """
     from Script.System.Education_System import (
         education_constant,
@@ -280,9 +283,11 @@ def get_listen_manual_teach_course(character_id: int) -> tuple | None:
     character_id -- 角色id
     Return arguments:
     Optional[tuple] -- (课型编号int, 科目能力id int)；她此刻不是在听玩家的手动授课时为None
-    功能: 玩家「授课」把在场的学生拉成听课、开始时刻对齐到玩家（handle_instruct.handle_teach），512 按学识与所在教室给她们结算；
+    功能: 玩家「授课」把在场的学生拉成听课、开始时刻对齐到玩家（handle_instruct.handle_teach），512
+    按学识与所在教室给她们结算；
              此前学生侧的 CVP 与 <课> 仍按她自己的课表取，节次外一句听课口上都不出，节次内写的是课表上的另一门课。
-          判据：不是玩家、行为是听课、与玩家同场景、玩家此刻在授课且不是课表上的课（get_now_teaching(0) 取不到）、两人的行为开始时刻对齐。只读
+          判据：不是玩家、行为是听课、与玩家同场景、玩家此刻在授课且不是课表上的课（get_now_teaching(0) 取不到）、
+          两人的行为开始时刻对齐。只读
     """
     from Script.System.Education_System import schedule_handle
 
@@ -344,8 +349,10 @@ def get_now_course_ability(character_id: int) -> int:
     正在进行的性技实操课优先于课表（Plan 22 四期）：当场开课与拖堂都可能发生在节次之外，
        此时下面那两条课表链一律取不到东西，所以先问 judge_in_running_class()。
        （教师反查 get_teacher_cell() 自 2026-09-09 起也并入了临时课覆盖层，节次内查玩家同样取得到）
-    玩家手动授课不在课表上，教师反查取不到时科目回落学识（Plan 31 §3.13，与 512 同口径，见 get_player_manual_teach_course）；
-       被玩家「授课」拉来听课的学生同样回落学识，先于她自己的课表（Plan 32 §3.10 L13，见 get_listen_manual_teach_course）
+    玩家手动授课不在课表上，教师反查取不到时科目回落学识（Plan 31 §3.13，与 512 同口径，见
+    get_player_manual_teach_course）；
+       被玩家「授课」拉来听课的学生同样回落学识，先于她自己的课表（Plan 32 §3.10 L13，见
+       get_listen_manual_teach_course）
     Keyword arguments:
     character_id -- 角色id
     Return arguments:

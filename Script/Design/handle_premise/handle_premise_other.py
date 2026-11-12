@@ -1272,7 +1272,8 @@ def handle_self_have_classmate(character_id: int) -> int:
 def handle_self_mother_available(character_id: int) -> int:
     """
     校验自己的母亲仍在队中且当前可跟随（Plan 23，母亲相关的公务事件用）
-    直接复用 judge_mother_available：母亲正在H、被监禁、外出委托时算不可跟随（不查医疗系统的住院表：那张表以抽象病人编号为键，干员从不进表），
+    直接复用 judge_mother_available：母亲正在H、被监禁、外出委托时算不可跟随（不查医疗系统的住院表：
+    那张表以抽象病人编号为键，干员从不进表），
        免得事件里写「母亲带她去岗位」时母亲其实不在
     Keyword arguments:
     character_id -- 角色id
@@ -1326,7 +1327,8 @@ def handle_self_have_any_course(character_id: int) -> int:
 def handle_self_have_theory_course(character_id: int) -> int:
     """
     校验自己有理论课：学生岗，且个人课表上至少有一格是每周确有的理论课
-    日常事件在 0 点推送，读「此刻这一节」的 CVP CourseType 恒为 -1，所以查整张个人课表（growth_handle.judge_have_course_type）；
+    日常事件在 0 点推送，读「此刻这一节」的 CVP CourseType 恒为 -1，
+    所以查整张个人课表（growth_handle.judge_have_course_type）；
        只读 child_growth，不惰性创建养成数据
     Keyword arguments:
     character_id -- 角色id
