@@ -31,7 +31,8 @@ class NoAgeDrugsOrChildPortraitsTest(SlowTestCase):
     """外表年龄药与铜化方舟设定不在配置里；立绘查找不返回「_小」差分；没有立绘的女儿不报错"""
 
     def test_age_drugs_and_setting_absent(self) -> None:
-        """道具 31、32 不在道具表与礼物表；设定 1 不在世界设定表；world_setting[1] 为 1 时开局设定不改干员的素质 102~107"""
+        """道具 31、32 不在道具表与礼物表；设定 1 不在世界设定表；
+        world_setting[1] 为 1 时开局设定不改干员的素质 102~107"""
         from Script.Config import game_config
         from Script.Design import character_handle
 

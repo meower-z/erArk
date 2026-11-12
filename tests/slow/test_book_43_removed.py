@@ -179,7 +179,8 @@ class Book43RemovedTest(SlowTestCase):
         )
 
     def test_old_save_nobody_holds_book(self) -> None:
-        """43 号书在借阅表里、没人借：读档时借阅表去掉这一项、其余每项不变，再存再读一次不变；每个干员照常判定借书、走娱乐读书，读的书都在书籍配置里"""
+        """43 号书在借阅表里、没人借：读档时借阅表去掉这一项、其余每项不变，再存再读一次不变；
+        每个干员照常判定借书、走娱乐读书，读的书都在书籍配置里"""
         from Script.Config import game_config
         from Script.Core import constant
         from Script.UI.Panel import borrow_book_panel
@@ -221,7 +222,8 @@ class Book43RemovedTest(SlowTestCase):
         self.assertTrue(reader_count, "有干员借到书在读")
 
     def test_old_save_npc_reads_book(self) -> None:
-        """干员借着 43 号书、存档时正读着它：读档后她手上没有 43 号书、正读着的书号归零，读完配置里所有书时判定借不到书；她读满这一段，再走娱乐读书时读的是书籍配置里的书，借书卡上 43 号书记为已还"""
+        """干员借着 43 号书、存档时正读着它：读档后她手上没有 43 号书、正读着的书号归零，
+        读完配置里所有书时判定借不到书；她读满这一段，再走娱乐读书时读的是书籍配置里的书，借书卡上 43 号书记为已还"""
         from Script.Config import game_config
         from Script.Core import constant
         from Script.UI.Panel import borrow_book_panel, manage_library
@@ -330,7 +332,8 @@ class Book43RemovedTest(SlowTestCase):
         return character_id
 
     def test_old_save_loaned_book_passes_island_21(self) -> None:
-        """干员借着、正读着 43 号书，阅读推荐与图书馆展示列表里有它：打开游戏状态自检时读档，借书一致性自检 ISLAND-21 随即通过，存档里没有对 43 号书与类型 43 的引用；再存再读一次，借阅表不变"""
+        """干员借着、正读着 43 号书，阅读推荐与图书馆展示列表里有它：打开游戏状态自检时读档，借书一致性自检 ISLAND-21
+        随即通过，存档里没有对 43 号书与类型 43 的引用；再存再读一次，借阅表不变"""
         from Script.Test.Static_Check.checks import check_island
 
         self.cache.all_system_setting.base_setting[SELF_CHECK_SETTING] = 1
@@ -374,7 +377,8 @@ class Book43RemovedTest(SlowTestCase):
         )
 
     def test_user_save_99_drops_unknown_books(self) -> None:
-        """用户存档 99：读档后借阅表里没有书籍配置里没有的书，其余每项仍在、借阅者不变或读档时还了书；再存再读一次，借阅表不变"""
+        """用户存档 99：读档后借阅表里没有书籍配置里没有的书，其余每项仍在、借阅者不变或读档时还了书；
+        再存再读一次，借阅表不变"""
         from Script.Config import game_config
         from Script.Core import constant, save_handle
 

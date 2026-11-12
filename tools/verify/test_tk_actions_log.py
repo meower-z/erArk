@@ -23,7 +23,8 @@ class TkActionsLog(unittest.TestCase):
     """检查 tk.act 写进 actions.log 的行。等待用的时钟、读探针和截图都换成假的。"""
 
     def test_key_with_newline(self) -> None:
-        """描述含换行的动作（如 type 加返回值 "\\n0"）在 actions.log 里只占一行。行里的这个换行是反斜杠加 n 两个字符。"""
+        """描述含换行的动作（如 type 加返回值 "\\n0"）在 actions.log 里只占一行。
+        行里的这个换行是反斜杠加 n 两个字符。"""
         tmpdir = tempfile.TemporaryDirectory()
         self.addCleanup(tmpdir.cleanup)
         out = pathlib.Path(tmpdir.name)

@@ -376,9 +376,11 @@ class PREGNANCY:
 class CHILD_GROWTH:
     """生长养成数据结构体（Plan 22）
 
-    主要挂在孩子身上，成年后保留供查阅。出生时不一定创建：母亲胎教值大于 0 时由胎教折算（baby_growth_handle.settle_prenatal_to_child）创建，
+    主要挂在孩子身上，成年后保留供查阅。
+    出生时不一定创建：母亲胎教值大于 0 时由胎教折算（baby_growth_handle.settle_prenatal_to_child）创建，
        否则等照料、选课、事件结算等第一次写入时才惰性创建。
-    普通干员也可以选课学技能（已确认口径 24），此时同样会被惰性创建出本结构体：学生岗的出勤、缺课、翘课、实操课次数与翘课 flag 都记在这里，
+    普通干员也可以选课学技能（已确认口径 24），此时同样会被惰性创建出本结构体：学生岗的出勤、缺课、翘课、
+    实操课次数与翘课 flag 都记在这里，
        性格倾向、照料、胎教、成绩单等其余养成字段保持初值。
     创建入口统一为 Script/System/Education_System/growth_handle.get_child_growth()，
     不要在别处直接 new，以免出现"有的角色有、有的角色没有"的不一致。

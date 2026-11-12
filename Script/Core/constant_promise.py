@@ -3908,12 +3908,15 @@ class Premise:
     """ 工作_授课 自己是学生，上课地点可解析但人不在那里 """
     SELF_COURSE_TEACHER_AVAILABLE = "self_course_teacher_available"
     """ 工作_授课 自己是学生，本节是教室课且授课教师能到岗（授课的是玩家的临时实操课，另要她进得了课堂） """
+    # 玩家的临时实操课上，能否进课堂由 sex_class_handle.judge_can_join_sex_class 判，点名必修的学生免查前置修习。
     SELF_COURSE_TEACHER_UNAVAILABLE = "self_course_teacher_unavailable"
-    """ 工作_授课 自己是学生，本节是教室课但授课教师来不了（或课表没排教师；临时实操课上进不了课堂的选修生也算来不了） """
+    """ 工作_授课 自己是学生，本节是教室课但授课教师来不了（含课表没排教师、自己进不了玩家的临时实操课） """
     SELF_COURSE_JOIN_SEX_CLASS = "self_course_join_sex_class"
     """ 工作_授课 自己是学生，本节的课所在教室正在上性技实操课、人已在教室、可以参加但还没进H """
+    # 目击H的目标行（target.csv 的 500）挂这条前提。
+    # 来上这节课的晚到学生不满足它，改由工作链的目标行安排：220835 加入课堂，220820 自习。
     SELF_NOT_ATTEND_SEX_CLASS_HERE = "self_not_attend_sex_class_here"
-    """ 工作_授课 自己不是来这里上正在进行的性技实操课的学生（目击H用：课堂H中晚到的学生去加入课堂或自习，不触发目击H） """
+    """ 工作_授课 自己不是来这里上正在进行的性技实操课的学生（目击H用，让课堂H中晚到的学生不触发目击H） """
 
     HAVE_NO_PATIENT_NEED_SURGERY = "have_no_patient_need_surgery"
     """ 工作_记录 自身没有需要进行手术的患者 """

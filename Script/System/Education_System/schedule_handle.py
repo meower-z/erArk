@@ -475,7 +475,8 @@ def get_now_course(character_id: int) -> dict | None:
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
-    Optional[dict] -- 不在节次内、角色不在学生岗（Plan 31 §3.8）、没排课、班级式课那一格已停课（全局课表空着，Plan 27）、
+    Optional[dict] -- 不在节次内、角色不在学生岗（Plan 31 §3.8）、没排课、
+    班级式课那一格已停课（全局课表空着，Plan 27）、
         或个人式课这一节上不成（场所未开放、兴趣课条件不符，Plan 28；兴趣课读书借不到书，Plan 29）时为None，否则为：
         {"course_type": 课型int, "target": 目标, "period": 节次int, "week_day": 星期int,
          "classroom": 教室场景名str（仅班级式课）, "ability_id": 科目能力id int（仅班级式课，-1为未知）,

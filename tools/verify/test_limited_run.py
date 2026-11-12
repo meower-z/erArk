@@ -411,7 +411,8 @@ class Slots(SlotCase):
         self.assertEqual(self.free_slots(), limited_run.SLOTS)
 
     def test_stale_state_ignored(self) -> None:
-        """锁空着的状态文件是死掉的运行留下的：live_runs 不算它，新运行拿到这个槽位时覆盖它；同一进程号旧运行留下的停止请求也删掉，不会一启动就停"""
+        """锁空着的状态文件是死掉的运行留下的：live_runs 不算它，新运行拿到这个槽位时覆盖它；
+        同一进程号旧运行留下的停止请求也删掉，不会一启动就停"""
         limited_run.STATE_DIR.mkdir(parents=True)
         limited_run.slot_file(0, "json").write_text(
             json.dumps(
@@ -438,7 +439,8 @@ class Slots(SlotCase):
         self.assertEqual(seen[0], (os.getpid(), False))
 
     def test_handover_scope_is_orphan(self) -> None:
-        """状态记着 9001、槽位锁却已由另一个进程（9999，还没写状态）持有时，9001 不算活着，它的 scope 算遗留，新运行以 75 拒绝"""
+        """状态记着 9001、槽位锁却已由另一个进程（9999，还没写状态）持有时，9001 不算活着，它的 scope 算遗留，
+        新运行以 75 拒绝"""
         self.hold(1, 9001)
         self.fake[0] = 9999
         self.units.return_value = ["era-game-9001.scope"]
@@ -546,7 +548,8 @@ class TmpDirs(SlotCase):
         self.assertFalse(self.own.exists())
 
     def test_kept_while_scope_alive(self) -> None:
-        """停过之后 scope 的 cgroup 目录还在、或 systemd 仍列出这个 scope 时，其中的进程可能还在写，临时目录留着，退出码不变"""
+        """停过之后 scope 的 cgroup 目录还在、或 systemd 仍列出这个 scope 时，其中的进程可能还在写，
+        临时目录留着，退出码不变"""
         self.fake_cgroup()
         for case in ("cgroup", "unit"):
             with self.subTest(case=case):
@@ -577,7 +580,8 @@ class TmpDirs(SlotCase):
         self.assertEqual(self.free_slots(), limited_run.SLOTS)
 
     def test_unique_per_launch(self) -> None:
-        """每次运行拿一个新目录，名字是 scope 名称加随机后缀：同一进程号的前一次运行留下的目录不会被接手，也不会被这次运行删掉"""
+        """每次运行拿一个新目录，名字是 scope 名称加随机后缀：同一进程号的前一次运行留下的目录不会被接手，
+        也不会被这次运行删掉"""
         stale = limited_run.STATE_DIR / "tmp" / f"{self.unit}-stale"
         stale.mkdir(parents=True)
         dirs = []
@@ -730,7 +734,8 @@ class MemoryPeak(SlotCase):
     unreclaimable_peak_mib 是运行中各次取样里回收不了的内存的最大值"""
 
     def test_unreclaimable_peak(self) -> None:
-        """文件缓存把 memory.peak 推到上限时，unreclaimable_peak_mib 只报各次取样里 anon、shmem、内核内存之和的最大值；scope 还没有 memory.stat 的那次取样跳过"""
+        """文件缓存把 memory.peak 推到上限时，unreclaimable_peak_mib 只报各次取样里 anon、shmem、内核内存之和的最大值；
+        scope 还没有 memory.stat 的那次取样跳过"""
         self.patch(limited_run, "CGROUP", self.tmp / "cgroup")
         self.patch(limited_run, "check_headroom")
         unit_dir = limited_run.scope_dir(f"era-game-{os.getpid()}")
@@ -780,7 +785,8 @@ class Refusals(SlotCase):
         self.assertEqual(self.launch(SLOT)[0], 0)
 
     def test_run_registering_between_reads(self) -> None:
-        """另一次运行在本次读完运行列表之后、列 scope 之前写下状态并建好 scope 时，它的 scope 不算遗留，本次启动不被拒绝"""
+        """另一次运行在本次读完运行列表之后、列 scope 之前写下状态并建好 scope 时，它的 scope 不算遗留，
+        本次启动不被拒绝"""
         held = limited_run.take_slots(1)
         self.addCleanup(limited_run.release_slots, held)
         slot = held[0][0]
@@ -834,7 +840,8 @@ class Refusals(SlotCase):
         self.assertIn(f"这次需要 {limited_run.SLOTS} 个", message)
 
     def test_same_checkout(self) -> None:
-        """同一 checkout（经符号链接进来也算）已有运行时以 75 拒绝；消息写出 checkout、占用者的 pid、槽位、模式、命令，并让调用方换自己的 worktree"""
+        """同一 checkout（经符号链接进来也算）已有运行时以 75 拒绝；
+        消息写出 checkout、占用者的 pid、槽位、模式、命令，并让调用方换自己的 worktree"""
         self.hold(1, 9001, cwd=self.checkout, mode="tk", out="/x/run")
         link = self.tmp / "link"
         link.symlink_to(self.checkout)
@@ -924,7 +931,8 @@ class RealLocks(unittest.TestCase):
         }
 
     def test_zombie_launcher(self) -> None:
-        """启动进程被 SIGKILL 后成了没回收的僵尸、它的槽位已被别的进程接手：僵尸的状态不算活着的运行，它的 scope 算遗留"""
+        """启动进程被 SIGKILL 后成了没回收的僵尸、它的槽位已被别的进程接手：僵尸的状态不算活着的运行，
+        它的 scope 算遗留"""
         launcher = self.child(
             "limited_run.write_state({'unit': 'era-game-%d' % __import__('os').getpid(), 'mode': 'headless', 'pid': "
             "__import__('os').getpid(), 'slots': [0], 'cwd': '/c/z', 'mem_max_mib': 2048, 'command': 'job-z'})"
@@ -959,7 +967,8 @@ class RealLocks(unittest.TestCase):
         )
 
     def test_handover(self) -> None:
-        """槽位 0 的锁在另一个进程手里、状态文件却记着一个还活着但不持锁的进程：活着的运行是持锁的那个，不是旧状态；持锁者写下状态后它才算活着"""
+        """槽位 0 的锁在另一个进程手里、状态文件却记着一个还活着但不持锁的进程：活着的运行是持锁的那个，不是旧状态；
+        持锁者写下状态后它才算活着"""
         bystander = subprocess.Popen(
             [sys.executable, "-c", "import time; time.sleep(60)"]
         )
@@ -979,7 +988,8 @@ class RealLocks(unittest.TestCase):
         )
 
     def test_proc_locks_parsing(self) -> None:
-        """假的 /proc/locks 与 mountinfo：只认 FLOCK 的持有者（不认等待者与 POSIX 锁），设备号按文件所在挂载点（最长前缀）对上，十六进制的设备号也能对上"""
+        """假的 /proc/locks 与 mountinfo：只认 FLOCK 的持有者（不认等待者与 POSIX 锁），
+        设备号按文件所在挂载点（最长前缀）对上，十六进制的设备号也能对上"""
         lock = limited_run.slot_file(0, "lock")
         lock.parent.mkdir(parents=True)
         lock.touch()
@@ -1210,7 +1220,8 @@ class Headroom(unittest.TestCase):
                     self.assertEqual(limited_run.container_limit(), limit)
 
     def test_earlyoom_margin(self) -> None:
-        """earlyoom -m 20 时，余量是可用内存减去总内存的 20%，比容器余量小就用它；再有一个 -m 15 的 earlyoom 时仍按 20%"""
+        """earlyoom -m 20 时，余量是可用内存减去总内存的 20%，比容器余量小就用它；
+        再有一个 -m 15 的 earlyoom 时仍按 20%"""
         self.process(7, "python3", "-m", "50")
         self.process(
             42, "earlyoom", "-m", "20", "-s", "100", "--prefer", "^python"
@@ -1222,7 +1233,8 @@ class Headroom(unittest.TestCase):
         self.assertEqual(limited_run.earlyoom_headroom()[1], 20.0)
 
     def test_percent_forms(self) -> None:
-        """各种写法下 SIGTERM 线的百分比，与 earlyoom v1.7 --dryrun 在 12 GiB 机器上打印的一致；组合短选项和重复选项按 earlyoom 的规则"""
+        """各种写法下 SIGTERM 线的百分比，与 earlyoom v1.7 --dryrun 在 12 GiB 机器上打印的一致；
+        组合短选项和重复选项按 earlyoom 的规则"""
         total = 12 << 20
         cases = {
             ("-m", "20", "-r", "0"): 20.0,

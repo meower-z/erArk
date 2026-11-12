@@ -1089,12 +1089,17 @@ def check_num_26_warehouse_capacity() -> list[CheckFailure]:
         return []
     materials = getattr(rhodes_island, "materials_resouce", None)
     materials = materials if isinstance(materials, dict) else {}
+    warehouse_level = (
+        getattr(rhodes_island, "facility_level", {}).get(3)
+        if isinstance(getattr(rhodes_island, "facility_level", None), dict)
+        else "?"
+    )
     return [
         make_failure(
             "NUM-26",
             "仓库容量为非负整数",
             (
-                f"warehouse_capacity={capacity!r} facility_level[3]={getattr(rhodes_island, 'facility_level', {}).get(3) if isinstance(getattr(rhodes_island, 'facility_level', None), dict) else '?'} "
+                f"warehouse_capacity={capacity!r} facility_level[3]={warehouse_level} "
                 f"used_extra_warehouse_capacity_module="
                 f"{getattr(rhodes_island, 'used_extra_warehouse_capacity_module', '?')} "
                 f"materials_resouce[31]={materials.get(31)} materials_resouce[12]={materials.get(12)}"

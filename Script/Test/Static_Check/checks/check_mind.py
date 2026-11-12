@@ -921,6 +921,13 @@ def check_air_hypnosis_scene_locked() -> list[CheckFailure]:
             and getattr(scene, "close_flag", 0) != 0
         ):
             continue
+        air_position = (
+            getattr(
+                getattr(pl, "pl_ability", None), "air_hypnosis_position", "?"
+            )
+            if pl is not None
+            else "?"
+        )
         failures.append(
             make_failure(
                 "MIND-19",
@@ -929,7 +936,7 @@ def check_air_hypnosis_scene_locked() -> list[CheckFailure]:
                 f"close_type={getattr(scene, 'close_type', '?') if scene is not None else '场景不存在'} "
                 f"close_flag={getattr(scene, 'close_flag', '?') if scene is not None else '?'}，"
                 f"玩家position={getattr(pl, 'position', '?') if pl is not None else '?'}，"
-                f"air_hypnosis_position={getattr(getattr(pl, 'pl_ability', None), 'air_hypnosis_position', '?') if pl is not None else '?'}",
+                f"air_hypnosis_position={air_position}",
                 [cid],
             )
         )
