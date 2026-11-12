@@ -9,10 +9,12 @@ import datetime
 import importlib.util
 import random
 import uuid
+from unittest import mock
 
 import numpy
 
 from Script.Design import handle_premise
+from tests import world
 from tests.fast import FORBIDDEN, FastLayerImportError
 from tests.fast.base import FastTestCase
 from tests.world import FixtureError
@@ -47,6 +49,17 @@ class WorldTest(FastTestCase):
         """先造 NPC 再造玩家时抛 FixtureError"""
         with self.assertRaises(FixtureError):
             self.world.chara(1, "干员")
+
+    def test_failed_check_leaves_no_chara(self) -> None:
+        """状态核对失败的角色不留在 cache.character_data 里。同一个 id 随后可以再造"""
+        self.world.chara(0, "博士")
+        with mock.patch.object(world, "STANDARD_OUTFIT", {}), self.assertRaises(
+            FixtureError
+        ):
+            self.world.chara(1, "干员")
+        self.assertNotIn(1, self.cache.character_data)
+        self.world.chara(1, "干员")
+        self.assertEqual(handle_premise.handle_normal_all(1), 1)
 
     def test_unknown_scene_refused(self) -> None:
         """不存在的场景路径抛 FixtureError"""

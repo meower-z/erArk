@@ -139,7 +139,7 @@ class SlotCase(unittest.TestCase):
     real_slot_holders = staticmethod(limited_run.slot_holders)
 
     def setUp(self) -> None:
-        """建临时状态目录与临时 checkout，并切换到 checkout"""
+        """建临时状态目录与临时 checkout 并切换过去，内存余量检查（check_headroom）换成放行的替身"""
         tmpdir = tempfile.TemporaryDirectory()
         self.addCleanup(tmpdir.cleanup)
         self.tmp = pathlib.Path(tmpdir.name).resolve()
@@ -151,6 +151,7 @@ class SlotCase(unittest.TestCase):
         self.fake: dict[int, int] = {}
         self.handles: dict[int, list[tuple[int, io.TextIOWrapper]]] = {}
         self.patch(limited_run, "slot_holders", side_effect=self.holders)
+        self.patch(limited_run, "check_headroom")
         self.checkout = self.make_checkout("mine")
         self.addCleanup(os.chdir, os.getcwd())
         os.chdir(self.checkout)
@@ -251,7 +252,7 @@ class SlotCase(unittest.TestCase):
         returncode: int | None = 0,
     ) -> tuple[int, str, mock.MagicMock]:
         """
-        运行一次 limited_run.run()，scope 换成以 0 结束的假进程，sudo 与 systemctl 换成空操作，内存余量检查放行；
+        运行一次 limited_run.run()，scope 换成以 0 结束的假进程，sudo 与 systemctl 换成空操作。
         标准输出记在 self.stdout
         参数：mem_max (int) 内存上限，字节；during (Callable | None) 假进程每次被查询是否结束时调用，
         用来查看运行中的状态；running (int) 假进程在前几次查询时还没结束；
@@ -507,9 +508,8 @@ class TmpDirs(SlotCase):
         (self.own / "sub" / "log.txt").write_text("x")
 
     def fake_cgroup(self) -> None:
-        """cgroup 目录换成临时目录，测试自己在其中建或删 scope 的目录；内存余量检查跟着换掉，放行"""
+        """cgroup 目录换成临时目录，测试自己在其中建或删 scope 的目录"""
         self.patch(limited_run, "CGROUP", self.tmp / "cgroup")
-        self.patch(limited_run, "check_headroom")
 
     def finished(self) -> dict:
         """
@@ -737,7 +737,6 @@ class MemoryPeak(SlotCase):
         """文件缓存把 memory.peak 推到上限时，unreclaimable_peak_mib 只报各次取样里 anon、shmem、内核内存之和的最大值；
         scope 还没有 memory.stat 的那次取样跳过"""
         self.patch(limited_run, "CGROUP", self.tmp / "cgroup")
-        self.patch(limited_run, "check_headroom")
         unit_dir = limited_run.scope_dir(f"era-game-{os.getpid()}")
         unit_dir.mkdir(parents=True)
         (unit_dir / "memory.peak").write_text(str(SLOT))

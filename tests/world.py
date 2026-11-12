@@ -333,7 +333,7 @@ class MinimalWorld:
         adv: int = 0,
     ) -> game_type.Character:
         """
-        造一个角色并登记进缓存与所在场景，然后核对她的状态
+        造一个角色放进 cache.character_data，核对她的状态，通过后登记进所在场景
         Keyword arguments:
         cid -- 角色id（0 为玩家；造 NPC 前须先造玩家）
         name -- 角色名
@@ -346,7 +346,8 @@ class MinimalWorld:
         功能描述:
             game_type.Character() 的多数容器字段初值是空 dict，游戏代码直接下标访问，这里全部按置零函数预填。
             默认角色当场核对：穿着衣服（不是大致全裸），NPC 的异常位1~7全部正常（normal_all 为 1）。
-            naked=True 的角色当场核对：全裸；NPC 还须只有位4异常（玩家的异常位恒为正常）。不符合时抛 FixtureError。
+            naked=True 的角色当场核对：全裸；NPC 还须只有位4异常（玩家的异常位恒为正常）。
+            不符合时把她从 cache.character_data 里删掉，再抛 FixtureError。这时她还没登记进 npc_id_got 和场景。
         """
         from Script.Core import game_type
         from Script.Design import attr_calculation, map_handle
@@ -396,10 +397,14 @@ class MinimalWorld:
         cd.behavior.start_time = cache.game_time
         cd.position = position
         cache.character_data[cid] = cd
+        try:
+            self._check_chara(cid, naked)
+        except FixtureError:
+            del cache.character_data[cid]
+            raise
         if cid:
             cache.npc_id_got.add(cid)
         scene.character_list.add(cid)
-        self._check_chara(cid, naked)
         return cd
 
     def _check_chara(self, cid: int, naked: bool) -> None:
