@@ -165,7 +165,9 @@ class Editor(unittest.TestCase):
                 if proc.poll() is not None or time.monotonic() > deadline:
                     return 77
                 time.sleep(0.2)
-            cls.runs.append({"out": str(out_dir), "pid": 4321, **fields})
+            cls.runs.append(
+                {"mode": mode, "out": str(out_dir), "pid": 4321, **fields}
+            )
             cls.stop_requested.wait(60)
             return 0
         finally:
@@ -369,7 +371,7 @@ class Lookup(unittest.TestCase):
         with mock.patch.object(
             limited_run,
             "live_runs",
-            return_value=[{"out": str(self.out), "pid": 1}],
+            return_value=[{"mode": "editor", "out": str(self.out), "pid": 1}],
         ):
             with self.assertRaises(SystemExit) as caught:
                 arkeditor.main(["shot", "--out", str(self.out)])
@@ -383,7 +385,9 @@ class Lookup(unittest.TestCase):
         with mock.patch.object(
             limited_run,
             "live_runs",
-            return_value=[{"out": str(self.out), "pid": 4321}],
+            return_value=[
+                {"mode": "editor", "out": str(self.out), "pid": 4321}
+            ],
         ), mock.patch.object(limited_run, "cmd_stop", return_value=0) as stop:
             self.assertEqual(
                 arkeditor.main(["stop", "--out", str(self.out)]), 0

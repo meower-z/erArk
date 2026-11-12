@@ -220,7 +220,7 @@ def xdotool_key(spec: str) -> str:
 
 def find_run(out_dir: Path) -> dict[str, object]:
     """
-    按证据目录找出以它启动、仍在运行的那次运行
+    按证据目录找出以它启动、仍在运行、mode 为 editor 的那次运行
     参数：
         out_dir (Path): 证据目录
     返回：
@@ -229,7 +229,9 @@ def find_run(out_dir: Path) -> dict[str, object]:
     runs = [
         run
         for run in limited_run.live_runs()
-        if run.get("out") and Path(run["out"]) == out_dir
+        if run.get("mode") == "editor"
+        and run.get("out")
+        and Path(run["out"]) == out_dir
     ]
     if not runs:
         sys.exit(
