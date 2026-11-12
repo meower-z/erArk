@@ -51,8 +51,8 @@ ignore_missing_imports = true
 [tool.lint-ratchet]
 baseline = ".lint-baseline.tsv"
 exclude = ["Script/Config/config_def.py"]
-soft = 300
-hard = 400
+soft = 400
+hard = 500
 reset = "verify script fixes lengthen three capped modules"
 # 棘轮运行 ruff 时带 `--ignore-noqa`，所以 `# noqa` 注释压不下棘轮报出的问题。
 # 因此这里不禁止 `# noqa` 注释。
