@@ -2223,7 +2223,8 @@ YOUNG_CHILD_H_FLAG_TUPLE = (
     "see_h_reaction_settled",
     "sex_toy_level",
 )
-""" 101/102阶段的孩子读档时换回默认值的 SPECIAL_FLAG 字段：H（含无意识H与睡奸中醒来）、隐奸、避孕套装饰、露出、挤奶与自慰后续链、群交邀请、看H反应、玩具档位 """
+""" 101/102阶段的孩子读档时换回默认值的 SPECIAL_FLAG 字段：H（含无意识H与睡奸中醒来）、隐奸、避孕套装饰、露出、
+挤奶与自慰后续链、群交邀请、看H反应、玩具档位 """
 YOUNG_CHILD_H_TALENT_TUPLE = (20, 21, 22, 23, 24, 25, 26, 27, 32, 35)
 """ 101/102阶段的孩子读档时清掉的素质：受精、妊娠、临盆、产后、育儿、假孕孕肚、孕肚、泌乳、精液膨腹、无意识妊娠 """
 KEEP_PREGNANCY_ATTR_SET = {
@@ -2527,9 +2528,11 @@ def _remove_from_group_sex_template(
     young_child_id_set -- 101/102阶段孩子的角色id集合
     Return arguments:
     int -- 改动的项数
-    功能: 阴茎侍奉的对象删空时换回默认的 [[-1], -1]。两部分分别检查结构：模板不是长度至少为2、第一项为字典的列表时整份跳过；
+    功能: 阴茎侍奉的对象删空时换回默认的 [[-1], -1]。
+    两部分分别检查结构：模板不是长度至少为2、第一项为字典的列表时整份跳过；
           阴茎侍奉部分不是 [对象列表, 指令状态] 时只跳过这一部分，单部位已做的改动保留。
-          group_sex_panel.clear_character_data_in_group_sex_template 只改游戏缓存里玩家的模板、不检查结构，而这里改的是还没载入缓存的存档里每个角色的模板，所以不用它
+          group_sex_panel.clear_character_data_in_group_sex_template 只改游戏缓存里玩家的模板、不检查结构，
+          而这里改的是还没载入缓存的存档里每个角色的模板，所以不用它
     """
     count = 0
     for (
@@ -2730,9 +2733,11 @@ def _take_young_child_off_line(
     """
     让101/102阶段的孩子离线：离开所有场景与当前干员列表，位置换成离线位置 ["0", "0"]，交互对象换成自己，
        行为不是发呆或带着移动路线时换成默认行为（发呆），跟随关闭；
-       没有职业（work_type 为0）、不在任何职业名单里，空出宿舍床位（宿舍与登记宿舍为空串），助理服务归零（同 handle_assistant_reset）；
+       没有职业（work_type 为0）、不在任何职业名单里，空出宿舍床位（宿舍与登记宿舍为空串），助理服务归零（同
+       handle_assistant_reset）；
        催眠、待触发事件、必须结算与显示的二段行为、快感状态归零；
-       别人以她为目标的，目标换回自己（NPC 当前的行为换成发呆）；以她为助理的，助理清零；别人正在搬运她的，搬运对象清零；别人的群交部位模板里去掉她。角色数据保留
+       别人以她为目标的，目标换回自己（NPC 当前的行为换成发呆）；以她为助理的，助理清零；
+       别人正在搬运她的，搬运对象清零；别人的群交部位模板里去掉她。角色数据保留
     Keyword arguments:
     loaded_dict -- 存档数据
     young_child_id_set -- 101/102阶段孩子的角色id集合
@@ -2864,7 +2869,8 @@ def _find_young_child_session(
     loaded_dict -- 存档数据（在清掉孩子的H标记、群交模板与对孩子的引用之前调用）
     young_child_id_set -- 101/102阶段孩子的角色id集合
     Return arguments:
-    dict -- {"group": 群交是否要结束, "time_stop": 时停是否要结束, "single_partner_id_set": 与孩子单人H的角色id集合, "child_id_set": 孩子的角色id集合}
+    dict -- {"group": 群交是否要结束, "time_stop": 时停是否要结束, "single_partner_id_set": 与孩子单人H的角色id集合,
+    "child_id_set": 孩子的角色id集合}
     功能: 群交：开着群交模式，且玩家以孩子为交互对象、或孩子在某个群交部位模板里、或孩子与玩家同场景在H中；
           时停：开着时停，且玩家以孩子为交互对象、搬运她或让她自由活动；
           单人H（含隐奸、露出）：交互对象是孩子且在H、隐奸或露出中的角色，与玩家同场景的群交参与者归群交结束
@@ -2946,7 +2952,8 @@ def end_young_child_session(session: YoungChildSession) -> None:
     session -- migrate_age_and_body_type 填入的会话信息（见 _find_young_child_session）
     Return arguments:
     None
-    功能: 群交按「群交结束」：场景内所有角色H状态归零（SCENE_ALL_CHARACTERS_H_STATE_RESET）、穿回衣服、阴茎位置归零、关闭群交模式；
+    功能: 群交按「群交结束」：场景内所有角色H状态归零（SCENE_ALL_CHARACTERS_H_STATE_RESET）、穿回衣服、
+    阴茎位置归零、关闭群交模式；
           时停按「解除时停」：清零时停搬运与自由活动对象、关闭时停；
           单人H按「结束H」：另一方H状态归零（BOTH_H_STATE_RESET 对其一侧）、开门；
           最后孩子一侧H状态归零、穿回衣服。结算读写游戏缓存，所以在读档覆盖缓存之后调用；
@@ -3005,11 +3012,14 @@ def migrate_age_and_body_type(
     读档时整理成长阶段、体型、见学与上课、行为表与娱乐表里已没有的编号、101/102阶段的H与身体状态和离线、外表年龄药相关的数据；对整理过的存档再读一次，这些数据不变
     Keyword arguments:
     loaded_dict -- 存档数据（角色数据须已经过 update_character_config_data）
-    session -- 传入 dict 时填入有孩子参与的会话（见 _find_young_child_session），读档覆盖缓存后交给 end_young_child_session
+    session -- 传入 dict 时填入有孩子参与的会话（见 _find_young_child_session），读档覆盖缓存后交给
+    end_young_child_session
     Return arguments:
     int -- 改动的项数
     功能: 静态干员见 _migrate_static_talent；103阶段的女儿去掉未初潮与未成年，女儿的成长阶段与体型保持原样；
-          见学、表里没有的行为与娱乐编号、101/102阶段的上课状态、101/102阶段的H与身体状态、离线、外表年龄药见 _clear_child_activity、_clear_young_child_h_state、_clear_young_child_egg_index、_take_young_child_off_line、_clear_age_drug_item；
+          见学、表里没有的行为与娱乐编号、101/102阶段的上课状态、101/102阶段的H与身体状态、离线、外表年龄药见
+          _clear_child_activity、_clear_young_child_h_state、_clear_young_child_egg_index、_take_young_child_off_line、
+          _clear_age_drug_item；
           最后清掉世界设定1的开关
     """
     count = 0

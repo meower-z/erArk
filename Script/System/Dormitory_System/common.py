@@ -180,7 +180,8 @@ def get_open_dormitory_room_occupancy() -> dict[str, int]:
     获取开放普通宿舍的占用表
     输入类型: 无
     输出类型: Dict[str, int]
-    功能: 按层号升序、层内房号升序列出全部开放普通宿舍的场景路径，并按宿舍统计角色集合的宿舍归属统计各房当前居住人数，返回保持该顺序的{房间路径: 人数}表
+    功能: 按层号升序、层内房号升序列出全部开放普通宿舍的场景路径，并按宿舍统计角色集合的宿舍归属统计各房当前居住人数，
+    返回保持该顺序的{房间路径: 人数}表
     """
     open_rooms_by_layer = get_open_dormitory_rooms_by_layer()
     room_occupancy: dict[str, int] = {}
@@ -202,7 +203,8 @@ def pick_dormitory_room(
     输入类型: room_occupancy(Dict[str, int]) -- 按层序排列的开放普通宿舍占用表，键为房间路径，值为当前人数
     输入类型: preferred_room(str) -- 入住者的优先意向房间（如角色的登记宿舍）路径，默认为空表示无意向
     输出类型: str
-    功能: 宿舍设计容量为2人，优先房在表内且不足2人时直接入住；否则返回表中第一间不足2人的房间；全部住满时返回人数最少的一间（并列时取顺序最前者）
+    功能: 宿舍设计容量为2人，优先房在表内且不足2人时直接入住；否则返回表中第一间不足2人的房间；
+    全部住满时返回人数最少的一间（并列时取顺序最前者）
     """
     if preferred_room in room_occupancy and room_occupancy[preferred_room] < 2:
         return preferred_room
@@ -217,7 +219,9 @@ def get_residence_type(character_id: int) -> str:
     获取角色当前的特殊住宿类型
     输入类型: character_id(int)
     输出类型: str
-    功能: 按访客>监禁>同居>舍管>监狱长的顺序返回角色命中的首个特殊住宿类型（"guest_room"/"prison"/"with_player"/"dormitory_manager"/"prison_manager"）；未处于任何特殊住宿状态时返回"dormitory"（正常住宿）
+    功能: 按访客>监禁>同居>舍管>监狱长的顺序返回角色命中的首个特殊住宿类型
+    （"guest_room"/"prison"/"with_player"/"dormitory_manager"/"prison_manager"）；
+    未处于任何特殊住宿状态时返回"dormitory"（正常住宿）
     """
     from Script.Design import handle_premise
 
@@ -244,7 +248,8 @@ def register_permanent_dormitory(character_id: int) -> None:
     进入特殊住宿前登记原宿舍
     输入类型: character_id(int)
     输出类型: 无
-    功能: 角色即将迁入特殊房间时调用；当前住在开放普通宿舍时把该宿舍记为登记宿舍，否则不改动（避免把特殊房间写入登记字段）
+    功能: 角色即将迁入特殊房间时调用；
+    当前住在开放普通宿舍时把该宿舍记为登记宿舍，否则不改动（避免把特殊房间写入登记字段）
     """
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dormitory in get_open_dormitory_room_occupancy():
@@ -256,7 +261,8 @@ def restore_character_dormitory(character_id: int) -> str:
     结束临时住宿状态时恢复角色的宿舍归属
     输入类型: character_id(int)
     输出类型: str
-    功能: 确保角色住回开放普通宿舍：已住在开放普通宿舍则保持不变；否则按登记宿舍优先分配（登记宿舍有空床则回住，无则按新入住规则挑选）。随后清空 permanent_dormitory（角色住在普通宿舍时该字段恒为空），返回最终宿舍路径
+    功能: 确保角色住回开放普通宿舍：已住在开放普通宿舍则保持不变；否则按登记宿舍优先分配（登记宿舍有空床则回住，
+    无则按新入住规则挑选）。随后清空 permanent_dormitory（角色住在普通宿舍时该字段恒为空），返回最终宿舍路径
     """
     character_data: game_type.Character = cache.character_data[character_id]
     room_occupancy = get_open_dormitory_room_occupancy()

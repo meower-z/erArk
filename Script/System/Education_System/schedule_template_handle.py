@@ -90,7 +90,8 @@ def get_template_data(template_id: int) -> dict | None:
     Keyword arguments:
     template_id -- 模板编号
     Return arguments:
-    Optional[dict] -- {TEMPLATE_KEY_NAME: 模板名str, TEMPLATE_KEY_SLOT: {时段int: 娱乐cid int}}（键见 education_constant），不存在则为None
+    Optional[dict] -- {TEMPLATE_KEY_NAME: 模板名str, TEMPLATE_KEY_SLOT: {时段int: 娱乐cid int}}（键见
+    education_constant），不存在则为None
     """
     init_default_template()
     return cache.rhodes_island.child_schedule_template.get(template_id, None)
@@ -354,7 +355,8 @@ def judge_activity_schedulable(entertainment_id: int) -> bool:
     entertainment_id -- 娱乐配置cid
     Return arguments:
     bool -- 能排为True；照料卵（pregnancy_constant.TEND_EGGS_ENTERTAINMENT_ID）为False
-    功能: 照料卵是妊娠系统给持卵者的专用娱乐：随机池专门排除它，只由每日的持卵钩子（egg_handle.replace_entertainment_for_eggs）换上；
+    功能: 照料卵是妊娠系统给持卵者的专用娱乐：随机池专门排除它，
+    只由每日的持卵钩子（egg_handle.replace_entertainment_for_eggs）换上；
           它的 need 列却是「无」，不在这里挡的话「选择活动」里就有它。排给孩子后她每晚去育儿室，
           状态机 427 找不到可鉴定的卵就「孵化卵」一小时，还拿医疗经验。
           候选表、每日改写、日程行三处共用本函数
@@ -596,7 +598,8 @@ def get_child_slot_activity_text(character_id: int, slot: int) -> str:
     character_id -- 角色id
     slot -- 时段0~2
     Return arguments:
-    str -- 活动名；0 为「自由选择娱乐活动」；活动存在但这个孩子不满足其 need 条件、或是不可排进日程的照料卵（Plan 28 §3.3）时为
+    str -- 活动名；0 为「自由选择娱乐活动」；
+    活动存在但这个孩子不满足其 need 条件、或是不可排进日程的照料卵（Plan 28 §3.3）时为
            「X（条件不符→自由选择）」，满足条件但地点还没开放时为「X（未开放→自由选择）」（Plan 27 §3.1）
     功能: 供个人课表的日程行与日程微调页共用。
           只做显示：真正的「退回」发生在 apply_schedule_for_child 的可排、need 与地点校验里，这里只是把它说给玩家听

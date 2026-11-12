@@ -18,13 +18,15 @@
     .conda\\python.exe tools/generate_character_portrait.py --child 阿达克利斯 --dry-run
     - 参数是原图路径，或角色名/种族名（依次在 image/美术风格参考图、image/立绘 下找同名图）；裸体、内衣类差分不接受
     - 第1张输入是铺白底的原图，画风、外貌、服装、姿势、肤色都以它为准，只把年龄改小（默认约 8 岁，--age 可改）
-    - 第2张输入是已拼好的比例对照表 tools/儿童立绘参考/儿童参考对照表.png（该目录下的儿童立绘裁出人物、统一身高后拼成），只用于理解儿童的年龄感与身体比例
+    - 第2张输入是已拼好的比例对照表 tools/儿童立绘参考/儿童参考对照表.png（该目录下的儿童立绘裁出人物、
+    统一身高后拼成），只用于理解儿童的年龄感与身体比例
     - 参考图有增删时加 --rebuild-child-ref-sheet，用目录中的参考图重新拼接并覆盖对照表
     - 提示词内置了从这些参考图总结出的儿童特征，--extra 只需写本角色的姿势、鞋子、肤色等细节
     - 结果保存为 <角色名>_小_全身_<时间>_<序号>.png，另存一张"原图 | 结果 | 标杆"的白底对比图
 
 API 密钥读取顺序：环境变量 OPENAI_API_KEY > 仓库根目录 ai_chat_api_key.csv 的 OPENAI_API_KEY 行
-接口地址读取顺序：--base-url > 环境变量 OPENAI_BASE_URL > ai_chat_api_key.csv 的 OPENAI_BASE_URL 行（都没有则用官方地址）
+接口地址读取顺序：--base-url > 环境变量 OPENAI_BASE_URL > ai_chat_api_key.csv 的 OPENAI_BASE_URL
+行（都没有则用官方地址）
 生成结果默认保存到 tools/output/立绘生成/<角色名>/，不会直接写入 image/立绘
 """
 
@@ -632,7 +634,8 @@ def request_images(
         client (openai.OpenAI): 客户端
         args (argparse.Namespace): 命令行参数
         prompt (str): 提示词
-        inputs (list[Path | tuple[str, bytes, str]]): 输入图片，可以是文件路径，也可以是 (文件名, 二进制数据, MIME 类型) 元组
+        inputs (list[Path | tuple[str, bytes, str]]): 输入图片，可以是文件路径，也可以是 (文件名,
+        二进制数据, MIME 类型) 元组
     返回值：list[bytes] - 生成的图片二进制数据
     """
     params = {

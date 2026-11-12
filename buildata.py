@@ -1,4 +1,5 @@
-"""前提与结算代码的开发辅助脚本：按顶部的 mode 生成前提处理函数，或在 constant_promise.py、constant_effect.py 与 csv 表之间互转"""
+"""前提与结算代码的开发辅助脚本：按顶部的 mode 生成前提处理函数，或在 constant_promise.py、constant_effect.py
+与 csv 表之间互转"""
 
 import ast
 import os
@@ -37,7 +38,8 @@ premise_module_dict = {
     "T": "handle_premise_talent.py",
     "X": "handle_premise_other.py",
 }
-""" 各类前提的处理函数写进 handle_premise 包里的哪个模块：能力进能力模块，素质进素质模块，状态与自定义内容进其他通用前提模块 """
+""" 各类前提的处理函数写进 handle_premise 包里的哪个模块：能力进能力模块，素质进素质模块，
+状态与自定义内容进其他通用前提模块 """
 premise_module = premise_module_dict[datetype]
 
 # 数据初始化
@@ -367,7 +369,8 @@ def csv_2_constand() -> str:
 
 def constand_effect_2_csv() -> str:
     """
-    结算文件转csv（mode 4）：读 constant_effect.py 里第一处「二段结算」之前的部分，重新生成 ArkEditor 的结算表 Effect.csv
+    结算文件转csv（mode 4）：读 constant_effect.py 里第一处「二段结算」之前的部分，重新生成 ArkEditor
+    的结算表 Effect.csv
     Keyword arguments:
     无
     Return arguments:
@@ -418,7 +421,8 @@ def constand_effect_2_csv() -> str:
 
 def csv_2_constand_effect() -> str:
     """
-    csv转结算文件（mode 5）：读 tools/csv/Effect.csv，把每个结算写成常量与说明行，接到 constant_effect.py 里 BehaviorEffect 类的末尾
+    csv转结算文件（mode 5）：读 tools/csv/Effect.csv，把每个结算写成常量与说明行，接到 constant_effect.py 里
+    BehaviorEffect 类的末尾
     Keyword arguments:
     无
     Return arguments:

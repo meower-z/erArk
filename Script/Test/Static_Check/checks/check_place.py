@@ -1,11 +1,13 @@
 # -*- coding: UTF-8 -*-
 """
 静态检查系统 - 位置/场景/跟随/助理/交互对象领域检查
-本模块实现 PLACE 组的30条不变量检查（PLACE-01 ~ PLACE-25、PLACE-27 ~ PLACE-31），覆盖角色位置、场景名册、门锁状态、移动路径、
+本模块实现 PLACE 组的30条不变量检查（PLACE-01 ~ PLACE-25、PLACE-27 ~ PLACE-31），覆盖角色位置、场景名册、
+门锁状态、移动路径、
 收藏地点、宿舍、交互对象、助理、跟随、装袋搬运等状态的一致性约束。
 
 约定与踩坑说明（写在此处，避免散落在各检查函数注释里重复）：
-1. `["0", "0"]` 不是哨兵值，是真实场景「罗德岛出口」，也是 `Character.position` 的默认值；离线角色被置为它是合法的稳定状态。
+1. `["0", "0"]` 不是哨兵值，是真实场景「罗德岛出口」，也是 `Character.position` 的默认值；
+离线角色被置为它是合法的稳定状态。
 2. 新生儿写入 `character_data` 但不进 `npc_id_got`、也不移动，所以"角色→场景名册"方向的检查必须以
    `LIVE = set(cache.npc_id_got) | {0}` 为域，不能用全体 `character_data`。
 3. 当前地图更新会把已删除场景内的角色迁到区域入口或["0", "0"]；位置检查仍检查迁移后的实际状态，不预设异常成因。
@@ -1436,7 +1438,8 @@ def _check_room_name(
     key: str,
     failures: list[CheckFailure],
 ) -> None:
-    """参数: scenes(dict)、tags(标签集合)、name(场景名)、cid(角色id或None)、key(str)、failures(list)；返回值: None；功能: 检查一次名称引用是否唯一解析。"""
+    """参数: scenes(dict)、tags(标签集合)、name(场景名)、cid(角色id或None)、key(str)、failures(list)；返回值: None；
+    功能: 检查一次名称引用是否唯一解析。"""
     paths = [
         path
         for path, scene in scenes.items()
@@ -1457,7 +1460,8 @@ def _check_room_name(
 
 @register_check("PLACE-31", "教室名称无歧义")
 def check_place_31() -> list[CheckFailure]:
-    """参数: 无；返回值: List[CheckFailure]；功能: 全局课表与个人0–3课型的场景名须唯一对应匹配教育标签的场景，未开放或关闭不报错。"""
+    """参数: 无；返回值: List[CheckFailure]；
+    功能: 全局课表与个人0–3课型的场景名须唯一对应匹配教育标签的场景，未开放或关闭不报错。"""
     cache = cache_control.cache
     from Script.System.Education_System import education_constant
 

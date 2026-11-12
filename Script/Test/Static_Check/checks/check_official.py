@@ -9,7 +9,8 @@ from ..check_registry import CheckFailure, register_check, make_failure
 
 @register_check("OFFICIAL-01", "队列条目")
 def check_official_01() -> list[CheckFailure]:
-    """参数: 无；返回值: List[CheckFailure]；功能: 检查队列及字段类型；角色引用失效单独警示。部门id由写入方保存为int。"""
+    """参数: 无；返回值: List[CheckFailure]；功能: 检查队列及字段类型；角色引用失效单独警示。
+    部门id由写入方保存为int。"""
     cache = cache_control.cache
     ri = getattr(cache, "rhodes_island", None)
     if ri is None:

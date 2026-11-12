@@ -76,7 +76,8 @@ def _behavior_type_ok(chara: game_type.Character) -> bool:
     功能:
         供BEHAV-10/11/12/22在字段类型损坏时跳过该角色的时间比较，避免抛异常被框架降级为"检查器自身异常"；
         起时behavior.start_time用isinstance，因为起时取自游戏时钟，类型是datetime的子类GameTime。
-        分钟数behavior.duration用type(...)is int而非isinstance，因为isinstance(True, int)为真，布尔值不应被当作合法分钟数
+        分钟数behavior.duration用type(...)is int而非isinstance，因为isinstance(True, int)为真，
+        布尔值不应被当作合法分钟数
     """
     try:
         behavior = chara.behavior

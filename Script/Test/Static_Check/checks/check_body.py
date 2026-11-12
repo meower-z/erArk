@@ -44,7 +44,8 @@ def _get_config_sets() -> tuple[set | None, set | None, dict | None]:
     参数:
         无
     返回值:
-        Tuple[Optional[set], Optional[set], Optional[dict]]: (服装部位id集合CT, 身体部位id集合BP, 服装模板配置表TEM)，配置未加载时对应项为None
+        Tuple[Optional[set], Optional[set], Optional[dict]]: (服装部位id集合CT, 身体部位id集合BP, 服装模板配置表TEM)，
+        配置未加载时对应项为None
     功能:
         统一获取本模块依赖的三张配置表；独立运行环境下配置可能未加载，此时相关检查退化为跳过
     """

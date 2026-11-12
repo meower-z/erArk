@@ -5,7 +5,8 @@
 本测试只读数据文件的 id、行为、前提、效果与类别列，不读文本列，也不启动游戏。
 测试要求：挂在儿童阶段的行里没有 H 内容；通用文本里没有挂在儿童阶段的行；JUDGED_DELETED 列出的行都已不在文件里。
 
-「挂在儿童阶段」：前提里有选中素质 101、102、103 的条件（CVP 素质条件，或阶段前提 CHILD_PREMISES）；养成事件在 CHILD_EVENT_BUCKETS 桶里也算。
+「挂在儿童阶段」：前提里有选中素质 101、102、103 的条件（CVP 素质条件，或阶段前提 CHILD_PREMISES）；
+养成事件在 CHILD_EVENT_BUCKETS 桶里也算。
 「H 内容」：满足任一条——
 - 行为的标签（Behavior_Data.csv 的 tag 列）首段是 SEXUAL_TAG_HEADS 之一，或含 SEXUAL_SUB_TAGS 之一；
 - 行为的标签只有「二段结算」，且行为名匹配 SEXUAL_SECOND_BEHAVIOR_PATTERN；
@@ -386,7 +387,8 @@ def classify(
     child_bucket -- 养成事件是否在 CHILD_EVENT_BUCKETS 桶里
     path -- 口上文件相对仓库根目录的路径
     Return arguments:
-    str -- other（不挂在儿童阶段）、sexual（挂在儿童阶段且属于 H）、child_body（通用文本挂在儿童阶段、不属于 H）、undecided（挂在儿童阶段、无法判定）、kept（挂在儿童阶段、不属于 H）
+    str -- other（不挂在儿童阶段）、sexual（挂在儿童阶段且属于 H）、child_body（通用文本挂在儿童阶段、不属于 H）、
+    undecided（挂在儿童阶段、无法判定）、kept（挂在儿童阶段、不属于 H）
     """
     keys = child_keys(premises)
     if not keys and not child_bucket:

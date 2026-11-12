@@ -373,7 +373,8 @@ def push_official_event(
     character_id -- 主体角色id，无主体为0
     partner_id -- 互动对象角色id，默认0为玩家
     to_front -- 是否插到队首（一次性的叙事节点用，如毕业典礼）
-    ignore_capacity -- 追加到队尾时是否不受队列容量上限约束（排在队尾的一次性叙事节点用，如成年后的通用 59 / 60，Plan 31 §3.2）；插队首的本就不受约束
+    ignore_capacity -- 追加到队尾时是否不受队列容量上限约束（排在队尾的一次性叙事节点用，如成年后的通用 59 / 60，Plan 31
+    §3.2）；插队首的本就不受约束
     Return arguments:
     bool -- 是否成功入队
     """

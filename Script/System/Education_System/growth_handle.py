@@ -14,7 +14,8 @@
     1. 习得珠是**通用**的、科目经验是**分科**的 —— 专精一门能把它推到高级，
        广泛选课则珠够而各科经验摊薄，总成长量由珠池封顶。
     2. 性技科目（70~77）的升级需求是**真实性交经验**（如膣技要 E61 阴道性交经验），
-       课堂与自习对它们只给习得与对应的理论经验（Plan 26，get_class_exp_id），真实经验要靠实操课来补 —— 理论与实操两条腿。
+       课堂与自习对它们只给习得与对应的理论经验（Plan 26，get_class_exp_id），真实经验要靠实操课来补 ——
+       理论与实操两条腿。
 """
 
 import datetime
@@ -455,7 +456,8 @@ def settle_course_attend(character_id: int) -> bool:
     Return arguments:
     bool -- 是否真的记上了（不是女儿也不是学生岗、不在节次内、同一节已记过、这一节已记了缺课则为False）
     功能: 守卫与 sex_class_handle.settle_attend 相同，只给女儿或学生岗记；
-          节次内按 last_attend_period 去重，同一节被打断后再回去上只记一次；与教室课共用这个标记也不会互相挤占——一格只有一门课。
+          节次内按 last_attend_period 去重，同一节被打断后再回去上只记一次；
+          与教室课共用这个标记也不会互相挤占——一格只有一门课。
           这一节已记了缺课（开课时体力不足、休完回来）的不记，也不写标记，行为照常派出（Plan 30，同一节只落一种记录）
     """
     from Script.Design import game_time
@@ -553,7 +555,8 @@ def settle_personality_pair(character_id: int, pair_id: int) -> int:
     按一对性格倾向的符号给这一对性格素质选边（Plan 32 §3.4，自 settle_personality_talent 抽出）
     Keyword arguments:
     character_id -- 角色id
-    pair_id -- 性格对编号（0勤劳/懒散 1坚强/脆弱 2热情/孤僻 3开放/羞耻，素质对照见 education_constant.PERSONALITY_PAIR_TALENT）
+    pair_id -- 性格对编号（0勤劳/懒散 1坚强/脆弱 2热情/孤僻 3开放/羞耻，素质对照见
+    education_constant.PERSONALITY_PAIR_TALENT）
     Return arguments:
     int -- 写上的素质id；倾向为 0、没有养成数据、角色或性格对不存在时为0（两侧都不动）
     功能: 正值取正向素质、负值取负向素质，并清掉同一对的另一侧；为 0 时不随机选边、两侧都不动。
@@ -594,7 +597,8 @@ def settle_adult_personality_pair(character_id: int, pair_id: int) -> int:
     pair_id -- 性格对编号（0~3）
     Return arguments:
     int -- 写上的素质id；不是已毕业（阶段 104）的女儿、或倾向为 0 时为0（素质不动）
-    功能: 毕业结算（pregnancy_handle.check_grow_to_girl）只在 103→104 那一刻选一次边，之后毕业典礼、成年纪念、通用 59 / 60
+    功能: 毕业结算（pregnancy_handle.check_grow_to_girl）只在 103→104 那一刻选一次边，之后毕业典礼、
+    成年纪念、通用 59 / 60
              与毕业前入队、毕业后才处理的日常事件，选项加的倾向值若不落到素质上，提示里写的「倾向：坚强」就是空话。
           只对已毕业的女儿生效：毕业前的倾向留到毕业时统一选边；成年学生（非女儿）没有性格养成。
           静默改写，不另出文本：事件选项的提示已写明倾向。由 change_growth_value / set_growth_value 在改写倾向后调用
@@ -764,7 +768,8 @@ def get_stage_progress(character_id: int) -> float:
     取角色在当前成长阶段里已经走过的进度百分比
 
     进度 = 本阶段已过的天数（get_stage_day） ÷ 本阶段一共的天数。
-       阶段阈值是**累计**的有效成长天数（婴儿0~30 / 幼女30~90 / 学员90~150），起点、终点都换算回游戏时刻（get_grow_day_time）再按游戏日历数天数。
+       阶段阈值是**累计**的有效成长天数（婴儿0~30 / 幼女30~90 / 学员90~150），起点、
+       终点都换算回游戏时刻（get_grow_day_time）再按游戏日历数天数。
        阶段转换（长大）仍按有效成长天数，不变
     Keyword arguments:
     character_id -- 角色id

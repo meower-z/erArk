@@ -16,22 +16,27 @@
         world.medical.medical_patients_today.13.state  门诊病人 13 的状态
         world.clock.game_time                          游戏时间
     scene.<场景路径>.occupants / close_flag 场景里的角色id（排序）与关门状态
-    log.talk / log.event                    这一步里交去显示的口上id（含随后被显示判断挡下的）、触发的事件id（ActionLog 记下，只记id，不记文本）
+    log.talk / log.event                    这一步里交去显示的口上id（含随后被显示判断挡下的）、触发的事件id（ActionLog
+    记下，只记id，不记文本）
 角色与世界的字段按对象的属性、字典的键逐层展开到叶子：叶子是布尔、数、字符串、时间、UUID、枚举，或每一项都是叶子的列表、集合（集合排序成列表）；
-时间记作「年-月-日 时:分」，UUID 记作它的字符串，枚举记作它的值。值为 0、假、空串、空容器或 None 的叶子不记，比较时这样的名字值为 null。
+时间记作「年-月-日 时:分」，UUID 记作它的字符串，枚举记作它的值。
+值为 0、假、空串、空容器或 None 的叶子不记，比较时这样的名字值为 null。
 值只有 JSON 能表达的数据，记不下的类型抛 TypeError，不用 repr 兜底。
 
 文件：每行「步<TAB>名字<TAB>值的 JSON」。第一步写下全部名字，之后每步只写变了、新出现或消失的名字，消失的名字值写 null，
-所以文件里一行就是一处变化。步是从 0000 开始的序号（时停中游戏时间不走，序号仍各不相同）。文件名以 .gz 结尾时按 gzip 读写。
+所以文件里一行就是一处变化。步是从 0000 开始的序号（时停中游戏时间不走，序号仍各不相同）。
+文件名以 .gz 结尾时按 gzip 读写。
 
 比较：python -m tests.snapshot compare <基准文件> <新文件> [--allow <放行文件>] [--limit N]
 把两份文件还原成每一步的全部状态，逐步逐名比较；一处差异是 (步, 名字, 基准值, 新值)，某一边没有这个名字时值记作 null；
 某一边整步缺失时只报一处名为 step 的差异，有这一步的一边值为 "present"，另一边为 null。
 报告先列最早出现差异的一步的全部差异，再按步逐条列出差异（最多 --limit 条，默认 200，0 为不限），
-最后是没放行的差异的两份汇总：按角色（角色id与名字、差异数、最早的步、涉及的字段）与按字段（角色id换成 *，差异数、最早的步、涉及的角色）。
+最后是没放行的差异的两份汇总：按角色（角色id与名字、差异数、最早的步、涉及的字段）与按字段（角色id换成 *，差异数、
+最早的步、涉及的角色）。
 每条差异写明步与这一步的基准游戏时间、名字（角色名字里带上角色的名字）、基准值与新值。
 放行文件是 JSON 列表，每条放行一处差异：
-    {"step": "0012", "name": "chara.12.position", "baseline": ["中枢", "走廊"], "new": ["中枢", "会议室"], "reason": "为什么允许"}
+    {"step": "0012", "name": "chara.12.position", "baseline": ["中枢", "走廊"], "new": ["中枢", "会议室"],
+    "reason": "为什么允许"}
 四个字段都要与差异完全相同，reason 不能为空，没有通配符。
 没被放行的差异、没有用上的放行都让比较失败（退出码 1）；放行了的差异照样列出。
 """
@@ -85,7 +90,8 @@ WORLD_AREAS = {
     "milk_in_fridge": "cooking",
     "urine_in_fridge": "cooking",
 }
-""" 罗德岛（cache.rhodes_island）字段所属的区域；没列出的字段以 MEDICAL_PREFIXES 开头的归 world.medical，其余归 world.base """
+""" 罗德岛（cache.rhodes_island）字段所属的区域；
+没列出的字段以 MEDICAL_PREFIXES 开头的归 world.medical，其余归 world.base """
 
 MEDICAL_PREFIXES = (
     "medical_",
@@ -214,7 +220,8 @@ def _leaf(value: object) -> object | None:
     Return arguments:
     object | None -- 快照值；value 是字典或对象，或是有一项不是叶子的列表、集合时为 None
     功能描述:
-        时间记作「年-月-日 时:分」，UUID 记作它的字符串，枚举记作它的值；列表、元组与集合的每一项都是叶子时（可以是嵌套的列表）它本身是叶子，
+        时间记作「年-月-日 时:分」，UUID 记作它的字符串，枚举记作它的值；
+        列表、元组与集合的每一项都是叶子时（可以是嵌套的列表）它本身是叶子，
         集合排序成列表；有一项是字典、对象或 None 时不是叶子。
     """
     if isinstance(value, enum.Enum):
@@ -312,7 +319,8 @@ class ActionLog:
 
     def install(self) -> None:
         """
-        包住显示口上与选事件的两个函数，记下它们的id后照常执行；口上在进 handle_talk_draw 时就记下，不管它随后的显示判断是否挡下
+        包住显示口上与选事件的两个函数，记下它们的id后照常执行；
+        口上在进 handle_talk_draw 时就记下，不管它随后的显示判断是否挡下
         Keyword arguments:
         无
         Return arguments:
@@ -411,7 +419,8 @@ def capture(
     Return arguments:
     dict[str, object] -- 名字: 值
     功能描述:
-        时钟；每个角色的全部字段（SKIPPED_CHARACTER_FIELDS 除外）；游戏缓存的世界状态（SKIPPED_CACHE_FIELDS 与 web_ 字段除外，
+        时钟；每个角色的全部字段（SKIPPED_CHARACTER_FIELDS 除外）；
+        游戏缓存的世界状态（SKIPPED_CACHE_FIELDS 与 web_ 字段除外，
         罗德岛的字段按 WORLD_AREAS 分区）；有人的场景里的角色，关着门的场景的关门状态；口上与事件的id。
         memo 只省时间：pickle 字节相同的对象状态相同，展开结果也相同；字节不同时照常展开。
     """

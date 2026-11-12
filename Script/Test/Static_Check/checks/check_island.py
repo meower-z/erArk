@@ -80,7 +80,8 @@ def _sp_flag_brief(ch: Any) -> str:
     参数:
         ch: 角色对象
     返回值:
-        str: 该角色离线相关标记的简要描述，形如 "field_commission=3,escaping=False,be_bagged=False,in_diplomatic_visit=0"
+        str: 该角色离线相关标记的简要描述，形如 "field_commission=3,escaping=False,be_bagged=False,
+        in_diplomatic_visit=0"
     功能:
         统一提取全域前提中约定的四个离线来源标记，供失败消息展示，用于判断"离线残留"还是"真实联动缺陷"
     """

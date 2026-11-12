@@ -43,7 +43,8 @@ def register_repair(check_id: str, repair_name: str) -> Callable[
     返回值:
         Callable: 装饰器
     功能:
-        将一个接收cache参数的修复函数注册到修复注册表；同一函数（__module__ 与 __qualname__ 都相同）再次注册同一check_id时
+        将一个接收cache参数的修复函数注册到修复注册表；
+        同一函数（__module__ 与 __qualname__ 都相同）再次注册同一check_id时
         替换原条目，其他函数注册已有check_id时抛ValueError（导入期即暴露配置错误）
     """
 

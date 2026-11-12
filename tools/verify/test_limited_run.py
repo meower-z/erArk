@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 """
-limited_run.py 的测试：命令行解析、传给命令的散列种子、槽位的占用与释放（含进程被杀后释放）、退出码 75 的各种拒绝、status 与 stop、
+limited_run.py 的测试：命令行解析、传给命令的散列种子、槽位的占用与释放（含进程被杀后释放）、退出码 75 的各种拒绝、
+status 与 stop、
 算上 earlyoom 的内存余量与退出码 76、各运行临时目录的删除与清理、finished 行的内存峰值；不启动游戏
 
 用法：
@@ -129,8 +130,10 @@ SLOT = limited_run.parse_size(limited_run.SLOT_SIZE)
 
 class SlotCase(unittest.TestCase):
     """
-    槽位测试的公共部分：状态目录换成临时目录，当前目录是临时的 checkout，假定没有存活的 era-game scope；不碰本机正在用的槽位。
-    假运行（hold）在本进程里拿锁，/proc/locks 里记的持锁者是本进程；slot_holders 换成把这些槽位的持锁者改写成假运行进程号的版本
+    槽位测试的公共部分：状态目录换成临时目录，当前目录是临时的 checkout，假定没有存活的 era-game scope；
+    不碰本机正在用的槽位。
+    假运行（hold）在本进程里拿锁，/proc/locks 里记的持锁者是本进程；
+    slot_holders 换成把这些槽位的持锁者改写成假运行进程号的版本
     """
 
     real_slot_holders = staticmethod(limited_run.slot_holders)
@@ -207,8 +210,10 @@ class SlotCase(unittest.TestCase):
         out: str | None = None,
     ) -> dict:
         """
-        模拟另一次正在运行的实例：在本进程里另开文件拿 count 个槽位（flock 按打开的文件算，与 run() 拿的互斥），并写下它的状态
-        参数：count (int) 槽位数；pid (int) 假的启动进程号；cwd (pathlib.Path | None) 它的 checkout，默认另建一个；mode (str) headless 或 tk；out (str | None) tk 的证据目录
+        模拟另一次正在运行的实例：在本进程里另开文件拿 count 个槽位（flock 按打开的文件算，与 run()
+        拿的互斥），并写下它的状态
+        参数：count (int) 槽位数；pid (int) 假的启动进程号；cwd (pathlib.Path | None) 它的 checkout，默认另建一个；
+        mode (str) headless 或 tk；out (str | None) tk 的证据目录
         返回：dict 它的状态
         """
         held = limited_run.take_slots(count)
@@ -246,8 +251,10 @@ class SlotCase(unittest.TestCase):
         returncode: int | None = 0,
     ) -> tuple[int, str, mock.MagicMock]:
         """
-        运行一次 limited_run.run()，scope 换成以 0 结束的假进程，sudo 与 systemctl 换成空操作，内存余量检查放行；标准输出记在 self.stdout
-        参数：mem_max (int) 内存上限，字节；during (Callable | None) 假进程每次被查询是否结束时调用，用来查看运行中的状态；running (int) 假进程在前几次查询时还没结束；
+        运行一次 limited_run.run()，scope 换成以 0 结束的假进程，sudo 与 systemctl 换成空操作，内存余量检查放行；
+        标准输出记在 self.stdout
+        参数：mem_max (int) 内存上限，字节；during (Callable | None) 假进程每次被查询是否结束时调用，
+        用来查看运行中的状态；running (int) 假进程在前几次查询时还没结束；
             returncode (int | None) 假进程的 returncode，None 表示还没等到它结束
         返回：tuple 退出码、标准错误、替换 Popen 的 mock；假进程记在 self.proc，替换 Popen 的 mock 记在 self.popen
         """
@@ -617,7 +624,8 @@ class TmpDirs(SlotCase):
 
     def make_entries(self) -> dict[str, pathlib.Path]:
         """
-        在 STATE_DIR/tmp 下放各种目录与文件：已结束的运行、只是 scope 名称、没有随机后缀的目录、正在运行的 9001、存活的遗留 scope 777、
+        在 STATE_DIR/tmp 下放各种目录与文件：已结束的运行、只是 scope 名称、没有随机后缀的目录、正在运行的 9001、
+        存活的遗留 scope 777、
         systemd 没列出但 cgroup 目录还在的 778、刚改动过的 779、进程号被无关进程重用的目录、本次 scope 名称的、
         指向别处的符号链接、同名的普通文件、名字不对的目录
         返回：dict[str, pathlib.Path] 名称到路径
@@ -664,7 +672,8 @@ class TmpDirs(SlotCase):
     def test_sweep(self) -> None:
         """
         清掉已结束的运行与进程号被重用的目录；
-        留下正在运行的、存活 scope 的（systemd 列出的 777，或 systemd 没列出、cgroup 目录还在的 778）、刚改动过的（779）、本次 scope 名称的、
+        留下正在运行的、存活 scope 的（systemd 列出的 777，或 systemd 没列出、cgroup 目录还在的 778）、
+        刚改动过的（779）、本次 scope 名称的、
         没有随机后缀、只是 scope 名称的（era-game-4243，清理不动它）、符号链接（及其指向的文件）、普通文件、名字不对的
         """
         entries = self.make_entries()
@@ -717,7 +726,8 @@ class TmpDirs(SlotCase):
 
 
 class MemoryPeak(SlotCase):
-    """finished 行的两个内存峰值：memory_peak_mib 是 scope 的 memory.peak，含文件缓存；unreclaimable_peak_mib 是运行中各次取样里回收不了的内存的最大值"""
+    """finished 行的两个内存峰值：memory_peak_mib 是 scope 的 memory.peak，含文件缓存；
+    unreclaimable_peak_mib 是运行中各次取样里回收不了的内存的最大值"""
 
     def test_unreclaimable_peak(self) -> None:
         """文件缓存把 memory.peak 推到上限时，unreclaimable_peak_mib 只报各次取样里 anon、shmem、内核内存之和的最大值；scope 还没有 memory.stat 的那次取样跳过"""

@@ -31,7 +31,8 @@ def get_now_class_tip(character_id: int) -> tuple[bool, str] | None:
     取角色当前的上课信息，供 <课> / <翘> 状态标识使用（Plan 22）
     只在角色**此刻正在上课/授课**时返回内容，而不是"本节有排课"——状态标识描述的是此刻的状态，
        与 <跟> <饿> 的口径一致。孩子因体力不足去休息、或被叫走跟随时不该显示 <课>
-    <翘> 与上课状态的 SKIP 同口径（Plan 32 §3.9 L1）：只在本节有课、不是点名必修的实操课、人不在 H 里时亮，没课的空节不亮
+    <翘> 与上课状态的 SKIP 同口径（Plan 32 §3.9 L1）：只在本节有课、不是点名必修的实操课、人不在 H
+    里时亮，没课的空节不亮
     Keyword arguments:
     character_id -- 角色id
     Return arguments:

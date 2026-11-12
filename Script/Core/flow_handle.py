@@ -461,7 +461,8 @@ def order_deal(
     print_order (bool) -- 是否将输入的order输出到屏幕上
     donot_return_null_str (bool) -- 不接受输入空字符串
 
-    返回值类型：str | int | None（Tk 下：允许空输入且 wframe_mouse.w_frame_up 已置位时返回空串，否则 str 类返回输入的字符串、order 类返回 None；Web 模式下由 Web 版 order_deal 返回，可能是 int）
+    返回值类型：str | int | None（Tk 下：允许空输入且 wframe_mouse.w_frame_up 已置位时返回空串，否则 str
+    类返回输入的字符串、order 类返回 None；Web 模式下由 Web 版 order_deal 返回，可能是 int）
     功能描述：处理用户输入的命令
     """
     # 检查是否在Web模式下

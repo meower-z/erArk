@@ -43,7 +43,8 @@ class FollowerSkipsExamTest(HealthCheckTestCase):
 
     def follow_doctor_in_office(self) -> None:
         """
-        博士邀请身边的她同行，回到博士办公室等待 FOLLOW_MINUTES 分钟，等她回到身边，核对她一直跟随、没去体检科；然后结束同行
+        博士邀请身边的她同行，回到博士办公室等待 FOLLOW_MINUTES 分钟，等她回到身边，核对她一直跟随、没去体检科；
+        然后结束同行
         Keyword arguments:
         无
         Return arguments:

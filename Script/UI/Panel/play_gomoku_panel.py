@@ -1355,7 +1355,8 @@ def count_shape(
     offsetY -- 列方向偏移
     role -- 落子方，1 或 -1
     Return arguments:
-    dict -- 键为 self_count、total_length、no_empty_self_count、one_empty_self_count、inner_empty_count、side_empty_count 的计数
+    dict -- 键为 self_count、total_length、no_empty_self_count、one_empty_self_count、inner_empty_count、
+    side_empty_count 的计数
     """
     opponent = -role
 
