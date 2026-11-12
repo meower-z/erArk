@@ -310,10 +310,10 @@ character_behavior.character_behavior = (
     guarded_character_behavior  # init_character_behavior 按模块全局名调用它
 )
 limit_error = None
-# 指令经 update.game_update_flow 进入行为循环：cache.game_update_flow_running >= 2 时它直接返回（update.py:15），
-# 否则加 1 再进入循环（update.py:19-20），结束后恢复（update.py:30）。所以指令的循环里计数是 1：
-# 嵌套的 game_update_flow 还会再跑一层循环，
-# 那一层里再嵌套的直接返回。这里照样加 1，结束后恢复
+# 游戏里指令经 update.game_update_flow 进入行为循环。cache.game_update_flow_running >= 2 时该函数直接返回。
+# 其余时候该函数把这个计数加 1 再跑循环，结束后恢复调用前的值。
+# 本脚本直接调用 init_character_behavior，所以在这里照样加 1，结束后恢复。
+# 计数从 0 起时，循环里嵌套调用的 game_update_flow 还会再跑一层循环，那一层里再嵌套的调用直接返回。
 caller_depth = cache.game_update_flow_running
 cache.game_update_flow_running = caller_depth + 1
 try:
@@ -351,9 +351,12 @@ for cid in sorted(WATCH):
 shown = [t.strip() for t in captured_texts]
 print("屏幕文字:", shown if shown else "无")
 check("玩家阶段收敛", not player_stuck, describe(0))
-check(
-    "NPC阶段收敛",
-    not npc_unfinished,
-    f"未完成(前8个): {[(c, cache.character_data[c].name) for c in npc_unfinished[:8]]}",
-)
+if player_stuck and not npc_passes:
+    print("  [--] NPC阶段收敛 没有判断：玩家阶段没有收敛，NPC阶段没有运行")
+else:
+    check(
+        "NPC阶段收敛",
+        not npc_unfinished,
+        f"未完成(前8个): {[(c, cache.character_data[c].name) for c in npc_unfinished[:8]]}",
+    )
 finish()

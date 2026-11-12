@@ -446,7 +446,7 @@ def main(argv: list[str] | None = None) -> int:
     launch = sub.add_parser(
         "start",
         parents=[out, limits],
-        help="启动编辑器并一直运行到 stop 或时限为止；它占着终端，要接着发动作就在命令后加 & 放到后台",
+        help="启动编辑器并一直运行到 stop 或时限为止。它占着终端，启动它的 shell 要一直开着，动作命令从另一个终端发",
     )
     launch.add_argument(
         "--ready-timeout",
