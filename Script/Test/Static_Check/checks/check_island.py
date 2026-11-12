@@ -1938,6 +1938,11 @@ def check_island_33_diplomat_mapping_consistency() -> list[CheckFailure]:
             ch.sp_flag.in_diplomatic_visit != country
             or ch.work.work_type != 131
         ):
+            location_head = (
+                getattr(ri, "current_location", [None])[0]
+                if getattr(ri, "current_location", None)
+                else None
+            )
             failures.append(
                 make_failure(
                     "ISLAND-33",
@@ -1945,7 +1950,7 @@ def check_island_33_diplomat_mapping_consistency() -> list[CheckFailure]:
                     f"[warning] country_id={country}，diplomat_id={did}({ch.name})，"
                     f"实际work.work_type={ch.work.work_type}(期望131)，"
                     f"实际sp_flag.in_diplomatic_visit={ch.sp_flag.in_diplomatic_visit}(期望{country})，"
-                    f"current_location[0]={getattr(ri, 'current_location', [None])[0] if getattr(ri, 'current_location', None) else None}",
+                    f"current_location[0]={location_head}",
                     [did],
                 )
             )

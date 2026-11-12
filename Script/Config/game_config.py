@@ -499,7 +499,8 @@ config_instruct_by_id: dict[str, int] = {}
 
 def load_data_json() -> None:
     """载入data.json、character.json与ui_text.json内配置数据"""
-    global config_data, character_data, ui_text_data, character_talk_data, character_event_data, talk_common_data, cook_question_data, official_event_data
+    global config_data, character_data, ui_text_data, character_talk_data
+    global character_event_data, talk_common_data, cook_question_data, official_event_data
     config_data = json_handle.load_json(data_path)
     character_data = json_handle.load_json(character_path)
     ui_text_data = json_handle.load_json(ui_text_path)
