@@ -23,7 +23,6 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 
-from Script.Config import normal_config
 from Script.Core import cache_control, constant
 from Script.Design import attr_calculation, map_handle
 from ..check_registry import CheckFailure, make_failure, register_check
@@ -416,7 +415,7 @@ def check_observable_05() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]，非装袋交互对象在玩家场景名册中时为空
     功能: 校验指令面板轴心 target 与场景名册一致；
-    健康存档中 Tk 会归一化目标，Web 也应只保留在场目标，装袋搬运是唯一明确例外。
+    交互对象是玩家自己或玩家正装袋搬运的角色时不报，debug 模式下也不报。
     """
     cache = cache_control.cache
     pl = _pl(cache)
@@ -441,16 +440,13 @@ def check_observable_05() -> list[CheckFailure]:
     target = data[target_id]
     pre = getattr(cache, "pl_pre_behavior_instruce", None)
     last_pre = pre[-1] if isinstance(pre, list) and pre else None
-    web_draw = getattr(
-        getattr(normal_config, "config_normal", None), "web_draw", None
-    )
     return [
         make_failure(
             "OBS-05",
             "玩家的交互对象必须在当前场景名册里",
             (
-                f"[warning] 已知缺陷机制：Web目标卡缺少Tk侧的在场归一化；target cid={target_id}({_name(target)})不在玩"
-                f"家当前场景名册，web_draw={web_draw}，pl.position={getattr(pl, 'position', None)}，"
+                f"[warning] target cid={target_id}({_name(target)})不在玩"
+                f"家当前场景名册，pl.position={getattr(pl, 'position', None)}，"
                 f"target.position={getattr(target, 'position', None)}，离线来源={_offline_context(target)}，"
                 f"上一玩家指令={last_pre}"
             ),

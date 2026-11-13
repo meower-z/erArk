@@ -17,23 +17,6 @@ from Script.Core.constant.SecondBehavior_Int import (
 )
 from Script.System.Instruct_System.Instruct import Instruct as Instruct
 from Script.Core.constant.Behavior_Int import Behavior_Int as Behavior_Int
-from Script.System.Instruct_System.instruct_category import (
-    InstructCategory as InstructCategory,
-    BODY_PART_NAMES as BODY_PART_NAMES,
-    COMPUTED_BODY_PARTS as COMPUTED_BODY_PARTS,
-)
-from Script.System.Instruct_System.interaction_types import (
-    InteractionMajorType as InteractionMajorType,
-    InteractionMinorType as InteractionMinorType,
-    MAJOR_TYPE_NAMES as MAJOR_TYPE_NAMES,
-    MAJOR_TYPE_ORDER as MAJOR_TYPE_ORDER,
-    MINOR_TYPE_NAMES as MINOR_TYPE_NAMES,
-    MAJOR_TO_MINOR_TYPES as MAJOR_TO_MINOR_TYPES,
-    MINOR_TO_MAJOR_TYPE as MINOR_TO_MAJOR_TYPE,
-    get_minor_types as get_minor_types,
-    get_minor_type_name as get_minor_type_name,
-    get_major_type_name as get_major_type_name,
-)
 
 from typing import TYPE_CHECKING
 
@@ -250,24 +233,6 @@ behavior_id_to_instruct_id: dict[str, str] = {}
 """ 从状态id获取指令id，状态id:指令id """
 instruct_premise_data: dict[str, set] = {}
 """ 指令显示的所需前提集合 """
-
-# ========== Web模式指令分类数据 ==========
-instruct_category_data: dict[str, int] = {}
-"""
-指令的大类数据，指令id:大类id
-- InstructCategory.SYSTEM_PANEL: 系统面板类
-- InstructCategory.CHARACTER: 角色交互类
-- InstructCategory.CHARACTER_PANEL: 角色交互面板类
-"""
-instruct_panel_id_data: dict[str, int] = {}
-""" 系统面板类指令对应的面板ID，指令id:Panel中的面板id """
-instruct_body_parts_data: dict[str, list[str]] = {}
-""" 指令关联的身体部位数据，指令id:部位列表（当列表长度为1时自动判断为单部位交互）"""
-instruct_major_type_data: dict[str, str] = {}
-""" 指令的大类型数据（Web模式新分类），指令id:大类型字符串标识符（如'mouth'/'hand'等）"""
-instruct_minor_type_data: dict[str, str] = {}
-""" 指令的小类型数据（Web模式新分类），指令id:小类型字符串标识符（如'mouth_talk'/'hand_touch'等）"""
-# =========================================
 
 handle_state_machine_data: dict[int, Callable[..., object]] = {}
 """ 角色状态机函数 """

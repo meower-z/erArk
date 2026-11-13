@@ -123,7 +123,7 @@ def get_rich_text_print(text_message: str, default_style: str) -> list:
     #
     # 返回值为一个与原始文本等长的列表，每个元素是一个样式描述：
     # - 若只有基础样式（颜色）则为字符串，例如 "standard"；
-    # - 若包含修饰符则为元组，例如 ("green", "bold", "italic")，以便在 tkinter/web 层
+    # - 若包含修饰符则为元组，例如 ("green", "bold", "italic")，以便在 tkinter 层
     #   将多个 tag 一起应用（Text.insert 接受一个样式元组）。
 
     # 把字符串形式的换行符 "\\n" 转为真实换行，保持解析与 remove_rich_cache 一致

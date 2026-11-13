@@ -2,10 +2,9 @@
 
 课表是「10 教室 × 7 天 × 9 节」的三维数据，一次全画必然超出终端宽度。
    本面板一次只展示**一间教室**的周表（7 天 × 9 节），教室用上方的横向标签页切换——
-   降一个维度之后 Tk 与 Web 都画得下（方案 §5.2）。
+   降一个维度之后画得下（方案 §5.2）。
 
-只用 Script/UI/Moudle/draw.py 的抽象绘制类，不直接碰 Tk 或 HTML；
-   Web_Draw_System/web_draw_adapter.py 在启动时包装这些抽象类，双模式才能同时成立。
+只用 Script/UI/Moudle/draw.py 的抽象绘制类，不直接碰 Tk。
 """
 
 import datetime

@@ -6,8 +6,8 @@
 0. 终端调试：使用本地 conda 环境，如 `c:/code/erArk/.conda/python.exe`。
 1. 构建数据：`python buildconfig.py` （解析 `data/csv/`, 生成 `data/*.json` 与 `Script/Config/config_def.py`）
 2. （若本地化改动）`python buildpo.py` → `python buildmo.py`
-3. 启动游戏：`python game.py`（根据 `config.ini` 决定 GUI(Tk) 或 Web）
-4. 调试：`config.ini` 里 `debug = 1`；必要时切 `web_draw = 1` 测试 Web 渲染。
+3. 启动游戏：`python game.py`
+4. 调试：`config.ini` 里 `debug = 1`。
 
 ## 2. 架构骨架
 - 入口：`game.py`
@@ -15,7 +15,7 @@
 - 初始化 & 流程：`Script/Core/game_init.py`, `Script/Design/start_flow.py`
 - 数据缓存/状态：`Script/Core/cache_control.py`
 - 存档：`Script/Core/save_handle.py`
-- UI 抽象：`Script/UI/Moudle/draw.py`；Web 适配 `Script/UI/web_draw_adapter.py` / IO `Script/Core/io_web.py`
+- UI 抽象：`Script/UI/Moudle/draw.py`
 - 事件/口上/结算：参考 `.github/prompts/数据处理工作流/` 对应文档与 `Script/Design/` 下同名模块。
 
 ## 3. 数据 & 生成物边界
@@ -24,11 +24,8 @@
 - 修改 CSV/角色/口上后必须重跑 `buildconfig.py`；未重建将出现字段缺失或旧枚举。
 - 不要直接手改 `config_def.py`（会被重生成覆盖）。
 
-## 4. 渲染双模策略
-- 判定：`config.ini: web_draw`（0=Tk,1=Web）
-- 统一调用：所有输出经 `io_init.era_print()` 或抽象 draw 类；禁止直接写 Tk 或拼 HTML。
-- Web 模式核心：元素缓冲 `cache.current_draw_elements` → 通过 `update_game_state()` 批量下发。
-- 新 UI 组件：先扩展抽象/适配层，再分别适配 Tk/Web（保持同名字段）。
+## 4. 渲染策略
+- 统一调用：所有输出经 `io_init.era_print()` 或抽象 draw 类；禁止直接写 Tk。
 
 ## 5. 行为循环要点（AI 插入扩展常用切点）
 - 玩家/NPC 行为结束判定集合：`cache.over_behavior_character`
@@ -41,7 +38,7 @@
 | 新增角色属性 | 加列至相关 CSV → run buildconfig → 在逻辑中通过生成的枚举/映射访问 |
 | 新增指令/行为 | 定义前提/执行/结算 → 更新指令面板数据源 CSV → 重建 → 在行为循环中调用或自动挑选逻辑接入 |
 | 新增事件/口上 | 添加 CSV/JSON → 重建 → 确认触发条件/前提脚本存在 |
-| UI 面板扩展 | 新建 `Script/UI/Panel/xxx.py` → 使用抽象 draw 类 → 若需 Web 特性同步适配 |
+| UI 面板扩展 | 新建 `Script/UI/Panel/xxx.py` → 使用抽象 draw 类 |
 | 本地化文本 | 更新 `data/po/<lang>/*.po` 或新增语言目录 → buildpo → buildmo |
 
 ## 7. MCP / PRTS 集成
@@ -58,12 +55,11 @@
 - 生成脚本 O(文件数) 读取；频繁局部小改→可临时复制小 CSV 做最小化测试。
 - 大量对话/事件加载在启动期完成；避免在主循环中做磁盘 I/O。
 - 未调用 buildconfig 的差异最常见：枚举缺失、KeyError、旧缓存。
-- Web 模式调试注意：输出积压需定期 `clear_screen()`，否则元素数组膨胀。
 
 ## 10. 快速排错清单
 - KeyError / 属性缺失：是否忘记重建？
 - 本地化缺失：`.po` 未编译为 `.mo`？语言目录命名是否匹配？
-- UI 不显示：是否绕过抽象层直接写入？Web 模式元素是否进入 `cache.current_draw_elements`？
+- UI 不显示：是否绕过抽象层直接写入？
 - 行为不触发：前提脚本或事件条件文件是否存在 / 返回值正确？
 
 ## 11. 进一步阅读索引
@@ -75,7 +71,6 @@
 ## 12. 给后续 AI 代理的执行建议
 - 变更前先判定是否修改源数据还是运行时代码，避免对生成文件动刀。
 - 对行为/事件新增：同时检视前提、结算、展示三个层面是否一致。
-- 编写面板：验证双模式；若仅 Tk 生效视为不完整提交。
 
 （本文件保持 20~50 行原则：已压缩为高信息密度速查，可按需扩展。）
 

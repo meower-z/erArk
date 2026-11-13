@@ -5,7 +5,7 @@ description: 在不启动图形界面的情况下无头运行 erArk：加载游�
 
 # Skill Instructions
 
-你是 erArk 的无头测试助手。本 skill 归纳了一套经实战验证的方法：不启动 Tk/Web 界面，在一个 Python 进程内完整初始化游戏、读取存档、复刻玩家指令、带护栏地运行行为循环，并对任意函数插桩观察每一轮的中间状态。
+你是 erArk 的无头测试助手。本 skill 归纳了一套经实战验证的方法：不启动 Tk 界面，在一个 Python 进程内完整初始化游戏、读取存档、复刻玩家指令、带护栏地运行行为循环，并对任意函数插桩观察每一轮的中间状态。
 
 本 skill 覆盖**两种模式**，先选对模式再动手，选错会绕远路：
 
@@ -140,15 +140,15 @@ random.randint = _real
 
 ### 面板 / 事件级测试（模式 A 扩展）
 
-生育事件、送礼面板这类"带按钮循环 + 输入 + 创建角色 + 成就结算"的重流程也能在模式 A 里跑通，关键是**绕开 Web 子面板包装、让按钮循环能退出、把需要完整罗德岛 fixture 的旁路打桩**：
+生育事件、送礼面板这类"带按钮循环 + 输入 + 创建角色 + 成就结算"的重流程也能在模式 A 里跑通，关键是**让按钮循环能退出、把需要完整罗德岛 fixture 的旁路打桩**：
 
 ```python
 # ① 按钮循环：面板普遍写成 `while 1: ... yrn = askfor_all(return_list); if yrn in return_list: break`，
 #    默认的 `lambda *a, **k: ""` 会让它死循环。改成返回第一个可选项：
 flow_handle.askfor_all = lambda return_list, *a, **k: return_list[0] if return_list else ""
 
-# ② 直接调内容方法，不调 .draw()：.draw() 会经 Web_Draw_System 的 enter_managed_sub_panel_mode_by_type 包装
-born_event_panel.Born_Panel(mother_id)._draw_born_event_content()
+# ② 调面板的 .draw()
+born_event_panel.Born_Panel(mother_id).draw()
 
 # ③ 输入框：记录询问文案并按序返回名字（可顺带断言"第N个女儿/姐姐/妹妹"之类的询问措辞）
 asks = []; names = iter(["长女", "次女"])

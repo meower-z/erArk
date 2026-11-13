@@ -25,7 +25,7 @@ def _get_font_scaling() -> float:
     """
     global _font_scaling
     if _font_scaling is None:
-        # Web模式或无Tk环境下，main_frame.normal_font 可能不存在，退化为 1.0
+        # 无Tk环境下，main_frame.normal_font 可能不存在，退化为 1.0
         try:
             from Script.Core import main_frame
 

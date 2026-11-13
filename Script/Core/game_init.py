@@ -42,18 +42,16 @@ def init(main_flow: Callable[[], object]) -> None:
     io_init.clear_order()
     flow_handle.cmd_clear()
     # 载入按键监听
-    if not normal_config.config_normal.web_draw:
-        from Script.Core import key_listion_event
+    from Script.Core import key_listion_event
 
-        key_listion_event.on_wframe_listion()
+    key_listion_event.on_wframe_listion()
     # 设置背景颜色
     io_init.set_background(normal_config.config_normal.background)
     # 初始化字体
     io_init.init_style()
-    # Tk模式下预热文本度量：绘制一屏典型内容并强制完成行度量后清屏（同批处理玩家不可见），
+    # 预热文本度量：绘制典型内容并强制完成行度量后清屏（同一渲染批内完成，玩家不可见），
     # 把进入游戏后前几屏的 Tk 字形/行度量尖峰（0.3~1秒的偶发卡顿）移到加载期
-    if not normal_config.config_normal.web_draw:
-        io_init.warm_up_text_metrics()
+    io_init.warm_up_text_metrics()
     # 初始化地图数据
     global _main_flow
     _main_flow = main_flow

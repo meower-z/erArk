@@ -49,7 +49,7 @@ CPU: \
 Memory: \
 峰值需占用1GB左右内存，请确保运行游戏前电脑至少有2GB的空闲内存空间 \
 系统: \
-TK绘制模式仅限Windows，Web绘制模式不限设备 \
+仅限Windows \
 配置调整: \
 可通过 [config.ini](config.ini) 文件进行调整，出现兼容问题请提交反馈
 

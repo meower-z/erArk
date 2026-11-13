@@ -3,7 +3,7 @@
 幼年阶段（素质101婴儿、102幼女）的H闸测试
 ========================================
 开新游戏后，把一名干员改成幼年阶段（年龄素质101~108清零后只留101或102），放到博士所在的场景。
-博士以她为交互对象时，H类指令在Tk指令面板的过滤与Web的两处指令前提判断中都不成立，
+博士以她为交互对象时，H类指令在指令面板的过滤中不成立，
 交给 handle_instruct 也不调用指令的处理函数。
 NPC的状态机选出以她为对象的H类行为时，行为换成发呆；她自己的普通等待不变。
 测试里没有任何H类指令或行为真正执行或结算：指令的处理函数换成只记下调用的替身，状态机只赋予行为。
@@ -44,19 +44,17 @@ class ChildStageHGateTest(SlowTestCase):
 
     def assert_h_instructs_closed(self, stage: int) -> None:
         """
-        博士以幼年阶段的干员为交互对象：抽查的H类指令在三处列表判断中都不成立，handle_instruct 也不调用它们的处理函数
+        博士以幼年阶段的干员为交互对象：抽查的H类指令在指令面板的过滤中不成立，handle_instruct 也不调用它们的处理函数
         Keyword arguments:
         stage -- 年龄素质，101或102
         Return arguments:
         无
         """
         from Script.Core import constant
-        from Script.Design import web_interaction_manager
         from Script.System.Instruct_System import (
             handle_instruct,
             see_instruct_panel,
         )
-        from Script.System.Web_Draw_System import tab_menu
 
         pl = self.cache.character_data[0]
         child_id = self.make_child(stage, "杜宾")
@@ -71,16 +69,6 @@ class ChildStageHGateTest(SlowTestCase):
                     i, {}, 0, use_type_filter_flag=False
                 )[0]
             ],
-            "Web交互管理器": [
-                i
-                for i in H_INSTRUCTS
-                if web_interaction_manager._check_single_instruct_premise(i, {})
-            ],
-            "Web选项卡": [
-                i
-                for i in H_INSTRUCTS
-                if tab_menu._check_single_instruct_premise(i, {})
-            ],
             "执行": [],
         }
         stubs = {
@@ -92,7 +80,7 @@ class ChildStageHGateTest(SlowTestCase):
                 handle_instruct.handle_instruct(instruct_id)
         self.assertEqual(
             listed,
-            {"Tk面板": [], "Web交互管理器": [], "Web选项卡": [], "执行": []},
+            {"Tk面板": [], "执行": []},
             f"T|{stage}：各处列出或执行的H类指令",
         )
 
@@ -105,10 +93,8 @@ class ChildStageHGateTest(SlowTestCase):
         self.assert_h_instructs_closed(101)
 
     def test_h_instructs_closed_in_debug_mode(self) -> None:
-        """debug模式下交互对象是102：抽查的H类指令在三处判断中仍不成立"""
-        from Script.Design import web_interaction_manager
+        """debug模式下交互对象是102：抽查的H类指令在指令面板的过滤中仍不成立"""
         from Script.System.Instruct_System import see_instruct_panel
-        from Script.System.Web_Draw_System import tab_menu
 
         self.cache.debug_mode = True
         self.cache.character_data[0].target_character_id = self.make_child(
@@ -122,20 +108,10 @@ class ChildStageHGateTest(SlowTestCase):
                     i, {}, 0, use_type_filter_flag=False
                 )[0]
             ],
-            "Web交互管理器": [
-                i
-                for i in H_INSTRUCTS
-                if web_interaction_manager._check_single_instruct_premise(i, {})
-            ],
-            "Web选项卡": [
-                i
-                for i in H_INSTRUCTS
-                if tab_menu._check_single_instruct_premise(i, {})
-            ],
         }
         self.assertEqual(
             listed,
-            {"Tk面板": [], "Web交互管理器": [], "Web选项卡": []},
+            {"Tk面板": []},
             "debug模式下各处列出的H类指令",
         )
 

@@ -118,13 +118,8 @@ SKIPPED_CACHE_FIELDS = {
     "map_data": "地图配置，读入后不变",
     "npc_tem_data": "角色模板（配置）；生下的孩子另作为角色记在 chara.<id>",
     "daily_intsruce": "玩家当天的指令记录（文本）",
-    "pending_event_text": "待显示的事件文本",
     "now_panel_id": "界面：当前面板",
     "cmd_data": "界面：按钮绑定的函数",
-    "current_draw_elements": "界面：Web 绘制元素",
-    "current_input_request": "界面：Web 输入请求",
-    "current_interaction_type": "界面：当前交互类型",
-    "current_return_list": "界面：当前可选项",
     "back_save_panel": "界面：存档面板",
     "game_update_flow_running": "界面：主循环是否在跑",
     "image_id": "界面：图片编号",
@@ -150,7 +145,7 @@ SKIPPED_CACHE_FIELDS = {
     "pregnancy_panel_filter_type": "界面：怀孕面板",
     "pregnancy_panel_sort_type": "界面：怀孕面板",
 }
-""" 不记的游戏缓存字段: 理由；另外以 web_ 开头的字段都是 Web 界面状态，不记 """
+""" 不记的游戏缓存字段: 理由 """
 
 
 SCALAR_TYPES = (bool, int, float, str)
@@ -420,7 +415,7 @@ def capture(
     dict[str, object] -- 名字: 值
     功能描述:
         时钟；每个角色的全部字段（SKIPPED_CHARACTER_FIELDS 除外）；
-        游戏缓存的世界状态（SKIPPED_CACHE_FIELDS 与 web_ 字段除外，
+        游戏缓存的世界状态（SKIPPED_CACHE_FIELDS 除外，
         罗德岛的字段按 WORLD_AREAS 分区）；有人的场景里的角色，关着门的场景的关门状态；口上与事件的id。
         memo 只省时间：pickle 字节相同的对象状态相同，展开结果也相同；字节不同时照常展开。
     """
@@ -446,7 +441,7 @@ def capture(
         if memo is not None:
             memo[cid] = (pickled, names)
     for field in sorted(vars(cache)):
-        if field in SKIPPED_CACHE_FIELDS or field.startswith("web_"):
+        if field in SKIPPED_CACHE_FIELDS:
             continue
         flatten(
             f"world.{CACHE_AREAS.get(field, field)}.{field}",

@@ -188,18 +188,16 @@ class SlotCase(unittest.TestCase):
             slot: owner for slot, owner in self.fake.items() if owner != pid
         }
 
-    def make_checkout(self, name: str, web: bool = False) -> pathlib.Path:
+    def make_checkout(self, name: str) -> pathlib.Path:
         """
         建一个假的 erArk checkout：有 game.py 和 config.ini
-        参数：name (str) 目录名；web (bool) config.ini 是否设 web_draw = 1
+        参数：name (str) 目录名
         返回：pathlib.Path checkout 根目录
         """
         root = self.tmp / name
         root.mkdir()
         (root / "game.py").write_text("")
-        (root / "config.ini").write_text(
-            f"[game]\ndebug = 0\nweb_draw = {int(web)}\n"
-        )
+        (root / "config.ini").write_text("[game]\ndebug = 0\n")
         return root
 
     def hold(
@@ -303,16 +301,14 @@ class Slots(SlotCase):
         }
         for mem_max, count in cases.items():
             with self.subTest(mem_max=mem_max):
-                self.assertEqual(
-                    limited_run.slots_needed(mem_max, self.checkout), count
-                )
+                self.assertEqual(limited_run.slots_needed(mem_max), count)
 
     def test_shipped_numbers(self) -> None:
         """现在的设定是 5 个 2G 槽位：2G 的运行占 1 个，3G 占 2 个，6G 占 3 个"""
         self.assertEqual((limited_run.SLOTS, SLOT), (5, 2 * GIB))
         self.assertEqual(
             [
-                limited_run.slots_needed(mem, self.checkout)
+                limited_run.slots_needed(mem)
                 for mem in (2 * GIB, 3 * GIB, 6 * GIB)
             ],
             [1, 2, 3],
@@ -768,7 +764,7 @@ class MemoryPeak(SlotCase):
 
 
 class Refusals(SlotCase):
-    """槽位够用也以 75 拒绝的情形：不属于任何运行的 scope、web 模式、同一 checkout"""
+    """槽位够用也以 75 拒绝的情形：不属于任何运行的 scope、同一 checkout"""
 
     def test_orphan_scope(self) -> None:
         """有不属于任何运行的存活 scope 时以 75 拒绝并写出它；属于正在运行的实例的 scope 不算"""
@@ -810,33 +806,6 @@ class Refusals(SlotCase):
         code, message, popen = self.launch(SLOT)
         self.assertEqual(code, 0, message)
         popen.assert_called_once()
-
-    def test_web_mode_keeps_size_check(self) -> None:
-        """web 模式的内存上限超过全部槽位时，照样以 2 拒绝，不因占全部槽位而放行"""
-        (self.checkout / "config.ini").write_text("[game]\nweb_draw = 1\n")
-        code, message, popen = self.launch(limited_run.SLOTS * SLOT + 1)
-        self.assertEqual(code, 2)
-        self.assertIn("等多久都启动不了", message)
-        popen.assert_not_called()
-
-    def test_web_mode_takes_all(self) -> None:
-        """config.ini 设了 web_draw = 1 时，不管内存上限多少都占全部槽位；别人占着一个时以 75 拒绝"""
-        (self.checkout / "config.ini").write_text("[game]\nweb_draw = 1\n")
-        self.assertEqual(
-            limited_run.slots_needed(SLOT, self.checkout), limited_run.SLOTS
-        )
-        seen = []
-        self.assertEqual(
-            self.launch(
-                SLOT, lambda: seen.append(limited_run.live_runs()[0]["slots"])
-            )[0],
-            0,
-        )
-        self.assertEqual(seen[0], list(range(limited_run.SLOTS)))
-        self.hold(1, 9001)
-        code, message, _ = self.launch(SLOT)
-        self.assertEqual(code, limited_run.EXIT_BUSY)
-        self.assertIn(f"这次需要 {limited_run.SLOTS} 个", message)
 
     def test_same_checkout(self) -> None:
         """同一 checkout（经符号链接进来也算）已有运行时以 75 拒绝；

@@ -197,7 +197,7 @@ EVENT_PROVIDER: Dict[int, Callable] = {}
 | 纯数字 | 复杂效果 | 既有 `constant.settle_behavior_effect_data[id]` |
 
 弃选方案：扩 `settle_behavior` 的主体判别。那里的属性映射硬绑 `Character` 对象，
-加全局主体要同时改主体判别、`change_data` 记录、Web 数值收集三处，且会影响全游戏的结算路径。
+加全局主体要同时改主体判别、`change_data` 记录两处，且会影响全游戏的结算路径。
 公务事件的 effect 串本就由自己的 `handle_effect_text` 逐项分发，在那里认前缀即可。
 
 前提侧 `CVP_RI_...` 则必须进 `handle_premise.handle_comprehensive_value_premise`

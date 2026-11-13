@@ -140,7 +140,7 @@ ${r ? JSON.stringify({ summary: r.summary, deviations: r.deviations, needs_outsi
 ## 做法
 1. git diff -- ${u.files.concat(u.tests || []).join(' ')}
 2. 逐条对照方案与实施文档：方案要求的点有没有漏、有没有做得不一样或多做了、接口签名与字段是否与方案 §4 一致
-3. 检查：中文 docstring 与注释、前提函数是否纯函数（不写数据、不惰性创建）、新字段的存档回填、Tk / Web 两种绘制是否都走抽象绘制类、每条发现是否都有断言
+3. 检查：中文 docstring 与注释、前提函数是否纯函数（不写数据、不惰性创建）、新字段的存档回填、绘制是否都走抽象绘制类、每条发现是否都有断言
 4. 只报问题，不改任何文件，不做 git 写操作；全部用中文回答`
 
 // ==== Implement ====

@@ -30,6 +30,14 @@ cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
+STALE_UI_FIELDS = (
+    "current_draw_elements",
+    "current_return_list",
+    "current_input_request",
+    "current_interaction_type",
+    "pending_event_text",
+)
+""" 读档时丢掉的界面字段名，game_type.Cache 没有这些字段 """
 
 
 def get_save_dir_path(save_id: str) -> str:
@@ -76,18 +84,6 @@ def establish_save_linux(save_id: str) -> None:
     Keyword argumentsL
     save_id -- 当前存档id
     """
-    # 如果是web模式且不是自动存档
-    if cache.web_mode and save_id != "auto":
-        # 清理Web模式图片缓存（避免缓存数据被序列化到存档中）
-        try:
-            from Script.System.Web_Draw_System.image_processor import (
-                clear_image_cache,
-            )
-
-            clear_image_cache()
-        except ImportError:
-            pass  # 如果模块不存在，忽略
-
     save_verson = {
         "game_verson": normal_config.config_normal.verson,
         "game_time": cache.game_time,
@@ -818,8 +814,10 @@ def input_load_save(save_id: str) -> None:
             now_draw.draw()
             update_count += migration_count
 
-    # 更新绘制模式
-    loaded_dict["web_mode"] = cache.web_mode
+    # 丢掉 STALE_UI_FIELDS 里的字段和以 web_ 开头的字段：Cache 没有它们，留下会被 cache.__dict__.update 写进缓存
+    for field_name in list(loaded_dict):
+        if field_name.startswith("web_") or field_name in STALE_UI_FIELDS:
+            del loaded_dict[field_name]
     # 重置游戏更新流程的嵌套深度
     loaded_dict["game_update_flow_running"] = 0
 

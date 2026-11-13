@@ -8,7 +8,7 @@
 
 通用面板的人名按钮靠 cmd_func 把选中者传回来，而无头测试的 askfor_all 桩不执行 cmd_func，
    所以退出循环后若闭包没被触发，再按返回值（角色名）反查一次——只在闭包未触发时兜底，同名角色不会被覆盖。
-只用 Script/UI/Moudle/draw.py 的抽象绘制类，Web 模式由 web_draw_adapter 接管。
+自己的绘制只用 Script/UI/Moudle 的 draw.py 与 panel.py，选人交给通用 NPC 选择面板。
 """
 
 from types import FunctionType

@@ -8,8 +8,7 @@
 单孩微调不在本面板，而在个人课表面板的「日程」一行（§5.2），
 因为微调是"看着这个孩子的课表决定她空闲时段干什么"，和课表放一起才顺手。
 
-只用 Script/UI/Moudle/draw.py 的抽象绘制类，不直接碰 Tk 或 HTML；
-   Web_Draw_System/web_draw_adapter.py 在启动时包装这些抽象类，双模式才能同时成立。
+绘制只经 Script/UI/Moudle 的 draw.py 与 panel.py，不直接碰 Tk。
 """
 
 from types import FunctionType
@@ -53,8 +52,8 @@ class Schedule_Template_Panel:
         输出类型: 无
         功能: 画模板表 + 批量套用入口。
               只画不取输入，askfor_all 由容器 Education_Manage_Panel 统一调用。
-                 本页原本自带的 [返回] 与容器的 [返回] return_text 完全相同（都是「返回」），
-                 同屏时 Tk 下会把先画的那个变成不可点的灰字、Web 下会画出两个，所以已删除
+              本页不画自己的 [返回]，因为容器的 [返回] 用同一个 return_text「返回」。
+              同屏有两个 return_text 相同的按钮时，先画的那个会变成不可点的普通文字。
         """
         draw.TitleLineDraw(_("日程模板"), self.width).draw()
         self._draw_head()
@@ -261,7 +260,7 @@ class Schedule_Template_Panel:
         向玩家要一个模板名
         输入类型: ask_text(str)，提示语
         输出类型: str，玩家输入的名字，取消或空输入为空串
-        功能: 走 panel.AskForOneMessage，Tk 与 Web 两种模式共用同一条输入链
+        功能: 走 panel.AskForOneMessage
         """
         ask_panel = panel.AskForOneMessage()
         ask_panel.set(ask_text, education_constant.TEMPLATE_NAME_MAX)

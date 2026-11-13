@@ -27,7 +27,7 @@ Note: `buildata.py` is NOT part of the data build chain despite its name — it 
 ```bash
 pip install -r requirements.txt
 ```
-Key dependencies: `PySide6` (ArkEditor GUI), `flask` + `flask-socketio` + `python-socketio` (web mode server), `openai` + `google-genai` (AI text generation), plus `Pillow`, `numpy`, `ephem`, `psutil`, `wcwidth`.
+Key dependencies: `PySide6` (ArkEditor GUI), `openai` + `google-genai` (AI text generation), plus `Pillow`, `numpy`, `ephem`, `psutil`, `wcwidth`.
 
 ### Testing Individual Components
 The game uses a debug mode (configured in config.ini) for testing. Set `debug = 1` to enable debug features.
@@ -42,19 +42,19 @@ New tests go into one of the two layers. `tests/fast/test_registration.py` fails
 ## High-Level Architecture
 
 ### Core Game Flow
-1. **Entry Point**: `game.py` - Auto-builds config data (`auto_build_config`), initializes cache and configs, loads the mod system (`init_mod_system()`), then starts either the Tkinter GUI (`game_init.run(start_flow.start_frame)`) or the web server, depending on `web_draw` in `config.ini`
+1. **Entry Point**: `game.py` - Auto-builds config data (`auto_build_config`), initializes cache and configs, loads the mod system (`init_mod_system()`), then starts the Tkinter GUI (`game_init.run(start_flow.start_frame)`)
 2. **Game Initialization**: `Script/Core/game_init.py` - Sets up the game environment, styles, and main flow
 3. **Main Frame Loop**: `Script/Design/start_flow.py` - Contains UI handling and panel management
 4. **Main Behavior Loop**: `Script/Design/character_behavior.py` - The actual game simulation loop
 
 ### Script Directory Layout
 - **`Script/Config`** - Config loading (`game_config.py`, `map_config.py`, `character_config.py`, `normal_config.py`) and the generated `config_def.py`
-- **`Script/Core`** - Engine layer: cache (`cache_control.py`), save (`save_handle.py`), IO for Tk/web (`io_init.py` / `io_web.py`), flow handling (`flow_handle.py` / `flow_handle_web.py`), web server (`web_server.py`), mod manager (`mod_manager.py`), game data types (`game_type.py`)
+- **`Script/Core`** - Engine layer: cache (`cache_control.py`), save (`save_handle.py`), IO (`io_init.py`), flow handling (`flow_handle.py`), mod manager (`mod_manager.py`), game data types (`game_type.py`)
 - **`Script/Design`** - Main game logic: behavior loop, NPC AI, map/navigation, talk, settlement dispatch (`settle_behavior.py`), etc.
   - **`Script/Design/handle_premise/`** - The premise (condition) system is a package, split by topic into ~20 modules (`handle_premise_H.py`, `handle_premise_place.py`, `handle_premise_ability.py`, `handle_premise_talent.py`, ...) with the main entry in `__init__.py`
 - **`Script/Settle`** - Settlement modules: `default.py`, `common_default.py` (universal settlement), `Second_effect.py` (second-stage effects), `default_cloth.py`, `item_effect.py`, `realtime_settle.py`, `past_day_settle.py`, `sleep_settle.py`
 - **`Script/StateMachine`** - Atomic NPC behavior modules (`default.py`, e.g. movement), executed via `Script/Design/handle_state_machine.py`
-- **`Script/System`** - Self-contained subsystems, each directory carrying its own design docs (`.md`): `Cooking_System`, `Dormitory_System`, `Education_System` (schooling & child-raising: timetables, classes, growth), `Field_Commission_System`, `First_Record_System` (sexual first-experience record system & panel), `Instruct_System` (instruction panel & categories), `Item_System`, `Medical_System`, `Official_Event_System` (official-duty events), `Pregnancy_System`, `Sex_System`, `Web_Draw_System` (web rendering)
+- **`Script/System`** - Self-contained subsystems, each directory carrying its own design docs (`.md`): `Cooking_System`, `Dormitory_System`, `Education_System` (schooling & child-raising: timetables, classes, growth), `Field_Commission_System`, `First_Record_System` (sexual first-experience record system & panel), `Instruct_System` (instruction panel & categories), `Item_System`, `Medical_System`, `Official_Event_System` (official-duty events), `Pregnancy_System`, `Sex_System`
 - **`Script/UI`** - `Flow` (title/creator/normal flows), `Moudle` (draw/panel primitives), `Panel` (60+ feature panels)
 
 ### Key Systems
@@ -78,8 +78,8 @@ New tests go into one of the two layers. `tests/fast/test_registration.py` fails
 - **Behavior Targets**: `data/target/` holds target definitions used by the NPC AI
 
 #### UI System
-- **Flow Management**: `Script/Core/flow_handle.py` (GUI) and `flow_handle_web.py` (Web)
-- **Drawing System**: `Script/UI/Moudle/draw.py` with the web adapter in `Script/System/Web_Draw_System/web_draw_adapter.py`
+- **Flow Management**: `Script/Core/flow_handle.py`
+- **Drawing System**: `Script/UI/Moudle/draw.py`
 - **Panels**: Various UI panels in `Script/UI/Panel/` and inside `Script/System/*` subsystems
 
 #### Save System
@@ -97,12 +97,6 @@ New tests go into one of the two layers. `tests/fast/test_registration.py` fails
 - **API keys**: read from `ai_chat_api_key.csv` at the repo root (`GEMINI_API_KEY` / `DEEPSEEK_API_KEY` rows) — treat this file as sensitive and never commit real keys
 - **Corpora/prompts for tooling**: `tools/AI/`
 
-### Web Mode
-The game supports a web-based interface:
-- Set `web_draw = 1` in `config.ini` to enable
-- Web server (Flask-SocketIO, port 5000) in `Script/Core/web_server.py`; web IO adapter in `Script/Core/io_web.py`
-- Rendering subsystem in `Script/System/Web_Draw_System/`: `web_draw_adapter.apply_web_adapters()` patches the draw classes at startup; specialized renderers include `scene_renderer.py`, `character_renderer.py`, `dialog_box.py`, `status_panel.py`, `tab_menu.py`, `interaction_handler.py`, `settlement_manager.py`, `image_processor.py`
-
 ## Code Guidelines
 
 1. **Comments**: All comments should be in Chinese
@@ -116,7 +110,7 @@ The game supports a web-based interface:
 
 ## Key Configuration Files
 
-- `config.ini`: Main game configuration (`debug`, `web_draw`, `language`, font, window size, in-game start date, save slots)
+- `config.ini`: Main game configuration (`debug`, `language`, font, window size, in-game start date, save slots)
 - `data/data.json`: Compiled game data from CSVs
 - `data/Character.json`: Character template data
 - `data/Character_Talk.json` / `data/Talk_Common.json`: Character and common dialogue data
@@ -220,13 +214,9 @@ For each character:
 - Time stop mode is active (only player acts, then loop breaks)
 - Special events or state changes that interrupt normal flow
 
-## Drawing System - Two Rendering Modes
+## Drawing System
 
-The game supports two rendering modes: Normal (Tkinter) and Web. The mode is determined by `web_draw` in `config.ini`.
-
-### Normal Drawing Mode (Tkinter)
-
-When `web_draw = 0`, the game uses Tkinter for GUI rendering:
+The game uses Tkinter for GUI rendering:
 
 1. **Drawing Classes** (`Script/UI/Moudle/draw.py`):
    - `NormalDraw`: Basic text drawing with width constraints
@@ -247,55 +237,15 @@ When `web_draw = 0`, the game uses Tkinter for GUI rendering:
    - `askfor_wait()`: Simple wait for player input
    - Direct event handling through Tkinter bindings
 
-### Web Drawing Mode
-
-When `web_draw = 1`, the game runs as a Flask-SocketIO web server (port 5000):
-
-1. **Rendering Subsystem** (`Script/System/Web_Draw_System/`):
-   - `web_draw_adapter.py`: `apply_web_adapters()` is called at startup to convert/patch the Tkinter draw classes into web element producers; elements are stored in `cache.current_draw_elements`
-   - Specialized renderers: `scene_renderer.py`, `character_renderer.py`, `dialog_box.py`, `status_panel.py`, `tab_menu.py`, `interaction_handler.py`, `settlement_manager.py`, `image_processor.py`, `body_part_button.py`
-   - Design docs live in the same directory (`Web绘制模式UI重构说明文档.md`)
-
-2. **Web IO Operations** (`Script/Core/io_web.py`):
-   - `era_print()`: Converts text to HTML elements
-   - `clear_screen()`: Clears element cache and updates web state
-   - Commands handled through web API requests
-   - No direct rendering, all output buffered as HTML elements
-
-3. **Web Flow Control** (`Script/Core/flow_handle_web.py`):
-   - `askfor_all()`: Polls for web API responses
-   - Updates game state through `update_game_state()`
-   - Asynchronous command handling via HTTP requests
-
-### Key Differences
-
-1. **Output Handling**:
-   - Normal: Direct write to Tkinter widgets
-   - Web: Buffer HTML elements in `cache.current_draw_elements`
-
-2. **Input Handling**:
-   - Normal: Tkinter event bindings and queues
-   - Web: HTTP API polling and response handling
-
-3. **State Management**:
-   - Normal: Immediate UI updates
-   - Web: Batch updates sent to client via `update_game_state()`
-
-4. **Command Processing**:
-   - Normal: Synchronous event handling
-   - Web: Asynchronous request/response cycle
-
 ### Development Considerations
 
 - All UI components should use the abstract drawing classes
-- Avoid direct Tkinter or HTML manipulation
+- Avoid direct Tkinter manipulation
 - Use `io_init.era_print()` for all text output
-- Test both modes when making UI changes
-- Web mode requires the web server running on port 5000
 
 ## Data Processing Workflow Documentation
 
-The `.github/prompts/数据处理工作流` directory contains 64 detailed documentation files (63 system/workflow docs plus a README). These documents explain the relationships between different systems and code components. When working on related features, refer to these documents for understanding system interconnections, dependencies, and data flow. Additionally, each `Script/System/*` subsystem directory carries its own design docs.
+The `.github/prompts/数据处理工作流` directory contains 63 detailed documentation files (62 system/workflow docs plus a README). These documents explain the relationships between different systems and code components. When working on related features, refer to these documents for understanding system interconnections, dependencies, and data flow. Additionally, each `Script/System/*` subsystem directory carries its own design docs.
 
 ### 🏗️ Core System Architecture Documents
 - **[角色行为系统](.github/prompts/数据处理工作流/角色行为系统.md)** - Core behavior loop, time management, status changes
@@ -324,7 +274,6 @@ The `.github/prompts/数据处理工作流` directory contains 64 detailed docum
 - **[全干员位置面板](.github/prompts/数据处理工作流/全干员位置面板.md)** - All character position panel
 - **[PRTS系统](.github/prompts/数据处理工作流/PRTS系统.md)** - PRTS communication system
 - **[Tk绘制模式](.github/prompts/数据处理工作流/Tk绘制模式.md)** - Tkinter rendering mode
-- **[Web绘制模式](.github/prompts/数据处理工作流/Web绘制模式.md)** - Web rendering mode
 
 ### 🗺️ Scene & Map Systems
 - **[地图系统](.github/prompts/数据处理工作流/地图系统.md)** - Map data structure and management

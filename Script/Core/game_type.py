@@ -177,8 +177,6 @@ class NormalConfig:
     """ 版本时间 """
     debug: bool
     """ 是否开启debug模式 """
-    web_draw: bool
-    """ 是否开启Web绘制 """
     background: str
     """ 背景色 """
     language: str
@@ -2038,75 +2036,6 @@ class Cache:
         """ 退出存档面板 """
         self.wframe_mouse: WFrameMouse = WFrameMouse()
         """ 主页监听控制流程用变量组 """
-        self.web_mode: bool = False
-        """ 是否为web模式 """
-        self.current_draw_elements: list = []
-        """ 当前绘制的元素列表 """
-        self.web_draw_history: list = []
-        """ Web模式下的文本历史缓存 """
-        self.web_draw_history_line_total: int = 0
-        """ web文本历史累计行数 """
-        self.current_return_list: list = []
-        """ 当前返回的元素列表 """
-        self.current_input_request: list | dict[str, object] = []
-        """ 当前输入请求列表 """
-        # ========== Web新UI模式专用字段 ==========
-        self.current_interaction_type: str | None = None
-        """ Web模式当前选中的交互类型（字符串标识符） """
-        self.web_game_state: dict = {}
-        """ Web模式游戏状态数据（用于增量更新） """
-        self.web_current_major_type: str | None = None
-        """ Web模式当前选中的大类型（'mouth'/'hand'/'penis'/'tool'/'arts'/'stop'/'other'） """
-        self.web_current_minor_type: str | None = None
-        """ Web模式当前选中的小类型（字符串标识符如'mouth_talk'/'hand_touch'等） """
-        self.web_major_type_memory: dict[str, str | None] = {}
-        """ Web模式大类切换记忆：记录每个大类最近选择的小类id，键为大类字符串id，值为小类字符串id """
-        self.web_selected_drug_id: int | None = None
-        """ Web模式当前选中的药物id """
-        self.web_selected_item_id: int | None = None
-        """ Web模式当前选中的道具id """
-        self.web_need_full_refresh: bool = False
-        """ Web模式是否需要完整刷新（切换交互对象后设置为True） """
-        self.web_value_changes: list[dict] = []
-        """ Web模式数值变化列表，每个元素包含 character_id, field, value, timestamp """
-        self.web_instruct_texts: list[str] = []
-        """ Web模式指令文本列表（包括指令行动描述和指令行动结算），用于指令文本回溯显示 """
-        self.web_other_texts: list[str] = []
-        """ Web模式其他文本列表（io_web.py中的其他文本），用于其他文本回溯显示 """
-        self.web_text_recording_flag: bool = False
-        """ Web模式文本记录标志，在角色行为循环期间为True，用于控制era_print的文本记录 """
-        self.web_settlement_description: str = ""
-        """ Web模式结算选项描述文本，在绘制结算按钮前设置，用于在结算选项弹窗中显示说明文本 """
-        self.pending_event_text: dict | None = None
-        """ 待显示的事件文本，由 draw_event_text_panel 保存，供 event_option_panel 使用 """
-        self.web_instruct_executing: bool = False
-        """ Web模式指令执行中标记：True表示SocketIO处理线程正在同步执行指令（含其内部嵌套的askfor_all），
-        主循环线程的askfor_all在此期间不应消费button_click_response，避免与嵌套面板争抢用户输入 """
-        self.web_instruct_executing_thread_id: int | None = None
-        """ Web模式正在同步执行指令的SocketIO线程ID：用于在get_button_response中识别仅允许该线程消费按钮响应 """
-        self.web_sub_panel_mode: bool = False
-        """ Web模式子面板模式标记：True表示当前正在主界面内显示非主面板 """
-        self.web_sub_panel_id: str | None = None
-        """ Web模式子面板ID：当前显示的子面板指令ID """
-        self.web_sub_panel_name: str = ""
-        """ Web模式子面板名称：当前显示的子面板名称（用于临时选项卡） """
-        # ========== Web对话框相关字段 ==========
-        self.web_dialog_visible: bool = False
-        """ Web对话框是否可见 """
-        self.web_dialog_speaker: str = ""
-        """ Web对话框当前说话者名称 """
-        self.web_dialog_text: str = ""
-        """ Web对话框当前显示的文本 """
-        self.web_dialog_text_color: str = "standard"
-        """ Web对话框文本颜色样式 """
-        self.web_dialog_queue: list[dict] = []
-        """ Web对话框待显示的文本队列 """
-        self.web_dialog_wait_input: bool = False
-        """ Web对话框是否等待用户输入（点击推进） """
-        self.web_minor_dialog_queue: list[dict] = []
-        """ Web小对话框队列（其他角色的台词） """
-        # ==========================================
-        # ==========================================
         self.character_data: dict[int, Character] = {}
         """ 角色对象数据缓存组 """
         self.npc_tem_data: dict[int, NpcTem] = {}

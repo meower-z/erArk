@@ -47,7 +47,6 @@ if cache.all_system_setting.base_setting.get(14, 0):
 读开关必须用 `.get` 带默认值 0，不能用裸下标。旧存档的设置补齐只在键数量变化时逐键补，存在键数相同而键集合不同的存档，对这类存档裸下标可能抛 `KeyError`。
 
 - Tk：`Script/UI/Panel/in_scene_panel.py` 主场景 `askfor_all(ask_list)` 之前调用 `run_turn_check()`；返回 `True` 时用 `io_init.era_print(..., "warning")` 提示玩家提交日志。
-- Web：`Script/UI/Panel/in_scene_panel_web.py` 取得 `ask_list` 之后、`askfor_all` 之前，同样调用与提示。
 - 读档：`Script/Core/save_handle.py` 的 `input_load_save` 末尾，存档已写入 cache 之后调用 `run_load_repair()`。
 
 回合检查在每次主场景面板准备等待输入前执行，包括纯 UI 重绘造成的重复迭代；检查级去重保证日志和提示不随之增长。完整迁移后的 354 角色真实存档上，一次 `run_all_checks()` 约 160ms；60 角色约 20ms。若检查集增长，应把共享配置查表移到角色循环外，而不是降低挂钩频率。

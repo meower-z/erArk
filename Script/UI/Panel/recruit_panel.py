@@ -58,8 +58,6 @@ def recruit_new_chara() -> bool:
     now_draw.width = window_width
     now_draw.style = "gold_enrod"
     now_draw.text = ""
-    # 刷新文本输出信号标记，确保在执行指令时，文本输出会被记录下来并发送给前端
-    cache.web_text_recording_flag = True
 
     if len(cache.npc_id_got) >= cache.rhodes_island.people_max:
         now_draw.text += _("\n\n   ※ 空余宿舍不足，无法招募 ※\n\n")

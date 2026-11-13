@@ -35,6 +35,6 @@
 
 `snapshot.build_snapshot(cache, ids)` 使用调用方传入的 cache。传入涉事角色 id 时，`character_data` 只转储涉事角色与玩家，最多 30 人，其余涉事角色只记 id；`scene_data` 只保留有角色的场景。
 
-排除静态配置与渲染缓存字段：`map_data`、`npc_tem_data`、`random_npc_list`、`recipe_data`、天文表、`wframe_mouse`、`cmd_data`、流水字段（每日指令文本、已触发事件 id），以及 `web_`、`current_`、`text_` 前缀字段。`rhodes_island.medical_patients_today` 用占位文本替代。
+排除静态配置与渲染缓存字段：`map_data`、`npc_tem_data`、`random_npc_list`、`recipe_data`、天文表、`wframe_mouse`、`cmd_data`、流水字段（每日指令文本、已触发事件 id），以及 `text_` 前缀字段。`rhodes_island.medical_patients_today` 用占位文本替代。
 
 转换遇到循环引用时写占位文本，达到 15 层或对象不可序列化时用 `repr` 兜底。

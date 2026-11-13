@@ -44,8 +44,8 @@ class Sex_Position_Panel:
         self.change_position = change_position
         """ 是否为切换体位 """
 
-    def _draw_panel_content(self) -> None:
-        """性交姿势面板主逻辑绘制。"""
+    def draw(self) -> None:
+        """绘制面板"""
         title_draw = draw.TitleLineDraw(_("性交体位"), self.width)
         # 获取当前角色数据
         character_data: game_type.Character = cache.character_data[0]
@@ -161,26 +161,6 @@ class Sex_Position_Panel:
             if yrn in return_list:
                 cache.now_panel_id = constant.Panel.IN_SCENE
                 break
-
-    def draw(self) -> None:
-        """绘制面板"""
-
-        # Web模式下进入子面板模式，确保面板内容渲染在固定头部下方的内容区域，
-        # 而不是直接附加到主界面的下方
-        from Script.System.Web_Draw_System import (
-            SEX_POSITION_PANEL_TAB_ID,
-            cleanup_managed_sub_panel_mode,
-            enter_managed_sub_panel_mode_by_type,
-        )
-
-        sub_panel_context = enter_managed_sub_panel_mode_by_type(
-            SEX_POSITION_PANEL_TAB_ID
-        )
-        try:
-            self._draw_panel_content()
-        finally:
-            # 无论正常退出还是抛出异常，都要清理当前方法进入的子面板
-            cleanup_managed_sub_panel_mode(sub_panel_context)
 
     def select_sex_position(self, sex_position_id: int) -> None:
         """结算选择的性交体位"""

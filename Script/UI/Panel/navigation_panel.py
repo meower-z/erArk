@@ -261,15 +261,9 @@ class Navigation_Panel(Base_function_class):
                 fix_draw = draw.NormalDraw()
                 fix_draw.text = fix_text
                 fix_draw.width = fix_width
-                fix_draw.web_type = "map-padding"
                 fix_draw.draw()
                 for draw_text in now_draw_line.draw_list:
                     # print(f"debug draw_text.text = {draw_text.text}")
-                    # 查询当前绘制是否为最后一个绘制
-                    if draw_text == now_draw_line.draw_list[-1]:
-                        now_draw_web_type = "map-last"
-                    else:
-                        now_draw_web_type = "map"
 
                     # 首先需要是地点按钮
                     if (
@@ -290,7 +284,6 @@ class Navigation_Panel(Base_function_class):
                                         normal_style="red",
                                         cmd_func=self.move_judge,
                                         args=(target_scene, 2),
-                                        web_type=now_draw_web_type,
                                     )
                                 else:
                                     now_draw = draw.Button(
@@ -299,7 +292,6 @@ class Navigation_Panel(Base_function_class):
                                         normal_style="deep_gray",
                                         cmd_func=self.move_judge,
                                         args=(target_scene, 2),
-                                        web_type=now_draw_web_type,
                                     )
                             else:
                                 # 临近地点正常绘制
@@ -316,7 +308,6 @@ class Navigation_Panel(Base_function_class):
                                         draw_text.text,
                                         cmd_func=self.move_judge,
                                         args=(target_scene,),
-                                        web_type=now_draw_web_type,
                                     )
                                     # TODO 如果是有特殊事件在那么显示为绿色
                                     # if len(cache.scene_data[full_scene_str].character_list):
@@ -329,7 +320,6 @@ class Navigation_Panel(Base_function_class):
                                         normal_style="deep_gray",
                                         cmd_func=self.move_judge,
                                         args=(target_scene, 1),
-                                        web_type=now_draw_web_type,
                                     )
                             now_draw.width = self.width
                             now_draw.draw()
@@ -340,14 +330,12 @@ class Navigation_Panel(Base_function_class):
                             now_draw = draw.NormalDraw()
                             now_draw.style = "gold_enrod"
                             now_draw.text = draw_text.text
-                            now_draw.web_type = now_draw_web_type
                             now_draw.draw()
                     # 如果不是地点按钮，则正常绘制文本
                     else:
                         now_draw = draw.NormalDraw()
                         now_draw.style = draw_text.style
                         now_draw.text = draw_text.text
-                        now_draw.web_type = now_draw_web_type
                         now_draw.draw()
                 line_feed.draw()
 

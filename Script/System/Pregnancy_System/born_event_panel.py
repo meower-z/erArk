@@ -100,8 +100,8 @@ class Born_Panel:
         self.draw_list: list[draw.NormalDraw] = []
         """ 绘制的文本列表 """
 
-    def _draw_born_event_content(self) -> None:
-        """生育事件主逻辑绘制。"""
+    def draw(self) -> None:
+        """绘制对象"""
         from Script.Design import second_behavior
 
         pl_character_data: game_type.Character = cache.character_data[0]
@@ -456,20 +456,3 @@ class Born_Panel:
                 achievement_panel.achievement_flow(_("生育"), 707)
 
             break
-
-    def draw(self) -> None:
-        """绘制对象"""
-        from Script.System.Web_Draw_System import (
-            BORN_EVENT_PANEL_TAB_ID,
-            cleanup_managed_sub_panel_mode,
-            enter_managed_sub_panel_mode_by_type,
-        )
-
-        sub_panel_context = enter_managed_sub_panel_mode_by_type(
-            BORN_EVENT_PANEL_TAB_ID
-        )
-        try:
-            self._draw_born_event_content()
-        finally:
-            # 无论正常退出还是抛出异常，都要清理当前方法进入的子面板
-            cleanup_managed_sub_panel_mode(sub_panel_context)

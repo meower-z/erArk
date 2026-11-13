@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 """
 游戏入口：作为主程序运行时构建数据，初始化缓存、配置、Mod、角色与时间，
-再按 config.ini 的 web_draw 以 Tk 窗口或 Web 服务器启动游戏
+再以 Tk 窗口启动游戏
 """
 
 import sys
@@ -43,9 +43,6 @@ if __name__ == "__main__":
         print("Mod加载完成")
     else:
         print("部分Mod加载失败，请检查mod文件夹")
-    # 读取Web模式标志
-    now_web_mode = normal_config.config_normal.web_draw
-    cache_control.cache.web_mode = now_web_mode
     # 初始化角色人物卡数据
     character_config.init_character_tem_data()
 
@@ -69,7 +66,7 @@ if __name__ == "__main__":
 
     # 性能监控开关：config.ini 中 perf_monitor = 1 时启用 TK 渲染性能埋点与排版补丁
     perf_monitor: int = getattr(normal_config.config_normal, "perf_monitor", 0)
-    if not now_web_mode and perf_monitor:
+    if perf_monitor:
         from Script.Core import perf_hook
 
         perf_hook.enabled = True
@@ -83,68 +80,11 @@ if __name__ == "__main__":
             f"性能监控已开启，每屏渲染耗时将写入 {perf_hook.get_output_path()}"
         )
 
-    def cleanup() -> None:
-        """
-        退出前清理函数
-
-        参数：无
-
-        返回值类型：无
-        功能描述：确保程序退出时关闭Web服务器
-        """
-        print("正在关闭Web服务器...")
-        stop_server()
-
-    # 判定是否需要使用Web模式
-    if now_web_mode:
-        print("正在初始化Web服务器...")
-
-        # 导入Web服务器模块和Web版IO适配器
-        # 注意：web_server模块中的eventlet已经在导入时根据需要执行了monkey_patch
-        from Script.Core.web_server import start_server, stop_server
-        import Script.Core.io_web as io
-
-        # 导入Web绘制适配器并应用到所有绘制类
-        from Script.System.Web_Draw_System import web_draw_adapter
-
-        # 应用Web绘制适配器到所有绘制类
-        web_draw_adapter.apply_web_adapters()
-
-        # 替换game_init中的io_init引用
-        game_init.io_init = io
-        # 初始化当前绘制元素列表
-        cache_control.cache.current_draw_elements = []
-
-        print("正在启动游戏Web服务器...")
-
-        # 启动Web服务器（现在会返回实际使用的端口）
-        try:
-            active_port = start_server()
-        except Exception as e:
-            print(f"Web服务器启动失败: {e}")
-            print("可能的解决方案:")
-            print("1. 关闭占用端口的其他程序")
-            print("2. 检查系统防火墙设置")
-            print("3. 以管理员权限运行程序")
-            print("4. 重启计算机后重试")
-            sys.exit(1)
-
-        # 添加退出处理函数
-        import atexit
-
-        # 注册退出处理函数
-        atexit.register(cleanup)
-
-    # 初始化游戏（使用Web模式，不启动tkinter窗口）
-    # 由于设置了Web模式标志，所有的输入输出和流程控制都会使用Web版本的函数
     try:
         game_init.run(start_flow.start_frame)
     except Exception as e:
         print(f"游戏初始化失败: {e}")
         logging.error(f"游戏初始化失败: {str(e)}", exc_info=True)
-        # 当游戏初始化失败时，也应该尝试清理服务器
-        if now_web_mode:
-            cleanup()
         sys.exit(1)
 
     # 保持主线程运行
@@ -154,7 +94,4 @@ if __name__ == "__main__":
             time.sleep(1)
     except KeyboardInterrupt:
         print("\n游戏已被用户中断")
-        # 明确调用清理函数
-        if now_web_mode:
-            cleanup()
         sys.exit(0)

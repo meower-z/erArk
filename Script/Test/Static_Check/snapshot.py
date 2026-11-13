@@ -33,8 +33,8 @@ EXCLUDED_TOP_LEVEL_FIELDS = {
     "daily_intsruce",  # 每日指令文本流水（长期游玩可达MB级；最近行为已在日志条目头部单列，流水全文无排查价值）
     "taiggered_event_record",  # 已触发事件id全集（只增流水，与状态自洽无关）
 }
-# 字段名前缀黑名单：以这些前缀开头的字段均为渲染缓存/Web模式专用中间数据，一并排除
-EXCLUDED_FIELD_PREFIXES = ("web_", "current_", "text_")
+# 字段名前缀黑名单：以这些前缀开头的字段均为渲染缓存中间数据，一并排除
+EXCLUDED_FIELD_PREFIXES = ("text_",)
 
 # rhodes_island内部排除的子字段：当日随机生成的内容数据（病人队列含大量生成文本，实测可达1MB），
 # 每日重新生成、无任何检查依赖、与状态自洽无关

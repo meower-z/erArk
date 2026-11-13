@@ -40,12 +40,12 @@ description: 为 erArk 新增一个玩家指令及其行为、前提、结算、
 
 ### 第三步：常量（全部手工维护）
 
-照既有条目位置逐个添加：`Script/Core/constant/Behavior.py`、`BehaviorStr.py`、`Behavior_Int.py`、`CharacterStatus.py`（`STATUS_` 前缀）、`Script/System/Instruct_System/Instruct.py`（本文件定义顺序决定 Web 指令显示顺序）。
+照既有条目位置逐个添加：`Script/Core/constant/Behavior.py`、`BehaviorStr.py`、`Behavior_Int.py`、`CharacterStatus.py`（`STATUS_` 前缀）、`Script/System/Instruct_System/Instruct.py`。
 
 ### 第四步：处理函数与面板
 
 1. `Script/System/Instruct_System/handle_instruct.py` 加 `@add_instruct(constant.Instruct.XXX)` 函数，内部调 `chara_handle_instruct_common_settle(constant.Behavior.XXX)`。
-2. 需要玩家二次选择时用**内联模态面板**：面板 `.draw()` 返回 -1 表示取消，处理函数据此直接 return（不结算不耗时）。参考 `Script/System/Item_System/condom_panel.py`；面板只用 `Script/UI/Moudle/draw.py` 的抽象绘制类以兼容 Web 模式。
+2. 需要玩家二次选择时用**内联模态面板**：面板 `.draw()` 返回 -1 表示取消，处理函数据此直接 return（不结算不耗时）。参考 `Script/System/Item_System/condom_panel.py`；面板只用 `Script/UI/Moudle/draw.py` 的抽象绘制类。
 3. 需要对方"接受"的指令加**实行值判定**：`chara_handle_instruct_common_settle(..., judge = _("严重骚扰"))`（难度档位见 `data/csv/InstructJudge.csv`，失败自动替换为失败行为）。若面板确认时会直接结算数据，judge 必须**前置到打开面板之前**手动调 `instuct_judege.calculation_instuct_judege(0, 目标id, _("严重骚扰"))`：-1 → return；0 → 结算失败行为 `constant.Behavior.HIGH_OBSCENITY_ANUS` 后 return；通过 → 开面板，最终通用结算不再传 judge（避免二次判定）。参考 `handle_condom_instruct_common`。
 
 ### 第五步：结算

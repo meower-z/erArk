@@ -9,7 +9,6 @@ from Script.UI.Panel import (
     normal_panel,
     h_item_shop_panel,
     in_scene_panel,
-    in_scene_panel_web,
     assistant_panel,
     building_panel,
     collection_panel,
@@ -60,13 +59,7 @@ width = normal_config.config_normal.text_width
 @handle_panel.add_panel(constant.Panel.IN_SCENE)
 def in_scene_flow() -> None:
     """场景互动面板"""
-    # Web模式下使用新的Web专用面板
-    if cache.web_mode:
-        now_panel: (
-            in_scene_panel_web.InScenePanelWeb | in_scene_panel.InScenePanel
-        ) = in_scene_panel_web.InScenePanelWeb(width)
-    else:
-        now_panel = in_scene_panel.InScenePanel(width)
+    now_panel = in_scene_panel.InScenePanel(width)
     now_panel.draw()
 
 

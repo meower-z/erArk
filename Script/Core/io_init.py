@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-"""输入输出接口层：命令与文本的队列收发、文本样式设置与图片打印，Tk 与 Web 两种模式共用"""
+"""输入输出接口层：命令与文本的队列收发、文本样式设置与图片打印"""
 
 from __future__ import annotations
 
@@ -19,12 +19,6 @@ if TYPE_CHECKING:
 # 获取全局缓存
 cache = cache_control.cache
 
-# Web模式相关的延迟导入状态
-_web_module_loaded = False
-""" 是否已加载Web IO模块 """
-web_io: ModuleType | None = None
-""" Web版IO模块的引用（延迟导入） """
-
 # Tkinter main_frame 延迟导入状态（解决无显示环境下的导入问题）
 _main_frame_module: ModuleType | None = None
 """ main_frame模块的引用（延迟导入） """
@@ -38,7 +32,7 @@ def _get_main_frame() -> ModuleType | None:
 
     参数：无
     返回值类型：module 或 None
-    功能描述：只在非Web模式且需要时才导入main_frame，避免在无显示环境下报错
+    功能描述：只在需要时才导入main_frame，避免在无显示环境下报错
     """
     global _main_frame_module, _main_frame_load_attempted
 
@@ -50,12 +44,6 @@ def _get_main_frame() -> ModuleType | None:
 
     _main_frame_load_attempted = True
 
-    # 检查是否配置为Web模式（直接读取配置，不依赖cache）
-    web_draw = getattr(normal_config.config_normal, "web_draw", 0)
-    if web_draw:
-        # Web模式下不需要加载main_frame
-        return None
-
     try:
         from Script.Core import main_frame
 
@@ -63,58 +51,7 @@ def _get_main_frame() -> ModuleType | None:
         return _main_frame_module
     except Exception as e:
         print(f"警告：无法导入Tkinter main_frame模块: {e}")
-        print("将尝试使用Web模式...")
-        # 强制启用Web模式
-        normal_config.config_normal.web_draw = True
-        cache.web_mode = True
         return None
-
-
-def _is_web_mode() -> bool:
-    """
-    动态检查是否在Web模式下运行
-
-    参数：无
-    返回值类型：bool
-    功能描述：检查cache.web_mode的当前值，并在首次检测到Web模式时加载相关模块
-
-    注意：此函数必须使用动态检查而非模块级变量，因为：
-    1. 模组加载可能在cache.web_mode设置之前导入此模块
-    2. 模组加载过程中会导入panel.py等模块，间接导入io_init
-    3. 如果使用静态变量，会导致WEB_MODE被错误地设置为False
-    """
-    global _web_module_loaded, web_io
-
-    # 动态获取当前的web_mode设置
-    web_mode = getattr(cache, "web_mode", False)
-
-    if web_mode and not _web_module_loaded:
-        try:
-            # 导入Web版IO模块
-            from Script.Core import io_web
-
-            web_io = io_web
-            # 设置加载标志
-            _web_module_loaded = True
-            print("Web IO loaded successfully.")
-        except ImportError as e:
-            print(f"警告：无法导入Web版IO模块: {e}")
-            return False
-
-    return web_mode and _web_module_loaded
-
-
-def _web_io() -> ModuleType | None:
-    """
-    取Web版IO模块
-
-    参数：无
-    返回值类型：ModuleType | None
-    功能描述：Web模式下返回已加载的Web版IO模块，非Web模式返回None
-    """
-    if _is_web_mode():
-        return web_io
-    return None
 
 
 input_evnet = threading.Event()
@@ -124,18 +61,17 @@ order_swap = None
 _flowthread: threading.Thread
 """ 运行开场流程的线程，由 run 创建 """
 
-# tkinter模式下的绑定（延迟到首次使用时判断）
+# main_frame 的绑定（延迟到首次使用时）
 _main_frame_bound = False
 """ 是否已绑定main_frame """
 
 
 def _ensure_main_frame_bound() -> None:
     """
-    确保tkinter模式下main_frame已绑定
-    只在非Web模式下执行绑定
+    确保main_frame已绑定
     """
     global _main_frame_bound
-    if not _main_frame_bound and not _is_web_mode():
+    if not _main_frame_bound:
         main_frame = _get_main_frame()
         if main_frame is not None:
             main_frame.bind_return(_input_evnet_set)
@@ -153,14 +89,7 @@ def _input_evnet_set(order: str) -> None:
     返回值类型：无
     功能描述：将命令推送到队列中
     """
-    # 检查是否在Web模式下
-    web_io_module = _web_io()
-    if web_io_module is not None:
-        # 使用Web版IO的推送命令函数
-        web_io_module._input_event_set(order)
-    else:
-        # 原始逻辑
-        put_order(order)
+    put_order(order)
 
 
 def get_order() -> str:
@@ -172,15 +101,8 @@ def get_order() -> str:
     返回值类型：str
     功能描述：从命令队列中获取一个命令
     """
-    # 检查是否在Web模式下
-    web_io_module = _web_io()
-    if web_io_module is not None:
-        # 使用Web版IO的获取命令函数
-        return web_io_module.get_order()
-    else:
-        # 原始逻辑
-        _ensure_main_frame_bound()
-        return _order_queue.get()
+    _ensure_main_frame_bound()
+    return _order_queue.get()
 
 
 def _get_input_event() -> threading.Event:
@@ -192,7 +114,6 @@ def _get_input_event() -> threading.Event:
     返回值类型：threading.Event
     功能描述：获取用于同步的输入事件锁
     """
-    # Web模式下也使用同样的事件锁
     return input_evnet
 
 
@@ -206,22 +127,15 @@ def run(open_func: Callable[[], object]) -> None:
     返回值类型：无
     功能描述：启动游戏主流程
     """
-    # 检查是否在Web模式下
-    web_io_module = _web_io()
-    if web_io_module is not None:
-        # 使用Web版IO的运行函数
-        return web_io_module.run(open_func)
-    else:
-        # 原始逻辑
-        _ensure_main_frame_bound()
-        main_frame = _get_main_frame()
-        if main_frame is None:
-            print("错误：无法加载Tkinter，且Web模式未启用")
-            return
-        global _flowthread
-        _flowthread = threading.Thread(target=open_func, name="flowthread")
-        _flowthread.start()
-        main_frame.run()
+    _ensure_main_frame_bound()
+    main_frame = _get_main_frame()
+    if main_frame is None:
+        print("错误：无法加载Tkinter")
+        return
+    global _flowthread
+    _flowthread = threading.Thread(target=open_func, name="flowthread")
+    _flowthread.start()
+    main_frame.run()
 
 
 def put_queue(message: str) -> None:
@@ -234,15 +148,13 @@ def put_queue(message: str) -> None:
     返回值类型：无
     功能描述：将消息推送到输出队列中
     """
-    # Web模式下不使用队列
-    if not _is_web_mode():
-        if perf_hook.enabled:
-            # 记录本屏首条消息入队时刻（供 GUI 侧计算整屏耗时），并累计消息数/字节数
-            if not perf_hook.get_mark("flow.screen_first_msg"):
-                perf_hook.mark("flow.screen_first_msg")
-            perf_hook.hook_count("flow.msg_total")
-            perf_hook.hook_count("flow.msg_bytes", len(message))
-        _send_queue.put_nowait(message)
+    if perf_hook.enabled:
+        # 记录本屏首条消息入队时刻（供 GUI 侧计算整屏耗时），并累计消息数/字节数
+        if not perf_hook.get_mark("flow.screen_first_msg"):
+            perf_hook.mark("flow.screen_first_msg")
+        perf_hook.hook_count("flow.msg_total")
+        perf_hook.hook_count("flow.msg_bytes", len(message))
+    _send_queue.put_nowait(message)
 
 
 def arm_input() -> None:
@@ -252,16 +164,14 @@ def arm_input() -> None:
     参数：无
 
     返回值类型：无
-    功能描述：Tk 模式下在某个提示的输入等待入口调用，把独立的 {"input_arm": true} 标记入队，
+    功能描述：在某个提示的输入等待入口调用，把独立的 {"input_arm": true} 标记入队，
               待 read_queue 处理到该标记时把 GUI 侧输入门禁置为已上膛，此后才接受该屏输入。
-              Web 模式无渲染期滞留点击问题，此处不入队。
     """
     # 隐性前提：绘制队列为单生产者（flow 线程），标记 push 后 flow 即阻塞等待输入，
     # 故标记恒为该屏消息的批尾；若未来出现后台绘制生产者需重新评估此假设。
-    if not _is_web_mode():
-        # 性能监控：flow 侧入队完成时刻，与 GUI 侧 _do_arm 配对得出真实渲染延迟
-        perf_hook.mark("flow.enqueue_done")
-        _send_queue.put_nowait(json.dumps({"input_arm": True}))
+    # 性能监控：flow 侧入队完成时刻，与 GUI 侧 _do_arm 配对得出真实渲染延迟
+    perf_hook.mark("flow.enqueue_done")
+    _send_queue.put_nowait(json.dumps({"input_arm": True}))
 
 
 def put_order(message: str) -> None:
@@ -274,14 +184,7 @@ def put_order(message: str) -> None:
     返回值类型：无
     功能描述：将命令推送到命令队列中
     """
-    # 检查是否在Web模式下
-    web_io_module = _web_io()
-    if web_io_module is not None:
-        # 使用Web版IO的put_order函数
-        web_io_module.put_order(message)
-    else:
-        # 原始逻辑
-        _order_queue.put_nowait(message)
+    _order_queue.put_nowait(message)
 
 
 # #######################################################################
@@ -416,25 +319,18 @@ def era_print(
     返回值类型：无
     功能描述：输出格式化文本到界面
     """
-    # 检查是否在Web模式下
-    web_io_module = _web_io()
-    if web_io_module is not None:
-        # 使用Web版IO的era_print函数
-        web_io_module.era_print(string, style, tooltip=tooltip)
-    else:
-        # 原始逻辑
-        if perf_hook.enabled:
-            _t0 = time.perf_counter()
-            json_str = new_json()
-            json_str["content"].append(text_json(string, style, tooltip))
-            message = json.dumps(json_str, ensure_ascii=False)
-            perf_hook.hook_time("flow.json_dumps", time.perf_counter() - _t0)
-            perf_hook.hook_count("flow.msg_text")
-            put_queue(message)
-            return
+    if perf_hook.enabled:
+        _t0 = time.perf_counter()
         json_str = new_json()
         json_str["content"].append(text_json(string, style, tooltip))
-        put_queue(json.dumps(json_str, ensure_ascii=False))
+        message = json.dumps(json_str, ensure_ascii=False)
+        perf_hook.hook_time("flow.json_dumps", time.perf_counter() - _t0)
+        perf_hook.hook_count("flow.msg_text")
+        put_queue(message)
+        return
+    json_str = new_json()
+    json_str["content"].append(text_json(string, style, tooltip))
+    put_queue(json.dumps(json_str, ensure_ascii=False))
 
 
 def image_print(image_name: str) -> None:
@@ -447,20 +343,13 @@ def image_print(image_name: str) -> None:
     返回值类型：无
     功能描述：输出图片到界面
     """
-    # 检查是否在Web模式下
-    web_io_module = _web_io()
-    if web_io_module is not None and hasattr(web_io_module, "image_print"):
-        # 使用Web版IO的image_print函数
-        web_io_module.image_print(image_name)
-    else:
-        # 原始逻辑
-        if perf_hook.enabled:
-            # 图片消息计数（比例条每格一条消息，是消息量放大器的直接指标）
-            perf_hook.hook_count("flow.msg_image")
-        json_str = new_json()
-        image_json = {"image_name": image_name}
-        json_str["image"] = image_json
-        put_queue(json.dumps(json_str, ensure_ascii=False))
+    if perf_hook.enabled:
+        # 图片消息计数（比例条每格一条消息，是消息量放大器的直接指标）
+        perf_hook.hook_count("flow.msg_image")
+    json_str = new_json()
+    image_json = {"image_name": image_name}
+    json_str["image"] = image_json
+    put_queue(json.dumps(json_str, ensure_ascii=False))
 
 
 def image_list_print(image_name_list: list) -> None:
@@ -478,14 +367,7 @@ def image_list_print(image_name_list: list) -> None:
     """
     if not image_name_list:
         return
-    # 检查是否在Web模式下（Tk模式的比例条绘制已被Web适配器整体替换，此处仅为兜底）
-    web_io_module = _web_io()
-    if web_io_module is not None:
-        if hasattr(web_io_module, "image_print"):
-            for image_name in image_name_list:
-                web_io_module.image_print(image_name)
-        return
-    # 原始逻辑：单条消息携带整组图片名
+    # 单条消息携带整组图片名
     if perf_hook.enabled:
         # 图片格数计数与逐格模式保持同口径，另计批数
         perf_hook.hook_count("flow.msg_image", len(image_name_list))
@@ -509,10 +391,8 @@ def warm_up_text_metrics() -> None:
               图片栏/污浊栏/指令面板所用文本的去重字形集；②data/map 各级目录 Map
               原文件的地图绘制文本（cache.map_data 即其加载结果）。随后推送
               metrics_sync 标记让 GUI 线程强制完成全部行度量，并立即清屏——
-              全程在同一渲染批内处理，玩家不可见，度量成本被移入加载期。仅 Tk 模式生效。
+              全程在同一渲染批内处理，玩家不可见，度量成本被移入加载期。
     """
-    if _is_web_mode():
-        return
     # 1. 地图面板内容：cache.map_data 即 data/map 各级目录下 Map 原文件的加载结果。
     #    抽取部分真实行保留行结构（制表符对齐是地图界面度量成本的大头），
     #    其余行的字形并入去重字形集，保证全部地图的字形都被覆盖
@@ -605,37 +485,9 @@ def clear_screen() -> None:
     返回值类型：无
     功能描述：清空显示界面
     """
-    # 检查是否在Web模式下
-    web_io_module = _web_io()
-    if web_io_module is not None:
-        # 使用Web版IO的clear_screen函数
-        web_io_module.clear_screen()
-    else:
-        # 原始逻辑
-        json_str = new_json()
-        json_str["clear_cmd"] = "true"
-        put_queue(json.dumps(json_str, ensure_ascii=False))
-
-
-def clear_screen_and_history() -> None:
-    """
-    清屏并清空历史记录（仅Web模式有效）
-
-    参数：无
-
-    返回值类型：无
-    功能描述：彻底清空显示界面和历史记录，用于进入主界面等需要完全清空屏幕的场景
-    """
-    # 检查是否在Web模式下
-    web_io_module = _web_io()
-    if web_io_module is not None:
-        # 使用Web版IO的clear_screen_and_history函数
-        web_io_module.clear_screen_and_history()
-    else:
-        # 非Web模式下与clear_screen相同
-        json_str = new_json()
-        json_str["clear_cmd"] = "true"
-        put_queue(json.dumps(json_str, ensure_ascii=False))
+    json_str = new_json()
+    json_str["clear_cmd"] = "true"
+    put_queue(json.dumps(json_str, ensure_ascii=False))
 
 
 def frame_style_def(
@@ -664,20 +516,18 @@ def frame_style_def(
     返回值类型：无
     功能描述：定义一个样式并推送到前端
     """
-    # Web模式下暂不处理样式定义
-    if not _is_web_mode():
-        json_str = new_json()
-        json_str["set_style"] = style_json(
-            style_name,
-            foreground,
-            background,
-            font,
-            fontsize,
-            bold,
-            underline,
-            italic,
-        )
-        put_queue(json.dumps(json_str, ensure_ascii=False))
+    json_str = new_json()
+    json_str["set_style"] = style_json(
+        style_name,
+        foreground,
+        background,
+        font,
+        fontsize,
+        bold,
+        underline,
+        italic,
+    )
+    put_queue(json.dumps(json_str, ensure_ascii=False))
 
 
 def set_background(color: str) -> None:
@@ -690,16 +540,9 @@ def set_background(color: str) -> None:
     返回值类型：无
     功能描述：设置界面的背景颜色
     """
-    # 检查是否在Web模式下
-    web_io_module = _web_io()
-    if web_io_module is not None and hasattr(web_io_module, "set_background"):
-        # 使用Web版IO的set_background函数
-        web_io_module.set_background(color)
-    else:
-        # 原始逻辑
-        json_str = new_json()
-        json_str["bgcolor"] = color
-        put_queue(json.dumps(json_str, ensure_ascii=False))
+    json_str = new_json()
+    json_str["bgcolor"] = color
+    put_queue(json.dumps(json_str, ensure_ascii=False))
 
 
 def clear_order() -> None:
@@ -711,16 +554,9 @@ def clear_order() -> None:
     返回值类型：无
     功能描述：清除界面上的所有命令按钮
     """
-    # 检查是否在Web模式下
-    web_io_module = _web_io()
-    if web_io_module is not None:
-        # 使用Web版IO的clear_order函数
-        web_io_module.clear_order()
-    else:
-        # 原始逻辑
-        json_str = new_json()
-        json_str["clearorder_cmd"] = "true"
-        put_queue(json.dumps(json_str, ensure_ascii=False))
+    json_str = new_json()
+    json_str["clearorder_cmd"] = "true"
+    put_queue(json.dumps(json_str, ensure_ascii=False))
 
 
 def io_print_cmd(
@@ -742,23 +578,14 @@ def io_print_cmd(
     返回值类型：无
     功能描述：在界面上显示一个可点击的命令按钮
     """
-    # 检查是否在Web模式下
-    web_io_module = _web_io()
-    if web_io_module is not None:
-        # 使用Web版IO的io_print_cmd函数
-        web_io_module.io_print_cmd(
-            cmd_str, cmd_number, normal_style, on_style, tooltip
-        )
-    else:
-        # 原始逻辑
-        if perf_hook.enabled:
-            # 按钮消息计数
-            perf_hook.hook_count("flow.msg_cmd")
-        json_str = new_json()
-        json_str["content"].append(
-            cmd_json(cmd_str, cmd_number, normal_style, on_style, tooltip)
-        )
-        put_queue(json.dumps(json_str, ensure_ascii=False))
+    if perf_hook.enabled:
+        # 按钮消息计数
+        perf_hook.hook_count("flow.msg_cmd")
+    json_str = new_json()
+    json_str["content"].append(
+        cmd_json(cmd_str, cmd_number, normal_style, on_style, tooltip)
+    )
+    put_queue(json.dumps(json_str, ensure_ascii=False))
 
 
 def io_print_image_cmd(
@@ -774,17 +601,15 @@ def io_print_image_cmd(
     返回值类型：无
     功能描述：在界面上显示一个图片按钮
     """
-    # Web模式下暂不支持图片命令
-    if not _is_web_mode():
-        json_str = new_json()
-        data: dict[str, object] = {}
-        data["type"] = "image_cmd"
-        data["text"] = cmd_str
-        data["num"] = cmd_number
-        if tooltip:
-            data["tooltip"] = tooltip
-        json_str["content"].append(data)
-        put_queue(json.dumps(json_str, ensure_ascii=False))
+    json_str = new_json()
+    data: dict[str, object] = {}
+    data["type"] = "image_cmd"
+    data["text"] = cmd_str
+    data["num"] = cmd_number
+    if tooltip:
+        data["tooltip"] = tooltip
+    json_str["content"].append(data)
+    put_queue(json.dumps(json_str, ensure_ascii=False))
 
 
 def io_clear_cmd(*cmd_numbers: int | str) -> None:
@@ -797,19 +622,12 @@ def io_clear_cmd(*cmd_numbers: int | str) -> None:
     返回值类型：无
     功能描述：清除指定的命令按钮，或者所有命令按钮
     """
-    # 检查是否在Web模式下
-    web_io_module = _web_io()
-    if web_io_module is not None and hasattr(web_io_module, "io_clear_cmd"):
-        # 使用Web版IO的io_clear_cmd函数
-        web_io_module.io_clear_cmd(*cmd_numbers)
+    json_str = new_json()
+    if cmd_numbers:
+        json_str["clearcmd_cmd"] = cmd_numbers
     else:
-        # 原始逻辑
-        json_str = new_json()
-        if cmd_numbers:
-            json_str["clearcmd_cmd"] = cmd_numbers
-        else:
-            json_str["clearcmd_cmd"] = "all"
-        put_queue(json.dumps(json_str, ensure_ascii=False))
+        json_str["clearcmd_cmd"] = "all"
+    put_queue(json.dumps(json_str, ensure_ascii=False))
 
 
 def style_def(
@@ -850,15 +668,6 @@ def init_style() -> None:
     返回值类型：无
     功能描述：初始化所有游戏中使用的样式
     """
-    # 检查是否在Web模式下
-    web_io_module = _web_io()
-    if web_io_module is not None:
-        # 使用Web版IO的init_style函数
-        if hasattr(web_io_module, "init_style"):
-            web_io_module.init_style()
-        return
-
-    # 原始逻辑
     global style_def
 
     def new_style_def(

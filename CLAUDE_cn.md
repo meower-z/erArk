@@ -27,7 +27,7 @@ python buildmo.py      # 从 PO 文件编译 MO 文件
 ```bash
 pip install -r requirements.txt
 ```
-关键依赖：`PySide6`（ArkEditor 图形界面）、`flask` + `flask-socketio` + `python-socketio`（Web 模式服务器）、`openai` + `google-genai`（AI 文本生成），以及 `Pillow`、`numpy`、`ephem`、`psutil`、`wcwidth`。
+关键依赖：`PySide6`（ArkEditor 图形界面）、`openai` + `google-genai`（AI 文本生成），以及 `Pillow`、`numpy`、`ephem`、`psutil`、`wcwidth`。
 
 ### 测试单个组件
 游戏使用调试模式（在 config.ini 中配置）进行测试。设置 `debug = 1` 启用调试功能。
@@ -35,19 +35,19 @@ pip install -r requirements.txt
 ## 高层架构
 
 ### 核心游戏流程
-1. **入口点**：`game.py` - 自动构建配置数据（`auto_build_config`），初始化缓存和配置，加载 mod 系统（`init_mod_system()`），然后根据 `config.ini` 中的 `web_draw` 启动 Tkinter GUI（`game_init.run(start_flow.start_frame)`）或 Web 服务器
+1. **入口点**：`game.py` - 自动构建配置数据（`auto_build_config`），初始化缓存和配置，加载 mod 系统（`init_mod_system()`），然后启动 Tkinter GUI（`game_init.run(start_flow.start_frame)`）
 2. **游戏初始化**：`Script/Core/game_init.py` - 设置游戏环境、样式和主流程
 3. **主框架循环**：`Script/Design/start_flow.py` - 包含 UI 处理和面板管理
 4. **主行为循环**：`Script/Design/character_behavior.py` - 实际的游戏模拟循环
 
 ### Script 目录结构
 - **`Script/Config`** - 配置加载（`game_config.py`、`map_config.py`、`character_config.py`、`normal_config.py`）以及自动生成的 `config_def.py`
-- **`Script/Core`** - 引擎层：缓存（`cache_control.py`）、存档（`save_handle.py`）、Tk/Web 的 IO（`io_init.py` / `io_web.py`）、流程处理（`flow_handle.py` / `flow_handle_web.py`）、Web 服务器（`web_server.py`）、mod 管理器（`mod_manager.py`）、游戏数据类型（`game_type.py`）
+- **`Script/Core`** - 引擎层：缓存（`cache_control.py`）、存档（`save_handle.py`）、IO（`io_init.py`）、流程处理（`flow_handle.py`）、mod 管理器（`mod_manager.py`）、游戏数据类型（`game_type.py`）
 - **`Script/Design`** - 主要游戏逻辑：行为循环、NPC AI、地图/导航、口上、结算分发（`settle_behavior.py`）等
   - **`Script/Design/handle_premise/`** - 前提（条件判定）系统是一个包，按主题拆分为约 20 个模块（`handle_premise_H.py`、`handle_premise_place.py`、`handle_premise_ability.py`、`handle_premise_talent.py` 等），主入口在 `__init__.py`
 - **`Script/Settle`** - 结算模块：`default.py`、`common_default.py`（通用结算）、`Second_effect.py`（二段效果）、`default_cloth.py`、`item_effect.py`、`realtime_settle.py`、`past_day_settle.py`、`sleep_settle.py`
 - **`Script/StateMachine`** - NPC 行为原子模块（`default.py`，如移动），由 `Script/Design/handle_state_machine.py` 调度执行
-- **`Script/System`** - 自成一体的子系统，每个目录内附带自己的设计文档（`.md`）：`Cooking_System`（烹饪）、`Dormitory_System`（宿舍）、`Education_System`（教育与养成：课表、上课、成长）、`Field_Commission_System`（外勤委托）、`First_Record_System`（性行为履历）、`Instruct_System`（指令面板与分类）、`Item_System`（道具）、`Medical_System`（医疗）、`Official_Event_System`（公务事件）、`Pregnancy_System`（妊娠）、`Sex_System`、`Web_Draw_System`（Web 绘制）
+- **`Script/System`** - 自成一体的子系统，每个目录内附带自己的设计文档（`.md`）：`Cooking_System`（烹饪）、`Dormitory_System`（宿舍）、`Education_System`（教育与养成：课表、上课、成长）、`Field_Commission_System`（外勤委托）、`First_Record_System`（性行为履历）、`Instruct_System`（指令面板与分类）、`Item_System`（道具）、`Medical_System`（医疗）、`Official_Event_System`（公务事件）、`Pregnancy_System`（妊娠）、`Sex_System`
 - **`Script/UI`** - `Flow`（标题/角色创建/常规流程）、`Moudle`（绘制/面板基础模块）、`Panel`（60 多个功能面板）
 
 ### 关键系统
@@ -71,8 +71,8 @@ pip install -r requirements.txt
 - **行为目标**：`data/target/` 存放 NPC AI 使用的目标定义
 
 #### UI 系统
-- **流程管理**：`Script/Core/flow_handle.py`（GUI）和 `flow_handle_web.py`（Web）
-- **绘制系统**：`Script/UI/Moudle/draw.py`，Web 适配器在 `Script/System/Web_Draw_System/web_draw_adapter.py`
+- **流程管理**：`Script/Core/flow_handle.py`
+- **绘制系统**：`Script/UI/Moudle/draw.py`
 - **面板**：各种 UI 面板在 `Script/UI/Panel/` 以及 `Script/System/*` 各子系统内
 
 #### 存档系统
@@ -90,12 +90,6 @@ pip install -r requirements.txt
 - **API 密钥**：从仓库根目录的 `ai_chat_api_key.csv` 读取（`GEMINI_API_KEY` / `DEEPSEEK_API_KEY` 两行）——此文件属敏感内容，切勿提交真实密钥
 - **工具用语料/提示词**：`tools/AI/`
 
-### Web 模式
-游戏支持基于 Web 的界面：
-- 在 `config.ini` 中设置 `web_draw = 1` 启用
-- Web 服务器（Flask-SocketIO，端口 5000）在 `Script/Core/web_server.py`；Web IO 适配器在 `Script/Core/io_web.py`
-- 渲染子系统在 `Script/System/Web_Draw_System/`：启动时调用 `web_draw_adapter.apply_web_adapters()` 对绘制类打补丁；专用渲染器包括 `scene_renderer.py`、`character_renderer.py`、`dialog_box.py`、`status_panel.py`、`tab_menu.py`、`interaction_handler.py`、`settlement_manager.py`、`image_processor.py`
-
 ## 代码指南
 
 1. **注释**：所有注释应使用中文
@@ -109,7 +103,7 @@ pip install -r requirements.txt
 
 ## 关键配置文件
 
-- `config.ini`：主游戏配置（`debug`、`web_draw`、`language`、字体、窗口尺寸、游戏内起始日期、存档槽位等）
+- `config.ini`：主游戏配置（`debug`、`language`、字体、窗口尺寸、游戏内起始日期、存档槽位等）
 - `data/data.json`：从 CSV 编译的游戏数据
 - `data/Character.json`：角色模板数据
 - `data/Character_Talk.json` / `data/Talk_Common.json`：角色口上与通用口上数据
@@ -210,13 +204,9 @@ GitHub Actions 工作流（`.github/workflows/python-app.yml`，push/PR 到 mast
 - 时停模式激活（只有玩家行动，然后循环中断）
 - 中断正常流程的特殊事件或状态变化
 
-## 绘制系统 - 两种渲染模式
+## 绘制系统
 
-游戏支持两种渲染模式：普通模式（Tkinter）和 Web 模式。模式由 `config.ini` 中的 `web_draw` 决定。
-
-### 普通绘制模式（Tkinter）
-
-当 `web_draw = 0` 时，游戏使用 Tkinter 进行 GUI 渲染：
+游戏使用 Tkinter 进行 GUI 渲染：
 
 1. **绘制类**（`Script/UI/Moudle/draw.py`）：
    - `NormalDraw`：带宽度限制的基础文本绘制
@@ -237,55 +227,15 @@ GitHub Actions 工作流（`.github/workflows/python-app.yml`，push/PR 到 mast
    - `askfor_wait()`：简单等待玩家输入
    - 通过 Tkinter 绑定直接处理事件
 
-### Web 绘制模式
-
-当 `web_draw = 1` 时，游戏作为 Flask-SocketIO Web 服务器运行（端口 5000）：
-
-1. **渲染子系统**（`Script/System/Web_Draw_System/`）：
-   - `web_draw_adapter.py`：启动时调用 `apply_web_adapters()` 将 Tkinter 绘制类转换/打补丁为 Web 元素生成器；元素存储在 `cache.current_draw_elements`
-   - 专用渲染器：`scene_renderer.py`、`character_renderer.py`、`dialog_box.py`、`status_panel.py`、`tab_menu.py`、`interaction_handler.py`、`settlement_manager.py`、`image_processor.py`、`body_part_button.py`
-   - 设计文档就在同目录下（`Web绘制模式UI重构说明文档.md`）
-
-2. **Web IO 操作**（`Script/Core/io_web.py`）：
-   - `era_print()`：将文本转换为 HTML 元素
-   - `clear_screen()`：清空元素缓存并更新 web 状态
-   - 通过 web API 请求处理命令
-   - 无直接渲染，所有输出作为 HTML 元素缓冲
-
-3. **Web 流程控制**（`Script/Core/flow_handle_web.py`）：
-   - `askfor_all()`：轮询 web API 响应
-   - 通过 `update_game_state()` 更新游戏状态
-   - 通过 HTTP 请求进行异步命令处理
-
-### 主要差异
-
-1. **输出处理**：
-   - 普通模式：直接写入 Tkinter 小部件
-   - Web 模式：在 `cache.current_draw_elements` 中缓冲 HTML 元素
-
-2. **输入处理**：
-   - 普通模式：Tkinter 事件绑定和队列
-   - Web 模式：HTTP API 轮询和响应处理
-
-3. **状态管理**：
-   - 普通模式：即时 UI 更新
-   - Web 模式：通过 `update_game_state()` 批量更新发送给客户端
-
-4. **命令处理**：
-   - 普通模式：同步事件处理
-   - Web 模式：异步请求/响应循环
-
 ### 开发注意事项
 
 - 所有 UI 组件都应使用抽象绘制类
-- 避免直接操作 Tkinter 或 HTML
+- 避免直接操作 Tkinter
 - 使用 `io_init.era_print()` 进行所有文本输出
-- 在进行 UI 更改时测试两种模式
-- Web 模式需要 web 服务器在端口 5000 上运行
 
 ## 数据处理工作流文档
 
-`.github/prompts/数据处理工作流` 目录包含 62 个详细文档（61 个系统/工作流文档加一个 README）。这些文档解释了不同系统与代码组件之间的关系。在处理相关功能时，请参考这些文档以理解系统之间的关联、依赖和数据流。此外，每个 `Script/System/*` 子系统目录内也附带自己的设计文档。
+`.github/prompts/数据处理工作流` 目录包含 63 个详细文档（62 个系统/工作流文档加一个 README）。这些文档解释了不同系统与代码组件之间的关系。在处理相关功能时，请参考这些文档以理解系统之间的关联、依赖和数据流。此外，每个 `Script/System/*` 子系统目录内也附带自己的设计文档。
 
 ### 🏗️ 核心系统架构文档
 - **[角色行为系统](.github/prompts/数据处理工作流/角色行为系统.md)** - 核心行为循环、时间管理、状态变化
@@ -312,7 +262,6 @@ GitHub Actions 工作流（`.github/workflows/python-app.yml`，push/PR 到 mast
 - **[全干员位置面板](.github/prompts/数据处理工作流/全干员位置面板.md)** - 全干员位置面板
 - **[PRTS系统](.github/prompts/数据处理工作流/PRTS系统.md)** - PRTS 通讯系统
 - **[Tk绘制模式](.github/prompts/数据处理工作流/Tk绘制模式.md)** - Tkinter 渲染模式
-- **[Web绘制模式](.github/prompts/数据处理工作流/Web绘制模式.md)** - Web 渲染模式
 
 ### 🗺️ 场景与地图系统
 - **[地图系统](.github/prompts/数据处理工作流/地图系统.md)** - 地图数据结构和管理

@@ -717,59 +717,8 @@ class Game_Basic_Settings_Panel:
             title_draw.draw()
             return_list = []
 
-            # ========== 绘制模式设置部分 ==========
-            line_feed.draw()
-            draw_mode_title = draw.NormalDraw()
-            draw_mode_title.text = _("━━━━━ 绘制模式设置 ━━━━━\n")
-            draw_mode_title.width = window_width
-            draw_mode_title.draw()
-
-            # 显示当前绘制模式
-            current_web_mode = cache.web_mode
-            if current_web_mode:
-                current_mode_text = _("Web绘制模式")
-            else:
-                current_mode_text = _("Tk绘制模式")
-
-            mode_info_text = ""
-            mode_info_text += _("当前绘制模式：{0}\n\n").format(
-                current_mode_text
-            )
-
-            # 两种模式的说明
-            mode_info_text += _(
-                "○Tk绘制模式：使用本地窗口显示游戏，响应速度快，稳定可靠，适合大部分玩家\n"
-            )
-            mode_info_text += _(
-                "○Web绘制模式：使用浏览器显示游戏，界面更美观，支持多设备访问，适合尝鲜体验\n\n"
-            )
-
-            mode_info_draw = draw.NormalDraw()
-            mode_info_draw.text = mode_info_text
-            mode_info_draw.width = window_width
-            mode_info_draw.draw()
-
-            # 切换绘制模式按钮
-            if current_web_mode:
-                switch_button_text = _("[切换到Tk绘制模式]")
-                new_mode = 0
-            else:
-                switch_button_text = _("[切换到Web绘制模式]")
-                new_mode = 1
-
-            switch_button = draw.CenterButton(
-                switch_button_text,
-                "switch_draw_mode",
-                max(len(switch_button_text) * 2, 40),
-                cmd_func=self.change_draw_mode_cmd,
-                args=(new_mode,),
-            )
-            switch_button.draw()
-            return_list.append(switch_button.return_text)
-            line_feed.draw()
-            line_feed.draw()
-
             # ========== 语言设置部分 ==========
+            line_feed.draw()
             language_title = draw.NormalDraw()
             language_title.text = _("━━━━━ 语言设置 ━━━━━\n")
             language_title.width = window_width
@@ -818,29 +767,6 @@ class Game_Basic_Settings_Panel:
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
                 break
-
-    def change_draw_mode_cmd(self, new_mode: int) -> None:
-        """修改绘制模式设置"""
-        # 修改config.ini文件中的web_draw设置
-        config_ini_path = normal_config.get_config_ini_path()
-        if os.path.exists(config_ini_path):
-            ini_config = configparser.ConfigParser()
-            ini_config.read(config_ini_path, encoding="utf8")
-            if "game" not in ini_config:
-                ini_config["game"] = {}
-            ini_config["game"]["web_draw"] = str(new_mode)
-            with open(config_ini_path, "w", encoding="utf8") as config_file:
-                ini_config.write(config_file)
-        # 输出提示信息
-        now_draw = draw.WaitDraw()
-        if new_mode == 1:
-            mode_name = _("Web绘制模式")
-        else:
-            mode_name = _("Tk绘制模式")
-        info_text = _("绘制模式已修改为{0}，重启游戏后生效").format(mode_name)
-        now_draw.text = info_text
-        now_draw.style = "gold_enrod"
-        now_draw.draw()
 
     def change_language_cmd(self, lang_code: str) -> None:
         """修改语言设置"""
