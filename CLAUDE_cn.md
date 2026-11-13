@@ -122,8 +122,7 @@ pip install -r requirements.txt
 ## tools 工具目录
 
 - **`tools/AI/`**：AI 文本生成用的语料和提示词文件
-- **`tools/MCP/`**：PRTS 干员资源下载 MCP 服务
-- **零散脚本**：PRTS 抓取（`arknights_story_downloader.py`、`download_prts_*.py`）、翻译工具（`compare_old_and_new_po.py`、`po2mo_polib.py`）、数据维护（`csv_renumber.py`、`update_behavior.py`、`body_part_editor.py` 等）
+- **零散脚本**：PRTS 抓取（`arknights_story_downloader.py`、`download_prts_*.py`）、翻译工具（`po2mo_polib.py`）、数据维护（`body_part_editor.py` 等）
 
 ## CI/CD 发布结构
 
