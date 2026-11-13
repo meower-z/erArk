@@ -16,7 +16,6 @@ force-exclude = '^/Script/Config/config_def\.py$'
 explicit_package_bases = true
 follow_imports = "silent"
 # tests/education 的脚本按顶层模块名导入 _bootstrap 与 official_event_check，tests/_mypy_stubs 的存根把这两个名字指到真实模块
-# tools/MCP/prts_character_downloader 的脚本按顶层模块名导入同目录的 downloader 与 server，tools/backup/rename_and_organize_images.py 把 tools 目录加进 sys.path 后导入 download_prts_character_image，tests/_mypy_stubs 里同名的存根也把这三个名字指到真实模块
 # tools/test_quality 的脚本也以自己的目录为脚本目录运行，按顶层模块名导入同目录的 data_check、fast_suite 与 checkout_fixture
 # tools/verify 的 tk.py、tk_game.py、test_limited_run.py 与 test_tk_game.py 把自己的目录加进 sys.path，再按顶层模块名导入同目录的模块。被这样导入的模块是 limited_run、tk 与 tk_game。tests/_mypy_stubs 里同名的存根把这三个名字指到真实模块。
 mypy_path = ["tools/test_quality", "tests/_mypy_stubs"]
@@ -27,12 +26,6 @@ warn_unused_ignores = true
 extra_checks = true
 warn_unreachable = true
 enable_error_code = ["possibly-undefined", "ignore-without-code", "deprecated", "redundant-self", "truthy-iterable"]
-
-# rtmlib 不带类型信息，也没有类型存根包。
-# 这一项让 mypy 不报 rtmlib 缺类型。
-[[tool.mypy.overrides]]
-module = ["rtmlib"]
-ignore_missing_imports = true
 
 # tools/test_quality 的脚本导入的 lint 包是可选的本机 lint 引擎，不随仓库提供（见 CONTRIBUTING.md），mypy 找不到它
 [[tool.mypy.overrides]]
@@ -130,8 +123,6 @@ ignore = ["PLW0603"]
 "tests/slow/test_foot_cloth_fills_locker_semen.py" = ["F401"]
 "tests/slow/test_lint_target_csv_full_check.py" = ["F401"]
 "tools/lint_target_csv.py" = ["F401"]
-# 写在 try 里的这个导入只用来判断是否装了 mcp 包。
-"tools/MCP/prts_character_downloader/start_server.py" = ["F401"]
 # 有些导入只为执行模块载入时的代码，例如构建游戏数据或完成注册。
 # ruff 认不出这里在运行时生成的 __all__，看不出其余导入是给 tests/education 的测试脚本用的。
 # 这里的导入按 game.py 的初始化顺序，穿插在初始化代码之间。
@@ -145,7 +136,6 @@ ignore = ["PLW0603"]
 "init_data.py" = ["E402"]
 "tests/fast/__init__.py" = ["E402"]
 "tests/education/test_talk_data.py" = ["E402"]
-"tools/MCP/prts_character_downloader/test_downloader.py" = ["E402"]
 # 这些测试脚本从上往下分节运行。
 # 每节在开头导入本节用到的模块。
 "tests/education/test_class_ai.py" = ["E402"]

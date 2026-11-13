@@ -88,34 +88,6 @@ print(sorted(official_event_check.load_effect_id_set()))
 outputs = []
 
 [[reader]]
-id = "R08"
-file = "tools/update_behavior.py"
-symbol = "update_behavior_file"
-mechanism = "writer"
-reads = "Behavior.py 里 class Behavior 之前的文件头"
-used_for = "按 Behavior_Data.csv 重写 Behavior.py 时原样保留文件头"
-when = "dev-tool"
-capture = "command"
-command = ["python", "tools/update_behavior.py"]
-outputs = ["@diff"]
-compare = "no-line-numbers"
-why = "diff 的行号头只说改在第几行，改动前后行号会移；改了什么由 + 与 - 行比较"
-
-[[reader]]
-id = "R09"
-file = "tools/fix_f_in_str.py"
-symbol = "<module>"
-mechanism = "writer"
-reads = "全部 .py 里翻译调用中的 f 字符串"
-used_for = "把 _(f\"...\") 改写成 _(\"...\").format(...)"
-when = "dev-tool"
-capture = "command"
-command = ["python", "tools/fix_f_in_str.py"]
-outputs = ["@diff"]
-compare = "no-line-numbers"
-why = "diff 的行号头只说改在第几行，改动前后行号会移；改了什么由 + 与 - 行比较"
-
-[[reader]]
 id = "R10"
 file = ".github/skills/system-review-round/dead_code_scan.py"
 symbol = "collect_definitions"
@@ -469,94 +441,10 @@ pattern = "open-py"
 why = "命中的是被三引号注释掉的旧代码；函数只把生成的前提函数追加到 handle_premise 模块末尾，不读它的内容"
 
 [[allow]]
-file = "tools/MCP/prts_character_downloader/downloader.py"
-symbol = "PRTSCharacterDownloader._find_workspace_root"
-pattern = "__file__"
-why = "用 __file__ 找工作区根目录"
-
-[[allow]]
-file = "tools/MCP/prts_character_downloader/test_downloader.py"
-symbol = "<module>"
-pattern = "__file__"
-why = "用 __file__ 把下载器目录加进 sys.path"
-
-[[allow]]
-file = "tools/MCP/prts_character_downloader/verify_mcp_setup.py"
-symbol = "<module>"
-pattern = "__file__"
-why = "用 __file__ 把仓库根目录加进 sys.path"
-
-[[allow]]
 file = "tools/ai_text_all_to_one.py"
 symbol = "main"
 pattern = "__file__"
 why = "用 __file__ 定位语料目录，只读写文本文件"
-
-[[allow]]
-file = "tools/backup/body_analysis_multi_compare.py"
-symbol = "main"
-pattern = "__file__"
-why = "用 __file__ 定位立绘测试目录，只读图片、写分析报告"
-
-[[allow]]
-file = "tools/backup/create_converted_behavior_effect.py"
-symbol = "main"
-pattern = "__file__"
-why = "用 __file__ 定位仓库根目录，只读写 CSV"
-
-[[allow]]
-file = "tools/backup/detect_long_sentences.py"
-symbol = "main"
-pattern = "__file__"
-why = "用 __file__ 定位仓库根目录，只读口上 CSV"
-
-[[allow]]
-file = "tools/backup/download_full_body_images.py"
-symbol = "<module>"
-pattern = "__file__"
-why = "用 __file__ 定位图片下载目录"
-
-[[allow]]
-file = "tools/backup/parse_character_ability_to_csv.py"
-symbol = "main"
-pattern = "read_text"
-why = "读角色能力的文本稿，写 CSV"
-
-[[allow]]
-file = "tools/backup/process_character_csvs.py"
-symbol = "process_file"
-pattern = "read_text"
-why = "读角色 CSV"
-
-[[allow]]
-file = "tools/backup/process_csv_classification.py"
-symbol = "main"
-pattern = "__file__"
-why = "用 __file__ 定位仓库根目录，只读写 CSV"
-
-[[allow]]
-file = "tools/backup/rename_and_organize_images.py"
-symbol = "download_full_body_images"
-pattern = "open-py"
-why = "说明文字里提到 .py 脚本；同一函数写的是下载的图片"
-
-[[allow]]
-file = "tools/backup/rename_and_organize_images.py"
-symbol = "download_full_body_images"
-pattern = "__file__"
-why = "用 __file__ 定位工具目录与图片目录"
-
-[[allow]]
-file = "tools/backup/rename_and_organize_images.py"
-symbol = "<module>"
-pattern = "__file__"
-why = "用 __file__ 定位脚本所在目录"
-
-[[allow]]
-file = "tools/backup/replace_commas.py"
-symbol = "main"
-pattern = "read_text"
-why = "读 CSV 文件"
 
 [[allow]]
 file = "tools/generate_character_portrait.py"
@@ -587,18 +475,6 @@ file = "tools/official_event_check.py"
 symbol = "<module>"
 pattern = "open-py"
 why = "模块说明里提到 constant_promise.py 等文件；读它们的是 load_premise_name_set（R06）与 load_effect_id_set（R07）"
-
-[[allow]]
-file = "tools/replace_quotes.py"
-symbol = "<module>"
-pattern = "__file__"
-why = "用 __file__ 定位仓库根目录，只读写 CSV"
-
-[[allow]]
-file = "tools/update_behavior.py"
-symbol = "main"
-pattern = "__file__"
-why = "用 __file__ 定位仓库根目录，把 Behavior.py 的路径交给 update_behavior_file（R08）"
 
 [[allow]]
 file = "tests/registration.py"
