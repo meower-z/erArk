@@ -537,9 +537,7 @@ class Character_FirstNPC:
             else:
                 self.npc_select_now = 9 - len(cache.npc_id_got)
             now_npc_draw.text = ""
-            now_npc_draw.text += _(
-                " 有口上的角色会注明文本文件的大小，欢迎使用附带的编辑器erArkEditor，无需写代码仅写文本即可创作口上\n"
-            )
+            now_npc_draw.text += _(" 有口上的角色会注明文本文件的大小\n")
             now_npc_draw.text += _("\n 当前已选干员：")
             for character_id in cache.npc_id_got:
                 npc_character_data = cache.character_data[character_id]

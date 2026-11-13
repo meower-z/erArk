@@ -15,13 +15,11 @@ force-exclude = '^/Script/Config/config_def\.py$'
 [tool.mypy]
 explicit_package_bases = true
 follow_imports = "silent"
-# 编辑器 tools/ArkEditor 以自己的目录为脚本目录运行，按顶层模块名导入同目录的模块（如 cache_control、ui.window）
 # tests/education 的脚本按顶层模块名导入 _bootstrap 与 official_event_check，tests/_mypy_stubs 的存根把这两个名字指到真实模块
 # tools/MCP/prts_character_downloader 的脚本按顶层模块名导入同目录的 downloader 与 server，tools/backup/rename_and_organize_images.py 把 tools 目录加进 sys.path 后导入 download_prts_character_image，tests/_mypy_stubs 里同名的存根也把这三个名字指到真实模块
-# tests/fast/arkeditor_file_load_driver.py 作为脚本运行，按顶层模块名导入 arkeditor_effect_menu_driver。tests/fast/arkeditor_entry_edit_driver.py 作为脚本运行，按顶层模块名导入 arkeditor_file_load_driver。tests/_mypy_stubs 里同名的存根让 mypy 把这两个名字解析到 tests/fast 里的真实模块。
 # tools/test_quality 的脚本也以自己的目录为脚本目录运行，按顶层模块名导入同目录的 data_check、fast_suite 与 checkout_fixture
-# tools/verify 的 tk.py、tk_game.py、arkeditor.py、test_limited_run.py、test_tk_game.py 与 test_arkeditor.py 把自己的目录加进 sys.path，再按顶层模块名导入同目录的模块。被这样导入的模块是 limited_run、tk、tk_game 与 arkeditor。tests/_mypy_stubs 里同名的存根把这四个名字指到真实模块。
-mypy_path = ["tools/ArkEditor", "tools/test_quality", "tests/_mypy_stubs"]
+# tools/verify 的 tk.py、tk_game.py、test_limited_run.py 与 test_tk_game.py 把自己的目录加进 sys.path，再按顶层模块名导入同目录的模块。被这样导入的模块是 limited_run、tk 与 tk_game。tests/_mypy_stubs 里同名的存根把这三个名字指到真实模块。
+mypy_path = ["tools/test_quality", "tests/_mypy_stubs"]
 check_untyped_defs = true
 strict_equality = true
 warn_redundant_casts = true
@@ -174,7 +172,6 @@ ignore = ["PLW0603"]
 # 上面几组里的 B010 也是这个原因。
 "profiling/ui_perf_patch.py" = ["B010"]
 "tests/education/test_save_compat.py" = ["B010"]
-"tests/fast/arkeditor_entry_edit_driver.py" = ["B010"]
 "tests/fast/test_mod_loader.py" = ["B010"]
 "tests/slow/test_move_option_event_lists_child.py" = ["B010"]
 "tests/slow/test_option_event_lists_child.py" = ["B010"]
@@ -199,13 +196,11 @@ test_globs = ["tests/fast/test_*.py"]
 # 变异体只拿 tests/fast 来查，不用 tests/slow。查变异体时 subprocess.run 被拦下，
 # 所以会启动子进程的测试文件不列进来：它们在不变异时就失败，整套测试一失败，哪个文件都打不了分
 test_globs = [
-    "tests/fast/test_buildata_tables_ignore_module_docstring.py",
     "tests/fast/test_check_reregister_same_function.py",
     "tests/fast/test_child_stage_names.py",
     "tests/fast/test_child_stages_offline.py",
     "tests/fast/test_clear_cmd_by_number.py",
     "tests/fast/test_climax_line_names_operator.py",
-    "tests/fast/test_commission_edit_save.py",
     "tests/fast/test_cup_shrinks_after_lactation_ends.py",
     "tests/fast/test_follower_enters_full_room.py",
     "tests/fast/test_game_clock_passes_checks.py",

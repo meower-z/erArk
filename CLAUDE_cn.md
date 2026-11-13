@@ -21,13 +21,13 @@ python init_data.py    # 预热运行时缓存（CI 在 buildconfig 之后运行
 python buildpo.py      # 从 .py 文件提取可翻译字符串生成 PO 文件
 python buildmo.py      # 从 PO 文件编译 MO 文件
 ```
-注意：`buildata.py` 虽然名字相似，但**不属于**数据构建链——它是开发者辅助工具，用于生成前提/结算的样板代码（向 `constant_promise` / `handle_premise` 中插入常量，并通过其 `mode` 变量在前提、结算定义与 CSV 之间互相转换）。
+注意：`buildata.py` 虽然名字相似，但**不属于**数据构建链——它是开发者辅助工具，用于生成前提/结算的样板代码（向 `constant_promise` / `handle_premise` 中插入常量，并通过其 `mode` 变量把 CSV 转换为前提、结算定义）。
 
 ### 安装依赖
 ```bash
 pip install -r requirements.txt
 ```
-关键依赖：`PySide6`（ArkEditor 图形界面）、`openai` + `google-genai`（AI 文本生成），以及 `Pillow`、`numpy`、`ephem`、`psutil`、`wcwidth`。
+关键依赖：`openai` + `google-genai`（AI 文本生成），以及 `Pillow`、`numpy`、`ephem`、`psutil`、`wcwidth`。
 
 ### 测试单个组件
 游戏使用调试模式（在 config.ini 中配置）进行测试。设置 `debug = 1` 启用调试功能。
@@ -114,28 +114,26 @@ pip install -r requirements.txt
 
 ## 开发工作流
 
-1. 编辑 `data/csv/`、`data/talk/`、`data/talk_common/`、`data/ui_text/` 或 `data/character/` 中的 CSV 文件（或使用 ArkEditor 工具）
+1. 编辑 `data/csv/`、`data/talk/`、`data/talk_common/`、`data/ui_text/` 或 `data/character/` 中的 CSV 文件
 2. 运行 `python buildconfig.py` 全量重建——或直接运行 `python game.py`，启动时会自动增量重建
 3. 运行 `python game.py` 测试更改
 4. 对于本地化更改，运行 `python buildpo.py` 和 `python buildmo.py`
 
 ## tools 工具目录
 
-- **`tools/ArkEditor/`**：独立的 PySide6 图形界面编辑器，用于编辑口上/事件数据（无需写代码）；CI 会将其打包为 `erArkEditor.zip`
 - **`tools/AI/`**：AI 文本生成用的语料和提示词文件
 - **`tools/MCP/`**：PRTS 干员资源下载 MCP 服务
 - **零散脚本**：PRTS 抓取（`arknights_story_downloader.py`、`download_prts_*.py`）、翻译工具（`compare_old_and_new_po.py`、`po2mo_polib.py`）、数据维护（`csv_renumber.py`、`update_behavior.py`、`body_part_editor.py` 等）
 
 ## CI/CD 发布结构
 
-GitHub Actions 工作流（`.github/workflows/python-app.yml`，push/PR 到 master 时用 PyInstaller 打包）会生成 4 个发布包：
+GitHub Actions 工作流（`.github/workflows/python-app.yml`，push/PR 到 master 时用 PyInstaller 打包）会生成 3 个发布包：
 
 | 包名 | 说明 | 包含内容 |
 | --- | --- | ------- |
 | `erArk_{版本号}.zip` | 完整游戏包 | 包含所有资源的完整游戏 |
 | `erArk_Lite_{版本号}.zip` | 轻量游戏包 | 不包含立绘、场景等大图片资源的游戏 |
 | `erArk_Images_{图片版本号}.zip` | 图片资源包 | 除 `image/状态条` 外的所有图片文件夹 |
-| `erArkEditor.zip` | 口上事件编辑器 | 独立的编辑器工具（`tools/ArkEditor/main.py`） |
 
 游戏版本号取自 `package.json`，图片版本号取自 `image/package.json`。另有第二个工作流（`sync-wiki.yml`）用于同步 wiki。
 
@@ -250,7 +248,6 @@ GitHub Actions 工作流（`.github/workflows/python-app.yml`，push/PR 到 mast
 - **[存档系统](.github/prompts/数据处理工作流/存档系统.md)** - 存档系统和跨版本兼容性
 - **[通用结算函数函数](.github/prompts/数据处理工作流/通用结算函数函数.md)** - 通用计算函数
 - **[多周目结算与继承系统](.github/prompts/数据处理工作流/多周目结算与继承系统.md)** - 多周目数据继承
-- **[ArkEditor编辑器系统说明](.github/prompts/数据处理工作流/ArkEditor编辑器系统说明.md)** - 内置编辑器系统
 - **[剧情总结工作流](.github/prompts/数据处理工作流/剧情总结工作流.md)** - 剧情总结工作流
 - **[剧情转外勤委托工作流](.github/prompts/数据处理工作流/剧情转外勤委托工作流.md)** - 剧情转外勤委托的转换工作流
 

@@ -21,13 +21,13 @@ python init_data.py    # Pre-warm runtime caches (CI runs this after buildconfig
 python buildpo.py      # Extract translatable strings from .py files into PO files
 python buildmo.py      # Compile MO files for every locale except zh_CN (needs gettext msgfmt, or polib from requirements-dev.txt); --out DIR writes elsewhere
 ```
-Note: `buildata.py` is NOT part of the data build chain despite its name — it is a developer helper for generating premise/settlement boilerplate (inserts constants into `constant_promise` / `handle_premise`, converts premise and settle definitions to/from CSV via its `mode` variable).
+Note: `buildata.py` is NOT part of the data build chain despite its name — it is a developer helper for generating premise/settlement boilerplate (inserts constants into `constant_promise` / `handle_premise`, converts CSV to premise and settle definitions via its `mode` variable).
 
 ### Dependencies Installation
 ```bash
 pip install -r requirements.txt
 ```
-Key dependencies: `PySide6` (ArkEditor GUI), `openai` + `google-genai` (AI text generation), plus `Pillow`, `numpy`, `ephem`, `psutil`, `wcwidth`.
+Key dependencies: `openai` + `google-genai` (AI text generation), plus `Pillow`, `numpy`, `ephem`, `psutil`, `wcwidth`.
 
 ### Testing Individual Components
 The game uses a debug mode (configured in config.ini) for testing. Set `debug = 1` to enable debug features.
@@ -121,14 +121,13 @@ New tests go into one of the two layers. `tests/fast/test_registration.py` fails
 
 ## Development Workflow
 
-1. Edit CSV files in `data/csv/`, `data/talk/`, `data/talk_common/`, `data/ui_text/`, or `data/character/` (or use the ArkEditor tool)
+1. Edit CSV files in `data/csv/`, `data/talk/`, `data/talk_common/`, `data/ui_text/`, or `data/character/`
 2. Run `python buildconfig.py` for a full rebuild — or just run `python game.py`, which rebuilds incrementally on startup
 3. Run `python game.py` to test changes
 4. For localization changes, run `python buildpo.py` and `python buildmo.py`
 
 ## Tools Directory
 
-- **`tools/ArkEditor/`**: Standalone PySide6 GUI editor for talk/event data (no coding required); packaged by CI as `erArkEditor.zip`
 - **`tools/AI/`**: Corpora and prompt files for AI text generation
 - **`tools/MCP/`**: PRTS character resource downloader MCP service
 - **`tools/map_aa_check.py`**: Pixel-level alignment checker for the AA maps in `data/map/*/Map`. Map layout is decided by the **font's real advance widths**, not by `wcwidth` — box-drawing characters and ASCII spaces belong to two incommensurable metric families that differ at some font sizes (including the size the current `config.ini` produces). Never validate an AA map by counting columns; run this instead. Supports `--tol N` and `--list-bad`, and exits non-zero on failure.
@@ -138,14 +137,13 @@ New tests go into one of the two layers. `tests/fast/test_registration.py` fails
 
 ## CI/CD Release Structure
 
-The GitHub Actions workflow (`.github/workflows/python-app.yml`, PyInstaller build on push/PR to master) produces 4 release packages:
+The GitHub Actions workflow (`.github/workflows/python-app.yml`, PyInstaller build on push/PR to master) produces 3 release packages:
 
 | Package | Description | Contents |
 | ------- | ----------- | -------- |
 | `erArk_{version}.zip` | Complete game package | Full game with all resources |
 | `erArk_Lite_{version}.zip` | Lightweight game package | Game without large image assets (portraits, scenes, etc.) |
 | `erArk_Images_{image_version}.zip` | Image resource package | All image folders except `image/状态条` |
-| `erArkEditor.zip` | Talk/Event editor | Standalone editor tool (`tools/ArkEditor/main.py`) |
 
 The game version comes from `package.json`, the image version from `image/package.json`. A second workflow (`sync-wiki.yml`) syncs the wiki.
 
@@ -260,7 +258,6 @@ The `.github/prompts/数据处理工作流` directory contains 63 detailed docum
 - **[存档系统](.github/prompts/数据处理工作流/存档系统.md)** - Save system and cross-version compatibility
 - **[通用结算函数函数](.github/prompts/数据处理工作流/通用结算函数函数.md)** - Universal calculation functions
 - **[多周目结算与继承系统](.github/prompts/数据处理工作流/多周目结算与继承系统.md)** - Multi-playthrough data inheritance
-- **[ArkEditor编辑器系统说明](.github/prompts/数据处理工作流/ArkEditor编辑器系统说明.md)** - Built-in editor system
 - **[新增指令工作流](.github/prompts/数据处理工作流/新增指令工作流.md)** - Complete workflow for adding a new player instruction (config, behavior, premise, settlement, talk)
 - **[系统复查工作流](.github/prompts/数据处理工作流/系统复查工作流.md)** - Repeated full review of an implemented system: dossier, Workflow multi-agent find/verify and implement/audit, plan double-docs, wrap-up (skill `system-review-round`)
 - **[剧情总结工作流](.github/prompts/数据处理工作流/剧情总结工作流.md)** - Story summarization workflow

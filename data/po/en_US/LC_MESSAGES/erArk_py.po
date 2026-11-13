@@ -953,10 +953,8 @@ msgstr "  (999 Operators can be chosen in debug mode)"
 msgid " 已选择全部初始干员"
 msgstr " All initial Operators are chosen"
 
-msgid " 有口上的角色会注明文本文件的大小，欢迎使用附带的编辑器erArkEditor，无需写代码仅写文本即可创作口上\n"
-msgstr ""
-"Characters with dialogues will indicate the size of dialogue file, it's "
-"welcomed to use the erArkEditor attached to write dialogues without coding\n"
+msgid " 有口上的角色会注明文本文件的大小\n"
+msgstr "Characters with dialogues will indicate the size of dialogue file\n"
 
 msgid ""
 "\n"

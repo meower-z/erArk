@@ -1,10 +1,9 @@
 # 棘轮检查用的环境装这个文件：pip install -r requirements-lint.txt
 -r requirements-dev.txt
-# 下面钉住游戏、编辑器、测试与工具脚本导入的第三方包，以及其中几个包依赖的包。
+# 下面钉住游戏、测试与工具脚本导入的第三方包，以及其中几个包依赖的包。
 # mypy 按装上的这些包的真实类型检查用到它们的代码。
 # 这里不钉 rtmlib。
 # rtmlib 不带类型信息，所以装上它也不改变 mypy 的结果。
-PySide6==6.12.0
 mcp==1.30.0
 httpx==0.28.1
 numpy==2.5.4
