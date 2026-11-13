@@ -4642,10 +4642,8 @@ msgid "， 当前工作中干员/总干员：{0}/{1}"
 msgstr ", 현재 업무 중/전체 오퍼레이터:{0}/{1}"
 
 #: .\Script\UI\Flow\creator_character_flow.py:544
-msgid ""
-" 有口上的角色会注明文本文件的大小，欢迎使用附带的编辑器erArkEditor，无需写代"
-"码仅写文本即可创作口上\n"
-msgstr " 대화가 있는 문자는 대화 파일의 크기를 나타냅니다. 코드 없이 대화를 작성할 때 첨부된 erArkEditor를 사용하는 것을 권장합니다.\n"
+msgid " 有口上的角色会注明文本文件的大小\n"
+msgstr " 대화가 있는 문자는 대화 파일의 크기를 나타냅니다.\n"
 
 #: .\Script\UI\Flow\creator_character_flow.py:545
 msgid ""

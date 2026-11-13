@@ -27,7 +27,7 @@ description: 为 erArk 新增一个玩家指令及其行为、前提、结算、
 ### 第一步：选号核对（必须最先做）
 
 1. 指令 cid 按类型分段：系统1-99 / 日常1001 / 工作2001 / 娱乐3001 / 技艺4001 / 猥亵5001 / 性爱6001，在 `data/csv/InstructConfig.csv` 目标段落确认空闲号。
-2. 行为 cid 必须在**三处**都空闲：`data/csv/Behavior_Data.csv`、`Script/Core/constant/Behavior_Int.py`、`tools/ArkEditor/csv/Behavior_Data.csv`。这三处存在历史不同步（同一编号含义不同），不能只看一处。
+2. 行为 cid 必须在**两处**都空闲：`data/csv/Behavior_Data.csv`、`Script/Core/constant/Behavior_Int.py`。这两处存在历史不同步（同一编号含义不同），不能只看一处。
 3. 若用行为结算器，效果 id 在 `Script/Core/constant_effect.py` 中确认空闲。
 
 ### 第二步：CSV 配置
@@ -51,7 +51,7 @@ description: 为 erArk 新增一个玩家指令及其行为、前提、结算、
 ### 第五步：结算
 
 二选一：
-- **行为结算器**：`constant_effect.py` 加常量 → `Script/Settle/` 对应文件加 `@settle_behavior.add_settle_behavior_effect` 函数（首行 `if not add_time: return`）→ `Behavior_Effect.csv` 挂接 → 同步 `tools/ArkEditor/csv/Effect.csv`（四列 `cid,effect_name,effect_type,effect`，`effect_type` 填与常量 docstring 首词一致的分类词）。
+- **行为结算器**：`constant_effect.py` 加常量 → `Script/Settle/` 对应文件加 `@settle_behavior.add_settle_behavior_effect` 函数（首行 `if not add_time: return`）→ `Behavior_Effect.csv` 挂接。
 - **面板直接结算**：结算函数写在子系统 handle 模块中（如 `condom_handle.settle_*`），面板确认时直接调用；`Behavior_Effect.csv` 挂 `9999`。副作用：数值变化不进入行动结算展示。
 
 **效果 id 选号与分类**（`BehaviorEffect` 按数字分段，docstring 格式 `""" 分类 说明 """`，新 id 必须插进对应分类段内相邻位置，勿追加到文件末尾）：
@@ -67,7 +67,6 @@ description: 为 erArk 新增一个玩家指令及其行为、前提、结算、
 1. **先查重**：优先用现成前提或参数化 CVP token（解析在 `handle_premise/__init__.py`，支持 A能力/T素质/E经验/S状态/F好感/X信赖/G攻略度/Gift礼物id 等；如 `CVP_A2_T|20_E_1` 交互对象素质20==1、`CVP_A1_F_GE_2000` 好感≥2000、`CVP_A1_Gift|35_G_0` 当前礼物id==35），能覆盖就不新增前提。
 2. `Script/Core/constant_promise.py` 加枚举：值为小写字符串 cid，docstring 格式 `""" 分类 说明 """`——首词分类决定归属段（约 70 类，如 系统状态/地点_定位/属性_能力/素质_妊娠/特殊flag_无意识/H_绝顶/初次_素质/道具_使用），新前提插到同分类相邻条目旁，勿追加到文件末尾。
 3. `Script/Design/handle_premise/` 按主题选模块加 `@add_premise` 函数（返回 1/0）：19 个主题文件 `handle_premise_<主题>.py`（H / ability / arts / assistant / base_value / body_manage / cloth / dirty / entertainment / fall / first / food / last_cmd / other / place / sp_flag / talent / time / work），选与分类词对应者。
-4. 同步 `tools/ArkEditor/csv/Premise.csv`（四列 `cid,premise_name,premise_type,premise`，`premise_type` 填与 docstring 相同的分类词）。
 
 ### 第七步：口上
 
@@ -102,8 +101,7 @@ description: 为 erArk 新增一个玩家指令及其行为、前提、结算、
 3. 在结算代码的触发点调 `second_behavior.character_get_second_behavior(character_id, "en_name")`（可在 `Script/Settle/`、`second_behavior.py`、各子系统 handle 中，视反应来源而定）。
 4. `data/csv/Behavior_Effect.csv` 必须加行：有数值效果挂对应效果 id（`Script/Settle/Second_effect.py` 中 `@add_settle_second_behavior_effect` 注册）；无数值效果挂空结算 `999`（二段行为的空结算是 999，不是一段行为的 9999）；需跨场景生效改挂 `998`/`997`（见 7b）。
 5. 口上按第七步 7b 建 `data/talk/system/second_*.csv` 条目。
-6. 同步 `tools/ArkEditor/csv/Behavior_Data.csv`。
-7. `python buildconfig.py` 后验证：`game_config.config_behavior` 含新 cid、`config_behavior_effect_data` 含新 en_name、（如挂了 997/998）`config_behavior_must_settle_cid_list`/`config_behavior_must_show_cid_list` 含新 en_name。
+6. `python buildconfig.py` 后验证：`game_config.config_behavior` 含新 cid、`config_behavior_effect_data` 含新 en_name、（如挂了 997/998）`config_behavior_must_settle_cid_list`/`config_behavior_must_show_cid_list` 含新 en_name。
 
 ## 完整案例
 

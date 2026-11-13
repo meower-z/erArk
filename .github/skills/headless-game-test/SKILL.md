@@ -408,8 +408,8 @@ character_behavior.handle_npc_ai.judge_interrupt_character_behavior = patched
 | 结算效果实现 | `Script/Settle/default.py`（`@add_settle_behavior_effect(效果id)`） |
 | 读档 API | `Script/Core/save_handle.py`（`input_load_save(save_id)`） |
 | 置零/初始化函数 | `Script/Design/attr_calculation.py`（`get_*_zero` / `get_zero_dirty` / `get_*_reset`，签名不规律，用 `inspect.signature` 查） |
-| 前提常量与分组 | `Script/Core/constant_promise.py`；分组同步在 `tools/ArkEditor/csv/Premise.csv` 第 3 列 |
-| 结算器常量与分号段 | `Script/Core/constant_effect.py`（`BehaviorEffect` 按分类分号段，新号要落在本类段末）；同步 `tools/ArkEditor/csv/Effect.csv` |
+| 前提常量与分组 | `Script/Core/constant_promise.py` |
+| 结算器常量与分号段 | `Script/Core/constant_effect.py`（`BehaviorEffect` 按分类分号段，新号要落在本类段末） |
 | 本 skill 的两个模板 | `unit_test_template.py`（模式A，可直接跑）、`harness_template.py`（模式B） |
 
 ## 运行方式

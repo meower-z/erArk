@@ -72,7 +72,6 @@ REASON_EXIT = {
     "not-ready": 77,
     "stopped-headless": 78,
     "stopped-tk": 0,
-    "stopped-editor": 0,
 }
 EXIT_BUSY = 75
 EXIT_NO_HEADROOM = 76
@@ -717,7 +716,7 @@ def scope_argv(unit, mode, mem_max, timeout, env, command):
     拼出在受限 scope 里以当前用户身份运行命令的 argv
     参数：
         unit (str): scope 名称
-        mode (str): headless、tk 或 editor，写进 unit 描述
+        mode (str): headless 或 tk，写进 unit 描述
         mem_max (int): 内存上限，字节
         timeout (int): 运行时限，秒
         env (dict[str, str]): 传给命令的完整环境变量
@@ -787,15 +786,15 @@ def run(
     """
     在受限 scope 里运行一次游戏，等它结束，报告结果；调用它的进程被中断时停掉 scope
     参数：
-        mode (str): headless、tk（由 tk_game.py 传入）或 editor（由 arkeditor.py start 传入）
+        mode (str): headless 或 tk（由 tk_game.py 传入）
         command (list[str]): 要运行的命令
         mem_max (int): 内存上限，字节
         timeout (int): 运行时限，秒
         extra_env (dict[str, str]): 额外传给命令的环境变量
-        out_dir (Path | None): tk 与 editor 模式的证据目录
-        ready_check (Callable[[], dict | None] | None): tk 与 editor 模式的就绪检查，就绪时返回要并入状态的字段；
+        out_dir (Path | None): tk 模式的证据目录
+        ready_check (Callable[[], dict | None] | None): tk 模式的就绪检查，就绪时返回要并入状态的字段。
         为 None 时不等就绪
-        ready_timeout (int): tk 与 editor 模式等待就绪的秒数
+        ready_timeout (int): tk 模式等待就绪的秒数
     返回：
         int: 退出码
     """
@@ -823,9 +822,7 @@ def run(
         for slot in slots:
             slot_file(slot, "json").unlink(missing_ok=True)
         stop_request.unlink(missing_ok=True)
-        summary = {"tk": "tk game", "editor": "ArkEditor"}.get(
-            mode, shlex.join(command)[:300]
-        )
+        summary = "tk game" if mode == "tk" else shlex.join(command)[:300]
         state = {
             "unit": unit,
             "mode": mode,
@@ -1025,7 +1022,7 @@ def stop_orphan(unit):
 
 def cmd_stop(target=None):
     """
-    停掉一次运行：请求它的启动进程（limited_run.py、tk_game.py 或 arkeditor.py）停掉 scope，并等它放开槽位。
+    停掉一次运行：请求它的启动进程（limited_run.py 或 tk_game.py）停掉 scope，并等它放开槽位。
     给了槽位编号或 pid 时只停那一次；没给时只在恰好有一次运行时停它，不核对它是谁启动的；有几次运行时不默认停任何一个。
     参数：
         target (str | None): 小于 SLOTS 的数是槽位编号，其他数是 pid；None 表示没给

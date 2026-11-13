@@ -1,7 +1,7 @@
-"""前提与结算代码的开发辅助脚本：按顶部的 mode 生成前提处理函数，或在 constant_promise.py、constant_effect.py
-与 csv 表之间互转"""
+"""前提与结算代码的开发辅助脚本，按顶部的 mode 运行下面列出的一种模式。模式 1 生成一条前提的处理函数。
+模式 3 和模式 5 把 tools/csv 里的 csv 表转成 constant_promise.py 或 constant_effect.py 的常量与说明行
+"""
 
-import ast
 import os
 import re
 
@@ -13,13 +13,12 @@ from Script.Config import game_config
 
 
 # 运行模式：
+# 0 不运行任何模式，只打印提示
 # 1 生成一条前提：处理函数接到 handle_premise 包里 premise_module 模块的末尾，
 #   constant_promise 的常量与说明行只打印出来
-# 2 前提文件转 csv：constant_promise.py 转成 ArkEditor 的前提表
 # 3 csv 转前提文件：tools/csv/premise.csv 接到 constant_promise.py 末尾
-# 4 结算文件转 csv：constant_effect.py 里二段结算之前的部分转成 ArkEditor 的结算表
 # 5 csv 转结算文件：tools/csv/Effect.csv 接到 constant_effect.py 的 BehaviorEffect 类末尾
-mode = 2
+mode = 0
 command_str = "lactation_1"
 capital_command = command_str.upper()
 dataname = "泌乳"
@@ -238,93 +237,6 @@ def constand_2_handle() -> str:
     return out_str
 
 
-def skip_module_docstring(line_list: list) -> list:
-    """
-    去掉代码文件开头的模块 docstring 与紧随其后的空行，其余行原样保留
-    Keyword arguments:
-    line_list -- 代码文件的全部行（readlines() 的结果）
-    Return arguments:
-    list -- 去掉模块 docstring 后的行；没有模块 docstring 时返回 line_list 本身
-    """
-    # 按字节解析：文件开头的 BOM 在字符串里会被当成非法字符
-    tree = ast.parse("".join(line_list).encode("utf-8"))
-    if ast.get_docstring(tree, clean=False) is None:
-        return line_list
-    docstring_node = tree.body[0]
-    # ast.parse 解析出的语句节点都带结束行号
-    assert docstring_node.end_lineno is not None
-    end_index = docstring_node.end_lineno
-    while end_index < len(line_list) and not line_list[end_index].strip():
-        end_index += 1
-    return line_list[: docstring_node.lineno - 1] + line_list[end_index:]
-
-
-def build_promise_csv_text(line_list: list) -> str:
-    """
-    把 constant_promise.py 的全部行转成 ArkEditor 前提表（tools/ArkEditor/csv/Premise.csv）的文本
-    只做字符串处理、不读写文件：本模块顶层会调 game_config.init()，回归测试不 import 本模块，
-       而是用 ast 单独取出这个函数来跑（tests/education/test_talk_data.py）
-    Keyword arguments:
-    line_list -- constant_promise.py 的全部行（readlines() 的结果，每行带换行符）
-    Return arguments:
-    str -- 前提表的完整文本：表头 + 每个前提一行「前提id,常量名,分类,描述」
-    """
-    import re  # 本函数会被单独取出来跑，用到的模块在函数里导入
-
-    # black 把超过 80 列的常量赋值折成「常量名 = (」「值」「)」三行，这里先把它并回一行
-    line_list = re.sub(
-        r'= \(\n\s*("[^"\n]*")\n\s*\)\n', r"= \1\n", "".join(line_list)
-    ).splitlines(True)
-    out_str = "cid,premise_name,premise_type,premise\n"
-    for line in line_list:
-        # 只看以引号收尾、不带注释的行：常量行（NAME = "id"）与紧随其后的单行 docstring
-        if len(line) >= 3 and line[-2] == '"' and "#" not in line:
-            if line[-3] == '"':
-                # docstring 行：取三引号中间的「分类 描述」
-                promise_text = line.split('"')[-4].strip()
-                if promise_text != "前提id":
-                    # 按第一个空格切一刀：分类里没有空格，描述里的空格原样保留
-                    part_list = promise_text.split(" ", 1)
-                    promise_type = part_list[0]
-                    promise_info = part_list[1] if len(part_list) > 1 else ""
-                    out_str += f"{promise_type},{promise_info}\n"
-            else:
-                # 常量行：先写前提id与常量名，分类与描述由下一行的 docstring 补齐
-                promise_cid = line.split('"')[-2].strip()
-                promise_name = line.split(" =")[0].strip()
-                out_str += f"{promise_cid},{promise_name},"
-        elif len(line) == 1:
-            out_str += "\n"
-    return out_str
-
-
-def constand_promise_2_csv() -> str:
-    """
-    前提文件转csv（mode 2）：读 constant_promise.py，重新生成 ArkEditor 的前提表
-    Keyword arguments:
-    无
-    Return arguments:
-    str -- 写入的前提表文本
-    """
-    with open(
-        os.path.join("Script", "Core", "constant_promise.py"),
-        encoding="utf-8",
-    ) as f:
-        line_list = skip_module_docstring(f.readlines())
-    out_str = build_promise_csv_text(line_list)
-
-    # 开始保存
-    with open(
-        os.path.join("tools", "ArkEditor", "csv", "Premise.csv"),
-        "w",
-        encoding="utf-8",
-    ) as f:
-        f.write(out_str)
-    print("已写入csv文件末尾")
-
-    return out_str
-
-
 def csv_2_constand() -> str:
     """
     csv转前提文件（mode 3）：读 tools/csv/premise.csv，把每个前提写成常量与说明行，接到 constant_promise.py 末尾
@@ -363,58 +275,6 @@ def csv_2_constand() -> str:
         f.write(out_str)
         f.close()
     print("已写入前提文件末尾")
-
-    return out_str
-
-
-def constand_effect_2_csv() -> str:
-    """
-    结算文件转csv（mode 4）：读 constant_effect.py 里第一处「二段结算」之前的部分，重新生成 ArkEditor
-    的结算表 Effect.csv
-    Keyword arguments:
-    无
-    Return arguments:
-    str -- 写入的结算表文本
-    """
-    with open(
-        os.path.join("Script", "Core", "constant_effect.py"),
-        encoding="utf-8",
-    ) as f:
-        a = skip_module_docstring(f.readlines())
-        f.close()
-    # black 把超过 80 列的常量赋值折成「常量名 = (」「值」「)」三行，这里先把它并回一行
-    a = re.sub(r"= \(\n\s*(\d+)\n\s*\)\n", r"= \1\n", "".join(a)).splitlines(
-        True
-    )
-    out_str = "cid,effect_name,effect_type,effect\n"
-
-    for line in a:
-        # 到二段结算则跳出
-        if "二段结算" in line:
-            break
-        if len(line) >= 3 and "#" not in line:
-            if line[-3] == '"' and " " in line:
-                effect_text = line.split('"')[-4].strip().split(" ")
-                if len(effect_text) == 2:
-                    out_str += f"{effect_text[0]},{effect_text[1]}\n"
-                else:
-                    out_str += f"二段结算,{str(effect_text)[2:-2]}\n"
-            elif "=" in line:
-                effect_name = line.split('"')[-1].strip().split(" ")[0]
-                effect_cid = line.split('"')[-1].strip().split(" ")[-1]
-                out_str += f"{effect_cid},{effect_name},"
-        elif len(line) == 1:
-            out_str += "\n"
-
-    # 开始保存
-    with open(
-        os.path.join("tools", "ArkEditor", "csv", "Effect.csv"),
-        "w",
-        encoding="utf-8",
-    ) as f:
-        f.write(out_str)
-        f.close()
-    print("已写入csv文件末尾")
 
     return out_str
 
@@ -462,11 +322,9 @@ def csv_2_constand_effect() -> str:
 if __name__ == "__main__":
     if mode == 1:
         out_str = constand_2_handle()
-    elif mode == 2:
-        constand_promise_2_csv()
     elif mode == 3:
         csv_2_constand()
-    elif mode == 4:
-        constand_effect_2_csv()
     elif mode == 5:
         csv_2_constand_effect()
+    else:
+        print("把 buildata.py 顶部的 mode 改成 1、3 或 5 再运行")

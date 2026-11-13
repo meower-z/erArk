@@ -32,7 +32,6 @@ from _bootstrap import (
 import csv
 from Script.System.Pregnancy_System import pregnancy_constant
 import ast
-import re
 from typing import Any
 from Script.System.Official_Event_System import official_event_handle
 
@@ -757,14 +756,55 @@ check(
         for name in E.PE_PLACE_DATA
     ),
 )
+
+
+def read_constant_doc(file_name: str, class_name: str) -> dict[Any, tuple]:
+    """
+    用 ast 读 Script/Core 下的一个常量文件，取出指定类里后面紧跟着说明字符串的常量
+    Keyword arguments:
+    file_name -- 常量文件名
+    class_name -- 类名
+    Return arguments:
+    dict -- 常量值 -> (常量名, 分类, 描述)。分类是说明里第一个空格之前的部分。描述是这个空格之后的部分，没有空格时为空
+    """
+    with open(
+        os.path.join("Script", "Core", file_name), encoding="utf-8-sig"
+    ) as constant_file:
+        tree = ast.parse(constant_file.read())
+    doc_dict: dict[Any, tuple] = {}
+    for class_node in tree.body:
+        if (
+            not isinstance(class_node, ast.ClassDef)
+            or class_node.name != class_name
+        ):
+            continue
+        body = class_node.body
+        for index in range(len(body) - 1):
+            node, doc_node = body[index], body[index + 1]
+            if not (
+                isinstance(node, ast.Assign)
+                and isinstance(node.targets[0], ast.Name)
+                and isinstance(node.value, ast.Constant)
+                and isinstance(doc_node, ast.Expr)
+                and isinstance(doc_node.value, ast.Constant)
+                and isinstance(doc_node.value.value, str)
+            ):
+                continue
+            doc_part = doc_node.value.value.strip().partition(" ")
+            doc_dict[node.value.value] = (
+                node.targets[0].id,
+                doc_part[0],
+                doc_part[2],
+            )
+    return doc_dict
+
+
+_premise_doc = read_constant_doc("constant_promise.py", "Premise")
+_effect_doc = read_constant_doc("constant_effect.py", "BehaviorEffect")
 check(
-    "ArkEditor 前提表已同步实操课与养成前提",
+    "实操课与养成前提在 constant_promise.py 的 Premise 类里都有常量",
     all(
-        name
-        in open(
-            os.path.join("tools", "ArkEditor", "csv", "Premise.csv"),
-            encoding="utf-8",
-        ).read()
+        name in _premise_doc
         for name in (
             "sex_class_mode_on",
             "self_in_sex_class",
@@ -778,125 +818,39 @@ check(
     ),
 )
 check(
-    "ArkEditor 效果表已同步 552、555、556",
-    all(
-        f"\n{eid},"
-        in open(
-            os.path.join("tools", "ArkEditor", "csv", "Effect.csv"),
-            encoding="utf-8",
-        ).read()
-        for eid in (552, 555, 556)
-    ),
+    "结算 552、555、556 在 constant_effect.py 的 BehaviorEffect 类里都有常量",
+    all(eid in _effect_doc for eid in (552, 555, 556)),
 )
 
-# Plan 31 §3.16（L17）：ArkEditor 前提表补全截断的描述、同步 6 个新前提；buildata 的生成器按第一个空格切一刀
-with open(
-    os.path.join("tools", "ArkEditor", "csv", "Premise.csv"), encoding="utf-8"
-) as _premise_csv_file:
-    _premise_csv_line_list = _premise_csv_file.read().splitlines()
 check(
-    "L11 / L13 ArkEditor 前提表已同步 6 个新前提",
+    "L11 / L13 6 个新前提在 Premise 类里都有常量",
+    all(name in _premise_doc for name in NEW_PREMISE_LIST),
+)
+_truncated_name_list = [
+    name for name, doc in _premise_doc.items() if doc[2].endswith("（Plan")
+]
+check(
+    "L17 Premise 类里没有哪个前提的描述以「（Plan」结尾",
+    not _truncated_name_list,
+    _truncated_name_list,
+)
+_three_name = (
+    "self_have_sibling_child",
+    "self_mother_available",
+    "self_follow_mother",
+)
+check(
+    "L17 同胞、母亲可跟随、跟随见学三个前提的说明都有分类与描述",
+    all(name in _premise_doc and _premise_doc[name][2] for name in _three_name),
+    [_premise_doc.get(name) for name in _three_name],
+)
+check(
+    "L17 6 个新前提的说明都有分类与描述",
     all(
-        any(line.startswith(f"{name},") for line in _premise_csv_line_list)
+        name in _premise_doc and _premise_doc[name][2]
         for name in NEW_PREMISE_LIST
     ),
 )
-_truncated_line_list = [
-    line for line in _premise_csv_line_list if line.endswith("（Plan")
-]
-check(
-    "L17 ArkEditor 前提表没有截断在「（Plan」的描述（同胞、母亲可跟随、跟随见学三行已补全）",
-    not _truncated_line_list,
-    _truncated_line_list,
-)
-
-with open("buildata.py", encoding="utf-8") as _buildata_file:
-    _buildata_tree = ast.parse(_buildata_file.read())
-_builder_node_list: list[ast.stmt] = [
-    node
-    for node in _buildata_tree.body
-    if isinstance(node, ast.FunctionDef)
-    and node.name == "build_promise_csv_text"
-]
-check(
-    "L17 buildata 有生成前提表的纯函数 build_promise_csv_text",
-    len(_builder_node_list) == 1,
-)
-if _builder_node_list:
-    _builder_scope: dict[str, Any] = {}
-    exec(
-        compile(
-            ast.Module(body=_builder_node_list, type_ignores=[]),
-            "buildata.py",
-            "exec",
-        ),
-        _builder_scope,
-    )
-    with open(
-        os.path.join("Script", "Core", "constant_promise.py"), encoding="utf-8"
-    ) as _promise_file:
-        _promise_line_list = _promise_file.readlines()
-    _generated_text = _builder_scope["build_promise_csv_text"](
-        _promise_line_list
-    )
-    _expect_fragment = {}
-    _spaced_name_set = set()
-    # black 把超过 80 列的常量赋值折成「常量名 = (」「值」「)」三行，期望值从并回一行后的文字里取
-    _joined_line_list = re.sub(
-        r'= \(\n\s*("[^"\n]*")\n\s*\)\n', r"= \1\n", "".join(_promise_line_list)
-    ).splitlines(True)
-    for _index, _line in enumerate(_joined_line_list[:-1]):
-        _doc_line = _joined_line_list[_index + 1]
-        _match = re.fullmatch(r'\s*([A-Z0-9_]+) = "([a-z0-9_]+)"\n', _line)
-        if (
-            not _match
-            or not _doc_line.endswith('"""\n')
-            or "#" in _doc_line
-            or _doc_line.count('"') != 6
-        ):
-            continue
-        _doc_text = _doc_line.strip().strip('"').strip()
-        if " " not in _doc_text:
-            continue
-        _doc_type, _doc_desc = _doc_text.split(" ", 1)
-        _expect_fragment[_match.group(2)] = (
-            f"{_match.group(2)},{_match.group(1)},{_doc_type},{_doc_desc}\n"
-        )
-        if " " in _doc_desc:
-            # 描述里本身带空格：改前按每个空格切、只取第二段，这些前提的描述都会截断
-            _spaced_name_set.add(_match.group(2))
-    _mismatch = [
-        name
-        for name in _spaced_name_set
-        if _expect_fragment[name] not in _generated_text
-    ]
-    check(
-        f"L17 生成器按第一个空格切一刀：描述里带空格的 {len(_spaced_name_set)} 个前提，生成的描述与 docstring 完全一致",
-        bool(_spaced_name_set) and not _mismatch,
-        _mismatch[:10],
-    )
-    _three_name = (
-        "self_have_sibling_child",
-        "self_mother_available",
-        "self_follow_mother",
-    )
-    check(
-        "L17 同上：同胞、母亲可跟随、跟随见学三行带着完整描述（改前截断在「（Plan」）",
-        all(
-            name in _expect_fragment
-            and _expect_fragment[name] in _generated_text
-            for name in _three_name
-        ),
-        [_expect_fragment.get(name) for name in _three_name],
-    )
-    check(
-        "L17 同上：6 个新前提都生成了完整的行",
-        all(
-            name in _expect_fragment
-            and _expect_fragment[name] in _generated_text
-            for name in NEW_PREMISE_LIST
-        ),
-    )
 # L18：校验工具 TEXT_DUP_LEN 的 docstring 归位
 with open(
     os.path.join("tools", "official_event_check.py"), encoding="utf-8"
@@ -1330,18 +1284,13 @@ check(
         for cid, (state_machine_id, place_premise) in UPCOMING_TARGET.items()
     ),
 )
-_upcoming_premise_line = next(
-    (
-        line
-        for line in _premise_csv_line_list
-        if line.startswith("self_course_upcoming,")
-    ),
-    "",
-)
+_upcoming_premise_desc = _premise_doc.get("self_course_upcoming", ("", "", ""))[
+    2
+]
 check(
-    "L27 同上：与 ArkEditor 前提表 self_course_upcoming 的说明同口径",
-    "今天已翘课的不算" in _upcoming_premise_line,
-    _upcoming_premise_line,
+    "L27 同上：与 Premise 类里 self_course_upcoming 的描述同口径",
+    "今天已翘课的不算" in _upcoming_premise_desc,
+    _upcoming_premise_desc,
 )
 # 收尾：还原夹具
 for _growth in _growth_by_cid.values():
@@ -1354,35 +1303,25 @@ remove_character(202)
 clear_schedules()
 
 section(
-    "Plan 32 实施复审补：ArkEditor 两张表与 CHILD_GROWTH 说明的数据锁（L26 / L27）"
+    "Plan 32 实施复审补：前提与结算常量的说明、CHILD_GROWTH 说明的数据锁（L26 / L27）"
 )
-with open(
-    os.path.join("tools", "ArkEditor", "csv", "Effect.csv"), encoding="utf-8"
-) as _effect_csv_file:
-    _effect_csv_line_list = _effect_csv_file.read().splitlines()
-_effect_line_557 = next(
-    (line for line in _effect_csv_line_list if line.startswith("557,")), ""
-)
-_effect_line_512 = next(
-    (line for line in _effect_csv_line_list if line.startswith("512,")), ""
+_effect_desc_557 = _effect_doc.get(557, ("", "", ""))[2]
+_effect_desc_512 = _effect_doc.get(512, ("", "", ""))[2]
+check(
+    "L26 Premise 类有新前提 self_have_public_course（常量名 SELF_HAVE_PUBLIC_COURSE）",
+    _premise_doc.get("self_have_public_course", ("",))[0]
+    == "SELF_HAVE_PUBLIC_COURSE",
 )
 check(
-    "L26 ArkEditor 前提表有新前提 self_have_public_course 一行（常量名 SELF_HAVE_PUBLIC_COURSE）",
-    any(
-        line.startswith("self_have_public_course,SELF_HAVE_PUBLIC_COURSE,")
-        for line in _premise_csv_line_list
-    ),
+    "L27 结算 557 的描述写学生坐下听课时「教师判能到岗」即结算，不写「学生晚于教师到场」",
+    "教师判能到岗" in _effect_desc_557
+    and "晚于教师到场" not in _effect_desc_557,
+    _effect_desc_557,
 )
 check(
-    "L27 ArkEditor 效果表 557 的说明改为学生坐下听课时「教师判能到岗」即结算，不再写「学生晚于教师到场」",
-    "教师判能到岗" in _effect_line_557
-    and "晚于教师到场" not in _effect_line_557,
-    _effect_line_557,
-)
-check(
-    "L27 ArkEditor 效果表 512 的说明补上 NPC 教师只发给「听课节次与自己开讲的节次相同」的学生",
-    "听课节次与自己开讲的节次相同" in _effect_line_512,
-    _effect_line_512,
+    "L27 结算 512 的描述写明 NPC 教师只发给「听课节次与自己开讲的节次相同」的学生",
+    "听课节次与自己开讲的节次相同" in _effect_desc_512,
+    _effect_desc_512,
 )
 check(
     "L27 CHILD_GROWTH 的类说明写明「出生时不一定创建」（胎教值大于 0 才建，否则首次写入时惰性建）",

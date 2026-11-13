@@ -14,7 +14,7 @@
 - **项目名**：erArk（era-明日方舟）
 - **性质**：基于明日方舟角色的 R18 文字模拟游戏，纯爱向，无牛无 G（作者声明）
 - **主要玩法来源**：以 eraTW 为主，缝合 AM / YM / SQC / MGT 等 era 系游戏机制
-- **技术栈**：Python（3.12 目标版本）+ Tkinter（GUI）+ PySide6（仅编辑器）+ gettext（本地化）
+- **技术栈**：Python（3.12 目标版本）+ Tkinter（GUI）+ gettext（本地化）
 - **开发状态**：α 测试阶段；单人独立开发，持续更新中
 - **当前版本**：v0.66（2026-08-18）
 - **协议**：CC BY-NC-SA 2.0；早期部分代码来自 dieloli；禁止商业用途
@@ -69,7 +69,6 @@
 | --- | --- |
 | `psutil`, `wcwidth`, `numpy`, `Pillow` | 运行时基础能力/排版/图像 |
 | `pyephem` / `ephem`, `python-dateutil` | 天文计算（月相、太阳时段）与日期 |
-| `PySide6` | ArkEditor 图形编辑器 |
 | `openai`, `google-genai` | 游戏内 AI 文本生成（OpenAI 兼容接口与 Gemini） |
 
 仓库自带本地 conda 环境：`.conda/python.exe`（调试时可用 `/mnt/c/code/era/erArk/.conda/python.exe` 或本地等价路径）。
@@ -102,7 +101,7 @@ black .
 - `auto_build_config.py` 与 `buildconfig.py` 的差异：
   - `auto_build_config`：若 `data/Character_Talk.json`、`data/Talk_Common.json` 已存在，则跳过口上数据重建；不重写 `Script/Config/config_def.py`（代码中有“玩家版本不需要写入 config_def”注释）。
   - `buildconfig`：全量重建并重写 `Script/Config/config_def.py`。
-- `buildata.py` **不是**数据构建脚本，而是开发者工具：生成前提/结算样板代码，并通过其 `mode` 变量在“前提/结算 Python 定义”与“CSV”之间互相转换。
+- `buildata.py` **不是**数据构建脚本，而是开发者工具：生成前提/结算样板代码，并通过其 `mode` 变量把“CSV”转换为“前提/结算 Python 定义”。
 - `init_data.py`：模拟游戏启动的缓存预热（Cache、normal_config、game_config、map_config），CI 打包前使用。
 - 数据源修改后必须重建；未重建最常见的错误是 KeyError/属性缺失/旧枚举。
 
@@ -123,9 +122,9 @@ black .
 | `data/` | 数据源 + 生成 JSON + 地图 + PO（见 §6） |
 | `image/` | 立绘、场景、断面图、状态条、logo、图片包版本 |
 | `static/` | 字体 |
-| `tools/` | ArkEditor、AI 工具、MCP、下载/转换/维护脚本（见 §17） |
+| `tools/` | AI 工具、MCP、下载/转换/维护脚本（见 §23） |
 | `mod/` | Mod 系统配置与示例 Mod（见 §16） |
-| `example/` | 编辑器教程/测试用例：事件、口上、外勤委托、富文本、纸娃娃文本 |
+| `example/` | 模板/测试用例：事件、口上、外勤委托、富文本、纸娃娃文本 |
 | `save/` | 存档目录（被 gitignore） |
 | `.github/` | CI workflow、ISSUE 模板、agents、prompts（60+ 系统文档） |
 | `old_data/`, `profiling/`, `profiling_output/` | 历史数据、性能分析与补丁、profiling 结果 |
@@ -555,7 +554,7 @@ init_character_behavior()
 - 支持：连锁口上（`handle_second_talk`）、必须显示/必须结算口上、特殊口上权重、口上跳绘判定、富文本代码转绘制文本
 - 口上按角色 `adv_id` 索引：`game_config.config_talk_data_by_chara_adv`
 - 通用口上类型由目录生成，如 `action_part_eat_A`
-- 编辑器可直接编辑口上 CSV；快速测试口上面板 `debug_panel.TALK_QUICK_TEST`
+- 快速测试口上面板 `debug_panel.TALK_QUICK_TEST`
 
 ---
 
@@ -808,17 +807,7 @@ init_character_behavior()
 
 ---
 
-## 23. ArkEditor 与工具
-
-### 23.1 ArkEditor（`tools/ArkEditor/`）
-
-- 独立 PySide6 图形编辑器，打包为 `erArkEditor.zip`；入口 `main.py`
-- 编辑对象：角色属性 CSV、口上 CSV、事件 JSON、外勤委托 CSV
-- 核心 UI：`ui/data_list.py`, `ui/item_text_edit.py`, `ui/premise_menu.py`, `ui/effect_menu.py`, `ui/CVP_menu.py`, `ui/CVE_menu.py`, `ui/CSE_menu.py`, `ui/commission_edit.py`
-- 自带 CSV 参考表：`csv/Premise.csv`（前提）、`csv/Effect.csv`（结算）、`csv/Behavior_Data.csv`（行为）等
-- 教程/模板在 `example/` 目录
-
-### 23.2 其他工具（`tools/`）
+## 23. 工具（`tools/`）
 
 - `ai_text_all_to_one.py`：AI 文本合并
 - `arknights_story_downloader.py`、`download_prts_*.py`：PRTS 剧情/背景/角色图抓取
@@ -852,11 +841,10 @@ GitHub Actions `.github/workflows/python-app.yml`（push/PR 到 master，windows
 2. `buildconfig.py` 构建数据
 3. `init_data.py` 预热缓存
 4. 复制游戏文件（data/config/image/update.log/example/static/mod 等）
-5. 打包四个产物：
+5. 打包三个产物：
    - `erArk_{版本}.zip`：完整游戏包
    - `erArk_Lite_{版本}.zip`：轻量版（移除 `image/场景`、`image/断面图`、`image/立绘`，仅保留基础场景）
    - `erArk_Images_{图片版本}.zip`：图片资源包
-   - `erArkEditor.zip`：口上/事件编辑器（附教程、模板和参考 CSV）
 6. 版本号：游戏 `package.json`，图片 `image/package.json`
 7. 另有 `sync-wiki.yml` 同步 wiki
 
@@ -968,7 +956,6 @@ GitHub Actions `.github/workflows/python-app.yml`（push/PR 到 master，windows
 | Mod 不生效 | `Script/Core/mod_manager.py`, `mod/*` |
 | AI 文本不生成 | `Script/Design/handle_chat_ai.py`, `ai_chat_api_key.csv`, `Ai_Chat_Setting.csv` |
 | Tk 渲染/输入 | `Script/Core/io_init.py`, `flow_handle.py`, `main_frame.py`, `UI/Moudle/draw.py` |
-| 编辑器问题 | `tools/ArkEditor/main.py`, `load_csv.py`, `ui/*` |
 
 ---
 
@@ -1007,7 +994,7 @@ GitHub Actions `.github/workflows/python-app.yml`（push/PR 到 master，windows
 `源石技艺系统`, `时间停止系统`, `催眠系统`, `群交系统`, `监禁调教系统`, `睡眠系统`, `隐奸系统`
 
 工作流：
-`AI文本生成系统`, `ArkEditor编辑器系统说明`, `存档系统`, `剧情总结工作流`, `剧情转外勤委托工作流`
+`AI文本生成系统`, `存档系统`, `剧情总结工作流`, `剧情转外勤委托工作流`
 
 ### 30.3 `Script/System/*` 内设计文档
 

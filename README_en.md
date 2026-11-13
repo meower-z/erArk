@@ -15,8 +15,7 @@ All system code documentation: [README.md](.github/prompts/数据处理工作流
 
 Normal Non-developer Players
 ----
-The [Releases](https://github.com/Godofcong-1/erArk/releases) section at the right has the coded exe, can be played immediately on click\
-The editor for dialogues/events, erArkEditor, was also in Releases, allowing production of dialogues and events without the need of coding
+The [Releases](https://github.com/Godofcong-1/erArk/releases) section at the right has the coded exe, can be played immediately on click
 
 Contact Method
 ----
@@ -24,7 +23,7 @@ Discord：https://discord.gg/Bur3EWTVkN
 
 Request
 ----
-Very lacking on text, recruiting dialogues writers, it’s welcomed to write dialogues with the editor
+Very lacking on text, recruiting dialogues writers
 
 BUG Feedback
 ----

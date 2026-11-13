@@ -170,14 +170,14 @@ phase('Audit')
 const LENSES = [
   { key: '方案对照', task: '逐条对照方案 §3 / §4 与实施文档 §2，列出没实现的、实现得不一样的、方案没写却多做了的' },
   { key: '测试覆盖', task: '方案里每条发现（H / M / L 编号）是否都有断言守住；实施文档 §2.0 复现表里「问题命中」的各项修好之后是否有断言锁定' },
-  { key: '收尾与文档', task: '代码层面的配套是否齐：常量注册、ArkEditor 副本 CSV、存档回填、注释与 docstring 是否跟上新口径；再列出收尾阶段主代理还要做的事（说明文档、索引、总纲回指、测试 README、update.log）写进 p6_todo' },
+  { key: '收尾与文档', task: '代码层面的配套是否齐：常量注册、存档回填、注释与 docstring 是否跟上新口径；再列出收尾阶段主代理还要做的事（说明文档、索引、总纲回指、测试 README、update.log）写进 p6_todo' },
 ]
 const audits = await parallel(LENSES.map(l => () =>
   counted(agent(`你是 erArk 系统复查实施阶段的复审代理，视角是「${l.key}」，只读。
 
 ## 依据
 ${DOCS}
-整体改动：git diff 与 git status（忽略工作区里与本次无关的 config.ini、.claude/settings.local.json、tools/ArkEditor/editor_config.ini）
+整体改动：git diff 与 git status（忽略工作区里与本次无关的 config.ini、.claude/settings.local.json）
 回归结果：${regress ? JSON.stringify(regress.results.map(r => ({ command: r.command, exit_code: r.exit_code, fail: r.fail, failures: r.failures }))) : '（回归代理没有返回结果）'}
 
 ## 任务
