@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-"""面板：页签容器、全局课表、个人课表、日程模板、养成总览、选人按钮（通用 NPC 选择面板）、临时课编辑、Web 适配器冒烟"""
+"""面板：页签容器、全局课表、个人课表、日程模板、养成总览、选人按钮（通用 NPC 选择面板）、临时课编辑"""
 
 from _bootstrap import (
     DEFAULT_TIME,
@@ -1512,37 +1512,6 @@ check(
     "L28 养成履历不再在函数内另起别名导入 game_config",
     "_game_config"
     not in inspect.getsource(growth_panel.Growth_Panel._draw_event_history),
-)
-
-section("Web 适配器冒烟")
-from Script.System.Web_Draw_System import web_draw_adapter
-
-web_draw_adapter.apply_web_adapters()
-cache.current_draw_elements = []
-problem = []
-for name, web_panel in (
-    ("全局课表", class_schedule_panel.Class_Schedule_Panel(W)),
-    ("个人课表", course_select_panel.Course_Select_Panel(W)),
-    ("养成总览", growth_panel.Growth_Panel(W)),
-    ("日程模板", schedule_template_panel.Schedule_Template_Panel(W)),
-):
-    try:
-        web_panel.draw_page([])
-    except Exception as error:
-        problem.append((name, repr(error)))
-check("Web 模式下四个子页都能画", not problem, problem)
-check(
-    "产生了 Web 元素",
-    len(cache.current_draw_elements) > 50,
-    len(cache.current_draw_elements),
-)
-check(
-    "元素带类型字段",
-    all(
-        isinstance(one, dict) and "type" in one
-        for one in cache.current_draw_elements[:20]
-    ),
-    cache.current_draw_elements[:2],
 )
 
 finish()

@@ -62,12 +62,6 @@ class InScenePanel:
         while 1:
             if cache.now_panel_id != constant.Panel.IN_SCENE:
                 break
-            # web模式下清屏
-            if cache.web_mode:
-                from Script.Core import io_init
-
-                io_init.clear_screen()
-                io_init.clear_order()
             # 绘制的开始时间
             start_draw = time.time()
             # 和上一次主界面绘制之间的空行数量，由系统设置决定

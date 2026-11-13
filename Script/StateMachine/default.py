@@ -64,12 +64,11 @@ def general_movement_module(
         character_data.behavior.move_target = move_path
         character_data.behavior.duration = move_time
         character_data.state = constant.CharacterStatus.STATUS_MOVE
-        # 如果和玩家位于同一地点，且未屏蔽，且不是Web模式，则输出提示信息
+        # 如果调用方要求提示，和玩家位于同一地点，且NPC移动提示未屏蔽，则输出提示信息
         if (
             show_info_flag
             and character_data.position == cache.character_data[0].position
             and cache.all_system_setting.draw_setting[8] == 1
-            and cache.web_mode == False
         ):
             now_scene_data = cache.scene_data[target_scene_str]
             now_draw = draw.NormalDraw()

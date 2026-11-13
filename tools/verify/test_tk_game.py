@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 """
-tk_game.py 与 tk.py 的测试：经 limited_run.run 启动、传下的种子与默认内存、证据目录检查、拒绝 web 模式的 checkout、
+tk_game.py 与 tk.py 的测试：经 limited_run.run 启动、传下的种子与默认内存、证据目录检查、
 与无头运行共用槽位、tk.py 选择要操作的实例、tk.py doctor 的内存检查；不启动游戏
 另有 tk.py 动作后何时截帧的测试，同样不启动游戏
 
@@ -71,7 +71,7 @@ class TkGame(unittest.TestCase):
             (mode, mem_max, timeout, out_dir, ready_timeout),
             ("tk", 3 << 30, 600, out, 300),
         )
-        self.assertEqual(limited_run.slots_needed(mem_max, self.tmp), 2)
+        self.assertEqual(limited_run.slots_needed(mem_max), 2)
         self.assertEqual(command[:2], ["bash", "-c"])
         self.assertIn(str(tk_game.PROBE), command[2])
         seed = limited_run.DEFAULT_SEED
@@ -117,27 +117,6 @@ class TkGame(unittest.TestCase):
             tk_game.main(["--out", str(out)])
         self.assertEqual(caught.exception.code, 2)
         run.assert_not_called()
-
-    def test_web_mode_refused(self) -> None:
-        """checkout 的 config.ini 设了 web_draw = 1 时以 2 退出，报出文件与设置，不占槽位、不启动，也不改 config.ini"""
-        run = self.patch(limited_run, "run", return_value=0)
-        take = self.patch(limited_run, "take_slots")
-        config = self.tmp / "config.ini"
-        config.write_text("[game]\nweb_draw = 1\n", encoding="utf8")
-        with self.assertRaises(SystemExit) as caught, mock.patch(
-            "sys.stderr"
-        ) as stderr:
-            tk_game.main(["--out", str(self.tmp / "run")])
-        self.assertEqual(caught.exception.code, 2)
-        message = "".join(call.args[0] for call in stderr.write.call_args_list)
-        self.assertIn(str(config), message)
-        self.assertIn("web_draw = 0", message)
-        run.assert_not_called()
-        take.assert_not_called()
-        self.assertFalse((self.tmp / "run").exists())
-        self.assertEqual(
-            config.read_text(encoding="utf8"), "[game]\nweb_draw = 1\n"
-        )
 
     def test_shares_slots_with_limited_run(self) -> None:
         """无头运行占着的槽位只剩 1 个空着时，要 2 个的 tk_game 经 limited_run 以 75 退出，不建 scope"""

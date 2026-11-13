@@ -14,12 +14,12 @@
 - **项目名**：erArk（era-明日方舟）
 - **性质**：基于明日方舟角色的 R18 文字模拟游戏，纯爱向，无牛无 G（作者声明）
 - **主要玩法来源**：以 eraTW 为主，缝合 AM / YM / SQC / MGT 等 era 系游戏机制
-- **技术栈**：Python（3.12 目标版本）+ Tkinter（默认 GUI）+ Flask-SocketIO（Web 模式）+ PySide6（仅编辑器）+ gettext（本地化）
+- **技术栈**：Python（3.12 目标版本）+ Tkinter（GUI）+ PySide6（仅编辑器）+ gettext（本地化）
 - **开发状态**：α 测试阶段；单人独立开发，持续更新中
 - **当前版本**：v0.66（2026-08-18）
 - **协议**：CC BY-NC-SA 2.0；早期部分代码来自 dieloli；禁止商业用途
 - **警告**：游戏含色情、暴力内容，禁止向未成年人传播
-- **玩家入口**：Release 中的 exe；官方支持系统为 Windows；Tk 模式仅 Windows，Web 模式不限设备
+- **玩家入口**：Release 中的 exe；官方支持系统为 Windows
 - **画面要求**：无显卡要求，但 AA 地图建议 1080P+；峰值内存约 1GB
 - **字体**：默认依赖“等距更纱黑体 SC / Sarasa Mono SC”，可通过 `config.ini -> font` 修改
 
@@ -49,10 +49,10 @@
 
 | 目录 | Python 文件数 | 代码行数 | 职责 |
 | --- | ---: | ---: | --- |
-| `Script/Core` | 33 | 23,276 | 引擎层：缓存、类型、存档、IO、流程、Web 服务器、Mod、常量、文本/富文本 |
+| `Script/Core` | 33 | 23,276 | 引擎层：缓存、类型、存档、IO、流程、Mod、常量、文本/富文本 |
 | `Script/Design` | 52 | 43,327 | 主游戏逻辑：行为循环、NPC AI、地图、口上、事件、前提、结算分发、角色/时间 |
 | `Script/Settle` | 10 | 18,772 | 结算实现：一段效果、二段效果、通用结算、道具、实时/过天/睡眠 |
-| `Script/System` | 52 | 26,755 | 垂直子系统：烹饪、宿舍、外勤、指令、医疗、性爱、Web 绘制 |
+| `Script/System` | 52 | 26,755 | 垂直子系统：烹饪、宿舍、外勤、指令、医疗、性爱 |
 | `Script/UI` | 67 | 38,095 | 绘制基础模块、面板、标题/创建角色/常规流程 |
 | `Script/StateMachine` | 2 | 3,151 | NPC 行为原子动作（移动、等待、去某地、睡觉等） |
 | `Script/Config` | 6 | 4,786 | 配置加载与自动生成的 `config_def.py` |
@@ -70,7 +70,6 @@
 | `psutil`, `wcwidth`, `numpy`, `Pillow` | 运行时基础能力/排版/图像 |
 | `pyephem` / `ephem`, `python-dateutil` | 天文计算（月相、太阳时段）与日期 |
 | `PySide6` | ArkEditor 图形编辑器 |
-| `flask`, `flask-socketio`, `python-socketio` | Web 模式服务器 |
 | `openai`, `google-genai` | 游戏内 AI 文本生成（OpenAI 兼容接口与 Gemini） |
 
 仓库自带本地 conda 环境：`.conda/python.exe`（调试时可用 `/mnt/c/code/era/erArk/.conda/python.exe` 或本地等价路径）。
@@ -113,8 +112,8 @@ black .
 
 | 路径 | 说明 |
 | --- | --- |
-| `game.py` | 唯一游戏入口（自动构建 + 初始化 + 启动 Tk/Web） |
-| `config.ini` | 游戏运行配置（语言、Web/Tk、窗口、字体、日期、存档等） |
+| `game.py` | 唯一游戏入口（自动构建 + 初始化 + 启动 Tk） |
+| `config.ini` | 游戏运行配置（语言、窗口、字体、日期、存档等） |
 | `auto_build_config.py` | 启动时增量构建脚本 |
 | `buildconfig.py` | 全量构建脚本 |
 | `buildata.py` | 前提/结算样板代码开发工具 |
@@ -123,7 +122,7 @@ black .
 | `Script/` | 全部游戏源代码（见 §5） |
 | `data/` | 数据源 + 生成 JSON + 地图 + PO（见 §6） |
 | `image/` | 立绘、场景、断面图、状态条、logo、图片包版本 |
-| `static/`, `templates/` | Web 模式前端（game.js / CSS / 中文字体 / index.html） |
+| `static/` | 字体 |
 | `tools/` | ArkEditor、AI 工具、MCP、下载/转换/维护脚本（见 §17） |
 | `mod/` | Mod 系统配置与示例 Mod（见 §16） |
 | `example/` | 编辑器教程/测试用例：事件、口上、外勤委托、富文本、纸娃娃文本 |
@@ -162,11 +161,8 @@ Script/
 │   ├── constant_promise.py # Premise 前提 ID 常量
 │   ├── game_init.py        # 游戏初始化 + 主流程异常兜底
 │   ├── flow_handle.py      # Tk 流程控制/命令绑定/输入
-│   ├── flow_handle_web.py  # Web 流程控制/输入/面板切换
 │   ├── io_init.py          # Tk IO 与绘制输出
-│   ├── io_web.py           # Web 元素缓冲输出
 │   ├── main_frame.py       # Tk 主窗口与事件总线
-│   ├── web_server.py       # Flask-SocketIO 服务器与 API
 │   ├── save_handle.py      # 存档读写与跨版本兼容
 │   ├── mod_manager.py      # Mod 扫描/加载/函数替换
 │   ├── get_text.py         # gettext 翻译函数 `_`
@@ -218,8 +214,7 @@ Script/
 │   ├── Field_Commission_System/ # 外勤委托
 │   ├── Instruct_System/    # 指令注册、分类、显示、映射
 │   ├── Medical_System/     # 医疗经营
-│   ├── Sex_System/         # 群交/隐奸/露出/绳艺/醉奸等
-│   └── Web_Draw_System/    # Web 渲染器与适配
+│   └── Sex_System/         # 群交/隐奸/露出/绳艺/醉奸等
 └── UI/
     ├── Moudle/draw.py      # 绘制类抽象层（NormalDraw/Button/BarDraw...）
     ├── Moudle/panel.py     # 通用面板构建块
@@ -359,7 +354,6 @@ Script/
 | 项 | 默认 | 含义 |
 | --- | --- | --- |
 | `debug` | 1 | 调试模式开关 |
-| `web_draw` | 0 | 0 = Tkinter，1 = Web（Flask-SocketIO，端口 5000 起自动找空端口） |
 | `perf_monitor` | 0 | Tk 渲染性能埋点 |
 | `language` | zh_CN | gettext 语言 |
 | `window_width/height`, `textbox_*`, `text_*`, `inputbox_*`, `font_size`, `tk_dpi` | 窗口/文本/输入框尺寸 |
@@ -389,19 +383,14 @@ Script/
 4. `get_text._` 翻译函数可用
 5. `game_config.init()` 加载全部游戏配置
 6. `init_mod_system()` 加载 Mod（失败仅告警不中断）
-7. 读取 `web_mode` 写入 `cache.web_mode`
-8. `character_config.init_character_tem_data()` 加载角色模板
-9. `map_config.init_map_data()` 加载地图
-10. `character_handle.init_character_tem()` 实例化角色
-11. `game_time.init_time()` 初始化游戏时间
-12. 若 `perf_monitor=1` 且 Tk 模式：启用 `perf_hook` + `profiling.ui_perf_patch`
-13. 若 Web 模式：
-    - `web_draw_adapter.apply_web_adapters()` 给绘制类打补丁
-    - `game_init.io_init = io_web` 切换 IO
-    - `start_server()` 启动 Flask-SocketIO（5000 起自动寻空端口，支持 eventlet monkey patch）
-14. `game_init.run(start_flow.start_frame)` 启动游戏
-15. `start_flow.start_frame()` 进入主循环，每轮执行 `constant.panel_data[cache.now_panel_id]()`
-16. 异常兜底：写入 `error.log`，自动保存 99 号档，给玩家“回到标题/退出”选项
+7. `character_config.init_character_tem_data()` 加载角色模板
+8. `map_config.init_map_data()` 加载地图
+9. `character_handle.init_character_tem()` 实例化角色
+10. `game_time.init_time()` 初始化游戏时间
+11. 若 `perf_monitor=1`：启用 `perf_hook` + `profiling.ui_perf_patch`
+12. `game_init.run(start_flow.start_frame)` 启动游戏
+13. `start_flow.start_frame()` 进入主循环，每轮执行 `constant.panel_data[cache.now_panel_id]()`
+14. 异常兜底：写入 `error.log`，自动保存 99 号档，给玩家“回到标题/退出”选项
 
 ---
 
@@ -409,11 +398,11 @@ Script/
 
 `Script/Core/game_type.py` 定义全部运行时对象（行数约 1942）。
 
-### 9.1 Cache（92 个字段）
+### 9.1 Cache（62 个字段）
 
 全局唯一 `cache_control.cache`，关键字段分组：
 
-- **渲染/输入**：`web_mode`, `current_draw_elements`, `web_*` 系列（交互状态/文本回溯/子面板/数值变化等）, `input_cache`, `cmd_data`, `now_panel_id`, `font_size`
+- **渲染/输入**：`input_cache`, `cmd_data`, `now_panel_id`, `font_size`
 - **角色世界**：`character_data`（角色ID -> Character）, `npc_tem_data`, `npc_id_got`, `forbidden_npc_id`, `npc_name_data`
 - **时间**：`game_time`, `pre_game_time`, `sun_phase`, `moon_phase`
 - **地图**：`map_data`, `scene_data`, `now_init_map_id`, `collect_position_list`
@@ -539,7 +528,7 @@ init_character_behavior()
   - `CVE_*`：综合数值结算
   - 事件中的 `CSE_*`：综合指令状态结算
 - 实现：`Script/Settle/default.py`（376 个处理函数）、`common_default.py`（通用 HP/MP/状态/快感/好感/信赖/高潮/经验计算）、`default_cloth.py`、`item_effect.py`、`orgasm_settle.py`
-- 所有变化累积在 `CharacterStatusChange` / `TargetChange`，玩家行动后格式化显示；Web 模式还有 `collect_web_value_changes()`
+- 所有变化累积在 `CharacterStatusChange` / `TargetChange`，玩家行动后格式化显示
 - 群交、性爱助手等特殊结算分支在 `handle_settle_behavior()` 中处理
 
 ### 12.2 二段结算
@@ -586,10 +575,9 @@ init_character_behavior()
 
 - 注册：`Script/System/Instruct_System/handle_instruct.py`
   - 400 个 `@add_instruct` 装饰器
-  - `add_instruct` 支持从 `InstructConfig.csv` 读参数（类型/名称/前提集/行为ID/Web分类等），装饰器参数优先
+  - `add_instruct` 支持从 `InstructConfig.csv` 读参数（类型/名称/前提集/行为ID等），装饰器参数优先
 - ID 常量：`Script/System/Instruct_System/Instruct.py`
 - 配置：`data/csv/InstructConfig.csv`（408 条）
-- 分类：`InstructCategory`（系统面板/角色交互/角色交互面板）、`InteractionMajorType` / `InteractionMinorType`（Web 新模式身体部位分类）
 - 显示与过滤：`Script/UI/Panel/instruct_filter_panel.py`、`Script/System/Instruct_System/see_instruct_panel.py`
 - 实行判定：`Script/Design/instuct_judege.py`；`InstructJudge.csv` 定义实行值判定
 - 调度：`handle_instruct()` 在玩家的交互对象处于幼年阶段时跳过 H 类指令（`child_stage_gate.blocks_instruct`）。对 `constant.instruct_premise_data` 里有的其余指令，它调用 `constant.handle_instruct_data` 里对应的函数
@@ -760,48 +748,19 @@ init_character_behavior()
 
 `Script/UI/Moudle/panel.py` 提供通用面板构建块（单选列表、消息+按钮、分页面板等）。
 
-### 19.2 Tk 模式（`web_draw=0`）
+### 19.2 Tk 模式
 
 - `Script/Core/io_init.py`：`era_print()`, `clear_screen()`, 命令绑定/输入事件，所有输出直接写入 Tk 文本组件
 - `Script/Core/flow_handle.py`：`askfor_all/askfor_str/askfor_int/askfor_wait`、命令处理
 - `Script/Core/main_frame.py`：主窗口与事件总线
 - 启动时有文本度量预热（`warm_up_text_metrics`）；`perf_monitor=1` 时启用性能埋点
 
-### 19.3 Web 模式（`web_draw=1`）
-
-- 服务器：`Script/Core/web_server.py`（Flask-SocketIO）
-- IO 适配：`Script/Core/io_web.py` 把输出转成元素字典追加到 `cache.current_draw_elements`，并通过 `update_game_state()` 批量下发
-- 流程：`Script/Core/flow_handle_web.py`（轮询 API 响应、`PanelChangeException` 面板切换）
-- 绘制适配：`Script/System/Web_Draw_System/web_draw_adapter.py::apply_web_adapters()` 给绘制类打补丁
-- 专用渲染器：`scene_renderer.py`, `character_renderer.py`, `dialog_box.py`, `status_panel.py`, `tab_menu.py`, `interaction_handler.py`, `settlement_manager.py`, `image_processor.py`, `body_part_button.py`, `body_analysis_ensemble.py`
-- 前端：`templates/index.html`, `static/game.js`, `static/js/*`, `static/css/style.css`, 字体
-- 端口：5000 起自动寻找空端口（最多尝试 50 次）
-- API：REST `/api/*` + SocketIO 事件（见 §20）
-
-### 19.4 Web 服务器 API 摘要
-
-REST：
-- `GET /` 首页
-- `GET /api/get_state` 游戏状态
-- `POST /api/button_click`, `/api/wait_response`, `/api/skip_wait`, `/api/string_input`, `/api/integer_input`
-- 切换开关：`toggle_extra_info_section`, `toggle_detailed_dirty`, `toggle_all_body_parts`, `quick_use_drug`, `toggle_cloth`
-- 图片：`/api/get_image_paths`, `/image/<path>`, `/api/cropped_image/<path>`, `/api/avatar_image/<name>`
-- 字体：`/api/get_font_config`
-
-SocketIO 事件（后端处理函数）：
-- 连接/状态：`connect`, `disconnect`, `refresh_state`, `request_game_state`
-- 交互选择：`select_interaction_type`, `click_body_part`, `select_major_type`, `select_minor_type`, `clear_interaction_selection`
-- 指令/目标：`execute_instruct`, `switch_target`, `get_panel_instructs`, `get_interaction_types`, `get_major_types`
-- 药物/道具：`get_drug_list`, `get_item_list`, `select_drug`, `select_item`
-- 场景/对话：`get_all_scene_characters`, `get_interaction_state`, `advance_dialog`, `skip_all_dialogs`, `get_character_dialog`
-- 事件/结算：`event_option_selected`, `settlement_button_selected`, `get_settlement_state`
-
-### 19.5 面板注册与切换
+### 19.3 面板注册与切换
 
 - `constant.Panel` 定义面板 ID（TITLE=0 … MIXOLOGY=66）
 - `UI/Flow/normal_flow.py` 用 `@handle_panel.add_panel(constant.Panel.X)` 注册面板函数
 - `start_flow.start_frame()` 主循环执行 `constant.panel_data[cache.now_panel_id]()`
-- 面板通过设置 `cache.now_panel_id` 切换；Web 模式抛出 `PanelChangeException` 实现子面板/主面板切换
+- 面板通过设置 `cache.now_panel_id` 切换
 
 ---
 
@@ -889,10 +848,10 @@ SocketIO 事件（后端处理函数）：
 
 GitHub Actions `.github/workflows/python-app.yml`（push/PR 到 master，windows-latest）：
 
-1. Python 3.12 + 依赖 + PyInstaller 打包 `game.py`（`-F`，隐藏导入 `engineio.async_drivers.threading`）
+1. Python 3.12 + 依赖 + PyInstaller 打包 `game.py`（`-F`）
 2. `buildconfig.py` 构建数据
 3. `init_data.py` 预热缓存
-4. 复制游戏文件（data/config/image/update.log/example/static/templates/mod 等）
+4. 复制游戏文件（data/config/image/update.log/example/static/mod 等）
 5. 打包四个产物：
    - `erArk_{版本}.zip`：完整游戏包
    - `erArk_Lite_{版本}.zip`：轻量版（移除 `image/场景`、`image/断面图`、`image/立绘`，仅保留基础场景）
@@ -913,7 +872,7 @@ GitHub Actions `.github/workflows/python-app.yml`（push/PR 到 master，windows
 - 格式化：black。black 的行宽设为 80 列。black 的缩进固定是 4 空格。
 - 不得手改生成文件：`data/*.json`、`Script/Config/config_def.py`、`.mo`、地图 pickle
 - 修改 CSV/口上/事件/角色后必须运行构建（或直接运行 `game.py` 触发增量构建）
-- UI 输出统一走抽象 draw 类或 `era_print`，不要直接操作 Tk/HTML；新 UI 需双模式验证
+- UI 输出统一走抽象 draw 类或 `era_print`，不要直接操作 Tk
 - 新增指令/行为/事件时，同时检查前提、结算、显示三层面
 - 主循环中避免磁盘 IO；注意输出积压与渲染性能
 - `ai_chat_api_key.csv` 敏感，不要提交真实密钥
@@ -932,10 +891,10 @@ GitHub Actions `.github/workflows/python-app.yml`（push/PR 到 master，windows
 
 ### 27.2 新增一个指令
 
-1. 在 `InstructConfig.csv` 增加行（行为 ID、前提集、Web 分类、身体部位等）
+1. 在 `InstructConfig.csv` 增加行（行为 ID、前提集等）
 2. 在 `Script/System/Instruct_System/handle_instruct.py` 用 `@add_instruct` 写处理函数
 3. 确保关联 `behavior_id` 在 `Behavior_Data.csv` / `Behavior_Effect.csv` 有结算配置
-4. 重跑构建，双模式验证显示与执行
+4. 重跑构建，验证显示与执行
 
 ### 27.3 新增一个结算效果
 
@@ -963,7 +922,6 @@ GitHub Actions `.github/workflows/python-app.yml`（push/PR 到 master，windows
 1. 在 `constant/__init__.py` 的 `Panel` 类加面板 ID
 2. 在 `Script/UI/Panel/` 新建面板，使用抽象 draw 类
 3. 在 `UI/Flow/normal_flow.py` 用 `@handle_panel.add_panel` 注册
-4. Tk + Web 双模式验证（Web 特殊交互可能需要扩展 `Web_Draw_System` 与 `static/game.js`）
 
 ### 27.7 本地化
 
@@ -975,7 +933,6 @@ GitHub Actions `.github/workflows/python-app.yml`（push/PR 到 master，windows
 ### 27.8 性能排查
 
 - Tk 卡顿：`config.ini -> perf_monitor=1`，查看 `profiling` 补丁与输出
-- Web 输出积压：确认 `clear_screen()` 时机、元素历史长度
 - 数据异常：确认是否漏跑构建
 
 ---
@@ -988,11 +945,9 @@ GitHub Actions `.github/workflows/python-app.yml`（push/PR 到 master，windows
 4. **地图预处理**：`data/MapData/SceneData/PlaceData/ScenePath` 是生成 pickle/JSON；地图改了需要删除或重建这些缓存（`map_config` 仅在文件不存在时解析原始地图目录）。
 5. **口上/事件前提串**：ID 必须与 `constant_promise.Premise` 一致，否则会被静默忽略或报错。
 6. **行为 ID 字符串化**：旧代码/旧存档用整数，新代码用字符串；跨版本兼容逻辑在存档读取中处理。
-7. **Web 模式线程模型**：指令执行与 SocketIO 处理有专门的线程/执行中标志（`web_instruct_executing*`），避免在任意线程直接调用游戏循环。
-8. **端口**：Web 默认 5000，自动找空端口，不要硬编码。
-9. **Tk 仅在 Windows 官方支持**；Web 模式用于跨设备。
-10. **敏感数据**：`ai_chat_api_key.csv` 不可提交。
-11. **R18 内容**：所有涉及敏感内容的文本仍需保留在数据和口上系统中，代码审查/生成内容时注意合规。
+7. **Tk 仅在 Windows 官方支持**。
+8. **敏感数据**：`ai_chat_api_key.csv` 不可提交。
+9. **R18 内容**：所有涉及敏感内容的文本仍需保留在数据和口上系统中，代码审查/生成内容时注意合规。
 
 ---
 
@@ -1013,7 +968,6 @@ GitHub Actions `.github/workflows/python-app.yml`（push/PR 到 master，windows
 | Mod 不生效 | `Script/Core/mod_manager.py`, `mod/*` |
 | AI 文本不生成 | `Script/Design/handle_chat_ai.py`, `ai_chat_api_key.csv`, `Ai_Chat_Setting.csv` |
 | Tk 渲染/输入 | `Script/Core/io_init.py`, `flow_handle.py`, `main_frame.py`, `UI/Moudle/draw.py` |
-| Web 模式不显示/交互异常 | `Script/Core/web_server.py`, `io_web.py`, `flow_handle_web.py`, `System/Web_Draw_System/*` |
 | 编辑器问题 | `tools/ArkEditor/main.py`, `load_csv.py`, `ui/*` |
 
 ---
@@ -1035,7 +989,7 @@ GitHub Actions `.github/workflows/python-app.yml`（push/PR 到 master，windows
 `角色行为系统`, `前提系统`, `结算系统`, `口上系统`, `事件系统`, `通用结算函数函数`, `CSV数据加载机制说明`, `多周目结算与继承系统`
 
 绘制/UI：
-`Tk绘制模式`, `Web绘制模式`, `主场景互动界面`, `指令面板系统`, `通用NPC选择面板`, `系统设置系统`, `全干员位置面板`, `PRTS系统`
+`Tk绘制模式`, `主场景互动界面`, `指令面板系统`, `通用NPC选择面板`, `系统设置系统`, `全干员位置面板`, `PRTS系统`
 
 地图：
 `地图系统`, `导航系统`
@@ -1060,10 +1014,9 @@ GitHub Actions `.github/workflows/python-app.yml`（push/PR 到 master，windows
 - `Cooking_System/烹饪系统说明文档.md`
 - `Dormitory_System/宿舍管理系统设计文档.md`, `实现步骤.md`
 - `Field_Commission_System/外勤委托系统.md`, `剧情总结工作流.md`, `剧情转外勤委托工作流.md`
-- `Instruct_System/指令系统整体逻辑.md`, `TK模式指令面板绘制.md`, `Web模式指令面板绘制.md`, `指令分类映射表.md`
+- `Instruct_System/指令系统整体逻辑.md`, `TK模式指令面板绘制.md`
 - `Medical_System/医疗经营系统.md`, `医疗经营系统实现流程.md`
 - `Sex_System/drunk_sex_plan.md`
-- `Web_Draw_System/Web绘制模式UI重构说明文档.md`, `Web绘制模式UI重构实现流程.md`
 
 ### 30.4 其他 `.github/prompts/` 内容资产
 

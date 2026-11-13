@@ -15,7 +15,6 @@ from Script.Core import (
     constant,
     rich_text,
 )
-from Script.Core.web_server import emit_realtime_text
 from Script.Design import map_handle, handle_premise, talk_image
 from Script.UI.Moudle import draw
 from Script.Config import normal_config, game_config
@@ -554,64 +553,6 @@ def handle_talk_draw(
                 )
                 now_draw.width = normal_config.config_normal.text_width
                 now_draw.text = now_talk_text
-
-        # ========== Web模式处理 ==========
-        # 在Web模式下，将口上对话文本发送到对话框区域显示，同时记录到文本回溯缓存
-        if hasattr(cache, "web_mode") and cache.web_mode:
-            # 将描述文本添加到Web指令文本缓存，用于文本回溯功能
-            if now_talk_text:
-                cache.web_instruct_texts.append(now_talk_text)
-                # 实时推送文本到前端
-                emit_realtime_text(now_talk_text, "instruct")
-            from Script.System.Web_Draw_System.dialog_box import add_dialog_text
-
-            # 获取说话者名称
-            speaker_name = character_data.name
-            # 不需要等待的情况（如跳过模式）
-            wait_input = not special_code[0]
-
-            # 判断是否为当前交互对象
-            # 玩家(0)的交互对象 或 玩家自己 显示在主对话框
-            # 其他角色显示在头像下方的小对话框
-            player_data = cache.character_data[0]
-            target_character_id = player_data.target_character_id
-
-            if character_id == 0 or character_id == target_character_id:
-                # 主对话框：显示当前交互对象或玩家的台词
-                # 获取当前角色的交互对象ID
-                # 注意：target_character_id 为 0 时表示交互对象是玩家，需要保留，不能用 if x 判断
-                current_target_id = (
-                    character_data.target_character_id
-                    if character_data.target_character_id != character_data.cid
-                    else -1
-                )
-                add_dialog_text(
-                    speaker_name,
-                    now_talk_text,
-                    final_color,
-                    wait_input,
-                    target_character_id=current_target_id,
-                )
-            else:
-                # 其他角色：显示在头像下方的小对话框
-                # 获取该角色当时的交互对象ID，用于切换到该角色时正确显示
-                # 注意：target_character_id 为 0 时表示交互对象是玩家，需要保留，不能用 if x 判断
-                other_char_target_id = (
-                    character_data.target_character_id
-                    if character_data.target_character_id != character_data.cid
-                    else -1
-                )
-                add_dialog_text(
-                    speaker_name,
-                    now_talk_text,
-                    final_color,
-                    wait_input=False,
-                    is_minor=True,
-                    character_id=character_id,
-                    target_character_id=other_char_target_id,
-                )
-            return
-        # ==========================================
 
         # 进行原文本的绘制，现已被富文本绘制替代
         # now_draw.draw()

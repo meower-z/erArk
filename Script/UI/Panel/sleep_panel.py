@@ -326,11 +326,11 @@ class Sleep_Panel:
     def input_sleep_time(self) -> None:
         """输入睡眠时间"""
         while 1:
-            user_input = flow_handle.askfor_str(
+            input_text = flow_handle.askfor_str(
                 _(_("请输入睡眠时间(最小1小时，最大8小时)："))
             )
             try:
-                user_input = int(user_input)
+                user_input = int(input_text)
             except BaseException:
                 continue
             if user_input <= 0:

@@ -670,9 +670,9 @@ class Assistant_Panel:
         """更改小时"""
         character_data: game_type.Character = cache.character_data[0]
         while 1:
-            user_input = flow_handle.askfor_str(_(_("请输入小时(24小时制)：")))
+            input_text = flow_handle.askfor_str(_(_("请输入小时(24小时制)：")))
             try:
-                user_input = int(user_input)
+                user_input = int(input_text)
             except BaseException:
                 continue
             if morning_flag:
@@ -697,9 +697,9 @@ class Assistant_Panel:
         """更改分钟"""
         character_data: game_type.Character = cache.character_data[0]
         while 1:
-            user_input = flow_handle.askfor_str(_(_("请输入分钟：")))
+            input_text = flow_handle.askfor_str(_(_("请输入分钟：")))
             try:
-                user_input = int(user_input)
+                user_input = int(input_text)
             except BaseException:
                 continue
             if user_input < 0:

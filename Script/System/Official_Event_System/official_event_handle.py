@@ -594,7 +594,7 @@ def handle_ri_effect(effect_list: list[str]) -> None:
     执行一条罗德岛全局数值的结算（CVE_RI_<类型>_<G/L/E>_<值>）
 
     不去扩 settle_behavior 的主体判别：那里的属性映射是 getattr(character_data, ...)
-       硬绑角色对象的，加一个全局主体要同时改主体判别、change_data 记录与Web数值收集三处。
+       硬绑角色对象的，加一个全局主体要同时改主体判别与 change_data 记录两处。
        公务事件的结算串本来就由本模块逐项分发，在这里认前缀成本最低（方案 §3.6）
     Keyword arguments:
     effect_list -- token 去掉 CVE_ 前缀后的分段，形如 ["RI", "R|13", "L", "100"]

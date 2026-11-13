@@ -121,11 +121,8 @@ def focus_cmd() -> None:
     """
     使光标聚焦在命令输出框上
     """
-    # Web模式下不执行tkinter的焦点操作，避免线程错误
-    if normal_config.config_normal.web_draw:
-        return
     try:
-        # 仅在需要时导入，避免Web/无显示环境在模块导入阶段触发Tk初始化
+        # 仅在需要时导入，避免无显示环境在模块导入阶段触发Tk初始化
         from Script.Core import main_frame
 
         main_frame.inputbox.focus_force()

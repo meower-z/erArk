@@ -22,8 +22,7 @@
 先确认「场景内有可交互对象」此刻确实抽随机数：判断的角色身边放了另一名干员。
 - 目标的前提：配置里同时要求这两个前提的目标，把它的前提集合换成只含这两个前提，search_target 检索这一个目标（凯尔希）。
 - 口上与事件的前提：handle_premise.get_weight_from_premise_dict（凯尔希）。
-- 指令的前提：see_instruct_panel.judge_single_instruct_filter，
-  以及 Web 模式的两个 _check_single_instruct_premise（博士）。
+- 指令的前提：see_instruct_panel.judge_single_instruct_filter（博士）。
 """
 
 import functools
@@ -350,11 +349,9 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
         self.assert_same_draws(judge, "get_weight_from_premise_dict")
 
     def test_instruct_premises(self) -> None:
-        """博士的指令过滤（Tk 与 Web 两种界面）：两种前提顺序抽的随机数相同"""
+        """博士的指令过滤：两种前提顺序抽的随机数相同"""
         from Script.Core import constant
-        from Script.Design import web_interaction_manager
         from Script.System.Instruct_System import see_instruct_panel
-        from Script.System.Web_Draw_System import tab_menu
 
         self.beside(0)
         instruct_id = constant.Instruct.WAIT
@@ -367,12 +364,6 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
             )[
                 0
             ],
-            "web_interaction_manager": lambda: web_interaction_manager._check_single_instruct_premise(
-                instruct_id, {}
-            ),
-            "tab_menu": lambda: tab_menu._check_single_instruct_premise(
-                instruct_id, {}
-            ),
         }
 
         def judge(

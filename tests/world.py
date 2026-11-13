@@ -485,7 +485,6 @@ class PlayerInput:
         io_init.io_print_image_cmd = self._print_cmd
         io_init.io_clear_cmd = self._clear_cmd
         io_init.clear_screen = self._clear_cmd
-        io_init.clear_screen_and_history = self._clear_cmd
         setattr(flow_handle, "order_deal", self._order_deal)
 
     def press(self, *labels: str) -> None:
@@ -556,7 +555,7 @@ class PlayerInput:
 
     def _clear_cmd(self, *cmd_numbers: int | str) -> None:
         """
-        替换 io_init.io_clear_cmd、clear_screen 与 clear_screen_and_history：忘掉按钮
+        替换 io_init.io_clear_cmd 与 clear_screen：忘掉按钮
         Keyword arguments:
         cmd_numbers -- 要忘掉的按钮的命令id；不给时忘掉全部按钮
         Return arguments:

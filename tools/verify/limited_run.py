@@ -6,7 +6,7 @@
 每次运行放进一个独立的 systemd scope，内存上限（MemoryMax，禁用 swap）与运行时限（RuntimeMaxSec）由内核和
 systemd 强制执行，
 超限时只杀这一组进程。全机共有 SLOTS 个槽位，每个代表 SLOT_SIZE 内存；
-一次运行占 ceil(内存上限 / SLOT_SIZE) 个，web 模式的运行占全部槽位。
+一次运行占 ceil(内存上限 / SLOT_SIZE) 个。
 run() 对每个槽位的锁文件持有 flock，进程死掉时内核自动放开。
 哪次运行活着只看 /proc/locks 里槽位锁的真实持有者，状态文件只是线索。
 槽位不够、同一 checkout 已有运行、或有不属于任何运行的 era-game scope 时以退出码 75 拒绝，不等待。
@@ -26,7 +26,6 @@ run() 对每个槽位的锁文件持有 flock，进程死掉时内核自动放�
 """
 
 import argparse
-import configparser
 import fcntl
 import getopt
 import json
@@ -425,36 +424,15 @@ def release_slots(held):
         handle.close()
 
 
-def web_mode(root):
+def slots_needed(mem_max):
     """
-    判断 checkout 的 config.ini 是否设了 web_draw = 1；web 模式的游戏会起 web 服务器监听端口
-    参数：
-        root (Path): checkout 根目录
-    返回：
-        bool: web 模式时为 True
-    """
-    parser = configparser.ConfigParser()
-    try:
-        parser.read(root / "config.ini", encoding="utf8")
-        return int(parser.get("game", "web_draw", fallback="0")) != 0
-    except (configparser.Error, ValueError):
-        return False
-
-
-def slots_needed(mem_max, root):
-    """
-    计算一次运行要占的槽位数：ceil(内存上限 / SLOT_SIZE)，至少一个；
-    web 模式占全部 SLOTS 个，但内存上限超过全部槽位时照样返回超出的数
+    计算一次运行要占的槽位数：ceil(内存上限 / SLOT_SIZE)，至少一个
     参数：
         mem_max (int): 内存上限，字节
-        root (Path): checkout 根目录
     返回：
         int: 槽位数，可能超过 SLOTS
     """
-    count = max(1, -(-mem_max // parse_size(SLOT_SIZE)))
-    if web_mode(root):
-        return max(count, SLOTS)
-    return count
+    return max(1, -(-mem_max // parse_size(SLOT_SIZE)))
 
 
 def read_state(slot):
@@ -729,7 +707,7 @@ def scope_env(extra):
         key: value for key, value in os.environ.items() if ENV_ALLOW.match(key)
     }
     env.update(extra)
-    # game_runner_guard.py 凭这个标记放行 era_image、web_server、game_init 的导入
+    # game_runner_guard.py 凭这个标记放行 era_image、game_init 的导入
     env["USE_GAME_RUNNER"] = "1"
     return env
 
@@ -822,7 +800,7 @@ def run(
         int: 退出码
     """
     cwd = os.path.realpath(os.getcwd())
-    count = slots_needed(mem_max, Path(cwd))
+    count = slots_needed(mem_max)
     if count > SLOTS:
         print(
             (

@@ -3,7 +3,7 @@
 静态检查系统 - 行为/时间/状态机/主循环完整性相关检查
 覆盖角色行为(Behavior)、全局时钟(game_time/pre_game_time)、结算主循环状态标记(over_behavior_character等)相关的
 21条不变式(BEHAV-01~BEHAV-22，不含已删除的BEHAV-13)。来源见规划文档final_invariants_behavior.md，钩子点为
-Script/UI/Panel/in_scene_panel.py与Script/UI/Panel/in_scene_panel_web.py主循环重绘处、flow_handle.askfor_all()之前。
+Script/UI/Panel/in_scene_panel.py主循环重绘处、flow_handle.askfor_all()之前。
 
 以下五条生命周期事实已烘焙进本文件全部检查，任何依赖它们的护栏都不得删除：
 1. cache.over_behavior_character在结算开始时清空、结算结束后保留；钩子处可能是上一次结算的残留值，

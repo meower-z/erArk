@@ -178,7 +178,6 @@ ignore = ["PLW0603"]
 "tests/fast/test_mod_loader.py" = ["B010"]
 "tests/slow/test_move_option_event_lists_child.py" = ["B010"]
 "tests/slow/test_option_event_lists_child.py" = ["B010"]
-"Script/System/Web_Draw_System/web_draw_adapter.py" = ["B010"]
 # 这里改写成属性访问时，mypy 报 GNUTranslations 没有 _catalog 属性。
 "Script/Core/get_text.py" = ["B009"]
 # 这两处 raise 改成带 from 的写法，会改变启动时显示的报错追溯文字。

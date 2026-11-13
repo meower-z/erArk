@@ -2,7 +2,7 @@
 
 import os
 
-# 立绘分类文件夹的优先顺序，web 模式遍历立绘子目录时也按这个顺序
+# 立绘分类文件夹的优先顺序
 PRIOR_PORTRAIT_SUB_DIRS = ["干员", "特殊NPC", "路人", "女儿"]
 
 
@@ -34,7 +34,7 @@ def image_path_priority(image_path: str) -> tuple:
 def build_image_path_index(directory: str) -> tuple:
     """
     遍历目录下的全部 png，为每个图片名（文件名去掉 .png）取一个文件
-    tk 模式的图片加载与 web 模式的立绘查找都用这里的结果，同名图片在两边取同一个文件
+    era_image.index_images_from_directory 用这里的结果建立图片索引
 
     Keyword arguments:
     directory -- str，图片根目录

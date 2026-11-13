@@ -59,10 +59,8 @@ class NormalDraw:
         """ 当前最大可绘制宽度 """
         self.text = ""
         """ 当前要绘制的文本 """
-        self.web_type: str = ""
-        """ Web绘制类型，用于前端特殊布局处理 """
         self.tooltip: str = ""
-        """ 悬浮提示文本，供 Tk / Web 端展示额外说明 """
+        """ 悬浮提示文本，展示额外说明 """
 
     def __len__(self) -> int:
         """
@@ -335,7 +333,7 @@ class InfoBarDraw:
         self.chara_state: bool = False
         """ 是否为人物状态 """
         self.tooltip: str = ""
-        """ 悬浮提示文本，供 Tk / Web 端展示额外说明 """
+        """ 悬浮提示文本，展示额外说明 """
         self.name_style: str = ""
         """ 描述文本(标签)的字体样式，为空时用默认色 """
 
@@ -390,9 +388,6 @@ class InfoBarDraw:
             bar_draw.width = now_max_width - len(info_draw) - len(value_draw)
         bar_draw.set(self.bar_id, max_value, value)
         fix_width = int((self.width - now_max_width) / 2)
-        # web绘制模式下修正宽度减少
-        if cache.web_mode:
-            fix_width = int(fix_width * 0.8)
         fix_draw = NormalDraw()
         fix_draw.text = " " * fix_width
         fix_draw.width = fix_width
@@ -487,7 +482,6 @@ class Button:
         on_mouse_style: str = "onbutton",
         cmd_func: Callable[..., object] | None = None,
         args: object = (),
-        web_type: str = "",
         tooltip: str = "",
     ) -> None:
         """初始化绘制对象"""
@@ -505,8 +499,6 @@ class Button:
         """ 按钮响应事件函数 """
         self.args = args
         """ 传给事件响应函数的参数列表 """
-        self.web_type: str = web_type
-        """ Web绘制类型 """
         self.tooltip = tooltip
         """ 鼠标悬停提示文本，用于展示附加说明 """
 
@@ -646,7 +638,6 @@ class CenterButton:
         on_mouse_style: str = "onbutton",
         cmd_func: Callable[..., object] | None = None,
         args: object = (),
-        web_type: str = "",
         tooltip: str = "",
     ) -> None:
         """初始化绘制对象"""
@@ -666,8 +657,6 @@ class CenterButton:
         """ 按钮响应事件函数 """
         self.args = args
         """ 传给事件响应函数的参数列表 """
-        self.web_type: str = web_type
-        """ Web绘制类型 """
         self.tooltip = tooltip
 
     """ 鼠标悬停提示文本，向玩家解释按钮含义 """

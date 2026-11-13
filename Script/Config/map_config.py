@@ -420,7 +420,7 @@ def _normalize_map_leading_spaces(map_draw_data: game_type.MapDraw) -> None:
 def _pad_map_lines_to_max_width(map_draw_data: game_type.MapDraw) -> None:
     """
     为每行添加填充空格使其达到max_width
-    这样可以确保Web端各行渲染宽度一致，解决对齐问题
+    这样可以确保各行渲染宽度一致，解决对齐问题
     """
     if not map_draw_data or not map_draw_data.draw_text:
         return

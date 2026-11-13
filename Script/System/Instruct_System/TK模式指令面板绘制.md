@@ -2,7 +2,7 @@
 
 ## 概述
 
-本文档详细说明在TK（Tkinter）绘制模式下，指令面板的绘制逻辑和实现细节。TK模式是erArk游戏的传统GUI模式，基于Python的Tkinter库实现。
+本文档详细说明在TK（Tkinter）绘制模式下，指令面板的绘制逻辑和实现细节。TK模式是erArk游戏的GUI模式，基于Python的Tkinter库实现。
 
 ---
 

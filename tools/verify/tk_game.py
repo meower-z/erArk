@@ -6,7 +6,6 @@
 内存上限、运行时限和游戏槽位都由 limited_run.run() 负责，本脚本不另做一份，所以 Tk 游戏与无头运行共用同一组槽位、
 同一张退出码表和同样的 JSON 事件行。
 每次 Tk 运行起自己的 Xvfb（-displayfd 选空闲的显示号），并发的 Tk 运行各用各的显示。status 与 stop 用 limited_run.py。
-checkout 的 config.ini 设了 web_draw = 1 时以 2 退出，不占槽位：web 模式的游戏不开 Tk 窗口。
 
 用法（在 erArk checkout 的根目录，用 .venv 的 python 运行本脚本）：
   tk_game.py --out <空的证据目录> [--mem 3G] [--timeout 600] [--ready-timeout 300]
@@ -128,11 +127,6 @@ def main(argv=None):
     args = parser.parse_args(argv)
     mem_max = args.mem
     root = limited_run.game_checkout()
-    if limited_run.web_mode(root):
-        parser.exit(
-            2,
-            f"{root / 'config.ini'} 设了 web_draw = 1，游戏会起 web 服务器而不开 Tk 窗口。Tk 运行需要 web_draw = 0。\n",
-        )
     out_dir = args.out.expanduser().resolve()
     if out_dir.exists() and any(out_dir.iterdir()):
         parser.error(

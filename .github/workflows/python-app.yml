@@ -29,7 +29,7 @@ jobs:
       - name: Run PyInstaller
         run: |
           $env:PYTHONPATH="${{ github.workspace }}"
-          pyinstaller -F game.py --hidden-import=engineio.async_drivers.threading --icon=image/logo.png
+          pyinstaller -F game.py --icon=image/logo.png
 
       - name: Build Game Config
         run: |
@@ -53,7 +53,6 @@ jobs:
           Copy-Item package.json dist/
           Copy-Item example dist/ -Recurse
           Copy-Item static dist/ -Recurse
-          Copy-Item templates dist/ -Recurse
           Copy-Item mod dist/ -Recurse
           Rename-Item dist erArk
 

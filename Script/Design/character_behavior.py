@@ -44,13 +44,6 @@ def init_character_behavior() -> None:
     from Script.UI.Panel import achievement_panel
     from Script.System.Field_Commission_System import field_commission_function
 
-    # 开始记录文本（用于Web模式文本回溯）
-    if hasattr(cache, "web_mode") and cache.web_mode:
-        cache.web_text_recording_flag = True
-        # 通知前端显示结算提示
-        from Script.Core import web_server
-
-        web_server.emit_settlement_status(True)
     cache.over_behavior_character = set()
     new_day_flag, pl_start_time, pl_duration = True, cache.game_time, 0
     while 1:
@@ -89,13 +82,6 @@ def init_character_behavior() -> None:
     # 结算成就
     achievement_panel.achievement_flow(_("时停"))
     achievement_panel.achievement_flow(_("群交"))
-    # 结束记录文本（用于Web模式文本回溯）
-    if hasattr(cache, "web_mode") and cache.web_mode:
-        cache.web_text_recording_flag = False
-        # 通知前端隐藏结算提示
-        from Script.Core import web_server
-
-        web_server.emit_settlement_status(False)
 
 
 def character_behavior(
@@ -279,21 +265,15 @@ def judge_character_status(character_id: int) -> int:
 
     # 绘制数值变化
     if first_settle_panel is not None and len(first_settle_panel.draw_list):
-        # Web模式：不绘制结算面板，数值变化已通过collect_web_value_changes收集
-        # 由前端以浮动文本形式在玩家信息栏和交互对象信息栏显示
-        if cache.web_mode:
-            pass
-        else:
-            # TK模式：正常绘制结算信息
-            first_settle_panel.draw()
-            if second_settle_panel is not None:
-                second_settle_panel.draw()
-            # 进行一次暂停以便玩家看输出信息，非玩家的信息显示由设置控制
-            if character_id == 0 or cache.all_system_setting.draw_setting[19]:
-                wait_draw = draw.WaitDraw()
-                wait_draw.text = "\n"
-                wait_draw.width = window_width
-                wait_draw.draw()
+        first_settle_panel.draw()
+        if second_settle_panel is not None:
+            second_settle_panel.draw()
+        # 暂停一次让玩家看输出信息，非玩家角色是否暂停由 draw_setting[19] 决定
+        if character_id == 0 or cache.all_system_setting.draw_setting[19]:
+            wait_draw = draw.WaitDraw()
+            wait_draw.text = "\n"
+            wait_draw.width = window_width
+            wait_draw.draw()
 
     return 1
 

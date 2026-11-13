@@ -261,8 +261,7 @@ def get_character_status_list(
     status_list.append(follow_draw)
     status_text_list.append(follow_text)
 
-    # 上课状态（Plan 22）：一处改动同时覆盖 Tk 与 Web
-    # Web 侧 Web_Draw_System/status_panel.py 的 _get_special_states 复用本函数并原样透传 tooltip
+    # 上课状态（Plan 22）
     class_draw = draw.LeftDraw()
     class_draw.style = "light_steel_blue"
     class_text = ""
