@@ -96,6 +96,9 @@ def establish_save_linux(save_id: str) -> None:
     }
     for key, value in data.items():
         write_save_data(save_id, key, value)
+    from Script.Modules.save_load import kernel_state
+
+    kernel_state.write(save_id)
 
 
 def load_save_info_head(save_id: str) -> dict:
@@ -1064,6 +1067,10 @@ def input_load_save(save_id: str) -> None:
 
     # 有101/102阶段的孩子参与的群交、时停与H，各按自己的结束结算收尾（这些结算读写游戏缓存，须在覆盖缓存之后）
     old_chara_to_new.end_young_child_session(young_child_session)
+
+    from Script.Modules.save_load import kernel_state
+
+    kernel_state.read(save_id)
 
     # 游戏状态自检（系统设置14号，默认关闭）：对载入后的存档做保守修复，包在开关关闭时不会被导入
     if cache.all_system_setting.base_setting.get(14, 0):

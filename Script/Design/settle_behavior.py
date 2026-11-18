@@ -1219,9 +1219,7 @@ def handle_comprehensive_value_effect(
                         character_move.own_charcter_move(to_place)
                     # NPC进行寻路移动
                     else:
-                        default.general_movement_module(
-                            final_character_id, to_place
-                        )
+                        default.plan_movement(final_character_id, to_place)
                 elif operation == "瞬移":
                     # 调用map_handle的character_move_scene方法，输入旧、新地点路径和角色id
                     map_handle.character_move_scene(

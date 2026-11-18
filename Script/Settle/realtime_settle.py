@@ -3,6 +3,7 @@
 import random
 import datetime
 from types import FunctionType
+from typing import TYPE_CHECKING
 from Script.Core import (
     cache_control,
     game_path_config,
@@ -20,6 +21,9 @@ from Script.Design import (
 from Script.UI.Moudle import draw
 from Script.UI.Panel import ejaculation_panel
 from Script.Config import game_config, normal_config
+
+if TYPE_CHECKING:
+    from Script.Kernel import core
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -670,37 +674,71 @@ def settle_player_ability(character_id: int, true_add_time: int) -> None:
         down_sp = min(max(true_add_time * 2, 1), character_data.sanity_point)
         character_data.sanity_point -= down_sp
         character_data.pl_ability.today_sanity_point_cost += down_sp
-    # 中断技艺
-    if (
-        handle_premise.handle_at_least_one_arts_on(character_id)
-        and character_data.sanity_point <= 0
-        and character_data.behavior.behavior_id
-        not in {
-            constant.Behavior.HYPNOSIS_CANCEL,
-            constant.Behavior.TIME_STOP_OFF,
-            constant.Behavior.LOW_OBSCENITY_ANUS,
-            constant.Behavior.HIGH_OBSCENITY_ANUS,
-            constant.Behavior.DO_H_FAIL,
-        }
-    ):
-        draw_wait = draw.WaitDraw()
-        draw_wait.width = window_width
-        draw_wait.style = "red"
-        draw_wait.text = _("\n理智值不足，开启的源石技艺已全部中断\n")
-        draw_wait.draw()
-        character_data.sanity_point = 0
-        character_data.pl_ability.visual = False
-        target = cache.character_data[character_data.target_character_id]
-        from Script.System.Instruct_System import handle_instruct
 
-        if target.sp_flag.unconscious_h >= 4:
-            handle_instruct.chara_handle_instruct_common_settle(
-                constant.Behavior.HYPNOSIS_CANCEL
-            )
-        if handle_premise.handle_time_stop_on(character_id):
-            handle_instruct.chara_handle_instruct_common_settle(
-                constant.Behavior.TIME_STOP_OFF
-            )
+
+ARTS_BREAK_EXEMPT = frozenset(
+    {
+        constant.Behavior.HYPNOSIS_CANCEL,
+        constant.Behavior.TIME_STOP_OFF,
+        constant.Behavior.LOW_OBSCENITY_ANUS,
+        constant.Behavior.HIGH_OBSCENITY_ANUS,
+        constant.Behavior.DO_H_FAIL,
+    }
+)
+""" 玩家在做这些行为时理智耗尽，技艺不中断 """
+
+
+def _arts_ends_to_plan() -> list[str]:
+    """
+    要给玩家排上的解除行为：催眠或时停还开着、解除行为还没排上
+    Return arguments:
+    list -- 解除催眠、解除时停的行为id
+    """
+    from Script.Modules.gameplay_resolution import plan_queue
+
+    ends: list[str] = []
+    if handle_premise.handle_target_in_hypnosis(0):
+        ends.append(constant.Behavior.HYPNOSIS_CANCEL)
+    if handle_premise.handle_time_stop_on(0):
+        ends.append(constant.Behavior.TIME_STOP_OFF)
+    return [b for b in ends if not plan_queue.plan_has(0, b)]
+
+
+def arts_break_due() -> bool:
+    """
+    玩家理智耗尽、还有源石技艺开着且没排上解除
+    Return arguments:
+    bool -- 该中断技艺时为真
+    """
+    character_data = cache.character_data[0]
+    if (
+        character_data.sanity_point > 0
+        or character_data.behavior.behavior_id in ARTS_BREAK_EXEMPT
+    ):
+        return False
+    return bool(character_data.pl_ability.visual or _arts_ends_to_plan())
+
+
+def break_arts() -> "core.Effects":
+    """
+    理智耗尽，开着的源石技艺全部中断：关透视，给玩家排上解除催眠与解除时停
+    Return arguments:
+    Effects -- 要交回内核的打断
+    """
+    from Script.System.Instruct_System import handle_instruct
+
+    draw_wait = draw.WaitDraw()
+    draw_wait.width = window_width
+    draw_wait.style = "red"
+    draw_wait.text = _("\n理智值不足，开启的源石技艺已全部中断\n")
+    draw_wait.draw()
+    character_data = cache.character_data[0]
+    character_data.sanity_point = 0
+    character_data.pl_ability.visual = False
+    items: list[core.Effect] = []
+    for behavior_id in _arts_ends_to_plan():
+        items.extend(handle_instruct.plan_instruct_common_settle(behavior_id))
+    return tuple(items)
 
 
 def get_sleep_disturbance_value(behavior_id: str, true_add_time: int) -> int:

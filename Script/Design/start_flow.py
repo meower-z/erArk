@@ -9,9 +9,17 @@ cache: game_type.Cache = cache_control.cache
 
 def start_frame() -> None:
     """
-    游戏主流程
+    游戏主流程：标题与建角色面板在这里循环；进了游戏就跑内核，主面板循环在玩家的选择里
     """
+    from Script.Design import update
+
     while True:
-        py_cmd.clr_cmd()
-        py_cmd.focus_cmd()
-        constant.panel_data[cache.now_panel_id]()
+        if cache.now_panel_id in (
+            constant.Panel.TITLE,
+            constant.Panel.CREATOR_CHARACTER,
+        ):
+            py_cmd.clr_cmd()
+            py_cmd.focus_cmd()
+            constant.panel_data[cache.now_panel_id]()
+        else:
+            update.run_game()

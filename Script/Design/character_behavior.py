@@ -16,11 +16,18 @@ from Script.Design import (
     handle_premise,
     event,
     handle_npc_ai,
-    handle_npc_ai_in_h,
     map_handle,
     handle_talent,
 )
 from Script.UI.Moudle import draw
+from Script.Modules.gameplay_resolution import (
+    events,
+    npc_passes,
+    plan_queue,
+    pre_pick,
+    time_hooks,
+)
+from Script.Modules.save_load import autosave
 from Script.Config import game_config, normal_config
 from Script.Settle import sleep_settle, past_day_settle, realtime_settle
 
@@ -63,19 +70,14 @@ def init_character_behavior() -> None:
         # 后结算其他NPC部分
         # now_time = datetime.datetime.now()
         # print(f"开始循环NPC部分: {now_time}")
-        while len(cache.over_behavior_character) <= len(id_list):
-            # print(f"debug 还差{len(id_list) - len(cache.over_behavior_character)}个NPC结算")
-            for character_id in id_list:
-                if character_id in cache.over_behavior_character:
-                    continue
-                character_behavior(character_id, cache.game_time, pl_start_time)
+        npc_passes.run_npc_passes(tuple(sorted(id_list)), pl_start_time)
         if cache.game_time.day != cache.pre_game_time.day and new_day_flag:
             new_day_flag = False
             past_day_settle.update_new_day()
         # 玩家睡觉存档
         if cache.pl_sleep_save_flag:
             cache.pl_sleep_save_flag = False
-            sleep_settle.update_save()
+            autosave.update_save()
         # 结束循环
         if len(cache.over_behavior_character) >= len(id_list) + 1:
             break
@@ -105,7 +107,7 @@ def character_behavior(
 
     # 处理特殊模式
     if character_id != 0:
-        handle_npc_ai.run_npc_pre_behavior_checks(
+        pre_pick.run_npc_pre_behavior_checks(
             character_id, pl_start_time
         )  # NPC行动前检查序列
 
@@ -136,32 +138,32 @@ def character_behavior(
                 constant.Behavior.CARRY_MOVE,
             }:
                 # 同场景里的NPC的跟随与被携带角色的同步移动
-                handle_npc_ai.judge_same_position_npc_follow()
+                events.judge_same_position_npc_follow()
                 # 全角色重置目击玩玩家H
                 for npc_id in cache.npc_id_got:
                     npc_data: game_type.Character = cache.character_data[npc_id]
                     npc_data.sp_flag.see_pl_h = False
             # 在玩家行动前的前置结算
-            judge_before_pl_behavior()
+            plan_queue.judge_before_pl_behavior()
             # 结算状态与事件
-            judge_character_status(character_id)
+            plan_queue.judge_character_status(character_id)
             # 刷新会根据时间即时增加的角色数值
-            realtime_settle.character_aotu_change_value(
+            time_hooks.character_aotu_change_value(
                 character_id, now_time, pl_start_time
             )
             # 睡觉刷新
             if character_data.behavior.behavior_id == constant.Behavior.SLEEP:
-                sleep_settle.update_sleep()
+                time_hooks.update_sleep()
             # 结算角色的状态是否会持续
-            realtime_settle.change_character_persistent_state(character_id)
+            time_hooks.change_character_persistent_state(character_id)
             time_judge = judge_character_status_time_over(
                 character_id, now_time
             )
             if time_judge:
                 cache.over_behavior_character.add(character_id)
         #         print(f"debug time_judge")
-        handle_npc_ai.judge_character_tired_sleep(character_id)  # 结算疲劳
-        handle_npc_ai_in_h.judge_character_h_obscenity_unconscious(
+        events.judge_character_tired_sleep(character_id)  # 结算疲劳
+        events.judge_character_h_obscenity_unconscious(
             character_id, pl_start_time
         )  # H状态、猥亵与无意识
         realtime_settle.judge_pl_real_time_data()  # 玩家实时数据结算
@@ -188,15 +190,15 @@ def character_behavior(
             judge_character_status(character_id)
         # 学生赶去上课的截短排在实时结算之前（Plan 32 §3.7 L4）：实时结算按行为的结束时刻封顶，
         #    先结算后截短的话，截掉的那一段饥饿、尿意、疲劳会在下一个行为（从离开时刻开始）里再算一遍
-        handle_npc_ai.judge_student_leave_truncate(character_id)
+        time_hooks.judge_student_leave_truncate(character_id)
         # 刷新会根据时间即时增加的角色数值
-        realtime_settle.character_aotu_change_value(
+        time_hooks.character_aotu_change_value(
             character_id, now_time, pl_start_time
         )
         # 结算角色的状态是否会持续
-        realtime_settle.change_character_persistent_state(character_id)
+        time_hooks.change_character_persistent_state(character_id)
         # 判断是否需要打断角色的当前行动
-        handle_npc_ai.judge_interrupt_character_behavior(character_id)
+        time_hooks.judge_interrupt_character_behavior(character_id)
         time_judge = judge_character_status_time_over(character_id, now_time)
         if time_judge:
             cache.over_behavior_character.add(character_id)
@@ -451,9 +453,7 @@ def judge_before_pl_behavior() -> None:
         handle_premise.handle_hidden_sex_mode_ge_1(0)
         and pl_character_data.behavior.behavior_id != constant.Behavior.END_H
     ):
-        from Script.System.Sex_System import hidden_sex_panel
-
-        hidden_sex_panel.handle_hidden_sex_flow()
+        plan_queue.handle_hidden_sex_flow()
     # 露出的模式更新
     if handle_premise.handle_exhibitionism_sex_mode_ge_1(0):
         from Script.System.Sex_System import exhibitionism_sex_panel

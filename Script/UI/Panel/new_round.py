@@ -876,7 +876,7 @@ class New_Round_Handle:
         """
         开始新的周目
         """
-        from Script.Design import talk, second_behavior
+        from Script.Design import talk, second_behavior, update
         from Script.UI.Panel import achievement_panel
 
         # 输出送别干员的送别口上
@@ -902,6 +902,8 @@ class New_Round_Handle:
         self.inherit_npc_data()
         # 重置游戏数据
         self.reset_game_data()
+        # 游戏时间回到了开局：内核状态也从重置后的缓存重建
+        update.reset_kernel(None)
 
         info_draw = draw.NormalDraw()
         info_draw.width = self.width
@@ -1213,6 +1215,8 @@ class New_Round_Handle:
         map_config.init_map_data()
         game_time.init_time()
         cache.rhodes_island = basement.get_base_zero()
+        cache.plan_queue = {}
+        cache.player_route = None
         cache.all_system_setting = attr_calculation.get_system_setting_zero()
         cache.rhodes_island.physical_examination_setting = (
             attr_calculation.get_physical_exam_setting_zero()

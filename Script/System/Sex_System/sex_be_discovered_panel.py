@@ -14,6 +14,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, instuct_judege
 from Script.Settle import default
 from Script.UI.Panel import achievement_panel
+from Script.Kernel import core
 
 panel_info_data: dict[str, object] = {}
 
@@ -237,8 +238,6 @@ class Sex_Be_Discovered_Panel:
 
     def _let_find_chara_away(self) -> None:
         """选择用花言巧语支开对方"""
-        from Script.Design import character_behavior
-
         pass_flag = False
         now_draw_text = ""
         if self.find_chara_data.talent[222]:
@@ -252,20 +251,11 @@ class Sex_Be_Discovered_Panel:
             pass_flag = True
         # 如果通过
         if pass_flag:
-            self.find_chara_data.behavior.behavior_id = (
-                constant.Behavior.SEE_H_BUT_DECEIVED
-            )
-            self.find_chara_data.behavior.duration = (
-                game_config.config_behavior[
-                    self.find_chara_data.behavior.behavior_id
-                ].duration
-            )
             # 绘制结果
             now_draw = draw.NormalDraw()
             now_draw.text = now_draw_text
             now_draw.draw()
-            character_behavior.judge_character_status(self.character_id)
-            self.discoverer_reaction_settled = True
+            self._plan_reaction(constant.Behavior.SEE_H_BUT_DECEIVED)
         # 未通过
         else:
             self._end_current_h()
@@ -281,10 +271,7 @@ class Sex_Be_Discovered_Panel:
         )
         select_panel.draw()
         # 如果邀请失败，则结束当前H
-        if (
-            self.pl_chara_data.behavior.behavior_id
-            == constant.Behavior.H_INTERRUPT
-        ):
+        if select_panel.invite_failed:
             self._end_current_h()
         else:
             # 结算成就
@@ -293,8 +280,6 @@ class Sex_Be_Discovered_Panel:
 
     def _continue_exhibitionism_sex(self) -> None:
         """选择转为露出"""
-        from Script.Design import character_behavior
-
         # 如果当前已经是露出模式
         if handle_premise.handle_exhibitionism_sex_mode_ge_1(0):
             # 判断对方的实行值
@@ -302,30 +287,12 @@ class Sex_Be_Discovered_Panel:
             if instuct_judege.calculation_instuct_judege(
                 0, self.character_id, _("露出")
             )[0]:
-                self.find_chara_data.behavior.behavior_id = (
-                    constant.Behavior.SEE_H_BUT_IGNORE
-                )
-                self.find_chara_data.behavior.duration = (
-                    game_config.config_behavior[
-                        self.find_chara_data.behavior.behavior_id
-                    ].duration
-                )
-                character_behavior.judge_character_status(self.character_id)
-                self.discoverer_reaction_settled = True
+                self._plan_reaction(constant.Behavior.SEE_H_BUT_IGNORE)
             # 如果是能接受H的等级，则自己离开
             elif instuct_judege.calculation_instuct_judege(
                 0, self.character_id, _("H模式")
             )[0]:
-                self.find_chara_data.behavior.behavior_id = (
-                    constant.Behavior.SEE_H_AND_LEAVE
-                )
-                self.find_chara_data.behavior.duration = (
-                    game_config.config_behavior[
-                        self.find_chara_data.behavior.behavior_id
-                    ].duration
-                )
-                character_behavior.judge_character_status(self.character_id)
-                self.discoverer_reaction_settled = True
+                self._plan_reaction(constant.Behavior.SEE_H_AND_LEAVE)
             # 否则打断当前H
             else:
                 self._end_current_h()
@@ -339,10 +306,7 @@ class Sex_Be_Discovered_Panel:
             )
             select_panel.draw()
             # 如果邀请失败，则结束当前H
-            if (
-                self.pl_chara_data.behavior.behavior_id
-                == constant.Behavior.H_INTERRUPT
-            ):
+            if select_panel.invite_failed:
                 self._end_current_h()
             else:
                 # 结算成就
@@ -350,37 +314,19 @@ class Sex_Be_Discovered_Panel:
 
     def _invite_find_char_to_join(self) -> None:
         """选择邀请对方加入群交"""
-        from Script.Design import character_behavior
-
         # 判断是否满足加入群交条件（意愿达标且未力竭/疲劳/重度困倦）
         if handle_premise.handle_instruct_judge_group_sex(
             self.character_id
         ) and not handle_premise.handle_self_exhausted(self.character_id):
             # 如果当前在群交中，则直接加入
             if handle_premise.handle_group_sex_mode_on(0):
-                self.find_chara_data.behavior.behavior_id = (
-                    constant.Behavior.JOIN_GROUP_SEX
-                )
-                self.find_chara_data.behavior.duration = (
-                    game_config.config_behavior[
-                        self.find_chara_data.behavior.behavior_id
-                    ].duration
-                )
-                character_behavior.judge_character_status(self.character_id)
-                self.discoverer_reaction_settled = True
+                self._plan_reaction(constant.Behavior.JOIN_GROUP_SEX)
             # 不在群交中则转为群交
             else:
-                self.find_chara_data.behavior.behavior_id = (
+                self._plan_reaction(
                     constant.Behavior.DISCOVER_OTHER_SEX_AND_JOIN
                 )
-                self.find_chara_data.behavior.duration = (
-                    game_config.config_behavior[
-                        self.find_chara_data.behavior.behavior_id
-                    ].duration
-                )
-                character_behavior.judge_character_status(self.character_id)
-                self.discoverer_reaction_settled = True
-                handle_instruct.chara_handle_instruct_common_settle(
+                handle_instruct.plan_instruct_common_settle(
                     constant.Behavior.OTHER_SEX_BE_FOUND_TO_GROUP_SEX
                 )
                 # 结算成就
@@ -388,47 +334,64 @@ class Sex_Be_Discovered_Panel:
         else:
             # 如果当前在群交中，则拒绝加入
             if handle_premise.handle_group_sex_mode_on(0):
-                self.find_chara_data.behavior.behavior_id = (
-                    constant.Behavior.REFUSE_JOIN_GROUP_SEX
-                )
-                self.find_chara_data.behavior.duration = (
-                    game_config.config_behavior[
-                        self.find_chara_data.behavior.behavior_id
-                    ].duration
-                )
-                character_behavior.judge_character_status(self.character_id)
-                self.discoverer_reaction_settled = True
+                self._plan_reaction(constant.Behavior.REFUSE_JOIN_GROUP_SEX)
             # 不在群交中则结束当前H
             else:
                 self._end_current_h()
 
     def _end_current_h(self) -> None:
-        """选择结束当前H"""
-        from Script.Design import character_behavior
-
+        """选择结束当前H：发现者排上打断行为，玩家排上结束群交或被打断的结束H"""
         # 交互对象进入被打断状态
         self.target_chara_data.action_info.h_interrupt = 1
-        # 发现者变为打断行为
-        self.find_chara_data.behavior.behavior_id = (
-            constant.Behavior.SEE_H_AND_INTERRUPT
-        )
-        self.find_chara_data.behavior.duration = game_config.config_behavior[
-            self.find_chara_data.behavior.behavior_id
-        ].duration
-        # 手动结算该状态
-        character_behavior.judge_character_status(self.character_id)
-        self.discoverer_reaction_settled = True
+        self._plan_reaction(constant.Behavior.SEE_H_AND_INTERRUPT)
         # 如果是在群交中，则结束群交
         if handle_premise.handle_group_sex_mode_on(0):
-            self.pl_chara_data.behavior.behavior_id = (
-                constant.Behavior.GROUP_SEX_END
-            )
-            handle_instruct.handle_group_sex_end()
-        # 否则结束当前H
+            handle_instruct.plan_group_sex_end(constant.Behavior.GROUP_SEX_END)
+        # 否则玩家被打断，结束H
         else:
-            # 玩家变为被打断行为
-            self.pl_chara_data.behavior.behavior_id = (
-                constant.Behavior.H_INTERRUPT
-            )
-            # 调用结束H处理
-            handle_instruct.handle_h_end()
+            handle_instruct.plan_h_end(constant.Behavior.H_INTERRUPT)
+
+    def _plan_reaction(self, behavior_id: str) -> None:
+        """
+        发现者的反应排进他的计划队列，打断他当前的行动
+        Keyword arguments:
+        behavior_id -- 反应的行为id
+        """
+        from Script.Modules.gameplay_resolution import plan_queue
+
+        plan_queue.plan_next(
+            self.character_id,
+            behavior_id,
+            game_config.config_behavior[behavior_id].duration,
+            interrupt=True,
+        )
+        self.discoverer_reaction_settled = True
+
+
+DISCOVERY = "gameplay_resolution.Discovery"
+""" 发现者目睹H的行动：开始时打开被发现面板 """
+
+
+@core.action(DISCOVERY)
+def start_discovery(act: core.Action) -> core.Effects:
+    """
+    发现者目睹H的行动开始：打开被发现面板，玩家的选择把各方的后续行动排进计划队列
+    Keyword arguments:
+    act -- 开始的行动，act.who 是发现者
+    Return arguments:
+    Effects -- 空（打断由计划队列的输出钩子补上）
+    """
+    now_panel = Sex_Be_Discovered_Panel(window_width, int(act.who))
+    now_panel.draw()
+    return ()
+
+
+def plan_discovery(character_id: int) -> None:
+    """
+    把发现者目睹H的行动排进他的计划队列，打断他当前的行动
+    Keyword arguments:
+    character_id -- 发现者的角色id
+    """
+    from Script.Modules.gameplay_resolution import plan_queue
+
+    plan_queue.plan_action(character_id, DISCOVERY, 1, interrupt=True)

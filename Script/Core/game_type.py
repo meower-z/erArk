@@ -2164,6 +2164,10 @@ class Cache:
         """ 大地图国家数据 """
         self.achievement: ACHIEVEMENT = ACHIEVEMENT()
         """ 成就 """
+        self.plan_queue: dict[int, list[Any]] = {}
+        """ 计划队列：角色id -> 这个角色排着的行动（gameplay_resolution.plan_queue.Planned）列表 """
+        self.player_route: tuple[Any, Any] | None = None
+        """ 玩家寻路途中为 (目标场景, 这一段的出发场景)，不在寻路时为 None """
 
 
 class TargetChange:

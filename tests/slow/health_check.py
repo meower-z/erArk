@@ -7,12 +7,9 @@
 体检科要医疗部升到 2 级才开放，这里按已开放处理。
 """
 
-from typing import TYPE_CHECKING
+from unittest import mock
 
 from tests.slow.base import SlowTestCase
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
 
 EXAM_ROOM = ["医疗", "体检科"]
 DR_OFFICE = ["中枢", "博士办公室"]
@@ -109,52 +106,41 @@ class HealthCheckTestCase(SlowTestCase):
 
     def record_picks(self, cid: int) -> list:
         """
-        之后该角色每次执行状态机（constant.handle_state_machine_data 中的函数，AI 选出行动后调用它），
-        都记下 (她的行为开始时间, 状态机id)
+        之后该角色每次经 npc_start.start_choice 开始 AI 选出的状态机时，记下 (开始前该角色的行为开始时间, 状态机id)。
+        状态机id 为 0（没有可做的行动）或 None（H 中不选新行动）时不记。这个替换在测试结束时撤销
         Keyword arguments:
         cid -- 角色id
         Return arguments:
-        list -- 记录列表，按执行顺序追加
+        list -- 记录列表，按开始的顺序追加
         """
-        from Script.Core import constant
+        import importlib
 
+        npc_start = importlib.import_module(
+            "Script.Modules.gameplay_resolution.npc_start"
+        )
         picks = []
         character_data = self.cache.character_data[cid]
+        start_choice = npc_start.start_choice
 
         def recorder(
-            state_machine_id: int, run: "Callable[..., object]"
-        ) -> "Callable[[int], None]":
+            character_id: int, state_machine_id: int | None, *args: object
+        ) -> None:
             """
-            包装一个状态机：记下该角色的执行，照常运行
+            记录型包装：记下该角色开始的状态机，照常开始
             Keyword arguments:
+            character_id -- 角色id
             state_machine_id -- 状态机id
-            run -- 原状态机函数
-            Return arguments:
-            function -- 包装后的状态机函数
+            args -- 其余参数，照传
             """
+            if character_id == cid and state_machine_id:
+                picks.append(
+                    (character_data.behavior.start_time, state_machine_id)
+                )
+            start_choice(character_id, state_machine_id, *args)
 
-            def wrapped(character_id: int) -> None:
-                """
-                记录型状态机
-                Keyword arguments:
-                character_id -- 执行的角色id
-                Return arguments:
-                无
-                """
-                if character_id == cid:
-                    picks.append(
-                        (character_data.behavior.start_time, state_machine_id)
-                    )
-                run(character_id)
-
-            return wrapped
-
-        for state_machine_id, run in list(
-            constant.handle_state_machine_data.items()
-        ):
-            constant.handle_state_machine_data[state_machine_id] = recorder(
-                state_machine_id, run
-            )
+        self.enterContext(
+            mock.patch.object(npc_start, "start_choice", recorder)
+        )
         return picks
 
     def fill_exam_room(self) -> list:

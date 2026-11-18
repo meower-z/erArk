@@ -18,10 +18,13 @@ class FastTestCase(unittest.TestCase):
 
     def setUp(self) -> None:
         """
-        复原小世界并重设随机源
+        复原小世界并重设随机源，丢掉上一个测试留下的内核状态（同读档）
         Keyword arguments:
         无
         Return arguments:
         无
         """
+        from Script.Design import update
+
         self.world.reset()
+        update.reset_kernel(None)

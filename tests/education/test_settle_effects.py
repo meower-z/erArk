@@ -38,7 +38,7 @@ from _bootstrap import (
 from Script.Settle import default as settle_default
 from Script.Settle import common_default
 from Script.System.Instruct_System import handle_instruct
-from Script.Design import second_behavior
+from Script.Design import character_behavior, second_behavior
 
 open_all_classroom()
 clear_schedules()
@@ -73,12 +73,8 @@ SECOND = constant.settle_second_behavior_effect_data
 E = education_constant
 # 授课结算末尾会对每个学生调 judge_character_status（那是行为循环的事），单测里钉死它；
 #    原函数留一份：Plan 32 实施复审补的 L6 一段要走真实的听课结算
-_real_judge_character_status = (
-    settle_default.character_behavior.judge_character_status
-)
-settle_default.character_behavior.judge_character_status = (
-    lambda character_id: 0
-)
+_real_judge_character_status = character_behavior.judge_character_status
+character_behavior.judge_character_status = lambda character_id: 0
 
 
 def reset_mark(*character_id_list: int) -> None:
@@ -1000,14 +996,12 @@ for _one in (student_a, student_b):
 reset_mark(201, 202)
 student_a_growth.last_absent_period = []
 student_b_growth.last_absent_period = []
-_stub_judge = settle_default.character_behavior.judge_character_status
-settle_default.character_behavior.judge_character_status = (
-    _real_judge_character_status
-)
+_stub_judge = character_behavior.judge_character_status
+character_behavior.judge_character_status = _real_judge_character_status
 try:
     EFFECT[512](101, 45, change, cache.game_time)
 finally:
-    settle_default.character_behavior.judge_character_status = _stub_judge
+    character_behavior.judge_character_status = _stub_judge
 check(
     (
         "L6 复审补：教师晚到开讲，512 跳过听课节次不同的女儿A，没有手动结算她下一节的听课行为——体力不变、"
@@ -1097,12 +1091,12 @@ for _l13_room, _l13_type in (
     L13_LOG.clear()
     _l13_exp = student_a.experience.get(exp_45, 0)
     _saved_flow = handle_instruct.update.game_update_flow
-    _saved_judge = settle_default.character_behavior.judge_character_status
+    _saved_judge = character_behavior.judge_character_status
     _saved_favor = (
         settle_default.base_chara_favorability_and_trust_common_settle
     )
     handle_instruct.update.game_update_flow = l13_game_update_flow
-    settle_default.character_behavior.judge_character_status = l13_judge_spy
+    character_behavior.judge_character_status = l13_judge_spy
     settle_default.base_chara_favorability_and_trust_common_settle = (
         lambda *a, **k: None
     )
@@ -1110,7 +1104,7 @@ for _l13_room, _l13_type in (
         handle_instruct.handle_teach()
     finally:
         handle_instruct.update.game_update_flow = _saved_flow
-        settle_default.character_behavior.judge_character_status = _saved_judge
+        character_behavior.judge_character_status = _saved_judge
         settle_default.base_chara_favorability_and_trust_common_settle = (
             _saved_favor
         )

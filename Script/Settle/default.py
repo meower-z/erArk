@@ -11,7 +11,6 @@ from Script.Design import (
     map_handle,
     attr_calculation,
     game_time,
-    character_behavior,
     handle_npc_ai_in_h,
     handle_premise,
     hypnosis_state,
@@ -2013,7 +2012,7 @@ def handle_target_hypnosis_active_h_switch_change(
         )
         change_data.sanity_point -= santi_down
         character_data.pl_ability.today_sanity_point_cost += santi_down
-        handle_instruct.chara_handle_instruct_common_settle(constant.Behavior.H)
+        handle_instruct.plan_instruct_common_settle(constant.Behavior.H)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2870,7 +2869,7 @@ def handle_wait_unitl_traget_action_end(
     """
     if not add_time:
         return
-    from Script.Design import update
+    from Script.Modules.gameplay_resolution import plan_queue
 
     character_data: game_type.Character = cache.character_data[character_id]
     target_character_data = cache.character_data[
@@ -2882,13 +2881,15 @@ def handle_wait_unitl_traget_action_end(
     target_end_time = game_time.get_sub_date(
         target_character_data.behavior.duration, old_date=target_start_time
     )
-    # 到结束时间还有多少分钟
+    # 到结束时间还有多少分钟，玩家接着等这么久
     add_time = int((target_end_time - now_time).total_seconds() / 60)
-    character_data = cache.character_data[0]
-    character_data.behavior.behavior_id = constant.Behavior.WAIT
-    character_data.state = constant.CharacterStatus.STATUS_WAIT
-    character_data.behavior.duration = add_time
-    update.game_update_flow(add_time)
+    if add_time > 0:
+        plan_queue.plan_next(
+            0,
+            constant.Behavior.WAIT,
+            add_time,
+            state=constant.CharacterStatus.STATUS_WAIT,
+        )
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2993,13 +2994,13 @@ def handle_move_to_own_dormitory(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    from Script.StateMachine.default import general_movement_module
+    from Script.StateMachine.default import plan_movement
 
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
     to_target = map_handle.get_map_system_path_for_str(character_data.dormitory)
-    general_movement_module(character_id, to_target)
+    plan_movement(character_id, to_target)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -9088,6 +9089,7 @@ def handle_teach_add_just(
         growth_handle,
         schedule_handle,
     )
+    from Script.Modules.gameplay_resolution import plan_queue
 
     character_data: game_type.Character = cache.character_data[character_id]
 
@@ -9182,9 +9184,16 @@ def handle_teach_add_just(
                             other_character_data.cid,
                         )
 
-                    # 手动结算该状态
-                    character_behavior.judge_character_status(chara_id)
-                    # other_character_data.state = constant.CharacterStatus.STATUS_ARDER
+                    # 该生重新开始听课，排进他的计划队列
+                    if not plan_queue.plan_has(
+                        chara_id, constant.Behavior.ATTENT_CLASS
+                    ):
+                        plan_queue.plan_next(
+                            chara_id,
+                            constant.Behavior.ATTENT_CLASS,
+                            other_character_data.behavior.duration,
+                            interrupt=True,
+                        )
 
 
 @settle_behavior.add_settle_behavior_effect(

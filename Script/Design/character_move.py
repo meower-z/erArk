@@ -31,64 +31,101 @@ def cancel_movement_plan(character_id: int) -> None:
 
 def own_charcter_move(target_scene: list) -> None:
     """
-    主角寻路至目标场景
+    主角寻路至目标场景：走第一段，之后每段在玩家下一次选行动时由计划队列接着走（continue_player_route）
     Keyword arguments:
     target_scene -- 寻路目标场景(在地图系统下的绝对坐标)
     """
-    while 1:
-        character_data: game_type.Character = cache.character_data[0]
-        move_now = "end"
-        if character_data.sp_flag.move_stop:
-            character_data.sp_flag.move_stop = False
-            break
-        # 如果当前场景已锁，离开时会把锁解开
-        # 已弃用，改为在 Script/Design/map_handle.py#character_move_scene() 中处理
-        if character_data.position != target_scene:
-            (
-                move_now,
-                __,
-                now_target_position,
-                now_need_time,
-            ) = character_move(0, target_scene)
-            break_list = ["null", "wait_open", "door_lock"]
-            if move_now in break_list:
-                break
-            # 隐奸携带模式中使用携带H中移动行为，消耗大幅增加
-            if character_data.sp_flag.hidden_sex_mode == 5:
-                character_data.behavior.behavior_id = (
-                    constant.Behavior.CARRY_MOVE
-                )
-                character_data.state = (
-                    constant.CharacterStatus.STATUS_CARRY_MOVE
-                )
-            else:
-                character_data.behavior.behavior_id = constant.Behavior.MOVE
-                character_data.state = constant.CharacterStatus.STATUS_MOVE
-            character_data.behavior.move_target = now_target_position
-            character_data.behavior.move_src = character_data.position
-            character_data.behavior.move_final_target = target_scene
-            character_data.behavior.duration = now_need_time
-            character_data.behavior.start_time = cache.game_time
-            character_data.action_info.ask_close_door_flag = False
-            # print(f"debug pl start_time = {character_data.behavior.start_time}")
-            update.game_update_flow(now_need_time)
-            # 若本段结算过程中移动计划被撤销（move_final_target 已不再指向 target_scene）
-            # 且尚未抵达目标，则停止寻路，不再走下一段
-            character_data = cache.character_data[0]
-            if (
-                character_data.position != target_scene
-                and character_data.behavior.move_final_target != target_scene
-            ):
-                break
-        else:
-            break
-    cache.character_data[0].target_character_id = 0
+    vars(cache)["player_route"] = None
+    move_now = _player_leg(target_scene)
     # 继续留在地图页面
     if move_now in ["Null", "wait_open", "door_lock"]:
         cache.now_panel_id = constant.Panel.SEE_MAP
     # 回到主页面
     else:
         cache.now_panel_id = constant.Panel.IN_SCENE
+
+
+def continue_player_route() -> None:
+    """
+    玩家要选下一个行动时，若还在寻路途中且上一段已走完，把下一段排进玩家的计划队列；
+    已抵达、被叫停、计划被撤销、上一段没走动或寻路断了时结束寻路，玩家不再有交互对象
+    """
+    route = vars(cache).get("player_route")
+    if route is None:
+        return
+    character_data: game_type.Character = cache.character_data[0]
+    # 这一段还没开始（界面刚定下）或还没走完
+    if character_data.behavior.behavior_id in {
+        constant.Behavior.MOVE,
+        constant.Behavior.CARRY_MOVE,
+    }:
+        return
+    target_scene, leg_start = route
+    if (
+        character_data.position != leg_start
+        and character_data.position != target_scene
+        and character_data.behavior.move_final_target == target_scene
+        and _player_leg(target_scene) not in ["end", *_BREAK_LIST]
+    ):
+        return
+    vars(cache)["player_route"] = None
+    character_data.target_character_id = 0
+
+
+_BREAK_LIST = ["null", "wait_open", "door_lock"]
+""" 寻路断掉的结果 """
+
+
+def _player_leg(target_scene: list) -> str:
+    """
+    玩家走寻路的一段：玩家选择时当场定下行动，结算途中排进玩家的计划队列
+    Keyword arguments:
+    target_scene -- 寻路目标场景
+    Return arguments:
+    str -- 寻路结果，"end" 为已在目标或被叫停
+    """
+    character_data: game_type.Character = cache.character_data[0]
+    if character_data.sp_flag.move_stop:
+        character_data.sp_flag.move_stop = False
+        vars(cache)["player_route"] = None
+        return "end"
+    if character_data.position == target_scene:
+        return "end"
+    move_now, __, now_target_position, now_need_time = character_move(
+        0, target_scene
+    )
+    if move_now in _BREAK_LIST:
+        return move_now
+    # 隐奸携带模式中使用携带H中移动行为，消耗大幅增加
+    if character_data.sp_flag.hidden_sex_mode == 5:
+        behavior_id = constant.Behavior.CARRY_MOVE
+        state = constant.CharacterStatus.STATUS_CARRY_MOVE
+    else:
+        behavior_id = constant.Behavior.MOVE
+        state = constant.CharacterStatus.STATUS_MOVE
+    vars(cache)["player_route"] = (target_scene, character_data.position)
+    character_data.action_info.ask_close_door_flag = False
+    leg: dict[str, object] = {
+        "move_target": now_target_position,
+        "move_src": character_data.position,
+        "move_final_target": target_scene,
+    }
+    if update.in_resolution():
+        from Script.Modules.gameplay_resolution import plan_queue
+
+        plan_queue.plan_next(
+            0, behavior_id, now_need_time, state=state, data=leg
+        )
+        return move_now
+    character_data.behavior.behavior_id = behavior_id
+    character_data.state = state
+    character_data.behavior.move_target = now_target_position
+    character_data.behavior.move_src = character_data.position
+    character_data.behavior.move_final_target = target_scene
+    character_data.behavior.duration = now_need_time
+    character_data.behavior.start_time = cache.game_time
+    update.game_update_flow(now_need_time)
+    return move_now
 
 
 def character_move(

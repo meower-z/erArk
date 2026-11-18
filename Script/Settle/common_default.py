@@ -5,7 +5,6 @@ from Script.Design import (
     character_handle,
     map_handle,
     attr_calculation,
-    handle_npc_ai,
     handle_premise,
     handle_ability,
 )
@@ -131,7 +130,6 @@ def base_chara_hp_mp_common_settle(
                 ]
                 target_change.hit_point += mp_value
             character_data.hit_point = max(1, character_data.hit_point)
-            handle_npc_ai.judge_character_tired_sleep(character_id)
         # 交互对象也同样
         if (
             target_flag
@@ -180,8 +178,6 @@ def base_chara_hp_mp_common_settle(
         character_data.hit_point = min(
             character_data.hit_point_max, character_data.hit_point
         )
-        # 检测hp1导致的疲劳
-        handle_npc_ai.judge_character_tired_sleep(character_id)
         # 交互对象也同样
         if (
             target_flag
@@ -207,7 +203,6 @@ def base_chara_hp_mp_common_settle(
                 target_character_data.hit_point_max,
                 target_character_data.hit_point,
             )
-            handle_npc_ai.judge_character_tired_sleep(target_character_id)
 
 
 def base_chara_state_common_settle(
