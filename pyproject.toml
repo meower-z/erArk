@@ -44,7 +44,7 @@ baseline = ".lint-baseline.tsv"
 exclude = ["Script/Config/config_def.py"]
 soft = 400
 hard = 500
-reset = "verify script fixes lengthen three capped modules"
+reset = "kernel core taken in verbatim; the kernel wiring lengthens eight capped modules"
 # 棘轮运行 ruff 时带 `--ignore-noqa`，所以 `# noqa` 注释压不下棘轮报出的问题。
 # 因此这里不禁止 `# noqa` 注释。
 ban_noqa = false
@@ -131,6 +131,8 @@ ignore = ["PLW0603"]
 # 调用方通过 handle_premise.名字 与 default.名字 使用这些名字。
 "Script/Design/handle_premise/__init__.py" = ["F403", "F405"]
 "Script/Settle/default.py" = ["F403", "F405"]
+# 内核 core.py 原样收入：用 PEP 695 的泛型写法，不带文档字符串。
+"Script/Kernel/core.py" = ["UP046", "D1"]
 # 这些文件要先运行一段代码，再导入后面的模块。
 # 这段代码初始化缓存与配置，或者改动 sys.path、sys.meta_path。
 "init_data.py" = ["E402"]

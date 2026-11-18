@@ -84,6 +84,7 @@ def seed_everything(seed: int = SEED) -> None:
     功能描述:
         游戏代码里的随机来自 random（大量）、numpy.random（value_handle.get_gauss_rand）与 uuid.uuid4（食物 uid）。
         PYTHONHASHSEED 只能在解释器启动前设定，由 tests/conftest.py 处理。
+        环境变量 ERARK_KEYED_RANDOM=1 时再换上按行为结算键控的随机流（tests/keyed_random.py）。
     """
     import numpy
 
@@ -91,6 +92,10 @@ def seed_everything(seed: int = SEED) -> None:
     numpy.random.seed(seed % (2**32))
     _uuid_rng.seed(seed)
     uuid.uuid4 = _seeded_uuid4
+    if os.environ.get("ERARK_KEYED_RANDOM") == "1":
+        from tests import keyed_random
+
+        keyed_random.install(seed, _uuid_rng)
 
 
 def _mute_ui() -> list:
@@ -205,7 +210,8 @@ class MinimalWorld:
             import auto_build_config  # noqa: F401
         from Script.Core import cache_control, game_type
 
-        if cache_control.cache is None:
+        # 类型标注里 cache 总是 Cache；运行时启动前为 None，按模块字典读出真实值
+        if vars(cache_control)["cache"] is None:
             cache_control.cache = game_type.Cache()
         from Script.Config import normal_config
 
