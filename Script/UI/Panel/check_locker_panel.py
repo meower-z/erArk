@@ -15,12 +15,12 @@ from Script.Core import (
 )
 from Script.Design import (
     map_handle,
-    update,
     attr_text,
     handle_premise,
     clothing,
 )
 from Script.UI.Moudle import draw, panel
+from Script.Modules.tk_ui import player_pick
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import ejaculation_panel
 
@@ -435,10 +435,11 @@ class FindDraw:
     def smell(self) -> None:
         """闻味道"""
 
-        self.pl_data.behavior.duration = 1
-        self.pl_data.behavior.behavior_id = constant.Behavior.SMELL_UNDERWEAR
-        self.pl_data.state = constant.CharacterStatus.STATUS_SMELL_UNDERWEAR
-        update.game_update_flow(1)
+        player_pick.choose(
+            constant.Behavior.SMELL_UNDERWEAR,
+            1,
+            state=constant.CharacterStatus.STATUS_SMELL_UNDERWEAR,
+        )
 
     def get_pan(self) -> None:
         """偷内裤"""

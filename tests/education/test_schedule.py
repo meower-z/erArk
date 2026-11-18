@@ -14,6 +14,7 @@ from _bootstrap import (
     education_constant,
     finish,
     game_config,
+    game_time,
     growth_handle,
     make_character,
     move_to,
@@ -125,37 +126,37 @@ check(
 )
 
 section("临时实操课覆盖层")
-today = cache.game_time.date().toordinal()
+today = game_time.now().date().toordinal()
 sex_class_handle.set_temp_class(today, 2, _("实践教室一"), 70, must_attend=[])
 check(
     "覆盖层：今天该节次读到主修科目与教师0",
     schedule_handle.get_class_cell(
-        _("实践教室一"), cache.game_time.weekday(), 2
+        _("实践教室一"), game_time.now().weekday(), 2
     )
     == [70, 0],
 )
-other_day = (cache.game_time.weekday() + 1) % 7
+other_day = (game_time.now().weekday() + 1) % 7
 check(
     "覆盖层不影响别的星期",
     schedule_handle.get_class_cell(_("实践教室一"), other_day, 2) is None,
 )
 check(
     "玩家的教师反查走覆盖层",
-    schedule_handle.get_teacher_cell(0, cache.game_time.weekday(), 2)
+    schedule_handle.get_teacher_cell(0, game_time.now().weekday(), 2)
     == (_("实践教室一"), 70),
 )
 check(
     "玩家周表并入今天的临时课",
     2
     in schedule_handle.get_teacher_week_schedule(0).get(
-        cache.game_time.weekday(), {}
+        game_time.now().weekday(), {}
     ),
 )
 # 第五轮：要写进每周循环的个人课表时不叠加覆盖层
 check(
     "include_temp=False 读的是每周固定的课表本身",
     schedule_handle.get_class_cell(
-        _("实践教室一"), cache.game_time.weekday(), 2, include_temp=False
+        _("实践教室一"), game_time.now().weekday(), 2, include_temp=False
     )
     is None,
 )
@@ -163,7 +164,7 @@ temp_student = make_character(209, "临时课测试", 152, daughter=True, stage=
 auto_schedule.auto_fill_selected_course(209)
 check(
     "一键选课不会把一次性的临时课选进每周课表",
-    schedule_handle.get_selected_course(209, cache.game_time.weekday(), 2)
+    schedule_handle.get_selected_course(209, game_time.now().weekday(), 2)
     is None,
 )
 remove_character(209)
@@ -351,8 +352,8 @@ section(
 )
 clear_schedules()
 set_time(period_time(0))
-today = cache.game_time.date().toordinal()
-weekday = cache.game_time.weekday()
+today = game_time.now().date().toordinal()
+weekday = game_time.now().weekday()
 ROOM_P = _("实践教室一")
 schedule_handle.set_class_cell(ROOM_P, weekday, 2, 43, 101)
 sex_class_handle.set_temp_class(today, 2, ROOM_P, 70)
@@ -467,8 +468,8 @@ check(
 section("Plan 27 §3.3：已停课视为没课，临时课覆盖层给出的格子照算")
 clear_schedules()
 set_time(period_time(0))
-_today_weekday = cache.game_time.weekday()
-_today_ordinal = cache.game_time.date().toordinal()
+_today_weekday = game_time.now().weekday()
+_today_ordinal = game_time.now().date().toordinal()
 schedule_handle.set_selected_course(
     201, _today_weekday, 0, education_constant.COURSE_TYPE_PRACTICE, ROOM_P
 )
@@ -500,7 +501,7 @@ clear_schedules()
 
 section("Plan 28 §3.2：个人式课这一节上不成视为没课")
 set_time(period_time(0))
-_wd = cache.game_time.weekday()
+_wd = game_time.now().weekday()
 teen_b = make_character(211, "少女B", 152, daughter=True, stage=104)
 schedule_handle.set_selected_course(
     211, _wd, 0, education_constant.COURSE_TYPE_INTEREST, 99999
@@ -544,7 +545,7 @@ check(
     and schedule_handle.get_now_course(201) is not None,
 )
 sex_class_handle.set_temp_class(
-    cache.game_time.date().toordinal(), 0, ROOM_P, 70, must_attend=[211]
+    game_time.now().date().toordinal(), 0, ROOM_P, 70, must_attend=[211]
 )
 _course = schedule_handle.get_now_course(211)
 check(
@@ -675,8 +676,8 @@ section(
 )
 clear_schedules()
 set_time(period_time(0))
-_wd = cache.game_time.weekday()
-_today = cache.game_time.date().toordinal()
+_wd = game_time.now().weekday()
+_today = game_time.now().date().toordinal()
 growth_handle.get_child_growth(201).selected_course = {}
 schedule_handle.set_class_cell(ROOM1, _wd, 0, 45, 101)
 schedule_handle.set_class_cell(ROOM1, _wd, 1, 43, 101)

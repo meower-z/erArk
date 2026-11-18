@@ -12,6 +12,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation
 from Script.UI.Panel import hypnosis_panel
+from Script.Design import game_time
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -154,7 +155,7 @@ def get_now_class_tip(character_id: int) -> tuple[bool, str] | None:
             and now_course["course_type"]
             not in education_constant.CLASSROOM_COURSE_TYPE_SET
         ):
-            now_time = character_data.behavior.start_time or cache.game_time
+            now_time = character_data.behavior.start_time or game_time.now()
             if (
                 behavior_id == constant.Behavior.REST
                 or character_data.sp_flag.is_h
@@ -388,7 +389,7 @@ def get_character_status_list(
             left_minute = int(
                 (
                     character_data.action_info.sleep_disturbed_end_time
-                    - cache.game_time
+                    - game_time.now()
                 ).total_seconds()
                 // 60
             )

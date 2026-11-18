@@ -286,7 +286,7 @@ def clean_expired_temp_class() -> int:
     settle_orphan_class()
     # 收尾之后课堂模式还开着，说明玩家仍在 H 中、这节课还在上（拖堂跨天），它的条目要留着
     class_alive = cache.sex_class_mode
-    today = cache.game_time.date().toordinal()
+    today = game_time.now().date().toordinal()
     del_key_list = []
     for now_key, now_data in cache.rhodes_island.temp_sex_class.items():
         if now_data.get("running", False) and class_alive:
@@ -358,11 +358,11 @@ def get_must_attend_set(classroom: str = "") -> set:
     now_class = get_running_class()
     if now_class is None:
         if classroom:
-            now_class = find_class_to_start(classroom, cache.game_time)[1]
+            now_class = find_class_to_start(classroom, game_time.now())[1]
         else:
             now_class = get_active_temp_class(
-                cache.game_time.date().toordinal(),
-                game_time.get_class_period_by_time(cache.game_time),
+                game_time.now().date().toordinal(),
+                game_time.get_class_period_by_time(game_time.now()),
             )
     if now_class is None:
         return set()
@@ -574,12 +574,12 @@ def get_date_ordinal_by_week_day(week_day: int, period: int) -> int:
     int -- 日期序数
     """
     # 从今天的 0 点开始按游戏日历逐日步进（get_predict_date 不经过非季月）
-    now_date = cache.game_time.replace(
+    now_date = game_time.now().replace(
         hour=0, minute=0, second=0, microsecond=0
     )
     # 就是今天、但这一节的开始时刻已经过去了，就从明天开始找
     start_time = get_period_start_time(now_date.toordinal(), period)
-    if start_time is not None and start_time <= cache.game_time:
+    if start_time is not None and start_time <= game_time.now():
         now_date = game_time.get_predict_date(1, now_date)
     # 星期按游戏日连续推进，一周内必然能找到对应的星期（循环上限留足余量）
     for _index in range(14):
@@ -856,7 +856,7 @@ def get_today_class_notify_text() -> str:
     Return arguments:
     str -- 提醒文本，今天没课或已提醒过则为空串
     """
-    today = cache.game_time.date().toordinal()
+    today = game_time.now().date().toordinal()
     text_list = []
     for class_key, class_data in cache.rhodes_island.temp_sex_class.items():
         date_ordinal, period = parse_class_key(class_key)
@@ -904,9 +904,9 @@ def start_sex_class(
     """
     pl_character_data: game_type.Character = cache.character_data[0]
     classroom = get_scene_name(pl_character_data.position)
-    today = cache.game_time.date().toordinal()
-    period = game_time.get_class_period_by_time(cache.game_time)
-    now_class = find_class_to_start(classroom, cache.game_time)[1]
+    today = game_time.now().date().toordinal()
+    period = game_time.get_class_period_by_time(game_time.now())
+    now_class = find_class_to_start(classroom, game_time.now())[1]
     if now_class is None:
         # 当前节次的键被别的教室还没开讲的预约占着：临时课的键不含教室，另开当场课会静默覆盖那条预约。
         #    玩家在这里开课就是决定在这里上，把那条挪过来（Plan 26 §3.5，L4）
@@ -935,7 +935,7 @@ def start_sex_class(
         join_id_list = get_scene_student_list(pl_character_data.position)
     # 出勤只在开课时记这一次：拖堂占用的后续节次既不记出勤也不记缺课（方案 §3.28.9）
     for student_id in join_id_list:
-        settle_attend(student_id, cache.game_time)
+        settle_attend(student_id, game_time.now())
     return now_class
 
 
@@ -1013,7 +1013,7 @@ def judge_end_type() -> int:
     if end_time is None:
         return 1
     # 预定下课前5分钟以上算提前，前后5分钟内算按时，再往后算拖堂
-    delta = (cache.game_time - end_time).total_seconds() / 60
+    delta = (game_time.now() - end_time).total_seconds() / 60
     if delta < -5:
         return 0
     if delta <= 5:
@@ -1104,7 +1104,7 @@ def settle_attend(
     ):
         return
     if now_time is None:
-        now_time = student_data.behavior.start_time or cache.game_time
+        now_time = student_data.behavior.start_time or game_time.now()
     judge_time = get_attend_judge_time(now_time)
     if growth_handle.judge_absent_this_period(student_id, judge_time):
         return

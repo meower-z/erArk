@@ -15,6 +15,7 @@ from Script.Core import (
     py_cmd,
 )
 from Script.Config import normal_config
+from Script.Modules.save_load import index
 from Script.UI.Moudle import panel, draw
 
 cache: game_type.Cache = cache_control.cache
@@ -139,7 +140,7 @@ class SaveInfoDraw:
         """ 存档位是否已存在 """
         save_name = _("空槽位")
         if self.save_exist_judge:
-            save_head = save_handle.load_save_info_head(self.text)
+            save_head = index.head(self.text)
             game_time: datetime.datetime = save_head["game_time"]
             save_time: datetime.datetime = save_head["save_time"]
 
@@ -295,8 +296,8 @@ class SaveInfoDraw:
                 break
             elif yrn == back_draw.return_text:
                 return
+        # 在游戏里读档时，读档中止玩家这次选行动，不回到这里；在标题画面读档时回到这里，存档列表随之退出
         save_handle.input_load_save(str(self.text))
-        cache.now_panel_id = constant.Panel.IN_SCENE
         cache.back_save_panel = True
 
     def delete_save(self) -> None:

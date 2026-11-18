@@ -34,6 +34,8 @@ class SmokeNewGameTest(SlowTestCase):
 
     def test_hours_pass_static_checks(self) -> None:
         """10:00 到 16:00 有干员吃饭，每个整点的全部静态自检都通过；逐步录下行为快照"""
+        from Script.Design import game_time
+
         from Script.Core import constant
         from Script.Test import Static_Check
         from Script.Test.Static_Check import checks
@@ -61,7 +63,9 @@ class SmokeNewGameTest(SlowTestCase):
             Return arguments:
             无
             """
-            hour = self.cache.game_time.strftime("%m-%d %H:%M")
+            from Script.Design import game_time
+
+            hour = game_time.now().strftime("%m-%d %H:%M")
             for f in Static_Check.run_all_checks():
                 failures.append(
                     f"{hour} {f.check_id} {f.check_name}: {f.message[:300]}"
@@ -73,12 +77,12 @@ class SmokeNewGameTest(SlowTestCase):
         log.install()
         npc_behaviors: set[str] = set()
         """ 干员在各步结束时的行为id """
-        start = self.cache.game_time
+        start = game_time.now()
         recorder.record("0000", capture(self.cache, log, memo))
         run_checks()
         for index in range(1, HOURS * 60 // STEP_MINUTES + 1):
             self.instruct(constant.Instruct.WAIT)
-            now = self.cache.game_time
+            now = game_time.now()
             recorder.record(f"{index:04d}", capture(self.cache, log, memo))
             npc_behaviors.update(
                 self.cache.character_data[cid].behavior.behavior_id
@@ -89,7 +93,7 @@ class SmokeNewGameTest(SlowTestCase):
         os.makedirs(os.path.dirname(LAST_RUN), exist_ok=True)
         recorder.write(LAST_RUN)
         self.assertEqual(
-            (self.cache.game_time - start).total_seconds(),
+            (game_time.now() - start).total_seconds(),
             HOURS * 3600,
             "主循环推进的时间",
         )

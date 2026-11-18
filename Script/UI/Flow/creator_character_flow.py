@@ -21,7 +21,9 @@ from Script.Design import (
     character_handle,
     attr_calculation,
     basement,
+    game_time,
 )
+from Script.Modules.save_load import kernel_state
 from Script.UI.Moudle import panel, draw
 from Script.Config import normal_config, game_config
 
@@ -47,6 +49,10 @@ def creator_character_panel() -> None:
     #    会把上一局的女儿一并实例化进这一局，从而触发本局并不存在的女儿的相关事件（跨存档 / 跨局泄漏）
     cache.character_data.clear()
     cache.npc_id_got.clear()
+    # 时钟回到开局：建角色时读到的游戏时间都是开局时刻
+    game_time.init_time()
+    clock = kernel_state.first_clock()
+    kernel_state.reset_clock(clock)
     character_handle.init_character_tem()
     cache.character_data[0] = game_type.Character()
     character_handle.init_character_list()
@@ -64,6 +70,7 @@ def creator_character_panel() -> None:
                 break
         cache.character_data[0] = game_type.Character()
     cache.now_panel_id = constant.Panel.IN_SCENE
+    kernel_state.new_game(clock)
 
 
 def first_bonus_and_setting_updata() -> None:
@@ -73,7 +80,8 @@ def first_bonus_and_setting_updata() -> None:
         cache.first_bonus[cid] = False
     for cid in game_config.config_world_setting:
         cache.world_setting[cid] = 0
-    cache.all_system_setting = attr_calculation.get_system_setting_zero()
+    cache.difficulty_setting = attr_calculation.get_difficulty_setting_zero()
+    cache.birth_type_setting = attr_calculation.get_birth_type_setting_zero()
     # 初始资源
     cache.rhodes_island.materials_resouce[1] = 20000
     cache.rhodes_island.materials_resouce[11] = 20
@@ -103,9 +111,8 @@ def game_start() -> None:
     character_handle.handle_character_setting()
     cooking.init_recipes()
     cooking.init_food_shop_data(new_day_flag=True)
-    talk_setting = cache.all_system_setting.character_text_version
-    cache.all_system_setting = attr_calculation.get_system_setting_zero()
-    cache.all_system_setting.character_text_version = talk_setting
+    cache.difficulty_setting = attr_calculation.get_difficulty_setting_zero()
+    cache.birth_type_setting = attr_calculation.get_birth_type_setting_zero()
     cache.country = attr_calculation.get_country_reset(cache.country)
     basement.get_base_updata()
     character_handle.init_character_entertainment()  # 需要设施开放的属性，所以放在设施后面

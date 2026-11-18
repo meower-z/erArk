@@ -1,35 +1,9 @@
-"""避孕套的存量池与装饰：旧存档字段补全、存量池的增减与清空、装饰的挂上与取回，以及饮用与挤出的结算"""
+"""避孕套的存量池与装饰：存量池的增减与清空、装饰的挂上与取回，以及饮用与挤出的结算"""
 
 from Script.Core import cache_control, game_type
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
-
-
-def check_collection_data(character_id: int = 0) -> None:
-    """
-    校验玩家收藏品结构体中避孕套存量池字段是否存在（旧存档兼容），不存在则补上\n
-    Keyword arguments:\n
-    character_id -- 角色id（仅玩家0有存量池）\n
-    Return arguments:\n
-    无
-    """
-    pl_collection = cache.character_data[0].pl_collection
-    if not hasattr(pl_collection, "used_condoms"):
-        pl_collection.used_condoms = []
-
-
-def check_dirty_data(character_id: int) -> None:
-    """
-    校验角色污浊结构体中装饰避孕套字段是否存在（旧存档兼容），不存在则补上\n
-    Keyword arguments:\n
-    character_id -- 角色id\n
-    Return arguments:\n
-    无
-    """
-    dirty_data = cache.character_data[character_id].dirty
-    if not hasattr(dirty_data, "condom_decoration"):
-        dirty_data.condom_decoration = {}
 
 
 def get_used_condoms() -> list[int]:
@@ -38,7 +12,6 @@ def get_used_condoms() -> list[int]:
     Return arguments:\n
     List[int] -- 存量池列表，每个元素为该避孕套内的精液量(ml)
     """
-    check_collection_data()
     return cache.character_data[0].pl_collection.used_condoms
 
 
@@ -50,7 +23,6 @@ def add_used_condom(semen_count: int) -> None:
     Return arguments:\n
     无
     """
-    check_collection_data()
     cache.character_data[0].pl_collection.used_condoms.append(semen_count)
 
 
@@ -60,7 +32,6 @@ def clear_used_condoms() -> None:
     Return arguments:\n
     无
     """
-    check_collection_data()
     cache.character_data[0].pl_collection.used_condoms = []
 
 
@@ -72,7 +43,6 @@ def get_decoration_dict(character_id: int) -> dict[tuple, list[int]]:
     Return arguments:\n
     Dict[tuple, List[int]] -- 键为(部位类型, 部位cid)，值为各套精液量列表
     """
-    check_dirty_data(character_id)
     return cache.character_data[character_id].dirty.condom_decoration
 
 

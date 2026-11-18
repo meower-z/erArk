@@ -7,11 +7,9 @@ from types import FunctionType
 from Script.Design import (
     basement,
     settle_behavior,
-    instuct_judege,
     map_handle,
     attr_calculation,
     game_time,
-    character_behavior,
     handle_npc_ai_in_h,
     handle_premise,
     hypnosis_state,
@@ -1024,7 +1022,7 @@ def handle_first_kiss(
     if character_data.talent[4] == 1:
         character_data.talent[4] = 0
         character_data.first_record.first_kiss_id = target_data.cid
-        character_data.first_record.first_kiss_time = cache.game_time
+        character_data.first_record.first_kiss_time = game_time.now()
         character_data.first_record.first_kiss_place = character_data.position
         # 初吻的二段结算
         second_behavior.character_get_second_behavior(
@@ -1033,7 +1031,7 @@ def handle_first_kiss(
     if target_data.talent[4] == 1:
         target_data.talent[4] = 0
         target_data.first_record.first_kiss_id = character_id
-        target_data.first_record.first_kiss_time = cache.game_time
+        target_data.first_record.first_kiss_time = game_time.now()
         target_data.first_record.first_kiss_place = target_data.position
         # 初吻的二段结算
         second_behavior.character_get_second_behavior(
@@ -1105,7 +1103,7 @@ def handle_first_sex(
     if character_data.talent[5] == 1 and (not item_flag):
         character_data.talent[5] = 0
         character_data.first_record.first_sex_id = target_data.cid
-        character_data.first_record.first_sex_time = cache.game_time
+        character_data.first_record.first_sex_time = game_time.now()
         character_data.first_record.first_sex_place = character_data.position
         character_data.first_record.first_sex_posture = instruct_name
     if target_data.talent[0] == 1:
@@ -1113,7 +1111,7 @@ def handle_first_sex(
         # NPC的V破处记录进部位交初体验dict（破处是权威事件，无条件覆盖通用挂钩先建的简版条目）
         target_data.first_record.first_part_sex_dict[6] = {
             "id": character_id,
-            "time": cache.game_time,
+            "time": game_time.now(),
             "place": list(target_data.position),
             "posture": instruct_name,
             "item": 1 if item_flag else -1,
@@ -1203,7 +1201,7 @@ def handle_first_a_sex(
     if character_data.talent[5] == 1 and (not item_flag):
         character_data.talent[5] = 0
         character_data.first_record.first_sex_id = target_data.cid
-        character_data.first_record.first_sex_time = cache.game_time
+        character_data.first_record.first_sex_time = game_time.now()
         character_data.first_record.first_sex_place = character_data.position
         character_data.first_record.first_sex_posture = instruct_name
     if target_data.talent[1] == 1:
@@ -1211,7 +1209,7 @@ def handle_first_a_sex(
         # NPC的A破处记录进部位交初体验dict（破处是权威事件，无条件覆盖通用挂钩先建的简版条目）
         target_data.first_record.first_part_sex_dict[8] = {
             "id": character_id,
-            "time": cache.game_time,
+            "time": game_time.now(),
             "place": list(target_data.position),
             "posture": instruct_name,
             "item": 1 if item_flag else -1,
@@ -1260,7 +1258,7 @@ def handle_first_u_sex(
     if character_data.talent[5] == 1:
         character_data.talent[5] = 0
         character_data.first_record.first_sex_id = target_data.cid
-        character_data.first_record.first_sex_time = cache.game_time
+        character_data.first_record.first_sex_time = game_time.now()
         character_data.first_record.first_sex_place = character_data.position
         character_data.first_record.first_sex_posture = instruct_name
     if target_data.talent[2] == 1:
@@ -1268,7 +1266,7 @@ def handle_first_u_sex(
         # NPC的U破处记录进部位交初体验dict（若未来接入采尿器道具破处，item记2）
         target_data.first_record.first_part_sex_dict[9] = {
             "id": character_id,
-            "time": cache.game_time,
+            "time": game_time.now(),
             "place": list(target_data.position),
             "posture": instruct_name,
             "item": -1,
@@ -1312,7 +1310,7 @@ def handle_first_w_sex(
     if character_data.talent[5] == 1:
         character_data.talent[5] = 0
         character_data.first_record.first_sex_id = target_data.cid
-        character_data.first_record.first_sex_time = cache.game_time
+        character_data.first_record.first_sex_time = game_time.now()
         character_data.first_record.first_sex_place = character_data.position
         character_data.first_record.first_sex_posture = instruct_name
     if target_data.talent[3] == 1:
@@ -1320,7 +1318,7 @@ def handle_first_w_sex(
         # NPC的W破处记录进部位交初体验dict（W破处无道具）
         target_data.first_record.first_part_sex_dict[7] = {
             "id": character_id,
-            "time": cache.game_time,
+            "time": game_time.now(),
             "place": list(target_data.position),
             "posture": instruct_name,
             "item": -1,
@@ -1412,7 +1410,7 @@ def handle_first_kiss_to_penis(
     if target_data.talent[4] == 1:
         target_data.talent[4] = 0
         target_data.first_record.first_kiss_id = character_id
-        target_data.first_record.first_kiss_time = cache.game_time
+        target_data.first_record.first_kiss_time = game_time.now()
         target_data.first_record.first_kiss_place = target_data.position
         target_data.first_record.first_kiss_body_part = 1
         # 阴茎初吻的二段结算
@@ -2013,7 +2011,7 @@ def handle_target_hypnosis_active_h_switch_change(
         )
         change_data.sanity_point -= santi_down
         character_data.pl_ability.today_sanity_point_cost += santi_down
-        handle_instruct.chara_handle_instruct_common_settle(constant.Behavior.H)
+        handle_instruct.plan_instruct_common_settle(constant.Behavior.H)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2870,7 +2868,7 @@ def handle_wait_unitl_traget_action_end(
     """
     if not add_time:
         return
-    from Script.Design import update
+    from Script.Modules.gameplay_resolution import plan_queue
 
     character_data: game_type.Character = cache.character_data[character_id]
     target_character_data = cache.character_data[
@@ -2882,13 +2880,15 @@ def handle_wait_unitl_traget_action_end(
     target_end_time = game_time.get_sub_date(
         target_character_data.behavior.duration, old_date=target_start_time
     )
-    # 到结束时间还有多少分钟
+    # 到结束时间还有多少分钟，玩家接着等这么久
     add_time = int((target_end_time - now_time).total_seconds() / 60)
-    character_data = cache.character_data[0]
-    character_data.behavior.behavior_id = constant.Behavior.WAIT
-    character_data.state = constant.CharacterStatus.STATUS_WAIT
-    character_data.behavior.duration = add_time
-    update.game_update_flow(add_time)
+    if add_time > 0:
+        plan_queue.plan_next(
+            0,
+            constant.Behavior.WAIT,
+            add_time,
+            state=constant.CharacterStatus.STATUS_WAIT,
+        )
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2993,13 +2993,13 @@ def handle_move_to_own_dormitory(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    from Script.StateMachine.default import general_movement_module
+    from Script.StateMachine.default import plan_movement
 
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
     to_target = map_handle.get_map_system_path_for_str(character_data.dormitory)
-    general_movement_module(character_id, to_target)
+    plan_movement(character_id, to_target)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -3100,7 +3100,7 @@ def handle_get_sleep_disturbed_state(
         return
     character_data: game_type.Character = cache.character_data[character_id]
     character_data.action_info.sleep_disturbed_end_time = (
-        game_time.get_sub_date(minute=60, old_date=cache.game_time)
+        game_time.get_sub_date(minute=60, old_date=game_time.now())
     )
 
 
@@ -3245,16 +3245,10 @@ def handle_interrupt_target_activity(
                 old_date=target_data.behavior.start_time,
             )
             if target_end_time >= character_data.behavior.start_time:
-                if target_data.behavior.behavior_id == constant.Behavior.MOVE:
-                    target_data.behavior = game_type.Behavior()
-                    target_data.state = constant.CharacterStatus.STATUS_ARDER
-                    instuct_judege.init_character_behavior_start_time(
-                        target_data.cid, character_data.behavior.start_time
-                    )
-                else:
-                    settle_behavior.handle_settle_behavior(
-                        target_data.cid, character_data.behavior.start_time
-                    )
+                from Script.Modules.gameplay_resolution import plan_queue
+
+                # 对方的行动在她自己的 ActionOver 里收尾
+                plan_queue.interrupt(target_data.cid)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5335,12 +5329,15 @@ def handle_chara_on_line(
     character_data.sp_flag.in_diplomatic_visit = old_in_diplomatic_visit
     if old_imprisonment:
         character_data.sp_flag.imprisonment = True
-    # 赋予默认行动数据
+    # 赋予默认行动数据：与内核加入角色时给的空闲一致，此刻开始、0分钟；已在内核里的角色当前的行动被打断
+    from Script.Modules.gameplay_resolution import plan_queue
+
     character_data.target_character_id = character_id
     character_data.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
     character_data.behavior.start_time = now_time
-    character_data.behavior.duration = 1
+    character_data.behavior.duration = 0
     character_data.state = constant.CharacterStatus.STATUS_ARDER
+    plan_queue.interrupt(character_id)
     # 加入当前干员列表
     if character_id not in cache.npc_id_got:
         cache.npc_id_got.add(character_id)
@@ -8768,7 +8765,7 @@ def handle_give_gift_add_adjust(
             character_data.ability[40]
         )
         # 更新最后赠送时间
-        target_data.action_info.last_gift_time = cache.game_time
+        target_data.action_info.last_gift_time = game_time.now()
         # 好感礼物小
         if gift_data.item_id == 172:
             base_chara_favorability_and_trust_common_settle(
@@ -9088,6 +9085,7 @@ def handle_teach_add_just(
         growth_handle,
         schedule_handle,
     )
+    from Script.Modules.gameplay_resolution import plan_queue
 
     character_data: game_type.Character = cache.character_data[character_id]
 
@@ -9182,9 +9180,16 @@ def handle_teach_add_just(
                             other_character_data.cid,
                         )
 
-                    # 手动结算该状态
-                    character_behavior.judge_character_status(chara_id)
-                    # other_character_data.state = constant.CharacterStatus.STATUS_ARDER
+                    # 该生重新开始听课，排进他的计划队列
+                    if not plan_queue.plan_has(
+                        chara_id, constant.Behavior.ATTENT_CLASS
+                    ):
+                        plan_queue.plan_next(
+                            chara_id,
+                            constant.Behavior.ATTENT_CLASS,
+                            other_character_data.behavior.duration,
+                            interrupt=True,
+                        )
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -9311,7 +9316,7 @@ def handle_skip_class_add_just(
     growth_data = growth_handle.get_child_growth(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
     growth_data.skip_class_flag = True
-    start_time = character_data.behavior.start_time or cache.game_time
+    start_time = character_data.behavior.start_time or game_time.now()
     growth_data.skip_class_day = start_time.toordinal()
     # 翘课换来的那点轻松：抑郁小幅回落。不给任何学习收益，这是翘课的代价
     if 19 in character_data.status_data:
@@ -12462,7 +12467,7 @@ def record_first_part_sex(
         behavior_name = game_config.config_behavior[behavior_id].name
     target_data.first_record.first_part_sex_dict[part_id] = {
         "id": character_id,
-        "time": cache.game_time,
+        "time": game_time.now(),
         "place": list(target_data.position),
         "posture": behavior_name,
         "item": item,

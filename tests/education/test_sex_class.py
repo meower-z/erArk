@@ -50,7 +50,7 @@ student_b = make_character(
     202, "女儿B", 152, daughter=True, stage=103, mother_id=102
 )
 adult = make_character(301, "成年干员", 21)
-today = cache.game_time.date().toordinal()
+today = game_time.now().date().toordinal()
 
 section("键与存取")
 check("键格式", sex_class_handle.get_class_key(739510, 3) == "739510-3")
@@ -118,7 +118,7 @@ cache.rhodes_island.temp_sex_class = {}
 
 section("星期 → 日期")
 set_time(period_time(3))
-weekday = cache.game_time.weekday()
+weekday = game_time.now().weekday()
 check(
     "今天、还没开始的节次 → 今天",
     sex_class_handle.get_date_ordinal_by_week_day(weekday, 5) == today,
@@ -538,11 +538,11 @@ check(
 set_time(period_time(6) + datetime.timedelta(minutes=20))
 check(
     "已下课的预约不再被当成等着开讲的",
-    sex_class_handle.find_reserved_class(ROOM_P, cache.game_time) == ("", None),
+    sex_class_handle.find_reserved_class(ROOM_P, game_time.now()) == ("", None),
 )
 check(
     "同一节下课后在同一间教室重开：沿用那条",
-    sex_class_handle.find_class_to_start(ROOM_P, cache.game_time)[1]
+    sex_class_handle.find_class_to_start(ROOM_P, game_time.now())[1]
     is reserved,
 )
 reopen = sex_class_handle.start_sex_class(72, [])
@@ -630,7 +630,7 @@ move_to(0, classroom_path(ROOM_P))
 move_to(201, classroom_path(ROOM_P))
 set_time(period_time(2) + datetime.timedelta(minutes=5))
 growth_handle.get_child_growth(201).last_absent_period = [
-    cache.game_time.toordinal(),
+    game_time.now().toordinal(),
     2,
 ]
 _attend = growth_handle.get_child_growth(201).attend_class_count
@@ -662,7 +662,7 @@ section(
 cache.sex_class_mode = False
 cache.group_sex_mode = False
 set_time(period_time(3))
-_hypno_day = (cache.game_time.weekday() + 3) % 7
+_hypno_day = (game_time.now().weekday() + 3) % 7
 hypno = make_character(305, "心控中的成年学生", 152)
 hypno.talent[72] = 1  # 被深层催眠
 hypno.sp_flag.unconscious_h = (
@@ -888,7 +888,7 @@ def run_effect_list(effect_id_list: list) -> None:
     """
     for effect_id in effect_id_list:
         EFFECT_DATA[effect_id](
-            0, 5, game_type.CharacterStatusChange(), cache.game_time
+            0, 5, game_type.CharacterStatusChange(), game_time.now()
         )
 
 
@@ -934,7 +934,7 @@ def open_class_for_h1(period: int, reserved: bool = True) -> dict:
     now_class = sex_class_handle.start_sex_class(70, [201, 202])
     pl.sp_flag.is_h = True
     pl.target_character_id = 201
-    EFFECT_DATA[10014](0, 5, game_type.CharacterStatusChange(), cache.game_time)
+    EFFECT_DATA[10014](0, 5, game_type.CharacterStatusChange(), game_time.now())
     return now_class
 
 
@@ -1259,9 +1259,9 @@ set_time(period_time(7) + datetime.timedelta(minutes=20))
 check(
     "L8 前置：预约的第 7 节下课后打上 ended，find_reserved_class 不再认它，开课取条目的 find_class_to_start 沿用它",
     _l8_class.get("ended") is True
-    and sex_class_handle.find_reserved_class(ROOM_P, cache.game_time)
+    and sex_class_handle.find_reserved_class(ROOM_P, game_time.now())
     == ("", None)
-    and sex_class_handle.find_class_to_start(ROOM_P, cache.game_time)[1]
+    and sex_class_handle.find_class_to_start(ROOM_P, game_time.now())[1]
     is _l8_class,
 )
 check(
@@ -1293,7 +1293,7 @@ section(
 cache.sex_class_mode = False
 cache.group_sex_mode = False
 set_time(period_time(3))
-_l9_day = (cache.game_time.weekday() + 4) % 7
+_l9_day = (game_time.now().weekday() + 4) % 7
 schedule_handle.set_class_cell(ROOM_P, _l9_day, 8, 74, -1)
 schedule_handle.set_selected_course(
     303, _l9_day, 8, education_constant.COURSE_TYPE_PRACTICE, ROOM_P
@@ -1422,9 +1422,9 @@ pl.sp_flag.is_h = (
 )
 pl.target_character_id = 301
 # 开课效果串里的 464（交互对象变成 H 状态）：玩家的交互对象是跟进教室的成年干员，一并被拉进 H
-EFFECT_DATA[464](0, 5, game_type.CharacterStatusChange(), cache.game_time)
+EFFECT_DATA[464](0, 5, game_type.CharacterStatusChange(), game_time.now())
 # 10014：两个模式置位、把场景里能参加的学生拉进 H（成年干员不是学生岗，门槛拦住她）
-EFFECT_DATA[10014](0, 5, game_type.CharacterStatusChange(), cache.game_time)
+EFFECT_DATA[10014](0, 5, game_type.CharacterStatusChange(), game_time.now())
 student_b.sp_flag.is_h = (
     True  # 女儿B 在宿舍、别处的 H 里：是学生岗的女儿，但不在玩家的场景
 )

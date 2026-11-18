@@ -10,7 +10,8 @@ from Script.Core import (
     constant,
 )
 from Script.Config import game_config, normal_config
-from Script.Design import update, map_handle, instuct_judege, game_time
+from Script.Design import map_handle, game_time
+from Script.Modules.tk_ui import player_pick
 
 panel_info_data: dict[str, object] = {}
 
@@ -223,41 +224,36 @@ class Take_Care_Baby_Panel:
 
     def settle_take_care(self, instruct_id: int) -> None:
         """结算照顾指令"""
-        instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-        character_data: game_type.Character = cache.character_data[0]
-        character_data.target_character_id = self.target_chara_id
-
         # button_text_list = ["抱一抱她","哼唱儿歌","喂奶","换尿布","教她说话","给她玩玩具"]
-
-        if instruct_id == 0:
-            character_data.behavior.behavior_id = constant.Behavior.HOLD_CHILD
-            character_data.state = constant.CharacterStatus.STATUS_HOLD_CHILD
-        elif instruct_id == 1:
-            character_data.behavior.behavior_id = (
-                constant.Behavior.SING_CHILDREN_SONG
-            )
-            character_data.state = (
-                constant.CharacterStatus.STATUS_SING_CHILDREN_SONG
-            )
-        elif instruct_id == 2:
-            character_data.behavior.behavior_id = constant.Behavior.NUIRSE_CHILD
-            character_data.state = constant.CharacterStatus.STATUS_NUIRSE_CHILD
-        elif instruct_id == 3:
-            character_data.behavior.behavior_id = (
-                constant.Behavior.CHANGE_DIAPERS
-            )
-            character_data.state = (
-                constant.CharacterStatus.STATUS_CHANGE_DIAPERS
-            )
-        elif instruct_id == 4:
-            character_data.behavior.behavior_id = constant.Behavior.TEACH_TALK
-            character_data.state = constant.CharacterStatus.STATUS_TEACH_TALK
-        elif instruct_id == 5:
-            character_data.behavior.behavior_id = constant.Behavior.GIVE_TOY
-            character_data.state = constant.CharacterStatus.STATUS_GIVE_TOY
-
-        character_data.behavior.duration = 30
-        update.game_update_flow(30)
+        behavior_id, state = {
+            0: (
+                constant.Behavior.HOLD_CHILD,
+                constant.CharacterStatus.STATUS_HOLD_CHILD,
+            ),
+            1: (
+                constant.Behavior.SING_CHILDREN_SONG,
+                constant.CharacterStatus.STATUS_SING_CHILDREN_SONG,
+            ),
+            2: (
+                constant.Behavior.NUIRSE_CHILD,
+                constant.CharacterStatus.STATUS_NUIRSE_CHILD,
+            ),
+            3: (
+                constant.Behavior.CHANGE_DIAPERS,
+                constant.CharacterStatus.STATUS_CHANGE_DIAPERS,
+            ),
+            4: (
+                constant.Behavior.TEACH_TALK,
+                constant.CharacterStatus.STATUS_TEACH_TALK,
+            ),
+            5: (
+                constant.Behavior.GIVE_TOY,
+                constant.CharacterStatus.STATUS_GIVE_TOY,
+            ),
+        }[instruct_id]
+        player_pick.choose(
+            behavior_id, 30, target=self.target_chara_id, state=state
+        )
 
 
 class Chose_First_bonus_ability_Panel:
@@ -556,7 +552,7 @@ class Order_Hotel_Room_Panel:
         cache.rhodes_island.love_hotel_room_lv = room_id + 1
         pl_character_data: game_type.Character = cache.character_data[0]
         pl_character_data.action_info.check_out_time = game_time.get_sub_date(
-            day=1, old_date=cache.game_time
+            day=1, old_date=game_time.now()
         )
         pl_character_data.action_info.check_out_time = (
             pl_character_data.action_info.check_out_time.replace(hour=12)

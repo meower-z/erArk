@@ -3,6 +3,7 @@
 import random
 import datetime
 from types import FunctionType
+from typing import TYPE_CHECKING
 from Script.Core import (
     cache_control,
     game_path_config,
@@ -20,6 +21,9 @@ from Script.Design import (
 from Script.UI.Moudle import draw
 from Script.UI.Panel import ejaculation_panel
 from Script.Config import game_config, normal_config
+
+if TYPE_CHECKING:
+    from Script.Kernel import core
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -39,8 +43,6 @@ _common_default = None
 """ common_default 模块的延迟导入缓存（同上） """
 _map_handle = None
 """ map_handle 模块的延迟导入缓存（同上） """
-_character_behavior = None
-""" character_behavior 模块的延迟导入缓存（同上） """
 
 
 def _rand_range_int(low: int, high: int) -> int:
@@ -74,7 +76,7 @@ def judge_pl_real_time_data() -> None:
     if love_hotel_room_lv > 0:
         if (
             game_time.judge_date_big_or_small(
-                cache.game_time, pl_character_data.action_info.check_out_time
+                game_time.now(), pl_character_data.action_info.check_out_time
             )
             > 0
         ):
@@ -101,16 +103,57 @@ def judge_pl_real_time_data() -> None:
     sex_class_handle.settle_orphan_class()
 
 
+def _tired_total(character_id: int, minutes: int) -> int:
+    """
+    一个行为做了 minutes 分钟时累计增加的疲劳值
+    Keyword arguments:
+    character_id -- 角色id
+    minutes -- 行为开始以来的分钟数
+    Return arguments:
+    int -- 累计增加的疲劳值
+    """
+    global _drunk_sex_common
+    if _drunk_sex_common is None:
+        from Script.System.Sex_System import drunk_sex_common as _drunk_module
+
+        _drunk_sex_common = _drunk_module
+    drunk_sex_common = _drunk_sex_common
+    tired_change = int(minutes / 6)
+    # 当前在香薰疗愈-疲劳状态下，疲劳值增加减少
+    if handle_premise.handle_aromatherapy_flag_8(character_id):
+        tired_change = int(tired_change * 0.8)
+    # 在喝醉的情况下，根据醉酒等级来提升疲劳值增加速度
+    drunk_level, __ = drunk_sex_common.get_drunk_level(character_id)
+    if drunk_level > 0:
+        tired_change = int(tired_change * (1 + drunk_level * 0.1))
+    # 大于5分钟的疲劳值增加至少为1
+    if minutes >= 5:
+        tired_change = max(tired_change, 1)
+    return tired_change
+
+
+def _visual_total(minutes: int) -> int:
+    """
+    视觉系技艺开着做了 minutes 分钟时累计消耗的理智（倍率前）：每 12 分钟 1，行为做了就至少 1
+    Keyword arguments:
+    minutes -- 行为开始以来的分钟数
+    Return arguments:
+    int -- 累计消耗的理智
+    """
+    return max(int(minutes / 12), 1) if minutes > 0 else 0
+
+
 def character_aotu_change_value(
     character_id: int,
     now_time: datetime.datetime,
-    pl_start_time: datetime.datetime,
+    since: datetime.datetime,
 ) -> None:
     """
-    结算角色随时间自动增加的数值
+    结算角色随时间自动增加的数值：当前行为与 (since, now_time) 重叠的那段
     Keyword arguments:
     character_id -- 角色id
-    now_time -- 指定时间
+    now_time -- 结算到的时间
+    since -- 从这一时刻算起
     """
     # 延迟导入并缓存，避免循环导入且不在热路径反复执行导入机制
     global _drunk_sex_common
@@ -124,17 +167,21 @@ def character_aotu_change_value(
     if now_character_data.target_character_id not in cache.character_data:
         now_character_data.target_character_id = character_id
     # 获取实际增加时间
-    true_add_time = get_true_add_time(character_id, now_time, pl_start_time)
+    true_add_time = get_true_add_time(character_id, now_time, since)
+    # 这个行为在 since 之前做过的分钟数：取整的数值按行为开始以来的分钟数取整，分段结算的合计与整段结算相同
+    behavior_start = now_character_data.behavior.start_time
+    done = max(int((since - behavior_start).total_seconds() / 60), 0)
 
     # 性技实操课的三次提醒（Plan 22 四期 §3.28.6）
-    # 一律用跨越判定（上次结算 < 提醒时刻 <= 当前）：游戏时间按行为时长跳跃，
-    #    玩家13:00开始一个60分钟的行为直接跳到14:00，13:30这个时刻从来没有被"经过"过，
-    #    用等于判定的话提醒永远不会触发
+    # 一律用跨越判定（上次结算 < 提醒时刻 <= 当前）：时钟按 5 分钟与行动的结束跳跃，
+    #    提醒时刻不一定正好被停到，用等于判定的话提醒可能永远不会触发
     if character_id == 0:
-        settle_sex_class_notify(now_character_data, now_behavior_id, now_time)
+        settle_sex_class_notify(
+            now_character_data, now_behavior_id, now_time, since
+        )
 
     # 结算疲劳值
-    settle_tired(character_id, true_add_time)
+    settle_tired(character_id, true_add_time, done)
 
     # 休息时回复体力、气力
     if now_behavior_id == constant.Behavior.REST:
@@ -142,19 +189,16 @@ def character_aotu_change_value(
 
     # 睡觉时大量减少疲劳值，增加熟睡值，回复体力、气力
     elif now_behavior_id == constant.Behavior.SLEEP:
-        settle_sleep(character_id, true_add_time)
+        settle_sleep(character_id, true_add_time, done)
 
     # 结算尿意值
-    if (
-        character_id == 0
-        and not cache.all_system_setting.difficulty_setting[12]
-    ):
+    if character_id == 0 and not cache.difficulty_setting[12]:
         pass
     else:
         add_urinate: float = _rand_range_int(
             int(true_add_time * 0.8), int(true_add_time * 1.2)
         )
-        add_urinate *= cache.all_system_setting.difficulty_setting[11] / 2
+        add_urinate *= cache.difficulty_setting[11] / 2
         new_urinate = min(
             now_character_data.urinate_point + int(add_urinate), 300
         )
@@ -185,12 +229,11 @@ def character_aotu_change_value(
 
     # 结算玩家
     if character_id == 0:
-
         # 非H模式下结算玩家的射精值减少
         if not now_character_data.sp_flag.is_h:
             # 上次射精时间距离现在超过30分钟则射精值减少
             last_time = now_character_data.action_info.last_eaj_add_time
-            if (cache.game_time - last_time) > datetime.timedelta(minutes=30):
+            if (game_time.now() - last_time) > datetime.timedelta(minutes=30):
                 new_eja = max(
                     now_character_data.eja_point - int(true_add_time * 10), 0
                 )
@@ -198,13 +241,15 @@ def character_aotu_change_value(
 
         # 玩家缓慢恢复精液量
         new_semen = min(
-            now_character_data.semen_point + int(true_add_time / 20),
+            now_character_data.semen_point
+            + int((done + true_add_time) / 20)
+            - int(done / 20),
             now_character_data.semen_point_max,
         )
         now_character_data.semen_point = new_semen
 
         # 结算玩家源石技艺的理智值消耗
-        settle_player_ability(character_id, true_add_time)
+        settle_player_ability(character_id, true_add_time, done)
 
         # 非时停中，当前地点有人睡觉时，结算玩家动作对所有睡眠NPC的影响
         if not handle_premise.handle_time_stop_on(
@@ -250,6 +295,7 @@ def settle_sex_class_notify(
     pl_character_data: game_type.Character,
     now_behavior_id: str,
     now_time: datetime.datetime,
+    since: datetime.datetime,
 ) -> None:
     """
     输出性技实操课的三次提醒（Plan 22 四期 §3.28.6、§3.28.9）
@@ -265,23 +311,26 @@ def settle_sex_class_notify(
     pl_character_data -- 玩家角色数据
     now_behavior_id -- 玩家当前的行为id
     now_time -- 当前时刻
+    since -- 上一次结算到的时刻；只发 (since, now_time] 里跨过的提醒
     Return arguments:
     无
     """
     from Script.System.Education_System import sex_class_handle
 
     text_list = []
-    # 第一次：起床时
-    if now_behavior_id == constant.Behavior.GET_UP:
+    start_time = pl_character_data.behavior.start_time or since
+    # 第一次：起床时，只在结算到起床开始的那一段里发
+    if (
+        now_behavior_id == constant.Behavior.GET_UP
+        and since <= start_time < now_time
+    ):
         wake_text = sex_class_handle.get_today_class_notify_text()
         if wake_text:
             text_list.append(wake_text)
-    # 第二、三次：跨越判定
-    last_time = pl_character_data.behavior.start_time
-    if last_time is not None:
-        text_list.extend(
-            sex_class_handle.check_and_send_notify(last_time, now_time)
-        )
+    # 第二、三次：跨越判定，从行为开始与上一次结算中更晚的那个算起
+    text_list.extend(
+        sex_class_handle.check_and_send_notify(max(start_time, since), now_time)
+    )
     for now_text in text_list:
         now_draw = draw.NormalDraw()
         now_draw.width = normal_config.config_normal.text_width
@@ -292,22 +341,22 @@ def settle_sex_class_notify(
 def get_true_add_time(
     character_id: int,
     now_time: datetime.datetime,
-    pl_start_time: datetime.datetime,
+    since: datetime.datetime,
 ) -> int:
     """
     获取真实的行动时间\n
     Keyword arguments:\n
     character_id -- 角色id\n
     now_time -- 当前时间\n
-    pl_start_time -- 玩家开始时间\n
+    since -- 从这一时刻算起\n
     Return arguments:\n
     true_add_time -- 真实的行动时间\n
     """
     now_character_data: game_type.Character = cache.character_data[character_id]
     add_time = now_character_data.behavior.duration
-    # 真实的开始时间是当前角色行动开始时间和玩家行动开始时间中更晚的那个
+    # 真实的开始时间是当前角色行动开始时间和 since 中更晚的那个
     now_character_behavior_start_time = now_character_data.behavior.start_time
-    true_start_time = max(now_character_behavior_start_time, pl_start_time)
+    true_start_time = max(now_character_behavior_start_time, since)
     # 真实的结束时间是当前角色行动结束时间和当前时间中更早的那个
     now_character_end_time = game_time.get_sub_date(
         minute=add_time, old_date=now_character_behavior_start_time
@@ -429,7 +478,7 @@ def change_character_persistent_state(character_id: int) -> None:
     # 因为睡眠时间很长，会导致持续状态的时间超过了当前时间，所以改为使用当前时间
     # start_time = now_character_data.behavior.start_time
     # now_time = game_time.get_sub_date(minute=now_character_data.behavior.duration, old_date=start_time)
-    now_time = cache.game_time
+    now_time = game_time.now()
 
     # H下结算全部持续状态
     if now_character_data.sp_flag.is_h:
@@ -454,33 +503,20 @@ def change_character_persistent_state(character_id: int) -> None:
                     now_character_data.h_state.body_item[i][2] = None
 
 
-def settle_tired(character_id: int, true_add_time: int) -> None:
+def settle_tired(character_id: int, true_add_time: int, done: int = 0) -> None:
     """
-    疲劳值结算：增加疲劳值
+    疲劳值结算：增加疲劳值（这一段前后行为开始以来累计值之差）
     参数:
         character_id (int): 角色ID
         true_add_time (int): 实际行动时间（分钟）
+        done (int): 这个行为在这一段之前做过的分钟数
     返回:
         None
     """
-    global _drunk_sex_common
-    if _drunk_sex_common is None:
-        from Script.System.Sex_System import drunk_sex_common as _drunk_module
-
-        _drunk_sex_common = _drunk_module
-    drunk_sex_common = _drunk_sex_common
     now_character_data: game_type.Character = cache.character_data[character_id]
-    tired_change = int(true_add_time / 6)
-    # 当前在香薰疗愈-疲劳状态下，疲劳值增加减少
-    if handle_premise.handle_aromatherapy_flag_8(character_id):
-        tired_change = int(tired_change * 0.8)
-    # 在喝醉的情况下，根据醉酒等级来提升疲劳值增加速度
-    drunk_level, __ = drunk_sex_common.get_drunk_level(character_id)
-    if drunk_level > 0:
-        tired_change = int(tired_change * (1 + drunk_level * 0.1))
-    # 大于5分钟的疲劳值增加至少为1
-    if true_add_time >= 5:
-        tired_change = max(tired_change, 1)
+    tired_change = _tired_total(
+        character_id, done + true_add_time
+    ) - _tired_total(character_id, done)
     # 如果为0则不结算
     if tired_change <= 0:
         return
@@ -540,12 +576,13 @@ def settle_rest(character_id: int, true_add_time: int) -> None:
     )
 
 
-def settle_sleep(character_id: int, true_add_time: int) -> None:
+def settle_sleep(character_id: int, true_add_time: int, done: int = 0) -> None:
     """
-    睡眠状态结算：减少疲劳，增加熟睡，恢复体力和气力
+    睡眠状态结算：减少疲劳（每睡满 6 分钟减 2，按行为开始以来的分钟数算），增加熟睡，恢复体力和气力
     参数:
         character_id (int): 角色ID
         true_add_time (int): 实际行动时间（分钟）
+        done (int): 这个行为在这一段之前做过的分钟数
     返回:
         None
     """
@@ -555,7 +592,7 @@ def settle_sleep(character_id: int, true_add_time: int) -> None:
     # 疲劳值越高，熟睡值增加越快，最高为疲劳值满时的2倍
     tired_adjust = 1 + now_char.tired_point / 160
     # 减少疲劳
-    tired_change = int(true_add_time / 6) * 2
+    tired_change = (int((done + true_add_time) / 6) - int(done / 6)) * 2
     now_char.tired_point = max(now_char.tired_point - tired_change, 0)
     # 增加熟睡值
     level, __ = attr_calculation.get_sleep_level(now_char.sleep_point)
@@ -589,19 +626,11 @@ def settle_sleep(character_id: int, true_add_time: int) -> None:
                     now_char.name
                 )
                 handle_npc_ai_in_h.recover_from_unconscious_h(0, info_text)
-            # 否则直接结束睡眠行为，转为空闲状态交由AI选择新行动
+            # 否则打断睡眠，她在自己的行动结束处交由AI选择新行动
             else:
-                # 延迟导入并缓存，避免循环导入（导入放在罕见分支内，不增加热路径开销）
-                global _character_behavior
-                if _character_behavior is None:
-                    from Script.Design import (
-                        character_behavior as _character_behavior_module,
-                    )
+                from Script.Modules.gameplay_resolution import plan_queue
 
-                    _character_behavior = _character_behavior_module
-                _character_behavior.judge_character_status_time_over(
-                    character_id, cache.game_time, end_now=2
-                )
+                plan_queue.interrupt(character_id)
             # 已醒来，跳过后续的睡眠回复结算
             return
     # 其他情况下正常增加熟睡值
@@ -643,19 +672,24 @@ def settle_sleep(character_id: int, true_add_time: int) -> None:
     )
 
 
-def settle_player_ability(character_id: int, true_add_time: int) -> None:
+def settle_player_ability(
+    character_id: int, true_add_time: int, done: int = 0
+) -> None:
     """
-    玩家源石技艺结算：消耗理智，管理技艺状态
+    玩家源石技艺结算：消耗理智，管理技艺状态；0 分钟的一段不消耗
     参数:
         character_id (int): 角色ID（玩家为0）
         true_add_time (int): 实际行动时间（分钟）
+        done (int): 这个行为在这一段之前做过的分钟数
     返回:
         None
     """
+    if true_add_time <= 0:
+        return
     character_data = cache.character_data[character_id]
     # 视觉系技艺消耗
     if character_data.pl_ability.visual:
-        down_sp = max(int(true_add_time / 12), 1)
+        down_sp = _visual_total(done + true_add_time) - _visual_total(done)
         multiple = (
             character_data.talent[307]
             + character_data.talent[308]
@@ -670,37 +704,71 @@ def settle_player_ability(character_id: int, true_add_time: int) -> None:
         down_sp = min(max(true_add_time * 2, 1), character_data.sanity_point)
         character_data.sanity_point -= down_sp
         character_data.pl_ability.today_sanity_point_cost += down_sp
-    # 中断技艺
-    if (
-        handle_premise.handle_at_least_one_arts_on(character_id)
-        and character_data.sanity_point <= 0
-        and character_data.behavior.behavior_id
-        not in {
-            constant.Behavior.HYPNOSIS_CANCEL,
-            constant.Behavior.TIME_STOP_OFF,
-            constant.Behavior.LOW_OBSCENITY_ANUS,
-            constant.Behavior.HIGH_OBSCENITY_ANUS,
-            constant.Behavior.DO_H_FAIL,
-        }
-    ):
-        draw_wait = draw.WaitDraw()
-        draw_wait.width = window_width
-        draw_wait.style = "red"
-        draw_wait.text = _("\n理智值不足，开启的源石技艺已全部中断\n")
-        draw_wait.draw()
-        character_data.sanity_point = 0
-        character_data.pl_ability.visual = False
-        target = cache.character_data[character_data.target_character_id]
-        from Script.System.Instruct_System import handle_instruct
 
-        if target.sp_flag.unconscious_h >= 4:
-            handle_instruct.chara_handle_instruct_common_settle(
-                constant.Behavior.HYPNOSIS_CANCEL
-            )
-        if handle_premise.handle_time_stop_on(character_id):
-            handle_instruct.chara_handle_instruct_common_settle(
-                constant.Behavior.TIME_STOP_OFF
-            )
+
+ARTS_BREAK_EXEMPT = frozenset(
+    {
+        constant.Behavior.HYPNOSIS_CANCEL,
+        constant.Behavior.TIME_STOP_OFF,
+        constant.Behavior.LOW_OBSCENITY_ANUS,
+        constant.Behavior.HIGH_OBSCENITY_ANUS,
+        constant.Behavior.DO_H_FAIL,
+    }
+)
+""" 玩家在做这些行为时理智耗尽，技艺不中断 """
+
+
+def _arts_ends_to_plan() -> list[str]:
+    """
+    要给玩家排上的解除行为：催眠或时停还开着、解除行为还没排上
+    Return arguments:
+    list -- 解除催眠、解除时停的行为id
+    """
+    from Script.Modules.gameplay_resolution import plan_queue
+
+    ends: list[str] = []
+    if handle_premise.handle_target_in_hypnosis(0):
+        ends.append(constant.Behavior.HYPNOSIS_CANCEL)
+    if handle_premise.handle_time_stop_on(0):
+        ends.append(constant.Behavior.TIME_STOP_OFF)
+    return [b for b in ends if not plan_queue.plan_has(0, b)]
+
+
+def arts_break_due() -> bool:
+    """
+    玩家理智耗尽、还有源石技艺开着且没排上解除
+    Return arguments:
+    bool -- 该中断技艺时为真
+    """
+    character_data = cache.character_data[0]
+    if (
+        character_data.sanity_point > 0
+        or character_data.behavior.behavior_id in ARTS_BREAK_EXEMPT
+    ):
+        return False
+    return bool(character_data.pl_ability.visual or _arts_ends_to_plan())
+
+
+def break_arts() -> "core.Effects":
+    """
+    理智耗尽，开着的源石技艺全部中断：关透视，给玩家排上解除催眠与解除时停
+    Return arguments:
+    Effects -- 要交回内核的打断
+    """
+    from Script.System.Instruct_System import handle_instruct
+
+    draw_wait = draw.WaitDraw()
+    draw_wait.width = window_width
+    draw_wait.style = "red"
+    draw_wait.text = _("\n理智值不足，开启的源石技艺已全部中断\n")
+    draw_wait.draw()
+    character_data = cache.character_data[0]
+    character_data.sanity_point = 0
+    character_data.pl_ability.visual = False
+    items: list[core.Effect] = []
+    for behavior_id in _arts_ends_to_plan():
+        items.extend(handle_instruct.plan_instruct_common_settle(behavior_id))
+    return tuple(items)
 
 
 def get_sleep_disturbance_value(behavior_id: str, true_add_time: int) -> int:

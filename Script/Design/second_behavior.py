@@ -10,6 +10,7 @@ from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 
 from typing import TYPE_CHECKING
+from Script.Design import game_time
 
 if TYPE_CHECKING:
     from types import ModuleType
@@ -102,7 +103,7 @@ def character_get_second_behavior(
             state_id = orgasm_settle_module.orgasm_part_to_state_id[part_str]
             if state_id not in first_record.first_strong_orgasm_dict:
                 first_record.first_strong_orgasm_dict[state_id] = [
-                    cache.game_time,
+                    game_time.now(),
                     list(character_data.position),
                 ]
             if (
@@ -110,7 +111,7 @@ def character_get_second_behavior(
                 and state_id not in first_record.first_super_orgasm_dict
             ):
                 first_record.first_super_orgasm_dict[state_id] = [
-                    cache.game_time,
+                    game_time.now(),
                     list(character_data.position),
                 ]
         # (2) 刻印升级行为则记录刻印首达等级（id格式{类型}_mark_{等级}，与部位绝顶id格式互斥）
@@ -119,7 +120,7 @@ def character_get_second_behavior(
             and second_behavior_id not in first_record.first_mark_dict
         ):
             first_record.first_mark_dict[second_behavior_id] = [
-                cache.game_time,
+                game_time.now(),
                 list(character_data.position),
             ]
         # (3) 固定二段行为id到特殊履历的白名单映射（受精/喷乳绝顶/放尿绝顶）

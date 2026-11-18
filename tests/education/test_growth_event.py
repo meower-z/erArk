@@ -190,7 +190,7 @@ check(
     all(len(one) == 3 and one[1] > 0 for one in candidate),
 )
 growth_handle.get_child_growth(201).event_history[candidate[0][0]] = {
-    "time": cache.game_time,
+    "time": game_time.now(),
     "choice": 0,
 }
 check(
@@ -284,7 +284,7 @@ cache.rhodes_island.official_event_queue = [
         "department": E.GROWTH_EVENT_DEPARTMENT,
         "chara_id": 999,
         "partner_id": 0,
-        "add_time": cache.game_time,
+        "add_time": game_time.now(),
     }
     for _index in range(official_event_handle.get_queue_max())
 ]
@@ -316,7 +316,7 @@ check(
 cache.rhodes_island.official_event_queue = []
 for uid in semester_bucket:
     growth_handle.get_child_growth(202).event_history[uid] = {
-        "time": cache.game_time,
+        "time": game_time.now(),
         "choice": 0,
     }
 check(
@@ -407,7 +407,7 @@ section(
 real_baby_id = character_handle.born_new_character(102, "新生儿")
 # 生产面板随后会写出生时刻（born_event_panel），这里照做
 cache.character_data[real_baby_id].pregnancy.born_time = (
-    cache.game_time - datetime.timedelta(days=20)
+    game_time.now() - datetime.timedelta(days=20)
 )
 check(
     "真实出生的婴儿不在 npc_id_got（到长成幼女才上线），是玩家的女儿、阶段 101",
@@ -453,13 +453,13 @@ section(
 )
 # 今天 2026-09-07 09:00（游戏时间）：萝莉与幼女的本阶段都从 30 天前（2026-06-07 09:00）起，婴儿 5 天前出生
 set_time(DEFAULT_TIME)
-loli.pregnancy.born_time = cache.game_time - datetime.timedelta(
+loli.pregnancy.born_time = game_time.now() - datetime.timedelta(
     days=pregnancy_constant.GROW_TO_LOLI_DAY + 30
 )
-child.pregnancy.born_time = cache.game_time - datetime.timedelta(
+child.pregnancy.born_time = game_time.now() - datetime.timedelta(
     days=pregnancy_constant.REARING_COMPLETE_DAY + 30
 )
-baby.pregnancy.born_time = cache.game_time - datetime.timedelta(days=5)
+baby.pregnancy.born_time = game_time.now() - datetime.timedelta(days=5)
 check(
     "M1 萝莉本阶段已过 30 天：「萝莉期第 31 天」（不按出生以来的总天数写）",
     growth_event_handle.get_growth_event_title({"chara_id": 201})
@@ -697,7 +697,7 @@ check(
 cache.rhodes_island.official_event_queue = []
 growth_handle.get_child_growth(214).event_history[
     E.ADULT_EXTRA_EVENT_UID_LIST[0]
-] = {"time": cache.game_time, "choice": 0}
+] = {"time": game_time.now(), "choice": 0}
 growth_event_handle.push_graduation_event(214)
 _queue_uid = [one["uid"] for one in official_event_handle.get_queue()]
 check(
@@ -714,7 +714,7 @@ cache.rhodes_island.official_event_queue = [
         "department": E.GROWTH_EVENT_DEPARTMENT,
         "chara_id": 999,
         "partner_id": 0,
-        "add_time": cache.game_time,
+        "add_time": game_time.now(),
     }
     for _index in range(official_event_handle.get_queue_max())
 ]
@@ -860,8 +860,8 @@ section(
     "Plan 31 §3.14（Q4 / L13）：生日、季月交替、断奶的事件只在正文写的时点出现"
 )
 _saved_born_211 = mate.pregnancy.born_time
-mate.pregnancy.born_time = cache.game_time.replace(
-    year=cache.game_time.year - 1, hour=6
+mate.pregnancy.born_time = game_time.now().replace(
+    year=game_time.now().year - 1, hour=6
 )
 check("L13 今天是她的生日：通用 3 进候选", "通用3" in candidate_uid_set(211))
 mate.pregnancy.born_time = mate.pregnancy.born_time - datetime.timedelta(days=1)
@@ -1011,7 +1011,7 @@ cache.rhodes_island.official_event_queue = [
         "department": E.GROWTH_EVENT_DEPARTMENT,
         "chara_id": 999,
         "partner_id": 0,
-        "add_time": cache.game_time,
+        "add_time": game_time.now(),
     }
     for _index in range(official_event_handle.get_queue_max())
 ]
@@ -1022,7 +1022,7 @@ check(
 )
 cache.rhodes_island.official_event_queue = []
 growth_handle.get_child_growth(211).event_history[E.BIRTHDAY_EVENT_UID] = {
-    "time": cache.game_time,
+    "time": game_time.now(),
     "choice": 1,
 }
 check(
@@ -1154,7 +1154,7 @@ cache.rhodes_island.all_work_npc_set.setdefault(
 to_loli = make_character(
     216, "要长成萝莉的幼女", 152, daughter=True, stage=102, mother_id=103
 )
-to_loli.pregnancy.born_time = cache.game_time - datetime.timedelta(
+to_loli.pregnancy.born_time = game_time.now() - datetime.timedelta(
     days=pregnancy_constant.GROW_TO_LOLI_DAY + 10
 )  # 已过长成萝莉的阈值 10 天
 for _uid in (child_bucket[0], "通用27", "通用16"):
@@ -1173,7 +1173,7 @@ check(
 to_girl = make_character(
     217, "要成年的萝莉", 152, daughter=True, stage=103, mother_id=103
 )
-to_girl.pregnancy.born_time = cache.game_time - datetime.timedelta(
+to_girl.pregnancy.born_time = game_time.now() - datetime.timedelta(
     days=pregnancy_constant.GROW_TO_GIRL_DAY + 13
 )  # 已过成年的阈值 13 天
 for _uid in (loli_bucket[0], "通用16", "期末1", "期末3"):

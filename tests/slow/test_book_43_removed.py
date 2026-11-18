@@ -224,6 +224,8 @@ class Book43RemovedTest(SlowTestCase):
     def test_old_save_npc_reads_book(self) -> None:
         """干员借着 43 号书、存档时正读着它：读档后她手上没有 43 号书、正读着的书号归零，
         读完配置里所有书时判定借不到书；她读满这一段，再走娱乐读书时读的是书籍配置里的书，借书卡上 43 号书记为已还"""
+        from Script.Design import game_time
+
         from Script.Config import game_config
         from Script.Core import constant
         from Script.UI.Panel import borrow_book_panel, manage_library
@@ -278,7 +280,7 @@ class Book43RemovedTest(SlowTestCase):
             f"{READ_MINUTES * 2} 分钟内她读完了这一段",
         )
         self.assertGreaterEqual(
-            self.cache.game_time,
+            game_time.now(),
             read_end,
             f"她读满 {READ_MINUTES} 分钟才停下，没有中途被打断",
         )
@@ -316,6 +318,8 @@ class Book43RemovedTest(SlowTestCase):
         Return arguments:
         int -- 干员的角色id
         """
+        from Script.Design import game_time
+
         from Script.Core import constant
         from Script.UI.Panel import borrow_book_panel
 
@@ -327,7 +331,7 @@ class Book43RemovedTest(SlowTestCase):
         character_data.behavior.behavior_id = constant.Behavior.READ_BOOK
         character_data.state = constant.CharacterStatus.STATUS_READ_BOOK
         character_data.behavior.book_id = BOOK
-        character_data.behavior.start_time = self.cache.game_time
+        character_data.behavior.start_time = game_time.now()
         character_data.behavior.duration = READ_MINUTES
         return character_id
 

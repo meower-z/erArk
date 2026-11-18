@@ -17,6 +17,7 @@ import math
 
 from Script.Core import cache_control
 from Script.Config import game_config
+from Script.Design import game_time
 from ..check_registry import CheckFailure, register_check, make_failure
 
 # 六个数值容器字段名，NUM-01及后续多条检查复用
@@ -1060,7 +1061,7 @@ def check_num_25_base_resource() -> list[CheckFailure]:
                 "基地资源键集覆盖配表且为非负整数",
                 (
                     f"资源缺键={missing} 键类型合法={key_type_ok} 非法值={value_bad} 涉及资源名={detail_names} "
-                    f"game_time={getattr(cache, 'game_time', '?')} "
+                    f"game_time={game_time.now()} "
                     f"warehouse_capacity={getattr(rhodes_island, 'warehouse_capacity', '?')}"
                 ),
             )
@@ -1201,9 +1202,7 @@ def check_num_29_urinate_point_upper_bound() -> list[CheckFailure]:
     cache = cache_control.cache
     if cache.debug_mode:
         return []
-    difficulty_setting = getattr(
-        getattr(cache, "all_system_setting", None), "difficulty_setting", None
-    )
+    difficulty_setting = getattr(cache, "difficulty_setting", None)
     difficulty_setting = (
         difficulty_setting if isinstance(difficulty_setting, dict) else {}
     )
@@ -1253,7 +1252,7 @@ def check_num_30_desire_point_non_negative() -> list[CheckFailure]:
                     "NUM-30",
                     "欲望值为非负整数且不设上限",
                     f"角色cid={cid} name={_chara_name(chara)} desire_point={desire!r} ability[33]={ability_33} "
-                    f"game_time={getattr(cache, 'game_time', '?')}",
+                    f"game_time={game_time.now()}",
                     [cid],
                 )
             )

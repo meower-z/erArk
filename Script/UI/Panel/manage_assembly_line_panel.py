@@ -16,6 +16,7 @@ from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
 
 from typing import TYPE_CHECKING
+from Script.Design import game_time
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -141,12 +142,12 @@ def settle_assembly_line(
             if newdayflag:
                 max_time = (
                     24
-                    + cache.game_time.hour
+                    + game_time.now().hour
                     - cache.rhodes_island.assembly_line[assembly_line_id][4]
                 )
             else:
                 max_time = (
-                    cache.game_time.hour
+                    game_time.now().hour
                     - cache.rhodes_island.assembly_line[assembly_line_id][4]
                 )
             # 生产效率(动态计算)
@@ -230,7 +231,7 @@ def settle_assembly_line(
         # 重置收菜时间
         cache.rhodes_island.assembly_line[assembly_line_id][
             4
-        ] = cache.game_time.hour
+        ] = game_time.now().hour
     # 结算成就
     achievement_panel.achievement_flow(_("生产"))
     # 结算住院病房扩展模块
@@ -686,7 +687,7 @@ class Manage_Assembly_Line_Panel:
         if (
             cache.rhodes_island.assembly_line[assembly_line_id][0] != 0
             and cache.rhodes_island.assembly_line[assembly_line_id][4]
-            != cache.game_time.hour
+            != game_time.now().hour
         ):
             pass
         else:

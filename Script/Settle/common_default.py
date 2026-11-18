@@ -5,7 +5,6 @@ from Script.Design import (
     character_handle,
     map_handle,
     attr_calculation,
-    handle_npc_ai,
     handle_premise,
     handle_ability,
 )
@@ -16,6 +15,7 @@ from Script.UI.Moudle import draw
 from Script.UI.Panel import ejaculation_panel, system_setting
 
 import random, math
+from Script.Design import game_time
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -131,7 +131,6 @@ def base_chara_hp_mp_common_settle(
                 ]
                 target_change.hit_point += mp_value
             character_data.hit_point = max(1, character_data.hit_point)
-            handle_npc_ai.judge_character_tired_sleep(character_id)
         # 交互对象也同样
         if (
             target_flag
@@ -180,8 +179,6 @@ def base_chara_hp_mp_common_settle(
         character_data.hit_point = min(
             character_data.hit_point_max, character_data.hit_point
         )
-        # 检测hp1导致的疲劳
-        handle_npc_ai.judge_character_tired_sleep(character_id)
         # 交互对象也同样
         if (
             target_flag
@@ -207,7 +204,6 @@ def base_chara_hp_mp_common_settle(
                 target_character_data.hit_point_max,
                 target_character_data.hit_point,
             )
-            handle_npc_ai.judge_character_tired_sleep(target_character_id)
 
 
 def base_chara_state_common_settle(
@@ -477,7 +473,7 @@ def chara_feel_state_adjust(
         other_npc_num = min(10, other_npc_num)
         final_adjust += other_npc_num * 0.02
     # 系统难度修正
-    now_difficulty = cache.all_system_setting.difficulty_setting[2]
+    now_difficulty = cache.difficulty_setting[2]
     difficulty_adjust = system_setting.get_difficulty_coefficient(
         now_difficulty
     )
@@ -593,7 +589,7 @@ def chara_base_state_adjust(
         other_npc_num = min(10, other_npc_num)
         final_adjust += other_npc_num * 0.05
     # 系统难度修正
-    now_difficulty = cache.all_system_setting.difficulty_setting[3]
+    now_difficulty = cache.difficulty_setting[3]
     difficulty_adjust = system_setting.get_difficulty_coefficient(
         now_difficulty
     )
@@ -845,7 +841,7 @@ def base_chara_favorability_and_trust_common_settle(
                 # 连续重复减值
                 final_adjust *= continuous_adjust
                 # 系统难度修正
-                now_difficulty = cache.all_system_setting.difficulty_setting[1]
+                now_difficulty = cache.difficulty_setting[1]
                 difficulty_adjust = system_setting.get_difficulty_coefficient(
                     now_difficulty
                 )
@@ -892,7 +888,7 @@ def base_chara_favorability_and_trust_common_settle(
                 # 连续重复减值
                 final_adjust *= continuous_adjust
                 # 系统难度修正
-                now_difficulty = cache.all_system_setting.difficulty_setting[1]
+                now_difficulty = cache.difficulty_setting[1]
                 difficulty_adjust = system_setting.get_difficulty_coefficient(
                     now_difficulty
                 )
@@ -1307,7 +1303,7 @@ def base_chara_experience_common_settle(
     ):
         character_data.first_record.first_part_sex_dict[2] = {
             "id": 0,
-            "time": cache.game_time,
+            "time": game_time.now(),
             "place": list(character_data.position),
             "posture": "",
             "item": -1,

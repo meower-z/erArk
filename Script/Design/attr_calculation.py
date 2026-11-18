@@ -36,24 +36,34 @@ def get_system_setting_zero() -> game_type.System_Setting:
         empty_system_setting.draw_setting[system_setting] = (
             drawing_setting_data.default_value
         )
-    for system_setting in game_config.config_difficulty_setting:
-        difficulty_setting_data = game_config.config_difficulty_setting[
-            system_setting
-        ]
-        empty_system_setting.difficulty_setting[system_setting] = (
-            difficulty_setting_data.default_value
-        )
-    for system_setting in game_config.config_birth_type_setting:
-        birth_type_setting_data = game_config.config_birth_type_setting[
-            system_setting
-        ]
-        empty_system_setting.birth_type_setting[system_setting] = (
-            birth_type_setting_data.default_value
-        )
     for __, tem_data in cache.npc_tem_data.items():
         chara_adv_id = tem_data.AdvNpc
         empty_system_setting.character_text_version[chara_adv_id] = 1
     return empty_system_setting
+
+
+def get_difficulty_setting_zero() -> dict[int, int]:
+    """
+    本存档难度设定的默认值
+    Return arguments:
+    dict -- 难度设定id到默认值
+    """
+    return {
+        setting_id: setting_data.default_value
+        for setting_id, setting_data in game_config.config_difficulty_setting.items()
+    }
+
+
+def get_birth_type_setting_zero() -> dict[int, int]:
+    """
+    本存档生殖方式设定的默认值
+    Return arguments:
+    dict -- 生育方式编号到默认开关值
+    """
+    return {
+        birth_type: setting_data.default_value
+        for birth_type, setting_data in game_config.config_birth_type_setting.items()
+    }
 
 
 def get_physical_exam_setting_zero() -> dict:
@@ -229,7 +239,7 @@ def get_time_zero() -> datetime.datetime:
     """
     时间归为游戏初始时间
     """
-    return cache.game_time
+    return game_time.now()
 
 
 def get_token_zero(token_dict: dict[int, bool]) -> dict[int, bool]:
@@ -401,16 +411,16 @@ def get_action_info_state_zero() -> game_type.ACTION_INFO:
     直接将行动信息结构体归0
     """
     action_info_data = game_type.ACTION_INFO()
-    action_info_data.talk_time = cache.game_time
-    action_info_data.last_move_time = cache.game_time
-    if cache.game_time.day != 1:
+    action_info_data.talk_time = game_time.now()
+    action_info_data.last_move_time = game_time.now()
+    if game_time.now().day != 1:
         action_info_data.last_training_time = game_time.get_sub_date(day=-1)
         action_info_data.last_shower_time = game_time.get_sub_date(day=-1)
     else:
-        action_info_data.last_training_time = cache.game_time
-        action_info_data.last_shower_time = cache.game_time
-    action_info_data.wake_time = cache.game_time
-    action_info_data.sleep_time = cache.game_time
+        action_info_data.last_training_time = game_time.now()
+        action_info_data.last_shower_time = game_time.now()
+    action_info_data.wake_time = game_time.now()
+    action_info_data.sleep_time = game_time.now()
 
     return action_info_data
 
@@ -514,9 +524,9 @@ def get_rand_npc_birthday(age: int) -> datetime.datetime:
     Keyword arguments:
     age -- 年龄
     """
-    now_year = cache.game_time.year
-    now_month = cache.game_time.month
-    now_day = cache.game_time.day
+    now_year = game_time.now().year
+    now_month = game_time.now().month
+    now_day = game_time.now().day
     birthday = game_time.get_rand_day_for_year(now_year)
     if now_month < birthday.month or (
         now_month == birthday.month and now_day < birthday.day

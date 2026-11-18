@@ -1,6 +1,10 @@
-"""角色行为主循环：推进玩家与NPC的行为，结算角色状态并判断行为是否结束"""
+"""
+角色行为的开始与收尾
+====================
+内核里一个行动开始时（gameplay_resolution.starts.behave）由 settle_start 结算，
+结束时（事件 ActionOver）由 end_action 收掉行为，玩家另由 player_after_end 跑寻路的下一段、实时数据、睡觉的存档与成就。
+"""
 
-import datetime
 from types import FunctionType
 from Script.Core import (
     cache_control,
@@ -12,17 +16,17 @@ from Script.Core import (
 from Script.Design import (
     settle_behavior,
     game_time,
-    instuct_judege,
     handle_premise,
     event,
     handle_npc_ai,
-    handle_npc_ai_in_h,
     map_handle,
     handle_talent,
 )
 from Script.UI.Moudle import draw
+from Script.Kernel import core
+from Script.Modules.save_load import autosave
 from Script.Config import game_config, normal_config
-from Script.Settle import sleep_settle, past_day_settle, realtime_settle
+from Script.Settle import sleep_settle, realtime_settle
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -37,172 +41,115 @@ line_feed.text = "\n"
 line_feed.width = 1
 
 
-def init_character_behavior() -> None:
+def settle_start(character_id: int, minutes: int) -> None:
     """
-    角色行为树总控制
+    行动开始时的结算（缓存里已换上新的行为）。
+    干员：结算状态与事件；目睹H的反应已结算过时跳过一次（移动照样结算）。
+    玩家：记下指令文本；发呆时不结算。否则移动时同场景的干员跟随、全员重置目击玩家H，行动前的前置结算，
+    结算状态与事件，睡觉刷新，H状态、猥亵与无意识；时停中累计时停时长，不在时停中时刷新委托任务
+    Keyword arguments:
+    character_id -- 角色id
+    minutes -- 行动在内核里的分钟数（时停中玩家的行动是 0）
     """
-    from Script.UI.Panel import achievement_panel
+    character_data: game_type.Character = cache.character_data[character_id]
+    behavior_id = character_data.behavior.behavior_id
+    if character_id:
+        if (
+            not character_data.sp_flag.see_h_reaction_settled
+            or behavior_id == constant.Behavior.MOVE
+        ):
+            judge_character_status(character_id)
+        character_data.sp_flag.see_h_reaction_settled = False
+        return
+    cache.daily_intsruce += character_instruct_record(0)
+    cache.pl_pre_behavior_instruce.append(behavior_id)
+    if len(cache.pl_pre_behavior_instruce) > 10:
+        cache.pl_pre_behavior_instruce.pop(0)
+    if behavior_id == constant.Behavior.SHARE_BLANKLY:
+        return
+    if behavior_id in {constant.Behavior.MOVE, constant.Behavior.CARRY_MOVE}:
+        # 同场景里的NPC的跟随与被携带角色的同步移动
+        handle_npc_ai.judge_same_position_npc_follow()
+        # 全角色重置目击玩玩家H
+        for npc_id in cache.npc_id_got:
+            cache.character_data[npc_id].sp_flag.see_pl_h = False
+    judge_before_pl_behavior()
+    judge_character_status(0)
+    if character_data.behavior.behavior_id == constant.Behavior.SLEEP:
+        sleep_settle.update_sleep()
+    from Script.Design import handle_npc_ai_in_h
+
+    handle_npc_ai_in_h.judge_character_h_obscenity_unconscious(
+        0, character_data.behavior.start_time
+    )
+    if cache.time_stop_mode and minutes == 0:
+        cache.achievement.time_stop_duration += character_data.behavior.duration
+        return
     from Script.System.Field_Commission_System import field_commission_function
 
-    cache.over_behavior_character = set()
-    new_day_flag, pl_start_time, pl_duration = True, cache.game_time, 0
-    while 1:
-        # 先结算玩家部分
-        while 0 not in cache.over_behavior_character:
-            pl_start_time = cache.character_data[0].behavior.start_time
-            pl_duration = cache.character_data[0].behavior.duration
-            character_behavior(0, cache.game_time, pl_start_time)
-        # 如果当前是时停模式，则回退时间，然后结束循环
-        if cache.time_stop_mode:
-            cache.achievement.time_stop_duration += pl_duration
-            game_time.sub_time_now(minute=pl_duration * -1)
-            break
-        field_commission_function.update_field_commission()  # 刷新委托任务
-        id_list = cache.npc_id_got.copy()
-        id_list.discard(0)
-        # 后结算其他NPC部分
-        # now_time = datetime.datetime.now()
-        # print(f"开始循环NPC部分: {now_time}")
-        while len(cache.over_behavior_character) <= len(id_list):
-            # print(f"debug 还差{len(id_list) - len(cache.over_behavior_character)}个NPC结算")
-            for character_id in id_list:
-                if character_id in cache.over_behavior_character:
-                    continue
-                character_behavior(character_id, cache.game_time, pl_start_time)
-        if cache.game_time.day != cache.pre_game_time.day and new_day_flag:
-            new_day_flag = False
-            past_day_settle.update_new_day()
-        # 玩家睡觉存档
-        if cache.pl_sleep_save_flag:
-            cache.pl_sleep_save_flag = False
-            sleep_settle.update_save()
-        # 结束循环
-        if len(cache.over_behavior_character) >= len(id_list) + 1:
-            break
-    # 结算成就
+    field_commission_function.update_field_commission()
+
+
+def end_action(character_id: int) -> None:
+    """
+    行动结束时收掉行为：行为记进旧行为列表，换成此刻开始的空行为（保留移动的来源；移动与带人移动时保留最终目标），
+    状态回到空闲，清掉事件；随后结算自动获得的素质和能力
+    Keyword arguments:
+    character_id -- 角色id
+    """
+    character_data: game_type.Character = cache.character_data[character_id]
+    old = character_data.behavior
+    character_data.last_behavior_id_list.append(old.behavior_id)
+    if len(character_data.last_behavior_id_list) > 5:
+        character_data.last_behavior_id_list.pop(0)
+    behavior = game_type.Behavior()
+    if old.behavior_id in {
+        constant.Behavior.MOVE,
+        constant.Behavior.CARRY_MOVE,
+    }:
+        behavior.move_final_target = old.move_final_target
+    behavior.move_src = old.move_src
+    behavior.start_time = game_time.at(core.state().clock)
+    character_data.behavior = behavior
+    character_data.state = constant.CharacterStatus.STATUS_ARDER
+    character_data.event.event_id = ""
+    character_data.event.son_event_id = ""
+    handle_talent.gain_talent(character_id, now_gain_type=0)
+
+
+def player_after_end() -> None:
+    """
+    玩家的行动收尾之后：寻路途中排上下一段，玩家实时数据结算，睡觉留下了存档标记时向 save_load 提出自动存档，
+    最后跑时停与群交的成就
+    """
+    from Script.Design import character_move
+    from Script.UI.Panel import achievement_panel
+
+    character_move.continue_player_route()
+    realtime_settle.judge_pl_real_time_data()
+    if cache.pl_sleep_save_flag:
+        cache.pl_sleep_save_flag = False
+        autosave.update_save()
     achievement_panel.achievement_flow(_("时停"))
     achievement_panel.achievement_flow(_("群交"))
 
 
-def character_behavior(
-    character_id: int,
-    now_time: datetime.datetime,
-    pl_start_time: datetime.datetime,
-) -> None:
+def target_left(character_id: int) -> bool:
     """
-    角色行为控制
+    角色的交互对象不是自己，且已不在角色所在的场景（玩家正在搬运的对象除外）
     Keyword arguments:
     character_id -- 角色id
-    now_time -- 指定时间
+    Return arguments:
+    bool -- 交互对象离开了时为真
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.dead:
-        return
-    if character_data.behavior.start_time.year <= 1:
-        instuct_judege.init_character_behavior_start_time(
-            character_id, pl_start_time
-        )
-
-    # 处理特殊模式
-    if character_id != 0:
-        handle_npc_ai.run_npc_pre_behavior_checks(
-            character_id, pl_start_time
-        )  # NPC行动前检查序列
-
-    # 处理公共资源
-    # update_cafeteria() # 刷新食堂的饭，不需要了，改为NPC在没有饭的时候自动刷新
-
-    # 先处理玩家部分
-    if character_id == 0:
-        # 记录玩家的指令文本
-        cache.daily_intsruce += character_instruct_record(0)
-        cache.pl_pre_behavior_instruce.append(
-            character_data.behavior.behavior_id
-        )
-        if len(cache.pl_pre_behavior_instruce) > 10:
-            cache.pl_pre_behavior_instruce.pop(0)
-
-        if (
-            character_data.behavior.behavior_id
-            == constant.Behavior.SHARE_BLANKLY
-        ):
-            cache.over_behavior_character.add(character_id)
-            # print(f"debug 玩家空闲")
-        # 非空闲活动下结算当前状态#
-        else:
-            # 结算玩家在移动时的特殊结算（含隐奸携带模式的携带H中移动）
-            if character_data.behavior.behavior_id in {
-                constant.Behavior.MOVE,
-                constant.Behavior.CARRY_MOVE,
-            }:
-                # 同场景里的NPC的跟随与被携带角色的同步移动
-                handle_npc_ai.judge_same_position_npc_follow()
-                # 全角色重置目击玩玩家H
-                for npc_id in cache.npc_id_got:
-                    npc_data: game_type.Character = cache.character_data[npc_id]
-                    npc_data.sp_flag.see_pl_h = False
-            # 在玩家行动前的前置结算
-            judge_before_pl_behavior()
-            # 结算状态与事件
-            judge_character_status(character_id)
-            # 刷新会根据时间即时增加的角色数值
-            realtime_settle.character_aotu_change_value(
-                character_id, now_time, pl_start_time
-            )
-            # 睡觉刷新
-            if character_data.behavior.behavior_id == constant.Behavior.SLEEP:
-                sleep_settle.update_sleep()
-            # 结算角色的状态是否会持续
-            realtime_settle.change_character_persistent_state(character_id)
-            time_judge = judge_character_status_time_over(
-                character_id, now_time
-            )
-            if time_judge:
-                cache.over_behavior_character.add(character_id)
-        #         print(f"debug time_judge")
-        handle_npc_ai.judge_character_tired_sleep(character_id)  # 结算疲劳
-        handle_npc_ai_in_h.judge_character_h_obscenity_unconscious(
-            character_id, pl_start_time
-        )  # H状态、猥亵与无意识
-        realtime_settle.judge_pl_real_time_data()  # 玩家实时数据结算
-        # print(f"debug 玩家结算完毕")
-
-    # 再处理NPC部分
-    if character_id:
-        if (
-            character_data.behavior.behavior_id
-            == constant.Behavior.SHARE_BLANKLY
-        ):
-            # 寻找可用行动
-            handle_npc_ai.find_character_target(character_id, now_time)
-            # 结算状态与事件
-            if (
-                not character_data.sp_flag.see_h_reaction_settled
-                or character_data.behavior.behavior_id == constant.Behavior.MOVE
-            ):
-                judge_character_status(character_id)
-            character_data.sp_flag.see_h_reaction_settled = False
-        # 移动情况下也直接结算
-        elif character_data.behavior.behavior_id == constant.Behavior.MOVE:
-            # 结算状态与事件
-            judge_character_status(character_id)
-        # 学生赶去上课的截短排在实时结算之前（Plan 32 §3.7 L4）：实时结算按行为的结束时刻封顶，
-        #    先结算后截短的话，截掉的那一段饥饿、尿意、疲劳会在下一个行为（从离开时刻开始）里再算一遍
-        handle_npc_ai.judge_student_leave_truncate(character_id)
-        # 刷新会根据时间即时增加的角色数值
-        realtime_settle.character_aotu_change_value(
-            character_id, now_time, pl_start_time
-        )
-        # 结算角色的状态是否会持续
-        realtime_settle.change_character_persistent_state(character_id)
-        # 判断是否需要打断角色的当前行动
-        handle_npc_ai.judge_interrupt_character_behavior(character_id)
-        time_judge = judge_character_status_time_over(character_id, now_time)
-        if time_judge:
-            cache.over_behavior_character.add(character_id)
-
-    # 自动获得对应素质和能力
-    handle_talent.gain_talent(character_id, now_gain_type=0)
+    target = character_data.target_character_id
+    if target in (character_id, character_data.sp_flag.bagging_chara_id):
+        return False
+    scene_path_str = map_handle.get_map_system_path_str_for_list(
+        character_data.position
+    )
+    return target not in cache.scene_data[scene_path_str].character_list
 
 
 def judge_character_status(character_id: int) -> int:
@@ -275,93 +222,6 @@ def judge_character_status(character_id: int) -> int:
             wait_draw.width = window_width
             wait_draw.draw()
 
-    return 1
-
-
-def judge_character_status_time_over(
-    character_id: int, now_time: datetime.datetime, end_now: int = 0
-) -> int:
-    """
-    结算角色状态是否本次行动已经结束
-    Keyword arguments:
-    character_id -- 角色id
-    end_now -- 是否要强制结算，1为当前时间大于行动结束时间，2为当前时间等于行动结束时间
-    Return arguments:
-    bool -- 本次update时间切片内活动是否已完成
-    """
-    character_data: game_type.Character = cache.character_data[character_id]
-    scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
-    )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-    # 如果行动起始时间大于当前时间，则初始化行动起始时间为当前时间
-    if game_time.judge_date_big_or_small(
-        character_data.behavior.start_time, now_time
-    ):
-        character_data.behavior.start_time = now_time
-    start_time = character_data.behavior.start_time
-    end_time = game_time.get_sub_date(
-        minute=character_data.behavior.duration, old_date=start_time
-    )
-    if (
-        character_data.target_character_id != character_id
-        and character_data.target_character_id not in scene_data.character_list
-    ):
-        # 例外：玩家在搬运该角色
-        if (
-            character_data.target_character_id
-            != character_data.sp_flag.bagging_chara_id
-        ):
-            end_time = now_time
-    # print(f"debug {character_data.name}的end_time = {end_time}")
-    time_judge = game_time.judge_date_big_or_small(now_time, end_time)
-    add_time = (end_time - start_time).total_seconds() / 60
-    # if character_data.name == "阿米娅":
-    #     print(f"debug {character_data.name}的time_judge = {time_judge}，add_time = {add_time}")
-    # 如果本次行动的持续时间为0或负数（负数见于状态机算出的异常时长，需在此拦截以保证时间前进）
-    if add_time <= 0:
-        # 如果是H状态，则直接可以跳出
-        if handle_premise.handle_self_is_h(character_id):
-            character_data.behavior.start_time = now_time
-            return 1
-        character_data.behavior = game_type.Behavior()
-        character_data.behavior.start_time = now_time
-        character_data.behavior.duration = 1
-        character_data.state = constant.CharacterStatus.STATUS_ARDER
-        return 0
-    if end_now:
-        time_judge = end_now
-    if time_judge:
-        # 记录并刷新旧行为列表
-        character_data.last_behavior_id_list.append(
-            character_data.behavior.behavior_id
-        )
-        if len(character_data.last_behavior_id_list) > 5:
-            character_data.last_behavior_id_list.pop(0)
-        # 保留移动的来源位置
-        tem_move_src = character_data.behavior.move_src
-        # 移动状态下则不完全重置行动数据，保留最终目标数据
-        if character_data.behavior.behavior_id == constant.Behavior.MOVE:
-            tem_move_final_target = character_data.behavior.move_final_target
-            character_data.behavior = game_type.Behavior()
-            character_data.behavior.move_final_target = tem_move_final_target
-        else:
-            character_data.behavior = game_type.Behavior()
-        # 赋予移动来源
-        character_data.behavior.move_src = tem_move_src
-        character_data.state = constant.CharacterStatus.STATUS_ARDER
-        character_data.event.event_id = ""
-        character_data.event.son_event_id = ""
-        # 当前时间大于行动结束时间
-        if time_judge == 1:
-            character_data.behavior.start_time = end_time
-            return 0
-        # 当前时间等于行动结束时间
-        elif time_judge == 2:
-            instuct_judege.init_character_behavior_start_time(
-                character_id, now_time
-            )
-            return 1
     return 1
 
 

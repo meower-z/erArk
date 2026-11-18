@@ -329,7 +329,7 @@ move_to(201, SCENE_DORM)
 check("学生走了就不成立", HP("scene_have_sex_class_student", 0) == 0)
 move_to(201, classroom_path(ROOM_P))
 cache.rhodes_island.temp_sex_class = {}
-today = cache.game_time.date().toordinal()
+today = game_time.now().date().toordinal()
 sex_class_handle.set_temp_class(today, 5, ROOM_P, 74, must_attend=[201])
 now_class = sex_class_handle.start_sex_class(74)
 cache.sex_class_mode = True
@@ -376,7 +376,7 @@ cache.sex_class_mode = False
 section("实习带教前提")
 intern_place = None
 schedule_handle.set_selected_course(
-    201, cache.game_time.weekday(), 0, E.COURSE_TYPE_INTERN, intern_work
+    201, game_time.now().weekday(), 0, E.COURSE_TYPE_INTERN, intern_work
 )
 set_time(period_time(0))
 intern_course = schedule_handle.get_now_course(201)
@@ -812,14 +812,14 @@ check(
 section("Plan 31 §3.6（L2）：<翘> 只认今天挂上的翘课 flag")
 _growth_201 = growth_handle.get_child_growth(201)
 _growth_201.skip_class_flag = True
-_growth_201.skip_class_day = cache.game_time.toordinal() - 1
+_growth_201.skip_class_day = game_time.now().toordinal() - 1
 _tip = character_info_head.get_now_class_tip(201)
 check(
     "L2 前一天挂上、没清掉的 flag（一步跨过午夜 / 翘课当天离线）：不亮 <翘>，照常显示在上课（此前整天挂着 <翘>）",
     _tip is not None and not _tip[0],
     _tip,
 )
-_growth_201.skip_class_day = cache.game_time.toordinal()
+_growth_201.skip_class_day = game_time.now().toordinal()
 _tip = character_info_head.get_now_class_tip(201)
 check("L2 今天挂上的：亮 <翘>", _tip is not None and _tip[0], _tip)
 _growth_201.skip_class_flag = False
@@ -882,7 +882,7 @@ check(
 )
 set_time(period_time(0))
 sex_class_handle.set_temp_class(
-    cache.game_time.date().toordinal(), 0, ROOM_P, 70
+    game_time.now().date().toordinal(), 0, ROOM_P, 70
 )
 move_to(0, classroom_path(ROOM_P))
 check(
@@ -1019,7 +1019,7 @@ set_time(period_time(0))
 _g201 = growth_handle.get_child_growth(201)
 _g201.selected_course = {}
 _g201.skip_class_flag = True
-_g201.skip_class_day = cache.game_time.toordinal()
+_g201.skip_class_day = game_time.now().toordinal()
 _g201.show_off_ability = {45: 2}
 student.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
 student.sp_flag.is_h = False
@@ -1063,7 +1063,7 @@ set_time(period_time(5))
 move_to(0, classroom_path(ROOM_P))
 move_to(201, classroom_path(ROOM_P))
 sex_class_handle.set_temp_class(
-    cache.game_time.date().toordinal(), 5, ROOM_P, 74, running=True
+    game_time.now().date().toordinal(), 5, ROOM_P, 74, running=True
 )
 _r = caught_dispatch()
 check(
@@ -1073,9 +1073,9 @@ check(
 )
 cache.rhodes_island.temp_sex_class = {}
 set_time(period_time(3) - datetime.timedelta(minutes=5))
-_l2_wd = cache.game_time.weekday()
+_l2_wd = game_time.now().weekday()
 sex_class_handle.set_temp_class(
-    cache.game_time.date().toordinal(), 3, ROOM_P, 74
+    game_time.now().date().toordinal(), 3, ROOM_P, 74
 )
 schedule_handle.set_class_cell(ROOM_P, _l2_wd, 3, 43, -1)
 schedule_handle.set_selected_course(

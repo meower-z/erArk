@@ -26,6 +26,7 @@ from collections.abc import Callable
 from Script.Core import cache_control, constant, game_type, get_text
 from Script.Config import game_config
 from Script.System.Official_Event_System import ri_value
+from Script.Design import game_time
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -312,7 +313,7 @@ def record_event_done(uid: str, character_id: int, option_index: int) -> None:
     Return arguments:
     无
     """
-    now_record = {"time": cache.game_time, "choice": option_index}
+    now_record = {"time": game_time.now(), "choice": option_index}
     if character_id and character_id in cache.character_data:
         growth_data = cache.character_data[character_id].child_growth
         if growth_data is not None:
@@ -390,7 +391,7 @@ def push_official_event(
         "department": get_event_department(uid),
         "chara_id": character_id,
         "partner_id": partner_id,
-        "add_time": cache.game_time,
+        "add_time": game_time.now(),
     }
     if to_front:
         queue.insert(0, queue_data)
@@ -673,7 +674,7 @@ def handle_effect_text(
             elif effect.isdigit():
                 handler = constant.settle_behavior_effect_data.get(int(effect))
                 if handler is not None:
-                    handler(character_id, 1, change_data, cache.game_time)
+                    handler(character_id, 1, change_data, game_time.now())
                 else:
                     print(
                         f"\ndebug 公务事件的结算{effect}不存在，请检查结算是否正确\n"

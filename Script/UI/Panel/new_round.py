@@ -15,6 +15,7 @@ from Script.UI.Moudle import draw, panel
 from Script.UI.Panel import see_character_info_panel
 from Script.Config import normal_config, game_config
 from Script.Design import handle_talent, character_handle
+from Script.Modules.save_load import kernel_state
 
 import copy
 
@@ -636,7 +637,6 @@ class New_Round_Handle:
             # 只有点击主面板的确定按钮才会退出
             if yrn == yes_draw.return_text:
                 self.start_new_round()
-                cache.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def show_npc_change(self) -> None:
@@ -921,6 +921,9 @@ class New_Round_Handle:
             if yrn in return_list:
                 achievement_panel.achievement_flow(_("周目"))
                 break
+        # 时钟回到开局，内核换成由重置后的缓存投影出的 GameState；在玩家选行动时调用，中止这次选择
+        cache.now_panel_id = constant.Panel.IN_SCENE
+        kernel_state.new_game(kernel_state.first_clock())
 
     def build_new_character_data(self, character_id: int) -> None:
         """
@@ -1187,10 +1190,10 @@ class New_Round_Handle:
 
     def reset_game_data(self) -> None:
         """
-        重置游戏数据
+        重置游戏数据。在玩家选行动时运行，不换内核状态（那会中止这次选择）：
+        时钟回到开局由面板最后的 kernel_state.new_game 做
         """
-        global cache
-        from Script.Design import attr_calculation, basement, game_time
+        from Script.Design import attr_calculation, basement
         from Script.UI.Flow import creator_character_flow
         from Script.Config import map_config
 
@@ -1205,15 +1208,20 @@ class New_Round_Handle:
         new_character_data = old_cache.character_data
         new_npc_id_got = old_cache.npc_id_got
         new_world_setting = old_cache.world_setting
-        new_system_setting = old_cache.all_system_setting
         new_achievement = old_cache.achievement
 
         # 开始重置
         cache_control.cache = cache
         map_config.init_map_data()
-        game_time.init_time()
         cache.rhodes_island = basement.get_base_zero()
-        cache.all_system_setting = attr_calculation.get_system_setting_zero()
+        cache.plan_queue = {}
+        cache.player_route = None
+        cache.difficulty_setting = (
+            attr_calculation.get_difficulty_setting_zero()
+        )
+        cache.birth_type_setting = (
+            attr_calculation.get_birth_type_setting_zero()
+        )
         cache.rhodes_island.physical_examination_setting = (
             attr_calculation.get_physical_exam_setting_zero()
         )
@@ -1222,7 +1230,8 @@ class New_Round_Handle:
         # 覆盖要保留的数据
         creator_character_flow.first_bonus_and_setting_updata()
         cache.world_setting = new_world_setting
-        cache.all_system_setting = new_system_setting
+        cache.difficulty_setting = old_cache.difficulty_setting
+        cache.birth_type_setting = old_cache.birth_type_setting
         cache.achievement = new_achievement
         cache.game_round = new_game_round
         cache.character_data = new_character_data

@@ -1815,11 +1815,6 @@ class System_Setting:
         """ 基础系统设定，即base类 """
         self.draw_setting: dict[int, int] = {}
         """ 绘制设定，即draw类 """
-        self.difficulty_setting: dict[int, int] = {}
-        """ 难度设定，即difficulty类 """
-        self.birth_type_setting: dict[int, int] = {}
-        """ 生殖方式设定，即birth类，键为生育方式编号（2多胎胎生/11带壳卵生/12无壳卵生），值为0关闭/1开启，
-        关闭的生育方式一律按单胎胎生处理 """
         self.line_before_main_update: int = 3
         """ 主界面刷新前的行数 """
         self.value_draw: dict[str, bool] = {"pl": False, "npc": False}
@@ -2084,16 +2079,17 @@ class Cache:
         """ 富文本样式记录 """
         self.text_one_by_one_rich_cache: dict = {}
         """ 富文本精确样式记录 """
-        self.font_size: int = 0
-        """ 字体大小 """
         self.image_id: int = 0
         """ 图片id """
         self.cmd_data: dict = {}
         """ cmd数据 """
-        self.game_time: datetime.datetime = datetime.datetime(1, 1, 1)
-        """ 游戏时间 """
-        self.pre_game_time: datetime.datetime = datetime.datetime(1, 1, 1)
-        """ 前一循环时的游戏时间 """
+        self.difficulty_setting: dict[int, int] = {}
+        """ 本存档的难度设定，即difficulty类 """
+        self.birth_type_setting: dict[int, int] = {}
+        """ 本存档的生殖方式设定，即birth类，键为生育方式编号（2多胎胎生/11带壳卵生/12无壳卵生），值为0关闭/1开启，
+        关闭的生育方式一律按单胎胎生处理 """
+        self.noise_woken: dict[int, int] = {}
+        """ 睡中被吵醒、还没结算的角色：被吵醒的角色id 到产生动静的角色id """
         self.now_panel_id: int = 0
         """ 当前游戏面板id """
         self.old_character_id: int = 0
@@ -2112,8 +2108,6 @@ class Cache:
         # """ 可穿戴道具类型数据 """
         self.over_behavior_character: set = set()
         """ 本次update中已结束结算的npc """
-        self.game_update_flow_running: int = 0
-        """ 游戏更新流程当前嵌套深度，用于限制递归调用层数 """
         self.pl_sleep_save_flag: bool = False
         """ 玩家睡觉，要进行存档 """
         self.recipe_data: dict[int, Recipes] = {}
@@ -2164,6 +2158,10 @@ class Cache:
         """ 大地图国家数据 """
         self.achievement: ACHIEVEMENT = ACHIEVEMENT()
         """ 成就 """
+        self.plan_queue: dict[int, list[Any]] = {}
+        """ 计划队列：角色id -> 这个角色排着的行动（gameplay_resolution.plan_queue 的 (种类, 意图)）列表 """
+        self.player_route: tuple[Any, Any] | None = None
+        """ 玩家寻路途中为 (目标场景, 这一段的出发场景)，不在寻路时为 None """
 
 
 class TargetChange:

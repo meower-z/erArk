@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import datetime
+import functools
 import time
 import random
 import math
 import ephem
-from types import FunctionType
+from types import FunctionType, MappingProxyType
 from typing import overload
 from dateutil import relativedelta
 from Script.Core import (
@@ -16,6 +17,7 @@ from Script.Core import (
     get_text,
 )
 from Script.Config import normal_config, game_config
+from Script.Kernel import core
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -177,21 +179,82 @@ def get_anchor_date(date: datetime.datetime) -> datetime.datetime:
     )
 
 
+MINUTES_PER_DAY = 24 * 60
+""" 一天的分钟数 """
+
+
+def now() -> datetime.datetime:
+    """
+    游戏时钟的当前时间：内核这一步开始时的时钟
+    Return arguments:
+    datetime.datetime -- 当前游戏时间
+    """
+    return at(core.state().clock)
+
+
+def minutes(dt: datetime.datetime) -> int:
+    """
+    游戏时间换成内核时钟的分钟数
+    Keyword arguments:
+    dt -- 游戏时间
+    Return arguments:
+    int -- 游戏日历上的分钟数
+    """
+    return int(get_play_time(dt) / datetime.timedelta(minutes=1))
+
+
+def at(m: int) -> datetime.datetime:
+    """
+    内核时钟的分钟数换成游戏时间
+    Keyword arguments:
+    m -- 游戏日历上的分钟数
+    Return arguments:
+    datetime.datetime -- 那一分钟的游戏时间（GameTime）
+    """
+    return GameTime.from_play_time(datetime.timedelta(minutes=m))
+
+
+def next_midnight(m: int) -> int:
+    """
+    下一个 0 点的分钟数
+    Keyword arguments:
+    m -- 游戏日历上的分钟数
+    Return arguments:
+    int -- m 之后（不含 m）最近的 0 点
+    """
+    return (m // MINUTES_PER_DAY + 1) * MINUTES_PER_DAY
+
+
+def day(m: int) -> int:
+    """
+    分钟数所在的游戏日序号
+    Keyword arguments:
+    m -- 游戏日历上的分钟数
+    Return arguments:
+    int -- 游戏日序号
+    """
+    return m // MINUTES_PER_DAY
+
+
 def init_time() -> None:
     """
-    初始化游戏时间
+    开局的时钟：内核换成一个还没有角色、时钟在配置的开局时间（规整到游戏日历上）的 GameState；
+    选行动中调用时，这次选择随 reset_state 中止
     """
-    game_time = datetime.datetime(
-        normal_config.config_normal.year,
-        normal_config.config_normal.month,
-        normal_config.config_normal.day,
-        normal_config.config_normal.hour,
-        normal_config.config_normal.minute,
+    start = to_game_time(
+        datetime.datetime(
+            normal_config.config_normal.year,
+            normal_config.config_normal.month,
+            normal_config.config_normal.day,
+            normal_config.config_normal.hour,
+            normal_config.config_normal.minute,
+        )
     )
-    # 配置里的开局日期规整到游戏日历上（不在游戏日历上的日期按下一个季月的1日算）
-    game_time = to_game_time(game_time)
-    cache.game_time = game_time
-    cache.pre_game_time = game_time
+    core.reset_state(
+        core.GameState(
+            minutes(start), MappingProxyType({}), MappingProxyType({})
+        )
+    )
 
 
 def get_season_month(month: int) -> int:
@@ -220,7 +283,7 @@ def get_date_text(game_time_data: datetime.datetime | None = None) -> str:
     game_timeData -- 时间数据，若为None，则获取当前游戏时间
     """
     if game_time_data is None:
-        game_time_data = cache.game_time
+        game_time_data = now()
     return _("时间:{year}年{month}月{day}日{hour}点{minute}分").format(
         year=game_time_data.year,
         month=get_month_text(game_time_data),
@@ -237,7 +300,7 @@ def get_date_until_day(game_time_data: datetime.datetime | None = None) -> str:
     game_timeData -- 时间数据，若为None，则获取当前游戏时间
     """
     if game_time_data is None:
-        game_time_data = cache.game_time
+        game_time_data = now()
     return _("时间:{year}年{month}月{day}日").format(
         year=game_time_data.year,
         month=get_month_text(game_time_data),
@@ -252,7 +315,7 @@ def get_year_text(game_time_data: datetime.datetime | None = None) -> str:
     game_timeData -- 时间数据，若为None，则获取当前游戏时间
     """
     if game_time_data is None:
-        game_time_data = cache.game_time
+        game_time_data = now()
     return _("时间:{year}年").format(
         year=game_time_data.year,
     )
@@ -265,7 +328,7 @@ def get_month_text(game_time_data: datetime.datetime | None = None) -> str:
     game_timeData -- 时间数据，若为None，则获取当前游戏时间
     """
     if game_time_data is None:
-        game_time_data = cache.game_time
+        game_time_data = now()
     # 非四季月（如直接用timedelta相加得到的5月）按归并规则兜底显示为下一个季月
     season_month = get_season_month(game_time_data.month)
     if season_month == 3:
@@ -290,7 +353,7 @@ def get_day_and_time_text(
     game_timeData -- 时间数据，若为None，则获取当前游戏时间
     """
     if game_time_data is None:
-        game_time_data = cache.game_time
+        game_time_data = now()
     return _("{day}日 {hour}点{minute}分").format(
         day=game_time_data.day,
         hour=game_time_data.hour,
@@ -302,24 +365,9 @@ def get_week_day_text() -> str:
     """
     获取星期描述文本
     """
-    week_day = cache.game_time.weekday()
+    week_day = now().weekday()
     week_date_data = game_config.config_week_day[week_day]
     return week_date_data.name
-
-
-def sub_time_now(
-    minute: int = 0, hour: int = 0, day: int = 0, month: int = 0, year: int = 0
-) -> None:
-    """
-    增加当前游戏时间
-    Keyword arguments:
-    minute -- 增加的分钟
-    hour -- 增加的小时
-    day -- 增加的天数
-    month -- 增加的月数
-    year -- 增加的年数
-    """
-    cache.game_time = get_sub_date(minute, hour, day, month, year)
 
 
 def get_sub_date(
@@ -343,7 +391,7 @@ def get_sub_date(
     GameTime -- 新日期
     """
     if old_date is None:
-        old_date = cache.game_time
+        old_date = now()
     # 普通 datetime（如占位用的默认时间）先规整成游戏时间，保证按游戏日历计算
     new_date = to_game_time(old_date)
     # 年、月按日历推算，落进非季月时按下一个季月的1日0时算
@@ -586,8 +634,6 @@ def get_sun_time(old_time: datetime.datetime) -> int:
     Return arguments:
     int -- 太阳位置id
     """
-    if "sun_phase" not in cache.__dict__:
-        cache.__dict__["sun_phase"] = {}
     now_sun_time = (old_time.hour + 3) // 2
     now_sun_time += 12 if now_sun_time < 0 else 0
     now_sun_time -= 12 if now_sun_time > 11 else 0
@@ -635,31 +681,35 @@ def get_moon_phase(now_time: datetime.datetime) -> int:
     Return arguments:
     int -- 月相配置id
     """
-    if "moon_phase" not in cache.__dict__:
-        cache.__dict__["moon_phase"] = {}
-    now_date_str = f"{now_time.year}/{now_time.month}/{now_time.day}"
-    if now_date_str not in cache.moon_phase:
-        # 按游戏日连续换算出的公历日期推算月相，换季时月相不跳
-        new_time = get_anchor_date(now_time)
-        new_time.astimezone(time_zone)
-        gatech.date = datetime.datetime.fromtimestamp(
-            time.mktime(new_time.utctimetuple()), datetime.UTC
-        ).replace(tzinfo=None)
-        moon.compute(gatech)
-        now_phase = moon.phase
-        gatech.date += 1
-        moon.compute(gatech)
-        next_phase = moon.phase
-        now_type = next_phase > now_phase
-        for phase in game_config.config_moon_data[now_type]:
-            phase_config = game_config.config_moon[phase]
-            if phase_config.min_phase < now_phase <= phase_config.max_phase:
-                cache.moon_phase[now_date_str] = phase_config.cid
-                break
-        if len(cache.moon_phase) > 3:
-            del_date = list(cache.moon_phase.keys())[0]
-            del cache.moon_phase[del_date]
-    return cache.moon_phase[now_date_str]
+    return _moon_phase_of_day(now_time.year, now_time.month, now_time.day)
+
+
+@functools.lru_cache(maxsize=4)
+def _moon_phase_of_day(year: int, month: int, day: int) -> int:
+    """
+    一个游戏日的月相配置id（按游戏日连续换算出的公历日期推算，换季时月相不跳）
+    Keyword arguments:
+    year -- 年
+    month -- 月
+    day -- 日
+    Return arguments:
+    int -- 月相配置id
+    """
+    new_time = get_anchor_date(datetime.datetime(year, month, day))
+    gatech.date = datetime.datetime.fromtimestamp(
+        time.mktime(new_time.utctimetuple()), datetime.UTC
+    ).replace(tzinfo=None)
+    moon.compute(gatech)
+    now_phase = moon.phase
+    gatech.date += 1
+    moon.compute(gatech)
+    next_phase = moon.phase
+    now_type = next_phase > now_phase
+    for phase in game_config.config_moon_data[now_type]:
+        phase_config = game_config.config_moon[phase]
+        if phase_config.min_phase < now_phase <= phase_config.max_phase:
+            return phase_config.cid
+    raise ValueError(f"no moon phase config holds {now_phase}")
 
 
 def judge_work_today(character_id: int) -> int:
@@ -671,7 +721,7 @@ def judge_work_today(character_id: int) -> int:
     int -- 周一到周五为1，周末为0
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    now_time = character_data.behavior.start_time or cache.game_time
+    now_time = character_data.behavior.start_time or now()
     now_week = now_time.weekday()
     if now_week < 6:
         return 1
@@ -688,7 +738,7 @@ def judge_entertainment_time(character_id: int) -> int:
     int -- 0为不在娱乐时间段，1为早上，2为下午，3为晚上
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    now_time = character_data.behavior.start_time or cache.game_time
+    now_time = character_data.behavior.start_time or now()
     now_hour = now_time.hour
     if 9 <= now_hour < 12:
         return 1
@@ -742,7 +792,7 @@ def get_class_period(character_id: int) -> int:
     int -- 节次编号0~8，不在任何节次内则为-1
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    now_time = character_data.behavior.start_time or cache.game_time
+    now_time = character_data.behavior.start_time or now()
     return get_class_period_by_time(now_time)
 
 
@@ -754,5 +804,5 @@ def get_now_semester() -> tuple:
     Return arguments:
     tuple -- (年int, 季月int)，季月取值为3/6/9/12
     """
-    now_time: datetime.datetime = cache.game_time
+    now_time: datetime.datetime = now()
     return now_time.year, get_season_month(now_time.month)

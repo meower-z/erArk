@@ -15,6 +15,7 @@ from Script.Settle.common_default import (
     base_chara_hp_mp_common_settle,
     base_chara_state_common_settle,
 )
+from Script.Design import game_time
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -788,7 +789,7 @@ def handle_add_small_p_feel(
     now_add_lust = int(now_add_lust)
     character_data.eja_point += now_add_lust
     change_data.eja_point += now_add_lust
-    character_data.action_info.last_eaj_add_time = cache.game_time
+    character_data.action_info.last_eaj_add_time = game_time.now()
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -1559,7 +1560,7 @@ def handle_add_middle_v_feel(
     now_add_lust = int(now_add_lust)
     character_data.eja_point += now_add_lust
     change_data.eja_point += now_add_lust
-    character_data.action_info.last_eaj_add_time = cache.game_time
+    character_data.action_info.last_eaj_add_time = game_time.now()
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -2098,7 +2099,7 @@ def handle_add_large_p_feel(
     now_add_lust = int(now_add_lust)
     character_data.eja_point += now_add_lust
     change_data.eja_point += now_add_lust
-    character_data.action_info.last_eaj_add_time = cache.game_time
+    character_data.action_info.last_eaj_add_time = game_time.now()
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -4270,7 +4271,7 @@ def handle_caught_skip_class(
     if growth_data is None or not growth_data.skip_class_flag:
         return
     growth_data.skip_class_flag = False
-    growth_data.skip_caught_day = cache.game_time.toordinal()
+    growth_data.skip_caught_day = game_time.now().toordinal()
     # 心虚与害怕，数值取一节课的量级（45分钟），与翘课本身给的抑郁回落大致相抵
     base_chara_state_common_settle(
         character_id, 45, 19, change_data=change_data

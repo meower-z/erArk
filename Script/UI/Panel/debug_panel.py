@@ -1,7 +1,9 @@
 """debug 界面面板，以及口上快速测试和数据重建工具"""
 
-from typing import Any
-from types import FunctionType
+import datetime
+from dataclasses import replace
+from typing import Any, cast
+from types import FunctionType, MappingProxyType
 from Script.Core import (
     cache_control,
     game_type,
@@ -23,6 +25,9 @@ from Script.Config import game_config, normal_config
 import os
 import json
 import csv
+from Script.Design import game_time
+from Script.Kernel import core
+from Script.Modules.gameplay_resolution import actions
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -34,6 +39,25 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
+
+
+def set_clock(new_time: datetime.datetime) -> None:
+    """
+    调试：把游戏时钟改到 new_time，只调用一次 core.reset_state，在选行动里调用时这次选择中止。
+    从新时刻起每 5 分钟结算一次；往后跳过了 0 点，新时刻先结算一次新的一天，往前跳不结算；
+    跳过的时间不做连续结算，进行中的行动保留原来的开始时刻
+    Keyword arguments:
+    new_time -- 新的游戏时间
+    """
+    game = core.state()
+    clock = game_time.minutes(new_time)
+    settled_day = cast(int, game.data[actions.SETTLED_DAY])
+    data = {
+        **game.data,
+        actions.TICKED: clock,
+        actions.SETTLED_DAY: min(settled_day, game_time.day(clock)),
+    }
+    core.reset_state(replace(game, clock=clock, data=MappingProxyType(data)))
 
 
 def build_csv_config(
@@ -809,7 +833,7 @@ class Debug_Panel:
 
                 # 要输出的变量名称以及注释
                 draw_text_list = []
-                draw_text_list.append(f"[000]:游戏时间：{cache.game_time}")
+                draw_text_list.append(f"[000]:游戏时间：{game_time.now()}")
                 draw_text_list.append(
                     f"[001]:已拥有的干员id列表：{cache.npc_id_got}"
                 )
@@ -1076,7 +1100,7 @@ class Debug_Panel:
 
             if self.now_panel == "全局变量":
                 if key_index == 0:
-                    info_text = f"[000]:游戏时间：{cache.game_time}      年月日分别为0,1,2"
+                    info_text = f"[000]:游戏时间：{game_time.now()}      年月日分别为0,1,2"
                     info_draw.text = info_text
                     info_draw.draw()
                     line_feed.draw()
@@ -1106,15 +1130,11 @@ class Debug_Panel:
                         info_draw.draw()
                         continue
                     if value_index[1] == 0:
-                        cache.game_time = cache.game_time.replace(
-                            year=new_value
-                        )
+                        set_clock(game_time.now().replace(year=new_value))
                     elif value_index[1] == 1:
-                        cache.game_time = cache.game_time.replace(
-                            month=new_value
-                        )
+                        set_clock(game_time.now().replace(month=new_value))
                     elif value_index[1] == 2:
-                        cache.game_time = cache.game_time.replace(day=new_value)
+                        set_clock(game_time.now().replace(day=new_value))
 
                 elif key_index == 1:
                     info_text = "[001]:已拥有的干员id列表：\n"
@@ -2208,7 +2228,7 @@ class Debug_Panel:
                     elif value_index == 5:
                         target_data.talent[22] = 1
                         target_data.pregnancy.fertilization_time = (
-                            cache.game_time
+                            game_time.now()
                         )
                         new_year = (
                             target_data.pregnancy.fertilization_time.year - 1
@@ -2260,7 +2280,7 @@ class Debug_Panel:
                             continue
                         target_data.talent[20 + value_index[1]] = new_value
                         target_data.pregnancy.fertilization_time = (
-                            cache.game_time
+                            game_time.now()
                         )
                     elif value_index[0] == 4:
                         if len(value_index) == 1:

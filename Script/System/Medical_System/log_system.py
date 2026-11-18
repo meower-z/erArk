@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Any, Mapping
 from types import FunctionType
 
-from Script.Core import cache_control, game_type, get_text
+from Script.Core import game_type, get_text
 from Script.Config import game_config
 from Script.UI.Moudle import draw
 from Script.System.Medical_System import medical_constant, medical_core
@@ -405,7 +405,7 @@ def append_medical_report(
     from Script.Design import game_time
 
     entry: dict[str, Any] = dict(report or {})
-    entry.setdefault("time", cache_control.cache.game_time)
+    entry.setdefault("time", game_time.now())
 
     time_obj = entry.get("time")
     try:

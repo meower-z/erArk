@@ -18,6 +18,7 @@ from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
 
 from typing import TYPE_CHECKING
+from Script.Design import game_time
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -219,7 +220,7 @@ def settle_agriculture_line(draw_flag: bool = True) -> tuple[bool, str]:
             cache.rhodes_island.herb_garden_line[agriculture_line_id].append(0)
         cache.rhodes_island.herb_garden_line[agriculture_line_id][
             4
-        ] = cache.game_time.hour
+        ] = game_time.now().hour
 
     # 遍历温室
     for agriculture_line_id in cache.rhodes_island.green_house_line:
@@ -280,7 +281,7 @@ def settle_agriculture_line(draw_flag: bool = True) -> tuple[bool, str]:
         # 重置收菜时间
         cache.rhodes_island.green_house_line[agriculture_line_id][
             4
-        ] = cache.game_time.hour
+        ] = game_time.now().hour
 
     # 结算成就
     achievement_panel.achievement_flow(_("种植"))
@@ -763,7 +764,7 @@ class Agriculture_Production_Panel:
                 cache.rhodes_island.herb_garden_line[agriculture_line_id][0]
                 != 0
                 and cache.rhodes_island.herb_garden_line[agriculture_line_id][4]
-                != cache.game_time.hour
+                != game_time.now().hour
             ):
                 pass
             else:
@@ -775,7 +776,7 @@ class Agriculture_Production_Panel:
                 cache.rhodes_island.green_house_line[agriculture_line_id][0]
                 != 0
                 and cache.rhodes_island.green_house_line[agriculture_line_id][4]
-                != cache.game_time.hour
+                != game_time.now().hour
             ):
                 pass
             else:

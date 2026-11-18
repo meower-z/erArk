@@ -119,6 +119,7 @@ from Script.Core import (
     save_handle,
 )  # noqa: F401,E402
 from Script.UI.Moudle import draw  # noqa: E402
+from tests import world
 
 _ = get_text._
 """ 翻译api：配置里的名字都过了翻译，测试里比对名字一律包 _() """
@@ -130,6 +131,8 @@ cache: game_type.Cache = cache_control.cache
 
 # ==== 2. 全局前置 ====
 cache.all_system_setting = attr_calculation.get_system_setting_zero()
+cache.difficulty_setting = attr_calculation.get_difficulty_setting_zero()
+cache.birth_type_setting = attr_calculation.get_birth_type_setting_zero()
 # 罗德岛设施：全部设施 Lv1，教育区另由测试按需调；facility_open 默认空（只开放三间基础教室）
 for _facility_cid in game_config.config_facility:
     cache.rhodes_island.facility_level.setdefault(_facility_cid, 1)
@@ -255,7 +258,7 @@ def set_time(now_time: datetime.datetime) -> None:
     无
     """
     now_time = game_time.to_game_time(now_time)
-    cache.game_time = now_time
+    world.set_clock(now_time)
     for character_data in cache.character_data.values():
         character_data.behavior.start_time = now_time
 
@@ -317,7 +320,7 @@ def make_character(
     cd.mana_point = 100
     cd.work.work_type = work_type
     cd.dormitory = scene_str(SCENE_DORM)
-    cd.behavior.start_time = cache.game_time
+    cd.behavior.start_time = game_time.now()
     if stage:
         cd.talent[stage] = 1
         if stage != 104:
@@ -325,7 +328,7 @@ def make_character(
     if daughter:
         cd.relationship.father_id = 0
         cd.relationship.mother_id = mother_id
-        cd.pregnancy.born_time = cache.game_time - datetime.timedelta(
+        cd.pregnancy.born_time = game_time.now() - datetime.timedelta(
             days=born_days
         )
         if mother_id in cache.character_data:

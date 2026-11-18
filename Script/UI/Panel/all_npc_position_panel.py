@@ -412,18 +412,9 @@ class MoveSonPanel:
                 )
             # now_draw.width = 1
             now_draw.draw()
-        # 博士前往干员位置的情况
+        # 博士前往干员位置的情况：寻路的各段在玩家下一次选行动时接着走
+        elif character_data.position != cache.character_data[0].position:
+            character_move.own_charcter_move(character_data.position)
+        # 该干员就在玩家的位置，玩家的交互对象设为该干员
         else:
-            pre_position = cache.character_data[0].position
-            while character_data.position != cache.character_data[0].position:
-                target_position = character_data.position
-                # target_scene_str = map_handle.get_map_system_path_str_for_list(target_scene)
-                character_move.own_charcter_move(target_position)
-                # 防止博士因某些原因无法移动，导致死循环，如果博士位置不变则跳出
-                if pre_position == cache.character_data[0].position:
-                    break
-                else:
-                    pre_position = cache.character_data[0].position
-            # 如果该干员在玩家的位置，那么玩家的交互对象设为该干员
-            if character_data.position == cache.character_data[0].position:
-                cache.character_data[0].target_character_id = character_id
+            cache.character_data[0].target_character_id = character_id

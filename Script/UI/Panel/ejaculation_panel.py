@@ -23,6 +23,7 @@ from Script.Config import game_config, normal_config
 import random
 
 from Script.UI.Panel import achievement_panel
+from Script.Design import game_time
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -308,7 +309,7 @@ def update_semen_dirty(
         and part_cid not in character_data.first_record.first_shoot_body_dict
     ):
         character_data.first_record.first_shoot_body_dict[part_cid] = [
-            cache.game_time,
+            game_time.now(),
             list(character_data.position),
         ]
     # 该部位增加当前精液量

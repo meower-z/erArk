@@ -1,29 +1,17 @@
-"""游戏流程刷新：推进游戏时间并运行角色行为循环"""
+"""
+游戏流程
+========
+内核（Script/Kernel/core.py）一步一步推进游戏。in_resolution 告诉调用方，内核此刻是否在一步的结算里。
+调用方在结算里经 plan_queue 把行动排进计划队列，不在结算里时经 player_pick.choose 当场定下玩家的行动。
+"""
 
-from Script.Design import character_behavior, game_time
-from Script.Core import py_cmd, cache_control
+from Script.Kernel import core
 
 
-def game_update_flow(add_time: int) -> None:
+def in_resolution() -> bool:
     """
-    游戏流程刷新
-    Keyword arguments:
-    add_time -- 游戏步进的时间
+    是否在结算里（事件、行动开始、时间流逝），不在玩家的选择里
+    Return arguments:
+    bool -- 内核在一步的结算里时为真
     """
-    # 深度达到上限时拒绝继续嵌套，防止递归调用导致死循环
-    if cache_control.cache.game_update_flow_running >= 2:
-        return
-
-    # 保存调用者深度，并进入当前更新层级
-    caller_depth = cache_control.cache.game_update_flow_running
-    cache_control.cache.game_update_flow_running = caller_depth + 1
-
-    try:
-        # 去掉了第一次结算
-        # character_behavior.init_character_behavior()
-        game_time.sub_time_now(add_time)
-        character_behavior.init_character_behavior()
-        py_cmd.focus_cmd()
-    finally:
-        # 无论是否发生异常，都恢复调用者进入前的深度
-        cache_control.cache.game_update_flow_running = caller_depth
+    return core.in_settlement()

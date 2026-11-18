@@ -154,22 +154,17 @@ def handle_settle_behavior(
                     confinement_and_training.get_behavior_id_of_sex_assistant()
                 )
                 if state_id != "0":
-                    warden_character_id = cache.rhodes_island.current_warden_id
-                    warden_character_data = cache.character_data[
-                        warden_character_id
-                    ]
-                    warden_character_data.behavior.behavior_id = state_id
-                    warden_character_data.state = state_id
-                    warden_character_data.behavior.duration = (
-                        now_character_data.behavior.duration
+                    from Script.Modules.gameplay_resolution import plan_queue
+
+                    # 监狱长接着做助手行为：排进她的计划队列并打断她当前的行动
+                    plan_queue.plan_next(
+                        cache.rhodes_island.current_warden_id,
+                        state_id,
+                        now_character_data.behavior.duration,
+                        target=now_character_data.target_character_id,
+                        state=state_id,
+                        interrupt=True,
                     )
-                    warden_character_data.behavior.start_time = (
-                        now_character_data.behavior.start_time
-                    )
-                    warden_character_data.target_character_id = (
-                        now_character_data.target_character_id
-                    )
-                    warden_character_data.h_state.sex_assist = True
         # 正常情况下则直接执行结算
         else:
             # 进行指令相关数据的结算
@@ -1219,9 +1214,7 @@ def handle_comprehensive_value_effect(
                         character_move.own_charcter_move(to_place)
                     # NPC进行寻路移动
                     else:
-                        default.general_movement_module(
-                            final_character_id, to_place
-                        )
+                        default.plan_movement(final_character_id, to_place)
                 elif operation == "瞬移":
                     # 调用map_handle的character_move_scene方法，输入旧、新地点路径和角色id
                     map_handle.character_move_scene(

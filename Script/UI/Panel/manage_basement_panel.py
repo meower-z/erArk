@@ -1367,7 +1367,7 @@ class Manage_Basement_Panel:
                         commision_id
                     ][1]
                     last_days = game_time.count_day_for_datetime(
-                        cache.game_time, return_time
+                        game_time.now(), return_time
                     )
                     if last_days <= 0:
                         last_days = _("不足一天")

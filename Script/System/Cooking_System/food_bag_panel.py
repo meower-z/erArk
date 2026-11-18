@@ -14,6 +14,7 @@ from Script.Core import (
 )
 from Script.UI.Moudle import panel, draw
 from Script.Design import attr_calculation, handle_premise
+from Script.Modules.tk_ui import player_pick
 from Script.Config import normal_config, game_config
 
 _: FunctionType = get_text._
@@ -586,22 +587,23 @@ class FoodGroupDraw:
     def eat_food(self, uid: UUID) -> None:
         """食用指定uid的食物"""
         from Script.System.Cooking_System import cooking
-        from Script.UI.Panel import achievement_panel
-        from Script.Design import update
         from Script.System.Sex_System import drunk_sex_common
 
         character_data: game_type.Character = cache.character_data[0]
         now_food: game_type.Food = character_data.food_bag[uid]
-        character_data.behavior.target_food = now_food
-        character_data.behavior.duration = 5
-        character_data.behavior.behavior_id = constant.Behavior.EAT
-        character_data.state = constant.CharacterStatus.STATUS_EAT
+        behavior_id, state = (
+            constant.Behavior.EAT,
+            constant.CharacterStatus.STATUS_EAT,
+        )
+        angry = achievement = False
         # 酒类判定，位于特殊调味判定之前，判定失败则变为拒绝饮酒
         if not drunk_sex_common.judge_accept_alcohol_food(
             character_data.target_character_id, now_food
         ):
-            character_data.behavior.behavior_id = constant.Behavior.REFUSE_DRINK
-            character_data.state = constant.CharacterStatus.STATUS_REFUSE_DRINK
+            behavior_id, state = (
+                constant.Behavior.REFUSE_DRINK,
+                constant.CharacterStatus.STATUS_REFUSE_DRINK,
+            )
         # 特殊调味的食物则需要进行食用判定，失败则变为拒绝食用
         elif now_food.special_seasoning != 0:
             if not cooking.judge_accept_special_seasoning_food(
@@ -609,32 +611,35 @@ class FoodGroupDraw:
             ):
                 # 味道调味则仅生气
                 if now_food.special_seasoning in [1, 2, 3, 4]:
-                    character_data.angry_point += 40
-                    character_data.sp_flag.angry_with_player = True
+                    angry = True
                 # 检测是否满足高级性骚扰的实行值需求
                 elif handle_premise.handle_instruct_judge_high_obscenity(0):
-                    character_data.behavior.behavior_id = (
-                        constant.Behavior.LOW_OBSCENITY_ANUS
-                    )
-                    character_data.state = (
-                        constant.CharacterStatus.STATUS_LOW_OBSCENITY_ANUS
+                    behavior_id, state = (
+                        constant.Behavior.LOW_OBSCENITY_ANUS,
+                        constant.CharacterStatus.STATUS_LOW_OBSCENITY_ANUS,
                     )
                 else:
-                    character_data.behavior.behavior_id = (
-                        constant.Behavior.REFUSE_EAT
+                    behavior_id, state = (
+                        constant.Behavior.REFUSE_EAT,
+                        constant.CharacterStatus.STATUS_REFUSE_EAT,
                     )
-                    character_data.state = (
-                        constant.CharacterStatus.STATUS_REFUSE_EAT
-                    )
-            # 接受的情况下
+            # 接受的情况下，吃下加了精液的食物结算成就
             else:
-                # 成就结算
-                if (
+                achievement = (
                     now_food.special_seasoning in [11, 12]
                     and now_food.special_seasoning_amount > 0
-                ):
-                    achievement_panel.achievement_flow(_("进食"), 1076)
+                )
 
         line_feed.draw()
         cache.now_panel_id = constant.Panel.IN_SCENE
-        update.game_update_flow(5)
+        player_pick.choose(
+            behavior_id,
+            5,
+            kind="eat_food",
+            state=state,
+            args={
+                "food_uid": str(uid),
+                "angry": angry,
+                "achievement": achievement,
+            },
+        )

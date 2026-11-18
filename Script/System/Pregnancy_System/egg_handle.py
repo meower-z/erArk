@@ -55,12 +55,7 @@ def is_birth_type_enabled(birth_type: int) -> bool:
     """
     if birth_type not in pregnancy_constant.BIRTH_TYPE_SETTING_LIST:
         return True
-    all_setting = getattr(cache, "all_system_setting", None)
-    birth_setting = (
-        getattr(all_setting, "birth_type_setting", None)
-        if all_setting is not None
-        else None
-    )
+    birth_setting = getattr(cache, "birth_type_setting", None)
     if not isinstance(birth_setting, dict):
         return True
     return bool(birth_setting.get(birth_type, 1))
@@ -253,7 +248,7 @@ def add_egg(character_id: int, fertilized: bool, soft: bool = False) -> int:
     character_data: game_type.Character = cache.character_data[character_id]
     egg_id = character_data.pregnancy.next_egg_id
     character_data.pregnancy.eggs[egg_id] = {
-        "lay_time": cache.game_time,
+        "lay_time": game_time.now(),
         "identified": False,
         "fertilized": fertilized,
         "identify_time": None,
@@ -301,7 +296,7 @@ def get_identifiable_eggs(character_id: int) -> dict:
         lay_day_time = egg_data["lay_time"].replace(
             hour=0, minute=0, second=0, microsecond=0
         )
-        now_day_time = cache.game_time.replace(
+        now_day_time = game_time.now().replace(
             hour=0, minute=0, second=0, microsecond=0
         )
         if game_time.count_day_for_datetime(lay_day_time, now_day_time) >= 1:
@@ -335,7 +330,7 @@ def get_hatch_day(egg_data: dict) -> int:
     """
     # 旧存档的卵可能缺加速键，一律.get兜底
     return game_time.count_day_for_datetime(
-        egg_data["lay_time"], cache.game_time
+        egg_data["lay_time"], game_time.now()
     ) + int(egg_data.get("acceleration_days", 0))
 
 
@@ -515,7 +510,7 @@ def npc_identify_eggs_settle(
     for egg_id, egg_data in identifiable_eggs.items():
         if egg_data["fertilized"]:
             egg_data["identified"] = True
-            egg_data["identify_time"] = cache.game_time
+            egg_data["identify_time"] = game_time.now()
             fertilized_count += 1
         else:
             # 未受精卵静默废弃
@@ -629,7 +624,7 @@ def identify_held_eggs_settle() -> None:
         egg_data = character_data.pregnancy.eggs[egg_id]
         if egg_data["fertilized"]:
             egg_data["identified"] = True
-            egg_data["identify_time"] = cache.game_time
+            egg_data["identify_time"] = game_time.now()
             egg_data["held_by_player"] = False
             fertilized_chara_count.setdefault(chara_id, 0)
             fertilized_chara_count[chara_id] += 1
@@ -672,7 +667,7 @@ def replace_entertainment_for_eggs(character_id: int) -> None:
     if character_data.sp_flag.imprisonment:
         return
     # 派对日全时段为派对娱乐，跳过
-    week_day = cache.game_time.weekday()
+    week_day = game_time.now().weekday()
     if hasattr(
         cache.rhodes_island, "party_day_of_week"
     ) and cache.rhodes_island.party_day_of_week.get(week_day, 0):

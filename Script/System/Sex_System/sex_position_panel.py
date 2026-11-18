@@ -170,6 +170,8 @@ class Sex_Position_Panel:
             sex_position_id
         ]
         character_data: game_type.Character = cache.character_data[0]
+        # 选定行动后面板退回场景：玩家的选择交回内核后，选择之后的代码不再运行
+        cache.now_panel_id = constant.Panel.IN_SCENE
         if self.change_position:
             # 切换体位的情况则记录该数据
             character_data.h_state.pre_sex_position = (

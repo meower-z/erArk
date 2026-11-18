@@ -14,7 +14,7 @@
         world.vehicle.vehicles.5                       载具 5 的 [拥有数, 外勤中数]
         world.library.book_borrow_dict.12              书 12 的借阅者
         world.medical.medical_patients_today.13.state  门诊病人 13 的状态
-        world.clock.game_time                          游戏时间
+        world.clock.moon_phase                         月相
     scene.<场景路径>.occupants / close_flag 场景里的角色id（排序）与关门状态
     log.talk / log.event                    这一步里交去显示的口上id（含随后被显示判断挡下的）、触发的事件id（ActionLog
     记下，只记id，不记文本）
@@ -102,8 +102,6 @@ MEDICAL_PREFIXES = (
 """ 医疗部字段的名字开头：病人表、床位、医生、收入与计数 """
 
 CACHE_AREAS = {
-    "game_time": "clock",
-    "pre_game_time": "clock",
     "game_round": "clock",
     "moon_phase": "clock",
     "sun_phase": "clock",
@@ -121,7 +119,6 @@ SKIPPED_CACHE_FIELDS = {
     "now_panel_id": "界面：当前面板",
     "cmd_data": "界面：按钮绑定的函数",
     "back_save_panel": "界面：存档面板",
-    "game_update_flow_running": "界面：主循环是否在跑",
     "image_id": "界面：图片编号",
     "npc_image_index": "界面：立绘编号",
     "input_cache": "界面：输入历史",
@@ -137,7 +134,6 @@ SKIPPED_CACHE_FIELDS = {
     "text_style_position": "界面：文本样式",
     "text_wait": "界面：文本等待",
     "text_one_by_one_rich_cache": "界面：逐字显示缓存",
-    "font_size": "界面：字号",
     "wframe_mouse": "界面：鼠标状态",
     "scene_panel_show": "界面：场景面板开关",
     "all_npc_position_panel_move_type": "界面：干员位置面板",
@@ -419,8 +415,10 @@ def capture(
         罗德岛的字段按 WORLD_AREAS 分区）；有人的场景里的角色，关着门的场景的关门状态；口上与事件的id。
         memo 只省时间：pickle 字节相同的对象状态相同，展开结果也相同；字节不同时照常展开。
     """
+    from Script.Design import game_time
+
     state: dict[str, object] = {
-        "clock": cache.game_time.strftime("%Y-%m-%d %H:%M")
+        "clock": game_time.now().strftime("%Y-%m-%d %H:%M")
     }
     for cid in sorted(cache.character_data):
         character = cache.character_data[cid]

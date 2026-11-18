@@ -15,11 +15,9 @@ from Script.Config import game_config, normal_config
 from Script.Design import (
     attr_calculation,
     handle_premise,
-    clothing,
-    update,
-    instuct_judege,
 )
 from Script.UI.Moudle import draw, panel
+from Script.Modules.tk_ui import player_pick
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -465,58 +463,13 @@ class SeeUndressButtonList:
         self.now_draw = name_draw
 
     def chose_button(self) -> None:
-        """玩家点击了选项"""
-        instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-        character_data = cache.character_data[0]
-        target_data: game_type.Character = cache.character_data[
-            character_data.target_character_id
-        ]
-        character_data.behavior.duration = 5
-        update.game_update_flow(5)
-
-        # 0号指令,脱到只穿内衣
-        if self.button_id == 0:
-
-            for i in {5, 8}:
-                target_data.cloth.cloth_off[i].extend(
-                    target_data.cloth.cloth_wear[i]
-                )
-            clothing.undress_out_cloth(character_data.target_character_id)
-            # character_data.behavior.behavior_id = constant.Behavior.OFFICIAL_WORK
-            # character_data.state = constant.CharacterStatus.STATUS_OFFICIAL_WORK
-
-        # 1号指令,脱到只穿袜子手套等
-        elif self.button_id == 1:
-            for i in {5, 6, 8, 9}:
-                target_data.cloth.cloth_off[i].extend(
-                    target_data.cloth.cloth_wear[i]
-                )
-            clothing.strip_down_till_socks_and_gloves_left(
-                character_data.target_character_id
-            )
-            # character_data.behavior.behavior_id = constant.Behavior.OFFICIAL_WORK
-            # character_data.state = constant.CharacterStatus.STATUS_OFFICIAL_WORK
-
-        # 2号指令,脱到全裸
-        elif self.button_id == 2:
-            for i in game_config.config_clothing_type:
-                target_data.cloth.cloth_off[i].extend(
-                    target_data.cloth.cloth_wear[i]
-                )
-            clothing.get_all_cloth_off(character_data.target_character_id)
-            # character_data.behavior.behavior_id = constant.Behavior.OFFICIAL_WORK
-            # character_data.state = constant.CharacterStatus.STATUS_OFFICIAL_WORK
-
-        # 3号指令,把内裤收走
-        elif self.button_id == 3:
-            clothing.pl_get_chara_pan(character_data.target_character_id)
-
-        # 后处理
-        cloth_off_after_settle(character_data.target_character_id)
-
-        # debug用打印
-        # print(f"debug target_data.cloth.cloth_wear = {target_data.cloth.cloth_wear}")
-        # print(f"debug target_data.cloth.cloth_off = {target_data.cloth.cloth_off}")
+        """玩家点击了选项：脱衣在行动开始时进行"""
+        player_pick.choose(
+            cache.character_data[0].behavior.behavior_id,
+            5,
+            kind="undress",
+            args={"choice": self.button_id},
+        )
 
     def draw(self) -> None:
         """绘制对象"""

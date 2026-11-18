@@ -571,7 +571,7 @@ class Gift_Panel:
         elif gift_data.type == 3:
             last_gift_time = target_character_data.action_info.last_gift_time
             days_diff = game_time.count_day_for_datetime(
-                last_gift_time, cache.game_time
+                last_gift_time, game_time.now()
             )
             # 如果和今天是同一天，则不能重复赠送
             if days_diff <= 0:

@@ -70,7 +70,7 @@ def get_semester_progress() -> float:
     if day_total <= 1:
         return 100.0
     return max(
-        0.0, min(100.0, (cache.game_time.day - 1) * 100.0 / (day_total - 1))
+        0.0, min(100.0, (game_time.now().day - 1) * 100.0 / (day_total - 1))
     )
 
 
@@ -83,7 +83,7 @@ def get_semester_left_day() -> int:
     int -- 剩余天数
     """
     year, month = game_time.get_now_semester()
-    return max(0, get_semester_day_total(year, month) - cache.game_time.day)
+    return max(0, get_semester_day_total(year, month) - game_time.now().day)
 
 
 def judge_semester_half_passed() -> bool:
@@ -108,7 +108,7 @@ def get_semester_head_text() -> str:
     year, month = game_time.get_now_semester()
     return _("{0} · 第 {1} / {2} 天（已过 {3}%）").format(
         get_semester_name(year, month),
-        cache.game_time.day,
+        game_time.now().day,
         get_semester_day_total(year, month),
         int(get_semester_progress()),
     )

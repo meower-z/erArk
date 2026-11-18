@@ -13,6 +13,7 @@ from unittest import mock
 
 import numpy
 
+from Script.Design import game_time as clock
 from Script.Design import handle_premise
 from tests import world
 from tests.fast import FORBIDDEN, FastLayerImportError
@@ -69,19 +70,32 @@ class WorldTest(FastTestCase):
     def test_reset_restores_state(self) -> None:
         """复原后角色、场景、游戏时间、角色模板都回到基线，缓存对象不变"""
         cache = self.cache
-        game_time = cache.game_time
+        game_time = clock.now()
         self.world.chara(0, "博士", position=ROOM)
         room = self.world.scene(ROOM)
         room.close_flag = 1
-        cache.game_time = game_time + datetime.timedelta(days=1)
+        world.set_clock(game_time + datetime.timedelta(days=1))
         cache.npc_tem_data[-1] = cache.npc_tem_data[1]
         self.world.reset()
         self.assertIs(self.cache, cache)
         self.assertEqual(cache.character_data, {})
         self.assertEqual(room.close_flag, 0)
         self.assertEqual(room.character_list, set())
-        self.assertEqual(cache.game_time, game_time)
+        self.assertEqual(clock.now(), game_time)
         self.assertNotIn(-1, cache.npc_tem_data)
+
+    def test_new_game_clock_is_start_time(self) -> None:
+        """开新游戏读的开局时间是 START_TIME，不是 config.ini 的；测试改过的配置复原时读回来"""
+        from Script.Config import normal_config
+        from Script.Modules.save_load import kernel_state
+
+        self.assertEqual(
+            kernel_state.first_clock(), clock.minutes(world.start_time())
+        )
+        normal_config.config_normal.text_width += 1
+        width = normal_config.config_normal.text_width
+        self.world.reset()
+        self.assertEqual(normal_config.config_normal.text_width, width - 1)
 
     def test_reset_reseeds_random(self) -> None:
         """每次复原后 random、numpy.random 与 uuid.uuid4 给出同一串值"""

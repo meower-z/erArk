@@ -2,7 +2,8 @@
 
 import datetime
 from functools import wraps
-from typing import Callable, ParamSpec, TypeVar
+from collections.abc import Callable, Mapping
+from typing import NoReturn, ParamSpec, TypeVar
 from types import FunctionType
 from Script.Core import (
     constant,
@@ -14,17 +15,19 @@ from Script.Core import (
 )
 from Script.Design import (
     handle_ability,
-    update,
     map_handle,
-    character_behavior,
     instuct_judege,
     handle_npc_ai_in_h,
     handle_premise,
     child_stage_gate,
 )
 from Script.UI.Panel import achievement_panel, normal_panel
+from Script.Kernel import core
 from Script.Config import normal_config, game_config
 from Script.UI.Moudle import draw
+from Script.Design import game_time
+from Script.Modules.gameplay_resolution import intent, player_starters
+from Script.Modules.tk_ui import player_pick
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -275,91 +278,242 @@ def instruct_filter_H_change(on_off_flag: bool) -> None:
         # print(f"debug 关闭H面板，恢复其他面板")
 
 
+TARGET_WAIT = "target_wait"
+""" Intent.args 的键：交互对象排上同样分钟数的等待 """
+START = "start"
+""" Intent.args 的键：指令自己的开始代码在 _start_parts 里的名字 """
+
+type StartPart = Callable[[int, intent.Intent], None]
+""" 一个指令在行动开始时自己的代码：角色id、意图 """
+_start_parts: dict[str, StartPart] = {}
+""" 名字到指令自己的开始代码 """
+
+
+def start_part(name: str) -> Callable[[StartPart], StartPart]:
+    """
+    登记一个指令在行动开始时自己的代码，choose_instruct(start=name) 选出的行动开始时调用它
+    Keyword arguments:
+    name -- 名字
+    Return arguments:
+    Callable -- 装饰器，原样交回被装饰的 fn(who, intent)
+    """
+
+    def register(fn: StartPart) -> StartPart:
+        if name in _start_parts:
+            raise RuntimeError(f"start part {name} is registered twice")
+        _start_parts[name] = fn
+        return fn
+
+    return register
+
+
+def choose_instruct(
+    behavior_id: str,
+    minutes: int,
+    *,
+    target: int | None = None,
+    state: int | str | None = None,
+    judge: str = "",
+    target_wait: bool = False,
+    start: str = "",
+    args: Mapping[str, object] | None = None,
+    fields: Mapping[str, object] | None = None,
+) -> NoReturn:
+    """
+    定下玩家一个指令的行动（种类 Instruct），抛出 player_pick.Chosen
+    Keyword arguments:
+    behavior_id -- 行为id
+    minutes -- 名义分钟数
+    target -- 交互对象的角色id，None 时为玩家当前的交互对象
+    state -- 开始时的角色状态，None 时为行为id
+    judge -- 指令的判断条件，开始门再查（催眠在那时扣理智）；为空时不判断
+    target_wait -- 交互对象是否排上同样分钟数的等待
+    start -- 指令自己的开始代码的名字（start_part），为空时没有
+    args -- 指令自己的参数（Intent.args）
+    fields -- 开始时写在玩家身上的值（Intent.fields）
+    """
+    instruct_args: dict[str, object] = dict(args or {})
+    if target_wait:
+        instruct_args[TARGET_WAIT] = True
+    if start:
+        instruct_args[START] = start
+    if target is None:
+        target = cache.character_data[0].target_character_id
+    player_pick.choose(
+        behavior_id,
+        minutes,
+        kind=player_starters.KIND,
+        target=target,
+        state=state,
+        fields=fields,
+        args=instruct_args,
+        judge=judge or None,
+    )
+
+
+def start_instruct(who: int, chosen: intent.Intent) -> None:
+    """
+    种类 Instruct 的行动开始时（player_starters 调用，在 begin 之后、结算之前）：
+    交互对象排上等待，群交模板，指令自己的开始代码
+    Keyword arguments:
+    who -- 角色id
+    chosen -- 行动的意图
+    """
+    from Script.Modules.gameplay_resolution import plan_queue
+    from Script.System.Sex_System import group_sex_panel
+
+    args = chosen.get("args", {})
+    target = chosen.get("target", who)
+    if args.get(TARGET_WAIT) and target != who:
+        plan_queue.plan_next(
+            target,
+            constant.Behavior.WAIT,
+            chosen["minutes"],
+            state=constant.CharacterStatus.STATUS_WAIT,
+            interrupt=True,
+        )
+    group_sex_panel.group_sex_settle(who, target, chosen["behavior_id"])
+    part = args.get(START)
+    if isinstance(part, str):
+        _start_parts[part](who, chosen)
+
+
 def chara_handle_instruct_common_settle(
+    behavior_id: str,
+    target_character_id: int = 0,
+    duration: int = 0,
+    judge: str = "",
+    force_taget_wait: bool = False,
+    *,
+    start: str = "",
+    args: Mapping[str, object] | None = None,
+) -> NoReturn:
+    """
+    玩家指令的通用选择：定下行动，抛出 player_pick.Chosen
+    Keyword arguments:
+    behavior_id -- 行为id
+    target_character_id -- 交互对象的角色id，0 时为玩家当前的交互对象
+    duration -- 分钟数，0 为查表
+    judge -- 判断条件，为空时不判断；行动开始时开始门判断，没过的换成对应的失败行为
+    force_taget_wait -- 交互对象是否排上同样分钟数的等待
+    start -- 指令自己的开始代码的名字（start_part），为空时没有
+    args -- 指令自己的参数（Intent.args）
+    """
+    choose_instruct(
+        behavior_id,
+        _instruct_duration(behavior_id, duration),
+        target=target_character_id or None,
+        judge=judge,
+        target_wait=force_taget_wait,
+        start=start,
+        args=args,
+    )
+
+
+def _judged_behavior_id(
+    behavior_id: str, character_id: int, target_character_id: int, judge: str
+) -> str | None:
+    """
+    有判断条件时先判断：失败时换成对应的失败行为，不能执行时为 None
+    Keyword arguments:
+    behavior_id -- 行为id
+    character_id -- 角色id
+    target_character_id -- 交互对象的角色id
+    judge -- 判断条件，为空时不判断
+    Return arguments:
+    str | None -- 要执行的行为id
+    """
+    if judge == "":
+        return behavior_id
+    judge_list = instuct_judege.calculation_instuct_judege(
+        character_id, target_character_id, judge
+    )
+    if judge_list[0] == -1:
+        return None
+    if judge_list[0] != 0:
+        return behavior_id
+    judge_to_behavior_id = {
+        _("初级骚扰"): constant.Behavior.LOW_OBSCENITY_ANUS,
+        _("道具"): constant.Behavior.LOW_OBSCENITY_ANUS,
+        _("口交"): constant.Behavior.LOW_OBSCENITY_ANUS,
+        _("严重骚扰"): constant.Behavior.HIGH_OBSCENITY_ANUS,
+        _("药物"): constant.Behavior.HIGH_OBSCENITY_ANUS,
+        _("SM"): constant.Behavior.HIGH_OBSCENITY_ANUS,
+        _("性交"): constant.Behavior.HIGH_OBSCENITY_ANUS,
+        _("A性交"): constant.Behavior.HIGH_OBSCENITY_ANUS,
+        _("U开发"): constant.Behavior.HIGH_OBSCENITY_ANUS,
+        _("U性交"): constant.Behavior.HIGH_OBSCENITY_ANUS,
+        _("亲吻"): constant.Behavior.KISS_FAIL,
+        _("H模式"): constant.Behavior.DO_H_FAIL,
+    }
+    return judge_to_behavior_id.get(judge, behavior_id)
+
+
+def _instruct_duration(behavior_id: str, duration: int) -> int:
+    """
+    行动的持续时间：为 0 时查表，表里不大于 0 时为 1
+    Keyword arguments:
+    behavior_id -- 行为id
+    duration -- 指定的分钟数，0 为查表
+    Return arguments:
+    int -- 分钟数
+    """
+    if duration == 0:
+        duration = game_config.config_behavior[behavior_id].duration
+        if duration <= 0:
+            duration = 1
+    return duration
+
+
+def plan_instruct_common_settle(
     behavior_id: str,
     character_id: int = 0,
     target_character_id: int = 0,
     duration: int = 0,
     judge: str = "",
-    game_update_flag: bool = False,
     force_taget_wait: bool = False,
-) -> int | None:
+) -> tuple[core.Interrupt, ...]:
     """
-    角色处理指令通用结算函数\n
-    Keyword arguments:\n
-    state_id -- 状态id\n
-    character_id -- 角色id，默认=0时为玩家指令\n
-    target_character_id -- 指定目标角色id，默认=0时没有指定目标角色\n
-    behevior_id -- 行动id，默认=0时为同状态id\n
-    duration -- 行动持续时间，默认=0时进行查表获得\n
-    judge -- 进行指令判断，默认为空\n
-    game_update_flag -- 是否强制更新游戏流程，默认=False\n
-    force_taget_wait -- 是否强制目标等待，默认=False\n
+    结算途中用的指令通用结算：不当场开始，把行动排进角色的计划队列（干员会被打断来接着做）
+    Keyword arguments:
+    behavior_id -- 行为id
+    character_id -- 角色id
+    target_character_id -- 交互对象的角色id，0 时用角色当前的交互对象
+    duration -- 分钟数，0 为查表
+    judge -- 判断条件，为空时不判断
+    force_taget_wait -- 是否让交互对象也排上等待
+    Return arguments:
+    tuple -- 空元组：排下的打断由计划队列在这一步交给内核
     """
+    from Script.Modules.gameplay_resolution import plan_queue
     from Script.System.Sex_System import group_sex_panel
 
-    instuct_judege.init_character_behavior_start_time(
-        character_id, cache.game_time
-    )
     character_data: game_type.Character = cache.character_data[character_id]
-    # 如果有指定目标角色id，则设置目标角色id
-    if target_character_id != 0:
-        character_data.target_character_id = target_character_id
-    else:
+    if target_character_id == 0:
         target_character_id = character_data.target_character_id
-    # 如果有判断条件，则先进行判断
-    if judge != "":
-        judge_list = instuct_judege.calculation_instuct_judege(
-            character_id, character_data.target_character_id, judge
-        )
-        if judge_list[0] == 0:
-            judge_to_behavior_id = {
-                _("初级骚扰"): constant.Behavior.LOW_OBSCENITY_ANUS,
-                _("道具"): constant.Behavior.LOW_OBSCENITY_ANUS,
-                _("口交"): constant.Behavior.LOW_OBSCENITY_ANUS,
-                _("严重骚扰"): constant.Behavior.HIGH_OBSCENITY_ANUS,
-                _("药物"): constant.Behavior.HIGH_OBSCENITY_ANUS,
-                _("SM"): constant.Behavior.HIGH_OBSCENITY_ANUS,
-                _("性交"): constant.Behavior.HIGH_OBSCENITY_ANUS,
-                _("A性交"): constant.Behavior.HIGH_OBSCENITY_ANUS,
-                _("U开发"): constant.Behavior.HIGH_OBSCENITY_ANUS,
-                _("U性交"): constant.Behavior.HIGH_OBSCENITY_ANUS,
-                _("亲吻"): constant.Behavior.KISS_FAIL,
-                _("H模式"): constant.Behavior.DO_H_FAIL,
-            }
-            behavior_id = judge_to_behavior_id.get(judge, behavior_id)
-        elif judge_list[0] == -1:
-            return 0
-    character_data.state = behavior_id
-    # 获取行为数据
-    behavior_data = game_config.config_behavior[behavior_id]
-    character_data.behavior.behavior_id = behavior_id
-    # 查表获取行动持续时间
-    if duration == 0:
-        duration = behavior_data.duration
-        # 如果持续时间小于等于0，则持续时间为1
-        if duration <= 0:
-            duration = 1
-    character_data.behavior.duration = duration
-    # 如果强制目标等待，则将目标角色状态设置为等待
-    if target_character_id != character_id and force_taget_wait:
-        instuct_judege.init_character_behavior_start_time(
-            target_character_id, cache.game_time
-        )
-        target_character_data: game_type.Character = cache.character_data[
-            target_character_id
-        ]
-        target_character_data.state = constant.CharacterStatus.STATUS_WAIT
-        target_character_data.behavior.behavior_id = constant.Behavior.WAIT
-        target_character_data.behavior.duration = duration
-    # 群交结算
-    group_sex_panel.group_sex_settle(
-        character_id, target_character_id, behavior_id
+    judged = _judged_behavior_id(
+        behavior_id, character_id, target_character_id, judge
     )
-    # 仅在玩家指令时更新游戏流程
-    if character_id == 0 or game_update_flag:
-        update.game_update_flow(duration)
-    return None
+    if judged is None:
+        return ()
+    duration = _instruct_duration(judged, duration)
+    if target_character_id != character_id and force_taget_wait:
+        plan_queue.plan_next(
+            target_character_id,
+            constant.Behavior.WAIT,
+            duration,
+            state=constant.CharacterStatus.STATUS_WAIT,
+            interrupt=True,
+        )
+    group_sex_panel.group_sex_settle(character_id, target_character_id, judged)
+    plan_queue.plan_next(
+        character_id,
+        judged,
+        duration,
+        target=target_character_id,
+        interrupt=character_id != 0,
+    )
+    return ()
 
 
 def handle_comprehensive_state_effect(
@@ -370,7 +524,7 @@ def handle_comprehensive_state_effect(
     now_time: datetime.datetime,
 ) -> int | None:
     """
-    综合指令行为结算
+    综合指令行为结算：玩家接着做指定的行为，排进玩家的计划队列
     Keyword arguments:
     effect_all_value_list -- 结算的各项数值
     character_id -- 角色id
@@ -403,10 +557,8 @@ def handle_comprehensive_state_effect(
             return 0
 
     behavior_id = effect_all_value_list[1]
-    chara_handle_instruct_common_settle(
-        behavior_id,
-        target_character_id=target_character_id,
-        game_update_flag=True,
+    plan_instruct_common_settle(
+        behavior_id, target_character_id=target_character_id
     )
     return None
 
@@ -465,11 +617,24 @@ def handle_chat() -> None:
         character_data.target_character_id
     ]
     if target_data.action_info.talk_count > character_data.ability[40] + 1:
-        chara_handle_instruct_common_settle(constant.Behavior.CHAT_FAILED)
+        chara_handle_instruct_common_settle(
+            constant.Behavior.CHAT_FAILED, start="count_talk"
+        )
     else:
-        chara_handle_instruct_common_settle(constant.Behavior.CHAT)
-    target_data.action_info.talk_count += 1
-    # print("聊天计数器+1，现在为 ：",target_data.action_info.talk_count)
+        chara_handle_instruct_common_settle(
+            constant.Behavior.CHAT, start="count_talk"
+        )
+
+
+@start_part("count_talk")
+def _count_talk(who: int, chosen: intent.Intent) -> None:
+    """
+    聊天开始时：交互对象的聊天计数加一
+    Keyword arguments:
+    who -- 角色id
+    chosen -- 行动的意图
+    """
+    cache.character_data[chosen["target"]].action_info.talk_count += 1
 
 
 @add_instruct(constant.Instruct.BUY_H_ITEM)
@@ -540,51 +705,45 @@ def handle_chat_with_ai() -> None:
 
 @add_instruct(constant.Instruct.TEACH)
 def handle_teach() -> None:
-    """处理授课指令"""
+    """处理授课指令：授课45分钟，开始时把在场的学生拉来听课"""
+    choose_instruct(
+        constant.Behavior.TEACH,
+        45,
+        state=constant.CharacterStatus.STATUS_TEACH,
+        start="teach",
+    )
+
+
+@start_part("teach")
+def _start_teach(who: int, chosen: intent.Intent) -> None:
+    """
+    授课开始时：在场能拉来听课、又没在听课的学生，打断手上的行动，排上听课到本节课结束
+    Keyword arguments:
+    who -- 角色id
+    chosen -- 行动的意图
+    """
+    from Script.Modules.gameplay_resolution import plan_queue
     from Script.System.Education_System import class_ai, schedule_handle
 
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.behavior.behavior_id = constant.Behavior.TEACH
-    character_data.behavior.duration = 45
-    character_data.state = constant.CharacterStatus.STATUS_TEACH
-    # 将当前场景里的学生变为听课状态
-    # 遍历当前场景的其他角色
     scene_path_str = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+        cache.character_data[who].position
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-    # 场景角色数大于等于2时进行检测
-    if len(scene_data.character_list) >= 2:
-        # 遍历当前角色列表
-        for chara_id in scene_data.character_list:
-            # 跳过自己
-            if chara_id == 0:
-                continue
-            else:
-                other_character_data: game_type.Character = (
-                    cache.character_data[chara_id]
-                )
-                # 只拉学生岗、不在 H / 睡觉 / 翘课 / 休息中的人，已经在听别的教师讲课的不抢（Plan 25 §3.4）。
-                #    开始时刻对齐到玩家，节次判定与课后结算才对得上
-                if (
-                    class_ai.judge_student_pullable(chara_id)
-                    and other_character_data.behavior.behavior_id
-                    != constant.Behavior.ATTENT_CLASS
-                ):
-                    other_character_data.behavior.behavior_id = (
-                        constant.Behavior.ATTENT_CLASS
-                    )
-                    other_character_data.behavior.start_time = (
-                        character_data.behavior.start_time
-                    )
-                    other_character_data.behavior.duration = (
-                        schedule_handle.get_period_left_minute(chara_id)
-                    )
-                    other_character_data.state = (
-                        constant.CharacterStatus.STATUS_ATTENT_CLASS
-                    )
-    update.game_update_flow(45)
+    for chara_id in cache.scene_data[scene_path_str].character_list:
+        if chara_id == who:
+            continue
+        # 只拉学生岗、不在 H / 睡觉 / 翘课 / 休息中的人，已经在听别的教师讲课的不抢
+        if (
+            class_ai.judge_student_pullable(chara_id)
+            and cache.character_data[chara_id].behavior.behavior_id
+            != constant.Behavior.ATTENT_CLASS
+        ):
+            plan_queue.plan_next(
+                chara_id,
+                constant.Behavior.ATTENT_CLASS,
+                schedule_handle.get_period_left_minute(chara_id),
+                state=constant.CharacterStatus.STATUS_ATTENT_CLASS,
+                interrupt=True,
+            )
 
 
 @add_instruct(constant.Instruct.BORROW_BOOK)
@@ -942,10 +1101,21 @@ def handle_all_npc_position() -> None:
 @add_instruct(constant.Instruct.FOLLOW)
 def handle_followed() -> None:
     """处理邀请同行指令"""
-    character_data: game_type.Character = cache.character_data[0]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
+    chara_handle_instruct_common_settle(
+        constant.Behavior.FOLLOW, duration=5, start="follow"
+    )
+
+
+@start_part("follow")
+def _start_follow(who: int, chosen: intent.Intent) -> None:
+    """
+    邀请同行开始时：其他干员退出跟随（助理与交互对象除外，debug 模式不限人数）
+    Keyword arguments:
+    who -- 角色id
+    chosen -- 行动的意图
+    """
+    character_data: game_type.Character = cache.character_data[who]
+    target_data: game_type.Character = cache.character_data[chosen["target"]]
 
     # 提示信息
     now_draw = draw.NormalDraw()
@@ -956,7 +1126,7 @@ def handle_followed() -> None:
         for npc_id in cache.npc_id_got:
             if npc_id not in {
                 0,
-                character_data.target_character_id,
+                chosen["target"],
                 character_data.assistant_character_id,
             }:
                 other_character_data = cache.character_data[npc_id]
@@ -965,10 +1135,7 @@ def handle_followed() -> None:
                     now_draw.text += _(
                         "当前最大跟随数量：1人，{0}退出跟随模式\n"
                     ).format(other_character_data.name)
-    # now_draw.width = 1
     now_draw.draw()
-
-    chara_handle_instruct_common_settle(constant.Behavior.FOLLOW, duration=5)
 
 
 @add_instruct(constant.Instruct.END_FOLLOW)
@@ -982,66 +1149,92 @@ def handle_end_followed() -> None:
 @add_instruct(constant.Instruct.ASK_TARGET_REST)
 def handle_ask_target_rest() -> None:
     """处理让对方休息指令"""
-    character_data: game_type.Character = cache.character_data[0]
-    target_character_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_character_data.sp_flag.rest = True
-    chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration=1)
+    chara_handle_instruct_common_settle(
+        constant.Behavior.WAIT,
+        duration=1,
+        start="target_sp_flag",
+        args={"flag": "rest"},
+    )
 
 
 @add_instruct(constant.Instruct.ASK_TARGET_SLEEP)
 def handle_ask_target_sleep() -> None:
     """处理让对方睡觉指令"""
-    character_data: game_type.Character = cache.character_data[0]
-    target_character_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_character_data.sp_flag.tired = True
-    chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration=1)
+    chara_handle_instruct_common_settle(
+        constant.Behavior.WAIT,
+        duration=1,
+        start="target_sp_flag",
+        args={"flag": "tired"},
+    )
+
+
+@start_part("target_sp_flag")
+def _set_target_sp_flag(who: int, chosen: intent.Intent) -> None:
+    """
+    行动开始时：交互对象的 sp_flag 里 args["flag"] 这一项设为真
+    Keyword arguments:
+    who -- 角色id
+    chosen -- 行动的意图
+    """
+    target_data = cache.character_data[chosen["target"]]
+    setattr(target_data.sp_flag, str(chosen["args"]["flag"]), True)
 
 
 @add_instruct(constant.Instruct.APOLOGIZE)
 def handle_apologize() -> None:
     """处理道歉指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
     character_data: game_type.Character = cache.character_data[0]
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    # 根据口才获取调整值#
-    character_data.ability.setdefault(25, 0)
-    adjust = handle_ability.get_ability_adjust(character_data.ability[40])
-    value = int(10 + adjust * 10)
-    # 减愤怒值
-    target_data.angry_point = max(target_data.angry_point - value, 0)
-    # 判定是否不生气了
-    if target_data.angry_point <= 30:
-        chara_handle_instruct_common_settle(
-            constant.Behavior.APOLOGIZE, force_taget_wait=True
-        )
+    value = _calm_value()
+    # 判定减掉愤怒值后是否不生气了
+    if target_data.angry_point - value <= 30:
+        behavior_id = constant.Behavior.APOLOGIZE
     else:
-        chara_handle_instruct_common_settle(
-            constant.Behavior.APOLOGIZE_FAILED, force_taget_wait=True
-        )
+        behavior_id = constant.Behavior.APOLOGIZE_FAILED
+    chara_handle_instruct_common_settle(
+        behavior_id,
+        force_taget_wait=True,
+        start="calm_target",
+        args={"value": value},
+    )
+
+
+def _calm_value() -> int:
+    """
+    玩家道歉、听牢骚时交互对象减掉的愤怒值：按口才调整
+    Return arguments:
+    int -- 愤怒值
+    """
+    adjust = handle_ability.get_ability_adjust(
+        cache.character_data[0].ability[40]
+    )
+    return int(10 + adjust * 10)
+
+
+@start_part("calm_target")
+def _calm_target(who: int, chosen: intent.Intent) -> None:
+    """
+    道歉、听牢骚开始时：交互对象减掉 args["value"] 的愤怒值，不低于0
+    Keyword arguments:
+    who -- 角色id
+    chosen -- 行动的意图
+    """
+    target_data = cache.character_data[chosen["target"]]
+    value = chosen["args"]["value"]
+    assert isinstance(value, int)
+    target_data.angry_point = max(target_data.angry_point - value, 0)
 
 
 @add_instruct(constant.Instruct.LISTEN_COMPLAINT)
 def handle_listen_complaint() -> None:
     """处理听牢骚指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    character_data: game_type.Character = cache.character_data[0]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    # 根据口才获取调整值#
-    character_data.ability.setdefault(25, 0)
-    adjust = handle_ability.get_ability_adjust(character_data.ability[40])
-    value = int(10 + adjust * 10)
-    # 减愤怒值
-    target_data.angry_point = max(target_data.angry_point - value, 0)
     chara_handle_instruct_common_settle(
-        constant.Behavior.LISTEN_COMPLAINT, force_taget_wait=True
+        constant.Behavior.LISTEN_COMPLAINT,
+        force_taget_wait=True,
+        start="calm_target",
+        args={"value": _calm_value()},
     )
 
 
@@ -1060,31 +1253,41 @@ def handle_originium_arts() -> None:
 @add_instruct(constant.Instruct.TARGET_TO_SELF)
 def handle_target_to_self() -> None:
     """处理对自己交互指令"""
-    pl_character_data = cache.character_data[0]
-    pl_character_data.target_character_id = 0
-    chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration=1)
+    choose_instruct(constant.Behavior.WAIT, 1, target=0)
 
 
 @add_instruct(constant.Instruct.DOOR_LOCK_INNER)
 def handle_door_lock_inner() -> None:
     """处理锁上门内侧锁指令"""
-    pl_character_data = cache.character_data[0]
-    now_position = pl_character_data.position
-    now_scene_str = map_handle.get_map_system_path_str_for_list(now_position)
-    now_scene_data = cache.scene_data[now_scene_str]
-    now_scene_data.close_flag = now_scene_data.close_type
-    chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration=1)
+    chara_handle_instruct_common_settle(
+        constant.Behavior.WAIT, duration=1, start="door", args={"lock": True}
+    )
 
 
 @add_instruct(constant.Instruct.DOOR_UNLOCK_INNER)
 def handle_door_unlock_inner() -> None:
     """处理解开门内侧锁指令"""
-    pl_character_data = cache.character_data[0]
-    now_position = pl_character_data.position
-    now_scene_str = map_handle.get_map_system_path_str_for_list(now_position)
+    chara_handle_instruct_common_settle(
+        constant.Behavior.WAIT, duration=1, start="door", args={"lock": False}
+    )
+
+
+@start_part("door")
+def _set_door(who: int, chosen: intent.Intent) -> None:
+    """
+    锁门、开锁开始时：角色所在场景的门锁上（args["lock"] 为真）或解开
+    Keyword arguments:
+    who -- 角色id
+    chosen -- 行动的意图
+    """
+    now_scene_str = map_handle.get_map_system_path_str_for_list(
+        cache.character_data[who].position
+    )
     now_scene_data = cache.scene_data[now_scene_str]
-    now_scene_data.close_flag = 0
-    chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration=1)
+    if chosen["args"]["lock"]:
+        now_scene_data.close_flag = now_scene_data.close_type
+    else:
+        now_scene_data.close_flag = 0
 
 
 @add_instruct(constant.Instruct.CHARA_DIY_INSTRUCT)
@@ -1201,134 +1404,113 @@ def handle_check_locker() -> None:
 @add_instruct(constant.Instruct.COLLCET_PANTY)
 def handle_collect_panty() -> None:
     """处理收起内裤指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.behavior.duration = 5
-    update.game_update_flow(5)
+    player_pick.choose(constant.Behavior.SHARE_BLANKLY, 5)
 
 
 @add_instruct(constant.Instruct.ASK_DATE)
 def handle_ask_date() -> None:
     """处理邀请约会指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.behavior.duration = 5
-    update.game_update_flow(5)
+    player_pick.choose(constant.Behavior.SHARE_BLANKLY, 5)
 
 
 @add_instruct(constant.Instruct.CONFESSION)
 def handle_confession() -> None:
-    """处理告白指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    character_data: game_type.Character = cache.character_data[0]
-    target_data = cache.character_data[character_data.target_character_id]
-    if (
-        handle_premise.handle_target_trust_ge_200(0)
-        and instuct_judege.calculation_instuct_judege(
-            0, character_data.target_character_id, _("告白")
-        )[0]
-    ):
-        character_data.behavior.behavior_id = constant.Behavior.CONFESSION
-        character_data.state = constant.CharacterStatus.STATUS_CONFESSION
-        # 将对象的恋慕转为恋人，对方获得戒指
-        from Script.Design import handle_talent
-
-        target_data.talent[202] = 0
-        target_data.talent[203] = 1
-        # 记录[恋人]陷落素质的获得时间与地点（此处直接赋值绕过了gain_talent，需补记）
-        handle_talent.record_fall_talent_time(
-            character_data.target_character_id, 203
-        )
-        target_data.talent[205] = 1
-        target_data.talent[411] = 1
-        character_data.pl_collection.token_list[
-            character_data.target_character_id
-        ] = True
-        now_draw = draw.WaitDraw()
-        now_draw.width = width
-        now_draw.text = _(
-            "\n告白成功，{0}收下了你赠予的[戒指]，[恋慕]转为[恋人]\n"
-        ).format(target_data.name)
-        now_draw.text += _("\n获得了{0}的信物：{1}\n").format(
-            target_data.name, target_data.token_text
-        )
-        now_draw.text += _("\n可以在[角色属性]-[角色设置]修改对彼此的称呼了\n")
-        now_draw.draw()
+    """处理告白指令：需要信赖≥200%且满足实行值，开始时交出戒指"""
+    if _token_accepted(_("告白")):
+        behavior_id = constant.Behavior.CONFESSION
+        state = constant.CharacterStatus.STATUS_CONFESSION
     else:
-        character_data.behavior.behavior_id = (
-            constant.Behavior.CONFESSION_FAILED
-        )
-        character_data.state = constant.CharacterStatus.STATUS_CONFESSION_FAILED
-        now_draw = draw.WaitDraw()
-        now_draw.width = width
-        now_draw.text = _("\n告白失败，需要[恋慕]、信赖≥200%、且满足实行值\n")
-        now_draw.draw()
-    character_data.behavior.duration = 10
-    update.game_update_flow(10)
+        behavior_id = constant.Behavior.CONFESSION_FAILED
+        state = constant.CharacterStatus.STATUS_CONFESSION_FAILED
+    choose_instruct(behavior_id, 10, state=state, start="token")
 
 
 @add_instruct(constant.Instruct.GIVE_NECKLACE)
 def handle_give_necklace() -> None:
-    """处理戴上项圈指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    character_data: game_type.Character = cache.character_data[0]
-    target_data = cache.character_data[character_data.target_character_id]
-    if (
+    """处理戴上项圈指令：需要信赖≥200%且满足实行值，开始时戴上项圈"""
+    if _token_accepted(_("戴上项圈")):
+        behavior_id = constant.Behavior.GIVE_NECKLACE
+        state = constant.CharacterStatus.STATUS_GIVE_NECKLACE
+    else:
+        behavior_id = constant.Behavior.GIVE_NECKLACE_FAILED
+        state = constant.CharacterStatus.STATUS_GIVE_NECKLACE_FAILED
+    choose_instruct(behavior_id, 10, state=state, start="token")
+
+
+def _token_accepted(judge: str) -> bool:
+    """
+    交互对象是否接受信物：信赖≥200%且实行值判定通过（判定会绘制，不扣催眠的理智）
+    Keyword arguments:
+    judge -- 判定名
+    Return arguments:
+    bool -- 接受时为真
+    """
+    return bool(
         handle_premise.handle_target_trust_ge_200(0)
         and instuct_judege.calculation_instuct_judege(
-            0, character_data.target_character_id, _("戴上项圈")
+            0,
+            cache.character_data[0].target_character_id,
+            judge,
+            settle_hypnosis=False,
         )[0]
-    ):
-        character_data.behavior.behavior_id = constant.Behavior.GIVE_NECKLACE
-        character_data.state = constant.CharacterStatus.STATUS_GIVE_NECKLACE
-        # 将对象的驯服转为宠物，增加项圈素质
-        from Script.Design import handle_talent
+    )
 
-        target_data.talent[212] = 0
-        target_data.talent[213] = 1
-        # 记录[宠物]陷落素质的获得时间与地点（此处直接赋值绕过了gain_talent，需补记）
-        handle_talent.record_fall_talent_time(
-            character_data.target_character_id, 213
-        )
-        target_data.talent[215] = 1
-        target_data.talent[411] = 1
-        character_data.pl_collection.token_list[
-            character_data.target_character_id
-        ] = True
-        now_draw = draw.WaitDraw()
-        now_draw.width = width
+
+@start_part("token")
+def _give_token(who: int, chosen: intent.Intent) -> None:
+    """
+    告白、戴上项圈开始时：成功时交互对象的[恋慕]转为[恋人]（或[驯服]转为[宠物]）、得到信物，失败时提示条件
+    Keyword arguments:
+    who -- 角色id
+    chosen -- 行动的意图
+    """
+    from Script.Design import handle_talent
+
+    character_data: game_type.Character = cache.character_data[who]
+    target_id = chosen["target"]
+    target_data = cache.character_data[target_id]
+    now_draw = draw.WaitDraw()
+    now_draw.width = width
+    behavior_id = chosen["behavior_id"]
+    if behavior_id == constant.Behavior.CONFESSION:
+        old, new, mark = 202, 203, 205
+        now_draw.text = _(
+            "\n告白成功，{0}收下了你赠予的[戒指]，[恋慕]转为[恋人]\n"
+        ).format(target_data.name)
+    elif behavior_id == constant.Behavior.GIVE_NECKLACE:
+        old, new, mark = 212, 213, 215
         now_draw.text = _(
             "\n{0}接受了项圈，戴在了自己的脖子上，[驯服]转为[宠物]\n"
         ).format(target_data.name)
-        now_draw.text += _("\n获得了{0}的信物：{1}\n").format(
-            target_data.name, target_data.token_text
-        )
-        now_draw.text += _("\n可以在[角色属性]-[角色设置]修改对彼此的称呼了\n")
-        now_draw.draw()
     else:
-        character_data.behavior.behavior_id = (
-            constant.Behavior.GIVE_NECKLACE_FAILED
-        )
-        character_data.state = (
-            constant.CharacterStatus.STATUS_GIVE_NECKLACE_FAILED
-        )
-        now_draw = draw.WaitDraw()
-        now_draw.width = width
-        now_draw.text = _(
-            "\n戴上项圈失败，需要[驯服]、信赖≥200%、且满足实行值\n"
-        )
+        if behavior_id == constant.Behavior.CONFESSION_FAILED:
+            now_draw.text = _(
+                "\n告白失败，需要[恋慕]、信赖≥200%、且满足实行值\n"
+            )
+        else:
+            now_draw.text = _(
+                "\n戴上项圈失败，需要[驯服]、信赖≥200%、且满足实行值\n"
+            )
         now_draw.draw()
-    character_data.behavior.duration = 10
-    update.game_update_flow(10)
+        return
+    target_data.talent[old] = 0
+    target_data.talent[new] = 1
+    # 记录陷落素质的获得时间与地点（此处直接赋值绕过了gain_talent，需补记）
+    handle_talent.record_fall_talent_time(target_id, new)
+    target_data.talent[mark] = 1
+    target_data.talent[411] = 1
+    character_data.pl_collection.token_list[target_id] = True
+    now_draw.text += _("\n获得了{0}的信物：{1}\n").format(
+        target_data.name, target_data.token_text
+    )
+    now_draw.text += _("\n可以在[角色属性]-[角色设置]修改对彼此的称呼了\n")
+    now_draw.draw()
 
 
 @add_instruct(constant.Instruct.DRINK_ALCOHOL)
 def handle_drink_alcohol() -> None:
     """处理劝酒指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.behavior.duration = 5
-    update.game_update_flow(5)
+    player_pick.choose(constant.Behavior.SHARE_BLANKLY, 5)
 
 
 @add_instruct(constant.Instruct.PEE)
@@ -1340,65 +1522,88 @@ def handle_pee() -> None:
 @add_instruct(constant.Instruct.COLLECT)
 def handle_collect() -> None:
     """处理摆放藏品指令"""
+    chara_handle_instruct_common_settle(
+        constant.Behavior.WAIT, duration=5, start="collect"
+    )
+
+
+@start_part("collect")
+def _collect(who: int, chosen: intent.Intent) -> None:
+    """
+    摆放藏品开始时：收起身上的藏品
+    Keyword arguments:
+    who -- 角色id
+    chosen -- 行动的意图
+    """
     from Script.UI.Panel import collection_panel
 
-    # 收起藏品
     collection_panel.collapse_collection()
-    chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration=5)
 
 
 @add_instruct(constant.Instruct.DO_H)
-def handle_do_h() -> None:
-    """处理邀请H指令"""
-    character_data: game_type.Character = cache.character_data[0]
-    target_data = cache.character_data[character_data.target_character_id]
+def handle_do_h(place: str = "") -> None:
+    """
+    处理邀请H指令
+    Keyword arguments:
+    place -- 在特别地点H时，玩家与交互对象 h_state 里要设为真的那一项（如 h_in_love_hotel），为空时没有
+    """
+    chara_handle_instruct_common_settle(
+        constant.Behavior.H,
+        judge=_("H模式"),
+        start="do_h",
+        args={"place": place},
+    )
+
+
+@start_part("do_h")
+def _start_do_h(who: int, chosen: intent.Intent) -> None:
+    """
+    邀请H开始时：记下特别地点；成功时没关的门自动关上，交互对象停止跟随并记下进入H的时间，提示进入或失败
+    Keyword arguments:
+    who -- 角色id
+    chosen -- 行动的意图
+    """
+    character_data: game_type.Character = cache.character_data[who]
+    target_data = cache.character_data[chosen["target"]]
+    place = str(chosen["args"]["place"])
+    if place:
+        setattr(character_data.h_state, place, True)
+        setattr(target_data.h_state, place, True)
     now_draw = draw.WaitDraw()
     now_draw.width = width
-    now_draw_text = "\n"
-    if instuct_judege.calculation_instuct_judege(
-        0, character_data.target_character_id, _("H模式")
-    )[0]:
-        now_scene_str = map_handle.get_map_system_path_str_for_list(
-            character_data.position
-        )
-        # 如果没关门，则自动将门关上
-        if cache.scene_data[now_scene_str].close_flag == 0:
-            cache.scene_data[now_scene_str].close_flag = cache.scene_data[
-                now_scene_str
-            ].close_type
-            now_draw_text += _("已自动关门\n")
-        target_data.sp_flag.is_follow = 0
-        target_data.action_info.last_conscious_h_time = cache.game_time
-        now_draw_text += _("进入H模式\n\n")
-        now_draw.text = now_draw_text
-        now_draw.style = "gold_enrod"
-        now_draw.draw()
-        chara_handle_instruct_common_settle(constant.Behavior.H)
-    else:
+    if chosen["behavior_id"] != constant.Behavior.H:
         now_draw.text = _("\n进入H模式失败\n\n")
         now_draw.style = "warning"
         now_draw.draw()
-        chara_handle_instruct_common_settle(constant.Behavior.DO_H_FAIL)
+        return
+    now_draw_text = "\n"
+    now_scene_str = map_handle.get_map_system_path_str_for_list(
+        character_data.position
+    )
+    # 如果没关门，则自动将门关上
+    if cache.scene_data[now_scene_str].close_flag == 0:
+        cache.scene_data[now_scene_str].close_flag = cache.scene_data[
+            now_scene_str
+        ].close_type
+        now_draw_text += _("已自动关门\n")
+    target_data.sp_flag.is_follow = 0
+    target_data.action_info.last_conscious_h_time = game_time.now()
+    now_draw_text += _("进入H模式\n\n")
+    now_draw.text = now_draw_text
+    now_draw.style = "gold_enrod"
+    now_draw.draw()
 
 
 @add_instruct(constant.Instruct.DO_H_IN_LOVE_HOTEL)
 def handle_do_h_in_love_hotel() -> None:
     """处理邀请在爱情旅馆H指令"""
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.h_state.h_in_love_hotel = True
-    target_data = cache.character_data[character_data.target_character_id]
-    target_data.h_state.h_in_love_hotel = True
-    handle_do_h()
+    handle_do_h("h_in_love_hotel")
 
 
 @add_instruct(constant.Instruct.DO_H_IN_BATHROOM)
 def handle_do_h_in_bathroom() -> None:
     """处理邀请在浴室H指令"""
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.h_state.h_in_bathroom = True
-    target_data = cache.character_data[character_data.target_character_id]
-    target_data.h_state.h_in_bathroom = True
-    handle_do_h()
+    handle_do_h("h_in_bathroom")
 
 
 @add_instruct(constant.Instruct.DO_H_WITH_DAUGHTER)
@@ -1409,12 +1614,10 @@ def handle_do_h_with_daughter() -> None:
 
 @add_instruct(constant.Instruct.PREPARE_TRAINING)
 def handle_prepare_training() -> None:
-    """处理调教前准备指令"""
+    """处理调教前准备指令：选择交给调教面板（行动开始时三人去调教室并做好准备）"""
     from Script.UI.Panel import confinement_and_training
 
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
     confinement_and_training.prepare_training()
-    update.game_update_flow(10)
 
 
 @add_instruct(constant.Instruct.SWITCH_TO_H_INTERFACE)
@@ -1426,7 +1629,6 @@ def handle_switch_to_h_interface() -> None:
 @add_instruct(constant.Instruct.SLEEP_OBSCENITY)
 def handle_sleep_obscenity() -> None:
     """处理睡眠猥亵指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
     character_data: game_type.Character = cache.character_data[0]
     target_data = cache.character_data[character_data.target_character_id]
     now_scene_str = map_handle.get_map_system_path_str_for_list(
@@ -1453,7 +1655,6 @@ def handle_stop_sleep_obscenity() -> None:
     """处理停止睡眠猥亵指令"""
     from Script.Settle import default
 
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
     character_data: game_type.Character = cache.character_data[0]
     target_data = cache.character_data[character_data.target_character_id]
     target_data.sp_flag.unconscious_h = 0
@@ -1478,10 +1679,7 @@ def handle_unconscious_h(type_name: str = "") -> None:
     处理无意识奸指令
     type_name: str = ""  # 用于区分无意识奸类型
     """
-    from Script.Settle import default
-
     character_data: game_type.Character = cache.character_data[0]
-    target_data = cache.character_data[character_data.target_character_id]
     now_scene_str = map_handle.get_map_system_path_str_for_list(
         character_data.position
     )
@@ -1492,26 +1690,38 @@ def handle_unconscious_h(type_name: str = "") -> None:
         door_return = close_door_panel.draw()
         if door_return == -1:
             return
-    target_data.action_info.last_unconscious_h_time = cache.game_time
+    chara_handle_instruct_common_settle(
+        constant.Behavior.H, start="unconscious_h", args={"type": type_name}
+    )
+
+
+@start_part("unconscious_h")
+def _start_unconscious_h(who: int, chosen: intent.Intent) -> None:
+    """
+    无意识奸开始时：交互对象记下时间、停止跟随，按 args["type"] 进入睡奸、醉奸等模式并提示
+    Keyword arguments:
+    who -- 角色id
+    chosen -- 行动的意图
+    """
+    from Script.Settle import default
+
+    target_id = chosen["target"]
+    target_data = cache.character_data[target_id]
+    type_name = chosen["args"]["type"]
+    target_data.action_info.last_unconscious_h_time = game_time.now()
     target_data.sp_flag.is_follow = 0
     now_draw = draw.WaitDraw()
     now_draw.width = width
     if type_name == "sleep":
         now_draw.text = _("\n进入睡奸模式\n")
         default.handle_unconscious_flag_to_1(
-            character_data.target_character_id,
-            1,
-            game_type.CharacterStatusChange(),
-            cache.game_time,
+            target_id, 1, game_type.CharacterStatusChange(), game_time.now()
         )
         cache.achievement.sleep_sex_record = {1: 0, 2: 0, 3: 0}
     elif type_name == "drunk":
         now_draw.text = _("\n进入醉奸模式\n")
         default.handle_unconscious_flag_to_2(
-            character_data.target_character_id,
-            1,
-            game_type.CharacterStatusChange(),
-            cache.game_time,
+            target_id, 1, game_type.CharacterStatusChange(), game_time.now()
         )
         cache.achievement.drunk_sex_record = {1: 0, 2: 0, 3: 0}
     elif type_name == "time_stop":
@@ -1521,8 +1731,6 @@ def handle_unconscious_h(type_name: str = "") -> None:
     else:
         now_draw.text = _("\n进入无意识奸模式\n")
     now_draw.draw()
-
-    chara_handle_instruct_common_settle(constant.Behavior.H)
 
 
 @add_instruct(constant.Instruct.SLEEP_H)
@@ -1563,76 +1771,91 @@ def handle_ask_exhibitionism_sex() -> None:
 
 @add_instruct(constant.Instruct.ASK_GROUP_SEX)
 def handle_ask_group_sex() -> None:
-    """处理邀请群交指令"""
-    now_draw = draw.WaitDraw()
-    now_draw.width = width
-
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
+    """处理邀请群交指令：场景里的干员逐个判定实行值，全部同意时进入群交模式"""
     character_data: game_type.Character = cache.character_data[0]
-    h_flag = True  # 是否成功进入群交模式
-    refuse_chara_list = []  # 拒绝的角色列表
-
-    # 对场景内的全角色进行实行值判定
     scene_path_str = map_handle.get_map_system_path_str_for_list(
         character_data.position
     )
-    scene_data: game_type.Scene = cache.scene_data[scene_path_str]
-    # 场景角色数大于等于2时进行检测
-    if len(scene_data.character_list) >= 2:
-        # 遍历当前角色列表
-        for chara_id in scene_data.character_list:
-            # 遍历非玩家的角色
-            if chara_id == 0:
-                continue
-            instuct_judege.init_character_behavior_start_time(
-                chara_id, cache.game_time
-            )
-            now_character_data = cache.character_data[chara_id]
-            now_character_data.behavior.behavior_id = constant.Behavior.WAIT
-            now_character_data.state = constant.CharacterStatus.STATUS_WAIT
-            now_character_data.behavior.duration = 1
-            # 开始判定，TODO 根据已同意人数而增加额外实行值加值
-            if not instuct_judege.calculation_instuct_judege(
-                0, chara_id, _("群交"), not_draw_flag=True
-            )[0]:
-                h_flag = False
-                refuse_chara_list.append(chara_id)
+    members = [
+        c for c in cache.scene_data[scene_path_str].character_list if c != 0
+    ]
+    # 开始判定，TODO 根据已同意人数而增加额外实行值加值
+    refused = [
+        chara_id
+        for chara_id in members
+        if not instuct_judege.calculation_instuct_judege(
+            0, chara_id, _("群交"), not_draw_flag=True, settle_hypnosis=False
+        )[0]
+    ]
+    if refused:
+        behavior_id = constant.Behavior.ASK_GROUP_SEX_FAIL
+        state = constant.CharacterStatus.STATUS_ASK_GROUP_SEX_FAIL
+    else:
+        behavior_id = constant.Behavior.ASK_GROUP_SEX
+        state = constant.CharacterStatus.STATUS_ASK_GROUP_SEX
+    choose_instruct(
+        behavior_id,
+        5,
+        state=state,
+        start="ask_group_sex",
+        args={"members": members, "refused": refused},
+    )
 
-    # 成功进入群交模式
-    if h_flag:
-        character_data.behavior.behavior_id = constant.Behavior.ASK_GROUP_SEX
-        character_data.state = constant.CharacterStatus.STATUS_ASK_GROUP_SEX
+
+def _ids(value: core.JSON) -> list[int]:
+    """
+    Intent.args 里的角色id列表（内核冻结后是元组）
+    Keyword arguments:
+    value -- args 里的值
+    Return arguments:
+    list -- 角色id
+    """
+    assert isinstance(value, tuple | list)
+    return [int(c) for c in value if isinstance(c, int)]
+
+
+@start_part("ask_group_sex")
+def _start_ask_group_sex(who: int, chosen: intent.Intent) -> None:
+    """
+    邀请群交开始时：成功时场景里的干员都排上加入群交，失败时都排上1分钟的等待，并记下拒绝的人
+    Keyword arguments:
+    who -- 角色id
+    chosen -- 行动的意图
+    """
+    from Script.Modules.gameplay_resolution import plan_queue
+
+    members = _ids(chosen["args"]["members"])
+    refused = _ids(chosen["args"]["refused"])
+    now_draw = draw.WaitDraw()
+    now_draw.width = width
+    if chosen["behavior_id"] == constant.Behavior.ASK_GROUP_SEX:
         now_draw.text = _("\n进入群交模式\n")
         now_draw.draw()
-        for chara_id in scene_data.character_list:
-            # 遍历非玩家的角色
-            if chara_id == 0:
-                continue
-            chara_handle_instruct_common_settle(
+        for chara_id in members:
+            plan_queue.plan_next(
+                chara_id,
                 constant.Behavior.JOIN_GROUP_SEX,
-                character_id=chara_id,
-                target_character_id=0,
+                _instruct_duration(constant.Behavior.JOIN_GROUP_SEX, 0),
+                interrupt=True,
             )
-            # 手动结算该状态
-            character_behavior.judge_character_status(chara_id)
-    else:
-        now_draw.text = _("\n进入群交模式失败\n")
-        for chara_id in refuse_chara_list:
-            now_draw.text += _("{0}拒绝了群交\n").format(
-                cache.character_data[chara_id].name
-            )
-        now_draw.draw()
-        character_data.action_info.ask_group_sex_refuse_chara_id_list = (
-            refuse_chara_list
+        return
+    now_draw.text = _("\n进入群交模式失败\n")
+    for chara_id in refused:
+        now_draw.text += _("{0}拒绝了群交\n").format(
+            cache.character_data[chara_id].name
         )
-        character_data.behavior.behavior_id = (
-            constant.Behavior.ASK_GROUP_SEX_FAIL
+    now_draw.draw()
+    cache.character_data[who].action_info.ask_group_sex_refuse_chara_id_list = (
+        refused
+    )
+    for chara_id in members:
+        plan_queue.plan_next(
+            chara_id,
+            constant.Behavior.WAIT,
+            1,
+            state=constant.CharacterStatus.STATUS_WAIT,
+            interrupt=True,
         )
-        character_data.state = (
-            constant.CharacterStatus.STATUS_ASK_GROUP_SEX_FAIL
-        )
-    character_data.behavior.duration = 5
-    update.game_update_flow(5)
 
 
 @add_instruct(constant.Instruct.WAIT_5_MIN_IN_H)
@@ -1655,54 +1878,150 @@ def handle_wait_5_min_in_h() -> None:
 
 
 @add_instruct(constant.Instruct.H_END)
-def handle_h_end() -> None:
-    """处理H结束指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    character_data: game_type.Character = cache.character_data[0]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    special_end_list = constant.special_end_H_list
+def handle_h_end(daughter: bool = False) -> None:
+    """
+    处理H结束指令：玩家结束5分钟，开始时对方原地等待10分钟
+    Keyword arguments:
+    daughter -- 是否是乱伦H的结束（开始时记成就）
+    """
+    behavior_id, state = _planned_end(
+        None, constant.Behavior.END_H, constant.CharacterStatus.STATUS_END_H
+    )
+    choose_instruct(
+        behavior_id,
+        5,
+        state=state,
+        start="h_end",
+        args={"daughter": daughter},
+    )
 
-    # 非特殊中断的情况下，正常结束H
-    if character_data.behavior.behavior_id not in special_end_list:
-        character_data.behavior.behavior_id = constant.Behavior.END_H
-        character_data.state = constant.CharacterStatus.STATUS_END_H
-        # 异常126正常，则进入跟随
-        if (
-            handle_premise.handle_normal_1(character_data.target_character_id)
-            and handle_premise.handle_normal_2(
-                character_data.target_character_id
-            )
-            and handle_premise.handle_normal_6(
-                character_data.target_character_id
-            )
-        ):
-            target_data.sp_flag.is_follow = 1
 
-    # 对方原地待机10分钟
-    if character_data.target_character_id != 0:
-        target_data.behavior.behavior_id = constant.Behavior.WAIT
-        target_data.behavior.duration = 10
-        target_data.behavior.start_time = character_data.behavior.start_time
-        target_data.state = constant.CharacterStatus.STATUS_WAIT
+@start_part("h_end")
+def _start_h_end(who: int, chosen: intent.Intent) -> None:
+    """
+    结束H开始时：乱伦H记成就，正常结束时对方进入跟随，对方原地等待10分钟，提示结束
+    Keyword arguments:
+    who -- 角色id
+    chosen -- 行动的意图
+    """
+    if chosen["args"]["daughter"]:
+        cache.achievement.h_with_daughter_count += 1
+        achievement_panel.achievement_flow(_("乱伦"))
+    _h_end_others(chosen["behavior_id"], chosen["target"])
 
-    # H结束时的其他处理完毕
+
+def _h_end_others(behavior_id: str, target_id: int) -> None:
+    """
+    结束H时玩家以外的处理：正常结束时对方进入跟随，对方排上原地等待10分钟，提示结束
+    Keyword arguments:
+    behavior_id -- 玩家的结束行为
+    target_id -- 对方的角色id，0 为没有
+    """
+    from Script.Modules.gameplay_resolution import plan_queue
+
+    if behavior_id == constant.Behavior.END_H:
+        _h_end_follow(target_id)
+    if target_id != 0:
+        plan_queue.plan_next(
+            target_id,
+            constant.Behavior.WAIT,
+            10,
+            state=constant.CharacterStatus.STATUS_WAIT,
+            interrupt=True,
+        )
+    _draw_end_text(_("\n结束H模式\n"))
+
+
+def _h_end_follow(target_character_id: int) -> None:
+    """
+    正常结束H时，异常1、2、6都正常的对方进入跟随
+    Keyword arguments:
+    target_character_id -- 对方的角色id
+    """
+    if (
+        handle_premise.handle_normal_1(target_character_id)
+        and handle_premise.handle_normal_2(target_character_id)
+        and handle_premise.handle_normal_6(target_character_id)
+    ):
+        cache.character_data[target_character_id].sp_flag.is_follow = 1
+
+
+def _draw_end_text(text: str) -> None:
+    """
+    绘制结束H的提示并等玩家确认
+    Keyword arguments:
+    text -- 提示文本
+    """
     now_draw = draw.WaitDraw()
     now_draw.width = width
-    now_draw.text = _("\n结束H模式\n")
+    now_draw.text = text
     now_draw.draw()
-    character_data.behavior.duration = 5
-    update.game_update_flow(5)
+
+
+def _planned_end(
+    end_behavior_id: str | None, normal_end: str, normal_state: int | str
+) -> tuple[str, int | str]:
+    """
+    结束H时玩家接着做的行为与状态：指定了特殊结束时用它、状态不变，玩家正在特殊结束时保留，否则正常结束
+    Keyword arguments:
+    end_behavior_id -- 指定的结束行为，None 为不指定
+    normal_end -- 正常结束的行为id
+    normal_state -- 正常结束的角色状态
+    Return arguments:
+    tuple -- 行为id与角色状态
+    """
+    character_data: game_type.Character = cache.character_data[0]
+    if end_behavior_id == normal_end:
+        return normal_end, normal_state
+    if end_behavior_id is not None:
+        return end_behavior_id, character_data.state
+    if character_data.behavior.behavior_id in constant.special_end_H_list:
+        return character_data.behavior.behavior_id, character_data.state
+    return normal_end, normal_state
+
+
+def _end_planned(normal_end: str) -> bool:
+    """
+    玩家的计划队列里是否已排着这种结束（正常结束或任一特殊结束）
+    Keyword arguments:
+    normal_end -- 正常结束的行为id
+    Return arguments:
+    bool -- 已排着时为真
+    """
+    from Script.Modules.gameplay_resolution import plan_queue
+
+    ends = {normal_end, *constant.special_end_H_list}
+    return any(p["behavior_id"] in ends for p in plan_queue.planned(0))
+
+
+def plan_h_end(
+    end_behavior_id: str | None = None,
+) -> tuple[core.Interrupt, ...]:
+    """
+    结算途中用的结束H：当场写入并显示"结束H模式"，玩家的结束行动（5分钟）与对方的等待（10分钟）排进计划队列
+    Keyword arguments:
+    end_behavior_id -- 玩家的特殊结束行为，None 时照玩家当前的行为定
+    Return arguments:
+    tuple -- 空元组：排下的打断由计划队列在这一步交给内核
+    """
+    from Script.Modules.gameplay_resolution import plan_queue
+
+    if _end_planned(constant.Behavior.END_H):
+        return ()
+    behavior_id, state = _planned_end(
+        end_behavior_id,
+        constant.Behavior.END_H,
+        constant.CharacterStatus.STATUS_END_H,
+    )
+    _h_end_others(behavior_id, cache.character_data[0].target_character_id)
+    plan_queue.plan_next(0, behavior_id, 5, state=state)
+    return ()
 
 
 @add_instruct(constant.Instruct.H_WITH_DAUGHTER_END)
 def handle_h_with_daughter_end() -> None:
     """处理结束乱伦H指令"""
-    cache.achievement.h_with_daughter_count += 1
-    # 结算成就
-    achievement_panel.achievement_flow(_("乱伦"))
-    handle_h_end()
+    handle_h_end(daughter=True)
 
 
 @add_instruct(constant.Instruct.IMPRISONMENT_H_END)
@@ -1714,93 +2033,77 @@ def handle_imprisonment_h_end() -> None:
 @add_instruct(constant.Instruct.UNCONSCIOUS_H_END)
 def handle_unconscious_h_end() -> None:
     """处理结束无意识奸指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    character_data: game_type.Character = cache.character_data[0]
+    choose_instruct(
+        constant.Behavior.NO_CONSCIOUS_H_END,
+        5,
+        state=constant.CharacterStatus.STATUS_NO_CONSCIOUS_H_END,
+        start="unconscious_h_end",
+    )
 
-    character_data.behavior.behavior_id = constant.Behavior.NO_CONSCIOUS_H_END
-    character_data.state = constant.CharacterStatus.STATUS_NO_CONSCIOUS_H_END
-    # 结算成就
+
+@start_part("unconscious_h_end")
+def _start_unconscious_h_end(who: int, chosen: intent.Intent) -> None:
+    """
+    结束无意识奸开始时：结算成就，提示结束
+    Keyword arguments:
+    who -- 角色id
+    chosen -- 行动的意图
+    """
     achievement_panel.achievement_flow(_("睡奸"))
-
-    # H结束时的其他处理完毕
-    now_draw = draw.WaitDraw()
-    now_draw.width = width
-    now_draw.text = _("\n结束无意识奸\n")
-    now_draw.draw()
-    character_data.behavior.duration = 5
-    update.game_update_flow(5)
+    _draw_end_text(_("\n结束无意识奸\n"))
 
 
 @add_instruct(constant.Instruct.HIDDEN_SEX_END)
 def handle_hidden_sex_end() -> None:
     """处理结束隐奸指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    character_data: game_type.Character = cache.character_data[0]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-
-    character_data.behavior.behavior_id = constant.Behavior.END_H
-    character_data.state = constant.CharacterStatus.STATUS_END_H
-    # 异常126正常，则进入跟随
-    if (
-        handle_premise.handle_normal_1(character_data.target_character_id)
-        and handle_premise.handle_normal_2(character_data.target_character_id)
-        and handle_premise.handle_normal_6(character_data.target_character_id)
-    ):
-        target_data.sp_flag.is_follow = 1
-    # 结算成就
-    achievement_panel.achievement_flow(_("隐奸"))
-
-    # 对方原地待机10分钟
-    target_data.behavior.behavior_id = constant.Behavior.WAIT
-    target_data.behavior.duration = 10
-    target_data.behavior.start_time = character_data.behavior.start_time
-    target_data.state = constant.CharacterStatus.STATUS_WAIT
-
-    # H结束时的其他处理完毕
-    now_draw = draw.WaitDraw()
-    now_draw.width = width
-    now_draw.text = _("\n结束隐奸\n")
-    now_draw.draw()
-    character_data.behavior.duration = 5
-    update.game_update_flow(5)
+    choose_instruct(
+        constant.Behavior.END_H,
+        5,
+        state=constant.CharacterStatus.STATUS_END_H,
+        start="sex_mode_end",
+        args={"mode": "hidden"},
+    )
 
 
 @add_instruct(constant.Instruct.EXHIBITIONISM_SEX_END)
 def handle_exhibitionism_sex_end() -> None:
     """处理结束露出指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    character_data: game_type.Character = cache.character_data[0]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
+    choose_instruct(
+        constant.Behavior.END_H,
+        5,
+        state=constant.CharacterStatus.STATUS_END_H,
+        start="sex_mode_end",
+        args={"mode": "exhibitionism"},
+    )
 
-    character_data.behavior.behavior_id = constant.Behavior.END_H
-    character_data.state = constant.CharacterStatus.STATUS_END_H
-    # 异常126正常，则进入跟随
-    if (
-        handle_premise.handle_normal_1(character_data.target_character_id)
-        and handle_premise.handle_normal_2(character_data.target_character_id)
-        and handle_premise.handle_normal_6(character_data.target_character_id)
-    ):
-        target_data.sp_flag.is_follow = 1
-    # 结算成就
-    achievement_panel.achievement_flow(_("露出"))
 
-    # 对方原地待机10分钟
-    target_data.behavior.behavior_id = constant.Behavior.WAIT
-    target_data.behavior.duration = 10
-    target_data.behavior.start_time = character_data.behavior.start_time
-    target_data.state = constant.CharacterStatus.STATUS_WAIT
+@start_part("sex_mode_end")
+def _start_sex_mode_end(who: int, chosen: intent.Intent) -> None:
+    """
+    结束隐奸、露出开始时：异常1、2、6都正常的对方进入跟随，结算成就，对方原地等待10分钟，提示结束
+    Keyword arguments:
+    who -- 角色id
+    chosen -- 行动的意图
+    """
+    from Script.Modules.gameplay_resolution import plan_queue
 
-    # H结束时的其他处理完毕
-    now_draw = draw.WaitDraw()
-    now_draw.width = width
-    now_draw.text = _("\n结束露出\n")
-    now_draw.draw()
-    character_data.behavior.duration = 5
-    update.game_update_flow(5)
+    target_id = chosen["target"]
+    _h_end_follow(target_id)
+    if chosen["args"]["mode"] == "hidden":
+        achievement_panel.achievement_flow(_("隐奸"))
+        text = _("\n结束隐奸\n")
+    else:
+        achievement_panel.achievement_flow(_("露出"))
+        text = _("\n结束露出\n")
+    if target_id != 0:
+        plan_queue.plan_next(
+            target_id,
+            constant.Behavior.WAIT,
+            10,
+            state=constant.CharacterStatus.STATUS_WAIT,
+            interrupt=True,
+        )
+    _draw_end_text(text)
 
 
 @add_instruct(constant.Instruct.START_SEX_CLASS)
@@ -1811,7 +2114,6 @@ def handle_start_sex_class() -> None:
         sex_class_handle,
     )
 
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
     character_data: game_type.Character = cache.character_data[0]
     student_list = sex_class_handle.get_scene_student_list()
     if not student_list:
@@ -1823,7 +2125,7 @@ def handle_start_sex_class() -> None:
     # 选主修科目：预约的那节课已经定好了（提前几分钟开讲的也算，Plan 26 §3.5），当场开课则现选一门
     classroom = sex_class_handle.get_scene_name(character_data.position)
     temp_class = sex_class_handle.find_class_to_start(
-        classroom, cache.game_time
+        classroom, game_time.now()
     )[1]
     ability_id = -1
     if temp_class is not None:
@@ -1832,12 +2134,29 @@ def handle_start_sex_class() -> None:
         ability_id = ask_for_sex_class_ability()
         if ability_id == -1:
             return
-    # 建/取本节课的数据并记出勤，之后模式开关、主修加成、旁观结算都从这条数据读
-    sex_class_handle.start_sex_class(ability_id, student_list)
     # 交互对象取第一名学生：行为效果串里的464会让交互对象进H，其余学生由10014的结算器补上
-    character_data.target_character_id = student_list[0]
     chara_handle_instruct_common_settle(
-        constant.Behavior.START_SEX_CLASS, target_character_id=student_list[0]
+        constant.Behavior.START_SEX_CLASS,
+        target_character_id=student_list[0],
+        start="start_sex_class",
+        args={"ability_id": ability_id, "students": student_list},
+    )
+
+
+@start_part("start_sex_class")
+def _start_sex_class(who: int, chosen: intent.Intent) -> None:
+    """
+    性技实操课开课时：建/取本节课的数据并记出勤，之后模式开关、主修加成、旁观结算都从这条数据读
+    Keyword arguments:
+    who -- 角色id
+    chosen -- 行动的意图
+    """
+    from Script.System.Education_System import sex_class_handle
+
+    ability_id = chosen["args"]["ability_id"]
+    assert isinstance(ability_id, int)
+    sex_class_handle.start_sex_class(
+        ability_id, _ids(chosen["args"]["students"])
     )
 
 
@@ -1886,70 +2205,104 @@ def ask_for_sex_class_ability() -> int:
 
 @add_instruct(constant.Instruct.END_SEX_CLASS)
 def handle_end_sex_class() -> None:
-    """处理结束性技实操课（下课）指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    character_data: game_type.Character = cache.character_data[0]
-    special_end_list = constant.special_end_H_list
-
-    # 非特殊中断的情况下，正常下课
-    if character_data.behavior.behavior_id not in special_end_list:
-        character_data.behavior.behavior_id = constant.Behavior.END_SEX_CLASS
-        character_data.state = constant.Behavior.END_SEX_CLASS
-
-    # 场景内所有H中的角色原地待机10分钟
-    now_scene_character_list = map_handle.get_chara_now_scene_all_chara_id_list(
-        0, remove_own_character=True
+    """处理结束性技实操课（下课）指令：玩家下课5分钟，开始时场景内H中的角色原地等待10分钟"""
+    behavior_id, state = _planned_end(
+        None, constant.Behavior.END_SEX_CLASS, constant.Behavior.END_SEX_CLASS
     )
-    for chara_id in now_scene_character_list:
-        target_data: game_type.Character = cache.character_data[chara_id]
-        if not handle_premise.handle_self_is_h(chara_id):
-            continue
-        target_data.behavior.behavior_id = constant.Behavior.WAIT
-        target_data.behavior.duration = 10
-        target_data.behavior.start_time = character_data.behavior.start_time
-        target_data.state = constant.CharacterStatus.STATUS_WAIT
-
-    now_draw = draw.WaitDraw()
-    now_draw.width = width
-    now_draw.text = _("\n下课\n")
-    now_draw.draw()
-    character_data.behavior.duration = 5
-    update.game_update_flow(5)
+    choose_instruct(
+        behavior_id,
+        5,
+        state=state,
+        start="h_members_wait",
+        args={"text": "end_sex_class"},
+    )
 
 
 @add_instruct(constant.Instruct.GROUP_SEX_END)
 def handle_group_sex_end() -> None:
-    """处理结束群交指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    character_data: game_type.Character = cache.character_data[0]
-    special_end_list = constant.special_end_H_list
+    """处理结束群交指令：玩家结束5分钟，开始时场景内H中的角色原地等待10分钟"""
+    behavior_id, state = _planned_end(
+        None,
+        constant.Behavior.GROUP_SEX_END,
+        constant.CharacterStatus.STATUS_GROUP_SEX_END,
+    )
+    choose_instruct(
+        behavior_id,
+        5,
+        state=state,
+        start="h_members_wait",
+        args={"text": "group_sex_end"},
+    )
 
-    # 非特殊中断的情况下，正常结束H
-    if character_data.behavior.behavior_id not in special_end_list:
-        character_data.behavior.behavior_id = constant.Behavior.GROUP_SEX_END
-        character_data.state = constant.CharacterStatus.STATUS_GROUP_SEX_END
 
-    # 场景内所有H中的角色原地待机10分钟
+@start_part("h_members_wait")
+def _start_h_members_wait(who: int, chosen: intent.Intent) -> None:
+    """
+    下课、结束群交开始时：场景内H中的角色排上原地等待10分钟，提示结束
+    Keyword arguments:
+    who -- 角色id
+    chosen -- 行动的意图
+    """
+    _h_members_wait()
+    if chosen["args"]["text"] == "end_sex_class":
+        _draw_end_text(_("\n下课\n"))
+    else:
+        _draw_end_text(_("\n结束群交模式\n"))
+
+
+def _h_members_wait() -> None:
+    """场景内H中的角色打断手上的行动，排上原地等待10分钟"""
+    from Script.Modules.gameplay_resolution import plan_queue
+
+    for chara_id in _scene_h_members():
+        plan_queue.plan_next(
+            chara_id,
+            constant.Behavior.WAIT,
+            10,
+            state=constant.CharacterStatus.STATUS_WAIT,
+            interrupt=True,
+        )
+
+
+def _scene_h_members() -> list[int]:
+    """
+    和玩家同场景、在H中的角色
+    Return arguments:
+    list -- 角色id
+    """
     now_scene_character_list = map_handle.get_chara_now_scene_all_chara_id_list(
         0, remove_own_character=True
     )
-    for chara_id in now_scene_character_list:
-        target_data: game_type.Character = cache.character_data[chara_id]
-        # 跳过非H状态的角色
-        if not handle_premise.handle_self_is_h(chara_id):
-            continue
-        target_data.behavior.behavior_id = constant.Behavior.WAIT
-        target_data.behavior.duration = 10
-        target_data.behavior.start_time = character_data.behavior.start_time
-        target_data.state = constant.CharacterStatus.STATUS_WAIT
+    return [
+        c
+        for c in now_scene_character_list
+        if handle_premise.handle_self_is_h(c)
+    ]
 
-    # H结束时的其他处理完毕
-    now_draw = draw.WaitDraw()
-    now_draw.width = width
-    now_draw.text = _("\n结束群交模式\n")
-    now_draw.draw()
-    character_data.behavior.duration = 5
-    update.game_update_flow(5)
+
+def plan_group_sex_end(
+    end_behavior_id: str | None = None,
+) -> tuple[core.Interrupt, ...]:
+    """
+    结算途中用的结束群交：当场显示"结束群交模式"，玩家的结束行动（5分钟）与在场H中各人的等待（10分钟）排进计划队列
+    Keyword arguments:
+    end_behavior_id -- 玩家的特殊结束行为，None 时照玩家当前的行为定
+    Return arguments:
+    tuple -- 空元组：排下的打断由计划队列在这一步交给内核
+    """
+    from Script.Modules.gameplay_resolution import plan_queue
+
+    if _end_planned(constant.Behavior.GROUP_SEX_END):
+        return ()
+    behavior_id, state = _planned_end(
+        end_behavior_id,
+        constant.Behavior.GROUP_SEX_END,
+        constant.CharacterStatus.STATUS_GROUP_SEX_END,
+    )
+    _h_members_wait()
+    _draw_end_text(_("\n结束群交模式\n"))
+    plan_queue.plan_next(0, behavior_id, 5, state=state)
+    return ()
 
 
 # 以下为娱乐#
@@ -1958,7 +2311,6 @@ def handle_group_sex_end() -> None:
 @add_instruct(constant.Instruct.SINGING)
 def handle_singing() -> None:
     """处理唱歌指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
     character_data = cache.character_data[0]
     # 如果音乐等级过低，且周围有其他角色，则进行需要确认再唱歌
     if character_data.ability[44] <= 2 and handle_premise.handle_scene_over_one(
@@ -1993,7 +2345,6 @@ def handle_singing() -> None:
 @add_instruct(constant.Instruct.PLAY_INSTRUMENT)
 def handle_play_instrument() -> None:
     """处理演奏乐器指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
     character_data: game_type.Character = cache.character_data[0]
     # 如果音乐等级过低，且周围有其他角色，则进行需要确认再演奏
     if character_data.ability[44] <= 2 and handle_premise.handle_scene_over_one(
@@ -2194,7 +2545,7 @@ def handle_official_work() -> None:
     from Script.System.Official_Event_System import official_event_panel
 
     # 先把待决断的公务事件（养成与各部门）逐条处理掉，再办公务本身（Plan 23）
-    # 放在通用结算之前：通用结算末尾会推进游戏流程并重绘主面板，放在其后弹出的事件会被盖掉
+    # 放在通用选择之前：通用选择定下行动后就离开面板，之后的代码不再运行
     official_event_panel.handle_official_event_queue(width)
     chara_handle_instruct_common_settle(
         constant.Behavior.OFFICIAL_WORK, force_taget_wait=True
@@ -2204,10 +2555,7 @@ def handle_official_work() -> None:
 @add_instruct(constant.Instruct.BATTLE_COMMAND)
 def handle_battle_command() -> None:
     """处理指挥作战指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    character_data = cache.character_data[0]
-    character_data.behavior.duration = 5
-    update.game_update_flow(5)
+    player_pick.choose(constant.Behavior.SHARE_BLANKLY, 5)
 
 
 @add_instruct(constant.Instruct.ASSISTANT_ADJUSTMENTS)
@@ -2634,24 +2982,20 @@ def handle_bagging_and_moving() -> None:
 @add_instruct(constant.Instruct.RELEASE_FROM_BAG)
 def handle_release_from_bag() -> None:
     """处理从袋中放出来指令"""
-    pl_character_data = cache.character_data[0]
-    pl_character_data.target_character_id = (
-        pl_character_data.sp_flag.bagging_chara_id
-    )
     chara_handle_instruct_common_settle(
-        constant.Behavior.RELEASE_FROM_BAG, force_taget_wait=True
+        constant.Behavior.RELEASE_FROM_BAG,
+        target_character_id=cache.character_data[0].sp_flag.bagging_chara_id,
+        force_taget_wait=True,
     )
 
 
 @add_instruct(constant.Instruct.PUT_INTO_PRISON)
 def handle_put_into_prision() -> None:
     """处理投入监牢指令"""
-    pl_character_data = cache.character_data[0]
-    pl_character_data.target_character_id = (
-        pl_character_data.sp_flag.bagging_chara_id
-    )
     chara_handle_instruct_common_settle(
-        constant.Behavior.PUT_INTO_PRISON, force_taget_wait=True
+        constant.Behavior.PUT_INTO_PRISON,
+        target_character_id=cache.character_data[0].sp_flag.bagging_chara_id,
+        force_taget_wait=True,
     )
 
 
@@ -3274,7 +3618,7 @@ def handle_condom_instruct_common(mode: str, behavior_id: str) -> None:
     """
     避孕套指令的公共处理流程
     先进行严重骚扰级别的实行值判定，判定失败则结算为严重骚扰失败行为且不打开选择面板；
-    判定通过后打开选择面板，面板确认时直接完成数据结算，最后走通用结算推进时间与口上
+    判定通过后打开选择面板，面板确认时直接完成数据结算，最后定下行动，行动开始时结算时间与口上
     Keyword arguments:
     mode -- 面板操作类型，hang=挂装饰，take_back=取回装饰，drink=饮用，squeeze=挤出
     behavior_id -- 判定通过后结算的行为id
@@ -3284,7 +3628,10 @@ def handle_condom_instruct_common(mode: str, behavior_id: str) -> None:
     character_data: game_type.Character = cache.character_data[0]
     # 实行值判定必须在打开面板之前进行：面板确认时会直接结算数据，判定失败不能给出选择机会
     judge_list = instuct_judege.calculation_instuct_judege(
-        0, character_data.target_character_id, _("严重骚扰")
+        0,
+        character_data.target_character_id,
+        _("严重骚扰"),
+        settle_hypnosis=False,
     )
     if judge_list[0] == -1:
         return
@@ -3293,7 +3640,6 @@ def handle_condom_instruct_common(mode: str, behavior_id: str) -> None:
         chara_handle_instruct_common_settle(
             constant.Behavior.HIGH_OBSCENITY_ANUS
         )
-        return
     now_draw = condom_panel.Condom_Select_Panel(width, mode)
     if now_draw.draw() == -1:
         return
@@ -3385,10 +3731,7 @@ def handle_philter() -> None:
 @add_instruct(constant.Instruct.ENEMAS)
 def handle_enemas() -> None:
     """处理灌肠液指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.behavior.duration = 5
-    update.game_update_flow(5)
+    player_pick.choose(constant.Behavior.SHARE_BLANKLY, 5)
 
 
 @add_instruct(constant.Instruct.DIURETICS_ONCE)
@@ -3932,10 +4275,7 @@ def handle_stimulate_vagina() -> None:
 @add_instruct(constant.Instruct.DOUBLE_PENETRATION)
 def handle_double_penetration() -> None:
     """处理二穴插入指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.behavior.duration = 5
-    update.game_update_flow(5)
+    player_pick.choose(constant.Behavior.SHARE_BLANKLY, 5)
 
 
 @add_instruct(constant.Instruct.URETHRAL_SEX)
@@ -4057,10 +4397,7 @@ def handle_back_lay_urethral_sex() -> None:
 @add_instruct(constant.Instruct.BEAT_BREAST)
 def handle_beat_breast() -> None:
     """处理打胸部指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.behavior.duration = 5
-    update.game_update_flow(5)
+    player_pick.choose(constant.Behavior.SHARE_BLANKLY, 5)
 
 
 @add_instruct(constant.Instruct.SPANKING)
@@ -4072,37 +4409,25 @@ def handle_spanking() -> None:
 @add_instruct(constant.Instruct.SHAME_PLAY)
 def handle_shame_play() -> None:
     """处理羞耻play指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.behavior.duration = 5
-    update.game_update_flow(5)
+    player_pick.choose(constant.Behavior.SHARE_BLANKLY, 5)
 
 
 @add_instruct(constant.Instruct.TAKE_SHOWER_H)
 def handle_take_shower_h() -> None:
     """处理淋浴指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.behavior.duration = 5
-    update.game_update_flow(5)
+    player_pick.choose(constant.Behavior.SHARE_BLANKLY, 5)
 
 
 @add_instruct(constant.Instruct.BUBBLE_BATH)
 def handle_bubble_bath() -> None:
     """处理泡泡浴指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.behavior.duration = 5
-    update.game_update_flow(5)
+    player_pick.choose(constant.Behavior.SHARE_BLANKLY, 5)
 
 
 @add_instruct(constant.Instruct.GIVE_BLOWJOB)
 def handle_give_blowjob() -> None:
     """处理给对方口交指令"""
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    character_data: game_type.Character = cache.character_data[0]
-    character_data.behavior.duration = 5
-    update.game_update_flow(5)
+    player_pick.choose(constant.Behavior.SHARE_BLANKLY, 5)
 
 
 @add_instruct(constant.Instruct.CHANGE_TOP_AND_BOTTOM)

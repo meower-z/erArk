@@ -107,7 +107,7 @@ class GrowthDrugStageNamesTest(SlowTestCase):
 
         for baby_id in self.baby_id_list:
             self.cache.character_data[baby_id].pregnancy.born_time = (
-                game_time.get_sub_date(day=-day, old_date=self.cache.game_time)
+                game_time.get_sub_date(day=-day, old_date=game_time.now())
             )
 
     def test_growth_accelerate_drug_tip(self) -> None:

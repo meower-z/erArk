@@ -22,6 +22,7 @@ from Script.Core import cache_control
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
+from Script.Design import game_time
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -172,7 +173,7 @@ def check_player_id_not_lingering_in_roster() -> list[CheckFailure]:
         make_failure(
             "ROSTER-02",
             "玩家id不应长期留在NPC名册里",
-            f"{warn}玩家id=0仍留在npc_id_got中(len={len(cache.npc_id_got)})，game_time={cache.game_time}，game_round={cache.game_round}；"
+            f"{warn}玩家id=0仍留在npc_id_got中(len={len(cache.npc_id_got)})，game_time={game_time.now()}，game_round={cache.game_round}；"
             f"若非开局首回合，说明discard(0)调用点(基建/宿舍面板)未生效或该id被重新add",
             [0],
         )
@@ -416,10 +417,10 @@ def check_prisoner_record_shape_and_roster_membership() -> list[CheckFailure]:
             entry_time, prob = rec[0], rec[1]
             if not (
                 isinstance(entry_time, datetime.datetime)
-                and entry_time <= cache.game_time
+                and entry_time <= game_time.now()
             ):
                 problems.append(
-                    f"入狱时间rec[0]={entry_time!r}不是<=game_time({cache.game_time})的datetime"
+                    f"入狱时间rec[0]={entry_time!r}不是<=game_time({game_time.now()})的datetime"
                 )
             if isinstance(prob, bool) or not isinstance(prob, (int, float)):
                 problems.append(
@@ -440,7 +441,7 @@ def check_prisoner_record_shape_and_roster_membership() -> list[CheckFailure]:
                     "囚犯名册条目结构合法且本人在编",
                     (
                         f"{warn}囚犯cid={cid} name={c.name!r} 存在问题: {'; '.join(problems)}；record={rec!r}，"
-                        f"game_time={cache.game_time}，"
+                        f"game_time={game_time.now()}，"
                         f"ability[42]={c.ability.get(42)}，ability[45]={c.ability.get(45)}，"
                         f"confinement_training_setting[4]={ri.confinement_training_setting.get(4)}"
                     ),
@@ -960,14 +961,14 @@ def check_no_severely_overdue_visitors() -> list[CheckFailure]:
                 )
             )
             continue
-        delta = cache.game_time - end
+        delta = game_time.now() - end
         if delta.days >= 1:
             failures.append(
                 make_failure(
                     "ROSTER-17",
                     "没有严重逾期未结算的访客",
                     f"{warn}访客cid={cid}到期时间{end}已逾期{delta}，超过一整天未结算(可能日结算漏跑或该访客被卡住)；"
-                    f"game_time={cache.game_time}，last_visitor_time={ri.last_visitor_time}，"
+                    f"game_time={game_time.now()}，last_visitor_time={ri.last_visitor_time}，"
                     f"base_move_visitor_flag={ri.base_move_visitor_flag}",
                     [cid],
                 )
@@ -1029,7 +1030,7 @@ def check_invite_visitor_shape_integrity() -> list[CheckFailure]:
                 (
                     f"{warn}ri.invite_visitor={raw!r}存在问题: {'; '.join(problems)}；"
                     f"facility_level[13]={ri.facility_level.get(13)}，"
-                    f"game_time={cache.game_time}，目标是否存在于character_data={exists}"
+                    f"game_time={game_time.now()}，目标是否存在于character_data={exists}"
                 ),
                 [target] if target else [],
             )
@@ -1265,7 +1266,7 @@ def check_recruit_line_shape_and_progress_range() -> list[CheckFailure]:
                     (
                         f"{warn}招募线lid={lid} record={rec!r} {'; '.join(problems)}；"
                         f"facility_level[7]={ri.facility_level.get(7)}，"
-                        f"game_time={cache.game_time}"
+                        f"game_time={game_time.now()}"
                     ),
                     [],
                 )
@@ -1444,7 +1445,7 @@ def check_ongoing_commission_shape_and_member_uniqueness() -> (
                 make_failure(
                     "ROSTER-25",
                     "进行中委托记录结构合法、人员全局唯一",
-                    f"{warn}委托mid={mid} {'; '.join(problems)}；完整record={r!r}，game_time={cache.game_time}",
+                    f"{warn}委托mid={mid} {'; '.join(problems)}；完整record={r!r}，game_time={game_time.now()}",
                     involved,
                 )
             )
@@ -1719,14 +1720,14 @@ def check_ongoing_commission_id_valid_and_not_overdue() -> list[CheckFailure]:
             )
             continue
         if not cache.debug_mode and not cache.time_stop_mode:
-            if not (end_time > cache.game_time):
-                overdue = cache.game_time - end_time
+            if not (end_time > game_time.now()):
+                overdue = game_time.now() - end_time
                 members = r[0] if isinstance(r[0], list) else []
                 failures.append(
                     make_failure(
                         "ROSTER-29",
                         "进行中委托id有效且未逾期",
-                        f"{warn}委托mid={mid}已到期或逾期，end_time={end_time}，game_time={cache.game_time}，逾期时长={overdue}；"
+                        f"{warn}委托mid={mid}已到期或逾期，end_time={end_time}，game_time={game_time.now()}，逾期时长={overdue}；"
                         f"人员={members}，finished_field_commissions_set={ri.finished_field_commissions_set}",
                         members,
                     )

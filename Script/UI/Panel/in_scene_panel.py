@@ -33,6 +33,51 @@ line_feed.text = "\n"
 line_feed.width = 1
 
 
+def scene_characters(scene_data: game_type.Scene) -> list[int]:
+    """
+    主界面列出的场景里的角色：除去玩家；收藏模式下只列收藏的角色
+    Keyword arguments:
+    scene_data -- 玩家所在的场景
+    Return arguments:
+    list -- 角色id
+    """
+    pl_character_data = cache.character_data[0]
+    character_set = scene_data.character_list.copy()
+    character_set.discard(0)
+    if cache.is_collection:
+        return [
+            i
+            for i in character_set
+            if i in pl_character_data.collection_character
+        ]
+    return list(character_set)
+
+
+def settle_player_target() -> None:
+    """
+    玩家的行动结束时（移动之后也是）重定交互对象：
+    交互对象不是自己也不在场景里，或刚移动到这里而交互对象不在场景里时，设为场景里的第一个角色；
+    场景里没有别的角色时设为自己。
+    主界面只读不写，绘制时用的就是这里定下的交互对象
+    """
+    pl_character_data = cache.character_data[0]
+    scene_path_str = map_handle.get_map_system_path_str_for_list(
+        pl_character_data.position
+    )
+    character_list = scene_characters(cache.scene_data[scene_path_str])
+    target = pl_character_data.target_character_id
+    if not character_list:
+        pl_character_data.target_character_id = 0
+    elif target not in character_list and (
+        target != 0
+        or (
+            cache.pl_pre_behavior_instruce
+            and cache.pl_pre_behavior_instruce[-1] == constant.Behavior.MOVE
+        )
+    ):
+        pl_character_data.target_character_id = character_list[0]
+
+
 class InScenePanel:
     """
     用于查看场景互动界面面板对象
@@ -83,16 +128,7 @@ class InScenePanel:
             character_handle_panel.null_button_text = (
                 pl_character_data.target_character_id
             )
-            character_set = scene_data.character_list.copy()
-            character_set.remove(0)  # 移除玩家自己
-            if cache.is_collection:
-                character_list = [
-                    i
-                    for i in character_set
-                    if i in pl_character_data.collection_character
-                ]
-            else:
-                character_list = list(character_set)
+            character_list = scene_characters(scene_data)
             character_handle_panel.text_list = character_list
 
             # if pl_character_data.dead:
@@ -132,26 +168,6 @@ class InScenePanel:
             character_handle_panel.null_button_text = (
                 pl_character_data.target_character_id
             )
-
-            # 交互对象的处理
-            # 如果场景中有NPC角色，玩家的交互对象不是自己，也不在场景中，且则将交互对象设为场景中的第一个角色
-            if (
-                len(character_list)
-                and pl_character_data.target_character_id != 0
-                and pl_character_data.target_character_id not in character_list
-            ):
-                pl_character_data.target_character_id = character_list[0]
-            # 如果场景中有角色，交互对象不在场景中，刚移动到一个新地点，则将交互对象设为场景中的第一个角色
-            elif (
-                len(character_list)
-                and pl_character_data.target_character_id not in character_list
-                and len(cache.pl_pre_behavior_instruce)
-                and cache.pl_pre_behavior_instruce[-1] == constant.Behavior.MOVE
-            ):
-                pl_character_data.target_character_id = character_list[0]
-            # 如果场景中没有NPC角色，则将交互对象设为自己
-            elif not len(character_list):
-                pl_character_data.target_character_id = 0
 
             # 开始绘制主界面标题栏
             ask_list = []

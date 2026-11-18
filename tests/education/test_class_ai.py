@@ -48,6 +48,7 @@ from Script.StateMachine import default as sm_default
 from Script.Design import character_behavior, instuct_judege
 from time import perf_counter
 from Script.Design import update
+from tests import world
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -102,7 +103,7 @@ def prepare_ai(cid: int) -> None:
     功能: 没起床会先被「起床」目标（target 205）接管；全裸则 normal_all 不成立，工作 / 娱乐的目标行根本不跑
     """
     cd = cache.character_data[cid]
-    cd.action_info.wake_time = cache.game_time
+    cd.action_info.wake_time = game_time.now()
     clothing.get_npc_cloth(cid)
 
 
@@ -124,7 +125,7 @@ def dispatch(cid: int, now_time: datetime.datetime | None = None) -> int:
     cd.behavior.move_final_target = []
     cd.state = constant.CharacterStatus.STATUS_ARDER
     set_time(now_time if now_time is not None else period_time(0))
-    cd.action_info.wake_time = cache.game_time
+    cd.action_info.wake_time = game_time.now()
     hit: list[int] = []
     origin = dict(constant.handle_state_machine_data)
     for sid, func in origin.items():
@@ -148,7 +149,7 @@ def dispatch(cid: int, now_time: datetime.datetime | None = None) -> int:
 
         constant.handle_state_machine_data[sid] = record_hit
     try:
-        handle_npc_ai.find_character_target(cid, cache.game_time)
+        handle_npc_ai.find_character_target(cid, game_time.now())
     finally:
         constant.handle_state_machine_data.clear()
         constant.handle_state_machine_data.update(origin)
@@ -359,7 +360,7 @@ check(
     class_ai.get_teacher_duty(201) == (E.TEACHER_DUTY_NONE, ""),
 )
 sex_class_handle.set_temp_class(
-    cache.game_time.date().toordinal(), 0, ROOM_P, 70, must_attend=[]
+    game_time.now().date().toordinal(), 0, ROOM_P, 70, must_attend=[]
 )
 check(
     "玩家恒为 NONE（临时实操课由玩家自己决定来不来）",
@@ -392,7 +393,7 @@ check(
 )
 student.hit_point = 100
 growth_handle.get_child_growth(201).skip_class_flag = True
-growth_handle.get_child_growth(201).skip_class_day = cache.game_time.toordinal()
+growth_handle.get_child_growth(201).skip_class_day = game_time.now().toordinal()
 check(
     "今日已翘课 → SKIP（flag 认日期：今天挂上的，Plan 31 §3.6）",
     class_ai.get_course_stage(201) == E.COURSE_STAGE_SKIP,
@@ -430,7 +431,7 @@ set_time(period_time(0))
 sex_class_handle.set_temp_class(_today, 0, ROOM_P, 70, must_attend=[201])
 student.hit_point = 10
 growth_handle.get_child_growth(201).skip_class_flag = True
-growth_handle.get_child_growth(201).skip_class_day = cache.game_time.toordinal()
+growth_handle.get_child_growth(201).skip_class_day = game_time.now().toordinal()
 class_ai.roll_skip_class = lambda character_id, now_time=None: True
 check(
     "必修实操课：体力不足、翘课 flag、掷中翘课同时成立也是 ATTEND（口径 60 / 65）",
@@ -559,7 +560,7 @@ check("没掷中 → 照常听课", dispatch(201) == SM.WORK_ATTENT_CLASS)
 class_ai.roll_skip_class = _orig_roll
 
 section("整链派发：必修实操课豁免与覆盖")
-today = cache.game_time.date().toordinal()
+today = game_time.now().date().toordinal()
 sex_class_handle.set_temp_class(today, 0, ROOM_P, 70, must_attend=[201])
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_PRACTICE, ROOM_P)
 check("必修判定成立", class_ai.judge_must_attend_sex_class(201))
@@ -930,7 +931,7 @@ check(
     "非教师不命中教师行",
     dispatch(201) not in (SM.WORK_TEACH, SM.MOVE_TO_TEACHER_OFFICE),
 )
-today = cache.game_time.date().toordinal()
+today = game_time.now().date().toordinal()
 sex_class_handle.set_temp_class(today, 0, ROOM_P, 70, must_attend=[])
 check(
     "这一格今天被临时实操课顶掉 → 教师反查查不到",
@@ -1036,7 +1037,7 @@ sex_class_handle.set_temp_class(today, 1, ROOM_P, 70, must_attend=[201])
 _pending_time = period_time(1) - datetime.timedelta(minutes=8)
 set_time(_pending_time)
 move_to(201, SCENE_DORM)
-temp_class, classroom = class_ai.get_next_sex_class(201, cache.game_time)
+temp_class, classroom = class_ai.get_next_sex_class(201, game_time.now())
 check(
     "距开始 8 分钟：必修者要动身",
     temp_class is not None and classroom == ROOM_P,
@@ -1048,21 +1049,21 @@ check(
 set_time(period_time(1) - datetime.timedelta(minutes=15))
 check(
     "距开始 15 分钟：还不动身",
-    class_ai.get_next_sex_class(201, cache.game_time)[0] is None,
+    class_ai.get_next_sex_class(201, game_time.now())[0] is None,
 )
 set_time(_pending_time)
 check(
     "非必修且没选修的人不动身",
-    class_ai.get_next_sex_class(202, cache.game_time)[0] is None,
+    class_ai.get_next_sex_class(202, game_time.now())[0] is None,
 )
 schedule_handle.set_selected_course(
-    202, cache.game_time.weekday(), 1, E.COURSE_TYPE_PRACTICE, ROOM_P
+    202, game_time.now().weekday(), 1, E.COURSE_TYPE_PRACTICE, ROOM_P
 )
 check(
     "选修了这间教室的人也动身",
-    class_ai.get_next_sex_class(202, cache.game_time)[0] is not None,
+    class_ai.get_next_sex_class(202, game_time.now())[0] is not None,
 )
-schedule_handle.clear_selected_course(202, cache.game_time.weekday(), 1)
+schedule_handle.clear_selected_course(202, game_time.now().weekday(), 1)
 schedule_handle.set_class_cell(ROOM1, 0, 0, 45, 101)
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
 move_to(201, classroom_path(ROOM1))
@@ -1287,7 +1288,7 @@ def begin(
     cd.behavior.move_target = []
     cd.behavior.move_final_target = []
     cd.action_info.wake_time = start
-    cache.game_time = now
+    world.set_clock(now)
 
 
 section(
@@ -2245,7 +2246,7 @@ constant.settle_second_behavior_effect_data[
 check(
     "623 被抓：清 flag、记下当天的日期序数",
     not _g.skip_class_flag
-    and _g.skip_caught_day == cache.game_time.toordinal(),
+    and _g.skip_caught_day == game_time.now().toordinal(),
 )
 set_time(period_time(7))
 check(
@@ -2671,11 +2672,11 @@ def run_loop_round(minute: int, npc_order: list) -> tuple:
     Return arguments:
     tuple -- (玩家阶段轮数, NPC 阶段遍数, 没收敛的角色列表)
     """
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
+    instuct_judege.init_character_behavior_start_time(0, game_time.now())
     pl.state = constant.CharacterStatus.STATUS_WAIT
     pl.behavior.behavior_id = constant.Behavior.WAIT
     pl.behavior.duration = minute
-    game_time.sub_time_now(minute)
+    world.set_clock(game_time.get_sub_date(minute))
     cache.over_behavior_character = set()
     pl_round = 0
     pl_start = pl.behavior.start_time
@@ -2683,7 +2684,7 @@ def run_loop_round(minute: int, npc_order: list) -> tuple:
         pl_round += 1
         if pl_round > 30:
             break
-        character_behavior.character_behavior(0, cache.game_time, pl_start)
+        character_behavior.character_behavior(0, game_time.now(), pl_start)
     npc_pass = 0
     while any(cid not in cache.over_behavior_character for cid in npc_order):
         npc_pass += 1
@@ -2694,7 +2695,7 @@ def run_loop_round(minute: int, npc_order: list) -> tuple:
                 continue
             clear_need(cid)
             character_behavior.character_behavior(
-                cid, cache.game_time, pl_start
+                cid, game_time.now(), pl_start
             )
     return (
         pl_round,
@@ -2762,7 +2763,7 @@ def setup_h1(third_room: str) -> None:
     move_to(101, classroom_path(ROOM1))
     move_to(201, classroom_path(ROOM2))
     set_time(period_time(0) + datetime.timedelta(minutes=40))
-    cache.pre_game_time = cache.game_time
+    cache.pre_game_time = game_time.now()
     for cid, behavior_id, state in (
         (101, constant.Behavior.TEACH, constant.CharacterStatus.STATUS_TEACH),
         (
@@ -3412,7 +3413,7 @@ move_to(201, SCENE_DORM)
 move_to(202, classroom_path(ROOM_P))
 pl.sp_flag.is_h = False
 set_time(T1030)
-cache.pre_game_time = cache.game_time
+cache.pre_game_time = game_time.now()
 prepare_ai(202)
 child.hit_point_max = 2000
 child.mana_point_max = 2000
@@ -3587,7 +3588,7 @@ def setup_ghost() -> dict:
     move_to(201, classroom_path(ROOM_P))
     move_to(202, SCENE_DORM)
     set_time(GHOST_START)
-    cache.pre_game_time = cache.game_time
+    cache.pre_game_time = game_time.now()
     ghost = sex_class_handle.set_temp_class(
         DEFAULT_TIME.date().toordinal(), 0, ROOM_P, 70, running=True
     )

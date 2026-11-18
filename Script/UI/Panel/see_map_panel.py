@@ -15,6 +15,7 @@ from Script.Core import (
 from Script.Design import map_handle, attr_text, character_move, handle_premise
 from Script.Config import game_config
 import random
+from Script.Modules.tk_ui import player_pick
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -340,11 +341,13 @@ class SeeMapPanel:
             and scene_path[-1] == "0"
         ):
             flag_map_open = True
-        character_move.own_charcter_move(scene_path)
-        # 如果是从大地图移动到另一个区块，则不关闭地图面板
-        if flag_map_open:
-            cache.now_panel_id = constant.Panel.SEE_MAP
-            self.down_map()
+        try:
+            character_move.own_charcter_move(scene_path)
+        except player_pick.Chosen:
+            # 如果是从大地图移动到另一个区块，则不关闭地图面板
+            if flag_map_open:
+                cache.now_panel_id = constant.Panel.SEE_MAP
+            raise
 
 
 class MoveMenuPanel:

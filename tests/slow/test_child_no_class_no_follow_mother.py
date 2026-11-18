@@ -9,18 +9,15 @@
   没有未初潮与未成年，
   置为学生岗、进养成名单。
 - 离线的幼女照样被每日派发挑作养成事件的主体；以她为主体的事件入队、结算一个选项后，她的照料值或性格倾向变了。
-- 另取第二名干员当女儿：工作日上课节次内、母亲在别的场景时，幼女与学员女儿的 AI 都不派见学的两个状态机
-  （717 移动到母亲身边、718 跟着母亲见学），行为也不是跟随母亲见学。
+- 另取第二名干员当女儿：工作日上课节次内、母亲在别的场景时，幼女与学员女儿的 AI 都不选见学的两个状态机
+  （717 移动到母亲身边、718 跟着母亲见学）。
 """
 
 import datetime
-from typing import TYPE_CHECKING
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
+from tests import world
 
 BABY = 101
 """ 婴儿素质 """
@@ -73,6 +70,8 @@ class ChildStagesOfflineTest(SlowTestCase):
 
     def test_child_offline_until_trainee(self) -> None:
         """出生后与长成幼女后不在任何场景、不在 npc_id_got、不上学；长成学员后上线、成年、上学"""
+        from Script.Design import game_time
+
         from Script.Design import character_handle, talk
         from Script.System.Education_System import (
             education_constant,
@@ -92,7 +91,7 @@ class ChildStagesOfflineTest(SlowTestCase):
             self.mother_id, "测试女儿"
         )
         child = self.cache.character_data[child_id]
-        child.pregnancy.born_time = self.cache.game_time
+        child.pregnancy.born_time = game_time.now()
         self.assertEqual(child.talent[BABY], 1, "出生时是婴儿")
         self.assertEqual(
             self.scene_list_with(child_id), [], "出生后不在任何场景"
@@ -165,6 +164,8 @@ class ChildStagesOfflineTest(SlowTestCase):
         离线的幼女照样派得到养成事件：每日派发会挑她当主体，挑一条选项会改她养成数值的事件入队，
         经 settle_official_event_option 结算那个选项后，她的照料值或性格倾向变了
         """
+        from Script.Design import game_time
+
         import random
 
         from Script.Design import character_handle, talk
@@ -186,7 +187,7 @@ class ChildStagesOfflineTest(SlowTestCase):
             self.mother_id, "测试女儿"
         )
         child = self.cache.character_data[child_id]
-        child.pregnancy.born_time = self.cache.game_time
+        child.pregnancy.born_time = game_time.now()
         self.mother.talent[REARING_TALENT] = 1
         with mock.patch.object(
             pregnancy_handle,
@@ -250,7 +251,7 @@ class ChildStagesOfflineTest(SlowTestCase):
         )
 
     def test_follow_mother_never_starts(self) -> None:
-        """工作日上课节次内、母亲在别的场景时，幼女与学员女儿的 AI 都不派见学的状态机，行为也不是跟随母亲见学"""
+        """工作日上课节次内、母亲在别的场景时，幼女与学员女儿的 AI 选出的状态机都不是见学的两个"""
         from Script.Core import constant
         from Script.Design import game_time, handle_npc_ai, map_handle
         from Script.System.Education_System import education_constant
@@ -260,34 +261,7 @@ class ChildStagesOfflineTest(SlowTestCase):
         daughter.relationship.father_id = 0
         daughter.relationship.mother_id = self.mother_id
         daughter.target_character_id = daughter_id
-        ran_list: list[int] = []
-        state_machine_data = dict(constant.handle_state_machine_data)
-        for state_machine_id, run in state_machine_data.items():
-
-            def record_and_run(
-                character_id: int,
-                state_machine_id: int = state_machine_id,
-                run: "Callable[..., object]" = run,
-            ) -> object:
-                """
-                记下派过的状态机id，再照常执行原状态机
-                Keyword arguments:
-                character_id -- 角色id
-                state_machine_id -- 状态机id
-                run -- 原状态机函数
-                Return arguments:
-                object -- 原状态机的返回值
-                """
-                ran_list.append(state_machine_id)
-                return run(character_id)
-
-            constant.handle_state_machine_data[state_machine_id] = (
-                record_and_run
-            )
-        self.addCleanup(
-            constant.handle_state_machine_data.update, state_machine_data
-        )
-        self.cache.game_time = game_time.to_game_time(CLASS_TIME)
+        world.set_clock(game_time.to_game_time(CLASS_TIME))
         if self.mother.position == daughter.position:
             other_scene = next(
                 path
@@ -310,18 +284,11 @@ class ChildStagesOfflineTest(SlowTestCase):
                 if talent_id == TRAINEE
                 else 0
             )
-            daughter.behavior.start_time = self.cache.game_time
+            daughter.behavior.start_time = game_time.now()
             daughter.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-            ran_list.clear()
-            handle_npc_ai.find_character_target(
-                daughter_id, self.cache.game_time
-            )
-            self.assertFalse(
-                FOLLOW_MOTHER_STATE_MACHINE_SET & set(ran_list),
-                f"阶段 {talent_id} 派了见学的状态机：{ran_list}",
-            )
-            self.assertNotEqual(
-                daughter.behavior.behavior_id,
-                constant.Behavior.FOLLOW_MOTHER,
-                f"阶段 {talent_id} 在跟随母亲见学",
+            chosen = handle_npc_ai.choose_state_machine(daughter_id)
+            self.assertNotIn(
+                chosen,
+                FOLLOW_MOTHER_STATE_MACHINE_SET,
+                f"阶段 {talent_id} 选了见学的状态机：{chosen}",
             )

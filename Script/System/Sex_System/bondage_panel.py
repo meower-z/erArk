@@ -154,6 +154,8 @@ class Bondage_Panel:
             target_character_id
         ]
         target_character_data.h_state.bondage = bondage_id
+        # 选定行动后面板退回场景：玩家的选择交回内核后，选择之后的代码不再运行
+        cache.now_panel_id = constant.Panel.IN_SCENE
         # 如果捆绑id为0，则解除捆绑
         if bondage_id == 0:
             handle_instruct.chara_handle_instruct_common_settle(

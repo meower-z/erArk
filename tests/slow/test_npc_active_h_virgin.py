@@ -6,7 +6,8 @@ NPC 主动H（逆推）时，仍有处女素质的她不选会夺走该素质的
 她有某个素质时，同时带「破处」与对应标签的行为就会夺走它。
 开新游戏，博士与阿米娅进一间能锁门的空房间；博士下「邀请H」进入H，再下「交给对方」让她主动H。
 之后把她的部位喜好固定为某个部位，用每个种子各调一次 npc_active_h，记下它赋给博士的行为。
-npc_active_h 选完行为后调的主循环换成只记录行为的替身，每次调完复原博士的行为，她的状态不前进。
+npc_active_h 选完行为后给博士排行动的 plan_queue.plan_next 换成只记录行为的替身，
+每次调完复原博士的行为，她的状态不前进。
 部位取 0（标签过滤只留 N 行为）与 22（不过滤标签）：
 - 她有素质0~4：选出的行为里没有会夺走其中任一素质的破处行为；
 - 她素质0~4 都没有：仍会选出破处行为。
@@ -84,7 +85,8 @@ class NpcActiveHVirginTest(SlowTestCase):
         Return arguments:
         collections.Counter[str] -- 行为id: 选中的次数
         """
-        from Script.Design import handle_npc_ai_in_h, update
+        from Script.Design import handle_npc_ai_in_h
+        from Script.Modules.gameplay_resolution import plan_queue
 
         player = self.cache.character_data[0]
         saved = (
@@ -95,21 +97,27 @@ class NpcActiveHVirginTest(SlowTestCase):
         )
         picks: collections.Counter[str] = collections.Counter()
 
-        def record(add_time: int) -> None:
+        def record(
+            who: int, behavior_id: str, *args: object, **kwargs: object
+        ) -> None:
             """
-            主循环的替身：记下赋给博士的行为
+            plan_next 的替身：记下排给博士的行为
             Keyword arguments:
-            add_time -- 推进的分钟数，不使用
+            who -- 排行动的角色id
+            behavior_id -- 行为id
+            args -- 不使用
+            kwargs -- 不使用
             Return arguments:
             无
             """
-            picks[player.behavior.behavior_id] += 1
+            if who == 0:
+                picks[behavior_id] += 1
 
         with mock.patch.object(
             handle_npc_ai_in_h,
             "evaluate_npc_body_part_prefs",
             return_value=part_id,
-        ), mock.patch.object(update, "game_update_flow", side_effect=record):
+        ), mock.patch.object(plan_queue, "plan_next", side_effect=record):
             for seed in SEEDS:
                 random.seed(seed)
                 handle_npc_ai_in_h.npc_active_h()

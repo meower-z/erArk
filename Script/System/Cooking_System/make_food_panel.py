@@ -13,11 +13,12 @@ from Script.Core import (
     constant,
     py_cmd,
 )
-from Script.Design import update, attr_calculation
+from Script.Design import attr_calculation
+from Script.Modules.tk_ui import player_pick
 from Script.System.Cooking_System import cooking, cook_question_panel
 from Script.UI.Moudle import draw, panel
 from Script.Config import game_config, normal_config
-from Script.UI.Panel import achievement_panel, ejaculation_panel
+from Script.UI.Panel import ejaculation_panel
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -1088,6 +1089,7 @@ class SeeFoodListByFoodNameDraw:
 
         # 按数量逐个创建食物对象（延迟创建：仅在制作时才创建对应菜谱的食物对象）
         real_count = 0
+        made_uid = ""
         for _i in range(make_count):
             # 药物调味则每份扣除一个药物，库存不足时停止制作
             if self.special_seasoning > 100:
@@ -1108,7 +1110,7 @@ class SeeFoodListByFoodNameDraw:
             new_food.special_seasoning_amount = semen_count
             # 放到玩家背包里
             character_data.food_bag[new_food.uid] = new_food
-            character_data.behavior.target_food = new_food
+            made_uid = str(new_food.uid)
             # 成就计数
             cache.achievement.make_food_count += 1
             real_count += 1
@@ -1133,23 +1135,27 @@ class SeeFoodListByFoodNameDraw:
             info_draw.draw()
             line_feed.draw()
 
-        # 烹饪行为
-        character_data.behavior.make_food_time = new_make_food_time
-        character_data.behavior.make_food_count = real_count
-        character_data.behavior.behavior_id = constant.Behavior.MAKE_FOOD
-        character_data.behavior.duration = new_make_food_time
-        character_data.state = constant.CharacterStatus.STATUS_MAKE_FOOD
-        # 如果是加料咖啡，则标记为正在制作加料咖啡
+        # 烹饪行为；加料咖啡标记为正在制作加料咖啡
+        behavior_id, state = (
+            constant.Behavior.MAKE_FOOD,
+            constant.CharacterStatus.STATUS_MAKE_FOOD,
+        )
         if self.add_coffee:
-            character_data.behavior.behavior_id = (
-                constant.Behavior.MAKE_COFFEE_ADD
+            behavior_id, state = (
+                constant.Behavior.MAKE_COFFEE_ADD,
+                constant.CharacterStatus.STATUS_MAKE_COFFEE_ADD,
             )
-            character_data.state = (
-                constant.CharacterStatus.STATUS_MAKE_COFFEE_ADD
-            )
-        update.game_update_flow(new_make_food_time)
-        # 结算成就
-        achievement_panel.achievement_flow(_("烹饪"))
+        player_pick.choose(
+            behavior_id,
+            new_make_food_time,
+            kind="make_food",
+            state=state,
+            fields={
+                "behavior.make_food_time": new_make_food_time,
+                "behavior.make_food_count": real_count,
+            },
+            args={"food_uid": made_uid},
+        )
 
     def draw(self) -> None:
         """绘制对象"""

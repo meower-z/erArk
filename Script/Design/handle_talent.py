@@ -7,6 +7,7 @@ from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from Script.UI.Panel import achievement_panel
+from Script.Design import game_time
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -33,7 +34,7 @@ def record_fall_talent_time(character_id: int, talent_id: int) -> None:
     character_data = cache.character_data[character_id]
     if talent_id not in character_data.first_record.fall_talent_time_dict:
         character_data.first_record.fall_talent_time_dict[talent_id] = [
-            cache.game_time,
+            game_time.now(),
             list(character_data.position),
         ]
 

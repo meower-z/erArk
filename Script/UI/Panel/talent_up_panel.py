@@ -11,7 +11,8 @@ from Script.Core import (
     constant,
 )
 from Script.Config import game_config, normal_config
-from Script.Design import update, handle_talent, attr_calculation
+from Script.Design import handle_talent, attr_calculation
+from Script.Modules.tk_ui import player_pick
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -318,8 +319,8 @@ class Character_talent_show_Text:
         handle_talent.gain_talent(self.character_id, 1, talent_id)
 
         # 等待1分钟以输出结果
-        character_data: game_type.Character = cache.character_data[0]
-        character_data.behavior.behavior_id = constant.Behavior.WAIT
-        character_data.state = constant.CharacterStatus.STATUS_WAIT
-        character_data.behavior.duration = 1
-        update.game_update_flow(1)
+        player_pick.choose(
+            constant.Behavior.WAIT,
+            1,
+            state=constant.CharacterStatus.STATUS_WAIT,
+        )

@@ -26,6 +26,7 @@ from Script.Design import basement, talk
 from Script.Settle import past_day_settle
 from Script.System.Official_Event_System import official_event_handle
 from Script.System.Pregnancy_System import pregnancy_handle
+from Script.Design import game_time
 
 clear_schedules()
 mother = make_character(102, "母亲", 0)
@@ -138,16 +139,16 @@ change = game_type.CharacterStatusChange()
 pl.target_character_id = 102
 constant.settle_behavior_effect_data[
     constant_effect.BehaviorEffect.PRENATAL_ADD_ADJUST
-](0, 30, change, cache.game_time)
+](0, 30, change, game_time.now())
 check("对孕肚说话一次 +0.5", mother.pregnancy.prenatal_point == 0.5)
 constant.settle_behavior_effect_data[
     constant_effect.BehaviorEffect.PRENATAL_ADD_ADJUST
-](0, 0, change, cache.game_time)
+](0, 0, change, game_time.now())
 check("add_time=0 不累积", mother.pregnancy.prenatal_point == 0.5)
 pl.target_character_id = 0
 constant.settle_behavior_effect_data[
     constant_effect.BehaviorEffect.PRENATAL_ADD_ADJUST
-](0, 30, change, cache.game_time)
+](0, 30, change, game_time.now())
 check("没有交互对象不累积", mother.pregnancy.prenatal_point == 0.5)
 check(
     "三条胎教指令的效果串都挂了 555",
@@ -231,7 +232,7 @@ hp_max = baby_a.hit_point_max
 favor_before = baby_a.favorability.get(0, 0)
 constant.settle_behavior_effect_data[
     constant_effect.BehaviorEffect.NUIRSE_CHILD_ADD_ADJUST
-](0, 30, change, cache.game_time)
+](0, 30, change, game_time.now())
 check(
     "玩家喂奶：体力上限 +2、好感增加",
     baby_a.hit_point_max == hp_max + E.NUIRSE_CHILD_HP_MAX_ADD
@@ -242,7 +243,7 @@ favor_before = baby_a.favorability.get(0, 0)
 hp_max = baby_a.hit_point_max
 constant.settle_behavior_effect_data[
     constant_effect.BehaviorEffect.NUIRSE_CHILD_ADD_ADJUST
-](105, 30, change, cache.game_time)
+](105, 30, change, game_time.now())
 check(
     "保育员喂奶：只加体质不加好感",
     baby_a.hit_point_max == hp_max + E.NUIRSE_CHILD_HP_MAX_ADD
@@ -252,13 +253,13 @@ pl.target_character_id = 102
 hp_max = mother.hit_point_max
 constant.settle_behavior_effect_data[
     constant_effect.BehaviorEffect.NUIRSE_CHILD_ADD_ADJUST
-](0, 30, change, cache.game_time)
+](0, 30, change, game_time.now())
 check("非婴儿不生效", mother.hit_point_max == hp_max)
 pl.target_character_id = 203
 hp_max = baby_a.hit_point_max
 constant.settle_behavior_effect_data[
     constant_effect.BehaviorEffect.NUIRSE_CHILD_ADD_ADJUST
-](0, 0, change, cache.game_time)
+](0, 0, change, game_time.now())
 check("add_time=0 不生效", baby_a.hit_point_max == hp_max)
 
 # ---------------------------------------------------------------------------

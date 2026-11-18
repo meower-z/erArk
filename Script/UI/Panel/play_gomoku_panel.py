@@ -1777,16 +1777,18 @@ class GomokuPanel:
             if self.game_over:
                 line_feed.draw()
                 line_feed.draw()
-                if self.current_player == "O":
-                    winner_name = self.pl_character_data.name
-                    self.end_settle(0)
-                else:
-                    winner_name = self.target_character_data.name
-                    self.end_settle(1)
-                win_draw = draw.NormalDraw()
+                winner = 0 if self.current_player == "O" else 1
+                winner_name = (
+                    self.pl_character_data.name
+                    if winner == 0
+                    else self.target_character_data.name
+                )
+                win_draw = draw.WaitDraw()
                 win_draw.text = _("{0} 获胜!\n\n\n").format(winner_name)
                 win_draw.width = self.width
                 win_draw.draw()
+                cache.now_panel_id = constant.Panel.IN_SCENE
+                self.end_settle(winner)
                 restart_button = draw.CenterButton(
                     _("[再来一局]"),
                     _("再来一局"),
