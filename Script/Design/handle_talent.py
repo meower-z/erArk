@@ -3,10 +3,11 @@
 from types import FunctionType
 from Script.Design import attr_calculation, handle_premise
 from Script.System.First_Record_System import first_record_handle
-from Script.Core import cache_control, game_type, get_text
+from Script.Core import cache_control, game_type, get_text, num
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from Script.UI.Panel import achievement_panel
+from Script.Design import game_time
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -33,7 +34,7 @@ def record_fall_talent_time(character_id: int, talent_id: int) -> None:
     character_data = cache.character_data[character_id]
     if talent_id not in character_data.first_record.fall_talent_time_dict:
         character_data.first_record.fall_talent_time_dict[talent_id] = [
-            cache.game_time,
+            game_time.now(),
             list(character_data.position),
         ]
 
@@ -293,7 +294,7 @@ def npc_gain_and_lost_cumflation(character_id: int) -> None:
         character_data.talent[32] = 1
         # 记录特殊履历：第一次获得精液膨腹素质（附记当时的腹部精液总量，失去再获得由dict去重不重写）
         first_record_handle.record_first_special_record(
-            character_id, 6, f"{abdomen_all_semen}ml"
+            character_id, 6, f"{num.shown(abdomen_all_semen)}ml"
         )
         now_draw_text += _("\n○{0}获得了[精液膨腹]\n").format(
             character_data.name

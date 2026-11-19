@@ -7,7 +7,7 @@ from Script.Design import (
     handle_premise,
     handle_ability,
 )
-from Script.Core import cache_control, constant_effect, game_type, get_text
+from Script.Core import cache_control, constant_effect, game_type, get_text, num
 from Script.Config import normal_config
 from Script.UI.Moudle import draw
 from Script.Settle.common_default import (
@@ -15,6 +15,7 @@ from Script.Settle.common_default import (
     base_chara_hp_mp_common_settle,
     base_chara_state_common_settle,
 )
+from Script.Design import game_time
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -788,7 +789,7 @@ def handle_add_small_p_feel(
     now_add_lust = int(now_add_lust)
     character_data.eja_point += now_add_lust
     change_data.eja_point += now_add_lust
-    character_data.action_info.last_eaj_add_time = cache.game_time
+    character_data.action_info.last_eaj_add_time = game_time.now()
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -1559,7 +1560,7 @@ def handle_add_middle_v_feel(
     now_add_lust = int(now_add_lust)
     character_data.eja_point += now_add_lust
     change_data.eja_point += now_add_lust
-    character_data.action_info.last_eaj_add_time = cache.game_time
+    character_data.action_info.last_eaj_add_time = game_time.now()
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -2098,7 +2099,7 @@ def handle_add_large_p_feel(
     now_add_lust = int(now_add_lust)
     character_data.eja_point += now_add_lust
     change_data.eja_point += now_add_lust
-    character_data.action_info.last_eaj_add_time = cache.game_time
+    character_data.action_info.last_eaj_add_time = game_time.now()
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -3010,11 +3011,15 @@ def handle_add_large_pain_first_sex(
 
     now_add_lust: float = 4000
     # 润滑修正
-    adjust = attr_calculation.get_pain_adjust(character_data.status_data[8])
+    adjust = attr_calculation.get_pain_adjust(
+        num.whole(character_data.status_data[8])
+    )
     now_add_lust *= adjust
     # print("润滑修正", now_add_lust)
     # 欲情修正
-    adjust = attr_calculation.get_pain_adjust(character_data.status_data[12])
+    adjust = attr_calculation.get_pain_adjust(
+        num.whole(character_data.status_data[12])
+    )
     adjust = adjust / 3 if adjust >= 2 else adjust / 2
     now_add_lust *= adjust
     # print("欲情修正", now_add_lust)
@@ -3054,10 +3059,14 @@ def handle_add_large_pain_first_a_sex(
 
     now_add_lust: float = 2000
     # 润滑修正
-    adjust = attr_calculation.get_pain_adjust(character_data.status_data[8])
+    adjust = attr_calculation.get_pain_adjust(
+        num.whole(character_data.status_data[8])
+    )
     now_add_lust *= adjust
     # 欲情修正
-    adjust = attr_calculation.get_pain_adjust(character_data.status_data[12])
+    adjust = attr_calculation.get_pain_adjust(
+        num.whole(character_data.status_data[12])
+    )
     adjust = adjust / 3 if adjust >= 2 else adjust / 2
     now_add_lust *= adjust
     # A扩张修正
@@ -3094,10 +3103,14 @@ def handle_add_large_pain_first_u_sex(
 
     now_add_lust: float = 4000
     # 润滑修正
-    adjust = attr_calculation.get_pain_adjust(character_data.status_data[8])
+    adjust = attr_calculation.get_pain_adjust(
+        num.whole(character_data.status_data[8])
+    )
     now_add_lust *= adjust
     # 欲情修正
-    adjust = attr_calculation.get_pain_adjust(character_data.status_data[12])
+    adjust = attr_calculation.get_pain_adjust(
+        num.whole(character_data.status_data[12])
+    )
     adjust = adjust / 3 if adjust >= 2 else adjust / 2
     now_add_lust *= adjust
     # U扩张修正
@@ -3134,10 +3147,14 @@ def handle_add_large_pain_first_w_sex(
 
     now_add_lust: float = 3000
     # 润滑修正
-    adjust = attr_calculation.get_pain_adjust(character_data.status_data[8])
+    adjust = attr_calculation.get_pain_adjust(
+        num.whole(character_data.status_data[8])
+    )
     now_add_lust *= adjust
     # 欲情修正
-    adjust = attr_calculation.get_pain_adjust(character_data.status_data[12])
+    adjust = attr_calculation.get_pain_adjust(
+        num.whole(character_data.status_data[12])
+    )
     adjust = adjust / 3 if adjust >= 2 else adjust / 2
     now_add_lust *= adjust
     # W扩张修正
@@ -3220,9 +3237,12 @@ def handle_milking_machine(
 
     if character_data.h_state.body_item[4][1]:
 
-        now_milk = 5 * character_data.behavior.duration
-        now_milk = min(character_data.pregnancy.milk, now_milk)
-        now_milk = int(now_milk)
+        now_milk = num.whole(
+            min(
+                character_data.pregnancy.milk,
+                5 * character_data.behavior.duration,
+            )
+        )
         cache.rhodes_island.milk_in_fridge.setdefault(character_id, 0)
         cache.rhodes_island.milk_in_fridge[character_id] += now_milk
         pl_character_data.pl_collection.milk_total.setdefault(character_id, 0)
@@ -3276,8 +3296,12 @@ def handle_urine_collector(
 
     if character_data.h_state.body_item[5][1]:
 
-        now_urine = 5 * character_data.behavior.duration
-        now_urine = min(character_data.urinate_point, now_urine)
+        now_urine = num.whole(
+            min(
+                character_data.urinate_point,
+                5 * character_data.behavior.duration,
+            )
+        )
         cache.rhodes_island.urine_in_fridge.setdefault(character_id, 0)
         cache.rhodes_island.urine_in_fridge[character_id] += now_urine
         pl_character_data.pl_collection.urine_total.setdefault(character_id, 0)
@@ -4270,7 +4294,7 @@ def handle_caught_skip_class(
     if growth_data is None or not growth_data.skip_class_flag:
         return
     growth_data.skip_class_flag = False
-    growth_data.skip_caught_day = cache.game_time.toordinal()
+    growth_data.skip_caught_day = game_time.now().toordinal()
     # 心虚与害怕，数值取一节课的量级（45分钟），与翘课本身给的抑郁回落大致相抵
     base_chara_state_common_settle(
         character_id, 45, 19, change_data=change_data

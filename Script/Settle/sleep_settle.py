@@ -7,6 +7,7 @@ from Script.Core import (
     game_path_config,
     game_type,
     get_text,
+    num,
 )
 from Script.Design import (
     handle_premise,
@@ -137,7 +138,7 @@ def settle_character_juel(character_id: int) -> int:
         elif character_data.sex == 1:
             if status_id == 3:
                 continue
-        status_value = 0
+        status_value: num.Num = 0
         # 获得状态值并清零
         if status_id in character_data.status_data:
             status_value = character_data.status_data[status_id]
@@ -234,11 +235,11 @@ def refresh_temp_semen_max() -> None:
     刷新临时最大精液量\n
     """
     character_data: game_type.Character = cache.character_data[0]
-    now_semen = character_data.semen_point
+    now_semen = num.whole(character_data.semen_point)
     # 需要睡眠时长至少大于等于6h
     if now_semen and character_data.behavior.duration >= 360:
         # 最大额外精液量为正常上限的4倍
-        character_data.tem_extra_semen_point += int(now_semen / 2)
+        character_data.tem_extra_semen_point += now_semen // 2
         character_data.tem_extra_semen_point = min(
             character_data.tem_extra_semen_point,
             character_data.semen_point_max * 4,
@@ -256,7 +257,7 @@ def refresh_temp_semen_max() -> None:
         now_draw.width = window_width
         draw_text = _(
             "\n在充足的睡眠下，今日未消耗的 {0}ml 精液转化为了 {1}ml 次日额外精液"
-        ).format(now_semen, int(now_semen / 2))
+        ).format(now_semen, now_semen // 2)
         if (
             character_data.tem_extra_semen_point
             >= character_data.semen_point_max * 4

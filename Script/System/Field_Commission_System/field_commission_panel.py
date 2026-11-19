@@ -1300,7 +1300,7 @@ class CommissionDraw:
                 character_id,
                 1,
                 change_data=game_type.CharacterStatusChange(),
-                now_time=cache.game_time,
+                now_time=game_time.now(),
             )
         # 结算派遣的载具
         now_vehicle_list = []

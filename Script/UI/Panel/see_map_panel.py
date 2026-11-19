@@ -14,7 +14,7 @@ from Script.Core import (
 )
 from Script.Design import map_handle, attr_text, character_move, handle_premise
 from Script.Config import game_config
-import random
+from Script.Modules.tk_ui import player_pick
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -92,7 +92,9 @@ class SeeMapPanel:
                 now_facility_tip_list = game_config.config_tip_data_by_facility[
                     now_facility_id
                 ]
-                random_tip_id = random.choice(now_facility_tip_list)
+                random_tip_id = player_pick.ui_random.choice(
+                    now_facility_tip_list
+                )
                 now_tip_text = game_config.config_tip_data[random_tip_id].info
                 tip_draw = draw.CenterDraw()
                 tip_draw.text = "○" + now_tip_text
@@ -340,11 +342,8 @@ class SeeMapPanel:
             and scene_path[-1] == "0"
         ):
             flag_map_open = True
-        character_move.own_charcter_move(scene_path)
-        # 如果是从大地图移动到另一个区块，则不关闭地图面板
-        if flag_map_open:
-            cache.now_panel_id = constant.Panel.SEE_MAP
-            self.down_map()
+        # 从大地图移动到另一个区块时，每一段移动开始后仍打开地图面板，面板按玩家的新位置显示下级地图
+        character_move.own_charcter_move(scene_path, open_map=flag_map_open)
 
 
 class MoveMenuPanel:

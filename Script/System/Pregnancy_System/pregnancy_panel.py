@@ -108,7 +108,7 @@ def get_stage_info_text(character_id: int, now_stage: int) -> str:
             game_time.get_predict_date(
                 pregnancy_constant.PREGNANCY_DAY - acc_day, start_time
             ),
-            cache.game_time,
+            game_time.now(),
         )
         return _("受精于{0}，预计{1}妊娠").format(
             get_date_text(start_time), get_date_text(predict_time)
@@ -151,7 +151,7 @@ def get_stage_info_text(character_id: int, now_stage: int) -> str:
             game_time.get_predict_date(
                 pregnancy_constant.PARTURIENT_DAY - acc_day, start_time
             ),
-            cache.game_time,
+            game_time.now(),
         )
         return _("受精于{0}，预计{1}临盆").format(
             get_date_text(start_time), get_date_text(predict_time)
@@ -167,7 +167,7 @@ def get_stage_info_text(character_id: int, now_stage: int) -> str:
                 pregnancy_constant.HATCH_TOTAL_DAY - egg_acc_day,
                 first_egg["lay_time"],
             ),
-            cache.game_time,
+            game_time.now(),
         )
         return _("孵化第{0}天，预计{1}破壳").format(
             hatch_day, get_date_text(born_time)
@@ -194,7 +194,7 @@ def get_stage_info_text(character_id: int, now_stage: int) -> str:
                     pregnancy_constant.REARING_COMPLETE_DAY - acc_day,
                     child_data.pregnancy.born_time,
                 ),
-                cache.game_time,
+                game_time.now(),
             )
             baby_text_list.append(
                 _("{0}（预计{1}长大）").format(

@@ -63,8 +63,9 @@ class PlanError(AssertionError):
 
 def instruct(world: FullWorld, instruct_id: str, presses: tuple = ()) -> None:
     """
-    像玩家在主界面点下指令一样执行它：先安排之后要按的按钮，确认指令的前提都成立，交给 handle_instruct；
-    指令打开了面板时显示面板（与 start_flow.start_frame 每一轮做的相同）
+    像玩家在主界面点下指令一样执行它：先安排之后要按的按钮，确认指令的前提都成立，
+    在玩家的一次选择里（world.act）交给 handle_instruct，指令打开了面板时显示面板（与主面板循环每一轮做的相同）；
+    游戏随之推进到玩家下一次要选行动
     Keyword arguments:
     world -- FullWorld
     instruct_id -- 指令id
@@ -77,6 +78,7 @@ def instruct(world: FullWorld, instruct_id: str, presses: tuple = ()) -> None:
     from Script.Core import constant
     from Script.Design import handle_premise
     from Script.System.Instruct_System import handle_instruct
+    from tests.world import act
 
     cache = world.cache
     failed = [
@@ -89,9 +91,14 @@ def instruct(world: FullWorld, instruct_id: str, presses: tuple = ()) -> None:
             f"指令 {instruct_id} 此刻不会出现在主界面，不成立的前提：{failed}"
         )
     world.player.press(*presses)
-    handle_instruct.handle_instruct(instruct_id)
-    if cache.now_panel_id != constant.Panel.IN_SCENE:
-        constant.panel_data[cache.now_panel_id]()
+
+    def choose() -> None:
+        """玩家这一次选择：点下指令，指令打开了面板时显示面板"""
+        handle_instruct.handle_instruct(instruct_id)
+        if cache.now_panel_id != constant.Panel.IN_SCENE:
+            constant.panel_data[cache.now_panel_id]()
+
+    act(choose)
     if cache.now_panel_id != constant.Panel.IN_SCENE:
         raise PlanError(
             f"指令 {instruct_id} 打开的面板退出后没有回到主界面：now_panel_id={cache.now_panel_id}"
@@ -121,7 +128,7 @@ def instruct_ready(instruct_id: str) -> bool:
 
 def walk(world: FullWorld, path: list) -> None:
     """
-    像玩家在地图上点选目的地一样让博士走过去，每一段路都经主循环结算
+    像玩家在地图上点选目的地一样让博士走过去（world.act），每一段路都经主循环结算
     Keyword arguments:
     world -- FullWorld
     path -- 目标场景路径列表
@@ -129,9 +136,10 @@ def walk(world: FullWorld, path: list) -> None:
     无
     """
     from Script.Design import character_move
+    from tests.world import act
 
     world.scene(path)
-    character_move.own_charcter_move(list(path))
+    act(lambda: character_move.own_charcter_move(list(path)))
 
 
 def npc_id(world: FullWorld, name: str) -> int:

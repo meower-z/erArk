@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     map_config.init_map_data()
 
-    from Script.Design import start_flow, character_handle, game_time
+    from Script.Design import start_flow, character_handle
     import Script.Settle
     import Script.StateMachine
     import Script.System.Medical_System
@@ -61,8 +61,10 @@ if __name__ == "__main__":
     # 载入角色人物卡数据
     character_handle.init_character_tem()
 
-    # 初始化游戏时间
-    game_time.init_time()
+    # 初始化游戏时间：内核时钟从开局时刻开始，新游戏或读档时再换掉内核的 GameState
+    from Script.Modules.save_load import kernel_state
+
+    kernel_state.reset_clock(kernel_state.first_clock())
 
     # 性能监控开关：config.ini 中 perf_monitor = 1 时启用 TK 渲染性能埋点与排版补丁
     perf_monitor: int = getattr(normal_config.config_normal, "perf_monitor", 0)

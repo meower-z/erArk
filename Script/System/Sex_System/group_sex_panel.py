@@ -933,9 +933,13 @@ class Edit_Group_Sex_Temple_Panel:
                         chara_id, check_course=chara_id not in must_attend_set
                     ):
                         continue
-                # 普通群交：判断群交实行值是否足够，不够的跳过
+                # 普通群交：判断群交实行值是否足够，不够的跳过（只判不扣：名单每刷新一次就判一次）
                 elif not instuct_judege.calculation_instuct_judege(
-                    0, chara_id, _("群交"), not_draw_flag=True
+                    0,
+                    chara_id,
+                    _("群交"),
+                    not_draw_flag=True,
+                    settle_hypnosis=False,
                 )[0]:
                     continue
                 # 力竭/疲劳/重度困倦者不再提供邀请
@@ -1065,6 +1069,8 @@ class Edit_Group_Sex_Temple_Panel:
     def invite_npc(self, character_id: int) -> None:
         """邀请NPC"""
         from Script.Design import instuct_judege, second_behavior
+        from Script.Modules.gameplay_resolution import plan_queue
+        from Script.Modules.npc_action_choice import choice
 
         character_data = cache.character_data[character_id]
         if not handle_premise.handle_normal_24567(character_id):
@@ -1077,14 +1083,28 @@ class Edit_Group_Sex_Temple_Panel:
             info_draw_text = _(
                 "\n已取消对{0}的群交邀请，{0}不会来这里参加群交了\n"
             ).format(character_data.name)
-            # 结算等待
-            instuct_judege.init_character_behavior_start_time(
-                character_id, cache.game_time
+            # 她原地等待5分钟：排进她的计划队列，打断她当前的行动
+            plan_queue.plan_next(
+                character_id,
+                constant.Behavior.WAIT,
+                5,
+                state=constant.CharacterStatus.STATUS_WAIT,
+                fields={"sp_flag.wait_flag": False},
+                interrupt=True,
             )
-            constant.handle_state_machine_data[0](character_id)
         # 力竭/疲劳/重度困倦者无法被邀请加入群交
         elif handle_premise.handle_self_exhausted(character_id):
             info_draw_text = _("***{0}过于疲劳，无法参加群交***\n").format(
+                character_data.name
+            )
+        # 普通群交在邀请时判一次并结算催眠的代价（名单只判不扣）；没过的不邀请
+        elif (
+            not cache.sex_class_mode
+            and not instuct_judege.calculation_instuct_judege(
+                0, character_id, _("群交"), not_draw_flag=True
+            )[0]
+        ):
+            info_draw_text = _("\n{0}拒绝了群交邀请\n").format(
                 character_data.name
             )
         # 否则邀请
@@ -1097,11 +1117,26 @@ class Edit_Group_Sex_Temple_Panel:
             second_behavior.character_get_second_behavior(
                 character_id, "be_invited_join_group_sex"
             )
-            # 结算移动
-            instuct_judege.init_character_behavior_start_time(
-                character_id, cache.game_time
-            )
-            constant.handle_state_machine_data[503](character_id)
+            # 她前往玩家的位置：排进她的计划队列，打断她当前的行动；寻路失败时原地等待5分钟
+            to_dr = cache.character_data[0].position
+            minutes = choice.route_minutes(character_id, to_dr)
+            if minutes > 0:
+                plan_queue.plan_next(
+                    character_id,
+                    constant.Behavior.MOVE,
+                    minutes,
+                    fields={"action_info.follow_wait_time": 0},
+                    move={"to": list(to_dr), "show": True},
+                    interrupt=True,
+                )
+            else:
+                plan_queue.plan_next(
+                    character_id,
+                    constant.Behavior.WAIT,
+                    5,
+                    state=constant.CharacterStatus.STATUS_WAIT,
+                    interrupt=True,
+                )
         # 绘制信息
         info_draw = draw.WaitDraw()
         info_draw.text = info_draw_text

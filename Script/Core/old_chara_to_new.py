@@ -14,6 +14,7 @@ from Script.Core import (
 from Script.Config import game_config
 from Script.Design import attr_calculation, character_handle, child_stage_gate
 from typing import TYPE_CHECKING, TypedDict
+from Script.Design import game_time
 
 if TYPE_CHECKING:
     from typing import Any
@@ -2961,7 +2962,7 @@ def end_young_child_session(session: YoungChildSession) -> None:
     """
     from Script.Settle import default, default_cloth
 
-    now_time = cache.game_time
+    now_time = game_time.now()
     if session.get("group"):
         default.handle_scene_all_characters_h_state_reset(
             0, 1, game_type.CharacterStatusChange(), now_time

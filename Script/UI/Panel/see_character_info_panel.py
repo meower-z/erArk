@@ -14,6 +14,7 @@ from Script.Core import (
     py_cmd,
     flow_handle,
     constant,
+    num,
 )
 from Script.Config import game_config, normal_config
 from Script.Design import (
@@ -26,6 +27,8 @@ from Script.Design import (
 )
 from Script.UI.Panel import body_info_panel, character_info_head
 from Script.System.First_Record_System import first_record_panel
+from Script.Modules.save_load import reset
+from Script.Modules.tk_ui import player_pick
 
 panel_info_data: dict[str, object] = {}
 
@@ -40,6 +43,14 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width = normal_config.config_normal.text_width
 """ 屏幕宽度 """
+
+
+@reset.repair
+def repair_eqip_token() -> None:
+    """读档时修补旧版本的信物数据：[0, [0]] 改为 [1, []]"""
+    player = cache.character_data.get(0)
+    if player is not None and player.pl_collection.eqip_token == [0, [0]]:
+        player.pl_collection.eqip_token = [1, []]
 
 
 class SeeCharacterInfoPanel:
@@ -427,8 +438,7 @@ class SeeCharacterStatusPanel:
         status_text = game_config.config_character_state[status_id].name
         status_value = 0
         if status_id in character_data.status_data:
-            status_value = character_data.status_data[status_id]
-        status_value = round(status_value)
+            status_value = num.shown(character_data.status_data[status_id])
         status_level = attr_calculation.get_status_level(status_value)
 
         # 计算当前等级的最大值
@@ -847,21 +857,12 @@ class CharacterTalentText:
             character_data.profession
         ].name
         race_text = game_config.config_race[character_data.race].name
-        # 如果birthplace是str的话，将其转换为int
-        if isinstance(character_data.relationship.birthplace, str):
-            character_data.relationship.birthplace = int(
-                character_data.relationship.birthplace
-            )
+        # 旧存档里出生地与势力可能是str
         birthplace_text = game_config.config_birthplace[
-            character_data.relationship.birthplace
+            int(character_data.relationship.birthplace)
         ].name
-        # 如果nation是str的话，将其转换为int
-        if isinstance(character_data.relationship.nation, str):
-            character_data.relationship.nation = int(
-                character_data.relationship.nation
-            )
         nation_text = game_config.config_nation[
-            character_data.relationship.nation
+            int(character_data.relationship.nation)
         ].name
         type_data = _("素质")
         type_line = draw.LittleTitleLineDraw(type_data, width, ":")
@@ -1316,9 +1317,6 @@ class PlayerAbilityText:
         )
         # 可装备数量
         pl_character_data = cache.character_data[0]
-        # 此处修正一下旧版本导致的信物数据
-        if pl_character_data.pl_collection.eqip_token == [0, [0]]:
-            pl_character_data.pl_collection.eqip_token = [1, []]
         equip_number = pl_character_data.pl_collection.eqip_token[0]
         now_text += _("  当前最大可装备数量：{0}\n\n").format(equip_number)
         now_text += _("  当前装备的信物：\n")
@@ -1657,7 +1655,8 @@ class SeeCharacterInfoByNameDrawInScene:
 
     def see_character(self) -> None:
         """切换目标角色"""
-        cache.character_data[0].target_character_id = self.character_id
+        with player_pick.drafting("scene target"):
+            cache.character_data[0].target_character_id = self.character_id
         py_cmd.clr_cmd()
 
 
@@ -1716,7 +1715,8 @@ class SeeCharacterInfoByimageDrawInScene:
 
     def see_character(self) -> None:
         """切换目标角色"""
-        cache.character_data[0].target_character_id = self.character_id
+        with player_pick.drafting("scene target"):
+            cache.character_data[0].target_character_id = self.character_id
         py_cmd.clr_cmd()
 
 

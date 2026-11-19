@@ -13,6 +13,8 @@ from Script.Core import (
 )
 from Script.UI.Moudle import draw, panel
 from Script.Config import game_config, normal_config
+from Script.Design import game_time
+from Script.Modules.save_load import settings
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -107,6 +109,7 @@ class System_Setting_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
+                settings.save()
                 cache.now_panel_id = constant.Panel.IN_SCENE
                 break
 
@@ -137,7 +140,7 @@ class System_Setting_Panel:
         elif type_name == _("难度"):
             setting_data = game_config.config_difficulty_setting
             setting_option = game_config.config_difficulty_setting_option
-            setting = cache.all_system_setting.difficulty_setting
+            setting = cache.difficulty_setting
         else:
             setting_data = game_config.config_draw_setting
             setting_option = game_config.config_draw_setting_option
@@ -203,13 +206,9 @@ class System_Setting_Panel:
                 if type_name == _("绘制"):
                     # 第12项，则加一个[修改字体大小]的按钮
                     if cid == 12:
-                        if cache.font_size == 0:
-                            cache.font_size = int(
-                                normal_config.config_normal.window_width
-                                / normal_config.config_normal.text_width
-                                * 2
-                            )
-                        new_button_text = _(" [{0}] ").format(cache.font_size)
+                        new_button_text = _(" [{0}] ").format(
+                            normal_config.config_normal.font_size
+                        )
                         new_button_len = max(len(new_button_text) * 2, 30)
                         new_button_draw = draw.LeftButton(
                             new_button_text,
@@ -332,7 +331,7 @@ class System_Setting_Panel:
                 return
             setting = cache.all_system_setting.base_setting
         elif type_name == _("难度"):
-            setting = cache.all_system_setting.difficulty_setting
+            setting = cache.difficulty_setting
         else:
             setting = cache.all_system_setting.draw_setting
         if setting[cid] < option_len - 1:
@@ -392,7 +391,6 @@ class System_Setting_Panel:
             new_size = 1
         elif new_size > 50:
             new_size = 50
-        cache.font_size = new_size
         normal_config.config_normal.font_size = new_size
         normal_config.config_normal.order_font_size = new_size - 2
         # 修改根目录下的config.ini文件中的字体大小
@@ -479,7 +477,7 @@ class System_Setting_Panel:
             info_draw.draw()
 
             # 遍历三种可开关的生殖方式
-            setting = cache.all_system_setting.birth_type_setting
+            setting = cache.birth_type_setting
             for birth_type in game_config.config_birth_type_setting:
                 setting_data = game_config.config_birth_type_setting[birth_type]
                 # 生殖方式名，点击显示详细说明
@@ -555,7 +553,7 @@ class System_Setting_Panel:
         """
         from Script.System.Pregnancy_System import egg_handle
 
-        setting = cache.all_system_setting.birth_type_setting
+        setting = cache.birth_type_setting
         setting_data = game_config.config_birth_type_setting[birth_type]
         # 由关闭改为开启：直接生效，无需确认（重新开启后自下一次判定起恢复该生殖方式）
         if not setting.get(birth_type, 1):
@@ -683,7 +681,7 @@ class System_Setting_Panel:
                     npc_id,
                     1,
                     change_data=game_type.CharacterStatusChange(),
-                    now_time=cache.game_time,
+                    now_time=game_time.now(),
                 )
                 # 输出提示信息
                 now_draw = draw.NormalDraw()

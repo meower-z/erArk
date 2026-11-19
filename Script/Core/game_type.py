@@ -1,8 +1,9 @@
 """游戏运行中使用的各类数据结构体定义(角色、地图、存档缓存、结算变化等)"""
 
+from Script.Core.num import Num
 import uuid
 from uuid import UUID
-from typing import Any
+from typing import TYPE_CHECKING, Any
 import datetime
 
 
@@ -303,7 +304,7 @@ class DIRTY:
         """
         self.penis_dirty_dict: dict = {}
         """ 阴茎的污浊属性 [semen精液, blood处子血] """
-        self.absorbed_total_semen: int = 0
+        self.absorbed_total_semen: Num = 0
         """ 累计吸收的精液总量，int类 """
         self.condom_decoration: dict[tuple, list[int]] = {}
         """ 挂在本角色身上作装饰的用过的避孕套
@@ -328,7 +329,7 @@ class PREGNANCY:
         """ 角色开始受精的时间 """
         self.born_time: datetime.datetime = datetime.datetime(1, 1, 1)
         """ 角色出生的时间 """
-        self.milk: int = 0
+        self.milk: Num = 0
         """ 角色当前乳汁量，单位毫升，每3分钟增加2毫升（平均4小时达到80%涨奶） """
         self.milk_max: int = 200
         """ 角色最大乳汁量，单位毫升 """
@@ -1260,7 +1261,7 @@ class PLAYER_ABILITY:
         """ 视觉系能力开关 """
         self.tactile: bool = False
         """ 触觉系能力开关 """
-        self.today_sanity_point_cost: int = 0
+        self.today_sanity_point_cost: Num = 0
         """ 今日已消耗的理智值 """
         self.hypnosis_type: int = 0
         """ 催眠类型 """
@@ -1649,6 +1650,8 @@ class Rhodes_Island:
         """ 体检设置 设置id:设置值 """
         self.today_physical_examination_chara_id_dict: dict[int, set] = {}
         """ 今日已体检的干员数据 干员id:体检项目id集合 """
+        self.physical_examination_in_progress: dict[int, set[str]] = {}
+        """ 玩家正在进行、还没结束的体检 干员id:已做过的检查行为id集合；每项检查随它的行动开始时写入 """
         self.examined_operator_ids: set[int] = set()
         """ 本次体检周期内已体检过的干员id集合 """
         self.waiting_for_exam_operator_ids: set[int] = set()
@@ -1815,11 +1818,6 @@ class System_Setting:
         """ 基础系统设定，即base类 """
         self.draw_setting: dict[int, int] = {}
         """ 绘制设定，即draw类 """
-        self.difficulty_setting: dict[int, int] = {}
-        """ 难度设定，即difficulty类 """
-        self.birth_type_setting: dict[int, int] = {}
-        """ 生殖方式设定，即birth类，键为生育方式编号（2多胎胎生/11带壳卵生/12无壳卵生），值为0关闭/1开启，
-        关闭的生育方式一律按单胎胎生处理 """
         self.line_before_main_update: int = 3
         """ 主界面刷新前的行数 """
         self.value_draw: dict[str, bool] = {"pl": False, "npc": False}
@@ -1868,39 +1866,39 @@ class Character:
         # """ 角色年龄 """
         self.hit_point_max: int = 0
         """ 角色最大HP """
-        self.hit_point: int = 0
+        self.hit_point: Num = 0
         """ 角色当前HP """
         self.mana_point_max: int = 0
         """ 角色最大MP """
-        self.mana_point: int = 0
+        self.mana_point: Num = 0
         """ 角色当前MP """
         self.sanity_point_max: int = 0
         """ 角色最大理智 """
-        self.sanity_point: int = 0
+        self.sanity_point: Num = 0
         """ 角色当前理智 """
         self.eja_point_max: int = 0
         """ 角色最大射精槽 """
-        self.eja_point: float = 0
+        self.eja_point: Num = 0
         """ 角色当前射精槽 """
         self.semen_point_max: int = 0
         """ 角色最大精液槽 """
-        self.semen_point: int = 0
+        self.semen_point: Num = 0
         """ 角色当前精液槽 """
         self.tem_extra_semen_point: int = 0
         """ 角色临时最大精液槽 """
         self.angry_point: int = 0
         """ 角色当前愤怒槽 """
-        self.tired_point: int = 0
+        self.tired_point: Num = 0
         """ 疲劳值 6m=1点，16h=160点(max)"""
-        self.urinate_point: int = 0
+        self.urinate_point: Num = 0
         """ 尿意值 1m=1点，4h=240点(max)"""
-        self.hunger_point: int = 0
+        self.hunger_point: Num = 0
         """ 饥饿值 1m=1点，4h=240点(max)"""
-        self.sleep_point: int = 0
+        self.sleep_point: Num = 0
         """ 熟睡值 1m=10点，10min=100点(max)"""
         self.desire_point: int = 0
         """ 欲望值 数值为百分比，100为最大 """
-        self.drunk_point: int = 0
+        self.drunk_point: Num = 0
         """ 醉酒度 数值为百分比，100为最大 """
         self.state: int | str = 0
         """ 角色当前状态 """
@@ -1944,7 +1942,7 @@ class Character:
         """ 角色生日数据 """
         # self.chest_tem: int = 0
         # """ 角色罩杯模板 """
-        self.status_data: dict[int, int] = {}
+        self.status_data: dict[int, Num] = {}
         """ 角色状态数据 状态id:状态数值 """
         self.hit_point_tem: int = 1
         """ 角色HP模板 """
@@ -2030,6 +2028,21 @@ class Character:
 class Cache:
     """游戏缓存数据结构体"""
 
+    if not TYPE_CHECKING:
+
+        def __getattr__(self, name: str) -> Any:
+            """
+            实例上没有的属性：玩家选择的草稿里，游戏缓存（cache_control.cache）交给 draft.fetch 复制原物；
+            其余情况与以 __ 开头的名字报 AttributeError
+            Keyword arguments:
+            name -- 属性名
+            """
+            if name.startswith("__"):
+                raise AttributeError(name)
+            from Script.Modules.gameplay_resolution import draft
+
+            return draft.fetch(self, name)
+
     def __init__(self) -> None:
         """初始化游戏缓存数据对象"""
         self.back_save_panel: bool = False
@@ -2084,16 +2097,17 @@ class Cache:
         """ 富文本样式记录 """
         self.text_one_by_one_rich_cache: dict = {}
         """ 富文本精确样式记录 """
-        self.font_size: int = 0
-        """ 字体大小 """
         self.image_id: int = 0
         """ 图片id """
         self.cmd_data: dict = {}
         """ cmd数据 """
-        self.game_time: datetime.datetime = datetime.datetime(1, 1, 1)
-        """ 游戏时间 """
-        self.pre_game_time: datetime.datetime = datetime.datetime(1, 1, 1)
-        """ 前一循环时的游戏时间 """
+        self.difficulty_setting: dict[int, int] = {}
+        """ 本存档的难度设定，即difficulty类 """
+        self.birth_type_setting: dict[int, int] = {}
+        """ 本存档的生殖方式设定，即birth类，键为生育方式编号（2多胎胎生/11带壳卵生/12无壳卵生），值为0关闭/1开启，
+        关闭的生育方式一律按单胎胎生处理 """
+        self.noise_woken: dict[int, int] = {}
+        """ 睡中被吵醒、还没结算的角色：被吵醒的角色id 到产生动静的角色id """
         self.now_panel_id: int = 0
         """ 当前游戏面板id """
         self.old_character_id: int = 0
@@ -2112,8 +2126,6 @@ class Cache:
         # """ 可穿戴道具类型数据 """
         self.over_behavior_character: set = set()
         """ 本次update中已结束结算的npc """
-        self.game_update_flow_running: int = 0
-        """ 游戏更新流程当前嵌套深度，用于限制递归调用层数 """
         self.pl_sleep_save_flag: bool = False
         """ 玩家睡觉，要进行存档 """
         self.recipe_data: dict[int, Recipes] = {}
@@ -2164,6 +2176,10 @@ class Cache:
         """ 大地图国家数据 """
         self.achievement: ACHIEVEMENT = ACHIEVEMENT()
         """ 成就 """
+        self.plan_queue: dict[int, list[Any]] = {}
+        """ 计划队列：角色id -> 这个角色排着的行动（gameplay_resolution.plan_queue 的 (种类, 意图)）列表 """
+        self.player_route: tuple[Any, ...] | None = None
+        """ 玩家寻路途中为 (目标场景, 这一段的出发场景, 跟着走的干员id, 是否仍打开地图面板)，不在寻路时为 None """
 
 
 class TargetChange:
@@ -2171,13 +2187,13 @@ class TargetChange:
 
     def __init__(self) -> None:
         """初始化交互对象角色变化对象"""
-        self.hit_point: int = 0
+        self.hit_point: Num = 0
         """ hp变化 """
-        self.mana_point: int = 0
+        self.mana_point: Num = 0
         """ mp变化 """
-        self.eja_point: int = 0
+        self.eja_point: Num = 0
         """ 射精变化 """
-        self.status_data: dict[int, int] = {}
+        self.status_data: dict[int, Num] = {}
         """ 状态变化 """
         self.favorability: int = 0
         """ 好感度变化 """
@@ -2189,7 +2205,7 @@ class TargetChange:
         """ 能力变化 """
         self.experience: dict[int, int] = {}
         """ 经验变化 """
-        self.sanity_point: int = 0
+        self.sanity_point: Num = 0
         """ 理智变化 """
         self.hypnosis_degree: float = 0
         """ 催眠程度变化 """
@@ -2200,13 +2216,13 @@ class CharacterStatusChange:
 
     def __init__(self) -> None:
         """初始化角色属性状态变更对象"""
-        self.hit_point: int = 0
+        self.hit_point: Num = 0
         """ hp变化 """
-        self.mana_point: int = 0
+        self.mana_point: Num = 0
         """ mp变化 """
-        self.eja_point: int = 0
+        self.eja_point: Num = 0
         """ 射精变化 """
-        self.status_data: dict[int, int] = {}
+        self.status_data: dict[int, Num] = {}
         """ 状态变化 """
         self.favorability: int = 0
         """ 好感度变化 """
@@ -2224,7 +2240,7 @@ class CharacterStatusChange:
         """ 能力变化 """
         self.experience: dict[int, int] = {}
         """ 经验变化 """
-        self.sanity_point: int = 0
+        self.sanity_point: Num = 0
         """ 理智变化 """
         self.hypnosis_degree: float = 0
         """ 催眠程度变化 """

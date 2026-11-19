@@ -38,11 +38,12 @@ class Condom_Select_Panel:
         self.select_index_set: set = set()
         """ 已勾选的条目下标集合 """
 
-    def draw(self) -> int:
+    def draw(self) -> dict[str, object] | None:
         """
-        绘制对象，玩家确认选择后直接调用对应的结算函数完成数据结算\n
+        绘制对象，只读数据：玩家确认的选择交给指令带进行动，开始时由 handle_instruct 的开始代码 condom 结算\n
         Return arguments:\n
-        int -- 结算完成返回1，取消时返回-1
+        dict | None -- 选择（op：操作类型；part：[部位类型, 部位cid]，饮用与取回时为 None；
+                       condom：存量池下标列表，取回时为 [部位类型, 部位cid, 该部位列表中的下标] 的列表），取消时为 None
         """
         character_data: game_type.Character = cache.character_data[0]
         target_character_id = character_data.target_character_id
@@ -51,36 +52,31 @@ class Condom_Select_Panel:
         if self.mode == "take_back":
             select_result = self.select_decoration(target_character_id)
             if isinstance(select_result, int):
-                return -1
-            condom_handle.settle_take_back(target_character_id, select_result)
-            return 1
+                return None
+            return {
+                "op": self.mode,
+                "part": None,
+                "condom": [
+                    [location[0], location[1], index]
+                    for location, index in select_result
+                ],
+            }
 
         condom_index_list = self.select_condoms()
         if isinstance(condom_index_list, int):
-            return -1
-        # 饮用模式无需选择部位，确认后直接结算
+            return None
+        # 饮用模式无需选择部位
         if self.mode == "drink":
-            condom_handle.settle_drink(target_character_id, condom_index_list)
-            return 1
-        # 挂装饰与挤出模式需要二级选择目标部位，确认后直接结算
+            return {"op": self.mode, "part": None, "condom": condom_index_list}
+        # 挂装饰与挤出模式需要二级选择目标部位
         part_result = self.select_part(target_character_id)
         if isinstance(part_result, int):
-            return -1
-        if self.mode == "hang":
-            condom_handle.settle_hang(
-                target_character_id,
-                part_result[0],
-                part_result[1],
-                condom_index_list,
-            )
-        else:
-            condom_handle.settle_squeeze(
-                target_character_id,
-                part_result[0],
-                part_result[1],
-                condom_index_list,
-            )
-        return 1
+            return None
+        return {
+            "op": self.mode,
+            "part": list(part_result),
+            "condom": condom_index_list,
+        }
 
     def select_condoms(self) -> list[int] | int:
         """

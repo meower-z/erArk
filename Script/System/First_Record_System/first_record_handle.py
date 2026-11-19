@@ -4,6 +4,7 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Design import map_handle
 from Script.Config import game_config
+from Script.Design import game_time
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -64,7 +65,7 @@ def record_first_special_record(
     if special_cid in character_data.first_record.first_special_record_dict:
         return
     character_data.first_record.first_special_record_dict[special_cid] = [
-        cache.game_time,
+        game_time.now(),
         list(character_data.position),
         special_data,
     ]
@@ -138,7 +139,7 @@ def record_first_h_mode(
     character_data = cache.character_data[character_id]
     if mode_key not in character_data.first_record.first_h_mode_dict:
         character_data.first_record.first_h_mode_dict[mode_key] = [
-            cache.game_time,
+            game_time.now(),
             list(character_data.position),
             extra_data,
         ]

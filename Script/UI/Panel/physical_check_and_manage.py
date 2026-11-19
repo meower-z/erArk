@@ -76,15 +76,15 @@ def settle_health_check() -> None:
         # 重置周期内的已体检干员数据
         if cache.rhodes_island.physical_examination_setting[3] == 0:
             # 每年重置一次
-            if cache.game_time.month == 3 and cache.game_time.day == 1:
+            if game_time.now().month == 3 and game_time.now().day == 1:
                 cache.rhodes_island.examined_operator_ids = set()
         elif cache.rhodes_island.physical_examination_setting[3] == 1:
             # 每月重置一次
-            if cache.game_time.day == 1:
+            if game_time.now().day == 1:
                 cache.rhodes_island.examined_operator_ids = set()
         elif cache.rhodes_island.physical_examination_setting[3] == 2:
             # 每周重置一次
-            if cache.game_time.weekday() == 0:
+            if game_time.now().weekday() == 0:
                 cache.rhodes_island.examined_operator_ids = set()
         elif cache.rhodes_island.physical_examination_setting[3] == 3:
             # 每天重置一次
@@ -108,8 +108,12 @@ class Physical_Check_And_Manage_Panel:
         """ 绘制的文本列表 """
         self.pl_character_data = cache.character_data[0]
         """ 玩家的角色数据 """
-        self.done_check_behavior_id_set: set[str] = set()
-        """ 已经检查过的行为id集合 """
+        self.done_check_behavior_id_set: set[str] = (
+            cache.rhodes_island.physical_examination_in_progress.get(
+                self.pl_character_data.target_character_id, set()
+            )
+        )
+        """ 这次体检里已经检查过的行为id集合（游戏数据里的，面板重开后仍在） """
 
     def draw(self) -> None:
         """绘制对象"""
@@ -254,6 +258,9 @@ class Physical_Check_And_Manage_Panel:
             cache.rhodes_island.today_physical_examination_chara_id_dict[
                 target_character_id
             ] = self.done_check_behavior_id_set
+            cache.rhodes_island.physical_examination_in_progress.pop(
+                target_character_id, None
+            )
             # 加入周期内已体检角色名单
             cache.rhodes_island.examined_operator_ids.add(target_character_id)
             # 清零今日体检时间
@@ -428,24 +435,20 @@ class Physical_Check_And_Manage_Panel:
                 break
 
     def settle_target_physical_status(self, behavior_id: str) -> None:
-        """结算目标角色的身体状态"""
+        """
+        选一项检查：记进游戏数据里这次体检做过的检查。选择时的写入在草稿里，
+        随检查的行动开始时写进游戏；在询问里返回或判定没过时不写，这项检查不算做过
+        """
         behavior_data = game_config.config_behavior[behavior_id]
+        self.done_check_behavior_id_set = (
+            cache.rhodes_island.physical_examination_in_progress.setdefault(
+                self.pl_character_data.target_character_id, set()
+            )
+        )
         self.done_check_behavior_id_set.add(behavior_id)
         line = draw.LineDraw("-", window_width)
         line.draw()
         line_feed.draw()
-        # 测试类的需要判断轻度猥亵
-        if "测试" in behavior_data.tag:
-            handle_instruct.chara_handle_instruct_common_settle(
-                behavior_id, judge=_("初级骚扰"), force_taget_wait=True
-            )
-        else:
-            handle_instruct.chara_handle_instruct_common_settle(
-                behavior_id, force_taget_wait=True
-            )
-        info_draw = draw.WaitDraw()
-        info_draw.text = "\n"
-        info_draw.draw()
         # 结算成就
         cache.achievement.health_check_count += 1
         achievement_panel.achievement_flow(_("身体检查"))
@@ -458,6 +461,15 @@ class Physical_Check_And_Manage_Panel:
         ):
             # 结算成就
             achievement_panel.achievement_flow(_("身体检查"), 1046)
+        # 测试类的需要判断轻度猥亵
+        if "测试" in behavior_data.tag:
+            handle_instruct.chara_handle_instruct_common_settle(
+                behavior_id, judge=_("初级骚扰"), force_taget_wait=True
+            )
+        else:
+            handle_instruct.chara_handle_instruct_common_settle(
+                behavior_id, force_taget_wait=True
+            )
 
     def manage_target_physical(self, target_character_id: int) -> None:
         """对目标角色进行身体管理"""
@@ -859,9 +871,6 @@ class Physical_Check_And_Manage_Panel:
             )
             # 结算身体管理
             target_character_data.body_manage[manage_cid] = 1
-            handle_instruct.chara_handle_instruct_common_settle(
-                constant.Behavior.WAIT, duration=1, force_taget_wait=True
-            )
             info_text += _(
                 "对{0}进行了{1}的身体管理，将在明天睡醒后生效。\n"
             ).format(
@@ -890,9 +899,6 @@ class Physical_Check_And_Manage_Panel:
         else:
             # 结算身体管理
             target_character_data.body_manage[manage_cid] = 0
-            handle_instruct.chara_handle_instruct_common_settle(
-                constant.Behavior.WAIT, duration=1, force_taget_wait=True
-            )
             info_text += _(
                 "取消了对{0}的{1}的身体管理，将在明天睡醒后生效。\n"
             ).format(
@@ -922,6 +928,9 @@ class Physical_Check_And_Manage_Panel:
         info_draw = draw.WaitDraw()
         info_draw.text = info_text
         info_draw.draw()
+        handle_instruct.chara_handle_instruct_common_settle(
+            constant.Behavior.WAIT, duration=1, force_taget_wait=True
+        )
 
     def cancle_physical_manage_panel(self) -> None:
         """取消身体管理"""

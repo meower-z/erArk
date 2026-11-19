@@ -23,7 +23,7 @@ def handle_first_kiss_in_today(character_id: int) -> int:
     character_data = cache.character_data[character_id]
     if (
         game_time.count_day_for_datetime(
-            character_data.first_record.first_kiss_time, cache.game_time
+            character_data.first_record.first_kiss_time, game_time.now()
         )
         == 0
     ):
@@ -65,7 +65,7 @@ def handle_first_sex_in_today(character_id: int) -> int:
         if record is None:
             return 0
         first_time = record["time"]
-    if game_time.count_day_for_datetime(first_time, cache.game_time) == 0:
+    if game_time.count_day_for_datetime(first_time, game_time.now()) == 0:
         return 1
     return 0
 
@@ -100,7 +100,7 @@ def handle_first_a_sex_in_today(character_id: int) -> int:
     record = character_data.first_record.first_part_sex_dict.get(8, None)
     if record is None:
         return 0
-    if game_time.count_day_for_datetime(record["time"], cache.game_time) == 0:
+    if game_time.count_day_for_datetime(record["time"], game_time.now()) == 0:
         return 1
     return 0
 
@@ -135,7 +135,7 @@ def handle_first_u_sex_in_today(character_id: int) -> int:
     record = character_data.first_record.first_part_sex_dict.get(9, None)
     if record is None:
         return 0
-    if game_time.count_day_for_datetime(record["time"], cache.game_time) == 0:
+    if game_time.count_day_for_datetime(record["time"], game_time.now()) == 0:
         return 1
     return 0
 
@@ -170,7 +170,7 @@ def handle_first_w_sex_in_today(character_id: int) -> int:
     record = character_data.first_record.first_part_sex_dict.get(7, None)
     if record is None:
         return 0
-    if game_time.count_day_for_datetime(record["time"], cache.game_time) == 0:
+    if game_time.count_day_for_datetime(record["time"], game_time.now()) == 0:
         return 1
     return 0
 
@@ -205,7 +205,7 @@ def handle_first_m_sex_in_today(character_id: int) -> int:
     record = character_data.first_record.first_part_sex_dict.get(2, None)
     if record is None:
         return 0
-    if game_time.count_day_for_datetime(record["time"], cache.game_time) == 0:
+    if game_time.count_day_for_datetime(record["time"], game_time.now()) == 0:
         return 1
     return 0
 

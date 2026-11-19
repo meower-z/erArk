@@ -180,9 +180,10 @@ class LanguageRun:
             behavior["handjob"].name,
             self.translate("[返回]"),
         )
-        template = self.player.h_state.group_sex_body_template_dict["A"]
         try:
             self.instruct(instruct.EDIT_GROUP_SEX_TEMPLE, presses)
+            # 编辑随退出面板时的 Edit 写进缓存，模板要在之后读
+            template = self.player.h_state.group_sex_body_template_dict["A"]
             return [dict(template[0]), template[1]]
         finally:
             # 面板中途出错时清掉没用掉的按钮，回到主界面再结束群交
@@ -204,13 +205,22 @@ class LanguageRun:
         return in_h
 
     def npc_active_h(self) -> list[Any]:
-        """「交给对方」前后的游戏时间与之后的玩家行为"""
-        time_before = str(self.cache.game_time)
+        """
+        「交给对方」前后的游戏时间与之后的玩家行为；对方随机选中的部位没有可做的行为时（时间不走），
+        按「继续享受」让她再选，最多 5 次
+        """
+        from Script.Design import game_time
+
+        time_before = str(game_time.now())
         self.instruct(self.constant.Instruct.CHANGE_TOP_AND_BOTTOM)
+        for _ in range(5):
+            if str(game_time.now()) != time_before:
+                break
+            self.instruct(self.constant.Instruct.KEEP_ENJOY)
         behavior = self.player.behavior.behavior_id
         return [
             time_before,
-            str(self.cache.game_time),
+            str(game_time.now()),
             behavior,
             self.player.state,
         ]

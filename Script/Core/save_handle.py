@@ -13,6 +13,7 @@ from Script.Core import (
     game_type,
     get_text,
     io_init,
+    num,
     old_chara_to_new,
 )
 from Script.Config import normal_config, game_config, character_config
@@ -21,6 +22,8 @@ from Script.UI.Moudle import draw
 from Script.System.Pregnancy_System import pregnancy_constant
 import json
 from typing import TYPE_CHECKING
+from Script.Design import game_time
+from Script.Modules.save_load import index
 
 if TYPE_CHECKING:
     from typing import Any
@@ -38,6 +41,13 @@ STALE_UI_FIELDS = (
     "pending_event_text",
 )
 """ 读档时丢掉的界面字段名，game_type.Cache 没有这些字段 """
+CLOCK_FIELDS = (
+    "game_time",
+    "pre_game_time",
+    "game_update_flow_running",
+    "font_size",
+)
+""" 读档时丢掉的旧存档字段：游戏时钟（在内核里）、旧主循环的嵌套深度、字号（在 config.ini 里） """
 
 
 def get_save_dir_path(save_id: str) -> str:
@@ -46,10 +56,7 @@ def get_save_dir_path(save_id: str) -> str:
     Keyword arguments:
     save_id -- 存档id
     """
-    save_path = os.path.join("save")
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
-    return os.path.join(save_path, save_id)
+    return index.path(save_id)
 
 
 def judge_save_file_exist(save_id: str) -> bool:
@@ -58,23 +65,22 @@ def judge_save_file_exist(save_id: str) -> bool:
     Keyword arguments:
     save_id -- 存档id
     """
-    save_head_path = os.path.join(get_save_dir_path(save_id), "0")
-    if not os.path.exists(save_head_path):
-        return False
-    save_path = os.path.join(get_save_dir_path(save_id), "1")
-    if not os.path.exists(save_path):
-        return False
-    return True
+    return save_id in index.slots()
 
 
 def establish_save(save_id: str) -> None:
     """
-    将游戏数据存入指定id的存档内
+    把游戏存进 save_id 号存档：缓存写进文件 "1"，存档头写进文件 "0"，内核状态写进文件 "2"
+    全局设置不随存档，有改动时另写进游戏目录下的 settings.json
     Keyword arguments:
     save_id -- 存档id
+    Return arguments:
+    无
     """
+    from Script.Modules.save_load import settings
+
     establish_save_linux(save_id)
-    return
+    settings.save()
 
 
 def establish_save_linux(save_id: str) -> None:
@@ -86,28 +92,15 @@ def establish_save_linux(save_id: str) -> None:
     """
     save_verson = {
         "game_verson": normal_config.config_normal.verson,
-        "game_time": cache.game_time,
+        "game_time": game_time.now(),
         "character_name": cache.character_data[0].name,
         "save_time": datetime.datetime.now(),
     }
-    data = {
-        "1": cache,
-        "0": save_verson,
-    }
-    for key, value in data.items():
-        write_save_data(save_id, key, value)
+    from Script.Modules.save_load import kernel_state
 
-
-def load_save_info_head(save_id: str) -> dict:
-    """
-    获取存档的头部信息
-    Keyword arguments:
-    save_id -- 存档id
-    """
-    save_path = get_save_dir_path(save_id)
-    file_path = os.path.join(save_path, "0")
-    with open(file_path, "rb") as f:
-        return pickle.load(f)
+    write_save_data(save_id, index.CACHE_FILE, cache)
+    index.write_head(save_id, save_verson)
+    kernel_state.write(save_id)
 
 
 def write_save_data(save_id: str, data_id: str, write_data: object) -> None:
@@ -235,7 +228,7 @@ def _drop_unknown_books(loaded_dict: dict) -> int:
     int -- 改动的处数
     功能描述:
         罗德岛：借阅表去掉这些书（谁借着都一样），图书馆展示列表去掉这些类型与书，阅读推荐去掉这些类型；
-        每个角色：借书集合去掉这些书，借书卡上这些书没还的记录记为在读档时刻还了，正在读的书是这些书时书号与书名归零。
+        每个角色：借书集合去掉这些书，借书卡上这些书没还的记录记为此刻（读档时是存档时刻）还了，正在读的书是这些书时书号与书名归零。
         阅读进度不动：成就按读完的书数统计
     """
     rhodes_island = loaded_dict["rhodes_island"]
@@ -268,6 +261,7 @@ def _drop_unknown_books(loaded_dict: dict) -> int:
     ]:
         rhodes_island.recommend_book_type_set.discard(book_type)
         count += 1
+    now_time = game_time.now()
     for character in loaded_dict["character_data"].values():
         entertainment = character.entertainment
         for book_id in [
@@ -282,7 +276,7 @@ def _drop_unknown_books(loaded_dict: dict) -> int:
                 record.get("book_id") not in game_config.config_book
                 and record.get("return_time") is None
             ):
-                record["return_time"] = loaded_dict["game_time"]
+                record["return_time"] = now_time
                 count += 1
         behavior = character.behavior
         if behavior.book_id and behavior.book_id not in game_config.config_book:
@@ -481,12 +475,13 @@ def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
 
     # 无壳卵生开关：本函数早于 update_settings 执行，且此时全局cache尚未被替换，只能从存档自身的设置对象里读
     # 旧存档没有该设置项，.get兜底为开启，正是旧存档迁移应有的行为
-    loaded_setting = getattr(loaded_cache, "all_system_setting", None)
-    loaded_birth_setting = (
-        getattr(loaded_setting, "birth_type_setting", None)
-        if loaded_setting is not None
-        else None
-    )
+    loaded_birth_setting = getattr(loaded_cache, "birth_type_setting", None)
+    if not loaded_birth_setting:
+        loaded_birth_setting = getattr(
+            getattr(loaded_cache, "all_system_setting", None),
+            "birth_type_setting",
+            None,
+        )
     soft_egg_enabled = True
     if isinstance(loaded_birth_setting, dict):
         soft_egg_enabled = bool(
@@ -736,7 +731,19 @@ def load_save(save_id: str) -> game_type.Cache:
 
 def input_load_save(save_id: str) -> None:
     """
-    载入存档存档id对应数据，覆盖当前游戏内存
+    读档：游戏缓存与内核的 GameState 都换成存档里的（kernel_state.load，读档的步骤见 save_load.reset）；
+    玩家选行动时调用则中止这次选择
+    Keyword arguments:
+    save_id -- 存档id
+    """
+    from Script.Modules.save_load import kernel_state
+
+    kernel_state.load(save_id)
+
+
+def install_save(save_id: str) -> None:
+    """
+    读档的 Reset 步骤：把存档的缓存（文件 "1"）装进游戏缓存，按顺序修补旧存档，再结束有101/102阶段的孩子参与的会话
     Keyword arguments:
     save_id -- 存档id
     """
@@ -818,8 +825,9 @@ def input_load_save(save_id: str) -> None:
     for field_name in list(loaded_dict):
         if field_name.startswith("web_") or field_name in STALE_UI_FIELDS:
             del loaded_dict[field_name]
-    # 重置游戏更新流程的嵌套深度
-    loaded_dict["game_update_flow_running"] = 0
+    # 游戏时钟在内核里（存档的文件 "2"；旧存档按存档头的游戏时间投影），不随缓存载入
+    for field_name in CLOCK_FIELDS:
+        loaded_dict.pop(field_name, None)
 
     # 遍历更新全角色属性
     cloth_update_count = 0
@@ -926,7 +934,7 @@ def input_load_save(save_id: str) -> None:
             loaded_dict["rhodes_island"].current_prisoners[
                 new_character_data.cid
             ] = [
-                cache.game_time,
+                game_time.now(),
                 0,
             ]
             update_count += 1
@@ -1034,8 +1042,11 @@ def input_load_save(save_id: str) -> None:
     # 去掉书籍配置里没有的书与书籍类型的引用
     update_count += _drop_unknown_books(loaded_dict)
 
-    # 更新各项设置
+    # 更新各项设置；系统设置是全局的，不随存档载入（还没有 settings.json 时，存档的设置成为全局设置）
     update_count += update_settings(loaded_dict)
+    from Script.Modules.save_load import settings
+
+    settings.adopt(loaded_dict.pop("all_system_setting"))
 
     # 更新大地图势力数据
     loaded_dict["country"] = attr_calculation.get_country_reset(
@@ -1065,7 +1076,56 @@ def input_load_save(save_id: str) -> None:
     # 有101/102阶段的孩子参与的群交、时停与H，各按自己的结束结算收尾（这些结算读写游戏缓存，须在覆盖缓存之后）
     old_chara_to_new.end_young_child_session(young_child_session)
 
-    # 游戏状态自检（系统设置14号，默认关闭）：对载入后的存档做保守修复，包在开关关闭时不会被导入
+
+CHARACTER_NUM_FIELDS = (
+    "hit_point",
+    "mana_point",
+    "sanity_point",
+    "eja_point",
+    "semen_point",
+    "tired_point",
+    "urinate_point",
+    "hunger_point",
+    "sleep_point",
+    "drunk_point",
+)
+""" 角色身上随时间结算的连续数值（Num）的属性名 """
+
+
+def exact_stats() -> None:
+    """
+    读档的 Reset 步骤：装好的缓存里随时间结算的数值是 float 时换成精确值（num.exact），整数与分数不动
+    数值：角色的 CHARACTER_NUM_FIELDS、体力与气力的上限（旧存档里可能是 float，时间结算拿它们作分母）与状态值，
+    污浊的累计吸收精液量、身体各部位的当前精液量与精液流通的剩余量，妊娠的奶量，玩家能力的当日理智消耗
+    """
+    for character in cache.character_data.values():
+        for name in (*CHARACTER_NUM_FIELDS, "hit_point_max", "mana_point_max"):
+            setattr(character, name, num.exact(getattr(character, name)))
+        status_data = character.status_data
+        for status_id, value in status_data.items():
+            status_data[status_id] = num.exact(value)
+        dirty = character.dirty
+        dirty.absorbed_total_semen = num.exact(dirty.absorbed_total_semen)
+        for part in dirty.body_semen.values():
+            part[1] = num.exact(part[1])
+        for flow in dirty.semen_flow:
+            for target in flow.get("targets", ()):
+                if "remaining_volume" in target:
+                    target["remaining_volume"] = num.exact(
+                        target["remaining_volume"]
+                    )
+        character.pregnancy.milk = num.exact(character.pregnancy.milk)
+        ability = character.pl_ability
+        ability.today_sanity_point_cost = num.exact(
+            ability.today_sanity_point_cost
+        )
+
+
+def repair_installed() -> None:
+    """
+    读档的 Reset 步骤，在角色投影之后：游戏状态自检（系统设置14号，默认关闭）对载入后的存档做保守修复，
+    包在开关关闭时不会被导入；修复改的是游戏缓存，不读内核的 GameState
+    """
     if cache.all_system_setting.base_setting.get(14, 0):
         from Script.Test import Static_Check as static_check_system
 
@@ -1257,92 +1317,55 @@ def update_map(loaded_dict: dict[str, Any]) -> int:
 
 def update_settings(loaded_dict: dict[str, Any]) -> int:
     """
-    更新设置
+    补全存档里的设置（难度、生殖方式、AI、体检、监禁调教），并给全局的角色口上选择补上缺的角色
     Keyword arguments:
     loaded_dict -- 存档数据
     """
     update_count = 0
-    zero_system_setting = attr_calculation.get_system_setting_zero()
-    base_setting = zero_system_setting.base_setting
-    if len(loaded_dict["all_system_setting"].base_setting) != len(base_setting):
-        for key in base_setting:
-            if key not in loaded_dict["all_system_setting"].base_setting:
-                loaded_dict["all_system_setting"].base_setting[key] = (
-                    base_setting[key]
-                )
-                update_count += 1
-        now_draw = draw.NormalDraw()
-        draw_text = _("\n系统设置已更新，如有需要请手动修改\n")
-        now_draw.style = "gold_enrod"
-        now_draw.text = draw_text
-        now_draw.draw()
-    draw_setting = zero_system_setting.draw_setting
-    if len(loaded_dict["all_system_setting"].draw_setting) != len(draw_setting):
-        for key in draw_setting:
-            if key not in loaded_dict["all_system_setting"].draw_setting:
-                loaded_dict["all_system_setting"].draw_setting[key] = (
-                    draw_setting[key]
-                )
-                update_count += 1
-        now_draw = draw.NormalDraw()
-        draw_text = _("\n绘制设置已更新，如有需要请手动修改\n")
-        now_draw.style = "gold_enrod"
-        now_draw.text = draw_text
-        now_draw.draw()
-    difficulty_setting = zero_system_setting.difficulty_setting
-    if len(loaded_dict["all_system_setting"].difficulty_setting) != len(
-        difficulty_setting
-    ):
+    # 难度与生殖方式是本存档的设置：旧存档把它们存在设置对象里，搬到存档自己的字段
+    for field_name in ("difficulty_setting", "birth_type_setting"):
+        if not loaded_dict.get(field_name):
+            loaded_dict[field_name] = dict(
+                getattr(loaded_dict["all_system_setting"], field_name, None)
+                or {}
+            )
+    difficulty_setting = attr_calculation.get_difficulty_setting_zero()
+    if len(loaded_dict["difficulty_setting"]) != len(difficulty_setting):
         for key in difficulty_setting:
-            if key not in loaded_dict["all_system_setting"].difficulty_setting:
-                loaded_dict["all_system_setting"].difficulty_setting[key] = (
-                    difficulty_setting[key]
-                )
+            if key not in loaded_dict["difficulty_setting"]:
+                loaded_dict["difficulty_setting"][key] = difficulty_setting[key]
                 update_count += 1
         now_difficulty = draw.NormalDraw()
         draw_text = _("\n难度设置已更新，如有需要请手动修改\n")
         now_difficulty.style = "gold_enrod"
         now_difficulty.text = draw_text
         now_difficulty.draw()
-    # 生殖方式设置（旧存档的设置对象里没有该属性，需先补空字典再逐项补默认值）
-    birth_type_setting = zero_system_setting.birth_type_setting
-    if not hasattr(loaded_dict["all_system_setting"], "birth_type_setting"):
-        loaded_dict["all_system_setting"].birth_type_setting = {}
-    if len(loaded_dict["all_system_setting"].birth_type_setting) != len(
-        birth_type_setting
-    ):
+    # 生殖方式设置（更旧的存档里没有该设置，逐项补默认值）
+    birth_type_setting = attr_calculation.get_birth_type_setting_zero()
+    if len(loaded_dict["birth_type_setting"]) != len(birth_type_setting):
         for key in birth_type_setting:
-            if key not in loaded_dict["all_system_setting"].birth_type_setting:
-                loaded_dict["all_system_setting"].birth_type_setting[key] = (
-                    birth_type_setting[key]
-                )
+            if key not in loaded_dict["birth_type_setting"]:
+                loaded_dict["birth_type_setting"][key] = birth_type_setting[key]
                 update_count += 1
         now_birth_type = draw.NormalDraw()
         draw_text = _("\n生殖方式设置已更新，如有需要请手动修改\n")
         now_birth_type.style = "gold_enrod"
         now_birth_type.text = draw_text
         now_birth_type.draw()
-    # 角色口上选择设置
-    character_text_version = zero_system_setting.character_text_version
-    # 获取玩家的女儿角色列表
-    daughter_characters = loaded_dict["character_data"][
+    # 角色口上选择设置是全局的：补上缺的角色与本存档女儿的默认值
+    character_text_version = (
+        attr_calculation.get_system_setting_zero().character_text_version
+    )
+    for daughter_cid in loaded_dict["character_data"][
         0
-    ].relationship.child_id_list
-    for daughter_cid in daughter_characters:
-        if daughter_cid not in character_text_version:
-            character_text_version[daughter_cid] = 1
-    if len(loaded_dict["all_system_setting"].character_text_version) != len(
-        character_text_version
-    ):
-        for key in character_text_version:
-            if (
-                key
-                not in loaded_dict["all_system_setting"].character_text_version
-            ):
-                loaded_dict["all_system_setting"].character_text_version[
-                    key
-                ] = character_text_version[key]
-                update_count += 1
+    ].relationship.child_id_list:
+        character_text_version.setdefault(daughter_cid, 1)
+    global_text_version = cache.all_system_setting.character_text_version
+    missing = character_text_version.keys() - global_text_version.keys()
+    for key in missing:
+        global_text_version[key] = character_text_version[key]
+    if missing:
+        update_count += len(missing)
         now_draw = draw.NormalDraw()
         draw_text = _("\n角色口上选择设置已更新，如有需要请手动修改\n")
         now_draw.style = "gold_enrod"

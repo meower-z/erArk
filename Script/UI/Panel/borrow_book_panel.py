@@ -9,9 +9,11 @@ from Script.Core import (
     constant,
 )
 from Script.UI.Moudle import draw
+from Script.Modules.tk_ui import player_pick
 from Script.Config import game_config, normal_config
 
 import random
+from Script.Design import game_time
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -47,7 +49,7 @@ def settle_library_book() -> None:
             now_choose_list.append(book_id)
         # 如果该类型的书籍超过3本，则随机选择其中的三本
         if len(now_choose_list) > 3:
-            now_choose_list = random.sample(now_choose_list, 3)
+            now_choose_list = player_pick.ui_random.sample(now_choose_list, 3)
         cache.rhodes_island.now_show_book_cid_of_type[book_type_cid] = (
             now_choose_list
         )
@@ -276,7 +278,7 @@ def add_borrow_history_record(character_id: int, book_id: int) -> None:
     new_record = {
         "book_id": book_id,
         "book_name": book_name,
-        "borrow_time": cache.game_time,
+        "borrow_time": game_time.now(),
         "return_time": None,
         "total_read_count": 0,
     }
@@ -301,7 +303,7 @@ def update_return_history_record(character_id: int, book_id: int) -> None:
     # 找到最近的未还书记录并更新
     for record in reversed(character_data.entertainment.borrow_book_history):
         if record["book_id"] == book_id and record["return_time"] is None:
-            record["return_time"] = cache.game_time
+            record["return_time"] = game_time.now()
             # 计算这本书的阅读次数（从角色的阅读进度记录中获取）
             if book_id in character_data.entertainment.read_book_progress:
                 # 简单的估算：进度除以30作为阅读次数（假设每次阅读增加30%左右进度）

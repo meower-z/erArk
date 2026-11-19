@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+from fractions import Fraction
 from typing import TypeGuard
 
 from Script.Core import cache_control
@@ -149,13 +150,13 @@ def _scene_key(position: object) -> str | None:
     return map_handle.get_map_system_path_str_for_list(position)
 
 
-def _num(x: object) -> TypeGuard[int | float]:
+def _num(x: object) -> TypeGuard[int | float | Fraction]:
     """
     参数: x 任意值
-    返回值: bool x为非bool的int/float时返回True
+    返回值: bool x为非bool的int/float/Fraction时返回True
     功能: 判断x是否为可安全参与大小比较的数值，排除bool（bool是int子类，会静默通过数值比较）
     """
-    return isinstance(x, (int, float)) and not isinstance(x, bool)
+    return isinstance(x, (int, float, Fraction)) and not isinstance(x, bool)
 
 
 # ============================== 一、时停 ==============================

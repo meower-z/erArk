@@ -1,307 +1,348 @@
 # -*- coding: UTF-8 -*-
 """
-erArk 无头测试 harness 模板
+erArk 无头行为循环诊断模板
 ==========================
-用途：不启动界面，加载存档、复刻指令、带护栏运行行为循环、逐轮内窥、内存模拟修复。
-用法：按 ==== 分段标记修改后，从仓库根目录运行：
-    timeout 240 ./.conda/python.exe -u harness_template.py
-    或以 heredoc 方式内联运行（<<'EOF' ... EOF）
-注意：
-  - 必须用 ./.conda/python.exe（裸 python 是商店空壳别名）
-  - 外层必须加 timeout。timeout 到时限会终止仍在运行的进程，例如陷入死循环的脚本。被 timeout 终止时 EXIT=124。
-  - 本脚本为只读诊断：只读存档入内存，不写任何文件；不要调用 establish_save / game_update_flow
-"""
+读档入内存，让玩家下一条真实指令，再带护栏地让内核一步一步推进（core.step），直到玩家下一次选行动。
+运行中可以查看指定角色每次选行动、开始行动前后的状态，也可以在内存里模拟候选修复。
+游戏世界取自被测 checkout 的 tests/world.py：FullWorld 完整启动游戏（结算器、状态机、界面流程），
+玩家输入由 world.player 给出。
+本脚本不存档：循环里会写文件的两处（玩家睡觉时的自动存档、临时外勤委托追加写 Commission.csv）被替换掉；
+但 FullWorld 启动时的 import auto_build_config 会在 CSV 变动时增量重建 data/ 下的生成物。
 
-from __future__ import annotations
+用法：按 ==== 分段标记修改后，从仓库根目录运行（外层必须加 timeout，输出重定向到文件再读）：
+    timeout 600 ./.conda/python.exe -u harness_template.py > <scratchpad>/run.log 2>&1
+需要存档：先把要读的存档放进 save/，再把 SAVE_ID 改成它的编号。
+
+退出码：0 推进到了玩家下一次选行动；1 时钟停在同一分钟超过步数上限（卡死），或玩家的指令没有开始；
+2 未捕获异常（存档不存在、推进中要玩家选择而没有安排输入，都落在这里）。
+判读：各角色开始行动的次数与内核步数随指令时长增长；是否异常以同一存档、同一指令的未修复基线为准。
+"""
 
 import io
 import os
-import sys
 import random
-from typing import TYPE_CHECKING
+import sys
+import traceback
 
-if TYPE_CHECKING:
-    import datetime
-
-# 从终端、管道或重定向文件运行时 sys.stdout 都是 TextIOWrapper
-assert isinstance(sys.stdout, io.TextIOWrapper)
-sys.stdout.reconfigure(
-    encoding="utf-8", errors="replace"
-)  # Windows GBK 控制台防乱码
-# 约定从仓库根目录运行本脚本；把当前工作目录加入 sys.path 以便 import 仓库根模块
-sys.path.insert(0, os.getcwd())
-
-# ==== 1. 初始化链（照抄 game.py 顺序，约3秒，顺序不能乱） ====
-import auto_build_config  # noqa: F401  增量构建游戏数据
-from Script.Config import normal_config
-from Script.Core import game_type, cache_control
-
-cache_control.cache = game_type.Cache()
-normal_config.init_normal_config()
-from Script.Config import game_config, character_config
-
-game_config.init()
-character_config.init_character_tem_data()
-from Script.Config import map_config
-
-map_config.init_map_data()
-from Script.Design import (  # noqa: E402
-    character_handle,
-    game_time,
-    character_behavior,
-    handle_npc_ai,
-    instuct_judege,
-    map_handle,
-    handle_premise,
-)
-import Script.Settle  # noqa: F401  注册全部结算器
-import Script.StateMachine  # noqa: F401  注册全部状态机
-from Script.Core import constant, save_handle, flow_handle
-from Script.UI.Moudle import draw
-from Script.System.Sex_System import drunk_sex_common
-
-character_handle.init_character_tem()
-game_time.init_time()
-
-# ==== 2. 屏蔽UI：所有绘制无操作化 + 记录感兴趣的文本 ====
-captured_messages: list[str] = []
-CAPTURE_KEYWORD = "吵醒"  # 改成要断言的文本关键词；不需要捕获则设为 None
+# ==== 0. 断言与收尾：finish() 打印断言汇总并以对应的退出码结束进程 ====
+FAILED: list[str] = []
+PASSED: list[str] = []
 
 
-def record_draw(self: draw.WaitDraw, *a: object, **k: object) -> None:
+def check(name, cond, extra=""):
     """
-    记录型绘制桩，不绘制任何内容：CAPTURE_KEYWORD 非空且绘制对象的 text 含该关键词时，
-    把去掉首尾空白的 text 追加到 captured_messages
+    记录并打印一条断言结果
     Keyword arguments:
-    self -- 绘制对象
+    name -- 断言名
+    cond -- 断言条件
+    extra -- 失败时附带打印的实际值
     Return arguments:
-    None
+    bool -- 断言是否通过
     """
-    if (
-        CAPTURE_KEYWORD
-        and getattr(self, "text", None)
-        and CAPTURE_KEYWORD in str(self.text)
+    (PASSED if cond else FAILED).append(name)
+    print(f"  [OK] {name}" if cond else f"  [FAIL] {name} {extra}", flush=True)
+    return bool(cond)
+
+
+def finish(code=None):
+    """
+    打印断言汇总并结束进程：全过退出码 0，有失败退出码 1
+    Keyword arguments:
+    code -- 指定退出码；None 时按断言结果决定
+    Return arguments:
+    无（进程直接退出）
+    """
+    print(
+        f"\nPASS={len(PASSED)} FAIL={len(FAILED)}",
+        *[f"  - {name}" for name in FAILED],
+        sep="\n",
+        flush=True,
+    )
+    os._exit(code if code is not None else (1 if FAILED else 0))
+
+
+def crash(exc_type, exc, tb):
+    """
+    未捕获异常：打印堆栈与汇总，以退出码 2 结束进程
+    Keyword arguments:
+    exc_type -- 异常类型
+    exc -- 异常对象
+    tb -- 回溯对象
+    Return arguments:
+    无（进程直接退出）
+    """
+    traceback.print_exception(exc_type, exc, tb)
+    finish(2)
+
+
+sys.excepthook = crash
+sys.path.insert(0, os.getcwd())  # 当前目录即被测 checkout 的根目录
+
+from tests.world import FullWorld
+
+world = FullWorld.load()
+cache = world.cache
+# 推进中要玩家选择时，按 world.player.press("按钮文字的一部分") 事先安排；没安排就抛 UnplannedInput（退出码 2），
+# 并列出屏幕上的按钮
+
+from Script.Core import io_init, save_handle
+from Script.Design import character_behavior, game_time, handle_npc_ai
+from Script.Kernel import core
+from Script.System.Field_Commission_System import field_commission_function
+from Script.System.Instruct_System import handle_instruct
+from tests.world import act
+
+# ==== 1. 读档 ====
+SAVE_ID = "<存档编号>"  # 存档目录 save/<SAVE_ID>/
+WATCH_NAME = "阿米娅"  # 重点观察的角色名；None 则不观察
+CAPTURE_KEYWORD = "吵醒"  # 结果里只打印含此关键词的屏幕文字；None 则全部打印
+captured_texts: list[str] = []
+"""输出时就收下的屏幕文字（world.player.screen 只留最近 400 段，循环跑完再筛会漏掉早先的文字）"""
+player_print = (
+    io_init.era_print
+)  # FullWorld 载入时由 world.player 换上的输出函数
+
+
+def capture_print(string, *args, **kwargs):
+    """
+    包装 io_init.era_print：含 CAPTURE_KEYWORD 的文字收进 captured_texts，再照常交给 world.player
+    Keyword arguments:
+    string -- 输出的文字
+    args / kwargs -- 原样传给原函数的其余参数
+    Return arguments:
+    原函数的返回值
+    """
+    if str(string).strip() and (
+        not CAPTURE_KEYWORD or CAPTURE_KEYWORD in str(string)
     ):
-        captured_messages.append(str(self.text).strip())
+        captured_texts.append(str(string))
+    return player_print(string, *args, **kwargs)
 
 
-for _cls_name in dir(draw):
-    _cls = getattr(draw, _cls_name)
-    if isinstance(_cls, type) and hasattr(_cls, "draw"):
-        try:
-            _cls.draw = lambda self, *a, **k: None
-        except Exception:
-            pass
-# WaitDraw 常用于关键提示，用记录型 stub
-setattr(draw.WaitDraw, "draw", record_draw)
-flow_handle.askfor_all = lambda *a, **k: ""
-flow_handle.askfor_wait = lambda *a, **k: None
+io_init.era_print = capture_print
 
-# ==== 3. 读档与状态体检 ====
-SAVE_ID = "5"  # 要加载的存档号
 save_handle.input_load_save(SAVE_ID)
-cache = cache_control.cache
 pl = cache.character_data[0]
+WATCH = {
+    cid
+    for cid, cd in cache.character_data.items()
+    if WATCH_NAME and cd.name == WATCH_NAME
+}
 
-WATCH_NAME = "阿米娅"  # 重点观察的角色名；None 则不按名找
-watch_id = None
-for _cid, _cd in cache.character_data.items():
-    if WATCH_NAME and _cd.name == WATCH_NAME:
-        watch_id = _cid
-        break
-WATCH = {watch_id} if watch_id is not None else set()
 
-print("== 存档体检 ==")
-print(
-    "game_time:",
-    cache.game_time,
-    "| 玩家位置:",
-    pl.position,
-    "| 玩家目标:",
-    pl.target_character_id,
-)
-if watch_id is not None:
-    _c = cache.character_data[watch_id]
-    _lv, _ = drunk_sex_common.get_drunk_level(watch_id)
-    print(
-        f"{_c.name}(id{watch_id}): 位置={_c.position} bhv={_c.behavior.behavior_id} dur={_c.behavior.duration}"
-        f" start={_c.behavior.start_time} state={_c.state}"
+def describe(cid):
+    """
+    把角色的行为与关键状态格式化成一行，供读档体检、逐轮内窥、结果判读共用
+    Keyword arguments:
+    cid -- 角色id
+    Return arguments:
+    str -- 状态描述
+    """
+    cd = cache.character_data[cid]
+    flag = cd.sp_flag
+    kernel = core.state().characters.get(str(cid))
+    end = (
+        game_time.at(kernel.action.start + kernel.action.duration)
+        if kernel
+        else "不在内核里"
     )
-    print(
-        f"  tired={_c.tired_point} sleep={_c.sleep_point} hp={_c.hit_point}/{_c.hit_point_max}"
-        f" mp={_c.mana_point}/{_c.mana_point_max} 醉酒lv={_lv} 安眠药={_c.h_state.body_item[9][1]}"
-    )
-    print(
-        f"  sp_flag: sleep={_c.sp_flag.sleep} sleep_h_awake={_c.sp_flag.sleep_h_awake}"
-        f" unconscious_h={_c.sp_flag.unconscious_h} is_h={_c.sp_flag.is_h} is_follow={_c.sp_flag.is_follow}"
+    return (
+        f"{cd.name}(id{cid}) 位置={cd.position} bhv={cd.behavior.behavior_id} dur={cd.behavior.duration}"
+        f" start={cd.behavior.start_time} state={cd.state} tired={cd.tired_point} sleep={cd.sleep_point}"
+        f" hp={cd.hit_point}/{cd.hit_point_max} mp={cd.mana_point}/{cd.mana_point_max}"
+        f" sp_flag(sleep={flag.sleep} unconscious_h={flag.unconscious_h} is_h={flag.is_h} is_follow={flag.is_follow})"
+        f" 内核行动结束于={end}"
     )
 
-# （可选）把玩家搬到观察角色所在场景：
-# map_handle.character_move_scene(pl.position, cache.character_data[watch_id].position, 0)
-# （可选）修改角色状态制造前置条件，如压低熟睡度确保进入吵醒判定：
-# cache.character_data[watch_id].sleep_point = 20
 
-# ==== 4. 控制随机分支（可选） ====
+print("== 读档体检 ==")
+print("game_time:", game_time.now())
+for _cid in [0, *sorted(WATCH)]:
+    print(" ", describe(_cid))
+
+# 按需制造前置条件，例如把玩家搬到观察角色所在场景、压低熟睡度：
+# map_handle.character_move_scene(pl.position, cache.character_data[next(iter(WATCH))].position, 0)
+# cache.character_data[next(iter(WATCH))].sleep_point = 20
+
+# ==== 2. 随机 ====
 random.seed(1)
-FORCE_RANDINT_MIN = True  # True=所有 randint 返回下界（概率判定必中）
+# True：只把 randint(1, 100) 的结果固定为 1，抽到 1 就命中的判定必中（如 rate >= randint(1, 100) 在 rate 至少为 1 时）；
+# 其他范围的 randint 照常随机（全换成下界会让 born_new_character 找空 id 的循环永不结束）
+FORCE_RANDINT_MIN = False
 if FORCE_RANDINT_MIN:
-    random.randint = lambda a, b: a
+    _real_randint = random.randint
+    random.randint = lambda a, b: (
+        1 if (a, b) == (1, 100) else _real_randint(a, b)
+    )
 
-# ==== 5. 复刻玩家指令（不进真实主循环！） ====
-BEHAVIOR = constant.Behavior.PLAY_INSTRUMENT  # 要模拟的行为常量
-STATE = constant.CharacterStatus.STATUS_PLAY_INSTRUMENT
+# ==== 3. 玩家的指令：act 里玩家第一次选行动时调用它，指令经 player_pick.choose 定下玩家的行动 ====
+# 换成被测指令的处理函数（Script/System/Instruct_System/handle_instruct.py 里 @add_instruct 的函数）；
+# 指令要面板选择时，先按 world.player.press 安排好输入
+INSTRUCT = handle_instruct.handle_play_instrument
 
-instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-pl.state = STATE
-pl.behavior.behavior_id = BEHAVIOR
-dur = max(game_config.config_behavior[BEHAVIOR].duration, 1)
-pl.behavior.duration = dur
-game_time.sub_time_now(dur)  # 真实流程也是先推进时间再进入行为循环
-print(
-    f"== 模拟指令 {BEHAVIOR} dur={dur} | 推进后 game_time: {cache.game_time} =="
-)
 
-# ==== 6. 逐轮内窥插桩（可选，排查轮内"赋予→掐死"时打开） ====
+# ==== 4. 内窥：对 WATCH 中的角色打印被包装函数调用前后的状态 ====
+def probe(module, func_name):
+    """
+    包装 module.func_name（首个参数须为角色id），对 WATCH 中的角色打印调用前后的状态
+    Keyword arguments:
+    module -- 函数所在模块；内核模块按 module.func_name 调用它，替换模块属性即生效
+    func_name -- 函数名
+    Return arguments:
+    无
+    """
+    original = getattr(module, func_name)
+
+    def wrapper(cid, *args, **kwargs):
+        """
+        被包装后的函数：调用原函数，并对观察角色打印前后状态
+        Keyword arguments:
+        cid -- 角色id
+        args / kwargs -- 原样传给原函数的其余参数
+        Return arguments:
+        原函数的返回值
+        """
+        if cid not in WATCH:
+            return original(cid, *args, **kwargs)
+        before = describe(cid)
+        result = original(cid, *args, **kwargs)
+        print(
+            f"    [{func_name}] 返回={result!r}\n      前: {before}\n      后: {describe(cid)}"
+        )
+        return result
+
+    setattr(module, func_name, wrapper)
+
+
 ENABLE_PROBE = True
 if ENABLE_PROBE and WATCH:
-    _orig_find = handle_npc_ai.find_character_target
+    probe(handle_npc_ai, "choose_state_machine")  # 干员选下一个行动的状态机
+    probe(handle_npc_ai, "judge_interrupt_character_behavior")
+    probe(
+        handle_npc_ai, "judge_student_leave_truncate"
+    )  # 学生赶去上课的截短，在实时结算之前调用
 
-    def _wrap_find(character_id: int, now_time: datetime.datetime) -> None:
-        """
-        调用原来的 find_character_target，角色在 WATCH 里时打印其行为 id、时长与状态
-        Keyword arguments:
-        character_id -- 角色id
-        now_time -- 原样传给原函数的时间
-        Return arguments:
-        None
-        """
-        _orig_find(character_id, now_time)
-        if character_id in WATCH:
-            cd = cache.character_data[character_id]
-            print(
-                f"    [find后] cid={character_id} bhv={cd.behavior.behavior_id} dur={cd.behavior.duration} "
-                f"state={cd.state}"
-            )
-
-    handle_npc_ai.find_character_target = _wrap_find
-    character_behavior.handle_npc_ai.find_character_target = (
-        _wrap_find  # 双保险
-    )
-
-    _orig_int = handle_npc_ai.judge_interrupt_character_behavior
-
-    def _wrap_int(character_id: int) -> int:
-        """
-        调用原来的 judge_interrupt_character_behavior，角色在 WATCH 里时打印调用前后的行为 id 与时长和返回值
-        Keyword arguments:
-        character_id -- 角色id
-        Return arguments:
-        int -- 原函数的返回值
-        """
-        pre = (
-            cache.character_data[character_id].behavior.behavior_id,
-            cache.character_data[character_id].behavior.duration,
-        )
-        r = _orig_int(character_id)
-        if character_id in WATCH:
-            cd = cache.character_data[character_id]
-            print(
-                f"    [中断判定] cid={character_id} 前={pre} 返回={r} 后=({cd.behavior.behavior_id},"
-                f"{cd.behavior.duration})"
-            )
-        return r
-
-    handle_npc_ai.judge_interrupt_character_behavior = _wrap_int
-    character_behavior.handle_npc_ai.judge_interrupt_character_behavior = (
-        _wrap_int
-    )
-
-    _orig_trunc = handle_npc_ai.judge_student_leave_truncate
-
-    def _wrap_trunc(character_id: int) -> bool:
-        """
-        调用原来的 judge_student_leave_truncate，角色在 WATCH 里且原函数返回真值时打印调用前后的行为时长
-        Keyword arguments:
-        character_id -- 角色id
-        Return arguments:
-        bool -- 原函数的返回值
-        """
-        pre = cache.character_data[character_id].behavior.duration
-        r = _orig_trunc(character_id)
-        if character_id in WATCH and r:
-            print(
-                f"    [学生截短] cid={character_id} 时长 {pre} → {cache.character_data[character_id].behavior.duration}"
-            )
-        return r
-
-    handle_npc_ai.judge_student_leave_truncate = _wrap_trunc
-    character_behavior.handle_npc_ai.judge_student_leave_truncate = _wrap_trunc
-
-# ==== 7. 内存模拟候选修复（可选：改源码前先验证收敛） ====
-# _orig_x = handle_npc_ai.judge_interrupt_character_behavior
+# ==== 5. 内存模拟候选修复（改源码前先在这里验证收敛） ====
+# _original = handle_npc_ai.judge_interrupt_character_behavior
 # def _patched(cid):
-#     cd = cache.character_data[cid]
 #     if <候选修复条件>:
 #         return 0
-#     return _orig_x(cid)
+#     return _original(cid)
 # handle_npc_ai.judge_interrupt_character_behavior = _patched
-# character_behavior.handle_npc_ai.judge_interrupt_character_behavior = _patched
 
-# ==== 8. 带护栏的行为循环（复刻 init_character_behavior 主干） ====
-PLAYER_PASS_LIMIT = 30
-NPC_PASS_LIMIT = 25
+# ==== 6. 带护栏地推进内核：act 一步一步调用 core.step，直到玩家下一次选行动 ====
+STEP_LIMIT = 500  # 时钟停在同一分钟时最多推进的步数；真死循环每步约 0.1 秒以内
 
-cache.over_behavior_character = set()
-g = 0
-pl_start = pl.behavior.start_time
-while 0 not in cache.over_behavior_character:
-    g += 1
-    if g > PLAYER_PASS_LIMIT:
-        print("!! 玩家阶段卡死")
-        break
-    pl_start = pl.behavior.start_time
-    character_behavior.character_behavior(0, cache.game_time, pl_start)
-print("玩家阶段轮数:", g)
 
-id_list = cache.npc_id_got.copy()
-id_list.discard(0)
-passes = 0
-stuck = False
-while len(cache.over_behavior_character) <= len(id_list):
-    passes += 1
-    if passes > NPC_PASS_LIMIT:
-        stuck = True
-        remain = [
-            (c, cache.character_data[c].name)
-            for c in id_list
-            if c not in cache.over_behavior_character
-        ]
-        print("!! NPC阶段死循环, 未完成(前8个):", remain[:8])
-        break
-    for cid in id_list:
-        if cid in cache.over_behavior_character:
-            continue
-        if cid in WATCH:
-            cd = cache.character_data[cid]
-            print(
-                f"[pass{passes}] 前: bhv={cd.behavior.behavior_id} dur={cd.behavior.duration}"
-                f" start={cd.behavior.start_time} state={cd.state}"
-            )
-        character_behavior.character_behavior(cid, cache.game_time, pl_start)
-        if cid in WATCH:
-            cd = cache.character_data[cid]
-            print(
-                f"[pass{passes}] 后: bhv={cd.behavior.behavior_id} dur={cd.behavior.duration}"
-                f" 完成={cid in cache.over_behavior_character}"
-            )
+class StepLimitReached(Exception):
+    """时钟停在同一分钟已推进 STEP_LIMIT 步，由护栏在下一步之前抛出以中止推进"""
 
-# ==== 9. 结果判读 ====
-print("NPC阶段轮数:", passes, "| 全部收敛:", not stuck)
-print("捕获文本:", captured_messages if captured_messages else "无")
-if watch_id is not None:
-    _c = cache.character_data[watch_id]
-    print(
-        f"{_c.name}最终: bhv={_c.behavior.behavior_id} dur={_c.behavior.duration} state={_c.state}"
-        f" 完成={watch_id in cache.over_behavior_character}"
-    )
-# 判读标准：玩家阶段通常1轮；NPC阶段个位数轮全部收敛；超限即活锁，"未完成"名单即卡死角色。
+
+saved_ids: list[str] = []
+
+
+def skip_save(save_id):
+    """
+    替换 save_handle.establish_save：只记下存档编号，不写文件（玩家睡觉后自动存档）
+    Keyword arguments:
+    save_id -- 存档编号
+    """
+    saved_ids.append(save_id)
+
+
+def skip_file_write(path, mode="r", *args, **kwargs):
+    """
+    替换 field_commission_function 模块里的 open：写模式丢进内存，
+    读模式照常打开（临时委托会追加写 data/csv/Commission.csv）
+    Keyword arguments:
+    path -- 文件路径
+    mode -- 打开模式
+    Return arguments:
+    文件对象；写模式时为丢弃内容的 io.StringIO
+    """
+    if any(flag in mode for flag in "wax+"):
+        return io.StringIO()
+    return open(path, mode, *args, **kwargs)
+
+
+save_handle.establish_save = skip_save
+# 模块里的 open 读的是模块全局名，没有就落到内置的 open
+vars(field_commission_function)["open"] = skip_file_write
+
+starts: dict[int, int] = {}
+"""每个角色开始行动的次数（character_behavior.settle_start 的调用数）"""
+same_minute: dict[int, int] = {}
+"""时钟停在当前这一分钟以来，每个角色开始行动的次数"""
+steps = 0
+"""内核推进的步数"""
+stalled = 0
+"""时钟停在当前这一分钟以来的步数"""
+real_settle_start = character_behavior.settle_start
+real_step = core.step
+
+
+def counted_settle_start(cid, minutes):
+    """
+    包装 settle_start：按角色计开始行动的次数，对 WATCH 中的角色打印开始前后的状态
+    Keyword arguments:
+    cid -- 角色id
+    minutes -- 行动的分钟数
+    """
+    starts[cid] = starts.get(cid, 0) + 1
+    same_minute[cid] = same_minute.get(cid, 0) + 1
+    if cid in WATCH:
+        print(f"[开始行动 第{starts[cid]}次] 前: {describe(cid)}")
+    real_settle_start(cid, minutes)
+    if cid in WATCH:
+        print(f"[开始行动 第{starts[cid]}次] 后: {describe(cid)}")
+
+
+def guarded_step():
+    """
+    包装 core.step：计步；时钟停在同一分钟跑满 STEP_LIMIT 步仍要再推进时抛出 StepLimitReached
+    """
+    global steps, stalled
+    if stalled >= STEP_LIMIT:
+        busiest = sorted(same_minute.items(), key=lambda kv: -kv[1])[:5]
+        raise StepLimitReached(
+            f"时钟停在 {game_time.now()} 已推进 {stalled} 步；这一分钟开始行动最多的角色: {busiest}"
+        )
+    clock = core.state().clock
+    real_step()
+    steps += 1
+    if core.state().clock == clock:
+        stalled += 1
+    else:
+        stalled = 0
+        same_minute.clear()
+
+
+character_behavior.settle_start = (
+    counted_settle_start  # 开始行动经 character_behavior.settle_start 调用它
+)
+core.step = guarded_step  # act 按 core.step 调用它
+limit_error = None
+clock_before = game_time.now()
+try:
+    act(INSTRUCT)
+except StepLimitReached as error:
+    limit_error = error
+
+# ==== 7. 结果 ====
+print()
+print(
+    f"内核步数: {steps} | 玩家开始行动: {starts.get(0, 0)} 次 | 干员开始行动最多: "
+    f"{max((n for cid, n in starts.items() if cid != 0), default=0)} 次 | 同一分钟步数上限 {STEP_LIMIT}"
+)
+print(
+    f"game_time: {clock_before} -> {game_time.now()} | 时停: {cache.time_stop_mode} | 被跳过的存档: {saved_ids or '无'}"
+)
+if limit_error:
+    print("!! 护栏中止了推进:", limit_error)
+for cid in sorted(WATCH):
+    print("最终:", describe(cid), f"开始行动 {starts.get(cid, 0)} 次")
+shown = [t.strip() for t in captured_texts]
+print("屏幕文字:", shown if shown else "无")
+check("玩家的指令开始了", starts.get(0, 0) >= 1, describe(0))
+check("推进到了玩家下一次选行动", limit_error is None, str(limit_error))
+finish()

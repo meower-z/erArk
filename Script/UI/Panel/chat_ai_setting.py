@@ -31,6 +31,27 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
+DEFAULT_ON = frozenset({7, 12, 14})
+""" 默认为1的设置id，其余默认为0 """
+
+
+def setting_of(cid: int) -> Any:
+    """
+    文本生成AI的一项设置，没有登记时为默认值
+    Keyword arguments:
+    cid -- 设置id
+    Return arguments:
+    Any -- 设置的值
+    """
+    return cache.ai_setting.ai_chat_setting.get(cid, int(cid in DEFAULT_ON))
+
+
+def fill_defaults() -> None:
+    """把没有登记的设置都写成默认值（改设置时调用，之后其他地方可以直接按id读）"""
+    for cid in game_config.config_ai_chat_setting:
+        cache.ai_setting.ai_chat_setting.setdefault(cid, int(cid in DEFAULT_ON))
+
+
 class Chat_Ai_Setting_Panel:
     """
     用于文本生成AI设置的面板对象
@@ -58,10 +79,7 @@ class Chat_Ai_Setting_Panel:
 
         title_text = _("文本生成AI设置")
         title_draw = draw.TitleLineDraw(title_text, self.width)
-        if (
-            1 not in cache.ai_setting.ai_chat_setting
-            or cache.ai_setting.ai_chat_setting[1] == 0
-        ):
+        if 1 not in cache.ai_setting.ai_chat_setting or setting_of(1) == 0:
             while 1:
                 return_list = []
                 title_draw.draw()
@@ -142,7 +160,7 @@ class Chat_Ai_Setting_Panel:
                 # 如果当前不是第1个设置，且第1个设置没有开启，则不显示后面的设置
                 if cid != 1 and (
                     1 not in cache.ai_setting.ai_chat_setting
-                    or cache.ai_setting.ai_chat_setting[1] == 0
+                    or setting_of(1) == 0
                 ):
                     break
                 line_feed.draw()
@@ -160,15 +178,7 @@ class Chat_Ai_Setting_Panel:
                 button_draw.draw()
                 return_list.append(button_draw.return_text)
 
-                # 如果没有该键，则创建一个，并置为0
-                if cid not in cache.ai_setting.ai_chat_setting:
-                    cache.ai_setting.ai_chat_setting[cid] = 0
-                    # 将部分选项默认设为1
-                    if cid in {7, 12, 14}:
-                        cache.ai_setting.ai_chat_setting[cid] = 1
-                now_setting_flag = cache.ai_setting.ai_chat_setting[
-                    cid
-                ]  # 当前设置的值
+                now_setting_flag = setting_of(cid)  # 当前设置的值
                 option_len = len(
                     game_config.config_ai_chat_setting_option[cid]
                 )  # 选项的长度
@@ -176,18 +186,18 @@ class Chat_Ai_Setting_Panel:
                 # 当前选择的选项的名字
                 # 自定义模型的名字
                 if cid == 5:
-                    button_text = f" [{cache.ai_setting.ai_chat_setting[cid]}] "
+                    button_text = f" [{setting_of(cid)}] "
                 # 自定义发送的数据
                 elif cid == 6:
                     button_text = _(" [调整发送的数据] ")
                 # 自定义base_url
-                elif cid == 10 and cache.ai_setting.ai_chat_setting[cid] == 1:
+                elif cid == 10 and setting_of(cid) == 1:
                     button_text = (
                         f" [{game_config.config_ai_chat_setting_option[cid][now_setting_flag]}] "
                         + cache.ai_setting.now_ai_chat_base_url
                     )
                 # 自定义代理
-                elif cid == 11 and cache.ai_setting.ai_chat_setting[cid] == 1:
+                elif cid == 11 and setting_of(cid) == 1:
                     button_text = (
                         f" [{game_config.config_ai_chat_setting_option[cid][now_setting_flag]}] "
                         + "ip："
@@ -244,7 +254,7 @@ class Chat_Ai_Setting_Panel:
                 return_list.append(button_draw.return_text)
 
             # api密钥
-            if cache.ai_setting.ai_chat_setting[1] == 1:
+            if setting_of(1) == 1:
                 line_feed.draw()
                 line_feed.draw()
 
@@ -342,7 +352,7 @@ class Chat_Ai_Setting_Panel:
                 return_list.append(button_draw.return_text)
 
             # 测试按钮
-            if cache.ai_setting.ai_chat_setting[1] == 1:
+            if setting_of(1) == 1:
                 line_feed.draw()
                 line_feed.draw()
                 button_text = _("  [测试](最大延迟上限10秒) ")
@@ -357,7 +367,7 @@ class Chat_Ai_Setting_Panel:
                 elif self.test_flag == 1:
                     info_text = (
                         _(" \n  测试通过，当前调用的模型为：")
-                        + cache.ai_setting.ai_chat_setting[5]
+                        + setting_of(5)
                         + "\n"
                     )
                     info_draw = draw.NormalDraw()
@@ -406,6 +416,7 @@ class Chat_Ai_Setting_Panel:
 
     def change_setting(self, cid: int, option_len: int) -> None:
         """修改设置"""
+        fill_defaults()
         # 自定义模型的名字
         if cid == 5:
             line_feed.draw()

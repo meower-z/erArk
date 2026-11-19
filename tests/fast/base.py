@@ -18,7 +18,7 @@ class FastTestCase(unittest.TestCase):
 
     def setUp(self) -> None:
         """
-        复原小世界并重设随机源
+        复原小世界并重设随机源；内核换成没有角色的开局时钟（同读档，各插件的 Reset 钩子清掉自己的状态）
         Keyword arguments:
         无
         Return arguments:

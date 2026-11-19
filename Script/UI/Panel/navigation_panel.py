@@ -37,7 +37,7 @@ def judge_arrive() -> bool:
 
     if cache.rhodes_island.move_target_and_time[0] != 0:
         if game_time.judge_date_big_or_small(
-            cache.game_time, cache.rhodes_island.move_target_and_time[2]
+            game_time.now(), cache.rhodes_island.move_target_and_time[2]
         ):
             # 结算抵达
             now_scene_id = cache.rhodes_island.current_location[0]
@@ -57,7 +57,7 @@ def judge_arrive() -> bool:
                         now_diplomat_chara_id,
                         1,
                         change_data=game_type.CharacterStatusChange(),
-                        now_time=cache.game_time,
+                        now_time=game_time.now(),
                     )
             if target_scene_id in cache.rhodes_island.diplomat_of_country:
                 target_diplomat_chara_id = (
@@ -68,7 +68,7 @@ def judge_arrive() -> bool:
                         target_diplomat_chara_id,
                         1,
                         change_data=game_type.CharacterStatusChange(),
-                        now_time=cache.game_time,
+                        now_time=game_time.now(),
                     )
             # 清零移动目标
             cache.rhodes_island.move_target_and_time = [0, 0, 0]
@@ -175,11 +175,11 @@ class Base_function_class:
             if birthplace_data.name == scene_name:
                 cache.rhodes_island.move_target_and_time[0] = birthplace_id
                 arrive_time = game_time.get_sub_date(
-                    day=need_time, old_date=cache.game_time
+                    day=need_time, old_date=game_time.now()
                 )
                 # debug模式下直接抵达
                 if cache.debug_mode:
-                    arrive_time = cache.game_time
+                    arrive_time = game_time.now()
                 cache.rhodes_island.move_target_and_time[2] = arrive_time
                 cache.rhodes_island.materials_resouce[15] -= need_fuel
                 break

@@ -19,6 +19,7 @@ from Script.Design import (
 )
 from Script.UI.Moudle import draw, panel
 from Script.Config import game_config, normal_config
+from Script.Modules.save_load import reset
 
 import random
 
@@ -39,6 +40,36 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
+
+
+@reset.repair
+def repair_recruit_lines() -> None:
+    """旧存档修补：待确认招募里不存在的角色id去掉，主招聘专员不是整数的改为 0，停止招募（策略 11）的线进度归 0"""
+    ri = cache.rhodes_island
+    ri.recruited_id = {
+        cid for cid in ri.recruited_id if cid and cid in cache.character_data
+    }
+    for line in ri.recruit_line.values():
+        if not isinstance(line[2], int):
+            line[2] = 0
+        if line[1] == 11:
+            line[0] = 0
+
+
+def can_recruit() -> bool:
+    """
+    是否可以确认招募：有空余宿舍且有待确认的干员；宿舍已满时绘制提示。只读
+    Return arguments:
+    bool -- 可以招募时为 True
+    """
+    if len(cache.npc_id_got) >= cache.rhodes_island.people_max:
+        now_draw = draw.WaitDraw()
+        now_draw.width = window_width
+        now_draw.style = "gold_enrod"
+        now_draw.text = _("\n\n   ※ 空余宿舍不足，无法招募 ※\n\n")
+        now_draw.draw()
+        return False
+    return bool(len(cache.rhodes_island.recruited_id))
 
 
 def recruit_new_chara() -> bool:
@@ -307,10 +338,7 @@ def calculate_recruit_line_efficiency(line_id: int) -> tuple[str, float]:
     # 当前设施效率
     facility_effect = basement.calc_facility_efficiency(7)
 
-    # 如果变量类型不是int，则改为0
-    if not isinstance(cache.rhodes_island.recruit_line[line_id][2], int):
-        cache.rhodes_island.recruit_line[line_id][2] = 0
-    # 招募效率(使用主/副招聘专员机制)
+    # 招募效率(使用主/副招聘专员机制)，不是整数的主招聘专员由读档修补改为 0
     line_main_id = cache.rhodes_island.recruit_line[line_id][2]
     main_name = (
         cache.character_data[line_main_id].name
@@ -319,10 +347,7 @@ def calculate_recruit_line_efficiency(line_id: int) -> tuple[str, float]:
     )
     # 全部主招聘专员
     main_ids = set()
-    # 全部主招聘专员如果不是int，则改为0
     for i in cache.rhodes_island.recruit_line:
-        if not isinstance(cache.rhodes_island.recruit_line[i][2], int):
-            cache.rhodes_island.recruit_line[i][2] = 0
         main_ids.add(cache.rhodes_island.recruit_line[i][2])
     # 计算加成
     total_bonus = 0.0
@@ -436,9 +461,8 @@ class Recruit_Panel:
             else:
                 now_text += _("  当前已招募待确认的干员有：")
                 for chara_id in cache.rhodes_island.recruited_id:
-                    # 如果角色id不存在或为0，则pop并跳过
+                    # 不存在的角色id由读档修补 repair_recruit_lines 去掉
                     if chara_id == 0 or chara_id not in cache.character_data:
-                        cache.rhodes_island.recruited_id.remove(chara_id)
                         continue
                     character_data: game_type.Character = cache.character_data[
                         chara_id
@@ -606,8 +630,6 @@ class Recruit_Panel:
                 detail_str, _total_bonus = calculate_recruit_line_efficiency(
                     recruit_line_id
                 )
-                if recruitment_strategy_id == 11:
-                    cache.rhodes_island.recruit_line[recruit_line_id][0] = 0
 
                 # 绘制效率加成文本，并将"空缺"标为橘色（warning样式）
                 full_detail = "    " + detail_str
@@ -1145,10 +1167,11 @@ class Recruit_Panel:
     def change_recruit_line_produce(
         self, asrecruit_line_id: int, recruitment_strategy_cid: int
     ) -> None:
-        """更改招募线的策略"""
-        cache.rhodes_island.recruit_line[asrecruit_line_id][
-            1
-        ] = recruitment_strategy_cid
+        """更改招募线的策略，改为停止招募（策略 11）时进度归 0"""
+        line = cache.rhodes_island.recruit_line[asrecruit_line_id]
+        line[1] = recruitment_strategy_cid
+        if recruitment_strategy_cid == 11:
+            line[0] = 0
 
     def settle_npc_id(self, chara_id: int) -> None:
         """结算干员的id变更"""

@@ -81,7 +81,7 @@ wait_texts = world.wait_texts  # WaitDraw 文本，断言「某段提示是否�
 import Script.Settle  # 结算器靠装饰器注册，MinimalWorld 不导入它
 from Script.Config import game_config
 from Script.Core import constant, game_type
-from Script.Design import attr_calculation, handle_premise
+from Script.Design import attr_calculation, game_time, handle_premise
 
 pl = world.chara(0, "博士")
 
@@ -103,7 +103,7 @@ target = world.chara(101, "样例干员")
 pl.target_character_id = 101
 change = game_type.CharacterStatusChange()
 constant.settle_behavior_effect_data[62](
-    0, 1, change, cache.game_time
+    0, 1, change, game_time.now()
 )  # 交互对象增加少量反感
 check(
     "结算器改动了交互对象的反感",

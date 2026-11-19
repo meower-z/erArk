@@ -11,6 +11,7 @@ from Script.Core import (
     constant,
     py_cmd,
     game_type,
+    num,
 )
 from Script.UI.Moudle import panel, draw
 from Script.Config import game_config, normal_config
@@ -64,7 +65,7 @@ def use_drug(item_id: int) -> None:
             pl_character_data.name,
             item_data.name,
             effect_add,
-            pl_character_data.sanity_point,
+            num.shown(pl_character_data.sanity_point),
             pl_character_data.sanity_point_max,
         )
     # 精力恢复剂
@@ -80,7 +81,7 @@ def use_drug(item_id: int) -> None:
             pl_character_data.name,
             item_data.name,
             effect_add,
-            pl_character_data.semen_point,
+            num.shown(pl_character_data.semen_point),
             pl_character_data.semen_point_max,
         )
     # 解酒药
@@ -105,7 +106,7 @@ def use_drug(item_id: int) -> None:
                 pl_character_data.name,
                 item_data.name,
                 effect_add,
-                pl_character_data.drunk_point,
+                num.shown(pl_character_data.drunk_point),
             )
     # 阴茎增大
     elif item_id == 16:

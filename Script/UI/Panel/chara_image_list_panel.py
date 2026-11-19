@@ -9,6 +9,7 @@ from Script.Core import (
     text_handle,
 )
 from Script.Design import handle_premise, cross_section_image, character_image
+from Script.Modules.tk_ui import player_pick
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -161,6 +162,7 @@ class CharacterImageButton:
 
     def change_target(self) -> None:
         """改变玩家当前交互对象"""
-        player_data: game_type.Character = cache.character_data[0]
-        if self.character_id:
-            player_data.target_character_id = self.character_id
+        with player_pick.drafting("portrait target"):
+            player_data: game_type.Character = cache.character_data[0]
+            if self.character_id:
+                player_data.target_character_id = self.character_id

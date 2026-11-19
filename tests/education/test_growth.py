@@ -26,6 +26,7 @@ from Script.System.Pregnancy_System import pregnancy_constant  # noqa: E402
 from Script.Design import handle_ability
 import inspect
 from Script.System.Official_Event_System import official_event_handle
+from tests import world
 
 open_all_classroom()
 clear_schedules()
@@ -577,9 +578,9 @@ set_time(period_time(2))
 g.last_absent_period = []
 check(
     "这一节没记缺课：False",
-    not growth_handle.judge_absent_this_period(201, cache.game_time),
+    not growth_handle.judge_absent_this_period(201, game_time.now()),
 )
-g.last_absent_period = [cache.game_time.toordinal(), 2]
+g.last_absent_period = [game_time.now().toordinal(), 2]
 _next_day = DEFAULT_TIME.date() + datetime.timedelta(days=1)
 check(
     "这一节记了缺课：同一节里任一时刻为 True；下一节、节次外、别的日期为 False",
@@ -767,19 +768,19 @@ check(
 )
 
 section(
-    "Plan 32 M1：阶段进度与出生日期无关（全年 120 个出生日期，用真实时钟 sub_time_now 逐日推进）"
+    "Plan 32 M1：阶段进度与出生日期无关（全年 120 个出生日期，用 world.set_clock 逐日拨时钟）"
 )
-_saved_time = cache.game_time
+_saved_time = game_time.now()
 _saved_born = baby.pregnancy.born_time
 _new_count = {}
 for _month in game_time.SEASON_MONTH_LIST:
     for _day in range(1, game_time.SEASON_DAY + 1):
         # 06:00 出生，此后每天 00:05（跨天结算派养成事件的时刻）取样，直到有效成长天数满婴儿期（长成幼女）
         baby.pregnancy.born_time = GT(2026, _month, _day, 6, 0)
-        cache.game_time = GT(2026, _month, _day, 0, 5)
+        world.set_clock(GT(2026, _month, _day, 0, 5))
         _new_count[(_month, _day)] = 0
         for _step in range(pregnancy_constant.REARING_COMPLETE_DAY + 10):
-            game_time.sub_time_now(day=1)
+            world.set_clock(game_time.get_sub_date(day=1))
             _grow_day = pregnancy_handle.get_child_grow_day(203)
             if _grow_day >= pregnancy_constant.REARING_COMPLETE_DAY:
                 break
@@ -799,15 +800,15 @@ check(
 
 section("Plan 32 M1：9/7 出生的婴儿跨过季月交替，本阶段天数与进度只走一天")
 baby.pregnancy.born_time = GT(2026, 9, 7, 6, 0)
-cache.game_time = GT(2026, 9, 30, 0, 5)
+world.set_clock(GT(2026, 9, 30, 0, 5))
 _day_before = growth_handle.get_stage_day(203)
 _progress_before = growth_handle.get_stage_progress(203)
 _grow_before = pregnancy_handle.get_child_grow_day(203)
-game_time.sub_time_now(day=1)
+world.set_clock(game_time.get_sub_date(day=1))
 check(
     "M1 真实时钟：9/30 的下一天是 12/1",
-    cache.game_time == DT(2026, 12, 1, 0, 5),
-    cache.game_time,
+    game_time.now() == DT(2026, 12, 1, 0, 5),
+    game_time.now(),
 )
 check(
     "M1 成长天数一夜 +1",
@@ -973,19 +974,19 @@ check(
 )
 
 section(
-    "Plan 32 实施复审补：M1 萝莉期 Growth|3_GE_70 的窗口（全年 120 个出生日期，用真实时钟 sub_time_now 逐日推进萝莉期）"
+    "Plan 32 实施复审补：M1 萝莉期 Growth|3_GE_70 的窗口（全年 120 个出生日期，用 world.set_clock 逐日拨时钟萝莉期）"
 )
-_saved_time = cache.game_time
+_saved_time = game_time.now()
 _saved_born_loli = student.pregnancy.born_time
 _loli_ge70 = {}
 for _month in game_time.SEASON_MONTH_LIST:
     for _day in range(1, game_time.SEASON_DAY + 1):
         # 06:00 出生，此后每天 00:05（跨天结算派养成事件的时刻）取样；只数有效成长天数落在萝莉期的日子
         student.pregnancy.born_time = GT(2026, _month, _day, 6, 0)
-        cache.game_time = GT(2026, _month, _day, 0, 5)
+        world.set_clock(GT(2026, _month, _day, 0, 5))
         _loli_ge70[(_month, _day)] = 0
         for _step in range(pregnancy_constant.GROW_TO_GIRL_DAY + 10):
-            game_time.sub_time_now(day=1)
+            world.set_clock(game_time.get_sub_date(day=1))
             _grow_day = pregnancy_handle.get_child_grow_day(201)
             if _grow_day >= pregnancy_constant.GROW_TO_GIRL_DAY:
                 break
@@ -1009,23 +1010,23 @@ check(
 section(
     "Plan 32 实施复审补：M1 婴儿期阶段进度 ≥ 50 首次成立的日子严格早于 ≥ 60（逐个出生日期，真实时钟）"
 )
-_saved_time = cache.game_time
+_saved_time = game_time.now()
 _saved_born_baby = baby.pregnancy.born_time
 _first_gap = {}
 for _month in game_time.SEASON_MONTH_LIST:
     for _day in range(1, game_time.SEASON_DAY + 1):
         baby.pregnancy.born_time = GT(2026, _month, _day, 6, 0)
-        cache.game_time = GT(2026, _month, _day, 0, 5)
+        world.set_clock(GT(2026, _month, _day, 0, 5))
         _first: dict[int, datetime.datetime | None] = {50: None, 60: None}
         for _step in range(pregnancy_constant.REARING_COMPLETE_DAY + 10):
-            game_time.sub_time_now(day=1)
+            world.set_clock(game_time.get_sub_date(day=1))
             _grow_day = pregnancy_handle.get_child_grow_day(203)
             if _grow_day >= pregnancy_constant.REARING_COMPLETE_DAY:
                 break
             _progress = growth_handle.get_stage_progress(203)
             for _line in (50, 60):
                 if _first[_line] is None and _progress >= _line:
-                    _first[_line] = cache.game_time
+                    _first[_line] = game_time.now()
         _first_gap[(_month, _day)] = (
             game_time.count_play_day(_first[50], _first[60])
             if _first[50] and _first[60] and _first[50] < _first[60]
@@ -1085,11 +1086,11 @@ check(
 check(
     "M1 加速药：本阶段天数 = 从「出生 + (萝莉阈值 − 30) 天」数到此刻 = 36",
     growth_handle.get_stage_day(212)
-    == game_time.count_play_day(_accel_start, cache.game_time)
+    == game_time.count_play_day(_accel_start, game_time.now())
     == 36,
     (
         growth_handle.get_stage_day(212),
-        game_time.count_play_day(_accel_start, cache.game_time),
+        game_time.count_play_day(_accel_start, game_time.now()),
     ),
 )
 check(

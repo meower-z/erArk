@@ -17,6 +17,7 @@ from _bootstrap import (
     semester_handle,
 )
 from Script.System.Official_Event_System import official_event_handle
+from Script.Design import game_time
 
 section("CHILD_GROWTH 字段级回填")
 mother = make_character(102, "母亲", 0)
@@ -124,7 +125,7 @@ section(
     "Plan 32 L22：挪了桶的养成事件，履历里的旧 uid 读档时改成新 uid（萝莉 1 / 20 / 26 → 期末 17 / 18 / 19）"
 )
 
-_record = {"time": cache.game_time, "choice": 2}
+_record = {"time": game_time.now(), "choice": 2}
 ga.event_history = {
     "萝莉1": dict(_record),
     "萝莉20": dict(_record),

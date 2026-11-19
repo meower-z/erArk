@@ -285,7 +285,7 @@ def handle_game_time_is_sleep_time(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_hour = cache.game_time.hour
+    now_hour = game_time.now().hour
     if now_hour in {0, 1, 2, 3, 4, 5, 22, 23}:
         return 1
     return 0
@@ -583,7 +583,7 @@ def handle_today_is_healty_check_day(character_id: int) -> int:
             return 1
     # 否则手动检查当前星期
     else:
-        now_week_day = cache.game_time.weekday()
+        now_week_day = game_time.now().weekday()
         if (
             now_week_day
             in cache.rhodes_island.manually_selected_exam_week_day_list
@@ -757,7 +757,7 @@ def handle_still_30_minutes_before_end(character_id: int) -> int:
     end_time = game_time.get_sub_date(
         minute=character_data.behavior.duration, old_date=start_time
     )
-    now_time = cache.game_time
+    now_time = game_time.now()
     true_add_time = int((now_time - end_time).total_seconds() / 60)
     if true_add_time >= 30:
         return 1
@@ -783,7 +783,7 @@ def handle_chara_behavior_end_time_lateer_than_game_time(
     end_time = game_time.get_sub_date(
         minute=character_data.behavior.duration, old_date=start_time
     )
-    now_time = cache.game_time
+    now_time = game_time.now()
     if game_time.judge_date_big_or_small(end_time, now_time) == 1:
         return 1
     return 0
@@ -798,7 +798,7 @@ def handle_time_over_a_year(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_time = cache.game_time
+    now_time = game_time.now()
     if now_time.year >= 2021:
         return 1
     elif now_time.year == 2020 and now_time.month >= 3:
@@ -815,7 +815,7 @@ def handle_time_spring(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_time = cache.game_time
+    now_time = game_time.now()
     if now_time.month == 3:
         return 1
     return 0
@@ -830,7 +830,7 @@ def handle_time_summer(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_time = cache.game_time
+    now_time = game_time.now()
     if now_time.month == 6:
         return 1
     return 0
@@ -845,7 +845,7 @@ def handle_time_autumn(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_time = cache.game_time
+    now_time = game_time.now()
     if now_time.month == 9:
         return 1
     return 0
@@ -860,7 +860,7 @@ def handle_time_winter(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_time = cache.game_time
+    now_time = game_time.now()
     if now_time.month == 12:
         return 1
     return 0

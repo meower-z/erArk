@@ -8,10 +8,12 @@ from Script.Core import (
     game_type,
     text_handle,
     constant,
+    num,
 )
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation
 from Script.UI.Panel import hypnosis_panel
+from Script.Design import game_time
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -154,7 +156,7 @@ def get_now_class_tip(character_id: int) -> tuple[bool, str] | None:
             and now_course["course_type"]
             not in education_constant.CLASSROOM_COURSE_TYPE_SET
         ):
-            now_time = character_data.behavior.start_time or cache.game_time
+            now_time = character_data.behavior.start_time or game_time.now()
             if (
                 behavior_id == constant.Behavior.REST
                 or character_data.sp_flag.is_h
@@ -388,7 +390,7 @@ def get_character_status_list(
             left_minute = int(
                 (
                     character_data.action_info.sleep_disturbed_end_time
-                    - cache.game_time
+                    - game_time.now()
                 ).total_seconds()
                 // 60
             )
@@ -741,7 +743,7 @@ class CharacterInfoHead:
         hp_draw.set(
             "HitPointbar",
             int(character_data.hit_point_max),
-            int(character_data.hit_point),
+            num.shown(character_data.hit_point),
             _("体力"),
             tooltip=_("体力，最低为1时会疲劳到无法行动"),
         )
@@ -751,7 +753,7 @@ class CharacterInfoHead:
         mp_draw.set(
             "ManaPointbar",
             int(character_data.mana_point_max),
-            int(character_data.mana_point),
+            num.shown(character_data.mana_point),
             _("气力"),
             tooltip=_("气力，精神上的耐力，最低为0时使体力的消耗增加"),
         )
@@ -768,7 +770,7 @@ class CharacterInfoHead:
             sanity_point_draw.set(
                 "SanityPointbar",
                 int(character_data.sanity_point_max),
-                int(character_data.sanity_point),
+                num.shown(character_data.sanity_point),
                 _("理智"),
                 tooltip=_("理智，使用源石技艺时消耗"),
             )
@@ -786,7 +788,7 @@ class CharacterInfoHead:
             semen_point_draw.set(
                 "SemenPointBar",
                 int(character_data.semen_point_max),
-                int(
+                num.shown(
                     character_data.semen_point
                     + character_data.tem_extra_semen_point
                 ),

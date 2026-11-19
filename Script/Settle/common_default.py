@@ -1,21 +1,23 @@
 """通用结算函数：体力与气力、状态与快感、好感与信赖、绝顶与经验的基础结算"""
 
+from fractions import Fraction
 from types import FunctionType
 from Script.Design import (
     character_handle,
     map_handle,
     attr_calculation,
-    handle_npc_ai,
     handle_premise,
     handle_ability,
 )
 from Script.System.First_Record_System import first_record_handle
-from Script.Core import cache_control, constant, game_type, get_text
+from Script.Core import cache_control, constant, game_type, get_text, num
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from Script.UI.Panel import ejaculation_panel, system_setting
 
-import random, math
+import math
+import random
+from Script.Design import game_time
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -131,7 +133,6 @@ def base_chara_hp_mp_common_settle(
                 ]
                 target_change.hit_point += mp_value
             character_data.hit_point = max(1, character_data.hit_point)
-            handle_npc_ai.judge_character_tired_sleep(character_id)
         # 交互对象也同样
         if (
             target_flag
@@ -180,8 +181,6 @@ def base_chara_hp_mp_common_settle(
         character_data.hit_point = min(
             character_data.hit_point_max, character_data.hit_point
         )
-        # 检测hp1导致的疲劳
-        handle_npc_ai.judge_character_tired_sleep(character_id)
         # 交互对象也同样
         if (
             target_flag
@@ -207,21 +206,21 @@ def base_chara_hp_mp_common_settle(
                 target_character_data.hit_point_max,
                 target_character_data.hit_point,
             )
-            handle_npc_ai.judge_character_tired_sleep(target_character_id)
 
 
 def base_chara_state_common_settle(
     character_id: int,
-    add_time: int,
+    add_time: num.Num,
     state_id: int,
     base_value: int = 30,
     ability_level: int = -1,
-    extra_adjust: float = 0,
+    extra_adjust: num.Num | float = 0,
     tenths_add: bool = True,
     change_data: (
         game_type.CharacterStatusChange | game_type.TargetChange | None
     ) = None,
     change_data_to_target_change: game_type.CharacterStatusChange | None = None,
+    exact: bool = False,
 ) -> None:
     """
     基础角色状态通用结算函数\n
@@ -234,7 +233,8 @@ def base_chara_state_common_settle(
     extra_adjust -- 额外系数\n
     tenths_add -- 是否额外增加十分之一\n
     change_data -- 结算信息记录对象\n
-    change_data_to_target_change -- 交互对象的结算信息记录对象
+    change_data_to_target_change -- 交互对象的结算信息记录对象\n
+    exact -- 时间结算传 True，最终值保留精确值；一次性的行动效果为 False，最终值截断为整数
     """
     character_data: game_type.Character = cache.character_data[character_id]
     pl_character_data: game_type.Character = cache.character_data[0]
@@ -311,14 +311,16 @@ def base_chara_state_common_settle(
                     continuous_adjust = max(0.4, continuous_adjust)
                     final_adjust *= continuous_adjust
 
-    # 最终值
-    final_value = time_base_value * final_adjust
+    # 最终值：系数是浮点，在这里转为精确值
+    final_value = time_base_value * num.exact(final_adjust)
     if tenths_add:
-        # 最大不超过3倍最终值
-        tenths_value = character_data.status_data[state_id] / 10
-        tenths_value = min(3 * final_value, tenths_value)
-        final_value += tenths_value
-    final_value = int(final_value)
+        # 现有状态值（整数部分）的十分之一，最大不超过3倍最终值
+        tenths_value = Fraction(
+            num.whole(character_data.status_data[state_id]), 10
+        )
+        final_value += min(3 * final_value, tenths_value)
+    if not exact:
+        final_value = int(final_value)
 
     # 心控-苦痛快感化，将苦痛状态转化为快感状态
     if (
@@ -335,6 +337,7 @@ def base_chara_state_common_settle(
             tenths_add=False,
             change_data=change_data,
             change_data_to_target_change=change_data_to_target_change,
+            exact=exact,
         )
         return
 
@@ -355,6 +358,7 @@ def base_chara_state_common_settle(
             final_value,
             change_data,
             change_data_to_target_change,
+            exact,
         )
 
     # 结算信息记录对象
@@ -477,7 +481,7 @@ def chara_feel_state_adjust(
         other_npc_num = min(10, other_npc_num)
         final_adjust += other_npc_num * 0.02
     # 系统难度修正
-    now_difficulty = cache.all_system_setting.difficulty_setting[2]
+    now_difficulty = cache.difficulty_setting[2]
     difficulty_adjust = system_setting.get_difficulty_coefficient(
         now_difficulty
     )
@@ -593,7 +597,7 @@ def chara_base_state_adjust(
         other_npc_num = min(10, other_npc_num)
         final_adjust += other_npc_num * 0.05
     # 系统难度修正
-    now_difficulty = cache.all_system_setting.difficulty_setting[3]
+    now_difficulty = cache.difficulty_setting[3]
     difficulty_adjust = system_setting.get_difficulty_coefficient(
         now_difficulty
     )
@@ -634,11 +638,12 @@ def chara_base_state_adjust(
 def extra_feel_settle(
     character_id: int,
     state_id: int,
-    final_value: float,
+    final_value: num.Num,
     change_data: (
         game_type.CharacterStatusChange | game_type.TargetChange | None
     ),
     change_data_to_target_change: game_type.CharacterStatusChange | None,
+    exact: bool = False,
 ) -> None:
     """
     顺从对恭顺、露出对羞耻、施虐对先导、受虐对苦痛而产生的额外快感
@@ -648,12 +653,13 @@ def extra_feel_settle(
     final_value -- 最终值
     change_data -- 状态变更信息记录对象
     change_data_to_target_change -- 状态变更信息记录对象
+    exact -- 同 base_chara_state_common_settle：False 时额外快感的量截断为整数
     """
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    final_value = max(10, final_value / 20)
-    final_value = int(final_value)
+    share: num.Num = Fraction(final_value, 20)
+    final_value = max(10, share) if exact else int(max(10, share))
 
     # 顺从对恭顺
     if state_id == 10 and character_data.ability[31] >= 5:
@@ -666,6 +672,7 @@ def extra_feel_settle(
             tenths_add=False,
             change_data=change_data,
             change_data_to_target_change=change_data_to_target_change,
+            exact=exact,
         )
         base_chara_experience_common_settle(
             character_id,
@@ -684,6 +691,7 @@ def extra_feel_settle(
             tenths_add=False,
             change_data=change_data,
             change_data_to_target_change=change_data_to_target_change,
+            exact=exact,
         )
         base_chara_experience_common_settle(
             character_id,
@@ -702,6 +710,7 @@ def extra_feel_settle(
             tenths_add=False,
             change_data=change_data,
             change_data_to_target_change=change_data_to_target_change,
+            exact=exact,
         )
         base_chara_experience_common_settle(
             character_id,
@@ -720,6 +729,7 @@ def extra_feel_settle(
             tenths_add=False,
             change_data=change_data,
             change_data_to_target_change=change_data_to_target_change,
+            exact=exact,
         )
         base_chara_experience_common_settle(
             character_id,
@@ -845,7 +855,7 @@ def base_chara_favorability_and_trust_common_settle(
                 # 连续重复减值
                 final_adjust *= continuous_adjust
                 # 系统难度修正
-                now_difficulty = cache.all_system_setting.difficulty_setting[1]
+                now_difficulty = cache.difficulty_setting[1]
                 difficulty_adjust = system_setting.get_difficulty_coefficient(
                     now_difficulty
                 )
@@ -892,7 +902,7 @@ def base_chara_favorability_and_trust_common_settle(
                 # 连续重复减值
                 final_adjust *= continuous_adjust
                 # 系统难度修正
-                now_difficulty = cache.all_system_setting.difficulty_setting[1]
+                now_difficulty = cache.difficulty_setting[1]
                 difficulty_adjust = system_setting.get_difficulty_coefficient(
                     now_difficulty
                 )
@@ -1307,7 +1317,7 @@ def base_chara_experience_common_settle(
     ):
         character_data.first_record.first_part_sex_dict[2] = {
             "id": 0,
-            "time": cache.game_time,
+            "time": game_time.now(),
             "place": list(character_data.position),
             "posture": "",
             "item": -1,

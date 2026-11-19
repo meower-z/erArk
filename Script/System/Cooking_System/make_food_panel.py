@@ -13,11 +13,11 @@ from Script.Core import (
     constant,
     py_cmd,
 )
-from Script.Design import update, attr_calculation
+from Script.Design import attr_calculation
+from Script.Modules.tk_ui import player_pick
 from Script.System.Cooking_System import cooking, cook_question_panel
 from Script.UI.Moudle import draw, panel
 from Script.Config import game_config, normal_config
-from Script.UI.Panel import achievement_panel, ejaculation_panel
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -1062,59 +1062,18 @@ class SeeFoodListByFoodNameDraw:
         self, new_make_food_time: int = 0, make_count: int = 1
     ) -> None:
         """
-        玩家制作食物
+        玩家定下做饭：调味材料连一份都不够时提示后不定下行动；精细模式先答题定下品质；
+        食物在行动开始时由 panel_starters 的 make_food 做出
         Keyword arguments:
         new_make_food_time -- 本次制作的总耗时（分钟）
         make_count -- 制作数量
         """
         from Script.Design import handle_premise
 
-        character_data: game_type.Character = cache.character_data[0]
-        food_recipe: game_type.Recipes = cache.recipe_data[int(self.food_cid)]
+        recipe_id = int(self.food_cid)
+        food_recipe: game_type.Recipes = cache.recipe_data[recipe_id]
 
-        # 计算食物品质：基础品质为玩家料理技能，封顶到美味
-        base_quality = cooking.get_base_food_quality(0)
-        # 如果当前是酒类，且当前地点在酒吧，则品质额外+1
-        if food_recipe.type == 3 and handle_premise.handle_in_bar(0):
-            base_quality += 1
-        food_quality = base_quality
-        # 精细模式且存在题库时，进入答题流程（特殊调味会替换对应阶段的问题），答对可提升品质（封顶绝珍）
-        if self.cook_mode == 1 and cooking.has_cook_question_library(
-            int(self.food_cid)
-        ):
-            food_quality = cook_question_panel.run_cook_question_flow(
-                int(self.food_cid), base_quality, self.special_seasoning
-            )
-
-        # 按数量逐个创建食物对象（延迟创建：仅在制作时才创建对应菜谱的食物对象）
-        real_count = 0
-        for _i in range(make_count):
-            # 药物调味则每份扣除一个药物，库存不足时停止制作
-            if self.special_seasoning > 100:
-                if character_data.item[self.special_seasoning] <= 0:
-                    break
-                character_data.item[self.special_seasoning] -= 1
-            # 精液调味则每份扣除一次精液量，库存不足时停止制作
-            semen_count = 0
-            if self.special_seasoning in {11, 12}:
-                __, semen_count = ejaculation_panel.common_ejaculation()
-                if semen_count <= 0:
-                    break
-            # 创建食物对象并赋予名字、作者、品质、味道
-            new_food = cooking.create_food(
-                "", int(self.food_cid), food_quality, character_data.name
-            )
-            new_food.special_seasoning = self.special_seasoning
-            new_food.special_seasoning_amount = semen_count
-            # 放到玩家背包里
-            character_data.food_bag[new_food.uid] = new_food
-            character_data.behavior.target_food = new_food
-            # 成就计数
-            cache.achievement.make_food_count += 1
-            real_count += 1
-
-        # 如果实际制作数量为0，则不进行后续处理并输出提示信息
-        if real_count <= 0:
+        if not cooking.player_can_season(self.special_seasoning):
             py_cmd.clr_cmd()
             line_feed.draw()
             info_draw = draw.NormalDraw()
@@ -1122,34 +1081,41 @@ class SeeFoodListByFoodNameDraw:
             info_draw.draw()
             line_feed.draw()
             return
-        # 如果实际制作数量小于请求数量，则输出提示信息
-        elif real_count < make_count:
-            py_cmd.clr_cmd()
-            line_feed.draw()
-            info_draw = draw.NormalDraw()
-            info_draw.text = _(
-                "因为调味材料或精液量不足，实际制作数量为 {0} 个\n"
-            ).format(real_count)
-            info_draw.draw()
-            line_feed.draw()
 
-        # 烹饪行为
-        character_data.behavior.make_food_time = new_make_food_time
-        character_data.behavior.make_food_count = real_count
-        character_data.behavior.behavior_id = constant.Behavior.MAKE_FOOD
-        character_data.behavior.duration = new_make_food_time
-        character_data.state = constant.CharacterStatus.STATUS_MAKE_FOOD
-        # 如果是加料咖啡，则标记为正在制作加料咖啡
+        # 计算食物品质：基础品质为玩家料理技能，封顶到美味
+        food_quality = cooking.get_base_food_quality(0)
+        # 如果当前是酒类，且当前地点在酒吧，则品质额外+1
+        if food_recipe.type == 3 and handle_premise.handle_in_bar(0):
+            food_quality += 1
+        # 精细模式且存在题库时，进入答题流程（特殊调味会替换对应阶段的问题），答对可提升品质（封顶绝珍）
+        if self.cook_mode == 1 and cooking.has_cook_question_library(recipe_id):
+            food_quality = cook_question_panel.run_cook_question_flow(
+                recipe_id, food_quality, self.special_seasoning
+            )
+
+        # 烹饪行为；加料咖啡标记为正在制作加料咖啡
+        behavior_id, state = (
+            constant.Behavior.MAKE_FOOD,
+            constant.CharacterStatus.STATUS_MAKE_FOOD,
+        )
         if self.add_coffee:
-            character_data.behavior.behavior_id = (
-                constant.Behavior.MAKE_COFFEE_ADD
+            behavior_id, state = (
+                constant.Behavior.MAKE_COFFEE_ADD,
+                constant.CharacterStatus.STATUS_MAKE_COFFEE_ADD,
             )
-            character_data.state = (
-                constant.CharacterStatus.STATUS_MAKE_COFFEE_ADD
-            )
-        update.game_update_flow(new_make_food_time)
-        # 结算成就
-        achievement_panel.achievement_flow(_("烹饪"))
+        player_pick.choose(
+            behavior_id,
+            new_make_food_time,
+            kind="make_food",
+            state=state,
+            fields={"behavior.make_food_time": new_make_food_time},
+            args={
+                "recipe_id": recipe_id,
+                "count": make_count,
+                "quality": food_quality,
+                "seasoning": self.special_seasoning,
+            },
+        )
 
     def draw(self) -> None:
         """绘制对象"""

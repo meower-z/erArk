@@ -16,6 +16,7 @@ from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
 
 from typing import TYPE_CHECKING
+from Script.Design import game_time
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -34,7 +35,7 @@ window_width: int = normal_config.config_normal.text_width
 
 def calculate_assembly_line_efficiency(line_id: int) -> tuple[str, float]:
     """
-    计算某条生产线当前总效率(百分比值), 同时更新缓存结构中 index2
+    计算某条生产线当前总效率(百分比值)
     输入参数:
     line_id -- 流水线id
     输出参数:
@@ -49,10 +50,10 @@ def calculate_assembly_line_efficiency(line_id: int) -> tuple[str, float]:
         round((facility_effect_ratio) * 100, 1)
     )
     base = facility_effect_ratio * 100
-    # 如果不是int，则转为0
-    if not isinstance(ri.assembly_line[line_id][1], (int)):
-        ri.assembly_line[line_id][1] = 0
+    # 不是int时按0（空缺）算
     line_main_id = ri.assembly_line[line_id][1]
+    if not isinstance(line_main_id, int):
+        line_main_id = 0
     # 收集全部主生产工人，防止副工人重复计入
     main_ids = {
         ri.assembly_line[lid][1]
@@ -87,12 +88,10 @@ def calculate_assembly_line_efficiency(line_id: int) -> tuple[str, float]:
         sub_bonus += base_effect
     total += sub_bonus
     worker_str += _("，副:{0}%]").format(round(sub_bonus, 1))
-    # 写回
-    ri.assembly_line[line_id][2] = round(total, 2)
     detail_str = _("当前效率加成：{0} {1} = {2}%").format(
         worker_str, facility_effect_str, round(total, 1)
     )
-    return detail_str, ri.assembly_line[line_id][2]
+    return detail_str, round(total, 2)
 
 
 def settle_assembly_line(
@@ -141,12 +140,12 @@ def settle_assembly_line(
             if newdayflag:
                 max_time = (
                     24
-                    + cache.game_time.hour
+                    + game_time.now().hour
                     - cache.rhodes_island.assembly_line[assembly_line_id][4]
                 )
             else:
                 max_time = (
-                    cache.game_time.hour
+                    game_time.now().hour
                     - cache.rhodes_island.assembly_line[assembly_line_id][4]
                 )
             # 生产效率(动态计算)
@@ -230,7 +229,7 @@ def settle_assembly_line(
         # 重置收菜时间
         cache.rhodes_island.assembly_line[assembly_line_id][
             4
-        ] = cache.game_time.hour
+        ] = game_time.now().hour
     # 结算成就
     achievement_panel.achievement_flow(_("生产"))
     # 结算住院病房扩展模块
@@ -302,8 +301,6 @@ class Manage_Assembly_Line_Panel:
         """绘制对象"""
         title_text = _("产品生产")
         title_draw = draw.TitleLineDraw(title_text, self.width)
-
-        settle_assembly_line(draw_flag=False)
 
         while 1:
             return_list = []
@@ -686,7 +683,7 @@ class Manage_Assembly_Line_Panel:
         if (
             cache.rhodes_island.assembly_line[assembly_line_id][0] != 0
             and cache.rhodes_island.assembly_line[assembly_line_id][4]
-            != cache.game_time.hour
+            != game_time.now().hour
         ):
             pass
         else:

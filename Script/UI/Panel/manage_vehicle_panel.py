@@ -10,6 +10,7 @@ from Script.Core import (
 )
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
+from Script.Modules.save_load import reset
 import random
 
 cache: game_type.Cache = cache_control.cache
@@ -24,9 +25,10 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
+@reset.repair
 def update_basement_vehicle_data() -> None:
     """
-    更新基地载具数据
+    补齐基地载具数据：开新游戏时与读档时运行
     """
     vehicle_data = game_config.config_vehicle
     for vehicle_id in vehicle_data:
@@ -121,9 +123,6 @@ class Manage_Vehicle_Panel:
 
         title_text = _("载具管理")
         commission_type_list = [_("常规载具"), _("特殊载具")]
-
-        # 更新基地载具数据
-        update_basement_vehicle_data()
 
         title_draw = draw.TitleLineDraw(title_text, self.width)
         while 1:

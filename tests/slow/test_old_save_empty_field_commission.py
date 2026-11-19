@@ -15,6 +15,7 @@ import datetime
 import shutil
 
 from tests.slow.base import SlowTestCase
+from tests import world
 
 SAVE_ID = "test_old_save_empty_field_commission"
 """ 本测试写入 save/ 的存档id，测试结束时删掉 """
@@ -166,7 +167,7 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
             field_commission_function,
         )
 
-        self.cache.game_time = end_time + datetime.timedelta(days=1)
+        world.set_clock(end_time + datetime.timedelta(days=1))
         field_commission_function.judge_field_commission_finish()
 
     def test_all_child_commission_cancelled_on_load(self) -> None:

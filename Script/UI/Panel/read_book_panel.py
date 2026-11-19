@@ -10,8 +10,7 @@ from Script.Core import (
     constant,
 )
 from Script.Config import game_config, normal_config
-from Script.Design import update, instuct_judege
-from Script.UI.Panel import borrow_book_panel
+from Script.Modules.tk_ui import player_pick
 import random
 
 panel_info_data: dict[str, object] = {}
@@ -128,14 +127,14 @@ class Read_Book_Panel:
 
     def read(self, book_id: int) -> None:
         """读选择的书"""
-        instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-        character_data: game_type.Character = cache.character_data[0]
-        book_data = game_config.config_book[book_id]
-        character_data.behavior.behavior_id = constant.Behavior.READ_BOOK
-        character_data.state = constant.CharacterStatus.STATUS_READ_BOOK
-        character_data.behavior.book_id = book_id
-        character_data.behavior.book_name = book_data.name
-        character_data.behavior.duration = 30
-        # 更新历史记录中的阅读次数
-        borrow_book_panel.update_read_count_in_history(0, book_id)
-        update.game_update_flow(30)
+        player_pick.choose(
+            constant.Behavior.READ_BOOK,
+            30,
+            kind="player_read_book",
+            state=constant.CharacterStatus.STATUS_READ_BOOK,
+            fields={
+                "behavior.book_id": book_id,
+                "behavior.book_name": game_config.config_book[book_id].name,
+            },
+            args={"book_id": book_id},
+        )

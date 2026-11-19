@@ -83,12 +83,9 @@ class CharacterSetting:
                 button_draw.draw()
                 self.return_list.append(button_draw.return_text)
 
-                # 如果没有该键，则创建一个，并置为0
-                if cid not in character_data.chara_setting:
-                    character_data.chara_setting[cid] = 0
-                now_setting_flag = character_data.chara_setting[
-                    cid
-                ]  # 当前设置的值
+                now_setting_flag = character_data.chara_setting.get(
+                    cid, 0
+                )  # 当前设置的值
                 option_len = len(
                     game_config.config_chara_setting_option[cid]
                 )  # 选项的长度
@@ -157,6 +154,7 @@ class CharacterSetting:
         from Script.Design import character
 
         character_data = cache.character_data[self.character_id]
+        character_data.chara_setting.setdefault(cid, 0)
         if character_data.chara_setting[cid] < option_len - 1:
             character_data.chara_setting[cid] += 1
         else:

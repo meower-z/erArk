@@ -79,12 +79,14 @@ class FollowerSkipsExamTest(HealthCheckTestCase):
 
     def test_booked_follower_waits_until_follow_ends(self) -> None:
         """排了体检、还没进等待名单（目标 210500）：时段前开始跟随，时段内不去体检科，结束同行后去"""
+        from Script.Design import game_time
+
         self.wait_until_hour(self.start - 1)
         # 把她带到博士身边，再邀请同行
         self.world.move(self.operator_id, self.cache.character_data[0].position)
         self.follow_doctor_in_office()
         self.assertGreaterEqual(
-            self.cache.game_time.hour, self.start, "跟随延续到时段内"
+            game_time.now().hour, self.start, "跟随延续到时段内"
         )
         self.assertTrue(
             self.wait_until(lambda: self.operator.position == EXAM_ROOM, 60),

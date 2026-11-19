@@ -30,6 +30,7 @@ from __future__ import annotations
 
 
 from Script.Core import cache_control
+from Script.Design import game_time
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -961,7 +962,7 @@ def check_hgroup_14() -> list[CheckFailure]:
                         f"[warning] NPC cid={cid}({_name(c)})go_to_join_group_sex=True但{'; '.join(bad)}；"
                         f"position={c.position} pl.position={pl.position} "
                         f"behavior_id={_behavior_id(c)} state={getattr(c, 'state', None)} "
-                        f"be_invited_join_group_sex={invited} game_time={getattr(cache, 'game_time', None)}"
+                        f"be_invited_join_group_sex={invited} game_time={game_time.now()}"
                     ),
                     [cid],
                 )
@@ -1685,7 +1686,7 @@ def check_hgroup_27() -> list[CheckFailure]:
                     (
                         f"cache.time_stop_mode=True但角色cid={cid}({_name(c)})unconscious_h={v!r}!=3；"
                         f"position={c.position} is_h={getattr(c.sp_flag, 'is_h', None)} "
-                        f"game_time={getattr(cache, 'game_time', None)} pl.behavior_id={pl_behavior_id}"
+                        f"game_time={game_time.now()} pl.behavior_id={pl_behavior_id}"
                     ),
                     [cid],
                 )
@@ -1698,7 +1699,7 @@ def check_hgroup_27() -> list[CheckFailure]:
                     (
                         f"cache.time_stop_mode=False但角色cid={cid}({_name(c)})unconscious_h=3(未随时停关闭写回)；"
                         f"position={c.position} "
-                        f"is_h={getattr(c.sp_flag, 'is_h', None)} game_time={getattr(cache, 'game_time', None)} "
+                        f"is_h={getattr(c.sp_flag, 'is_h', None)} game_time={game_time.now()} "
                         f"pl.behavior_id={pl_behavior_id}"
                     ),
                     [cid],

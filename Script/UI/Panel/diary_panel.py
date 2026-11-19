@@ -129,7 +129,7 @@ class Diary_Panel:
         if not os.path.exists(diary_files_path):
             os.makedirs(diary_files_path)
         pl_name = cache.character_data[0].name
-        time = f"_{cache.game_time.year}_{cache.game_time.month}_{cache.game_time.day}"
+        time = f"_{game_time.now().year}_{game_time.now().month}_{game_time.now().day}"
         diray_file_name = pl_name + time + ".txt"
         diray_file_path = os.path.join(diary_files_path, diray_file_name)
         # 开始写入

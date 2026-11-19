@@ -14,6 +14,7 @@ from Script.Design import character_handle, handle_premise, talk, map_handle
 import random
 
 from Script.UI.Panel import achievement_panel
+from Script.Design import game_time
 
 panel_info_data: dict[str, object] = {}
 
@@ -297,7 +298,7 @@ class Born_Panel:
                     child_character_data: game_type.Character = (
                         cache.character_data[new_child_id]
                     )
-                    child_character_data.pregnancy.born_time = cache.game_time
+                    child_character_data.pregnancy.born_time = game_time.now()
                     child_name_list.append(child_character_data.name)
 
                     info_draw.text = _(

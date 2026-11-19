@@ -1,35 +1,9 @@
-"""避孕套的存量池与装饰：旧存档字段补全、存量池的增减与清空、装饰的挂上与取回，以及饮用与挤出的结算"""
+"""避孕套的存量池与装饰：存量池的增减与清空、装饰的挂上与取回，以及饮用与挤出的结算"""
 
 from Script.Core import cache_control, game_type
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
-
-
-def check_collection_data(character_id: int = 0) -> None:
-    """
-    校验玩家收藏品结构体中避孕套存量池字段是否存在（旧存档兼容），不存在则补上\n
-    Keyword arguments:\n
-    character_id -- 角色id（仅玩家0有存量池）\n
-    Return arguments:\n
-    无
-    """
-    pl_collection = cache.character_data[0].pl_collection
-    if not hasattr(pl_collection, "used_condoms"):
-        pl_collection.used_condoms = []
-
-
-def check_dirty_data(character_id: int) -> None:
-    """
-    校验角色污浊结构体中装饰避孕套字段是否存在（旧存档兼容），不存在则补上\n
-    Keyword arguments:\n
-    character_id -- 角色id\n
-    Return arguments:\n
-    无
-    """
-    dirty_data = cache.character_data[character_id].dirty
-    if not hasattr(dirty_data, "condom_decoration"):
-        dirty_data.condom_decoration = {}
 
 
 def get_used_condoms() -> list[int]:
@@ -38,7 +12,6 @@ def get_used_condoms() -> list[int]:
     Return arguments:\n
     List[int] -- 存量池列表，每个元素为该避孕套内的精液量(ml)
     """
-    check_collection_data()
     return cache.character_data[0].pl_collection.used_condoms
 
 
@@ -50,7 +23,6 @@ def add_used_condom(semen_count: int) -> None:
     Return arguments:\n
     无
     """
-    check_collection_data()
     cache.character_data[0].pl_collection.used_condoms.append(semen_count)
 
 
@@ -60,7 +32,6 @@ def clear_used_condoms() -> None:
     Return arguments:\n
     无
     """
-    check_collection_data()
     cache.character_data[0].pl_collection.used_condoms = []
 
 
@@ -72,7 +43,6 @@ def get_decoration_dict(character_id: int) -> dict[tuple, list[int]]:
     Return arguments:\n
     Dict[tuple, List[int]] -- 键为(部位类型, 部位cid)，值为各套精液量列表
     """
-    check_dirty_data(character_id)
     return cache.character_data[character_id].dirty.condom_decoration
 
 
@@ -208,7 +178,7 @@ def settle_hang(
     condom_index_list: list[int],
 ) -> None:
     """
-    挂上避孕套装饰的结算（由选择面板在确认时直接调用）\n
+    挂上避孕套装饰的结算（行动开始时由指令的开始代码 condom 调用）\n
     Keyword arguments:\n
     target_character_id -- 交互对象角色id\n
     part_type -- 部位类型，0=身体（仅头发0），1=服装部位\n
@@ -230,7 +200,7 @@ def settle_take_back(
     target_character_id: int, location_index_list: list[tuple[tuple, int]]
 ) -> None:
     """
-    取回避孕套装饰的结算（由选择面板在确认时直接调用）\n
+    取回避孕套装饰的结算（行动开始时由指令的开始代码 condom 调用）\n
     Keyword arguments:\n
     target_character_id -- 交互对象角色id\n
     location_index_list -- 要取回的装饰列表，每个元素为((部位类型, 部位cid), 该部位列表中的下标)\n
@@ -251,7 +221,7 @@ def settle_drink(
     target_character_id: int, condom_index_list: list[int]
 ) -> None:
     """
-    饮用避孕套精液的结算（由选择面板在确认时直接调用）\n
+    饮用避孕套精液的结算（行动开始时由指令的开始代码 condom 调用）\n
     消耗选中的避孕套，每套精液按10%残留口腔、90%进入胃部结算，并加精液/饮精经验与口喉快感\n
     Keyword arguments:\n
     target_character_id -- 交互对象角色id\n
@@ -312,7 +282,7 @@ def settle_squeeze(
     condom_index_list: list[int],
 ) -> None:
     """
-    挤出避孕套精液的结算（由选择面板在确认时直接调用）\n
+    挤出避孕套精液的结算（行动开始时由指令的开始代码 condom 调用）\n
     消耗选中的避孕套，将其中精液全额转移到交互对象指定部位（身体部位追加自然流动）\n
     Keyword arguments:\n
     target_character_id -- 交互对象角色id\n

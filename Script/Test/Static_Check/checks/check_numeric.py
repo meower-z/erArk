@@ -14,10 +14,25 @@ TypeError而抛出未捕获异常，只会跟着报"结构不满足前置条件"
 """
 
 import math
+from fractions import Fraction
+from typing import TypeGuard
 
 from Script.Core import cache_control
 from Script.Config import game_config
+from Script.Design import game_time
 from ..check_registry import CheckFailure, register_check, make_failure
+
+
+def _exact(value: object) -> TypeGuard[int | Fraction]:
+    """
+    随时间结算的连续数值（num.Num）的合法类型：int 或 Fraction，不含 bool
+    Keyword arguments:
+    value -- 数值
+    Return arguments:
+    bool -- 是否为 int 或 Fraction
+    """
+    return type(value) is int or type(value) is Fraction
+
 
 # 六个数值容器字段名，NUM-01及后续多条检查复用
 _NUMERIC_DICT_FIELDS = (
@@ -547,7 +562,7 @@ def check_num_12_status_data_dict_keys() -> list[CheckFailure]:
     return failures
 
 
-@register_check("NUM-13", "状态值为非负整数")
+@register_check("NUM-13", "状态值为非负的整数或分数")
 def check_num_13_status_data_non_negative() -> list[CheckFailure]:
     """
     参数:
@@ -555,7 +570,7 @@ def check_num_13_status_data_non_negative() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验chara.status_data的每个值都是非负整数。通用状态结算写入前int()转换、写入后max(0, ...)，全库其余直写
+        校验chara.status_data的每个值都是非负的int或Fraction。通用状态结算写入后max(0, ...)，全库其余直写
         路径也逐行钳制且均为非负。带cache.debug_mode守卫。
     """
     cache = cache_control.cache
@@ -566,15 +581,13 @@ def check_num_13_status_data_non_negative() -> list[CheckFailure]:
         if not _dict_field_ok(chara, "status_data"):
             continue
         bad = {
-            k: v
-            for k, v in chara.status_data.items()
-            if type(v) is not int or v < 0
+            k: v for k, v in chara.status_data.items() if not _exact(v) or v < 0
         }
         if bad:
             failures.append(
                 make_failure(
                     "NUM-13",
-                    "状态值为非负整数",
+                    "状态值为非负的整数或分数",
                     f"角色cid={cid} name={_chara_name(chara)} 非法状态值={bad} "
                     f"behavior_id={getattr(getattr(chara, 'behavior', None), 'behavior_id', '?')}",
                     [cid],
@@ -612,7 +625,7 @@ def check_num_14_status_data_upper_bound() -> list[CheckFailure]:
         over = {
             k: v
             for k, v in chara.status_data.items()
-            if type(v) in (int, float) and v > 99999
+            if type(v) in (int, float, Fraction) and v > 99999
         }
         if over:
             detail = {
@@ -843,7 +856,7 @@ def check_num_20_hit_point_range() -> list[CheckFailure]:
         hp = getattr(chara, "hit_point", None)
         hp_max = getattr(chara, "hit_point_max", None)
         if (
-            type(hp) is not int
+            not _exact(hp)
             or (type(hp_max) is not int and type(hp_max) is not float)
             or not (1 <= hp <= hp_max)
         ):
@@ -882,7 +895,7 @@ def check_num_21_mana_point_range() -> list[CheckFailure]:
         mp = getattr(chara, "mana_point", None)
         mp_max = getattr(chara, "mana_point_max", None)
         if (
-            type(mp) is not int
+            not _exact(mp)
             or (type(mp_max) is not int and type(mp_max) is not float)
             or not (0 <= mp <= mp_max)
         ):
@@ -919,7 +932,7 @@ def check_num_22_sanity_point_range() -> list[CheckFailure]:
         sp = getattr(chara, "sanity_point", None)
         sp_max = getattr(chara, "sanity_point_max", None)
         if (
-            type(sp) is not int
+            not _exact(sp)
             or (type(sp_max) is not int and type(sp_max) is not float)
             or not (0 <= sp <= sp_max)
         ):
@@ -956,7 +969,7 @@ def check_num_23_eja_point_non_negative() -> list[CheckFailure]:
     failures = []
     for cid, chara in cache.character_data.items():
         eja = getattr(chara, "eja_point", None)
-        if not ((type(eja) is int or type(eja) is float) and eja >= 0):
+        if not ((_exact(eja) or type(eja) is float) and eja >= 0):
             h_state = getattr(chara, "h_state", None)
             sp_flag = getattr(chara, "sp_flag", None)
             failures.append(
@@ -996,7 +1009,7 @@ def check_num_24_semen_point_range() -> list[CheckFailure]:
         semen_max = getattr(chara, "semen_point_max", None)
         tem_extra = getattr(chara, "tem_extra_semen_point", None)
         ok = (
-            type(semen) is int
+            _exact(semen)
             and type(tem_extra) is int
             and (type(semen_max) is int or type(semen_max) is float)
             and 0 <= semen <= semen_max
@@ -1060,7 +1073,7 @@ def check_num_25_base_resource() -> list[CheckFailure]:
                 "基地资源键集覆盖配表且为非负整数",
                 (
                     f"资源缺键={missing} 键类型合法={key_type_ok} 非法值={value_bad} 涉及资源名={detail_names} "
-                    f"game_time={getattr(cache, 'game_time', '?')} "
+                    f"game_time={game_time.now()} "
                     f"warehouse_capacity={getattr(rhodes_island, 'warehouse_capacity', '?')}"
                 ),
             )
@@ -1134,7 +1147,7 @@ def check_num_27_fatigue_family_range() -> list[CheckFailure]:
         bad_fields = {}
         for field, upper in bounds.items():
             v = getattr(chara, field, None)
-            if not (type(v) is int and 0 <= v <= upper):
+            if not (_exact(v) and 0 <= v <= upper):
                 bad_fields[field] = v
         if bad_fields:
             failures.append(
@@ -1170,7 +1183,7 @@ def check_num_28_urinate_point_non_negative() -> list[CheckFailure]:
     failures = []
     for cid, chara in cache.character_data.items():
         urinate = getattr(chara, "urinate_point", None)
-        if not (type(urinate) is int and urinate >= 0):
+        if not (_exact(urinate) and urinate >= 0):
             failures.append(
                 make_failure(
                     "NUM-28",
@@ -1201,16 +1214,14 @@ def check_num_29_urinate_point_upper_bound() -> list[CheckFailure]:
     cache = cache_control.cache
     if cache.debug_mode:
         return []
-    difficulty_setting = getattr(
-        getattr(cache, "all_system_setting", None), "difficulty_setting", None
-    )
+    difficulty_setting = getattr(cache, "difficulty_setting", None)
     difficulty_setting = (
         difficulty_setting if isinstance(difficulty_setting, dict) else {}
     )
     failures = []
     for cid, chara in cache.character_data.items():
         urinate = getattr(chara, "urinate_point", None)
-        if (type(urinate) is int or type(urinate) is float) and urinate > 300:
+        if (_exact(urinate) or type(urinate) is float) and urinate > 300:
             failures.append(
                 make_failure(
                     "NUM-29",
@@ -1253,7 +1264,7 @@ def check_num_30_desire_point_non_negative() -> list[CheckFailure]:
                     "NUM-30",
                     "欲望值为非负整数且不设上限",
                     f"角色cid={cid} name={_chara_name(chara)} desire_point={desire!r} ability[33]={ability_33} "
-                    f"game_time={getattr(cache, 'game_time', '?')}",
+                    f"game_time={game_time.now()}",
                     [cid],
                 )
             )

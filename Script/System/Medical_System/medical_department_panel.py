@@ -797,7 +797,6 @@ class FinanceReportSubPanel(_BaseSubPanel):
         counters = medical_constant.MedicalDailyCounters.from_mapping(
             getattr(ri, "medical_daily_counters", None)
         )
-        ri.medical_daily_counters = counters
         counter_dict = counters.as_dict()
         if counter_dict:
             info_draw.text += _("今日统计：\n")

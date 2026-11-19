@@ -2,8 +2,8 @@
 """
 erArk 无头行为循环诊断模板
 ==========================
-读档入内存、复刻一条玩家指令，再带护栏地跑一轮真实的行为循环 init_character_behavior。
-运行中可以逐轮查看指定角色，也可以在内存里模拟候选修复。
+读档入内存，让玩家下一条真实指令，再带护栏地让内核一步一步推进（core.step），直到玩家下一次选行动。
+运行中可以查看指定角色每次选行动、开始行动前后的状态，也可以在内存里模拟候选修复。
 游戏世界取自被测 checkout 的 tests/world.py：FullWorld 完整启动游戏（结算器、状态机、界面流程），
 玩家输入由 world.player 给出。
 本脚本不存档：循环里会写文件的两处（玩家睡觉时的自动存档、临时外勤委托追加写 Commission.csv）被替换掉；
@@ -14,10 +14,9 @@ erArk 无头行为循环诊断模板
     <venv>/bin/python tools/verify/limited_run.py --timeout 600 -- <venv>/bin/python -u <运行目录>/test.py
 需要存档：先把要读的存档装进 save/（`unzip -o <存档>.zip -d save/`），再把 SAVE_ID 改成它的编号。
 
-退出码：0 玩家阶段与 NPC 阶段都收敛；1 有阶段超过轮数上限（卡死）；
-2 未捕获异常（存档不存在、循环要玩家选择而没有安排输入，都落在这里）。
-判读：玩家阶段通常 1 轮。读档后的第一轮循环要让 NPC 追平存档时刻，一次实测中 NPC 阶段约 20 轮；
-      任一阶段达到 10 轮会打印提醒，是否异常以同一存档、同一指令的未修复基线轮数为准。
+退出码：0 推进到了玩家下一次选行动；1 时钟停在同一分钟超过步数上限（卡死），或玩家的指令没有开始；
+2 未捕获异常（存档不存在、推进中要玩家选择而没有安排输入，都落在这里）。
+判读：各角色开始行动的次数与内核步数随指令时长增长；是否异常以同一存档、同一指令的未修复基线为准。
 """
 
 import io
@@ -84,18 +83,15 @@ from tests.world import FullWorld
 
 world = FullWorld.load()
 cache = world.cache
-# 循环里要玩家选择时，按 world.player.press("按钮文字的一部分") 事先安排；没安排就抛 UnplannedInput（退出码 2），
+# 推进中要玩家选择时，按 world.player.press("按钮文字的一部分") 事先安排；没安排就抛 UnplannedInput（退出码 2），
 # 并列出屏幕上的按钮
 
-from Script.Config import game_config
-from Script.Core import constant, io_init, save_handle
-from Script.Design import (
-    character_behavior,
-    game_time,
-    handle_npc_ai,
-    instuct_judege,
-)
+from Script.Core import io_init, save_handle
+from Script.Design import character_behavior, game_time, handle_npc_ai
+from Script.Kernel import core
 from Script.System.Field_Commission_System import field_commission_function
+from Script.System.Instruct_System import handle_instruct
+from tests.world import act
 
 # ==== 1. 读档 ====
 SAVE_ID = "<存档编号>"  # 存档目录 save/<SAVE_ID>/
@@ -145,17 +141,23 @@ def describe(cid):
     """
     cd = cache.character_data[cid]
     flag = cd.sp_flag
+    kernel = core.state().characters.get(str(cid))
+    end = (
+        game_time.at(kernel.action.start + kernel.action.duration)
+        if kernel
+        else "不在内核里"
+    )
     return (
         f"{cd.name}(id{cid}) 位置={cd.position} bhv={cd.behavior.behavior_id} dur={cd.behavior.duration}"
         f" start={cd.behavior.start_time} state={cd.state} tired={cd.tired_point} sleep={cd.sleep_point}"
         f" hp={cd.hit_point}/{cd.hit_point_max} mp={cd.mana_point}/{cd.mana_point_max}"
         f" sp_flag(sleep={flag.sleep} unconscious_h={flag.unconscious_h} is_h={flag.is_h} is_follow={flag.is_follow})"
-        f" 完成={cid in cache.over_behavior_character}"
+        f" 内核行动结束于={end}"
     )
 
 
 print("== 读档体检 ==")
-print("game_time:", cache.game_time)
+print("game_time:", game_time.now())
 for _cid in [0, *sorted(WATCH)]:
     print(" ", describe(_cid))
 
@@ -174,32 +176,18 @@ if FORCE_RANDINT_MIN:
         1 if (a, b) == (1, 100) else _real_randint(a, b)
     )
 
-# ==== 3. 复刻玩家指令（不进真实主循环） ====
-BEHAVIOR = constant.Behavior.PLAY_INSTRUMENT
-# 指令处理函数给 chara_handle_instruct_common_settle 传了非 0 的 duration= 时填那个值（如等待五分钟是 5）；
-# 没传或传 0 时用查表值，与游戏一样不足 1 记 1
-DURATION = max(game_config.config_behavior[BEHAVIOR].duration, 1)
-
-# 处理函数不调 chara_handle_instruct_common_settle、自己赋值时（如 handle_teach 设 STATUS_TEACH、拉学生听课），
-# 把下面四行换成它的赋值
-instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-pl.state = BEHAVIOR  # chara_handle_instruct_common_settle 也把 state 设为行为id
-pl.behavior.behavior_id = BEHAVIOR
-pl.behavior.duration = DURATION
-game_time.sub_time_now(
-    pl.behavior.duration
-)  # 真实流程也是先推进时间再进入行为循环
-print(
-    f"== 模拟指令 {BEHAVIOR} dur={pl.behavior.duration} | 推进后 game_time: {cache.game_time} =="
-)
+# ==== 3. 玩家的指令：act 里玩家第一次选行动时调用它，指令经 player_pick.choose 定下玩家的行动 ====
+# 换成被测指令的处理函数（Script/System/Instruct_System/handle_instruct.py 里 @add_instruct 的函数）；
+# 指令要面板选择时，先按 world.player.press 安排好输入
+INSTRUCT = handle_instruct.handle_play_instrument
 
 
-# ==== 4. 逐轮内窥：对 WATCH 中的角色打印被包装函数调用前后的状态 ====
+# ==== 4. 内窥：对 WATCH 中的角色打印被包装函数调用前后的状态 ====
 def probe(module, func_name):
     """
     包装 module.func_name（首个参数须为角色id），对 WATCH 中的角色打印调用前后的状态
     Keyword arguments:
-    module -- 函数所在模块；character_behavior 经 handle_npc_ai.xxx 调用，替换模块属性即生效
+    module -- 函数所在模块；内核模块按 module.func_name 调用它，替换模块属性即生效
     func_name -- 函数名
     Return arguments:
     无
@@ -229,7 +217,7 @@ def probe(module, func_name):
 
 ENABLE_PROBE = True
 if ENABLE_PROBE and WATCH:
-    probe(handle_npc_ai, "find_character_target")
+    probe(handle_npc_ai, "choose_state_machine")  # 干员选下一个行动的状态机
     probe(handle_npc_ai, "judge_interrupt_character_behavior")
     probe(
         handle_npc_ai, "judge_student_leave_truncate"
@@ -243,13 +231,12 @@ if ENABLE_PROBE and WATCH:
 #     return _original(cid)
 # handle_npc_ai.judge_interrupt_character_behavior = _patched
 
-# ==== 6. 带护栏地跑真实的行为循环 init_character_behavior ====
-PASS_LIMIT = 100  # 真死循环每轮约 0.1 秒，100 轮也只要十来秒
-WARN_PASSES = 10
+# ==== 6. 带护栏地推进内核：act 一步一步调用 core.step，直到玩家下一次选行动 ====
+STEP_LIMIT = 500  # 时钟停在同一分钟时最多推进的步数；真死循环每步约 0.1 秒以内
 
 
-class PassLimitReached(Exception):
-    """某个角色跑满 PASS_LIMIT 轮仍未完成，由护栏抛出以中止真实循环"""
+class StepLimitReached(Exception):
+    """时钟停在同一分钟已推进 STEP_LIMIT 步，由护栏在下一步之前抛出以中止推进"""
 
 
 saved_ids: list[str] = []
@@ -257,7 +244,7 @@ saved_ids: list[str] = []
 
 def skip_save(save_id):
     """
-    替换 save_handle.establish_save：只记下存档编号，不写文件（玩家睡觉时真实循环会自动存档）
+    替换 save_handle.establish_save：只记下存档编号，不写文件（玩家睡觉后自动存档）
     Keyword arguments:
     save_id -- 存档编号
     """
@@ -280,83 +267,83 @@ def skip_file_write(path, mode="r", *args, **kwargs):
 
 
 save_handle.establish_save = skip_save
-field_commission_function.open = skip_file_write
+# 模块里的 open 读的是模块全局名，没有就落到内置的 open
+vars(field_commission_function)["open"] = skip_file_write
 
-pass_count: dict[int, int] = {}
-"""每个角色已被 character_behavior 结算的轮数；真实循环每轮对每个未完成的角色各调用一次"""
-real_character_behavior = character_behavior.character_behavior
+starts: dict[int, int] = {}
+"""每个角色开始行动的次数（character_behavior.settle_start 的调用数）"""
+same_minute: dict[int, int] = {}
+"""时钟停在当前这一分钟以来，每个角色开始行动的次数"""
+steps = 0
+"""内核推进的步数"""
+stalled = 0
+"""时钟停在当前这一分钟以来的步数"""
+real_settle_start = character_behavior.settle_start
+real_step = core.step
 
 
-def guarded_character_behavior(cid, now_time, pl_start_time):
+def counted_settle_start(cid, minutes):
     """
-    包装 character_behavior：按角色计轮，跑满 PASS_LIMIT 轮仍要再跑时抛出 PassLimitReached；
-    对 WATCH 中的 NPC 打印每轮前后状态
+    包装 settle_start：按角色计开始行动的次数，对 WATCH 中的角色打印开始前后的状态
     Keyword arguments:
     cid -- 角色id
-    now_time -- 当前时间
-    pl_start_time -- 玩家行为开始时间
+    minutes -- 行动的分钟数
     """
-    if pass_count.get(cid, 0) >= PASS_LIMIT:
-        raise PassLimitReached(f"{describe(cid)} 跑满 {PASS_LIMIT} 轮仍未完成")
-    pass_count[cid] = pass_count.get(cid, 0) + 1
+    starts[cid] = starts.get(cid, 0) + 1
+    same_minute[cid] = same_minute.get(cid, 0) + 1
     if cid in WATCH:
-        print(f"[NPC 第{pass_count[cid]}轮] 前: {describe(cid)}")
-    real_character_behavior(cid, now_time, pl_start_time)
+        print(f"[开始行动 第{starts[cid]}次] 前: {describe(cid)}")
+    real_settle_start(cid, minutes)
     if cid in WATCH:
-        print(f"[NPC 第{pass_count[cid]}轮] 后: {describe(cid)}")
+        print(f"[开始行动 第{starts[cid]}次] 后: {describe(cid)}")
 
 
-character_behavior.character_behavior = (
-    guarded_character_behavior  # init_character_behavior 按模块全局名调用它
+def guarded_step():
+    """
+    包装 core.step：计步；时钟停在同一分钟跑满 STEP_LIMIT 步仍要再推进时抛出 StepLimitReached
+    """
+    global steps, stalled
+    if stalled >= STEP_LIMIT:
+        busiest = sorted(same_minute.items(), key=lambda kv: -kv[1])[:5]
+        raise StepLimitReached(
+            f"时钟停在 {game_time.now()} 已推进 {stalled} 步；这一分钟开始行动最多的角色: {busiest}"
+        )
+    clock = core.state().clock
+    real_step()
+    steps += 1
+    if core.state().clock == clock:
+        stalled += 1
+    else:
+        stalled = 0
+        same_minute.clear()
+
+
+character_behavior.settle_start = (
+    counted_settle_start  # 开始行动经 character_behavior.settle_start 调用它
 )
+core.step = guarded_step  # act 按 core.step 调用它
 limit_error = None
-# 游戏里指令经 update.game_update_flow 进入行为循环。cache.game_update_flow_running >= 2 时该函数直接返回。
-# 其余时候该函数把这个计数加 1 再跑循环，结束后恢复调用前的值。
-# 本脚本直接调用 init_character_behavior，所以在这里照样加 1，结束后恢复。
-# 计数从 0 起时，循环里嵌套调用的 game_update_flow 还会再跑一层循环，那一层里再嵌套的调用直接返回。
-caller_depth = cache.game_update_flow_running
-cache.game_update_flow_running = caller_depth + 1
+clock_before = game_time.now()
 try:
-    character_behavior.init_character_behavior()
-except PassLimitReached as error:
+    act(INSTRUCT)
+except StepLimitReached as error:
     limit_error = error
-finally:
-    cache.game_update_flow_running = caller_depth
-player_passes = pass_count.get(0, 0)
-npc_passes = max((n for cid, n in pass_count.items() if cid != 0), default=0)
-player_stuck = 0 not in cache.over_behavior_character
-id_list = cache.npc_id_got - {0}
-# 时停中真实循环结算完玩家就回退时间、不进 NPC 阶段，NPC 本来就不会完成
-npc_unfinished = (
-    []
-    if cache.time_stop_mode
-    else sorted(id_list - cache.over_behavior_character)
-)
 
 # ==== 7. 结果 ====
 print()
 print(
-    f"玩家阶段轮数: {player_passes} | NPC阶段轮数: {npc_passes} | 上限 {PASS_LIMIT}"
+    f"内核步数: {steps} | 玩家开始行动: {starts.get(0, 0)} 次 | 干员开始行动最多: "
+    f"{max((n for cid, n in starts.items() if cid != 0), default=0)} 次 | 同一分钟步数上限 {STEP_LIMIT}"
 )
 print(
-    f"循环结束后 game_time: {cache.game_time} | 时停: {cache.time_stop_mode} | 被跳过的存档: {saved_ids or '无'}"
+    f"game_time: {clock_before} -> {game_time.now()} | 时停: {cache.time_stop_mode} | 被跳过的存档: {saved_ids or '无'}"
 )
 if limit_error:
-    print("!! 护栏中止了循环:", limit_error)
-for phase, passes in (("玩家", player_passes), ("NPC", npc_passes)):
-    if passes >= WARN_PASSES:
-        print(f"!! 提醒：{phase}阶段用了 {passes} 轮，请与未修复基线的轮数对比")
+    print("!! 护栏中止了推进:", limit_error)
 for cid in sorted(WATCH):
-    print("最终:", describe(cid))
+    print("最终:", describe(cid), f"开始行动 {starts.get(cid, 0)} 次")
 shown = [t.strip() for t in captured_texts]
 print("屏幕文字:", shown if shown else "无")
-check("玩家阶段收敛", not player_stuck, describe(0))
-if player_stuck and not npc_passes:
-    print("  [--] NPC阶段收敛 没有判断：玩家阶段没有收敛，NPC阶段没有运行")
-else:
-    check(
-        "NPC阶段收敛",
-        not npc_unfinished,
-        f"未完成(前8个): {[(c, cache.character_data[c].name) for c in npc_unfinished[:8]]}",
-    )
+check("玩家的指令开始了", starts.get(0, 0) >= 1, describe(0))
+check("推进到了玩家下一次选行动", limit_error is None, str(limit_error))
 finish()

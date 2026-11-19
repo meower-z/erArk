@@ -385,7 +385,7 @@ Script/
 7. `character_config.init_character_tem_data()` 加载角色模板
 8. `map_config.init_map_data()` 加载地图
 9. `character_handle.init_character_tem()` 实例化角色
-10. `game_time.init_time()` 初始化游戏时间
+10. `kernel_state.reset_clock(kernel_state.first_clock())` 把内核时钟拨到 config.ini 的开局时刻
 11. 若 `perf_monitor=1`：启用 `perf_hook` + `profiling.ui_perf_patch`
 12. `game_init.run(start_flow.start_frame)` 启动游戏
 13. `start_flow.start_frame()` 进入主循环，每轮执行 `constant.panel_data[cache.now_panel_id]()`
@@ -623,7 +623,7 @@ init_character_behavior()
 ### 17.1 时间
 
 `Script/Design/game_time.py`：
-- `init_time()` 从 config.ini 起始日期创建 `cache.game_time`
+- `now()` 把内核时钟（`core.state().clock`，分钟数）换成游戏时间；开局时刻由 `kernel_state.first_clock()` 从 config.ini 起始日期算出
 - 加减时间、日期差、星期、月份文本
 - 天文计算：太阳时段/节气（`get_solar_period`, `get_sun_phase_for_sun_az`, 依赖 pyephem），月相（`get_moon_phase`），供游戏内时间系统使用
 - 工作/娱乐时间判断

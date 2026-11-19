@@ -7,12 +7,9 @@
 体检科要医疗部升到 2 级才开放，这里按已开放处理。
 """
 
-from typing import TYPE_CHECKING
+from unittest import mock
 
 from tests.slow.base import SlowTestCase
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
 
 EXAM_ROOM = ["医疗", "体检科"]
 DR_OFFICE = ["中枢", "博士办公室"]
@@ -83,16 +80,18 @@ class HealthCheckTestCase(SlowTestCase):
         Return arguments:
         无
         """
+        from Script.Design import game_time
+
         from Script.Core import constant
 
-        today = self.cache.game_time.day
+        today = game_time.now().day
         self.wait_until_hour(23)
         self.walk(DR_ROOM)
         self.world.player.press("8小时", "确定")
         self.instruct(constant.Instruct.SLEEP)
         self.show_panel()
         self.world.player.check_done()
-        self.assertNotEqual(self.cache.game_time.day, today, "博士睡过了午夜")
+        self.assertNotEqual(game_time.now().day, today, "博士睡过了午夜")
         self.walk(DR_OFFICE)
 
     def wait_until_hour(self, hour: int) -> None:
@@ -103,58 +102,45 @@ class HealthCheckTestCase(SlowTestCase):
         Return arguments:
         无
         """
+        from Script.Design import game_time
+
         self.assertTrue(
-            self.wait_until(lambda: self.cache.game_time.hour >= hour, 24 * 60)
+            self.wait_until(lambda: game_time.now().hour >= hour, 24 * 60)
         )
 
     def record_picks(self, cid: int) -> list:
         """
-        之后该角色每次执行状态机（constant.handle_state_machine_data 中的函数，AI 选出行动后调用它），
-        都记下 (她的行为开始时间, 状态机id)
+        之后该角色每次经 handle_npc_ai.choose_state_machine 选出状态机时，记下 (此刻该角色的行为开始时间, 状态机id)。
+        选择与开始在同一步里，此刻的行为开始时间是上一个行动的。不选新行动（None）时不记。这个替换在测试结束时撤销
         Keyword arguments:
         cid -- 角色id
         Return arguments:
-        list -- 记录列表，按执行顺序追加
+        list -- 记录列表，按选择的顺序追加
         """
-        from Script.Core import constant
+        from Script.Design import handle_npc_ai
 
         picks = []
         character_data = self.cache.character_data[cid]
+        choose_state_machine = handle_npc_ai.choose_state_machine
 
-        def recorder(
-            state_machine_id: int, run: "Callable[..., object]"
-        ) -> "Callable[[int], None]":
+        def recorder(character_id: int) -> int | None:
             """
-            包装一个状态机：记下该角色的执行，照常运行
+            记录型包装：照常选出状态机，记下该角色选出的
             Keyword arguments:
-            state_machine_id -- 状态机id
-            run -- 原状态机函数
+            character_id -- 角色id
             Return arguments:
-            function -- 包装后的状态机函数
+            int | None -- 选出的状态机id
             """
+            state_machine_id = choose_state_machine(character_id)
+            if character_id == cid and state_machine_id is not None:
+                picks.append(
+                    (character_data.behavior.start_time, state_machine_id)
+                )
+            return state_machine_id
 
-            def wrapped(character_id: int) -> None:
-                """
-                记录型状态机
-                Keyword arguments:
-                character_id -- 执行的角色id
-                Return arguments:
-                无
-                """
-                if character_id == cid:
-                    picks.append(
-                        (character_data.behavior.start_time, state_machine_id)
-                    )
-                run(character_id)
-
-            return wrapped
-
-        for state_machine_id, run in list(
-            constant.handle_state_machine_data.items()
-        ):
-            constant.handle_state_machine_data[state_machine_id] = recorder(
-                state_machine_id, run
-            )
+        self.enterContext(
+            mock.patch.object(handle_npc_ai, "choose_state_machine", recorder)
+        )
         return picks
 
     def fill_exam_room(self) -> list:

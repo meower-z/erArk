@@ -29,10 +29,12 @@ from tests.education._bootstrap import handle_premise as handle_premise
 from tests.education._bootstrap import make_character as make_character
 from tests.education._bootstrap import map_handle as map_handle
 from tests.education._bootstrap import move_to as move_to
+from tests.education._bootstrap import npc_turn as npc_turn
 from tests.education._bootstrap import open_all_classroom as open_all_classroom
 from tests.education._bootstrap import os as os
 from tests.education._bootstrap import period_time as period_time
 from tests.education._bootstrap import pl as pl
+from tests.education._bootstrap import play as play
 from tests.education._bootstrap import random as random
 from tests.education._bootstrap import remove_character as remove_character
 from tests.education._bootstrap import ROOT as ROOT
@@ -50,4 +52,7 @@ from tests.education._bootstrap import semester_handle as semester_handle
 from tests.education._bootstrap import set_time as set_time
 from tests.education._bootstrap import settle_behavior as settle_behavior
 from tests.education._bootstrap import sex_class_handle as sex_class_handle
+from tests.education._bootstrap import start as start
+from tests.education._bootstrap import sync as sync
 from tests.education._bootstrap import sys as sys
+from tests.education._bootstrap import wait as wait

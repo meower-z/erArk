@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from types import FunctionType
 from Script.UI.Moudle import draw
-from Script.Core import cache_control, game_type, get_text
+from Script.Core import cache_control, game_type, get_text, num
 from Script.Config import game_config, normal_config
 from Script.Design import attr_text, game_time
 from Script.UI.Panel import character_info_head, hypnosis_panel
@@ -453,7 +453,9 @@ def _build_fluid_text(character_id: int) -> str:
                         )
                     if absorbed_semen:
                         stomach_text_list.append(
-                            _("肠胃一共吸收了{0}ml精液").format(absorbed_semen)
+                            _("肠胃一共吸收了{0}ml精液").format(
+                                num.shown(absorbed_semen)
+                            )
                         )
                     now_text += _("  {0}：{1}\n").format(
                         part_name, _("，").join(stomach_text_list)

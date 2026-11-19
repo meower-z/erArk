@@ -24,6 +24,7 @@ import os
 import traceback
 
 from Script.Config import normal_config, game_config
+from Script.Design import game_time
 from . import snapshot as snapshot_module
 from .check_registry import CheckFailure, get_all_checks
 
@@ -267,7 +268,7 @@ def _build_entry_header_lines(
     功能:
         构造日志条目的公共头部，供失败条目与修复条目共用
     """
-    game_time_text = getattr(cache, "game_time", "未知")
+    game_time_text = game_time.now()
     game_round_text = getattr(cache, "game_round", "未知")
     lines = []
     lines.append("=" * 80)

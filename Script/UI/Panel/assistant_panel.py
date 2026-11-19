@@ -16,6 +16,7 @@ from Script.Design import (
     second_behavior,
 )
 from Script.UI.Moudle import draw, panel
+from Script.Modules.save_load import reset
 from Script.Config import game_config, normal_config
 
 import random
@@ -217,6 +218,14 @@ def assistant_replace(new_assistant_id: int) -> None:
     info_draw.draw()
 
 
+@reset.repair
+def repair_follow_flag() -> None:
+    """读档时修补：跟随状态超出 0-4 的角色归零"""
+    for character_data in cache.character_data.values():
+        if character_data.sp_flag.is_follow > 4:
+            character_data.sp_flag.is_follow = 0
+
+
 class Assistant_Panel:
     """
     用于查看助理界面面板对象
@@ -271,10 +280,6 @@ class Assistant_Panel:
 
             if character_data.assistant_character_id != 0:
 
-                # 如果数值超限则归零
-                if assistant_data.sp_flag.is_follow > 4:
-                    assistant_data.sp_flag.is_follow = 0
-
                 # 开始遍历全部助理服务
                 for cid in game_config.config_assistant_services:
                     # 跳过未实装的服务
@@ -286,9 +291,8 @@ class Assistant_Panel:
                         game_config.config_assistant_services_option[cid]
                     )
                     service_option_text_all = service_option_data[0]
-                    assistant_data.assistant_services.setdefault(cid, 0)
                     service_option_text_now = service_option_text_all[
-                        assistant_data.assistant_services[cid]
+                        assistant_data.assistant_services.get(cid, 0)
                     ]
                     service_option_len = len(service_option_text_all)
 

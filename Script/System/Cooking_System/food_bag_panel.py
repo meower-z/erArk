@@ -14,6 +14,7 @@ from Script.Core import (
 )
 from Script.UI.Moudle import panel, draw
 from Script.Design import attr_calculation, handle_premise
+from Script.Modules.tk_ui import player_pick
 from Script.Config import normal_config, game_config
 
 _: FunctionType = get_text._
@@ -285,23 +286,9 @@ class FoodBagPanel:
         # 读取背包食物，按(recipe, special_seasoning)分组
         group_normal: dict = {}
         group_special: dict = {}
-        del_food_flag = False
-        for i in character_data.food_bag.copy():
-            food_data: game_type.Food = cache.character_data[0].food_bag[i]
+        for i in character_data.food_bag:
+            food_data: game_type.Food = character_data.food_bag[i]
             recipe_data = game_config.config_recipes.get(food_data.recipe)
-            # 版本更新用修正
-            # 如果food_data没有milk_ml属性，则删除该食物
-            if not hasattr(food_data, "milk_ml"):
-                del cache.character_data[0].food_bag[i]
-                del_food_flag = True
-                continue
-            # 如果food_data是精液调味(调味类型11和12)没有special_seasoning_amount属性，则删除该食物
-            elif food_data.special_seasoning in [11, 12] and not hasattr(
-                food_data, "special_seasoning_amount"
-            ):
-                del cache.character_data[0].food_bag[i]
-                del_food_flag = True
-                continue
             # 如果是食用类型的食物，则跳过饮用类型的食物
             if (
                 self.now_panel == _("食用")
@@ -331,15 +318,6 @@ class FoodBagPanel:
             else:
                 group_special.setdefault(group_key, [])
                 group_special[group_key].append(i)
-
-        # 输出删除食物的提示信息
-        if del_food_flag:
-            del_food_draw = draw.LeftDraw()
-            del_food_draw.text = _(
-                "\n检测到因版本变更导致的食物数据异常，已删除部分异常食物，并重置了部分食物的数据，请保存并覆盖原存档。\n"
-            )
-            del_food_draw.draw()
-            line_feed.draw()
 
         return group_normal, group_special
 
@@ -584,57 +562,13 @@ class FoodGroupDraw:
                 break
 
     def eat_food(self, uid: UUID) -> None:
-        """食用指定uid的食物"""
-        from Script.System.Cooking_System import cooking
-        from Script.UI.Panel import achievement_panel
-        from Script.Design import update
-        from Script.System.Sex_System import drunk_sex_common
-
-        character_data: game_type.Character = cache.character_data[0]
-        now_food: game_type.Food = character_data.food_bag[uid]
-        character_data.behavior.target_food = now_food
-        character_data.behavior.duration = 5
-        character_data.behavior.behavior_id = constant.Behavior.EAT
-        character_data.state = constant.CharacterStatus.STATUS_EAT
-        # 酒类判定，位于特殊调味判定之前，判定失败则变为拒绝饮酒
-        if not drunk_sex_common.judge_accept_alcohol_food(
-            character_data.target_character_id, now_food
-        ):
-            character_data.behavior.behavior_id = constant.Behavior.REFUSE_DRINK
-            character_data.state = constant.CharacterStatus.STATUS_REFUSE_DRINK
-        # 特殊调味的食物则需要进行食用判定，失败则变为拒绝食用
-        elif now_food.special_seasoning != 0:
-            if not cooking.judge_accept_special_seasoning_food(
-                character_data.target_character_id
-            ):
-                # 味道调味则仅生气
-                if now_food.special_seasoning in [1, 2, 3, 4]:
-                    character_data.angry_point += 40
-                    character_data.sp_flag.angry_with_player = True
-                # 检测是否满足高级性骚扰的实行值需求
-                elif handle_premise.handle_instruct_judge_high_obscenity(0):
-                    character_data.behavior.behavior_id = (
-                        constant.Behavior.LOW_OBSCENITY_ANUS
-                    )
-                    character_data.state = (
-                        constant.CharacterStatus.STATUS_LOW_OBSCENITY_ANUS
-                    )
-                else:
-                    character_data.behavior.behavior_id = (
-                        constant.Behavior.REFUSE_EAT
-                    )
-                    character_data.state = (
-                        constant.CharacterStatus.STATUS_REFUSE_EAT
-                    )
-            # 接受的情况下
-            else:
-                # 成就结算
-                if (
-                    now_food.special_seasoning in [11, 12]
-                    and now_food.special_seasoning_amount > 0
-                ):
-                    achievement_panel.achievement_flow(_("进食"), 1076)
-
+        """食用指定uid的食物：交互对象接不接受由行动开始时的判定决定"""
         line_feed.draw()
         cache.now_panel_id = constant.Panel.IN_SCENE
-        update.game_update_flow(5)
+        player_pick.choose(
+            constant.Behavior.EAT,
+            5,
+            kind="eat_food",
+            state=constant.CharacterStatus.STATUS_EAT,
+            args={"food_uid": str(uid)},
+        )

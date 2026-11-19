@@ -169,42 +169,22 @@ class Sex_Position_Panel:
         sex_position_data = game_config.config_sex_position_data[
             sex_position_id
         ]
-        character_data: game_type.Character = cache.character_data[0]
-        if self.change_position:
-            # 切换体位的情况则记录该数据
-            character_data.h_state.pre_sex_position = (
-                character_data.h_state.current_sex_position
-            )
-        else:
-            # 不是切换体位则重置该数据
-            character_data.h_state.pre_sex_position = -1
-        # 阴道性交
-        if self.sex_type == 1:
-            behavior_id = sex_position_data.vaginal_sex_behavior_id
-            handle_instruct.chara_handle_instruct_common_settle(
-                behavior_id, judge=_("性交"), force_taget_wait=True
-            )
-        # 子宫口性交的情况
-        elif self.sex_type == 2:
-            behavior_id = sex_position_data.cervix_sex_behavior_id
-            handle_instruct.chara_handle_instruct_common_settle(
-                behavior_id, judge=_("W性交"), force_taget_wait=True
-            )
-        # 子宫性交的情况
-        elif self.sex_type == 3:
-            behavior_id = sex_position_data.womb_sex_behavior_id
-            handle_instruct.chara_handle_instruct_common_settle(
-                behavior_id, judge=_("W性交"), force_taget_wait=True
-            )
-        # 肛门性交的情况
-        elif self.sex_type == 4:
-            behavior_id = sex_position_data.anal_sex_behavior_id
-            handle_instruct.chara_handle_instruct_common_settle(
-                behavior_id, judge=_("A性交"), force_taget_wait=True
-            )
-        # 尿道性交的情况
-        elif self.sex_type == 5:
-            behavior_id = sex_position_data.urethral_sex_behavior_id
-            handle_instruct.chara_handle_instruct_common_settle(
-                behavior_id, judge=_("U性交"), force_taget_wait=True
-            )
+        # 选定行动后面板退回场景：玩家的选择交回内核后，选择之后的代码不再运行
+        cache.now_panel_id = constant.Panel.IN_SCENE
+        # 性交种类：1阴道，2子宫口，3子宫，4肛门，5尿道
+        field, judge = {
+            1: ("vaginal_sex_behavior_id", _("性交")),
+            2: ("cervix_sex_behavior_id", _("W性交")),
+            3: ("womb_sex_behavior_id", _("W性交")),
+            4: ("anal_sex_behavior_id", _("A性交")),
+            5: ("urethral_sex_behavior_id", _("U性交")),
+        }[self.sex_type]
+        behavior_id: str = getattr(sex_position_data, field)
+        # 上一个体位在行动开始时记下（handle_instruct 的开始代码 sex_position）
+        handle_instruct.chara_handle_instruct_common_settle(
+            behavior_id,
+            judge=judge,
+            force_taget_wait=True,
+            start="sex_position",
+            args={"change_position": self.change_position},
+        )

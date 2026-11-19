@@ -5,7 +5,7 @@
 开新游戏后，把一名干员改成幼年阶段（年龄素质101~108清零后只留101或102），放到博士所在的场景。
 博士以她为交互对象时，H类指令在指令面板的过滤中不成立，
 交给 handle_instruct 也不调用指令的处理函数。
-NPC的状态机选出以她为对象的H类行为时，行为换成发呆；她自己的普通等待不变。
+NPC的状态机选出以她为对象的H类行为时，行为换成发呆；她自己的普通等待在行动开始时不变。
 测试里没有任何H类指令或行为真正执行或结算：指令的处理函数换成只记下调用的替身，状态机只赋予行为。
 """
 
@@ -134,7 +134,7 @@ class ChildStageHGateTest(SlowTestCase):
         )
 
     def test_child_keeps_ordinary_wait(self) -> None:
-        """102自己的等待30分钟不是H类行为：行为与时长不变"""
+        """102自己的等待30分钟不是H类行为：博士等待五分钟时她开始这一行动，行为与时长不变"""
         from Script.Core import constant
 
         child_id = self.make_child(102, "杜宾")
@@ -142,6 +142,7 @@ class ChildStageHGateTest(SlowTestCase):
         constant.handle_state_machine_data[constant.StateMachine.WAIT_30_MIN](
             child_id
         )
+        self.instruct(constant.Instruct.WAIT)
         self.assertEqual(
             (child.behavior.behavior_id, child.behavior.duration),
             (constant.Behavior.WAIT, 30),

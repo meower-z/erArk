@@ -2,7 +2,7 @@
 
 from types import FunctionType
 from collections.abc import Callable, Collection, Iterable
-from Script.Core import cache_control, constant, game_type, get_text
+from Script.Core import cache_control, constant, game_type, get_text, num
 from Script.Core import constant_promise
 from Script.Design import attr_calculation, character, instuct_judege
 from Script.Config import game_config
@@ -394,7 +394,7 @@ def get_now_course_ability(character_id: int) -> int:
 
 
 def judge_value_by_operator(
-    final_value: float, operator_text: str, judge_text: str
+    final_value: num.Num | float, operator_text: str, judge_text: str
 ) -> int:
     """
     按运算符比较两个数值，供不需要角色主体的前提复用（如 Plan 23 的 CVP_RI_ 全局数值）
@@ -487,7 +487,7 @@ def handle_comprehensive_value_premise(
         type_son_id = int(premise_all_value_list[1].split("|")[1])
     if "Son" in premise_all_value_list[1]:
         return 0
-    final_value: float = 0
+    final_value: num.Num | float = 0
     if premise_all_value_list[1][0] == "A":
         final_value = final_character_data.ability.get(type_son_id, 0)
     elif premise_all_value_list[1][0] == "T":
@@ -522,12 +522,11 @@ def handle_comprehensive_value_premise(
             final_value = final_character_data.status_data.get(type_son_id, 0)
     elif premise_all_value_list[1][0] == "F":
         if "Flag" in premise_all_value_list[1]:
-            final_character_data.author_flag.chara_int_flag_dict.setdefault(
-                type_son_id, 0
+            final_value = (
+                final_character_data.author_flag.chara_int_flag_dict.get(
+                    type_son_id, 0
+                )
             )
-            final_value = final_character_data.author_flag.chara_int_flag_dict[
-                type_son_id
-            ]
         else:
             final_value = final_character_data.favorability[0]
     elif premise_all_value_list[1][0] == "X":
@@ -826,7 +825,11 @@ def handle_instruct_judge_low_obscenity(character_id: int) -> int:
     if character_id == 0:
         return 0
     if instuct_judege.calculation_instuct_judege(
-        0, character_id, _("初级骚扰"), not_draw_flag=True
+        0,
+        character_id,
+        _("初级骚扰"),
+        not_draw_flag=True,
+        settle_hypnosis=False,
     )[0]:
         return 1
     return 0
@@ -847,7 +850,11 @@ def handle_target_instruct_judge_low_obscenity(character_id: int) -> int:
         return 0
     # 判断交互对象是否满足低级骚扰条件（调用计算函数判断低级骚扰）
     if instuct_judege.calculation_instuct_judege(
-        character_id, target_character_id, _("初级骚扰"), not_draw_flag=True
+        character_id,
+        target_character_id,
+        _("初级骚扰"),
+        not_draw_flag=True,
+        settle_hypnosis=False,
     )[0]:
         return 1
     return 0
@@ -875,7 +882,11 @@ def handle_instruct_judge_high_obscenity(character_id: int) -> int:
     if character_id == 0:
         return 0
     if instuct_judege.calculation_instuct_judege(
-        0, character_id, _("严重骚扰"), not_draw_flag=True
+        0,
+        character_id,
+        _("严重骚扰"),
+        not_draw_flag=True,
+        settle_hypnosis=False,
     )[0]:
         return 1
     return 0
@@ -899,7 +910,11 @@ def handle_target_instruct_judge_high_obscenity(character_id: int) -> int:
         return 0
     # 调用评价函数判断交互对象是否满足“严重骚扰”条件
     if instuct_judege.calculation_instuct_judege(
-        character_id, target_character_id, _("严重骚扰"), not_draw_flag=True
+        character_id,
+        target_character_id,
+        _("严重骚扰"),
+        not_draw_flag=True,
+        settle_hypnosis=False,
     )[0]:
         return 1
     return 0
@@ -929,7 +944,11 @@ def handle_instruct_judge_h(character_id: int) -> int:
     if character_id == 0:
         return 0
     if instuct_judege.calculation_instuct_judege(
-        0, character_id, _("H模式"), not_draw_flag=True
+        0,
+        character_id,
+        _("H模式"),
+        not_draw_flag=True,
+        settle_hypnosis=False,
     )[0]:
         return 1
     return 0
@@ -949,7 +968,11 @@ def handle_target_instruct_judge_h(character_id: int) -> int:
     if character_id == target_character_id:
         return 0
     if instuct_judege.calculation_instuct_judege(
-        character_id, target_character_id, _("H模式"), not_draw_flag=True
+        character_id,
+        target_character_id,
+        _("H模式"),
+        not_draw_flag=True,
+        settle_hypnosis=False,
     )[0]:
         return 1
     return 0
@@ -979,7 +1002,11 @@ def handle_instruct_judge_group_sex(character_id: int) -> int:
     if character_id == 0:
         return 0
     if instuct_judege.calculation_instuct_judege(
-        0, character_id, _("群交"), not_draw_flag=True
+        0,
+        character_id,
+        _("群交"),
+        not_draw_flag=True,
+        settle_hypnosis=False,
     )[0]:
         return 1
     return 0

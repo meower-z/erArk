@@ -12,6 +12,8 @@ from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation, handle_ability
 import random
+from Script.Design import game_time
+from Script.Modules.save_load import reset
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -25,9 +27,21 @@ window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 
 
+def diplomat_of(country_id: int) -> list[int]:
+    """
+    势力的外交数据，没有登记时为默认值
+    Keyword arguments:
+    country_id -- 势力编号
+    Return arguments:
+    list -- [外交官角色id, 外交方针id]，没有登记时为 [0, 0]
+    """
+    return cache.rhodes_island.diplomat_of_country.get(country_id, [0, 0])
+
+
+@reset.repair
 def update_nation_data() -> None:
     """
-    重置矿石病感染率数据
+    读档时修补：全势力0声望且全国家0感染率时，重置矿石病感染率数据
     """
     need_update = True
 
@@ -65,16 +79,12 @@ def judge_diplomatic_policy() -> None:
     # 遍历所有势力
     for country_id in cache.rhodes_island.diplomat_of_country:
         # 外交官数据
-        diplomat_chara_id = cache.rhodes_island.diplomat_of_country[country_id][
-            0
-        ]
+        diplomat_chara_id = diplomat_of(country_id)[0]
         if diplomat_chara_id == 0:
             continue
         diplomat_chara_data = cache.character_data[diplomat_chara_id]
         # 外交方针数据
-        diplomatic_policy_id = cache.rhodes_island.diplomat_of_country[
-            country_id
-        ][1]
+        diplomatic_policy_id = diplomat_of(country_id)[1]
         if diplomatic_policy_id == 0:
             continue
         diplomatic_policy_data = game_config.config_diplomatic_policy[
@@ -291,11 +301,6 @@ class Nation_Diplomacy_Panel:
         title_text = _("势力外交")
         commission_type_list = [_("国家及附属势力"), _("其他势力")]
 
-        # 更新势力声望数据
-        cache.country = attr_calculation.get_country_reset(cache.country)
-        # 检查是否有全势力0声望0感染率的，如果有则重置矿石病感染率数据
-        update_nation_data()
-
         title_draw = draw.TitleLineDraw(title_text, self.width)
         while 1:
             return_list = []
@@ -399,10 +404,6 @@ class Nation_Diplomacy_Panel:
             # 绘制势力信息
             for nation_id in all_nation_list:
                 nation_data = game_config.config_nation[nation_id]
-                cache.rhodes_island.diplomat_of_country.setdefault(
-                    nation_data.country, [0, 0]
-                )
-
                 # 势力按钮绘制
                 nation_name = attr_calculation.pad_display_width(
                     nation_data.name, text_width, "center"
@@ -439,9 +440,7 @@ class Nation_Diplomacy_Panel:
                     )
                 )
                 # 外交官
-                now_diplomat_chara_id = cache.rhodes_island.diplomat_of_country[
-                    nation_data.country
-                ][0]
+                now_diplomat_chara_id = diplomat_of(nation_data.country)[0]
                 if now_diplomat_chara_id != 0:
                     now_diplomat_chara_data = cache.character_data[
                         now_diplomat_chara_id
@@ -535,10 +534,6 @@ class Nation_Diplomacy_Panel:
         if "\\n" in nation_introduction:
             nation_introduction = nation_introduction.replace("\\n", "\n      ")
 
-        # 初始化负责外交官数据
-        if nation_data.country not in cache.rhodes_island.diplomat_of_country:
-            cache.rhodes_island.diplomat_of_country[nation_data.country][0] = 0
-
         while 1:
             return_list = []
             line = draw.LineDraw("-", self.width)
@@ -569,9 +564,7 @@ class Nation_Diplomacy_Panel:
                     "○负责地区势力的外交官会长期离岛停留在对应国家，只有当罗德岛本身也在同一国家时才会在岛上办公\n"
                 )
                 info_text += _("当前势力的负责外交官为：")
-                now_diplomat_chara_id = cache.rhodes_island.diplomat_of_country[
-                    nation_data.country
-                ][0]
+                now_diplomat_chara_id = diplomat_of(nation_data.country)[0]
                 if now_diplomat_chara_id != 0:
                     now_diplomat_chara_data = cache.character_data[
                         now_diplomat_chara_id
@@ -602,11 +595,7 @@ class Nation_Diplomacy_Panel:
                 line_feed.draw()
 
                 # 当前外交方针
-                now_diplomatic_policy_cid = (
-                    cache.rhodes_island.diplomat_of_country[
-                        nation_data.country
-                    ][1]
-                )
+                now_diplomatic_policy_cid = diplomat_of(nation_data.country)[1]
                 now_diplomatic_policy_text = ""
                 if now_diplomat_chara_id == 0:
                     now_diplomatic_policy_text += _(
@@ -693,9 +682,7 @@ class Nation_Diplomacy_Panel:
             npc_draw_count = 0
             chara_list = set(cache.npc_id_got)
             # 将当前派遣的外交官加入到角色列表里（此处为副本，不能影响cache.npc_id_got）
-            now_diplomat_chara_id = cache.rhodes_island.diplomat_of_country[
-                country_id
-            ][0]
+            now_diplomat_chara_id = diplomat_of(country_id)[0]
             if now_diplomat_chara_id != 0:
                 chara_list.add(now_diplomat_chara_id)
             # 遍历角色列表，绘制符合条件的角色为按钮
@@ -757,20 +744,22 @@ class Nation_Diplomacy_Panel:
         from Script.Settle import default
 
         # 解除任命旧的外交官
-        old_diplomat_id = cache.rhodes_island.diplomat_of_country[country_id][0]
+        old_diplomat_id = diplomat_of(country_id)[0]
         if old_diplomat_id != 0:
             old_diplomat_chara_data = cache.character_data[old_diplomat_id]
             # 取消外交官的工作类型和负责区域数据
             old_diplomat_chara_data.work.work_type = 0
             old_diplomat_chara_data.sp_flag.in_diplomatic_visit = 0
-            cache.rhodes_island.diplomat_of_country[country_id][0] = 0
+            cache.rhodes_island.diplomat_of_country.setdefault(
+                country_id, [0, 0]
+            )[0] = 0
             # 如果是离线状态，则上线
             if not handle_premise.handle_normal_7(old_diplomat_id):
                 default.handle_chara_on_line(
                     old_diplomat_id,
                     1,
                     change_data=game_type.CharacterStatusChange(),
-                    now_time=cache.game_time,
+                    now_time=game_time.now(),
                 )
             # 根据是本地还是外派，赋予对应的二段行为结算
             if cache.rhodes_island.current_location[0] == country_id:
@@ -788,9 +777,9 @@ class Nation_Diplomacy_Panel:
             new_diplomat_chara_data = cache.character_data[character_id]
             # 设置外交官的工作类型和负责区域数据
             new_diplomat_chara_data.work.work_type = 131
-            cache.rhodes_island.diplomat_of_country[country_id][
-                0
-            ] = character_id
+            cache.rhodes_island.diplomat_of_country.setdefault(
+                country_id, [0, 0]
+            )[0] = character_id
             new_diplomat_chara_data.sp_flag.in_diplomatic_visit = country_id
             # 根据是本地还是外派，赋予对应的二段行为结算
             if cache.rhodes_island.current_location[0] == country_id:
@@ -814,7 +803,7 @@ class Nation_Diplomacy_Panel:
                     character_id,
                     1,
                     change_data=game_type.CharacterStatusChange(),
-                    now_time=cache.game_time,
+                    now_time=game_time.now(),
                 )
                 # 输出外派提示
                 info_text = _(
@@ -844,9 +833,7 @@ class Nation_Diplomacy_Panel:
         # facility_name = facility_data.name
         # facility_cid = game_config.config_facility_effect_data[facility_name][now_level]
         # 外交官信息
-        now_diplomat_chara_id = cache.rhodes_island.diplomat_of_country[
-            nation_data.country
-        ][0]
+        now_diplomat_chara_id = diplomat_of(nation_data.country)[0]
         now_diplomat_chara_data = cache.character_data[now_diplomat_chara_id]
 
         while 1:
@@ -876,10 +863,7 @@ class Nation_Diplomacy_Panel:
                 # TODO 实装声望和感染率的影响
                 draw_style = "standard"
                 # 如果已经选择，则绘制为金色
-                if (
-                    diplomatic_policy_id
-                    == cache.rhodes_island.diplomat_of_country[country_id][1]
-                ):
+                if diplomatic_policy_id == diplomat_of(country_id)[1]:
                     draw_style = "gold_enrod"
                 draw_text = (
                     f"[{diplomatic_policy_id}]{diplomatic_policy_data.name.ljust(15,'　')}："
@@ -918,6 +902,6 @@ class Nation_Diplomacy_Panel:
         country_id -- 势力编号
         """
 
-        cache.rhodes_island.diplomat_of_country[country_id][
+        cache.rhodes_island.diplomat_of_country.setdefault(country_id, [0, 0])[
             1
         ] = diplomatic_policy_id

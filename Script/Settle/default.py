@@ -7,11 +7,9 @@ from types import FunctionType
 from Script.Design import (
     basement,
     settle_behavior,
-    instuct_judege,
     map_handle,
     attr_calculation,
     game_time,
-    character_behavior,
     handle_npc_ai_in_h,
     handle_premise,
     hypnosis_state,
@@ -26,6 +24,7 @@ from Script.Core import (
     constant_effect,
     game_type,
     get_text,
+    num,
 )
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
@@ -1024,7 +1023,7 @@ def handle_first_kiss(
     if character_data.talent[4] == 1:
         character_data.talent[4] = 0
         character_data.first_record.first_kiss_id = target_data.cid
-        character_data.first_record.first_kiss_time = cache.game_time
+        character_data.first_record.first_kiss_time = game_time.now()
         character_data.first_record.first_kiss_place = character_data.position
         # 初吻的二段结算
         second_behavior.character_get_second_behavior(
@@ -1033,7 +1032,7 @@ def handle_first_kiss(
     if target_data.talent[4] == 1:
         target_data.talent[4] = 0
         target_data.first_record.first_kiss_id = character_id
-        target_data.first_record.first_kiss_time = cache.game_time
+        target_data.first_record.first_kiss_time = game_time.now()
         target_data.first_record.first_kiss_place = target_data.position
         # 初吻的二段结算
         second_behavior.character_get_second_behavior(
@@ -1105,7 +1104,7 @@ def handle_first_sex(
     if character_data.talent[5] == 1 and (not item_flag):
         character_data.talent[5] = 0
         character_data.first_record.first_sex_id = target_data.cid
-        character_data.first_record.first_sex_time = cache.game_time
+        character_data.first_record.first_sex_time = game_time.now()
         character_data.first_record.first_sex_place = character_data.position
         character_data.first_record.first_sex_posture = instruct_name
     if target_data.talent[0] == 1:
@@ -1113,7 +1112,7 @@ def handle_first_sex(
         # NPC的V破处记录进部位交初体验dict（破处是权威事件，无条件覆盖通用挂钩先建的简版条目）
         target_data.first_record.first_part_sex_dict[6] = {
             "id": character_id,
-            "time": cache.game_time,
+            "time": game_time.now(),
             "place": list(target_data.position),
             "posture": instruct_name,
             "item": 1 if item_flag else -1,
@@ -1203,7 +1202,7 @@ def handle_first_a_sex(
     if character_data.talent[5] == 1 and (not item_flag):
         character_data.talent[5] = 0
         character_data.first_record.first_sex_id = target_data.cid
-        character_data.first_record.first_sex_time = cache.game_time
+        character_data.first_record.first_sex_time = game_time.now()
         character_data.first_record.first_sex_place = character_data.position
         character_data.first_record.first_sex_posture = instruct_name
     if target_data.talent[1] == 1:
@@ -1211,7 +1210,7 @@ def handle_first_a_sex(
         # NPC的A破处记录进部位交初体验dict（破处是权威事件，无条件覆盖通用挂钩先建的简版条目）
         target_data.first_record.first_part_sex_dict[8] = {
             "id": character_id,
-            "time": cache.game_time,
+            "time": game_time.now(),
             "place": list(target_data.position),
             "posture": instruct_name,
             "item": 1 if item_flag else -1,
@@ -1260,7 +1259,7 @@ def handle_first_u_sex(
     if character_data.talent[5] == 1:
         character_data.talent[5] = 0
         character_data.first_record.first_sex_id = target_data.cid
-        character_data.first_record.first_sex_time = cache.game_time
+        character_data.first_record.first_sex_time = game_time.now()
         character_data.first_record.first_sex_place = character_data.position
         character_data.first_record.first_sex_posture = instruct_name
     if target_data.talent[2] == 1:
@@ -1268,7 +1267,7 @@ def handle_first_u_sex(
         # NPC的U破处记录进部位交初体验dict（若未来接入采尿器道具破处，item记2）
         target_data.first_record.first_part_sex_dict[9] = {
             "id": character_id,
-            "time": cache.game_time,
+            "time": game_time.now(),
             "place": list(target_data.position),
             "posture": instruct_name,
             "item": -1,
@@ -1312,7 +1311,7 @@ def handle_first_w_sex(
     if character_data.talent[5] == 1:
         character_data.talent[5] = 0
         character_data.first_record.first_sex_id = target_data.cid
-        character_data.first_record.first_sex_time = cache.game_time
+        character_data.first_record.first_sex_time = game_time.now()
         character_data.first_record.first_sex_place = character_data.position
         character_data.first_record.first_sex_posture = instruct_name
     if target_data.talent[3] == 1:
@@ -1320,7 +1319,7 @@ def handle_first_w_sex(
         # NPC的W破处记录进部位交初体验dict（W破处无道具）
         target_data.first_record.first_part_sex_dict[7] = {
             "id": character_id,
-            "time": cache.game_time,
+            "time": game_time.now(),
             "place": list(target_data.position),
             "posture": instruct_name,
             "item": -1,
@@ -1412,7 +1411,7 @@ def handle_first_kiss_to_penis(
     if target_data.talent[4] == 1:
         target_data.talent[4] = 0
         target_data.first_record.first_kiss_id = character_id
-        target_data.first_record.first_kiss_time = cache.game_time
+        target_data.first_record.first_kiss_time = game_time.now()
         target_data.first_record.first_kiss_place = target_data.position
         target_data.first_record.first_kiss_body_part = 1
         # 阴茎初吻的二段结算
@@ -1637,7 +1636,7 @@ def handle_hypnosis_all(
     if character_id in scene_character_list:
         scene_character_list.remove(character_id)
     # 基础理智消耗
-    sanity_point_cost = 10
+    sanity_point_cost: num.Num = 10
     # 遍历角色列表
     for target_id in scene_character_list:
         # 计算理智消耗
@@ -2013,7 +2012,7 @@ def handle_target_hypnosis_active_h_switch_change(
         )
         change_data.sanity_point -= santi_down
         character_data.pl_ability.today_sanity_point_cost += santi_down
-        handle_instruct.chara_handle_instruct_common_settle(constant.Behavior.H)
+        handle_instruct.plan_instruct_common_settle(constant.Behavior.H)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2870,7 +2869,7 @@ def handle_wait_unitl_traget_action_end(
     """
     if not add_time:
         return
-    from Script.Design import update
+    from Script.Modules.gameplay_resolution import plan_queue
 
     character_data: game_type.Character = cache.character_data[character_id]
     target_character_data = cache.character_data[
@@ -2882,13 +2881,15 @@ def handle_wait_unitl_traget_action_end(
     target_end_time = game_time.get_sub_date(
         target_character_data.behavior.duration, old_date=target_start_time
     )
-    # 到结束时间还有多少分钟
+    # 到结束时间还有多少分钟，玩家接着等这么久
     add_time = int((target_end_time - now_time).total_seconds() / 60)
-    character_data = cache.character_data[0]
-    character_data.behavior.behavior_id = constant.Behavior.WAIT
-    character_data.state = constant.CharacterStatus.STATUS_WAIT
-    character_data.behavior.duration = add_time
-    update.game_update_flow(add_time)
+    if add_time > 0:
+        plan_queue.plan_next(
+            0,
+            constant.Behavior.WAIT,
+            add_time,
+            state=constant.CharacterStatus.STATUS_WAIT,
+        )
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2993,13 +2994,13 @@ def handle_move_to_own_dormitory(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    from Script.StateMachine.default import general_movement_module
+    from Script.StateMachine.default import plan_movement
 
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
     to_target = map_handle.get_map_system_path_for_str(character_data.dormitory)
-    general_movement_module(character_id, to_target)
+    plan_movement(character_id, to_target)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -3100,7 +3101,7 @@ def handle_get_sleep_disturbed_state(
         return
     character_data: game_type.Character = cache.character_data[character_id]
     character_data.action_info.sleep_disturbed_end_time = (
-        game_time.get_sub_date(minute=60, old_date=cache.game_time)
+        game_time.get_sub_date(minute=60, old_date=game_time.now())
     )
 
 
@@ -3164,8 +3165,9 @@ def handle_add_medium_hit_point(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    add_hit_point = add_time * (20 + character_data.hit_point_max * 0.01)
-    add_hit_point = int(add_hit_point)
+    add_hit_point: num.Num = int(
+        add_time * (20 + character_data.hit_point_max * 0.01)
+    )
     character_data.hit_point += add_hit_point
     if character_data.hit_point > character_data.hit_point_max:
         add_hit_point -= character_data.hit_point - character_data.hit_point_max
@@ -3195,8 +3197,9 @@ def handle_add_medium_mana_point(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    add_mana_point = add_time * (30 + character_data.hit_point_max * 0.02)
-    add_mana_point = int(add_mana_point)
+    add_mana_point: num.Num = int(
+        add_time * (30 + character_data.hit_point_max * 0.02)
+    )
     character_data.mana_point += add_mana_point
     if character_data.mana_point > character_data.mana_point_max:
         add_mana_point -= (
@@ -3245,16 +3248,10 @@ def handle_interrupt_target_activity(
                 old_date=target_data.behavior.start_time,
             )
             if target_end_time >= character_data.behavior.start_time:
-                if target_data.behavior.behavior_id == constant.Behavior.MOVE:
-                    target_data.behavior = game_type.Behavior()
-                    target_data.state = constant.CharacterStatus.STATUS_ARDER
-                    instuct_judege.init_character_behavior_start_time(
-                        target_data.cid, character_data.behavior.start_time
-                    )
-                else:
-                    settle_behavior.handle_settle_behavior(
-                        target_data.cid, character_data.behavior.start_time
-                    )
+                from Script.Modules.gameplay_resolution import plan_queue
+
+                # 对方的行为在她自己的结束函数（actions.wrap_up）里收尾
+                plan_queue.interrupt(target_data.cid)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -3798,7 +3795,7 @@ def handle_target_add_small_p_feel(
     now_add_lust: float = add_time + now_lust_multiple
     adjust = handle_ability.get_ability_adjust(target_data.ability[3])
     now_add_lust *= adjust
-    target_data.eja_point += now_add_lust
+    target_data.eja_point += num.exact(now_add_lust)
     # change_data.target_change.setdefault(target_data.cid, game_type.TargetChange())
     # target_change: game_type.TargetChange = change_data.target_change[target_data.cid]
     # target_change.eja_point.setdefault(3, 0)
@@ -5076,7 +5073,7 @@ def handle_self_h_state_reset(
     for state_id in game_config.config_character_state:
         if game_config.config_character_state[state_id].type == 0:
             now_data = attr_calculation.get_status_level(
-                character_data.status_data[state_id]
+                num.whole(character_data.status_data[state_id])
             )
             character_data.h_state.orgasm_level[state_id] = now_data
     # 清零H相关二段状态
@@ -5156,11 +5153,11 @@ def handle_update_orgasm_level(
     for state_id in game_config.config_character_state:
         if game_config.config_character_state[state_id].type == 0:
             now_data = attr_calculation.get_status_level(
-                character_data.status_data[state_id]
+                num.whole(character_data.status_data[state_id])
             )
             character_data.h_state.orgasm_level[state_id] = now_data
             now_data = attr_calculation.get_status_level(
-                target_data.status_data[state_id]
+                num.whole(target_data.status_data[state_id])
             )
             target_data.h_state.orgasm_level[state_id] = now_data
 
@@ -5194,7 +5191,7 @@ def handle_scene_all_characters_update_orgasm_level(
         for state_id in game_config.config_character_state:
             if game_config.config_character_state[state_id].type == 0:
                 now_data = attr_calculation.get_status_level(
-                    now_character_data.status_data[state_id]
+                    num.whole(now_character_data.status_data[state_id])
                 )
                 now_character_data.h_state.orgasm_level[state_id] = now_data
 
@@ -5335,12 +5332,15 @@ def handle_chara_on_line(
     character_data.sp_flag.in_diplomatic_visit = old_in_diplomatic_visit
     if old_imprisonment:
         character_data.sp_flag.imprisonment = True
-    # 赋予默认行动数据
+    # 赋予默认行动数据：与内核加入角色时给的空闲一致，此刻开始、0分钟；已在内核里的角色当前的行动被打断
+    from Script.Modules.gameplay_resolution import plan_queue
+
     character_data.target_character_id = character_id
     character_data.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
     character_data.behavior.start_time = now_time
-    character_data.behavior.duration = 1
+    character_data.behavior.duration = 0
     character_data.state = constant.CharacterStatus.STATUS_ARDER
+    plan_queue.interrupt(character_id)
     # 加入当前干员列表
     if character_id not in cache.npc_id_got:
         cache.npc_id_got.add(character_id)
@@ -7806,7 +7806,7 @@ def handle_urethral_swab_add_adjust(
         # 润滑调整
         target_data.status_data.setdefault(8, 0)
         pain_adjust = attr_calculation.get_pain_adjust(
-            target_data.status_data[8]
+            num.whole(target_data.status_data[8])
         )
 
         # 扩长等级相对于插入等级的调整，棉棒默认为无影响
@@ -7863,7 +7863,7 @@ def handle_urethral_finger_insertion_add_adjust(
         # 润滑调整
         target_data.status_data.setdefault(8, 0)
         pain_adjust = attr_calculation.get_pain_adjust(
-            target_data.status_data[8]
+            num.whole(target_data.status_data[8])
         )
 
         # 扩长等级相对于插入等级的调整，手指为-2级扩张
@@ -8768,7 +8768,7 @@ def handle_give_gift_add_adjust(
             character_data.ability[40]
         )
         # 更新最后赠送时间
-        target_data.action_info.last_gift_time = cache.game_time
+        target_data.action_info.last_gift_time = game_time.now()
         # 好感礼物小
         if gift_data.item_id == 172:
             base_chara_favorability_and_trust_common_settle(
@@ -9063,6 +9063,131 @@ def handle_read_add_adjust(
         achievement_panel.achievement_flow(_("读书"))
 
 
+def _teach_subject(teacher_id: int) -> tuple[int, int]:
+    """
+    教师这一节所授的科目与课型。
+    全局课表上这一节有这位教师的课、而且科目已知时，取课表的科目与课型。
+    查不到时科目用学识（FALLBACK_SUBJECT_ABILITY），课型按教师所在的场景判。
+    Keyword arguments:
+    teacher_id -- 教师的角色id
+    Return arguments:
+    tuple -- (科目能力id, 课型编号)
+    """
+    from Script.System.Education_System import (
+        education_constant,
+        schedule_handle,
+    )
+
+    teaching = schedule_handle.get_now_teaching(teacher_id)
+    if teaching is not None and teaching["ability_id"] > 0:
+        return teaching["ability_id"], teaching["course_type"]
+    return (
+        education_constant.FALLBACK_SUBJECT_ABILITY,
+        schedule_handle.get_course_type_by_position(
+            cache.character_data[teacher_id].position
+        ),
+    )
+
+
+def _settle_class_student(
+    teacher_id: int,
+    student_id: int,
+    scene_name: str,
+    lesson: tuple[int, int, int],
+    add_time: int,
+    change_data: game_type.CharacterStatusChange,
+) -> bool:
+    """
+    一名听课学生这一侧的授课收益（512 的学生侧，557 结算被玩家授课拉来的学生时也用）。
+    NPC 教师授课时，只结算本节课表排在这间教室、节次与教师开讲节次相同的学生。
+    玩家授课时不按课表筛学生，该生本节课表排在这间教室时才计一节出勤。
+    收益交给 settle_student_class_gain，同一节只结算一次。
+    玩家授课并且真的结算了时，再加该生对玩家的好感与信赖。
+    Keyword arguments:
+    teacher_id -- 教师的角色id，0 为玩家
+    student_id -- 学生的角色id
+    scene_name -- 授课场景的名字
+    lesson -- (科目能力id, 课型编号, 教师开讲的节次)
+    add_time -- 结算时间
+    change_data -- 教师的结算信息记录对象
+    Return arguments:
+    bool -- 是否结算了
+    """
+    from Script.System.Education_System import growth_handle, schedule_handle
+
+    ability_id, course_type, teacher_period = lesson
+    student_course = schedule_handle.get_now_course(student_id)
+    scheduled_here = (
+        student_course is not None and student_course["classroom"] == scene_name
+    )
+    if teacher_id != 0 and not scheduled_here:
+        return False
+    if (
+        teacher_id != 0
+        and student_course is not None
+        and student_course["period"] != teacher_period
+    ):
+        return False
+    if not growth_handle.settle_student_class_gain(
+        student_id,
+        teacher_id,
+        ability_id,
+        course_type,
+        add_time,
+        change_data_to_target_change=change_data,
+        count_attend=scheduled_here,
+    ):
+        return False
+    if teacher_id == 0:
+        student_data: game_type.Character = cache.character_data[student_id]
+        for favorability_flag in (True, False):
+            base_chara_favorability_and_trust_common_settle(
+                teacher_id,
+                add_time,
+                favorability_flag,
+                0,
+                student_data.ability[32],
+                change_data,
+                student_data.cid,
+            )
+    return True
+
+
+def _settle_pulled_by_player_teach(student_id: int, add_time: int) -> bool:
+    """
+    玩家授课时，在同一场景、与玩家同一时刻开始听课的学生这一侧的收益，按 _settle_class_student 结算。
+    玩家开讲时已在听课的学生由 512 结算过，节次内由 settle_student_class_gain 的每节标记挡下第二份。
+    变化记在一个用完即弃的新记录对象里，不显示。
+    Keyword arguments:
+    student_id -- 学生的角色id
+    add_time -- 结算时间
+    Return arguments:
+    bool -- 她是否在听玩家这次授课。为 True 时这次听课已由这里结算完，调用方不再按课表结算
+    """
+    student_data: game_type.Character = cache.character_data[student_id]
+    pl_character_data: game_type.Character = cache.character_data[0]
+    if (
+        pl_character_data.behavior.behavior_id != constant.Behavior.TEACH
+        or pl_character_data.position != student_data.position
+        or pl_character_data.behavior.start_time
+        != student_data.behavior.start_time
+    ):
+        return False
+    ability_id, course_type = _teach_subject(0)
+    scene_name = cache.scene_data[
+        map_handle.get_map_system_path_str_for_list(student_data.position)
+    ].scene_name
+    _settle_class_student(
+        0,
+        student_id,
+        scene_name,
+        (ability_id, course_type, game_time.get_class_period(0)),
+        add_time,
+        game_type.CharacterStatusChange(),
+    )
+    return True
+
+
 @settle_behavior.add_settle_behavior_effect(
     constant_effect.BehaviorEffect.TEACH_ADD_ADJUST
 )
@@ -9073,8 +9198,11 @@ def handle_teach_add_just(
     now_time: datetime.datetime,
 ) -> None:
     """
-    （教学用）按课表所排的科目结算：教师与场景内所有听课角色都获得该科目的习得与经验，如果玩家是老师则再加好感和信赖
-    Plan 22 改造：科目从写死的学识(45)改为查全局课表取当节所授科目；查不到课表时回落学识，保证既有干员学生链不被破坏
+    （教学用）结算一次授课，科目与课型由 _teach_subject 取。
+    教师获得该科目的习得与经验。
+    场景里正在听课的学生逐个交给 _settle_class_student 结算。
+    NPC 教师授课时，结算了的学生重新排上听课；玩家授课时她们接着听手上的课。
+    被玩家授课拉来、稍后才坐下的学生不在这里结算，由 557 结算。
     Keyword arguments:
     character_id -- 角色id
     add_time -- 结算时间
@@ -9083,25 +9211,11 @@ def handle_teach_add_just(
     """
     if not add_time:
         return
-    from Script.System.Education_System import (
-        education_constant,
-        growth_handle,
-        schedule_handle,
-    )
+    from Script.System.Education_System import growth_handle
+    from Script.Modules.gameplay_resolution import plan_queue
 
     character_data: game_type.Character = cache.character_data[character_id]
-
-    # 取本节所授科目与课型：教师视角反查全局课表
-    ability_id = education_constant.FALLBACK_SUBJECT_ABILITY
-    course_type = education_constant.COURSE_TYPE_THEORY
-    teaching = schedule_handle.get_now_teaching(character_id)
-    if teaching is not None and teaching["ability_id"] > 0:
-        ability_id = teaching["ability_id"]
-        course_type = teaching["course_type"]
-    else:
-        course_type = schedule_handle.get_course_type_by_position(
-            character_data.position
-        )
+    ability_id, course_type = _teach_subject(character_id)
 
     # 教师自身的教学相长：加当节所授科目的习得与经验
     growth_handle.settle_teacher_class_gain(
@@ -9132,59 +9246,27 @@ def handle_teach_add_just(
                     other_character_data.behavior.behavior_id
                     == constant.Behavior.ATTENT_CLASS
                 ):
-                    student_course = schedule_handle.get_now_course(chara_id)
-                    scheduled_here = (
-                        student_course is not None
-                        and student_course["classroom"] == scene_data.scene_name
-                    )
-                    if character_id != 0 and not scheduled_here:
-                        continue
-                    if (
-                        character_id != 0
-                        and student_course is not None
-                        and student_course["period"] != teacher_period
-                    ):
-                        continue
-
-                    # 按课表科目结算该学生的习得与科目经验，学习速度由师生等级差决定；同一节只结算一次。
-                    #    玩家手动授课只在该生本节课表就排在这间教室时才计出勤，节次外 / 别处的课只给收益（Plan 25 §3.4）
-                    if not growth_handle.settle_student_class_gain(
-                        chara_id,
+                    if not _settle_class_student(
                         character_id,
-                        ability_id,
-                        course_type,
+                        chara_id,
+                        scene_data.scene_name,
+                        (ability_id, course_type, teacher_period),
                         add_time,
-                        change_data_to_target_change=change_data,
-                        count_attend=scheduled_here,
+                        change_data,
                     ):
                         continue
 
-                    # 如果老师是玩家
-                    if character_id == 0:
-                        # 加好感
-                        base_chara_favorability_and_trust_common_settle(
-                            character_id,
-                            add_time,
-                            True,
-                            0,
-                            other_character_data.ability[32],
-                            change_data,
-                            other_character_data.cid,
+                    # NPC 教师授课时该生重新开始听课，排进他的计划队列；
+                    # 玩家授课时不排：排上的听课与玩家同一刻、同一场景开始，557 会把她当作被拉来的学生再结算一份
+                    if character_id != 0 and not plan_queue.plan_has(
+                        chara_id, constant.Behavior.ATTENT_CLASS
+                    ):
+                        plan_queue.plan_next(
+                            chara_id,
+                            constant.Behavior.ATTENT_CLASS,
+                            other_character_data.behavior.duration,
+                            interrupt=True,
                         )
-                        # 加信赖
-                        base_chara_favorability_and_trust_common_settle(
-                            character_id,
-                            add_time,
-                            False,
-                            0,
-                            other_character_data.ability[32],
-                            change_data,
-                            other_character_data.cid,
-                        )
-
-                    # 手动结算该状态
-                    character_behavior.judge_character_status(chara_id)
-                    # other_character_data.state = constant.CharacterStatus.STATUS_ARDER
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -9247,7 +9329,8 @@ def handle_attent_class_add_just(
        settle_student_class_gain 按节次去重，教师随后开讲时的广播不会重复。
     代价：教师判能到岗、这一节却被临时叫走（比如被玩家拉进 H）时，学生照样拿到这节课，与「能到岗」判据的既有含义一致。
     不走这里的：课表上没排教师（那是自习，由 548 结算）、授课者是玩家（临时实操课，那是课堂 H，不是授课）、
-       学生不在本节的教室里（她是在那间教室坐下来等教师的；被玩家拉到别处听课的由玩家的广播结算）。
+       学生不在本节的教室里（她是在那间教室坐下来等教师的）。
+    她在玩家授课的场景、与玩家同一时刻开始听课时，由 _settle_pulled_by_player_teach 结算，下面按课表的结算不再走。
     「这一节」按学生自己的行为开始时刻取；
     这一节已由实操课记过出勤的（sex_class_handle.settle_attend 也写去重标记，Plan 32 §3.8 L7），
        settle_student_class_gain 按去重不再结算，同一节只落一种记录
@@ -9265,6 +9348,8 @@ def handle_attent_class_add_just(
         schedule_handle,
     )
 
+    if _settle_pulled_by_player_teach(character_id, add_time):
+        return
     now_course = schedule_handle.get_now_course(character_id)
     if now_course is None or now_course["ability_id"] <= 0:
         return
@@ -9311,7 +9396,7 @@ def handle_skip_class_add_just(
     growth_data = growth_handle.get_child_growth(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
     growth_data.skip_class_flag = True
-    start_time = character_data.behavior.start_time or cache.game_time
+    start_time = character_data.behavior.start_time or game_time.now()
     growth_data.skip_class_day = start_time.toordinal()
     # 翘课换来的那点轻松：抑郁小幅回落。不给任何学习收益，这是翘课的代价
     if 19 in character_data.status_data:
@@ -10811,7 +10896,7 @@ def handle_target_lubrication_adjust_add_pain(
         # 获取调整值#
         target_data.status_data.setdefault(8, 0)
         pain_adjust = attr_calculation.get_pain_adjust(
-            target_data.status_data[8]
+            num.whole(target_data.status_data[8])
         )
         base_chara_state_common_settle(
             character_data.target_character_id,
@@ -10857,7 +10942,7 @@ def handle_target_v_adjust_add_pain(
         # 润滑调整
         target_data.status_data.setdefault(8, 0)
         pain_adjust = attr_calculation.get_pain_adjust(
-            target_data.status_data[8]
+            num.whole(target_data.status_data[8])
         )
         # 腰技的调整
         waist_tech = character_data.ability[76]
@@ -10918,7 +11003,7 @@ def handle_target_a_adjust_add_pain(
         # 润滑调整
         target_data.status_data.setdefault(8, 0)
         pain_adjust = attr_calculation.get_pain_adjust(
-            target_data.status_data[8]
+            num.whole(target_data.status_data[8])
         )
         # 腰技的调整
         waist_tech = character_data.ability[76]
@@ -10979,7 +11064,7 @@ def handle_target_u_adjust_add_pain(
         # 润滑调整
         target_data.status_data.setdefault(8, 0)
         pain_adjust = attr_calculation.get_pain_adjust(
-            target_data.status_data[8]
+            num.whole(target_data.status_data[8])
         )
         # 腰技的调整
         waist_tech = character_data.ability[76]
@@ -11041,7 +11126,7 @@ def handle_target_w_adjust_add_pain(
         # 润滑调整
         target_data.status_data.setdefault(8, 0)
         pain_adjust = attr_calculation.get_pain_adjust(
-            target_data.status_data[8]
+            num.whole(target_data.status_data[8])
         )
         # 腰技的调整
         waist_tech = character_data.ability[76]
@@ -12462,7 +12547,7 @@ def record_first_part_sex(
         behavior_name = game_config.config_behavior[behavior_id].name
     target_data.first_record.first_part_sex_dict[part_id] = {
         "id": character_id,
-        "time": cache.game_time,
+        "time": game_time.now(),
         "place": list(target_data.position),
         "posture": behavior_name,
         "item": item,

@@ -155,6 +155,8 @@ class GrowthEventsMatchStageTest(SlowTestCase):
 
     def test_old_save_with_unknown_event(self) -> None:
         """存档的公务队列与养成履历里有事件表没有的事件：读档后静态检查通过，队列里那一条被静默清掉，养成总览照常画出"""
+        from Script.Design import game_time
+
         import datetime
 
         from Script.Config import game_config
@@ -180,7 +182,7 @@ class GrowthEventsMatchStageTest(SlowTestCase):
                 "department": education_constant.GROWTH_EVENT_DEPARTMENT,
                 "chara_id": elder_id,
                 "partner_id": 0,
-                "add_time": self.cache.game_time,
+                "add_time": game_time.now(),
             }
         )
         self.assertTrue(
