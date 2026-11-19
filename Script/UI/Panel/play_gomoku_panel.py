@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import random
 import numpy as np
 from collections import deque, defaultdict
 import re
@@ -18,8 +17,9 @@ from Script.Core import (
 )
 from types import FunctionType
 from Script.Config import normal_config, game_config
+from Script.Modules.tk_ui import player_pick
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NoReturn
 
 if TYPE_CHECKING:
     from typing import Any
@@ -543,7 +543,7 @@ class ZobristCache:
         Return arguments:
         int -- 转成的整数
         """
-        return int("".join(str(random.randint(0, 1)) for _ in range(length)), 2)
+        return player_pick.ui_random.getrandbits(length)
 
     def toggle_piece(self, x: int, y: int, role: int) -> None:
         """
@@ -1659,8 +1659,14 @@ class GomokuPanel:
                 info_draw.draw()
 
             line_feed.draw()
+            back_button = draw.CenterButton(_("[返回]"), _("返回"), self.width)
+            back_button.draw()
+            return_list.append(back_button.return_text)
+            line_feed.draw()
 
             yrn = flow_handle.askfor_all(return_list)
+            if yrn == back_button.return_text:
+                player_pick.back()
             if yrn in return_list:
                 cache.now_panel_id = constant.Panel.IN_SCENE
                 break
@@ -1777,24 +1783,17 @@ class GomokuPanel:
             if self.game_over:
                 line_feed.draw()
                 line_feed.draw()
-                if self.current_player == "O":
-                    winner_name = self.pl_character_data.name
-                    self.end_settle(0)
-                else:
-                    winner_name = self.target_character_data.name
-                    self.end_settle(1)
-                win_draw = draw.NormalDraw()
+                winner = 0 if self.current_player == "O" else 1
+                winner_name = (
+                    self.pl_character_data.name
+                    if winner == 0
+                    else self.target_character_data.name
+                )
+                win_draw = draw.WaitDraw()
                 win_draw.text = _("{0} 获胜!\n\n\n").format(winner_name)
                 win_draw.width = self.width
                 win_draw.draw()
-                restart_button = draw.CenterButton(
-                    _("[再来一局]"),
-                    _("再来一局"),
-                    self.width // 2,
-                    cmd_func=self.reset_board,
-                )
-                restart_button.draw()
-                return_list.append(restart_button.return_text)
+                self.end_settle(winner)
 
             back_draw = draw.CenterButton(
                 _("[结束游戏]"), _("结束游戏"), self.width // 2
@@ -1806,25 +1805,28 @@ class GomokuPanel:
                 cache.now_panel_id = constant.Panel.IN_SCENE
                 break
 
-    def end_settle(self, winner: int) -> None:
-        """游戏结束结算"""
+    def end_settle(self, winner: int) -> NoReturn:
+        """
+        游戏结束：定下胜或负的行为，游戏类型与难度在行动开始时写进玩家的行为数据
+        Keyword arguments:
+        winner -- 0 玩家胜，1 交互对象胜
+        """
 
         from Script.System.Instruct_System import handle_instruct
 
-        # 写入游戏类型与难度
-        hard_level = self.DEPTH // 2
-        self.pl_character_data.behavior.board_game_type = 1
-        self.pl_character_data.behavior.board_game_ai_difficulty = hard_level
-
-        # 结算状态
-        if winner == 0:
-            handle_instruct.chara_handle_instruct_common_settle(
-                constant.Behavior.PL_WIN_IN_BOARD_GAME, force_taget_wait=True
-            )
-        else:
-            handle_instruct.chara_handle_instruct_common_settle(
-                constant.Behavior.PL_LOSE_IN_BOARD_GAME, force_taget_wait=True
-            )
+        behavior_id = (
+            constant.Behavior.PL_WIN_IN_BOARD_GAME
+            if winner == 0
+            else constant.Behavior.PL_LOSE_IN_BOARD_GAME
+        )
+        handle_instruct.chara_handle_instruct_common_settle(
+            behavior_id,
+            force_taget_wait=True,
+            fields={
+                "behavior.board_game_type": 1,
+                "behavior.board_game_ai_difficulty": self.DEPTH // 2,
+            },
+        )
 
     def choose_first_player(self) -> None:
         """选择先后手"""
@@ -1850,8 +1852,14 @@ class GomokuPanel:
             )
             second_button.draw()
             return_list.append(second_button.return_text)
+            line_feed.draw()
+            back_button = draw.CenterButton(_("[返回]"), _("返回"), self.width)
+            back_button.draw()
+            return_list.append(back_button.return_text)
 
             yrn = flow_handle.askfor_all(return_list)
+            if yrn == back_button.return_text:
+                player_pick.back()
             if yrn in return_list:
                 break
 
@@ -2113,22 +2121,6 @@ class GomokuPanel:
     def check_winner(self, lst: list[tuple[int, int]]) -> bool:
         """检查是否有玩家获胜"""
         return check_winner(lst, COLUMN, ROW)
-
-    def reset_board(self) -> None:
-        """重置棋盘"""
-        self.board_draw = [["┼" for _ in range(15)] for _ in range(15)]
-        self.current_player = "O"
-        self.selected_row = -1
-        self.selected_col = -1
-        self.last_ai_move = None
-        self.last_player_move = None
-        self.game_over = False
-        self.list1.clear()
-        self.list2.clear()
-        self.list3.clear()
-        self.board_class = Gomoku_Board()
-        self.choose_ai_difficulty()
-        self.choose_first_player()
 
     def ai(self) -> tuple[int, int]:
         """AI决策，返回下一步位置"""

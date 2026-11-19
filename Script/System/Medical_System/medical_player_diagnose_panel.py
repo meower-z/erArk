@@ -19,6 +19,7 @@ from Script.System.Medical_System import (
     medical_constant,
     medical_player_diagnose_function,
 )
+from Script.Modules.tk_ui import player_pick
 from Script.UI.Moudle import draw
 
 cache: game_type.Cache = cache_control.cache
@@ -1752,6 +1753,9 @@ class MedicalPlayerDiagnosePanel:
         """
         # 确保面板状态已切回场景，避免结算时界面异常
         cache.now_panel_id = constant.Panel.IN_SCENE
+        # 一项检查都没做就退出：整个选择取消，不花时间也不留改动
+        if self._abort_requested and self._checks_executed == 0:
+            player_pick.back()
         # 基础耗时5分钟
         duration = 5
         # 按检查次数累计耗时，每次检查+10分钟

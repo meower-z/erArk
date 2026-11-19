@@ -2,6 +2,7 @@
 
 import os
 from types import FunctionType
+from typing import NoReturn
 from Script.Core import (
     cache_control,
     game_type,
@@ -19,6 +20,9 @@ from Script.Design import (
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 import random
+from Script.Design import game_time
+from Script.Modules.gameplay_resolution import plan_queue
+from Script.Modules.tk_ui import player_pick
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -103,7 +107,7 @@ def calculate_escape_probability(character_id: int) -> float:
         )
     else:
         cache.rhodes_island.current_prisoners[character_id] = [
-            cache.game_time,
+            game_time.now(),
             add_escape_probability,
         ]
 
@@ -200,7 +204,7 @@ def escape_success(character_id: int) -> None:
         character_id,
         1,
         change_data=game_type.CharacterStatusChange(),
-        now_time=cache.game_time,
+        now_time=game_time.now(),
     )
     field_commission_function.create_capture_fugitive_commission(character_id)
 
@@ -242,7 +246,7 @@ def chara_become_prisoner(character_id: int) -> None:
     # 重置身体管理
     character_data.body_manage = attr_calculation.get_body_manage_zero()
     # 加入囚犯数据
-    cache.rhodes_island.current_prisoners[character_id] = [cache.game_time, 0]
+    cache.rhodes_island.current_prisoners[character_id] = [game_time.now(), 0]
     # 服装结算
     clothing.handle_prisoner_clothing(character_id)
     # 当前位置作为宿舍，并保存旧宿舍
@@ -316,17 +320,30 @@ def get_unused_prison_dormitory() -> str:
     return ""
 
 
-def prepare_training() -> None:
+def prepare_training() -> NoReturn:
     """
-    玩家、玩家交互对象、监狱长三个人移动到调教室\n
-    监狱长对交互对象完成调教前准备工作\n
+    玩家定下调教前准备：10 分钟的等待，准备工作在行动开始时进行（start_training_preparation）
+    """
+    player_pick.choose(
+        constant.Behavior.WAIT,
+        10,
+        kind="prepare_training",
+        target=cache.character_data[0].target_character_id,
+        state=constant.CharacterStatus.STATUS_WAIT,
+    )
+
+
+def start_training_preparation(target_character_id: int) -> None:
+    """
+    调教前准备的开始：玩家、交互对象、监狱长三个人到调教室\n
+    监狱长对交互对象完成调教前准备工作，交互对象与监狱长随玩家等待 10 分钟\n
+    Keyword arguments:
+    target_character_id -- 玩家的交互对象
     """
     from Script.Settle import default
-    from Script.Design import character_move
     from Script.UI.Panel import h_item_shop_panel
 
     pl_character_data = cache.character_data[0]
-    target_character_id = pl_character_data.target_character_id
     target_character_data = cache.character_data[target_character_id]
     warden_id = cache.rhodes_island.current_warden_id
     warden_character_data = cache.character_data[warden_id]
@@ -342,17 +359,9 @@ def prepare_training() -> None:
     map_handle.character_move_scene(
         warden_character_data.position, humiliation_room_list, warden_id
     )
-    # 原地等待5分钟
-    target_character_data.target_character_id = target_character_id
-    target_character_data.behavior.behavior_id = constant.Behavior.WAIT
-    target_character_data.behavior.duration = 5
-    target_character_data.state = constant.CharacterStatus.STATUS_WAIT
-    warden_character_data.target_character_id = target_character_id
-    warden_character_data.behavior.behavior_id = constant.Behavior.WAIT
-    warden_character_data.behavior.duration = 5
-    warden_character_data.state = constant.CharacterStatus.STATUS_WAIT
-    # 玩家移动
-    character_move.own_charcter_move(humiliation_room_list)
+    map_handle.character_move_scene(
+        pl_character_data.position, humiliation_room_list, 0
+    )
     # 清洗
     if cache.rhodes_island.pre_training_cleaning:
         target_character_data.dirty = attr_calculation.get_dirty_reset(
@@ -367,13 +376,13 @@ def prepare_training() -> None:
             0,
             add_time=1,
             change_data=game_type.CharacterStatusChange(),
-            now_time=cache.game_time,
+            now_time=game_time.now(),
         )
         default.handle_target_add_huge_lubrication(
             warden_id,
             add_time=1,
             change_data=game_type.CharacterStatusChange(),
-            now_time=cache.game_time,
+            now_time=game_time.now(),
         )
     # 道具使用
     body_item_list = h_item_shop_panel.body_item_list
@@ -393,7 +402,7 @@ def prepare_training() -> None:
                     0,
                     add_time=1,
                     change_data=game_type.CharacterStatusChange(),
-                    now_time=cache.game_time,
+                    now_time=game_time.now(),
                 )
                 cache.character_data[0].item[item_id] -= 1
             # 其他道具
@@ -409,7 +418,7 @@ def prepare_training() -> None:
                             warden_id,
                             add_time=1,
                             change_data=game_type.CharacterStatusChange(),
-                            now_time=cache.game_time,
+                            now_time=game_time.now(),
                         )
                     # 安眠药
                     elif i == 9:
@@ -417,7 +426,7 @@ def prepare_training() -> None:
                             warden_id,
                             add_time=1,
                             change_data=game_type.CharacterStatusChange(),
-                            now_time=cache.game_time,
+                            now_time=game_time.now(),
                         )
                     # 排卵促进药
                     elif i == 10:
@@ -425,7 +434,7 @@ def prepare_training() -> None:
                             warden_id,
                             add_time=1,
                             change_data=game_type.CharacterStatusChange(),
-                            now_time=cache.game_time,
+                            now_time=game_time.now(),
                         )
                     # 事前避孕药
                     elif i == 11:
@@ -433,7 +442,7 @@ def prepare_training() -> None:
                             warden_id,
                             add_time=1,
                             change_data=game_type.CharacterStatusChange(),
-                            now_time=cache.game_time,
+                            now_time=game_time.now(),
                         )
                     # 事后避孕药
                     elif i == 12:
@@ -441,19 +450,18 @@ def prepare_training() -> None:
                             warden_id,
                             add_time=1,
                             change_data=game_type.CharacterStatusChange(),
-                            now_time=cache.game_time,
+                            now_time=game_time.now(),
                         )
-    # 全员等待10分钟
-    target_character_data.behavior.behavior_id = constant.Behavior.WAIT
-    target_character_data.behavior.duration = 10
-    target_character_data.state = constant.CharacterStatus.STATUS_WAIT
-    warden_character_data.behavior.behavior_id = constant.Behavior.WAIT
-    warden_character_data.behavior.duration = 10
-    warden_character_data.state = constant.CharacterStatus.STATUS_WAIT
-    pl_character_data.behavior.behavior_id = constant.Behavior.WAIT
-    pl_character_data.behavior.duration = 10
-    pl_character_data.state = constant.CharacterStatus.STATUS_WAIT
-    pl_character_data.target_character_id = target_character_id
+    # 交互对象与监狱长随玩家等待10分钟
+    for waiting_id in (target_character_id, warden_id):
+        plan_queue.plan_next(
+            waiting_id,
+            constant.Behavior.WAIT,
+            10,
+            target=target_character_id,
+            state=constant.CharacterStatus.STATUS_WAIT,
+            interrupt=True,
+        )
 
 
 def get_all_can_use_behavior_id_for_sex_assistant(
@@ -697,11 +705,8 @@ class Confinement_And_Training_Manage_Panel:
                 button_draw.draw()
                 return_list.append(button_draw.return_text)
 
-                # 如果没有该键，则创建一个，并置为0
-                if cid not in cache.rhodes_island.confinement_training_setting:
-                    cache.rhodes_island.confinement_training_setting[cid] = 0
                 now_setting_flag = (
-                    cache.rhodes_island.confinement_training_setting[cid]
+                    cache.rhodes_island.confinement_training_setting.get(cid, 0)
                 )  # 当前设置的值
                 option_len = len(
                     game_config.config_confinement_training_setting_option[cid]
@@ -817,6 +822,7 @@ class Confinement_And_Training_Manage_Panel:
 
     def change_setting(self, cid: int, option_len: int) -> None:
         """修改设置"""
+        cache.rhodes_island.confinement_training_setting.setdefault(cid, 0)
         if (
             cache.rhodes_island.confinement_training_setting[cid]
             < option_len - 1

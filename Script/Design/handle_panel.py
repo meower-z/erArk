@@ -17,7 +17,7 @@ def add_panel(
     [Callable[PanelParams, PanelReturn]], Callable[PanelParams, PanelReturn]
 ]:
     """
-    添加面板
+    添加面板：玩家选行动时，面板（player_pick.UNDRAFTED 之外）在选择的草稿里运行（player_pick.drafting）
     Keyword arguments:
     panel -- 面板id
     Return arguments:
@@ -31,7 +31,13 @@ def add_panel(
         def return_wrapper(
             *args: PanelParams.args, **kwargs: PanelParams.kwargs
         ) -> PanelReturn:
-            return func(*args, **kwargs)
+            from Script.Modules.tk_ui import player_pick
+
+            if panel in player_pick.UNDRAFTED:
+                return func(*args, **kwargs)
+            with player_pick.drafting(f"panel {panel}"):
+                result = func(*args, **kwargs)
+            return result
 
         constant.panel_data[panel] = return_wrapper
         return return_wrapper

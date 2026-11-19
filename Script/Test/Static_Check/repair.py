@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from fractions import Fraction
 
 from Script.Config import game_config
 
@@ -110,7 +111,7 @@ def repair_fatigue_family_range(cache: game_type.Cache) -> list[dict]:
         List[dict]: 修复记录列表
     功能:
         与NUM-27（含MIND-24的sleep_point子集）同语义：tired_point/hunger_point/sleep_point/drunk_point
-        必须是[0,上界]内的int。非int（含None/bool）置0，越界钳制到边界
+        必须是[0,上界]内的int或Fraction。其他类型（含None/bool）置0，越界钳制到边界
     """
     bounds = {
         "tired_point": 160,
@@ -122,9 +123,12 @@ def repair_fatigue_family_range(cache: game_type.Cache) -> list[dict]:
     for cid, chara in cache.character_data.items():
         for field, upper in bounds.items():
             v = getattr(chara, field, None)
-            if type(v) is int and 0 <= v <= upper:
-                continue
-            new_v = min(max(v, 0), upper) if type(v) is int else 0
+            if isinstance(v, int | Fraction) and not isinstance(v, bool):
+                if 0 <= v <= upper:
+                    continue
+                new_v = min(max(v, 0), upper)
+            else:
+                new_v = 0
             setattr(chara, field, new_v)
             records.append(
                 _record("NUM-27", _chara_label(cid, chara), field, v, new_v)

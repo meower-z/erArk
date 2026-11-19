@@ -60,8 +60,6 @@ class Manage_Dormitory_Panel:
         title_draw = draw.TitleLineDraw(title_text, self.width)
 
         while 1:
-            basement.get_base_updata()
-            basement.update_work_people()
             return_list: list[str] = []
 
             title_draw.draw()

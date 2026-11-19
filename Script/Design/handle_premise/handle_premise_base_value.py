@@ -1,7 +1,13 @@
 """基础数值相关的前提处理函数"""
 
 from types import FunctionType
-from Script.Core import cache_control, constant_promise, game_type, get_text
+from Script.Core import (
+    cache_control,
+    constant_promise,
+    game_type,
+    get_text,
+    num,
+)
 from Script.Design import attr_calculation
 from Script.Design.handle_premise.premise_registry import add_premise
 
@@ -90,7 +96,7 @@ def handle_mp_0(character_id: int) -> int:
         return_value = max(
             1, character_data.hit_point_max - character_data.hit_point
         )
-        return return_value
+        return num.whole(return_value)
     else:
         return 0
 
@@ -453,7 +459,7 @@ def handle_tired_ge_85(character_id: int) -> int:
 
     value = character_data.tired_point / 160
     if value > 0.84:
-        return character_data.tired_point * 5
+        return num.whole(character_data.tired_point * 5)
     else:
         return 0
 
@@ -489,7 +495,7 @@ def handle_tired_100(character_id: int) -> int:
 
     value = character_data.tired_point / 160
     if value >= 1:
-        return character_data.tired_point * 5
+        return num.whole(character_data.tired_point * 5)
     else:
         return 0
 
@@ -584,7 +590,7 @@ def handle_t_tired_ge_85(character_id: int) -> int:
 
     value = target_data.tired_point / 160
     if value > 0.84:
-        return target_data.tired_point * 5
+        return num.whole(target_data.tired_point * 5)
     else:
         return 0
 
@@ -695,7 +701,7 @@ def handle_urinate_ge_125(character_id: int) -> int:
 
     value = character_data.urinate_point / 240
     if value >= 1.5:
-        return character_data.urinate_point * 5
+        return num.whole(character_data.urinate_point * 5)
     else:
         return 0
 
@@ -950,7 +956,7 @@ def handle_milk_ge_80(character_id: int) -> int:
     value = character_data.pregnancy.milk / character_data.pregnancy.milk_max
 
     if value > 0.80:
-        return character_data.pregnancy.milk
+        return num.whole(character_data.pregnancy.milk)
     else:
         return 0
 

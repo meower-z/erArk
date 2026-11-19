@@ -107,7 +107,7 @@ class GrowthDrugStageNamesTest(SlowTestCase):
 
         for baby_id in self.baby_id_list:
             self.cache.character_data[baby_id].pregnancy.born_time = (
-                game_time.get_sub_date(day=-day, old_date=self.cache.game_time)
+                game_time.get_sub_date(day=-day, old_date=game_time.now())
             )
 
     def test_growth_accelerate_drug_tip(self) -> None:
@@ -175,15 +175,10 @@ class GrowthDrugStageNamesTest(SlowTestCase):
         with mock.patch.object(
             draw, "LeftButton", side_effect=record_left_button
         ):
-            self.assertTrue(
-                gift_panel.Gift_Panel(PANEL_WIDTH).select_target_baby(),
-                "选了婴儿",
-            )
+            chosen = gift_panel.Gift_Panel(PANEL_WIDTH).select_target_baby()
         player_input.check_done()
         self.assertEqual(
-            self.cache.character_data[0].behavior.gift_child_id,
-            self.baby_id_list[0],
-            "按下第一个按钮选中了第一个婴儿",
+            chosen, self.baby_id_list[0], "按下第一个按钮选中了第一个婴儿"
         )
         self.assertEqual(len(button_text_list), 2, "两个婴儿各有一个按钮")
         for text in button_text_list:

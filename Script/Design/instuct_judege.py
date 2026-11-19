@@ -8,6 +8,7 @@ from Script.Core import (
     cache_control,
     get_text,
     game_type,
+    num,
     text_handle,
     flow_handle,
 )
@@ -67,7 +68,7 @@ def calculation_instuct_judege(
                        传 False 时补正照算（理智够就加补正），但不写任何数据，供前提、门槛、
                        名单这类只判不做的调用方用（Plan 31 §3.3）\n
     Return arguments:\n
-    int -- 1成功,0失败,-1无副作用返回\n
+    int -- 1成功,0失败\n
     int -- 实行值\n
     float -- 实行值与目标值的比值\n
     """
@@ -117,18 +118,30 @@ def calculation_instuct_judege(
     # 状态修正
     # 欲情和快乐为低正修正，恭顺和屈服为高正修正，羞耻和抑郁低小负修正，苦痛和恐怖和反感为高负修正
     add_status_level_sum_s = attr_calculation.get_status_level(
-        target_data.status_data[12]
-    ) + attr_calculation.get_status_level(target_data.status_data[13])
+        num.whole(target_data.status_data[12])
+    ) + attr_calculation.get_status_level(
+        num.whole(target_data.status_data[13])
+    )
     add_status_level_sum_l = attr_calculation.get_status_level(
-        target_data.status_data[10]
-    ) + attr_calculation.get_status_level(target_data.status_data[15])
+        num.whole(target_data.status_data[10])
+    ) + attr_calculation.get_status_level(
+        num.whole(target_data.status_data[15])
+    )
     down_status_level_sum_s = attr_calculation.get_status_level(
-        target_data.status_data[16]
-    ) + attr_calculation.get_status_level(target_data.status_data[19])
+        num.whole(target_data.status_data[16])
+    ) + attr_calculation.get_status_level(
+        num.whole(target_data.status_data[19])
+    )
     down_status_level_sum_l = (
-        attr_calculation.get_status_level(target_data.status_data[17])
-        + attr_calculation.get_status_level(target_data.status_data[18])
-        + attr_calculation.get_status_level(target_data.status_data[20])
+        attr_calculation.get_status_level(
+            num.whole(target_data.status_data[17])
+        )
+        + attr_calculation.get_status_level(
+            num.whole(target_data.status_data[18])
+        )
+        + attr_calculation.get_status_level(
+            num.whole(target_data.status_data[20])
+        )
     )
     judge_status = (
         add_status_level_sum_s * 5
@@ -537,113 +550,10 @@ def calculation_instuct_judege(
     # 是否进行相关信息的绘制与结算
     if not not_draw_flag:
 
-        # 询问信息
-        ask_text = ""
-        if instruct_name == _("亲吻") and target_data.talent[4]:
-            ask_text += _("\n\n 是否要夺走{0}的初吻？").format(target_data.name)
-        if instruct_name == _("口交") and target_data.talent[4]:
-            ask_text += _("\n\n 是否要用阴茎夺走{0}的初吻？").format(
-                target_data.name
-            )
-        elif instruct_name == _("性交") and target_data.talent[0]:
-            ask_text += _("\n\n 是否要夺走{0}的阴道处女？").format(
-                target_data.name
-            )
-        elif instruct_name == _("A性交") and target_data.talent[1]:
-            ask_text += _("\n\n 是否要夺走{0}的肛门处女？").format(
-                target_data.name
-            )
-        elif instruct_name == _("U性交") and target_data.talent[2]:
-            ask_text += _("\n\n 是否要夺走{0}的尿道处女？").format(
-                target_data.name
-            )
-        elif instruct_name == _("W性交") and target_data.talent[3]:
-            ask_text += _("\n\n 是否要夺走{0}的子宫处女？").format(
-                target_data.name
-            )
-        # 询问戴套，True为已戴套
-        if character_data.h_state.body_item[13][1]:
-            condom_flag = True
-        else:
-            condom_flag = False
-        if instruct_name == _("性交") or instruct_name == _("W性交"):
-            # 避孕套、已显示过该信息，以上可直接通过
-            if (
-                character_data.h_state.body_item[13][1]
-                or not target_data.h_state.condom_info_show_flag
-            ):
-                pass
-            else:
-                # 无意识
-                if target_data.sp_flag.unconscious_h:
-                    ask_text += _(
-                        "当前正在对{0}无意识奸，是否不戴套？\n"
-                    ).format(target_data.name)
-                # 妊娠合意
-                elif target_data.talent[14]:
-                    ask_text += _(
-                        "{0}已经做好了随时都可以怀孕的准备，是否不戴套？\n"
-                    ).format(target_data.name)
-                # 避孕中出合意+事前避孕药
-                elif (
-                    target_data.talent[13]
-                    and target_data.h_state.body_item[11][1]
-                ):
-                    ask_text += _(
-                        "{0}已经吃过事前避孕药了，所以内射也不会怀孕，是否不戴套？\n"
-                    ).format(target_data.name)
-                # 性无知
-                elif target_data.talent[222]:
-                    ask_text += _(
-                        "{0}似乎对性和避孕都一无所知，是否不戴套？\n"
-                    ).format(target_data.name)
-                elif judge_rate < 0.5:
-                    ask_text += _(
-                        "{0}坚决地要求你必须戴上避孕套，是否坚持不带套？\n"
-                    ).format(target_data.name)
-                elif judge_rate < 1:
-                    ask_text += _(
-                        "{0}希望你戴上避孕套，是否坚持不带套？\n"
-                    ).format(target_data.name)
-                else:
-                    ask_text += _(
-                        "{0}提醒你还没有戴避孕套，但也表示可以不戴就这样继续，是否不带套？\n"
-                    ).format(target_data.name)
-                target_data.h_state.condom_info_show_flag = False
-        if len(ask_text):
-            # 判断态度
-            ask_text += _(" (对方的态度：")
-            if judge_rate < 0.5:
-                ask_text += _("拒绝)\n")
-            elif judge_rate < 1:
-                ask_text += _("犹豫)\n")
-            else:
-                ask_text += _("接受)\n")
-            while 1:
-                return_list = []
-                ask_draw = draw.WaitDraw()
-                # ask_draw.width = 1
-                ask_draw.text = ask_text
-                ask_draw.draw()
-
-                line_feed.draw()
-                line_feed.draw()
-                yes_draw = draw.CenterButton(
-                    _("[确定]"), _("确定"), int(window_width / 2)
-                )
-                yes_draw.draw()
-                return_list.append(yes_draw.return_text)
-                back_draw = draw.CenterButton(
-                    _("[返回]"), _("返回"), int(window_width / 2)
-                )
-                back_draw.draw()
-                line_feed.draw()
-                return_list.append(back_draw.return_text)
-                yrn = flow_handle.askfor_all(return_list)
-                if yrn == back_draw.return_text:
-                    return [-1, judge, judge_rate]
-                elif yrn == yes_draw.return_text:
-                    break
+        # 问过玩家的戴套提示只显示一次：选择时 ask_judge 问过，开始时在这里记下
+        if _asks_condom(character_data, target_data, instruct_name):
+            target_data.h_state.condom_info_show_flag = False
+        condom_flag = bool(character_data.h_state.body_item[13][1])
 
         # 正常直接判定，并输出文本
         if judge_data_type != "V":
@@ -722,3 +632,143 @@ def calculation_instuct_judege(
 
     # 返回判定结果
     return [final_judge, judge, judge_rate]
+
+
+def _asks_condom(
+    character_data: game_type.Character,
+    target_data: game_type.Character,
+    instruct_name: str,
+) -> bool:
+    """
+    性交时是否要问玩家戴不戴套：玩家没戴套，对方还没提示过
+    Keyword arguments:
+    character_data -- 玩家
+    target_data -- 交互对象
+    instruct_name -- 指令名字
+    Return arguments:
+    bool -- 要问时为真
+    """
+    return (
+        instruct_name in {_("性交"), _("W性交")}
+        and not character_data.h_state.body_item[13][1]
+        and bool(target_data.h_state.condom_info_show_flag)
+    )
+
+
+def ask_text(
+    character_id: int,
+    target_character_id: int,
+    instruct_name: str,
+    judge_rate: float,
+) -> str:
+    """
+    指令要先问玩家的话：夺走对方的初吻或处女，或不戴套；不用问时为空。只读数据
+    Keyword arguments:
+    character_id -- 角色id
+    target_character_id -- 目标角色id
+    instruct_name -- 指令名字
+    judge_rate -- 实行值与目标值的比值，决定对方的态度
+    Return arguments:
+    str -- 要问的话
+    """
+    character_data: game_type.Character = cache.character_data[character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
+    text = ""
+    if instruct_name == _("亲吻") and target_data.talent[4]:
+        text += _("\n\n 是否要夺走{0}的初吻？").format(target_data.name)
+    if instruct_name == _("口交") and target_data.talent[4]:
+        text += _("\n\n 是否要用阴茎夺走{0}的初吻？").format(target_data.name)
+    elif instruct_name == _("性交") and target_data.talent[0]:
+        text += _("\n\n 是否要夺走{0}的阴道处女？").format(target_data.name)
+    elif instruct_name == _("A性交") and target_data.talent[1]:
+        text += _("\n\n 是否要夺走{0}的肛门处女？").format(target_data.name)
+    elif instruct_name == _("U性交") and target_data.talent[2]:
+        text += _("\n\n 是否要夺走{0}的尿道处女？").format(target_data.name)
+    elif instruct_name == _("W性交") and target_data.talent[3]:
+        text += _("\n\n 是否要夺走{0}的子宫处女？").format(target_data.name)
+    if _asks_condom(character_data, target_data, instruct_name):
+        # 无意识
+        if target_data.sp_flag.unconscious_h:
+            text += _("当前正在对{0}无意识奸，是否不戴套？\n").format(
+                target_data.name
+            )
+        # 妊娠合意
+        elif target_data.talent[14]:
+            text += _(
+                "{0}已经做好了随时都可以怀孕的准备，是否不戴套？\n"
+            ).format(target_data.name)
+        # 避孕中出合意+事前避孕药
+        elif target_data.talent[13] and target_data.h_state.body_item[11][1]:
+            text += _(
+                "{0}已经吃过事前避孕药了，所以内射也不会怀孕，是否不戴套？\n"
+            ).format(target_data.name)
+        # 性无知
+        elif target_data.talent[222]:
+            text += _("{0}似乎对性和避孕都一无所知，是否不戴套？\n").format(
+                target_data.name
+            )
+        elif judge_rate < 0.5:
+            text += _(
+                "{0}坚决地要求你必须戴上避孕套，是否坚持不带套？\n"
+            ).format(target_data.name)
+        elif judge_rate < 1:
+            text += _("{0}希望你戴上避孕套，是否坚持不带套？\n").format(
+                target_data.name
+            )
+        else:
+            text += _(
+                "{0}提醒你还没有戴避孕套，但也表示可以不戴就这样继续，是否不带套？\n"
+            ).format(target_data.name)
+    if not text:
+        return ""
+    # 判断态度
+    text += _(" (对方的态度：")
+    if judge_rate < 0.5:
+        text += _("拒绝)\n")
+    elif judge_rate < 1:
+        text += _("犹豫)\n")
+    else:
+        text += _("接受)\n")
+    return text
+
+
+def ask_judge(
+    character_id: int, target_character_id: int, instruct_name: str
+) -> bool:
+    """
+    选择时先问玩家（ask_text 不为空时画出来，[确定]或[返回]）。只判不写数据，判定与代价在行动开始时
+    Keyword arguments:
+    character_id -- 角色id
+    target_character_id -- 目标角色id
+    instruct_name -- 指令名字
+    Return arguments:
+    bool -- 玩家确定或不用问时为真，[返回]时为假
+    """
+    if target_character_id == 0:
+        return True
+    judge_rate = calculation_instuct_judege(
+        character_id,
+        target_character_id,
+        instruct_name,
+        not_draw_flag=True,
+        settle_hypnosis=False,
+    )[2]
+    text = ask_text(
+        character_id, target_character_id, instruct_name, judge_rate
+    )
+    if not text:
+        return True
+    ask_draw = draw.WaitDraw()
+    ask_draw.text = text
+    ask_draw.draw()
+    line_feed.draw()
+    line_feed.draw()
+    yes_draw = draw.CenterButton(_("[确定]"), _("确定"), int(window_width / 2))
+    yes_draw.draw()
+    back_draw = draw.CenterButton(_("[返回]"), _("返回"), int(window_width / 2))
+    back_draw.draw()
+    line_feed.draw()
+    answer = flow_handle.askfor_all(
+        [yes_draw.return_text, back_draw.return_text]
+    )
+    return answer == yes_draw.return_text

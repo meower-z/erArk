@@ -802,7 +802,6 @@ class Achievement_Panel:
             draw_achievement_list = []
             for cid in game_config.config_achievement:
                 achievement_data = game_config.config_achievement[cid]
-                cache.achievement.achievement_dict.setdefault(cid, False)
                 # 跳过未实装的
                 if achievement_data.todo == 1:
                     continue

@@ -286,7 +286,7 @@ def settle_student_class_gain(
 
     growth_data = get_child_growth(student_id)
     now_time = (
-        cache.character_data[student_id].behavior.start_time or cache.game_time
+        cache.character_data[student_id].behavior.start_time or game_time.now()
     )
     period = game_time.get_class_period(student_id)
     now_mark = []
@@ -475,7 +475,7 @@ def settle_course_attend(character_id: int) -> bool:
     period = game_time.get_class_period(character_id)
     if period == -1:
         return False
-    now_time = character_data.behavior.start_time or cache.game_time
+    now_time = character_data.behavior.start_time or game_time.now()
     if judge_absent_this_period(character_id, now_time):
         return False
     now_mark = [now_time.toordinal(), period]
@@ -761,7 +761,7 @@ def get_stage_day(character_id: int) -> int:
     stage_start_time = get_grow_day_time(
         character_id, get_stage_start_day(character_id)
     )
-    return game_time.count_play_day(stage_start_time, cache.game_time)
+    return game_time.count_play_day(stage_start_time, game_time.now())
 
 
 def get_stage_progress(character_id: int) -> float:

@@ -11,9 +11,11 @@ from __future__ import annotations
 
 import datetime
 import math
+from fractions import Fraction
 from typing import TypeGuard
 
 from Script.Core import cache_control
+from Script.Design import game_time
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -33,7 +35,7 @@ def _num(x: object) -> bool:
         判断x是否为可安全参与大小比较的数值（排除bool与NaN/inf）
     """
     return (
-        isinstance(x, (int, float))
+        isinstance(x, (int, float, Fraction))
         and not isinstance(x, bool)
         and math.isfinite(x)
     )
@@ -1206,10 +1208,7 @@ def check_fertilization_time() -> list[CheckFailure]:
         校验处于素质20/21/22任一阶段的角色，其fertilization_time是有效datetime（非默认值年份1）且不晚于当前游戏时间
         （阶段推进全靠该时间差，默认值或未来值会让角色瞬间跳到临盆或永远卡住）。未受精角色的默认值合法
     """
-    cache = cache_control.cache
-    game_time = getattr(cache, "game_time", None) if cache is not None else None
-    if not isinstance(game_time, datetime.datetime):
-        return []
+    now_time = game_time.now()
     failures = []
     for cid, chara in _iter_charas():
         if not any(_talent_get(chara, i) for i in (20, 21, 22)):
@@ -1218,15 +1217,13 @@ def check_fertilization_time() -> list[CheckFailure]:
             getattr(chara, "pregnancy", None), "fertilization_time", None
         )
         if not (
-            isinstance(ft, datetime.datetime)
-            and ft.year > 1
-            and ft <= game_time
+            isinstance(ft, datetime.datetime) and ft.year > 1 and ft <= now_time
         ):
             failures.append(
                 make_failure(
                     "BODY-24",
                     "怀孕中须有有效受精时间",
-                    f"角色id={cid}({_name(chara)})处于妊娠阶段但fertilization_time无效: {ft!r} (game_time={game_time})",
+                    f"角色id={cid}({_name(chara)})处于妊娠阶段但fertilization_time无效: {ft!r} (game_time={now_time})",
                     [cid],
                 )
             )
@@ -1557,9 +1554,7 @@ def check_child_born_time() -> list[CheckFailure]:
         debug面板会改写born_time推进育儿，故为warning
     """
     cache = cache_control.cache
-    game_time = getattr(cache, "game_time", None) if cache is not None else None
-    if not isinstance(game_time, datetime.datetime):
-        return []
+    now_time = game_time.now()
     failures = []
     for cid, chara in _iter_charas():
         if not (_talent_get(chara, 23) or _talent_get(chara, 24)):
@@ -1581,7 +1576,7 @@ def check_child_born_time() -> list[CheckFailure]:
         if not (
             isinstance(born_time, datetime.datetime)
             and born_time.year > 1
-            and born_time <= game_time
+            and born_time <= now_time
         ):
             failures.append(
                 make_failure(
@@ -1589,7 +1584,7 @@ def check_child_born_time() -> list[CheckFailure]:
                     "产后/育儿所引用的孩子须有有效出生时间",
                     (
                         f"[warning] 角色id={cid}({_name(chara)})的末位孩子id={child_list[-1]}({_name(child)})的born_tim"
-                        f"e无效: {born_time!r} (game_time={game_time})"
+                        f"e无效: {born_time!r} (game_time={now_time})"
                     ),
                     [cid, child_list[-1]],
                 )

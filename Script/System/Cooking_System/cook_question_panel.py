@@ -1,6 +1,5 @@
-"""精细模式烹饪的答题流程"""
+"""精细模式烹饪的答题流程：抽题与选项顺序用只影响显示的随机数（player_pick.ui_random）"""
 
-import random
 from types import FunctionType
 from Script.Core import (
     cache_control,
@@ -14,6 +13,7 @@ from Script.Design import attr_calculation
 from Script.System.Cooking_System import cooking
 from Script.UI.Moudle import draw
 from Script.Config import normal_config
+from Script.Modules.tk_ui import player_pick
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -81,7 +81,7 @@ def run_cook_question_flow(
         if not stage_questions:
             continue
         # 随机抽取一题
-        question_data = random.choice(stage_questions)
+        question_data = player_pick.ui_random.choice(stage_questions)
         question_text = question_data.get("question", "")
         correct_answer = question_data.get("correct_answer", "")
         # 最错误的答案为3号错误答案
@@ -93,7 +93,7 @@ def run_cook_question_flow(
             if wrong_answer:
                 options.append(wrong_answer)
         # 选项随机排列，使每次顺序不同
-        random.shuffle(options)
+        player_pick.ui_random.shuffle(options)
 
         py_cmd.clr_cmd()
         # 阶段分隔线与标题

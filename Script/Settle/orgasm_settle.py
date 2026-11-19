@@ -7,6 +7,7 @@ from Script.Design import attr_calculation, handle_premise, second_behavior
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel, ejaculation_panel
+from Script.Design import game_time
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -460,7 +461,7 @@ def orgasm_settle_in_second_behavior(
             not in character_data.first_record.first_plural_orgasm_dict
         ):
             character_data.first_record.first_plural_orgasm_dict[part_count] = [
-                cache.game_time,
+                game_time.now(),
                 list(character_data.position),
                 sorted(tem_orgasm_set),
             ]

@@ -317,9 +317,8 @@ def get_resouce_price(
         base_price *= 1.5
     else:
         base_price = 1.1 * base_price if buy_or_sell_flag else 0.9 * base_price
-    cache.rhodes_island.supply_demand_dict.setdefault(resouce_id, 1)
     # 供需影响
-    supply_demand = cache.rhodes_island.supply_demand_dict[resouce_id]
+    supply_demand = cache.rhodes_island.supply_demand_dict.get(resouce_id, 1)
     # 交易员影响
     multiplier, _tem1, _tem2 = calculate_trade_multiplier(
         resouce_id, buy_or_sell_flag

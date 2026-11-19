@@ -1,7 +1,7 @@
 """显示角色身体污秽状况的面板，以及精液量与插入对象的查询"""
 
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text, rich_text
+from Script.Core import cache_control, game_type, get_text, rich_text, num
 from Script.Design import map_handle, clothing, attr_calculation
 from Script.Design import handle_premise, handle_talent
 from Script.UI.Moudle import draw
@@ -136,20 +136,18 @@ class SeeCharacterBodyPanel:
             else:
                 visual_flag = 1
 
-        # 遍历全部位并输出结果
+        # 遍历全部位并输出结果（缺的部位在绘制用的副本里补上）
+        body_semen = dict(target_character_data.dirty.body_semen)
         for i in range(len(game_config.config_body_part)):
             body_part_data = game_config.config_body_part[i]
             part_name = body_part_data.name
 
-            # 检查脏污数据中是否包含该部位，如果没有则补上
-            if len(target_character_data.dirty.body_semen) <= i:
-                target_character_data.dirty.body_semen[i] = [part_name, 0, 0, 0]
+            if len(body_semen) <= i:
+                body_semen[i] = [part_name, 0, 0, 0]
 
             # 最开始先计算腹部整体的精液量累积
             if i in [6, 7, 8, 15]:
-                abdomen_all_semen += target_character_data.dirty.body_semen[i][
-                    1
-                ]
+                abdomen_all_semen += body_semen[i][1]
 
             # 判定部位是否被衣服遮挡，且没有透视中
             if i not in no_cloth_body_list and visual_flag == 0:
@@ -244,8 +242,8 @@ class SeeCharacterBodyPanel:
                 all_part_text_list.append(f" {now_part_text}")
 
             # 精液污浊判定
-            if target_character_data.dirty.body_semen[i][2]:
-                semen_level = target_character_data.dirty.body_semen[i][2]
+            if body_semen[i][2]:
+                semen_level = body_semen[i][2]
                 dirty_text_cid = f"{_(part_name, revert_translation = True)}精液污浊{str(semen_level)}"
                 # 是否显示完整污浊文本
                 if cache.all_system_setting.draw_setting[10]:
@@ -304,7 +302,7 @@ class SeeCharacterBodyPanel:
                         ).format(part_name, str(decoration_count))
                     # 如果该部位已有污浊信息，则先换行再显示，否则直接显示
                     if (
-                        target_character_data.dirty.body_semen[i][2]
+                        body_semen[i][2]
                         and len(all_part_text_list)
                         and not all_part_text_list[-1].endswith("\n")
                     ):
@@ -399,7 +397,7 @@ class SeeCharacterBodyPanel:
             # 如果有奶水，则显示奶水量
             if target_character_data.pregnancy.milk:
                 lactation_text = _(" 乳汁量为{0}ml").format(
-                    target_character_data.pregnancy.milk
+                    num.shown(target_character_data.pregnancy.milk)
                 )
                 all_part_text_list.append(lactation_text)
 

@@ -1578,20 +1578,17 @@ def handle_in_dormitory(character_id: int) -> int:
     now_position = map_handle.get_map_system_path_str_for_list(
         character_data.position
     )
-    scene_list = map_handle.get_map_system_path_for_str(
-        character_data.dormitory
-    )
-    # 因为在这里出现过BUG，所以加一个额外的修正判定，强制将博士的宿舍定为中枢\博士房间
-    if character_id == 0 and character_data.dormitory == "":
-        character_data.dormitory = map_handle.get_map_system_path_str_for_list(
+    dormitory = character_data.dormitory
+    scene_list = map_handle.get_map_system_path_for_str(dormitory)
+    # 博士的宿舍为空，或首段是翻译后的中枢名时，按中枢\博士房间比较
+    if (character_id == 0 and dormitory == "") or scene_list[0] in {
+        _("中枢"),
+        _("控制中枢"),
+    }:
+        dormitory = map_handle.get_map_system_path_str_for_list(
             ["中枢", "博士房间"]
         )
-    # 在其他语言中将被翻译的宿舍名进行修正
-    elif scene_list[0] == _("中枢") or scene_list[0] == _("控制中枢"):
-        character_data.dormitory = map_handle.get_map_system_path_str_for_list(
-            ["中枢", "博士房间"]
-        )
-    return now_position == character_data.dormitory
+    return now_position == dormitory
 
 
 @add_premise(constant_promise.Premise.NOT_IN_DORMITORY)

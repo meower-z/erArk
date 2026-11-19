@@ -17,6 +17,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation, handle_ability
 from Script.UI.Moudle import draw, panel
+from Script.Modules.save_load import reset
 
 from typing import TYPE_CHECKING
 
@@ -55,8 +56,25 @@ UI 说明：
 
 
 # ---------------------------- 数据初始化辅助 ---------------------------- #
+UNBUILT_ZONES = (8, 18, 20)
+""" 未实装的区块，默认断电 """
+
+
+def strategy_of(zone_cid: int) -> int:
+    """
+    区块当前的供电策略，没有登记时为默认值：未实装的区块断电（2），其余标准（0）
+    Keyword arguments:
+    zone_cid -- 区块id
+    Return arguments:
+    int -- 供电策略
+    """
+    default = 2 if zone_cid in UNBUILT_ZONES else 0
+    return cache.rhodes_island.power_supply_strategy.get(zone_cid, default)
+
+
+@reset.repair
 def _init_power_runtime_fields() -> None:
-    """确保动力系统运行期字段存在"""
+    """确保动力系统运行期字段存在：读档时修补旧存档，结算前也调用"""
     ri = cache.rhodes_island
     if not hasattr(ri, "power_supply_strategy"):
         cache.rhodes_island.power_supply_strategy = {}
@@ -77,7 +95,7 @@ def _init_power_runtime_fields() -> None:
                     0  # 标准
                 )
                 # 未实装的区块，默认断电
-                if facility_cid in (8, 18, 20):
+                if facility_cid in UNBUILT_ZONES:
                     cache.rhodes_island.power_supply_strategy[facility_cid] = (
                         2  # 断电
                     )
@@ -352,7 +370,6 @@ def get_theoretical_fire_generation(
               'theory_total': 理论总发电量
             }
     """
-    _init_power_runtime_fields()
     ri = cache.rhodes_island
     # 主炉等级与动力区等级同步
     now_facility_lv = ri.facility_level.get(1, 1)
@@ -399,7 +416,6 @@ def get_theoretical_clean_generation(kind: int = -1) -> float:
     """计算24h清洁能源理论发电量
     kind: -1=全部 0=水力 1=风力 2=光伏
     """
-    _init_power_runtime_fields()
     ri = cache.rhodes_island
     hydro, wind, solar = ri.other_power_facility_list
     # facility_lv = ri.facility_level.get(1, 1)  # 动力区等级，cid=1
@@ -453,8 +469,7 @@ def get_theoretical_power_generation() -> float:
 
 def _get_zone_adjust(zone_cid: int) -> float:
     """获取某区块当前策略调整系数"""
-    ri = cache.rhodes_island
-    strategy_id = ri.power_supply_strategy.get(zone_cid, 0)
+    strategy_id = strategy_of(zone_cid)
     strategy_obj = game_config.config_supply_strategy.get(strategy_id)
     if strategy_obj:
         try:
@@ -644,12 +659,11 @@ class Manage_Power_System_Panel:
 
     def __init__(self, width: int) -> None:
         """
-        初始化面板，并确保动力系统运行期字段存在
+        初始化面板
         Keyword arguments:
         width -- 绘制宽度
         """
         self.width = width
-        _init_power_runtime_fields()
 
     # ---------- 主绘制 ---------- #
     def draw(self) -> None:
@@ -660,7 +674,6 @@ class Manage_Power_System_Panel:
         None
         """
         while 1:
-            _init_power_runtime_fields()
             ri = cache.rhodes_island
             title = draw.TitleLineDraw(_("动力系统管理"), self.width)
             title.draw()
@@ -769,8 +782,6 @@ class Manage_Power_System_Panel:
     # ---------- 供电策略子界面 ---------- #
     def _panel_supply_strategy(self) -> None:
         """供电策略调整子界面"""
-        _init_power_runtime_fields()
-        ri = cache.rhodes_island
         # 获取供电策略数据
         supply_strategy = game_config.config_supply_strategy
         while 1:
@@ -810,7 +821,7 @@ class Manage_Power_System_Panel:
                 # 跳过动力区本身
                 if cid == 1:
                     continue
-                st = ri.power_supply_strategy.get(cid, 0)
+                st = strategy_of(cid)
                 # 设施名称
                 fac_name = attr_calculation.pad_display_width(
                     "　" + fac_data.name, 12
@@ -833,13 +844,13 @@ class Manage_Power_System_Panel:
                 def make_dec(cid_inner: int) -> "Callable[[], None]":
                     return lambda: self._set_strategy(
                         cid_inner,
-                        (ri.power_supply_strategy.get(cid_inner, 0) - 1) % 5,
+                        (strategy_of(cid_inner) - 1) % 5,
                     )
 
                 def make_inc(cid_inner: int) -> "Callable[[], None]":
                     return lambda: self._set_strategy(
                         cid_inner,
-                        (ri.power_supply_strategy.get(cid_inner, 0) + 1) % 5,
+                        (strategy_of(cid_inner) + 1) % 5,
                     )
 
                 btn_dec = draw.CenterButton(
@@ -872,8 +883,7 @@ class Manage_Power_System_Panel:
     def _cycle_strategy(self, cid: int) -> None:
         """循环切换某区块的供电策略"""
         ri = cache.rhodes_island
-        now = ri.power_supply_strategy.get(cid, 0)
-        ri.power_supply_strategy[cid] = (now + 1) % 5
+        ri.power_supply_strategy[cid] = (strategy_of(cid) + 1) % 5
 
     def _set_strategy(self, cid: int, value: int) -> None:
         """

@@ -43,6 +43,8 @@ class MoveOptionEventListsChildTest(SlowTestCase):
         Return arguments:
         无
         """
+        from Script.Design import game_time
+
         from Script.Core import constant
 
         npc_id = min(cid for cid in self.cache.npc_id_got if cid)
@@ -51,7 +53,7 @@ class MoveOptionEventListsChildTest(SlowTestCase):
         npc.talent[FALL_2_TALENT] = 1
         npc.behavior.behavior_id = constant.Behavior.WAIT
         npc.state = constant.CharacterStatus.STATUS_WAIT
-        npc.behavior.start_time = self.cache.game_time
+        npc.behavior.start_time = game_time.now()
         npc.behavior.duration = WAIT_MINUTES
 
     def _record(self) -> tuple[list[str], list[str], list[list[str]]]:

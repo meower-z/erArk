@@ -3,7 +3,10 @@
 可偷取全部内裤或袜子，或选择射在衣物上
 """
 
+from collections.abc import Mapping
 from types import FunctionType
+from typing import cast
+
 from Script.Core import (
     cache_control,
     game_type,
@@ -15,12 +18,14 @@ from Script.Core import (
 )
 from Script.Design import (
     map_handle,
-    update,
     attr_text,
     handle_premise,
     clothing,
 )
 from Script.UI.Moudle import draw, panel
+from Script.Kernel import core
+from Script.Modules.gameplay_resolution import edits
+from Script.Modules.tk_ui import player_pick
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import ejaculation_panel
 
@@ -322,7 +327,6 @@ class FindDraw:
         return_list: list[str] = []
         # title_draw.draw()
         cloth_show_draw = draw.NormalDraw()
-        self.pl_data.target_character_id = self.npc_id
         while 1:
             return_list.clear()
             line = draw.LineDraw("-", window_width)
@@ -435,10 +439,12 @@ class FindDraw:
     def smell(self) -> None:
         """闻味道"""
 
-        self.pl_data.behavior.duration = 1
-        self.pl_data.behavior.behavior_id = constant.Behavior.SMELL_UNDERWEAR
-        self.pl_data.state = constant.CharacterStatus.STATUS_SMELL_UNDERWEAR
-        update.game_update_flow(1)
+        player_pick.choose(
+            constant.Behavior.SMELL_UNDERWEAR,
+            1,
+            target=self.npc_id,
+            state=constant.CharacterStatus.STATUS_SMELL_UNDERWEAR,
+        )
 
     def get_pan(self) -> None:
         """偷内裤"""
@@ -602,16 +608,29 @@ class Ejaculation_NameDraw:
         self.now_draw.draw()
 
     def shoot_here(self) -> None:
-        """
-        清除当前命令，并对该干员衣柜里的这一衣物类型执行射精流程
-        Return arguments:
-        None
-        """
+        """清除当前命令，定下射在该干员衣柜里这一衣物类型上的具名编辑"""
         py_cmd.clr_cmd()
-        # 调用射精流程
-        ejaculation_panel.ejaculation_flow(
-            part_cid=self.index,
-            part_type=self.locker_type,
-            target_character_id=self.npc_id,
-            draw_flag=True,
+        player_pick.commit_edit(
+            "locker_shoot",
+            {
+                "part": self.index,
+                "locker": self.locker_type,
+                "target": self.npc_id,
+            },
         )
+
+
+@edits.edit("locker_shoot")
+def shoot_in_locker(who: int, args: Mapping[str, core.JSON]) -> None:
+    """
+    射在衣柜的衣物上：射精流程（射精量的随机数与高潮结算）在编辑开始时运行
+    Keyword arguments:
+    who -- 角色id
+    args -- part 衣物类型，locker 衣柜类型（2 大浴场更衣室，3 宿舍），target 衣柜主人的角色id
+    """
+    ejaculation_panel.ejaculation_flow(
+        part_cid=int(cast(int, args["part"])),
+        part_type=int(cast(int, args["locker"])),
+        target_character_id=int(cast(int, args["target"])),
+        draw_flag=True,
+    )

@@ -1,6 +1,7 @@
 """选择睡眠时间的面板与睡到玩家起床时间的计算"""
 
 import datetime
+from fractions import Fraction
 from types import FunctionType
 from Script.UI.Moudle import draw
 from Script.UI.Panel import diary_panel
@@ -13,12 +14,11 @@ from Script.Core import (
 )
 from Script.Config import normal_config
 from Script.Design import (
-    update,
     map_handle,
-    instuct_judege,
     game_time,
     handle_premise,
 )
+from Script.Modules.tk_ui import player_pick
 import math
 
 cache: game_type.Cache = cache_control.cache
@@ -87,10 +87,14 @@ class Sleep_Panel:
     def draw(self) -> None:
         """绘制对象"""
 
-        # 计算回复时间，然后向上取整，且最小为1
-        # 计算公式同Script/Design/character_behavior.py#character_aotu_change_value()
-        hit_point_add_base = self.pl_character_data.hit_point_max * 0.0025 + 3
-        mana_point_add_base = self.pl_character_data.mana_point_max * 0.005 + 6
+        # 计算回复时间（小时），然后向上取整，且最小为1
+        # 比率同 realtime_settle.settle_sleep：体力每分钟 上限/400+3，气力每分钟 上限/200+6，疲劳每分钟 1/3
+        hit_point_add_base = (
+            self.pl_character_data.hit_point_max * Fraction(1, 400) + 3
+        )
+        mana_point_add_base = (
+            self.pl_character_data.mana_point_max * Fraction(1, 200) + 6
+        )
         hp_recover_time = math.ceil(
             (
                 self.pl_character_data.hit_point_max
@@ -111,7 +115,7 @@ class Sleep_Panel:
         hpmp_need_time = max(hpmp_need_time, 1)
         # 其他回复所需时间，最大为8小时
         tired_recover_time = math.ceil(
-            (self.pl_character_data.tired_point) * 3 / 60
+            Fraction(self.pl_character_data.tired_point * 3, 60)
         )  # 疲劳
         # 理智和精液
         sanity_recover_time = math.ceil(
@@ -283,42 +287,16 @@ class Sleep_Panel:
 
             yrn = flow_handle.askfor_all(return_list)
             if yrn == yes_draw.return_text:
-                # 关门
-                if self.close_door_flag:
-                    cache.scene_data[now_scene_str].close_flag = (
-                        now_scene_data.close_type
-                    )
-                # 睡眠
                 if self.sleep_time_min == 0:
                     self.sleep_time_min = self.sleep_time_hour * 60
-                instuct_judege.init_character_behavior_start_time(
-                    0, cache.game_time
-                )
-                self.pl_character_data.behavior.duration = self.sleep_time_min
-                self.pl_character_data.behavior.behavior_id = (
-                    constant.Behavior.SLEEP
-                )
-                self.pl_character_data.state = (
-                    constant.CharacterStatus.STATUS_SLEEP
-                )
-
-                self.pl_character_data.action_info.sleep_time = (
-                    cache.game_time
-                )  # 记录睡觉时间
-                self.pl_character_data.action_info.wake_time = (
-                    game_time.get_sub_date(
-                        minute=self.sleep_time_min, old_date=cache.game_time
-                    )
-                )  # 记录醒来时间
-                # 关闭玩家的透视
-                self.pl_character_data.pl_ability.visual = False
-                # print(f"debug 玩家睡觉，睡觉时间 = {pl_character_data.action_info.sleep_time},
-                # 醒来时间 = {pl_character_data.action_info.wake_time}")
-                # cache.wframe_mouse.w_frame_skip_wait_mouse = 1
-                self.assistant_sleep_settle()
-                update.game_update_flow(self.sleep_time_min)
                 cache.now_panel_id = constant.Panel.IN_SCENE
-                break
+                player_pick.choose(
+                    constant.Behavior.SLEEP,
+                    self.sleep_time_min,
+                    kind="sleep",
+                    state=constant.CharacterStatus.STATUS_SLEEP,
+                    args={"close_door": bool(self.close_door_flag)},
+                )
             elif yrn == back_draw.return_text:
                 cache.now_panel_id = constant.Panel.IN_SCENE
                 break
@@ -383,45 +361,3 @@ class Sleep_Panel:
         """显示日记"""
         now_draw = diary_panel.Diary_Panel(window_width)
         now_draw.draw()
-
-    def assistant_sleep_settle(self) -> None:
-        """助理的睡眠结算"""
-        # 如果没有助理则直接返回
-        if self.pl_character_data.assistant_character_id == 0:
-            return
-        # 如果助理已经睡觉了，或异常状态6，则直接返回
-        if handle_premise.handle_action_sleep(
-            self.pl_character_data.assistant_character_id
-        ) or not handle_premise.handle_normal_6(
-            self.pl_character_data.assistant_character_id
-        ):
-            return
-        # 如果开启了晚安问候、且还没有进行，则进入要晚安问候状态
-        if handle_premise.handle_assistant_night_salutation_on(
-            self.pl_character_data.assistant_character_id
-        ) and handle_premise.handle_night_salutation_flag_0(
-            self.pl_character_data.assistant_character_id
-        ):
-            instuct_judege.init_character_behavior_start_time(
-                self.pl_character_data.assistant_character_id, cache.game_time
-            )
-            constant.handle_state_machine_data[708](
-                self.pl_character_data.assistant_character_id
-            )
-        # 同居服务开启中，未开启晚安问候或已进行晚安问候，则进入要睡觉状态
-        elif handle_premise.handle_assistant_live_together_on(
-            self.pl_character_data.assistant_character_id
-        ) and (
-            handle_premise.handle_assistant_night_salutation_0(
-                self.pl_character_data.assistant_character_id
-            )
-            or handle_premise.handle_night_salutation_flag_2(
-                self.pl_character_data.assistant_character_id
-            )
-        ):
-            instuct_judege.init_character_behavior_start_time(
-                self.pl_character_data.assistant_character_id, cache.game_time
-            )
-            constant.handle_state_machine_data[78](
-                self.pl_character_data.assistant_character_id
-            )

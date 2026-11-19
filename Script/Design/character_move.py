@@ -29,66 +29,136 @@ def cancel_movement_plan(character_id: int) -> None:
     character_data.behavior.move_final_target = []
 
 
-def own_charcter_move(target_scene: list) -> None:
+def own_charcter_move(
+    target_scene: list, follow: int = 0, open_map: bool = False
+) -> None:
     """
-    主角寻路至目标场景
+    主角寻路至目标场景：走第一段，之后每段在玩家下一次选行动时由计划队列接着走（continue_player_route）。
+    玩家选行动时，第一段能走就选定它（player_pick.choose，从那里退出本函数）；已在目标、被叫停或寻路断了时，清掉玩家的交互对象
     Keyword arguments:
     target_scene -- 寻路目标场景(在地图系统下的绝对坐标)
+    follow -- 前往这名干员的位置：她走开了就跟过去，到达时设为玩家的交互对象；0 为不跟人
+    open_map -- 每一段开始后仍打开地图面板（从大地图移动到另一个区块时）
     """
-    while 1:
-        character_data: game_type.Character = cache.character_data[0]
-        move_now = "end"
-        if character_data.sp_flag.move_stop:
-            character_data.sp_flag.move_stop = False
-            break
-        # 如果当前场景已锁，离开时会把锁解开
-        # 已弃用，改为在 Script/Design/map_handle.py#character_move_scene() 中处理
-        if character_data.position != target_scene:
-            (
-                move_now,
-                __,
-                now_target_position,
-                now_need_time,
-            ) = character_move(0, target_scene)
-            break_list = ["null", "wait_open", "door_lock"]
-            if move_now in break_list:
-                break
-            # 隐奸携带模式中使用携带H中移动行为，消耗大幅增加
-            if character_data.sp_flag.hidden_sex_mode == 5:
-                character_data.behavior.behavior_id = (
-                    constant.Behavior.CARRY_MOVE
-                )
-                character_data.state = (
-                    constant.CharacterStatus.STATUS_CARRY_MOVE
-                )
-            else:
-                character_data.behavior.behavior_id = constant.Behavior.MOVE
-                character_data.state = constant.CharacterStatus.STATUS_MOVE
-            character_data.behavior.move_target = now_target_position
-            character_data.behavior.move_src = character_data.position
-            character_data.behavior.move_final_target = target_scene
-            character_data.behavior.duration = now_need_time
-            character_data.behavior.start_time = cache.game_time
-            character_data.action_info.ask_close_door_flag = False
-            # print(f"debug pl start_time = {character_data.behavior.start_time}")
-            update.game_update_flow(now_need_time)
-            # 若本段结算过程中移动计划被撤销（move_final_target 已不再指向 target_scene）
-            # 且尚未抵达目标，则停止寻路，不再走下一段
-            character_data = cache.character_data[0]
-            if (
-                character_data.position != target_scene
-                and character_data.behavior.move_final_target != target_scene
-            ):
-                break
-        else:
-            break
-    cache.character_data[0].target_character_id = 0
+    vars(cache)["player_route"] = None
+    move_now = _player_leg(target_scene, follow, open_map)
+    if move_now == "end" or move_now in _BREAK_LIST:
+        cache.character_data[0].target_character_id = 0
     # 继续留在地图页面
     if move_now in ["Null", "wait_open", "door_lock"]:
         cache.now_panel_id = constant.Panel.SEE_MAP
     # 回到主页面
     else:
         cache.now_panel_id = constant.Panel.IN_SCENE
+
+
+def continue_player_route() -> None:
+    """
+    玩家要选下一个行动时，若还在寻路途中且上一段已走完，把下一段排进玩家的计划队列；
+    已抵达、被叫停、计划被撤销、上一段没走动或寻路断了时结束寻路，玩家不再有交互对象
+    """
+    route = vars(cache).get("player_route")
+    if route is None:
+        return
+    character_data: game_type.Character = cache.character_data[0]
+    legs = (constant.Behavior.MOVE, constant.Behavior.CARRY_MOVE)
+    # 这一段还没开始（界面刚定下）或还没走完
+    if character_data.behavior.behavior_id in legs:
+        return
+    # 事件把这一段排进了队列，还没开始
+    from Script.Modules.gameplay_resolution import plan_queue
+
+    if any(plan_queue.plan_has(0, leg) for leg in legs):
+        return
+    route_target, leg_start, *rest = route
+    follow, open_map = (rest + [0, False])[:2]
+    # 跟着干员走：目标是她此刻的位置
+    target_scene = (
+        cache.character_data[follow].position if follow else route_target
+    )
+    if (
+        character_data.position != leg_start
+        and character_data.position != target_scene
+        and character_data.behavior.move_final_target == route_target
+        and _player_leg(target_scene, follow, open_map)
+        not in ["end", *_BREAK_LIST]
+    ):
+        return
+    vars(cache)["player_route"] = None
+    # 跟到了干员身边时她是交互对象，否则不再有交互对象
+    character_data.target_character_id = (
+        follow if follow and character_data.position == target_scene else 0
+    )
+
+
+_BREAK_LIST = ["null", "wait_open", "door_lock"]
+""" 寻路断掉的结果 """
+
+
+def _player_leg(
+    target_scene: list, follow: int = 0, open_map: bool = False
+) -> str:
+    """
+    玩家走寻路的一段：玩家选行动时选定它（player_pick.choose，从那里退出本函数），结算途中排进玩家的计划队列
+    Keyword arguments:
+    target_scene -- 寻路目标场景
+    follow -- 跟着走的干员id，0 为不跟人
+    open_map -- 这一段开始后仍打开地图面板
+    Return arguments:
+    str -- 寻路结果，"end" 为已在目标或被叫停
+    """
+    character_data: game_type.Character = cache.character_data[0]
+    if character_data.sp_flag.move_stop:
+        character_data.sp_flag.move_stop = False
+        vars(cache)["player_route"] = None
+        return "end"
+    if character_data.position == target_scene:
+        return "end"
+    move_now, __, now_target_position, now_need_time = character_move(
+        0, target_scene
+    )
+    if move_now in _BREAK_LIST:
+        return move_now
+    # 隐奸携带模式中使用携带H中移动行为，消耗大幅增加
+    if character_data.sp_flag.hidden_sex_mode == 5:
+        behavior_id = constant.Behavior.CARRY_MOVE
+        state = constant.CharacterStatus.STATUS_CARRY_MOVE
+    else:
+        behavior_id = constant.Behavior.MOVE
+        state = constant.CharacterStatus.STATUS_MOVE
+    vars(cache)["player_route"] = (
+        target_scene,
+        character_data.position,
+        follow,
+        open_map,
+    )
+    fields = {
+        "behavior.move_target": now_target_position,
+        "behavior.move_src": character_data.position,
+        "behavior.move_final_target": target_scene,
+        "action_info.ask_close_door_flag": False,
+    }
+    from Script.Modules.gameplay_resolution import starts
+
+    args = {starts.OPEN_MAP: True} if open_map else None
+    if update.in_resolution():
+        from Script.Modules.gameplay_resolution import plan_queue
+
+        plan_queue.plan_next(
+            0,
+            behavior_id,
+            now_need_time,
+            state=state,
+            fields=fields,
+            args=args,
+        )
+        return move_now
+    from Script.Modules.tk_ui import player_pick
+
+    cache.now_panel_id = constant.Panel.IN_SCENE
+    player_pick.choose(
+        behavior_id, now_need_time, state=state, fields=fields, args=args
+    )
 
 
 def character_move(
@@ -174,7 +244,7 @@ def judge_character_move_to_private(
     character_id: int, move_path: list
 ) -> tuple[bool, bool]:
     """
-    结算角色是否移动到私密房间\n
+    结算角色是否移动到私密房间：判定（private_move_outcome）之后当场结算（settle_private_move）\n
     Keyword arguments:\n
     character_id -- 角色id\n
     move_path -- 移动路径\n
@@ -182,81 +252,109 @@ def judge_character_move_to_private(
     move_flag -- true的话就是移动\n
     wait_flag -- true的话就是等待\n
     """
+    move_flag, wait_flag, outcome = private_move_outcome(
+        character_id, move_path
+    )
+    settle_private_move(character_id, outcome)
+    return move_flag, wait_flag
+
+
+PRIVATE_MOVE_OUTCOMES = (
+    "stop_follow",
+    "give_up",
+    "waiting_long",
+    "barge_in",
+    "wait_outside",
+)
+""" 私密房间前要结算的结果 """
+
+
+def _private_move_text(outcome: str) -> str:
+    """
+    私密房间前的结果的提示文字
+    Keyword arguments:
+    outcome -- 结果
+    Return arguments:
+    str -- 带 {0}（角色名）的文字
+    """
+    return {
+        "stop_follow": _("因为等待时间过长，所以{0}不再继续跟随\n"),
+        "give_up": _("因为等待时间过长，所以{0}放弃了有些私密的打算\n"),
+        "waiting_long": _("{0}有些私密的事想要找你，已经在门外等候多时了\n"),
+        "barge_in": _("{0}等不下去了，决定直接进来\n"),
+        "wait_outside": _("因为不方便进来，所以{0}正在外面等待\n"),
+    }[outcome]
+
+
+def private_move_outcome(
+    character_id: int, move_path: list
+) -> tuple[bool, bool, str]:
+    """
+    判定角色能否移动到私密房间，只读缓存\n
+    Keyword arguments:\n
+    character_id -- 角色id\n
+    move_path -- 移动路径\n
+    Return arguments:\n
+    move_flag -- true的话就是移动\n
+    wait_flag -- true的话就是等待\n
+    outcome -- 要结算的结果：PRIVATE_MOVE_OUTCOMES 之一，没有要结算的时为空字符串\n
+    """
     character_data: game_type.Character = cache.character_data[character_id]
-    move_flag = True  # true的话就是移动
-    wait_flag = False  # true的话就是等待
-    draw_flag = False  # true的话就是已经输出过提示信息了
     # 移动路径为空，直接返回
     if move_path == []:
-        return False, True
+        return False, True, ""
     # 进行私密跟随判断
     target_scene_str = map_handle.get_map_system_path_str_for_list(move_path)
     access_type = map_handle.judge_scene_accessible(
         target_scene_str, character_id
     )
-    if access_type == "private":
-        # 超时后取消跟随
-        if character_data.chara_setting[0] == 0:
-            if character_data.action_info.follow_wait_time >= 30:
-                now_draw = draw.NormalDraw()
-                # 如果是因为等待
-                if character_data.sp_flag.is_follow > 0:
-                    character_data.sp_flag.is_follow = 0
-                    now_draw.text = _(
-                        "因为等待时间过长，所以{0}不再继续跟随\n"
-                    ).format(character_data.name)
-                # 如果是因为想逆推
-                elif character_data.sp_flag.npc_masturebate_for_player:
-                    # 如果门没关的话，就依然进去
-                    now_scene_data = cache.scene_data[target_scene_str]
-                    if now_scene_data.close_flag == 0:
-                        move_flag = True
-                        wait_flag = False
-                        return move_flag, wait_flag
-                    # 如果超过了一个小时，则不再逆推
-                    elif character_data.action_info.follow_wait_time >= 60:
-                        character_data.sp_flag.npc_masturebate_for_player = (
-                            False
-                        )
-                        now_draw.text = _(
-                            "因为等待时间过长，所以{0}放弃了有些私密的打算\n"
-                        ).format(character_data.name)
-                    # 否则则门外等待
-                    else:
-                        now_draw.text = _(
-                            "{0}有些私密的事想要找你，已经在门外等候多时了\n"
-                        ).format(character_data.name)
-                now_draw.draw()
-                draw_flag = True
-            else:
-                wait_flag = True
-            move_flag = False
-        # 超时后仍继续等待
-        elif character_data.chara_setting[0] == 1:
-            move_flag = False
-            wait_flag = True
-        # 超时后直接闯入
-        elif character_data.chara_setting[0] == 2:
-            if character_data.action_info.follow_wait_time < 30:
-                move_flag = False
-                wait_flag = True
-            else:
-                now_draw = draw.NormalDraw()
-                now_draw.text = _("{0}等不下去了，决定直接进来\n").format(
-                    character_data.name
-                )
-                now_draw.draw()
-                draw_flag = True
-        # 一直跟随，无视私密地点
-        elif character_data.chara_setting[0] == 3:
-            pass
+    if access_type != "private":
+        return True, False, ""
+    wait_time = character_data.action_info.follow_wait_time
+    setting = character_data.chara_setting[0]
+    # 超时后取消跟随
+    if setting == 0:
+        if wait_time < 30:
+            return False, True, "wait_outside"
+        # 如果是因为等待
+        if character_data.sp_flag.is_follow > 0:
+            return False, False, "stop_follow"
+        # 如果是因为想逆推
+        if character_data.sp_flag.npc_masturebate_for_player:
+            # 如果门没关的话，就依然进去
+            if cache.scene_data[target_scene_str].close_flag == 0:
+                return True, False, ""
+            # 超过一个小时就放弃逆推，否则门外等待
+            if wait_time >= 60:
+                return False, False, "give_up"
+            return False, False, "waiting_long"
+        return False, False, ""
+    # 超时后仍继续等待
+    if setting == 1:
+        return False, True, "wait_outside"
+    # 超时后直接闯入
+    if setting == 2:
+        if wait_time < 30:
+            return False, True, "wait_outside"
+        return True, False, "barge_in"
+    # 一直跟随，无视私密地点
+    return True, False, ""
 
-        # 等待时输出提示信息
-        if wait_flag and not draw_flag:
-            now_draw = draw.NormalDraw()
-            now_draw.text = _("因为不方便进来，所以{0}正在外面等待\n").format(
-                character_data.name
-            )
-            now_draw.draw()
 
-    return move_flag, wait_flag
+def settle_private_move(character_id: int, outcome: str) -> None:
+    """
+    结算私密房间前的结果：取消跟随或放弃逆推，并显示提示\n
+    Keyword arguments:\n
+    character_id -- 角色id\n
+    outcome -- private_move_outcome 交回的结果\n
+    """
+    if outcome not in PRIVATE_MOVE_OUTCOMES:
+        return
+    character_data: game_type.Character = cache.character_data[character_id]
+    if outcome == "stop_follow":
+        character_data.sp_flag.is_follow = 0
+    elif outcome == "give_up":
+        character_data.sp_flag.npc_masturebate_for_player = False
+    now_draw = draw.NormalDraw()
+    now_draw.text = _private_move_text(outcome).format(character_data.name)
+    now_draw.draw()

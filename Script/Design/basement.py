@@ -11,6 +11,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle
 from Script.UI.Moudle import draw
+from Script.Design import game_time
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏内缓存数据 """
@@ -75,7 +76,7 @@ def get_base_zero() -> game_type.Rhodes_Island:
     base_data.current_location = [17, 1701]
 
     # 访客来访时间初始化
-    base_data.last_visitor_time = cache.game_time
+    base_data.last_visitor_time = game_time.now()
 
     # 初始化流水线(结构: [生产配方id, 主生产工人id, 当前总效率百分比, 待切换配方id, 上次结算小时])
     base_data.assembly_line[0] = [1, 0, 0.0, 0, 0]
@@ -313,9 +314,9 @@ def calc_facility_efficiency(facility_cid: int = -1) -> float:
     if facility_data.type >= 0:
         zone_cid = facility_data.type
     # 供电策略的调整
-    now_power_strategy = cache.rhodes_island.power_supply_strategy.get(
-        zone_cid, 0
-    )
+    from Script.UI.Panel import manage_power_system_panel
+
+    now_power_strategy = manage_power_system_panel.strategy_of(zone_cid)
     now_power_strategy_adjust = game_config.config_supply_strategy[
         now_power_strategy
     ].adjust
@@ -720,8 +721,7 @@ def update_facility_people() -> None:
 
     cache.rhodes_island.reader_now = 0
 
-    cache.npc_id_got.discard(0)
-    for id in cache.npc_id_got:
+    for id in cache.npc_id_got - {0}:
         # 图书馆读者统计
         if handle_premise.handle_in_library(id):
             cache.rhodes_island.reader_now += 1

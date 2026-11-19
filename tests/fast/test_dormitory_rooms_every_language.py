@@ -51,10 +51,21 @@ from Script.Design import attr_calculation, basement, game_time
 from Script.System.Dormitory_System import common
 
 cache = cache_control.cache
-cache.game_time = cache.pre_game_time = game_time.to_game_time(
-    datetime.datetime(*json.loads(sys.argv[3]))
+from types import MappingProxyType
+from Script.Kernel import core
+
+core.reset_state(
+    core.GameState(
+        game_time.minutes(
+            game_time.to_game_time(datetime.datetime(*json.loads(sys.argv[3])))
+        ),
+        MappingProxyType({}),
+        MappingProxyType({}),
+    )
 )
 cache.all_system_setting = attr_calculation.get_system_setting_zero()
+cache.difficulty_setting = attr_calculation.get_difficulty_setting_zero()
+cache.birth_type_setting = attr_calculation.get_birth_type_setting_zero()
 cache.rhodes_island = basement.get_base_zero()
 basement.get_base_updata()
 levels = {}

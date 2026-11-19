@@ -12,9 +12,10 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from Script.Config import game_config
-from Script.Core import cache_control, game_type
+from Script.Core import game_type
 from Script.Design import handle_ability
 from Script.System.Medical_System import medical_constant, medical_core
+from Script.Design import game_time
 
 
 @dataclass
@@ -576,7 +577,7 @@ def _record_surgery_attempt(
 
     # 构造日志条目，记录核心字段。
     record: dict[str, object] = {
-        "time": getattr(cache_control.cache, "game_time", None),
+        "time": game_time.now(),
         "patient_id": patient.patient_id,
         "doctor_id": doctor.cid,
         "status": status,

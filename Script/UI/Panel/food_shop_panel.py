@@ -12,7 +12,8 @@ from Script.Core import (
     constant,
     py_cmd,
 )
-from Script.Design import map_handle, update, attr_calculation
+from Script.Design import map_handle, attr_calculation
+from Script.Modules.tk_ui import player_pick
 from Script.System.Cooking_System import cooking
 from Script.UI.Moudle import draw, panel
 from Script.Config import game_config, normal_config
@@ -449,28 +450,15 @@ class SeeFoodListByFoodNameDraw:
         uid: UUID,
         restaurant_id: int | Literal["Stall_Vendor"] | None = None,
     ) -> None:
-        """玩家购买食物"""
-        # 将食物放入背包，并从食物商店中删除
-        if restaurant_id is None:
-            cache.character_data[0].food_bag[uid] = (
-                cache.rhodes_island.dining_hall_data[cid][uid]
-            )
-            del cache.rhodes_island.dining_hall_data[cid][uid]
-        elif restaurant_id == "Stall_Vendor":
-            cache.character_data[0].food_bag[uid] = (
-                cache.rhodes_island.stall_vendor_data[0][cid][uid]
-            )
-            del cache.rhodes_island.stall_vendor_data[0][cid][uid]
-        else:
-            cache.character_data[0].food_bag[uid] = (
-                cache.rhodes_island.restaurant_data[restaurant_id][cid][uid]
-            )
-            del cache.rhodes_island.restaurant_data[restaurant_id][cid][uid]
-        # 赋予到角色属性
-        character_data: game_type.Character = cache.character_data[0]
-        character_data.behavior.behavior_id = constant.Behavior.BUY_FOOD
-        character_data.state = constant.CharacterStatus.STATUS_BUY_FOOD
-        character_data.behavior.target_food = character_data.food_bag[uid]
-        character_data.behavior.duration = 1
-        # 时间流逝
-        update.game_update_flow(1)
+        """玩家购买食物：食物在行动开始时从货架移进背包"""
+        player_pick.choose(
+            constant.Behavior.BUY_FOOD,
+            1,
+            kind="player_buy_food",
+            state=constant.CharacterStatus.STATUS_BUY_FOOD,
+            args={
+                "food_cid": cid,
+                "food_uid": str(uid),
+                "restaurant": restaurant_id,
+            },
+        )

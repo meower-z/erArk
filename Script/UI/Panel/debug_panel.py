@@ -1,7 +1,9 @@
 """debug 界面面板，以及口上快速测试和数据重建工具"""
 
-from typing import Any
-from types import FunctionType
+import datetime
+from dataclasses import replace
+from typing import Any, cast
+from types import FunctionType, MappingProxyType
 from Script.Core import (
     cache_control,
     game_type,
@@ -9,6 +11,7 @@ from Script.Core import (
     flow_handle,
     constant,
     py_cmd,
+    num,
 )
 from Script.Design import (
     basement,
@@ -23,6 +26,9 @@ from Script.Config import game_config, normal_config
 import os
 import json
 import csv
+from Script.Design import game_time
+from Script.Kernel import core
+from Script.Modules.gameplay_resolution import actions
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -34,6 +40,28 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
+
+
+def set_clock(new_time: datetime.datetime) -> None:
+    """
+    调试：把游戏时钟改到 new_time，只调用一次 core.reset_state，在选行动里调用时这次选择中止。
+    从新时刻起每 5 分钟结算一次；往后跳过了 0 点，新时刻先结算一次新的一天，往前跳不结算；
+    跳过的时间不做连续结算，进行中的行动保留原来的开始时刻
+    Keyword arguments:
+    new_time -- 新的游戏时间
+    """
+    game = core.state()
+    clock = game_time.minutes(new_time)
+    settled_day = cast(int, game.data[actions.SETTLED_DAY])
+    data = {
+        **game.data,
+        actions.TICKED: clock,
+        actions.SETTLED_DAY: min(settled_day, game_time.day(clock)),
+    }
+    core.reset_state(
+        replace(game, clock=clock, data=MappingProxyType(data)),
+        {"cause": "clock"},
+    )
 
 
 def build_csv_config(
@@ -757,8 +785,7 @@ class Debug_Panel:
 
         title_draw = draw.TitleLineDraw(title_text, self.width)
 
-        # 进行一轮刷新
-        basement.update_work_people()
+        # 刷新设施人数（界面状态）；岗位名单由日结与改岗位的操作维护，打开面板只读
         basement.update_facility_people()
 
         while 1:
@@ -809,7 +836,7 @@ class Debug_Panel:
 
                 # 要输出的变量名称以及注释
                 draw_text_list = []
-                draw_text_list.append(f"[000]:游戏时间：{cache.game_time}")
+                draw_text_list.append(f"[000]:游戏时间：{game_time.now()}")
                 draw_text_list.append(
                     f"[001]:已拥有的干员id列表：{cache.npc_id_got}"
                 )
@@ -863,28 +890,28 @@ class Debug_Panel:
                 # 要输出的变量名称以及注释
                 draw_text_list = []
                 draw_text_list.append(
-                    f"[000]:当前HP：{cache.character_data[0].hit_point}"
+                    f"[000]:当前HP：{num.shown(cache.character_data[0].hit_point)}"
                 )
                 draw_text_list.append(
                     f"[001]:最大HP：{cache.character_data[0].hit_point_max}"
                 )
                 draw_text_list.append(
-                    f"[002]:当前MP：{cache.character_data[0].mana_point}"
+                    f"[002]:当前MP：{num.shown(cache.character_data[0].mana_point)}"
                 )
                 draw_text_list.append(
                     f"[003]:最大MP：{cache.character_data[0].mana_point_max}"
                 )
                 draw_text_list.append(
-                    f"[004]:当前射精槽：{cache.character_data[0].eja_point}"
+                    f"[004]:当前射精槽：{num.shown(cache.character_data[0].eja_point)}"
                 )
                 draw_text_list.append(
-                    f"[005]:疲劳值 6m=1点，16h=160点(max)：{cache.character_data[0].tired_point}"
+                    f"[005]:疲劳值 6m=1点，16h=160点(max)：{num.shown(cache.character_data[0].tired_point)}"
                 )
                 draw_text_list.append(
-                    f"[006]:尿意值 1m=1点，4h=240点(max)：{cache.character_data[0].urinate_point}"
+                    f"[006]:尿意值 1m=1点，4h=240点(max)：{num.shown(cache.character_data[0].urinate_point)}"
                 )
                 draw_text_list.append(
-                    f"[007]:饥饿值 1m=1点，4h=240点(max)：{cache.character_data[0].hunger_point}"
+                    f"[007]:饥饿值 1m=1点，4h=240点(max)：{num.shown(cache.character_data[0].hunger_point)}"
                 )
                 draw_text_list.append("[008]:全源石技艺全开，理智9999")
                 draw_text_list.append("[009]:资源全99999")
@@ -1076,7 +1103,7 @@ class Debug_Panel:
 
             if self.now_panel == "全局变量":
                 if key_index == 0:
-                    info_text = f"[000]:游戏时间：{cache.game_time}      年月日分别为0,1,2"
+                    info_text = f"[000]:游戏时间：{game_time.now()}      年月日分别为0,1,2"
                     info_draw.text = info_text
                     info_draw.draw()
                     line_feed.draw()
@@ -1106,15 +1133,11 @@ class Debug_Panel:
                         info_draw.draw()
                         continue
                     if value_index[1] == 0:
-                        cache.game_time = cache.game_time.replace(
-                            year=new_value
-                        )
+                        set_clock(game_time.now().replace(year=new_value))
                     elif value_index[1] == 1:
-                        cache.game_time = cache.game_time.replace(
-                            month=new_value
-                        )
+                        set_clock(game_time.now().replace(month=new_value))
                     elif value_index[1] == 2:
-                        cache.game_time = cache.game_time.replace(day=new_value)
+                        set_clock(game_time.now().replace(day=new_value))
 
                 elif key_index == 1:
                     info_text = "[001]:已拥有的干员id列表：\n"
@@ -1240,9 +1263,7 @@ class Debug_Panel:
 
                 # 当前HP
                 if key_index == 0:
-                    info_text = (
-                        f"[000]:当前HP：{cache.character_data[0].hit_point}"
-                    )
+                    info_text = f"[000]:当前HP：{num.shown(cache.character_data[0].hit_point)}"
                     info_draw.text = info_text
                     info_draw.draw()
                     line_feed.draw()
@@ -1264,9 +1285,7 @@ class Debug_Panel:
                     cache.character_data[0].hit_point_max = new_value
                 # 当前MP
                 elif key_index == 2:
-                    info_text = (
-                        f"[002]:当前MP：{cache.character_data[0].mana_point}"
-                    )
+                    info_text = f"[002]:当前MP：{num.shown(cache.character_data[0].mana_point)}"
                     info_draw.text = info_text
                     info_draw.draw()
                     line_feed.draw()
@@ -1286,9 +1305,7 @@ class Debug_Panel:
                     cache.character_data[0].mana_point_max = new_value
                 # 当前射精槽
                 elif key_index == 4:
-                    info_text = (
-                        f"[004]:当前射精槽：{cache.character_data[0].eja_point}"
-                    )
+                    info_text = f"[004]:当前射精槽：{num.shown(cache.character_data[0].eja_point)}"
                     info_draw.text = info_text
                     info_draw.draw()
                     line_feed.draw()
@@ -1298,7 +1315,7 @@ class Debug_Panel:
                     cache.character_data[0].eja_point = new_value
                 # 疲劳值
                 elif key_index == 5:
-                    info_text = f"[005]:疲劳值 6m=1点，16h=160点(max)：{cache.character_data[0].tired_point}"
+                    info_text = f"[005]:疲劳值 6m=1点，16h=160点(max)：{num.shown(cache.character_data[0].tired_point)}"
                     info_draw.text = info_text
                     info_draw.draw()
                     line_feed.draw()
@@ -1308,7 +1325,10 @@ class Debug_Panel:
                     cache.character_data[0].tired_point = new_value
                 # 尿意值
                 elif key_index == 6:
-                    info_text = f"[006]:尿意值 1m=1点，4h=240点(max)：{cache.character_data[0].urinate_point}"
+                    info_text = (
+                        "[006]:尿意值 1m=1点，4h=240点(max)："
+                        f"{num.shown(cache.character_data[0].urinate_point)}"
+                    )
                     info_draw.text = info_text
                     info_draw.draw()
                     line_feed.draw()
@@ -1318,7 +1338,7 @@ class Debug_Panel:
                     cache.character_data[0].urinate_point = new_value
                 # 饥饿值
                 elif key_index == 7:
-                    info_text = f"[007]:饥饿值 1m=1点，4h=240点(max)：{cache.character_data[0].hunger_point}"
+                    info_text = f"[007]:饥饿值 1m=1点，4h=240点(max)：{num.shown(cache.character_data[0].hunger_point)}"
                     info_draw.text = info_text
                     info_draw.draw()
                     line_feed.draw()
@@ -1469,42 +1489,48 @@ class Debug_Panel:
             # 基础属性
             if key_index == 0:
                 draw_text_list = []
-                draw_text_list.append(f"[000]:当前HP：{target_data.hit_point}")
+                draw_text_list.append(
+                    f"[000]:当前HP：{num.shown(target_data.hit_point)}"
+                )
                 draw_text_list.append(
                     f"[001]:最大HP：{target_data.hit_point_max}"
                 )
-                draw_text_list.append(f"[002]:当前MP：{target_data.mana_point}")
+                draw_text_list.append(
+                    f"[002]:当前MP：{num.shown(target_data.mana_point)}"
+                )
                 draw_text_list.append(
                     f"[003]:最大MP：{target_data.mana_point_max}"
                 )
                 draw_text_list.append(
-                    f"[004]:当前理智：{target_data.sanity_point}"
+                    f"[004]:当前理智：{num.shown(target_data.sanity_point)}"
                 )
                 draw_text_list.append(
                     f"[005]:最大理智：{target_data.sanity_point_max}"
                 )
                 draw_text_list.append(
-                    f"[011]:疲劳值 6m=1点，16h=160点(max)：{target_data.tired_point}"
+                    f"[011]:疲劳值 6m=1点，16h=160点(max)：{num.shown(target_data.tired_point)}"
                 )
                 draw_text_list.append(
-                    f"[012]:尿意值 1m=1点，4h=240点(max)：{target_data.urinate_point}"
+                    f"[012]:尿意值 1m=1点，4h=240点(max)：{num.shown(target_data.urinate_point)}"
                 )
                 draw_text_list.append(
-                    f"[013]:饥饿值 1m=1点，4h=240点(max)：{target_data.hunger_point}"
+                    f"[013]:饥饿值 1m=1点，4h=240点(max)：{num.shown(target_data.hunger_point)}"
                 )
                 draw_text_list.append(
-                    f"[014]:熟睡值 1m=10点，10min=100点(max)：{target_data.sleep_point}"
+                    f"[014]:熟睡值 1m=10点，10min=100点(max)：{num.shown(target_data.sleep_point)}"
                 )
                 draw_text_list.append(
                     f"[015]:愤怒槽：{target_data.angry_point}"
                 )
-                draw_text_list.append(f"[016]:射精槽：{target_data.eja_point}")
+                draw_text_list.append(
+                    f"[016]:射精槽：{num.shown(target_data.eja_point)}"
+                )
                 draw_text_list.append(
                     f"[017]:对玩家的好感度：{target_data.favorability[0]}"
                 )
                 draw_text_list.append(f"[018]:信赖度：{target_data.trust}")
                 draw_text_list.append(
-                    f"[019]:乳汁量：{target_data.pregnancy.milk}"
+                    f"[019]:乳汁量：{num.shown(target_data.pregnancy.milk)}"
                 )
                 draw_text_list.append(
                     f"[020]:乳汁上限：{target_data.pregnancy.milk_max}"
@@ -1513,13 +1539,13 @@ class Debug_Panel:
                     f"[021]:欲望值：{target_data.desire_point}"
                 )
                 draw_text_list.append(
-                    f"[022]:精液值：{target_data.semen_point}"
+                    f"[022]:精液值：{num.shown(target_data.semen_point)}"
                 )
                 draw_text_list.append(
                     f"[023]:精液值上限：{target_data.semen_point_max}"
                 )
                 draw_text_list.append(
-                    f"[024]:醉酒值 0~100点(max)：{target_data.drunk_point}"
+                    f"[024]:醉酒值 0~100点(max)：{num.shown(target_data.drunk_point)}"
                 )
 
                 # 进行显示
@@ -1641,7 +1667,7 @@ class Debug_Panel:
                 info_text = "\n"
                 for cid in game_config.config_character_state:
                     name = game_config.config_character_state[cid].name
-                    info_text += f"{cid}:{name}={target_data.status_data[cid]} "
+                    info_text += f"{cid}:{name}={num.shown(target_data.status_data[cid])} "
                 draw_text_list.append(f"[000]:状态列表：\n{info_text}")
 
                 # 进行显示
@@ -1840,8 +1866,12 @@ class Debug_Panel:
             # 污浊数据
             elif key_index == 12:
                 draw_text_list = []
+                shown_body_semen = {
+                    part: [slot[0], num.shown(slot[1]), *slot[2:]]
+                    for part, slot in target_data.dirty.body_semen.items()
+                }
                 draw_text_list.append(
-                    f"[000]:身体精液情况，编号int:[部位名str,当前精液量int,当前精液等级int,总精液量int]：\n{target_data.dirty.body_semen}"
+                    f"[000]:身体精液情况，编号int:[部位名str,当前精液量int,当前精液等级int,总精液量int]：\n{shown_body_semen}"
                 )
                 draw_text_list.append(
                     f"\n[001]:服装精液情况，编号int:[部位名str,当前精液量int,当前精液等级int,总精液量int]：\n{target_data.dirty.cloth_semen}"
@@ -2167,7 +2197,7 @@ class Debug_Panel:
                 draw_text_list.append("[005]:一键触发生产事件")
                 draw_text_list.append("[006]:一键触发育儿+育儿完成事件")
                 draw_text_list.append(
-                    f"[007]:角色当前乳汁量：{target_data.pregnancy.milk}"
+                    f"[007]:角色当前乳汁量：{num.shown(target_data.pregnancy.milk)}"
                 )
                 draw_text_list.append(
                     f"[008]:角色最大乳汁量：{target_data.pregnancy.milk_max}"
@@ -2208,7 +2238,7 @@ class Debug_Panel:
                     elif value_index == 5:
                         target_data.talent[22] = 1
                         target_data.pregnancy.fertilization_time = (
-                            cache.game_time
+                            game_time.now()
                         )
                         new_year = (
                             target_data.pregnancy.fertilization_time.year - 1
@@ -2260,7 +2290,7 @@ class Debug_Panel:
                             continue
                         target_data.talent[20 + value_index[1]] = new_value
                         target_data.pregnancy.fertilization_time = (
-                            cache.game_time
+                            game_time.now()
                         )
                     elif value_index[0] == 4:
                         if len(value_index) == 1:

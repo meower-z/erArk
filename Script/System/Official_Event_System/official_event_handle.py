@@ -1,12 +1,12 @@
 """公务事件系统的入队、出队与结算（Plan 23 方案 §3.2）
 
-公务事件 = 玩家在博士办公室「处理公务」时需要逐条决断的事。
+公务事件 = 玩家在博士办公室「处理公务」时需要决断的事，每次处理公务决断一条。
 养成事件（教育区）只是它的一个部门分类，生产、医疗、人事、后勤、外勤、装备等部门同样往这里挂事件。
 
 流程：
     每日结算 → check_new_day_official_event() 各部门的提供者各自节流后给出今日候选 → 入队
-    → 玩家在博士办公室「处理公务」→ official_event_panel 逐条弹出决断
-    → settle_official_event_option() 结算选项并写入履历
+    → 玩家在博士办公室「处理公务」→ official_event_panel 弹出第一条事件，玩家选定选项
+    → 处理公务的行动开始时 settle_official_event_option() 结算选项并写入履历
 
 三条不可省的护栏：
     1. **入队节流**：不节流的话多女儿或多部门时一次公务会涌出十几条，玩家会直接失去判断意愿
@@ -26,6 +26,7 @@ from collections.abc import Callable
 from Script.Core import cache_control, constant, game_type, get_text
 from Script.Config import game_config
 from Script.System.Official_Event_System import ri_value
+from Script.Design import game_time
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -312,7 +313,7 @@ def record_event_done(uid: str, character_id: int, option_index: int) -> None:
     Return arguments:
     无
     """
-    now_record = {"time": cache.game_time, "choice": option_index}
+    now_record = {"time": game_time.now(), "choice": option_index}
     if character_id and character_id in cache.character_data:
         growth_data = cache.character_data[character_id].child_growth
         if growth_data is not None:
@@ -390,7 +391,7 @@ def push_official_event(
         "department": get_event_department(uid),
         "chara_id": character_id,
         "partner_id": partner_id,
-        "add_time": cache.game_time,
+        "add_time": game_time.now(),
     }
     if to_front:
         queue.insert(0, queue_data)
@@ -673,7 +674,7 @@ def handle_effect_text(
             elif effect.isdigit():
                 handler = constant.settle_behavior_effect_data.get(int(effect))
                 if handler is not None:
-                    handler(character_id, 1, change_data, cache.game_time)
+                    handler(character_id, 1, change_data, game_time.now())
                 else:
                     print(
                         f"\ndebug 公务事件的结算{effect}不存在，请检查结算是否正确\n"

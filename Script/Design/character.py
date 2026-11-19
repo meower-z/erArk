@@ -117,7 +117,7 @@ def init_attr(character_id: int) -> None:
 
     # 一系列初始化函数
     instuct_judege.init_character_behavior_start_time(
-        character_id, cache.game_time
+        character_id, game_time.now()
     )
     character_data.hit_point = character_data.hit_point_max
     character_data.mana_point = character_data.mana_point_max

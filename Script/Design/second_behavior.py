@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from types import FunctionType
-from Script.Core import cache_control, constant, game_type, get_text
+from Script.Core import cache_control, constant, game_type, get_text, num
 from Script.Design import handle_premise, talk, settle_behavior
 from Script.System.First_Record_System import first_record_handle
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 
 from typing import TYPE_CHECKING
+from Script.Design import game_time
 
 if TYPE_CHECKING:
     from types import ModuleType
@@ -102,7 +103,7 @@ def character_get_second_behavior(
             state_id = orgasm_settle_module.orgasm_part_to_state_id[part_str]
             if state_id not in first_record.first_strong_orgasm_dict:
                 first_record.first_strong_orgasm_dict[state_id] = [
-                    cache.game_time,
+                    game_time.now(),
                     list(character_data.position),
                 ]
             if (
@@ -110,7 +111,7 @@ def character_get_second_behavior(
                 and state_id not in first_record.first_super_orgasm_dict
             ):
                 first_record.first_super_orgasm_dict[state_id] = [
-                    cache.game_time,
+                    game_time.now(),
                     list(character_data.position),
                 ]
         # (2) 刻印升级行为则记录刻印首达等级（id格式{类型}_mark_{等级}，与部位绝顶id格式互斥）
@@ -119,7 +120,7 @@ def character_get_second_behavior(
             and second_behavior_id not in first_record.first_mark_dict
         ):
             first_record.first_mark_dict[second_behavior_id] = [
-                cache.game_time,
+                game_time.now(),
                 list(character_data.position),
             ]
         # (3) 固定二段行为id到特殊履历的白名单映射（受精/喷乳绝顶/放尿绝顶）
@@ -589,7 +590,7 @@ def get_now_state_all_value_and_text_from_mark_up_data(
             mark_up_data_text += f" {game_config.config_character_state[state_id].name}*{adjust} = {now_state_value} "
         else:
             state_id = need_state[0]
-            now_state_value = character_status_data[state_id]
+            now_state_value = num.shown(character_status_data[state_id])
             mark_up_data_all_value += now_state_value
             mark_up_data_text += f" {game_config.config_character_state[state_id].name} = {now_state_value} "
     return mark_up_data_all_value, mark_up_data_text

@@ -1,7 +1,7 @@
 """露出H模式的更新与选择面板"""
 
 from types import FunctionType
-from Script.System.Instruct_System import handle_instruct
+from Script.System.Sex_System.hidden_sex_panel import _settle_instruct
 from Script.UI.Moudle import draw
 from Script.Core import (
     cache_control,
@@ -80,6 +80,8 @@ class Select_Exhibitionism_Sex_Mode_Panel:
         """ 绘制的最大宽度 """
         self.sex_be_discovered_flag: bool = sex_be_discovered_flag
         """ 是否是从被发现面板跳转过来 """
+        self.invite_failed: bool = False
+        """ 是否邀请露出失败 """
         self.now_panel = _("选择露出H模式")
         """ 当前绘制的页面 """
 
@@ -151,48 +153,43 @@ class Select_Exhibitionism_Sex_Mode_Panel:
             target_character_id
         ]
 
-        # 判断是否成功邀请露出
-        if instuct_judege.calculation_instuct_judege(
-            0, target_character_id, _("露出")
-        )[0]:
-            character_data.sp_flag.exhibitionism_sex_mode = mode_id
-            target_character_data.sp_flag.exhibitionism_sex_mode = mode_id
-            target_character_data.sp_flag.is_follow = 0
-            now_scene_character_list = (
-                map_handle.get_chara_now_scene_all_chara_id_list(0)
-            )
-            other_chara_count = len(now_scene_character_list) - 2
-            # 成就初始化
-            cache.achievement.exhibitionism_sex_record = {
-                1: mode_id,
-                2: other_chara_count,
-                3: 0,
-                4: 0,
-            }
-            # 如果是从被发现面板跳转过来
-            if self.sex_be_discovered_flag:
-                handle_instruct.chara_handle_instruct_common_settle(
-                    constant.Behavior.OTHER_SEX_BE_FOUND_TO_EXHIBITIONISM_SEX
-                )
-            # 否则正常结算
-            else:
-                handle_instruct.chara_handle_instruct_common_settle(
-                    constant.Behavior.ASK_EXHIBITIONISM_SEX
-                )
-        else:
+        # 从被发现面板跳转过来（结算途中）时当场判定邀请；玩家选择时只定下行动，邀请在行动开始时判定，
+        #    没过的换成邀请露出失败（它的开始代码提示失败），这里写下的模式随草稿一起作废
+        if (
+            self.sex_be_discovered_flag
+            and not instuct_judege.calculation_instuct_judege(
+                0, target_character_id, _("露出")
+            )[0]
+        ):
             now_draw = draw.WaitDraw()
             now_draw.text = _("\n邀请露出失败\n")
             now_draw.draw()
-            # 如果是从被发现面板跳转过来
-            if self.sex_be_discovered_flag:
-                character_data.behavior.behavior_id = (
-                    constant.Behavior.H_INTERRUPT
-                )
-            # 否则正常结算
-            else:
-                handle_instruct.chara_handle_instruct_common_settle(
-                    constant.Behavior.ASK_EXHIBITIONISM_SEX_FAIL
-                )
+            self.invite_failed = True
+            return
+        character_data.sp_flag.exhibitionism_sex_mode = mode_id
+        target_character_data.sp_flag.exhibitionism_sex_mode = mode_id
+        target_character_data.sp_flag.is_follow = 0
+        now_scene_character_list = (
+            map_handle.get_chara_now_scene_all_chara_id_list(0)
+        )
+        other_chara_count = len(now_scene_character_list) - 2
+        # 成就初始化
+        cache.achievement.exhibitionism_sex_record = {
+            1: mode_id,
+            2: other_chara_count,
+            3: 0,
+            4: 0,
+        }
+        # 如果是从被发现面板跳转过来
+        if self.sex_be_discovered_flag:
+            _settle_instruct(
+                constant.Behavior.OTHER_SEX_BE_FOUND_TO_EXHIBITIONISM_SEX
+            )
+        # 否则正常结算
+        else:
+            _settle_instruct(
+                constant.Behavior.ASK_EXHIBITIONISM_SEX, judge=_("露出")
+            )
 
     @staticmethod
     def _mode_available(mode_id: int) -> bool:

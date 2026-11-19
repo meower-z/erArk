@@ -70,3 +70,6 @@ static_check_seen.json
 
 # 中文 PO 由 buildconfig / auto_build_config / buildpo 生成，只作 Crowdin 原文
 data/po/zh_CN/
+
+# 全局设置（游戏根目录，不随存档）
+settings.json

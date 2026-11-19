@@ -2,19 +2,21 @@
 新周目面板：选择继承到新周目的玩家与干员数据，并显示角色能力与经验
 """
 
+from collections.abc import Mapping
 from types import FunctionType
 from Script.Core import (
     get_text,
     flow_handle,
     game_type,
     cache_control,
-    constant,
 )
 
 from Script.UI.Moudle import draw, panel
 from Script.UI.Panel import see_character_info_panel
 from Script.Config import normal_config, game_config
 from Script.Design import handle_talent, character_handle
+from Script.Kernel import core
+from Script.Modules.save_load import kernel_state
 
 import copy
 
@@ -71,6 +73,8 @@ class New_Round_Handle:
         """ 送别干员id """
         self.show_world_setting = False
         """ 显示世界设定面板 """
+        self.world_setting: dict[int, int] = dict(cache.world_setting)
+        """ 新周目的世界设定：设定id -> 是否选择 """
 
     def draw(self) -> None:
         """绘制面板"""
@@ -588,7 +592,7 @@ class New_Round_Handle:
                 from Script.UI.Flow import creator_character_flow
 
                 world_setting_panel = creator_character_flow.World_Setting(
-                    self.width
+                    self.width, self.world_setting
                 )
                 world_setting_panel.draw()
                 # 保存世界设定面板的返回列表，但不立即添加到主返回列表
@@ -636,7 +640,6 @@ class New_Round_Handle:
             # 只有点击主面板的确定按钮才会退出
             if yrn == yes_draw.return_text:
                 self.start_new_round()
-                cache.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def show_npc_change(self) -> None:
@@ -872,14 +875,33 @@ class New_Round_Handle:
         """
         self.show_world_setting = not self.show_world_setting
 
+    def choices(self) -> dict[str, core.JSON]:
+        """
+        面板上的继承选择
+        Return arguments:
+        dict -- 各项继承的档位、陷落干员id列表与新周目的世界设定，见 setup
+        """
+        return {
+            "pl_abi_and_exp_count": self.pl_abi_and_exp_count,
+            "pl_originium_arts_count": self.pl_originium_arts_count,
+            "pl_extra_growth_count": self.pl_extra_growth_count,
+            "pl_collection_count": self.pl_collection_count,
+            "chara_fon_and_trust_count": self.chara_fon_and_trust_count,
+            "chara_abi_and_exp_count": self.chara_abi_and_exp_count,
+            "chara_hypnosis_count": self.chara_hypnosis_count,
+            "all_fall_chara_list": tuple(self.all_fall_chara_list),
+            "world_setting": {
+                str(cid): value for cid, value in self.world_setting.items()
+            },
+        }
+
     def start_new_round(self) -> None:
         """
-        开始新的周目
+        开始新的周目：送别干员的送别口上属于结束的周目，先在这里输出；
+        再经 kernel_state.new_round 换入新周目，玩家选行动时调用则中止这次选择
         """
         from Script.Design import talk, second_behavior
-        from Script.UI.Panel import achievement_panel
 
-        # 输出送别干员的送别口上
         if self.farewell_npc_id:
             second_behavior.character_get_second_behavior(
                 self.farewell_npc_id, "new_round_farewell"
@@ -895,361 +917,365 @@ class New_Round_Handle:
 
         line_draw = draw.LineDraw("-", self.width)
         line_draw.draw()
+        kernel_state.new_round(self.choices())
 
-        # 继承玩家数据
-        self.inherit_player_data()
-        # 继承干员数据
-        self.inherit_npc_data()
-        # 重置游戏数据
-        self.reset_game_data()
 
-        info_draw = draw.NormalDraw()
-        info_draw.width = self.width
-        info_draw_text = "\n\n\n\n\n\n\n\n\n"
-        info_draw.text = info_draw_text
-        info_draw.draw()
+def _int(value: core.JSON) -> int:
+    """
+    继承选择里的一个整数
+    Keyword arguments:
+    value -- 继承选择里的值
+    Return arguments:
+    int -- 这个整数
+    """
+    if not isinstance(value, int):
+        raise TypeError(f"{value!r} is not an int")
+    return value
 
-        while 1:
 
-            return_list = []
-            button_draw = draw.CenterButton(
-                _("[醒来]"), _("醒来\n"), self.width
-            )
-            return_list.append(button_draw.return_text)
-            button_draw.draw()
-            yrn = flow_handle.askfor_all(return_list)
-            if yrn in return_list:
-                achievement_panel.achievement_flow(_("周目"))
-                break
+def _count(choices: Mapping[str, core.JSON], key: str) -> int:
+    """
+    继承选择里一项继承的档位
+    Keyword arguments:
+    choices -- 继承选择
+    key -- 继承项
+    Return arguments:
+    int -- 档位
+    """
+    return _int(choices[key])
 
-    def build_new_character_data(self, character_id: int) -> None:
-        """
-        构建新的角色数据
-        Keyword arguments:
-        character_id -- 角色id
-        """
+
+def _inherit_rate(type_id: int, count: int) -> int:
+    """
+    一类继承在一个档位上的继承比例
+    Keyword arguments:
+    type_id -- 继承类型
+    count -- 档位
+    Return arguments:
+    int -- 继承比例，百分数
+    """
+    cid = game_config.config_new_round_inherit_type_data[type_id][count]
+    return game_config.config_new_round_inherit[cid].inherit_rate
+
+
+def setup(inherit: Mapping[str, core.JSON]) -> None:
+    """
+    新周目的 Reset 步骤：按继承选择重建玩家与干员数据，重置游戏数据，等玩家「醒来」。
+    此时 game_time.now() 已是新周目的开局时刻，缓存还是结束的周目的
+    Keyword arguments:
+    inherit -- 继承选择，键见 New_Round_Handle.choices
+    """
+    from Script.UI.Panel import achievement_panel
+
+    fallen = inherit["all_fall_chara_list"]
+    world_setting = inherit["world_setting"]
+    if not isinstance(fallen, tuple) or not isinstance(world_setting, Mapping):
+        raise TypeError(f"inherit {inherit!r} is malformed")
+    _inherit_player_data(inherit)
+    _inherit_npc_data(inherit, {_int(chara_id) for chara_id in fallen})
+    _reset_game_data(
+        {int(cid): _int(value) for cid, value in world_setting.items()}
+    )
+
+    info_draw = draw.NormalDraw()
+    info_draw.width = width
+    info_draw.text = "\n\n\n\n\n\n\n\n\n"
+    info_draw.draw()
+
+    while 1:
+        return_list = []
+        button_draw = draw.CenterButton(_("[醒来]"), _("醒来\n"), width)
+        return_list.append(button_draw.return_text)
+        button_draw.draw()
+        yrn = flow_handle.askfor_all(return_list)
+        if yrn in return_list:
+            achievement_panel.achievement_flow(_("周目"))
+            break
+
+
+def _inherit_player_data(inherit: Mapping[str, core.JSON]) -> None:
+    """
+    继承玩家数据
+    Keyword arguments:
+    inherit -- 继承选择
+    """
+    from Script.Design import character
+
+    info_draw = draw.NormalDraw()
+    info_draw.width = width
+    info_draw_text = "\n\n"
+    info_draw_text += _("开始继承玩家数据\n")
+
+    # 记录旧的玩家数据
+    old_pl_character_data = copy.deepcopy(cache.character_data[0])
+    # 构建新的玩家数据
+    cache.character_data[0] = game_type.Character()
+    character.init_attr(0)
+    new_pl_character_data = cache.character_data[0]
+    new_pl_character_data.name = old_pl_character_data.name
+
+    # 归档旧周目的性行为履历（old_pl_character_data已deepcopy，快照直接引用即可；此时cache.game_round仍是旧周目数）
+    new_pl_character_data.first_record_history = getattr(
+        old_pl_character_data, "first_record_history", {}
+    )
+    if old_pl_character_data.first_record.has_any_record():
+        new_pl_character_data.first_record_history[cache.game_round] = (
+            old_pl_character_data.first_record
+        )
+
+    # 玩家能力与经验
+    now_rate = _inherit_rate(1, _count(inherit, "pl_abi_and_exp_count"))
+    for i in old_pl_character_data.ability:
+        new_pl_character_data.ability[i] = int(
+            old_pl_character_data.ability[i] * now_rate / 100
+        )
+    for i in old_pl_character_data.experience:
+        new_pl_character_data.experience[i] = int(
+            old_pl_character_data.experience[i] * now_rate / 100
+        )
+    info_draw_text += _("玩家能力与经验继承完毕\n")
+
+    # 玩家源石技艺
+    if _count(inherit, "pl_originium_arts_count") > 0:
+        for i in range(301, 350):
+            if (
+                i in old_pl_character_data.talent
+                and old_pl_character_data.talent[i]
+            ):
+                new_pl_character_data.talent[i] = old_pl_character_data.talent[
+                    i
+                ]
+    info_draw_text += _("玩家源石技艺继承完毕\n")
+
+    # 玩家属性上限成长
+    now_rate = _inherit_rate(2, _count(inherit, "pl_extra_growth_count"))
+    # 体力上限成长
+    hp_extra_grouth = (
+        (old_pl_character_data.hit_point_max - 1000) * now_rate / 100
+    )
+    new_pl_character_data.hit_point_max = int(1000 + hp_extra_grouth)
+    # 气力上限成长
+    mp_extra_grouth = (
+        (old_pl_character_data.mana_point_max - 1000) * now_rate / 100
+    )
+    new_pl_character_data.mana_point_max = int(1000 + mp_extra_grouth)
+    # 理智上限成长
+    san_extra_grouth = (
+        (old_pl_character_data.sanity_point_max - 100) * now_rate / 100
+    )
+    new_pl_character_data.sanity_point_max = int(100 + san_extra_grouth)
+    # 精液上限成长
+    semen_extra_grouth = (
+        (old_pl_character_data.semen_point_max - 100) * now_rate / 100
+    )
+    new_pl_character_data.semen_point_max = int(100 + semen_extra_grouth)
+    info_draw_text += _("玩家属性上限成长继承完毕\n")
+
+    # 玩家收藏品
+    now_rate = _inherit_rate(3, _count(inherit, "pl_collection_count"))
+    # 首先计算旧的收藏品数量和新的收藏品数量
+    old_pan_count, old_socks_count = 0, 0
+    for chara_cid in old_pl_character_data.pl_collection.npc_panties:
+        old_pan_count += len(
+            old_pl_character_data.pl_collection.npc_panties[chara_cid]
+        )
+    for chara_cid in old_pl_character_data.pl_collection.npc_socks:
+        old_socks_count += len(
+            old_pl_character_data.pl_collection.npc_socks[chara_cid]
+        )
+    new_pan_count = int(old_pan_count * now_rate / 100)
+    new_socks_count = int(old_socks_count * now_rate / 100)
+
+    # 在当前计数收藏品不超过新的数量的情况下，进行收藏品继承
+    now_pan_count, now_socks_count = 0, 0
+    for chara_cid in old_pl_character_data.pl_collection.npc_panties:
+        pan_count = len(
+            old_pl_character_data.pl_collection.npc_panties[chara_cid]
+        )
+        now_pan_count += pan_count
+        new_pl_character_data.pl_collection.npc_panties[chara_cid] = (
+            old_pl_character_data.pl_collection.npc_panties[chara_cid]
+        )
+        if now_pan_count > new_pan_count:
+            break
+    for chara_cid in old_pl_character_data.pl_collection.npc_socks:
+        socks_count = len(
+            old_pl_character_data.pl_collection.npc_socks[chara_cid]
+        )
+        now_socks_count += socks_count
+        new_pl_character_data.pl_collection.npc_socks[chara_cid] = (
+            old_pl_character_data.pl_collection.npc_socks[chara_cid]
+        )
+        if now_socks_count > new_socks_count:
+            break
+    info_draw_text += _("玩家收藏品继承完毕\n")
+    info_draw.text = info_draw_text
+    info_draw.draw()
+
+
+def _inherit_npc_data(
+    inherit: Mapping[str, core.JSON], fallen_ids: set[int]
+) -> None:
+    """
+    继承干员数据：每名干员重建，陷落干员按继承选择带上好感、信任、能力、经验与催眠进度
+    Keyword arguments:
+    inherit -- 继承选择
+    fallen_ids -- 陷落干员id
+    """
+    info_draw = draw.NormalDraw()
+    info_draw.width = width
+    info_draw_text = "\n"
+    info_draw_text += _("开始继承干员数据\n")
+
+    # 记录旧的干员数据
+    old_npc_data = copy.deepcopy(cache.character_data)
+    cache.npc_id_got = set()
+
+    for now_id, now_npc_data in cache.npc_tem_data.items():
         character_handle.init_character(
-            character_id, cache.npc_tem_data[character_id]
+            now_id, now_npc_data, collect_reset=False
         )
-
-    def inherit_player_data(self) -> None:
-        """
-        继承玩家数据
-        """
-        from Script.Design import character
-
-        info_draw = draw.NormalDraw()
-        info_draw.width = self.width
-        info_draw_text = "\n\n"
-        info_draw_text += _("开始继承玩家数据\n")
-
-        # 记录旧的玩家数据
-        old_pl_character_data = copy.deepcopy(cache.character_data[0])
-        # 构建新的玩家数据
-        cache.character_data[0] = game_type.Character()
-        character.init_attr(0)
-        new_pl_character_data = cache.character_data[0]
-        new_pl_character_data.name = old_pl_character_data.name
-
-        # 归档旧周目的性行为履历（old_pl_character_data已deepcopy，快照直接引用即可；此时cache.game_round仍是旧周目数）
-        new_pl_character_data.first_record_history = getattr(
-            old_pl_character_data, "first_record_history", {}
-        )
-        if old_pl_character_data.first_record.has_any_record():
-            new_pl_character_data.first_record_history[cache.game_round] = (
-                old_pl_character_data.first_record
-            )
-
-        # 玩家能力与经验
-        now_inherit_data_cid = game_config.config_new_round_inherit_type_data[
-            1
-        ][self.pl_abi_and_exp_count]
-        now_inherit_data = game_config.config_new_round_inherit[
-            now_inherit_data_cid
-        ]
-        now_rate = now_inherit_data.inherit_rate
-        for i in old_pl_character_data.ability:
-            new_pl_character_data.ability[i] = int(
-                old_pl_character_data.ability[i] * now_rate / 100
-            )
-        for i in old_pl_character_data.experience:
-            new_pl_character_data.experience[i] = int(
-                old_pl_character_data.experience[i] * now_rate / 100
-            )
-        info_draw_text += _("玩家能力与经验继承完毕\n")
-
-        # 玩家源石技艺
-        if self.pl_originium_arts_count > 0:
-            for i in range(301, 350):
-                if (
-                    i in old_pl_character_data.talent
-                    and old_pl_character_data.talent[i]
-                ):
-                    new_pl_character_data.talent[i] = (
-                        old_pl_character_data.talent[i]
-                    )
-        info_draw_text += _("玩家源石技艺继承完毕\n")
-
-        # 玩家属性上限成长
-        now_inherit_data_cid = game_config.config_new_round_inherit_type_data[
-            2
-        ][self.pl_extra_growth_count]
-        now_inherit_data = game_config.config_new_round_inherit[
-            now_inherit_data_cid
-        ]
-        now_rate = now_inherit_data.inherit_rate
-        # 体力上限成长
-        hp_extra_grouth = (
-            (old_pl_character_data.hit_point_max - 1000) * now_rate / 100
-        )
-        new_pl_character_data.hit_point_max = int(1000 + hp_extra_grouth)
-        # 气力上限成长
-        mp_extra_grouth = (
-            (old_pl_character_data.mana_point_max - 1000) * now_rate / 100
-        )
-        new_pl_character_data.mana_point_max = int(1000 + mp_extra_grouth)
-        # 理智上限成长
-        san_extra_grouth = (
-            (old_pl_character_data.sanity_point_max - 100) * now_rate / 100
-        )
-        new_pl_character_data.sanity_point_max = int(100 + san_extra_grouth)
-        # 精液上限成长
-        semen_extra_grouth = (
-            (old_pl_character_data.semen_point_max - 100) * now_rate / 100
-        )
-        new_pl_character_data.semen_point_max = int(100 + semen_extra_grouth)
-        info_draw_text += _("玩家属性上限成长继承完毕\n")
-
-        # 玩家收藏品
-        now_inherit_data_cid = game_config.config_new_round_inherit_type_data[
-            3
-        ][self.pl_collection_count]
-        now_inherit_data = game_config.config_new_round_inherit[
-            now_inherit_data_cid
-        ]
-        now_rate = now_inherit_data.inherit_rate
-        # 首先计算旧的收藏品数量和新的收藏品数量
-        old_pan_count, old_socks_count = 0, 0
-        for chara_cid in old_pl_character_data.pl_collection.npc_panties:
-            old_pan_count += len(
-                old_pl_character_data.pl_collection.npc_panties[chara_cid]
-            )
-        for chara_cid in old_pl_character_data.pl_collection.npc_socks:
-            old_socks_count += len(
-                old_pl_character_data.pl_collection.npc_socks[chara_cid]
-            )
-        new_pan_count = int(old_pan_count * now_rate / 100)
-        new_socks_count = int(old_socks_count * now_rate / 100)
-
-        # 在当前计数收藏品不超过新的数量的情况下，进行收藏品继承
-        now_pan_count, now_socks_count = 0, 0
-        for chara_cid in old_pl_character_data.pl_collection.npc_panties:
-            pan_count = len(
-                old_pl_character_data.pl_collection.npc_panties[chara_cid]
-            )
-            now_pan_count += pan_count
-            new_pl_character_data.pl_collection.npc_panties[chara_cid] = (
-                old_pl_character_data.pl_collection.npc_panties[chara_cid]
-            )
-            if now_pan_count > new_pan_count:
-                break
-        for chara_cid in old_pl_character_data.pl_collection.npc_socks:
-            socks_count = len(
-                old_pl_character_data.pl_collection.npc_socks[chara_cid]
-            )
-            now_socks_count += socks_count
-            new_pl_character_data.pl_collection.npc_socks[chara_cid] = (
-                old_pl_character_data.pl_collection.npc_socks[chara_cid]
-            )
-            if now_socks_count > new_socks_count:
-                break
-        info_draw_text += _("玩家收藏品继承完毕\n")
-        info_draw.text = info_draw_text
-        info_draw.draw()
-
-    def inherit_npc_data(self) -> None:
-        """
-        继承干员数据
-        """
-        info_draw = draw.NormalDraw()
-        info_draw.width = self.width
-        info_draw_text = "\n"
-        info_draw_text += _("开始继承干员数据\n")
-
-        # 记录旧的干员数据
-        old_npc_data = copy.deepcopy(cache.character_data)
-        cache.npc_id_got = set()
-
-        for now_id, now_npc_data in cache.npc_tem_data.items():
-
-            # 仅继承陷落干员
-            if now_id not in self.all_fall_chara_list:
-                character_handle.init_character(
-                    now_id, now_npc_data, collect_reset=False
+        if now_id in fallen_ids:
+            new_npc_data = cache.character_data[now_id]
+            cache.npc_id_got.add(now_id)
+            if len(cache.npc_id_got) > 0:
+                info_draw_text += _("共有{0}名陷落干员继承到下一周目\n").format(
+                    len(cache.npc_id_got)
                 )
             else:
-                character_handle.init_character(
-                    now_id, now_npc_data, collect_reset=False
+                info_draw_text += _("没有陷落干员\n")
+
+            # 干员好感与信任
+            now_rate = _inherit_rate(
+                4, _count(inherit, "chara_fon_and_trust_count")
+            )
+            new_npc_data.trust = int(
+                old_npc_data[now_id].trust * now_rate / 100
+            )
+            new_npc_data.favorability[0] = int(
+                old_npc_data[now_id].favorability[0] * now_rate / 100
+            )
+            if now_rate > 0:
+                info_draw_text += _(
+                    "干员好感与信任继承完毕，共继承了{rate}%的好感与信任\n"
+                ).format(rate=now_rate)
+            else:
+                info_draw_text += _("干员好感与信任未继承\n")
+
+            # 干员能力与经验
+            now_rate = _inherit_rate(
+                5, _count(inherit, "chara_abi_and_exp_count")
+            )
+            for i in old_npc_data[now_id].ability:
+                new_npc_data.ability[i] = int(
+                    old_npc_data[now_id].ability[i] * now_rate / 100
                 )
-                new_npc_data = cache.character_data[now_id]
-                cache.npc_id_got.add(now_id)
-                if len(cache.npc_id_got) > 0:
-                    info_draw_text += _(
-                        "共有{0}名陷落干员继承到下一周目\n"
-                    ).format(len(cache.npc_id_got))
-                else:
-                    info_draw_text += _("没有陷落干员\n")
-
-                # 干员好感与信任
-                now_inherit_data_cid = (
-                    game_config.config_new_round_inherit_type_data[4][
-                        self.chara_fon_and_trust_count
-                    ]
+            for i in old_npc_data[now_id].experience:
+                new_npc_data.experience[i] = int(
+                    old_npc_data[now_id].experience[i] * now_rate / 100
                 )
-                now_inherit_data = game_config.config_new_round_inherit[
-                    now_inherit_data_cid
-                ]
-                now_rate = now_inherit_data.inherit_rate
-                new_npc_data.trust = int(
-                    old_npc_data[now_id].trust * now_rate / 100
+            if now_rate > 0:
+                info_draw_text += _(
+                    "干员能力与经验继承完毕，共继承了{rate}%的能力与经验\n"
+                ).format(rate=now_rate)
+            else:
+                info_draw_text += _("干员能力与经验未继承\n")
+
+            # 干员催眠进度
+            now_rate = _inherit_rate(6, _count(inherit, "chara_hypnosis_count"))
+            new_npc_data.hypnosis.hypnosis_degree = int(
+                old_npc_data[now_id].hypnosis.hypnosis_degree * now_rate / 100
+            )
+            if now_rate > 0:
+                info_draw_text += _(
+                    "干员催眠进度继承完毕，共继承了{rate}%的催眠进度\n"
+                ).format(rate=now_rate)
+            else:
+                info_draw_text += _("干员催眠进度未继承\n")
+
+        # 归档旧周目的性行为履历（陷落与未陷落分支都归档；old_npc_data已整体deepcopy，快照直接引用即可）
+        old_data = old_npc_data.get(now_id)
+        if old_data is not None:
+            new_data = cache.character_data[now_id]
+            new_data.first_record_history = getattr(
+                old_data, "first_record_history", {}
+            )
+            if old_data.first_record.has_any_record():
+                new_data.first_record_history[cache.game_round] = (
+                    old_data.first_record
                 )
-                new_npc_data.favorability[0] = int(
-                    old_npc_data[now_id].favorability[0] * now_rate / 100
-                )
-                if now_rate > 0:
-                    info_draw_text += _(
-                        "干员好感与信任继承完毕，共继承了{rate}%的好感与信任\n"
-                    ).format(rate=now_rate)
-                else:
-                    info_draw_text += _("干员好感与信任未继承\n")
 
-                # 干员能力与经验
-                now_inherit_data_cid = (
-                    game_config.config_new_round_inherit_type_data[5][
-                        self.chara_abi_and_exp_count
-                    ]
-                )
-                now_inherit_data = game_config.config_new_round_inherit[
-                    now_inherit_data_cid
-                ]
-                now_rate = now_inherit_data.inherit_rate
-                for i in old_npc_data[now_id].ability:
-                    new_npc_data.ability[i] = int(
-                        old_npc_data[now_id].ability[i] * now_rate / 100
-                    )
-                for i in old_npc_data[now_id].experience:
-                    new_npc_data.experience[i] = int(
-                        old_npc_data[now_id].experience[i] * now_rate / 100
-                    )
-                if now_rate > 0:
-                    info_draw_text += _(
-                        "干员能力与经验继承完毕，共继承了{rate}%的能力与经验\n"
-                    ).format(rate=now_rate)
-                else:
-                    info_draw_text += _("干员能力与经验未继承\n")
+    info_draw.text = info_draw_text
+    info_draw.draw()
 
-                # 干员催眠进度
-                now_inherit_data_cid = (
-                    game_config.config_new_round_inherit_type_data[6][
-                        self.chara_hypnosis_count
-                    ]
-                )
-                now_inherit_data = game_config.config_new_round_inherit[
-                    now_inherit_data_cid
-                ]
-                now_rate = now_inherit_data.inherit_rate
-                new_npc_data.hypnosis.hypnosis_degree = int(
-                    old_npc_data[now_id].hypnosis.hypnosis_degree
-                    * now_rate
-                    / 100
-                )
-                if now_rate > 0:
-                    info_draw_text += _(
-                        "干员催眠进度继承完毕，共继承了{rate}%的催眠进度\n"
-                    ).format(rate=now_rate)
-                else:
-                    info_draw_text += _("干员催眠进度未继承\n")
 
-            # 归档旧周目的性行为履历（陷落与未陷落分支都归档；old_npc_data已整体deepcopy，快照直接引用即可）
-            old_data = old_npc_data.get(now_id)
-            if old_data is not None:
-                new_data = cache.character_data[now_id]
-                new_data.first_record_history = getattr(
-                    old_data, "first_record_history", {}
-                )
-                if old_data.first_record.has_any_record():
-                    new_data.first_record_history[cache.game_round] = (
-                        old_data.first_record
-                    )
+def _reset_game_data(world_setting: dict[int, int]) -> None:
+    """
+    重置游戏数据：留下继承后的角色与已获得干员、难度、出生设定与成就，周目数加一，换上新周目的世界设定
+    Keyword arguments:
+    world_setting -- 新周目的世界设定
+    """
+    from Script.Design import attr_calculation, basement
+    from Script.UI.Flow import creator_character_flow
+    from Script.Config import map_config
 
-        info_draw.text = info_draw_text
-        info_draw.draw()
+    info_draw = draw.NormalDraw()
+    info_draw.width = width
+    info_draw_text = "\n"
+    info_draw_text += _("开始重置游戏数据\n")
 
-    def reset_game_data(self) -> None:
-        """
-        重置游戏数据
-        """
-        global cache
-        from Script.Design import attr_calculation, basement, game_time
-        from Script.UI.Flow import creator_character_flow
-        from Script.Config import map_config
+    # 要保留的数据
+    old_cache = copy.deepcopy(cache_control.cache)
+    new_game_round = old_cache.game_round + 1
+    new_character_data = old_cache.character_data
+    new_npc_id_got = old_cache.npc_id_got
+    new_achievement = old_cache.achievement
 
-        info_draw = draw.NormalDraw()
-        info_draw.width = self.width
-        info_draw_text = "\n"
-        info_draw_text += _("开始重置游戏数据\n")
+    # 开始重置
+    cache_control.cache = cache
+    map_config.init_map_data()
+    cache.rhodes_island = basement.get_base_zero()
+    cache.plan_queue = {}
+    cache.player_route = None
+    cache.difficulty_setting = attr_calculation.get_difficulty_setting_zero()
+    cache.birth_type_setting = attr_calculation.get_birth_type_setting_zero()
+    cache.rhodes_island.physical_examination_setting = (
+        attr_calculation.get_physical_exam_setting_zero()
+    )
+    info_draw_text += _("游戏数据重置完毕\n")
 
-        # 要保留的数据
-        old_cache = copy.deepcopy(cache_control.cache)
-        new_game_round = old_cache.game_round + 1
-        new_character_data = old_cache.character_data
-        new_npc_id_got = old_cache.npc_id_got
-        new_world_setting = old_cache.world_setting
-        new_system_setting = old_cache.all_system_setting
-        new_achievement = old_cache.achievement
+    # 覆盖要保留的数据
+    creator_character_flow.first_bonus_and_setting_updata()
+    cache.world_setting = world_setting
+    cache.difficulty_setting = old_cache.difficulty_setting
+    cache.birth_type_setting = old_cache.birth_type_setting
+    cache.achievement = new_achievement
+    cache.game_round = new_game_round
+    cache.character_data = new_character_data
+    cache.npc_id_got = new_npc_id_got
+    creator_character_flow.game_start()
 
-        # 开始重置
-        cache_control.cache = cache
-        map_config.init_map_data()
-        game_time.init_time()
-        cache.rhodes_island = basement.get_base_zero()
-        cache.all_system_setting = attr_calculation.get_system_setting_zero()
-        cache.rhodes_island.physical_examination_setting = (
-            attr_calculation.get_physical_exam_setting_zero()
-        )
-        info_draw_text += _("游戏数据重置完毕\n")
-
-        # 覆盖要保留的数据
-        creator_character_flow.first_bonus_and_setting_updata()
-        cache.world_setting = new_world_setting
-        cache.all_system_setting = new_system_setting
-        cache.achievement = new_achievement
-        cache.game_round = new_game_round
-        cache.character_data = new_character_data
-        cache.npc_id_got = new_npc_id_got
-        creator_character_flow.game_start()
-
-        # 根据继承的角色，将有人住的宿舍设为开放
-        for now_id in new_npc_id_got:
-            # 获取地点数据
-            now_character_data = cache.character_data[now_id]
-            now_dormitory = now_character_data.dormitory
-            now_scene_data = cache.scene_data[now_dormitory]
-            # 如果该地点在设施开放列表中
-            if (
+    # 根据继承的角色，将有人住的宿舍设为开放
+    for now_id in new_npc_id_got:
+        # 获取地点数据
+        now_character_data = cache.character_data[now_id]
+        now_dormitory = now_character_data.dormitory
+        now_scene_data = cache.scene_data[now_dormitory]
+        # 如果该地点在设施开放列表中
+        if (
+            now_scene_data.scene_name
+            in game_config.config_facility_open_name_set
+        ):
+            open_cid = game_config.config_facility_open_name_to_cid[
                 now_scene_data.scene_name
-                in game_config.config_facility_open_name_set
-            ):
-                open_cid = game_config.config_facility_open_name_to_cid[
-                    now_scene_data.scene_name
-                ]
-                # 如果未开放，则开放
-                if not cache.rhodes_island.facility_open[open_cid]:
-                    cache.rhodes_island.facility_open[open_cid] = True
+            ]
+            # 如果未开放，则开放
+            if not cache.rhodes_island.facility_open[open_cid]:
+                cache.rhodes_island.facility_open[open_cid] = True
 
-        info_draw_text += _("继承数据覆盖完毕\n")
-        info_draw.text = info_draw_text
-        info_draw.draw()
+    info_draw_text += _("继承数据覆盖完毕\n")
+    info_draw.text = info_draw_text
+    info_draw.draw()
 
 
 class CharacterabiText:

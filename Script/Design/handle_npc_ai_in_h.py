@@ -1,7 +1,9 @@
 """H 中的 NPC AI：无意识 H 的判断与结算、NPC 逆推、群交中的行动与抢占"""
 
-import random
+from __future__ import annotations
+
 import datetime
+import random
 from types import FunctionType
 from Script.Core import (
     cache_control,
@@ -11,10 +13,7 @@ from Script.Core import (
     get_text,
 )
 from Script.Design import (
-    instuct_judege,
     handle_premise,
-    update,
-    character_behavior,
     attr_calculation,
     map_handle,
     child_stage_gate,
@@ -22,6 +21,7 @@ from Script.Design import (
 )
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
+from Script.Design import game_time
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -128,81 +128,72 @@ def judge_character_h_obscenity_unconscious(
     if handle_premise.handle_self_time_stop_orgasm_relase(character_id):
         character_data.h_state.time_stop_release = False
 
-    # 如果不在同一位置
-    # 隐奸携带模式中被携带的角色由跟随结算直接搬运位置，与玩家移动结算的先后可能产生短暂的场景分离，不做重置
+    # 群交中，仅自慰类型和补位类型的干员由群交AI判断处理（睡奸与6异常时例外）；
+    # H中或木头人时做什么由她选行动时决定（handle_npc_ai.choose_state_machine）
     if (
-        handle_premise.handle_not_in_player_scene(character_id)
-        and character_data.sp_flag.hidden_sex_mode != 5
+        (character_data.sp_flag.is_h or character_data.hypnosis.blockhead)
+        and character_data.behavior.behavior_id != constant.Behavior.SLEEP
+        and handle_premise.handle_normal_6(character_id)
+        and handle_premise.handle_group_sex_mode_on(character_id)
+        and (
+            handle_premise.handle_npc_ai_type_1_in_group_sex(character_id)
+            or handle_premise.handle_npc_ai_type_2_in_group_sex(character_id)
+        )
     ):
-        # 结束H状态
-        if handle_premise.handle_self_is_h(character_id):
-            character_data.sp_flag.is_h = False
-            character_data.sp_flag.unconscious_h = 0
-            character_data.behavior.behavior_id = constant.Behavior.END_H
-            character_data.state = constant.CharacterStatus.STATUS_END_H
-            character_data.behavior.start_time = pl_start_time
-            character_data.behavior.duration = 1
-            character_data.target_character_id = character_id
-        # 结束睡眠猥亵状态
-        if handle_premise.handle_unconscious_flag_1(character_id):
-            character_data.sp_flag.unconscious_h = 0
-        # 结束空气催眠
-        if (
-            handle_premise.handle_unconscious_flag_5(character_id)
-            and character_data.position
-            != pl_character_data.pl_ability.air_hypnosis_position
-        ):
-            character_data.sp_flag.unconscious_h = 0
-        # 结束隐奸状态
-        if handle_premise.handle_hidden_sex_mode_ge_1(character_id):
-            character_data.sp_flag.hidden_sex_mode = 0
-        # 结束露出状态
-        if handle_premise.handle_exhibitionism_sex_mode_ge_1(character_id):
-            character_data.sp_flag.exhibitionism_sex_mode = 0
-
-    # H状态或木头人时，行动锁死为等待不动
-    if character_data.sp_flag.is_h or character_data.hypnosis.blockhead:
-        # 睡奸时例外
-        if character_data.behavior.behavior_id == constant.Behavior.SLEEP:
-            return 1
-        # 6异常时例外
-        if not handle_premise.handle_normal_6(character_id):
-            return 1
-        # 群交时
-        if handle_premise.handle_group_sex_mode_on(character_id):
-            # 仅自慰类型和补位类型由群交AI判断处理
-            if handle_premise.handle_npc_ai_type_1_in_group_sex(
-                character_id
-            ) or handle_premise.handle_npc_ai_type_2_in_group_sex(character_id):
-                npc_ai_in_group_sex(character_id)
-                return 1
-            # 如果已经获得性爱助手行为，则结算助手行动
-            elif character_data.h_state.sex_assist:
-                # 手动结算性爱助手行动
-                character_behavior.judge_character_status(character_id)
-                character_data.h_state.sex_assist = False
-        character_data.behavior.behavior_id = constant.Behavior.WAIT
-        character_data.state = constant.CharacterStatus.STATUS_WAIT
-        character_data.behavior.start_time = pl_start_time
-        character_data.behavior.duration = pl_character_data.behavior.duration
-        character_data.target_character_id = character_id
-        # 防止行为的时间为0
-        if character_data.behavior.duration == 0:
-            past_time = int(
-                (cache.game_time - pl_start_time).total_seconds() / 60
-            )
-            past_time = max(1, past_time)
-            character_data.behavior.duration = past_time
-
+        npc_ai_in_group_sex(character_id)
     return 1
+
+
+def end_h_left_behind(character_id: int) -> None:
+    """
+    玩家离开场景后，留下的干员结束H、睡眠猥亵、空气催眠、隐奸与露出（事件 HLeftBehind）\n
+    H中的干员排上1分钟的结束H，当前的行动被打断\n
+    Keyword arguments:
+    character_id -- 角色id\n
+    """
+    from Script.Modules.gameplay_resolution import plan_queue
+
+    character_data: game_type.Character = cache.character_data[character_id]
+    pl_character_data: game_type.Character = cache.character_data[0]
+    # 结束H状态
+    if handle_premise.handle_self_is_h(character_id):
+        character_data.sp_flag.is_h = False
+        character_data.sp_flag.unconscious_h = 0
+        plan_queue.plan_next(
+            character_id,
+            constant.Behavior.END_H,
+            1,
+            state=constant.CharacterStatus.STATUS_END_H,
+            interrupt=True,
+        )
+    # 结束睡眠猥亵状态
+    if handle_premise.handle_unconscious_flag_1(character_id):
+        character_data.sp_flag.unconscious_h = 0
+    # 结束空气催眠
+    if (
+        handle_premise.handle_unconscious_flag_5(character_id)
+        and character_data.position
+        != pl_character_data.pl_ability.air_hypnosis_position
+    ):
+        character_data.sp_flag.unconscious_h = 0
+    # 结束隐奸状态
+    if handle_premise.handle_hidden_sex_mode_ge_1(character_id):
+        character_data.sp_flag.hidden_sex_mode = 0
+    # 结束露出状态
+    if handle_premise.handle_exhibitionism_sex_mode_ge_1(character_id):
+        character_data.sp_flag.exhibitionism_sex_mode = 0
 
 
 def recover_from_unconscious_h(character_id: int, info_text: str = "") -> None:
     """
     交互对象从无意识H中恢复意识的结算\n
+    接着的等待排进对方的计划队列并打断对方当前的行动；玩家的反应（继续H时等待5分钟，否则裁决出的行为与结束无意识H）
+    排进玩家的计划队列并打断玩家当前的行动；群交中的其他角色只结束自己的行动\n
     Keyword arguments:\n
     character_id -- 角色id\n
+    info_text -- 提示文本，为空时用默认的恢复意识提示\n
     """
+    from Script.Modules.gameplay_resolution import plan_queue
     from Script.Settle import default
 
     character_data: game_type.Character = cache.character_data[character_id]
@@ -231,19 +222,9 @@ def recover_from_unconscious_h(character_id: int, info_text: str = "") -> None:
         now_draw.text = info_text
     now_draw.draw()
 
-    # 终止对方的行动
-    character_behavior.judge_character_status_time_over(
-        character_data.target_character_id, cache.game_time, end_now=2
-    )
     # 睡眠中，则对方获得睡奸醒来状态
     if handle_premise.handle_action_sleep(character_data.target_character_id):
         target_data.sp_flag.sleep_h_awake = True
-    # 同步玩家的行动开始时间
-    instuct_judege.init_character_behavior_start_time(
-        character_id, cache.game_time
-    )
-    # 玩家的行动时间设为5分钟
-    character_data.behavior.duration = 5
 
     # 结算恢复无意识的二段行为
     settle_unconscious_semen_and_cloth(target_data.cid)
@@ -264,9 +245,6 @@ def recover_from_unconscious_h(character_id: int, info_text: str = "") -> None:
             game_type.CharacterStatusChange(),
             datetime.datetime(1, 1, 1),
         )
-        # 暂存玩家的行为
-        tem_behavior_id = character_data.behavior.behavior_id
-        tem_state = character_data.state
         # 结算交互对象以外的其他角色，遍历在角色列表的副本上进行，结算中囚犯干员会被移回监牢而改动该列表
         for chara_id in scene_data.character_list.copy():
             # 如果是玩家，则跳过
@@ -279,32 +257,28 @@ def recover_from_unconscious_h(character_id: int, info_text: str = "") -> None:
             handle_unconscious_h_response(
                 character_id, chara_id, can_continue=False
             )
-        # 恢复玩家的交互对象与行为
-        character_data.target_character_id = target_data.cid
-        character_data.behavior.behavior_id = tem_behavior_id
-        character_data.state = tem_state
 
     # 结算交互对象的响应
     response = handle_unconscious_h_response(
         character_id, character_data.target_character_id
     )
 
-    # 对方的行为改为等待
-    target_data.behavior.behavior_id = constant.Behavior.WAIT
-    target_data.state = constant.CharacterStatus.STATUS_WAIT
-
-    # 如果继续H
+    # 如果继续H，对方等待10分钟
+    wait_minutes = 10
     if response == UnconsciousHResponse.CONTINUE_H:
         default.handle_h_flag_to_1(
             target_data.cid,
             1,
             game_type.CharacterStatusChange(),
-            cache.game_time,
+            game_time.now(),
         )
-        character_data.behavior.behavior_id = constant.Behavior.WAIT
-        character_data.state = constant.CharacterStatus.STATUS_WAIT
-        # 对方的行为时间设为10分钟
-        target_data.behavior.duration = 10
+        plan_queue.plan_next(
+            character_id,
+            constant.Behavior.WAIT,
+            5,
+            state=constant.CharacterStatus.STATUS_WAIT,
+            interrupt=True,
+        )
         # 睡眠中，则对方获得装睡状态，仍继续无意识H
         if handle_premise.handle_action_sleep(
             character_data.target_character_id
@@ -313,19 +287,17 @@ def recover_from_unconscious_h(character_id: int, info_text: str = "") -> None:
             target_data.sp_flag.unconscious_h = 1
             # 成就刷新
             cache.achievement.sleep_sex_record[1] = 1
-    # 否则
+    # 否则对象只等1分钟，地点开门；双方H结构体由排上的结束无意识H在补体力气力上限之后重置
     else:
-        # 对象行为时间改为1分钟
-        target_data.behavior.duration = 1
-        # 重置双方H结构体和相关数据
-        default.handle_both_h_state_reset(
-            0, 1, game_type.CharacterStatusChange(), datetime.datetime(1, 1, 1)
-        )
-        # 地点开门
+        wait_minutes = 1
         scene_data.close_flag = 0
-
-    # 时间推进5分钟
-    update.game_update_flow(5)
+    plan_queue.plan_next(
+        target_data.cid,
+        constant.Behavior.WAIT,
+        wait_minutes,
+        state=constant.CharacterStatus.STATUS_WAIT,
+        interrupt=True,
+    )
 
 
 class UnconsciousHResponse:
@@ -343,6 +315,23 @@ class UnconsciousHResponse:
     """ 玩家H失败 """
 
 
+UNCONSCIOUS_H_REACTION: dict[int, tuple[str, int]] = {
+    UnconsciousHResponse.LOW_OBSCENITY: (
+        constant.Behavior.LOW_OBSCENITY_ANUS,
+        constant.CharacterStatus.STATUS_LOW_OBSCENITY_ANUS,
+    ),
+    UnconsciousHResponse.HIGH_OBSCENITY: (
+        constant.Behavior.HIGH_OBSCENITY_ANUS,
+        constant.CharacterStatus.STATUS_HIGH_OBSCENITY_ANUS,
+    ),
+    UnconsciousHResponse.H_FAIL: (
+        constant.Behavior.DO_H_FAIL,
+        constant.CharacterStatus.STATUS_DO_H_FAIL,
+    ),
+}
+""" 裁决结果到玩家反应的行为与状态；愤怒时玩家没有反应行为 """
+
+
 def handle_unconscious_h_response(
     character_id: int, target_character_id: int, can_continue: bool = True
 ) -> int:
@@ -358,13 +347,13 @@ def handle_unconscious_h_response(
         int -- UnconsciousHResponse中的裁决结果
 
     功能描述:
-        先解除目标角色的无意识H状态，再按目标角色自身的监禁状态与陷落状态得出裁决结果，
-        并按裁决结果改写玩家的行为与状态。
-        裁决为继续H以外的结果时，借玩家的状态机成对结算这场H的收尾；
-        裁决为继续H而can_continue为False时，改为直接对目标角色本人做退出结算。
-        因此返回后，除〈裁决为CONTINUE_H且can_continue为True〉这一种情况外，
-        目标角色的收尾都已经在本函数内完成。
+        先解除目标角色的无意识H状态，再按目标角色自身的监禁状态与陷落状态得出裁决结果。
+        can_continue为True时：裁决为继续H以外的结果时，玩家对她的反应行为（5分钟，愤怒时没有）与结束无意识H
+        依次排进玩家的计划队列，并打断玩家当前的行动。
+        can_continue为False时只结算目标角色这一边：不论裁决，都对她本人做退出结算（退出奖励、H状态归位、穿回衣物），
+        然后打断她当前的行动。
     """
+    from Script.Modules.gameplay_resolution import plan_queue
     from Script.Settle import default, default_cloth
 
     # 从缓存中获取自己角色数据与目标角色数据
@@ -393,12 +382,6 @@ def handle_unconscious_h_response(
         # 如果陷落状态大于0，则设置为轻度性骚扰状态
         elif character_fall_level > 0:
             response = UnconsciousHResponse.LOW_OBSCENITY
-            character_data.behavior.behavior_id = (
-                constant.Behavior.LOW_OBSCENITY_ANUS
-            )
-            character_data.state = (
-                constant.CharacterStatus.STATUS_LOW_OBSCENITY_ANUS
-            )
         # 如果陷落状态小于0，则目标角色愤怒并增加愤怒值
         elif character_fall_level < 0:
             response = UnconsciousHResponse.ANGRY
@@ -407,56 +390,63 @@ def handle_unconscious_h_response(
         # 如果没有陷落状态，则设置为高级性骚扰状态
         else:
             response = UnconsciousHResponse.HIGH_OBSCENITY
-            character_data.behavior.behavior_id = (
-                constant.Behavior.HIGH_OBSCENITY_ANUS
-            )
-            character_data.state = (
-                constant.CharacterStatus.STATUS_HIGH_OBSCENITY_ANUS
-            )
     # 如果上述条件都不满足，则设置为H失败状态
     else:
         response = UnconsciousHResponse.H_FAIL
-        character_data.behavior.behavior_id = constant.Behavior.DO_H_FAIL
-        character_data.state = constant.CharacterStatus.STATUS_DO_H_FAIL
 
-    # 不继续H，当场借玩家的状态机成对结算
-    if response != UnconsciousHResponse.CONTINUE_H:
-        character_data.behavior.duration = 5
-        character_data.target_character_id = target_character_id
-        character_behavior.judge_character_status(character_id)
-        character_data.behavior.behavior_id = (
-            constant.Behavior.NO_CONSCIOUS_H_END
-        )
-        character_data.state = (
-            constant.CharacterStatus.STATUS_NO_CONSCIOUS_H_END
-        )
-        character_behavior.judge_character_status(character_id)
-    # 裁决为继续H但本次不允许继续，对目标角色本人做退出奖励、H状态归位与穿回衣物。
-    # 退出奖励会连同角色的交互对象一起结算，而目标角色身上的交互对象可能是没有清理过的旧值，
-    # 因此先把目标指向自己再发奖
-    elif not can_continue:
+    # 群交中的其他角色：只结算她这一边，结束她当前的行动；不论她继续与否，她这一边的H都在这里结束
+    if not can_continue:
+        # 退出结算：退出奖励、H状态归位与穿回衣物。
+        # 寸止解放按玩家的交互对象结算，结算时把玩家的交互对象暂时指向她，结算完复原；
+        # 退出奖励会连同角色的交互对象一起结算，而她身上的交互对象可能是没有清理过的旧值，因此先把她的目标指向自己
+        old_target_character_id = character_data.target_character_id
         character_data.target_character_id = target_character_id
         default.handle_orgasm_edge_release(
-            character_id, 1, game_type.CharacterStatusChange(), cache.game_time
+            character_id,
+            1,
+            game_type.CharacterStatusChange(),
+            game_time.now(),
         )
+        character_data.target_character_id = old_target_character_id
         target_data.target_character_id = target_character_id
         default.handle_end_h_add_hpmp_max(
             target_character_id,
             1,
             game_type.CharacterStatusChange(),
-            cache.game_time,
+            game_time.now(),
         )
         default.handle_self_h_state_reset(
             target_character_id,
             1,
             game_type.CharacterStatusChange(),
-            cache.game_time,
+            game_time.now(),
         )
         default_cloth.handle_self_cloth_back(
             target_character_id,
             1,
             game_type.CharacterStatusChange(),
-            cache.game_time,
+            game_time.now(),
+        )
+        plan_queue.interrupt(target_character_id)
+    # 不继续H：玩家的反应与结束无意识H排进玩家的计划队列
+    elif response != UnconsciousHResponse.CONTINUE_H:
+        reaction = UNCONSCIOUS_H_REACTION.get(response)
+        if reaction is not None:
+            plan_queue.plan_next(
+                character_id,
+                reaction[0],
+                5,
+                target=target_character_id,
+                state=reaction[1],
+                interrupt=True,
+            )
+        plan_queue.plan_next(
+            character_id,
+            constant.Behavior.NO_CONSCIOUS_H_END,
+            0,
+            target=target_character_id,
+            state=constant.CharacterStatus.STATUS_NO_CONSCIOUS_H_END,
+            interrupt=True,
         )
 
     # 返回裁决结果
@@ -467,12 +457,14 @@ def judge_weak_up_in_sleep_h(
     character_id: int, target_character_id: int
 ) -> None:
     """
-    判断睡眠中是否被吵醒\n
+    判断睡眠中是否被吵醒：掷骰，吵醒时记进 cache.noise_woken，掷骰的这一步里由 time_hooks 结算（wake_by_noise）\n
+    每个睡着的人各掷一次；她已被吵醒而还没结算时不再掷骰\n
     Keyword arguments:\n
     character_id -- 产生动作的角色id\n
     target_character_id -- 需要判定是否醒来的睡眠角色id\n
     """
-    now_character_data: game_type.Character = cache.character_data[character_id]
+    if target_character_id in cache.noise_woken:
+        return
     target_data: game_type.Character = cache.character_data[target_character_id]
 
     # 浅睡和半梦半醒时递增苏醒概率
@@ -486,49 +478,51 @@ def judge_weak_up_in_sleep_h(
         )
     # 判定是否吵醒
     if weak_rate >= random.randint(1, 100):
-        # 清空疲劳和睡眠程度
-        target_data.tired_point = 0
-        target_data.sleep_point = 0
-        if target_data.sp_flag.unconscious_h == 1:
-            # 睡奸目标：走现有无意识H恢复流程
-            info_text = _("\n因为{0}的动作，{1}从梦中惊醒过来\n").format(
-                now_character_data.name, target_data.name
-            )
-            recover_from_unconscious_h(character_id, info_text)
-        elif target_data.sp_flag.unconscious_h == 0:
-            # 普通睡眠角色：先结束睡眠行为，再执行“睡觉中被吵醒”行为
-            # 注意顺序：judge_character_status_time_over()内部会用game_type.Behavior()整体重置行动数据，
-            # 因此必须先结束睡眠、再赋予新行为，否则新行为会被覆盖
-            character_behavior.judge_character_status_time_over(
-                target_character_id, cache.game_time, end_now=2
-            )
-            # 冗余但便宜的保险：行动起始时间若残留睡眠时的旧值，结算时的add_time会算出天文数字
-            instuct_judege.init_character_behavior_start_time(
-                target_character_id, cache.game_time
-            )
-            target_data.behavior.duration = 1
-            target_data.behavior.behavior_id = (
-                constant.Behavior.WAKE_UP_BY_NOISE
-            )
-            target_data.state = constant.CharacterStatus.STATUS_WAKE_UP_BY_NOISE
-            # 交互对象设为产生动静的角色（玩家），供效果762把对方推回前一场景使用。
-            # 这里依赖judge_character_status_time_over()中“交互对象不在场景内则把行动立刻结束”的例外分支：
-            # 该分支会跳过sp_flag.bagging_chara_id等于交互对象id的情况，而玩家id与其默认值同为0，
-            # 因此玩家被762推走后本行为不会被判定为已结束。改动bagging_chara_id的默认值时需同步复核此处。
-            target_data.target_character_id = character_id
-            character_behavior.judge_character_status(target_character_id)
-        else:
-            # 醉酒、时停、平然、空气、体控、心控等其他无意识状态：沿用旧的提示与结束流程
-            info_text = _("\n{0}被{1}的动静吵醒了\n").format(
-                target_data.name, now_character_data.name
-            )
-            now_draw = draw.WaitDraw()
-            now_draw.width = window_width
-            now_draw.text = info_text
-            now_draw.draw()
-            character_behavior.judge_character_status_time_over(
-                target_character_id, cache.game_time, end_now=2
-            )
+        cache.noise_woken[target_character_id] = character_id
+
+
+def wake_by_noise(character_id: int, target_character_id: int) -> None:
+    """
+    睡着的角色被动静吵醒（掷骰的这一步里由 time_hooks 调用）：她当前的行动被打断，在这一步结束\n
+    Keyword arguments:\n
+    character_id -- 产生动作的角色id\n
+    target_character_id -- 被吵醒的角色id\n
+    """
+    from Script.Modules.gameplay_resolution import plan_queue
+
+    now_character_data: game_type.Character = cache.character_data[character_id]
+    target_data: game_type.Character = cache.character_data[target_character_id]
+    # 清空疲劳和睡眠程度
+    target_data.tired_point = 0
+    target_data.sleep_point = 0
+    if target_data.sp_flag.unconscious_h == 1:
+        # 睡奸目标：走现有无意识H恢复流程
+        info_text = _("\n因为{0}的动作，{1}从梦中惊醒过来\n").format(
+            now_character_data.name, target_data.name
+        )
+        recover_from_unconscious_h(character_id, info_text)
+        return
+    if target_data.sp_flag.unconscious_h == 0:
+        # 普通睡眠角色：睡眠行为当场结束，“睡觉中被吵醒”排进它的计划队列。
+        # 交互对象设为产生动静的角色（玩家），供效果762把对方推回前一场景使用
+        plan_queue.plan_next(
+            target_character_id,
+            constant.Behavior.WAKE_UP_BY_NOISE,
+            1,
+            target=character_id,
+            state=constant.CharacterStatus.STATUS_WAKE_UP_BY_NOISE,
+            interrupt=True,
+        )
+        return
+    # 醉酒、时停、平然、空气、体控、心控等其他无意识状态：提示，并结束当前的行动
+    info_text = _("\n{0}被{1}的动静吵醒了\n").format(
+        target_data.name, now_character_data.name
+    )
+    now_draw = draw.WaitDraw()
+    now_draw.width = window_width
+    now_draw.text = info_text
+    now_draw.draw()
+    plan_queue.interrupt(target_character_id)
 
 
 def settle_unconscious_semen_and_cloth(character_id: int) -> None:
@@ -651,12 +645,13 @@ def evaluate_npc_body_part_prefs(character_id: int) -> int:
     return part_id
 
 
-def npc_active_h() -> int | None:
+def npc_active_h() -> int:
     """
-    判断NPC的逆推ai\n
+    判断NPC的逆推ai：在玩家选行动时调用，选出的行为经 player_pick.choose 定为玩家这次的行动（抛出 Chosen）\n
     Return arguments:
-    bool -- 0为失败，1为正常逆推
+    int -- 0为对方没有逆推或没有可选的行为
     """
+    from Script.Modules.tk_ui import player_pick
     from Script.System.Instruct_System import see_instruct_panel
 
     pl_character_data: game_type.Character = cache.character_data[0]
@@ -746,18 +741,13 @@ def npc_active_h() -> int | None:
     # 随机选择一个状态
     behavior_id = random.choice(all_stastus_list)
 
-    # 赋予给玩家
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    pl_character_data.behavior.behavior_id = behavior_id
-    pl_character_data.state = behavior_id
-    pl_character_data.behavior.duration = 10
-    update.game_update_flow(10)
-    return None
+    # 定为玩家这次选的行动
+    player_pick.choose(behavior_id, 10, state=behavior_id)
 
 
 def npc_ai_in_group_sex(character_id: int) -> None:
     """
-    NPC在群交中的AI，不含抢占\n
+    NPC在群交中的AI，不含抢占：在她自己的行为结束时（actions.wrap_up）选模板里的部位与状态加入，或进入要自慰状态\n
     Keyword arguments:\n
     character_id -- 角色id\n
     """
@@ -791,9 +781,6 @@ def npc_ai_in_group_sex(character_id: int) -> None:
     # 如果设定NPC为仅自慰，则进入要自慰后返回
     if handle_premise.handle_npc_ai_type_1_in_group_sex(character_id):
         character_data.sp_flag.masturebate = 3
-        character_data.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-        character_data.state = constant.CharacterStatus.STATUS_ARDER
-        # print(f"debug {character_data.name}进入了要自慰状态")
         return
 
     # 获取当前模板的空缺部位和非空缺部位
@@ -801,143 +788,32 @@ def npc_ai_in_group_sex(character_id: int) -> None:
         group_sex_panel.get_now_template_part_list()
     )
 
-    # 如果有空缺，则随机选择一个部位
-    if len(now_template_empty_part_list):
-        body_part = random.choice(now_template_empty_part_list)
-        # 如果是加入侍奉，则直接加入
-        if body_part == _("加入侍奉"):
-            A_template_data[1][0].append(character_id)
-            # print(f"debug {character_data.name}加入侍奉{game_config.config_status[ A_template_data[1][1]].name}")
-        else:
-            # 获取该部位的状态id列表
-            old_target_character_id = pl_character_data.target_character_id
-            pl_character_data.target_character_id = character_id
-            try:
-                new_status_id_list = (
-                    group_sex_panel.get_status_id_list_from_group_sex_body_part(
-                        body_part
-                    )
-                )
-            finally:
-                pl_character_data.target_character_id = old_target_character_id
-            # 如果没有可用的状态，则返回
-            if len(new_status_id_list) == 0:
-                return
-            # 随机选择一个状态
-            status_id = random.choice(new_status_id_list)
-            # 如果是侍奉
-            if body_part == "侍奉":
-                A_template_data[1] = [[character_id], status_id]
-            # 如果是对单
-            else:
-                A_template_data[0][body_part] = [character_id, status_id]
-            # print(f"debug {character_data.name}对{body_part}选择了{game_config.config_status[status_id].name}")
-    # 否则，自己进入要自慰状态
+    # 没有空缺时，自己进入要自慰状态
+    if not now_template_empty_part_list:
+        character_data.sp_flag.masturebate = 3
+        return
+    # 随机选择一个部位；如果是加入侍奉，则直接加入
+    body_part = random.choice(now_template_empty_part_list)
+    if body_part == _("加入侍奉"):
+        A_template_data[1][0].append(character_id)
+        return
+    # 获取该部位的状态id列表：查询按玩家的交互对象判断前提，查完复原
+    old_target_character_id = pl_character_data.target_character_id
+    pl_character_data.target_character_id = character_id
+    try:
+        new_status_id_list = (
+            group_sex_panel.get_status_id_list_from_group_sex_body_part(
+                body_part
+            )
+        )
+    finally:
+        pl_character_data.target_character_id = old_target_character_id
+    # 如果没有可用的状态，则返回
+    if len(new_status_id_list) == 0:
+        return
+    # 随机选择一个状态；侍奉时替换侍奉位，对单时占这个部位
+    status_id = random.choice(new_status_id_list)
+    if body_part == "侍奉":
+        A_template_data[1] = [[character_id], status_id]
     else:
-        character_data.sp_flag.masturebate = 3
-        character_data.state = constant.CharacterStatus.STATUS_ARDER
-        character_data.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-        # print(f"debug {character_data.name}进入了要自慰状态")
-
-
-def npc_ai_in_group_sex_type_3() -> None:
-    """
-    NPC在群交中的抢占AI\n
-    Keyword arguments:\n
-    character_id -- 角色id\n
-    """
-    from Script.System.Sex_System import group_sex_panel
-
-    pl_character_data: game_type.Character = cache.character_data[0]
-    A_template_data = pl_character_data.h_state.group_sex_body_template_dict[
-        "A"
-    ]
-    group_sex_chara_id_list = group_sex_panel.count_group_sex_character_list()
-    scene_path_str = map_handle.get_map_system_path_str_for_list(
-        pl_character_data.position
-    )
-    scene_data = cache.scene_data[scene_path_str]
-    now_scene_chara_id_list = scene_data.character_list
-
-    # 筛选角色列表
-    new_chara_id_list = []
-    for character_id in now_scene_chara_id_list:
-        character_data: game_type.Character = cache.character_data[character_id]
-        # 如果自己已在群交模板中，则跳过
-        if character_id in group_sex_chara_id_list:
-            continue
-        # 如果不是H状态+群交，则跳过
-        if (
-            not character_data.sp_flag.is_h
-            or handle_premise.handle_group_sex_mode_off(character_id)
-        ):
-            continue
-        new_chara_id_list.append(character_id)
-
-    # 获取当前模板的空缺部位和非空缺部位
-    now_template_empty_part_list, now_template_not_empty_part_list = (
-        group_sex_panel.get_now_template_part_list()
-    )
-
-    # 遍历空缺部位
-    for body_part in now_template_empty_part_list:
-        # 如果新角色列表空了，则退出循环
-        if len(new_chara_id_list) <= 0:
-            break
-        # 从新角色列表中选择一个随机角色
-        character_id = random.choice(new_chara_id_list)
-        # 从列表中去掉该角色
-        new_chara_id_list.remove(character_id)
-        # 如果是加入侍奉，则直接加入
-        if body_part == _("加入侍奉"):
-            A_template_data[1][0].append(character_id)
-            # print(f"debug {character_data.name}加入侍奉{game_config.config_status[ A_template_data[1][1]].name}")
-        else:
-            # 获取该部位的状态id列表
-            old_target_character_id = pl_character_data.target_character_id
-            try:
-                pl_character_data.target_character_id = character_id
-                new_status_id_list = (
-                    group_sex_panel.get_status_id_list_from_group_sex_body_part(
-                        body_part
-                    )
-                )
-            finally:
-                pl_character_data.target_character_id = old_target_character_id
-            # 随机选择一个状态
-            status_id = random.choice(new_status_id_list)
-            # 如果是侍奉
-            if body_part == "侍奉":
-                A_template_data[1] = [[character_id], status_id]
-            # 如果是对单
-            else:
-                A_template_data[0][body_part] = [character_id, status_id]
-            # print(f"debug {character_data.name}对{body_part}选择了{game_config.config_status[status_id].name}")
-
-    # 遍历非空缺部位
-    for body_part in now_template_not_empty_part_list:
-        # 如果新角色列表空了，则退出循环
-        if len(new_chara_id_list) <= 0:
-            break
-        # 二分之一的几率不结算该部位
-        if random.randint(0, 1):
-            continue
-        # 从新角色列表中选择一个随机角色
-        character_id = random.choice(new_chara_id_list)
-        # 从列表中去掉该角色
-        new_chara_id_list.remove(character_id)
-        # 如果是侍奉，则加入角色列表，并踢出列表中的第0个角色
-        if body_part == "侍奉":
-            A_template_data[1][0].append(character_id)
-            A_template_data[1][0].pop(0)
-        # 否则代替原角色
-        else:
-            A_template_data[0][body_part][0] = character_id
-
-    # 剩下的角色进入要自慰状态
-    for character_id in new_chara_id_list:
-        character_data = cache.character_data[character_id]
-        character_data.sp_flag.masturebate = 3
-        character_data.state = constant.CharacterStatus.STATUS_ARDER
-        character_data.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-        # print(f"debug {character_data.name}进入了要自慰状态")
+        A_template_data[0][body_part] = [character_id, status_id]

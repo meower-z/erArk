@@ -171,12 +171,12 @@ def get_today_temp_class(week_day: int, period: int) -> dict | None:
           所以只有「今天」的那一节才覆盖；下了课的那一节交还给原来的课表（2026-09-12 第五轮），
           否则该节剩余时间里选修生会对着「授课者=玩家」空等
     """
-    if week_day != cache.game_time.weekday():
+    if week_day != game_time.now().weekday():
         return None
     from Script.System.Education_System import sex_class_handle
 
     return sex_class_handle.get_active_temp_class(
-        cache.game_time.date().toordinal(), period
+        game_time.now().date().toordinal(), period
     )
 
 
@@ -320,7 +320,7 @@ def get_upcoming_teaching(
     if not judge_schedule_teacher(character_id):
         return None
     character_data: game_type.Character = cache.character_data[character_id]
-    now_time = character_data.behavior.start_time or cache.game_time
+    now_time = character_data.behavior.start_time or game_time.now()
     for period, (hour, minute) in enumerate(game_time.CLASS_PERIOD_START):
         start_time = now_time.replace(
             hour=hour, minute=minute, second=0, microsecond=0
@@ -365,11 +365,11 @@ def get_teacher_week_schedule(
     if teacher_id == 0:
         from Script.System.Education_System import sex_class_handle
 
-        today = cache.game_time.date().toordinal()
+        today = game_time.now().date().toordinal()
         for class_key, temp_class in cache.rhodes_island.temp_sex_class.items():
             date_ordinal, period = sex_class_handle.parse_class_key(class_key)
             if date_ordinal == today and not temp_class.get("ended", False):
-                result.setdefault(cache.game_time.weekday(), {})[period] = (
+                result.setdefault(game_time.now().weekday(), {})[period] = (
                     temp_class.get("classroom", ""),
                     temp_class.get("ability_id", -1),
                 )
@@ -447,20 +447,25 @@ def clear_selected_course(
 
 
 def get_period_left_minute(
-    character_id: int, default_minute: int = game_time.CLASS_PERIOD_MINUTE
+    character_id: int,
+    default_minute: int = game_time.CLASS_PERIOD_MINUTE,
+    from_time: datetime.datetime | None = None,
 ) -> int:
     """
     取角色此刻所在节次还剩多少分钟（上课类行为的时长用，2026-09-12 第五轮）
     Keyword arguments:
     character_id -- 角色id
     default_minute -- 不在节次内时返回的时长
+    from_time -- 从这一刻算起；为 None 时取角色行为的开始时刻，没有开始时刻时取当前时刻
     Return arguments:
     int -- 剩余分钟数，最少1
     功能: 节次首尾相接没有课间，走班的人一迟到，照满45分钟上就会压进下一节，一节节滚下去越迟越多；
           把授课 / 听课 / 自习 / 个人式课的时长截到本节结束，下一节就能按时换教室
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    now_time = character_data.behavior.start_time or cache.game_time
+    now_time = (
+        from_time or character_data.behavior.start_time or game_time.now()
+    )
     period = game_time.get_class_period_by_time(now_time)
     if period == -1:
         return default_minute
@@ -486,7 +491,7 @@ def get_now_course(character_id: int) -> dict | None:
     if period == -1:
         return None
     character_data: game_type.Character = cache.character_data[character_id]
-    now_time = character_data.behavior.start_time or cache.game_time
+    now_time = character_data.behavior.start_time or game_time.now()
     return get_course_at(character_id, now_time, period)
 
 
@@ -509,7 +514,7 @@ def get_upcoming_course(
     import datetime
 
     character_data: game_type.Character = cache.character_data[character_id]
-    now_time = character_data.behavior.start_time or cache.game_time
+    now_time = character_data.behavior.start_time or game_time.now()
     for period, (hour, minute) in enumerate(game_time.CLASS_PERIOD_START):
         start_time = now_time.replace(
             hour=hour, minute=minute, second=0, microsecond=0
@@ -553,7 +558,7 @@ def get_course_at(
     #    本节没排课的则交回 AI 去娱乐。改在这一处，派课 / 移动 / <课>标识 / 前提就全部跟上
     temp_class = (
         get_today_temp_class(week_day, period)
-        if now_time.date() == cache.game_time.date()
+        if now_time.date() == game_time.now().date()
         else None
     )
     if temp_class is not None and character_id in temp_class.get(
@@ -609,7 +614,7 @@ def get_now_teaching(character_id: int) -> dict | None:
     if period == -1:
         return None
     character_data: game_type.Character = cache.character_data[character_id]
-    now_time = character_data.behavior.start_time or cache.game_time
+    now_time = character_data.behavior.start_time or game_time.now()
     cell = get_teacher_cell(character_id, now_time.weekday(), period)
     if cell is None:
         return None

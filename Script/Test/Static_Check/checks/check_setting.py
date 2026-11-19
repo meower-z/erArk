@@ -19,10 +19,7 @@ if TYPE_CHECKING:
 def check_birth_01() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 生育开关覆盖配置键，值为0/1，多余键仅警示。"""
     cache = cache_control.cache
-    setting = getattr(cache, "all_system_setting", None)
-    if setting is None:
-        return []
-    values = getattr(setting, "birth_type_setting", None)
+    values = getattr(cache, "birth_type_setting", None)
     if not isinstance(values, dict):
         return [
             make_failure(
@@ -72,9 +69,7 @@ def check_birth_02() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 按原始种族生育方式检查关闭后的卵、无壳排卵机会与博士持卵索引，
     不检查胎数。"""
     cache = cache_control.cache
-    values = getattr(
-        getattr(cache, "all_system_setting", None), "birth_type_setting", None
-    )
+    values = getattr(cache, "birth_type_setting", None)
     characters = getattr(cache, "character_data", None)
     races = getattr(game_config, "config_race", None)
     if (

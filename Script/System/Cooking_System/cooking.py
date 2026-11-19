@@ -7,6 +7,7 @@ from Script.Core.game_type import Recipes, Food
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.Design import handle_premise
+from Script.Modules.save_load import reset
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -52,6 +53,19 @@ def create_recipe(
     recipe.introduce = introduce
     recipe.type = type
     return recipe
+
+
+@reset.repair
+def _drop_old_format_food() -> None:
+    """读档时删掉各角色背包里旧版本的食物：没有母乳量，或精液调味却没有调味量"""
+    for character in cache.character_data.values():
+        food_bag = character.food_bag
+        for uid, food in list(food_bag.items()):
+            if not hasattr(food, "milk_ml") or (
+                food.special_seasoning in [11, 12]
+                and not hasattr(food, "special_seasoning_amount")
+            ):
+                del food_bag[uid]
 
 
 def create_food(
@@ -353,6 +367,57 @@ def init_makefood_data() -> None:
         cache.rhodes_island.makefood_data[str(recipes_id)] = recipes_id
 
 
+def player_can_season(seasoning: int) -> bool:
+    """
+    玩家手上的调味材料够做一份：药物调味要有这种药，精液调味要还射得出精液
+    Keyword arguments:
+    seasoning -- 调味cid
+    Return arguments:
+    bool -- 够做一份
+    """
+    if seasoning > 100:
+        return cache.character_data[0].item[seasoning] > 0
+    if seasoning in {11, 12}:
+        return not handle_premise.handle_pl_semen_le_2(0)
+    return True
+
+
+def player_make_dishes(
+    recipe_id: int, count: int, quality: int, seasoning: int
+) -> list[uuid.UUID]:
+    """
+    玩家做出食物放进背包：药物调味每份用掉一个药，精液调味每份射精一次，材料不够时停下；每份计入成就
+    Keyword arguments:
+    recipe_id -- 菜谱id
+    count -- 要做的份数
+    quality -- 食物品质
+    seasoning -- 调味cid
+    Return arguments:
+    list -- 做好的食物uid，按做出的顺序
+    """
+    from Script.UI.Panel import ejaculation_panel
+
+    character_data = cache.character_data[0]
+    made: list[uuid.UUID] = []
+    for _i in range(count):
+        if not player_can_season(seasoning):
+            break
+        if seasoning > 100:
+            character_data.item[seasoning] -= 1
+        semen_count = 0
+        if seasoning in {11, 12}:
+            __, semen_count = ejaculation_panel.common_ejaculation()
+            if semen_count <= 0:
+                break
+        food = create_food("", recipe_id, quality, character_data.name)
+        food.special_seasoning = seasoning
+        food.special_seasoning_amount = semen_count
+        character_data.food_bag[food.uid] = food
+        made.append(food.uid)
+        cache.achievement.make_food_count += 1
+    return made
+
+
 def get_character_food_bag_type_list_buy_food_type(
     character_id: int, food_type: str
 ) -> dict[str, set]:
@@ -552,11 +617,14 @@ def get_filtered_sorted_cook_data(food_type: str) -> list:
     return food_list
 
 
-def judge_accept_special_seasoning_food(character_id: int) -> int:
+def judge_accept_special_seasoning_food(
+    character_id: int, food: game_type.Food
+) -> int:
     """
-    是否接受特殊调味的食物
+    是否接受玩家给的特殊调味的食物（玩家的行动开始时判定，食物由调用方传入）
     Keyword arguments:
     character_id -- 角色id
+    food -- 玩家要给她吃的食物
     Return arguments:
     bool -- 接受或不接受
     """
@@ -564,11 +632,10 @@ def judge_accept_special_seasoning_food(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[character_id]
     return_d100 = random.randint(1, 100)
     # 食物的菜谱难度
-    food_recipe_id = pl_character_data.behavior.target_food.recipe
-    food_recipe_data: game_type.Recipes = cache.recipe_data[food_recipe_id]
+    food_recipe_data: game_type.Recipes = cache.recipe_data[food.recipe]
     food_difficulty = food_recipe_data.difficulty
     # 食物的品质
-    food_quality = pl_character_data.behavior.target_food.quality
+    food_quality = food.quality
     # 口才+菜谱难度+食物品质的双重加成判定
     accept_rate = (
         pl_character_data.ability[40] * 10
@@ -584,14 +651,12 @@ def judge_accept_special_seasoning_food(character_id: int) -> int:
     if handle_premise.handle_unnormal_567(character_id):
         return 1
     # 普通调味直接通过
-    elif handle_premise.handle_pl_action_food_normal(0):
+    elif food.special_seasoning == 0:
         return 1
     # 其他特殊调味
     else:
         # 精液判定
-        if handle_premise.handle_pl_action_food_sement_hidden(
-            0
-        ) or handle_premise.handle_pl_action_food_sement_direct(0):
+        if food.special_seasoning in (11, 12):
             # 精爱味觉或淫乱可以通过
             if target_data.talent[31] or target_data.talent[40]:
                 target_data.sp_flag.find_food_weird = True
@@ -609,7 +674,7 @@ def judge_accept_special_seasoning_food(character_id: int) -> int:
                 return 1
 
             # 精液_巧妙混合
-            if handle_premise.handle_pl_action_food_sement_hidden(0):
+            if food.special_seasoning == 11:
                 # 3级爱情系或至少2级隶属系的话才接受
                 for talent_id in {203, 204, 212, 213, 214}:
                     if target_data.talent[talent_id]:
@@ -623,7 +688,7 @@ def judge_accept_special_seasoning_food(character_id: int) -> int:
                     target_data.sp_flag.find_food_weird = True
                     return 0
             # 精液_直接盖上
-            elif handle_premise.handle_pl_action_food_sement_direct(0):
+            elif food.special_seasoning == 12:
                 # 4级爱情系或至少3级隶属系的话才接受
                 for talent_id in {204, 213, 214}:
                     if target_data.talent[talent_id]:
@@ -637,7 +702,7 @@ def judge_accept_special_seasoning_food(character_id: int) -> int:
                     target_data.sp_flag.find_food_weird = True
                     return 0
         # 药物判定
-        elif handle_premise.handle_pl_action_food_medicine(0):
+        elif food.special_seasoning >= 100:
             # 进行概率判定，难度*2，但不会高于40
             if min(return_d100 * 2, 40) <= accept_rate:
                 target_data.sp_flag.find_food_weird = False

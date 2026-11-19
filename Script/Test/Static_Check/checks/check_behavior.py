@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """
 静态检查系统 - 行为/时间/状态机/主循环完整性相关检查
-覆盖角色行为(Behavior)、全局时钟(game_time/pre_game_time)、结算主循环状态标记(over_behavior_character等)相关的
+覆盖角色行为(Behavior)、全局时钟(内核时钟与ticked/settled_day)、结算主循环状态标记(over_behavior_character等)相关的
 21条不变式(BEHAV-01~BEHAV-22，不含已删除的BEHAV-13)。来源见规划文档final_invariants_behavior.md，钩子点为
 Script/UI/Panel/in_scene_panel.py主循环重绘处、flow_handle.askfor_all()之前。
 
@@ -11,7 +11,7 @@ Script/UI/Panel/in_scene_panel.py主循环重绘处、flow_handle.askfor_all()�
 2. Character.state的整数取值(constant.CharacterStatus)与行为配表cid是两套已经漂移的编号，
    任何"state必须等于/映射到行为cid"的断言一律不做。
 3. 时停模式下玩家结算完即break、全局时间回退pl_duration分钟，NPC本轮完全未结算；
-   玩家合法领先cache.game_time，NPC数据合法陈旧。
+   玩家合法领先game_time.now()，NPC数据合法陈旧。
 4. H中的NPC可以合法地持有已过期行为(handle_npc_ai.py的提前入集与character_behavior.py的H捷径都会让行为原样留存)。
 5. 新开局到达钩子时没有任何结算跑过，因此任何"必须刚结算过"语义的断言都不成立。
 
@@ -126,6 +126,19 @@ def check_character_dict_key_matches_cid() -> list[CheckFailure]:
     return failures
 
 
+def _clock_marks() -> tuple[int, object, object]:
+    """
+    返回值:
+        tuple -- 内核时钟(分钟)，GameState的ticked与settled_day(缺失时为None)
+    功能:
+        读一步边界上的时钟记账：ticked是上一次Tick结算到的时钟，settled_day是已跑过新一天结算的游戏日
+    """
+    from Script.Kernel import core
+
+    game = core.state()
+    return game.clock, game.data.get("ticked"), game.data.get("settled_day")
+
+
 @register_check("BEHAV-02", "全局时钟健全性")
 def check_global_clock_sanity() -> list[CheckFailure]:
     """
@@ -134,34 +147,21 @@ def check_global_clock_sanity() -> list[CheckFailure]:
     返回值:
         List[CheckFailure] -- 失败记录列表
     功能:
-        校验cache.game_time/cache.pre_game_time都是已初始化的朴素datetime且只保留到分钟(游戏时钟的类型GameTime是datetime的子类，按datetime判定)。三个写入源都不产生
-        秒/微秒/时区，哨兵0001-01-01只可能来自旧存档缺字段被补默认值——那正是要抓的迁移缺陷；秒/微秒/时区那半
-        是构造性真值(无写入通道)，保留是因为代价为零且能识别外部注入/反序列化损坏
+        校验GameState的时钟记账ticked/settled_day都是整数。游戏只有内核这一个时钟(分钟数，构造上就只到分钟)，
+        两项缺失只可能来自没经state_from_cache或存档读入的GameState——那正是要抓的迁移缺陷
     """
-    cache = cache_control.cache
-    game_t = getattr(cache, "game_time", None)
-    pre_t = getattr(cache, "pre_game_time", None)
-    failures = []
-    for label, t in (("game_time", game_t), ("pre_game_time", pre_t)):
-        ok = (
-            isinstance(t, datetime.datetime)
-            and t != datetime.datetime(1, 1, 1)
-            and t.second == 0
-            and t.microsecond == 0
-            and t.tzinfo is None
+    clock, ticked, settled_day = _clock_marks()
+    if isinstance(ticked, int) and isinstance(settled_day, int):
+        return []
+    return [
+        make_failure(
+            "BEHAV-02",
+            "全局时钟健全性",
+            f"ticked={ticked!r}或settled_day={settled_day!r}不是整数；clock={clock}, "
+            f"now_panel_id={getattr(cache_control.cache, 'now_panel_id', None)}",
+            [],
         )
-        if ok:
-            continue
-        failures.append(
-            make_failure(
-                "BEHAV-02",
-                "全局时钟健全性",
-                f"cache.{label}={t!r}不是合法的已初始化朴素datetime(要求非哨兵0001-01-01、秒/微秒为0、无时区)；"
-                f"game_time={game_t!r}, pre_game_time={pre_t!r}, now_panel_id={getattr(cache, 'now_panel_id', None)}",
-                [],
-            )
-        )
-    return failures
+    ]
 
 
 @register_check("BEHAV-03", "世界月份只能是四季月")
@@ -172,28 +172,17 @@ def check_world_month_is_seasonal() -> list[CheckFailure]:
     返回值:
         List[CheckFailure] -- 失败记录列表
     功能:
-        校验cache.game_time与cache.pre_game_time的月份都属于四季月{3,6,9,12}。全年被折叠为四个月，
-        get_sub_date会显式归并其他月份；出现第五种月份不只是数据脏，get_date_text()对第五种月份没有else分支，
-        下一次绘制就会UnboundLocalError崩溃。已知唯一的合法绕过是调试面板直接replace月份——这正是本条要抓的
-        非正常状态，不为它加豁免
+        校验当前游戏时间的月份属于四季月{3,6,9,12}。全年被折叠为四个月，get_date_text()对第五种月份没有else分支，
+        出现第五种月份下一次绘制就会UnboundLocalError崩溃
     """
-    cache = cache_control.cache
-    game_t = getattr(cache, "game_time", None)
-    pre_t = getattr(cache, "pre_game_time", None)
-    ok = (
-        isinstance(game_t, datetime.datetime)
-        and game_t.month in {3, 6, 9, 12}
-        and isinstance(pre_t, datetime.datetime)
-        and pre_t.month in {3, 6, 9, 12}
-    )
-    if ok:
+    now_time = game_time.now()
+    if now_time.month in {3, 6, 9, 12}:
         return []
     return [
         make_failure(
             "BEHAV-03",
             "世界月份只能是四季月",
-            f"game_time={game_t!r}(月={getattr(game_t, 'month', None)})或pre_game_time={pre_t!r}"
-            f"(月={getattr(pre_t, 'month', None)})不属于四季月{{3,6,9,12}}；get_date_text()对第五种月份"
+            f"game_time={now_time!r}(月={now_time.month})不属于四季月{{3,6,9,12}}；get_date_text()对第五种月份"
             f"没有else分支，下一次绘制会UnboundLocalError崩溃",
             [],
         )
@@ -208,33 +197,20 @@ def check_pre_game_time_not_after_game_time() -> list[CheckFailure]:
     返回值:
         List[CheckFailure] -- 失败记录列表
     功能:
-        校验cache.pre_game_time不晚于cache.game_time。pre_game_time只在初始化与每日刷新被赋成当时的
-        cache.game_time，是单调追赶的锚点；时停的回退量与本回合推进量相抵，净变化为0。本条实际是时钟倒流探测器，
-        真实可达路径是"等待至交互对象行动结束"的add_time未做下限钳制，对象行动已结束时为负会让全局时钟真的倒退
+        校验ticked不晚于内核时钟、settled_day不晚于今天。两者只由Tick/NewDay记成当时的时钟与日子，
+        是单调追赶的锚点；本条是时钟倒流探测器。类型损坏由BEHAV-02负责，此处跳过
     """
-    cache = cache_control.cache
-    game_t = getattr(cache, "game_time", None)
-    pre_t = getattr(cache, "pre_game_time", None)
-    # 任一时间缺失时无从比较，跳过本检查
-    if game_t is None or pre_t is None:
+    clock, ticked, settled_day = _clock_marks()
+    if not isinstance(ticked, int) or not isinstance(settled_day, int):
         return []
-    try:
-        ok = pre_t <= game_t
-    except Exception:
-        # 类型损坏由BEHAV-02负责，本条只做时钟倒流探测，比较本身失败时跳过避免"检查器自身异常"
+    if ticked <= clock and settled_day <= game_time.day(clock):
         return []
-    if ok:
-        return []
-    character_data = getattr(cache, "character_data", None) or {}
-    player = character_data.get(0)
-    duration0 = getattr(getattr(player, "behavior", None), "duration", None)
     return [
         make_failure(
             "BEHAV-04",
             "上一循环时间不得晚于当前时间",
-            f"pre_game_time={pre_t!r}晚于game_time={game_t!r}(差值={game_t - pre_t})，时钟疑似倒流；"
-            f"time_stop_mode={getattr(cache, 'time_stop_mode', None)}, 0号角色behavior.duration={duration0!r}；"
-            f"疑似命中'等待至交互对象行动结束'路径的add_time未做下限钳制导致全局时钟倒退",
+            f"ticked={ticked}或settled_day={settled_day}晚于clock={clock}(day={game_time.day(clock)})，"
+            f"时钟疑似倒流；time_stop_mode={getattr(cache_control.cache, 'time_stop_mode', None)}",
             [],
         )
     ]
@@ -248,68 +224,22 @@ def check_daily_refresh_completed() -> list[CheckFailure]:
     返回值:
         List[CheckFailure] -- 失败记录列表
     功能:
-        校验若game_time与pre_game_time的日期不同，说明主循环的跨日刷新(比较日期并调用每日刷新，把
-        pre_game_time推到当前)钩子处仍未完成，今日事件记录/每日计数器等都没清；用date()而非.day是本条要抓的
-        缺口(生产代码只比较.day，月/年不同但日号相同会被生产代码放过)。时停整条跳过：时停下玩家结算完即提前
-        break，走不到每日刷新那一步。定为warning：这类状态会连续告警至多一个游戏日后自愈
+        校验settled_day就是今天。时钟在0点停下，NewDay在任何人选行动之前跑，所以钩子处(玩家选行动时)
+        今天的刷新一定已经跑过；不等说明今日事件记录/每日计数器等都没清
     """
-    cache = cache_control.cache
-    if getattr(cache, "time_stop_mode", False):
+    clock, __, settled_day = _clock_marks()
+    if not isinstance(settled_day, int) or settled_day == game_time.day(clock):
         return []
-    game_t = getattr(cache, "game_time", None)
-    pre_t = getattr(cache, "pre_game_time", None)
-    # 任一时间缺失时无从比较日期，跳过本检查
-    if game_t is None or pre_t is None:
-        return []
-    try:
-        ok = game_t.date() == pre_t.date()
-    except Exception:
-        return []
-    if ok:
-        return []
-    character_data = getattr(cache, "character_data", None) or {}
-    player = character_data.get(0)
-    behavior0 = getattr(player, "behavior", None)
-    today_event = getattr(cache, "today_taiggered_event_record", None) or set()
+    today_event = (
+        getattr(cache_control.cache, "today_taiggered_event_record", None)
+        or set()
+    )
     return [
         make_failure(
             "BEHAV-05",
             "跨日刷新已经完成",
-            f"[warning] game_time={game_t!r}与pre_game_time={pre_t!r}日期不同，跨日刷新(今日事件记录/每日计数器)"
-            f"疑似尚未执行；0号角色behavior.behavior_id={getattr(behavior0, 'behavior_id', None)!r}, "
-            f"duration={getattr(behavior0, 'duration', None)!r}, today_taiggered_event_record长度={len(today_event)}",
-            [],
-        )
-    ]
-
-
-@register_check("BEHAV-06", "更新流程嵌套深度必须归零")
-def check_update_flow_depth_zero() -> list[CheckFailure]:
-    """
-    参数:
-        无
-    返回值:
-        List[CheckFailure] -- 失败记录列表
-    功能:
-        校验cache.game_update_flow_running恒为0。game_update_flow用该计数器限制递归并在finally恢复，
-        钩子只能从顶层面板派发到达，不存在从结算内部重入场景面板的路径，因此语义值恒为0；非0直接暴露
-        "结算过程中重绘了主面板"这类重入错误。上限本身是空转(达到上限会提前return、finally保证恢复)，
-        因此收紧为严格==0而非区间
-    """
-    cache = cache_control.cache
-    v = getattr(cache, "game_update_flow_running", None)
-    if type(v) is int and v == 0:
-        return []
-    character_data = getattr(cache, "character_data", None) or {}
-    player = character_data.get(0)
-    behavior0 = getattr(player, "behavior", None)
-    return [
-        make_failure(
-            "BEHAV-06",
-            "更新流程嵌套深度必须归零",
-            f"cache.game_update_flow_running={v!r}不等于0，暴露'结算过程中重绘主面板'一类重入错误；"
-            f"now_panel_id={getattr(cache, 'now_panel_id', None)}, game_time={getattr(cache, 'game_time', None)}, "
-            f"0号角色behavior.behavior_id={getattr(behavior0, 'behavior_id', None)!r}",
+            f"settled_day={settled_day}不是今天(day={game_time.day(clock)}, game_time={game_time.now()!r})，"
+            f"跨日刷新疑似尚未执行；today_taiggered_event_record长度={len(today_event)}",
             [],
         )
     ]
@@ -463,7 +393,7 @@ def check_behavior_start_time_not_sentinel() -> list[CheckFailure]:
                 (
                     f"角色cid={cid}(name={getattr(chara, 'name', '?')!r})的behavior.start_time仍是哨兵0001-01-01，"
                     f"说明该角色被主循环跳过未处理；behavior_id={behavior.behavior_id!r}, "
-                    f"game_time={getattr(cache, 'game_time', None)!r}, cid in "
+                    f"game_time={game_time.now()!r}, cid in "
                     f"over_behavior_character={cid in over_behavior_character}"
                 ),
                 [cid],
@@ -480,7 +410,7 @@ def check_behavior_start_time_not_future() -> list[CheckFailure]:
     返回值:
         List[CheckFailure] -- 失败记录列表
     功能:
-        校验每个被调度角色的behavior.start_time不晚于cache.game_time。judge_character_status_time_over()
+        校验每个被调度角色的behavior.start_time不晚于game_time.now()。judge_character_status_time_over()
         开头会把未来的start_time无条件钳到当前时间，钩子处出现"起时在未来"意味着某条路径绕过了主循环。
         时停模式下整条跳过(不能只跳过玩家)：装袋释放/投监两条路径会在时停期间把NPC的start_time写成回退前的
         推进后时刻，随后主循环回退全局时钟，该NPC合法领先
@@ -489,7 +419,7 @@ def check_behavior_start_time_not_future() -> list[CheckFailure]:
     if getattr(cache, "time_stop_mode", False):
         return []
     character_data = getattr(cache, "character_data", None) or {}
-    game_t = getattr(cache, "game_time", None)
+    game_t = game_time.now()
     over_behavior_character = (
         getattr(cache, "over_behavior_character", None) or set()
     )
@@ -511,7 +441,7 @@ def check_behavior_start_time_not_future() -> list[CheckFailure]:
                 "行为起时不得晚于游戏时间",
                 (
                     f"角色cid={cid}(name={getattr(chara, 'name', '?')!r})的behavior.start_time={behavior.start_time!r}"
-                    f"晚于cache.game_time={game_t!r}；behavior_id={behavior.behavior_id!r}, "
+                    f"晚于game_time.now()={game_t!r}；behavior_id={behavior.behavior_id!r}, "
                     f"duration={behavior.duration!r}, "
                     f"time_stop_mode={getattr(cache, 'time_stop_mode', None)}, cid in "
                     f"over_behavior_character={cid in over_behavior_character}"
@@ -530,7 +460,7 @@ def check_no_stale_expired_behavior() -> list[CheckFailure]:
     返回值:
         List[CheckFailure] -- 失败记录列表
     功能:
-        校验非H、duration>0的被调度角色，其行为结束时间END()不早于cache.game_time。主循环靠
+        校验非H、duration>0的被调度角色，其行为结束时间END()不早于game_time.now()。主循环靠
         "结束时间已到就重跑一次"推进，钩子处不该再有结束时间早于当前时间的角色。必须用END()(get_sub_date)，
         不能用timedelta近似，跨季当天生产代码会把月份钳位、timedelta近似会稳定误报。非严格>=且不排除玩家：
         新开局全体角色是Behavior()默认值(duration 0)，部分路径会让玩家带着duration=5、
@@ -541,11 +471,8 @@ def check_no_stale_expired_behavior() -> list[CheckFailure]:
     if getattr(cache, "time_stop_mode", False):
         return []
     character_data = getattr(cache, "character_data", None) or {}
-    game_t = getattr(cache, "game_time", None)
+    game_t = game_time.now()
     group_sex_mode = getattr(cache, "group_sex_mode", None)
-    # game_time缺失时无从判断行为是否过期，跳过本检查
-    if game_t is None:
-        return []
     failures = []
     for cid in _live_ids(cache):
         chara = character_data.get(cid)
@@ -704,7 +631,7 @@ def check_interacting_character_end_info_valid() -> list[CheckFailure]:
                 (
                     f"角色cid={cid}(name={getattr(chara, 'name', '?')!r})的action_info.interacting_character_end_info="
                     f"{info!r}指向的角色id={other_id!r}既不是哨兵-1也不在character_data中；"
-                    f"game_time={getattr(cache, 'game_time', None)!r}, "
+                    f"game_time={game_time.now()!r}, "
                     f"character_data键(前20个)={sorted(character_data.keys())[:20]}"
                 ),
                 [cid],
@@ -722,7 +649,7 @@ def check_active_body_item_not_expired() -> list[CheckFailure]:
         List[CheckFailure] -- 失败记录列表
     功能:
         校验h_state.body_item中"生效中(item[1]为真)"的道具，其结束时间item[2]要么为None要么晚于
-        cache.game_time。每个参与结算的角色每轮都会跑一次持续状态结算，H中结算全部部位、非H只结算8号
+        game_time.now()。每个参与结算的角色每轮都会跑一次持续状态结算，H中结算全部部位、非H只结算8号
         (持续性利尿剂)与9号(安眠药)，结束时间已到(相等也算到期)的置为失效；钩子处还留着"生效中+结束时间≤当前
         时间"说明该角色本轮没被结算到。非H时必须收窄到8/9，否则会把"H中挂上、退出H后自然留存"的道具误报成脏数据。
         时停模式下只查玩家：NPC本轮完全未结算持续状态。比较用严格>：生产用judge_date_big_or_small判到期，
@@ -731,7 +658,7 @@ def check_active_body_item_not_expired() -> list[CheckFailure]:
     cache = cache_control.cache
     character_data = getattr(cache, "character_data", None) or {}
     time_stop = getattr(cache, "time_stop_mode", False)
-    game_t = getattr(cache, "game_time", None)
+    game_t = game_time.now()
     failures = []
     for cid in _live_ids(cache):
         if time_stop and cid != 0:
@@ -1033,7 +960,7 @@ def check_behavior_start_time_seasonal_month() -> list[CheckFailure]:
         List[CheckFailure] -- 失败记录列表
     功能:
         校验每个被调度角色(排除哨兵值)的behavior.start_time月份属于四季月{3,6,9,12}。start_time的所有来源
-        要么是cache.game_time的拷贝，要么是get_sub_date的输出，因此继承BEHAV-03的月份约束。显式排除哨兵，
+        要么是game_time.now()的拷贝，要么是get_sub_date的输出，因此继承BEHAV-03的月份约束。显式排除哨兵，
         以免与BEHAV-10双重报警。级别为warning：保留的价值在于旧存档迁移会原样复制整个behavior对象，是唯一可能
         带进历史月份的通道，读档后、任何一次结算之前的窗口内触发属于迁移问题而非运行期缺陷
     """
@@ -1056,7 +983,7 @@ def check_behavior_start_time_seasonal_month() -> list[CheckFailure]:
                 "行为起时落在四季月上",
                 f"[warning] 角色cid={cid}(name={getattr(chara, 'name', '?')!r})的behavior.start_time="
                 f"{behavior.start_time!r}月份不属于四季月{{3,6,9,12}}，疑似旧存档迁移带入的历史月份；"
-                f"behavior_id={behavior.behavior_id!r}, game_time={getattr(cache, 'game_time', None)!r}",
+                f"behavior_id={behavior.behavior_id!r}, game_time={game_time.now()!r}",
                 [cid],
             )
         )

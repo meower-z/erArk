@@ -109,6 +109,8 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         shrunk（持有103的静态干员集合）、d101~d104、mother，
            以及检查要用的婴儿出生时间、外勤委托id、书id、孩子脱下的衣服、快感状态id
         """
+        from Script.Design import game_time
+
         from Script.Config import game_config
 
         cache = self.cache
@@ -213,7 +215,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         child.sp_flag.be_bagged = True
         mother.action_info.interacting_character_end_info = [
             child_id,
-            cache.game_time,
+            game_time.now(),
         ]
         player.action_info.ask_group_sex_refuse_chara_id_list = [
             child_id,
@@ -227,12 +229,12 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         island = cache.rhodes_island
         island.milk_in_fridge[child_id] = 30
         island.urine_in_fridge[child_id] = 10
-        island.current_prisoners[child_id] = [cache.game_time, 0]
+        island.current_prisoners[child_id] = [game_time.now(), 0]
         child.sp_flag.imprisonment = True
         commission_id = min(game_config.config_commission)
         island.ongoing_field_commissions[commission_id] = [
             [child_id, mother_id],
-            cache.game_time,
+            game_time.now(),
             [],
         ]
         child.sp_flag.field_commission = commission_id
@@ -291,7 +293,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         child.child_growth.schedule_template_id = 1
         child.child_growth.schedule_override = {0: FOLLOW_MOTHER_ENTERTAINMENT}
         child.child_growth.skip_class_flag = True
-        child.child_growth.skip_class_day = cache.game_time.toordinal()
+        child.child_growth.skip_class_day = game_time.now().toordinal()
         cache.rhodes_island.child_schedule_template[1] = {
             "name": "测试日程",
             "slot": {
@@ -356,8 +358,8 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             0: {"mother_id": id_dict["d101"], "semen_count": 5.0},
             1: {"mother_id": mother_id, "semen_count": 5.0},
         }
-        baby.pregnancy.born_time = cache.game_time
-        id_dict["baby_born_time"] = cache.game_time
+        baby.pregnancy.born_time = game_time.now()
+        id_dict["baby_born_time"] = game_time.now()
         mother = cache.character_data[mother_id]
         for talent_id in (23, 24, 27):
             mother.talent[talent_id] = 1

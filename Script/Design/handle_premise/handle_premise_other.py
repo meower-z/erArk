@@ -169,21 +169,11 @@ def handle_have_moved(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     now_time: datetime.datetime = character_data.behavior.start_time
-    move_flag = 0
-    # 同一天内过1小时则判定为1
-    if (
-        now_time.day == character_data.action_info.last_move_time.day
-        and now_time.hour > character_data.action_info.last_move_time.hour
-    ):
-        character_data.action_info.last_move_time = now_time
-        # print("过一小时判定,character_id :",character_id)
-        move_flag = 1
-    # 非同一天也判定为1
-    elif now_time.day != character_data.action_info.last_move_time.day:
-        character_data.action_info.last_move_time = now_time
-        move_flag = 1
-        # print("非同一天判定")
-    return move_flag
+    last_move_time = character_data.action_info.last_move_time
+    # 不同天，或同一天里已到了下一个小时
+    if now_time.day != last_move_time.day:
+        return 1
+    return int(now_time.hour > last_move_time.hour)
 
 
 @add_premise(constant_promise.Premise.AI_WAIT)
@@ -213,7 +203,7 @@ def handle_have_trained(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    now_time = cache.game_time
+    now_time = game_time.now()
     train_time = character_data.action_info.last_training_time
     add_day = int((now_time - train_time).days)
     if add_day >= 2:
@@ -231,7 +221,7 @@ def handle_not_shower(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    now_time = cache.game_time
+    now_time = game_time.now()
     shower_time = character_data.action_info.last_shower_time
     if shower_time.day == now_time.day:
         return 0
@@ -252,7 +242,7 @@ def handle_have_showered(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    now_time = cache.game_time
+    now_time = game_time.now()
     shower_time = character_data.action_info.last_shower_time
     if shower_time.day == now_time.day:
         return 1
@@ -273,7 +263,7 @@ def handle_have_not_wake_up(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    now_time = cache.game_time
+    now_time = game_time.now()
     wake_up_time = character_data.action_info.wake_time
     if (
         wake_up_time.day != now_time.day
@@ -539,7 +529,7 @@ def handle_sleep_disturbed_1(character_id: int) -> int:
     if end_time is None:
         return 0
     # 结束时间晚于当前游戏时间才算处于该状态，时间相等即已到期
-    if game_time.judge_date_big_or_small(end_time, cache.game_time) == 1:
+    if game_time.judge_date_big_or_small(end_time, game_time.now()) == 1:
         return 1
     return 0
 
@@ -1465,7 +1455,7 @@ def handle_self_birthday_today(character_id: int) -> int:
     born_time = cache.character_data[character_id].pregnancy.born_time
     if born_time.year <= 1:
         return 0
-    now_time = cache.game_time
+    now_time = game_time.now()
     return (
         1
         if now_time.month == born_time.month and now_time.day == born_time.day
@@ -2393,8 +2383,7 @@ def handle_ai_chat_on(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    cache.ai_setting.ai_chat_setting.setdefault(1, 0)
-    return cache.ai_setting.ai_chat_setting[1]
+    return cache.ai_setting.ai_chat_setting.get(1, 0)
 
 
 @add_premise(constant_promise.Premise.SELF_WAITING_FOR_HEALTH_CHECK)

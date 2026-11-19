@@ -27,8 +27,8 @@ description: 在不启动图形界面的情况下无头运行 erArk：加载游�
    timeout 300 ./.conda/python.exe -u <脚本> > "$LOG" 2>&1; echo "EXIT=$?"; tail -30 "$LOG"
    ```
    （`$TMPDIR` 在 Git Bash 里是空的，`> "$TMPDIR/x.log"` 会写到 `/x.log` 并 Permission denied，必须写完整的 scratchpad 路径。）
-5. **绝不调用会进入真实主循环的函数**：`handle_instruct.handle_xxx()`、`chara_handle_instruct_common_settle()`、`update.game_update_flow()` 最终都会调 `init_character_behavior()`。如果要排查的 BUG 正是死循环，harness 自己就会卡死。必须用"复刻指令赋值 + 手动推进时间 + 带护栏的自建循环"代替（见下文）。
-6. **只读纪律**：读档只用 `save_handle.input_load_save(id)`（纯读入内存）；绝不调用 `establish_save()`；不 inline 调用 `init_character_behavior()`（其结尾的成就结算可能写文件）。所有修复先用 monkeypatch 在内存中模拟验证，确认收敛后再改源码。
+5. **不要自己写主循环**：游戏由内核一步一步推进（`Script/Kernel/core.py` 的 `core.step()`）。玩家的指令要在玩家选行动时下：用 `tests/world.py` 的 `act(指令处理函数)`，它推进到玩家选行动时跑这条指令，再推进到玩家下一次选行动时停下。要排查的 BUG 是死循环时，先给 `core.step` 包一层步数护栏（见下文与 `harness_template.py`），否则 harness 自己就会卡死。
+6. **只读纪律**：读档只用 `save_handle.input_load_save(id)`（纯读入内存）；绝不调用 `establish_save()`；推进中会写文件的两处（玩家睡觉后的自动存档 `save_handle.establish_save`、临时外勤委托追加写 Commission.csv）先替换掉（见 `harness_template.py`）。所有修复先用 monkeypatch 在内存中模拟验证，确认收敛后再改源码。
 7. **含中文的脚本一律写成文件再跑，不要走 heredoc/stdin**。Git Bash 把 heredoc 以 GBK 喂给 Python，脚本里的中文字符串会被解码成乱码，直接 `SyntaxError: invalid syntax`（报错行里能看到 `��` 就是这个原因）。正确做法：用 Write 工具把脚本写到 scratchpad（UTF-8），开头 `os.chdir(r"c:\code\erArk")` + `sys.path.insert(0, r"c:\code\erArk")`，再 `timeout 300 ./.conda/python.exe -u "<scratchpad>/xxx.py" > "$LOG" 2>&1`。纯 ASCII 的一次性小脚本才可以用 heredoc（`./.conda/python.exe -u - <<'EOF'`，此时 sys.path[0] 为当前目录，可直接 `import auto_build_config`）。同理，需要批量改含中文的 CSV/文档时也用脚本文件而不是 stdin。
 8. **测试脚本是回归资产，改完一轮功能就重跑上一轮的测试**。同一子系统连续多个 plan 时（如 plan_14→17→18 的怀孕系统），每次实施后除了跑新测试，还要重跑前几轮留下的测试文件（scratchpad 会随会话丢失，长期要用的测试请在 plan 文档里记录其断言清单，或在用户同意后收进仓库）。
 
@@ -71,7 +71,7 @@ assert map_handle.get_map_system_path_str_for_list(SCENE) in cache.scene_data
 | `talent[121]` | 手写 `cd.talent[121] = 1` | 罩杯素质 121~125 至少要有一个为 1：胸部成长/乳汁上限之类的代码用 `for tid in [121..125]: if talent[tid]: ...; break` 找罩杯，一个都没有时循环变量不赋值 → `UnboundLocalError`（报错在 `chest_grow`/`milk_max` 处） |
 | `race` | 手写 `cd.race = <种族id>` | 默认 0=博士；生育方式、种族限定判定都查 `game_config.config_race[cd.race]`，测卵生/多胎要显式给对应种族 |
 | `relationship` / `pregnancy` | 默认即可 | `Character()` 已带完整默认对象；测亲子链时手写 `relationship.mother_id/father_id/child_id_list` 并**两边都要挂**（母亲与玩家的 `child_id_list` 都 append） |
-| 时间类字段 | `cache.game_time - datetime.timedelta(days=N)` | 造"N 天前"的 `fertilization_time/born_time` 用 timedelta 即可；但**断言显示文本时**要按 `game_time.get_sub_date` 的季月归并（只有 3/6/9/12 月）来预期，别硬算 `t.month` |
+| 时间类字段 | `game_time.now() - datetime.timedelta(days=N)` | 造"N 天前"的 `fertilization_time/born_time` 用 timedelta 即可；但**断言显示文本时**要按 `game_time.get_sub_date` 的季月归并（只有 3/6/9/12 月）来预期，别硬算 `t.month` |
 
 拿不准签名时**先查再写**，一次就能定：
 
@@ -228,8 +228,9 @@ from Script.Design import character_handle, game_time, character_behavior, instu
 import Script.Settle, Script.StateMachine      # 注册全部结算器与状态机，缺了会 KeyError
 from Script.Core import constant, save_handle, flow_handle
 from Script.UI.Moudle import draw
+from Script.Modules.save_load import kernel_state
 character_handle.init_character_tem()
-game_time.init_time()
+kernel_state.reset_clock(kernel_state.first_clock())
 ```
 
 顺序不能乱：`cache` 先建、`normal_config` 先于 `game_config`、`Script.Settle`/`Script.StateMachine` 必须 import（装饰器注册）。Mod 系统可跳过（测试不需要）。
@@ -268,62 +269,60 @@ pl = cache.character_data[0]
 - 体检清单（排查行为类 BUG 时先打印这些）：`behavior.behavior_id / duration / start_time`、`state`、`position`、`target_character_id`、`tired_point`、`sleep_point`、`hit_point/max`、`mana_point/max`、`hunger_point`、`sp_flag` 全量（`sleep / rest / tired / sleep_h_awake / unconscious_h / imprisonment / is_follow / is_h / hidden_sex_mode`）、醉酒等级 `drunk_sex_common.get_drunk_level(cid)`、安眠药 `h_state.body_item[9][1]`、`work.work_type`、`entertainment.entertainment_type`。
 - 需要移动角色到某场景：`map_handle.character_move_scene(旧位置, 新位置, cid)`。
 
-### 第四步：复刻指令（不进真实循环）
+### 第四步：下玩家的指令，带护栏地推进内核（核心）
 
-`chara_handle_instruct_common_settle()` 对玩家指令做的核心三件事，手动复刻：
+玩家的指令经 `tests/world.py` 的 `act` 下：内核一步一步推进（`core.step()`），玩家选行动时跑指令的处理函数（`Script/System/Instruct_System/handle_instruct.py` 里 `@add_instruct` 的函数，按指令中文名搜），推进到玩家下一次选行动时停下。时钟由内核推进，当前时刻用 `game_time.now()` 读。
 
-```python
-instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-pl.state = constant.CharacterStatus.STATUS_XXX
-pl.behavior.behavior_id = constant.Behavior.XXX
-dur = max(game_config.config_behavior[constant.Behavior.XXX].duration, 1)  # 查表时长
-pl.behavior.duration = dur
-game_time.sub_time_now(dur)          # 推进游戏时间到行动结束点（真实流程也是先推时间再跑循环）
-```
-
-指令名 → 行为常量的查找路径：`Script/System/Instruct_System/handle_instruct.py`（搜指令中文名）→ `constant.Behavior.*`；时长在 `data/csv/Behavior_Data.csv`。
-
-### 第五步：带护栏的行为循环（核心）
-
-复刻 `init_character_behavior()` 的主干，但每个 while 都加轮数上限，超限即判死循环并报告卡住的角色：
+给 `core.step` 包一层护栏：时钟停在同一分钟推进太多步就是死循环，抛出异常中止推进，并报告这一分钟开始行动最多的角色：
 
 ```python
-cache.over_behavior_character = set()
-g = 0
-while 0 not in cache.over_behavior_character:          # 玩家阶段
-    g += 1
-    if g > 30: print("!! 玩家阶段卡死"); break
-    pl_start = pl.behavior.start_time
-    character_behavior.character_behavior(0, cache.game_time, pl_start)
+from Script.Kernel import core
+from Script.Design import character_behavior, game_time
+from Script.System.Instruct_System import handle_instruct
+from tests.world import act
 
-id_list = cache.npc_id_got.copy(); id_list.discard(0)  # NPC 阶段
-passes = 0
-while len(cache.over_behavior_character) <= len(id_list):
-    passes += 1
-    if passes > 25:
-        print("!! NPC阶段死循环, 未完成:",
-              [(c, cache.character_data[c].name) for c in id_list if c not in cache.over_behavior_character][:8])
-        break
-    for cid in id_list:
-        if cid in cache.over_behavior_character: continue
-        character_behavior.character_behavior(cid, cache.game_time, pl_start)
+STEP_LIMIT = 500
+class StepLimitReached(Exception): pass
+starts, same_minute, stalled = {}, {}, 0
+real_settle_start, real_step = character_behavior.settle_start, core.step
+
+def counted_settle_start(cid, minutes):        # 每个角色开始行动都经过这里
+    starts[cid] = starts.get(cid, 0) + 1
+    same_minute[cid] = same_minute.get(cid, 0) + 1
+    real_settle_start(cid, minutes)
+
+def guarded_step():
+    global stalled
+    if stalled >= STEP_LIMIT:
+        raise StepLimitReached(f"时钟停在 {game_time.now()}：{sorted(same_minute.items(), key=lambda kv: -kv[1])[:5]}")
+    clock = core.state().clock
+    real_step()
+    if core.state().clock == clock:
+        stalled += 1
+    else:
+        stalled = 0
+        same_minute.clear()
+
+character_behavior.settle_start = counted_settle_start
+core.step = guarded_step
+act(handle_instruct.handle_play_instrument)
 ```
 
-判读标准：正常情况玩家阶段 1 轮、NPC 阶段个位数轮全部收敛；超过上限即为活锁，**"未完成"名单就是卡死角色清单**。注意：提前 break 时名单里也会混入还没轮到处理的正常角色，缩小范围要看逐轮内窥（下一步）。
+判读标准：各角色开始行动的次数随指令时长增长；时钟停在同一分钟超过上限即为活锁，报告里开始行动最多的角色就是卡死角色。是否异常以同一存档、同一指令的未修复基线为准。
 
 ### 第六步：逐轮内窥（定位循环形态）
 
-对可疑角色，在每轮 `character_behavior()` 前后打印行为四元组（behavior_id / duration / start_time / state）。若"前后打印完全相同且永不完成"，说明**轮内发生了赋予→掐死的隐形循环**，需要包装中间函数看到轮内状态：
+对可疑角色，在每次开始行动（`character_behavior.settle_start`）前后打印行为四元组（behavior_id / duration / start_time / state）。若同一分钟里反复开始行动、前后打印完全相同，说明**发生了赋予→掐死的隐形循环**，需要包装中间函数看到其中的状态。`harness_template.py` 的 `probe` 一次包好下面这几处：
 
 ```python
-orig_find = handle_npc_ai.find_character_target
-def wrap_find(cid, now_time):
-    orig_find(cid, now_time)
+orig_choose = handle_npc_ai.choose_state_machine
+def wrap_choose(cid):
+    r = orig_choose(cid)
     if cid in WATCH:
         cd = cache.character_data[cid]
-        print(f"    [find后] cid={cid} bhv={cd.behavior.behavior_id} dur={cd.behavior.duration} state={cd.state}")
-handle_npc_ai.find_character_target = wrap_find
-character_behavior.handle_npc_ai.find_character_target = wrap_find   # 双保险：两个模块引用都替换
+        print(f"    [选状态机] cid={cid} 返回={r} bhv={cd.behavior.behavior_id} dur={cd.behavior.duration} state={cd.state}")
+    return r
+handle_npc_ai.choose_state_machine = wrap_choose   # 内核按 handle_npc_ai.xxx 调用，替换模块属性即生效
 
 orig_int = handle_npc_ai.judge_interrupt_character_behavior
 def wrap_int(cid):
@@ -334,7 +333,6 @@ def wrap_int(cid):
         print(f"    [中断判定] cid={cid} 前={pre} 返回={r} 后=({cd.behavior.behavior_id},{cd.behavior.duration})")
     return r
 handle_npc_ai.judge_interrupt_character_behavior = wrap_int
-character_behavior.handle_npc_ai.judge_interrupt_character_behavior = wrap_int
 
 # 学生赶去上课的截短（Plan 32 起）不在 judge_interrupt_character_behavior 里：
 #    character_behavior 的 NPC 分支在实时结算之前调 judge_student_leave_truncate，要记截短就一并包它
@@ -346,7 +344,6 @@ def wrap_trunc(cid):
         print(f"    [学生截短] cid={cid} 时长 {pre} → {cache.character_data[cid].behavior.duration}")
     return r
 handle_npc_ai.judge_student_leave_truncate = wrap_trunc
-character_behavior.handle_npc_ai.judge_student_leave_truncate = wrap_trunc
 ```
 
 同法可包装 `judge_character_status`、`realtime_settle.character_aotu_change_value` 等任意环节。
@@ -373,15 +370,14 @@ def patched(cid):
     if <候选修复条件>: return 0
     return _orig(cid)
 handle_npc_ai.judge_interrupt_character_behavior = patched
-character_behavior.handle_npc_ai.judge_interrupt_character_behavior = patched
-# 重跑第五步，断言收敛轮数与最终状态
+# 重跑第四步，断言推进到了玩家下一次选行动、各角色开始行动的次数正常
 ```
 
 改完源码后**去掉补丁重跑同一 harness** 做最终验证，再补一组回归（如：修复烂醉豁免后，验证非烂醉浅睡者仍会被吵醒且收敛）。
 
 ## 死循环排查心法
 
-行为循环卡死 = 某角色永远进不了 `cache.over_behavior_character`。`judge_character_status_time_over()` 只有两条 return 0 路径：
+行为循环卡死 = 时钟停在同一分钟，某些角色反复开始行动。下面是旧主循环（`judge_character_status_time_over`）时代归纳的成因，内核里的对应判断见 `Script/Modules/gameplay_resolution/`。`judge_character_status_time_over()` 只有两条 return 0 路径：
 
 - **A 路径**（`add_time <= 0`）：行为时长为 0/负 → 重置为空闲、duration=1、start=now、返回 0；
 - **B 路径**（`time_judge == 1`，结束时间早于当前时间）：重置行为、start_time=end_time、返回 0。
@@ -398,8 +394,8 @@ character_behavior.handle_npc_ai.judge_interrupt_character_behavior = patched
 
 | 要找什么 | 位置 |
 | --- | --- |
-| 主循环/时间结算 | `Script/Design/character_behavior.py`（`init_character_behavior`、`judge_character_status_time_over`） |
-| NPC AI 选择/打断 | `Script/Design/handle_npc_ai.py`（`find_character_target`、`judge_interrupt_character_behavior`、学生截短 `judge_student_leave_truncate`（Plan 32，排在实时结算之前）） |
+| 主循环/时间结算 | `Script/Kernel/core.py`（`step`）、`Script/Modules/gameplay_resolution/`、`Script/Design/character_behavior.py`（`settle_start`） |
+| NPC AI 选择/打断 | `Script/Design/handle_npc_ai.py`（`choose_state_machine`、`judge_interrupt_character_behavior`、学生截短 `judge_student_leave_truncate`（Plan 32，排在实时结算之前）） |
 | 实时数值/睡眠/吵醒 | `Script/Settle/realtime_settle.py`（`settle_sleep`、`settle_sleep_h`） |
 | AI 目标配置 | `data/target/default/target.csv`（格式：id,状态机id,前提管道,类型,注释） |
 | 状态机 id ↔ 名称 | `Script/Core/constant/StateMachine.py`；实现在 `Script/StateMachine/default.py` |

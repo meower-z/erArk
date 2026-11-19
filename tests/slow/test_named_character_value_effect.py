@@ -35,7 +35,7 @@ class NamedCharacterValueEffectTest(SlowTestCase):
             [f"E|{experience_id}", "G", "2"],
         ]
 
-        def settle(subject: str) -> tuple[list[float], dict]:
+        def settle(subject: str) -> tuple[list[object], dict]:
             """
             以 subject 为主体结算 effect_list
             Keyword arguments:

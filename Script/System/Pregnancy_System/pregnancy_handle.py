@@ -48,7 +48,7 @@ def get_pregnancy_past_day(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     natural_day = game_time.count_day_for_datetime(
-        character_data.pregnancy.fertilization_time, cache.game_time
+        character_data.pregnancy.fertilization_time, game_time.now()
     )
     return natural_day + int(character_data.pregnancy.acceleration_days)
 
@@ -107,7 +107,7 @@ def get_child_grow_day(child_id: int) -> int:
     """
     child_character_data: game_type.Character = cache.character_data[child_id]
     natural_day = game_time.count_day_for_datetime(
-        child_character_data.pregnancy.born_time, cache.game_time
+        child_character_data.pregnancy.born_time, game_time.now()
     )
     return natural_day + int(
         getattr(child_character_data.pregnancy, "growth_acceleration_days", 0)
@@ -309,7 +309,7 @@ def get_fertilization_rate(character_id: int) -> tuple[float, str]:
     if character_data.h_state.body_item[11][1]:
         now_rate = 0
         if game_time.judge_date_big_or_small(
-            cache.game_time, character_data.h_state.body_item[11][2]
+            game_time.now(), character_data.h_state.body_item[11][2]
         ):
             character_data.h_state.body_item[11][1] = False
     # 事后避孕药修正
@@ -482,7 +482,7 @@ def check_fertilization(character_id: int) -> int | None:
                 )
                 draw_text += "\n※※※※※※※※※\n"
                 character_data.talent[20] = 1
-                character_data.pregnancy.fertilization_time = cache.game_time
+                character_data.pregnancy.fertilization_time = game_time.now()
                 character_data.pregnancy.fetus_count = success_count
                 # 新受精重置妊娠加速药的累计加速天数
                 character_data.pregnancy.acceleration_days = 0.0
