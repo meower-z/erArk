@@ -86,7 +86,7 @@ def update_new_day() -> None:
             growth_data = character_data.child_growth
             if (
                 growth_data.skip_class_flag
-                and growth_data.skip_class_day < cache.game_time.toordinal()
+                and growth_data.skip_class_day < game_time.now().toordinal()
             ):
                 growth_data.skip_class_flag = False
         if character_id:
@@ -122,7 +122,7 @@ def update_new_day() -> None:
                 character_data.ability[33], character_data.ability[33] * 2
             )
             # 每周一次，如果已陷落则提供粉红凭证
-            if cache.game_time.weekday() == 6:
+            if game_time.now().weekday() == 6:
                 fall_chara_give_pink_voucher(character_id)
 
     # 非角色部分
@@ -146,12 +146,12 @@ def update_new_day() -> None:
     basement.update_base_resouce_newday()  # 更新基地资源
     navigation_panel.judge_arrive()  # 判断是否到达目的地
     # 每周一次
-    if cache.game_time.weekday() == 6:
+    if game_time.now().weekday() == 6:
         nation_diplomacy_panel.judge_diplomatic_policy()  # 结算外交政策
         nation_diplomacy_panel.settle_all_country_infection_rate()  # 结算全国度的源石病感染率变化
     # 每周一的助理轮换
     if (
-        cache.game_time.weekday() == 0
+        game_time.now().weekday() == 0
         and handle_premise.handle_pl_assistant_change_every_week_on(0)
     ):
         assistant_panel.select_random_assistant()
@@ -163,8 +163,6 @@ def update_new_day() -> None:
     official_event_handle.check_new_day_official_event()
     # 清空今日触发事件记录
     cache.today_taiggered_event_record = set()
-    # 更新游戏时间
-    cache.pre_game_time = cache.game_time
     # 每日指令输入记录
     cache.daily_intsruce.append(
         "\n\n" + game_time.get_date_until_day() + "\n\n"

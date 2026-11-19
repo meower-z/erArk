@@ -45,6 +45,8 @@ class FullExamRoomDropsExamTest(HealthCheckTestCase):
         Return arguments:
         无
         """
+        from Script.Design import game_time
+
         operator = self.operator
         gave_up = self.wait_until(
             lambda: operator.action_info.health_check_today == 0
@@ -55,25 +57,27 @@ class FullExamRoomDropsExamTest(HealthCheckTestCase):
             gave_up,
             f"今日体检时间 {operator.action_info.health_check_today}，在等待名单上：{self.operator_id in self.waiting}",
         )
-        today = self.cache.game_time.day
+        today = game_time.now().day
         self.assertTrue(
             self.wait_until(
                 lambda: self.operator.position == EXAM_ROOM
-                or self.cache.game_time.day != today,
+                or game_time.now().day != today,
                 24 * 60,
             )
         )
         self.assertNotEqual(
             self.operator.position,
             EXAM_ROOM,
-            f"{self.cache.game_time} 她又进了体检科",
+            f"{game_time.now()} 她又进了体检科",
         )
 
     def test_booked_operator_gives_up_when_full(self) -> None:
         """排了体检、还没进等待名单（目标 210500）：时段开始前体检科坐满，她放弃今天的体检；下一个体检日照常抽中她"""
+        from Script.Design import game_time
+
         self.wait_until_hour(self.start - 1)
         self.assertTrue(
-            self.wait_until(lambda: self.cache.game_time.minute >= 55, 60)
+            self.wait_until(lambda: game_time.now().minute >= 55, 60)
         )
         self.fill_exam_room()
         self.check_gives_up_for_today()

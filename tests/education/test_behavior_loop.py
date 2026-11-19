@@ -23,18 +23,20 @@ from _bootstrap import (
     map_handle,
     move_to,
     os,
-    pl,
     save_handle,
     schedule_handle,
     section,
     semester_handle,
     set_time,
     sex_class_handle,
+    wait,
 )
 from tests.education._skip import skip
-from Script.Design import character_behavior, clothing, instuct_judege
+from Script.Design import clothing
+from Script.Kernel import core
 from Script.Settle import past_day_settle, realtime_settle
 from Script.UI.Panel import character_info_head
+from tests import world
 
 E = education_constant
 
@@ -66,7 +68,7 @@ for save_id in _save_id_list:
         print("  存档", save_id, "载入失败", repr(error))
         continue
     count = len(growth_handle.get_student_candidate_list())
-    print(f"  存档 {save_id}: 在学女儿 {count} 人，游戏时间 {cache.game_time}")
+    print(f"  存档 {save_id}: 在学女儿 {count} 人，游戏时间 {game_time.now()}")
     if count > best_count:
         best_count = count
         best_id = save_id
@@ -155,7 +157,7 @@ if len(teacher_list) < 2:
 teacher_list = schedule_handle.get_teacher_candidate_list()
 check("至少 2 名教师", len(teacher_list) >= 2, teacher_list)
 # 把时间拨到本月的一个工作日 08:40（到岗时间，教师会按「马上要上的那一节」先去教室，第五轮）
-now = cache.game_time
+now = game_time.now()
 day = now.replace(hour=8, minute=40, second=0, microsecond=0)
 while day.weekday() >= 5:
     day += datetime.timedelta(days=1)
@@ -164,7 +166,6 @@ if day.month != now.month:
     while day.weekday() >= 5:
         day += datetime.timedelta(days=1)
 set_time(day)
-cache.pre_game_time = day
 # 女儿与教师都从空闲、没有生理需求开始：存档里带进来的半截行为（睡觉、吃饭、H）和饥饿会让开头几十分钟的取样全是噪声
 for cid in daughter_list + teacher_list:
     cd = cache.character_data[cid]
@@ -197,40 +198,18 @@ section("带护栏的行为循环")
 
 def run_one_round(minute: int) -> tuple:
     """
-    复刻一次「玩家等待 minute 分钟」后的完整行为循环
+    玩家等待 minute 分钟：内核推进到玩家下一次选行动
     Return arguments:
-    tuple -- (玩家阶段轮数, NPC 阶段轮数, 未收敛的角色列表)
+    tuple -- (玩家阶段停下时的时钟, 内核步数, 行动早已结束、还没选下一个行动的干员列表)
     """
-    instuct_judege.init_character_behavior_start_time(0, cache.game_time)
-    pl.state = constant.CharacterStatus.STATUS_WAIT
-    pl.behavior.behavior_id = constant.Behavior.WAIT
-    pl.behavior.duration = minute
-    game_time.sub_time_now(minute)
-    cache.over_behavior_character = set()
-    pl_round = 0
-    pl_start = pl.behavior.start_time
-    while 0 not in cache.over_behavior_character:
-        pl_round += 1
-        if pl_round > 30:
-            break
-        character_behavior.character_behavior(0, cache.game_time, pl_start)
-    id_list = cache.npc_id_got.copy()
-    id_list.discard(0)
-    npc_pass = 0
-    # 上限 60 而不是 skill 里的 25：真实存档里总有几个没事可做的干员在「空闲 1 分钟」里一分钟一分钟地挪，
-    #    45 分钟的一轮要挪 45 步才追平时钟，那不是卡死（清空课表的基线跑出来一模一样）；卡死是 60 步还追不上
-    while len(cache.over_behavior_character) <= len(id_list):
-        npc_pass += 1
-        if npc_pass > 60:
-            break
-        for cid in id_list:
-            if cid in cache.over_behavior_character:
-                continue
-            character_behavior.character_behavior(
-                cid, cache.game_time, pl_start
-            )
-    stuck = [cid for cid in id_list if cid not in cache.over_behavior_character]
-    return pl_round, npc_pass, stuck
+    steps = wait(minute)
+    game = core.state()
+    stuck = [
+        int(who)
+        for who, c in game.characters.items()
+        if who != "0" and c.action.start + c.action.duration < game.clock
+    ]
+    return game.clock, steps, stuck
 
 
 error_list = []
@@ -296,14 +275,14 @@ for index, minute in enumerate((40, 45, 45, 45, 45, 45)):
             for cid in stuck[:6]
         )
     print(
-        f"  第 {index + 1} 轮 {cache.game_time}: 玩家 {pl_round} 轮 / NPC {npc_pass} 轮 / 未收敛 {len(stuck)} / "
+        f"  第 {index + 1} 轮 {game_time.now()}: 内核 {npc_pass} 步 / 未收敛 {len(stuck)} / "
         f"女儿在课 {in_class}/{len(daughter_list)}"
         f" / 教师在对的教室授课 {right_room_count}/{teaching_count}{stuck_text}"
     )
 check("六轮循环没有抛异常", not error_list, error_list)
 check(
-    "每轮都收敛（玩家 ≤ 30 轮、NPC ≤ 60 轮、无卡死角色）",
-    all(r[0] <= 30 and r[1] <= 60 and r[2] == 0 for r in round_log),
+    "每轮都收敛（内核推进到玩家下一次选行动，没有行动早已结束、还没选下一个行动的干员）",
+    all(r[2] == 0 for r in round_log),
     round_log,
 )
 attend_gain = (
@@ -346,7 +325,7 @@ must_list = []
 old_room = {}
 for cid in daughter_list:
     course = schedule_handle.get_selected_course(
-        cid, cache.game_time.weekday(), 4
+        cid, game_time.now().weekday(), 4
     )
     if (
         course is not None
@@ -362,17 +341,17 @@ check("挑到了第 5 节在别的教室上课的女儿", len(must_list) > 0, mu
 for cid in daughter_list:
     clear_need(cid)
 sex_class_handle.set_temp_class(
-    cache.game_time.date().toordinal(), 5, sex_room, 70, must_attend=must_list
+    game_time.now().date().toordinal(), 5, sex_room, 70, must_attend=must_list
 )
 pre_round_log = []
 for minute in (
-    14 * 60 - (cache.game_time.hour * 60 + cache.game_time.minute),
+    14 * 60 - (game_time.now().hour * 60 + game_time.now().minute),
     45,
 ):
     pre_round_log.append(run_one_round(minute))
 arrived = [cid for cid in must_list if class_ai.judge_in_scene(cid, sex_room)]
 print(
-    f"  {cache.game_time}: 必修生在{sex_room} {len(arrived)}/{len(must_list)}，两轮 "
+    f"  {game_time.now()}: 必修生在{sex_room} {len(arrived)}/{len(must_list)}，两轮 "
     f"{[(r[0], r[1], len(r[2])) for r in pre_round_log]}"
 )
 for cid in must_list:
@@ -384,7 +363,7 @@ for cid in must_list:
     )
 check(
     "两轮都收敛（打断规则没有让 NPC 来回抖动）",
-    all(r[0] <= 30 and r[1] <= 60 and not r[2] for r in pre_round_log),
+    all(not r[2] for r in pre_round_log),
     [(r[0], r[1], len(r[2])) for r in pre_round_log],
 )
 # 改前她们在第 5 节听课到 14:45 才动身，开课那一刻全都还在原来的教室；改后 14:35 提前退场。
@@ -409,9 +388,7 @@ class_ai.get_skip_class_rate = _orig_rate
 section(
     "Plan 32 §3.7（L4）：学生截短排在实时结算之前，截掉的那一段只算一遍（真实存档、真实行为循环）"
 )
-# 读档会重建全部角色对象（save_handle.input_load_save），_bootstrap 里的 pl 已不是存档里的玩家 cache.character_data[0]，
-#    它的开始时刻不能当这一步的起点：这一段不经 run_one_round，自己把起点显式传给 NPC 阶段；
-#    NPC 阶段只让挑出的那名女儿参加（别的角色与本题无关），翘课概率钉成 0（她翘了课，跨天那一段的 flag 断言就随机了）
+# 翘课概率钉成 0（她翘了课，跨天那一段的 flag 断言就随机了）
 class_ai.get_skip_class_rate = lambda character_id: 0.0
 L4_RT_LOG: list[tuple[str, datetime.datetime, int, int]] = []
 """ 挑出的那名女儿的实时结算记录：(行为id, 行为开始时刻, 行为时长, 这次结算的分钟数) """
@@ -441,7 +418,7 @@ check(
 def l4_true_add_spy(
     character_id: int,
     now_time: datetime.datetime,
-    pl_start_time: datetime.datetime,
+    since: datetime.datetime,
 ) -> int:
     """
     实时结算取「这次结算多少分钟」的记录包装（realtime_settle.character_aotu_change_value 经模块全局名调用它），
@@ -449,11 +426,11 @@ def l4_true_add_spy(
     Keyword arguments:
     character_id -- 角色id
     now_time -- 当前时刻
-    pl_start_time -- 玩家这一步的开始时刻
+    since -- 从这一刻起结算
     Return arguments:
     int -- 原函数的返回值：这次结算的分钟数
     """
-    result = _orig_true_add(character_id, now_time, pl_start_time)
+    result = _orig_true_add(character_id, now_time, since)
     if character_id == l4_id:
         cd = cache.character_data[character_id]
         L4_RT_LOG.append(
@@ -469,15 +446,13 @@ def l4_true_add_spy(
 
 def run_l4_step(minute: int, class_period: int) -> tuple:
     """
-    让挑出的女儿从此刻起在宿舍过家家 minute 分钟，跑一步「玩家走 minute 分钟」的真实行为循环，记下她的实时结算
+    让挑出的女儿从此刻起在宿舍过家家 minute 分钟，玩家等待 minute 分钟（内核推进到玩家下一次选行动），记下她的实时结算
     Keyword arguments:
     minute -- 玩家这一步的分钟数，也是她这段过家家的时长
     class_period -- 今天给她排一节理论课的节次（那一格在全局课表上排成没有教师、到了教室自习），-1 为一节课都不排
     Return arguments:
-    tuple -- (NPC 阶段遍数, 是否收敛, 她的实时结算记录)
-    功能: 照 init_character_behavior 的顺序先玩家、后 NPC；玩家置为空闲，只推进时钟，这一步的起点显式传进去。
-          交互对象设回自己，否则 judge_character_status_time_over 按「交互对象不在场」把行为的结束改写为这一步的结束；
-          护栏 120 遍：没事可做时会一分钟一分钟地挪（README 夹具陷阱），60 分钟一步最多 60 遍
+    tuple -- (内核步数, 她是否跟上了时钟, 她的实时结算记录)
+    功能: 交回自己的交互对象，否则交互对象不在场会提前结束她的行为
     """
     cd = cache.character_data[l4_id]
     growth_data = growth_handle.get_child_growth(l4_id)
@@ -490,7 +465,7 @@ def run_l4_step(minute: int, class_period: int) -> tuple:
         schedule_handle.set_selected_course(
             l4_id, l4_week_day, class_period, E.COURSE_TYPE_THEORY, l4_room
         )
-    step_start = cache.game_time
+    step_start = game_time.now()
     move_to(l4_id, l4_home)
     cd.sp_flag.is_h = False
     cd.sp_flag.is_follow = 0
@@ -503,27 +478,16 @@ def run_l4_step(minute: int, class_period: int) -> tuple:
     cd.target_character_id = l4_id
     cd.action_info.wake_time = step_start
     clear_need(l4_id)
-    pl_data = cache.character_data[0]
-    pl_data.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-    pl_data.behavior.start_time = step_start
-    game_time.sub_time_now(minute)
-    cache.over_behavior_character = set()
+    world.set_clock(step_start)
     L4_RT_LOG.clear()
-    npc_pass = 0
     realtime_settle.get_true_add_time = l4_true_add_spy
     try:
-        character_behavior.character_behavior(0, cache.game_time, step_start)
-        while l4_id not in cache.over_behavior_character:
-            npc_pass += 1
-            if npc_pass > 120:
-                break
-            clear_need(l4_id)
-            character_behavior.character_behavior(
-                l4_id, cache.game_time, step_start
-            )
+        steps = wait(minute)
     finally:
         realtime_settle.get_true_add_time = _orig_true_add
-    return npc_pass, l4_id in cache.over_behavior_character, list(L4_RT_LOG)
+    game = core.state()
+    act = game.characters[str(l4_id)].action
+    return steps, act.start + act.duration >= game.clock, list(L4_RT_LOG)
 
 
 def l4_log_text(log: list) -> list:
@@ -549,7 +513,7 @@ if l4_id != -1:
         "",
     )
 check("L4 前提：有一间已开放的理论教室可排课", l4_room != "", l4_room)
-l4_week_day = cache.game_time.weekday()
+l4_week_day = game_time.now().weekday()
 """ 给她排课的星期：今天 """
 l4_home: list[str] = []
 """ 她过家家的地点：她宿舍的场景路径，宿舍不在场景表里时用教育区入口 """
@@ -561,7 +525,7 @@ if l4_id != -1 and l4_room:
         else list(SCENE_EDU_ENTRY)
     )
     set_time(
-        cache.game_time.replace(hour=14, minute=45, second=0, microsecond=0)
+        game_time.now().replace(hour=14, minute=45, second=0, microsecond=0)
     )
     pass0, over0, log0 = run_l4_step(60, -1)
     check(
@@ -575,13 +539,14 @@ if l4_id != -1 and l4_room:
     pass1, over1, log1 = run_l4_step(60, 7)
     check(
         (
-            "L4 16:15 有课、15:45 起过家家：在实时结算之前就截到 15:55（开课前 20 分钟），这一段只结算 10 "
-            "分钟（此前先按 60 分钟结算、再截短）"
+            "L4 16:15 有课、15:45 起过家家：每 5 分钟的 Tick 在 15:55（开课前 20 分钟）之后最多 4 分钟内截掉，"
+            "过家家这一段结算 10~14 分钟"
         ),
         bool(log1)
         and log1[0][0] == constant.Behavior.PLAY_HOUSE
-        and log1[0][2] == 10
-        and log1[0][3] == 10,
+        and 10
+        <= sum(one[3] for one in log1 if one[0] == constant.Behavior.PLAY_HOUSE)
+        <= 14,
         l4_log_text(log1),
     )
     check(
@@ -595,13 +560,13 @@ if l4_id != -1 and l4_room:
 class_ai.get_skip_class_rate = _orig_rate
 
 section("跨天结算")
-set_time(cache.game_time.replace(hour=0, minute=1))
+set_time(game_time.now().replace(hour=0, minute=1))
 # 跨天只清前一天及更早挂上的翘课 flag（Plan 32 §3.7 L5：一步跨过午夜时，新一天刚挂上的 flag 不能被清掉）。
 #    存档当天可能真有女儿翘过课，她的 flag 认的就是今天：统一改成前一天挂上的，下面的断言才不随存档而变
 for cid in daughter_list:
     if growth_handle.get_child_growth(cid).skip_class_flag:
         growth_handle.get_child_growth(cid).skip_class_day = (
-            cache.game_time.toordinal() - 1
+            game_time.now().toordinal() - 1
         )
 try:
     past_day_settle.update_new_day()

@@ -36,11 +36,10 @@
 | 编号 | 名称 | 说明 |
 |---|---|---|
 | BEHAV-01 | 角色字典键与角色自身cid一致 | cache.character_data的字典键与角色对象自身的cid一致 |
-| BEHAV-02 | 全局时钟健全性 | cache.game_time/cache.pre_game_time都是已初始化的朴素datetime且只保留到分钟 |
-| BEHAV-03 | 世界月份只能是四季月 | cache.game_time与cache.pre_game_time的月份都属于四季月{3,6,9,12} |
-| BEHAV-04 | 上一循环时间不得晚于当前时间 | cache.pre_game_time不晚于cache.game_time |
-| BEHAV-05 | 跨日刷新已经完成 | 若game_time与pre_game_time的日期不同，说明主循环的跨日刷新(比较日期并调用每日刷新，把 pre_game_time推到当前)钩子处仍未完成，今日事件记录/每日计数器等都没清 |
-| BEHAV-06 | 更新流程嵌套深度必须归零 | cache.game_update_flow_running恒为0 |
+| BEHAV-02 | 全局时钟健全性 | 内核全局数据里的 ticked（分钟）与 settled_day（游戏日）都是整数 |
+| BEHAV-03 | 世界月份只能是四季月 | game_time.now() 的月份属于四季月{3,6,9,12} |
+| BEHAV-04 | 上一循环时间不得晚于当前时间 | ticked 不晚于内核时钟，settled_day 不晚于时钟所在的游戏日 |
+| BEHAV-05 | 跨日刷新已经完成 | settled_day 等于时钟所在的游戏日：过 0 点的 NewDay 事件已跑完每日刷新 |
 | BEHAV-07 | 行为核心字段类型正确 | 每个被调度角色的behavior有字符串id、朴素datetime起时、非布尔整数分钟数 |
 | BEHAV-08 | 当前行为id必须已注册 | 每个被调度角色的behavior_id都能在game_config.config_behavior(键为en_name)中查到 |
 | BEHAV-09 | 运行中行为时长为非负整数 | 每个被调度角色的behavior.duration是非负整数 |

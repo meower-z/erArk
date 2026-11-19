@@ -18,6 +18,7 @@ from Script.Core import (
 from Script.Design import map_handle, handle_premise, talk_image
 from Script.UI.Moudle import draw
 from Script.Config import normal_config, game_config
+from Script.Design import game_time
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -786,14 +787,14 @@ def check_not_draw_talk(
         # 当前小时内已触发过的不触发
         if (
             character_data.action_info.move_talk_time.hour
-            == cache.game_time.hour
+            == game_time.now().hour
             and character_data.action_info.move_talk_time.year > 1
         ):
             # print(f"debug {character_data.name}在当前小时内已触发过一次移动文本")
             return True
         else:
             # 重置移动文本触发时间
-            character_data.action_info.move_talk_time = cache.game_time
+            character_data.action_info.move_talk_time = game_time.now()
             return False
 
     # NPC的等待

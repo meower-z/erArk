@@ -88,7 +88,7 @@ def init(main_flow: Callable[[], object]) -> None:
                 e.write(f"最近输入指令：{cache.input_cache}\n")
                 e.write(f"玩家最近状态：{instruct_cn_name_list}\n")
                 e.write(
-                    f"当前游戏内时间：{game_time.get_date_text(cache.game_time)}\n"
+                    f"当前游戏内时间：{game_time.get_date_text(game_time.now())}\n"
                 )
                 traceback.print_exc(file=e)
             # 向游戏内写入错误信息
@@ -99,7 +99,7 @@ def init(main_flow: Callable[[], object]) -> None:
             error_text += _("最近输入指令：{0}\n").format(cache.input_cache)
             error_text += _("玩家最近状态：{0}\n").format(instruct_cn_name_list)
             error_text += _("当前游戏内时间：{0}\n").format(
-                game_time.get_date_text(cache.game_time)
+                game_time.get_date_text(game_time.now())
             )
             error_text += traceback.format_exc()
             error_text += _(

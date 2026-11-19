@@ -1064,7 +1064,9 @@ class Edit_Group_Sex_Temple_Panel:
 
     def invite_npc(self, character_id: int) -> None:
         """邀请NPC"""
-        from Script.Design import instuct_judege, second_behavior
+        from Script.Design import second_behavior
+        from Script.Modules.gameplay_resolution import plan_queue
+        from Script.Modules.npc_action_choice import choice
 
         character_data = cache.character_data[character_id]
         if not handle_premise.handle_normal_24567(character_id):
@@ -1077,11 +1079,15 @@ class Edit_Group_Sex_Temple_Panel:
             info_draw_text = _(
                 "\n已取消对{0}的群交邀请，{0}不会来这里参加群交了\n"
             ).format(character_data.name)
-            # 结算等待
-            instuct_judege.init_character_behavior_start_time(
-                character_id, cache.game_time
+            # 她原地等待5分钟：排进她的计划队列，打断她当前的行动
+            plan_queue.plan_next(
+                character_id,
+                constant.Behavior.WAIT,
+                5,
+                state=constant.CharacterStatus.STATUS_WAIT,
+                fields={"sp_flag.wait_flag": False},
+                interrupt=True,
             )
-            constant.handle_state_machine_data[0](character_id)
         # 力竭/疲劳/重度困倦者无法被邀请加入群交
         elif handle_premise.handle_self_exhausted(character_id):
             info_draw_text = _("***{0}过于疲劳，无法参加群交***\n").format(
@@ -1097,11 +1103,26 @@ class Edit_Group_Sex_Temple_Panel:
             second_behavior.character_get_second_behavior(
                 character_id, "be_invited_join_group_sex"
             )
-            # 结算移动
-            instuct_judege.init_character_behavior_start_time(
-                character_id, cache.game_time
-            )
-            constant.handle_state_machine_data[503](character_id)
+            # 她前往玩家的位置：排进她的计划队列，打断她当前的行动；寻路失败时原地等待5分钟
+            to_dr = cache.character_data[0].position
+            minutes = choice.route_minutes(character_id, to_dr)
+            if minutes > 0:
+                plan_queue.plan_next(
+                    character_id,
+                    constant.Behavior.MOVE,
+                    minutes,
+                    fields={"action_info.follow_wait_time": 0},
+                    move={"to": list(to_dr), "show": True},
+                    interrupt=True,
+                )
+            else:
+                plan_queue.plan_next(
+                    character_id,
+                    constant.Behavior.WAIT,
+                    5,
+                    state=constant.CharacterStatus.STATUS_WAIT,
+                    interrupt=True,
+                )
         # 绘制信息
         info_draw = draw.WaitDraw()
         info_draw.text = info_draw_text

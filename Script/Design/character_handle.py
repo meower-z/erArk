@@ -277,7 +277,7 @@ def get_new_character(character_id: int, visitor_flag: bool = False) -> None:
         character_id,
         1,
         change_data=game_type.CharacterStatusChange(),
-        now_time=cache.game_time,
+        now_time=game_time.now(),
     )
 
     character_data = cache.character_data[character_id]
@@ -295,7 +295,7 @@ def get_new_character(character_id: int, visitor_flag: bool = False) -> None:
         ].effect
         stay_days = facility_effect
         end_time = game_time.get_sub_date(
-            day=stay_days, old_date=cache.game_time
+            day=stay_days, old_date=game_time.now()
         )
         cache.rhodes_island.visitor_info[character_id] = end_time
         # 赋予访客flag
@@ -323,11 +323,18 @@ def get_new_character(character_id: int, visitor_flag: bool = False) -> None:
     # 初始化新角色娱乐
     handle_npc_ai.get_chara_entertainment(character_id)
 
-    # 新角色原地等待30分钟
-    character_data.behavior.behavior_id = constant.Behavior.WAIT
-    character_data.behavior.duration = 30
-    character_data.behavior.start_time = cache.game_time
-    character_data.state = constant.CharacterStatus.STATUS_WAIT
+    # 新角色原地等待30分钟：她加入内核时以此刻结束的空闲开始，接着开始排上的等待
+    from Script.Modules.gameplay_resolution import plan_queue
+
+    character_data.behavior = game_type.Behavior()
+    character_data.behavior.start_time = game_time.now()
+    character_data.behavior.duration = 0
+    plan_queue.plan_next(
+        character_id,
+        constant.Behavior.WAIT,
+        30,
+        state=constant.CharacterStatus.STATUS_WAIT,
+    )
 
 
 def add_favorability(

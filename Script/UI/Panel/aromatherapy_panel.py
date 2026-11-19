@@ -10,8 +10,7 @@ from Script.Core import (
 )
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
-from Script.Design import update, instuct_judege
-from Script.UI.Panel import achievement_panel
+from Script.Modules.tk_ui import player_pick
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -291,29 +290,8 @@ class Aromatherapy_Panel:
                 flag = False
                 break
         if flag:
-            # 消耗资源
-            for need_text in need_list:
-                need_type = int(need_text.split("|")[0])
-                need_value = int(need_text.split("|")[1])
-                cache.rhodes_island.materials_resouce[need_type] -= need_value
-            # 减少调香次数
-            cache.rhodes_island.remaining_aromatherapy_sessions_today -= 1
-            # 对方施加调香效果
-            pl_character_data = cache.character_data[0]
-            target_character_data = cache.character_data[
-                pl_character_data.target_character_id
-            ]
-            target_character_data.sp_flag.aromatherapy = (
-                self.now_choice_recipe_id
-            )
-            # 行动时间
-            cost_time = 60
-            instuct_judege.init_character_behavior_start_time(
-                0, cache.game_time
-            )
-            pl_character_data.behavior.duration = cost_time
-            # 根据序号获得对应的状态
-            aromatherapy_dict = {
+            # 消耗资源、对方的调香效果与等待、成就在行动开始时结算
+            behavior_id, state = {
                 1: (
                     constant.Behavior.AROMATHERAPY_1,
                     constant.CharacterStatus.STATUS_AROMATHERAPY_1,
@@ -346,24 +324,11 @@ class Aromatherapy_Panel:
                     constant.Behavior.AROMATHERAPY_8,
                     constant.CharacterStatus.STATUS_AROMATHERAPY_8,
                 ),
-            }
-            if self.now_choice_recipe_id in aromatherapy_dict:
-                (
-                    pl_character_data.behavior.behavior_id,
-                    pl_character_data.state,
-                ) = aromatherapy_dict[self.now_choice_recipe_id]
-            # 对方停止并等待同样的时间
-            instuct_judege.init_character_behavior_start_time(
-                pl_character_data.target_character_id, cache.game_time
+            }[self.now_choice_recipe_id]
+            player_pick.choose(
+                behavior_id,
+                60,
+                kind="aromatherapy",
+                state=state,
+                args={"recipe_id": self.now_choice_recipe_id},
             )
-            target_character_data.target_character_id = (
-                pl_character_data.target_character_id
-            )
-            target_character_data.behavior.behavior_id = constant.Behavior.WAIT
-            target_character_data.behavior.duration = cost_time
-            target_character_data.state = constant.CharacterStatus.STATUS_WAIT
-            # 更新游戏时间
-            update.game_update_flow(cost_time)
-            # 结算成就
-            cache.achievement.aromatherapy_count += 1
-            achievement_panel.achievement_flow(_("调香"))

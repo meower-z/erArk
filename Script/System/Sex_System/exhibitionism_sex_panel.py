@@ -1,7 +1,7 @@
 """露出H模式的更新与选择面板"""
 
 from types import FunctionType
-from Script.System.Instruct_System import handle_instruct
+from Script.System.Sex_System.hidden_sex_panel import _settle_instruct
 from Script.UI.Moudle import draw
 from Script.Core import (
     cache_control,
@@ -80,6 +80,8 @@ class Select_Exhibitionism_Sex_Mode_Panel:
         """ 绘制的最大宽度 """
         self.sex_be_discovered_flag: bool = sex_be_discovered_flag
         """ 是否是从被发现面板跳转过来 """
+        self.invite_failed: bool = False
+        """ 是否邀请露出失败 """
         self.now_panel = _("选择露出H模式")
         """ 当前绘制的页面 """
 
@@ -171,28 +173,20 @@ class Select_Exhibitionism_Sex_Mode_Panel:
             }
             # 如果是从被发现面板跳转过来
             if self.sex_be_discovered_flag:
-                handle_instruct.chara_handle_instruct_common_settle(
+                _settle_instruct(
                     constant.Behavior.OTHER_SEX_BE_FOUND_TO_EXHIBITIONISM_SEX
                 )
             # 否则正常结算
             else:
-                handle_instruct.chara_handle_instruct_common_settle(
-                    constant.Behavior.ASK_EXHIBITIONISM_SEX
-                )
+                _settle_instruct(constant.Behavior.ASK_EXHIBITIONISM_SEX)
         else:
             now_draw = draw.WaitDraw()
             now_draw.text = _("\n邀请露出失败\n")
             now_draw.draw()
-            # 如果是从被发现面板跳转过来
-            if self.sex_be_discovered_flag:
-                character_data.behavior.behavior_id = (
-                    constant.Behavior.H_INTERRUPT
-                )
-            # 否则正常结算
-            else:
-                handle_instruct.chara_handle_instruct_common_settle(
-                    constant.Behavior.ASK_EXHIBITIONISM_SEX_FAIL
-                )
+            self.invite_failed = True
+            # 从被发现面板跳转过来时由被发现面板结束H，否则正常结算露出失败
+            if not self.sex_be_discovered_flag:
+                _settle_instruct(constant.Behavior.ASK_EXHIBITIONISM_SEX_FAIL)
 
     @staticmethod
     def _mode_available(mode_id: int) -> bool:

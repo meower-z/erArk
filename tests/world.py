@@ -27,10 +27,12 @@ import io
 import os
 import random
 import sys
+import tempfile
 import uuid
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from typing import Self
 
     from Script.Core import game_type
@@ -84,6 +86,7 @@ def seed_everything(seed: int = SEED) -> None:
     功能描述:
         游戏代码里的随机来自 random（大量）、numpy.random（value_handle.get_gauss_rand）与 uuid.uuid4（食物 uid）。
         PYTHONHASHSEED 只能在解释器启动前设定，由 tests/conftest.py 处理。
+        环境变量 ERARK_KEYED_RANDOM=1 时再换上按行为结算键控的随机流（tests/keyed_random.py）。
     """
     import numpy
 
@@ -91,6 +94,112 @@ def seed_everything(seed: int = SEED) -> None:
     numpy.random.seed(seed % (2**32))
     _uuid_rng.seed(seed)
     uuid.uuid4 = _seeded_uuid4
+    if os.environ.get("ERARK_KEYED_RANDOM") == "1":
+        from tests import keyed_random
+
+        keyed_random.install(seed, _uuid_rng)
+
+
+def set_clock(dt: datetime.datetime) -> None:
+    """
+    把内核时钟拨到 dt（经 core.reset_state，角色与全局数据不变）
+    Keyword arguments:
+    dt -- 新的游戏时间
+    Return arguments:
+    无
+    """
+    from dataclasses import replace
+
+    from Script.Design import game_time
+    from Script.Kernel import core
+
+    core.reset_state(replace(core.state(), clock=game_time.minutes(dt)))
+
+
+def reset_clock(dt: datetime.datetime) -> None:
+    """
+    内核换成一个没有角色、时钟在 dt 的 GameState（ticked、settled_day 都是此刻）
+    Keyword arguments:
+    dt -- 游戏时间
+    """
+    from types import MappingProxyType
+
+    from Script.Design import game_time
+    from Script.Kernel import core
+
+    m = game_time.minutes(dt)
+    core.reset_state(
+        core.GameState(
+            m,
+            MappingProxyType({}),
+            MappingProxyType({"ticked": m, "settled_day": game_time.day(m)}),
+        )
+    )
+
+
+def start_time() -> datetime.datetime:
+    """
+    复原后的游戏时间：START_TIME 规整到游戏日历上
+    Keyword arguments:
+    无
+    Return arguments:
+    GameTime -- 游戏时间
+    """
+    from Script.Design import game_time
+
+    return game_time.to_game_time(datetime.datetime(*START_TIME))
+
+
+_left: object = None
+""" 上一次 act 停下时的 GameState """
+
+
+def act(fn: Callable[[], None]) -> None:
+    """
+    玩家做一个行动：内核一步一步推进，到玩家选行动时跑一次 fn，再推进到玩家下一次选行动时停下
+    fn 经 player_pick.choose 定下的行动随即开始。fn 没有定下行动就返回时（例如打开又退出一个面板），act 立即停下。
+    内核状态不是上一次 act 停下时的那个（例如世界刚复原、读档或拨过时钟）时，先由 actions.state_from_cache 从缓存投影出
+    各角色的行动，时钟与全局数据不变。一个测试里可以连着调用
+    Keyword arguments:
+    fn -- 玩家选行动时跑的操作（无参数的函数），例如一条指令或一次寻路
+    Return arguments:
+    无
+    """
+    from dataclasses import replace
+
+    from Script.Kernel import core
+    from Script.Modules import load_order
+    from Script.Modules.gameplay_resolution import actions
+    from Script.Modules.tk_ui import player_pick
+
+    ran = False
+
+    def chooser() -> None:
+        """玩家的选择：第一次跑 fn，之后（或 fn 没有定下行动时）结束脚本"""
+        nonlocal ran
+        if not ran:
+            ran = True
+            fn()
+        raise player_pick.LeftGame
+
+    global _left
+    core.load(load_order.LOAD_ORDER)
+    game = core.state()
+    if game is not _left:
+        fresh = actions.state_from_cache(game.clock)
+        core.reset_state(replace(fresh, data=game.data) if game.data else fresh)
+    saved, player_pick.chooser = player_pick.chooser, chooser
+    try:
+        while True:
+            core.step()
+    except player_pick.LeftGame:
+        _left = core.state()
+    finally:
+        player_pick.chooser = saved
+
+
+play = act
+""" 同 act：玩家做 fn 里的操作，游戏推进到玩家下一次要选行动 """
 
 
 def _mute_ui() -> list:
@@ -134,6 +243,45 @@ def _mute_ui() -> list:
     )
     flow_handle.askfor_wait = lambda *args, **kwargs: None
     return wait_texts
+
+
+def _fresh_config() -> None:
+    """
+    重新读 config.ini（测试改过的取值不留到下一个测试），开局时间换成 START_TIME：开新游戏的时钟从 START_TIME 起
+    Keyword arguments:
+    无
+    Return arguments:
+    无
+    """
+    from Script.Config import normal_config
+
+    normal_config.init_normal_config()
+    config = normal_config.config_normal
+    config.year, config.month, config.day, config.hour, config.minute = (
+        START_TIME
+    )
+
+
+SETTINGS_DIR = tempfile.mkdtemp(prefix="erark-settings-")
+""" 测试进程放 settings.json 的临时目录，MinimalWorld 每次复原时 _fresh_settings 把全局设置文件的路径换到这里 """
+
+
+def _fresh_settings() -> None:
+    """
+    全局设置回到还没装过的样子：settings.json 换到 SETTINGS_DIR 下并删掉，settings 模块记下的设置清空
+    下一次 core.reset_state 时，settings 的输出钩子以默认值为底、盖上缓存此刻的系统设置，重新装好全局设置
+    Keyword arguments:
+    无
+    Return arguments:
+    无
+    """
+    from Script.Modules.save_load import settings
+
+    settings.path = os.path.join(SETTINGS_DIR, "settings.json")
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(settings.path)
+    settings._live = None
+    settings._saved = None
 
 
 class MinimalWorld:
@@ -205,27 +353,30 @@ class MinimalWorld:
             import auto_build_config  # noqa: F401
         from Script.Core import cache_control, game_type
 
-        if cache_control.cache is None:
+        # 类型标注里 cache 总是 Cache；运行时启动前为 None，按模块字典读出真实值
+        if vars(cache_control)["cache"] is None:
             cache_control.cache = game_type.Cache()
-        from Script.Config import normal_config
-
-        normal_config.init_normal_config()
+        _fresh_config()
         from Script.Config import character_config, game_config, map_config
 
         with contextlib.redirect_stdout(io.StringIO()):
             game_config.init()
             character_config.init_character_tem_data()
             map_config.init_map_data()
-        from Script.Design import attr_calculation, basement, game_time
+        from Script.Design import attr_calculation, basement
 
         self.cache = cache_control.cache
         """ 游戏缓存（对象一直不变，复原时原地改写） """
         cache = self.cache
         cache.npc_tem_data = dict(character_config.character_tem_list)
-        cache.game_time = cache.pre_game_time = game_time.to_game_time(
-            datetime.datetime(*START_TIME)
-        )
+        reset_clock(start_time())
         cache.all_system_setting = attr_calculation.get_system_setting_zero()
+        cache.difficulty_setting = (
+            attr_calculation.get_difficulty_setting_zero()
+        )
+        cache.birth_type_setting = (
+            attr_calculation.get_birth_type_setting_zero()
+        )
         cache.rhodes_island = basement.get_base_zero()
         basement.get_base_updata()
         for clothing_type, cloth_ids in STANDARD_OUTFIT.items():
@@ -289,6 +440,13 @@ class MinimalWorld:
             scene.character_list = set(baseline["character_list"])
             scene.scene_tag = list(baseline["scene_tag"])
         self.wait_texts.clear()
+        _fresh_config()
+        _fresh_settings()
+        from Script.Kernel import core
+        from Script.Modules import load_order
+
+        core.load(load_order.LOAD_ORDER)
+        reset_clock(start_time())
         seed_everything()
 
     def scene(self, path: list) -> game_type.Scene:
@@ -350,7 +508,7 @@ class MinimalWorld:
             不符合时把她从 cache.character_data 里删掉，再抛 FixtureError。这时她还没登记进 npc_id_got 和场景。
         """
         from Script.Core import game_type
-        from Script.Design import attr_calculation, map_handle
+        from Script.Design import attr_calculation, game_time, map_handle
 
         cache = self.cache
         if cid in cache.character_data:
@@ -394,7 +552,7 @@ class MinimalWorld:
         cd.dormitory = map_handle.get_map_system_path_str_for_list(
             DEFAULT_SCENE
         )
-        cd.behavior.start_time = cache.game_time
+        cd.behavior.start_time = game_time.now()
         cd.position = position
         cache.character_data[cid] = cd
         try:
@@ -652,8 +810,12 @@ class FullWorld(MinimalWorld):
         import Script.System.Medical_System  # noqa: F401
         import Script.UI.Flow  # noqa: F401
         from Script.Design import character_handle
+        from Script.Kernel import core
+        from Script.Modules import load_order
 
         character_handle.init_character_tem()
+        _fresh_settings()
+        core.load(load_order.LOAD_ORDER)
 
     def reset(self) -> None:
         """

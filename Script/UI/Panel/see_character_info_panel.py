@@ -14,6 +14,7 @@ from Script.Core import (
     py_cmd,
     flow_handle,
     constant,
+    num,
 )
 from Script.Config import game_config, normal_config
 from Script.Design import (
@@ -427,8 +428,7 @@ class SeeCharacterStatusPanel:
         status_text = game_config.config_character_state[status_id].name
         status_value = 0
         if status_id in character_data.status_data:
-            status_value = character_data.status_data[status_id]
-        status_value = round(status_value)
+            status_value = num.shown(character_data.status_data[status_id])
         status_level = attr_calculation.get_status_level(status_value)
 
         # 计算当前等级的最大值

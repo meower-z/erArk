@@ -12,6 +12,7 @@ from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation, handle_ability
 import random
+from Script.Design import game_time
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -770,7 +771,7 @@ class Nation_Diplomacy_Panel:
                     old_diplomat_id,
                     1,
                     change_data=game_type.CharacterStatusChange(),
-                    now_time=cache.game_time,
+                    now_time=game_time.now(),
                 )
             # 根据是本地还是外派，赋予对应的二段行为结算
             if cache.rhodes_island.current_location[0] == country_id:
@@ -814,7 +815,7 @@ class Nation_Diplomacy_Panel:
                     character_id,
                     1,
                     change_data=game_type.CharacterStatusChange(),
-                    now_time=cache.game_time,
+                    now_time=game_time.now(),
                 )
                 # 输出外派提示
                 info_text = _(

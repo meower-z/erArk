@@ -1,7 +1,7 @@
 """显示角色身体污秽状况的面板，以及精液量与插入对象的查询"""
 
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text, rich_text
+from Script.Core import cache_control, game_type, get_text, rich_text, num
 from Script.Design import map_handle, clothing, attr_calculation
 from Script.Design import handle_premise, handle_talent
 from Script.UI.Moudle import draw
@@ -399,7 +399,7 @@ class SeeCharacterBodyPanel:
             # 如果有奶水，则显示奶水量
             if target_character_data.pregnancy.milk:
                 lactation_text = _(" 乳汁量为{0}ml").format(
-                    target_character_data.pregnancy.milk
+                    num.shown(target_character_data.pregnancy.milk)
                 )
                 all_part_text_list.append(lactation_text)
 

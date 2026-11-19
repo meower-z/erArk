@@ -53,7 +53,7 @@ class GameTimeInfoPanel:
         #     now_draw.draw_list.append(solar_period_draw)
         #     now_width += len(solar_period_draw)
         # 时段
-        sun_time = game_time.get_sun_time(cache.game_time)
+        sun_time = game_time.get_sun_time(game_time.now())
         sun_time_config = game_config.config_sun_time[sun_time]
         sun_time_draw = draw.NormalDraw()
         sun_time_draw.text = f"{sun_time_config.name}"
@@ -66,7 +66,7 @@ class GameTimeInfoPanel:
         now_width += len(sun_time_draw)
         # 月相
         if sun_time <= 2 or sun_time >= 10:
-            moon_phase = game_time.get_moon_phase(cache.game_time)
+            moon_phase = game_time.get_moon_phase(game_time.now())
             moon_phase_config = game_config.config_moon[moon_phase]
             moon_phase_draw = draw.NormalDraw()
             moon_phase_draw.text = f"{moon_phase_config.name} "

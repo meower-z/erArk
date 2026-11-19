@@ -205,12 +205,14 @@ class LanguageRun:
 
     def npc_active_h(self) -> list[Any]:
         """「交给对方」前后的游戏时间与之后的玩家行为"""
-        time_before = str(self.cache.game_time)
+        from Script.Design import game_time
+
+        time_before = str(game_time.now())
         self.instruct(self.constant.Instruct.CHANGE_TOP_AND_BOTTOM)
         behavior = self.player.behavior.behavior_id
         return [
             time_before,
-            str(self.cache.game_time),
+            str(game_time.now()),
             behavior,
             self.player.state,
         ]

@@ -19,6 +19,8 @@ class JuelEventEffectTest(SlowTestCase):
 
     def test_event_adds_juel(self) -> None:
         """结算星熊的子事件：她的宝珠0多1，状态12多10，经验0增加"""
+        from Script.Design import game_time
+
         from Script.Core import game_type
         from Script.Design import settle_behavior
 
@@ -37,7 +39,7 @@ class JuelEventEffectTest(SlowTestCase):
         ]
         change_data = game_type.CharacterStatusChange()
         settle_behavior.handle_event_data(
-            EVENT_ID, 0, 1, change_data, cache.game_time
+            EVENT_ID, 0, 1, change_data, game_time.now()
         )
         after = [
             npc.juel.get(0, 0),

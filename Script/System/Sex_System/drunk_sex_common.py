@@ -1,7 +1,8 @@
 """醉酒：醉酒等级、醉酒值的增减、是否接受酒类食物与品酒"""
 
+from fractions import Fraction
 from types import FunctionType
-from Script.Core import cache_control, game_type, get_text
+from Script.Core import cache_control, game_type, get_text, num
 from Script.Config import game_config
 from Script.Design import instuct_judege, handle_premise
 
@@ -21,16 +22,16 @@ def get_drunk_level(character_id: int) -> tuple[int, str]:
     str -- 醉酒等级名,清醒-烂醉
     """
     character_data = cache.character_data[character_id]
-    value: float = character_data.drunk_point
+    value: num.Num = character_data.drunk_point
     # 如果角色千杯不醉，则醉酒值*0.1
     if handle_premise.handle_self_have_never_drunk(character_id):
-        value *= 0.1
+        value *= Fraction(1, 10)
     # 如果角色酒量好，则醉酒值*0.8
     elif handle_premise.handle_self_have_good_alcohol_tolerance(character_id):
-        value *= 0.8
+        value *= Fraction(4, 5)
     # 如果角色酒量差，则醉酒值*1.5
     elif handle_premise.handle_self_have_bad_alcohol_tolerance(character_id):
-        value *= 1.5
+        value *= Fraction(3, 2)
     # 如果角色一杯就倒，则醉酒值*5
     elif handle_premise.handle_self_have_easily_drunk(character_id):
         value *= 5
@@ -104,37 +105,32 @@ def reduce_drunk_point(character_id: int, time: int) -> None:
     # 醉酒值小于等于0时不再减少
     if character_data.drunk_point <= 0:
         return
-    # 时间小于5分钟时不减少醉酒值
-    if time < 5:
-        return
-    # 5分钟及以上但小于10分钟时按10分钟计算，其余按每10分钟1点四舍五入计算
-    if time < 10:
-        base_reduce = 1
-    else:
-        base_reduce = round(time / 10)
-    coefficient = 1.0
+    # 每分钟减少 1/10
+    base_reduce = Fraction(time, 10)
+    coefficient: num.Num = 1
     # 根据当前醉酒程度获取修正系数：醉酒×0.8，烂醉×0.5，其他状态不影响
     drunk_cid, __ = get_drunk_level(character_id)
     if drunk_cid == 2:
-        coefficient *= 0.8
+        coefficient *= Fraction(4, 5)
     elif drunk_cid == 3:
-        coefficient *= 0.5
+        coefficient *= Fraction(1, 2)
     # 根据当前空腹程度获取修正系数：饥饿×1.2，饱腹×0.8，其他状态不影响
     if handle_premise.handle_hunger_ge_80(character_id):
-        coefficient *= 1.2
+        coefficient *= Fraction(6, 5)
     elif handle_premise.handle_hunger_le_20(character_id):
-        coefficient *= 0.8
+        coefficient *= Fraction(4, 5)
     # 如果当前正在睡觉，则醉酒值减少速度加快，按1.5倍计算
     if handle_premise.handle_action_sleep(character_id):
-        coefficient *= 1.5
-    # 计算最终减少值（保留浮点，最终对醉酒值取整），并确保醉酒值不低于0
-    reduce_value = base_reduce * coefficient
+        coefficient *= Fraction(3, 2)
+    # 计算最终减少值，并确保醉酒值不低于0
+    reduce_value: num.Num = base_reduce * coefficient
     character_data.drunk_point = max(
-        0, round(character_data.drunk_point - reduce_value)
+        0, character_data.drunk_point - reduce_value
     )
-    # 减少的醉酒值同比转化为尿意值
+    # 减少的醉酒值按 3/2 转化为尿意值
+    add_urinate: num.Num = reduce_value * Fraction(3, 2)
     character_data.urinate_point = min(
-        300, character_data.urinate_point + round(reduce_value * 1.5)
+        300, character_data.urinate_point + add_urinate
     )
 
 

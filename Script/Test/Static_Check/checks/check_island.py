@@ -26,6 +26,7 @@ from Script.System.Dormitory_System import common as dorm_common
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
+from Script.Design import game_time
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -1186,7 +1187,7 @@ def check_island_22_party_day_of_week() -> list[CheckFailure]:
                 "一周派对排期键值合法且同一娱乐不占两天",
                 (
                     f"重复出现的娱乐id与对应天={dup_days}，"
-                    f"当前weekday={getattr(cache.game_time, 'weekday', lambda: '?')()}"
+                    f"当前weekday={getattr(game_time.now(), 'weekday', lambda: '?')()}"
                 ),
                 [],
             )

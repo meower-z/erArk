@@ -20,6 +20,7 @@ from _bootstrap import (
 from typing import TYPE_CHECKING
 import ast
 import inspect
+from Script.Design import game_time
 
 if TYPE_CHECKING:
     from types import ModuleType
@@ -305,11 +306,11 @@ check(
 schedule_template_handle.apply_template(203, 0)
 open_all_classroom()
 schedule_handle.set_selected_course(
-    201, cache.game_time.weekday(), 0, T.COURSE_TYPE_THEORY, _("理论教室一")
+    201, game_time.now().weekday(), 0, T.COURSE_TYPE_THEORY, _("理论教室一")
 )
 check(
     "上午第一节排了课",
-    schedule_handle.get_selected_course(201, cache.game_time.weekday(), 0)
+    schedule_handle.get_selected_course(201, game_time.now().weekday(), 0)
     is not None,
 )
 

@@ -3,6 +3,7 @@
 """
 
 from types import FunctionType
+from typing import NoReturn
 from Script.UI.Moudle import draw
 from Script.Core import (
     cache_control,
@@ -11,7 +12,8 @@ from Script.Core import (
     constant,
 )
 from Script.Config import game_config, normal_config
-from Script.Design import update, handle_talent, attr_calculation
+from Script.Design import attr_calculation
+from Script.Modules.tk_ui import player_pick
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -303,23 +305,16 @@ class Character_talent_show_Text:
             self.return_list.append(yes_draw.return_text)
             line_feed.draw()
 
-    def level_up(self, talent_id: int) -> None:
+    def level_up(self, talent_id: int) -> NoReturn:
         """
-        提示选择成功，以手动获得类型结算该素质
-        再让玩家等待1分钟并推进游戏时间以输出结果
+        定下获得该素质：1 分钟的等待，开始时由 panel_starters 的 talent_up 提示选择成功并以手动获得类型结算该素质
         Keyword arguments:
         talent_id -- 素质id
-        Return arguments:
-        None
         """
-        now_draw_succed = draw.WaitDraw()
-        now_draw_succed.text = _("选择成功\n")
-        now_draw_succed.draw()
-        handle_talent.gain_talent(self.character_id, 1, talent_id)
-
-        # 等待1分钟以输出结果
-        character_data: game_type.Character = cache.character_data[0]
-        character_data.behavior.behavior_id = constant.Behavior.WAIT
-        character_data.state = constant.CharacterStatus.STATUS_WAIT
-        character_data.behavior.duration = 1
-        update.game_update_flow(1)
+        player_pick.choose(
+            constant.Behavior.WAIT,
+            1,
+            kind="talent_up",
+            state=constant.CharacterStatus.STATUS_WAIT,
+            args={"character_id": self.character_id, "talent_id": talent_id},
+        )

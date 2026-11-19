@@ -250,7 +250,7 @@ def settle_absent(character_id: int, by_skip: bool = False) -> bool:
     """
     growth_data = growth_handle.get_child_growth(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
-    now_time = character_data.behavior.start_time or cache.game_time
+    now_time = character_data.behavior.start_time or game_time.now()
     period = game_time.get_class_period(character_id)
     # 两个调用方都只在节次内派发，这里兜一道：节次外记下的标记会占掉当天真正的缺课
     if period == -1:
@@ -286,7 +286,7 @@ def judge_must_attend_sex_class(
 
     if now_time is None:
         character_data: game_type.Character = cache.character_data[character_id]
-        now_time = character_data.behavior.start_time or cache.game_time
+        now_time = character_data.behavior.start_time or game_time.now()
     period = game_time.get_class_period_by_time(now_time)
     if period == -1:
         return False
@@ -380,7 +380,7 @@ def get_pending_sex_classroom(character_id: int) -> str:
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.work.work_type != education_constant.STUDENT_WORK_TYPE:
         return ""
-    now_time = character_data.behavior.start_time or cache.game_time
+    now_time = character_data.behavior.start_time or game_time.now()
     return get_next_sex_class(character_id, now_time)[1]
 
 
@@ -404,7 +404,7 @@ def get_course_stage(character_id: int) -> int:
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.work.work_type != education_constant.STUDENT_WORK_TYPE:
         return education_constant.COURSE_STAGE_NONE
-    now_time = character_data.behavior.start_time or cache.game_time
+    now_time = character_data.behavior.start_time or game_time.now()
     # 预到岗优先于本节的一切（原 find_character_target 里排在上课判定之前）
     pending_class, pending_classroom = get_next_sex_class(
         character_id, now_time
@@ -541,7 +541,7 @@ def judge_attend_running_sex_class_here(character_id: int) -> bool:
     classroom = running_class.get("classroom", "")
     if not classroom or not judge_in_scene(character_id, classroom):
         return False
-    now_time = character_data.behavior.start_time or cache.game_time
+    now_time = character_data.behavior.start_time or game_time.now()
     # 待赴、已被玩家提前开讲的那一节（Plan 26 §3.5）
     pending_class, pending_classroom = get_next_sex_class(
         character_id, now_time
@@ -601,7 +601,7 @@ def roll_skip_class(
         return False
     character_data: game_type.Character = cache.character_data[character_id]
     if now_time is None:
-        now_time = character_data.behavior.start_time or cache.game_time
+        now_time = character_data.behavior.start_time or game_time.now()
     # 前提路径上只读 child_growth，不走会惰性创建养成数据的 get_child_growth
     growth_data = character_data.child_growth
     if (
@@ -640,7 +640,7 @@ def judge_skip_class_today(
     if growth_data is None or not growth_data.skip_class_flag:
         return False
     if now_time is None:
-        now_time = character_data.behavior.start_time or cache.game_time
+        now_time = character_data.behavior.start_time or game_time.now()
     return growth_data.skip_class_day == now_time.toordinal()
 
 

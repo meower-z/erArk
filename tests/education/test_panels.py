@@ -42,6 +42,7 @@ from Script.System.Education_System import student_select
 from Script.Core import text_handle
 from Script.System.Pregnancy_System import pregnancy_constant
 import inspect
+from Script.Design import game_time
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -492,7 +493,7 @@ check(
 )
 g.skip_class_flag = True
 # 翘课 flag 认日期（Plan 31 §3.6）：只在挂上的那一天显示「今天正在翘课」，这里同 549 一样把日期一并写上
-g.skip_class_day = cache.game_time.toordinal()
+g.skip_class_day = game_time.now().toordinal()
 g.show_off_ability = {45: 2}
 g.report_card_flag = True
 answers[:] = [lambda o: o == "女儿01"]
@@ -562,10 +563,10 @@ flow_handle.askfor_all = fake_askfor
 section("Plan 26 §3.6：被今天的临时实操课顶替的格子")
 clear_schedules()
 set_time(period_time(0))
-_weekday = cache.game_time.weekday()
+_weekday = game_time.now().weekday()
 schedule_handle.set_class_cell(ROOM_P, _weekday, 4, 43, 101)
 sex_class_handle.set_temp_class(
-    cache.game_time.date().toordinal(), 4, ROOM_P, 70
+    game_time.now().date().toordinal(), 4, ROOM_P, 70
 )
 panel = class_schedule_panel.Class_Schedule_Panel(W)
 panel.now_room = ROOM_P
@@ -895,7 +896,7 @@ schedule_handle.clear_selected_course(204, 2, 3)
 section("Plan 31 §3.6：养成总览的翘课标记只认挂上 flag 的那一天")
 _g201 = growth_handle.get_child_growth(201)
 _g201.skip_class_flag = True
-_g201.skip_class_day = cache.game_time.toordinal()
+_g201.skip_class_day = game_time.now().toordinal()
 drawn_text.clear()
 growth_panel.Growth_Panel(W)._draw_flag(201)
 check(
@@ -903,7 +904,7 @@ check(
     any("今天正在翘课" in t for t in drawn_text),
     drawn_text,
 )
-_g201.skip_class_day = cache.game_time.toordinal() - 1
+_g201.skip_class_day = game_time.now().toordinal() - 1
 drawn_text.clear()
 growth_panel.Growth_Panel(W)._draw_flag(201)
 check(
@@ -1011,7 +1012,7 @@ for _cid in (201, 202, 301):
 section("Plan 31 L6：课表格子上的教师已离岗 / 不在岛上时名字后加标注、灰字")
 clear_schedules()
 set_time(period_time(0))
-_l6_day = cache.game_time.weekday()
+_l6_day = game_time.now().weekday()
 schedule_handle.set_class_cell(ROOM1, _l6_day, 0, 45, 103)
 schedule_handle.set_class_cell(ROOM1, _l6_day, 1, 45, 104)
 schedule_handle.set_class_cell(ROOM1, _l6_day, 2, 45, 105)
@@ -1105,7 +1106,7 @@ check(
     [one for one in _button_log if ROOM1 in one[0]],
 )
 sex_class_handle.set_temp_class(
-    cache.game_time.date().toordinal(), 4, ROOM_P, 70
+    game_time.now().date().toordinal(), 4, ROOM_P, 70
 )
 schedule_handle.set_class_cell(ROOM_P, _l6_day, 4, 43, 103)
 flow_handle.askfor_all = scripted_askfor
@@ -1154,7 +1155,7 @@ section(
 )
 clear_schedules()
 set_time(period_time(0))
-_l21_day = cache.game_time.weekday()
+_l21_day = game_time.now().weekday()
 schedule_handle.set_class_cell(ROOM1, _l21_day, 0, 45, 103)
 teacher_b.sp_flag.imprisonment = True
 check(
@@ -1318,7 +1319,7 @@ section(
 )
 clear_schedules()
 set_time(period_time(0))
-_st_day = cache.game_time.weekday()
+_st_day = game_time.now().weekday()
 _st = cache.character_data[201]
 _st_growth = growth_handle.get_child_growth(201)
 _st_growth.selected_course = {}
@@ -1405,13 +1406,13 @@ check(
     character_info_head.get_now_class_tip(201),
 )
 _st.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
-_st_growth.last_absent_period = [cache.game_time.toordinal(), 0]
+_st_growth.last_absent_period = [game_time.now().toordinal(), 0]
 check(
     "L14 这一节已记过缺课、休完回到地点：不亮 <课>",
     character_info_head.get_now_class_tip(201) is None,
     character_info_head.get_now_class_tip(201),
 )
-_st_growth.last_absent_period = [cache.game_time.toordinal() - 1, 0]
+_st_growth.last_absent_period = [game_time.now().toordinal() - 1, 0]
 check(
     "L14 前一天同一节的缺课记录不算：照亮",
     character_info_head.get_now_class_tip(201) is not None,
@@ -1430,7 +1431,7 @@ schedule_handle.set_selected_course(
 )
 move_to(201, SCENE_DORM)
 _st_growth.skip_class_flag = True
-_st_growth.skip_class_day = cache.game_time.toordinal()
+_st_growth.skip_class_day = game_time.now().toordinal()
 _tip = character_info_head.get_now_class_tip(201)
 check(
     "L1 对照：第 1 节有课、今天已翘课：亮 <翘>「本该上」",
@@ -1462,7 +1463,7 @@ check(
 )
 _st.sp_flag.is_h = False
 sex_class_handle.set_temp_class(
-    cache.game_time.date().toordinal(), 0, ROOM_P, 74, must_attend=[201]
+    game_time.now().date().toordinal(), 0, ROOM_P, 74, must_attend=[201]
 )
 move_to(201, classroom_path(ROOM_P))
 _tip = character_info_head.get_now_class_tip(201)

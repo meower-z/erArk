@@ -88,8 +88,10 @@ from Script.Core import (
 )  # noqa: F401,E402
 from Script.UI.Moudle import draw  # noqa: E402
 
+from Script.Modules.save_load import kernel_state
+
 character_handle.init_character_tem()
-game_time.init_time()
+kernel_state.reset_clock(kernel_state.first_clock())
 cache = cache_control.cache
 
 # ==== 2. 全局前置（不做这两件事会在结算里 KeyError） ====
@@ -132,7 +134,7 @@ def record_draw(self: draw.WaitDraw, *a: object, **k: object) -> None:
 
 setattr(draw.WaitDraw, "draw", record_draw)
 
-print("初始化完成，游戏时间 =", cache.game_time)
+print("初始化完成，游戏时间 =", game_time.now())
 
 
 # ==== 4. 角色 fixture ====
@@ -226,7 +228,7 @@ target = new_chara(101, "样例干员")
 pl.target_character_id = 101
 change = game_type.CharacterStatusChange()
 constant.settle_behavior_effect_data[62](
-    0, 1, change, cache.game_time
+    0, 1, change, game_time.now()
 )  # 交互对象增加少量反感
 check(
     "结算器确实改动了数值",

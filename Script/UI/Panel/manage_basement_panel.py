@@ -7,6 +7,7 @@ from Script.Core import (
     get_text,
     flow_handle,
     constant,
+    num,
 )
 from Script.Design import basement, attr_calculation, handle_premise, game_time
 from Script.UI.Moudle import draw
@@ -739,7 +740,7 @@ class Manage_Basement_Panel:
 
                     def get_sort_val(
                         nid: int, key: str, columns=cat_columns
-                    ) -> float:
+                    ) -> num.Num | float:
                         if key == _("无"):
                             return 0
                         c = cache.character_data[nid]
@@ -854,13 +855,13 @@ class Manage_Basement_Panel:
                             hp_draw.set(
                                 "HitPointbar",
                                 int(character_data.hit_point_max),
-                                int(character_data.hit_point),
+                                num.shown(character_data.hit_point),
                                 "体力",
                             )
                             hp_draw.draw()
 
                             hp_str_len = len(
-                                f"({int(character_data.hit_point)}/{int(character_data.hit_point_max)})"
+                                f"({num.shown(character_data.hit_point)}/{int(character_data.hit_point_max)})"
                             )
                             pad_len = max(0, 12 - hp_str_len)
 
@@ -875,13 +876,13 @@ class Manage_Basement_Panel:
                             mp_draw.set(
                                 "ManaPointbar",
                                 int(character_data.mana_point_max),
-                                int(character_data.mana_point),
+                                num.shown(character_data.mana_point),
                                 "气力",
                             )
                             mp_draw.draw()
 
                             mp_str_len = len(
-                                f"({int(character_data.mana_point)}/{int(character_data.mana_point_max)})"
+                                f"({num.shown(character_data.mana_point)}/{int(character_data.mana_point_max)})"
                             )
                             mp_pad_len = max(0, 12 - mp_str_len)
 
@@ -1367,7 +1368,7 @@ class Manage_Basement_Panel:
                         commision_id
                     ][1]
                     last_days = game_time.count_day_for_datetime(
-                        cache.game_time, return_time
+                        game_time.now(), return_time
                     )
                     if last_days <= 0:
                         last_days = _("不足一天")

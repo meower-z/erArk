@@ -3,8 +3,8 @@
 慢速层测试的基类
 ================
 每个测试由 pytest --forked 放进自己的新进程。setUp 在其中完整启动游戏（FullWorld）并开新游戏，
-测试再用玩家指令（instruct）与走路（walk）推进：有行动时长的指令与走路都经游戏主循环 update.game_update_flow 结算时间；
-打开面板的指令只换面板，由 show_panel 显示。
+测试再用玩家指令（instruct）与走路（walk）推进：每次都是 world.act 里玩家的一次选择，
+游戏随之推进到玩家下一次要选行动；打开面板的指令只换面板，由 show_panel 显示。
 """
 
 import signal
@@ -111,14 +111,23 @@ class SlowTestCase(unittest.TestCase):
         from Script.Core import constant
         from Script.Design import handle_premise
         from Script.System.Instruct_System import handle_instruct
+        from tests import world
 
-        failed = [
-            premise
-            for premise in constant.instruct_premise_data.get(instruct_id, ())
-            if not handle_premise.handle_premise(premise, 0)
-        ]
-        self.assertEqual(failed, [], f"指令 {instruct_id} 此刻不会出现在主界面")
-        handle_instruct.handle_instruct(instruct_id)
+        def pick() -> None:
+            """玩家这一次选行动：确认指令出现在主界面，再点下它"""
+            failed = [
+                premise
+                for premise in constant.instruct_premise_data.get(
+                    instruct_id, ()
+                )
+                if not handle_premise.handle_premise(premise, 0)
+            ]
+            self.assertEqual(
+                failed, [], f"指令 {instruct_id} 此刻不会出现在主界面"
+            )
+            handle_instruct.handle_instruct(instruct_id)
+
+        world.act(pick)
 
     def show_panel(self) -> None:
         """
@@ -130,8 +139,13 @@ class SlowTestCase(unittest.TestCase):
         无
         """
         from Script.Core import constant
+        from tests import world
 
-        constant.panel_data[self.cache.now_panel_id]()
+        def pick() -> None:
+            """玩家这一次选行动：显示此刻的面板"""
+            constant.panel_data[self.cache.now_panel_id]()
+
+        world.act(pick)
 
     def wait_until(self, done: "Callable[[], bool]", minutes: int) -> bool:
         """
@@ -152,13 +166,14 @@ class SlowTestCase(unittest.TestCase):
 
     def walk(self, path: list) -> None:
         """
-        像玩家在地图上点选目的地一样让博士走过去，每一段路都经主循环结算
+        像玩家在地图上点选目的地一样让博士走过去：一次选择，余下各段由计划队列接着走完
         Keyword arguments:
         path -- 目标场景路径列表
         Return arguments:
         无
         """
         from Script.Design import character_move
+        from tests import world
 
         self.world.scene(path)
-        character_move.own_charcter_move(list(path))
+        world.act(lambda: character_move.own_charcter_move(list(path)))

@@ -39,9 +39,11 @@ class FootClothFillsLockerSemenTest(SlowTestCase):
         Return arguments:
         无
         """
+        from Script.Design import game_time
+
         from Script.Core import game_type
 
-        effect(cid, 5, game_type.CharacterStatusChange(), self.cache.game_time)
+        effect(cid, 5, game_type.CharacterStatusChange(), game_time.now())
 
     def foot_cloth_to_locker(
         self,

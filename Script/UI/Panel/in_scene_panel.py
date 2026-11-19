@@ -19,7 +19,12 @@ from Script.Core import (
     constant,
     py_cmd,
 )
-from Script.Design import attr_text, map_handle, handle_premise
+from Script.Design import (
+    attr_text,
+    character_behavior,
+    map_handle,
+    handle_premise,
+)
 from Script.Config import game_config
 import logging, time
 
@@ -83,16 +88,7 @@ class InScenePanel:
             character_handle_panel.null_button_text = (
                 pl_character_data.target_character_id
             )
-            character_set = scene_data.character_list.copy()
-            character_set.remove(0)  # 移除玩家自己
-            if cache.is_collection:
-                character_list = [
-                    i
-                    for i in character_set
-                    if i in pl_character_data.collection_character
-                ]
-            else:
-                character_list = list(character_set)
+            character_list = character_behavior.scene_characters(scene_data)
             character_handle_panel.text_list = character_list
 
             # if pl_character_data.dead:
@@ -132,26 +128,6 @@ class InScenePanel:
             character_handle_panel.null_button_text = (
                 pl_character_data.target_character_id
             )
-
-            # 交互对象的处理
-            # 如果场景中有NPC角色，玩家的交互对象不是自己，也不在场景中，且则将交互对象设为场景中的第一个角色
-            if (
-                len(character_list)
-                and pl_character_data.target_character_id != 0
-                and pl_character_data.target_character_id not in character_list
-            ):
-                pl_character_data.target_character_id = character_list[0]
-            # 如果场景中有角色，交互对象不在场景中，刚移动到一个新地点，则将交互对象设为场景中的第一个角色
-            elif (
-                len(character_list)
-                and pl_character_data.target_character_id not in character_list
-                and len(cache.pl_pre_behavior_instruce)
-                and cache.pl_pre_behavior_instruce[-1] == constant.Behavior.MOVE
-            ):
-                pl_character_data.target_character_id = character_list[0]
-            # 如果场景中没有NPC角色，则将交互对象设为自己
-            elif not len(character_list):
-                pl_character_data.target_character_id = 0
 
             # 开始绘制主界面标题栏
             ask_list = []

@@ -300,6 +300,31 @@ def settle_discovered(character_id: int) -> None:
         now_panel.draw()
 
 
+def _settle_instruct(behavior_id: str, then: str = "") -> None:
+    """
+    玩家的隐奸指令结算：玩家选择时当场定下行动，结算途中（从被发现面板跳转过来）排进计划队列
+    Keyword arguments:
+    behavior_id -- 行为id
+    then -- 接着做的指令的行为id（交互对象一起等待），为空时没有；玩家选择时在行动开始时排进计划队列
+    """
+    from Script.Design import update
+
+    if update.in_resolution():
+        handle_instruct.plan_instruct_common_settle(behavior_id)
+        if then:
+            handle_instruct.plan_instruct_common_settle(
+                then, force_taget_wait=True
+            )
+    elif then:
+        handle_instruct.chara_handle_instruct_common_settle(
+            behavior_id,
+            start=handle_instruct.THEN,
+            args={handle_instruct.THEN: then},
+        )
+    else:
+        handle_instruct.chara_handle_instruct_common_settle(behavior_id)
+
+
 class See_Hidden_Sex_InfoPanel:
     """
     显示隐奸栏数据面板对象
@@ -417,6 +442,8 @@ class Select_Hidden_Sex_Mode_Panel:
         """ 绘制的最大宽度 """
         self.sex_be_discovered_flag: bool = sex_be_discovered_flag
         """ 是否是从被发现面板跳转过来 """
+        self.invite_failed: bool = False
+        """ 是否邀请隐奸失败 """
         self.now_panel = _("选择隐奸模式")
         """ 当前绘制的页面 """
         self.draw_list: list[draw.NormalDraw] = []
@@ -551,17 +578,8 @@ class Select_Hidden_Sex_Mode_Panel:
             if mode_id == 5:
                 character_data.sp_flag.is_h = True
                 character_data.h_state.current_sex_position = -1
-            # 如果是从被发现面板跳转过来
-            if self.sex_be_discovered_flag:
-                handle_instruct.chara_handle_instruct_common_settle(
-                    constant.Behavior.OTHER_SEX_BE_FOUND_TO_HIDDEN_SEX
-                )
-            # 否则正常结算隐奸
-            else:
-                handle_instruct.chara_handle_instruct_common_settle(
-                    constant.Behavior.ASK_HIDDEN_SEX
-                )
-            # 携带模式下以对面抱位直接插入所选部位（实行值判定已在邀请隐奸时通过，此处不再判定）
+            # 携带模式下邀请之后以对面抱位直接插入所选部位（实行值判定已在邀请隐奸时通过，此处不再判定）
+            carry_behavior_id = ""
             if mode_id == 5:
                 sex_position_data = game_config.config_sex_position_data[9]
                 if carry_sex_type == 1:
@@ -574,23 +592,25 @@ class Select_Hidden_Sex_Mode_Panel:
                     carry_behavior_id = (
                         sex_position_data.urethral_sex_behavior_id
                     )
-                handle_instruct.chara_handle_instruct_common_settle(
-                    carry_behavior_id, force_taget_wait=True
+            # 如果是从被发现面板跳转过来
+            if self.sex_be_discovered_flag:
+                _settle_instruct(
+                    constant.Behavior.OTHER_SEX_BE_FOUND_TO_HIDDEN_SEX,
+                    carry_behavior_id,
+                )
+            # 否则正常结算隐奸
+            else:
+                _settle_instruct(
+                    constant.Behavior.ASK_HIDDEN_SEX, carry_behavior_id
                 )
         else:
             now_draw = draw.WaitDraw()
             now_draw.text = _("\n邀请隐奸失败\n")
             now_draw.draw()
-            # 如果是从被发现面板跳转过来
-            if self.sex_be_discovered_flag:
-                character_data.behavior.behavior_id = (
-                    constant.Behavior.H_INTERRUPT
-                )
-            # 否则正常结算隐奸失败
-            else:
-                handle_instruct.chara_handle_instruct_common_settle(
-                    constant.Behavior.ASK_HIDDEN_SEX_FAIL
-                )
+            self.invite_failed = True
+            # 从被发现面板跳转过来时由被发现面板结束H，否则正常结算隐奸失败
+            if not self.sex_be_discovered_flag:
+                _settle_instruct(constant.Behavior.ASK_HIDDEN_SEX_FAIL)
 
     def select_carry_insert_part(self) -> int:
         """

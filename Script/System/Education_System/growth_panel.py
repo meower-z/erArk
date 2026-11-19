@@ -175,8 +175,8 @@ class Growth_Panel:
             else:
                 # 预计日期从今天往后按游戏日历数
                 predict_time = max(
-                    game_time.get_predict_date(left_day, cache.game_time),
-                    cache.game_time,
+                    game_time.get_predict_date(left_day, game_time.now()),
+                    game_time.now(),
                 )
                 text += _("｜距成长为{0}还有 {1}，预计在 {2}年{3}\n").format(
                     next_stage_name,
@@ -499,7 +499,7 @@ class Growth_Panel:
                     "、".join(name_list)
                 )
             )
-        if class_ai.judge_skip_class_today(character_id, cache.game_time):
+        if class_ai.judge_skip_class_today(character_id, game_time.now()):
             text_list.append(_("今天正在翘课"))
         # 队列是全岛共用的，这里只数这个孩子的那几条（Plan 23）
         # 不提示的话玩家不知道要去博士办公室处理公务，事件会一直躺在队列里

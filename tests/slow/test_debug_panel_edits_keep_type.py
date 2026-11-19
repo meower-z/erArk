@@ -66,9 +66,11 @@ class DebugPanelEditKeepTypeTest(SlowTestCase):
 
     def test_party_day(self) -> None:
         """[007] 改一天的派对娱乐，当天刷新娱乐时干员的娱乐都是它"""
+        from Script.Design import game_time
+
         from Script.Design import handle_npc_ai
 
-        week_day = self.cache.game_time.weekday()
+        week_day = game_time.now().weekday()
         before = dict(self.ri.party_day_of_week)
         self.use_panel(
             ("press", "[全局变量]"),

@@ -340,11 +340,8 @@ class SeeMapPanel:
             and scene_path[-1] == "0"
         ):
             flag_map_open = True
-        character_move.own_charcter_move(scene_path)
-        # 如果是从大地图移动到另一个区块，则不关闭地图面板
-        if flag_map_open:
-            cache.now_panel_id = constant.Panel.SEE_MAP
-            self.down_map()
+        # 从大地图移动到另一个区块时，每一段移动开始后仍打开地图面板，面板按玩家的新位置显示下级地图
+        character_move.own_charcter_move(scene_path, open_map=flag_map_open)
 
 
 class MoveMenuPanel:

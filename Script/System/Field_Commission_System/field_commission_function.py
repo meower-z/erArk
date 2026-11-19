@@ -36,7 +36,7 @@ def format_commission_reputation_for_display(value: float) -> str:
 
 def update_field_commission() -> None:
     """
-    刷新外勤委托的相关数据
+    刷新外勤委托的相关数据；由 time_hooks 的 Tick 每 5 分钟调用一次
     """
     judge_field_commission_finish()
     find_nation_field_commission()
@@ -115,7 +115,7 @@ def get_commission_demand_and_reward(
                     fugitive_id,
                     1,
                     change_data=game_type.CharacterStatusChange(),
-                    now_time=cache.game_time,
+                    now_time=game_time.now(),
                 )
 
     return_list = (satify_flag, type_text, full_text)
@@ -483,7 +483,7 @@ def judge_field_commission_finish() -> None:
             1
         ]
         if (
-            game_time.judge_date_big_or_small(cache.game_time, end_time)
+            game_time.judge_date_big_or_small(game_time.now(), end_time)
             or cache.debug_mode
         ):
             # 获取派遣人员列表
@@ -521,7 +521,7 @@ def judge_field_commission_finish() -> None:
                     character_id,
                     1,
                     change_data=game_type.CharacterStatusChange(),
-                    now_time=cache.game_time,
+                    now_time=game_time.now(),
                 )
                 draw_text += f"{cache.character_data[character_id].name} "
             # 载具损坏与回收

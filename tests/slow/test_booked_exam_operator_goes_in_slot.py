@@ -24,15 +24,15 @@ class BookedExamOperatorGoesInSlotTest(HealthCheckTestCase):
 
     def test_goes_to_exam_room_in_her_slot(self) -> None:
         """可露希尔时段前不去体检科，进入时段后先去体检科"""
+        from Script.Design import game_time
+
         operator_id = self.book_daily_exam("可露希尔")
         operator = self.cache.character_data[operator_id]
         picks = self.record_picks(operator_id)
         self.sleep_through_midnight()
         slot = operator.action_info.health_check_today
         self.assertIn(slot, SLOT_START, "午夜抽签给她排了上午或下午体检")
-        slot_time = self.cache.game_time.replace(
-            hour=SLOT_START[slot], minute=0
-        )
+        slot_time = game_time.now().replace(hour=SLOT_START[slot], minute=0)
         self.wait_until_hour(slot_time.hour)
         self.assertNotIn(
             MOVE_TO_EXAM,

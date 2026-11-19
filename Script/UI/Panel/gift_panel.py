@@ -353,10 +353,14 @@ class Gift_Panel:
         if not self.check_gift_available(gift_id):
             return
 
+        # 礼物id与选中的卵、婴儿在行动开始时写进玩家的行为数据
+        fields: dict[str, object] = {"behavior.gift_id": gift_id}
         # 孵化加速药需要先选择目标卵（玩家取消则不送出）
         if gift_id == 36:
-            if not self.select_target_egg():
+            egg_id = self.select_target_egg()
+            if egg_id is None:
                 return
+            fields["behavior.gift_egg_id"] = egg_id
         # 成长加速药送给母亲时需要先选择目标婴儿（玩家取消则不送出）；送给幼女/学员女儿时对本人生效，无需选择
         if gift_id == 39:
             from Script.System.Pregnancy_System import pregnancy_handle
@@ -364,36 +368,30 @@ class Gift_Panel:
             if not pregnancy_handle.is_growth_drug_self_target(
                 character_data.target_character_id
             ):
-                if not self.select_target_baby():
+                child_id = self.select_target_baby()
+                if child_id is None:
                     return
+                fields["behavior.gift_child_id"] = child_id
 
-        # 将礼物id赋予角色行为数据
-        character_data.behavior.gift_id = gift_id
-        # 药剂礼物需要轻度猥亵条件
+        # 药剂礼物需要轻度猥亵条件，阴茎倒模需要严重猥亵条件
+        judge = ""
         if gift_data.type == 11:
-            handle_instruct.chara_handle_instruct_common_settle(
-                constant.Behavior.GIVE_GIFT,
-                judge=_("初级骚扰"),
-                force_taget_wait=True,
-            )
-        # 阴茎倒模需要严重猥亵条件
+            judge = _("初级骚扰")
         elif gift_data.type == 13:
-            handle_instruct.chara_handle_instruct_common_settle(
-                constant.Behavior.GIVE_GIFT,
-                judge=_("严重骚扰"),
-                force_taget_wait=True,
-            )
-        else:
-            handle_instruct.chara_handle_instruct_common_settle(
-                constant.Behavior.GIVE_GIFT, force_taget_wait=True
-            )
+            judge = _("严重骚扰")
+        handle_instruct.chara_handle_instruct_common_settle(
+            constant.Behavior.GIVE_GIFT,
+            judge=judge,
+            force_taget_wait=True,
+            fields=fields,
+        )
 
-    def select_target_egg(self) -> bool:
+    def select_target_egg(self) -> int | None:
         """
         孵化加速药的选卵交互：绘制交互对象全部可加速的孵化中卵供玩家选择\n
         仅一枚可加速卵时跳过选择直接选中\n
         Returns:\n
-        bool -- 是否完成了选择（False为玩家取消或无可选卵）
+        int | None -- 选中的卵编号（None为玩家取消或无可选卵）
         """
         from Script.System.Pregnancy_System import egg_handle, pregnancy_panel
 
@@ -405,13 +403,10 @@ class Gift_Panel:
             target_character_data.cid
         )
         if not len(accelerable_eggs):
-            return False
+            return None
         # 仅一枚可加速卵时跳过选择直接选中
         if len(accelerable_eggs) == 1:
-            character_data.behavior.gift_egg_id = list(accelerable_eggs.keys())[
-                0
-            ]
-            return True
+            return next(iter(accelerable_eggs))
         # 多枚卵时绘制选择列表
         title_draw = draw.TitleLineDraw(_("选择要加速孵化的卵"), self.width)
         while 1:
@@ -432,13 +427,7 @@ class Gift_Panel:
                     game_time.get_duration_text(acc_day),
                     pregnancy_panel.get_date_text(born_time),
                 )
-                button_draw = draw.LeftButton(
-                    egg_text,
-                    str(egg_id),
-                    self.width,
-                    cmd_func=self.select_egg_id,
-                    args=(egg_id,),
-                )
+                button_draw = draw.LeftButton(egg_text, str(egg_id), self.width)
                 return_list.append(button_draw.return_text)
                 button_draw.draw()
                 line_feed.draw()
@@ -451,24 +440,15 @@ class Gift_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                return False
-            return True
+                return None
+            return int(yrn)
 
-    def select_egg_id(self, egg_id: int) -> None:
-        """
-        选卵按钮回调：把选中的卵编号写入玩家行为数据\n
-        Keyword arguments:\n
-        egg_id -- 选中的卵编号
-        """
-        character_data: game_type.Character = cache.character_data[0]
-        character_data.behavior.gift_egg_id = egg_id
-
-    def select_target_baby(self) -> bool:
+    def select_target_baby(self) -> int | None:
         """
         成长加速药的选婴儿交互：绘制交互对象名下全部可加速的婴儿供玩家选择\n
         仅一名可加速婴儿时跳过选择直接选中\n
         Returns:\n
-        bool -- 是否完成了选择（False为玩家取消或无可选婴儿）
+        int | None -- 选中的婴儿角色id（None为玩家取消或无可选婴儿）
         """
         from Script.System.Pregnancy_System import (
             pregnancy_handle,
@@ -483,11 +463,10 @@ class Gift_Panel:
             target_character_data.cid
         )
         if not len(accelerable_babies):
-            return False
+            return None
         # 仅一名可加速婴儿时跳过选择直接选中
         if len(accelerable_babies) == 1:
-            character_data.behavior.gift_child_id = accelerable_babies[0]
-            return True
+            return accelerable_babies[0]
         # 多名婴儿时绘制选择列表
         title_draw = draw.TitleLineDraw(_("选择要加速成长的婴儿"), self.width)
         while 1:
@@ -518,11 +497,7 @@ class Gift_Panel:
                     pregnancy_panel.get_date_text(grow_time),
                 )
                 button_draw = draw.LeftButton(
-                    baby_text,
-                    str(child_id),
-                    self.width,
-                    cmd_func=self.select_child_id,
-                    args=(child_id,),
+                    baby_text, str(child_id), self.width
                 )
                 return_list.append(button_draw.return_text)
                 button_draw.draw()
@@ -536,17 +511,8 @@ class Gift_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                return False
-            return True
-
-    def select_child_id(self, child_id: int) -> None:
-        """
-        选婴儿按钮回调：把选中的婴儿角色id写入玩家行为数据\n
-        Keyword arguments:\n
-        child_id -- 选中的婴儿角色id
-        """
-        character_data: game_type.Character = cache.character_data[0]
-        character_data.behavior.gift_child_id = child_id
+                return None
+            return int(yrn)
 
     def check_gift_available(self, gift_id: int) -> bool:
         """
@@ -571,7 +537,7 @@ class Gift_Panel:
         elif gift_data.type == 3:
             last_gift_time = target_character_data.action_info.last_gift_time
             days_diff = game_time.count_day_for_datetime(
-                last_gift_time, cache.game_time
+                last_gift_time, game_time.now()
             )
             # 如果和今天是同一天，则不能重复赠送
             if days_diff <= 0:

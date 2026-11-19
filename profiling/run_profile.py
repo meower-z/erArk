@@ -67,13 +67,13 @@ def parse_args() -> argparse.Namespace:
         "--ticks",
         type=int,
         default=240,
-        help="要模拟的逻辑循环次数 (调用 update.game_update_flow 次数)",
+        help="要模拟的逻辑循环次数（玩家等待的次数，每次等待期间内核一步一步推进）",
     )
     ap.add_argument(
         "--minutes-per-tick",
         type=int,
         default=1,
-        help="每次循环推进的游戏分钟数 add_time",
+        help="每次循环推进的游戏分钟数（玩家每次等待的分钟数）",
     )
     ap.add_argument(
         "--warmup", type=int, default=0, help="预热 tick (不计入 profile)"
@@ -243,7 +243,6 @@ def new_game_minimal_init() -> None:
         character,
         attr_calculation,
         basement,
-        game_time,
     )
     from Script.System.Cooking_System import cooking
     from Script.Config import game_config
@@ -255,7 +254,8 @@ def new_game_minimal_init() -> None:
     # 1. 创建玩家角色
     cache.character_data[0] = game_type.Character()
     # 初始化玩家基础属性
-    character_handle.init_character_list()  # 载入 NPC 模板 / 基础角色结构
+    character_handle.init_character_tem()  # 从全局配置池拷贝 NPC 模板
+    character_handle.init_character_list()  # 按模板建出各角色
     character.init_attr(0)
 
     # 2. 基础基地与设定
@@ -267,6 +267,8 @@ def new_game_minimal_init() -> None:
     for cid in game_config.config_world_setting:
         cache.world_setting[cid] = 0
     cache.all_system_setting = attr_calculation.get_system_setting_zero()
+    cache.difficulty_setting = attr_calculation.get_difficulty_setting_zero()
+    cache.birth_type_setting = attr_calculation.get_birth_type_setting_zero()
     cache.rhodes_island.materials_resouce[1] = 20000
     cache.rhodes_island.materials_resouce[11] = 20
     cache.rhodes_island.physical_examination_setting = (
@@ -313,26 +315,27 @@ def new_game_minimal_init() -> None:
     except Exception as e:
         log(f"cooking 初始化忽略异常: {e}")
 
-    # 6. 游戏时间
-    game_time.init_time()
-
-    # 7. 初始化字体 / 颜色风格 (避免 rich_text / main_frame 缺依赖)
+    # 6. 初始化字体 / 颜色风格 (避免 rich_text / main_frame 缺依赖)
     try:
         io_init.init_style()
     except Exception as e:
         log(f"io_init.init_style 忽略异常: {e}")
 
-    # 8. 初始行为（玩家与 NPC）:
+    # 7. 初始行为（玩家与 NPC）：开始时间没设过，内核从开局时刻开始各角色的行动
     from Script.Core import constant as cst
 
     for cid in cache.npc_id_got:
         ch = cache.character_data.get(cid)
         if not ch:
             continue
-        # 保留 start_time 默认 sentinel，行为循环会自动补
         ch.behavior.behavior_id = cst.Behavior.SHARE_BLANKLY
-        ch.behavior.duration = 5  # 给个最小持续时间，避免 0
-        # start_time 留为 (1,1,1) 由 instuct_judege.init_character_behavior_start_time 修正
+        ch.behavior.duration = 5
+
+    # 8. 内核换成由缓存在开局时刻投影出的 GameState，同新游戏的最后一步
+    from Script.Kernel import core
+    from Script.Modules.save_load import kernel_state
+
+    kernel_state.new_game(core.state().clock)
 
     log("新建游戏最小初始化完成.")
 
@@ -389,11 +392,21 @@ def init_game_environment(
 
     map_config.init_map_data()
 
-    from Script.Design import start_flow, character_handle, game_time
+    from Script.Design import start_flow, character_handle
     import Script.Settle
     import Script.StateMachine
     from Script.Core import game_init
     import Script.UI.Flow
+
+    # 内核加载各模块：新游戏与读档的 Reset 步骤是 save_load.reset 的钩子，须在第一次换 GameState 之前加载
+    from Script.Kernel import core
+    from Script.Modules import load_order
+    from Script.Modules.save_load import kernel_state
+
+    core.load(load_order.LOAD_ORDER)
+
+    # 内核时钟拨到开局时刻：建角色与读档时读到的游戏时间都从这里来
+    kernel_state.reset_clock(kernel_state.first_clock())
 
     # 尝试存档逻辑
     loaded = False
@@ -448,17 +461,28 @@ def load_premise_profiler(
 # ------------------------- Tick 驱动 -------------------------
 def run_ticks(ticks: int, minutes_per_tick: int) -> None:
     """
-    调用 update.game_update_flow 推进游戏 ticks 次，并按进度打日志
+    推进游戏 ticks 次，并按进度打日志：每次内核一步一步推进 minutes_per_tick 分钟，
+    其间玩家每次选行动都选等待 minutes_per_tick 分钟
     Keyword arguments:
     ticks -- 推进次数，不大于 0 时直接返回
     minutes_per_tick -- 每次推进的分钟数
     Return arguments:
     None
     """
-    from Script.Design import update
+    from Script.Core import constant
+    from Script.Kernel import core
+    from Script.Modules import load_order
+    from Script.Modules.tk_ui import player_pick
 
     if ticks <= 0:
         return
+
+    def wait() -> None:
+        """玩家的选择：等待 minutes_per_tick 分钟"""
+        player_pick.choose(constant.Behavior.WAIT, minutes_per_tick)
+
+    core.load(load_order.LOAD_ORDER)
+    player_pick.chooser = wait
     progress_interval = 1 if ticks <= 20 else max(1, ticks // 10)
     for i in range(ticks):
         tick_index = i + 1
@@ -469,7 +493,9 @@ def run_ticks(ticks: int, minutes_per_tick: int) -> None:
             or tick_index % progress_interval == 0
         ):
             log(f"Tick {tick_index}/{ticks} (+{minutes_per_tick}min)")
-        update.game_update_flow(minutes_per_tick)
+        end = core.state().clock + minutes_per_tick
+        while core.state().clock < end:
+            core.step()
 
 
 # ------------------------- Profile 执行 -------------------------

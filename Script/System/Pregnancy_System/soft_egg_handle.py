@@ -23,6 +23,7 @@ from Script.Design import (
 )
 from Script.UI.Moudle import draw
 from Script.System.Pregnancy_System import pregnancy_constant, egg_handle
+from Script.Design import game_time
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -155,7 +156,7 @@ def lay_soft_egg(character_id: int) -> int:
     egg_id = pl_collection.next_soft_egg_id
     pl_collection.soft_eggs[egg_id] = {
         "mother_id": character_id,
-        "lay_time": cache.game_time,
+        "lay_time": game_time.now(),
         "position": list(character_data.position),
         "semen_count": float(transfer_count),
     }
@@ -298,7 +299,7 @@ def get_soft_egg_remain_minute(egg_data: dict) -> int:
     int -- 剩余分钟
     """
     passed_minute = (
-        cache.game_time - egg_data["lay_time"]
+        game_time.now() - egg_data["lay_time"]
     ).total_seconds() / 60
     remain_minute = (
         pregnancy_constant.SOFT_EGG_FERTILIZATION_DELAY_HOUR * 60
@@ -359,7 +360,7 @@ def check_soft_eggs_fertilization() -> None:
                 new_egg_id = egg_handle.add_egg(mother_id, True, soft=True)
                 new_egg_data = mother_character_data.pregnancy.eggs[new_egg_id]
                 new_egg_data["identified"] = True
-                new_egg_data["identify_time"] = cache.game_time
+                new_egg_data["identify_time"] = game_time.now()
                 # 孵化计时自体外排出起算，与带壳卵生以排出时间为基准一致
                 new_egg_data["lay_time"] = egg_data["lay_time"]
             draw_text += _(

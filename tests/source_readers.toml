@@ -481,3 +481,43 @@ file = "tests/registration.py"
 symbol = "module_problems"
 pattern = "__file__"
 why = "用测试模块的 __file__ 算出相对路径写进提示，不读源码内容"
+
+[[reader]]
+id = "R33"
+file = "tests/fast/test_npc_choice_reads_only.py"
+symbol = "character_fields"
+mechanism = "ast"
+reads = "game_type.py 里 Character 类的字段名"
+used_for = "测试：判断选行动的代码是否给角色字段赋值"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R34"
+file = "tests/fast/test_npc_choice_reads_only.py"
+symbol = "scanned"
+mechanism = "ast"
+reads = "选行动的代码（npc_action_choice 的文件、状态机、选目标、宿舍管理员的状态机）里每个顶层函数的赋值与调用"
+used_for = "测试：选行动的代码不写游戏状态"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R35"
+file = "tests/fast/test_npc_choice_reads_only.py"
+symbol = "NpcChoiceReadsOnlyTest.test_scope_files_exist"
+mechanism = "ast"
+reads = "选行动的代码所在文件的顶层函数名"
+used_for = "测试：跳过的函数名都还在文件里"
+when = "test"
+capture = "suite"
+
+[[reader]]
+id = "R36"
+file = "tests/fast/test_stat_display.py"
+symbol = "scanned"
+mechanism = "ast"
+reads = "Script 下全部 .py 里 f-string 字段、str() 参数、字符串 % 的右边与 .format() 参数中读到的连续数值（体力、气力、理智等 Num 字段）"
+used_for = "测试：连续数值变成文字前经过 shown()"
+when = "test"
+capture = "suite"

@@ -10,6 +10,7 @@ from Script.Core import (
     flow_handle,
     constant,
     py_cmd,
+    num,
 )
 from Script.Design import (
     attr_calculation,
@@ -23,6 +24,7 @@ from Script.Config import game_config, normal_config
 import random
 
 from Script.UI.Panel import achievement_panel
+from Script.Design import game_time
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -222,19 +224,22 @@ def common_ejaculation() -> tuple[str, int]:
             extra_text += _("（浓厚精液+）")
 
         # 射精量不高于剩余精液值
-        semen_count = min(
+        semen_ml = min(
             int(semen_count),
-            character_data.semen_point + character_data.tem_extra_semen_point,
+            num.whole(
+                character_data.semen_point
+                + character_data.tem_extra_semen_point
+            ),
         )
         # 组合射精文本
-        semen_text += str(semen_count) + _("ml精液") + extra_text
+        semen_text += str(semen_ml) + _("ml精液") + extra_text
 
         character_data.h_state.orgasm_level[3] += 1  # 更新射精次数
         character_data.h_state.just_shoot = 1  # 更新刚射精状态
         character_data.dirty.penis_dirty_dict["semen"] = (
             True  # 更新阴茎精液污浊状态
         )
-        cache.rhodes_island.total_semen_count += semen_count  # 更新总精液量
+        cache.rhodes_island.total_semen_count += semen_ml  # 更新总精液量
         character_data.h_state.endure_not_shot_count = 0  # 清零忍住不射次数
 
         # # 更新精液值，目前弃用
@@ -242,16 +247,16 @@ def common_ejaculation() -> tuple[str, int]:
         #     semen_count = character_data.semen_point
 
         # 优先扣除临时额外精液值，不够的再扣除基础精液值
-        if character_data.tem_extra_semen_point > semen_count:
-            character_data.tem_extra_semen_point -= semen_count
+        if character_data.tem_extra_semen_point > semen_ml:
+            character_data.tem_extra_semen_point -= semen_ml
         else:
             character_data.semen_point -= (
-                semen_count - character_data.tem_extra_semen_point
+                semen_ml - character_data.tem_extra_semen_point
             )
             character_data.tem_extra_semen_point = 0
         character_data.semen_point = max(0, character_data.semen_point)
 
-        return semen_text, semen_count
+        return semen_text, semen_ml
 
 
 def update_semen_dirty(
@@ -308,7 +313,7 @@ def update_semen_dirty(
         and part_cid not in character_data.first_record.first_shoot_body_dict
     ):
         character_data.first_record.first_shoot_body_dict[part_cid] = [
-            cache.game_time,
+            game_time.now(),
             list(character_data.position),
         ]
     # 该部位增加当前精液量

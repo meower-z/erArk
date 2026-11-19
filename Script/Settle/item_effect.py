@@ -10,7 +10,7 @@ from Script.Design import (
     attr_calculation,
     handle_premise,
 )
-from Script.Core import cache_control, constant_effect, game_type, get_text
+from Script.Core import cache_control, constant_effect, game_type, get_text, num
 from Script.Config import normal_config
 from Script.UI.Moudle import draw
 
@@ -1749,7 +1749,7 @@ def handle_target_enema_end(
         now_semen_data = character_data.dirty.body_semen[8]
         semen_num = now_semen_data[1] * 0.9
         if semen_num > 1:
-            now_semen_data[1] -= semen_num
+            now_semen_data[1] -= num.exact(semen_num)
             now_semen_data[2] = attr_calculation.get_semen_now_level(
                 now_semen_data[1], 8, 0
             )

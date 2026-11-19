@@ -14,6 +14,7 @@ from Script.Core import (
     get_text,
     text_handle,
     rich_text,
+    num,
 )
 from Script.Design import (
     attr_text,
@@ -154,22 +155,17 @@ def handle_settle_behavior(
                     confinement_and_training.get_behavior_id_of_sex_assistant()
                 )
                 if state_id != "0":
-                    warden_character_id = cache.rhodes_island.current_warden_id
-                    warden_character_data = cache.character_data[
-                        warden_character_id
-                    ]
-                    warden_character_data.behavior.behavior_id = state_id
-                    warden_character_data.state = state_id
-                    warden_character_data.behavior.duration = (
-                        now_character_data.behavior.duration
+                    from Script.Modules.gameplay_resolution import plan_queue
+
+                    # 监狱长接着做助手行为：排进她的计划队列并打断她当前的行动
+                    plan_queue.plan_next(
+                        cache.rhodes_island.current_warden_id,
+                        state_id,
+                        now_character_data.behavior.duration,
+                        target=now_character_data.target_character_id,
+                        state=state_id,
+                        interrupt=True,
                     )
-                    warden_character_data.behavior.start_time = (
-                        now_character_data.behavior.start_time
-                    )
-                    warden_character_data.target_character_id = (
-                        now_character_data.target_character_id
-                    )
-                    warden_character_data.h_state.sex_assist = True
         # 正常情况下则直接执行结算
         else:
             # 进行指令相关数据的结算
@@ -286,55 +282,62 @@ def handle_settle_behavior(
                 )
 
         # 体力/气力/射精/理智的结算输出
-        if change_data.hit_point and round(change_data.hit_point, 2) != 0:
+        seen = shown_change(now_character_data.hit_point, change_data.hit_point)
+        if seen:
             now_text += (
                 "\n  <hp_point>"
                 + _("体力")
                 + "　" * 4
-                + text_handle.number_to_symbol_string(
-                    int(change_data.hit_point)
-                )
+                + text_handle.number_to_symbol_string(seen)
                 + "</hp_point>"
             )
-        if change_data.mana_point and round(change_data.mana_point, 2) != 0:
+        seen = shown_change(
+            now_character_data.mana_point, change_data.mana_point
+        )
+        if seen:
             now_text += (
                 "\n  <mp_point>"
                 + _("气力")
                 + "　" * 4
-                + text_handle.number_to_symbol_string(
-                    int(change_data.mana_point)
-                )
+                + text_handle.number_to_symbol_string(seen)
                 + "</mp_point>"
             )
-        if change_data.eja_point and round(change_data.eja_point, 2) != 0:
+        seen = shown_change(now_character_data.eja_point, change_data.eja_point)
+        if seen:
             now_text += (
                 "\n  <semen>"
                 + _("射精欲")
                 + "　" * 3
-                + text_handle.number_to_symbol_string(
-                    int(change_data.eja_point)
-                )
+                + text_handle.number_to_symbol_string(seen)
                 + "</semen>"
             )
-        if change_data.sanity_point and round(change_data.sanity_point, 2) != 0:
+        seen = shown_change(
+            now_character_data.sanity_point, change_data.sanity_point
+        )
+        if seen:
             now_text += (
                 "\n  <sanity>"
                 + _("理智")
                 + "　" * 4
-                + text_handle.number_to_symbol_string(
-                    int(change_data.sanity_point)
-                )
+                + text_handle.number_to_symbol_string(seen)
                 + "</sanity>"
             )
 
         # 状态的结算输出
         if len(change_data.status_data) and not exchange_flag:
             # 获取排序后的状态列表，按 type 排序（快感 type==0 在前）
+            seen_status = {
+                status_id: shown_change(
+                    now_character_data.status_data[status_id],
+                    change_data.status_data[status_id],
+                )
+                for status_id in change_data.status_data
+                if status_id in game_config.config_character_state
+            }
             resort_state_list = [
                 status_id
                 for status_id in game_config.config_character_state
-                if status_id in change_data.status_data
-                and change_data.status_data[status_id] != 0
+                if seen_status.get(status_id)
             ]
             resort_state_list.sort(
                 key=lambda sid: game_config.config_character_state[sid].type
@@ -351,15 +354,17 @@ def handle_settle_behavior(
                 # 补全对齐
                 state_name = f"{state_name.ljust(6,'　')}"
                 now_text += state_name + attr_text.get_value_text(
-                    int(change_data.status_data[status_id])
+                    seen_status[status_id]
                 )
                 # 获取新旧状态等级
                 new_state_level = attr_calculation.get_status_level(
-                    now_character_data.status_data[status_id]
+                    num.whole(now_character_data.status_data[status_id])
                 )
                 old_state_level = attr_calculation.get_status_level(
-                    now_character_data.status_data[status_id]
-                    - change_data.status_data[status_id]
+                    num.whole(
+                        now_character_data.status_data[status_id]
+                        - change_data.status_data[status_id]
+                    )
                 )
                 # 如果状态等级有变化则显示
                 if new_state_level != old_state_level:
@@ -440,31 +445,27 @@ def handle_settle_behavior(
                 now_text = name + f"<{color_name}>:</{color_name}>"
 
                 # 体力/气力/好感/信赖/催眠度的结算输出
-                if (
-                    target_change.hit_point
-                    and round(target_change.hit_point, 2) != 0
-                ):
+                seen = shown_change(
+                    target_data.hit_point, target_change.hit_point
+                )
+                if seen:
                     now_text += (
                         _("\n  <hp_point>")
                         + _("体力")
                         + "　" * 4
-                        + text_handle.number_to_symbol_string(
-                            int(target_change.hit_point)
-                        )
+                        + text_handle.number_to_symbol_string(seen)
                         + "</hp_point>"
                     )
                     judge = 1
-                if (
-                    target_change.mana_point
-                    and round(target_change.mana_point, 2) != 0
-                ):
+                seen = shown_change(
+                    target_data.mana_point, target_change.mana_point
+                )
+                if seen:
                     now_text += (
                         "\n  <mp_point>"
                         + _("气力")
                         + "　" * 4
-                        + text_handle.number_to_symbol_string(
-                            int(target_change.mana_point)
-                        )
+                        + text_handle.number_to_symbol_string(seen)
                         + "</mp_point>"
                     )
                     judge = 1
@@ -515,11 +516,18 @@ def handle_settle_behavior(
                 # 状态的结算输出
                 if len(target_change.status_data):
                     # 获取排序后的状态列表，按 type 排序（快感 type==0 在前）
+                    seen_status = {
+                        status_id: shown_change(
+                            target_data.status_data[status_id],
+                            target_change.status_data[status_id],
+                        )
+                        for status_id in target_change.status_data
+                        if status_id in game_config.config_character_state
+                    }
                     resort_state_list = [
                         status_id
                         for status_id in game_config.config_character_state
-                        if status_id in target_change.status_data
-                        and target_change.status_data[status_id] != 0
+                        if seen_status.get(status_id)
                     ]
                     resort_state_list.sort(
                         key=lambda sid: game_config.config_character_state[
@@ -547,16 +555,18 @@ def handle_settle_behavior(
                         now_text += (
                             state_name
                             + text_handle.number_to_symbol_string(
-                                int(target_change.status_data[status_id])
+                                seen_status[status_id]
                             )
                         )
                         # 获取新旧状态等级
                         new_state_level = attr_calculation.get_status_level(
-                            target_data.status_data[status_id]
+                            num.whole(target_data.status_data[status_id])
                         )
                         old_state_level = attr_calculation.get_status_level(
-                            target_data.status_data[status_id]
-                            - target_change.status_data[status_id]
+                            num.whole(
+                                target_data.status_data[status_id]
+                                - target_change.status_data[status_id]
+                            )
                         )
                         # 如果状态等级有变化则显示
                         if new_state_level != old_state_level:
@@ -613,6 +623,18 @@ def handle_settle_behavior(
 
         return now_panel
     return None
+
+
+def shown_change(now: num.Num, change: num.Num) -> int:
+    """
+    玩家在数值上看得到的变化：结算后与结算前的显示值之差
+    Keyword arguments:
+    now -- 结算后的数值
+    change -- 这次结算记下的变化量
+    Return arguments:
+    int -- num.shown(now) - num.shown(now - change)，整数数值时等于 change
+    """
+    return num.shown(now) - num.shown(now - change)
 
 
 def handle_instruct_data(
@@ -1219,9 +1241,7 @@ def handle_comprehensive_value_effect(
                         character_move.own_charcter_move(to_place)
                     # NPC进行寻路移动
                     else:
-                        default.general_movement_module(
-                            final_character_id, to_place
-                        )
+                        default.plan_movement(final_character_id, to_place)
                 elif operation == "瞬移":
                     # 调用map_handle的character_move_scene方法，输入旧、新地点路径和角色id
                     map_handle.character_move_scene(

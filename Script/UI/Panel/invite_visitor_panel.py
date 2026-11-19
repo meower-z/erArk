@@ -223,12 +223,12 @@ def settle_visitor_arrivals_and_departures() -> None:
 
     # 根据时间而产生的访客
     add_day = game_time.count_day_for_datetime(
-        cache.rhodes_island.last_visitor_time, cache.game_time
+        cache.rhodes_island.last_visitor_time, game_time.now()
     )
     visitor_come_possibility = add_day * 3
     if random.randint(1, 100) <= visitor_come_possibility:
         # 刷新访客来访时间
-        cache.rhodes_island.last_visitor_time = cache.game_time
+        cache.rhodes_island.last_visitor_time = game_time.now()
         settle_visitor_arrivals()
 
     # 访客离开
@@ -237,7 +237,7 @@ def settle_visitor_arrivals_and_departures() -> None:
     for visitor_id in now_visitor_id_list:
         # 判断是否已经超过停留时间
         if game_time.judge_date_big_or_small(
-            cache.game_time, cache.rhodes_island.visitor_info[visitor_id]
+            game_time.now(), cache.rhodes_island.visitor_info[visitor_id]
         ):
             judge_visitor_if_leave(visitor_id)
 

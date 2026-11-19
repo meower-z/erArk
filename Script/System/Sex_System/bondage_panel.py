@@ -145,22 +145,19 @@ class Bondage_Panel:
                 break
 
     def select_bondage(self, bondage_id: int) -> None:
-        """赋予选择的捆绑"""
+        """定下捆绑（id 为 0 时解除），交互对象身上的捆绑在行动开始时换上（handle_instruct 的开始代码 bondage）"""
         from Script.System.Instruct_System import handle_instruct
 
-        character_data: game_type.Character = cache.character_data[0]
-        target_character_id = character_data.target_character_id
-        target_character_data: game_type.Character = cache.character_data[
-            target_character_id
-        ]
-        target_character_data.h_state.bondage = bondage_id
-        # 如果捆绑id为0，则解除捆绑
-        if bondage_id == 0:
-            handle_instruct.chara_handle_instruct_common_settle(
-                constant.Behavior.UNBIND, judge=_("SM"), force_taget_wait=True
-            )
-        # 否则进行捆绑
-        else:
-            handle_instruct.chara_handle_instruct_common_settle(
-                constant.Behavior.BIND, judge=_("SM"), force_taget_wait=True
-            )
+        # 选定行动后面板退回场景：玩家的选择交回内核后，选择之后的代码不再运行
+        cache.now_panel_id = constant.Panel.IN_SCENE
+        handle_instruct.chara_handle_instruct_common_settle(
+            (
+                constant.Behavior.UNBIND
+                if bondage_id == 0
+                else constant.Behavior.BIND
+            ),
+            judge=_("SM"),
+            force_taget_wait=True,
+            start="bondage",
+            args={"bondage_id": bondage_id},
+        )

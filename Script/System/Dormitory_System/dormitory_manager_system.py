@@ -1,12 +1,18 @@
 """宿舍管理员的状态机与相关函数：前往舍管房、整理宿舍意见、选择并移动至目标宿舍、处理宿舍问题，以及要求复制钥匙时给予玩家对应层的钥匙"""
 
+from __future__ import annotations
+
 import re
 import random
 from types import FunctionType
+from typing import TYPE_CHECKING
 
 from Script.Core import cache_control, game_type, get_text, constant
 from Script.Design import handle_state_machine, map_handle, handle_premise
 from Script.System.Dormitory_System import common
+
+if TYPE_CHECKING:
+    from Script.Modules.npc_action_choice import choice
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -69,34 +75,30 @@ def _get_target_room(character_id: int) -> str:
     功能: 从 CHARA_WORK 读取目标宿舍字段，未初始化时返回空字符串
     """
     work_data = cache.character_data[character_id].work
-    if not hasattr(work_data, "dormitory_admin_target_room"):
-        work_data.dormitory_admin_target_room = ""
-    return str(work_data.dormitory_admin_target_room)
+    return str(getattr(work_data, "dormitory_admin_target_room", ""))
 
 
-def _set_target_room(character_id: int, room_path: str) -> None:
+def _plan_target_room(plan: choice.Plan, room_path: str) -> None:
     """
-    设置宿舍管理员目标宿舍
-    输入类型: character_id(int), room_path(str)
+    在计划里记下宿舍管理员的目标宿舍
+    输入类型: plan(Plan), room_path(str)
     输出类型: 无
-    功能: 在 CHARA_WORK 中记录目标宿舍路径
+    功能: 行动开始时在 CHARA_WORK 中记录目标宿舍路径
     """
-    work_data = cache.character_data[character_id].work
-    work_data.dormitory_admin_target_room = room_path
+    plan.set("work.dormitory_admin_target_room", room_path)
 
 
-def _set_wait_behavior(character_id: int, minute: int) -> None:
+def _plan_wait(plan: choice.Plan, minute: int) -> None:
     """
-    设置角色原地等待行为
-    输入类型: character_id(int), minute(int)
+    在计划里记下原地等待
+    输入类型: plan(Plan), minute(int)
     输出类型: 无
-    功能: 设置角色等待状态和持续时间
+    功能: 行动开始时设置角色等待状态和持续时间
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.target_character_id = character_id
-    character_data.behavior.behavior_id = constant.Behavior.WAIT
-    character_data.behavior.duration = max(int(minute), 1)
-    character_data.state = constant.CharacterStatus.STATUS_WAIT
+    plan.set("target_character_id", plan.character_id)
+    plan.set("behavior.behavior_id", constant.Behavior.WAIT)
+    plan.set("behavior.duration", max(int(minute), 1))
+    plan.set("state", constant.CharacterStatus.STATUS_WAIT)
 
 
 def _get_office_path_by_layer(layer: int) -> list:
@@ -131,121 +133,115 @@ def _get_open_room_paths_by_layer(layer: int) -> list:
 @handle_state_machine.add_state_machine(
     constant.StateMachine.DORMITORY_ADMIN_TO_OFFICE
 )
-def dormitory_admin_to_office(character_id: int) -> None:
+def dormitory_admin_to_office(character_id: int) -> choice.Plan:
     """
     宿舍管理员状态机入口：前往所属层舍管房
     输入类型: character_id(int)
     输出类型: 无
     功能: 根据角色负责层号获取舍管房路径，前往途中不显示移动信息；异常情况时原地等待后重试
     """
-
+    plan = handle_state_machine.new_plan(character_id)
     # 阶段0：初始前往舍管房，或因异常返回后的重试
     layer = _get_manager_layer_by_character(character_id)
     if layer <= 0:
-        _set_wait_behavior(character_id, 5)
-        return
+        _plan_wait(plan, 5)
+        return plan
 
     # 获取目标舍管房路径，优先匹配对应层级，未找到时随机分配一个舍管房
     target_scene = _get_office_path_by_layer(layer)
     if target_scene == []:
-        _set_wait_behavior(character_id, 5)
-        return
+        _plan_wait(plan, 5)
+        return plan
 
     # 前往舍管房，途中不显示移动信息
-    from Script.StateMachine.default import general_movement_module
-
-    general_movement_module(character_id, target_scene, show_info_flag=False)
+    plan.move(target_scene, show_info_flag=False)
+    return plan
 
 
 @handle_state_machine.add_state_machine(
     constant.StateMachine.DORMITORY_ADMIN_ORGANIZE
 )
-def dormitory_admin_organize(character_id: int) -> None:
+def dormitory_admin_organize(character_id: int) -> choice.Plan:
     """
     整理宿舍意见
     输入类型: character_id(int)
-    输出类型: 无
+    输出类型: Plan
     功能: 原地工作，并切换到选房阶段
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.target_character_id = character_id
-    character_data.behavior.behavior_id = (
-        constant.Behavior.ORGANIZE_DORMITORY_OPINION
+    plan = handle_state_machine.new_plan(character_id)
+    plan.set("target_character_id", character_id)
+    plan.set(
+        "behavior.behavior_id", constant.Behavior.ORGANIZE_DORMITORY_OPINION
     )
-    character_data.behavior.duration = 10
-    character_data.state = (
-        constant.CharacterStatus.STATUS_ORGANIZE_DORMITORY_OPINION
+    plan.set("behavior.duration", 10)
+    plan.set(
+        "state", constant.CharacterStatus.STATUS_ORGANIZE_DORMITORY_OPINION
     )
+    return plan
 
 
-def dormitory_admin_select_room(character_id: int) -> None:
+def dormitory_admin_select_room(plan: choice.Plan) -> str:
     """
     选择目标宿舍
-    输入类型: character_id(int)
-    输出类型: 无
-    功能: 从同层已开放宿舍中随机选定一个可巡查房间
+    输入类型: plan(Plan)
+    输出类型: str
+    功能: 从同层已开放宿舍中随机选定一个可巡查房间，记进计划；层号无效时记下原地等待，返回原有的目标宿舍
     """
+    character_id = plan.character_id
     layer = _get_manager_layer_by_character(character_id)
     if layer <= 0:
-        _set_wait_behavior(character_id, 5)
-        return
+        _plan_wait(plan, 5)
+        return _get_target_room(character_id)
 
     # 获取同层已开放宿舍列表，若无可选房间则进入返回舍管房阶段
     room_paths = _get_open_room_paths_by_layer(layer)
-    if len(room_paths) == 0:
-        _set_target_room(character_id, "")
-        return
-
-    # 从可选房间中随机选定一个，并进入前往宿舍阶段
-    _set_target_room(character_id, random.choice(room_paths))
+    room = random.choice(room_paths) if room_paths else ""
+    # 无可选房间时为空，进入返回舍管房阶段；否则进入前往宿舍阶段
+    _plan_target_room(plan, room)
+    return room
 
 
 @handle_state_machine.add_state_machine(
     constant.StateMachine.DORMITORY_ADMIN_MOVE_TO_DORM
 )
-def dormitory_admin_move_to_dorm(character_id: int) -> None:
+def dormitory_admin_move_to_dorm(character_id: int) -> choice.Plan:
     """
     移动至目标宿舍
     输入类型: character_id(int)
-    输出类型: 无
+    输出类型: Plan
     功能: 向已选目标宿舍移动，到达后切换到处理问题阶段
     """
-    # 先赋予目标宿舍，方便后续阶段读取
-    dormitory_admin_select_room(character_id)
-    # 获取目标宿舍路径，若无有效目标则进入返回舍管房阶段
-    target_room = _get_target_room(character_id)
+    plan = handle_state_machine.new_plan(character_id)
+    # 先选定目标宿舍，若无有效目标则进入返回舍管房阶段
+    target_room = dormitory_admin_select_room(plan)
     if target_room == "":
-        return
+        return plan
 
     target_scene = map_handle.get_map_system_path_for_str(target_room)
 
     # 前往目标宿舍，途中不显示移动信息
-    from Script.StateMachine.default import general_movement_module
-
-    general_movement_module(character_id, target_scene, show_info_flag=False)
+    plan.move(target_scene, show_info_flag=False)
+    return plan
 
 
 @handle_state_machine.add_state_machine(
     constant.StateMachine.DORMITORY_ADMIN_HANDLE_PROBLEM
 )
-def dormitory_admin_handle_problem(character_id: int) -> None:
+def dormitory_admin_handle_problem(character_id: int) -> choice.Plan:
     """
     处理宿舍问题
     输入类型: character_id(int)
-    输出类型: 无
+    输出类型: Plan
     功能: 在宿舍处理问题，之后进入返回舍管房阶段
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.target_character_id = character_id
-    character_data.behavior.behavior_id = (
-        constant.Behavior.HANDLE_DORMITORY_PROBLEM
-    )
-    character_data.behavior.duration = 30
-    character_data.state = (
-        constant.CharacterStatus.STATUS_HANDLE_DORMITORY_PROBLEM
-    )
+    plan = handle_state_machine.new_plan(character_id)
+    plan.set("target_character_id", character_id)
+    plan.set("behavior.behavior_id", constant.Behavior.HANDLE_DORMITORY_PROBLEM)
+    plan.set("behavior.duration", 30)
+    plan.set("state", constant.CharacterStatus.STATUS_HANDLE_DORMITORY_PROBLEM)
     # 清零目标宿舍，进入返回舍管房阶段
-    _set_target_room(character_id, "")
+    _plan_target_room(plan, "")
+    return plan
 
 
 def ask_copy_key(character_id: int) -> int:

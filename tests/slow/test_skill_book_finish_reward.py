@@ -29,6 +29,8 @@ class SkillBookFinishRewardTest(SlowTestCase):
         Return arguments:
         int -- 这本书对应经验的增加量
         """
+        from Script.Design import game_time
+
         from Script.Config import game_config
         from Script.Core import game_type
         from Script.Settle import default
@@ -44,7 +46,7 @@ class SkillBookFinishRewardTest(SlowTestCase):
             character_id,
             READ_MINUTES,
             game_type.CharacterStatusChange(),
-            self.cache.game_time,
+            game_time.now(),
         )
         return character_data.experience.get(exp_id, 0) - before
 

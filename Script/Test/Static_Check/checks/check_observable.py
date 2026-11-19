@@ -22,8 +22,9 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from fractions import Fraction
 
-from Script.Core import cache_control, constant
+from Script.Core import cache_control, constant, num
 from Script.Design import attr_calculation, map_handle
 from ..check_registry import CheckFailure, make_failure, register_check
 
@@ -183,10 +184,10 @@ def _sleep_level(chara: object) -> int | None:
     ):
         return None
     value = getattr(chara, "sleep_point", None)
-    if not isinstance(value, (int, float)) or isinstance(value, bool):
+    if not isinstance(value, (int, float, Fraction)) or isinstance(value, bool):
         return None
     try:
-        return attr_calculation.get_sleep_level(value)[0]
+        return attr_calculation.get_sleep_level(num.exact(value))[0]
     except Exception:
         return None
 
@@ -566,7 +567,7 @@ def check_observable_08() -> list[CheckFailure]:
         drunk_point = getattr(chara, "drunk_point", None)
         if (
             getattr(_sp(chara), "unconscious_h", 0) == 2
-            and isinstance(drunk_point, (int, float))
+            and isinstance(drunk_point, (int, float, Fraction))
             and not isinstance(drunk_point, bool)
             and drunk_point <= 0
         ):

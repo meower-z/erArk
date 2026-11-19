@@ -20,8 +20,11 @@ import sys
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from types import TracebackType
     from typing import NoReturn
+
+    from Script.Kernel import core as kernel
 
 ROOT = os.path.abspath(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
@@ -119,20 +122,28 @@ from Script.Core import (
     save_handle,
 )  # noqa: F401,E402
 from Script.UI.Moudle import draw  # noqa: E402
+from tests import world
 
 _ = get_text._
 """ 翻译api：配置里的名字都过了翻译，测试里比对名字一律包 _() """
 
+from Script.Modules.save_load import kernel_state
+
 character_handle.init_character_tem()
-game_time.init_time()
+kernel_state.reset_clock(kernel_state.first_clock())
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
 
 # ==== 2. 全局前置 ====
 cache.all_system_setting = attr_calculation.get_system_setting_zero()
+cache.difficulty_setting = attr_calculation.get_difficulty_setting_zero()
+cache.birth_type_setting = attr_calculation.get_birth_type_setting_zero()
 # 罗德岛设施：全部设施 Lv1，教育区另由测试按需调；facility_open 默认空（只开放三间基础教室）
 for _facility_cid in game_config.config_facility:
     cache.rhodes_island.facility_level.setdefault(_facility_cid, 1)
+# 资源仓库：每种资源 0（与 basement 初始化一致）；内核推进时玩家行动收尾的成就结算要读它
+for _resouce_cid in game_config.config_resouce:
+    cache.rhodes_island.materials_resouce.setdefault(_resouce_cid, 0)
 # 书库：全部书籍在架、没被借走（与 basement 初始化一致）；兴趣课读书要先借书（Plan 29），空书库会让那一节视为没课
 for _book_cid in game_config.config_book:
     cache.rhodes_island.book_borrow_dict.setdefault(_book_cid, -1)
@@ -255,7 +266,7 @@ def set_time(now_time: datetime.datetime) -> None:
     无
     """
     now_time = game_time.to_game_time(now_time)
-    cache.game_time = now_time
+    world.set_clock(now_time)
     for character_data in cache.character_data.values():
         character_data.behavior.start_time = now_time
 
@@ -317,7 +328,7 @@ def make_character(
     cd.mana_point = 100
     cd.work.work_type = work_type
     cd.dormitory = scene_str(SCENE_DORM)
-    cd.behavior.start_time = cache.game_time
+    cd.behavior.start_time = game_time.now()
     if stage:
         cd.talent[stage] = 1
         if stage != 104:
@@ -325,7 +336,7 @@ def make_character(
     if daughter:
         cd.relationship.father_id = 0
         cd.relationship.mother_id = mother_id
-        cd.pregnancy.born_time = cache.game_time - datetime.timedelta(
+        cd.pregnancy.born_time = game_time.now() - datetime.timedelta(
             days=born_days
         )
         if mother_id in cache.character_data:
@@ -413,6 +424,191 @@ def period_time(
     return datetime.datetime(day.year, day.month, day.day, hour, minute)
 
 
+_kernel_left: object = None
+""" 上一次 play / start 停下时的 GameState：内核还是它时接着跑，不再从缓存投影 """
+
+
+def sync(keep_queue: bool = False) -> None:
+    """
+    内核状态不是上一次 play 停下时的那个（脚本改过缓存或拨过时钟）时，由缓存在此刻投影出各角色的行动：
+    玩家的行为截在此刻，玩家第一步就选行动；各角色的计划队列清空（脚本直接调结算时排下、内核没跑过的计划）。
+    干员缓存里行为的时长为 0 时，它的行动此刻已结束，第一步就收尾、重新选
+    Keyword arguments:
+    keep_queue -- 为真时不清计划队列
+    """
+    from Script.Kernel import core
+    from Script.Modules import load_order
+    from Script.Modules.gameplay_resolution import actions
+
+    global _kernel_left
+    core.load(load_order.LOAD_ORDER)
+    if core.state() is not _kernel_left:
+        player = cache.character_data[0]
+        player.behavior.start_time = game_time.now()
+        player.behavior.duration = 0
+        if not keep_queue:
+            cache.plan_queue.clear()
+        core.reset_state(actions.state_from_cache(core.state().clock))
+        _kernel_left = core.state()
+
+
+def play(
+    fn: "Callable[[], object] | None" = None,
+    stop_at_same_minute: bool = False,
+    limit: int = 100000,
+) -> int:
+    """
+    先 sync()，再一步一步推进内核：玩家要选行动时跑 fn（fn 经 player_pick.choose 定下行动），
+    推进到玩家下一次要选行动时停下。fn 为 None 时，玩家队列里排着的行动照常开始，玩家第一次要选行动就停下
+    Keyword arguments:
+    fn -- 玩家选行动时跑的操作
+    stop_at_same_minute -- 为真时，玩家定下行动之后，这一分钟里各角色都开始了行动（下一步就要走时间）即停下
+    limit -- 步数上限，推进到上限还没停下时抛出 RuntimeError
+    Return arguments:
+    int -- 推进的步数
+    """
+    from Script.Kernel import core
+    from Script.Modules.tk_ui import player_pick
+
+    global _kernel_left
+    ran = False
+
+    def chooser() -> None:
+        """玩家的选择：第一次跑 fn，之后结束推进"""
+        nonlocal ran
+        if fn is not None and not ran:
+            ran = True
+            fn()
+        raise player_pick.LeftGame
+
+    sync()
+    saved, player_pick.chooser = player_pick.chooser, chooser
+    steps = 0
+    try:
+        while True:
+            if steps >= limit:
+                raise RuntimeError(f"内核推进 {limit} 步还没停下")
+            core.step()
+            steps += 1
+            game = core.state()
+            if (
+                stop_at_same_minute
+                and ran
+                and all(
+                    c.action.start + c.action.duration > game.clock
+                    for c in game.characters.values()
+                )
+            ):
+                break
+    except player_pick.LeftGame:
+        pass
+    finally:
+        player_pick.chooser = saved
+        _kernel_left = core.state()
+    return steps
+
+
+def npc_turn(character_id: int, keep_queue: bool = False) -> None:
+    """
+    只让一名干员此刻选、开始下一个行动（PickNextAction、StartAction 走内核），别的角色不动：
+    sync() 之后，内核里别的角色的行动延到很久以后，这名干员的行动在此刻结束、不经 ActionOver 收尾
+    （脚本造的角色没有结算过时间，收尾的结算会从很久以前算起）；这一步里事件的条件一律不成立。
+    之后的 play / sync 由缓存重新投影
+    Keyword arguments:
+    character_id -- 干员的角色id
+    keep_queue -- 为真时不清计划队列（sync），队首的行动先开始
+    """
+    from dataclasses import replace
+    from types import MappingProxyType
+
+    from Script.Kernel import core
+    from Script.Modules import load_order
+    from Script.Modules.gameplay_resolution import actions
+
+    global _kernel_left
+    sync(keep_queue)
+    game = core.state()
+    who = str(character_id)
+    characters = {
+        key: replace(
+            c,
+            data=(
+                MappingProxyType({**c.data, actions.OPEN: None})
+                if key == who
+                else c.data
+            ),
+            action=replace(
+                c.action,
+                start=game.clock,
+                duration=0 if key == who else 10**6,
+            ),
+        )
+        for key, c in game.characters.items()
+    }
+    core.reset_state(replace(game, characters=MappingProxyType(characters)))
+    core.load((*load_order.LOAD_ORDER, sys.modules[__name__]))
+    try:
+        core.step()
+    finally:
+        core.load(load_order.LOAD_ORDER)
+        _kernel_left = None
+
+
+def _no_event(game: "kernel.GameState", who: str) -> "kernel.Intercept[bool]":
+    """
+    npc_turn 里事件条件的输入钩子：一律不成立
+    Keyword arguments:
+    game -- 当前的 GameState
+    who -- 角色键
+    Return arguments:
+    Intercept -- 交回 False
+    """
+    from Script.Kernel import core
+
+    return core.Intercept(False)
+
+
+def _hook_events() -> None:
+    """给内核登记过的每个事件的条件挂上 _no_event（只在 npc_turn 把本模块排进载入顺序时生效）"""
+    from Script.Kernel import core
+    from Script.Modules import load_order
+
+    core.load(load_order.LOAD_ORDER)
+    for name in core._events:
+        core.input_hook(core.condition(core.Event(name)))(_no_event)
+
+
+def start(fn: "Callable[[], object]") -> int:
+    """
+    玩家此刻做 fn 里的操作，内核推进到这一分钟里各角色都开始了行动（时间前进之前）停下
+    Keyword arguments:
+    fn -- 玩家选行动时跑的操作
+    Return arguments:
+    int -- 推进的步数
+    """
+    return play(fn, stop_at_same_minute=True)
+
+
+def wait(minute: int) -> int:
+    """
+    玩家此刻等待 minute 分钟，内核推进到玩家等完、要选下一个行动时停下
+    Keyword arguments:
+    minute -- 等待的分钟数
+    Return arguments:
+    int -- 推进的步数
+    """
+    from Script.Modules.tk_ui import player_pick
+
+    return play(
+        lambda: player_pick.choose(
+            constant.Behavior.WAIT,
+            minute,
+            state=constant.CharacterStatus.STATUS_WAIT,
+        )
+    )
+
+
+_hook_events()
 set_time(DEFAULT_TIME)
 pl = make_character(0, "博士")
 """ 玩家 """

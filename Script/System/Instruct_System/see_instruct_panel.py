@@ -403,13 +403,13 @@ class SeeInstructPanel:
         # 如果是重复指令，则加上连续标记
         if len(cache.pl_pre_behavior_instruce):
             last_behavior_id = cache.pl_pre_behavior_instruce[-1]
-            # 适配旧存档
-            if isinstance(last_behavior_id, int):
-                cache.pl_pre_behavior_instruce = []
-                last_behavior_id = "share_blankly"
-            last_behavior_data = game_config.config_behavior[last_behavior_id]
-            if instruct_name == last_behavior_data.name:
-                now_draw_1.text += _("(连续)")
+            # 旧存档里记的是行为的数字id，不算连续
+            if isinstance(last_behavior_id, str):
+                last_behavior_data = game_config.config_behavior[
+                    last_behavior_id
+                ]
+                if instruct_name == last_behavior_data.name:
+                    now_draw_1.text += _("(连续)")
         now_draw_1.text += "\n"
         now_draw_1.draw()
         line = draw.LineDraw("-", self.width)
@@ -436,7 +436,4 @@ class SeeInstructPanel:
         line = draw.LineDraw("-", self.width)
         line.draw()
         # 指令结算
-        pl_character_data = cache.character_data[0]
-        pl_character_data.event.event_id = event_id
-        pl_character_data.event.chara_diy_event_flag = True
-        handle_instruct.handle_instruct(constant.Instruct.CHARA_DIY_INSTRUCT)
+        handle_instruct.handle_chara_diy_instruct(event_id)
