@@ -44,7 +44,7 @@ baseline = ".lint-baseline.tsv"
 exclude = ["Script/Config/config_def.py"]
 soft = 400
 hard = 500
-reset = "verify script fixes lengthen three capped modules"
+reset = "kernel prototype round 4: zero-minute edits, action-end hook, read-only picks and the round-3 changes lengthen capped modules"
 # 棘轮运行 ruff 时带 `--ignore-noqa`，所以 `# noqa` 注释压不下棘轮报出的问题。
 # 因此这里不禁止 `# noqa` 注释。
 ban_noqa = false
