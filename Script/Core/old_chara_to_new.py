@@ -1908,13 +1908,13 @@ def update_character_config_data(value: game_type.Character) -> int:
             if key not in value.experience:
                 value.experience[key] = 0
                 update_count += 1
-    # 素质
+    # 素质：补齐前先去掉 Talent.csv 已没有的编号 6。补齐只在素质数与配置不同时运行，留着 6 可能让它漏补。
+    update_count += int(value.talent.pop(6, None) is not None)
     if len(value.talent) != len(game_config.config_talent):
         for key in game_config.config_talent:
             if key not in value.talent:
                 value.talent[key] = 0
                 update_count += 1
-                # print(f"debug key = {key}")
     # 如果没有u插入经验，则增加u处女素质
     if value.experience[63] == 0 and value.talent[2] == 0 and value.cid != 0:
         value.talent[2] = 1
@@ -2173,8 +2173,8 @@ BODY_TALENT_TUPLE = (104, 105, 106, 107, 108)
 """ 体型素质 """
 ADULT_BODY_TALENT = 104
 """ 少女素质：没开世界设定1、或角色模板没有体型素质时，静态干员身上的成长阶段素质换成它 """
-MINOR_TALENT_TUPLE = (6, 7)
-""" 未初潮、未成年素质：静态干员与103阶段的女儿不持有 """
+MINOR_TALENT_TUPLE = (7,)
+""" 未成年素质：读档时从静态干员与103阶段的女儿身上去掉 """
 WORLD_SETTING_SHRINK = 1
 """ 世界设定1在存档 world_setting 里的键：开着它开局的存档，全岛干员的体型素质104~107在开局时换成了103 """
 AGE_DRUG_ITEM_TUPLE = (31, 32)
@@ -2237,7 +2237,7 @@ def _is_player_daughter(character: game_type.Character) -> bool:
 
 def _clear_minor_talent(character: game_type.Character) -> int:
     """
-    去掉角色的未初潮与未成年素质
+    去掉角色身上 MINOR_TALENT_TUPLE 里的未成年素质
     Keyword arguments:
     character -- 角色数据
     Return arguments:
@@ -2255,7 +2255,7 @@ def _migrate_static_talent(
     character: game_type.Character, world_setting_shrink: bool
 ) -> int:
     """
-    静态干员（非玩家、非女儿的角色）的素质：去掉未初潮与未成年；持有成长阶段素质时去掉它，换成体型素质
+    整理静态干员（非玩家、非女儿的角色）的素质：去掉未成年素质，持有成长阶段素质时把它换成体型素质
     Keyword arguments:
     character -- 角色数据
     world_setting_shrink -- 存档是否开着世界设定1
@@ -2993,7 +2993,7 @@ def migrate_age_and_body_type(
     end_young_child_session
     Return arguments:
     int -- 改动的项数
-    功能: 静态干员见 _migrate_static_talent；103阶段的女儿去掉未初潮与未成年，女儿的成长阶段与体型保持原样；
+    功能: 静态干员的素质见 _migrate_static_talent，103阶段的女儿去掉未成年素质，女儿的成长阶段与体型不变；
           见学、表里没有的行为与娱乐编号、101/102阶段的上课状态、101/102阶段的H与身体状态、离线、外表年龄药见
           _clear_child_activity、_clear_young_child_h_state、_clear_young_child_egg_index、_take_young_child_off_line、
           _clear_age_drug_item；

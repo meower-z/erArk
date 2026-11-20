@@ -549,8 +549,6 @@ class SeeCharacterBodyPanel:
                 dirty_diff_text_cid = f"{_(part_name, revert_translation = True)}妊娠精液污浊{str(semen_level)}"
             elif handle_premise.handle_fertilization_1(self.character_id):
                 dirty_diff_text_cid = f"{_(part_name, revert_translation = True)}受精精液污浊{str(semen_level)}"
-            elif handle_premise.handle_menarche_1(self.character_id):
-                dirty_diff_text_cid = f"{_(part_name, revert_translation = True)}未初潮精液污浊{str(semen_level)}"
             else:
                 dirty_diff_text_cid = f"{_(part_name, revert_translation = True)}未孕精液污浊{str(semen_level)}"
             return dirty_diff_text_cid

@@ -16,6 +16,7 @@ from Script.Core import cache_control, game_type, get_text
 from Script.Config import normal_config
 from Script.Design import (
     attr_calculation,
+    child_stage_gate,
     handle_premise,
     map_handle,
     second_behavior,
@@ -91,7 +92,7 @@ def judge_external_ovulation(
 ) -> bool:
     """
     绝顶结算中的体外排卵判定：满足条件且概率命中时赋予二段行为 lay_soft_egg 并消耗本日机会
-    \n条件：NPC、无壳卵生、排卵日且机会未用、与玩家同一地点、已初潮、非未装生育模组的机械
+    \n条件：NPC、无壳卵生、排卵日且机会未用、与玩家同一地点、非幼年阶段（素质101/102）、非未装生育模组的机械
     Keyword arguments:
     character_id -- 角色id
     orgasm_part -- 绝顶部位的快感状态id
@@ -106,7 +107,7 @@ def judge_external_ovulation(
     character_data: game_type.Character = cache.character_data[character_id]
     if not handle_premise.handle_in_player_scene(character_id):
         return False
-    if handle_premise.handle_menarche_1(character_id):
+    if child_stage_gate.is_child_stage(character_id):
         return False
     if character_data.race == 2 and character_data.talent[171] == 0:
         return False

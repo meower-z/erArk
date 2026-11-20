@@ -1222,7 +1222,7 @@ class Physical_Check_And_Manage_Panel:
         # 受孕
         report_text += " " + base_ability_dict[3]
         # 当前怀孕进度
-        all_pregnancy_talent_id_list = [0, 6, 7, 20, 21, 22, 23, 24, 26, 27, 35]
+        all_pregnancy_talent_id_list = [0, 7, 20, 21, 22, 23, 24, 26, 27, 35]
         now_pregnancy_talent_id_list = [20, 21, 22, 23, 24]
         pregnancy_talent_text = " "
         all_pregnancy_flag, now_pregnancy_flag = False, False

@@ -4813,9 +4813,6 @@ msgstr "No Kissing Experience"
 msgid "童贞"
 msgstr "Virginity"
 
-msgid "未初潮"
-msgstr "No Menarche"
-
 msgid "未成年"
 msgstr "Underage"
 
@@ -12225,9 +12222,6 @@ msgid "我想让干员怀孕，有什么办法提高受精几率吗？"
 msgstr ""
 "I want to make my Operators pregnant, is there ways to increase chance of "
 "fertilization?"
-
-msgid "该如何让拥有【未初潮】素质的干员怀孕？"
-msgstr "How to make Operators with [No Menarche] pregnant?"
 
 msgid "种植相关的基建系统是如何运作的？"
 msgstr "How does the systems related to planting works?"
