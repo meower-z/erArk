@@ -16,7 +16,6 @@ str,str,int,str,str
 22,pregnancy,0,high_1&self_not_fall,{Name}的小腹开始随着时间愈发隆起，\n意外的怀孕使得她愈发的不安，\n无法知悉孩子的父亲究竟是谁。
 23,pregnancy,0,high_1&CVP_A1_F_L_2000,{Name}怀孕了，肚子开始一天天隆起，\n{Name}怀着忐忑的心情向{PlayerName}汇报了身体的变化。
 24,pregnancy,0,high_1&CVP_A1_F_GE_2000,{Name}兴奋地抚摸着微微隆起的小腹，眼中闪烁着喜悦的光芒。\n{Name}汇报着身体的发生的变化，告知了{PlayerName}自己已经怀孕的情况。
-25,pregnancy,0,high_10&CVP_A1_T|7_G_0,{Name}的幼小的肚子一点点大了起来，\n对年幼的{Name}来说，这份爱的结晶可能太过沉重，\n总之继续努力吧。
 
 31,lay_egg,0,high_1,在排卵日的翌日清晨，{Name}在私密处的酸胀感中缓缓产下了一枚温热的卵，她小心地将其擦拭干净，收拢在怀中。
 32,lay_egg,0,high_1,{Name}的种族天性在排卵日如约而至，她安静地找了个无人的角落，任凭身体的本能将一枚光滑的卵排出体外。
