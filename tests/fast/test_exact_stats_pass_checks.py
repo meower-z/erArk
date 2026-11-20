@@ -14,6 +14,7 @@ from Script.Modules.domains import needs
 from Script.Modules.gameplay_resolution import working
 from Script.Test.Static_Check.check_registry import get_all_checks
 from tests.fast.base import FastTestCase
+from Script.Config import normal_config
 
 THIRD = Fraction(1, 3)
 """ 加到每个数值上的零头 """
@@ -88,7 +89,7 @@ class ExactStatsPassChecksTest(FastTestCase):
 
     def test_load_repair_keeps_fractions(self) -> None:
         """读档修复不改带零头的数值"""
-        self.cache.all_system_setting.base_setting[14] = 1
+        normal_config.system_setting.base_setting[14] = 1
         self.set_stats(THIRD)
         save_handle.repair_installed()
         for chara in self.charas:

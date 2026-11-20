@@ -27,6 +27,7 @@ from Script.Modules import load_order
 from Script.Modules.gameplay_resolution import actions
 from Script.Modules.save_load import index, kernel_state, upgrade
 from tests.fast.base import FastTestCase
+from Script.Config import normal_config
 
 SAVE_ID = "kernel_state_test"
 """ 测试用的存档id """
@@ -149,17 +150,17 @@ class KernelStateTest(FastTestCase):
         cache.npc_id_got = {0}
         cache.country = attr_calculation.get_country_reset(cache.country)
         cache.difficulty_setting[1] = 3
-        cache.all_system_setting.base_setting[1] = 0
+        normal_config.system_setting.base_setting[1] = 0
         start = core.state().clock
         saved = game(start + 800, {"0": start + 800})
         save_handle.establish_save(SAVE_ID)
         cache.difficulty_setting[1] = 1
-        settings = cache.all_system_setting
+        settings = normal_config.system_setting
         settings.base_setting[1] = 1
         game(start + 20, {"0": start + 20})
         save_handle.input_load_save(SAVE_ID)
         self.assertEqual(cache.difficulty_setting[1], 3)
-        self.assertIs(cache.all_system_setting, settings)
+        self.assertIs(normal_config.system_setting, settings)
         self.assertEqual(settings.base_setting[1], 1)
         self.assertEqual(core.state(), saved)
 

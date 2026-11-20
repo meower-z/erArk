@@ -78,10 +78,11 @@ class PickDraftWorldTest(SlowTestCase):
         Keyword arguments:
         panel_id -- 面板id
         """
+        from Script.UI.Moudle import view
         from Script.Core import constant
 
         def round_() -> None:
-            self.cache.now_panel_id = panel_id
+            view.now_panel_id = panel_id
             constant.panel_data[panel_id]()
             self.world.player.check_done()
 

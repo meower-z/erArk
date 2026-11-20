@@ -40,10 +40,12 @@ class NoBonusRun(LanguageRun):
 
     def new_game(self) -> None:
         """与 LanguageRun.new_game 相同的开新游戏流程，但不选助理干员"""
+        from Script.UI.Moudle import view
+
         flow = game("Script.UI.Flow.creator_character_flow")
         self.press(" -【初次唤醒】-")
         game("Script.UI.Flow.title_flow").title_panel()
-        now_panel_id = self.cache.now_panel_id
+        now_panel_id = view.now_panel_id
         if now_panel_id != self.constant.Panel.CREATOR_CHARACTER:
             raise AssertionError(f"标题画面没有进入创建角色：{now_panel_id}")
         self.press("我读完并理解了以上8条，我对自己负责，我不删，我要玩")

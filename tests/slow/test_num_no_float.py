@@ -130,6 +130,8 @@ class NumNoFloatTest(SlowTestCase):
 
     def test_three_hours_from_save_99(self) -> None:
         """读档后玩家一直等待：每一步之后没有浮点、没有分母过大的连续数值"""
+        from Script.UI.Moudle import view
+
         constant = importlib.import_module("Script.Core.constant")
         save_handle = importlib.import_module("Script.Core.save_handle")
         core = importlib.import_module("Script.Kernel.core")
@@ -144,7 +146,7 @@ class NumNoFloatTest(SlowTestCase):
         if not os.path.isdir(os.path.join("save", USER_SAVE_ID)):
             self.skipTest("用户存档 99 没装在 save/99")
         save_handle.input_load_save(USER_SAVE_ID)
-        self.cache.now_panel_id = constant.Panel.IN_SCENE
+        view.now_panel_id = constant.Panel.IN_SCENE
         core.load(load_order.LOAD_ORDER)
 
         def wait() -> None:

@@ -37,12 +37,12 @@ from Script.System.Education_System import (
     schedule_template_panel,
 )
 from typing import TYPE_CHECKING
-from Script.Design import instuct_judege
+from Script.Design import game_time, instuct_judege
 from Script.System.Education_System import student_select
 from Script.Core import text_handle
 from Script.System.Pregnancy_System import pregnancy_constant
+from Script.UI.Moudle import view
 import inspect
-from Script.Design import game_time
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -100,7 +100,7 @@ container.draw()
 rl = captured["rl"]
 check(
     "首屏有 [返回]，回到场景面板",
-    _("返回") in rl and cache.now_panel_id == constant.Panel.IN_SCENE,
+    _("返回") in rl and view.now_panel_id == constant.Panel.IN_SCENE,
 )
 check(
     "另三个页签可点",

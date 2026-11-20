@@ -93,8 +93,9 @@ class LoadRebuildsDerivedTest(SlowTestCase):
         save_handle = game("Script.Core.save_handle")
         kernel = game("Script.Kernel.core")
         load_order = game("Script.Modules.load_order")
+        view = game("Script.UI.Moudle.view")
         save_handle.input_load_save(SLOT)
-        self.cache.now_panel_id = constant.Panel.IN_SCENE
+        view.now_panel_id = constant.Panel.IN_SCENE
         kernel.load(load_order.LOAD_ORDER)
 
     def test_save_and_load_keep_values(self) -> None:

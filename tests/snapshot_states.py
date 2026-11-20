@@ -75,12 +75,12 @@ def instruct(world: FullWorld, instruct_id: str, presses: tuple = ()) -> None:
     功能描述:
         前提不成立、安排的按钮没有用掉时抛 PlanError。
     """
+    from Script.UI.Moudle import view
     from Script.Core import constant
     from Script.Design import handle_premise
     from Script.System.Instruct_System import handle_instruct
     from tests.world import act
 
-    cache = world.cache
     failed = [
         premise
         for premise in constant.instruct_premise_data.get(instruct_id, ())
@@ -95,13 +95,13 @@ def instruct(world: FullWorld, instruct_id: str, presses: tuple = ()) -> None:
     def choose() -> None:
         """玩家这一次选择：点下指令，指令打开了面板时显示面板"""
         handle_instruct.handle_instruct(instruct_id)
-        if cache.now_panel_id != constant.Panel.IN_SCENE:
-            constant.panel_data[cache.now_panel_id]()
+        if view.now_panel_id != constant.Panel.IN_SCENE:
+            constant.panel_data[view.now_panel_id]()
 
     act(choose)
-    if cache.now_panel_id != constant.Panel.IN_SCENE:
+    if view.now_panel_id != constant.Panel.IN_SCENE:
         raise PlanError(
-            f"指令 {instruct_id} 打开的面板退出后没有回到主界面：now_panel_id={cache.now_panel_id}"
+            f"指令 {instruct_id} 打开的面板退出后没有回到主界面：now_panel_id={view.now_panel_id}"
         )
     if world.player.planned:
         raise PlanError(

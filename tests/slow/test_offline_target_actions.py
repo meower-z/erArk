@@ -72,6 +72,7 @@ class OfflineTargetActionsTest(SlowTestCase):
 
     def test_nursery_care_from_panel_cares(self) -> None:
         """照顾婴儿面板里抱一抱婴儿：开始的是 30 分钟的抱孩子，婴儿的数据被结算改过"""
+        from Script.UI.Moudle import view
         from Script.Core import constant
         from Script.Kernel import core
         from tests import world
@@ -85,7 +86,7 @@ class OfflineTargetActionsTest(SlowTestCase):
         self.world.player.press(label, "抱一抱她")
 
         def pick() -> None:
-            self.cache.now_panel_id = constant.Panel.TAKE_CARE_BABY
+            view.now_panel_id = constant.Panel.TAKE_CARE_BABY
             constant.panel_data[constant.Panel.TAKE_CARE_BABY]()
 
         world.act(pick)

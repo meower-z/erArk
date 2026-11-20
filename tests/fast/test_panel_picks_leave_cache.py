@@ -26,9 +26,6 @@ from Script.UI.Panel import (
 )
 from tests.fast.base import FastTestCase
 
-UI_STATE = frozenset({"now_panel_id"})
-""" 面板可以在选择里改的缓存属性 """
-
 
 def pickled(cache: Any) -> dict[str, bytes]:
     """
@@ -41,7 +38,7 @@ def pickled(cache: Any) -> dict[str, bytes]:
     out = {
         k: pickle.dumps(v)
         for k, v in vars(cache).items()
-        if k not in UI_STATE and k != "character_data"
+        if k != "character_data"
     }
     for cid, data in cache.character_data.items():
         out[f"character_data[{cid}]"] = pickle.dumps(data)

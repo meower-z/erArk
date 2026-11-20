@@ -24,6 +24,7 @@ from Script.Kernel import core
 from Script.Modules.gameplay_resolution import plan_queue
 from Script.Modules.save_load import autosave
 from Script.Modules.tk_ui import player_pick
+from Script.UI.Moudle import view
 
 type Fingerprint = tuple[bytes, core.GameState, object, int, bool]
 
@@ -111,7 +112,7 @@ class Watch:
         """
 
         def watched() -> None:
-            panel = cache_control.cache.now_panel_id
+            panel = view.now_panel_id
             before = fingerprint()
             chosen = False
             with file_writes() as wrote:

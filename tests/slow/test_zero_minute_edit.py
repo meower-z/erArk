@@ -67,15 +67,17 @@ class ZeroMinuteEditTest(SlowTestCase):
 
     def open_power(self) -> None:
         """「管理能源系统」指令做的事：面板id换成动力系统管理面板（指令要在动力区才列出，这里直接换面板）"""
+        from Script.UI.Moudle import view
         from Script.Core import constant
 
-        self.cache.now_panel_id = constant.Panel.MANAGE_POWER_SYSTEM
+        view.now_panel_id = constant.Panel.MANAGE_POWER_SYSTEM
 
     def show(self) -> None:
         """显示此刻的面板（与主循环的一轮相同）"""
+        from Script.UI.Moudle import view
         from Script.Core import constant
 
-        constant.panel_data[self.cache.now_panel_id]()
+        constant.panel_data[view.now_panel_id]()
         self.world.player.check_done()
 
     def strategy(self) -> dict[int, int]:

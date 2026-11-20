@@ -18,6 +18,7 @@ from Script.Modules import load_order
 from Script.Modules.gameplay_resolution import actions, intent
 from Script.Modules.tk_ui import player_hook, player_pick
 from tests.fast.base import FastTestCase
+from Script.UI.Moudle import view
 
 _started: list[tuple[str, int, int]] = []
 """ 开始过的测试行动：(行为id, 开始的分钟, 时长) """
@@ -137,11 +138,11 @@ class DrivenPlayerPick(FastTestCase):
             if len(titles) > 1:
                 raise FlowDone
             core.reset_state(_player_only(60))
-            self.cache.now_panel_id = _GAME_PANEL
+            view.now_panel_id = _GAME_PANEL
 
         def in_game() -> None:
             if not game_rounds:
-                self.cache.now_panel_id = constant.Panel.TITLE
+                view.now_panel_id = constant.Panel.TITLE
                 return
             _choose(*game_rounds.pop(0))
 
@@ -151,7 +152,7 @@ class DrivenPlayerPick(FastTestCase):
                 {constant.Panel.TITLE: title, _GAME_PANEL: in_game},
             )
         )
-        self.cache.now_panel_id = constant.Panel.TITLE
+        view.now_panel_id = constant.Panel.TITLE
         with self.assertRaises(FlowDone):
             start_flow.start_frame()
         self.assertEqual(_started, [("a", 60, 30), ("b", 90, 5), ("c", 95, 1)])

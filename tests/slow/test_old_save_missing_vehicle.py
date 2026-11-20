@@ -38,6 +38,7 @@ class TestOldSaveMissingVehicle(SlowTestCase):
 
     def test_new_game_and_old_save_fill_every_vehicle(self) -> None:
         """新游戏的载具表有每个载具id且全为 [0, 0]；缺一个id的存档读档后补成 [0, 0]，留着的载具不变"""
+        from Script.UI.Moudle import view
         from Script.Config import game_config
         from Script.Core import constant, save_handle
 
@@ -55,7 +56,7 @@ class TestOldSaveMissingVehicle(SlowTestCase):
         vehicles[kept] = list(OWNED)
         save_handle.establish_save(SAVE_ID)
         save_handle.input_load_save(SAVE_ID)
-        self.cache.now_panel_id = constant.Panel.IN_SCENE
+        view.now_panel_id = constant.Panel.IN_SCENE
 
         vehicles = self.cache.rhodes_island.vehicles
         self.assertEqual(sorted(vehicles), vehicle_ids, "读档后的载具id")

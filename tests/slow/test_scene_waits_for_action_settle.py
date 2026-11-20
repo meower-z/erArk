@@ -23,6 +23,8 @@ class SceneWaitsForActionSettleTest(SlowTestCase):
 
     def test_each_wait_settles_before_next_input(self) -> None:
         """每次场景面板等输入时，游戏时间比上一次多 5 分钟；面板经玩家的选择入口跑"""
+        from Script.UI.Moudle import view
+
         constant = importlib.import_module("Script.Core.constant")
         flow_handle = importlib.import_module("Script.Core.flow_handle")
         game_time = importlib.import_module("Script.Design.game_time")
@@ -31,7 +33,7 @@ class SceneWaitsForActionSettleTest(SlowTestCase):
             "Script.Modules.tk_ui.player_pick"
         )
 
-        self.assertEqual(self.cache.now_panel_id, constant.Panel.IN_SCENE)
+        self.assertEqual(view.now_panel_id, constant.Panel.IN_SCENE)
         asked_at: list[datetime.datetime] = []
         order_deal = flow_handle.order_deal
         chooser = player_pick.chooser
@@ -49,7 +51,7 @@ class SceneWaitsForActionSettleTest(SlowTestCase):
                 if len(args) > 2
                 else kwargs.get("donot_return_null_str", True)
             )
-            if choice and self.cache.now_panel_id == constant.Panel.IN_SCENE:
+            if choice and view.now_panel_id == constant.Panel.IN_SCENE:
                 asked_at.append(game_time.now())
             return order_deal(*args, **kwargs)
 

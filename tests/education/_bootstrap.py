@@ -135,7 +135,7 @@ cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
 
 # ==== 2. 全局前置 ====
-cache.all_system_setting = attr_calculation.get_system_setting_zero()
+normal_config.system_setting = attr_calculation.get_system_setting_zero()
 cache.difficulty_setting = attr_calculation.get_difficulty_setting_zero()
 cache.birth_type_setting = attr_calculation.get_birth_type_setting_zero()
 # 罗德岛设施：全部设施 Lv1，教育区另由测试按需调；facility_open 默认空（只开放三间基础教室）

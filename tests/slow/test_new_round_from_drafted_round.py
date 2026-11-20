@@ -68,8 +68,10 @@ class NewRoundFromDraftedRoundTest(SlowTestCase):
 
     def pick_in_arts_panel(self) -> None:
         """玩家这一次选择显示源石技艺面板（经 handle_panel 注册，在选择的草稿里运行），按钮由 self.world.player 安排"""
+        from Script.UI.Moudle import view
+
         constant = game("Script.Core.constant")
-        self.cache.now_panel_id = constant.Panel.ORIGINIUM_ARTS
+        view.now_panel_id = constant.Panel.ORIGINIUM_ARTS
         self.show_panel()
         self.world.player.check_done()
 
