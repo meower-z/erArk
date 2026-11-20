@@ -9,6 +9,7 @@
 
 from unittest import mock
 
+from tests import kernel_data
 from tests.slow.base import SlowTestCase
 
 EXAM_ROOM = ["医疗", "体检科"]
@@ -159,7 +160,8 @@ class HealthCheckTestCase(SlowTestCase):
             if cid and cid not in self.cache.npc_id_got
         )[:10]
         for cid in recruits:
-            character_handle.get_new_character(cid)
+            with kernel_data.writing():
+                character_handle.get_new_character(cid)
             self.world.move(cid, EXAM_ROOM)
         self.assertTrue(
             map_handle.judge_scene_is_full(

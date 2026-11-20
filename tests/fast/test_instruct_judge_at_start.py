@@ -13,6 +13,7 @@
 
 import json
 from collections.abc import Mapping
+from dataclasses import replace
 from typing import cast
 from unittest import mock
 
@@ -207,6 +208,9 @@ class InstructJudgeAtStartTest(FastTestCase):
         self.assertGreater(one_member_cost, 0)
         self.player.sanity_point = one_member_cost
         act = self.pick(constant.Instruct.ASK_GROUP_SEX)
+        picked = cast(Mapping[str, core.JSON], act.action_data)
+        staged = {"who": None, "key": "base.power_strategy", "old": None}
+        act = replace(act, action_data={**picked, "effects": (staged,)})
         self.world.wait_texts.clear()
         gated = self.start(act)
         data = gated.action_data
@@ -217,6 +221,7 @@ class InstructJudgeAtStartTest(FastTestCase):
             (constant.Behavior.ASK_GROUP_SEX_FAIL, 1, 0),
             "（开始的行为，拒绝的人数，剩下的理智）",
         )
+        self.assertNotIn("effects", data, "失败的行为不带选择时的写入")
         name = self.cache.character_data[refused[0]].name
         self.assertTrue(
             any(f"{name}拒绝了群交" in t for t in self.world.wait_texts),

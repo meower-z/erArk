@@ -32,13 +32,12 @@ PLAIN_MAX = {
 """ 有上限、画成数值条的连续数值：n 取上限 """
 PLAIN = (
     "eja_point",
-    "tired_point",
-    "urinate_point",
-    "hunger_point",
     "sleep_point",
     "drunk_point",
 )
 """ 其余直接存放在角色上的连续数值：n 取 10 """
+NEEDS = ("tired", "urine", "hunger", "milk")
+""" GameState 里的生理需求（body.needs），n 取 10 """
 STATUS_VALUE = 1000
 """ 各状态值的 n """
 
@@ -48,7 +47,7 @@ class NumDisplayTest(SlowTestCase):
 
     def setUp(self) -> None:
         """
-        开新游戏，博士以一名干员为交互对象，两人在同一处
+        开新游戏，博士以一名干员为交互对象，两人在同一处。GameState 数据的读写记在以当前状态为底的缓冲区里
         Keyword arguments:
         无
         Return arguments:
@@ -62,6 +61,11 @@ class NumDisplayTest(SlowTestCase):
         self.player.target_character_id = self.operator_id
         self.player.pl_ability.visual = True
         self.player.talent[309] = 1
+        core = importlib.import_module("Script.Kernel.core")
+        working = importlib.import_module(
+            "Script.Modules.gameplay_resolution.working"
+        )
+        self.enterContext(working.based_on(core.state()))
 
     def set_values(self, extra: Fraction) -> None:
         """
@@ -71,7 +75,9 @@ class NumDisplayTest(SlowTestCase):
         Return arguments:
         无
         """
+        needs = importlib.import_module("Script.Modules.domains.needs")
         for character in (self.player, self.operator):
+            needs.set(character.cid, **dict.fromkeys(NEEDS, 10 + extra))
             for name, max_name in PLAIN_MAX.items():
                 setattr(character, name, getattr(character, max_name) + extra)
             for name in PLAIN:
@@ -81,7 +87,6 @@ class NumDisplayTest(SlowTestCase):
             for slot in character.dirty.body_semen.values():
                 slot[1] = 10 + extra
                 slot[2] = 1
-            character.pregnancy.milk = 10 + extra
 
     def screen(self, extra: Fraction) -> list[str]:
         """

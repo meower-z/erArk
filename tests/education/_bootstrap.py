@@ -122,7 +122,7 @@ from Script.Core import (
     save_handle,
 )  # noqa: F401,E402
 from Script.UI.Moudle import draw  # noqa: E402
-from tests import world
+from tests import kernel_data, world
 
 _ = get_text._
 """ 翻译api：配置里的名字都过了翻译，测试里比对名字一律包 _() """
@@ -282,13 +282,13 @@ def make_character(
     born_days: int = 30,
 ) -> game_type.Character:
     """
-    造一个能跑通结算 / 前提 / 面板链路的最小角色 fixture，并登记进 cache
+    造一个能跑通结算 / 前提 / 面板链路的最小角色 fixture，登记进 cache，再把它的四项生理需求设为 0（吃饱、歇足）
     Keyword arguments:
     cid -- 角色id（0 为玩家）
     name -- 角色名
     work_type -- 岗位id（151 教师 / 152 学生 / 153 保育员）
     daughter -- 是否为玩家的女儿（father_id = 0）
-    stage -- 成长阶段素质id（101 婴儿 / 102 幼女 / 103 萝莉 / 104 少女），0 为成年干员；婴儿不进 npc_id_got（Plan 28）
+    stage -- 成长阶段素质id（101 至 104），0 为成年干员。stage 为 101（婴儿）时不进 npc_id_got
     mother_id -- 母亲的角色id
     position -- 初始场景路径，默认宿舍
     born_days -- 出生距今的游戏天数（成长天数用）
@@ -345,6 +345,7 @@ def make_character(
                 mother_data.relationship.child_id_list.append(cid)
     cd.position = list(position if position is not None else SCENE_DORM)
     cache.character_data[cid] = cd
+    kernel_data.set_needs(cid, tired=0, hunger=0, urine=0, milk=0)
     # 婴儿不进 npc_id_got，与真实婴儿一致（Plan 28 §3.9）：character_handle.born_new_character 不加，
     #    要到长成幼女、get_new_character 上线时才加。此前夹具把婴儿也放进去，婴儿期事件派不出来的 BUG 一直测不出
     if cid and stage != 101:
@@ -430,15 +431,14 @@ _kernel_left: object = None
 
 def sync(keep_queue: bool = False) -> None:
     """
-    内核状态不是上一次 play 停下时的那个（脚本改过缓存或拨过时钟）时，由缓存在此刻投影出各角色的行动：
-    玩家的行为截在此刻，玩家第一步就选行动；各角色的计划队列清空（脚本直接调结算时排下、内核没跑过的计划）。
-    干员缓存里行为的时长为 0 时，它的行动此刻已结束，第一步就收尾、重新选
+    内核状态不是上一次 play 停下时的那个（脚本改过缓存或拨过时钟）时，用 kernel_data.reprojected 在此刻重新投影。
+    各角色的行动由缓存投影，各角色留着自己的 GameState 数据。玩家的行为截在此刻，玩家第一步就选行动。
+    计划队列清空（脚本直接调结算时排下、内核没跑过的计划）。干员缓存里行为的时长为 0 时，第一步就收尾、重新选
     Keyword arguments:
     keep_queue -- 为真时不清计划队列
     """
     from Script.Kernel import core
     from Script.Modules import load_order
-    from Script.Modules.gameplay_resolution import actions
 
     global _kernel_left
     core.load(load_order.LOAD_ORDER)
@@ -448,7 +448,7 @@ def sync(keep_queue: bool = False) -> None:
         player.behavior.duration = 0
         if not keep_queue:
             cache.plan_queue.clear()
-        core.reset_state(actions.state_from_cache(core.state().clock))
+        core.reset_state(kernel_data.reprojected(core.state()))
         _kernel_left = core.state()
 
 

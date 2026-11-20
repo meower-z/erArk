@@ -105,7 +105,7 @@ class LoadIsResetTest(SlowTestCase):
 
     def save(self, old: bool = False) -> "core.GameState":
         """
-        等待一次后存档，old 为真时删掉存档里的文件 "2"（旧存档），再等待一次；忘掉此前的 Reset 记录
+        等待一次后存档，old 为真时删掉存档里的文件 "2" 与存档头里的标记，做成旧存档。再等待一次，忘掉此前的 Reset 记录
         Keyword arguments:
         old -- 是否做成旧存档
         Return arguments:
@@ -113,6 +113,7 @@ class LoadIsResetTest(SlowTestCase):
         """
         core = game("Script.Kernel.core")
         save_handle = game("Script.Core.save_handle")
+        index = game("Script.Modules.save_load.index")
         kernel_state = game("Script.Modules.save_load.kernel_state")
         self.instruct("WAIT")
         saved = core.state()
@@ -121,6 +122,9 @@ class LoadIsResetTest(SlowTestCase):
             os.remove(
                 os.path.join(self.folder, SAVE_ID, kernel_state.SAVE_FILE)
             )
+            head = index.head(SAVE_ID)
+            del head[kernel_state.TOKEN]
+            index.write_head(SAVE_ID, head)
         self.instruct("WAIT")
         self.assertNotEqual(core.state().clock, saved.clock)
         self.resets.clear()

@@ -14,6 +14,9 @@ from unittest import mock
 
 from Script.Core import constant, game_type
 from Script.Design import game_time
+from Script.Kernel import core
+from Script.Modules.domains import needs
+from Script.Modules.gameplay_resolution import working
 from Script.Settle import realtime_settle
 from tests.fast.base import FastTestCase
 
@@ -63,19 +66,20 @@ class SettlePiecesTest(FastTestCase):
         read: Callable[[game_type.Character], object],
     ) -> dict[str, object]:
         """
-        每种切法在复原的世界里各结算一次
+        每种切法在复原的世界里各结算一次，读写的 GameState 数据记在以复原后的状态为底的缓冲区里
         Keyword arguments:
         prepare -- 造出角色、摆好行为，返回要读的角色
         read -- 结算后读出的数值
         Return arguments:
-        dict -- 切法 -> 读出的数值
+        dict -- 切法到读出的数值
         """
         out = {}
         for name, cuts in CUTS.items():
             self.world.reset()
-            chara = prepare()
-            self.settle(chara.cid, cuts)
-            out[name] = read(chara)
+            with working.based_on(core.state()):
+                chara = prepare()
+                self.settle(chara.cid, cuts)
+                out[name] = read(chara)
         return out
 
     def assert_exact(
@@ -107,11 +111,12 @@ class SettlePiecesTest(FastTestCase):
 
         def prepare() -> game_type.Character:
             chara = self.npc(constant.Behavior.WAIT)
-            chara.tired_point = 0
+            needs.set(chara.cid, tired=0)
             return chara
 
         self.assert_exact(
-            self.by_cuts(prepare, lambda c: c.tired_point), Fraction(7, 9)
+            self.by_cuts(prepare, lambda c: needs.of(c.cid)["tired"]),
+            Fraction(7, 9),
         )
 
     def test_sleep_tired(self) -> None:
@@ -119,11 +124,12 @@ class SettlePiecesTest(FastTestCase):
 
         def prepare() -> game_type.Character:
             chara = self.npc(constant.Behavior.SLEEP)
-            chara.tired_point = 100
+            needs.set(chara.cid, tired=100)
             return chara
 
         self.assert_exact(
-            self.by_cuts(prepare, lambda c: c.tired_point), 100 - Fraction(8, 3)
+            self.by_cuts(prepare, lambda c: needs.of(c.cid)["tired"]),
+            100 - Fraction(8, 3),
         )
 
     def test_player_semen(self) -> None:
@@ -161,7 +167,7 @@ class SettlePiecesTest(FastTestCase):
         def prepare() -> game_type.Character:
             chara = self.npc(constant.Behavior.WAIT)
             chara.drunk_point = 40
-            chara.hunger_point = 120
+            needs.set(chara.cid, hunger=120)
             return chara
 
         self.assert_exact(
@@ -172,18 +178,20 @@ class SettlePiecesTest(FastTestCase):
         """体内 250 ml、饥饿 100、体力气力全满，5 分钟：吸收 max(1/5, 250/500) * 5 = 5/2 ml，饥饿加 5 * 3/4 再减 5/2"""
         chara = self.npc(constant.Behavior.WAIT)
         chara.dirty.body_semen[8][1] = 250
-        chara.hunger_point = 100
+        self.enterContext(working.based_on(core.state()))
+        needs.set(1, hunger=100)
         with mock.patch("random.randint", return_value=100):
             self.settle(1, [0, 5])
         self.assertEqual(chara.dirty.body_semen[8][1], Fraction(495, 2))
         self.assertEqual(chara.dirty.absorbed_total_semen, Fraction(5, 2))
-        self.assertEqual(chara.hunger_point, Fraction(405, 4))
+        self.assertEqual(needs.of(1)["hunger"], Fraction(405, 4))
 
     def test_hunger_rate_on_grid(self) -> None:
         """体力剩一半、气力全满，5 分钟：饥饿加 5 * 3/4 * (2 - 50/100) = 45/8"""
         chara = self.npc(constant.Behavior.WAIT)
         chara.hit_point = 50
-        chara.hunger_point = 0
+        self.enterContext(working.based_on(core.state()))
+        needs.set(1, hunger=0)
         with mock.patch("random.randint", return_value=100):
             self.settle(1, [0, 5])
-        self.assertEqual(chara.hunger_point, Fraction(45, 8))
+        self.assertEqual(needs.of(1)["hunger"], Fraction(45, 8))

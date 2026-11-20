@@ -9,6 +9,9 @@
 from fractions import Fraction
 
 from Script.Core import save_handle
+from Script.Kernel import core
+from Script.Modules.domains import needs
+from Script.Modules.gameplay_resolution import working
 from Script.Test.Static_Check.check_registry import get_all_checks
 from tests.fast.base import FastTestCase
 
@@ -20,12 +23,11 @@ FIELDS = {
     "sanity_point": 50,
     "eja_point": 100,
     "semen_point": 10,
-    "tired_point": 48,
-    "urinate_point": 100,
-    "hunger_point": 38,
     "sleep_point": 66,
 }
 """ 角色身上的连续数值与测试用的整数部分，都在各自量程内 """
+NEEDS = {"tired": 48, "urine": 100, "hunger": 38}
+""" 角色的生理需求（body.needs）与测试用的整数部分，都在各自量程内 """
 
 
 class ExactStatsPassChecksTest(FastTestCase):
@@ -33,7 +35,7 @@ class ExactStatsPassChecksTest(FastTestCase):
 
     def setUp(self) -> None:
         """
-        玩家与一名干员，数值上限足够大
+        玩家与一名干员，数值上限足够大。GameState 数据的读写记在 working.based_on(core.state()) 开的缓冲区里
         Keyword arguments:
         无
         Return arguments:
@@ -49,16 +51,18 @@ class ExactStatsPassChecksTest(FastTestCase):
             chara.mana_point_max = 1000
             chara.sanity_point_max = 100
             chara.semen_point_max = 100
+        self.enterContext(working.based_on(core.state()))
 
     def set_stats(self, extra: int | Fraction) -> None:
         """
-        把每个连续数值设为整数部分加 extra，状态值 0 号设为 1 加 extra
+        把每个连续数值与生理需求设为整数部分加 extra，状态值 0 号设为 1 加 extra
         Keyword arguments:
         extra -- 零头（0 时数值都是 int）
         """
         for chara in self.charas:
             for field, value in FIELDS.items():
                 setattr(chara, field, value + extra)
+            needs.set(chara.cid, **{k: v + extra for k, v in NEEDS.items()})
             chara.status_data[0] = 1 + extra
 
     def failures(self) -> set[tuple[str, str]]:
@@ -92,5 +96,10 @@ class ExactStatsPassChecksTest(FastTestCase):
                 self.assertEqual(
                     {f: getattr(chara, f) for f in FIELDS},
                     {f: v + THIRD for f, v in FIELDS.items()},
+                )
+                stats = needs.of(chara.cid).items()
+                self.assertEqual(
+                    {k: v for k, v in stats if k in NEEDS},
+                    {k: v + THIRD for k, v in NEEDS.items()},
                 )
                 self.assertEqual(chara.status_data[0], 1 + THIRD)

@@ -21,9 +21,6 @@ PLAIN = frozenset(
         "sanity_point",
         "eja_point",
         "semen_point",
-        "tired_point",
-        "urinate_point",
-        "hunger_point",
         "sleep_point",
         "drunk_point",
         "absorbed_total_semen",
@@ -41,19 +38,21 @@ def is_num_read(node: ast.AST) -> bool:
     Keyword arguments:
     node -- 表达式
     Return arguments:
-    bool -- PLAIN 里的属性、pregnancy.milk、status_data[...]、body_semen[...][1]
+    bool -- 是 PLAIN 里的属性、needs.of(...)[...]（生理需求）、status_data[...] 或 body_semen[...][1] 时为真
     """
     if isinstance(node, ast.Attribute):
-        if node.attr in PLAIN:
-            return True
-        return (
-            node.attr == "milk"
-            and isinstance(node.value, ast.Attribute)
-            and node.value.attr == "pregnancy"
-        )
+        return node.attr in PLAIN
     if not isinstance(node, ast.Subscript):
         return False
     base = node.value
+    if (
+        isinstance(base, ast.Call)
+        and isinstance(base.func, ast.Attribute)
+        and base.func.attr == "of"
+        and isinstance(base.func.value, ast.Name)
+        and base.func.value.id == "needs"
+    ):
+        return True
     if isinstance(base, ast.Attribute) and base.attr == "status_data":
         return True
     return (
@@ -199,10 +198,10 @@ class StatDisplayTest(FastTestCase):
                 'a = f"{c.hit_point}"',
                 "b = str(int(c.status_data[3]))",
                 'd = "%d/%d" % (c.mana_point, c.mana_point_max)',
-                'e = _("{0}").format(c.pregnancy.milk + 1)',
+                'e = _("{0}").format(needs.of(c.cid)["milk"] + 1)',
                 'f = f"{c.dirty.body_semen[2][1]}"',
                 'g = f"{num.shown(c.hit_point)}"',
-                'h = f"{get_level(c.tired_point)}"',
+                'h = f"{get_level(needs.of(0)["tired"])}"',
                 'i = f"{c.sp_flag.milk}{c.dirty.body_semen[2][2]}"',
                 'j = f"{c.hit_point_max}"',
             ]
@@ -213,7 +212,7 @@ class StatDisplayTest(FastTestCase):
                 "x.py:1 c.hit_point",
                 "x.py:2 c.status_data[3]",
                 "x.py:3 c.mana_point",
-                "x.py:4 c.pregnancy.milk",
+                "x.py:4 needs.of(c.cid)['milk']",
                 "x.py:5 c.dirty.body_semen[2][1]",
             ],
         )

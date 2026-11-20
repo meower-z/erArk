@@ -12,6 +12,9 @@ from fractions import Fraction
 
 from Script.Core import constant, game_type
 from Script.Design import game_time
+from Script.Kernel import core
+from Script.Modules.domains import needs
+from Script.Modules.gameplay_resolution import working
 from Script.Settle import realtime_settle
 from tests.fast.base import FastTestCase
 
@@ -20,10 +23,11 @@ class ExactRatesTest(FastTestCase):
     """疲劳按分钟的精确比率"""
 
     def setUp(self) -> None:
-        """玩家与一名干员，都在开局时刻"""
+        """玩家与一名干员，都在开局时刻。GameState 数据的读写记在 working.based_on(core.state()) 开的缓冲区里"""
         super().setUp()
         self.world.chara(0, "博士")
         self.npc = self.world.chara(1, "干员")
+        self.enterContext(working.based_on(core.state()))
 
     def run_behavior(
         self, behavior_id: str, minutes: int, step: int
@@ -53,24 +57,24 @@ class ExactRatesTest(FastTestCase):
 
     def test_sleep_eight_hours(self) -> None:
         """疲劳 200 睡 480 分钟、每 5 分钟结算：剩 40"""
-        self.npc.tired_point = 200
+        needs.set(self.npc.cid, tired=200)
         self.run_behavior(constant.Behavior.SLEEP, 480, 5)
-        self.assertEqual(self.npc.tired_point, 40)
+        self.assertEqual(needs.of(self.npc.cid)["tired"], 40)
 
     def test_sleep_five_minutes(self) -> None:
         """疲劳 100 睡 5 分钟：减 5/3"""
-        self.npc.tired_point = 100
+        needs.set(self.npc.cid, tired=100)
         self.run_behavior(constant.Behavior.SLEEP, 5, 5)
-        self.assertEqual(self.npc.tired_point, 100 - Fraction(5, 3))
+        self.assertEqual(needs.of(self.npc.cid)["tired"], 100 - Fraction(5, 3))
 
     def test_awake_five_minutes(self) -> None:
         """醒着等待 5 分钟：疲劳加 35/72"""
-        self.npc.tired_point = 0
+        needs.set(self.npc.cid, tired=0)
         self.run_behavior(constant.Behavior.WAIT, 5, 5)
-        self.assertEqual(self.npc.tired_point, Fraction(35, 72))
+        self.assertEqual(needs.of(self.npc.cid)["tired"], Fraction(35, 72))
 
     def test_awake_three_minutes(self) -> None:
         """醒着等待 3 分钟：疲劳加 7/24"""
-        self.npc.tired_point = 0
+        needs.set(self.npc.cid, tired=0)
         self.run_behavior(constant.Behavior.WAIT, 3, 3)
-        self.assertEqual(self.npc.tired_point, Fraction(7, 24))
+        self.assertEqual(needs.of(self.npc.cid)["tired"], Fraction(7, 24))

@@ -156,21 +156,19 @@ _left: object = None
 
 def act(fn: Callable[[], None]) -> None:
     """
-    玩家做一个行动：内核一步一步推进，到玩家选行动时跑一次 fn，再推进到玩家下一次选行动时停下
+    玩家做一个行动：内核一步一步推进，到玩家选行动时跑一次 fn，再推进到玩家下一次选行动时停下。
     fn 经 player_pick.choose 定下的行动随即开始。fn 没有定下行动就返回时（例如打开又退出一个面板），act 立即停下。
-    内核状态不是上一次 act 停下时的那个（例如世界刚复原、读档或拨过时钟）时，先由 actions.state_from_cache 从缓存投影出
-    各角色的行动，时钟与全局数据不变。一个测试里可以连着调用
+    内核状态不是上一次 act 停下时的那个时（例如世界刚复原、读档或拨过时钟），先用 kernel_data.reprojected
+    重新投影各角色的行动，时钟不变，每个角色的数据跟着这个角色走（去掉 open）。一个测试里可以连着调用。
     Keyword arguments:
     fn -- 玩家选行动时跑的操作（无参数的函数），例如一条指令或一次寻路
     Return arguments:
     无
     """
-    from dataclasses import replace
-
     from Script.Kernel import core
     from Script.Modules import load_order
-    from Script.Modules.gameplay_resolution import actions
     from Script.Modules.tk_ui import player_pick
+    from tests import kernel_data
 
     ran = False
 
@@ -186,8 +184,7 @@ def act(fn: Callable[[], None]) -> None:
     core.load(load_order.LOAD_ORDER)
     game = core.state()
     if game is not _left:
-        fresh = actions.state_from_cache(game.clock)
-        core.reset_state(replace(fresh, data=game.data) if game.data else fresh)
+        core.reset_state(kernel_data.reprojected(game))
     saved, player_pick.chooser = player_pick.chooser, chooser
     try:
         while True:

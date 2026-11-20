@@ -17,7 +17,7 @@ import datetime
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
-from tests import world
+from tests import kernel_data, world
 
 BABY = 101
 """ 婴儿素质 """
@@ -134,7 +134,9 @@ class ChildStagesOfflineTest(SlowTestCase):
             pregnancy_handle,
             "get_child_grow_day",
             return_value=pregnancy_constant.GROW_TO_LOLI_DAY,
-        ), mock.patch.object(pregnancy_handle, "chest_grow", return_value=""):
+        ), mock.patch.object(
+            pregnancy_handle, "chest_grow", return_value=""
+        ), kernel_data.writing():
             pregnancy_handle.check_all_child_grow_to_loli()
         self.assertEqual(child.talent[TRAINEE], 1, "幼女长成了学员")
         self.assertEqual(

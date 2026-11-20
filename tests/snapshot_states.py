@@ -228,19 +228,18 @@ def build_time_stop_h(world: FullWorld) -> None:
 @contextlib.contextmanager
 def days_passed(day: int) -> Iterator[None]:
     """
-    在 with 块里，孕期天数与孩子的成长天数都按 day 天计
+    在 with 块里，孕期天数与孩子的成长天数都按 day 天计，块里写的 GameState 数据在块结束时套用到内核状态上
     Keyword arguments:
     day -- 经过的天数
-    Return arguments:
-    无
     """
     from Script.System.Pregnancy_System import pregnancy_handle
+    from tests.kernel_data import writing
 
     with mock.patch.object(
         pregnancy_handle, "get_pregnancy_past_day", return_value=day
     ), mock.patch.object(
         pregnancy_handle, "get_child_grow_day", return_value=day
-    ):
+    ), writing():
         yield
 
 

@@ -411,21 +411,20 @@ def capture(
     取当前游戏状态的一份快照
     Keyword arguments:
     cache -- 游戏缓存
-    log -- 口上与事件的记录；给出时取走它此前的记录
-    memo -- 逐步调用时传同一个空字典：记下每个角色上一次的 pickle 字节与展开结果，字节相同的角色直接沿用结果
+    log -- 口上与事件的记录，给出时取走它此前的记录
+    memo -- 逐步调用时传同一个空字典，记下每个角色上一次的 pickle 字节与展开结果，字节相同的角色直接沿用结果
     Return arguments:
-    dict[str, object] -- 名字: 值
+    dict[str, object] -- 名字到值
     功能描述:
-        时钟；每个角色的全部字段（SKIPPED_CHARACTER_FIELDS 除外）；
-        游戏缓存的世界状态（SKIPPED_CACHE_FIELDS 除外，
-        罗德岛的字段按 WORLD_AREAS 分区）；有人的场景里的角色，关着门的场景的关门状态；口上与事件的id。
-        memo 只省时间：pickle 字节相同的对象状态相同，展开结果也相同；字节不同时照常展开。
+        时钟，每个角色的全部字段（SKIPPED_CHARACTER_FIELDS 除外），
+        GameState 里的生理需求与供电策略（按它们在缓存里时的名字），
+        游戏缓存的世界状态（SKIPPED_CACHE_FIELDS 除外，罗德岛的字段按 WORLD_AREAS 分区），有人的场景里的角色，
+        关着门的场景的关门状态，口上与事件的id。memo 只省时间：pickle 字节相同的对象状态相同，展开结果也相同。
     """
     from Script.Design import game_time
+    from tests.kernel_data import project_state
 
-    state: dict[str, object] = {
-        "clock": game_time.now().strftime("%Y-%m-%d %H:%M")
-    }
+    state: dict[str, object] = {"clock": f"{game_time.now():%Y-%m-%d %H:%M}"}
     for cid in sorted(cache.character_data):
         character = cache.character_data[cid]
         pickled = (
@@ -444,6 +443,7 @@ def capture(
         state.update(names)
         if memo is not None:
             memo[cid] = (pickled, names)
+    project_state(cache, state)
     for field in sorted(vars(cache)):
         if field in SKIPPED_CACHE_FIELDS:
             continue
