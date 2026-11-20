@@ -86,7 +86,7 @@
 | BODY-23 | 产后/育儿互斥且须有可追溯的孩子 | 素质23产后与24育儿互斥；两者任一成立时child_id_list须为非空list且末位id存在于character_data （推进函数无保护读取child_id_list[-1]并索引character_data，… |
 | BODY-24 | 怀孕中须有有效受精时间 | 处于素质20/21/22任一阶段的角色，其fertilization_time是有效datetime（非默认值年份1）且不晚于当前游戏时间 （阶段推进全靠该时间差，默认值或未来值会让角色瞬间跳到临盆或永远卡住） |
 | BODY-25 | 孕肚素质与妊娠/临盆绑定 | 素质26孕肚成立当且仅当角色处于21妊娠或22临盆（进入妊娠时授予、分娩时移除） |
-| BODY-26 | 乳汁量有界且上限为正 | milk/milk_max为有限数值、milk_max>0（被当分母，<=0会ZeroDivisionError）、0<=milk<=milk_max |
+| BODY-26 | 乳汁量有界且上限为正 | body.needs的milk与乳汁上限（body.pregnancy，pregnancy.milk_max）为有限数值、乳汁上限>0（被当分母，<=0会ZeroDivisionError）、0<=milk<=乳汁上限 |
 | BODY-27 | 涨奶标记蕴含泌乳素质 | lactation_flag为真时素质27必为1 |
 | BODY-28 | 罩杯素质有且只有一个 | 非玩家、非机械体角色的罩杯素质121~125恰好持有一个（胸部成长函数假定必有其一， 缺失会UnboundLocalError，崩溃级） |
 | BODY-29 | 臀/腿/足素质各组至多一个 | 126-128(臀)、129-130(腿)、131-132(足)三组互斥档位各至多持有一个 |
@@ -223,7 +223,7 @@ H 状态、群交模式、逆推、隐奸。
 | MIND-21 | 玩家当前催眠类型合法且已解锁 | pl_ability.hypnosis_type∈{0,1,2,3,4}，且1需素质331、2需333、3/4需334(Hypnosis_Type.csv的 talent_id列) |
 | MIND-22 | 无意识状态取值域 | sp_flag.unconscious_h∈[0,7] |
 | MIND-23 | 睡眠行为与角色状态ID对齐 | behavior.behavior_id=="sleep"时state==111 |
-| MIND-24 | 熟睡值值域 | sleep_point为非bool数值且落在[0,100]内(Sleep_Level.csv最高档上限100) |
+| MIND-24 | 熟睡值值域 | body.needs的sleep为非bool数值且落在[0,100]内 |
 | MIND-25 | 睡眠无意识必须依附睡眠行为或装睡 | unconscious_h==1(睡眠)时behavior_id=="sleep"或h_state.pretend_sleep为真 |
 | MIND-28 | 时停高潮计数结构合法 | h_state.time_stop_orgasm_count是dict，键为int、值为非负整数 |
 | MIND-29 | 睡眠计划时分字段合法 | action_info.plan_to_sleep_time与plan_to_wake_time均为[时,分]形状的二元int列表， 小时0-23、分钟0-59 |
@@ -252,19 +252,19 @@ H 状态、群交模式、逆推、隐奸。
 | NUM-15 | 好感键有效且必含玩家 | 本域唯一方向为"角色⊆全局"的键集检查：校验chara.favorability的每个目标id都必须是cache.character_data 中现存角色，且必须含键0（玩家）——能力升级需求F<n>与事件通道均裸取/裸写favorability[0] |
 | NUM-16 | 好感值为整数 | 只检查chara.favorability值的类型为int，不设上下界 |
 | NUM-17 | 信赖与催眠程度为有限实数 | chara.trust与chara.hypnosis.hypnosis_degree都是类型合法(int/float)且有限(非NaN/inf)的实数 |
-| NUM-18 | 体力/气力上限为正整数 | hit_point_max/mana_point_max均为正整数 |
-| NUM-19 | 玩家专属槽位上限为正整数 | 仅校验cid 0（玩家）的sanity_point_max/eja_point_max/semen_point_max均为正整数，且sanity_point_max<=9999 |
-| NUM-20 | 当前体力在[1,上限] | chara.hit_point在[1, hit_point_max]范围内（力竭底线为1而非0） |
-| NUM-21 | 当前气力在[0,上限] | chara.mana_point在[0, mana_point_max]范围内 |
-| NUM-22 | 当前理智在[0,上限] | chara.sanity_point在[0, sanity_point_max]范围内 |
+| NUM-18 | 体力/气力上限为正整数 | body.needs的hit_max/mana_max均为正整数 |
+| NUM-19 | 玩家专属槽位上限为正整数 | 仅校验cid 0（玩家）的body.needs的sanity_max与eja_point_max/semen_point_max均为正整数，且sanity_max<=9999 |
+| NUM-20 | 当前体力在[1,上限] | body.needs的hit在[1, hit_max]范围内（力竭底线为1而非0），死亡角色不查 |
+| NUM-21 | 当前气力在[0,上限] | body.needs的mana在[0, mana_max]范围内 |
+| NUM-22 | 当前理智在[0,上限] | body.needs的sanity在[0, sanity_max]范围内 |
 | NUM-23 | 射精槽非负且不设上限 | chara.eja_point非负，不检查<=eja_point_max——槽满时"忍住射精"会直接return，合法保留 eja_point>=eja_point_max |
 | NUM-24 | 精液槽与临时精液槽范围 | chara.semen_point在[0, semen_point_max]，chara.tem_extra_semen_point在[0, semen_point_max*4] |
 | NUM-25 | 基地资源键集覆盖配表且为非负整数 | config_resouce的每个id都在cache.rhodes_island.materials_resouce中存在（配表⊆资源，方向同NUM-02—— 存档迁移只补不删已下线的资源id，多余键合法），且键为精确int、值为非负整数（各面板按固定id裸下标， 没有任何统一的max(0,...)兜底，负资源意味着某条支付路径漏判） |
 | NUM-26 | 仓库容量为非负整数 | cache.rhodes_island.warehouse_capacity为非负整数 |
-| NUM-27 | 疲劳/饥饿/熟睡/醉酒在各自量程内 | body.needs的tired∈[0,160]、hunger∈[0,240]与sleep_point∈[0,100]、drunk_point∈[0,100]，都须是int或Fraction |
+| NUM-27 | 疲劳/饥饿/熟睡/醉酒在各自量程内 | body.needs的tired∈[0,160]、hunger∈[0,240]、sleep∈[0,100]、drunk∈[0,100]，都须是int或Fraction |
 | NUM-28 | 尿意值非负且为整数 | body.needs的urine是非负的int或Fraction |
 | NUM-29 | 角色尿意值不超过300 | 所有角色（含玩家cid=0）body.needs的urine不超过300（设计上界，realtime_settle、drunk_sex_common与default.py加尿意时都用它封顶），失败记录带[warning]前缀 |
-| NUM-30 | 欲望值为非负整数且不设上限 | chara.desire_point为非负整数，不强制<=100——尽管字段注释称100为最大，逐日结算逐日累加且无任何 钳制，前提函数在>=100时权重仍随数值单调增长，说明设计上预期会超过100 |
+| NUM-30 | 欲望值为非负整数且不设上限 | body.needs的desire为非负整数，不查<=100。逐日结算按欲望等级累加欲望值而不封顶，前提函数在>=100时权重仍随数值增长 |
 
 ## OBS：可观察矛盾
 
@@ -279,7 +279,7 @@ H 状态、群交模式、逆推、隐奸。
 | OBS-05 | 玩家的交互对象必须在当前场景名册里 | 指令面板轴心 target 与场景名册一致；健康存档中目标已归一化为在场角色，装袋搬运是唯一明确例外 |
 | OBS-06 | 同一角色不得同时处于隐奸模式与露出模式 | 检查同一角色的两种 H 分流模式不会同时大于零；健康存档的入口与结束链应保持模式互斥，因此恒不命中 |
 | OBS-07 | 性爱助手结算必须满足监狱长约束 | 群交调教现场有非零监狱长，且 sex_assist 只落在该监狱长身上；健康存档的助手结算应只写当前监狱长，因此恒不命中 |
-| OBS-08 | 醉酒型无意识H不得在醉酒值耗尽后残留 | 检查醉酒型无意识 H 不会在 drunk_point<=0 后继续残留；健康存档若来源消失就应同步退出该模式，因此恒不命中 |
+| OBS-08 | 醉酒型无意识H不得在醉酒值耗尽后残留 | unconscious_h=2（醉酒型无意识H）的角色的body.needs的drunk须大于0，级别warning |
 | OBS-09 | 非群交下至多一名NPC处于阴茎插入中 | 玩家单一阴茎不会在普通 H 中同时记录插入多名 NPC；健康存档换位与拔出链会清旧对象，所以恒不命中 |
 | OBS-12 | 助理跟随服务开启时恢复正常的空闲助理必须在跟随 | 检查服务2开启后，非疲劳、非困倦、无生理意图、非H的空闲在线助理不会丢失跟随；健康存档的服务承诺应维持 is_follow=1，因此恒不命中 |
 | OBS-13 | 非当前助理的角色助理服务位必须全为0 | 全量检查非玩家、非当前助理角色的已实装服务位均归零；健康存档在替换或取消助理时会清旧服务，因此恒不命中 |
@@ -393,7 +393,7 @@ H 状态、群交模式、逆推、隐奸。
 | SUPP-02 | 访客上限与开放客房数一致 | visitor_max等于当前config_facility_open中名称含"客房"且facility_open为真的条目数 |
 | SUPP-03 | 设施开放派生单调覆盖 | 对当前config_facility_open中每个待开放项，只要其zone_cid已被全设施 当前等级效果cid覆盖（相等，或同十位且个位数达标），对应facility_open[open_cid]就应为真 |
 | SUPP-04 | 时停无意识值跨名单残留 | 非时停时，character_data中任何角色都不应残留专属时停无意识值 unconscious_h==3 |
-| SUPP-05 | 愤怒值下界 | 每个角色的angry_point类型为int且不小于0 |
+| SUPP-05 | 愤怒值下界 | 每个角色的body.needs的angry类型为int且不小于0 |
 | SUPP-06 | 模板对象别名 | 任一角色实例的ability/experience/talent字典都不得与任一NPC模板 对应字典是同一个对象（用id()判等，不比较值） |
 | SUPP-07 | 仓储扩展模块使用数非负 | （只取独立于NUM-26的后半式） |
 | SUPP-08 | 办公室场景引用合法 | character_data中每个角色的officeroom（列表字段）只允许是空列表或 cache.scene_data的合法键 |

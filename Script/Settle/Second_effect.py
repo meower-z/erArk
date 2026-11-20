@@ -16,7 +16,7 @@ from Script.Settle.common_default import (
     base_chara_state_common_settle,
 )
 from Script.Design import game_time
-from Script.Modules.domains import needs
+from Script.Modules.domains import needs, pregnancy
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -3213,7 +3213,7 @@ def handle_add_sleep_point(
         return
 
     if handle_premise.handle_self_sleep_pills(character_id):
-        character_data.sleep_point = 100
+        needs.set(character_id, sleep=100)
         needs.set(character_id, tired=max(10, needs.of(character_id)["tired"]))
 
 
@@ -3339,15 +3339,15 @@ def handle_b_orgasm_to_milk(
         return
 
     # 额外增加乳汁
-    add_milk = int(character_data.pregnancy.milk_max * 0.2)
+    add_milk = int(pregnancy.milk_max(character_id) * 0.2)
     needs.add(character_id, "milk", add_milk)
     # 喷乳至回到最大值的40%，其余的喷出
     eject_milk = int(
-        needs.of(character_id)["milk"] - character_data.pregnancy.milk_max * 0.4
+        needs.of(character_id)["milk"] - pregnancy.milk_max(character_id) * 0.4
     )
     if eject_milk > 0:
         needs.set(
-            character_id, milk=int(character_data.pregnancy.milk_max * 0.4)
+            character_id, milk=int(pregnancy.milk_max(character_id) * 0.4)
         )
         character_data.behavior.milk_ml += eject_milk
 

@@ -418,7 +418,7 @@ class SeeCharacterBodyPanel:
             )
             # 欲望值文本
             desire_text = _("欲望值{0}%").format(
-                target_character_data.desire_point
+                needs.of(target_character_data.cid)["desire"]
             )
             # 组合文本
             now_text = _(" 当前为{0},{1},{2}").format(

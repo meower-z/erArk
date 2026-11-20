@@ -28,6 +28,7 @@ from Script.Design.handle_premise.handle_premise_body_manage import *
 from Script.Design.handle_premise.handle_premise_work import *
 from Script.Design.handle_premise.handle_premise_food import *
 from Script.Design.handle_premise.premise_registry import add_premise
+from Script.Modules.domains import needs
 
 cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -439,7 +440,6 @@ def handle_comprehensive_value_premise(
     pl_character_data = cache.character_data[0]
     pl_target_character_id = pl_character_data.target_character_id
     pl_target_character_data = cache.character_data[pl_target_character_id]
-    # print(f"debug character_id = {character_id}, premise_all_value_list = {premise_all_value_list}")
 
     # 罗德岛全局数值的主体RI（Plan 23）：资源、声望、公务量这类不属于任何角色的数值
     # 必须在角色主体的判别之前提前返回：下面那段数值B的判别是按「类型|子id」拆的，
@@ -1267,9 +1267,9 @@ def handle_normal_5(character_id: int) -> int:
     if _sleep_counts(character_id) and handle_sleep_level_0(character_id):
         return 0
     # 醉酒，醉酒值为0时必为清醒
-    if cache.character_data[
+    if needs.of(character_id)["drunk"] > 0 and handle_drunk_level_2(
         character_id
-    ].drunk_point > 0 and handle_drunk_level_2(character_id):
+    ):
         return 0
     return 1
 
@@ -1298,9 +1298,9 @@ def handle_normal_6(character_id: int) -> int:
     if _sleep_counts(character_id) and handle_sleep_level_ge_1(character_id):
         return 0
     # 烂醉，醉酒值为0时必为清醒
-    if cache.character_data[
+    if needs.of(character_id)["drunk"] > 0 and handle_drunk_level_3(
         character_id
-    ].drunk_point > 0 and handle_drunk_level_3(character_id):
+    ):
         return 0
     return 1
 

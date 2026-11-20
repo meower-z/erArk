@@ -24,7 +24,7 @@ from Script.Design import (
 from Script.UI.Moudle import draw
 from Script.UI.Panel import ejaculation_panel
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import needs
+from Script.Modules.domains import needs, pregnancy
 
 if TYPE_CHECKING:
     from Script.Kernel import core
@@ -161,12 +161,12 @@ def character_aotu_change_value(
     # 获取当前体力气力与最大值的比例，当前比例越低，调整系数越高，最高为无体力时的2倍，最低为满比例时的1倍
     # 比例读体力气力的整数部分：它们反馈进饥饿的比率，读精确值会让分母逐段变大
     hit_adjust_coefficient = 2 - Fraction(
-        num.whole(now_character_data.hit_point),
-        now_character_data.hit_point_max,
+        num.whole(needs.of(character_id)["hit"]),
+        needs.of(character_id)["hit_max"],
     )
     mana_adjust_coefficient = 2 - Fraction(
-        num.whole(now_character_data.mana_point),
-        now_character_data.mana_point_max,
+        num.whole(needs.of(character_id)["mana"]),
+        needs.of(character_id)["mana_max"],
     )
 
     # 结算饥饿值
@@ -223,7 +223,7 @@ def character_aotu_change_value(
         # 结算乳汁量，仅结算有泌乳素质的
         if now_character_data.talent[27]:
             add_milk = num.jitter(true_add_time * MILK_PER_MINUTE, 80, 120)
-            milk_max = now_character_data.pregnancy.milk_max
+            milk_max = pregnancy.milk_max(character_id)
             needs.add(character_id, "milk", add_milk, max=milk_max)
 
         # 有意识下的部分持续结算
@@ -517,16 +517,13 @@ def settle_rest(character_id: int, true_add_time: int) -> None:
         elif setting == 2:
             final_adjust *= Fraction(3, 2)
     # 回复体力和气力
-    hp_base = now_char.hit_point_max * Fraction(3, 1000) + 10
-    mp_base = now_char.mana_point_max * Fraction(3, 500) + 20
+    maxima = needs.of(character_id)
+    hp_base = maxima["hit_max"] * Fraction(3, 1000) + 10
+    mp_base = maxima["mana_max"] * Fraction(3, 500) + 20
     add_hp: num.Num = hp_base * true_add_time * final_adjust
     add_mp: num.Num = mp_base * true_add_time * final_adjust
-    now_char.hit_point = min(
-        now_char.hit_point + add_hp, now_char.hit_point_max
-    )
-    now_char.mana_point = min(
-        now_char.mana_point + add_mp, now_char.mana_point_max
-    )
+    needs.add(character_id, "hit", add_hp, max=maxima["hit_max"])
+    needs.add(character_id, "mana", add_mp, max=maxima["mana_max"])
 
 
 def settle_sleep(character_id: int, true_add_time: int) -> None:
@@ -547,7 +544,9 @@ def settle_sleep(character_id: int, true_add_time: int) -> None:
     tired_change: num.Num = Fraction(true_add_time, 3)
     needs.add(character_id, "tired", -tired_change, min=0)
     # 增加熟睡值
-    level, __ = attr_calculation.get_sleep_level(now_char.sleep_point)
+    level, __ = attr_calculation.get_sleep_level(
+        needs.of(character_id)["sleep"]
+    )
     add_sleep: num.Num
     if level <= 1:
         add_sleep = true_add_time * tired_adjust * Fraction(3, 2)
@@ -564,10 +563,10 @@ def settle_sleep(character_id: int, true_add_time: int) -> None:
         and handle_premise.handle_self_not_sleep_pills(character_id)
         and handle_premise.handle_drunk_level_0(character_id)
     ):
-        sleep_point: num.Num = now_char.sleep_point - add_sleep
-        now_char.sleep_point = min(max(sleep_point, 0), 100)
+        sleep_point: num.Num = needs.of(character_id)["sleep"] - add_sleep
+        needs.set(character_id, sleep=min(max(sleep_point, 0), 100))
         # 熟睡值已减少到0时NPC直接醒来
-        if now_char.sleep_point <= 0 and character_id:
+        if needs.of(character_id)["sleep"] <= 0 and character_id:
             pl_character_data: game_type.Character = cache.character_data[0]
             # 玩家与该角色在同一地点，且玩家正在对该角色睡奸中，则结算从无意识H中恢复意识
             if (
@@ -588,8 +587,8 @@ def settle_sleep(character_id: int, true_add_time: int) -> None:
             return
     # 其他情况下正常增加熟睡值
     else:
-        raised: num.Num = now_char.sleep_point + add_sleep
-        now_char.sleep_point = min(max(raised, 0), 100)
+        raised: num.Num = needs.of(character_id)["sleep"] + add_sleep
+        needs.set(character_id, sleep=min(max(raised, 0), 100))
     # 回复体力和气力
     final_adjust: num.Num = 1
     if now_char.talent[351]:
@@ -612,16 +611,13 @@ def settle_sleep(character_id: int, true_add_time: int) -> None:
             )
         )
         final_adjust *= 1 + Fraction(knowledge_level, 20)
-    hp_base = now_char.hit_point_max * Fraction(1, 400) + 3
-    mp_base = now_char.mana_point_max * Fraction(1, 200) + 6
+    maxima = needs.of(character_id)
+    hp_base = maxima["hit_max"] * Fraction(1, 400) + 3
+    mp_base = maxima["mana_max"] * Fraction(1, 200) + 6
     add_hp: num.Num = hp_base * true_add_time * final_adjust
     add_mp: num.Num = mp_base * true_add_time * final_adjust
-    now_char.hit_point = min(
-        now_char.hit_point + add_hp, now_char.hit_point_max
-    )
-    now_char.mana_point = min(
-        now_char.mana_point + add_mp, now_char.mana_point_max
-    )
+    needs.add(character_id, "hit", add_hp, max=maxima["hit_max"])
+    needs.add(character_id, "mana", add_mp, max=maxima["mana_max"])
 
 
 def settle_player_ability(character_id: int, true_add_time: int) -> None:
@@ -643,14 +639,14 @@ def settle_player_ability(character_id: int, true_add_time: int) -> None:
         )
         down_sp = min(
             Fraction(true_add_time, 12) * max(multiple, 1),
-            character_data.sanity_point,
+            needs.of(character_id)["sanity"],
         )
-        character_data.sanity_point -= down_sp
+        needs.add(character_id, "sanity", -down_sp)
         character_data.pl_ability.today_sanity_point_cost += down_sp
     # 时停系技艺消耗
     if handle_premise.handle_time_stop_on(character_id):
-        down_sp = min(true_add_time * 2, character_data.sanity_point)
-        character_data.sanity_point -= down_sp
+        down_sp = min(true_add_time * 2, needs.of(character_id)["sanity"])
+        needs.add(character_id, "sanity", -down_sp)
         character_data.pl_ability.today_sanity_point_cost += down_sp
 
 
@@ -690,7 +686,7 @@ def arts_break_due() -> bool:
     """
     character_data = cache.character_data[0]
     if (
-        character_data.sanity_point > 0
+        needs.of(character_data.cid)["sanity"] > 0
         or character_data.behavior.behavior_id in ARTS_BREAK_EXEMPT
     ):
         return False
@@ -711,7 +707,7 @@ def break_arts() -> "core.Effects":
     draw_wait.text = _("\n理智值不足，开启的源石技艺已全部中断\n")
     draw_wait.draw()
     character_data = cache.character_data[0]
-    character_data.sanity_point = 0
+    needs.set(character_data.cid, sanity=0)
     character_data.pl_ability.visual = False
     items: list[core.Effect] = []
     for behavior_id in _arts_ends_to_plan():
@@ -820,11 +816,13 @@ def settle_sleep_h(character_id: int, true_add_time: int) -> None:
             continue
 
         # 减少熟睡程度；睡眠等级大于1时也照常结算，只是不会进入醒来判定
-        sleeper_data.sleep_point = max(0, sleeper_data.sleep_point - down_sleep)
+        needs.set(
+            sleeper_id, sleep=max(0, needs.of(sleeper_id)["sleep"] - down_sleep)
+        )
 
         # 重新计算当前熟睡等级
         sleep_level, __ = attr_calculation.get_sleep_level(
-            sleeper_data.sleep_point
+            needs.of(sleeper_id)["sleep"]
         )
         # 只有睡眠等级小于等于1时才判定是否被吵醒
         if sleep_level <= 1:

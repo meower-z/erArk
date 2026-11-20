@@ -22,6 +22,7 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Design import game_time, map_handle
 from Script.System.Education_System import education_constant, growth_handle
+from Script.Modules.domains import needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -1166,11 +1167,10 @@ def judge_hp_low_only_watch(character_id: int) -> bool:
     """
     if character_id not in cache.character_data:
         return False
-    character_data: game_type.Character = cache.character_data[character_id]
-    if not character_data.hit_point_max:
+    if not needs.of(character_id)["hit_max"]:
         return False
     return (
-        character_data.hit_point / character_data.hit_point_max
+        needs.of(character_id)["hit"] / needs.of(character_id)["hit_max"]
         < education_constant.ABSENT_HP_RATE
     )
 

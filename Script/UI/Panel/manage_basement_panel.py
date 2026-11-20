@@ -13,6 +13,7 @@ from Script.Design import basement, attr_calculation, handle_premise, game_time
 from Script.UI.Moudle import draw, view
 from Script.UI.Panel import see_character_info_panel
 from Script.Config import game_config, normal_config
+from Script.Modules.domains import needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -746,13 +747,13 @@ class Manage_Basement_Panel:
                         if key == _("信赖"):
                             return c.trust
                         if key == _("体力"):
-                            return c.hit_point
+                            return needs.of(nid)["hit"]
                         if key == _("最大体力"):
-                            return c.hit_point_max
+                            return needs.of(nid)["hit_max"]
                         if key == _("气力"):
-                            return c.mana_point
+                            return needs.of(nid)["mana"]
                         if key == _("最大气力"):
-                            return c.mana_point_max
+                            return needs.of(nid)["mana_max"]
                         if key == _("催眠深度"):
                             return c.hypnosis.hypnosis_degree
                         if key == _("工作"):
@@ -849,14 +850,14 @@ class Manage_Basement_Panel:
                             hp_draw.scale = 0.8
                             hp_draw.set(
                                 "HitPointbar",
-                                int(character_data.hit_point_max),
-                                num.shown(character_data.hit_point),
+                                int(needs.of(character_id)["hit_max"]),
+                                num.shown(needs.of(character_id)["hit"]),
                                 "体力",
                             )
                             hp_draw.draw()
 
                             hp_str_len = len(
-                                f"({num.shown(character_data.hit_point)}/{int(character_data.hit_point_max)})"
+                                f"({num.shown(needs.of(character_id)['hit'])}/{int(needs.of(character_id)['hit_max'])})"
                             )
                             pad_len = max(0, 12 - hp_str_len)
 
@@ -870,14 +871,14 @@ class Manage_Basement_Panel:
                             mp_draw.scale = 0.8
                             mp_draw.set(
                                 "ManaPointbar",
-                                int(character_data.mana_point_max),
-                                num.shown(character_data.mana_point),
+                                int(needs.of(character_id)["mana_max"]),
+                                num.shown(needs.of(character_id)["mana"]),
                                 "气力",
                             )
                             mp_draw.draw()
 
                             mp_str_len = len(
-                                f"({num.shown(character_data.mana_point)}/{int(character_data.mana_point_max)})"
+                                f"({num.shown(needs.of(character_id)['mana'])}/{int(needs.of(character_id)['mana_max'])})"
                             )
                             mp_pad_len = max(0, 12 - mp_str_len)
 
@@ -1164,8 +1165,7 @@ class Manage_Basement_Panel:
                 info_draw.width = self.width
                 info_draw.draw()
                 return
-            else:
-                now_panel = equipmen_panel.Equipment_Maintain_Panel(self.width)
+            now_panel = equipmen_panel.Equipment_Maintain_Panel(self.width)
         elif son_panel == _("[生产系统]"):
             now_panel = manage_assembly_line_panel.Manage_Assembly_Line_Panel(
                 self.width

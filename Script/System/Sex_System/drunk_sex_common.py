@@ -22,8 +22,7 @@ def get_drunk_level(character_id: int) -> tuple[int, str]:
     int -- 醉酒等级cid,0-3\n
     str -- 醉酒等级名,清醒-烂醉
     """
-    character_data = cache.character_data[character_id]
-    value: num.Num = character_data.drunk_point
+    value: num.Num = needs.of(character_id)["drunk"]
     # 如果角色千杯不醉，则醉酒值*0.1
     if handle_premise.handle_self_have_never_drunk(character_id):
         value *= Fraction(1, 10)
@@ -80,7 +79,6 @@ def add_drunk_point(
     None
     """
     # 获取该食物会增加的醉酒值
-    character_data = cache.character_data[character_id]
     add_value = get_food_drunk_value(food)
     if add_value <= 0:
         return
@@ -88,8 +86,9 @@ def add_drunk_point(
     if taste_wine_flag:
         add_value = round(add_value * 0.3)
     # 增加角色的醉酒值，并确保不超过100
-    character_data.drunk_point = min(
-        100, character_data.drunk_point + add_value
+    needs.set(
+        character_id,
+        drunk=min(100, needs.of(character_id)["drunk"] + add_value),
     )
 
 
@@ -102,9 +101,8 @@ def reduce_drunk_point(character_id: int, time: int) -> None:
     Return arguments:\n
     None
     """
-    character_data = cache.character_data[character_id]
     # 醉酒值小于等于0时不再减少
-    if character_data.drunk_point <= 0:
+    if needs.of(character_id)["drunk"] <= 0:
         return
     # 每分钟减少 1/10
     base_reduce = Fraction(time, 10)
@@ -125,8 +123,9 @@ def reduce_drunk_point(character_id: int, time: int) -> None:
         coefficient *= Fraction(3, 2)
     # 计算最终减少值，并确保醉酒值不低于0
     reduce_value: num.Num = base_reduce * coefficient
-    character_data.drunk_point = max(
-        0, character_data.drunk_point - reduce_value
+    needs.set(
+        character_id,
+        drunk=max(0, needs.of(character_id)["drunk"] - reduce_value),
     )
     # 减少的醉酒值按 3/2 转化为尿意值
     add_urinate: num.Num = reduce_value * Fraction(3, 2)
@@ -186,7 +185,7 @@ def taste_wine(character_id: int) -> None:
 
     character_data = cache.character_data[character_id]
     # 获取角色当前醉酒值和醉酒等级
-    drunk_value = character_data.drunk_point
+    drunk_value = needs.of(character_id)["drunk"]
     get_drunk_level(character_id)
     # 角色的酒量基础为3，从一杯就倒到千杯不醉，分别对应为1到5
     alcohol_tolerance = 3

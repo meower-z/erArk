@@ -17,6 +17,7 @@ from Script.Design import (
 )
 from Script.UI.Moudle import draw
 from Script.Config import normal_config
+from Script.Modules.domains import needs
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -118,8 +119,12 @@ def update_new_day() -> None:
             # 清零食物不对劲的flag
             character_data.sp_flag.find_food_weird = False
             # 根据欲望等级增加欲望值
-            character_data.desire_point += random.randint(
-                character_data.ability[33], character_data.ability[33] * 2
+            needs.add(
+                character_id,
+                "desire",
+                random.randint(
+                    character_data.ability[33], character_data.ability[33] * 2
+                ),
             )
             # 每周一次，如果已陷落则提供粉红凭证
             if game_time.now().weekday() == 6:

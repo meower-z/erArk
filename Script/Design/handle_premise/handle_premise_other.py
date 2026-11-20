@@ -18,6 +18,7 @@ from Script.Design import (
 from Script.Config import normal_config, game_config
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.UI.Moudle import view
+from Script.Modules.domains import needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -613,8 +614,7 @@ def handle_good_mood(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    value = character_data.angry_point
+    value = needs.of(character_id)["angry"]
     if value <= 5:
         return 1
     else:
@@ -630,8 +630,7 @@ def handle_normal_mood(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    value = character_data.angry_point
+    value = needs.of(character_id)["angry"]
     if 5 < value and value <= 30:
         return 1
     else:
@@ -647,8 +646,7 @@ def handle_bad_mood(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    value = character_data.angry_point
+    value = needs.of(character_id)["angry"]
     if 30 < value and value <= 50:
         return 1
     else:
@@ -664,8 +662,7 @@ def handle_angry_mood(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    value = character_data.angry_point
+    value = needs.of(character_id)["angry"]
     if value > 50:
         return 1
     else:
@@ -772,7 +769,7 @@ def handle_t_bad_or_angry_mood(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    value = target_data.angry_point
+    value = needs.of(target_data.cid)["angry"]
     if value > 30:
         return 1
     else:

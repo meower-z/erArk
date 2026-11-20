@@ -40,7 +40,7 @@ def handle_self_exhausted(character_id: int) -> int:
 
     character_data: game_type.Character = cache.character_data[character_id]
     # 体力耗尽（力竭）
-    if character_data.hit_point <= 1:
+    if needs.of(character_id)["hit"] <= 1:
         return 1
     # 疲劳状态
     if character_data.sp_flag.tired:

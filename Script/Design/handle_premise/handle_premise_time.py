@@ -334,10 +334,9 @@ def handle_tired_ge_75_or_sleep_time_or_hp1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     if handle_tired_ge_75_or_sleep_time(character_id):
         return 1
-    elif character_data.hit_point <= 1:
+    elif needs.of(character_id)["hit"] <= 1:
         return 1
     return 0
 

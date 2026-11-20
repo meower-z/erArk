@@ -386,7 +386,7 @@ def handle_unconscious_h_response(
         # 如果陷落状态小于0，则目标角色愤怒并增加愤怒值
         elif character_fall_level < 0:
             response = UnconsciousHResponse.ANGRY
-            target_data.angry_point += 100
+            needs.add(target_character_id, "angry", 100)
             target_data.sp_flag.angry_with_player = True
         # 如果没有陷落状态，则设置为高级性骚扰状态
         else:
@@ -466,17 +466,12 @@ def judge_weak_up_in_sleep_h(
     """
     if target_character_id in cache.noise_woken:
         return
-    target_data: game_type.Character = cache.character_data[target_character_id]
 
     # 浅睡和半梦半醒时递增苏醒概率
-    weak_rate = (
-        game_config.config_sleep_level[1].sleep_point - target_data.sleep_point
-    )
-    if target_data.sleep_point <= game_config.config_sleep_level[0].sleep_point:
-        weak_rate += (
-            game_config.config_sleep_level[0].sleep_point
-            - target_data.sleep_point
-        )
+    sleep = needs.of(target_character_id)["sleep"]
+    weak_rate = game_config.config_sleep_level[1].sleep_point - sleep
+    if sleep <= game_config.config_sleep_level[0].sleep_point:
+        weak_rate += game_config.config_sleep_level[0].sleep_point - sleep
     # 判定是否吵醒
     if weak_rate >= random.randint(1, 100):
         cache.noise_woken[target_character_id] = character_id
@@ -494,8 +489,7 @@ def wake_by_noise(character_id: int, target_character_id: int) -> None:
     now_character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[target_character_id]
     # 清空疲劳和睡眠程度
-    needs.set(target_character_id, tired=0)
-    target_data.sleep_point = 0
+    needs.set(target_character_id, tired=0, sleep=0)
     if target_data.sp_flag.unconscious_h == 1:
         # 睡奸目标：走现有无意识H恢复流程
         info_text = _("\n因为{0}的动作，{1}从梦中惊醒过来\n").format(

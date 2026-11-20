@@ -22,6 +22,8 @@ from Script.Design import (
     attr_calculation,
     basement,
 )
+from Script.Kernel import core
+from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import kernel_state
 from Script.UI.Moudle import panel, draw, view
 from Script.Config import normal_config, game_config
@@ -41,7 +43,7 @@ line = draw.LineDraw("=", width)
 
 @handle_panel.add_panel(constant.Panel.CREATOR_CHARACTER)
 def creator_character_panel() -> None:
-    """创建角色面板"""
+    """创建角色面板。建角色写的 GameState 数据记在以当前状态为底的缓冲区里，换成效果后交给 kernel_state.new_game"""
     # 清掉同一进程里上一局残留的角色与已获得集合，并从干净的全局配置池重新拷贝一份角色模板：
     #    上一局生的女儿，其模板会随 born_new_character 留在运行时的 npc_tem_data 里、角色也留在
     #    character_data 里，而标题画面开新游戏并不重置这些运行时数据。不清的话 init_character_list
@@ -54,24 +56,25 @@ def creator_character_panel() -> None:
     # 时钟回到开局：建角色时读到的游戏时间都是开局时刻
     clock = kernel_state.first_clock()
     kernel_state.reset_clock(clock)
-    character_handle.init_character_tem()
-    cache.character_data[0] = game_type.Character()
-    character_handle.init_character_list()
-    while 1:
-        confirm_game_info_panel()
-        if input_name_panel():
-            character.init_attr(0)
-            # game_start()
-            cache.rhodes_island = basement.get_base_zero()
-            first_bonus_and_setting_updata()
-            character_handle.first_NPC_work()
-            io_init.init_style()  # 刷新NPC的文本字体颜色
-            if confirm_character_attr_panel():
-                game_start()
-                break
+    with working.based_on(core.state()) as buffer:
+        character_handle.init_character_tem()
         cache.character_data[0] = game_type.Character()
-    view.now_panel_id = constant.Panel.IN_SCENE
-    kernel_state.new_game(clock)
+        character_handle.init_character_list()
+        while 1:
+            confirm_game_info_panel()
+            if input_name_panel():
+                character.init_attr(0)
+                cache.rhodes_island = basement.get_base_zero()
+                first_bonus_and_setting_updata()
+                character_handle.first_NPC_work()
+                io_init.init_style()  # 刷新NPC的文本字体颜色
+                if confirm_character_attr_panel():
+                    game_start()
+                    break
+            cache.character_data[0] = game_type.Character()
+        view.now_panel_id = constant.Panel.IN_SCENE
+        effects = buffer.effects()
+    kernel_state.new_game(clock, effects)
 
 
 def first_bonus_and_setting_updata() -> None:
@@ -157,7 +160,6 @@ def confirm_game_info_panel() -> None:
 
 def confirm_character_attr_panel() -> bool:
     """确认角色属性面板"""
-    # now_attr_panel = see_character_info_panel.SeeCharacterInfoPanel(0, width)
     askfor_panel = panel.OneMessageAndSingleColumnButton()
     while 1:
         line_feed_draw.draw()
@@ -221,8 +223,6 @@ class Character_creat_Handle:
         bonus_draw = Character_Bonus(self.width)
         world_setting_draw = World_Setting(self.width)
         other_settings_draw = Other_Settings(self.width)
-        # abi_draw = see_character_info_panel.CharacterabiText(0, width)
-        # tal_draw = see_character_info_panel.CharacterTalentText(0, width, 8, 0)
         self.draw_list: list = [
             info_draw,
             jj_draw,

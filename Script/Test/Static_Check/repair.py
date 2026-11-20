@@ -111,30 +111,27 @@ def repair_fatigue_family_range(cache: game_type.Cache) -> list[dict]:
     返回值:
         List[dict]: 修复记录列表
     功能:
-        与NUM-27（含MIND-24的sleep_point子集）同语义：body.needs的tired、hunger与角色的sleep_point、drunk_point
-        必须是[0,上界]内的int或Fraction。其他类型置0，越界钳制到边界。body.needs的项经needs.set写回。
+        与NUM-27同语义：body.needs的tired、hunger、sleep、drunk必须是[0,上界]内的int或Fraction。
+        其他类型置0，越界钳制到边界，经needs.set写回。
     """
     bounds = {
         "needs.tired": 160,
         "needs.hunger": 240,
-        "sleep_point": 100,
-        "drunk_point": 100,
+        "needs.sleep": 100,
+        "needs.drunk": 100,
     }
     records = []
     for cid, chara in cache.character_data.items():
         values = {f"needs.{k}": v for k, v in needs.of(cid).items()}
         for field, upper in bounds.items():
-            v = values.get(field, getattr(chara, field, None))
+            v = values[field]
             if isinstance(v, int | Fraction) and not isinstance(v, bool):
                 if 0 <= v <= upper:
                     continue
                 new_v = min(max(v, 0), upper)
             else:
                 new_v = 0
-            if field in values:
-                needs.set(cid, **{field.removeprefix("needs."): new_v})
-            else:
-                setattr(chara, field, new_v)
+            needs.set(cid, **{field.removeprefix("needs."): new_v})
             records.append(
                 _record("NUM-27", _chara_label(cid, chara), field, v, new_v)
             )
@@ -149,15 +146,15 @@ def repair_angry_point_lower_bound(cache: game_type.Cache) -> list[dict]:
     返回值:
         List[dict]: 修复记录列表
     功能:
-        与SUPP-05同语义：angry_point必须是>=0的int。非int置0，负值拉回0
+        与SUPP-05同语义：body.needs的angry必须是>=0的int。非int置0，负值拉回0，经needs.set写回
     """
     records = []
     for cid, chara in cache.character_data.items():
-        v = getattr(chara, "angry_point", 0)
+        v = needs.of(cid)["angry"]
         if type(v) is int and v >= 0:
             continue
         new_v = max(v, 0) if type(v) is int else 0
-        chara.angry_point = new_v
+        needs.set(cid, angry=new_v)
         records.append(
             _record(
                 "SUPP-05", _chara_label(cid, chara), "angry_point", v, new_v

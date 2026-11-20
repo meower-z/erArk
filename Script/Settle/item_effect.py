@@ -1629,7 +1629,7 @@ def handle_target_add_huge_desire_and_submit(
     target_change.status_data[15] += now_add_lust
 
     # 欲望值
-    target_data.desire_point = 100
+    needs.set(target_data.cid, desire=100)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1840,8 +1840,7 @@ def handle_target_add_tired_tosleep(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    needs.set(target_data.cid, tired=160)
-    target_data.sleep_point = 100
+    needs.set(target_data.cid, tired=160, sleep=100)
     target_data.h_state.body_item[9][1] = True
     target_data.h_state.body_item[9][2] = now_time + datetime.timedelta(hours=8)
 

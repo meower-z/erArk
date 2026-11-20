@@ -18,6 +18,7 @@ from Script.Design import (
     game_time,
 )
 from Script.Config import game_config, character_config, normal_config
+from Script.Modules.domains import needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -74,8 +75,9 @@ def init_character(
     now_character.ability = copy.deepcopy(character_tem.Ability)
     now_character.experience = copy.deepcopy(character_tem.Experience)
     now_character.talent = copy.deepcopy(character_tem.Talent)
-    now_character.hit_point_max = character_tem.Hp
-    now_character.mana_point_max = character_tem.Mp
+    needs.set(
+        now_character.cid, hit_max=character_tem.Hp, mana_max=character_tem.Mp
+    )
     now_character.dormitory = character_tem.Dormitory
     now_character.token_text = character_tem.Token
     # if character_tem.Chest:

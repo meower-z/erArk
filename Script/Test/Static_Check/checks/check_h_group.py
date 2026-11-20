@@ -29,8 +29,9 @@ final_invariants_h_group.md（H-xx + HS-xx 不变式清单）。
 from __future__ import annotations
 
 
-from Script.Core import cache_control
+from Script.Core import cache_control, num
 from Script.Design import game_time
+from Script.Modules.domains import needs
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -241,7 +242,7 @@ def check_hgroup_02() -> list[CheckFailure]:
     detail = [
         (
             f"cid={c.cid} name={_name(c)} is_h={c.sp_flag.is_h} behavior_id={_behavior_id(c)} "
-            f"hit_point={getattr(c, 'hit_point', None)}"
+            f"hit_point={num.shown(needs.of(c.cid)['hit'])}"
         )
         for c in in_h
     ]
@@ -1072,16 +1073,15 @@ def check_hgroup_15() -> list[CheckFailure]:
                         [0, t.cid],
                     )
                 )
-    else:
-        if hidden:
-            failures.append(
-                make_failure(
-                    "HGROUP-15",
-                    "隐奸模式必须双向一致且至多一对",
-                    f"[warning] {known_bug}：玩家hidden_sex_mode=0但存在带该模式的NPC；{_ctx()}",
-                    [c.cid for c in hidden],
-                )
+    elif hidden:
+        failures.append(
+            make_failure(
+                "HGROUP-15",
+                "隐奸模式必须双向一致且至多一对",
+                f"[warning] {known_bug}：玩家hidden_sex_mode=0但存在带该模式的NPC；{_ctx()}",
+                [c.cid for c in hidden],
             )
+        )
     return failures
 
 
@@ -1741,7 +1741,7 @@ def check_hgroup_28() -> list[CheckFailure]:
                     (
                         f"角色cid={cid}({_name(c)})pretend_sleep=True但sleep_h_awake={awake} "
                         f"unconscious_h={uh!r}(应为1) is_h={ih}；"
-                        f"behavior_id={_behavior_id(c)} sleep_point={getattr(c, 'sleep_point', None)} "
+                        f"behavior_id={_behavior_id(c)} sleep_point={num.shown(needs.of(cid)['sleep'])} "
                         f"cache.time_stop_mode={getattr(cache, 'time_stop_mode', None)}(若为True，"
                         f"已知会因HGROUP-27的时停覆写而误报，请先排除)"
                     ),

@@ -15,6 +15,7 @@ from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 
 from typing import TYPE_CHECKING
+from Script.Modules.domains import needs
 
 if TYPE_CHECKING:
     from typing import Any
@@ -65,6 +66,7 @@ def achievement_flow(achievement_type: str, achievement_id: int = 0) -> None:
     功能：根据类型结算成就并绘制获得提示
     """
     pl_character_data: game_type.Character = cache.character_data[0]
+    pl_needs = needs.of(0)
     # 成就类型与结算函数的映射字典
     func = None
     if achievement_type == _("关系"):
@@ -122,10 +124,7 @@ def achievement_flow(achievement_type: str, achievement_id: int = 0) -> None:
             [331, 332, 333],
         ],
         _("锻炼"): [
-            min(
-                pl_character_data.hit_point_max,
-                pl_character_data.mana_point_max,
-            ),
+            min(pl_needs["hit_max"], pl_needs["mana_max"]),
             [401, 402, 403],
         ],
         _("时停"): [cache.achievement.time_stop_duration, [601, 602, 603]],

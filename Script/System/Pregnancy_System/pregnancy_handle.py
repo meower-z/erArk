@@ -28,6 +28,7 @@ from Script.System.Pregnancy_System import born_event_panel
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.Config import game_config, normal_config
 from Script.Modules.gameplay_resolution import working
+from Script.Modules.domains import pregnancy
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -518,14 +519,13 @@ def check_fertilization(character_id: int) -> int | None:
                 )
 
         character_data.pregnancy.fertilization_rate = 0
-    else:
-        if (
-            character_data.h_state.body_item[11][1]
-            or character_data.h_state.body_item[12][1]
-        ):
-            draw_text += _(
-                "\n在避孕药的影响下——\n精子在{0}的阴道中游荡，但未能成功受精\n"
-            ).format(character_data.name)
+    elif (
+        character_data.h_state.body_item[11][1]
+        or character_data.h_state.body_item[12][1]
+    ):
+        draw_text += _(
+            "\n在避孕药的影响下——\n精子在{0}的阴道中游荡，但未能成功受精\n"
+        ).format(character_data.name)
 
     # 绘制输出
     talk.must_show_talk_check(character_id)
@@ -562,8 +562,8 @@ def check_pregnancy(character_id: int) -> None:
             # 根据罩杯大小修改乳汁上限
             for talent_id in [121, 122, 123, 124, 125]:
                 if character_data.talent[talent_id]:
-                    character_data.pregnancy.milk_max = (
-                        150 + (talent_id - 121) * 40
+                    pregnancy.set_milk_max(
+                        character_id, 150 + (talent_id - 121) * 40
                     )
                     break
             second_behavior.character_get_second_behavior(

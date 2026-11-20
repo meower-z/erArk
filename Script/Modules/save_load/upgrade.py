@@ -7,18 +7,22 @@ CURRENT 是本游戏写的文件 "2" 的版本。STEPS[n] 把版本 n 的 JSON �
 版本 0 与 1 的存档把动力数据放在罗德岛对象上。install_save 解开缓存后对每个版本调 adopt_power，把它搬进 GameState。
 界面的临时状态与玩家的面板选择不随存档：读任何版本的存档时，drop_ui_fields 去掉旧版本留在缓存与罗德岛对象上的它们，
 以及不再使用的字段。
+版本 3 之前的存档里，体力、气力、理智与它们的上限，愤怒、熟睡、欲望、醉酒在文件 "1" 的角色对象上。
+乳汁上限在角色的妊娠数据上。2 升 3 的 STEPS[2] 只给 body.needs 补上默认值。
+存档里的值由读档时角色替换的 copy_pickled 与重建角色后的 adopt_pickled 取来。
 读旧存档不改写存档的文件。读完再存，写的是当前版本。本模块不登记行动、事件或规则，也不在 LOAD_ORDER 里。
 """
 
-from collections.abc import Callable
-from typing import Any
+from collections.abc import Callable, Mapping
+from typing import Any, cast
 
 from Script.Core import game_type, num
-from Script.Modules.domains import needs, power
+from Script.Core.num import Num
+from Script.Modules.domains import needs, power, pregnancy
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import settings
 
-CURRENT = 2
+CURRENT = 3
 """ 本游戏写的文件 "2" 的版本 """
 
 
@@ -32,9 +36,6 @@ def _v1_to_v2(data: dict[str, Any]) -> dict[str, Any]:
     """
     return data
 
-
-STEPS: dict[int, Callable[[dict[str, Any]], dict[str, Any]]] = {1: _v1_to_v2}
-""" 版本 n 到 n + 1 的升级步骤，键为 n """
 
 V0_NEEDS = {
     "tired_point": "tired",
@@ -88,6 +89,69 @@ ISLAND_UI_FIELDS = (
     "reader_now",
 )
 """ 旧版本存在罗德岛对象上的界面临时状态与玩家的面板选择：Rhodes_Island 没有它们 """
+PICKLED_NEEDS = {
+    "hit_point": "hit",
+    "hit_point_max": "hit_max",
+    "mana_point": "mana",
+    "mana_point_max": "mana_max",
+    "sanity_point": "sanity",
+    "sanity_point_max": "sanity_max",
+    "angry_point": "angry",
+    "sleep_point": "sleep",
+    "desire_point": "desire",
+    "drunk_point": "drunk",
+}
+""" 版本 3 之前的存档里，角色对象上的属性名到 body.needs 的项 """
+PICKLED_EXACT = {
+    "hit_point",
+    "hit_point_max",
+    "mana_point",
+    "mana_point_max",
+    "sanity_point",
+    "sleep_point",
+    "drunk_point",
+}
+""" PICKLED_NEEDS 里读档时换成精确值（num.exact）的属性 """
+REPLACED_COPIES = {
+    "hit_point",
+    "mana_point",
+    "sanity_point",
+    "sanity_point_max",
+    "angry_point",
+    "sleep_point",
+    "desire_point",
+}
+""" 角色替换时从旧角色对象抄到新角色对象的属性。体力与气力上限取新角色的模板，醉酒值不抄 """
+PICKLED_MILK_MAX = "milk_max"
+""" 版本 3 之前的存档里，乳汁上限在角色妊娠数据（pregnancy）上的属性名 """
+STALE = "last_hunger_time"
+""" 版本 3 之前的存档里，角色对象上没有代码读的属性（最后一次结算饥饿的时间），读档时删掉 """
+
+
+def fill_v2_needs(data: dict[str, Any]) -> dict[str, Any]:
+    """
+    版本 2 升 3：文件 "2" 里每一份 body.needs（各角色数据里的与 roster.offstage 里的）补上 PICKLED_NEEDS 的十项，
+    取默认值，已有的项不变。十项的值在文件 "1" 的角色对象上，读档时由 adopt_pickled 写进 body.needs
+    Keyword arguments:
+    data -- 版本 2 的 JSON 对象，原地修改
+    Return arguments:
+    dict -- 版本 3 的 JSON 对象
+    """
+    default = cast(Mapping[str, Num], needs.DEFAULT)
+    added = {stat: default[stat] for stat in PICKLED_NEEDS.values()}
+    tables = [c["data"] for c in data["characters"].values()]
+    tables.extend(data["data"].get(working.OFFSTAGE, {}).values())
+    for table in tables:
+        if needs.KEY in table:
+            table[needs.KEY] = {**added, **table[needs.KEY]}
+    return data
+
+
+STEPS: dict[int, Callable[[dict[str, Any]], dict[str, Any]]] = {
+    1: _v1_to_v2,
+    2: fill_v2_needs,
+}
+""" 版本 n 到 n + 1 的升级步骤。版本 0 升 1 不是 JSON 步骤，见模块说明 """
 
 
 def fill_v0_defaults(loaded_dict: dict[str, Any]) -> None:
@@ -213,3 +277,51 @@ def drop_ui_fields(loaded_dict: dict[str, Any]) -> dict[str, Any]:
         if name in settings.PREFERENCES
         and type(value) is type(getattr(default, name))
     }
+
+
+def copy_pickled(old: object, new: object, hit_max: int, mana_max: int) -> bool:
+    """
+    角色替换时，旧角色对象还带着版本 3 之前的数值属性时，把 REPLACED_COPIES 里的属性抄到新角色对象上，
+    体力与气力上限设为新角色模板的值。读档后面的 adopt_pickled 再把它们写进 body.needs
+    Keyword arguments:
+    old -- 旧角色
+    new -- 新角色
+    hit_max -- 新角色模板的体力上限
+    mana_max -- 新角色模板的气力上限
+    Return arguments:
+    bool -- 抄了时为 True。旧角色没有这些属性时什么也不抄，为 False
+    """
+    if not hasattr(old, "hit_point"):
+        return False
+    values = {name: getattr(old, name) for name in REPLACED_COPIES}
+    values.update(hit_point_max=hit_max, mana_point_max=mana_max)
+    for name, value in values.items():
+        setattr(new, name, value)
+    return True
+
+
+def adopt_pickled(loaded_dict: dict[str, Any]) -> None:
+    """
+    重建角色之后，角色对象还带着版本 3 之前的数值属性时（版本 0 到 2 的存档），把 PICKLED_NEEDS 的十项写进当前缓冲区的
+    body.needs。PICKLED_EXACT 里的属性换成精确值，对象上缺的属性读 0。乳汁上限不是 200 时写进 body.pregnancy。
+    这些属性、妊娠数据上的乳汁上限与 last_hunger_time 从对象上删掉
+    Keyword arguments:
+    loaded_dict -- 存档缓存的属性表
+    """
+    for cid, character in loaded_dict["character_data"].items():
+        if not hasattr(character, "hit_point"):
+            continue
+        values = {}
+        for name, stat in PICKLED_NEEDS.items():
+            value = getattr(character, name, 0)
+            values[stat] = num.exact(value) if name in PICKLED_EXACT else value
+            if hasattr(character, name):
+                delattr(character, name)
+        needs.set(cid, **values)
+        milk_max = getattr(character.pregnancy, PICKLED_MILK_MAX, 200)
+        if milk_max != 200:
+            pregnancy.set_milk_max(cid, milk_max)
+        if hasattr(character.pregnancy, PICKLED_MILK_MAX):
+            delattr(character.pregnancy, PICKLED_MILK_MAX)
+        if hasattr(character, STALE):
+            delattr(character, STALE)

@@ -147,10 +147,11 @@ def describe(cid):
         if kernel
         else "不在内核里"
     )
+    n = needs.of(cid)
     return (
         f"{cd.name}(id{cid}) 位置={cd.position} bhv={cd.behavior.behavior_id} dur={cd.behavior.duration}"
-        f" start={cd.behavior.start_time} state={cd.state} tired={needs.of(cid)['tired']} sleep={cd.sleep_point}"
-        f" hp={cd.hit_point}/{cd.hit_point_max} mp={cd.mana_point}/{cd.mana_point_max}"
+        f" start={cd.behavior.start_time} state={cd.state} tired={n['tired']} sleep={n['sleep']}"
+        f" hp={n['hit']}/{n['hit_max']} mp={n['mana']}/{n['mana_max']}"
         f" sp_flag(sleep={flag.sleep} unconscious_h={flag.unconscious_h} is_h={flag.is_h} is_follow={flag.is_follow})"
         f" 内核行动结束于={end}"
     )
@@ -163,7 +164,7 @@ for _cid in [0, *sorted(WATCH)]:
 
 # 按需制造前置条件，例如把玩家搬到观察角色所在场景、压低熟睡度：
 # map_handle.character_move_scene(pl.position, cache.character_data[next(iter(WATCH))].position, 0)
-# cache.character_data[next(iter(WATCH))].sleep_point = 20
+# from tests import kernel_data; kernel_data.set_needs(next(iter(WATCH)), sleep=20)
 
 # ==== 2. 随机 ====
 random.seed(1)

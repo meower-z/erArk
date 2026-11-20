@@ -19,6 +19,7 @@ from Script.System.Pregnancy_System import pregnancy_handle
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
+from Script.Modules.domains import needs
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -97,7 +98,7 @@ def update_sleep() -> None:
             line_feed.draw()
         else:
             # 清零并随机重置生气程度
-            character_data.angry_point = random.randrange(1, 35)
+            needs.set(character_id, angry=random.randrange(1, 35))
             # 清零H被撞破的flag
             character_data.action_info.h_interrupt = 0
             # 重置每天第一次见面
@@ -214,12 +215,13 @@ def sanity_point_grow() -> None:
     today_cost = character_data.pl_ability.today_sanity_point_cost
     character_data.pl_ability.today_sanity_point_cost = 0
     # 消耗超过90时进行成长
-    if today_cost >= 50 and character_data.sanity_point_max < 9999:
+    if today_cost >= 50 and needs.of(character_data.cid)["sanity_max"] < 9999:
         # 成长值为消耗值的1/50，四舍五入取整
         grow_value = round(today_cost / 50)
-        character_data.sanity_point_max += grow_value
-        character_data.sanity_point_max = min(
-            character_data.sanity_point_max, 9999
+        needs.add(character_data.cid, "sanity_max", grow_value)
+        needs.set(
+            character_data.cid,
+            sanity_max=min(needs.of(character_data.cid)["sanity_max"], 9999),
         )
         # 绘制说明信息
         now_draw = draw.WaitDraw()

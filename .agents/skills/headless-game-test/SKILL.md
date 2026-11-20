@@ -266,7 +266,7 @@ pl = cache.character_data[0]
 ```
 
 - 按名字找角色：遍历 `cache.character_data.items()` 比对 `cd.name`。
-- 体检清单（排查行为类 BUG 时先打印这些）：`behavior.behavior_id / duration / start_time`、`state`、`position`、`target_character_id`、`needs.of(cid)`（疲劳 `tired`、饥饿 `hunger`、尿意 `urine`、乳汁 `milk`）、`sleep_point`、`hit_point/max`、`mana_point/max`、`sp_flag` 全量（`sleep / rest / tired / sleep_h_awake / unconscious_h / imprisonment / is_follow / is_h / hidden_sex_mode`）、醉酒等级 `drunk_sex_common.get_drunk_level(cid)`、安眠药 `h_state.body_item[9][1]`、`work.work_type`、`entertainment.entertainment_type`。
+- 体检清单（排查行为类 BUG 时先打印这些）：`behavior.behavior_id / duration / start_time`、`state`、`position`、`target_character_id`、`needs.of(cid)`（疲劳 `tired`、饥饿 `hunger`、尿意 `urine`、乳汁 `milk`、熟睡值 `sleep`、体力 `hit` 与上限 `hit_max`、气力 `mana` 与上限 `mana_max`）、`sp_flag` 全量（`sleep / rest / tired / sleep_h_awake / unconscious_h / imprisonment / is_follow / is_h / hidden_sex_mode`）、醉酒等级 `drunk_sex_common.get_drunk_level(cid)`、安眠药 `h_state.body_item[9][1]`、`work.work_type`、`entertainment.entertainment_type`。
 - 需要移动角色到某场景：`map_handle.character_move_scene(旧位置, 新位置, cid)`。
 
 ### 第四步：下玩家的指令，带护栏地推进内核（核心）
