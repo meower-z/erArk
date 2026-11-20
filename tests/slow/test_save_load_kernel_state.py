@@ -101,8 +101,8 @@ class SaveLoadKernelStateTest(SlowTestCase):
 
     def test_open_keys_load_and_each_end_runs_once(self) -> None:
         """
-        存档的内核状态带 open 键：读档后按 open 换掉行动、去掉 open；等待一次，每个行动至多收尾一次，
-        收尾的行动是读档时还在进行的干员行为或读档后开始的，前者此后结束的都收尾了
+        存档的内核状态带 open 键：读档后按 open 换掉行动、去掉 open，角色的其余数据留着。
+        等待一次，每个行动至多收尾一次。收尾的行动是读档时还在进行的干员行为或读档后开始的，前者此后结束的都收尾了
         """
         kernel = game("Script.Kernel.core")
         actions = game("Script.Modules.gameplay_resolution.actions")
@@ -117,6 +117,9 @@ class SaveLoadKernelStateTest(SlowTestCase):
             with open(path, encoding="utf-8") as f:
                 data = json.load(f)
             running = set()
+            kept = {
+                who: set(c["data"]) for who, c in data["characters"].items()
+            }
             for who, c in data["characters"].items():
                 act = c["action"]
                 opened = (
@@ -138,8 +141,8 @@ class SaveLoadKernelStateTest(SlowTestCase):
         loaded = kernel.state()
         self.assertTrue(running, "存档时有行为还在进行的干员")
         self.assertEqual(
-            {who: dict(c.data) for who, c in loaded.characters.items()},
-            {who: {} for who in loaded.characters},
+            {who: set(c.data) for who, c in loaded.characters.items()},
+            {who: kept[who] for who in loaded.characters},
         )
         self.assertEqual(
             {

@@ -15,7 +15,7 @@ import datetime
 import shutil
 
 from tests.slow.base import SlowTestCase
-from tests import world
+from tests import kernel_data, world
 
 SAVE_ID = "test_old_save_empty_field_commission"
 """ 本测试写入 save/ 的存档id，测试结束时删掉 """
@@ -168,7 +168,8 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
         )
 
         world.set_clock(end_time + datetime.timedelta(days=1))
-        field_commission_function.judge_field_commission_finish()
+        with kernel_data.writing():
+            field_commission_function.judge_field_commission_finish()
 
     def test_all_child_commission_cancelled_on_load(self) -> None:
         """成员全是101/102孩子的委托读档后取消：载具收回，不发奖励，不算完成；再读一次不变"""

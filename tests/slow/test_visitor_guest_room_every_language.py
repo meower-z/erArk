@@ -11,6 +11,7 @@ import signal
 import traceback
 from typing import Any
 
+from tests import kernel_data
 from tests.slow import remove_parent_guard
 from tests.slow.base import SlowTestCase
 from tests.slow.test_tag_logic_same_in_english import game, set_language
@@ -62,8 +63,9 @@ def collect(language: str) -> dict[str, Any]:
         game("Script.UI.Panel.recruit_panel").find_recruitable_npc()
     )[:VISITOR_COUNT]
     invite_visitor_panel: Any = game("Script.UI.Panel.invite_visitor_panel")
-    for visitor_id in visitor_list:
-        invite_visitor_panel.settle_visitor_arrivals(visitor_id)
+    with kernel_data.writing():
+        for visitor_id in visitor_list:
+            invite_visitor_panel.settle_visitor_arrivals(visitor_id)
     return {
         "guest_rooms": constant.place_data["Guest_Room"],
         "visitor_max": cache.rhodes_island.visitor_max,

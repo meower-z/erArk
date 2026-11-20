@@ -14,6 +14,7 @@
 import shutil
 from typing import TYPE_CHECKING
 
+from tests import kernel_data
 from tests.slow.base import SlowTestCase
 
 if TYPE_CHECKING:
@@ -110,7 +111,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
            以及检查要用的婴儿出生时间、外勤委托id、书id、孩子脱下的衣服、快感状态id
         """
         from Script.Design import game_time
-
         from Script.Config import game_config
 
         cache = self.cache
@@ -347,7 +347,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         baby.target_character_id = 0
         for talent_id in (20, 21, 27):
             baby.talent[talent_id] = 1
-        baby.pregnancy.milk = 50
+        kernel_data.set_needs(baby.cid, milk=50)
         baby.pregnancy.lactation_flag = True
         baby.pregnancy.fertilization_rate = 30
         baby.pregnancy.eggs = {0: {"identified": False, "fertilized": True}}
@@ -363,7 +363,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         mother = cache.character_data[mother_id]
         for talent_id in (23, 24, 27):
             mother.talent[talent_id] = 1
-        mother.pregnancy.milk = 80
+        kernel_data.set_needs(mother_id, milk=80)
         id_dict["mother"] = mother_id
         return id_dict
 
@@ -694,7 +694,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         )
         self.assertEqual(
             (
-                baby.pregnancy.milk,
+                kernel_data.needs_of(baby.cid)["milk"],
                 baby.pregnancy.lactation_flag,
                 baby.pregnancy.fertilization_rate,
                 baby.pregnancy.eggs,
@@ -827,7 +827,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         self.assertEqual(
             (
                 [mother.talent.get(talent_id, 0) for talent_id in (23, 24, 27)],
-                mother.pregnancy.milk,
+                kernel_data.needs_of(mother.cid)["milk"],
             ),
             ([1, 1, 1], 80),
             "母亲的产后、育儿与泌乳保持原样",

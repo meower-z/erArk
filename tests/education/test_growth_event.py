@@ -37,6 +37,7 @@ from Script.System.Pregnancy_System import pregnancy_constant
 import inspect
 from Script.Design import talk
 from Script.Settle import past_day_settle
+from tests import kernel_data
 import _bootstrap as _boot
 from Script.UI.Moudle import draw as _draw_module
 import importlib.util as _importlib_util
@@ -1148,9 +1149,7 @@ talk.must_show_talk_check = lambda character_id: None
 clear_schedules()
 set_time(period_time(0))
 cache.rhodes_island.party_day_of_week = {day: 0 for day in range(7)}
-cache.rhodes_island.all_work_npc_set.setdefault(
-    education_constant.TEACHER_WORK_TYPE, set()
-)
+cache.rhodes_island.all_work_npc_set.setdefault(E.TEACHER_WORK_TYPE, set())
 to_loli = make_character(
     216, "要长成萝莉的幼女", 152, daughter=True, stage=102, mother_id=103
 )
@@ -1159,7 +1158,8 @@ to_loli.pregnancy.born_time = game_time.now() - datetime.timedelta(
 )  # 已过长成萝莉的阈值 10 天
 for _uid in (child_bucket[0], "通用27", "通用16"):
     official_event_handle.push_official_event(_uid, 216)
-pregnancy_handle.check_grow_to_loli(216)
+with kernel_data.writing():
+    pregnancy_handle.check_grow_to_loli(216)
 check(
     (
         "L16 幼女长成萝莉（pregnancy_handle.check_grow_to_loli）：素质已换成萝莉，幼女桶的与前提写着不派萝莉的通用 27 "

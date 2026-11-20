@@ -79,7 +79,13 @@ class InstructColumnsHideTest(SlowTestCase):
         """疲劳值高于两条界线时，面板不列出 tired_type 不为0的指令"""
         constant = importlib.import_module("Script.Core.constant")
 
-        self.cache.character_data[0].tired_point = TIRED_POINT
+        core = importlib.import_module("Script.Kernel.core")
+        needs = importlib.import_module("Script.Modules.domains.needs")
+        working = importlib.import_module(
+            "Script.Modules.gameplay_resolution.working"
+        )
+        self.enterContext(working.based_on(core.state()))
+        needs.set(0, tired=TIRED_POINT)
         listed = self.listed_columns()
         self.assertIn(constant.Instruct.WAIT, listed)
         self.assertEqual(

@@ -2,12 +2,13 @@
 """
 存档里的内核状态
 ================
-- kernel_state.write 把 core.state() 写成 JSON，read 读回同一个 GameState。
-- 玩家选行动时读档（kernel_state.load）中止这次选择，越过插件的 except Exception：行动不开始，
-  step() 照常返回，下一步在读回的 GameState 上选行动。
-- save_handle 存档再读档：难度取存档里的，系统设置是全局的，读档不换它；内核换成存档时的 GameState。
-- 存档的内核状态里带 open 键（开始了、还没收尾的行为为真）：读档后 open 不为真的角色换成同样起止的 kernel.Idle，
-  为真的保留行为，open 一律去掉；行为的结束函数只对还没收尾的角色各运行一次。
+- kernel_state.write 把 core.state() 写成 JSON，read 读回同一个 GameState 与当前版本。
+- 存档头没有标记、也没有文件 "2" 的存档（旧存档）读回 None 与版本 0。
+- 玩家选行动时读档（kernel_state.load）中止这次选择，越过插件的 except Exception。
+  行动不开始，step() 照常返回，下一步在读回的 GameState 上选行动。
+- save_handle 存档再读档：难度取存档里的，系统设置是全局的，读档不换它。内核换成存档时的 GameState。
+- 存档的内核状态里带 open 键（开始了、还没收尾的行为为真）。读档后 open 不为真的角色换成同样起止的 kernel.Idle，
+  为真的保留行为，open 一律去掉。行为的结束函数只对还没收尾的角色各运行一次。
 存档都写在临时目录里（index.SAVE_DIR 换成它）。
 """
 
@@ -24,7 +25,7 @@ from Script.Design import attr_calculation
 from Script.Kernel import core
 from Script.Modules import load_order
 from Script.Modules.gameplay_resolution import actions
-from Script.Modules.save_load import index, kernel_state
+from Script.Modules.save_load import index, kernel_state, upgrade
 from tests.fast.base import FastTestCase
 
 SAVE_ID = "kernel_state_test"
@@ -63,6 +64,16 @@ def game(clock: int, ends: dict[str, int]) -> core.GameState:
     return core.state()
 
 
+def write(token: str = "t") -> None:
+    """
+    写一个存档头带标记 token 的存档：存档头与文件 "2"
+    Keyword arguments:
+    token -- 本次存档的标记
+    """
+    index.write_head(SAVE_ID, {kernel_state.TOKEN: token})
+    kernel_state.write(SAVE_ID, token)
+
+
 class KernelStateTest(FastTestCase):
     """存档里的内核状态：写、读、读档"""
 
@@ -76,16 +87,17 @@ class KernelStateTest(FastTestCase):
     def test_write_then_read_gives_equal_state(self) -> None:
         """写下的 GameState 读回来相等，角色的先后不变"""
         saved = game(100, {"0": 100, "2": 130, "1": 160})
-        kernel_state.write(SAVE_ID)
+        write()
         kernel_state.reset_clock(0)
-        loaded = kernel_state.read(SAVE_ID)
-        self.assertEqual(loaded, saved)
+        loaded, version = kernel_state.read(SAVE_ID)
+        self.assertEqual((loaded, version), (saved, upgrade.CURRENT))
         assert loaded is not None
         self.assertEqual(tuple(loaded.characters), ("0", "2", "1"))
 
     def test_read_without_kernel_state_is_none(self) -> None:
-        """没有文件 "2" 的存档（旧存档）读回 None"""
-        self.assertIsNone(kernel_state.read(SAVE_ID))
+        """存档头没有标记、也没有文件 "2" 的存档（旧存档）读回 None 与版本 0"""
+        index.write_head(SAVE_ID, {})
+        self.assertEqual(kernel_state.read(SAVE_ID), (None, 0))
 
     def test_load_inside_pick_restarts_step(self) -> None:
         """
@@ -93,7 +105,7 @@ class KernelStateTest(FastTestCase):
         下一步在读回的 GameState 上选行动，Work 开始
         """
         saved = game(500, {"0": 500})
-        kernel_state.write(SAVE_ID)
+        write()
         game(10, {"0": 10})
         trace: list[tuple[str, int]] = []
         toy = ModuleType(f"tests.fast.kernel_state_toy_{next(_serial)}")

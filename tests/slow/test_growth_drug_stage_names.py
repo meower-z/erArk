@@ -16,6 +16,7 @@
 from typing import TYPE_CHECKING
 from unittest import mock
 
+from tests import kernel_data
 from tests.slow.base import SlowTestCase
 
 if TYPE_CHECKING:
@@ -240,7 +241,9 @@ class GrowthDrugStageNamesTest(SlowTestCase):
             pregnancy_handle,
             "get_child_grow_day",
             return_value=pregnancy_constant.GROW_TO_LOLI_DAY,
-        ), mock.patch.object(pregnancy_handle, "chest_grow", return_value=""):
+        ), mock.patch.object(
+            pregnancy_handle, "chest_grow", return_value=""
+        ), kernel_data.writing():
             pregnancy_handle.check_all_child_grow_to_loli()
         self.assertEqual(
             self.cache.character_data[child_id].talent[103], 1, "她长成了学员"

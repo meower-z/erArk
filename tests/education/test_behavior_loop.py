@@ -36,7 +36,7 @@ from Script.Design import clothing
 from Script.Kernel import core
 from Script.Settle import past_day_settle, realtime_settle
 from Script.UI.Panel import character_info_head
-from tests import world
+from tests import kernel_data, world
 
 E = education_constant
 
@@ -127,9 +127,8 @@ def clear_need(cid: int) -> None:
     无
     """
     cd = cache.character_data[cid]
-    for name in ("hunger_point", "urinate_point", "tired_point", "sleep_point"):
-        if hasattr(cd, name):
-            setattr(cd, name, 0)
+    kernel_data.set_needs(cid, hunger=0, urine=0, tired=0)
+    cd.sleep_point = 0
     for name in ("eat_food", "rest", "pee"):
         if hasattr(cd.sp_flag, name):
             setattr(cd.sp_flag, name, 0)
@@ -569,7 +568,8 @@ for cid in daughter_list:
             game_time.now().toordinal() - 1
         )
 try:
-    past_day_settle.update_new_day()
+    with kernel_data.writing():
+        past_day_settle.update_new_day()
     check("update_new_day 不抛异常", True)
 except Exception as error:
     import traceback

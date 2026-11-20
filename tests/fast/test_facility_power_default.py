@@ -8,8 +8,14 @@
 from Script.Config import game_config
 from Script.Core import cache_control
 from Script.Design import basement
-from Script.UI.Panel import manage_power_system_panel
+from Script.Kernel import core
+from Script.Modules.domains import power
 from tests.fast.base import FastTestCase
+
+
+def _strategies(table: dict[str, int]) -> None:
+    """内核换成全局键 base.power_strategy 为 table 的状态"""
+    core.reset_state(core.with_value(core.state(), None, power.KEY, table))
 
 
 class FacilityPowerDefaultTest(FastTestCase):
@@ -17,7 +23,7 @@ class FacilityPowerDefaultTest(FastTestCase):
 
     def test_unbuilt_zone_defaults_to_cut_off(self) -> None:
         """未实装区块里的设施：空策略表下的效率等于登记断电时的效率"""
-        unbuilt = manage_power_system_panel.UNBUILT_ZONES
+        unbuilt = power.UNBUILT_ZONES
         island = cache_control.cache.rhodes_island
         for cid in game_config.config_facility:
             island.facility_level.setdefault(cid, 1)
@@ -26,10 +32,10 @@ class FacilityPowerDefaultTest(FastTestCase):
             for cid, f in game_config.config_facility.items()
             if (f.type if f.type >= 0 else cid) in unbuilt
         )
-        island.power_supply_strategy = {zone: 2}
+        _strategies({str(zone): 2})
         cut_off = basement.calc_facility_efficiency(cid)
-        island.power_supply_strategy = {zone: 0}
+        _strategies({str(zone): 0})
         standard = basement.calc_facility_efficiency(cid)
         self.assertNotEqual(cut_off, standard, "断电与标准的效率不同")
-        island.power_supply_strategy = {}
+        _strategies({})
         self.assertEqual(basement.calc_facility_efficiency(cid), cut_off)

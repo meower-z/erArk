@@ -11,6 +11,9 @@
 from Script.Config import game_config
 from Script.Core import constant_promise
 from Script.Design import handle_premise
+from Script.Kernel import core
+from Script.Modules.domains import needs
+from Script.Modules.gameplay_resolution import working
 from Script.UI.Panel import gift_panel
 from tests.fast.base import FastTestCase
 
@@ -45,7 +48,8 @@ class TraineeNotChildTest(FastTestCase):
         self.pl = self.world.chara(0, "博士")
         self.daughter = self.world.chara(1, "女儿")
         self.daughter.relationship.father_id = 0
-        self.daughter.hunger_point = HUNGRY_POINT
+        self.enterContext(working.based_on(core.state()))
+        needs.set(1, hunger=HUNGRY_POINT)
         self.pl.target_character_id = 1
 
     def set_stage(self, talent_id: int) -> None:

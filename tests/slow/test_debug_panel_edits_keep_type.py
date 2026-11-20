@@ -10,6 +10,7 @@ NPC角色 [013] 本次H 输入「6,部位,第几项」与新值，只改这个�
 照新值判断。
 """
 
+from tests import kernel_data
 from tests.slow.base import SlowTestCase
 
 PARTY_ENTERTAINMENT = 101
@@ -127,7 +128,9 @@ class DebugPanelEditKeepTypeTest(SlowTestCase):
             ("type", str(chara_id)),
         )
         self.assertEqual(self.ri.recruited_id, {chara_id}, "待确认的只有这一名")
-        self.assertTrue(recruit_panel.recruit_new_chara(), "确认招募成功")
+        with kernel_data.writing():
+            recruited = recruit_panel.recruit_new_chara()
+        self.assertTrue(recruited, "确认招募成功")
         self.assertIn(chara_id, self.cache.npc_id_got, "确认后这名干员入职")
         self.assertEqual(self.ri.recruited_id, set(), "确认后没有待确认的干员")
 

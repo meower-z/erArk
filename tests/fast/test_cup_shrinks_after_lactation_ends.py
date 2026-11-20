@@ -11,6 +11,9 @@
 from typing import TYPE_CHECKING
 
 from Script.Design import handle_talent
+from Script.Kernel import core
+from Script.Modules.domains import needs
+from Script.Modules.gameplay_resolution import working
 from Script.UI.Panel import gift_panel
 from tests.fast.base import FastTestCase
 
@@ -28,7 +31,7 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
 
     def setUp(self) -> None:
         """
-        造博士
+        造博士。GameState 数据的读写记在 working.based_on(core.state()) 开的缓冲区里
         Keyword arguments:
         无
         Return arguments:
@@ -36,6 +39,7 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
         """
         super().setUp()
         self.world.chara(0, "博士")
+        self.enterContext(working.based_on(core.state()))
 
     def make(self, cid: int, cup: int) -> "game_type.Character":
         """
@@ -64,7 +68,7 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
         """
         cd = self.make(cid, cup)
         gift_panel.handle_drug_use_effect(cid, LACTATION_DRUG)
-        cd.pregnancy.milk = 190
+        needs.set(cd.cid, milk=190)
         self.settle(cid)
         return cd
 
@@ -84,7 +88,7 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
         """涨奶后用停乳药：罩杯缩回涨奶前的大小，只缩一次"""
         cd = self.make(1, 122)
         gift_panel.handle_drug_use_effect(1, LACTATION_DRUG)
-        cd.pregnancy.milk = 190
+        needs.set(cd.cid, milk=190)
         self.assertEqual(self.settle(1), ([123], True))
         gift_panel.handle_drug_use_effect(1, STOP_LACTATION_DRUG)
         self.assertEqual(cd.talent[27], 0)
@@ -95,7 +99,7 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
         """旧存档里卡住的状态（没有泌乳素质、涨奶标记还在、奶量为 0）：第一次结算修复，只修一次"""
         cd = self.make(2, 123)
         cd.pregnancy.lactation_flag = True
-        cd.pregnancy.milk = 0
+        needs.set(cd.cid, milk=0)
         self.assertEqual(self.settle(2), ([122], False))
         self.assertEqual(self.settle(2), ([122], False))
 
@@ -103,7 +107,7 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
         """罩杯已是爆乳时涨奶：没有变大也没有涨奶标记，停乳后保持爆乳"""
         cd = self.make(3, 125)
         gift_panel.handle_drug_use_effect(3, LACTATION_DRUG)
-        cd.pregnancy.milk = 190
+        needs.set(cd.cid, milk=190)
         self.assertEqual(self.settle(3), ([125], False))
         gift_panel.handle_drug_use_effect(3, STOP_LACTATION_DRUG)
         self.assertEqual(self.settle(3), ([125], False))
@@ -118,7 +122,7 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
 
         cd = self.engorge(7, 122)
         gift_panel.handle_drug_use_effect(7, SHRINK_CHEST_DRUG)
-        cd.pregnancy.milk = 100
+        needs.set(cd.cid, milk=100)
         self.assertEqual(self.settle(7), ([121], False))
 
         self.engorge(8, 121)
@@ -132,5 +136,5 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
         self.assertEqual(self.settle(5), ([122], False))
         cd = self.engorge(6, 122)
         self.assertEqual(self.settle(6), ([123], True))
-        cd.pregnancy.milk = 100
+        needs.set(cd.cid, milk=100)
         self.assertEqual(self.settle(6), ([122], False))

@@ -49,9 +49,6 @@ PLAIN = (
     "sanity_point",
     "eja_point",
     "semen_point",
-    "tired_point",
-    "urinate_point",
-    "hunger_point",
     "sleep_point",
     "drunk_point",
 )
@@ -62,14 +59,17 @@ def num_fields(
     character: "game_type.Character",
 ) -> Iterator[tuple[str, object]]:
     """
-    列出一个角色的全部连续数值
+    列出一个角色的全部连续数值，含 GameState 里的生理需求（body.needs）
     Keyword arguments:
     character -- 角色数据（game_type.Character）
     Return arguments:
     Iterator[tuple[str, object]] -- (数值路径, 值)
     """
+    needs = importlib.import_module("Script.Modules.domains.needs")
     for name in PLAIN:
         yield name, getattr(character, name)
+    for stat, value in needs.of(character.cid).items():
+        yield f"needs.{stat}", value
     for status_id, value in character.status_data.items():
         yield f"status_data[{status_id}]", value
     dirty = character.dirty
@@ -82,7 +82,6 @@ def num_fields(
                 f"dirty.semen_flow[{i}].targets[{j}].remaining_volume",
                 target["remaining_volume"],
             )
-    yield "pregnancy.milk", character.pregnancy.milk
     yield "pl_ability.today_sanity_point_cost", (
         character.pl_ability.today_sanity_point_cost
     )
@@ -90,7 +89,7 @@ def num_fields(
 
 def set_thirds(character: "game_type.Character") -> None:
     """
-    把一个角色的每个连续数值设为一个整数加 1/3（整数取当前值，不小于 1）
+    把一个角色的每个连续数值与生理需求设为一个整数加 1/3（整数取当前值，不小于 1）
     Keyword arguments:
     character -- 角色数据（game_type.Character）
     Return arguments:
@@ -102,7 +101,11 @@ def set_thirds(character: "game_type.Character") -> None:
         character.status_data[status_id] = max(int(value), 1) + THIRD
     for slot in character.dirty.body_semen.values():
         slot[1] = max(int(slot[1]), 1) + THIRD
-    character.pregnancy.milk = max(int(character.pregnancy.milk), 1) + THIRD
+    needs = importlib.import_module("Script.Modules.domains.needs")
+    stats = needs.of(character.cid)
+    needs.set(
+        character.cid, **{k: max(int(v), 1) + THIRD for k, v in stats.items()}
+    )
 
 
 def wrong(value: object) -> bool:
@@ -200,6 +203,11 @@ class NumNoFloatTest(SlowTestCase):
         )
         no_csv_write.start()
         self.addCleanup(no_csv_write.stop)
+        core = importlib.import_module("Script.Kernel.core")
+        working = importlib.import_module(
+            "Script.Modules.gameplay_resolution.working"
+        )
+        self.enterContext(working.based_on(core.state()))
         for name, effect, second in effects:
             set_thirds(player)
             set_thirds(operator)

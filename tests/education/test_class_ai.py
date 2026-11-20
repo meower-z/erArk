@@ -49,7 +49,7 @@ from Script.System.Pregnancy_System import pregnancy_constant
 from typing import TYPE_CHECKING
 from Script.Design import character_behavior
 from Script.Kernel import core
-from tests import world
+from tests import kernel_data, world
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -2691,9 +2691,8 @@ def clear_need(cid: int) -> None:
     功能: 夹具环境没有食谱数据，饿了去买饭会抛异常
     """
     cd = cache.character_data[cid]
-    for name in ("hunger_point", "urinate_point", "tired_point", "sleep_point"):
-        if hasattr(cd, name):
-            setattr(cd, name, 0)
+    kernel_data.set_needs(cid, hunger=0, urine=0, tired=0)
+    cd.sleep_point = 0
     for name in ("eat_food", "rest", "pee"):
         if hasattr(cd.sp_flag, name):
             setattr(cd.sp_flag, name, 0)

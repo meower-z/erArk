@@ -7,6 +7,7 @@
 各条满员判定在 tests/fast/test_follower_enters_full_room.py。
 """
 
+from tests import kernel_data
 from tests.slow.base import SlowTestCase
 
 DR_OFFICE = ["中枢", "博士办公室"]
@@ -29,8 +30,9 @@ class FollowerEntersFullRoomTest(SlowTestCase):
             for cid in self.cache.character_data
             if cid and cid not in self.cache.npc_id_got
         )[:RECRUITS]
-        for cid in recruits:
-            character_handle.get_new_character(cid)
+        with kernel_data.writing():
+            for cid in recruits:
+                character_handle.get_new_character(cid)
         office_str = map_handle.get_map_system_path_str_for_list(DR_OFFICE)
         self.assertTrue(map_handle.judge_scene_is_full(office_str))
         follower_id = self.npc("杜宾")
