@@ -784,8 +784,6 @@ def check_grow_to_loli(character_id: int) -> None:
             talk.must_show_talk_check(character_id)
             character_data.talent[102] = 0
             character_data.talent[103] = 1
-            # 长成学员时去掉未成年素质
-            character_data.talent[7] = 0
             from Script.Design import handle_npc_ai
             from Script.System.Education_System import (
                 education_constant,
@@ -850,7 +848,6 @@ def check_grow_to_girl(character_id: int) -> None:
             talk.must_show_talk_check(character_id)
             character_data.talent[103] = 0
             character_data.talent[104] = 1
-            character_data.talent[7] = 0
             # 成长为少女后成长停滞素质已无意义，顺手清除
             character_data.talent[28] = 0
             # 学员期记下的待炫耀也清掉：炫耀口上只写幼女 / 学员，毕业后见面再派只会静默地加一份好感

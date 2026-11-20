@@ -1420,7 +1420,7 @@ def check_talent_dict_shape() -> list[CheckFailure]:
         List[CheckFailure]: 失败记录列表
     功能:
         校验talent字典覆盖config_talent全部键（全库大量裸下标访问，缺键即KeyError），键为int、值为int且取值0/1。
-        必须是配置⊆存档方向：迁移只补缺失键、从不删除废弃键；type is int排除True/False。
+        必须是配置⊆存档方向：迁移补缺失键，删除的废弃键只有素质6、7；type is int排除True/False。
         本条是BODY-22/28/29/30的前置条件；迁移的len()守卫在多余键数恰好等于缺失键数时不修复，本条正好能报出这类存档
     """
     try:
