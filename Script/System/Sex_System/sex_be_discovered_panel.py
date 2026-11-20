@@ -2,7 +2,7 @@
 
 from types import FunctionType
 from Script.System.Instruct_System import handle_instruct
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 from Script.Core import (
     cache_control,
     get_text,
@@ -233,7 +233,7 @@ class Sex_Be_Discovered_Panel:
 
             yrn = flow_handle.askfor_all(return_list)
             if yrn in return_list:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def _let_find_chara_away(self) -> None:

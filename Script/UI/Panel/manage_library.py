@@ -8,7 +8,7 @@ from Script.Core import (
     flow_handle,
     constant,
 )
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, panel, view
 from Script.UI.Panel import common_select_NPC
 from Script.Config import game_config, normal_config
 
@@ -125,7 +125,7 @@ class Manage_Library_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def urge_return_book_list(self) -> None:

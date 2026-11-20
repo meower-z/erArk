@@ -9,7 +9,7 @@ from Script.Core import (
     constant,
 )
 from Script.Design import character, attr_calculation
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 
 cache: game_type.Cache = cache_control.cache
@@ -144,7 +144,7 @@ class Prts_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def change_panel(self, prts_type: str) -> None:
@@ -290,7 +290,7 @@ class ShowCharaNameDraw:
             # 姓名信息
             name_text = character_data.name.ljust(12, "　")
             # 获取当前版本信息
-            now_version = cache.all_system_setting.character_text_version[
+            now_version = normal_config.system_setting.character_text_version[
                 self.chara_adv_id
             ]
             tip_cid_list = game_config.config_tip_chara_data_by_adv[
@@ -464,7 +464,7 @@ class ShowCharaNameDraw:
             chara_draw.style = self.text_color
             chara_draw.draw()
             # 获取当前版本信息
-            now_version = cache.all_system_setting.character_text_version[
+            now_version = normal_config.system_setting.character_text_version[
                 self.chara_adv_id
             ]
 
@@ -530,9 +530,9 @@ class ShowCharaNameDraw:
         选择角色文本版本
         """
         # 设置当前版本
-        cache.all_system_setting.character_text_version[self.chara_adv_id] = (
-            version_id
-        )
+        normal_config.system_setting.character_text_version[
+            self.chara_adv_id
+        ] = version_id
 
     def show_chara_info(self, name_text: str, info_text: str) -> None:
         """

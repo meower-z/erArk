@@ -13,7 +13,7 @@ from Script.Core import (
     py_cmd,
 )
 from Script.Design import handle_premise, talk, child_stage_gate
-from Script.Config import config_def, game_config
+from Script.Config import config_def, game_config, normal_config
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -48,10 +48,10 @@ def judge_single_instruct_filter(
     """
     filter_judge = True
     # 如果该指令不存在，则置为存在
-    if instruct_id not in cache.instruct_index_filter:
-        cache.instruct_index_filter[instruct_id] = True
+    if instruct_id not in normal_config.system_setting.instruct_index_filter:
+        normal_config.system_setting.instruct_index_filter[instruct_id] = True
     # 如果在过滤列表里，则过滤
-    if not cache.instruct_index_filter[instruct_id]:
+    if not normal_config.system_setting.instruct_index_filter[instruct_id]:
         filter_judge = False
     # H子类指令过滤
     if (
@@ -60,7 +60,10 @@ def judge_single_instruct_filter(
         and now_type == constant.InstructType.SEX
     ):
         now_sub_type = constant.instruct_sub_type_data[instruct_id]
-        if cache.instruct_sex_type_filter[now_sub_type] == 0:
+        if (
+            normal_config.system_setting.instruct_sex_type_filter[now_sub_type]
+            == 0
+        ):
             filter_judge = False
     # 前提判断
     if filter_judge:
@@ -122,35 +125,49 @@ class SeeInstructPanel:
         """ 监听的按钮列表 """
 
         # 初始化指令类型过滤
-        if cache.instruct_type_filter == {}:
-            cache.instruct_type_filter[0] = True
-            cache.instruct_type_filter[1] = True
-            cache.instruct_type_filter[2] = True
-            cache.instruct_type_filter[3] = True
-            cache.instruct_type_filter[4] = True
+        if normal_config.system_setting.instruct_type_filter == {}:
+            normal_config.system_setting.instruct_type_filter[0] = True
+            normal_config.system_setting.instruct_type_filter[1] = True
+            normal_config.system_setting.instruct_type_filter[2] = True
+            normal_config.system_setting.instruct_type_filter[3] = True
+            normal_config.system_setting.instruct_type_filter[4] = True
         for instruct_type in game_config.config_instruct_type:
-            if instruct_type not in cache.instruct_type_filter:
-                cache.instruct_type_filter[instruct_type] = False
-        cache.instruct_type_filter[6] = True
+            if (
+                instruct_type
+                not in normal_config.system_setting.instruct_type_filter
+            ):
+                normal_config.system_setting.instruct_type_filter[
+                    instruct_type
+                ] = False
+        normal_config.system_setting.instruct_type_filter[6] = True
 
         # 初始化性爱子类类型过滤
         for instruct_type in game_config.config_instruct_sex_type:
-            if instruct_type not in cache.instruct_sex_type_filter:
+            if (
+                instruct_type
+                not in normal_config.system_setting.instruct_sex_type_filter
+            ):
                 if instruct_type == 0:
-                    cache.instruct_sex_type_filter[instruct_type] = True
+                    normal_config.system_setting.instruct_sex_type_filter[
+                        instruct_type
+                    ] = True
                 else:
-                    cache.instruct_sex_type_filter[instruct_type] = False
+                    normal_config.system_setting.instruct_sex_type_filter[
+                        instruct_type
+                    ] = False
 
         # 初始化命令过滤
-        if cache.instruct_index_filter == {}:
-            for now_type in cache.instruct_type_filter:
+        if normal_config.system_setting.instruct_index_filter == {}:
+            for now_type in normal_config.system_setting.instruct_type_filter:
                 for instruct in constant.instruct_type_data[now_type]:
-                    cache.instruct_index_filter[instruct] = True
+                    normal_config.system_setting.instruct_index_filter[
+                        instruct
+                    ] = True
 
     def draw(self) -> None:
         """绘制操作菜单面板"""
         SINGLE_LINE_INSTRUCT_NUM = (
-            int(cache.all_system_setting.draw_setting[11]) + 1
+            int(normal_config.system_setting.draw_setting[11]) + 1
         )  # 单行显示的指令数量
         self.return_list = []
 
@@ -160,12 +177,20 @@ class SeeInstructPanel:
             | dict[int, config_def.Instruct_Sex_Type]
         )
         if handle_premise.handle_now_show_h_instruct(0):
-            instruct_type_len = len(cache.instruct_sex_type_filter) + 1
-            now_instruct_type_list = cache.instruct_sex_type_filter
+            instruct_type_len = (
+                len(normal_config.system_setting.instruct_sex_type_filter) + 1
+            )
+            now_instruct_type_list = (
+                normal_config.system_setting.instruct_sex_type_filter
+            )
             now_instruct_config = game_config.config_instruct_sex_type
         else:
-            instruct_type_len = len(cache.instruct_type_filter) - 1
-            now_instruct_type_list = cache.instruct_type_filter
+            instruct_type_len = (
+                len(normal_config.system_setting.instruct_type_filter) - 1
+            )
+            now_instruct_type_list = (
+                normal_config.system_setting.instruct_type_filter
+            )
             now_instruct_config = game_config.config_instruct_type
 
         # 分隔符
@@ -211,7 +236,7 @@ class SeeInstructPanel:
         now_instruct_list = []
         now_premise_data: dict[str, float] = {}
         # 遍历指令过滤
-        for now_type in cache.instruct_type_filter:
+        for now_type in normal_config.system_setting.instruct_type_filter:
             # 玩家关闭了该类，或交互对象临盆、产后、处于幼年阶段而隐藏该类时，跳过该类
             if not handle_premise.instruct_type_shown(now_type):
                 continue
@@ -358,25 +383,35 @@ class SeeInstructPanel:
         now_type -- 指令类型
         """
         if handle_premise.handle_now_show_h_instruct(0):
-            if cache.instruct_sex_type_filter[now_type]:
-                cache.instruct_sex_type_filter[now_type] = False
+            if normal_config.system_setting.instruct_sex_type_filter[now_type]:
+                normal_config.system_setting.instruct_sex_type_filter[
+                    now_type
+                ] = False
             else:
-                cache.instruct_sex_type_filter[now_type] = True
+                normal_config.system_setting.instruct_sex_type_filter[
+                    now_type
+                ] = True
             # 如果是技艺类的话，则也同时变动非H中的技艺类
             if now_type == constant.SexInstructSubType.ARTS:
-                cache.instruct_type_filter[constant.InstructType.ARTS] = (
-                    cache.instruct_sex_type_filter[now_type]
-                )
+                normal_config.system_setting.instruct_type_filter[
+                    constant.InstructType.ARTS
+                ] = normal_config.system_setting.instruct_sex_type_filter[
+                    now_type
+                ]
         else:
-            if cache.instruct_type_filter[now_type]:
-                cache.instruct_type_filter[now_type] = False
+            if normal_config.system_setting.instruct_type_filter[now_type]:
+                normal_config.system_setting.instruct_type_filter[now_type] = (
+                    False
+                )
             else:
-                cache.instruct_type_filter[now_type] = True
+                normal_config.system_setting.instruct_type_filter[now_type] = (
+                    True
+                )
             # 如果是技艺类的话，则也同时变动H中的技艺类
             if now_type == constant.InstructType.ARTS:
-                cache.instruct_sex_type_filter[
+                normal_config.system_setting.instruct_sex_type_filter[
                     constant.SexInstructSubType.ARTS
-                ] = cache.instruct_type_filter[now_type]
+                ] = normal_config.system_setting.instruct_type_filter[now_type]
 
     def handle_instruct(self, instruct_id_or_cid: str) -> None:
         """

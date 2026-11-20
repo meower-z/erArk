@@ -18,6 +18,7 @@ from Script.Core import (
     cache_control,
     constant,
 )
+from Script.UI.Moudle import view
 
 # 全局缓存
 cache: game_type.Cache = cache_control.cache
@@ -315,7 +316,7 @@ def order_deal(
 
     返回值类型：str | None。flag 为 "str" 时返回输入的字符串，纯数字的输入先经 str(int(...)) 规范化。
     flag 为 "order" 时处理这条输入后返回 None。
-    donot_return_null_str 为假且 cache.wframe_mouse.w_frame_up 已置位时返回空串。
+    donot_return_null_str 为假且 view.wframe_mouse.w_frame_up 已置位时返回空串。
     功能描述：处理用户输入的命令
     """
     global __skip_flag__
@@ -327,7 +328,7 @@ def order_deal(
     io_init.arm_input()
     while True:
         time.sleep(0.01)
-        if not donot_return_null_str and cache.wframe_mouse.w_frame_up:
+        if not donot_return_null_str and view.wframe_mouse.w_frame_up:
             return ""
         while not io_init._order_queue.empty():
             order = io_init.get_order()
@@ -362,8 +363,8 @@ def askfor_str(
     功能描述：获取用户输入的字符串
     """
     while True:
-        if not donot_return_null_str and cache.wframe_mouse.w_frame_up:
-            cache.wframe_mouse.w_frame_up = 0
+        if not donot_return_null_str and view.wframe_mouse.w_frame_up:
+            view.wframe_mouse.w_frame_up = 0
             return ""
         order = order_deal("str", print_order, donot_return_null_str)
         if donot_return_null_str and order != "":
@@ -446,8 +447,8 @@ def askfor_wait() -> None:
     if getattr(cache, "benchmark_mode", False):
         return
 
-    cache.wframe_mouse.w_frame_up = 0
-    while not cache.wframe_mouse.w_frame_up:
+    view.wframe_mouse.w_frame_up = 0
+    while not view.wframe_mouse.w_frame_up:
         re = askfor_str(donot_return_null_str=False)
         if re == "":
             break
@@ -455,4 +456,4 @@ def askfor_wait() -> None:
     # 否则用回车结束等待时 w_frame_up 会遗留为0并跨界面残留（置1的唯一入口在鼠标路径上）
     # 之后一次点在空白处的左键会被 mouse_left_check 的 w==0 分支误判为"推进等待"：
     # 消耗掉一次性的输入许可却不产生任何指令，askfor_all 从此永远收不到输入，游戏静默卡死
-    cache.wframe_mouse.w_frame_up = 1
+    view.wframe_mouse.w_frame_up = 1

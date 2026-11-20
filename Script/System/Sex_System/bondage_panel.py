@@ -1,7 +1,7 @@
 """绳子的面板对象"""
 
 from types import FunctionType
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 from Script.Core import (
     cache_control,
     get_text,
@@ -141,7 +141,7 @@ class Bondage_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn in return_list:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def select_bondage(self, bondage_id: int) -> None:
@@ -149,7 +149,7 @@ class Bondage_Panel:
         from Script.System.Instruct_System import handle_instruct
 
         # 选定行动后面板退回场景：玩家的选择交回内核后，选择之后的代码不再运行
-        cache.now_panel_id = constant.Panel.IN_SCENE
+        view.now_panel_id = constant.Panel.IN_SCENE
         handle_instruct.chara_handle_instruct_common_settle(
             (
                 constant.Behavior.UNBIND

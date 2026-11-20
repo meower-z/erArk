@@ -15,7 +15,7 @@ from Script.Core import (
 )
 from Script.Design import basement, handle_premise, map_handle
 from Script.System.Dormitory_System import common
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 from Script.Config import normal_config
 
 cache: game_type.Cache = cache_control.cache
@@ -115,7 +115,7 @@ class Manage_Dormitory_Panel:
                         "\n○已将{0}名未分配楼层的宿舍管理员重置为无岗位\n"
                     ).format(reset_count)
                     info_draw.draw()
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def change_panel(self, now_panel: str) -> None:

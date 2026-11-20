@@ -24,7 +24,7 @@ from Script.Design import (
 from Script.UI.Panel import achievement_panel, normal_panel
 from Script.Kernel import core
 from Script.Config import normal_config, game_config
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 from Script.Design import game_time
 from Script.Modules.gameplay_resolution import intent, player_starters
 from Script.Modules.tk_ui import player_pick
@@ -263,16 +263,15 @@ def instruct_filter_H_change(on_off_flag: bool) -> None:
     Keyword arguments:
     on_off_flag -- true:进入H false:退出H
     """
+    setting = normal_config.system_setting
     if on_off_flag:
-        cache.instruct_type_filter_cache = cache.instruct_type_filter.copy()
+        view.instruct_type_filter_cache = setting.instruct_type_filter.copy()
         # 自动开启性爱面板并关闭其他面板
-        cache.instruct_type_filter[6] = True
+        setting.instruct_type_filter[6] = True
         for i in {1, 2, 3, 4, 5}:
-            cache.instruct_type_filter[i] = False
-        # print(f"debug 开启H面板，关闭其他面板")
-    elif len(cache.instruct_type_filter_cache):
-        cache.instruct_type_filter = cache.instruct_type_filter_cache.copy()
-        # print(f"debug 关闭H面板，恢复其他面板")
+            setting.instruct_type_filter[i] = False
+    elif len(view.instruct_type_filter_cache):
+        setting.instruct_type_filter = view.instruct_type_filter_cache.copy()
 
 
 TARGET_WAIT = "target_wait"
@@ -622,13 +621,13 @@ def handle_rest() -> None:
 @add_instruct(constant.Instruct.BUY_FOOD)
 def handle_buy_food() -> None:
     """处理购买食物指令"""
-    cache.now_panel_id = constant.Panel.FOOD_SHOP
+    view.now_panel_id = constant.Panel.FOOD_SHOP
 
 
 @add_instruct(constant.Instruct.EAT)
 def handle_eat() -> None:
     """处理食物背包指令"""
-    cache.now_panel_id = constant.Panel.FOOD_BAG
+    view.now_panel_id = constant.Panel.FOOD_BAG
 
 
 @add_instruct(constant.Instruct.PUT_SELFMADE_FOOD_IN)
@@ -642,19 +641,19 @@ def handle_put_selfmade_food_in() -> None:
 @add_instruct(constant.Instruct.MOVE)
 def handle_move() -> None:
     """处理移动指令"""
-    cache.now_panel_id = constant.Panel.SEE_MAP
+    view.now_panel_id = constant.Panel.SEE_MAP
 
 
 @add_instruct(constant.Instruct.CARRY_MOVE)
 def handle_carry_move() -> None:
     """处理携带H中移动指令，与移动指令共用地图面板，实际行为在own_charcter_move中按携带模式区分"""
-    cache.now_panel_id = constant.Panel.SEE_MAP
+    view.now_panel_id = constant.Panel.SEE_MAP
 
 
 @add_instruct(constant.Instruct.SEE_ATTR)
 def handle_see_attr() -> None:
     """查看属性"""
-    cache.now_panel_id = constant.Panel.SEE_ATTR
+    view.now_panel_id = constant.Panel.SEE_ATTR
 
 
 @add_instruct(constant.Instruct.CHAT)
@@ -688,31 +687,31 @@ def _count_talk(who: int, chosen: intent.Intent) -> None:
 @add_instruct(constant.Instruct.BUY_H_ITEM)
 def handle_buy_h_item() -> None:
     """处理购买成人用品指令"""
-    cache.now_panel_id = constant.Panel.H_ITEM_SHOP
+    view.now_panel_id = constant.Panel.H_ITEM_SHOP
 
 
 @add_instruct(constant.Instruct.ITEM)
 def handle_item() -> None:
     """处理道具指令"""
-    cache.now_panel_id = constant.Panel.ITEM
+    view.now_panel_id = constant.Panel.ITEM
 
 
 @add_instruct(constant.Instruct.SAVE)
 def handle_save() -> None:
     """处理读写存档指令"""
-    cache.now_panel_id = constant.Panel.SAVE
+    view.now_panel_id = constant.Panel.SAVE
 
 
 @add_instruct(constant.Instruct.ABL_UP)
 def handle_abl_up() -> None:
     """处理属性上升"""
-    cache.now_panel_id = constant.Panel.ABL_UP
+    view.now_panel_id = constant.Panel.ABL_UP
 
 
 @add_instruct(constant.Instruct.OWNER_ABL_UP)
 def handle_owner_abl_up() -> None:
     """处理自身属性上升"""
-    cache.now_panel_id = constant.Panel.OWNER_ABL_UP
+    view.now_panel_id = constant.Panel.OWNER_ABL_UP
 
 
 @add_instruct(constant.Instruct.DEBUG_MODE_ON)
@@ -730,25 +729,25 @@ def debug_mode_off() -> None:
 @add_instruct(constant.Instruct.DEBUG_ADJUST)
 def debug_adjust() -> None:
     """处理debug数值调整指令"""
-    cache.now_panel_id = constant.Panel.DEBUG_ADJUST
+    view.now_panel_id = constant.Panel.DEBUG_ADJUST
 
 
 @add_instruct(constant.Instruct.SYSTEM_SETTING)
 def handle_system_setting() -> None:
     """系统设置"""
-    cache.now_panel_id = constant.Panel.SYSTEM_SETTING
+    view.now_panel_id = constant.Panel.SYSTEM_SETTING
 
 
 @add_instruct(constant.Instruct.TALK_QUICK_TEST)
 def handle_talk_quick_test() -> None:
     """快速测试口上"""
-    cache.now_panel_id = constant.Panel.TALK_QUICK_TEST
+    view.now_panel_id = constant.Panel.TALK_QUICK_TEST
 
 
 @add_instruct(constant.Instruct.CHAT_WITH_AI)
 def handle_chat_with_ai() -> None:
     """与文本生成AI对话"""
-    cache.now_panel_id = constant.Panel.CHAT_WITH_AI
+    view.now_panel_id = constant.Panel.CHAT_WITH_AI
 
 
 @add_instruct(constant.Instruct.TEACH)
@@ -799,25 +798,25 @@ def _start_teach(who: int, chosen: intent.Intent) -> None:
 @add_instruct(constant.Instruct.BORROW_BOOK)
 def handle_borrow_book() -> None:
     """处理借阅书籍指令"""
-    cache.now_panel_id = constant.Panel.BORROW_BOOK
+    view.now_panel_id = constant.Panel.BORROW_BOOK
 
 
 @add_instruct(constant.Instruct.READ_BOOK)
 def handle_read_book() -> None:
     """处理读书指令"""
-    cache.now_panel_id = constant.Panel.READ_BOOK
+    view.now_panel_id = constant.Panel.READ_BOOK
 
 
 @add_instruct(constant.Instruct.MANAGE_LIBRARY)
 def handle_manage_library() -> None:
     """处理管理图书馆指令"""
-    cache.now_panel_id = constant.Panel.MANAGE_LIBRARY
+    view.now_panel_id = constant.Panel.MANAGE_LIBRARY
 
 
 @add_instruct(constant.Instruct.MANAGE_ASSEMBLY_LINE)
 def handle_manage_assembly_line() -> None:
     """处理管理流水线指令"""
-    cache.now_panel_id = constant.Panel.MANAGE_ASSEMBLY_LINE
+    view.now_panel_id = constant.Panel.MANAGE_ASSEMBLY_LINE
 
 
 @add_instruct(constant.Instruct.PLANT_MANAGE_CROP)
@@ -829,25 +828,25 @@ def handle_plant_manage_crop() -> None:
 @add_instruct(constant.Instruct.MANAGE_AGRICULTURE)
 def handle_manage_agriculture() -> None:
     """处理管理农业生产指令"""
-    cache.now_panel_id = constant.Panel.MANAGE_AGRICULTURE
+    view.now_panel_id = constant.Panel.MANAGE_AGRICULTURE
 
 
 @add_instruct(constant.Instruct.MANAGE_VEHICLE)
 def handle_manage_vehicle() -> None:
     """处理管理载具指令"""
-    cache.now_panel_id = constant.Panel.MANAGE_VEHICLE
+    view.now_panel_id = constant.Panel.MANAGE_VEHICLE
 
 
 @add_instruct(constant.Instruct.PHYSICAL_CHECK_AND_MANAGE)
 def handle_physical_check_and_manage() -> None:
     """处理身体检查与管理指令"""
-    cache.now_panel_id = constant.Panel.PHYSICAL_CHECK_AND_MANAGE
+    view.now_panel_id = constant.Panel.PHYSICAL_CHECK_AND_MANAGE
 
 
 @add_instruct(constant.Instruct.MANAGE_CONFINEMENT_AND_TRAINING)
 def handle_manage_vonfinement_and_training() -> None:
     """处理管理监禁调教指令"""
-    cache.now_panel_id = constant.Panel.MANAGE_CONFINEMENT_AND_TRAINING
+    view.now_panel_id = constant.Panel.MANAGE_CONFINEMENT_AND_TRAINING
 
 
 @add_instruct(constant.Instruct.INVESTIGATE_RESOURCE_MARKET)
@@ -861,25 +860,25 @@ def handle_investigate_resource_market() -> None:
 @add_instruct(constant.Instruct.MANAGE_RESOURCE_EXCHANGE)
 def handle_manage_resource_exchange() -> None:
     """处理管理资源交易指令"""
-    cache.now_panel_id = constant.Panel.MANAGE_RESOURCE_EXCHANGE
+    view.now_panel_id = constant.Panel.MANAGE_RESOURCE_EXCHANGE
 
 
 @add_instruct(constant.Instruct.NAVIGATION)
 def handle_navigation() -> None:
     """处理导航指令"""
-    cache.now_panel_id = constant.Panel.NAVIGATION
+    view.now_panel_id = constant.Panel.NAVIGATION
 
 
 @add_instruct(constant.Instruct.MANAGE_BASEMENT)
 def handle_manage_basement() -> None:
     """处理管理罗德岛指令"""
-    cache.now_panel_id = constant.Panel.MANAGE_BASEMENT
+    view.now_panel_id = constant.Panel.MANAGE_BASEMENT
 
 
 @add_instruct(constant.Instruct.EDUCATION_MANAGE)
 def handle_education_manage() -> None:
     """处理教育管理系统指令"""
-    cache.now_panel_id = constant.Panel.EDUCATION_MANAGE
+    view.now_panel_id = constant.Panel.EDUCATION_MANAGE
 
 
 @add_instruct(constant.Instruct.CHECK_REPORT_CARD)
@@ -891,7 +890,7 @@ def handle_check_report_card() -> None:
 @add_instruct(constant.Instruct.MANAGE_DORMITORY)
 def handle_manage_dormitory() -> None:
     """处理宿舍管理系统指令"""
-    cache.now_panel_id = constant.Panel.MANAGE_DORMITORY
+    view.now_panel_id = constant.Panel.MANAGE_DORMITORY
 
 
 # 以下为源石技艺#
@@ -948,7 +947,7 @@ def handle_hypnosis_all() -> None:
 @add_instruct(constant.Instruct.CHANGE_HYPNOSIS_MODE)
 def handle_change_hypnosis_mode() -> None:
     """处理切换催眠模式"""
-    cache.now_panel_id = constant.Panel.CHANGE_HYPNOSIS_MODE
+    view.now_panel_id = constant.Panel.CHANGE_HYPNOSIS_MODE
 
 
 @add_instruct(constant.Instruct.HYPNOSIS_CANCEL)
@@ -1064,13 +1063,13 @@ def handle_target_stop_in_time_stop() -> None:
 @add_instruct(constant.Instruct.DIRAY)
 def handle_diary() -> None:
     """处理日记指令"""
-    cache.now_panel_id = constant.Panel.DIRAY
+    view.now_panel_id = constant.Panel.DIRAY
 
 
 @add_instruct(constant.Instruct.SLEEP)
 def handle_sleep() -> None:
     """处理睡觉指令"""
-    cache.now_panel_id = constant.Panel.SLEEP
+    view.now_panel_id = constant.Panel.SLEEP
 
 
 @add_instruct(constant.Instruct.TAKE_SHOWER)
@@ -1100,14 +1099,14 @@ def handle_wait() -> None:
 @add_instruct(constant.Instruct.WAIT_1_HOUR)
 def handle_wait_1_hour() -> None:
     """处理等待一个小时指令"""
-    cache.wframe_mouse.w_frame_skip_wait_mouse = 1
+    view.wframe_mouse.w_frame_skip_wait_mouse = 1
     chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration=60)
 
 
 @add_instruct(constant.Instruct.WAIT_6_HOUR)
 def handle_wait_6_hour() -> None:
     """处理等待六个小时指令"""
-    cache.wframe_mouse.w_frame_skip_wait_mouse = 1
+    view.wframe_mouse.w_frame_skip_wait_mouse = 1
     chara_handle_instruct_common_settle(constant.Behavior.WAIT, duration=360)
 
 
@@ -1120,7 +1119,7 @@ def handle_make_coffee() -> None:
 @add_instruct(constant.Instruct.MAKE_COFFEE_ADD)
 def handle_make_coffee_add() -> None:
     """处理泡咖啡（加料）指令"""
-    cache.now_panel_id = constant.Panel.MAKE_COFFEE_ADD
+    view.now_panel_id = constant.Panel.MAKE_COFFEE_ADD
 
 
 @add_instruct(constant.Instruct.ASK_MAKE_COFFEE)
@@ -1132,19 +1131,19 @@ def handle_ask_make_coffee() -> None:
 @add_instruct(constant.Instruct.MAKE_FOOD)
 def handle_make_food() -> None:
     """做饭"""
-    cache.now_panel_id = constant.Panel.MAKE_FOOD
+    view.now_panel_id = constant.Panel.MAKE_FOOD
 
 
 @add_instruct(constant.Instruct.MIXOLOGY)
 def handle_mixology() -> None:
     """处理调酒指令"""
-    cache.now_panel_id = constant.Panel.MIXOLOGY
+    view.now_panel_id = constant.Panel.MIXOLOGY
 
 
 @add_instruct(constant.Instruct.ALL_NPC_POSITION)
 def handle_all_npc_position() -> None:
     """处理干员位置一览指令"""
-    cache.now_panel_id = constant.Panel.ALL_NPC_POSITION
+    view.now_panel_id = constant.Panel.ALL_NPC_POSITION
 
 
 @add_instruct(constant.Instruct.FOLLOW)
@@ -1290,13 +1289,13 @@ def handle_listen_complaint() -> None:
 @add_instruct(constant.Instruct.GIVE_GIFT)
 def handle_give_gift() -> None:
     """处理赠送礼物指令"""
-    cache.now_panel_id = constant.Panel.GIVE_GIFT
+    view.now_panel_id = constant.Panel.GIVE_GIFT
 
 
 @add_instruct(constant.Instruct.ORIGINIUM_ARTS)
 def handle_originium_arts() -> None:
     """处理源石技艺指令"""
-    cache.now_panel_id = constant.Panel.ORIGINIUM_ARTS
+    view.now_panel_id = constant.Panel.ORIGINIUM_ARTS
 
 
 @add_instruct(constant.Instruct.TARGET_TO_SELF)
@@ -1459,37 +1458,37 @@ def handle_prenatal_touch() -> None:
 @add_instruct(constant.Instruct.TAKE_CARE_BABY)
 def handle_take_care_baby() -> None:
     """处理照顾婴儿指令"""
-    cache.now_panel_id = constant.Panel.TAKE_CARE_BABY
+    view.now_panel_id = constant.Panel.TAKE_CARE_BABY
 
 
 @add_instruct(constant.Instruct.ORDER_HOTEL_ROOM)
 def handle_order_hotel_room() -> None:
     """处理预定房间指令"""
-    cache.now_panel_id = constant.Panel.ORDER_HOTEL_ROOM
+    view.now_panel_id = constant.Panel.ORDER_HOTEL_ROOM
 
 
 @add_instruct(constant.Instruct.SEE_COLLECTION)
 def handle_see_collection() -> None:
     """处理查看收藏品指令"""
-    cache.now_panel_id = constant.Panel.COLLECTION
+    view.now_panel_id = constant.Panel.COLLECTION
 
 
 @add_instruct(constant.Instruct.SEE_ACHIEVEMENT)
 def handle_see_achievement() -> None:
     """处理查看蚀刻章指令"""
-    cache.now_panel_id = constant.Panel.SEE_ACHIEVEMENT
+    view.now_panel_id = constant.Panel.SEE_ACHIEVEMENT
 
 
 @add_instruct(constant.Instruct.SEE_FRIDGE)
 def handle_see_fridge() -> None:
     """处理查看冰箱指令"""
-    cache.now_panel_id = constant.Panel.FRIDGE
+    view.now_panel_id = constant.Panel.FRIDGE
 
 
 @add_instruct(constant.Instruct.PREGNANCY_OVERVIEW)
 def handle_pregnancy_overview() -> None:
     """处理怀孕总览指令"""
-    cache.now_panel_id = constant.Panel.PREGNANCY_OVERVIEW
+    view.now_panel_id = constant.Panel.PREGNANCY_OVERVIEW
 
 
 @add_instruct(constant.Instruct.TAKE_CHARA_EGGS)
@@ -1513,13 +1512,13 @@ def handle_identify_held_eggs() -> None:
 @add_instruct(constant.Instruct.FIELD_COMMISSION)
 def handle_field_commission() -> None:
     """处理外勤委托指令"""
-    cache.now_panel_id = constant.Panel.FIELD_COMMISSION
+    view.now_panel_id = constant.Panel.FIELD_COMMISSION
 
 
 @add_instruct(constant.Instruct.CHECK_LOCKER)
 def handle_check_locker() -> None:
     """处理检查衣柜指令"""
-    cache.now_panel_id = constant.Panel.CHECK_LOCKER
+    view.now_panel_id = constant.Panel.CHECK_LOCKER
 
 
 @add_instruct(constant.Instruct.COLLCET_PANTY)
@@ -1768,7 +1767,7 @@ def handle_prepare_training() -> None:
 @add_instruct(constant.Instruct.SWITCH_TO_H_INTERFACE)
 def handle_switch_to_h_interface() -> None:
     """处理切换到H指令"""
-    cache.show_non_h_in_hidden_sex = False
+    view.show_non_h_in_hidden_sex = False
 
 
 @add_instruct(constant.Instruct.SLEEP_OBSCENITY)
@@ -1902,13 +1901,13 @@ def handle_hypnosis_h() -> None:
 @add_instruct(constant.Instruct.ASK_HIDDEN_SEX)
 def handle_ask_hidden_sex() -> None:
     """处理邀请隐奸指令"""
-    cache.now_panel_id = constant.Panel.ASK_HIDDEN_SEX
+    view.now_panel_id = constant.Panel.ASK_HIDDEN_SEX
 
 
 @add_instruct(constant.Instruct.ASK_EXHIBITIONISM_SEX)
 def handle_ask_exhibitionism_sex() -> None:
     """处理邀请露出指令"""
-    cache.now_panel_id = constant.Panel.ASK_EXHIBITIONISM_SEX
+    view.now_panel_id = constant.Panel.ASK_EXHIBITIONISM_SEX
 
 
 @start_part(constant.Behavior.ASK_HIDDEN_SEX_FAIL)
@@ -2600,7 +2599,7 @@ def handle_play_water() -> None:
 @add_instruct(constant.Instruct.PLAY_GOMOKU)
 def handle_play_gomoku() -> None:
     """处理下五子棋指令"""
-    cache.now_panel_id = constant.Panel.PLAY_GOMOKU
+    view.now_panel_id = constant.Panel.PLAY_GOMOKU
 
 
 @add_instruct(constant.Instruct.PLAY_CHESS)
@@ -2654,7 +2653,7 @@ def handle_swimming() -> None:
 @add_instruct(constant.Instruct.TASTE_WINE)
 def handle_taste_wine() -> None:
     """处理品酒指令"""
-    cache.now_panel_id = constant.Panel.FOOD_BAG
+    view.now_panel_id = constant.Panel.FOOD_BAG
 
 
 @add_instruct(constant.Instruct.TASTE_TEA)
@@ -2730,7 +2729,7 @@ def handle_onsen_bath() -> None:
 @add_instruct(constant.Instruct.AROMATHERAPY)
 def handle_aromatherapy() -> None:
     """处理香薰疗愈指令"""
-    cache.now_panel_id = constant.Panel.AROMATHERAPY
+    view.now_panel_id = constant.Panel.AROMATHERAPY
 
 
 # 以下为工作#
@@ -2772,37 +2771,37 @@ def handle_battle_command() -> None:
 @add_instruct(constant.Instruct.ASSISTANT_ADJUSTMENTS)
 def handle_ASSISTANT_ADJUSTMENTS() -> None:
     """处理助理相关调整指令"""
-    cache.now_panel_id = constant.Panel.ASSISTANT
+    view.now_panel_id = constant.Panel.ASSISTANT
 
 
 @add_instruct(constant.Instruct.BUILDING)
 def handle_building() -> None:
     """处理基建系统指令"""
-    cache.now_panel_id = constant.Panel.BUILDING
+    view.now_panel_id = constant.Panel.BUILDING
 
 
 @add_instruct(constant.Instruct.EQUIPMENT_MAINTAIN)
 def handle_equipment_maintain() -> None:
     """处理管理装备维护指令"""
-    cache.now_panel_id = constant.Panel.EQUIPMENT_MAINTAIN
+    view.now_panel_id = constant.Panel.EQUIPMENT_MAINTAIN
 
 
 @add_instruct(constant.Instruct.RECRUITMENT)
 def handle_recruiment() -> None:
     """处理招募情况指令"""
-    cache.now_panel_id = constant.Panel.RECRUITMENT
+    view.now_panel_id = constant.Panel.RECRUITMENT
 
 
 @add_instruct(constant.Instruct.VISITOR_SYSTEM)
 def handle_visitor_system() -> None:
     """处理访客系统指令"""
-    cache.now_panel_id = constant.Panel.VISITOR
+    view.now_panel_id = constant.Panel.VISITOR
 
 
 @add_instruct(constant.Instruct.NATION_DIPLOMACY)
 def handle_nation_diplomacy() -> None:
     """处理势力与外交指令"""
-    cache.now_panel_id = constant.Panel.NATION_DIPLOMACY
+    view.now_panel_id = constant.Panel.NATION_DIPLOMACY
 
 
 @add_instruct(constant.Instruct.INVITE_VISITOR)
@@ -2816,7 +2815,7 @@ def handle_invite_visitor() -> None:
 @add_instruct(constant.Instruct.PRTS)
 def handle_prts() -> None:
     """处理普瑞赛斯指令"""
-    cache.now_panel_id = constant.Panel.PRTS
+    view.now_panel_id = constant.Panel.PRTS
 
 
 @add_instruct(constant.Instruct.TRAINING)
@@ -2845,13 +2844,13 @@ def handle_cure_patient() -> None:
         now_draw.text = _("\n当前没有需要诊疗的病人\n")
         now_draw.draw()
         return
-    cache.now_panel_id = constant.Panel.CURE_PATIENT
+    view.now_panel_id = constant.Panel.CURE_PATIENT
 
 
 @add_instruct(constant.Instruct.MANAGE_DEDICAL_DEPARTMENT)
 def handle_manage_dedical_department() -> None:
     """处理管理医疗系统指令"""
-    cache.now_panel_id = constant.Panel.MANAGE_DEDICAL_DEPARTMENT
+    view.now_panel_id = constant.Panel.MANAGE_DEDICAL_DEPARTMENT
 
 
 @add_instruct(constant.Instruct.RECRUIT)
@@ -2903,7 +2902,7 @@ def handle_manage_facility_power() -> None:
 @add_instruct(constant.Instruct.MANAGE_POWER_SYSTEM)
 def handle_manage_power_system() -> None:
     """处理管理能源系统指令"""
-    cache.now_panel_id = constant.Panel.MANAGE_POWER_SYSTEM
+    view.now_panel_id = constant.Panel.MANAGE_POWER_SYSTEM
 
 
 @add_instruct(constant.Instruct.REPAIR_EQUIPMENT)
@@ -3789,7 +3788,7 @@ def handle_remote_all_set_sex_toy_strong_in_h() -> None:
 @add_instruct(constant.Instruct.BONDAGE)
 def handle_bondage() -> None:
     """处理绳艺指令"""
-    cache.now_panel_id = constant.Panel.BONDAGE
+    view.now_panel_id = constant.Panel.BONDAGE
 
 
 @add_instruct(constant.Instruct.PATCH_ON)
@@ -4719,7 +4718,7 @@ def handle_try_pl_active_h() -> None:
 @add_instruct(constant.Instruct.UNDRESS)
 def handle_undress() -> None:
     """处理脱衣服指令"""
-    cache.now_panel_id = constant.Panel.UNDRESS
+    view.now_panel_id = constant.Panel.UNDRESS
 
 
 @add_instruct(constant.Instruct.ORGASM_EDGE_ON)
@@ -4749,13 +4748,13 @@ def handle_run_all_group_sex_temple() -> None:
 @add_instruct(constant.Instruct.EDIT_GROUP_SEX_TEMPLE)
 def handle_edit_group_sex_temple() -> None:
     """处理编辑群交行动指令"""
-    cache.now_panel_id = constant.Panel.EDIT_GROUP_SEX_TEMPLE
+    view.now_panel_id = constant.Panel.EDIT_GROUP_SEX_TEMPLE
 
 
 @add_instruct(constant.Instruct.SWITCH_TO_NON_H_INTERFACE)
 def handle_switch_to_non_h_interface() -> None:
     """处理切换到非H指令"""
-    cache.show_non_h_in_hidden_sex = True
+    view.show_non_h_in_hidden_sex = True
 
 
 @add_instruct(constant.Instruct.PULL_OUT_PENIS)

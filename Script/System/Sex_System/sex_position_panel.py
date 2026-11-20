@@ -1,7 +1,7 @@
 """性交姿势选择面板"""
 
 from types import FunctionType
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 from Script.Core import (
     cache_control,
     get_text,
@@ -159,7 +159,7 @@ class Sex_Position_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn in return_list:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def select_sex_position(self, sex_position_id: int) -> None:
@@ -170,7 +170,7 @@ class Sex_Position_Panel:
             sex_position_id
         ]
         # 选定行动后面板退回场景：玩家的选择交回内核后，选择之后的代码不再运行
-        cache.now_panel_id = constant.Panel.IN_SCENE
+        view.now_panel_id = constant.Panel.IN_SCENE
         # 性交种类：1阴道，2子宫口，3子宫，4肛门，5尿道
         field, judge = {
             1: ("vaginal_sex_behavior_id", _("性交")),

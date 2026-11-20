@@ -2,7 +2,7 @@
 
 from collections.abc import Collection
 from types import FunctionType
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, panel, view
 from Script.Core import (
     cache_control,
     get_text,
@@ -696,7 +696,7 @@ class Edit_Group_Sex_Temple_Panel:
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
                 self.reset_unfinish_select()
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def show_target_chara_list(self, temple_id: str, body_part: str) -> None:

@@ -8,7 +8,7 @@ from Script.Core import (
     flow_handle,
     constant,
 )
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 from Script.Modules.tk_ui import player_pick
 from Script.Config import game_config, normal_config
 
@@ -50,9 +50,7 @@ def settle_library_book() -> None:
         # 如果该类型的书籍超过3本，则随机选择其中的三本
         if len(now_choose_list) > 3:
             now_choose_list = player_pick.ui_random.sample(now_choose_list, 3)
-        cache.rhodes_island.now_show_book_cid_of_type[book_type_cid] = (
-            now_choose_list
-        )
+        view.now_show_book_cid_of_type[book_type_cid] = now_choose_list
 
     # 获取玩家的借书情况
     pl_character_data: game_type.Character = cache.character_data[0]
@@ -60,13 +58,8 @@ def settle_library_book() -> None:
     # 遍历借的书籍，也加入到展示列表里
     for book_id in pl_borrow:
         book_type = game_config.config_book[book_id].type
-        if (
-            book_id
-            not in cache.rhodes_island.now_show_book_cid_of_type[book_type]
-        ):
-            cache.rhodes_island.now_show_book_cid_of_type[book_type].append(
-                book_id
-            )
+        if book_id not in view.now_show_book_cid_of_type[book_type]:
+            view.now_show_book_cid_of_type[book_type].append(book_id)
 
 
 def check_return_book(character_id: int) -> int:
@@ -422,11 +415,9 @@ class Borrow_Book_Panel:
             for book_type_cid in game_config.config_book_type:
                 book_type_data = game_config.config_book_type[book_type_cid]
                 if book_type_data.father_type_name in self.now_panel:
-                    now_choose_list = (
-                        cache.rhodes_island.now_show_book_cid_of_type[
-                            book_type_cid
-                        ]
-                    )
+                    now_choose_list = view.now_show_book_cid_of_type[
+                        book_type_cid
+                    ]
                     # 遍历该类型下的书籍
                     for book_cid in now_choose_list:
                         book_data = game_config.config_book[book_cid]
@@ -525,7 +516,7 @@ class Borrow_Book_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def change_panel(self, building_type: str) -> None:

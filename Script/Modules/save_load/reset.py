@@ -117,10 +117,12 @@ def _reconcile_roster_data(
 
 
 def _panel(new: core.GameState, why: Mapping[str, core.JSON]) -> core.GameState:
-    """回到场景面板"""
-    from Script.Core import cache_control, constant
+    """回到场景面板，关掉隐奸中显示非H指令的开关"""
+    from Script.Core import constant
+    from Script.UI.Moudle import view
 
-    cache_control.cache.now_panel_id = constant.Panel.IN_SCENE
+    view.now_panel_id = constant.Panel.IN_SCENE
+    view.show_non_h_in_hidden_sex = False
     return new
 
 

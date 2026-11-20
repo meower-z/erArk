@@ -1,7 +1,7 @@
 """读书面板与书籍片段的绘制"""
 
 from types import FunctionType
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 from Script.Core import (
     cache_control,
     get_text,
@@ -122,7 +122,7 @@ class Read_Book_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn in return_list:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def read(self, book_id: int) -> None:

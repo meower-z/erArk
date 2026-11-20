@@ -157,8 +157,7 @@ def check_global_clock_sanity() -> list[CheckFailure]:
         make_failure(
             "BEHAV-02",
             "全局时钟健全性",
-            f"ticked={ticked!r}或settled_day={settled_day!r}不是整数；clock={clock}, "
-            f"now_panel_id={getattr(cache_control.cache, 'now_panel_id', None)}",
+            f"ticked={ticked!r}或settled_day={settled_day!r}不是整数；clock={clock}",
             [],
         )
     ]

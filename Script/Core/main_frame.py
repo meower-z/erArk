@@ -53,6 +53,7 @@ from Script.Core import (
 from Script.Config import normal_config, game_config
 from Script.Core import era_image
 from typing import TYPE_CHECKING
+from Script.UI.Moudle import view
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -307,7 +308,6 @@ win_height = height + titlebar_height + frm_width
 x = root.winfo_screenwidth() // 2 - win_width // 2
 y = root.winfo_screenheight() // 2 - win_height // 2
 # 从窗口改为最大化
-# root.geometry("{}x{}+{}+{}".format(width, height, x, y))
 # Tk 的 zoomed 窗口状态只适用于 Windows 和 macOS。
 # X11 上用 -zoomed 窗口属性请求最大化。
 if root.tk.call("tk", "windowingsystem") == "x11":
@@ -469,13 +469,13 @@ def send_input(*args: object) -> None:
         if not (order) == "":
             del cache.input_cache[0]
             cache.input_cache.append(order)
-            cache.input_position = 0
+            view.input_position = 0
     else:
         if not (order) == "":
             cache.input_cache.append(order)
-            cache.input_position = 0
-    cache.input_cache_draft = ""
-    cache.input_cache_browsing = False
+            view.input_position = 0
+    view.input_cache_draft = ""
+    view.input_cache_browsing = False
     # 上膛只发生在 io_init.run 已绑定输入处理函数、启动 flow 线程之后，故此处已绑定
     assert input_event_func is not None
     input_event_func(order)

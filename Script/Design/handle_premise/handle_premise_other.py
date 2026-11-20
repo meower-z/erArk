@@ -17,6 +17,7 @@ from Script.Design import (
 )
 from Script.Config import normal_config, game_config
 from Script.Design.handle_premise.premise_registry import add_premise
+from Script.UI.Moudle import view
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -187,7 +188,6 @@ def handle_ai_wait(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     if character_data.sp_flag.wait_flag:
-        # print("判断到需要进行等待，character_id = ",character_id)
         return 999
     else:
         return 0
@@ -2204,9 +2204,9 @@ def instruct_type_shown(instruct_type: int) -> bool:
     bool -- 玩家的指令类型过滤开着该类，且该类不因交互对象而隐藏时为True
     功能描述:
         交互对象临盆、产后或处于幼年阶段（素质101、102）时，隐藏TARGET_HIDDEN_INSTRUCT_TYPES里的类型。
-        只读玩家的过滤设置 cache.instruct_type_filter，不改写它。
+        只读玩家的过滤设置 normal_config.system_setting.instruct_type_filter，不改写它。
     """
-    if not cache.instruct_type_filter[instruct_type]:
+    if not normal_config.system_setting.instruct_type_filter[instruct_type]:
         return False
     if instruct_type not in TARGET_HIDDEN_INSTRUCT_TYPES:
         return True
@@ -2226,7 +2226,7 @@ def handle_daily_panel_show(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    if cache.instruct_type_filter[1]:
+    if normal_config.system_setting.instruct_type_filter[1]:
         return 1
     return 0
 
@@ -2240,7 +2240,7 @@ def handle_play_panel_show(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    if cache.instruct_type_filter[2]:
+    if normal_config.system_setting.instruct_type_filter[2]:
         return 1
     return 0
 
@@ -2254,7 +2254,7 @@ def handle_work_panel_show(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    if cache.instruct_type_filter[3]:
+    if normal_config.system_setting.instruct_type_filter[3]:
         return 1
     return 0
 
@@ -2347,7 +2347,7 @@ def handle_show_non_h_in_hidden_sex(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    return cache.show_non_h_in_hidden_sex
+    return view.show_non_h_in_hidden_sex
 
 
 @add_premise(constant_promise.Premise.NOT_SHOW_NON_H_IN_HIDDEN_SEX)

@@ -144,6 +144,7 @@ def main() -> None:
 
     from Script.Core import cache_control, constant, flow_handle, io_init
     from Script.Config import normal_config
+    from Script.UI.Moudle import view
 
     cache = cache_control.cache
 
@@ -212,7 +213,7 @@ def main() -> None:
                 io_init.clear_screen()
         if state["screens_done"] >= total_screens or state["aborted"]:
             # 让面板的 while-1 循环在下一次条件检查时退出
-            cache.now_panel_id = -999
+            view.now_panel_id = -999
         return ""
 
     flow_handle.askfor_all = benchmark_askfor_all
@@ -248,12 +249,12 @@ def main() -> None:
             panel: BenchmarkPanel
             if args.panel == "map":
                 # 查看地图界面：SeeMapPanel 的 while-1 循环同样以 now_panel_id 为退出条件
-                cache.now_panel_id = constant.Panel.SEE_MAP
+                view.now_panel_id = constant.Panel.SEE_MAP
                 from Script.UI.Panel import see_map_panel
 
                 panel = see_map_panel.SeeMapPanel(width)
             else:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 from Script.UI.Panel import in_scene_panel
 
                 panel = in_scene_panel.InScenePanel(width)

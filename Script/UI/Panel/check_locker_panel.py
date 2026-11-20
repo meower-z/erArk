@@ -22,7 +22,7 @@ from Script.Design import (
     handle_premise,
     clothing,
 )
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, panel, view
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import edits
 from Script.Modules.tk_ui import player_pick
@@ -175,7 +175,7 @@ class Check_locker_Panel:
             yrn = flow_handle.askfor_all(return_list)
 
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def steal_all_pan(

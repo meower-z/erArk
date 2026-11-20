@@ -42,12 +42,6 @@ class DrawEventTextPanel(draw.LineFeedWaitDraw):
         self.tooltip: str = ""
         """ 绘制文本的悬停提示 """
         player_data: game_type.Character = cache.character_data[0]
-        if cache.is_collection:
-            if (
-                character_id
-                and character_id not in player_data.collection_character
-            ):
-                return
         character_data: game_type.Character = cache.character_data[character_id]
         if player_data.position not in [
             character_data.position,

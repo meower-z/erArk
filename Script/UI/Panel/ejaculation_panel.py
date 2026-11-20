@@ -18,7 +18,7 @@ from Script.Design import (
     map_handle,
     handle_ability,
 )
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 
 import random
@@ -73,7 +73,7 @@ def show_endure_ejaculation_panel() -> bool:
     return_flag = judge_endure_ejaculation(now_rate)
 
     # 如果系统设置中选择了手动选择是否忍耐
-    if cache.all_system_setting.base_setting.get(11, 2) == 2:
+    if normal_config.system_setting.base_setting.get(11, 2) == 2:
         while 1:
             line.draw()
             line_feed.draw()
@@ -110,7 +110,7 @@ def show_endure_ejaculation_panel() -> bool:
                     return_flag = False
                 break
     # 如果系统设置中选择了一定忍耐
-    elif cache.all_system_setting.base_setting.get(11, 2) == 1:
+    elif normal_config.system_setting.base_setting.get(11, 2) == 1:
         pass
     # 如果系统设置中选择了不忍耐直接射出
     else:
@@ -359,7 +359,7 @@ def update_semen_dirty(
         part_type == 0
         and part_cid == 8
         and now_semen_data[2] > 1
-        and cache.all_system_setting.base_setting[8]
+        and normal_config.system_setting.base_setting[8]
         and handle_premise.handle_have_clyster_tools(0)
         and handle_premise.handle_target_a_empty(0)
     ):
@@ -643,7 +643,7 @@ class Ejaculation_Panel:
         elif soft_egg_flag:
             self.draw_choose_part()
         # 如果没有选择射精部位，则直接在当前阴茎位置射精
-        elif not cache.all_system_setting.base_setting[3]:
+        elif not normal_config.system_setting.base_setting[3]:
             now_position = target_data.h_state.insert_position
             if now_position != -1:
                 # 身体
@@ -865,7 +865,7 @@ class Ejaculation_Panel:
 
             # 在非页面切换时退出面板
             if yrn not in [_("身体"), _("服装")]:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def change_shoot_target(self, target_character_id: int) -> None:

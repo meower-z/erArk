@@ -2,6 +2,7 @@
 """游戏主流程：唯一的循环，标题与建角色面板在这里显示，进了游戏就一步一步推进内核"""
 
 from Script.Core import py_cmd, constant, cache_control, game_type
+from Script.UI.Moudle import view
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -18,10 +19,10 @@ def start_frame() -> None:
 
     core.load(load_order.LOAD_ORDER)
     while True:
-        if cache.now_panel_id in player_pick.PRE_GAME_PANELS:
+        if view.now_panel_id in player_pick.PRE_GAME_PANELS:
             py_cmd.clr_cmd()
             py_cmd.focus_cmd()
-            constant.panel_data[cache.now_panel_id]()
+            constant.panel_data[view.now_panel_id]()
             continue
         try:
             core.step()

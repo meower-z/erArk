@@ -5,15 +5,18 @@ CURRENT 是本游戏写的文件 "2" 的版本。STEPS[n] 把版本 n 的 JSON �
 版本 0 的存档把生理需求与供电策略放在文件 "1" 的缓存对象上，所以 0 升 1 不是 JSON 步骤。
 这一升级在 install_save 里分三处。解开缓存后调 fill_v0_defaults，角色替换时调 copy_v0_needs，重建角色后调 adopt_v0。
 版本 0 与 1 的存档把动力数据放在罗德岛对象上。install_save 解开缓存后对每个版本调 adopt_power，把它搬进 GameState。
+界面的临时状态与玩家的面板选择不随存档：读任何版本的存档时，drop_ui_fields 去掉旧版本留在缓存与罗德岛对象上的它们，
+以及不再使用的字段。
 读旧存档不改写存档的文件。读完再存，写的是当前版本。本模块不登记行动、事件或规则，也不在 LOAD_ORDER 里。
 """
 
 from collections.abc import Callable
 from typing import Any
 
-from Script.Core import num
+from Script.Core import game_type, num
 from Script.Modules.domains import needs, power
 from Script.Modules.gameplay_resolution import working
+from Script.Modules.save_load import settings
 
 CURRENT = 2
 """ 本游戏写的文件 "2" 的版本 """
@@ -43,6 +46,48 @@ V0_MILK = "milk"
 """ 旧存档里乳汁在角色妊娠数据（pregnancy）上的属性名 """
 V0_STRATEGY = "power_supply_strategy"
 """ 旧存档里供电策略在罗德岛对象上的属性名 """
+UI_FIELDS = (
+    "back_save_panel",
+    "wframe_mouse",
+    "input_cache_draft",
+    "input_cache_browsing",
+    "input_position",
+    "now_panel_id",
+    "npc_image_index",
+    "text_wait",
+    "show_non_h_in_hidden_sex",
+    "instruct_type_filter",
+    "instruct_sex_type_filter",
+    "instruct_type_filter_cache",
+    "instruct_index_filter",
+    "scene_panel_show",
+    "all_npc_position_panel_select_type",
+    "all_npc_position_panel_move_type",
+    "pregnancy_panel_sort_type",
+    "pregnancy_panel_filter_type",
+    "now_init_map_id",
+    "output_text_style",
+    "text_style_position",
+    "text_style_cache",
+    "text_one_by_one_rich_cache",
+    "image_id",
+    "cmd_data",
+    "is_collection",
+)
+""" 旧版本存在缓存对象上的界面临时状态、玩家的面板选择与不再使用的字段：Cache 没有它们 """
+ISLAND_UI_FIELDS = (
+    "makefood_data",
+    "makefood_filter_type",
+    "makefood_filter_difficulty",
+    "makefood_filter_time",
+    "makefood_sort_type",
+    "makefood_sort_order",
+    "makefood_cook_mode",
+    "makefood_make_count",
+    "now_show_book_cid_of_type",
+    "reader_now",
+)
+""" 旧版本存在罗德岛对象上的界面临时状态与玩家的面板选择：Rhodes_Island 没有它们 """
 
 
 def fill_v0_defaults(loaded_dict: dict[str, Any]) -> None:
@@ -144,3 +189,27 @@ def adopt_power(loaded_dict: dict[str, Any]) -> None:
         ),
     )
     power.set_storage(found.get("power_storage", 0.0))
+
+
+def drop_ui_fields(loaded_dict: dict[str, Any]) -> dict[str, Any]:
+    """
+    去掉存档缓存与罗德岛对象上 UI_FIELDS、ISLAND_UI_FIELDS 里的属性
+    Keyword arguments:
+    loaded_dict -- 存档缓存的属性表
+    Return arguments:
+    dict -- 其中玩家的面板选择（settings.PREFERENCES 里、类型与默认值相同的），名字到值
+    """
+    default = game_type.System_Setting()
+    island = vars(loaded_dict["rhodes_island"])
+    found = {
+        name: loaded_dict.pop(name) for name in UI_FIELDS if name in loaded_dict
+    }
+    found.update(
+        {name: island.pop(name) for name in ISLAND_UI_FIELDS if name in island}
+    )
+    return {
+        name: value
+        for name, value in found.items()
+        if name in settings.PREFERENCES
+        and type(value) is type(getattr(default, name))
+    }

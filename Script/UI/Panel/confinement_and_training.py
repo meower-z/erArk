@@ -17,7 +17,7 @@ from Script.Design import (
     map_handle,
     virgin_break_gate,
 )
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 import random
 from Script.Design import game_time
@@ -803,7 +803,7 @@ class Confinement_And_Training_Manage_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def draw_info(self, cid: int) -> None:

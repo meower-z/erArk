@@ -9,6 +9,7 @@ from Script.Core import (
 )
 from Script.Config import normal_config
 from typing import TYPE_CHECKING
+from Script.UI.Moudle import view
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -45,7 +46,7 @@ def pcmd(
     normal_style -- 正常状态下命令显示样式
     on_style -- 鼠标在其上的时候命令显示样式
     """
-    cache.text_wait = float(normal_config.config_normal.text_wait)
+    view.text_wait = float(normal_config.config_normal.text_wait)
     global last_char
     if len(cmd_str) > 0:
         last_char = cmd_str[-1:]
@@ -78,7 +79,7 @@ def pimagecmd(
     arg -- 传给命令函数的顺序参数
     kw -- 传给命令函数的字典参数，None 时不传字典参数
     """
-    cache.text_wait = float(normal_config.config_normal.text_wait)
+    view.text_wait = float(normal_config.config_normal.text_wait)
     global last_char
     if len(cmd_str) > 0:
         last_char = cmd_str[-1:]

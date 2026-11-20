@@ -6,7 +6,7 @@ import numpy as np
 from collections import deque, defaultdict
 import re
 
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 from Script.Core import (
     cache_control,
     game_type,
@@ -1668,7 +1668,7 @@ class GomokuPanel:
             if yrn == back_button.return_text:
                 player_pick.back()
             if yrn in return_list:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def set_ai_difficulty(self, depth: int) -> None:
@@ -1802,7 +1802,7 @@ class GomokuPanel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def end_settle(self, winner: int) -> NoReturn:

@@ -2,6 +2,7 @@
 
 from tkinter import Event
 from Script.Core import main_frame, py_cmd, game_type, cache_control
+from Script.UI.Moudle import view
 
 wframe = main_frame.root
 
@@ -16,7 +17,7 @@ def _set_history_order(history_index: int) -> None:
     Keyword arguments:
     history_index -- 历史命令索引
     """
-    cache.input_position = history_index
+    view.input_position = history_index
     main_frame.set_order(cache.input_cache[history_index])
 
 
@@ -81,7 +82,7 @@ def mouse_left_check(event: Event) -> None:
     if not main_frame.input_armed:
         return
     py_cmd.focus_cmd()
-    if not cache.wframe_mouse.w_frame_up:
+    if not view.wframe_mouse.w_frame_up:
         set_wframe_up()
         # 一次性门：推进逐字等待同样视作消费一次输入，立即撤膛，防止连点残留；
         # 下一次 order_deal 入口的标记会重新上膛。
@@ -96,14 +97,14 @@ def mouse_right_check(event: Event) -> None:
     Keyword arguments:
     event -- 鼠标事件
     """
-    cache.wframe_mouse.mouse_right = 1
-    cache.text_wait = 0
-    cache.wframe_mouse.w_frame_skip_wait_mouse = 1
+    view.wframe_mouse.mouse_right = 1
+    view.text_wait = 0
+    view.wframe_mouse.w_frame_skip_wait_mouse = 1
     # 渲染期输入门禁：右键"催渲染跳过"是其本职（上方三个标志），渲染期必须保留，故不设门；
     # 但未上膛时不推进逐字等待、也不注入输入，避免右键在渲染期提前推进/打出未见过的命令。
     if not main_frame.input_armed:
         return
-    if not cache.wframe_mouse.w_frame_up:
+    if not view.wframe_mouse.w_frame_up:
         set_wframe_up()
     else:
         mouse_check_push(event)
@@ -118,22 +119,22 @@ def key_up(event: Event) -> None:
     if len(cache.input_cache) == 0:
         return
 
-    if not cache.input_cache_browsing:
-        cache.input_cache_draft = main_frame.get_order()
-        cache.input_cache_browsing = True
-        cache.input_position = len(cache.input_cache)
+    if not view.input_cache_browsing:
+        view.input_cache_draft = main_frame.get_order()
+        view.input_cache_browsing = True
+        view.input_position = len(cache.input_cache)
 
-    if cache.input_position > len(cache.input_cache):
-        cache.input_position = len(cache.input_cache)
+    if view.input_position > len(cache.input_cache):
+        view.input_position = len(cache.input_cache)
 
-    if cache.input_position == len(cache.input_cache):
-        cache.input_position -= 1
-        _set_history_order(cache.input_position)
-    elif cache.input_position > 0:
-        previous_index = _get_previous_distinct_index(cache.input_position)
+    if view.input_position == len(cache.input_cache):
+        view.input_position -= 1
+        _set_history_order(view.input_position)
+    elif view.input_position > 0:
+        previous_index = _get_previous_distinct_index(view.input_position)
         if previous_index >= 0:
-            cache.input_position = previous_index
-            _set_history_order(cache.input_position)
+            view.input_position = previous_index
+            _set_history_order(view.input_position)
 
 
 def key_down(event: Event) -> None:
@@ -145,29 +146,29 @@ def key_down(event: Event) -> None:
     if len(cache.input_cache) == 0:
         return
 
-    if not cache.input_cache_browsing:
+    if not view.input_cache_browsing:
         return
 
-    if cache.input_position < len(cache.input_cache) - 1:
-        next_index = _get_next_distinct_index(cache.input_position)
+    if view.input_position < len(cache.input_cache) - 1:
+        next_index = _get_next_distinct_index(view.input_position)
         if next_index >= 0:
-            cache.input_position = next_index
+            view.input_position = next_index
             _set_history_order(next_index)
             return
 
-    if cache.input_position == len(cache.input_cache) - 1:
-        cache.input_position = 0
-        cache.input_cache_browsing = False
-        main_frame.set_order(cache.input_cache_draft)
-        cache.input_cache_draft = ""
+    if view.input_position == len(cache.input_cache) - 1:
+        view.input_position = 0
+        view.input_cache_browsing = False
+        main_frame.set_order(view.input_cache_draft)
+        view.input_cache_draft = ""
 
 
 def set_wframe_up() -> None:
     """
     修正逐字输出状态为nowait
     """
-    cache.wframe_mouse.w_frame_up = 1
-    cache.wframe_mouse.w_frame_lines_up = 1
+    view.wframe_mouse.w_frame_up = 1
+    view.wframe_mouse.w_frame_lines_up = 1
 
 
 def mouse_check_push(event: Event | None = None) -> None:

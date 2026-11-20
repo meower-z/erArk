@@ -8,7 +8,7 @@ from Script.Core import (
     flow_handle,
     constant,
 )
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.save_load import reset
 import random
@@ -418,7 +418,7 @@ class Manage_Vehicle_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def change_panel(self, building_type: str) -> None:

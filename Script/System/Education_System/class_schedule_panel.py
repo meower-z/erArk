@@ -22,7 +22,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.Design import game_time, attr_calculation, basement
 from Script.System.Education_System import education_constant, schedule_handle
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -221,7 +221,7 @@ class Education_Manage_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
             if yrn in tab_return_map:
                 self.change_panel(tab_return_map[yrn])

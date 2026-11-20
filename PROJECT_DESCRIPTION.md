@@ -389,7 +389,7 @@ Script/
 10. `kernel_state.reset_clock(kernel_state.first_clock())` 把内核时钟拨到 config.ini 的开局时刻
 11. 若 `perf_monitor=1`：启用 `perf_hook` + `profiling.ui_perf_patch`
 12. `game_init.run(start_flow.start_frame)` 启动游戏
-13. `start_flow.start_frame()` 进入主循环，每轮执行 `constant.panel_data[cache.now_panel_id]()`
+13. `start_flow.start_frame()` 进入主循环，每轮执行 `constant.panel_data[view.now_panel_id]()`
 14. 异常兜底：写入 `error.log`，自动保存 99 号档，给玩家“回到标题/退出”选项
 
 ---
@@ -402,15 +402,15 @@ Script/
 
 全局唯一 `cache_control.cache`，关键字段分组：
 
-- **渲染/输入**：`input_cache`, `cmd_data`, `now_panel_id`, `font_size`
+- **渲染/输入**：`input_cache`
 - **角色世界**：`character_data`（角色ID -> Character）, `npc_tem_data`, `npc_id_got`, `forbidden_npc_id`, `npc_name_data`
 - **时间**：`game_time`, `pre_game_time`
-- **地图**：`map_data`, `scene_data`, `now_init_map_id`, `collect_position_list`
+- **地图**：`map_data`, `scene_data`, `collect_position_list`
 - **行为循环**：`over_behavior_character`, `pl_sleep_save_flag`, `time_stop_mode`, `group_sex_mode`
-- **基地/世界**：`rhodes_island`, `country`, `all_system_setting`, `world_setting`, `ai_setting`
+- **基地/世界**：`rhodes_island`, `country`, `world_setting`, `ai_setting`
 - **玩家**：`achievement`, `first_bonus`, `daily_intsruce`, `pl_pre_behavior_instruce`
 - **记录**：`taiggered_event_record`, `today_taiggered_event_record`
-- **指令过滤/样式**：`instruct_type_filter`, `show_non_h_in_hidden_sex`, `output_text_style` 等
+- **不在缓存里**：界面临时状态（`now_panel_id`、`show_non_h_in_hidden_sex` 等）在 `Script/UI/Moudle/view.py`；全局系统设置与玩家的面板选择（`instruct_type_filter` 等）在 `normal_config.system_setting`，存在 settings.json
 
 ### 9.2 Character（74 个字段）
 
@@ -759,8 +759,8 @@ init_character_behavior()
 
 - `constant.Panel` 定义面板 ID（TITLE=0 … MIXOLOGY=66）
 - `UI/Flow/normal_flow.py` 用 `@handle_panel.add_panel(constant.Panel.X)` 注册面板函数
-- `start_flow.start_frame()` 主循环执行 `constant.panel_data[cache.now_panel_id]()`
-- 面板通过设置 `cache.now_panel_id` 切换
+- `start_flow.start_frame()` 主循环执行 `constant.panel_data[view.now_panel_id]()`
+- 面板通过设置 `view.now_panel_id` 切换
 
 ---
 

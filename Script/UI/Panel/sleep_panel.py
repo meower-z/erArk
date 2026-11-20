@@ -3,7 +3,7 @@
 import datetime
 from fractions import Fraction
 from types import FunctionType
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 from Script.UI.Panel import diary_panel
 from Script.Core import (
     cache_control,
@@ -290,7 +290,7 @@ class Sleep_Panel:
             if yrn == yes_draw.return_text:
                 if self.sleep_time_min == 0:
                     self.sleep_time_min = self.sleep_time_hour * 60
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 player_pick.choose(
                     constant.Behavior.SLEEP,
                     self.sleep_time_min,
@@ -299,7 +299,7 @@ class Sleep_Panel:
                     args={"close_door": bool(self.close_door_flag)},
                 )
             elif yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def input_sleep_time(self) -> None:

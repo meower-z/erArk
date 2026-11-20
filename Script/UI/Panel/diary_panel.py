@@ -9,7 +9,7 @@ from Script.Core import (
     constant,
 )
 from Script.Design import game_time
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, panel, view
 from Script.Config import normal_config
 import os
 
@@ -109,7 +109,7 @@ class Diary_Panel:
                 yrn == back_draw.return_text
                 or yrn == save_button_draw.return_text
             ):
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def insert_text(self) -> None:

@@ -5,7 +5,7 @@
 
 import os
 from types import FunctionType
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, panel, view
 from Script.Core import (
     cache_control,
     get_text,
@@ -1872,16 +1872,8 @@ class SeeCharacterInfoInScenePanel:
         position = cache.character_data[0].position
         position_str = map_handle.get_map_system_path_str_for_list(position)
         scene_data: game_type.Scene = cache.scene_data[position_str]
-        if cache.is_collection:
-            character_data: game_type.Character = cache.character_data[0]
-            now_list = [
-                i
-                for i in scene_data.character_list
-                if i in character_data.collection_character
-            ]
-        else:
-            now_list = list(scene_data.character_list)
-            now_list.remove(0)
+        now_list = list(scene_data.character_list)
+        now_list.remove(0)
         self.handle_panel = SeeCharacterInfoHandleInScene(
             target_id, width, now_list
         )
@@ -1890,4 +1882,4 @@ class SeeCharacterInfoInScenePanel:
     def draw(self) -> None:
         """绘制对象"""
         self.handle_panel.draw()
-        cache.now_panel_id = constant.Panel.IN_SCENE
+        view.now_panel_id = constant.Panel.IN_SCENE

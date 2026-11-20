@@ -46,11 +46,6 @@ def handle_talk(character_id: int) -> None:
     ):
         # print(f"debug {character_data.name}和玩家不在同一位置，不显示文本")
         return
-    # 检测是否是收藏模式#
-    if cache.is_collection and character_id:
-        player_data: game_type.Character = cache.character_data[0]
-        if character_id not in player_data.collection_character:
-            return
     # 智能跟随模式下，博士离开时，跟随的角色不显示送别文本
     if (
         character_id == 0
@@ -109,11 +104,6 @@ def handle_second_talk(
     character_data: game_type.Character = cache.character_data[character_id]
     # 已计算过的前提字典
     calculated_premise_dict: dict[str, float] = {}
-    # 检测是否是收藏模式#
-    if cache.is_collection and character_id:
-        player_data: game_type.Character = cache.character_data[0]
-        if character_id not in player_data.collection_character:
-            return
 
     # 自己
     if behavior_id == "share_blankly":
@@ -192,11 +182,13 @@ def handle_talk_sub(
         if (
             character_data.adv != 0
             and character_data.adv
-            in cache.all_system_setting.character_text_version
+            in normal_config.system_setting.character_text_version
         ):
-            character_version = cache.all_system_setting.character_text_version[
-                character_data.adv
-            ]
+            character_version = (
+                normal_config.system_setting.character_text_version[
+                    character_data.adv
+                ]
+            )
         # 获取触发者id的口上，需要自己adv不为0，有自己adv的口上，自己口上版本不是无
         if (
             character_data.adv != 0
@@ -216,11 +208,13 @@ def handle_talk_sub(
         if (
             target_data.adv != 0
             and target_data.adv
-            in cache.all_system_setting.character_text_version
+            in normal_config.system_setting.character_text_version
         ):
-            target_version = cache.all_system_setting.character_text_version[
-                target_data.adv
-            ]
+            target_version = (
+                normal_config.system_setting.character_text_version[
+                    target_data.adv
+                ]
+            )
         # 获取交互目标的口上
         if (
             target_data.adv != 0
@@ -249,7 +243,7 @@ def handle_talk_sub(
                 continue
         # 系统设置中的是否使用通用文本
         if (
-            cache.all_system_setting.draw_setting[2] == 0
+            normal_config.system_setting.draw_setting[2] == 0
             and talk_config.adv_id == 0
         ):
             continue
@@ -267,7 +261,9 @@ def handle_talk_sub(
         if now_weight:
             # 如果该句文本是角色口上，则权重乘以角色专属文本权重倍数，默认10倍
             if talk_config.adv_id != 0:
-                now_weight *= cache.all_system_setting.draw_setting.get(14, 10)
+                now_weight *= normal_config.system_setting.draw_setting.get(
+                    14, 10
+                )
             # 计算特殊前提权重加成
             new_weight = handle_special_talk_weight(
                 character_id, talk_premise_set
@@ -385,7 +381,9 @@ def handle_special_talk_weight(character_id: int, talk_premise_set: set) -> int:
         for premise in talk_premise_set:
             # 如果口上前提中存在该前提，则进行权重加成
             if premise in judge_premise_set:
-                new_weight *= cache.all_system_setting.draw_setting.get(15, 5)
+                new_weight *= normal_config.system_setting.draw_setting.get(
+                    15, 5
+                )
                 break
     return new_weight
 
@@ -418,9 +416,9 @@ def choice_talk_from_talk_data(
         if (
             (not unusual_talk_flag or talk_weight < 100)
             and behavior_id in game_config.config_talk_common_cid_list_by_type
-            and cache.all_system_setting.draw_setting[2] == 1
+            and normal_config.system_setting.draw_setting[2] == 1
         ):
-            use_common_talk_rate = cache.all_system_setting.draw_setting[13]
+            use_common_talk_rate = normal_config.system_setting.draw_setting[13]
             if random.randint(1, 100) <= use_common_talk_rate * 10:
                 talk_text = "{" + behavior_id + "}"
                 now_talk_id = ""
@@ -429,7 +427,7 @@ def choice_talk_from_talk_data(
         # 在没有口上的情况下，如果行为id在通用口上列表中，则调用纸娃娃地文
         if (
             behavior_id in game_config.config_talk_common_cid_list_by_type
-            and cache.all_system_setting.draw_setting[2] == 1
+            and normal_config.system_setting.draw_setting[2] == 1
         ):
             talk_text = "{" + behavior_id + "}"
             common_behavior_id = behavior_id
@@ -774,7 +772,7 @@ def check_not_draw_talk(
     # NPC的移动
     if character_id != 0 and now_behavior_id == constant.Behavior.MOVE:
         # 设置为屏蔽的不触发
-        if cache.all_system_setting.draw_setting[8] == 0:
+        if normal_config.system_setting.draw_setting[8] == 0:
             # print(f"debug {character_data.name}设置为屏蔽，不显示移动文本")
             return True
         # 跟随博士的移动不触发
@@ -814,12 +812,12 @@ def check_not_draw_talk(
         and now_behavior_id == constant.SecondBehavior.DAY_HELLO
     ):
         # 全屏蔽
-        if cache.all_system_setting.draw_setting[9] == 0:
+        if normal_config.system_setting.draw_setting[9] == 0:
             # print(f"debug {character_data.name}设置为屏蔽，不显示每日招呼文本")
             return True
         # 仅屏蔽地文
         elif (
-            cache.all_system_setting.draw_setting[9] == 2
+            normal_config.system_setting.draw_setting[9] == 2
             and not unusual_talk_flag
         ):
             # print(f"debug {character_data.name}设置为仅屏蔽地文，不显示地文的每日招呼文本")
@@ -959,7 +957,7 @@ def talk_common_judge_one_pass(now_talk: str, character_id: int) -> str:
                             if part in part_dict
                         ]
                         detail_level = (
-                            cache.all_system_setting.draw_setting.get(20, 1)
+                            normal_config.system_setting.draw_setting.get(20, 1)
                         )
                         # 低档：A/B/C三段中等概率随机只取一段
                         if detail_level == 0:

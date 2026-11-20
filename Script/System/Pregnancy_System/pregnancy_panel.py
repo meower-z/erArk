@@ -10,7 +10,7 @@ from Script.Core import (
     constant,
     py_cmd,
 )
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 from Script.Config import normal_config
 from Script.Design import game_time
 from Script.Design import handle_premise
@@ -279,7 +279,7 @@ class Pregnancy_Overview_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def draw_overview_page(self) -> list:
@@ -296,7 +296,7 @@ class Pregnancy_Overview_Panel:
         info_draw.draw()
         sort_text = (
             _("[按阶段降序▼]")
-            if cache.pregnancy_panel_sort_type == 0
+            if view.pregnancy_panel_sort_type == 0
             else _("[按阶段升序▲]")
         )
         sort_draw = draw.LeftButton(
@@ -315,7 +315,7 @@ class Pregnancy_Overview_Panel:
         info_draw.draw()
         now_draw: draw.NormalDraw | draw.LeftButton
         for stage_id in range(len(pregnancy_constant.STAGE_NAME_LIST)):
-            if stage_id == cache.pregnancy_panel_filter_type:
+            if stage_id == view.pregnancy_panel_filter_type:
                 now_draw = draw.NormalDraw()
                 now_draw.text = (
                     f"▶{pregnancy_constant.STAGE_NAME_LIST[stage_id]}  "
@@ -347,15 +347,15 @@ class Pregnancy_Overview_Panel:
             if now_stage == pregnancy_constant.STAGE_NONE:
                 continue
             if (
-                cache.pregnancy_panel_filter_type
-                and now_stage != cache.pregnancy_panel_filter_type
+                view.pregnancy_panel_filter_type
+                and now_stage != view.pregnancy_panel_filter_type
             ):
                 continue
             chara_stage_list.append((character_id, now_stage))
         # 按阶段排序（0降序，1升序）
         chara_stage_list.sort(
             key=lambda data: data[1],
-            reverse=cache.pregnancy_panel_sort_type == 0,
+            reverse=view.pregnancy_panel_sort_type == 0,
         )
 
         if not len(chara_stage_list):
@@ -504,7 +504,7 @@ class Pregnancy_Overview_Panel:
 
     def change_sort_type(self) -> None:
         """切换总览页的排序方向"""
-        cache.pregnancy_panel_sort_type = 1 - cache.pregnancy_panel_sort_type
+        view.pregnancy_panel_sort_type = 1 - view.pregnancy_panel_sort_type
 
     def change_filter_type(self, stage_id: int) -> None:
         """
@@ -512,7 +512,7 @@ class Pregnancy_Overview_Panel:
         Keyword arguments:
         stage_id -- 阶段枚举值（0为全部）
         """
-        cache.pregnancy_panel_filter_type = stage_id
+        view.pregnancy_panel_filter_type = stage_id
 
     def jump_to_tree(self, character_id: int) -> None:
         """

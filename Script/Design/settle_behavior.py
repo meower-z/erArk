@@ -399,7 +399,7 @@ def handle_settle_behavior(
 
         if (
             PC_information_flag == 1
-            and cache.all_system_setting.draw_setting[6] == 1
+            and normal_config.system_setting.draw_setting[6] == 1
         ):
             now_text_list.append(now_text)
 
@@ -596,7 +596,7 @@ def handle_settle_behavior(
                 if (
                     judge
                     and (now_text != name)
-                    and cache.all_system_setting.draw_setting[7] == 1
+                    and normal_config.system_setting.draw_setting[7] == 1
                 ):
                     now_text_list.append(now_text)
         if add_time > 0:

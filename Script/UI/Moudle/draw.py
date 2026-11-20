@@ -16,6 +16,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 
 from typing import TYPE_CHECKING
+from Script.UI.Moudle import view
 
 if TYPE_CHECKING:
     from collections.abc import Sized, Callable
@@ -120,7 +121,7 @@ class WaitDraw(NormalDraw):
             io_init.era_print(self.text, self.style, tooltip=self.tooltip)
             if int(len(self.text)):
                 # 右键激活跳过标志时忽略等待，否则正常停顿等待玩家操作
-                if not cache.wframe_mouse.w_frame_skip_wait_mouse:
+                if not view.wframe_mouse.w_frame_skip_wait_mouse:
                     flow_handle.askfor_wait()
                 else:
                     time.sleep(0.001)
@@ -145,7 +146,7 @@ class WaitDraw(NormalDraw):
         # 输出后等待玩家操作
         if int(len(self.text)):
             # 右键激活跳过标志时忽略等待，否则正常停顿等待玩家操作
-            if not cache.wframe_mouse.w_frame_skip_wait_mouse:
+            if not view.wframe_mouse.w_frame_skip_wait_mouse:
                 flow_handle.askfor_wait()
             else:
                 time.sleep(0.001)
@@ -202,7 +203,7 @@ class LineFeedWaitDraw(NormalDraw):
                 if remain:
                     io_init.era_print("\n")
                 # 等待玩家操作
-                if not cache.wframe_mouse.w_frame_skip_wait_mouse:
+                if not view.wframe_mouse.w_frame_skip_wait_mouse:
                     flow_handle.askfor_wait()
                 else:
                     time.sleep(0.001)
@@ -992,7 +993,6 @@ class CenterDrawImage(NormalDraw):
         print("int(len(self)) :", int(len(self)))
         print("int(self.width) :", int(self.width))
         if int(len(self)) > int(self.width):
-            # print("第一个分支")
             now_image = ""
             if self.width > 0:
                 for i in self.text:

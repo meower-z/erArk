@@ -1,7 +1,7 @@
 """查看角色图片列表的绘制对象与按钮"""
 
 from types import FunctionType
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 from Script.Core import (
     get_text,
     cache_control,
@@ -85,9 +85,9 @@ class CharacterImageListDraw:
             npc_darw_list = self.character_list
         else:
             # 修正超过数据范围的起始点
-            if cache.npc_image_index >= len(self.character_list):
-                cache.npc_image_index = len(self.character_list) - 1
-            start_index = cache.npc_image_index
+            if view.npc_image_index >= len(self.character_list):
+                view.npc_image_index = len(self.character_list) - 1
+            start_index = view.npc_image_index
             npc_darw_list = self.character_list[
                 start_index : min((10 + start_index), len(self.character_list))
             ]
@@ -118,10 +118,10 @@ class CharacterImageListDraw:
 
     def next_page(self) -> None:
         """跳到下一页"""
-        if cache.npc_image_index + 10 <= len(self.character_list):
-            cache.npc_image_index += 10
+        if view.npc_image_index + 10 <= len(self.character_list):
+            view.npc_image_index += 10
         else:
-            cache.npc_image_index = 0
+            view.npc_image_index = 0
 
 
 class CharacterImageButton:

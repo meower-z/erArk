@@ -17,7 +17,7 @@ from Script.Design import (
     basement,
     game_time,
 )
-from Script.Config import game_config, character_config
+from Script.Config import game_config, character_config, normal_config
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -103,7 +103,7 @@ def init_character(
     # 赋予口上大小
     now_character.talk_size = character_tem.Talk_Size
     # 口上版本
-    cache.all_system_setting.character_text_version[character_id] = 1
+    normal_config.system_setting.character_text_version[character_id] = 1
     # 最后集成
     cache.character_data[character_id] = now_character
     character.init_attr(character_id)

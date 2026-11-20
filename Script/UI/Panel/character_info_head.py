@@ -317,7 +317,7 @@ def get_character_status_list(
     # 玩家饥饿提示根据设置决定是否显示，且与饭点时间无关
     elif (
         character_id == 0
-        and cache.all_system_setting.draw_setting.get(17, 1) == 1
+        and normal_config.system_setting.draw_setting.get(17, 1) == 1
     ):
         hunger_text = (
             _(" <饿>")
@@ -339,7 +339,7 @@ def get_character_status_list(
     # 玩家尿意提示根据设置决定是否显示
     if (
         character_id == 0
-        and cache.all_system_setting.draw_setting.get(17, 1) == 0
+        and normal_config.system_setting.draw_setting.get(17, 1) == 0
     ):
         urinate_text = ""
     urinate_draw.text = urinate_text
@@ -430,11 +430,11 @@ def get_character_status_list(
     # 催眠状态时进行显示
     hypnosis_draw = draw.LeftDraw()
     hypnosis_text = ""
-    if cache.all_system_setting.draw_setting[4] and (
+    if normal_config.system_setting.draw_setting[4] and (
         handle_premise.handle_unconscious_hypnosis_flag(character_id)
         or (
             character_data.hypnosis.hypnosis_degree > 0
-            and cache.all_system_setting.draw_setting[4] == 2
+            and normal_config.system_setting.draw_setting[4] == 2
         )
     ):
         hypnosis_text = _(" <催眠")
@@ -443,7 +443,7 @@ def get_character_status_list(
             character_data.hypnosis.hypnosis_degree
         )
         # 是否显示具体数值
-        if cache.all_system_setting.draw_setting[4] == 2:
+        if normal_config.system_setting.draw_setting[4] == 2:
             # 显示到小数点后一位
             hypnosis_text += (
                 f"({round(character_data.hypnosis.hypnosis_degree, 1)}%)"
@@ -693,12 +693,12 @@ class CharacterInfoHead:
             favorability_text = f"{int(character_data.favorability[0])}"
             trust_text = f"{round(character_data.trust, 1)}%"
             # 只显示等级
-            if cache.all_system_setting.draw_setting[3] == 1:
+            if normal_config.system_setting.draw_setting[3] == 1:
                 favorability_and_trust_text = _(
                     "好感度:{0}，信赖度:{1}"
                 ).format(favorability_lv_letter, trust_lv_letter)
             # 显示数值和等级
-            elif cache.all_system_setting.draw_setting[3] == 2:
+            elif normal_config.system_setting.draw_setting[3] == 2:
                 favorability_and_trust_text = _(
                     "好感度:{0}({1})，信赖度:{2}({3})"
                 ).format(

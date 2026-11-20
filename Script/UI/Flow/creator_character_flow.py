@@ -23,7 +23,7 @@ from Script.Design import (
     basement,
 )
 from Script.Modules.save_load import kernel_state
-from Script.UI.Moudle import panel, draw
+from Script.UI.Moudle import panel, draw, view
 from Script.Config import normal_config, game_config
 
 cache: game_type.Cache = cache_control.cache
@@ -70,7 +70,7 @@ def creator_character_panel() -> None:
                 game_start()
                 break
         cache.character_data[0] = game_type.Character()
-    cache.now_panel_id = constant.Panel.IN_SCENE
+    view.now_panel_id = constant.Panel.IN_SCENE
     kernel_state.new_game(clock)
 
 
@@ -120,7 +120,6 @@ def game_start() -> None:
     medical_service.init_medical_department_data(reset_runtime=True)
     manage_vehicle_panel.update_basement_vehicle_data()
     achievement_panel.achievement_flow(_("周目"))
-    # print(f"debug 2facility_open = {cache.base_resouce.facility_open}")
 
 
 def confirm_game_info_panel() -> None:
@@ -1062,7 +1061,9 @@ class SelectFirstNPCButton:
         # 如果有口上的话，且版本已启用，输出大小
         if (
             target_data.talk_size
-            and cache.all_system_setting.character_text_version[target_data.adv]
+            and normal_config.system_setting.character_text_version[
+                target_data.adv
+            ]
             > 0
         ):
             button_text += f"({target_data.talk_size}kb)"
@@ -1114,7 +1115,6 @@ class SelectFirstNPCButton:
             )
 
         # 按钮绘制
-        # self.button_return = NPC_id
         self.draw_text = button_text
 
         """ 绘制的对象 """

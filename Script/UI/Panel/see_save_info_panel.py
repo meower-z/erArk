@@ -16,7 +16,7 @@ from Script.Core import (
 )
 from Script.Config import normal_config
 from Script.Modules.save_load import index, kernel_state
-from Script.UI.Moudle import panel, draw
+from Script.UI.Moudle import panel, draw, view
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -70,8 +70,8 @@ class SeeSaveListPanel:
     def draw(self) -> None:
         """绘制对象"""
         while 1:
-            if cache.back_save_panel:
-                cache.back_save_panel = False
+            if view.back_save_panel:
+                view.back_save_panel = False
                 break
             line_feed.draw()
             title_draw = draw.TitleLineDraw(_("神经连接柜"), self.width)
@@ -97,7 +97,7 @@ class SeeSaveListPanel:
             if yrn == back_draw.return_text:
                 break
         if self.back_to_main:
-            cache.now_panel_id = constant.Panel.IN_SCENE
+            view.now_panel_id = constant.Panel.IN_SCENE
 
 
 class SaveInfoDraw:
@@ -308,7 +308,7 @@ class SaveInfoDraw:
             refused_draw.width = self.width
             refused_draw.draw()
             return
-        cache.back_save_panel = True
+        view.back_save_panel = True
 
     def delete_save(self) -> None:
         """删除存档"""

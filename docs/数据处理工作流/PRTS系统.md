@@ -108,7 +108,7 @@ class Tip_Chara:
 
 **功能：** 管理同一角色的多个文本版本
 
-**存储位置：** `cache.all_system_setting.character_text_version[adv_id]`
+**存储位置：** `normal_config.system_setting.character_text_version[adv_id]`
 
 **切换机制：**
 1. 显示角色所有可用版本

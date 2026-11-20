@@ -17,7 +17,7 @@ from Script.Design import (
     handle_talent,
     handle_ability,
 )
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.Modules.save_load import reset
 
@@ -158,7 +158,7 @@ def find_recruitable_npc() -> list[int]:
         if cache.character_data[chara_id].adv in constant.ban_NPC_adv_set:
             continue
         # 如果设置了禁止，则跳过禁止干员
-        if cache.all_system_setting.base_setting[7]:
+        if normal_config.system_setting.base_setting[7]:
             if chara_id in cache.forbidden_npc_id:
                 continue
         recruitable_npc_id_list.append(chara_id)
@@ -683,7 +683,7 @@ class Recruit_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def select_recruitment_strategy(self, recruit_line_id: int) -> None:
@@ -806,7 +806,7 @@ class Recruit_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn in return_list:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def select_npc_position(self) -> None:

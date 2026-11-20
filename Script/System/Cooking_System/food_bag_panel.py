@@ -12,7 +12,7 @@ from Script.Core import (
     constant,
     flow_handle,
 )
-from Script.UI.Moudle import panel, draw
+from Script.UI.Moudle import panel, draw, view
 from Script.Design import attr_calculation, handle_premise
 from Script.Modules.tk_ui import player_pick
 from Script.Config import normal_config, game_config
@@ -136,7 +136,7 @@ class FoodBagPanel:
         )
         while 1:
             character_data: game_type.Character = cache.character_data[0]
-            if cache.now_panel_id != constant.Panel.FOOD_BAG:
+            if view.now_panel_id != constant.Panel.FOOD_BAG:
                 break
 
             # 获取当前面板下的食物分组
@@ -272,7 +272,7 @@ class FoodBagPanel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def get_food_group(self) -> tuple[dict, dict]:
@@ -564,7 +564,7 @@ class FoodGroupDraw:
     def eat_food(self, uid: UUID) -> None:
         """食用指定uid的食物：交互对象接不接受由行动开始时的判定决定"""
         line_feed.draw()
-        cache.now_panel_id = constant.Panel.IN_SCENE
+        view.now_panel_id = constant.Panel.IN_SCENE
         player_pick.choose(
             constant.Behavior.EAT,
             5,

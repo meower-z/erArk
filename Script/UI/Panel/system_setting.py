@@ -10,7 +10,7 @@ from Script.Core import (
     flow_handle,
     constant,
 )
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.Design import game_time
 from Script.Modules.save_load import settings
@@ -109,7 +109,7 @@ class System_Setting_Panel:
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
                 settings.save()
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def change_type_show(self, type_name: str) -> None:
@@ -135,7 +135,7 @@ class System_Setting_Panel:
         if type_name == _("基础"):
             setting_data = game_config.config_system_setting
             setting_option = game_config.config_system_setting_option
-            setting = cache.all_system_setting.base_setting
+            setting = normal_config.system_setting.base_setting
         elif type_name == _("难度"):
             setting_data = game_config.config_difficulty_setting
             setting_option = game_config.config_difficulty_setting_option
@@ -143,7 +143,7 @@ class System_Setting_Panel:
         else:
             setting_data = game_config.config_draw_setting
             setting_option = game_config.config_draw_setting_option
-            setting = cache.all_system_setting.draw_setting
+            setting = normal_config.system_setting.draw_setting
 
         # 绘制选项标题
         if self.type_show[type_name]:
@@ -270,7 +270,7 @@ class System_Setting_Panel:
                 if (
                     type_name == _("基础")
                     and cid == 7
-                    and cache.all_system_setting.base_setting[cid]
+                    and normal_config.system_setting.base_setting[cid]
                 ):
                     new_button_text = _(" [修改已禁止干员列表] ")
                     new_button_len = max(len(new_button_text) * 2, 30)
@@ -328,11 +328,11 @@ class System_Setting_Panel:
                 now_draw.width = self.width
                 now_draw.draw()
                 return
-            setting = cache.all_system_setting.base_setting
+            setting = normal_config.system_setting.base_setting
         elif type_name == _("难度"):
             setting = cache.difficulty_setting
         else:
-            setting = cache.all_system_setting.draw_setting
+            setting = normal_config.system_setting.draw_setting
         if setting[cid] < option_len - 1:
             setting[cid] += 1
         else:
@@ -343,7 +343,7 @@ class System_Setting_Panel:
                 for character_id in cache.character_data:
                     character_data = cache.character_data[character_id]
                     character_data.chara_setting[1] = (
-                        cache.all_system_setting.draw_setting[cid]
+                        normal_config.system_setting.draw_setting[cid]
                     )
             elif cid == 11:
                 line_feed.draw()
@@ -358,7 +358,7 @@ class System_Setting_Panel:
                     new_num = 0
                 elif new_num > 9:
                     new_num = 9
-                cache.all_system_setting.draw_setting[cid] = new_num
+                normal_config.system_setting.draw_setting[cid] = new_num
             elif cid == 14 or cid == 15:
                 line_feed.draw()
                 line_draw = draw.LineDraw("-", self.width)
@@ -372,7 +372,7 @@ class System_Setting_Panel:
                     new_num = 1
                 elif new_num > 99:
                     new_num = 99
-                cache.all_system_setting.draw_setting[cid] = new_num
+                normal_config.system_setting.draw_setting[cid] = new_num
 
     def change_font_size(self) -> None:
         """修改字体大小"""

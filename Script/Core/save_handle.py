@@ -19,7 +19,7 @@ from Script.Core import (
 )
 from Script.Config import normal_config, game_config, character_config
 from Script.Design import attr_calculation, character_handle, map_handle
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 from Script.System.Pregnancy_System import pregnancy_constant
 import json
 from typing import TYPE_CHECKING
@@ -230,7 +230,7 @@ def _drop_unknown_books(loaded_dict: dict) -> int:
     Return arguments:
     int -- 改动的处数
     功能描述:
-        罗德岛：借阅表去掉这些书（谁借着都一样），图书馆展示列表去掉这些类型与书，阅读推荐去掉这些类型；
+        罗德岛：借阅表去掉这些书（谁借着都一样），阅读推荐去掉这些类型；
         每个角色：借书集合去掉这些书，借书卡上这些书没还的记录记为此刻（读档时是存档时刻）还了，正在读的书是这些书时书号与书名归零。
         阅读进度不动：成就按读完的书数统计
     """
@@ -243,20 +243,6 @@ def _drop_unknown_books(loaded_dict: dict) -> int:
     ]:
         del rhodes_island.book_borrow_dict[book_id]
         count += 1
-    show_book_dict = rhodes_island.now_show_book_cid_of_type
-    for book_type in list(show_book_dict):
-        if book_type not in game_config.config_book_type:
-            del show_book_dict[book_type]
-            count += 1
-            continue
-        book_list = [
-            book_id
-            for book_id in show_book_dict[book_type]
-            if book_id in game_config.config_book
-        ]
-        if book_list != show_book_dict[book_type]:
-            show_book_dict[book_type] = book_list
-            count += 1
     for book_type in [
         book_type
         for book_type in rhodes_island.recommend_book_type_set
@@ -695,7 +681,7 @@ class SaveUnpickler(pickle.Unpickler):
 
     def find_class(self, module: str, name: str) -> Any:
         """
-        按模块名与类名取类，普通 datetime 换成 _load_save_datetime
+        按模块名与类名取类，普通 datetime 换成 _load_save_datetime；旧存档里 game_type 的鼠标状态类已搬到 view
         Keyword arguments:
         module -- 模块名
         name -- 类名
@@ -704,6 +690,8 @@ class SaveUnpickler(pickle.Unpickler):
         """
         if module == "datetime" and name == "datetime":
             return _load_save_datetime
+        if (module, name) == ("Script.Core.game_type", "WFrameMouse"):
+            return view.WFrameMouse
         return super().find_class(module, name)
 
 
@@ -827,6 +815,7 @@ def install_save(save_id: str, version: int) -> None:
     for field_name in list(loaded_dict):
         if field_name.startswith("web_") or field_name in STALE_UI_FIELDS:
             del loaded_dict[field_name]
+    preferences = upgrade.drop_ui_fields(loaded_dict)
     # 游戏时钟在内核里（存档的文件 "2"；旧存档按存档头的游戏时间投影），不随缓存载入
     for field_name in CLOCK_FIELDS:
         loaded_dict.pop(field_name, None)
@@ -1049,7 +1038,7 @@ def install_save(save_id: str, version: int) -> None:
     update_count += update_settings(loaded_dict)
     from Script.Modules.save_load import settings
 
-    settings.adopt(loaded_dict.pop("all_system_setting"))
+    settings.adopt(loaded_dict.pop("all_system_setting", None), preferences)
 
     # 更新大地图势力数据
     loaded_dict["country"] = attr_calculation.get_country_reset(
@@ -1071,10 +1060,10 @@ def install_save(save_id: str, version: int) -> None:
     # 使用 update() 方法来更新 cache 的字典
     cache.__dict__.update(loaded_dict)
 
-    # 鼠标状态属于临时界面状态，不该随存档带入：旧版存档可能把“正在按任意键继续”的0值一起存了进来，
-    # 载入后 w_frame_up 残留为0，之后第一次左键会被 mouse_left_check 误判为“推进等待”，
+    # 鼠标状态是界面的临时状态，读档后从头开始：读档前留下的 w_frame_up 为0时，
+    # 之后第一次左键会被 mouse_left_check 误判为“推进等待”，
     # 消耗掉一次性的输入许可却不产生任何指令，askfor_all 从此收不到输入，游戏静默卡死
-    cache.wframe_mouse = game_type.WFrameMouse()
+    view.wframe_mouse = view.WFrameMouse()
 
     # 有101/102阶段的孩子参与的群交、时停与H，各按自己的结束结算收尾（这些结算读写游戏缓存，须在覆盖缓存之后）
     old_chara_to_new.end_young_child_session(young_child_session)
@@ -1125,7 +1114,7 @@ def repair_installed() -> None:
     读档的 Reset 步骤，在角色投影之后：游戏状态自检（系统设置14号，默认关闭）对载入后的存档做保守修复，
     包在开关关闭时不会被导入；修复改游戏缓存，生理需求经这一步的缓冲区读写 GameState 的 body.needs
     """
-    if cache.all_system_setting.base_setting.get(14, 0):
+    if normal_config.system_setting.base_setting.get(14, 0):
         from Script.Test import Static_Check as static_check_system
 
         static_check_system.run_load_repair()
@@ -1251,7 +1240,6 @@ def update_map(loaded_dict: dict[str, Any]) -> int:
             for _key, value in loaded_dict["character_data"].items():
                 if value.position[-1] == "人气快餐开封菜":
                     value.position[-1] = "约翰老妈汉堡店"
-                    # print(f"已将{value.name}的位置从人气开封菜改为约翰老妈汉堡店")
         for key, _value in loaded_dict["scene_data"].copy().items():
             if key not in cache.scene_data:
                 del loaded_dict["scene_data"][key]
@@ -1321,7 +1309,7 @@ def update_settings(loaded_dict: dict[str, Any]) -> int:
     for field_name in ("difficulty_setting", "birth_type_setting"):
         if not loaded_dict.get(field_name):
             loaded_dict[field_name] = dict(
-                getattr(loaded_dict["all_system_setting"], field_name, None)
+                getattr(loaded_dict.get("all_system_setting"), field_name, None)
                 or {}
             )
     difficulty_setting = attr_calculation.get_difficulty_setting_zero()
@@ -1355,7 +1343,7 @@ def update_settings(loaded_dict: dict[str, Any]) -> int:
         0
     ].relationship.child_id_list:
         character_text_version.setdefault(daughter_cid, 1)
-    global_text_version = cache.all_system_setting.character_text_version
+    global_text_version = normal_config.system_setting.character_text_version
     missing = character_text_version.keys() - global_text_version.keys()
     for key in missing:
         global_text_version[key] = character_text_version[key]

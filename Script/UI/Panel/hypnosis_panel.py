@@ -16,7 +16,7 @@ from Script.Design import (
     handle_ability,
     hypnosis_state,
 )
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 
 cache: game_type.Cache = cache_control.cache
@@ -335,7 +335,7 @@ class Chose_Hypnosis_Type_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn in return_list:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def change_hypnosis_type(self, hypnosis_type_cid: int) -> None:
@@ -773,10 +773,10 @@ class Chose_Roleplay_Type_Panel:
             if yrn == yes_draw.return_text:
                 # 结算角色扮演选择
                 self.settle_roleplay_selection()
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
             elif yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def toggle_type_expand(self, t: str) -> None:

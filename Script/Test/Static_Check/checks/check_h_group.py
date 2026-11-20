@@ -402,8 +402,7 @@ def check_hgroup_05() -> list[CheckFailure]:
         slots, serve = T
         ctx = (
             f"group_sex_lock_flag={getattr(pl.h_state, 'group_sex_lock_flag', None)} "
-            f"all_group_sex_temple_run={getattr(pl.h_state, 'all_group_sex_temple_run', None)} "
-            f"now_panel_id={getattr(cache, 'now_panel_id', None)}"
+            f"all_group_sex_temple_run={getattr(pl.h_state, 'all_group_sex_temple_run', None)}"
         )
         if isinstance(slots, dict):
             for p, v in slots.items():

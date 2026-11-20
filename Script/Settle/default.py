@@ -975,7 +975,7 @@ def handle_move_to_target_scene(
     if len(character_data.behavior.move_target):
         # 如果NPC移动提示未屏蔽，且该NPC和玩家位于同一地点，则输出提示信息
         if (
-            cache.all_system_setting.draw_setting[8] == 1
+            normal_config.system_setting.draw_setting[8] == 1
             and character_id > 0
             and character_data.position == cache.character_data[0].position
         ):
@@ -8178,7 +8178,7 @@ def handle_end_h_add_hpmp_max(
             info_draw.width = width
             info_draw.draw()
         # npc则自动进行一次能力上升结算
-        if chara_id != 0 and cache.all_system_setting.base_setting[2]:
+        if chara_id != 0 and normal_config.system_setting.base_setting[2]:
             handle_ability.gain_ability(chara_id)
 
 
@@ -8270,7 +8270,7 @@ def handle_group_sex_end_h_add_hpmp_max(
             info_draw.width = width
             info_draw.draw()
         # npc则自动进行一次能力上升结算
-        if chara_id != 0 and cache.all_system_setting.base_setting[2]:
+        if chara_id != 0 and normal_config.system_setting.base_setting[2]:
             handle_ability.gain_ability(chara_id)
 
 
