@@ -1,9 +1,10 @@
 """
 save_load 的存档升级
 ====================
-文件 "2" 的版本：CURRENT 是本游戏写的版本，STEPS[n] 把版本 n 的 JSON 对象升到 n + 1。
-版本 0 是旧存档，它的生理需求与供电策略还在文件 "1" 的缓存对象上，所以 0 升 1 不是 JSON 步骤。
-这一升级是读档的 install_save 里的三步：解开缓存后 fill_v0_defaults，角色替换时 copy_v0_needs，重建角色后 adopt_v0。
+CURRENT 是本游戏写的文件 "2" 的版本。STEPS[n] 把版本 n 的 JSON 对象升到 n + 1。
+版本 0 的存档把生理需求与供电策略放在文件 "1" 的缓存对象上，所以 0 升 1 不是 JSON 步骤。
+这一升级在 install_save 里分三处。解开缓存后调 fill_v0_defaults，角色替换时调 copy_v0_needs，重建角色后调 adopt_v0。
+版本 0 与 1 的存档把动力数据放在罗德岛对象上。install_save 解开缓存后对每个版本调 adopt_power，把它搬进 GameState。
 读旧存档不改写存档的文件。读完再存，写的是当前版本。本模块不登记行动、事件或规则，也不在 LOAD_ORDER 里。
 """
 
@@ -14,10 +15,23 @@ from Script.Core import num
 from Script.Modules.domains import needs, power
 from Script.Modules.gameplay_resolution import working
 
-CURRENT = 1
+CURRENT = 2
 """ 本游戏写的文件 "2" 的版本 """
-STEPS: dict[int, Callable[[dict[str, Any]], dict[str, Any]]] = {}
-""" 版本 n 到 n + 1 的升级步骤，现在没有 """
+
+
+def _v1_to_v2(data: dict[str, Any]) -> dict[str, Any]:
+    """
+    版本 1 升 2。文件 "2" 的结构不变，原样交回。版本 1 存档的动力数据由 adopt_power 搬进 GameState
+    Keyword arguments:
+    data -- 版本 1 的 JSON 对象
+    Return arguments:
+    dict -- 同一个对象
+    """
+    return data
+
+
+STEPS: dict[int, Callable[[dict[str, Any]], dict[str, Any]]] = {1: _v1_to_v2}
+""" 版本 n 到 n + 1 的升级步骤，键为 n """
 
 V0_NEEDS = {
     "tired_point": "tired",
@@ -90,3 +104,43 @@ def adopt_v0(loaded_dict: dict[str, Any]) -> None:
     table = {str(zone): value for zone, value in strategy.items()}
     working.put(None, power.KEY, table)
     delattr(island, V0_STRATEGY)
+
+
+V1_POWER = (
+    "power_use",
+    "power_max",
+    "power_storage",
+    "power_storage_max",
+    "power_operator_ids_list",
+    "main_power_facility_operator_ids",
+    "orundum_reactor_list",
+    "other_power_facility_list",
+    "battery_list",
+    "now_used_extra_clean_energy_module_count",
+    "now_used_extra_battery_count",
+)
+""" 版本 0 与 1 的存档里罗德岛对象上的动力属性名 """
+
+
+def adopt_power(loaded_dict: dict[str, Any]) -> None:
+    """
+    罗德岛对象带着 V1_POWER 里的属性（版本 0 与 1 的存档）时，把动力数据写进当前缓冲区，再从对象上删掉这些属性
+    副反应炉数量、清洁能源设施、蓄电池与主调控员写进 base.power，储能写进 base.power_storage
+    缺的属性取 DEFAULT_PLANT 里的值，储能缺时为 0.0。对象上没有这些属性时什么也不写
+    Keyword arguments:
+    loaded_dict -- 存档缓存的属性表
+    """
+    island = loaded_dict.get("rhodes_island")
+    attrs = vars(island) if island is not None else {}
+    found = {name: attrs.pop(name) for name in V1_POWER if name in attrs}
+    if not found:
+        return
+    power.set_plant(
+        aux_reactors=found.get("orundum_reactor_list", [1, 3])[1],
+        clean=tuple(found.get("other_power_facility_list", (0, 0, 0))),
+        batteries=tuple(found.get("battery_list", (0, 0, 0))),
+        main_operators=tuple(
+            found.get("main_power_facility_operator_ids", (0, 0, 0, 0))
+        ),
+    )
+    power.set_storage(found.get("power_storage", 0.0))

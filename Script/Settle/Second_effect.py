@@ -3658,9 +3658,7 @@ def handle_store_small_orgasm_charge(
     # 不在人力发电室中则返回
     if handle_premise.handle_not_in_human_power_room(character_id):
         return
-    from Script.UI.Panel.manage_power_system_panel import (
-        store_power_by_human_power,
-    )
+    from Script.Settle.power_settle import store_power_by_human_power
 
     draw_flag = False
     # 如果和玩家在同一位置，则进行显示
@@ -3685,9 +3683,7 @@ def handle_store_normal_orgasm_charge(
     # 不在人力发电室中则返回
     if handle_premise.handle_not_in_human_power_room(character_id):
         return
-    from Script.UI.Panel.manage_power_system_panel import (
-        store_power_by_human_power,
-    )
+    from Script.Settle.power_settle import store_power_by_human_power
 
     draw_flag = False
     # 如果和玩家在同一位置，则进行显示
@@ -3712,9 +3708,7 @@ def handle_store_strong_orgasm_charge(
     # 不在人力发电室中则返回
     if handle_premise.handle_not_in_human_power_room(character_id):
         return
-    from Script.UI.Panel.manage_power_system_panel import (
-        store_power_by_human_power,
-    )
+    from Script.Settle.power_settle import store_power_by_human_power
 
     draw_flag = False
     # 如果和玩家在同一位置，则进行显示
@@ -3739,9 +3733,7 @@ def handle_store_super_orgasm_charge(
     # 不在人力发电室中则返回
     if handle_premise.handle_not_in_human_power_room(character_id):
         return
-    from Script.UI.Panel.manage_power_system_panel import (
-        store_power_by_human_power,
-    )
+    from Script.Settle.power_settle import store_power_by_human_power
 
     draw_flag = False
     # 如果和玩家在同一位置，则进行显示

@@ -648,7 +648,7 @@ init_character_behavior()
 | 系统 | 核心文件 | 主要数据 |
 | --- | --- | --- |
 | 基地/基建管理 | `Design/basement.py`, `UI/Panel/building_panel.py`, `manage_basement_panel.py` | `Facility*.csv` |
-| 动力/能源 | `UI/Panel/manage_power_system_panel.py` | `Power_Generation.csv`, `Power_Storage.csv` |
+| 动力/能源 | `Modules/domains/power.py`, `Modules/domains/power_supply.py`, `Settle/power_settle.py`, `UI/Panel/manage_power_system_panel.py` | `Power_Generation.csv`, `Power_Storage.csv` |
 | 农业生产 | `UI/Panel/agriculture_production_panel.py`, `Design/basement.py` | 农场设施 |
 | 工业生产/流水线 | `UI/Panel/manage_assembly_line_panel.py` | `ProductFormula.csv` |
 | 资源交易 | `UI/Panel/resource_exchange_panel.py` | `Resource.csv`, `Restaurant.csv` |
