@@ -16,6 +16,7 @@ from Script.Modules import load_order
 from Script.Modules.gameplay_resolution import actions
 from Script.Modules.save_load import reset
 from tests.fast.base import FastTestCase
+from Script.UI.Moudle import view
 
 
 class ResetStepsTest(FastTestCase):
@@ -55,7 +56,7 @@ class ResetStepsTest(FastTestCase):
         list -- 运行过的步骤目标
         """
         self.calls.clear()
-        self.cache.now_panel_id = constant.Panel.SEE_MAP
+        view.now_panel_id = constant.Panel.SEE_MAP
         clock = core.state().clock
         empty = core.GameState(
             clock, MappingProxyType({}), MappingProxyType({})
@@ -83,7 +84,7 @@ class ResetStepsTest(FastTestCase):
         for why, expected in cases:
             with self.subTest(str(why.get("cause"))):
                 self.assertEqual(self.run_cause(why), expected)
-                in_scene = self.cache.now_panel_id == constant.Panel.IN_SCENE
+                in_scene = view.now_panel_id == constant.Panel.IN_SCENE
                 self.assertEqual(
                     in_scene, why.get("cause") in ("load", "new_round")
                 )

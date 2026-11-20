@@ -93,6 +93,8 @@ class DraftCodecSweepTest(SlowTestCase):
 
     def test_every_leaf_type_round_trips(self) -> None:
         """每个顶层属性里的每种叶子类型各改一个，再改列表、集合与字典键：应用之后与改过的副本编码相同"""
+        from Script.UI.Moudle import view
+
         constant = importlib.import_module("Script.Core.constant")
         save_handle = importlib.import_module("Script.Core.save_handle")
         draft = importlib.import_module(
@@ -104,7 +106,7 @@ class DraftCodecSweepTest(SlowTestCase):
         if not os.path.isdir(os.path.join("save", USER_SAVE_ID)):
             self.skipTest("用户存档 99 没装在 save/99")
         save_handle.input_load_save(USER_SAVE_ID)
-        self.cache.now_panel_id = constant.Panel.IN_SCENE
+        view.now_panel_id = constant.Panel.IN_SCENE
         keep = player_pick.UI_STATE | player_pick.META_STATE
         session = draft.Session(keep)
         copies: dict[str, object] = {}

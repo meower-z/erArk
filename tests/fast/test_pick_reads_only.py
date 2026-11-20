@@ -14,6 +14,7 @@ from Script.Modules.tk_ui import player_pick
 from tests import pick_guard
 from tests import world as world_module
 from tests.fast.base import FastTestCase
+from Script.UI.Moudle import view
 
 
 class PickReadsOnlyTest(FastTestCase):
@@ -24,7 +25,7 @@ class PickReadsOnlyTest(FastTestCase):
         super().setUp()
         self.world.chara(0, "博士")
         self.world.chara(1, "干员")
-        self.cache.now_panel_id = constant.Panel.IN_SCENE
+        view.now_panel_id = constant.Panel.IN_SCENE
 
     def play(self, round_fn: Callable[[], None]) -> pick_guard.Round:
         """
@@ -43,8 +44,7 @@ class PickReadsOnlyTest(FastTestCase):
         """只改界面状态后取消：指纹不变，没有 Chosen"""
 
         def browse() -> None:
-            self.cache.now_panel_id = constant.Panel.SEE_MAP
-            self.cache.cmd_data[0] = "browse"
+            view.now_panel_id = constant.Panel.SEE_MAP
             player_pick.back()
 
         got = self.play(browse)

@@ -13,6 +13,7 @@ from Script.Design import character_behavior, map_handle
 from Script.UI.Panel import see_map_panel
 from tests.fast.base import FastTestCase
 from tests.world import play
+from Script.UI.Moudle import view
 
 START = ["宿舍", "1区", "101"]
 """ 博士出发的地点 """
@@ -66,7 +67,7 @@ class MapStaysOpenAcrossBlocksTest(FastTestCase):
             return 1
 
         panel = see_map_panel.SeeMapPanel.__new__(see_map_panel.SeeMapPanel)
-        self.cache.now_panel_id = constant.Panel.SEE_MAP
+        view.now_panel_id = constant.Panel.SEE_MAP
         with mock.patch.object(
             character_behavior, "judge_character_status", settle
         ):
@@ -76,10 +77,10 @@ class MapStaysOpenAcrossBlocksTest(FastTestCase):
         """移动到另一个区块后仍是地图面板"""
         self.move(BLOCK)
         self.assertEqual(self.player.position, BLOCK)
-        self.assertEqual(self.cache.now_panel_id, constant.Panel.SEE_MAP)
+        self.assertEqual(view.now_panel_id, constant.Panel.SEE_MAP)
 
     def test_main_panel_after_moving_in_the_same_block(self) -> None:
         """同一区块里移动后回到主界面"""
         self.move(SAME_BLOCK)
         self.assertEqual(self.player.position, SAME_BLOCK)
-        self.assertEqual(self.cache.now_panel_id, constant.Panel.IN_SCENE)
+        self.assertEqual(view.now_panel_id, constant.Panel.IN_SCENE)

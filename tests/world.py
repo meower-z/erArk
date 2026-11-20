@@ -27,9 +27,10 @@ import io
 import os
 import random
 import sys
-import tempfile
 import uuid
 from typing import TYPE_CHECKING
+
+from tests import outside_cache
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -259,28 +260,6 @@ def _fresh_config() -> None:
     )
 
 
-SETTINGS_DIR = tempfile.mkdtemp(prefix="erark-settings-")
-""" 测试进程放 settings.json 的临时目录，MinimalWorld 每次复原时 _fresh_settings 把全局设置文件的路径换到这里 """
-
-
-def _fresh_settings() -> None:
-    """
-    全局设置回到还没装过的样子：settings.json 换到 SETTINGS_DIR 下并删掉，settings 模块记下的设置清空
-    下一次 core.reset_state 时，settings 的输出钩子以默认值为底、盖上缓存此刻的系统设置，重新装好全局设置
-    Keyword arguments:
-    无
-    Return arguments:
-    无
-    """
-    from Script.Modules.save_load import settings
-
-    settings.path = os.path.join(SETTINGS_DIR, "settings.json")
-    with contextlib.suppress(FileNotFoundError):
-        os.remove(settings.path)
-    settings._live = None
-    settings._saved = None
-
-
 class MinimalWorld:
     """
     小世界：真实游戏配置 + 空游戏状态 + 一键复原，不启动游戏
@@ -367,7 +346,6 @@ class MinimalWorld:
         cache = self.cache
         cache.npc_tem_data = dict(character_config.character_tem_list)
         reset_clock(start_time())
-        cache.all_system_setting = attr_calculation.get_system_setting_zero()
         cache.difficulty_setting = (
             attr_calculation.get_difficulty_setting_zero()
         )
@@ -438,7 +416,7 @@ class MinimalWorld:
             scene.scene_tag = list(baseline["scene_tag"])
         self.wait_texts.clear()
         _fresh_config()
-        _fresh_settings()
+        outside_cache.fresh()
         from Script.Kernel import core
         from Script.Modules import load_order
 
@@ -811,7 +789,7 @@ class FullWorld(MinimalWorld):
         from Script.Modules import load_order
 
         character_handle.init_character_tem()
-        _fresh_settings()
+        outside_cache.fresh()
         core.load(load_order.LOAD_ORDER)
 
     def reset(self) -> None:
@@ -838,12 +816,13 @@ class FullWorld(MinimalWorld):
         """
         from Script.Core import constant
         from Script.UI.Flow import creator_character_flow, title_flow
+        from Script.UI.Moudle import view
 
         self.player.press("初次唤醒")
         title_flow.title_panel()
-        if self.cache.now_panel_id != constant.Panel.CREATOR_CHARACTER:
+        if view.now_panel_id != constant.Panel.CREATOR_CHARACTER:
             raise FixtureError(
-                f"标题画面没有进入创建角色：now_panel_id={self.cache.now_panel_id}"
+                f"标题画面没有进入创建角色：now_panel_id={view.now_panel_id}"
             )
         self.player.press("我读完并理解了以上8条")
         self.player.type(self.PLAYER_NAME)

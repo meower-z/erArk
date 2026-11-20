@@ -72,11 +72,12 @@ class Book43RemovedTest(SlowTestCase):
         Return arguments:
         无
         """
+        from Script.UI.Moudle import view
         from Script.Core import constant, save_handle
 
         save_handle.establish_save(SAVE_ID)
         save_handle.input_load_save(SAVE_ID)
-        self.cache.now_panel_id = constant.Panel.IN_SCENE
+        view.now_panel_id = constant.Panel.IN_SCENE
 
     def library_text(self, *tabs: str) -> str:
         """
@@ -342,13 +343,13 @@ class Book43RemovedTest(SlowTestCase):
     def test_old_save_loaned_book_passes_island_21(self) -> None:
         """干员借着、正读着 43 号书，阅读推荐与图书馆展示列表里有它：打开游戏状态自检时读档，借书一致性自检 ISLAND-21
         随即通过，存档里没有对 43 号书与类型 43 的引用；再存再读一次，借阅表不变"""
+        from Script.Config import normal_config
         from Script.Test.Static_Check.checks import check_island
 
-        self.cache.all_system_setting.base_setting[SELF_CHECK_SETTING] = 1
+        normal_config.system_setting.base_setting[SELF_CHECK_SETTING] = 1
         self.lend_and_read_book()
         rhodes_island = self.cache.rhodes_island
         rhodes_island.recommend_book_type_set.add(BOOK_TYPE)
-        rhodes_island.now_show_book_cid_of_type[BOOK_TYPE] = [BOOK]
         self.save_and_load()
         self.assertEqual(
             check_island.check_island_21_book_borrow_consistency(),
@@ -359,8 +360,6 @@ class Book43RemovedTest(SlowTestCase):
         references = []
         if BOOK in rhodes_island.book_borrow_dict:
             references.append("借阅表")
-        if BOOK_TYPE in rhodes_island.now_show_book_cid_of_type:
-            references.append("图书馆展示列表")
         if BOOK_TYPE in rhodes_island.recommend_book_type_set:
             references.append("阅读推荐")
         for character_id, character_data in self.cache.character_data.items():
@@ -387,6 +386,7 @@ class Book43RemovedTest(SlowTestCase):
     def test_user_save_99_drops_unknown_books(self) -> None:
         """用户存档 99：读档后借阅表里没有书籍配置里没有的书，其余每项仍在、借阅者不变或读档时还了书；
         再存再读一次，借阅表不变"""
+        from Script.UI.Moudle import view
         from Script.Config import game_config
         from Script.Core import constant, save_handle
 
@@ -402,7 +402,7 @@ class Book43RemovedTest(SlowTestCase):
         }
         self.assertTrue(unknown, "存档 99 的借阅表里有书籍配置里没有的书")
         save_handle.input_load_save(USER_SAVE_ID)
-        self.cache.now_panel_id = constant.Panel.IN_SCENE
+        view.now_panel_id = constant.Panel.IN_SCENE
         book_borrow_dict = self.cache.rhodes_island.book_borrow_dict
         self.assertFalse(
             unknown & set(book_borrow_dict), "读档后借阅表里没有这些项"

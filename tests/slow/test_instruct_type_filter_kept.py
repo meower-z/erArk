@@ -4,7 +4,7 @@
 ==============================================================
 开新游戏后，玩家用面板的类型按钮打开猥亵类（新游戏默认关着），杜宾作为普通成年交互对象。
 交互对象临盆（素质22）、产后（素质23）、婴儿（素质101）或幼女（素质102）时，Tk指令面板不列出技艺、猥亵、性爱三类的指令，
-前提 obscenity_panel_show 不成立；画完面板后玩家的设置 cache.instruct_type_filter 与画之前相同，
+前提 obscenity_panel_show 不成立；画完面板后玩家的设置 normal_config.system_setting.instruct_type_filter 与画之前相同，
 换回杜宾为交互对象时，猥亵类的指令照玩家的设置列出，obscenity_panel_show 成立。
 玩家用按钮关上猥亵类时，以杜宾为交互对象也不列出猥亵类的指令。
 测试里没有任何角色进入H状态，也没有执行任何指令。
@@ -115,8 +115,10 @@ class InstructTypeFilterKeptTest(SlowTestCase):
 
     def test_special_target_keeps_player_setting(self) -> None:
         """交互对象临盆、产后、婴儿或幼女：三类不列出；玩家的设置不变，换回成年交互对象时猥亵类照设置列出"""
+        from Script.Config import normal_config
+
         self.toggle_type(OBSCENITY)
-        before = dict(self.cache.instruct_type_filter)
+        before = dict(normal_config.system_setting.instruct_type_filter)
         self.assertTrue(before[OBSCENITY], "玩家打开了猥亵类")
         self.assertIn(
             OBSCENITY,
@@ -143,7 +145,7 @@ class InstructTypeFilterKeptTest(SlowTestCase):
                 f"交互对象{kind}时 obscenity_panel_show",
             )
             self.assertEqual(
-                dict(self.cache.instruct_type_filter),
+                dict(normal_config.system_setting.instruct_type_filter),
                 before,
                 f"交互对象{kind}时画完面板后的玩家设置",
             )

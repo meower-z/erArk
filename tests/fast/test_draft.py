@@ -29,6 +29,7 @@ from Script.Modules.gameplay_resolution import actions, draft, edits, intent
 from Script.Modules.save_load import kernel_state
 from Script.Modules.tk_ui import player_pick
 from tests.fast.base import FastTestCase
+from Script.UI.Moudle import view
 
 KEEP = player_pick.UI_STATE | player_pick.META_STATE
 
@@ -231,8 +232,8 @@ class DraftingTest(DraftCase):
         """只读、只改界面状态：没有 Edit"""
         with player_pick.drafting("test"):
             _ = cache_control.cache.character_data[1].name
-            cache_control.cache.now_panel_id = 5
-        self.assertEqual(cache_control.cache.now_panel_id, 5)
+            view.now_panel_id = 5
+        self.assertEqual(view.now_panel_id, 5)
 
     def test_back_leaves_nothing(self) -> None:
         """改了之后取消：抛出 Back，缓存是原物"""

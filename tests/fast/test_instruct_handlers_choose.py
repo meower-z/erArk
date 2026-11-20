@@ -3,7 +3,7 @@
 玩家指令只选不写
 ================
 每个指令处理函数在玩家选行动时跑一遍：定下行动的抛出 player_pick.Chosen，行动数据是能原样过 JSON 的 Intent，
-抛出前缓存逐字节相同（按 pickle 比较；界面状态 now_panel_id、wframe_mouse 除外）；
+抛出前缓存逐字节相同（按 pickle 比较）；
 不定行动的换面板、问玩家后返回，或是零时间的操作。
 种类 Instruct 的开始代码（handle_instruct.start_instruct）在行动开始时才写缓存。
 """
@@ -24,8 +24,6 @@ LOADED_FIRST = update
 """ 先于 Script.Modules 导入的 update：Script.Modules 的包初始化要在 update 导入途中进行 """
 NPC = 1
 """ 玩家的交互对象 """
-UI_STATE = frozenset({"now_panel_id", "wframe_mouse"})
-""" 选择时可以改的界面状态 """
 
 
 class InstructHandlersChooseTest(FastTestCase):
@@ -81,9 +79,7 @@ class InstructHandlersChooseTest(FastTestCase):
             if act is None:
                 continue
             chosen[instruct_id] = act
-            written = [
-                k for k in changed(before, self.cache) if k not in UI_STATE
-            ]
+            written = changed(before, self.cache)
             if written:
                 writers[instruct_id] = written
             with self.subTest(instruct=instruct_id):

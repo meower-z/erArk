@@ -117,10 +117,12 @@ class LanguageRun:
 
     def new_game(self) -> None:
         """与 FullWorld.new_game 相同的开新游戏流程，按钮文字取当前语言下的文字"""
+        from Script.UI.Moudle import view
+
         flow: Any = game("Script.UI.Flow.creator_character_flow")
         self.press(" -【初次唤醒】-")
         game("Script.UI.Flow.title_flow").title_panel()
-        now_panel_id = self.cache.now_panel_id
+        now_panel_id = view.now_panel_id
         if now_panel_id != self.constant.Panel.CREATOR_CHARACTER:
             raise AssertionError(f"标题画面没有进入创建角色：{now_panel_id}")
         self.press("我读完并理解了以上8条，我对自己负责，我不删，我要玩")
@@ -160,6 +162,8 @@ class LanguageRun:
         Return arguments:
         list -- 退出面板后的群交模板 A
         """
+        from Script.UI.Moudle import view
+
         instruct = self.constant.Instruct
         game("tests.snapshot_states").walk(self.world, ["中枢", "博士办公室"])
         self.summon(KALTSIT_ID)
@@ -188,7 +192,7 @@ class LanguageRun:
         finally:
             # 面板中途出错时清掉没用掉的按钮，回到主界面再结束群交
             self.world.player.planned.clear()
-            self.cache.now_panel_id = self.constant.Panel.IN_SCENE
+            view.now_panel_id = self.constant.Panel.IN_SCENE
             self.instruct(instruct.GROUP_SEX_END)
 
     def enter_h(self) -> bool:

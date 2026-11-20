@@ -140,6 +140,8 @@ class ZeroMinutePanelsTest(SlowTestCase):
         Return arguments:
         tuple -- (打开的面板数, {面板名: 定下的行动与变了的缓存属性，或出的错})
         """
+        from Script.UI.Moudle import view
+
         names = {
             value: name
             for name, value in vars(self.constant.Panel).items()
@@ -157,7 +159,7 @@ class ZeroMinutePanelsTest(SlowTestCase):
         problems: dict[str, str] = {}
         for panel in panels:
             name = names.get(panel, str(panel))
-            self.cache.now_panel_id = panel
+            view.now_panel_id = panel
             reset()
             self.world.player.planned.clear()
             before = self.pick_guard.fingerprint()
@@ -167,7 +169,7 @@ class ZeroMinutePanelsTest(SlowTestCase):
                 self.tests_world.act(self.constant.panel_data[panel])
             except Exception as error:
                 problems[name] = f"{type(error).__name__}：{error}"[:300]
-                self.cache.now_panel_id = self.constant.Panel.IN_SCENE
+                view.now_panel_id = self.constant.Panel.IN_SCENE
                 self.tests_world.act(lambda: None)
                 continue
             after = self.pick_guard.fingerprint()
@@ -186,7 +188,7 @@ class ZeroMinutePanelsTest(SlowTestCase):
                 problems[name] = (
                     f"行动 {self.player_starts()}，变了 {moved + extra}"
                 )
-            self.cache.now_panel_id = self.constant.Panel.IN_SCENE
+            view.now_panel_id = self.constant.Panel.IN_SCENE
         return len(panels), problems
 
     def test_new_game_open_and_leave(self) -> None:
@@ -196,11 +198,13 @@ class ZeroMinutePanelsTest(SlowTestCase):
 
     def test_save_99_open_and_leave(self) -> None:
         """存档 99 里每个面板打开再离开：玩家没有开始行动，缓存的指纹不变"""
+        from Script.UI.Moudle import view
+
         save_handle = importlib.import_module("Script.Core.save_handle")
         if not os.path.isdir(os.path.join("save", USER_SAVE_ID)):
             self.skipTest("用户存档 99 没装在 save/99")
         save_handle.input_load_save(USER_SAVE_ID)
-        self.cache.now_panel_id = self.constant.Panel.IN_SCENE
+        view.now_panel_id = self.constant.Panel.IN_SCENE
         count, problems = self.sweep()
         self.assertEqual(problems, {}, f"打开了 {count} 个面板")
 

@@ -265,6 +265,7 @@ class SaveLoadKernelStateTest(SlowTestCase):
 
     def test_new_round_restarts_kernel_from_cache(self) -> None:
         """新周目开局时没有上一周目排下的行动与寻路。等待一次后，每个角色的内核行动都开始在新周目里"""
+        from Script.UI.Moudle import view
         from Script.Design import game_time
 
         core = game("Script.Kernel.core")
@@ -277,7 +278,7 @@ class SaveLoadKernelStateTest(SlowTestCase):
         new_round.New_Round_Handle().start_new_round()
         self.world.player.check_done()
         self.assert_no_queue_or_route(npc)
-        self.assertEqual(self.cache.now_panel_id, constant.Panel.IN_SCENE)
+        self.assertEqual(view.now_panel_id, constant.Panel.IN_SCENE)
         round_start = game_time.minutes(game_time.now())
         self.assertLess(round_start, before, "新周目的游戏时间回到开局")
         self.wait()

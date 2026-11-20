@@ -12,7 +12,7 @@ import copy
 from collections.abc import Callable, Iterator, Mapping
 from unittest import mock
 
-from Script.Config import game_config
+from Script.Config import game_config, normal_config
 from Script.Core import constant, flow_handle, game_type
 from Script.Design import game_time, update
 from Script.Kernel import core
@@ -25,6 +25,7 @@ from Script.UI.Panel import gift_panel, play_gomoku_panel, talent_up_panel
 from tests import pick_guard
 from tests import world as world_module
 from tests.fast.base import FastTestCase
+from Script.UI.Moudle import view
 
 LOADED_FIRST = (update, handle_instruct)
 """ 先于 Script.Modules 导入的 update；handle_instruct 登记指令处理函数 """
@@ -51,7 +52,7 @@ class PanelSubMenusReadOnly(FastTestCase):
         self.player.target_character_id = NPC
         if not self.cache.recipe_data:
             cooking.init_recipes()
-        self.cache.now_panel_id = constant.Panel.IN_SCENE
+        view.now_panel_id = constant.Panel.IN_SCENE
         self.answers: list[str] = []
         self.enterContext(
             mock.patch.object(flow_handle, "askfor_all", self.answer)
@@ -119,7 +120,7 @@ class PanelSubMenusReadOnly(FastTestCase):
             pick_guard.fingerprint() == before, "缓存与内核状态不变"
         )
         self.assertEqual(start_gate.calls, gate_calls)
-        self.assertEqual(self.cache.now_panel_id, constant.Panel.IN_SCENE)
+        self.assertEqual(view.now_panel_id, constant.Panel.IN_SCENE)
 
     def assert_commits(
         self, answers: list[str], round_fn: Callable[[], None]
@@ -341,7 +342,7 @@ class PanelSubMenusReadOnly(FastTestCase):
             )
         with self.subTest("精细模式答题"):
             self.player.food_bag.clear()
-            self.cache.rhodes_island.makefood_make_count = {}
+            normal_config.system_setting.makefood_make_count = {}
             button = self.food_button(0, 1)
             questions = cooking.get_food_cook_questions(int(button.cid))
             asked = sum(

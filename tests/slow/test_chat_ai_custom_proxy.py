@@ -175,6 +175,8 @@ class ChatAiCustomProxyTest(SlowTestCase):
         Return arguments:
         无
         """
+        from Script.UI.Moudle import view
+
         player = self.world.player
         start = len(player.screen)
         snapshot_states.instruct(self.world, self.constant.Instruct.CHAT)
@@ -183,7 +185,7 @@ class ChatAiCustomProxyTest(SlowTestCase):
             "聊天的地文显示假代理返回的文本",
         )
         player.planned.clear()
-        self.cache.now_panel_id = self.constant.Panel.IN_SCENE
+        view.now_panel_id = self.constant.Panel.IN_SCENE
         start = len(player.screen)
         snapshot_states.instruct(
             self.world,

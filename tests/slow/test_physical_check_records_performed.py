@@ -49,6 +49,7 @@ class PhysicalCheckRecordsPerformedTest(SlowTestCase):
         Keyword arguments:
         presses -- 按钮文字片段
         """
+        from Script.UI.Moudle import view
         from Script.Core import constant
         from tests import world
 
@@ -56,7 +57,7 @@ class PhysicalCheckRecordsPerformedTest(SlowTestCase):
         self.world.player.press(*presses)
 
         def pick() -> None:
-            self.cache.now_panel_id = panel_id
+            view.now_panel_id = panel_id
             constant.panel_data[panel_id]()
 
         world.act(pick)

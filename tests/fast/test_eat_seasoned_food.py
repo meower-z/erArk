@@ -14,6 +14,7 @@ from Script.Core import constant
 from Script.System.Cooking_System import cooking, food_bag_panel
 from Script.Modules.tk_ui import player_pick
 from tests.fast.base import FastTestCase
+from Script.UI.Moudle import view
 
 NPC = 1
 """ 交互对象 """
@@ -51,7 +52,7 @@ class EatSeasonedFoodTest(FastTestCase):
         self.food = cooking.create_food("0", recipe_id)
         self.food.special_seasoning = SEMEN_HIDDEN
         self.player.food_bag[self.food.uid] = self.food
-        self.cache.now_panel_id = constant.Panel.IN_SCENE
+        view.now_panel_id = constant.Panel.IN_SCENE
 
     def test_eating_seasoned_food_picks_eat(self) -> None:
         """选择不出错，定下的是食用，选择时博士的 target_food 没被改写"""

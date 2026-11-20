@@ -26,6 +26,7 @@ class TalkCommonNestedTest(SlowTestCase):
 
     def test_reversed_order_climax_line(self) -> None:
         """倒序时杜宾的口喉高潮渲染出通用口上，文本里不留通用占位符"""
+        from Script.Config import normal_config
         from Script.Config import game_config
         from Script.Core import constant
         from Script.Design import talk
@@ -39,7 +40,7 @@ class TalkCommonNestedTest(SlowTestCase):
         self.instruct(constant.Instruct.DOOR_LOCK_INNER)
         self.assertTrue(operator.sp_flag.is_h)
 
-        self.cache.all_system_setting.draw_setting[13] = 10
+        normal_config.system_setting.draw_setting[13] = 10
         game_config.config_talk_common_cid_list_by_type = dict(
             reversed(
                 list(game_config.config_talk_common_cid_list_by_type.items())

@@ -25,6 +25,7 @@ from Script.System.Sex_System import bondage_panel, sex_position_panel
 from tests import pick_guard
 from tests import world as world_module
 from tests.fast.base import FastTestCase
+from Script.UI.Moudle import view
 
 NPC = 1
 """ 玩家的交互对象 """
@@ -45,7 +46,7 @@ class InstructSubMenuTest(FastTestCase):
         self.player = self.world.chara(0, "博士")
         self.npc = self.world.chara(NPC, "干员")
         self.player.target_character_id = NPC
-        self.cache.now_panel_id = constant.Panel.IN_SCENE
+        view.now_panel_id = constant.Panel.IN_SCENE
         world_module.act(player_pick.back)
 
     def play(

@@ -138,12 +138,13 @@ class SlowTestCase(unittest.TestCase):
         Return arguments:
         无
         """
+        from Script.UI.Moudle import view
         from Script.Core import constant
         from tests import world
 
         def pick() -> None:
             """玩家这一次选行动：显示此刻的面板"""
-            constant.panel_data[self.cache.now_panel_id]()
+            constant.panel_data[view.now_panel_id]()
 
         world.act(pick)
 

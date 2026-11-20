@@ -86,10 +86,11 @@ class PickDraftHTest(SlowTestCase):
         Return arguments:
         Callable -- 交给 run_pick 的操作
         """
+        from Script.UI.Moudle import view
         from Script.Core import constant
 
         def show() -> None:
-            self.cache.now_panel_id = panel_id
+            view.now_panel_id = panel_id
             constant.panel_data[panel_id]()
 
         return show

@@ -142,6 +142,8 @@ class NumDisplayTest(SlowTestCase):
 
     def test_settle_text_lists_only_seen_changes(self) -> None:
         """显示值没变的 ±1/3 不列出，显示值变了 2 的列出 +2"""
+        from Script.Config import normal_config
+
         game_config = importlib.import_module("Script.Config.game_config")
         game_type = importlib.import_module("Script.Core.game_type")
         settle_behavior = importlib.import_module(
@@ -161,7 +163,7 @@ class NumDisplayTest(SlowTestCase):
             seen: 2,
         }
         change.target_change[self.operator_id] = target_change
-        self.cache.all_system_setting.draw_setting[7] = 1
+        normal_config.system_setting.draw_setting[7] = 1
         now_time = self.player.behavior.start_time
         with mock.patch.object(
             settle_behavior, "handle_instruct_data", return_value=change

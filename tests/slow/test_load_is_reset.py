@@ -150,6 +150,8 @@ class LoadIsResetTest(SlowTestCase):
 
     def test_load_swaps_whole_state(self) -> None:
         """确认读取：内核状态是存档时的，Reset 看到的时钟是存档的，选择里没有行动开始，回到主界面"""
+        from Script.UI.Moudle import view
+
         core = game("Script.Kernel.core")
         start_gate = game("Script.Modules.gameplay_resolution.start_gate")
         constant = game("Script.Core.constant")
@@ -159,7 +161,7 @@ class LoadIsResetTest(SlowTestCase):
         self.assertEqual(core.state(), saved)
         self.assertEqual(self.resets, [(saved.clock, saved.clock, calls)])
         self.assertEqual(start_gate.calls, calls)
-        self.assertEqual(self.cache.now_panel_id, constant.Panel.IN_SCENE)
+        self.assertEqual(view.now_panel_id, constant.Panel.IN_SCENE)
 
     def test_old_save_projects_characters(self) -> None:
         """旧存档：内核时钟是存档头的游戏时间，角色是缓存里的名单，全局数据有 ticked 与 settled_day"""
@@ -179,6 +181,8 @@ class LoadIsResetTest(SlowTestCase):
         """
         系统设置 14 打开时读旧存档：修复跑一次，跑时游戏时间已是存档的；之后的静态检查没有 BEHAV-02 的失败
         """
+        from Script.Config import normal_config
+
         static_check = game("Script.Test.Static_Check")
         game_time = game("Script.Design.game_time")
         run_load_repair = static_check.run_load_repair
@@ -188,7 +192,7 @@ class LoadIsResetTest(SlowTestCase):
             repair_clocks.append(game_time.minutes(game_time.now()))
             return run_load_repair()
 
-        self.cache.all_system_setting.base_setting[14] = 1
+        normal_config.system_setting.base_setting[14] = 1
         saved = self.save(old=True)
         with mock.patch.object(static_check, "run_load_repair", repair):
             self.load()

@@ -41,12 +41,14 @@ class ChildStageDirtTextTest(SlowTestCase):
         无
         """
         super().setUp()
+        from Script.Config import normal_config
+
         self.target_id = min(cid for cid in self.cache.npc_id_got if cid != 0)
         self.target = self.cache.character_data[self.target_id]
         for clothing_type in self.target.cloth.cloth_wear:
             self.target.cloth.cloth_wear[clothing_type] = []
         self.cache.character_data[0].target_character_id = self.target_id
-        self.cache.all_system_setting.draw_setting[FULL_DIRTY_SETTING] = 1
+        normal_config.system_setting.draw_setting[FULL_DIRTY_SETTING] = 1
 
     def panel_text(self, talent_id: int, semen_level: int) -> str:
         """

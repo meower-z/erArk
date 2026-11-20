@@ -16,6 +16,7 @@ from Script.Modules import load_order
 from Script.Modules.gameplay_resolution import actions, intent
 from Script.Modules.tk_ui import player_hook, player_pick
 from tests.fast.base import FastTestCase
+from Script.UI.Moudle import view
 
 _started: list[tuple[str, int]] = []
 """ 开始过的测试行动：(行为id, 开始的分钟) """
@@ -54,14 +55,14 @@ class PickBackTest(FastTestCase):
 
         def sub_menu() -> None:
             look()
-            self.cache.now_panel_id = constant.Panel.MAKE_FOOD
+            view.now_panel_id = constant.Panel.MAKE_FOOD
             try:
                 player_pick.back()
             except Exception:
                 self.fail("Back 被面板的 except Exception 拦下")
 
         def scene() -> None:
-            panels.append(self.cache.now_panel_id)
+            panels.append(view.now_panel_id)
             look()
 
         panels: list[int] = []

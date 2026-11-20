@@ -72,12 +72,14 @@ class SaveV1Test(SlowTestCase):
         Keyword arguments:
         save_id -- 存档id
         """
+        from Script.UI.Moudle import view
+
         constant = game("Script.Core.constant")
         save_handle = game("Script.Core.save_handle")
         kernel = game("Script.Kernel.core")
         load_order = game("Script.Modules.load_order")
         save_handle.input_load_save(save_id)
-        self.cache.now_panel_id = constant.Panel.IN_SCENE
+        view.now_panel_id = constant.Panel.IN_SCENE
         kernel.load(load_order.LOAD_ORDER)
 
     def wait(self, minutes: int) -> None:
@@ -121,7 +123,6 @@ class SaveV1Test(SlowTestCase):
         attrs = {
             name: draft.encode(value)
             for name, value in sorted(vars(self.cache).items())
-            if name != "all_system_setting"
         }
         return json.dumps(attrs, sort_keys=True, ensure_ascii=False)
 
@@ -150,6 +151,8 @@ class SaveV1Test(SlowTestCase):
 
     def test_save_load_and_continue(self) -> None:
         """存进新存档后读回与存档前相同，存档后接着玩与读回后接着玩相同，再存再读不变"""
+        from Script.UI.Moudle import view
+
         constant = game("Script.Core.constant")
         save_handle = game("Script.Core.save_handle")
         world = game("tests.world")
@@ -157,11 +160,11 @@ class SaveV1Test(SlowTestCase):
         power = game("Script.Modules.domains.power")
         self.wait(60)
         strategies = power.strategies()
-        self.cache.now_panel_id = constant.Panel.MANAGE_POWER_SYSTEM
+        view.now_panel_id = constant.Panel.MANAGE_POWER_SYSTEM
         self.world.player.press(
             "供电策略调整", "[+]", "返回", "蓄电池管理", "[+]", "返回", "返回"
         )
-        world.act(constant.panel_data[self.cache.now_panel_id])
+        world.act(constant.panel_data[view.now_panel_id])
         self.world.player.check_done()
         self.assertNotEqual(power.strategies(), strategies, "面板里改了策略")
         self.assertEqual(power.plant()["batteries"], (1, 0, 0), "加了蓄电池")
