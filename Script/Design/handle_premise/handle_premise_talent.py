@@ -215,18 +215,6 @@ def handle_self_is_loli(character_id: int) -> int:
     return 0
 
 
-@add_premise(constant_promise.Premise.SELF_CHILD_OR_LOLI_1)
-def handle_self_child_or_loli_1(character_id: int) -> int:
-    """
-    校验自己是幼女（儿童阶段）；学员已成年，不算
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return handle_self_is_child(character_id)
-
-
 @add_premise(constant_promise.Premise.T_CHILD_OR_LOLI_1)
 def handle_t_child_or_loli_1(character_id: int) -> int:
     """
@@ -237,34 +225,7 @@ def handle_t_child_or_loli_1(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    return handle_self_child_or_loli_1(character_data.target_character_id)
-
-
-@add_premise(constant_promise.Premise.SELF_UNDERAGE)
-def handle_self_underage(character_id: int) -> int:
-    """
-    校验自己是否未成年
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    character_data = cache.character_data[character_id]
-    if character_data.talent[102] == 1:
-        return 1
-    return 0
-
-
-@add_premise(constant_promise.Premise.SELF_NOT_UNDERAGE)
-def handle_self_not_underage(character_id: int) -> int:
-    """
-    校验自己不是未成年
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return not handle_self_underage(character_id)
+    return handle_self_is_child(character_data.target_character_id)
 
 
 @add_premise(constant_promise.Premise.SELF_CHEST_IS_CLIFF)

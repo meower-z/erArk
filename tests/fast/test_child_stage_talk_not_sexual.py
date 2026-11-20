@@ -41,9 +41,7 @@ CHILD_PREMISES = frozenset(
         "baby_1",
         "child_1",
         "loli_1",
-        "self_child_or_loli_1",
         "t_child_or_loli_1",
-        "self_underage",
         "t_baby_1",
     }
 )
