@@ -5,7 +5,7 @@
 > 用途：本文档是 erArk 仓库的一份自包含、可持续维护的完整项目描述，供后续 AI/开发者快速建立上下文。
 > 生成时间：2026-08-18；代码快照：`master @ b17d1b1ba`；游戏版本：`v0.66 / package.json = 2026.8.18`。
 > 若代码发生大版本变更，应先更新本文档，再基于本文档工作。
-> 更细的系统级文档索引见最后一节“文档导航”；仓库自带的 `CLAUDE.md` / `CLAUDE_cn.md` / `.github/copilot-instructions.md` 也需结合阅读。
+> 更细的系统级文档索引见最后一节“文档导航”；仓库自带的 `CLAUDE.md` / `CLAUDE_cn.md` 也需结合阅读。
 
 ---
 
@@ -137,7 +137,6 @@ black .
 | `package.json` | 游戏版本号（当前 `2026.8.18`） |
 | `image/package.json` | 图片包版本号（当前 `2026.7.31`） |
 | `CLAUDE.md` / `CLAUDE_cn.md` | 仓库 AI 指导文档（中英文） |
-| `.github/copilot-instructions.md` | Copilot/AI 代理最小速查 |
 | `ai_chat_api_key.csv` | AI 文本生成密钥（敏感，已 gitignore，勿提交） |
 
 ---
@@ -966,7 +965,6 @@ GitHub Actions `.github/workflows/python-app.yml`（push/PR 到 master，windows
 
 - `CLAUDE_cn.md`：中文 AI 指导（最详细的一页式架构说明）
 - `CLAUDE.md`：英文 AI 指导
-- `.github/copilot-instructions.md`：AI 代理最小必读速查
 - `README.md` / `README_en.md`：玩家向 README
 - `update.log`：版本更新日志
 - `todo list.txt`：作者待办与未实装系统规划
