@@ -22,10 +22,10 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from fractions import Fraction
 
 from Script.Core import cache_control, constant, num
 from Script.Design import attr_calculation, map_handle
+from Script.Modules.domains import needs
 from ..check_registry import CheckFailure, make_failure, register_check
 
 from typing import TYPE_CHECKING
@@ -173,19 +173,17 @@ def _scene(cache: game_type.Cache, position: object) -> game_type.Scene | None:
     return scene_data.get(_P(position))
 
 
-def _sleep_level(chara: object) -> int | None:
+def _sleep_level(cid: int) -> int | None:
     """
-    参数: chara 角色对象
-    返回值: Optional[int] 睡眠等级；配置未载入或字段不可计算时返回 None
-    功能: 调用已确认只读的睡眠等级派生函数，并把独立脚本缺配置降级为跳过。
+    参数: cid 角色id
+    返回值: Optional[int] 由熟睡值（needs.of(cid)["sleep"]）算出的睡眠等级，配置未载入或算不出等级时为 None
+    功能: 用 attr_calculation.get_sleep_level 算等级。独立脚本里没有载入配置时返回 None，调用方跳过检查。
     """
     if game_config is None or not getattr(
         game_config, "config_sleep_level", None
     ):
         return None
-    value = getattr(chara, "sleep_point", None)
-    if not isinstance(value, (int, float, Fraction)) or isinstance(value, bool):
-        return None
+    value = needs.of(cid)["sleep"]
     try:
         return attr_calculation.get_sleep_level(num.exact(value))[0]
     except Exception:
@@ -551,8 +549,8 @@ def check_observable_07() -> list[CheckFailure]:
 def check_observable_08() -> list[CheckFailure]:
     """
     参数: 无
-    返回值: List[CheckFailure]，unconscious_h=2 均仍有正醉酒值支撑时为空
-    功能: 检查醉酒型无意识 H 不会在 drunk_point<=0 后继续残留；健康存档若来源消失就应同步退出该模式，因此恒不命中。
+    返回值: List[CheckFailure]，醉酒型无意识 H（unconscious_h=2）的角色的醉酒值都大于 0 时为空
+    功能: 报出 unconscious_h=2 而醉酒值（needs.of(cid)["drunk"]）<=0 的角色。debug 模式与时停中不检查。
     """
     cache = cache_control.cache
     if (
@@ -564,13 +562,8 @@ def check_observable_08() -> list[CheckFailure]:
     bad = []
     details = []
     for cid, chara in _iter_live(cache):
-        drunk_point = getattr(chara, "drunk_point", None)
-        if (
-            getattr(_sp(chara), "unconscious_h", 0) == 2
-            and isinstance(drunk_point, (int, float, Fraction))
-            and not isinstance(drunk_point, bool)
-            and drunk_point <= 0
-        ):
+        drunk_point = needs.of(cid)["drunk"]
+        if getattr(_sp(chara), "unconscious_h", 0) == 2 and drunk_point <= 0:
             bad.append(cid)
             details.append(
                 f"cid={cid}({_name(chara)}) drunk_point={drunk_point}"
@@ -679,7 +672,7 @@ def check_observable_12() -> list[CheckFailure]:
         != constant.Behavior.SHARE_BLANKLY
     ):
         return []
-    sleep_level = _sleep_level(assistant)
+    sleep_level = _sleep_level(assistant_id)
     if sleep_level is None or getattr(sp, "tired", False) or sleep_level >= 2:
         return []
     physiological = (

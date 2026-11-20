@@ -1085,7 +1085,7 @@ def check_sleep_behavior_state_alignment() -> list[CheckFailure]:
                     f"角色id={cid}({_name(chara)})behavior_id=sleep但state="
                     f"{state!r}(类型{type(state).__name__}，应为111)，"
                     f"start_time={getattr(behavior, 'start_time', '?')} duration={getattr(behavior, 'duration', '?')} "
-                    f"sleep_point={getattr(chara, 'sleep_point', '?')}"
+                    f"sleep_point={num.shown(needs.of(cid)['sleep'])}"
                 ),
                 [cid],
             )
@@ -1099,7 +1099,7 @@ def check_sleep_point_bound() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]
     功能:
-        校验sleep_point为非bool数值且落在[0,100]内。越界会让睡眠等级落入错误档位。
+        校验玩家与已登场干员的熟睡值（needs.of(cid)["sleep"]）是非bool数值且落在[0,100]内。
         debug面板可以直接改熟睡值，所以debug模式下不检查。失败信息附带body.needs里的疲劳tired。
     """
     cache = cache_control.cache
@@ -1107,7 +1107,7 @@ def check_sleep_point_bound() -> list[CheckFailure]:
         return []
     failures = []
     for cid, chara in _iter_pl_and_npcs():
-        sp = getattr(chara, "sleep_point", None)
+        sp = needs.of(cid)["sleep"]
         if _num(sp) and 0 <= sp <= 100:
             continue
         failures.append(
@@ -1154,7 +1154,7 @@ def check_sleep_unconscious_needs_sleep_or_pretend() -> list[CheckFailure]:
                     f"behavior_id={_behavior_id(chara)} "
                     f"pretend_sleep={getattr(getattr(chara, 'h_state', None), 'pretend_sleep', '?')} "
                     f"sleep_h_awake={getattr(sp_flag, 'sleep_h_awake', '?')} "
-                    f"sleep_point={getattr(chara, 'sleep_point', '?')} state={getattr(chara, 'state', '?')}"
+                    f"sleep_point={num.shown(needs.of(cid)['sleep'])} state={getattr(chara, 'state', '?')}"
                 ),
                 [cid],
             )

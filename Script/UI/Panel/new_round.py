@@ -4,12 +4,14 @@
 
 from collections.abc import Mapping
 from types import FunctionType
+from typing import cast
 from Script.Core import (
     get_text,
     flow_handle,
     game_type,
     cache_control,
 )
+from Script.Core.num import Num
 
 from Script.UI.Moudle import draw, panel
 from Script.UI.Panel import see_character_info_panel
@@ -19,6 +21,7 @@ from Script.Kernel import core
 from Script.Modules.save_load import kernel_state
 
 import copy
+from Script.Modules.domains import needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -345,14 +348,15 @@ class New_Round_Handle:
             reduce_button.draw()
             line_feed_draw.draw()
             # 绘制玩家属性上限成长
+            pl_needs = needs.of(0)
             hp_extra_grouth = 1000 + int(
-                (pl_character_data.hit_point_max - 1000) * now_rate / 100
+                (pl_needs["hit_max"] - 1000) * now_rate / 100
             )
             mp_extra_grouth = 1000 + int(
-                (pl_character_data.mana_point_max - 1000) * now_rate / 100
+                (pl_needs["mana_max"] - 1000) * now_rate / 100
             )
             santy_extra_grouth = 100 + int(
-                (pl_character_data.sanity_point_max - 100) * now_rate / 100
+                (pl_needs["sanity_max"] - 100) * now_rate / 100
             )
             semen_extra_grouth = 100 + int(
                 (pl_character_data.semen_point_max - 100) * now_rate / 100
@@ -360,11 +364,11 @@ class New_Round_Handle:
             info_text = _(
                 "  属性上限成长：当前体力上限{0}(→{1})，气力上限{2}(→{3})，理智上限{4}(→{5})，精液上限{6}(→{7})\n\n"
             ).format(
-                pl_character_data.hit_point_max,
+                pl_needs["hit_max"],
                 hp_extra_grouth,
-                pl_character_data.mana_point_max,
+                pl_needs["mana_max"],
                 mp_extra_grouth,
-                pl_character_data.sanity_point_max,
+                pl_needs["sanity_max"],
                 santy_extra_grouth,
                 pl_character_data.semen_point_max,
                 semen_extra_grouth,
@@ -704,19 +708,14 @@ class New_Round_Handle:
             ]
             now_rate = now_inherit_data.inherit_rate
             # 体力上限成长
-            hp_extra_grouth = (
-                (pl_character_data.hit_point_max - 1000) * now_rate / 100
-            )
+            pl_needs = needs.of(0)
+            hp_extra_grouth = (pl_needs["hit_max"] - 1000) * now_rate / 100
             all_cost += int(hp_extra_grouth / 50)
             # 气力上限成长
-            mp_extra_grouth = (
-                (pl_character_data.mana_point_max - 1000) * now_rate / 100
-            )
+            mp_extra_grouth = (pl_needs["mana_max"] - 1000) * now_rate / 100
             all_cost += int(mp_extra_grouth / 50)
             # 理智上限成长
-            san_extra_grouth = (
-                (pl_character_data.sanity_point_max - 100) * now_rate / 100
-            )
+            san_extra_grouth = (pl_needs["sanity_max"] - 100) * now_rate / 100
             all_cost += int(san_extra_grouth)
             # 精液上限成长
             semen_extra_grouth = (
@@ -879,7 +878,8 @@ class New_Round_Handle:
         """
         面板上的继承选择
         Return arguments:
-        dict -- 各项继承的档位、陷落干员id列表与新周目的世界设定，见 setup
+        dict -- 各项继承的档位、陷落干员id列表、新周目的世界设定，
+        与博士此刻的体力、气力、理智上限（player_maxima），见 setup
         """
         return {
             "pl_abi_and_exp_count": self.pl_abi_and_exp_count,
@@ -892,6 +892,10 @@ class New_Round_Handle:
             "all_fall_chara_list": tuple(self.all_fall_chara_list),
             "world_setting": {
                 str(cid): value for cid, value in self.world_setting.items()
+            },
+            "player_maxima": {
+                stat: needs.of(0)[stat]
+                for stat in ("hit_max", "mana_max", "sanity_max")
             },
         }
 
@@ -995,7 +999,8 @@ def setup(inherit: Mapping[str, core.JSON]) -> None:
 
 def _inherit_player_data(inherit: Mapping[str, core.JSON]) -> None:
     """
-    继承玩家数据
+    继承玩家数据。这一步在新周目的 Reset 里运行，GameState 已是新周目的，
+    所以博士的体力、气力与理智上限从继承选择的 player_maxima 算出
     Keyword arguments:
     inherit -- 继承选择
     """
@@ -1050,20 +1055,15 @@ def _inherit_player_data(inherit: Mapping[str, core.JSON]) -> None:
     # 玩家属性上限成长
     now_rate = _inherit_rate(2, _count(inherit, "pl_extra_growth_count"))
     # 体力上限成长
-    hp_extra_grouth = (
-        (old_pl_character_data.hit_point_max - 1000) * now_rate / 100
-    )
-    new_pl_character_data.hit_point_max = int(1000 + hp_extra_grouth)
+    maxima = cast(Mapping[str, Num], inherit["player_maxima"])
+    hp_extra_grouth = (maxima["hit_max"] - 1000) * now_rate / 100
+    needs.set(0, hit_max=int(1000 + hp_extra_grouth))
     # 气力上限成长
-    mp_extra_grouth = (
-        (old_pl_character_data.mana_point_max - 1000) * now_rate / 100
-    )
-    new_pl_character_data.mana_point_max = int(1000 + mp_extra_grouth)
+    mp_extra_grouth = (maxima["mana_max"] - 1000) * now_rate / 100
+    needs.set(0, mana_max=int(1000 + mp_extra_grouth))
     # 理智上限成长
-    san_extra_grouth = (
-        (old_pl_character_data.sanity_point_max - 100) * now_rate / 100
-    )
-    new_pl_character_data.sanity_point_max = int(100 + san_extra_grouth)
+    san_extra_grouth = (maxima["sanity_max"] - 100) * now_rate / 100
+    needs.set(0, sanity_max=int(100 + san_extra_grouth))
     # 精液上限成长
     semen_extra_grouth = (
         (old_pl_character_data.semen_point_max - 100) * now_rate / 100

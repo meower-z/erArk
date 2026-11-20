@@ -60,16 +60,18 @@ def _first_npc(
     return None
 
 
-def _becomes_tired(character_id: int) -> bool:
+def _becomes_tired(character_id: int, game: core.GameState) -> bool:
     """
-    BecomeTired 对这个干员成立：体力到 1 而还没疲劳
+    BecomeTired 对这个干员成立：game 里这个干员的体力到 1，而还没疲劳
     Keyword arguments:
     character_id -- 干员id
+    game -- 触发函数收到的 GameState，体力从它读
     Return arguments:
     bool -- 成立时为真
     """
     character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.hit_point <= 1 and not character_data.sp_flag.tired
+    hit = needs.of(character_id, game)["hit"]
+    return hit <= 1 and not character_data.sp_flag.tired
 
 
 def tired_case(character_id: int, game: core.GameState) -> str | None:
@@ -107,20 +109,22 @@ def tired_case(character_id: int, game: core.GameState) -> str | None:
         return "follow"
     if cache.group_sex_mode and flag.is_h:
         return "group"
-    if flag.is_h and (not flag.unconscious_h or character_data.hit_point <= 1):
+    if flag.is_h and (
+        not flag.unconscious_h or needs.of(character_id, game)["hit"] <= 1
+    ):
         return "h"
     return None
 
 
 def _become_tired_when(game: core.GameState) -> str | None:
     """
-    R1 的触发：干员体力到 1 而还没疲劳
+    BecomeTired 的触发：game 里体力到 1 而还没疲劳的干员
     Keyword arguments:
-    game -- 当前的 GameState
+    game -- 当前的 GameState，体力从它读
     Return arguments:
     str | None -- 第一个成立的干员的键
     """
-    return _first_npc(game, _becomes_tired)
+    return _first_npc(game, lambda cid: _becomes_tired(cid, game))
 
 
 @core.event("gameplay_resolution.events.BecomeTired", _become_tired_when)
@@ -139,15 +143,15 @@ def become_tired(who: str) -> core.Effects:
 
 def _player_spent(game: core.GameState) -> bool:
     """
-    玩家力竭：体力到 1 而还在 H 或群交中，玩家的队列里还没排着任何 H 或群交的结束
+    玩家力竭：game 里玩家的体力到 1，而还在 H 或群交中，玩家的队列里还没排着任何 H 或群交的结束
     （排着别的结束时 plan_h_end 与 plan_group_sex_end 什么也不排，所以排着就算已收场）
     Keyword arguments:
-    game -- 当前的 GameState
+    game -- 当前的 GameState，体力从它读
     Return arguments:
     bool -- 成立时为真
     """
     character_data: game_type.Character = cache.character_data[0]
-    if character_data.hit_point > 1:
+    if needs.of(0, game)["hit"] > 1:
         return False
     target_data = cache.character_data[character_data.target_character_id]
     if not (cache.group_sex_mode or target_data.sp_flag.is_h):
@@ -274,7 +278,7 @@ def _stop_following_when(game: core.GameState) -> str | None:
     """
     return _first_npc(
         game,
-        lambda cid: not _becomes_tired(cid)
+        lambda cid: not _becomes_tired(cid, game)
         and tired_case(cid, game) == "follow",
     )
 

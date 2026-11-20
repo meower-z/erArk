@@ -15,6 +15,7 @@ import random
 
 from Script.UI.Panel import achievement_panel
 from Script.Design import game_time
+from Script.Modules.domains import pregnancy
 
 panel_info_data: dict[str, object] = {}
 
@@ -381,8 +382,8 @@ class Born_Panel:
                 # 根据罩杯大小修改乳汁上限
                 for talent_id in [121, 122, 123, 124, 125]:
                     if mom_character_data.talent[talent_id]:
-                        mom_character_data.pregnancy.milk_max = (
-                            150 + (talent_id - 121) * 40
+                        pregnancy.set_milk_max(
+                            mom_character_data.cid, 150 + (talent_id - 121) * 40
                         )
                         break
                 mom_character_data.experience[86] += 1

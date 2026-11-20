@@ -284,8 +284,9 @@ def get_character_status_list(
     # 非普通时输出当前心情
     angry_draw = draw.LeftDraw()
     angry_text = ""
+    now = needs.of(character_id)
     if character_id != 0:
-        angry_text = attr_calculation.get_angry_text(character_data.angry_point)
+        angry_text = attr_calculation.get_angry_text(now["angry"])
         angry_text = "" if angry_text == _("普通") else " " + angry_text
     if angry_text == _(" 愉快"):
         angry_draw.style = "coral"
@@ -315,10 +316,7 @@ def get_character_status_list(
         )
         hunger_draw.tooltip = _("肚子饿了，想要吃点东西")
     # 玩家饥饿提示根据设置决定是否显示，且与饭点时间无关
-    elif (
-        character_id == 0
-        and normal_config.system_setting.draw_setting.get(17, 1) == 1
-    ):
+    elif normal_config.system_setting.draw_setting.get(17, 1) == 1:
         hunger_text = (
             _(" <饿>")
             if handle_premise.handle_hunger_ge_80(character_id)
@@ -349,7 +347,7 @@ def get_character_status_list(
     # 非0疲劳时输出当前疲劳状态
     sleep_draw = draw.LeftDraw()
     sleep_draw.style = "little_dark_slate_blue"
-    tired_lv = attr_calculation.get_tired_level(needs.of(character_id)["tired"])
+    tired_lv = attr_calculation.get_tired_level(now["tired"])
     sleep_text = " <" + constant.tired_text_list[tired_lv] + ">"
     # 0疲劳的清醒则不输出
     if sleep_text == _(" <清醒>"):
@@ -360,7 +358,7 @@ def get_character_status_list(
             character_id
         ) or handle_premise.handle_unconscious_flag_1(character_id):
             sleep_lv, sleep_name = attr_calculation.get_sleep_level(
-                character_data.sleep_point
+                now["sleep"]
             )
             sleep_text = f" <{sleep_name}>"
             sleep_draw.tooltip = game_config.config_sleep_level[
@@ -742,8 +740,8 @@ class CharacterInfoHead:
         hp_draw.scale = 0.8
         hp_draw.set(
             "HitPointbar",
-            int(character_data.hit_point_max),
-            num.shown(character_data.hit_point),
+            int(needs.of(character_id)["hit_max"]),
+            num.shown(needs.of(character_id)["hit"]),
             _("体力"),
             tooltip=_("体力，最低为1时会疲劳到无法行动"),
         )
@@ -752,8 +750,8 @@ class CharacterInfoHead:
         mp_draw.scale = 0.8
         mp_draw.set(
             "ManaPointbar",
-            int(character_data.mana_point_max),
-            num.shown(character_data.mana_point),
+            int(needs.of(character_id)["mana_max"]),
+            num.shown(needs.of(character_id)["mana"]),
             _("气力"),
             tooltip=_("气力，精神上的耐力，最低为0时使体力的消耗增加"),
         )
@@ -769,8 +767,8 @@ class CharacterInfoHead:
             sanity_point_draw.scale = 1
             sanity_point_draw.set(
                 "SanityPointbar",
-                int(character_data.sanity_point_max),
-                num.shown(character_data.sanity_point),
+                int(needs.of(character_id)["sanity_max"]),
+                num.shown(needs.of(character_id)["sanity"]),
                 _("理智"),
                 tooltip=_("理智，使用源石技艺时消耗"),
             )

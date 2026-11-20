@@ -29,6 +29,7 @@ from Script.Config import game_config, normal_config
 from Script.System.First_Record_System import first_record_handle
 from Script.System.Instruct_System import handle_instruct
 from Script.UI.Panel import hypnosis_panel
+from Script.Modules.domains import needs
 
 if TYPE_CHECKING:
     from Script.UI.Moudle import panel
@@ -236,11 +237,9 @@ def handle_settle_behavior(
         change_data.target_change[0].target_change[character_id] = change_data
 
         # 开始互换
-        # print(f"debug 前target_change.hit_point = {target_change.hit_point}")
         change_data, target_change = target_change, change_data
         now_character_data = player_character_data
         character_id = 0
-        # print(f"debug 后target_change.hit_point = {target_change.hit_point}")
     # elif character_id:
     #     return
     if change_data.mana_point:
@@ -259,7 +258,6 @@ def handle_settle_behavior(
         PC_information_flag = 1
     if len(change_data.target_change) and not character_id:
         for target_character_id in change_data.target_change:
-            # print(f"debug target_now_judge,character_id = {character_id},target_character_id = {target_character_id}")
             if character_id == target_character_id:
                 continue
             else:
@@ -286,7 +284,9 @@ def handle_settle_behavior(
                 )
 
         # 体力/气力/射精/理智的结算输出
-        seen = shown_change(now_character_data.hit_point, change_data.hit_point)
+        seen = shown_change(
+            needs.of(now_character_data.cid)["hit"], change_data.hit_point
+        )
         if seen:
             now_text += (
                 "\n  <hp_point>"
@@ -296,7 +296,7 @@ def handle_settle_behavior(
                 + "</hp_point>"
             )
         seen = shown_change(
-            now_character_data.mana_point, change_data.mana_point
+            needs.of(now_character_data.cid)["mana"], change_data.mana_point
         )
         if seen:
             now_text += (
@@ -316,7 +316,7 @@ def handle_settle_behavior(
                 + "</semen>"
             )
         seen = shown_change(
-            now_character_data.sanity_point, change_data.sanity_point
+            needs.of(now_character_data.cid)["sanity"], change_data.sanity_point
         )
         if seen:
             now_text += (
@@ -450,7 +450,7 @@ def handle_settle_behavior(
 
                 # 体力/气力/好感/信赖/催眠度的结算输出
                 seen = shown_change(
-                    target_data.hit_point, target_change.hit_point
+                    needs.of(target_data.cid)["hit"], target_change.hit_point
                 )
                 if seen:
                     now_text += (
@@ -462,7 +462,7 @@ def handle_settle_behavior(
                     )
                     judge = 1
                 seen = shown_change(
-                    target_data.mana_point, target_change.mana_point
+                    needs.of(target_data.cid)["mana"], target_change.mana_point
                 )
                 if seen:
                     now_text += (

@@ -23,6 +23,7 @@ import random
 from Script.Design import game_time
 from Script.Modules.gameplay_resolution import plan_queue
 from Script.Modules.tk_ui import player_pick
+from Script.Modules.domains import needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -161,14 +162,14 @@ def judge_can_escape(character_id: int) -> tuple[bool, float, float]:
     # 乘以战斗技能
     escape_value *= character_data.ability[42]
     # 乘以体力气力
-    escape_value *= character_data.hit_point / 100
-    escape_value *= character_data.mana_point / 100
+    escape_value *= needs.of(character_id)["hit"] / 100
+    escape_value *= needs.of(character_id)["mana"] / 100
 
     # 监狱长的对抗值
     warden_data = cache.character_data[warden_id]
     warden_value: float = warden_data.ability[42]
-    warden_value *= warden_data.hit_point / 100
-    warden_value *= warden_data.mana_point / 100
+    warden_value *= needs.of(warden_id)["hit"] / 100
+    warden_value *= needs.of(warden_id)["mana"] / 100
 
     # 对比
     if escape_value > warden_value:
@@ -692,7 +693,6 @@ class Confinement_And_Training_Manage_Panel:
                     game_config.config_confinement_training_setting[cid]
                 )
                 # 选项名
-                # id_text = f"[{(str(cid)).rjust(2, '0')}]"
                 button_text = f"  [{confinement_training_setting_data.name}]： "
                 button_len = max(len(button_text) * 2, 60)
                 button_draw = draw.LeftButton(

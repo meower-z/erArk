@@ -28,6 +28,7 @@ from Script.UI.Moudle import draw, view
 from Script.Design import game_time
 from Script.Modules.gameplay_resolution import intent, player_starters
 from Script.Modules.tk_ui import player_pick
+from Script.Modules.domains import needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -581,7 +582,6 @@ def handle_comprehensive_state_effect(
     """
     if not add_time:
         return None
-    # print(f"debug effect_all_value_list:{effect_all_value_list}")
     character_data: game_type.Character = cache.character_data[0]
     # 进行主体A的判别，A1为自己，A2为交互对象，A3为指定id角色(格式为A3|15)
     if effect_all_value_list[0] == "A1":
@@ -928,7 +928,7 @@ def handle_hypnosis_all() -> None:
     scene_data: game_type.Scene = cache.scene_data[now_scene_str]
     now_npc_num = len(scene_data.character_list) - 1
     sanity_point_cost = 10 + 10 * now_npc_num
-    if character_data.sanity_point < sanity_point_cost:
+    if needs.of(character_data.cid)["sanity"] < sanity_point_cost:
         now_draw = draw.WaitDraw()
         draw_text = _(
             "\n当前理智值不足，至少需要{0}点理智值，无法进行集体催眠\n"
@@ -1237,7 +1237,7 @@ def handle_apologize() -> None:
     ]
     value = _calm_value()
     # 判定减掉愤怒值后是否不生气了
-    if target_data.angry_point - value <= 30:
+    if needs.of(target_data.cid)["angry"] - value <= 30:
         behavior_id = constant.Behavior.APOLOGIZE
     else:
         behavior_id = constant.Behavior.APOLOGIZE_FAILED
@@ -1272,7 +1272,7 @@ def _calm_target(who: int, chosen: intent.Intent) -> None:
     target_data = cache.character_data[chosen["target"]]
     value = chosen["args"]["value"]
     assert isinstance(value, int)
-    target_data.angry_point = max(target_data.angry_point - value, 0)
+    needs.add(target_data.cid, "angry", -value, min=0)
 
 
 @add_instruct(constant.Instruct.LISTEN_COMPLAINT)

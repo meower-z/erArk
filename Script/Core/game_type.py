@@ -310,8 +310,6 @@ class PREGNANCY:
         """ 角色开始受精的时间 """
         self.born_time: datetime.datetime = datetime.datetime(1, 1, 1)
         """ 角色出生的时间 """
-        self.milk_max: int = 200
-        """ 角色最大乳汁量，单位毫升 """
         self.unconscious_fertilization: bool = True
         """ 无意识妊娠flag，如果进行过有意识下的H就会被置为False """
         self.lactation_flag: bool = False
@@ -1799,18 +1797,6 @@ class Character:
         """ 角色性别 """
         # self.age: int = 18
         # """ 角色年龄 """
-        self.hit_point_max: int = 0
-        """ 角色最大HP """
-        self.hit_point: Num = 0
-        """ 角色当前HP """
-        self.mana_point_max: int = 0
-        """ 角色最大MP """
-        self.mana_point: Num = 0
-        """ 角色当前MP """
-        self.sanity_point_max: int = 0
-        """ 角色最大理智 """
-        self.sanity_point: Num = 0
-        """ 角色当前理智 """
         self.eja_point_max: int = 0
         """ 角色最大射精槽 """
         self.eja_point: Num = 0
@@ -1821,14 +1807,6 @@ class Character:
         """ 角色当前精液槽 """
         self.tem_extra_semen_point: int = 0
         """ 角色临时最大精液槽 """
-        self.angry_point: int = 0
-        """ 角色当前愤怒槽 """
-        self.sleep_point: Num = 0
-        """ 熟睡值 1m=10点，10min=100点(max)"""
-        self.desire_point: int = 0
-        """ 欲望值 数值为百分比，100为最大 """
-        self.drunk_point: Num = 0
-        """ 醉酒度 数值为百分比，100为最大 """
         self.state: int | str = 0
         """ 角色当前状态 """
         self.last_behavior_id_list: list = [0]
@@ -1893,8 +1871,6 @@ class Character:
         """ 角色已死亡 """
         self.collection_character: set = set()
         """ 收藏的角色列表 """
-        self.last_hunger_time: datetime.datetime = datetime.datetime(1, 1, 1)
-        """ 最后一次结算饥饿的时间 """
         self.ability: dict[int, int] = {}
         """ 角色能力 """
         self.experience: dict[int, int] = {}

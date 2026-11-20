@@ -31,6 +31,7 @@ from Script.UI.Panel import (
     cloth_panel,
     confinement_and_training,
 )
+from Script.Modules.domains import needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -163,7 +164,7 @@ def start_eat_food(who: int, chosen: intent.Intent) -> None:
     food = character_data.food_bag[UUID(str(args["food_uid"]))]
     character_data.behavior.target_food = food
     if args.get("angry"):
-        character_data.angry_point += 40
+        needs.add(who, "angry", 40)
         character_data.sp_flag.angry_with_player = True
     elif (
         chosen["behavior_id"] == constant.Behavior.EAT

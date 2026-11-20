@@ -52,6 +52,7 @@ from Script.System.Education_System import (
 )
 
 from typing import TYPE_CHECKING
+from Script.Modules.domains import needs
 
 if TYPE_CHECKING:
     import datetime
@@ -429,8 +430,8 @@ def get_course_stage(character_id: int) -> int:
         return get_attend_or_join_stage(character_id, now_course)
     # 第一道闸：体力
     if (
-        character_data.hit_point_max
-        and character_data.hit_point / character_data.hit_point_max
+        needs.of(character_id)["hit_max"]
+        and needs.of(character_id)["hit"] / needs.of(character_id)["hit_max"]
         < education_constant.ABSENT_HP_RATE
     ):
         return education_constant.COURSE_STAGE_ABSENT_HP
@@ -723,10 +724,9 @@ def judge_student_join_class(
         return False
     if judge_must_attend_sex_class(student_id, now_time):
         return True
-    character_data: game_type.Character = cache.character_data[student_id]
     if (
-        character_data.hit_point_max
-        and character_data.hit_point / character_data.hit_point_max
+        needs.of(student_id)["hit_max"]
+        and needs.of(student_id)["hit"] / needs.of(student_id)["hit_max"]
         < education_constant.ABSENT_HP_RATE
     ):
         return False

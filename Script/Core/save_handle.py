@@ -728,6 +728,7 @@ def install_save(save_id: str, version: int) -> None:
     """
     读档的 Reset 步骤。把存档的缓存（文件 "1"）装进游戏缓存，按顺序修补旧存档，再结束有101/102阶段的孩子参与的会话。
     解开后对每个版本调 upgrade.adopt_power 搬走动力属性。版本 0 先补齐生理需求与供电策略属性，重建角色后写进 GameState。
+    重建角色之后，任何版本都调 upgrade.adopt_pickled，把角色对象上剩下的体力等数值属性写进 GameState，并从对象上删掉。
     Keyword arguments:
     save_id -- 存档id
     version -- 存档的版本，旧存档为 0
@@ -965,6 +966,7 @@ def install_save(save_id: str, version: int) -> None:
     )
     if version == 0:
         upgrade.adopt_v0(loaded_dict)
+    upgrade.adopt_pickled(loaded_dict)
     young_child_session: old_chara_to_new.YoungChildSession = {}
     update_count += old_chara_to_new.migrate_age_and_body_type(
         loaded_dict, young_child_session
@@ -1069,26 +1071,18 @@ def install_save(save_id: str, version: int) -> None:
     old_chara_to_new.end_young_child_session(young_child_session)
 
 
-CHARACTER_NUM_FIELDS = (
-    "hit_point",
-    "mana_point",
-    "sanity_point",
-    "eja_point",
-    "semen_point",
-    "sleep_point",
-    "drunk_point",
-)
-""" 角色身上随时间结算的连续数值（Num）的属性名 """
+CHARACTER_NUM_FIELDS = ("eja_point", "semen_point")
+""" exact_stats 换成精确值的角色属性名：射精槽与精液槽 """
 
 
 def exact_stats() -> None:
     """
     读档的 Reset 步骤：装好的缓存里随时间结算的数值是 float 时换成精确值（num.exact），int 与 Fraction 不动。
-    数值有角色的 CHARACTER_NUM_FIELDS、体力与气力的上限、状态值、污浊的累计吸收精液量、身体各部位的当前精液量、
-    精液流通的剩余量与玩家能力的当日理智消耗。生理需求不在这里，旧存档的生理需求由 upgrade.adopt_v0 换成精确值。
+    数值有角色的 CHARACTER_NUM_FIELDS、状态值、污浊的累计吸收精液量、身体各部位的当前精液量、
+    精液流通的剩余量与玩家能力的当日理智消耗。body.needs 不在这里，见 upgrade.adopt_v0 与 upgrade.adopt_pickled。
     """
     for character in cache.character_data.values():
-        for name in (*CHARACTER_NUM_FIELDS, "hit_point_max", "mana_point_max"):
+        for name in CHARACTER_NUM_FIELDS:
             setattr(character, name, num.exact(getattr(character, name)))
         status_data = character.status_data
         for status_id, value in status_data.items():

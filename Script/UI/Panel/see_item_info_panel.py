@@ -15,6 +15,7 @@ from Script.Core import (
 )
 from Script.UI.Moudle import panel, draw, view
 from Script.Config import game_config, normal_config
+from Script.Modules.domains import needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -55,9 +56,11 @@ def use_drug(item_id: int) -> None:
     # 药剂效果
     # 理智恢复剂
     if item_id <= 3:
-        pl_character_data.sanity_point = min(
-            pl_character_data.sanity_point + effect_add,
-            pl_character_data.sanity_point_max,
+        needs.add(
+            pl_character_data.cid,
+            "sanity",
+            effect_add,
+            max=needs.of(pl_character_data.cid)["sanity_max"],
         )
         now_draw_text = _(
             "\n{0}使用了{1}，理智值增加{2}，现在为{3}/{4}\n\n"
@@ -65,8 +68,8 @@ def use_drug(item_id: int) -> None:
             pl_character_data.name,
             item_data.name,
             effect_add,
-            num.shown(pl_character_data.sanity_point),
-            pl_character_data.sanity_point_max,
+            num.shown(needs.of(pl_character_data.cid)["sanity"]),
+            needs.of(pl_character_data.cid)["sanity_max"],
         )
     # 精力恢复剂
     elif item_id == 11:
@@ -95,18 +98,16 @@ def use_drug(item_id: int) -> None:
             pl_character_data.item[item_id] += 1
         else:
             # 药的效果随醉酒程度递减
-            now_drunk_value = pl_character_data.drunk_point
+            now_drunk_value = needs.of(pl_character_data.cid)["drunk"]
             effect_add = int(effect_add * (1 - (now_drunk_value / 100) * 0.7))
-            pl_character_data.drunk_point = max(
-                pl_character_data.drunk_point - effect_add, 0
-            )
+            needs.add(pl_character_data.cid, "drunk", -effect_add, min=0)
             now_draw_text = _(
                 "\n{0}使用了{1}，醉酒值减少了{2}，现在为{3}\n\n"
             ).format(
                 pl_character_data.name,
                 item_data.name,
                 effect_add,
-                num.shown(pl_character_data.drunk_point),
+                num.shown(needs.of(pl_character_data.cid)["drunk"]),
             )
     # 阴茎增大
     elif item_id == 16:

@@ -795,8 +795,6 @@ def migrate_character_replacement(
         new_character.sex = new_tem.Sex
         new_character.profession = new_tem.Profession
         new_character.race = new_tem.Race
-        new_character.hit_point_max = new_tem.Hp
-        new_character.mana_point_max = new_tem.Mp
         new_character.token_text = new_tem.Token
         new_character.dormitory = new_tem.Dormitory
         new_character.text_color = (
@@ -817,10 +815,6 @@ def migrate_character_replacement(
 
         # ========== 2. 复制旧角色的动态数据 ==========
         # 数值属性
-        new_character.hit_point = old_character.hit_point
-        new_character.mana_point = old_character.mana_point
-        new_character.sanity_point = old_character.sanity_point
-        new_character.sanity_point_max = old_character.sanity_point_max
         new_character.eja_point = old_character.eja_point
         new_character.eja_point_max = old_character.eja_point_max
         new_character.semen_point = old_character.semen_point
@@ -828,11 +822,12 @@ def migrate_character_replacement(
         new_character.tem_extra_semen_point = (
             old_character.tem_extra_semen_point
         )
-        new_character.angry_point = old_character.angry_point
         if not upgrade.copy_v0_needs(old_character, new_character):
             needs.set(new_id, **needs.of(old_id))
-        new_character.sleep_point = old_character.sleep_point
-        new_character.desire_point = old_character.desire_point
+        if not upgrade.copy_pickled(
+            old_character, new_character, new_tem.Hp, new_tem.Mp
+        ):
+            needs.set(new_id, hit_max=new_tem.Hp, mana_max=new_tem.Mp, drunk=0)
         new_character.state = old_character.state
         if hasattr(old_character, "last_behavior_id_list"):
             new_character.last_behavior_id_list = (
@@ -948,11 +943,6 @@ def migrate_character_replacement(
 
         # 时间相关
         new_character.birthday = old_character.birthday
-        new_character.last_hunger_time = (
-            old_character.last_hunger_time
-            if hasattr(old_character, "last_hunger_time")
-            else datetime.datetime(1, 1, 1)
-        )
 
         # 复杂对象属性 - 直接复制引用后更新内部ID
         new_character.behavior = old_character.behavior
@@ -2205,9 +2195,8 @@ KEEP_PREGNANCY_ATTR_SET = {
     "reproduction_period",
     "born_time",
     "growth_acceleration_days",
-    "milk_max",
 }
-""" 101/102阶段的孩子读档时保留的 PREGNANCY 字段：生殖周期、出生时间、成长加速天数、奶量上限 """
+""" 101/102阶段的孩子读档时保留的 PREGNANCY 字段：生殖周期、出生时间、成长加速天数 """
 
 
 def _is_young_child(character: game_type.Character) -> bool:

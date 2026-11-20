@@ -18,6 +18,7 @@ from Script.UI.Panel import ejaculation_panel, system_setting
 import math
 import random
 from Script.Design import game_time
+from Script.Modules.domains import needs
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -58,9 +59,6 @@ def base_chara_hp_mp_common_settle(
         return
     character_data: game_type.Character = cache.character_data[character_id]
     target_character_id = character_data.target_character_id
-    target_character_data: game_type.Character = cache.character_data[
-        target_character_id
-    ]
     if character_data.dead:
         return
     # 程度定义
@@ -102,7 +100,7 @@ def base_chara_hp_mp_common_settle(
         mp_value = int(add_time * mp_adjust * mp_value)
     if mp_value != 0:
         # 进行结算
-        character_data.mana_point += mp_value
+        needs.add(character_id, "mana", mp_value)
         # 结算信息记录
         if change_data is not None:
             change_data.mana_point += mp_value
@@ -115,13 +113,11 @@ def base_chara_hp_mp_common_settle(
             )
             target_change.mana_point += mp_value
         # 最小为0，最大为上限
-        character_data.mana_point = max(0, character_data.mana_point)
-        character_data.mana_point = min(
-            character_data.mana_point_max, character_data.mana_point
-        )
+        now = needs.of(character_id)
+        needs.set(character_id, mana=min(now["mana_max"], max(0, now["mana"])))
         # 如果气力为0则体力进行等值消耗
-        if character_data.mana_point == 0 and mp_value < 0:
-            character_data.hit_point += mp_value
+        if needs.of(character_id)["mana"] == 0 and mp_value < 0:
+            needs.add(character_id, "hit", mp_value)
             if change_data is not None:
                 change_data.hit_point += mp_value
             if change_data_to_target_change is not None:
@@ -132,7 +128,7 @@ def base_chara_hp_mp_common_settle(
                     character_id
                 ]
                 target_change.hit_point += mp_value
-            character_data.hit_point = max(1, character_data.hit_point)
+            needs.set(character_id, hit=max(1, needs.of(character_id)["hit"]))
         # 交互对象也同样
         if (
             target_flag
@@ -145,26 +141,22 @@ def base_chara_hp_mp_common_settle(
             )
             target_change = change_data.target_change[target_character_id]
             # 进行结算
-            target_character_data.mana_point += mp_value
+            needs.add(target_character_id, "mana", mp_value)
             target_change.mana_point += mp_value
-            target_character_data.mana_point = max(
-                0, target_character_data.mana_point
-            )
-            target_character_data.mana_point = min(
-                target_character_data.mana_point_max,
-                target_character_data.mana_point,
-            )
+            now = needs.of(target_character_id)
+            mana = min(now["mana_max"], max(0, now["mana"]))
+            needs.set(target_character_id, mana=mana)
     # 体力结算
     if hp_value in [-1, 1]:
         hp_value = int(add_time * hp_adjust * hp_value)
     if hp_value != 0:
         # 气力为0时体力消耗3倍
-        if character_data.mana_point == 0 and hp_value < 0:
+        if needs.of(character_id)["mana"] == 0 and hp_value < 0:
             hp_value_last = hp_value * 3
         else:
             hp_value_last = hp_value
         # 进行结算
-        character_data.hit_point += hp_value_last
+        needs.add(character_id, "hit", hp_value_last)
         # 结算信息记录
         if change_data is not None:
             change_data.hit_point += hp_value_last
@@ -177,17 +169,15 @@ def base_chara_hp_mp_common_settle(
             ]
             target_change.hit_point += hp_value_last
         # 最小为1，最大为上限
-        character_data.hit_point = max(1, character_data.hit_point)
-        character_data.hit_point = min(
-            character_data.hit_point_max, character_data.hit_point
-        )
+        now = needs.of(character_id)
+        needs.set(character_id, hit=min(now["hit_max"], max(1, now["hit"])))
         # 交互对象也同样
         if (
             target_flag
             and change_data is not None
             and target_character_id != character_id
         ):
-            if target_character_data.mana_point == 0 and hp_value < 0:
+            if needs.of(target_character_id)["mana"] == 0 and hp_value < 0:
                 hp_value_last = hp_value * 3
             else:
                 hp_value_last = hp_value
@@ -197,15 +187,11 @@ def base_chara_hp_mp_common_settle(
             )
             target_change = change_data.target_change[target_character_id]
             # 进行结算
-            target_character_data.hit_point += hp_value_last
+            needs.add(target_character_id, "hit", hp_value_last)
             target_change.hit_point += hp_value_last
-            target_character_data.hit_point = max(
-                1, target_character_data.hit_point
-            )
-            target_character_data.hit_point = min(
-                target_character_data.hit_point_max,
-                target_character_data.hit_point,
-            )
+            now = needs.of(target_character_id)
+            hit = min(now["hit_max"], max(1, now["hit"]))
+            needs.set(target_character_id, hit=hit)
 
 
 def base_chara_state_common_settle(

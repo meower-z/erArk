@@ -1,7 +1,7 @@
 """
-角色的生理需求：角色的键 body.needs
-===================================
-值是 {"tired": 疲劳, "hunger": 饥饿, "urine": 尿意, "milk": 乳汁}，每项是 int 或 Fraction。
+角色的生理需求与体力等数值：角色的键 body.needs
+===============================================
+值的各项见 Needs：疲劳、饥饿、尿意、乳汁，体力、气力、理智与它们的上限，愤怒、熟睡、欲望、醉酒。
 角色没有这一项时读默认值 DEFAULT（饥饿 240，其余 0）。
 这个键归本模块的规则 apply 所有。代码不整值替换它，而是用 add 或 set 记一次操作，规则按顺序把操作套到当前值上。
 """
@@ -28,9 +28,44 @@ class Needs(TypedDict):
     """ 尿意 """
     milk: Num
     """ 乳汁 """
+    hit: Num
+    """ 体力 """
+    hit_max: int
+    """ 体力上限 """
+    mana: Num
+    """ 气力 """
+    mana_max: int
+    """ 气力上限 """
+    sanity: Num
+    """ 理智 """
+    sanity_max: int
+    """ 理智上限 """
+    angry: int
+    """ 愤怒值 """
+    sleep: Num
+    """ 熟睡值，0 到 100，越大睡得越深 """
+    desire: int
+    """ 欲望值，不设上限 """
+    drunk: Num
+    """ 醉酒值，0 到 100 """
 
 
-DEFAULT: Needs = {"tired": 0, "hunger": 240, "urine": 0, "milk": 0}
+DEFAULT: Needs = {
+    "tired": 0,
+    "hunger": 240,
+    "urine": 0,
+    "milk": 0,
+    "hit": 0,
+    "hit_max": 0,
+    "mana": 0,
+    "mana_max": 0,
+    "sanity": 0,
+    "sanity_max": 0,
+    "angry": 0,
+    "sleep": 0,
+    "desire": 0,
+    "drunk": 0,
+}
 """ 角色没有 body.needs 时读到的值 """
 
 

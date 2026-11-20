@@ -17,6 +17,7 @@ from Script.Design import (
 )
 from Script.Config import normal_config
 from Script.UI.Moudle import panel, draw
+from Script.Modules.domains import needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -87,12 +88,10 @@ def init_attr(character_id: int) -> None:
         character_data.talent = attr_calculation.get_Dr_talent_zero(
             character_data.talent
         )
-        character_data.hit_point_max = 1000
-        character_data.mana_point_max = 1000
+        needs.set(character_id, hit_max=1000, mana_max=1000)
         character_data.eja_point = 0
         character_data.eja_point_max = 1000
-        character_data.sanity_point = 100
-        character_data.sanity_point_max = 100
+        needs.set(character_id, sanity=100, sanity_max=100)
         character_data.semen_point = 100
         character_data.semen_point_max = 100
         character_data.pl_collection.token_list = (
@@ -118,9 +117,9 @@ def init_attr(character_id: int) -> None:
     instuct_judege.init_character_behavior_start_time(
         character_id, game_time.now()
     )
-    character_data.hit_point = character_data.hit_point_max
-    character_data.mana_point = character_data.mana_point_max
-    character_data.angry_point = random.randrange(1, 35)
+    needs.set(character_id, hit=needs.of(character_id)["hit_max"])
+    needs.set(character_id, mana=needs.of(character_id)["mana_max"])
+    needs.set(character_id, angry=random.randrange(1, 35))
     if character_id:
         clothing.get_underwear(character_id)
     # default_clothing_data = clothing.creator_suit(character_data.clothing_tem, character_data.sex)

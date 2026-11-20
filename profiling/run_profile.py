@@ -231,8 +231,9 @@ def try_load_save(save_id: str) -> bool:
 # ------------------------- 新建游戏最小初始化 -------------------------
 def new_game_minimal_init() -> None:
     """
-    参考 creator_character_flow.creator_character_panel / game_start 的关键步骤，
-    但剔除用户交互与 UI 绘制，仅构造可供 AI 行为循环使用的最小数据环境。
+    照 creator_character_flow.creator_character_panel 与 game_start 的关键步骤，
+    去掉交互与绘制，建出 AI 行为循环要用的最小新游戏（角色、基地、设定、初始行为等）。
+    建角色写的 GameState 数据记进调用方用 working.based_on 开的缓冲区。
     """
     log("执行新建游戏最小初始化...")
     from Script.Core import cache_control, game_type
@@ -329,12 +330,6 @@ def new_game_minimal_init() -> None:
         ch.behavior.behavior_id = cst.Behavior.SHARE_BLANKLY
         ch.behavior.duration = 5
 
-    # 8. 内核换成由缓存在开局时刻投影出的 GameState，同新游戏的最后一步
-    from Script.Kernel import core
-    from Script.Modules.save_load import kernel_state
-
-    kernel_state.new_game(core.state().clock)
-
     log("新建游戏最小初始化完成.")
 
 
@@ -399,6 +394,7 @@ def init_game_environment(
     # 内核加载各模块：新游戏与读档的 Reset 步骤是 save_load.reset 的钩子，须在第一次换 GameState 之前加载
     from Script.Kernel import core
     from Script.Modules import load_order
+    from Script.Modules.gameplay_resolution import working
     from Script.Modules.save_load import kernel_state
 
     core.load(load_order.LOAD_ORDER)
@@ -415,7 +411,11 @@ def init_game_environment(
         loaded = try_load_save("auto")
 
     if not loaded:
-        new_game_minimal_init()
+        # 建角色会写 GameState 数据，同新游戏一样先记进缓冲区，再把效果交给 new_game
+        with working.based_on(core.state()) as buffer:
+            new_game_minimal_init()
+            effects = buffer.effects()
+        kernel_state.new_game(core.state().clock, effects)
     else:
         log("已加载存档，跳过新建流程。")
 

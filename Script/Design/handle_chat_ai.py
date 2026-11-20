@@ -301,7 +301,9 @@ def build_user_prompt(
     )
 
     # 心情、年龄、种族、出身地、势力
-    angry_text = attr_calculation.get_angry_text(npc_character_data.angry_point)
+    angry_text = attr_calculation.get_angry_text(
+        needs.of(npc_character_data.cid)["angry"]
+    )
     age_text = attr_text.get_age_talent_text(npc_character_id)
     race_name = game_config.config_race[npc_character_data.race].name
     birthplace_name = game_config.config_birthplace[
@@ -349,7 +351,7 @@ def build_user_prompt(
     # 睡眠
     if tem_send_data_flags[35]:
         __, sleep_text = attr_calculation.get_sleep_level(
-            npc_character_data.sleep_point
+            needs.of(npc_character_data.cid)["sleep"]
         )
     # 疲劳
     if tem_send_data_flags[33]:
@@ -643,12 +645,10 @@ def text_ai(
                 "{talk_num}", str(talk_num)
             )
         system_promote += _(system_promote_text)
-    # print(system_promote)
     # 用户提示词
     user_prompt = build_user_prompt(
         character_id, behavior_id, original_text, translator, direct_mode
     )
-    # print(f'user_prompt = {user_prompt}')
 
     # 直接对话模式
     if direct_mode:

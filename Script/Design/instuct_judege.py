@@ -21,6 +21,7 @@ from Script.Design import (
 )
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
+from Script.Modules.domains import needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -175,7 +176,8 @@ def calculation_instuct_judege(
         calculation_text += _("+全刻印总修正(") + str(judge_mark) + ")"
 
     # 心情修正，好心情+10，坏心情-10，愤怒-30
-    judge_angry = attr_calculation.get_angry_level(target_data.angry_point) * 20
+    angry = needs.of(target_character_id)["angry"]
+    judge_angry = attr_calculation.get_angry_level(angry) * 20
     judge += judge_angry
     if judge_angry:
         calculation_text += _("+心情修正(") + str(judge_angry) + ")"
@@ -515,13 +517,13 @@ def calculation_instuct_judege(
                 # 最后的总结算
                 # settle_hypnosis 为假时只判不扣（Plan 31 §3.3）：前提、面板、名单每刷新一次就求值一次，
                 #    在这里扣理智或解除催眠，同一个判定会越判越变，打开一次面板就改掉了存档数据
-                if sanity_point_cost <= character_data.sanity_point:
+                if sanity_point_cost <= needs.of(character_id)["sanity"]:
                     judge += judge_hypnosis
                     if settle_hypnosis:
                         calculation_text += _("+催眠(+{0},消耗{1}理智)").format(
                             judge_hypnosis, sanity_point_cost
                         )
-                        character_data.sanity_point -= sanity_point_cost
+                        needs.add(character_id, "sanity", -sanity_point_cost)
                         character_data.pl_ability.today_sanity_point_cost += (
                             sanity_point_cost
                         )
@@ -559,7 +561,6 @@ def calculation_instuct_judege(
         if judge_data_type != "V":
             calculation_text += " = " + str(judge) + "\n"
             now_draw = draw.WaitDraw()
-            # now_draw.width = 1
             now_draw.text = calculation_text
             now_draw.draw()
 
@@ -570,7 +571,6 @@ def calculation_instuct_judege(
             and handle_premise.handle_imprisonment_0(target_character_id)
         ):
             agree_draw = draw.WaitDraw()
-            # agree_draw.width = 1
             draw_text = ""
             if instruct_name == _("亲吻") and target_data.talent[11] == 0:
                 target_data.talent[11] = 1

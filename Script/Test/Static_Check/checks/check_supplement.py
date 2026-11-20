@@ -20,7 +20,7 @@ from types import FunctionType
 from Script.Core import cache_control, get_text
 from Script.Config import game_config
 from Script.Design import map_handle
-from Script.Modules.domains import power
+from Script.Modules.domains import needs, power
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -247,15 +247,14 @@ def check_angry_point_lower_bound() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能:
-        来源: NO-01。校验每个角色的angry_point类型为int且不小于0。道歉和听牢骚等指令路径的减法写点
-        已用max(..., 0)钳制下界，本条为保护性检查，守住该不变量不被新写点破坏。下游把<=30当作正常阈值，
-        显示逻辑又会把负数落入最低愤怒档，因此负值一旦出现即语义不成立。级别为warning
+        来源: NO-01。校验每个角色的愤怒值（needs.of(cid)["angry"]）是int且不小于0。
+        道歉等指令减愤怒值时以0为下限，本条防新的写入破坏这一点。级别为warning
     """
     cache = cache_control.cache
     character_data = getattr(cache, "character_data", {}) or {}
     failures = []
     for cid, c in character_data.items():
-        angry_point = getattr(c, "angry_point", 0)
+        angry_point = needs.of(cid)["angry"]
         if type(angry_point) is not int or angry_point < 0:
             failures.append(
                 make_failure(

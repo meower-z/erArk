@@ -296,13 +296,17 @@ def load(save_id: str) -> None:
     _reset_keeping_cache(game, why)
 
 
-def new_game(clock: int) -> None:
+def new_game(clock: int, effects: core.Effects = ()) -> None:
     """
-    新游戏的最后一步（缓存已建好）：内核换成 clock 时刻的空 GameState，Reset 的步骤由缓存投影出角色
+    新游戏的最后一步（缓存已建好）：内核换成 clock 时刻的空 GameState 套上 effects，Reset 的步骤再由缓存投影出角色。
+    空状态里没有角色，effects 写的角色数据先在 roster.offstage 里，Reset 的步骤把投影出的角色的数据移进各自的角色数据
     Keyword arguments:
     clock -- 开局的时钟
+    effects -- 建角色时写进缓冲区的 GameState 数据换成的效果，默认没有
     """
-    core.reset_state(_empty(clock), {"cause": "new_game"})
+    core.reset_state(
+        core.preview(_empty(clock), effects), {"cause": "new_game"}
+    )
 
 
 def new_round(choices: Mapping[str, core.JSON]) -> None:

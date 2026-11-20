@@ -91,23 +91,25 @@ class Sleep_Panel:
         # 计算回复时间（小时），然后向上取整，且最小为1
         # 比率同 realtime_settle.settle_sleep：体力每分钟 上限/400+3，气力每分钟 上限/200+6，疲劳每分钟 1/3
         hit_point_add_base = (
-            self.pl_character_data.hit_point_max * Fraction(1, 400) + 3
+            needs.of(self.pl_character_data.cid)["hit_max"] * Fraction(1, 400)
+            + 3
         )
         mana_point_add_base = (
-            self.pl_character_data.mana_point_max * Fraction(1, 200) + 6
+            needs.of(self.pl_character_data.cid)["mana_max"] * Fraction(1, 200)
+            + 6
         )
         hp_recover_time = math.ceil(
             (
-                self.pl_character_data.hit_point_max
-                - self.pl_character_data.hit_point
+                needs.of(self.pl_character_data.cid)["hit_max"]
+                - needs.of(self.pl_character_data.cid)["hit"]
             )
             / hit_point_add_base
             / 60
         )
         mp_recover_time = math.ceil(
             (
-                self.pl_character_data.mana_point_max
-                - self.pl_character_data.mana_point
+                needs.of(self.pl_character_data.cid)["mana_max"]
+                - needs.of(self.pl_character_data.cid)["mana"]
             )
             / mana_point_add_base
             / 60
@@ -121,10 +123,10 @@ class Sleep_Panel:
         # 理智和精液
         sanity_recover_time = math.ceil(
             (
-                self.pl_character_data.sanity_point_max
-                - self.pl_character_data.sanity_point
+                needs.of(self.pl_character_data.cid)["sanity_max"]
+                - needs.of(self.pl_character_data.cid)["sanity"]
             )
-            / self.pl_character_data.sanity_point_max
+            / needs.of(self.pl_character_data.cid)["sanity_max"]
             / 0.15
         )  # 理智
         semen_recover_time = math.ceil(
@@ -132,7 +134,7 @@ class Sleep_Panel:
                 self.pl_character_data.semen_point_max
                 - self.pl_character_data.semen_point
             )
-            / self.pl_character_data.sanity_point_max
+            / needs.of(self.pl_character_data.cid)["sanity_max"]
             / 0.15
         )  # 精液
         all_recover_time = max(

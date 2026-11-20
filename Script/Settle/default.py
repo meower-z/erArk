@@ -102,17 +102,17 @@ def handle_add_small_hit_point(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    add_hit_point = add_time * (10 + character_data.hit_point_max * 0.005)
+    add_hit_point = add_time * (10 + needs.of(character_id)["hit_max"] * 0.005)
     now_add_hit_point = add_hit_point
     # 如果气力=0则恢复减半
-    if character_data.mana_point == 0:
+    if needs.of(character_id)["mana"] == 0:
         now_add_hit_point /= 2
     now_add_hit_point = int(now_add_hit_point)
-    character_data.hit_point += now_add_hit_point
+    needs.add(character_id, "hit", now_add_hit_point)
     change_data.hit_point += now_add_hit_point
     # 如果超过最大值则=最大值
-    if character_data.hit_point >= character_data.hit_point_max:
-        character_data.hit_point = character_data.hit_point_max
+    if needs.of(character_id)["hit"] >= needs.of(character_id)["hit_max"]:
+        needs.set(character_id, hit=needs.of(character_id)["hit_max"])
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -137,12 +137,12 @@ def handle_add_small_mana_point(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    add_mana_point = add_time * (20 + character_data.hit_point_max * 0.01)
+    add_mana_point = add_time * (20 + needs.of(character_id)["hit_max"] * 0.01)
     add_mana_point = int(add_mana_point)
-    character_data.mana_point += add_mana_point
+    needs.add(character_id, "mana", add_mana_point)
     change_data.mana_point += add_mana_point
-    if character_data.mana_point > character_data.mana_point_max:
-        character_data.mana_point = character_data.mana_point_max
+    if needs.of(character_id)["mana"] > needs.of(character_id)["mana_max"]:
+        needs.set(character_id, mana=needs.of(character_id)["mana_max"])
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -658,8 +658,7 @@ def handle_mood_to_good(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.angry_point = 0
+    needs.set(character_id, angry=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -679,8 +678,7 @@ def handle_mood_to_normal(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.angry_point = 20
+    needs.set(character_id, angry=20)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -700,8 +698,7 @@ def handle_mood_to_bad(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.angry_point = 40
+    needs.set(character_id, angry=40)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -721,8 +718,7 @@ def handle_mood_to_angry(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.angry_point = 75
+    needs.set(character_id, angry=75)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -842,7 +838,7 @@ def handle_scene_all_characters_desire_point_zero(
     for chara_id in scene_data.character_list:
         if chara_id == 0:
             continue
-        character_data.desire_point = 0
+        needs.set(character_id, desire=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -867,17 +863,17 @@ def handle_add_both_small_hit_point(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    add_hit_point = add_time * (10 + character_data.hit_point_max * 0.005)
+    add_hit_point = add_time * (10 + needs.of(character_id)["hit_max"] * 0.005)
     now_add_hit_point = add_hit_point
     # 如果气力=0则恢复减半
-    if character_data.mana_point == 0:
+    if needs.of(character_id)["mana"] == 0:
         now_add_hit_point /= 2
     now_add_hit_point = int(now_add_hit_point)
-    character_data.hit_point += now_add_hit_point
+    needs.add(character_id, "hit", now_add_hit_point)
     change_data.hit_point += now_add_hit_point
     # 如果超过最大值则=最大值
-    if character_data.hit_point >= character_data.hit_point_max:
-        character_data.hit_point = character_data.hit_point_max
+    if needs.of(character_id)["hit"] >= needs.of(character_id)["hit_max"]:
+        needs.set(character_id, hit=needs.of(character_id)["hit_max"])
     # 交互对象也同样#
     if character_data.target_character_id != character_id:
         target_data: game_type.Character = cache.character_data[
@@ -889,17 +885,22 @@ def handle_add_both_small_hit_point(
         target_change: game_type.TargetChange = change_data.target_change[
             target_data.cid
         ]
-        add_hit_point = add_time * (10 + target_data.hit_point_max * 0.005)
+        add_hit_point = add_time * (
+            10 + needs.of(target_data.cid)["hit_max"] * 0.005
+        )
         now_add_hit_point = add_hit_point
         # 如果气力=0则恢复减半
-        if target_data.mana_point == 0:
+        if needs.of(target_data.cid)["mana"] == 0:
             now_add_hit_point /= 2
         now_add_hit_point = int(now_add_hit_point)
-        target_data.hit_point += now_add_hit_point
+        needs.add(target_data.cid, "hit", now_add_hit_point)
         target_change.hit_point += now_add_hit_point
         # 如果超过最大值则=最大值
-        if target_data.hit_point >= target_data.hit_point_max:
-            target_data.hit_point = target_data.hit_point_max
+        if (
+            needs.of(target_data.cid)["hit"]
+            >= needs.of(target_data.cid)["hit_max"]
+        ):
+            needs.set(target_data.cid, hit=needs.of(target_data.cid)["hit_max"])
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -924,12 +925,12 @@ def handle_add_both_small_mana_point(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    add_mana_point = add_time * (20 + character_data.hit_point_max * 0.01)
+    add_mana_point = add_time * (20 + needs.of(character_id)["hit_max"] * 0.01)
     add_mana_point = int(add_mana_point)
-    character_data.mana_point += add_mana_point
+    needs.add(character_id, "mana", add_mana_point)
     change_data.mana_point += add_mana_point
-    if character_data.mana_point > character_data.mana_point_max:
-        character_data.mana_point = character_data.mana_point_max
+    if needs.of(character_id)["mana"] > needs.of(character_id)["mana_max"]:
+        needs.set(character_id, mana=needs.of(character_id)["mana_max"])
     # 交互对象也同样#
     if character_data.target_character_id != character_id:
         target_data: game_type.Character = cache.character_data[
@@ -941,13 +942,20 @@ def handle_add_both_small_mana_point(
         target_change: game_type.TargetChange = change_data.target_change[
             target_data.cid
         ]
-        add_mana_point = add_time * (20 + target_data.hit_point_max * 0.01)
+        add_mana_point = add_time * (
+            20 + needs.of(target_data.cid)["hit_max"] * 0.01
+        )
         add_mana_point = int(add_mana_point)
-        target_data.mana_point += add_mana_point
+        needs.add(target_data.cid, "mana", add_mana_point)
         target_change.mana_point += add_mana_point
         # 如果超过最大值则=最大值
-        if target_data.mana_point >= target_data.mana_point_max:
-            target_data.mana_point = target_data.mana_point_max
+        if (
+            needs.of(target_data.cid)["mana"]
+            >= needs.of(target_data.cid)["mana_max"]
+        ):
+            needs.set(
+                target_data.cid, mana=needs.of(target_data.cid)["mana_max"]
+            )
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1444,7 +1452,7 @@ def handle_penetrating_vision_on(
     if character_data.dead:
         return
     character_data.pl_ability.visual = True
-    character_data.sanity_point = max(character_data.sanity_point - 1, 0)
+    needs.add(character_id, "sanity", -1, min=0)
     change_data.sanity_point -= 1
     character_data.pl_ability.today_sanity_point_cost += 1
 
@@ -1559,9 +1567,7 @@ def handle_hypnosis_one(
     santi_down = hypnosis_panel.calculate_hypnosis_sanity_cost(
         character_data.target_character_id
     )
-    character_data.sanity_point = max(
-        character_data.sanity_point - santi_down, 0
-    )
+    needs.add(character_id, "sanity", -santi_down, min=0)
     change_data.sanity_point -= santi_down
     character_data.pl_ability.today_sanity_point_cost += santi_down
     # 结算催眠度增加
@@ -1585,7 +1591,7 @@ def handle_hypnosis_one(
     )
     # 判断是否理智已耗尽导致催眠结束
     if (
-        character_data.sanity_point == 0
+        needs.of(character_id)["sanity"] == 0
         and target_character_data.sp_flag.unconscious_h
     ):
         # 空气催眠则重置催眠地点和解开门锁
@@ -1645,15 +1651,13 @@ def handle_hypnosis_all(
         sanity_point_cost += santi_down
         hypnosis_character_list.append(target_id)
         # 如果超出了现有理智，则取现有理智
-        if sanity_point_cost >= character_data.sanity_point:
+        if sanity_point_cost >= needs.of(character_data.cid)["sanity"]:
             sanity_point_cost = min(
-                sanity_point_cost, character_data.sanity_point
+                sanity_point_cost, needs.of(character_data.cid)["sanity"]
             )
             break
     # 结算理智消耗
-    character_data.sanity_point = max(
-        character_data.sanity_point - sanity_point_cost, 0
-    )
+    needs.add(character_data.cid, "sanity", -sanity_point_cost, min=0)
     change_data.sanity_point -= sanity_point_cost
     character_data.pl_ability.today_sanity_point_cost += sanity_point_cost
     # 遍历催眠角色列表
@@ -1687,7 +1691,7 @@ def handle_hypnosis_all(
         # 判断催眠完成
         hypnosis_panel.evaluate_hypnosis_completion(target_id)
     # 判断是否理智已耗尽导致催眠结束
-    if character_data.sanity_point == 0:
+    if needs.of(character_data.cid)["sanity"] == 0:
         for target_id in scene_character_list:
             target_character_data = cache.character_data[target_id]
             # 空气催眠则重置催眠地点和解开门锁
@@ -1766,9 +1770,7 @@ def handle_target_hypnosis_increase_body_sensitivity_on(
         return
     santi_down = 10
     target_character_data.hypnosis.increase_body_sensitivity = True
-    character_data.sanity_point = max(
-        character_data.sanity_point - santi_down, 0
-    )
+    needs.add(character_id, "sanity", -santi_down, min=0)
     change_data.sanity_point -= santi_down
     character_data.pl_ability.today_sanity_point_cost += santi_down
 
@@ -1823,7 +1825,7 @@ def handle_target_hypnosis_force_climax(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    character_data.sanity_point = max(character_data.sanity_point - 50, 0)
+    needs.add(character_id, "sanity", -50, min=0)
     change_data.sanity_point -= 50
     character_data.pl_ability.today_sanity_point_cost += 50
 
@@ -1867,9 +1869,7 @@ def handle_target_hypnosis_force_ovulation_on(
 
     if egg_handle.is_egg_soft(character_data.target_character_id):
         target_character_data.pregnancy.external_ovulation_chance = True
-    character_data.sanity_point = max(
-        character_data.sanity_point - santi_down, 0
-    )
+    needs.add(character_id, "sanity", -santi_down, min=0)
     change_data.sanity_point -= santi_down
     character_data.pl_ability.today_sanity_point_cost += santi_down
 
@@ -1936,9 +1936,7 @@ def handle_target_hypnosis_blockhead_switch_change(
         target_character_data.hypnosis.blockhead = True
         target_character_data.sp_flag.unconscious_h = 6
         santi_down = 10
-        character_data.sanity_point = max(
-            character_data.sanity_point - santi_down, 0
-        )
+        needs.add(character_id, "sanity", -santi_down, min=0)
         change_data.sanity_point -= santi_down
         character_data.pl_ability.today_sanity_point_cost += santi_down
 
@@ -2008,9 +2006,7 @@ def handle_target_hypnosis_active_h_switch_change(
         target_character_data.h_state.npc_active_h = True
         target_character_data.sp_flag.unconscious_h = 6
         santi_down = 10
-        character_data.sanity_point = max(
-            character_data.sanity_point - santi_down, 0
-        )
+        needs.add(character_id, "sanity", -santi_down, min=0)
         change_data.sanity_point -= santi_down
         character_data.pl_ability.today_sanity_point_cost += santi_down
         handle_instruct.plan_instruct_common_settle(constant.Behavior.H)
@@ -2077,9 +2073,7 @@ def handle_target_hypnosis_pain_as_pleasure_switch_change(
     else:
         target_character_data.hypnosis.pain_as_pleasure = True
         santi_down = 10
-        character_data.sanity_point = max(
-            character_data.sanity_point - santi_down, 0
-        )
+        needs.add(character_id, "sanity", -santi_down, min=0)
         change_data.sanity_point -= santi_down
         character_data.pl_ability.today_sanity_point_cost += santi_down
 
@@ -2239,7 +2233,7 @@ def handle_target_be_free_in_time_stop(
     character_data.pl_ability.free_in_time_stop_chara_id = (
         character_data.target_character_id
     )
-    character_data.sanity_point = max(character_data.sanity_point - 50, 0)
+    needs.add(character_id, "sanity", -50, min=0)
     change_data.sanity_point -= 50
     character_data.pl_ability.today_sanity_point_cost += 50
 
@@ -3167,12 +3161,14 @@ def handle_add_medium_hit_point(
     if character_data.dead:
         return
     add_hit_point: num.Num = int(
-        add_time * (20 + character_data.hit_point_max * 0.01)
+        add_time * (20 + needs.of(character_id)["hit_max"] * 0.01)
     )
-    character_data.hit_point += add_hit_point
-    if character_data.hit_point > character_data.hit_point_max:
-        add_hit_point -= character_data.hit_point - character_data.hit_point_max
-        character_data.hit_point = character_data.hit_point_max
+    needs.add(character_id, "hit", add_hit_point)
+    if needs.of(character_id)["hit"] > needs.of(character_id)["hit_max"]:
+        add_hit_point -= (
+            needs.of(character_id)["hit"] - needs.of(character_id)["hit_max"]
+        )
+        needs.set(character_id, hit=needs.of(character_id)["hit_max"])
     change_data.hit_point += add_hit_point
 
 
@@ -3199,14 +3195,14 @@ def handle_add_medium_mana_point(
     if character_data.dead:
         return
     add_mana_point: num.Num = int(
-        add_time * (30 + character_data.hit_point_max * 0.02)
+        add_time * (30 + needs.of(character_id)["hit_max"] * 0.02)
     )
-    character_data.mana_point += add_mana_point
-    if character_data.mana_point > character_data.mana_point_max:
+    needs.add(character_id, "mana", add_mana_point)
+    if needs.of(character_id)["mana"] > needs.of(character_id)["mana_max"]:
         add_mana_point -= (
-            character_data.mana_point - character_data.mana_point_max
+            needs.of(character_id)["mana"] - needs.of(character_id)["mana_max"]
         )
-        character_data.mana_point = character_data.mana_point_max
+        needs.set(character_id, mana=needs.of(character_id)["mana_max"])
     change_data.mana_point += add_mana_point
 
 
@@ -3644,12 +3640,9 @@ def handle_target_to_most_desire(
             # 跳过玩家
             if chara_id == 0:
                 continue
-            other_character_data: game_type.Character = cache.character_data[
-                chara_id
-            ]
             # 检测欲望值
-            if other_character_data.desire_point > max_desire_value:
-                max_desire_value = other_character_data.desire_point
+            if needs.of(chara_id)["desire"] > max_desire_value:
+                max_desire_value = needs.of(chara_id)["desire"]
                 target_chara_id = chara_id
         # 设置交互对象
         if target_chara_id:
@@ -5319,10 +5312,9 @@ def handle_chara_on_line(
         return
     character_data: game_type.Character = cache.character_data[character_id]
     # 基础属性重置
-    character_data.hit_point = character_data.hit_point_max
-    character_data.mana_point = character_data.mana_point_max
-    needs.set(character_id, hunger=0, tired=0, urine=0)
-    character_data.sleep_point = 0
+    needs.set(character_id, hit=needs.of(character_id)["hit_max"])
+    needs.set(character_id, mana=needs.of(character_id)["mana_max"])
+    needs.set(character_id, hunger=0, tired=0, urine=0, sleep=0)
     # 清零各特殊状态flag
     old_imprisonment = character_data.sp_flag.imprisonment
     # 外交访问状态需要跨上线保留，否则外交官随罗德岛抵达驻在国回岛后会丢失驻在国信息
@@ -7764,8 +7756,14 @@ def handle_aromatherapy_add_adjust(
 
     # 回复
     if target_character_data.sp_flag.aromatherapy == 1:
-        target_character_data.hit_point = target_character_data.hit_point_max
-        target_character_data.mana_point = target_character_data.mana_point_max
+        needs.set(
+            target_character_data.cid,
+            hit=needs.of(target_character_data.cid)["hit_max"],
+        )
+        needs.set(
+            target_character_data.cid,
+            mana=needs.of(target_character_data.cid)["mana_max"],
+        )
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -8153,16 +8151,19 @@ def handle_end_h_add_hpmp_max(
         if orgasm_count > 0:
             # 去掉最后的逗号，换成换行符
             info_text = info_text[:-1] + "\n"
-            now_character_data.hit_point_max += orgasm_count * 2
-            now_character_data.mana_point_max += orgasm_count * 3
+            needs.add(chara_id, "hit_max", orgasm_count * 2)
+            needs.add(chara_id, "mana_max", orgasm_count * 3)
             info_text += _(
                 "在激烈的H之后，{0}的体力上限增加了{1}，气力上限增加了{2}"
             ).format(
                 now_character_data.name, orgasm_count * 2, orgasm_count * 3
             )
             # 减少欲望值
-            now_character_data.desire_point = max(
-                int(now_character_data.desire_point - orgasm_count * 20), 0
+            needs.set(
+                chara_id,
+                desire=max(
+                    int(needs.of(chara_id)["desire"] - orgasm_count * 20), 0
+                ),
             )
             # 玩家则额外增加精液量上限
             if chara_id == 0 and now_character_data.semen_point_max < 999:
@@ -8245,17 +8246,15 @@ def handle_group_sex_end_h_add_hpmp_max(
         if orgasm_count > 0:
             # 去掉最后的逗号，换成换行符
             info_text = info_text[:-1] + "\n"
-            now_character_data.hit_point_max += orgasm_count * 2
-            now_character_data.mana_point_max += orgasm_count * 3
+            needs.add(chara_id, "hit_max", orgasm_count * 2)
+            needs.add(chara_id, "mana_max", orgasm_count * 3)
             info_text += _(
                 "在激烈的H之后，{0}的体力上限增加了{1}，气力上限增加了{2}"
             ).format(
                 now_character_data.name, orgasm_count * 2, orgasm_count * 3
             )
             # 减少欲望值
-            now_character_data.desire_point = max(
-                now_character_data.desire_point - orgasm_count * 20, 0
-            )
+            needs.add(chara_id, "desire", -(orgasm_count * 20), min=0)
             # 玩家则额外增加精液量上限
             if chara_id == 0 and now_character_data.semen_point_max < 999:
                 now_character_data.semen_point_max += orgasm_count
@@ -9924,18 +9923,18 @@ def handle_add_hpmp_max(
 
     # 指数曲线，x = [1000, 2000, 4000, 5000, 10000]， y = [50, 25, 15, 10, 5]
     add_hp = 128.961 * math.exp(
-        -0.0016 * character_data.hit_point_max
-    ) + 28.578 * math.exp(-1.8453e-04 * character_data.hit_point_max)
+        -0.0016 * needs.of(character_id)["hit_max"]
+    ) + 28.578 * math.exp(-1.8453e-04 * needs.of(character_id)["hit_max"])
     add_mp = 128.961 * math.exp(
-        -0.0016 * character_data.mana_point_max
-    ) + 28.578 * math.exp(-1.8453e-04 * character_data.mana_point_max)
+        -0.0016 * needs.of(character_id)["mana_max"]
+    ) + 28.578 * math.exp(-1.8453e-04 * needs.of(character_id)["mana_max"])
 
     # 最终增加值
     add_hp = int(add_hp * facility_adjust * random.uniform(0.8, 1.2))
     add_mp = int(add_mp * facility_adjust * random.uniform(0.8, 1.5))
     # 增加上限
-    character_data.hit_point_max += add_hp
-    character_data.mana_point_max += add_mp
+    needs.add(character_id, "hit_max", add_hp)
+    needs.add(character_id, "mana_max", add_mp)
     # 如果和玩家位于同一地点，则输出提示信息
     if character_data.position == cache.character_data[0].position:
         now_draw = draw.NormalDraw()
@@ -9950,15 +9949,19 @@ def handle_add_hpmp_max(
             character_data.target_character_id
         ]
         add_hp = 128.961 * math.exp(
-            -0.0016 * target_data.hit_point_max
-        ) + 28.578 * math.exp(-1.8453e-04 * target_data.hit_point_max * 2)
+            -0.0016 * needs.of(target_data.cid)["hit_max"]
+        ) + 28.578 * math.exp(
+            -1.8453e-04 * needs.of(target_data.cid)["hit_max"] * 2
+        )
         add_mp = 128.961 * math.exp(
-            -0.0016 * target_data.mana_point_max
-        ) + 28.578 * math.exp(-1.8453e-04 * target_data.mana_point_max * 2)
+            -0.0016 * needs.of(target_data.cid)["mana_max"]
+        ) + 28.578 * math.exp(
+            -1.8453e-04 * needs.of(target_data.cid)["mana_max"] * 2
+        )
         add_hp = int(add_hp * facility_adjust * random.uniform(0.8, 1.2))
         add_mp = int(add_mp * facility_adjust * random.uniform(0.8, 1.5))
-        target_data.hit_point_max += add_hp
-        target_data.mana_point_max += add_mp
+        needs.add(target_data.cid, "hit_max", add_hp)
+        needs.add(target_data.cid, "mana_max", add_mp)
         # 如果和玩家位于同一地点，则输出提示信息
         if character_data.position == cache.character_data[0].position:
             now_draw = draw.NormalDraw()
@@ -11814,7 +11817,7 @@ def handle_low_obscenity_failed_adjust(
             change_data_to_target_change=change_data,
         )
         # 加愤怒
-        target_data.angry_point += 50
+        needs.add(target_data.cid, "angry", 50)
         target_data.sp_flag.angry_with_player = True
         # 降好感
         base_chara_favorability_and_trust_common_settle(
@@ -11871,7 +11874,7 @@ def handle_high_obscenity_failed_adjust(
         target_change.status_data.setdefault(20, 0)
         target_change.status_data[20] = now_add_lust
         # 加愤怒
-        target_data.angry_point += 100
+        needs.add(target_data.cid, "angry", 100)
         target_data.sp_flag.angry_with_player = True
         # 降好感
         base_chara_favorability_and_trust_common_settle(
@@ -11942,7 +11945,7 @@ def handle_do_h_failed_adjust(
         target_change.status_data.setdefault(20, 0)
         target_change.status_data[20] = now_add_lust
         # 加愤怒
-        target_data.angry_point += 100
+        needs.add(target_data.cid, "angry", 100)
         target_data.sp_flag.angry_with_player = True
         # 降好感
         base_chara_favorability_and_trust_common_settle(
@@ -12107,8 +12110,7 @@ def handle_sleep_point_zero(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.sleep_point = 0
+    needs.set(character_id, sleep=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -12134,7 +12136,7 @@ def handle_target_sleep_point_zero(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.sleep_point = 0
+    needs.set(target_data.cid, sleep=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -12208,7 +12210,7 @@ def handle_target_desire_point_zero(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.desire_point = 0
+    needs.set(target_data.cid, desire=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -12230,8 +12232,7 @@ def handle_desire_point_to_79(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.desire_point = 79
+    needs.set(character_id, desire=79)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -12257,7 +12258,7 @@ def handle_target_desire_point_to_79(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.desire_point = 79
+    needs.set(target_data.cid, desire=79)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -12279,8 +12280,7 @@ def handle_desire_point_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.desire_point = 0
+    needs.set(character_id, desire=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -12302,14 +12302,13 @@ def handle_add_small_sanity_point(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     add_sanity_point = int(
-        add_time / 60 * 0.15 * character_data.sanity_point_max
+        add_time / 60 * 0.15 * needs.of(character_id)["sanity_max"]
     )
-    character_data.sanity_point += add_sanity_point
+    needs.add(character_id, "sanity", add_sanity_point)
     # 如果超过最大值则=最大值
-    if character_data.sanity_point >= character_data.sanity_point_max:
-        character_data.sanity_point = character_data.sanity_point_max
+    if needs.of(character_id)["sanity"] >= needs.of(character_id)["sanity_max"]:
+        needs.set(character_id, sanity=needs.of(character_id)["sanity_max"])
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -13989,8 +13988,8 @@ def handle_nuirse_child_add_adjust(
     # 只对婴儿生效
     if not target_data.talent.get(101, 0):
         return
-    target_data.hit_point_max += education_constant.NUIRSE_CHILD_HP_MAX_ADD
-    target_data.mana_point_max += education_constant.NUIRSE_CHILD_MP_MAX_ADD
+    needs.add(target_id, "hit_max", education_constant.NUIRSE_CHILD_HP_MAX_ADD)
+    needs.add(target_id, "mana_max", education_constant.NUIRSE_CHILD_MP_MAX_ADD)
     if character_id != 0:
         return
     base_chara_favorability_and_trust_common_settle(

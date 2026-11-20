@@ -17,7 +17,7 @@ import math
 from fractions import Fraction
 from typing import TypeGuard
 
-from Script.Core import cache_control
+from Script.Core import cache_control, num
 from Script.Config import game_config
 from Script.Design import game_time
 from Script.Modules.domains import needs
@@ -764,17 +764,17 @@ def check_num_18_hp_mp_max_positive() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验hit_point_max/mana_point_max均为正整数。实时结算每回合无保护地做hit_point/hit_point_max与
-        mana_point/mana_point_max，上限为0直接ZeroDivisionError。对全体角色成立（NPC由模板赋值，玩家固定值）。
-        带cache.debug_mode守卫（debug面板允许把上限改为0或负数）。
+        校验每个角色的体力上限与气力上限（needs.of(cid) 的 hit_max、mana_max）都是正整数。
+        实时结算用体力、气力除以各自的上限，上限为0时ZeroDivisionError。
+        debug面板可以把上限改成0或负数，所以debug模式下不检查。
     """
     cache = cache_control.cache
     if cache.debug_mode:
         return []
     failures = []
     for cid, chara in cache.character_data.items():
-        hp_max = getattr(chara, "hit_point_max", None)
-        mp_max = getattr(chara, "mana_point_max", None)
+        hp_max = needs.of(cid)["hit_max"]
+        mp_max = needs.of(cid)["mana_max"]
         if not (
             type(hp_max) is int
             and hp_max > 0
@@ -801,10 +801,9 @@ def check_num_19_player_only_max_fields() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        仅校验cid 0（玩家）的sanity_point_max/eja_point_max/semen_point_max均为正整数，且sanity_point_max<=9999。
-        这三个字段只在玩家分支被赋值，NPC分支只设hit_point_max/mana_point_max，三项对NPC原封不动停在类默认值0；
-        对NPC检查会产生"每回合每NPC一条"的必然误报，故迭代范围严格限定为cid==0。高潮判定
-        eja_point>=eja_point_max在上限为0时恒真，会让玩家每次结算都触发高潮。带cache.debug_mode守卫。
+        只校验玩家（cid 0）的理智上限（needs.of(0)["sanity_max"]）、eja_point_max、semen_point_max都是正整数，
+        且理智上限<=9999（理智上限的成长封顶在9999）。角色初始化只给玩家设这三项，NPC的停在默认值0，
+        所以不查NPC。debug模式下不检查。
     """
     cache = cache_control.cache
     if cache.debug_mode:
@@ -812,27 +811,27 @@ def check_num_19_player_only_max_fields() -> list[CheckFailure]:
     chara = cache.character_data.get(0)
     if chara is None:
         return []
-    fields = ("sanity_point_max", "eja_point_max", "semen_point_max")
-    values = {f: getattr(chara, f, None) for f in fields}
+    values = {
+        f: getattr(chara, f) for f in ("eja_point_max", "semen_point_max")
+    }
+    values["sanity_point_max"] = needs.of(0)["sanity_max"]
     ok = (
         all(type(v) is int and v > 0 for v in values.values())
         and type(values["sanity_point_max"]) is int
         and values["sanity_point_max"] <= 9999
     )
-    if not ok:
-        failures = [
-            make_failure(
-                "NUM-19",
-                "玩家专属槽位上限为正整数",
-                f"玩家cid=0 sanity_point_max={values['sanity_point_max']!r} eja_point_max={values['eja_point_max']!r} "
-                f"semen_point_max={values['semen_point_max']!r} sanity_point={getattr(chara, 'sanity_point', '?')} "
-                f"eja_point={getattr(chara, 'eja_point', '?')} semen_point={getattr(chara, 'semen_point', '?')}",
-                [0],
-            )
-        ]
-    else:
-        failures = []
-    return failures
+    if ok:
+        return []
+    return [
+        make_failure(
+            "NUM-19",
+            "玩家专属槽位上限为正整数",
+            f"玩家cid=0 sanity_point_max={values['sanity_point_max']!r} eja_point_max={values['eja_point_max']!r} "
+            f"semen_point_max={values['semen_point_max']!r} sanity_point={num.shown(needs.of(0)['sanity'])} "
+            f"eja_point={getattr(chara, 'eja_point', '?')} semen_point={getattr(chara, 'semen_point', '?')}",
+            [0],
+        )
+    ]
 
 
 @register_check("NUM-20", "当前体力在[1,上限]")
@@ -843,9 +842,8 @@ def check_num_20_hit_point_range() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验chara.hit_point在[1, hit_point_max]范围内（力竭底线为1而非0）。死亡角色豁免——死亡角色被结算函数
-        直接return，HP冻结在旧值，不代表越界。HP并非每回合统一双向clamp，只在对应结算发生时钳制，本项本质是
-        找出绕过通用结算的直写路径。带cache.debug_mode守卫。
+        校验每个活着的角色的体力（needs.of(cid)["hit"]）在[1, 体力上限]内，体力的下限是1不是0。
+        死亡角色不查。debug模式下不检查。
     """
     cache = cache_control.cache
     if cache.debug_mode:
@@ -854,8 +852,8 @@ def check_num_20_hit_point_range() -> list[CheckFailure]:
     for cid, chara in cache.character_data.items():
         if getattr(chara, "dead", False):
             continue
-        hp = getattr(chara, "hit_point", None)
-        hp_max = getattr(chara, "hit_point_max", None)
+        hp = needs.of(cid)["hit"]
+        hp_max = needs.of(cid)["hit_max"]
         if (
             not _exact(hp)
             or (type(hp_max) is not int and type(hp_max) is not float)
@@ -884,17 +882,16 @@ def check_num_21_mana_point_range() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验chara.mana_point在[0, mana_point_max]范围内。通用增减与休息回复都钳制此范围。上限为0时本式退化为
-        mana_point==0，NUM-18会先报出根因。死亡角色同样被结算跳过，但MP下界0恒成立，无需dead豁免。
-        带cache.debug_mode守卫。
+        校验每个角色的气力（needs.of(cid)["mana"]）在[0, 气力上限]内。
+        上限为0时只有气力0合法，上限的问题由NUM-18报出。debug模式下不检查。
     """
     cache = cache_control.cache
     if cache.debug_mode:
         return []
     failures = []
     for cid, chara in cache.character_data.items():
-        mp = getattr(chara, "mana_point", None)
-        mp_max = getattr(chara, "mana_point_max", None)
+        mp = needs.of(cid)["mana"]
+        mp_max = needs.of(cid)["mana_max"]
         if (
             not _exact(mp)
             or (type(mp_max) is not int and type(mp_max) is not float)
@@ -905,7 +902,7 @@ def check_num_21_mana_point_range() -> list[CheckFailure]:
                     "NUM-21",
                     "当前气力在[0,上限]",
                     f"角色cid={cid} name={_chara_name(chara)} mana_point={mp!r} mana_point_max={mp_max!r} "
-                    f"hit_point={getattr(chara, 'hit_point', '?')} "
+                    f"hit_point={num.shown(needs.of(cid)['hit'])} "
                     f"behavior_id={getattr(getattr(chara, 'behavior', None), 'behavior_id', '?')}",
                     [cid],
                 )
@@ -921,17 +918,15 @@ def check_num_22_sanity_point_range() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验chara.sanity_point在[0, sanity_point_max]范围内。消耗侧一律max(x-y,0)、实时消耗先min再扣、指令判定
-        先比较再扣、恢复侧以上限封顶。对NPC本式空洞成立（sanity_point_max恒为0且理智被强制压回0），不产生假
-        阳性，可对全体跑，但真正有意义的只有cid 0。带cache.debug_mode守卫。
+        校验每个角色的理智（needs.of(cid)["sanity"]）在[0, 理智上限]内。debug模式下不检查。
     """
     cache = cache_control.cache
     if cache.debug_mode:
         return []
     failures = []
     for cid, chara in cache.character_data.items():
-        sp = getattr(chara, "sanity_point", None)
-        sp_max = getattr(chara, "sanity_point_max", None)
+        sp = needs.of(cid)["sanity"]
+        sp_max = needs.of(cid)["sanity_max"]
         if (
             not _exact(sp)
             or (type(sp_max) is not int and type(sp_max) is not float)
@@ -1130,7 +1125,7 @@ def check_num_27_fatigue_family_range() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验body.needs的tired∈[0,160]、hunger∈[0,240]与sleep_point∈[0,100]、drunk_point∈[0,100]，都须是int或Fraction。
+        校验body.needs的tired∈[0,160]、hunger∈[0,240]、sleep∈[0,100]、drunk∈[0,100]，都须是int或Fraction。
         出界说明有写入越过了上下限。debug面板可以直接改写这四项，所以debug模式下不检查。
     """
     cache = cache_control.cache
@@ -1139,15 +1134,15 @@ def check_num_27_fatigue_family_range() -> list[CheckFailure]:
     bounds = {
         "needs.tired": 160,
         "needs.hunger": 240,
-        "sleep_point": 100,
-        "drunk_point": 100,
+        "needs.sleep": 100,
+        "needs.drunk": 100,
     }
     failures = []
     for cid, chara in cache.character_data.items():
         values = {f"needs.{k}": v for k, v in needs.of(cid).items()}
         bad_fields = {}
         for field, upper in bounds.items():
-            v = values.get(field, getattr(chara, field, None))
+            v = values[field]
             if not (_exact(v) and 0 <= v <= upper):
                 bad_fields[field] = v
         if bad_fields:
@@ -1189,7 +1184,7 @@ def check_num_28_urinate_point_non_negative() -> list[CheckFailure]:
                     "NUM-28",
                     "尿意值非负且为整数",
                     f"角色cid={cid} name={_chara_name(chara)} urine={urinate!r} "
-                    f"drunk_point={getattr(chara, 'drunk_point', '?')} "
+                    f"drunk_point={num.shown(needs.of(cid)['drunk'])} "
                     f"behavior_id={getattr(getattr(chara, 'behavior', None), 'behavior_id', '?')}",
                     [cid],
                 )
@@ -1243,16 +1238,15 @@ def check_num_30_desire_point_non_negative() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验chara.desire_point为非负整数，不强制<=100——尽管字段注释称100为最大，逐日结算逐日累加且无任何
-        钳制，前提函数在>=100时权重仍随数值单调增长，说明设计上预期会超过100。下界0由结算侧的max(...,0)与
-        NPC AI的置0维护。带cache.debug_mode守卫。
+        校验每个角色的欲望值（needs.of(cid)["desire"]）是非负整数，不查上限。
+        逐日结算按欲望等级累加欲望值而不封顶，前提函数在欲望值>=100时权重仍随数值增长。debug模式下不检查。
     """
     cache = cache_control.cache
     if cache.debug_mode:
         return []
     failures = []
     for cid, chara in cache.character_data.items():
-        desire = getattr(chara, "desire_point", None)
+        desire = needs.of(cid)["desire"]
         if not (type(desire) is int and desire >= 0):
             ability = getattr(chara, "ability", None)
             ability_33 = ability.get(33) if isinstance(ability, dict) else None
