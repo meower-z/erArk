@@ -73,3 +73,4 @@ data/po/zh_CN/
 
 # 全局设置（游戏根目录，不随存档）
 settings.json
+config.local.ini
