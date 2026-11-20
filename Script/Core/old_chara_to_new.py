@@ -15,7 +15,7 @@ from Script.Config import game_config
 from Script.Design import attr_calculation, character_handle, child_stage_gate
 from typing import TYPE_CHECKING, TypedDict
 from Script.Design import game_time
-from Script.Modules.domains import needs
+from Script.Modules.domains import needs, power
 from Script.Modules.save_load import upgrade
 
 if TYPE_CHECKING:
@@ -440,19 +440,7 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
                 old_to_new_id.get(oid, oid) for oid in ri.recruited_id
             }
 
-        # power_operator_ids_list
-        if hasattr(ri, "power_operator_ids_list"):
-            ri.power_operator_ids_list = [
-                old_to_new_id.get(oid, oid)
-                for oid in ri.power_operator_ids_list
-            ]
-
-        # main_power_facility_operator_ids (List[int] - 主力供能设施的调控员id列表)
-        if hasattr(ri, "main_power_facility_operator_ids"):
-            ri.main_power_facility_operator_ids = [
-                old_to_new_id.get(oid, oid)
-                for oid in ri.main_power_facility_operator_ids
-            ]
+        power.remap_operators(old_to_new_id)
 
         # maintenance_place (Dict[int, str] - 角色id:地点)
         if hasattr(ri, "maintenance_place"):
@@ -1459,19 +1447,7 @@ def migrate_character_replacement(
             for oid in old_recruited:
                 ri.recruited_id.add(old_to_new_id_map.get(oid, oid))
 
-        # power_operator_ids_list
-        if hasattr(ri, "power_operator_ids_list"):
-            ri.power_operator_ids_list = [
-                old_to_new_id_map.get(oid, oid)
-                for oid in ri.power_operator_ids_list
-            ]
-
-        # main_power_facility_operator_ids
-        if hasattr(ri, "main_power_facility_operator_ids"):
-            ri.main_power_facility_operator_ids = [
-                old_to_new_id_map.get(oid, oid)
-                for oid in ri.main_power_facility_operator_ids
-            ]
+        power.remap_operators(old_to_new_id_map)
 
         # maintenance_place
         if hasattr(ri, "maintenance_place") and ri.maintenance_place:

@@ -508,7 +508,6 @@ def update_work_people() -> None:
     cache.rhodes_island.production_worker_ids = []
     cache.rhodes_island.herb_garden_operator_ids = []
     cache.rhodes_island.green_house_operator_ids = []
-    cache.rhodes_island.power_operator_ids_list = []
     cache.rhodes_island.hr_operator_ids_list = []
 
     clinic_doctors = []
@@ -653,15 +652,6 @@ def update_work_people() -> None:
                 )
                 or 0
             )
-
-        # 如果是供能调控员，则加入供能调控员列表
-        if work_type == 11:
-            if chara_id not in cache.rhodes_island.power_operator_ids_list:
-                cache.rhodes_island.power_operator_ids_list.append(chara_id)
-        # 如果不是供能调控员，则从供能调控员列表中移除
-        else:
-            if chara_id in cache.rhodes_island.power_operator_ids_list:
-                cache.rhodes_island.power_operator_ids_list.remove(chara_id)
 
         # 如果不是检修工程师，则清空该角色的检修目标
         if work_type != 21:
@@ -849,11 +839,9 @@ def settle_office_work() -> None:
     else:
         effectiveness_change -= max_damage_down
     # 结算能源系统
-    from Script.UI.Panel import manage_power_system_panel
+    from Script.Settle import power_settle
 
-    shortage_ratio, __ = manage_power_system_panel.settle_power_system(
-        draw_flag=True
-    )
+    shortage_ratio, __ = power_settle.settle_power_system(draw_flag=True)
     # # 如果能源系统出现供电不足，则降低效率
     effectiveness_change -= shortage_ratio / 2
     cache.rhodes_island.effectiveness = 100 + int(effectiveness_change)
@@ -938,8 +926,8 @@ def draw_todo() -> None:
         manage_assembly_line_panel,
         agriculture_production_panel,
         invite_visitor_panel,
-        manage_power_system_panel,
     )
+    from Script.Modules.domains import power_supply
 
     # 如果系统设置中关闭了待办事项，直接返回
     if cache.all_system_setting.draw_setting[5] == 0:
@@ -948,12 +936,8 @@ def draw_todo() -> None:
     draw_text = ""
 
     # 供电是否不足
-    power_generation = (
-        manage_power_system_panel.get_theoretical_power_generation()
-    )
-    power_consumption = (
-        manage_power_system_panel.get_theoretical_power_consumption()
-    )
+    power_generation = power_supply.power_generation()
+    power_consumption = power_supply.power_consumption()
     if power_generation < power_consumption:
         draw_text += _("  当前供电不足，可能影响基地正常运转\n")
 

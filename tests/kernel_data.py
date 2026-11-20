@@ -125,8 +125,12 @@ def _without_open(game: core.GameState, who: str) -> dict[str, core.JSON]:
 
 def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     """
-    快照里按缓存里时的名字记下 GameState 里的生理需求与供电策略：chara.<id>.tired_point、hunger_point、
-    urinate_point、pregnancy.milk，以及 world.base.power_supply_strategy.<区块id>（每个大区块的生效策略）
+    快照里按旧缓存的属性名记下 GameState 里的生理需求与动力状态，快照因此能与按这些名字录下的基准逐项比较。
+    生理需求记作 chara.<id>.tired_point、hunger_point、urinate_point、pregnancy.milk。
+    每个大区块的生效策略记作 world.base.power_supply_strategy.<区块id>。
+    动力记在 world.base 下，名字为 power_storage、power_storage_max、power_operator_ids_list、
+    main_power_facility_operator_ids、orundum_reactor_list（主反应炉等级与副反应炉数量）、other_power_facility_list
+    与 battery_list。
     Keyword arguments:
     cache -- 游戏缓存
     state -- 快照，原地补上
@@ -144,3 +148,18 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
         if facility.type == -1:
             name = f"world.base.power_supply_strategy.{zone}"
             flatten(name, power.strategy_of(zone), state)
+    plant = power.plant()
+    island = {
+        "power_storage": power.storage(),
+        "power_storage_max": power.storage_max(),
+        "power_operator_ids_list": power.operator_ids(),
+        "main_power_facility_operator_ids": plant["main_operators"],
+        "orundum_reactor_list": (
+            power.main_reactor_level(),
+            plant["aux_reactors"],
+        ),
+        "other_power_facility_list": plant["clean"],
+        "battery_list": plant["batteries"],
+    }
+    for field, value in island.items():
+        flatten(f"world.base.{field}", value, state)

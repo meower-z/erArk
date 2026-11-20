@@ -15,6 +15,7 @@
 from types import FunctionType
 
 from Script.Core import cache_control, game_type, get_text
+from Script.Modules.domains import power
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -106,7 +107,7 @@ def get_ri_value(type_text: str) -> float:
     if type_name == RI_TYPE_EFFECTIVENESS:
         return float(cache.rhodes_island.effectiveness)
     if type_name == RI_TYPE_POWER:
-        return float(cache.rhodes_island.power_storage)
+        return float(power.storage())
     if type_name == RI_TYPE_PEOPLE:
         return float(len(cache.npc_id_got))
     return 0.0
@@ -145,7 +146,7 @@ def set_ri_value(type_text: str, new_value: float) -> None:
             max(EFFECTIVENESS_MIN, min(float(new_value), EFFECTIVENESS_MAX)), 1
         )
     elif type_name == RI_TYPE_POWER:
-        cache.rhodes_island.power_storage = max(0, int(new_value))
+        power.set_storage(max(0, int(new_value)))
 
 
 def change_ri_value(type_text: str, add_value: float) -> None:

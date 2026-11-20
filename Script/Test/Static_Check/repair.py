@@ -18,7 +18,7 @@ from collections.abc import Callable
 from fractions import Fraction
 
 from Script.Config import game_config
-from Script.Modules.domains import needs
+from Script.Modules.domains import needs, power
 
 from . import check_log
 
@@ -362,13 +362,12 @@ def repair_main_power_operator_slots(cache: game_type.Cache) -> list[dict]:
     返回值:
         List[dict]: 修复记录列表
     功能:
-        与ISLAND-28同语义：main_power_facility_operator_ids四槽中，指向不存在角色或work_type!=11角色的槽位
-        置0（空槽标记）；同一cid重复占多槽时保留首个、其余置0
+        与ISLAND-28同语义。base.power 的 main_operators 里指向不存在角色或 work_type!=11 角色的槽位置 0（空槽）。
+        同一 cid 占多槽时保留第一个，其余置 0。槽位有变化时整值写回 base.power
     """
-    ri = cache.rhodes_island
     cd = cache.character_data
-    slots = getattr(ri, "main_power_facility_operator_ids", None)
-    if not (isinstance(slots, list) and len(slots) == 4):
+    slots = list(power.plant()["main_operators"])
+    if len(slots) != 4:
         return []
     old_slots = list(slots)
     seen = set()
@@ -384,11 +383,12 @@ def repair_main_power_operator_slots(cache: game_type.Cache) -> list[dict]:
             seen.add(m)
     if slots == old_slots:
         return []
+    power.set_plant(main_operators=tuple(slots))
     return [
         _record(
             "ISLAND-28",
             "罗德岛主供能设施",
-            "main_power_facility_operator_ids",
+            "base.power.main_operators",
             old_slots,
             list(slots),
         )

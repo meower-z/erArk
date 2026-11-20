@@ -1515,30 +1515,6 @@ class Rhodes_Island:
         self.effectiveness: float = 0
         """ 基地效率 """
 
-        # 动力区
-        self.power_use: int = 0
-        """ 当前使用电力（2025.9已废弃） """
-        self.power_max: int = 0
-        """ 总可用电力（2025.9已废弃） """
-        self.power_storage: float = 0.0
-        """ 当前储能 """
-        self.power_storage_max: float = 0.0
-        """ 最大可储能，由蓄电池数量与等级计算 """
-        self.power_operator_ids_list: list[int] = []
-        """ 供能调控员id列表 """
-        self.main_power_facility_operator_ids: list[int] = [0, 0, 0, 0]
-        """ 主力供能设施的调控员id列表，0~3分别为火水风光发电 """
-        self.orundum_reactor_list: list[int] = [1, 3]
-        """ 源石反应炉的列表，0号为主反应炉等级，1为已启用的副反应炉数量 """
-        self.other_power_facility_list: list[int] = [0, 0, 0]
-        """ 其他供能设施列表，0为水力发电机数量，1为风能发电机数量，2为太阳能发电机数量 """
-        self.battery_list: list[int] = [0, 0, 0]
-        """ 蓄电池列表，0号为1级蓄电池数量，1号为2级蓄电池数量，2号为3级蓄电池数量 """
-        self.now_used_extra_clean_energy_module_count: int = 0
-        """ 当前正在使用的额外清洁能源模块数量的记录，用于在卖出等减少数量操作时防止超出 """
-        self.now_used_extra_battery_count: int = 0
-        """ 当前正在使用的额外蓄电池数量的记录，用于在卖出等减少数量操作时防止超出 """
-
         # 工程部
         self.maintenance_place: dict[int, str] = {}
         """ 当前每个角色的待检修地点，角色id:地点 """

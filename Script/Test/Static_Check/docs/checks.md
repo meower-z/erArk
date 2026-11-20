@@ -186,8 +186,8 @@ H 状态、群交模式、逆推、隐奸。
 | ISLAND-24 | 自动交易设置键与阈值合法 | 每个自动交易资源id必须存在于资源配置；设置字典必须含六个标准键；库存阈值在0..仓库容量，价格 百分比在0..300，开关是0/1或True/False |
 | ISLAND-25 | 载具在外数量与进行中委托占用一致 | 每种载具记录形如[总数,外勤中数量]，满足0<=外勤中<=总数，且"外勤中"精确等于所有进行中委托占用 该型载具的台数之和；委托引用的载具型号必须同时存在于配置与载具表 |
 | ISLAND-26 | 外勤派遣名单与干员外勤标记一致 | 每个进行中委托的id必须合法；成员必须是存在的角色、不被两个委托同时派遣、其sp_flag.field_commission 等于该委托id；反过来，任何field_commission!=0的角色都必须恰好出现在对应委… |
-| ISLAND-27 | 储能与供能设施结构、绝对范围合法 | 当前储能落在[0, power_storage_max]；三个供能列表结构固定(副反应炉2项、其他清洁能源3项、蓄电池 3项)；所有数量与已用扩展位计数非负 |
-| ISLAND-28 | 主供能调控员槽位有效且不重复 | main_power_facility_operator_ids是固定4槽(火/水/风/光)，每个非0值必须是存在的角色且 work.work_type==11，四槽互不重复 |
+| ISLAND-27 | 储能与供能设施结构、绝对范围合法 | base.power_storage 在[0, 最大储能]内、clean 与 batteries 各有 3 项、副反应炉与各设施数量都是非负整数 |
+| ISLAND-28 | 主供能调控员槽位有效且不重复 | base.power 的 main_operators 是火/水/风/光 4 槽、每个非0值是 work.work_type==11 的现有角色、4 槽互不重复 |
 | ISLAND-29 | 监狱长引用与囚犯数据自洽 | current_warden_id为0或指向一名存在的、work.work_type==191的角色；每个囚犯id必须存在，逃脱概率 落在0..100 |
 | ISLAND-30 | 设施损坏数据与检修分派自洽 | facility_damage_data的键必须是合法场景路径、值为正整数(<=0时代码会pop)；maintenance_place的键 必须是存在的、work.work_type==21的角色，值必须是合法场景路径 |
 | ISLAND-31 | 访客集合与待确认招募集合合法 | visitor_info是dict，键均为存在的角色，访客数不超过visitor_max；recruited_id是集合、不含0、 成员均存在，且与已招募名单不相交 |

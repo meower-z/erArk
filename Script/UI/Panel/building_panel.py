@@ -10,7 +10,7 @@ from Script.Core import (
 )
 from Script.Design import basement
 from Script.UI.Moudle import draw
-from Script.UI.Panel import manage_power_system_panel
+from Script.Modules.domains import power_supply
 from Script.Config import game_config, normal_config
 
 cache: game_type.Cache = cache_control.cache
@@ -53,12 +53,8 @@ class Building_Panel:
         while 1:
             return_list = []
             title_draw.draw()
-            power_consumption = (
-                manage_power_system_panel.get_theoretical_power_consumption()
-            )
-            power_generation = (
-                manage_power_system_panel.get_theoretical_power_generation()
-            )
+            power_consumption = power_supply.power_consumption()
+            power_generation = power_supply.power_generation()
 
             # 绘制主面板
             now_draw: draw.CenterDraw | draw.CenterButton
@@ -189,12 +185,8 @@ class Building_Panel:
         Keyword arguments:
         facility_cid -- 建筑效果编号
         """
-        power_consumption = (
-            manage_power_system_panel.get_theoretical_power_consumption()
-        )
-        power_generation = (
-            manage_power_system_panel.get_theoretical_power_generation()
-        )
+        power_consumption = power_supply.power_consumption()
+        power_generation = power_supply.power_generation()
 
         while 1:
             return_list = []

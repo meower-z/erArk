@@ -22,6 +22,7 @@ from typing import Any
 
 from Script.Core import cache_control
 from Script.Config import game_config
+from Script.Modules.domains import power
 from Script.System.Dormitory_System import common as dorm_common
 from ..check_registry import CheckFailure, register_check, make_failure
 
@@ -519,7 +520,6 @@ _WORK_LIST_FIELDS = (
     ("production_worker_ids", 121, False),
     ("hr_operator_ids_list", 71, False),
     ("trade_operator_ids_list", 111, True),
-    ("power_operator_ids_list", 11, False),
     ("herb_garden_operator_ids", 161, False),
     ("green_house_operator_ids", 162, False),
 )
@@ -1501,100 +1501,32 @@ def check_island_27_power_structure_and_range() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验当前储能落在[0, power_storage_max]；三个供能列表结构固定(副反应炉2项、其他清洁能源3项、蓄电池
-        3项)；所有数量与已用扩展位计数非负。不加"设施数<=基础位+当前模块库存"等上界断言——交易卖出不检查
-        已用计数，可把模块库存卖到低于已建设施需求，这类上界只适合做经营告警，此处不实现
+        校验 base.power_storage 在[0, 最大储能]内、clean 与 batteries 各有 3 项、副反应炉与各设施数量都是非负整数。
+        不加"设施数<=基础位+当前模块库存"等上界断言。交易卖出不看已建设施，可把模块库存卖到低于已建设施的需求。
+        这类上界只适合做经营告警
     """
-    cache = cache_control.cache
-    ri = cache.rhodes_island
-    failures = []
-    power_storage = getattr(ri, "power_storage", None)
-    power_storage_max = getattr(ri, "power_storage_max", None)
-    if (
-        power_storage is None
-        or power_storage_max is None
-        or not (0 <= power_storage <= power_storage_max)
-    ):
-        failures.append(
-            make_failure(
-                "ISLAND-27",
-                "储能与供能设施结构、绝对范围合法",
-                f"ri.power_storage={power_storage}，ri.power_storage_max={power_storage_max}，超出[0, max]范围",
-                [],
-            )
+    plant = power.plant()
+    stored, top = power.storage(), power.storage_max()
+    problems = []
+    if not 0 <= stored <= top:
+        problems.append(
+            f"base.power_storage={stored}，最大储能={top}，超出[0, max]范围"
         )
-    orundum_reactor_list = getattr(ri, "orundum_reactor_list", None)
-    other_power_facility_list = getattr(ri, "other_power_facility_list", None)
-    battery_list = getattr(ri, "battery_list", None)
-    if not (
-        isinstance(orundum_reactor_list, list)
-        and len(orundum_reactor_list) == 2
-    ):
-        failures.append(
-            make_failure(
-                "ISLAND-27",
-                "储能与供能设施结构、绝对范围合法",
-                f"ri.orundum_reactor_list结构非法：{orundum_reactor_list!r}，期望长度2",
-                [],
+    for name in ("clean", "batteries"):
+        if len(plant[name]) != 3:
+            problems.append(
+                f"base.power.{name}结构非法：{plant[name]!r}，期望长度3"
             )
+    counts = [plant["aux_reactors"], *plant["clean"], *plant["batteries"]]
+    bad = [n for n in counts if type(n) is not int or n < 0]
+    if bad:
+        problems.append(
+            f"供能设施中存在非法数量={bad}，base.power={dict(plant)}"
         )
-    if not (
-        isinstance(other_power_facility_list, list)
-        and len(other_power_facility_list) == 3
-    ):
-        failures.append(
-            make_failure(
-                "ISLAND-27",
-                "储能与供能设施结构、绝对范围合法",
-                f"ri.other_power_facility_list结构非法：{other_power_facility_list!r}，期望长度3",
-                [],
-            )
-        )
-    if not (isinstance(battery_list, list) and len(battery_list) == 3):
-        failures.append(
-            make_failure(
-                "ISLAND-27",
-                "储能与供能设施结构、绝对范围合法",
-                f"ri.battery_list结构非法：{battery_list!r}，期望长度3",
-                [],
-            )
-        )
-    all_counts = []
-    for lst in (battery_list, other_power_facility_list, orundum_reactor_list):
-        if isinstance(lst, list):
-            all_counts.extend(lst)
-    negative_or_bad = [n for n in all_counts if type(n) is not int or n < 0]
-    if negative_or_bad:
-        failures.append(
-            make_failure(
-                "ISLAND-27",
-                "储能与供能设施结构、绝对范围合法",
-                f"供能列表中存在非法数量={negative_or_bad}，battery_list={battery_list}，"
-                f"other_power_facility_list={other_power_facility_list}，orundum_reactor_list={orundum_reactor_list}",
-                [],
-            )
-        )
-    used_clean = getattr(ri, "now_used_extra_clean_energy_module_count", None)
-    used_battery = getattr(ri, "now_used_extra_battery_count", None)
-    if used_clean is not None and used_clean < 0:
-        failures.append(
-            make_failure(
-                "ISLAND-27",
-                "储能与供能设施结构、绝对范围合法",
-                f"ri.now_used_extra_clean_energy_module_count={used_clean}为负",
-                [],
-            )
-        )
-    if used_battery is not None and used_battery < 0:
-        failures.append(
-            make_failure(
-                "ISLAND-27",
-                "储能与供能设施结构、绝对范围合法",
-                f"ri.now_used_extra_battery_count={used_battery}为负",
-                [],
-            )
-        )
-    return failures
+    return [
+        make_failure("ISLAND-27", "储能与供能设施结构、绝对范围合法", text, [])
+        for text in problems
+    ]
 
 
 @register_check("ISLAND-28", "主供能调控员槽位有效且不重复")
@@ -1605,19 +1537,19 @@ def check_island_28_main_power_operator_slots() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验main_power_facility_operator_ids是固定4槽(火/水/风/光)，每个非0值必须是存在的角色且
-        work.work_type==11，四槽互不重复。不要求在npc_id_got（调控员可被派外勤，岗位与槽位都保留）
+        校验 base.power 的 main_operators 是火/水/风/光 4 槽、每个非0值是 work.work_type==11 的现有角色、4 槽互不重复。
+        不要求角色在 npc_id_got 里，派外勤的调控员保留岗位与槽位
     """
     cache = cache_control.cache
     ri = cache.rhodes_island
     cd = cache.character_data
-    slots = getattr(ri, "main_power_facility_operator_ids", None)
-    if not (isinstance(slots, list) and len(slots) == 4):
+    slots = power.plant()["main_operators"]
+    if len(slots) != 4:
         return [
             make_failure(
                 "ISLAND-28",
                 "主供能调控员槽位有效且不重复",
-                f"main_power_facility_operator_ids结构非法：{slots!r}，期望长度4的list",
+                f"base.power.main_operators结构非法：{slots!r}，期望长度4",
                 [],
             )
         ]
@@ -1639,7 +1571,6 @@ def check_island_28_main_power_operator_slots() -> list[CheckFailure]:
                 "ISLAND-28",
                 "主供能调控员槽位有效且不重复",
                 f"四槽全量={slots}，重复占用cid={sorted(dup)}，非法槽位cid={illegal}，明细={detail}，"
-                f"power_operator_ids_list={getattr(ri, 'power_operator_ids_list', None)}，"
                 f"all_work_npc_set.get(11)={getattr(ri, 'all_work_npc_set', {}).get(11)}",
                 sorted(set(dup) | set(illegal)),
             )
