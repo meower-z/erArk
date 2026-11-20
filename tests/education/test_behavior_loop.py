@@ -99,8 +99,8 @@ if not daughter_list:
             born_days=300,
             position=SCENE_EDU_ENTRY,
         )
-        cd.hit_point_max = cd.hit_point = 1000
-        cd.mana_point_max = cd.mana_point = 1000
+        kernel_data.set_needs(cd.cid, hit_max=1000, hit=1000)
+        kernel_data.set_needs(cd.cid, mana_max=1000, mana=1000)
         clothing.get_underwear(9001 + index)
     all_daughter_list = growth_handle.get_student_candidate_list()
     daughter_list = [
@@ -128,14 +128,14 @@ def clear_need(cid: int) -> None:
     """
     cd = cache.character_data[cid]
     kernel_data.set_needs(cid, hunger=0, urine=0, tired=0)
-    cd.sleep_point = 0
+    kernel_data.set_needs(cid, sleep=0)
     for name in ("eat_food", "rest", "pee"):
         if hasattr(cd.sp_flag, name):
             setattr(cd.sp_flag, name, 0)
     cd.sp_flag.sleep = False
     cd.sp_flag.tired = False
-    cd.hit_point = cd.hit_point_max
-    cd.mana_point = cd.mana_point_max
+    kernel_data.set_needs(cid, hit=kernel_data.needs_of(cid)["hit_max"])
+    kernel_data.set_needs(cid, mana=kernel_data.needs_of(cid)["mana_max"])
 
 
 teacher_list = schedule_handle.get_teacher_candidate_list()

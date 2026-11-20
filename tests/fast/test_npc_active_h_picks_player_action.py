@@ -14,9 +14,10 @@ from Script.Config import game_config
 from Script.Core import constant
 from Script.Design import update
 from Script.Kernel import core
-from Script.Modules.gameplay_resolution import actions, plan_queue
+from Script.Modules.gameplay_resolution import plan_queue
 from Script.Modules.tk_ui import player_pick
 from Script.System.Instruct_System import handle_instruct, see_instruct_panel
+from tests import kernel_data
 from tests.fast.base import FastTestCase
 
 LOADED_FIRST = (update, handle_instruct)
@@ -37,7 +38,7 @@ class NpcActiveHPicksPlayerActionTest(FastTestCase):
         self.player.target_character_id = NPC
         self.player.sp_flag.is_h = True
         self.npc.sp_flag.is_h = True
-        core.reset_state(actions.state_from_cache())
+        core.reset_state(kernel_data.reprojected(core.state()))
         patch = mock.patch.object(
             see_instruct_panel,
             "judge_single_instruct_filter",

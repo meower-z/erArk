@@ -484,6 +484,7 @@ class MinimalWorld:
         """
         from Script.Core import game_type
         from Script.Design import attr_calculation, game_time, map_handle
+        from tests import kernel_data
 
         cache = self.cache
         if cid in cache.character_data:
@@ -522,14 +523,13 @@ class MinimalWorld:
         cd.assistant_services = attr_calculation.get_assistant_services_zero()
         cd.favorability = {0: 0}
         cd.talent[121] = 1
-        cd.hit_point_max = cd.hit_point = 100
-        cd.mana_point_max = cd.mana_point = 100
         cd.dormitory = map_handle.get_map_system_path_str_for_list(
             DEFAULT_SCENE
         )
         cd.behavior.start_time = game_time.now()
         cd.position = position
         cache.character_data[cid] = cd
+        kernel_data.set_needs(cid, hit_max=100, hit=100, mana_max=100, mana=100)
         try:
             self._check_chara(cid, naked)
         except FixtureError:

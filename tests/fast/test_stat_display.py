@@ -21,13 +21,15 @@ PLAIN = frozenset(
         "sanity_point",
         "eja_point",
         "semen_point",
-        "sleep_point",
-        "drunk_point",
         "absorbed_total_semen",
         "today_sanity_point_cost",
     }
 )
 """ 存 Num 的属性名（读到属性本身就是数值） """
+WHOLE_NEEDS = frozenset(
+    {"hit_max", "mana_max", "sanity_max", "angry", "desire"}
+)
+""" body.needs 里只存 int 的项，显示时不用包 shown """
 PASS_THROUGH = frozenset({"int", "float", "round", "abs", "max", "min"})
 """ 数值穿过它们仍然原样变成文字的函数 """
 
@@ -38,7 +40,8 @@ def is_num_read(node: ast.AST) -> bool:
     Keyword arguments:
     node -- 表达式
     Return arguments:
-    bool -- 是 PLAIN 里的属性、needs.of(...)[...]（生理需求）、status_data[...] 或 body_semen[...][1] 时为真
+    bool -- 是 PLAIN 里的属性、needs.of(...)[...]（下标是 WHOLE_NEEDS 里的常量时除外）、status_data[...]
+    或 body_semen[...][1] 时为真
     """
     if isinstance(node, ast.Attribute):
         return node.attr in PLAIN
@@ -52,7 +55,10 @@ def is_num_read(node: ast.AST) -> bool:
         and isinstance(base.func.value, ast.Name)
         and base.func.value.id == "needs"
     ):
-        return True
+        stat = node.slice
+        return not (
+            isinstance(stat, ast.Constant) and stat.value in WHOLE_NEEDS
+        )
     if isinstance(base, ast.Attribute) and base.attr == "status_data":
         return True
     return (

@@ -43,6 +43,7 @@ from Script.Settle import default as settle_default
 from Script.Settle import common_default
 from Script.System.Instruct_System import handle_instruct
 from Script.Design import character_behavior, second_behavior
+from tests import kernel_data
 
 open_all_classroom()
 clear_schedules()
@@ -70,7 +71,6 @@ student_b = make_character(
     born_days=120,
     position=classroom_path(ROOM1),
 )
-BE = constant_effect.BehaviorEffect
 SE = constant_effect.SecondEffect
 EFFECT = constant.settle_behavior_effect_data
 SECOND = constant.settle_second_behavior_effect_data
@@ -994,8 +994,8 @@ student_b.behavior.behavior_id = constant.Behavior.ATTENT_CLASS
 student_b.behavior.start_time = period_time(0) + datetime.timedelta(minutes=40)
 student_b.behavior.duration = 5
 for _one in (student_a, student_b):
-    _one.hit_point_max = _one.hit_point = 100
-    _one.mana_point_max = _one.mana_point = 100
+    kernel_data.set_needs(_one.cid, hit_max=100, hit=100)
+    kernel_data.set_needs(_one.cid, mana_max=100, mana=100)
     _one.target_character_id = _one.cid
 reset_mark(201, 202)
 student_a_growth.last_absent_period = []
@@ -1006,31 +1006,31 @@ try:
     EFFECT[512](101, 45, change, game_time.now())
 finally:
     character_behavior.judge_character_status = _stub_judge
+_hit_a, _hit_b = (kernel_data.needs_of(cid)["hit"] for cid in (201, 202))
 check(
     (
         "L6 复审补：教师晚到开讲，512 跳过听课节次不同的女儿A，没有手动结算她下一节的听课行为——体力不变、"
         "也没写去重标记（此前体力 100 → 1）"
     ),
-    student_a.hit_point == 100 and student_a_growth.last_attend_period == [],
-    (student_a.hit_point, student_a_growth.last_attend_period),
+    _hit_a == 100 and student_a_growth.last_attend_period == [],
+    (_hit_a, student_a_growth.last_attend_period),
 )
 check(
     "L6 复审补对照：同在第 0 节听课的女儿B 照常结算这一节（写上本节标记），512 对她走的是真实的 judge_character_status",
     student_b_growth.last_attend_period == [_l6_today, 0],
-    (student_b.hit_point, student_b_growth.last_attend_period),
+    (_hit_b, student_b_growth.last_attend_period),
 )
-_real_judge_character_status(201)
+kernel_data.written(_real_judge_character_status, 201)
 check(
     (
         "L6 复审补对照：对女儿A 直接跑一遍真实的 judge_character_status（改前 512 对她做的事），"
         "体力就会掉——上面的「体力不变」不是恒真"
     ),
-    student_a.hit_point < 100,
-    student_a.hit_point,
+    kernel_data.needs_of(student_a.cid)["hit"] < 100,
+    kernel_data.needs_of(student_a.cid)["hit"],
 )
 for _one in (student_a, student_b):
-    _one.hit_point = 100
-    _one.mana_point = 100
+    kernel_data.set_needs(_one.cid, hit=100, mana=100)
     _one.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
 teacher.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
 move_to(101, classroom_path(ROOM1))

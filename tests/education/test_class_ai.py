@@ -408,12 +408,12 @@ schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
 check(
     "本节有课 → ATTEND", class_ai.get_course_stage(201) == E.COURSE_STAGE_ATTEND
 )
-student.hit_point = 10
+kernel_data.set_needs(student.cid, hit=10)
 check(
     "体力 < 30% → ABSENT_HP",
     class_ai.get_course_stage(201) == E.COURSE_STAGE_ABSENT_HP,
 )
-student.hit_point = 100
+kernel_data.set_needs(student.cid, hit=100)
 growth_handle.get_child_growth(201).skip_class_flag = True
 growth_handle.get_child_growth(201).skip_class_day = game_time.now().toordinal()
 check(
@@ -451,7 +451,7 @@ check(
 cache.rhodes_island.temp_sex_class = {}
 set_time(period_time(0))
 sex_class_handle.set_temp_class(_today, 0, ROOM_P, 70, must_attend=[201])
-student.hit_point = 10
+kernel_data.set_needs(student.cid, hit=10)
 growth_handle.get_child_growth(201).skip_class_flag = True
 growth_handle.get_child_growth(201).skip_class_day = game_time.now().toordinal()
 class_ai.roll_skip_class = lambda character_id, now_time=None: True
@@ -461,7 +461,7 @@ check(
 )
 class_ai.roll_skip_class = _orig_roll
 growth_handle.get_child_growth(201).skip_class_flag = False
-student.hit_point = 100
+kernel_data.set_needs(student.cid, hit=100)
 cache.rhodes_island.temp_sex_class = {}
 schedule_handle.set_selected_course(101, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
 check(
@@ -541,7 +541,7 @@ schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
 
 section("整链派发：两道闸（220805 / 220810）")
 move_to(201, classroom_path(ROOM1))
-student.hit_point = 10
+kernel_data.set_needs(student.cid, hit=10)
 _absent = growth_handle.get_child_growth(201).absent_count
 check(
     "体力 < 30% → 721 记缺课并休息",
@@ -562,7 +562,7 @@ check(
     "体力缺课不置翘课 flag",
     not growth_handle.get_child_growth(201).skip_class_flag,
 )
-student.hit_point = 100
+kernel_data.set_needs(student.cid, hit=100)
 # 这一节已记了缺课的不再计出勤（Plan 30 §3.4）；后面各段仍在同一天的第 1 节里验出勤，清掉缺课标记
 growth_handle.get_child_growth(201).last_absent_period = []
 growth_handle.get_child_growth(201).skip_class_flag = True
@@ -588,7 +588,7 @@ schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_PRACTICE, ROOM_P)
 check("必修判定成立", class_ai.judge_must_attend_sex_class(201))
 check("非必修的人不成立", not class_ai.judge_must_attend_sex_class(202))
 move_to(201, classroom_path(ROOM_P))
-student.hit_point = 10
+kernel_data.set_needs(student.cid, hit=10)
 _absent = growth_handle.get_child_growth(201).absent_count
 sm = dispatch(201)
 check(
@@ -597,7 +597,7 @@ check(
     and growth_handle.get_child_growth(201).absent_count == _absent,
     sm,
 )
-student.hit_point = 100
+kernel_data.set_needs(student.cid, hit=100)
 class_ai.roll_skip_class = lambda character_id, now_time=None: True
 move_to(201, classroom_path(ROOM_P))
 check("必修 + 掷中翘课：不翘课", dispatch(201) == SM.WORK_ATTENT_CLASS)
@@ -1234,7 +1234,7 @@ clear_schedules()
 
 section("Plan 25 §3.3：教师可用性对齐授课行（醉酒 / 催眠）")
 set_time(period_time(0))
-teacher.drunk_point = 99999
+kernel_data.set_needs(teacher.cid, drunk=99999)
 check(
     "醉到烂醉的教师不可用（授课行的 normal 前提不成立）",
     not teacher_available(),
@@ -1250,7 +1250,7 @@ check(
     _student_sm == SM.EDUCATION_SELF_STUDY and _teacher_sm != SM.WORK_TEACH,
     (_student_sm, _teacher_sm),
 )
-teacher.drunk_point = 0
+kernel_data.set_needs(teacher.cid, drunk=0)
 # 醉酒时派发的是睡觉：先把她叫起来，下面只验催眠与恢复
 teacher.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
 teacher.sp_flag.sleep = False
@@ -1274,7 +1274,7 @@ check(
         teacher.sp_flag.sleep,
         teacher.sp_flag.is_h,
         teacher.behavior.behavior_id,
-        teacher.drunk_point,
+        kernel_data.needs_of(teacher.cid)["drunk"],
         [
             handle_premise.handle_premise(f"normal_{n}", 101)
             for n in range(1, 8)
@@ -1582,9 +1582,9 @@ def teach_pull(cid: int) -> bool:
 
 
 check("正常学生被拉进听课", teach_pull(201))
-student.hit_point = 10
+kernel_data.set_needs(student.cid, hit=10)
 check("体力 < 30% 的学生不拉（她自己决策时走 721 缺课）", not teach_pull(201))
-student.hit_point = 100
+kernel_data.set_needs(student.cid, hit=100)
 class_ai.roll_skip_class = lambda character_id, now_time=None: True
 check("本节掷中翘课的学生不拉", not teach_pull(201))
 class_ai.roll_skip_class = _orig_roll
@@ -1594,12 +1594,12 @@ student.work.work_type = 152
 sex_class_handle.set_temp_class(
     period_time(0).date().toordinal(), 0, ROOM1, 70, must_attend=[201]
 )
-student.hit_point = 10
+kernel_data.set_needs(student.cid, hit=10)
 check(
     "必修生体力不足也该来（豁免两道闸）",
     class_ai.judge_student_join_class(201, ROOM1, period_time(0)),
 )
-student.hit_point = 100
+kernel_data.set_needs(student.cid, hit=100)
 check(
     "这一节课表指向别的教室的不算",
     not class_ai.judge_student_join_class(201, _("理论教室二"), period_time(0)),
@@ -1956,7 +1956,7 @@ check(
     schedule_handle.get_now_course(201) is None
     and class_ai.get_course_stage(201) == E.COURSE_STAGE_NONE,
 )
-student.hit_point = 10
+kernel_data.set_needs(student.cid, hit=10)
 _absent = growth_handle.get_child_growth(201).absent_count
 move_to(201, SCENE_DORM)
 sm = dispatch(201)
@@ -1966,7 +1966,7 @@ check(
     and growth_handle.get_child_growth(201).absent_count == _absent,
     sm,
 )
-student.hit_point = 100
+kernel_data.set_needs(student.cid, hit=100)
 class_ai.get_skip_class_rate = lambda character_id: 1.0
 move_to(201, SCENE_DORM)
 sm = dispatch(201)
@@ -2178,8 +2178,8 @@ section(
 _rate_before = class_ai.get_skip_class_rate
 set_time(period_time(0))
 prepare_ai(201)
-student.hit_point_max = 100
-student.hit_point = 100
+kernel_data.set_needs(student.cid, hit_max=100)
+kernel_data.set_needs(student.cid, hit=100)
 _g = growth_handle.get_child_growth(201)
 _g.selected_course = {}
 for _p in range(8):
@@ -2235,7 +2235,7 @@ check(
     (_g.absent_count - _absent, _g.skip_count - _skip),
 )
 _g.skip_class_flag = False
-student.hit_point = 10
+kernel_data.set_needs(student.cid, hit=10)
 move_to(201, _pe_place)
 sm = dispatch(201, period_time(3))
 check(
@@ -2244,7 +2244,7 @@ check(
     and _g.absent_count == _absent + 4
     and _g.skip_count == _skip + 3,
 )
-student.hit_point = 100
+kernel_data.set_needs(student.cid, hit=100)
 class_ai.get_skip_class_rate = lambda character_id: 1.0
 move_to(201, SCENE_DORM)
 sm = dispatch(201, period_time(3) + datetime.timedelta(minutes=30))
@@ -2256,11 +2256,11 @@ check(
     (sm, _g.absent_count - _absent, _g.skip_count - _skip),
 )
 class_ai.get_skip_class_rate = lambda character_id: 0.0
-student.hit_point = 10
+kernel_data.set_needs(student.cid, hit=10)
 move_to(201, _pe_place)
 dispatch(201, period_time(4))
 _attend = _g.attend_class_count
-student.hit_point = 100
+kernel_data.set_needs(student.cid, hit=100)
 move_to(201, _pe_place)
 sm = dispatch(201, period_time(4) + datetime.timedelta(minutes=30))
 check(
@@ -2692,14 +2692,14 @@ def clear_need(cid: int) -> None:
     """
     cd = cache.character_data[cid]
     kernel_data.set_needs(cid, hunger=0, urine=0, tired=0)
-    cd.sleep_point = 0
+    kernel_data.set_needs(cid, sleep=0)
     for name in ("eat_food", "rest", "pee"):
         if hasattr(cd.sp_flag, name):
             setattr(cd.sp_flag, name, 0)
     cd.sp_flag.sleep = False
     cd.sp_flag.tired = False
-    cd.hit_point = cd.hit_point_max
-    cd.mana_point = cd.mana_point_max
+    kernel_data.set_needs(cid, hit=kernel_data.needs_of(cid)["hit_max"])
+    kernel_data.set_needs(cid, mana=kernel_data.needs_of(cid)["mana_max"])
 
 
 def run_loop_round(minute: int, npc_order: list) -> tuple:
@@ -2803,8 +2803,8 @@ def setup_h1(third_room: str) -> None:
     ):
         cd = cache.character_data[cid]
         prepare_ai(cid)
-        cd.hit_point_max = 2000
-        cd.mana_point_max = 2000
+        kernel_data.set_needs(cid, hit_max=2000)
+        kernel_data.set_needs(cid, mana_max=2000)
         cd.sp_flag.is_h = False
         cd.sp_flag.is_follow = 0
         cd.sp_flag.unconscious_h = 0
@@ -2951,8 +2951,8 @@ check(
 )
 for cid in (101, 201):
     cd = cache.character_data[cid]
-    cd.hit_point_max = cd.hit_point = 100
-    cd.mana_point_max = cd.mana_point = 100
+    kernel_data.set_needs(cd.cid, hit_max=100, hit=100)
+    kernel_data.set_needs(cd.cid, mana_max=100, mana=100)
     cd.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
     cd.behavior.duration = 0
 g31.selected_course = {}
@@ -3040,8 +3040,8 @@ def run_rt32(
     set_time(start)
     move_to(0, SCENE_DORM)
     move_to(201, place)
-    student.hit_point_max = 2000
-    student.mana_point_max = 2000
+    kernel_data.set_needs(student.cid, hit_max=2000)
+    kernel_data.set_needs(student.cid, mana_max=2000)
     student.sp_flag.is_h = False
     student.sp_flag.is_follow = 0
     student.sp_flag.unconscious_h = 0
@@ -3255,8 +3255,8 @@ clear_schedules()
 g32.selected_course = {}
 g32.last_attend_period = []
 g32.last_absent_period = []
-student.hit_point_max = student.hit_point = 100
-student.mana_point_max = student.mana_point = 100
+kernel_data.set_needs(student.cid, hit_max=100, hit=100)
+kernel_data.set_needs(student.cid, mana_max=100, mana=100)
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_PE, _("木桩房"))
 set_time(period_time(0))
 _pe32 = class_ai.get_course_place_now_or_upcoming(201)
@@ -3275,7 +3275,7 @@ check(
     and g32.last_attend_period == [period_time(0).toordinal(), 0],
     (sm, g32.last_attend_period),
 )
-student.hit_point = 10
+kernel_data.set_needs(student.cid, hit=10)
 move_to(201, _pe32)
 sm = dispatch(201, period_time(0) + datetime.timedelta(minutes=20))
 check(
@@ -3285,7 +3285,7 @@ check(
     and g32.last_absent_period == [],
     (sm, g32.absent_count - absent32, g32.last_absent_period),
 )
-student.hit_point = 100
+kernel_data.set_needs(student.cid, hit=100)
 set_time(period_time(0) + datetime.timedelta(minutes=30))
 check(
     "L7 翘课（714 调 settle_absent 带 by_skip）同理：本节已记出勤 → 返回 False，缺课与累计翘课数都不加",
@@ -3389,8 +3389,8 @@ clear_schedules()
 g32.selected_course = {}
 g32.last_attend_period = []
 g32.last_absent_period = []
-student.hit_point_max = student.hit_point = 100
-student.mana_point_max = student.mana_point = 100
+kernel_data.set_needs(student.cid, hit_max=100, hit=100)
+kernel_data.set_needs(student.cid, mana_max=100, mana=100)
 schedule_handle.set_class_cell(ROOM1, 0, 0, 45, 101)
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
 set_time(period_time(0))
@@ -3448,8 +3448,8 @@ move_to(202, classroom_path(ROOM_P))
 pl.sp_flag.is_h = False
 set_time(T1030)
 prepare_ai(202)
-child.hit_point_max = 2000
-child.mana_point_max = 2000
+kernel_data.set_needs(child.cid, hit_max=2000)
+kernel_data.set_needs(child.cid, mana_max=2000)
 child.sp_flag.is_h = False
 child.sp_flag.is_follow = 0
 child.sp_flag.unconscious_h = 0
@@ -3523,8 +3523,8 @@ check(
         child.experience.get(_l10_real_exp_id, 0) - _l10_real,
     ),
 )
-child.hit_point_max = child.hit_point = 100
-child.mana_point_max = child.mana_point = 100
+kernel_data.set_needs(child.cid, hit_max=100, hit=100)
+kernel_data.set_needs(child.cid, mana_max=100, mana=100)
 child.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
 child.behavior.duration = 0
 child_g32.selected_course = {}
@@ -3541,12 +3541,10 @@ GHOST_START = period_time(0) + datetime.timedelta(minutes=5)
 GHOST_PROBE: list[tuple[bool, bool]] = []
 """ NPC 阶段第一次处理 NPC 时（玩家阶段刚走完）的现场：(课堂模式是否开着, 是否还有 running 的实操课) """
 _orig_choose = handle_npc_ai.choose_state_machine
-_ghost_pl_point = (
-    pl.hit_point_max,
-    pl.hit_point,
-    pl.mana_point_max,
-    pl.mana_point,
-)
+_ghost_pl_point = {
+    stat: kernel_data.needs_of(pl.cid)[stat]
+    for stat in ("hit_max", "hit", "mana_max", "mana")
+}
 """ 玩家原来的体力 / 气力（上限与当前值），本段跑完还原 """
 
 
@@ -3610,12 +3608,12 @@ def setup_ghost() -> dict:
     ) in attr_calculation.get_confinement_training_setting_zero().items():
         cache.rhodes_island.confinement_training_setting.setdefault(key, value)
     pl.sp_flag.is_h = False
-    pl.hit_point_max = pl.hit_point = 2000
-    pl.mana_point_max = pl.mana_point = 2000
+    kernel_data.set_needs(pl.cid, hit_max=2000, hit=2000)
+    kernel_data.set_needs(pl.cid, mana_max=2000, mana=2000)
     child.sp_flag.is_h = False
     prepare_ai(201)
-    student.hit_point_max = 2000
-    student.mana_point_max = 2000
+    kernel_data.set_needs(student.cid, hit_max=2000)
+    kernel_data.set_needs(student.cid, mana_max=2000)
     student.sp_flag.is_h = False
     student.sp_flag.see_pl_h = False
     student.sp_flag.is_follow = 0
@@ -3718,9 +3716,7 @@ check(
     "OrphanClass" in _ghost_still,
     _ghost_still,
 )
-pl.hit_point_max, pl.hit_point, pl.mana_point_max, pl.mana_point = (
-    _ghost_pl_point
-)
+kernel_data.set_needs(pl.cid, **_ghost_pl_point)
 cache.sex_class_mode = False
 cache.group_sex_mode = False
 cache.rhodes_island.temp_sex_class = {}
@@ -3729,8 +3725,8 @@ for _cid in (0, 201, 202):
 student.sp_flag.see_pl_h = False
 for key in student.second_behavior:
     student.second_behavior[key] = 0
-student.hit_point_max = student.hit_point = 100
-student.mana_point_max = student.mana_point = 100
+kernel_data.set_needs(student.cid, hit_max=100, hit=100)
+kernel_data.set_needs(student.cid, mana_max=100, mana=100)
 student.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
 student.behavior.duration = 0
 g32.selected_course = {}
@@ -3755,8 +3751,8 @@ _NOT_HERE = "self_not_attend_sex_class_here"
 改前没有这个常量时本段照样能跑到派发那一步） """
 for _cid in (201, 202):
     _cd = cache.character_data[_cid]
-    _cd.hit_point_max = _cd.hit_point = 100
-    _cd.mana_point_max = _cd.mana_point = 100
+    kernel_data.set_needs(_cd.cid, hit_max=100, hit=100)
+    kernel_data.set_needs(_cd.cid, mana_max=100, mana=100)
     _cd.sp_flag.is_h = False
     _cd.sp_flag.see_pl_h = False
     _cd.sp_flag.go_to_join_group_sex = False
@@ -3897,8 +3893,8 @@ clear_schedules()
 
 # 收尾：还原本轮改过的夹具
 class_ai.get_skip_class_rate = _orig_rate
-student.hit_point_max = student.hit_point = 100
-student.mana_point_max = student.mana_point = 100
+kernel_data.set_needs(student.cid, hit_max=100, hit=100)
+kernel_data.set_needs(student.cid, mana_max=100, mana=100)
 student.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
 student.behavior.duration = 0
 g32.selected_course = {}

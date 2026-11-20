@@ -24,6 +24,7 @@ from Script.Kernel import core
 from Script.Modules import load_order
 from Script.Modules.gameplay_resolution import actions, intent, time_hooks
 from tests import world
+from tests import kernel_data
 from tests.fast.base import FastTestCase
 
 LOADED_FIRST = update
@@ -114,7 +115,7 @@ class ActionLifecycleTest(FastTestCase):
         )
         script[str(AMIYA)] = [kiss, wait(7)] + [wait(30)] * 3
         core.load((*load_order.LOAD_ORDER, sys.modules[__name__]))
-        core.reset_state(actions.state_from_cache())
+        core.reset_state(kernel_data.reprojected(core.state()))
         ticks = mock.patch.object(time_hooks, "tick_one", side_effect=self.over)
         ticks.start()
         self.addCleanup(ticks.stop)

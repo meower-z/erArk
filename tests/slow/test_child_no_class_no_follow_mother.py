@@ -67,7 +67,7 @@ class ChildStagesOfflineTest(SlowTestCase):
         """出生后与长成幼女后不在任何场景、不在 npc_id_got、不上学；长成学员后上线、成年、上学"""
         from Script.Design import game_time
 
-        from Script.Design import character_handle, talk
+        from Script.Design import talk
         from Script.System.Education_System import (
             education_constant,
             growth_handle,
@@ -82,9 +82,7 @@ class ChildStagesOfflineTest(SlowTestCase):
             setattr, talk, "must_show_talk_check", talk.must_show_talk_check
         )
         talk.must_show_talk_check = lambda character_id: None
-        child_id = character_handle.born_new_character(
-            self.mother_id, "测试女儿"
-        )
+        child_id = kernel_data.born(self.mother_id, "测试女儿")
         child = self.cache.character_data[child_id]
         child.pregnancy.born_time = game_time.now()
         self.assertEqual(child.talent[BABY], 1, "出生时是婴儿")
@@ -160,7 +158,7 @@ class ChildStagesOfflineTest(SlowTestCase):
 
         import random
 
-        from Script.Design import character_handle, talk
+        from Script.Design import talk
         from Script.System.Education_System import (
             growth_event_handle,
             growth_handle,
@@ -175,9 +173,7 @@ class ChildStagesOfflineTest(SlowTestCase):
             setattr, talk, "must_show_talk_check", talk.must_show_talk_check
         )
         talk.must_show_talk_check = lambda character_id: None
-        child_id = character_handle.born_new_character(
-            self.mother_id, "测试女儿"
-        )
+        child_id = kernel_data.born(self.mother_id, "测试女儿")
         child = self.cache.character_data[child_id]
         child.pregnancy.born_time = game_time.now()
         self.mother.talent[REARING_TALENT] = 1

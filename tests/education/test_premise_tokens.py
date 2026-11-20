@@ -36,6 +36,7 @@ from _bootstrap import (
 )
 from Script.Design import second_behavior
 from Script.Design import handle_ability
+from tests import kernel_data
 
 open_all_classroom()
 clear_schedules()
@@ -374,7 +375,6 @@ sex_class_handle.end_sex_class()
 cache.sex_class_mode = False
 
 section("实习带教前提")
-intern_place = None
 schedule_handle.set_selected_course(
     201, game_time.now().weekday(), 0, E.COURSE_TYPE_INTERN, intern_work
 )
@@ -480,14 +480,14 @@ student.talent[103] = 0
 student.talent[104] = 1
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_INTEREST, 99999)
 _ct_interest = f"CVP_A1_CourseType|{E.COURSE_TYPE_INTEREST}_E_1"
-student.hit_point = 10
+kernel_data.set_needs(student.cid, hit=10)
 check(
     "排着不存在的兴趣课：CVP CourseType 不成立，照常上课 / 体力缺课两个学生前提都为 0（此前都按有课判）",
     HP(_ct_interest, 201) == 0
     and HP("self_course_attend", 201) == 0
     and HP("self_course_absent_by_hp", 201) == 0,
 )
-student.hit_point = 100
+kernel_data.set_needs(student.cid, hit=100)
 student.talent[104] = 0
 student.talent[103] = 1
 schedule_handle.set_selected_course(

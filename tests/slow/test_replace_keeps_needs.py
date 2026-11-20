@@ -1,11 +1,13 @@
 # -*- coding: UTF-8 -*-
 """
-角色替换时生理需求与主调控员跟到新id
-====================================
+角色替换时 body.needs 与主调控员跟到新id
+========================================
 开新游戏，取一名在场干员当旧角色，一名不在场角色的id当新id（从存档属性表的角色表里删掉它），按这个映射跑读档的角色替换。
-- 当前存档时，新id的生理需求（body.needs）四项都等于旧角色的。
+- 当前存档：新id的 body.needs 里体力与气力上限取新id的模板，醉酒为 0，其余各项等于旧角色的。
 - 主调控员是旧角色时，替换后 base.power 里的主调控员是新id。
-- 旧存档时，旧角色对象带着疲劳、饥饿、尿意属性，这些属性抄到新角色对象上，留给读档后面的 upgrade.adopt_v0。
+- 旧存档：旧角色对象带着疲劳、饥饿、尿意属性时，这些属性抄到新角色对象上，留给读档后面的 upgrade.adopt_v0。
+- 版本 1 与 2 的存档：疲劳、饥饿、尿意、乳汁在 GameState 里，旧角色对象带着体力等十项属性。
+  新角色对象抄过属性、再经读档后面的 upgrade.adopt_pickled 写进 body.needs 之后，与当前存档得到的相同。
 """
 
 import importlib
@@ -19,8 +21,20 @@ NEEDS = {
     "hunger": 100,
     "urine": 61,
     "milk": Fraction(37, 8),
+    "hit": Fraction(901, 2),
+    "hit_max": 1500,
+    "mana": 300,
+    "mana_max": 1200,
+    "sanity": 40,
+    "sanity_max": 90,
+    "angry": 20,
+    "sleep": Fraction(10, 3),
+    "desire": 55,
+    "drunk": 30,
 }
-""" 旧角色的生理需求 """
+""" 旧角色的十四项数值。版本 1 的存档用例里，其中十项是旧角色对象的属性，GS1_NEEDS 的四项写进 body.needs """
+GS1_NEEDS = ("tired", "hunger", "urine", "milk")
+""" 版本 1 的存档里已在 GameState（文件 "2"）里的四项 """
 
 
 def game(name: str) -> ModuleType:
@@ -53,15 +67,40 @@ class ReplaceKeepsNeedsTest(SlowTestCase):
         )
         self.assertEqual(count, 1)
 
+    def template_maxima(self) -> dict[str, int]:
+        """新id模板的体力与气力上限，键是 body.needs 的项"""
+        tem = self.cache.npc_tem_data[self.new]
+        return {"hit_max": tem.Hp, "mana_max": tem.Mp}
+
     def test_current_save_moves_needs(self) -> None:
-        """当前存档：新id的生理需求等于旧角色的"""
+        """当前存档：新id的体力与气力上限取模板，醉酒为 0，其余各项等于旧角色的"""
         core = game("Script.Kernel.core")
         needs = game("Script.Modules.domains.needs")
         working = game("Script.Modules.gameplay_resolution.working")
         with working.based_on(core.state()):
             needs.set(self.old, **NEEDS)
             self.replace()
-            self.assertEqual(dict(needs.of(self.new)), NEEDS)
+            got = dict(needs.of(self.new))
+        want = {**NEEDS, **self.template_maxima(), "drunk": 0}
+        self.assertEqual(got, want)
+
+    def test_pickled_stats_copy_attributes(self) -> None:
+        """版本 1 与 2 的存档：新角色对象抄过属性、再经 adopt_pickled 写进 body.needs 之后，与当前存档得到的相同"""
+        core = game("Script.Kernel.core")
+        needs = game("Script.Modules.domains.needs")
+        upgrade = game("Script.Modules.save_load.upgrade")
+        working = game("Script.Modules.gameplay_resolution.working")
+        old = self.loaded["character_data"][self.old]
+        for name, stat in upgrade.PICKLED_NEEDS.items():
+            setattr(old, name, NEEDS[stat])
+        with working.based_on(core.state()):
+            needs.set(self.old, **{k: NEEDS[k] for k in GS1_NEEDS})
+            self.replace()
+            new = self.loaded["character_data"][self.new]
+            upgrade.adopt_pickled({"character_data": {self.new: new}})
+            got = dict(needs.of(self.new))
+        want = {**NEEDS, **self.template_maxima(), "drunk": 0}
+        self.assertEqual(got, want)
 
     def test_main_power_operator_follows_id(self) -> None:
         """主调控员是旧角色时，角色替换后主调控员是新id"""

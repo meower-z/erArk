@@ -6,6 +6,8 @@
 - 草稿那种 {"$frac": [3, 4]} 与带 "$frac" 的两键映射原样读回。只有一个键 "$frac" 且值是字符串的映射不能写。
 - 进行中的玩家行动带着草稿与选择时的写入，写进文件再读回不变。
 - 存档头有标记时，文件 "2" 缺失、截断、标记不同或版本过高都拒绝读档，不当旧存档读。
+- 版本 1 的文件读回时升到当前版本：角色数据与 roster.offstage 里的每份 body.needs 补上体力、气力、理智与它们的上限，
+  愤怒、熟睡、欲望、醉酒，都取默认值 0，原有的项不变。
 存档都写在临时目录里（index.SAVE_DIR 换成它）。
 """
 
@@ -131,3 +133,34 @@ class SaveCodecTest(FastTestCase):
                         f.write(body)
                 with self.assertRaisesRegex(kernel_state.SaveRefused, SAVE_ID):
                     kernel_state.read(SAVE_ID)
+
+    def test_version_1_gains_the_new_stats(self) -> None:
+        """版本 1 的文件读回后版本为当前版本，玩家与 roster.offstage 里的 body.needs 补上十项默认值 0，原有的项不变"""
+        path = os.path.join(index.path(SAVE_ID), kernel_state.SAVE_FILE)
+        parked: core.JSON = {
+            "7": {"body.needs": {"tired": 3, "hunger": Fraction(5, 2)}}
+        }
+        state({"roster.offstage": parked})
+        self.write()
+        with open(path, encoding="utf-8") as f:
+            text = f.read()
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(
+                text.replace(f'"version": {upgrade.CURRENT}', '"version": 1', 1)
+            )
+        loaded, version = kernel_state.read(SAVE_ID)
+        self.assertEqual(version, upgrade.CURRENT)
+        assert loaded is not None
+        added = dict.fromkeys(upgrade.PICKLED_NEEDS.values(), 0)
+        player = loaded.characters["0"].data["body.needs"]
+        offstage = loaded.data["roster.offstage"]
+        assert isinstance(player, MappingProxyType)
+        assert isinstance(offstage, MappingProxyType)
+        self.assertEqual(
+            dict(player),
+            {**added, "tired": BIG, "urine": Fraction(3, 1), "hunger": 12},
+        )
+        self.assertEqual(
+            dict(offstage["7"]["body.needs"]),
+            {**added, "tired": 3, "hunger": Fraction(5, 2)},
+        )

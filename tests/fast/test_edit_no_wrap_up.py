@@ -14,8 +14,9 @@ from Script.Core import cache_control
 from Script.Design import character_behavior, update
 from Script.Kernel import core
 from Script.Modules import load_order
-from Script.Modules.gameplay_resolution import actions, time_hooks
+from Script.Modules.gameplay_resolution import time_hooks
 from Script.Modules.tk_ui import player_pick
+from tests import kernel_data
 from tests.fast.base import FastTestCase
 
 LOADED_FIRST = update
@@ -34,7 +35,7 @@ class EditNoWrapUpTest(FastTestCase):
         super().setUp()
         self.world.chara(0, "博士")
         core.load(load_order.LOAD_ORDER)
-        core.reset_state(actions.state_from_cache())
+        core.reset_state(kernel_data.reprojected(core.state()))
         self.log: list[tuple[str, int]] = []
         choices = [self.edit, self.wait]
 

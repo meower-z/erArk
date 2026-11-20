@@ -16,13 +16,13 @@ from Script.Core import constant
 from Script.Design import update
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import (
-    actions,
     intent,
     player_starters,
     start_gate,
 )
 from Script.Modules.tk_ui import player_pick
 from Script.System.Instruct_System import handle_instruct
+from tests import kernel_data
 from tests.fast.base import FastTestCase
 
 LOADED_FIRST = (update, handle_instruct)
@@ -41,7 +41,7 @@ class FailedJudgeMinutesTest(FastTestCase):
         self.player = self.world.chara(0, "博士")
         self.world.chara(NPC, "干员")
         self.player.target_character_id = NPC
-        core.reset_state(actions.state_from_cache())
+        core.reset_state(kernel_data.reprojected(core.state()))
 
     def test_failed_judge_takes_failure_minutes(self) -> None:
         """邀请H没过：开始的是邀请H失败，内核时长与名义分钟数都是它的时长"""

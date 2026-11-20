@@ -12,6 +12,7 @@ from unittest import mock
 from Script.Design import handle_npc_ai_in_h
 from Script.Modules.gameplay_resolution import time_hooks
 from tests.fast.base import FastTestCase
+from tests import kernel_data
 
 
 class NoiseWakesEachSleeperTest(FastTestCase):
@@ -28,7 +29,9 @@ class NoiseWakesEachSleeperTest(FastTestCase):
         super().setUp()
         self.world.chara(0, "博士")
         for cid in (1, 2):
-            self.world.chara(cid, f"干员{cid}").sleep_point = 0
+            kernel_data.set_needs(
+                self.world.chara(cid, f"干员{cid}").cid, sleep=0
+            )
         self.cache.noise_woken.clear()
 
     def test_each_light_sleeper_rolls(self) -> None:

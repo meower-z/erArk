@@ -10,19 +10,24 @@
 - HEnd、GroupExit、HLeftBehind 等玩家力竭（PlayerSpent）。
 - StopFollowing 等同一干员的 BecomeTired。
 - HLeftBehind 等同一干员力竭的收场（events.tired_case）。
+另有一例：BecomeTired 与 PlayerSpent 的触发函数从交给它们的 GameState 读体力，不读同一步里还没套用的写入。
 """
 
 import datetime
 from collections.abc import Callable
 from types import MappingProxyType
+from typing import cast
 from unittest import mock
 
 from Script.Design import attr_calculation, character_behavior, game_time
 from Script.Design import handle_premise
 from Script.Kernel import core
+from Script.Modules.domains import needs
 from Script.Modules.gameplay_resolution import actions, events, time_hooks
+from Script.Modules.gameplay_resolution import working
 from Script.Settle import realtime_settle
 from tests.fast.base import FastTestCase
+from tests import kernel_data
 
 type Trigger = Callable[[core.GameState], object]
 
@@ -36,7 +41,7 @@ NOON = MIDNIGHT + 12 * 60
 
 def state(clock: int, ticked: int, settled_day: int) -> core.GameState:
     """
-    玩家与干员1各做一个 10 小时的 Behavior 的 GameState
+    玩家与干员1各做一个 10 小时的 Behavior 的 GameState。两人的 body.needs 取调用时内核状态里的值
     Keyword arguments:
     clock -- 时钟
     ticked -- 上一次 Tick 结算到的时钟
@@ -47,7 +52,9 @@ def state(clock: int, ticked: int, settled_day: int) -> core.GameState:
     characters = {
         who: core.Character(
             core.Action(who, actions.behave.name, None, clock - 1, 600),
-            MappingProxyType({}),
+            MappingProxyType(
+                {needs.KEY: cast(core.JSON, needs.of(int(who), core.state()))}
+            ),
         )
         for who in ("0", "1")
     }
@@ -60,10 +67,14 @@ def state(clock: int, ticked: int, settled_day: int) -> core.GameState:
     )
 
 
-SETTLED = state(NOON, NOON, game_time.day(NOON))
-""" 中午，Tick 与 NewDay 都已结算 """
-TICK_DUE = state(NOON, NOON - 5, game_time.day(NOON))
-""" 中午，Tick 还没结算 """
+def settled() -> core.GameState:
+    """中午、Tick 与 NewDay 都已结算的 GameState，body.needs 取调用时内核状态里的值"""
+    return state(NOON, NOON, game_time.day(NOON))
+
+
+def tick_due() -> core.GameState:
+    """中午、Tick 还没结算的 GameState，body.needs 取调用时内核状态里的值"""
+    return state(NOON, NOON - 5, game_time.day(NOON))
 
 
 class PrecedenceTest(FastTestCase):
@@ -75,8 +86,8 @@ class PrecedenceTest(FastTestCase):
         self.player = self.world.chara(0, "博士")
         self.npc = self.world.chara(1, "干员")
         self.player.target_character_id = 1
-        self.player.hit_point = 100
-        self.npc.hit_point = 100
+        kernel_data.set_needs(self.player.cid, hit=100)
+        kernel_data.set_needs(self.npc.cid, hit=100)
         self.npc.sp_flag.is_h = True
         self.arts_due = False
         self.enterContext(
@@ -116,7 +127,7 @@ class PrecedenceTest(FastTestCase):
     def test_world_and_character_events_wait_for_the_clock(self) -> None:
         """Tick 没结算时，OrphanClass、ArtsBreak、BecomeTired、TargetLeft、PlayerSpent 都不触发"""
         self.cache.sex_class_mode = True
-        self.npc.hit_point = 1
+        kernel_data.set_needs(self.npc.cid, hit=1)
         self.arts_due = True
         self.enterContext(
             mock.patch.object(
@@ -131,21 +142,17 @@ class PrecedenceTest(FastTestCase):
         )
         for trigger, data in cases:
             with self.subTest(trigger.__name__):
-                self.assert_waits(
-                    trigger, data, lambda: TICK_DUE, lambda: SETTLED
-                )
+                self.assert_waits(trigger, data, tick_due, settled)
         self.arts_due = False
-        self.player.hit_point = 1
-        self.assert_waits(
-            events._player_spent_when, "0", lambda: TICK_DUE, lambda: SETTLED
-        )
+        kernel_data.set_needs(self.player.cid, hit=1)
+        self.assert_waits(events._player_spent_when, "0", tick_due, settled)
 
     def test_player_ends_wait_for_arts_break(self) -> None:
         """ArtsBreak 成立时，PlayerSpent、HEnd、GroupExit 都不触发"""
 
         def arts(due: bool) -> core.GameState:
             self.arts_due = due
-            return SETTLED
+            return settled()
 
         self.npc.sp_flag.tired = True
         cases: tuple[tuple[Trigger, object, Callable[[], None]], ...] = (
@@ -164,8 +171,8 @@ class PrecedenceTest(FastTestCase):
         """玩家力竭时，HEnd、GroupExit、HLeftBehind 都不触发"""
 
         def spent(hit_point: int) -> core.GameState:
-            self.player.hit_point = hit_point
-            return SETTLED
+            kernel_data.set_needs(self.player.cid, hit=hit_point)
+            return settled()
 
         self.enterContext(
             mock.patch.object(
@@ -188,14 +195,14 @@ class PrecedenceTest(FastTestCase):
         """跟随中的干员体力到 1 而疲劳标记还没设：StopFollowing 不触发；设上之后交回他"""
         self.npc.sp_flag.is_h = False
         self.npc.sp_flag.is_follow = 1
-        self.npc.hit_point = 1
+        kernel_data.set_needs(self.npc.cid, hit=1)
         self.enterContext(
             mock.patch.object(attr_calculation, "get_tired_level", lambda v: 2)
         )
 
         def tired(flag: bool) -> core.GameState:
             self.npc.sp_flag.tired = flag
-            return SETTLED
+            return settled()
 
         self.assertEqual(events._become_tired_when(tired(False)), "1")
         self.assert_waits(
@@ -204,6 +211,25 @@ class PrecedenceTest(FastTestCase):
             lambda: tired(False),
             lambda: tired(True),
         )
+
+    def test_triggers_read_hit_from_their_state(self) -> None:
+        """
+        BecomeTired 与 PlayerSpent 从交给触发函数的 GameState 读体力：状态里体力为 1 时触发，
+        同一步里还没套用的写入把体力改成 100 也一样触发。状态里干员体力为 100 时 BecomeTired 不触发
+        """
+        self.npc.sp_flag.is_h = False
+        kernel_data.set_needs(self.npc.cid, hit=1)
+        kernel_data.set_needs(self.player.cid, hit=1)
+        spent = settled()
+        with working.based_on(core.state()):
+            needs.set(1, hit=100)
+            needs.set(0, hit=100)
+            self.assertEqual(events._become_tired_when(spent), "1")
+            self.npc.sp_flag.is_h = True
+            self.assertEqual(events._player_spent_when(spent), "0")
+            self.npc.sp_flag.is_h = False
+        kernel_data.set_needs(self.npc.cid, hit=100)
+        self.assertIsNone(events._become_tired_when(settled()))
 
     def test_h_left_behind_waits_for_the_tired_end(self) -> None:
         """被留在 H 里的干员疲劳（tired_case 为 h）：HLeftBehind 不触发；不疲劳时交回他"""
@@ -215,7 +241,7 @@ class PrecedenceTest(FastTestCase):
 
         def tired(flag: bool) -> core.GameState:
             self.npc.sp_flag.tired = flag
-            return SETTLED
+            return settled()
 
         self.assertEqual(events._h_end_when(tired(True)), "1")
         self.assert_waits(
@@ -231,7 +257,7 @@ class PrecedenceTest(FastTestCase):
         Keyword arguments:
         scene -- 改现场的函数
         """
-        self.player.hit_point = 100
+        kernel_data.set_needs(self.player.cid, hit=100)
         self.npc.sp_flag.is_h = True
         self.npc.sp_flag.tired = True
         self.cache.group_sex_mode = False
@@ -240,7 +266,7 @@ class PrecedenceTest(FastTestCase):
 
     def spend_player(self) -> None:
         """玩家体力到 1，交互对象还在 H 中"""
-        self.player.hit_point = 1
+        kernel_data.set_needs(self.player.cid, hit=1)
 
     def tire_npc(self) -> None:
         """干员疲劳"""

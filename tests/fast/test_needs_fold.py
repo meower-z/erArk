@@ -90,7 +90,8 @@ class NeedsFoldTest(FastTestCase):
             needs_with(milk=Fraction(37, 8)), "set", {"hunger": 0, "tired": 0}
         )
         self.assertEqual(
-            new, {"tired": 0, "hunger": 0, "urine": 0, "milk": Fraction(37, 8)}
+            new,
+            {**needs.DEFAULT, "hunger": 0, "milk": Fraction(37, 8)},
         )
 
     def test_unknown_op_raises(self) -> None:

@@ -13,6 +13,7 @@ from fractions import Fraction
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
+from tests import kernel_data
 
 ROOM = ["中枢", "会议室"]
 PRIMARY_HYPNOSIS = 331
@@ -95,11 +96,11 @@ class ArtsBreakPlansCancelTest(SlowTestCase):
         pl.talent[PRIMARY_HYPNOSIS] = 1
         operator = self.cache.character_data[self._hypnotize("杜宾")]
         pl.pl_ability.visual = True
-        pl.sanity_point = Fraction(1, 3)
+        kernel_data.set_needs(pl.cid, sanity=Fraction(1, 3))
         breaks = self._count_breaks()
         self.instruct(constant.Instruct.WAIT)
         self.assertEqual(len(breaks), 1, "技艺中断的提示出现一次")
-        self.assertEqual(pl.sanity_point, 0)
+        self.assertEqual(kernel_data.needs_of(pl.cid)["sanity"], 0)
         self.assertFalse(pl.pl_ability.visual, "透视关掉")
         self.assertEqual(
             self.cache.pl_pre_behavior_instruce[-2:],
@@ -116,7 +117,7 @@ class ArtsBreakPlansCancelTest(SlowTestCase):
         pl.talent[PRIMARY_TIME_STOP] = 1
         self.instruct(constant.Instruct.TIME_STOP_ON)
         self.assertTrue(self.cache.time_stop_mode, "时停开着")
-        pl.sanity_point = 1
+        kernel_data.set_needs(pl.cid, sanity=1)
         breaks = self._count_breaks()
         self.instruct(constant.Instruct.WAIT)
         self.assertEqual(len(breaks), 1, "技艺中断的提示出现一次")

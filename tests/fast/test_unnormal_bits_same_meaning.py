@@ -18,6 +18,7 @@ from Script.Config import game_config
 from Script.Core import constant
 from Script.Design import handle_premise as HP
 from tests.fast.base import FastTestCase
+from tests import kernel_data
 
 SAMPLES = 4000
 """ 随机状态的组数 """
@@ -188,8 +189,8 @@ class UnnormalBitsSameMeaningTest(FastTestCase):
         waiting.discard(1)
         if rng.random() < 0.3:
             waiting.add(1)
-        operator.sleep_point = rng.choice(SLEEP_POINTS)
-        operator.drunk_point = rng.choice(DRUNK_POINTS)
+        kernel_data.set_needs(operator.cid, sleep=rng.choice(SLEEP_POINTS))
+        kernel_data.set_needs(operator.cid, drunk=rng.choice(DRUNK_POINTS))
         for talent_id in range(350, 360):
             if talent_id in operator.talent:
                 operator.talent[talent_id] = 1 if rng.random() < 0.15 else 0
@@ -233,8 +234,8 @@ class UnnormalBitsSameMeaningTest(FastTestCase):
                             short,
                             op.sp_flag.unconscious_h,
                             op.behavior.behavior_id,
-                            op.sleep_point,
-                            op.drunk_point,
+                            kernel_data.needs_of(op.cid)["sleep"],
+                            kernel_data.needs_of(op.cid)["drunk"],
                         )
                     )
             per_bit_normal = [bool(f(1)) for f in ALL_BITS]

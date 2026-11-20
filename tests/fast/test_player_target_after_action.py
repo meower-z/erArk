@@ -11,7 +11,7 @@
 from Script.Core import constant
 from Script.Design import character_behavior, update
 from Script.Kernel import core
-from Script.Modules.gameplay_resolution import actions
+from tests import kernel_data
 from tests.fast.base import FastTestCase
 
 LOADED_FIRST = update
@@ -32,7 +32,7 @@ class PlayerTargetAfterActionTest(FastTestCase):
         super().setUp()
         self.player = self.world.chara(0, "博士")
         self.world.chara(GONE, "离开的干员", position=ELSEWHERE)
-        core.reset_state(actions.state_from_cache())
+        core.reset_state(kernel_data.reprojected(core.state()))
 
     def test_target_who_left_is_replaced(self) -> None:
         """交互对象（干员1）已离开：换成场景里的干员2"""

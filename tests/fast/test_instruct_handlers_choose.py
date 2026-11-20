@@ -14,11 +14,12 @@ from typing import cast
 from Script.Core import constant
 from Script.Design import update
 from Script.Kernel import core
-from Script.Modules.gameplay_resolution import actions, intent, player_starters
+from Script.Modules.gameplay_resolution import intent, player_starters
 from Script.Modules.tk_ui import player_pick
 from Script.System.Instruct_System import handle_instruct
 from tests.fast.base import FastTestCase
 from tests.fast.test_npc_pick_leaves_cache import changed, pickled
+from tests import kernel_data
 
 LOADED_FIRST = update
 """ 先于 Script.Modules 导入的 update：Script.Modules 的包初始化要在 update 导入途中进行 """
@@ -41,7 +42,7 @@ class InstructHandlersChooseTest(FastTestCase):
         self.player = self.world.chara(0, "博士")
         self.world.chara(NPC, "干员")
         self.player.target_character_id = NPC
-        core.reset_state(actions.state_from_cache())
+        core.reset_state(kernel_data.reprojected(core.state()))
 
     def pick(self, instruct_id: str) -> core.Action | None:
         """
@@ -96,7 +97,7 @@ class InstructHandlersChooseTest(FastTestCase):
 
     def start(self, act: core.Action) -> None:
         """
-        跑种类 Instruct 的开始代码，行动数据先过一遍 JSON
+        跑种类 Instruct 的开始代码，行动数据先过一遍 JSON。开始代码写的 GameState 数据随后套用到内核状态上
         Keyword arguments:
         act -- 定下的行动
         """
@@ -104,7 +105,8 @@ class InstructHandlersChooseTest(FastTestCase):
             act.action_id, intent.KIND_PREFIX + player_starters.KIND
         )
         data = json.loads(json.dumps(act.action_data))
-        handle_instruct.start_instruct(0, cast(intent.Intent, data))
+        with kernel_data.writing():
+            handle_instruct.start_instruct(0, cast(intent.Intent, data))
 
     def test_door_lock_written_at_start(self) -> None:
         """
@@ -130,17 +132,16 @@ class InstructHandlersChooseTest(FastTestCase):
         Return arguments:
         无
         """
-        target = self.cache.character_data[NPC]
-        target.angry_point = 35
+        kernel_data.set_needs(NPC, angry=35)
         act = self.pick(constant.Instruct.APOLOGIZE)
         assert act is not None
         assert isinstance(act.action_data, dict)
-        self.assertEqual(target.angry_point, 35)
+        self.assertEqual(kernel_data.needs_of(NPC)["angry"], 35)
         self.assertEqual(
             act.action_data["behavior_id"], constant.Behavior.APOLOGIZE
         )
         self.start(act)
-        self.assertLess(target.angry_point, 35)
+        self.assertLess(kernel_data.needs_of(NPC)["angry"], 35)
 
     def test_target_waits_through_plan_queue(self) -> None:
         """
