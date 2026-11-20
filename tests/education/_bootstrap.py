@@ -331,8 +331,6 @@ def make_character(
     cd.behavior.start_time = game_time.now()
     if stage:
         cd.talent[stage] = 1
-        if stage != 104:
-            cd.talent[7] = 1  # 未成年
     if daughter:
         cd.relationship.father_id = 0
         cd.relationship.mother_id = mother_id

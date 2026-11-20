@@ -39700,14 +39700,6 @@ msgstr "동정"
 msgid "阴茎没有插入过阴道或肛门等部位，仍保持着身体上的纯洁"
 msgstr ""
 
-#: ./data\csv\Talent.csv:14
-msgid "未成年"
-msgstr "미성년"
-
-#: ./data\csv\Talent.csv:14
-msgid "身心尚未完全发育成熟，处于成长阶段，需要细心呵护和引导，某些行为可能会造成更大的心理影响"
-msgstr ""
-
 #: ./data\csv\Talent.csv:16
 msgid "亲吻合意"
 msgstr "첫키스"

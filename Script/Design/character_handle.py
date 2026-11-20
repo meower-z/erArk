@@ -180,7 +180,6 @@ def born_new_character(mother_id: int, child_name: str) -> int:
         2: 1,
         3: 1,
         4: 1,
-        7: 1,
         101: 1,
         121: 1,
         126: 1,

@@ -1908,8 +1908,10 @@ def update_character_config_data(value: game_type.Character) -> int:
             if key not in value.experience:
                 value.experience[key] = 0
                 update_count += 1
-    # 素质：补齐前先去掉 Talent.csv 已没有的编号 6。补齐只在素质数与配置不同时运行，留着 6 可能让它漏补。
-    update_count += int(value.talent.pop(6, None) is not None)
+    # 素质：补齐前先去掉 Talent.csv 里没有的编号 6 与 7。补齐只在素质数与 Talent.csv 不同时运行。
+    # 留着这两个键，缺键的存档可能素质数相同而漏补。
+    for talent_id in (6, 7):
+        update_count += int(value.talent.pop(talent_id, None) is not None)
     if len(value.talent) != len(game_config.config_talent):
         for key in game_config.config_talent:
             if key not in value.talent:
@@ -2173,8 +2175,6 @@ BODY_TALENT_TUPLE = (104, 105, 106, 107, 108)
 """ 体型素质 """
 ADULT_BODY_TALENT = 104
 """ 少女素质：没开世界设定1、或角色模板没有体型素质时，静态干员身上的成长阶段素质换成它 """
-MINOR_TALENT_TUPLE = (7,)
-""" 未成年素质：读档时从静态干员与103阶段的女儿身上去掉 """
 WORLD_SETTING_SHRINK = 1
 """ 世界设定1在存档 world_setting 里的键：开着它开局的存档，全岛干员的体型素质104~107在开局时换成了103 """
 AGE_DRUG_ITEM_TUPLE = (31, 32)
@@ -2235,27 +2235,11 @@ def _is_player_daughter(character: game_type.Character) -> bool:
     return character.cid != 0 and character.relationship.father_id == 0
 
 
-def _clear_minor_talent(character: game_type.Character) -> int:
-    """
-    去掉角色身上 MINOR_TALENT_TUPLE 里的未成年素质
-    Keyword arguments:
-    character -- 角色数据
-    Return arguments:
-    int -- 改动的素质数
-    """
-    count = 0
-    for talent_id in MINOR_TALENT_TUPLE:
-        if character.talent.get(talent_id, 0):
-            character.talent[talent_id] = 0
-            count += 1
-    return count
-
-
 def _migrate_static_talent(
     character: game_type.Character, world_setting_shrink: bool
 ) -> int:
     """
-    整理静态干员（非玩家、非女儿的角色）的素质：去掉未成年素质，持有成长阶段素质时把它换成体型素质
+    整理静态干员（非玩家、非女儿的角色）的素质：持有成长阶段素质时把它换成体型素质
     Keyword arguments:
     character -- 角色数据
     world_setting_shrink -- 存档是否开着世界设定1
@@ -2265,7 +2249,7 @@ def _migrate_static_talent(
     """
     from Script.Config import character_config
 
-    count = _clear_minor_talent(character)
+    count = 0
     stage_list = [
         talent_id
         for talent_id in STAGE_TALENT_TUPLE
@@ -2993,7 +2977,7 @@ def migrate_age_and_body_type(
     end_young_child_session
     Return arguments:
     int -- 改动的项数
-    功能: 静态干员的素质见 _migrate_static_talent，103阶段的女儿去掉未成年素质，女儿的成长阶段与体型不变；
+    功能: 静态干员的素质见 _migrate_static_talent，女儿的成长阶段与体型不变；
           见学、表里没有的行为与娱乐编号、101/102阶段的上课状态、101/102阶段的H与身体状态、离线、外表年龄药见
           _clear_child_activity、_clear_young_child_h_state、_clear_young_child_egg_index、_take_young_child_off_line、
           _clear_age_drug_item；
@@ -3002,12 +2986,10 @@ def migrate_age_and_body_type(
     count = 0
     world_setting = loaded_dict.get("world_setting", {})
     world_setting_shrink = bool(world_setting.get(WORLD_SETTING_SHRINK, 0))
-    # 先换静态干员与103女儿的素质：药物缩成101/102的静态干员由此回到成年，不算孩子
+    # 先换静态干员的素质：药物缩成101/102的静态干员由此回到成年，不算孩子
     for character in loaded_dict["character_data"].values():
         if character.cid != 0 and not _is_player_daughter(character):
             count += _migrate_static_talent(character, world_setting_shrink)
-        elif _is_player_daughter(character) and character.talent.get(103, 0):
-            count += _clear_minor_talent(character)
     young_child_id_set = {
         character.cid
         for character in loaded_dict["character_data"].values()

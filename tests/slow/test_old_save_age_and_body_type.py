@@ -2,10 +2,10 @@
 """
 旧存档读档后的成长阶段与体型
 ============================
-开新游戏后按旧规则摆出存档状态：开着世界设定1（全岛干员的体型104~107换成103），一名静态干员持有未初潮与未成年，
+开新游戏后按旧规则摆出存档状态：开着世界设定1（全岛干员的体型104~107换成103），一名静态干员持有素质表里没有的素质6与7、没有素质28的键，
 四个女儿分处101、102、103与毕业（104），103的学员持有未初潮与未成年，101的婴儿有污浊、H状态、泌乳、妊娠与卵（含玩家持有的卵索引与她的体外卵），
 102的孩子在线、与玩家在单人H中、有学生岗与宿舍、是玩家的助理、被玩家搬运与装袋、在别人的名单与收藏品里、在母亲的群交部位模板里、在见学、有课表与日程，道具栏里有外表年龄药，存档里还有配置表里没有的娱乐（含兴趣课的目标）与行为编号，以及改编号前的旧娱乐编号。
-经 save_handle 真实写盘、读档，检查读档后的素质（素质编号都在 Talent.csv 里）、见学与上课状态、道具与世界设定；
+经 save_handle 真实写盘、读档，检查读档后的素质（每个角色的素质键与素质表的键相同）、见学与上课状态、道具与世界设定。
 把读档后的游戏再写盘、读档一次，所有被检查的数据都没有变。
 另一个测试关着世界设定1：持有103的静态干员读档后持有少女。
 再两个测试在群交中读档：玩家、102的孩子与另一名干员同场景群交，玩家以孩子或那名干员为交互对象，读档后群交都按群交结束收尾。
@@ -33,7 +33,7 @@ MISSING_ENTERTAINMENT = 159
 MISSING_BEHAVIOR = "behavior_not_in_table"
 """ Behavior_Data.csv 里没有的行为id，代表存档里存着、配置表里已经去掉的行为 """
 MINOR_OPERATOR_ADV = 254
-""" 摆出未初潮与未成年的静态干员 """
+""" 旧存档里持有素质6与7、没有素质28的键的静态干员的剧情npc编号 """
 
 
 class TestOldSaveAgeAndBodyType(SlowTestCase):
@@ -134,6 +134,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         ][0]
         cache.character_data[minor_id].talent[6] = 1
         cache.character_data[minor_id].talent[7] = 1
+        del cache.character_data[minor_id].talent[28]
         cache.character_data[minor_id].item[31] = 1
         shrink_id = min(
             cid
@@ -529,19 +530,16 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                     game_config.config_entertainment,
                     f"角色{cid}的娱乐槽位{value}应在 Entertainment.csv 里",
                 )
-            self.assertFalse(
-                set(chara.talent) - set(game_config.config_talent),
-                f"角色{cid}的素质编号都应在 Talent.csv 里",
+            self.assertEqual(
+                chara.talent.keys(),
+                game_config.config_talent.keys(),
+                f"角色{cid}读档后的素质键应与素质表的键相同",
             )
             if cid == 0:
                 continue
             if chara.relationship.father_id == 0:
                 continue
             self.assertEqual(stage_list, [], f"静态干员{cid}不应持有成长阶段")
-            self.assertFalse(
-                chara.talent.get(7, 0),
-                f"静态干员{cid}不应持有未成年素质",
-            )
             if cid in id_dict["shrunk"]:
                 self.assertEqual(
                     body_list,
@@ -572,11 +570,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 [t for t in STAGE_TALENT_TUPLE if daughter.talent.get(t, 0)],
                 [stage],
                 f"{stage}阶段的女儿应保留成长阶段",
-            )
-            self.assertEqual(
-                daughter.talent.get(7, 0),
-                0 if stage == 103 else 1,
-                f"{stage}阶段的女儿：103应去掉未成年素质，101/102应保留",
             )
         graduate = cache.character_data[id_dict["d104"]]
         self.assertEqual(

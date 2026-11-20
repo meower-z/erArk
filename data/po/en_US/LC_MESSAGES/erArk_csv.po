@@ -4813,9 +4813,6 @@ msgstr "No Kissing Experience"
 msgid "童贞"
 msgstr "Virginity"
 
-msgid "未成年"
-msgstr "Underage"
-
 msgid "亲吻合意"
 msgstr "Kiss Agreement"
 

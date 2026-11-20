@@ -266,8 +266,8 @@ check(
 )
 check(
     "既有写法不受影响",
-    attr_calculation.judge_require(["T7|0"], 302)[0] == 1
-    and attr_calculation.judge_require(["T7|0"], 202)[0] == 0,
+    attr_calculation.judge_require(["T102|0"], 302)[0] == 1
+    and attr_calculation.judge_require(["T102|0"], 202)[0] == 0,
 )
 
 section("选活动分组与显示名")
