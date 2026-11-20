@@ -59,6 +59,8 @@ from Script.Config import normal_config  # noqa: E402
 from Script.Core import game_type, cache_control  # noqa: E402
 
 cache_control.cache = game_type.Cache()  # 必须在 game_config.init() 之前
+# 断言不受本机 config.local.ini 影响
+os.environ[normal_config.DEFAULTS_ONLY_ENV] = "1"
 normal_config.init_normal_config()
 from Script.Config import game_config, character_config  # noqa: E402
 

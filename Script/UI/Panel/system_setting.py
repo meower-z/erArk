@@ -2,7 +2,6 @@
 系统设置面板与游戏基础设置面板，以及按难度返回修正系数
 """
 
-import os, configparser
 from types import FunctionType
 from Script.Core import (
     cache_control,
@@ -393,19 +392,14 @@ class System_Setting_Panel:
             new_size = 50
         normal_config.config_normal.font_size = new_size
         normal_config.config_normal.order_font_size = new_size - 2
-        # 修改根目录下的config.ini文件中的字体大小
-        config_ini_path = normal_config.get_config_ini_path()
-        if os.path.exists(config_ini_path):
-            ini_config = configparser.ConfigParser()
-            ini_config.read(config_ini_path, encoding="utf8")
-            if "game" not in ini_config:
-                ini_config["game"] = {}
-            ini_config["game"]["font_size"] = str(new_size)
-            ini_config["game"]["text_width"] = str(
-                int(normal_config.config_normal.window_width / new_size * 2)
-            )
-            with open(config_ini_path, "w", encoding="utf8") as config_file:
-                ini_config.write(config_file)
+        normal_config.write_local_config(
+            {
+                "font_size": str(new_size),
+                "text_width": str(
+                    int(normal_config.config_normal.window_width / new_size * 2)
+                ),
+            }
+        )
 
         # 输出提示信息
         now_draw = draw.WaitDraw()
@@ -433,16 +427,7 @@ class System_Setting_Panel:
         elif new_dpi > 300:
             new_dpi = 300
         normal_config.config_normal.tk_dpi = new_dpi
-        # 修改根目录下的config.ini文件中的DPI设置
-        config_ini_path = normal_config.get_config_ini_path()
-        if os.path.exists(config_ini_path):
-            ini_config = configparser.ConfigParser()
-            ini_config.read(config_ini_path, encoding="utf8")
-            if "game" not in ini_config:
-                ini_config["game"] = {}
-            ini_config["game"]["tk_dpi"] = str(new_dpi)
-            with open(config_ini_path, "w", encoding="utf8") as config_file:
-                ini_config.write(config_file)
+        normal_config.write_local_config({"tk_dpi": str(new_dpi)})
 
         # 输出提示信息
         now_draw = draw.WaitDraw()
@@ -770,16 +755,7 @@ class Game_Basic_Settings_Panel:
         """修改语言设置"""
         # 修改配置中的语言
         normal_config.config_normal.language = lang_code
-        # 修改config.ini文件中的语言设置
-        config_ini_path = normal_config.get_config_ini_path()
-        if os.path.exists(config_ini_path):
-            ini_config = configparser.ConfigParser()
-            ini_config.read(config_ini_path, encoding="utf8")
-            if "game" not in ini_config:
-                ini_config["game"] = {}
-            ini_config["game"]["language"] = lang_code
-            with open(config_ini_path, "w", encoding="utf8") as config_file:
-                ini_config.write(config_file)
+        normal_config.write_local_config({"language": lang_code})
         # 输出提示信息
         now_draw = draw.WaitDraw()
         info_text = _("语言已修改为{0}，重启游戏后生效").format(
