@@ -236,7 +236,7 @@ def calculation_instuct_judege(
             judge -= 50
             calculation_text += _("+工作时间饮酒(-50)")
         # 未成年饮酒
-        if handle_premise.handle_self_underage(target_data.cid):
+        if handle_premise.handle_self_is_child(target_data.cid):
             judge -= 100
             calculation_text += _("+未成年饮酒(-100)")
         # 酒量好饮酒
