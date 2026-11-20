@@ -89,6 +89,7 @@ cache = world.cache
 from Script.Core import io_init, save_handle
 from Script.Design import character_behavior, game_time, handle_npc_ai
 from Script.Kernel import core
+from Script.Modules.domains import needs
 from Script.System.Field_Commission_System import field_commission_function
 from Script.System.Instruct_System import handle_instruct
 from tests.world import act
@@ -149,7 +150,7 @@ def describe(cid):
     )
     return (
         f"{cd.name}(id{cid}) 位置={cd.position} bhv={cd.behavior.behavior_id} dur={cd.behavior.duration}"
-        f" start={cd.behavior.start_time} state={cd.state} tired={cd.tired_point} sleep={cd.sleep_point}"
+        f" start={cd.behavior.start_time} state={cd.state} tired={needs.of(cid)['tired']} sleep={cd.sleep_point}"
         f" hp={cd.hit_point}/{cd.hit_point_max} mp={cd.mana_point}/{cd.mana_point_max}"
         f" sp_flag(sleep={flag.sleep} unconscious_h={flag.unconscious_h} is_h={flag.is_h} is_follow={flag.is_follow})"
         f" 内核行动结束于={end}"

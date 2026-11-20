@@ -22,6 +22,7 @@ from Script.Design import (
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Design import game_time
+from Script.Modules.domains import needs
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -493,7 +494,7 @@ def wake_by_noise(character_id: int, target_character_id: int) -> None:
     now_character_data: game_type.Character = cache.character_data[character_id]
     target_data: game_type.Character = cache.character_data[target_character_id]
     # 清空疲劳和睡眠程度
-    target_data.tired_point = 0
+    needs.set(target_character_id, tired=0)
     target_data.sleep_point = 0
     if target_data.sp_flag.unconscious_h == 1:
         # 睡奸目标：走现有无意识H恢复流程
@@ -735,8 +736,6 @@ def npc_active_h() -> int:
     # 如果没有符合条件的状态，则返回
     if len(all_stastus_list) == 0:
         return 0
-
-    # print(f"debug 全列表为{all_stastus_list}")
 
     # 随机选择一个状态
     behavior_id = random.choice(all_stastus_list)

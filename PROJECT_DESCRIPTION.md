@@ -416,7 +416,7 @@ Script/
 关键字段：
 
 - 基本：`cid`, `name`, `nick_name*`, `sex`, `adv`, `dead`
-- 数值：`hit_point*`, `mana_point*`, `sanity_point*`, `eja_point*`, `semen_point*`, `angry_point`, `tired_point`, `urinate_point`, `hunger_point`, `sleep_point`, `desire_point`, `drunk_point`
+- 数值：`hit_point*`, `mana_point*`, `sanity_point*`, `eja_point*`, `semen_point*`, `angry_point`, `sleep_point`, `desire_point`, `drunk_point`（疲劳、饥饿、尿意与乳汁不在 Character 上，在 GameState 的角色键 `body.needs` 里，用 `needs.of(cid)` 读）
 - 成长/社交：`ability`, `experience`, `juel`, `talent`, `favorability`, `trust`, `status_data`
 - 行为：`behavior`（Behavior 对象）, `second_behavior`, `must_settle/must_show_second_behavior_id_list`, `last_behavior_id_list`
 - 位置/住宿：`position`, `officeroom`, `dormitory`, `pre_dormitory`

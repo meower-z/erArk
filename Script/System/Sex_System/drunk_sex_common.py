@@ -5,6 +5,7 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text, num
 from Script.Config import game_config
 from Script.Design import instuct_judege, handle_premise
+from Script.Modules.domains import needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -129,8 +130,9 @@ def reduce_drunk_point(character_id: int, time: int) -> None:
     )
     # 减少的醉酒值按 3/2 转化为尿意值
     add_urinate: num.Num = reduce_value * Fraction(3, 2)
-    character_data.urinate_point = min(
-        300, character_data.urinate_point + add_urinate
+    needs.set(
+        character_id,
+        urine=min(300, needs.of(character_id)["urine"] + add_urinate),
     )
 
 

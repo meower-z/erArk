@@ -24,6 +24,7 @@ from Script.Design import (
 from Script.UI.Moudle import draw
 from Script.UI.Panel import ejaculation_panel
 from Script.Config import game_config, normal_config
+from Script.Modules.domains import needs
 
 if TYPE_CHECKING:
     from Script.Kernel import core
@@ -155,8 +156,7 @@ def character_aotu_change_value(
         add_urinate: num.Num = num.jitter(
             true_add_time * URINE_PER_MINUTE, 80, 120
         ) * Fraction(cache.difficulty_setting[11], 2)
-        new_urinate = min(now_character_data.urinate_point + add_urinate, 300)
-        now_character_data.urinate_point = new_urinate
+        needs.add(character_id, "urine", add_urinate, max=300)
 
     # 获取当前体力气力与最大值的比例，当前比例越低，调整系数越高，最高为无体力时的2倍，最低为满比例时的1倍
     # 比例读体力气力的整数部分：它们反馈进饥饿的比率，读精确值会让分母逐段变大
@@ -175,8 +175,7 @@ def character_aotu_change_value(
         * hit_adjust_coefficient
         * mana_adjust_coefficient
     )
-    new_hunger = min(now_character_data.hunger_point + add_hunger, 240)
-    now_character_data.hunger_point = new_hunger
+    needs.add(character_id, "hunger", add_hunger, max=240)
 
     # 结算醉酒值
     drunk_sex_common.reduce_drunk_point(character_id, true_add_time)
@@ -224,11 +223,8 @@ def character_aotu_change_value(
         # 结算乳汁量，仅结算有泌乳素质的
         if now_character_data.talent[27]:
             add_milk = num.jitter(true_add_time * MILK_PER_MINUTE, 80, 120)
-            new_milk = min(
-                now_character_data.pregnancy.milk + add_milk,
-                now_character_data.pregnancy.milk_max,
-            )
-            now_character_data.pregnancy.milk = new_milk
+            milk_max = now_character_data.pregnancy.milk_max
+            needs.add(character_id, "milk", add_milk, max=milk_max)
 
         # 有意识下的部分持续结算
         if (
@@ -405,9 +401,7 @@ def semen_absorb(character_id: int, true_add_time: int, body_part: int) -> None:
     # 更新吸收精液量
     now_character_data.dirty.absorbed_total_semen += absorb_ml
     # 根据吸收的精液量来减少饥饿度
-    now_character_data.hunger_point = max(
-        now_character_data.hunger_point - absorb_ml, 0
-    )
+    needs.add(character_id, "hunger", -absorb_ml, min=0)
     # 如果现存量小于3ml，则清零
     if now_character_data.dirty.body_semen[body_part][1] < 3:
         now_character_data.dirty.body_semen[body_part][1] = 0
@@ -484,9 +478,7 @@ def settle_tired(character_id: int, true_add_time: int) -> None:
     drunk_level, __ = _drunk_sex_common.get_drunk_level(character_id)
     if drunk_level > 0:
         tired_change *= 1 + Fraction(drunk_level, 10)
-    now_character_data.tired_point = min(
-        now_character_data.tired_point + tired_change, 160
-    )
+    needs.add(character_id, "tired", tired_change, max=160)
 
 
 def settle_rest(character_id: int, true_add_time: int) -> None:
@@ -550,10 +542,10 @@ def settle_sleep(character_id: int, true_add_time: int) -> None:
 
     now_char = cache.character_data[character_id]
     # 疲劳值越高，熟睡值增加越快，最高为疲劳值满时的2倍；读疲劳的整数部分，免得熟睡值的分母逐段变大
-    tired_adjust = 1 + Fraction(num.whole(now_char.tired_point), 160)
+    tired_adjust = 1 + Fraction(num.whole(needs.of(character_id)["tired"]), 160)
     # 减少疲劳
     tired_change: num.Num = Fraction(true_add_time, 3)
-    now_char.tired_point = max(now_char.tired_point - tired_change, 0)
+    needs.add(character_id, "tired", -tired_change, min=0)
     # 增加熟睡值
     level, __ = attr_calculation.get_sleep_level(now_char.sleep_point)
     add_sleep: num.Num

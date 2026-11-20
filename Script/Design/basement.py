@@ -12,6 +12,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle
 from Script.UI.Moudle import draw
 from Script.Design import game_time
+from Script.Modules.domains import power
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏内缓存数据 """
@@ -314,9 +315,7 @@ def calc_facility_efficiency(facility_cid: int = -1) -> float:
     if facility_data.type >= 0:
         zone_cid = facility_data.type
     # 供电策略的调整
-    from Script.UI.Panel import manage_power_system_panel
-
-    now_power_strategy = manage_power_system_panel.strategy_of(zone_cid)
+    now_power_strategy = power.strategy_of(zone_cid)
     now_power_strategy_adjust = game_config.config_supply_strategy[
         now_power_strategy
     ].adjust

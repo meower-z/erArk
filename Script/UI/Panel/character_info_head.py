@@ -14,6 +14,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation
 from Script.UI.Panel import hypnosis_panel
 from Script.Design import game_time
+from Script.Modules.domains import needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -348,7 +349,7 @@ def get_character_status_list(
     # 非0疲劳时输出当前疲劳状态
     sleep_draw = draw.LeftDraw()
     sleep_draw.style = "little_dark_slate_blue"
-    tired_lv = attr_calculation.get_tired_level(character_data.tired_point)
+    tired_lv = attr_calculation.get_tired_level(needs.of(character_id)["tired"])
     sleep_text = " <" + constant.tired_text_list[tired_lv] + ">"
     # 0疲劳的清醒则不输出
     if sleep_text == _(" <清醒>"):
@@ -675,7 +676,6 @@ class CharacterInfoHead:
         )
 
         character_data: game_type.Character = cache.character_data[character_id]
-        # sex_text = game_config.config_sex_tem[character_data.sex].name
 
         # 好感与信赖
         favorability_and_trust_text = ""

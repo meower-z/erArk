@@ -16,6 +16,7 @@ from typing import TypeGuard
 
 from Script.Core import cache_control
 from Script.Design import game_time
+from Script.Modules.domains import needs
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -1268,15 +1269,14 @@ def check_milk_bounds() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验milk/milk_max为有限数值、milk_max>0（被当分母，<=0会ZeroDivisionError）、0<=milk<=milk_max。
-        先确认有限非bool数值，NaN会静默绕过两侧比较。催乳存在瞬时超限中间态，但每回合一次的检查点看不到
+        校验body.needs的milk与pregnancy.milk_max是有限非bool数值，milk_max>0（它作分母），且0<=milk<=milk_max。
     """
     failures = []
     for cid, chara in _iter_charas():
         preg = getattr(chara, "pregnancy", None)
         if preg is None:
             continue
-        milk = getattr(preg, "milk", 0)
+        milk = needs.of(cid)["milk"]
         milk_max = getattr(preg, "milk_max", 0)
         if not (
             _num(milk)

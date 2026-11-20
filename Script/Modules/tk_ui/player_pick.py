@@ -18,7 +18,7 @@ from typing import NoReturn, cast
 
 from Script.Core import cache_control, constant, game_type, py_cmd
 from Script.Kernel import core
-from Script.Modules.gameplay_resolution import draft, edits, intent
+from Script.Modules.gameplay_resolution import draft, edits, intent, working
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -130,10 +130,13 @@ def picking() -> Iterator[None]:
 
 
 def _with_draft(
-    act: core.Action, changes: list[draft.Change], interrupts: list[str]
+    act: core.Action,
+    changes: list[draft.Change],
+    interrupts: list[str],
+    effects: tuple[core.JSON, ...],
 ) -> core.Action:
-    """定下的行动带上选择的草稿与打断：Edit 放进 draft，有行为id的意图放进 Intent.draft，其余行动报 TypeError"""
-    if not changes and not interrupts:
+    """定下的行动带上选择的草稿、打断与写入：Edit 接在同名项后，有行为id的意图放进同名项，其余报 TypeError"""
+    if not changes and not interrupts and not effects:
         return act
     data = act.action_data
     if not isinstance(data, Mapping):
@@ -147,11 +150,17 @@ def _with_draft(
                 *cast(Sequence[str], data["interrupts"]),
                 *interrupts,
             ),
+            "effects": (
+                *cast(Sequence[core.JSON], data["effects"]),
+                *effects,
+            ),
         }
     elif "behavior_id" in data:
         drafted = {**data, "draft": tuple(changes)}
         if interrupts:
             drafted["interrupts"] = tuple(interrupts)
+        if effects:
+            drafted["effects"] = effects
     else:
         raise TypeError(f"{act.action_id} cannot carry a draft")
     return core.Action(
@@ -176,22 +185,27 @@ def drafting(origin: str) -> Iterator[None]:
         yield
         return
     session = draft.Session(UI_STATE | META_STATE)
+    buffer = working.open_pick()
     try:
         yield
     except Chosen as chosen:
+        effects = working.close_pick(buffer)
         if not draft.active():
             raise
         changes, interrupts = session.close()
-        raise Chosen(_with_draft(chosen.action, changes, interrupts)) from None
+        drafted = _with_draft(chosen.action, changes, interrupts, effects)
+        raise Chosen(drafted) from None
     except BaseException:
+        working.close_pick(buffer)
         if draft.active():
             session.drop()
         raise
+    effects = working.close_pick(buffer)
     if not draft.active():
         return
     changes, interrupts = session.close()
-    if changes or interrupts:
-        raise Chosen(edits.edit_action(origin, changes, interrupts))
+    if changes or interrupts or effects:
+        raise Chosen(edits.edit_action(origin, changes, interrupts, effects))
 
 
 def commit_edit(name: str, args: Mapping[str, core.JSON]) -> NoReturn:

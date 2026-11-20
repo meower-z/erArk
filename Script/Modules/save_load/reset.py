@@ -12,6 +12,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from Script.Kernel import core
+from Script.Modules.gameplay_resolution import working
 
 type Step = Callable[[core.GameState, Mapping[str, core.JSON]], core.GameState]
 type Repair = Callable[[], None]
@@ -50,7 +51,10 @@ def _install_save(
     """存档的缓存装进游戏缓存"""
     from Script.Core import save_handle
 
-    save_handle.install_save(str(why["save"]))
+    version = why.get("version", 0)
+    if not isinstance(version, int):
+        raise TypeError(f"version {version!r} is not an int")
+    save_handle.install_save(str(why["save"]), version)
     return new
 
 
@@ -105,6 +109,13 @@ def _repairs_registered(
     return new
 
 
+def _reconcile_roster_data(
+    new: core.GameState, why: Mapping[str, core.JSON]
+) -> core.GameState:
+    """每个角色的数据只留在一处，roster.offstage 里缓存已没有的角色的数据丢掉（working.reconcile）"""
+    return working.reconcile(new)
+
+
 def _panel(new: core.GameState, why: Mapping[str, core.JSON]) -> core.GameState:
     """回到场景面板"""
     from Script.Core import cache_control, constant
@@ -122,6 +133,11 @@ STEPS: tuple[ResetStep, ...] = (
     ),
     ResetStep("repair_installed", frozenset({"load"}), _repair_installed),
     ResetStep("repairs", frozenset({"load"}), _repairs_registered),
+    ResetStep(
+        "reconcile_roster_data",
+        frozenset({"load", "new_round", "new_game"}),
+        _reconcile_roster_data,
+    ),
     ResetStep("panel", frozenset({"load", "new_round"}), _panel),
 )
 """ Reset 的步骤，按运行顺序 """
@@ -141,5 +157,8 @@ def run_steps(
     """
     for step in STEPS:
         if why.get("cause") in step.causes:
-            new = step.run(new, why)
+            with working.based_on(new) as buffer:
+                stepped = step.run(new, why)
+                effects = buffer.effects()
+            new = core.preview(stepped, effects)
     return (new, why)

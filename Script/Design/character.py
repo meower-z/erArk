@@ -100,7 +100,6 @@ def init_attr(character_id: int) -> None:
                 character_data.pl_collection.token_list
             )
         )
-        character_data.tired_point = 0
         character_data.pl_ability = attr_calculation.get_pl_ability_zero()
         character_data.pl_collection = attr_calculation.get_collection_zero()
         character_data.cloth = attr_calculation.get_cloth_zero()
@@ -122,7 +121,6 @@ def init_attr(character_id: int) -> None:
     character_data.hit_point = character_data.hit_point_max
     character_data.mana_point = character_data.mana_point_max
     character_data.angry_point = random.randrange(1, 35)
-    character_data.hunger_point = 240
     if character_id:
         clothing.get_underwear(character_id)
     # default_clothing_data = clothing.creator_suit(character_data.clothing_tem, character_data.sex)

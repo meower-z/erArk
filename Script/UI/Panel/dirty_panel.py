@@ -6,6 +6,7 @@ from Script.Design import map_handle, clothing, attr_calculation
 from Script.Design import handle_premise, handle_talent
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
+from Script.Modules.domains import needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -107,7 +108,6 @@ class SeeCharacterBodyPanel:
         target_character_data = cache.character_data[
             character_data.target_character_id
         ]
-        # print("game_config.config_character_state_type :",game_config.config_character_state_type)
         # print("game_config.config_character_state_type_data :",game_config.config_character_state_type_data)
 
         type_line = draw.LittleTitleLineDraw(_("身体"), width, ":")
@@ -395,9 +395,9 @@ class SeeCharacterBodyPanel:
         # 如果有腔内透视
         if visual_flag >= 2:
             # 如果有奶水，则显示奶水量
-            if target_character_data.pregnancy.milk:
+            if needs.of(target_character_data.cid)["milk"]:
                 lactation_text = _(" 乳汁量为{0}ml").format(
-                    num.shown(target_character_data.pregnancy.milk)
+                    num.shown(needs.of(target_character_data.cid)["milk"])
                 )
                 all_part_text_list.append(lactation_text)
 

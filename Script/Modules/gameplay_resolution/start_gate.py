@@ -191,7 +191,7 @@ def _judged(act: core.Action, who: int, data: Data) -> core.Action:
     rest = {key: value for key, value in data.items() if key != JUDGE}
     if judged == behavior_id:
         return replace(act, action_data=rest)
-    for key in ("state", "fields", "draft", "interrupts"):
+    for key in ("state", "fields", "draft", "interrupts", "effects"):
         rest.pop(key, None)
     args = rest.get("args", {})
     if isinstance(args, Mapping):

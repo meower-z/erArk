@@ -48,6 +48,7 @@ from Script.Settle.common_default import (
 )
 
 from Script.Settle.item_effect import *
+from Script.Modules.domains import needs
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -5320,10 +5321,8 @@ def handle_chara_on_line(
     # 基础属性重置
     character_data.hit_point = character_data.hit_point_max
     character_data.mana_point = character_data.mana_point_max
-    character_data.hunger_point = 0
-    character_data.tired_point = 0
+    needs.set(character_id, hunger=0, tired=0, urine=0)
     character_data.sleep_point = 0
-    character_data.urinate_point = 0
     # 清零各特殊状态flag
     old_imprisonment = character_data.sp_flag.imprisonment
     # 外交访问状态需要跨上线保留，否则外交官随罗德岛抵达驻在国回岛后会丢失驻在国信息
@@ -7694,12 +7693,9 @@ def handle_milk_add_adjust(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
     pl_character_data: game_type.Character = cache.character_data[0]
 
-    now_milk = int(target_data.pregnancy.milk)
+    now_milk = int(needs.of(character_data.target_character_id)["milk"])
     character_data.behavior.milk_ml += now_milk
     cache.rhodes_island.milk_in_fridge.setdefault(
         character_data.target_character_id, 0
@@ -7713,7 +7709,7 @@ def handle_milk_add_adjust(
     pl_character_data.pl_collection.milk_total[
         character_data.target_character_id
     ] += now_milk
-    target_data.pregnancy.milk = 0
+    needs.set(character_data.target_character_id, milk=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -12016,7 +12012,7 @@ def handle_urinate_point_zero(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    character_data.urinate_point = 0
+    needs.set(character_id, urine=0)
     # 尿道的精液一起归零
     character_data.dirty.body_semen[9][1] = 0
     character_data.dirty.body_semen[9][2] = 0
@@ -12066,8 +12062,7 @@ def handle_hunger_point_zero(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.hunger_point = 0
+    needs.set(character_id, hunger=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -12090,10 +12085,7 @@ def handle_target_hunger_point_zero(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.hunger_point = 0
+    needs.set(character_data.target_character_id, hunger=0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -12164,8 +12156,9 @@ def handle_add_small_urinate_point(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.urinate_point = min(character_data.urinate_point + 60, 300)
+    needs.set(
+        character_id, urine=min(needs.of(character_id)["urine"] + 60, 300)
+    )
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -12188,10 +12181,8 @@ def handle_target_add_small_urinate_point(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.urinate_point = min(target_data.urinate_point + 60, 300)
+    target_id = character_data.target_character_id
+    needs.set(target_id, urine=min(needs.of(target_id)["urine"] + 60, 300))
 
 
 @settle_behavior.add_settle_behavior_effect(

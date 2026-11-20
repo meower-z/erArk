@@ -15,7 +15,7 @@ from Script.Core import (
     py_cmd,
 )
 from Script.Config import normal_config
-from Script.Modules.save_load import index
+from Script.Modules.save_load import index, kernel_state
 from Script.UI.Moudle import panel, draw
 
 cache: game_type.Cache = cache_control.cache
@@ -296,8 +296,18 @@ class SaveInfoDraw:
                 break
             elif yrn == back_draw.return_text:
                 return
-        # 在游戏里读档时，读档中止玩家这次选行动，不回到这里；在标题画面读档时回到这里，存档列表随之退出
-        save_handle.input_load_save(str(self.text))
+        # 在游戏里读档成功时，读档中止玩家这次选行动，不回到这里。在标题画面读档成功时回到这里，存档列表随之退出
+        # 存档被拒绝（kernel_state.SaveRefused）时回到这里，显示原因，留在存档列表
+        try:
+            save_handle.input_load_save(str(self.text))
+        except kernel_state.SaveRefused as refused:
+            refused_draw = draw.WaitDraw()
+            refused_draw.text = _("\n读档被拒绝：{reason}\n").format(
+                reason=refused
+            )
+            refused_draw.width = self.width
+            refused_draw.draw()
+            return
         cache.back_save_panel = True
 
     def delete_save(self) -> None:

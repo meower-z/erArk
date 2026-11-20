@@ -20,6 +20,7 @@ from types import FunctionType
 from Script.Core import cache_control, get_text
 from Script.Config import game_config
 from Script.Design import map_handle
+from Script.Modules.domains import power
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -98,16 +99,11 @@ def check_power_supply_strategy_validity() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能:
-        来源: IO-01。校验cache.rhodes_island.power_supply_strategy的键值域：键必须是当前配置中
-        type==-1的大区块设施cid，值必须是game_config.config_supply_strategy的合法键。管理面板只为该类
-        大区块初始化键并在合法值间轮换；消费端basement.calc_facility_efficiency先把子设施折算到父区块，
-        再对策略配置做无保护索引，非法键说明派生表结构损坏，非法值会直接KeyError
+        来源: IO-01。校验GameState全局键base.power_strategy（经power.strategies读）的键值域：
+        键必须是当前配置中type==-1的大区块设施cid，值必须是game_config.config_supply_strategy的合法键。
+        basement.calc_facility_efficiency先把子设施折算到父区块，再对策略配置做无保护索引，非法值会直接KeyError。
     """
-    cache = cache_control.cache
-    ri = getattr(cache, "rhodes_island", None)
-    strategy = getattr(ri, "power_supply_strategy", None)
-    if not isinstance(strategy, dict):
-        return []
+    strategy = power.strategies()
     valid_zone_cids = {
         cid
         for cid, fac in game_config.config_facility.items()
@@ -121,7 +117,7 @@ def check_power_supply_strategy_validity() -> list[CheckFailure]:
                 make_failure(
                     "SUPP-01",
                     "供电策略合法性",
-                    f"power_supply_strategy中的键zone_cid={zone_cid}不是当前配置中type==-1的大区块设施cid"
+                    f"base.power_strategy中的键zone_cid={zone_cid}不是当前配置中type==-1的大区块设施cid"
                     f"（合法区块集合={sorted(valid_zone_cids)}），basement.calc_facility_efficiency按此键折算子设施供电策略时会取到脏数据",
                     [],
                 )
@@ -131,7 +127,7 @@ def check_power_supply_strategy_validity() -> list[CheckFailure]:
                 make_failure(
                     "SUPP-01",
                     "供电策略合法性",
-                    f"power_supply_strategy[{zone_cid}]={strategy_id}不在合法策略id集合{sorted(valid_strategy_ids)}中，"
+                    f"base.power_strategy[{zone_cid}]={strategy_id}不在合法策略id集合{sorted(valid_strategy_ids)}中，"
                     f"basement.calc_facility_efficiency会对game_config.config_supply_strategy[{strategy_id}]做无保护索引，直接KeyError",
                     [],
                 )

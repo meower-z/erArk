@@ -1,21 +1,19 @@
 """
 事件内核
 ========
-游戏状态 GameState 不可变，含时钟（分钟）、角色表与全局数据。每个角色同时只有一个行动。
-step() 每次结算一件事：一个触发的事件，否则是行动已结束、种类登记了结束函数的第一个角色的收尾，
-否则是行动已结束的第一个角色（同一步里选下一个行动并开始），
-否则由 kernel.TimeElapse 推进时钟。插件模块按 load() 的顺序给钩子点挂输入钩子与输出钩子。
-行动、事件与钩子返回的效果（Effects）由 kernel.ApplyEffects 应用到状态上。
+GameState 不可变，含时钟（分钟）、角色表与全局数据。数据值是 JSON 值，也可以是 Fraction。每个角色同时只有一个行动。
+step() 每次结算一件事，次序见 _step。一步抛出异常时，step() 恢复这一步之前的状态，再调用钩子点 kernel.StepFailed。
+插件模块按 load() 的顺序给钩子点挂输入钩子与输出钩子。效果（Effects）由 kernel.ApplyEffects 应用到状态上。
 """
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
+from fractions import Fraction
 from types import MappingProxyType, ModuleType
 from typing import Any, Literal, NoReturn, cast
 
-type JSON = (
-    None | bool | int | float | str | tuple[JSON, ...] | Mapping[str, JSON]
-)
+type _Scalar = None | bool | int | float | Fraction | str
+type JSON = _Scalar | tuple[JSON, ...] | Mapping[str, JSON]
 type Hooks = dict[tuple[str, str], list[Callable[..., Any]]]
 
 
@@ -370,7 +368,7 @@ def _frozen(value: JSON) -> JSON:
         return _frozen_data(value)
     if isinstance(value, tuple | list):
         return tuple(_frozen(item) for item in value)
-    if value is None or isinstance(value, bool | int | float | str):
+    if value is None or isinstance(value, bool | int | float | Fraction | str):
         return value
     raise TypeError(f"{value!r} is not JSON")
 
@@ -589,12 +587,6 @@ def _data_of(game: GameState, who: str | None) -> Data:
     return game.data if who is None else game.characters[who].data
 
 
-def _with_data(game: GameState, who: str | None, data: Data) -> GameState:
-    if who is None:
-        return replace(game, data=_frozen_data(data))
-    return _with(game, who, data=_frozen_data(data))
-
-
 def value(game: GameState, who: str | None, key: str) -> JSON:
     """
     读一项数据
@@ -612,16 +604,19 @@ def with_value(
     game: GameState, who: str | None, key: str, new: JSON
 ) -> GameState:
     """
-    返回改了一项数据的新状态，数据冻结后存入
+    返回改了一项数据的新状态。只冻结 new。状态里已有的值本来就是冻结的，原样沿用。
     Keyword arguments:
     game -- 游戏状态
     who -- 角色键，None 为全局数据
     key -- 数据项名
-    new -- 新值
+    new -- 新值，可以含 Fraction
     Return arguments:
     GameState -- 新状态
     """
-    return _with_data(game, who, {**_data_of(game, who), key: new})
+    data = MappingProxyType({**_data_of(game, who), **_frozen_data({key: new})})
+    if who is None:
+        return replace(game, data=data)
+    return _with(game, who, data=data)
 
 
 def _round(game: GameState, effects: Effects) -> GameState:
@@ -922,11 +917,13 @@ def load(load_order: Sequence[ModuleType]) -> None:
     _context.plugins = (__name__, *(m.__name__ for m in load_order))
 
 
+@hook_only("kernel.StepFailed")
+def step_failed() -> None:
+    """钩子点 kernel.StepFailed，本体什么也不做。一步抛出异常、状态恢复之后，step() 调用它"""
+
+
 def step() -> None:
-    """
-    走一步（见 _step），时钟没动时这一分钟的步数加一，动了就归 0。在一步之内调用时报错
-    一步中抛出异常时恢复这一步之前的状态再抛出。选行动时换掉了整个状态，这一步就此结束
-    """
+    """走一步（见 _step），在一步之内调用时报错。一步抛出异常时恢复这一步之前的状态，调用 kernel.StepFailed，再抛出"""
     if _context.phase != "idle":
         raise RuntimeError("step() inside a step")
     before = _context.boundary = _context.state
@@ -938,6 +935,7 @@ def step() -> None:
         pass
     except BaseException:
         _context.state = before
+        _loop_calls(step_failed)
         raise
     finally:
         _context.phase = "idle"

@@ -329,8 +329,6 @@ class PREGNANCY:
         """ 角色开始受精的时间 """
         self.born_time: datetime.datetime = datetime.datetime(1, 1, 1)
         """ 角色出生的时间 """
-        self.milk: Num = 0
-        """ 角色当前乳汁量，单位毫升，每3分钟增加2毫升（平均4小时达到80%涨奶） """
         self.milk_max: int = 200
         """ 角色最大乳汁量，单位毫升 """
         self.unconscious_fertilization: bool = True
@@ -1540,8 +1538,6 @@ class Rhodes_Island:
         """ 当前正在使用的额外清洁能源模块数量的记录，用于在卖出等减少数量操作时防止超出 """
         self.now_used_extra_battery_count: int = 0
         """ 当前正在使用的额外蓄电池数量的记录，用于在卖出等减少数量操作时防止超出 """
-        self.power_supply_strategy: dict[int, int] = {}
-        """ 各主区块供电策略 facility_cid:策略id(见supply_strategy.csv) """
 
         # 工程部
         self.maintenance_place: dict[int, str] = {}
@@ -1888,12 +1884,6 @@ class Character:
         """ 角色临时最大精液槽 """
         self.angry_point: int = 0
         """ 角色当前愤怒槽 """
-        self.tired_point: Num = 0
-        """ 疲劳值 6m=1点，16h=160点(max)"""
-        self.urinate_point: Num = 0
-        """ 尿意值 1m=1点，4h=240点(max)"""
-        self.hunger_point: Num = 0
-        """ 饥饿值 1m=1点，4h=240点(max)"""
         self.sleep_point: Num = 0
         """ 熟睡值 1m=10点，10min=100点(max)"""
         self.desire_point: int = 0

@@ -10,7 +10,12 @@ from collections.abc import Callable, Mapping, Sequence
 from typing import cast
 
 from Script.Kernel import core
-from Script.Modules.gameplay_resolution import draft, intent, plan_queue
+from Script.Modules.gameplay_resolution import (
+    draft,
+    intent,
+    plan_queue,
+    working,
+)
 
 EDIT = intent.KIND_PREFIX + "Edit"
 """ Edit 的 action_id """
@@ -43,6 +48,7 @@ def edit_action(
     origin: str,
     changes: Sequence[draft.Change],
     interrupts: Sequence[str] = (),
+    effects: Sequence[core.JSON] = (),
     *,
     name: str | None = None,
     args: Mapping[str, core.JSON] | None = None,
@@ -53,15 +59,17 @@ def edit_action(
     origin -- 编辑来自哪里（面板或指令），只供查看
     changes -- 草稿
     interrupts -- 选择时排下打断的角色键
+    effects -- 选择时写 GameState 数据的写入（working.close_pick 交回的）
     name -- 具名编辑的名字，没有时为 None
     args -- 具名编辑的参数
     Return arguments:
-    Action -- data 为 origin、draft、interrupts，具名编辑时另有 edit 与 args
+    Action -- data 为 origin、draft、interrupts、effects，具名编辑时另有 edit 与 args
     """
     data: dict[str, core.JSON] = {
         "origin": origin,
         "draft": tuple(changes),
         "interrupts": tuple(interrupts),
+        "effects": tuple(effects),
     }
     if name is not None:
         data["edit"] = name
@@ -72,13 +80,15 @@ def edit_action(
 @core.action(EDIT)
 def start_edit(act: core.Action) -> core.Effects:
     """
-    Edit 的开始：写入草稿，重新排上选择时计划的打断，再运行具名编辑
+    Edit 的开始：先用 working.replay 把选择时的写入放进这一步的缓冲区，再写入草稿，
+    重新排上选择时计划的打断，最后运行具名编辑
     Keyword arguments:
     act -- Edit 行动
     Return arguments:
-    Effects -- 空：打断由计划队列在这一步交给内核
+    Effects -- 空，打断由计划队列在这一步交给内核
     """
     data = cast(Mapping[str, core.JSON], act.action_data)
+    working.replay(cast(Sequence[core.JSON], data.get("effects", ())))
     draft.apply(cast(Sequence[draft.Change], data["draft"]))
     for who in cast(Sequence[str], data["interrupts"]):
         plan_queue.interrupt(int(who))

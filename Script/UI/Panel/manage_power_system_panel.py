@@ -17,6 +17,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation, handle_ability
 from Script.UI.Moudle import draw, panel
+from Script.Modules.domains import power
 from Script.Modules.save_load import reset
 
 from typing import TYPE_CHECKING
@@ -56,51 +57,14 @@ UI 说明：
 
 
 # ---------------------------- 数据初始化辅助 ---------------------------- #
-UNBUILT_ZONES = (8, 18, 20)
-""" 未实装的区块，默认断电 """
-
-
-def strategy_of(zone_cid: int) -> int:
-    """
-    区块当前的供电策略，没有登记时为默认值：未实装的区块断电（2），其余标准（0）
-    Keyword arguments:
-    zone_cid -- 区块id
-    Return arguments:
-    int -- 供电策略
-    """
-    default = 2 if zone_cid in UNBUILT_ZONES else 0
-    return cache.rhodes_island.power_supply_strategy.get(zone_cid, default)
-
-
 @reset.repair
 def _init_power_runtime_fields() -> None:
     """确保动力系统运行期字段存在：读档时修补旧存档，结算前也调用"""
     ri = cache.rhodes_island
-    if not hasattr(ri, "power_supply_strategy"):
-        cache.rhodes_island.power_supply_strategy = {}
     if not hasattr(ri, "power_storage"):
         cache.rhodes_island.power_storage = 0
     if not hasattr(ri, "power_storage_max"):
         cache.rhodes_island.power_storage_max = 0
-
-    # 初始化所有大区块的策略(参考 Facility.csv 中 -1 标记的主区块 cid 0~?)
-    for facility_cid, facility_data in game_config.config_facility.items():
-        # type = -1 为区块
-        try:
-            if (
-                facility_data.type == -1
-                and facility_cid not in ri.power_supply_strategy
-            ):
-                cache.rhodes_island.power_supply_strategy[facility_cid] = (
-                    0  # 标准
-                )
-                # 未实装的区块，默认断电
-                if facility_cid in UNBUILT_ZONES:
-                    cache.rhodes_island.power_supply_strategy[facility_cid] = (
-                        2  # 断电
-                    )
-        except Exception:
-            continue
 
 
 # ---------------------------- 工具函数 ---------------------------- #
@@ -469,7 +433,7 @@ def get_theoretical_power_generation() -> float:
 
 def _get_zone_adjust(zone_cid: int) -> float:
     """获取某区块当前策略调整系数"""
-    strategy_id = strategy_of(zone_cid)
+    strategy_id = power.strategy_of(zone_cid)
     strategy_obj = game_config.config_supply_strategy.get(strategy_id)
     if strategy_obj:
         try:
@@ -821,7 +785,7 @@ class Manage_Power_System_Panel:
                 # 跳过动力区本身
                 if cid == 1:
                     continue
-                st = strategy_of(cid)
+                st = power.strategy_of(cid)
                 # 设施名称
                 fac_name = attr_calculation.pad_display_width(
                     "　" + fac_data.name, 12
@@ -844,13 +808,13 @@ class Manage_Power_System_Panel:
                 def make_dec(cid_inner: int) -> "Callable[[], None]":
                     return lambda: self._set_strategy(
                         cid_inner,
-                        (strategy_of(cid_inner) - 1) % 5,
+                        (power.strategy_of(cid_inner) - 1) % 5,
                     )
 
                 def make_inc(cid_inner: int) -> "Callable[[], None]":
                     return lambda: self._set_strategy(
                         cid_inner,
-                        (strategy_of(cid_inner) + 1) % 5,
+                        (power.strategy_of(cid_inner) + 1) % 5,
                     )
 
                 btn_dec = draw.CenterButton(
@@ -880,11 +844,6 @@ class Manage_Power_System_Panel:
             if yrn == back.return_text:
                 break
 
-    def _cycle_strategy(self, cid: int) -> None:
-        """循环切换某区块的供电策略"""
-        ri = cache.rhodes_island
-        ri.power_supply_strategy[cid] = (strategy_of(cid) + 1) % 5
-
     def _set_strategy(self, cid: int, value: int) -> None:
         """
         设置某区块的供电策略
@@ -894,8 +853,7 @@ class Manage_Power_System_Panel:
         Return arguments:
         None
         """
-        ri = cache.rhodes_island
-        ri.power_supply_strategy[cid] = value
+        power.set_strategy(cid, value)
 
     # ---------- 调控员管理 ---------- #
     def _panel_operator(self) -> None:

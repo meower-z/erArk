@@ -54,6 +54,8 @@ class Intent(TypedDict):
     """ 选择时写下的草稿（draft.Change 的列表），开始时在 begin 之前写入；判定没过时不写 """
     interrupts: NotRequired[list[str]]
     """ 选择时排下打断的角色键，开始时在 begin 之前重新排上；判定没过时不排 """
+    effects: NotRequired[list[core.JSON]]
+    """ 选择时写 GameState 数据的写入（working.close_pick 交回的），开始时在草稿之前放进这一步。判定没过时不放 """
 
 
 def behavior_action(

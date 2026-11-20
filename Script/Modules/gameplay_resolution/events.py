@@ -19,6 +19,7 @@ from types import FunctionType
 from Script.Core import cache_control, constant, game_type, get_text, num
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions, plan_queue, time_hooks
+from Script.Modules.domains import needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -71,14 +72,15 @@ def _becomes_tired(character_id: int) -> bool:
     return character_data.hit_point <= 1 and not character_data.sp_flag.tired
 
 
-def tired_case(character_id: int) -> str | None:
+def tired_case(character_id: int, game: core.GameState) -> str | None:
     """
     疲劳或困倦的干员在 H 或跟随中时该怎么收场
     Keyword arguments:
     character_id -- 干员id
+    game -- 触发函数收到的 GameState，疲劳从它读
     Return arguments:
-    str | None -- "follow" 停止跟随，"group" 退出群交，"h" 结束 H，None 不用收场
-    （已排上力竭退出群交的干员，退出开始前群交可能已经转成普通 H，这时也不用收场）
+    str | None -- "follow" 停止跟随，"group" 退出群交，"h" 结束 H，None 不用收场。
+    已排上力竭退出群交的干员也是 None，因为退出开始前群交可能已经转成普通 H
     """
     from Script.Design import attr_calculation
 
@@ -93,7 +95,7 @@ def tired_case(character_id: int) -> str | None:
     if not (
         flag.tired
         or attr_calculation.get_tired_level(
-            num.whole(character_data.tired_point)
+            num.whole(needs.of(character_id, game)["tired"])
         )
         >= 2
     ):
@@ -212,7 +214,7 @@ def _h_end_when(game: core.GameState) -> str | None:
         or plan_queue.plan_has(0, constant.Behavior.T_H_HP_0)
     ):
         return None
-    return _first_npc(game, lambda cid: tired_case(cid) == "h")
+    return _first_npc(game, lambda cid: tired_case(cid, game) == "h")
 
 
 @core.event("gameplay_resolution.events.HEnd", _h_end_when)
@@ -243,7 +245,7 @@ def _group_exit_when(game: core.GameState) -> str | None:
     """
     if not time_hooks.arts_settled(game) or _player_spent(game):
         return None
-    return _first_npc(game, lambda cid: tired_case(cid) == "group")
+    return _first_npc(game, lambda cid: tired_case(cid, game) == "group")
 
 
 @core.event("gameplay_resolution.events.GroupExit", _group_exit_when)
@@ -272,7 +274,8 @@ def _stop_following_when(game: core.GameState) -> str | None:
     """
     return _first_npc(
         game,
-        lambda cid: not _becomes_tired(cid) and tired_case(cid) == "follow",
+        lambda cid: not _becomes_tired(cid)
+        and tired_case(cid, game) == "follow",
     )
 
 
@@ -308,20 +311,21 @@ def _h_left_behind_when(game: core.GameState) -> str | None:
     """
     if _player_spent(game):
         return None
-    return _first_npc(game, _left_behind)
+    return _first_npc(game, lambda cid: _left_behind(cid, game))
 
 
-def _left_behind(character_id: int) -> bool:
+def _left_behind(character_id: int, game: core.GameState) -> bool:
     """
-    这个干员被留在 H 里：玩家离开了场景，他还在 H 或某种性爱模式中，且没有要先收场的疲劳
+    这个干员被留在 H 里：玩家离开了场景，干员还在 H 或某种性爱模式中，且没有要先收场的疲劳
     Keyword arguments:
     character_id -- 干员id
+    game -- 触发函数收到的 GameState，交给 tired_case
     Return arguments:
     bool -- 成立时为真
     """
     from Script.Design import handle_premise
 
-    if tired_case(character_id) is not None:
+    if tired_case(character_id, game) is not None:
         return False
     character_data: game_type.Character = cache.character_data[character_id]
     flag = character_data.sp_flag
