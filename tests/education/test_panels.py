@@ -43,6 +43,7 @@ from Script.Core import text_handle
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.UI.Moudle import view
 import inspect
+from tests import kernel_data
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -59,7 +60,7 @@ teacher_b = make_character(103, "教师乙", 151)
 teacher_c = make_character(104, "教师丙", 151)
 teacher_d = make_character(105, "教师丁", 151)
 mother = make_character(102, "母亲", 0)
-daughter_list = [
+for i in range(11):
     make_character(
         201 + i,
         f"女儿{i + 1:02d}",
@@ -69,8 +70,6 @@ daughter_list = [
         mother_id=102,
         born_days=100,
     )
-    for i in range(11)
-]
 adult_student = make_character(301, "成年学生", 152)
 # 容器每轮都会按设施等级刷新房间开放状态，最小 fixture 没有完整的罗德岛数据，钉死它
 class_schedule_panel.basement.get_base_updata = lambda *a, **k: None
@@ -1446,14 +1445,14 @@ check(
     _tip,
 )
 set_time(period_time(0))
-_st.hit_point = 10
+kernel_data.set_needs(_st.cid, hit=10)
 _tip = character_info_head.get_now_class_tip(201)
 check(
     "L1 体力不足（上课状态是体力缺课、不是翘课）：不亮 <翘>",
     _tip is None or not _tip[0],
     _tip,
 )
-_st.hit_point = 100
+kernel_data.set_needs(_st.cid, hit=100)
 _st.sp_flag.is_h = True
 _tip = character_info_head.get_now_class_tip(201)
 check(

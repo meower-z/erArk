@@ -17,6 +17,7 @@ from collections.abc import Callable, Mapping
 from typing import cast
 
 from tests.slow.base import SlowTestCase
+from tests import kernel_data
 
 LOCKER_ROOM = ["大浴场", "更衣室"]
 """ 大浴场的更衣室（浴场衣柜） """
@@ -316,7 +317,7 @@ class PickDraftWorldTest(SlowTestCase):
 
         player = self.cache.character_data[0]
         player.item[0] = 1
-        player.sanity_point = 0
+        kernel_data.set_needs(player.cid, sanity=0)
 
         def pick() -> None:
             with player_pick.drafting("item"):
@@ -325,7 +326,7 @@ class PickDraftWorldTest(SlowTestCase):
         start, end, changed = self.run_pick(pick)
         self.assert_one_edit(start, end, changed)
         self.assertEqual(player.item[0], 0)
-        self.assertGreater(player.sanity_point, 0)
+        self.assertGreater(kernel_data.needs_of(player.cid)["sanity"], 0)
 
     def test_call_all_follow_rides_edit(self) -> None:
         """一键全跟随：一个 0 分钟的 Edit，之后每名干员都在跟随"""

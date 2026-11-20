@@ -15,20 +15,22 @@ from Script.Modules.gameplay_resolution import working
 from Script.Test.Static_Check.check_registry import get_all_checks
 from tests.fast.base import FastTestCase
 from Script.Config import normal_config
+from tests import kernel_data
 
 THIRD = Fraction(1, 3)
 """ 加到每个数值上的零头 """
-FIELDS = {
-    "hit_point": 500,
-    "mana_point": 500,
-    "sanity_point": 50,
-    "eja_point": 100,
-    "semen_point": 10,
-    "sleep_point": 66,
-}
+FIELDS = {"eja_point": 100, "semen_point": 10}
 """ 角色身上的连续数值与测试用的整数部分，都在各自量程内 """
-NEEDS = {"tired": 48, "urine": 100, "hunger": 38}
-""" 角色的生理需求（body.needs）与测试用的整数部分，都在各自量程内 """
+NEEDS = {
+    "tired": 48,
+    "urine": 100,
+    "hunger": 38,
+    "hit": 500,
+    "mana": 500,
+    "sanity": 50,
+    "sleep": 66,
+}
+""" body.needs 里的数值与测试用的整数部分，都在各自量程内 """
 
 
 class ExactStatsPassChecksTest(FastTestCase):
@@ -48,9 +50,9 @@ class ExactStatsPassChecksTest(FastTestCase):
             self.world.chara(1, "干员"),
         ]
         for chara in self.charas:
-            chara.hit_point_max = 1000
-            chara.mana_point_max = 1000
-            chara.sanity_point_max = 100
+            kernel_data.set_needs(
+                chara.cid, hit_max=1000, mana_max=1000, sanity_max=100
+            )
             chara.semen_point_max = 100
         self.enterContext(working.based_on(core.state()))
 

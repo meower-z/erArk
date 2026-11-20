@@ -16,10 +16,11 @@ from Script.Config import game_config
 from Script.Core import constant
 from Script.Design import instuct_judege, update
 from Script.Kernel import core
-from Script.Modules.gameplay_resolution import actions, intent, plan_queue
+from Script.Modules.gameplay_resolution import intent, plan_queue
 from Script.Modules.tk_ui import player_pick
 from Script.System.Instruct_System import handle_instruct
 from Script.System.Sex_System import hidden_sex_panel
+from tests import kernel_data
 from tests.fast.base import FastTestCase
 
 LOADED_FIRST = update
@@ -43,7 +44,7 @@ class HiddenSexCarryInsertsAfterAskTest(FastTestCase):
         self.player = self.world.chara(0, "博士")
         self.world.chara(NPC, "干员")
         self.player.target_character_id = NPC
-        core.reset_state(actions.state_from_cache())
+        core.reset_state(kernel_data.reprojected(core.state()))
 
     def test_carry_insert_queued_when_ask_starts(self) -> None:
         """邀请隐奸开始时排上阴道插入"""

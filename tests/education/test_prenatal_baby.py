@@ -27,6 +27,7 @@ from Script.Settle import past_day_settle
 from Script.System.Official_Event_System import official_event_handle
 from Script.System.Pregnancy_System import pregnancy_handle
 from Script.Design import game_time
+from tests import kernel_data
 
 clear_schedules()
 mother = make_character(102, "母亲", 0)
@@ -228,39 +229,38 @@ settle_behavior.handle_comprehensive_value_effect(
 check("出勤数不可被 CVE 改写", growth_a.attend_class_count == 0)
 
 section("喂奶 556")
-hp_max = baby_a.hit_point_max
+hp_max = kernel_data.needs_of(baby_a.cid)["hit_max"]
 favor_before = baby_a.favorability.get(0, 0)
-constant.settle_behavior_effect_data[
+nurse_child = constant.settle_behavior_effect_data[
     constant_effect.BehaviorEffect.NUIRSE_CHILD_ADD_ADJUST
-](0, 30, change, game_time.now())
+]
+kernel_data.written(nurse_child, 0, 30, change, game_time.now())
 check(
     "玩家喂奶：体力上限 +2、好感增加",
-    baby_a.hit_point_max == hp_max + E.NUIRSE_CHILD_HP_MAX_ADD
+    kernel_data.needs_of(baby_a.cid)["hit_max"]
+    == hp_max + E.NUIRSE_CHILD_HP_MAX_ADD
     and baby_a.favorability.get(0, 0) > favor_before,
 )
 nurse.target_character_id = 203
 favor_before = baby_a.favorability.get(0, 0)
-hp_max = baby_a.hit_point_max
-constant.settle_behavior_effect_data[
-    constant_effect.BehaviorEffect.NUIRSE_CHILD_ADD_ADJUST
-](105, 30, change, game_time.now())
+hp_max = kernel_data.needs_of(baby_a.cid)["hit_max"]
+kernel_data.written(nurse_child, 105, 30, change, game_time.now())
 check(
     "保育员喂奶：只加体质不加好感",
-    baby_a.hit_point_max == hp_max + E.NUIRSE_CHILD_HP_MAX_ADD
+    kernel_data.needs_of(baby_a.cid)["hit_max"]
+    == hp_max + E.NUIRSE_CHILD_HP_MAX_ADD
     and baby_a.favorability.get(0, 0) == favor_before,
 )
 pl.target_character_id = 102
-hp_max = mother.hit_point_max
-constant.settle_behavior_effect_data[
-    constant_effect.BehaviorEffect.NUIRSE_CHILD_ADD_ADJUST
-](0, 30, change, game_time.now())
-check("非婴儿不生效", mother.hit_point_max == hp_max)
+hp_max = kernel_data.needs_of(mother.cid)["hit_max"]
+kernel_data.written(nurse_child, 0, 30, change, game_time.now())
+check("非婴儿不生效", kernel_data.needs_of(mother.cid)["hit_max"] == hp_max)
 pl.target_character_id = 203
-hp_max = baby_a.hit_point_max
-constant.settle_behavior_effect_data[
-    constant_effect.BehaviorEffect.NUIRSE_CHILD_ADD_ADJUST
-](0, 0, change, game_time.now())
-check("add_time=0 不生效", baby_a.hit_point_max == hp_max)
+hp_max = kernel_data.needs_of(baby_a.cid)["hit_max"]
+kernel_data.written(nurse_child, 0, 0, change, game_time.now())
+check(
+    "add_time=0 不生效", kernel_data.needs_of(baby_a.cid)["hit_max"] == hp_max
+)
 
 # ---------------------------------------------------------------------------
 # Plan 32（第十三轮复查）
@@ -326,7 +326,7 @@ _orig_base_newday = basement.update_base_resouce_newday
 basement.update_base_resouce_newday = lambda: None
 _new_day_error = ""
 try:
-    past_day_settle.update_new_day()
+    kernel_data.written(past_day_settle.update_new_day)
 except Exception as now_error:
     import traceback  # noqa: E402
 

@@ -20,6 +20,7 @@ from Script.Core import game_type, save_handle
 from Script.Design import attr_calculation
 from Script.Modules.save_load import index
 from Script.UI.Moudle import draw
+from tests import kernel_data
 from tests.fast.base import FastTestCase
 
 SLOT = "leaves_out"
@@ -87,6 +88,7 @@ class SaveLeavesOutTest(FastTestCase):
             mock.patch.object(
                 attr_calculation, "get_country_reset", lambda c: c
             ),
+            kernel_data.writing(),
         ):
             save_handle.install_save(SLOT, 1)
         return next(text for text in texts if "完成了更新" in text)

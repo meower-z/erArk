@@ -19,6 +19,7 @@ from Script.Modules.domains import needs
 from Script.Modules.gameplay_resolution import working
 from Script.Settle import realtime_settle
 from tests.fast.base import FastTestCase
+from tests import kernel_data
 
 CUTS = {
     "8": [0, 8],
@@ -152,12 +153,14 @@ class SettlePiecesTest(FastTestCase):
         def prepare() -> game_type.Character:
             player = self.world.chara(0, "博士")
             player.pl_ability.visual = True
-            player.sanity_point = 100
+            kernel_data.set_needs(player.cid, sanity=100)
             self.behave(0, constant.Behavior.WAIT, 8)
             return player
 
         self.assert_exact(
-            self.by_cuts(prepare, lambda c: c.sanity_point),
+            self.by_cuts(
+                prepare, lambda c: kernel_data.needs_of(c.cid)["sanity"]
+            ),
             100 - Fraction(2, 3),
         )
 
@@ -166,12 +169,15 @@ class SettlePiecesTest(FastTestCase):
 
         def prepare() -> game_type.Character:
             chara = self.npc(constant.Behavior.WAIT)
-            chara.drunk_point = 40
+            kernel_data.set_needs(chara.cid, drunk=40)
             needs.set(chara.cid, hunger=120)
             return chara
 
         self.assert_exact(
-            self.by_cuts(prepare, lambda c: c.drunk_point), 40 - Fraction(4, 5)
+            self.by_cuts(
+                prepare, lambda c: kernel_data.needs_of(c.cid)["drunk"]
+            ),
+            40 - Fraction(4, 5),
         )
 
     def test_absorb_and_hunger_on_grid(self) -> None:
@@ -189,7 +195,7 @@ class SettlePiecesTest(FastTestCase):
     def test_hunger_rate_on_grid(self) -> None:
         """体力剩一半、气力全满，5 分钟：饥饿加 5 * 3/4 * (2 - 50/100) = 45/8"""
         chara = self.npc(constant.Behavior.WAIT)
-        chara.hit_point = 50
+        kernel_data.set_needs(chara.cid, hit=50)
         self.enterContext(working.based_on(core.state()))
         needs.set(1, hunger=0)
         with mock.patch("random.randint", return_value=100):

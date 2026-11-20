@@ -52,7 +52,7 @@ class GrowthDrugStageNamesTest(SlowTestCase):
         无
         """
         super().setUp()
-        from Script.Design import character_handle, map_handle, talk
+        from Script.Design import map_handle, talk
 
         # 母亲一侧必显二段的口上显示与本条无关，不显示
         self.addCleanup(
@@ -62,9 +62,7 @@ class GrowthDrugStageNamesTest(SlowTestCase):
         self.mother_id = min(cid for cid in self.cache.npc_id_got if cid)
         self.mother = self.cache.character_data[self.mother_id]
         self.baby_id_list = [
-            character_handle.born_new_character(
-                self.mother_id, f"测试女儿{index}"
-            )
+            kernel_data.born(self.mother_id, f"测试女儿{index}")
             for index in (1, 2)
         ]
         nursery = next(

@@ -84,9 +84,8 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         int -- 女儿的角色id
         """
         from Script.Core import game_type
-        from Script.Design import character_handle
 
-        daughter_id = character_handle.born_new_character(mother_id, name)
+        daughter_id = kernel_data.born(mother_id, name)
         daughter = self.cache.character_data[daughter_id]
         for talent_id in (101, 102, 103, 104, 6, 7):
             daughter.talent[talent_id] = 0

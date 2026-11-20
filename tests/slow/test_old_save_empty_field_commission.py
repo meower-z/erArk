@@ -71,11 +71,8 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
         Return arguments:
         int -- 女儿的角色id
         """
-        from Script.Design import character_handle
 
-        daughter_id = character_handle.born_new_character(
-            self._mother_id(), name
-        )
+        daughter_id = kernel_data.born(self._mother_id(), name)
         talent = self.cache.character_data[daughter_id].talent
         for talent_id in (101, 102, 103, 104):
             talent[talent_id] = 0

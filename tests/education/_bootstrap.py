@@ -282,7 +282,8 @@ def make_character(
     born_days: int = 30,
 ) -> game_type.Character:
     """
-    造一个能跑通结算 / 前提 / 面板链路的最小角色 fixture，登记进 cache，再把它的四项生理需求设为 0（吃饱、歇足）
+    造一个能跑通结算 / 前提 / 面板链路的最小角色 fixture，登记进 cache，
+    再把它的疲劳、饥饿、尿意、乳汁设为 0（吃饱、歇足），体力、气力与它们的上限设为 100
     Keyword arguments:
     cid -- 角色id（0 为玩家）
     name -- 角色名
@@ -322,10 +323,6 @@ def make_character(
         attr_calculation.get_assistant_services_zero()
     )  # 实行值计算会读助理服务[8]
     cd.talent[121] = 1
-    cd.hit_point_max = 100
-    cd.hit_point = 100
-    cd.mana_point_max = 100
-    cd.mana_point = 100
     cd.work.work_type = work_type
     cd.dormitory = scene_str(SCENE_DORM)
     cd.behavior.start_time = game_time.now()
@@ -344,6 +341,7 @@ def make_character(
     cd.position = list(position if position is not None else SCENE_DORM)
     cache.character_data[cid] = cd
     kernel_data.set_needs(cid, tired=0, hunger=0, urine=0, milk=0)
+    kernel_data.set_needs(cid, hit=100, hit_max=100, mana=100, mana_max=100)
     # 婴儿不进 npc_id_got，与真实婴儿一致（Plan 28 §3.9）：character_handle.born_new_character 不加，
     #    要到长成幼女、get_new_character 上线时才加。此前夹具把婴儿也放进去，婴儿期事件派不出来的 BUG 一直测不出
     if cid and stage != 101:

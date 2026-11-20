@@ -15,6 +15,7 @@ from tests import pick_guard
 from tests import world as world_module
 from tests.fast.base import FastTestCase
 from Script.UI.Moudle import view
+from tests import kernel_data
 
 
 class PickReadsOnlyTest(FastTestCase):
@@ -63,7 +64,7 @@ class PickReadsOnlyTest(FastTestCase):
         """对照：选择里改了角色的数值后取消，指纹变了"""
 
         def write() -> None:
-            self.cache.character_data[1].hit_point += 1
+            kernel_data.set_needs(1, hit=kernel_data.needs_of(1)["hit"] + (1))
             player_pick.back()
 
         self.assertTrue(self.play(write).changed)

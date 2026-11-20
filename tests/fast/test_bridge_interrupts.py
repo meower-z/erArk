@@ -22,6 +22,7 @@ from Script.Modules.gameplay_resolution import actions, plan_queue, time_hooks
 from Script.Settle import realtime_settle
 from Script.Modules.load_order import LOAD_ORDER
 from tests.fast.base import FastTestCase
+from tests import kernel_data
 
 CLOCK = game_time.minutes(datetime(2020, 12, 22, 10, 40))
 """ 内核时钟 """
@@ -81,7 +82,7 @@ class BridgeInterruptsTest(FastTestCase):
         maker -- 弄出动静的角色id
         sleeper -- 浅睡的角色id
         """
-        self.cache.character_data[sleeper].sleep_point = 0
+        kernel_data.set_needs(sleeper, sleep=0)
 
         def settle(cid: int, now: datetime, since: datetime) -> None:
             if cid == maker:

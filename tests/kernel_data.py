@@ -4,9 +4,11 @@
 ============================
 - writing：测试在一步之外跑写 GameState 数据的游戏代码（例如直接调用孕产结算）时用。
   写入记在以当前状态为底的缓冲区里，with 块结束时套用到内核状态上。
-- set_needs 与 needs_of 在一步之外改、读角色的生理需求。
+- written 在 writing 里跑一个游戏函数并交回它的返回值。born 用 written 在一步之外生一个孩子。
+- set_needs 与 needs_of 改、读角色的 body.needs，set_milk_max 与 milk_max_of 改、读角色的乳汁上限（body.pregnancy）。
 - reprojected 从缓存重新投影各角色的行动，每个角色的数据跟着这个角色留在角色数据或 roster.offstage 里。
-- project_state 在快照里按生理需求与供电策略在缓存里时的名字记下它们的值，快照因此能与以前的快照比较。
+- project_state 在快照里用这些数据在缓存里时的属性名记下 body.needs、乳汁上限与动力状态的值，
+  快照因此能与按缓存属性录下的快照比较。
 """
 
 from __future__ import annotations
@@ -16,9 +18,10 @@ from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Callable, Iterator
 
     from Script.Core import game_type
+    from Script.Core.num import Num
     from Script.Kernel import core
     from Script.Modules.domains.needs import Needs
 
@@ -39,17 +42,49 @@ def writing() -> Iterator[None]:
     core.reset_state(core.preview(core.state(), effects))
 
 
-def set_needs(cid: int, **values: int) -> None:
+def written[**P, T](fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> T:
     """
-    在一步之外把角色的几项生理需求（body.needs）换成新值，套用到内核状态上
+    在一步之外跑写 GameState 数据的游戏函数 fn：在 writing 的 with 块里调用它，块结束时写下的数据套用到内核状态上
+    Keyword arguments:
+    fn -- 游戏函数
+    args -- fn 的位置参数
+    kwargs -- fn 的关键字参数
+    Return arguments:
+    T -- fn 的返回值
+    """
+    with writing():
+        return fn(*args, **kwargs)
+
+
+def born(mother_id: int, name: str) -> int:
+    """
+    在一步之外由 character_handle.born_new_character 生一个孩子，经 written 把写下的数据套用到内核状态上
+    Keyword arguments:
+    mother_id -- 母亲的角色id
+    name -- 孩子的名字
+    Return arguments:
+    int -- 孩子的角色id
+    """
+    from Script.Design import character_handle
+
+    return written(character_handle.born_new_character, mother_id, name)
+
+
+def set_needs(cid: int, **values: Num) -> None:
+    """
+    把角色 body.needs 里给出的项换成新值。
+    在一步、一次挑选或一个缓冲区里时写进当前缓冲区，不在这些里时套用到内核状态上
     Keyword arguments:
     cid -- 角色id
-    values -- 需求项到新值
+    values -- 项到新值
     """
     from Script.Modules.domains import needs
 
-    with writing():
+    try:
         needs.set(cid, **values)
+    except RuntimeError:
+        with writing():
+            needs.set(cid, **values)
 
 
 def needs_of(cid: int) -> Needs:
@@ -63,6 +98,36 @@ def needs_of(cid: int) -> Needs:
     from Script.Modules.domains import needs
 
     return needs.of(cid)
+
+
+def set_milk_max(cid: int, value: int) -> None:
+    """
+    把角色的乳汁上限（body.pregnancy）换成 value。
+    在一步、一次挑选或一个缓冲区里时写进当前缓冲区，不在这些里时套用到内核状态上
+    Keyword arguments:
+    cid -- 角色id
+    value -- 乳汁上限
+    """
+    from Script.Modules.domains import pregnancy
+
+    try:
+        pregnancy.set_milk_max(cid, value)
+    except RuntimeError:
+        with writing():
+            pregnancy.set_milk_max(cid, value)
+
+
+def milk_max_of(cid: int) -> int:
+    """
+    角色此刻的乳汁上限（body.pregnancy），在缓冲区里时含还没套用的写入
+    Keyword arguments:
+    cid -- 角色id
+    Return arguments:
+    int -- 乳汁上限
+    """
+    from Script.Modules.domains import pregnancy
+
+    return pregnancy.milk_max(cid)
 
 
 def reprojected(game: core.GameState) -> core.GameState:
@@ -125,8 +190,9 @@ def _without_open(game: core.GameState, who: str) -> dict[str, core.JSON]:
 
 def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     """
-    快照里按旧缓存的属性名记下 GameState 里的生理需求与动力状态，快照因此能与按这些名字录下的基准逐项比较。
-    生理需求记作 chara.<id>.tired_point、hunger_point、urinate_point、pregnancy.milk。
+    快照里按旧缓存的属性名记下 GameState 里的生理需求、体力等数值与动力状态，快照因此能与按这些名字录下的基准逐项比较。
+    body.needs 记作 chara.<id>.tired_point、hunger_point、urinate_point、pregnancy.milk
+    与 upgrade.PICKLED_NEEDS 里的属性名，乳汁上限记作 chara.<id>.pregnancy.milk_max。
     每个大区块的生效策略记作 world.base.power_supply_strategy.<区块id>。
     动力记在 world.base 下，名字为 power_storage、power_storage_max、power_operator_ids_list、
     main_power_facility_operator_ids、orundum_reactor_list（主反应炉等级与副反应炉数量）、other_power_facility_list
@@ -136,14 +202,18 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     state -- 快照，原地补上
     """
     from Script.Config import game_config
-    from Script.Modules.domains import needs, power
+    from Script.Modules.domains import needs, power, pregnancy
+    from Script.Modules.save_load import upgrade
     from tests.snapshot import flatten
 
     names = {"tired": "tired_point", "hunger": "hunger_point"}
     names.update(urine="urinate_point", milk="pregnancy.milk")
+    names.update({stat: name for name, stat in upgrade.PICKLED_NEEDS.items()})
     for cid in cache.character_data:
         for stat, value in needs.of(cid).items():
             flatten(f"chara.{cid}.{names[stat]}", value, state)
+        name = f"chara.{cid}.pregnancy.milk_max"
+        flatten(name, pregnancy.milk_max(cid), state)
     for zone, facility in game_config.config_facility.items():
         if facility.type == -1:
             name = f"world.base.power_supply_strategy.{zone}"

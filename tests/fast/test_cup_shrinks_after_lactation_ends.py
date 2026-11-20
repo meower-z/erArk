@@ -16,6 +16,7 @@ from Script.Modules.domains import needs
 from Script.Modules.gameplay_resolution import working
 from Script.UI.Panel import gift_panel
 from tests.fast.base import FastTestCase
+from tests import kernel_data
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -54,7 +55,7 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
         for talent_id in CUPS:
             cd.talent[talent_id] = 0
         cd.talent[cup] = 1
-        cd.pregnancy.milk_max = 190
+        kernel_data.set_milk_max(cd.cid, 190)
         return cd
 
     def engorge(self, cid: int, cup: int) -> "game_type.Character":

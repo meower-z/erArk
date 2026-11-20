@@ -16,6 +16,7 @@ import itertools
 import sys
 import tempfile
 from collections.abc import Callable
+from dataclasses import replace
 from types import MappingProxyType, ModuleType
 from typing import Any
 from unittest import mock
@@ -142,8 +143,9 @@ class KernelStateTest(FastTestCase):
 
     def test_load_takes_difficulty_from_save(self) -> None:
         """
-        存档时难度 1 为 3、系统设置 1 号为 0；之后难度改成 1、系统设置改成 1，再读档：
-        难度回到 3，系统设置还是 1、还是同一个对象；内核回到存档时的 GameState
+        存档时难度 1 为 3、系统设置 1 号为 0。之后把难度改成 1、系统设置改成 1，再读档。
+        难度回到 3，系统设置还是 1、还是同一个对象。
+        内核的 GameState 除去全局键 roster.offstage 之外与存档时相同
         """
         self.world.chara(0, "博士")
         cache = self.cache
@@ -162,13 +164,16 @@ class KernelStateTest(FastTestCase):
         self.assertEqual(cache.difficulty_setting[1], 3)
         self.assertIs(normal_config.system_setting, settings)
         self.assertEqual(settings.base_setting[1], 1)
-        self.assertEqual(core.state(), saved)
+        loaded = core.state()
+        data = dict(loaded.data)
+        data.pop("roster.offstage")
+        self.assertEqual(replace(loaded, data=MappingProxyType(data)), saved)
 
     def test_open_keys_load_and_no_end_runs_twice(self) -> None:
         """
-        存档里玩家的行为已收尾（open 为 None）、干员1的行为已结束而还没收尾、干员2的行为还在进行（open 都为真）：
-        读档后玩家是同样起止的 kernel.Idle，两名干员保留行为，没有 open；
-        走到三人都选过行动，结束函数对干员1在读档的这一分钟、对干员2在她的行为结束时各运行一次，玩家没有
+        存档里玩家的行为已收尾（open 为 None），干员1的行为已结束而还没收尾，干员2的行为还在进行（两人的 open 为真）。
+        读档后玩家是同样起止的 kernel.Idle，两名干员保留行为，三人的角色数据里都没有 open。
+        走到三人都选过行动，结束函数对干员1在读档的这一分钟、对干员2在她的行为结束时各运行一次，对玩家不运行
         """
         self.assertIn(actions.behave.name, core._actions, load_order.__name__)
         for cid in range(3):
@@ -212,7 +217,9 @@ class KernelStateTest(FastTestCase):
                 "2": (actions.behave.name, clock - 5, 10),
             },
         )
-        self.assertEqual([dict(c.data) for c in loaded.values()], [{}] * 3)
+        self.assertEqual(
+            ["open" in c.data for c in loaded.values()], [False] * 3
+        )
         ended: list[str] = []
 
         def end(act: core.Action) -> core.Effects:

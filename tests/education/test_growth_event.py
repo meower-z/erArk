@@ -5,7 +5,6 @@ from _bootstrap import (
     DEFAULT_TIME,
     _,
     cache,
-    character_handle,
     check,
     class_ai,
     clear_schedules,
@@ -405,7 +404,7 @@ check(
 section(
     "Plan 28 §3.1：走真实出生路径的婴儿（character_handle.born_new_character）"
 )
-real_baby_id = character_handle.born_new_character(102, "新生儿")
+real_baby_id = kernel_data.born(102, "新生儿")
 # 生产面板随后会写出生时刻（born_event_panel），这里照做
 cache.character_data[real_baby_id].pregnancy.born_time = (
     game_time.now() - datetime.timedelta(days=20)

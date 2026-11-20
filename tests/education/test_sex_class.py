@@ -39,6 +39,7 @@ from _bootstrap import (
 from Script.Design import instuct_judege
 from Script.Design import handle_npc_ai
 from Script.Settle import common_default
+from tests import kernel_data
 
 open_all_classroom()
 clear_schedules()
@@ -396,14 +397,14 @@ check(
 )
 
 section("旁观")
-student_b.hit_point = 10
+kernel_data.set_needs(student_b.cid, hit=10)
 check(
     "体力不足只旁观",
     sex_class_handle.judge_hp_low_only_watch(202)
     and not sex_class_handle.judge_hp_low_only_watch(201)
     and not sex_class_handle.judge_hp_low_only_watch(999),
 )
-student_b.hit_point = 100
+kernel_data.set_needs(student_b.cid, hit=100)
 cache.sex_class_mode = False
 check("没开课堂模式没有旁观者", sex_class_handle.get_watcher_list() == [])
 cache.sex_class_mode = True
@@ -675,8 +676,7 @@ schedule_handle.set_selected_course(
 )
 move_to(0, classroom_path(ROOM_P))
 move_to(305, classroom_path(ROOM_P))
-pl.sanity_point_max = 2000
-pl.sanity_point = 2000
+kernel_data.set_needs(pl.cid, sanity_max=2000, sanity=2000)
 pl.pl_ability.today_sanity_point_cost = 0
 pl.talent[332] = 0
 check(
@@ -698,10 +698,11 @@ check(
     all(_m1_list),
     _m1_list,
 )
+_m1_sanity = kernel_data.needs_of(pl.cid)["sanity"]
 check(
     "M1 求值 8 次后玩家理智不变、今日消耗不累加（此前每求值一次扣一回）",
-    pl.sanity_point == 2000 and pl.pl_ability.today_sanity_point_cost == 0,
-    (pl.sanity_point, pl.pl_ability.today_sanity_point_cost),
+    _m1_sanity == 2000 and pl.pl_ability.today_sanity_point_cost == 0,
+    (_m1_sanity, pl.pl_ability.today_sanity_point_cost),
 )
 check(
     "M1 她的心控没被动过",
@@ -730,19 +731,19 @@ check(
     ),
     all(_m1_in_class)
     and all(_m1_joinable)
-    and pl.sanity_point == 2000
+    and kernel_data.needs_of(pl.cid)["sanity"] == 2000
     and pl.pl_ability.today_sanity_point_cost == 0,
     (
         _m1_in_class,
         _m1_joinable,
-        pl.sanity_point,
+        kernel_data.needs_of(pl.cid)["sanity"],
         pl.pl_ability.today_sanity_point_cost,
     ),
 )
 cache.sex_class_mode = False
 cache.group_sex_mode = False
 cache.rhodes_island.temp_sex_class = {}
-pl.sanity_point = 0
+kernel_data.set_needs(pl.cid, sanity=0)
 check(
     "M1 理智为 0：没有补正，门槛不成立",
     not sex_class_handle.judge_can_join_sex_class(305),
@@ -751,19 +752,19 @@ handle_premise.handle_premise("scene_have_sex_class_student", 0)
 check(
     "M1 理智为 0 时判门槛、求值前提都不解除她的催眠（此前心控被清零），今日消耗仍为 0",
     hypno.sp_flag.unconscious_h == 7
-    and pl.sanity_point == 0
+    and kernel_data.needs_of(pl.cid)["sanity"] == 0
     and pl.pl_ability.today_sanity_point_cost == 0,
     (
         hypno.sp_flag.unconscious_h,
-        pl.sanity_point,
+        kernel_data.needs_of(pl.cid)["sanity"],
         pl.pl_ability.today_sanity_point_cost,
     ),
 )
-pl.sanity_point = 2000
-_m1_default = instuct_judege.calculation_instuct_judege(
-    0, 305, _("H模式"), not_draw_flag=True
+kernel_data.set_needs(pl.cid, sanity=2000)
+_m1_default = kernel_data.written(
+    instuct_judege.calculation_instuct_judege, 0, 305, _("H模式"), True
 )
-_m1_cost = 2000 - pl.sanity_point
+_m1_cost = 2000 - kernel_data.needs_of(pl.cid)["sanity"]
 check(
     "M1 其它系统的缺省调用（settle_hypnosis=True）照旧：补正后通过、扣理智、累加今日消耗",
     _m1_default[0] == 1
@@ -771,7 +772,7 @@ check(
     and pl.pl_ability.today_sanity_point_cost == _m1_cost,
     (_m1_default, _m1_cost, pl.pl_ability.today_sanity_point_cost),
 )
-pl.sanity_point = 0
+kernel_data.set_needs(pl.cid, sanity=0)
 instuct_judege.calculation_instuct_judege(
     0, 305, _("H模式"), not_draw_flag=True
 )
@@ -781,8 +782,7 @@ check(
     hypno.sp_flag.unconscious_h,
 )
 pl.talent[332] = 0
-pl.sanity_point = 0
-pl.sanity_point_max = 0
+kernel_data.set_needs(pl.cid, sanity=0, sanity_max=0)
 pl.pl_ability.today_sanity_point_cost = 0
 schedule_handle.clear_class_cell(ROOM_P, _hypno_day, 8)
 remove_character(305)

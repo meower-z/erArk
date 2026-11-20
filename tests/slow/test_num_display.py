@@ -23,21 +23,14 @@ WIDTH = 120
 """ 绘制宽度 """
 THIRD = Fraction(1, 3)
 """ 加在每个连续数值上的零头 """
-PLAIN_MAX = {
-    "hit_point": "hit_point_max",
-    "mana_point": "mana_point_max",
-    "sanity_point": "sanity_point_max",
-    "semen_point": "semen_point_max",
-}
-""" 有上限、画成数值条的连续数值：n 取上限 """
-PLAIN = (
-    "eja_point",
-    "sleep_point",
-    "drunk_point",
-)
+PLAIN_MAX = {"semen_point": "semen_point_max"}
+""" 角色对象上有上限、画成数值条的连续数值到它的上限属性：n 取上限 """
+NEEDS_MAX = {"hit": "hit_max", "mana": "mana_max", "sanity": "sanity_max"}
+""" body.needs 里有上限、画成数值条的连续数值到它的上限项：n 取上限 """
+PLAIN = ("eja_point",)
 """ 其余直接存放在角色上的连续数值：n 取 10 """
-NEEDS = ("tired", "urine", "hunger", "milk")
-""" GameState 里的生理需求（body.needs），n 取 10 """
+NEEDS = ("tired", "urine", "hunger", "milk", "sleep", "drunk")
+""" body.needs 里其余的连续数值：n 取 10 """
 STATUS_VALUE = 1000
 """ 各状态值的 n """
 
@@ -78,6 +71,11 @@ class NumDisplayTest(SlowTestCase):
         needs = importlib.import_module("Script.Modules.domains.needs")
         for character in (self.player, self.operator):
             needs.set(character.cid, **dict.fromkeys(NEEDS, 10 + extra))
+            current = needs.of(character.cid)
+            needs.set(
+                character.cid,
+                **{k: current[m] + extra for k, m in NEEDS_MAX.items()},
+            )
             for name, max_name in PLAIN_MAX.items():
                 setattr(character, name, getattr(character, max_name) + extra)
             for name in PLAIN:

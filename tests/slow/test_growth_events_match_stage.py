@@ -62,7 +62,7 @@ class GrowthEventsMatchStageTest(SlowTestCase):
         Return arguments:
         tuple -- (母亲id int, 姐姐id int, 妹妹id int)
         """
-        from Script.Design import character_handle, talk
+        from Script.Design import talk
         from Script.System.Pregnancy_System import (
             pregnancy_constant,
             pregnancy_handle,
@@ -75,7 +75,7 @@ class GrowthEventsMatchStageTest(SlowTestCase):
         talk.must_show_talk_check = lambda character_id: None
         mother_id = min(cid for cid in self.cache.npc_id_got if cid)
         mother = self.cache.character_data[mother_id]
-        elder_id = character_handle.born_new_character(mother_id, "测试姐姐")
+        elder_id = kernel_data.born(mother_id, "测试姐姐")
         mother.talent[REARING_TALENT] = 1
         with mock.patch.object(
             pregnancy_handle,
@@ -97,7 +97,7 @@ class GrowthEventsMatchStageTest(SlowTestCase):
             1,
             "姐姐长成了学员",
         )
-        younger_id = character_handle.born_new_character(mother_id, "测试妹妹")
+        younger_id = kernel_data.born(mother_id, "测试妹妹")
         self.assertEqual(
             self.cache.character_data[younger_id].talent[BABY],
             1,

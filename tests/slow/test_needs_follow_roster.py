@@ -68,7 +68,7 @@ class NeedsFollowRosterTest(SlowTestCase):
         self.assertEqual(needs.of(self.cid)["milk"], MILK)
 
     def test_online_reset_keeps_milk(self) -> None:
-        """上线的结算把饥饿、疲劳、尿意清零，乳汁不变"""
+        """上线的结算把饥饿、疲劳、尿意清零，乳汁不变。只比较 body.needs 里这四项"""
         core = game("Script.Kernel.core")
         game_type = game("Script.Core.game_type")
         default = game("Script.Settle.default")
@@ -82,7 +82,8 @@ class NeedsFollowRosterTest(SlowTestCase):
                 game_type.CharacterStatusChange(),
                 datetime.datetime.now(),
             )
-            got = dict(needs.of(self.cid))
+            got = needs.of(self.cid)
         self.assertEqual(
-            got, {"tired": 0, "hunger": 0, "urine": 0, "milk": MILK}
+            {k: got[k] for k in ("tired", "hunger", "urine", "milk")},
+            {"tired": 0, "hunger": 0, "urine": 0, "milk": MILK},
         )

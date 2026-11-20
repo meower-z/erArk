@@ -201,6 +201,7 @@ class PanelSubMenusReadOnly(FastTestCase):
                 pregnancy_handle, "get_child_grow_day", return_value=1
             )
         )
+        world_module.act(lambda: None)
         with self.subTest("选卵时返回"):
             self.assert_backs_out(["返回选卵"], lambda: panel.select_gift(36))
         with self.subTest("选婴儿时返回"):

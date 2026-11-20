@@ -14,6 +14,7 @@
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
+from tests import kernel_data
 
 AMIYA_ID = 1
 """ 阿米娅的角色id """
@@ -49,7 +50,7 @@ class EventsTiredChainTest(SlowTestCase):
         self.kaltsit.sp_flag.is_follow = 1
         self.kaltsit.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
         for chara in (self.amiya, self.kaltsit):
-            chara.hit_point = 1
+            kernel_data.set_needs(chara.cid, hit=1)
             chara.sp_flag.tired = False
         self.cache.pl_pre_behavior_instruce.clear()
         from Script.UI.Moudle import draw
@@ -160,7 +161,7 @@ class EventsTiredChainTest(SlowTestCase):
         from Script.Kernel import core
         from Script.Modules.gameplay_resolution import events, plan_queue
 
-        self.pl.hit_point = 1
+        kernel_data.set_needs(self.pl.cid, hit=1)
         game = cast(core.GameState, None)
         self.assertTrue(events._player_spent(game), "没排结束时成立")
         plan_queue.plan_next(0, constant.Behavior.H_INTERRUPT, 5)

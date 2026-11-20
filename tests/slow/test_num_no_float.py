@@ -43,15 +43,7 @@ MINUTES = 180
 """ 推进的游戏分钟数 """
 DENOMINATOR_LIMIT = 2**64
 """ 分母的上限（不含） """
-PLAIN = (
-    "hit_point",
-    "mana_point",
-    "sanity_point",
-    "eja_point",
-    "semen_point",
-    "sleep_point",
-    "drunk_point",
-)
+PLAIN = ("eja_point", "semen_point")
 """ 角色上直接存放的连续数值 """
 
 

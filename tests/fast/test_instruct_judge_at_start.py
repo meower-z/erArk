@@ -21,7 +21,6 @@ from Script.Core import constant, get_text
 from Script.Design import handle_premise, instuct_judege, update
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import (
-    actions,
     intent,
     player_starters,
     start_gate,
@@ -32,6 +31,7 @@ from Script.System.Instruct_System import handle_instruct
 from Script.System.Item_System import condom_panel
 from Script.System.Sex_System import group_sex_panel
 from tests.fast.base import FastTestCase
+from tests import kernel_data
 
 LOADED_FIRST = update
 """ 先于 Script.Modules 导入的 update：Script.Modules 的包初始化要在 update 导入途中进行 """
@@ -61,10 +61,9 @@ class InstructJudgeAtStartTest(FastTestCase):
         self.player = self.world.chara(0, "博士")
         self.npc = self.world.chara(NPC, "干员")
         self.player.target_character_id = NPC
-        self.player.sanity_point = SANITY
-        self.player.sanity_point_max = SANITY
+        kernel_data.set_needs(self.player.cid, sanity=SANITY, sanity_max=SANITY)
         self.npc.sp_flag.unconscious_h = IN_HYPNOSIS
-        core.reset_state(actions.state_from_cache())
+        core.reset_state(kernel_data.reprojected(core.state()))
 
     def pick(self, instruct_id: str) -> core.Action:
         """
@@ -80,18 +79,19 @@ class InstructJudgeAtStartTest(FastTestCase):
 
     def start(self, act: core.Action) -> core.Action:
         """
-        行动过开始门，再跑种类 Instruct 的开始代码
+        行动过开始门，再跑种类 Instruct 的开始代码。这两步写的 GameState 数据随后套用到内核状态上
         Keyword arguments:
         act -- 定下的行动
         Return arguments:
         Action -- 开始门交给内层的行动
         """
-        result = start_gate.gate(act)
-        assert isinstance(result, tuple)
-        gated = result[0]
-        if gated.action_id == intent.KIND_PREFIX + player_starters.KIND:
-            data = json.loads(json.dumps(gated.action_data))
-            handle_instruct.start_instruct(0, cast(intent.Intent, data))
+        with kernel_data.writing():
+            result = start_gate.gate(act)
+            assert isinstance(result, tuple)
+            gated = result[0]
+            if gated.action_id == intent.KIND_PREFIX + player_starters.KIND:
+                data = json.loads(json.dumps(gated.action_data))
+                handle_instruct.start_instruct(0, cast(intent.Intent, data))
         return gated
 
     def passes_by_hypnosis_only(self, judge: str) -> None:
@@ -112,7 +112,9 @@ class InstructJudgeAtStartTest(FastTestCase):
             0, NPC, judge, not_draw_flag=True, settle_hypnosis=False
         )[0]
         self.assertEqual((without, with_hypnosis), (0, 1))
-        self.assertEqual(self.player.sanity_point, SANITY)
+        self.assertEqual(
+            kernel_data.needs_of(self.player.cid)["sanity"], SANITY
+        )
 
     def deep_hypnosis(self) -> None:
         """玩家有中级催眠，交互对象被深层催眠"""
@@ -125,24 +127,28 @@ class InstructJudgeAtStartTest(FastTestCase):
         self.npc.trust = 200
         self.passes_by_hypnosis_only(_("戴上项圈"))
         act = self.pick(constant.Instruct.GIVE_NECKLACE)
-        self.assertEqual(self.player.sanity_point, SANITY)
+        self.assertEqual(
+            kernel_data.needs_of(self.player.cid)["sanity"], SANITY
+        )
         gated = self.start(act)
         data = gated.action_data
         assert isinstance(data, Mapping)
         self.assertEqual(data["behavior_id"], constant.Behavior.GIVE_NECKLACE)
-        self.assertLess(self.player.sanity_point, SANITY)
+        self.assertLess(kernel_data.needs_of(self.player.cid)["sanity"], SANITY)
 
     def test_group_sex_pays_hypnosis_at_start(self) -> None:
         """邀请群交靠催眠补正通过：开始后理智少了，行为是邀请群交"""
         self.deep_hypnosis()
         self.passes_by_hypnosis_only(_("群交"))
         act = self.pick(constant.Instruct.ASK_GROUP_SEX)
-        self.assertEqual(self.player.sanity_point, SANITY)
+        self.assertEqual(
+            kernel_data.needs_of(self.player.cid)["sanity"], SANITY
+        )
         gated = self.start(act)
         data = gated.action_data
         assert isinstance(data, Mapping)
         self.assertEqual(data["behavior_id"], constant.Behavior.ASK_GROUP_SEX)
-        self.assertLess(self.player.sanity_point, SANITY)
+        self.assertLess(kernel_data.needs_of(self.player.cid)["sanity"], SANITY)
 
     def test_condom_decoration_pays_hypnosis_at_start(self) -> None:
         """挂上避孕套装饰靠催眠补正通过严重骚扰判定：开始后理智少了"""
@@ -154,19 +160,21 @@ class InstructJudgeAtStartTest(FastTestCase):
             return_value={"op": "hang", "part": [0, 0], "condom": []},
         ):
             act = self.pick(constant.Instruct.HANG_CONDOM_DECORATION)
-        self.assertEqual(self.player.sanity_point, SANITY)
+        self.assertEqual(
+            kernel_data.needs_of(self.player.cid)["sanity"], SANITY
+        )
         gated = self.start(act)
         data = gated.action_data
         assert isinstance(data, Mapping)
         self.assertEqual(
             data["behavior_id"], constant.Behavior.HANG_CONDOM_DECORATION
         )
-        self.assertLess(self.player.sanity_point, SANITY)
+        self.assertLess(kernel_data.needs_of(self.player.cid)["sanity"], SANITY)
 
     def invite_from_editor(self) -> None:
         """
-        在群交模板编辑里邀请交互对象：小世界的干员没穿衣服（服装异常），状态检查记为正常；
-        她到玩家处的路程记为 0 分钟
+        在群交模板编辑里邀请交互对象：小世界的干员没穿衣服（服装异常），状态检查记为正常，
+        她到玩家处的路程记为 0 分钟。邀请写的 GameState 数据随后套用到内核状态上
         """
         editor = group_sex_panel.Edit_Group_Sex_Temple_Panel(100)
         with (
@@ -174,6 +182,7 @@ class InstructJudgeAtStartTest(FastTestCase):
             mock.patch.object(
                 handle_premise, "handle_normal_24567", return_value=1
             ),
+            kernel_data.writing(),
         ):
             editor.invite_npc(NPC)
 
@@ -183,13 +192,13 @@ class InstructJudgeAtStartTest(FastTestCase):
         self.passes_by_hypnosis_only(_("群交"))
         self.invite_from_editor()
         self.assertTrue(self.npc.sp_flag.go_to_join_group_sex)
-        self.assertLess(self.player.sanity_point, SANITY)
+        self.assertLess(kernel_data.needs_of(self.player.cid)["sanity"], SANITY)
 
     def test_editor_invite_refused_without_sanity(self) -> None:
         """理智不够催眠的代价：模板编辑里邀请她，她不被邀请"""
         self.deep_hypnosis()
         self.passes_by_hypnosis_only(_("群交"))
-        self.player.sanity_point = 0
+        kernel_data.set_needs(self.player.cid, sanity=0)
         self.invite_from_editor()
         self.assertFalse(self.npc.sp_flag.go_to_join_group_sex)
 
@@ -200,13 +209,16 @@ class InstructJudgeAtStartTest(FastTestCase):
         other = self.world.chara(OTHER_NPC, "干员2")
         other.sp_flag.unconscious_h = IN_HYPNOSIS
         other.talent[BEEN_DEEP_HYPNOSIS] = 1
-        core.reset_state(actions.state_from_cache())
-        instuct_judege.calculation_instuct_judege(
-            0, NPC, _("群交"), not_draw_flag=True
+        core.reset_state(kernel_data.reprojected(core.state()))
+        with kernel_data.writing():
+            instuct_judege.calculation_instuct_judege(
+                0, NPC, _("群交"), not_draw_flag=True
+            )
+        one_member_cost = (
+            SANITY - kernel_data.needs_of(self.player.cid)["sanity"]
         )
-        one_member_cost = SANITY - self.player.sanity_point
         self.assertGreater(one_member_cost, 0)
-        self.player.sanity_point = one_member_cost
+        kernel_data.set_needs(self.player.cid, sanity=one_member_cost)
         act = self.pick(constant.Instruct.ASK_GROUP_SEX)
         picked = cast(Mapping[str, core.JSON], act.action_data)
         staged = {"who": None, "key": "base.power_strategy", "old": None}
@@ -217,7 +229,11 @@ class InstructJudgeAtStartTest(FastTestCase):
         assert isinstance(data, Mapping)
         refused = self.player.action_info.ask_group_sex_refuse_chara_id_list
         self.assertEqual(
-            (data["behavior_id"], len(refused), self.player.sanity_point),
+            (
+                data["behavior_id"],
+                len(refused),
+                kernel_data.needs_of(self.player.cid)["sanity"],
+            ),
             (constant.Behavior.ASK_GROUP_SEX_FAIL, 1, 0),
             "（开始的行为，拒绝的人数，剩下的理智）",
         )
