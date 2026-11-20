@@ -21,7 +21,7 @@ memory: project
 
 ## 工作流程
 1. **接收任务**：从主代理接收目标文件路径和必要的参数
-2. **skill调用**：使用路径为'.github\skills\text_generation_for_instruction_code_generation'的skill
+2. **skill调用**：使用路径为'.agents\skills\text_generation_for_instruction_code_generation'的skill
 3. **文件读取**：通过skill读取所有相关的要求文件、前提文件和例子文件
 4. **内容理解**：全面理解所有读取的内容，包括格式要求、内容规范、示例模式等
 5. **目标文件操作**：

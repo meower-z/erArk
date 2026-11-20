@@ -6,7 +6,7 @@
     check() / section() / finish() 三个断言工具、make_character() 角色 fixture 工厂、
     set_time() / move_to() / open_all_classroom() / clear_schedules() 等环境工具。
 
-铁律（详见 .claude/skills/headless-game-test/SKILL.md）：
+铁律（详见 .agents/skills/headless-game-test/SKILL.md）：
     1. 脚本末尾必须调用 finish()。它打印汇总行，并按断言结果设退出码。慢速层的套件测试靠这两样判定脚本是否通过。
     2. 含中文的脚本一律写成文件跑，不要走 heredoc / stdin（GBK 会把中文喂坏）
     3. 只读：绝不调用 save_handle.establish_save()，不 inline 调用 init_character_behavior()

@@ -1,7 +1,7 @@
 export const meta = {
   name: 'system-review-implement',
   description: 'erArk 系统复查 P5：按实施单元并行实施与单元复审，再跑全套回归与三视角复审',
-  whenToUse: '由 system-review-round skill 在用户拍板、主代理改完共用文件之后调起；args 为方案、实施文档与实施单元表（字段见 .github/skills/system-review-round/tools/Workflow编排.md）',
+  whenToUse: '由 system-review-round skill 在用户拍板、主代理改完共用文件之后调起；args 为方案、实施文档与实施单元表（字段见 .agents/skills/system-review-round/tools/Workflow编排.md）',
   phases: [
     { title: 'Implement', detail: '每个实施单元一个代理，文件互不相交；随后单元复审' },
     { title: 'Regress', detail: '一个代理跑校验工具与全套回归' },

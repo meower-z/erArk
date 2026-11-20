@@ -126,7 +126,9 @@ black .
 | `mod/` | Mod 系统配置与示例 Mod（见 §16） |
 | `example/` | 模板/测试用例：事件、口上、外勤委托、富文本、纸娃娃文本 |
 | `save/` | 存档目录（被 gitignore） |
-| `.github/` | CI workflow、ISSUE 模板、agents、prompts（60+ 系统文档） |
+| `.github/` | GitHub Actions 工作流、ISSUE 模板 |
+| `docs/` | 系统与工作流文档（`数据处理工作流/`，见 §30.2）、角色 ID 重构文档（`重构文档/`）、文本创作参考资料（`authoring/`，见 §30.4） |
+| `.agents/skills/` | AI 代理按步骤执行的技能：`add-new-instruction`、`draw-aa-map`、`game-design-dialogue`、`headless-game-test`、`system-review-round`、`text_generation_for_instruction_code_generation`、`update-changelog` |
 | `old_data/`, `profiling/`, `profiling_output/` | 历史数据、性能分析与补丁、profiling 结果 |
 | `dist/`, `build/` | PyInstaller 打包产物（被 gitignore） |
 | `update.log` | 完整更新日志 |
@@ -969,7 +971,7 @@ GitHub Actions `.github/workflows/python-app.yml`（push/PR 到 master，windows
 - `update.log`：版本更新日志
 - `todo list.txt`：作者待办与未实装系统规划
 
-### 30.2 `.github/prompts/数据处理工作流/`（60 个文档）
+### 30.2 `docs/数据处理工作流/`（60 个文档）
 
 核心架构：
 `角色行为系统`, `前提系统`, `结算系统`, `口上系统`, `事件系统`, `通用结算函数函数`, `CSV数据加载机制说明`, `多周目结算与继承系统`
@@ -1004,13 +1006,14 @@ GitHub Actions `.github/workflows/python-app.yml`（push/PR 到 master，windows
 - `Medical_System/医疗经营系统.md`, `医疗经营系统实现流程.md`
 - `Sex_System/drunk_sex_plan.md`
 
-### 30.4 其他 `.github/prompts/` 内容资产
+### 30.4 `docs/authoring/` 文本创作参考资料
 
 - `基础/`：常用地点、种族等指令前提分支提示词
 - `H方式/`：按 H 方式（群交、隐奸、露出、催眠、监禁、时停、角色扮演等）拆分的前提分支提示词
 - `其他差分/`：礼物、药剂、食物加料、香薰疗愈等前提分支提示词
 - `AI文本生成工作流/`：AI 批量生成口上/地文的工作流与目标文件
 - `复数文本技能生成提示词/`：复数文本技能生成模板
+- `text_generation_for_instruction_code_generation/`：生成指令文本用的前提说明、生成要求和示例 csv
 
 ---
 

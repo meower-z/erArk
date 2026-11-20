@@ -1,6 +1,6 @@
 """
 把「生成目标文件」目录下各 csv 第 6 行起的数据剪切出来，追加到「生成完待处理数据.csv」；
-两者都在本脚本所在目录下的 .github/prompts/AI文本生成工作流/ 里
+两者都在本脚本所在目录下的 docs/authoring/AI文本生成工作流/ 里
 """
 
 from pathlib import Path
@@ -45,12 +45,12 @@ def main() -> None:
     """输入类型: None / 输出类型: None / 功能: 执行剪切与合并流程"""
     base_dir = Path(__file__).resolve().parent
     source_dir = (
-        base_dir / ".github" / "prompts" / "AI文本生成工作流" / "生成目标文件"
+        base_dir / "docs" / "authoring" / "AI文本生成工作流" / "生成目标文件"
     )
     target_file = (
         base_dir
-        / ".github"
-        / "prompts"
+        / "docs"
+        / "authoring"
         / "AI文本生成工作流"
         / "生成完待处理数据.csv"
     )
