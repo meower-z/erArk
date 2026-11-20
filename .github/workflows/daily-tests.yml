@@ -1,0 +1,62 @@
+name: Daily tests
+
+on:
+  schedule:
+    - cron: "17 19 * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/daily-tests.yml
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+            tests/requirements.txt
+
+      - name: Install dependencies
+        id: deps
+        run: python -m pip install -r requirements.txt -r requirements-dev.txt -r tests/requirements.txt
+
+      - name: Install window manager
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends openbox
+
+      - name: Fast suite
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
+        timeout-minutes: 15
+        run: python -m pytest tests/fast -p no:cacheprovider -rfEs --junitxml=test-reports/fast.xml
+
+      - name: Slow suite
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
+        timeout-minutes: 60
+        run: xvfb-run -a sh -c 'openbox & python -m pytest tests/slow --forked -k "not EducationSuiteTest" -p no:cacheprovider -rfEs --junitxml=test-reports/slow.xml'
+
+      - name: Education suite
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
+        timeout-minutes: 20
+        run: python -m pytest tests/slow --forked -k EducationSuiteTest -p no:cacheprovider -rfEsP --junitxml=test-reports/education.xml
+
+      - name: tools/verify unit tests
+        if: ${{ !cancelled() && steps.deps.outcome == 'success' }}
+        timeout-minutes: 10
+        run: python -m pytest tools/verify -p no:cacheprovider -rfEs --junitxml=test-reports/verify.xml
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports
+          path: test-reports/
+          retention-days: 7

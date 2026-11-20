@@ -134,7 +134,7 @@ GitHub Actions 工作流（`.github/workflows/python-app.yml`，push/PR 到 mast
 | `erArk_Lite_{版本号}.zip` | 轻量游戏包 | 不包含立绘、场景等大图片资源的游戏 |
 | `erArk_Images_{图片版本号}.zip` | 图片资源包 | 除 `image/状态条` 外的所有图片文件夹 |
 
-游戏版本号取自 `package.json`，图片版本号取自 `image/package.json`。另有第二个工作流（`sync-wiki.yml`）用于同步 wiki。
+游戏版本号取自 `package.json`，图片版本号取自 `image/package.json`。
 
 **图片文件夹分布：**
 - **仅在图片资源包中**：`image/场景`、`image/断面图`、`image/立绘`
