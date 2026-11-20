@@ -16,7 +16,7 @@ from Script.Core import (
     save_handle,
 )
 from Script.Config import game_config, normal_config
-from Script.UI.Moudle import panel
+from Script.UI.Moudle import panel, view
 from Script.Design import game_time
 
 _: FunctionType = get_text._
@@ -124,7 +124,7 @@ def init(main_flow: Callable[[], object]) -> None:
                 io_init.clear_screen()
                 io_init.clear_order()
                 flow_handle.cmd_clear()
-                cache.now_panel_id = constant.Panel.TITLE
+                view.now_panel_id = constant.Panel.TITLE
             else:
                 os._exit(0)
 

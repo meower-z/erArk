@@ -135,21 +135,14 @@ def player_after_end() -> None:
 
 def scene_characters(scene_data: game_type.Scene) -> list[int]:
     """
-    主界面列出的场景里的角色：除去玩家；收藏模式下只列收藏的角色
+    主界面列出的场景里的角色：除去玩家
     Keyword arguments:
     scene_data -- 玩家所在的场景
     Return arguments:
     list -- 角色id
     """
-    pl_character_data = cache.character_data[0]
     character_set = scene_data.character_list.copy()
     character_set.discard(0)
-    if cache.is_collection:
-        return [
-            i
-            for i in character_set
-            if i in pl_character_data.collection_character
-        ]
     return list(character_set)
 
 
@@ -260,7 +253,7 @@ def judge_character_status(character_id: int) -> int:
         if second_settle_panel is not None:
             second_settle_panel.draw()
         # 暂停一次让玩家看输出信息，非玩家角色是否暂停由 draw_setting[19] 决定
-        if character_id == 0 or cache.all_system_setting.draw_setting[19]:
+        if character_id == 0 or normal_config.system_setting.draw_setting[19]:
             wait_draw = draw.WaitDraw()
             wait_draw.text = "\n"
             wait_draw.width = window_width

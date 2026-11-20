@@ -21,7 +21,7 @@ from Script.Design import (
     clothing,
     map_handle,
 )
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 import os
 import json
@@ -278,7 +278,7 @@ class TALK_QUICK_TEST:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 return
             elif (
                 yrn == button1_draw.return_text
@@ -431,7 +431,7 @@ class TALK_QUICK_TEST:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def test_single_talk(
@@ -785,9 +785,6 @@ class Debug_Panel:
 
         title_draw = draw.TitleLineDraw(title_text, self.width)
 
-        # 刷新设施人数（界面状态）；岗位名单由日结与改岗位的操作维护，打开面板只读
-        basement.update_facility_people()
-
         while 1:
             return_list = []
             title_draw.draw()
@@ -995,7 +992,7 @@ class Debug_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def change_panel(self, department_type: str) -> None:

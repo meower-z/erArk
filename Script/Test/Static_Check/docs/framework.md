@@ -39,7 +39,7 @@ __all__ = ["run_turn_check", "run_load_repair", "run_all_checks", "LOG_PATH"]
 总开关是系统设置“基础”类的 cid 14“是否开启游戏状态自检”，默认关闭。三处挂钩形式相同：先读开关，开关打开时才在 `if` 内部导入本包并调用接口；开关关闭时本包不会被导入。
 
 ```python
-if cache.all_system_setting.base_setting.get(14, 0):
+if normal_config.system_setting.base_setting.get(14, 0):
     from Script.Test import Static_Check as static_check_system
     ...
 ```

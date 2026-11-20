@@ -2,7 +2,7 @@
 
 from types import FunctionType
 from Script.System.Instruct_System import see_instruct_panel
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, panel, view
 from Script.UI.Panel import (
     game_info_panel,
     see_character_info_panel,
@@ -25,7 +25,7 @@ from Script.Design import (
     map_handle,
     handle_premise,
 )
-from Script.Config import game_config
+from Script.Config import game_config, normal_config
 import logging, time
 
 cache: game_type.Cache = cache_control.cache
@@ -65,13 +65,13 @@ class InScenePanel:
             999,
         )
         while 1:
-            if cache.now_panel_id != constant.Panel.IN_SCENE:
+            if view.now_panel_id != constant.Panel.IN_SCENE:
                 break
             # 绘制的开始时间
             start_draw = time.time()
             # 和上一次主界面绘制之间的空行数量，由系统设置决定
             len_str = game_config.config_draw_setting_option[1][
-                cache.all_system_setting.draw_setting[1]
+                normal_config.system_setting.draw_setting[1]
             ]
             len_line = int(len_str[:1])
             for _i in range(len_line):
@@ -124,7 +124,7 @@ class InScenePanel:
             if len(character_list) > 9:
                 meet_draw.text += "\n"
             # meet_draw.width = self.width
-            cache.wframe_mouse.w_frame_skip_wait_mouse = 0
+            view.wframe_mouse.w_frame_skip_wait_mouse = 0
             character_handle_panel.null_button_text = (
                 pl_character_data.target_character_id
             )
@@ -250,7 +250,7 @@ class InScenePanel:
             character_status_draw_list = []
             if (
                 pl_character_data.target_character_id
-                and cache.scene_panel_show[0]
+                and normal_config.system_setting.scene_panel_show[0]
             ):
                 character_status_draw = (
                     see_character_info_panel.SeeCharacterStatusPanel(
@@ -317,7 +317,7 @@ class InScenePanel:
 
             # ↓以下为服装栏的内容↓#
             if (
-                cache.scene_panel_show[1]
+                normal_config.system_setting.scene_panel_show[1]
                 and pl_character_data.target_character_id
             ):
                 # 如果是在H中，则切换为按钮型的点选服装穿脱面板
@@ -338,7 +338,7 @@ class InScenePanel:
 
             # ↓以下为身体栏的内容↓#
             if (
-                cache.scene_panel_show[2]
+                normal_config.system_setting.scene_panel_show[2]
                 and pl_character_data.target_character_id
             ):
                 character_body_draw = dirty_panel.SeeCharacterBodyPanel(
@@ -367,7 +367,10 @@ class InScenePanel:
                 character_hidden_sex_draw.draw()
 
             # 以下为图片面板#
-            if len(character_list) and cache.scene_panel_show[4]:
+            if (
+                len(character_list)
+                and normal_config.system_setting.scene_panel_show[4]
+            ):
                 line_draw = draw.LineDraw("-.-", self.width)
                 line_draw.draw()
                 character_image_list_draw = (
@@ -397,7 +400,7 @@ class InScenePanel:
             logging.debug("————————")
             logging.debug(f"指令外，ask_list = {ask_list}")
             # 游戏状态自检（系统设置14号，默认关闭）：等待输入前检查一次游戏状态，发现异常只提示不中断
-            if cache.all_system_setting.base_setting.get(14, 0):
+            if normal_config.system_setting.base_setting.get(14, 0):
                 from Script.Test import Static_Check as static_check_system
 
                 if static_check_system.run_turn_check():
@@ -435,9 +438,9 @@ class InScenePanel:
         """
         # 判断当前面板状态（详细污浊单独处理）
         condition = (
-            cache.all_system_setting.draw_setting[10]
+            normal_config.system_setting.draw_setting[10]
             if index == 5
-            else cache.scene_panel_show[index]
+            else normal_config.system_setting.scene_panel_show[index]
         )
         # 根据状态确定按钮显示文本
         button_text = hide_text if condition else show_text
@@ -466,8 +469,10 @@ class InScenePanel:
         """
         # 切换面板状态（详细污浊单独处理）
         if index == 5:
-            cache.all_system_setting.draw_setting[10] = (
-                not cache.all_system_setting.draw_setting[10]
+            normal_config.system_setting.draw_setting[10] = (
+                not normal_config.system_setting.draw_setting[10]
             )
         else:
-            cache.scene_panel_show[index] = not cache.scene_panel_show[index]
+            normal_config.system_setting.scene_panel_show[index] = (
+                not normal_config.system_setting.scene_panel_show[index]
+            )

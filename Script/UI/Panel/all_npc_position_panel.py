@@ -10,7 +10,7 @@ from Script.Core import (
     py_cmd,
 )
 from Script.Design import map_handle, handle_premise
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 
 cache: game_type.Cache = cache_control.cache
@@ -76,8 +76,8 @@ class All_Npc_Position_Panel:
         ]
         self.break_flag = False
         # 读取缓存中的筛选与移动类型
-        self.select_type = cache.all_npc_position_panel_select_type
-        self.move_type = cache.all_npc_position_panel_move_type
+        self.select_type = view.all_npc_position_panel_select_type
+        self.move_type = view.all_npc_position_panel_move_type
         while 1:
             title_draw.draw()
             py_cmd.clr_cmd()
@@ -248,7 +248,7 @@ class All_Npc_Position_Panel:
                 and yrn not in {"0", "1"}
                 and self.move_type == 2
             ):
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def call_all(self) -> None:
@@ -261,18 +261,18 @@ class All_Npc_Position_Panel:
     def move_type_change(self, new_type: int) -> None:
         """移动类型切换"""
         self.move_type = new_type
-        cache.all_npc_position_panel_move_type = new_type
+        view.all_npc_position_panel_move_type = new_type
 
     def select_type_change(self, new_type: int) -> None:
         """筛选类型切换"""
         self.select_type = new_type
-        cache.all_npc_position_panel_select_type = new_type
+        view.all_npc_position_panel_select_type = new_type
         if new_type == 5:
             ask_name_panel = panel.AskForOneMessage()
             ask_name_panel.set(_("输入要筛选的关键词"), 10)
             now_name = ask_name_panel.draw()
             self.name_search = now_name
-            cache.all_npc_position_panel_select_type = 0
+            view.all_npc_position_panel_select_type = 0
 
 
 class MoveSonPanel:

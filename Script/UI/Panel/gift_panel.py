@@ -1,7 +1,7 @@
 """赠送礼物的面板与药物使用效果的处理"""
 
 from types import FunctionType
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 from Script.Core import (
     cache_control,
     get_text,
@@ -339,7 +339,7 @@ class Gift_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def select_gift(self, gift_id: int) -> None:

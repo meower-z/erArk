@@ -299,16 +299,13 @@ class Session:
         """
         打开草稿
         Keyword arguments:
-        keep -- 选择时可以直接写的缓存路径（界面状态与全局设置），如 "now_panel_id"、"rhodes_island.makefood_data"
+        keep -- 选择时可以直接写的缓存顶层属性名，如 "input_cache"
         """
         global _session
         if _session is not None:
             raise RuntimeError("a draft session is already open")
-        paths = list(keep)
-        self.keep = frozenset(p for p in paths if "." not in p)
+        self.keep = frozenset(keep)
         """ 不复制的顶层属性 """
-        self.leaves = tuple(tuple(p.split(".")) for p in paths if "." in p)
-        """ 复制的顶层属性下可以直接写的路径 """
         cache = vars(cache_control.cache)
         self.orig: dict[str, object] = dict(cache)
         """ 打开时缓存的顶层属性 """
@@ -335,17 +332,11 @@ class Session:
 
     def close(self) -> tuple[list[Change], list[str]]:
         """
-        关闭草稿：可以直接写的路径抄回原物，比较副本与原物，换回原物，计划队列退回打开时
+        关闭草稿：比较副本与原物，换回原物，计划队列退回打开时
         Return arguments:
         tuple -- (草稿, 这次选择里排下打断的角色键)
         """
         cache = vars(cache_control.cache)
-        for root, *names in self.leaves:
-            if root in cache and root in self.orig:
-                src, dst = cache[root], self.orig[root]
-                for name in names[:-1]:
-                    src, dst = getattr(src, name), getattr(dst, name)
-                setattr(dst, names[-1], getattr(src, names[-1]))
         changes: list[Change] = []
         for name in list(cache):
             if name in self.keep:

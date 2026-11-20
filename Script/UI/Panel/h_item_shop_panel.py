@@ -11,7 +11,7 @@ from Script.Core import (
     constant,
 )
 from Script.Config import game_config, normal_config
-from Script.UI.Moudle import panel, draw
+from Script.UI.Moudle import panel, draw, view
 from Script.UI.Panel import see_item_info_panel
 
 cache: game_type.Cache = cache_control.cache
@@ -179,7 +179,7 @@ class HItemShopPanel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
 
@@ -332,7 +332,7 @@ class BuyItemByItemNameDraw:
                 line_feed.draw()
             yrn = flow_handle.askfor_all(return_list)
             if yrn in return_list:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def buy_many(self) -> None:

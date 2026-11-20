@@ -11,7 +11,7 @@ from Script.Core import (
 )
 from Script.Design import handle_premise, attr_calculation, game_time, attr_text
 from Script.System.Instruct_System import handle_instruct
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 import random
 
@@ -246,7 +246,7 @@ class Physical_Check_And_Manage_Panel:
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
                 self.settle_finish_physical_check(target_character_id)
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def settle_finish_physical_check(self, target_character_id: int) -> None:
@@ -431,7 +431,7 @@ class Physical_Check_And_Manage_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def settle_target_physical_status(self, behavior_id: str) -> None:
@@ -578,7 +578,7 @@ class Physical_Check_And_Manage_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def judge_manage_requirement(
@@ -888,7 +888,6 @@ class Physical_Check_And_Manage_Panel:
                     # 工作结算
                     target_character_data.work.work_type = 193
                     basement.update_work_people()
-                    basement.update_facility_people()
                     info_text += _(
                         "因为被要求进行性爱的相关练习，所以{0}的工作被调整为特殊职业-{1}了\n"
                     ).format(
@@ -917,7 +916,6 @@ class Physical_Check_And_Manage_Panel:
                 ):
                     target_character_data.work.work_type = 0
                     basement.update_work_people()
-                    basement.update_facility_people()
                     info_text += _(
                         "因为没有进行性爱的相关练习，所以{0}的特殊职业-{1}被取消了\n"
                     ).format(

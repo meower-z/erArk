@@ -26,7 +26,7 @@ from Script.Modules.gameplay_resolution import (
     plan_queue,
     working,
 )
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -183,7 +183,7 @@ def begin(who: int, act: core.Action, chosen: intent.Intent) -> None:
             now_draw.style = style
         now_draw.draw()
     if who == 0:
-        cache.now_panel_id = (
+        view.now_panel_id = (
             constant.Panel.SEE_MAP
             if chosen.get("args", {}).get(OPEN_MAP)
             else constant.Panel.IN_SCENE

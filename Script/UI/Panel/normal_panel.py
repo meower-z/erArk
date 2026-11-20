@@ -1,7 +1,7 @@
 """关门、照顾婴儿、初始奖励能力选择、冰箱与预订房间等日常小面板"""
 
 from types import FunctionType
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, panel, view
 from Script.Core import (
     cache_control,
     get_text,
@@ -169,7 +169,7 @@ class Take_Care_Baby_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def choice_take_care(self, chara_id: int) -> None:
@@ -404,7 +404,7 @@ class Fridge_Panel:
 
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def take_milk(self, character_id: int) -> None:
@@ -527,7 +527,7 @@ class Order_Hotel_Room_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def order_room(self, room_id: int) -> None:

@@ -13,6 +13,7 @@ from Script.Core import cache_control, constant, game_type
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions
 from Script.Modules.tk_ui import player_pick
+from Script.UI.Moudle import view
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -38,4 +39,4 @@ def pick_player_action(
         except player_pick.Chosen as chosen:
             return core.Intercept(chosen.action)
         except player_pick.Back:
-            cache.now_panel_id = constant.Panel.IN_SCENE
+            view.now_panel_id = constant.Panel.IN_SCENE

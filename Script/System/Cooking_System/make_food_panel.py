@@ -16,7 +16,7 @@ from Script.Core import (
 from Script.Design import attr_calculation
 from Script.Modules.tk_ui import player_pick
 from Script.System.Cooking_System import cooking, cook_question_panel
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 
 cache: game_type.Cache = cache_control.cache
@@ -64,36 +64,32 @@ class Make_food_Panel:
         """ 0普通做饭，1泡咖啡，2酒类 """
         self.special_seasoning = 0
         """ 调味类型 """
-        # 烹饪模式与制作数量改为按做饭类型记忆在罗德岛数据里（与做饭面板的筛选/排序一致）
-        # 进入面板时做一次值域校验，防止旧存档或模组写入的非法值导致两个模式按钮都不高亮
-        if not isinstance(cache.rhodes_island.makefood_cook_mode, dict):
-            cache.rhodes_island.makefood_cook_mode = {}
-        if not isinstance(cache.rhodes_island.makefood_make_count, dict):
-            cache.rhodes_island.makefood_make_count = {}
-        if cache.rhodes_island.makefood_cook_mode.get(
-            self.make_food_type, 0
-        ) not in {0, 1}:
-            cache.rhodes_island.makefood_cook_mode[self.make_food_type] = 0
+        # 烹饪模式与制作数量按做饭类型记在全局设置里，玩家下次打开同类型面板时沿用
+        # 进入面板时做一次值域校验，防止设置文件或旧存档里的非法值导致两个模式按钮都不高亮
+        cook_mode = normal_config.system_setting.makefood_cook_mode
+        if cook_mode.get(self.make_food_type, 0) not in {0, 1}:
+            cook_mode[self.make_food_type] = 0
 
     @property
     def cook_mode(self) -> int:
         """
-        当前的烹饪模式（读罗德岛缓存，按做饭类型记忆玩家上一次的选择）
+        当前的烹饪模式（读全局设置，按做饭类型记忆玩家上一次的选择）
         Return arguments:
         int -- 烹饪模式：0标准，1精细
         """
-        return cache.rhodes_island.makefood_cook_mode.get(
+        return normal_config.system_setting.makefood_cook_mode.get(
             self.make_food_type, 0
         )
 
     @cook_mode.setter
     def cook_mode(self, cook_mode: int) -> None:
         """
-        设置烹饪模式并写回罗德岛缓存，使下次打开同类型面板时沿用
+        设置烹饪模式并写回全局设置，使下次打开同类型面板时沿用
         Keyword arguments:
         cook_mode -- 烹饪模式：0标准，1精细
         """
-        cache.rhodes_island.makefood_cook_mode[self.make_food_type] = cook_mode
+        setting = normal_config.system_setting
+        setting.makefood_cook_mode[self.make_food_type] = cook_mode
 
     def draw(self) -> None:
         """绘制对象"""
@@ -181,7 +177,7 @@ class Make_food_Panel:
                 (3, _("类型")),
             ]
             for sort_id, sort_name in sort_type_options:
-                if sort_id == cache.rhodes_island.makefood_sort_type:
+                if sort_id == view.makefood_sort_type:
                     btn_text = f"[●{sort_name}]"
                 else:
                     btn_text = f"[{sort_name}]"
@@ -202,7 +198,7 @@ class Make_food_Panel:
             order_title.draw()
             sort_order_options = [(0, _("升序")), (1, _("降序"))]
             for order_id, order_name in sort_order_options:
-                if order_id == cache.rhodes_island.makefood_sort_order:
+                if order_id == view.makefood_sort_order:
                     btn_text = f"[●{order_name}]"
                 else:
                     btn_text = f"[{order_name}]"
@@ -418,7 +414,7 @@ class Make_food_Panel:
                 and SeeFoodListByFoodNameDraw.last_confirm_result == _("确认")
             ):
                 # 选择返回或者确认制作成功后，退出面板
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def change_panel(self, food_type: str) -> None:
@@ -526,9 +522,9 @@ class Make_food_Panel:
 
         # 构建筛选状态文本
         filter_parts = []
-        filter_type = cache.rhodes_island.makefood_filter_type
-        filter_difficulty = cache.rhodes_island.makefood_filter_difficulty
-        filter_time = cache.rhodes_island.makefood_filter_time
+        filter_type = view.makefood_filter_type
+        filter_difficulty = view.makefood_filter_difficulty
+        filter_time = view.makefood_filter_time
 
         if filter_type:
             type_names = [type_name_map.get(t, str(t)) for t in filter_type]
@@ -548,8 +544,8 @@ class Make_food_Panel:
             filter_text = _("筛选：无")
 
         # 构建排序状态文本
-        sort_type = cache.rhodes_island.makefood_sort_type
-        sort_order = cache.rhodes_island.makefood_sort_order
+        sort_type = view.makefood_sort_type
+        sort_order = view.makefood_sort_order
 
         if sort_type != 0:
             sort_text = _("排序：{0}{1}").format(
@@ -600,7 +596,7 @@ class Make_food_Panel:
             info_draw.text = _("○类型筛选（点击切换）：\n")
             info_draw.draw()
 
-            current_filter_type = cache.rhodes_island.makefood_filter_type
+            current_filter_type = view.makefood_filter_type
             for type_id, type_name in type_name_map.items():
                 if type_id in current_filter_type:
                     button_text = f"[√{type_name}]"
@@ -623,7 +619,7 @@ class Make_food_Panel:
             info_draw.text = _("○难度筛选：\n")
             info_draw.draw()
 
-            current_difficulty = cache.rhodes_island.makefood_filter_difficulty
+            current_difficulty = view.makefood_filter_difficulty
             for diff_id, diff_name in difficulty_options:
                 if diff_id == current_difficulty:
                     button_text = f"[●{diff_name}]"
@@ -646,7 +642,7 @@ class Make_food_Panel:
             info_draw.text = _("○时间筛选：\n")
             info_draw.draw()
 
-            current_time = cache.rhodes_island.makefood_filter_time
+            current_time = view.makefood_filter_time
             for time_id, time_name in time_options:
                 if time_id == current_time:
                     button_text = f"[● {time_name}]"
@@ -685,30 +681,30 @@ class Make_food_Panel:
 
     def toggle_filter_type(self, type_id: int) -> None:
         """切换类型筛选"""
-        if type_id in cache.rhodes_island.makefood_filter_type:
-            cache.rhodes_island.makefood_filter_type.remove(type_id)
+        if type_id in view.makefood_filter_type:
+            view.makefood_filter_type.remove(type_id)
         else:
-            cache.rhodes_island.makefood_filter_type.append(type_id)
+            view.makefood_filter_type.append(type_id)
 
     def set_filter_difficulty(self, difficulty: int) -> None:
         """设置难度筛选"""
-        cache.rhodes_island.makefood_filter_difficulty = difficulty
+        view.makefood_filter_difficulty = difficulty
 
     def set_filter_time(self, time_level: int) -> None:
         """设置时间筛选"""
-        cache.rhodes_island.makefood_filter_time = time_level
+        view.makefood_filter_time = time_level
 
     def clear_filter(self) -> None:
         """清除所有筛选"""
-        cache.rhodes_island.makefood_filter_type = []
-        cache.rhodes_island.makefood_filter_difficulty = -1
-        cache.rhodes_island.makefood_filter_time = -1
+        view.makefood_filter_type = []
+        view.makefood_filter_difficulty = -1
+        view.makefood_filter_time = -1
 
     def clear_filter_and_sort(self) -> None:
         """清除筛选和排序"""
         self.clear_filter()
-        cache.rhodes_island.makefood_sort_type = 0
-        cache.rhodes_island.makefood_sort_order = 0
+        view.makefood_sort_type = 0
+        view.makefood_sort_order = 0
 
     def open_sort_panel(self) -> None:
         """
@@ -734,7 +730,7 @@ class Make_food_Panel:
             info_draw.text = _("○排序维度：\n")
             info_draw.draw()
 
-            current_sort_type = cache.rhodes_island.makefood_sort_type
+            current_sort_type = view.makefood_sort_type
             for sort_id, sort_name in sort_type_options:
                 if sort_id == current_sort_type:
                     button_text = f"[●{sort_name}]"
@@ -757,7 +753,7 @@ class Make_food_Panel:
             info_draw.text = _("○排序顺序：\n")
             info_draw.draw()
 
-            current_sort_order = cache.rhodes_island.makefood_sort_order
+            current_sort_order = view.makefood_sort_order
             for order_id, order_name in sort_order_options:
                 if order_id == current_sort_order:
                     button_text = f"[●{order_name}]"
@@ -787,11 +783,11 @@ class Make_food_Panel:
 
     def set_sort_type(self, sort_type: int) -> None:
         """设置排序维度"""
-        cache.rhodes_island.makefood_sort_type = sort_type
+        view.makefood_sort_type = sort_type
 
     def set_sort_order(self, sort_order: int) -> None:
         """设置排序顺序"""
-        cache.rhodes_island.makefood_sort_order = sort_order
+        view.makefood_sort_order = sort_order
 
 
 class SeeFoodListByFoodNameDraw:
@@ -938,7 +934,7 @@ class SeeFoodListByFoodNameDraw:
             )
         max_count = max(1, max_count)
         # 沿用上次在同类型做饭面板中选择的制作数量，并按本次可制作上限钳制
-        remember_count = cache.rhodes_island.makefood_make_count.get(
+        remember_count = normal_config.system_setting.makefood_make_count.get(
             self.make_food_type, 1
         )
         if not isinstance(remember_count, int) or remember_count < 1:
@@ -1048,9 +1044,9 @@ class SeeFoodListByFoodNameDraw:
                 make_count = max_count
             elif yrn == confirm_draw.return_text:
                 # 记忆本次的制作数量，供下次打开同类型做饭面板时沿用
-                cache.rhodes_island.makefood_make_count[self.make_food_type] = (
-                    make_count
-                )
+                normal_config.system_setting.makefood_make_count[
+                    self.make_food_type
+                ] = make_count
                 self.make_food(make_food_time, make_count)
                 SeeFoodListByFoodNameDraw.last_confirm_result = _("确认")
                 break

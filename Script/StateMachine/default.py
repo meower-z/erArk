@@ -7,7 +7,7 @@ import os
 import random
 from types import FunctionType
 from typing import TYPE_CHECKING
-from Script.Config import game_config
+from Script.Config import game_config, normal_config
 from Script.Design import (
     handle_state_machine,
     character_move,
@@ -104,7 +104,7 @@ def _draw_move_intent(character_id: int, target_scene_str: str) -> None:
     character_data: game_type.Character = cache.character_data[character_id]
     if (
         character_data.position == cache.character_data[0].position
-        and cache.all_system_setting.draw_setting[8] == 1
+        and normal_config.system_setting.draw_setting[8] == 1
     ):
         now_scene_data = cache.scene_data[target_scene_str]
         now_draw = draw.NormalDraw()

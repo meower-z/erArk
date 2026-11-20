@@ -1,7 +1,7 @@
 """查看当前地图的面板、快捷移动菜单，以及场景名列表与各类快捷寻路按钮列表"""
 
 from types import FunctionType
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, panel, view
 from Script.Core import (
     get_text,
     cache_control,
@@ -57,7 +57,7 @@ class SeeMapPanel:
         first_position = cache.character_data[0].position
         while 1:
             line_feed.draw()
-            if cache.now_panel_id != constant.Panel.SEE_MAP:
+            if view.now_panel_id != constant.Panel.SEE_MAP:
                 break
             if len(self.now_map) >= 2 and self.now_map[-1] == "0":
                 self.now_map.pop()
@@ -299,7 +299,7 @@ class SeeMapPanel:
             yrn = flow_handle.askfor_all(return_list)
             py_cmd.clr_cmd()
             if yrn == back_button.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def up_map(self) -> None:
@@ -333,7 +333,7 @@ class SeeMapPanel:
         """
         py_cmd.clr_cmd()
         line_feed.draw()
-        cache.wframe_mouse.w_frame_skip_wait_mouse = 1
+        view.wframe_mouse.w_frame_skip_wait_mouse = 1
         character_data: game_type.Character = cache.character_data[0]
         flag_map_open = False
         # 从大地图移动到另一个区块时，不关闭地图面板，且切换到下级地图面板
@@ -516,7 +516,7 @@ class MapSceneNameDraw:
         """
         py_cmd.clr_cmd()
         line_feed.draw()
-        cache.wframe_mouse.w_frame_skip_wait_mouse = 1
+        view.wframe_mouse.w_frame_skip_wait_mouse = 1
         character_move.own_charcter_move(scene_path)
 
 
@@ -661,7 +661,7 @@ class ScenePathNameMoveDraw:
         """
         py_cmd.clr_cmd()
         line_feed.draw()
-        cache.wframe_mouse.w_frame_skip_wait_mouse = 1
+        view.wframe_mouse.w_frame_skip_wait_mouse = 1
         character_move.own_charcter_move(self.scene_path)
 
 
@@ -770,7 +770,7 @@ class SocialSceneNameDraw:
         """
         py_cmd.clr_cmd()
         line_feed.draw()
-        cache.wframe_mouse.w_frame_skip_wait_mouse = 1
+        view.wframe_mouse.w_frame_skip_wait_mouse = 1
         character_move.own_charcter_move(self.scene_path)
 
 
@@ -904,7 +904,7 @@ class CollectionSceneNamePanel:
         """
         py_cmd.clr_cmd()
         line_feed.draw()
-        cache.wframe_mouse.w_frame_skip_wait_mouse = 1
+        view.wframe_mouse.w_frame_skip_wait_mouse = 1
         character_move.own_charcter_move(scene_path)
 
     def settle_collection_place(self, collect_flag: bool) -> None:

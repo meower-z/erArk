@@ -16,25 +16,6 @@ class FlowContorl:
     """ 退出游戏 """
 
 
-class WFrameMouse:
-    """鼠标状态结构体"""
-
-    w_frame_up: int = 2
-    """ 逐字输出状态 """
-    mouse_right: int = 0
-    """ 鼠标右键按下 """
-    w_frame_lines_up: int = 2
-    """ 逐行输出状态 """
-    w_frame_re_print: int = 0
-    """ 再次载入游戏界面 """
-    w_frame_lines_state: int = 2
-    """ 逐行输出状态 """
-    w_frame_mouse_next_line: int = 0
-    """ 等待玩家确认后逐行 """
-    w_frame_skip_wait_mouse: int = 0
-    """ 跳过等待输入后继续输出文本 """
-
-
 class NpcTem:
     """npc模板用结构体对象"""
 
@@ -1547,25 +1528,6 @@ class Rhodes_Island:
         食堂内贩卖的食物数据
         食谱id(str):食物唯一id:食物对象
         """
-        self.makefood_data: dict[str, int] = {}
-        """
-        做饭区可制作的菜谱数据（延迟创建：仅记录可制作的菜谱id，食物对象在制作时才创建）
-        食谱id(str):食谱id(int)
-        """
-        self.makefood_filter_type: list[int] = []
-        """ 做饭筛选：菜谱类型列表，空列表表示不筛选 """
-        self.makefood_filter_difficulty: int = -1
-        """ 做饭筛选：难度档位（-1不限，0简单0-3，1中等4-6，2困难7+） """
-        self.makefood_filter_time: int = -1
-        """ 做饭筛选：时间档位（-1不限，0快速0-30，1中等31-60，2耗时61+） """
-        self.makefood_sort_type: int = 0
-        """ 做饭排序：排序维度（0无，1难度，2时间，3类型） """
-        self.makefood_sort_order: int = 0
-        """ 做饭排序：排序顺序（0升序，1降序） """
-        self.makefood_cook_mode: dict[int, int] = {0: 0, 1: 0, 2: 0}
-        """ 做饭记忆：烹饪模式（0标准模式，1精细模式），键为做饭类型（0普通做饭/1泡咖啡/2调酒） """
-        self.makefood_make_count: dict[int, int] = {0: 1, 1: 1, 2: 1}
-        """ 做饭记忆：制作数量，键为做饭类型（0普通做饭/1泡咖啡/2调酒） """
 
         # 医疗部
         self.medical_patients_today: dict[int, Any] = {}
@@ -1651,12 +1613,8 @@ class Rhodes_Island:
         # 训练场
 
         # 图书档案区
-        self.now_show_book_cid_of_type: dict[int, list] = {}
-        """ 当前展示的可借阅书籍，类别id：书籍id列表 """
         self.book_borrow_dict: dict[int, int] = {}
         """ 书籍借出情况 书籍id:借出人id(-1为未借出) """
-        self.reader_now: int = 0
-        """ 当前图书馆中的读者数量 """
         self.recommend_book_type_set: set = set()
         """ 推荐的阅读类别 """
 
@@ -1789,6 +1747,18 @@ class System_Setting:
         """ 数值绘制 """
         self.character_text_version: dict[int, int] = {}
         """ 角色文本版本，adv_id:版本id """
+        self.instruct_type_filter: dict[int, bool] = {}
+        """ 玩家操作指令面板指令过滤状态数据 指令类型:是否展示"""
+        self.instruct_sex_type_filter: dict[int, bool] = {}
+        """ 玩家操作指令面板中，H类的指令过滤状态数据 指令类型:是否展示"""
+        self.instruct_index_filter: dict[str, bool] = {}
+        """ 玩家各编号指令过滤状态数据 指令编号:是否展示"""
+        self.scene_panel_show: list[bool] = [True, True, True, True, True]
+        """ 场景面板中的子面板显示情况,0状态,1服装,2身体,3暂无,4图片 """
+        self.makefood_cook_mode: dict[int, int] = {0: 0, 1: 0, 2: 0}
+        """ 做饭记忆：烹饪模式（0标准模式，1精细模式），键为做饭类型（0普通做饭/1泡咖啡/2调酒） """
+        self.makefood_make_count: dict[int, int] = {0: 1, 1: 1, 2: 1}
+        """ 做饭记忆：制作数量，键为做饭类型（0普通做饭/1泡咖啡/2调酒） """
 
 
 class Ai_Setting:
@@ -2000,10 +1970,6 @@ class Cache:
 
     def __init__(self) -> None:
         """初始化游戏缓存数据对象"""
-        self.back_save_panel: bool = False
-        """ 退出存档面板 """
-        self.wframe_mouse: WFrameMouse = WFrameMouse()
-        """ 主页监听控制流程用变量组 """
         self.character_data: dict[int, Character] = {}
         """ 角色对象数据缓存组 """
         self.npc_tem_data: dict[int, NpcTem] = {}
@@ -2014,10 +1980,6 @@ class Cache:
         """ 禁止出现的干员id集合 """
         self.input_cache: list[str] = []
         """ 玩家指令输入记录（最大20）"""
-        self.input_cache_draft: str = ""
-        """ 玩家正在编辑但尚未发送的输入草稿 """
-        self.input_cache_browsing: bool = False
-        """ 玩家是否正在浏览输入历史 """
         self.daily_intsruce: list[str] = []
         """ 每日指令输入记录 """
         self.pl_pre_behavior_instruce: list[str] = []
@@ -2026,36 +1988,10 @@ class Cache:
         """ 触发过的事件记录 """
         self.today_taiggered_event_record: set = set()
         """ 今日触发过的事件记录 """
-        self.now_init_map_id: str = ""
-        """ 寻路算法用,当前节点所属的地图的id """
         self.collect_position_list: list = []
         """ 收藏地点合集 """
-        self.input_position: int = 0
-        """ 回溯输入记录用定位 """
-        self.instruct_type_filter: dict[int, bool] = {}
-        """ 玩家操作指令面板指令过滤状态数据 指令类型:是否展示"""
-        self.instruct_sex_type_filter: dict[int, bool] = {}
-        """ 玩家操作指令面板中，H类的指令过滤状态数据 指令类型:是否展示"""
-        self.instruct_type_filter_cache: dict[int, bool] = {}
-        """ （已弃用）玩家操作指令面板指令过滤状态数据_的缓存 指令类型:是否展示"""
-        self.instruct_index_filter: dict[str, bool] = {}
-        """ 玩家各编号指令过滤状态数据 指令编号:是否展示"""
-        self.show_non_h_in_hidden_sex: bool = False
-        """ 是否在隐奸中显示非H类指令 """
-        self.output_text_style: str = ""
-        """ 富文本记录输出样式临时缓存 """
-        self.text_style_position: int = 0
-        """ 富文本回溯样式记录用定位 """
         # self.clothing_type_data: dict = {}
         # """ 存储服装类型数据 """
-        self.text_style_cache: list[str] = []
-        """ 富文本样式记录 """
-        self.text_one_by_one_rich_cache: dict = {}
-        """ 富文本精确样式记录 """
-        self.image_id: int = 0
-        """ 图片id """
-        self.cmd_data: dict = {}
-        """ cmd数据 """
         self.difficulty_setting: dict[int, int] = {}
         """ 本存档的难度设定，即difficulty类 """
         self.birth_type_setting: dict[int, int] = {}
@@ -2063,16 +1999,8 @@ class Cache:
         关闭的生育方式一律按单胎胎生处理 """
         self.noise_woken: dict[int, int] = {}
         """ 睡中被吵醒、还没结算的角色：被吵醒的角色id 到产生动静的角色id """
-        self.now_panel_id: int = 0
-        """ 当前游戏面板id """
         self.old_character_id: int = 0
         """ 离开场景面板前在场景中查看的角色id """
-        self.npc_image_index: int = 0
-        """ 当前绘制人物列表的开始值 """
-        self.text_wait: float = 0
-        """ 绘制文本输出等待时间 """
-        self.scene_panel_show: list = [True, True, True, True, True]
-        """ 场景面板中的子面板显示情况,0状态,1服装,2身体,3暂无,4图片 """
         self.map_data: dict[str, Map] = {}
         """ 游戏地图数据 地图路径:地图数据 """
         self.scene_data: dict[str, Scene] = {}
@@ -2087,8 +2015,6 @@ class Cache:
         """ 菜谱数据 """
         self.npc_name_data: set = set()
         """ 已有的npc姓名集合 """
-        self.is_collection: bool = False
-        """ 启用收藏模式 """
         self.shoot_position: int = 0
         """ 记录射精位置 """
         self.debug_mode: bool = False
@@ -2103,14 +2029,6 @@ class Cache:
                本标志只用于口上差分、前提区分与结算差分（主修加成、旁观收益、出勤） """
         self.game_round: int = 1
         """ 当前周目数 """
-        self.all_npc_position_panel_select_type: int = 0
-        """ 所有npc位置面板筛选类型 """
-        self.all_npc_position_panel_move_type: int = 0
-        """ 所有npc位置面板移动类型 """
-        self.pregnancy_panel_sort_type: int = 0
-        """ 怀孕总览面板排序类型（0按阶段降序，1按阶段升序） """
-        self.pregnancy_panel_filter_type: int = 0
-        """ 怀孕总览面板筛选类型（0全部，其余为阶段枚举值） """
         self.rhodes_island: Rhodes_Island = Rhodes_Island()
         """ 罗德岛相关属性 """
         self.first_bonus: dict[int, int] = {}
@@ -2119,8 +2037,6 @@ class Cache:
         """ 世界设定 """
         # self.system_setting: Dict[int, int] = {}
         # """ 系统设定，见System_Setting.csv """
-        self.all_system_setting: System_Setting = System_Setting()
-        """ 新的总系统设定 """
         self.ai_setting: Ai_Setting = Ai_Setting()
         """ ai设定 """
         self.country: Country = Country()

@@ -73,7 +73,7 @@ def update_new_day() -> None:
     for character_id in all_chara_id_set:
         character_data: game_type.Character = cache.character_data[character_id]
         # 处理持有食物变质与过期，并获取过期食物数量
-        if cache.all_system_setting.base_setting.get(10, 1):
+        if normal_config.system_setting.base_setting.get(10, 1):
             expired_food_num = cooking.handle_food_deterioration(character_id)
             if expired_food_num > 0 and character_id == 0:
                 now_draw.text = _(

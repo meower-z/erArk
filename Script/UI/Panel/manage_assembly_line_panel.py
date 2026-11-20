@@ -11,7 +11,7 @@ from Script.Core import (
     constant,
 )
 from Script.Design import attr_calculation, basement, handle_ability
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
 
@@ -410,7 +410,7 @@ class Manage_Assembly_Line_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def select_npc_position(self) -> None:

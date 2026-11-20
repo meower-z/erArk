@@ -16,7 +16,7 @@ from Script.Design import (
     attr_calculation,
     handle_premise,
 )
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, panel, view
 from Script.Modules.tk_ui import player_pick
 
 cache: game_type.Cache = cache_control.cache
@@ -138,7 +138,7 @@ class SeeCharacterClothPanel:
                         dirty_text_cid = f"{_(type_name, revert_translation=True)}精液污浊{str(semen_level)}"
                         # 是否显示完整污浊文本，仅在最后一件衣服上显示
                         if (
-                            cache.all_system_setting.draw_setting[10]
+                            normal_config.system_setting.draw_setting[10]
                             and cloth_id
                             == target_character_data.cloth.cloth_wear[
                                 clothing_type
@@ -148,7 +148,7 @@ class SeeCharacterClothPanel:
                                 "dirty_full"
                             ][dirty_text_cid]
                         elif (
-                            cache.all_system_setting.draw_setting[10]
+                            normal_config.system_setting.draw_setting[10]
                             and cloth_id
                             != target_character_data.cloth.cloth_wear[
                                 clothing_type
@@ -168,7 +168,7 @@ class SeeCharacterClothPanel:
                 )
                 if decoration_count:
                     # 开启详细污浊信息时显示等级描述文本，否则显示个数
-                    if cache.all_system_setting.draw_setting[10]:
+                    if normal_config.system_setting.draw_setting[10]:
                         decoration_level = condom_handle.get_decoration_level(
                             decoration_count
                         )
@@ -205,7 +205,7 @@ class SeeCharacterClothPanel:
             elif (
                 now_text != ""
                 and now_text[-1] != "\n"
-                and cache.all_system_setting.draw_setting[10]
+                and normal_config.system_setting.draw_setting[10]
             ):
                 if (
                     target_character_data.dirty.cloth_semen[clothing_type][2]
@@ -312,7 +312,7 @@ class Undress_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
 
@@ -579,7 +579,7 @@ class SwitchCharacterClothPanel:
                         dirty_text_cid = f"{_(type_name, revert_translation=True)}精液污浊{str(semen_level)}"
                         # 只在最后一件衣服上显示完整污浊文本
                         if (
-                            cache.all_system_setting.draw_setting[10]
+                            normal_config.system_setting.draw_setting[10]
                             and cloth_id
                             == target_character_data.cloth.cloth_wear[
                                 clothing_type
@@ -589,7 +589,7 @@ class SwitchCharacterClothPanel:
                                 "dirty_full"
                             ][dirty_text_cid]
                         elif (
-                            cache.all_system_setting.draw_setting[10]
+                            normal_config.system_setting.draw_setting[10]
                             and cloth_id
                             != target_character_data.cloth.cloth_wear[
                                 clothing_type
@@ -617,7 +617,7 @@ class SwitchCharacterClothPanel:
                     self.draw_list.append(line_feed)
                     now_row = []
             # 完整污浊显示时换行
-            elif now_row and cache.all_system_setting.draw_setting[10]:
+            elif now_row and normal_config.system_setting.draw_setting[10]:
                 if (
                     target_character_data.dirty.cloth_semen[clothing_type][2]
                     != 0

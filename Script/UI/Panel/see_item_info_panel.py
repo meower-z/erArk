@@ -13,7 +13,7 @@ from Script.Core import (
     game_type,
     num,
 )
-from Script.UI.Moudle import panel, draw
+from Script.UI.Moudle import panel, draw, view
 from Script.Config import game_config, normal_config
 
 cache: game_type.Cache = cache_control.cache
@@ -288,7 +288,7 @@ class SeeCharacterItemBagPanel:
             self.return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(self.return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
 

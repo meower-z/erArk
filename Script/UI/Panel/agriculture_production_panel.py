@@ -13,7 +13,7 @@ from Script.Core import (
     constant,
 )
 from Script.Design import handle_ability, basement
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
 
@@ -438,7 +438,7 @@ class Agriculture_Production_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def select_agri_position(self) -> None:

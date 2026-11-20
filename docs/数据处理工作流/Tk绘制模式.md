@@ -33,7 +33,7 @@
 - `NormalDraw`：基础文本绘制，使用 `text_handle.get_text_index` 计算宽度，按 `self.width` 自动换行。
 - `FullDraw`：不处理换行，直接输出。
 - `WaitDraw`：绘制完成后调用 `flow_handle.askfor_wait()`；用于需要暂停的剧情输出。
-- `LineFeedWaitDraw`：以 `\n` 分段并逐行等待，底层利用 `cache.wframe_mouse` 控制跳过逻辑。
+- `LineFeedWaitDraw`：以 `\n` 分段并逐行等待，底层利用 `view.wframe_mouse` 控制跳过逻辑。
 - `CenterDraw`/`RightDraw`/`LeftDraw`：对齐变种，内部调用 `text_handle.align()`。
 - `CenterMergeDraw`/`LeftMergeDraw`：合并多个 `NormalDraw` 并控制整体宽度。
 
@@ -57,7 +57,7 @@
   - `SingleColumnButton`：将若干 `draw.Button` 竖向排列。
   - `OneMessageAndSingleColumnButton`：常见的“上方文本 + 下方选项”组合。
   - `CenterDrawTextListPanel`、`LeftDrawTextListPanel`：按列对齐输出列表。
-  - `LeftDrawTextListWaitPanel`：绘制完成后阻塞等待输入（结合 `cache.wframe_mouse`）。
+  - `LeftDrawTextListWaitPanel`：绘制完成后阻塞等待输入（结合 `view.wframe_mouse`）。
 - 业务面板位于 `Script/UI/Panel/*`，多数 `draw()` 函数中：
   1. 收集数据并实例化 `draw.*` 元素。
   2. 调用 `io_init.clear_cmd()`/`io_init.clear_screen()` 等更新 UI。
@@ -76,13 +76,13 @@
 
 ## 7. 等待控制与鼠标状态
 
-- **状态结构体**：`cache.wframe_mouse`（定义于 `game_type.WFrameMouse`）记录逐字/逐行输出状态、鼠标点击、是否跳过等待等标志位。
+- **状态结构体**：`view.wframe_mouse`（定义于 `view.WFrameMouse`，`Script/UI/Moudle/view.py`）记录逐字/逐行输出状态、鼠标点击、是否跳过等待等标志位。
 - **事件绑定**：`Script.Core.key_listion_event.on_wframe_listion()` 在 Tk 根窗口上绑定鼠标与键盘事件：
   - 左键：聚焦输入框并触发 `set_wframe_up()`。
   - 右键：开启跳过模式（`w_frame_skip_wait_mouse = 1`）。
   - 上/下方向键：遍历指令历史。
   - 回车：发送输入框内容。
-- **等待逻辑**：`flow_handle.askfor_wait()` 在循环中检查 `cache.wframe_mouse.w_frame_up`；部分 `draw`（例如 `LineFeedWaitDraw`）与面板会依据 `w_frame_skip_wait_mouse` 决定是否自动继续。
+- **等待逻辑**：`flow_handle.askfor_wait()` 在循环中检查 `view.wframe_mouse.w_frame_up`；部分 `draw`（例如 `LineFeedWaitDraw`）与面板会依据 `w_frame_skip_wait_mouse` 决定是否自动继续。
 
 ## 8. 样式、文本宽度与对齐
 
@@ -114,7 +114,7 @@
 
 - **输出异常/乱码**：检查 `io_init.init_style()` 是否执行；确认字体文件是否被 `load_local_fonts()` 正常加载（查看控制台日志）。
 - **命令点击无反应**：确认 `py_cmd.pcmd()` 绑定的 `cmd_id` 是否唯一，`flow_handle.cmd_map` 有对应条目；`io_init.clear_cmd()` 是否被提前清空。
-- **等待卡死**：定位 `cache.wframe_mouse` 状态，确保在鼠标事件中正确设置 `w_frame_up`；必要时排查是否存在持续的 `askfor_wait()`。
+- **等待卡死**：定位 `view.wframe_mouse` 状态，确保在鼠标事件中正确设置 `w_frame_up`；必要时排查是否存在持续的 `askfor_wait()`。
 - **图片不显示**：确认 `image/*.png` 名称与 `game_config.config_image` 中一致，首次显示该图片时控制台是否输出「加载图片失败」。
 
 ---

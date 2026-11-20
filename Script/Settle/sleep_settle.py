@@ -92,7 +92,7 @@ def update_sleep() -> None:
             # 幼女离线、不在 npc_id_got 里，长成学员的检查在这里统一做
             pregnancy_handle.check_all_child_grow_to_loli()
             # 检查是否有可以升级的能力
-            if cache.all_system_setting.base_setting[1]:
+            if normal_config.system_setting.base_setting[1]:
                 handle_ability.gain_ability(character_id)
             line_feed.draw()
         else:
@@ -109,7 +109,7 @@ def update_sleep() -> None:
             # 检查是否有可以获得的素质
             handle_talent.gain_talent(character_id, now_gain_type=3)
             # 检查是否有可以升级的能力
-            if cache.all_system_setting.base_setting[2]:
+            if normal_config.system_setting.base_setting[2]:
                 handle_ability.gain_ability(character_id)
             # 清零H状态
             character_data.h_state = attr_calculation.get_h_state_reset(

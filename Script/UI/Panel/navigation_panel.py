@@ -1,7 +1,7 @@
 """导航面板、快捷移动菜单与场景名列表的绘制，以及抵达判断"""
 
 from types import FunctionType
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, panel, view
 from Script.Core import (
     get_text,
     cache_control,
@@ -169,7 +169,7 @@ class Base_function_class:
         """
         py_cmd.clr_cmd()
         line_feed.draw()
-        cache.wframe_mouse.w_frame_skip_wait_mouse = 1
+        view.wframe_mouse.w_frame_skip_wait_mouse = 1
         for birthplace_id in game_config.config_birthplace:
             birthplace_data = game_config.config_birthplace[birthplace_id]
             if birthplace_data.name == scene_name:
@@ -365,7 +365,7 @@ class Navigation_Panel(Base_function_class):
             yrn = flow_handle.askfor_all(return_list)
             py_cmd.clr_cmd()
             if yrn == back_button.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 
 
 from Script.Core import cache_control
-from Script.Config import game_config
+from Script.Config import game_config, normal_config
 from Script.System.Pregnancy_System import pregnancy_constant
 from ..check_registry import CheckFailure, register_check, make_failure
 
@@ -145,18 +145,16 @@ def check_birth_02() -> list[CheckFailure]:
 
 
 def _check_cook_memory(
-    ri: game_type.Rhodes_Island | None,
+    setting: game_type.System_Setting,
     field: str,
     check_id: str,
     name: str,
     low: int,
     high: int,
 ) -> list[CheckFailure]:
-    """参数: ri(罗德岛对象)、field/check_id/name(str)、low/high(int)；返回值: List[CheckFailure]；
+    """参数: setting(全局设置对象)、field/check_id/name(str)、low/high(int)；返回值: List[CheckFailure]；
     功能: 校验烹饪记忆字典的页签与数值范围。"""
-    if ri is None:
-        return []
-    memory = getattr(ri, field, None)
+    memory = getattr(setting, field, None)
     if not isinstance(memory, dict):
         return [
             make_failure(
@@ -188,9 +186,8 @@ def _check_cook_memory(
 @register_check("COOK-01", "烹饪模式记忆")
 def check_cook_01() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 烹饪模式字典只允许0–2页签，模式为0或1，允许缺键。"""
-    cache = cache_control.cache
     return _check_cook_memory(
-        getattr(cache, "rhodes_island", None),
+        normal_config.system_setting,
         "makefood_cook_mode",
         "COOK-01",
         "烹饪模式记忆",
@@ -202,9 +199,8 @@ def check_cook_01() -> list[CheckFailure]:
 @register_check("COOK-02", "制作份数记忆")
 def check_cook_02() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 制作份数字典只允许0–2页签，份数为1–10整数。"""
-    cache = cache_control.cache
     return _check_cook_memory(
-        getattr(cache, "rhodes_island", None),
+        normal_config.system_setting,
         "makefood_make_count",
         "COOK-02",
         "制作份数记忆",

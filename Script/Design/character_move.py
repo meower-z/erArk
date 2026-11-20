@@ -2,7 +2,7 @@
 
 from Script.Core import cache_control, constant, game_type, get_text
 from Script.Design import map_handle, update
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 from types import FunctionType
 
 cache: game_type.Cache = cache_control.cache
@@ -46,10 +46,10 @@ def own_charcter_move(
         cache.character_data[0].target_character_id = 0
     # 继续留在地图页面
     if move_now in ["Null", "wait_open", "door_lock"]:
-        cache.now_panel_id = constant.Panel.SEE_MAP
+        view.now_panel_id = constant.Panel.SEE_MAP
     # 回到主页面
     else:
-        cache.now_panel_id = constant.Panel.IN_SCENE
+        view.now_panel_id = constant.Panel.IN_SCENE
 
 
 def continue_player_route() -> None:
@@ -155,7 +155,7 @@ def _player_leg(
         return move_now
     from Script.Modules.tk_ui import player_pick
 
-    cache.now_panel_id = constant.Panel.IN_SCENE
+    view.now_panel_id = constant.Panel.IN_SCENE
     player_pick.choose(
         behavior_id, now_need_time, state=state, fields=fields, args=args
     )

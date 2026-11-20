@@ -18,7 +18,7 @@ from Script.Core import (
 )
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation, handle_ability
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 from Script.System.Medical_System import medical_constant, medical_service
 
 cache: game_type.Cache = cache_control.cache
@@ -110,7 +110,7 @@ class Medical_Department_Panel:
 
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_button.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def switch_panel(self, panel_name: str) -> None:

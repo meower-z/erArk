@@ -2,7 +2,7 @@
 
 from types import FunctionType
 from Script.System.Sex_System.hidden_sex_panel import _settle_instruct
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 from Script.Core import (
     cache_control,
     get_text,
@@ -140,7 +140,7 @@ class Select_Exhibitionism_Sex_Mode_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn in return_list:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def select_this_mode(self, mode_id: int) -> None:

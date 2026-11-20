@@ -23,11 +23,6 @@ EXCLUDED_TOP_LEVEL_FIELDS = {
     "npc_tem_data",  # npc模板静态数据
     "random_npc_list",  # 旧存档读档后会留在cache上的随机npc数据，Cache本身不声明它
     "recipe_data",  # 菜谱静态数据
-    "wframe_mouse",  # 主页监听控制流程用变量组（渲染相关）
-    "cmd_data",  # cmd绘制数据
-    "input_cache_draft",  # 玩家正在编辑但尚未发送的输入草稿
-    "output_text_style",  # 富文本记录输出样式临时缓存
-    "text_style_position",  # 富文本回溯样式记录用定位
     "daily_intsruce",  # 每日指令文本流水（长期游玩可达MB级；最近行为已在日志条目头部单列，流水全文无排查价值）
     "taiggered_event_record",  # 已触发事件id全集（只增流水，与状态自洽无关）
 }

@@ -9,7 +9,7 @@ from Script.Core import (
     constant,
     py_cmd,
 )
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, panel, view
 from Script.Config import normal_config
 
 cache: game_type.Cache = cache_control.cache
@@ -46,7 +46,7 @@ class Instruct_filter_Panel:
 
         instruct_index_list = []
 
-        for now_type in cache.instruct_type_filter:
+        for now_type in normal_config.system_setting.instruct_type_filter:
             if now_type != constant.InstructType.SYSTEM:
                 for instruct in constant.instruct_type_data[now_type]:
                     instruct_index_list.append(instruct)
@@ -69,7 +69,7 @@ class Instruct_filter_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
 
@@ -119,11 +119,13 @@ class HandleFilterButtonList:
             show_index = self.index.ljust(6, " ")
         button_text = f"[{show_index}]{instruct_name}"
 
-        if self.index not in cache.instruct_index_filter:
-            cache.instruct_index_filter[self.index] = True
+        if self.index not in normal_config.system_setting.instruct_index_filter:
+            normal_config.system_setting.instruct_index_filter[self.index] = (
+                True
+            )
         text_style = (
             "standard"
-            if cache.instruct_index_filter[self.index]
+            if normal_config.system_setting.instruct_index_filter[self.index]
             else "deep_gray"
         )
 
@@ -143,8 +145,8 @@ class HandleFilterButtonList:
 
     def chose_button(self) -> None:
         """玩家点击了选项"""
-        cache.instruct_index_filter[self.index] = (
-            not cache.instruct_index_filter[self.index]
+        normal_config.system_setting.instruct_index_filter[self.index] = (
+            not normal_config.system_setting.instruct_index_filter[self.index]
         )
 
     def draw(self) -> None:

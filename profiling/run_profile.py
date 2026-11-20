@@ -202,10 +202,8 @@ def try_load_save(save_id: str) -> bool:
     成功返回 True
     """
     try:
-        from Script.Core import cache_control, constant
-        from Script.Core import save_handle
-
-        cache = cache_control.cache
+        from Script.Core import constant, save_handle
+        from Script.UI.Moudle import view
 
         if save_id == "auto":
             exist = save_handle.judge_save_file_exist("auto")
@@ -213,7 +211,7 @@ def try_load_save(save_id: str) -> bool:
                 log("auto 存档不存在")
                 return False
             save_handle.input_load_save("auto")
-            cache.now_panel_id = constant.Panel.IN_SCENE
+            view.now_panel_id = constant.Panel.IN_SCENE
             log("已加载 auto 存档")
             return True
         else:
@@ -222,7 +220,7 @@ def try_load_save(save_id: str) -> bool:
                 log(f"存档 {save_id} 不存在")
                 return False
             save_handle.input_load_save(save_id)
-            cache.now_panel_id = constant.Panel.IN_SCENE
+            view.now_panel_id = constant.Panel.IN_SCENE
             log(f"已加载存档 {save_id}")
             return True
     except Exception as e:
@@ -245,7 +243,7 @@ def new_game_minimal_init() -> None:
         basement,
     )
     from Script.System.Cooking_System import cooking
-    from Script.Config import game_config
+    from Script.Config import game_config, normal_config
     from Script.Core import io_init
     from Script.System.Dormitory_System import common as dormitory_common
 
@@ -266,7 +264,7 @@ def new_game_minimal_init() -> None:
         cache.first_bonus[cid] = False
     for cid in game_config.config_world_setting:
         cache.world_setting[cid] = 0
-    cache.all_system_setting = attr_calculation.get_system_setting_zero()
+    normal_config.system_setting = attr_calculation.get_system_setting_zero()
     cache.difficulty_setting = attr_calculation.get_difficulty_setting_zero()
     cache.birth_type_setting = attr_calculation.get_birth_type_setting_zero()
     cache.rhodes_island.materials_resouce[1] = 20000

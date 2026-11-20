@@ -15,7 +15,7 @@ from Script.Design import (
     map_handle,
     second_behavior,
 )
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, panel, view
 from Script.Modules.save_load import reset
 from Script.Config import game_config, normal_config
 
@@ -362,7 +362,7 @@ class Assistant_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def chose_button(self, service_cid: int, service_option_len: int) -> None:

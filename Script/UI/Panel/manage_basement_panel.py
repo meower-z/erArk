@@ -10,7 +10,7 @@ from Script.Core import (
     num,
 )
 from Script.Design import basement, attr_calculation, handle_premise, game_time
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 from Script.UI.Panel import see_character_info_panel
 from Script.Config import game_config, normal_config
 
@@ -131,9 +131,6 @@ class Manage_Basement_Panel:
         }
 
         title_draw = draw.TitleLineDraw(title_text, self.width)
-
-        # 刷新图书馆读者数（界面状态）
-        basement.update_facility_people()
 
         while 1:
             return_list = []
@@ -1076,7 +1073,7 @@ class Manage_Basement_Panel:
                         0  # 若在修改排序模式，按下返回僅關閉修改排序視窗
                     )
                 else:
-                    cache.now_panel_id = constant.Panel.IN_SCENE
+                    view.now_panel_id = constant.Panel.IN_SCENE
                     break
             elif yrn == "toggle_filter_work":
                 self.filter_work = (self.filter_work + 1) % 3
@@ -1329,7 +1326,7 @@ class Manage_Basement_Panel:
                         )
 
             elif department == _("图书馆"):
-                reader_count = cache.rhodes_island.reader_now
+                reader_count = basement.library_reader_count()
                 now_text += _("\n  当前读者人数：{0} 人").format(reader_count)
 
             elif department == _("宿舍区"):
@@ -1435,7 +1432,7 @@ class Manage_Basement_Panel:
         )
         now_draw.draw()
         # 设置返回后的面板id
-        cache.now_panel_id = constant.Panel.IN_SCENE
+        view.now_panel_id = constant.Panel.IN_SCENE
 
 
 class Change_Npc_Work_Panel:
@@ -1829,4 +1826,3 @@ class Change_Npc_Work_Panel:
             )
         # 更新罗德岛的工作人员及状态
         basement.update_work_people()
-        basement.update_facility_people()

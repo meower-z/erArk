@@ -264,10 +264,8 @@ def _reset_keeping_cache(game: core.GameState, why: core.Data) -> None:
     # 选择的草稿里换入时先换回原物，草稿之后关闭时什么也不做
     draft.abandon()
     cache = cache_control.cache
-    # 存档同样 pickle 整个缓存；全局设置不属于存档，不复制，恢复后仍是同一个对象
-    saved = dict(cache.__dict__)
-    live = saved.pop("all_system_setting")
-    data = pickle.dumps(saved, pickle.HIGHEST_PROTOCOL)
+    # 换入前留一份缓存的 pickle（存档也这样 pickle 整个缓存），钩子出错时换回
+    data = pickle.dumps(cache.__dict__, pickle.HIGHEST_PROTOCOL)
     before = core.state()
     try:
         core.reset_state(game, why)
@@ -276,7 +274,6 @@ def _reset_keeping_cache(game: core.GameState, why: core.Data) -> None:
         if core.state() is before:
             cache.__dict__.clear()
             cache.__dict__.update(pickle.loads(data))
-            cache.all_system_setting = live
         raise
 
 

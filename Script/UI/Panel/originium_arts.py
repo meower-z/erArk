@@ -11,7 +11,7 @@ from Script.Core import (
     constant,
 )
 from Script.Design import handle_talent, handle_premise
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 
 cache: game_type.Cache = cache_control.cache
@@ -220,7 +220,7 @@ class Originium_Arts_Panel:
             return_list.append(back_draw.return_text)
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back_draw.return_text or yrn == "12":
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     def to_do(self, n: object) -> None:

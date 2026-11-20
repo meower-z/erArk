@@ -19,6 +19,7 @@ from typing import NoReturn, cast
 from Script.Core import cache_control, constant, game_type, py_cmd
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import draft, edits, intent, working
+from Script.UI.Moudle import view
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -59,42 +60,11 @@ def back() -> NoReturn:
     raise Back
 
 
-UI_STATE: frozenset[str] = frozenset(
-    {
-        "now_panel_id",
-        "wframe_mouse",
-        "cmd_data",
-        "text_wait",
-        "input_cache",
-        "back_save_panel",
-        "instruct_type_filter",
-        "instruct_sex_type_filter",
-        "instruct_index_filter",
-        "instruct_type_filter_cache",
-        "rhodes_island.makefood_filter_type",
-        "rhodes_island.makefood_filter_difficulty",
-        "rhodes_island.makefood_filter_time",
-        "rhodes_island.makefood_sort_type",
-        "rhodes_island.makefood_sort_order",
-        "rhodes_island.makefood_cook_mode",
-        "rhodes_island.makefood_make_count",
-        "rhodes_island.makefood_data",
-        "all_npc_position_panel_select_type",
-        "all_npc_position_panel_move_type",
-        "collect_position_list",
-        "pregnancy_panel_sort_type",
-        "pregnancy_panel_filter_type",
-        "scene_panel_show",
-        "show_non_h_in_hidden_sex",
-        "npc_image_index",
-        "rhodes_island.reader_now",
-        "rhodes_island.now_show_book_cid_of_type",
-    }
-)
-""" 玩家选行动时可以写的缓存属性路径（界面状态）；其余缓存在选行动时只读 """
+UI_STATE: frozenset[str] = frozenset({"input_cache", "collect_position_list"})
+""" 玩家选行动时可以直接写的缓存属性（输入记录、收藏地点）；其余缓存在选行动时只读 """
 
-META_STATE: frozenset[str] = frozenset({"all_system_setting", "debug_mode"})
-""" 不属于游戏状态的缓存属性（全局设置，每次换 GameState 后重装）：选择时照旧直接写 """
+META_STATE: frozenset[str] = frozenset({"debug_mode"})
+""" 玩家选行动时也直接写的 debug 模式开关 """
 
 UNDRAFTED = frozenset(
     {
@@ -225,8 +195,8 @@ def _round() -> None:
     """
     py_cmd.clr_cmd()
     py_cmd.focus_cmd()
-    constant.panel_data[cache.now_panel_id]()
-    if cache.now_panel_id in PRE_GAME_PANELS:
+    constant.panel_data[view.now_panel_id]()
+    if view.now_panel_id in PRE_GAME_PANELS:
         raise LeftGame
 
 

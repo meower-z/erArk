@@ -7,7 +7,7 @@ import math
 import time
 from collections.abc import Sequence
 from types import FunctionType
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 from Script.Core import (
     io_init,
     flow_handle,
@@ -324,7 +324,7 @@ class LeftDrawTextListWaitPanel(LeftDrawTextListPanel):
             for value in now_list:
                 value.draw()
             io_init.era_print("\n")
-        if not cache.wframe_mouse.w_frame_skip_wait_mouse:
+        if not view.wframe_mouse.w_frame_skip_wait_mouse:
             flow_handle.askfor_wait()
         else:
             time.sleep(0.001)

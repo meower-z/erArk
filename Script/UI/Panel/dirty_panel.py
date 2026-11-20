@@ -171,7 +171,7 @@ class SeeCharacterBodyPanel:
                 else:
                     text_index = "爱液4"
                 # 是否显示完整污浊文本
-                if cache.all_system_setting.draw_setting[10]:
+                if normal_config.system_setting.draw_setting[10]:
                     now_part_text = game_config.ui_text_data["dirty_full"][
                         text_index
                     ]
@@ -193,7 +193,7 @@ class SeeCharacterBodyPanel:
                 ):
                     # 是否显示完整污浊文本
                     dirty_text_cid = "破处血1"
-                    if cache.all_system_setting.draw_setting[10]:
+                    if normal_config.system_setting.draw_setting[10]:
                         dirty_text = game_config.ui_text_data["dirty_full"][
                             dirty_text_cid
                         ]
@@ -229,7 +229,7 @@ class SeeCharacterBodyPanel:
                 else:
                     text_index = "尿液4"
                 # 是否显示完整污浊文本
-                if cache.all_system_setting.draw_setting[10]:
+                if normal_config.system_setting.draw_setting[10]:
                     now_part_text = game_config.ui_text_data["dirty_full"][
                         text_index
                     ]
@@ -246,7 +246,7 @@ class SeeCharacterBodyPanel:
                 semen_level = body_semen[i][2]
                 dirty_text_cid = f"{_(part_name, revert_translation = True)}精液污浊{str(semen_level)}"
                 # 是否显示完整污浊文本
-                if cache.all_system_setting.draw_setting[10]:
+                if normal_config.system_setting.draw_setting[10]:
                     # 检查是否有差分文本
                     dirty_diff_text_cid = self.get_dirty_diff_text_cid(
                         i, semen_level
@@ -284,7 +284,7 @@ class SeeCharacterBodyPanel:
                 )
                 if decoration_count:
                     # 开启详细污浊信息时显示等级描述文本，否则显示个数
-                    if cache.all_system_setting.draw_setting[10]:
+                    if normal_config.system_setting.draw_setting[10]:
                         decoration_level = condom_handle.get_decoration_level(
                             decoration_count
                         )
@@ -318,7 +318,7 @@ class SeeCharacterBodyPanel:
             egg_name = soft_egg_handle.get_soft_egg_name(egg_id)
             egg_semen_count = int(egg_data["semen_count"])
             # 是否显示完整污浊文本
-            if cache.all_system_setting.draw_setting[10]:
+            if normal_config.system_setting.draw_setting[10]:
                 egg_semen_level = soft_egg_handle.get_soft_egg_semen_level(
                     egg_semen_count
                 )
@@ -347,7 +347,7 @@ class SeeCharacterBodyPanel:
             if now_level >= 2:
                 dirty_text_cid = f"腹部整体精液污浊{str(now_level)}"
                 # 是否显示完整污浊文本
-                if cache.all_system_setting.draw_setting[10]:
+                if normal_config.system_setting.draw_setting[10]:
                     dirty_text_context = game_config.ui_text_data["dirty_full"][
                         dirty_text_cid
                     ]
@@ -366,7 +366,7 @@ class SeeCharacterBodyPanel:
         if target_character_data.dirty.a_clean:
             text_index = f"灌肠{str(target_character_data.dirty.a_clean)}"
             # 是否显示完整污浊文本
-            if cache.all_system_setting.draw_setting[10]:
+            if normal_config.system_setting.draw_setting[10]:
                 enemas_text = game_config.ui_text_data["dirty_full"][text_index]
                 enemas_text = f"<semen>{enemas_text}</semen>\n"
                 enemas_text = _(" [肠道]:") + enemas_text
@@ -379,7 +379,7 @@ class SeeCharacterBodyPanel:
                 f"灌肠液量{str(target_character_data.dirty.enema_capacity)}"
             )
             # 是否显示完整污浊文本
-            if cache.all_system_setting.draw_setting[10]:
+            if normal_config.system_setting.draw_setting[10]:
                 enema_capacity_text = game_config.ui_text_data["dirty_full"][
                     text_index
                 ]

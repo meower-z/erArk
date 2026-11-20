@@ -14,7 +14,7 @@ from Script.Core import (
 )
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation
-from Script.UI.Moudle import draw, panel
+from Script.UI.Moudle import draw, panel, view
 from Script.Modules.domains import power, power_supply
 
 from typing import TYPE_CHECKING
@@ -166,7 +166,7 @@ class Manage_Power_System_Panel:
 
             yrn = flow_handle.askfor_all(return_list)
             if yrn == back.return_text:
-                cache.now_panel_id = constant.Panel.IN_SCENE
+                view.now_panel_id = constant.Panel.IN_SCENE
                 break
 
     # ---------- 供电策略子界面 ---------- #

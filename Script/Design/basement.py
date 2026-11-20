@@ -687,17 +687,17 @@ def update_work_people() -> None:
     )
 
 
-def update_facility_people() -> None:
+def library_reader_count() -> int:
     """
-    更新当前基地各设施使用人数
+    当前图书馆中的读者数量
+    Return arguments:
+    int -- 在图书馆里的干员数（不含玩家）
     """
-
-    cache.rhodes_island.reader_now = 0
-
-    for id in cache.npc_id_got - {0}:
-        # 图书馆读者统计
-        if handle_premise.handle_in_library(id):
-            cache.rhodes_island.reader_now += 1
+    return sum(
+        1
+        for id in cache.npc_id_got - {0}
+        if handle_premise.handle_in_library(id)
+    )
 
 
 def settle_milk() -> None:
@@ -914,7 +914,7 @@ def draw_todo() -> None:
     from Script.Modules.domains import power_supply
 
     # 如果系统设置中关闭了待办事项，直接返回
-    if cache.all_system_setting.draw_setting[5] == 0:
+    if normal_config.system_setting.draw_setting[5] == 0:
         return
 
     draw_text = ""

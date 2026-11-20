@@ -8,6 +8,7 @@ from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.Design import handle_premise
 from Script.Modules.save_load import reset
+from Script.UI.Moudle import view
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -361,10 +362,10 @@ def init_makefood_data() -> None:
     延迟创建：此处仅记录玩家当前可制作的菜谱id，实际的食物对象在玩家选定菜谱并制作时才创建，\n
     以减少不必要的内存占用和性能消耗。\n
     """
-    cache.rhodes_island.makefood_data = {}
+    view.makefood_data = {}
     cookable_recipes_list = get_character_cookable_recipes()
     for recipes_id in cookable_recipes_list:
-        cache.rhodes_island.makefood_data[str(recipes_id)] = recipes_id
+        view.makefood_data[str(recipes_id)] = recipes_id
 
 
 def player_can_season(seasoning: int) -> bool:
@@ -451,7 +452,6 @@ def get_food_list_from_food_shop(
     Return arguments:
     dict -- 食物列表 食物id:食物名字
     """
-    # print(f"debug food_type = {food_type}, restaurant_id = {restaurant_id}")
     food_list = {}
     # 食堂内的食物
     if restaurant_id == -1:
@@ -510,7 +510,7 @@ def get_cook_from_makefood_data_by_food_type(
     dict -- 食物列表 食物id:食物名字
     """
     food_list = {}
-    for food_id in cache.rhodes_island.makefood_data:
+    for food_id in view.makefood_data:
         # 选择对应食物种类
         if food_type == _("主食") and cache.recipe_data[int(food_id)].type != 0:
             continue
@@ -556,11 +556,11 @@ def get_filtered_sorted_cook_data(food_type: str) -> list:
     food_list = list(base_food_dict.items())
 
     # 获取筛选/排序配置
-    filter_type = cache.rhodes_island.makefood_filter_type
-    filter_difficulty = cache.rhodes_island.makefood_filter_difficulty
-    filter_time = cache.rhodes_island.makefood_filter_time
-    sort_type = cache.rhodes_island.makefood_sort_type
-    sort_order = cache.rhodes_island.makefood_sort_order
+    filter_type = view.makefood_filter_type
+    filter_difficulty = view.makefood_filter_difficulty
+    filter_time = view.makefood_filter_time
+    sort_type = view.makefood_sort_type
+    sort_order = view.makefood_sort_order
 
     # 应用筛选
     if filter_type or filter_difficulty != -1 or filter_time != -1:

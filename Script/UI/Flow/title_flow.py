@@ -3,7 +3,7 @@
 import os
 from types import FunctionType
 from Script.Config import normal_config
-from Script.UI.Moudle import panel, draw
+from Script.UI.Moudle import panel, draw, view
 from Script.UI.Panel import (
     see_save_info_panel,
     system_setting,
@@ -70,7 +70,7 @@ def title_panel() -> None:
     py_cmd.clr_cmd()
     now_key = return_list[ans]
     if now_key == now_list[0]:
-        cache.now_panel_id = constant.Panel.CREATOR_CHARACTER
+        view.now_panel_id = constant.Panel.CREATOR_CHARACTER
     elif now_key == now_list[1]:
         now_panel: (
             see_save_info_panel.SeeSaveListPanel

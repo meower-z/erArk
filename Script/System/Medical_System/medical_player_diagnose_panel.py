@@ -20,7 +20,7 @@ from Script.System.Medical_System import (
     medical_player_diagnose_function,
 )
 from Script.Modules.tk_ui import player_pick
-from Script.UI.Moudle import draw
+from Script.UI.Moudle import draw, view
 
 cache: game_type.Cache = cache_control.cache
 """ 全局缓存对象 """
@@ -303,7 +303,7 @@ class MedicalPlayerDiagnosePanel:
             tip_draw.width = self.width
             tip_draw.text = _("当前医疗部暂无可供博士亲自诊疗的病人。") + "\n"
             tip_draw.draw()
-            cache.now_panel_id = constant.Panel.IN_SCENE
+            view.now_panel_id = constant.Panel.IN_SCENE
             return True
 
         # 持续渲染界面直至流程被明确关闭
@@ -1650,10 +1650,10 @@ class MedicalPlayerDiagnosePanel:
         next_value = allowed_indices[(position + 1) % len(allowed_indices)]
 
         # 写回系统设置并输出提示语，便于玩家确认当前等级
-        base_setting = getattr(cache.all_system_setting, "base_setting", {})
+        base_setting = getattr(normal_config.system_setting, "base_setting", {})
         if not isinstance(base_setting, dict):
             base_setting = {}
-            cache.all_system_setting.base_setting = base_setting
+            normal_config.system_setting.base_setting = base_setting
         base_setting[12] = next_value
 
         # if 0 <= next_value < len(option_list):
@@ -1752,7 +1752,7 @@ class MedicalPlayerDiagnosePanel:
             None。
         """
         # 确保面板状态已切回场景，避免结算时界面异常
-        cache.now_panel_id = constant.Panel.IN_SCENE
+        view.now_panel_id = constant.Panel.IN_SCENE
         # 一项检查都没做就退出：整个选择取消，不花时间也不留改动
         if self._abort_requested and self._checks_executed == 0:
             player_pick.back()
@@ -1911,10 +1911,10 @@ class MedicalPlayerDiagnosePanel:
             allowed_indices = [0]
 
         # 取得系统设置字典，若不存在则初始化为空字典
-        base_setting = getattr(cache.all_system_setting, "base_setting", {})
+        base_setting = getattr(normal_config.system_setting, "base_setting", {})
         if not isinstance(base_setting, dict):
             base_setting = {}
-            cache.all_system_setting.base_setting = base_setting
+            normal_config.system_setting.base_setting = base_setting
 
         current_value = int(base_setting.get(12, 0) or 0)
 
