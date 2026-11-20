@@ -3,9 +3,9 @@
 新游戏存进当前版本，再读再存
 ============================
 开新游戏（SlowTestCase.setUp），存档目录换成临时目录。
-- 等待 60 分钟，在动力系统管理面板里把一个区块的供电策略调高一档，存进新存档：文件 "2" 里有 Fraction 的标签。
-  读回这个存档，内核状态的 JSON 与存档前相同。
-- 存档之后接着玩 60 分钟，与读回存档后接着玩 60 分钟（随机数同样重设）比较：内核状态、花名册顺序、
+- 等待 60 分钟，在动力系统管理面板里把一个区块的供电策略调高一档，再加一台 L1 蓄电池，存进新存档。
+  文件 "2" 里有 Fraction 的标签和 base.power。读回这个存档，内核状态的 JSON 与存档前相同。
+- 存档之后接着玩 60 分钟，与读回存档后接着玩 60 分钟（随机数同样重设）比较。内核状态、花名册顺序、
   全部角色的生理需求、开始的行动序列与随机数状态都相同。
 - 读回后再存一次，文件 "2" 除了存档标记都与上一次相同。再读一次，内核状态与存档前相同，缓存的 JSON 与第一次读回时相同。
 - 文件 "2" 截断或换成另一次存档的，读档抛 SaveRefused，错误里有存档id。
@@ -158,16 +158,20 @@ class SaveV1Test(SlowTestCase):
         self.wait(60)
         strategies = power.strategies()
         self.cache.now_panel_id = constant.Panel.MANAGE_POWER_SYSTEM
-        self.world.player.press("供电策略调整", "[+]", "返回", "返回")
+        self.world.player.press(
+            "供电策略调整", "[+]", "返回", "蓄电池管理", "[+]", "返回", "返回"
+        )
         world.act(constant.panel_data[self.cache.now_panel_id])
         self.world.player.check_done()
         self.assertNotEqual(power.strategies(), strategies, "面板里改了策略")
+        self.assertEqual(power.plant()["batteries"], (1, 0, 0), "加了蓄电池")
         before_save = self.state_json()
         save_handle.establish_save(SLOT)
         path = os.path.join(self.folder, SLOT, kernel_state.SAVE_FILE)
         with open(path, encoding="utf-8") as f:
             first_file = json.load(f)
         self.assertIn('"$frac"', json.dumps(first_file), "文件 2 里有 Fraction")
+        self.assertIn(power.PLANT, first_file["data"], "文件 2 里有动力设施")
 
         random.seed(SEED)
         self.started.clear()

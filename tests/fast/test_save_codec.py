@@ -115,7 +115,11 @@ class SaveCodecTest(FastTestCase):
         cases = {
             "truncated": text[: len(text) // 2],
             "other token": text.replace('"t"', '"u"', 1),
-            "too new": text.replace('"version": 1', '"version": 2', 1),
+            "too new": text.replace(
+                f'"version": {upgrade.CURRENT}',
+                f'"version": {upgrade.CURRENT + 1}',
+                1,
+            ),
             "missing": None,
         }
         for name, body in cases.items():

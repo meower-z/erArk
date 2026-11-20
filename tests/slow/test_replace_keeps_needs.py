@@ -1,10 +1,11 @@
 # -*- coding: UTF-8 -*-
 """
-角色替换时生理需求搬到新id
-==========================
+角色替换时生理需求与主调控员跟到新id
+====================================
 开新游戏，取一名在场干员当旧角色，一名不在场角色的id当新id（从存档属性表的角色表里删掉它），按这个映射跑读档的角色替换。
-- 当前存档：新id的生理需求（body.needs）四项都等于旧角色的。
-- 旧存档：旧角色对象带着疲劳、饥饿、尿意属性时，这些属性抄到新角色对象上，留给读档后面的 upgrade.adopt_v0。
+- 当前存档时，新id的生理需求（body.needs）四项都等于旧角色的。
+- 主调控员是旧角色时，替换后 base.power 里的主调控员是新id。
+- 旧存档时，旧角色对象带着疲劳、饥饿、尿意属性，这些属性抄到新角色对象上，留给读档后面的 upgrade.adopt_v0。
 """
 
 import importlib
@@ -61,6 +62,17 @@ class ReplaceKeepsNeedsTest(SlowTestCase):
             needs.set(self.old, **NEEDS)
             self.replace()
             self.assertEqual(dict(needs.of(self.new)), NEEDS)
+
+    def test_main_power_operator_follows_id(self) -> None:
+        """主调控员是旧角色时，角色替换后主调控员是新id"""
+        core = game("Script.Kernel.core")
+        power = game("Script.Modules.domains.power")
+        working = game("Script.Modules.gameplay_resolution.working")
+        with working.based_on(core.state()):
+            power.set_plant(main_operators=(0, self.old, 0, 0))
+            self.replace()
+            mains = power.plant()["main_operators"]
+        self.assertEqual(mains, (0, self.new, 0, 0))
 
     def test_old_save_copies_attributes(self) -> None:
         """旧存档：旧角色对象上的属性抄到新角色对象上"""
