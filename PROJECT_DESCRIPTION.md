@@ -846,7 +846,6 @@ GitHub Actions `.github/workflows/python-app.yml`（push/PR 到 master，windows
    - `erArk_Lite_{版本}.zip`：轻量版（移除 `image/场景`、`image/断面图`、`image/立绘`，仅保留基础场景）
    - `erArk_Images_{图片版本}.zip`：图片资源包
 6. 版本号：游戏 `package.json`，图片 `image/package.json`
-7. 另有 `sync-wiki.yml` 同步 wiki
 
 轻量版 + 图片资源包 = 完整版。
 

@@ -144,7 +144,7 @@ The GitHub Actions workflow (`.github/workflows/python-app.yml`, PyInstaller bui
 | `erArk_Lite_{version}.zip` | Lightweight game package | Game without large image assets (portraits, scenes, etc.) |
 | `erArk_Images_{image_version}.zip` | Image resource package | All image folders except `image/状态条` |
 
-The game version comes from `package.json`, the image version from `image/package.json`. A second workflow (`sync-wiki.yml`) syncs the wiki.
+The game version comes from `package.json`, the image version from `image/package.json`.
 
 **Image folder distribution:**
 - **Included in Images package only**: `image/场景`, `image/断面图`, `image/立绘`

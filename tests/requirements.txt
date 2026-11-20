@@ -1,5 +1,6 @@
 # 测试依赖：pip install -r tests/requirements.txt（游戏本身的依赖在根目录 requirements.txt）
-pytest>=9.1
+# 上限：pytest 9.2.0 下慢速层的 --forked 测试全部失败
+pytest>=9.1,<9.2
 # 慢速层的 --forked
 pytest-forked>=1.7
 # 量两层的测试覆盖到哪些模块
