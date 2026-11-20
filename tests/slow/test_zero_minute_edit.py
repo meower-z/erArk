@@ -1,13 +1,15 @@
 # -*- coding: UTF-8 -*-
 """
-零分钟的界面编辑：面板里改了游戏状态，确认后是一个 0 分钟的 Edit，玩家在同一分钟里接着选
+零分钟的界面编辑。面板里改了游戏状态，确认后是一个 0 分钟的 Edit，玩家在同一分钟里接着选
 ========================================================================================
-- 动力系统管理面板里把一个区块的供电策略调高一档再退出：内核开始了玩家的一个行动，是 0 分钟的 Edit。
+- 动力系统管理面板里把一个区块的供电策略调高一档再退出。内核开始玩家的一个行动，是 0 分钟的 Edit。
   时钟不动，玩家在同一分钟里再选。Edit 开始之后，GameState 的 base.power_strategy 里只有这个区块的新策略。
   面板运行期间（定下 Edit 之前），缓存的指纹与 GameState 的全局数据都不变。
-- 打开面板什么也不改就退出：没有行动，缓存的指纹不变。
-- 面板里改过之后整个选择取消（player_pick.back）：没有行动，策略不变。
-- 下 constant.Instruct.SLEEP_OBSCENITY 指令：交互对象进入对应的模式，也是一个 0 分钟的 Edit。
+- 蓄电池管理里加一台 L1 蓄电池再退出，也是一个 0 分钟的 Edit。面板运行期间缓存的指纹与全局数据不变。
+  Edit 之后 GameState 的 base.power 里有这台蓄电池。
+- 打开面板什么也不改就退出。没有行动，缓存的指纹不变。
+- 面板里改过之后整个选择取消（player_pick.back）。没有行动，策略不变。
+- 下 constant.Instruct.SLEEP_OBSCENITY 指令。交互对象进入对应的模式，也是一个 0 分钟的 Edit。
 """
 
 from collections.abc import Callable
@@ -107,6 +109,24 @@ class ZeroMinuteEditTest(SlowTestCase):
         (zone,) = moved
         stored = core.state().data[power.KEY]
         self.assertEqual(stored, {str(zone): after[zone]})
+
+    def test_battery_change_commits_one_edit(self) -> None:
+        """
+        加一台 L1 蓄电池再退出，是一个 0 分钟的 Edit
+        面板运行期间缓存与全局数据不变，Edit 之后 base.power 里有这台蓄电池
+        """
+        from Script.Kernel import core
+        from Script.Modules.domains import power
+        from Script.Modules.gameplay_resolution import edits
+
+        self.open_power()
+        self.world.player.press("蓄电池管理", "[+]", "返回", "返回")
+        _start, _end, changed = self.run_pick(self.show)
+        self.assertEqual(self.player_starts(), [(edits.EDIT, 0)])
+        self.assertFalse(changed, "面板运行期间缓存被写了")
+        self.assertEqual(self.data_moved, [False], "面板运行期间全局数据变了")
+        stored = power.plant(core.state())
+        self.assertEqual(stored["batteries"], (1, 0, 0))
 
     def test_open_and_leave_commits_nothing(self) -> None:
         """打开面板直接退出：没有行动，缓存不变"""
