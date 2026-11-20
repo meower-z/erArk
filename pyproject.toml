@@ -3,7 +3,7 @@
 [tool.black]
 line-length = 80
 # 只格式化根目录与下列顶层目录里的 .py；其他顶层目录（例如本机另放的仓库）不碰，新增含代码的顶层目录时加进来
-include = '^/((\.github|mod|profiling|Script|tests|tools)/.*)?[^/]+\.pyi?$'
+include = '^/((\.agents|mod|profiling|Script|tests|tools)/.*)?[^/]+\.pyi?$'
 # config_def.py 由 buildconfig.py 生成
 force-exclude = '^/Script/Config/config_def\.py$'
 
@@ -148,9 +148,9 @@ ignore = ["PLW0603"]
 # 模板按 game.py 的初始化顺序导入模块，或者在改动 sys.path 之后才导入。
 # 模板里没用上的导入只为构建数据或注册，或者留给复制模板的人在自己的测试里用。
 # repro_template 用 import * 取得 _bootstrap 的初始化与辅助函数。
-".github/skills/headless-game-test/harness_template.py" = ["F401", "E402", "B010"]
-".github/skills/headless-game-test/unit_test_template.py" = ["F401", "E402", "B010"]
-".github/skills/system-review-round/repro_template.py" = ["E402", "F403", "F405"]
+".agents/skills/headless-game-test/harness_template.py" = ["F401", "E402", "B010"]
+".agents/skills/headless-game-test/unit_test_template.py" = ["F401", "E402", "B010"]
+".agents/skills/system-review-round/repro_template.py" = ["E402", "F403", "F405"]
 "tools/verify/headless_harness_template.py" = ["E402"]
 "tools/verify/headless_unit_template.py" = ["F401", "E402"]
 # 这两个文件按 game.py 的顺序初始化游戏。

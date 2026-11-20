@@ -1,6 +1,6 @@
 # 生长养成系统回归测试
 
-覆盖 `Script/System/Education_System/` 及其全部外部挂接点（结算器、状态机、前提、面板、存档、口上与事件数据）的无头回归套件。系统说明见 `.github/prompts/数据处理工作流/生长养成系统.md` §16。
+覆盖 `Script/System/Education_System/` 及其全部外部挂接点（结算器、状态机、前提、面板、存档、口上与事件数据）的无头回归套件。系统说明见 `docs/数据处理工作流/生长养成系统.md` §16。
 
 本套件用自己的公共引导 `_bootstrap.py`。其他系统的新测试写进 `tests/fast/` 或 `tests/slow/`，不用 `_bootstrap.py`。
 
@@ -39,7 +39,7 @@ python -u tests/education/test_semester.py                       # 单跑一个�
 | `test_save_compat.py` | `CHILD_GROWTH` 字段级回填（含 Plan 30 的 `skip_count` / `skip_caught_day` / `semester_base_work_type`、Plan 31 的 `skip_class_day` / `sex_class_count` 补默认值）与成绩单迁移、教育区娱乐编号 175~178→152~155 的读档迁移（模板 / 单孩覆盖 / 娱乐槽位）、`save/` 下全部真实存档只读载入后的结构、学期结算幂等、四个面板可画；Plan 32：L22 旧履历的萝莉 1 / 20 / 26 读档改名为期末 17 / 18 / 19（孩子与罗德岛两处、幂等、新 uid 已有记录不覆盖）；本机没有 `save/` 或没有存档时跳过真实存档一段；Plan 32 实施复审补：迁移前后的残留检查，真实存档载入后没有萝莉 1 / 20 / 26 的残留 |
 | `test_behavior_loop.py` | 模式 B：在女儿最多的真实存档上排课，从 08:40（到岗时间）起带护栏跑六轮行为循环，检查点落在每节课中段（节次交界处人人都在换教室）：收敛、学生岗的女儿进教室（课表只对学生岗生效，存档里改了岗的女儿不计入）、本节有课的教师在课表上那间教室授课、上午四节每人平均 ≥ 3 节出勤；再预约一节下午的实操课，断言开课时必修生都已离开上一节的教室、且已有人在实操教室等（路上撞上需求会晚到，所以不要求全员到场）；再跑一次跨天结算；Plan 32：L4 学生截短排在实时结算之前、截掉的那一段只算一遍（真实存档、真实行为循环）；本机没有 `save/` 或没有可读存档时整份跳过（PASS=0，行为循环的验收改看 `test_class_ai` 的循环段） |
 
-## fixture 陷阱（本套件新增的，通用的见 `.github/skills/headless-game-test/SKILL.md`）
+## fixture 陷阱（本套件新增的，通用的见 `.agents/skills/headless-game-test/SKILL.md`）
 
 - 脚本从 `_bootstrap` 逐个导入用到的名字（含翻译函数 `_`），不用 `from _bootstrap import *`，因为 ruff 的 F403 规则会报出星号导入的那一行。
 - `behavior.start_time` 默认是公元 1 年，`get_class_period` 读的就是它——改游戏时间一律用 `set_time()`，它会同步全部角色。

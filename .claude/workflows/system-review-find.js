@@ -1,7 +1,7 @@
 export const meta = {
   name: 'system-review-find',
   description: 'erArk 系统复查 P1~P3：按检查维度并行核查、逐条对抗式核实、补漏、写复现脚本',
-  whenToUse: '由 system-review-round skill 在 P0 建档之后调起；args 为系统档案与已知清单（字段见 .github/skills/system-review-round/tools/Workflow编排.md）',
+  whenToUse: '由 system-review-round skill 在 P0 建档之后调起；args 为系统档案与已知清单（字段见 .agents/skills/system-review-round/tools/Workflow编排.md）',
   phases: [
     { title: 'Find', detail: '每个检查维度一个只读核查代理' },
     { title: 'Verify', detail: '逐条对抗式核实，默认反驳' },
@@ -10,7 +10,7 @@ export const meta = {
   ],
 }
 
-// ==== 内置检查维度（与 .github/skills/system-review-round/tools/复查清单.md 的七组一一对应） ====
+// ==== 内置检查维度（与 .agents/skills/system-review-round/tools/复查清单.md 的七组一一对应） ====
 const DEFAULT_DIMENSIONS = [
   {
     key: '设计对账',
@@ -364,8 +364,8 @@ ${confirmed.map((f, i) => `${i + 1}. [${f.severity_guess}] ${f.title}
    复现思路：${f.repro_idea || '（无）'}；核实代理给的检查：${f.votes.map(v => v.repro_check).filter(Boolean).join('；') || '（无）'}`).join('\n')}
 
 ## 做法
-1. 以 .github/skills/system-review-round/repro_template.py 为骨架，写到 ${dir}/repro_plan${A.plan_no}.py（用 Write 工具写文件，不要用 heredoc）
-2. 引导：${A.tests ? `把 ${A.tests} 加进 sys.path 后 from _bootstrap import *（fixture 陷阱见该目录 README）` : '本系统没有回归套件，照 .claude/skills/headless-game-test/SKILL.md 模式 A 自建引导'}
+1. 以 .agents/skills/system-review-round/repro_template.py 为骨架，写到 ${dir}/repro_plan${A.plan_no}.py（用 Write 工具写文件，不要用 heredoc）
+2. 引导：${A.tests ? `把 ${A.tests} 加进 sys.path 后 from _bootstrap import *（fixture 陷阱见该目录 README）` : '本系统没有回归套件，照 .agents/skills/headless-game-test/SKILL.md 模式 A 自建引导'}
 3. 每条发现一组 R 检查，每项的「成立」都表示「问题现在确实存在」；另外补前提对照（证明夹具真的走到了那条路径）与数据事实；每项写明修好之后预期成立还是不成立
 4. 运行：timeout 300 ./.conda/python.exe -u <脚本> > ${dir}/repro.log 2>&1，读日志；脚本报错就修到能跑完
 5. 复现不出来的发现写进 not_reproduced 并说明原因，不要硬凑

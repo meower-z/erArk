@@ -32,7 +32,7 @@ tools/AI
 ai_chat_api_key.txt
 ai_chat_api_key.csv
 data/talk/ai
-.github/prompts/AI文本生成工作流/生成目标文件/
+docs/authoring/AI文本生成工作流/生成目标文件/
 .claude/agent-memory
 .claude/settings.json
 yolo11x-pose.pt
@@ -74,3 +74,9 @@ data/po/zh_CN/
 # 全局设置（游戏根目录，不随存档）
 settings.json
 config.local.ini
+
+# 代理技能：git 在 .agents/ 下只跟踪 skills/。
+# 第一行让这条规则在 .git/info/exclude 忽略了 .agents/ 的检出里也成立。
+!/.agents/
+/.agents/*
+!/.agents/skills/
