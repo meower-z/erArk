@@ -6,7 +6,7 @@
 - 出生（character_handle.born_new_character）后、婴儿长成幼女（pregnancy_handle.check_rearing_complete）后，
   孩子都不在任何场景的角色名单里，也不在 npc_id_got 里；长成幼女时不置学生岗，不在养成名单里。
   幼女长成学员（睡眠结算里的 pregnancy_handle.check_all_child_grow_to_loli）后，孩子进了 npc_id_got 和一个场景，
-  没有未初潮与未成年，
+  没有未成年素质，
   置为学生岗、进养成名单。
 - 离线的幼女照样被每日派发挑作养成事件的主体；以她为主体的事件入队、结算一个选项后，她的照料值或性格倾向变了。
 - 另取第二名干员当女儿：工作日上课节次内、母亲在别的场景时，幼女与学员女儿的 AI 都不选见学的两个状态机
@@ -25,8 +25,6 @@ CHILD = 102
 """ 幼女素质 """
 TRAINEE = 103
 """ 学员素质 """
-NO_MENARCHE = 6
-""" 未初潮素质 """
 UNDERAGE = 7
 """ 未成年素质 """
 REARING_TALENT = 24
@@ -139,11 +137,7 @@ class ChildStagesOfflineTest(SlowTestCase):
         ), kernel_data.writing():
             pregnancy_handle.check_all_child_grow_to_loli()
         self.assertEqual(child.talent[TRAINEE], 1, "幼女长成了学员")
-        self.assertEqual(
-            (child.talent[NO_MENARCHE], child.talent[UNDERAGE]),
-            (0, 0),
-            "学员已成年：没有未初潮，也没有未成年",
-        )
+        self.assertEqual(child.talent[UNDERAGE], 0, "学员没有未成年素质")
         self.assertIn(
             child_id, self.cache.npc_id_got, "长成学员后进了 npc_id_got"
         )

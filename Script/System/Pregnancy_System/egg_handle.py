@@ -8,6 +8,7 @@ from Script.Core import (
     get_text,
 )
 from Script.Design import (
+    child_stage_gate,
     talk,
     second_behavior,
     game_time,
@@ -469,8 +470,7 @@ def check_ovulation(character_id: int) -> None:
         return
     # 排卵结算即本周期排卵日事件的消费，以下豁免分支同样视为本周期已处理
     character_data.pregnancy.ovulation_flag = False
-    # 未初潮不排卵
-    if handle_premise.handle_menarche_1(character_id):
+    if child_stage_gate.is_child_stage(character_id):
         return
     # 机械体且未安装生育模组不排卵
     if character_data.race == 2 and character_data.talent[171] == 0:

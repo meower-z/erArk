@@ -115,7 +115,6 @@ def gain_talent(
         npc_b_talent_change_for_lactation_flag(character_id)
         chara_settle_drink_talent(character_id)
     if now_gain_type == 3:
-        npc_lost_no_menarche_talent(character_id)
         settle_favorite_sex_position(character_id)
 
 
@@ -365,28 +364,6 @@ def npc_b_talent_change_for_lactation_flag(character_id: int) -> None:
             character_id, [121, 122, 123, 124, 125], False, _("胸部")
         ):
             pass
-
-
-def npc_lost_no_menarche_talent(character_id: int) -> None:
-    """
-    干员失去未初潮素质\n
-    """
-    character_data = cache.character_data[character_id]
-    if character_data.talent[6]:
-        # 需要W相关开发至少为4级
-        if character_data.ability[7] + character_data.ability[12] >= 4:
-            character_data.talent[6] = 0
-            # 记录特殊履历：初潮
-            first_record_handle.record_first_special_record(character_id, 5, "")
-            now_draw_text = _(
-                "\n在对子宫的持续开发下，{0}提前迎来了性成熟，可以受精怀孕了\n"
-            ).format(character_data.name)
-            now_draw_text += _("○{0}失去了[未初潮]\n").format(
-                character_data.name
-            )
-            now_draw_succed = draw.WaitDraw()
-            now_draw_succed.text = now_draw_text
-            now_draw_succed.draw()
 
 
 def body_part_talent_update(

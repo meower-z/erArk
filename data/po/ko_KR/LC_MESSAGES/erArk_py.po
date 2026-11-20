@@ -2723,18 +2723,6 @@ msgstr "{0}은(는) [정액 섭취 절정]을 얻었습니다\n"
 msgid "胸部"
 msgstr "가슴"
 
-#: .\Script\Design\handle_talent.py:294
-#, python-brace-format
-msgid ""
-"\n"
-"在对子宫的持续开发下，{0}提前迎来了性成熟，可以受精怀孕了\n"
-msgstr "\n자궁의 지속적인 개발로 {0}은(는) 빠르게 발달해 임신이 가능해졌다\n"
-
-#: .\Script\Design\handle_talent.py:295
-#, python-brace-format
-msgid "○{0}失去了[未初潮]\n"
-msgstr "○{0}은(는) [미초경]을 잃었다\n"
-
 #: .\Script\Design\handle_talent.py:317
 msgid "未找到目标素质，无法进行变化\n"
 msgstr "소질 검색 결과가 나오지 않아 변경할 수 없습니다.\n"
@@ -3381,14 +3369,6 @@ msgid ""
 "\n"
 "在浓厚精液的影响下，怀孕概率由{0}上升到了{1}%\n"
 msgstr "\n농축 정액의 영향으로 임신확률이 {0}에서 {1}%로 상승했다\n"
-
-#: .\Script\Design\pregnancy.py:120
-#, python-brace-format
-msgid ""
-"\n"
-"因为{0}还没有迎来初潮，所以精子只能在阴道内徒劳地寻找不存在的卵子，无法完成受"
-"精\n"
-msgstr "\n{0}은(는) 아직 초경을 맞이하지 않았기 때문에 임신할 수 없다\n"
 
 #: .\Script\Design\pregnancy.py:125
 #, python-brace-format

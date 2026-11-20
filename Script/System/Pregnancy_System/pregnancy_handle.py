@@ -14,6 +14,7 @@ from Script.Core import (
 )
 from Script.Design import (
     character_handle,
+    child_stage_gate,
     game_time,
     handle_premise,
     handle_talent,
@@ -404,18 +405,15 @@ def check_fertilization(character_id: int) -> int | None:
         if character_data.talent[i] == 1:
             character_data.pregnancy.fertilization_rate = 0
             return 0
+    if child_stage_gate.is_child_stage(character_id):
+        character_data.pregnancy.fertilization_rate = 0
+        return 0
 
     # 只判断有受精可能的
     if character_data.pregnancy.fertilization_rate:
 
-        # 如果未初潮，则无法受精并触发对话
-        if handle_premise.handle_menarche_1(character_id):
-            draw_text += _(
-                "\n因为{0}还没有迎来初潮，所以精子只能在阴道内徒劳地寻找不存在的卵子，无法完成受精\n"
-            ).format(character_data.name)
-
         # 假孕孕肚状态下无法受精（正常经get_fertilization_rate已清零概率，此处为绕过概率计算路径的兜底）
-        elif handle_premise.handle_fake_inflation_1(character_id):
+        if handle_premise.handle_fake_inflation_1(character_id):
             character_data.pregnancy.fertilization_rate = 0
             draw_text += _(
                 "\n{0}正处于假孕状态，精子无法使其真正受精\n"
@@ -786,8 +784,7 @@ def check_grow_to_loli(character_id: int) -> None:
             talk.must_show_talk_check(character_id)
             character_data.talent[102] = 0
             character_data.talent[103] = 1
-            # 学员已成年：未初潮与未成年一并去掉
-            character_data.talent[6] = 0
+            # 长成学员时去掉未成年素质
             character_data.talent[7] = 0
             from Script.Design import handle_npc_ai
             from Script.System.Education_System import (
@@ -808,9 +805,6 @@ def check_grow_to_loli(character_id: int) -> None:
             draw_text = "\n※※※※※※※※※\n"
             draw_text += _("\n{0}长大成人了\n").format(character_data.name)
             draw_text += _("\n{0}从[幼女]成长为了[学员]\n").format(
-                character_data.name
-            )
-            draw_text += _("\n{0}失去了[未初潮]与[未成年]\n").format(
                 character_data.name
             )
             draw_text += chest_grow_text
