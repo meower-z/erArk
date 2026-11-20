@@ -403,7 +403,7 @@ Script/
 
 - **渲染/输入**：`input_cache`, `cmd_data`, `now_panel_id`, `font_size`
 - **角色世界**：`character_data`（角色ID -> Character）, `npc_tem_data`, `npc_id_got`, `forbidden_npc_id`, `npc_name_data`
-- **时间**：`game_time`, `pre_game_time`, `sun_phase`, `moon_phase`
+- **时间**：`game_time`, `pre_game_time`
 - **地图**：`map_data`, `scene_data`, `now_init_map_id`, `collect_position_list`
 - **行为循环**：`over_behavior_character`, `pl_sleep_save_flag`, `time_stop_mode`, `group_sex_mode`
 - **基地/世界**：`rhodes_island`, `country`, `all_system_setting`, `world_setting`, `ai_setting`

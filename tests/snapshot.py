@@ -14,7 +14,6 @@
         world.vehicle.vehicles.5                       载具 5 的 [拥有数, 外勤中数]
         world.library.book_borrow_dict.12              书 12 的借阅者
         world.medical.medical_patients_today.13.state  门诊病人 13 的状态
-        world.clock.moon_phase                         月相
     scene.<场景路径>.occupants / close_flag 场景里的角色id（排序）与关门状态
     log.talk / log.event                    这一步里交去显示的口上id（含随后被显示判断挡下的）、触发的事件id（ActionLog
     记下，只记id，不记文本）
@@ -104,8 +103,6 @@ MEDICAL_PREFIXES = (
 
 CACHE_AREAS = {
     "game_round": "clock",
-    "moon_phase": "clock",
-    "sun_phase": "clock",
     "recipe_data": "cooking",
 }
 """ 游戏缓存字段所属的区域；没列出的字段以字段名为区域，如 world.country.<键> """

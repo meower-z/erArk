@@ -137,9 +137,6 @@ def get_base_updata() -> None:
         facility_cid = game_config.config_facility_effect_data[facility_name][
             level
         ]
-        facility_effect = game_config.config_facility_effect[
-            facility_cid
-        ].effect
 
         # 如果满足设施开放的前提条件，则开放该设施
         for open_cid in game_config.config_facility_open:
@@ -164,30 +161,8 @@ def get_base_updata() -> None:
 
         # print(f"debug power_use = {base_data.power_use}")
 
-        # 初始化仓库容量
-        if facility_name == _("仓储区"):
-            cache.rhodes_island.warehouse_capacity = (
-                facility_effect
-                + cache.rhodes_island.used_extra_warehouse_capacity_module * 200
-            )
-        # 初始化干员人数上限
-        elif facility_name == _("宿舍区"):
-            cache.rhodes_island.people_max = facility_effect
-        # 初始化生活娱乐区设施数量上限
-        elif facility_name == _("生活娱乐区"):
-            cache.rhodes_island.life_zone_max = facility_effect
-        # 初始化患者人数上限，并刷新当天患者人数
-        elif facility_name == _("医疗部"):
-            # 在此处不刷新当天患者人数，改为在医疗系统结算，即,medical_service.settle_medical_department,中刷新
-            pass
-        # 初始化科研区设施数量上限
-        elif facility_name == _("科研部"):
-            cache.rhodes_island.research_zone_max = facility_effect
-        # 初始化战斗时干员数量上限
-        elif facility_name == _("指挥室"):
-            cache.rhodes_island.soldier_max = facility_effect
         # 初始化招募条
-        elif facility_name == _("文职部"):
+        if facility_name == _("文职部"):
             # 初始化招募线，结构:[进度, 策略id, 主招聘专员id, 线效率%]
             if 0 not in cache.rhodes_island.recruit_line:
                 cache.rhodes_island.recruit_line[0] = [0, 0, 0, 0]
@@ -223,23 +198,6 @@ def get_base_updata() -> None:
             if level >= 5:
                 _init_line(4)
             # 暂不在此处直接计算效率，延迟到调用 calculate_assembly_line_efficiency
-        elif facility_name == _("访客区"):
-            # 刷新最大访客数量
-            # 遍历全部客房
-            room_count = 0
-            for room_id in game_config.config_facility_open:
-                # 跳过非客房和未开放的客房
-                if (
-                    _("客房")
-                    not in game_config.config_facility_open[room_id].name
-                ):
-                    continue
-                # 跳过未开放的客房
-                cache.rhodes_island.facility_open.setdefault(room_id, False)
-                if not cache.rhodes_island.facility_open[room_id]:
-                    continue
-                room_count += 1
-            cache.rhodes_island.visitor_max = room_count
         elif facility_name == _("疗养庭院"):
             # 温室生产线初始化
             if 0 not in cache.rhodes_island.green_house_line:
@@ -282,6 +240,32 @@ def get_base_updata() -> None:
                 cache.rhodes_island.herb_garden_line[agriculture_line_id][
                     2
                 ] = produce_effect
+    update_facility_limits(cache.rhodes_island)
+
+
+def update_facility_limits(base_data: game_type.Rhodes_Island) -> None:
+    """
+    按设施等级、已用的仓储空间扩展模块数和已开放的客房数，刷新仓库容量、干员人数上限和访客上限
+    Keyword arguments:
+    base_data -- 要刷新的罗德岛数据
+    """
+    for all_cid, facility in game_config.config_facility.items():
+        level = base_data.facility_level[all_cid]
+        effect_cid = game_config.config_facility_effect_data[facility.name][
+            level
+        ]
+        effect = game_config.config_facility_effect[effect_cid].effect
+        if facility.name == _("仓储区"):
+            extra = base_data.used_extra_warehouse_capacity_module * 200
+            base_data.warehouse_capacity = effect + extra
+        elif facility.name == _("宿舍区"):
+            base_data.people_max = effect
+    base_data.visitor_max = sum(
+        1
+        for room_id, room in game_config.config_facility_open.items()
+        if _("客房") in room.name
+        and base_data.facility_open.get(room_id, False)
+    )
 
 
 def calc_facility_efficiency(facility_cid: int = -1) -> float:

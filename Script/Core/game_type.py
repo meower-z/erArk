@@ -1540,8 +1540,6 @@ class Rhodes_Island:
         """ 各层宿舍管理员，输入类型:无，输出类型:Dict[int,int]，功能:key=层号(1-9), value=角色id(0表示未任命) """
 
         # 生活娱乐区
-        self.life_zone_max: int = 0
-        """ 生活娱乐区设施数量上限 """
         self.milk_in_fridge: dict[int, int] = {}
         """ 冰箱里每个干员的当日母乳存量，干员id:母乳ml存量 """
         self.dining_hall_data: dict[str, dict[UUID, Food]] = {}
@@ -1760,11 +1758,6 @@ class Rhodes_Island:
         self.sex_assistant_ai_ban_behavior_id_list: list = []
         """ 调教助手的AI禁止行为列表 """
 
-        self.research_zone_max: int = 0
-        """ 科研区设施数量上限 """
-        self.soldier_max: int = 0
-        """ 战斗时干员数量上限 """
-
 
 class Country:
     """大地图国家数据"""
@@ -1910,10 +1903,6 @@ class Character:
         # """ 角色罩杯模板 """
         self.status_data: dict[int, Num] = {}
         """ 角色状态数据 状态id:状态数值 """
-        self.hit_point_tem: int = 1
-        """ 角色HP模板 """
-        self.mana_point_tem: int = 1
-        """ 角色MP模板 """
         # self.social_contact: Dict[int, Set] = {}
         # """ 角色社交关系数据 关系类型:角色id集合 """
         # self.social_contact_data: Dict[int, int] = {}
@@ -2100,10 +2089,6 @@ class Cache:
         """ 已有的npc姓名集合 """
         self.is_collection: bool = False
         """ 启用收藏模式 """
-        self.sun_phase: dict[str, dict[int, dict[int, int]]] = {}
-        """ 指定日期下每分钟太阳位置 日期:时:分:位置id """
-        self.moon_phase: dict[str, int] = {}
-        """ 指定日期月相记录 日期:月相id """
         self.shoot_position: int = 0
         """ 记录射精位置 """
         self.debug_mode: bool = False
