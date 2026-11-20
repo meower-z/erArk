@@ -20,6 +20,7 @@ from Script.Design import (
 )
 from Script.Modules.tk_ui import player_pick
 import math
+from Script.Modules.domains import needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -115,7 +116,7 @@ class Sleep_Panel:
         hpmp_need_time = max(hpmp_need_time, 1)
         # 其他回复所需时间，最大为8小时
         tired_recover_time = math.ceil(
-            Fraction(self.pl_character_data.tired_point * 3, 60)
+            Fraction(needs.of(self.pl_character_data.cid)["tired"] * 3, 60)
         )  # 疲劳
         # 理智和精液
         sanity_recover_time = math.ceil(

@@ -18,6 +18,7 @@ from collections.abc import Callable
 from fractions import Fraction
 
 from Script.Config import game_config
+from Script.Modules.domains import needs
 
 from . import check_log
 
@@ -110,26 +111,30 @@ def repair_fatigue_family_range(cache: game_type.Cache) -> list[dict]:
     返回值:
         List[dict]: 修复记录列表
     功能:
-        与NUM-27（含MIND-24的sleep_point子集）同语义：tired_point/hunger_point/sleep_point/drunk_point
-        必须是[0,上界]内的int或Fraction。其他类型（含None/bool）置0，越界钳制到边界
+        与NUM-27（含MIND-24的sleep_point子集）同语义：body.needs的tired、hunger与角色的sleep_point、drunk_point
+        必须是[0,上界]内的int或Fraction。其他类型置0，越界钳制到边界。body.needs的项经needs.set写回。
     """
     bounds = {
-        "tired_point": 160,
-        "hunger_point": 240,
+        "needs.tired": 160,
+        "needs.hunger": 240,
         "sleep_point": 100,
         "drunk_point": 100,
     }
     records = []
     for cid, chara in cache.character_data.items():
+        values = {f"needs.{k}": v for k, v in needs.of(cid).items()}
         for field, upper in bounds.items():
-            v = getattr(chara, field, None)
+            v = values.get(field, getattr(chara, field, None))
             if isinstance(v, int | Fraction) and not isinstance(v, bool):
                 if 0 <= v <= upper:
                     continue
                 new_v = min(max(v, 0), upper)
             else:
                 new_v = 0
-            setattr(chara, field, new_v)
+            if field in values:
+                needs.set(cid, **{field.removeprefix("needs."): new_v})
+            else:
+                setattr(chara, field, new_v)
             records.append(
                 _record("NUM-27", _chara_label(cid, chara), field, v, new_v)
             )
@@ -273,12 +278,6 @@ def repair_cloth_slot_duplicates(cache: game_type.Cache) -> list[dict]:
                     )
                 )
     return records
-
-
-# BODY-05修复（已随检查一并撤除，2026-08-28）：曾对"跨位置重复服装"按 穿着>宿舍衣柜>大浴场衣柜 优先级
-# 去重。已证明对携带CSV专属内衣的角色有害：容器里存的是服装模板编号而非实体UID，删掉"重复"项后，该角色
-# 下次经get_npc_cloth整套换装（RESTE_CLOTH效果）会随机塞入替代服装顶替被删的专属内衣位——属内容损毁，
-# 故不保留降级版本，详见check_body.py中BODY-05的退役注记
 
 
 @register_repair("BODY-35", "个人服装模板列表无效项清除")

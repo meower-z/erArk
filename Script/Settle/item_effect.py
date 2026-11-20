@@ -13,6 +13,7 @@ from Script.Design import (
 from Script.Core import cache_control, constant_effect, game_type, get_text, num
 from Script.Config import normal_config
 from Script.UI.Moudle import draw
+from Script.Modules.domains import needs
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -1785,10 +1786,7 @@ def handle_target_add_urinate(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
-    target_data.urinate_point = 240
+    needs.set(character_data.target_character_id, urine=240)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1842,7 +1840,7 @@ def handle_target_add_tired_tosleep(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    target_data.tired_point = 160
+    needs.set(target_data.cid, tired=160)
     target_data.sleep_point = 100
     target_data.h_state.body_item[9][1] = True
     target_data.h_state.body_item[9][2] = now_time + datetime.timedelta(hours=8)

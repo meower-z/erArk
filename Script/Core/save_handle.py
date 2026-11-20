@@ -6,6 +6,7 @@ import os
 import pickle
 import shutil
 import datetime
+import uuid
 from types import FunctionType
 from Script.Core import (
     cache_control,
@@ -23,7 +24,7 @@ from Script.System.Pregnancy_System import pregnancy_constant
 import json
 from typing import TYPE_CHECKING
 from Script.Design import game_time
-from Script.Modules.save_load import index
+from Script.Modules.save_load import index, upgrade
 
 if TYPE_CHECKING:
     from typing import Any
@@ -90,17 +91,19 @@ def establish_save_linux(save_id: str) -> None:
     Keyword argumentsL
     save_id -- 当前存档id
     """
+    from Script.Modules.save_load import kernel_state
+
+    token = uuid.uuid4().hex
     save_verson = {
         "game_verson": normal_config.config_normal.verson,
         "game_time": game_time.now(),
         "character_name": cache.character_data[0].name,
         "save_time": datetime.datetime.now(),
+        kernel_state.TOKEN: token,
     }
-    from Script.Modules.save_load import kernel_state
-
     write_save_data(save_id, index.CACHE_FILE, cache)
     index.write_head(save_id, save_verson)
-    kernel_state.write(save_id)
+    kernel_state.write(save_id, token)
 
 
 def write_save_data(save_id: str, data_id: str, write_data: object) -> None:
@@ -741,11 +744,13 @@ def input_load_save(save_id: str) -> None:
     kernel_state.load(save_id)
 
 
-def install_save(save_id: str) -> None:
+def install_save(save_id: str, version: int) -> None:
     """
-    读档的 Reset 步骤：把存档的缓存（文件 "1"）装进游戏缓存，按顺序修补旧存档，再结束有101/102阶段的孩子参与的会话
+    读档的 Reset 步骤：把存档的缓存（文件 "1"）装进游戏缓存，按顺序修补旧存档，再结束有101/102阶段的孩子参与的会话。
+    版本 0 的存档解开后先补齐生理需求与供电策略属性，重建角色之后再把它们写进 GameState，并从缓存对象上删掉。
     Keyword arguments:
     save_id -- 存档id
+    version -- 存档的版本，旧存档为 0
     """
     from Script.Design import basement
     from Script.System.Cooking_System import cooking
@@ -758,6 +763,8 @@ def install_save(save_id: str) -> None:
 
     # 从存档中加载字典
     loaded_dict = load_save(save_id).__dict__
+    if version == 0:
+        upgrade.fill_v0_defaults(loaded_dict)
 
     draw_text = _("\n开始检测存档的数据结构是否需要跨版本更新\n")
     now_draw = draw.LeftDraw()
@@ -836,7 +843,6 @@ def install_save(save_id: str) -> None:
         new_character_data = game_type.Character()
         recursive_update(new_character_data, value)
         # new_character_data.__dict__.update(value.__dict__)
-        # print(f"debug name = {value.name}")
         # 角色素质、经验、宝珠、能力、设置的更新
         update_count += old_chara_to_new.update_character_config_data(
             new_character_data
@@ -922,7 +928,6 @@ def install_save(save_id: str) -> None:
             loaded_dict["character_data"][0].pl_collection.npc_socks[
                 new_character_data.cid
             ] = []
-            # print(f"debug value.cid = {value.cid}, value.name = {value.name}")
             update_count += 1
         # 被监禁的角色检查是否在囚犯列表中，需要排除正在逃跑的人
         if (
@@ -975,6 +980,8 @@ def install_save(save_id: str) -> None:
     update_count += _migrate_child_schedule_template(
         loaded_dict["rhodes_island"]
     )
+    if version == 0:
+        upgrade.adopt_v0(loaded_dict)
     young_child_session: old_chara_to_new.YoungChildSession = {}
     update_count += old_chara_to_new.migrate_age_and_body_type(
         loaded_dict, young_child_session
@@ -1083,9 +1090,6 @@ CHARACTER_NUM_FIELDS = (
     "sanity_point",
     "eja_point",
     "semen_point",
-    "tired_point",
-    "urinate_point",
-    "hunger_point",
     "sleep_point",
     "drunk_point",
 )
@@ -1094,9 +1098,9 @@ CHARACTER_NUM_FIELDS = (
 
 def exact_stats() -> None:
     """
-    读档的 Reset 步骤：装好的缓存里随时间结算的数值是 float 时换成精确值（num.exact），整数与分数不动
-    数值：角色的 CHARACTER_NUM_FIELDS、体力与气力的上限（旧存档里可能是 float，时间结算拿它们作分母）与状态值，
-    污浊的累计吸收精液量、身体各部位的当前精液量与精液流通的剩余量，妊娠的奶量，玩家能力的当日理智消耗
+    读档的 Reset 步骤：装好的缓存里随时间结算的数值是 float 时换成精确值（num.exact），int 与 Fraction 不动。
+    数值有角色的 CHARACTER_NUM_FIELDS、体力与气力的上限、状态值、污浊的累计吸收精液量、身体各部位的当前精液量、
+    精液流通的剩余量与玩家能力的当日理智消耗。生理需求不在这里，旧存档的生理需求由 upgrade.adopt_v0 换成精确值。
     """
     for character in cache.character_data.values():
         for name in (*CHARACTER_NUM_FIELDS, "hit_point_max", "mana_point_max"):
@@ -1114,7 +1118,6 @@ def exact_stats() -> None:
                     target["remaining_volume"] = num.exact(
                         target["remaining_volume"]
                     )
-        character.pregnancy.milk = num.exact(character.pregnancy.milk)
         ability = character.pl_ability
         ability.today_sanity_point_cost = num.exact(
             ability.today_sanity_point_cost
@@ -1124,7 +1127,7 @@ def exact_stats() -> None:
 def repair_installed() -> None:
     """
     读档的 Reset 步骤，在角色投影之后：游戏状态自检（系统设置14号，默认关闭）对载入后的存档做保守修复，
-    包在开关关闭时不会被导入；修复改的是游戏缓存，不读内核的 GameState
+    包在开关关闭时不会被导入；修复改游戏缓存，生理需求经这一步的缓冲区读写 GameState 的 body.needs
     """
     if cache.all_system_setting.base_setting.get(14, 0):
         from Script.Test import Static_Check as static_check_system
@@ -1143,7 +1146,6 @@ def update_dict_with_default(
     """
     update_count = 0
     for key, value in default_dict.items():
-        # print("存档修复: key", key, "value", value)
         # 跳过Python的内置方法
         if key.startswith("__") and key.endswith("__"):
             continue
@@ -1251,13 +1253,11 @@ def update_map(loaded_dict: dict[str, Any]) -> int:
         loaded_dict["map_data"] = cache.map_data
         # 在2024.7月的版本中将人气快餐开封菜改为了约翰老妈汉堡店
         if "贸易\\人气快餐开封菜" in loaded_dict["scene_data"]:
-            # print("发现存档存在人气快餐开封菜")
             for _key, value in loaded_dict["character_data"].items():
                 if value.position[-1] == "人气快餐开封菜":
                     value.position[-1] = "约翰老妈汉堡店"
                     # print(f"已将{value.name}的位置从人气开封菜改为约翰老妈汉堡店")
         for key, _value in loaded_dict["scene_data"].copy().items():
-            # print(f"debug 地图数据: key = {key}, value = {_value.scene_tag}")
             if key not in cache.scene_data:
                 del loaded_dict["scene_data"][key]
                 update_count += 1

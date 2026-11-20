@@ -10,6 +10,7 @@ from Script.Core import (
 )
 from Script.Design import attr_calculation
 from Script.Design.handle_premise.premise_registry import add_premise
+from Script.Modules.domains import needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -347,9 +348,8 @@ def handle_tired_le_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = character_data.tired_point / 160
+    value = needs.of(character_id)["tired"] / 160
     if value <= 0:
         return 1
     else:
@@ -365,9 +365,8 @@ def handle_tired_ge_10(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = character_data.tired_point / 160
+    value = needs.of(character_id)["tired"] / 160
     if value >= 0.1:
         return 1
     else:
@@ -383,9 +382,8 @@ def handle_tired_ge_50(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = character_data.tired_point / 160
+    value = needs.of(character_id)["tired"] / 160
     if value >= 0.5:
         return 1
     else:
@@ -401,9 +399,8 @@ def handle_tired_le_74(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = character_data.tired_point / 160
+    value = needs.of(character_id)["tired"] / 160
     if value <= 0.74:
         return 1
     else:
@@ -419,9 +416,8 @@ def handle_tired_ge_75(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = character_data.tired_point / 160
+    value = needs.of(character_id)["tired"] / 160
     if value > 0.74:
         return 1
     else:
@@ -437,9 +433,8 @@ def handle_tired_le_84(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = character_data.tired_point / 160
+    value = needs.of(character_id)["tired"] / 160
     if value <= 0.84:
         return 1
     else:
@@ -455,11 +450,10 @@ def handle_tired_ge_85(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = character_data.tired_point / 160
+    value = needs.of(character_id)["tired"] / 160
     if value > 0.84:
-        return num.whole(character_data.tired_point * 5)
+        return num.whole(needs.of(character_id)["tired"] * 5)
     else:
         return 0
 
@@ -473,9 +467,8 @@ def handle_tired_l_100(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = character_data.tired_point / 160
+    value = needs.of(character_id)["tired"] / 160
     if value < 1:
         return 1
     else:
@@ -491,11 +484,10 @@ def handle_tired_100(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = character_data.tired_point / 160
+    value = needs.of(character_id)["tired"] / 160
     if value >= 1:
-        return num.whole(character_data.tired_point * 5)
+        return num.whole(needs.of(character_id)["tired"] * 5)
     else:
         return 0
 
@@ -510,9 +502,8 @@ def handle_t_tired_ge_50(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
 
-    value = target_data.tired_point / 160
+    value = needs.of(character_data.target_character_id)["tired"] / 160
     if value >= 0.5:
         return 1
     else:
@@ -529,9 +520,8 @@ def handle_t_tired_le_74(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
 
-    value = target_data.tired_point / 160
+    value = needs.of(character_data.target_character_id)["tired"] / 160
     if value <= 0.74:
         return 1
     else:
@@ -548,9 +538,8 @@ def handle_t_tired_ge_75(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
 
-    value = target_data.tired_point / 160
+    value = needs.of(character_data.target_character_id)["tired"] / 160
     if value > 0.74:
         return 1
     else:
@@ -567,9 +556,8 @@ def handle_t_tired_le_84(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
 
-    value = target_data.tired_point / 160
+    value = needs.of(character_data.target_character_id)["tired"] / 160
     if value <= 0.84:
         return 1
     else:
@@ -586,11 +574,12 @@ def handle_t_tired_ge_85(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
 
-    value = target_data.tired_point / 160
+    value = needs.of(character_data.target_character_id)["tired"] / 160
     if value > 0.84:
-        return num.whole(target_data.tired_point * 5)
+        return num.whole(
+            needs.of(character_data.target_character_id)["tired"] * 5
+        )
     else:
         return 0
 
@@ -605,9 +594,8 @@ def handle_t_tired_100(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data = cache.character_data[character_data.target_character_id]
 
-    value = target_data.tired_point / 160
+    value = needs.of(character_data.target_character_id)["tired"] / 160
     if value >= 1:
         return 1
     else:
@@ -623,9 +611,8 @@ def handle_urinate_le_12(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = character_data.urinate_point / 240
+    value = needs.of(character_id)["urine"] / 240
     if value <= 0.125:
         return 1
     else:
@@ -641,9 +628,8 @@ def handle_urinate_le_49(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = character_data.urinate_point / 240
+    value = needs.of(character_id)["urine"] / 240
     if value <= 0.49:
         return 1
     else:
@@ -659,9 +645,8 @@ def handle_urinate_le_79(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = character_data.urinate_point / 240
+    value = needs.of(character_id)["urine"] / 240
     if value <= 0.79:
         return 1
     else:
@@ -677,11 +662,10 @@ def handle_urinate_ge_80(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = character_data.urinate_point / 240
+    value = needs.of(character_id)["urine"] / 240
     if value > 0.79:
-        extra_value = int(character_data.urinate_point - 240 * 0.8)
+        extra_value = int(needs.of(character_id)["urine"] - 240 * 0.8)
         return extra_value * 5
     else:
         return 0
@@ -697,11 +681,10 @@ def handle_urinate_ge_125(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = character_data.urinate_point / 240
+    value = needs.of(character_id)["urine"] / 240
     if value >= 1.5:
-        return num.whole(character_data.urinate_point * 5)
+        return num.whole(needs.of(character_id)["urine"] * 5)
     else:
         return 0
 
@@ -716,11 +699,8 @@ def handle_target_urinate_le_49(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
 
-    value = target_data.urinate_point / 240
+    value = needs.of(character_data.target_character_id)["urine"] / 240
     if value <= 0.49:
         return 1
     else:
@@ -736,9 +716,8 @@ def handle_pl_urinate_le_49(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    player_data: game_type.Character = cache.character_data[0]
 
-    value = player_data.urinate_point / 240
+    value = needs.of(0)["urine"] / 240
     if value <= 0.49:
         return 1
     else:
@@ -755,11 +734,8 @@ def handle_target_urinate_le_79(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
 
-    value = target_data.urinate_point / 240
+    value = needs.of(character_data.target_character_id)["urine"] / 240
     if value <= 0.79:
         return 1
     else:
@@ -776,11 +752,8 @@ def handle_target_urinate_ge_80(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
 
-    value = target_data.urinate_point / 240
+    value = needs.of(character_data.target_character_id)["urine"] / 240
     if value > 0.79:
         return 1
     else:
@@ -796,9 +769,8 @@ def handle_hunger_le_20(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = character_data.hunger_point / 240
+    value = needs.of(character_id)["hunger"] / 240
     if value <= 0.20:
         return 1
     else:
@@ -814,9 +786,8 @@ def handle_hunger_le_79(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = character_data.hunger_point / 240
+    value = needs.of(character_id)["hunger"] / 240
     if value <= 0.79:
         return 1
     else:
@@ -832,12 +803,11 @@ def handle_hunger_ge_80(character_id: int) -> float:
     Return arguments:
     float -- 权重
     """
-    character_data = cache.character_data[character_id]
 
-    value = character_data.hunger_point / 240
+    value = needs.of(character_id)["hunger"] / 240
     if value > 0.79:
         # print(f"debug {character_id}角色饿了")
-        extra_value = character_data.hunger_point - 240 * 0.8
+        extra_value = needs.of(character_id)["hunger"] - 240 * 0.8
         return extra_value * 5
     else:
         return 0
@@ -853,11 +823,8 @@ def handle_target_hunger_le_79(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
 
-    value = target_data.hunger_point / 240
+    value = needs.of(character_data.target_character_id)["hunger"] / 240
     if value <= 0.79:
         return 1
     else:
@@ -874,11 +841,8 @@ def handle_target_hunger_ge_80(character_id: int) -> int:
     int -- 权重
     """
     character_data = cache.character_data[character_id]
-    target_data: game_type.Character = cache.character_data[
-        character_data.target_character_id
-    ]
 
-    value = target_data.hunger_point / 240
+    value = needs.of(character_data.target_character_id)["hunger"] / 240
     if value > 0.79:
         return 1
     else:
@@ -896,7 +860,7 @@ def handle_milk_le_29(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
 
-    value = character_data.pregnancy.milk / character_data.pregnancy.milk_max
+    value = needs.of(character_id)["milk"] / character_data.pregnancy.milk_max
     if value <= 0.29:
         return 1
     else:
@@ -914,7 +878,7 @@ def handle_milk_ge_30(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
 
-    value = character_data.pregnancy.milk / character_data.pregnancy.milk_max
+    value = needs.of(character_id)["milk"] / character_data.pregnancy.milk_max
     if value > 0.29:
         return 1
     else:
@@ -932,7 +896,7 @@ def handle_milk_le_79(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
 
-    value = character_data.pregnancy.milk / character_data.pregnancy.milk_max
+    value = needs.of(character_id)["milk"] / character_data.pregnancy.milk_max
     if value <= 0.79:
         return 1
     else:
@@ -950,13 +914,13 @@ def handle_milk_ge_80(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
 
-    if character_data.pregnancy.milk == 0:
+    if needs.of(character_id)["milk"] == 0:
         return 0
 
-    value = character_data.pregnancy.milk / character_data.pregnancy.milk_max
+    value = needs.of(character_id)["milk"] / character_data.pregnancy.milk_max
 
     if value > 0.80:
-        return num.whole(character_data.pregnancy.milk)
+        return num.whole(needs.of(character_id)["milk"])
     else:
         return 0
 
@@ -976,7 +940,7 @@ def handle_target_milk_le_29(character_id: int) -> int:
     ]
 
     value = (
-        target_character_data.pregnancy.milk
+        needs.of(target_character_data.cid)["milk"]
         / target_character_data.pregnancy.milk_max
     )
     if value <= 0.29:
@@ -1000,7 +964,7 @@ def handle_target_milk_ge_30(character_id: int) -> int:
     ]
 
     value = (
-        target_character_data.pregnancy.milk
+        needs.of(target_character_data.cid)["milk"]
         / target_character_data.pregnancy.milk_max
     )
     if value > 0.29:
@@ -1024,7 +988,7 @@ def handle_target_milk_le_79(character_id: int) -> int:
     ]
 
     value = (
-        target_character_data.pregnancy.milk
+        needs.of(target_character_data.cid)["milk"]
         / target_character_data.pregnancy.milk_max
     )
     if value <= 0.79:
@@ -1048,7 +1012,7 @@ def handle_target_milk_ge_80(character_id: int) -> int:
     ]
 
     value = (
-        target_character_data.pregnancy.milk
+        needs.of(target_character_data.cid)["milk"]
         / target_character_data.pregnancy.milk_max
     )
     if value > 0.79:

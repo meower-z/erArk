@@ -3,6 +3,7 @@
 from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design.handle_premise.premise_registry import add_premise
+from Script.Modules.domains import needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -29,12 +30,11 @@ def handle_self_tired(character_id: int) -> int:
 @add_premise(constant_promise.Premise.SELF_EXHAUSTED)
 def handle_self_exhausted(character_id: int) -> int:
     """
-    自身力竭、疲劳或重度困倦（体力≤1、带疲劳标记、或困倦等级≥2）
-    是 handle_self_tired（仅疲劳标记）的广义版本，供群交准入等需要"体力不支"判断处复用
+    自身力竭、疲劳或重度困倦：体力≤1、带疲劳标记，或body.needs里的疲劳对应的困倦等级≥2
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
-    int -- 权重，1为力竭/疲劳/重度困倦，0为正常
+    int -- 权重，满足任一条件为1，否则为0
     """
     from Script.Design import attr_calculation
 
@@ -46,7 +46,7 @@ def handle_self_exhausted(character_id: int) -> int:
     if character_data.sp_flag.tired:
         return 1
     # 重度困倦（困倦等级≥2）
-    if attr_calculation.get_tired_level(character_data.tired_point) >= 2:
+    if attr_calculation.get_tired_level(needs.of(character_id)["tired"]) >= 2:
         return 1
     return 0
 

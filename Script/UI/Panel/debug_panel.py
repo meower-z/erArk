@@ -29,6 +29,7 @@ import csv
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions
+from Script.Modules.domains import needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -76,7 +77,6 @@ def build_csv_config(
     返回：None
     功能：读取csv并更新全局配置数据
     """
-    # print(f"debug file_path = {file_path}")
     with open(file_path, encoding="utf-8") as now_file:
         now_read = csv.DictReader(now_file)
         now_docstring_data = {}
@@ -905,13 +905,13 @@ class Debug_Panel:
                     f"[004]:当前射精槽：{num.shown(cache.character_data[0].eja_point)}"
                 )
                 draw_text_list.append(
-                    f"[005]:疲劳值 6m=1点，16h=160点(max)：{num.shown(cache.character_data[0].tired_point)}"
+                    f"[005]:疲劳值 6m=1点，16h=160点(max)：{num.shown(needs.of(0)["tired"])}"
                 )
                 draw_text_list.append(
-                    f"[006]:尿意值 1m=1点，4h=240点(max)：{num.shown(cache.character_data[0].urinate_point)}"
+                    f"[006]:尿意值 1m=1点，4h=240点(max)：{num.shown(needs.of(0)["urine"])}"
                 )
                 draw_text_list.append(
-                    f"[007]:饥饿值 1m=1点，4h=240点(max)：{num.shown(cache.character_data[0].hunger_point)}"
+                    f"[007]:饥饿值 1m=1点，4h=240点(max)：{num.shown(needs.of(0)["hunger"])}"
                 )
                 draw_text_list.append("[008]:全源石技艺全开，理智9999")
                 draw_text_list.append("[009]:资源全99999")
@@ -1315,19 +1315,19 @@ class Debug_Panel:
                     cache.character_data[0].eja_point = new_value
                 # 疲劳值
                 elif key_index == 5:
-                    info_text = f"[005]:疲劳值 6m=1点，16h=160点(max)：{num.shown(cache.character_data[0].tired_point)}"
+                    info_text = f"[005]:疲劳值 6m=1点，16h=160点(max)：{num.shown(needs.of(0)["tired"])}"
                     info_draw.text = info_text
                     info_draw.draw()
                     line_feed.draw()
                     change_value_panel = panel.AskForOneMessage()
                     change_value_panel.set(_("输入改变后的值"), 100)
                     new_value = int(change_value_panel.draw())
-                    cache.character_data[0].tired_point = new_value
+                    needs.set(0, tired=new_value)
                 # 尿意值
                 elif key_index == 6:
                     info_text = (
                         "[006]:尿意值 1m=1点，4h=240点(max)："
-                        f"{num.shown(cache.character_data[0].urinate_point)}"
+                        f"{num.shown(needs.of(0)["urine"])}"
                     )
                     info_draw.text = info_text
                     info_draw.draw()
@@ -1335,17 +1335,17 @@ class Debug_Panel:
                     change_value_panel = panel.AskForOneMessage()
                     change_value_panel.set(_("输入改变后的值"), 100)
                     new_value = int(change_value_panel.draw())
-                    cache.character_data[0].urinate_point = new_value
+                    needs.set(0, urine=new_value)
                 # 饥饿值
                 elif key_index == 7:
-                    info_text = f"[007]:饥饿值 1m=1点，4h=240点(max)：{num.shown(cache.character_data[0].hunger_point)}"
+                    info_text = f"[007]:饥饿值 1m=1点，4h=240点(max)：{num.shown(needs.of(0)["hunger"])}"
                     info_draw.text = info_text
                     info_draw.draw()
                     line_feed.draw()
                     change_value_panel = panel.AskForOneMessage()
                     change_value_panel.set(_("输入改变后的值"), 100)
                     new_value = int(change_value_panel.draw())
-                    cache.character_data[0].hunger_point = new_value
+                    needs.set(0, hunger=new_value)
                 # 全源石技艺全开，理智9999
                 elif key_index == 8:
                     for talent_id in {
@@ -1508,13 +1508,13 @@ class Debug_Panel:
                     f"[005]:最大理智：{target_data.sanity_point_max}"
                 )
                 draw_text_list.append(
-                    f"[011]:疲劳值 6m=1点，16h=160点(max)：{num.shown(target_data.tired_point)}"
+                    f"[011]:疲劳值 6m=1点，16h=160点(max)：{num.shown(needs.of(target_data.cid)["tired"])}"
                 )
                 draw_text_list.append(
-                    f"[012]:尿意值 1m=1点，4h=240点(max)：{num.shown(target_data.urinate_point)}"
+                    f"[012]:尿意值 1m=1点，4h=240点(max)：{num.shown(needs.of(target_data.cid)["urine"])}"
                 )
                 draw_text_list.append(
-                    f"[013]:饥饿值 1m=1点，4h=240点(max)：{num.shown(target_data.hunger_point)}"
+                    f"[013]:饥饿值 1m=1点，4h=240点(max)：{num.shown(needs.of(target_data.cid)["hunger"])}"
                 )
                 draw_text_list.append(
                     f"[014]:熟睡值 1m=10点，10min=100点(max)：{num.shown(target_data.sleep_point)}"
@@ -1530,7 +1530,7 @@ class Debug_Panel:
                 )
                 draw_text_list.append(f"[018]:信赖度：{target_data.trust}")
                 draw_text_list.append(
-                    f"[019]:乳汁量：{num.shown(target_data.pregnancy.milk)}"
+                    f"[019]:乳汁量：{num.shown(needs.of(target_data.cid)["milk"])}"
                 )
                 draw_text_list.append(
                     f"[020]:乳汁上限：{target_data.pregnancy.milk_max}"
@@ -1588,11 +1588,11 @@ class Debug_Panel:
                     elif value_index == 5:
                         target_data.sanity_point_max = new_value
                     elif value_index == 11:
-                        target_data.tired_point = new_value
+                        needs.set(target_data.cid, tired=new_value)
                     elif value_index == 12:
-                        target_data.urinate_point = new_value
+                        needs.set(target_data.cid, urine=new_value)
                     elif value_index == 13:
-                        target_data.hunger_point = new_value
+                        needs.set(target_data.cid, hunger=new_value)
                     elif value_index == 14:
                         target_data.sleep_point = new_value
                     elif value_index == 15:
@@ -1604,7 +1604,7 @@ class Debug_Panel:
                     elif value_index == 18:
                         target_data.trust = new_value
                     elif value_index == 19:
-                        target_data.pregnancy.milk = new_value
+                        needs.set(target_data.cid, milk=new_value)
                     elif value_index == 20:
                         target_data.pregnancy.milk_max = new_value
                     elif value_index == 21:
@@ -2197,7 +2197,7 @@ class Debug_Panel:
                 draw_text_list.append("[005]:一键触发生产事件")
                 draw_text_list.append("[006]:一键触发育儿+育儿完成事件")
                 draw_text_list.append(
-                    f"[007]:角色当前乳汁量：{num.shown(target_data.pregnancy.milk)}"
+                    f"[007]:角色当前乳汁量：{num.shown(needs.of(target_data.cid)["milk"])}"
                 )
                 draw_text_list.append(
                     f"[008]:角色最大乳汁量：{target_data.pregnancy.milk_max}"
@@ -2263,7 +2263,7 @@ class Debug_Panel:
                             )
                         )
                     elif value_index == 7:
-                        target_data.pregnancy.milk = new_value
+                        needs.set(target_data.cid, milk=new_value)
                     elif value_index == 8:
                         target_data.pregnancy.milk_max = new_value
                     elif value_index[0] == 2:

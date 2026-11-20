@@ -16,6 +16,7 @@ from Script.Settle.common_default import (
     base_chara_state_common_settle,
 )
 from Script.Design import game_time
+from Script.Modules.domains import needs
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -784,7 +785,6 @@ def handle_add_small_p_feel(
     character_data: game_type.Character = cache.character_data[0]
 
     now_add_lust = 100 + character_data.eja_point * 0.4
-    # adjust = handle_ability.get_ability_adjust(character_data.ability[3])
     # now_add_lust *= adjust
     now_add_lust = int(now_add_lust)
     character_data.eja_point += now_add_lust
@@ -3191,8 +3191,8 @@ def handle_add_urinate(
         return
 
     if character_data.h_state.body_item[8][1]:
-        if character_data.urinate_point >= 30:
-            character_data.urinate_point = 240
+        if needs.of(character_id)["urine"] >= 30:
+            needs.set(character_id, urine=240)
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -3214,7 +3214,7 @@ def handle_add_sleep_point(
 
     if handle_premise.handle_self_sleep_pills(character_id):
         character_data.sleep_point = 100
-        character_data.tired_point = max(10, character_data.tired_point)
+        needs.set(character_id, tired=max(10, needs.of(character_id)["tired"]))
 
 
 @settle_behavior.add_settle_second_behavior_effect(
@@ -3239,7 +3239,7 @@ def handle_milking_machine(
 
         now_milk = num.whole(
             min(
-                character_data.pregnancy.milk,
+                needs.of(character_id)["milk"],
                 5 * character_data.behavior.duration,
             )
         )
@@ -3247,7 +3247,7 @@ def handle_milking_machine(
         cache.rhodes_island.milk_in_fridge[character_id] += now_milk
         pl_character_data.pl_collection.milk_total.setdefault(character_id, 0)
         pl_character_data.pl_collection.milk_total[character_id] += now_milk
-        character_data.pregnancy.milk -= now_milk
+        needs.add(character_id, "milk", -(now_milk))
         character_data.behavior.milk_ml += now_milk
 
         # 绘制信息
@@ -3263,8 +3263,8 @@ def handle_milking_machine(
     """
     # 没有乳汁时停止榨乳
     # 去掉了该功能，在H结束前会一直榨乳
-    if character_data.pregnancy.milk <= 0:
-        character_data.pregnancy.milk = 0
+    if needs.of(character_id)["milk"] <= 0:
+        needs.set(character_id, milk=0)
         character_data.h_state.body_item[4][1] = 0
         character_data.second_behavior[1104] = 0
         # 绘制信息
@@ -3298,7 +3298,7 @@ def handle_urine_collector(
 
         now_urine = num.whole(
             min(
-                character_data.urinate_point,
+                needs.of(character_id)["urine"],
                 5 * character_data.behavior.duration,
             )
         )
@@ -3306,7 +3306,7 @@ def handle_urine_collector(
         cache.rhodes_island.urine_in_fridge[character_id] += now_urine
         pl_character_data.pl_collection.urine_total.setdefault(character_id, 0)
         pl_character_data.pl_collection.urine_total[character_id] += now_urine
-        character_data.urinate_point -= now_urine
+        needs.add(character_id, "urine", -(now_urine))
         character_data.behavior.urine_ml += now_urine
 
         # 绘制信息
@@ -3340,14 +3340,14 @@ def handle_b_orgasm_to_milk(
 
     # 额外增加乳汁
     add_milk = int(character_data.pregnancy.milk_max * 0.2)
-    character_data.pregnancy.milk += add_milk
+    needs.add(character_id, "milk", add_milk)
     # 喷乳至回到最大值的40%，其余的喷出
     eject_milk = int(
-        character_data.pregnancy.milk - character_data.pregnancy.milk_max * 0.4
+        needs.of(character_id)["milk"] - character_data.pregnancy.milk_max * 0.4
     )
     if eject_milk > 0:
-        character_data.pregnancy.milk = int(
-            character_data.pregnancy.milk_max * 0.4
+        needs.set(
+            character_id, milk=int(character_data.pregnancy.milk_max * 0.4)
         )
         character_data.behavior.milk_ml += eject_milk
 
@@ -3397,11 +3397,11 @@ def handle_u_orgasm_to_pee(
 
     # 额外增加尿意
     add_urine = int(240 * 0.2)
-    character_data.urinate_point += add_urine
+    needs.add(character_id, "urine", add_urine)
     # 喷至回到最大值的40%，其余的喷出
-    eject_urine = int(character_data.urinate_point - 240 * 0.4)
+    eject_urine = int(needs.of(character_id)["urine"] - 240 * 0.4)
     if eject_urine > 0:
-        character_data.urinate_point = int(240 * 0.4)
+        needs.set(character_id, urine=int(240 * 0.4))
 
         # 如果已经装上采尿器了，则收集至采尿器中
         if character_data.h_state.body_item[5][1]:

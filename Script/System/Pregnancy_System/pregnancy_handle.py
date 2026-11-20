@@ -26,6 +26,7 @@ from Script.UI.Panel import achievement_panel
 from Script.System.Pregnancy_System import born_event_panel
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.Config import game_config, normal_config
+from Script.Modules.gameplay_resolution import working
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -644,7 +645,6 @@ def check_born(character_id: int) -> None:
         )
         # 每过一天+20%几率判断是否生产
         now_rate = past_day * 20
-        # print(f"debug {character_data.name}进入生产检测，当前生产几率为{now_rate}%")
         if random.randint(1, 100) <= now_rate:
             draw_panel = born_event_panel.Born_Panel(character_id)
             draw_panel.draw()
@@ -1146,13 +1146,12 @@ def get_suspected_abnormal_daughter_list() -> list:
 
 def remove_abnormal_daughter(character_id: int) -> bool:
     """
-    把一名疑似误入本存档的女儿彻底移除，并清掉她在各处的引用
-
-    只对 judge_suspected_abnormal_daughter 判定为真的角色生效，绝不会误删博士在册的亲生女儿
+    把一名疑似误入本存档的女儿从缓存里移除，用 working.forget 丢掉她停放的数据，并清掉别处对她的引用。
+    只移除 judge_suspected_abnormal_daughter 判定为真的角色
     Keyword arguments:
     character_id -- 要移除的角色id
     Return arguments:
-    bool -- 是否成功移除
+    bool -- 移除了时为真
     """
     from Script.Design import map_handle
     from Script.System.Official_Event_System import official_event_handle
@@ -1170,9 +1169,10 @@ def remove_abnormal_daughter(character_id: int) -> bool:
         and character_id in cache.scene_data[scene_path_str].character_list
     ):
         cache.scene_data[scene_path_str].character_list.remove(character_id)
-    # 删掉角色数据、已获得集合与角色模板（模板一并删掉，免得再被实例化）
+    # 删掉角色数据与已获得集合，用 working.forget 丢掉停放的数据，再删掉角色模板，免得再被实例化
     cache.npc_id_got.discard(character_id)
     cache.character_data.pop(character_id, None)
+    working.forget(character_id)
     cache.npc_tem_data.pop(character_id, None)
     # 清掉其他角色对她的引用：血缘子女名单与当前交互对象
     for other_data in cache.character_data.values():

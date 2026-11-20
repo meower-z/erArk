@@ -5,6 +5,7 @@ from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design import game_time
 from Script.Design.handle_premise.premise_registry import add_premise
+from Script.Modules.domains import needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -317,9 +318,8 @@ def handle_tired_ge_75_or_sleep_time(character_id: int) -> int:
                 if character_data.behavior.start_time.hour > 20
                 else character_data.behavior.start_time.hour + 24
             )
-            # print(f"debug {character_data.name}的睡觉前提判定，now_hour = {now_hour}，返回值为{(now_hour-21) *100}")
             return (now_hour - 21) * 100
-    value = character_data.tired_point / 160
+    value = needs.of(character_id)["tired"] / 160
     if value > 0.74:
         return 1
     return 0

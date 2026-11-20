@@ -24,6 +24,7 @@ from Script.Modules.gameplay_resolution import (
     draft,
     intent,
     plan_queue,
+    working,
 )
 from Script.UI.Moudle import draw
 
@@ -205,6 +206,7 @@ def behave(act: core.Action, extra: Extra | None = None) -> core.Effects:
     if not isinstance(act.action_data, Mapping):
         raise TypeError(f"{act.action_id} 的行动数据不是 Intent")
     chosen = cast(intent.Intent, dict(act.action_data))
+    working.replay(chosen.get("effects", ()))
     if "draft" in chosen:
         draft.apply(cast(list[draft.Change], chosen["draft"]))
     for interrupted in chosen.get("interrupts", ()):

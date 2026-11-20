@@ -15,6 +15,8 @@ from Script.Config import game_config
 from Script.Design import attr_calculation, character_handle, child_stage_gate
 from typing import TYPE_CHECKING, TypedDict
 from Script.Design import game_time
+from Script.Modules.domains import needs
+from Script.Modules.save_load import upgrade
 
 if TYPE_CHECKING:
     from typing import Any
@@ -839,9 +841,8 @@ def migrate_character_replacement(
             old_character.tem_extra_semen_point
         )
         new_character.angry_point = old_character.angry_point
-        new_character.tired_point = old_character.tired_point
-        new_character.urinate_point = old_character.urinate_point
-        new_character.hunger_point = old_character.hunger_point
+        if not upgrade.copy_v0_needs(old_character, new_character):
+            needs.set(new_id, **needs.of(old_id))
         new_character.sleep_point = old_character.sleep_point
         new_character.desire_point = old_character.desire_point
         new_character.state = old_character.state
@@ -2124,7 +2125,6 @@ def update_chara_cloth(
     # 跳过玩家
     if value.cid == 0:
         return 0
-    # print(f"debug value.cid = {value.cid}")
 
     # 判断是否需要重置服装数据
     reset_cloth_flag = False
@@ -2143,7 +2143,6 @@ def update_chara_cloth(
             if reset_cloth_flag:
                 break
     # 进行服装数据的重置
-    # print(f"debug old value.cloth.cloth_wear = {value.cloth.cloth_wear}")
     if reset_cloth_flag:
         value.cloth = attr_calculation.get_cloth_zero()
         for cloth_id in tem_character.Cloth:
@@ -2156,7 +2155,6 @@ def update_chara_cloth(
             value.cloth.cloth_wear[6].append(bra_id)
         if not len(value.cloth.cloth_wear[9]):
             value.cloth.cloth_wear[9].append(pan_id)
-        # print(f"debug new value.cloth.cloth_wear = {value.cloth.cloth_wear}")
         return 1
     return 0
 
@@ -2184,7 +2182,6 @@ def update_new_character(loaded_dict: dict[str, Any]) -> int:
         if now_npc_data.Name == _("深靛"):
             continue
         new_character_cid = now_npc_data.AdvNpc  # 使用adv作为cid
-        # print(f"debug new_character_cid = {new_character_cid}")
         new_character = character_handle.init_character(
             new_character_cid, now_npc_data
         )
@@ -2486,6 +2483,9 @@ def _clear_young_child_h_state(character: game_type.Character) -> int:
             count += _replace_if_changed(
                 character.pregnancy, attr_name, default_value
             )
+    if needs.of(character.cid)["milk"] != 0:
+        needs.set(character.cid, milk=0)
+        count += 1
     return count
 
 

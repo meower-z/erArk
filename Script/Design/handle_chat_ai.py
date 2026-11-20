@@ -17,6 +17,7 @@ from google.genai import types as genai_types
 import os
 import re
 from typing import Any, Callable, Iterable, TypedDict
+from Script.Modules.domains import needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -126,7 +127,6 @@ def judge_use_text_ai(
         translator=translator,
         direct_mode=direct_mode,
     )
-    # print(f"debug AI文本生成返回文本 = {ai_result}")
 
     # 处理直接对话模式的返回值
     if isinstance(ai_result, dict):
@@ -354,7 +354,7 @@ def build_user_prompt(
     # 疲劳
     if tem_send_data_flags[33]:
         tired_lv = attr_calculation.get_tired_level(
-            npc_character_data.tired_point
+            needs.of(npc_character_data.cid)["tired"]
         )
         if tired_lv > 0:
             tired_text = constant.tired_text_list[tired_lv]

@@ -261,9 +261,9 @@ H 状态、群交模式、逆推、隐奸。
 | NUM-24 | 精液槽与临时精液槽范围 | chara.semen_point在[0, semen_point_max]，chara.tem_extra_semen_point在[0, semen_point_max*4] |
 | NUM-25 | 基地资源键集覆盖配表且为非负整数 | config_resouce的每个id都在cache.rhodes_island.materials_resouce中存在（配表⊆资源，方向同NUM-02—— 存档迁移只补不删已下线的资源id，多余键合法），且键为精确int、值为非负整数（各面板按固定id裸下标， 没有任何统一的max(0,...)兜底，负资源意味着某条支付路径漏判） |
 | NUM-26 | 仓库容量为非负整数 | cache.rhodes_island.warehouse_capacity为非负整数 |
-| NUM-27 | 疲劳/饥饿/熟睡/醉酒在各自量程内 | tired_point∈[0,160]、hunger_point∈[0,240]、sleep_point∈[0,100]、drunk_point∈[0,100] |
-| NUM-28 | 尿意值非负且为整数 | chara.urinate_point为非负整数 |
-| NUM-29 | 角色尿意值不超过300 | 所有角色（含玩家cid=0）的urinate_point不超过300（设计上界，realtime_settle与 drunk_sex_common两处min(300,...)体现 |
+| NUM-27 | 疲劳/饥饿/熟睡/醉酒在各自量程内 | body.needs的tired∈[0,160]、hunger∈[0,240]与sleep_point∈[0,100]、drunk_point∈[0,100]，都须是int或Fraction |
+| NUM-28 | 尿意值非负且为整数 | body.needs的urine是非负的int或Fraction |
+| NUM-29 | 角色尿意值不超过300 | 所有角色（含玩家cid=0）body.needs的urine不超过300（设计上界，realtime_settle、drunk_sex_common与default.py加尿意时都用它封顶），失败记录带[warning]前缀 |
 | NUM-30 | 欲望值为非负整数且不设上限 | chara.desire_point为非负整数，不强制<=100——尽管字段注释称100为最大，逐日结算逐日累加且无任何 钳制，前提函数在>=100时权重仍随数值单调增长，说明设计上预期会超过100 |
 
 ## OBS：可观察矛盾
@@ -389,7 +389,7 @@ H 状态、群交模式、逆推、隐奸。
 
 | 编号 | 名称 | 说明 |
 |---|---|---|
-| SUPP-01 | 供电策略合法性 | cache.rhodes_island.power_supply_strategy的键值域：键必须是当前配置中 type==-1的大区块设施cid，值必须是game_config.config_supply_strategy的合法键 |
+| SUPP-01 | 供电策略合法性 | GameState全局键base.power_strategy的键值域：键必须是当前配置中type==-1的大区块设施cid，值必须是game_config.config_supply_strategy的合法键 |
 | SUPP-02 | 生活娱乐/科研/士兵/访客上限派生一致 | life_zone_max/research_zone_max/soldier_max分别与设施cid 5/8/21 当前等级效果一致，visitor_max与当前config_facility_open中名称含"客房"且facility_open为真的数量一致 |
 | SUPP-03 | 设施开放派生单调覆盖 | 对当前config_facility_open中每个待开放项，只要其zone_cid已被全设施 当前等级效果cid覆盖（相等，或同十位且个位数达标），对应facility_open[open_cid]就应为真 |
 | SUPP-04 | 时停无意识值跨名单残留 | 非时停时，character_data中任何角色都不应残留专属时停无意识值 unconscious_h==3 |

@@ -20,8 +20,9 @@ from __future__ import annotations
 from fractions import Fraction
 from typing import TypeGuard
 
-from Script.Core import cache_control
+from Script.Core import cache_control, num
 from Script.Design import map_handle
+from Script.Modules.domains import needs
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -1098,10 +1099,8 @@ def check_sleep_point_bound() -> list[CheckFailure]:
     参数: 无
     返回值: List[CheckFailure]
     功能:
-        校验sleep_point为非bool数值且落在[0,100]内(Sleep_Level.csv最高档上限100)。越界会让睡眠等级
-        落入错误档位，负数尤其会被get_sleep_level判成"半梦半醒"。已实测判定值域可被打破——实时结算中
-        add_sleep可为负，而白天分支只有下界、常规分支只有上界，负add_sleep能让最终值越出对侧边界，
-        本式抓的是真bug；debug面板可直接改熟睡值，加debug豁免
+        校验sleep_point为非bool数值且落在[0,100]内。越界会让睡眠等级落入错误档位。
+        debug面板可以直接改熟睡值，所以debug模式下不检查。失败信息附带body.needs里的疲劳tired。
     """
     cache = cache_control.cache
     if cache is None or getattr(cache, "debug_mode", False):
@@ -1117,7 +1116,7 @@ def check_sleep_point_bound() -> list[CheckFailure]:
                 "熟睡值值域",
                 (
                     f"角色id={cid}({_name(chara)})的sleep_point越界: {sp!r}(合法范围[0,100])，"
-                    f"tired_point={getattr(chara, 'tired_point', '?')} behavior_id={_behavior_id(chara)} "
+                    f"tired={num.shown(needs.of(cid)['tired'])} behavior_id={_behavior_id(chara)} "
                     f"unconscious_h={_u(chara)}"
                 ),
                 [cid],

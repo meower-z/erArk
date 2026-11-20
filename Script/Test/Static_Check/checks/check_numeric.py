@@ -20,6 +20,7 @@ from typing import TypeGuard
 from Script.Core import cache_control
 from Script.Config import game_config
 from Script.Design import game_time
+from Script.Modules.domains import needs
 from ..check_registry import CheckFailure, register_check, make_failure
 
 
@@ -1129,24 +1130,24 @@ def check_num_27_fatigue_family_range() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验tired_point∈[0,160]、hunger_point∈[0,240]、sleep_point∈[0,100]、drunk_point∈[0,100]。这四项都是按
-        分钟累加、并在累加处双向封顶的计量值，出界说明有直接赋值旁路。带cache.debug_mode守卫
-        （debug面板可直接改写这些字段）。
+        校验body.needs的tired∈[0,160]、hunger∈[0,240]与sleep_point∈[0,100]、drunk_point∈[0,100]，都须是int或Fraction。
+        出界说明有写入越过了上下限。debug面板可以直接改写这四项，所以debug模式下不检查。
     """
     cache = cache_control.cache
     if cache.debug_mode:
         return []
     bounds = {
-        "tired_point": 160,
-        "hunger_point": 240,
+        "needs.tired": 160,
+        "needs.hunger": 240,
         "sleep_point": 100,
         "drunk_point": 100,
     }
     failures = []
     for cid, chara in cache.character_data.items():
+        values = {f"needs.{k}": v for k, v in needs.of(cid).items()}
         bad_fields = {}
         for field, upper in bounds.items():
-            v = getattr(chara, field, None)
+            v = values.get(field, getattr(chara, field, None))
             if not (_exact(v) and 0 <= v <= upper):
                 bad_fields[field] = v
         if bad_fields:
@@ -1174,21 +1175,20 @@ def check_num_28_urinate_point_non_negative() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验chara.urinate_point为非负整数。排尿结算清零，无任何无钳制的减法，下界稳固。上界另见NUM-29。
-        带cache.debug_mode守卫。
+        校验body.needs的urine是非负的int或Fraction。上界见NUM-29。debug模式下不检查。
     """
     cache = cache_control.cache
     if cache.debug_mode:
         return []
     failures = []
     for cid, chara in cache.character_data.items():
-        urinate = getattr(chara, "urinate_point", None)
+        urinate = needs.of(cid)["urine"]
         if not (_exact(urinate) and urinate >= 0):
             failures.append(
                 make_failure(
                     "NUM-28",
                     "尿意值非负且为整数",
-                    f"角色cid={cid} name={_chara_name(chara)} urinate_point={urinate!r} "
+                    f"角色cid={cid} name={_chara_name(chara)} urine={urinate!r} "
                     f"drunk_point={getattr(chara, 'drunk_point', '?')} "
                     f"behavior_id={getattr(getattr(chara, 'behavior', None), 'behavior_id', '?')}",
                     [cid],
@@ -1205,11 +1205,8 @@ def check_num_29_urinate_point_upper_bound() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验所有角色（含玩家cid=0）的urinate_point不超过300（设计上界，realtime_settle与
-        drunk_sex_common两处min(300,...)体现；其余写入点均为固定值≤240或自带回落上界）。
-        已知default.py:9506,9528两处裸 += 60缺失钳制（上游PR #303钳制之），在未含该修复的
-        游戏本体上300可被合法突破，故降为warning而非error；#303合入上游后本项可升回error。
-        带cache.debug_mode守卫。
+        校验所有角色（含玩家cid=0）body.needs的urine不超过300。失败记录带[warning]前缀。debug模式下不检查。
+        300是设计上界，realtime_settle、drunk_sex_common与default.py加尿意时都用它封顶。
     """
     cache = cache_control.cache
     if cache.debug_mode:
@@ -1220,14 +1217,14 @@ def check_num_29_urinate_point_upper_bound() -> list[CheckFailure]:
     )
     failures = []
     for cid, chara in cache.character_data.items():
-        urinate = getattr(chara, "urinate_point", None)
+        urinate = needs.of(cid)["urine"]
         if (_exact(urinate) or type(urinate) is float) and urinate > 300:
             failures.append(
                 make_failure(
                     "NUM-29",
                     "角色尿意值不超过300",
                     (
-                        f"[warning] 角色cid={cid} name={_chara_name(chara)} urinate_point={urinate!r} "
+                        f"[warning] 角色cid={cid} name={_chara_name(chara)} urine={urinate!r} "
                         f"behavior_id={getattr(getattr(chara, 'behavior', None), 'behavior_id', '?')} "
                         f"difficulty_setting[11]={difficulty_setting.get(11)} "
                         f"difficulty_setting[12]={difficulty_setting.get(12)}"
