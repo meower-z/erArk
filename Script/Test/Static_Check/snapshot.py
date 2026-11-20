@@ -23,8 +23,6 @@ EXCLUDED_TOP_LEVEL_FIELDS = {
     "npc_tem_data",  # npc模板静态数据
     "random_npc_list",  # 旧存档读档后会留在cache上的随机npc数据，Cache本身不声明它
     "recipe_data",  # 菜谱静态数据
-    "sun_phase",  # 太阳位置缓存表
-    "moon_phase",  # 月相缓存表
     "wframe_mouse",  # 主页监听控制流程用变量组（渲染相关）
     "cmd_data",  # cmd绘制数据
     "input_cache_draft",  # 玩家正在编辑但尚未发送的输入草稿

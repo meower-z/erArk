@@ -390,7 +390,7 @@ H 状态、群交模式、逆推、隐奸。
 | 编号 | 名称 | 说明 |
 |---|---|---|
 | SUPP-01 | 供电策略合法性 | GameState全局键base.power_strategy的键值域：键必须是当前配置中type==-1的大区块设施cid，值必须是game_config.config_supply_strategy的合法键 |
-| SUPP-02 | 生活娱乐/科研/士兵/访客上限派生一致 | life_zone_max/research_zone_max/soldier_max分别与设施cid 5/8/21 当前等级效果一致，visitor_max与当前config_facility_open中名称含"客房"且facility_open为真的数量一致 |
+| SUPP-02 | 访客上限与开放客房数一致 | visitor_max等于当前config_facility_open中名称含"客房"且facility_open为真的条目数 |
 | SUPP-03 | 设施开放派生单调覆盖 | 对当前config_facility_open中每个待开放项，只要其zone_cid已被全设施 当前等级效果cid覆盖（相等，或同十位且个位数达标），对应facility_open[open_cid]就应为真 |
 | SUPP-04 | 时停无意识值跨名单残留 | 非时停时，character_data中任何角色都不应残留专属时停无意识值 unconscious_h==3 |
 | SUPP-05 | 愤怒值下界 | 每个角色的angry_point类型为int且不小于0 |

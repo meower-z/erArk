@@ -24,7 +24,7 @@ from Script.System.Pregnancy_System import pregnancy_constant
 import json
 from typing import TYPE_CHECKING
 from Script.Design import game_time
-from Script.Modules.save_load import index, upgrade
+from Script.Modules.save_load import index, unsaved, upgrade
 
 if TYPE_CHECKING:
     from typing import Any
@@ -119,7 +119,7 @@ def write_save_data(save_id: str, data_id: str, write_data: object) -> None:
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     with open(file_path, "wb+") as f:
-        pickle.dump(write_data, f)
+        unsaved.dump(write_data, f)
 
 
 _ENTERTAINMENT_CID_MIGRATE = {175: 152, 176: 153, 177: 154, 178: 155}
@@ -467,15 +467,6 @@ def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
             if hasattr(scene, "scene_path"):
                 scene.scene_path = _normalize_save_path(scene.scene_path)
 
-    map_data = getattr(loaded_cache, "map_data", None)
-    if isinstance(map_data, dict):
-        loaded_cache.map_data = _normalize_save_path_keys(map_data)
-        for map_data_value in loaded_cache.map_data.values():
-            if hasattr(map_data_value, "map_path"):
-                map_data_value.map_path = _normalize_save_path(
-                    map_data_value.map_path
-                )
-
     # 无壳卵生开关：本函数早于 update_settings 执行，且此时全局cache尚未被替换，只能从存档自身的设置对象里读
     # 旧存档没有该设置项，.get兜底为开启，正是旧存档迁移应有的行为
     loaded_birth_setting = getattr(loaded_cache, "birth_type_setting", None)
@@ -728,6 +719,7 @@ def load_save(save_id: str) -> game_type.Cache:
     file_path = os.path.join(save_path, "1")
     with open(file_path, "rb") as f:
         loaded_cache = SaveUnpickler(f).load()
+    unsaved.restore(loaded_cache)
     _normalize_loaded_save_paths(loaded_cache)
     return loaded_cache
 
@@ -789,6 +781,8 @@ def install_save(save_id: str, version: int) -> None:
         now_draw.draw()
         update_count += migrate_count
 
+    # 缓存文件不写的字段先取新缓存的值，不算作跨版本更新
+    unsaved.fill_defaults(loaded_dict, new_cache)
     # 递归地更新 loaded_dict
     update_count += update_dict_with_default(loaded_dict, new_cache.__dict__)
     # 更新角色预设
@@ -1040,8 +1034,10 @@ def install_save(save_id: str, version: int) -> None:
                             all_cid
                         ] = True
                         break
-    # 更新食谱
+    basement.update_facility_limits(loaded_dict["rhodes_island"])
+    # 读到的存档里没有菜谱与地图，这里换上按数据文件新建的菜谱和游戏启动时载入的地图
     loaded_dict["recipe_data"] = cooking.init_recipes()
+    loaded_dict["map_data"] = cache.map_data
     # 更新图书借阅
     for all_cid in game_config.config_book:
         if all_cid not in loaded_dict["rhodes_island"].book_borrow_dict:
@@ -1250,7 +1246,6 @@ def update_map(loaded_dict: dict[str, Any]) -> int:
             change_map_flag = True
     # 如果地图数据有变化，将地图路径也更新，同时删除不存在的地图数据
     if change_map_flag:
-        loaded_dict["map_data"] = cache.map_data
         # 在2024.7月的版本中将人气快餐开封菜改为了约翰老妈汉堡店
         if "贸易\\人气快餐开封菜" in loaded_dict["scene_data"]:
             for _key, value in loaded_dict["character_data"].items():

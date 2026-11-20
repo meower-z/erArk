@@ -34,36 +34,6 @@ P = map_handle.get_map_system_path_str_for_list
 _: FunctionType = get_text._
 
 
-def _eff(ri: game_type.Rhodes_Island, facility_cid: int) -> int | None:
-    """
-    参数:
-        ri: cache.rhodes_island 罗德岛数据对象
-        facility_cid (int): 设施配置cid（config_facility的键）
-    返回值:
-        int|None: 该设施在其当前等级下的效果数值(config_facility_effect.effect)，任何一环缺失/越界时返回None
-    功能:
-        _eff(fid)帮助函数：config_facility_effect[config_facility_effect_data[名字][等级]].effect，
-        全程防御式访问，任一层级配置/存档字段缺失都安全地返回None而不抛异常
-    """
-    try:
-        facility = game_config.config_facility.get(facility_cid)
-        if facility is None:
-            return None
-        level = getattr(ri, "facility_level", {}).get(facility_cid)
-        if type(level) is not int:
-            return None
-        effect_data = game_config.config_facility_effect_data.get(facility.name)
-        if effect_data is None or not (0 <= level < len(effect_data)):
-            return None
-        effect_cid = effect_data[level]
-        effect = game_config.config_facility_effect.get(effect_cid)
-        if effect is None:
-            return None
-        return effect.effect
-    except Exception:
-        return None
-
-
 def _all_current_effect_cids(ri: game_type.Rhodes_Island) -> list[int]:
     """
     参数:
@@ -135,61 +105,39 @@ def check_power_supply_strategy_validity() -> list[CheckFailure]:
     return failures
 
 
-@register_check("SUPP-02", "生活娱乐/科研/士兵/访客上限派生一致")
+@register_check("SUPP-02", "访客上限与开放客房数一致")
 def check_facility_derived_max_consistency() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能:
-        来源: IO-02。校验life_zone_max/research_zone_max/soldier_max分别与设施cid 5/8/21
-        当前等级效果一致，visitor_max与当前config_facility_open中名称含"客房"且facility_open为真的数量一致。
-        级别为warning：这四个字段只由get_base_updata()在若干面板打开时派生刷新，没有每回合自动刷新点，
-        跨版本配置变化或读档到首次打开相关面板之前，短暂/历史漂移是合法状态而非硬损坏
+        来源: IO-02。校验visitor_max等于当前config_facility_open中名称含"客房"且facility_open为真的条目数。
+        级别为warning：游戏代码里只有basement.update_facility_limits()写visitor_max，读档和get_base_updata()调用它。
+        开放客房的某条路径若没有接着调用get_base_updata()，visitor_max会暂时偏离，这种偏离不算存档损坏。
     """
     cache = cache_control.cache
     ri = getattr(cache, "rhodes_island", None)
     if ri is None:
         return []
-    eff5 = _eff(ri, 5)
-    eff8 = _eff(ri, 8)
-    eff21 = _eff(ri, 21)
-    if eff5 is None or eff8 is None or eff21 is None:
-        return []
     facility_open = getattr(ri, "facility_open", {}) or {}
-    expected_visitor_max = sum(
+    expected = sum(
         1
         for oid, room in game_config.config_facility_open.items()
         if _("客房") in getattr(room, "name", "")
         and facility_open.get(oid, False)
     )
-    failures = []
-    checks = (
-        ("life_zone_max", eff5, 5),
-        ("research_zone_max", eff8, 8),
-        ("soldier_max", eff21, 21),
-        ("visitor_max", expected_visitor_max, None),
-    )
-    for field_name, expected, facility_cid in checks:
-        actual = getattr(ri, field_name, None)
-        if actual != expected:
-            failures.append(
-                make_failure(
-                    "SUPP-02",
-                    "生活娱乐/科研/士兵/访客上限派生一致",
-                    f"[warning] ri.{field_name}={actual}，重算期望值={expected}"
-                    + (
-                        (
-                            f"（_eff({facility_cid})，"
-                            f"facility_level[{facility_cid}]={getattr(ri, 'facility_level', {}).get(facility_cid)}）"
-                        )
-                        if facility_cid is not None
-                        else "（当前开放客房数）"
-                    )
-                    + "，可能是跨版本配置变化后尚未刷新，或某条设施更新路径漏调get_base_updata()",
-                    [],
-                )
-            )
-    return failures
+    actual = getattr(ri, "visitor_max", None)
+    if actual == expected:
+        return []
+    return [
+        make_failure(
+            "SUPP-02",
+            "访客上限与开放客房数一致",
+            f"[warning] ri.visitor_max={actual}，按当前开放客房数算出的期望值={expected}，"
+            "可能是开放客房的某条路径没有接着调用get_base_updata()",
+            [],
+        )
+    ]
 
 
 @register_check("SUPP-03", "设施开放派生单调覆盖")
