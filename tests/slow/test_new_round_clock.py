@@ -55,9 +55,8 @@ class NewRoundClockTest(SlowTestCase):
         game_state = core.state()
         self.assertEqual(game_state.clock, first, "新周目从开局时刻开始")
         self.assertGreater(len(game_state.characters), 1, "内核里有干员")
-        self.assertEqual(
-            game_time.minutes(cache.rhodes_island.last_visitor_time), first
-        )
+        visitor = game("Script.Modules.domains.visitor")
+        self.assertEqual(game_time.minutes(visitor.last_arrival()), first)
         for chara_id, character in cache.character_data.items():
             info = character.action_info
             stamps = {

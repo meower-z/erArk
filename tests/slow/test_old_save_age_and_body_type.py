@@ -112,6 +112,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         """
         from Script.Design import game_time
         from Script.Config import game_config
+        from Script.Modules.domains.commission import start
 
         cache = self.cache
         static_id_list = [
@@ -233,11 +234,8 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         island.current_prisoners[child_id] = [game_time.now(), 0]
         child.sp_flag.imprisonment = True
         commission_id = min(game_config.config_commission)
-        island.ongoing_field_commissions[commission_id] = [
-            [child_id, mother_id],
-            game_time.now(),
-            [],
-        ]
+        team = [child_id, mother_id]
+        kernel_data.written(start, commission_id, team, game_time.now(), [])
         child.sp_flag.field_commission = commission_id
         island.temp_sex_class["1-1"] = {
             "classroom": "理论教室一",
@@ -390,11 +388,12 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         Keyword arguments:
         无
         Return arguments:
-        dict -- 角色id到数据的字典，外加世界设定、日程模板、玩家收藏品里的卵、当前干员列表、各场景的角色、各职业名单、
-           罗德岛里的冷库、囚犯、外勤、实操课、体检与借书数据，以及场景面板记着的角色
+        dict -- 角色id到数据的字典，外加世界设定、日程模板、玩家收藏品里的卵、当前干员列表、各场景的角色、GameState 的
+           全部全局数据、罗德岛里的冷库、囚犯、实操课、体检与借书数据，以及场景面板记着的角色
         """
         collection = self.cache.character_data[0].pl_collection
-        work = importlib.import_module("Script.Modules.domains.work")
+        from Script.Kernel import core
+
         snapshot: dict[str | int, object] = {
             "world_setting": dict(self.cache.world_setting),
             "template": repr(self.cache.rhodes_island.child_schedule_template),
@@ -404,7 +403,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 path: sorted(scene.character_list)
                 for path, scene in self.cache.scene_data.items()
             },
-            "work": work.rosters(),
+            "data": dict(core.state().data),
             "island": repr(
                 [
                     getattr(self.cache.rhodes_island, name)
@@ -412,7 +411,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                         "milk_in_fridge",
                         "urine_in_fridge",
                         "current_prisoners",
-                        "ongoing_field_commissions",
                         "temp_sex_class",
                         "examined_operator_ids",
                         "waiting_for_exam_operator_ids",
@@ -842,6 +840,8 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         child = cache.character_data[child_id]
         player = cache.character_data[0]
         island = cache.rhodes_island
+        from Script.Modules.domains import commission
+
         collection = player.pl_collection
         self.assertEqual(
             (
@@ -898,7 +898,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         )
         self.assertEqual(
             (
-                island.ongoing_field_commissions[id_dict["commission"]][0],
+                list(commission.ongoing()[id_dict["commission"]].team),
                 island.temp_sex_class["1-1"]["must_attend"],
             ),
             ([mother_id], [mother_id]),

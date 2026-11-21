@@ -68,7 +68,7 @@ def collect(language: str) -> dict[str, Any]:
             invite_visitor_panel.settle_visitor_arrivals(visitor_id)
     return {
         "guest_rooms": constant.place_data["Guest_Room"],
-        "visitor_max": cache.rhodes_island.visitor_max,
+        "visitor_max": game("Script.Modules.domains.visitor").capacity(),
         "dormitory": [
             cache.character_data[cid].dormitory for cid in visitor_list
         ],

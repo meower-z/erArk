@@ -12,8 +12,10 @@ from unittest import mock
 from Script.Core import constant
 from Script.Design import game_time
 from Script.Kernel import core
+from Script.Modules.domains import commission
 from Script.Modules.gameplay_resolution import time_hooks
 from Script.Settle import realtime_settle
+from tests import kernel_data
 from tests.fast.base import FastTestCase
 
 COMMISSION = 2
@@ -69,24 +71,18 @@ class CommissionTickTest(FastTestCase):
 
     def test_due_commission_finishes_in_next_tick(self) -> None:
         """8 分钟后到期：第 5 分钟的 Tick 不完成，第 10 分钟的 Tick 完成，玩家的睡觉没有结束、没有选择"""
-        ongoing = self.cache.rhodes_island.ongoing_field_commissions
-        ongoing[COMMISSION] = [
-            [],
-            game_time.at(self.base) + datetime.timedelta(minutes=8),
-            [],
-        ]
+        end = game_time.at(self.base) + datetime.timedelta(minutes=8)
+        kernel_data.written(commission.start, COMMISSION, [], end, [])
         finished_at = None
         clocks = []
         for __ in range(6):
             core.step()
             clocks.append(core.state().clock)
-            if finished_at is None and COMMISSION not in ongoing:
+            if finished_at is None and COMMISSION not in commission.ongoing():
                 finished_at = core.state().clock
         self.assertEqual(
             clocks, [self.base + m for m in (5, 5, 10, 10, 15, 15)]
         )
         self.assertEqual(finished_at, self.base + 10)
-        self.assertIn(
-            COMMISSION, self.cache.rhodes_island.finished_field_commissions_set
-        )
+        self.assertIn(COMMISSION, commission.finished())
         self.assertEqual(core.state().characters["0"].action, self.action)

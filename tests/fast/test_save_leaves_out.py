@@ -30,7 +30,6 @@ CHILD = 9999
 REBUILT = (
     "warehouse_capacity",
     "people_max",
-    "visitor_max",
     "medical_bed_limit",
 )
 """ 缓存文件不写、读档时重新算出的罗德岛字段 """

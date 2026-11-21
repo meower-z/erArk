@@ -10,8 +10,8 @@
 - set_needs 与 needs_of 改、读角色的 body.needs，set_milk_max 与 milk_max_of 改、读角色的乳汁上限（body.pregnancy）。
 - set_ward 在一步之外换掉医疗部的住院病人表。
 - reprojected 从缓存重新投影各角色的行动，每个角色的数据跟着这个角色留在角色数据或 roster.offstage 里。
-- project_state 在快照里用这些数据在缓存里时的属性名记下 body.needs、乳汁上限、动力、设施、经济、岗位名册与监狱长的值，
-  快照因此能与按缓存属性录下的快照比较。
+- project_state 在快照里用这些数据在缓存里时的属性名记下 body.needs、乳汁上限、动力、设施、经济、岗位名册、监狱长、
+  仓库、生产线、食堂货架、医疗部、外勤委托、载具、访客与罗德岛位置的值，快照因此能与按缓存属性录下的快照比较。
 """
 
 from __future__ import annotations
@@ -302,6 +302,7 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     工人名单记作 world.base.<production.PICKLED_WORKERS 里的属性名>。
     食堂货架记作 world.cooking.dining_hall_data。医疗部数据记在 world.medical 下，
     名字为罗德岛对象上旧的属性名（medical.OLD_NAMES），病人按字段展开。
+    外勤委托、载具、访客、邀请与罗德岛的位置由 _project_travel 记下。
     Keyword arguments:
     cache -- 游戏缓存
     state -- 快照，原地补上
@@ -373,6 +374,47 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
         else:
             flatten(f"world.medical.{field}", value, state)
     _project_economy(state)
+    _project_travel(state)
+
+
+def _project_travel(state: dict[str, object]) -> None:
+    """
+    快照里按罗德岛对象上旧的属性名与形状记下外勤委托、载具、访客、邀请与罗德岛的位置。
+    进行中的委托记作 world.commission.ongoing_field_commissions.<委托id> 下的 [队伍, 返回时刻, 载具]。
+    已完成与不可进行的委托记作 world.commission 下的两个集合。
+    载具记作 world.vehicle.vehicles.<载具id> 下的 [拥有数, 外勤中数]。访客、上次随机来访时刻、邀请、移动标记、访客上限、
+    所在位置与移动记在 world.base 下，名字为旧的属性名。GameState 不存的列表项按新游戏里的值记：位置的第二项为 1701，
+    邀请的第三项为 0，移动的第二项为 0。停着时移动记作 [0, 0, 0]
+    Keyword arguments:
+    state -- 快照，原地补上
+    """
+    from Script.Modules.domains import commission, location, visitor
+    from tests.snapshot import flatten
+
+    ongoing = {
+        cid: [list(one.team), one.end, list(one.vehicles)]
+        for cid, one in commission.ongoing().items()
+    }
+    flatten("world.commission.ongoing_field_commissions", ongoing, state)
+    for name, ids in (
+        ("finished_field_commissions_set", commission.finished()),
+        ("shut_down_field_commissions_set", commission.shut_down()),
+    ):
+        flatten(f"world.commission.{name}", set(ids), state)
+    rows = {vid: list(row) for vid, row in commission.vehicles().items()}
+    flatten("world.vehicle.vehicles", rows, state)
+    going = location.move()
+    island = {
+        "visitor_info": visitor.visitors(),
+        "last_visitor_time": visitor.last_arrival(),
+        "invite_visitor": [*visitor.invite(), 0],
+        "base_move_visitor_flag": visitor.moved(),
+        "visitor_max": visitor.capacity(),
+        "current_location": [location.country(), 1701],
+        "move_target_and_time": [going[0], 0, going[1]] if going else [0] * 3,
+    }
+    for field, value in island.items():
+        flatten(f"world.base.{field}", value, state)
 
 
 def _project_economy(state: dict[str, object]) -> None:
