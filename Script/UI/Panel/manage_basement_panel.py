@@ -13,7 +13,7 @@ from Script.Design import basement, attr_calculation, handle_premise, game_time
 from Script.UI.Moudle import draw, view
 from Script.UI.Panel import see_character_info_panel
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import economy, facility, needs
+from Script.Modules.domains import economy, facility, needs, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -233,7 +233,7 @@ class Manage_Basement_Panel:
 
                 # 统计各部门岗位的工作干员数量
                 work_people_now, people_max = (
-                    cache.rhodes_island.work_people_now,
+                    work.people_now(),
                     len(cache.npc_id_got),
                 )
 
@@ -304,7 +304,7 @@ class Manage_Basement_Panel:
                         if work_data.department == department:
                             all_info_draw.text += (
                                 f"  {work_data.name} — "
-                                f"{len(cache.rhodes_island.all_work_npc_set[all_cid])}"
+                                f"{len(work.roster(all_cid))}"
                             )
                     if department == _("机库"):
                         field_people_now = 0
@@ -1266,10 +1266,8 @@ class Manage_Basement_Panel:
                     now_text += _("\n  当前正在工作的{0}：").format(
                         work_data.name
                     )
-                    if len(cache.rhodes_island.all_work_npc_set[all_cid]):
-                        for npc_id in cache.rhodes_island.all_work_npc_set[
-                            all_cid
-                        ]:
+                    if work.roster(all_cid):
+                        for npc_id in work.roster(all_cid):
                             npc_name = cache.character_data[npc_id].name
                             now_text += f" {npc_name}"
                     else:
@@ -1798,7 +1796,7 @@ class Change_Npc_Work_Panel:
         if handle_premise.handle_work_is_warden(character_id):
             target_data.work.work_type = 0
             common.restore_character_dormitory(character_id)
-            cache.rhodes_island.current_warden_id = 0
+            work.set_warden(0)
         # 赋予新工作
         target_data.work.work_type = work_id
         # 如果当前工作是监狱长
@@ -1806,19 +1804,14 @@ class Change_Npc_Work_Panel:
             from Script.Design import map_handle
 
             # 如果有其他干员是监狱长，则解除其监狱长身份，并重置宿舍
-            if (
-                cache.rhodes_island.current_warden_id != 0
-                and cache.rhodes_island.current_warden_id != character_id
-            ):
+            if work.warden() != 0 and work.warden() != character_id:
                 old_warden_data: game_type.Character = cache.character_data[
-                    cache.rhodes_island.current_warden_id
+                    work.warden()
                 ]
                 old_warden_data.work.work_type = 0
-                common.restore_character_dormitory(
-                    cache.rhodes_island.current_warden_id
-                )
+                common.restore_character_dormitory(work.warden())
             # 更新监狱长id
-            cache.rhodes_island.current_warden_id = character_id
+            work.set_warden(character_id)
             # 更新监狱长的宿舍
             common.register_permanent_dormitory(character_id)
             target_data.dormitory = map_handle.get_map_system_path_str_for_list(

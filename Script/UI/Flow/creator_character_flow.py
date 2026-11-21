@@ -23,6 +23,7 @@ from Script.Design import (
     basement,
 )
 from Script.Kernel import core
+from Script.Modules.domains import work
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import kernel_state
 from Script.UI.Moudle import panel, draw, view
@@ -480,9 +481,7 @@ class Character_FirstNPC:
         else:
             info_last_draw.text = _(" 已选择全部初始干员")
 
-        work_people_now, people_max = cache.rhodes_island.work_people_now, len(
-            cache.npc_id_got
-        )
+        work_people_now, people_max = work.people_now(), len(cache.npc_id_got)
         info_last_draw.text += _("， 当前工作中干员/总干员：{0}/{1}").format(
             work_people_now, people_max
         )

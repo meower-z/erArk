@@ -10,7 +10,7 @@ base.supply_demand 是 {资源id: 供需系数}。表里没有的资源，调用
 base.main_traders 是 {资源类型: 主交易员的角色id}。表里没有的类型读 0，即空缺。
 base.auto_trade 是 {资源id: 自动交易设置}。表里没有的资源读 DEFAULT_AUTO_TRADE。
 各表的键在状态里存成字符串，读函数交出的资源id是 int。
-交易员名单不存，由岗位名册 all_work_npc_set 算出。
+交易员名单不存，由岗位名册 work.roster(TRADER_WORK) 算出。
 """
 
 from collections.abc import Mapping
@@ -19,6 +19,7 @@ from uuid import UUID
 
 from Script.Core import cache_control, game_type
 from Script.Kernel import core
+from Script.Modules.domains import work
 from Script.Modules.gameplay_resolution import working
 
 INCOME = "base.income_today"
@@ -395,13 +396,13 @@ def remap_traders(old_to_new: Mapping[int, int]) -> None:
 
 def trade_operator_ids() -> list[int]:
     """
-    交易员名单：岗位名册 all_work_npc_set 里职位为 TRADER_WORK 的角色。
-    先按已招募干员 cache.npc_id_got 的遍历顺序排列，这是 update_work_people 建名册时的顺序
+    交易员名单：岗位名册 work.roster(TRADER_WORK) 里的角色。
+    按已招募干员 cache.npc_id_got 此刻的遍历顺序排列
     Return arguments:
-    list -- 角色id，已不在 npc_id_got 里的交易员排在最后
+    list -- 角色id，已不在 npc_id_got 里的交易员按名册的顺序排在最后
     """
     cache = cache_control.cache
-    traders = cache.rhodes_island.all_work_npc_set.get(TRADER_WORK, set())
+    traders = work.roster(TRADER_WORK)
     ordered = [cid for cid in cache.npc_id_got if cid in traders]
     return ordered + [cid for cid in traders if cid not in cache.npc_id_got]
 

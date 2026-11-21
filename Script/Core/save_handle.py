@@ -728,9 +728,9 @@ def input_load_save(save_id: str) -> None:
 def install_save(save_id: str, version: int) -> None:
     """
     读档的 Reset 步骤。把存档的缓存（文件 "1"）装进游戏缓存，按顺序修补旧存档，再结束有101/102阶段的孩子参与的会话。
-    版本 0 先补齐生理需求与供电策略属性。
-    随后 upgrade.adopt_power、adopt_facility 与 adopt_economy 搬走罗德岛对象的动力、设施与经济属性。
-    adopt_facility 交回的缺失属性个数计入跨版本更新。重建角色后 upgrade.adopt_pickled 搬走角色对象上的体力等数值属性。
+    版本 0 先补齐生理需求与供电策略属性。随后 upgrade.adopt_power、adopt_facility、adopt_economy 与 adopt_work
+    搬走罗德岛对象的动力、设施、经济属性与岗位名册、监狱长。adopt_facility 交回的缺失属性个数计入跨版本更新。
+    重建角色后 upgrade.adopt_pickled 搬走角色对象上的体力等数值属性。
     Keyword arguments:
     save_id -- 存档id
     version -- 存档的版本，旧存档为 0
@@ -751,6 +751,7 @@ def install_save(save_id: str, version: int) -> None:
     upgrade.adopt_power(loaded_dict)
     update_count += upgrade.adopt_facility(loaded_dict, version)
     upgrade.adopt_economy(loaded_dict)
+    upgrade.adopt_work(loaded_dict)
 
     draw_text = _("\n开始检测存档的数据结构是否需要跨版本更新\n")
     now_draw = draw.LeftDraw()
@@ -1061,7 +1062,6 @@ def install_save(save_id: str, version: int) -> None:
     finish_draw.text = draw_text
     finish_draw.draw()
 
-    # 使用 update() 方法来更新 cache 的字典
     cache.__dict__.update(loaded_dict)
 
     # 鼠标状态是界面的临时状态，读档后从头开始：读档前留下的 w_frame_up 为0时，

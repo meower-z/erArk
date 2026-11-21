@@ -28,7 +28,7 @@ from Script.System.Pregnancy_System import born_event_panel
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.Config import game_config, normal_config
 from Script.Modules.gameplay_resolution import working
-from Script.Modules.domains import pregnancy
+from Script.Modules.domains import pregnancy, work
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -809,14 +809,7 @@ def check_grow_to_loli(character_id: int) -> None:
             draw_text += _("\n{0}成为了一名学员，会在教育区上课学习\n").format(
                 character_data.name
             )
-            if (
-                len(
-                    cache.rhodes_island.all_work_npc_set[
-                        education_constant.TEACHER_WORK_TYPE
-                    ]
-                )
-                == 0
-            ):
+            if len(work.roster(education_constant.TEACHER_WORK_TYPE)) == 0:
                 draw_text += _(
                     "\n当前教育区没有进行授课工作的老师，请尽快安排一名干员负责教师工作\n"
                 )

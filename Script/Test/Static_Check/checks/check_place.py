@@ -24,6 +24,7 @@ from typing import TypeGuard
 
 from Script.Core import cache_control
 from Script.Design import map_handle
+from Script.Modules.domains import work
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -1022,13 +1023,12 @@ def check_cohabitation_service_matches_dormitory() -> list[CheckFailure]:
     services = getattr(assistant, "assistant_services", None) or {}
     if services.get(7, 0) != 1:
         return failures
-    work = getattr(assistant, "work", None)
-    if getattr(work, "work_type", None) == 191:
+    chara_work = getattr(assistant, "work", None)
+    if getattr(chara_work, "work_type", None) == 191:
         return failures  # 豁免监狱长：任命为监狱长会改宿舍但不清同居服务位，是合法且持久的状态
     expected_dormitory = P(["中枢", "博士房间"])
     dormitory = getattr(assistant, "dormitory", None)
     if dormitory != expected_dormitory:
-        rhodes_island = getattr(cache, "rhodes_island", None)
         failures.append(
             make_failure(
                 "PLACE-22",
@@ -1038,8 +1038,8 @@ def check_cohabitation_service_matches_dormitory() -> list[CheckFailure]:
                     f"[7]=1)，"
                     f"但dormitory={dormitory}（期望{expected_dormitory}），"
                     f"permanent_dormitory={getattr(assistant, 'permanent_dormitory', None)}，"
-                    f"work_type={getattr(work, 'work_type', None)}，"
-                    f"current_warden_id={getattr(rhodes_island, 'current_warden_id', None)}"
+                    f"work_type={getattr(chara_work, 'work_type', None)}，"
+                    f"work.warden()={work.warden()}"
                 ),
                 [aid],
             )

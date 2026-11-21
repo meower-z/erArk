@@ -19,6 +19,7 @@ from Script.Design import (
 )
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
+from Script.Modules.domains import work
 from Script.Modules.save_load import reset
 
 import random
@@ -355,7 +356,7 @@ def calculate_recruit_line_efficiency(line_id: int) -> tuple[str, float]:
     # 文本
     hr_parts_str = "["
     # 遍历所有招聘专员
-    for chara_id in cache.rhodes_island.hr_operator_ids_list:
+    for chara_id in work.roster(work.HR_WORK):
         if chara_id not in cache.character_data:
             continue
         # 跳过玩家
@@ -372,9 +373,7 @@ def calculate_recruit_line_efficiency(line_id: int) -> tuple[str, float]:
                 character_data.ability.get(40, 0),
                 round(base_effect, 1),
             )
-        elif chara_id in main_ids:
-            pass
-        else:
+        elif chara_id not in main_ids:
             sub_bonus += base_effect / 5
     # 如果文本为空，说明没有主招聘专员
     if hr_parts_str == "[":
@@ -927,7 +926,7 @@ class Recruit_Panel:
 
             info = draw.NormalDraw()
             info.text = _("  当前招聘专员数量：{0}      \n").format(
-                len(ri.hr_operator_ids_list)
+                len(work.roster(work.HR_WORK))
             )
             info.draw()
 
@@ -1019,7 +1018,7 @@ class Recruit_Panel:
             }
             other_ops = [
                 cid
-                for cid in ri.hr_operator_ids_list
+                for cid in work.roster(work.HR_WORK)
                 if cid not in main_ids and cid != 0
             ]
             # 依话术等级从高到低排序
@@ -1128,7 +1127,7 @@ class Recruit_Panel:
                 "请选择一名招聘专员担任第{0}号招募线主招聘专员:\n"
             ).format(line_id + 1)
             final_list = []
-            for npc_id in ri.hr_operator_ids_list:
+            for npc_id in work.roster(work.HR_WORK):
                 if npc_id == 0:
                     continue
                 final_list.append(
@@ -1152,7 +1151,7 @@ class Recruit_Panel:
         chara_id -- 干员角色id
         """
         ri = cache.rhodes_island
-        if chara_id not in ri.hr_operator_ids_list:
+        if chara_id not in work.roster(work.HR_WORK):
             return
         # 如果已经是该线主，则撤销
         if ri.recruit_line[line_id][2] == chara_id:

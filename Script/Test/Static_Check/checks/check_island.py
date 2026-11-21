@@ -22,7 +22,7 @@ from typing import Any
 
 from Script.Core import cache_control
 from Script.Config import game_config
-from Script.Modules.domains import economy, facility, power
+from Script.Modules.domains import economy, facility, power, work
 from Script.System.Dormitory_System import common as dorm_common
 from ..check_registry import CheckFailure, register_check, make_failure
 
@@ -356,9 +356,8 @@ def check_island_07_work_type_valid() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验每个在编非玩家干员的work.work_type存在于WorkType.csv。价值偏低但成本更低——
-        all_work_npc_set[work_type].add(...)是无保护索引，非法值通常在下一次面板刷新时就KeyError崩溃，
-        撑不到检查器看到；cid in cd的守卫交给ISLAND-01，这里再判一次只是防止本条自身抛异常
+        校验每个在编非玩家干员的work.work_type存在于WorkType.csv。非法值在下一次刷新时会进岗位名册；
+        cid in cd的守卫交给ISLAND-01，这里再判一次只是防止本条自身抛异常
     """
     cache = cache_control.cache
     cd = cache.character_data
@@ -381,30 +380,24 @@ def check_island_07_work_type_valid() -> list[CheckFailure]:
     return failures
 
 
-@register_check("ISLAND-08", "岗位集合键完整、成员合法且与自身键自洽")
-def check_island_08_all_work_npc_set_self_consistent() -> list[CheckFailure]:
+@register_check("ISLAND-08", "岗位名册的岗位合法、成员合法且与所在岗位自洽")
+def check_island_08_work_rosters_self_consistent() -> list[CheckFailure]:
     """
     参数:
         无
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验all_work_npc_set的键必须等于岗位配置全集；集合里的每个id必须是存在的角色，且其work.work_type
-        必须等于所在集合的键。绝不能加cid in cache.npc_id_got——外勤/关押/外派会把人移出名单而集合保留他，
+        校验岗位名册（work.rosters）的每个岗位id都在岗位配置里；名册里的每个id必须是存在的角色，且其work.work_type
+        必须等于所在岗位。绝不能加cid in cache.npc_id_got——外勤/关押/外派会把人移出名单而名册保留他，
         是主线玩法下的必现误报
     """
     cache = cache_control.cache
-    ri = cache.rhodes_island
     cd = cache.character_data
-    all_work_npc_set = getattr(ri, "all_work_npc_set", None)
-    if not isinstance(all_work_npc_set, dict):
-        return []
-    config_keys = set(game_config.config_work_type)
-    actual_keys = set(all_work_npc_set)
-    key_diff_missing = sorted(config_keys - actual_keys)
-    key_diff_extra = sorted(actual_keys - config_keys)
+    rosters = work.rosters()
+    key_diff_extra = sorted(set(rosters) - set(game_config.config_work_type))
     violations: list[tuple[Any, Any, str, int | None]] = []
-    for wid, ids in all_work_npc_set.items():
+    for wid, ids in rosters.items():
         for cid in ids:
             if cid not in cd:
                 violations.append((wid, cid, "不存在", None))
@@ -412,12 +405,12 @@ def check_island_08_all_work_npc_set_self_consistent() -> list[CheckFailure]:
                 violations.append(
                     (wid, cid, cd[cid].name, cd[cid].work.work_type)
                 )
-    if key_diff_missing or key_diff_extra or violations:
+    if key_diff_extra or violations:
         return [
             make_failure(
                 "ISLAND-08",
-                "岗位集合键完整、成员合法且与自身键自洽",
-                f"缺失的work_id={key_diff_missing}，多余的work_id={key_diff_extra}，"
+                "岗位名册的岗位合法、成员合法且与所在岗位自洽",
+                f"多余的work_id={key_diff_extra}，"
                 f"违规(work_id,cid,name,实际work_type)={violations}",
                 [v[1] for v in violations],
             )
@@ -433,19 +426,15 @@ def check_island_09_work_set_recompute() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验按当前在编名单逐人重算的岗位集合应与缓存一致。只能是告警，有两个合法漂移源：外交任免直接改
-        work.work_type却不调update_work_people()；离线角色留在集合里而重算式扫不到他。报告时按sp_flag把
+        校验按当前在编名单逐人重算的岗位集合应与岗位名册一致。只能是告警，有两个合法漂移源：外交任免直接改
+        work.work_type却不调update_work_people()；离线角色留在名册里而重算式扫不到他。报告时按sp_flag把
         "离线残留"与"面板漏刷新"分类
     """
     cache = cache_control.cache
-    ri = cache.rhodes_island
     cd = cache.character_data
-    all_work_npc_set = getattr(ri, "all_work_npc_set", None)
-    if not isinstance(all_work_npc_set, dict):
-        return []
     failures = []
     for wid in game_config.config_work_type:
-        cached_set = all_work_npc_set.get(wid, set())
+        cached_set = set(work.roster(wid))
         recompute_set = {
             cid
             for cid in cache.npc_id_got
@@ -474,45 +463,9 @@ def check_island_09_work_set_recompute() -> list[CheckFailure]:
     return failures
 
 
-@register_check("ISLAND-10", "在岗人数计数可由岗位集合重算")
-def check_island_10_work_people_now() -> list[CheckFailure]:
-    """
-    参数:
-        无
-    返回值:
-        List[CheckFailure]: 失败记录列表
-    功能:
-        校验work_people_now必须等于所有非0岗位集合的规模之和。两者只由同一轮循环写入，不受面板触发式刷新
-        影响。已知唯一破口：角色id重映射把两个旧id映到同一新id时集合会缩、计数不缩——正是要抓的真问题
-    """
-    cache = cache_control.cache
-    ri = cache.rhodes_island
-    all_work_npc_set = getattr(ri, "all_work_npc_set", None)
-    if not isinstance(all_work_npc_set, dict):
-        return []
-    recompute = sum(
-        len(ids) for wid, ids in all_work_npc_set.items() if wid != 0
-    )
-    work_people_now = getattr(ri, "work_people_now", None)
-    if work_people_now != recompute:
-        per_set = {
-            wid: len(ids) for wid, ids in all_work_npc_set.items() if wid != 0
-        }
-        return [
-            make_failure(
-                "ISLAND-10",
-                "在岗人数计数可由岗位集合重算",
-                f"ri.work_people_now={work_people_now}，重算值={recompute}，各非零岗位集合规模={per_set}",
-                [],
-            )
-        ]
-    return []
-
-
-# 四个岗位派生列表与对应的all_work_npc_set键，ISLAND-11/ISLAND-12共用
+# 三个岗位派生列表与对应的岗位id，ISLAND-11/ISLAND-12共用
 _WORK_LIST_FIELDS = (
     ("production_worker_ids", 121),
-    ("hr_operator_ids_list", 71),
     ("herb_garden_operator_ids", 161),
     ("green_house_operator_ids", 162),
 )
@@ -526,16 +479,13 @@ def check_island_11_work_lists_superset() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验四个岗位派生列表引用合法、无重复、不漏在岗者。列表成员必须是存在的角色，且岗位与列表对应。
-        每个列表必须包含对应岗位集合的全部成员，漏人是真bug。四个列表都只断言超集，不报多出的成员。
+        校验三个岗位派生列表引用合法、无重复、不漏在岗者。列表成员必须是存在的角色，且岗位与列表对应。
+        每个列表必须包含对应岗位名册的全部成员，漏人是真bug。三个列表都只断言超集，不报多出的成员。
         多出来的是离线残留，合法可达，交给ISLAND-12
     """
     cache = cache_control.cache
     ri = cache.rhodes_island
     cd = cache.character_data
-    all_work_npc_set = getattr(ri, "all_work_npc_set", None)
-    if not isinstance(all_work_npc_set, dict):
-        return []
     failures = []
     for field, wid in _WORK_LIST_FIELDS:
         lst = getattr(ri, field, None)
@@ -551,7 +501,7 @@ def check_island_11_work_lists_superset() -> list[CheckFailure]:
             for cid in lst
             if cid not in cd or cd[cid].work.work_type != wid
         ]
-        expected = all_work_npc_set.get(wid, set())
+        expected = set(work.roster(wid))
         missing = expected - set(lst)
         if dup or mismatched or missing:
             detail = [
@@ -578,22 +528,19 @@ def check_island_12_work_lists_stale_members() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        [warning] 校验四个增量维护的岗位列表应与对应岗位集合严格相等。出现多余成员说明列表在两次刷新之间
+        [warning] 校验三个增量维护的岗位列表应与对应岗位名册严格相等。出现多余成员说明列表在两次刷新之间
         滞后于成员实际状态。日结时update_work_people()会整体重置并按在编角色重建这些列表，本条覆盖的是
         两次重建之间可能出现的瞬态漂移
     """
     cache = cache_control.cache
     ri = cache.rhodes_island
     cd = cache.character_data
-    all_work_npc_set = getattr(ri, "all_work_npc_set", None)
-    if not isinstance(all_work_npc_set, dict):
-        return []
     failures = []
     for field, wid in _WORK_LIST_FIELDS:
         lst = getattr(ri, field, None)
         if not isinstance(lst, list):
             continue
-        expected = all_work_npc_set.get(wid, set())
+        expected = set(work.roster(wid))
         stale = set(lst) - expected
         if not stale:
             continue
@@ -751,7 +698,7 @@ def check_island_15_line_main_operator() -> list[CheckFailure]:
         121: getattr(ri, "production_worker_ids", []),
         161: getattr(ri, "herb_garden_operator_ids", []),
         162: getattr(ri, "green_house_operator_ids", []),
-        71: getattr(ri, "hr_operator_ids_list", []),
+        71: work.roster(work.HR_WORK),
     }
     line_defs = (
         (getattr(ri, "assembly_line", None), 1, 121, "assembly_line"),
@@ -908,7 +855,7 @@ def check_island_17_dormitory_manager_work_type_and_layers() -> (
                 "ISLAND-17",
                 "宿舍管理员岗位联动与层键覆盖",
                 f"[warning] 管理员岗位不为31的(layer,manager_id,name,实际work_type)={mismatched}，"
-                f"all_work_npc_set.get(31)={getattr(ri, 'all_work_npc_set', {}).get(31)}",
+                f"work.roster(31)={work.roster(31)}",
                 [m for _layer, m, _n, _w in mismatched],
             )
         )
@@ -1519,7 +1466,6 @@ def check_island_28_main_power_operator_slots() -> list[CheckFailure]:
         不要求角色在 npc_id_got 里，派外勤的调控员保留岗位与槽位
     """
     cache = cache_control.cache
-    ri = cache.rhodes_island
     cd = cache.character_data
     slots = power.plant()["main_operators"]
     if len(slots) != 4:
@@ -1549,7 +1495,7 @@ def check_island_28_main_power_operator_slots() -> list[CheckFailure]:
                 "ISLAND-28",
                 "主供能调控员槽位有效且不重复",
                 f"四槽全量={slots}，重复占用cid={sorted(dup)}，非法槽位cid={illegal}，明细={detail}，"
-                f"all_work_npc_set.get(11)={getattr(ri, 'all_work_npc_set', {}).get(11)}",
+                f"work.roster(11)={work.roster(11)}",
                 sorted(set(dup) | set(illegal)),
             )
         ]
@@ -1564,14 +1510,14 @@ def check_island_29_warden_and_prisoners() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验current_warden_id为0或指向一名存在的、work.work_type==191的角色；每个囚犯id必须存在，逃脱概率
+        校验监狱长（work.warden）为0或指向一名存在的、work.work_type==191的角色；每个囚犯id必须存在，逃脱概率
         落在0..100。去掉了"在npc_id_got"子句——监狱长可能被关押或逃脱而离线，此时work_type仍是191，引用合法
     """
     cache = cache_control.cache
     ri = cache.rhodes_island
     cd = cache.character_data
     failures = []
-    warden_id = getattr(ri, "current_warden_id", 0)
+    warden_id = work.warden()
     if warden_id != 0 and not (
         warden_id in cd and cd[warden_id].work.work_type == 191
     ):
@@ -1584,7 +1530,7 @@ def check_island_29_warden_and_prisoners() -> list[CheckFailure]:
             make_failure(
                 "ISLAND-29",
                 "监狱长引用与囚犯数据自洽",
-                f"ri.current_warden_id={warden_id}({_chara_name(cd, warden_id)})不是合法监狱长引用，"
+                f"work.warden()={warden_id}({_chara_name(cd, warden_id)})不是合法监狱长引用，"
                 f"实际work_type={ch_work and ch_work.work_type}，{_sp_flag_brief(ch)}，"
                 f"实际work_type==191的角色列表={actual_wardens}",
                 [warden_id],

@@ -16,7 +16,7 @@ from Script.Design import basement, handle_premise, map_handle
 from Script.System.Dormitory_System import common
 from Script.UI.Moudle import draw, view
 from Script.Config import normal_config
-from Script.Modules.domains import facility
+from Script.Modules.domains import facility, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -326,8 +326,7 @@ class Manage_Dormitory_Panel:
 
         # 显示已被任命为宿舍管理员，但是还没有被分配层级的干员
         manager_pool = sorted(
-            list(cache.rhodes_island.all_work_npc_set.get(31, set())),
-            key=lambda x: cache.character_data[x].adv,
+            work.roster(31), key=lambda x: cache.character_data[x].adv
         )
         now_text = _("\n 以下干员已被任命为宿舍管理员，但尚未分配管理层级：")
         unassigned_managers = []
@@ -685,8 +684,7 @@ class Manage_Dormitory_Panel:
 
             basement.update_work_people()
             manager_pool = sorted(
-                list(cache.rhodes_island.all_work_npc_set.get(31, set())),
-                key=lambda x: cache.character_data[x].adv,
+                work.roster(31), key=lambda x: cache.character_data[x].adv
             )
 
             info_draw = draw.NormalDraw()

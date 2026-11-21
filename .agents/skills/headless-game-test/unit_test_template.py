@@ -292,7 +292,7 @@ random.randint = _orig_randint
 
 # 5.7 面板/事件级测试的打桩组见 SKILL.md「面板 / 事件级测试」：
 #     直接调面板的 _draw_xxx_content() 而非 .draw()；input_name_func / achievement_flow / get_new_character 打桩；
-#     cache.npc_id_got 非空且有 profession=3 的角色；cache.rhodes_island.all_work_npc_set.setdefault(151, set())
+#     cache.npc_id_got 非空且有 profession=3 的角色
 
 # ==== 6. 汇总 ====
 print()

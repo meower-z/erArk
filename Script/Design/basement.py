@@ -12,7 +12,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle
 from Script.UI.Moudle import draw
 from Script.Design import game_time
-from Script.Modules.domains import economy, facility, power
+from Script.Modules.domains import economy, facility, power, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏内缓存数据 """
@@ -45,10 +45,6 @@ def get_base_zero() -> game_type.Rhodes_Island:
     # 派对设为空
     for i in range(7):
         base_data.party_day_of_week[i] = 0
-
-    # 工作干员合集设为空
-    for all_cid in game_config.config_work_type:
-        base_data.all_work_npc_set[all_cid] = set()
 
     # 位置设为炎国
     base_data.current_location = [17, 1701]
@@ -458,15 +454,13 @@ def update_work_people() -> None:
     """
     from Script.System.Medical_System import medical_constant, medical_service
 
-    # 初始化各职位的干员集合
-    cache.rhodes_island.work_people_now = 0
-    for all_cid in game_config.config_work_type:
-        cache.rhodes_island.all_work_npc_set[all_cid] = set()
+    # 各岗位的干员名单，按遍历在编干员的顺序重建
+    rosters: dict[int, list[int]] = {}
+    warden_id = work.warden()
     # 重置各岗位当前人员名单，后续按在编角色重建
     cache.rhodes_island.production_worker_ids = []
     cache.rhodes_island.herb_garden_operator_ids = []
     cache.rhodes_island.green_house_operator_ids = []
-    cache.rhodes_island.hr_operator_ids_list = []
 
     clinic_doctors = []
     hospital_doctors = []
@@ -530,17 +524,14 @@ def update_work_people() -> None:
             if c.work.work_type != 162:
                 cache.rhodes_island.green_house_line[gh_line_id][1] = 0
 
-    # 遍历所有干员，将有职位的干员加入对应职位集合
+    # 遍历在编干员，把每人加进所在岗位的名单（无岗位的进岗位 0）
     cache.npc_id_got.discard(0)
     for chara_id in cache.npc_id_got:
         character_data = cache.character_data[chara_id]
         work_type = character_data.work.work_type
 
-        # 如果干员有职位，将干员加入对应职位集合
+        rosters.setdefault(work_type, []).append(chara_id)
         if work_type:
-            cache.rhodes_island.all_work_npc_set[work_type].add(chara_id)
-            cache.rhodes_island.work_people_now += 1
-
             # 外交官丢失了驻在国信息时的数据修复
             if (
                 work_type == 131
@@ -580,10 +571,6 @@ def update_work_people() -> None:
                         chara_id
                     )
 
-        else:
-            cache.rhodes_island.all_work_npc_set[0].add(chara_id)
-        # print(f"debug cache.base_resouce.all_work_npc_set = {cache.base_resouce.all_work_npc_set}")
-
         if work_type == clinic_work_id:
             clinic_doctors.append(chara_id)
             clinic_power_total += float(
@@ -611,14 +598,6 @@ def update_work_people() -> None:
             if chara_id in cache.rhodes_island.maintenance_equipment_chara_id:
                 cache.rhodes_island.maintenance_equipment_chara_id.pop(chara_id)
 
-        # 招聘专员列表维护
-        if work_type == 71:
-            if chara_id not in cache.rhodes_island.hr_operator_ids_list:
-                cache.rhodes_island.hr_operator_ids_list.append(chara_id)
-        else:
-            if chara_id in cache.rhodes_island.hr_operator_ids_list:
-                cache.rhodes_island.hr_operator_ids_list.remove(chara_id)
-
         # 如果是工人，则加入工人列表
         if work_type == 121:
             if chara_id not in cache.rhodes_island.production_worker_ids:
@@ -630,8 +609,10 @@ def update_work_people() -> None:
 
         # 如果是监狱长，则更新监狱长id
         if work_type == 191:
-            cache.rhodes_island.current_warden_id = chara_id
+            warden_id = chara_id
 
+    work.set_rosters(rosters)
+    work.set_warden(warden_id)
     clinic_doctors.sort()
     hospital_doctors.sort()
     medical_service.update_doctor_assignments(
