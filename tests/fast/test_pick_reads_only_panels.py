@@ -22,7 +22,7 @@ from Script.System.Cooking_System import cooking, make_food_panel
 from Script.System.Instruct_System import handle_instruct
 from Script.System.Pregnancy_System import egg_handle, pregnancy_handle
 from Script.UI.Panel import gift_panel, play_gomoku_panel, talent_up_panel
-from tests import pick_guard
+from tests import chara_abilities as ca, pick_guard
 from tests import world as world_module
 from tests.fast.base import FastTestCase
 from Script.UI.Moudle import view
@@ -257,10 +257,11 @@ class PanelSubMenusReadOnly(FastTestCase):
 
     def test_talent_up(self) -> None:
         """素质升级：确定后才在 1 分钟等待开始时获得素质"""
+        talent = ca.talent(NPC)
         talent_id = next(
             gain.talent_id
             for gain in game_config.config_talent_gain.values()
-            if not self.cache.character_data[NPC].talent[gain.talent_id]
+            if not talent[gain.talent_id]
             and gain.talent_id not in {201, 211, 203, 213}
         )
         panel = object.__new__(talent_up_panel.Character_talent_show_Text)
@@ -270,7 +271,7 @@ class PanelSubMenusReadOnly(FastTestCase):
             (behavior.behavior_id, behavior.duration),
             (constant.Behavior.WAIT, 1),
         )
-        self.assertEqual(self.cache.character_data[NPC].talent[talent_id], 1)
+        self.assertEqual(talent[talent_id], 1)
 
     def food_button(
         self, seasoning: int, cook_mode: int

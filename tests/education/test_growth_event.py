@@ -36,7 +36,7 @@ from Script.System.Pregnancy_System import pregnancy_constant
 import inspect
 from Script.Design import talk
 from Script.Settle import past_day_settle
-from tests import kernel_data
+from tests import chara_abilities as ca, kernel_data
 from Script.Modules.domains import official
 from collections.abc import Callable
 import _bootstrap as _boot
@@ -1093,7 +1093,7 @@ for _uid in ("婴儿5", "通用27", "通用16", "期末1"):
     push_event(_uid, 215)
 push_event("婴儿5", 204)
 push_event(loli_bucket[0], 201)
-growing.talent[101], growing.talent[102] = 0, 1
+ca.talent(growing)[101], ca.talent(growing)[102] = (0, 1)
 _dropped = drop_stale(215)
 _left = queue_pair_list()
 check(
@@ -1117,7 +1117,7 @@ check(
     drop_stale(215) == 0 and queue_pair_list() == _left,
 )
 push_event(child_bucket[0], 215)
-growing.talent[102], growing.talent[103] = 0, 1
+ca.talent(growing)[102], ca.talent(growing)[103] = (0, 1)
 _dropped = drop_stale(215)
 _left_215 = [one[0] for one in queue_pair_list() if one[1] == 215]
 check(
@@ -1127,7 +1127,7 @@ check(
 )
 for _uid in (loli_bucket[0], "期末3", E.GRADUATION_EVENT_UID):
     push_event(_uid, 215)
-growing.talent[103], growing.talent[104] = 0, 1
+ca.talent(growing)[103], ca.talent(growing)[104] = (0, 1)
 _dropped = drop_stale(215)
 _left_215 = [one[0] for one in queue_pair_list() if one[1] == 215]
 check(
@@ -1158,8 +1158,8 @@ check(
         "L16 幼女长成萝莉（pregnancy_handle.check_grow_to_loli）：素质已换成萝莉，幼女桶的与前提写着不派萝莉的通用 27 "
         "清掉，通用 16 照留"
     ),
-    to_loli.talent[103] == 1
-    and to_loli.talent[102] == 0
+    ca.talent(to_loli)[103] == 1
+    and ca.talent(to_loli)[102] == 0
     and queue_pair_list() == [("通用16", 216)],
     queue_pair_list(),
 )
@@ -1179,7 +1179,7 @@ check(
         "L16 萝莉成年（pregnancy_handle.check_grow_to_girl）：残留的萝莉桶、通用桶与前提写着只派萝莉的期末 3 清掉，"
         "期末 1 照留；毕业典礼在队首、成年纪念紧随，通用 59 / 60 在队尾"
     ),
-    to_girl.talent[104] == 1
+    ca.talent(to_girl)[104] == 1
     and queue_pair_list()[0] == (E.GRADUATION_EVENT_UID, 217)
     and _left_217
     == [E.GRADUATION_EVENT_UID, E.ADULT_MEMORIAL_EVENT_UID, "期末1"]

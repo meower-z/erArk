@@ -99,7 +99,9 @@ class NpcIntentsPureTest(FastTestCase):
             core.GameState(
                 self.clock,
                 MappingProxyType({}),
-                MappingProxyType({actions.TICKED: self.clock - 2}),
+                MappingProxyType(
+                    {**core.state().data, actions.TICKED: self.clock - 2}
+                ),
             )
         )
 

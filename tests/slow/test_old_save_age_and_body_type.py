@@ -15,7 +15,7 @@ import importlib
 import shutil
 from typing import TYPE_CHECKING
 
-from tests import kernel_data as kd
+from tests import chara_abilities as ca, kernel_data as kd
 from tests.slow.base import SlowTestCase
 
 if TYPE_CHECKING:
@@ -83,12 +83,12 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         daughter_id = kd.born(mother_id, name)
         daughter = self.cache.character_data[daughter_id]
         for talent_id in (101, 102, 103, 104, 6, 7):
-            daughter.talent[talent_id] = 0
-        daughter.talent[stage] = 1
+            ca.talent(daughter_id)[talent_id] = 0
+        ca.talent(daughter_id)[stage] = 1
         if stage <= 102:
-            daughter.talent[6] = 1
+            ca.talent(daughter_id)[6] = 1
         if stage <= 103:
-            daughter.talent[7] = 1
+            ca.talent(daughter_id)[7] = 1
         if stage >= 102:
             daughter.work.work_type = 152
         daughter.child_growth = game_type.CHILD_GROWTH()
@@ -116,7 +116,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         ]
         # 世界设定1开局时把104~107换成103
         for cid in static_id_list:
-            talent = cache.character_data[cid].talent
+            talent = ca.talent(cid)
             for talent_id in (104, 105, 106, 107):
                 if talent.get(talent_id, 0):
                     talent[talent_id] = 0
@@ -127,9 +127,9 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             for cid in static_id_list
             if cache.character_data[cid].adv == MINOR_OPERATOR_ADV
         ][0]
-        cache.character_data[minor_id].talent[6] = 1
-        cache.character_data[minor_id].talent[7] = 1
-        del cache.character_data[minor_id].talent[28]
+        ca.talent(minor_id)[6] = 1
+        ca.talent(minor_id)[7] = 1
+        del ca.talent(minor_id)[28]
         cache.character_data[minor_id].item[31] = 1
         shrink_id = min(
             cid
@@ -145,9 +145,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             "minor": minor_id,
             "shrink": shrink_id,
             "shrunk": {
-                cid
-                for cid in static_id_list
-                if cache.character_data[cid].talent.get(103, 0)
+                cid for cid in static_id_list if ca.talent(cid).get(103, 0)
             },
         }
         for stage in (101, 102, 103, 104):
@@ -303,7 +301,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         child.child_growth.skip_class_day = game_time.now().toordinal()
         # 103的学员：未初潮、未成年、在见学，有课表；毕业的女儿：有听课与成绩单记录
         student = cache.character_data[id_dict["d103"]]
-        student.talent[6] = 1
+        ca.talent(student)[6] = 1
         assert student.child_growth is not None
         student.child_growth.follow_mother_flag = True
         student.child_growth.selected_course = {
@@ -345,7 +343,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         baby.sp_flag.go_to_join_group_sex = True
         baby.target_character_id = 0
         for talent_id in (20, 21, 27):
-            baby.talent[talent_id] = 1
+            ca.talent(baby)[talent_id] = 1
         kd.set_needs(baby.cid, milk=50)
         baby.pregnancy.lactation_flag = True
         baby.pregnancy.fertilization_rate = 30
@@ -361,7 +359,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         id_dict["baby_born_time"] = game_time.now()
         mother = cache.character_data[mother_id]
         for talent_id in (23, 24, 27):
-            mother.talent[talent_id] = 1
+            ca.talent(mother_id)[talent_id] = 1
         kd.set_needs(mother_id, milk=80)
         id_dict["mother"] = mother_id
         return id_dict
@@ -410,7 +408,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         for cid, chara in self.cache.character_data.items():
             growth = chara.child_growth
             snapshot[cid] = (
-                dict(chara.talent),
+                dict(ca.talent(chara)),
                 dict(chara.item),
                 chara.behavior.behavior_id,
                 chara.state,
@@ -485,12 +483,12 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             stage_list = [
                 talent_id
                 for talent_id in STAGE_TALENT_TUPLE
-                if chara.talent.get(talent_id, 0)
+                if ca.talent(chara).get(talent_id, 0)
             ]
             body_list = [
                 talent_id
                 for talent_id in BODY_TALENT_TUPLE
-                if chara.talent.get(talent_id, 0)
+                if ca.talent(chara).get(talent_id, 0)
             ]
             self.assertFalse(
                 chara.item.get(31, 0) or chara.item.get(32, 0),
@@ -513,7 +511,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                     f"角色{cid}的娱乐槽位{value}应在 Entertainment.csv 里",
                 )
             self.assertEqual(
-                chara.talent.keys(),
+                ca.talent(chara).keys(),
                 game_config.config_talent.keys(),
                 f"角色{cid}读档后的素质键应与素质表的键相同",
             )
@@ -533,7 +531,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             [
                 t
                 for t in BODY_TALENT_TUPLE
-                if cache.character_data[id_dict["shrink"]].talent.get(t, 0)
+                if ca.talent(id_dict["shrink"]).get(t, 0)
             ],
             "世界设定1缩小的干员应取回模板的体型",
         )
@@ -541,23 +539,24 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             [
                 t
                 for t in BODY_TALENT_TUPLE
-                if cache.character_data[id_dict["minor"]].talent.get(t, 0)
+                if ca.talent(id_dict["minor"]).get(t, 0)
             ],
             [104],
             "持有103的静态干员应持有少女",
         )
         for stage in (101, 102, 103):
-            daughter = cache.character_data[id_dict[f"d{stage}"]]
+            daughter_talent = ca.talent(id_dict[f"d{stage}"])
             self.assertEqual(
-                [t for t in STAGE_TALENT_TUPLE if daughter.talent.get(t, 0)],
+                [t for t in STAGE_TALENT_TUPLE if daughter_talent.get(t, 0)],
                 [stage],
                 f"{stage}阶段的女儿应保留成长阶段",
             )
         graduate = cache.character_data[id_dict["d104"]]
+        graduate_talent = ca.talent(graduate)
         self.assertEqual(
             (
-                [t for t in STAGE_TALENT_TUPLE if graduate.talent.get(t, 0)],
-                graduate.talent.get(104, 0),
+                [t for t in STAGE_TALENT_TUPLE if graduate_talent.get(t, 0)],
+                graduate_talent.get(104, 0),
             ),
             ([], 1),
             "毕业的女儿保持少女",
@@ -663,7 +662,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             [
                 talent_id
                 for talent_id in (20, 21, 22, 23, 24, 25, 26, 27, 32, 35)
-                if baby.talent.get(talent_id, 0)
+                if ca.talent(baby).get(talent_id, 0)
             ],
             [],
             "101的婴儿没有妊娠与泌乳素质",
@@ -798,7 +797,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         mother = cache.character_data[id_dict["mother"]]
         self.assertEqual(
             (
-                [mother.talent.get(talent_id, 0) for talent_id in (23, 24, 27)],
+                [ca.talent(mother).get(t, 0) for t in (23, 24, 27)],
                 kd.needs_of(mother.cid)["milk"],
             ),
             ([1, 1, 1], 80),
@@ -981,12 +980,12 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             if self._template_body(cache.character_data[cid].adv)
             in ([105], [106])
         )
-        talent = cache.character_data[operator_id].talent
+        talent = ca.talent(operator_id)
         for talent_id in BODY_TALENT_TUPLE:
             talent[talent_id] = 0
         talent[103] = 1
         self._save_and_load()
-        talent = cache.character_data[operator_id].talent
+        talent = ca.talent(operator_id)
         self.assertEqual(
             [
                 t

@@ -11,6 +11,7 @@
 """
 
 from tests.slow.base import SlowTestCase
+from tests import chara_abilities as ca
 
 AGE_TALENTS = range(101, 109)
 """ 年龄素质 """
@@ -101,15 +102,14 @@ class InstructTypeFilterKeptTest(SlowTestCase):
         int -- 角色id
         """
         chara_id = self.npc(name)
-        chara = self.cache.character_data[chara_id]
         if kind == "临盆":
-            chara.talent[22] = 1
+            ca.talent(chara_id)[22] = 1
         elif kind == "产后":
-            chara.talent[23] = 1
+            ca.talent(chara_id)[23] = 1
         else:
             for talent_id in AGE_TALENTS:
-                chara.talent[talent_id] = 0
-            chara.talent[{"婴儿": 101, "幼女": 102}[kind]] = 1
+                ca.talent(chara_id)[talent_id] = 0
+            ca.talent(chara_id)[{"婴儿": 101, "幼女": 102}[kind]] = 1
         self.world.move(chara_id, self.pl.position)
         return chara_id
 

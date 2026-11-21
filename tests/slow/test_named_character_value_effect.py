@@ -7,6 +7,7 @@
 """
 
 from tests.slow.base import SlowTestCase
+from tests import chara_abilities as ca, kernel_data
 
 
 class NamedCharacterValueEffectTest(SlowTestCase):
@@ -46,18 +47,21 @@ class NamedCharacterValueEffectTest(SlowTestCase):
             """
             before = [
                 npc.status_data.get(status_id, 0),
-                npc.ability.get(ability_id, 0),
-                npc.experience.get(experience_id, 0),
+                ca.ability(npc).get(ability_id, 0),
+                ca.experience(npc).get(experience_id, 0),
             ]
             change_data = game_type.CharacterStatusChange()
             for effect in effect_list:
-                settle_behavior.handle_comprehensive_value_effect(
-                    0, [subject] + effect, change_data
+                kernel_data.written(
+                    settle_behavior.handle_comprehensive_value_effect,
+                    0,
+                    [subject] + effect,
+                    change_data,
                 )
             after = [
                 npc.status_data.get(status_id, 0),
-                npc.ability.get(ability_id, 0),
-                npc.experience.get(experience_id, 0),
+                ca.ability(npc).get(ability_id, 0),
+                ca.experience(npc).get(experience_id, 0),
             ]
             record = change_data.target_change[npc_id]
             return [

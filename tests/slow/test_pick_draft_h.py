@@ -15,6 +15,7 @@ from collections.abc import Callable, Mapping
 from typing import cast
 
 from tests.slow.base import SlowTestCase
+from tests import chara_abilities as ca
 
 
 class PickDraftHTest(SlowTestCase):
@@ -296,7 +297,7 @@ class PickDraftHTest(SlowTestCase):
         pl.target_character_id = 0
         cid = min(c for c in game_config.config_hypnosis_type if c > 0)
         type_data = game_config.config_hypnosis_type[cid]
-        pl.talent[type_data.talent_id] = 1
+        ca.talent(0)[type_data.talent_id] = 1
         pl.pl_ability.hypnosis_type = 0
         show = self.panel(constant.Panel.CHANGE_HYPNOSIS_MODE)
 

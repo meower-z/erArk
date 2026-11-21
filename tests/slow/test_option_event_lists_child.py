@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 
 from tests.slow.base import SlowTestCase
 from tests.world import UnplannedInput
+from tests import chara_abilities as ca
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -56,7 +57,7 @@ class OptionEventListsChildTest(SlowTestCase):
         npc = self.cache.character_data[npc_id]
         self.cache.npc_id_got.add(npc_id)
         self.world.move(npc_id, player.position)
-        npc.talent[FALL_3_TALENT] = 1
+        ca.talent(npc_id)[FALL_3_TALENT] = 1
         npc.favorability[0] = FAVORABILITY
         npc.trust = TRUST
         player.target_character_id = npc_id
@@ -143,7 +144,7 @@ class OptionEventListsChildTest(SlowTestCase):
             game_config.config_event[CHILD_ID].text.split("|")[0], 0
         )
         fired, offered = self._record()
-        before = (npc.juel.get(0, 0), npc.experience.get(0, 0))
+        before = (ca.juel(npc).get(0, 0), ca.experience(npc).get(0, 0))
         for _ in range(TRIES):
             # 聊天次数超过上限时，聊天指令走聊天失败行为
             npc.action_info.talk_count = 0
@@ -151,7 +152,7 @@ class OptionEventListsChildTest(SlowTestCase):
             offered.clear()
             self.world.player.planned.clear()
             self.world.player.press(label)
-            before = (npc.juel.get(0, 0), npc.experience.get(0, 0))
+            before = (ca.juel(npc).get(0, 0), ca.experience(npc).get(0, 0))
             try:
                 self.instruct(constant.Instruct.CHAT)
             except UnplannedInput:
@@ -162,7 +163,7 @@ class OptionEventListsChildTest(SlowTestCase):
         self.assertIn(PARENT_ID, fired, f"聊天 {TRIES} 次，父事件都没有触发")
         self.assertIn(CHILD_ID, offered, "父事件的选项面板列出的子事件")
         self.world.player.check_done()
-        after = (npc.juel.get(0, 0), npc.experience.get(0, 0))
+        after = (ca.juel(npc).get(0, 0), ca.experience(npc).get(0, 0))
         self.assertEqual(
             after[0] - before[0], 1, f"皮肤快感珠：{before} -> {after}"
         )

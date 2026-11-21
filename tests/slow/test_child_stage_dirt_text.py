@@ -10,6 +10,7 @@
 """
 
 from tests.slow.base import SlowTestCase
+from tests import chara_abilities as ca
 
 BABY = 101
 """ 婴儿素质：差分文本表里没有她的行 """
@@ -62,7 +63,9 @@ class ChildStageDirtTextTest(SlowTestCase):
         from Script.UI.Panel import dirty_panel
 
         for age_talent in AGE_TALENT_LIST:
-            self.target.talent[age_talent] = 1 if age_talent == talent_id else 0
+            ca.talent(self.target)[age_talent] = (
+                1 if age_talent == talent_id else 0
+            )
         for part_id in AGE_PART_LIST:
             self.target.dirty.body_semen[part_id][2] = semen_level
         panel = dirty_panel.SeeCharacterBodyPanel(

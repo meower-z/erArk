@@ -31,7 +31,7 @@ from _bootstrap import (
     sex_class_handle,
 )
 import inspect
-from tests import kernel_data
+from tests import chara_abilities as ca, kernel_data
 from Script.Modules.domains import library
 
 section("教室列表与开放判定")
@@ -648,18 +648,18 @@ if _hard_book is not None:
     _hard_ability = game_config.config_book_type[
         game_config.config_book[_hard_book].type
     ].ability_id
-    _hard_level = _reader.ability.get(_hard_ability, 0)
-    _reader.ability[_hard_ability] = 0
+    _hard_level = ca.ability(201).get(_hard_ability, 0)
+    ca.ability(201)[_hard_ability] = 0
     check(
         "只剩一本能力不够读的书：不成立（与 check_random_borrow_book 的筛选同口径）",
         not schedule_handle.judge_personal_course_valid(201, read_course),
     )
-    _reader.ability[_hard_ability] = 6
+    ca.ability(201)[_hard_ability] = 6
     check(
         "能力够了：成立",
         schedule_handle.judge_personal_course_valid(201, read_course),
     )
-    _reader.ability[_hard_ability] = _hard_level
+    ca.ability(201)[_hard_ability] = _hard_level
 check(
     "判定不写数据：没借书、书库借出状态没被改",
     not _reader.entertainment.borrow_book_id_set

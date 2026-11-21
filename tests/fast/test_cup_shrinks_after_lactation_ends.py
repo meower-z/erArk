@@ -16,7 +16,7 @@ from Script.Modules.domains import needs
 from Script.Modules.gameplay_resolution import working
 from Script.UI.Panel import gift_panel
 from tests.fast.base import FastTestCase
-from tests import kernel_data
+from tests import chara_abilities as ca, kernel_data
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -53,8 +53,8 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
         """
         cd = self.world.chara(cid, f"干员{cid}")
         for talent_id in CUPS:
-            cd.talent[talent_id] = 0
-        cd.talent[cup] = 1
+            ca.talent(cd)[talent_id] = 0
+        ca.talent(cd)[cup] = 1
         kernel_data.set_milk_max(cd.cid, 190)
         return cd
 
@@ -83,7 +83,9 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
         """
         handle_talent.npc_b_talent_change_for_lactation_flag(cid)
         cd = self.cache.character_data[cid]
-        return [t for t in CUPS if cd.talent[t]], cd.pregnancy.lactation_flag
+        return [
+            t for t in CUPS if ca.talent(cid)[t]
+        ], cd.pregnancy.lactation_flag
 
     def test_stop_lactation_shrinks_cup_once(self) -> None:
         """涨奶后用停乳药：罩杯缩回涨奶前的大小，只缩一次"""
@@ -92,7 +94,7 @@ class CupShrinksAfterLactationEndsTest(FastTestCase):
         needs.set(cd.cid, milk=190)
         self.assertEqual(self.settle(1), ([123], True))
         gift_panel.handle_drug_use_effect(1, STOP_LACTATION_DRUG)
-        self.assertEqual(cd.talent[27], 0)
+        self.assertEqual(ca.talent(cd)[27], 0)
         self.assertEqual(self.settle(1), ([122], False))
         self.assertEqual(self.settle(1), ([122], False))
 

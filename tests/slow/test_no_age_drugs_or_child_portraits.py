@@ -12,7 +12,7 @@ import importlib
 import os
 import re
 
-from tests import kernel_data
+from tests import chara_abilities as ca, kernel_data
 from tests.slow.base import SlowTestCase
 from tests.world import ROOT
 
@@ -53,7 +53,8 @@ class NoAgeDrugsOrChildPortraitsTest(SlowTestCase):
 
         before = {
             cid: [
-                chara.talent.get(talent_id, 0) for talent_id in AGE_TALENT_IDS
+                ca.talent(chara).get(talent_id, 0)
+                for talent_id in AGE_TALENT_IDS
             ]
             for cid, chara in self.cache.character_data.items()
             if cid
@@ -74,7 +75,8 @@ class NoAgeDrugsOrChildPortraitsTest(SlowTestCase):
         character_handle.handle_character_setting()
         after = {
             cid: [
-                chara.talent.get(talent_id, 0) for talent_id in AGE_TALENT_IDS
+                ca.talent(chara).get(talent_id, 0)
+                for talent_id in AGE_TALENT_IDS
             ]
             for cid, chara in self.cache.character_data.items()
             if cid
@@ -108,8 +110,8 @@ class NoAgeDrugsOrChildPortraitsTest(SlowTestCase):
         for cid, chara in self.cache.character_data.items():
             if cid == 0:
                 continue
-            chara.talent[102] = 1
-            chara.talent[103] = 1
+            ca.talent(chara)[102] = 1
+            ca.talent(chara)[103] = 1
             picked[chara.name] = character_image.find_character_image_name(cid)
         self.assertIn(
             MOTHER_NAME, picked, f"开局的角色里没有{MOTHER_NAME}，用例不成立"

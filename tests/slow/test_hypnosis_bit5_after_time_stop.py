@@ -10,6 +10,7 @@
 """
 
 from tests.slow.base import SlowTestCase
+from tests import chara_abilities as ca
 
 ROOM = ["中枢", "会议室"]
 PRIMARY_HYPNOSIS = 331
@@ -29,9 +30,10 @@ class HypnosisBit5AfterTimeStopTest(SlowTestCase):
         from Script.Core import constant
         from Script.Design import handle_premise
 
+        talent = ca.talent(0)
         pl = self.cache.character_data[0]
-        pl.talent[PRIMARY_HYPNOSIS] = 1
-        pl.talent[PRIMARY_TIME_STOP] = 1
+        talent[PRIMARY_HYPNOSIS] = 1
+        talent[PRIMARY_TIME_STOP] = 1
         operator_id = self.npc("杜宾")
         operator = self.cache.character_data[operator_id]
         operator.hypnosis.hypnosis_degree = game_config.config_hypnosis_type[

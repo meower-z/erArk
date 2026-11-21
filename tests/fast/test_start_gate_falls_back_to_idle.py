@@ -22,7 +22,7 @@ from Script.Core import constant, constant_promise
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions, intent, start_gate
 from Script.Modules.domains import modes
-from tests import kernel_data
+from tests import chara_abilities as ca, kernel_data
 from tests.fast.base import FastTestCase
 
 AMIYA = 1
@@ -196,7 +196,7 @@ class StartGateTest(FastTestCase):
 
     def test_h_on_child_stage_target_falls_back_to_idle(self) -> None:
         """交互对象处于幼年阶段：接吻换成发呆"""
-        self.kaltsit.talent[CHILD] = 1
+        ca.talent(self.kaltsit)[CHILD] = 1
         self.assertEqual(
             self.started(self.start(AMIYA, 5), AMIYA)[:3],
             (constant.Behavior.SHARE_BLANKLY, 1, "child_stage"),
@@ -205,7 +205,7 @@ class StartGateTest(FastTestCase):
 
     def test_npc_does_not_take_kept_first_kiss(self) -> None:
         """干员2仍保有初吻：干员1的接吻换成发呆，玩家的接吻原样开始"""
-        self.kaltsit.talent[FIRST_KISS] = 1
+        ca.talent(self.kaltsit)[FIRST_KISS] = 1
         npc = self.started(self.start(AMIYA, 5), AMIYA)[:3]
         player = self.started(self.start(0, 5), 0)[:3]
         self.assertEqual(

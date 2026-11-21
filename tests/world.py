@@ -30,7 +30,7 @@ import sys
 import uuid
 from typing import TYPE_CHECKING
 
-from tests import kernel_data, outside_cache
+from tests import chara_abilities as ca, kernel_data, outside_cache
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -489,17 +489,14 @@ class MinimalWorld:
             for clothing_type, cloth_ids in STANDARD_OUTFIT.items():
                 cd.cloth.cloth_wear[clothing_type] = list(cloth_ids)
         cd.dirty = attr_calculation.get_zero_dirty()
-        cd.talent = attr_calculation.get_talent_zero({})
-        cd.ability = attr_calculation.get_ability_zero({})
         cd.status_data = attr_calculation.get_status_zero({})
-        cd.juel = attr_calculation.get_juel_zero({})
-        cd.experience = attr_calculation.get_experience_zero({})
         cd.second_behavior = attr_calculation.get_second_behavior_zero({})
         cd.h_state = attr_calculation.get_h_state_reset(cd.h_state)
         cd.body_manage = attr_calculation.get_body_manage_zero()
         cd.assistant_services = attr_calculation.get_assistant_services_zero()
         cd.favorability = {0: 0}
-        cd.talent[121] = 1
+        ca.zero_tables(cid)
+        ca.talent(cid)[121] = 1
         cd.dormitory = map_handle.get_map_system_path_str_for_list(
             DEFAULT_SCENE
         )

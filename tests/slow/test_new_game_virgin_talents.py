@@ -10,6 +10,7 @@
 import shutil
 
 from tests.slow.base import SlowTestCase
+from tests import chara_abilities as ca
 
 SAVE_ID = "test_new_game_virgin_talents"
 """ 本测试写入 save/ 的存档id，测试结束时删掉 """
@@ -38,10 +39,13 @@ class NewGameVirginTalentsTest(SlowTestCase):
     def test_new_game_virgin_talents(self) -> None:
         """开局时玩家以外的角色素质 0~4 都为 1"""
         lacking = sorted(
-            (chara.adv, [t for t in VIRGIN_TALENTS if chara.talent.get(t) != 1])
+            (
+                chara.adv,
+                [t for t in VIRGIN_TALENTS if ca.talent(chara).get(t) != 1],
+            )
             for cid, chara in self.cache.character_data.items()
             if cid != 0
-            and any(chara.talent.get(t) != 1 for t in VIRGIN_TALENTS)
+            and any(ca.talent(chara).get(t) != 1 for t in VIRGIN_TALENTS)
         )
         self.assertEqual(
             lacking, [], "开局时缺处女素质的角色（模板编号, 缺的素质）"
@@ -52,7 +56,7 @@ class NewGameVirginTalentsTest(SlowTestCase):
         from Script.Core import save_handle
 
         before = {
-            cid: dict(chara.talent)
+            cid: dict(ca.talent(chara))
             for cid, chara in self.cache.character_data.items()
         }
         save_handle.establish_save(SAVE_ID)
@@ -61,7 +65,7 @@ class NewGameVirginTalentsTest(SlowTestCase):
         )
         save_handle.input_load_save(SAVE_ID)
         after = {
-            cid: dict(chara.talent)
+            cid: dict(ca.talent(chara))
             for cid, chara in self.cache.character_data.items()
         }
         self.assertEqual(sorted(after), sorted(before), "读档后的角色id")

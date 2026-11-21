@@ -24,7 +24,7 @@ from unittest import mock
 from Script.Core import save_handle
 from Script.Kernel import core
 from Script.Modules import load_order
-from Script.Modules.domains import country, medical, physical_exam
+from Script.Modules.domains import abilities, country, medical, physical_exam
 from Script.Modules.domains import playthrough, warehouse
 from Script.Modules.gameplay_resolution import actions
 from Script.Modules.save_load import index, kernel_state, upgrade
@@ -152,8 +152,8 @@ class KernelStateTest(FastTestCase):
         """
         存档时难度 1 为 3、系统设置 1 号为 0。之后把难度改成 1、系统设置改成 1，再读档。
         难度回到 3，系统设置还是 1、还是同一个对象。
-        内核的 GameState 除去全局键 roster.offstage、医疗部的三个键与体检设置之外，与存档时相同。
-        医疗部的三个键与体检设置存档里没有，是读档修补补上的
+        内核的 GameState 除去全局键 roster.offstage、医疗部的三个键、体检设置与角色数据里 abilities 的四个键之外，
+        与存档时相同。这几项存档里没有，是读档修补补上的
         """
         self.world.chara(0, "博士")
         cache = self.cache
@@ -187,6 +187,14 @@ class KernelStateTest(FastTestCase):
             physical_exam.SETTING,
         ):
             data.pop(key, None)
+        tables = abilities.PICKLED.values()
+        characters = {
+            who: replace(
+                c, data={k: v for k, v in c.data.items() if k not in tables}
+            )
+            for who, c in loaded.characters.items()
+        }
+        loaded = replace(loaded, characters=MappingProxyType(characters))
         self.assertEqual(replace(loaded, data=MappingProxyType(data)), saved)
 
     def test_open_keys_load_and_no_end_runs_twice(self) -> None:

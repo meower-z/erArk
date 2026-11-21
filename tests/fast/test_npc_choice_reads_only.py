@@ -4,7 +4,8 @@ NPC 选行动的代码只读缓存
 ========================
 npc_action_choice 的代码（状态机、选目标、宿舍管理员的状态机、模块自己的文件）不写游戏状态：
 不给缓存或角色数据赋值，不调用会改变状态或嵌套结算的函数。状态机把选出的行动记进计划，由行动开始时写进缓存。
-写入的判定是静态的启发式：赋值或变更调用的目标链上有 cache 的属性，或有 Character 的字段名（基底不是 self）。
+写入的判定是静态的启发式：赋值或变更调用的目标链上有 cache 的属性，或有 Character 的字段名（基底不是 self），
+或目标链从 abilities.ability、experience、juel 或 talent 的调用开始。对这样一张表调用 merge 或 replace 也算写入。
 还没搬走的写入列在 REMAINING 里：某个函数不再写时要从表里删掉，表只减不增。
 """
 
@@ -30,6 +31,8 @@ MUTATORS = frozenset(
     }
 )
 """ 会改变容器的方法名 """
+TABLES = frozenset({"ability", "experience", "juel", "talent"})
+""" abilities 里交回角色一张表的函数名 """
 FORBIDDEN_CALLS = frozenset(
     {
         "general_movement_module",
@@ -163,6 +166,24 @@ def char_field(target: ast.AST, fields: frozenset[str]) -> str | None:
     return None
 
 
+def table_write(target: ast.AST) -> bool:
+    """
+    目标链是否从 abilities.ability、experience、juel 或 talent 的调用开始
+    Keyword arguments:
+    target -- 赋值目标或变更调用的对象
+    Return arguments:
+    bool -- 是时为 True
+    """
+    base = chain(target)[0]
+    return (
+        isinstance(base, ast.Call)
+        and isinstance(base.func, ast.Attribute)
+        and base.func.attr in TABLES
+        and isinstance(base.func.value, ast.Name)
+        and base.func.value.id == "abilities"
+    )
+
+
 def character_fields() -> frozenset[str]:
     """
     Character 在 __init__ 里设的字段名
@@ -216,10 +237,20 @@ def problems(tree: ast.AST, fields: frozenset[str]) -> list[str]:
             )
             if name in FORBIDDEN_CALLS or name.startswith("_set_"):
                 out.append(f"{line} 调用 {name}")
-            if isinstance(func, ast.Attribute) and func.attr in MUTATORS:
+            if isinstance(func, ast.Attribute) and (
+                func.attr in MUTATORS
+                or (
+                    func.attr in ("merge", "replace")
+                    and table_write(func.value)
+                )
+            ):
                 targets = [func.value]
         for target in targets:
-            if cache_attr(target) or char_field(target, fields):
+            if (
+                cache_attr(target)
+                or char_field(target, fields)
+                or table_write(target)
+            ):
                 out.append(f"{line} 写 {ast.unparse(target)}")
     return out
 

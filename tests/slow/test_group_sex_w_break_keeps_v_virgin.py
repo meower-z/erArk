@@ -17,6 +17,7 @@
 """
 
 from tests.slow.base import SlowTestCase
+from tests import chara_abilities as ca
 
 AMIYA_ID = 1
 """ 阿米娅的角色id """
@@ -55,9 +56,9 @@ class GroupSexWBreakKeepsVVirginTest(SlowTestCase):
         )
         amiya = self.cache.character_data[AMIYA_ID]
         for talent_id, value in enumerate((1, 1, 0, 0, 1)):
-            amiya.talent[talent_id] = value
+            ca.talent(AMIYA_ID)[talent_id] = value
         amiya.h_state.insert_position = 6
-        self.pl.ability[76] = 4
+        ca.ability(self.pl)[76] = 4
 
     def summon(self, chara_id: int, mode: tuple) -> None:
         """
@@ -113,7 +114,7 @@ class GroupSexWBreakKeepsVVirginTest(SlowTestCase):
 
     def test_without_v_virgin_lists_w_break(self) -> None:
         """素质0 与素质3 都没有：会列出带 W 的破处行为"""
-        self.cache.character_data[AMIYA_ID].talent[0] = 0
+        ca.talent(AMIYA_ID)[0] = 0
         listed = self.w_break_listed()
         self.assertNotEqual(
             [behavior_id for ids in listed.values() for behavior_id in ids],

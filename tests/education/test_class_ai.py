@@ -48,7 +48,7 @@ from Script.System.Pregnancy_System import pregnancy_constant
 from typing import TYPE_CHECKING
 from Script.Kernel import core
 from Script.Modules.domains import achievement, modes, plan, physical_exam as px
-from tests import kernel_data, world
+from tests import chara_abilities as ca, kernel_data, world
 from Script.Modules.domains import library
 
 if TYPE_CHECKING:
@@ -321,12 +321,12 @@ cache.npc_id_got.discard(101)
 check("不在岛上（不在 npc_id_got）不可用", not teacher_available())
 cache.npc_id_got.add(101)
 # Plan 24 §3.4：教师目标行挂着 normal 前提，这些状态下她不会去授课，这里必须同步判为不可用
-teacher.talent[22] = 1
+ca.talent(teacher)[22] = 1
 check("临盆不可用（normal_2）", not teacher_available())
-teacher.talent[22] = 0
-teacher.talent[23] = 1
+ca.talent(teacher)[22] = 0
+ca.talent(teacher)[23] = 1
 check("产后不可用（normal_2）", not teacher_available())
-teacher.talent[23] = 0
+ca.talent(teacher)[23] = 0
 pl.assistant_character_id = 101
 check("当助理不可用（normal_3）", not teacher_available())
 pl.assistant_character_id = 0
@@ -1121,8 +1121,8 @@ move_to(101, classroom_path(ROOM1))
 move_to(201, classroom_path(ROOM1))
 _put = {True: px.add, False: px.discard}
 for _name, _toggle in (
-    ("临盆", lambda on: teacher.talent.__setitem__(22, 1 if on else 0)),
-    ("产后", lambda on: teacher.talent.__setitem__(23, 1 if on else 0)),
+    ("临盆", lambda on: ca.talent(teacher).__setitem__(22, 1 if on else 0)),
+    ("产后", lambda on: ca.talent(teacher).__setitem__(23, 1 if on else 0)),
     (
         "当助理",
         lambda on: setattr(pl, "assistant_character_id", 101 if on else 0),
@@ -1686,8 +1686,8 @@ check(
 schedule_handle.set_selected_course(
     201, 0, 0, E.COURSE_TYPE_INTEREST, NO_ENTERTAINMENT
 )
-student.talent[103] = 0
-student.talent[104] = 1
+ca.talent(student)[103] = 0
+ca.talent(student)[104] = 1
 set_time(period_time(0))
 check(
     "排着不存在的兴趣课：上课地点解析不出",
@@ -1699,8 +1699,8 @@ check(
     dispatch(201)
     not in (SM.EDUCATION_MOVE_TO_COURSE_PLACE, SM.EDUCATION_DO_COURSE),
 )
-student.talent[104] = 0
-student.talent[103] = 1
+ca.talent(student)[104] = 0
+ca.talent(student)[103] = 1
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_INTEREST, CHESS)
 set_time(period_time(0))
 check(
@@ -1936,8 +1936,8 @@ section(
 set_time(period_time(0))
 prepare_ai(201)
 prepare_ai(202)
-student.talent[103] = 0
-student.talent[104] = 1
+ca.talent(student)[103] = 0
+ca.talent(student)[104] = 1
 schedule_handle.set_selected_course(
     201, 0, 0, E.COURSE_TYPE_INTEREST, NO_ENTERTAINMENT
 )
@@ -1974,8 +1974,8 @@ check(
     "也不为它提前动身（到岗时间不算 UPCOMING）",
     class_ai.get_course_stage(201) == E.COURSE_STAGE_NONE,
 )
-student.talent[104] = 0
-student.talent[103] = 1
+ca.talent(student)[104] = 0
+ca.talent(student)[103] = 1
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_INTEREST, CHESS)
 set_time(period_time(0))
 check(
@@ -1987,8 +1987,8 @@ check(
     "整条链：715 去上课地点", dispatch(201) == SM.EDUCATION_MOVE_TO_COURSE_PLACE
 )
 schedule_handle.clear_selected_course(201, 0, 0)
-student.talent[103] = 0
-student.talent[104] = 1
+ca.talent(student)[103] = 0
+ca.talent(student)[104] = 1
 schedule_handle.set_selected_course(
     201, 0, 1, E.COURSE_TYPE_INTEREST, NO_ENTERTAINMENT
 )
@@ -2003,8 +2003,8 @@ check(
     "截短规则 B：下一节是上不成的兴趣课 → 不截（取数口已视为没课，class_ai 里删掉的重复判定不影响）",
     handle_npc_ai.judge_student_leave_truncate(201) == 0,
 )
-student.talent[104] = 0
-student.talent[103] = 1
+ca.talent(student)[104] = 0
+ca.talent(student)[103] = 1
 schedule_handle.set_selected_course(201, 0, 1, E.COURSE_TYPE_INTEREST, CHESS)
 begin(
     201,
@@ -3457,8 +3457,8 @@ _l10_expect = max(
 )
 """ 自习档的科目经验：自习基础值 × 自习的总倍率（无教师，速度系数恒为 1） """
 _l10_attend = child_g32.attend_class_count
-_l10_exp = child.experience.get(_l10_exp_id, 0)
-_l10_real = child.experience.get(_l10_real_exp_id, 0)
+_l10_exp = ca.experience(child).get(_l10_exp_id, 0)
+_l10_real = ca.experience(child).get(_l10_real_exp_id, 0)
 _l10_course = schedule_handle.get_now_course(202)
 check(
     (
@@ -3500,12 +3500,12 @@ check(
 )
 check(
     "L10 跑完：拿到自习档的科目经验——指技的理论经验加上自习基础值（× 自习倍率），真实的手交经验不变",
-    child.experience.get(_l10_exp_id, 0) - _l10_exp == _l10_expect
-    and child.experience.get(_l10_real_exp_id, 0) == _l10_real,
+    ca.experience(child).get(_l10_exp_id, 0) - _l10_exp == _l10_expect
+    and ca.experience(child).get(_l10_real_exp_id, 0) == _l10_real,
     (
-        child.experience.get(_l10_exp_id, 0) - _l10_exp,
+        ca.experience(child).get(_l10_exp_id, 0) - _l10_exp,
         _l10_expect,
-        child.experience.get(_l10_real_exp_id, 0) - _l10_real,
+        ca.experience(child).get(_l10_real_exp_id, 0) - _l10_real,
     ),
 )
 kernel_data.set_needs(child.cid, hit_max=100, hit=100)

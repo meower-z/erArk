@@ -26,7 +26,7 @@ from Script.Settle import past_day_settle
 from Script.System.Official_Event_System import official_event_handle
 from Script.System.Pregnancy_System import pregnancy_handle
 from Script.Design import game_time
-from tests import kernel_data
+from tests import chara_abilities as ca, kernel_data
 from Script.Modules.domains import official
 
 clear_schedules()
@@ -68,7 +68,7 @@ subject_exp_set = {
     growth_handle.get_subject_exp_id(a) for a in E.SUBJECT_ABILITY_LIST
 } - {0}
 mother.pregnancy.prenatal_point = 40.0
-exp_before_a = dict(baby_a.experience)
+exp_before_a = dict(ca.experience(baby_a))
 text_a = baby_growth_handle.settle_prenatal_to_child(102, 203)
 text_b = baby_growth_handle.settle_prenatal_to_child(102, 204)
 growth_a = baby_a.child_growth
@@ -82,13 +82,13 @@ check(
 check("转写不清零母亲侧", mother.pregnancy.prenatal_point == 40.0)
 check(
     "双胎各得 400 个习得珠",
-    baby_a.juel.get(J, 0) == 400 and baby_b.juel.get(J, 0) == 400,
-    (baby_a.juel.get(J, 0), baby_b.juel.get(J, 0)),
+    ca.juel(baby_a).get(J, 0) == 400 and ca.juel(baby_b).get(J, 0) == 400,
+    (ca.juel(baby_a).get(J, 0), ca.juel(baby_b).get(J, 0)),
 )
 check(
     "经验一项都没动（18 门科目的升级经验，含 7 种性交类，全是 0）",
-    dict(baby_a.experience) == exp_before_a
-    and all(baby_a.experience.get(e, 0) == 0 for e in subject_exp_set),
+    dict(ca.experience(baby_a)) == exp_before_a
+    and all(ca.experience(baby_a).get(e, 0) == 0 for e in subject_exp_set),
 )
 juel_name = baby_growth_handle.get_learn_juel_name()
 check(
@@ -114,23 +114,23 @@ check(
     and nurse.child_growth is None,
 )
 mother.pregnancy.prenatal_point = 1.0
-juel_before = baby_b.juel.get(J, 0)
+juel_before = ca.juel(baby_b).get(J, 0)
 text = baby_growth_handle.settle_prenatal_to_child(102, 204)
 check(
     "1 点：折 10 个珠，也有一句文本",
     growth_b.prenatal_point == 1.0
-    and baby_b.juel.get(J, 0) - juel_before == 10
+    and ca.juel(baby_b).get(J, 0) - juel_before == 10
     and "10" in text,
     text,
 )
 _orig_juel_rate = E.PRENATAL_JUEL_PER_POINT
 E.PRENATAL_JUEL_PER_POINT = 0
-juel_before = baby_b.juel.get(J, 0)
+juel_before = ca.juel(baby_b).get(J, 0)
 text = baby_growth_handle.settle_prenatal_to_child(102, 204)
 E.PRENATAL_JUEL_PER_POINT = _orig_juel_rate
 check(
     "比例调到 0 时折不出珠：不加珠、给「还不足以留下什么」那句",
-    baby_b.juel.get(J, 0) == juel_before and "还不足以留下什么" in text,
+    ca.juel(baby_b).get(J, 0) == juel_before and "还不足以留下什么" in text,
     text,
 )
 mother.pregnancy.prenatal_point = 0.0
@@ -218,11 +218,11 @@ settle_behavior.handle_comprehensive_value_effect(
     0, ["A2", "Growth|20", "G", "0.3"], change
 )
 check("照料值 +0.3", abs(growth_a.care_point - 0.3) < 1e-9)
-exp_before = baby_a.experience.get(85, 0)
+exp_before = ca.experience(baby_a).get(85, 0)
 settle_behavior.handle_comprehensive_value_effect(
     0, ["A2", "E|85", "G", "8"], change
 )
-check("音乐经验 +8", baby_a.experience.get(85, 0) - exp_before == 8)
+check("音乐经验 +8", ca.experience(baby_a).get(85, 0) - exp_before == 8)
 settle_behavior.handle_comprehensive_value_effect(
     0, ["A2", "Growth|0", "G", "9"], change
 )
@@ -281,7 +281,7 @@ kernel_data.written(pregnancy_handle._settle_baby_grow_up, 102, 203)
 talk.must_show_talk_check = _orig_must_show
 check(
     "L19 前提：长成幼女（素质 101 → 102）",
-    baby_a.talent[102] == 1 and baby_a.talent[101] == 0,
+    ca.talent(baby_a)[102] == 1 and ca.talent(baby_a)[101] == 0,
 )
 _left_203 = [one["uid"] for one in official.queue() if one["chara_id"] == 203]
 check(

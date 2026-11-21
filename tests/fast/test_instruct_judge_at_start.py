@@ -31,7 +31,7 @@ from Script.System.Instruct_System import handle_instruct
 from Script.System.Item_System import condom_panel
 from Script.System.Sex_System import group_sex_panel
 from tests.fast.base import FastTestCase
-from tests import kernel_data
+from tests import chara_abilities as ca, kernel_data
 
 LOADED_FIRST = update
 """ 先于 Script.Modules 导入的 update：Script.Modules 的包初始化要在 update 导入途中进行 """
@@ -101,13 +101,13 @@ class InstructJudgeAtStartTest(FastTestCase):
         judge -- 判定名
         """
         talents = (BEEN_PRIMARY_HYPNOSIS, BEEN_DEEP_HYPNOSIS)
-        kept = {t: self.npc.talent[t] for t in talents}
+        kept = {t: ca.talent(self.npc)[t] for t in talents}
         for t in talents:
-            self.npc.talent[t] = 0
+            ca.talent(self.npc)[t] = 0
         without = instuct_judege.calculation_instuct_judege(
             0, NPC, judge, not_draw_flag=True, settle_hypnosis=False
         )[0]
-        self.npc.talent.update(kept)
+        ca.talent(self.npc).update(kept)
         with_hypnosis = instuct_judege.calculation_instuct_judege(
             0, NPC, judge, not_draw_flag=True, settle_hypnosis=False
         )[0]
@@ -118,8 +118,8 @@ class InstructJudgeAtStartTest(FastTestCase):
 
     def deep_hypnosis(self) -> None:
         """玩家有中级催眠，交互对象被深层催眠"""
-        self.player.talent[PL_INTERMEDIATE_HYPNOSIS] = 1
-        self.npc.talent[BEEN_DEEP_HYPNOSIS] = 1
+        ca.talent(self.player)[PL_INTERMEDIATE_HYPNOSIS] = 1
+        ca.talent(self.npc)[BEEN_DEEP_HYPNOSIS] = 1
 
     def test_necklace_pays_hypnosis_at_start(self) -> None:
         """戴上项圈靠催眠补正通过：选择时理智不变，开始后少了，行为是戴上项圈"""
@@ -152,7 +152,7 @@ class InstructJudgeAtStartTest(FastTestCase):
 
     def test_condom_decoration_pays_hypnosis_at_start(self) -> None:
         """挂上避孕套装饰靠催眠补正通过严重骚扰判定：开始后理智少了"""
-        self.npc.talent[BEEN_PRIMARY_HYPNOSIS] = 1
+        ca.talent(self.npc)[BEEN_PRIMARY_HYPNOSIS] = 1
         self.passes_by_hypnosis_only(_("严重骚扰"))
         with mock.patch.object(
             condom_panel.Condom_Select_Panel,
@@ -208,7 +208,7 @@ class InstructJudgeAtStartTest(FastTestCase):
         self.passes_by_hypnosis_only(_("群交"))
         other = self.world.chara(OTHER_NPC, "干员2")
         other.sp_flag.unconscious_h = IN_HYPNOSIS
-        other.talent[BEEN_DEEP_HYPNOSIS] = 1
+        ca.talent(other)[BEEN_DEEP_HYPNOSIS] = 1
         core.reset_state(kernel_data.reprojected(core.state()))
         with kernel_data.writing():
             instuct_judege.calculation_instuct_judege(

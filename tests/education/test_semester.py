@@ -20,6 +20,7 @@ from _bootstrap import (
     semester_handle,
     set_time,
 )
+from tests import chara_abilities as ca
 
 clear_schedules()
 mother = make_character(102, "母亲", 0)
@@ -110,9 +111,7 @@ check(
 
 section("等级增量")
 g.semester_base_ability = {45: 1, 43: 2}
-student.ability[45] = 3
-student.ability[43] = 2
-student.ability[40] = 1
+ca.ability(student).merge({45: 3, 43: 2, 40: 1})
 check(
     "只含真涨了的科目",
     semester_handle.get_semester_level_change(201) == {45: [1, 3], 40: [0, 1]},
@@ -135,7 +134,7 @@ g.semester_base_absent = 0
 g.semester_base_ability = {}
 g.attend_class_count = 0
 g.absent_count = 0
-student.ability[45] = 1
+ca.ability(student)[45] = 1
 check(
     "第一次记账只立基线",
     semester_handle.settle_semester_change() == []
@@ -149,8 +148,7 @@ check(
 )
 g.attend_class_count = 9
 g.absent_count = 1
-student.ability[45] = 3
-student.ability[43] = 4
+ca.ability(student).merge({45: 3, 43: 4})
 set_time(datetime.datetime(2026, 12, 1, 9, 0))
 report_list = semester_handle.settle_semester_change()
 check("切学期出成绩单", report_list == [201])

@@ -17,7 +17,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Any
 from unittest import mock
 
-from tests import kernel_data
+from tests import chara_abilities as ca, kernel_data
 from tests.slow.base import SlowTestCase
 
 if TYPE_CHECKING:
@@ -86,11 +86,11 @@ class NewRoundFromDraftedRoundTest(SlowTestCase):
 
     def test_new_round_in_draft_runs_on_originals(self) -> None:
         """草稿里习得素质后开新周目：开局时刻、周目数加一，留着定下的素质，草稿里的素质不进新周目，之后没有 Edit"""
+        talent = ca.talent(0)
         kernel = game("Script.Kernel.core")
         kernel_state = game("Script.Modules.save_load.kernel_state")
         new_round = game("Script.UI.Panel.new_round")
         edits = game("Script.Modules.gameplay_resolution.edits")
-        cache_control = game("Script.Core.cache_control")
         playthrough = game("Script.Modules.domains.playthrough")
 
         self.world.player.press(
@@ -98,9 +98,8 @@ class NewRoundFromDraftedRoundTest(SlowTestCase):
         )
         self.pick_in_arts_panel()
         self.assertEqual(self.player_starts(), [(edits.EDIT, 0)])
-        player = cache_control.cache.character_data[0]
-        self.assertEqual(player.talent[KEPT_TALENT], 1, "第一次选择定下了素质")
-        self.assertEqual(player.talent[DRAFTED_TALENT], 0)
+        self.assertEqual(talent[KEPT_TALENT], 1, "第一次选择定下了素质")
+        self.assertEqual(talent[DRAFTED_TALENT], 0)
 
         self.wait()
         before_round = playthrough.game_round()
@@ -126,18 +125,12 @@ class NewRoundFromDraftedRoundTest(SlowTestCase):
             new_round.New_Round_Handle, "__init__", inherit_arts
         ):
             self.pick_in_arts_panel()
-        cache = cache_control.cache
         self.assertEqual(
             playthrough.game_round(), before_round + 1, "周目数加一"
         )
         self.assertEqual(kernel.state().clock, first, "新周目从开局时刻开始")
-        player = cache.character_data[0]
-        self.assertEqual(
-            player.talent[KEPT_TALENT], 1, "继承了上一周目定下的素质"
-        )
-        self.assertEqual(
-            player.talent[DRAFTED_TALENT], 0, "草稿里的素质进了新周目"
-        )
+        self.assertEqual(talent[KEPT_TALENT], 1, "继承了上一周目定下的素质")
+        self.assertEqual(talent[DRAFTED_TALENT], 0, "草稿里的素质进了新周目")
 
         self.wait()
         self.assertEqual(kernel.state().clock, first + 5, "新周目里照常等待")
@@ -147,7 +140,7 @@ class NewRoundFromDraftedRoundTest(SlowTestCase):
             f"开新周目以来玩家开始的行动：{self.player_starts()}",
         )
         self.assertEqual(
-            cache_control.cache.character_data[0].talent[DRAFTED_TALENT],
+            talent[DRAFTED_TALENT],
             0,
             "等待后草稿里的素质写了进来",
         )

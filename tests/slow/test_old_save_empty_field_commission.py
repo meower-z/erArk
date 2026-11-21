@@ -17,7 +17,7 @@ import shutil
 from typing import Any
 
 from tests.slow.base import SlowTestCase
-from tests import kernel_data, world
+from tests import chara_abilities as ca, kernel_data, world
 
 SAVE_ID = "test_old_save_empty_field_commission"
 """ 本测试写入 save/ 的存档id，测试结束时删掉 """
@@ -84,7 +84,7 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
         """
 
         daughter_id = kernel_data.born(self._mother_id(), name)
-        talent = self.cache.character_data[daughter_id].talent
+        talent = ca.talent(daughter_id)
         for talent_id in (101, 102, 103, 104):
             talent[talent_id] = 0
         talent[stage] = 1

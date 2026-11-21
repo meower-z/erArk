@@ -22,7 +22,7 @@ from Script.Modules.gameplay_resolution import intent, start_gate
 from Script.Modules.tk_ui import player_pick
 from Script.System.Instruct_System import handle_instruct
 from Script.System.Sex_System import bondage_panel, sex_position_panel
-from tests import pick_guard
+from tests import chara_abilities as ca, pick_guard
 from tests import world as world_module
 from tests.fast.base import FastTestCase
 from Script.UI.Moudle import view
@@ -120,7 +120,7 @@ class InstructSubMenuTest(FastTestCase):
 
     def test_judge_question(self) -> None:
         """夺走初吻的询问：[返回]没有行动也没有发呆；[确定]定下亲吻，开始时不再问"""
-        self.npc.talent[FIRST_KISS] = 1
+        ca.talent(self.npc)[FIRST_KISS] = 1
         self.cache.debug_mode = True
         kiss = self.instruct(constant.Instruct.KISS)
         self.assert_backs_out(kiss, NO)
@@ -168,7 +168,7 @@ class InstructSubMenuTest(FastTestCase):
     def test_sex_position(self) -> None:
         """换体位：处女的询问能取消；确定后换之前的体位在行动开始时才记下"""
         self.cache.debug_mode = True
-        self.npc.talent[0] = 1
+        ca.talent(self.npc)[0] = 1
         self.player.h_state.current_sex_position = 3
         self.player.h_state.pre_sex_position = -1
         position_id = next(

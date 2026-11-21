@@ -18,6 +18,7 @@ import itertools
 from Script.Core import constant_promise
 from Script.Design import handle_premise
 from tests.fast.base import FastTestCase
+from tests import chara_abilities as ca
 
 Premise = constant_promise.Premise
 
@@ -37,7 +38,7 @@ def self_kiss_experience_0(self_data, target_data, player_data) -> bool:
     Return arguments:
     bool -- 判定角色的亲吻经验为0时为 True
     """
-    return self_data.experience[KISS_EXPERIENCE] == 0
+    return ca.experience(self_data)[KISS_EXPERIENCE] == 0
 
 
 def target_kiss_experience_0(self_data, target_data, player_data) -> bool:
@@ -50,7 +51,7 @@ def target_kiss_experience_0(self_data, target_data, player_data) -> bool:
     Return arguments:
     bool -- 交互对象的亲吻经验为0时为 True
     """
-    return target_data.experience[KISS_EXPERIENCE] == 0
+    return ca.experience(target_data)[KISS_EXPERIENCE] == 0
 
 
 def player_no_first_kiss(self_data, target_data, player_data) -> bool:
@@ -63,7 +64,7 @@ def player_no_first_kiss(self_data, target_data, player_data) -> bool:
     Return arguments:
     bool -- 玩家未保有初吻时为 True
     """
-    return player_data.talent[FIRST_KISS] == 0
+    return ca.talent(player_data)[FIRST_KISS] == 0
 
 
 def target_no_first_kiss(self_data, target_data, player_data) -> bool:
@@ -76,7 +77,7 @@ def target_no_first_kiss(self_data, target_data, player_data) -> bool:
     Return arguments:
     bool -- 交互对象未保有初吻时为 True
     """
-    return target_data.talent[FIRST_KISS] == 0
+    return ca.talent(target_data)[FIRST_KISS] == 0
 
 
 CASES = [
@@ -112,10 +113,10 @@ class KissPremisesOwnHandlerTest(FastTestCase):
         for p_exp, n_exp, p_kiss, n_kiss in itertools.product(
             (0, 3), (0, 3), (0, 1), (0, 1)
         ):
-            player.experience[KISS_EXPERIENCE] = p_exp
-            npc.experience[KISS_EXPERIENCE] = n_exp
-            player.talent[FIRST_KISS] = p_kiss
-            npc.talent[FIRST_KISS] = n_kiss
+            ca.experience(player)[KISS_EXPERIENCE] = p_exp
+            ca.experience(npc)[KISS_EXPERIENCE] = n_exp
+            ca.talent(player)[FIRST_KISS] = p_kiss
+            ca.talent(npc)[FIRST_KISS] = n_kiss
             for character_id, (name, premise, expect) in itertools.product(
                 (0, 1), CASES
             ):

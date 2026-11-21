@@ -44,7 +44,7 @@ from Script.Core import text_handle
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.UI.Moudle import view
 import inspect
-from tests import kernel_data
+from tests import chara_abilities as ca, kernel_data
 from Script.Modules.domains import library
 
 if TYPE_CHECKING:
@@ -57,7 +57,7 @@ clear_schedules()
 ROOM1 = _("理论教室一")
 ROOM_P = _("实践教室一")
 teacher = make_character(101, "教师甲", 151)
-teacher.ability[45] = 5
+ca.ability(teacher)[45] = 5
 teacher_b = make_character(103, "教师乙", 151)
 teacher_c = make_character(104, "教师丙", 151)
 teacher_d = make_character(105, "教师丁", 151)
@@ -440,14 +440,14 @@ check(
     and "少女" in stage_text,
     stage_text,
 )
-cache.character_data[201].talent[E.GROWTH_STOP_TALENT_ID] = 1
+ca.talent(201)[E.GROWTH_STOP_TALENT_ID] = 1
 drawn_text.clear()
 gp.draw_page([])
 check(
     "成长停滞时写明阶段不会推进",
     any("停滞" in t and "不会推进" in t for t in drawn_text),
 )
-cache.character_data[201].talent[E.GROWTH_STOP_TALENT_ID] = 0
+ca.talent(201)[E.GROWTH_STOP_TALENT_ID] = 0
 cache.character_data[201].relationship.mother_id = -1
 drawn_text.clear()
 gp.draw_page([])

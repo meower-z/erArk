@@ -15,6 +15,7 @@ from _bootstrap import (
     schedule_handle,
     section,
 )
+from tests import chara_abilities as ca
 
 open_all_classroom()
 clear_schedules()
@@ -60,9 +61,9 @@ check("没有教师时 (0, 0)", auto_schedule.auto_fill_class_schedule() == (0, 
 teacher_a = make_character(101, "教师甲", 151)
 teacher_b = make_character(102, "教师乙", 151)
 teacher_c = make_character(103, "教师丙", 151)
-teacher_a.ability[45] = 5
-teacher_b.ability[45] = 5
-teacher_c.ability[43] = 7
+ca.ability(teacher_a)[45] = 5
+ca.ability(teacher_b)[45] = 5
+ca.ability(teacher_c)[43] = 7
 
 section("最优教师")
 check(
@@ -179,7 +180,7 @@ check(
     auto_schedule.auto_fill_selected_course(201) == (0, skipped_c),
 )
 # 该科等级最低优先：给学生某科高等级，同节次若有该科与别科，应选别科
-student.ability[45] = 8
+ca.ability(student)[45] = 8
 clear_schedules()
 schedule_handle.set_class_cell(room_list[0], 0, 0, 45, 101)
 schedule_handle.set_class_cell(room_list[1], 0, 0, 43, 103)

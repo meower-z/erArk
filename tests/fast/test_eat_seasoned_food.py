@@ -15,6 +15,7 @@ from Script.System.Cooking_System import cooking, food_bag_panel
 from Script.Modules.tk_ui import player_pick
 from tests.fast.base import FastTestCase
 from Script.UI.Moudle import view
+from tests import chara_abilities as ca
 
 NPC = 1
 """ 交互对象 """
@@ -38,7 +39,7 @@ class EatSeasonedFoodTest(FastTestCase):
         super().setUp()
         self.player = self.world.chara(0, "博士")
         self.npc = self.world.chara(NPC, "干员")
-        self.npc.talent[SEMEN_TASTE] = 1
+        ca.talent(self.npc)[SEMEN_TASTE] = 1
         self.player.target_character_id = NPC
         if not self.cache.recipe_data:
             cooking.init_recipes()

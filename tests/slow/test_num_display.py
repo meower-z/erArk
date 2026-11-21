@@ -18,6 +18,7 @@ from fractions import Fraction
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
+from tests import chara_abilities as ca
 
 WIDTH = 120
 """ 绘制宽度 """
@@ -53,7 +54,7 @@ class NumDisplayTest(SlowTestCase):
         self.operator.position = list(self.player.position)
         self.player.target_character_id = self.operator_id
         self.player.pl_ability.visual = True
-        self.player.talent[309] = 1
+        ca.talent(self.player)[309] = 1
         core = importlib.import_module("Script.Kernel.core")
         working = importlib.import_module(
             "Script.Modules.gameplay_resolution.working"

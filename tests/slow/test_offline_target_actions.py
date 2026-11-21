@@ -14,6 +14,7 @@ from collections.abc import Mapping
 from typing import cast
 
 from tests.slow.base import SlowTestCase
+from tests import chara_abilities as ca
 
 BABY = 101
 """ 婴儿素质的id """
@@ -79,7 +80,7 @@ class OfflineTargetActionsTest(SlowTestCase):
 
         baby_id = self.offline_chara()
         baby = self.cache.character_data[baby_id]
-        baby.talent[BABY] = 1
+        ca.talent(baby_id)[BABY] = 1
         before = pickle.dumps(baby)
         clock = core.state().clock
         label = f"[{str(baby.adv).rjust(4, '0')}]:{baby.name}"
