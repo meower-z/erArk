@@ -18,7 +18,7 @@ from Script.Design import (
 from Script.Config import normal_config, game_config
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.UI.Moudle import view
-from Script.Modules.domains import facility, needs
+from Script.Modules.domains import facility, needs, physical_exam
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -106,7 +106,7 @@ def handle_periodic_health_check_on(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    return cache.rhodes_island.physical_examination_setting[2] == 1
+    return physical_exam.setting(2) == 1
 
 
 @add_premise(constant_promise.Premise.HEALTH_CHECK_DONE_NEED_CHECK_AGAIN)
@@ -118,7 +118,7 @@ def handle_health_check_done_need_check_again(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    return cache.rhodes_island.physical_examination_setting[5] == 1
+    return physical_exam.setting(5) == 1
 
 
 @add_premise(constant_promise.Premise.HEALTH_CHECK_DONE_NOT_NEED_CHECK_AGAIN)
@@ -2392,7 +2392,7 @@ def handle_self_waiting_for_health_check(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    return character_id in cache.rhodes_island.waiting_for_exam_operator_ids
+    return physical_exam.has(physical_exam.WAITING, character_id)
 
 
 @add_premise(constant_promise.Premise.SELF_NOT_WAITING_FOR_HEALTH_CHECK)
@@ -2416,7 +2416,7 @@ def handle_self_health_checked(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    return character_id in cache.rhodes_island.examined_operator_ids
+    return physical_exam.has(physical_exam.EXAMINED, character_id)
 
 
 @add_premise(constant_promise.Premise.SELF_NOT_HEALTH_CHECKED)
@@ -2440,10 +2440,7 @@ def handle_self_health_checked_today(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    return (
-        character_id
-        in cache.rhodes_island.today_physical_examination_chara_id_dict
-    )
+    return physical_exam.has(physical_exam.TODAY, character_id)
 
 
 @add_premise(constant_promise.Premise.SELF_NOT_HEALTH_CHECKED_TODAY)
@@ -2479,18 +2476,15 @@ def handle_self_in_health_check_list(character_id: int) -> int:
         return 0
     character_data: game_type.Character = cache.character_data[character_id]
     # 源石病患者
-    if cache.rhodes_island.physical_examination_setting[4] == 0:
+    if physical_exam.setting(4) == 0:
         if character_data.talent[150] == 1:
             return 1
     # 全干员
-    elif cache.rhodes_island.physical_examination_setting[4] == 1:
+    elif physical_exam.setting(4) == 1:
         return 1
     # 手动选择干员
-    elif cache.rhodes_island.physical_examination_setting[4] == 2:
-        if (
-            character_id
-            in cache.rhodes_island.manually_selected_exam_operator_ids
-        ):
+    elif physical_exam.setting(4) == 2:
+        if physical_exam.has(physical_exam.CHOSEN, character_id):
             return 1
     return 0
 
@@ -2504,7 +2498,7 @@ def handle_someone_waiting_for_health_check(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    return len(cache.rhodes_island.waiting_for_exam_operator_ids) > 0
+    return len(physical_exam.ids(physical_exam.WAITING)) > 0
 
 
 @add_premise(constant_promise.Premise.SELF_IN_HEALTH_CHECK_ACTION_CHAIN)

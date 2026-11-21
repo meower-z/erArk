@@ -431,7 +431,7 @@ Script/
 - `NpcTem`：角色模板（能力/经验/素质/服装/基础属性）
 - `Map` / `MapDraw` / `MapDrawLine` / `MapDrawText`：AA 地图与绘制
 - `Scene`：场景路径、名字、室内外、家具、门、面积、标签、角色列表、图片
-- `Rhodes_Island`：宿舍、医疗、仓库、外交、囚犯、收入等（设施等级、待开放设施的开放情况与基地效率在 GameState 的全局键 `base.facility_level`、`base.facility_open` 与 `base.effectiveness` 里。读写它们用 `Modules/domains/facility.py`。各岗位的干员名册与监狱长在全局键 `base.work` 与 `base.warden` 里，用 `work.roster(岗位id)` 与 `work.warden()` 读。生产线、工人名单与食堂货架在全局键 `base.production` 与 `base.dining_hall` 里，分别用 `Modules/domains/production.py` 与 `Modules/domains/kitchen.py` 读写）
+- `Rhodes_Island`：宿舍、医疗、仓库、外交、囚犯、收入等（设施等级、待开放设施的开放情况与基地效率在 GameState 的全局键 `base.facility_level`、`base.facility_open` 与 `base.effectiveness` 里。读写它们用 `Modules/domains/facility.py`。各岗位的干员名册与监狱长在全局键 `base.work` 与 `base.warden` 里，用 `work.roster(岗位id)` 与 `work.warden()` 读。生产线、工人名单与食堂货架在全局键 `base.production` 与 `base.dining_hall` 里，分别用 `Modules/domains/production.py` 与 `Modules/domains/kitchen.py` 读写。设施损坏、检修地点、铁匠的维修记录、装备维护设置与手动选择的装备维护对象在全局键 `base.facility_damage`、`base.maintenance_place`、`base.equipment_repair`、`base.equipment_setting` 与 `base.equipment_operators` 里，用 `Modules/domains/maintenance.py` 读写。体检设置、今日与进行中的体检记录、三份体检名单与体检日在七个以 `base.exam_` 开头的全局键里，用 `Modules/domains/physical_exam.py` 读写）
 - `Country`：势力外交数据
 - `CharacterStatusChange` / `TargetChange`：结算数值变更累积器
 - `DIRTY`, `PREGNANCY`, `RELATIONSHIP`, `HYPNOSIS`, `CLOTH`, `BODY_H_STATE`, `FIRST_RECORD`, `ACTION_INFO`, `AUTHOR_FLAG` 等：角色各领域状态容器
@@ -653,7 +653,7 @@ init_character_behavior()
 | 农业生产 | `UI/Panel/agriculture_production_panel.py`, `Design/basement.py`, `Modules/domains/production.py` | 农场设施 |
 | 工业生产/流水线 | `UI/Panel/manage_assembly_line_panel.py`, `Modules/domains/production.py` | `ProductFormula.csv` |
 | 资源交易 | `UI/Panel/resource_exchange_panel.py`, `Modules/domains/economy.py`, `Modules/domains/warehouse.py` | `Resource.csv`, `Restaurant.csv` |
-| 装备维护 | `UI/Panel/equipmen_panel.py` | `Equipment_*` 系列 |
+| 装备维护 | `UI/Panel/equipmen_panel.py`, `Modules/domains/maintenance.py` | `Equipment_*` 系列 |
 | 载具管理 | `UI/Panel/manage_vehicle_panel.py` | `Vehicle.csv` |
 | 宿舍管理 | `System/Dormitory_System/*` | 宿舍场景地图 |
 | 医疗经营 | `System/Medical_System/*`, `Modules/domains/medical.py`, `Modules/domains/medical_patient.py` | `Medical_*` 系列 |
@@ -678,7 +678,7 @@ init_character_behavior()
 | 身体信息 | `UI/Panel/body_info_panel.py`, `dirty_panel.py` | `BodyPart.csv` |
 | 射精面板 | `UI/Panel/ejaculation_panel.py` | `Semen_Shoot_Amount.csv` |
 | 妊娠/婴儿 | `Design/pregnancy.py`, `UI/Panel/sp_event_panel.py`, `get_up_panel.py` | 怀孕状态、孩子出生 |
-| 身体检查与管理 | `UI/Panel/physical_check_and_manage.py` | `Physical_Exam_Setting.csv` |
+| 身体检查与管理 | `UI/Panel/physical_check_and_manage.py`, `Modules/domains/physical_exam.py` | `Physical_Exam_Setting.csv` |
 | 读书/图书馆 | `UI/Panel/borrow_book_panel.py`, `read_book_panel.py`, `manage_library.py` | `Book*.csv` |
 | 五子棋 | `UI/Panel/play_gomoku_panel.py` | 娱乐小游戏 |
 

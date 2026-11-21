@@ -13,7 +13,8 @@ from Script.Design import basement, attr_calculation, handle_premise, game_time
 from Script.UI.Moudle import draw, view
 from Script.UI.Panel import see_character_info_panel
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import economy, facility, needs, warehouse, work
+from Script.Modules.domains import economy, facility, maintenance, needs
+from Script.Modules.domains import warehouse, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -1278,14 +1279,11 @@ class Manage_Basement_Panel:
                 now_text += _("\n  当前故障地点与设施损坏数：")
                 facility_damage_text = ""
                 now_count = 0
-                for scene_path_str in cache.rhodes_island.facility_damage_data:
+                for scene_path_str, count in maintenance.damage().items():
                     # 每行显示3个
                     if now_count % 3 == 0:
                         facility_damage_text += "\n"
-                    facility_damage_text += (
-                        f"    {scene_path_str}-"
-                        f"{cache.rhodes_island.facility_damage_data[scene_path_str]}"
-                    )
+                    facility_damage_text += f"    {scene_path_str}-{count}"
                     now_count += 1
                 if facility_damage_text == "":
                     facility_damage_text = _("\n    无")
@@ -1294,12 +1292,12 @@ class Manage_Basement_Panel:
                 now_text += _("\n  当前检修人员与其负责地点：")
                 npc_and_place_text = ""
                 now_count = 0
-                for chara_id in cache.rhodes_island.maintenance_place:
-                    if len(cache.rhodes_island.maintenance_place[chara_id]):
+                for chara_id, place in maintenance.places().items():
+                    if len(place):
                         if now_count % 3 == 0:
                             npc_and_place_text += "\n"
                         chara_name = cache.character_data[chara_id].name
-                        npc_and_place_text += f"    {chara_name}-{cache.rhodes_island.maintenance_place[chara_id]}"
+                        npc_and_place_text += f"    {chara_name}-{place}"
                         now_count += 1
                 if npc_and_place_text == "":
                     npc_and_place_text = _("\n    无")

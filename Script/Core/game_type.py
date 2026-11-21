@@ -1486,18 +1486,6 @@ class Rhodes_Island:
         self.office_work: float = 0
         """ 需要处理的公务 """
 
-        # 工程部
-        self.maintenance_place: dict[int, str] = {}
-        """ 当前每个角色的待检修地点，角色id:地点 """
-        self.facility_damage_data: dict[str, int] = {}
-        """ 设施损坏数据，地点名str:损坏值int """
-        self.equipment_maintain_setting: dict[int, int] = {}
-        """ 装备维护设置 设置id:设置值 """
-        self.equipment_maintain_operator_ids: list[int] = []
-        """ 手动选择的装备维护对象干员id列表 """
-        self.maintenance_equipment_chara_id: dict[int, int] = {}
-        """ 当前每个角色正在维护中的装备的所属角色id，角色id:角色id """
-
         # 仓储区
         self.warehouse_capacity: int = 0
         """ 仓库容量 """
@@ -1516,21 +1504,6 @@ class Rhodes_Island:
 
         self.urine_in_fridge: dict[int, int] = {}
         """ 冷库里每个干员的当日圣水量，干员id:圣水ml存量 """
-
-        self.physical_examination_setting: dict[int, int] = {}
-        """ 体检设置 设置id:设置值 """
-        self.today_physical_examination_chara_id_dict: dict[int, set] = {}
-        """ 今日已体检的干员数据 干员id:体检项目id集合 """
-        self.physical_examination_in_progress: dict[int, set[str]] = {}
-        """ 玩家正在进行、还没结束的体检 干员id:已做过的检查行为id集合；每项检查随它的行动开始时写入 """
-        self.examined_operator_ids: set[int] = set()
-        """ 本次体检周期内已体检过的干员id集合 """
-        self.waiting_for_exam_operator_ids: set[int] = set()
-        """ 当前正在等待体检的干员id集合 """
-        self.manually_selected_exam_operator_ids: set[int] = set()
-        """ 手动选择的体检对象干员id集合 """
-        self.manually_selected_exam_week_day_list: list[int] = []
-        """ 手动选择的每周的体检日列表 """
 
         # 文职区
         self.recruit_line: dict[int, list] = {}

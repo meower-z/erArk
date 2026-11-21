@@ -25,6 +25,7 @@ from Script.Config import game_config
 from Script.Modules.domains import (
     economy,
     facility,
+    maintenance,
     power,
     production,
     warehouse,
@@ -1552,55 +1553,50 @@ def check_island_30_facility_damage_and_maintenance() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验facility_damage_data的键必须是合法场景路径、值为正整数(<=0时代码会pop)；maintenance_place的键
-        必须是存在的、work.work_type==21的角色，值必须是合法场景路径。不要求检修工程师在npc_id_got（外勤中
-        的工程师不会被清maintenance_place）；不要求检修目标当前仍有损坏记录（无损坏时会随机选目标）
+        校验设施损坏表与检修地点表：损坏表的键是合法场景路径、值是正整数，检修地点表的键是存在的、work.work_type==21的
+        角色、值是合法场景路径。两张表由 maintenance.damage 与 maintenance.places 读出。不要求检修工程师在npc_id_got
+        （外勤中的工程师留着检修地点）。不要求检修目标当前仍有损坏记录（无损坏时会随机选目标）
     """
     cache = cache_control.cache
-    ri = cache.rhodes_island
     cd = cache.character_data
     failures = []
-    facility_damage_data = getattr(ri, "facility_damage_data", None)
-    if isinstance(facility_damage_data, dict):
-        illegal_damage = [
-            (p, v)
-            for p, v in facility_damage_data.items()
-            if not (p in cache.scene_data and type(v) is int and v >= 1)
+    illegal_damage = [
+        (p, v)
+        for p, v in maintenance.damage().items()
+        if not (p in cache.scene_data and type(v) is int and v >= 1)
+    ]
+    if illegal_damage:
+        failures.append(
+            make_failure(
+                "ISLAND-30",
+                "设施损坏数据与检修分派自洽",
+                f"facility_damage_data非法键/值明细={illegal_damage}",
+                [],
+            )
+        )
+    illegal_maintenance = [
+        (cid, place)
+        for cid, place in maintenance.places().items()
+        if not (
+            cid in cd
+            and cd[cid].work.work_type == 21
+            and place in cache.scene_data
+        )
+    ]
+    if illegal_maintenance:
+        detail = [
+            f"cid={cid},{_chara_name(cd, cid)},work_type={cd[cid].work.work_type if cid in cd else None},"
+            f"{_sp_flag_brief(cd.get(cid))},place_in_scene_data={place in cache.scene_data}"
+            for cid, place in illegal_maintenance
         ]
-        if illegal_damage:
-            failures.append(
-                make_failure(
-                    "ISLAND-30",
-                    "设施损坏数据与检修分派自洽",
-                    f"facility_damage_data非法键/值明细={illegal_damage}",
-                    [],
-                )
+        failures.append(
+            make_failure(
+                "ISLAND-30",
+                "设施损坏数据与检修分派自洽",
+                f"maintenance_place非法明细={illegal_maintenance}，涉及角色详情={detail}",
+                [cid for cid, _place in illegal_maintenance if cid in cd],
             )
-    maintenance_place = getattr(ri, "maintenance_place", None)
-    if isinstance(maintenance_place, dict):
-        illegal_maintenance = [
-            (cid, place)
-            for cid, place in maintenance_place.items()
-            if not (
-                cid in cd
-                and cd[cid].work.work_type == 21
-                and place in cache.scene_data
-            )
-        ]
-        if illegal_maintenance:
-            detail = [
-                f"cid={cid},{_chara_name(cd, cid)},work_type={cd[cid].work.work_type if cid in cd else None},"
-                f"{_sp_flag_brief(cd.get(cid))},place_in_scene_data={place in cache.scene_data}"
-                for cid, place in illegal_maintenance
-            ]
-            failures.append(
-                make_failure(
-                    "ISLAND-30",
-                    "设施损坏数据与检修分派自洽",
-                    f"maintenance_place非法明细={illegal_maintenance}，涉及角色详情={detail}",
-                    [cid for cid, _place in illegal_maintenance if cid in cd],
-                )
-            )
+        )
     return failures
 
 

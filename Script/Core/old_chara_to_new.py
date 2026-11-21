@@ -17,8 +17,10 @@ from typing import TYPE_CHECKING, TypedDict
 from Script.Design import game_time
 from Script.Modules.domains import (
     economy,
+    maintenance,
     medical,
     needs,
+    physical_exam,
     power,
     production,
     work,
@@ -443,21 +445,9 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
 
         power.remap_operators(old_to_new_id)
         production.remap(old_to_new_id)
-
-        # maintenance_place (Dict[int, str] - 角色id:地点)
-        if hasattr(ri, "maintenance_place"):
-            old_maint = ri.maintenance_place.copy()
-            ri.maintenance_place = {}
-            for old_id, place in old_maint.items():
-                new_id = old_to_new_id.get(old_id, old_id)
-                ri.maintenance_place[new_id] = place
-
-        # equipment_maintain_operator_ids (List[int] - 手动选择的装备维护对象干员id列表)
-        if hasattr(ri, "equipment_maintain_operator_ids"):
-            ri.equipment_maintain_operator_ids = [
-                old_to_new_id.get(oid, oid)
-                for oid in ri.equipment_maintain_operator_ids
-            ]
+        # 换工程部与体检数据里的角色id，正在进行的体检除外
+        maintenance.remap(old_to_new_id)
+        physical_exam.remap(old_to_new_id)
 
         # milk_in_fridge (Dict[int, int] - 干员id:母乳ml存量)
         if hasattr(ri, "milk_in_fridge"):
@@ -523,15 +513,6 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
                 new_id = old_to_new_id.get(old_id, old_id)
                 ri.current_prisoners[new_id] = value
 
-        # maintenance_equipment_chara_id (Dict[int, int])
-        if hasattr(ri, "maintenance_equipment_chara_id"):
-            old_maint_eq = ri.maintenance_equipment_chara_id.copy()
-            ri.maintenance_equipment_chara_id = {}
-            for old_id, old_target in old_maint_eq.items():
-                new_id = old_to_new_id.get(old_id, old_id)
-                new_target = old_to_new_id.get(old_target, old_target)
-                ri.maintenance_equipment_chara_id[new_id] = new_target
-
         # urine_in_fridge (Dict[int, int])
         if hasattr(ri, "urine_in_fridge"):
             old_urine = ri.urine_in_fridge.copy()
@@ -539,34 +520,6 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
             for old_id, value in old_urine.items():
                 new_id = old_to_new_id.get(old_id, old_id)
                 ri.urine_in_fridge[new_id] = value
-
-        # today_physical_examination_chara_id_dict (Dict[int, set])
-        if hasattr(ri, "today_physical_examination_chara_id_dict"):
-            old_exam = ri.today_physical_examination_chara_id_dict.copy()
-            ri.today_physical_examination_chara_id_dict = {}
-            for old_id, value in old_exam.items():
-                new_id = old_to_new_id.get(old_id, old_id)
-                ri.today_physical_examination_chara_id_dict[new_id] = value
-
-        # examined_operator_ids (Set[int])
-        if hasattr(ri, "examined_operator_ids"):
-            ri.examined_operator_ids = {
-                old_to_new_id.get(oid, oid) for oid in ri.examined_operator_ids
-            }
-
-        # waiting_for_exam_operator_ids (Set[int])
-        if hasattr(ri, "waiting_for_exam_operator_ids"):
-            ri.waiting_for_exam_operator_ids = {
-                old_to_new_id.get(oid, oid)
-                for oid in ri.waiting_for_exam_operator_ids
-            }
-
-        # manually_selected_exam_operator_ids (Set[int])
-        if hasattr(ri, "manually_selected_exam_operator_ids"):
-            ri.manually_selected_exam_operator_ids = {
-                old_to_new_id.get(oid, oid)
-                for oid in ri.manually_selected_exam_operator_ids
-            }
 
         # recruit_line (Dict[int, List]) - 招募线id:[0进度, 1策略id, 2主招聘专员id, 3效率]
         if hasattr(ri, "recruit_line"):
@@ -1343,20 +1296,8 @@ def migrate_character_replacement(
         work.set_warden(normalize_single_character_id(work.warden(), 0))
         work.remap(old_to_new_id_map)
         production.remap(old_to_new_id_map)
-
-        # maintenance_place
-        if hasattr(ri, "maintenance_place") and ri.maintenance_place:
-            old_maint = ri.maintenance_place.copy()
-            ri.maintenance_place = {}
-            for oid, place in old_maint.items():
-                ri.maintenance_place[old_to_new_id_map.get(oid, oid)] = place
-
-        # equipment_maintain_operator_ids
-        if hasattr(ri, "equipment_maintain_operator_ids"):
-            ri.equipment_maintain_operator_ids = [
-                old_to_new_id_map.get(oid, oid)
-                for oid in ri.equipment_maintain_operator_ids
-            ]
+        maintenance.remap(old_to_new_id_map)
+        physical_exam.remap(old_to_new_id_map)
 
         # milk_in_fridge
         if hasattr(ri, "milk_in_fridge") and ri.milk_in_fridge:
@@ -1424,67 +1365,12 @@ def migrate_character_replacement(
             for oid, value in old_prisoners.items():
                 ri.current_prisoners[old_to_new_id_map.get(oid, oid)] = value
 
-        # maintenance_equipment_chara_id
-        if (
-            hasattr(ri, "maintenance_equipment_chara_id")
-            and ri.maintenance_equipment_chara_id
-        ):
-            old_maint_eq = ri.maintenance_equipment_chara_id.copy()
-            ri.maintenance_equipment_chara_id = {}
-            for oid, old_target in old_maint_eq.items():
-                new_id = old_to_new_id_map.get(oid, oid)
-                new_target = old_to_new_id_map.get(old_target, old_target)
-                ri.maintenance_equipment_chara_id[new_id] = new_target
-
         # urine_in_fridge
         if hasattr(ri, "urine_in_fridge") and ri.urine_in_fridge:
             old_urine = ri.urine_in_fridge.copy()
             ri.urine_in_fridge = {}
             for oid, value in old_urine.items():
                 ri.urine_in_fridge[old_to_new_id_map.get(oid, oid)] = value
-
-        # today_physical_examination_chara_id_dict
-        if (
-            hasattr(ri, "today_physical_examination_chara_id_dict")
-            and ri.today_physical_examination_chara_id_dict
-        ):
-            old_exam = ri.today_physical_examination_chara_id_dict.copy()
-            ri.today_physical_examination_chara_id_dict = {}
-            for oid, value in old_exam.items():
-                ri.today_physical_examination_chara_id_dict[
-                    old_to_new_id_map.get(oid, oid)
-                ] = value
-
-        # examined_operator_ids
-        if hasattr(ri, "examined_operator_ids") and ri.examined_operator_ids:
-            old_examined = ri.examined_operator_ids.copy()
-            ri.examined_operator_ids = set()
-            for oid in old_examined:
-                ri.examined_operator_ids.add(old_to_new_id_map.get(oid, oid))
-
-        # waiting_for_exam_operator_ids
-        if (
-            hasattr(ri, "waiting_for_exam_operator_ids")
-            and ri.waiting_for_exam_operator_ids
-        ):
-            old_waiting = ri.waiting_for_exam_operator_ids.copy()
-            ri.waiting_for_exam_operator_ids = set()
-            for oid in old_waiting:
-                ri.waiting_for_exam_operator_ids.add(
-                    old_to_new_id_map.get(oid, oid)
-                )
-
-        # manually_selected_exam_operator_ids
-        if (
-            hasattr(ri, "manually_selected_exam_operator_ids")
-            and ri.manually_selected_exam_operator_ids
-        ):
-            old_manual = ri.manually_selected_exam_operator_ids.copy()
-            ri.manually_selected_exam_operator_ids = set()
-            for oid in old_manual:
-                ri.manually_selected_exam_operator_ids.add(
-                    old_to_new_id_map.get(oid, oid)
-                )
 
         # recruit_line
         if hasattr(ri, "recruit_line") and ri.recruit_line:
@@ -2408,7 +2294,6 @@ def _clear_young_child_reference(
         rhodes_island.milk_in_fridge,
         rhodes_island.urine_in_fridge,
         rhodes_island.current_prisoners,
-        rhodes_island.today_physical_examination_chara_id_dict,
     ):
         for chara_id in young_child_id_set & set(chara_key_dict):
             del chara_key_dict[chara_id]
@@ -2422,12 +2307,7 @@ def _clear_young_child_reference(
             count += _discard_id(
                 class_data.get("must_attend"), young_child_id_set
             )
-    for exam_set in (
-        rhodes_island.examined_operator_ids,
-        rhodes_island.waiting_for_exam_operator_ids,
-        rhodes_island.manually_selected_exam_operator_ids,
-    ):
-        count += _discard_id(exam_set, young_child_id_set)
+    count += physical_exam.drop(young_child_id_set)
     for book_id, borrower_id in list(rhodes_island.book_borrow_dict.items()):
         if borrower_id in young_child_id_set:
             rhodes_island.book_borrow_dict[book_id] = -1

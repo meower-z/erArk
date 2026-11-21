@@ -28,7 +28,7 @@ from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import kernel_state
 from Script.UI.Moudle import panel, draw, view
 from Script.Config import normal_config, game_config
-from Script.Modules.domains import warehouse
+from Script.Modules.domains import physical_exam, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -95,7 +95,7 @@ def first_bonus_and_setting_updata() -> None:
     # 初始资源
     warehouse.start({1: 20000, 11: 20, 15: 1000, 21: 10})
     # 体检设置
-    cache.rhodes_island.physical_examination_setting = (
+    physical_exam.set_settings(
         attr_calculation.get_physical_exam_setting_zero()
     )
     # 调教设置

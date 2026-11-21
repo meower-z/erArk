@@ -1241,9 +1241,6 @@ def _reset_game_data(world_setting: dict[int, int]) -> None:
     cache.player_route = None
     cache.difficulty_setting = attr_calculation.get_difficulty_setting_zero()
     cache.birth_type_setting = attr_calculation.get_birth_type_setting_zero()
-    cache.rhodes_island.physical_examination_setting = (
-        attr_calculation.get_physical_exam_setting_zero()
-    )
     info_draw_text += _("游戏数据重置完毕\n")
 
     # 覆盖要保留的数据

@@ -13,6 +13,7 @@ from Script.Design import handle_premise, attr_calculation, game_time, attr_text
 from Script.System.Instruct_System import handle_instruct
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
+from Script.Modules.domains import physical_exam
 import random
 
 from Script.UI.Panel import achievement_panel
@@ -34,7 +35,7 @@ def settle_health_check() -> None:
     结算体检
     """
     # 重置今日体检数据
-    cache.rhodes_island.today_physical_examination_chara_id_dict = {}
+    physical_exam.clear(physical_exam.TODAY)
     # 如果开启了定期体检
     if handle_premise.handle_periodic_health_check_on(0):
         # 如果今天是体检日，则抽选今日要体检的干员
@@ -52,9 +53,7 @@ def settle_health_check() -> None:
                 if handle_premise.handle_self_in_health_check_list(chara_id):
                     need_physical_examination_chara_id_list.append(chara_id)
             # 今日的要体检人数
-            need_chara_num = (
-                int(cache.rhodes_island.physical_examination_setting[6]) + 1
-            )
+            need_chara_num = int(physical_exam.setting(6)) + 1
             final_physical_examination_chara_id_list = []
             # 如果要体检的人数大于等于干员总数，则全体体检
             if need_chara_num >= len(need_physical_examination_chara_id_list):
@@ -74,21 +73,21 @@ def settle_health_check() -> None:
                 else:
                     now_character_data.action_info.health_check_today = 2
         # 重置周期内的已体检干员数据
-        if cache.rhodes_island.physical_examination_setting[3] == 0:
+        if physical_exam.setting(3) == 0:
             # 每年重置一次
             if game_time.now().month == 3 and game_time.now().day == 1:
-                cache.rhodes_island.examined_operator_ids = set()
-        elif cache.rhodes_island.physical_examination_setting[3] == 1:
+                physical_exam.clear(physical_exam.EXAMINED)
+        elif physical_exam.setting(3) == 1:
             # 每月重置一次
             if game_time.now().day == 1:
-                cache.rhodes_island.examined_operator_ids = set()
-        elif cache.rhodes_island.physical_examination_setting[3] == 2:
+                physical_exam.clear(physical_exam.EXAMINED)
+        elif physical_exam.setting(3) == 2:
             # 每周重置一次
             if game_time.now().weekday() == 0:
-                cache.rhodes_island.examined_operator_ids = set()
-        elif cache.rhodes_island.physical_examination_setting[3] == 3:
+                physical_exam.clear(physical_exam.EXAMINED)
+        elif physical_exam.setting(3) == 3:
             # 每天重置一次
-            cache.rhodes_island.examined_operator_ids = set()
+            physical_exam.clear(physical_exam.EXAMINED)
 
 
 class Physical_Check_And_Manage_Panel:
@@ -108,11 +107,9 @@ class Physical_Check_And_Manage_Panel:
         """ 绘制的文本列表 """
         self.pl_character_data = cache.character_data[0]
         """ 玩家的角色数据 """
-        self.done_check_behavior_id_set: set[str] = (
-            cache.rhodes_island.physical_examination_in_progress.get(
-                self.pl_character_data.target_character_id, set()
-            )
-        )
+        self.done_check_behavior_id_set: set[str] = physical_exam.checks(
+            physical_exam.IN_PROGRESS
+        ).get(self.pl_character_data.target_character_id, set())
         """ 这次体检里已经检查过的行为id集合（游戏数据里的，面板重开后仍在） """
 
     def draw(self) -> None:
@@ -134,13 +131,9 @@ class Physical_Check_And_Manage_Panel:
             cinfo_draw.draw()
 
             # 如果对象已经在体检数据中，则直接显示体检数据
-            if (
-                target_character_id
-                in cache.rhodes_island.today_physical_examination_chara_id_dict
-            ):
-                self.done_check_behavior_id_set = cache.rhodes_island.today_physical_examination_chara_id_dict[
-                    target_character_id
-                ]
+            today = physical_exam.checks(physical_exam.TODAY)
+            if target_character_id in today:
+                self.done_check_behavior_id_set = today[target_character_id]
                 button1_text = _("[001]检查身体情况（今日已体检）")
                 button1_draw: draw.NormalDraw | draw.LeftButton
                 button1_draw = draw.NormalDraw()
@@ -254,25 +247,12 @@ class Physical_Check_And_Manage_Panel:
         # 如果已经体检了
         if len(self.done_check_behavior_id_set) > 0:
             target_character_data = cache.character_data[target_character_id]
-            # 记录到今日已体检角色数据中
-            cache.rhodes_island.today_physical_examination_chara_id_dict[
-                target_character_id
-            ] = self.done_check_behavior_id_set
-            cache.rhodes_island.physical_examination_in_progress.pop(
-                target_character_id, None
+            # 做过的检查移进今日已体检。受检者加进本周期已体检名单，并移出等待名单
+            physical_exam.finish(
+                target_character_id, self.done_check_behavior_id_set
             )
-            # 加入周期内已体检角色名单
-            cache.rhodes_island.examined_operator_ids.add(target_character_id)
             # 清零今日体检时间
             target_character_data.action_info.health_check_today = 0
-            # 从等待体检名单中移除
-            if (
-                target_character_id
-                in cache.rhodes_island.waiting_for_exam_operator_ids
-            ):
-                cache.rhodes_island.waiting_for_exam_operator_ids.remove(
-                    target_character_id
-                )
 
     def check_target_physical(self, target_character_id: int) -> None:
         """查看目标角色的身体情况"""
@@ -440,12 +420,11 @@ class Physical_Check_And_Manage_Panel:
         随检查的行动开始时写进游戏；在询问里返回或判定没过时不写，这项检查不算做过
         """
         behavior_data = game_config.config_behavior[behavior_id]
-        self.done_check_behavior_id_set = (
-            cache.rhodes_island.physical_examination_in_progress.setdefault(
-                self.pl_character_data.target_character_id, set()
-            )
-        )
-        self.done_check_behavior_id_set.add(behavior_id)
+        examined_id = self.pl_character_data.target_character_id
+        physical_exam.record_check(examined_id, behavior_id)
+        self.done_check_behavior_id_set = physical_exam.checks(
+            physical_exam.IN_PROGRESS
+        )[examined_id]
         line = draw.LineDraw("-", window_width)
         line.draw()
         line_feed.draw()
@@ -1011,10 +990,7 @@ class Physical_Check_And_Manage_Panel:
             # 遍历全部设置
             for cid in game_config.config_physical_exam_setting:
                 # 如果当前不是第2个设置，且第2个设置没有开启，则不显示后面的设置
-                if (
-                    cid >= 3
-                    and cache.rhodes_island.physical_examination_setting[2] == 0
-                ):
+                if cid >= 3 and physical_exam.setting(2) == 0:
                     break
                 line_feed.draw()
                 physical_exam_setting_data = (
@@ -1036,11 +1012,9 @@ class Physical_Check_And_Manage_Panel:
                 return_list.append(button_draw.return_text)
 
                 # 如果没有该键，则创建一个，并置为0
-                if cid not in cache.rhodes_island.physical_examination_setting:
-                    cache.rhodes_island.physical_examination_setting[cid] = 0
-                now_setting_flag = (
-                    cache.rhodes_island.physical_examination_setting[cid]
-                )  # 当前设置的值
+                if cid not in physical_exam.settings():
+                    physical_exam.set_setting(cid, 0)
+                now_setting_flag = physical_exam.setting(cid)  # 当前设置的值
                 option_len = len(
                     game_config.config_physical_exam_setting_option[cid]
                 )  # 选项的长度
@@ -1061,14 +1035,8 @@ class Physical_Check_And_Manage_Panel:
                 return_list.append(button_draw.return_text)
 
                 # 部分选项有额外的手动选择按钮
-                if (
-                    cid == 4
-                    and cache.rhodes_island.physical_examination_setting[cid]
-                    == 2
-                ):
-                    now_len = len(
-                        cache.rhodes_island.manually_selected_exam_operator_ids
-                    )
+                if cid == 4 and physical_exam.setting(cid) == 2:
+                    now_len = len(physical_exam.ids(physical_exam.CHOSEN))
                     button_text = _("[调整干员名单]({0}人)").format(now_len)
                     button_len = max(len(button_text) * 2, 20)
                     button_draw = draw.CenterButton(
@@ -1079,14 +1047,8 @@ class Physical_Check_And_Manage_Panel:
                     )
                     button_draw.draw()
                     return_list.append(button_draw.return_text)
-                elif (
-                    cid == 7
-                    and cache.rhodes_island.physical_examination_setting[cid]
-                    == 1
-                ):
-                    now_len = len(
-                        cache.rhodes_island.manually_selected_exam_week_day_list
-                    )
+                elif cid == 7 and physical_exam.setting(cid) == 1:
+                    now_len = len(physical_exam.week_days())
                     button_text = _("[调整体检日]({0}天)").format(now_len)
                     button_len = max(len(button_text) * 2, 20)
                     button_draw = draw.CenterButton(
@@ -1442,15 +1404,12 @@ class Physical_Check_And_Manage_Panel:
                 new_num = 0
             elif new_num > 9:
                 new_num = 9
-            cache.rhodes_island.physical_examination_setting[cid] = new_num
+            physical_exam.set_setting(cid, new_num)
         else:
-            if (
-                cache.rhodes_island.physical_examination_setting[cid]
-                < option_len - 1
-            ):
-                cache.rhodes_island.physical_examination_setting[cid] += 1
+            if physical_exam.setting(cid) < option_len - 1:
+                physical_exam.set_setting(cid, physical_exam.setting(cid) + 1)
             else:
-                cache.rhodes_island.physical_examination_setting[cid] = 0
+                physical_exam.set_setting(cid, 0)
 
     def adjust_target_list(self) -> None:
         """调整体检对象名单"""
@@ -1470,9 +1429,7 @@ class Physical_Check_And_Manage_Panel:
         while 1:
             npc_id_got_list = sorted(cache.npc_id_got)
             # 已选择的角色id列表
-            selected_id_list = list(
-                cache.rhodes_island.manually_selected_exam_operator_ids
-            )
+            selected_id_list = list(physical_exam.ids(physical_exam.CHOSEN))
             final_list = []
             # 遍历角色id
             for npc_id in npc_id_got_list:
@@ -1504,17 +1461,10 @@ class Physical_Check_And_Manage_Panel:
 
     def switch_chara_in_target_list(self, character_id: int) -> None:
         """切换体检对象名单中的角色"""
-        if (
-            character_id
-            in cache.rhodes_island.manually_selected_exam_operator_ids
-        ):
-            cache.rhodes_island.manually_selected_exam_operator_ids.remove(
-                character_id
-            )
+        if physical_exam.has(physical_exam.CHOSEN, character_id):
+            physical_exam.discard(physical_exam.CHOSEN, character_id)
         else:
-            cache.rhodes_island.manually_selected_exam_operator_ids.add(
-                character_id
-            )
+            physical_exam.add(physical_exam.CHOSEN, character_id)
 
     def adjust_physical_exam_date(self) -> None:
         """调整体检日期"""
@@ -1538,10 +1488,7 @@ class Physical_Check_And_Manage_Panel:
                 draw_text = f" [{week_id}]{week_data[week_id].name}"
                 draw_style = "standard"
                 # 如果已选择该日期，则显示为选中状态
-                if (
-                    week_id
-                    in cache.rhodes_island.manually_selected_exam_week_day_list
-                ):
+                if week_id in physical_exam.week_days():
                     draw_text += _("(已选择)")
                     draw_style = "gold_enrod"
                 week_draw = draw.LeftButton(
@@ -1568,11 +1515,4 @@ class Physical_Check_And_Manage_Panel:
 
     def set_physical_exam_date(self, week_id: int) -> None:
         """设置体检日期"""
-        if week_id in cache.rhodes_island.manually_selected_exam_week_day_list:
-            cache.rhodes_island.manually_selected_exam_week_day_list.remove(
-                week_id
-            )
-        else:
-            cache.rhodes_island.manually_selected_exam_week_day_list.append(
-                week_id
-            )
+        physical_exam.toggle_week_day(week_id)

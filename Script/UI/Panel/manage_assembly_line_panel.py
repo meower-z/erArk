@@ -16,7 +16,8 @@ from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
 from typing import TYPE_CHECKING
 from Script.Design import game_time
-from Script.Modules.domains import facility, medical, production, warehouse
+from Script.Modules.domains import facility, maintenance, medical, production
+from Script.Modules.domains import warehouse
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -110,11 +111,9 @@ def settle_assembly_line(
 
     # 计算设施损坏
     damage_down = 0
-    for facility_str in cache.rhodes_island.facility_damage_data:
+    for facility_str, count in maintenance.damage().items():
         if "制造加工" in facility_str:
-            damage_down = (
-                cache.rhodes_island.facility_damage_data[facility_str] * 2
-            )
+            damage_down = count * 2
 
     # 结算基建模块的当场生效
     hospital_bed_modules = 0

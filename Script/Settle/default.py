@@ -48,7 +48,8 @@ from Script.Settle.common_default import (
 )
 
 from Script.Settle.item_effect import *
-from Script.Modules.domains import facility, medical, needs, warehouse
+from Script.Modules.domains import facility, maintenance, medical, needs
+from Script.Modules.domains import physical_exam, warehouse
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -2818,8 +2819,7 @@ def handle_enter_waiting_for_physical_exam(
     """
     if not add_time:
         return
-    if character_id not in cache.rhodes_island.waiting_for_exam_operator_ids:
-        cache.rhodes_island.waiting_for_exam_operator_ids.add(character_id)
+    physical_exam.add(physical_exam.WAITING, character_id)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -2841,8 +2841,7 @@ def handle_exit_waiting_for_physical_exam(
     """
     if not add_time:
         return
-    if character_id in cache.rhodes_island.waiting_for_exam_operator_ids:
-        cache.rhodes_island.waiting_for_exam_operator_ids.remove(character_id)
+    physical_exam.discard(physical_exam.WAITING, character_id)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -3125,9 +3124,7 @@ def handle_facility_damage_check(
         character_data.position
     )
     # 计算已损坏次数
-    damage_count = 0
-    if scene_path_str in cache.rhodes_island.facility_damage_data:
-        damage_count = cache.rhodes_island.facility_damage_data[scene_path_str]
+    damage_count = maintenance.damage().get(scene_path_str, 0)
     # 计算损坏几率
     damage_rate = 1 / (2**damage_count)
     damage_rate = max(damage_rate, 0)
@@ -3135,7 +3132,7 @@ def handle_facility_damage_check(
     if random.random() < (damage_rate / 100):
         # 损坏
         damage_count += 1
-        cache.rhodes_island.facility_damage_data[scene_path_str] = damage_count
+        maintenance.set_damage(scene_path_str, damage_count)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -8477,12 +8474,13 @@ def handle_maintenance_add_adjust(
         character_data.position
     )
     # 检查是否在损坏设施数据中
-    if scene_path_str in cache.rhodes_island.facility_damage_data:
+    damage = maintenance.damage()
+    if scene_path_str in damage:
         repair_num = character_data.ability[48]
-        cache.rhodes_island.facility_damage_data[scene_path_str] -= repair_num
         # 修复后如果小于等于0则去掉
-        if cache.rhodes_island.facility_damage_data[scene_path_str] <= 0:
-            cache.rhodes_island.facility_damage_data.pop(scene_path_str)
+        maintenance.set_damage(
+            scene_path_str, damage[scene_path_str] - repair_num
+        )
 
 
 @settle_behavior.add_settle_behavior_effect(
