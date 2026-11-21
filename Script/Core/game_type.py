@@ -1437,25 +1437,6 @@ class Rhodes_Island:
 
     def __init__(self) -> None:
         """初始化罗德岛相关属性对象"""
-        self.class_schedule: dict[str, dict[int, dict[int, list]]] = {}
-        """ 全局课表（Plan 22） 键str:教室场景名(如"理论教室一") 值dict:{星期int(0~6): {节次int(0~8): [科目能力id int,
-        授课教师id int]}}
-            未排的格子表示该教室该节次空闲；教师id为-1表示排了课但未指派教师（本节降级为自习）
-            只存班级式的教室课；体育/兴趣/实习课存在各角色的 child_growth.selected_course 里 """
-        self.temp_sex_class: dict[str, dict] = {}
-        """ 临时性技实操课（Plan 22 四期 §4.3.2）
-            键str:"日期序数-节次"(如"739510-3")  值dict:
-            {"classroom": 教室场景名str, "ability_id": 性技科目能力id int(只填70~75、77，76腰技男性专属),
-             "must_attend": 必修学生角色id列表 list,
-             "notified": [起床提醒已发bool, 半小时提醒已发bool, 下课时刻提醒已发bool],
-             "running": 本节课是否正在进行中 bool,
-             "reserved": 开课时是否复用了预约条目 bool（开课口上按「预约 / 当场」分档用）,
-             "ended": 预约的课下课后打的标记 bool（2026-09-12 第五轮：条目留到跨天清理，覆盖层与必修判定不再认它）}
-            一次性课程，键含具体日期序数——不能并进 class_schedule（那里键是星期0~6，会每周重复上演）
-            过期条目在跨天结算时清理，但 running 为真的那条要跳过（拖堂可跨天） """
-        self.child_schedule_template: dict[int, dict] = {}
-        """ 孩子日程模板（Plan 22） 键int:模板编号 值dict:{"name": 模板名str, "slot": {时段int(0~2): 活动id int}}
-            活动id 复用 Entertainment 配置 id。本期只建字段，写入方在二期 """
 
         # 控制中枢
 
@@ -1507,20 +1488,6 @@ class Rhodes_Island:
         # 甲板
 
         # 关押区
-        self.current_prisoners: dict[int, list] = {}
-        """ 当前囚犯干员的数据，干员id: [被关押的时间datetime, 逃脱的概率int] """
-        self.confinement_training_setting: dict[int, int] = {}
-        """ 监禁调教设置 设置id:设置值 """
-        self.pre_training_cleaning: bool = False
-        """ 调教前清洗准备 """
-        self.pre_training_lubrication: bool = False
-        """ 调教前润滑准备 """
-        self.pre_training_tool_dict: dict[int, int] = {}
-        """ 调教前道具使用，同BODY_H_STATE类的body_item """
-        self.sex_assistant_ai_behavior_id_list: list = []
-        """ 调教助手的AI行为列表 """
-        self.sex_assistant_ai_ban_behavior_id_list: list = []
-        """ 调教助手的AI禁止行为列表 """
 
 
 class Country:

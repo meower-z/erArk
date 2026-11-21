@@ -15,10 +15,24 @@ from Script.Config import game_config
 from Script.Design import attr_calculation, character_handle, child_stage_gate
 from typing import TYPE_CHECKING, TypedDict
 from Script.Design import game_time
-from Script.Modules.domains import commission, diplomacy, economy, fridge
-from Script.Modules.domains import library
-from Script.Modules.domains import medical, modes, needs, playthrough, power
-from Script.Modules.domains import production, recruit, visitor, work
+from Script.Modules.domains import (
+    commission,
+    diplomacy,
+    economy,
+    education,
+    fridge,
+    library,
+    medical,
+    modes,
+    needs,
+    playthrough,
+    power,
+    prison,
+    production,
+    recruit,
+    visitor,
+    work,
+)
 from Script.Modules.save_load import upgrade
 
 if TYPE_CHECKING:
@@ -433,13 +447,8 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
         # 访客、邀请目标与外勤委托的队伍里的角色id
         _remap_visitor_and_commission(old_to_new_id)
 
-        # current_prisoners (Dict[int, List])
-        if hasattr(ri, "current_prisoners"):
-            old_prisoners = ri.current_prisoners.copy()
-            ri.current_prisoners = {}
-            for old_id, value in old_prisoners.items():
-                new_id = old_to_new_id.get(old_id, old_id)
-                ri.current_prisoners[new_id] = value
+        # 关押区囚犯名册
+        prison.remap(old_to_new_id)
 
         # maintenance_equipment_chara_id (Dict[int, int])
         if hasattr(ri, "maintenance_equipment_chara_id"):
@@ -1268,12 +1277,8 @@ def migrate_character_replacement(
         # 访客、邀请目标与外勤委托的队伍里的角色id
         _remap_visitor_and_commission(old_to_new_id_map)
 
-        # current_prisoners
-        if hasattr(ri, "current_prisoners") and ri.current_prisoners:
-            old_prisoners = ri.current_prisoners.copy()
-            ri.current_prisoners = {}
-            for oid, value in old_prisoners.items():
-                ri.current_prisoners[old_to_new_id_map.get(oid, oid)] = value
+        # 关押区囚犯名册
+        prison.remap(old_to_new_id_map)
 
         # maintenance_equipment_chara_id
         if (
@@ -2238,22 +2243,18 @@ def _clear_young_child_reference(
     rhodes_island = loaded_dict["rhodes_island"]
     count += fridge.drop(young_child_id_set)
     for chara_key_dict in (
-        rhodes_island.current_prisoners,
         rhodes_island.today_physical_examination_chara_id_dict,
     ):
         for chara_id in young_child_id_set & set(chara_key_dict):
             del chara_key_dict[chara_id]
             count += 1
+    count += prison.drop_prisoners(young_child_id_set)
     for commission_id, one in commission.ongoing().items():
         team = list(one.team)
         count += _discard_id(team, young_child_id_set)
         commission.set_team(commission_id, team)
     count += _cancel_empty_field_commission()
-    for class_data in rhodes_island.temp_sex_class.values():
-        if isinstance(class_data, dict):
-            count += _discard_id(
-                class_data.get("must_attend"), young_child_id_set
-            )
+    count += education.drop_must_attend(young_child_id_set)
     for exam_set in (
         rhodes_island.examined_operator_ids,
         rhodes_island.waiting_for_exam_operator_ids,
@@ -2627,21 +2628,9 @@ def migrate_age_and_body_type(
             loaded_dict["character_data"][0], young_child_id_set
         )
     count += _take_young_child_off_line(loaded_dict, young_child_id_set)
-    for template_data in loaded_dict[
-        "rhodes_island"
-    ].child_schedule_template.values():
-        slot_data = (
-            template_data.get("slot", {})
-            if isinstance(template_data, dict)
-            else {}
-        )
-        for slot in [
-            slot
-            for slot, value in slot_data.items()
-            if value not in game_config.config_entertainment
-        ]:
-            slot_data[slot] = 0
-            count += 1
+    count += education.clear_missing_template_slots(
+        game_config.config_entertainment
+    )
     if world_setting_shrink:
         if isinstance(world_setting, dict):
             world_setting[WORLD_SETTING_SHRINK] = 0

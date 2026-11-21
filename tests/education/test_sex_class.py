@@ -15,6 +15,7 @@ from _bootstrap import (
     constant_promise,
     datetime,
     drawn_text,
+    education,
     education_constant,
     finish,
     game_config,
@@ -77,9 +78,9 @@ check(
     and not data["running"]
     and not data["reserved"],
 )
-check("读回同一条", sex_class_handle.get_temp_class(today, 2) is data)
+check("读回同一条", sex_class_handle.get_temp_class(today, 2) == data)
 check(
-    "当场开课的 notified 全为已发",
+    "当场开课",
     sex_class_handle.set_temp_class(today, 3, ROOM_P, 71, running=True)[
         "notified"
     ]
@@ -95,7 +96,7 @@ check(
 )
 sex_class_handle.del_temp_class(today, 3)
 check(
-    "删掉后没有运行中的课",
+    "删掉后无运行课",
     sex_class_handle.get_running_class() is None
     and sex_class_handle.get_running_class_key() == "",
 )
@@ -116,7 +117,7 @@ check(
 )
 kernel_data.set_world(modes.set_sex_class, False)
 pl.sp_flag.is_h = False
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 
 section("星期 → 日期")
 set_time(period_time(3))
@@ -254,7 +255,7 @@ check(
     == period_time(4) + datetime.timedelta(minutes=45)
     and sex_class_handle.get_period_start_time(today, 9) is None,
 )
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 reserved = sex_class_handle.set_temp_class(
     today, 4, ROOM_P, 70, must_attend=[201]
 )
@@ -262,9 +263,24 @@ text_list = sex_class_handle.check_and_send_notify(
     period_time(4) - datetime.timedelta(minutes=60),
     period_time(4) - datetime.timedelta(minutes=20),
 )
+
+
+def _temp(period: int, day: int | None = None) -> dict:
+    return (
+        sex_class_handle.get_temp_class(today if day is None else day, period)
+        or {}
+    )
+
+
+def _patch_temp(period: int, day: int | None = None, **fields: object) -> dict:
+    d = today if day is None else day
+    key = sex_class_handle.get_class_key(d, period)
+    return education.put_temp_class(key, {**_temp(period, d), **fields})
+
+
 check(
     "跨过开始前 30 分钟 → 第二次提醒",
-    len(text_list) == 1 and reserved["notified"][1],
+    len(text_list) == 1 and _temp(4)["notified"][1],
 )
 check(
     "再结算一次不重发",
@@ -281,7 +297,7 @@ check(
     )
     == [],
 )
-reserved["running"] = True
+_patch_temp(4, running=True)
 check(
     "上课中跨过下课时刻 → 第三次提醒",
     len(
@@ -291,16 +307,16 @@ check(
         )
     )
     == 1
-    and reserved["notified"][2],
+    and _temp(4)["notified"][2],
 )
-reserved["running"] = False
+_patch_temp(4, running=False)
 set_time(period_time(0))
 first_text = sex_class_handle.get_today_class_notify_text()
 check(
     "起床提醒含教室与科目",
     ROOM_P in first_text
     and game_config.config_ability[70].name in first_text
-    and reserved["notified"][0],
+    and _temp(4)["notified"][0],
 )
 check("起床提醒只发一次", sex_class_handle.get_today_class_notify_text() == "")
 
@@ -312,7 +328,7 @@ student_a_growth.attend_class_count = 0
 now_class = sex_class_handle.start_sex_class(70)
 check(
     "预约的那节：复用条目、标记预约",
-    now_class is reserved and now_class["running"] and now_class["reserved"],
+    now_class == _temp(4) and now_class["running"] and now_class["reserved"],
 )
 check(
     "到场学生记出勤",
@@ -366,26 +382,17 @@ check(
 )
 # 预约的课下课后条目留到跨天，但打上已下课标记，覆盖层不再认它（第五轮）
 set_time(period_time(4) + datetime.timedelta(minutes=20))
+check("预约下课", _temp(4).get("ended") is True)
+check("已下课非有效", sex_class_handle.get_active_temp_class(today, 4) is None)
 check(
-    "预约的课下课：条目保留、标记 ended",
-    sex_class_handle.get_temp_class(today, 4) is reserved
-    and reserved.get("ended") is True,
+    "已下课交还课表", schedule_handle.get_class_cell(ROOM_P, weekday, 4) is None
 )
 check(
-    "已下课：不再是有效临时课",
-    sex_class_handle.get_active_temp_class(today, 4) is None,
-)
-check(
-    "已下课：课表格子交还原来的课",
-    schedule_handle.get_class_cell(ROOM_P, weekday, 4) is None,
-)
-check(
-    "已下课：玩家的教师反查也取不到",
-    schedule_handle.get_teacher_cell(0, weekday, 4) is None,
+    "已下课无教师反查", schedule_handle.get_teacher_cell(0, weekday, 4) is None
 )
 sex_class_handle.end_sex_class()
 check("重复下课不报错", True)
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 set_time(period_time(5))
 new_class = sex_class_handle.start_sex_class(71)
 check(
@@ -452,7 +459,7 @@ check(
 sex_class_handle.end_sex_class()
 check(
     "当场开的课下课后条目直接删掉",
-    impromptu_key not in cache.rhodes_island.temp_sex_class,
+    impromptu_key not in education.temp_classes(),
 )
 kernel_data.set_world(modes.set_sex_class, False)
 kernel_data.set_world(modes.set_group_sex, False)
@@ -473,7 +480,7 @@ check(
 )
 
 section("Plan 26 §3.5：提前几分钟开讲预约的课，开的就是预约那节")
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 kernel_data.set_world(modes.set_sex_class, False)
 kernel_data.set_world(modes.set_group_sex, False)
 newbie = make_character(
@@ -510,22 +517,18 @@ check(
     sex_class_handle.get_scene_student_list(),
 )
 check(
-    "开课指令预读得到预约（不再重问主修）",
-    sex_class_handle.find_class_to_start(ROOM_P, early)[1] is reserved,
+    "开课指令预读得到预约",
+    sex_class_handle.find_class_to_start(ROOM_P, early)[1] == reserved,
 )
 now_class = sex_class_handle.start_sex_class(72)
 check(
     "复用预约条目：运行中、标记预约、键还是第 6 节",
-    now_class is reserved
-    and reserved["running"]
-    and reserved["reserved"]
+    now_class == _temp(6)
+    and now_class["running"]
+    and now_class["reserved"]
     and sex_class_handle.get_running_class_key() == key_6,
 )
-check(
-    "没有另开一节当场课",
-    list(cache.rhodes_island.temp_sex_class.keys()) == [key_6],
-    list(cache.rhodes_island.temp_sex_class.keys()),
-)
+check("没有另开一节当场课", list(education.temp_classes()) == [key_6])
 set_time(period_time(6) + datetime.timedelta(minutes=45))
 check(
     "按预约的节次判档：到点下课是「按时」",
@@ -534,7 +537,7 @@ check(
 sex_class_handle.end_sex_class()
 check(
     "下课后预约那条打上 ended、不再覆盖",
-    reserved.get("ended") is True
+    _temp(6).get("ended") is True
     and sex_class_handle.get_active_temp_class(today, 6) is None,
 )
 set_time(period_time(6) + datetime.timedelta(minutes=20))
@@ -545,12 +548,12 @@ check(
 check(
     "同一节下课后在同一间教室重开：沿用那条",
     sex_class_handle.find_class_to_start(ROOM_P, game_time.now())[1]
-    is reserved,
+    == _temp(6),
 )
 reopen = sex_class_handle.start_sex_class(72, [])
 check(
     "重开：清掉已下课标记、仍是预约",
-    reopen is reserved and reserved["ended"] is False and reserved["running"],
+    reopen == _temp(6) and reopen["ended"] is False and reopen["running"],
 )
 sex_class_handle.end_sex_class()
 
@@ -561,11 +564,11 @@ move_to(0, classroom_path(_("大礼堂")))
 started = sex_class_handle.start_sex_class(71, [])
 check(
     "挪用：还是那一条，教室改成大礼堂，必修名单保留、算预约",
-    started is moved
-    and moved["classroom"] == _("大礼堂")
-    and moved["must_attend"] == [204]
-    and moved["reserved"],
-    moved,
+    started == _temp(7)
+    and started["classroom"] == _("大礼堂")
+    and started["must_attend"] == [204]
+    and started["reserved"],
+    started,
 )
 sex_class_handle.end_sex_class()
 move_to(0, classroom_path(ROOM_P))
@@ -584,7 +587,7 @@ student_b.work.work_type = 152
 check("改回学生岗恢复", sex_class_handle.judge_can_join_sex_class(202))
 
 section("Plan 26 L8：开课前半小时的提醒写实")
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 sex_class_handle.set_temp_class(today, 8, ROOM_P, 70)
 text_list = sex_class_handle.check_and_send_notify(
     period_time(8) - datetime.timedelta(minutes=40),
@@ -597,7 +600,7 @@ check(
     and "已经在往教室走了" not in text_list[0],
     text_list,
 )
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 
 section(
     "Plan 27 L2（按设计保留）：同一节里下课后再开一次实操课，到场学生再记一节出勤"
@@ -623,7 +626,7 @@ check(
     (_attend, _first, growth_handle.get_child_growth(201).attend_class_count),
 )
 student_a.sp_flag.is_h = False
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 
 section("Plan 30 §3.4：这一节已记缺课的学生，开课与 722 晚到都不记出勤")
 kernel_data.set_world(modes.set_sex_class, False)
@@ -655,7 +658,7 @@ check(
     growth_handle.get_child_growth(201).attend_class_count == _attend + 1,
 )
 growth_handle.get_child_growth(201).last_absent_period = []
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 
 section(
     "Plan 31 M1：实操课门槛的实行值只判不扣——门槛与前提求值多次，不扣理智、不累加今日消耗、不解除催眠"
@@ -742,7 +745,7 @@ check(
 )
 kernel_data.set_world(modes.set_sex_class, False)
 kernel_data.set_world(modes.set_group_sex, False)
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 kernel_data.set_needs(pl.cid, sanity=0)
 check(
     "M1 理智为 0：没有补正，门槛不成立",
@@ -790,7 +793,7 @@ remove_character(305)
 section(
     "Plan 31 L3：提前几分钟开讲预约的实操课，按那一节判「本节已缺课」；L12：记出勤时累计实操课次数"
 )
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 kernel_data.set_world(modes.set_sex_class, False)
 kernel_data.set_world(modes.set_group_sex, False)
 move_to(0, classroom_path(ROOM_P))
@@ -838,7 +841,7 @@ check(
     (_attend, _g201.attend_class_count, _sex, _g201.sex_class_count),
 )
 sex_class_handle.end_sex_class()
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 sex_class_handle.set_temp_class(today, 5, ROOM_P, 70)
 set_time(_l3_early)
 _g201.last_absent_period = [today, 5]
@@ -850,7 +853,7 @@ check(
     (_attend, _g201.attend_class_count, _sex, _g201.sex_class_count),
 )
 sex_class_handle.end_sex_class()
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 set_time(
     datetime.datetime(_l3_early.year, _l3_early.month, _l3_early.day, 12, 30)
 )
@@ -871,7 +874,7 @@ check(
 )
 sex_class_handle.end_sex_class()
 _g201.last_absent_period = []
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 
 section("Plan 32 H1：课堂 H 以别的方式结束（玩家已不在 H）时一并下课")
 
@@ -924,7 +927,7 @@ def open_class_for_h1(period: int, reserved: bool = True) -> dict:
     Return arguments:
     dict -- 本节课的数据
     """
-    cache.rhodes_island.temp_sex_class = {}
+    education.clear_temp_classes()
     kernel_data.set_world(modes.set_sex_class, False)
     kernel_data.set_world(modes.set_group_sex, False)
     for chara_id in (0, 201, 202):
@@ -993,23 +996,20 @@ check(
     "H1 下一步的 OrphanClass 事件里下课：课堂模式已关、那节课不再 running（预约的打上 ended）",
     not modes.sex_class()
     and sex_class_handle.get_running_class() is None
-    and _h1_class.get("ended") is True,
-    _h1_class,
+    and _temp(1).get("ended") is True,
+    _temp(1),
 )
 check(
-    "H1 开课指令 5209 的 SEX_CLASS_MODE_OFF 重新成立（此前从此开不了课）",
+    "H1 SEX_CLASS_MODE_OFF",
     bool(
         handle_premise.handle_premise(
             constant_promise.Premise.SEX_CLASS_MODE_OFF, 0
         )
     ),
 )
+check("H1 主修加成失效", sex_class_handle.get_now_bonus_exp_id() == 0)
 check(
-    "H1 主修加成随之失效：没有进行中的课，主修经验 id 为 0（此前全岛拿那门主修对应的经验都乘加成）",
-    sex_class_handle.get_now_bonus_exp_id() == 0,
-)
-check(
-    "H1 此后学生走进那间实践教室上常规课：判照常上课，不再被拉进没有博士的课堂（此前判 JOIN、722 拉进 H）",
+    "H1 常规课不拉进H",
     class_ai.get_attend_or_join_stage(201, {"classroom": ROOM_P})
     == education_constant.COURSE_STAGE_ATTEND,
 )
@@ -1034,7 +1034,7 @@ run_effect_list([407, 10011])
 play()
 check(
     "H1 玩家体力归零（373）收尾后同样下课：课堂模式已关、当场开的课条目直接删掉",
-    not modes.sex_class() and _h1_key not in cache.rhodes_island.temp_sex_class,
+    not modes.sex_class() and _h1_key not in education.temp_classes(),
 )
 # 只剩一名学生、转单人 H（375）后再结束 H（362）
 _h1_class = open_class_for_h1(3)
@@ -1045,13 +1045,13 @@ run_effect_list([10011])
 play()
 check(
     "H1 转单人 H（375 只有 10011）后玩家仍在 H：课照上（课堂模式开着、那节课仍 running）",
-    modes.sex_class() and _h1_class["running"] and pl.sp_flag.is_h,
+    modes.sex_class() and _temp(3).get("running") and pl.sp_flag.is_h,
 )
 check(
     "H1 课还在上时 settle_orphan_class 什么都不做、返回 False",
     sex_class_handle.settle_orphan_class() is False
     and modes.sex_class()
-    and _h1_class["running"],
+    and _temp(3).get("running"),
 )
 pl.target_character_id = 201
 run_effect_list([404])
@@ -1060,7 +1060,7 @@ check(
     "H1 这场单人 H 结束（362 的 404 清双方 H 状态）后下课",
     not modes.sex_class()
     and sex_class_handle.get_running_class() is None
-    and _h1_class.get("ended") is True
+    and _temp(3).get("ended") is True
     and not pl.sp_flag.is_h
     and not student_a.sp_flag.is_h,
 )
@@ -1077,33 +1077,32 @@ check(
     pl.last_behavior_id_list[-1:] == [constant.Behavior.GROUP_SEX_END]
     and not modes.sex_class()
     and sex_class_handle.get_running_class() is None
-    and _h1_class.get("ended") is True
+    and _temp(5).get("ended") is True
     and not student_a.sp_flag.is_h,
-    (pl.last_behavior_id_list[-1:], modes.sex_class(), _h1_class),
+    (pl.last_behavior_id_list[-1:], modes.sex_class(), _temp(5)),
 )
 # 旧档里已经留下的幽灵课堂：课堂模式开着、那节课 running，玩家早已不在 H
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 kernel_data.set_world(modes.set_group_sex, False)
 pl.sp_flag.is_h = False
-_h1_ghost = sex_class_handle.set_temp_class(today, 4, ROOM_P, 70, running=True)
-_h1_ghost["reserved"] = True
+sex_class_handle.set_temp_class(today, 4, ROOM_P, 70, running=True)
+_patch_temp(4, reserved=True)
 kernel_data.set_world(modes.set_sex_class, True)
 play()
 check(
     "H1 旧档里的幽灵课堂（课堂模式开着、玩家不在 H）：下一步的 OrphanClass 事件里收掉",
     not modes.sex_class()
-    and _h1_ghost["running"] is False
-    and _h1_ghost.get("ended") is True,
-    _h1_ghost,
+    and _temp(4).get("running") is False
+    and _temp(4).get("ended") is True,
+    _temp(4),
 )
 check(
     "H1 settle_orphan_class 在课堂模式没开时什么都不做、返回 False",
     sex_class_handle.settle_orphan_class() is False,
 )
-cache.rhodes_island.temp_sex_class = {}
-sex_class_handle.set_temp_class(today - 1, 3, ROOM_P, 70, running=True)[
-    "reserved"
-] = True
+education.clear_temp_classes()
+sex_class_handle.set_temp_class(today - 1, 3, ROOM_P, 70, running=True)
+_patch_temp(3, today - 1, reserved=True)
 kernel_data.set_world(modes.set_sex_class, True)
 check(
     "H1 跨天清理：昨天留下的幽灵课堂按过期清掉、课堂模式一并关掉（此前跳过 running 的那条，永远不清）",
@@ -1116,9 +1115,9 @@ kernel_data.set_world(modes.set_sex_class, False)
 check(
     "H1 跨天清理：课堂模式没开、条目却还挂着 running 的，照样按过期清掉",
     sex_class_handle.clean_expired_temp_class() == 1
-    and not cache.rhodes_island.temp_sex_class,
+    and not education.temp_classes(),
 )
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 kernel_data.set_world(modes.set_sex_class, False)
 kernel_data.set_world(modes.set_group_sex, False)
 for _cid in (0, 201, 202):
@@ -1148,7 +1147,7 @@ check(
     ),
 )
 sex_class_handle.end_sex_class()
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 sex_class_handle.set_temp_class(today, 5, ROOM_P, 70)
 set_time(period_time(5) - datetime.timedelta(minutes=5))
 _g201.last_attend_period = []
@@ -1159,7 +1158,7 @@ check(
     _g201.last_attend_period,
 )
 sex_class_handle.end_sex_class()
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 set_time(DEFAULT_TIME.replace(hour=12, minute=30))
 _g201.last_attend_period = [today, 3]
 sex_class_handle.start_sex_class(70, [201])
@@ -1169,7 +1168,7 @@ check(
     _g201.last_attend_period,
 )
 sex_class_handle.end_sex_class()
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 set_time(period_time(6) + datetime.timedelta(minutes=5))
 _g201.last_absent_period = [today, 6]
 _g201.last_attend_period = []
@@ -1192,7 +1191,7 @@ for _open_time, _period, _label in (
         "提前 5 分钟开讲预约的第 5 节",
     ),
 ):
-    cache.rhodes_island.temp_sex_class = {}
+    education.clear_temp_classes()
     if _period == 5:
         sex_class_handle.set_temp_class(today, 5, ROOM_P, 70)
     set_time(_open_time)
@@ -1216,7 +1215,7 @@ check(
     "L7 跨单元整链对照：下一节没记出勤，settle_absent 照常记缺课",
     class_ai.settle_absent(201) and _g201.absent_count == _absent + 1,
 )
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 _g201.last_absent_period = []
 _g201.last_attend_period = []
 
@@ -1239,12 +1238,12 @@ sex_class_handle.start_sex_class(72, sex_class_handle.get_scene_student_list())
 sex_class_handle.end_sex_class()
 set_time(period_time(7) + datetime.timedelta(minutes=20))
 check(
-    "L8 前置：预约的第 7 节下课后打上 ended，find_reserved_class 不再认它，开课取条目的 find_class_to_start 沿用它",
-    _l8_class.get("ended") is True
+    "L8 前置：预约的第 7 节下课后打上 ended，find_reserved_class 不再认它，find_class_to_start 沿用它",
+    _temp(7).get("ended") is True
     and sex_class_handle.find_reserved_class(ROOM_P, game_time.now())
     == ("", None)
     and sex_class_handle.find_class_to_start(ROOM_P, game_time.now())[1]
-    is _l8_class,
+    == _temp(7),
 )
 check(
     "L8 同一节下课后：按教室取的必修名单沿用那条已下课的预约（此前走 find_reserved_class 取到空集）",
@@ -1267,7 +1266,7 @@ check(
     (_attend, _g204.attend_class_count, _sex, _g204.sex_class_count),
 )
 sex_class_handle.end_sex_class()
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 
 section(
     "Plan 32 L9：课堂成员按身份认——课中实行值跌破门槛的成年学生仍在旁观名单与在课前提里"
@@ -1382,7 +1381,7 @@ move_to(301, SCENE_DORM)
 move_to(303, SCENE_DORM)
 schedule_handle.clear_class_cell(ROOM_P, _l9_day, 8)
 schedule_handle.clear_selected_course(303, _l9_day, 8)
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 kernel_data.set_world(modes.set_sex_class, False)
 kernel_data.set_world(modes.set_group_sex, False)
 
@@ -1483,7 +1482,7 @@ check(
     _l11_gain_list,
 )
 sex_class_handle.end_sex_class()
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 kernel_data.set_world(modes.set_sex_class, False)
 kernel_data.set_world(modes.set_group_sex, False)
 for _cid in (0, 201, 202, 301):

@@ -48,9 +48,9 @@ from Script.Settle.common_default import (
 )
 
 from Script.Settle.item_effect import *
-from Script.Modules.domains import achievement, facility, history, medical
-from Script.Modules.domains import modes, needs, official, recruit, visitor
-from Script.Modules.domains import fridge, warehouse
+from Script.Modules.domains import achievement, facility, fridge, history
+from Script.Modules.domains import medical, modes, needs, official, prison
+from Script.Modules.domains import recruit, visitor, warehouse
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -8487,13 +8487,13 @@ def handle_train_prisoners_add_adjust(
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
-    now_train_id = cache.rhodes_island.confinement_training_setting.get(1, 0)
-    all_prisoner_data = cache.rhodes_island.current_prisoners
+    now_train_id = prison.setting(1)
+    all_prisoner_ids = prison.prisoner_ids()
     # 如果未设定训练则返回
     if now_train_id == 0:
         return
     # 如果没有囚犯则返回
-    if len(all_prisoner_data) == 0:
+    if len(all_prisoner_ids) == 0:
         return
     # 部位快感训练
     if now_train_id == 1:
@@ -8638,8 +8638,7 @@ def handle_train_prisoners_add_adjust(
             )
 
     # 遍历犯人
-    for key, __ in all_prisoner_data.items():
-        now_prisoner_cid = key
+    for now_prisoner_cid in all_prisoner_ids:
         # 1异常或睡觉中的角色不进行训练
         if not handle_premise.handle_normal_1(
             now_prisoner_cid
@@ -9656,13 +9655,7 @@ def handle_set_free_add_just(
         character_data.target_character_id
     )
     # 从囚犯数据中删除
-    if (
-        character_data.target_character_id
-        in cache.rhodes_island.current_prisoners
-    ):
-        cache.rhodes_island.current_prisoners.pop(
-            character_data.target_character_id
-        )
+    prison.release(character_data.target_character_id)
     # 刷新衣服
     clothing.get_cloth_from_dormitory_locker(character_data.target_character_id)
 

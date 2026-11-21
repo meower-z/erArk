@@ -265,10 +265,11 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
         self.world.player.press("逆来顺受")
         self.instruct(constant.Instruct.DOOR_LOCK_INNER)
         self.assertTrue(operator.sp_flag.is_h)
-        setting = self.cache.rhodes_island.confinement_training_setting
+        prison = importlib.import_module("Script.Modules.domains.prison")
         # 12：调教助手与博士同部位；13：调教对象不限于囚犯
-        setting[12] = 1
-        setting[13] = 1
+        with kernel_data.writing():
+            prison.set_setting(12, 1)
+            prison.set_setting(13, 1)
         work = importlib.import_module("Script.Modules.domains.work")
         kernel_data.written(work.set_warden, self.npc("凯尔希"))
         self.cache.character_data[0].behavior.behavior_id = (

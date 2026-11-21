@@ -15,6 +15,7 @@ from tests.education._bootstrap import datetime as datetime
 from tests.education._bootstrap import DEFAULT_TIME as DEFAULT_TIME
 from tests.education._bootstrap import draw as draw
 from tests.education._bootstrap import drawn_text as drawn_text
+from tests.education._bootstrap import education as education
 from tests.education._bootstrap import education_constant as education_constant
 from tests.education._bootstrap import finish as finish
 from tests.education._bootstrap import flow_handle as flow_handle

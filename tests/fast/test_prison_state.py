@@ -156,7 +156,8 @@ class PrisonStateTest(FastTestCase):
             effects = buf.effects()
         state = core.preview(core.state(), effects)
         encoded = kernel_state.encode(state, "tok")
-        decoded, _token = kernel_state.decode(encoded, upgrade.CURRENT)
+        self.assertEqual(encoded["version"], upgrade.CURRENT)
+        decoded = kernel_state.decode(encoded, tagged=True)
         self.assertEqual(prison.prisoners(decoded), {30: [now, 7]})
         self.assertEqual(prison.setting(4, game=decoded), 1)
         self.assertTrue(prison.cleaning(decoded))
@@ -193,3 +194,14 @@ class PrisonStateTest(FastTestCase):
 
         prison.set_setting(4, 999)
         self.assertTrue(self.flagged("ROSTER-13"))
+
+
+class PrisonWriteBlockTest(FastTestCase):
+    """缓冲区之外写入关押区键会报错"""
+
+    def test_write_outside_buffer_raises(self) -> None:
+        """未打开 working 缓冲区时写两个键均报 RuntimeError"""
+        with self.assertRaises(RuntimeError):
+            prison.imprison(10, game_time.now(), 0)
+        with self.assertRaises(RuntimeError):
+            prison.set_setting(4, 1)

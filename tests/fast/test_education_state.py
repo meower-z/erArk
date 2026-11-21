@@ -49,6 +49,13 @@ class EducationStateTest(FastTestCase):
         self.assertIsNone(education.class_cell("理论教室一", 0, 1))
         education.set_class_cell("理论教室一", 0, 1, 45, 1)
         self.assertEqual(education.class_cell("理论教室一", 0, 1), [45, 1])
+        self.assertEqual(education.teacher_slot(1, 0, 1), ("理论教室一", 45))
+        self.assertIsNone(
+            education.teacher_slot(1, 0, 1, skip_classroom="理论教室一")
+        )
+        self.assertEqual(
+            education.teacher_week_schedule(1), {0: {1: ("理论教室一", 45)}}
+        )
         self.assertEqual(
             education.class_schedule(),
             {"理论教室一": {0: {1: [45, 1]}}},
@@ -172,7 +179,8 @@ class EducationStateTest(FastTestCase):
             effects = buf.effects()
         state = core.preview(core.state(), effects)
         encoded = kernel_state.encode(state, "tok")
-        decoded, _token = kernel_state.decode(encoded, upgrade.CURRENT)
+        self.assertEqual(encoded["version"], upgrade.CURRENT)
+        decoded = kernel_state.decode(encoded, tagged=True)
         self.assertEqual(
             education.class_cell("理论教室一", 2, 3, decoded), [45, -1]
         )
@@ -218,3 +226,16 @@ class EducationStateTest(FastTestCase):
         growth.schedule_template_id = 99
         self.cache.character_data[1].child_growth = growth
         self.assertTrue(self.flagged("EDU-11"))
+
+
+class EducationWriteBlockTest(FastTestCase):
+    """缓冲区之外写入教育区键会报错"""
+
+    def test_write_outside_buffer_raises(self) -> None:
+        """未打开 working 缓冲区时写三个键均报 RuntimeError"""
+        with self.assertRaises(RuntimeError):
+            education.set_class_cell("理论教室一", 0, 0, 45, 1)
+        with self.assertRaises(RuntimeError):
+            education.put_temp_class("739510-0", {"classroom": "实践教室一"})
+        with self.assertRaises(RuntimeError):
+            education.put_template(1, {"name": "方案一", "slot": {}})

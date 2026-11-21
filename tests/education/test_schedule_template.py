@@ -7,6 +7,7 @@ from _bootstrap import (
     cache,
     check,
     clear_schedules,
+    education,
     education_constant,
     finish,
     game_config,
@@ -83,18 +84,11 @@ assert custom_after is not None
 check("改模板时段", custom_after["slot"][1] == CHESS)
 schedule_template_handle.set_template_slot(99, 1, CHESS)
 check("改不存在的模板不报错", True)
-saved = {
-    k: dict(v["slot"])
-    for k, v in cache.rhodes_island.child_schedule_template.items()
-}
+saved = {k: dict(v["slot"]) for k, v in education.templates().items()}
 schedule_template_handle.init_default_template()
 check(
     "已有模板时不再覆盖",
-    {
-        k: dict(v["slot"])
-        for k, v in cache.rhodes_island.child_schedule_template.items()
-    }
-    == saved,
+    {k: dict(v["slot"]) for k, v in education.templates().items()} == saved,
 )
 
 section("新建 / 改名 / 删除")
@@ -129,12 +123,12 @@ schedule_template_handle.set_child_override(201, 2, MOVIE)
 check(
     "预设不可删",
     not schedule_template_handle.delete_template(1)
-    and 1 in cache.rhodes_island.child_schedule_template,
+    and 1 in education.templates(),
 )
 check(
     "删自建模板",
     schedule_template_handle.delete_template(5)
-    and 5 not in cache.rhodes_island.child_schedule_template,
+    and 5 not in education.templates(),
 )
 loli_growth = loli.child_growth
 assert loli_growth is not None
@@ -559,12 +553,9 @@ check(
     "L28 预设与自建模板的数据都只有这两个键",
     all(
         set(data) == {T.TEMPLATE_KEY_NAME, T.TEMPLATE_KEY_SLOT}
-        for data in cache.rhodes_island.child_schedule_template.values()
+        for data in education.templates().values()
     ),
-    [
-        sorted(data)
-        for data in cache.rhodes_island.child_schedule_template.values()
-    ],
+    [sorted(data) for data in education.templates().values()],
 )
 
 

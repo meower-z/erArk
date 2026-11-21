@@ -6,9 +6,9 @@ LOAD_ORDER 由内到外列出各模块的文件。core.load 之后，内核只�
 一个输入钩子截下调用（Intercept）时，内层的钩子都不调用，只调用更外层的模块的输出钩子。
 domains 的 medical、power、needs、pregnancy、facility、economy、work、warehouse、production、kitchen、commission、
 location、visitor、recruit、official、diplomacy、dormitory、library、playthrough、country、modes、achievement、
-history、plan、entertainment、tallies 与 fridge 排在最内，不挂钩子。它们登记 working 的键：medical、power、facility、
-official、modes、history 与 plan 各三个，needs、work、warehouse、commission、recruit、library、playthrough 与
-entertainment 各两个，economy 七个，其余各一个。
+history、plan、entertainment、tallies、fridge、prison 与 education 排在最内，不挂钩子。它们登记 working 的键：
+medical、power、facility、official、modes、history、plan 与 education 各三个，needs、work、warehouse、commission、
+recruit、library、playthrough、entertainment 与 prison 各两个，economy 七个，其余各一个。
 needs 还登记它的键 body.needs 的规则。economy 还登记今日收入与今日买卖总量两个键的规则。warehouse 还登记库存的规则。
 tallies 与 fridge 还分别登记 base.tallies 与 base.fridge 的规则。
 PickNextAction 上的输入钩子由外到内是：save_load 的自动存档、计划队列、tk_ui 的玩家选择。
@@ -30,6 +30,7 @@ from Script.Modules.domains import (
     diplomacy,
     dormitory,
     economy,
+    education,
     entertainment,
     facility,
     fridge,
@@ -45,6 +46,7 @@ from Script.Modules.domains import (
     playthrough,
     power,
     pregnancy,
+    prison,
     production,
     recruit,
     tallies,
@@ -97,6 +99,8 @@ LOAD_ORDER: tuple[ModuleType, ...] = (
     entertainment,
     tallies,
     fridge,
+    prison,
+    education,
     actions,
     starts,
     npc_starters,

@@ -22,7 +22,7 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Design import game_time, map_handle
 from Script.System.Education_System import education_constant, growth_handle
-from Script.Modules.domains import modes, needs
+from Script.Modules.domains import education, modes, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -72,9 +72,7 @@ def get_temp_class(date_ordinal: int, period: int) -> dict | None:
     Return arguments:
     Optional[dict] -- 课程数据，没有则为None
     """
-    return cache.rhodes_island.temp_sex_class.get(
-        get_class_key(date_ordinal, period), None
-    )
+    return education.temp_class(get_class_key(date_ordinal, period))
 
 
 def get_active_temp_class(date_ordinal: int, period: int) -> dict | None:
@@ -130,10 +128,9 @@ def set_temp_class(
         # 是否是预约排进课表的那节：开课时由 start_sex_class 按"复用了已有条目"来定，供开课口上分档
         "reserved": False,
     }
-    cache.rhodes_island.temp_sex_class[get_class_key(date_ordinal, period)] = (
-        now_data
+    return education.put_temp_class(
+        get_class_key(date_ordinal, period), now_data
     )
-    return now_data
 
 
 def del_temp_class(date_ordinal: int, period: int) -> None:
@@ -145,9 +142,7 @@ def del_temp_class(date_ordinal: int, period: int) -> None:
     Return arguments:
     无
     """
-    cache.rhodes_island.temp_sex_class.pop(
-        get_class_key(date_ordinal, period), None
-    )
+    education.delete_temp_class(get_class_key(date_ordinal, period))
 
 
 def get_running_class() -> dict | None:
@@ -158,7 +153,7 @@ def get_running_class() -> dict | None:
     Return arguments:
     Optional[dict] -- 课程数据，没有在进行的则为None
     """
-    for now_data in cache.rhodes_island.temp_sex_class.values():
+    for now_data in education.temp_classes().values():
         if now_data.get("running", False):
             return now_data
     return None
@@ -172,7 +167,7 @@ def get_running_class_key() -> str:
     Return arguments:
     str -- 字典键，没有在进行的则为空串
     """
-    for now_key, now_data in cache.rhodes_island.temp_sex_class.items():
+    for now_key, now_data in education.temp_classes().items():
         if now_data.get("running", False):
             return now_key
     return ""
@@ -214,7 +209,7 @@ def find_reserved_class(
     best_key = ""
     best_class = None
     best_start = None
-    for class_key, class_data in cache.rhodes_island.temp_sex_class.items():
+    for class_key, class_data in education.temp_classes().items():
         date_ordinal, period = parse_class_key(class_key)
         if (
             date_ordinal != today
@@ -282,22 +277,21 @@ def clean_expired_temp_class() -> int:
     Return arguments:
     int -- 清理掉的条目数（含幽灵课堂收尾时删掉的当场课）
     """
-    before_count = len(cache.rhodes_island.temp_sex_class)
+    before_count = len(education.temp_classes())
     # 幽灵课堂先按下课收尾：关课堂模式，预约的打 ended（随后按日期清），当场开的直接删掉
     settle_orphan_class()
     # 收尾之后课堂模式还开着，说明玩家仍在 H 中、这节课还在上（拖堂跨天），它的条目要留着
     class_alive = modes.sex_class()
     today = game_time.now().date().toordinal()
     del_key_list = []
-    for now_key, now_data in cache.rhodes_island.temp_sex_class.items():
+    for now_key, now_data in education.temp_classes().items():
         if now_data.get("running", False) and class_alive:
             continue
         date_ordinal, _period = parse_class_key(now_key)
         if date_ordinal != -1 and date_ordinal < today:
             del_key_list.append(now_key)
-    for now_key in del_key_list:
-        del cache.rhodes_island.temp_sex_class[now_key]
-    return before_count - len(cache.rhodes_island.temp_sex_class)
+    education.delete_temp_classes(del_key_list)
+    return before_count - len(education.temp_classes())
 
 
 # ---------------------------------------------------------------------------
@@ -797,11 +791,16 @@ def check_and_send_notify(
     Return arguments:
     List[str] -- 要输出的提醒文本
     """
-    result = []
-    for class_key, class_data in cache.rhodes_island.temp_sex_class.items():
+    result: list[str] = []
+    all_temp = education.temp_classes()
+    if not all_temp:
+        return result
+    for class_key, class_data in all_temp.items():
         date_ordinal, period = parse_class_key(class_key)
         if date_ordinal == -1:
             continue
+        before = class_data.get("notified")
+        before_snap = list(before) if isinstance(before, list) else None
         notified = fix_notified(class_data)
         # 第二次：开始前30分钟
         if not notified[1]:
@@ -831,6 +830,8 @@ def check_and_send_notify(
                         "\n【课程提醒】预定的下课时间到了。你可以就此结束这节课，也可以继续下去——没有人会催你。\n"
                     )
                 )
+        if notified != before_snap:
+            education.put_temp_class(class_key, class_data)
     return result
 
 
@@ -859,17 +860,22 @@ def get_today_class_notify_text() -> str:
     """
     today = game_time.now().date().toordinal()
     text_list = []
-    for class_key, class_data in cache.rhodes_island.temp_sex_class.items():
+    for class_key, class_data in education.temp_classes().items():
         date_ordinal, period = parse_class_key(class_key)
         if date_ordinal != today:
             continue
+        before = class_data.get("notified")
+        before_snap = list(before) if isinstance(before, list) else None
         notified = fix_notified(class_data)
-        if notified[0]:
-            continue
-        start_time = get_period_start_time(date_ordinal, period)
+        start_time = (
+            None if notified[0] else get_period_start_time(date_ordinal, period)
+        )
         if start_time is None:
+            if notified != before_snap:
+                education.put_temp_class(class_key, class_data)
             continue
         notified[0] = True
+        education.put_temp_class(class_key, class_data)
         text_list.append(
             _(
                 "【今日课程】你在今天{0}安排了一节性技实操课（{1}），地点在{2}。"
@@ -907,7 +913,7 @@ def start_sex_class(
     classroom = get_scene_name(pl_character_data.position)
     today = game_time.now().date().toordinal()
     period = game_time.get_class_period_by_time(game_time.now())
-    now_class = find_class_to_start(classroom, game_time.now())[1]
+    class_key, now_class = find_class_to_start(classroom, game_time.now())
     if now_class is None:
         # 当前节次的键被别的教室还没开讲的预约占着：临时课的键不含教室，另开当场课会静默覆盖那条预约。
         #    玩家在这里开课就是决定在这里上，把那条挪过来（Plan 26 §3.5，L4）
@@ -918,6 +924,7 @@ def start_sex_class(
             and not other_class.get("ended", False)
         ):
             other_class["classroom"] = classroom
+            class_key = get_class_key(today, period)
             now_class = other_class
     if now_class is not None:
         now_class["running"] = True
@@ -927,11 +934,11 @@ def start_sex_class(
         now_class["reserved"] = True
         if ability_id in education_constant.SEX_CLASS_ABILITY_LIST:
             now_class["ability_id"] = ability_id
+        now_class = education.put_temp_class(class_key, now_class)
     else:
         now_class = set_temp_class(
             today, period, classroom, ability_id, running=True
         )
-        now_class["reserved"] = False
     if join_id_list is None:
         join_id_list = get_scene_student_list(pl_character_data.position)
     # 出勤只在开课时记这一次：拖堂占用的后续节次既不记出勤也不记缺课（方案 §3.28.9）
@@ -941,29 +948,20 @@ def start_sex_class(
 
 
 def end_sex_class() -> None:
-    """
-    结束当前的性技实操课
-
-    玩家点下课（6021 → 效果 10015），或课堂 H 以别的方式结束、玩家已不在 H 时一并下课（settle_orphan_class，
-    Plan 32 §3.1）。
-       玩家还在课堂 H 里时系统永不自动下课（口径68 允许无限拖堂）。
-    没有 running 的课时直接返回，两处各调一次也无妨。
-    Keyword arguments:
-    无
-    Return arguments:
-    无
-    """
+    """结束当前的性技实操课（下课或幽灵课堂收尾调用）；没有在进行的课时直接返回"""
     class_key = get_running_class_key()
     if not class_key:
         return
-    now_class = cache.rhodes_island.temp_sex_class[class_key]
+    now_class = education.temp_class(class_key)
+    if now_class is None:
+        return
     now_class["running"] = False
-    # 下了课这一节就交还给原来的课表（2026-09-12 第五轮）：当场开的课没有任何后续用处，直接删掉；
-    #    预约的课留着条目到跨天清理，只打上已下课标记，覆盖层与必修判定据此不再认它
+    # 下了课这一节就交还给原来的课表：当场开的直接删掉，预约的留着条目到跨天清理并标 ended
     if now_class.get("reserved", False):
         now_class["ended"] = True
+        education.put_temp_class(class_key, now_class)
     else:
-        del cache.rhodes_island.temp_sex_class[class_key]
+        education.delete_temp_class(class_key)
 
 
 def settle_orphan_class() -> bool:

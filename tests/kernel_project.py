@@ -7,12 +7,65 @@ project_world_misc 记世界设定、周目、国家、模式、吵醒名单、�
 指令记录只记最近行为，每日记录不在快照里。
 project_base_tallies 记基地的派对排期、旅馆房间档次、计数与冰箱，共 4 个全局键。
 它还记干员人数上限与仓库容量，这两项读时算出。
+stepping 与 auto_commit_outside_step 供教育区测试在内核单步之外自动套用指定全局键的写入。
 """
 
 from __future__ import annotations
 
+import contextlib
 import importlib
-from typing import Any
+from collections.abc import Collection, Iterator
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from Script.Kernel import core
+
+_in_step = 0
+""" 经 stepping() 包住的内核单步嵌套层数 """
+
+
+@contextlib.contextmanager
+def stepping() -> Iterator[None]:
+    """
+    标出正在执行一次内核推进，让 auto_commit_outside_step 不拦截这一步里的 working.put
+    Keyword arguments:
+    无
+    Return arguments:
+    Iterator[None] -- 上下文管理器
+    """
+    global _in_step
+    _in_step += 1
+    try:
+        yield
+    finally:
+        _in_step -= 1
+
+
+def auto_commit_outside_step(keys: Collection[str]) -> None:
+    """
+    包装 working.put：在 stepping() 之外且没有打开缓冲区时，
+    把 keys 里全局键的写入经 kernel_data.writing() 套用到内核状态。
+    stepping() 内、角色键与其余全局键原样走 working.put
+    Keyword arguments:
+    keys -- 允许在一步之外自动套用的全局键集合
+    """
+    from Script.Modules.gameplay_resolution import working
+    from tests import kernel_data
+
+    allowed = frozenset(keys)
+    raw_put = working.put
+
+    def put(who: str | None, key: str, new: core.JSON) -> None:
+        if _in_step or who is not None or key not in allowed:
+            raw_put(who, key, new)
+            return
+        try:
+            raw_put(who, key, new)
+        except RuntimeError:
+            with kernel_data.writing():
+                raw_put(who, key, new)
+
+    working.put = put
 
 
 def domain(name: str) -> Any:

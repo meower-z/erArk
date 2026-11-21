@@ -11,6 +11,7 @@ from _bootstrap import (
     clear_schedules,
     constant,
     datetime,
+    education,
     education_constant,
     finish,
     game_config,
@@ -153,23 +154,20 @@ check(
         game_time.now().weekday(), {}
     ),
 )
-# 第五轮：要写进每周循环的个人课表时不叠加覆盖层
+_w = game_time.now().weekday()
 check(
     "include_temp=False 读的是每周固定的课表本身",
-    schedule_handle.get_class_cell(
-        _("实践教室一"), game_time.now().weekday(), 2, include_temp=False
-    )
+    schedule_handle.get_class_cell(_("实践教室一"), _w, 2, include_temp=False)
     is None,
 )
 temp_student = make_character(209, "临时课测试", 152, daughter=True, stage=103)
 auto_schedule.auto_fill_selected_course(209)
 check(
     "一键选课不会把一次性的临时课选进每周课表",
-    schedule_handle.get_selected_course(209, game_time.now().weekday(), 2)
-    is None,
+    schedule_handle.get_selected_course(209, _w, 2) is None,
 )
 remove_character(209)
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 
 section("个人课表与当前课程")
 student = make_character(201, "女儿A", 152, daughter=True, stage=103)
@@ -806,7 +804,7 @@ check(
 auto_schedule.auto_fill_class_schedule()
 _l21_teacher_set = {
     cell[1]
-    for week_data in cache.rhodes_island.class_schedule.values()
+    for week_data in education.class_schedule().values()
     for period_data in week_data.values()
     for cell in period_data.values()
 }

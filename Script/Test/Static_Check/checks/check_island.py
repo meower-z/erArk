@@ -32,6 +32,7 @@ from Script.Modules.domains import (
     library,
     location,
     power,
+    prison,
     production,
     recruit,
     visitor,
@@ -1370,7 +1371,6 @@ def check_island_29_warden_and_prisoners() -> list[CheckFailure]:
         落在0..100。去掉了"在npc_id_got"子句——监狱长可能被关押或逃脱而离线，此时work_type仍是191，引用合法
     """
     cache = cache_control.cache
-    ri = cache.rhodes_island
     cd = cache.character_data
     failures = []
     warden_id = work.warden()
@@ -1392,27 +1392,23 @@ def check_island_29_warden_and_prisoners() -> list[CheckFailure]:
                 [warden_id],
             )
         )
-    current_prisoners = getattr(ri, "current_prisoners", None)
-    if isinstance(current_prisoners, dict):
-        illegal = [
-            (p, v)
-            for p, v in current_prisoners.items()
-            if not (
-                p in cd
-                and isinstance(v, list)
-                and len(v) >= 2
-                and 0 <= v[1] <= 100
+    current_prisoners = prison.prisoners()
+    illegal = [
+        (p, v)
+        for p, v in current_prisoners.items()
+        if not (
+            p in cd and isinstance(v, list) and len(v) >= 2 and 0 <= v[1] <= 100
+        )
+    ]
+    if illegal:
+        failures.append(
+            make_failure(
+                "ISLAND-29",
+                "监狱长引用与囚犯数据自洽",
+                f"base.prisoners中的违规(囚犯id,记录)={illegal}",
+                [p for p, _v in illegal if p in cd],
             )
-        ]
-        if illegal:
-            failures.append(
-                make_failure(
-                    "ISLAND-29",
-                    "监狱长引用与囚犯数据自洽",
-                    f"current_prisoners中的违规(囚犯id,记录)={illegal}",
-                    [p for p, _v in illegal if p in cd],
-                )
-            )
+        )
     return failures
 
 

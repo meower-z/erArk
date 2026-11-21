@@ -1,7 +1,7 @@
 """课表读写与查询（Plan 22 一期）
 
 两层课表：
-    全局课表 Rhodes_Island.class_schedule —— 只排班级式的教室课（理论/实践/公开），
+    全局课表 base.class_schedule（经 education 读写）—— 只排班级式的教室课（理论/实践/公开），
         结构为 {教室场景名: {星期: {节次: [科目能力id, 授课教师id]}}}
     个人课表 Character.child_growth.selected_course —— 承载学生的选课与个人式课程
         （体育/兴趣/实习），结构为 {星期: {节次: [课型, 目标]}}
@@ -17,7 +17,7 @@ from Script.Config import game_config
 from Script.Design import game_time, map_handle
 from Script.System.Education_System import education_constant
 from typing import TYPE_CHECKING
-from Script.Modules.domains import facility
+from Script.Modules.domains import education, facility
 
 if TYPE_CHECKING:
     import datetime
@@ -202,8 +202,7 @@ def get_class_cell(
         ):
             # 教师id为0即玩家亲自授课
             return [temp_class.get("ability_id", -1), 0]
-    schedule = cache.rhodes_island.class_schedule
-    return schedule.get(classroom, {}).get(week_day, {}).get(period, None)
+    return education.class_cell(classroom, week_day, period)
 
 
 def set_class_cell(
@@ -220,11 +219,9 @@ def set_class_cell(
     Return arguments:
     无
     """
-    schedule = cache.rhodes_island.class_schedule
-    schedule.setdefault(classroom, {}).setdefault(week_day, {})[period] = [
-        ability_id,
-        teacher_id,
-    ]
+    education.set_class_cell(
+        classroom, week_day, period, ability_id, teacher_id
+    )
 
 
 def clear_class_cell(classroom: str, week_day: int, period: int) -> None:
@@ -237,9 +234,7 @@ def clear_class_cell(classroom: str, week_day: int, period: int) -> None:
     Return arguments:
     无
     """
-    schedule = cache.rhodes_island.class_schedule
-    if classroom in schedule and week_day in schedule[classroom]:
-        schedule[classroom][week_day].pop(period, None)
+    education.clear_class_cell(classroom, week_day, period)
 
 
 def get_teacher_cell(
@@ -264,19 +259,14 @@ def get_teacher_cell(
     #    玩家也从不出现在全局课表的教师位上，漏了这一层就会像 4-C 的主修口上那样"玩家永远查不到自己"
     if teacher_id == 0 and temp_class is not None:
         return temp_class.get("classroom", ""), temp_class.get("ability_id", -1)
-    for classroom, week_data in cache.rhodes_island.class_schedule.items():
-        cell = week_data.get(week_day, {}).get(period, None)
-        if cell is None or cell[1] != teacher_id:
-            continue
-        # 这一格今天被临时实操课顶掉了：原来排在这里的 NPC 教师这节不用来（2026-09-12 第五轮）。
-        #    不跳过的话她会按课表走进教室，在玩家的课堂 H 里原地开讲
-        if (
-            temp_class is not None
-            and temp_class.get("classroom", "") == classroom
-        ):
-            continue
-        return classroom, cell[0]
-    return None
+    # 这一格今天被临时实操课顶掉了：原来排在这里的 NPC 教师这节不用来（2026-09-12 第五轮）。
+    #    不跳过的话她会按课表走进教室，在玩家的课堂 H 里原地开讲
+    skip_room = (
+        temp_class.get("classroom", "") if temp_class is not None else None
+    )
+    return education.teacher_slot(
+        teacher_id, week_day, period, skip_classroom=skip_room
+    )
 
 
 def judge_schedule_teacher(character_id: int) -> bool:
@@ -350,21 +340,13 @@ def get_teacher_week_schedule(
     Return arguments:
     Dict[int, Dict[int, Tuple[str, int]]] -- {星期: {节次: (教室场景名, 科目能力id)}}
     """
-    result: dict[int, dict[int, tuple[str, int]]] = {}
-    for classroom, week_data in cache.rhodes_island.class_schedule.items():
-        for week_day, period_data in week_data.items():
-            for period, cell in period_data.items():
-                if cell[1] == teacher_id:
-                    result.setdefault(week_day, {})[period] = (
-                        classroom,
-                        cell[0],
-                    )
+    result = education.teacher_week_schedule(teacher_id)
     # 玩家的周课表再并入今天的临时实操课，与 get_teacher_cell 的覆盖层保持一致（已下课的不算）
     if teacher_id == 0:
         from Script.System.Education_System import sex_class_handle
 
         today = game_time.now().date().toordinal()
-        for class_key, temp_class in cache.rhodes_island.temp_sex_class.items():
+        for class_key, temp_class in education.temp_classes().items():
             date_ordinal, period = sex_class_handle.parse_class_key(class_key)
             if date_ordinal == today and not temp_class.get("ended", False):
                 result.setdefault(game_time.now().weekday(), {})[period] = (

@@ -5,6 +5,7 @@ from _bootstrap import (
     ROOT,
     cache,
     check,
+    education,
     finish,
     game_config,
     game_type,
@@ -96,21 +97,21 @@ check(
     migrated == [152, 176, 177, 155, 152, 58, 0, None, True],
     migrated,
 )
-cache.rhodes_island.child_schedule_template = {
-    9: {"name": "旧模板", "slot": {0: 178, 1: 58, 2: 177}},
-    10: {"name": "空模板", "slot": {}},
-}
-count = save_handle._migrate_child_schedule_template(cache.rhodes_island)
+education.set_templates(
+    {
+        9: {"name": "旧模板", "slot": {0: 178, 1: 58, 2: 177}},
+        10: {"name": "空模板", "slot": {}},
+    }
+)
+count = save_handle._migrate_child_schedule_template()
 check(
     "模板侧：时段里的旧编号换成表里有的新编号并计数",
-    count == 1
-    and cache.rhodes_island.child_schedule_template[9]["slot"]
-    == {0: 155, 1: 58, 2: 177},
-    cache.rhodes_island.child_schedule_template,
+    count == 1 and education.templates()[9]["slot"] == {0: 155, 1: 58, 2: 177},
+    education.templates(),
 )
 check(
     "模板侧：再跑一次是幂等的",
-    save_handle._migrate_child_schedule_template(cache.rhodes_island) == 0,
+    save_handle._migrate_child_schedule_template() == 0,
 )
 ga.schedule_override = {1: 176, 2: 152}
 student_a.entertainment.entertainment_type = [175, 58, 178]
@@ -121,7 +122,7 @@ check(
     and student_a.entertainment.entertainment_type == [152, 58, 155],
     (ga.schedule_override, student_a.entertainment.entertainment_type),
 )
-cache.rhodes_island.child_schedule_template = {}
+education.clear_templates()
 
 section(
     "Plan 32 L22：挪了桶的养成事件，履历里的旧 uid 读档时改成新 uid（萝莉 1 / 20 / 26 → 期末 17 / 18 / 19）"
@@ -275,15 +276,8 @@ for save_id in candidate_list:
                 (save_id, cid, "dead scene", character_data.position)
             )
             break
-    for field in (
-        "class_schedule",
-        "temp_sex_class",
-        "child_schedule_template",
-    ):
-        if not hasattr(cache.rhodes_island, field):
-            problem.append((save_id, "rhodes", field))
     # 课表结构：{教室: {星期: {节次: [科目, 教师]}}}
-    for room, week in cache.rhodes_island.class_schedule.items():
+    for room, week in education.class_schedule().items():
         for day, cells in week.items():
             for period, cell in cells.items():
                 if not (isinstance(cell, list) and len(cell) == 2):

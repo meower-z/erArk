@@ -8,7 +8,6 @@ from _bootstrap import (
     SCENE_EDU_ENTRY,
     SCENE_NURSERY,
     _,
-    attr_calculation,
     cache,
     check,
     class_ai,
@@ -17,6 +16,7 @@ from _bootstrap import (
     constant,
     constant_effect,
     datetime,
+    education,
     education_constant,
     finish,
     game_config,
@@ -444,7 +444,7 @@ check(
     class_ai.get_pending_sex_classroom(201) == ROOM_P
     and class_ai.get_pending_sex_classroom(202) == "",
 )
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 set_time(period_time(0))
 sex_class_handle.set_temp_class(_today, 0, ROOM_P, 70, must_attend=[201])
 kernel_data.set_needs(student.cid, hit=10)
@@ -458,7 +458,7 @@ check(
 class_ai.roll_skip_class = _orig_roll
 growth_handle.get_child_growth(201).skip_class_flag = False
 kernel_data.set_needs(student.cid, hit=100)
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 schedule_handle.set_selected_course(101, 0, 0, E.COURSE_TYPE_THEORY, ROOM1)
 check(
     "非学生岗恒为 NONE：教师身上挂着个人课表也不算",
@@ -628,7 +628,7 @@ check(
     and must_course["classroom"] == ROOM_P,
 )
 check("非必修且没排课的人不受影响", schedule_handle.get_now_course(202) is None)
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 
 section("整链派发：个人式课型（210805 / 220825）")
 schedule_handle.set_selected_course(201, 0, 0, E.COURSE_TYPE_PE, _("木桩房"))
@@ -955,7 +955,7 @@ check(
     "被顶掉的教师 → 562 回办公室待命",
     dispatch(101) == SM.MOVE_TO_TEACHER_OFFICE,
 )
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 schedule_handle.clear_class_cell(ROOM_P, 0, 0)
 check(
     "本节没课、工作时间 → 562 回教师办公室",
@@ -1359,7 +1359,7 @@ check(
     handle_npc_ai.judge_student_leave_truncate(201) == 0
     and leave_minutes(201) == 35,
 )
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 sex_class_handle.set_temp_class(
     DEFAULT_TIME.date().toordinal(), 2, ROOM_P, 70, must_attend=[201]
 )
@@ -1369,7 +1369,7 @@ check(
     handle_npc_ai.judge_student_leave_truncate(201) == 0
     and leave_minutes(201) == 45,
 )
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 sex_class_handle.set_temp_class(
     DEFAULT_TIME.date().toordinal(), 1, ROOM_P, 70, must_attend=[201]
 )
@@ -1847,7 +1847,7 @@ check(
     and (must_course := schedule_handle.get_now_course(201)) is not None
     and must_course["classroom"] == ROOM_P,
 )
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 schedule_handle.set_selected_course(201, 0, 1, E.COURSE_TYPE_PRACTICE, ROOM_P)
 sex_class_handle.set_temp_class(
     DEFAULT_TIME.date().toordinal(), 1, ROOM_P, 70, must_attend=[]
@@ -3587,11 +3587,6 @@ def setup_ghost() -> dict:
     kernel_data.set_world(modes.set_group_sex, True)
     # 开群交时的结算（Settle 3417）建好的群交成就记录；玩家行动收尾的成就结算要读它
     kernel_data.set_world(achievement.put, "group_sex_record", {1: [], 2: []})
-    for (
-        key,
-        value,
-    ) in attr_calculation.get_confinement_training_setting_zero().items():
-        cache.rhodes_island.confinement_training_setting.setdefault(key, value)
     pl.sp_flag.is_h = False
     kernel_data.set_needs(pl.cid, hit_max=2000, hit=2000)
     kernel_data.set_needs(pl.cid, mana_max=2000, mana=2000)
@@ -3632,7 +3627,7 @@ check(
     "她本节是这间教室的常规课、人在教室，个人课表里有性技教室课（过得了改前的 JOIN 判定）",
     modes.sex_class()
     and modes.group_sex()
-    and sex_class_handle.get_running_class() is _ghost
+    and sex_class_handle.get_running_class() == _ghost
     and not pl.sp_flag.is_h
     and pl.position == SCENE_DORM
     and class_ai.judge_in_scene(201, ROOM_P)
@@ -3662,8 +3657,8 @@ check(
     "H1 真实循环：跑完仍没有进行中的课、课堂模式关着，那条当场开的实操课已删掉",
     not modes.sex_class()
     and sex_class_handle.get_running_class() is None
-    and not cache.rhodes_island.temp_sex_class,
-    (modes.sex_class(), cache.rhodes_island.temp_sex_class),
+    and not education.temp_classes(),
+    (modes.sex_class(), education.temp_classes()),
 )
 check(
     "H1 真实循环：收敛（没有撞护栏），状态机记录里没有 722，她没被拉进 H（此前判 JOIN、722 把她拉进没有博士的课堂）",
@@ -3704,7 +3699,7 @@ check(
 kernel_data.set_needs(pl.cid, **_ghost_pl_point)
 kernel_data.set_world(modes.set_sex_class, False)
 kernel_data.set_world(modes.set_group_sex, False)
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 for _cid in (0, 201, 202):
     cache.character_data[_cid].sp_flag.is_h = False
 student.sp_flag.see_pl_h = False
@@ -3866,7 +3861,7 @@ pl.sp_flag.is_h = False
 sex_class_handle.end_sex_class()
 kernel_data.set_world(modes.set_sex_class, False)
 kernel_data.set_world(modes.set_group_sex, False)
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 for _cid in (0, 102, 201, 202):
     cache.character_data[_cid].sp_flag.is_h = False
     cache.character_data[_cid].sp_flag.see_pl_h = False

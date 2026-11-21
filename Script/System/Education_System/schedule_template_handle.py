@@ -19,7 +19,7 @@
 
 数据分两层存（口径 4「操作量不随孩子数翻倍」的落点）：
 
-    模板本体  Rhodes_Island.child_schedule_template   全局共享一份
+    模板本体  base.child_schedule_template（经 education 读写）  全局共享一份
     孩子身上  CHILD_GROWTH.schedule_template_id       只存模板编号
               CHILD_GROWTH.schedule_override          只存对模板的单项覆盖
 
@@ -29,6 +29,7 @@
 from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
+from Script.Modules.domains import education
 from Script.System.Education_System import (
     education_constant,
     growth_handle,
@@ -57,153 +58,97 @@ def get_entertainment_cid_by_name(name: str) -> int:
     return 0
 
 
-def init_default_template() -> None:
-    """
-    把四套预设模板写进全局模板表（只在表为空时写一次，玩家改过之后不再覆盖）
-    Keyword arguments:
-    无
-    Return arguments:
-    无
-    """
-    if not hasattr(cache.rhodes_island, "child_schedule_template"):
-        cache.rhodes_island.child_schedule_template = {}
-    if cache.rhodes_island.child_schedule_template:
-        return
-    for template_id, name in education_constant.PRESET_TEMPLATE_NAME.items():
-        slot_data = {}
-        for slot, entertainment_name in enumerate(
-            education_constant.PRESET_TEMPLATE_SLOT_NAME[template_id]
-        ):
-            slot_data[slot] = get_entertainment_cid_by_name(entertainment_name)
-        cache.rhodes_island.child_schedule_template[template_id] = {
+def _default_templates() -> dict[int, dict]:
+    return {
+        tid: {
             education_constant.TEMPLATE_KEY_NAME: name,
-            education_constant.TEMPLATE_KEY_SLOT: slot_data,
+            education_constant.TEMPLATE_KEY_SLOT: {
+                slot: get_entertainment_cid_by_name(ent_name)
+                for slot, ent_name in enumerate(
+                    education_constant.PRESET_TEMPLATE_SLOT_NAME[tid]
+                )
+            },
         }
+        for tid, name in education_constant.PRESET_TEMPLATE_NAME.items()
+    }
+
+
+def init_default_template() -> None:
+    """把四套预设模板写进全局模板表（只在表为空时写一次，已有模板时跳过）"""
+    if not education.templates():
+        education.set_templates(_default_templates())
 
 
 def get_template_data(template_id: int) -> dict | None:
-    """
-    取一套模板的数据
-    Keyword arguments:
-    template_id -- 模板编号
-    Return arguments:
-    Optional[dict] -- {TEMPLATE_KEY_NAME: 模板名str, TEMPLATE_KEY_SLOT: {时段int: 娱乐cid int}}（键见
-    education_constant），不存在则为None
-    """
-    init_default_template()
-    return cache.rhodes_island.child_schedule_template.get(template_id, None)
+    """取一套模板的数据；全局模板表为空时返回预设模板副本而不写入"""
+    stored = education.templates()
+    return (stored if stored else _default_templates()).get(template_id, None)
 
 
 def get_all_template_id() -> list[int]:
-    """
-    取全部模板编号，按编号升序
-    Keyword arguments:
-    无
-    Return arguments:
-    List[int] -- 模板编号列表
-    """
-    init_default_template()
-    return sorted(cache.rhodes_island.child_schedule_template.keys())
+    """取全部模板编号，按编号升序"""
+    stored = education.templates()
+    return sorted((stored if stored else _default_templates()).keys())
 
 
 def set_template_slot(
     template_id: int, slot: int, entertainment_id: int
 ) -> None:
-    """
-    改一套模板某个时段的活动
-    Keyword arguments:
-    template_id -- 模板编号
-    slot -- 时段0~2
-    entertainment_id -- 娱乐cid，0表示该时段不改写（保持随机）
-    Return arguments:
-    无
-    """
-    template_data = get_template_data(template_id)
+    """改一套模板某个时段的活动（entertainment_id 为 0 表示保持随机）"""
+    init_default_template()
+    template_data = education.template(template_id)
     if template_data is None:
         return
     template_data.setdefault(education_constant.TEMPLATE_KEY_SLOT, {})[
         slot
     ] = entertainment_id
+    education.put_template(template_id, template_data)
 
 
 def judge_template_is_preset(template_id: int) -> bool:
-    """
-    校验一套模板是不是四套预设之一（Plan 22 二期第一轮追加）
-    Keyword arguments:
-    template_id -- 模板编号
-    Return arguments:
-    bool -- 是否为预设
-    """
+    """校验一套模板是不是四套预设之一"""
     return template_id in education_constant.PRESET_TEMPLATE_NAME
 
 
 def create_template(name: str) -> int:
-    """
-    新建一套空模板（Plan 22 二期第一轮追加）
-
-    方案 §1 要的是「可定义**若干套**日常日程模板」，四套预设只是起点。
-    编号取「现存最大编号 + 1」，不补中间的空缺号；但被删的**最大**编号会被下一套新模板复用
-       （收尾轮测试发现，与原注释「删过的编号不复用」不符）。这不会串日程：delete_template 删之前
-       已把引用它的孩子解开（schedule_template_id 归 0、覆盖清空；Plan 32 起连不在岛上的人一起解开），
-       不存在"孩子还指着旧编号"的情形。
-    Keyword arguments:
-    name -- 模板名，留空则自动命名
-    Return arguments:
-    int -- 新模板的编号，建失败为0
-    """
+    """新建一套空模板，编号取现存最大编号 + 1；name 留空则自动命名"""
     init_default_template()
-    template_dict = cache.rhodes_island.child_schedule_template
+    template_dict = education.templates()
     new_id = (max(template_dict.keys()) if template_dict else 0) + 1
     name = name.strip() if name else ""
     if not name:
         name = _("模板{0}").format(new_id)
-    template_dict[new_id] = {
-        education_constant.TEMPLATE_KEY_NAME: name,
-        education_constant.TEMPLATE_KEY_SLOT: {},
-    }
+    education.put_template(
+        new_id,
+        {
+            education_constant.TEMPLATE_KEY_NAME: name,
+            education_constant.TEMPLATE_KEY_SLOT: {},
+        },
+    )
     return new_id
 
 
 def rename_template(template_id: int, name: str) -> bool:
-    """
-    给一套模板改名（Plan 22 二期第一轮追加）。预设也可改名，改的只是显示用的名字
-    Keyword arguments:
-    template_id -- 模板编号
-    name -- 新名字，留空则不改
-    Return arguments:
-    bool -- 是否改成功
-    """
-    template_data = get_template_data(template_id)
+    """给一套模板改名；预设也可改名，留空不改"""
+    init_default_template()
+    template_data = education.template(template_id)
     if template_data is None:
         return False
     name = name.strip() if name else ""
     if not name:
         return False
     template_data[education_constant.TEMPLATE_KEY_NAME] = name
+    education.put_template(template_id, template_data)
     return True
 
 
 def delete_template(template_id: int) -> bool:
-    """
-    删掉一套自建模板（Plan 22 二期第一轮追加）
-
-    四套预设不可删：init_default_template 只在整张表为空时才补，
-       删掉一套预设不会被补回来，而 PRESET_TEMPLATE_NAME 的编号在代码里被引用着。
-    删之前必须把引用它的孩子解开，否则那些孩子的 schedule_template_id
-       指向一个不存在的编号，get_child_slot_activity 每天都拿到 None。
-       解开的范围是全部角色，含外勤 / 外交等不在岛上的人（Plan 32 §3.12 L17）：被删的最大编号会被下一套新模板复用
-    Keyword arguments:
-    template_id -- 模板编号
-    Return arguments:
-    bool -- 是否删成功
-    """
+    """删掉一套自建模板（预设不可删），删前把全部引用该模板的角色解开"""
     init_default_template()
     if judge_template_is_preset(template_id):
         return False
-    if template_id not in cache.rhodes_island.child_schedule_template:
+    if education.template(template_id) is None:
         return False
-    # 遍历全部角色，不只是在岛的人（Plan 32 §3.12 L17）：外勤 / 外交 / 离线中的女儿不在 npc_id_got，
-    #    此前她仍指着被删的编号，新模板复用这个编号时，她回岛后静默套上新模板
     for character_data in cache.character_data.values():
         growth_data = character_data.child_growth
         if (
@@ -213,20 +158,13 @@ def delete_template(template_id: int) -> bool:
             continue
         growth_data.schedule_template_id = 0
         growth_data.schedule_override = {}
-    del cache.rhodes_island.child_schedule_template[template_id]
-    return True
+    return education.delete_template(template_id)
 
 
 def apply_template(character_id: int, template_id: int) -> None:
-    """
-    给一个孩子套用模板。换模板时一并清空该孩子的单项覆盖——
-    覆盖是"针对某套模板的微调"，留着它跨模板生效只会让玩家看不懂自己的日程
-    Keyword arguments:
-    character_id -- 角色id
-    template_id -- 模板编号，0表示取消套用
-    Return arguments:
-    无
-    """
+    """给一个孩子套用模板（0 表示取消），换模板时清空该孩子的单项覆盖"""
+    if template_id:
+        init_default_template()
     growth_data = growth_handle.get_child_growth(character_id)
     if growth_data.schedule_template_id != template_id:
         growth_data.schedule_override = {}

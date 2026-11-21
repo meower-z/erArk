@@ -15,8 +15,8 @@ from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 
 from typing import TYPE_CHECKING
-from Script.Modules.domains import achievement, commission, needs
-from Script.Modules.domains import playthrough, warehouse
+from Script.Modules.domains import achievement, commission, needs, playthrough
+from Script.Modules.domains import prison, warehouse
 
 if TYPE_CHECKING:
     from typing import Any
@@ -111,7 +111,7 @@ def achievement_flow(achievement_type: str, achievement_id: int = 0) -> None:
     # 成就类型与结算值的映射字典
     achievement_type_value_dict: dict[str, list[Any]] = {
         _("周目"): [playthrough.game_round(), [1, 2]],
-        _("囚犯"): [len(cache.rhodes_island.current_prisoners), [121, 122]],
+        _("囚犯"): [len(prison.prisoner_ids()), [121, 122]],
         _("龙门币"): [
             warehouse.amount(1),
             [201, 202, 203],

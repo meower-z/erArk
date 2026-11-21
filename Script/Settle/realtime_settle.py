@@ -25,7 +25,7 @@ from Script.UI.Moudle import draw
 from Script.UI.Panel import ejaculation_panel
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import entertainment, facility, modes, needs
-from Script.Modules.domains import playthrough, pregnancy
+from Script.Modules.domains import playthrough, pregnancy, prison
 
 if TYPE_CHECKING:
     from Script.Kernel import core
@@ -508,7 +508,7 @@ def settle_rest(character_id: int, true_add_time: int) -> None:
         final_adjust *= Fraction(3, 2)
     # 监禁条件判定
     if handle_premise.handle_imprisonment_1(character_id):
-        setting = cache.rhodes_island.confinement_training_setting[4]
+        setting = prison.setting(4)
         if setting == 0:
             final_adjust *= Fraction(1, 2)
         elif setting == 2:
@@ -594,7 +594,7 @@ def settle_sleep(character_id: int, true_add_time: int) -> None:
         final_adjust *= Fraction(3, 2)
     # 监禁条件判定
     if handle_premise.handle_imprisonment_1(character_id):
-        setting = cache.rhodes_island.confinement_training_setting[4]
+        setting = prison.setting(4)
         if setting == 0:
             final_adjust *= Fraction(1, 2)
         elif setting == 2:

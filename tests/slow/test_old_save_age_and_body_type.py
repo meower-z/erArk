@@ -41,13 +41,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
     """旧存档读档后的成长阶段、体型、见学与上课状态、外表年龄药、世界设定1"""
 
     def tearDown(self) -> None:
-        """
-        删掉本测试写入的存档
-        Keyword arguments:
-        无
-        Return arguments:
-        无
-        """
+        """删掉本测试写入的存档"""
         from Script.Core import save_handle
 
         shutil.rmtree(
@@ -228,20 +222,37 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         player.pl_collection.npc_socks[child_id] = ["测试"]
         player.pl_collection.milk_total[child_id] = 30
         player.pl_collection.urine_total[child_id] = 20
+        education = importlib.import_module("Script.Modules.domains.education")
+        prison = importlib.import_module("Script.Modules.domains.prison")
         island = cache.rhodes_island
-        island.current_prisoners[child_id] = [game_time.now(), 0]
         child.sp_flag.imprisonment = True
         commission_id = min(game_config.config_commission)
         team = [child_id, mother_id]
         kd.written(start, commission_id, team, game_time.now(), [])
         child.sp_flag.field_commission = commission_id
-        island.temp_sex_class["1-1"] = {
-            "classroom": "理论教室一",
-            "ability_id": 70,
-            "must_attend": [child_id, mother_id],
-            "notified": [False, False, False],
-            "running": False,
-        }
+        with kd.writing():
+            prison.imprison(child_id, game_time.now(), 0)
+            education.put_temp_class(
+                "1-1",
+                {
+                    "classroom": "理论教室一",
+                    "ability_id": 70,
+                    "must_attend": [child_id, mother_id],
+                    "notified": [False, False, False],
+                    "running": False,
+                },
+            )
+            education.put_template(
+                1,
+                {
+                    "name": "测试日程",
+                    "slot": {
+                        0: FOLLOW_MOTHER_ENTERTAINMENT,
+                        1: MISSING_ENTERTAINMENT,
+                        2: 0,
+                    },
+                },
+            )
         island.examined_operator_ids.add(child_id)
         island.waiting_for_exam_operator_ids.add(child_id)
         island.manually_selected_exam_operator_ids.add(child_id)
@@ -291,14 +302,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         child.child_growth.schedule_override = {0: FOLLOW_MOTHER_ENTERTAINMENT}
         child.child_growth.skip_class_flag = True
         child.child_growth.skip_class_day = game_time.now().toordinal()
-        cache.rhodes_island.child_schedule_template[1] = {
-            "name": "测试日程",
-            "slot": {
-                0: FOLLOW_MOTHER_ENTERTAINMENT,
-                1: MISSING_ENTERTAINMENT,
-                2: 0,
-            },
-        }
         # 103的学员：未初潮、未成年、在见学，有课表；毕业的女儿：有听课与成绩单记录
         student = cache.character_data[id_dict["d103"]]
         student.talent[6] = 1
@@ -387,14 +390,15 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         无
         Return arguments:
         dict -- 角色id到数据的字典，外加世界设定、日程模板、玩家收藏品里的卵、当前干员列表、各场景的角色、GameState 的
-           全部全局数据、罗德岛里的囚犯、实操课与体检数据，以及场景面板记着的角色
+           全部全局数据、罗德岛里的体检数据，以及场景面板记着的角色
         """
         collection = self.cache.character_data[0].pl_collection
+        education = importlib.import_module("Script.Modules.domains.education")
         from Script.Kernel import core
 
         snapshot: dict[str | int, object] = {
             "world_setting": kd.world_settings(),
-            "template": repr(self.cache.rhodes_island.child_schedule_template),
+            "template": repr(education.templates()),
             "eggs": repr((collection.held_eggs, collection.soft_eggs)),
             "npc_id_got": sorted(self.cache.npc_id_got),
             "scene": {
@@ -406,8 +410,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 [
                     getattr(self.cache.rhodes_island, name)
                     for name in (
-                        "current_prisoners",
-                        "temp_sex_class",
                         "examined_operator_ids",
                         "waiting_for_exam_operator_ids",
                         "manually_selected_exam_operator_ids",
@@ -620,8 +622,9 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             "share_blankly",
             "表里没有的行为换成发呆",
         )
+        education = importlib.import_module("Script.Modules.domains.education")
         self.assertEqual(
-            cache.rhodes_island.child_schedule_template[1]["slot"][1],
+            education.templates()[1]["slot"][1],
             0,
             "日程模板里表里没有的娱乐换成0",
         )
@@ -813,22 +816,14 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             ([1, 1, 1], 80),
             "母亲的产后、育儿与泌乳保持原样",
         )
-        for value in cache.rhodes_island.child_schedule_template[1][
-            "slot"
-        ].values():
+        for value in education.templates()[1]["slot"].values():
             self.assertTrue(
                 value == 0 or value in game_config.config_entertainment,
                 f"日程模板的时段{value}应是自由选择或 Entertainment.csv 里的娱乐",
             )
 
     def _assert_no_child_reference(self, id_dict: dict) -> None:
-        """
-        检查其他结构里没有对102孩子的引用，与她并列的母亲的条目保留
-        Keyword arguments:
-        id_dict -- _build_old_save 返回的角色id
-        Return arguments:
-        无
-        """
+        """检查其他结构里没有对102孩子的引用，与她并列的母亲的条目保留"""
         cache = self.cache
         child_id = id_dict["d102"]
         mother_id = id_dict["mother"]
@@ -870,11 +865,13 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             ("", [], [], 0, 0),
             "玩家收藏品里没有孩子的胖次、袜子、乳汁与圣水",
         )
+        education = importlib.import_module("Script.Modules.domains.education")
+        prison = importlib.import_module("Script.Modules.domains.prison")
         self.assertEqual(
             [
                 child_id in one
                 for one in (
-                    island.current_prisoners,
+                    prison.prisoner_ids(),
                     island.today_physical_examination_chara_id_dict,
                     island.examined_operator_ids,
                     island.waiting_for_exam_operator_ids,
@@ -892,7 +889,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         self.assertEqual(
             (
                 list(commission.ongoing()[id_dict["commission"]].team),
-                island.temp_sex_class["1-1"]["must_attend"],
+                (education.temp_class("1-1") or {}).get("must_attend"),
             ),
             ([mother_id], [mother_id]),
             "外勤委托与实操课必修名单里没有孩子，母亲保留",

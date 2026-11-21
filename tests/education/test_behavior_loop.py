@@ -1,9 +1,7 @@
 # -*- coding: UTF-8 -*-
-"""模式 B：在真实存档上带护栏地跑行为循环，看孩子按课表上课、循环收敛、跨天结算不炸
-
+"""模式 B：在真实存档上带护栏地跑行为循环，看孩子按课表上课、循环收敛、跨天结算不炸。
 只读：读档只用 input_load_save，绝不 establish_save；行为循环是自建的带轮数上限的副本，
-   不 inline 调用 init_character_behavior()（其结尾的成就结算可能写文件）。
-"""
+不 inline 调用 init_character_behavior()（其结尾的成就结算可能写文件）。"""
 
 from _bootstrap import (
     ROOT,
@@ -14,6 +12,7 @@ from _bootstrap import (
     class_ai,
     constant,
     datetime,
+    education,
     education_constant,
     finish,
     game_time,
@@ -175,7 +174,7 @@ for cid in daughter_list + teacher_list:
     cd.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
     cd.behavior.duration = 0
     cd.state = constant.CharacterStatus.STATUS_ARDER
-cache.rhodes_island.class_schedule = {}
+education.clear_class_schedule()
 filled, skipped = auto_schedule.auto_fill_class_schedule()
 check("一键排课", filled > 0, (filled, skipped))
 for cid in daughter_list:
@@ -381,7 +380,7 @@ check(
     len(arrived) >= 1,
     (arrived, must_list),
 )
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 class_ai.get_skip_class_rate = _orig_rate
 
 section(

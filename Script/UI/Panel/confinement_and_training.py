@@ -23,7 +23,7 @@ import random
 from Script.Design import game_time
 from Script.Modules.gameplay_resolution import plan_queue
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import facility, needs, work
+from Script.Modules.domains import facility, needs, prison, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -41,7 +41,7 @@ def settle_prisoners() -> None:
     """
     囚犯结算，先计算逃脱概率的增加，再判断是否能逃脱，最后处理失败与成功的情况。\n
     """
-    for character_id in cache.rhodes_island.current_prisoners.copy():
+    for character_id in prison.prisoner_ids():
         # 计算逃脱概率
         escape_probability = calculate_escape_probability(character_id)
         # 判断是否能逃脱
@@ -59,9 +59,9 @@ def settle_prisoners() -> None:
 def calculate_escape_probability(character_id: int) -> float:
     """
     计算指定角色的逃脱概率。\n
-    逃脱概率 = (战斗技能 + 学识技能) * (confinement_training_setting[4] * 0.5)\n
+    逃脱概率 = (战斗技能 + 学识技能) * ((生活水平设置 + 1) * 0.5)\n
     战斗技能存储在 character_data.ability[42]，学识技能存储在 character_data.ability[45]。\n
-    计算得到的概率将记录在 cache.rhodes_island.current_prisoners[chara_id][1]。\n
+    计算得到的概率将写入内核状态的 base.prisoners。\n
     Keyword arguments:\n
     character_id -- 角色id\n
     Return arguments:\n
@@ -76,9 +76,7 @@ def calculate_escape_probability(character_id: int) -> float:
     total_skill = combat_skill + knowledge_skill
 
     # 基础系数基于生活水平
-    coefficient = (
-        cache.rhodes_island.confinement_training_setting.get(4, 0) + 1
-    ) * 0.5
+    coefficient = (prison.setting(4) + 1) * 0.5
     # 屈服刻印减少系数
     coefficient -= character_data.ability[14] * 0.1
     # 反发刻印增加系数
@@ -92,27 +90,15 @@ def calculate_escape_probability(character_id: int) -> float:
     add_escape_probability = total_skill * coefficient
 
     # 已逃脱概率越高，则越难提升，最少也有1%
-    max_probability = (
-        100 - cache.rhodes_island.current_prisoners[character_id][1]
-    ) * 0.1
+    old_prob = prison.escape_probability(character_id)
+    max_probability = (100 - old_prob) * 0.1
     add_escape_probability = int(min(add_escape_probability, max_probability))
     add_escape_probability = max(add_escape_probability, 1)
 
     # 记录逃脱概率
-    if character_id in cache.rhodes_island.current_prisoners:
-        cache.rhodes_island.current_prisoners[character_id][
-            1
-        ] += add_escape_probability
-        cache.rhodes_island.current_prisoners[character_id][1] = min(
-            cache.rhodes_island.current_prisoners[character_id][1], 100
-        )
-    else:
-        cache.rhodes_island.current_prisoners[character_id] = [
-            game_time.now(),
-            add_escape_probability,
-        ]
-
-    return cache.rhodes_island.current_prisoners[character_id][1]
+    new_prob = min(old_prob + add_escape_probability, 100)
+    prison.set_escape_probability(character_id, new_prob)
+    return new_prob
 
 
 def judge_can_escape(character_id: int) -> tuple[bool, float, float]:
@@ -129,12 +115,13 @@ def judge_can_escape(character_id: int) -> tuple[bool, float, float]:
     float -- 监狱长对抗值\n
     """
     # 需要是囚犯
-    if character_id not in cache.rhodes_island.current_prisoners:
+    if not prison.is_prisoner(character_id):
         return False, 0, 0
+    prob = prison.escape_probability(character_id)
     # 如果没有监狱长，且概率大于30，则直接逃脱
     warden_id = work.warden()
     if warden_id == 0:
-        if cache.rhodes_island.current_prisoners[character_id][1] > 30:
+        if prob > 30:
             return True, 0, 0
         return False, 0, 0
     # 关押区的等级效果
@@ -146,19 +133,14 @@ def judge_can_escape(character_id: int) -> tuple[bool, float, float]:
     # 需要逃脱概率大于50+关押区效果，最大99
     need_escape_probability = 50 + facility_effect
     need_escape_probability = min(need_escape_probability, 99)
-    if (
-        cache.rhodes_island.current_prisoners[character_id][1]
-        < need_escape_probability
-    ):
+    if prob < need_escape_probability:
         return False, 0, 0
 
     # 囚犯的逃脱概率
     character_data = cache.character_data[character_id]
-    escape_value = cache.rhodes_island.current_prisoners[character_id][1] / 100
+    escape_value = prob / 100
     # 乘以生活水平
-    escape_value *= (
-        cache.rhodes_island.confinement_training_setting[4] + 1
-    ) * 0.4
+    escape_value *= (prison.setting(4) + 1) * 0.4
     # 乘以战斗技能
     escape_value *= character_data.ability[42]
     # 乘以体力气力
@@ -199,7 +181,7 @@ def escape_success(character_id: int) -> None:
     # 进入逃跑中的状态
     character_data.sp_flag.escaping = True
     # 移除囚犯信息
-    cache.rhodes_island.current_prisoners.pop(character_id)
+    prison.release(character_id)
     # 囚犯离线
     default.handle_chara_off_line(
         character_id,
@@ -227,7 +209,7 @@ def escape_fail(character_id: int) -> None:
     escape_draw.width = window_width
     escape_draw.draw()
     # 囚犯逃脱值清零
-    cache.rhodes_island.current_prisoners[character_id][1] = 0
+    prison.set_escape_probability(character_id, 0)
 
 
 def chara_become_prisoner(character_id: int) -> None:
@@ -247,7 +229,7 @@ def chara_become_prisoner(character_id: int) -> None:
     # 重置身体管理
     character_data.body_manage = attr_calculation.get_body_manage_zero()
     # 加入囚犯数据
-    cache.rhodes_island.current_prisoners[character_id] = [game_time.now(), 0]
+    prison.imprison(character_id, game_time.now(), 0)
     # 服装结算
     clothing.handle_prisoner_clothing(character_id)
     # 当前位置作为宿舍，并保存旧宿舍
@@ -307,7 +289,7 @@ def get_unused_prison_dormitory() -> str:
 
     # 收集所有在用的牢狱名字
     occupied_dorms = set()
-    for prisoner_id in cache.rhodes_island.current_prisoners:
+    for prisoner_id in prison.prisoner_ids():
         character_data = cache.character_data[prisoner_id]
         dorm = character_data.dormitory
         for d in all_dormitories:
@@ -364,15 +346,12 @@ def start_training_preparation(target_character_id: int) -> None:
         pl_character_data.position, humiliation_room_list, 0
     )
     # 清洗
-    if cache.rhodes_island.pre_training_cleaning:
+    if prison.cleaning():
         target_character_data.dirty = attr_calculation.get_dirty_reset(
             target_character_data.dirty
         )
     # 润滑
-    if (
-        cache.rhodes_island.pre_training_lubrication
-        and handle_premise.handle_have_body_lubricant(0)
-    ):
+    if prison.lubrication() and handle_premise.handle_have_body_lubricant(0):
         default.handle_use_body_lubricant(
             0,
             add_time=1,
@@ -389,8 +368,7 @@ def start_training_preparation(target_character_id: int) -> None:
     body_item_list = h_item_shop_panel.body_item_list
     for i in range(len(body_item_list)):
         # 已开启
-        cache.rhodes_island.pre_training_tool_dict.setdefault(i, 0)
-        if cache.rhodes_island.pre_training_tool_dict[i]:
+        if prison.tool(i):
             item_id = h_item_shop_panel.get_item_id_from_body_item_list(i)
             item_num = cache.character_data[0].item[item_id]
             # 如果没有道具，则跳过
@@ -524,10 +502,7 @@ def get_all_can_use_behavior_id_for_sex_assistant(
                     continue
                 # 如果指定了部位或者不使用的部位，则也跳过被ban的指令id
                 if select_part != "" or not_selet_part != "":
-                    if (
-                        behavior_id
-                        in cache.rhodes_island.sex_assistant_ai_ban_behavior_id_list
-                    ):
+                    if behavior_id in prison.assistant_ban_behaviors():
                         continue
                 pl_character_data = cache.character_data[0]
                 if pl_character_data.target_character_id != 0:
@@ -555,9 +530,7 @@ def get_behavior_id_of_sex_assistant() -> str:
     if handle_premise.handle_sex_assistant_off(0):
         return "0"
     # 如果调教目标是仅囚犯干员的话，玩家的交互对象不是囚犯时返回0
-    if cache.rhodes_island.confinement_training_setting[
-        13
-    ] == 0 and handle_premise.handle_t_imprisonment_0(0):
+    if prison.setting(13) == 0 and handle_premise.handle_t_imprisonment_0(0):
         return "0"
     # 6异常或者绳子捆绑则返回0
     warden_id = work.warden()
@@ -566,14 +539,9 @@ def get_behavior_id_of_sex_assistant() -> str:
     ) or handle_premise.handle_self_now_bondage(warden_id):
         return "0"
     # 如果是指定指令列表，则直接随机选择
-    if (
-        handle_premise.handle_sex_assistant_3(0)
-        and len(cache.rhodes_island.sex_assistant_ai_behavior_id_list) > 0
-    ):
-        behavior_id = random.choice(
-            cache.rhodes_island.sex_assistant_ai_behavior_id_list
-        )
-        return behavior_id
+    behaviors = prison.assistant_behaviors()
+    if handle_premise.handle_sex_assistant_3(0) and behaviors:
+        return random.choice(behaviors)
     else:
         # 获取玩家当前的状态id
         pl_character_data = cache.character_data[0]
@@ -657,11 +625,12 @@ class Confinement_And_Training_Manage_Panel:
 
             all_info_draw = draw.NormalDraw()
             now_text = "   "
-            if len(cache.rhodes_island.current_prisoners) == 0:
+            prisoner_ids = prison.prisoner_ids()
+            if not prisoner_ids:
                 now_text += _("目前没有囚犯\n")
             else:
                 now_text += _("目前的囚犯有：")
-                for chara_id in cache.rhodes_island.current_prisoners:
+                for chara_id in prisoner_ids:
                     tem_character_data: game_type.Character = (
                         cache.character_data[chara_id]
                     )
@@ -680,13 +649,7 @@ class Confinement_And_Training_Manage_Panel:
             # 遍历全部设置
             for cid in game_config.config_confinement_training_setting:
                 # 如果是第13序号[调教目标]的话，需要12[调教助手]已开启
-                if (
-                    cid == 13
-                    and cache.rhodes_island.confinement_training_setting.get(
-                        12, 0
-                    )
-                    == 0
-                ):
+                if cid == 13 and prison.setting(12) == 0:
                     continue
                 line_feed.draw()
                 confinement_training_setting_data = (
@@ -705,9 +668,7 @@ class Confinement_And_Training_Manage_Panel:
                 button_draw.draw()
                 return_list.append(button_draw.return_text)
 
-                now_setting_flag = (
-                    cache.rhodes_island.confinement_training_setting.get(cid, 0)
-                )  # 当前设置的值
+                now_setting_flag = prison.setting(cid)  # 当前设置的值
                 option_len = len(
                     game_config.config_confinement_training_setting_option[cid]
                 )  # 选项的长度
@@ -729,10 +690,8 @@ class Confinement_And_Training_Manage_Panel:
                     return_list.append(button_draw.return_text)
                 # 调教前准备单独处理
                 elif cid == 11:
-                    clean_flag = cache.rhodes_island.pre_training_cleaning
-                    lubrication_flag = (
-                        cache.rhodes_island.pre_training_lubrication
-                    )
+                    clean_flag = prison.cleaning()
+                    lubrication_flag = prison.lubrication()
 
                     if clean_flag:
                         clean_text = _(" [进行污浊清洗] ")
@@ -770,10 +729,7 @@ class Confinement_And_Training_Manage_Panel:
                 # 调教助手的额外选项
                 if cid == 12:
                     # 如果选择的是从指定列表中选择，则显示指定列表按钮
-                    if (
-                        cache.rhodes_island.confinement_training_setting[cid]
-                        == 3
-                    ):
+                    if prison.setting(cid) == 3:
                         target_text = _(" [调整指令列表] ")
                         target_button = draw.LeftButton(
                             target_text,
@@ -822,26 +778,16 @@ class Confinement_And_Training_Manage_Panel:
 
     def change_setting(self, cid: int, option_len: int) -> None:
         """修改设置"""
-        cache.rhodes_island.confinement_training_setting.setdefault(cid, 0)
-        if (
-            cache.rhodes_island.confinement_training_setting[cid]
-            < option_len - 1
-        ):
-            cache.rhodes_island.confinement_training_setting[cid] += 1
-        else:
-            cache.rhodes_island.confinement_training_setting[cid] = 0
+        cur = prison.setting(cid)
+        prison.set_setting(cid, cur + 1 if cur < option_len - 1 else 0)
 
     def change_pre_training_cleaning(self) -> None:
         """切换是否进行污浊清洗"""
-        cache.rhodes_island.pre_training_cleaning = (
-            not cache.rhodes_island.pre_training_cleaning
-        )
+        prison.set_cleaning(not prison.cleaning())
 
     def change_pre_training_lubrication(self) -> None:
         """切换是否使用润滑液提前润滑"""
-        cache.rhodes_island.pre_training_lubrication = (
-            not cache.rhodes_island.pre_training_lubrication
-        )
+        prison.set_lubrication(not prison.lubrication())
 
     def adjust_tool_list(self) -> None:
         """调整道具使用"""
@@ -865,10 +811,6 @@ class Confinement_And_Training_Manage_Panel:
 
             # 遍历道具列表
             for i in range(len(body_item_list)):
-                # 初始化道具字典
-                if i not in cache.rhodes_island.pre_training_tool_dict:
-                    cache.rhodes_island.pre_training_tool_dict[i] = 0
-
                 # 持有道具数量
                 item_id = h_item_shop_panel.get_item_id_from_body_item_list(i)
                 item_num = cache.character_data[0].item[item_id]
@@ -899,7 +841,8 @@ class Confinement_And_Training_Manage_Panel:
                 # 如果数量为0，则绘制灰色不可选按钮
                 button_draw: draw.NormalDraw | draw.LeftButton
                 if item_num <= 0:
-                    cache.rhodes_island.pre_training_tool_dict[i] = 0
+                    if prison.tool(i):
+                        prison.set_tool(i, 0)
                     button_text = _(" [不使用] ")
                     button_draw = draw.NormalDraw()
                     button_draw.text = button_text
@@ -907,7 +850,7 @@ class Confinement_And_Training_Manage_Panel:
                     button_draw.width = 20
                     button_draw.draw()
                 else:
-                    if cache.rhodes_island.pre_training_tool_dict[i]:
+                    if prison.tool(i):
                         button_text = _(" [使用] ")
                     else:
                         button_text = _(" [不使用] ")
@@ -934,10 +877,7 @@ class Confinement_And_Training_Manage_Panel:
 
     def change_pre_training_tool(self, tool_id: int) -> None:
         """切换是否使用道具"""
-        if cache.rhodes_island.pre_training_tool_dict[tool_id]:
-            cache.rhodes_island.pre_training_tool_dict[tool_id] = 0
-        else:
-            cache.rhodes_island.pre_training_tool_dict[tool_id] = 1
+        prison.set_tool(tool_id, 0 if prison.tool(tool_id) else 1)
 
     def adjust_sex_assistant_instruct_list(
         self, ban_flag: bool = False
@@ -946,6 +886,8 @@ class Confinement_And_Training_Manage_Panel:
         new_status_id_list = get_all_can_use_behavior_id_for_sex_assistant()
         while 1:
             return_list = []
+            selected_behaviors = prison.assistant_behaviors()
+            banned_behaviors = prison.assistant_ban_behaviors()
             line = draw.LineDraw("-", self.width)
             line.draw()
             line_feed.draw()
@@ -960,18 +902,10 @@ class Confinement_And_Training_Manage_Panel:
                 button_text = f" [{status_data.name}] "
                 button_len = max(len(button_text) * 2, 30)
                 # 选择下，选择变黄
-                if (
-                    not ban_flag
-                    and status_id
-                    in cache.rhodes_island.sex_assistant_ai_behavior_id_list
-                ):
+                if not ban_flag and status_id in selected_behaviors:
                     draw_style = "gold_enrod"
                 # 禁止下，选择变灰
-                elif (
-                    ban_flag
-                    and status_id
-                    in cache.rhodes_island.sex_assistant_ai_ban_behavior_id_list
-                ):
+                elif ban_flag and status_id in banned_behaviors:
                     draw_style = "deep_gray"
                 else:
                     draw_style = "standard"
@@ -1001,7 +935,7 @@ class Confinement_And_Training_Manage_Panel:
                 break
 
     def change_select_instruct(
-        self, instruct_id: int, ban_flag: bool = False
+        self, instruct_id: str, ban_flag: bool = False
     ) -> None:
         """
         切换调教助手指令选择状态
@@ -1010,26 +944,6 @@ class Confinement_And_Training_Manage_Panel:
         ban_flag -- 是否禁止该指令
         """
         if not ban_flag:
-            if (
-                instruct_id
-                in cache.rhodes_island.sex_assistant_ai_behavior_id_list
-            ):
-                cache.rhodes_island.sex_assistant_ai_behavior_id_list.remove(
-                    instruct_id
-                )
-            else:
-                cache.rhodes_island.sex_assistant_ai_behavior_id_list.append(
-                    instruct_id
-                )
+            prison.toggle_assistant_behavior(instruct_id)
         else:
-            if (
-                instruct_id
-                in cache.rhodes_island.sex_assistant_ai_ban_behavior_id_list
-            ):
-                cache.rhodes_island.sex_assistant_ai_ban_behavior_id_list.remove(
-                    instruct_id
-                )
-            else:
-                cache.rhodes_island.sex_assistant_ai_ban_behavior_id_list.append(
-                    instruct_id
-                )
+            prison.toggle_assistant_ban_behavior(instruct_id)

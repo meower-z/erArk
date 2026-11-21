@@ -20,7 +20,8 @@ import os
 from Script.Config import game_config
 from Script.Core import cache_control
 from Script.Modules.domains import commission, diplomacy, facility, location
-from Script.Modules.domains import modes, playthrough, recruit, visitor, work
+from Script.Modules.domains import modes, playthrough, prison, recruit, visitor
+from Script.Modules.domains import work
 from ..check_registry import CheckFailure, register_check, make_failure
 from typing import TYPE_CHECKING
 from Script.Design import game_time
@@ -334,12 +335,12 @@ def check_imprisonment_flag_partition_completeness() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     cd = cache.character_data
-    ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     imp = {cid for cid, c in cd.items() if cid != 0 and c.sp_flag.imprisonment}
     esc = {cid for cid, c in cd.items() if cid != 0 and c.sp_flag.escaping}
-    prisoners = set(ri.current_prisoners)
+    prisoners_map = prison.prisoners()
+    prisoners = set(prisoners_map)
     union = prisoners | esc
     for cid in imp - union:
         c = cd[cid]
@@ -349,7 +350,7 @@ def check_imprisonment_flag_partition_completeness() -> list[CheckFailure]:
                 "监禁flag的来源分区完整",
                 (
                     f"{warn}角色cid={cid} name={c.name!r} sp_flag.imprisonment为True，"
-                    f"但既不在current_prisoners也不escaping；"
+                    f"但既不在base.prisoners也不escaping；"
                     f"position={c.position}，dormitory={c.dormitory!r}，permanent_dormitory={c.permanent_dormitory!r}"
                 ),
                 [cid],
@@ -362,9 +363,9 @@ def check_imprisonment_flag_partition_completeness() -> list[CheckFailure]:
                 "ROSTER-05",
                 "监禁flag的来源分区完整",
                 (
-                    f"{warn}角色cid={cid} name={getattr(maybe_c, 'name', '?')!r} 在current_prisoners或escaping中，"
+                    f"{warn}角色cid={cid} name={getattr(maybe_c, 'name', '?')!r} 在base.prisoners或escaping中，"
                     f"但sp_flag.imprisonment为False；"
-                    f"current_prisoners.get={ri.current_prisoners.get(cid)}"
+                    f"base.prisoners.get={prisoners_map.get(cid)}"
                 ),
                 [cid],
             )
@@ -375,7 +376,7 @@ def check_imprisonment_flag_partition_completeness() -> list[CheckFailure]:
             make_failure(
                 "ROSTER-05",
                 "监禁flag的来源分区完整",
-                f"{warn}角色cid={cid} name={c.name!r} 同时在current_prisoners囚犯名册与escaping逃跑者集合中(应互斥)；"
+                f"{warn}角色cid={cid} name={c.name!r} 同时在base.prisoners囚犯名册与escaping逃跑者集合中(应互斥)；"
                 f"position={c.position}，dormitory={c.dormitory!r}",
                 [cid],
             )
@@ -388,15 +389,14 @@ def check_prisoner_record_shape_and_roster_membership() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
-    功能: 校验current_prisoners每条记录形状为[入狱时间, 逃脱概率]，概率夹在0..100之间且非bool污染，
+    功能: 校验base.prisoners每条记录形状为[入狱时间, 逃脱概率]，概率夹在0..100之间且非bool污染，
     本人在编且sp_flag.imprisonment为True、escaping为False
     """
     cache = cache_control.cache
     cd = cache.character_data
-    ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
-    for cid, rec in ri.current_prisoners.items():
+    for cid, rec in prison.prisoners().items():
         if cid == 0 or cid not in cd:
             failures.append(
                 make_failure(
@@ -443,7 +443,7 @@ def check_prisoner_record_shape_and_roster_membership() -> list[CheckFailure]:
                         f"{warn}囚犯cid={cid} name={c.name!r} 存在问题: {'; '.join(problems)}；record={rec!r}，"
                         f"game_time={game_time.now()}，"
                         f"ability[42]={c.ability.get(42)}，ability[45]={c.ability.get(45)}，"
-                        f"confinement_training_setting[4]={ri.confinement_training_setting.get(4)}"
+                        f"prison.setting(4)={prison.setting(4)}"
                     ),
                     [cid],
                 )
@@ -461,12 +461,12 @@ def check_prisoner_dormitory_uniqueness() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     cd = cache.character_data
-    ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     prison_dorms = _prison_dorms(cache)
     dorm_to_cids: dict[str, list[int]] = {}
-    for cid in ri.current_prisoners:
+    prisoners = prison.prisoner_ids()
+    for cid in prisoners:
         if cid not in cd:
             continue
         d = cd[cid].dormitory
@@ -490,7 +490,7 @@ def check_prisoner_dormitory_uniqueness() -> list[CheckFailure]:
                 make_failure(
                     "ROSTER-07",
                     "囚犯宿舍是互不重复的合法牢房",
-                    f"{warn}牢房{d!r}被多名囚犯共用: {names}，len(current_prisoners)={len(ri.current_prisoners)}",
+                    f"{warn}牢房{d!r}被多名囚犯共用: {names}，len(base.prisoners)={len(prisoners)}",
                     list(cids),
                 )
             )
@@ -508,11 +508,10 @@ def check_prisoner_stays_in_prison_area_and_not_bagged() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     cd = cache.character_data
-    ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     player = cd.get(0)
-    for cid in ri.current_prisoners:
+    for cid in prison.prisoner_ids():
         if cid not in cd:
             continue
         c = cd[cid]
@@ -551,7 +550,6 @@ def check_escapee_full_offline_state() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     cd = cache.character_data
-    ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     membership = _scene_membership(cache)
@@ -561,8 +559,8 @@ def check_escapee_full_offline_state() -> list[CheckFailure]:
         problems = []
         if not c.sp_flag.imprisonment:
             problems.append("imprisonment应保留为True但为False")
-        if cid in ri.current_prisoners:
-            problems.append("仍残留在current_prisoners囚犯名册中")
+        if prison.is_prisoner(cid):
+            problems.append("仍残留在base.prisoners囚犯名册中")
         if cid in cache.npc_id_got:
             problems.append("仍在npc_id_got在编名册中")
         hit = membership.get(cid, [])
@@ -597,7 +595,6 @@ def check_escapee_has_executable_capture_commission() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     cd = cache.character_data
-    ri = cache.rhodes_island
     warn = _sev(cache, True)
     failures: list[CheckFailure] = []
     if not game_config.config_commission:
@@ -620,7 +617,7 @@ def check_escapee_has_executable_capture_commission() -> list[CheckFailure]:
                     "逃跑者仍有一条可执行的追捕委托",
                     f"{warn}逃跑者cid={cid} name={c.name!r} 没有任何未完成的追捕委托(期望reward={target_reward!r})；"
                     f"已完成的委托={sorted(finished)}，"
-                    f"进行中的委托id列表={list(commission.ongoing())}，当前囚犯数={len(ri.current_prisoners)}",
+                    f"进行中的委托id列表={list(commission.ongoing())}，当前囚犯数={len(prison.prisoner_ids())}",
                     [cid],
                 )
             )
@@ -704,7 +701,6 @@ def check_warden_identity_soft_constraints() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     cd = cache.character_data
-    ri = cache.rhodes_island
     warn = _sev(cache, True)
     failures: list[CheckFailure] = []
     wid = work.warden()
@@ -721,8 +717,8 @@ def check_warden_identity_soft_constraints() -> list[CheckFailure]:
         problems.append(
             f"dormitory={w.dormitory!r}不是关押/休息室({warden_dorm!r})"
         )
-    if wid in ri.current_prisoners:
-        problems.append("是当前囚犯(在current_prisoners中)")
+    if prison.is_prisoner(wid):
+        problems.append("是当前囚犯(在base.prisoners中)")
     if w.sp_flag.vistor == 1:
         problems.append("当前是在岛访客(vistor==1)")
     if w.sp_flag.field_commission:
@@ -758,24 +754,24 @@ def check_confinement_training_setting_keys_and_range() -> list[CheckFailure]:
     依赖game_config.config_confinement_training_setting，若为空(独立环境未加载配置)则循环自然不产生任何失败，等价于跳过本条
     """
     cache = cache_control.cache
-    ri = cache.rhodes_island
+    settings = prison.settings()
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     for cid in game_config.config_confinement_training_setting:
         option = game_config.config_confinement_training_setting_option.get(
             cid, []
         )
-        if cid not in ri.confinement_training_setting:
+        if cid not in settings:
             failures.append(
                 make_failure(
                     "ROSTER-13",
                     "监禁调教设置键齐全且取值在选项范围内",
-                    f"{warn}设置项cid={cid}缺失于ri.confinement_training_setting，option长度={len(option)}",
+                    f"{warn}设置项cid={cid}缺失于base.prison_settings，option长度={len(option)}",
                     [],
                 )
             )
             continue
-        v = ri.confinement_training_setting[cid]
+        v = settings[cid]
         if type(v) is not int:
             failures.append(
                 make_failure(
@@ -791,7 +787,7 @@ def check_confinement_training_setting_keys_and_range() -> list[CheckFailure]:
                 make_failure(
                     "ROSTER-13",
                     "监禁调教设置键齐全且取值在选项范围内",
-                    f"{warn}设置项cid={cid}取值v={v}越界，option长度={len(option)}，完整设置={dict(ri.confinement_training_setting)}",
+                    f"{warn}设置项cid={cid}取值v={v}越界，option长度={len(option)}，完整设置={dict(settings)}",
                     [],
                 )
             )
@@ -1017,7 +1013,6 @@ def check_invite_target_still_valid_candidate() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     cd = cache.character_data
-    ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     t = _invite_target()
@@ -1041,8 +1036,8 @@ def check_invite_target_still_valid_candidate() -> list[CheckFailure]:
         problems.append("已在访客名册中")
     if t in recruit.pending():
         problems.append("已在recruit.pending()待确认招募名单中")
-    if t in ri.current_prisoners:
-        problems.append("已在ri.current_prisoners囚犯名册中")
+    if prison.is_prisoner(t):
+        problems.append("已在base.prisoners囚犯名册中")
     if c.sp_flag.vistor == 1:
         problems.append("当前是在岛访客(vistor==1)")
     if c.sp_flag.imprisonment:
@@ -1136,7 +1131,6 @@ def check_visitor_identity_mutual_exclusion() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     cd = cache.character_data
-    ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     V = set(visitor.visitors())
@@ -1146,13 +1140,13 @@ def check_visitor_identity_mutual_exclusion() -> list[CheckFailure]:
     C: set[int] = set()
     for r in commission.ongoing().values():
         C |= set(r.team)
-    R = set(ri.current_prisoners)
+    R = set(prison.prisoner_ids())
     E = {cid for cid, c in cd.items() if cid != 0 and c.sp_flag.escaping}
     named = {
         "待确认招募(recruited_id)": P,
         "邀请目标(invite_visitor)": invited,
         "外勤中(base.commission)": C,
-        "囚犯(current_prisoners)": R,
+        "囚犯(base.prisoners)": R,
         "逃跑者(escaping)": E,
     }
     for cid in V:
@@ -1448,7 +1442,6 @@ def check_field_commission_member_identity_exclusion() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     cd = cache.character_data
-    ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     C: set[int] = set()
@@ -1467,7 +1460,7 @@ def check_field_commission_member_identity_exclusion() -> list[CheckFailure]:
     forbidden = {
         "访客(base.visitor)": set(visitor.visitors()),
         "待确认招募(recruited_id)": recruit.pending(),
-        "囚犯(current_prisoners)": set(ri.current_prisoners),
+        "囚犯(base.prisoners)": set(prison.prisoner_ids()),
         "邀请目标(invite_visitor)": {t} if t else set(),
         "监狱长(work.warden)": {work.warden()} if work.warden() else set(),
         "逃跑者(escaping)": {
@@ -1705,7 +1698,6 @@ def check_assistant_identity_exclusion() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     cd = cache.character_data
-    ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     player = cd.get(0)
@@ -1744,8 +1736,8 @@ def check_assistant_identity_exclusion() -> list[CheckFailure]:
         )
     if a == work.warden():
         problems.append("同时是监狱长(work.warden)")
-    if a in ri.current_prisoners or ca.sp_flag.imprisonment:
-        problems.append("同时是囚犯(在current_prisoners中或imprisonment为True)")
+    if prison.is_prisoner(a) or ca.sp_flag.imprisonment:
+        problems.append("同时是囚犯(在base.prisoners中或imprisonment为True)")
     if ca.sp_flag.field_commission:
         problems.append(
             f"field_commission={ca.sp_flag.field_commission}非零(外勤中)"
@@ -1776,7 +1768,6 @@ def check_bagging_pair_consistency() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     cd = cache.character_data
-    ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     player = cd.get(0)
@@ -1829,8 +1820,8 @@ def check_bagging_pair_consistency() -> list[CheckFailure]:
             problems.append(f"仍残留在场景{hit}中")
         if c.position != ["0", "0"]:
             problems.append(f"position={c.position!r}未归零")
-        if b in ri.current_prisoners or c.sp_flag.imprisonment:
-            problems.append("同时是囚犯(current_prisoners或imprisonment)")
+        if prison.is_prisoner(b) or c.sp_flag.imprisonment:
+            problems.append("同时是囚犯(base.prisoners或imprisonment)")
         if visitor.is_visitor(b) or c.sp_flag.vistor == 1:
             problems.append("同时是访客(访客名册或vistor==1)")
         if c.sp_flag.field_commission:

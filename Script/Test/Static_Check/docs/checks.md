@@ -342,7 +342,7 @@ H 状态、群交模式、逆推、隐奸。
 | ROSTER-03 | 在编干员与场景名册双向一致 | 在编NPC恰好出现在其position对应的那一个场景里，离线角色从所有场景消失，场景里不得有幽灵id |
 | ROSTER-04 | 离线来源flag必须对应真正的离线态 | 装袋/外勤/越狱三条路径都是"置来源flag→handle_chara_off_line"的原子写法 |
 | ROSTER-05 | 监禁flag的来源分区完整 | 带imprisonment的角色当且仅当是在册囚犯或逃跑中的前囚犯(escape_success故意保留imprisonment)； 囚犯与逃犯两个集合互斥 |
-| ROSTER-06 | 囚犯名册条目结构合法且本人在编 | current_prisoners每条记录形状为[入狱时间, 逃脱概率]，概率夹在0..100之间且非bool污染， 本人在编且sp_flag.imprisonment为True、escaping为False |
+| ROSTER-06 | 囚犯名册条目结构合法且本人在编 | base.prisoners每条记录形状为[入狱时间, 逃脱概率]，概率夹在0..100之间且非bool污染， 本人在编且sp_flag.imprisonment为True、escaping为False |
 | ROSTER-07 | 囚犯宿舍是互不重复的合法牢房 | 每名囚犯的dormitory都必须在PRISON_DORMS(全部Prison标签场景，即牢1..牢8)集合内，且互不重复 |
 | ROSTER-08 | 囚犯留在关押区且不得同时被装袋 | 囚犯cant_move，NPC AI会把不在牢房的囚犯瞬移回宿舍，合法的短暂离房只有"正在H(含调教室)"； 用position[0] == "关押"比对目录首段，不拼分隔符 |
 | ROSTER-09 | 逃跑者处于完整离线态 | escape_success依次置escaping→pop囚犯名册→handle_chara_off_line→创建追捕委托， 并保留imprisonment |

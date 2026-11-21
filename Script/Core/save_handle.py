@@ -24,23 +24,33 @@ from Script.System.Pregnancy_System import pregnancy_constant
 import json
 from typing import TYPE_CHECKING
 from Script.Design import game_time
-from Script.Modules.domains import achievement, commission, country, diplomacy
 from Script.Modules.domains import (
+    achievement,
+    commission,
+    country,
+    diplomacy,
     dormitory,
+    education,
+    entertainment,
     facility,
+    fridge,
     history,
     kitchen,
     library,
-)
-from Script.Modules.domains import location, medical, modes, needs, official
-from Script.Modules.domains import (
+    location,
+    medical,
+    modes,
+    needs,
+    official,
     plan,
     playthrough,
+    prison,
     production,
     recruit,
+    tallies,
     visitor,
+    warehouse,
 )
-from Script.Modules.domains import entertainment, fridge, tallies, warehouse
 from Script.Modules.save_load import index, unsaved, upgrade
 
 if TYPE_CHECKING:
@@ -170,20 +180,15 @@ def _migrate_entertainment_cid(value: Any) -> Any:
     return value
 
 
-def _migrate_child_schedule_template(
-    rhodes_island_data: game_type.Rhodes_Island,
-) -> int:
+def _migrate_child_schedule_template() -> int:
     """
-    把罗德岛数据里日程模板各时段存的旧娱乐编号换成新编号
-    Keyword arguments:
-    rhodes_island_data -- 存档里的 Rhodes_Island 对象（须已有 child_schedule_template 字段）
+    把内核状态里日程模板各时段存的旧娱乐编号换成新编号
     Return arguments:
     int -- 换掉的时段数
     """
     count = 0
-    for template_data in getattr(
-        rhodes_island_data, "child_schedule_template", {}
-    ).values():
+    templates = education.templates()
+    for template_data in templates.values():
         slot_data = (
             template_data.get("slot", {})
             if isinstance(template_data, dict)
@@ -194,6 +199,8 @@ def _migrate_child_schedule_template(
             if new_cid != slot_data[slot]:
                 slot_data[slot] = new_cid
                 count += 1
+    if count:
+        education.set_templates(templates)
     return count
 
 
@@ -741,8 +748,9 @@ def input_load_save(save_id: str) -> None:
 def install_save(save_id: str, version: int) -> None:
     """
     读档的 Reset 步骤。把存档的缓存（文件 "1"）装进游戏缓存，按顺序修补旧存档，再结束有101/102阶段的孩子参与的会话。
-    版本 0 先补齐生理需求与供电策略属性。随后十九个 adopt 函数搬走罗德岛对象的属性。其中十四个交回的条数计入跨版本更新。
-    重建角色后 adopt_pickled 搬走角色的数值属性。补全设置前后七个模块搬走周目等数据。它们交回的条数也计入跨版本更新。
+    版本 0 先补齐生理需求与供电策略属性。随后二十一个 adopt 函数搬走罗德岛对象的属性，
+    其中十六个交回的条数计入跨版本更新。重建角色后 adopt_pickled 搬走角色的数值属性。
+    补全设置前后七个模块搬走周目等数据。它们交回的条数也计入跨版本更新。
     Keyword arguments:
     save_id -- 存档id
     version -- 存档的版本，旧存档为 0
@@ -770,7 +778,7 @@ def install_save(save_id: str, version: int) -> None:
         update_count += domain.adopt_old_save(loaded_dict, version)
     for domain in (recruit, official, diplomacy, dormitory, library):
         update_count += domain.adopt_old_save(loaded_dict, version)
-    for domain in (entertainment, tallies, fridge):
+    for domain in (entertainment, tallies, fridge, prison, education):
         update_count += domain.adopt_old_save(loaded_dict, version)
 
     draw_text = _("\n开始检测存档的数据结构是否需要跨版本更新\n")
@@ -942,15 +950,9 @@ def install_save(save_id: str, version: int) -> None:
         if (
             new_character_data.sp_flag.imprisonment
             and not new_character_data.sp_flag.escaping
-            and new_character_data.cid
-            not in loaded_dict["rhodes_island"].current_prisoners
+            and not prison.is_prisoner(new_character_data.cid)
         ):
-            loaded_dict["rhodes_island"].current_prisoners[
-                new_character_data.cid
-            ] = [
-                game_time.now(),
-                0,
-            ]
+            prison.imprison(new_character_data.cid, game_time.now(), 0)
             update_count += 1
         # 重新指向新的角色数据
         loaded_dict["character_data"][key] = new_character_data
@@ -977,17 +979,8 @@ def install_save(save_id: str, version: int) -> None:
         if all_cid not in warehouse.stock():
             warehouse.set(all_cid, 0)
             update_count += 1
-    # 生长养成系统旧存档兼容：补全全局课表与孩子日程模板（Plan 22）
-    if not hasattr(loaded_dict["rhodes_island"], "class_schedule"):
-        loaded_dict["rhodes_island"].class_schedule = {}
-        update_count += 1
-    if not hasattr(loaded_dict["rhodes_island"], "child_schedule_template"):
-        loaded_dict["rhodes_island"].child_schedule_template = {}
-        update_count += 1
     # 教育区娱乐改编号（2026-09-09）：日程模板各时段里存的旧编号换成新编号
-    update_count += _migrate_child_schedule_template(
-        loaded_dict["rhodes_island"]
-    )
+    update_count += _migrate_child_schedule_template()
     if version == 0:
         upgrade.adopt_v0(loaded_dict)
     upgrade.adopt_pickled(loaded_dict)
@@ -995,10 +988,6 @@ def install_save(save_id: str, version: int) -> None:
     update_count += old_chara_to_new.migrate_age_and_body_type(
         loaded_dict, young_child_session
     )
-    # 临时性技实操课（Plan 22 四期）
-    if not hasattr(loaded_dict["rhodes_island"], "temp_sex_class"):
-        loaded_dict["rhodes_island"].temp_sex_class = {}
-        update_count += 1
     # 挪了桶的养成事件：全局履历里的旧uid改成新uid
     event_history = official.history()
     update_count += _migrate_official_event_history(event_history)
@@ -1336,18 +1325,10 @@ def update_settings(loaded_dict: dict[str, Any]) -> int:
         now_draw.text = draw_text
         now_draw.draw()
     # 更新监禁调教设置
-    if len(loaded_dict["rhodes_island"].confinement_training_setting) != len(
+    if len(prison.settings()) != len(
         game_config.config_confinement_training_setting
     ):
-        for key in game_config.config_confinement_training_setting:
-            if (
-                key
-                not in loaded_dict["rhodes_island"].confinement_training_setting
-            ):
-                loaded_dict["rhodes_island"].confinement_training_setting[
-                    key
-                ] = 0
-                update_count += 1
+        update_count += prison.fill_missing_settings()
         now_draw = draw.NormalDraw()
         draw_text = _("\n监禁调教设置已更新，如有需要请手动修改\n")
         now_draw.style = "gold_enrod"
