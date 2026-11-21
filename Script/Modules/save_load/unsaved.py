@@ -42,6 +42,9 @@ UNSAVED: dict[type, frozenset[str]] = {
 def _reduce(obj: Any) -> tuple[Any, ...]:
     reduced = obj.__reduce_ex__(pickle.DEFAULT_PROTOCOL)
     func, args, saved, *rest = reduced
+    # 对象没有实例属性时，__reduce_ex__ 给出的状态是 None。这时没有字段要略过。
+    if saved is None:
+        return reduced
     names = UNSAVED[type(obj)]
     state = {k: v for k, v in saved.items() if k not in names}
     templates = state.get("npc_tem_data")

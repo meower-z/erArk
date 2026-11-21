@@ -5,7 +5,7 @@ from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design import game_time
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import needs
+from Script.Modules.domains import needs, physical_exam
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -574,19 +574,16 @@ def handle_today_is_healty_check_day(character_id: int) -> int:
     int -- 权重
     """
     # 如果是每天体检的话
-    if cache.rhodes_island.physical_examination_setting[3] == 3:
+    if physical_exam.setting(3) == 3:
         return 1
     # 如果设置的是周末体检日的话
-    elif cache.rhodes_island.physical_examination_setting[7] == 0:
+    elif physical_exam.setting(7) == 0:
         if handle_time_weekend(character_id):
             return 1
     # 否则手动检查当前星期
     else:
         now_week_day = game_time.now().weekday()
-        if (
-            now_week_day
-            in cache.rhodes_island.manually_selected_exam_week_day_list
-        ):
+        if now_week_day in physical_exam.week_days():
             return 1
     return 0
 

@@ -248,7 +248,7 @@ def new_game_minimal_init() -> None:
     from Script.Config import game_config, normal_config
     from Script.Core import io_init
     from Script.System.Dormitory_System import common as dormitory_common
-    from Script.Modules.domains import playthrough, warehouse
+    from Script.Modules.domains import physical_exam, playthrough, warehouse
 
     cache = cache_control.cache
 
@@ -271,7 +271,7 @@ def new_game_minimal_init() -> None:
     normal_config.system_setting = attr_calculation.get_system_setting_zero()
     playthrough.reset_difficulty_and_birth()
     warehouse.start({1: 20000, 11: 20})
-    cache.rhodes_island.physical_examination_setting = (
+    physical_exam.set_settings(
         attr_calculation.get_physical_exam_setting_zero()
     )
 

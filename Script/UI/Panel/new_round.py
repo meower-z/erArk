@@ -1214,7 +1214,7 @@ def _reset_game_data(world_setting: dict[int, int]) -> None:
     Keyword arguments:
     world_setting -- 新周目的世界设定
     """
-    from Script.Design import attr_calculation, basement
+    from Script.Design import basement
     from Script.UI.Flow import creator_character_flow
     from Script.Config import map_config
     from Script.System.Medical_System import medical_service
@@ -1240,9 +1240,6 @@ def _reset_game_data(world_setting: dict[int, int]) -> None:
     cache.rhodes_island = basement.get_base_zero()
     medical_service.init_medical_department_data(cache.rhodes_island)
     playthrough.reset_difficulty_and_birth()
-    cache.rhodes_island.physical_examination_setting = (
-        attr_calculation.get_physical_exam_setting_zero()
-    )
     info_draw_text += _("游戏数据重置完毕\n")
 
     # 覆盖要保留的数据

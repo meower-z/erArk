@@ -13,8 +13,9 @@ from uuid import UUID
 from Script.Core import cache_control, constant, game_type
 from Script.Kernel import core
 from Script.Modules.domains import economy, kitchen
+from Script.Modules.domains import maintenance as engineering
 from Script.Modules.gameplay_resolution import intent, starts
-from Script.Modules.domains import medical, medical_patient
+from Script.Modules.domains import medical, medical_patient, physical_exam
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -62,13 +63,13 @@ def assign_dormitory(who: int, data: intent.Intent) -> None:
 @starts.starter("join_exam_queue")
 def join_exam_queue(who: int, data: intent.Intent) -> None:
     """加入等待体检的名单"""
-    cache.rhodes_island.waiting_for_exam_operator_ids.add(who)
+    physical_exam.add(physical_exam.WAITING, who)
 
 
 @starts.starter("leave_exam_queue")
 def leave_exam_queue(who: int, data: intent.Intent) -> None:
     """退出等待体检的名单"""
-    cache.rhodes_island.waiting_for_exam_operator_ids.discard(who)
+    physical_exam.discard(physical_exam.WAITING, who)
 
 
 @starts.starter("private_move")
@@ -321,4 +322,4 @@ def join_sex_class(who: int, data: intent.Intent) -> None:
 @starts.starter("maintenance")
 def maintenance(who: int, data: intent.Intent) -> None:
     """记下检修地点"""
-    cache.rhodes_island.maintenance_place[who] = str(_args(data)["place"])
+    engineering.set_place(who, str(_args(data)["place"]))

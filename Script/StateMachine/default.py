@@ -17,7 +17,7 @@ from Script.Design import (
     basement,
 )
 from Script.Core import get_text, cache_control, game_type, constant
-from Script.Modules.domains import kitchen, modes, production
+from Script.Modules.domains import kitchen, maintenance, modes, production
 from Script.UI.Moudle import draw
 from Script.Modules.domains import economy
 
@@ -1388,11 +1388,9 @@ def character_move_to_maintenance_place(character_id: int) -> choice.Plan:
     """
     # 正常情况下
     plan = handle_state_machine.new_plan(character_id)
-    if character_id in cache.rhodes_island.maintenance_place:
-        to_maintenance_place_shop = map_handle.get_map_system_path_for_str(
-            cache.rhodes_island.maintenance_place[character_id]
-        )
-        plan.move(to_maintenance_place_shop)
+    place = maintenance.place_of(character_id)
+    if place is not None:
+        plan.move(map_handle.get_map_system_path_for_str(place))
     # 如果检修地点已不存在则取消检修状态
     else:
         plan.set("sp_flag.work_maintenance", False)
@@ -3718,13 +3716,14 @@ def character_work_maintenance_2(character_id: int) -> choice.Plan:
         character_data.position
     )
     # 检查是否在损坏设施数据中
-    if scene_path_str in cache.rhodes_island.facility_damage_data:
+    damage = maintenance.damage()
+    if scene_path_str in damage:
         need_time = 60
         # 1级损坏，10分钟修复
-        if cache.rhodes_island.facility_damage_data[scene_path_str] == 1:
+        if damage[scene_path_str] == 1:
             need_time = 10
         # 2级损坏，30分钟修复
-        elif cache.rhodes_island.facility_damage_data[scene_path_str] == 2:
+        elif damage[scene_path_str] == 2:
             need_time = 30
     # 根据制造能力等级减少维修时间
     ability_level = character_data.ability[48]
