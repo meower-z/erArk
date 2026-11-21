@@ -4,6 +4,7 @@
 from datetime import datetime
 
 from Script.Core import cache_control
+from Script.Modules.domains import official
 from ..check_registry import CheckFailure, register_check, make_failure
 
 
@@ -12,33 +13,11 @@ def check_official_01() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 检查队列及字段类型；角色引用失效单独警示。
     部门id由写入方保存为int。"""
     cache = cache_control.cache
-    ri = getattr(cache, "rhodes_island", None)
-    if ri is None:
-        return []
-    queue = getattr(ri, "official_event_queue", None)
-    if not isinstance(queue, list):
-        return [
-            make_failure(
-                "OFFICIAL-01",
-                "队列条目",
-                f"cid=None key=official_event_queue value={queue!r}；须为list",
-                [],
-            )
-        ]
+    queue = official.queue()
     characters = getattr(cache, "character_data", None)
     failures = []
     for index, item in enumerate(queue):
         prefix = f"official_event_queue[{index}]"
-        if not isinstance(item, dict):
-            failures.append(
-                make_failure(
-                    "OFFICIAL-01",
-                    "队列条目",
-                    f"cid=None key={prefix} value={item!r}；须为dict",
-                    [],
-                )
-            )
-            continue
         cid = item.get("chara_id")
         ids = [cid] if type(cid) is int else []
         for key, kind in (
@@ -83,15 +62,7 @@ def check_official_02() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 全局与角色履历条目须为dict，time为datetime，choice为非负整数。"""
     cache = cache_control.cache
     histories: list[tuple[int | None, str, object]] = [
-        (
-            None,
-            "official_event_history",
-            getattr(
-                getattr(cache, "rhodes_island", None),
-                "official_event_history",
-                None,
-            ),
-        )
+        (None, "official_event_history", official.history())
     ]
     characters = getattr(cache, "character_data", None)
     if isinstance(characters, dict):

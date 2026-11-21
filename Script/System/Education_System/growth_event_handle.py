@@ -17,6 +17,7 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.System.Education_System import education_constant
+from Script.Modules.domains import official
 from Script.System.Official_Event_System import official_event_handle
 
 cache: game_type.Cache = cache_control.cache
@@ -512,7 +513,7 @@ def drop_stale_stage_event(character_id: int) -> int:
         education_constant.STAGE_ANY,
         *education_constant.STAGE_ALL_CHILD,
     }
-    queue = official_event_handle.get_queue()
+    queue = official.queue()
     keep_list = []
     drop_count = 0
     for one in queue:
@@ -547,9 +548,8 @@ def drop_stale_stage_event(character_id: int) -> int:
                     drop_count += 1
                     continue
         keep_list.append(one)
-    # 原地改写，队列本体的引用不变
     if drop_count:
-        queue[:] = keep_list
+        official.set_queue(keep_list)
     return drop_count
 
 

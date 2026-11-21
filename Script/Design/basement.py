@@ -12,10 +12,13 @@ from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle
 from Script.UI.Moudle import draw
 from Script.Modules.domains import (
+    diplomacy,
     economy,
     facility,
+    official,
     power,
     production,
+    recruit,
     warehouse,
     work,
 )
@@ -36,46 +39,17 @@ def get_base_zero() -> game_type.Rhodes_Island:
     """
     base_data = game_type.Rhodes_Island()
 
-    # 遍历全部书籍
-    for book_id in game_config.config_book:
-        # 全书籍设为未借出
-        base_data.book_borrow_dict[book_id] = -1
-
     # 派对设为空
     for i in range(7):
         base_data.party_day_of_week[i] = 0
 
-    # 初始化招募(结构:[进度, 策略id, 主招聘专员id, 线效率])
-    base_data.recruit_line[0] = [0, 0, 0, 0]
-
-    # 初始化公务工作
-    base_data.office_work += 200
-
-    # 初始化宿舍管理员（1~9层各对应一名，默认未任命）
-    for layer_id in range(1, 10):
-        base_data.dormitory_managers[layer_id] = 0
-
     return base_data
-
-
-def init_dormitory_managers(base_data: game_type.Rhodes_Island) -> None:
-    """
-    初始化宿舍管理员数据
-    输入类型: game_type.Rhodes_Island
-    输出类型: 无
-    功能: 将 dormitory_managers 中 1~9 层全部初始化为 0（未任命）
-    """
-    for layer_id in range(1, 10):
-        if layer_id not in base_data.dormitory_managers:
-            base_data.dormitory_managers[layer_id] = 0
 
 
 def get_base_updata() -> None:
     """
     遍历基地情况结构体，根据设施等级更新全部数值
     """
-    from Script.UI.Panel import recruit_panel
-
     cache = cache_control.cache
 
     # 遍历全设施清单
@@ -112,27 +86,11 @@ def get_base_updata() -> None:
 
         # print(f"debug power_use = {base_data.power_use}")
 
-        # 初始化招募条
+        # 按等级开放招募线：1 级 1 条，3 到 5 级每级多 1 条
         if facility_name == _("文职部"):
-            # 初始化招募线，结构:[进度, 策略id, 主招聘专员id, 线效率%]
-            if 0 not in cache.rhodes_island.recruit_line:
-                cache.rhodes_island.recruit_line[0] = [0, 0, 0, 0]
-            if level >= 3 and 1 not in cache.rhodes_island.recruit_line:
-                cache.rhodes_island.recruit_line[1] = [0, 0, 0, 0]
-            if level >= 4 and 2 not in cache.rhodes_island.recruit_line:
-                cache.rhodes_island.recruit_line[2] = [0, 0, 0, 0]
-            if level >= 5 and 3 not in cache.rhodes_island.recruit_line:
-                cache.rhodes_island.recruit_line[3] = [0, 0, 0, 0]
-            # 计算各线当前效率
-            for recruit_line_id in cache.rhodes_island.recruit_line:
-                __, total_bonus = (
-                    recruit_panel.calculate_recruit_line_efficiency(
-                        recruit_line_id
-                    )
-                )
-                cache.rhodes_island.recruit_line[recruit_line_id][3] = round(
-                    total_bonus, 1
-                )
+            recruit.open_lines(
+                [i for i, need in enumerate((0, 3, 4, 5)) if level >= need]
+            )
         elif facility_name == _("制造加工区"):
             # 按等级开放流水线：1 级 1 条，2 到 5 级每级多 1 条
             production.open_lines(
@@ -409,19 +367,14 @@ def update_work_people() -> None:
     # 检查各资源类型主交易员有效性
     economy.drop_invalid_traders()
 
-    # 检查各招聘线主招聘专员有效性
-    for recruit_line_id in cache.rhodes_island.recruit_line:
-        # 如果变量类型不是int，则改为0
-        if not isinstance(
-            cache.rhodes_island.recruit_line[recruit_line_id][2], int
-        ):
-            cache.rhodes_island.recruit_line[recruit_line_id][2] = 0
-        main_id = cache.rhodes_island.recruit_line[recruit_line_id][2]
+    # 已经不是招聘专员的，撤销主招聘专员
+    recruit_lines = recruit.lines()
+    for line in recruit_lines.values():
+        main_id = line["main"]
         if main_id and main_id in cache.character_data:
-            character_data = cache.character_data[main_id]
-            # 如果已经不是招聘专员，则撤销主招聘专员
-            if character_data.work.work_type != 71:
-                cache.rhodes_island.recruit_line[recruit_line_id][2] = 0
+            if cache.character_data[main_id].work.work_type != 71:
+                line["main"] = 0
+    recruit.put_lines(recruit_lines)
     # 撤下职位与生产线不对应的主负责人
     for kind in production.KINDS:
         production.release_mains(kind)
@@ -439,12 +392,9 @@ def update_work_people() -> None:
                 work_type == 131
                 and character_data.sp_flag.in_diplomatic_visit == 0
             ):
-                for country_id in cache.rhodes_island.diplomat_of_country:
+                for country_id, post in diplomacy.table().items():
                     # 仍在外交官名册上的，补回驻在国信息
-                    if (
-                        cache.rhodes_island.diplomat_of_country[country_id][0]
-                        == chara_id
-                    ):
+                    if post["diplomat"] == chara_id:
                         character_data.sp_flag.in_diplomatic_visit = country_id
                         break
                 else:
@@ -600,7 +550,7 @@ def settle_office_work() -> None:
     结算公务
     """
 
-    now_work = cache.rhodes_island.office_work
+    now_work = official.office_work()
     # 全设施等级的和
     all_facility_level = sum(facility.levels().values())
     # 总工作量为设施等级和*10+干员数量
@@ -636,13 +586,8 @@ def settle_office_work() -> None:
     facility.set_effectiveness(round(max(effectiveness, 50), 1))
     # 取0.3~0.7的随机数，作为新增的工作量
     add_work = random.randint(30, 70) / 100 * all_work
-    # 把新增的工作量加入当前剩余工作量
-    cache.rhodes_island.office_work += add_work
-    # 工作量不会小于0，也不会大于总工作量
-    cache.rhodes_island.office_work = min(
-        cache.rhodes_island.office_work, all_work
-    )
-    cache.rhodes_island.office_work = max(cache.rhodes_island.office_work, 0)
+    # 把新增的工作量加入当前剩余工作量，工作量不会小于0，也不会大于总工作量
+    official.set_office_work(max(min(now_work + add_work, all_work), 0))
     # 输出提示信息
     now_draw_text = _("\n今日剩余待处理公务量为{0:.1f}，").format(now_work)
     if max_damage_down < 5:
@@ -718,7 +663,7 @@ def draw_todo() -> None:
         draw_text += _("  当前供电不足，可能影响基地正常运转\n")
 
     # 是否有已招募待确认的干员
-    if len(cache.rhodes_island.recruited_id):
+    if recruit.pending():
         draw_text += _("  当前有干员已招募，等待确认\n")
 
     # 是否有人正在等待体检

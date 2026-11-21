@@ -11,6 +11,7 @@ from Script.Core import (
 from Script.UI.Moudle import draw, panel, view
 from Script.UI.Panel import common_select_NPC
 from Script.Config import game_config, normal_config
+from Script.Modules.domains import library
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -139,6 +140,7 @@ class Manage_Library_Panel:
             book_count = 0
 
             # 按类型遍历全图书，寻找已经被借出的书籍
+            holders = library.holders()
             for book_type_cid in game_config.config_book_type:
                 if book_type_cid == 0:
                     continue
@@ -147,15 +149,13 @@ class Manage_Library_Panel:
                     book_type_cid
                 ]:
                     book_data = game_config.config_book[book_cid]
-                    if cache.rhodes_island.book_borrow_dict[book_cid] > 0:
+                    borrow_npc_id = holders[book_cid]
+                    if borrow_npc_id > 0:
                         book_count += 1
                         book_text = (
                             f"  [{str(book_count).rjust(3,'0')}]("
                             f"{book_type_data.son_type_name}){book_data.name}"
                         )
-                        borrow_npc_id = cache.rhodes_island.book_borrow_dict[
-                            book_cid
-                        ]
                         borrow_npc_name = cache.character_data[
                             borrow_npc_id
                         ].name
@@ -225,9 +225,7 @@ class Manage_Library_Panel:
             line = draw.LineDraw("-", self.width)
             line.draw()
             info_draw = draw.NormalDraw()
-            can_recommend_count = 3 - len(
-                cache.rhodes_island.recommend_book_type_set
-            )
+            can_recommend_count = 3 - len(library.recommended())
             info_draw.text = _("\n 当前剩余可选推荐 {0}\n").format(
                 can_recommend_count
             )
@@ -547,7 +545,7 @@ class SelectRecommendBookButton:
         type_data = game_config.config_book_type[self.book_type_id]
         button_text = f"[{str(type_data.cid).rjust(2,'0')}]：{type_data.father_type_name}-{type_data.son_type_name}"
         name_draw: draw.LeftDraw | draw.LeftButton = draw.LeftDraw()
-        if self.book_type_id in cache.rhodes_island.recommend_book_type_set:
+        if self.book_type_id in library.recommended():
             button_text += _(" (已推荐)")
             name_draw = draw.LeftButton(
                 button_text,
@@ -569,12 +567,11 @@ class SelectRecommendBookButton:
 
     def button_0(self) -> None:
         """选项1"""
-        if self.book_type_id in cache.rhodes_island.recommend_book_type_set:
-            cache.rhodes_island.recommend_book_type_set.remove(
-                self.book_type_id
-            )
-        elif 3 - len(cache.rhodes_island.recommend_book_type_set):
-            cache.rhodes_island.recommend_book_type_set.add(self.book_type_id)
+        recommended = library.recommended()
+        if self.book_type_id in recommended:
+            library.set_recommended(recommended - {self.book_type_id})
+        elif 3 - len(recommended):
+            library.set_recommended(recommended | {self.book_type_id})
 
     def draw(self) -> None:
         """绘制对象"""

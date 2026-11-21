@@ -24,11 +24,15 @@ from Script.Core import cache_control
 from Script.Config import game_config
 from Script.Modules.domains import (
     commission,
+    diplomacy,
+    dormitory,
     economy,
     facility,
+    library,
     location,
     power,
     production,
+    recruit,
     visitor,
     warehouse,
     work,
@@ -609,10 +613,8 @@ def check_island_13_assembly_line() -> list[CheckFailure]:
     return failures
 
 
-@register_check("ISLAND-14", "农业线与招募线结构、种植类型合法")
-def check_island_14_agriculture_and_recruit_line_structure() -> (
-    list[CheckFailure]
-):
+@register_check("ISLAND-14", "农业线结构、种植类型合法")
+def check_island_14_agriculture_line_structure() -> list[CheckFailure]:
     """
     参数:
         无
@@ -620,10 +622,8 @@ def check_island_14_agriculture_and_recruit_line_structure() -> (
         List[CheckFailure]: 失败记录列表
     功能:
         校验药田线与温室线（从 base.production 读）的种植类型是0(停种)或该线允许的资源，药田为11，温室为16。
-        这两种资源取自种植面板 select_agriculture_line_produce 的候选。招募线每条是至少4项的list
+        这两种资源取自种植面板 select_agriculture_line_produce 的候选
     """
-    cache = cache_control.cache
-    ri = cache.rhodes_island
     failures = []
 
     def _check_line(field: str, allowed_types: tuple[int, ...]) -> None:
@@ -636,7 +636,7 @@ def check_island_14_agriculture_and_recruit_line_structure() -> (
             failures.append(
                 make_failure(
                     "ISLAND-14",
-                    "农业线与招募线结构、种植类型合法",
+                    "农业线结构、种植类型合法",
                     f"线{field}：违规line_id与整条记录={violations}，允许的种植类型v[0]={allowed_types}",
                     [],
                 )
@@ -644,23 +644,6 @@ def check_island_14_agriculture_and_recruit_line_structure() -> (
 
     _check_line("herb_garden", (0, 11))
     _check_line("green_house", (0, 16))
-
-    recruit_line = getattr(ri, "recruit_line", None)
-    if isinstance(recruit_line, dict):
-        violations = [
-            (line_id, v)
-            for line_id, v in recruit_line.items()
-            if not (isinstance(v, list) and len(v) >= 4)
-        ]
-        if violations:
-            failures.append(
-                make_failure(
-                    "ISLAND-14",
-                    "农业线与招募线结构、种植类型合法",
-                    f"线recruit_line：违规line_id与整条记录={violations}",
-                    [],
-                )
-            )
     return failures
 
 
@@ -680,7 +663,6 @@ def check_island_15_line_main_operator() -> list[CheckFailure]:
         不要求主负责人在npc_id_got：主管、种植员与招聘专员都能被派外勤，岗位与槽位都保留
     """
     cache = cache_control.cache
-    ri = cache.rhodes_island
     cd = cache.character_data
     failures = []
     main_list = {
@@ -691,14 +673,8 @@ def check_island_15_line_main_operator() -> list[CheckFailure]:
         kind: (wid, [(i, v["main"]) for i, v in production.lines(kind).items()])
         for kind, wid in production.KINDS.items()
     }
-    recruit = getattr(ri, "recruit_line", None)
-    if isinstance(recruit, dict):
-        mains_at_2 = [
-            (i, v[2])
-            for i, v in recruit.items()
-            if isinstance(v, list) and len(v) > 2
-        ]
-        slots["recruit_line"] = (71, mains_at_2)
+    recruit_mains = [(i, v["main"]) for i, v in recruit.lines().items()]
+    slots["recruit_line"] = (71, recruit_mains)
     for line_name, (wid, pairs) in slots.items():
         mains = [(line_id, m) for line_id, m in pairs if m]
         occupant_count = Counter(m for _lid, m in mains)
@@ -760,16 +736,13 @@ def check_island_16_dormitory_managers_structure() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验dormitory_managers的键只能是1..9层；值是0(未任命)或一名存在的角色；同一人不得同时管理两层。
-        用<=而非==range(1,10)：init_dormitory_managers()全仓无调用点，旧档若存在残缺字典不会被修复；缺层
+        校验dormitory.managers()的键只能是1..9层；值是0(未任命)或一名存在的角色；同一人不得同时管理两层。
+        用<=而非==range(1,10)：旧档若存在残缺字典不会被修复；缺层
         不会崩溃，全部消费点都用.get(layer,0)。不要求管理员在npc_id_got（舍管可被派外勤）
     """
     cache = cache_control.cache
-    ri = cache.rhodes_island
     cd = cache.character_data
-    dormitory_managers = getattr(ri, "dormitory_managers", None)
-    if not isinstance(dormitory_managers, dict):
-        return []
+    dormitory_managers = dormitory.managers()
     illegal_layers = [
         layer for layer in dormitory_managers if layer not in range(1, 10)
     ]
@@ -811,15 +784,12 @@ def check_island_17_dormitory_manager_work_type_and_layers() -> (
         List[CheckFailure]: 失败记录列表
     功能:
         [warning] 校验每个被任命的管理员的work.work_type应为31，且1..9层键应齐全。前者失败指向一处真实的
-        联动缺失（select_new_work把现任舍管改派成别的岗位时只改work.work_type，不碰dormitory_managers），
+        联动缺失（select_new_work把现任舍管改派成别的岗位时只改work.work_type，不碰各层管理员），
         后者指向旧档迁移残缺
     """
     cache = cache_control.cache
-    ri = cache.rhodes_island
     cd = cache.character_data
-    dormitory_managers = getattr(ri, "dormitory_managers", None)
-    if not isinstance(dormitory_managers, dict):
-        return []
+    dormitory_managers = dormitory.managers()
     failures = []
     missing_layers = sorted(set(range(1, 10)) - set(dormitory_managers))
     if missing_layers:
@@ -861,11 +831,8 @@ def check_island_18_closed_layer_no_manager() -> list[CheckFailure]:
         任命入口只对open_layers出按钮，实际只能抓存档编辑/mod
     """
     cache = cache_control.cache
-    ri = cache.rhodes_island
     cd = cache.character_data
-    dormitory_managers = getattr(ri, "dormitory_managers", None)
-    if not isinstance(dormitory_managers, dict):
-        return []
+    dormitory_managers = dormitory.managers()
     try:
         max_open_layer = dorm_common.get_dormitory_max_open_layer()
     except Exception:
@@ -980,16 +947,13 @@ def check_island_21_book_borrow_consistency() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验book_borrow_dict[book]=借阅者id(-1未借出，0为玩家)与角色的entertainment.borrow_book_id_set必须
+        校验library.holders()[book]=借阅者id(-1未借出，0为玩家)与角色的entertainment.borrow_book_id_set必须
         互为反向索引；书籍id必须合法；单人持书不超过3本。两处状态必须成对更新，是典型易漏点；书籍id合法性
         不是冗余——自动借书直接索引config_book[book_id]，失效键会崩
     """
     cache = cache_control.cache
-    ri = cache.rhodes_island
     cd = cache.character_data
-    book_borrow_dict = getattr(ri, "book_borrow_dict", None)
-    if not isinstance(book_borrow_dict, dict):
-        return []
+    book_borrow_dict = library.holders()
     failures = []
     for book, holder in book_borrow_dict.items():
         if book not in game_config.config_book:
@@ -1583,11 +1547,11 @@ def check_island_31_visitor_and_recruited_id() -> list[CheckFailure]:
         List[CheckFailure]: 失败记录列表
     功能:
         校验base.visitor里的访客都是存在的角色，访客数不超过按已开放客房数算出的访客上限(visitor.capacity())，
-        recruited_id是集合时不含0、成员均存在、与已招募名单不相交。不断言"访客必须在npc_id_got"（可能被绑架而离线）。
+        待确认招募名单recruit.pending()不含0、成员均存在、与已招募名单不相交。
+        不断言"访客必须在npc_id_got"（可能被绑架而离线）。
         不断言"干员数<=people_max"（访客计入名单但只受客房数约束，属设计内流程，不在本条硬检查范围）
     """
     cache = cache_control.cache
-    ri = cache.rhodes_island
     cd = cache.character_data
     failures = []
     visitors = visitor.visitors()
@@ -1601,21 +1565,20 @@ def check_island_31_visitor_and_recruited_id() -> list[CheckFailure]:
                 ghost_visitors,
             )
         )
-    recruited_id = getattr(ri, "recruited_id", None)
-    if isinstance(recruited_id, set):
-        conflict = recruited_id & cache.npc_id_got
-        ghost_recruited = [r for r in recruited_id if r not in cd]
-        if 0 in recruited_id or ghost_recruited or conflict:
-            conflict_detail = [(r, _chara_name(cd, r)) for r in conflict]
-            failures.append(
-                make_failure(
-                    "ISLAND-31",
-                    "访客集合与待确认招募集合合法",
-                    f"recruited_id含0={0 in recruited_id}，幽灵成员={ghost_recruited}，"
-                    f"recruited_id与npc_id_got交集={conflict_detail}",
-                    list(conflict) + ghost_recruited,
-                )
+    recruited_id = recruit.pending()
+    conflict = recruited_id & cache.npc_id_got
+    ghost_recruited = [r for r in recruited_id if r not in cd]
+    if 0 in recruited_id or ghost_recruited or conflict:
+        conflict_detail = [(r, _chara_name(cd, r)) for r in conflict]
+        failures.append(
+            make_failure(
+                "ISLAND-31",
+                "访客集合与待确认招募集合合法",
+                f"recruited_id含0={0 in recruited_id}，幽灵成员={ghost_recruited}，"
+                f"recruited_id与npc_id_got交集={conflict_detail}",
+                list(conflict) + ghost_recruited,
             )
+        )
     return failures
 
 
@@ -1688,31 +1651,17 @@ def check_island_33_diplomat_mapping_consistency() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        [warning] 校验diplomat_of_country[国家][0]的非零角色必须存在、sp_flag.in_diplomatic_visit等于该国家、
+        [warning] 校验diplomacy.table()[国家]["diplomat"]的非零角色必须存在、sp_flag.in_diplomatic_visit等于该国家、
         work.work_type==131，且一人不得同时负责两国；反过来任何in_diplomatic_visit!=0的角色都必须正是该国
         映射所指的人。定为告警是因为有UI可达的破坏路径（改派现任外交官为别的岗位、任命候选表不排除已负责
         他国的角色），都是设计缺陷而非数据损坏
     """
     cache = cache_control.cache
-    ri = cache.rhodes_island
     cd = cache.character_data
-    diplomat_of_country = getattr(ri, "diplomat_of_country", None)
-    if not isinstance(diplomat_of_country, dict):
-        return []
     failures = []
     seen: dict[int, int] = {}
-    for country, v in diplomat_of_country.items():
-        if not (isinstance(v, list) and len(v) >= 2):
-            failures.append(
-                make_failure(
-                    "ISLAND-33",
-                    "外交官映射、岗位与外派标记三方一致",
-                    f"[warning] country_id={country}的diplomat_of_country记录结构非法：{v!r}",
-                    [],
-                )
-            )
-            continue
-        did = v[0]
+    for country, post in diplomacy.table().items():
+        did = post["diplomat"]
         if not did:
             continue
         if did not in cd:
@@ -1764,7 +1713,7 @@ def check_island_33_diplomat_mapping_consistency() -> list[CheckFailure]:
                         (
                             f"[warning] 角色cid={cid}({ch.name})的sp_flag.in_diplomatic_visit="
                             f"{ch.sp_flag.in_diplomatic_visit}，"
-                            f"但diplomat_of_country[{ch.sp_flag.in_diplomatic_visit}]未指回该角色"
+                            f"但diplomacy.table()[{ch.sp_flag.in_diplomatic_visit}]未指回该角色"
                             f"(实际映射到seen.get(cid)={seen.get(cid)})"
                         ),
                         [cid],

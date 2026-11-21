@@ -29,7 +29,8 @@ import csv
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions
-from Script.Modules.domains import facility, needs, pregnancy, warehouse
+from Script.Modules.domains import facility, needs, pregnancy, recruit
+from Script.Modules.domains import warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -845,11 +846,9 @@ class Debug_Panel:
                 draw_text_list.append(
                     f"[007]:一周内的派对计划，周一0~周日6:娱乐id：{cache.rhodes_island.party_day_of_week}"
                 )
+                draw_text_list.append(f"[008]:当前招募进度：{recruit.lines()}")
                 draw_text_list.append(
-                    f"[008]:当前招募进度：{cache.rhodes_island.recruit_line}"
-                )
-                draw_text_list.append(
-                    f"[009]:已招募待确认的干员id：{cache.rhodes_island.recruited_id}"
+                    f"[009]:已招募待确认的干员id：{recruit.pending()}"
                 )
 
                 for i in range(len(draw_text_list)):
@@ -1201,7 +1200,6 @@ class Debug_Panel:
                     change_value_panel = panel.AskForOneMessage()
                     change_value_panel.set(_("输入改变后的值"), 100)
                     new_value = int(change_value_panel.draw())
-                    # cache.base_resouce.materials_resouce[1] = new_value
                 elif key_index == 7:
                     info_text = f"[007]:一周内的派对计划，周一0~周日6:娱乐id：{cache.rhodes_island.party_day_of_week}"
                     info_draw.text = info_text
@@ -1222,7 +1220,7 @@ class Debug_Panel:
                         entertainment_id
                     )
                 elif key_index == 8:
-                    info_text = f"[008]:当前招募进度：{cache.rhodes_island.recruit_line}"
+                    info_text = f"[008]:当前招募进度：{recruit.lines()}"
                     info_draw.text = info_text
                     info_draw.draw()
                     line_feed.draw()
@@ -1237,16 +1235,18 @@ class Debug_Panel:
                     line_id, progress = map(
                         int, value_index_panel.draw().split(",")
                     )
-                    cache.rhodes_island.recruit_line[line_id][0] = progress
+                    recruit.set_line(line_id, progress=progress)
                 elif key_index == 9:
-                    info_text = f"[009]:已招募待确认的干员id：{cache.rhodes_island.recruited_id}"
+                    info_text = (
+                        f"[009]:已招募待确认的干员id：{recruit.pending()}"
+                    )
                     info_draw.text = info_text
                     info_draw.draw()
                     line_feed.draw()
                     change_value_panel = panel.AskForOneMessage()
                     change_value_panel.set(_("输入改变后的值"), 100)
                     new_value = int(change_value_panel.draw())
-                    cache.rhodes_island.recruited_id = {new_value}
+                    recruit.set_pending({new_value})
 
             elif self.now_panel == "常用更改":
 
@@ -1395,9 +1395,9 @@ class Debug_Panel:
                         )
                 # 重置文职部的招募数据
                 elif key_index == 14:
-                    for i in range(len(cache.rhodes_island.recruit_line)):
-                        cache.rhodes_island.recruit_line[i] = [0, 0, 0, 0]
-                    cache.rhodes_island.recruited_id = set()
+                    for i in range(len(recruit.lines())):
+                        recruit.set_line(i, **recruit.IDLE)
+                    recruit.set_pending(())
                 # 交互对象全部位快感增加
                 elif key_index == 15:
                     line_feed.draw()
@@ -1426,7 +1426,7 @@ class Debug_Panel:
                         new_value
                     )
                     if character_id not in cache.npc_id_got:
-                        cache.rhodes_island.recruited_id.add(character_id)
+                        recruit.set_pending(recruit.pending() | {character_id})
                         info_draw.text = _("\n招募成功\n")
                     else:
                         info_draw.text = _("\n已招募过\n")

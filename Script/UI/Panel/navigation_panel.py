@@ -15,7 +15,7 @@ from Script.Core import (
 from Script.Design import map_handle, attr_text, game_time
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
-from Script.Modules.domains import location, visitor, warehouse
+from Script.Modules.domains import diplomacy, location, visitor, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -48,10 +48,8 @@ def judge_arrive() -> bool:
             ].name
             location.arrive()
             # 结算变动的外交官
-            if now_scene_id in cache.rhodes_island.diplomat_of_country:
-                now_diplomat_chara_id = cache.rhodes_island.diplomat_of_country[
-                    now_scene_id
-                ][0]
+            if now_scene_id in diplomacy.table():
+                now_diplomat_chara_id = diplomacy.of(now_scene_id)["diplomat"]
                 if now_diplomat_chara_id != 0:
                     default.handle_chara_off_line(
                         now_diplomat_chara_id,
@@ -59,10 +57,10 @@ def judge_arrive() -> bool:
                         change_data=game_type.CharacterStatusChange(),
                         now_time=game_time.now(),
                     )
-            if target_scene_id in cache.rhodes_island.diplomat_of_country:
-                target_diplomat_chara_id = (
-                    cache.rhodes_island.diplomat_of_country[target_scene_id][0]
-                )
+            if target_scene_id in diplomacy.table():
+                target_diplomat_chara_id = diplomacy.of(target_scene_id)[
+                    "diplomat"
+                ]
                 if target_diplomat_chara_id != 0:
                     default.handle_chara_on_line(
                         target_diplomat_chara_id,

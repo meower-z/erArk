@@ -24,8 +24,9 @@ from Script.System.Pregnancy_System import pregnancy_constant
 import json
 from typing import TYPE_CHECKING
 from Script.Design import game_time
-from Script.Modules.domains import commission, facility, kitchen, location
-from Script.Modules.domains import medical, production, visitor, warehouse
+from Script.Modules.domains import commission, diplomacy, dormitory, facility
+from Script.Modules.domains import kitchen, library, location, medical, official
+from Script.Modules.domains import production, recruit, visitor, warehouse
 from Script.Modules.save_load import index, unsaved, upgrade
 
 if TYPE_CHECKING:
@@ -197,7 +198,7 @@ def _migrate_official_event_history(history_data: dict) -> int:
     """
     把事件履历里挪了桶的事件的旧uid改成新uid
     Keyword arguments:
-    history_data -- 事件履历：CHILD_GROWTH.event_history 以uid为键，罗德岛的 official_event_history
+    history_data -- 事件履历：CHILD_GROWTH.event_history 以uid为键，official.history() 的全局履历
     以「uid@角色id」为键（无主体时就是uid）
     Return arguments:
     int -- 改了名的条数
@@ -232,26 +233,17 @@ def _drop_unknown_books(loaded_dict: dict) -> int:
     Return arguments:
     int -- 改动的处数
     功能描述:
-        罗德岛：借阅表去掉这些书（谁借着都一样），阅读推荐去掉这些类型；
+        图书馆（library）：借阅表去掉这些书（谁借着都一样），阅读推荐去掉这些类型；
         每个角色：借书集合去掉这些书，借书卡上这些书没还的记录记为此刻（读档时是存档时刻）还了，正在读的书是这些书时书号与书名归零。
         阅读进度不动：成就按读完的书数统计
     """
-    rhodes_island = loaded_dict["rhodes_island"]
-    count = 0
-    for book_id in [
-        book_id
-        for book_id in rhodes_island.book_borrow_dict
-        if book_id not in game_config.config_book
-    ]:
-        del rhodes_island.book_borrow_dict[book_id]
-        count += 1
-    for book_type in [
-        book_type
-        for book_type in rhodes_island.recommend_book_type_set
-        if book_type not in game_config.config_book_type
-    ]:
-        rhodes_island.recommend_book_type_set.discard(book_type)
-        count += 1
+    holders = library.holders()
+    books = {b: h for b, h in holders.items() if b in game_config.config_book}
+    types = library.recommended() & set(game_config.config_book_type)
+    count = len(holders) - len(books) + len(library.recommended() - types)
+    if count:
+        library.put_holders(books)
+        library.set_recommended(types)
     now_time = game_time.now()
     for character in loaded_dict["character_data"].values():
         entertainment = character.entertainment
@@ -733,8 +725,8 @@ def install_save(save_id: str, version: int) -> None:
     """
     读档的 Reset 步骤。把存档的缓存（文件 "1"）装进游戏缓存，按顺序修补旧存档，再结束有101/102阶段的孩子参与的会话。
     版本 0 先补齐生理需求与供电策略属性。随后 upgrade 的 adopt_power、adopt_facility、adopt_economy、adopt_work，
-    warehouse.adopt_old_save、medical.adopt_island 与 production 等五个模块的 adopt_old_save 依次搬走罗德岛对象的属性。
-    adopt_facility 与五个 adopt_old_save 交回的个数计入跨版本更新。重建角色后 upgrade.adopt_pickled 搬走角色数值属性。
+    warehouse.adopt_old_save、medical.adopt_island 与 production 等十个模块的 adopt_old_save 依次搬走罗德岛对象的属性。
+    adopt_facility 与十个 adopt_old_save 交回的个数计入跨版本更新。重建角色后 upgrade.adopt_pickled 搬走角色数值属性。
     Keyword arguments:
     save_id -- 存档id
     version -- 存档的版本，旧存档为 0
@@ -759,6 +751,8 @@ def install_save(save_id: str, version: int) -> None:
     warehouse.adopt_old_save(loaded_dict)
     medical.adopt_island(loaded_dict)
     for domain in (production, kitchen, commission, visitor, location):
+        update_count += domain.adopt_old_save(loaded_dict, version)
+    for domain in (recruit, official, diplomacy, dormitory, library):
         update_count += domain.adopt_old_save(loaded_dict, version)
 
     draw_text = _("\n开始检测存档的数据结构是否需要跨版本更新\n")
@@ -987,32 +981,10 @@ def install_save(save_id: str, version: int) -> None:
     if not hasattr(loaded_dict["rhodes_island"], "temp_sex_class"):
         loaded_dict["rhodes_island"].temp_sex_class = {}
         update_count += 1
-    # 公务事件待处理队列与全局履历（Plan 23，由 Plan 22 三期的养成事件队列升格而来）
-    if not hasattr(loaded_dict["rhodes_island"], "official_event_queue"):
-        old_queue = getattr(
-            loaded_dict["rhodes_island"], "growth_event_queue", []
-        )
-        new_queue = []
-        # 旧档的队列元素没有 department，按 uid 回查配置补上；事件已被删掉的直接丢弃，
-        #    留着会在出队时查不到配置而被清理，不如在载入时就清干净
-        for one in old_queue:
-            if (
-                not isinstance(one, dict)
-                or one.get("uid") not in game_config.config_official_event
-            ):
-                continue
-            one["department"] = game_config.config_official_event[
-                one["uid"]
-            ].get("department", 0)
-            new_queue.append(one)
-        loaded_dict["rhodes_island"].official_event_queue = new_queue
-        update_count += 1
-    if not hasattr(loaded_dict["rhodes_island"], "official_event_history"):
-        loaded_dict["rhodes_island"].official_event_history = {}
-        update_count += 1
-    update_count += _migrate_official_event_history(
-        loaded_dict["rhodes_island"].official_event_history
-    )
+    # 挪了桶的养成事件：全局履历里的旧uid改成新uid
+    history = official.history()
+    update_count += _migrate_official_event_history(history)
+    official.set_history(history)
     # 更新罗德岛的设施等级
     for all_cid in game_config.config_facility:
         # 没有记录的设施改为初始等级0
@@ -1039,10 +1011,6 @@ def install_save(save_id: str, version: int) -> None:
     # 读到的存档里没有菜谱与地图，这里换上按数据文件新建的菜谱和游戏启动时载入的地图
     loaded_dict["recipe_data"] = cooking.init_recipes()
     loaded_dict["map_data"] = cache.map_data
-    # 更新图书借阅
-    for all_cid in game_config.config_book:
-        if all_cid not in loaded_dict["rhodes_island"].book_borrow_dict:
-            loaded_dict["rhodes_island"].book_borrow_dict[all_cid] = -1
     # 去掉书籍配置里没有的书与书籍类型的引用
     update_count += _drop_unknown_books(loaded_dict)
 

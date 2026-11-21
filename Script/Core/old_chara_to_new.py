@@ -17,12 +17,15 @@ from typing import TYPE_CHECKING, TypedDict
 from Script.Design import game_time
 from Script.Modules.domains import (
     commission,
+    diplomacy,
     economy,
+    library,
     medical,
     needs,
     power,
     production,
     visitor,
+    recruit,
     work,
 )
 from Script.Modules.save_load import upgrade
@@ -105,34 +108,6 @@ def normalize_single_character_id(raw_value: Any, default: int = 0) -> int:
         return int(raw_value)
     except (TypeError, ValueError):
         return default
-
-
-def normalize_line_chara_id_data(
-    line_data: Any, chara_index: int, min_length: int
-) -> list:
-    """
-    将旧存档中的产线/招募线数据归一化为标准列表结构
-    Keyword arguments:
-    line_data -- 原始线体数据
-    chara_index -- 主角色id所在下标
-    min_length -- 最低需要补齐的长度
-    Return arguments:
-    list -- 归一化后的线体数据
-    """
-    if isinstance(line_data, tuple):
-        line_data = list(line_data)
-    elif not isinstance(line_data, list):
-        line_data = [0] * min_length
-    else:
-        line_data = line_data.copy()
-
-    while len(line_data) < min_length:
-        line_data.append(0)
-
-    line_data[chara_index] = normalize_single_character_id(
-        line_data[chara_index], 0
-    )
-    return line_data
 
 
 def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
@@ -434,15 +409,10 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
     if "rhodes_island" in loaded_dict:
         ri = loaded_dict["rhodes_island"]
 
-        # recruited_id (Set[int])
-        if hasattr(ri, "recruited_id") and ri.recruited_id:
-            # 如果ri.recruited_id是int类型的话，则先转为set
-            if isinstance(ri.recruited_id, int):
-                ri.recruited_id = {ri.recruited_id}
-            ri.recruited_id = {
-                old_to_new_id.get(oid, oid) for oid in ri.recruited_id
-            }
-
+        # 招募线的主招聘专员、待确认招募、借书人与外交官
+        recruit.remap(old_to_new_id)
+        library.remap(old_to_new_id)
+        diplomacy.remap(old_to_new_id)
         power.remap_operators(old_to_new_id)
         production.remap(old_to_new_id)
 
@@ -472,30 +442,10 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
         # 医疗部的门诊、住院医生名单与分科配置
         medical.remap_doctors(old_to_new_id)
 
-        # book_borrow_dict (Dict[int, int])
-        if hasattr(ri, "book_borrow_dict"):
-            old_borrow = ri.book_borrow_dict.copy()
-            ri.book_borrow_dict = {}
-            for book_id, old_id in old_borrow.items():
-                if old_id != -1:
-                    ri.book_borrow_dict[book_id] = old_to_new_id.get(
-                        old_id, old_id
-                    )
-                else:
-                    ri.book_borrow_dict[book_id] = old_id
-
         economy.remap_traders(old_to_new_id)
 
         # 访客、邀请目标与外勤委托的队伍里的角色id
         _remap_visitor_and_commission(old_to_new_id)
-
-        # diplomat_of_country (Dict[int, List])
-        if hasattr(ri, "diplomat_of_country"):
-            for _country_id, data in ri.diplomat_of_country.items():
-                if len(data) > 0:
-                    data[0] = normalize_single_character_id(data[0], 0)
-                if len(data) > 0 and data[0] != 0:
-                    data[0] = old_to_new_id.get(data[0], data[0])
 
         # current_prisoners (Dict[int, List])
         if hasattr(ri, "current_prisoners"):
@@ -549,14 +499,6 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
                 old_to_new_id.get(oid, oid)
                 for oid in ri.manually_selected_exam_operator_ids
             }
-
-        # recruit_line (Dict[int, List]) - 招募线id:[0进度, 1策略id, 2主招聘专员id, 3效率]
-        if hasattr(ri, "recruit_line"):
-            for line_id, raw_line_data in ri.recruit_line.items():
-                line_data = normalize_line_chara_id_data(raw_line_data, 2, 4)
-                ri.recruit_line[line_id] = line_data
-                if line_data[2] != 0:
-                    line_data[2] = old_to_new_id.get(line_data[2], line_data[2])
 
         # 岗位名册与监狱长
         work.set_warden(normalize_single_character_id(work.warden(), 0))
@@ -1314,13 +1256,10 @@ def migrate_character_replacement(
     if "rhodes_island" in loaded_dict:
         ri = loaded_dict["rhodes_island"]
 
-        # recruited_id
-        if hasattr(ri, "recruited_id") and ri.recruited_id:
-            old_recruited = ri.recruited_id.copy()
-            ri.recruited_id = set()
-            for oid in old_recruited:
-                ri.recruited_id.add(old_to_new_id_map.get(oid, oid))
-
+        # 招募线的主招聘专员、待确认招募、借书人与外交官
+        recruit.remap(old_to_new_id_map)
+        library.remap(old_to_new_id_map)
+        diplomacy.remap(old_to_new_id_map)
         power.remap_operators(old_to_new_id_map)
         work.set_warden(normalize_single_character_id(work.warden(), 0))
         work.remap(old_to_new_id_map)
@@ -1350,30 +1289,10 @@ def migrate_character_replacement(
         # 医疗部的门诊、住院医生名单与分科配置
         medical.remap_doctors(old_to_new_id_map)
 
-        # book_borrow_dict
-        if hasattr(ri, "book_borrow_dict") and ri.book_borrow_dict:
-            old_borrow = ri.book_borrow_dict.copy()
-            ri.book_borrow_dict = {}
-            for book_id, old_id in old_borrow.items():
-                if old_id != -1:
-                    ri.book_borrow_dict[book_id] = old_to_new_id_map.get(
-                        old_id, old_id
-                    )
-                else:
-                    ri.book_borrow_dict[book_id] = old_id
-
         economy.remap_traders(old_to_new_id_map)
 
         # 访客、邀请目标与外勤委托的队伍里的角色id
         _remap_visitor_and_commission(old_to_new_id_map)
-
-        # diplomat_of_country
-        if hasattr(ri, "diplomat_of_country") and ri.diplomat_of_country:
-            for _country_id, data in ri.diplomat_of_country.items():
-                if len(data) > 0:
-                    data[0] = normalize_single_character_id(data[0], 0)
-                if len(data) > 0 and data[0] != 0:
-                    data[0] = old_to_new_id_map.get(data[0], data[0])
 
         # current_prisoners
         if hasattr(ri, "current_prisoners") and ri.current_prisoners:
@@ -1443,16 +1362,6 @@ def migrate_character_replacement(
                 ri.manually_selected_exam_operator_ids.add(
                     old_to_new_id_map.get(oid, oid)
                 )
-
-        # recruit_line
-        if hasattr(ri, "recruit_line") and ri.recruit_line:
-            for line_id, raw_line_data in ri.recruit_line.items():
-                line_data = normalize_line_chara_id_data(raw_line_data, 2, 4)
-                ri.recruit_line[line_id] = line_data
-                if line_data[2] != 0:
-                    line_data[2] = old_to_new_id_map.get(
-                        line_data[2], line_data[2]
-                    )
 
     # ========== 9. 更新场景数据中的角色列表 ==========
     if "scene_data" in loaded_dict:
@@ -2387,9 +2296,9 @@ def _clear_young_child_reference(
         rhodes_island.manually_selected_exam_operator_ids,
     ):
         count += _discard_id(exam_set, young_child_id_set)
-    for book_id, borrower_id in list(rhodes_island.book_borrow_dict.items()):
+    for book_id, borrower_id in library.holders().items():
         if borrower_id in young_child_id_set:
-            rhodes_island.book_borrow_dict[book_id] = -1
+            library.set_holder(book_id, library.FREE)
             count += 1
     if loaded_dict.get("old_character_id") in young_child_id_set:
         loaded_dict["old_character_id"] = 0

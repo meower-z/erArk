@@ -48,7 +48,8 @@ from Script.Settle.common_default import (
 )
 
 from Script.Settle.item_effect import *
-from Script.Modules.domains import facility, medical, needs, visitor, warehouse
+from Script.Modules.domains import facility, medical, needs, official, recruit
+from Script.Modules.domains import visitor, warehouse
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -7175,16 +7176,14 @@ def handle_official_work_add_adjust(
     adjust *= basement.calc_facility_efficiency(22)
     # 处理工作
     finish_work = int(add_time * adjust)
-    cache.rhodes_island.office_work = int(
-        max(cache.rhodes_island.office_work - finish_work, 0)
-    )
+    official.set_office_work(int(max(official.office_work() - finish_work, 0)))
     # 输出处理结果
     if character_data.position == cache.character_data[0].position:
         now_draw = draw.NormalDraw()
         now_draw_text += _("共处理了{0}公务，").format(finish_work)
-        if cache.rhodes_island.office_work > 0:
+        if official.office_work() > 0:
             now_draw_text += _("还有{0}需要处理\n").format(
-                cache.rhodes_island.office_work
+                official.office_work()
             )
         else:
             now_draw_text += _("已经全部处理完毕\n\n")
@@ -7522,23 +7521,21 @@ def handle_recruit_add_just(
 
     # 确定使用哪个招募栏位
     select_index = -1
+    recruit_lines = recruit.lines()
     # 如果角色是主招聘专员，则使用其指定的栏位
-    for recruit_line_id in cache.rhodes_island.recruit_line:
-        if character_id == cache.rhodes_island.recruit_line[recruit_line_id][2]:
+    for recruit_line_id, line in recruit_lines.items():
+        if character_id == line["main"]:
             select_index = recruit_line_id
             break
     # 如果不是或是玩家来招募，则随机一个指派过去
     if select_index == -1 or character_id == 0:
-        line_id_list = list(cache.rhodes_island.recruit_line.keys())
-        select_index = random.choice(line_id_list)
+        select_index = random.choice(list(recruit_lines))
         # 如果不是主招聘专员也不是玩家，则降低效率
         if character_id != 0:
             adjust /= 5
 
-    # 招募线数据
-    recruit_line_data = cache.rhodes_island.recruit_line[select_index]
     # 获得招募策略
-    recruit_strategy_id = recruit_line_data[1]
+    recruit_strategy_id = recruit_lines[select_index]["strategy"]
     # 如果该招募槽的策略为11号停止招募，则直接返回
     if recruit_strategy_id == 11:
         return
@@ -7567,16 +7564,13 @@ def handle_recruit_add_just(
             character_data.name,
             select_index,
             round(now_add_lust, 1),
-            round(
-                cache.rhodes_island.recruit_line[select_index][0]
-                + now_add_lust,
-                1,
-            ),
+            round(recruit_lines[select_index]["progress"] + now_add_lust, 1),
         )
         now_draw.draw()
 
     # 增加对应槽的招募值，并进行结算
-    cache.rhodes_island.recruit_line[select_index][0] += now_add_lust
+    progress = recruit_lines[select_index]["progress"] + now_add_lust
+    recruit.set_line(select_index, progress=progress)
     recruit_panel.update_recruit()
 
 
@@ -7623,7 +7617,7 @@ def handle_invite_visitor_add_adjust(
         return
 
     # 如果该角色已经被招募，则直接返回
-    if target in cache.npc_id_got or target in cache.rhodes_island.recruited_id:
+    if target in cache.npc_id_got or target in recruit.pending():
         visitor.set_invite(0)
         # 玩家使用时显示提示
         if character_id == 0:

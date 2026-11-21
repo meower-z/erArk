@@ -7,7 +7,7 @@ from Script.Core import (
     game_type,
 )
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import medical, warehouse, work
+from Script.Modules.domains import medical, official, recruit, warehouse, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -1282,7 +1282,7 @@ def handle_new_npc_wait(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    if len(cache.rhodes_island.recruited_id):
+    if recruit.pending():
         return 1
     return 0
 
@@ -1296,7 +1296,7 @@ def handle_have_office_work_need_to_do(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    return cache.rhodes_island.office_work > 0
+    return official.office_work() > 0
 
 
 @add_premise(constant_promise.Premise.NOT_HAVE_OFFICE_WORK_NEED_TO_DO)

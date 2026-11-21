@@ -19,7 +19,7 @@ from Script.Design import (
 )
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import location, visitor, work
+from Script.Modules.domains import diplomacy, location, recruit, visitor, work
 from Script.Modules.save_load import reset
 
 import random
@@ -45,16 +45,15 @@ window_width: int = normal_config.config_normal.text_width
 
 @reset.repair
 def repair_recruit_lines() -> None:
-    """旧存档修补：待确认招募里不存在的角色id去掉，主招聘专员不是整数的改为 0，停止招募（策略 11）的线进度归 0"""
-    ri = cache.rhodes_island
-    ri.recruited_id = {
-        cid for cid in ri.recruited_id if cid and cid in cache.character_data
-    }
-    for line in ri.recruit_line.values():
-        if not isinstance(line[2], int):
-            line[2] = 0
-        if line[1] == 11:
-            line[0] = 0
+    """旧存档修补：待确认招募里不存在的角色id去掉，停止招募（策略 11）的线进度归 0"""
+    recruit.set_pending(
+        cid for cid in recruit.pending() if cid and cid in cache.character_data
+    )
+    lines = recruit.lines()
+    for line in lines.values():
+        if line["strategy"] == 11:
+            line["progress"] = 0
+    recruit.put_lines(lines)
 
 
 def can_recruit() -> bool:
@@ -70,7 +69,7 @@ def can_recruit() -> bool:
         now_draw.text = _("\n\n   ※ 空余宿舍不足，无法招募 ※\n\n")
         now_draw.draw()
         return False
-    return bool(len(cache.rhodes_island.recruited_id))
+    return bool(recruit.pending())
 
 
 def recruit_new_chara() -> bool:
@@ -96,9 +95,10 @@ def recruit_new_chara() -> bool:
         now_draw.draw()
         return False
 
-    elif len(cache.rhodes_island.recruited_id):
+    elif pending := recruit.pending():
         # 从待招募的干员中选择
-        new_chara_id = cache.rhodes_island.recruited_id.pop()
+        new_chara_id = pending.pop()
+        recruit.set_pending(pending)
         # 招募该干员
         character_handle.get_new_character(new_chara_id)
         character_data = cache.character_data[new_chara_id]
@@ -125,9 +125,10 @@ def find_recruitable_npc() -> list[int]:
     # 收集所有已被任命为各国外交官的干员id
     # 外派期间的外交官会被移出npc_id_got，无法靠“已在罗德岛”排除，故在此单独收集
     diplomat_id_set = set()
-    for diplomat_data in cache.rhodes_island.diplomat_of_country.values():
-        if diplomat_data and diplomat_data[0]:
-            diplomat_id_set.add(diplomat_data[0])
+    for post in diplomacy.table().values():
+        if post["diplomat"]:
+            diplomat_id_set.add(post["diplomat"])
+    pending = recruit.pending()
 
     for adv_id, tem_data in cache.npc_tem_data.items():
         chara_id = adv_id
@@ -138,7 +139,7 @@ def find_recruitable_npc() -> list[int]:
         if chara_id in cache.npc_id_got:
             continue
         # 跳过已在待确认招募列表中的
-        if chara_id in cache.rhodes_island.recruited_id:
+        if chara_id in pending:
             continue
         # 跳过女儿
         if tem_data.Mother_id != 0 or tem_data.AdvNpc > 9000:
@@ -173,16 +174,14 @@ def update_recruit() -> None:
     from Script.UI.Panel import recruit_panel
 
     # 遍历全招募栏
-    for recruit_line_id in cache.rhodes_island.recruit_line:
+    for recruit_line_id, line in recruit.lines().items():
 
         # 如果超过100则进行结算
-        if cache.rhodes_island.recruit_line[recruit_line_id][0] >= 100:
-            cache.rhodes_island.recruit_line[recruit_line_id][0] = 0
+        if line["progress"] >= 100:
+            recruit.set_line(recruit_line_id, progress=0)
 
             # 招募策略
-            recruitment_strategy = cache.rhodes_island.recruit_line[
-                recruit_line_id
-            ][1]
+            recruitment_strategy = line["strategy"]
 
             # 绘制信息
             now_draw = draw.WaitDraw()
@@ -192,15 +191,8 @@ def update_recruit() -> None:
             # 开始获得招募npc的id
             recruitable_npc_id_list = recruit_panel.find_recruitable_npc()
             wait_id_list = []
-            # 保证为int类型
-            if not isinstance(
-                cache.rhodes_island.recruit_line[recruit_line_id][2], int
-            ):
-                cache.rhodes_island.recruit_line[recruit_line_id][2] = 0
             # 主招募专员
-            line_main_chara_id = cache.rhodes_island.recruit_line[
-                recruit_line_id
-            ][2]
+            line_main_chara_id = line["main"]
             line_main_chara_data = cache.character_data[line_main_chara_id]
             for chara_id in recruitable_npc_id_list:
                 if (
@@ -292,7 +284,7 @@ def update_recruit() -> None:
                     wait_id_list.append(chara_id)
             if len(wait_id_list):
                 choice_id = random.choice(wait_id_list)
-                cache.rhodes_island.recruited_id.add(choice_id)
+                recruit.set_pending(recruit.pending() | {choice_id})
 
                 now_draw.text = _(
                     "\n\n   ※ 招募到了新的干员，请前往博士办公室确认 ※\n\n"
@@ -310,7 +302,7 @@ def update_recruit() -> None:
                 )
                 now_draw.style = "warning"
                 now_draw.draw()
-                cache.rhodes_island.recruit_line[recruit_line_id][1] = 11
+                recruit.set_line(recruit_line_id, strategy=11)
 
 
 def calculate_recruit_line_efficiency(line_id: int) -> tuple[str, float]:
@@ -322,10 +314,11 @@ def calculate_recruit_line_efficiency(line_id: int) -> tuple[str, float]:
     detail_str -- 描述字符串
     total_bonus -- 效率值
     """
-    if line_id not in cache.rhodes_island.recruit_line:
+    lines = recruit.lines()
+    if line_id not in lines:
         return _("无此招募线"), 0.0
 
-    recruitment_strategy_id = cache.rhodes_island.recruit_line[line_id][1]
+    recruitment_strategy_id = lines[line_id]["strategy"]
     recruitment_strategy_data = game_config.config_recruitment_strategy.get(
         recruitment_strategy_id
     )
@@ -338,17 +331,15 @@ def calculate_recruit_line_efficiency(line_id: int) -> tuple[str, float]:
     # 当前设施效率
     facility_effect = basement.calc_facility_efficiency(7)
 
-    # 招募效率(使用主/副招聘专员机制)，不是整数的主招聘专员由读档修补改为 0
-    line_main_id = cache.rhodes_island.recruit_line[line_id][2]
+    # 招募效率(使用主/副招聘专员机制)
+    line_main_id = lines[line_id]["main"]
     main_name = (
         cache.character_data[line_main_id].name
         if line_main_id in cache.character_data
         else _("空缺")
     )
     # 全部主招聘专员
-    main_ids = set()
-    for i in cache.rhodes_island.recruit_line:
-        main_ids.add(cache.rhodes_island.recruit_line[i][2])
+    main_ids = {line["main"] for line in lines.values()}
     # 计算加成
     total_bonus = 0.0
     sub_bonus = 0.0
@@ -439,7 +430,7 @@ class Recruit_Panel:
         title_draw = draw.TitleLineDraw(title_text, self.width)
         # 当前设施数据
         now_level = facility.level(7)
-        line_count = len(cache.rhodes_island.recruit_line)
+        line_count = len(recruit.lines())
 
         # 开始获得招募npc的id
         recruitable_npc_id_list = find_recruitable_npc()
@@ -454,11 +445,11 @@ class Recruit_Panel:
             )
 
             # 取消掉原本的"当前国家可招募干员数量"的文字
-            if len(cache.rhodes_island.recruited_id) == 0:
+            if not recruit.pending():
                 now_text += _("  当前没有已招募待确认的干员\n")
             else:
                 now_text += _("  当前已招募待确认的干员有：")
-                for chara_id in cache.rhodes_island.recruited_id:
+                for chara_id in recruit.pending():
                     # 不存在的角色id由读档修补 repair_recruit_lines 去掉
                     if chara_id == 0 or chara_id not in cache.character_data:
                         continue
@@ -471,12 +462,9 @@ class Recruit_Panel:
             all_info_draw.text = now_text
             all_info_draw.draw()
 
-            for recruit_line_id in cache.rhodes_island.recruit_line:
+            for recruit_line_id, line in recruit.lines().items():
                 # 招募进度，保留一位小数
-                now_dregree = cache.rhodes_island.recruit_line[recruit_line_id][
-                    0
-                ]
-                now_dregree = round(now_dregree, 1)
+                now_dregree = round(line["progress"], 1)
                 now_text = _("\n {0}号招募进度：{1}%").format(
                     recruit_line_id + 1, now_dregree
                 )
@@ -484,9 +472,7 @@ class Recruit_Panel:
                 all_info_draw.draw()
 
                 # 基础数据
-                recruitment_strategy_id = cache.rhodes_island.recruit_line[
-                    recruit_line_id
-                ][1]
+                recruitment_strategy_id = line["strategy"]
                 recruitment_strategy_data = (
                     game_config.config_recruitment_strategy[
                         recruitment_strategy_id
@@ -513,11 +499,7 @@ class Recruit_Panel:
 
                 # 计算本线当前策略能招募到的干员列表
                 line_wait_id_list = []
-                line_main_chara_id = cache.rhodes_island.recruit_line[
-                    recruit_line_id
-                ][2]
-                if not isinstance(line_main_chara_id, int):
-                    line_main_chara_id = 0
+                line_main_chara_id = line["main"]
 
                 for chara_id in recruitable_npc_id_list:
                     if recruitment_strategy_id == 11:
@@ -659,12 +641,9 @@ class Recruit_Panel:
             )
 
             # 检查是否有任何一条招募线的主招聘专员空缺
-            has_vacant_main = False
-            for recruit_line_id in cache.rhodes_island.recruit_line:
-                main_id = cache.rhodes_island.recruit_line[recruit_line_id][2]
-                if not isinstance(main_id, int) or main_id == 0:
-                    has_vacant_main = True
-                    break
+            has_vacant_main = any(
+                line["main"] == 0 for line in recruit.lines().values()
+            )
 
             # 如果有空缺，将按钮的正常颜色改为 gold_enrod
             if has_vacant_main:
@@ -693,9 +672,8 @@ class Recruit_Panel:
             info_draw.width = window_width
             return_list = []
 
-            recruitment_strategy_id = cache.rhodes_island.recruit_line[
-                recruit_line_id
-            ][1]
+            now_line = recruit.lines()[recruit_line_id]
+            recruitment_strategy_id = now_line["strategy"]
             recruitment_strategy_data = game_config.config_recruitment_strategy[
                 recruitment_strategy_id
             ]
@@ -735,9 +713,7 @@ class Recruit_Panel:
                 button_draw_text += "："
                 button_draw_text += recruitment_strategy_data.introduce
                 # 主招聘专员id
-                line_main_chara_id = cache.rhodes_island.recruit_line[
-                    recruit_line_id
-                ][2]
+                line_main_chara_id = now_line["main"]
                 # 招聘当地随机干员
                 if cid == 0:
                     birthplace_id = location.country()
@@ -809,7 +785,6 @@ class Recruit_Panel:
 
     def select_npc_position(self) -> None:
         """招聘专员管理(任命各线主招聘专员)"""
-        ri = cache.rhodes_island
         from Script.UI.Panel import manage_basement_panel
         from Script.Design import handle_ability, handle_talent
 
@@ -977,11 +952,8 @@ class Recruit_Panel:
             div.draw()
 
             # 显示各线主招聘专员
-            for line_id in ri.recruit_line:
-                main_id = ri.recruit_line[line_id][2]
-                if not isinstance(main_id, int):
-                    main_id = 0
-
+            for line_id, line in recruit.lines().items():
+                main_id = line["main"]
                 role_str = _("主召聘专员({0}号)").format(line_id + 1)
                 row_text = build_row_text(role_str, main_id, True)
 
@@ -1010,11 +982,7 @@ class Recruit_Panel:
             line_feed.draw()
 
             # 其它副招聘专员
-            main_ids = {
-                ri.recruit_line[i][2]
-                for i in ri.recruit_line
-                if isinstance(ri.recruit_line[i][2], int)
-            }
+            main_ids = {line["main"] for line in recruit.lines().values()}
             other_ops = [
                 cid
                 for cid in work.roster(work.HR_WORK)
@@ -1103,7 +1071,6 @@ class Recruit_Panel:
 
     def _appoint_main_hr(self, line_id: int) -> None:
         """任命某条招募线主招聘专员(重复选择同一人可撤销)"""
-        ri = cache.rhodes_island
         from Script.UI.Panel import common_select_NPC
 
         now_draw_panel: panel.PageHandlePanel = panel.PageHandlePanel(
@@ -1130,7 +1097,7 @@ class Recruit_Panel:
                 if npc_id == 0:
                     continue
                 final_list.append(
-                    [npc_id, _make, [ri.recruit_line[line_id][2]]]
+                    [npc_id, _make, [recruit.lines()[line_id]["main"]]]
                 )
             now_draw_panel.text_list = final_list
             return_list, _other_return_list, select_state = (
@@ -1149,27 +1116,16 @@ class Recruit_Panel:
         line_id -- 招募线id
         chara_id -- 干员角色id
         """
-        ri = cache.rhodes_island
-        if chara_id not in work.roster(work.HR_WORK):
-            return
-        # 如果已经是该线主，则撤销
-        if ri.recruit_line[line_id][2] == chara_id:
-            ri.recruit_line[line_id][2] = 0
-        else:
-            # 先清除其在其它线的主身份
-            for lid in ri.recruit_line:
-                if lid != line_id and ri.recruit_line[lid][2] == chara_id:
-                    ri.recruit_line[lid][2] = 0
-            ri.recruit_line[line_id][2] = chara_id
+        if chara_id in work.roster(work.HR_WORK):
+            recruit.appoint(line_id, chara_id)
 
     def change_recruit_line_produce(
         self, asrecruit_line_id: int, recruitment_strategy_cid: int
     ) -> None:
         """更改招募线的策略，改为停止招募（策略 11）时进度归 0"""
-        line = cache.rhodes_island.recruit_line[asrecruit_line_id]
-        line[1] = recruitment_strategy_cid
+        recruit.set_line(asrecruit_line_id, strategy=recruitment_strategy_cid)
         if recruitment_strategy_cid == 11:
-            line[0] = 0
+            recruit.set_line(asrecruit_line_id, progress=0)
 
     def settle_npc_id(self, chara_id: int) -> None:
         """结算干员的id变更"""

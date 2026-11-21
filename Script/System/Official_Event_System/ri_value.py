@@ -15,7 +15,7 @@
 from types import FunctionType
 
 from Script.Core import cache_control, game_type, get_text
-from Script.Modules.domains import facility, power, warehouse
+from Script.Modules.domains import facility, official, power, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -100,7 +100,7 @@ def get_ri_value(type_text: str) -> float:
     if type_name == RI_TYPE_FACILITY:
         return float(facility.level(son_id, 0))
     if type_name == RI_TYPE_OFFICE_WORK:
-        return float(cache.rhodes_island.office_work)
+        return float(official.office_work())
     if type_name == RI_TYPE_EFFECTIVENESS:
         return float(facility.effectiveness())
     if type_name == RI_TYPE_POWER:
@@ -135,8 +135,8 @@ def set_ri_value(type_text: str, new_value: float) -> None:
         cache.country.nation_reputation[son_id] = new_value
     elif type_name == RI_TYPE_OFFICE_WORK:
         # 公务量夹在 0~总工作量之间，与每日结算的口径一致
-        cache.rhodes_island.office_work = round(
-            max(0.0, min(float(new_value), get_all_office_work())), 1
+        official.set_office_work(
+            round(max(0.0, min(float(new_value), get_all_office_work())), 1)
         )
     elif type_name == RI_TYPE_EFFECTIVENESS:
         value = max(EFFECTIVENESS_MIN, min(float(new_value), EFFECTIVENESS_MAX))

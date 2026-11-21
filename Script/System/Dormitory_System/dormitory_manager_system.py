@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 from Script.Core import cache_control, game_type, get_text, constant
 from Script.Design import handle_state_machine, map_handle, handle_premise
+from Script.Modules.domains import dormitory
 from Script.System.Dormitory_System import common
 
 if TYPE_CHECKING:
@@ -46,7 +47,7 @@ def get_dormitory_manager_knowledge(character_id: int) -> int:
     if layer <= 0:
         return 0
 
-    manager_id = cache.rhodes_island.dormitory_managers.get(layer, 0)
+    manager_id = dormitory.managers().get(layer, 0)
     if not manager_id or manager_id not in cache.character_data:
         return 0
 
@@ -59,9 +60,9 @@ def _get_manager_layer_by_character(character_id: int) -> int:
     获取角色作为宿舍管理员时负责的层号
     输入类型: character_id(int)
     输出类型: int
-    功能: 从 rhodes_island.dormitory_managers 中反查角色负责层号
+    功能: 从 dormitory.managers() 中反查角色负责层号
     """
-    for layer, manager_id in cache.rhodes_island.dormitory_managers.items():
+    for layer, manager_id in dormitory.managers().items():
         if manager_id == character_id:
             return int(layer)
     return 0
