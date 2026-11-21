@@ -8,6 +8,7 @@ from typing import TypeGuard
 
 from Script.Core import cache_control
 from Script.Config import game_config
+from Script.Modules.domains import education
 from Script.System.Education_System import education_constant
 from ..check_registry import CheckFailure, register_check, make_failure
 
@@ -340,11 +341,7 @@ def check_edu_08() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；
     功能: 全局课表按星期、节次存[能力id,教师id]，教师可为-1，不要求在场或在岗。"""
     cache = cache_control.cache
-    schedule = getattr(
-        getattr(cache, "rhodes_island", None), "class_schedule", None
-    )
-    if not isinstance(schedule, dict):
-        return []
+    schedule = education.class_schedule()
     abilities = getattr(game_config, "config_ability", None)
     characters = getattr(cache, "character_data", None)
     failures: list[CheckFailure] = []
@@ -448,18 +445,15 @@ def check_edu_10() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 校验模板slot和角色覆盖表，空模板合法。"""
     cache = cache_control.cache
     failures: list[CheckFailure] = []
-    templates = getattr(
-        getattr(cache, "rhodes_island", None), "child_schedule_template", None
-    )
-    if isinstance(templates, dict):
-        for key, template in templates.items():
-            if isinstance(template, dict):
-                _check_slots(
-                    template.get("slot"),
-                    None,
-                    f"child_schedule_template[{key!r}].slot",
-                    failures,
-                )
+    templates = education.templates()
+    for key, template in templates.items():
+        if isinstance(template, dict):
+            _check_slots(
+                template.get("slot"),
+                None,
+                f"child_schedule_template[{key!r}].slot",
+                failures,
+            )
     for cid, growth in _growths(cache):
         _check_slots(
             getattr(growth, "schedule_override", None),
@@ -474,11 +468,7 @@ def check_edu_10() -> list[CheckFailure]:
 def check_edu_11() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 角色模板引用须为0或当前模板表内的键。"""
     cache = cache_control.cache
-    templates = getattr(
-        getattr(cache, "rhodes_island", None), "child_schedule_template", None
-    )
-    if not isinstance(templates, dict):
-        return []
+    templates = education.templates()
     failures = []
     for cid, growth in _growths(cache):
         value = getattr(growth, "schedule_template_id", None)

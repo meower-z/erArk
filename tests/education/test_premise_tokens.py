@@ -6,7 +6,6 @@ from _bootstrap import (
     SCENE_DORM,
     SCENE_EDU_ENTRY,
     _,
-    cache,
     check,
     class_ai,
     classroom_path,
@@ -14,6 +13,7 @@ from _bootstrap import (
     constant,
     constant_promise,
     datetime,
+    education,
     education_constant,
     finish,
     game_config,
@@ -319,17 +319,14 @@ check(
     HP("sex_class_mode_off", 0) == 1 and HP("sex_class_mode_on", 0) == 0,
 )
 check("在实践教室：in_sex_class_place", HP("in_sex_class_place", 0) == 1)
-check(
-    "场景里的学生没修过性技课：没有可参加的学生（口径 63 宽松版）",
-    HP("scene_have_sex_class_student", 0) == 0,
-)
+check("场景里没修过性技课", HP("scene_have_sex_class_student", 0) == 0)
 schedule_handle.set_class_cell(ROOM_P, 3, 8, 74, -1)
 schedule_handle.set_selected_course(201, 3, 8, E.COURSE_TYPE_PRACTICE, ROOM_P)
 check("场景里有可参加的学生", HP("scene_have_sex_class_student", 0) == 1)
 move_to(201, SCENE_DORM)
 check("学生走了就不成立", HP("scene_have_sex_class_student", 0) == 0)
 move_to(201, classroom_path(ROOM_P))
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 today = game_time.now().date().toordinal()
 sex_class_handle.set_temp_class(today, 5, ROOM_P, 74, must_attend=[201])
 now_class = sex_class_handle.start_sex_class(74)
@@ -363,7 +360,7 @@ set_time(period_time(5) + datetime.timedelta(minutes=80))
 check("下课三档：拖堂", HP("sex_class_end_late", 0) == 1)
 sex_class_handle.end_sex_class()
 kernel_data.set_world(modes.set_sex_class, False)
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 set_time(period_time(5))
 sex_class_handle.start_sex_class(70)
 kernel_data.set_world(modes.set_sex_class, True)
@@ -889,7 +886,7 @@ check(
     "L9 人在当天临时实操课的教室里：教师反查优先，科目取那节课的 70、不回落学识",
     HP("CVP_A1_Course|70_G_0", 0) == 1 and HP("CVP_A1_Course|45_G_0", 0) == 0,
 )
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 pl.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY
 check(
     "L9 玩家没在授课：不回落，两项都不成立",
@@ -1071,7 +1068,7 @@ check(
     _r == (False, False),
     _r,
 )
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 set_time(period_time(3) - datetime.timedelta(minutes=5))
 _l2_wd = game_time.now().weekday()
 sex_class_handle.set_temp_class(
@@ -1092,7 +1089,7 @@ check(
     _r == (False, False),
     _r,
 )
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 move_to(0, SCENE_DORM)
 move_to(201, SCENE_DORM)
 _r = caught_dispatch()

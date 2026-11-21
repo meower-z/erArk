@@ -23,7 +23,7 @@ from Script.Design import (
     game_time,
 )
 from Script.Kernel import core
-from Script.Modules.domains import country, playthrough, visitor
+from Script.Modules.domains import country, playthrough, prison, visitor
 from Script.Modules.domains import warehouse, work
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import kernel_state
@@ -96,9 +96,7 @@ def first_bonus_and_setting_updata() -> None:
         attr_calculation.get_physical_exam_setting_zero()
     )
     # 调教设置
-    cache.rhodes_island.confinement_training_setting = (
-        attr_calculation.get_confinement_training_setting_zero()
-    )
+    prison.reset_settings()
 
 
 def game_start() -> None:

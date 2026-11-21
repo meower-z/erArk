@@ -1,6 +1,5 @@
 # -*- coding: UTF-8 -*-
-"""结算器：512 授课 / 557 学生坐下听课时教师判能到岗即结算 / 548 自习 / 549 翘课 / 550 检查成绩单 / 552 实习 / 622 炫耀
-/ 623 翘课被抓 / 10014 10015 课堂H模式"""
+"""结算器：512 授课 / 557 听课 / 548 自习 / 549 翘课 / 550 成绩单 / 552 实习 / 622 炫耀 / 623 被抓 / 10014 10015"""
 
 from functools import partial
 from typing import Any
@@ -18,6 +17,7 @@ from _bootstrap import (
     constant_effect,
     datetime,
     drawn_text,
+    education,
     education_constant,
     finish,
     game_config,
@@ -314,7 +314,7 @@ check(
     "H1 本节是玩家的临时实操课（授课者为玩家）：557 不结算",
     student_b_growth.last_attend_period == [],
 )
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 # 学生不在本节的教室里（被玩家拉到别处听课）：她这一节由把她拉去的人结算，557 不接手
 move_to(202, SCENE_DORM)
 EFFECT[557](202, 45, change, game_time.now())
@@ -495,7 +495,7 @@ move_to(0, classroom_path(ROOM_P))
 move_to(201, classroom_path(ROOM_P))
 move_to(202, classroom_path(ROOM_P))
 set_time(period_time(5))
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 kernel_data.set_world(modes.set_sex_class, False)
 kernel_data.set_world(modes.set_group_sex, False)
 # 前置修习（口径 63 宽松版）：两个学生各排一节性技科目的教室课
@@ -532,7 +532,7 @@ check(
 )
 
 section("Plan 26 §3.1：性技科目的教室课与自习只发理论经验、不补记初体验")
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 set_time(period_time(6))
 move_to(101, classroom_path(ROOM1))
 move_to(201, classroom_path(ROOM1))
@@ -620,7 +620,7 @@ check(
     student_a.experience.get(170, 0) > finger_before[0]
     and student_a.experience.get(41, 0) == finger_before[1],
 )
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 move_to(0, SCENE_DORM)
 
 section(

@@ -122,13 +122,14 @@ from Script.Core import (
     save_handle,
 )  # noqa: F401,E402
 from Script.UI.Moudle import draw  # noqa: E402
-from tests import kernel_data, world
+from tests import kernel_data, kernel_project, world
 
 _ = get_text._
 """ 翻译api：配置里的名字都过了翻译，测试里比对名字一律包 _() """
 
 from Script.Modules.save_load import kernel_state
-from Script.Modules.domains import modes, official, plan, playthrough, warehouse
+from Script.Modules.domains import education, modes, official, plan
+from Script.Modules.domains import playthrough, warehouse
 
 character_handle.init_character_tem()
 kernel_state.reset_clock(kernel_state.first_clock())
@@ -141,6 +142,7 @@ kernel_data.written(playthrough.reset_difficulty_and_birth)
 # 罗德岛设施：GameState 里没有设施数据，读到的是每个设施 1 级、每个待开放设施未开放。教育区的等级由测试按需改
 # 资源仓库：每种资源 0（与 basement 初始化一致）；内核推进时玩家行动收尾的成就结算要读它
 kernel_data.written(warehouse.start, {})
+kernel_project.auto_commit_outside_step(education.KEYS)
 # 书库：library.holders() 把配置里的每本书读作在架、没被借走；兴趣课读书要先借书（Plan 29）
 
 # ==== 3. 屏蔽 UI，并把绘制文本收进 drawn_text ====
@@ -373,16 +375,8 @@ def open_all_classroom() -> None:
 
 
 def clear_schedules() -> None:
-    """
-    清空课表、临时实操课、日程模板与公务事件队列，供各组用例之间隔离
-    Keyword arguments:
-    无
-    Return arguments:
-    无
-    """
-    cache.rhodes_island.class_schedule = {}
-    cache.rhodes_island.temp_sex_class = {}
-    cache.rhodes_island.child_schedule_template = {}
+    """清空课表、临时实操课、日程模板与公务事件队列，供各组用例之间隔离"""
+    education.clear_all()
     kernel_data.put(official.set_queue, [])
     kernel_data.put(official.set_history, {})
     kernel_data.set_world(modes.set_sex_class, False)
@@ -479,7 +473,8 @@ def play(
         while True:
             if steps >= limit:
                 raise RuntimeError(f"内核推进 {limit} 步还没停下")
-            core.step()
+            with kernel_project.stepping():
+                core.step()
             steps += 1
             game = core.state()
             if (
@@ -533,7 +528,8 @@ def npc_turn(character_id: int, keep_queue: bool = False) -> None:
     core.reset_state(replace(game, characters=MappingProxyType(characters)))
     core.load((*load_order.LOAD_ORDER, sys.modules[__name__]))
     try:
-        core.step()
+        with kernel_project.stepping():
+            core.step()
     finally:
         core.load(load_order.LOAD_ORDER)
         _kernel_left = None

@@ -1,20 +1,21 @@
 # -*- coding: UTF-8 -*-
 """
-快照里按旧罗德岛对象的属性名记下招募、公务、外交、宿舍管理员与图书馆的值
-======================================================================
+快照里按旧罗德岛对象的属性名记下招募、公务、外交、宿舍管理员、图书馆、关押区与教育区的值
+========================================================================================
 kernel_data.project_state 调用 project。快照因此能与按缓存属性录下的快照逐项比较。
 """
 
 
 def project(state: dict[str, object]) -> None:
     """
-    快照里按旧罗德岛对象的属性名记下招募、公务、外交、宿舍管理员与图书馆的值。借阅表与推荐阅读记在 world.library 下，
-    其余记在 world.base 下。招募线记作旧的四项列表，效率一项记 0。外交记作 [外交官, 外交方针]
+    快照里按旧罗德岛对象的属性名记下招募、公务、外交、宿舍管理员、图书馆、关押区与教育区的值。
+    借阅表与推荐阅读记在 world.library 下，其余记在 world.base 下。
+    招募线记作旧的四项列表，效率一项记 0。外交记作 [外交官, 外交方针]
     Keyword arguments:
     state -- 快照，原地补上
     """
-    from Script.Modules.domains import diplomacy, dormitory, library
-    from Script.Modules.domains import official, recruit
+    from Script.Modules.domains import diplomacy, dormitory, education, library
+    from Script.Modules.domains import official, prison, recruit
     from tests.snapshot import flatten
 
     island = {
@@ -31,6 +32,18 @@ def project(state: dict[str, object]) -> None:
             for c, v in diplomacy.table().items()
         },
         "dormitory_managers": dormitory.managers(),
+        "current_prisoners": prison.prisoners(),
+        "confinement_training_setting": prison.settings(),
+        "pre_training_cleaning": prison.cleaning(),
+        "pre_training_lubrication": prison.lubrication(),
+        "pre_training_tool_dict": prison.tools(),
+        "sex_assistant_ai_behavior_id_list": prison.assistant_behaviors(),
+        "sex_assistant_ai_ban_behavior_id_list": (
+            prison.assistant_ban_behaviors()
+        ),
+        "class_schedule": education.class_schedule(),
+        "temp_sex_class": education.temp_classes(),
+        "child_schedule_template": education.templates(),
     }
     for field, value in island.items():
         flatten(f"world.base.{field}", value, state)

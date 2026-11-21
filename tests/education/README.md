@@ -65,7 +65,7 @@ python -u tests/education/test_semester.py                       # 单跑一个�
 - 学生赶去上课的截短（Plan 32 L4）已从 `judge_interrupt_character_behavior` 挪到 `handle_npc_ai.judge_student_leave_truncate`，由 `character_behavior` 的 NPC 分支在实时结算之前调：断言截出来的时长直接调它；探针只包 `judge_interrupt_character_behavior` 的会漏掉截短（`headless-game-test` 的包装已补）。
 - 自建的行为循环（不经 `run_one_round`）要把参与的 NPC 的交互对象设回自己：`judge_character_status_time_over` 按「交互对象不在场」把行为的结束改写为这一步的结束，时间线会整段跳过（`test_behavior_loop.py` 的 L4 段）。
 - 读档（`save_handle.input_load_save`）会重建全部角色对象：`_bootstrap` 导出的 `pl` 已不是存档里的玩家，读档后一律用 `cache.character_data[0]`（`run_one_round` 仍用夹具 `pl` 是旧问题，列在 Plan 32 方案 §7）。
-- 跑真实的开课效果（383 的 10010 / 10014）时，课上玩家的 H 动作（含 6021 下课）走 `settle_behavior` 的群交分支、读 `confinement_training_setting[12]`，先 `attr_calculation.get_confinement_training_setting_zero()`（Plan 32 重建复现脚本时踩到）。
+- 跑真实的开课效果（383 的 10010 / 10014）时，课上玩家的 H 动作（含 6021 下课）走 `settle_behavior` 的群交分支、读 `prison.setting(12)`；监禁调教设置默认全 0，无需手动初始化。
 - 群交模式开着时跑行为循环（幽灵课堂那种），玩家体力一旦 ≤ 1，疲劳判定会走「群交中玩家体力归零」、经 `handle_group_sex_end` 调 `update.game_update_flow`，嵌套跑一层真实主循环：`test_class_ai` 前面各段会把玩家体力耗到 1，这类段落要把玩家体力 / 气力设成 2000，并把 `game_update_flow` 换成记录桩（Plan 32 收尾补测试时踩到）。
 - `test_settle_effects` 开头把 `character_behavior.judge_character_status` 全局桩成了空函数，原函数存在 `_real_judge_character_status`，要走真实的听课结算时临时换回来（Plan 32）。
 - 带 `Weight|0` 的 CVP 不能交给 `handle_premise.handle_premise` 直接求值：`handle_comprehensive_value_premise` 没有 Weight 分支，会抛 `UnboundLocalError`（口上的 `get_weight_from_premise_dict` 在它之前就把这类前提截走了）；`high_` 前提已注册、返回的是权重值，要证明它被跳过只能用记录桩（Plan 32）。

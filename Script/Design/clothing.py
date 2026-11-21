@@ -9,6 +9,7 @@ from Script.Core import (
 )
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation, handle_premise, map_handle
+from Script.Modules.domains import prison
 from Script.UI.Moudle import draw
 
 cache: game_type.Cache = cache_control.cache
@@ -220,26 +221,25 @@ def handle_prisoner_clothing(character_id: int) -> None:
     """
     if character_id:
         character_data = cache.character_data[character_id]
-        cache.rhodes_island.confinement_training_setting.setdefault(2, 0)
-        cache.rhodes_island.confinement_training_setting.setdefault(3, 0)
+        cloth_setting = prison.setting(2)
+        underwear_setting = prison.setting(3)
         # 全裸
-        if cache.rhodes_island.confinement_training_setting[2] == 0:
+        if cloth_setting == 0:
             get_all_cloth_off(character_id)
         # 囚服
-        elif cache.rhodes_island.confinement_training_setting[2] == 1:
+        elif cloth_setting == 1:
             get_prison_cloth(character_id)
         # 正常衣服
         else:
             get_npc_cloth(character_id)
         # 清空内衣
-        # if cache.rhodes_island.confinement_training_setting[3] == 0:
         character_data.cloth.cloth_wear[6] = []
         character_data.cloth.cloth_wear[9] = []
         # 清空袜子
-        if cache.rhodes_island.confinement_training_setting[3] == 0:
+        if underwear_setting == 0:
             character_data.cloth.cloth_wear[10] = []
         # 提供情趣内衣与袜子
-        elif cache.rhodes_island.confinement_training_setting[3] == 1:
+        elif underwear_setting == 1:
             get_underwear(character_id, type_cid=2)
             get_socks(character_id)
         # 提供正常内衣与袜子

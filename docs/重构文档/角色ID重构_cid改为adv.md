@@ -1285,7 +1285,7 @@ npc_tem_data\[i\]
 | `base.production["green_house"]["lines"][x]["main"]` | int | 温室主种植员ID。存在 GameState 的全局数据里，换id时由 `production.remap` 映射 |
 | `base.production["green_house"]["workers"]` | List[int] | 温室种植员ID列表。存在 GameState 的全局数据里，换id时由 `production.remap` 映射 |
 | `current_warden_id` | int | 监狱长ID |
-| `current_prisoners` | Dict[int, List] | 囚犯ID字典 |
+| `base.prisoners` | Dict[str, Dict] | 囚犯ID字典。存在 GameState 的全局数据里，换id时由 `prison.remap` 映射 |
 | `base.fridge["urine"]` | Dict[str, int] | 冰箱 urine 表里的干员ID。存在 GameState 的全局数据里，换id时由 `fridge.remap` 映射 |
 | `today_physical_examination_chara_id_dict` | Dict[int, set] | 今日体检干员ID |
 | `examined_operator_ids` | Set[int] | 已体检干员ID集合 |

@@ -18,6 +18,7 @@ from Script.Modules.domains import (
     economy,
     facility,
     needs,
+    prison,
     recruit,
     visitor,
     warehouse,
@@ -323,9 +324,7 @@ class Manage_Basement_Panel:
                             field_people_now
                         )
                     elif department == _("关押区"):
-                        prisoner_now = len(
-                            cache.rhodes_island.current_prisoners
-                        )
+                        prisoner_now = len(prison.prisoner_ids())
                         all_info_draw.text += _("  囚犯 — {0}").format(
                             prisoner_now
                         )

@@ -4,7 +4,7 @@ from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Config import game_config
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import entertainment, modes
+from Script.Modules.domains import entertainment, modes, prison
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -2482,14 +2482,8 @@ def handle_self_not_go_to_join_group_sex(character_id: int) -> int:
 
 @add_premise(constant_promise.Premise.SEX_ASSISTANT_ON)
 def handle_sex_assistant_on(character_id: int) -> int:
-    """
-    开启了性爱助手
-    Keyword arguments:
-    character_id -- 角色id
-    Return arguments:
-    int -- 权重
-    """
-    return cache.rhodes_island.confinement_training_setting[12] > 0
+    """开启了性爱助手"""
+    return prison.setting(12) > 0
 
 
 @add_premise(constant_promise.Premise.SEX_ASSISTANT_OFF)
@@ -2513,7 +2507,7 @@ def handle_sex_assistant_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    return cache.rhodes_island.confinement_training_setting[12] == 1
+    return prison.setting(12) == 1
 
 
 @add_premise(constant_promise.Premise.SEX_ASSISTANT_2)
@@ -2525,7 +2519,7 @@ def handle_sex_assistant_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    return cache.rhodes_island.confinement_training_setting[12] == 2
+    return prison.setting(12) == 2
 
 
 @add_premise(constant_promise.Premise.SEX_ASSISTANT_3)
@@ -2537,7 +2531,7 @@ def handle_sex_assistant_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    return cache.rhodes_island.confinement_training_setting[12] == 3
+    return prison.setting(12) == 3
 
 
 @add_premise(constant_promise.Premise.SELF_SLEEP_H_AWAKE_BUT_PRETEND_SLEEP)

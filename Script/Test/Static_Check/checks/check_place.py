@@ -24,7 +24,7 @@ from typing import TypeGuard
 
 from Script.Core import cache_control
 from Script.Design import map_handle
-from Script.Modules.domains import visitor, work
+from Script.Modules.domains import education, visitor, work
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -1468,19 +1468,16 @@ def check_place_31() -> list[CheckFailure]:
     classroom_tags = set(
         education_constant.CLASSROOM_TAG_BY_COURSE_TYPE.values()
     )
-    schedule = getattr(
-        getattr(cache, "rhodes_island", None), "class_schedule", None
-    )
-    if isinstance(schedule, dict):
-        for name in schedule:
-            _check_room_name(
-                scenes,
-                classroom_tags,
-                name,
-                None,
-                f"class_schedule[{name!r}]",
-                failures,
-            )
+    schedule = education.class_schedule()
+    for name in schedule:
+        _check_room_name(
+            scenes,
+            classroom_tags,
+            name,
+            None,
+            f"base.class_schedule[{name!r}]",
+            failures,
+        )
     characters = getattr(cache, "character_data", None)
     if not isinstance(characters, dict):
         return failures

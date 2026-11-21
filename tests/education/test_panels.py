@@ -14,6 +14,7 @@ from _bootstrap import (
     datetime,
     draw,
     drawn_text,
+    education,
     education_constant,
     finish,
     flow_handle,
@@ -232,8 +233,7 @@ check(
 )
 check(
     "临时课不写进全局课表",
-    cache.rhodes_island.class_schedule.get(ROOM_P, {}).get(2, {}).get(3)
-    is None,
+    education.class_cell(ROOM_P, 2, 3) is None,
 )
 answers[:] = [lambda o: o == _("排一节性技实操课"), lambda o: o == "DEL"]
 panel.handle_yrn(cell_key)
@@ -1471,7 +1471,7 @@ check(
     _tip is None or not _tip[0],
     _tip,
 )
-cache.rhodes_island.temp_sex_class = {}
+education.clear_temp_classes()
 _st_growth.skip_class_flag = False
 _st_growth.skip_class_day = 0
 _st_growth.selected_course = {}

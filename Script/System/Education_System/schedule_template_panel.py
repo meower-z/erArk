@@ -176,23 +176,23 @@ class Schedule_Template_Panel:
         输出类型: 无
         功能: 改的是模板本体，所有套用它的孩子一起变
         """
-        template_data = schedule_template_handle.get_template_data(template_id)
-        if template_data is None:
-            return
         while 1:
+            data = schedule_template_handle.get_template_data(template_id)
+            if data is None:
+                return
             return_list: list[str] = []
             slot_by_return: dict[str, int] = {}
             draw.TitleLineDraw(
                 _("编辑模板：{0}").format(
-                    template_data[education_constant.TEMPLATE_KEY_NAME]
+                    data[education_constant.TEMPLATE_KEY_NAME]
                 ),
                 self.width,
             ).draw()
             for slot in range(education_constant.SLOT_COUNT):
                 now_name = schedule_template_handle.get_activity_name(
-                    template_data.get(
-                        education_constant.TEMPLATE_KEY_SLOT, {}
-                    ).get(slot, 0)
+                    data.get(education_constant.TEMPLATE_KEY_SLOT, {}).get(
+                        slot, 0
+                    )
                 )
                 now_draw = draw.LeftButton(
                     _("[{0}：{1}]").format(

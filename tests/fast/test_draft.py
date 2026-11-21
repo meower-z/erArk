@@ -116,21 +116,27 @@ class DiffApplyTest(DraftCase):
         self.assertEqual(after, changed)
 
     def test_new_and_removed_dict_values_apply(self) -> None:
-        """草稿里给课表加了一间教室（值是字典）、删了另一间：apply 之后原物与副本 pickle 相等"""
+        """草稿里给个人课表加了一天（值是字典）、删了另一天：apply 之后原物与副本 pickle 相等"""
         cache = cache_control.cache
-        cache.rhodes_island.class_schedule = {"旧教室": {0: {1: [2]}}}
+        growth = game_type.CHILD_GROWTH()
+        growth.selected_course = {0: {1: [0, "理论教室一"]}}
+        cache.character_data[1].child_growth = growth
         session = draft.Session(KEEP)
-        schedule = cache.rhodes_island.class_schedule
-        schedule["新教室"] = {1: {2: [3, 4]}}
-        del schedule["旧教室"]
-        changed = pickled(cache.rhodes_island.class_schedule)
+        selected = cache.character_data[1].child_growth.selected_course
+        selected[1] = {2: [1, "实践教室一"]}
+        del selected[0]
+        changed = pickled(cache.character_data[1].child_growth.selected_course)
         changes, _ = session.close()
         self.assertEqual(
-            cache.rhodes_island.class_schedule, {"旧教室": {0: {1: [2]}}}
+            cache.character_data[1].child_growth.selected_course,
+            {0: {1: [0, "理论教室一"]}},
         )
         frozen = core._frozen(cast(core.JSON, changes))
         draft.apply(cast(list[draft.Change], frozen))
-        self.assertEqual(pickled(cache.rhodes_island.class_schedule), changed)
+        self.assertEqual(
+            pickled(cache.character_data[1].child_growth.selected_course),
+            changed,
+        )
 
     def test_apply_refuses_stale_draft(self) -> None:
         """草稿之后原值变了：apply 报错"""

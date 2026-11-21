@@ -6,6 +6,7 @@ from _bootstrap import (
     cache,
     check,
     clear_schedules,
+    education,
     education_constant,
     finish,
     game_time,
@@ -143,13 +144,13 @@ check(
 )
 snapshot = {
     room: {d: dict(v) for d, v in week.items()}
-    for room, week in cache.rhodes_island.class_schedule.items()
+    for room, week in education.class_schedule().items()
 }
 check("重复点击幂等", auto_schedule.auto_fill_class_schedule() == (0, skipped))
-check("幂等后课表未变", cache.rhodes_island.class_schedule == snapshot)
+check("幂等后课表未变", education.class_schedule() == snapshot)
 clear_schedules()
 auto_schedule.auto_fill_class_schedule()
-check("结果可复现", cache.rhodes_island.class_schedule == snapshot)
+check("结果可复现", education.class_schedule() == snapshot)
 # 手排的格子不被动
 clear_schedules()
 schedule_handle.set_class_cell(room_list[0], 0, 0, 40, 102)

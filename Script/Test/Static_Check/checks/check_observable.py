@@ -25,7 +25,7 @@ from collections.abc import Iterator
 
 from Script.Core import cache_control, constant, num
 from Script.Design import attr_calculation, map_handle
-from Script.Modules.domains import history, modes, needs, work
+from Script.Modules.domains import history, modes, needs, prison, work
 from ..check_registry import CheckFailure, make_failure, register_check
 
 from typing import TYPE_CHECKING
@@ -504,10 +504,7 @@ def check_observable_07() -> list[CheckFailure]:
         or modes.time_stop()
     ):
         return []
-    island = getattr(cache, "rhodes_island", None)
-    settings = getattr(island, "confinement_training_setting", None)
-    if island is None or not isinstance(settings, dict):
-        return []
+    settings = prison.settings()
     warden = work.warden()
     bad_ids = []
     bad = []

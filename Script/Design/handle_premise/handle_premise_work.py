@@ -1,13 +1,9 @@
 """工作相关的前提处理函数"""
 
-from Script.Core import (
-    cache_control,
-    constant,
-    constant_promise,
-    game_type,
-)
+from Script.Core import cache_control, constant, constant_promise, game_type
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import medical, official, recruit, warehouse, work
+from Script.Modules.domains import medical, official, prison, recruit, warehouse
+from Script.Modules.domains import work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -1332,7 +1328,7 @@ def handle_prisoner_in_custody(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    if len(cache.rhodes_island.current_prisoners):
+    if len(prison.prisoner_ids()):
         return 1
     return 0
 
@@ -1346,7 +1342,7 @@ def handle_prisoner_daily_management_set(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    if cache.rhodes_island.confinement_training_setting[1]:
+    if prison.setting(1):
         return 1
     return 0
 
