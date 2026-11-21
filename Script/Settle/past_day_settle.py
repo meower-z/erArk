@@ -17,7 +17,7 @@ from Script.Design import (
 )
 from Script.UI.Moudle import draw
 from Script.Config import normal_config
-from Script.Modules.domains import needs
+from Script.Modules.domains import history, needs
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -167,11 +167,9 @@ def update_new_day() -> None:
     # 事件前提要读当天刷新过的状态，顺序颠倒会拿到昨天的数据
     official_event_handle.check_new_day_official_event()
     # 清空今日触发事件记录
-    cache.today_taiggered_event_record = set()
+    history.clear_today()
     # 每日指令输入记录
-    cache.daily_intsruce.append(
-        "\n\n" + game_time.get_date_until_day() + "\n\n"
-    )
+    history.add_daily("\n\n" + game_time.get_date_until_day() + "\n\n")
 
 
 def fall_chara_give_pink_voucher(character_id: int) -> None:

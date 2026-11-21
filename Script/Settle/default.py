@@ -48,8 +48,9 @@ from Script.Settle.common_default import (
 )
 
 from Script.Settle.item_effect import *
-from Script.Modules.domains import facility, medical, needs, official, recruit
-from Script.Modules.domains import visitor, warehouse
+from Script.Modules.domains import achievement, facility, history, medical
+from Script.Modules.domains import modes, needs, official, recruit, visitor
+from Script.Modules.domains import warehouse
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -2124,7 +2125,7 @@ def handle_time_stop_on(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    cache.time_stop_mode = True
+    modes.set_time_stop(True)
     target_chara_set = cache.npc_id_got.copy()
     target_chara_set.add(0)
     for chara_id in target_chara_set:
@@ -2153,7 +2154,7 @@ def handle_time_stop_off(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    cache.time_stop_mode = False
+    modes.set_time_stop(False)
     target_chara_set = cache.npc_id_got.copy()
     target_chara_set.add(0)
     for chara_id in target_chara_set:
@@ -3358,11 +3359,9 @@ def handle_add_this_event_to_already_triggered(
     """
     player_character_data: game_type.Character = cache.character_data[0]
     if player_character_data.event.son_event_id:
-        cache.taiggered_event_record.add(
-            player_character_data.event.son_event_id
-        )
+        history.trigger(player_character_data.event.son_event_id)
     else:
-        cache.taiggered_event_record.add(player_character_data.event.event_id)
+        history.trigger(player_character_data.event.event_id)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -3384,13 +3383,9 @@ def handle_add_this_event_to_today_already_triggered(
     """
     player_character_data: game_type.Character = cache.character_data[0]
     if player_character_data.event.son_event_id:
-        cache.today_taiggered_event_record.add(
-            player_character_data.event.son_event_id
-        )
+        history.trigger_today(player_character_data.event.son_event_id)
     else:
-        cache.today_taiggered_event_record.add(
-            player_character_data.event.event_id
-        )
+        history.trigger_today(player_character_data.event.event_id)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -3411,11 +3406,11 @@ def handle_group_sex_mode_on(
     now_time -- 结算的时间
     """
     # 如果已经开启，则不处理
-    if cache.group_sex_mode:
+    if modes.group_sex():
         return
-    cache.group_sex_mode = True
+    modes.set_group_sex(True)
     # 结算成就
-    cache.achievement.group_sex_record = {1: [], 2: []}
+    achievement.put("group_sex_record", {1: [], 2: []})
     achievement_panel.achievement_flow(_("群交"))
 
 
@@ -3436,7 +3431,7 @@ def handle_group_sex_mode_off(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
-    cache.group_sex_mode = False
+    modes.set_group_sex(False)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -3459,12 +3454,12 @@ def handle_sex_class_mode_on(
     from Script.System.Education_System import sex_class_handle
 
     # 如果已经开启，则不处理
-    if cache.sex_class_mode:
+    if modes.sex_class():
         return
-    cache.sex_class_mode = True
+    modes.set_sex_class(True)
     # 必须同时置群交模式：群交模板面板、射精面板等十余处读取点判的都是那个标志，
     #    只置 sex_class_mode 的话整个模板界面都不会出现。行为效果串里的10010已经置过，这里兜底
-    cache.group_sex_mode = True
+    modes.set_group_sex(True)
     # 把在场可参加的学生一并拉进H状态——效果串里的462/464只管玩家自己与当前交互对象，
     # 其余到场学生要在这里补上，否则她们会被NPC AI派去做别的事
     for student_id in sex_class_handle.get_scene_student_list():
@@ -3500,7 +3495,7 @@ def handle_sex_class_mode_off(
     """
     from Script.System.Education_System import sex_class_handle
 
-    cache.sex_class_mode = False
+    modes.set_sex_class(False)
     sex_class_handle.end_sex_class()
 
 
@@ -7193,7 +7188,7 @@ def handle_official_work_add_adjust(
     # 输出待办事项
     basement.draw_todo()
     # 结算成就
-    cache.achievement.handle_official_business_count += 1
+    achievement.add("handle_official_business_count", 1)
     achievement_panel.achievement_flow(_("公务"))
 
 
@@ -8744,7 +8739,7 @@ def handle_give_gift_add_adjust(
     # 礼物持有数量-1
     item_id = gift_data.item_id
     character_data.item[item_id] -= 1
-    cache.achievement.gift_count += 1
+    achievement.add("gift_count", 1)
 
     # 好感礼物
     if gift_data.type == 3:

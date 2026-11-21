@@ -35,10 +35,10 @@ from Script.System.Education_System import (
     course_select_panel,
     growth_panel,
     schedule_template_panel,
+    student_select,
 )
 from typing import TYPE_CHECKING
 from Script.Design import game_time, instuct_judege
-from Script.System.Education_System import student_select
 from Script.Core import text_handle
 from Script.System.Pregnancy_System import pregnancy_constant
 from Script.UI.Moudle import view
@@ -669,8 +669,8 @@ def capture_invite(
 
 common_select_NPC.common_select_npc_button_list_func = capture_invite
 flow_handle.askfor_all = fake_askfor
-cache.sex_class_mode = True
-cache.group_sex_mode = True
+kernel_data.set_world(kernel_data.domain("modes").set_sex_class, True)
+kernel_data.set_world(kernel_data.domain("modes").set_group_sex, True)
 schedule_handle.set_class_cell(ROOM_P, 3, 8, 74, -1)
 schedule_handle.set_selected_course(202, 3, 8, E.COURSE_TYPE_PRACTICE, ROOM_P)
 move_to(0, classroom_path(ROOM_P))
@@ -682,8 +682,8 @@ check(
     invite_list,
 )
 check("没修过性技课、也没被点名的学生不在", 203 not in invite_list, invite_list)
-cache.sex_class_mode = False
-cache.group_sex_mode = False
+kernel_data.set_world(kernel_data.domain("modes").set_sex_class, False)
+kernel_data.set_world(kernel_data.domain("modes").set_group_sex, False)
 common_select_NPC.common_select_npc_button_list_func = _orig_select_func
 move_to(0, SCENE_DORM)
 clear_schedules()

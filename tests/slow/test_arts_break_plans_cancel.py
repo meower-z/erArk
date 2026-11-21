@@ -10,10 +10,11 @@
 """
 
 from fractions import Fraction
+import importlib
 from unittest import mock
 
-from tests.slow.base import SlowTestCase
 from tests import kernel_data
+from tests.slow.base import SlowTestCase
 
 ROOM = ["中枢", "会议室"]
 PRIMARY_HYPNOSIS = 331
@@ -102,8 +103,9 @@ class ArtsBreakPlansCancelTest(SlowTestCase):
         self.assertEqual(len(breaks), 1, "技艺中断的提示出现一次")
         self.assertEqual(kernel_data.needs_of(pl.cid)["sanity"], 0)
         self.assertFalse(pl.pl_ability.visual, "透视关掉")
+        history = importlib.import_module("Script.Modules.domains.history")
         self.assertEqual(
-            self.cache.pl_pre_behavior_instruce[-2:],
+            history.recent()[-2:],
             [constant.Behavior.WAIT, constant.Behavior.HYPNOSIS_CANCEL],
             "等待之后接着解除催眠",
         )
@@ -113,17 +115,19 @@ class ArtsBreakPlansCancelTest(SlowTestCase):
         """时停中理智耗尽：博士下一个行动是解除时停，时间重新流动"""
         from Script.Core import constant
 
+        history = importlib.import_module("Script.Modules.domains.history")
+        modes = importlib.import_module("Script.Modules.domains.modes")
         pl = self.cache.character_data[0]
         pl.talent[PRIMARY_TIME_STOP] = 1
         self.instruct(constant.Instruct.TIME_STOP_ON)
-        self.assertTrue(self.cache.time_stop_mode, "时停开着")
+        self.assertTrue(modes.time_stop(), "时停开着")
         kernel_data.set_needs(pl.cid, sanity=1)
         breaks = self._count_breaks()
         self.instruct(constant.Instruct.WAIT)
         self.assertEqual(len(breaks), 1, "技艺中断的提示出现一次")
         self.assertEqual(
-            self.cache.pl_pre_behavior_instruce[-2:],
+            history.recent()[-2:],
             [constant.Behavior.WAIT, constant.Behavior.TIME_STOP_OFF],
             "等待之后接着解除时停",
         )
-        self.assertFalse(self.cache.time_stop_mode, "时间重新流动")
+        self.assertFalse(modes.time_stop(), "时间重新流动")

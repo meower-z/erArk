@@ -28,7 +28,7 @@ from Script.UI.Moudle import draw, view
 from Script.Design import game_time
 from Script.Modules.gameplay_resolution import intent, player_starters
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import needs
+from Script.Modules.domains import achievement, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -1788,7 +1788,7 @@ def handle_sleep_obscenity() -> None:
     now_draw.text = _("\n进入睡眠猥亵模式\n")
     now_draw.draw()
     # 虽然在无意识奸中会刷新该数值，但是为了防止仅睡奸猥亵不H，在这里也初始化一下
-    cache.achievement.sleep_sex_record = {1: 0, 2: 0, 3: 0}
+    achievement.put("sleep_sex_record", {1: 0, 2: 0, 3: 0})
 
 
 @add_instruct(constant.Instruct.STOP_SLEEP_OBSCENITY)
@@ -1858,13 +1858,13 @@ def _start_unconscious_h(who: int, chosen: intent.Intent) -> None:
         default.handle_unconscious_flag_to_1(
             target_id, 1, game_type.CharacterStatusChange(), game_time.now()
         )
-        cache.achievement.sleep_sex_record = {1: 0, 2: 0, 3: 0}
+        achievement.put("sleep_sex_record", {1: 0, 2: 0, 3: 0})
     elif type_name == "drunk":
         now_draw.text = _("\n进入醉奸模式\n")
         default.handle_unconscious_flag_to_2(
             target_id, 1, game_type.CharacterStatusChange(), game_time.now()
         )
-        cache.achievement.drunk_sex_record = {1: 0, 2: 0, 3: 0}
+        achievement.put("drunk_sex_record", {1: 0, 2: 0, 3: 0})
     elif type_name == "time_stop":
         now_draw.text = _("\n进入时停奸模式\n")
     elif type_name == "hypnosis":
@@ -2101,7 +2101,7 @@ def _start_h_end(who: int, chosen: intent.Intent) -> None:
     chosen -- 行动的意图
     """
     if chosen["args"]["daughter"]:
-        cache.achievement.h_with_daughter_count += 1
+        achievement.add("h_with_daughter_count", 1)
         achievement_panel.achievement_flow(_("乱伦"))
     _h_end_others(chosen["behavior_id"], chosen["target"])
 

@@ -89,7 +89,7 @@ cache = world.cache
 from Script.Core import io_init, save_handle
 from Script.Design import character_behavior, game_time, handle_npc_ai
 from Script.Kernel import core
-from Script.Modules.domains import needs
+from Script.Modules.domains import modes, needs
 from Script.System.Field_Commission_System import field_commission_function
 from Script.System.Instruct_System import handle_instruct
 from tests.world import act
@@ -338,7 +338,7 @@ print(
     f"{max((n for cid, n in starts.items() if cid != 0), default=0)} 次 | 同一分钟步数上限 {STEP_LIMIT}"
 )
 print(
-    f"game_time: {clock_before} -> {game_time.now()} | 时停: {cache.time_stop_mode} | 被跳过的存档: {saved_ids or '无'}"
+    f"game_time: {clock_before} -> {game_time.now()} | 时停: {modes.time_stop()} | 被跳过的存档: {saved_ids or '无'}"
 )
 if limit_error:
     print("!! 护栏中止了推进:", limit_error)

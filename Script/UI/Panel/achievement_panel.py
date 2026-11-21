@@ -15,7 +15,8 @@ from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 
 from typing import TYPE_CHECKING
-from Script.Modules.domains import commission, needs, warehouse
+from Script.Modules.domains import achievement, commission, needs
+from Script.Modules.domains import playthrough, warehouse
 
 if TYPE_CHECKING:
     from typing import Any
@@ -47,7 +48,7 @@ def get_achievement_judge_by_value(
     if not achievement_data:
         return False
     # 如果已达成则返回False
-    if cache.achievement.achievement_dict.get(achievement_id, False):
+    if achievement.done(achievement_id):
         return False
     # 判断值是否满足条件
     if judge_value >= achievement_data.value:
@@ -109,49 +110,52 @@ def achievement_flow(achievement_type: str, achievement_id: int = 0) -> None:
                 read_book_count += 1
     # 成就类型与结算值的映射字典
     achievement_type_value_dict: dict[str, list[Any]] = {
-        _("周目"): [cache.game_round, [1, 2]],
+        _("周目"): [playthrough.game_round(), [1, 2]],
         _("囚犯"): [len(cache.rhodes_island.current_prisoners), [121, 122]],
         _("龙门币"): [
             warehouse.amount(1),
             [201, 202, 203],
         ],
-        _("购买道具"): [len(cache.achievement.buy_item_count_list), [211, 212]],
-        _("外勤"): [cache.achievement.field_commission_count, [301, 302, 303]],
+        _("购买道具"): [
+            len(achievement.get("buy_item_count_list")),
+            [211, 212],
+        ],
+        _("外勤"): [achievement.get("field_commission_count"), [301, 302, 303]],
         _("载具"): [vehicles_count, [311, 312]],
-        _("维修"): [cache.achievement.equipment_repair_count, [321, 322, 323]],
+        _("维修"): [achievement.get("equipment_repair_count"), [321, 322, 323]],
         _("保养"): [
-            cache.achievement.equipment_maintenance_count,
+            achievement.get("equipment_maintenance_count"),
             [331, 332, 333],
         ],
         _("锻炼"): [
             min(pl_needs["hit_max"], pl_needs["mana_max"]),
             [401, 402, 403],
         ],
-        _("时停"): [cache.achievement.time_stop_duration, [601, 602, 603]],
+        _("时停"): [achievement.get("time_stop_duration"), [601, 602, 603]],
         _("生育"): [
             len(pl_character_data.relationship.child_id_list),
             [701, 702, 703],
         ],
-        _("生产"): [cache.achievement.production_count, [801, 802, 803]],
-        _("种植"): [cache.achievement.harvest_count, [811, 812, 813]],
-        _("乱伦"): [cache.achievement.h_with_daughter_count, [941, 942]],
+        _("生产"): [achievement.get("production_count"), [801, 802, 803]],
+        _("种植"): [achievement.get("harvest_count"), [811, 812, 813]],
+        _("乱伦"): [achievement.get("h_with_daughter_count"), [941, 942]],
         _("公务"): [
-            cache.achievement.handle_official_business_count,
+            achievement.get("handle_official_business_count"),
             [1001, 1002, 1003],
         ],
         _("读书"): [read_book_count, [1011, 1012, 1013]],
-        _("烹饪"): [cache.achievement.make_food_count, [1021, 1022, 1023]],
-        _("礼物"): [cache.achievement.gift_count, [1031, 1032]],
+        _("烹饪"): [achievement.get("make_food_count"), [1021, 1022, 1023]],
+        _("礼物"): [achievement.get("gift_count"), [1031, 1032]],
         _("身体检查"): [
-            cache.achievement.health_check_count,
+            achievement.get("health_check_count"),
             [1041, 1042, 1043],
         ],
         _("体检报告"): [
-            len(cache.achievement.body_report_chara_count_list),
+            len(achievement.get("body_report_chara_count_list")),
             [1051, 1052],
         ],
-        _("调香"): [cache.achievement.aromatherapy_count, [1061, 1062]],
-        _("导航"): [len(cache.achievement.visited_nation_list), [1101, 1102]],
+        _("调香"): [achievement.get("aromatherapy_count"), [1061, 1062]],
+        _("导航"): [len(achievement.get("visited_nation_list")), [1101, 1102]],
     }
     # 如果是其他类型，则使用结算值进行结算
     judge_value, achievement_ids = achievement_type_value_dict.get(
@@ -191,14 +195,14 @@ def settle_achievement(
     # 遍历成就ID列表
     for achievement_id in achievement_ids:
         # 需要未达成该成就
-        if not cache.achievement.achievement_dict.get(achievement_id, False):
+        if not achievement.done(achievement_id):
             # 强制结算或判断值满足条件
             if (
                 force
                 or judge_value
                 >= game_config.config_achievement[achievement_id].value
             ):
-                cache.achievement.achievement_dict[achievement_id] = True
+                achievement.set_entry("achievement_dict", achievement_id, True)
                 return_list.append(achievement_id)
     return return_list
 
@@ -539,8 +543,8 @@ def settle_chara_group_sex() -> list[int]:
                 daughter_and_mother_flag = 1
     # 904号成就
     if (
-        len(cache.achievement.group_sex_record[1]) >= 10
-        and len(cache.achievement.group_sex_record[2]) >= 20
+        len(achievement.get("group_sex_record")[1]) >= 10
+        and len(achievement.get("group_sex_record")[2]) >= 20
     ):
         # 如果满足条件则结算成就904
         return_list.extend(settle_achievement(1, 904, force=True))
@@ -569,13 +573,13 @@ def settle_chara_exhibitionism_sex() -> list[int]:
     if handle_premise.handle_player_not_in_exhibitionism_sex_mode(0):
         return return_list
     # 露出模式
-    mode_id = cache.achievement.exhibitionism_sex_record[1]
+    mode_id = achievement.get("exhibitionism_sex_record")[1]
     # 在场其他角色人数
-    other_chara_count = cache.achievement.exhibitionism_sex_record[2]
+    other_chara_count = achievement.get("exhibitionism_sex_record")[2]
     # 射精次数
-    ejaculation_count = cache.achievement.exhibitionism_sex_record[3]
+    ejaculation_count = achievement.get("exhibitionism_sex_record")[3]
     # 绝顶次数
-    climax_count = cache.achievement.exhibitionism_sex_record[4]
+    climax_count = achievement.get("exhibitionism_sex_record")[4]
     # 成就932的特殊标志
     flag_932 = 0
     if (
@@ -619,13 +623,13 @@ def settle_chara_hidden_sex() -> list[int]:
     if handle_premise.handle_player_not_in_hidden_sex_mode(0):
         return return_list
     # 隐奸模式
-    mode_id = cache.achievement.hidden_sex_record[1]
+    mode_id = achievement.get("hidden_sex_record")[1]
     # 在场其他角色人数
-    other_chara_count = cache.achievement.hidden_sex_record[2]
+    other_chara_count = achievement.get("hidden_sex_record")[2]
     # 射精次数
-    ejaculation_count = cache.achievement.hidden_sex_record[3]
+    ejaculation_count = achievement.get("hidden_sex_record")[3]
     # 绝顶次数
-    climax_count = cache.achievement.hidden_sex_record[4]
+    climax_count = achievement.get("hidden_sex_record")[4]
     # 成就913的特殊标志
     flag_913 = 0
     if (
@@ -665,11 +669,11 @@ def settle_chara_sleep_sex() -> list[int]:
     if not handle_premise.handle_t_unconscious_flag_1(0):
         return return_list
     # 睡奸模式
-    mode_id = cache.achievement.sleep_sex_record[1]
+    mode_id = achievement.get("sleep_sex_record")[1]
     # 射精次数
-    ejaculation_count = cache.achievement.sleep_sex_record[2]
+    ejaculation_count = achievement.get("sleep_sex_record")[2]
     # 绝顶次数
-    climax_count = cache.achievement.sleep_sex_record[3]
+    climax_count = achievement.get("sleep_sex_record")[3]
     # 成就923的特殊标志
     flag_923 = 0
     if mode_id == 1 and ejaculation_count >= 3 and climax_count >= 3:
@@ -774,8 +778,8 @@ class Achievement_Panel:
             )
             info_text += _("蚀刻章一览：")
             len_got = 0
-            for cid in cache.achievement.achievement_dict:
-                if cache.achievement.achievement_dict[cid]:
+            for got in achievement.get("achievement_dict").values():
+                if got:
                     len_got += 1
             total = len(game_config.config_achievement)
             info_text += f"{len_got}/{total}\n"
@@ -805,11 +809,8 @@ class Achievement_Panel:
                 if achievement_data.todo == 1:
                     continue
                 # 跳过有前置需求且前置需求没满足的
-                if (
+                if achievement_data.pre_id and not achievement.done(
                     achievement_data.pre_id
-                    and not cache.achievement.achievement_dict.get(
-                        achievement_data.pre_id, False
-                    )
                 ):
                     continue
                 # 跳过有后置升级且该后置已满足的
@@ -817,18 +818,12 @@ class Achievement_Panel:
                     next_achievement_id = (
                         game_config.config_achievement_id_relation[cid]
                     )
-                    if (
+                    if next_achievement_id and achievement.done(
                         next_achievement_id
-                        and cache.achievement.achievement_dict.get(
-                            next_achievement_id, False
-                        )
                     ):
                         continue
                 # 跳过未达成的隐藏成就
-                if (
-                    achievement_data.special
-                    and not cache.achievement.achievement_dict.get(cid, False)
-                ):
+                if achievement_data.special and not achievement.done(cid):
                     continue
                 draw_achievement_list.append(cid)
 
@@ -855,14 +850,14 @@ class Achievement_Panel:
         pl_character_data: game_type.Character = cache.character_data[0]
         # 如果某道具已拥有，则添加到购买过的道具列表中
         for item_id in pl_character_data.item:
-            if item_id not in cache.achievement.buy_item_count_list:
-                cache.achievement.buy_item_count_list.append(item_id)
+            if item_id not in achievement.get("buy_item_count_list"):
+                achievement.append("buy_item_count_list", item_id)
         # 如果外勤数小于已完成的外勤统计数，则等于外勤统计数量
-        if cache.achievement.field_commission_count < len(
+        if achievement.get("field_commission_count") < len(
             commission.finished()
         ):
-            cache.achievement.field_commission_count = len(
-                commission.finished()
+            achievement.put(
+                "field_commission_count", len(commission.finished())
             )
         # 刷新所有成就
         for achievement_id in game_config.config_achievement:
@@ -911,9 +906,7 @@ class Achievement_Draw:
         # 成就数据
         achievement_data = game_config.config_achievement[achievement_cid]
         # 判断是否已达成
-        get_flag = cache.achievement.achievement_dict.get(
-            achievement_cid, False
-        )
+        get_flag = achievement.done(achievement_cid)
         if get_flag:
             achievement_text = "●"
             draw_style = "standard"

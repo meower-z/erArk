@@ -12,6 +12,7 @@ from Script.Design import game_time
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import normal_config
 import os
+from Script.Modules.domains import history
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -59,8 +60,7 @@ class Diary_Panel:
 
             info_text = ""
             info_text += f"{self.time_text}\n\n"
-            for i in cache.daily_intsruce:
-                info_text += i
+            info_text += history.daily()
             info_text += "\n\n"
             if len(self.all_insert_text) > 0:
                 info_text += f"{self.all_insert_text}\n\n"
@@ -136,12 +136,11 @@ class Diary_Panel:
         with open(diray_file_path, "w", encoding="utf-8") as f:
             f.write(self.time_text)
             f.write("\n\n")
-            for i in cache.daily_intsruce:
-                f.write(i)
+            f.write(history.daily())
             f.write("\n\n")
             f.write(self.all_insert_text)
         # 清空缓存
-        cache.daily_intsruce = []
+        history.clear_daily()
         self.all_insert_text = ""
         # 输出提示信息
         now_draw = draw.WaitDraw()

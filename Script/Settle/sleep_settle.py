@@ -19,7 +19,7 @@ from Script.System.Pregnancy_System import pregnancy_handle
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
-from Script.Modules.domains import needs
+from Script.Modules.domains import needs, plan
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -120,7 +120,7 @@ def update_sleep() -> None:
             character_data.sp_flag.sleep_h_awake = False
 
     # 非角色部分
-    cache.pl_sleep_save_flag = True
+    plan.set_sleep_save(True)
 
 
 def settle_character_juel(character_id: int) -> int:

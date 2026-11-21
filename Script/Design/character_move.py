@@ -3,6 +3,7 @@
 from Script.Core import cache_control, constant, game_type, get_text
 from Script.Design import map_handle, update
 from Script.UI.Moudle import draw, view
+from Script.Modules.domains import plan
 from types import FunctionType
 
 cache: game_type.Cache = cache_control.cache
@@ -40,16 +41,19 @@ def own_charcter_move(
     follow -- 前往这名干员的位置：她走开了就跟过去，到达时设为玩家的交互对象；0 为不跟人
     open_map -- 每一段开始后仍打开地图面板（从大地图移动到另一个区块时）
     """
-    vars(cache)["player_route"] = None
-    move_now = _player_leg(target_scene, follow, open_map)
-    if move_now == "end" or move_now in _BREAK_LIST:
-        cache.character_data[0].target_character_id = 0
-    # 继续留在地图页面
-    if move_now in ["Null", "wait_open", "door_lock"]:
-        view.now_panel_id = constant.Panel.SEE_MAP
-    # 回到主页面
-    else:
-        view.now_panel_id = constant.Panel.IN_SCENE
+    from Script.Modules.tk_ui import player_pick
+
+    with player_pick.drafting("move"):
+        plan.set_route(None)
+        move_now = _player_leg(target_scene, follow, open_map)
+        if move_now == "end" or move_now in _BREAK_LIST:
+            cache.character_data[0].target_character_id = 0
+        # 继续留在地图页面
+        if move_now in ["Null", "wait_open", "door_lock"]:
+            view.now_panel_id = constant.Panel.SEE_MAP
+        # 回到主页面
+        else:
+            view.now_panel_id = constant.Panel.IN_SCENE
 
 
 def continue_player_route() -> None:
@@ -57,7 +61,7 @@ def continue_player_route() -> None:
     玩家要选下一个行动时，若还在寻路途中且上一段已走完，把下一段排进玩家的计划队列；
     已抵达、被叫停、计划被撤销、上一段没走动或寻路断了时结束寻路，玩家不再有交互对象
     """
-    route = vars(cache).get("player_route")
+    route = plan.route()
     if route is None:
         return
     character_data: game_type.Character = cache.character_data[0]
@@ -84,7 +88,7 @@ def continue_player_route() -> None:
         not in ["end", *_BREAK_LIST]
     ):
         return
-    vars(cache)["player_route"] = None
+    plan.set_route(None)
     # 跟到了干员身边时她是交互对象，否则不再有交互对象
     character_data.target_character_id = (
         follow if follow and character_data.position == target_scene else 0
@@ -110,7 +114,7 @@ def _player_leg(
     character_data: game_type.Character = cache.character_data[0]
     if character_data.sp_flag.move_stop:
         character_data.sp_flag.move_stop = False
-        vars(cache)["player_route"] = None
+        plan.set_route(None)
         return "end"
     if character_data.position == target_scene:
         return "end"
@@ -126,12 +130,7 @@ def _player_leg(
     else:
         behavior_id = constant.Behavior.MOVE
         state = constant.CharacterStatus.STATUS_MOVE
-    vars(cache)["player_route"] = (
-        target_scene,
-        character_data.position,
-        follow,
-        open_map,
-    )
+    plan.set_route((target_scene, character_data.position, follow, open_map))
     fields = {
         "behavior.move_target": now_target_position,
         "behavior.move_src": character_data.position,

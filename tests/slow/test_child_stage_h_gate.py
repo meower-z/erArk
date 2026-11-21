@@ -11,6 +11,7 @@ NPC的状态机选出以她为对象的H类行为时，行为换成发呆；她�
 
 from unittest import mock
 
+from tests import kernel_data
 from tests.slow.base import SlowTestCase
 
 AGE_TALENTS = range(101, 109)
@@ -124,8 +125,11 @@ class ChildStageHGateTest(SlowTestCase):
         npc_id = self.npc("阿米娅")
         npc = self.cache.character_data[npc_id]
         self.world.move(npc_id, self.cache.character_data[0].position)
-        constant.handle_state_machine_data[constant.StateMachine.WORK_MASSAGE](
-            npc_id
+        kernel_data.written(
+            constant.handle_state_machine_data[
+                constant.StateMachine.WORK_MASSAGE
+            ],
+            npc_id,
         )
         self.assertEqual(
             (npc.behavior.behavior_id, npc.target_character_id),
@@ -139,8 +143,11 @@ class ChildStageHGateTest(SlowTestCase):
 
         child_id = self.make_child(102, "杜宾")
         child = self.cache.character_data[child_id]
-        constant.handle_state_machine_data[constant.StateMachine.WAIT_30_MIN](
-            child_id
+        kernel_data.written(
+            constant.handle_state_machine_data[
+                constant.StateMachine.WAIT_30_MIN
+            ],
+            child_id,
         )
         self.instruct(constant.Instruct.WAIT)
         self.assertEqual(

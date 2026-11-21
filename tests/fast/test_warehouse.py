@@ -16,9 +16,9 @@ from unittest import mock
 
 from Script.Config import game_config
 from Script.Core import save_handle
-from Script.Design import attr_calculation, basement
+from Script.Design import basement
 from Script.Kernel import core
-from Script.Modules.domains import warehouse
+from Script.Modules.domains import country, warehouse
 from Script.Modules.gameplay_resolution import working
 from Script.Test.Static_Check.check_registry import get_all_checks
 from Script.UI.Moudle import draw
@@ -128,9 +128,7 @@ class WarehouseTest(FastTestCase):
         with (
             mock.patch.object(draw, "NormalDraw", Quiet),
             mock.patch.object(draw, "LeftDraw", Quiet),
-            mock.patch.object(
-                attr_calculation, "get_country_reset", lambda c: c
-            ),
+            mock.patch.object(country, "fill", lambda: None),
             kernel_data.writing(),
         ):
             save_handle.install_save(SLOT, 3)

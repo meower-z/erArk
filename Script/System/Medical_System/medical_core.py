@@ -22,6 +22,7 @@ from Script.Modules.domains import (
     warehouse,
 )
 from Script.System.Medical_System import medical_constant
+from Script.Modules.domains import country
 
 
 def edits[**P, R](fn: Callable[P, R]) -> Callable[P, R]:
@@ -228,19 +229,15 @@ def _calculate_patient_refresh_count(
     price_ratio = float(medical.state().price_ratio or 1.0)
     refresh_multiplier = resolve_price_refresh_multiplier(price_ratio)
 
-    # 叠加国家感染率系数：从全局缓存安全读取，缺失或无效时使用 1.0 兜底。
-    cache_obj = getattr(cache_control, "cache", None)
-    country_cache = getattr(cache_obj, "country", None)
-    infection_ratio_table = (
-        getattr(country_cache, "country_infection_patient_ratio", {})
-        if country_cache
-        else {}
-    )
+    # 叠加国家感染率系数：表里没有当前国家或系数无效时使用 1.0 兜底。
+    infection_ratio_table = country.table(country.RATIO)
     # 获取当前国家 ID
     current_country_id = location.country()
     # 获取当前国家的感染人数的影响系数，缺失时默认为 1.0。
-    infection_ratio = float(
-        infection_ratio_table.get(current_country_id, 1.0) or 1.0
+    infection_ratio = (
+        float(infection_ratio_table.get(current_country_id, 1.0) or 1.0)
+        if current_country_id is not None
+        else 1.0
     )
 
     # 汇总三项倍率，取整后返回非负的刷新数量。

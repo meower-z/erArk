@@ -18,6 +18,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import panel, view
 from Script.Design import game_time
+from Script.Modules.domains import history
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -76,7 +77,7 @@ def init(main_flow: Callable[[], object]) -> None:
         except Exception:
             # 最近玩家指令状态
             instruct_cn_name_list = ""
-            for behavior_id in cache.pl_pre_behavior_instruce:
+            for behavior_id in history.recent():
                 if behavior_id in game_config.config_behavior:
                     behavior_data = game_config.config_behavior[behavior_id]
                     instruct_cn_name_list += behavior_data.name + "，"

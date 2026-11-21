@@ -26,6 +26,7 @@ import traceback
 from types import ModuleType
 from typing import Any, Callable
 
+from tests import kernel_data
 from tests.slow import remove_parent_guard
 from tests.slow.base import SlowTestCase
 
@@ -283,15 +284,17 @@ class LanguageRun:
         function: Any = game(
             "Script.System.Field_Commission_System.field_commission_function"
         )
+        country: Any = game("Script.Modules.domains.country")
         settled = 0
-        for commission in self.config.config_commission.values():
-            for text in commission.reward.split("&"):
-                if text.split("_")[0] in REWARD_PREFIX_SET:
-                    function.process_commission_text(
-                        text, True, True, [AMIYA_ID], "", "", True
-                    )
-                    settled += 1
-        reputation = self.cache.country.nation_reputation
+        with kernel_data.writing():
+            for commission in self.config.config_commission.values():
+                for text in commission.reward.split("&"):
+                    if text.split("_")[0] in REWARD_PREFIX_SET:
+                        function.process_commission_text(
+                            text, True, True, [AMIYA_ID], "", "", True
+                        )
+                        settled += 1
+        reputation = country.table(country.REPUTATION)
         reputation_dict = {
             str(key): reputation[key] for key in sorted(reputation)
         }

@@ -25,7 +25,7 @@ from collections.abc import Iterator
 
 from Script.Core import cache_control, constant, num
 from Script.Design import attr_calculation, map_handle
-from Script.Modules.domains import needs, work
+from Script.Modules.domains import history, modes, needs, work
 from ..check_registry import CheckFailure, make_failure, register_check
 
 from typing import TYPE_CHECKING
@@ -230,8 +230,8 @@ def check_observable_01() -> list[CheckFailure]:
     if (
         pl is None
         or getattr(cache, "debug_mode", False)
-        or getattr(cache, "time_stop_mode", False)
-        or getattr(cache, "group_sex_mode", False)
+        or modes.time_stop()
+        or modes.group_sex()
     ):
         return []
     pl_sp = _sp(pl)
@@ -279,11 +279,7 @@ def check_observable_02() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     pl = _pl(cache)
-    if (
-        pl is None
-        or getattr(cache, "debug_mode", False)
-        or getattr(cache, "time_stop_mode", False)
-    ):
+    if pl is None or getattr(cache, "debug_mode", False) or modes.time_stop():
         return []
     hs = _hs(pl)
     if hs is None:
@@ -437,7 +433,7 @@ def check_observable_05() -> list[CheckFailure]:
     if not isinstance(roster, (list, set, tuple)) or target_id in roster:
         return []
     target = data[target_id]
-    pre = getattr(cache, "pl_pre_behavior_instruce", None)
+    pre = history.recent()
     last_pre = pre[-1] if isinstance(pre, list) and pre else None
     return [
         make_failure(
@@ -505,7 +501,7 @@ def check_observable_07() -> list[CheckFailure]:
     if (
         cache is None
         or getattr(cache, "debug_mode", False)
-        or getattr(cache, "time_stop_mode", False)
+        or modes.time_stop()
     ):
         return []
     island = getattr(cache, "rhodes_island", None)
@@ -518,7 +514,7 @@ def check_observable_07() -> list[CheckFailure]:
     if (
         _positive_number(settings.get(12, 0))
         and warden == 0
-        and getattr(cache, "group_sex_mode", False)
+        and modes.group_sex()
     ):
         bad.append(
             "群交现场已开启调教助手设置但没有监狱长(work.warden()=0)，结算会把玩家当助手"
@@ -556,7 +552,7 @@ def check_observable_08() -> list[CheckFailure]:
     if (
         cache is None
         or getattr(cache, "debug_mode", False)
-        or getattr(cache, "time_stop_mode", False)
+        or modes.time_stop()
     ):
         return []
     bad = []
@@ -591,8 +587,8 @@ def check_observable_09() -> list[CheckFailure]:
     if (
         cache is None
         or getattr(cache, "debug_mode", False)
-        or getattr(cache, "time_stop_mode", False)
-        or getattr(cache, "group_sex_mode", False)
+        or modes.time_stop()
+        or modes.group_sex()
     ):
         return []
     bad = []
@@ -643,7 +639,7 @@ def check_observable_12() -> list[CheckFailure]:
         pl is None
         or data is None
         or getattr(cache, "debug_mode", False)
-        or getattr(cache, "time_stop_mode", False)
+        or modes.time_stop()
     ):
         return []
     assistant_id = getattr(pl, "assistant_character_id", None)
@@ -771,7 +767,7 @@ def check_observable_16() -> list[CheckFailure]:
     if (
         cache is None
         or getattr(cache, "debug_mode", False)
-        or getattr(cache, "time_stop_mode", False)
+        or modes.time_stop()
     ):
         return []
     bad = []
@@ -819,7 +815,7 @@ def check_observable_17() -> list[CheckFailure]:
     if (
         cache is None
         or getattr(cache, "debug_mode", False)
-        or getattr(cache, "time_stop_mode", False)
+        or modes.time_stop()
     ):
         return []
     bad = []

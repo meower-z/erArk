@@ -1,14 +1,10 @@
 """前一指令相关的前提处理函数"""
 
 from types import FunctionType
-from Script.Core import (
-    cache_control,
-    constant,
-    constant_promise,
-    game_type,
-    get_text,
-)
+from Script.Core import cache_control, constant, constant_promise
+from Script.Core import game_type, get_text
 from Script.Design.handle_premise.premise_registry import add_premise
+from Script.Modules.domains import history
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -475,8 +471,8 @@ def handle_last_cmd_deep_throat(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    if len(cache.pl_pre_behavior_instruce):
-        last_behavior = cache.pl_pre_behavior_instruce[-1]
+    if len(history.recent()):
+        last_behavior = history.recent()[-1]
         if last_behavior == constant.Behavior.DEEP_THROAT:
             return 1
     return 0

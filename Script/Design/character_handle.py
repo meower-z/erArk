@@ -18,7 +18,7 @@ from Script.Design import (
     game_time,
 )
 from Script.Config import game_config, character_config, normal_config
-from Script.Modules.domains import facility, needs, visitor
+from Script.Modules.domains import facility, needs, playthrough, visitor
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -425,8 +425,8 @@ def handle_character_setting() -> None:
             continue
         character_data = cache.character_data[character_id]
         # 淫乱化
-        if cache.world_setting[2]:
+        if playthrough.setting(playthrough.WORLD, 2):
             character_data.talent[40] = 1
         # 泌乳化
-        if cache.world_setting[3]:
+        if playthrough.setting(playthrough.WORLD, 3):
             character_data.talent[27] = 1

@@ -2,7 +2,7 @@
 gameplay_resolution 的计划队列与打断：旧结算代码和内核之间的桥
 ================================================================
 结算途中要让某个角色接着做的行动，不在当场开始，而是作为意图（intent.Intent）排进这个角色的队列
-（存在缓存里，随存档保存）。
+（全局键 plan.queue，经 domains.plan 读写，随存档保存）。
 - plan_next 排一个行动；要求打断时，角色当前的行动在这一步结束，他马上来选。
 - interrupt 只打断，不排行动：角色在自己的行为结束（actions.wrap_up）时收尾，再按自己的选择接着做。
 - 角色选行动时，PickNextAction 的输入钩子 queue_head 先看队首：有时交回队首的行动，只读不弹；
@@ -15,8 +15,8 @@ gameplay_resolution 的计划队列与打断：旧结算代码和内核之间的
 from collections.abc import Mapping, Sequence
 from typing import cast
 
-from Script.Core import cache_control
 from Script.Kernel import core
+from Script.Modules.domains import plan
 from Script.Modules.gameplay_resolution import actions, intent
 
 FIELD_ROOTS = frozenset({"behavior", "sp_flag", "action_info", "work"})
@@ -52,15 +52,16 @@ def forget_on_reset(game: core.GameState) -> core.GameState:
     return game
 
 
-def _queue(who: int) -> list[Queued]:
+def _queue(who: int, game: core.GameState | None = None) -> list[Queued]:
     """
-    角色在缓存里的队列，只读；没有时为空列表
+    角色的队列，只读；没有时为空列表
     Keyword arguments:
     who -- 角色id
+    game -- 给出时只读这个状态，没有时读当前缓冲区
     Return arguments:
     list -- 队首在前
     """
-    queue: list[Queued] = cache_control.cache.plan_queue.get(who, [])
+    queue: list[Queued] = plan.queue(who, game)
     return queue
 
 
@@ -153,8 +154,7 @@ def plan_next(
         planned_intent["say"] = say
     if premises:
         planned_intent["premises"] = list(premises)
-    queues = cache_control.cache.plan_queue
-    queues.setdefault(int(who), []).append((kind, planned_intent))
+    plan.set_queue(int(who), [*_queue(int(who)), (kind, planned_intent)])
     if interrupt:
         _pending.append(core.Interrupt(str(who)))
 
@@ -168,27 +168,35 @@ def interrupt(who: int) -> None:
     _pending.append(core.Interrupt(str(who)))
 
 
-def plan_has(who: int, behavior_id: str) -> bool:
+def plan_has(
+    who: int, behavior_id: str, game: core.GameState | None = None
+) -> bool:
     """
     角色的队列里是否已经排着这个行动
     Keyword arguments:
     who -- 角色id
     behavior_id -- 行为id
+    game -- 给出时只读这个状态，没有时读当前缓冲区
     Return arguments:
     bool -- 排着时为真
     """
-    return any(item["behavior_id"] == behavior_id for _, item in _queue(who))
+    return any(
+        item["behavior_id"] == behavior_id for _, item in _queue(who, game)
+    )
 
 
-def planned(who: int) -> list[intent.Intent]:
+def planned(
+    who: int, game: core.GameState | None = None
+) -> list[intent.Intent]:
     """
     角色排着的行动的意图，队首在前（副本）
     Keyword arguments:
     who -- 角色id
+    game -- 给出时只读这个状态，没有时读当前缓冲区
     Return arguments:
     list -- 意图
     """
-    return [intent.Intent(**item) for _, item in _queue(int(who))]
+    return [intent.Intent(**item) for _, item in _queue(int(who), game)]
 
 
 def pop(who: int) -> intent.Intent:
@@ -199,10 +207,9 @@ def pop(who: int) -> intent.Intent:
     Return arguments:
     Intent -- 弹出的意图
     """
-    queues = cache_control.cache.plan_queue
-    _, item = queues[int(who)].pop(0)
-    if not queues[int(who)]:
-        del queues[int(who)]
+    queue = _queue(int(who))
+    _, item = queue.pop(0)
+    plan.set_queue(int(who), queue)
     return item
 
 

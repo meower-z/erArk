@@ -15,7 +15,7 @@
 from types import FunctionType
 
 from Script.Core import cache_control, game_type, get_text
-from Script.Modules.domains import facility, official, power, warehouse
+from Script.Modules.domains import country, facility, official, power, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -96,7 +96,7 @@ def get_ri_value(type_text: str) -> float:
     if type_name == RI_TYPE_RESOURCE:
         return float(warehouse.stock().get(son_id, 0))
     if type_name == RI_TYPE_REPUTATION:
-        return float(cache.country.nation_reputation.get(son_id, 0))
+        return float(country.reputation(son_id, 0))
     if type_name == RI_TYPE_FACILITY:
         return float(facility.level(son_id, 0))
     if type_name == RI_TYPE_OFFICE_WORK:
@@ -132,7 +132,7 @@ def set_ri_value(type_text: str, new_value: float) -> None:
         # 资源不允许为负，否则仓库面板会显示出一个谁也还不上的负数
         warehouse.set(son_id, max(0, int(new_value)))
     elif type_name == RI_TYPE_REPUTATION:
-        cache.country.nation_reputation[son_id] = new_value
+        country.set_reputation(son_id, new_value)
     elif type_name == RI_TYPE_OFFICE_WORK:
         # 公务量夹在 0~总工作量之间，与每日结算的口径一致
         official.set_office_work(

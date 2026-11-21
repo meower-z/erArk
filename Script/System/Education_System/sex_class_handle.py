@@ -7,7 +7,7 @@
     2. 前提区分 —— "在上课"与"在群交"要能分开判
     3. 结算差分 —— 课堂 H 要给学生加主修科目经验、给旁观者发观摩收益、记出勤
 
-开课时必须**同时**置 `cache.group_sex_mode = True`：群交模板面板、射精面板
+开课时必须**同时**置 `mode.group_sex = True`：群交模板面板、射精面板
    等十余处读取点判的都是那个标志，只置 sex_class_mode 的话整个模板界面都不会出现。
 
 两种发起方式在数据上是**统一的**——当场开课也会创建一条 temp_sex_class 条目并置 running，
@@ -22,7 +22,7 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Design import game_time, map_handle
 from Script.System.Education_System import education_constant, growth_handle
-from Script.Modules.domains import needs
+from Script.Modules.domains import modes, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -286,7 +286,7 @@ def clean_expired_temp_class() -> int:
     # 幽灵课堂先按下课收尾：关课堂模式，预约的打 ended（随后按日期清），当场开的直接删掉
     settle_orphan_class()
     # 收尾之后课堂模式还开着，说明玩家仍在 H 中、这节课还在上（拖堂跨天），它的条目要留着
-    class_alive = cache.sex_class_mode
+    class_alive = modes.sex_class()
     today = game_time.now().date().toordinal()
     del_key_list = []
     for now_key, now_data in cache.rhodes_island.temp_sex_class.items():
@@ -492,7 +492,7 @@ def get_class_member_list() -> list[int]:
              与主修科目加成（common_default 的经验写入段，实施复审补）都读这份名单。
           只读不写，前提路径上可以调用
     """
-    if not cache.sex_class_mode:
+    if not modes.sex_class():
         return []
     pl_character_data: game_type.Character = cache.character_data[0]
     scene_path_str = map_handle.get_map_system_path_str_for_list(
@@ -989,11 +989,11 @@ def settle_orphan_class() -> bool:
                 属群交系统（方案 §7）；
              转隐奸 1 / 2（男不隐）会清玩家的 H 而这场 H 仍在继续，课也随之收掉（hidden_sex_panel）
     """
-    if not cache.sex_class_mode:
+    if not modes.sex_class():
         return False
     if 0 not in cache.character_data or cache.character_data[0].sp_flag.is_h:
         return False
-    cache.sex_class_mode = False
+    modes.set_sex_class(False)
     end_sex_class()
     return True
 
@@ -1143,7 +1143,7 @@ def get_watcher_list() -> list[int]:
     """
     from Script.System.Sex_System import group_sex_panel
 
-    if not cache.sex_class_mode:
+    if not modes.sex_class():
         return []
     in_template_list = group_sex_panel.count_group_sex_character_list()
     return [

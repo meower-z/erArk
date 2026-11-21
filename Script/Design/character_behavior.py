@@ -28,6 +28,7 @@ from Script.Kernel import core
 from Script.Modules.save_load import autosave
 from Script.Config import game_config, normal_config
 from Script.Settle import sleep_settle, realtime_settle
+from Script.Modules.domains import achievement, history, modes, plan
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -62,10 +63,7 @@ def settle_start(character_id: int, minutes: int) -> None:
             judge_character_status(character_id)
         character_data.sp_flag.see_h_reaction_settled = False
         return
-    cache.daily_intsruce += character_instruct_record(0)
-    cache.pl_pre_behavior_instruce.append(behavior_id)
-    if len(cache.pl_pre_behavior_instruce) > 10:
-        cache.pl_pre_behavior_instruce.pop(0)
+    history.note_instruction(character_instruct_record(0), behavior_id)
     if behavior_id == constant.Behavior.SHARE_BLANKLY:
         return
     if behavior_id in {constant.Behavior.MOVE, constant.Behavior.CARRY_MOVE}:
@@ -83,8 +81,8 @@ def settle_start(character_id: int, minutes: int) -> None:
     handle_npc_ai_in_h.judge_character_h_obscenity_unconscious(
         0, character_data.behavior.start_time
     )
-    if cache.time_stop_mode and minutes == 0:
-        cache.achievement.time_stop_duration += character_data.behavior.duration
+    if modes.time_stop() and minutes == 0:
+        achievement.add("time_stop_duration", character_data.behavior.duration)
 
 
 def end_action(character_id: int) -> None:
@@ -123,11 +121,11 @@ def player_after_end() -> None:
     from Script.UI.Panel import achievement_panel
 
     character_move.continue_player_route()
-    if cache.player_route is None:
+    if plan.route() is None:
         settle_player_target()
     realtime_settle.judge_pl_real_time_data()
-    if cache.pl_sleep_save_flag:
-        cache.pl_sleep_save_flag = False
+    if plan.sleep_save():
+        plan.set_sleep_save(False)
         autosave.update_save()
     achievement_panel.achievement_flow(_("时停"))
     achievement_panel.achievement_flow(_("群交"))
@@ -163,10 +161,7 @@ def settle_player_target() -> None:
         pl_character_data.target_character_id = 0
     elif target not in character_list and (
         target != 0
-        or (
-            cache.pl_pre_behavior_instruce
-            and cache.pl_pre_behavior_instruce[-1] == constant.Behavior.MOVE
-        )
+        or (history.recent() and history.recent()[-1] == constant.Behavior.MOVE)
     ):
         pl_character_data.target_character_id = character_list[0]
 

@@ -5,7 +5,8 @@ from Script.Core import cache_control, game_type, get_text
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Design import game_time, attr_calculation, talk, handle_premise
-from Script.Modules.domains import commission, location, recruit, warehouse
+from Script.Modules.domains import achievement, commission, country
+from Script.Modules.domains import location, recruit, warehouse
 import random
 
 cache: game_type.Cache = cache_control.cache
@@ -294,13 +295,11 @@ def process_commission_text(
                 if nation_data.country == now_country:
                     item_id = nation_id
                     item_name = nation_data.name + item_name
-                    now_have_item_num = cache.country.nation_reputation[
-                        nation_id
-                    ]
+                    now_have_item_num = country.reputation(nation_id)
                     break
         else:
             item_name = game_config.config_nation[item_id].name + item_name
-            now_have_item_num = cache.country.nation_reputation[item_id]
+            now_have_item_num = country.reputation(item_id)
     # 好感
     elif text_list[0] == "好感":
         item_name = _("好感")
@@ -364,7 +363,6 @@ def process_commission_text(
                 warehouse.add(item_id, -int(item_num))
             elif deduction_or_increase and text_list[0] == "声望":
                 # 将不再扣除声望
-                # cache.country.nation_reputation[item_id] -= item_num
                 pass
     # 奖励
     else:
@@ -412,7 +410,7 @@ def process_commission_text(
             # 声望
             elif text_list[0] == "声望":
                 # 在前面已经乘过了，不需要再乘一遍
-                cache.country.nation_reputation[item_id] += item_num
+                country.add_reputation(item_id, item_num)
             # 好感
             elif text_list[0] == "好感":
                 cache.character_data[item_id].favorability[0] += int(item_num)
@@ -510,7 +508,7 @@ def judge_field_commission_finish() -> None:
             draw_text += recruited_text
             draw_text += equipment_damage_text
             # 结算成就
-            cache.achievement.field_commission_count += 1
+            achievement.add("field_commission_count", 1)
             achievement_panel.achievement_flow(_("外勤"))
             if "追捕" in game_config.config_commission[commision_id].reward:
                 achievement_panel.achievement_flow(_("外勤"), 306)

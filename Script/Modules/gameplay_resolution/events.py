@@ -19,7 +19,7 @@ from types import FunctionType
 from Script.Core import cache_control, constant, game_type, get_text, num
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions, plan_queue, time_hooks
-from Script.Modules.domains import needs
+from Script.Modules.domains import modes, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -27,15 +27,16 @@ _: FunctionType = get_text._
 """ 翻译api """
 
 
-def _npc(who: str) -> game_type.Character | None:
+def _npc(who: str, game: core.GameState) -> game_type.Character | None:
     """
     干员事件条件的共同前提：是干员、没死、不在时停中（时停中干员不结算）
     Keyword arguments:
     who -- 角色键
+    game -- 当前的 GameState
     Return arguments:
     Character | None -- 满足时为干员的数据
     """
-    if who == actions.PLAYER or cache.time_stop_mode:
+    if who == actions.PLAYER or modes.time_stop(game):
         return None
     character_data: game_type.Character = cache.character_data[int(who)]
     return None if character_data.dead else character_data
@@ -55,7 +56,7 @@ def _first_npc(
     if not time_hooks.clock_settled(game):
         return None
     for who in game.characters:
-        if _npc(who) is not None and holds(int(who)):
+        if _npc(who, game) is not None and holds(int(who)):
             return who
     return None
 
@@ -91,7 +92,7 @@ def tired_case(character_id: int, game: core.GameState) -> str | None:
     if not (flag.is_h or flag.is_follow):
         return None
     if plan_queue.plan_has(
-        character_id, constant.Behavior.GROUP_SEX_NPC_HP_0_END
+        character_id, constant.Behavior.GROUP_SEX_NPC_HP_0_END, game
     ):
         return None
     if not (
@@ -107,7 +108,7 @@ def tired_case(character_id: int, game: core.GameState) -> str | None:
         and character_data.behavior.behavior_id != constant.Behavior.WAIT
     ):
         return "follow"
-    if cache.group_sex_mode and flag.is_h:
+    if modes.group_sex(game) and flag.is_h:
         return "group"
     if flag.is_h and (
         not flag.unconscious_h or needs.of(character_id, game)["hit"] <= 1
@@ -154,14 +155,16 @@ def _player_spent(game: core.GameState) -> bool:
     if needs.of(0, game)["hit"] > 1:
         return False
     target_data = cache.character_data[character_data.target_character_id]
-    if not (cache.group_sex_mode or target_data.sp_flag.is_h):
+    if not (modes.group_sex(game) or target_data.sp_flag.is_h):
         return False
     ends = {
         constant.Behavior.END_H,
         constant.Behavior.GROUP_SEX_END,
         *constant.special_end_H_list,
     }
-    return not any(p["behavior_id"] in ends for p in plan_queue.planned(0))
+    return not any(
+        p["behavior_id"] in ends for p in plan_queue.planned(0, game)
+    )
 
 
 def _player_spent_when(game: core.GameState) -> str | None:
@@ -197,7 +200,7 @@ def player_spent(who: str) -> core.Effects:
     if character_data.sp_flag.is_h:
         _draw(character_data.name + _("太累了，无法继续H\n"))
     character_data.sp_flag.tired = False
-    if cache.group_sex_mode:
+    if modes.group_sex():
         return handle_instruct.plan_group_sex_end(
             constant.Behavior.GROUP_SEX_PL_HP_0_END
         )
@@ -215,7 +218,7 @@ def _h_end_when(game: core.GameState) -> str | None:
     if (
         not time_hooks.arts_settled(game)
         or _player_spent(game)
-        or plan_queue.plan_has(0, constant.Behavior.T_H_HP_0)
+        or plan_queue.plan_has(0, constant.Behavior.T_H_HP_0, game)
     ):
         return None
     return _first_npc(game, lambda cid: tired_case(cid, game) == "h")

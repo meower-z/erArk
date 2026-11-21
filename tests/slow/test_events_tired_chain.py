@@ -11,10 +11,11 @@
 两个事件互相让对方成立时，事件与收尾步数的上限（core.CYCLE_LIMIT）让内核抛 core.EventCycle，而不是在同一时刻无限循环。
 """
 
+import importlib
 from unittest import mock
 
-from tests.slow.base import SlowTestCase
 from tests import kernel_data
+from tests.slow.base import SlowTestCase
 
 AMIYA_ID = 1
 """ 阿米娅的角色id """
@@ -52,7 +53,8 @@ class EventsTiredChainTest(SlowTestCase):
         for chara in (self.amiya, self.kaltsit):
             kernel_data.set_needs(chara.cid, hit=1)
             chara.sp_flag.tired = False
-        self.cache.pl_pre_behavior_instruce.clear()
+        history = importlib.import_module("Script.Modules.domains.history")
+        kernel_data.set_world(history.set_recent, [])
         from Script.UI.Moudle import draw
 
         patcher = mock.patch.object(
@@ -99,8 +101,9 @@ class EventsTiredChainTest(SlowTestCase):
         self.assertLess(
             texts.index(h_end[0]), texts.index(follow[0]), "H 结束的那句在前"
         )
+        history = importlib.import_module("Script.Modules.domains.history")
         self.assertEqual(
-            self.cache.pl_pre_behavior_instruce[:1],
+            history.recent()[:1],
             [constant.Behavior.T_H_HP_0],
             "博士接下来开始的行动是 T_H_HP_0",
         )
@@ -164,7 +167,9 @@ class EventsTiredChainTest(SlowTestCase):
         kernel_data.set_needs(self.pl.cid, hit=1)
         game = cast(core.GameState, None)
         self.assertTrue(events._player_spent(game), "没排结束时成立")
-        plan_queue.plan_next(0, constant.Behavior.H_INTERRUPT, 5)
+        kernel_data.written(
+            plan_queue.plan_next, 0, constant.Behavior.H_INTERRUPT, 5
+        )
         self.assertFalse(
             events._player_spent(game), "排着 H_INTERRUPT 时不成立"
         )
@@ -182,13 +187,15 @@ class EventsTiredChainTest(SlowTestCase):
         from Script.Design import handle_npc_ai
         from Script.Modules.gameplay_resolution import plan_queue
 
-        self.cache.group_sex_mode = True
+        modes = importlib.import_module("Script.Modules.domains.modes")
+        kernel_data.set_world(modes.set_group_sex, True)
         self.kaltsit.sp_flag.is_follow = 0
         self.kaltsit.sp_flag.is_h = True
-        plan_queue.plan_next(
-            KALTSIT_ID, constant.Behavior.GROUP_SEX_NPC_HP_0_END, 1
-        )
-        handle_npc_ai.commit_group_sex_tired_exit(AMIYA_ID)
+        with kernel_data.writing():
+            plan_queue.plan_next(
+                KALTSIT_ID, constant.Behavior.GROUP_SEX_NPC_HP_0_END, 1
+            )
+            handle_npc_ai.commit_group_sex_tired_exit(AMIYA_ID)
         queued = [p["behavior_id"] for p in plan_queue.planned(0)]
         ends = {constant.Behavior.GROUP_SEX_END, *constant.special_end_H_list}
         self.assertNotIn(

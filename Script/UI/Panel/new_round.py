@@ -5,23 +5,16 @@
 from collections.abc import Mapping
 from types import FunctionType
 from typing import cast
-from Script.Core import (
-    get_text,
-    flow_handle,
-    game_type,
-    cache_control,
-)
+from Script.Core import cache_control, flow_handle, game_type, get_text
 from Script.Core.num import Num
-
 from Script.UI.Moudle import draw, panel
 from Script.UI.Panel import see_character_info_panel
 from Script.Config import normal_config, game_config
 from Script.Design import handle_talent, character_handle
 from Script.Kernel import core
 from Script.Modules.save_load import kernel_state
-
 import copy
-from Script.Modules.domains import facility, needs
+from Script.Modules.domains import facility, needs, playthrough
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -76,7 +69,9 @@ class New_Round_Handle:
         """ 送别干员id """
         self.show_world_setting = False
         """ 显示世界设定面板 """
-        self.world_setting: dict[int, int] = dict(cache.world_setting)
+        self.world_setting: dict[int, int] = playthrough.settings(
+            playthrough.WORLD
+        )
         """ 新周目的世界设定：设定id -> 是否选择 """
 
     def draw(self) -> None:
@@ -93,7 +88,7 @@ class New_Round_Handle:
             info_draw = draw.NormalDraw()
             info_draw.width = self.width
             # 当前周目数
-            now_round = cache.game_round
+            now_round = playthrough.game_round()
             point_add = now_round * 20
             self.round_point_all += point_add
             info_text += _("当前周目数：{0}(+{1})\n\n").format(
@@ -897,6 +892,7 @@ class New_Round_Handle:
                 stat: needs.of(0)[stat]
                 for stat in ("hit_max", "mana_max", "sanity_max")
             },
+            "carried": playthrough.carry_for_new_round(core.state()),
         }
 
     def start_new_round(self) -> None:
@@ -973,8 +969,10 @@ def setup(inherit: Mapping[str, core.JSON]) -> None:
 
     fallen = inherit["all_fall_chara_list"]
     world_setting = inherit["world_setting"]
+    carried = inherit["carried"]
     if not isinstance(fallen, tuple) or not isinstance(world_setting, Mapping):
         raise TypeError(f"inherit {inherit!r} is malformed")
+    playthrough.restore_carried(cast(Mapping[str, core.JSON], carried))
     _inherit_player_data(inherit)
     _inherit_npc_data(inherit, {_int(chara_id) for chara_id in fallen})
     _reset_game_data(
@@ -1019,12 +1017,12 @@ def _inherit_player_data(inherit: Mapping[str, core.JSON]) -> None:
     new_pl_character_data = cache.character_data[0]
     new_pl_character_data.name = old_pl_character_data.name
 
-    # 归档旧周目的性行为履历（old_pl_character_data已deepcopy，快照直接引用即可；此时cache.game_round仍是旧周目数）
+    # 归档旧周目的性行为履历（old_pl_character_data已deepcopy，快照直接引用即可；此时周目数仍是旧周目数）
     new_pl_character_data.first_record_history = getattr(
         old_pl_character_data, "first_record_history", {}
     )
     if old_pl_character_data.first_record.has_any_record():
-        new_pl_character_data.first_record_history[cache.game_round] = (
+        new_pl_character_data.first_record_history[playthrough.game_round()] = (
             old_pl_character_data.first_record
         )
 
@@ -1201,7 +1199,7 @@ def _inherit_npc_data(
                 old_data, "first_record_history", {}
             )
             if old_data.first_record.has_any_record():
-                new_data.first_record_history[cache.game_round] = (
+                new_data.first_record_history[playthrough.game_round()] = (
                     old_data.first_record
                 )
 
@@ -1211,7 +1209,8 @@ def _inherit_npc_data(
 
 def _reset_game_data(world_setting: dict[int, int]) -> None:
     """
-    重置游戏数据：留下继承后的角色与已获得干员、难度、出生设定与成就，周目数加一，换上新周目的世界设定
+    重置游戏数据：留下继承后的角色与已获得干员、难度与生殖方式设定，周目数加一，换上新周目的世界设定。
+    成就与 playthrough.CARRIED_KEYS 里其余的键已在 setup 里写回
     Keyword arguments:
     world_setting -- 新周目的世界设定
     """
@@ -1227,20 +1226,20 @@ def _reset_game_data(world_setting: dict[int, int]) -> None:
 
     # 要保留的数据
     old_cache = copy.deepcopy(cache_control.cache)
-    new_game_round = old_cache.game_round + 1
+    new_game_round = playthrough.game_round() + 1
     new_character_data = old_cache.character_data
     new_npc_id_got = old_cache.npc_id_got
-    new_achievement = old_cache.achievement
+    kept = {
+        table: playthrough.settings(table)
+        for table in (playthrough.DIFFICULTY, playthrough.BIRTH_TYPE)
+    }
 
     # 开始重置
     cache_control.cache = cache
     map_config.init_map_data()
     cache.rhodes_island = basement.get_base_zero()
     medical_service.init_medical_department_data(cache.rhodes_island)
-    cache.plan_queue = {}
-    cache.player_route = None
-    cache.difficulty_setting = attr_calculation.get_difficulty_setting_zero()
-    cache.birth_type_setting = attr_calculation.get_birth_type_setting_zero()
+    playthrough.reset_difficulty_and_birth()
     cache.rhodes_island.physical_examination_setting = (
         attr_calculation.get_physical_exam_setting_zero()
     )
@@ -1248,11 +1247,10 @@ def _reset_game_data(world_setting: dict[int, int]) -> None:
 
     # 覆盖要保留的数据
     creator_character_flow.first_bonus_and_setting_updata()
-    cache.world_setting = world_setting
-    cache.difficulty_setting = old_cache.difficulty_setting
-    cache.birth_type_setting = old_cache.birth_type_setting
-    cache.achievement = new_achievement
-    cache.game_round = new_game_round
+    playthrough.set_settings(playthrough.WORLD, world_setting)
+    for table, values in kept.items():
+        playthrough.set_settings(table, values)
+    playthrough.set_game_round(new_game_round)
     cache.character_data = new_character_data
     cache.npc_id_got = new_npc_id_got
     creator_character_flow.game_start()

@@ -13,7 +13,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import panel, draw, view
 from Script.UI.Panel import see_item_info_panel
-from Script.Modules.domains import facility, warehouse
+from Script.Modules.domains import achievement, facility, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -384,7 +384,7 @@ class BuyItemByItemNameDraw:
                 item_config.name,
             )
             # 结算成就
-            cache.achievement.buy_item_count_list.append(self.text)
+            achievement.append("buy_item_count_list", self.text)
         elif self.character_data.item[self.text] == 99:
             now_text = _("已达到最高堆叠上限")
         else:

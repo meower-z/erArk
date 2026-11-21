@@ -26,6 +26,7 @@ from Script.Design import (
     handle_premise,
 )
 from Script.Config import game_config, normal_config
+from Script.Modules.domains import modes
 import logging, time
 
 cache: game_type.Cache = cache_control.cache
@@ -347,7 +348,7 @@ class InScenePanel:
                 character_body_draw.draw()
 
             # ↓以下为群交栏的内容↓#
-            if cache.group_sex_mode:
+            if modes.group_sex():
                 from Script.System.Sex_System import group_sex_panel
 
                 character_group_sex_draw = group_sex_panel.SeeGroupSexInfoPanel(

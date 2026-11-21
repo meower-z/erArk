@@ -42,12 +42,12 @@ from _bootstrap import (
     sync,
     wait,
 )
-from Script.Design import handle_npc_ai, clothing
+from Script.Design import character_behavior, clothing, handle_npc_ai
 from Script.Settle import realtime_settle
 from Script.System.Pregnancy_System import pregnancy_constant
 from typing import TYPE_CHECKING
-from Script.Design import character_behavior
 from Script.Kernel import core
+from Script.Modules.domains import achievement, modes, plan
 from tests import kernel_data, world
 from Script.Modules.domains import library
 
@@ -174,7 +174,7 @@ def start_sm(sid: int, cid: int) -> None:
     cid -- 角色id
     """
     sync()
-    constant.handle_state_machine_data[sid](cid)
+    kernel_data.written(constant.handle_state_machine_data[sid], cid)
     quiet_turn(cid, keep_queue=True)
 
 
@@ -1492,8 +1492,8 @@ move_to(0, classroom_path(ROOM_P))
 schedule_handle.set_class_cell(ROOM_P, 0, 5, 74, -1)
 schedule_handle.set_selected_course(202, 0, 5, E.COURSE_TYPE_PRACTICE, ROOM_P)
 sex_class_handle.start_sex_class(70, [])
-cache.sex_class_mode = True
-cache.group_sex_mode = True
+kernel_data.set_world(modes.set_sex_class, True)
+kernel_data.set_world(modes.set_group_sex, True)
 pl.sp_flag.is_h = True
 _late = period_time(5) + datetime.timedelta(minutes=10)
 move_to(202, SCENE_DORM)
@@ -1535,7 +1535,7 @@ check(
 remove_character(301)
 pl.sp_flag.is_h = False
 sex_class_handle.end_sex_class()
-cache.sex_class_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
 set_time(_late)
 check(
     "下课后不再 JOIN",
@@ -1620,11 +1620,11 @@ def queued_move(cid: int) -> list[str]:
     Return arguments:
     list -- 目标场景路径，没有移动时为空列表
     """
-    move = cache.plan_queue.get(cid, [])[-1][1].get("move")
-    return list(move["to"]) if move else []
+    return list((plan.queue(cid)[-1][1].get("move") or {}).get("to", []))
 
 
-constant.handle_state_machine_data[SM.MOVE_TO_CLASS_ROOM](101)
+sm_handle = constant.handle_state_machine_data
+kernel_data.written(sm_handle[SM.MOVE_TO_CLASS_ROOM], 101)
 _moves.append(queued_move(101))
 check(
     "课表有残留的教师：去自己下一节授课的教室，不被带去实操教室",
@@ -1721,8 +1721,8 @@ check(
     class_ai.get_course_stage(201) == E.COURSE_STAGE_SEX_PENDING,
 )
 sex_class_handle.start_sex_class(70, [])
-cache.sex_class_mode = True
-cache.group_sex_mode = True
+kernel_data.set_world(modes.set_sex_class, True)
+kernel_data.set_world(modes.set_group_sex, True)
 pl.sp_flag.is_h = True
 set_time(_early)
 check(
@@ -1785,13 +1785,13 @@ check(
 )
 pl.sp_flag.is_h = False
 sex_class_handle.end_sex_class()
-cache.sex_class_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
 mother.sp_flag.go_to_join_group_sex = True
 sm = dispatch(102, _early)
 check("普通群交（不是课堂）→ 505 → 96 加入群交", sm == 96, sm)
 mother.sp_flag.go_to_join_group_sex = False
 mother.sp_flag.is_h = False
-cache.group_sex_mode = False
+kernel_data.set_world(modes.set_group_sex, False)
 move_to(0, SCENE_DORM)
 move_to(102, SCENE_EDU_ENTRY)
 move_to(201, SCENE_DORM)
@@ -1883,7 +1883,7 @@ move_to(201, SCENE_DORM)
 _moves = []
 for _seed in range(12):
     random.seed(_seed)
-    constant.handle_state_machine_data[SM.MOVE_TO_CLASS_ROOM](201)
+    kernel_data.written(sm_handle[SM.MOVE_TO_CLASS_ROOM], 201)
     _moves.append(queued_move(201))
 check(
     "只开了理论教室一：12 个种子下没课学生的 561 回落都去理论教室一（此前在全部 6 间里随机，会走向锁着的教室）",
@@ -1894,7 +1894,7 @@ open_all_classroom()
 _moves.clear()
 for _seed in range(12):
     random.seed(_seed)
-    constant.handle_state_machine_data[SM.MOVE_TO_CLASS_ROOM](201)
+    kernel_data.written(sm_handle[SM.MOVE_TO_CLASS_ROOM], 201)
     _moves.append(queued_move(201))
 random.seed()
 check(
@@ -1920,7 +1920,7 @@ student.sp_flag.sleep = False
 student.behavior.behavior_id = constant.Behavior.SLEEP
 student.behavior.duration = 120
 check("行为是睡觉：判为不可拉", not class_ai.judge_student_pullable(201))
-constant.handle_state_machine_data[SM.WORK_TEACH](101)
+kernel_data.written(constant.handle_state_machine_data[SM.WORK_TEACH], 101)
 check(
     "教师开讲（303）：她继续睡，不被改成听课",
     student.behavior.behavior_id == constant.Behavior.SLEEP,
@@ -2566,7 +2566,7 @@ student.behavior.behavior_id = constant.Behavior.SELF_STUDY
 student.behavior.start_time = period_time(2)
 student.behavior.duration = 45
 teacher.behavior.start_time = t_open
-constant.handle_state_machine_data[SM.WORK_TEACH](101)
+kernel_data.written(constant.handle_state_machine_data[SM.WORK_TEACH], 101)
 check(
     "H1 303 开讲：时间线在前的学生不被改动（行为与开始时刻都不变）",
     student.behavior.behavior_id == constant.Behavior.SELF_STUDY
@@ -3353,8 +3353,8 @@ check(
 move_to(0, classroom_path(ROOM_P))
 set_time(T1030)
 sex_class_handle.start_sex_class(70, [])
-cache.sex_class_mode = True
-cache.group_sex_mode = True
+kernel_data.set_world(modes.set_sex_class, True)
+kernel_data.set_world(modes.set_group_sex, True)
 pl.sp_flag.is_h = True
 move_to(202, classroom_path(ROOM_P))
 sm = dispatch(202, T1030 + datetime.timedelta(minutes=10))
@@ -3367,8 +3367,8 @@ check(
 )
 pl.sp_flag.is_h = False
 sex_class_handle.end_sex_class()
-cache.sex_class_mode = False
-cache.group_sex_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
+kernel_data.set_world(modes.set_group_sex, False)
 child_g32.selected_course = {}
 
 section(
@@ -3544,7 +3544,7 @@ def ghost_probe_spy(character_id: int) -> int | None:
     if character_id and not GHOST_PROBE:
         GHOST_PROBE.append(
             (
-                cache.sex_class_mode,
+                modes.sex_class(),
                 sex_class_handle.get_running_class() is not None,
             )
         )
@@ -3583,10 +3583,10 @@ def setup_ghost() -> dict:
     ghost = sex_class_handle.set_temp_class(
         DEFAULT_TIME.date().toordinal(), 0, ROOM_P, 70, running=True
     )
-    cache.sex_class_mode = True
-    cache.group_sex_mode = True
+    kernel_data.set_world(modes.set_sex_class, True)
+    kernel_data.set_world(modes.set_group_sex, True)
     # 开群交时的结算（Settle 3417）建好的群交成就记录；玩家行动收尾的成就结算要读它
-    cache.achievement.group_sex_record = {1: [], 2: []}
+    kernel_data.set_world(achievement.put, "group_sex_record", {1: [], 2: []})
     for (
         key,
         value,
@@ -3630,8 +3630,8 @@ _ghost = setup_ghost()
 check(
     "H1 前提（幽灵课堂）：课堂模式与群交模式开着、实践教室一第 1 节的当场实操课 running，玩家不在 H、人在宿舍；"
     "她本节是这间教室的常规课、人在教室，个人课表里有性技教室课（过得了改前的 JOIN 判定）",
-    cache.sex_class_mode
-    and cache.group_sex_mode
+    modes.sex_class()
+    and modes.group_sex()
     and sex_class_handle.get_running_class() is _ghost
     and not pl.sp_flag.is_h
     and pl.position == SCENE_DORM
@@ -3660,10 +3660,10 @@ check(
 )
 check(
     "H1 真实循环：跑完仍没有进行中的课、课堂模式关着，那条当场开的实操课已删掉",
-    not cache.sex_class_mode
+    not modes.sex_class()
     and sex_class_handle.get_running_class() is None
     and not cache.rhodes_island.temp_sex_class,
-    (cache.sex_class_mode, cache.rhodes_island.temp_sex_class),
+    (modes.sex_class(), cache.rhodes_island.temp_sex_class),
 )
 check(
     "H1 真实循环：收敛（没有撞护栏），状态机记录里没有 722，她没被拉进 H（此前判 JOIN、722 把她拉进没有博士的课堂）",
@@ -3702,8 +3702,8 @@ check(
     _ghost_still,
 )
 kernel_data.set_needs(pl.cid, **_ghost_pl_point)
-cache.sex_class_mode = False
-cache.group_sex_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
+kernel_data.set_world(modes.set_group_sex, False)
 cache.rhodes_island.temp_sex_class = {}
 for _cid in (0, 201, 202):
     cache.character_data[_cid].sp_flag.is_h = False
@@ -3750,8 +3750,8 @@ for _cid in (201, 202):
         _cid, 0, 5, E.COURSE_TYPE_PRACTICE, ROOM_P
     )
 sex_class_handle.start_sex_class(70, [])
-cache.sex_class_mode = True
-cache.group_sex_mode = True
+kernel_data.set_world(modes.set_sex_class, True)
+kernel_data.set_world(modes.set_group_sex, True)
 pl.sp_flag.is_h = True
 # 开课时已在教室、被拉进课堂 H 的学生：她在 H 里，晚到的人一进门就满足「该地点有其他角色在和玩家进行非隐奸的 H」
 move_to(201, classroom_path(ROOM_P))
@@ -3836,8 +3836,8 @@ for key in child.second_behavior:
     child.second_behavior[key] = 0
 pl.sp_flag.is_h = False
 sex_class_handle.end_sex_class()
-cache.sex_class_mode = False
-cache.group_sex_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
+kernel_data.set_world(modes.set_group_sex, False)
 clear_schedules()
 sex_class_handle.set_temp_class(
     DEFAULT_TIME.date().toordinal(), 1, ROOM_P, 70, must_attend=[202]
@@ -3845,8 +3845,8 @@ sex_class_handle.set_temp_class(
 _early_81 = period_time(1) - datetime.timedelta(minutes=5)
 set_time(_early_81)
 sex_class_handle.start_sex_class(70, [])
-cache.sex_class_mode = True
-cache.group_sex_mode = True
+kernel_data.set_world(modes.set_sex_class, True)
+kernel_data.set_world(modes.set_group_sex, True)
 pl.sp_flag.is_h = True
 student.sp_flag.is_h = True
 move_to(202, classroom_path(ROOM_P))
@@ -3864,8 +3864,8 @@ check(
 constant.handle_state_machine_data[SM.SEE_H_AND_MOVE_TO_DORMITORY] = _orig_see_h
 pl.sp_flag.is_h = False
 sex_class_handle.end_sex_class()
-cache.sex_class_mode = False
-cache.group_sex_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
+kernel_data.set_world(modes.set_group_sex, False)
 cache.rhodes_island.temp_sex_class = {}
 for _cid in (0, 102, 201, 202):
     cache.character_data[_cid].sp_flag.is_h = False

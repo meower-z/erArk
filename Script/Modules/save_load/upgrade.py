@@ -3,7 +3,7 @@ save_load 的存档升级
 ====================
 CURRENT 是本游戏写的文件 "2" 的版本。STEPS[n] 把版本 n 的 JSON 对象升到版本 n + 1。
 STEPS 从版本 1 开始。版本 0 的存档头里没有标记，kernel_state.read 读它时不跑 STEPS。
-STEPS[2] 是 fill_v2_needs。STEPS[1] 与 STEPS[3] 到 STEPS[10] 是 _identity，原样交回文件 "2"。
+STEPS[2] 是 fill_v2_needs。STEPS[1] 与 STEPS[3] 到 STEPS[11] 是 _identity，原样交回文件 "2"。
 这几步前后文件 "2" 的结构相同。存档版本仍在这几步上各升 1。CURRENT 较低的旧版游戏因此拒读较新的存档。
 读旧存档时处理文件 "1" 解开后对象的常量与函数在 adopt_legacy 里，另有一些在各领域模块的 adopt 函数里。
 本模块导入 adopt_legacy 的公开名字，并把它们列在 __all__ 里。调用方经 upgrade 取用这些名字，例如 upgrade.adopt_power。
@@ -73,7 +73,7 @@ __all__ = [
     "fill_v2_needs",
 ]
 
-CURRENT = 11
+CURRENT = 12
 """ 本游戏写的文件 "2" 的版本 """
 
 
@@ -119,5 +119,6 @@ STEPS: dict[int, Callable[[dict[str, Any]], dict[str, Any]]] = {
     8: _identity,
     9: _identity,
     10: _identity,
+    11: _identity,
 }
 """ 版本 n 到 n + 1 的升级步骤。版本 0 升 1 不是 JSON 步骤，见模块说明 """

@@ -22,12 +22,12 @@ from typing import Any
 from unittest import mock
 
 from Script.Core import save_handle
-from Script.Design import attr_calculation
 from Script.Kernel import core
 from Script.Modules import load_order
-from Script.Modules.domains import medical, warehouse
+from Script.Modules.domains import country, medical, playthrough, warehouse
 from Script.Modules.gameplay_resolution import actions
 from Script.Modules.save_load import index, kernel_state, upgrade
+from tests import kernel_data
 from tests.fast.base import FastTestCase
 from Script.Config import normal_config
 
@@ -39,7 +39,7 @@ _serial = itertools.count()
 def game(clock: int, ends: dict[str, int]) -> core.GameState:
     """
     一个 GameState：每个角色一个带行动数据的 Idle，在 ends 给出的分钟结束。角色与全局数据里有各种 JSON 值。
-    全局数据里的 base.stock 取自当前状态，换上这个 GameState 后库存不变
+    全局数据里的 base.stock、本周目设定与势力和国家取自当前状态，换上这个 GameState 后它们不变
     Keyword arguments:
     clock -- 时钟
     ends -- 角色键到他的行动结束的分钟
@@ -63,7 +63,10 @@ def game(clock: int, ends: dict[str, int]) -> core.GameState:
         "ticked": clock,
         "settled_day": clock // 1440,
         "nested": ((1,), ()),
-        warehouse.KEY: core.value(core.state(), None, warehouse.KEY),
+        **{
+            key: core.value(core.state(), None, key)
+            for key in (warehouse.KEY, playthrough.SETTINGS, country.KEY)
+        },
     }
     core.reset_state(core.GameState(clock, MappingProxyType(characters), data))
     return core.state()
@@ -153,18 +156,23 @@ class KernelStateTest(FastTestCase):
         self.world.chara(0, "博士")
         cache = self.cache
         cache.npc_id_got = {0}
-        cache.country = attr_calculation.get_country_reset(cache.country)
-        cache.difficulty_setting[1] = 3
+        kernel_data.written(country.fill)
+        kernel_data.written(playthrough.reset_difficulty_and_birth)
+        kernel_data.set_world(
+            playthrough.set_setting, playthrough.DIFFICULTY, 1, 3
+        )
         normal_config.system_setting.base_setting[1] = 0
         start = core.state().clock
         saved = game(start + 800, {"0": start + 800})
         save_handle.establish_save(SAVE_ID)
-        cache.difficulty_setting[1] = 1
+        kernel_data.set_world(
+            playthrough.set_setting, playthrough.DIFFICULTY, 1, 1
+        )
         settings = normal_config.system_setting
         settings.base_setting[1] = 1
         game(start + 20, {"0": start + 20})
         save_handle.input_load_save(SAVE_ID)
-        self.assertEqual(cache.difficulty_setting[1], 3)
+        self.assertEqual(playthrough.setting(playthrough.DIFFICULTY, 1), 3)
         self.assertIs(normal_config.system_setting, settings)
         self.assertEqual(settings.base_setting[1], 1)
         loaded = core.state()
@@ -184,9 +192,7 @@ class KernelStateTest(FastTestCase):
         for cid in range(3):
             self.world.chara(cid, f"角色{cid}")
         self.cache.npc_id_got = {0, 1, 2}
-        self.cache.country = attr_calculation.get_country_reset(
-            self.cache.country
-        )
+        kernel_data.written(country.fill)
         clock = core.state().clock + 800
         data: core.JSON = {"behavior_id": "share_blankly", "minutes": 10}
         ended_at = {"0": (None, clock - 10), "1": (True, clock - 10)}

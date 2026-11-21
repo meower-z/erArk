@@ -12,6 +12,7 @@ from Script.Core import (
 )
 from Script.Config import normal_config
 from Script.Design import handle_premise, map_handle
+from Script.Modules.domains import achievement
 
 panel_info_data: dict[str, object] = {}
 
@@ -174,12 +175,10 @@ class Select_Exhibitionism_Sex_Mode_Panel:
         )
         other_chara_count = len(now_scene_character_list) - 2
         # 成就初始化
-        cache.achievement.exhibitionism_sex_record = {
-            1: mode_id,
-            2: other_chara_count,
-            3: 0,
-            4: 0,
-        }
+        achievement.put(
+            "exhibitionism_sex_record",
+            {1: mode_id, 2: other_chara_count, 3: 0, 4: 0},
+        )
         # 如果是从被发现面板跳转过来
         if self.sex_be_discovered_flag:
             _settle_instruct(

@@ -15,6 +15,7 @@ from Script.Design import handle_premise, handle_ability, map_handle
 from Script.UI.Panel import dirty_panel
 
 import random
+from Script.Modules.domains import achievement
 
 panel_info_data: dict[str, object] = {}
 
@@ -579,12 +580,10 @@ class Select_Hidden_Sex_Mode_Panel:
         scene_data: game_type.Scene = cache.scene_data[scene_path_str]
         other_chara_count = len(scene_data.character_list) - 2
         # 成就初始化
-        cache.achievement.hidden_sex_record = {
-            1: mode_id,
-            2: other_chara_count,
-            3: 0,
-            4: 0,
-        }
+        achievement.put(
+            "hidden_sex_record",
+            {1: mode_id, 2: other_chara_count, 3: 0, 4: 0},
+        )
         # 如果男不隐，则玩家取消H状态
         if mode_id in {1, 2}:
             character_data.sp_flag.is_h = False

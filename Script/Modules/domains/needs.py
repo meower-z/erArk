@@ -4,17 +4,22 @@
 值的各项见 Needs：疲劳、饥饿、尿意、乳汁，体力、气力、理智与它们的上限，愤怒、熟睡、欲望、醉酒。
 角色没有这一项时读默认值 DEFAULT（饥饿 240，其余 0）。
 这个键归本模块的规则 apply 所有。代码不整值替换它，而是用 add 或 set 记一次操作，规则按顺序把操作套到当前值上。
+全局键 needs.sleep_noise 记睡中被吵醒、还没结算的角色：{被吵醒的角色id的字符串: 产生动静的角色id}，没有这一项时为空。
+它整值替换，值没变时不写。
 """
 
 from collections.abc import Mapping
-from typing import TypedDict, cast
+from typing import Any, TypedDict, cast
 
 from Script.Core.num import Num
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import working
+from Script.Modules.save_load import pickled
 
 KEY = "body.needs"
 """ 生理需求在角色数据里的键 """
+NOISE = "needs.sleep_noise"
+""" 睡中被吵醒、还没结算的角色的全局键 """
 
 
 class Needs(TypedDict):
@@ -98,6 +103,7 @@ def fold(old: core.JSON, op: str, operand: core.JSON) -> core.JSON:
 
 
 working.register(KEY, cast(core.JSON, DEFAULT), fold)
+working.register(NOISE, {})
 
 
 @core.rule(KEY)
@@ -162,3 +168,58 @@ def set(cid: int, **values: Num) -> None:
     values -- 需求项到新值
     """
     working.change(str(cid), KEY, "set", cast(core.JSON, values))
+
+
+def noise_woken() -> dict[int, int]:
+    """
+    睡中被吵醒、还没结算的角色
+    Return arguments:
+    dict -- 被吵醒的角色id 到产生动静的角色id，键为 int 的新字典
+    """
+    woken = cast(Mapping[str, int], working.get(None, NOISE))
+    return {int(cid): by for cid, by in woken.items()}
+
+
+def note_woken(cid: int, by: int) -> None:
+    """
+    记下 cid 被 by 的动静吵醒，写进当前缓冲区
+    Keyword arguments:
+    cid -- 被吵醒的角色id
+    by -- 产生动静的角色id
+    """
+    woken = noise_woken()
+    if woken.get(cid) != by or cid not in woken:
+        _put_woken({**woken, cid: by})
+
+
+def take_woken(cid: int) -> int:
+    """
+    取出 cid 的记录，同 dict.pop(cid)，写进当前缓冲区
+    Keyword arguments:
+    cid -- 被吵醒的角色id，没有记录时报 KeyError
+    Return arguments:
+    int -- 产生动静的角色id
+    """
+    woken = noise_woken()
+    by = woken.pop(cid)
+    _put_woken(woken)
+    return by
+
+
+def _put_woken(woken: Mapping[int, int]) -> None:
+    working.put(None, NOISE, {str(cid): by for cid, by in woken.items()})
+
+
+def adopt_old_save(loaded_dict: dict[str, Any], version: int) -> int:
+    """
+    读档时调用。从存档缓存里删掉 noise_woken，记录写进当前缓冲区
+    Keyword arguments:
+    loaded_dict -- 存档缓存的属性表
+    version -- 存档的版本，旧存档为 0
+    Return arguments:
+    int -- 补上或换掉的项数，计法同 save_handle.update_dict_with_default
+    """
+    found, count = pickled.take(loaded_dict, {"noise_woken": {}}, version)
+    if found and noise_woken() != found["noise_woken"]:
+        _put_woken(found["noise_woken"])
+    return count

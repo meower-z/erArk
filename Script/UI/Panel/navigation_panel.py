@@ -2,20 +2,13 @@
 
 from types import FunctionType
 from Script.UI.Moudle import draw, panel, view
-from Script.Core import (
-    get_text,
-    cache_control,
-    game_type,
-    flow_handle,
-    value_handle,
-    text_handle,
-    constant,
-    py_cmd,
-)
+from Script.Core import cache_control, constant, flow_handle, game_type
+from Script.Core import get_text, py_cmd, text_handle, value_handle
 from Script.Design import map_handle, attr_text, game_time
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
-from Script.Modules.domains import diplomacy, location, visitor, warehouse
+from Script.Modules.domains import achievement, diplomacy, location
+from Script.Modules.domains import visitor, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -77,11 +70,11 @@ def judge_arrive() -> bool:
             now_draw.style = "gold_enrod"
             now_draw.draw()
             # 如果炎不在列表中，则添加
-            if 17 not in cache.achievement.visited_nation_list:
-                cache.achievement.visited_nation_list.append(17)
+            if 17 not in achievement.get("visited_nation_list"):
+                achievement.append("visited_nation_list", 17)
             # 结算成就
-            if target_scene_id not in cache.achievement.visited_nation_list:
-                cache.achievement.visited_nation_list.append(target_scene_id)
+            if target_scene_id not in achievement.get("visited_nation_list"):
+                achievement.append("visited_nation_list", target_scene_id)
             achievement_panel.achievement_flow(_("导航"))
             return True
     return False

@@ -36,9 +36,9 @@ from _bootstrap import (
     sex_class_handle,
     sync,
 )
-from Script.Design import instuct_judege
-from Script.Design import handle_npc_ai
+from Script.Design import handle_npc_ai, instuct_judege
 from Script.Settle import common_default
+from Script.Modules.domains import modes
 from tests import kernel_data
 
 open_all_classroom()
@@ -106,7 +106,7 @@ section("过期清理")
 sex_class_handle.set_temp_class(today - 1, 1, ROOM_P, 70)
 sex_class_handle.set_temp_class(today - 2, 1, ROOM_P, 70, running=True)
 sex_class_handle.set_temp_class(today + 1, 1, ROOM_P, 70)
-cache.sex_class_mode = True
+kernel_data.set_world(modes.set_sex_class, True)
 pl.sp_flag.is_h = True
 check(
     "清掉昨天的、保留运行中的（课还在上：课堂模式开着、玩家在 H 中）与今后的",
@@ -114,7 +114,7 @@ check(
     and sex_class_handle.get_temp_class(today - 2, 1) is not None
     and sex_class_handle.get_temp_class(today + 1, 1) is not None,
 )
-cache.sex_class_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
 pl.sp_flag.is_h = False
 cache.rhodes_island.temp_sex_class = {}
 
@@ -405,10 +405,10 @@ check(
     and not sex_class_handle.judge_hp_low_only_watch(999),
 )
 kernel_data.set_needs(student_b.cid, hit=100)
-cache.sex_class_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
 check("没开课堂模式没有旁观者", sex_class_handle.get_watcher_list() == [])
-cache.sex_class_mode = True
-cache.group_sex_mode = True
+kernel_data.set_world(modes.set_sex_class, True)
+kernel_data.set_world(modes.set_group_sex, True)
 student_a.sp_flag.is_h = True
 student_b.sp_flag.is_h = True
 watcher_list = sex_class_handle.get_watcher_list()
@@ -454,8 +454,8 @@ check(
     "当场开的课下课后条目直接删掉",
     impromptu_key not in cache.rhodes_island.temp_sex_class,
 )
-cache.sex_class_mode = False
-cache.group_sex_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
+kernel_data.set_world(modes.set_group_sex, False)
 
 section("出勤只给女儿与学生岗记（第五轮）")
 adult_attend = make_character(302, "路过的成年干员", 21)
@@ -474,8 +474,8 @@ check(
 
 section("Plan 26 §3.5：提前几分钟开讲预约的课，开的就是预约那节")
 cache.rhodes_island.temp_sex_class = {}
-cache.sex_class_mode = False
-cache.group_sex_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
+kernel_data.set_world(modes.set_group_sex, False)
 newbie = make_character(
     204, "没修过性技课的必修生", 152, daughter=True, stage=103, mother_id=102
 )
@@ -602,8 +602,8 @@ cache.rhodes_island.temp_sex_class = {}
 section(
     "Plan 27 L2（按设计保留）：同一节里下课后再开一次实操课，到场学生再记一节出勤"
 )
-cache.sex_class_mode = False
-cache.group_sex_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
+kernel_data.set_world(modes.set_group_sex, False)
 move_to(0, classroom_path(ROOM_P))
 move_to(201, classroom_path(ROOM_P))
 student_a.sp_flag.is_h = False
@@ -626,8 +626,8 @@ student_a.sp_flag.is_h = False
 cache.rhodes_island.temp_sex_class = {}
 
 section("Plan 30 §3.4：这一节已记缺课的学生，开课与 722 晚到都不记出勤")
-cache.sex_class_mode = False
-cache.group_sex_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
+kernel_data.set_world(modes.set_group_sex, False)
 move_to(0, classroom_path(ROOM_P))
 move_to(201, classroom_path(ROOM_P))
 set_time(period_time(2) + datetime.timedelta(minutes=5))
@@ -661,8 +661,8 @@ section(
     "Plan 31 M1：实操课门槛的实行值只判不扣——门槛与前提求值多次，不扣理智、不累加今日消耗、不解除催眠"
 )
 
-cache.sex_class_mode = False
-cache.group_sex_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
+kernel_data.set_world(modes.set_group_sex, False)
 set_time(period_time(3))
 _hypno_day = (game_time.now().weekday() + 3) % 7
 hypno = make_character(305, "心控中的成年学生", 152)
@@ -709,8 +709,8 @@ check(
     hypno.sp_flag.unconscious_h == 7,
     hypno.sp_flag.unconscious_h,
 )
-cache.sex_class_mode = True
-cache.group_sex_mode = True
+kernel_data.set_world(modes.set_sex_class, True)
+kernel_data.set_world(modes.set_group_sex, True)
 _m1_running = sex_class_handle.set_temp_class(
     today, 3, ROOM_P, 74, running=True
 )
@@ -740,8 +740,8 @@ check(
         pl.pl_ability.today_sanity_point_cost,
     ),
 )
-cache.sex_class_mode = False
-cache.group_sex_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
+kernel_data.set_world(modes.set_group_sex, False)
 cache.rhodes_island.temp_sex_class = {}
 kernel_data.set_needs(pl.cid, sanity=0)
 check(
@@ -791,8 +791,8 @@ section(
     "Plan 31 L3：提前几分钟开讲预约的实操课，按那一节判「本节已缺课」；L12：记出勤时累计实操课次数"
 )
 cache.rhodes_island.temp_sex_class = {}
-cache.sex_class_mode = False
-cache.group_sex_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
+kernel_data.set_world(modes.set_group_sex, False)
 move_to(0, classroom_path(ROOM_P))
 move_to(201, classroom_path(ROOM_P))
 student_a.sp_flag.is_h = False
@@ -887,10 +887,11 @@ def run_effect_list(effect_id_list: list) -> None:
     Return arguments:
     无
     """
-    for effect_id in effect_id_list:
-        EFFECT_DATA[effect_id](
-            0, 5, game_type.CharacterStatusChange(), game_time.now()
-        )
+    with kernel_data.writing():
+        for effect_id in effect_id_list:
+            EFFECT_DATA[effect_id](
+                0, 5, game_type.CharacterStatusChange(), game_time.now()
+            )
 
 
 def judge_instruct_show(instruct_id: str) -> bool:
@@ -924,8 +925,8 @@ def open_class_for_h1(period: int, reserved: bool = True) -> dict:
     dict -- 本节课的数据
     """
     cache.rhodes_island.temp_sex_class = {}
-    cache.sex_class_mode = False
-    cache.group_sex_mode = False
+    kernel_data.set_world(modes.set_sex_class, False)
+    kernel_data.set_world(modes.set_group_sex, False)
     for chara_id in (0, 201, 202):
         move_to(chara_id, classroom_path(ROOM_P))
         cache.character_data[chara_id].sp_flag.is_h = False
@@ -935,7 +936,7 @@ def open_class_for_h1(period: int, reserved: bool = True) -> dict:
     now_class = sex_class_handle.start_sex_class(70, [201, 202])
     pl.sp_flag.is_h = True
     pl.target_character_id = 201
-    EFFECT_DATA[10014](0, 5, game_type.CharacterStatusChange(), game_time.now())
+    run_effect_list([10014])
     return now_class
 
 
@@ -961,8 +962,8 @@ check(
 _h1_class = open_class_for_h1(1)
 check(
     "H1 前置：开课后课堂模式与群交模式都开着、玩家与两名学生都在 H 中、那节课 running",
-    cache.sex_class_mode
-    and cache.group_sex_mode
+    modes.sex_class()
+    and modes.group_sex()
     and pl.sp_flag.is_h
     and student_a.sp_flag.is_h
     and student_b.sp_flag.is_h
@@ -982,15 +983,15 @@ check(
         "H1 结束群交（371 效果串里的 407 / 10011）之后：群交模式已关、玩家与学生都已不在 H，"
         "课堂模式此刻还开着（效果串里没有 10015）"
     ),
-    not cache.group_sex_mode
+    not modes.group_sex()
     and not pl.sp_flag.is_h
     and not student_a.sp_flag.is_h
-    and cache.sex_class_mode,
+    and modes.sex_class(),
 )
 play()
 check(
     "H1 下一步的 OrphanClass 事件里下课：课堂模式已关、那节课不再 running（预约的打上 ended）",
-    not cache.sex_class_mode
+    not modes.sex_class()
     and sex_class_handle.get_running_class() is None
     and _h1_class.get("ended") is True,
     _h1_class,
@@ -1012,14 +1013,14 @@ check(
     class_ai.get_attend_or_join_stage(201, {"classroom": ROOM_P})
     == education_constant.COURSE_STAGE_ATTEND,
 )
-cache.group_sex_mode = True
+kernel_data.set_world(modes.set_group_sex, True)
 pl.sp_flag.is_h = True
 check(
     "H1 对照：普通群交（课堂模式没开）照常显示「结束群交」、不显示「结束性技实操课」",
     judge_instruct_show("group_sex_end")
     and not judge_instruct_show("end_sex_class"),
 )
-cache.group_sex_mode = False
+kernel_data.set_world(modes.set_group_sex, False)
 pl.sp_flag.is_h = False
 # 玩家体力归零（373，效果串与 371 相同）：当场开的课
 _h1_class = open_class_for_h1(2, reserved=False)
@@ -1033,8 +1034,7 @@ run_effect_list([407, 10011])
 play()
 check(
     "H1 玩家体力归零（373）收尾后同样下课：课堂模式已关、当场开的课条目直接删掉",
-    not cache.sex_class_mode
-    and _h1_key not in cache.rhodes_island.temp_sex_class,
+    not modes.sex_class() and _h1_key not in cache.rhodes_island.temp_sex_class,
 )
 # 只剩一名学生、转单人 H（375）后再结束 H（362）
 _h1_class = open_class_for_h1(3)
@@ -1045,12 +1045,12 @@ run_effect_list([10011])
 play()
 check(
     "H1 转单人 H（375 只有 10011）后玩家仍在 H：课照上（课堂模式开着、那节课仍 running）",
-    cache.sex_class_mode and _h1_class["running"] and pl.sp_flag.is_h,
+    modes.sex_class() and _h1_class["running"] and pl.sp_flag.is_h,
 )
 check(
     "H1 课还在上时 settle_orphan_class 什么都不做、返回 False",
     sex_class_handle.settle_orphan_class() is False
-    and cache.sex_class_mode
+    and modes.sex_class()
     and _h1_class["running"],
 )
 pl.target_character_id = 201
@@ -1058,7 +1058,7 @@ run_effect_list([404])
 play()
 check(
     "H1 这场单人 H 结束（362 的 404 清双方 H 状态）后下课",
-    not cache.sex_class_mode
+    not modes.sex_class()
     and sex_class_handle.get_running_class() is None
     and _h1_class.get("ended") is True
     and not pl.sp_flag.is_h
@@ -1067,31 +1067,31 @@ check(
 _h1_class = open_class_for_h1(5)
 student_b.sp_flag.is_h = False  # 女儿B 已先力竭退出，只剩女儿A
 sync()
-handle_npc_ai.commit_group_sex_tired_exit(201)
-play()
+kernel_data.written(handle_npc_ai.commit_group_sex_tired_exit, 201)
+play(keep_queue=True)
 check(
     (
         "H1 复审补：最后一名学生力竭退出（commit_group_sex_tired_exit 的真实调用链）→ 玩家结束群交 → "
         "这个行动收尾时下课：课堂模式已关、那节课打上 ended、学生已不在 H"
     ),
     pl.last_behavior_id_list[-1:] == [constant.Behavior.GROUP_SEX_END]
-    and not cache.sex_class_mode
+    and not modes.sex_class()
     and sex_class_handle.get_running_class() is None
     and _h1_class.get("ended") is True
     and not student_a.sp_flag.is_h,
-    (pl.last_behavior_id_list[-1:], cache.sex_class_mode, _h1_class),
+    (pl.last_behavior_id_list[-1:], modes.sex_class(), _h1_class),
 )
 # 旧档里已经留下的幽灵课堂：课堂模式开着、那节课 running，玩家早已不在 H
 cache.rhodes_island.temp_sex_class = {}
-cache.group_sex_mode = False
+kernel_data.set_world(modes.set_group_sex, False)
 pl.sp_flag.is_h = False
 _h1_ghost = sex_class_handle.set_temp_class(today, 4, ROOM_P, 70, running=True)
 _h1_ghost["reserved"] = True
-cache.sex_class_mode = True
+kernel_data.set_world(modes.set_sex_class, True)
 play()
 check(
     "H1 旧档里的幽灵课堂（课堂模式开着、玩家不在 H）：下一步的 OrphanClass 事件里收掉",
-    not cache.sex_class_mode
+    not modes.sex_class()
     and _h1_ghost["running"] is False
     and _h1_ghost.get("ended") is True,
     _h1_ghost,
@@ -1104,23 +1104,23 @@ cache.rhodes_island.temp_sex_class = {}
 sex_class_handle.set_temp_class(today - 1, 3, ROOM_P, 70, running=True)[
     "reserved"
 ] = True
-cache.sex_class_mode = True
+kernel_data.set_world(modes.set_sex_class, True)
 check(
     "H1 跨天清理：昨天留下的幽灵课堂按过期清掉、课堂模式一并关掉（此前跳过 running 的那条，永远不清）",
-    sex_class_handle.clean_expired_temp_class() == 1
+    kernel_data.written(sex_class_handle.clean_expired_temp_class) == 1
     and sex_class_handle.get_temp_class(today - 1, 3) is None
-    and not cache.sex_class_mode,
+    and not modes.sex_class(),
 )
 sex_class_handle.set_temp_class(today - 1, 3, ROOM_P, 70, running=True)
-cache.sex_class_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
 check(
     "H1 跨天清理：课堂模式没开、条目却还挂着 running 的，照样按过期清掉",
     sex_class_handle.clean_expired_temp_class() == 1
     and not cache.rhodes_island.temp_sex_class,
 )
 cache.rhodes_island.temp_sex_class = {}
-cache.sex_class_mode = False
-cache.group_sex_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
+kernel_data.set_world(modes.set_group_sex, False)
 for _cid in (0, 201, 202):
     cache.character_data[_cid].sp_flag.is_h = False
 
@@ -1272,8 +1272,8 @@ cache.rhodes_island.temp_sex_class = {}
 section(
     "Plan 32 L9：课堂成员按身份认——课中实行值跌破门槛的成年学生仍在旁观名单与在课前提里"
 )
-cache.sex_class_mode = False
-cache.group_sex_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
+kernel_data.set_world(modes.set_group_sex, False)
 set_time(period_time(3))
 _l9_day = (game_time.now().weekday() + 4) % 7
 schedule_handle.set_class_cell(ROOM_P, _l9_day, 8, 74, -1)
@@ -1288,8 +1288,8 @@ check(
     sex_class_handle.judge_has_sex_skill_course(303)
     and not sex_class_handle.judge_can_join_sex_class(303),
 )
-cache.sex_class_mode = True
-cache.group_sex_mode = True
+kernel_data.set_world(modes.set_sex_class, True)
+kernel_data.set_world(modes.set_group_sex, True)
 sex_class_handle.set_temp_class(today, 3, ROOM_P, 74, running=True)
 pl.sp_flag.is_h = True
 adult_student.sp_flag.is_h = (
@@ -1321,7 +1321,7 @@ check(
     and not handle_premise.handle_premise("self_in_sex_class", 301),
 )
 # 课堂 H 中玩家开时停（U1 单元复审补）：成员名单按身份认，旁观名单另判状态那一层（judge_sex_class_state_ok）。
-cache.time_stop_mode = True
+kernel_data.set_world(modes.set_time_stop, True)
 check(
     (
         "L9 复审补：时停中（全体 NPC 判意识不清）旁观名单为空：被冻结的学生不拿观摩收益、不派旁观口上（L9 "
@@ -1335,7 +1335,7 @@ check(
     303 in sex_class_handle.get_class_member_list(),
     sex_class_handle.get_class_member_list(),
 )
-cache.time_stop_mode = False
+kernel_data.set_world(modes.set_time_stop, False)
 check(
     "L9 复审补：关掉时停后旁观名单恢复",
     303 in sex_class_handle.get_watcher_list(),
@@ -1361,7 +1361,7 @@ check(
     and "[0000]女儿B" not in _l11_text,
     _l11_text,
 )
-cache.sex_class_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
 drawn_text.clear()
 group_sex_panel.Edit_Group_Sex_Temple_Panel(190).show_target_chara_list(
     "A", "mouth"
@@ -1383,8 +1383,8 @@ move_to(303, SCENE_DORM)
 schedule_handle.clear_class_cell(ROOM_P, _l9_day, 8)
 schedule_handle.clear_selected_course(303, _l9_day, 8)
 cache.rhodes_island.temp_sex_class = {}
-cache.sex_class_mode = False
-cache.group_sex_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
+kernel_data.set_world(modes.set_group_sex, False)
 
 section(
     "Plan 32 实施复审补：L11 主修加成只给课堂成员——经验写入段（common_default.base_chara_experience_common_settle）"
@@ -1403,10 +1403,8 @@ pl.sp_flag.is_h = (
     True  # 开课效果串里 462 的事（玩家进 H），与上面 H1 一段同写法
 )
 pl.target_character_id = 301
-# 开课效果串里的 464（交互对象变成 H 状态）：玩家的交互对象是跟进教室的成年干员，一并被拉进 H
-EFFECT_DATA[464](0, 5, game_type.CharacterStatusChange(), game_time.now())
-# 10014：两个模式置位、把场景里能参加的学生拉进 H（成年干员不是学生岗，门槛拦住她）
-EFFECT_DATA[10014](0, 5, game_type.CharacterStatusChange(), game_time.now())
+# 开课效果串里的 464 拉交互对象进 H，10014 置位两个模式并拉场景里符合门槛的学生进 H
+run_effect_list([464, 10014])
 student_b.sp_flag.is_h = (
     True  # 女儿B 在宿舍、别处的 H 里：是学生岗的女儿，但不在玩家的场景
 )
@@ -1422,8 +1420,8 @@ check(
         "把玩家的交互对象（非学生岗的成年干员）拉进了 H，"
         "她在玩家场景、在 H 里却不是成员；在宿舍 H 里的女儿B 不在玩家场景、也不是成员"
     ),
-    cache.sex_class_mode
-    and cache.group_sex_mode
+    modes.sex_class()
+    and modes.group_sex()
     and _l11_exp == growth_handle.get_subject_exp_id(70) > 0
     and student_a.sp_flag.is_h
     and 201 in _l11_members
@@ -1486,8 +1484,8 @@ check(
 )
 sex_class_handle.end_sex_class()
 cache.rhodes_island.temp_sex_class = {}
-cache.sex_class_mode = False
-cache.group_sex_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
+kernel_data.set_world(modes.set_group_sex, False)
 for _cid in (0, 201, 202, 301):
     cache.character_data[_cid].sp_flag.is_h = False
 pl.target_character_id = 0

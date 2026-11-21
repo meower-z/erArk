@@ -179,10 +179,11 @@ class Book43RemovedTest(SlowTestCase):
         from Script.Core import constant
         from Script.Design import handle_state_machine
 
-        for character_id in character_ids:
-            handle_state_machine.handle_state_machine(
-                constant.StateMachine.ENTERTAIN_READ, character_id
-            )
+        with kernel_data.writing():
+            for character_id in character_ids:
+                handle_state_machine.handle_state_machine(
+                    constant.StateMachine.ENTERTAIN_READ, character_id
+                )
         self.instruct(constant.Instruct.WAIT)
 
     def test_old_save_nobody_holds_book(self) -> None:

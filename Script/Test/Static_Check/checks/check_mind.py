@@ -22,7 +22,7 @@ from typing import TypeGuard
 
 from Script.Core import cache_control, num
 from Script.Design import map_handle
-from Script.Modules.domains import needs
+from Script.Modules.domains import achievement, modes, needs
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -174,7 +174,7 @@ def check_time_stop_player_unconscious() -> list[CheckFailure]:
         玩家半没有NPC半(MIND-02)已知的"时停中上线"例外，两者严重级别不同，故分列为error
     """
     cache = cache_control.cache
-    if cache is None or not getattr(cache, "time_stop_mode", False):
+    if cache is None or not modes.time_stop():
         return []
     pl = _pl()
     if pl is None:
@@ -189,7 +189,7 @@ def check_time_stop_player_unconscious() -> list[CheckFailure]:
             (
                 f"时停开启(time_stop_mode=True)但玩家sp_flag.unconscious_h={u}(应为3)，"
                 f"behavior_id={_behavior_id(pl)}，"
-                f"累计时停时长={getattr(getattr(cache, 'achievement', None), 'time_stop_duration', '?')}"
+                f"累计时停时长={achievement.get('time_stop_duration')}"
             ),
             [0],
         )
@@ -208,7 +208,7 @@ def check_time_stop_npc_unconscious() -> list[CheckFailure]:
         故聚合上报并标为warning，不逐角色刷屏
     """
     cache = cache_control.cache
-    if cache is None or not getattr(cache, "time_stop_mode", False):
+    if cache is None or not modes.time_stop():
         return []
     hits = []
     for cid, chara in _iter_npcs():
@@ -251,7 +251,7 @@ def check_time_stop_off_no_residual() -> list[CheckFailure]:
         （InstructConfig.csv:5214前提仅T_UNCONSCIOUS_FLAG_3）
     """
     cache = cache_control.cache
-    if cache is None or getattr(cache, "time_stop_mode", True):
+    if cache is None or modes.time_stop():
         return []
     hits = []
     pl = _pl()
@@ -288,7 +288,7 @@ def check_time_stop_requires_talent_316() -> list[CheckFailure]:
     if (
         cache is None
         or getattr(cache, "debug_mode", False)
-        or not getattr(cache, "time_stop_mode", False)
+        or not modes.time_stop()
     ):
         return []
     pl = _pl()
@@ -335,7 +335,7 @@ def check_time_stop_carry_free_fields_zero() -> list[CheckFailure]:
             "MIND-05",
             "时停搬运/自由活动字段在正常游戏中恒为零",
             f"[warning] 迁移/脏状态: carry_chara_id_in_time_stop={carry!r} free_in_time_stop_chara_id={free!r} "
-            f"(均应恒为0，当前版本正常路径写不出非零值)，time_stop_mode={getattr(cache, 'time_stop_mode', '?')}，"
+            f"(均应恒为0，当前版本正常路径写不出非零值)，time_stop_mode={modes.time_stop()}，"
             f"action_info.carry_chara_id={getattr(getattr(pl, 'action_info', None), 'carry_chara_id', '?')}",
             [0],
         )
@@ -355,7 +355,7 @@ def check_time_stop_no_residual_release_flag() -> list[CheckFailure]:
         效果527的循环显式跳过玩家(chara_id==0则continue)，故本式不覆盖玩家
     """
     cache = cache_control.cache
-    if cache is None or not getattr(cache, "time_stop_mode", False):
+    if cache is None or not modes.time_stop():
         return []
     hits = []
     for cid, chara in _iter_npcs():
@@ -703,7 +703,7 @@ def check_body_control_unconscious_needs_mode() -> list[CheckFailure]:
                     f"h_state.npc_active_h="
                     f"{getattr(h_state, 'npc_active_h', '?')} "
                     f"sp_flag.is_h={getattr(getattr(chara, 'sp_flag', None), 'is_h', '?')} "
-                    f"time_stop_mode={getattr(cache, 'time_stop_mode', '?')} "
+                    f"time_stop_mode={modes.time_stop()} "
                     f"behavior_id={_behavior_id(chara)}"
                 ),
                 [cid],
@@ -1189,7 +1189,7 @@ def check_time_stop_orgasm_count_shape() -> list[CheckFailure]:
                     (
                         f"[warning] 角色id={cid}({_name(chara)})的h_state.time_stop_orgasm_count结构非法: {d!r}，"
                         f"time_stop_release={getattr(h_state, 'time_stop_release', '?')} "
-                        f"time_stop_mode={getattr(cache, 'time_stop_mode', '?') if cache is not None else '?'}"
+                        f"time_stop_mode={modes.time_stop() if cache is not None else '?'}"
                     ),
                     [cid],
                 )

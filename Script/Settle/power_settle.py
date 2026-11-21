@@ -7,7 +7,7 @@ from types import FunctionType
 
 from Script.Config import game_config, normal_config
 from Script.Core import cache_control, get_text
-from Script.Modules.domains import power, power_supply
+from Script.Modules.domains import achievement, power, power_supply
 from Script.UI.Moudle import draw
 
 _: FunctionType = get_text._
@@ -115,7 +115,7 @@ def store_power_by_human_power(
             per_degree
         )
         draw_text.draw()
-    if not cache_control.cache.achievement.achievement_dict.get(827, False):
+    if not achievement.done(827):
         achievement_data = game_config.config_achievement[827]
         if per_degree >= achievement_data.value:
             from Script.UI.Panel import achievement_panel

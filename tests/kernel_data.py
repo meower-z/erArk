@@ -23,6 +23,10 @@ import contextlib
 from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
+from tests.kernel_project import domain as domain, mode as mode
+from tests.kernel_project import set_world_setting as set_world_setting
+from tests.kernel_project import world_settings as world_settings
+
 if TYPE_CHECKING:
     import datetime
     from collections.abc import Callable, Iterator
@@ -226,6 +230,9 @@ def put[**P](
         written(fn, *args, **kwargs)
 
 
+set_world = put
+
+
 def set_book_holders(holders: Mapping[int, int]) -> None:
     """
     把给出的书的借书人换成新值，别的书不变，写法同 put
@@ -351,7 +358,7 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
         work,
     )
     from Script.Modules.save_load import upgrade
-    from tests import base_projection
+    from tests import base_projection, kernel_project
     from tests.snapshot import flatten
 
     names = {"tired": "tired_point", "hunger": "hunger_point"}
@@ -408,6 +415,7 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     _project_economy(state)
     _project_travel(state)
     base_projection.project(state)
+    kernel_project.project_world_misc(state)
 
 
 def _project_travel(state: dict[str, object]) -> None:

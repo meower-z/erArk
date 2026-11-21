@@ -317,19 +317,15 @@ class MinimalWorld:
             game_config.init()
             character_config.init_character_tem_data()
             map_config.init_map_data()
-        from Script.Design import attr_calculation, basement
+        from Script.Design import basement
+        from Script.Modules.domains import playthrough
 
         self.cache = cache_control.cache
         """ 游戏缓存（对象一直不变，复原时原地改写） """
         cache = self.cache
         cache.npc_tem_data = dict(character_config.character_tem_list)
         kernel_data.reset_clock(start_time(), {})
-        cache.difficulty_setting = (
-            attr_calculation.get_difficulty_setting_zero()
-        )
-        cache.birth_type_setting = (
-            attr_calculation.get_birth_type_setting_zero()
-        )
+        kernel_data.written(playthrough.reset_difficulty_and_birth)
         cache.rhodes_island = kernel_data.new_island()
         kernel_data.written(basement.get_base_updata)
         for clothing_type, cloth_ids in STANDARD_OUTFIT.items():

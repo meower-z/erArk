@@ -15,19 +15,9 @@ from Script.Config import game_config
 from Script.Design import attr_calculation, character_handle, child_stage_gate
 from typing import TYPE_CHECKING, TypedDict
 from Script.Design import game_time
-from Script.Modules.domains import (
-    commission,
-    diplomacy,
-    economy,
-    library,
-    medical,
-    needs,
-    power,
-    production,
-    visitor,
-    recruit,
-    work,
-)
+from Script.Modules.domains import commission, diplomacy, economy, library
+from Script.Modules.domains import medical, modes, needs, playthrough, power
+from Script.Modules.domains import production, recruit, visitor, work
 from Script.Modules.save_load import upgrade
 
 if TYPE_CHECKING:
@@ -1668,8 +1658,6 @@ def update_character_config_data(value: game_type.Character) -> int:
                 constant.Behavior_Int, key
             ):
                 value.behavior.behavior_id = getattr(constant.Behavior, key)
-                # update_count += 1
-                # print(f"debug 更新了行为id: {key} -> {value.behavior.behavior_id}")
                 break
     second_behavior_copy = value.second_behavior.copy()
     # 遍历原始的二级行为字典，处理整型键的更新或删除
@@ -2495,7 +2483,7 @@ def _find_young_child_session(
     }
     if player is None or not young_child_id_set:
         return session
-    if loaded_dict.get("group_sex_mode"):
+    if loaded_dict.get("group_sex_mode", modes.group_sex()):
         in_template = False
         for character in character_data.values():
             for (
@@ -2530,7 +2518,7 @@ def _find_young_child_session(
             or in_template
             or child_in_scene_h
         )
-    if loaded_dict.get("time_stop_mode"):
+    if loaded_dict.get("time_stop_mode", modes.time_stop()):
         time_stop_id_set = {
             player.target_character_id,
             player.pl_ability.free_in_time_stop_chara_id,
@@ -2633,8 +2621,12 @@ def migrate_age_and_body_type(
           最后清掉世界设定1的开关
     """
     count = 0
-    world_setting = loaded_dict.get("world_setting", {})
-    world_setting_shrink = bool(world_setting.get(WORLD_SETTING_SHRINK, 0))
+    world_setting = loaded_dict.get("world_setting")
+    world_setting_shrink = bool(
+        world_setting.get(WORLD_SETTING_SHRINK, 0)
+        if isinstance(world_setting, dict)
+        else playthrough.setting(playthrough.WORLD, WORLD_SETTING_SHRINK, 0)
+    )
     # 先换静态干员的素质：药物缩成101/102的静态干员由此回到成年，不算孩子
     for character in loaded_dict["character_data"].values():
         if character.cid != 0 and not _is_player_daughter(character):
@@ -2675,6 +2667,9 @@ def migrate_age_and_body_type(
             slot_data[slot] = 0
             count += 1
     if world_setting_shrink:
-        world_setting[WORLD_SETTING_SHRINK] = 0
+        if isinstance(world_setting, dict):
+            world_setting[WORLD_SETTING_SHRINK] = 0
+        else:
+            playthrough.set_setting(playthrough.WORLD, WORLD_SETTING_SHRINK, 0)
         count += 1
     return count

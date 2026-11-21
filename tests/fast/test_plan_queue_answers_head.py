@@ -18,6 +18,7 @@ from Script.Design import character_behavior, handle_npc_ai
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions, plan_queue
 from Script.System.Instruct_System import handle_instruct
+from tests import kernel_data
 from tests.fast.base import FastTestCase
 from tests.world import play
 
@@ -33,8 +34,10 @@ class PlanQueueAnswersHeadTest(FastTestCase):
         self.world.chara(0, "博士")
         self.world.chara(NPC, "干员")
         player = self.cache.character_data[0]
-        plan_queue.plan_next(NPC, constant.Behavior.SLEEP, 60)
-        plan_queue.plan_next(0, constant.Behavior.REST, 7)
+        kernel_data.written(
+            plan_queue.plan_next, NPC, constant.Behavior.SLEEP, 60
+        )
+        kernel_data.written(plan_queue.plan_next, 0, constant.Behavior.REST, 7)
         player_starts: list[tuple[str, int, int]] = []
         npc_starts: list[tuple[str, int, int]] = []
 

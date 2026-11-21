@@ -1787,25 +1787,10 @@ class Cache:
         """ 禁止出现的干员id集合 """
         self.input_cache: list[str] = []
         """ 玩家指令输入记录（最大20）"""
-        self.daily_intsruce: list[str] = []
-        """ 每日指令输入记录 """
-        self.pl_pre_behavior_instruce: list[str] = []
-        """ 玩家过去行为指令记录，最大长度为10 """
-        self.taiggered_event_record: set = set()
-        """ 触发过的事件记录 """
-        self.today_taiggered_event_record: set = set()
-        """ 今日触发过的事件记录 """
         self.collect_position_list: list = []
         """ 收藏地点合集 """
         # self.clothing_type_data: dict = {}
         # """ 存储服装类型数据 """
-        self.difficulty_setting: dict[int, int] = {}
-        """ 本存档的难度设定，即difficulty类 """
-        self.birth_type_setting: dict[int, int] = {}
-        """ 本存档的生殖方式设定，即birth类，键为生育方式编号（2多胎胎生/11带壳卵生/12无壳卵生），值为0关闭/1开启，
-        关闭的生育方式一律按单胎胎生处理 """
-        self.noise_woken: dict[int, int] = {}
-        """ 睡中被吵醒、还没结算的角色：被吵醒的角色id 到产生动静的角色id """
         self.old_character_id: int = 0
         """ 离开场景面板前在场景中查看的角色id """
         self.map_data: dict[str, Map] = {}
@@ -1816,8 +1801,6 @@ class Cache:
         # """ 可穿戴道具类型数据 """
         self.over_behavior_character: set = set()
         """ 本次update中已结束结算的npc """
-        self.pl_sleep_save_flag: bool = False
-        """ 玩家睡觉，要进行存档 """
         self.recipe_data: dict[int, Recipes] = {}
         """ 菜谱数据 """
         self.npc_name_data: set = set()
@@ -1826,34 +1809,12 @@ class Cache:
         """ 记录射精位置 """
         self.debug_mode: bool = False
         """ debug模式 """
-        self.time_stop_mode: bool = False
-        """ 时间停止模式 """
-        self.group_sex_mode: bool = False
-        """ 群交模式 """
-        self.sex_class_mode: bool = False
-        """ 性技实操课（课堂H）模式（Plan 22 四期 §3.28）
-            开启时须同时置 group_sex_mode = True，群交模板与其全部读取点才生效；
-               本标志只用于口上差分、前提区分与结算差分（主修加成、旁观收益、出勤） """
-        self.game_round: int = 1
-        """ 当前周目数 """
         self.rhodes_island: Rhodes_Island = Rhodes_Island()
         """ 罗德岛相关属性 """
-        self.first_bonus: dict[int, int] = {}
-        """ 初期奖励 """
-        self.world_setting: dict[int, int] = {}
-        """ 世界设定 """
         # self.system_setting: Dict[int, int] = {}
         # """ 系统设定，见System_Setting.csv """
         self.ai_setting: Ai_Setting = Ai_Setting()
         """ ai设定 """
-        self.country: Country = Country()
-        """ 大地图国家数据 """
-        self.achievement: ACHIEVEMENT = ACHIEVEMENT()
-        """ 成就 """
-        self.plan_queue: dict[int, list[Any]] = {}
-        """ 计划队列：角色id -> 这个角色排着的行动（gameplay_resolution.plan_queue 的 (种类, 意图)）列表 """
-        self.player_route: tuple[Any, ...] | None = None
-        """ 玩家寻路途中为 (目标场景, 这一段的出发场景, 跟着走的干员id, 是否仍打开地图面板)，不在寻路时为 None """
 
 
 class TargetChange:

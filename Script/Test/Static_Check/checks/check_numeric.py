@@ -20,7 +20,7 @@ from typing import TypeGuard
 from Script.Core import cache_control, num
 from Script.Config import game_config
 from Script.Design import game_time
-from Script.Modules.domains import facility, needs, warehouse
+from Script.Modules.domains import facility, needs, playthrough, warehouse
 from ..check_registry import CheckFailure, register_check, make_failure
 
 
@@ -1195,10 +1195,7 @@ def check_num_29_urinate_point_upper_bound() -> list[CheckFailure]:
     cache = cache_control.cache
     if cache.debug_mode:
         return []
-    difficulty_setting = getattr(cache, "difficulty_setting", None)
-    difficulty_setting = (
-        difficulty_setting if isinstance(difficulty_setting, dict) else {}
-    )
+    difficulty_setting = playthrough.settings(playthrough.DIFFICULTY)
     failures = []
     for cid, chara in cache.character_data.items():
         urinate = needs.of(cid)["urine"]

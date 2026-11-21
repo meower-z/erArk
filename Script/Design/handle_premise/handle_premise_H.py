@@ -4,6 +4,7 @@ from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Config import game_config
 from Script.Design.handle_premise.premise_registry import add_premise
+from Script.Modules.domains import modes
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -2265,7 +2266,7 @@ def handle_sex_class_mode_on(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    return cache.sex_class_mode
+    return modes.sex_class()
 
 
 @add_premise(constant_promise.Premise.SEX_CLASS_MODE_OFF)
@@ -2277,7 +2278,7 @@ def handle_sex_class_mode_off(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    return not cache.sex_class_mode
+    return not modes.sex_class()
 
 
 @add_premise(constant_promise.Premise.SEX_CLASS_END_EARLY)
@@ -2372,7 +2373,7 @@ def handle_self_in_sex_class(character_id: int) -> int:
     """
     from Script.System.Education_System import sex_class_handle
 
-    if not cache.sex_class_mode:
+    if not modes.sex_class():
         return 0
     character_data: game_type.Character = cache.character_data[character_id]
     if not character_data.sp_flag.is_h:
@@ -4150,8 +4151,6 @@ def handle_have_anal_plug(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    # if character_data.item[130] > 0:
-    # return 1
     return 0
     # 在爱情旅馆的顶级套房中则临时持有
     if handle_h_in_love_hotel(character_id) and handle_love_hotel_room_v3(

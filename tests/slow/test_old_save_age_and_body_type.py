@@ -15,7 +15,7 @@ import importlib
 import shutil
 from typing import TYPE_CHECKING
 
-from tests import kernel_data
+from tests import kernel_data as kd
 from tests.slow.base import SlowTestCase
 
 if TYPE_CHECKING:
@@ -86,7 +86,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         """
         from Script.Core import game_type
 
-        daughter_id = kernel_data.born(mother_id, name)
+        daughter_id = kd.born(mother_id, name)
         daughter = self.cache.character_data[daughter_id]
         for talent_id in (101, 102, 103, 104, 6, 7):
             daughter.talent[talent_id] = 0
@@ -127,7 +127,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 if talent.get(talent_id, 0):
                     talent[talent_id] = 0
                     talent[103] = 1
-        cache.world_setting[1] = 1
+        kd.set_world_setting(1, 1)
         minor_id = [
             cid
             for cid in static_id_list
@@ -182,7 +182,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
 
         work = importlib.import_module("Script.Modules.domains.work")
         students = [*work.roster(152), id_dict["d102"]]
-        kernel_data.written(work.set_rosters, {**work.rosters(), 152: students})
+        kd.written(work.set_rosters, {**work.rosters(), 152: students})
         dormitory_common.new_character_get_dormitory(id_dict["d102"])
         self.assertIn(
             child.dormitory,
@@ -235,7 +235,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         child.sp_flag.imprisonment = True
         commission_id = min(game_config.config_commission)
         team = [child_id, mother_id]
-        kernel_data.written(start, commission_id, team, game_time.now(), [])
+        kd.written(start, commission_id, team, game_time.now(), [])
         child.sp_flag.field_commission = commission_id
         island.temp_sex_class["1-1"] = {
             "classroom": "理论教室一",
@@ -249,7 +249,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         island.manually_selected_exam_operator_ids.add(child_id)
         island.today_physical_examination_chara_id_dict[child_id] = {1}
         book_id = min(game_config.config_book)
-        kernel_data.set_book_holders({book_id: child_id})
+        kd.set_book_holders({book_id: child_id})
         child.entertainment.borrow_book_id_set = {book_id}
         cache.old_character_id = child_id
         # 玩家与她在单人H中（双方都在H、玩家所在房间关着门，她脱了一件衣服），母亲正对她做着别的行为；
@@ -346,7 +346,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         baby.target_character_id = 0
         for talent_id in (20, 21, 27):
             baby.talent[talent_id] = 1
-        kernel_data.set_needs(baby.cid, milk=50)
+        kd.set_needs(baby.cid, milk=50)
         baby.pregnancy.lactation_flag = True
         baby.pregnancy.fertilization_rate = 30
         baby.pregnancy.eggs = {0: {"identified": False, "fertilized": True}}
@@ -362,7 +362,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         mother = cache.character_data[mother_id]
         for talent_id in (23, 24, 27):
             mother.talent[talent_id] = 1
-        kernel_data.set_needs(mother_id, milk=80)
+        kd.set_needs(mother_id, milk=80)
         id_dict["mother"] = mother_id
         return id_dict
 
@@ -395,7 +395,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         from Script.Kernel import core
 
         snapshot: dict[str | int, object] = {
-            "world_setting": dict(self.cache.world_setting),
+            "world_setting": kd.world_settings(),
             "template": repr(self.cache.rhodes_island.child_schedule_template),
             "eggs": repr((collection.held_eggs, collection.soft_eggs)),
             "npc_id_got": sorted(self.cache.npc_id_got),
@@ -494,7 +494,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
 
         cache = self.cache
         work = importlib.import_module("Script.Modules.domains.work")
-        self.assertEqual(cache.world_setting.get(1, 0), 0, "世界设定1应已关闭")
+        self.assertEqual(kd.world_settings().get(1, 0), 0, "世界设定1应已关闭")
         for cid, chara in cache.character_data.items():
             stage_list = [
                 talent_id
@@ -683,7 +683,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         )
         self.assertEqual(
             (
-                kernel_data.needs_of(baby.cid)["milk"],
+                kd.needs_of(baby.cid)["milk"],
                 baby.pregnancy.lactation_flag,
                 baby.pregnancy.fertilization_rate,
                 baby.pregnancy.eggs,
@@ -812,7 +812,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         self.assertEqual(
             (
                 [mother.talent.get(talent_id, 0) for talent_id in (23, 24, 27)],
-                kernel_data.needs_of(mother.cid)["milk"],
+                kd.needs_of(mother.cid)["milk"],
             ),
             ([1, 1, 1], 80),
             "母亲的产后、育儿与泌乳保持原样",
@@ -998,7 +998,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         无
         """
         cache = self.cache
-        cache.world_setting[1] = 0
+        kd.set_world_setting(1, 0)
         static_id_list = [
             cid
             for cid, chara in cache.character_data.items()
@@ -1055,7 +1055,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 character_id,
             )
         cache.npc_id_got.add(child_id)
-        cache.group_sex_mode = True
+        kd.set_world(kd.domain("modes").set_group_sex, True)
         player.sp_flag.is_h = True
         for character_id in (child_id, other_id):
             cache.character_data[character_id].sp_flag.is_h = True
@@ -1088,7 +1088,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         snapshot_list = []
         for _ in range(2):
             self._save_and_load()
-            self.assertFalse(cache.group_sex_mode, "群交模式已关闭")
+            self.assertFalse(kd.mode("group_sex"), "群交模式已关闭")
             for character_id in (0, child_id, other_id):
                 chara = cache.character_data[character_id]
                 self.assertFalse(

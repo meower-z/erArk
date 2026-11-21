@@ -25,6 +25,7 @@ import random
 
 from Script.UI.Panel import achievement_panel
 from Script.Design import game_time
+from Script.Modules.domains import achievement, modes
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -497,26 +498,19 @@ def ejaculation_flow(
         # 群交中
         if handle_premise.handle_group_sex_mode_on(0):
             # 成就记录
-            cache.achievement.group_sex_record.setdefault(1, [])
-            if target_character_id not in cache.achievement.group_sex_record[1]:
-                cache.achievement.group_sex_record[1].append(
-                    target_character_id
-                )
+            achievement.append_entry("group_sex_record", 1, target_character_id)
         # 隐奸状态下
         elif handle_premise.handle_hidden_sex_mode_ge_1(0):
             # 成就统计
-            cache.achievement.hidden_sex_record.setdefault(3, 0)
-            cache.achievement.hidden_sex_record[3] += 1
+            achievement.add_entry("hidden_sex_record", 3)
         # 露出状态下
         elif handle_premise.handle_exhibitionism_sex_mode_ge_1(0):
             # 成就统计
-            cache.achievement.exhibitionism_sex_record.setdefault(3, 0)
-            cache.achievement.exhibitionism_sex_record[3] += 1
+            achievement.add_entry("exhibitionism_sex_record", 3)
         # 睡奸状态下
         elif handle_premise.handle_t_unconscious_flag_1(0):
             # 成就统计
-            cache.achievement.sleep_sex_record.setdefault(2, 0)
-            cache.achievement.sleep_sex_record[2] += 1
+            achievement.add_entry("sleep_sex_record", 2)
         # 正常射精时
         if not character_data.h_state.body_item[13][1]:
             # 射在体外无壳卵上
@@ -636,7 +630,7 @@ class Ejaculation_Panel:
             else:
                 self.shoot_here(6, 0)
         # 群交模式下手动选择对象与部位
-        elif cache.group_sex_mode:
+        elif modes.group_sex():
             self.draw_choose_target_chara_in_group_sex()
             self.draw_choose_part()
         # 有体外卵时强制手动选择

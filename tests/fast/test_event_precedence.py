@@ -22,7 +22,7 @@ from unittest import mock
 from Script.Design import attr_calculation, character_behavior, game_time
 from Script.Design import handle_premise
 from Script.Kernel import core
-from Script.Modules.domains import needs
+from Script.Modules.domains import modes, needs
 from Script.Modules.gameplay_resolution import actions, events, time_hooks
 from Script.Modules.gameplay_resolution import working
 from Script.Settle import realtime_settle
@@ -62,7 +62,11 @@ def state(clock: int, ticked: int, settled_day: int) -> core.GameState:
         clock,
         MappingProxyType(characters),
         MappingProxyType(
-            {time_hooks.TICKED: ticked, time_hooks.SETTLED_DAY: settled_day}
+            {
+                **core.state().data,
+                time_hooks.TICKED: ticked,
+                time_hooks.SETTLED_DAY: settled_day,
+            }
         ),
     )
 
@@ -92,7 +96,9 @@ class PrecedenceTest(FastTestCase):
         self.arts_due = False
         self.enterContext(
             mock.patch.object(
-                realtime_settle, "arts_break_due", lambda: self.arts_due
+                realtime_settle,
+                "arts_break_due",
+                lambda game=None: self.arts_due,
             )
         )
 
@@ -126,7 +132,7 @@ class PrecedenceTest(FastTestCase):
 
     def test_world_and_character_events_wait_for_the_clock(self) -> None:
         """Tick 没结算时，OrphanClass、ArtsBreak、BecomeTired、TargetLeft、PlayerSpent 都不触发"""
-        self.cache.sex_class_mode = True
+        kernel_data.set_world(modes.set_sex_class, True)
         kernel_data.set_needs(self.npc.cid, hit=1)
         self.arts_due = True
         self.enterContext(
@@ -260,7 +266,7 @@ class PrecedenceTest(FastTestCase):
         kernel_data.set_needs(self.player.cid, hit=100)
         self.npc.sp_flag.is_h = True
         self.npc.sp_flag.tired = True
-        self.cache.group_sex_mode = False
+        kernel_data.set_world(modes.set_group_sex, False)
         self.arts_due = False
         scene()
 
@@ -278,4 +284,4 @@ class PrecedenceTest(FastTestCase):
 
     def group_sex(self) -> None:
         """群交中"""
-        self.cache.group_sex_mode = True
+        kernel_data.set_world(modes.set_group_sex, True)

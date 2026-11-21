@@ -248,7 +248,7 @@ def new_game_minimal_init() -> None:
     from Script.Config import game_config, normal_config
     from Script.Core import io_init
     from Script.System.Dormitory_System import common as dormitory_common
-    from Script.Modules.domains import warehouse
+    from Script.Modules.domains import playthrough, warehouse
 
     cache = cache_control.cache
 
@@ -265,12 +265,11 @@ def new_game_minimal_init() -> None:
 
     # 初始奖励 / 世界设定 (等同 first_bonus_and_setting_updata 的核心)
     for cid in game_config.config_first_bonus:
-        cache.first_bonus[cid] = False
+        playthrough.set_setting(playthrough.FIRST_BONUS, cid, False)
     for cid in game_config.config_world_setting:
-        cache.world_setting[cid] = 0
+        playthrough.set_setting(playthrough.WORLD, cid, 0)
     normal_config.system_setting = attr_calculation.get_system_setting_zero()
-    cache.difficulty_setting = attr_calculation.get_difficulty_setting_zero()
-    cache.birth_type_setting = attr_calculation.get_birth_type_setting_zero()
+    playthrough.reset_difficulty_and_birth()
     warehouse.start({1: 20000, 11: 20})
     cache.rhodes_island.physical_examination_setting = (
         attr_calculation.get_physical_exam_setting_zero()

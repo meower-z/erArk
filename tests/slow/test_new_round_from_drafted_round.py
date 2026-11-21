@@ -91,6 +91,7 @@ class NewRoundFromDraftedRoundTest(SlowTestCase):
         new_round = game("Script.UI.Panel.new_round")
         edits = game("Script.Modules.gameplay_resolution.edits")
         cache_control = game("Script.Core.cache_control")
+        playthrough = game("Script.Modules.domains.playthrough")
 
         self.world.player.press(
             "[011]", self.talent_button(KEPT_TALENT), "[返回]", "[返回]"
@@ -102,7 +103,7 @@ class NewRoundFromDraftedRoundTest(SlowTestCase):
         self.assertEqual(player.talent[DRAFTED_TALENT], 0)
 
         self.wait()
-        before_round = cache_control.cache.game_round
+        before_round = playthrough.game_round()
         first = kernel_state.first_clock()
         self.assertGreater(kernel.state().clock, first, "开局后时钟已走过")
         handle_init = new_round.New_Round_Handle.__init__
@@ -126,7 +127,9 @@ class NewRoundFromDraftedRoundTest(SlowTestCase):
         ):
             self.pick_in_arts_panel()
         cache = cache_control.cache
-        self.assertEqual(cache.game_round, before_round + 1, "周目数加一")
+        self.assertEqual(
+            playthrough.game_round(), before_round + 1, "周目数加一"
+        )
         self.assertEqual(kernel.state().clock, first, "新周目从开局时刻开始")
         player = cache.character_data[0]
         self.assertEqual(

@@ -7,7 +7,7 @@ from Script.Core.game_type import Recipes, Food
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.Design import handle_premise
-from Script.Modules.domains import economy, kitchen
+from Script.Modules.domains import achievement, economy, kitchen
 from Script.Modules.save_load import reset
 from Script.UI.Moudle import view
 
@@ -408,7 +408,7 @@ def player_make_dishes(
         food.special_seasoning_amount = semen_count
         character_data.food_bag[food.uid] = food
         made.append(food.uid)
-        cache.achievement.make_food_count += 1
+        achievement.add("make_food_count", 1)
     return made
 
 

@@ -17,7 +17,7 @@ from Script.Design import (
     basement,
 )
 from Script.Core import get_text, cache_control, game_type, constant
-from Script.Modules.domains import kitchen, production
+from Script.Modules.domains import kitchen, modes, production
 from Script.UI.Moudle import draw
 from Script.Modules.domains import economy
 
@@ -3608,11 +3608,8 @@ def character_education_join_sex_class(character_id: int) -> choice.Plan:
     plan.set("sp_flag.go_to_join_group_sex", False)
     plan.set("target_character_id", character_id)
     must_attend = character_id in sex_class_handle.get_must_attend_set()
-    if (
-        not cache.sex_class_mode
-        or not sex_class_handle.judge_can_join_sex_class(
-            character_id, check_course=not must_attend
-        )
+    if not modes.sex_class() or not sex_class_handle.judge_can_join_sex_class(
+        character_id, check_course=not must_attend
     ):
         plan.set("behavior.behavior_id", constant.Behavior.SHARE_BLANKLY)
         plan.set("behavior.duration", 1)

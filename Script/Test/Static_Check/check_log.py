@@ -25,6 +25,7 @@ import traceback
 
 from Script.Config import normal_config, game_config
 from Script.Design import game_time
+from Script.Modules.domains import history, playthrough
 from . import snapshot as snapshot_module
 from .check_registry import CheckFailure, get_all_checks
 
@@ -191,10 +192,10 @@ def _build_recent_behavior_text(cache: game_type.Cache) -> str:
     返回值:
         str: 最近行为指令（id+中文名）的可读文本
     功能:
-        遍历cache.pl_pre_behavior_instruce，将每个行为id翻译为中文名称（查不到则仅保留id），拼接为日志展示用文本；
+        遍历玩家最近的行为id（history.recent），将每个行为id翻译为中文名称（查不到则仅保留id），拼接为日志展示用文本；
         翻译逻辑与Script/Core/game_init.py中崩溃日志的写法保持一致，使用try/except兜底防止个别未知id导致异常
     """
-    behavior_id_list = getattr(cache, "pl_pre_behavior_instruce", []) or []
+    behavior_id_list = history.recent()
     text_list = []
     for behavior_id in behavior_id_list:
         try:
@@ -269,7 +270,7 @@ def _build_entry_header_lines(
         构造日志条目的公共头部，供失败条目与修复条目共用
     """
     game_time_text = game_time.now()
-    game_round_text = getattr(cache, "game_round", "未知")
+    game_round_text = playthrough.game_round()
     lines = []
     lines.append("=" * 80)
     lines.append(

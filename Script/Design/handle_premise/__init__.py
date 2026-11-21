@@ -28,7 +28,7 @@ from Script.Design.handle_premise.handle_premise_body_manage import *
 from Script.Design.handle_premise.handle_premise_work import *
 from Script.Design.handle_premise.handle_premise_food import *
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import needs
+from Script.Modules.domains import history, needs
 
 cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -649,7 +649,7 @@ def handle_comprehensive_value_premise(
     # 前指令的单独计算
     elif premise_all_value_list[1][0] == "I":
         if "Instruct" in premise_all_value_list[1]:
-            len_pre_behavior = len(cache.pl_pre_behavior_instruce)
+            len_pre_behavior = len(history.recent())
             behavior_id_str = "_".join(premise_all_value_list[1:-2])
             premise_all_value_list[1] = behavior_id_str
             premise_all_value_list = (
@@ -660,9 +660,7 @@ def handle_comprehensive_value_premise(
             # 指令计数
             count = 0
             for i in range(len_pre_behavior):
-                last_cmd = cache.pl_pre_behavior_instruce[
-                    len_pre_behavior - 1 - i
-                ]
+                last_cmd = history.recent()[len_pre_behavior - 1 - i]
                 # 跳过当前指令
                 if count == 0:
                     count += 1

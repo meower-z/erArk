@@ -11,6 +11,7 @@
 from Script.Core import constant
 from Script.Design import character_behavior, update
 from Script.Kernel import core
+from Script.Modules.domains import history
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 
@@ -45,7 +46,9 @@ class PlayerTargetAfterActionTest(FastTestCase):
         """刚移动过来，交互对象是自己：换成场景里的干员2"""
         self.world.chara(HERE, "在场的干员")
         self.player.target_character_id = 0
-        self.cache.pl_pre_behavior_instruce.append(constant.Behavior.MOVE)
+        kernel_data.set_world(
+            history.set_recent, [*history.recent(), constant.Behavior.MOVE]
+        )
         character_behavior.player_after_end()
         self.assertEqual(self.player.target_character_id, HERE)
 

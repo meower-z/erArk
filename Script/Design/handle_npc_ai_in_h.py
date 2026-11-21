@@ -22,7 +22,7 @@ from Script.Design import (
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Design import game_time
-from Script.Modules.domains import needs
+from Script.Modules.domains import achievement, history, needs
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -93,8 +93,8 @@ def judge_character_h_obscenity_unconscious(
         # 二次确认H意外结束的归零结算
         special_end_list = constant.special_end_H_list
         if (
-            len(cache.pl_pre_behavior_instruce)
-            and cache.pl_pre_behavior_instruce[-1] in special_end_list
+            len(history.recent())
+            and history.recent()[-1] in special_end_list
             and character_data.behavior.behavior_id not in special_end_list
         ):
             default.handle_both_h_state_reset(
@@ -287,7 +287,7 @@ def recover_from_unconscious_h(character_id: int, info_text: str = "") -> None:
             target_data.h_state.pretend_sleep = True
             target_data.sp_flag.unconscious_h = 1
             # 成就刷新
-            cache.achievement.sleep_sex_record[1] = 1
+            achievement.set_entry("sleep_sex_record", 1, 1)
     # 否则对象只等1分钟，地点开门；双方H结构体由排上的结束无意识H在补体力气力上限之后重置
     else:
         wait_minutes = 1
@@ -458,13 +458,13 @@ def judge_weak_up_in_sleep_h(
     character_id: int, target_character_id: int
 ) -> None:
     """
-    判断睡眠中是否被吵醒：掷骰，吵醒时记进 cache.noise_woken，掷骰的这一步里由 time_hooks 结算（wake_by_noise）\n
+    判断睡眠中是否被吵醒：掷骰，吵醒时记进 needs.sleep_noise，掷骰的这一步里由 time_hooks 结算（wake_by_noise）\n
     每个睡着的人各掷一次；她已被吵醒而还没结算时不再掷骰\n
     Keyword arguments:\n
     character_id -- 产生动作的角色id\n
     target_character_id -- 需要判定是否醒来的睡眠角色id\n
     """
-    if target_character_id in cache.noise_woken:
+    if target_character_id in needs.noise_woken():
         return
 
     # 浅睡和半梦半醒时递增苏醒概率
@@ -474,7 +474,7 @@ def judge_weak_up_in_sleep_h(
         weak_rate += game_config.config_sleep_level[0].sleep_point - sleep
     # 判定是否吵醒
     if weak_rate >= random.randint(1, 100):
-        cache.noise_woken[target_character_id] = character_id
+        needs.note_woken(target_character_id, character_id)
 
 
 def wake_by_noise(character_id: int, target_character_id: int) -> None:

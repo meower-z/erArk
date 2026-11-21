@@ -9,6 +9,7 @@ from Script.Core import cache_control, game_type, get_text, num
 from Script.Config import game_config, normal_config
 from Script.Design import attr_text, game_time
 from Script.UI.Panel import character_info_head, hypnosis_panel
+from Script.Modules.domains import playthrough
 
 if TYPE_CHECKING:
     import datetime
@@ -536,19 +537,17 @@ class FirstRecordText:
         first_record_history = getattr(
             character_data, "first_record_history", {}
         )
-        available_round_list = sorted(first_record_history)
-        available_round_list.append(cache.game_round)
+        cur = playthrough.game_round()
+        available_round_list = [*sorted(first_record_history), cur]
         # 当前查看的周目（无效选择时回退为当前周目）
-        now_round = (
-            _selected_round
-            if _selected_round in available_round_list
-            else cache.game_round
+        in_rounds = _selected_round in available_round_list
+        now_round = _selected_round if in_rounds else cur
+        is_current = now_round == cur
+        first_record = (
+            character_data.first_record
+            if is_current
+            else first_record_history[now_round]
         )
-        is_current = now_round == cache.game_round
-        if is_current:
-            first_record = character_data.first_record
-        else:
-            first_record = first_record_history[now_round]
 
         # 周目切换按钮行（存在历史周目时才显示，▶标记当前查看的周目）
         if len(available_round_list) > 1:
@@ -557,7 +556,7 @@ class FirstRecordText:
             switch_tip_draw.width = width
             self.draw_list.append(switch_tip_draw)
             for round_num in available_round_list:
-                if round_num == cache.game_round:
+                if round_num == cur:
                     button_label = _("第{0}周目(当前)").format(round_num)
                 else:
                     button_label = _("第{0}周目").format(round_num)

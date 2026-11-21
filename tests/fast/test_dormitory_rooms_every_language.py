@@ -64,10 +64,10 @@ core.reset_state(
     )
 )
 normal_config.system_setting = attr_calculation.get_system_setting_zero()
-cache.difficulty_setting = attr_calculation.get_difficulty_setting_zero()
-cache.birth_type_setting = attr_calculation.get_birth_type_setting_zero()
 cache.rhodes_island = basement.get_base_zero()
 from tests import kernel_data
+from Script.Modules.domains import playthrough
+kernel_data.written(playthrough.reset_difficulty_and_birth)
 kernel_data.written(basement.get_base_updata)
 levels = {}
 for level in range(1, 6):

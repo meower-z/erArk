@@ -4,6 +4,7 @@ import random
 from Script.Core import cache_control, game_type
 from Script.UI.Panel import draw_event_text_panel
 from Script.Config import game_config
+from Script.Modules.domains import history
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -105,19 +106,19 @@ def handle_event(
                     continue
             # 和触发记录相关的前提
             if "this_event_in_triggered_record" in event_config.premise:
-                if event_id not in cache.taiggered_event_record:
+                if not history.triggered(event_id):
                     continue
             if "this_event_not_in_triggered_record" in event_config.premise:
-                if event_id in cache.taiggered_event_record:
+                if history.triggered(event_id):
                     continue
             if "this_event_in_today_triggered_record" in event_config.premise:
-                if event_id not in cache.today_taiggered_event_record:
+                if not history.triggered_today(event_id):
                     continue
             if (
                 "this_event_not_in_today_triggered_record"
                 in event_config.premise
             ):
-                if event_id in cache.today_taiggered_event_record:
+                if history.triggered_today(event_id):
                     continue
             if len(event_config.premise):
                 # 计算前提字典的总权重

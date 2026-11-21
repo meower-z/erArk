@@ -17,7 +17,7 @@ from unittest import mock
 
 from Script.Config import character_config
 from Script.Core import game_type, save_handle
-from Script.Design import attr_calculation
+from Script.Modules.domains import country
 from Script.Modules.save_load import index
 from Script.UI.Moudle import draw
 from tests import kernel_data
@@ -84,9 +84,7 @@ class SaveLeavesOutTest(FastTestCase):
         with (
             mock.patch.object(draw, "NormalDraw", Recorder),
             mock.patch.object(draw, "LeftDraw", Recorder),
-            mock.patch.object(
-                attr_calculation, "get_country_reset", lambda c: c
-            ),
+            mock.patch.object(country, "fill", lambda: None),
             kernel_data.writing(),
         ):
             save_handle.install_save(SLOT, 1)
