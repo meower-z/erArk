@@ -13,10 +13,9 @@ from collections.abc import Callable, Mapping
 from typing import TypedDict, cast
 
 from Script.Config import game_config
-from Script.Core import cache_control
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import working
-from Script.Modules.domains import facility, work
+from Script.Modules.domains import facility, warehouse, work
 
 KEY = "base.power_strategy"
 """ 供电策略在全局数据里的键 """
@@ -255,12 +254,9 @@ def change_aux_reactors(delta: int) -> None:
     Keyword arguments:
     delta -- 大于 0 为增加，否则为减少
     """
-    island = cache_control.cache.rhodes_island
     aux = plant()["aux_reactors"]
     if delta > 0:
-        aux = min(
-            aux + 1, main_reactor_level() * 2 + 3 + island.materials_resouce[51]
-        )
+        aux = min(aux + 1, main_reactor_level() * 2 + 3 + warehouse.amount(51))
     elif aux > 0:
         aux -= 1
     set_plant(aux_reactors=aux)
@@ -277,11 +273,7 @@ def change_clean(kind: int, delta: int) -> int | None:
     """
     clean = list(plant()["clean"])
     if delta > 0:
-        limit = (
-            main_reactor_level() * 2
-            + 3
-            + cache_control.cache.rhodes_island.materials_resouce[53]
-        )
+        limit = main_reactor_level() * 2 + 3 + warehouse.amount(53)
         if sum(clean) >= limit:
             return limit
     clean[kind] = max(0, clean[kind] + delta)
@@ -300,11 +292,7 @@ def change_battery(level: int, delta: int) -> int | None:
     """
     batteries = list(plant()["batteries"])
     if delta > 0:
-        limit = (
-            main_reactor_level() * 2
-            + 8
-            + cache_control.cache.rhodes_island.materials_resouce[52]
-        )
+        limit = main_reactor_level() * 2 + 8 + warehouse.amount(52)
         if sum(batteries) >= limit:
             return limit
         batteries[level] += 1

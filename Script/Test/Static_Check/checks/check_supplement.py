@@ -20,7 +20,7 @@ from types import FunctionType
 from Script.Core import cache_control, get_text
 from Script.Config import game_config
 from Script.Design import map_handle
-from Script.Modules.domains import facility, needs, power
+from Script.Modules.domains import facility, needs, power, warehouse
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -330,24 +330,23 @@ def check_used_extra_warehouse_capacity_module_non_negative() -> (
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
     功能:
-        来源: NO-05（只取独立于NUM-26的后半式）。校验cache.rhodes_island.
-        used_extra_warehouse_capacity_module类型为int且不小于0。该计数参与
-        warehouse_capacity=base+used*200并在装配线面板增量更新容量，负数没有玩法语义，
-        且会把派生仓储容量向下扣减，可能在基础容量仍足够大时绕过既有的warehouse_capacity>=0检查。
-        使用type(v) is int以拒绝bool
+        来源: NO-05（只取独立于NUM-26的后半式）。校验base.warehouse_modules（warehouse.extra_modules()）
+        类型为int且不小于0。basement.update_facility_limits按 仓储区设施效果+模块数*200 算warehouse_capacity，
+        装配线结算每产出一个模块把容量加200。负数没有玩法语义，会把容量往下扣，
+        可能在基础容量仍足够大时绕过NUM-26的warehouse_capacity>=0检查。使用type(v) is int以拒绝bool
     """
     cache = cache_control.cache
     ri = getattr(cache, "rhodes_island", None)
     if ri is None:
         return []
-    used = getattr(ri, "used_extra_warehouse_capacity_module", 0)
+    used = warehouse.extra_modules()
     if type(used) is not int or used < 0:
         return [
             make_failure(
                 "SUPP-07",
                 "仓储扩展模块使用数非负",
                 (
-                    f"cache.rhodes_island.used_extra_warehouse_capacity_module={used}，类型或值不满足type是int且>=0；"
+                    f"base.warehouse_modules={used}，类型或值不满足type是int且>=0；"
                     f"warehouse_capacity={getattr(ri, 'warehouse_capacity', None)}，"
                     f"facility_level[3]={facility.levels().get(3)}"
                 ),

@@ -21,6 +21,7 @@ from Script.System.Medical_System import (
 )
 from Script.Modules.tk_ui import player_pick
 from Script.UI.Moudle import draw, view
+from Script.Modules.domains import warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 全局缓存对象 """
@@ -927,12 +928,8 @@ class MedicalPlayerDiagnosePanel:
         rhodes_island = getattr(cache, "rhodes_island", None)
         if rhodes_island is None:
             return {}
-        inventory = getattr(rhodes_island, "materials_resouce", None)
-        if not isinstance(inventory, dict):
-            return {}
-
         snapshot: dict[int, float] = {}
-        for resource_id, value in inventory.items():
+        for resource_id, value in warehouse.stock().items():
             try:
                 snapshot[int(resource_id)] = float(value or 0.0)
             except (TypeError, ValueError):

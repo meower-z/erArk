@@ -24,6 +24,7 @@ from Script.System.Medical_System import (
     medical_constant,
     medical_core,
 )
+from Script.Modules.domains import warehouse
 
 _: FunctionType = get_text._
 """ 翻译函数 """
@@ -273,9 +274,7 @@ def settle_medical_department(
 
     # 计算药品库存快照，便于日志输出消耗、缺口与库存
     inventory_snapshot: dict[int, dict[str, float]] = {}
-    inventory_map = {}
-    if isinstance(getattr(rhodes_island, "materials_resouce", None), dict):
-        inventory_map = dict(rhodes_island.materials_resouce)
+    inventory_map = warehouse.stock()
     accumulator_map = dict(
         getattr(rhodes_island, "medical_inventory_accumulator", {}) or {}
     )

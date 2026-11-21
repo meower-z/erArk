@@ -12,6 +12,7 @@ from Script.Design import attr_calculation
 from Script.Modules.domains import economy
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
+from Script.Modules.domains import warehouse
 import random
 
 cache: game_type.Cache = cache_control.cache
@@ -127,39 +128,39 @@ def perform_trade(
     if price <= 0:
         return None
     # 初始化资源库存
-    cache.rhodes_island.materials_resouce.setdefault(resouce_id, 0)
-    cache.rhodes_island.materials_resouce.setdefault(1, 0)
+    warehouse.ensure(resouce_id)
+    warehouse.ensure(1)
 
     result_quantity = quantity
     # 买入操作
     if buy_flag:
         capacity_left = (
             cache.rhodes_island.warehouse_capacity
-            - cache.rhodes_island.materials_resouce[resouce_id]
+            - warehouse.amount(resouce_id)
         )
         # 仓库已满无法购买
         if capacity_left <= 0:
             return None
         result_quantity = min(result_quantity, capacity_left)
         if price > 0:
-            affordable = cache.rhodes_island.materials_resouce[1] // price
+            affordable = warehouse.amount(1) // price
             result_quantity = min(result_quantity, affordable)
         if result_quantity <= 0:
             return None
         total_price = price * result_quantity
-        cache.rhodes_island.materials_resouce[resouce_id] += result_quantity
-        cache.rhodes_island.materials_resouce[1] -= total_price
+        warehouse.add(resouce_id, result_quantity)
+        warehouse.add(1, -total_price)
         _adjust_supply_demand_after_trade(resouce_id, result_quantity, True)
     # 卖出操作
     else:
-        available = cache.rhodes_island.materials_resouce[resouce_id]
+        available = warehouse.amount(resouce_id)
         result_quantity = min(result_quantity, available)
         # 无法卖出任何数量
         if result_quantity <= 0:
             return None
         total_price = price * result_quantity
-        cache.rhodes_island.materials_resouce[resouce_id] -= result_quantity
-        cache.rhodes_island.materials_resouce[1] += total_price
+        warehouse.add(resouce_id, -result_quantity)
+        warehouse.add(1, total_price)
         _adjust_supply_demand_after_trade(resouce_id, result_quantity, False)
 
     economy.add_traded(resouce_id, result_quantity)
@@ -195,22 +196,18 @@ def auto_trade_resources() -> None:
             sell_on = settings.get("sell_on", False)
             sell_stock = settings.get("sell_stock", 0)
             sell_percent = settings.get("sell_price_percent", 0)
-            cache.rhodes_island.materials_resouce.setdefault(resouce_id, 0)
+            warehouse.ensure(resouce_id)
 
             # 自动卖出
             if (
                 sell_on
                 and sell_stock >= 0
                 and sell_percent > 0
-                and cache.rhodes_island.materials_resouce[resouce_id]
-                > sell_stock
+                and warehouse.amount(resouce_id) > sell_stock
             ):
                 _price_now, percent_sell = get_resouce_price(resouce_id, False)
                 if percent_sell + 100 >= sell_percent:
-                    need_qty = (
-                        cache.rhodes_island.materials_resouce[resouce_id]
-                        - sell_stock
-                    )
+                    need_qty = warehouse.amount(resouce_id) - sell_stock
                     trade_ret = perform_trade(resouce_id, need_qty, False)
                     if trade_ret:
                         summary_lines.append(
@@ -228,15 +225,11 @@ def auto_trade_resources() -> None:
                 and buy_stock > 0
                 and buy_percent > 0
                 and resouce_data.cant_buy == 0
-                and cache.rhodes_island.materials_resouce[resouce_id]
-                < buy_stock
+                and warehouse.amount(resouce_id) < buy_stock
             ):
                 _price_now, percent_buy = get_resouce_price(resouce_id, True)
                 if percent_buy + 100 <= buy_percent:
-                    need_qty = (
-                        buy_stock
-                        - cache.rhodes_island.materials_resouce[resouce_id]
-                    )
+                    need_qty = buy_stock - warehouse.amount(resouce_id)
                     trade_ret = perform_trade(resouce_id, need_qty, True)
                     if trade_ret:
                         summary_lines.append(
@@ -387,16 +380,16 @@ class Resource_Exchange_Line_Panel:
             resouce_data = game_config.config_resouce[
                 self.now_select_resouce_id
             ]  # 资源数据
-            now_resouce_stock = cache.rhodes_island.materials_resouce[
+            now_resouce_stock = warehouse.amount(
                 self.now_select_resouce_id
-            ]  # 当前资源库存
+            )  # 当前资源库存
             warehouse_capacity = (
                 cache.rhodes_island.warehouse_capacity
             )  # 仓库容量
             cant_buy_flag = (
                 True if resouce_data.cant_buy == 1 else False
             )  # 检测该商品是否可以购买
-            money = cache.rhodes_island.materials_resouce[1]  # 当前龙门币数量
+            money = warehouse.amount(1)  # 当前龙门币数量
 
             # 提取价格与加成数据用于显示
             buy_price, buy_percent = get_resouce_price(
@@ -868,10 +861,10 @@ class Resource_Exchange_Line_Panel:
         info_draw_text = _(
             "\n交易成功！\n当前龙门币数量：{0}({1})\n资源{2}数量：{3}/{4}({5})\n"
         ).format(
-            cache.rhodes_island.materials_resouce[1],
+            warehouse.amount(1),
             money_delta,
             game_config.config_resouce[self.now_select_resouce_id].name,
-            cache.rhodes_island.materials_resouce[self.now_select_resouce_id],
+            warehouse.amount(self.now_select_resouce_id),
             cache.rhodes_island.warehouse_capacity,
             resource_delta,
         )
@@ -1096,7 +1089,7 @@ class Resource_Exchange_Line_Panel:
                 continue
 
             # 显示当前资源的名称与库存量
-            current_stock = cache.rhodes_island.materials_resouce.get(res_id, 0)
+            current_stock = warehouse.stock().get(res_id, 0)
             stock_draw = draw.NormalDraw()
             stock_draw.text = _("当前资源：{0}，库存量：{1}\n").format(
                 resource_data.name, current_stock
@@ -1408,10 +1401,7 @@ class Resource_Exchange_Line_Panel:
                         # 特产商品仅在当地可以买入，其他地方只能卖出
                         if resouce_data.type == _("特产"):
                             if (
-                                cache.rhodes_island.materials_resouce[
-                                    resouce_id
-                                ]
-                                == 0
+                                warehouse.amount(resouce_id) == 0
                                 and resouce_data.specialty
                                 != cache.rhodes_island.current_location[0]
                             ):
@@ -1427,7 +1417,7 @@ class Resource_Exchange_Line_Panel:
                         return_list.append(button_draw.return_text)
 
                         now_text = _("\n      当前存量：{0}/{1}").format(
-                            cache.rhodes_island.materials_resouce[resouce_id],
+                            warehouse.amount(resouce_id),
                             cache.rhodes_island.warehouse_capacity,
                         )
                         # 判断是否可以买入卖出
@@ -1480,11 +1470,9 @@ class Resource_Exchange_Line_Panel:
 
         capacity_left = (
             cache.rhodes_island.warehouse_capacity
-            - cache.rhodes_island.materials_resouce[self.now_select_resouce_id]
+            - warehouse.amount(self.now_select_resouce_id)
         )
-        now_stock = cache.rhodes_island.materials_resouce[
-            self.now_select_resouce_id
-        ]
+        now_stock = warehouse.amount(self.now_select_resouce_id)
 
         # 交易数量最大买入上限
         if self.quantity_of_resouce > capacity_left:
@@ -1504,10 +1492,10 @@ class Resource_Exchange_Line_Panel:
         if buy_price <= 0:
             return
 
-        money = cache.rhodes_island.materials_resouce[1]
+        money = warehouse.amount(1)
         capacity_left = (
             cache.rhodes_island.warehouse_capacity
-            - cache.rhodes_island.materials_resouce[self.now_select_resouce_id]
+            - warehouse.amount(self.now_select_resouce_id)
         )
 
         affordable = money // buy_price
@@ -1517,9 +1505,7 @@ class Resource_Exchange_Line_Panel:
 
     def settle_max_sell(self) -> None:
         """结算最大卖出数量"""
-        self.quantity_of_resouce = -cache.rhodes_island.materials_resouce[
-            self.now_select_resouce_id
-        ]
+        self.quantity_of_resouce = -warehouse.amount(self.now_select_resouce_id)
 
     def reset_quantity(
         self,

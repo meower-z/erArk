@@ -15,7 +15,7 @@ from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 
 from typing import TYPE_CHECKING
-from Script.Modules.domains import needs
+from Script.Modules.domains import needs, warehouse
 
 if TYPE_CHECKING:
     from typing import Any
@@ -112,7 +112,7 @@ def achievement_flow(achievement_type: str, achievement_id: int = 0) -> None:
         _("周目"): [cache.game_round, [1, 2]],
         _("囚犯"): [len(cache.rhodes_island.current_prisoners), [121, 122]],
         _("龙门币"): [
-            cache.rhodes_island.materials_resouce[1],
+            warehouse.amount(1),
             [201, 202, 203],
         ],
         _("购买道具"): [len(cache.achievement.buy_item_count_list), [211, 212]],

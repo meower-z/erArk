@@ -13,6 +13,7 @@ from collections.abc import Callable
 from Script.Config import config_def, game_config
 from Script.Core import game_type
 from Script.System.Medical_System import medical_constant, medical_core
+from Script.Modules.domains import warehouse
 
 
 def try_hospitalize(
@@ -315,7 +316,6 @@ def try_consume_medicine(
 
     # 准备运行期缓存，包括药品累加器与进度记录。
     accumulator = rhodes_island.medical_inventory_accumulator
-    inventory = rhodes_island.materials_resouce
 
     recorded_map = patient.medicine_recorded
     progress_map = patient.medicine_progress
@@ -355,7 +355,7 @@ def try_consume_medicine(
         required_units = int(
             math.floor(accumulator_value + medical_constant.FLOAT_EPSILON)
         )
-        stock = int(inventory.get(resource_id, 0) or 0)
+        stock = int(warehouse.stock().get(resource_id, 0) or 0)
 
         # 如果从零开始累计且库存不足 1 单位，则视为扣除失败。
         starting_fresh = (
@@ -379,7 +379,7 @@ def try_consume_medicine(
 
         consumed_now = required_units
         if consumed_now > 0:
-            inventory[resource_id] = stock - consumed_now
+            warehouse.set(resource_id, stock - consumed_now)
             accumulator_value -= consumed_now
 
         accumulator[resource_id] = accumulator_value

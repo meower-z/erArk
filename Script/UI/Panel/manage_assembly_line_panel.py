@@ -16,7 +16,7 @@ from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
 from typing import TYPE_CHECKING
 from Script.Design import game_time
-from Script.Modules.domains import facility
+from Script.Modules.domains import facility, warehouse
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -161,8 +161,7 @@ def settle_assembly_line(
             for need_type in formula_data_now:
                 # 当前种类的原料最大生产数
                 now_type_max_produce_num = (
-                    cache.rhodes_island.materials_resouce[need_type]
-                    // formula_data_now[need_type]
+                    warehouse.amount(need_type) // formula_data_now[need_type]
                 )
                 # 不超过总最大生产数
                 produce_num = min(produce_num, now_type_max_produce_num)
@@ -172,11 +171,11 @@ def settle_assembly_line(
             if produce_num > 0:
                 # 结算实际消耗的原料
                 for need_type in formula_data_now:
-                    cache.rhodes_island.materials_resouce[need_type] -= (
-                        produce_num * formula_data_now[need_type]
+                    warehouse.add(
+                        need_type, -(produce_num * formula_data_now[need_type])
                     )
                 # 结算实际生产的产品
-                cache.rhodes_island.materials_resouce[product_id] += produce_num
+                warehouse.add(product_id, produce_num)
                 cache.achievement.production_count += produce_num
                 # 如果是住院病房扩展模块，则增加到记录中
                 if product_id == 54:
@@ -205,11 +204,11 @@ def settle_assembly_line(
                 )
                 # 不会超过仓库容量
                 if (
-                    cache.rhodes_island.materials_resouce[product_id]
+                    warehouse.amount(product_id)
                     > cache.rhodes_island.warehouse_capacity
                 ):
-                    cache.rhodes_island.materials_resouce[product_id] = (
-                        cache.rhodes_island.warehouse_capacity
+                    warehouse.set(
+                        product_id, cache.rhodes_island.warehouse_capacity
                     )
                     now_text += _(
                         "，由于仓库容量不足，{0}已达上限数量{1}"
@@ -256,8 +255,8 @@ def settle_assembly_line(
     # 结算仓储空间扩展模块
     if extra_warehouse_modules > 0:
         # 结算模块数量
-        cache.rhodes_island.used_extra_warehouse_capacity_module += (
-            extra_warehouse_modules
+        warehouse.set_extra_modules(
+            warehouse.extra_modules() + extra_warehouse_modules
         )
         # 增加仓库容量
         cache.rhodes_island.warehouse_capacity += extra_warehouse_modules * 200
@@ -327,10 +326,10 @@ class Manage_Assembly_Line_Panel:
                     f"\n {attr_calculation.pad_display_width(resouce, 8)}："
                 )
                 # 遍历该类型的资源
-                for material_id in cache.rhodes_island.materials_resouce:
+                for material_id in warehouse.stock():
                     material_data = game_config.config_resouce[material_id]
                     if material_data.type == resouce:
-                        now_text += f"  {material_data.name}：{cache.rhodes_island.materials_resouce[material_id]}"
+                        now_text += f"  {material_data.name}：{warehouse.amount(material_id)}"
 
             all_info_draw.text = now_text
             all_info_draw.draw()
@@ -617,7 +616,7 @@ class Manage_Assembly_Line_Panel:
                     continue
 
                 # 遍历该类型的资源
-                for material_id in cache.rhodes_island.materials_resouce:
+                for material_id in warehouse.stock():
                     material_data = game_config.config_resouce[material_id]
                     if material_data.type == resouce:
                         # 根据资源id来查找配方id

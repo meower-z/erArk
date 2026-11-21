@@ -32,7 +32,7 @@ from Script.UI.Panel import (
     cloth_panel,
     confinement_and_training,
 )
-from Script.Modules.domains import needs
+from Script.Modules.domains import needs, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -231,7 +231,7 @@ def start_aromatherapy(who: int, chosen: intent.Intent) -> None:
     formula = game_config.config_aromatherapy_recipes[recipe_id].formula
     for need_text in formula.split("&"):
         need_type, need_value = (int(v) for v in need_text.split("|"))
-        island.materials_resouce[need_type] -= need_value
+        warehouse.add(need_type, -need_value)
     island.remaining_aromatherapy_sessions_today -= 1
     cache.character_data[target_id].sp_flag.aromatherapy = recipe_id
     plan_queue.plan_next(

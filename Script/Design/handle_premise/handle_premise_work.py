@@ -7,7 +7,7 @@ from Script.Core import (
     game_type,
 )
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import work
+from Script.Modules.domains import warehouse, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -1323,9 +1323,7 @@ def handle_pink_certificate_g_10(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    if cache.rhodes_island.materials_resouce[4] > 10:
-        return 1
-    return 0
+    return int(warehouse.amount(4) > 10)
 
 
 @add_premise(constant_promise.Premise.PRISONER_IN_CUSTODY)

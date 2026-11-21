@@ -13,6 +13,7 @@ from Script.Core import (
 from Script.Design import handle_talent, handle_premise
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
+from Script.Modules.domains import warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -60,7 +61,6 @@ class Originium_Arts_Panel:
             cinfo_draw.draw()
 
             # 选项面板
-            # button_all_draw = panel.LeftDrawTextListPanel()
 
             DNT_Panel = Down_Negative_Talent_Panel(self.width)
             button1_text = _("[001]消除负面刻印")
@@ -319,7 +319,7 @@ class Originium_Arts_Panel:
             info_text = ""
             info_text += _(
                 "\n能力可以直接消耗至纯源石或满足特定条件解锁，当前至纯源石：{0}\n"
-            ).format(cache.rhodes_island.materials_resouce[3])
+            ).format(warehouse.amount(3))
             info_text += _("\n当前可以获得/升级的能力有：\n\n")
             info_draw.text = _(info_text)
             info_draw.draw()
@@ -348,7 +348,7 @@ class Originium_Arts_Panel:
                     now_draw.text = _(draw_text)
                     now_draw.style = "deep_gray"
                     now_draw.draw()
-                elif cache.rhodes_island.materials_resouce[3] < money_cost:
+                elif warehouse.amount(3) < money_cost:
                     now_draw = draw.NormalDraw()
                     draw_text += _("({0}至纯源石-当前源石不足)：{1}\n").format(
                         money_cost, talent_info
@@ -649,9 +649,9 @@ class Originium_Arts_Panel:
             pass
         else:
             # 花费大于当前拥有的至纯源石则返回
-            if cache.rhodes_island.materials_resouce[3] < money_cost:
+            if warehouse.amount(3) < money_cost:
                 return
-            cache.rhodes_island.materials_resouce[3] -= money_cost
+            warehouse.add(3, -money_cost)
         # 升级或获得能力
         self.pl_character_data.talent[talent_id] = 1
         info_text = _("\n习得了{0}\n").format(talent_name)

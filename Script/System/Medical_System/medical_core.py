@@ -13,7 +13,7 @@ from Script.Config import config_def, game_config
 from Script.Core import cache_control, game_type
 from Script.Modules.domains import economy
 from Script.System.Medical_System import medical_constant
-from Script.Modules.domains import facility
+from Script.Modules.domains import facility, warehouse
 
 
 def _bump_daily_counter(
@@ -65,9 +65,7 @@ def _apply_income_to_rhodes(
     rhodes_island.medical_income_total += income_value
     economy.add_income(income_value)
     # 同步物资仓库中的龙门币库存。
-    inventory = getattr(rhodes_island, "materials_resouce", None)
-    if isinstance(inventory, dict):
-        inventory[1] = int(inventory.get(1, 0) or 0) + income_value
+    warehouse.set(1, int(warehouse.stock().get(1, 0) or 0) + income_value)
 
 
 def _get_rhodes_island(

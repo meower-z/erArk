@@ -35,7 +35,7 @@ from Script.Modules.domains import (
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import settings
 
-CURRENT = 6
+CURRENT = 7
 """ 本游戏写的文件 "2" 的版本 """
 
 
@@ -195,12 +195,18 @@ def _v5_to_v6(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
+def _v6_to_v7(data: dict[str, Any]) -> dict[str, Any]:
+    """版本 6 升 7，文件 "2" 原样交回。旧存档的仓库数据由 warehouse.adopt_old_save 从罗德岛对象搬进 GameState"""
+    return data
+
+
 STEPS: dict[int, Callable[[dict[str, Any]], dict[str, Any]]] = {
     1: _v1_to_v2,
     2: fill_v2_needs,
     3: _v3_to_v4,
     4: _v4_to_v5,
     5: _v5_to_v6,
+    6: _v6_to_v7,
 }
 """ 版本 n 到 n + 1 的升级步骤。版本 0 升 1 不是 JSON 步骤，见模块说明 """
 

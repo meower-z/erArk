@@ -11,7 +11,7 @@ from Script.Core import (
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import facility
+from Script.Modules.domains import facility, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -106,12 +106,14 @@ class Aromatherapy_Panel:
             # 资源信息
             now_text = ""
             now_text += _("\n  当前调香资源        ：")
-            for recipes_id in cache.rhodes_island.materials_resouce:
+            for recipes_id in warehouse.stock():
                 recipes_data = game_config.config_resouce[recipes_id]
                 if recipes_data.name == _("香料") or recipes_data.type == _(
                     "香水"
                 ):
-                    now_text += f"  {recipes_data.name}：{cache.rhodes_island.materials_resouce[recipes_id]}"
+                    now_text += (
+                        f"  {recipes_data.name}：{warehouse.amount(recipes_id)}"
+                    )
             all_info_draw.text = now_text
             all_info_draw.draw()
             line_feed.draw()
@@ -287,7 +289,7 @@ class Aromatherapy_Panel:
         for need_text in need_list:
             need_type = int(need_text.split("|")[0])
             need_value = int(need_text.split("|")[1])
-            if cache.rhodes_island.materials_resouce[need_type] < need_value:
+            if warehouse.amount(need_type) < need_value:
                 flag = False
                 break
         if flag:

@@ -29,7 +29,7 @@ import csv
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions
-from Script.Modules.domains import facility, needs, pregnancy
+from Script.Modules.domains import facility, needs, pregnancy, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -838,15 +838,9 @@ class Debug_Panel:
                     f"[001]:已拥有的干员id列表：{cache.npc_id_got}"
                 )
                 draw_text_list.append("[002]:全干员id列表（太长了无法显示）")
-                draw_text_list.append(
-                    f"[003]:龙门币：{cache.rhodes_island.materials_resouce[1]}"
-                )
-                draw_text_list.append(
-                    f"[004]:合成玉：{cache.rhodes_island.materials_resouce[2]}"
-                )
-                draw_text_list.append(
-                    f"[005]:粉红凭证：{cache.rhodes_island.materials_resouce[4]}"
-                )
+                draw_text_list.append(f"[003]:龙门币：{warehouse.amount(1)}")
+                draw_text_list.append(f"[004]:合成玉：{warehouse.amount(2)}")
+                draw_text_list.append(f"[005]:粉红凭证：{warehouse.amount(4)}")
                 draw_text_list.append("[006]:基地当前所有待开放设施的开放情况")
                 draw_text_list.append(
                     f"[007]:一周内的派对计划，周一0~周日6:娱乐id：{cache.rhodes_island.party_day_of_week}"
@@ -1172,32 +1166,32 @@ class Debug_Panel:
                     elif value_index[1] == 1:
                         character_handle.get_new_character(value_index[0])
                 elif key_index == 3:
-                    info_text = f"[003]:龙门币：{cache.rhodes_island.materials_resouce[1]}"
+                    info_text = f"[003]:龙门币：{warehouse.amount(1)}"
                     info_draw.text = info_text
                     info_draw.draw()
                     line_feed.draw()
                     change_value_panel = panel.AskForOneMessage()
                     change_value_panel.set(_("输入改变后的值"), 100)
                     new_value = int(change_value_panel.draw())
-                    cache.rhodes_island.materials_resouce[1] = new_value
+                    warehouse.set(1, new_value)
                 elif key_index == 4:
-                    info_text = f"[004]:合成玉：{cache.rhodes_island.materials_resouce[2]}"
+                    info_text = f"[004]:合成玉：{warehouse.amount(2)}"
                     info_draw.text = info_text
                     info_draw.draw()
                     line_feed.draw()
                     change_value_panel = panel.AskForOneMessage()
                     change_value_panel.set(_("输入改变后的值"), 100)
                     new_value = int(change_value_panel.draw())
-                    cache.rhodes_island.materials_resouce[2] = new_value
+                    warehouse.set(2, new_value)
                 elif key_index == 5:
-                    info_text = f"[005]:粉红凭证：{cache.rhodes_island.materials_resouce[4]}"
+                    info_text = f"[005]:粉红凭证：{warehouse.amount(4)}"
                     info_draw.text = info_text
                     info_draw.draw()
                     line_feed.draw()
                     change_value_panel = panel.AskForOneMessage()
                     change_value_panel.set(_("输入改变后的值"), 100)
                     new_value = int(change_value_panel.draw())
-                    cache.rhodes_island.materials_resouce[4] = new_value
+                    warehouse.set(4, new_value)
                 elif key_index == 6:
                     info_text = "[006]:基地当前所有待开放设施的开放情况"
                     info_text += f"{facility.opens()}"
@@ -1365,10 +1359,8 @@ class Debug_Panel:
                         needs.set(0, sanity=9999, sanity_max=9999)
                 # 资源全99999
                 elif key_index == 9:
-                    for material_id in cache.rhodes_island.materials_resouce:
-                        cache.rhodes_island.materials_resouce[material_id] = (
-                            99999
-                        )
+                    for material_id in warehouse.stock():
+                        warehouse.set(material_id, 99999)
                 # 设施全满级、全开放
                 elif key_index == 10:
                     for all_cid in facility.levels():

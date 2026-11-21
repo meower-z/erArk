@@ -48,7 +48,7 @@ from Script.Settle.common_default import (
 )
 
 from Script.Settle.item_effect import *
-from Script.Modules.domains import facility, needs
+from Script.Modules.domains import facility, needs, warehouse
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -8382,7 +8382,7 @@ def handle_board_game_win_add_adjust(
     )
     # 粉红凭证
     add_pink_certificates = int(add_time // 2 * ai_level)
-    cache.rhodes_island.materials_resouce[4] += add_pink_certificates
+    warehouse.add(4, add_pink_certificates)
     # 输出提示信息
     game_name = game_config.config_board_game[
         character_data.behavior.board_game_type

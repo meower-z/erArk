@@ -12,6 +12,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.Design import map_handle, game_time
 from Script.Modules.tk_ui import player_pick
+from Script.Modules.domains import warehouse
 
 panel_info_data: dict[str, object] = {}
 
@@ -434,9 +435,7 @@ class Fridge_Panel:
         character_data = cache.character_data[character_id]
 
         # 转化母乳为鲜母乳
-        cache.rhodes_island.materials_resouce[
-            31
-        ] += cache.rhodes_island.milk_in_fridge[character_id]
+        warehouse.add(31, cache.rhodes_island.milk_in_fridge[character_id])
 
         now_draw = draw.WaitDraw()
         draw_text = _("\n  你将{0}的母乳（{1}ml）转化为了【鲜母乳】\n").format(
@@ -535,7 +534,7 @@ class Order_Hotel_Room_Panel:
         room_price = [2, 10, 100]
         room_name = [_("标间"), _("情趣主题房"), _("顶级套房")]
         # 判断粉红凭证是否足够
-        if cache.rhodes_island.materials_resouce[4] < room_price[room_id]:
+        if warehouse.amount(4) < room_price[room_id]:
             now_draw = draw.WaitDraw()
             draw_text = _("\n粉红凭证不足，无法预订{0}\n").format(
                 room_name[room_id]
@@ -544,7 +543,7 @@ class Order_Hotel_Room_Panel:
             now_draw.draw()
             return
         # 进行结算
-        cache.rhodes_island.materials_resouce[4] -= room_price[room_id]
+        warehouse.add(4, -room_price[room_id])
         cache.rhodes_island.love_hotel_room_lv = room_id + 1
         pl_character_data: game_type.Character = cache.character_data[0]
         pl_character_data.action_info.check_out_time = game_time.get_sub_date(

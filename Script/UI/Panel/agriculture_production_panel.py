@@ -18,7 +18,7 @@ from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
 from typing import TYPE_CHECKING
 from Script.Design import game_time
-from Script.Modules.domains import facility
+from Script.Modules.domains import facility, warehouse
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -143,7 +143,6 @@ def settle_agriculture_line(draw_flag: bool = True) -> tuple[bool, str]:
     un_normal -- bool 是否有异常
     return_text -- str 结算信息
     """
-    # print("debug 开始结算农业生产")
     # 生产是否有问题
     un_normal = False
     return_text = "\n"
@@ -162,7 +161,6 @@ def settle_agriculture_line(draw_flag: bool = True) -> tuple[bool, str]:
         resouce_id = cache.rhodes_island.herb_garden_line[agriculture_line_id][
             0
         ]
-        # print(f"debug 药田{agriculture_line_id}，种植的作物id为{resouce_id}")
         if resouce_id != 0:
             resouce_data = game_config.config_resouce[resouce_id]
 
@@ -179,7 +177,7 @@ def settle_agriculture_line(draw_flag: bool = True) -> tuple[bool, str]:
             # 结算实际生产
             if produce_num > 0:
                 # 结算实际生产的作物
-                cache.rhodes_island.materials_resouce[resouce_id] += produce_num
+                warehouse.add(resouce_id, produce_num)
                 cache.achievement.harvest_count += produce_num
 
                 now_text = _("\n今日药田共生产了{0}个{1}").format(
@@ -192,11 +190,11 @@ def settle_agriculture_line(draw_flag: bool = True) -> tuple[bool, str]:
                     )
                 # 不会超过仓库容量
                 if (
-                    cache.rhodes_island.materials_resouce[resouce_id]
+                    warehouse.amount(resouce_id)
                     > cache.rhodes_island.warehouse_capacity
                 ):
-                    cache.rhodes_island.materials_resouce[resouce_id] = (
-                        cache.rhodes_island.warehouse_capacity
+                    warehouse.set(
+                        resouce_id, cache.rhodes_island.warehouse_capacity
                     )
                     now_text += _(
                         "，由于仓库容量不足，{0}已达上限数量{1}"
@@ -227,7 +225,6 @@ def settle_agriculture_line(draw_flag: bool = True) -> tuple[bool, str]:
         resouce_id = cache.rhodes_island.green_house_line[agriculture_line_id][
             0
         ]
-        # print(f"debug 温室{agriculture_line_id}，种植的作物id为{resouce_id}")
         if resouce_id != 0:
             resouce_data = game_config.config_resouce[resouce_id]
 
@@ -244,7 +241,7 @@ def settle_agriculture_line(draw_flag: bool = True) -> tuple[bool, str]:
             # 结算实际生产
             if produce_num > 0:
                 # 结算实际生产的产品
-                cache.rhodes_island.materials_resouce[resouce_id] += produce_num
+                warehouse.add(resouce_id, produce_num)
                 cache.achievement.harvest_count += produce_num
 
                 now_text = _("\n今日温室共生产了{0}个{1}").format(
@@ -257,11 +254,11 @@ def settle_agriculture_line(draw_flag: bool = True) -> tuple[bool, str]:
                     )
                 # 不会超过仓库容量
                 if (
-                    cache.rhodes_island.materials_resouce[resouce_id]
+                    warehouse.amount(resouce_id)
                     > cache.rhodes_island.warehouse_capacity
                 ):
-                    cache.rhodes_island.materials_resouce[resouce_id] = (
-                        cache.rhodes_island.warehouse_capacity
+                    warehouse.set(
+                        resouce_id, cache.rhodes_island.warehouse_capacity
                     )
                     now_text += _(
                         "，由于仓库容量不足，{0}已达上限数量{1}"
@@ -328,7 +325,9 @@ class Agriculture_Production_Panel:
             # 遍历该类型的资源
             for material_id in [11, 16]:
                 material_data = game_config.config_resouce[material_id]
-                now_text += f"  {material_data.name}：{cache.rhodes_island.materials_resouce[material_id]}"
+                now_text += (
+                    f"  {material_data.name}：{warehouse.amount(material_id)}"
+                )
             now_text += "\n"
 
             all_info_draw.text = now_text

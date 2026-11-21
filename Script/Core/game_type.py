@@ -1501,10 +1501,6 @@ class Rhodes_Island:
         # 仓储区
         self.warehouse_capacity: int = 0
         """ 仓库容量 """
-        self.materials_resouce: dict[int, int] = {}
-        """ 素材资源 """
-        self.used_extra_warehouse_capacity_module: int = 0
-        """ 已使用的仓储空间扩展模块数量 """
 
         # 宿舍区
         self.dormitory_managers: dict[int, int] = {}

@@ -13,7 +13,7 @@ from Script.Design import basement, attr_calculation, handle_premise, game_time
 from Script.UI.Moudle import draw, view
 from Script.UI.Panel import see_character_info_panel
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import economy, facility, needs, work
+from Script.Modules.domains import economy, facility, needs, warehouse, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -206,12 +206,12 @@ class Manage_Basement_Panel:
                     all_info_draw = draw.NormalDraw()
                     all_info_draw.width = self.width
                     all_info_draw.text = ""
-                    for material_id in cache.rhodes_island.materials_resouce:
+                    for material_id in warehouse.stock():
                         material_data = game_config.config_resouce[material_id]
                         if material_data.type == resouce:
                             all_info_draw.text += (
                                 f"\n  {material_data.name}："
-                                f"{cache.rhodes_island.materials_resouce[material_id]}"
+                                f"{warehouse.amount(material_id)}"
                             )
                     all_info_draw.text += "\n"
                     all_info_draw.draw()

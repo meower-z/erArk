@@ -28,6 +28,7 @@ from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import kernel_state
 from Script.UI.Moudle import panel, draw, view
 from Script.Config import normal_config, game_config
+from Script.Modules.domains import warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -88,10 +89,7 @@ def first_bonus_and_setting_updata() -> None:
     cache.difficulty_setting = attr_calculation.get_difficulty_setting_zero()
     cache.birth_type_setting = attr_calculation.get_birth_type_setting_zero()
     # 初始资源
-    cache.rhodes_island.materials_resouce[1] = 20000
-    cache.rhodes_island.materials_resouce[11] = 20
-    cache.rhodes_island.materials_resouce[15] = 1000
-    cache.rhodes_island.materials_resouce[21] = 10
+    warehouse.start({1: 20000, 11: 20, 15: 1000, 21: 10})
     # 体检设置
     cache.rhodes_island.physical_examination_setting = (
         attr_calculation.get_physical_exam_setting_zero()
@@ -1271,17 +1269,17 @@ class Character_Bonus:
 
         # 获得金钱
         elif first_bonus_id == 11:
-            if cache.rhodes_island.materials_resouce[2]:
-                cache.rhodes_island.materials_resouce[1] = 20000
-                cache.rhodes_island.materials_resouce[2] = 0
-                cache.rhodes_island.materials_resouce[4] = 0
-                cache.rhodes_island.materials_resouce[11] = 20
+            if warehouse.amount(2):
+                warehouse.set(1, 20000)
+                warehouse.set(2, 0)
+                warehouse.set(4, 0)
+                warehouse.set(11, 20)
                 cache.first_bonus[first_bonus_id] = False
             elif self.bonus_now >= 5:
-                cache.rhodes_island.materials_resouce[1] = 70000
-                cache.rhodes_island.materials_resouce[2] = 6000
-                cache.rhodes_island.materials_resouce[4] = 100
-                cache.rhodes_island.materials_resouce[11] = 50
+                warehouse.set(1, 70000)
+                warehouse.set(2, 6000)
+                warehouse.set(4, 100)
+                warehouse.set(11, 50)
                 cache.first_bonus[first_bonus_id] = True
             else:
                 fail_flag = True

@@ -154,7 +154,7 @@ born_event_panel.Born_Panel(mother_id).draw()
 asks = []; names = iter(["长女", "次女"])
 character.input_name_func = lambda ask_text: (asks.append(ask_text), next(names))[1]
 
-# ④ 成就结算读 cache.rhodes_island.materials_resouce[1] 等 → KeyError，直接打桩（注意要打在**调用方模块**上）
+# ④ 成就结算用 warehouse.amount(1) 读 base.stock，库存里没有资源 1 时 KeyError: '1'，直接打桩（注意要打在**调用方模块**上）
 born_event_panel.achievement_panel.achievement_flow = lambda *a, **k: None
 
 # ⑤ 角色上线链 get_new_character 需要娱乐安排等完整 fixture → 只做登记的 stub
@@ -198,7 +198,7 @@ rm -f data/Character_Talk.json
 | 进程"卡死"、看不到任何输出 | 用了 `| tail` 管道，见铁律 4 |
 | `SyntaxError: invalid syntax`，报错行里有 `��` | heredoc/stdin 里的中文被 GBK 解码，改写成脚本文件，见铁律 7 |
 | `UnboundLocalError` 出现在 `chest_grow` / 乳汁上限 | fixture 没有罩杯素质，加 `talent[121] = 1` |
-| `KeyError: 1` 出现在 `achievement_panel.achievement_flow` | 成就结算读 `rhodes_island.materials_resouce`，打桩 `achievement_flow` |
+| `KeyError: '1'` 出现在 `achievement_panel.achievement_flow` | 成就结算用 `warehouse.amount(1)` 读 `base.stock`，库存里没有资源 1，打桩 `achievement_flow` |
 | `IndexError` 出现在 `random.choice(doctor_id_list)` 之类 | 事件要随机选医生/干员，`npc_id_got` 为空或没有 profession=3 |
 | 面板测试永不返回（无报错） | `askfor_all` 桩返回了不在 `return_list` 里的值，按钮循环退不出 |
 | 调 `get_new_character` 后一连串 KeyError | 上线链要完整罗德岛 fixture，用只登记 `npc_id_got` 的 stub |
