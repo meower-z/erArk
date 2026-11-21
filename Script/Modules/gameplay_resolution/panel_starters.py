@@ -21,7 +21,7 @@ from Script.Design import (
     map_handle,
 )
 from Script.Kernel import core
-from Script.Modules.domains import economy
+from Script.Modules.domains import achievement, economy
 from Script.Modules.gameplay_resolution import intent, plan_queue, starts
 from Script.System.Cooking_System import cooking
 from Script.System.Sex_System import drunk_sex_common
@@ -241,7 +241,7 @@ def start_aromatherapy(who: int, chosen: intent.Intent) -> None:
         state=constant.CharacterStatus.STATUS_WAIT,
         interrupt=True,
     )
-    cache.achievement.aromatherapy_count += 1
+    achievement.add("aromatherapy_count", 1)
     achievement_panel.achievement_flow(_("调香"))
 
 

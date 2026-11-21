@@ -12,7 +12,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.Design import map_handle, game_time
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import warehouse
+from Script.Modules.domains import playthrough, warehouse
 
 panel_info_data: dict[str, object] = {}
 
@@ -316,7 +316,7 @@ class Chose_First_bonus_ability_Panel:
     def chose_this_ability(self, ability_id: int) -> None:
         """选项1"""
         self.chose_ability_id = ability_id
-        cache.first_bonus[21] = ability_id
+        playthrough.set_setting(playthrough.FIRST_BONUS, 21, ability_id)
 
 
 class Fridge_Panel:

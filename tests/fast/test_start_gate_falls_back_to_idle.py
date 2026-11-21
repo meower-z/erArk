@@ -21,6 +21,8 @@ from collections.abc import Mapping
 from Script.Core import constant, constant_promise
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions, intent, start_gate
+from Script.Modules.domains import modes
+from tests import kernel_data
 from tests.fast.base import FastTestCase
 
 AMIYA = 1
@@ -217,7 +219,7 @@ class StartGateTest(FastTestCase):
 
     def test_time_stop_player_action_takes_no_kernel_time(self) -> None:
         """时停中玩家接吻 5 分钟：内核时长 0，名义分钟数 5"""
-        self.cache.time_stop_mode = True
+        kernel_data.set_world(modes.set_time_stop, True)
         act = self.start(0, 5)
         data = act.action_data
         assert isinstance(data, Mapping)
@@ -235,13 +237,13 @@ class StartGateTest(FastTestCase):
         Return arguments:
         无
         """
-        self.cache.time_stop_mode = True
+        kernel_data.set_world(modes.set_time_stop, True)
         act = self.start(0, 1, constant.Behavior.TIME_STOP_OFF)
         self.assertEqual(act.duration, 1, "解除时停的内核时长")
 
     def test_time_stop_off_swapped_for_idle_takes_no_kernel_time(self) -> None:
         """时停中玩家解除时停，交互对象已死亡：换成发呆，时停没解除，内核时长 0"""
-        self.cache.time_stop_mode = True
+        kernel_data.set_world(modes.set_time_stop, True)
         self.kaltsit.dead = True
         act = self.start(0, 1, constant.Behavior.TIME_STOP_OFF, target=KALTSIT)
         self.assertEqual(

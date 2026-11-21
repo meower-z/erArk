@@ -26,6 +26,7 @@ from tests import pick_guard
 from tests import world as world_module
 from tests.fast.base import FastTestCase
 from Script.UI.Moudle import view
+from Script.Modules.domains import achievement
 
 LOADED_FIRST = (update, handle_instruct)
 """ 先于 Script.Modules 导入的 update；handle_instruct 登记指令处理函数 """
@@ -320,7 +321,7 @@ class PanelSubMenusReadOnly(FastTestCase):
         """做饭：确认后开始时才做出食物、用掉药、计入成就；精细模式的品质是答题的结果"""
         with self.subTest("药物调味做两份"):
             self.player.item[DRUG] = 2
-            made_before = self.cache.achievement.make_food_count
+            made_before = achievement.get("make_food_count")
             button = self.food_button(DRUG, 0)
             data = self.chosen(["增加", "确认"], button.make_food_for_sure)
             self.assertEqual(
@@ -334,7 +335,7 @@ class PanelSubMenusReadOnly(FastTestCase):
             self.assertEqual(len(foods), 2)
             self.assertEqual(self.player.item[DRUG], 0)
             self.assertEqual(
-                self.cache.achievement.make_food_count, made_before + 2
+                achievement.get("make_food_count"), made_before + 2
             )
             self.assertEqual(behavior.make_food_count, 2)
             self.assertEqual(behavior.target_food.uid, foods[-1].uid)

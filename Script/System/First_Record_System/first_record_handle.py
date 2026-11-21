@@ -5,6 +5,7 @@ from Script.Core import cache_control, game_type, get_text
 from Script.Design import map_handle
 from Script.Config import game_config
 from Script.Design import game_time
+from Script.Modules.domains import modes
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -164,7 +165,7 @@ def check_first_h_mode(character_id: int) -> None:
             character_id, f"unconscious_{character_data.sp_flag.unconscious_h}"
         )
     # 群交（附加数据：当时场景内角色数）
-    if cache.group_sex_mode:
+    if modes.group_sex():
         scene_path_str = map_handle.get_map_system_path_str_for_list(
             character_data.position
         )

@@ -7,6 +7,7 @@ from __future__ import annotations
 from Script.Core import cache_control
 from Script.Config import game_config, normal_config
 from Script.System.Pregnancy_System import pregnancy_constant
+from Script.Modules.domains import playthrough
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -18,17 +19,7 @@ if TYPE_CHECKING:
 @register_check("BIRTH-01", "生育开关")
 def check_birth_01() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 生育开关覆盖配置键，值为0/1，多余键仅警示。"""
-    cache = cache_control.cache
-    values = getattr(cache, "birth_type_setting", None)
-    if not isinstance(values, dict):
-        return [
-            make_failure(
-                "BIRTH-01",
-                "生育开关",
-                f"cid=None key=birth_type_setting value={values!r}；须为dict",
-                [],
-            )
-        ]
+    values = playthrough.settings(playthrough.BIRTH_TYPE)
     config = getattr(game_config, "config_birth_type_setting", None)
     failures = []
     if isinstance(config, dict):
@@ -69,7 +60,7 @@ def check_birth_02() -> list[CheckFailure]:
     """参数: 无；返回值: List[CheckFailure]；功能: 按原始种族生育方式检查关闭后的卵、无壳排卵机会与博士持卵索引，
     不检查胎数。"""
     cache = cache_control.cache
-    values = getattr(cache, "birth_type_setting", None)
+    values = playthrough.settings(playthrough.BIRTH_TYPE)
     characters = getattr(cache, "character_data", None)
     races = getattr(game_config, "config_race", None)
     if (

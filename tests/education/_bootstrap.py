@@ -128,7 +128,7 @@ _ = get_text._
 """ 翻译api：配置里的名字都过了翻译，测试里比对名字一律包 _() """
 
 from Script.Modules.save_load import kernel_state
-from Script.Modules.domains import official, warehouse
+from Script.Modules.domains import modes, official, plan, playthrough, warehouse
 
 character_handle.init_character_tem()
 kernel_state.reset_clock(kernel_state.first_clock())
@@ -137,8 +137,7 @@ cache: game_type.Cache = cache_control.cache
 
 # ==== 2. 全局前置 ====
 normal_config.system_setting = attr_calculation.get_system_setting_zero()
-cache.difficulty_setting = attr_calculation.get_difficulty_setting_zero()
-cache.birth_type_setting = attr_calculation.get_birth_type_setting_zero()
+kernel_data.written(playthrough.reset_difficulty_and_birth)
 # 罗德岛设施：GameState 里没有设施数据，读到的是每个设施 1 级、每个待开放设施未开放。教育区的等级由测试按需改
 # 资源仓库：每种资源 0（与 basement 初始化一致）；内核推进时玩家行动收尾的成就结算要读它
 kernel_data.written(warehouse.start, {})
@@ -386,8 +385,8 @@ def clear_schedules() -> None:
     cache.rhodes_island.child_schedule_template = {}
     kernel_data.put(official.set_queue, [])
     kernel_data.put(official.set_history, {})
-    cache.sex_class_mode = False
-    cache.group_sex_mode = False
+    kernel_data.set_world(modes.set_sex_class, False)
+    kernel_data.set_world(modes.set_group_sex, False)
 
 
 def classroom_path(classroom: str) -> list:
@@ -440,7 +439,7 @@ def sync(keep_queue: bool = False) -> None:
         player.behavior.start_time = game_time.now()
         player.behavior.duration = 0
         if not keep_queue:
-            cache.plan_queue.clear()
+            kernel_data.set_world(plan.clear_queues)
         core.reset_state(kernel_data.reprojected(core.state()))
         _kernel_left = core.state()
 
@@ -449,14 +448,13 @@ def play(
     fn: "Callable[[], object] | None" = None,
     stop_at_same_minute: bool = False,
     limit: int = 100000,
+    keep_queue: bool = False,
 ) -> int:
-    """
-    先 sync()，再一步一步推进内核：玩家要选行动时跑 fn（fn 经 player_pick.choose 定下行动），
-    推进到玩家下一次要选行动时停下。fn 为 None 时，玩家队列里排着的行动照常开始，玩家第一次要选行动就停下
+    """先 sync(keep_queue) 再推进内核：玩家选行动时跑 fn，到下次选行动停下；fn 为 None 时队首行动照常开始
     Keyword arguments:
     fn -- 玩家选行动时跑的操作
-    stop_at_same_minute -- 为真时，玩家定下行动之后，这一分钟里各角色都开始了行动（下一步就要走时间）即停下
-    limit -- 步数上限，推进到上限还没停下时抛出 RuntimeError
+    stop_at_same_minute -- 玩家定下行动后这一分钟各角色都开始行动即停下
+    limit -- 步数上限（超限抛 RuntimeError）；keep_queue 为真时不清计划队列
     Return arguments:
     int -- 推进的步数
     """
@@ -474,7 +472,7 @@ def play(
             fn()
         raise player_pick.LeftGame
 
-    sync()
+    sync(keep_queue)
     saved, player_pick.chooser = player_pick.chooser, chooser
     steps = 0
     try:

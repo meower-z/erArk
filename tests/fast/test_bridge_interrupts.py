@@ -18,7 +18,13 @@ from unittest import mock
 from Script.Core import constant
 from Script.Design import game_time, handle_npc_ai_in_h
 from Script.Kernel import core
-from Script.Modules.gameplay_resolution import actions, plan_queue, time_hooks
+from Script.Modules.domains import needs
+from Script.Modules.gameplay_resolution import (
+    actions,
+    plan_queue,
+    time_hooks,
+    working,
+)
 from Script.Settle import realtime_settle
 from Script.Modules.load_order import LOAD_ORDER
 from tests.fast.base import FastTestCase
@@ -121,7 +127,7 @@ class BridgeInterruptsTest(FastTestCase):
             core.step()
         self.assertEqual(core.state().data[time_hooks.TICKED], CLOCK, "Tick")
         self.assertEqual(core.state().clock, CLOCK, "事件那一步时间没走")
-        self.assertEqual(self.cache.noise_woken, {}, "名单清空")
+        self.assertEqual(needs.noise_woken(), {}, "名单清空")
         self.assertEqual(
             [i["behavior_id"] for i in plan_queue.planned(2)],
             [constant.Behavior.WAKE_UP_BY_NOISE],
@@ -155,17 +161,18 @@ class BridgeInterruptsTest(FastTestCase):
         Return arguments:
         无
         """
-        for member in (2, 3):
-            handle_npc_ai_in_h.handle_unconscious_h_response(
-                0, member, can_continue=False
-            )
-        self.assertEqual(plan_queue.planned(0), [], "成员不给玩家排行动")
-        handle_npc_ai_in_h.handle_unconscious_h_response(0, 1)
-        ends = [
-            i["behavior_id"]
-            for i in plan_queue.planned(0)
-            if i["behavior_id"] == constant.Behavior.NO_CONSCIOUS_H_END
-        ]
+        with working.based_on(core.state()):
+            for member in (2, 3):
+                handle_npc_ai_in_h.handle_unconscious_h_response(
+                    0, member, can_continue=False
+                )
+            self.assertEqual(plan_queue.planned(0), [], "成员不给玩家排行动")
+            handle_npc_ai_in_h.handle_unconscious_h_response(0, 1)
+            ends = [
+                i["behavior_id"]
+                for i in plan_queue.planned(0)
+                if i["behavior_id"] == constant.Behavior.NO_CONSCIOUS_H_END
+            ]
         self.assertEqual(len(ends), 1, "结束无意识H只排一次")
         effects = plan_queue.drain(())[0]
         self.assertEqual(

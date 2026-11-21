@@ -26,6 +26,7 @@ from tests import pick_guard
 from tests import world as world_module
 from tests.fast.base import FastTestCase
 from Script.UI.Moudle import view
+from Script.Modules.domains import history
 
 NPC = 1
 """ 玩家的交互对象 """
@@ -124,9 +125,7 @@ class InstructSubMenuTest(FastTestCase):
         kiss = self.instruct(constant.Instruct.KISS)
         self.assert_backs_out(kiss, NO)
         self.assert_commits(kiss, YES)
-        self.assertEqual(
-            self.cache.pl_pre_behavior_instruce[-1], constant.Behavior.KISS
-        )
+        self.assertEqual(history.recent()[-1], constant.Behavior.KISS)
 
     def test_condom_decoration(self) -> None:
         """挂上避孕套装饰：选套、选部位两层都能取消；确定后避孕套在行动开始时才挂上"""
@@ -158,7 +157,7 @@ class InstructSubMenuTest(FastTestCase):
         panel = bondage_panel.Bondage_Panel(width=1)
         self.assert_commits(lambda: panel.select_bondage(bondage_id))
         self.assertEqual(
-            self.cache.pl_pre_behavior_instruce[-1],
+            history.recent()[-1],
             constant.Behavior.HIGH_OBSCENITY_ANUS,
         )
         self.assertEqual(self.npc.h_state.bondage, 0)

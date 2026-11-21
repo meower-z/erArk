@@ -12,6 +12,7 @@ from Script.Core import (
 )
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle, virgin_break_gate
+from Script.Modules.domains import modes
 
 panel_info_data: dict[str, object] = {}
 
@@ -49,7 +50,7 @@ def group_sex_settle(
     target_character_id -- 目标角色id
     """
     # 如果是非群交模式，则返回
-    if not cache.group_sex_mode:
+    if not modes.group_sex():
         return
     # 非玩家或无交互对象返回
     if character_id != 0 or target_character_id == character_id:
@@ -388,7 +389,6 @@ class SeeGroupSexInfoPanel:
         """ 显示的状态类型 """
 
         type_line = draw.LittleTitleLineDraw(_("群交"), width, ":")
-        # print("type_data.name :",type_data.name)
         text_draw = draw.NormalDraw()
 
         character_data = cache.character_data[0]
@@ -741,7 +741,7 @@ class Edit_Group_Sex_Temple_Panel:
             for chara_id in all_character_list
             if chara_id not in group_sex_chara_id_list
         ]
-        if cache.sex_class_mode:
+        if modes.sex_class():
             class_member_set = set(sex_class_handle.get_class_member_list())
             all_character_list = [
                 chara_id
@@ -761,7 +761,7 @@ class Edit_Group_Sex_Temple_Panel:
                 # 性技实操课上，体力不足的学生只能站在一边旁观，不进模板（Plan 22 四期 口径65）。
                 # 只在课堂模式下生效：普通群交没有这条限制，把它一并管上会改掉既有玩法
                 if (
-                    cache.sex_class_mode
+                    modes.sex_class()
                     and sex_class_handle.judge_hp_low_only_watch(chara_id)
                 ):
                     watch_draw = draw.LeftDraw()
@@ -915,7 +915,7 @@ class Edit_Group_Sex_Temple_Panel:
             # 课堂模式下的必修名单：点名必修的人豁免前置修习
             must_attend_set = (
                 sex_class_handle.get_must_attend_set()
-                if cache.sex_class_mode
+                if modes.sex_class()
                 else set()
             )
             # 已选择的角色id列表
@@ -928,7 +928,7 @@ class Edit_Group_Sex_Temple_Panel:
                 # 如果角色已在场景中，则跳过
                 if chara_id in now_scene_character_list:
                     continue
-                if cache.sex_class_mode:
+                if modes.sex_class():
                     if not sex_class_handle.judge_can_join_sex_class(
                         chara_id, check_course=chara_id not in must_attend_set
                     ):
@@ -1099,7 +1099,7 @@ class Edit_Group_Sex_Temple_Panel:
             )
         # 普通群交在邀请时判一次并结算催眠的代价（名单只判不扣）；没过的不邀请
         elif (
-            not cache.sex_class_mode
+            not modes.sex_class()
             and not instuct_judege.calculation_instuct_judege(
                 0, character_id, _("群交"), not_draw_flag=True
             )[0]

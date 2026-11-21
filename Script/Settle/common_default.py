@@ -18,7 +18,7 @@ from Script.UI.Panel import ejaculation_panel, system_setting
 import math
 import random
 from Script.Design import game_time
-from Script.Modules.domains import needs
+from Script.Modules.domains import history, modes, needs, playthrough
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -274,19 +274,18 @@ def base_chara_state_common_settle(
     ):
         # 判断是否为连续指令
         if (
-            len(cache.pl_pre_behavior_instruce) >= 2
-            and cache.pl_pre_behavior_instruce[-1]
-            == cache.pl_pre_behavior_instruce[-2]
+            len(history.recent()) >= 2
+            and history.recent()[-1] == history.recent()[-2]
         ):
             # 统计连续指令次数
-            last_instr = cache.pl_pre_behavior_instruce[-1]
+            last_instr = history.recent()[-1]
             # 如果last_instr属于基础指令则跳过连续相关处理
             if last_instr in [0, 1, 2]:
                 pass
             else:
                 instruct_count = 0
                 # 从后往前遍历
-                for instr in reversed(cache.pl_pre_behavior_instruce):
+                for instr in reversed(history.recent()):
                     if instr == last_instr:
                         instruct_count += 1
                     else:
@@ -467,7 +466,7 @@ def chara_feel_state_adjust(
         other_npc_num = min(10, other_npc_num)
         final_adjust += other_npc_num * 0.02
     # 系统难度修正
-    now_difficulty = cache.difficulty_setting[2]
+    now_difficulty = playthrough.setting(playthrough.DIFFICULTY, 2)
     difficulty_adjust = system_setting.get_difficulty_coefficient(
         now_difficulty
     )
@@ -583,7 +582,7 @@ def chara_base_state_adjust(
         other_npc_num = min(10, other_npc_num)
         final_adjust += other_npc_num * 0.05
     # 系统难度修正
-    now_difficulty = cache.difficulty_setting[3]
+    now_difficulty = playthrough.setting(playthrough.DIFFICULTY, 3)
     difficulty_adjust = system_setting.get_difficulty_coefficient(
         now_difficulty
     )
@@ -786,19 +785,18 @@ def base_chara_favorability_and_trust_common_settle(
         continuous_adjust: float = 1
         # 判断是否为连续指令
         if (
-            len(cache.pl_pre_behavior_instruce) >= 2
-            and cache.pl_pre_behavior_instruce[-1]
-            == cache.pl_pre_behavior_instruce[-2]
+            len(history.recent()) >= 2
+            and history.recent()[-1] == history.recent()[-2]
         ):
             # 统计连续指令次数
-            last_instr = cache.pl_pre_behavior_instruce[-1]
+            last_instr = history.recent()[-1]
             # 如果last_instr属于基础指令则跳过连续相关处理
             if last_instr in [0, 1, 2]:
                 pass
             else:
                 instruct_count = 0
                 # 从后往前遍历
-                for instr in reversed(cache.pl_pre_behavior_instruce):
+                for instr in reversed(history.recent()):
                     if instr == last_instr:
                         instruct_count += 1
                     else:
@@ -841,7 +839,7 @@ def base_chara_favorability_and_trust_common_settle(
                 # 连续重复减值
                 final_adjust *= continuous_adjust
                 # 系统难度修正
-                now_difficulty = cache.difficulty_setting[1]
+                now_difficulty = playthrough.setting(playthrough.DIFFICULTY, 1)
                 difficulty_adjust = system_setting.get_difficulty_coefficient(
                     now_difficulty
                 )
@@ -888,7 +886,7 @@ def base_chara_favorability_and_trust_common_settle(
                 # 连续重复减值
                 final_adjust *= continuous_adjust
                 # 系统难度修正
-                now_difficulty = cache.difficulty_setting[1]
+                now_difficulty = playthrough.setting(playthrough.DIFFICULTY, 1)
                 difficulty_adjust = system_setting.get_difficulty_coefficient(
                     now_difficulty
                 )
@@ -1274,7 +1272,7 @@ def base_chara_experience_common_settle(
                     final_character_id, 125, change_data=change_data
                 )
 
-    if cache.sex_class_mode and final_character_id != 0:
+    if modes.sex_class() and final_character_id != 0:
         from Script.System.Education_System import sex_class_handle
 
         if (

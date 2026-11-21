@@ -22,6 +22,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING
 from unittest import mock
 
+from tests import kernel_data
 from tests.slow.base import SlowTestCase
 
 if TYPE_CHECKING:
@@ -194,11 +195,13 @@ class SaveLoadKernelStateTest(SlowTestCase):
         int -- 排着睡觉的干员id
         """
         constant = game("Script.Core.constant")
+        plan = game("Script.Modules.domains.plan")
         plan_queue = game("Script.Modules.gameplay_resolution.plan_queue")
         npc = min(i for i in self.cache.npc_id_got if i)
-        plan_queue.plan_next(npc, constant.Behavior.SLEEP, 60)
         position = self.cache.character_data[0].position
-        vars(self.cache)["player_route"] = (position, position)
+        with kernel_data.writing():
+            plan_queue.plan_next(npc, constant.Behavior.SLEEP, 60)
+            plan.set_route([position, position])
         return npc
 
     def assert_no_queue_or_route(self, npc: int) -> None:
@@ -207,18 +210,16 @@ class SaveLoadKernelStateTest(SlowTestCase):
         Keyword arguments:
         npc -- 干员id
         """
+        plan = game("Script.Modules.domains.plan")
         plan_queue = game("Script.Modules.gameplay_resolution.plan_queue")
         self.assertEqual(plan_queue.planned(npc), [])
-        self.assertIsNone(vars(self.cache).get("player_route"))
+        self.assertIsNone(plan.route())
 
     def test_old_save_load_drops_queue_and_route(self) -> None:
         """读一个没有计划队列与寻路的存档后，读档前排下的行动与寻路都不留下"""
         save_handle = game("Script.Core.save_handle")
         self.wait()
-        for key in ("plan_queue", "player_route"):
-            vars(self.cache).pop(key, None)
         save_handle.establish_save(SAVE_ID)
-        vars(self.cache)["plan_queue"] = {}
         try:
             npc = self.queue_and_route()
             save_handle.input_load_save(SAVE_ID)

@@ -24,9 +24,23 @@ from Script.System.Pregnancy_System import pregnancy_constant
 import json
 from typing import TYPE_CHECKING
 from Script.Design import game_time
-from Script.Modules.domains import commission, diplomacy, dormitory, facility
-from Script.Modules.domains import kitchen, library, location, medical, official
-from Script.Modules.domains import production, recruit, visitor, warehouse
+from Script.Modules.domains import achievement, commission, country, diplomacy
+from Script.Modules.domains import (
+    dormitory,
+    facility,
+    history,
+    kitchen,
+    library,
+)
+from Script.Modules.domains import location, medical, modes, needs, official
+from Script.Modules.domains import (
+    plan,
+    playthrough,
+    production,
+    recruit,
+    visitor,
+)
+from Script.Modules.domains import warehouse
 from Script.Modules.save_load import index, unsaved, upgrade
 
 if TYPE_CHECKING:
@@ -447,9 +461,12 @@ def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
             if hasattr(scene, "scene_path"):
                 scene.scene_path = _normalize_save_path(scene.scene_path)
 
-    # 无壳卵生开关：本函数早于 update_settings 执行，且此时全局cache尚未被替换，只能从存档自身的设置对象里读
+    # 无壳卵生开关：本函数早于 playthrough.adopt_old_save 执行，且此时全局cache尚未被替换，只能从存档自身读：
+    # 版本 12 之前的存档在缓存上，版本 12 起在换入的 GameState 里，更旧的存档在设置对象里
     # 旧存档没有该设置项，.get兜底为开启，正是旧存档迁移应有的行为
-    loaded_birth_setting = getattr(loaded_cache, "birth_type_setting", None)
+    loaded_birth_setting = getattr(
+        loaded_cache, "birth_type_setting", None
+    ) or playthrough.settings(playthrough.BIRTH_TYPE)
     if not loaded_birth_setting:
         loaded_birth_setting = getattr(
             getattr(loaded_cache, "all_system_setting", None),
@@ -727,6 +744,7 @@ def install_save(save_id: str, version: int) -> None:
     版本 0 先补齐生理需求与供电策略属性。随后 upgrade 的 adopt_power、adopt_facility、adopt_economy、adopt_work，
     warehouse.adopt_old_save、medical.adopt_island 与 production 等十个模块的 adopt_old_save 依次搬走罗德岛对象的属性。
     adopt_facility 与十个 adopt_old_save 交回的个数计入跨版本更新。重建角色后 upgrade.adopt_pickled 搬走角色数值属性。
+    补全设置前后，playthrough 等七个模块搬走设定、周目、国家、模式、吵醒名单、成就、记录与计划，并计入跨版本更新。
     Keyword arguments:
     save_id -- 存档id
     version -- 存档的版本，旧存档为 0
@@ -982,9 +1000,9 @@ def install_save(save_id: str, version: int) -> None:
         loaded_dict["rhodes_island"].temp_sex_class = {}
         update_count += 1
     # 挪了桶的养成事件：全局履历里的旧uid改成新uid
-    history = official.history()
-    update_count += _migrate_official_event_history(history)
-    official.set_history(history)
+    event_history = official.history()
+    update_count += _migrate_official_event_history(event_history)
+    official.set_history(event_history)
     # 更新罗德岛的设施等级
     for all_cid in game_config.config_facility:
         # 没有记录的设施改为初始等级0
@@ -1015,15 +1033,19 @@ def install_save(save_id: str, version: int) -> None:
     update_count += _drop_unknown_books(loaded_dict)
 
     # 更新各项设置；系统设置是全局的，不随存档载入（还没有 settings.json 时，存档的设置成为全局设置）
+    update_count += playthrough.adopt_old_save(loaded_dict, version)
     update_count += update_settings(loaded_dict)
     from Script.Modules.save_load import settings
 
     settings.adopt(loaded_dict.pop("all_system_setting", None), preferences)
 
-    # 更新大地图势力数据
-    loaded_dict["country"] = attr_calculation.get_country_reset(
-        loaded_dict["country"]
-    )
+    # 更新大地图势力数据，再搬走模式开关、成就、事件与指令记录、计划
+    update_count += country.adopt_old_save(loaded_dict, version)
+    update_count += modes.adopt_old_save(loaded_dict, version)
+    update_count += needs.adopt_old_save(loaded_dict, version)
+    update_count += achievement.adopt_old_save(loaded_dict, version)
+    update_count += history.adopt_old_save(loaded_dict, version)
+    update_count += plan.adopt_old_save(loaded_dict, version)
 
     # 更新游戏地图
     update_count += update_map(loaded_dict)
@@ -1256,41 +1278,11 @@ def update_map(loaded_dict: dict[str, Any]) -> int:
 
 def update_settings(loaded_dict: dict[str, Any]) -> int:
     """
-    补全存档里的设置（难度、生殖方式、AI、体检、监禁调教），并给全局的角色口上选择补上缺的角色
+    补全存档里的设置（AI、体检、监禁调教），并给全局的角色口上选择补上缺的角色
     Keyword arguments:
     loaded_dict -- 存档数据
     """
     update_count = 0
-    # 难度与生殖方式是本存档的设置：旧存档把它们存在设置对象里，搬到存档自己的字段
-    for field_name in ("difficulty_setting", "birth_type_setting"):
-        if not loaded_dict.get(field_name):
-            loaded_dict[field_name] = dict(
-                getattr(loaded_dict.get("all_system_setting"), field_name, None)
-                or {}
-            )
-    difficulty_setting = attr_calculation.get_difficulty_setting_zero()
-    if len(loaded_dict["difficulty_setting"]) != len(difficulty_setting):
-        for key in difficulty_setting:
-            if key not in loaded_dict["difficulty_setting"]:
-                loaded_dict["difficulty_setting"][key] = difficulty_setting[key]
-                update_count += 1
-        now_difficulty = draw.NormalDraw()
-        draw_text = _("\n难度设置已更新，如有需要请手动修改\n")
-        now_difficulty.style = "gold_enrod"
-        now_difficulty.text = draw_text
-        now_difficulty.draw()
-    # 生殖方式设置（更旧的存档里没有该设置，逐项补默认值）
-    birth_type_setting = attr_calculation.get_birth_type_setting_zero()
-    if len(loaded_dict["birth_type_setting"]) != len(birth_type_setting):
-        for key in birth_type_setting:
-            if key not in loaded_dict["birth_type_setting"]:
-                loaded_dict["birth_type_setting"][key] = birth_type_setting[key]
-                update_count += 1
-        now_birth_type = draw.NormalDraw()
-        draw_text = _("\n生殖方式设置已更新，如有需要请手动修改\n")
-        now_birth_type.style = "gold_enrod"
-        now_birth_type.text = draw_text
-        now_birth_type.draw()
     # 角色口上选择设置是全局的：补上缺的角色与本存档女儿的默认值
     character_text_version = (
         attr_calculation.get_system_setting_zero().character_text_version

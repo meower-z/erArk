@@ -6,7 +6,7 @@ gameplay_resolution 的时钟：5 分钟一次的 Tick、0 点的 NewDay，以�
 - Tick：时钟比 ticked 晚 5 分钟、或跨进了 ticked 之后的一天时，把每个角色从 ticked 结算到此刻，
   到点该提前结束的干员发 Interrupt，再结算外勤委托，ticked 记成此刻。数值按分钟的比率精确累加，
   5 分钟只是结算的间隔：怎样切段，合计都一样；没有经过时间的一段什么也不写，所以同一时刻再结算一次不改任何值。
-  结算里掷骰被吵醒的角色（cache.noise_woken）在同一步里醒来（_wake_the_woken）。
+  结算里掷骰被吵醒的角色（needs.sleep_noise）在同一步里醒来（_wake_the_woken）。
 - NewDay：时钟进了 settled_day 之后的一天时跑新一天的结算，settled_day 记成今天。
 TimeElapse 的输入钩子让时钟最多走到下一次 Tick 与下一个 0 点，所以新一天的结算在 0 点、任何人选行动之前。
 一个行为结束时（actions.wrap_up）由 tick_one 把这个角色结算到此刻，Tick 只从 ticked 算起，同一段不会算两遍。
@@ -26,6 +26,7 @@ from typing import cast
 from Script.Core import cache_control, game_type
 from Script.Design import game_time
 from Script.Kernel import core
+from Script.Modules.domains import modes, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -104,11 +105,11 @@ def _settle(character_id: int, since: int, until: int | None = None) -> bool:
 
 
 def _wake_the_woken() -> None:
-    """时间结算里被吵醒的角色（cache.noise_woken）在这一步醒来：按角色id依次结算，清空 noise_woken"""
+    """时间结算里被吵醒的角色（needs.sleep_noise）在这一步醒来：按角色id依次结算，取出各自的记录"""
     from Script.Design import handle_npc_ai_in_h
 
-    for cid in sorted(cache.noise_woken):
-        handle_npc_ai_in_h.wake_by_noise(cache.noise_woken.pop(cid), cid)
+    for cid in sorted(needs.noise_woken()):
+        handle_npc_ai_in_h.wake_by_noise(needs.take_woken(cid), cid)
 
 
 def tick_one(who: int) -> None:
@@ -122,7 +123,7 @@ def tick_one(who: int) -> None:
     character_data = cache.character_data.get(who)
     if (
         who == 0
-        and cache.time_stop_mode
+        and modes.time_stop()
         and character_data is not None
         and game_time.minutes(character_data.behavior.start_time) == game.clock
     ):
@@ -249,7 +250,7 @@ def _arts_break_due(game: core.GameState) -> bool | None:
     """
     from Script.Settle import realtime_settle
 
-    if clock_settled(game) and realtime_settle.arts_break_due():
+    if clock_settled(game) and realtime_settle.arts_break_due(game):
         return True
     return None
 
@@ -290,7 +291,7 @@ def _orphan_class_due(game: core.GameState) -> bool | None:
     player = cache.character_data.get(0)
     if (
         clock_settled(game)
-        and cache.sex_class_mode
+        and modes.sex_class(game)
         and player is not None
         and not player.sp_flag.is_h
     ):

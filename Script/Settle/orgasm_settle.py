@@ -8,6 +8,7 @@ from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel, ejaculation_panel
 from Script.Design import game_time
+from Script.Modules.domains import achievement
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -337,26 +338,21 @@ def orgasm_settle_in_second_behavior(
             # 群交状态下
             if handle_premise.handle_group_sex_mode_on(character_id):
                 # 成就统计
-                cache.achievement.group_sex_record.setdefault(2, [])
-                if character_id not in cache.achievement.group_sex_record[2]:
-                    cache.achievement.group_sex_record[2].append(character_id)
+                achievement.append_entry("group_sex_record", 2, character_id)
             # 隐奸状态下
             elif handle_premise.handle_hidden_sex_mode_ge_1(character_id):
                 # 成就统计
-                cache.achievement.hidden_sex_record.setdefault(4, 0)
-                cache.achievement.hidden_sex_record[4] += 1
+                achievement.add_entry("hidden_sex_record", 4)
             # 露出状态下
             elif handle_premise.handle_exhibitionism_sex_mode_ge_1(
                 character_id
             ):
                 # 成就统计
-                cache.achievement.exhibitionism_sex_record.setdefault(4, 0)
-                cache.achievement.exhibitionism_sex_record[4] += 1
+                achievement.add_entry("exhibitionism_sex_record", 4)
             # 睡奸状态下
             if handle_premise.handle_unconscious_flag_1(character_id):
                 # 成就统计
-                cache.achievement.sleep_sex_record.setdefault(3, 0)
-                cache.achievement.sleep_sex_record[3] += 1
+                achievement.add_entry("sleep_sex_record", 3)
             # 该部位高潮计数+1
             part_count += 1
             # 加入高潮部位记录

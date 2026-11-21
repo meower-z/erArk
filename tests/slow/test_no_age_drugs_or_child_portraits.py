@@ -8,9 +8,11 @@ image 目录与游戏的图片索引里没有以「_小」为差分段的图片�
 图片索引在导入 Script.Core.era_image 时建立，快速层不能导入它，所以本测试属于慢速层。
 """
 
+import importlib
 import os
 import re
 
+from tests import kernel_data
 from tests.slow.base import SlowTestCase
 from tests.world import ROOT
 
@@ -60,7 +62,15 @@ class NoAgeDrugsOrChildPortraitsTest(SlowTestCase):
             any(any(talents[2:]) for talents in before.values()),
             "开局没有带素质 104~107 的干员，用例不成立",
         )
-        self.cache.world_setting[COPPER_ARK_SETTING_ID] = 1
+        playthrough = importlib.import_module(
+            "Script.Modules.domains.playthrough"
+        )
+        kernel_data.set_world(
+            playthrough.set_setting,
+            playthrough.WORLD,
+            COPPER_ARK_SETTING_ID,
+            1,
+        )
         character_handle.handle_character_setting()
         after = {
             cid: [

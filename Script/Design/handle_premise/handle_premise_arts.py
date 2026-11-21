@@ -4,6 +4,7 @@ from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Config import game_config
 from Script.Design.handle_premise.premise_registry import add_premise
+from Script.Modules.domains import modes
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -26,7 +27,6 @@ def handle_at_least_one_arts_on(character_id: int) -> int:
     # 透视
     if handle_penetrating_vision_on(character_id):
         return 1
-    # 时停
     if handle_time_stop_on(character_id):
         return 1
     return 0
@@ -1008,7 +1008,7 @@ def handle_time_stop_on(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    return cache.time_stop_mode
+    return modes.time_stop()
 
 
 @add_premise(constant_promise.Premise.TIME_STOP_OFF)

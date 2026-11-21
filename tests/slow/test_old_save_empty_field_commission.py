@@ -192,7 +192,10 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
         ]
         self._send(ALL_CHILD_COMMISSION, child_id_list)
         end_time = domain.ongoing()[ALL_CHILD_COMMISSION].end
-        achievement_count = self.cache.achievement.field_commission_count
+        achievement = importlib.import_module(
+            "Script.Modules.domains.achievement"
+        )
+        achievement_count = achievement.get("field_commission_count")
         self._save_and_load()
         self.assertNotIn(
             ALL_CHILD_COMMISSION,
@@ -223,7 +226,7 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
             "取消的委托不算完成",
         )
         self.assertEqual(
-            self.cache.achievement.field_commission_count,
+            achievement.get("field_commission_count"),
             achievement_count,
             "取消的委托不计外勤成就",
         )
@@ -242,7 +245,10 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
         child_id = self._daughter("测试女儿102", 102)
         self._send(PARTIAL_COMMISSION, [adult_id, child_id])
         end_time = domain.ongoing()[PARTIAL_COMMISSION].end
-        achievement_count = self.cache.achievement.field_commission_count
+        achievement = importlib.import_module(
+            "Script.Modules.domains.achievement"
+        )
+        achievement_count = achievement.get("field_commission_count")
         self._save_and_load()
         self.assertEqual(
             domain.ongoing()[PARTIAL_COMMISSION].team,
@@ -271,7 +277,7 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
             "完成的委托算完成",
         )
         self.assertEqual(
-            self.cache.achievement.field_commission_count,
+            achievement.get("field_commission_count"),
             achievement_count + 1,
             "完成的委托计外勤成就",
         )

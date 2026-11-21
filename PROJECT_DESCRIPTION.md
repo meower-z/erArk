@@ -406,11 +406,9 @@ Script/
 - **角色世界**：`character_data`（角色ID -> Character）, `npc_tem_data`, `npc_id_got`, `forbidden_npc_id`, `npc_name_data`
 - **时间**：`game_time`, `pre_game_time`
 - **地图**：`map_data`, `scene_data`, `collect_position_list`
-- **行为循环**：`over_behavior_character`, `pl_sleep_save_flag`, `time_stop_mode`, `group_sex_mode`
-- **基地/世界**：`rhodes_island`, `country`, `world_setting`, `ai_setting`
-- **玩家**：`achievement`, `first_bonus`, `daily_intsruce`, `pl_pre_behavior_instruce`
-- **记录**：`taiggered_event_record`, `today_taiggered_event_record`
-- **不在缓存里**：界面临时状态（`now_panel_id`、`show_non_h_in_hidden_sex` 等）在 `Script/UI/Moudle/view.py`；全局系统设置与玩家的面板选择（`instruct_type_filter` 等）在 `normal_config.system_setting`，存在 settings.json
+- **行为循环**：`over_behavior_character`
+- **基地/世界**：`rhodes_island`, `ai_setting`
+- **不在缓存里**：界面临时状态（`now_panel_id`、`show_non_h_in_hidden_sex` 等）在 `Script/UI/Moudle/view.py`；全局系统设置与玩家的面板选择（`instruct_type_filter` 等）在 `normal_config.system_setting`，存在 settings.json；本周目设定与周目数（`save.settings`、`calendar.round`）、势力与国家（`world.country`）、模式开关（`mode.time_stop`、`mode.group_sex`、`mode.sex_class`）、睡中被吵醒名单（`needs.sleep_noise`）、成就（`world.achievement`）、事件与指令记录（`events.triggered`、`events.triggered_today`、`log.instructions`）与计划队列、寻路与睡觉存档标记（`plan.queue`、`plan.route`、`plan.sleep_save`）都在 GameState 全局键里，由 `Modules/domains/` 下的对应模块读写
 
 ### 9.2 Character（74 个字段）
 
@@ -453,7 +451,7 @@ init_character_behavior()
 │       while len(over_behavior_character) <= len(id_list)
 │           for 每个未完成 NPC: character_behavior(id, game_time, pl_start_time)
 ├── 跨天：game_time.day != pre_game_time.day -> past_day_settle.update_new_day()
-├── 睡觉存档：pl_sleep_save_flag -> sleep_settle.update_save()
+├── 睡觉存档：plan.sleep_save -> sleep_settle.update_save()
 └── 结束时成就结算（时停/群交）
 ```
 
@@ -462,7 +460,7 @@ init_character_behavior()
 1. 死亡角色直接返回；`start_time` 为空时初始化
 2. NPC：`run_npc_pre_behavior_checks()`（疲劳/睡眠/移动限制/助理/跟随/H 等）
 3. 玩家：
-   - 记录指令历史 `daily_intsruce`、`pl_pre_behavior_instruce`
+   - 记录指令历史 `log.instructions`（`domains/history.py`）
    - 空闲 `SHARE_BLANKLY`：直接标记完成
    - 移动：结算同场景跟随 + 重置目击玩家 H
    - 非空闲：`judge_before_pl_behavior()` -> `judge_character_status()`（事件 + 结算）-> `realtime_settle.character_aotu_change_value()` -> 睡眠结算 -> `change_character_persistent_state()` -> `judge_character_status_time_over()`
@@ -567,7 +565,7 @@ init_character_behavior()
 - 事件类型：指令前置、指令后置、子事件（`son_event_id`）、多层嵌套事件
 - 事件文本通过 `DrawEventTextPanel` 绘制；选项通过 `Event_option_Panel`
 - 效果结算走与行为相同的 `CVE/CSE/int` 体系
-- 记录触发次数：`cache.taiggered_event_record` / `today_taiggered_event_record`
+- 记录已触发事件：`events.triggered` / `events.triggered_today`（`domains/history.py`）
 
 ---
 
@@ -675,7 +673,7 @@ init_character_behavior()
 | 服装/脱衣/换装 | `Design/clothing.py`, `UI/Panel/cloth_panel.py` | `Clothing*.csv` |
 | 衣柜检查 | `UI/Panel/check_locker_panel.py` | 衣柜偷取等 |
 | 收藏品 | `UI/Panel/collection_panel.py` | `Collection_bouns.csv` |
-| 成就/蚀刻章 | `UI/Panel/achievement_panel.py` | `Achievement.csv` |
+| 成就/蚀刻章 | `UI/Panel/achievement_panel.py`, `Modules/domains/achievement.py` | `Achievement.csv` |
 | 身体信息 | `UI/Panel/body_info_panel.py`, `dirty_panel.py` | `BodyPart.csv` |
 | 射精面板 | `UI/Panel/ejaculation_panel.py` | `Semen_Shoot_Amount.csv` |
 | 妊娠/婴儿 | `Design/pregnancy.py`, `UI/Panel/sp_event_panel.py`, `get_up_panel.py` | 怀孕状态、孩子出生 |
@@ -705,7 +703,7 @@ init_character_behavior()
 | --- | --- | --- |
 | 源石技艺 | `UI/Panel/originium_arts.py` | 催眠/透视/激素/时停等技艺 |
 | 催眠 | `UI/Panel/hypnosis_panel.py`, `Design/hypnosis_state.py` | `Hypnosis_*` 系列 |
-| 时间停止 | `Design/…` + 主循环特殊处理 | `cache.time_stop_mode` |
+| 时间停止 | `Design/…`, `Modules/domains/modes.py` + 主循环特殊处理 | `mode.time_stop` |
 | 醉酒/醉奸 | `Sex_System/drunk_sex_common.py` | `Alcohol_Level.csv`, `Drunk_Level.csv` |
 
 ### 18.5 特殊 H 系统

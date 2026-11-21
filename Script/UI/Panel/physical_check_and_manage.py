@@ -16,6 +16,7 @@ from Script.Config import game_config, normal_config
 import random
 
 from Script.UI.Panel import achievement_panel
+from Script.Modules.domains import achievement
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -450,7 +451,7 @@ class Physical_Check_And_Manage_Panel:
         line.draw()
         line_feed.draw()
         # 结算成就
-        cache.achievement.health_check_count += 1
+        achievement.add("health_check_count", 1)
         achievement_panel.achievement_flow(_("身体检查"))
         # 在干员的破处当天进行处女膜检查
         pl_character_data = cache.character_data[0]
@@ -1383,9 +1384,7 @@ class Physical_Check_And_Manage_Panel:
             game_time.get_date_until_day()[3:]
         )
         # 成就记录
-        cache.achievement.body_report_chara_count_list.append(
-            target_character_id
-        )
+        achievement.append("body_report_chara_count_list", target_character_id)
 
         while 1:
 

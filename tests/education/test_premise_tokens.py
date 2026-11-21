@@ -34,8 +34,8 @@ from _bootstrap import (
     settle_behavior,
     sex_class_handle,
 )
-from Script.Design import second_behavior
-from Script.Design import handle_ability
+from Script.Design import handle_ability, second_behavior
+from Script.Modules.domains import modes
 from tests import kernel_data
 
 open_all_classroom()
@@ -313,7 +313,7 @@ settle_behavior.handle_comprehensive_value_effect(
 check("A1 视角写自己的照料值", g.care_point == 3.0)
 
 section("实操课前提")
-cache.sex_class_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
 check(
     "模式关：mode_off 成立",
     HP("sex_class_mode_off", 0) == 1 and HP("sex_class_mode_on", 0) == 0,
@@ -333,7 +333,7 @@ cache.rhodes_island.temp_sex_class = {}
 today = game_time.now().date().toordinal()
 sex_class_handle.set_temp_class(today, 5, ROOM_P, 74, must_attend=[201])
 now_class = sex_class_handle.start_sex_class(74)
-cache.sex_class_mode = True
+kernel_data.set_world(modes.set_sex_class, True)
 check("模式开：mode_on 成立", HP("sex_class_mode_on", 0) == 1)
 check(
     "预约的课：sex_class_reserved",
@@ -362,17 +362,17 @@ check("下课三档：按时", HP("sex_class_end_on_time", 0) == 1)
 set_time(period_time(5) + datetime.timedelta(minutes=80))
 check("下课三档：拖堂", HP("sex_class_end_late", 0) == 1)
 sex_class_handle.end_sex_class()
-cache.sex_class_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
 cache.rhodes_island.temp_sex_class = {}
 set_time(period_time(5))
 sex_class_handle.start_sex_class(70)
-cache.sex_class_mode = True
+kernel_data.set_world(modes.set_sex_class, True)
 check(
     "当场开课：sex_class_impromptu",
     HP("sex_class_impromptu", 0) == 1 and HP("sex_class_reserved", 0) == 0,
 )
 sex_class_handle.end_sex_class()
-cache.sex_class_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
 
 section("实习带教前提")
 schedule_handle.set_selected_course(

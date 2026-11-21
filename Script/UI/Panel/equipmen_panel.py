@@ -3,18 +3,18 @@
 from types import FunctionType
 from Script.Core import (
     cache_control,
+    constant,
+    flow_handle,
     game_type,
     get_text,
-    flow_handle,
-    constant,
 )
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.Design import handle_ability, handle_premise, basement
 from Script.Modules.domains import commission
 import random
-
 from Script.UI.Panel import achievement_panel
+from Script.Modules.domains import achievement
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -314,7 +314,7 @@ def repair_equipment(
                 smith_chara_id
             ]
             # 结算成就
-            cache.achievement.equipment_repair_count += 1
+            achievement.add("equipment_repair_count", 1)
             achievement_panel.achievement_flow(_("维修"))
     return repair_flag, repair_text
 
@@ -405,7 +405,7 @@ def maintain_equipment(
                 smith_chara_id
             ]
             # 结算成就
-            cache.achievement.equipment_maintenance_count += 1
+            achievement.add("equipment_maintenance_count", 1)
             achievement_panel.achievement_flow(_("保养"))
     return maintain_flag, maintain_text
 

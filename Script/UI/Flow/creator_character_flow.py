@@ -14,7 +14,6 @@ from Script.Core import (
     py_cmd,
     io_init,
 )
-
 from Script.Design import (
     handle_panel,
     character,
@@ -24,12 +23,13 @@ from Script.Design import (
     game_time,
 )
 from Script.Kernel import core
-from Script.Modules.domains import visitor, work
+from Script.Modules.domains import country, playthrough, visitor
+from Script.Modules.domains import warehouse, work
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import kernel_state
 from Script.UI.Moudle import panel, draw, view
 from Script.Config import normal_config, game_config
-from Script.Modules.domains import warehouse
+from Script.Modules.domains.playthrough import FIRST_BONUS, WORLD
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -55,9 +55,6 @@ def creator_character_panel() -> None:
     #    会把上一局的女儿一并实例化进这一局，从而触发本局并不存在的女儿的相关事件（跨存档 / 跨局泄漏）
     cache.character_data.clear()
     cache.npc_id_got.clear()
-    # 上一局排着的行动与玩家的路线也不带进新的一局
-    cache.plan_queue = {}
-    cache.player_route = None
     # 时钟回到开局：建角色时读到的游戏时间都是开局时刻
     clock = kernel_state.first_clock()
     kernel_state.reset_clock(clock)
@@ -88,11 +85,10 @@ def first_bonus_and_setting_updata() -> None:
     """刷新初始奖励和设定"""
     cache = cache_control.cache
     for cid in game_config.config_first_bonus:
-        cache.first_bonus[cid] = False
+        playthrough.set_setting(FIRST_BONUS, cid, False)
     for cid in game_config.config_world_setting:
-        cache.world_setting[cid] = 0
-    cache.difficulty_setting = attr_calculation.get_difficulty_setting_zero()
-    cache.birth_type_setting = attr_calculation.get_birth_type_setting_zero()
+        playthrough.set_setting(WORLD, cid, 0)
+    playthrough.reset_difficulty_and_birth()
     # 初始资源
     warehouse.start({1: 20000, 11: 20, 15: 1000, 21: 10})
     # 体检设置
@@ -107,7 +103,6 @@ def first_bonus_and_setting_updata() -> None:
 
 def game_start() -> None:
     """初始化游戏数据"""
-    cache = cache_control.cache
     from Script.System.Cooking_System import cooking
     from Script.UI.Panel import achievement_panel, manage_vehicle_panel
     from Script.System.Medical_System import medical_service
@@ -119,9 +114,8 @@ def game_start() -> None:
     character_handle.handle_character_setting()
     cooking.init_recipes()
     cooking.init_food_shop_data(new_day_flag=True)
-    cache.difficulty_setting = attr_calculation.get_difficulty_setting_zero()
-    cache.birth_type_setting = attr_calculation.get_birth_type_setting_zero()
-    cache.country = attr_calculation.get_country_reset(cache.country)
+    playthrough.reset_difficulty_and_birth()
+    country.fill()
     basement.get_base_updata()
     character_handle.init_character_entertainment()  # 需要设施开放的属性，所以放在设施后面
     medical_service.init_medical_department_data(reset_runtime=True)
@@ -1160,7 +1154,7 @@ class Character_Bonus:
         now_draw_list.append(line)
 
         # 提供的点数
-        bonus_all += cache.game_round * 20
+        bonus_all += playthrough.game_round() * 20
         if cache.debug_mode:
             bonus_all += 999
         self.bonus_now = bonus_all
@@ -1179,7 +1173,7 @@ class Character_Bonus:
             button_text = ""
             first_bonus_data = game_config.config_first_bonus[cid]
             # 判断是否已经选择，并输出对应前缀和预填消耗文本
-            if cache.first_bonus[cid]:
+            if playthrough.setting(FIRST_BONUS, cid):
                 self.bonus_now -= first_bonus_data.consume
                 button_text += "   ●"
                 draw_style = "gold_enrod"
@@ -1194,10 +1188,10 @@ class Character_Bonus:
                 f"{first_bonus_data.name}({first_bonus_data.consume})："
             )
             # 文本2(部分奖励有特殊文本)
-            if cache.first_bonus[cid]:
+            if playthrough.setting(FIRST_BONUS, cid):
                 if cid == 21:
                     ability_name = game_config.config_ability[
-                        cache.first_bonus[cid]
+                        playthrough.setting(FIRST_BONUS, cid)
                     ].name
                     button_text += _("(已选{0})").format(ability_name)
                 elif cid == 22:
@@ -1223,7 +1217,7 @@ class Character_Bonus:
         info_draw = draw.LeftDraw()
         # info_draw.width = 1
         info_draw.text = _(" \n 当前为第 {0} 周目\n").format(
-            str(cache.game_round)
+            str(playthrough.game_round())
         )
         info_draw.text += _(" 当前剩余奖励点数 =")
         info_draw.text += _(" {0} = [周目数 * 20]").format(self.bonus_now)
@@ -1260,10 +1254,10 @@ class Character_Bonus:
 
             if pl_character_data.talent[talent_id]:
                 pl_character_data.talent[talent_id] = 0
-                cache.first_bonus[first_bonus_id] = False
+                playthrough.set_setting(FIRST_BONUS, first_bonus_id, False)
             elif self.bonus_now >= 10:
                 pl_character_data.talent[talent_id] = 1
-                cache.first_bonus[first_bonus_id] = True
+                playthrough.set_setting(FIRST_BONUS, first_bonus_id, True)
             else:
                 fail_flag = True
 
@@ -1274,13 +1268,13 @@ class Character_Bonus:
                 warehouse.set(2, 0)
                 warehouse.set(4, 0)
                 warehouse.set(11, 20)
-                cache.first_bonus[first_bonus_id] = False
+                playthrough.set_setting(FIRST_BONUS, first_bonus_id, False)
             elif self.bonus_now >= 5:
                 warehouse.set(1, 70000)
                 warehouse.set(2, 6000)
                 warehouse.set(4, 100)
                 warehouse.set(11, 50)
-                cache.first_bonus[first_bonus_id] = True
+                playthrough.set_setting(FIRST_BONUS, first_bonus_id, True)
             else:
                 fail_flag = True
 
@@ -1289,20 +1283,20 @@ class Character_Bonus:
 
             # 领域专家
             if first_bonus_id == 21:
-                if cache.first_bonus[first_bonus_id]:
-                    pl_character_data.ability[
-                        cache.first_bonus[first_bonus_id]
-                    ] = 0
-                    cache.first_bonus[first_bonus_id] = False
+                if ability_id := playthrough.setting(
+                    FIRST_BONUS, first_bonus_id
+                ):
+                    pl_character_data.ability[ability_id] = 0
+                    playthrough.set_setting(FIRST_BONUS, first_bonus_id, False)
                 elif self.bonus_now >= 5:
                     now_panel = normal_panel.Chose_First_bonus_ability_Panel(
                         self.width
                     )
                     now_panel.draw()
-                    if cache.first_bonus[first_bonus_id]:
-                        pl_character_data.ability[
-                            cache.first_bonus[first_bonus_id]
-                        ] = 5
+                    if ability_id := playthrough.setting(
+                        FIRST_BONUS, first_bonus_id
+                    ):
+                        pl_character_data.ability[ability_id] = 5
                 else:
                     fail_flag = True
 
@@ -1316,7 +1310,7 @@ class Character_Bonus:
                     ]
                     target_data.favorability[0] = 0
                     target_data.trust = 0
-                    cache.first_bonus[first_bonus_id] = False
+                    playthrough.set_setting(FIRST_BONUS, first_bonus_id, False)
 
                 # 这里直接沿用的助理页面的代码
                 if self.bonus_now >= 5:
@@ -1331,8 +1325,10 @@ class Character_Bonus:
                         )
                         new_assistant_data.favorability[0] = 1000
                         new_assistant_data.trust = 50
-                        cache.first_bonus[first_bonus_id] = (
-                            pl_character_data.assistant_character_id
+                        playthrough.set_setting(
+                            FIRST_BONUS,
+                            first_bonus_id,
+                            pl_character_data.assistant_character_id,
                         )
 
                 else:
@@ -1361,9 +1357,11 @@ class World_Setting:
         self.width: int = width
         """ 当前最大可绘制宽度 """
         self.settings: dict[int, int] = (
-            cache.world_setting if settings is None else settings
+            playthrough.settings(WORLD) if settings is None else settings
         )
         """ 面板选择写入的世界设定 """
+        self.saved = settings is None
+        """ 选择写进本存档的世界设定表 """
         self.return_list: list[str] = []
         """ 监听的按钮列表 """
 
@@ -1430,6 +1428,8 @@ class World_Setting:
     def select_setting(self, setting_cid: int) -> None:
         """选择该设定"""
         self.settings[setting_cid] = not self.settings[setting_cid]
+        if self.saved:
+            playthrough.set_settings(WORLD, self.settings)
 
 
 class Other_Settings:

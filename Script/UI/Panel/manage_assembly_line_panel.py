@@ -5,18 +5,18 @@ from __future__ import annotations
 from types import FunctionType
 from Script.Core import (
     cache_control,
+    constant,
+    flow_handle,
     game_type,
     get_text,
-    flow_handle,
-    constant,
 )
-from Script.Design import attr_calculation, basement, handle_ability
+from Script.Design import attr_calculation, basement, game_time, handle_ability
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
 from typing import TYPE_CHECKING
-from Script.Design import game_time
 from Script.Modules.domains import facility, medical, production, warehouse
+from Script.Modules.domains import achievement
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -161,7 +161,7 @@ def settle_assembly_line(
                     )
                 # 结算实际生产的产品
                 warehouse.add(product_id, produce_num)
-                cache.achievement.production_count += produce_num
+                achievement.add("production_count", produce_num)
                 # 如果是住院病房扩展模块，则增加到记录中
                 if product_id == 54:
                     hospital_bed_modules += produce_num

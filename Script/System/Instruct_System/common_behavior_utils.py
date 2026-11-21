@@ -2,6 +2,7 @@
 """获取玩家最近一条非中断H指令的behavior_id"""
 
 from Script.Core import cache_control, constant
+from Script.Modules.domains import history
 
 cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -19,7 +20,7 @@ def get_last_valid_sex_behavior_id() -> str:
         跳过constant.special_end_H_list中的中断指令，
         返回第一条有效指令，避免破处体位被记录为中断类指令。
     """
-    for behavior_id in reversed(cache.pl_pre_behavior_instruce):
+    for behavior_id in reversed(history.recent()):
         if behavior_id not in constant.special_end_H_list:
             return behavior_id
     return constant.Behavior.SHARE_BLANKLY

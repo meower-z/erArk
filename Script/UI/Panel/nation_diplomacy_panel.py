@@ -14,7 +14,13 @@ from Script.Design import attr_calculation, handle_ability
 import random
 from Script.Design import game_time
 from Script.Modules.save_load import reset
-from Script.Modules.domains import diplomacy, facility, location, medical
+from Script.Modules.domains import (
+    country,
+    diplomacy,
+    facility,
+    location,
+    medical,
+)
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -37,22 +43,23 @@ def update_nation_data() -> None:
 
     # 首先检查是否全势力0声望
     for nation_id in game_config.config_nation:
-        if cache.country.nation_reputation[nation_id] != 0:
+        if country.reputation(nation_id) != 0:
             need_update = False
             break
 
     # 如果全势力0声望，则检查是否有全势力0感染率
     if need_update:
         for country_id in game_config.config_birthplace:
-            if cache.country.country_infection_rate[country_id] != 0:
+            if country.infection_rate(country_id) != 0:
                 need_update = False
                 break
 
     # 如果全势力0声望0感染率，则更新
     if need_update:
         for country_id in game_config.config_birthplace:
-            cache.country.country_infection_rate[country_id] = (
-                game_config.config_birthplace[country_id].infect_rate
+            country.set_infection_rate(
+                country_id,
+                game_config.config_birthplace[country_id].infect_rate,
             )
 
 
@@ -107,14 +114,14 @@ def judge_diplomatic_policy() -> None:
         if diplomatic_policy_id == 1:
             # 小幅度降低源石病感染率
             down_rate = 0.01 * ability_adjust * random_just
-            cache.country.country_infection_rate[country_id] -= down_rate
+            country.add_infection_rate(country_id, -down_rate)
             all_infection_rate += down_rate
         elif diplomatic_policy_id == 2:
             # 小幅度提高声望
             up_reputation = 0.1 * ability_adjust * random_just
             # 修正声望
             nation_cid = country_id * 10 + 1
-            cache.country.nation_reputation[nation_cid] += up_reputation
+            country.add_reputation(nation_cid, up_reputation)
             all_reputation += up_reputation
             # 遍历当地的附属势力
             for (
@@ -123,16 +130,14 @@ def judge_diplomatic_policy() -> None:
                 nation_cid
             ]:
                 # 修正声望
-                cache.country.nation_reputation[subordinate_id] += (
-                    up_reputation * 0.5
-                )
+                country.add_reputation(subordinate_id, up_reputation * 0.5)
                 all_reputation += up_reputation * 0.5
         elif diplomatic_policy_id == 3:
             # 小幅度提高声望
             up_reputation = 0.1 * ability_adjust * random_just
             # 修正声望
             nation_cid = country_id * 10 + 1
-            cache.country.nation_reputation[nation_cid] += up_reputation
+            country.add_reputation(nation_cid, up_reputation)
             all_reputation += up_reputation
             # 遍历当地的附属势力
             for (
@@ -141,21 +146,19 @@ def judge_diplomatic_policy() -> None:
                 nation_cid
             ]:
                 # 修正声望
-                cache.country.nation_reputation[subordinate_id] += (
-                    up_reputation * 3
-                )
+                country.add_reputation(subordinate_id, up_reputation * 3)
                 all_reputation += up_reputation * 3
         elif diplomatic_policy_id == 4:
             # 大幅度降低源石病感染率
             down_rate = 0.05 * ability_adjust * random_just
-            cache.country.country_infection_rate[country_id] -= down_rate
+            country.add_infection_rate(country_id, -down_rate)
             all_infection_rate += down_rate
         elif diplomatic_policy_id == 5:
             # 大幅度提高声望
             up_reputation = 0.3 * ability_adjust * random_just
             # 修正声望
             nation_cid = country_id * 10 + 1
-            cache.country.nation_reputation[nation_cid] += up_reputation
+            country.add_reputation(nation_cid, up_reputation)
             all_reputation += up_reputation
             # 遍历当地的附属势力
             for (
@@ -164,7 +167,7 @@ def judge_diplomatic_policy() -> None:
                 nation_cid
             ]:
                 # 修正声望
-                cache.country.nation_reputation[subordinate_id] += up_reputation
+                country.add_reputation(subordinate_id, up_reputation)
                 all_reputation += up_reputation
 
     # 保留小数
@@ -198,11 +201,11 @@ def settle_all_country_infection_rate() -> None:
             continue
         # 跳过拉特兰
         if country_id == 7:
-            cache.country.country_infection_patient_ratio[country_id] = 0.1
+            country.set_patient_ratio(country_id, 0.1)
             continue
         count += 1
         # 旧比例
-        old_rate = cache.country.country_infection_rate[country_id]
+        old_rate = country.infection_rate(country_id)
         # 基础上升次数与当前感染率有关，感染率越高，上升越快
         base_times = (old_rate // 10) + 1
         # 基础上升率与每周治疗加权量有关，治疗量越高，上升越慢，可以为负数
@@ -212,42 +215,26 @@ def settle_all_country_infection_rate() -> None:
         # 如果当前国家，则进行记录
         if country_id == now_country:
             now_country_change = change
-        # 进行调整
-        cache.country.country_infection_rate[country_id] += change
-        # 限制在0~99.99之间
-        cache.country.country_infection_rate[country_id] = min(
-            max(round(cache.country.country_infection_rate[country_id], 3), 0),
-            99.99,
-        )
-        this_week_all_country_infection_rate += (
-            cache.country.country_infection_rate[country_id]
-        )
-        # 计算矿石病感染率对于病人数量的影响
-        cache.country.country_infection_patient_ratio[country_id] = (
-            cache.country.country_infection_rate[country_id] / 30
-        )
-        # 限制在0.1~3.0之间
-        cache.country.country_infection_patient_ratio[country_id] = min(
-            max(cache.country.country_infection_patient_ratio[country_id], 0.1),
-            3.0,
-        )
+        # 进行调整，限制在0~99.99之间
+        new_rate = min(max(round(old_rate + change, 3), 0), 99.99)
+        country.set_infection_rate(country_id, new_rate)
+        this_week_all_country_infection_rate += new_rate
+        # 计算矿石病感染率对于病人数量的影响，限制在0.1~3.0之间
+        country.set_patient_ratio(country_id, min(max(new_rate / 30, 0.1), 3.0))
 
     # 重置每周治疗加权量
     with medical.editing() as m:
         m.weekly_weighted_treatment = 0
     # 如果存在上周感染率总和，则进行对比输出变化
-    if cache.country.last_week_all_country_infection_rate != -1.0:
+    if country.last_week_rate() != -1.0:
         total_change = (
-            this_week_all_country_infection_rate
-            - cache.country.last_week_all_country_infection_rate
+            this_week_all_country_infection_rate - country.last_week_rate()
         )
         total_change_rate = total_change / count
     else:
         total_change_rate = 0.0
     # 更新本周所有国家感染率总和
-    cache.country.last_week_all_country_infection_rate = (
-        this_week_all_country_infection_rate
-    )
+    country.set_last_week_rate(this_week_all_country_infection_rate)
     # 输出结算信息
     info_text = "\n"
     info_text += _("○源石病感染率统计报告：")
@@ -397,9 +384,7 @@ class Nation_Diplomacy_Panel:
                     nation_data.name, text_width, "center"
                 )
                 # 声望
-                now_nation_reputation = cache.country.nation_reputation[
-                    nation_id
-                ]
+                now_nation_reputation = country.reputation(nation_id)
                 now_nation_reputation = round(now_nation_reputation, 2)
                 _tem_rep, now_nation_reputation_level = (
                     attr_calculation.get_reputation_level(now_nation_reputation)
@@ -415,9 +400,7 @@ class Nation_Diplomacy_Panel:
                     now_country_treatment_progress = _("无")
                 else:
                     now_country_treatment_progress = round(
-                        cache.country.country_infection_rate[
-                            nation_data.country
-                        ],
+                        country.infection_rate(nation_data.country),
                         3,
                     )
                 now_country_treatment_progress = (
@@ -492,9 +475,9 @@ class Nation_Diplomacy_Panel:
         nation_data = game_config.config_nation[nation_id]
         nation_name = nation_data.name
         nation_introduction = nation_data.introduction
-        nation_reputation = round(cache.country.nation_reputation[nation_id], 2)
+        nation_reputation = round(country.reputation(nation_id), 2)
         nation_infected_rate = round(
-            cache.country.country_infection_rate.get(nation_data.country, 0), 3
+            country.infection_rate(nation_data.country, 0), 3
         )
         # 势力特产
         nation_specialty_list = game_config.config_resouce_data_of_nation.get(
@@ -511,9 +494,7 @@ class Nation_Diplomacy_Panel:
         )
         nation_subordinate_str = ""
         for cid in nation_subordinate_list:
-            now_nation_reputation = round(
-                cache.country.nation_reputation[cid], 2
-            )
+            now_nation_reputation = round(country.reputation(cid), 2)
             _tem_sub, now_nation_reputation_level = (
                 attr_calculation.get_reputation_level(now_nation_reputation)
             )

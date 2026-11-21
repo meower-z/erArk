@@ -381,7 +381,7 @@ class Schedule_Template_Panel:
         if template_id is None:
             return
         # 必须走一期的 get_student_candidate_list 而不是「有成长素质就算孩子」：
-        #    世界设定「萝莉化」(cache.world_setting[1]) 会给全岛干员挂上萝莉素质103
+        #    世界设定「萝莉化」(世界设定表的 1 号) 会给全岛干员挂上萝莉素质103
         #    (character_handle.py:434)，只按素质筛会把整个罗德岛列进这份名单；
         #    另外婴儿(101)也排不了自习读书，那份名单已经把两件事一并挡掉了
         child_list = growth_handle.get_student_candidate_list()

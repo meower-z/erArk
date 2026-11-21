@@ -52,7 +52,7 @@ from Script.System.Education_System import (
 )
 
 from typing import TYPE_CHECKING
-from Script.Modules.domains import needs
+from Script.Modules.domains import modes, needs
 
 if TYPE_CHECKING:
     import datetime
@@ -460,7 +460,7 @@ def get_attend_or_join_stage(character_id: int, now_course: dict) -> int:
     """
     from Script.System.Education_System import sex_class_handle
 
-    if not cache.sex_class_mode:
+    if not modes.sex_class():
         return education_constant.COURSE_STAGE_ATTEND
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.sp_flag.is_h:
@@ -500,7 +500,7 @@ def judge_pending_class_joinable(
     """
     from Script.System.Education_System import sex_class_handle
 
-    if not cache.sex_class_mode or not pending_class.get("running", False):
+    if not modes.sex_class() or not pending_class.get("running", False):
         return False
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.sp_flag.is_h or not judge_in_scene(
@@ -531,7 +531,7 @@ def judge_attend_running_sex_class_here(character_id: int) -> bool:
     """
     from Script.System.Education_System import sex_class_handle
 
-    if not cache.sex_class_mode:
+    if not modes.sex_class():
         return False
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.work.work_type != education_constant.STUDENT_WORK_TYPE:

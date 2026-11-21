@@ -17,6 +17,7 @@ import random
 from Script.Config import game_config
 from Script.Core import constant
 from Script.Design import handle_premise as HP
+from Script.Modules.domains import modes
 from tests.fast.base import FastTestCase
 from tests import kernel_data
 
@@ -194,7 +195,7 @@ class UnnormalBitsSameMeaningTest(FastTestCase):
         for talent_id in range(350, 360):
             if talent_id in operator.talent:
                 operator.talent[talent_id] = 1 if rng.random() < 0.15 else 0
-        self.cache.time_stop_mode = rng.random() < 0.2
+        kernel_data.set_world(modes.set_time_stop, rng.random() < 0.2)
         for clothing_type in game_config.config_clothing_type:
             roll = rng.random()
             if roll < 0.45:
@@ -265,6 +266,6 @@ class UnnormalBitsSameMeaningTest(FastTestCase):
             clothing_type: []
             for clothing_type in game_config.config_clothing_type
         }
-        self.cache.time_stop_mode = True
+        kernel_data.set_world(modes.set_time_stop, True)
         self.assertEqual([f(0) for f in ALL_BITS], [1] * 7)
         self.assertEqual(HP.handle_unnormal(0), 0)

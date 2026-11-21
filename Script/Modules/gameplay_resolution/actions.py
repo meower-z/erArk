@@ -24,6 +24,7 @@ from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import time_hooks
 from Script.Modules.gameplay_resolution import intent
+from Script.Modules.domains import modes
 
 PLAYER = "0"
 """ 玩家在 GameState.characters 里的键 """
@@ -61,7 +62,7 @@ def time_stop(act: core.Action) -> tuple[core.Action]:
     data = act.action_data
     if (
         act.who == PLAYER
-        and cache.time_stop_mode
+        and modes.time_stop()
         and isinstance(data, Mapping)
         and "behavior_id" in data
         and data["behavior_id"] != constant.Behavior.TIME_STOP_OFF

@@ -12,7 +12,7 @@ from __future__ import annotations
 from Script.Core import cache_control
 from Script.Config import game_config
 from Script.Design import map_handle
-from Script.Modules.domains import facility, needs, power, warehouse
+from Script.Modules.domains import facility, modes, needs, power, warehouse
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -168,7 +168,7 @@ def check_time_stop_unconscious_survives_off_list() -> list[CheckFailure]:
         新周目继承整张character_data也可能把历史残留带入
     """
     cache = cache_control.cache
-    if cache is None or getattr(cache, "time_stop_mode", False):
+    if cache is None or modes.time_stop():
         return []
     character_data = getattr(cache, "character_data", {}) or {}
     npc_id_got: set[int] = getattr(cache, "npc_id_got", set()) or set()

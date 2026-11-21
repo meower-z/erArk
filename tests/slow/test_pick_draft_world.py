@@ -14,10 +14,11 @@
 """
 
 from collections.abc import Callable, Mapping
+import importlib
 from typing import cast
 
-from tests.slow.base import SlowTestCase
 from tests import kernel_data
+from tests.slow.base import SlowTestCase
 
 LOCKER_ROOM = ["大浴场", "更衣室"]
 """ 大浴场的更衣室（浴场衣柜） """
@@ -262,7 +263,8 @@ class PickDraftWorldTest(SlowTestCase):
         food = cooking.create_food("0", recipe_id)
         food.special_seasoning = SPECIAL_SEASONING
         player.food_bag[food.uid] = food
-        self.cache.time_stop_mode = True
+        modes = importlib.import_module("Script.Modules.domains.modes")
+        kernel_data.set_world(modes.set_time_stop, True)
 
         def pick() -> None:
             with player_pick.drafting("food_bag"):

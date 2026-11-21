@@ -27,6 +27,7 @@ import datetime
 from Script.Core import cache_control
 from Script.Config import game_config
 from Script.Design import game_time
+from Script.Modules.domains import achievement, history, modes
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -209,7 +210,7 @@ def check_pre_game_time_not_after_game_time() -> list[CheckFailure]:
             "BEHAV-04",
             "上一循环时间不得晚于当前时间",
             f"ticked={ticked}或settled_day={settled_day}晚于clock={clock}(day={game_time.day(clock)})，"
-            f"时钟疑似倒流；time_stop_mode={getattr(cache_control.cache, 'time_stop_mode', None)}",
+            f"时钟疑似倒流；time_stop_mode={modes.time_stop()}",
             [],
         )
     ]
@@ -229,16 +230,12 @@ def check_daily_refresh_completed() -> list[CheckFailure]:
     clock, __, settled_day = _clock_marks()
     if not isinstance(settled_day, int) or settled_day == game_time.day(clock):
         return []
-    today_event = (
-        getattr(cache_control.cache, "today_taiggered_event_record", None)
-        or set()
-    )
     return [
         make_failure(
             "BEHAV-05",
             "跨日刷新已经完成",
             f"settled_day={settled_day}不是今天(day={game_time.day(clock)}, game_time={game_time.now()!r})，"
-            f"跨日刷新疑似尚未执行；today_taiggered_event_record长度={len(today_event)}",
+            f"跨日刷新疑似尚未执行；events.triggered_today长度={history.today_count()}",
             [],
         )
     ]
@@ -415,7 +412,7 @@ def check_behavior_start_time_not_future() -> list[CheckFailure]:
         推进后时刻，随后主循环回退全局时钟，该NPC合法领先
     """
     cache = cache_control.cache
-    if getattr(cache, "time_stop_mode", False):
+    if modes.time_stop():
         return []
     character_data = getattr(cache, "character_data", None) or {}
     game_t = game_time.now()
@@ -442,7 +439,7 @@ def check_behavior_start_time_not_future() -> list[CheckFailure]:
                     f"角色cid={cid}(name={getattr(chara, 'name', '?')!r})的behavior.start_time={behavior.start_time!r}"
                     f"晚于game_time.now()={game_t!r}；behavior_id={behavior.behavior_id!r}, "
                     f"duration={behavior.duration!r}, "
-                    f"time_stop_mode={getattr(cache, 'time_stop_mode', None)}, cid in "
+                    f"time_stop_mode={modes.time_stop()}, cid in "
                     f"over_behavior_character={cid in over_behavior_character}"
                 ),
                 [cid],
@@ -467,11 +464,11 @@ def check_no_stale_expired_behavior() -> list[CheckFailure]:
         duration<=0被过滤：完成分支会把behavior重置为duration=0，属于合法终态
     """
     cache = cache_control.cache
-    if getattr(cache, "time_stop_mode", False):
+    if modes.time_stop():
         return []
     character_data = getattr(cache, "character_data", None) or {}
     game_t = game_time.now()
-    group_sex_mode = getattr(cache, "group_sex_mode", None)
+    group_sex_mode = modes.group_sex()
     failures = []
     for cid in _live_ids(cache):
         chara = character_data.get(cid)
@@ -500,7 +497,7 @@ def check_no_stale_expired_behavior() -> list[CheckFailure]:
                     f"start_time={behavior.start_time!r}, duration={behavior.duration!r}, END={end_time!r} < "
                     f"game_time={game_t!r}；"
                     f"is_h={getattr(sp_flag, 'is_h', None)}, unconscious_h={getattr(sp_flag, 'unconscious_h', None)}, "
-                    f"time_stop_mode={getattr(cache, 'time_stop_mode', None)}, group_sex_mode={group_sex_mode}, "
+                    f"time_stop_mode={modes.time_stop()}, group_sex_mode={group_sex_mode}, "
                     f"target_character_id={getattr(chara, 'target_character_id', None)}"
                 ),
                 [cid],
@@ -656,7 +653,7 @@ def check_active_body_item_not_expired() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     character_data = getattr(cache, "character_data", None) or {}
-    time_stop = getattr(cache, "time_stop_mode", False)
+    time_stop = modes.time_stop()
     game_t = game_time.now()
     failures = []
     for cid in _live_ids(cache):
@@ -783,7 +780,7 @@ def check_last_behavior_id_list_bounded() -> list[CheckFailure]:
         校验last_behavior_id_list是长度在[1,5]的list，且每个元素要么是0要么是字符串。初值[0]，完成行为时
         追加并裁到5，是全仓库唯一写入点。定为warning而非error：旧存档迁移原样复制列表且不裁剪，超长列表每轮只
         缩短1项，会连续多个合法回合告警。不加x in game_config.config_behavior成员校验(旧存档必然噪声)；
-        不并入全局cache.pl_pre_behavior_instruce(它没有任何读档裁剪路径)
+        不并入全局键 log.instructions 的 recent(它没有任何读档裁剪路径)
     """
     cache = cache_control.cache
     character_data = getattr(cache, "character_data", None) or {}
@@ -831,7 +828,7 @@ def check_time_stop_player_unconscious() -> list[CheckFailure]:
         NPC侧差异只适合另做告警
     """
     cache = cache_control.cache
-    if not getattr(cache, "time_stop_mode", False):
+    if not modes.time_stop():
         return []
     character_data = getattr(cache, "character_data", None) or {}
     player = character_data.get(0)
@@ -847,7 +844,6 @@ def check_time_stop_player_unconscious() -> list[CheckFailure]:
             unconscious_npcs.append(cid)
         if len(unconscious_npcs) >= 10:
             break
-    achievement = getattr(cache, "achievement", None)
     return [
         make_failure(
             "BEHAV-19",
@@ -857,7 +853,7 @@ def check_time_stop_player_unconscious() -> list[CheckFailure]:
                 f"_h={getattr(sp_flag, 'unconscious_h', None)!r}"
                 f"!=3，时停开关可能只跑了一半；is_h={getattr(sp_flag, 'is_h', None)}, "
                 f"已置3的NPC样本(至多10个)={unconscious_npcs}, "
-                f"time_stop_duration={getattr(achievement, 'time_stop_duration', None)!r}"
+                f"time_stop_duration={achievement.get('time_stop_duration')!r}"
             ),
             [0],
         )
@@ -878,7 +874,7 @@ def check_group_sex_mode_player_in_h() -> list[CheckFailure]:
         is_h清零的路径用的是hidden_sex_mode而非group_sex_mode，不构成本条反例
     """
     cache = cache_control.cache
-    if not getattr(cache, "group_sex_mode", False):
+    if not modes.group_sex():
         return []
     character_data = getattr(cache, "character_data", None) or {}
     player = character_data.get(0)
@@ -898,9 +894,9 @@ def check_group_sex_mode_player_in_h() -> list[CheckFailure]:
         make_failure(
             "BEHAV-20",
             "群交模式必须有玩家在H中",
-            f"[warning] cache.group_sex_mode=True但0号玩家sp_flag.is_h=False，模式可能已泄漏，NPC的AI会一直走"
+            f"[warning] mode.group_sex=True但0号玩家sp_flag.is_h=False，模式可能已泄漏，NPC的AI会一直走"
             f"群交分支；behavior_id={getattr(getattr(player, 'behavior', None), 'behavior_id', None)!r}, "
-            f"当前在H中的角色样本(至多10个)={h_npcs}, time_stop_mode={getattr(cache, 'time_stop_mode', None)}",
+            f"当前在H中的角色样本(至多10个)={h_npcs}, time_stop_mode={modes.time_stop()}",
             [0],
         )
     ]
@@ -944,7 +940,7 @@ def check_over_behavior_character_ids_exist() -> list[CheckFailure]:
             "完成集合里只能是存在的角色id",
             f"cache.over_behavior_character中存在不是'存在角色id'的元素(野指针信号): {bad!r}，"
             f"集合总长度={len(over_set)}, npc_id_got(前20个)={sorted(npc_id_got)[:20]}, "
-            f"time_stop_mode={getattr(cache, 'time_stop_mode', None)}",
+            f"time_stop_mode={modes.time_stop()}",
             involved,
         )
     ]

@@ -2,6 +2,7 @@
 """结算器：512 授课 / 557 学生坐下听课时教师判能到岗即结算 / 548 自习 / 549 翘课 / 550 检查成绩单 / 552 实习 / 622 炫耀
 / 623 翘课被抓 / 10014 10015 课堂H模式"""
 
+from functools import partial
 from typing import Any
 
 from _bootstrap import (
@@ -39,10 +40,10 @@ from _bootstrap import (
     sex_class_handle,
     start,
 )
-from Script.Settle import default as settle_default
-from Script.Settle import common_default
+from Script.Settle import common_default, default as settle_default
 from Script.System.Instruct_System import handle_instruct
 from Script.Design import character_behavior, second_behavior
+from Script.Modules.domains import modes
 from tests import kernel_data
 
 open_all_classroom()
@@ -72,7 +73,10 @@ student_b = make_character(
     position=classroom_path(ROOM1),
 )
 SE = constant_effect.SecondEffect
-EFFECT = constant.settle_behavior_effect_data
+EFFECT = {
+    k: partial(kernel_data.written, f)
+    for k, f in constant.settle_behavior_effect_data.items()
+}
 SECOND = constant.settle_second_behavior_effect_data
 E = education_constant
 # 授课结算末尾会对每个学生调 judge_character_status（那是行为循环的事），单测里钉死它；
@@ -82,13 +86,7 @@ character_behavior.judge_character_status = lambda character_id: 0
 
 
 def reset_mark(*character_id_list: int) -> None:
-    """
-    清掉学生的「本节已结算」去重标记：同一节里要连着验好几种结算时用（第五轮加的去重）
-    Keyword arguments:
-    character_id_list -- 角色id
-    Return arguments:
-    无
-    """
+    """清掉学生的「本节已结算」去重标记：同一节里要连着验好几种结算时用"""
     for character_id in character_id_list:
         growth_handle.get_child_growth(character_id).last_attend_period = []
 
@@ -498,8 +496,8 @@ move_to(201, classroom_path(ROOM_P))
 move_to(202, classroom_path(ROOM_P))
 set_time(period_time(5))
 cache.rhodes_island.temp_sex_class = {}
-cache.sex_class_mode = False
-cache.group_sex_mode = False
+kernel_data.set_world(modes.set_sex_class, False)
+kernel_data.set_world(modes.set_group_sex, False)
 # 前置修习（口径 63 宽松版）：两个学生各排一节性技科目的教室课
 schedule_handle.set_class_cell(ROOM_P, 2, 8, 74, -1)
 schedule_handle.set_selected_course(201, 2, 8, E.COURSE_TYPE_PRACTICE, ROOM_P)
@@ -508,7 +506,7 @@ schedule_handle.set_selected_course(202, 2, 8, E.COURSE_TYPE_PRACTICE, ROOM_P)
 attend_before = student_a_growth.attend_class_count
 sex_class_handle.start_sex_class(70)
 EFFECT[10014](0, 5, change, game_time.now())
-check("开课：两个标志都置位", cache.sex_class_mode and cache.group_sex_mode)
+check("开课：两个标志都置位", modes.sex_class() and modes.group_sex())
 check("在场学生进 H 状态", student_a.sp_flag.is_h and student_b.sp_flag.is_h)
 check(
     "开课整条链路每个学生只记一节出勤（第五轮修正 +2）",
@@ -530,7 +528,7 @@ check("有运行中的课", sex_class_handle.get_running_class() is not None)
 EFFECT[10015](0, 5, change, game_time.now())
 check(
     "下课：关闭模式、清 running",
-    not cache.sex_class_mode and sex_class_handle.get_running_class() is None,
+    not modes.sex_class() and sex_class_handle.get_running_class() is None,
 )
 
 section("Plan 26 §3.1：性技科目的教室课与自习只发理论经验、不补记初体验")

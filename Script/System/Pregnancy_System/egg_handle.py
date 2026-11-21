@@ -17,6 +17,7 @@ from Script.Design import handle_premise
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.System.Pregnancy_System import pregnancy_constant
+from Script.Modules.domains import playthrough
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -56,10 +57,7 @@ def is_birth_type_enabled(birth_type: int) -> bool:
     """
     if birth_type not in pregnancy_constant.BIRTH_TYPE_SETTING_LIST:
         return True
-    birth_setting = getattr(cache, "birth_type_setting", None)
-    if not isinstance(birth_setting, dict):
-        return True
-    return bool(birth_setting.get(birth_type, 1))
+    return bool(playthrough.setting(playthrough.BIRTH_TYPE, birth_type, 1))
 
 
 def get_birth_type(character_id: int) -> int:

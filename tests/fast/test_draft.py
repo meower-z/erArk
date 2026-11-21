@@ -280,7 +280,7 @@ class ResetInSessionTest(DraftCase):
         self.broken = False
 
         def setup(inherit: object) -> None:
-            self.cache.game_round += 1
+            self.cache.old_character_id += 1
             if self.broken:
                 raise RuntimeError("setup")
 
@@ -291,29 +291,32 @@ class ResetInSessionTest(DraftCase):
         core.load(load_order.LOAD_ORDER)
 
     def test_failed_reset_in_session_restores_originals(self) -> None:
-        """草稿里改了玩家名后新周目出错：缓存是原物（玩家名、周目数照旧，character_data 是原来的 dict），草稿已关闭"""
+        """
+        草稿里改了玩家名后新周目出错：缓存是原物（玩家名、old_character_id 照旧，character_data 是原来的 dict），
+        草稿已关闭
+        """
         before = dict(vars(cache_control.cache))
-        game_round = self.cache.game_round
+        old_id = self.cache.old_character_id
         draft.Session(KEEP)
         cache_control.cache.character_data[0].name = "草稿"
         self.broken = True
         with self.assertRaises(RuntimeError):
             kernel_state.new_round({})
         self.assertFalse(draft.active())
-        self.assertEqual(self.cache.game_round, game_round)
+        self.assertEqual(self.cache.old_character_id, old_id)
         self.assertEqual(self.cache.character_data[0].name, "博士")
         self.assertIs(type(self.cache.character_data), dict)
         self.assertEqual(set(vars(cache_control.cache)), set(before))
 
     def test_reset_in_session_runs_on_originals(self) -> None:
-        """草稿里改了玩家名后新周目成功：周目数加一，草稿里的玩家名没有写进去，草稿已关闭"""
-        game_round = self.cache.game_round
+        """草稿里改了玩家名后新周目成功：old_character_id 加一，草稿里的玩家名没有写进去，草稿已关闭"""
+        old_id = self.cache.old_character_id
         draft.Session(KEEP)
         cache_control.cache.character_data[0].name = "草稿"
         with mock.patch.object(actions, "project", lambda new: new):
             kernel_state.new_round({})
         self.assertFalse(draft.active())
-        self.assertEqual(self.cache.game_round, game_round + 1)
+        self.assertEqual(self.cache.old_character_id, old_id + 1)
         self.assertEqual(self.cache.character_data[0].name, "博士")
 
 

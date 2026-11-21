@@ -14,6 +14,7 @@ from Script.Core import (
 )
 from Script.Design import handle_premise, talk, child_stage_gate
 from Script.Config import config_def, game_config, normal_config
+from Script.Modules.domains import history
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -436,8 +437,8 @@ class SeeInstructPanel:
         now_draw_1 = draw.NormalDraw()
         now_draw_1.text = f"{instruct_name}"
         # 如果是重复指令，则加上连续标记
-        if len(cache.pl_pre_behavior_instruce):
-            last_behavior_id = cache.pl_pre_behavior_instruce[-1]
+        if len(history.recent()):
+            last_behavior_id = history.recent()[-1]
             # 旧存档里记的是行为的数字id，不算连续
             if isinstance(last_behavior_id, str):
                 last_behavior_data = game_config.config_behavior[

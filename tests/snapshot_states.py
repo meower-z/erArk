@@ -198,7 +198,7 @@ def build_time_stop_h(world: FullWorld) -> None:
     无
     """
     from Script.Core import constant
-    from Script.Design import handle_premise
+    from Script.Design import handle_premise as hp
 
     # 医疗部：华法琳转住院医生，杜宾转坐诊医生
     walk(world, DOCTOR_OFFICE)
@@ -221,7 +221,7 @@ def build_time_stop_h(world: FullWorld) -> None:
     summon(world, ASSISTANT_NAME)
     instruct(world, constant.Instruct.TIME_STOP_ON)
     instruct(world, constant.Instruct.TIME_STOP_H)
-    if not (world.cache.time_stop_mode and handle_premise.handle_is_h(0)):
+    if not (hp.handle_time_stop_on(0) and hp.handle_is_h(0)):
         raise PlanError("没有进入时停中的 H")
 
 

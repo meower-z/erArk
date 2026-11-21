@@ -18,7 +18,7 @@ from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
 from typing import TYPE_CHECKING
 from Script.Design import game_time
-from Script.Modules.domains import facility, production, warehouse
+from Script.Modules.domains import achievement, facility, production, warehouse
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -150,7 +150,7 @@ def settle_agriculture_line(draw_flag: bool = True) -> tuple[bool, str]:
             if produce_num > 0:
                 # 结算实际生产的作物
                 warehouse.add(resouce_id, produce_num)
-                cache.achievement.harvest_count += produce_num
+                achievement.add("harvest_count", produce_num)
 
                 now_text = _("\n今日药田共生产了{0}个{1}").format(
                     produce_num, resouce_data.name
@@ -207,7 +207,7 @@ def settle_agriculture_line(draw_flag: bool = True) -> tuple[bool, str]:
             if produce_num > 0:
                 # 结算实际生产的产品
                 warehouse.add(resouce_id, produce_num)
-                cache.achievement.harvest_count += produce_num
+                achievement.add("harvest_count", produce_num)
 
                 now_text = _("\n今日温室共生产了{0}个{1}").format(
                     produce_num, resouce_data.name

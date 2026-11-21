@@ -2,14 +2,16 @@
 """
 被吵醒、不肯继续的无意识H对象，H照样整套结束
 ============================================
-玩家对睡着的干员A进行睡眠H，她被动静吵醒（cache.noise_woken），陷落为负、愤怒，不继续H：
+玩家对睡着的干员A进行睡眠H，她被动静吵醒（needs.sleep_noise），陷落为负、愤怒，不继续H：
 - 排上的结束无意识H是 0 分钟的行动，它的结束结算照样整套运行：之后A不在H里，H状态归位（插入位置 -1），
   脱下的衣服穿回去了。
 - 群交中：同一场景里一起H的干员B也被叫醒，同样不肯继续。她这一边照样做退出结算：H状态归位，衣服穿回去。
 """
 
+import importlib
 from unittest import mock
 
+from tests import kernel_data
 from tests.slow.base import SlowTestCase
 
 INSERTED = 3
@@ -66,9 +68,10 @@ class UnconsciousHRefusalEndsHTest(SlowTestCase):
         from Script.System.Instruct_System import handle_instruct
         from tests import world
 
+        needs = importlib.import_module("Script.Modules.domains.needs")
         self.in_h(0, 0)
         self.in_h(self.a_id, 1)
-        self.cache.noise_woken[self.a_id] = 0
+        kernel_data.set_world(needs.note_woken, self.a_id, 0)
         with (
             mock.patch.object(
                 handle_premise,
@@ -90,7 +93,8 @@ class UnconsciousHRefusalEndsHTest(SlowTestCase):
 
     def test_refused_group_member_ends_h(self) -> None:
         """群交中B也不肯继续：她这一边做退出结算，H状态归位，衣服穿回去"""
-        self.cache.group_sex_mode = True
+        modes = importlib.import_module("Script.Modules.domains.modes")
+        kernel_data.set_world(modes.set_group_sex, True)
         self.in_h(self.b_id, 1)
         self.wake_a()
         self.assertEqual(self.ended(self.b_id), (False, -1, False))

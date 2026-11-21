@@ -19,9 +19,10 @@ from unittest import mock
 
 from Script.Config import normal_config
 from Script.Core import constant, game_type, save_handle
-from Script.Design import attr_calculation
+from Script.Modules.domains import country
 from Script.Modules.save_load import index
 from Script.UI.Moudle import view
+from tests import kernel_data
 from tests.fast.base import FastTestCase
 
 FIRST = "ui_state_first"
@@ -51,9 +52,7 @@ class UiStateOutsideSaveTest(FastTestCase):
         self.enterContext(mock.patch.object(index, "SAVE_DIR", folder))
         self.world.chara(0, "博士")
         self.cache.npc_id_got = {0}
-        self.cache.country = attr_calculation.get_country_reset(
-            self.cache.country
-        )
+        kernel_data.written(country.fill)
 
     def test_ui_choices_leave_save_alone(self) -> None:
         """存档之后只改界面状态与面板选择再存一次：两次的缓存文件相同"""
@@ -148,9 +147,7 @@ class HiddenSexToggleOffAfterLoadTest(FastTestCase):
         folder = self.enterContext(tempfile.TemporaryDirectory())
         self.enterContext(mock.patch.object(index, "SAVE_DIR", folder))
         self.world.chara(0, "博士")
-        self.cache.country = attr_calculation.get_country_reset(
-            self.cache.country
-        )
+        kernel_data.written(country.fill)
 
     def test_load_turns_toggle_off(self) -> None:
         """开关关着时存档，打开开关后读这个档：开关是关的"""

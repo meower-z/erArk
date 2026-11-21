@@ -58,6 +58,7 @@ class HiddenSexCarryInsertsAfterAskTest(FastTestCase):
                 "calculation_instuct_judege",
                 return_value=[1, 1, 1.0],
             ),
+            kernel_data.writing(),
             self.assertRaises(player_pick.Chosen) as chosen,
         ):
             panel.select_this_mode(CARRY)
@@ -67,7 +68,9 @@ class HiddenSexCarryInsertsAfterAskTest(FastTestCase):
         insert = game_config.config_sex_position_data[
             FACING_CARRY_POSITION
         ].vaginal_sex_behavior_id
-        handle_instruct.start_instruct(
-            0, cast(intent.Intent, json.loads(json.dumps(data)))
+        kernel_data.written(
+            handle_instruct.start_instruct,
+            0,
+            cast(intent.Intent, json.loads(json.dumps(data))),
         )
         self.assertTrue(plan_queue.plan_has(0, insert))

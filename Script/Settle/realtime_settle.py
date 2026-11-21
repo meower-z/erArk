@@ -24,7 +24,8 @@ from Script.Design import (
 from Script.UI.Moudle import draw
 from Script.UI.Panel import ejaculation_panel
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import facility, needs, pregnancy
+from Script.Modules.domains import facility, modes, needs
+from Script.Modules.domains import playthrough, pregnancy
 
 if TYPE_CHECKING:
     from Script.Kernel import core
@@ -150,12 +151,10 @@ def character_aotu_change_value(
         settle_sleep(character_id, true_add_time)
 
     # 结算尿意值
-    if character_id == 0 and not cache.difficulty_setting[12]:
-        pass
-    else:
+    if character_id != 0 or playthrough.setting(playthrough.DIFFICULTY, 12):
         add_urinate: num.Num = num.jitter(
             true_add_time * URINE_PER_MINUTE, 80, 120
-        ) * Fraction(cache.difficulty_setting[11], 2)
+        ) * Fraction(playthrough.setting(playthrough.DIFFICULTY, 11), 2)
         needs.add(character_id, "urine", add_urinate, max=300)
 
     # 获取当前体力气力与最大值的比例，当前比例越低，调整系数越高，最高为无体力时的2倍，最低为满比例时的1倍
@@ -324,7 +323,6 @@ def settle_semen_flow(character_id: int, true_add_time: int) -> None:
     now_character_data: game_type.Character = cache.character_data[character_id]
     # 每个目标每分钟最多流入 2 ml
     flow_semen_max = true_add_time * 2
-    # print(f"debug {now_character_data.name}的精液流动最大量为{flow_semen_max}，add_time = {true_add_time}")
 
     new_flow_list = []
     # 遍历每个部位的精液流动
@@ -374,7 +372,6 @@ def settle_semen_flow(character_id: int, true_add_time: int) -> None:
             new_flow_list.append(all_flow_dict)
     # 更新流动的源头列表
     now_character_data.dirty.semen_flow = new_flow_list
-    # print(f"debug {now_character_data.name}的精液流动完毕，剩余流动列表为{now_character_data.dirty.semen_flow}")
 
 
 def semen_absorb(character_id: int, true_add_time: int, body_part: int) -> None:
@@ -662,7 +659,9 @@ ARTS_BREAK_EXEMPT = frozenset(
 """ 玩家在做这些行为时理智耗尽，技艺不中断 """
 
 
-def _arts_ends_to_plan() -> list[str]:
+def _arts_ends_to_plan(
+    game: "core.GameState | None" = None,
+) -> list[str]:
     """
     要给玩家排上的解除行为：催眠或时停还开着、解除行为还没排上
     Return arguments:
@@ -673,12 +672,12 @@ def _arts_ends_to_plan() -> list[str]:
     ends: list[str] = []
     if handle_premise.handle_target_in_hypnosis(0):
         ends.append(constant.Behavior.HYPNOSIS_CANCEL)
-    if handle_premise.handle_time_stop_on(0):
+    if modes.time_stop(game):
         ends.append(constant.Behavior.TIME_STOP_OFF)
-    return [b for b in ends if not plan_queue.plan_has(0, b)]
+    return [b for b in ends if not plan_queue.plan_has(0, b, game)]
 
 
-def arts_break_due() -> bool:
+def arts_break_due(game: "core.GameState | None" = None) -> bool:
     """
     玩家理智耗尽、还有源石技艺开着且没排上解除
     Return arguments:
@@ -686,11 +685,11 @@ def arts_break_due() -> bool:
     """
     character_data = cache.character_data[0]
     if (
-        needs.of(character_data.cid)["sanity"] > 0
+        needs.of(character_data.cid, game)["sanity"] > 0
         or character_data.behavior.behavior_id in ARTS_BREAK_EXEMPT
     ):
         return False
-    return bool(character_data.pl_ability.visual or _arts_ends_to_plan())
+    return bool(character_data.pl_ability.visual or _arts_ends_to_plan(game))
 
 
 def break_arts() -> "core.Effects":

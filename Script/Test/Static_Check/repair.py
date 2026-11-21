@@ -18,7 +18,7 @@ from collections.abc import Callable
 from fractions import Fraction
 
 from Script.Config import game_config
-from Script.Modules.domains import needs, power, work
+from Script.Modules.domains import modes, needs, power, work
 
 from . import check_log
 
@@ -476,7 +476,7 @@ def repair_masturebate_stale_group_flag(cache: game_type.Cache) -> list[dict]:
         （群交中有人从无意识恢复时先关group_sex_mode再清理其余角色，清理函数不清masturebate），不覆盖
         仍在H/群交中的角色——那些角色下次H/群交正常结束时会经效果407自然清零。
     """
-    if getattr(cache, "group_sex_mode", False):
+    if modes.group_sex():
         return []
     records = []
     for cid, chara in cache.character_data.items():

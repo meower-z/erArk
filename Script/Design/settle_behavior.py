@@ -29,7 +29,7 @@ from Script.Config import game_config, normal_config
 from Script.System.First_Record_System import first_record_handle
 from Script.System.Instruct_System import handle_instruct
 from Script.UI.Panel import hypnosis_panel
-from Script.Modules.domains import needs, work
+from Script.Modules.domains import modes, needs, work
 
 if TYPE_CHECKING:
     from Script.UI.Moudle import panel
@@ -181,7 +181,7 @@ def handle_settle_behavior(
         # 性技实操课：给没占到模板部位的旁观学生结算观摩收益（Plan 22 四期 §3.28.8）
         # 判的是 sex_class_mode 而不是 group_sex_mode——课堂模式会同时置那个标志，
         #    若判错，任何一场普通群交都会给全场围观干员发经验与状态
-        if character_id == 0 and cache.sex_class_mode:
+        if character_id == 0 and modes.sex_class():
             from Script.System.Education_System import sex_class_handle
 
             sex_class_handle.settle_watcher(add_time, change_data)

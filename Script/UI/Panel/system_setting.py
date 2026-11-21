@@ -5,15 +5,16 @@
 from types import FunctionType
 from Script.Core import (
     cache_control,
+    constant,
+    flow_handle,
     game_type,
     get_text,
-    flow_handle,
-    constant,
 )
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.Design import game_time
 from Script.Modules.save_load import settings
+from Script.Modules.domains import playthrough
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -139,7 +140,7 @@ class System_Setting_Panel:
         elif type_name == _("难度"):
             setting_data = game_config.config_difficulty_setting
             setting_option = game_config.config_difficulty_setting_option
-            setting = cache.difficulty_setting
+            setting = playthrough.settings(playthrough.DIFFICULTY)
         else:
             setting_data = game_config.config_draw_setting
             setting_option = game_config.config_draw_setting_option
@@ -330,13 +331,12 @@ class System_Setting_Panel:
                 return
             setting = normal_config.system_setting.base_setting
         elif type_name == _("难度"):
-            setting = cache.difficulty_setting
+            setting = playthrough.settings(playthrough.DIFFICULTY)
         else:
             setting = normal_config.system_setting.draw_setting
-        if setting[cid] < option_len - 1:
-            setting[cid] += 1
-        else:
-            setting[cid] = 0
+        setting[cid] = setting[cid] + 1 if setting[cid] < option_len - 1 else 0
+        if type_name == _("难度"):
+            playthrough.set_settings(playthrough.DIFFICULTY, setting)
         if type_name == _("绘制"):
             # 全角色是否使用通用文本
             if cid == 2:
@@ -462,7 +462,7 @@ class System_Setting_Panel:
             info_draw.draw()
 
             # 遍历三种可开关的生殖方式
-            setting = cache.birth_type_setting
+            setting = playthrough.settings(playthrough.BIRTH_TYPE)
             for birth_type in game_config.config_birth_type_setting:
                 setting_data = game_config.config_birth_type_setting[birth_type]
                 # 生殖方式名，点击显示详细说明
@@ -538,18 +538,18 @@ class System_Setting_Panel:
         """
         from Script.System.Pregnancy_System import egg_handle
 
-        setting = cache.birth_type_setting
+        setting = playthrough.settings(playthrough.BIRTH_TYPE)
         setting_data = game_config.config_birth_type_setting[birth_type]
         # 由关闭改为开启：直接生效，无需确认（重新开启后自下一次判定起恢复该生殖方式）
         if not setting.get(birth_type, 1):
-            setting[birth_type] = 1
+            playthrough.set_setting(playthrough.BIRTH_TYPE, birth_type, 1)
             return
         # 由开启改为关闭：先二次确认，再清除存量数据
         if not self.confirm_close_birth_type(
             setting_data.name, setting_data.info
         ):
             return
-        setting[birth_type] = 0
+        playthrough.set_setting(playthrough.BIRTH_TYPE, birth_type, 0)
         clear_text = egg_handle.clear_birth_type_data(birth_type)
         line_feed.draw()
         now_draw = draw.WaitDraw()

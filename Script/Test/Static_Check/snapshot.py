@@ -23,8 +23,6 @@ EXCLUDED_TOP_LEVEL_FIELDS = {
     "npc_tem_data",  # npc模板静态数据
     "random_npc_list",  # 旧存档读档后会留在cache上的随机npc数据，Cache本身不声明它
     "recipe_data",  # 菜谱静态数据
-    "daily_intsruce",  # 每日指令文本流水（长期游玩可达MB级；最近行为已在日志条目头部单列，流水全文无排查价值）
-    "taiggered_event_record",  # 已触发事件id全集（只增流水，与状态自洽无关）
 }
 # 字段名前缀黑名单：以这些前缀开头的字段均为渲染缓存中间数据，一并排除
 EXCLUDED_FIELD_PREFIXES = ("text_",)
