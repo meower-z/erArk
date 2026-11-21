@@ -320,9 +320,11 @@ class PickDraftHTest(SlowTestCase):
         """两条公务事件排队：弹出第一条，选项结算在开始时跑一次，第一条记进履历，第二条留在队列里"""
         from Script.Config import game_config
         from Script.Core import constant
+        from Script.Modules.domains import official
         from Script.Modules.tk_ui import player_pick
         from Script.System.Instruct_System import handle_instruct
         from Script.System.Official_Event_System import official_event_handle
+        from tests import kernel_data
 
         for uid in ("测试公务甲", "测试公务乙"):
             game_config.config_official_event[uid] = {
@@ -335,8 +337,10 @@ class PickDraftHTest(SlowTestCase):
             }
             self.addCleanup(game_config.config_official_event.pop, uid)
             self.assertTrue(
-                official_event_handle.push_official_event(
-                    uid, ignore_capacity=True
+                kernel_data.written(
+                    official_event_handle.push_official_event,
+                    uid,
+                    ignore_capacity=True,
                 )
             )
         effects: list[tuple[str, bool]] = []
@@ -362,11 +366,11 @@ class PickDraftHTest(SlowTestCase):
             self.player_starts(), [constant.Behavior.OFFICIAL_WORK]
         )
         self.assertEqual(effects, [("测试公务甲结算二", False)])
-        history = self.cache.rhodes_island.official_event_history
+        history = official.history()
         self.assertEqual(history["测试公务甲"]["choice"], 2)
         self.assertNotIn("测试公务乙", history)
         self.assertEqual(
-            [one["uid"] for one in official_event_handle.get_queue()],
+            [one["uid"] for one in official.queue()],
             ["测试公务乙"],
         )
         self.assertNotIn("测试公务乙选项一", self.screen())

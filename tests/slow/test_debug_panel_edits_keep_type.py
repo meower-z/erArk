@@ -93,28 +93,30 @@ class DebugPanelEditKeepTypeTest(SlowTestCase):
 
     def test_recruit_progress(self) -> None:
         """[008] 改一条招募线的进度，进度满 100 时招募刷新把它清零"""
+        from Script.Modules.domains import recruit
         from Script.UI.Panel import recruit_panel
 
-        line = list(self.ri.recruit_line[RECRUIT_LINE])
+        line = recruit.lines()[RECRUIT_LINE]
         self.use_panel(
             ("press", "[全局变量]"),
             ("press", "[008]"),
             ("type", f"{RECRUIT_LINE},100"),
         )
         self.assertEqual(
-            self.ri.recruit_line[RECRUIT_LINE],
-            [100] + line[1:],
+            recruit.lines()[RECRUIT_LINE],
+            {**line, "progress": 100},
             "招募线只改进度一项",
         )
-        recruit_panel.update_recruit()
+        kernel_data.written(recruit_panel.update_recruit)
         self.assertEqual(
-            self.ri.recruit_line[RECRUIT_LINE][0],
+            recruit.lines()[RECRUIT_LINE]["progress"],
             0,
             "进度满 100 后招募刷新清零",
         )
 
     def test_recruited_id(self) -> None:
         """[009] 输入一名干员为已招募待确认，确认招募后这名干员入职"""
+        from Script.Modules.domains import recruit
         from Script.UI.Panel import recruit_panel
 
         chara_id = min(
@@ -127,12 +129,12 @@ class DebugPanelEditKeepTypeTest(SlowTestCase):
             ("press", "[009]"),
             ("type", str(chara_id)),
         )
-        self.assertEqual(self.ri.recruited_id, {chara_id}, "待确认的只有这一名")
+        self.assertEqual(recruit.pending(), {chara_id}, "待确认的只有这一名")
         with kernel_data.writing():
             recruited = recruit_panel.recruit_new_chara()
         self.assertTrue(recruited, "确认招募成功")
         self.assertIn(chara_id, self.cache.npc_id_got, "确认后这名干员入职")
-        self.assertEqual(self.ri.recruited_id, set(), "确认后没有待确认的干员")
+        self.assertEqual(recruit.pending(), set(), "确认后没有待确认的干员")
 
     def test_orgasm_count(self) -> None:
         """[013] 本次H 改一个部位的一项高潮计数，前提照新值判断"""

@@ -49,6 +49,7 @@ from typing import TYPE_CHECKING
 from Script.Design import character_behavior
 from Script.Kernel import core
 from tests import kernel_data, world
+from Script.Modules.domains import library
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -751,7 +752,7 @@ check(
 )
 # 逐项时借的书还回去，别带进后面的用例
 for _book_id in list(student.entertainment.borrow_book_id_set):
-    cache.rhodes_island.book_borrow_dict[_book_id] = -1
+    kernel_data.put(library.set_holder, _book_id, -1)
     student.entertainment.borrow_book_id_set.discard(_book_id)
 student.behavior.book_id = 0
 student.behavior.book_name = ""
@@ -2051,7 +2052,7 @@ schedule_handle.set_selected_course(
 _read_place = class_ai.get_course_place_now_or_upcoming(201)
 move_to(201, _read_place)
 # 先把 0 号书标成被别人借走：改后随机借到 0 号书会让「不再读 0 号书」偶然失真
-cache.rhodes_island.book_borrow_dict[0] = 999
+kernel_data.put(library.set_holder, 0, 999)
 student.behavior.book_id = 0
 student.behavior.book_name = ""
 growth_handle.get_child_growth(201).last_attend_period = []
@@ -2067,7 +2068,7 @@ check(
     and student.behavior.book_id != 0
     and student.behavior.book_name
     == game_config.config_book[student.behavior.book_id].name
-    and cache.rhodes_island.book_borrow_dict[student.behavior.book_id] == 201,
+    and library.holders()[student.behavior.book_id] == 201,
     (
         sm,
         student.behavior.book_id,
@@ -2092,11 +2093,10 @@ check(
     student.entertainment.borrow_book_id_set == {_held_book}
     and student.behavior.book_id == _held_book,
 )
-cache.rhodes_island.book_borrow_dict[_held_book] = -1
+kernel_data.put(library.set_holder, _held_book, -1)
 student.entertainment.borrow_book_id_set.discard(_held_book)
-_saved_borrow = dict(cache.rhodes_island.book_borrow_dict)
-for _book_id in cache.rhodes_island.book_borrow_dict:
-    cache.rhodes_island.book_borrow_dict[_book_id] = 999
+_saved_borrow = library.holders()
+kernel_data.put(library.put_holders, dict.fromkeys(_saved_borrow, 999))
 check(
     "书库里借不到书：这一节视为没课（get_now_course 为 None、上课状态 NONE，判定只读）",
     schedule_handle.get_now_course(201) is None
@@ -2111,7 +2111,7 @@ check(
     and growth_handle.get_child_growth(201).attend_class_count == _attend,
     sm,
 )
-cache.rhodes_island.book_borrow_dict.update(_saved_borrow)
+kernel_data.put(library.put_holders, _saved_borrow)
 # 判定与执行之间书被别人借走：716 等 1 分钟、不记出勤
 _orig_borrow = borrow_book_panel.check_random_borrow_book
 borrow_book_panel.check_random_borrow_book = lambda character_id: 0
@@ -2145,18 +2145,16 @@ check(
     ),
 )
 for _book_id in list(reader.entertainment.borrow_book_id_set):
-    cache.rhodes_island.book_borrow_dict[_book_id] = -1
+    kernel_data.put(library.set_holder, _book_id, -1)
     reader.entertainment.borrow_book_id_set.discard(_book_id)
-for _book_id in cache.rhodes_island.book_borrow_dict:
-    cache.rhodes_island.book_borrow_dict[_book_id] = 999
+kernel_data.put(library.put_holders, dict.fromkeys(_saved_borrow, 999))
 start_sm(SM.ENTERTAIN_READ, 402)
 check(
     "对照：401 借不到书仍等 1 分钟",
     reader.behavior.behavior_id == constant.Behavior.WAIT
     and reader.behavior.duration == 1,
 )
-cache.rhodes_island.book_borrow_dict.update(_saved_borrow)
-cache.rhodes_island.book_borrow_dict[0] = -1
+kernel_data.put(library.put_holders, {**_saved_borrow, 0: -1})
 remove_character(402)
 move_to(201, SCENE_DORM)
 schedule_handle.clear_selected_course(201, 0, 0)

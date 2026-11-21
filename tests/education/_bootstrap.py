@@ -128,7 +128,7 @@ _ = get_text._
 """ 翻译api：配置里的名字都过了翻译，测试里比对名字一律包 _() """
 
 from Script.Modules.save_load import kernel_state
-from Script.Modules.domains import warehouse
+from Script.Modules.domains import official, warehouse
 
 character_handle.init_character_tem()
 kernel_state.reset_clock(kernel_state.first_clock())
@@ -142,9 +142,7 @@ cache.birth_type_setting = attr_calculation.get_birth_type_setting_zero()
 # 罗德岛设施：GameState 里没有设施数据，读到的是每个设施 1 级、每个待开放设施未开放。教育区的等级由测试按需改
 # 资源仓库：每种资源 0（与 basement 初始化一致）；内核推进时玩家行动收尾的成就结算要读它
 kernel_data.written(warehouse.start, {})
-# 书库：全部书籍在架、没被借走（与 basement 初始化一致）；兴趣课读书要先借书（Plan 29），空书库会让那一节视为没课
-for _book_cid in game_config.config_book:
-    cache.rhodes_island.book_borrow_dict.setdefault(_book_cid, -1)
+# 书库：library.holders() 把配置里的每本书读作在架、没被借走；兴趣课读书要先借书（Plan 29）
 
 # ==== 3. 屏蔽 UI，并把绘制文本收进 drawn_text ====
 drawn_text: list[str] = []
@@ -386,8 +384,8 @@ def clear_schedules() -> None:
     cache.rhodes_island.class_schedule = {}
     cache.rhodes_island.temp_sex_class = {}
     cache.rhodes_island.child_schedule_template = {}
-    cache.rhodes_island.official_event_queue = []
-    cache.rhodes_island.official_event_history = {}
+    kernel_data.put(official.set_queue, [])
+    kernel_data.put(official.set_history, {})
     cache.sex_class_mode = False
     cache.group_sex_mode = False
 

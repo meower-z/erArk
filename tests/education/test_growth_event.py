@@ -37,6 +37,8 @@ import inspect
 from Script.Design import talk
 from Script.Settle import past_day_settle
 from tests import kernel_data
+from Script.Modules.domains import official
+from collections.abc import Callable
 import _bootstrap as _boot
 from Script.UI.Moudle import draw as _draw_module
 import importlib.util as _importlib_util
@@ -267,10 +269,47 @@ check(
     == official_event_handle.get_department_name(E.GROWTH_EVENT_DEPARTMENT),
 )
 
+
+def outside_step[**P, T](fn: Callable[P, T]) -> Callable[P, T]:
+    """fn 在一步之外的版本：每次调用经 kernel_data.written 跑 fn（它写公务事件队列），交回它的返回值"""
+
+    def run(*args: P.args, **kwargs: P.kwargs) -> T:
+        return kernel_data.written(fn, *args, **kwargs)
+
+    return run
+
+
+push_event = outside_step(official_event_handle.push_official_event)
+push_birthday = outside_step(growth_event_handle.push_birthday_event)
+push_graduation = outside_step(growth_event_handle.push_graduation_event)
+push_semester = outside_step(growth_event_handle.push_semester_event)
+push_semester_for = outside_step(
+    growth_event_handle.push_semester_event_for_list
+)
+drop_stale = outside_step(growth_event_handle.drop_stale_stage_event)
+
+
+def fill_queue(uid: str) -> None:
+    """
+    把公务事件队列排满（get_queue_max 条），每条都是 uid、主体 999
+    Keyword arguments:
+    uid -- 公务事件 uid
+    """
+    entry = {
+        "uid": uid,
+        "department": E.GROWTH_EVENT_DEPARTMENT,
+        "chara_id": 999,
+        "partner_id": 0,
+        "add_time": game_time.now(),
+    }
+    max_count = official_event_handle.get_queue_max()
+    kernel_data.put(official.set_queue, [entry] * max_count)
+
+
 section("入队")
-cache.rhodes_island.official_event_queue = []
-growth_event_handle.push_graduation_event(201)
-queue = official_event_handle.get_queue()
+kernel_data.put(official.set_queue, [])
+push_graduation(201)
+queue = official.queue()
 check(
     "毕业典礼在队首、成年纪念紧随其后",
     [one["uid"] for one in queue[:2]]
@@ -278,42 +317,32 @@ check(
 )
 check("队列项带主体", queue[0]["chara_id"] == 201)
 # 一辈子一次的毕业典礼不受队列容量上限约束（第五轮）：队列满了也不能丢
-cache.rhodes_island.official_event_queue = [
-    {
-        "uid": E.GRADUATION_EVENT_UID,
-        "department": E.GROWTH_EVENT_DEPARTMENT,
-        "chara_id": 999,
-        "partner_id": 0,
-        "add_time": game_time.now(),
-    }
-    for _index in range(official_event_handle.get_queue_max())
-]
-growth_event_handle.push_graduation_event(206)
+fill_queue(E.GRADUATION_EVENT_UID)
+push_graduation(206)
 check(
     "队列已满时毕业典礼照样插到队首",
-    official_event_handle.get_queue()[0]["chara_id"] == 206
-    and official_event_handle.get_queue()[0]["uid"] == E.GRADUATION_EVENT_UID,
+    official.queue()[0]["chara_id"] == 206
+    and official.queue()[0]["uid"] == E.GRADUATION_EVENT_UID,
 )
 check(
     "队列已满时普通事件仍被挡",
-    not official_event_handle.push_official_event(E.GRADUATION_EVENT_UID, 201),
+    not push_event(E.GRADUATION_EVENT_UID, 201),
 )
-cache.rhodes_island.official_event_queue = []
+kernel_data.put(official.set_queue, [])
 check(
     "期末事件入队",
-    growth_event_handle.push_semester_event(201)
-    and len(official_event_handle.get_queue()) == 1,
+    push_semester(201) and len(official.queue()) == 1,
 )
 check(
     "入队的是期末桶里的事件",
-    official_event_handle.get_queue()[0]["uid"] in semester_bucket,
+    official.queue()[0]["uid"] in semester_bucket,
 )
 check(
     "待处理计数",
     growth_event_handle.get_growth_event_queue_count(201) == 1
     and growth_event_handle.get_growth_event_queue_count(202) == 0,
 )
-cache.rhodes_island.official_event_queue = []
+kernel_data.put(official.set_queue, [])
 for uid in semester_bucket:
     growth_handle.get_child_growth(202).event_history[uid] = {
         "time": game_time.now(),
@@ -321,12 +350,11 @@ for uid in semester_bucket:
     }
 check(
     "池子抽干时返回 False 且不入队",
-    not growth_event_handle.push_semester_event(202)
-    and official_event_handle.get_queue() == [],
+    not push_semester(202) and official.queue() == [],
 )
 check(
     "批量：只给能入队的计数",
-    growth_event_handle.push_semester_event_for_list([201, 202]) == 1,
+    push_semester_for([201, 202]) == 1,
 )
 
 section(
@@ -352,11 +380,10 @@ check(
     baby_candidate and not (baby_candidate & baby_excluded),
     sorted(baby_candidate & baby_excluded),
 )
-cache.rhodes_island.official_event_queue = []
+kernel_data.put(official.set_queue, [])
 check(
     "成年女儿不入队期末事件",
-    growth_event_handle.push_semester_event_for_list([206]) == 0
-    and official_event_handle.get_queue() == [],
+    push_semester_for([206]) == 0 and official.queue() == [],
 )
 check(
     "期末 13 的前提：上一份成绩单不是「无课可评」",
@@ -479,15 +506,14 @@ check(
         growth_event_handle.get_growth_event_title({"chara_id": 204}),
     ),
 )
-cache.rhodes_island.official_event_queue = []
+kernel_data.put(official.set_queue, [])
 loli.work.work_type = 21
 check(
     "改了岗（岗位 21）的萝莉：学期结束照推期末事件",
-    growth_event_handle.push_semester_event_for_list([201]) == 1
-    and official_event_handle.get_queue()[0]["chara_id"] == 201,
+    push_semester_for([201]) == 1 and official.queue()[0]["chara_id"] == 201,
 )
 loli.work.work_type = 152
-cache.rhodes_island.official_event_queue = []
+kernel_data.put(official.set_queue, [])
 
 section(
     "Plan 30 §3.6：同学与「有课」只算学生岗的真课；§3.2：期末 9 / 10 进得了待努力的候选；§3.1：萝莉 2 按翘课数"
@@ -661,45 +687,43 @@ check(
 _adult_order = [E.GRADUATION_EVENT_UID, E.ADULT_MEMORIAL_EVENT_UID] + list(
     E.ADULT_EXTRA_EVENT_UID_LIST
 )
-cache.rhodes_island.official_event_queue = []
-growth_event_handle.push_graduation_event(214)
-_queue_uid = [one["uid"] for one in official_event_handle.get_queue()]
+kernel_data.put(official.set_queue, [])
+push_graduation(214)
+_queue_uid = [one["uid"] for one in official.queue()]
 check(
     "M2 空队列：成年结算后依次是通用 1 / 2 / 59 / 60，主体都是她（此前只推 1 / 2，59 / 60 永远出不来）",
     _queue_uid == _adult_order
-    and all(
-        one["chara_id"] == 214 for one in official_event_handle.get_queue()
-    ),
+    and all(one["chara_id"] == 214 for one in official.queue()),
     _queue_uid,
 )
-cache.rhodes_island.official_event_queue = []
-official_event_handle.push_official_event(loli_bucket[0], 201)
-growth_event_handle.push_graduation_event(214)
-_queue_uid = [one["uid"] for one in official_event_handle.get_queue()]
+kernel_data.put(official.set_queue, [])
+push_event(loli_bucket[0], 201)
+push_graduation(214)
+_queue_uid = [one["uid"] for one in official.queue()]
 check(
     "M2 队里已有日常事件：1 / 2 插到队首，59 / 60 排在它后面（队尾）",
     _queue_uid == _adult_order[:2] + [loli_bucket[0]] + _adult_order[2:],
     _queue_uid,
 )
-growth_event_handle.push_graduation_event(214)
+push_graduation(214)
 check(
     "M2 已在队列里的 59 / 60 不重复推（judge_event_can_enqueue）",
     all(
         sum(
             1
-            for one in official_event_handle.get_queue()
+            for one in official.queue()
             if one["uid"] == uid and one["chara_id"] == 214
         )
         == 1
         for uid in E.ADULT_EXTRA_EVENT_UID_LIST
     ),
 )
-cache.rhodes_island.official_event_queue = []
+kernel_data.put(official.set_queue, [])
 growth_handle.get_child_growth(214).event_history[
     E.ADULT_EXTRA_EVENT_UID_LIST[0]
 ] = {"time": game_time.now(), "choice": 0}
-growth_event_handle.push_graduation_event(214)
-_queue_uid = [one["uid"] for one in official_event_handle.get_queue()]
+push_graduation(214)
+_queue_uid = [one["uid"] for one in official.queue()]
 check(
     "M2 已经历过的通用 59 不再推，通用 60 照推",
     _queue_uid == _adult_order[:2] + [E.ADULT_EXTRA_EVENT_UID_LIST[1]],
@@ -708,34 +732,21 @@ check(
 growth_handle.get_child_growth(214).event_history.pop(
     E.ADULT_EXTRA_EVENT_UID_LIST[0], None
 )
-cache.rhodes_island.official_event_queue = [
-    {
-        "uid": loli_bucket[0],
-        "department": E.GROWTH_EVENT_DEPARTMENT,
-        "chara_id": 999,
-        "partner_id": 0,
-        "add_time": game_time.now(),
-    }
-    for _index in range(official_event_handle.get_queue_max())
-]
-growth_event_handle.push_graduation_event(214)
-_queue_uid = [
-    one["uid"]
-    for one in official_event_handle.get_queue()
-    if one["chara_id"] == 214
-]
+fill_queue(loli_bucket[0])
+push_graduation(214)
+_queue_uid = [one["uid"] for one in official.queue() if one["chara_id"] == 214]
 check(
     "M2 队列已满：通用 1 / 2 照样插到队首、59 / 60 照样追加到队尾（此前按普通入队被挡，永远丢掉）",
     _queue_uid == _adult_order
-    and [one["uid"] for one in official_event_handle.get_queue()[-2:]]
+    and [one["uid"] for one in official.queue()[-2:]]
     == list(E.ADULT_EXTRA_EVENT_UID_LIST),
     _queue_uid,
 )
 check(
     "M2 队列已满时普通事件仍被挡",
-    not official_event_handle.push_official_event(loli_bucket[0], 201),
+    not push_event(loli_bucket[0], 201),
 )
-cache.rhodes_island.official_event_queue = []
+kernel_data.put(official.set_queue, [])
 check(
     "M2 真实的成年结算（pregnancy_handle.check_grow_to_girl）走的就是 push_graduation_event",
     "growth_event_handle.push_graduation_event("
@@ -962,10 +973,7 @@ def queue_pair_list() -> list:
     Return arguments:
     list -- [(uid str, 角色id int), ...]，按队列顺序
     """
-    return [
-        (one["uid"], one["chara_id"])
-        for one in official_event_handle.get_queue()
-    ]
+    return [(one["uid"], one["chara_id"]) for one in official.queue()]
 
 
 section("Plan 32 M2：生日当天，跨天结算直接把生日事件（通用 3）插到队首")
@@ -984,8 +992,8 @@ check(
     HP(constant_promise.Premise.SELF_BIRTHDAY_TODAY, 211)
     and HP(constant_promise.Premise.SELF_BIRTHDAY_TODAY, 214),
 )
-official_event_handle.push_official_event(loli_bucket[0], 201)
-_pushed = growth_event_handle.push_birthday_event()
+push_event(loli_bucket[0], 201)
+_pushed = push_birthday()
 check(
     (
         "M2 今天过生日的萝莉：通用 3 插在队首、主体是她；成年姐姐不在日常派发名单里、不推（此前只能靠每晚 70% "
@@ -1002,33 +1010,23 @@ check(
 )
 check(
     "M2 再调一次不重复推",
-    growth_event_handle.push_birthday_event() == []
+    push_birthday() == []
     and queue_pair_list().count((E.BIRTHDAY_EVENT_UID, 211)) == 1,
 )
-cache.rhodes_island.official_event_queue = [
-    {
-        "uid": loli_bucket[0],
-        "department": E.GROWTH_EVENT_DEPARTMENT,
-        "chara_id": 999,
-        "partner_id": 0,
-        "add_time": game_time.now(),
-    }
-    for _index in range(official_event_handle.get_queue_max())
-]
+fill_queue(loli_bucket[0])
 check(
     "M2 队列已满：照样插到队首（与毕业典礼一样不受容量上限约束）",
-    growth_event_handle.push_birthday_event() == [211]
+    push_birthday() == [211]
     and queue_pair_list()[0] == (E.BIRTHDAY_EVENT_UID, 211),
 )
-cache.rhodes_island.official_event_queue = []
+kernel_data.put(official.set_queue, [])
 growth_handle.get_child_growth(211).event_history[E.BIRTHDAY_EVENT_UID] = {
     "time": game_time.now(),
     "choice": 1,
 }
 check(
     "M2 已经历过的不再推",
-    growth_event_handle.push_birthday_event() == []
-    and official_event_handle.get_queue() == [],
+    push_birthday() == [] and official.queue() == [],
 )
 growth_handle.get_child_growth(211).event_history.pop(
     E.BIRTHDAY_EVENT_UID, None
@@ -1036,8 +1034,7 @@ growth_handle.get_child_growth(211).event_history.pop(
 set_time(datetime.datetime(2026, 9, 8, 0, 5))
 check(
     "M2 第二天（不是生日）不推",
-    growth_event_handle.push_birthday_event() == []
-    and official_event_handle.get_queue() == [],
+    push_birthday() == [] and official.queue() == [],
 )
 _new_day_src = inspect.getsource(past_day_settle.update_new_day)
 check(
@@ -1093,11 +1090,11 @@ growing = make_character(
     born_days=5,
 )
 for _uid in ("婴儿5", "通用27", "通用16", "期末1"):
-    official_event_handle.push_official_event(_uid, 215)
-official_event_handle.push_official_event("婴儿5", 204)
-official_event_handle.push_official_event(loli_bucket[0], 201)
+    push_event(_uid, 215)
+push_event("婴儿5", 204)
+push_event(loli_bucket[0], 201)
 growing.talent[101], growing.talent[102] = 0, 1
-_dropped = growth_event_handle.drop_stale_stage_event(215)
+_dropped = drop_stale(215)
 _left = queue_pair_list()
 check(
     (
@@ -1117,12 +1114,11 @@ check(
 )
 check(
     "L16 再调一次没有可清的：返回 0、队列不变",
-    growth_event_handle.drop_stale_stage_event(215) == 0
-    and queue_pair_list() == _left,
+    drop_stale(215) == 0 and queue_pair_list() == _left,
 )
-official_event_handle.push_official_event(child_bucket[0], 215)
+push_event(child_bucket[0], 215)
 growing.talent[102], growing.talent[103] = 0, 1
-_dropped = growth_event_handle.drop_stale_stage_event(215)
+_dropped = drop_stale(215)
 _left_215 = [one[0] for one in queue_pair_list() if one[1] == 215]
 check(
     "L16 幼女→萝莉：幼女桶的与前提写着不派萝莉的通用 27 都清掉（2 条），通用 16 与期末 1 照留",
@@ -1130,9 +1126,9 @@ check(
     (_dropped, _left_215),
 )
 for _uid in (loli_bucket[0], "期末3", E.GRADUATION_EVENT_UID):
-    official_event_handle.push_official_event(_uid, 215)
+    push_event(_uid, 215)
 growing.talent[103], growing.talent[104] = 0, 1
-_dropped = growth_event_handle.drop_stale_stage_event(215)
+_dropped = drop_stale(215)
 _left_215 = [one[0] for one in queue_pair_list() if one[1] == 215]
 check(
     "L16 萝莉→少女：萝莉桶、通用桶与前提写着只派萝莉的期末 3 都清掉（3 条），前提不写阶段的期末 1 与成年桶（104）不动",
@@ -1155,7 +1151,7 @@ to_loli.pregnancy.born_time = game_time.now() - datetime.timedelta(
     days=pregnancy_constant.GROW_TO_LOLI_DAY + 10
 )  # 已过长成萝莉的阈值 10 天
 for _uid in (child_bucket[0], "通用27", "通用16"):
-    official_event_handle.push_official_event(_uid, 216)
+    push_event(_uid, 216)
 with kernel_data.writing():
     pregnancy_handle.check_grow_to_loli(216)
 check(
@@ -1175,8 +1171,8 @@ to_girl.pregnancy.born_time = game_time.now() - datetime.timedelta(
     days=pregnancy_constant.GROW_TO_GIRL_DAY + 13
 )  # 已过成年的阈值 13 天
 for _uid in (loli_bucket[0], "通用16", "期末1", "期末3"):
-    official_event_handle.push_official_event(_uid, 217)
-pregnancy_handle.check_grow_to_girl(217)
+    push_event(_uid, 217)
+kernel_data.written(pregnancy_handle.check_grow_to_girl, 217)
 talk.must_show_talk_check = _orig_must_show
 _left_217 = [one[0] for one in queue_pair_list() if one[1] == 217]
 check(
@@ -1242,13 +1238,13 @@ check(
     and 14 in pl.h_state.body_item,
     _birthday_today,
 )
-_pushed = growth_event_handle.push_birthday_event()
+_pushed = push_birthday()
 check(
     "M2 双胞胎：push_birthday_event 返回按 id 升序的 [218, 219]，队首依次是（通用 3, 218）、（通用 3, 219）",
     _pushed == [218, 219] and queue_pair_list()[:2] == _twin_head,
     (_pushed, queue_pair_list()),
 )
-cache.rhodes_island.official_event_queue = []
+kernel_data.put(official.set_queue, [])
 check(
     "M2 口球对照：没人塞口球时，按口上的判法（official_event_handle.judge_premise_pass）通用 3 的前提对姐姐成立",
     official_event_handle.judge_premise_pass(_birthday_premise, 218, 0) > 0,
@@ -1260,7 +1256,7 @@ check(
     and official_event_handle.judge_premise_pass(_birthday_premise, 218, 0)
     == 0,
 )
-_pushed = growth_event_handle.push_birthday_event()
+_pushed = push_birthday()
 check(
     (
         "M2 姐姐被塞着口球：生日事件照样推入（逐条判前提、不带口上的口球判定），两人仍按 id "
@@ -1270,20 +1266,20 @@ check(
     (_pushed, queue_pair_list()),
 )
 twin_a.h_state.body_item[14][1] = False
-cache.rhodes_island.official_event_queue = []
+kernel_data.put(official.set_queue, [])
 pl.h_state.body_item[14][1] = True
 check(
     "M2 博士被塞着口球：按口上的判法（交互对象指向博士）同样整组判 0",
     official_event_handle.judge_premise_pass(_birthday_premise, 218, 0) == 0,
 )
-_pushed = growth_event_handle.push_birthday_event()
+_pushed = push_birthday()
 check(
     "M2 博士被塞着口球：生日事件照样推入，两人按 id 升序排在队首",
     _pushed == [218, 219] and queue_pair_list()[:2] == _twin_head,
     (_pushed, queue_pair_list()),
 )
 pl.h_state.body_item[14][1] = False
-cache.rhodes_island.official_event_queue = []
+kernel_data.put(official.set_queue, [])
 JP = growth_event_handle.judge_premise_all_pass
 check(
     "M2 judge_premise_all_pass：空前提为 True（主体不存在也一样）；前提非空而主体不存在为 False",
@@ -1372,7 +1368,7 @@ check(
 )
 remove_character(218)
 remove_character(219)
-cache.rhodes_island.official_event_queue = []
+kernel_data.put(official.set_queue, [])
 set_time(period_time(0))
 clear_schedules()
 
@@ -1383,7 +1379,7 @@ from Script.System.Official_Event_System import (
     official_event_panel,
 )  # noqa: E402
 
-cache.rhodes_island.official_event_queue = []
+kernel_data.put(official.set_queue, [])
 set_time(period_time(0))
 _od_uid = "期末1"
 _od_queue_data = {
@@ -1472,9 +1468,9 @@ check(
     _od_wait,
 )
 # 处理公务的真实流程：出队 → 决断（askfor_all 桩默认选第一个可选项）→ 结算 → 单独显示后果
-cache.rhodes_island.official_event_queue = []
+kernel_data.put(official.set_queue, [])
 growth_handle.get_child_growth(201).event_history.pop(_od_uid, None)
-official_event_handle.push_official_event(_od_uid, 201)
+push_event(_od_uid, 201)
 _od_seq: list[tuple[str, Any]] = []
 """ 结算与 WaitDraw 的先后：("settle", 选项序号) / ("wait", 文本) """
 _orig_settle_option = official_event_handle.settle_official_event_option
@@ -1504,9 +1500,10 @@ setattr(
     lambda self, *args, **kwargs: _od_seq.append(("wait", self.text)),
 )
 try:
-    _od_chosen = official_event_panel.choose_official_event_option(120)
-    if _od_chosen is not None:
-        official_event_panel.settle_chosen_option(_od_chosen)
+    with kernel_data.writing():
+        _od_chosen = official_event_panel.choose_official_event_option(120)
+        if _od_chosen is not None:
+            official_event_panel.settle_chosen_option(_od_chosen)
 finally:
     official_event_handle.settle_official_event_option = _orig_settle_option
     setattr(_draw_module.WaitDraw, "draw", _orig_wait_draw)
@@ -1530,7 +1527,7 @@ check(
     .event_history.get(_od_uid, {})
     .get("choice")
     == _od_choice
-    and official_event_handle.get_queue() == [],
+    and official.queue() == [],
     _od_seq,
 )
 # 置灰的选项照旧写不能选的原因（那是条件，不是后果）
@@ -1567,7 +1564,7 @@ check(
     _gray_line,
 )
 growth_handle.get_child_growth(201).event_history.pop(_od_uid, None)
-cache.rhodes_island.official_event_queue = []
+kernel_data.put(official.set_queue, [])
 
 section(
     "抬头只占一行（用户报告）：LittleTitleLineDraw 的线条长度要把标题算进去"

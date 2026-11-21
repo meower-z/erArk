@@ -28,6 +28,7 @@ from Script.System.Official_Event_System import official_event_handle
 from Script.System.Pregnancy_System import pregnancy_handle
 from Script.Design import game_time
 from tests import kernel_data
+from Script.Modules.domains import official
 
 clear_schedules()
 mother = make_character(102, "母亲", 0)
@@ -272,22 +273,19 @@ section(
 open_all_classroom()
 cache.rhodes_island.party_day_of_week = {day: 0 for day in range(7)}
 clear_schedules()
-official_event_handle.push_official_event("婴儿5", 203)
-official_event_handle.push_official_event("通用27", 203)
+with kernel_data.writing():
+    official_event_handle.push_official_event("婴儿5", 203)
+    official_event_handle.push_official_event("通用27", 203)
 _orig_must_show = talk.must_show_talk_check
 # 母亲一侧必显二段的口上显示与本条无关，打桩成空函数（跑完即还原）
 talk.must_show_talk_check = lambda character_id: None
-pregnancy_handle._settle_baby_grow_up(102, 203)
+kernel_data.written(pregnancy_handle._settle_baby_grow_up, 102, 203)
 talk.must_show_talk_check = _orig_must_show
 check(
     "L19 前提：长成幼女（素质 101 → 102）",
     baby_a.talent[102] == 1 and baby_a.talent[101] == 0,
 )
-_left_203 = [
-    one["uid"]
-    for one in official_event_handle.get_queue()
-    if one["chara_id"] == 203
-]
+_left_203 = [one["uid"] for one in official.queue() if one["chara_id"] == 203]
 check(
     "L16 婴儿期入队、还没处理的婴儿 5 清掉，通用 27（通用桶）照留",
     _left_203 == ["通用27"],
@@ -343,7 +341,7 @@ check(
     not _g_old.skip_class_flag
     and not class_ai.judge_skip_class_today(207, _new_day),
 )
-_queue = official_event_handle.get_queue()
+_queue = official.queue()
 check(
     "M2 今天过生日的萝莉：跨天结算后队首是她的生日事件，且只有一条（在日常派发之前推入，日常派发不会再抽到它）",
     bool(_queue)

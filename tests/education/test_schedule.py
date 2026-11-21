@@ -31,6 +31,7 @@ from _bootstrap import (
 )
 import inspect
 from tests import kernel_data
+from Script.Modules.domains import library
 
 section("教室列表与开放判定")
 clear_schedules()
@@ -596,9 +597,8 @@ check(
     schedule_handle.judge_personal_course_valid(201, read_course)
     and schedule_handle.get_now_course(201) is not None,
 )
-_saved_borrow = dict(cache.rhodes_island.book_borrow_dict)
-for _book_id in cache.rhodes_island.book_borrow_dict:
-    cache.rhodes_island.book_borrow_dict[_book_id] = 999
+_saved_borrow = library.holders()
+kernel_data.put(library.put_holders, dict.fromkeys(_saved_borrow, 999))
 check(
     "书库全被借走：不成立，视为没课（此前照样是课，到了图书馆读 0 号书）",
     not schedule_handle.judge_personal_course_valid(201, read_course)
@@ -616,7 +616,7 @@ check(
     and schedule_handle.get_now_course(201) is not None,
 )
 _reader.entertainment.borrow_book_id_set.discard(_easy_book)
-cache.rhodes_island.book_borrow_dict[_easy_book] = -1
+kernel_data.put(library.set_holder, _easy_book, -1)
 _reader.entertainment.read_book_progress[_easy_book] = 100
 check(
     "书库里只剩一本读完了的书：不成立",
@@ -628,7 +628,7 @@ check(
     schedule_handle.judge_personal_course_valid(201, read_course),
 )
 del _reader.entertainment.read_book_progress[_easy_book]
-cache.rhodes_island.book_borrow_dict[_easy_book] = 999
+kernel_data.put(library.set_holder, _easy_book, 999)
 _hard_book = next(
     (
         b
@@ -646,7 +646,7 @@ _hard_book = next(
 )
 check("书库里有难度 3 的技能书", _hard_book is not None)
 if _hard_book is not None:
-    cache.rhodes_island.book_borrow_dict[_hard_book] = -1
+    kernel_data.put(library.set_holder, _hard_book, -1)
     _hard_ability = game_config.config_book_type[
         game_config.config_book[_hard_book].type
     ].ability_id
@@ -665,9 +665,9 @@ if _hard_book is not None:
 check(
     "判定不写数据：没借书、书库借出状态没被改",
     not _reader.entertainment.borrow_book_id_set
-    and all(v != 201 for v in cache.rhodes_island.book_borrow_dict.values()),
+    and all(v != 201 for v in library.holders().values()),
 )
-cache.rhodes_island.book_borrow_dict.update(_saved_borrow)
+kernel_data.put(library.put_holders, _saved_borrow)
 schedule_handle.clear_selected_course(201, _wd, 0)
 clear_schedules()
 

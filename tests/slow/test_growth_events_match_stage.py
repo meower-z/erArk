@@ -169,6 +169,7 @@ class GrowthEventsMatchStageTest(SlowTestCase):
             growth_handle,
             growth_panel,
         )
+        from Script.Modules.domains import official
         from Script.System.Official_Event_System import official_event_handle
         from Script.Test.Static_Check.checks import check_official
 
@@ -179,18 +180,20 @@ class GrowthEventsMatchStageTest(SlowTestCase):
         )
         _mother_id, elder_id, _younger_id = self.make_daughters()
         # 事件表里没有的事件按存档里的样子摆进队列：字段与 push_official_event 写入的相同
-        official_event_handle.get_queue().append(
-            {
-                "uid": UNKNOWN_EVENT_UID,
-                "department": education_constant.GROWTH_EVENT_DEPARTMENT,
-                "chara_id": elder_id,
-                "partner_id": 0,
-                "add_time": game_time.now(),
-            }
-        )
+        unknown = {
+            "uid": UNKNOWN_EVENT_UID,
+            "department": education_constant.GROWTH_EVENT_DEPARTMENT,
+            "chara_id": elder_id,
+            "partner_id": 0,
+            "add_time": game_time.now(),
+        }
+        kernel_data.put(official.set_queue, [*official.queue(), unknown])
         self.assertTrue(
-            official_event_handle.push_official_event(
-                KNOWN_EVENT_UID, elder_id, 0
+            kernel_data.written(
+                official_event_handle.push_official_event,
+                KNOWN_EVENT_UID,
+                elder_id,
+                0,
             ),
             f"{KNOWN_EVENT_UID} 入队",
         )
@@ -222,15 +225,14 @@ class GrowthEventsMatchStageTest(SlowTestCase):
             elder_growth.event_history,
             "读档后履历里还留着这条事件",
         )
+        count = official_event_handle.get_official_event_queue_count
         self.assertEqual(
-            official_event_handle.get_official_event_queue_count(elder_id),
-            1,
-            "数队列时只剩一条",
+            kernel_data.written(count, elder_id), 1, "数队列时只剩一条"
         )
         self.assertEqual(
             [
                 one["uid"]
-                for one in official_event_handle.get_queue()
+                for one in official.queue()
                 if one["chara_id"] == elder_id
             ],
             [KNOWN_EVENT_UID],

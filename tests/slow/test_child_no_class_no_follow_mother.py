@@ -163,6 +163,7 @@ class ChildStagesOfflineTest(SlowTestCase):
             growth_event_handle,
             growth_handle,
         )
+        from Script.Modules.domains import official
         from Script.System.Official_Event_System import official_event_handle
         from Script.System.Pregnancy_System import (
             pregnancy_constant,
@@ -214,17 +215,17 @@ class ChildStagesOfflineTest(SlowTestCase):
         assert found is not None
         uid, partner_id, option_index = found
         self.assertTrue(
-            official_event_handle.push_official_event(
-                uid, child_id, partner_id
+            kernel_data.written(
+                official_event_handle.push_official_event,
+                uid,
+                child_id,
+                partner_id,
             ),
             "事件入队",
         )
         self.assertIn(
             (uid, child_id),
-            [
-                (one["uid"], one["chara_id"])
-                for one in official_event_handle.get_queue()
-            ],
+            [(one["uid"], one["chara_id"]) for one in official.queue()],
             "队列里有以她为主体的这条事件",
         )
         growth_data = growth_handle.get_child_growth(child_id)

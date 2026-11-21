@@ -75,8 +75,6 @@ SKIPPED_CHARACTER_FIELDS = {
 """ 不记的角色字段（名字里 chara.<id>. 之后的部分）: 理由 """
 
 WORLD_AREAS = {
-    "book_borrow_dict": "library",
-    "recommend_book_type_set": "library",
     "milk_in_fridge": "cooking",
     "urine_in_fridge": "cooking",
 }

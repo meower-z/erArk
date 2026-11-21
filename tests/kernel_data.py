@@ -9,9 +9,12 @@
 - set_facility_level 改设施等级。set_room_open 改待开放设施的开放情况。
 - set_needs 与 needs_of 改、读角色的 body.needs，set_milk_max 与 milk_max_of 改、读角色的乳汁上限（body.pregnancy）。
 - set_ward 在一步之外换掉医疗部的住院病人表。
+- put 调用一个领域模块的写函数，在一步之外时经 written 套用（例如换公务事件队列）。
+- set_book_holders 改借阅表里给出的书的借书人。
 - reprojected 从缓存重新投影各角色的行动，每个角色的数据跟着这个角色留在角色数据或 roster.offstage 里。
 - project_state 在快照里用这些数据在缓存里时的属性名记下 body.needs、乳汁上限、动力、设施、经济、岗位名册、监狱长、
-  仓库、生产线、食堂货架、医疗部、外勤委托、载具、访客与罗德岛位置的值，快照因此能与按缓存属性录下的快照比较。
+  仓库、生产线、食堂货架、医疗部、外勤委托、载具、访客、罗德岛位置、招募、公务、外交、宿舍管理员与图书馆的值，
+  快照因此能与按缓存属性录下的快照比较。
 """
 
 from __future__ import annotations
@@ -206,6 +209,34 @@ def milk_max_of(cid: int) -> int:
     return pregnancy.milk_max(cid)
 
 
+def put[**P](
+    fn: Callable[P, object], *args: P.args, **kwargs: P.kwargs
+) -> None:
+    """
+    调用只写 GameState 数据的 fn（领域模块的写函数，例如 official.set_queue、library.set_holder）。
+    在一步、一次挑选或一个缓冲区里时写进当前缓冲区，不在这些里时经 written 套用到内核状态上
+    Keyword arguments:
+    fn -- 写函数
+    args -- fn 的位置参数
+    kwargs -- fn 的关键字参数
+    """
+    try:
+        fn(*args, **kwargs)
+    except RuntimeError:
+        written(fn, *args, **kwargs)
+
+
+def set_book_holders(holders: Mapping[int, int]) -> None:
+    """
+    把给出的书的借书人换成新值，别的书不变，写法同 put
+    Keyword arguments:
+    holders -- 书id 到借书人
+    """
+    from Script.Modules.domains import library
+
+    put(library.put_holders, {**library.holders(), **holders})
+
+
 def set_ward(*patient_ids: int) -> None:
     """
     在一步之外把住院病人表换成只有给出编号的住院病人
@@ -320,6 +351,7 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
         work,
     )
     from Script.Modules.save_load import upgrade
+    from tests import base_projection
     from tests.snapshot import flatten
 
     names = {"tired": "tired_point", "hunger": "hunger_point"}
@@ -375,6 +407,7 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
             flatten(f"world.medical.{field}", value, state)
     _project_economy(state)
     _project_travel(state)
+    base_projection.project(state)
 
 
 def _project_travel(state: dict[str, object]) -> None:
