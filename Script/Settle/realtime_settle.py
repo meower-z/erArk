@@ -24,7 +24,7 @@ from Script.Design import (
 from Script.UI.Moudle import draw
 from Script.UI.Panel import ejaculation_panel
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import needs, pregnancy
+from Script.Modules.domains import facility, needs, pregnancy
 
 if TYPE_CHECKING:
     from Script.Kernel import core
@@ -494,7 +494,7 @@ def settle_rest(character_id: int, true_add_time: int) -> None:
     # 休息室对回复效果的影响
     final_adjust: num.Num
     if handle_premise.handle_in_rest_room_or_dormitory(character_id):
-        now_level = cache.rhodes_island.facility_level[31]
+        now_level = facility.level(31)
         facility_cid = game_config.config_facility_effect_data[_("休息室")][
             int(now_level)
         ]

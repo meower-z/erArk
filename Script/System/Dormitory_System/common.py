@@ -7,6 +7,7 @@ from collections import defaultdict
 
 from Script.Core import cache_control, game_type, constant, get_text
 from Script.Config import game_config
+from Script.Modules.domains import facility
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -21,7 +22,7 @@ def _get_dormitory_level() -> int:
     输出类型: int
     功能: 读取罗德岛宿舍区等级，默认1级
     """
-    return int(cache.rhodes_island.facility_level.get(4, 1))
+    return int(facility.level(4, 1))
 
 
 def _get_base_open_room_upper_no() -> int:
@@ -114,7 +115,7 @@ def get_open_dormitory_rooms_by_layer() -> dict[int, list[tuple[str, str]]]:
     open_facility_name_set = {
         open_data.name
         for open_cid, open_data in game_config.config_facility_open.items()
-        if cache.rhodes_island.facility_open.get(open_cid, False)
+        if facility.is_open(open_cid, False)
     }
 
     for room_path in sorted(
@@ -482,8 +483,7 @@ def new_character_get_dormitory(character_id: int) -> None:
             if _("客房") not in room_name:
                 continue
             # 跳过未开放的客房
-            cache.rhodes_island.facility_open.setdefault(room_id, False)
-            if not cache.rhodes_island.facility_open[room_id]:
+            if not facility.is_open(room_id, False):
                 continue
             # 遍历检查是否有同名客房，使用排序后的列表
             for room_full_path in guest_room_sorted:

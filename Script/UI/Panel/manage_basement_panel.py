@@ -13,7 +13,7 @@ from Script.Design import basement, attr_calculation, handle_premise, game_time
 from Script.UI.Moudle import draw, view
 from Script.UI.Panel import see_character_info_panel
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import needs
+from Script.Modules.domains import facility, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -1699,7 +1699,7 @@ class Change_Npc_Work_Panel:
                         open_cid = game_config.config_facility_open_name_to_cid[
                             work_place
                         ]
-                        if not cache.rhodes_island.facility_open[open_cid]:
+                        if not facility.is_open(open_cid):
                             flag_open = False
                 # 特殊解锁的工作不直接开放
                 if work_tag == 2:

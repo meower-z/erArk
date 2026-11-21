@@ -20,9 +20,9 @@ import os
 from Script.Config import game_config
 from Script.Core import cache_control
 from ..check_registry import CheckFailure, register_check, make_failure
-
 from typing import TYPE_CHECKING
 from Script.Design import game_time
+from Script.Modules.domains import facility
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -885,7 +885,7 @@ def check_visitor_room_uniqueness() -> list[CheckFailure]:
         room_to_cids.setdefault(d, []).append(cid)
         if d not in guest_rooms:
             open_2000 = {
-                k: v for k, v in ri.facility_open.items() if 2000 < k < 2100
+                k: v for k, v in facility.opens().items() if 2000 < k < 2100
             }
             failures.append(
                 make_failure(
@@ -924,14 +924,14 @@ def check_visitor_count_within_capacity() -> list[CheckFailure]:
     failures: list[CheckFailure] = []
     if len(ri.visitor_info) > ri.visitor_max:
         open_2000 = {
-            k: v for k, v in ri.facility_open.items() if 2000 < k < 2100
+            k: v for k, v in facility.opens().items() if 2000 < k < 2100
         }
         failures.append(
             make_failure(
                 "ROSTER-16",
                 "访客人数不超过客房上限",
                 f"{warn}当前访客数len(visitor_info)={len(ri.visitor_info)}超过visitor_max={ri.visitor_max}；"
-                f"facility_open(2000-2099)={open_2000}，facility_level[13]={ri.facility_level.get(13)}",
+                f"facility_open(2000-2099)={open_2000}，facility_level[13]={facility.levels().get(13)}",
                 list(ri.visitor_info),
             )
         )
@@ -1029,7 +1029,7 @@ def check_invite_visitor_shape_integrity() -> list[CheckFailure]:
                 "邀请栏结构完整、空目标必归零",
                 (
                     f"{warn}ri.invite_visitor={raw!r}存在问题: {'; '.join(problems)}；"
-                    f"facility_level[13]={ri.facility_level.get(13)}，"
+                    f"facility_level[13]={facility.levels().get(13)}，"
                     f"game_time={game_time.now()}，目标是否存在于character_data={exists}"
                 ),
                 [target] if target else [],
@@ -1265,7 +1265,7 @@ def check_recruit_line_shape_and_progress_range() -> list[CheckFailure]:
                     "招募线记录形状与进度范围",
                     (
                         f"{warn}招募线lid={lid} record={rec!r} {'; '.join(problems)}；"
-                        f"facility_level[7]={ri.facility_level.get(7)}，"
+                        f"facility_level[7]={facility.levels().get(7)}，"
                         f"game_time={game_time.now()}"
                     ),
                     [],

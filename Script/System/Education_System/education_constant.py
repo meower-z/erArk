@@ -70,7 +70,7 @@ EDUCATION_ZONE_NAME = _("教育区")
     必须过 `_()`：`config_facility_effect_data` 的键是 `game_config` 翻译过的 name，
        写死中文会让教育区的成长效率加成在非中文语言下整个失效 """
 EDUCATION_ZONE_CID = 15
-""" 教育区在 Facility.csv:22 中的设施id，用于查 Rhodes_Island.facility_level """
+""" 教育区在 Facility.csv:22 中的设施id，用 facility.level 查它的等级 """
 LEARN_STATE_ID = 9
 """ 习得状态id（CharacterState.csv:15），睡眠结算时换算为习得珠(juel 9) """
 

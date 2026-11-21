@@ -16,6 +16,7 @@ from Script.System.Field_Commission_System.field_commission_function import (
     get_commission_demand_and_reward,
     process_commission_text,
 )
+from Script.Modules.domains import facility
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -88,7 +89,7 @@ class Field_Commission_Panel:
             line.draw()
 
             # 设施信息
-            now_level = cache.rhodes_island.facility_level[14]
+            now_level = facility.level(14)
             facility_info_text = ""
             facility_info_text += _(
                 "○通用委托无论在哪里都可以接到，地区委托则需要罗德岛移动到对应地区时才可接到，能接到的委托等级与机库的等级有关\n"
@@ -190,10 +191,7 @@ class Field_Commission_Panel:
                     ):
                         continue
                     # 跳过等级大于设施等级+1的委托
-                    if (
-                        commision_data.level
-                        > cache.rhodes_island.facility_level[14] + 1
-                    ):
+                    if commision_data.level > facility.level(14) + 1:
                         continue
                     # 跳过含有角色出场且还没有招募到该角色的角色类委托
                     if (

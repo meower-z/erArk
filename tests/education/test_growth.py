@@ -26,7 +26,7 @@ from Script.System.Pregnancy_System import pregnancy_constant  # noqa: E402
 from Script.Design import handle_ability
 import inspect
 from Script.System.Official_Event_System import official_event_handle
-from tests import world
+from tests import kernel_data, world
 
 open_all_classroom()
 clear_schedules()
@@ -52,20 +52,20 @@ check(
     abs(growth_handle.get_learn_speed(2, 5) - 0.4) < 1e-9
     and growth_handle.get_learn_speed(0, 8) > 0,
 )
-cache.rhodes_island.facility_level[education_constant.EDUCATION_ZONE_CID] = 1
+kernel_data.set_facility_level(education_constant.EDUCATION_ZONE_CID, 1)
 check("教育区 Lv1 无加成", growth_handle.get_education_zone_adjust() == 1.0)
-cache.rhodes_island.facility_level[education_constant.EDUCATION_ZONE_CID] = 5
+kernel_data.set_facility_level(education_constant.EDUCATION_ZONE_CID, 5)
 check(
     "教育区 Lv5 → 2.0",
     abs(growth_handle.get_education_zone_adjust() - 2.0) < 1e-9,
     growth_handle.get_education_zone_adjust(),
 )
-cache.rhodes_island.facility_level[education_constant.EDUCATION_ZONE_CID] = 3
+kernel_data.set_facility_level(education_constant.EDUCATION_ZONE_CID, 3)
 check(
     "教育区 Lv3 → 1.2",
     abs(growth_handle.get_education_zone_adjust() - 1.2) < 1e-9,
 )
-cache.rhodes_island.facility_level[education_constant.EDUCATION_ZONE_CID] = 1
+kernel_data.set_facility_level(education_constant.EDUCATION_ZONE_CID, 1)
 
 section("成长停滞（口径 27）")
 teacher.ability[45] = 4
@@ -639,9 +639,9 @@ check(
     growth_handle.judge_selected_cell_real(201, 2, 4),
     _lockable_pe,
 )
-cache.rhodes_island.facility_open[_lockable_cid] = False
+kernel_data.set_room_open(_lockable_cid, False)
 check("场地未开放：不算", not growth_handle.judge_selected_cell_real(201, 2, 4))
-cache.rhodes_island.facility_open[_lockable_cid] = True
+kernel_data.set_room_open(_lockable_cid, True)
 schedule_handle.set_selected_course(
     201,
     2,

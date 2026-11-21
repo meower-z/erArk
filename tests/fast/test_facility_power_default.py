@@ -6,7 +6,6 @@
 """
 
 from Script.Config import game_config
-from Script.Core import cache_control
 from Script.Design import basement
 from Script.Kernel import core
 from Script.Modules.domains import power
@@ -24,9 +23,6 @@ class FacilityPowerDefaultTest(FastTestCase):
     def test_unbuilt_zone_defaults_to_cut_off(self) -> None:
         """未实装区块里的设施：空策略表下的效率等于登记断电时的效率"""
         unbuilt = power.UNBUILT_ZONES
-        island = cache_control.cache.rhodes_island
-        for cid in game_config.config_facility:
-            island.facility_level.setdefault(cid, 1)
         cid, zone = next(
             (cid, f.type if f.type >= 0 else cid)
             for cid, f in game_config.config_facility.items()

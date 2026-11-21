@@ -14,6 +14,7 @@ from Script.Design import attr_calculation, handle_ability
 import random
 from Script.Design import game_time
 from Script.Modules.save_load import reset
+from Script.Modules.domains import facility
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -828,10 +829,7 @@ class Nation_Diplomacy_Panel:
         country_id = nation_data.country
 
         # 设施信息
-        now_level = cache.rhodes_island.facility_level[13]
-        # facility_data = game_config.config_facility[13]
-        # facility_name = facility_data.name
-        # facility_cid = game_config.config_facility_effect_data[facility_name][now_level]
+        now_level = facility.level(13)
         # 外交官信息
         now_diplomat_chara_id = diplomat_of(nation_data.country)[0]
         now_diplomat_chara_data = cache.character_data[now_diplomat_chara_id]

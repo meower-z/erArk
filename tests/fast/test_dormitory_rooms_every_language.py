@@ -67,11 +67,12 @@ normal_config.system_setting = attr_calculation.get_system_setting_zero()
 cache.difficulty_setting = attr_calculation.get_difficulty_setting_zero()
 cache.birth_type_setting = attr_calculation.get_birth_type_setting_zero()
 cache.rhodes_island = basement.get_base_zero()
-basement.get_base_updata()
+from tests import kernel_data
+kernel_data.written(basement.get_base_updata)
 levels = {}
 for level in range(1, 6):
-  cache.rhodes_island.facility_level[4] = level
-  basement.get_base_updata()
+  kernel_data.set_facility_level(4, level)
+  kernel_data.written(basement.get_base_updata)
   levels[level] = {
       layer: [
           [room_path, common.get_layer_by_dormitory_path(room_path)]

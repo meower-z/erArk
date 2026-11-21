@@ -431,7 +431,7 @@ Script/
 - `NpcTem`：角色模板（能力/经验/素质/服装/基础属性）
 - `Map` / `MapDraw` / `MapDrawLine` / `MapDrawText`：AA 地图与绘制
 - `Scene`：场景路径、名字、室内外、家具、门、面积、标签、角色列表、图片
-- `Rhodes_Island`：基地设施等级、电力、宿舍、食堂、医疗、仓库、外交、囚犯、收入等
+- `Rhodes_Island`：宿舍、食堂、医疗、仓库、外交、囚犯、收入等（设施等级、待开放设施的开放情况与基地效率在 GameState 的全局键 `base.facility_level`、`base.facility_open` 与 `base.effectiveness` 里。读写它们用 `Modules/domains/facility.py`）
 - `Country`：势力外交数据
 - `CharacterStatusChange` / `TargetChange`：结算数值变更累积器
 - `DIRTY`, `PREGNANCY`, `RELATIONSHIP`, `HYPNOSIS`, `CLOTH`, `BODY_H_STATE`, `FIRST_RECORD`, `ACTION_INFO`, `AUTHOR_FLAG` 等：角色各领域状态容器
@@ -648,7 +648,7 @@ init_character_behavior()
 
 | 系统 | 核心文件 | 主要数据 |
 | --- | --- | --- |
-| 基地/基建管理 | `Design/basement.py`, `UI/Panel/building_panel.py`, `manage_basement_panel.py` | `Facility*.csv` |
+| 基地/基建管理 | `Modules/domains/facility.py`, `Design/basement.py`, `UI/Panel/building_panel.py`, `manage_basement_panel.py` | `Facility*.csv` |
 | 动力/能源 | `Modules/domains/power.py`, `Modules/domains/power_supply.py`, `Settle/power_settle.py`, `UI/Panel/manage_power_system_panel.py` | `Power_Generation.csv`, `Power_Storage.csv` |
 | 农业生产 | `UI/Panel/agriculture_production_panel.py`, `Design/basement.py` | 农场设施 |
 | 工业生产/流水线 | `UI/Panel/manage_assembly_line_panel.py` | `ProductFormula.csv` |

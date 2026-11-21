@@ -11,6 +11,7 @@ from Script.Core import (
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.tk_ui import player_pick
+from Script.Modules.domains import facility
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -29,7 +30,7 @@ def settle_aromatherapy_sessions() -> None:
     结算香薰疗愈次数
     """
 
-    level = cache.rhodes_island.facility_level[16]
+    level = facility.level(16)
 
     # 刷新香薰疗愈次数
     if level >= 5:

@@ -6,6 +6,7 @@ from Script.Core import cache_control, game_type, get_text, constant
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from types import FunctionType
+from Script.Modules.domains import facility
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -149,7 +150,6 @@ def get_map_system_path_str_for_list(now_list: list) -> str:
     Keyword arguments:
     now_list -- 地图路径列表数据
     """
-    # print(f"debug now_list = {now_list}")
     return os.sep.join(now_list)
 
 
@@ -676,7 +676,7 @@ def judge_scene_accessible(
         ]
 
         # 如果该设施已开放，则正常通过，否则进入条件判断
-        if not cache.rhodes_island.facility_open[open_cid]:
+        if not facility.is_open(open_cid):
             # 是玩家的话输出提示信息
             if character_id == 0 and draw_flag:
                 # 获取设施的解锁条件数据

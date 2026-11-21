@@ -14,6 +14,7 @@ from Script.Core import (
 from Script.Core.num import Num
 from Script.Design import game_time
 from Script.Config import game_config
+from Script.Modules.domains import facility
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -142,9 +143,6 @@ def get_relationship_zero(
     检查初始关系，将为空的项补为0
     """
     relationship_data = relationship_dict
-    # for status in game_config.tio:
-    #     if status not in status_dict:
-    #         status_list[status] = 0
     return relationship_data
 
 
@@ -1069,7 +1067,7 @@ def judge_require(
                 reason += "  "
                 break
         elif judge_type == "O":
-            if not cache.rhodes_island.facility_open[judge_type_id]:
+            if not facility.is_open(judge_type_id):
                 judge = 0
                 reason += _("解锁{0}  ").format(
                     game_config.config_facility_open[judge_type_id].name

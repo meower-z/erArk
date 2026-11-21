@@ -1433,10 +1433,6 @@ class Rhodes_Island:
 
     def __init__(self) -> None:
         """初始化罗德岛相关属性对象"""
-        self.facility_level: dict[int, int] = {}
-        """ 基地当前所有设施的等级 """
-        self.facility_open: dict[int, bool] = {}
-        """ 基地当前所有待开放设施的开放情况 """
         self.all_work_npc_set: dict[int, set] = {}
         """ 所有工作的所属的干员id合集,工作id:干员id的集合 """
         self.work_people_now: int = 0
@@ -1491,8 +1487,6 @@ class Rhodes_Island:
         """ 基地移动目标和时间, [0国家id,1城市id,2抵达时间] """
         self.office_work: float = 0
         """ 需要处理的公务 """
-        self.effectiveness: float = 0
-        """ 基地效率 """
 
         # 工程部
         self.maintenance_place: dict[int, str] = {}

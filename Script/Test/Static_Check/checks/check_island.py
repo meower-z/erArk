@@ -22,7 +22,7 @@ from typing import Any
 
 from Script.Core import cache_control
 from Script.Config import game_config
-from Script.Modules.domains import power
+from Script.Modules.domains import facility, power
 from Script.System.Dormitory_System import common as dorm_common
 from ..check_registry import CheckFailure, register_check, make_failure
 
@@ -45,13 +45,15 @@ def _eff(ri: game_type.Rhodes_Island, facility_cid: int) -> int | None:
         全程防御式访问，供多条检查复用，任一层级配置/存档字段缺失都安全地返回None而不抛异常
     """
     try:
-        facility = game_config.config_facility.get(facility_cid)
-        if facility is None:
+        facility_data = game_config.config_facility.get(facility_cid)
+        if facility_data is None:
             return None
-        level = ri.facility_level.get(facility_cid)
+        level = facility.levels().get(facility_cid)
         if type(level) is not int:
             return None
-        effect_data = game_config.config_facility_effect_data.get(facility.name)
+        effect_data = game_config.config_facility_effect_data.get(
+            facility_data.name
+        )
         if effect_data is None or not (0 <= level < len(effect_data)):
             return None
         effect_cid = effect_data[level]
@@ -146,25 +148,23 @@ def check_island_02_facility_level_range() -> list[CheckFailure]:
         缺键或越界会让config_facility_effect_data[name][level]直接下标失败。用<=而非==比较键集：读档只补当前
         配置缺键、从不删旧键，csv删设施后旧档会留多余键，多余键单独作迁移告警，不对多余键取config_facility[fid]
     """
-    cache = cache_control.cache
-    ri = cache.rhodes_island
-    facility_level = getattr(ri, "facility_level", None)
-    if not isinstance(facility_level, dict):
-        return []
+    facility_level = facility.levels()
     failures = []
     missing = [
         fid for fid in game_config.config_facility if fid not in facility_level
     ]
     violations = []
-    for fid, facility in game_config.config_facility.items():
+    for fid, facility_data in game_config.config_facility.items():
         if fid not in facility_level:
             continue
         lv = facility_level[fid]
         effect_data = game_config.config_facility_effect_data.get(
-            facility.name, []
+            facility_data.name, []
         )
         if type(lv) is not int or not (1 <= lv < len(effect_data)):
-            violations.append((fid, facility.name, lv, len(effect_data) - 1))
+            violations.append(
+                (fid, facility_data.name, lv, len(effect_data) - 1)
+            )
     extra_keys = sorted(set(facility_level) - set(game_config.config_facility))
     if missing or violations:
         failures.append(
@@ -190,10 +190,8 @@ def check_island_03_facility_level_vs_core() -> list[CheckFailure]:
         校验除控制中枢(cid 0)自身外，任一设施等级不得高于控制中枢等级+1。唯一升级写点的门槛正是如此约束，
         豁免范围恰好只有控制中枢自身
     """
-    cache = cache_control.cache
-    ri = cache.rhodes_island
-    facility_level = getattr(ri, "facility_level", None)
-    if not isinstance(facility_level, dict) or 0 not in facility_level:
+    facility_level = facility.levels()
+    if 0 not in facility_level:
         return []
     core_lv = facility_level[0]
     violations = [
@@ -226,11 +224,7 @@ def check_island_04_facility_open_values() -> list[CheckFailure]:
         校验当前配置的每个可开放设施都在facility_open中有开放记录，值必须是True/False或语义等价的1/0。
         不能写type(v) is bool——debug面板"设施全满级、全开放"写的是整数1，一旦用过全表都变int
     """
-    cache = cache_control.cache
-    ri = cache.rhodes_island
-    facility_open = getattr(ri, "facility_open", None)
-    if not isinstance(facility_open, dict):
-        return []
+    facility_open = facility.opens()
     missing = [
         oid
         for oid in game_config.config_facility_open
@@ -334,7 +328,7 @@ def check_island_06_warehouse_and_people_max() -> list[CheckFailure]:
                 "仓库容量与干员上限是设施等级的派生值",
                 f"ri.warehouse_capacity={warehouse_capacity}，期望值=_eff(3)({eff3})+"
                 f"used_extra_warehouse_capacity_module({used_extra})*200={expected_warehouse}，"
-                f"facility_level[3]={getattr(ri, 'facility_level', {}).get(3)}，"
+                f"facility_level[3]={facility.levels().get(3)}，"
                 f"本次读档后是否打开过基建/建造面板需人工排查",
                 [],
             )
@@ -346,7 +340,7 @@ def check_island_06_warehouse_and_people_max() -> list[CheckFailure]:
                 "ISLAND-06",
                 "仓库容量与干员上限是设施等级的派生值",
                 f"ri.people_max={people_max}，期望值=_eff(4)={eff4}，"
-                f"facility_level[4]={getattr(ri, 'facility_level', {}).get(4)}，"
+                f"facility_level[4]={facility.levels().get(4)}，"
                 f"本次读档后是否打开过基建/建造面板需人工排查",
                 [],
             )
@@ -635,7 +629,7 @@ def check_island_13_assembly_line() -> list[CheckFailure]:
     cache = cache_control.cache
     ri = cache.rhodes_island
     assembly_line = getattr(ri, "assembly_line", None)
-    facility_level = getattr(ri, "facility_level", {})
+    facility_level = facility.levels()
     if not isinstance(assembly_line, dict) or 12 not in facility_level:
         return []
     failures = []
@@ -955,7 +949,7 @@ def check_island_18_closed_layer_no_manager() -> list[CheckFailure]:
             make_failure(
                 "ISLAND-18",
                 "已关闭楼层不得保留管理员",
-                f"facility_level[4]={getattr(ri, 'facility_level', {}).get(4)}，"
+                f"facility_level[4]={facility.levels().get(4)}，"
                 f"get_dormitory_max_open_layer()={max_open_layer}，违规(layer,manager_id,name)={violations}",
                 [v[1] for v in violations],
             )
@@ -1768,7 +1762,7 @@ def check_island_32_shop_open_list() -> list[CheckFailure]:
         for oid, o in game_config.config_facility_open.items()
         if 111 <= o.zone_cid <= 115
     }
-    facility_open = getattr(ri, "facility_open", {})
+    facility_open = facility.opens()
     failures = []
     dup_names = [n for n, cnt in Counter(shop_open_list).items() if cnt > 1]
     if dup_names:
@@ -1786,7 +1780,7 @@ def check_island_32_shop_open_list() -> list[CheckFailure]:
                 "ISLAND-32",
                 "贸易子设施列表与开放表一致、不超上限、无重复",
                 f"len(shop_open_list)={len(shop_open_list)}超过_eff(11)={eff11}，"
-                f"facility_level[11]={getattr(ri, 'facility_level', {}).get(11)}",
+                f"facility_level[11]={facility.levels().get(11)}",
                 [],
             )
         )

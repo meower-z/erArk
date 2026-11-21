@@ -48,7 +48,7 @@ from Script.Settle.common_default import (
 )
 
 from Script.Settle.item_effect import *
-from Script.Modules.domains import needs
+from Script.Modules.domains import facility, needs
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -8986,7 +8986,7 @@ def handle_read_add_adjust(
         if handle_premise.handle_in_library(character_id):
             facility_data = game_config.config_facility[10]
             facility_name = facility_data.name
-            library_level = cache.rhodes_island.facility_level[10]
+            library_level = facility.level(10)
             facility_effect_cid = game_config.config_facility_effect_data[
                 facility_name
             ][int(library_level)]

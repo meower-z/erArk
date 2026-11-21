@@ -5,9 +5,11 @@
 - writing：测试在一步之外跑写 GameState 数据的游戏代码（例如直接调用孕产结算）时用。
   写入记在以当前状态为底的缓冲区里，with 块结束时套用到内核状态上。
 - written 在 writing 里跑一个游戏函数并交回它的返回值。born 用 written 在一步之外生一个孩子。
+- reset_clock 把内核换成一个没有角色、时钟在给定时刻、带着给定全局数据的 GameState。
+- set_facility_level 改设施等级。set_room_open 改待开放设施的开放情况。
 - set_needs 与 needs_of 改、读角色的 body.needs，set_milk_max 与 milk_max_of 改、读角色的乳汁上限（body.pregnancy）。
 - reprojected 从缓存重新投影各角色的行动，每个角色的数据跟着这个角色留在角色数据或 roster.offstage 里。
-- project_state 在快照里用这些数据在缓存里时的属性名记下 body.needs、乳汁上限与动力状态的值，
+- project_state 在快照里用这些数据在缓存里时的属性名记下 body.needs、乳汁上限、动力与设施的值，
   快照因此能与按缓存属性录下的快照比较。
 """
 
@@ -18,6 +20,7 @@ from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    import datetime
     from collections.abc import Callable, Iterator
 
     from Script.Core import game_type
@@ -54,6 +57,63 @@ def written[**P, T](fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> T:
     """
     with writing():
         return fn(*args, **kwargs)
+
+
+def reset_clock(dt: datetime.datetime, data: Mapping[str, core.JSON]) -> None:
+    """
+    内核换成一个没有角色、时钟在 dt 的 GameState。它的全局数据是 data 加上此刻的 ticked 与 settled_day
+    Keyword arguments:
+    dt -- 游戏时间
+    data -- 全局数据
+    """
+    from types import MappingProxyType
+
+    from Script.Design import game_time
+    from Script.Kernel import core
+
+    m = game_time.minutes(dt)
+    day = game_time.day(m)
+    core.reset_state(
+        core.GameState(
+            m,
+            MappingProxyType({}),
+            MappingProxyType({**data, "ticked": m, "settled_day": day}),
+        )
+    )
+
+
+def set_facility_level(cid: int, level: int) -> None:
+    """
+    把一个设施的等级设为 level。
+    在一步、一次挑选或一个缓冲区里时写进当前缓冲区，不在这些里时套用到内核状态上
+    Keyword arguments:
+    cid -- 设施id
+    level -- 等级
+    """
+    from Script.Modules.domains import facility
+
+    try:
+        facility.set_level(cid, level)
+    except RuntimeError:
+        with writing():
+            facility.set_level(cid, level)
+
+
+def set_room_open(cid: int, value: bool = True) -> None:
+    """
+    把一个待开放设施的开放情况设为 value。
+    在一步、一次挑选或一个缓冲区里时写进当前缓冲区，不在这些里时套用到内核状态上
+    Keyword arguments:
+    cid -- 待开放设施id
+    value -- 是否开放
+    """
+    from Script.Modules.domains import facility
+
+    try:
+        facility.set_open(cid, value)
+    except RuntimeError:
+        with writing():
+            facility.set_open(cid, value)
 
 
 def born(mother_id: int, name: str) -> int:
@@ -194,6 +254,8 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     body.needs 记作 chara.<id>.tired_point、hunger_point、urinate_point、pregnancy.milk
     与 upgrade.PICKLED_NEEDS 里的属性名，乳汁上限记作 chara.<id>.pregnancy.milk_max。
     每个大区块的生效策略记作 world.base.power_supply_strategy.<区块id>。
+    设施等级、待开放设施的开放情况与基地效率记作 world.base 下的 facility_level.<设施id>、
+    facility_open.<待开放设施id> 与 effectiveness。
     动力记在 world.base 下，名字为 power_storage、power_storage_max、power_operator_ids_list、
     main_power_facility_operator_ids、orundum_reactor_list（主反应炉等级与副反应炉数量）、other_power_facility_list
     与 battery_list。
@@ -202,7 +264,7 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     state -- 快照，原地补上
     """
     from Script.Config import game_config
-    from Script.Modules.domains import needs, power, pregnancy
+    from Script.Modules.domains import facility, needs, power, pregnancy
     from Script.Modules.save_load import upgrade
     from tests.snapshot import flatten
 
@@ -214,8 +276,8 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
             flatten(f"chara.{cid}.{names[stat]}", value, state)
         name = f"chara.{cid}.pregnancy.milk_max"
         flatten(name, pregnancy.milk_max(cid), state)
-    for zone, facility in game_config.config_facility.items():
-        if facility.type == -1:
+    for zone, zone_data in game_config.config_facility.items():
+        if zone_data.type == -1:
             name = f"world.base.power_supply_strategy.{zone}"
             flatten(name, power.strategy_of(zone), state)
     plant = power.plant()
@@ -230,6 +292,9 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
         ),
         "other_power_facility_list": plant["clean"],
         "battery_list": plant["batteries"],
+        "facility_level": facility.levels(),
+        "facility_open": facility.opens(),
+        "effectiveness": facility.effectiveness(),
     }
     for field, value in island.items():
         flatten(f"world.base.{field}", value, state)

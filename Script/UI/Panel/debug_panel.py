@@ -29,7 +29,7 @@ import csv
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions
-from Script.Modules.domains import needs, pregnancy
+from Script.Modules.domains import facility, needs, pregnancy
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -1200,7 +1200,7 @@ class Debug_Panel:
                     cache.rhodes_island.materials_resouce[4] = new_value
                 elif key_index == 6:
                     info_text = "[006]:基地当前所有待开放设施的开放情况"
-                    info_text += f"{cache.rhodes_island.facility_open}"
+                    info_text += f"{facility.opens()}"
                     info_draw.text = info_text
                     info_draw.draw()
                     line_feed.draw()
@@ -1371,10 +1371,10 @@ class Debug_Panel:
                         )
                 # 设施全满级、全开放
                 elif key_index == 10:
-                    for all_cid in cache.rhodes_island.facility_level:
-                        cache.rhodes_island.facility_level[all_cid] = 5
-                        for cid in cache.rhodes_island.facility_open:
-                            cache.rhodes_island.facility_open[cid] = True
+                    for all_cid in facility.levels():
+                        facility.set_level(all_cid, 5)
+                        for cid in facility.opens():
+                            facility.set_open(cid, True)
                         basement.get_base_updata()
                 # 重置全角色特殊flag
                 elif key_index == 11:
