@@ -6,12 +6,12 @@
   写入记在以当前状态为底的缓冲区里，with 块结束时套用到内核状态上。
 - written 在 writing 里跑一个游戏函数并交回它的返回值。born 用 written 在一步之外生一个孩子。
 - reset_clock 把内核换成一个没有角色、时钟在给定时刻、带着给定全局数据的 GameState。
-- set_facility_level 改设施等级。set_room_open 改待开放设施的开放情况。
+- set_facility_level 改设施等级。set_room_open 改待开放设施的开放情况。set_waiting 把角色加进或移出等待体检的名单。
 - set_needs 与 needs_of 改、读角色的 body.needs，set_milk_max 与 milk_max_of 改、读角色的乳汁上限（body.pregnancy）。
 - set_ward 在一步之外换掉医疗部的住院病人表。
 - reprojected 从缓存重新投影各角色的行动，每个角色的数据跟着这个角色留在角色数据或 roster.offstage 里。
-- project_state 在快照里用这些数据在缓存里时的属性名记下 body.needs、乳汁上限、动力、设施、经济、岗位名册与监狱长的值，
-  快照因此能与按缓存属性录下的快照比较。
+- project_state 在快照里用这些数据在缓存里时的属性名，记下 body.needs、乳汁上限、动力、设施、经济、岗位名册、
+  监狱长、工程部与体检的值。快照因此能与按缓存属性录下的快照比较。
 """
 
 from __future__ import annotations
@@ -130,6 +130,23 @@ def set_room_open(cid: int, value: bool = True) -> None:
     except RuntimeError:
         with writing():
             facility.set_open(cid, value)
+
+
+def set_waiting(cid: int, waiting: bool = True) -> None:
+    """
+    把角色加进或移出等待体检的名单。
+    在一步、一次挑选或 working.based_on 的缓冲区里时写进当前缓冲区。在别处时经 written 写下，并套用到内核状态上
+    Keyword arguments:
+    cid -- 角色id
+    waiting -- True 时加进名单，False 时移出
+    """
+    from Script.Modules.domains import physical_exam
+
+    write = physical_exam.add if waiting else physical_exam.discard
+    try:
+        write(physical_exam.WAITING, cid)
+    except RuntimeError:
+        written(write, physical_exam.WAITING, cid)
 
 
 def born(mother_id: int, name: str) -> int:
@@ -302,6 +319,7 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     工人名单记作 world.base.<production.PICKLED_WORKERS 里的属性名>。
     食堂货架记作 world.cooking.dining_hall_data。医疗部数据记在 world.medical 下，
     名字为罗德岛对象上旧的属性名（medical.OLD_NAMES），病人按字段展开。
+    经济数据的记法见 _project_economy。工程部与体检数据的记法见 _project_maintenance_exam。
     Keyword arguments:
     cache -- 游戏缓存
     state -- 快照，原地补上
@@ -373,6 +391,36 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
         else:
             flatten(f"world.medical.{field}", value, state)
     _project_economy(state)
+    _project_maintenance_exam(state)
+
+
+def _project_maintenance_exam(state: dict[str, object]) -> None:
+    """
+    快照里按旧罗德岛对象上的属性名，在 world.base 下记下 GameState 里工程部与体检的数据。
+    值的类型同旧属性：以角色id为键的表的键为 int，三份体检名单与做过的检查为集合
+    Keyword arguments:
+    state -- 快照，原地补上
+    """
+    from Script.Modules.domains import maintenance as m
+    from Script.Modules.domains import physical_exam as px
+    from tests.snapshot import flatten
+
+    island = {
+        "facility_damage_data": m.damage(),
+        "maintenance_place": m.places(),
+        "maintenance_equipment_chara_id": m.repairs(),
+        "equipment_maintain_setting": m.settings(),
+        "equipment_maintain_operator_ids": m.operators(),
+        "physical_examination_setting": px.settings(),
+        "today_physical_examination_chara_id_dict": px.checks(px.TODAY),
+        "physical_examination_in_progress": px.checks(px.IN_PROGRESS),
+        "examined_operator_ids": px.ids(px.EXAMINED),
+        "waiting_for_exam_operator_ids": px.ids(px.WAITING),
+        "manually_selected_exam_operator_ids": px.ids(px.CHOSEN),
+        "manually_selected_exam_week_day_list": px.week_days(),
+    }
+    for field, value in island.items():
+        flatten(f"world.base.{field}", value, state)
 
 
 def _project_economy(state: dict[str, object]) -> None:

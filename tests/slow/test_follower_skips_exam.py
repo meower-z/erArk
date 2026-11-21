@@ -95,14 +95,17 @@ class FollowerSkipsExamTest(HealthCheckTestCase):
 
     def test_waiting_follower_waits_until_follow_ends(self) -> None:
         """已在等待体检名单上（目标 220505）：博士在体检科邀请她同行带回办公室，她不回体检科，结束同行后回去"""
-        waiting = self.cache.rhodes_island.waiting_for_exam_operator_ids
         self.assertTrue(
-            self.wait_until(lambda: self.operator_id in waiting, 24 * 60),
+            self.wait_until(
+                lambda: self.operator_id in self.waiting(), 24 * 60
+            ),
             "她在时段内到体检科登记",
         )
         self.walk(EXAM_ROOM)
         self.follow_doctor_in_office()
-        self.assertIn(self.operator_id, waiting, "跟随中她仍在等待体检名单上")
+        self.assertIn(
+            self.operator_id, self.waiting(), "跟随中她仍在等待体检名单上"
+        )
         self.assertTrue(
             self.wait_until(lambda: self.operator.position == EXAM_ROOM, 60),
             f"她在 {self.operator.position}",

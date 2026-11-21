@@ -18,9 +18,10 @@ from unittest import mock
 from Script.Config import character_config
 from Script.Core import game_type, save_handle
 from Script.Design import attr_calculation
+from Script.Kernel import core
+from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import index
 from Script.UI.Moudle import draw
-from tests import kernel_data
 from tests.fast.base import FastTestCase
 
 SLOT = "leaves_out"
@@ -63,7 +64,8 @@ class SaveLeavesOutTest(FastTestCase):
 
     def load_message(self) -> str:
         """
-        读档的 Reset 步骤读入存档，返回最后报更新条数的那句话。
+        用读档的 Reset 步骤读入存档，交回最后报更新条数的那句话。
+        读档在以当前 GameState 为底的缓冲区里进行，写下的数据随后丢掉，所以每次都从同一个状态读档。
         画面输出换成记下文本。小世界没有国家数据，国家的重算换成原样返回。
         Return arguments:
         str -- 「检测完毕，共有N条数据完成了更新」那句话
@@ -88,7 +90,7 @@ class SaveLeavesOutTest(FastTestCase):
             mock.patch.object(
                 attr_calculation, "get_country_reset", lambda c: c
             ),
-            kernel_data.writing(),
+            working.based_on(core.state()),
         ):
             save_handle.install_save(SLOT, 1)
         return next(text for text in texts if "完成了更新" in text)

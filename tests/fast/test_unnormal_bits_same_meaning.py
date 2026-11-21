@@ -185,10 +185,7 @@ class UnnormalBitsSameMeaningTest(FastTestCase):
         )
         self.player.assistant_character_id = 1 if rng.random() < 0.15 else 0
         operator.action_info.health_check_today = rng.randrange(4)
-        waiting = self.cache.rhodes_island.waiting_for_exam_operator_ids
-        waiting.discard(1)
-        if rng.random() < 0.3:
-            waiting.add(1)
+        kernel_data.set_waiting(1, rng.random() < 0.3)
         kernel_data.set_needs(operator.cid, sleep=rng.choice(SLEEP_POINTS))
         kernel_data.set_needs(operator.cid, drunk=rng.choice(DRUNK_POINTS))
         for talent_id in range(350, 360):

@@ -321,7 +321,7 @@ _g_new.skip_class_flag, _g_new.skip_class_day = True, _new_day.toordinal()
 _g_old.skip_class_flag, _g_old.skip_class_day = True, _new_day.toordinal() - 1
 clear_schedules()
 _orig_base_newday = basement.update_base_resouce_newday
-# 基建日结在夹具里缺 physical_examination_setting 的键 2（README 夹具陷阱），排在角色刷新段之后，换成空函数
+# 基建日结在夹具里读不到 2 号体检设置，会报 KeyError（README 夹具陷阱）。它排在角色刷新段之后，这里换成空函数
 basement.update_base_resouce_newday = lambda: None
 _new_day_error = ""
 try:

@@ -32,7 +32,6 @@ class FullExamRoomDropsExamTest(HealthCheckTestCase):
         super().setUp()
         self.operator_id = self.book_daily_exam("可露希尔")
         self.operator = self.cache.character_data[self.operator_id]
-        self.waiting = self.cache.rhodes_island.waiting_for_exam_operator_ids
         self.sleep_through_midnight()
         self.start = SLOT_START[self.operator.action_info.health_check_today]
 
@@ -50,12 +49,13 @@ class FullExamRoomDropsExamTest(HealthCheckTestCase):
         operator = self.operator
         gave_up = self.wait_until(
             lambda: operator.action_info.health_check_today == 0
-            and self.operator_id not in self.waiting,
+            and self.operator_id not in self.waiting(),
             GIVE_UP_MINUTES,
         )
+        waiting = self.operator_id in self.waiting()
         self.assertTrue(
             gave_up,
-            f"今日体检时间 {operator.action_info.health_check_today}，在等待名单上：{self.operator_id in self.waiting}",
+            f"今日体检时间 {operator.action_info.health_check_today}，在等待名单上：{waiting}",
         )
         today = game_time.now().day
         self.assertTrue(
@@ -91,7 +91,9 @@ class FullExamRoomDropsExamTest(HealthCheckTestCase):
         """已在等待体检名单上（目标 220505）：她暂时离开体检科、正往回走时体检科坐满，她退出等待名单"""
         operator = self.operator
         self.assertTrue(
-            self.wait_until(lambda: self.operator_id in self.waiting, 24 * 60),
+            self.wait_until(
+                lambda: self.operator_id in self.waiting(), 24 * 60
+            ),
             "她在时段内到体检科登记",
         )
         self.assertTrue(
@@ -102,6 +104,6 @@ class FullExamRoomDropsExamTest(HealthCheckTestCase):
             ),
             "她离开体检科后往回走",
         )
-        self.assertIn(self.operator_id, self.waiting)
+        self.assertIn(self.operator_id, self.waiting())
         self.fill_exam_room()
         self.check_gives_up_for_today()

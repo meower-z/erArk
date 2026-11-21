@@ -246,10 +246,10 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             "notified": [False, False, False],
             "running": False,
         }
-        island.examined_operator_ids.add(child_id)
-        island.waiting_for_exam_operator_ids.add(child_id)
-        island.manually_selected_exam_operator_ids.add(child_id)
-        island.today_physical_examination_chara_id_dict[child_id] = {1}
+        exam = importlib.import_module("Script.Modules.domains.physical_exam")
+        kernel_data.written(exam.finish, child_id, {1})
+        kernel_data.written(exam.add, exam.WAITING, child_id)
+        kernel_data.written(exam.add, exam.CHOSEN, child_id)
         book_id = min(game_config.config_book)
         island.book_borrow_dict[book_id] = child_id
         child.entertainment.borrow_book_id_set = {book_id}
@@ -395,6 +395,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         """
         collection = self.cache.character_data[0].pl_collection
         work = importlib.import_module("Script.Modules.domains.work")
+        exam = importlib.import_module("Script.Modules.domains.physical_exam")
         snapshot: dict[str | int, object] = {
             "world_setting": dict(self.cache.world_setting),
             "template": repr(self.cache.rhodes_island.child_schedule_template),
@@ -414,13 +415,13 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                         "current_prisoners",
                         "ongoing_field_commissions",
                         "temp_sex_class",
-                        "examined_operator_ids",
-                        "waiting_for_exam_operator_ids",
-                        "manually_selected_exam_operator_ids",
-                        "today_physical_examination_chara_id_dict",
                         "book_borrow_dict",
                     )
                 ]
+            ),
+            "exam": repr(
+                [exam.ids(key) for key in exam.ID_LISTS]
+                + [exam.checks(exam.TODAY)]
             ),
             "old_character_id": self.cache.old_character_id,
         }
@@ -875,6 +876,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
             ("", [], [], 0, 0),
             "玩家收藏品里没有孩子的胖次、袜子、乳汁与圣水",
         )
+        exam = importlib.import_module("Script.Modules.domains.physical_exam")
         self.assertEqual(
             [
                 child_id in one
@@ -882,12 +884,9 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                     island.milk_in_fridge,
                     island.urine_in_fridge,
                     island.current_prisoners,
-                    island.today_physical_examination_chara_id_dict,
-                    island.examined_operator_ids,
-                    island.waiting_for_exam_operator_ids,
-                    island.manually_selected_exam_operator_ids,
                 )
-            ],
+            ]
+            + [exam.has(key, child_id) for key in (exam.TODAY, *exam.ID_LISTS)],
             [False] * 7,
             "冷库、囚犯与体检名单里没有孩子",
         )
