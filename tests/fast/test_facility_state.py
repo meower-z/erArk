@@ -15,7 +15,7 @@ from Script.Config import game_config
 from Script.Core import game_type
 from Script.Design import basement
 from Script.Kernel import core
-from Script.Modules.domains import facility
+from Script.Modules.domains import facility, official
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import upgrade
 from Script.System.Official_Event_System import ri_value
@@ -81,7 +81,7 @@ class FacilityStateTest(FastTestCase):
 
     def test_office_work_settle_floors_effectiveness(self) -> None:
         """剩余公务远超总工作量时，每日公务结算把基地效率降到 50。公务事件读到的效率也是 50"""
-        self.cache.rhodes_island.office_work = 10**6
+        official.set_office_work(10**6)
         basement.settle_office_work()
         self.assertEqual(facility.effectiveness(), 50)
         self.assertEqual(

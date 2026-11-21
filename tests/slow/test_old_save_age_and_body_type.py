@@ -249,7 +249,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         island.manually_selected_exam_operator_ids.add(child_id)
         island.today_physical_examination_chara_id_dict[child_id] = {1}
         book_id = min(game_config.config_book)
-        island.book_borrow_dict[book_id] = child_id
+        kernel_data.set_book_holders({book_id: child_id})
         child.entertainment.borrow_book_id_set = {book_id}
         cache.old_character_id = child_id
         # 玩家与她在单人H中（双方都在H、玩家所在房间关着门，她脱了一件衣服），母亲正对她做着别的行为；
@@ -416,7 +416,6 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                         "waiting_for_exam_operator_ids",
                         "manually_selected_exam_operator_ids",
                         "today_physical_examination_chara_id_dict",
-                        "book_borrow_dict",
                     )
                 ]
             ),
@@ -840,7 +839,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         child = cache.character_data[child_id]
         player = cache.character_data[0]
         island = cache.rhodes_island
-        from Script.Modules.domains import commission
+        from Script.Modules.domains import commission, library
 
         collection = player.pl_collection
         self.assertEqual(
@@ -906,7 +905,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         )
         self.assertEqual(
             (
-                island.book_borrow_dict[id_dict["book"]],
+                library.holders()[id_dict["book"]],
                 child.entertainment.borrow_book_id_set,
                 cache.old_character_id,
             ),

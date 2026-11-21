@@ -44,6 +44,7 @@ from Script.System.Pregnancy_System import pregnancy_constant
 from Script.UI.Moudle import view
 import inspect
 from tests import kernel_data
+from Script.Modules.domains import library
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -873,9 +874,8 @@ schedule_handle.clear_selected_course(204, 2, 3)
 schedule_handle.set_selected_course(
     204, 2, 3, E.COURSE_TYPE_INTEREST, _read_cid
 )
-_saved_borrow = dict(cache.rhodes_island.book_borrow_dict)
-for _book_id in cache.rhodes_island.book_borrow_dict:
-    cache.rhodes_island.book_borrow_dict[_book_id] = 999
+_saved_borrow = library.holders()
+kernel_data.put(library.put_holders, dict.fromkeys(_saved_borrow, 999))
 flow_handle.askfor_all = scripted_askfor
 answers[:] = [lambda o: o == "DONE"]
 drawn_text.clear()
@@ -883,7 +883,7 @@ class_schedule_panel.Class_Schedule_Panel(W)._select_must_attend(
     [], ROOM_P, 2, 3
 )
 flow_handle.askfor_all = fake_askfor
-cache.rhodes_island.book_borrow_dict.update(_saved_borrow)
+kernel_data.put(library.put_holders, _saved_borrow)
 _replace_line = next((t for t in drawn_text if "会顶替原本的课" in t), "")
 check(
     "书库此刻借空：排着读书兴趣课的学生照标「*」、明细照写（此前借空就不标）",

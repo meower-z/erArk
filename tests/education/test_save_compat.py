@@ -18,6 +18,8 @@ from _bootstrap import (
 )
 from Script.System.Official_Event_System import official_event_handle
 from Script.Design import game_time
+from Script.Modules.domains import official
+from tests import kernel_data
 
 section("CHILD_GROWTH 字段级回填")
 mother = make_character(102, "母亲", 0)
@@ -181,7 +183,7 @@ def find_old_report_uid_left(label: str) -> list:
     list -- [(来源, "rhodes" 或角色id, 键), ...]，没有残留时为空列表
     """
     result: list[tuple[str, str | int, str]] = []
-    for key in cache.rhodes_island.official_event_history:
+    for key in official.history():
         if isinstance(key, str) and key.partition("@")[0] in OLD_REPORT_UID_SET:
             result.append((label, "rhodes", key))
     for cid, character_data in cache.character_data.items():
@@ -196,12 +198,10 @@ def find_old_report_uid_left(label: str) -> list:
 section(
     "Plan 32 实施复审补：读档后查旧 uid 残留的辅助函数（L22；下面真实存档一段逐个存档拿它查）"
 )
-_saved_global_history = cache.rhodes_island.official_event_history
+_saved_global_history = official.history()
 ga.event_history = {"萝莉26": dict(_record), "萝莉2": dict(_record)}
-cache.rhodes_island.official_event_history = {
-    "萝莉1@305": dict(_record),
-    "通用3@305": dict(_record),
-}
+_old_history = {"萝莉1@305": dict(_record), "通用3@305": dict(_record)}
+kernel_data.put(official.set_history, _old_history)
 check(
     "L22 迁移之前查得到两处残留：孩子履历里的萝莉 26、罗德岛全局履历里的「萝莉1@305」（萝莉 2、通用 3 不算）",
     {one[2] for one in find_old_report_uid_left("本地")}
@@ -209,9 +209,8 @@ check(
     find_old_report_uid_left("本地"),
 )
 save_handle._normalize_loaded_save_paths(cache)
-save_handle._migrate_official_event_history(
-    cache.rhodes_island.official_event_history
-)
+save_handle._migrate_official_event_history(_old_history)
+kernel_data.put(official.set_history, _old_history)
 check(
     "L22 照读档的两处迁移（孩子走 _normalize_loaded_save_paths，罗德岛走 input_load_save 里的 "
     "_migrate_official_event_history）之后查不到残留",
@@ -219,7 +218,7 @@ check(
     find_old_report_uid_left("本地"),
 )
 ga.event_history = {}
-cache.rhodes_island.official_event_history = _saved_global_history
+kernel_data.put(official.set_history, _saved_global_history)
 
 section("真实存档只读载入")
 # 本机没有 save 目录、或里面没有存档时跳过这一段（2026-09-15 用户拍板）：存档不入库，换机器、换目录后常常没带过来。
@@ -280,8 +279,6 @@ for save_id in candidate_list:
         "class_schedule",
         "temp_sex_class",
         "child_schedule_template",
-        "official_event_queue",
-        "official_event_history",
     ):
         if not hasattr(cache.rhodes_island, field):
             problem.append((save_id, "rhodes", field))

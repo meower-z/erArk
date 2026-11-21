@@ -27,6 +27,7 @@ from Script.Design import handle_ability
 import inspect
 from Script.System.Official_Event_System import official_event_handle
 from tests import kernel_data, world
+from Script.Modules.domains import library
 
 open_all_classroom()
 clear_schedules()
@@ -661,9 +662,8 @@ _read_cid = next(
 schedule_handle.set_selected_course(
     201, 2, 6, E6.COURSE_TYPE_INTEREST, _read_cid
 )
-_saved_borrow = dict(cache.rhodes_island.book_borrow_dict)
-for _book_id in cache.rhodes_island.book_borrow_dict:
-    cache.rhodes_island.book_borrow_dict[_book_id] = 999
+_saved_borrow = library.holders()
+kernel_data.put(library.put_holders, dict.fromkeys(_saved_borrow, 999))
 check(
     "读书兴趣课：书库此刻借空仍算（是一时的状态；上课判定 judge_personal_course_valid 则判没课）",
     growth_handle.judge_selected_cell_real(201, 2, 6)
@@ -671,7 +671,7 @@ check(
         201, {"course_type": E6.COURSE_TYPE_INTEREST, "target": _read_cid}
     ),
 )
-cache.rhodes_island.book_borrow_dict.update(_saved_borrow)
+kernel_data.put(library.put_holders, _saved_borrow)
 for _p in (3, 4, 5, 6):
     schedule_handle.clear_selected_course(201, 2, _p)
 clear_schedules()

@@ -20,10 +20,12 @@ class RecruitAtStartTest(SlowTestCase):
         """开新游戏，放一名可招募的干员进待确认列表，记下玩家开始的行动"""
         super().setUp()
         from Script.Kernel import core
+        from Script.Modules.domains import recruit
         from Script.UI.Panel import recruit_panel
+        from tests import kernel_data
 
         self.new_id = recruit_panel.find_recruitable_npc()[0]
-        self.cache.rhodes_island.recruited_id = {self.new_id}
+        kernel_data.put(recruit.set_pending, {self.new_id})
         self.started: list[core.Action] = []
         saved = core._bodies["kernel.StartAction"]
 
@@ -62,6 +64,7 @@ class RecruitAtStartTest(SlowTestCase):
     def test_recruit_joins_at_start(self) -> None:
         """选择期间缓存不变；5 分钟的等待开始后新干员加入，待确认列表空了"""
         from Script.Core import constant
+        from Script.Modules.domains import recruit
 
         changed = self.confirm()
         self.assertFalse(changed, "选择期间招募已经写了缓存")
@@ -74,7 +77,7 @@ class RecruitAtStartTest(SlowTestCase):
         ]
         self.assertEqual(started, [(constant.Behavior.WAIT, 5)])
         self.assertIn(self.new_id, self.cache.npc_id_got)
-        self.assertEqual(self.cache.rhodes_island.recruited_id, set())
+        self.assertEqual(recruit.pending(), set())
 
     def test_full_dormitory_commits_nothing(self) -> None:
         """宿舍已满：没有行动，缓存不变，新干员没有加入"""

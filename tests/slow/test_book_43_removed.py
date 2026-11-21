@@ -23,6 +23,7 @@ import shutil
 from typing import TYPE_CHECKING
 from unittest import mock
 
+from tests import kernel_data
 from tests.slow.base import SlowTestCase
 
 if TYPE_CHECKING:
@@ -127,6 +128,7 @@ class Book43RemovedTest(SlowTestCase):
 
     def test_old_save_player_holds_book(self) -> None:
         """博士借着 43 号书、阅读推荐里有它的类型：读档后读书面板、借阅书籍面板与阅读推荐都照常显示，不算这本书"""
+        from Script.Modules.domains import library
         from Script.UI.Panel import (
             borrow_book_panel,
             manage_library,
@@ -137,8 +139,9 @@ class Book43RemovedTest(SlowTestCase):
         player.entertainment.borrow_book_id_set.add(BOOK)
         player.entertainment.read_book_progress[BOOK] = 40
         borrow_book_panel.add_borrow_history_record(0, BOOK)
-        self.cache.rhodes_island.book_borrow_dict[BOOK] = 0
-        self.cache.rhodes_island.recommend_book_type_set.add(BOOK_TYPE)
+        kernel_data.put(library.set_holder, BOOK, 0)
+        recommended = library.recommended() | {BOOK_TYPE}
+        kernel_data.put(library.set_recommended, recommended)
         self.save_and_load()
         player_input = self.world.player
         player_input.screen.clear()
@@ -187,24 +190,24 @@ class Book43RemovedTest(SlowTestCase):
         每个干员照常判定借书、走娱乐读书，读的书都在书籍配置里"""
         from Script.Config import game_config
         from Script.Core import constant
+        from Script.Modules.domains import library
         from Script.UI.Panel import borrow_book_panel
 
-        book_borrow_dict = self.cache.rhodes_island.book_borrow_dict
-        book_borrow_dict[BOOK] = -1
+        kernel_data.put(library.set_holder, BOOK, -1)
         kept = {
             book_id: holder
-            for book_id, holder in book_borrow_dict.items()
+            for book_id, holder in library.holders().items()
             if book_id != BOOK
         }
         self.save_and_load()
-        book_borrow_dict = self.cache.rhodes_island.book_borrow_dict
+        book_borrow_dict = library.holders()
         self.assertNotIn(
             BOOK, book_borrow_dict, "读档时借阅表去掉了没人借的 43 号书"
         )
         self.assertEqual(book_borrow_dict, kept, "借阅表其余每项不变")
         self.save_and_load()
         self.assertEqual(
-            self.cache.rhodes_island.book_borrow_dict,
+            library.holders(),
             kept,
             "再存再读一次，借阅表不变",
         )
@@ -326,12 +329,13 @@ class Book43RemovedTest(SlowTestCase):
         from Script.Design import game_time
 
         from Script.Core import constant
+        from Script.Modules.domains import library
         from Script.UI.Panel import borrow_book_panel
 
         character_id = min(cid for cid in self.cache.npc_id_got if cid != 0)
         character_data = self.cache.character_data[character_id]
         character_data.entertainment.borrow_book_id_set.add(BOOK)
-        self.cache.rhodes_island.book_borrow_dict[BOOK] = character_id
+        kernel_data.put(library.set_holder, BOOK, character_id)
         borrow_book_panel.add_borrow_history_record(character_id, BOOK)
         character_data.behavior.behavior_id = constant.Behavior.READ_BOOK
         character_data.state = constant.CharacterStatus.STATUS_READ_BOOK
@@ -344,23 +348,23 @@ class Book43RemovedTest(SlowTestCase):
         """干员借着、正读着 43 号书，阅读推荐与图书馆展示列表里有它：打开游戏状态自检时读档，借书一致性自检 ISLAND-21
         随即通过，存档里没有对 43 号书与类型 43 的引用；再存再读一次，借阅表不变"""
         from Script.Config import normal_config
+        from Script.Modules.domains import library
         from Script.Test.Static_Check.checks import check_island
 
         normal_config.system_setting.base_setting[SELF_CHECK_SETTING] = 1
         self.lend_and_read_book()
-        rhodes_island = self.cache.rhodes_island
-        rhodes_island.recommend_book_type_set.add(BOOK_TYPE)
+        recommended = library.recommended() | {BOOK_TYPE}
+        kernel_data.put(library.set_recommended, recommended)
         self.save_and_load()
         self.assertEqual(
             check_island.check_island_21_book_borrow_consistency(),
             [],
             "读档后 ISLAND-21 通过",
         )
-        rhodes_island = self.cache.rhodes_island
         references = []
-        if BOOK in rhodes_island.book_borrow_dict:
+        if BOOK in library.holders():
             references.append("借阅表")
-        if BOOK_TYPE in rhodes_island.recommend_book_type_set:
+        if BOOK_TYPE in library.recommended():
             references.append("阅读推荐")
         for character_id, character_data in self.cache.character_data.items():
             entertainment = character_data.entertainment
@@ -375,10 +379,10 @@ class Book43RemovedTest(SlowTestCase):
             if character_data.behavior.book_id == BOOK:
                 references.append(f"角色 {character_id} 正读着的书")
         self.assertEqual(references, [], "存档里没有对 43 号书与类型 43 的引用")
-        book_borrow_dict = dict(rhodes_island.book_borrow_dict)
+        book_borrow_dict = library.holders()
         self.save_and_load()
         self.assertEqual(
-            self.cache.rhodes_island.book_borrow_dict,
+            library.holders(),
             book_borrow_dict,
             "再存再读一次，借阅表不变",
         )
@@ -389,12 +393,12 @@ class Book43RemovedTest(SlowTestCase):
         from Script.UI.Moudle import view
         from Script.Config import game_config
         from Script.Core import constant, save_handle
+        from Script.Modules.domains import library
 
         if not os.path.isfile(os.path.join("save", USER_SAVE_ID, "1")):
             self.skipTest("save/99 fixture not installed")
-        saved = dict(
-            save_handle.load_save(USER_SAVE_ID).rhodes_island.book_borrow_dict
-        )
+        old_island = save_handle.load_save(USER_SAVE_ID).rhodes_island
+        saved = dict(vars(old_island)["book_borrow_dict"])
         unknown = {
             book_id
             for book_id in saved
@@ -403,7 +407,7 @@ class Book43RemovedTest(SlowTestCase):
         self.assertTrue(unknown, "存档 99 的借阅表里有书籍配置里没有的书")
         save_handle.input_load_save(USER_SAVE_ID)
         view.now_panel_id = constant.Panel.IN_SCENE
-        book_borrow_dict = self.cache.rhodes_island.book_borrow_dict
+        book_borrow_dict = library.holders()
         self.assertFalse(
             unknown & set(book_borrow_dict), "读档后借阅表里没有这些项"
         )
@@ -426,7 +430,7 @@ class Book43RemovedTest(SlowTestCase):
         loaded = dict(book_borrow_dict)
         self.save_and_load()
         self.assertEqual(
-            self.cache.rhodes_island.book_borrow_dict,
+            library.holders(),
             loaded,
             "再存再读一次，借阅表不变",
         )
