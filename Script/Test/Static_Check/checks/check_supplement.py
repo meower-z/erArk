@@ -1,23 +1,15 @@
 # -*- coding: UTF-8 -*-
 """
 静态检查系统 - 补充盲点检查
-本模块实现 SUPP-01…SUPP-08：不属于任何单一领域模块的盲点条目（来源编号 IO-01、IO-02、IO-05、
-MO-03、NO-01、NO-03、NO-05、PO-02）。各检查以文档字符串完整表述不变式本身，文档字符串首行注明来源编号。
-
-约定与全域前提（与其余领域模块一致，此处不重复展开）：
-1. 全部字段访问一律使用getattr/dict.get加默认值防御，绝不能因老存档缺字段或类型不符而抛异常；
-   若某个结构性假设本身就是不变量的一部分，则让比较结果记为"不变量失败"，而不是让检查器自己崩溃。
-2. 配表访问一律走Script.Config.game_config，检查函数只在真正执行时才引用配表字典，一旦某个配表字段本身缺失，
-   对应检查退化为跳过（返回空列表），不影响其余检查项。
-3. severity约定：消息文本以"[warning] "为前缀的是警示级（已知存在合法/历史漂移窗口，仅作诊断参考）；
-   无前缀的是错误级（无合法反例，命中即代表真实状态损坏）。
+===========================
+本模块实现 SUPP-01 与 SUPP-03 到 SUPP-08 七条检查。它们不属于任何单一领域的检查模块。
+每条检查的文档字符串在「功能」一节以「来源:」注明来源编号。
+失败消息以 "[warning] " 开头的是警示级，只作诊断参考。没有这个前缀的是错误级，命中即表示状态损坏。
 """
 
 from __future__ import annotations
 
-from types import FunctionType
-
-from Script.Core import cache_control, get_text
+from Script.Core import cache_control
 from Script.Config import game_config
 from Script.Design import map_handle
 from Script.Modules.domains import facility, needs, power, warehouse
@@ -30,8 +22,6 @@ if TYPE_CHECKING:
 
 # 场景路径列表 -> map_handle路径字符串；内部用os.sep拼接，禁止自己写分隔符
 P = map_handle.get_map_system_path_str_for_list
-# 翻译api，SUPP-02判定"客房"名称时需要与basement.py同样按本地化后的名称比对
-_: FunctionType = get_text._
 
 
 def _all_current_effect_cids(ri: game_type.Rhodes_Island) -> list[int]:
@@ -103,41 +93,6 @@ def check_power_supply_strategy_validity() -> list[CheckFailure]:
                 )
             )
     return failures
-
-
-@register_check("SUPP-02", "访客上限与开放客房数一致")
-def check_facility_derived_max_consistency() -> list[CheckFailure]:
-    """
-    参数: 无
-    返回值: List[CheckFailure]: 失败记录列表
-    功能:
-        来源: IO-02。校验visitor_max等于当前config_facility_open中名称含"客房"且facility_open为真的条目数。
-        级别为warning：游戏代码里只有basement.update_facility_limits()写visitor_max，读档和get_base_updata()调用它。
-        开放客房的某条路径若没有接着调用get_base_updata()，visitor_max会暂时偏离，这种偏离不算存档损坏。
-    """
-    cache = cache_control.cache
-    ri = getattr(cache, "rhodes_island", None)
-    if ri is None:
-        return []
-    facility_open = facility.opens()
-    expected = sum(
-        1
-        for oid, room in game_config.config_facility_open.items()
-        if _("客房") in getattr(room, "name", "")
-        and facility_open.get(oid, False)
-    )
-    actual = getattr(ri, "visitor_max", None)
-    if actual == expected:
-        return []
-    return [
-        make_failure(
-            "SUPP-02",
-            "访客上限与开放客房数一致",
-            f"[warning] ri.visitor_max={actual}，按当前开放客房数算出的期望值={expected}，"
-            "可能是开放客房的某条路径没有接着调用get_base_updata()",
-            [],
-        )
-    ]
 
 
 @register_check("SUPP-03", "设施开放派生单调覆盖")

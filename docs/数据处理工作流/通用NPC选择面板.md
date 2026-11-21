@@ -54,7 +54,7 @@
 |---------|------|----------|----------|
 | 0 | 不筛选 | 显示所有角色 | 直接显示原始列表 |
 | 1 | 筛选收藏干员 | 显示被收藏的角色 | 检查`character_data.chara_setting[2] == 1` |
-| 2 | 筛选访客干员 | 显示访客角色 | 检查`npc_id in cache.rhodes_island.visitor_info` |
+| 2 | 筛选访客干员 | 显示访客角色 | 检查`handle_premise.handle_self_visitor_flag_1(npc_id)`（`sp_flag.vistor == 1`） |
 | 3 | 筛选未陷落干员 | 显示未陷落的角色 | 使用`handle_premise.handle_self_not_fall()` |
 | 4 | 筛选已陷落干员 | 显示已陷落的角色 | 使用`handle_premise.handle_self_fall()` |
 | 5 | 按名称筛选 | 根据名称关键词筛选 | 字符串包含匹配 |

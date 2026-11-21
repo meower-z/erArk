@@ -11,6 +11,7 @@ from Script.Core import (
 from Script.Design import map_handle
 from Script.Config import game_config
 from Script.Design.handle_premise.premise_registry import add_premise
+from Script.Modules.domains import location
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -320,7 +321,6 @@ def handle_scene_someone_is_h(character_id: int) -> int:
         character_id
     )
     # 场景角色数大于2时进行检测，不再排除自己的跟随和H状态
-    # if len(scene_data.character_list) > 2 and not (character_data.sp_flag.is_follow or character_data.sp_flag.is_h):
     if len(character_list) <= 2:
         return 0
     # 遍历当前角色列表
@@ -4286,7 +4286,7 @@ def handle_in_aegir(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 1
 
 
@@ -4299,7 +4299,7 @@ def handle_in_bolivar(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 2
 
 
@@ -4312,7 +4312,7 @@ def handle_in_higashi(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 3
 
 
@@ -4325,7 +4325,7 @@ def handle_in_columbia(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 4
 
 
@@ -4338,7 +4338,7 @@ def handle_in_kazimierz(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 5
 
 
@@ -4351,7 +4351,7 @@ def handle_in_kazdel(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 6
 
 
@@ -4364,7 +4364,7 @@ def handle_in_laterano(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 7
 
 
@@ -4377,7 +4377,7 @@ def handle_in_leithanien(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 8
 
 
@@ -4390,7 +4390,7 @@ def handle_in_rim_billiton(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 9
 
 
@@ -4403,7 +4403,7 @@ def handle_in_minos(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 10
 
 
@@ -4416,7 +4416,7 @@ def handle_in_sargon(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 11
 
 
@@ -4429,7 +4429,7 @@ def handle_in_sami(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 12
 
 
@@ -4442,7 +4442,7 @@ def handle_in_victoria(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 13
 
 
@@ -4455,7 +4455,7 @@ def handle_in_ursus(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 14
 
 
@@ -4468,7 +4468,7 @@ def handle_in_kjerag(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 15
 
 
@@ -4481,7 +4481,7 @@ def handle_in_siracusa(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 16
 
 
@@ -4494,7 +4494,7 @@ def handle_in_yan(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 17
 
 
@@ -4507,7 +4507,7 @@ def handle_in_iberia(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 18
 
 
@@ -4520,7 +4520,7 @@ def handle_in_durin(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 19
 
 
@@ -4533,7 +4533,7 @@ def handle_in_siesta(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 20
 
 
@@ -4546,7 +4546,7 @@ def handle_in_northern(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 21
 
 
@@ -4559,7 +4559,7 @@ def handle_in_foehn_hotlands(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 22
 
 
@@ -4572,7 +4572,7 @@ def handle_in_karlan(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 23
 
 
@@ -4585,7 +4585,7 @@ def handle_in_dan(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 24
 
 
@@ -4598,7 +4598,7 @@ def handle_in_vouivre(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 25
 
 
@@ -4611,7 +4611,7 @@ def handle_in_infy_icefield(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     return now_country == 26
 
 

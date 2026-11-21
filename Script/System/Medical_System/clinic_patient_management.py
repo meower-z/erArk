@@ -997,9 +997,7 @@ def refresh_medical_patients(
         return []
 
     # 依据配置与收费系数计算需要刷新的病人数量。
-    refresh_count = medical_core._calculate_patient_refresh_count(
-        rhodes_island, level_config
-    )
+    refresh_count = medical_core._calculate_patient_refresh_count(level_config)
     if refresh_count <= 0:
         return []
 

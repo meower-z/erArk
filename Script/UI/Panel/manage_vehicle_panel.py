@@ -11,7 +11,7 @@ from Script.Core import (
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.save_load import reset
-from Script.Modules.domains import warehouse
+from Script.Modules.domains import commission, warehouse
 import random
 from Script.Modules.domains import facility
 
@@ -32,10 +32,7 @@ def update_basement_vehicle_data() -> None:
     """
     补齐基地载具数据：开新游戏时与读档时运行
     """
-    vehicle_data = game_config.config_vehicle
-    for vehicle_id in vehicle_data:
-        if vehicle_id not in cache.rhodes_island.vehicles:
-            cache.rhodes_island.vehicles[vehicle_id] = [0, 0]
+    commission.fill_vehicles()
 
 
 def settle_vehicle(commision_id: int) -> str:
@@ -47,23 +44,20 @@ def settle_vehicle(commision_id: int) -> str:
     vehicle_text -- 载具损坏与回收信息
     """
     vehicle_text = ""
-    send_vehicle_list = cache.rhodes_island.ongoing_field_commissions[
-        commision_id
-    ][2]
+    send_vehicle_list = commission.ongoing()[commision_id].vehicles
     # 损坏概率与等级相关
     base_rate = 0.05 * game_config.config_commission[commision_id].level
     for vehicle_id in send_vehicle_list:
         # 根据基准概率判断载具是否损坏
         if random.random() < base_rate:
-            cache.rhodes_island.vehicles[vehicle_id][0] += -1
-            cache.rhodes_island.vehicles[vehicle_id][1] += -1
+            commission.add_vehicle(vehicle_id, owned=-1, out=-1)
             vehicle_text += _("({0}损坏)").format(
                 game_config.config_vehicle[vehicle_id].name
             )
             # 如果损坏了，则概率下降一半，以免连续损坏
             base_rate *= 0.5
         else:
-            cache.rhodes_island.vehicles[vehicle_id][1] -= 1
+            commission.add_vehicle(vehicle_id, out=-1)
 
     return vehicle_text
 
@@ -165,10 +159,9 @@ class Manage_Vehicle_Panel:
             )
             # 载具数量
             self.vehicle_count = 0
-            for vehicle_id in cache.rhodes_island.vehicles:
-                self.vehicle_count += cache.rhodes_island.vehicles[vehicle_id][
-                    0
-                ]
+            vehicles = commission.vehicles()
+            for vehicle_id in vehicles:
+                self.vehicle_count += vehicles[vehicle_id][0]
             facility_info_text = ""
             facility_info_text += _(
                 "○载具用于给执行外勤委托的干员提供交通和其他方面的辅助，提高委托效率\n"
@@ -257,7 +250,7 @@ class Manage_Vehicle_Panel:
                 vehicle_data = game_config.config_vehicle[cid]
                 # 获得方式
                 acquire_way = vehicle_data.acquiring
-                vehicle_count = cache.rhodes_island.vehicles[cid][0]
+                vehicle_count = vehicles[cid][0]
                 if self.now_panel == _("常规载具") and acquire_way != _("基础"):
                     continue
                 if self.now_panel == _("特殊载具"):
@@ -271,7 +264,7 @@ class Manage_Vehicle_Panel:
             # === 对列表进行排序逻辑处理 ===
             def get_sort_key(cid_key: int) -> int:
                 if self.sort_by == _("持有量"):
-                    return cache.rhodes_island.vehicles[cid_key][0]
+                    return commission.vehicles()[cid_key][0]
                 elif self.sort_by == _("价钱"):
                     return game_config.config_vehicle[cid_key].price
                 elif self.sort_by == _("速度"):
@@ -320,9 +313,9 @@ class Manage_Vehicle_Panel:
                     vehicle_data.special, text_width, "center"
                 )
                 vehicle_count_str = (
-                    str(cache.rhodes_island.vehicles[vehicle_id][1])
+                    str(vehicles[vehicle_id][1])
                     + "/"
-                    + str(cache.rhodes_island.vehicles[vehicle_id][0])
+                    + str(vehicles[vehicle_id][0])
                 )
                 vehicle_count_str = attr_calculation.pad_display_width(
                     vehicle_count_str, text_width, "center"
@@ -469,7 +462,7 @@ class Manage_Vehicle_Panel:
             info_draw.text += _("\n 特殊效果：{0}").format(vehicle_special)
             info_draw.text += _("\n 介绍：{0}").format(vehicle_description)
 
-            owned_count = cache.rhodes_island.vehicles[vehicle_id][0]
+            owned_count, out_count = commission.vehicles()[vehicle_id]
             info_draw.text += _("\n\n 该载具当前已拥有数量：{0}").format(
                 owned_count
             )
@@ -543,10 +536,7 @@ class Manage_Vehicle_Panel:
 
             # === 判断是否可出售 ===
             sell_condition = (
-                vehicle_acquiring == _("基础")
-                and cache.rhodes_island.vehicles[vehicle_id][0]
-                - cache.rhodes_island.vehicles[vehicle_id][1]
-                > 0
+                vehicle_acquiring == _("基础") and owned_count - out_count > 0
             )
             sell_vehicle_draw: draw.CenterButton | draw.CenterDraw
             if sell_condition:
@@ -597,7 +587,7 @@ class Manage_Vehicle_Panel:
         # 购买载具
         if warehouse.amount(1) >= vehicle_price:
             warehouse.add(1, -vehicle_price)
-            cache.rhodes_island.vehicles[vehicle_id][0] += 1
+            commission.add_vehicle(vehicle_id, owned=1)
             self.vehicle_count += 1
             info_draw.text = _("\n花费 {0} 龙门币购买了一个 {1}\n").format(
                 vehicle_price, vehicle_data.name
@@ -620,7 +610,7 @@ class Manage_Vehicle_Panel:
         vehicle_price = int(vehicle_data.price * 0.8)
         # 出售载具
         warehouse.add(1, vehicle_price)
-        cache.rhodes_island.vehicles[vehicle_id][0] -= 1
+        commission.add_vehicle(vehicle_id, owned=-1)
         self.vehicle_count -= 1
         info_draw = draw.WaitDraw()
         info_draw.width = window_width

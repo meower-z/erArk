@@ -1276,10 +1276,10 @@ npc_tem_data\[i\]
 | `resource_type_main_trader` | Dict[str, int] | 资源主交易员ID |
 | `base.production["assembly"]["lines"][x]["main"]` | int | 流水线主工人ID。存在 GameState 的全局数据里，换id时由 `production.remap` 映射 |
 | `base.production["assembly"]["workers"]` | List[int] | 生产工人ID列表。存在 GameState 的全局数据里，换id时由 `production.remap` 映射 |
-| `visitor_info` | Dict[int, datetime] | 访客ID信息 |
-| `invite_visitor[0]` | int | 邀请目标ID |
+| `base.visitor["visitors"]` 的键 | str | 访客ID。存在 GameState 的全局数据里，换id时由 `visitor.remap` 映射 |
+| `base.visitor["invite"]["target"]` | int | 邀请目标ID。存在 GameState 的全局数据里，换id时由 `visitor.remap` 映射 |
 | `diplomat_of_country[x][0]` | int | 外交官ID |
-| `ongoing_field_commissions[x][0]` | List[int] | 外勤干员ID列表 |
+| `base.commission["ongoing"][x]["team"]` | List[int] | 外勤干员ID列表。存在 GameState 的全局数据里，换id时由 `commission.remap` 映射 |
 | `base.production["herb_garden"]["lines"][x]["main"]` | int | 药田主种植员ID。存在 GameState 的全局数据里，换id时由 `production.remap` 映射 |
 | `base.production["herb_garden"]["workers"]` | List[int] | 药田种植员ID列表。存在 GameState 的全局数据里，换id时由 `production.remap` 映射 |
 | `base.production["green_house"]["lines"][x]["main"]` | int | 温室主种植员ID。存在 GameState 的全局数据里，换id时由 `production.remap` 映射 |

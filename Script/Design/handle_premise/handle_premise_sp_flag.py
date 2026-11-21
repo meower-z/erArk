@@ -3,7 +3,7 @@
 from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import needs
+from Script.Modules.domains import location, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -577,7 +577,7 @@ def handle_in_diplomatic_visit_1_and_other_country(character_id: int) -> int:
         target_coutry_cid = cache.character_data[
             character_id
         ].sp_flag.in_diplomatic_visit
-        if target_coutry_cid != cache.rhodes_island.current_location[0]:
+        if target_coutry_cid != location.country():
             return 1
     return 0
 

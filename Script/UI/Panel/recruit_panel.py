@@ -19,7 +19,7 @@ from Script.Design import (
 )
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import work
+from Script.Modules.domains import location, visitor, work
 from Script.Modules.save_load import reset
 
 import random
@@ -216,7 +216,7 @@ def update_recruit() -> None:
                     # 筛选出出生地是当前罗德岛所在地的角色
                     if (
                         character_data.relationship.birthplace
-                        != cache.rhodes_island.current_location[0]
+                        != location.country()
                     ):
                         continue
                     wait_id_list.append(chara_id)
@@ -298,12 +298,11 @@ def update_recruit() -> None:
                     "\n\n   ※ 招募到了新的干员，请前往博士办公室确认 ※\n\n"
                 )
                 # 检查该角色是否是正在邀请的访客
-                if choice_id == cache.rhodes_island.invite_visitor[0]:
+                if choice_id == visitor.invite()[0]:
                     now_draw.text += _(
                         "   ※ 招募到的新干员是正在邀请的访客，已自动停止邀请 ※\n\n"
                     )
-                    cache.rhodes_island.invite_visitor[0] = 0
-                    cache.rhodes_island.invite_visitor[1] = 0
+                    visitor.set_invite(0)
                 now_draw.draw()
             else:
                 now_draw.text = _(
@@ -527,7 +526,7 @@ class Recruit_Panel:
                     if recruitment_strategy_id == 0:
                         if (
                             chara_data.relationship.birthplace
-                            == cache.rhodes_island.current_location[0]
+                            == location.country()
                         ):
                             line_wait_id_list.append(chara_id)
                     elif recruitment_strategy_id == 1:
@@ -741,7 +740,7 @@ class Recruit_Panel:
                 ][2]
                 # 招聘当地随机干员
                 if cid == 0:
-                    birthplace_id = cache.rhodes_island.current_location[0]
+                    birthplace_id = location.country()
                     add_text = game_config.config_birthplace[birthplace_id].name
                     button_draw_text += _("（{0}）").format(add_text)
                 # 对于同主招聘专员的策略，进行补充说明

@@ -18,7 +18,7 @@ from Script.Design import (
 from Script.Config import normal_config, game_config
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.UI.Moudle import view
-from Script.Modules.domains import facility, needs
+from Script.Modules.domains import facility, needs, visitor
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -92,7 +92,7 @@ def handle_visitor_zone_have_target(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    if cache.rhodes_island.invite_visitor[0] != 0:
+    if visitor.invite()[0] != 0:
         return 1
     return 0
 

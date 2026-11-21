@@ -11,7 +11,6 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle
 from Script.UI.Moudle import draw
-from Script.Design import game_time
 from Script.Modules.domains import (
     economy,
     facility,
@@ -46,17 +45,8 @@ def get_base_zero() -> game_type.Rhodes_Island:
     for i in range(7):
         base_data.party_day_of_week[i] = 0
 
-    # 位置设为炎国
-    base_data.current_location = [17, 1701]
-
-    # 访客来访时间初始化
-    base_data.last_visitor_time = game_time.now()
-
     # 初始化招募(结构:[进度, 策略id, 主招聘专员id, 线效率])
     base_data.recruit_line[0] = [0, 0, 0, 0]
-
-    # 初始化邀请
-    base_data.invite_visitor = [0, 0, 0]
 
     # 初始化公务工作
     base_data.office_work += 200
@@ -169,7 +159,7 @@ def get_base_updata() -> None:
 
 def update_facility_limits(base_data: game_type.Rhodes_Island) -> None:
     """
-    按设施等级、已用的仓储空间扩展模块数和已开放的客房数，刷新仓库容量、干员人数上限和访客上限
+    按设施等级与已用的仓储空间扩展模块数，刷新仓库容量与干员人数上限
     Keyword arguments:
     base_data -- 要刷新的罗德岛数据
     """
@@ -184,11 +174,6 @@ def update_facility_limits(base_data: game_type.Rhodes_Island) -> None:
             base_data.warehouse_capacity = effect + extra
         elif facility_data.name == _("宿舍区"):
             base_data.people_max = effect
-    base_data.visitor_max = sum(
-        1
-        for room_id, room in game_config.config_facility_open.items()
-        if _("客房") in room.name and facility.is_open(room_id, False)
-    )
 
 
 def calc_facility_efficiency(facility_cid: int = -1) -> float:

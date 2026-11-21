@@ -11,6 +11,7 @@ from Script.Core import (
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.Design import handle_ability, handle_premise, basement
+from Script.Modules.domains import commission
 import random
 
 from Script.UI.Panel import achievement_panel
@@ -129,9 +130,7 @@ def settle_equipment_damage_in_commission(commision_id: int) -> str:
     """
     equipment_damage_text = ""
     # 获取派遣人员列表
-    send_npc_list = cache.rhodes_island.ongoing_field_commissions[commision_id][
-        0
-    ]
+    send_npc_list = commission.ongoing()[commision_id].team
     commision_lv = game_config.config_commission[commision_id].level
     damage_rate_data = game_config.config_equipment_damage_rate[commision_lv]
     damage_rate_list = [

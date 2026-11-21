@@ -1479,10 +1479,6 @@ class Rhodes_Island:
         """ 本周陷落干员提供的粉红凭证总数 """
 
         # 控制中枢
-        self.current_location: list[int] = []
-        """ 基地当前所在位置，[0国家id,1城市id] """
-        self.move_target_and_time: list = [0, 0, 0]
-        """ 基地移动目标和时间, [0国家id,1城市id,2抵达时间] """
         self.office_work: float = 0
         """ 需要处理的公务 """
 
@@ -1551,28 +1547,8 @@ class Rhodes_Island:
         """ 在爱情旅馆中的房间级别，0未入住，1标间，2情趣主题房，3顶级套房 """
 
         # 访客区
-        self.visitor_max: int = 0
-        """ 访客人数上限 """
-        self.base_move_visitor_flag: bool = False
-        """ 因为基地移动而吸引访客 """
-        self.visitor_info: dict[int, datetime.datetime] = {}
-        """ 访客统计数据 访客id:[0停留开始时间] """
-        self.last_visitor_time: datetime.datetime = datetime.datetime(1, 1, 1)
-        """ 上次访客到来时间 """
-        self.invite_visitor: list = []
-        """ 当前邀请进度 [0目标角色id, 1招募进度, 2招募效率百分比(如2.5)] """
         self.diplomat_of_country: dict[int, list] = {}
         """ 负责各的外交官 出身地国家id:[0外交官角色id, 1外交方针id] """
-
-        # 机库
-        self.ongoing_field_commissions: dict[int, list] = {}
-        """ 进行中的外勤委托，委托id:0干员id列表List，1返回时间datetime，2使用的载具id列表List """
-        self.vehicles: dict[int, list] = {}
-        """ 载具id:[0数量int，1外勤中数量int] """
-        self.finished_field_commissions_set: set = set()
-        """ 已完成的外勤委托集合 """
-        self.shut_down_field_commissions_set: set = set()
-        """ 已禁止的外勤委托集合 """
 
         # 教育区
 

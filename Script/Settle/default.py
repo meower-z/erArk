@@ -48,7 +48,7 @@ from Script.Settle.common_default import (
 )
 
 from Script.Settle.item_effect import *
-from Script.Modules.domains import facility, medical, needs, warehouse
+from Script.Modules.domains import facility, medical, needs, visitor, warehouse
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -7611,8 +7611,9 @@ def handle_invite_visitor_add_adjust(
     if target_data.dead:
         return
 
+    target, progress = visitor.invite()
     # 如果没有选择目标则直接返回
-    if cache.rhodes_island.invite_visitor[0] == 0:
+    if target == 0:
         # 玩家使用时显示提示
         if character_id == 0:
             now_draw = draw.NormalDraw()
@@ -7622,13 +7623,8 @@ def handle_invite_visitor_add_adjust(
         return
 
     # 如果该角色已经被招募，则直接返回
-    if (
-        cache.rhodes_island.invite_visitor[0] in cache.npc_id_got
-        or cache.rhodes_island.invite_visitor[0]
-        in cache.rhodes_island.recruited_id
-    ):
-        cache.rhodes_island.invite_visitor[0] = 0
-        cache.rhodes_island.invite_visitor[1] = 0
+    if target in cache.npc_id_got or target in cache.rhodes_island.recruited_id:
+        visitor.set_invite(0)
         # 玩家使用时显示提示
         if character_id == 0:
             now_draw = draw.NormalDraw()
@@ -7656,12 +7652,12 @@ def handle_invite_visitor_add_adjust(
         ).format(
             character_data.name,
             round(now_add_lust, 1),
-            round(cache.rhodes_island.invite_visitor[1] + now_add_lust, 1),
+            round(progress + now_add_lust, 1),
         )
         now_draw.draw()
 
     # 增加对应槽的邀请值，并进行结算
-    cache.rhodes_island.invite_visitor[1] += now_add_lust
+    visitor.set_invite(target, progress + now_add_lust)
     invite_visitor_panel.update_invite_visitor()
 
 

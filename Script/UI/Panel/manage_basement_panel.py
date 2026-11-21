@@ -13,7 +13,15 @@ from Script.Design import basement, attr_calculation, handle_premise, game_time
 from Script.UI.Moudle import draw, view
 from Script.UI.Panel import see_character_info_panel
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import economy, facility, needs, warehouse, work
+from Script.Modules.domains import (
+    commission,
+    economy,
+    facility,
+    needs,
+    visitor,
+    warehouse,
+    work,
+)
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -308,14 +316,8 @@ class Manage_Basement_Panel:
                             )
                     if department == _("机库"):
                         field_people_now = 0
-                        for (
-                            cid
-                        ) in cache.rhodes_island.ongoing_field_commissions:
-                            field_people_now += len(
-                                cache.rhodes_island.ongoing_field_commissions[
-                                    cid
-                                ][0]
-                            )
+                        for one in commission.ongoing().values():
+                            field_people_now += len(one.team)
                         all_info_draw.text += _("  外勤干员 — {0}").format(
                             field_people_now
                         )
@@ -1338,17 +1340,12 @@ class Manage_Basement_Panel:
             elif department == _("机库"):
                 now_text += _("\n  当前外勤委托情况：")
                 # 输出委托信息
-                for (
-                    commision_id
-                ) in cache.rhodes_island.ongoing_field_commissions:
+                ongoing = commission.ongoing()
+                for commision_id, one in ongoing.items():
                     commision_data = game_config.config_commission[commision_id]
                     commision_name = commision_data.name
                     # 参与干员名字
-                    commision_chara_id_list = (
-                        cache.rhodes_island.ongoing_field_commissions[
-                            commision_id
-                        ][0]
-                    )
+                    commision_chara_id_list = one.team
                     commision_chara_name_list = [
                         cache.character_data[chara_id].name
                         for chara_id in commision_chara_id_list
@@ -1357,9 +1354,7 @@ class Manage_Basement_Panel:
                         commision_chara_name_list
                     )
                     # 剩余返回天数
-                    return_time = cache.rhodes_island.ongoing_field_commissions[
-                        commision_id
-                    ][1]
+                    return_time = one.end
                     last_days = game_time.count_day_for_datetime(
                         game_time.now(), return_time
                     )
@@ -1370,26 +1365,18 @@ class Manage_Basement_Panel:
                     now_text += _("\n  [{0}]：{1}，剩余{2}").format(
                         commision_name, commision_chara_name_str, last_days
                     )
-                if not len(cache.rhodes_island.ongoing_field_commissions):
+                if not len(ongoing):
                     now_text += _("\n  无")
                 now_text += _("\n  当前载具情况：")
                 # 输出载具信息
-                for vehicle_id in cache.rhodes_island.vehicles:
+                for vehicle_id, counts in commission.vehicles().items():
+                    # 拥有数与外勤中数
+                    now_vehicle_count, out_vehicle_count = counts
                     # 如果未持有，则跳过
-                    if (
-                        cache.rhodes_island.vehicles[vehicle_id][0] == 0
-                        and cache.rhodes_island.vehicles[vehicle_id][1] == 0
-                    ):
+                    if now_vehicle_count == 0 and out_vehicle_count == 0:
                         continue
                     vehicle_data = game_config.config_vehicle[vehicle_id]
                     vehicle_name = vehicle_data.name
-                    # 载具数量
-                    now_vehicle_count = cache.rhodes_island.vehicles[
-                        vehicle_id
-                    ][0]
-                    out_vehicle_count = cache.rhodes_island.vehicles[
-                        vehicle_id
-                    ][1]
                     now_text += _("\n  [{0}]：可用{1}辆，出动中{2}辆").format(
                         vehicle_name, now_vehicle_count, out_vehicle_count
                     )
@@ -1506,7 +1493,7 @@ class Change_Npc_Work_Panel:
                 if npc_id == 0:
                     continue
                 # 去掉访客
-                if npc_id in cache.rhodes_island.visitor_info:
+                if visitor.is_visitor(npc_id):
                     continue
                 # 去掉2、7异常
                 if not handle_premise.handle_normal_2(npc_id):

@@ -16,7 +16,7 @@ from Script.System.Field_Commission_System.field_commission_function import (
     get_commission_demand_and_reward,
     process_commission_text,
 )
-from Script.Modules.domains import facility
+from Script.Modules.domains import commission, facility, location
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -132,7 +132,7 @@ class Field_Commission_Panel:
             line.draw()
 
             # 获取当前国家的委托列表
-            now_country_id = cache.rhodes_island.current_location[0]
+            now_country_id = location.country()
             if now_country_id in game_config.config_commission_id_by_country:
                 now_country_commision_list = (
                     game_config.config_commission_id_by_country[now_country_id]
@@ -174,21 +174,17 @@ class Field_Commission_Panel:
                     if (
                         commision_data.related_id != -1
                         and commision_data.related_id
-                        not in cache.rhodes_island.finished_field_commissions_set
+                        not in commission.finished()
                     ):
                         continue
                     # 特殊外勤只能接受一次
                     if (
                         commision_data.special != 0
-                        and commision_id
-                        in cache.rhodes_island.finished_field_commissions_set
+                        and commision_id in commission.finished()
                     ):
                         continue
                     # 跳过已经关闭的委托
-                    if (
-                        commision_id
-                        in cache.rhodes_island.shut_down_field_commissions_set
-                    ):
+                    if commision_id in commission.shut_down():
                         continue
                     # 跳过等级大于设施等级+1的委托
                     if commision_data.level > facility.level(14) + 1:
@@ -286,13 +282,10 @@ class CommissionDraw:
         commission_name = commission_data.name
 
         # 未完成的委托前面加星号
-        if (
-            self.commission_id
-            not in cache.rhodes_island.finished_field_commissions_set
-        ):
+        if self.commission_id not in commission.finished():
             commission_name = "⭐" + commission_name
 
-        if self.commission_id in cache.rhodes_island.ongoing_field_commissions:
+        if self.commission_id in commission.ongoing():
             commission_name += _("（进行中）")
 
         commission_name = attr_calculation.pad_display_width(
@@ -331,10 +324,7 @@ class CommissionDraw:
 
         # 可以进行的，绘制为按钮
         commision_draw: draw.LeftButton | draw.NormalDraw
-        if (
-            self.commission_id
-            not in cache.rhodes_island.ongoing_field_commissions
-        ):
+        if self.commission_id not in commission.ongoing():
             commision_draw = draw.LeftButton(
                 commision_text,
                 "\n" + commission_data.name,  # 返回时不带星号
@@ -368,10 +358,7 @@ class CommissionDraw:
         commision_name = commision_data.name
 
         # 委托介绍的名称加星号
-        if (
-            commision_id
-            not in cache.rhodes_island.finished_field_commissions_set
-        ):
+        if commision_id not in commission.finished():
             commision_name = "⭐" + commision_name
 
         commision_level = str(commision_data.level)
@@ -1237,10 +1224,8 @@ class CommissionDraw:
         else:
             self.send_vehicle_dict[vehicle_id] += 1
         # 最大不会超过可派遣数量
-        vehicle_count = (
-            cache.rhodes_island.vehicles[vehicle_id][0]
-            - cache.rhodes_island.vehicles[vehicle_id][1]
-        )
+        owned, out = commission.vehicles()[vehicle_id]
+        vehicle_count = owned - out
         if self.send_vehicle_dict[vehicle_id] > vehicle_count:
             self.send_vehicle_dict[vehicle_id] = vehicle_count
 
@@ -1303,9 +1288,9 @@ class CommissionDraw:
         # 结算派遣的载具
         now_vehicle_list = []
         for vehicle_id in self.send_vehicle_dict:
-            cache.rhodes_island.vehicles[vehicle_id][
-                1
-            ] += self.send_vehicle_dict[vehicle_id]
+            commission.add_vehicle(
+                vehicle_id, out=self.send_vehicle_dict[vehicle_id]
+            )
             for __ in range(self.send_vehicle_dict[vehicle_id]):
                 now_vehicle_list.append(vehicle_id)
 
@@ -1336,11 +1321,12 @@ class CommissionDraw:
             new_day = commision_time
 
         # 添加到进行中的委托
-        cache.rhodes_island.ongoing_field_commissions[commision_id] = [
+        commission.start(
+            commision_id,
             self.send_npc_list,
             new_time_by_speed,
             now_vehicle_list,
-        ]
+        )
 
         # 绘制委托信息
         draw_text = ""
@@ -1386,12 +1372,9 @@ class CommissionDraw:
             info_draw_2.width = self.width
             info_draw_2.draw()
 
-            for vehicle_cid in cache.rhodes_island.vehicles:
+            for vehicle_cid, (owned, out) in commission.vehicles().items():
                 # 如果没有可以派遣的载具，则不绘制
-                vehicle_count = (
-                    cache.rhodes_island.vehicles[vehicle_cid][0]
-                    - cache.rhodes_island.vehicles[vehicle_cid][1]
-                )
+                vehicle_count = owned - out
                 if vehicle_count <= 0:
                     continue
 

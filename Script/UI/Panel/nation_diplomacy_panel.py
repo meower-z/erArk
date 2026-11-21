@@ -14,7 +14,7 @@ from Script.Design import attr_calculation, handle_ability
 import random
 from Script.Design import game_time
 from Script.Modules.save_load import reset
-from Script.Modules.domains import facility, medical
+from Script.Modules.domains import facility, location, medical
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -200,7 +200,7 @@ def settle_all_country_infection_rate() -> None:
     # 本周所有国家感染率总和
     this_week_all_country_infection_rate = 0.0
     # 当前所在国家
-    now_country = cache.rhodes_island.current_location[0]
+    now_country = location.country()
     now_country_change = 0.0
     count = 0
     for country_id in game_config.config_birthplace:
@@ -395,8 +395,7 @@ class Nation_Diplomacy_Panel:
                 # 获取当前位置的势力列表
                 if (
                     self.now_panel == _("国家及附属势力")
-                    and nation_data.country
-                    == cache.rhodes_island.current_location[0]
+                    and nation_data.country == location.country()
                 ):
                     now_lacation_nation_list.append(cid)
                 all_nation_list.append(cid)
@@ -762,7 +761,7 @@ class Nation_Diplomacy_Panel:
                     now_time=game_time.now(),
                 )
             # 根据是本地还是外派，赋予对应的二段行为结算
-            if cache.rhodes_island.current_location[0] == country_id:
+            if location.country() == country_id:
                 second_behavior.character_get_second_behavior(
                     old_diplomat_id, "relieved_of_diplomat_local"
                 )
@@ -782,7 +781,7 @@ class Nation_Diplomacy_Panel:
             )[0] = character_id
             new_diplomat_chara_data.sp_flag.in_diplomatic_visit = country_id
             # 根据是本地还是外派，赋予对应的二段行为结算
-            if cache.rhodes_island.current_location[0] == country_id:
+            if location.country() == country_id:
                 second_behavior.character_get_second_behavior(
                     character_id, "appoinnted_as_diplomat_local"
                 )

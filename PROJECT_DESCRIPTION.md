@@ -431,7 +431,7 @@ Script/
 - `NpcTem`：角色模板（能力/经验/素质/服装/基础属性）
 - `Map` / `MapDraw` / `MapDrawLine` / `MapDrawText`：AA 地图与绘制
 - `Scene`：场景路径、名字、室内外、家具、门、面积、标签、角色列表、图片
-- `Rhodes_Island`：宿舍、医疗、仓库、外交、囚犯、收入等（设施等级、待开放设施的开放情况与基地效率在 GameState 的全局键 `base.facility_level`、`base.facility_open` 与 `base.effectiveness` 里。读写它们用 `Modules/domains/facility.py`。各岗位的干员名册与监狱长在全局键 `base.work` 与 `base.warden` 里，用 `work.roster(岗位id)` 与 `work.warden()` 读。生产线、工人名单与食堂货架在全局键 `base.production` 与 `base.dining_hall` 里，分别用 `Modules/domains/production.py` 与 `Modules/domains/kitchen.py` 读写）
+- `Rhodes_Island`：宿舍、医疗、仓库、外交、囚犯、收入等（设施等级、待开放设施的开放情况与基地效率在 GameState 的全局键 `base.facility_level`、`base.facility_open` 与 `base.effectiveness` 里。读写它们用 `Modules/domains/facility.py`。各岗位的干员名册与监狱长在全局键 `base.work` 与 `base.warden` 里，用 `work.roster(岗位id)` 与 `work.warden()` 读。生产线、工人名单与食堂货架在全局键 `base.production` 与 `base.dining_hall` 里，分别用 `Modules/domains/production.py` 与 `Modules/domains/kitchen.py` 读写。外勤委托与载具表在全局键 `base.commission` 与 `base.vehicles` 里，用 `Modules/domains/commission.py` 读写。访客、上次随机来访的时刻、邀请与移动标记在全局键 `base.visitor` 里，用 `Modules/domains/visitor.py` 读写。访客上限不存下，由 `visitor.capacity()` 按已开放的客房算出。罗德岛所在的国家与移动在全局键 `base.location` 里，用 `Modules/domains/location.py` 读写）
 - `Country`：势力外交数据
 - `CharacterStatusChange` / `TargetChange`：结算数值变更累积器
 - `DIRTY`, `PREGNANCY`, `RELATIONSHIP`, `HYPNOSIS`, `CLOTH`, `BODY_H_STATE`, `FIRST_RECORD`, `ACTION_INFO`, `AUTHOR_FLAG` 等：角色各领域状态容器
@@ -637,6 +637,7 @@ init_character_behavior()
 - 寻路：`map_config` 在加载地图时用 `Script/Core/dijkstra.py` 预计算各节点最短路存入 `Map.sorted_path`；运行时由 `map_handle.get_path_finding()` 直接查询
 - 场景可达性、门/锁判定、场景内角色列表、场景满员
 - 导航面板：`Script/UI/Panel/navigation_panel.py`、`see_map_panel.py`
+- 罗德岛所在的国家与移动：GameState 的全局键 `base.location`，用 `Script/Modules/domains/location.py` 读写
 
 ---
 
@@ -654,12 +655,12 @@ init_character_behavior()
 | 工业生产/流水线 | `UI/Panel/manage_assembly_line_panel.py`, `Modules/domains/production.py` | `ProductFormula.csv` |
 | 资源交易 | `UI/Panel/resource_exchange_panel.py`, `Modules/domains/economy.py`, `Modules/domains/warehouse.py` | `Resource.csv`, `Restaurant.csv` |
 | 装备维护 | `UI/Panel/equipmen_panel.py` | `Equipment_*` 系列 |
-| 载具管理 | `UI/Panel/manage_vehicle_panel.py` | `Vehicle.csv` |
+| 载具管理 | `UI/Panel/manage_vehicle_panel.py`, `Modules/domains/commission.py` | `Vehicle.csv` |
 | 宿舍管理 | `System/Dormitory_System/*` | 宿舍场景地图 |
 | 医疗经营 | `System/Medical_System/*`, `Modules/domains/medical.py`, `Modules/domains/medical_patient.py` | `Medical_*` 系列 |
-| 外勤委托 | `System/Field_Commission_System/*` | `Commission.csv` |
+| 外勤委托 | `System/Field_Commission_System/*`, `Modules/domains/commission.py` | `Commission.csv` |
 | 招募 | `UI/Panel/recruit_panel.py` | `Recruitment_Strategy.csv` |
-| 邀请访客 | `UI/Panel/invite_visitor_panel.py` | 访客设施 |
+| 邀请访客 | `UI/Panel/invite_visitor_panel.py`, `Modules/domains/visitor.py` | 访客设施 |
 | 势力外交 | `UI/Panel/nation_diplomacy_panel.py` | `Nation.csv`, `Diplomatic_Policy.csv` |
 | 助理 | `UI/Panel/assistant_panel.py` | `AssistantServices.csv` |
 | 全干员位置/召集 | `UI/Panel/all_npc_position_panel.py` | 角色位置 |

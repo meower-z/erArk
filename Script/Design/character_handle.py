@@ -18,7 +18,7 @@ from Script.Design import (
     game_time,
 )
 from Script.Config import game_config, character_config, normal_config
-from Script.Modules.domains import facility, needs
+from Script.Modules.domains import facility, needs, visitor
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -297,7 +297,7 @@ def get_new_character(character_id: int, visitor_flag: bool = False) -> None:
         end_time = game_time.get_sub_date(
             day=stay_days, old_date=game_time.now()
         )
-        cache.rhodes_island.visitor_info[character_id] = end_time
+        visitor.arrive(character_id, end_time)
         # 赋予访客flag
         character_data.sp_flag.vistor = 1
     else:

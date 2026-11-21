@@ -16,11 +16,13 @@ from Script.Design import attr_calculation, character_handle, child_stage_gate
 from typing import TYPE_CHECKING, TypedDict
 from Script.Design import game_time
 from Script.Modules.domains import (
+    commission,
     economy,
     medical,
     needs,
     power,
     production,
+    visitor,
     work,
 )
 from Script.Modules.save_load import upgrade
@@ -484,22 +486,8 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
 
         economy.remap_traders(old_to_new_id)
 
-        # visitor_info (Dict[int, datetime])
-        if hasattr(ri, "visitor_info"):
-            old_visitors = ri.visitor_info.copy()
-            ri.visitor_info = {}
-            for old_id, value in old_visitors.items():
-                new_id = old_to_new_id.get(old_id, old_id)
-                ri.visitor_info[new_id] = value
-
-        # invite_visitor
-        if hasattr(ri, "invite_visitor") and ri.invite_visitor:
-            ri.invite_visitor[0] = normalize_single_character_id(
-                ri.invite_visitor[0], 0
-            )
-            ri.invite_visitor[0] = old_to_new_id.get(
-                ri.invite_visitor[0], ri.invite_visitor[0]
-            )
+        # 访客、邀请目标与外勤委托的队伍里的角色id
+        _remap_visitor_and_commission(old_to_new_id)
 
         # diplomat_of_country (Dict[int, List])
         if hasattr(ri, "diplomat_of_country"):
@@ -508,12 +496,6 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
                     data[0] = normalize_single_character_id(data[0], 0)
                 if len(data) > 0 and data[0] != 0:
                     data[0] = old_to_new_id.get(data[0], data[0])
-
-        # ongoing_field_commissions (Dict[int, List])
-        if hasattr(ri, "ongoing_field_commissions"):
-            for _commission_id, data in ri.ongoing_field_commissions.items():
-                if len(data) > 0 and isinstance(data[0], list):
-                    data[0] = [old_to_new_id.get(oid, oid) for oid in data[0]]
 
         # current_prisoners (Dict[int, List])
         if hasattr(ri, "current_prisoners"):
@@ -1382,21 +1364,8 @@ def migrate_character_replacement(
 
         economy.remap_traders(old_to_new_id_map)
 
-        # visitor_info
-        if hasattr(ri, "visitor_info") and ri.visitor_info:
-            old_visitors = ri.visitor_info.copy()
-            ri.visitor_info = {}
-            for oid, value in old_visitors.items():
-                ri.visitor_info[old_to_new_id_map.get(oid, oid)] = value
-
-        # invite_visitor
-        if hasattr(ri, "invite_visitor") and ri.invite_visitor:
-            ri.invite_visitor[0] = normalize_single_character_id(
-                ri.invite_visitor[0], 0
-            )
-            ri.invite_visitor[0] = old_to_new_id_map.get(
-                ri.invite_visitor[0], ri.invite_visitor[0]
-            )
+        # 访客、邀请目标与外勤委托的队伍里的角色id
+        _remap_visitor_and_commission(old_to_new_id_map)
 
         # diplomat_of_country
         if hasattr(ri, "diplomat_of_country") and ri.diplomat_of_country:
@@ -1405,17 +1374,6 @@ def migrate_character_replacement(
                     data[0] = normalize_single_character_id(data[0], 0)
                 if len(data) > 0 and data[0] != 0:
                     data[0] = old_to_new_id_map.get(data[0], data[0])
-
-        # ongoing_field_commissions
-        if (
-            hasattr(ri, "ongoing_field_commissions")
-            and ri.ongoing_field_commissions
-        ):
-            for _commission_id, data in ri.ongoing_field_commissions.items():
-                if len(data) > 0 and isinstance(data[0], list):
-                    data[0] = [
-                        old_to_new_id_map.get(oid, oid) for oid in data[0]
-                    ]
 
         # current_prisoners
         if hasattr(ri, "current_prisoners") and ri.current_prisoners:
@@ -2413,10 +2371,11 @@ def _clear_young_child_reference(
         for chara_id in young_child_id_set & set(chara_key_dict):
             del chara_key_dict[chara_id]
             count += 1
-    for commission_data in rhodes_island.ongoing_field_commissions.values():
-        if isinstance(commission_data, list) and commission_data:
-            count += _discard_id(commission_data[0], young_child_id_set)
-    count += _cancel_empty_field_commission(rhodes_island)
+    for commission_id, one in commission.ongoing().items():
+        team = list(one.team)
+        count += _discard_id(team, young_child_id_set)
+        commission.set_team(commission_id, team)
+    count += _cancel_empty_field_commission()
     for class_data in rhodes_island.temp_sex_class.values():
         if isinstance(class_data, dict):
             count += _discard_id(
@@ -2438,37 +2397,38 @@ def _clear_young_child_reference(
     return count
 
 
-def _cancel_empty_field_commission(
-    rhodes_island: game_type.Rhodes_Island,
-) -> int:
+def _cancel_empty_field_commission() -> int:
     """
-    取消没有成员的外勤委托：从进行中的委托里移除，派出的载具收回
-    Keyword arguments:
-    rhodes_island -- 存档里的罗德岛数据
+    取消没有成员的外勤委托，写进当前缓冲区。游戏里没有取消委托的流程，这里只做完成结算里的两步：
+    派出且在载具表里的载具每辆外勤中数减 1，委托从进行中的委托里删掉。
+    奖励、已完成、成就、招募与损坏都不结算，派遣时扣的资源不退
     Return arguments:
-    int -- 改动的项数
-    功能: 游戏里没有取消委托的流程，这里只做完成结算 judge_field_commission_finish 里收回载具与移除委托的两步：
-          载具按 settle_vehicle 不损坏时的做法，每辆的派出数减1；委托从 ongoing_field_commissions 移除。
-          奖励、计入已完成、成就、招募、载具损坏与装备损坏都不结算，派遣时扣掉的资源不退
+    int -- 改动的项数：收回的载具数加删掉的委托数
     """
     count = 0
-    for commission_id, commission_data in list(
-        rhodes_island.ongoing_field_commissions.items()
-    ):
-        if (
-            not isinstance(commission_data, list)
-            or not commission_data
-            or commission_data[0]
-        ):
+    for commission_id, one in commission.ongoing().items():
+        if one.team:
             continue
-        vehicle_id_list = commission_data[2] if len(commission_data) > 2 else []
-        for vehicle_id in vehicle_id_list:
-            if vehicle_id in rhodes_island.vehicles:
-                rhodes_island.vehicles[vehicle_id][1] -= 1
+        for vehicle_id in one.vehicles:
+            if vehicle_id in commission.vehicles():
+                commission.add_vehicle(vehicle_id, out=-1)
                 count += 1
-        del rhodes_island.ongoing_field_commissions[commission_id]
+        commission.finish(commission_id)
         count += 1
     return count
+
+
+def _remap_visitor_and_commission(old_to_new_id: dict[int, int]) -> None:
+    """
+    角色换id时调用。邀请目标先按 normalize_single_character_id 归一成 int。
+    随后访客、邀请目标与进行中的外勤委托的队伍里的旧id换成新id，写进当前缓冲区
+    Keyword arguments:
+    old_to_new_id -- 旧id到新id，表里没有的id不变
+    """
+    target, progress = visitor.invite()
+    visitor.set_invite(normalize_single_character_id(target, 0), progress)
+    visitor.remap(old_to_new_id)
+    commission.remap(old_to_new_id)
 
 
 def _take_young_child_off_line(
