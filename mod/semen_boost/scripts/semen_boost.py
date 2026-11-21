@@ -184,6 +184,7 @@ def modded_common_ejaculation() -> tuple[str, int]:
         semen_count:  射精量
     """
     from Script.Design import handle_premise, handle_ability
+    from Script.Modules.domains import tallies
 
     character_data = cache.character_data[0]
 
@@ -282,7 +283,7 @@ def modded_common_ejaculation() -> tuple[str, int]:
     character_data.dirty.penis_dirty_dict["semen"] = (
         True  # 更新阴茎精液污浊状态
     )
-    cache.rhodes_island.total_semen_count += semen_count  # 更新总精液量
+    tallies.add(tallies.SEMEN, semen_count)  # 更新总精液量
     character_data.h_state.endure_not_shot_count = 0  # 清零忍住不射次数
 
     # 优先扣除临时额外精液值，不够的再扣除基础精液值

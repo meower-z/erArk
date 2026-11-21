@@ -50,7 +50,7 @@ from Script.Settle.common_default import (
 from Script.Settle.item_effect import *
 from Script.Modules.domains import achievement, facility, history, medical
 from Script.Modules.domains import modes, needs, official, recruit, visitor
-from Script.Modules.domains import warehouse
+from Script.Modules.domains import fridge, warehouse
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -7674,12 +7674,7 @@ def handle_milk_add_adjust(
 
     now_milk = int(needs.of(character_data.target_character_id)["milk"])
     character_data.behavior.milk_ml += now_milk
-    cache.rhodes_island.milk_in_fridge.setdefault(
-        character_data.target_character_id, 0
-    )
-    cache.rhodes_island.milk_in_fridge[
-        character_data.target_character_id
-    ] += now_milk
+    fridge.add(fridge.MILK, character_data.target_character_id, now_milk)
     pl_character_data.pl_collection.milk_total.setdefault(
         character_data.target_character_id, 0
     )

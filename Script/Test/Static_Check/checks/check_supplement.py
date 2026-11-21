@@ -286,9 +286,9 @@ def check_used_extra_warehouse_capacity_module_non_negative() -> (
     返回值: List[CheckFailure]: 失败记录列表
     功能:
         来源: NO-05（只取独立于NUM-26的后半式）。校验base.warehouse_modules（warehouse.extra_modules()）
-        类型为int且不小于0。basement.update_facility_limits按 仓储区设施效果+模块数*200 算warehouse_capacity，
-        装配线结算每产出一个模块把容量加200。负数没有玩法语义，会把容量往下扣，
-        可能在基础容量仍足够大时绕过NUM-26的warehouse_capacity>=0检查。使用type(v) is int以拒绝bool
+        类型为int且不小于0。warehouse.capacity()按 仓储区设施效果+模块数*200 算仓库容量，
+        装配线结算每产出一个模块，模块数加1，容量随之多200。负数没有玩法语义，会把容量往下扣，
+        可能在基础容量仍足够大时绕过NUM-26的warehouse.capacity()>=0检查。使用type(v) is int以拒绝bool
     """
     cache = cache_control.cache
     ri = getattr(cache, "rhodes_island", None)
@@ -302,7 +302,6 @@ def check_used_extra_warehouse_capacity_module_non_negative() -> (
                 "仓储扩展模块使用数非负",
                 (
                     f"base.warehouse_modules={used}，类型或值不满足type是int且>=0；"
-                    f"warehouse_capacity={getattr(ri, 'warehouse_capacity', None)}，"
                     f"facility_level[3]={facility.levels().get(3)}"
                 ),
                 [],

@@ -177,7 +177,7 @@ def init_medical_department_data(
         )
 
     # 依据当前配置重新计算床位上限并同步旧计数器。
-    rhodes_island.medical_bed_limit = medical_core._calculate_medical_bed_limit(
+    medical.state().bed_limit = medical_core._calculate_medical_bed_limit(
         rhodes_island
     )
 
@@ -380,7 +380,7 @@ def settle_medical_department(
 
     # 结算完成后刷新病人列表，使用更新后的收费系数。
     refresh_medical_patients(target_base=rhodes_island)
-    rhodes_island.medical_bed_limit = medical_core._calculate_medical_bed_limit(
+    medical.state().bed_limit = medical_core._calculate_medical_bed_limit(
         rhodes_island
     )
 

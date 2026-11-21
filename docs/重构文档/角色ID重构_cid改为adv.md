@@ -1227,7 +1227,7 @@ npc_tem_data\[i\]
 | `main_power_facility_operator_ids` | Dict[int, Set[int]] | **List[int]** | ✅已修复 |
 | `maintenance_place` | Dict[str, int] | **Dict[int, str]** (键是角色id，值是地点) | ✅已修复 |
 | `equipment_maintain_operator_ids` | Dict[str, Set[int]] | **List[int]** | ✅已修复 |
-| `milk_in_fridge` | Dict[int, List] | **Dict[int, int]** | ✅已修复 |
+| `milk_in_fridge` | Dict[int, List] | **Dict[int, int]**（这份数据在全局键 `base.fridge` 的 milk 表里，换id时由 `fridge.remap` 映射） | ✅已修复 |
 
 ## 附录A：完整需要迁移的角色ID字段清单
 
@@ -1268,7 +1268,7 @@ npc_tem_data\[i\]
 | `maintenance_place` | Dict[int, str] | 当前每个角色的待检修地点，角色id:地点 |
 | `equipment_maintain_operator_ids` | List[int] | 手动选择的装备维护对象干员id列表 |
 | `maintenance_equipment_chara_id` | Dict[int, int] | 维护装备角色ID映射 |
-| `milk_in_fridge` | Dict[int, int] | 冰箱母乳-干员ID |
+| `base.fridge["milk"]` | Dict[str, int] | 冰箱 milk 表里的干员ID。存在 GameState 的全局数据里，换id时由 `fridge.remap` 映射 |
 | `medical_clinic_doctor_ids` | List[int] | 诊所医生ID列表 |
 | `medical_hospital_doctor_ids` | List[int] | 医院医生ID列表 |
 | `base.book_holders[书籍id]` | int | 书籍借出人ID。存在 GameState 的全局数据里，换id时由 `library.remap` 映射 |
@@ -1286,7 +1286,7 @@ npc_tem_data\[i\]
 | `base.production["green_house"]["workers"]` | List[int] | 温室种植员ID列表。存在 GameState 的全局数据里，换id时由 `production.remap` 映射 |
 | `current_warden_id` | int | 监狱长ID |
 | `current_prisoners` | Dict[int, List] | 囚犯ID字典 |
-| `urine_in_fridge` | Dict[int, int] | 圣水-干员ID |
+| `base.fridge["urine"]` | Dict[str, int] | 冰箱 urine 表里的干员ID。存在 GameState 的全局数据里，换id时由 `fridge.remap` 映射 |
 | `today_physical_examination_chara_id_dict` | Dict[int, set] | 今日体检干员ID |
 | `examined_operator_ids` | Set[int] | 已体检干员ID集合 |
 | `waiting_for_exam_operator_ids` | Set[int] | 等待体检干员ID集合 |

@@ -17,7 +17,7 @@ from Script.Design import handle_premise
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.System.Pregnancy_System import pregnancy_constant
-from Script.Modules.domains import playthrough
+from Script.Modules.domains import entertainment, playthrough
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -666,9 +666,7 @@ def replace_entertainment_for_eggs(character_id: int) -> None:
         return
     # 派对日全时段为派对娱乐，跳过
     week_day = game_time.now().weekday()
-    if hasattr(
-        cache.rhodes_island, "party_day_of_week"
-    ) and cache.rhodes_island.party_day_of_week.get(week_day, 0):
+    if entertainment.party_days().get(week_day, 0):
         return
     # 幼女离线，不进行照料卵
     if handle_premise.handle_self_is_child(character_id):

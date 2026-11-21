@@ -184,7 +184,7 @@ class Manage_Basement_Panel:
                 all_info_draw.text = ""
                 all_info_draw.text += _(
                     " 当前仓库容量（单资源存放上限）：{0}\n\n"
-                ).format(cache.rhodes_island.warehouse_capacity)
+                ).format(warehouse.capacity())
                 all_info_draw.width = self.width
                 all_info_draw.draw()
 
@@ -1332,7 +1332,7 @@ class Manage_Basement_Panel:
             elif department == _("宿舍区"):
                 npc_count = str(len(cache.npc_id_got))
                 now_text += _("\n  干员总数/宿舍容量：{0}/{1}").format(
-                    npc_count, cache.rhodes_island.people_max
+                    npc_count, facility.people_max()
                 )
                 now_text += common.get_dormitory_occupants_text()
                 now_text += "\n"

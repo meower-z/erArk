@@ -4,7 +4,7 @@ from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Config import game_config
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import modes
+from Script.Modules.domains import entertainment, modes
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -50,7 +50,7 @@ def handle_not_live_inlove_hotel(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    if cache.rhodes_island.love_hotel_room_lv == 0:
+    if entertainment.hotel_room() == 0:
         return 1
     return 0
 
@@ -64,7 +64,7 @@ def handle_live_inlove_hotel(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    if cache.rhodes_island.love_hotel_room_lv > 0:
+    if entertainment.hotel_room() > 0:
         return 1
     return 0
 
@@ -78,7 +78,7 @@ def handle_love_hotel_room_v1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    if cache.rhodes_island.love_hotel_room_lv == 1:
+    if entertainment.hotel_room() == 1:
         return 1
     return 0
 
@@ -92,7 +92,7 @@ def handle_love_hotel_room_v2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    if cache.rhodes_island.love_hotel_room_lv == 2:
+    if entertainment.hotel_room() == 2:
         return 1
     return 0
 
@@ -106,7 +106,7 @@ def handle_love_hotel_room_v3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    if cache.rhodes_island.love_hotel_room_lv == 3:
+    if entertainment.hotel_room() == 3:
         return 1
     return 0
 

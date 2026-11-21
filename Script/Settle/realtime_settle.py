@@ -24,7 +24,7 @@ from Script.Design import (
 from Script.UI.Moudle import draw
 from Script.UI.Panel import ejaculation_panel
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import facility, modes, needs
+from Script.Modules.domains import entertainment, facility, modes, needs
 from Script.Modules.domains import playthrough, pregnancy
 
 if TYPE_CHECKING:
@@ -73,7 +73,7 @@ def judge_pl_real_time_data() -> None:
     """
 
     pl_character_data: game_type.Character = cache.character_data[0]
-    love_hotel_room_lv = cache.rhodes_island.love_hotel_room_lv
+    love_hotel_room_lv = entertainment.hotel_room()
 
     # 酒店退房时间到了则退房
     if love_hotel_room_lv > 0:
@@ -91,7 +91,7 @@ def judge_pl_real_time_data() -> None:
             )
             now_draw.draw()
             # 结算
-            cache.rhodes_island.love_hotel_room_lv = 0
+            entertainment.set_hotel_room(0)
             pl_character_data.action_info.check_out_time = datetime.datetime(
                 1, 1, 1
             )

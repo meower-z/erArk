@@ -15,10 +15,12 @@ from Script.Modules.domains import (
     diplomacy,
     economy,
     facility,
+    fridge,
     official,
     power,
     production,
     recruit,
+    tallies,
     warehouse,
     work,
 )
@@ -39,19 +41,13 @@ def get_base_zero() -> game_type.Rhodes_Island:
     """
     base_data = game_type.Rhodes_Island()
 
-    # 派对设为空
-    for i in range(7):
-        base_data.party_day_of_week[i] = 0
-
     return base_data
 
 
 def get_base_updata() -> None:
     """
-    遍历基地情况结构体，根据设施等级更新全部数值
+    按各设施的当前等级开放够条件的待开放设施、招募线与生产线。它还按疗养庭院的等级重置计数 tallies.AROMATHERAPY
     """
-    cache = cache_control.cache
-
     # 遍历全设施清单
     for all_cid in game_config.config_facility:
         # 全设施等级设为对应值
@@ -102,36 +98,16 @@ def get_base_updata() -> None:
             # 香薰治疗室
             # 刷新香薰疗愈次数
             if level >= 5:
-                cache.rhodes_island.remaining_aromatherapy_sessions_today = 3
+                tallies.set(tallies.AROMATHERAPY, 3)
             elif level == 4:
-                cache.rhodes_island.remaining_aromatherapy_sessions_today = 2
+                tallies.set(tallies.AROMATHERAPY, 2)
             elif level <= 3:
-                cache.rhodes_island.remaining_aromatherapy_sessions_today = 1
+                tallies.set(tallies.AROMATHERAPY, 1)
         elif facility_name == _("药田"):
             production.open_lines(
                 "herb_garden",
                 [i for i, need in enumerate((0, 3, 4, 5)) if level >= need],
             )
-    update_facility_limits(cache.rhodes_island)
-
-
-def update_facility_limits(base_data: game_type.Rhodes_Island) -> None:
-    """
-    按设施等级与已用的仓储空间扩展模块数，刷新仓库容量与干员人数上限
-    Keyword arguments:
-    base_data -- 要刷新的罗德岛数据
-    """
-    for all_cid, facility_data in game_config.config_facility.items():
-        level = facility.level(all_cid)
-        effect_cid = game_config.config_facility_effect_data[
-            facility_data.name
-        ][level]
-        effect = game_config.config_facility_effect[effect_cid].effect
-        if facility_data.name == _("仓储区"):
-            extra = warehouse.extra_modules() * 200
-            base_data.warehouse_capacity = effect + extra
-        elif facility_data.name == _("宿舍区"):
-            base_data.people_max = effect
 
 
 def calc_facility_efficiency(facility_cid: int = -1) -> float:
@@ -473,12 +449,10 @@ def settle_milk() -> None:
     all_milk = 0
 
     # 结算冰箱中的母乳
-    for character_id in cache.rhodes_island.milk_in_fridge:
-        now_milk = cache.rhodes_island.milk_in_fridge[character_id]
+    for now_milk in fridge.table(fridge.MILK).values():
         warehouse.add(31, now_milk)
         all_milk += now_milk
-        # print(f"debug {cache.character_data[character_id].name}的母乳（{now_milk}ml）已转化为罗德岛的母乳")
-    cache.rhodes_island.milk_in_fridge = {}
+    fridge.clear(fridge.MILK)
 
     # 结算所有角色携带的母乳
     chara_id_list = list(cache.character_data.keys())
@@ -506,13 +480,13 @@ def settle_milk() -> None:
         now_draw.draw()
 
     # 检测是否超出仓库容量上限
-    if warehouse.amount(31) > cache.rhodes_island.warehouse_capacity:
-        warehouse.set(31, cache.rhodes_island.warehouse_capacity)
+    if warehouse.amount(31) > warehouse.capacity():
+        warehouse.set(31, warehouse.capacity())
         now_draw = draw.WaitDraw()
         now_draw.width = window_width
         now_draw.text = _(
             "\n由于仓库容量不足，【鲜母乳】已达上限数量{0}\n"
-        ).format(cache.rhodes_island.warehouse_capacity)
+        ).format(warehouse.capacity())
         now_draw.draw()
 
 
@@ -521,9 +495,9 @@ def settle_semen() -> None:
     结算精液转化
     """
 
-    today_semen = cache.rhodes_island.total_semen_count
+    today_semen = tallies.get(tallies.SEMEN)
     warehouse.add(12, today_semen)
-    cache.rhodes_island.total_semen_count = 0
+    tallies.set(tallies.SEMEN, 0)
 
     # 输出提示信息
     if today_semen:
@@ -535,13 +509,13 @@ def settle_semen() -> None:
         now_draw.draw()
 
     # 检测是否超出仓库容量上限
-    if warehouse.amount(12) > cache.rhodes_island.warehouse_capacity:
-        warehouse.set(12, cache.rhodes_island.warehouse_capacity)
+    if warehouse.amount(12) > warehouse.capacity():
+        warehouse.set(12, warehouse.capacity())
         now_draw = draw.WaitDraw()
         now_draw.width = window_width
         now_draw.text = _(
             "\n由于仓库容量不足，【矿石病药材】已达上限数量{0}\n"
-        ).format(cache.rhodes_island.warehouse_capacity)
+        ).format(warehouse.capacity())
         now_draw.draw()
 
 
@@ -613,30 +587,29 @@ def settle_pink_certificate() -> None:
     """
 
     # 根据好感度结算粉红凭证增加
-    pink_certificate_add = int(
-        cache.rhodes_island.total_favorability_increased / 100
-    )
-    pink_certificate_add = max(pink_certificate_add, 0)
+    favorability = tallies.get(tallies.FAVORABILITY)
+    fallen = tallies.get(tallies.FALLEN)
+    pink_certificate_add = max(int(favorability / 100), 0)
     warehouse.add(4, pink_certificate_add)
     # 结算陷落角色提供的的粉红凭证
-    warehouse.add(4, cache.rhodes_island.week_fall_chara_pink_certificate_add)
+    warehouse.add(4, fallen)
     # 输出提示信息
     now_draw = draw.WaitDraw()
     now_draw.width = window_width
     now_draw.text = _(
         "\n今日全角色总好感度上升为：{0}，折合为 {1} 粉红凭证\n"
     ).format(
-        int(cache.rhodes_island.total_favorability_increased),
+        int(favorability),
         pink_certificate_add,
     )
-    if cache.rhodes_island.week_fall_chara_pink_certificate_add:
+    if fallen:
         now_draw.text += _("本周全陷落角色提供的粉红凭证为：{0}\n").format(
-            cache.rhodes_island.week_fall_chara_pink_certificate_add
+            fallen
         )
     now_draw.draw()
     # 清零计数
-    cache.rhodes_island.total_favorability_increased = 0
-    cache.rhodes_island.week_fall_chara_pink_certificate_add = 0
+    tallies.set(tallies.FAVORABILITY, 0)
+    tallies.set(tallies.FALLEN, 0)
 
 
 def draw_todo() -> None:

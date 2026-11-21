@@ -12,7 +12,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.Design import map_handle, game_time
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import playthrough, warehouse
+from Script.Modules.domains import entertainment, fridge, playthrough, warehouse
 
 panel_info_data: dict[str, object] = {}
 
@@ -350,18 +350,16 @@ class Fridge_Panel:
             now_draw.text = draw_text
             now_draw.draw()
 
-            if len(cache.rhodes_island.milk_in_fridge) == 0:
+            milk_table = fridge.table(fridge.MILK)
+            if len(milk_table) == 0:
                 draw_text = _("\n    当前冰箱里没有母乳\n")
                 now_draw.text = draw_text
                 now_draw.draw()
 
             # 获得冰箱内的乳制品
-            for character_id in cache.rhodes_island.milk_in_fridge:
+            for character_id, character_milk in milk_table.items():
                 character_data = cache.character_data[character_id]
                 character_name = character_data.name
-                character_milk = cache.rhodes_island.milk_in_fridge[
-                    character_id
-                ]
                 draw_text = ("  [{}]{}：{}ml").format(
                     str(character_data.adv).rjust(4, "0"),
                     character_name,
@@ -417,11 +415,9 @@ class Fridge_Panel:
 
         # 创建食物对象，并放进玩家的背包里
         new_food = cooking.create_food("", 1001, 5, character_data.name)
-        new_food.milk_ml = cache.rhodes_island.milk_in_fridge[character_id]
+        # 拿走冰箱里的母乳
+        new_food.milk_ml = fridge.take(fridge.MILK, character_id)
         pl_character_data.food_bag[new_food.uid] = new_food
-
-        # 删除冰箱里的母乳
-        del cache.rhodes_island.milk_in_fridge[character_id]
 
         now_draw = draw.WaitDraw()
         draw_text = _("\n  你将{0}的母乳（{1}ml）放进了背包\n").format(
@@ -434,19 +430,16 @@ class Fridge_Panel:
         """转化母乳为资源【鲜母乳】"""
         character_data = cache.character_data[character_id]
 
-        # 转化母乳为鲜母乳
-        warehouse.add(31, cache.rhodes_island.milk_in_fridge[character_id])
+        # 拿走冰箱里的母乳，转化为鲜母乳
+        milk = fridge.take(fridge.MILK, character_id)
+        warehouse.add(31, milk)
 
         now_draw = draw.WaitDraw()
         draw_text = _("\n  你将{0}的母乳（{1}ml）转化为了【鲜母乳】\n").format(
-            character_data.name,
-            cache.rhodes_island.milk_in_fridge[character_id],
+            character_data.name, milk
         )
         now_draw.text = draw_text
         now_draw.draw()
-
-        # 删除冰箱里的母乳
-        del cache.rhodes_island.milk_in_fridge[character_id]
 
 
 class Order_Hotel_Room_Panel:
@@ -490,7 +483,7 @@ class Order_Hotel_Room_Panel:
             info_draw.draw()
 
             # 如果未预订房间的话直接输出按钮
-            if cache.rhodes_island.love_hotel_room_lv == 0:
+            if entertainment.hotel_room() == 0:
                 room_text_list = [
                     _("标间(2粉红凭证)"),
                     _("情趣主题房(10粉红凭证)"),
@@ -513,7 +506,7 @@ class Order_Hotel_Room_Panel:
             else:
                 room_name = [_("标间"), _("情趣主题房"), _("顶级套房")]
                 draw_text = _("当前已预订{0}，退房时间为{1}日12点\n").format(
-                    room_name[cache.rhodes_island.love_hotel_room_lv - 1],
+                    room_name[entertainment.hotel_room() - 1],
                     cache.character_data[0].action_info.check_out_time.day,
                 )
                 info_draw.text = draw_text
@@ -544,7 +537,7 @@ class Order_Hotel_Room_Panel:
             return
         # 进行结算
         warehouse.add(4, -room_price[room_id])
-        cache.rhodes_island.love_hotel_room_lv = room_id + 1
+        entertainment.set_hotel_room(room_id + 1)
         pl_character_data: game_type.Character = cache.character_data[0]
         pl_character_data.action_info.check_out_time = game_time.get_sub_date(
             day=1, old_date=game_time.now()

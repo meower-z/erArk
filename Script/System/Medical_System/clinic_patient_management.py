@@ -840,7 +840,7 @@ def apply_new_medical_price_ratio(
     medical.state().price_ratio = new_ratio
     medical.state().new_price_ratio = 0.0
     # 更新床位上限。
-    rhodes_island.medical_bed_limit = medical_core._calculate_medical_bed_limit(
+    medical.state().bed_limit = medical_core._calculate_medical_bed_limit(
         rhodes_island
     )
     return True

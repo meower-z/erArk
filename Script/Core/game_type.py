@@ -1437,10 +1437,6 @@ class Rhodes_Island:
 
     def __init__(self) -> None:
         """初始化罗德岛相关属性对象"""
-        self.people_max: int = 0
-        """ 干员人数上限 """
-        self.party_day_of_week: dict[int, int] = {}
-        """ 一周内的派对计划，周一0~周日6:娱乐id """
         self.class_schedule: dict[str, dict[int, dict[int, list]]] = {}
         """ 全局课表（Plan 22） 键str:教室场景名(如"理论教室一") 值dict:{星期int(0~6): {节次int(0~8): [科目能力id int,
         授课教师id int]}}
@@ -1460,12 +1456,6 @@ class Rhodes_Island:
         self.child_schedule_template: dict[int, dict] = {}
         """ 孩子日程模板（Plan 22） 键int:模板编号 值dict:{"name": 模板名str, "slot": {时段int(0~2): 活动id int}}
             活动id 复用 Entertainment 配置 id。本期只建字段，写入方在二期 """
-        self.total_favorability_increased: int = 0
-        """ 每日总好感度提升 """
-        self.total_semen_count: int = 0
-        """ 每日总射精量 """
-        self.week_fall_chara_pink_certificate_add: int = 0
-        """ 本周陷落干员提供的粉红凭证总数 """
 
         # 控制中枢
 
@@ -1482,19 +1472,10 @@ class Rhodes_Island:
         """ 当前每个角色正在维护中的装备的所属角色id，角色id:角色id """
 
         # 仓储区
-        self.warehouse_capacity: int = 0
-        """ 仓库容量 """
 
         # 生活娱乐区
-        self.milk_in_fridge: dict[int, int] = {}
-        """ 冰箱里每个干员的当日母乳存量，干员id:母乳ml存量 """
 
         # 医疗部
-        self.medical_bed_limit: int = 0
-        """ 医疗区床位上限（含加成） """
-
-        self.urine_in_fridge: dict[int, int] = {}
-        """ 冷库里每个干员的当日圣水量，干员id:圣水ml存量 """
 
         self.physical_examination_setting: dict[int, int] = {}
         """ 体检设置 设置id:设置值 """
@@ -1514,16 +1495,12 @@ class Rhodes_Island:
         # 训练场
 
         # 贸易区
-        self.love_hotel_room_lv: int = 0
-        """ 在爱情旅馆中的房间级别，0未入住，1标间，2情趣主题房，3顶级套房 """
 
         # 访客区
 
         # 教育区
 
         # 疗养庭院
-        self.remaining_aromatherapy_sessions_today: int = 0
-        """ 今日剩余调香次数 """
 
         # 大浴场
 

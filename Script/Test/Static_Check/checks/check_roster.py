@@ -1079,7 +1079,6 @@ def check_recruited_id_pool_validity() -> list[CheckFailure]:
     """
     cache = cache_control.cache
     cd = cache.character_data
-    ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     for cid in recruit.pending():
@@ -1120,7 +1119,7 @@ def check_recruited_id_pool_validity() -> list[CheckFailure]:
                     "ROSTER-20",
                     "待确认招募名单合法",
                     f"{warn}待确认招募cid={cid} name={c.name!r} adv={c.adv} {'; '.join(problems)}；"
-                    f"len(npc_id_got)={len(cache.npc_id_got)}，people_max={ri.people_max}",
+                    f"len(npc_id_got)={len(cache.npc_id_got)}，people_max={facility.people_max()}",
                     [cid],
                 )
             )

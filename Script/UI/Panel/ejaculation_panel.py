@@ -25,7 +25,7 @@ import random
 
 from Script.UI.Panel import achievement_panel
 from Script.Design import game_time
-from Script.Modules.domains import achievement, modes
+from Script.Modules.domains import achievement, modes, tallies
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -240,12 +240,8 @@ def common_ejaculation() -> tuple[str, int]:
         character_data.dirty.penis_dirty_dict["semen"] = (
             True  # 更新阴茎精液污浊状态
         )
-        cache.rhodes_island.total_semen_count += semen_ml  # 更新总精液量
+        tallies.add(tallies.SEMEN, semen_ml)  # 更新总精液量
         character_data.h_state.endure_not_shot_count = 0  # 清零忍住不射次数
-
-        # # 更新精液值，目前弃用
-        # if semen_count > character_data.semen_point:
-        #     semen_count = character_data.semen_point
 
         # 优先扣除临时额外精液值，不够的再扣除基础精液值
         if character_data.tem_extra_semen_point > semen_ml:

@@ -29,6 +29,7 @@ SMALL: Mapping[str, core.JSON] = {
     "price_ratio": 0.0,
     "new_price_ratio": 0.0,
     "bed_modules": 0,
+    "bed_limit": 0,
     "accumulator": {},
     "surgery_records": (),
     "income_today": 0,
@@ -52,6 +53,7 @@ OLD_NAMES = {
     "medical_price_ratio": "price_ratio",
     "new_medical_price_ratio": "new_price_ratio",
     "used_hospital_bed_modules": "bed_modules",
+    "medical_bed_limit": "bed_limit",
     "medical_inventory_accumulator": "accumulator",
     "medical_surgery_records": "surgery_records",
     "medical_income_today": "income_today",
@@ -96,6 +98,8 @@ class Medical:
     """下次日结算时生效的收费系数，0 表示未调整"""
     bed_modules: int
     """已使用的住院病房基建模块数量"""
+    bed_limit: int
+    """ 住院床位上限。医疗部初始化、日结、新收费系数生效与产出病房模块时按 _calculate_medical_bed_limit 重算 """
     accumulator: dict[int, float]
     """药物扣除累计器，资源id:累计小数"""
     surgery_records: list[dict[str, Any]]
@@ -305,8 +309,8 @@ class PickledPatient:
 
 def adopt_island(loaded_dict: dict[str, Any]) -> None:
     """
-    读档时，罗德岛对象带着医疗部属性（OLD_NAMES 里的，版本 0 到 8 的存档）就把它们写进当前缓冲区的医疗部数据，
-    再从对象上删掉这些属性与 DEAD_FIELDS。对象上没有这些属性时什么也不写
+    读档时，罗德岛对象带着 OLD_NAMES 里的医疗部属性（游戏写的存档里，只有版本 9 之前的带着它们）就把它们写进
+    当前缓冲区的医疗部数据，再从对象上删掉这些属性与 DEAD_FIELDS。对象上没有这些属性时什么也不写
     Keyword arguments:
     loaded_dict -- 存档缓存的属性表
     """

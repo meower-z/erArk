@@ -27,6 +27,7 @@ from Script.Modules.domains import (
     diplomacy,
     dormitory,
     economy,
+    entertainment,
     facility,
     library,
     location,
@@ -307,55 +308,6 @@ def check_island_05_resource_stock() -> list[CheckFailure]:
             )
         ]
     return []
-
-
-@register_check("ISLAND-06", "仓库容量与干员上限是设施等级的派生值")
-def check_island_06_warehouse_and_people_max() -> list[CheckFailure]:
-    """
-    参数:
-        无
-    返回值:
-        List[CheckFailure]: 失败记录列表
-    功能:
-        校验warehouse_capacity == 仓储区(cid 3)当前等级效果 + 已用仓储扩展模块数*200，
-        people_max == 宿舍区(cid 4)当前等级效果。唯一合法漂移窗口是跨版本改配置效果值后、玩家首次打开
-        相关面板之前，效果表本身缺失时退化为跳过
-    """
-    cache = cache_control.cache
-    ri = cache.rhodes_island
-    eff3 = _eff(ri, 3)
-    eff4 = _eff(ri, 4)
-    if eff3 is None or eff4 is None:
-        return []
-    failures = []
-    warehouse_capacity = getattr(ri, "warehouse_capacity", None)
-    used_extra = warehouse.extra_modules()
-    expected_warehouse = eff3 + used_extra * 200
-    if warehouse_capacity != expected_warehouse:
-        failures.append(
-            make_failure(
-                "ISLAND-06",
-                "仓库容量与干员上限是设施等级的派生值",
-                f"ri.warehouse_capacity={warehouse_capacity}，期望值=_eff(3)({eff3})+"
-                f"base.warehouse_modules({used_extra})*200={expected_warehouse}，"
-                f"facility_level[3]={facility.levels().get(3)}，"
-                f"本次读档后是否打开过基建/建造面板需人工排查",
-                [],
-            )
-        )
-    people_max = getattr(ri, "people_max", None)
-    if people_max != eff4:
-        failures.append(
-            make_failure(
-                "ISLAND-06",
-                "仓库容量与干员上限是设施等级的派生值",
-                f"ri.people_max={people_max}，期望值=_eff(4)={eff4}，"
-                f"facility_level[4]={facility.levels().get(4)}，"
-                f"本次读档后是否打开过基建/建造面板需人工排查",
-                [],
-            )
-        )
-    return failures
 
 
 @register_check("ISLAND-07", "已招募干员的岗位id必须合法")
@@ -1018,23 +970,10 @@ def check_island_22_party_day_of_week() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验party_day_of_week必须是dict、键恰为0..6，值为合法娱乐id(0表示无活动)，且同一非零娱乐id不得同时
-        占据两天。isinstance(dict)守卫不可省——debug面板允许把整个party_day_of_week直接替换成一个整数，
-        否则检查器会抛异常而不是给出清晰结论
+        校验一周派对排期（entertainment.party_days()）的键恰为0..6，值为合法娱乐id(0表示无活动)，
+        且同一非零娱乐id不得同时占据两天
     """
-    cache = cache_control.cache
-    ri = cache.rhodes_island
-    party_day_of_week = getattr(ri, "party_day_of_week", None)
-    if not isinstance(party_day_of_week, dict):
-        return [
-            make_failure(
-                "ISLAND-22",
-                "一周派对排期键值合法且同一娱乐不占两天",
-                f"ri.party_day_of_week不是dict，实际类型={type(party_day_of_week).__name__}，"
-                f"cache.debug_mode={getattr(cache, 'debug_mode', '?')}",
-                [],
-            )
-        ]
+    party_day_of_week = entertainment.party_days()
     failures = []
     key_set = set(party_day_of_week)
     if key_set != set(range(7)):
@@ -1147,9 +1086,8 @@ def check_island_24_auto_trade_setting() -> list[CheckFailure]:
         设置字典必须含六个标准键。库存阈值在0..仓库容量，价格百分比在0..300，开关是0/1或True/False。
         开关不能写type(...) is bool：economy.auto_trade把设置过的资源缺的键读成整数0，面板改设置时连这个0一起存回
     """
-    ri = cache_control.cache.rhodes_island
     keys_required = set(economy.AUTO_TRADE_KEYS)
-    warehouse_capacity = getattr(ri, "warehouse_capacity", 0)
+    warehouse_capacity = warehouse.capacity()
     failures = []
     for rid, s in economy.auto_trade_table().items():
         if (
@@ -1190,7 +1128,7 @@ def check_island_24_auto_trade_setting() -> list[CheckFailure]:
                     "ISLAND-24",
                     "自动交易设置键与阈值合法",
                     f"resource_id={rid}({game_config.config_resouce[rid].name})，完整setting字典={s}，"
-                    f"ri.warehouse_capacity={warehouse_capacity}，越界字段={out_of_range}",
+                    f"warehouse.capacity()={warehouse_capacity}，越界字段={out_of_range}",
                     [],
                 )
             )
