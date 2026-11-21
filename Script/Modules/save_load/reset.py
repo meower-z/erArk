@@ -133,6 +133,9 @@ STEPS: tuple[ResetStep, ...] = (
     ResetStep(
         "project", frozenset({"load", "new_round", "new_game"}), _project
     ),
+    ResetStep(
+        "reconcile_projected", frozenset({"load"}), _reconcile_roster_data
+    ),
     ResetStep("repair_installed", frozenset({"load"}), _repair_installed),
     ResetStep("repairs", frozenset({"load"}), _repairs_registered),
     ResetStep(

@@ -1537,10 +1537,6 @@ class Character:
         """ 角色id """
         self.name: str = ""
         """ 角色名字 """
-        self.nick_name: str = ""
-        """ 他人对自己的称呼 """
-        self.nick_name_to_pl: str = ""
-        """ 自己对玩家的称呼 """
         self.sex: int = 0
         """ 角色性别 """
         # self.age: int = 18
@@ -1571,12 +1567,6 @@ class Character:
         # """ 角色所持金钱数据 """
         self.position: list[str] = ["0", "0"]
         """ 角色当前坐标数据 """
-        self.officeroom: list[str] = []
-        """ 角色所属办公室坐标 """
-        self.dormitory: str = ""
-        """ 角色宿舍坐标 """
-        self.permanent_dormitory: str = ""
-        """ 角色的登记宿舍坐标：临时住进特殊房间期间记录其原普通宿舍；住在普通宿舍时恒为空 """
         self.birthday: datetime.datetime = datetime.datetime(1, 1, 1)
         """ 角色生日数据 """
         # self.chest_tem: int = 0
@@ -1585,10 +1575,6 @@ class Character:
         # """ 角色社交关系数据 关系类型:角色id集合 """
         # self.social_contact_data: Dict[int, int] = {}
         # """ 角色社交关系数据 角色id:关系类型 """
-        self.favorability: dict[int, int] = {}
-        """ 角色好感度数据 角色id:好感度 """
-        self.trust: float = 0
-        """ 角色信赖度数据 """
         self.target_character_id: int = 0
         """ 角色当前交互对象id """
         self.adv: int = 0
@@ -1597,28 +1583,12 @@ class Character:
         # """ 是否不想穿衣服 """
         self.dead: bool = False
         """ 角色已死亡 """
-        self.collection_character: set = set()
-        """ 收藏的角色列表 """
         self.profession: int = 0
         """ 角色职业 """
         self.race: int = 0
         """ 角色种族 """
         self.token_text: str = ""
         """ 角色信物文本 """
-        self.assistant_character_id: int = 0
-        """ 助理角色id """
-        self.chara_setting: dict[int, int] = {}
-        """ 角色的个人设置 """
-        self.assistant_services: dict[int, int] = {}
-        """ 角色作为助理的情况 """
-        self.work: CHARA_WORK = CHARA_WORK()
-        """ 角色的工作情况 """
-        self.entertainment: CHARA_ENTERTAINMENT = CHARA_ENTERTAINMENT()
-        """ 角色的娱乐与兴趣情况 """
-        self.relationship: RELATIONSHIP = RELATIONSHIP()
-        """ 角色的社会关系 """
-        self.author_flag: AUTHOR_FLAG = AUTHOR_FLAG()
-        """ 角色口上作者变量 """
 
 
 class Cache:

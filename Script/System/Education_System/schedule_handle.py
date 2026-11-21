@@ -18,6 +18,7 @@ from Script.Design import game_time, map_handle
 from Script.System.Education_System import education_constant
 from typing import TYPE_CHECKING
 from Script.Modules.domains import education, facility, flags, growth, roster
+from Script.Modules.domains import chara_life
 
 if TYPE_CHECKING:
     import datetime
@@ -284,7 +285,7 @@ def judge_schedule_teacher(character_id: int) -> bool:
     if character_id == 0:
         return True
     return (
-        cache.character_data[character_id].work.work_type
+        chara_life.work_type(character_id)
         == education_constant.TEACHER_WORK_TYPE
     )
 
@@ -523,7 +524,7 @@ def get_course_at(
     #    get_course_stage、judge_selected_cell_real 等已有的岗位判断保留，冗余无害。
     #    点名必修的覆盖也在这之后：必修名单只收学生岗，名单开出后改了岗的，不再被带去实操教室
     if (
-        cache.character_data[character_id].work.work_type
+        chara_life.work_type(character_id)
         != education_constant.STUDENT_WORK_TYPE
     ):
         return None
@@ -629,7 +630,7 @@ def get_teacher_candidate_list() -> list[int]:
     for character_id in roster.active():
         character_data: game_type.Character = cache.character_data[character_id]
         if (
-            character_data.work.work_type
+            chara_life.work_type(character_id)
             != education_constant.TEACHER_WORK_TYPE
         ):
             continue
@@ -681,8 +682,7 @@ def get_intern_mentor(character_id: int, work_type_id: int) -> int:
     for other_id in scene_data.character_list:
         if other_id == character_id:
             continue
-        other_data: game_type.Character = cache.character_data[other_id]
-        if other_data.work.work_type == work_type_id:
+        if chara_life.work_type(other_id) == work_type_id:
             return other_id
     return -1
 
@@ -740,10 +740,7 @@ def get_course_place(now_course: dict) -> list[str]:
         work_type_id = now_course["target"]
         for scene_path_str in scene_list:
             for other_id in cache.scene_data[scene_path_str].character_list:
-                if (
-                    cache.character_data[other_id].work.work_type
-                    == work_type_id
-                ):
+                if chara_life.work_type(other_id) == work_type_id:
                     return map_handle.get_map_system_path_for_str(
                         scene_path_str
                     )

@@ -19,6 +19,7 @@ from Script.Config import game_config
 from Script.System.Education_System import education_constant
 from Script.Modules.domains import growth, official, roster
 from Script.System.Official_Event_System import official_event_handle
+from Script.Modules.domains import relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -88,9 +89,8 @@ def get_sibling_child_list(character_id: int) -> list[int]:
     Return arguments:
     List[int] -- 兄弟姐妹的角色id列表
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    father_id = character_data.relationship.father_id
-    mother_id = character_data.relationship.mother_id
+    father_id = relations.father_id(character_id)
+    mother_id = relations.mother_id(character_id)
     # 双亲未登记时是 -1，两个都没登记的角色会互相认成兄弟姐妹（世界设定的萝莉化会给一大批
     #    干员挂上萝莉素质，正好撞进这个洞），所以只认有效的双亲id
     result = []
@@ -103,10 +103,9 @@ def get_sibling_child_list(character_id: int) -> list[int]:
             not in education_constant.SIBLING_PLAY_STAGE_SET
         ):
             continue
-        other_data: game_type.Character = cache.character_data[other_id]
-        if father_id >= 0 and other_data.relationship.father_id == father_id:
+        if father_id >= 0 and relations.father_id(other_id) == father_id:
             result.append(other_id)
-        elif mother_id >= 0 and other_data.relationship.mother_id == mother_id:
+        elif mother_id >= 0 and relations.mother_id(other_id) == mother_id:
             result.append(other_id)
     return result
 

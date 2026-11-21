@@ -6,7 +6,7 @@ from types import FunctionType
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
-from Script.Modules.domains import abilities, growth
+from Script.Modules.domains import abilities, growth, chara_life, relations
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -32,7 +32,6 @@ def check_upgrade_requirements(
     返回值:
       (bool, dict): 布尔值表示是否满足所有需求，字典包含需要消耗的珠信息。
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     jule_dict = {}
     for need_text in need_list:
         # 解析需求字符串
@@ -55,10 +54,10 @@ def check_upgrade_requirements(
             if abilities.experience(character_id)[need_type_id] < need_value:
                 return False, {}
         elif need_type == "F":
-            if character_data.favorability[0] < need_value:
+            if relations.favorability(character_id)[0] < need_value:
                 return False, {}
         elif need_type == "X":
-            if character_data.trust < need_value:
+            if relations.trust(character_id) < need_value:
                 return False, {}
     return True, jule_dict
 
@@ -160,8 +159,8 @@ def gain_ability(character_id: int) -> None:
                 #    还要在学生岗：改了岗的学员靠工作练升的科目不是课上学的，而学员的炫耀口上约一半写老师与课堂
                 if (
                     ability_cid in education_constant.SUBJECT_ABILITY_LIST
-                    and character_data.relationship.father_id == 0
-                    and character_data.work.work_type
+                    and relations.father_id(character_id) == 0
+                    and chara_life.work_type(character_id)
                     == education_constant.STUDENT_WORK_TYPE
                     and growth_handle.get_character_stage(character_id)
                     in (102, 103)

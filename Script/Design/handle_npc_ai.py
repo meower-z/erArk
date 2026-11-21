@@ -17,6 +17,7 @@ from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import abilities, action_info, entertainment
 from Script.Modules.domains import facility, flags, hypnosis, needs, roster
+from Script.Modules.domains import chara_life
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -242,7 +243,7 @@ def judge_character_cant_move(character_id: int) -> int:
             and not flags.get(character_id, "is_h")
         ):
             dormitory_list = map_handle.get_map_system_path_for_str(
-                character_data.dormitory
+                chara_life.dormitory(character_id)
             )
             map_handle.character_move_scene(
                 character_data.position, dormitory_list, character_id
@@ -280,7 +281,6 @@ def choose_state_machine(character_id: int) -> int | None:
     Return arguments:
     int | None -- 状态机id；角色在H中、是木头人或没有可做的行动时为 None
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     all_target_list = list(game_config.config_target.keys())
     premise_data: dict[str, float] = {}
     target_weight_data: dict[str, float] = {}
@@ -398,7 +398,7 @@ def choose_state_machine(character_id: int) -> int | None:
             premise_data = new_premise_data
     if judge == 0 and handle_premise.handle_have_work(character_id):
         # 当前工作数据
-        work_type_id = character_data.work.work_type
+        work_type_id = chara_life.work_type(character_id)
         work_type_data = game_config.config_work_type[work_type_id]
         # 进行工作
         if judge == 0:
@@ -467,7 +467,7 @@ def choose_state_machine(character_id: int) -> int | None:
     ):
         # 当前娱乐数据
         enter_time = game_time.judge_entertainment_time(character_id) - 1
-        entertainment_type_id = character_data.entertainment.entertainment_type[
+        entertainment_type_id = chara_life.entertainment_type(character_id)[
             enter_time
         ]
         entertainment_type_data = game_config.config_entertainment[
@@ -695,12 +695,11 @@ def npc_auto_work_or_entertainment(
     int -- 状态机id\n
     Dict[str, float] -- 新的前提数据\n
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     # 工作
     if work_flag:
         # 当前工作数据
-        work_type_id = character_data.work.work_type
+        work_type_id = chara_life.work_type(character_id)
         work_type_data = game_config.config_work_type[work_type_id]
         tem_premise_data = {"work_time"}
         # 进行工作
@@ -713,7 +712,7 @@ def npc_auto_work_or_entertainment(
     # 娱乐
     else:
         enter_time = game_time.judge_entertainment_time(character_id) - 1
-        entertainment_type_id = character_data.entertainment.entertainment_type[
+        entertainment_type_id = chara_life.entertainment_type(character_id)[
             enter_time
         ]
         entermainment_type_data = game_config.config_entertainment[
@@ -964,7 +963,6 @@ def get_chara_entertainment(character_id: int) -> None:
     character_id -- 角色id
     """
     week_day = game_time.now().weekday()
-    character_data: game_type.Character = cache.character_data[character_id]
     if character_id:
         # 重置基础数据
         flags.set(character_id, swim=0)
@@ -972,8 +970,8 @@ def get_chara_entertainment(character_id: int) -> None:
         # 如果当天有派对的话，则全员当天娱乐为该娱乐
         if entertainment.party_day(week_day):
             for i in range(3):
-                character_data.entertainment.entertainment_type[i] = (
-                    entertainment.party_day(week_day)
+                chara_life.entertainment_type.set_item(
+                    character_id, i, entertainment.party_day(week_day)
                 )
 
         # 否则随机当天的娱乐活动
@@ -1049,8 +1047,8 @@ def get_chara_entertainment(character_id: int) -> None:
                             continue
 
                 # 跳出循环后，将该娱乐活动赋值给角色
-                character_data.entertainment.entertainment_type[i] = (
-                    choice_entertainment_id
+                chara_life.entertainment_type.set_item(
+                    character_id, i, choice_entertainment_id
                 )
                 entertainment_list.remove(
                     choice_entertainment_id

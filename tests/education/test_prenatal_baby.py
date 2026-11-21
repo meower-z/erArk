@@ -31,6 +31,7 @@ from Script.System.Pregnancy_System import pregnancy_handle
 from Script.Design import game_time
 from tests import chara_abilities as ca, kernel_data
 from Script.Modules.domains import official
+from Script.Modules.domains import relations
 
 clear_schedules()
 mother = make_character(102, "母亲", 0)
@@ -234,7 +235,7 @@ check("出勤数不可被 CVE 改写", growth_a.attend_class_count == 0)
 
 section("喂奶 556")
 hp_max = kernel_data.needs_of(baby_a.cid)["hit_max"]
-favor_before = baby_a.favorability.get(0, 0)
+favor_before = relations.favorability(baby_a.cid).get(0, 0)
 nurse_child = constant.settle_behavior_effect_data[
     constant_effect.BehaviorEffect.NUIRSE_CHILD_ADD_ADJUST
 ]
@@ -243,17 +244,17 @@ check(
     "玩家喂奶：体力上限 +2、好感增加",
     kernel_data.needs_of(baby_a.cid)["hit_max"]
     == hp_max + E.NUIRSE_CHILD_HP_MAX_ADD
-    and baby_a.favorability.get(0, 0) > favor_before,
+    and relations.favorability(baby_a.cid).get(0, 0) > favor_before,
 )
 nurse.target_character_id = 203
-favor_before = baby_a.favorability.get(0, 0)
+favor_before = relations.favorability(baby_a.cid).get(0, 0)
 hp_max = kernel_data.needs_of(baby_a.cid)["hit_max"]
 kernel_data.written(nurse_child, 105, 30, change, game_time.now())
 check(
     "保育员喂奶：只加体质不加好感",
     kernel_data.needs_of(baby_a.cid)["hit_max"]
     == hp_max + E.NUIRSE_CHILD_HP_MAX_ADD
-    and baby_a.favorability.get(0, 0) == favor_before,
+    and relations.favorability(baby_a.cid).get(0, 0) == favor_before,
 )
 pl.target_character_id = 102
 hp_max = kernel_data.needs_of(mother.cid)["hit_max"]

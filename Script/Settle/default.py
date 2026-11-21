@@ -30,13 +30,13 @@ from Script.Settle.common_default import base_chara_experience_common_settle
 
 from Script.Settle.item_effect import *
 from Script.Modules.domains import abilities, achievement, action_info, dirty
-from Script.Modules.domains import facility, first_record, flags, fridge
-from Script.Modules.domains import growth, h_meters, h_state, history, hypnosis
-from Script.Modules.domains import inventory
-from Script.Modules.domains import maintenance, medical, modes, needs, official
-from Script.Modules.domains import physical_exam, player_ability
+from Script.Modules.domains import facility, first_record, flags, fridge, growth
+from Script.Modules.domains import h_meters, h_state, history, hypnosis
+from Script.Modules.domains import inventory, maintenance, medical, modes, needs
+from Script.Modules.domains import official, physical_exam, player_ability
 from Script.Modules.domains import player_collection, pregnancy, prison, recruit
 from Script.Modules.domains import roster, status, visitor, wardrobe, warehouse
+from Script.Modules.domains import chara_life, relations
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -2969,8 +2969,9 @@ def handle_move_to_own_dormitory(
 
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    to_target = map_handle.get_map_system_path_for_str(character_data.dormitory)
+    to_target = map_handle.get_map_system_path_for_str(
+        chara_life.dormitory(character_id)
+    )
     plan_movement(character_id, to_target)
 
 
@@ -3209,7 +3210,6 @@ def handle_interrupt_target_activity(
     if character_data.target_character_id == 0:
         return
     # if target_data.behavior.behavior_id == constant.Behavior.DEAD:
-    #     return
     if target_data.behavior.behavior_id:
         if (
             target_data.behavior.start_time
@@ -4752,13 +4752,11 @@ def handle_assistant_reset(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.assistant_services = (
-        attr_calculation.get_assistant_services_zero()
+    relations.assistant_services.set(
+        character_id, attr_calculation.get_assistant_services_zero()
     )
-    pl_character_data = cache.character_data[0]
-    if pl_character_data.assistant_character_id == character_id:
-        pl_character_data.assistant_character_id = 0
+    if relations.assistant_character_id(0) == character_id:
+        relations.assistant_character_id.set(0, 0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5045,7 +5043,7 @@ def handle_self_h_state_reset(
         character_id
     ) and handle_premise.handle_not_in_dormitory(character_id):
         dormitory_list = map_handle.get_map_system_path_for_str(
-            character_data.dormitory
+            chara_life.dormitory(character_id)
         )
         map_handle.character_move_scene(
             character_data.position, dormitory_list, character_id
@@ -5807,8 +5805,7 @@ def handle_dormitory_admin_phase_to_0(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.work.dormitory_admin_phase = 0
+    chara_life.dormitory_admin_phase.set(character_id, 0)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -5830,8 +5827,7 @@ def handle_dormitory_admin_phase_to_1(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
-    character_data.work.dormitory_admin_phase = 1
+    chara_life.dormitory_admin_phase.set(character_id, 1)
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -7176,9 +7172,7 @@ def handle_cure_patient_add_just(
     before_income = medical.state().income_today
 
     # 如果已有病人则选取该病人
-    patient_id = getattr(
-        getattr(character_data, "work", None), "medical_patient_id", 0
-    )
+    patient_id = chara_life.medical_patient_id(character_id)
     patient_obj = None
     # 先从今日病人中寻找
     if patient_id:
@@ -7193,8 +7187,7 @@ def handle_cure_patient_add_just(
 
     # 没有病人则直接返回
     if patient_obj is None:
-        if hasattr(character_data, "work"):
-            character_data.work.medical_patient_id = 0
+        chara_life.medical_patient_id.set(character_id, 0)
         return
 
     # 病情等级
@@ -7265,7 +7258,7 @@ def handle_perform_surgery(
         return
 
     # 获取病人id
-    patient_id = int(getattr(doctor_data.work, "surgery_patient_id", 0) or 0)
+    patient_id = chara_life.surgery_patient_id(doctor_data.cid)
 
     # 执行手术
     medical_service.attempt_surgery(
@@ -8867,11 +8860,13 @@ def handle_read_add_adjust(
             )
 
     # 结算书籍的阅读进度
-    character_data.entertainment.read_book_progress.setdefault(book_id, 0)
+    read_book_progress = chara_life.read_book_progress(character_id)
+    read_book_progress.setdefault(book_id, 0)
+    chara_life.read_book_progress.set(character_id, read_book_progress)
     info_text = _("\n{0}阅读了{1}，").format(
         character_data.name, book_data.name
     )
-    if character_data.entertainment.read_book_progress[book_id] < 100:
+    if chara_life.read_book_progress(character_id)[book_id] < 100:
         base = 5
         adjust = (
             handle_ability.get_ability_adjust(ability[45]) / book_difficulty_int
@@ -8894,22 +8889,23 @@ def handle_read_add_adjust(
         # 计算阅读进度
         read_progress = int(base * adjust * random.uniform(0.5, 1.5))
         read_progress = max(read_progress, 1)
-        old_progress = character_data.entertainment.read_book_progress[book_id]
-        character_data.entertainment.read_book_progress[
-            book_id
-        ] += read_progress
+        old_progress = chara_life.read_book_progress(character_id)[book_id]
+        with chara_life.read_book_progress.editing(
+            character_id
+        ) as read_book_progress:
+            read_book_progress[book_id] += read_progress
         # 绘制提示信息
         info_text += _("阅读进度增加了{0}%，从{1}%增加到{2}%").format(
             read_progress,
             old_progress,
-            character_data.entertainment.read_book_progress[book_id],
+            chara_life.read_book_progress(character_id)[book_id],
         )
         # 如果阅读进度大于等于100，则结算读完的奖励
         if (
-            character_data.entertainment.read_book_progress[book_id] >= 100
+            chara_life.read_book_progress(character_id)[book_id] >= 100
             or cache.debug_mode
         ):
-            character_data.entertainment.read_book_progress[book_id] = 100
+            chara_life.read_book_progress.set_item(character_id, book_id, 100)
             # 如果是技能书籍，则增加对应技能的经验
             if exp_id != 0:
                 if book_difficulty == 0:
@@ -9891,7 +9887,6 @@ def handle_sing_add_adjust(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    # print(f"debug 唱歌，角色 = {character_data.name}，目标= {target_data.name}")
 
     if character_data.target_character_id != character_id and (
         not character_id or not character_data.target_character_id
@@ -9908,8 +9903,6 @@ def handle_sing_add_adjust(
         if ability[44] <= 2 and character_id == 0:
             good_flag = False
         adjust = handle_ability.get_ability_adjust(ability[44])
-
-        # print(f"debug 唱歌，adjust = {adjust}，add_favorability = {add_favorability}")
 
         # 对在场的全部角色起效
         for chara_id in cache.scene_data[
@@ -11762,10 +11755,13 @@ def handle_high_obscenity_failed_adjust(
             character_id, add_time, True, 0, -3, change_data
         )
         # 降信赖
-        now_lust_multiple = target_data.trust * 0.2 + 2
+        now_lust_multiple = relations.trust(target_data.cid) * 0.2 + 2
         if now_lust_multiple < 0:
             now_lust_multiple *= -1
-        target_data.trust -= now_lust_multiple
+        relations.trust.set(
+            target_data.cid,
+            relations.trust(target_data.cid) - now_lust_multiple,
+        )
         change_data.target_change.setdefault(
             target_data.cid, game_type.TargetChange()
         )
@@ -11834,10 +11830,13 @@ def handle_do_h_failed_adjust(
             character_id, add_time, True, 0, -15, change_data
         )
         # 降信赖
-        now_lust_multiple = target_data.trust * 0.4 + 5
+        now_lust_multiple = relations.trust(target_data.cid) * 0.4 + 5
         if now_lust_multiple < 0:
             now_lust_multiple *= -1
-        target_data.trust -= now_lust_multiple
+        relations.trust.set(
+            target_data.cid,
+            relations.trust(target_data.cid) - now_lust_multiple,
+        )
         change_data.target_change.setdefault(
             target_data.cid, game_type.TargetChange()
         )

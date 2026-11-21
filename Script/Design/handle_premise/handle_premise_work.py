@@ -3,7 +3,7 @@
 from Script.Core import cache_control, constant, constant_promise, game_type
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.Modules.domains import medical, official, prison, recruit, warehouse
-from Script.Modules.domains import abilities, work
+from Script.Modules.domains import abilities, work, chara_life
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -18,8 +18,7 @@ def handle_have_work(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type > 0
+    return chara_life.work_type(character_id) > 0
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_WORK)
@@ -61,8 +60,7 @@ def handle_work_is_power_operator(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type == 11
+    return chara_life.work_type(character_id) == 11
 
 
 @add_premise(constant_promise.Premise.TARGET_WORK_IS_POWER_OPERATOR)
@@ -87,8 +85,7 @@ def handle_work_is_maintenance_engineer(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type == 21
+    return chara_life.work_type(character_id) == 21
 
 
 @add_premise(constant_promise.Premise.TARGET_WORK_IS_MAINTENANCE_ENGINEER)
@@ -115,8 +112,7 @@ def handle_work_is_blacksmith(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type == 22
+    return chara_life.work_type(character_id) == 22
 
 
 @add_premise(constant_promise.Premise.TARGET_WORK_IS_BLACKSMITH)
@@ -141,8 +137,7 @@ def handle_work_is_doctor(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type == 61
+    return chara_life.work_type(character_id) == 61
 
 
 @add_premise(constant_promise.Premise.TARGET_WORK_IS_DOCTOR)
@@ -167,8 +162,7 @@ def handle_work_is_hospital_doctor(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type == 62
+    return chara_life.work_type(character_id) == 62
 
 
 @add_premise(constant_promise.Premise.TARGET_WORK_IS_HOSPITAL_DOCTOR)
@@ -193,8 +187,7 @@ def handle_work_is_hr(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type == 71
+    return chara_life.work_type(character_id) == 71
 
 
 @add_premise(constant_promise.Premise.TARGET_WORK_IS_HR)
@@ -219,8 +212,7 @@ def handle_work_is_library_manager(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type == 101
+    return chara_life.work_type(character_id) == 101
 
 
 @add_premise(constant_promise.Premise.TARGET_WORK_IS_LIBRARY_MANAGER)
@@ -245,8 +237,7 @@ def handle_work_is_resource_trader(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type == 111
+    return chara_life.work_type(character_id) == 111
 
 
 @add_premise(constant_promise.Premise.TARGET_WORK_IS_RESOURCE_TRADER)
@@ -273,8 +264,10 @@ def handle_work_is_teacher(character_id: int) -> int:
     """
     from Script.System.Education_System import education_constant
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type == education_constant.TEACHER_WORK_TYPE
+    return (
+        chara_life.work_type(character_id)
+        == education_constant.TEACHER_WORK_TYPE
+    )
 
 
 @add_premise(constant_promise.Premise.TARGET_WORK_IS_TEACHER)
@@ -301,8 +294,10 @@ def handle_work_is_student(character_id: int) -> int:
     """
     from Script.System.Education_System import education_constant
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type == education_constant.STUDENT_WORK_TYPE
+    return (
+        chara_life.work_type(character_id)
+        == education_constant.STUDENT_WORK_TYPE
+    )
 
 
 @add_premise(constant_promise.Premise.TARGET_WORK_IS_STUDENT)
@@ -327,8 +322,7 @@ def handle_work_is_nursery_worker(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type == 153
+    return chara_life.work_type(character_id) == 153
 
 
 @add_premise(constant_promise.Premise.TARGET_WORK_IS_NURSERY_WORKER)
@@ -397,8 +391,10 @@ def handle_teacher_no_class_duty(character_id: int) -> int:
     """
     from Script.System.Education_System import class_ai, education_constant
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.work.work_type != education_constant.TEACHER_WORK_TYPE:
+    if (
+        chara_life.work_type(character_id)
+        != education_constant.TEACHER_WORK_TYPE
+    ):
         return 0
     return int(
         class_ai.get_teacher_duty(character_id)[0]
@@ -575,8 +571,10 @@ def handle_self_course_is_classroom(character_id: int) -> int:
         schedule_handle,
     )
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.work.work_type != education_constant.STUDENT_WORK_TYPE:
+    if (
+        chara_life.work_type(character_id)
+        != education_constant.STUDENT_WORK_TYPE
+    ):
         return 0
     now_course = schedule_handle.get_now_course(character_id)
     return int(
@@ -600,8 +598,10 @@ def handle_self_course_is_personal(character_id: int) -> int:
         schedule_handle,
     )
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.work.work_type != education_constant.STUDENT_WORK_TYPE:
+    if (
+        chara_life.work_type(character_id)
+        != education_constant.STUDENT_WORK_TYPE
+    ):
         return 0
     now_course = schedule_handle.get_now_course(character_id)
     return int(
@@ -625,7 +625,10 @@ def handle_self_in_course_place(character_id: int) -> int:
     from Script.System.Education_System import class_ai, education_constant
 
     character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.work.work_type != education_constant.STUDENT_WORK_TYPE:
+    if (
+        chara_life.work_type(character_id)
+        != education_constant.STUDENT_WORK_TYPE
+    ):
         return 0
     to_place = class_ai.get_course_place_now_or_upcoming(character_id)
     if not to_place:
@@ -649,7 +652,10 @@ def handle_self_not_in_course_place(character_id: int) -> int:
     from Script.System.Education_System import class_ai, education_constant
 
     character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.work.work_type != education_constant.STUDENT_WORK_TYPE:
+    if (
+        chara_life.work_type(character_id)
+        != education_constant.STUDENT_WORK_TYPE
+    ):
         return 0
     to_place = class_ai.get_course_place_now_or_upcoming(character_id)
     if not to_place:
@@ -678,8 +684,10 @@ def handle_self_course_teacher_available(character_id: int) -> int:
         schedule_handle,
     )
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.work.work_type != education_constant.STUDENT_WORK_TYPE:
+    if (
+        chara_life.work_type(character_id)
+        != education_constant.STUDENT_WORK_TYPE
+    ):
         return 0
     now_course = schedule_handle.get_now_course(character_id)
     if (
@@ -710,8 +718,10 @@ def handle_self_course_teacher_unavailable(character_id: int) -> int:
         schedule_handle,
     )
 
-    character_data: game_type.Character = cache.character_data[character_id]
-    if character_data.work.work_type != education_constant.STUDENT_WORK_TYPE:
+    if (
+        chara_life.work_type(character_id)
+        != education_constant.STUDENT_WORK_TYPE
+    ):
         return 0
     now_course = schedule_handle.get_now_course(character_id)
     if (
@@ -797,8 +807,7 @@ def handle_work_is_combat_training(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type == 91
+    return chara_life.work_type(character_id) == 91
 
 
 @add_premise(constant_promise.Premise.TARGET_WORK_IS_COMBAT_TRAINING)
@@ -823,8 +832,7 @@ def handle_work_is_fitness_trainer(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type == 92
+    return chara_life.work_type(character_id) == 92
 
 
 @add_premise(constant_promise.Premise.TARGET_WORK_IS_FITNESS_TRAINER)
@@ -849,8 +857,7 @@ def handle_work_is_cook(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type == 51
+    return chara_life.work_type(character_id) == 51
 
 
 @add_premise(constant_promise.Premise.TARGET_WORK_IS_COOK)
@@ -875,8 +882,7 @@ def handle_work_is_production_worker(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type == 121
+    return chara_life.work_type(character_id) == 121
 
 
 @add_premise(constant_promise.Premise.TARGET_WORK_IS_PRODUCTION_WORKER)
@@ -901,8 +907,7 @@ def handle_work_is_massage_therapist(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type == 171
+    return chara_life.work_type(character_id) == 171
 
 
 @add_premise(constant_promise.Premise.TARGET_WORK_IS_MASSAGE_THERAPIST)
@@ -927,8 +932,7 @@ def handle_work_is_diplomat(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type == 131
+    return chara_life.work_type(character_id) == 131
 
 
 @add_premise(constant_promise.Premise.TARGET_WORK_IS_DIPLOMAT)
@@ -953,8 +957,7 @@ def handle_work_is_invitation_commissioner(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type == 132
+    return chara_life.work_type(character_id) == 132
 
 
 @add_premise(constant_promise.Premise.TARGET_WORK_IS_INVITATION_COMMISSIONER)
@@ -981,8 +984,7 @@ def handle_work_is_medicinal_planter(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type == 161
+    return chara_life.work_type(character_id) == 161
 
 
 @add_premise(constant_promise.Premise.TARGET_WORK_IS_MEDICINAL_PLANTER)
@@ -1007,8 +1009,7 @@ def handle_work_is_floral_planter(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type == 162
+    return chara_life.work_type(character_id) == 162
 
 
 @add_premise(constant_promise.Premise.TARGET_WORK_IS_FLORAL_PLANTER)
@@ -1033,8 +1034,7 @@ def handle_work_is_sex_trainee(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type == 193
+    return chara_life.work_type(character_id) == 193
 
 
 @add_premise(constant_promise.Premise.TARGET_WORK_IS_SEX_TRAINEE)
@@ -1059,8 +1059,7 @@ def handle_work_is_warden(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type == 191
+    return chara_life.work_type(character_id) == 191
 
 
 @add_premise(constant_promise.Premise.T_WORK_IS_WARDEN)
@@ -1098,8 +1097,7 @@ def handle_work_is_dormitory_manager(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.work_type == 31
+    return chara_life.work_type(character_id) == 31
 
 
 @add_premise(constant_promise.Premise.TARGET_WORK_IS_DORMITORY_MANAGER)
@@ -1136,8 +1134,7 @@ def handle_have_no_patient_need_surgery(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.surgery_patient_id == 0
+    return chara_life.surgery_patient_id(character_id) == 0
 
 
 @add_premise(constant_promise.Premise.HAVE_PATIENT_NEED_SURGERY)
@@ -1161,8 +1158,7 @@ def handle_dormitory_manager_action_0(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.dormitory_admin_phase == 0
+    return chara_life.dormitory_admin_phase(character_id) == 0
 
 
 @add_premise(constant_promise.Premise.DORMITORY_MANAGER_ACTION_1)
@@ -1174,8 +1170,7 @@ def handle_dormitory_manager_action_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.work.dormitory_admin_phase == 1
+    return chara_life.dormitory_admin_phase(character_id) == 1
 
 
 @add_premise(constant_promise.Premise.PATIENT_WAIT)
@@ -1365,7 +1360,7 @@ def handle_have_intern_student(character_id: int) -> int:
     )
 
     character_data: game_type.Character = cache.character_data[character_id]
-    work_type_id = character_data.work.work_type
+    work_type_id = chara_life.work_type(character_id)
     if not work_type_id:
         return 0
     scene_path_str = map_handle.get_map_system_path_str_for_list(

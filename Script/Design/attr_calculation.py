@@ -14,7 +14,8 @@ from Script.Core import (
 from Script.Core.num import Num
 from Script.Design import game_time
 from Script.Config import game_config
-from Script.Modules.domains import abilities, facility, hypnosis
+from Script.Modules.domains import abilities, facility, hypnosis, chara_life
+from Script.Modules.domains import relations
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -97,23 +98,6 @@ def get_event_zero() -> game_type.Chara_Event:
     return event_data
 
 
-def get_work_zero() -> game_type.CHARA_WORK:
-    """
-    初始化工作结构体
-    """
-    work_data = game_type.CHARA_WORK()
-    return work_data
-
-
-def get_entertainment_zero() -> game_type.CHARA_ENTERTAINMENT:
-    """
-    初始化娱乐结构体
-    """
-    entertainment_data = game_type.CHARA_ENTERTAINMENT()
-
-    return entertainment_data
-
-
 def get_pregnancy_zero() -> game_type.PREGNANCY:
     """
     初始化受精怀孕情况数据结构体
@@ -122,16 +106,6 @@ def get_pregnancy_zero() -> game_type.PREGNANCY:
     pregnancy_data.reproduction_period = random.randint(0, 6)
 
     return pregnancy_data
-
-
-def get_relationship_zero(
-    relationship_dict: game_type.RELATIONSHIP,
-) -> game_type.RELATIONSHIP:
-    """
-    检查初始关系，将为空的项补为0
-    """
-    relationship_data = relationship_dict
-    return relationship_data
 
 
 def get_status_zero(status_dict: dict[int, Num]) -> dict[int, Num]:
@@ -745,7 +719,6 @@ def judge_require(
     reason -- 不满足需求的原因\n
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     judge = 1
     reason = _("需要:")
 
@@ -801,12 +774,12 @@ def judge_require(
                 reason += f"{game_config.config_experience[judge_type_id].name}>={judge_value}  "
                 break
         elif judge_type == "F":
-            if character_data.favorability[0] < judge_value:
+            if relations.favorability(character_id)[0] < judge_value:
                 judge = 0
                 reason += _("好感度>={0}  ").format(judge_value)
                 break
         elif judge_type == "X":
-            if character_data.trust < judge_value:
+            if relations.trust(character_id) < judge_value:
                 # 催眠进度代替信赖度
                 if hypnosis_replace_trust_flag:
                     if (
@@ -834,7 +807,7 @@ def judge_require(
                 reason += _("攻略等级>={0}  ").format(judge_value)
                 break
         elif judge_type == "W":
-            now_work_type = character_data.work.work_type
+            now_work_type = chara_life.work_type(character_id)
             work_name = (
                 game_config.config_work_type[judge_type_id].name
                 if judge_type_id in game_config.config_work_type

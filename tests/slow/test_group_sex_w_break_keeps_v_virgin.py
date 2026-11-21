@@ -17,7 +17,7 @@
 """
 
 from tests.slow.base import SlowTestCase
-from tests import chara_abilities as ca
+from tests import chara_abilities as ca, kernel_data
 
 AMIYA_ID = 1
 """ 阿米娅的角色id """
@@ -71,6 +71,7 @@ class GroupSexWBreakKeepsVVirginTest(SlowTestCase):
         Return arguments:
         无
         """
+        from Script.Modules.domains import relations
         from Script.Core import constant
 
         chara = self.cache.character_data[chara_id]
@@ -83,8 +84,8 @@ class GroupSexWBreakKeepsVVirginTest(SlowTestCase):
         )
         self.assertTrue(arrived, f"{chara.name} 走到了博士身边")
         # 好感与信赖的上限，日常互动能攒到，够邀请群交的判定
-        chara.favorability[0] = 100000
-        chara.trust = 300
+        kernel_data.put(relations.favorability.set_item, chara_id, 0, 100000)
+        kernel_data.put(relations.trust.set, chara_id, 300)
 
     def w_break_listed(self) -> dict[str, list[str]]:
         """

@@ -15,8 +15,8 @@ from Script.UI.Panel import body_info_panel, character_info_head
 from Script.System.First_Record_System import first_record_panel
 from Script.Modules.save_load import reset
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import abilities, h_state, player_collection
-from Script.Modules.domains import roster, status, visitor
+from Script.Modules.domains import abilities, h_state, player_collection, roster
+from Script.Modules.domains import status, visitor, chara_life, relations
 
 panel_info_data: dict[str, object] = {}
 cache: game_type.Cache = cache_control.cache
@@ -497,7 +497,7 @@ class CharacterRoomText:
         character_data: game_type.Character = cache.character_data[
             self.character_id
         ]
-        dormitory = character_data.dormitory
+        dormitory = chara_life.dormitory(character_data.cid)
         dormitory_text = ""
         if dormitory == "":
             dormitory_text = _("暂无")
@@ -516,7 +516,7 @@ class CharacterRoomText:
         #     now_classroom_text += _("暂无")
         # self.classroom_text = now_classroom_text
         # """ 教室位置文本 """
-        officeroom = character_data.officeroom
+        officeroom = chara_life.officeroom(character_data.cid)
         now_officeroom_text = _("办公室位置:")
         if len(officeroom):
             officeroom_text = attr_text.get_scene_path_text(officeroom)
@@ -845,10 +845,10 @@ class CharacterTalentText:
         race_text = game_config.config_race[character_data.race].name
         # 旧存档里出生地与势力可能是str
         birthplace_text = game_config.config_birthplace[
-            int(character_data.relationship.birthplace)
+            int(relations.birthplace(character_id))
         ].name
         nation_text = game_config.config_nation[
-            int(character_data.relationship.nation)
+            int(relations.nation(character_id))
         ].name
         type_data = _("素质")
         type_line = draw.LittleTitleLineDraw(type_data, width, ":")
@@ -963,14 +963,11 @@ class CharacterDailyText:
         """ 当前面板监听的按钮列表 """
         self.center_status: bool = center_status
         """ 居中绘制状态文本 """
-        character_data = cache.character_data[character_id]
         work_text = game_config.config_work_type[
-            character_data.work.work_type
+            chara_life.work_type(character_id)
         ].name
         entertainment_text_list = []
-        for (
-            entertainment_type
-        ) in character_data.entertainment.entertainment_type:
+        for entertainment_type in chara_life.entertainment_type(character_id):
             entertainment_name = game_config.config_entertainment[
                 entertainment_type
             ].name
@@ -982,9 +979,8 @@ class CharacterDailyText:
 
         now_draw_list: list[draw.LeftDraw] = []
         text_list = _("当前工作：{0}     ").format(work_text)
-        if (
-            game_time.judge_work_today(character_id)
-            and character_data.work.work_type
+        if game_time.judge_work_today(character_id) and chara_life.work_type(
+            character_id
         ):
             text_list += _(
                 " 今日上午：工作    今日下午：工作    今日晚上：{0}"
@@ -997,7 +993,7 @@ class CharacterDailyText:
                 entertainment_text_list[1],
                 entertainment_text_list[2],
             )
-        live_room = character_data.dormitory.split(os.sep)[-1]
+        live_room = chara_life.dormitory(character_id).split(os.sep)[-1]
         text_list += _("\n居住房间：{0}").format(live_room)
 
         text_draw = draw.LeftDraw()
@@ -1048,7 +1044,6 @@ class CharacterVisitorText:
         """ 当前面板监听的按钮列表 """
         self.center_status: bool = center_status
         """ 居中绘制状态文本 """
-        character_data = cache.character_data[character_id]
 
         type_data = _("访客")
         type_line = draw.LittleTitleLineDraw(type_data, width, ":")
@@ -1072,7 +1067,7 @@ class CharacterVisitorText:
         leav_time = game_time.get_date_until_day(
             visitor.visitors()[character_id]
         )
-        live_room = character_data.dormitory.split(os.sep)[-1]
+        live_room = chara_life.dormitory(character_id).split(os.sep)[-1]
         text_list += _("留下意愿：{0}     ").format(stay_text)
         text_list += _("离开时间：{0}     ").format(leav_time)
         text_list += _("居住房间：{0}").format(live_room)

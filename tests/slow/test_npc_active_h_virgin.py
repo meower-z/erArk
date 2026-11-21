@@ -22,7 +22,7 @@ from collections.abc import Mapping
 from unittest import mock
 
 from tests.slow.base import SlowTestCase
-from tests import chara_abilities as ca
+from tests import chara_abilities as ca, kernel_data
 
 NPC_NAME = "阿米娅"
 """ 主动H的干员，开局时有素质0~4 """
@@ -57,12 +57,12 @@ class NpcActiveHVirginTest(SlowTestCase):
         Return arguments:
         int -- 她的角色id
         """
+        from Script.Modules.domains import relations
         from Script.Core import constant
         from Script.Design import map_handle
 
         player = self.cache.character_data[0]
         npc_id = self.npc(NPC_NAME)
-        npc = self.cache.character_data[npc_id]
         room_key = next(
             key
             for key, scene in sorted(self.cache.scene_data.items())
@@ -71,8 +71,10 @@ class NpcActiveHVirginTest(SlowTestCase):
         room = map_handle.get_map_system_path_for_str(room_key)
         self.world.move(0, room)
         self.world.move(npc_id, room)
-        npc.favorability[0] = FAVORABILITY
-        npc.trust = TRUST
+        kernel_data.put(
+            relations.favorability.set_item, npc_id, 0, FAVORABILITY
+        )
+        kernel_data.put(relations.trust.set, npc_id, TRUST)
         player.target_character_id = npc_id
         self.instruct(constant.Instruct.DO_H)
         self.instruct(constant.Instruct.CHANGE_TOP_AND_BOTTOM)

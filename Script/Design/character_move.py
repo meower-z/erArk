@@ -5,6 +5,7 @@ from Script.Design import map_handle, update
 from Script.UI.Moudle import draw, view
 from Script.Modules.domains import action_info, flags, inventory, plan
 from types import FunctionType
+from Script.Modules.domains import chara_profile
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -298,7 +299,6 @@ def private_move_outcome(
     wait_flag -- true的话就是等待\n
     outcome -- 要结算的结果：PRIVATE_MOVE_OUTCOMES 之一，没有要结算的时为空字符串\n
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     # 移动路径为空，直接返回
     if move_path == []:
         return False, True, ""
@@ -310,7 +310,7 @@ def private_move_outcome(
     if access_type != "private":
         return True, False, ""
     wait_time = action_info.get(character_id, "follow_wait_time")
-    setting = character_data.chara_setting[0]
+    setting = chara_profile.chara_setting(character_id)[0]
     # 超时后取消跟随
     if setting == 0:
         if wait_time < 30:

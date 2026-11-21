@@ -17,6 +17,7 @@ from Script.System.Instruct_System import handle_instruct
 from Script.UI.Panel import hypnosis_panel
 from Script.Modules.domains import abilities, action_info, flags, h_meters
 from Script.Modules.domains import hypnosis, modes, needs, roster, status, work
+from Script.Modules.domains import chara_profile, relations
 
 if TYPE_CHECKING:
     from Script.UI.Moudle import panel
@@ -199,7 +200,6 @@ def handle_settle_behavior(
             )
 
     # target_data = game_type.Character = cache.character_data[player_character_data.target_character_id]
-    # print("target_data.name :",target_data.name)
     # 注释掉了会按不交流的时间自动扣好感的系统#
     # change_character_favorability_for_time(character_id, now_time)
     # 注释掉了社交关系#
@@ -251,13 +251,12 @@ def handle_settle_behavior(
                 PC_information_flag = 1 if PC_information_flag == 1 else 2
                 break
     if now_judge:
-        # print(f"debug now_judge")
         now_text_list = []
         if character_id == 0:
             now_text = (
                 "\n"
                 + now_character_data.name
-                + now_character_data.nick_name
+                + chara_profile.nick_name(now_character_data.cid)
                 + ": "
             )
         else:
@@ -748,7 +747,6 @@ def handle_event_data(
     """
     if event_id != "":
         # 进行事件结算
-        # print(f"debug handle_settle_behavior event_id = {event_id}")
         event_data: game_type.Event = game_config.config_event[event_id]
         for effect in event_data.effect:
             # 综合数值结算判定
@@ -1169,15 +1167,21 @@ def handle_comprehensive_value_effect(
         # 好感
         elif attribute_name == "favorability":
             operation_func = operation_mapping[operation]
-            final_character_data.favorability[0] = operation_func(
-                final_character_data.favorability[0],
-                int(effect_all_value_list[3]),
-            )
+            with relations.favorability.editing(
+                final_character_id
+            ) as favorability:
+                favorability[0] = operation_func(
+                    favorability[0], int(effect_all_value_list[3])
+                )
         # 信赖
         elif attribute_name == "trust":
             operation_func = operation_mapping[operation]
-            final_character_data.trust = operation_func(
-                final_character_data.trust, int(effect_all_value_list[3])
+            relations.trust.set(
+                final_character_id,
+                operation_func(
+                    relations.trust(final_character_id),
+                    int(effect_all_value_list[3]),
+                ),
             )
         # 经验
         elif attribute_name == "experience" and operation in ["G", "L"]:
@@ -1193,17 +1197,13 @@ def handle_comprehensive_value_effect(
         # 角色口上flag
         elif attribute_name == "flag":
             operation_func = operation_mapping[operation]
-            final_character_data.author_flag.chara_int_flag_dict.setdefault(
-                type_son_id, 0
-            )
-            final_character_data.author_flag.chara_int_flag_dict[
-                type_son_id
-            ] = operation_func(
-                final_character_data.author_flag.chara_int_flag_dict[
-                    type_son_id
-                ],
-                int(effect_all_value_list[3]),
-            )
+            with chara_profile.author_flag.editing(
+                final_character_id
+            ) as author_flag:
+                author_flag.setdefault(type_son_id, 0)
+                author_flag[type_son_id] = operation_func(
+                    author_flag[type_son_id], int(effect_all_value_list[3])
+                )
         # 绝顶
         elif attribute_name == "climax":
             if operation == "E":

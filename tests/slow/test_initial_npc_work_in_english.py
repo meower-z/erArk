@@ -6,6 +6,7 @@
 与 character_handle.first_NPC_work 给的初始工作相同。
 """
 
+import importlib
 import signal
 
 from tests.slow import remove_parent_guard
@@ -28,8 +29,13 @@ class InitialNpcWorkInEnglishTest(SlowTestCase):
     def test_first_work(self) -> None:
         """五名初始干员的工作是初始工作"""
         run = LanguageRun(ENGLISH)
+        chara_life = importlib.import_module(
+            "Script.Modules.domains.chara_life"
+        )
         work_dict = {
-            chara_id: run.cache.character_data[chara_id].work.work_type
+            chara_id: chara_life.work_type(
+                run.cache.character_data[chara_id].cid
+            )
             for chara_id in FIRST_WORK_DICT
         }
         self.assertEqual(work_dict, FIRST_WORK_DICT)

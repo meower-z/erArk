@@ -19,6 +19,7 @@ from Script.Modules.domains import player_collection, wardrobe
 from tests import kernel_data
 from tests.fast.base import FastTestCase
 from tests import chara_abilities as ca
+from Script.Modules.domains import relations
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -72,7 +73,7 @@ class ChildStagesOfflineTest(FastTestCase):
         super().setUp()
         self.pl = self.world.chara(0, "博士")
         self.daughter = self.world.chara(1, "女儿")
-        self.daughter.relationship.father_id = 0
+        kernel_data.put(relations.father_id.set, self.daughter.cid, 0)
         self.daughter.target_character_id = 1
         self.pl.target_character_id = 1
 

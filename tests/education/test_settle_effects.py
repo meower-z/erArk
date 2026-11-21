@@ -9,7 +9,7 @@ from _bootstrap import child_growth, classroom_path, clear_schedules, constant
 from _bootstrap import constant_effect, datetime, drawn_text, education
 from _bootstrap import education_constant, finish, game_config, game_time
 from _bootstrap import game_type, growth, growth_handle, handle_premise
-from _bootstrap import make_character, move_to, open_all_classroom
+from _bootstrap import make_character, move_to, open_all_classroom, relations
 from _bootstrap import period_time, pl, play, remove_character, roster
 from _bootstrap import schedule_handle, schedule_template_handle, section
 from _bootstrap import semester_handle, set_time, sex_class_handle, start
@@ -435,14 +435,14 @@ semester_handle.push_report_card(
     },
 )
 drawn_text.clear()
-favor_before = student_a.favorability.get(0, 0)
+favor_before = relations.favorability(201).get(0, 0)
 EFFECT[550](0, 15, change, game_time.now())
 check(
     "有冻结成绩单：发那一份并清 flag",
     any("优秀" in t and "尚未结束" not in t for t in drawn_text)
     and not student_a_growth.report_card_flag,
 )
-check("加了好感", student_a.favorability.get(0, 0) > favor_before)
+check("加了好感", relations.favorability(201).get(0, 0) > favor_before)
 semester_handle.push_report_card(
     201,
     {

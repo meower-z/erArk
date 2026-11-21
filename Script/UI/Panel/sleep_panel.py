@@ -20,7 +20,7 @@ from Script.Design import (
 )
 from Script.Modules.tk_ui import player_pick
 import math
-from Script.Modules.domains import action_info, h_meters, needs
+from Script.Modules.domains import action_info, h_meters, needs, relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -145,10 +145,10 @@ class Sleep_Panel:
 
         # 检测是否开启了早安服务
         morning_service_flag = False
-        if self.pl_character_data.assistant_character_id:
+        if relations.assistant_character_id(self.pl_character_data.cid):
             # 如果开启了，则默认睡到早安服务时间
             if handle_premise.handle_assistant_morning_salutation_on(
-                self.pl_character_data.assistant_character_id
+                relations.assistant_character_id(self.pl_character_data.cid)
             ):
                 morning_service_flag = True
                 self.get_time_to_morning_service()

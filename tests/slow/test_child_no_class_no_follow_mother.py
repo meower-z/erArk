@@ -68,7 +68,7 @@ class ChildStagesOfflineTest(SlowTestCase):
     def test_child_offline_until_trainee(self) -> None:
         """出生后与长成幼女后不在任何场景、不在 npc_id_got、不上学；长成学员后上线、成年、上学"""
         from Script.Design import game_time, talk
-        from Script.Modules.domains import pregnancy, roster
+        from Script.Modules.domains import chara_life, pregnancy, roster
         from Script.System.Education_System import (
             education_constant,
             growth_handle,
@@ -84,7 +84,6 @@ class ChildStagesOfflineTest(SlowTestCase):
         )
         talk.must_show_talk_check = lambda character_id: None
         child_id = kernel_data.born(self.mother_id, "测试女儿")
-        child = self.cache.character_data[child_id]
         kernel_data.put(pregnancy.update, child_id, born_time=game_time.now())
         self.assertEqual(ca.talent(child_id)[BABY], 1, "出生时是婴儿")
         self.assertEqual(
@@ -105,11 +104,15 @@ class ChildStagesOfflineTest(SlowTestCase):
         )
         self.assertFalse(roster.has(child_id), "长成幼女后不在在编名册")
         self.assertNotEqual(
-            child.work.work_type,
+            chara_life.work_type(child_id),
             education_constant.STUDENT_WORK_TYPE,
             "长成幼女时不置学生岗",
         )
-        child.work.work_type = education_constant.STUDENT_WORK_TYPE
+        kernel_data.put(
+            chara_life.work_type.set,
+            child_id,
+            education_constant.STUDENT_WORK_TYPE,
+        )
         with self.assertRaises(ValueError):
             kernel_data.put(roster.add, child_id)
         self.assertNotIn(
@@ -117,7 +120,7 @@ class ChildStagesOfflineTest(SlowTestCase):
             growth_handle.get_student_candidate_list(),
             "幼女既无法进入名册，也不在养成名单里",
         )
-        child.work.work_type = 0
+        kernel_data.put(chara_life.work_type.set, child_id, 0)
 
         # 胸部成长按母亲的胸部素质算，与上线、上学无关；本局取来当母亲的干员未必有胸部素质，这里不结算它
         with mock.patch.object(
@@ -134,7 +137,7 @@ class ChildStagesOfflineTest(SlowTestCase):
             len(self.scene_list_with(child_id)), 1, "长成学员后在一个场景里"
         )
         self.assertEqual(
-            child.work.work_type,
+            chara_life.work_type(child_id),
             education_constant.STUDENT_WORK_TYPE,
             "长成学员时置学生岗",
         )
@@ -240,14 +243,15 @@ class ChildStagesOfflineTest(SlowTestCase):
 
     def test_follow_mother_never_starts(self) -> None:
         """工作日上课节次内、母亲在别的场景时，幼女与学员女儿的 AI 选出的状态机都不是见学的两个"""
+        from Script.Modules.domains import chara_life, relations
         from Script.Core import constant
         from Script.Design import game_time, handle_npc_ai, map_handle
         from Script.System.Education_System import education_constant
 
         daughter_id = self.other_id
         daughter = self.cache.character_data[daughter_id]
-        daughter.relationship.father_id = 0
-        daughter.relationship.mother_id = self.mother_id
+        kernel_data.put(relations.father_id.set, daughter_id, 0)
+        kernel_data.put(relations.mother_id.set, daughter_id, self.mother_id)
         daughter.target_character_id = daughter_id
         world.set_clock(game_time.to_game_time(CLASS_TIME))
         if self.mother.position == daughter.position:
@@ -270,10 +274,14 @@ class ChildStagesOfflineTest(SlowTestCase):
                 ca.talent(daughter_id)[stage_id] = (
                     1 if stage_id == talent_id else 0
                 )
-            daughter.work.work_type = (
-                education_constant.STUDENT_WORK_TYPE
-                if talent_id == TRAINEE
-                else 0
+            kernel_data.put(
+                chara_life.work_type.set,
+                daughter_id,
+                (
+                    education_constant.STUDENT_WORK_TYPE
+                    if talent_id == TRAINEE
+                    else 0
+                ),
             )
             daughter.behavior.start_time = game_time.now()
             daughter.behavior.behavior_id = constant.Behavior.SHARE_BLANKLY

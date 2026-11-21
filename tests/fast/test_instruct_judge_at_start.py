@@ -32,7 +32,7 @@ from Script.System.Item_System import condom_panel
 from Script.System.Sex_System import group_sex_panel
 from tests.fast.base import FastTestCase
 from tests import chara_abilities as ca, kernel_data
-from Script.Modules.domains import action_info, flags
+from Script.Modules.domains import action_info, flags, relations
 
 LOADED_FIRST = update
 """ 先于 Script.Modules 导入的 update：Script.Modules 的包初始化要在 update 导入途中进行 """
@@ -125,7 +125,7 @@ class InstructJudgeAtStartTest(FastTestCase):
     def test_necklace_pays_hypnosis_at_start(self) -> None:
         """戴上项圈靠催眠补正通过：选择时理智不变，开始后少了，行为是戴上项圈"""
         self.deep_hypnosis()
-        self.npc.trust = 200
+        kernel_data.put(relations.trust.set, self.npc.cid, 200)
         self.passes_by_hypnosis_only(_("戴上项圈"))
         act = self.pick(constant.Instruct.GIVE_NECKLACE)
         self.assertEqual(

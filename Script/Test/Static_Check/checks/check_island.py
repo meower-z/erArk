@@ -31,6 +31,7 @@ from Script.System.Dormitory_System import common as dorm_common
 from ..check_registry import CheckFailure, register_check, make_failure
 from typing import TYPE_CHECKING
 from Script.Design import game_time
+from Script.Modules.domains import chara_life
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -318,7 +319,7 @@ def check_island_07_work_type_valid() -> list[CheckFailure]:
     for cid in roster.active():
         if cid == 0 or cid not in cd:
             continue
-        work_type = cd[cid].work.work_type
+        work_type = chara_life.work_type(cid)
         if work_type not in valid_work_types:
             failures.append(
                 make_failure(
@@ -353,9 +354,9 @@ def check_island_08_work_rosters_self_consistent() -> list[CheckFailure]:
         for cid in ids:
             if cid not in cd:
                 violations.append((wid, cid, "不存在", None))
-            elif cd[cid].work.work_type != wid:
+            elif chara_life.work_type(cid) != wid:
                 violations.append(
-                    (wid, cid, cd[cid].name, cd[cid].work.work_type)
+                    (wid, cid, cd[cid].name, chara_life.work_type(cid))
                 )
     if key_diff_extra or violations:
         return [
@@ -390,7 +391,7 @@ def check_island_09_work_set_recompute() -> list[CheckFailure]:
         recompute_set = {
             cid
             for cid in roster.active()
-            if cid != 0 and cid in cd and cd[cid].work.work_type == wid
+            if cid != 0 and cid in cd and chara_life.work_type(cid) == wid
         }
         extra = cached_set - recompute_set
         missing = recompute_set - cached_set
@@ -399,7 +400,7 @@ def check_island_09_work_set_recompute() -> list[CheckFailure]:
         detail = [
             (
                 f"cid={cid},name={_chara_name(cd, cid)},"
-                f"work_type={getattr(cd.get(cid), 'work', None) and cd[cid].work.work_type},"
+                f"work_type={chara_life.work_type(cid) if cid in cd else None},"
                 f"{_sp_flag_brief(cd.get(cid))}"
             )
             for cid in sorted(extra | missing)
@@ -449,10 +450,10 @@ def check_island_11_work_lists_superset() -> list[CheckFailure]:
             (
                 cid,
                 _chara_name(cd, cid),
-                cd[cid].work.work_type if cid in cd else None,
+                chara_life.work_type(cid) if cid in cd else None,
             )
             for cid in lst
-            if cid not in cd or cd[cid].work.work_type != wid
+            if cid not in cd or chara_life.work_type(cid) != wid
         ]
         expected = set(work.roster(wid))
         missing = expected - set(lst)
@@ -627,7 +628,7 @@ def check_island_15_line_main_operator() -> list[CheckFailure]:
             if not (
                 type(m) is int
                 and m in cd
-                and cd[m].work.work_type == wid
+                and chara_life.work_type(m) == wid
                 and m in main_list.get(wid, [])
             )
         ]
@@ -635,7 +636,8 @@ def check_island_15_line_main_operator() -> list[CheckFailure]:
             dup_lines = sorted(line_id for line_id, m in mains if m in dup)
             detail = [
                 (
-                    f"line_id={lid},m={m},{_chara_name(cd, m)},work_type={cd[m].work.work_type if m in cd else None},"
+                    f"line_id={lid},m={m},{_chara_name(cd, m)},"
+                    f"work_type={chara_life.work_type(m) if m in cd else None},"
                     f"{_sp_flag_brief(cd.get(m))}"
                 )
                 for lid, m in illegal
@@ -652,11 +654,12 @@ def check_island_15_line_main_operator() -> list[CheckFailure]:
     illegal_traders = [
         (rtype, m)
         for rtype, m in economy.main_traders().items()
-        if m and not (m in cd and cd[m].work.work_type == economy.TRADER_WORK)
+        if m
+        and not (m in cd and chara_life.work_type(m) == economy.TRADER_WORK)
     ]
     if illegal_traders:
         detail = [
-            f"type={t},m={m},{_chara_name(cd, m)},work_type={cd[m].work.work_type if m in cd else None}"
+            f"type={t},m={m},{_chara_name(cd, m)},work_type={chara_life.work_type(m) if m in cd else None}"
             for t, m in illegal_traders
         ]
         failures.append(
@@ -744,9 +747,9 @@ def check_island_17_dormitory_manager_work_type_and_layers() -> (
             )
         )
     mismatched = [
-        (layer, m, _chara_name(cd, m), cd[m].work.work_type)
+        (layer, m, _chara_name(cd, m), chara_life.work_type(m))
         for layer, m in dormitory_managers.items()
-        if m and m in cd and cd[m].work.work_type != 31
+        if m and m in cd and chara_life.work_type(m) != 31
     ]
     if mismatched:
         failures.append(
@@ -815,7 +818,7 @@ def check_island_19_dormitory_path_valid() -> list[CheckFailure]:
         if cid == 0 or cid not in cd:
             continue
         ch = cd[cid]
-        dormitory = getattr(ch, "dormitory", None)
+        dormitory = chara_life.dormitory(cid)
         if dormitory and dormitory in cache.scene_data:
             continue
         failures.append(
@@ -823,7 +826,7 @@ def check_island_19_dormitory_path_valid() -> list[CheckFailure]:
                 "ISLAND-19",
                 "已招募干员的宿舍路径必须是合法场景",
                 f"角色cid={cid}({ch.name})的dormitory={dormitory!r}非法（务必区分''/'无'/其他非法路径），"
-                f"permanent_dormitory={getattr(ch, 'permanent_dormitory', None)!r}，work.work_type={ch.work.work_type}",
+                f"permanent_dormitory={chara_life.permanent_dormitory(cid)!r}，work.work_type={chara_life.work_type(cid)}",
                 [cid],
             )
         )
@@ -852,7 +855,7 @@ def check_island_20_dormitory_room_capacity() -> list[CheckFailure]:
         ch = cd.get(cid)
         if ch is None:
             continue
-        occ.setdefault(ch.dormitory, []).append(cid)
+        occ.setdefault(chara_life.dormitory(ch.cid), []).append(cid)
     failures = []
     for path, cids in occ.items():
         try:
@@ -862,7 +865,7 @@ def check_island_20_dormitory_room_capacity() -> list[CheckFailure]:
         if not layer or len(cids) <= 2:
             continue
         residents = [
-            (cid, cd[cid].name, cd[cid].work.work_type) for cid in cids
+            (cid, cd[cid].name, chara_life.work_type(cid)) for cid in cids
         ]
         scene_name = (
             getattr(cache.scene_data.get(path), "name", path)
@@ -911,9 +914,8 @@ def check_island_21_book_borrow_consistency() -> list[CheckFailure]:
         book_name = game_config.config_book[book].name
         if holder == -1:
             continue
-        if (
-            holder not in cd
-            or book not in cd[holder].entertainment.borrow_book_id_set
+        if holder not in cd or book not in chara_life.borrow_book_id_set(
+            holder
         ):
             failures.append(
                 make_failure(
@@ -922,13 +924,13 @@ def check_island_21_book_borrow_consistency() -> list[CheckFailure]:
                     (
                         f"book_id={book}({book_name})记录holder={holder}({_chara_name(cd, holder)})，"
                         f"但其borrow_book_id_set="
-                        f"{cd[holder].entertainment.borrow_book_id_set if holder in cd else '(角色不存在)'}中不含该书"
+                        f"{chara_life.borrow_book_id_set(holder) if holder in cd else '(角色不存在)'}中不含该书"
                     ),
                     [holder] if holder in cd else [],
                 )
             )
     for cid, ch in cd.items():
-        borrow_set = ch.entertainment.borrow_book_id_set
+        borrow_set = chara_life.borrow_book_id_set(ch.cid)
         if len(borrow_set) > 3:
             failures.append(
                 make_failure(
@@ -1029,7 +1031,7 @@ def check_island_23_entertainment_type() -> list[CheckFailure]:
     cd = cache.character_data
     failures = []
     for cid, ch in cd.items():
-        et = ch.entertainment.entertainment_type
+        et = chara_life.entertainment_type(ch.cid)
         if (
             isinstance(et, list)
             and len(et) == 3
@@ -1327,12 +1329,12 @@ def check_island_28_main_power_operator_slots() -> list[CheckFailure]:
     non_zero = [m for m in slots if m]
     dup = {m for m, cnt in Counter(non_zero).items() if cnt > 1}
     illegal = [
-        m for m in non_zero if not (m in cd and cd[m].work.work_type == 11)
+        m for m in non_zero if not (m in cd and chara_life.work_type(m) == 11)
     ]
     if dup or illegal:
         detail = [
             (
-                f"cid={m},{_chara_name(cd, m)},work_type={cd[m].work.work_type if m in cd else None},"
+                f"cid={m},{_chara_name(cd, m)},work_type={chara_life.work_type(m) if m in cd else None},"
                 f"{_sp_flag_brief(cd.get(m))}"
             )
             for m in sorted(set(dup) | set(illegal))
@@ -1365,19 +1367,16 @@ def check_island_29_warden_and_prisoners() -> list[CheckFailure]:
     failures = []
     warden_id = work.warden()
     if warden_id != 0 and not (
-        warden_id in cd and cd[warden_id].work.work_type == 191
+        warden_id in cd and chara_life.work_type(warden_id) == 191
     ):
-        actual_wardens = [
-            cid for cid, ch in cd.items() if ch.work.work_type == 191
-        ]
+        actual_wardens = [c for c in cd if chara_life.work_type(c) == 191]
         ch = cd.get(warden_id)
-        ch_work = getattr(ch, "work", None)
         failures.append(
             make_failure(
                 "ISLAND-29",
                 "监狱长引用与囚犯数据自洽",
                 f"work.warden()={warden_id}({_chara_name(cd, warden_id)})不是合法监狱长引用，"
-                f"实际work_type={ch_work and ch_work.work_type}，{_sp_flag_brief(ch)}，"
+                f"实际work_type={chara_life.work_type(warden_id) if ch is not None else None}，{_sp_flag_brief(ch)}，"
                 f"实际work_type==191的角色列表={actual_wardens}",
                 [warden_id],
             )
@@ -1436,13 +1435,13 @@ def check_island_30_facility_damage_and_maintenance() -> list[CheckFailure]:
         for cid, place in maintenance.places().items()
         if not (
             cid in cd
-            and cd[cid].work.work_type == 21
+            and chara_life.work_type(cid) == 21
             and place in cache.scene_data
         )
     ]
     if illegal_maintenance:
         detail = [
-            f"cid={cid},{_chara_name(cd, cid)},work_type={cd[cid].work.work_type if cid in cd else None},"
+            f"cid={cid},{_chara_name(cd, cid)},work_type={chara_life.work_type(cid) if cid in cd else None},"
             f"{_sp_flag_brief(cd.get(cid))},place_in_scene_data={place in cache.scene_data}"
             for cid, place in illegal_maintenance
         ]
@@ -1608,7 +1607,7 @@ def check_island_33_diplomat_mapping_consistency() -> list[CheckFailure]:
         ch = cd[did]
         if (
             flags.get(ch.cid, "in_diplomatic_visit") != country
-            or ch.work.work_type != 131
+            or chara_life.work_type(ch.cid) != 131
         ):
             location_head = location.country()
             failures.append(
@@ -1616,7 +1615,7 @@ def check_island_33_diplomat_mapping_consistency() -> list[CheckFailure]:
                     "ISLAND-33",
                     "外交官映射、岗位与外派标记三方一致",
                     f"[warning] country_id={country}，diplomat_id={did}({ch.name})，"
-                    f"实际work.work_type={ch.work.work_type}(期望131)，"
+                    f"实际work.work_type={chara_life.work_type(ch.cid)}(期望131)，"
                     f"实际sp_flag.in_diplomatic_visit={flags.get(ch.cid, "in_diplomatic_visit")}(期望{country})，"
                     f"所在国家={location_head}",
                     [did],

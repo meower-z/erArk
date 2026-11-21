@@ -29,6 +29,7 @@ from Script.Config import game_config, normal_config
 from Script.Modules.domains import dirty, h_state, hypnosis
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.domains import abilities, growth, pregnancy, roster, work
+from Script.Modules.domains import chara_life, relations
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -193,17 +194,13 @@ def get_baby_id_list(mother_id: int) -> list:
     Return arguments:
     list -- 婴儿角色id列表（按出生顺序）
     """
-    mother_character_data: game_type.Character = cache.character_data[mother_id]
     baby_id_list = []
-    for child_id in mother_character_data.relationship.child_id_list:
+    for child_id in relations.child_id_list(mother_id):
         if child_id not in cache.character_data:
             continue
-        child_character_data: game_type.Character = cache.character_data[
-            child_id
-        ]
         if (
             handle_premise.handle_self_is_baby(child_id)
-            and child_character_data.relationship.mother_id == mother_id
+            and relations.mother_id(child_id) == mother_id
         ):
             baby_id_list.append(child_id)
     return baby_id_list
@@ -649,7 +646,7 @@ def check_rearing(character_id: int) -> None:
     # 需要已经是产后状态
     if handle_premise.handle_postpartum_1(character_id):
         # 计算最新一个孩子出生后经过的有效天数（含成长加速药）
-        child_id = character_data.relationship.child_id_list[-1]
+        child_id = relations.child_id_list(character_id)[-1]
         child_character_data: game_type.Character = cache.character_data[
             child_id
         ]
@@ -786,7 +783,9 @@ def check_grow_to_loli(character_id: int) -> None:
 
             # 成为学员即上线，并转为学生岗（取教育系统的常量，不写死 152）
             character_handle.get_new_character(character_id)
-            character_data.work.work_type = education_constant.STUDENT_WORK_TYPE
+            chara_life.work_type.set(
+                character_id, education_constant.STUDENT_WORK_TYPE
+            )
             # 幼女期入队、还没处理的幼女桶事件清掉，否则会顶着「学员期」的抬头弹出
             growth_event_handle.drop_stale_stage_event(character_id)
             # 换完素质、置了学生岗之后刷当天娱乐，再按日程模板改写（顺序与跨天结算相同）
@@ -917,7 +916,7 @@ def check_all_child_grow_to_loli() -> None:
     检查玩家的全部女儿里有没有该长成学员的幼女（睡眠结算时调用一次）
     幼女离线、不在 npc_id_got 里，逐角色的 check_all_pregnancy 轮不到她，所以从玩家的子女名单里找
     """
-    for child_id in list(cache.character_data[0].relationship.child_id_list):
+    for child_id in list(relations.child_id_list(0)):
         if child_id in cache.character_data:
             check_grow_to_loli(child_id)
 
@@ -950,7 +949,7 @@ def chest_grow(character_id: int, print_flag: bool = False) -> str:
     """
 
     character_data: game_type.Character = cache.character_data[character_id]
-    mom_id = character_data.relationship.mother_id
+    mom_id = relations.mother_id(character_id)
     mom_character_data: game_type.Character = cache.character_data[mom_id]
     # 跳过机械
     if mom_character_data.race == 2:
@@ -1012,7 +1011,7 @@ def body_part_grow(character_id: int, print_flag: bool = False) -> str:
     """
 
     character_data: game_type.Character = cache.character_data[character_id]
-    mom_id = character_data.relationship.mother_id
+    mom_id = relations.mother_id(character_id)
     mom_character_data: game_type.Character = cache.character_data[mom_id]
     now_text = ""
 
@@ -1083,11 +1082,9 @@ def judge_suspected_abnormal_daughter(character_id: int) -> bool:
     """
     if character_id == 0 or character_id not in cache.character_data:
         return False
-    if cache.character_data[character_id].relationship.father_id != 0:
+    if relations.father_id(character_id) != 0:
         return False
-    return (
-        character_id not in cache.character_data[0].relationship.child_id_list
-    )
+    return character_id not in relations.child_id_list(0)
 
 
 def get_all_player_daughter_id_list() -> list:
@@ -1101,7 +1098,7 @@ def get_all_player_daughter_id_list() -> list:
     return [
         cid
         for cid in sorted(cache.character_data)
-        if cid != 0 and cache.character_data[cid].relationship.father_id == 0
+        if cid != 0 and relations.father_id(cid) == 0
     ]
 
 
@@ -1113,7 +1110,7 @@ def get_suspected_abnormal_daughter_list() -> list:
     Return arguments:
     list -- 疑似误入的女儿id列表，按id升序
     """
-    child_id_set = set(cache.character_data[0].relationship.child_id_list)
+    child_id_set = set(relations.child_id_list(0))
     return [
         cid
         for cid in get_all_player_daughter_id_list()
@@ -1153,8 +1150,10 @@ def remove_abnormal_daughter(character_id: int) -> bool:
     cache.npc_tem_data.pop(character_id, None)
     # 清掉其他角色对她的引用：血缘子女名单与当前交互对象
     for other_data in cache.character_data.values():
-        if character_id in other_data.relationship.child_id_list:
-            other_data.relationship.child_id_list.remove(character_id)
+        child_id_list = relations.child_id_list(other_data.cid)
+        if character_id in child_id_list:
+            child_id_list.remove(character_id)
+            relations.child_id_list.set(other_data.cid, child_id_list)
         if other_data.target_character_id == character_id:
             other_data.target_character_id = other_data.cid
     # 清掉公务事件队列里指向她的项（clean 会丢弃主体已不在角色表里的项）

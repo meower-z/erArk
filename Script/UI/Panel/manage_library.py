@@ -12,6 +12,7 @@ from Script.UI.Moudle import draw, panel, view
 from Script.UI.Panel import common_select_NPC
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import entertainment, library
+from Script.Modules.domains import chara_life
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -193,9 +194,11 @@ class Manage_Library_Panel:
         """角色还书"""
 
         character_data = cache.character_data[chara_id]
-        character_data.entertainment.book_return_possibility += 100
-        character_data.entertainment.entertainment_type = [101] * len(
-            character_data.entertainment.entertainment_type
+        chara_life.book_return_possibility.set(
+            chara_id, chara_life.book_return_possibility(chara_id) + 100
+        )
+        chara_life.entertainment_type.set(
+            chara_id, [101] * len(chara_life.entertainment_type(chara_id))
         )
         now_draw = draw.WaitDraw()
         now_draw.width = window_width
@@ -321,12 +324,8 @@ class Manage_Library_Panel:
         for character_id in cache.character_data:
             if character_id == 0:  # 跳过玩家
                 continue
-            character_data = cache.character_data[character_id]
             # 检查是否有借阅历史记录
-            if (
-                hasattr(character_data.entertainment, "borrow_book_history")
-                and len(character_data.entertainment.borrow_book_history) > 0
-            ):
+            if len(chara_life.borrow_book_history(character_id)) > 0:
                 character_list.append(
                     [character_id, self.show_character_history, []]
                 )
@@ -407,22 +406,17 @@ class Manage_Library_Panel:
             line_feed.draw()
 
             # 检查是否有借阅历史
-            if (
-                not hasattr(character_data.entertainment, "borrow_book_history")
-                or len(character_data.entertainment.borrow_book_history) == 0
-            ):
+            if len(chara_life.borrow_book_history(character_id)) == 0:
                 no_history_draw = draw.NormalDraw()
                 no_history_draw.width = window_width
                 no_history_draw.text = _("\n  该角色暂无借阅历史记录\n")
                 no_history_draw.draw()
             else:
                 # 显示借阅历史统计信息
-                total_books = len(
-                    character_data.entertainment.borrow_book_history
-                )
+                total_books = len(chara_life.borrow_book_history(character_id))
                 total_reads = sum(
                     record.get("total_read_count", 0)
-                    for record in character_data.entertainment.borrow_book_history
+                    for record in chara_life.borrow_book_history(character_id)
                 )
 
                 stats_draw = draw.NormalDraw()
@@ -437,7 +431,7 @@ class Manage_Library_Panel:
 
                 # 显示详细的借阅记录
                 for i, record in enumerate(
-                    reversed(character_data.entertainment.borrow_book_history)
+                    reversed(chara_life.borrow_book_history(character_id))
                 ):
                     book_id = record.get("book_id", 0)
                     book_name = record.get("book_name", _("未知书籍"))

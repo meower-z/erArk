@@ -10,6 +10,7 @@ from Script.UI.Panel import hypnosis_panel
 from Script.Design import game_time
 from Script.Modules.domains import abilities, action_info, flags, h_meters
 from Script.Modules.domains import h_state, hypnosis, inventory, needs
+from Script.Modules.domains import chara_profile, relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -668,18 +669,19 @@ class CharacterInfoHead:
         # 好感与信赖
         favorability_and_trust_text = ""
         if character_id:
+            favorability = relations.favorability(character_id)[0]
             favorability_lv, _fav_tem = attr_calculation.get_favorability_level(
-                character_data.favorability[0]
+                favorability
             )
             favorability_lv_letter = attr_calculation.judge_grade(
                 favorability_lv
             )
             trust_lv, _trust_tem = attr_calculation.get_trust_level(
-                character_data.trust
+                relations.trust(character_id)
             )
             trust_lv_letter = attr_calculation.judge_grade(trust_lv)
-            favorability_text = f"{int(character_data.favorability[0])}"
-            trust_text = f"{round(character_data.trust, 1)}%"
+            favorability_text = f"{int(favorability)}"
+            trust_text = f"{round(relations.trust(character_id), 1)}%"
             # 只显示等级
             if normal_config.system_setting.draw_setting[3] == 1:
                 favorability_and_trust_text = _(
@@ -716,9 +718,7 @@ class CharacterInfoHead:
         if character_id:
             message = f"{character_data.name} {favorability_and_trust_text}"
         else:
-            message = (
-                f"{character_data.name}{character_data.nick_name}{eja_text}"
-            )
+            message = f"{character_data.name}{chara_profile.nick_name(character_id)}{eja_text}"
         message_draw = draw.CenterDraw()
         # 根据其他状态的长度来调整文本的长度，同时也保证了一个最小长度
         text_width = text_handle.get_text_index(message)

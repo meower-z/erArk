@@ -141,6 +141,8 @@ class LanguageRun:
         Keyword arguments:
         chara_id -- 角色id
         """
+        from Script.Modules.domains import relations
+
         chara = self.cache.character_data[chara_id]
         # 面板记住上次选的召集方式，只在第一次按
         mode = () if self.summon_mode_chosen else ("召集到自己当前位置",)
@@ -153,8 +155,8 @@ class LanguageRun:
                 break
             self.instruct(self.constant.Instruct.WAIT)
         # 好感与信赖的上限，日常互动能攒到，够邀请群交与邀请H的判定
-        chara.favorability[0] = 100000
-        chara.trust = 300
+        kernel_data.put(relations.favorability.set_item, chara_id, 0, 100000)
+        kernel_data.put(relations.trust.set, chara_id, 300)
 
     def group_sex_serve(self) -> list[Any]:
         """
@@ -290,6 +292,8 @@ class LanguageRun:
 
     def commission_reward(self) -> list[Any]:
         """逐项结算前缀在 REWARD_PREFIX_SET 里的委托奖励：项数、声望与阿米娅的好感"""
+        from Script.Modules.domains import relations
+
         function: Any = game(
             "Script.System.Field_Commission_System.field_commission_function"
         )
@@ -307,7 +311,11 @@ class LanguageRun:
         reputation_dict = {
             str(key): reputation[key] for key in sorted(reputation)
         }
-        return [settled, reputation_dict, self.amiya.favorability[0]]
+        return [
+            settled,
+            reputation_dict,
+            relations.favorability(self.amiya.cid)[0],
+        ]
 
     def cook_question(self) -> dict[str, list[int]]:
         """每道菜各阶段与各特殊调味替换阶段的题数"""

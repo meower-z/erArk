@@ -23,7 +23,7 @@ from Script.Config import game_config
 from Script.Design import game_time, attr_calculation
 from Script.Modules.domains import growth
 from Script.System.Education_System import education_constant, growth_handle
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, chara_life
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -187,7 +187,6 @@ def get_top_ability(character_id: int) -> tuple[int, int]:
     Return arguments:
     Tuple[int, int] -- (科目能力id, 等级)，一门都没学过则为(-1, 0)
     """
-
     if character_id not in cache.character_data:
         return -1, 0
     top_ability_id = -1
@@ -248,7 +247,7 @@ def get_report_incomplete_reason(character_id: int) -> str:
     if character_id not in cache.character_data:
         return ""
     character_data: game_type.Character = cache.character_data[character_id]
-    work_type = character_data.work.work_type
+    work_type = chara_life.work_type(character_id)
     growth_data = growth.of(character_id)
     base_work_type = (
         growth_data.semester_base_work_type if growth_data is not None else -1
@@ -297,7 +296,7 @@ def judge_adult_out_of_school(character_id: int) -> bool:
     if growth_handle.get_character_stage(character_id) != 104:
         return False
     return (
-        cache.character_data[character_id].work.work_type
+        chara_life.work_type(character_id)
         != education_constant.STUDENT_WORK_TYPE
     )
 
@@ -420,7 +419,6 @@ def reset_semester_baseline(character_id: int, semester_id: list[int]) -> None:
     无
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     with growth.editing(character_id) as growth_data:
         assert growth_data is not None
         # 存的是 list 的**副本**：直接存传进来的那个对象，多个孩子会共享同一个 list
@@ -432,7 +430,7 @@ def reset_semester_baseline(character_id: int, semester_id: list[int]) -> None:
             for ability_id in education_constant.SUBJECT_ABILITY_LIST
         }
         # 学期初的岗位（Plan 30）：成绩单按它与结算时的岗位写不全的理由，学期结算据它认出整学期都不在学生岗的成年女儿
-        growth_data.semester_base_work_type = character_data.work.work_type
+        growth_data.semester_base_work_type = chara_life.work_type(character_id)
 
 
 def settle_semester_change() -> list[int]:

@@ -23,6 +23,7 @@ from Script.Test.Static_Check import repair
 from Script.Test.Static_Check.check_registry import get_all_checks
 from tests import kernel_data
 from tests.fast.base import FastTestCase
+from Script.Modules.domains import chara_life
 
 JOBS = {1: 71, 2: 0, 3: 71, 4: 191, 5: 22, 6: 71}
 """ 角色id到岗位id：三名招聘专员、一名无岗位、一名监狱长、一名检修 """
@@ -36,7 +37,11 @@ class WorkRostersTest(FastTestCase):
         super().setUp()
         self.world.chara(0, "博士")
         for cid, job in JOBS.items():
-            self.world.chara(cid, f"干员{cid}").work.work_type = job
+            kernel_data.put(
+                chara_life.work_type.set,
+                self.world.chara(cid, f"干员{cid}").cid,
+                job,
+            )
 
     def met(self, job: int) -> tuple[int, ...]:
         """
@@ -49,7 +54,7 @@ class WorkRostersTest(FastTestCase):
         return tuple(
             cid
             for cid in roster.active()
-            if cid and self.cache.character_data[cid].work.work_type == job
+            if cid and chara_life.work_type(cid) == job
         )
 
     def flagged(self, check_id: str) -> bool:
@@ -76,7 +81,7 @@ class WorkRostersTest(FastTestCase):
     def test_warden_kept_without_191(self) -> None:
         """监狱长换了岗位后再刷新，没有别人是 191，监狱长仍是她"""
         kernel_data.written(basement.update_work_people)
-        self.cache.character_data[4].work.work_type = 0
+        kernel_data.put(chara_life.work_type.set, 4, 0)
         kernel_data.written(basement.update_work_people)
         self.assertEqual(work.warden(), 4)
         self.assertEqual(work.roster(191), ())
@@ -87,7 +92,7 @@ class WorkRostersTest(FastTestCase):
         pick = working.open_pick()
         basement.update_work_people()
         self.assertEqual(working.close_pick(pick), ())
-        self.cache.character_data[2].work.work_type = 71
+        kernel_data.put(chara_life.work_type.set, 2, 71)
         pick = working.open_pick()
         basement.update_work_people()
         carried = [
@@ -129,7 +134,7 @@ class WorkRostersTest(FastTestCase):
         """ISLAND-08 对刷新后的名册不报，有人换了岗位而名册没刷新时报。ISLAND-29 的修复把监狱长改到 4 号"""
         kernel_data.written(basement.update_work_people)
         self.assertFalse(self.flagged("ISLAND-08"))
-        self.cache.character_data[5].work.work_type = 71
+        kernel_data.put(chara_life.work_type.set, 5, 71)
         self.assertTrue(self.flagged("ISLAND-08"))
         with kernel_data.writing():
             work.set_warden(1)

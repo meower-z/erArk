@@ -11,6 +11,7 @@ import ast
 import inspect
 from Script.Design import game_time
 from tests import kernel_data
+from Script.Modules.domains import chara_life, relations
 
 if TYPE_CHECKING:
     from types import ModuleType
@@ -298,15 +299,15 @@ check(
 )
 
 section("每日改写")
-loli.entertainment.entertainment_type = [11, 12, 13]
+chara_life.entertainment_type.set(loli.cid, [11, 12, 13])
 schedule_template_handle.apply_schedule_for_child(201)
-check("没套模板不改写", loli.entertainment.entertainment_type == [11, 12, 13])
+check("没套模板不改写", chara_life.entertainment_type(loli.cid) == [11, 12, 13])
 schedule_template_handle.apply_template(201, T.TEMPLATE_BALANCED)
 schedule_template_handle.apply_schedule_for_child(201)
 check(
     "上午有课也照写（有课的节次由课表在节次级别优先），三段全按模板",
-    loli.entertainment.entertainment_type == [SELF_STUDY, CHESS, MOVIE],
-    loli.entertainment.entertainment_type,
+    chara_life.entertainment_type(loli.cid) == [SELF_STUDY, CHESS, MOVIE],
+    chara_life.entertainment_type(loli.cid),
 )
 check(
     "候选活动表不含 0 号",
@@ -327,7 +328,7 @@ check(
 )
 schedule_template_handle.apply_template(202, T.TEMPLATE_PLAYFUL)
 schedule_template_handle.apply_template(203, T.TEMPLATE_PLAYFUL)
-child.entertainment.entertainment_type = [11, 12, 13]
+chara_life.entertainment_type.set(child.cid, [11, 12, 13])
 schedule_template_handle.apply_schedule_for_child(202)
 kernel_data.set_room_open(GAME_ROOM_OPEN_CID, True)
 schedule_template_handle.apply_template(202, 0)
@@ -355,12 +356,12 @@ check(
 tend_tid = schedule_template_handle.create_template("旧档里排了照料卵")
 schedule_template_handle.set_template_slot(tend_tid, 2, TEND)
 schedule_template_handle.apply_template(202, tend_tid)
-child.entertainment.entertainment_type = [11, 12, 13]
+chara_life.entertainment_type.set(child.cid, [11, 12, 13])
 schedule_template_handle.apply_schedule_for_child(202)
 check(
     "旧档里残留的照料卵：改写时跳过，晚上留着当天的随机值（此前写成照料卵，孩子每晚去育儿室「孵化卵」）",
-    child.entertainment.entertainment_type[2] == 13,
-    child.entertainment.entertainment_type,
+    chara_life.entertainment_type(child.cid)[2] == 13,
+    chara_life.entertainment_type(child.cid),
 )
 check(
     "日程行写「照料卵（条件不符→自由选择）」",
@@ -381,11 +382,11 @@ _orig_layer, _orig_need = (
 )
 egg_handle.is_egg_layer = lambda character_id: True
 egg_handle.have_need_tend_eggs = lambda character_id: True
-adult_student.entertainment.entertainment_type = [11, 12, 13]
+chara_life.entertainment_type.set(adult_student.cid, [11, 12, 13])
 egg_handle.replace_entertainment_for_eggs(301)
 _tend_slot = (
-    adult_student.entertainment.entertainment_type.index(TEND)
-    if TEND in adult_student.entertainment.entertainment_type
+    chara_life.entertainment_type(adult_student.cid).index(TEND)
+    if TEND in chara_life.entertainment_type(adult_student.cid)
     else -1
 )
 schedule_template_handle.apply_schedule_for_child(301)
@@ -396,15 +397,13 @@ egg_handle.is_egg_layer, egg_handle.have_need_tend_eggs = (
 check(
     "持卵钩子换上的照料卵时段在日程改写后仍是照料卵，其余时段照常改写（跨天结算里钩子先于改写，此前被改回模板的活动）",
     _tend_slot != -1
-    and adult_student.entertainment.entertainment_type[_tend_slot] == TEND
+    and chara_life.entertainment_type(adult_student.cid)[_tend_slot] == TEND
     and all(
         value == CHESS
-        for index, value in enumerate(
-            adult_student.entertainment.entertainment_type
-        )
+        for index, value in enumerate(chara_life.entertainment_type(301))
         if index != _tend_slot
     ),
-    (_tend_slot, adult_student.entertainment.entertainment_type),
+    (_tend_slot, chara_life.entertainment_type(adult_student.cid)),
 )
 schedule_template_handle.apply_template(301, 0)
 
@@ -456,8 +455,8 @@ check(
 )
 schedule_template_handle.delete_template(_l17_reused)
 remove_character(204)
-if 204 in mother.relationship.child_id_list:
-    mother.relationship.child_id_list.remove(204)
+with relations.child_id_list.editing(mother.cid) as _children:
+    _children[:] = [c for c in _children if c != 204]
 
 section(
     "Plan 32 §3.12（L18）：成年非女儿干员离开学生岗后，当学生时套的日程不再改写"
@@ -466,20 +465,20 @@ _l18_id = schedule_template_handle.create_template("三段下棋（L18）")
 for _slot in range(3):
     schedule_template_handle.set_template_slot(_l18_id, _slot, CHESS)
 schedule_template_handle.apply_template(301, _l18_id)
-adult_student.entertainment.entertainment_type = [11, 12, 13]
+chara_life.entertainment_type.set(adult_student.cid, [11, 12, 13])
 schedule_template_handle.apply_schedule_for_child(301)
 check(
     "L18 对照：成年学生在学生岗时照模板改写",
-    adult_student.entertainment.entertainment_type == [CHESS] * 3,
-    adult_student.entertainment.entertainment_type,
+    chara_life.entertainment_type(adult_student.cid) == [CHESS] * 3,
+    chara_life.entertainment_type(adult_student.cid),
 )
-adult_student.work.work_type = 21
-adult_student.entertainment.entertainment_type = [11, 12, 13]
+chara_life.work_type.set(adult_student.cid, 21)
+chara_life.entertainment_type.set(adult_student.cid, [11, 12, 13])
 schedule_template_handle.apply_schedule_for_child(301)
 check(
     "L18 改岗后（不是女儿）：不再改写，保留当天的随机娱乐（此前每天照当学生时套的模板写，要解除只能先改回学生岗）",
-    adult_student.entertainment.entertainment_type == [11, 12, 13],
-    adult_student.entertainment.entertainment_type,
+    chara_life.entertainment_type(adult_student.cid) == [11, 12, 13],
+    chara_life.entertainment_type(adult_student.cid),
 )
 adult_growth = growth.of(adult_student.cid)
 assert adult_growth is not None
@@ -487,23 +486,23 @@ check(
     "L18 模板本身保留：她仍指着这套模板",
     adult_growth.schedule_template_id == _l18_id,
 )
-adult_student.work.work_type = 152
+chara_life.work_type.set(adult_student.cid, 152)
 schedule_template_handle.apply_schedule_for_child(301)
 check(
     "L18 改回学生岗：照旧生效",
-    adult_student.entertainment.entertainment_type == [CHESS] * 3,
-    adult_student.entertainment.entertainment_type,
+    chara_life.entertainment_type(adult_student.cid) == [CHESS] * 3,
+    chara_life.entertainment_type(adult_student.cid),
 )
-loli.work.work_type = 21
+chara_life.work_type.set(loli.cid, 21)
 schedule_template_handle.apply_template(201, _l18_id)
-loli.entertainment.entertainment_type = [11, 12, 13]
+chara_life.entertainment_type.set(loli.cid, [11, 12, 13])
 schedule_template_handle.apply_schedule_for_child(201)
 check(
     "L18 改了岗的女儿不受影响：照模板改写（女儿不看岗位，工作时间的见学让路另有判定）",
-    loli.entertainment.entertainment_type == [CHESS] * 3,
-    loli.entertainment.entertainment_type,
+    chara_life.entertainment_type(loli.cid) == [CHESS] * 3,
+    chara_life.entertainment_type(loli.cid),
 )
-loli.work.work_type = 152
+chara_life.work_type.set(loli.cid, 152)
 schedule_template_handle.apply_template(201, 0)
 schedule_template_handle.apply_template(301, 0)
 schedule_template_handle.delete_template(_l18_id)

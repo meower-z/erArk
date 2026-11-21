@@ -13,7 +13,7 @@ from Script.Config import game_config
 from Script.Modules.domains import maintenance
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.Modules.domains import action_info, entertainment, flags, location
-from Script.Modules.domains import wardrobe
+from Script.Modules.domains import wardrobe, chara_life, relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -729,7 +729,6 @@ def handle_place_have_assistant(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    pl_character_data: game_type.Character = cache.character_data[0]
     character_list = map_handle.get_chara_now_scene_all_chara_id_list(
         character_id
     )
@@ -741,7 +740,7 @@ def handle_place_have_assistant(character_id: int) -> int:
         # 跳过玩家
         if chara_id == 0:
             continue
-        if chara_id == pl_character_data.assistant_character_id:
+        if chara_id == relations.assistant_character_id(0):
             return 1
     return 0
 
@@ -1580,7 +1579,7 @@ def handle_in_dormitory(character_id: int) -> int:
     now_position = map_handle.get_map_system_path_str_for_list(
         character_data.position
     )
-    dormitory = character_data.dormitory
+    dormitory = chara_life.dormitory(character_id)
     scene_list = map_handle.get_map_system_path_for_str(dormitory)
     # 博士的宿舍为空，或首段是翻译后的中枢名时，按中枢\博士房间比较
     if (character_id == 0 and dormitory == "") or scene_list[0] in {
@@ -1703,7 +1702,7 @@ def handle_in_problem_target_dormitory(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     # 获取目标宿舍路径，若无有效目标则进入返回舍管房阶段
-    target_room = character_data.work.dormitory_admin_target_room
+    target_room = chara_life.dormitory_admin_target_room(character_data.cid)
     if target_room == "":
         return 0
 

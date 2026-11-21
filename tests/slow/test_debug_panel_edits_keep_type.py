@@ -69,6 +69,7 @@ class DebugPanelEditKeepTypeTest(SlowTestCase):
 
     def test_party_day(self) -> None:
         """[007] 改一天的派对娱乐，当天刷新娱乐时干员的娱乐都是它"""
+        from Script.Modules.domains import chara_life
         from Script.Design import game_time
 
         from Script.Design import handle_npc_ai
@@ -89,9 +90,9 @@ class DebugPanelEditKeepTypeTest(SlowTestCase):
             "派对计划只改输入的这一天",
         )
         npc_id = self.other_npc()
-        handle_npc_ai.get_chara_entertainment(npc_id)
+        kernel_data.written(handle_npc_ai.get_chara_entertainment, npc_id)
         self.assertEqual(
-            self.cache.character_data[npc_id].entertainment.entertainment_type,
+            chara_life.entertainment_type(npc_id),
             [PARTY_ENTERTAINMENT] * 3,
             "当天有派对时干员的三项娱乐都是派对的娱乐",
         )

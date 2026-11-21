@@ -6,10 +6,10 @@ from Script.Core import cache_control, game_type, get_text, constant
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle
 from Script.UI.Moudle import draw
-from Script.Modules.domains import abilities, diplomacy, economy, facility
-from Script.Modules.domains import flags, fridge, inventory, maintenance
-from Script.Modules.domains import official, physical_exam, power, production
-from Script.Modules.domains import recruit, roster, tallies, warehouse, work
+from Script.Modules.domains import flags, maintenance, physical_exam, production
+from Script.Modules.domains import abilities, chara_life, diplomacy, inventory
+from Script.Modules.domains import economy, facility, official, power, warehouse
+from Script.Modules.domains import fridge, recruit, roster, tallies, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏内缓存数据 """
@@ -304,7 +304,7 @@ def update_work_people() -> None:
     for line in recruit_lines.values():
         main_id = line["main"]
         if main_id and main_id in cache.character_data:
-            if cache.character_data[main_id].work.work_type != 71:
+            if chara_life.work_type(main_id) != 71:
                 line["main"] = 0
     recruit.put_lines(recruit_lines)
     # 撤下职位与生产线不对应的主负责人
@@ -315,7 +315,7 @@ def update_work_people() -> None:
     roster.discard(0)
     for chara_id in roster.active():
         character_data = cache.character_data[chara_id]
-        work_type = character_data.work.work_type
+        work_type = chara_life.work_type(chara_id)
 
         rosters.setdefault(work_type, []).append(chara_id)
         if work_type:
@@ -333,7 +333,7 @@ def update_work_people() -> None:
                         break
                 else:
                     # 名册上没有的，视为旧版本的外交官数据，改为新的邀请专员
-                    character_data.work.work_type = 132
+                    chara_life.work_type.set(chara_id, 132)
 
         if work_type == clinic_work_id:
             clinic_doctors.append(chara_id)

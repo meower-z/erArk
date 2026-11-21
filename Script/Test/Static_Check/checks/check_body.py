@@ -26,6 +26,7 @@ from Script.Modules.domains import (
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
+from Script.Modules.domains import relations
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -1092,9 +1093,7 @@ def check_postpartum_child() -> list[CheckFailure]:
                 )
             )
         if t23 or t24:
-            child_list = getattr(
-                getattr(chara, "relationship", None), "child_id_list", None
-            )
+            child_list = relations.child_id_list(cid)
             if not (
                 isinstance(child_list, list)
                 and len(child_list) > 0
@@ -1298,11 +1297,7 @@ def check_age_stage_talent() -> list[CheckFailure]:
     """
     failures = []
     for cid, chara in _iter_charas():
-        if (
-            cid == 0
-            or getattr(getattr(chara, "relationship", None), "father_id", -1)
-            != 0
-        ):
+        if cid == 0 or relations.father_id(cid) != 0:
             continue
         hit = [i for i in range(101, 108) if _talent_get(chara, i)]
         if len(hit) != 1:
@@ -1453,9 +1448,7 @@ def check_child_born_time() -> list[CheckFailure]:
     for cid, chara in _iter_charas():
         if not (_talent_get(chara, 23) or _talent_get(chara, 24)):
             continue
-        child_list = getattr(
-            getattr(chara, "relationship", None), "child_id_list", None
-        )
+        child_list = relations.child_id_list(cid)
         # BODY-23前置条件：孩子引用必须有效，否则由BODY-23报告，此处跳过
         if not (
             isinstance(child_list, list)

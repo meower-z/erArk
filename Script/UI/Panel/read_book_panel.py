@@ -12,6 +12,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.Modules.tk_ui import player_pick
 import random
+from Script.Modules.domains import chara_life
 
 panel_info_data: dict[str, object] = {}
 
@@ -71,8 +72,6 @@ class Read_Book_Panel:
     def draw(self) -> None:
         """绘制对象"""
 
-        character_data: game_type.Character = cache.character_data[0]
-
         title_text = _("读书")
         title_draw = draw.TitleLineDraw(title_text, self.width)
 
@@ -81,7 +80,7 @@ class Read_Book_Panel:
             title_draw.draw()
 
             # 当前借书数量信息
-            book_id_set = character_data.entertainment.borrow_book_id_set
+            book_id_set = chara_life.borrow_book_id_set(0)
 
             # 如果未借书的话直接输出提示信息
             if len(book_id_set) == 0:
@@ -97,10 +96,8 @@ class Read_Book_Panel:
                     son_type_name = game_config.config_book_type[
                         book_data.type
                     ].son_type_name
-                    now_progress = (
-                        character_data.entertainment.read_book_progress.get(
-                            book_id, 0
-                        )
+                    now_progress = chara_life.read_book_progress(0).get(
+                        book_id, 0
                     )
                     progress_text = _("（阅读进度：{0}%）").format(now_progress)
                     book_text = f"  [{str(book_id).rjust(3,'0')}]({son_type_name}){book_data.name} {progress_text}"

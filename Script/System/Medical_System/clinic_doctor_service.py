@@ -20,6 +20,7 @@ from Script.System.Medical_System import (
 )
 from Script.System.Medical_System import clinic_patient_management
 from Script.Modules.domains import medical, medical_patient, visitor
+from Script.Modules.domains import chara_life
 
 _: FunctionType = get_text._
 """ 翻译函数 """
@@ -187,9 +188,7 @@ def _bind_doctor_to_patient(
 
     # 写入病人侧的绑定信息并同步医生的运行期字段。
     patient.assigned_doctor_id = doctor_character.cid
-    work_data = getattr(doctor_character, "work", None)
-    if work_data is not None:
-        work_data.medical_patient_id = patient.patient_id
+    chara_life.medical_patient_id.set(doctor_character.cid, patient.patient_id)
 
 
 def _clear_doctor_patient_binding(
@@ -215,9 +214,7 @@ def _clear_doctor_patient_binding(
 
     # 将医生的运行期病人引用重置为 0，避免重复引用。
     if doctor_character is not None:
-        work_data = getattr(doctor_character, "work", None)
-        if work_data is not None:
-            work_data.medical_patient_id = 0
+        chara_life.medical_patient_id.set(doctor_character.cid, 0)
 
 
 def _patient_matches_specialization(
@@ -534,8 +531,7 @@ def acquire_patient_for_doctor(
     )
 
     # --- 若医生已有绑定病人则尝试直接沿用 ---
-    work_data = getattr(doctor_character, "work", None)
-    assigned_id = int(getattr(work_data, "medical_patient_id", 0) or 0)
+    assigned_id = chara_life.medical_patient_id(doctor_character.cid)
     cached_patient = patient_table.get(assigned_id) if assigned_id else None
     if _is_patient_assignable(cached_patient, doctor_id, specialization_key):
         _bind_doctor_to_patient(cached_patient, doctor_character)
@@ -693,9 +689,7 @@ def _is_medical_doctor_candidate(
         return False
 
     # 仅允许空岗、门诊或住院岗位的干员。
-    character = cache.character_data[character_id]
-    work_type = getattr(character, "work", None)
-    work_id = getattr(work_type, "work_type", 0) if work_type is not None else 0
+    work_id = chara_life.work_type(character_id)
     clinic_work_id = medical_constant.MedicalDoctorProfession.CLINICIAN.value
     hospital_work_id = (
         medical_constant.MedicalDoctorProfession.HOSPITALIST.value

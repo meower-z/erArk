@@ -38,7 +38,6 @@ def collect(language: str) -> dict[str, Any]:
     """
     translate = set_language(language)
     world: Any = game("tests.world").FullWorld.load()
-    cache = world.cache
     constant: Any = game("Script.Core.constant")
     snapshot_states: Any = game("tests.snapshot_states")
     # FullWorld.new_game 按下的按钮文字没有译成当前语言
@@ -66,12 +65,11 @@ def collect(language: str) -> dict[str, Any]:
     with kernel_data.writing():
         for visitor_id in visitor_list:
             invite_visitor_panel.settle_visitor_arrivals(visitor_id)
+    chara_life: Any = game("Script.Modules.domains.chara_life")
     return {
         "guest_rooms": constant.place_data["Guest_Room"],
         "visitor_max": game("Script.Modules.domains.visitor").capacity(),
-        "dormitory": [
-            cache.character_data[cid].dormitory for cid in visitor_list
-        ],
+        "dormitory": [chara_life.dormitory(cid) for cid in visitor_list],
     }
 
 

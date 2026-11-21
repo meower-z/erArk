@@ -15,6 +15,7 @@ from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import abilities, dirty, hypnosis, player_ability
 from Script.Modules.domains import player_collection, roster, status, warehouse
+from Script.Modules.domains import relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -39,8 +40,6 @@ class Originium_Arts_Panel:
         """初始化绘制对象"""
         self.width: int = width
         """ 绘制的最大宽度 """
-        # self.now_panel = _("源石技艺")
-        # """ 当前绘制的页面 """
         self.draw_list: list[draw.NormalDraw] = []
         """ 绘制的文本列表 """
         self.pl_character_data = cache.character_data[0]
@@ -55,8 +54,6 @@ class Originium_Arts_Panel:
         while 1:
             return_list = []
             title_draw.draw()
-            # line = draw.LineDraw("-", window_width)
-            # line.draw()
             cinfo_draw = draw.NormalDraw()
             info_text = _("\n要使用哪一个源石技艺呢？\n")
             cinfo_draw.text = info_text
@@ -383,14 +380,19 @@ class Originium_Arts_Panel:
                     for chara_id in roster.active():
                         character_data = cache.character_data[chara_id]
                         if (
-                            character_data.favorability[0]
+                            relations.favorability(character_data.cid)[0]
                             > now_favorability_count
                         ):
                             now_favorability_count = int(
-                                character_data.favorability[0]
+                                relations.favorability(character_data.cid)[0]
                             )
-                        if character_data.trust > now_trust_count:
-                            now_trust_count = int(character_data.trust)
+                        if (
+                            relations.trust(character_data.cid)
+                            > now_trust_count
+                        ):
+                            now_trust_count = int(
+                                relations.trust(character_data.cid)
+                            )
                     # 绘制
                     draw_text += _(
                         "：需要单干员最高好感度≥{0}（当前{1}），最高信赖度≥{2}（当前{3}）"
@@ -418,7 +420,7 @@ class Originium_Arts_Panel:
                         )
                         character_data = cache.character_data[chara_id]
                         now_favorability_count += int(
-                            character_data.favorability[0]
+                            relations.favorability(character_data.cid)[0]
                         )
                     # 绘制
                     draw_text += _(
@@ -444,7 +446,7 @@ class Originium_Arts_Panel:
                     for chara_id in roster.active():
                         character_data = cache.character_data[chara_id]
                         now_favorability_count += int(
-                            character_data.favorability[0]
+                            relations.favorability(character_data.cid)[0]
                         )
                         for talent_id in [204, 214]:
                             if abilities.talent(chara_id)[talent_id]:
@@ -512,9 +514,7 @@ class Originium_Arts_Panel:
                 # 生理透视
                 elif talent_id == 309:
                     # 计算体内被射精总量和总绝顶经验
-                    now_child_count = len(
-                        cache.character_data[0].relationship.child_id_list
-                    )
+                    now_child_count = len(relations.child_id_list(0))
                     # 绘制
                     draw_text += _("：需要生育孩子数量≥{0}（当前{1}）").format(
                         talent_of_arts_data.lv_up_value1, now_child_count

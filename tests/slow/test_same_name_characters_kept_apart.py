@@ -65,12 +65,13 @@ def collect_new_game(language: str) -> dict[str, list[int]]:
     Return arguments:
     dict -- npc_id_got、assistant 与 candidates，见模块文档字符串
     """
-    run = LanguageRun(language)
-    cache = run.cache
+    from Script.Modules.domains import relations
+
+    LanguageRun(language)
     assistant_panel = game("Script.UI.Panel.assistant_panel")
     return {
         "npc_id_got": sorted(kernel_data.domain("roster").active()),
-        "assistant": [cache.character_data[0].assistant_character_id],
+        "assistant": [relations.assistant_character_id(0)],
         "candidates": assistant_panel.get_assistant_candidates(),
     }
 
@@ -83,11 +84,15 @@ def collect_load(language: str) -> dict[str, list[int]]:
     Return arguments:
     dict -- 角色id（字符串）-> 读档后该键下角色的 [cid, adv, 好感度]
     """
+    from Script.Modules.domains import relations
+
     run = NoBonusRun(language)
     cache = run.cache
     save_handle = game("Script.Core.save_handle")
     for chara_id, favorability in FAVORABILITY_DICT.items():
-        cache.character_data[chara_id].favorability[0] = favorability
+        kernel_data.put(
+            relations.favorability.set_item, chara_id, 0, favorability
+        )
     save_handle.establish_save(SAVE_ID)
     try:
         save_handle.input_load_save(SAVE_ID)
@@ -101,7 +106,7 @@ def collect_load(language: str) -> dict[str, list[int]]:
         loaded[str(chara_id)] = [
             character.cid,
             character.adv,
-            character.favorability[0],
+            relations.favorability(character.cid)[0],
         ]
     return loaded
 

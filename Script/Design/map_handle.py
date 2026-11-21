@@ -6,7 +6,7 @@ from Script.Core import cache_control, game_type, get_text, constant
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
 from types import FunctionType
-from Script.Modules.domains import facility, flags
+from Script.Modules.domains import facility, flags, chara_life, relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -722,12 +722,12 @@ def judge_scene_accessible(
     # 锁门判断
     if now_scene_data.close_flag == 1:
         # 即使关门，也可以进去自己的宿舍
-        if character_data.dormitory == target_scene_str:
+        if chara_life.dormitory(character_data.cid) == target_scene_str:
             pass
         # 助理可以进锁门了的博士房间和博士办公室，跟着博士进门时也可以进
         elif (
             character_id
-            and character_id == pl_character_data.assistant_character_id
+            and character_id == relations.assistant_character_id(0)
             and (
                 "Dr_room" in now_scene_data.scene_tag
                 or "Dr_Office" in now_scene_data.scene_tag
@@ -781,7 +781,7 @@ def judge_scene_accessible(
         # 博士房间
         if "Dr_room" in now_scene_data.scene_tag:
             # 助理可以进
-            if character_id == pl_character_data.assistant_character_id:
+            if character_id == relations.assistant_character_id(0):
                 pass
             else:
                 return "private"
@@ -791,7 +791,7 @@ def judge_scene_accessible(
         # 非自己的宿舍
         elif (
             "Dormitory" in now_scene_data.scene_tag
-            and character_data.dormitory != target_scene_str
+            and chara_life.dormitory(character_data.cid) != target_scene_str
         ):
             return "private"
 

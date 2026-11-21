@@ -17,7 +17,7 @@ from typing import Any
 from Script.Core import constant
 from Script.Design import handle_premise
 from tests.fast.base import FastTestCase
-from Script.Modules.domains import flags
+from Script.Modules.domains import flags, chara_life, relations
 
 LOADED = handle_premise
 """ 导入即注册全部前提 """
@@ -182,8 +182,10 @@ class PremisesReadOnlyTest(FastTestCase):
         """
 
         def prepare() -> None:
-            self.player.dormitory = ""
-            self.player.assistant_character_id = NPC
-            self.npc.assistant_services = {}
+            kernel_data.put(chara_life.dormitory.set, self.player.cid, "")
+            kernel_data.put(
+                relations.assistant_character_id.set, self.player.cid, NPC
+            )
+            kernel_data.put(relations.assistant_services.set, self.npc.cid, {})
 
         self.check(prepare)

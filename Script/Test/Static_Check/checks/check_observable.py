@@ -29,6 +29,7 @@ from Script.Modules.domains import needs, player_ability, prison, roster, work
 from ..check_registry import CheckFailure, make_failure, register_check
 
 from typing import TYPE_CHECKING
+from Script.Modules.domains import relations
 
 if TYPE_CHECKING:
     from types import ModuleType
@@ -623,7 +624,7 @@ def check_observable_12() -> list[CheckFailure]:
         or modes.time_stop()
     ):
         return []
-    assistant_id = getattr(pl, "assistant_character_id", None)
+    assistant_id = relations.assistant_character_id(0)
     got = roster.active()
     if (
         not isinstance(assistant_id, int)
@@ -634,8 +635,8 @@ def check_observable_12() -> list[CheckFailure]:
     ):
         return []
     assistant = data[assistant_id]
-    services = getattr(assistant, "assistant_services", None)
-    if not isinstance(services, dict) or not bool(services.get(2, 0)):
+    services = relations.assistant_services(assistant_id)
+    if not services.get(2, 0):
         return []
     follow = flags.get(assistant_id, "is_follow")
     if (
@@ -703,7 +704,7 @@ def check_observable_13() -> list[CheckFailure]:
     data = _character_data(cache)
     if pl is None or data is None:
         return []
-    assistant_id = getattr(pl, "assistant_character_id", None)
+    assistant_id = relations.assistant_character_id(0)
     if not isinstance(assistant_id, int) or isinstance(assistant_id, bool):
         return []
     bad = []
@@ -711,9 +712,7 @@ def check_observable_13() -> list[CheckFailure]:
     for cid, chara in data.items():
         if cid == 0 or cid == assistant_id:
             continue
-        services = getattr(chara, "assistant_services", None)
-        if not isinstance(services, dict):
-            continue
+        services = relations.assistant_services(cid)
         active = {
             key: services.get(key)
             for key in _ASSISTANT_SERVICE_KEYS

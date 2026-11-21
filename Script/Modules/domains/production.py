@@ -13,6 +13,7 @@ from Script.Core import cache_control
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import working
+from Script.Modules.domains import chara_life
 
 KEY = "base.production"
 """ 生产线在全局数据里的键 """
@@ -168,7 +169,7 @@ def release_mains(kind: str) -> None:
         if (
             main
             and main in characters
-            and characters[main].work.work_type != KINDS[kind]
+            and chara_life.work_type(main) != KINDS[kind]
         ):
             current[line_id] = {**line, "main": 0}
     _put_lines(kind, current)

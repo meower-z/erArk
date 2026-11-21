@@ -16,7 +16,7 @@ from Script.Design import game_time
 from Script.Design import handle_premise
 from Script.System.Pregnancy_System import egg_handle, family_tree_draw
 from Script.System.Pregnancy_System import pregnancy_constant, pregnancy_handle
-from Script.Modules.domains import abilities, pregnancy, roster
+from Script.Modules.domains import abilities, pregnancy, roster, relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -625,12 +625,8 @@ class Pregnancy_Overview_Panel:
             )
             remove_draw.draw()
             return_list.append(remove_draw.return_text)
-            mother_id = character_data.relationship.mother_id
-            mother_name = (
-                cache.character_data[mother_id].name
-                if mother_id in cache.character_data
-                else _("未知")
-            )
+            mother = cache.character_data.get(relations.mother_id(character_id))
+            mother_name = mother.name if mother is not None else _("未知")
             stage_name = _("成年")
             for talent_id in (101, 102, 103, 104):
                 if abilities.talent(character_id).get(talent_id):

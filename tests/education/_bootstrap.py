@@ -12,6 +12,7 @@
     3. 只读：绝不调用 save_handle.establish_save()，不 inline 调用 init_character_behavior()
 """
 
+import contextlib
 import datetime
 import io
 import os
@@ -129,10 +130,10 @@ _ = get_text._
 """ 翻译api：配置里的名字都过了翻译，测试里比对名字一律包 _() """
 
 from Script.Modules.save_load import kernel_state
-from Script.Modules.domains import body_manage, education, growth as growth
-from Script.Modules.domains import inventory, modes, official, plan, playthrough
-from Script.Modules.domains import pregnancy as pregnancy, roster as roster
-from Script.Modules.domains import status, wardrobe, warehouse
+from Script.Modules.domains import body_manage, education, growth, inventory
+from Script.Modules.domains import modes, official, plan, playthrough, pregnancy
+from Script.Modules.domains import roster, status, wardrobe, warehouse
+from Script.Modules.domains import chara_key, chara_life, relations
 from tests.education._growth_ref import child_growth as child_growth
 
 character_handle.init_character_tem()
@@ -144,7 +145,7 @@ cache: game_type.Cache = cache_control.cache
 normal_config.system_setting = attr_calculation.get_system_setting_zero()
 kernel_data.written(playthrough.reset_difficulty_and_birth)
 kernel_data.written(warehouse.start, {})
-# 教育测试允许游戏函数在单步外写入教育、名册、妊娠、养成及角色的状态值、道具、食物背包、服装与身体管理键
+# 教育测试允许单步外写入教育、名册、妊娠、养成、状态值、道具、食物背包、服装、身体管理与全部角色键（chara_key.BY_KEY）
 chara_keys = (status.KEY, inventory.ITEMS, inventory.FOODS, wardrobe.KEY)
 kernel_project.auto_commit_outside_step(
     {
@@ -154,6 +155,7 @@ kernel_project.auto_commit_outside_step(
         growth.KEY,
         *chara_keys,
         body_manage.KEY,
+        *chara_key.BY_KEY,
     }
 )
 ca.auto_commit_outside_step()
@@ -181,10 +183,8 @@ def _record_draw(self: object, *args: object, **kwargs: object) -> None:
 for _cls_name in dir(draw):
     _cls = getattr(draw, _cls_name)
     if isinstance(_cls, type) and hasattr(_cls, "draw"):
-        try:
+        with contextlib.suppress(Exception):
             _cls.draw = _record_draw
-        except Exception:
-            pass
 # askfor_all 默认返回第一个可选项，面板的按钮循环才退得出去；测试可自行替换
 flow_handle.askfor_all = lambda return_list, *a, **k: (
     return_list[0] if return_list else ""
@@ -303,24 +303,24 @@ def make_character(
     cd.sex = 1
     cd.race = 0
     cd.second_behavior = attr_calculation.get_second_behavior_zero({})
-    cd.favorability = {0: 0}
-    cd.assistant_services = (
-        attr_calculation.get_assistant_services_zero()
+    relations.favorability.set(cd.cid, {0: 0})
+    relations.assistant_services.set(
+        cd.cid, attr_calculation.get_assistant_services_zero()
     )  # 实行值计算会读助理服务[8]
     ca.zero_tables(cid)
     ca.talent(cid)[121] = 1
-    cd.work.work_type = work_type
-    cd.dormitory = scene_str(SCENE_DORM)
+    chara_life.work_type.set(cd.cid, work_type)
+    chara_life.dormitory.set(cd.cid, scene_str(SCENE_DORM))
     cd.behavior.start_time = game_time.now()
     if stage:
         ca.talent(cd)[stage] = 1
     if daughter:
-        cd.relationship.father_id = 0
-        cd.relationship.mother_id = mother_id
+        relations.father_id.set(cd.cid, 0)
+        relations.mother_id.set(cd.cid, mother_id)
         if mother_id in cache.character_data:
-            mother_data = cache.character_data[mother_id]
-            if cid not in mother_data.relationship.child_id_list:
-                mother_data.relationship.child_id_list.append(cid)
+            with relations.child_id_list.editing(mother_id) as children:
+                if cid not in children:
+                    children.append(cid)
     cd.position = list(position if position is not None else SCENE_DORM)
     cache.character_data[cid] = cd
     chara_data.seed(cid, {})

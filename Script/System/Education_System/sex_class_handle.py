@@ -22,7 +22,8 @@ from Script.Core import cache_control, game_type, get_text
 from Script.Design import game_time, map_handle
 from Script.System.Education_System import education_constant, growth_handle
 from Script.Modules.domains import abilities, education, flags, growth, modes
-from Script.Modules.domains import needs, roster
+from Script.Modules.domains import needs, roster, chara_life, relations
+from Script.System.Education_System.education_constant import STUDENT_WORK_TYPE
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -395,7 +396,7 @@ def judge_can_join_sex_class(
         return False
     # 课堂 H 只收学生岗（Plan 26 §3.10，Plan 24 口径 1「课表只对学生岗生效」的延伸）：改了岗的女儿人在教室也不拉进来。
     #    开课拉人、开课后到场的 JOIN、课堂模式下的邀请都经这里，一并收紧；必修名单本来就只列学生岗
-    if character_data.work.work_type != education_constant.STUDENT_WORK_TYPE:
+    if chara_life.work_type(character_id) != STUDENT_WORK_TYPE:
         return False
     # 状态异常的不拉进来（第2层，见 judge_sex_class_state_ok；刻意不查服装异常）
     if not judge_sex_class_state_ok(character_id):
@@ -404,7 +405,7 @@ def judge_can_join_sex_class(
     if check_course and not judge_has_sex_skill_course(character_id):
         return False
     # 孩子零门槛
-    if character_data.relationship.father_id == 0:
+    if relations.father_id(character_id) == 0:
         return True
     # 成年干员仍走既有的H模式实行值，只判不扣（Plan 31 §3.3，见上方说明）
     return bool(
@@ -503,9 +504,8 @@ def get_class_member_list() -> list[int]:
             continue
         # 身份：学生岗，或玩家的女儿
         if (
-            character_data.work.work_type
-            != education_constant.STUDENT_WORK_TYPE
-            and character_data.relationship.father_id != 0
+            chara_life.work_type(character_id) != STUDENT_WORK_TYPE
+            and relations.father_id(character_id) != 0
         ):
             continue
         result.append(character_id)
@@ -535,10 +535,7 @@ def get_selected_student_list(
 
     result = []
     for character_id in list(roster.active_sorted()):
-        if (
-            cache.character_data[character_id].work.work_type
-            != education_constant.STUDENT_WORK_TYPE
-        ):
+        if chara_life.work_type(character_id) != STUDENT_WORK_TYPE:
             continue
         course = schedule_handle.get_selected_course(
             character_id, week_day, period
@@ -1095,8 +1092,8 @@ def settle_attend(
         return
     student_data: game_type.Character = cache.character_data[student_id]
     if (
-        student_data.relationship.father_id != 0
-        and student_data.work.work_type != education_constant.STUDENT_WORK_TYPE
+        relations.father_id(student_id) != 0
+        and chara_life.work_type(student_id) != STUDENT_WORK_TYPE
     ):
         return
     if now_time is None:

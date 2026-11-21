@@ -21,7 +21,8 @@ from Script.Modules.domains import abilities, action_info, body_manage, dirty
 from Script.Modules.domains import first_record, flags, h_meters, h_state
 from Script.Modules.domains import inventory, needs, player_ability
 from Script.Modules.domains import player_collection, pregnancy, roster, status
-from Script.Modules.domains import wardrobe
+from Script.Modules.domains import wardrobe, chara_key, chara_life
+from Script.Modules.domains import chara_profile, relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -75,16 +76,16 @@ def init_attr(character_id: int) -> None:
     first_record.clear(character_id)
     action_info.init_zero(character_id)
     character_data.event = attr_calculation.get_event_zero()
-    character_data.work = attr_calculation.get_work_zero()
-    character_data.entertainment = attr_calculation.get_entertainment_zero()
+    chara_key.reset(character_id, (*chara_life.WORK, *chara_life.ENTERTAINMENT))
     pregnancy.put(character_id, attr_calculation.get_pregnancy_zero())
     flags.reset(character_id)
-    character_data.chara_setting = attr_calculation.get_chara_setting_zero()
-    character_data.assistant_services = (
-        attr_calculation.get_assistant_services_zero()
+    chara_profile.chara_setting.set(
+        character_id, attr_calculation.get_chara_setting_zero()
+    )
+    relations.assistant_services.set(
+        character_id, attr_calculation.get_assistant_services_zero()
     )
     body_manage.replace(character_id, attr_calculation.get_body_manage_zero())
-    # character_data.relationship = attr_calculation.get_relationship_zero(character_data.relationship)
 
     # 主角的初始处理，HP和MP的最大值默认为1000，EP最大值默认为1000，初始化信物，困倦程度归零
     if character_id == 0:
@@ -102,9 +103,10 @@ def init_attr(character_id: int) -> None:
         player_ability.reset(0)
         player_collection.init_zero(0)
         wardrobe.put(character_id, attr_calculation.get_cloth_zero())
-        character_data.favorability = {0: 0}
-        character_data.dormitory = map_handle.get_map_system_path_str_for_list(
-            ["中枢", "博士房间"]
+        relations.favorability.set(character_id, {0: 0})
+        chara_life.dormitory.set(
+            character_id,
+            map_handle.get_map_system_path_str_for_list(["中枢", "博士房间"]),
         )  # 此处不可使用翻译
         # 初始收藏地点
         cache.collect_position_list = []

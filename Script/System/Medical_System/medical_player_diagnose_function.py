@@ -16,7 +16,7 @@ from Script.System.Medical_System import (
     medical_core,
     medical_service,
 )
-from Script.Modules.domains import medical, medical_patient
+from Script.Modules.domains import chara_life, medical, medical_patient
 
 _: FunctionType = get_text._
 """ 翻译函数 """
@@ -134,16 +134,15 @@ def start_player_diagnose_session(
         patient.player_pending_checks = []
 
     # 绑定医生与病人，记录当前处理对象。
-    patient.assigned_doctor_id = (
-        doctor_character.cid if doctor_character is not None else 0
-    )
+    doctor_id = doctor_character.cid if doctor_character is not None else 0
+    patient.assigned_doctor_id = doctor_id
     medical_service.set_patient_state(
         patient, medical_constant.MedicalPatientState.IN_TREATMENT_PLAYER
     )
     medical.state().player_patient_id = patient.patient_id
 
-    if doctor_character is not None and hasattr(doctor_character, "work"):
-        doctor_character.work.medical_patient_id = patient.patient_id
+    if doctor_character is not None:
+        chara_life.medical_patient_id.set(doctor_id, patient.patient_id)
 
     return patient
 
@@ -192,8 +191,8 @@ def abort_player_diagnose_session(
         doctor_character = getattr(
             cache_control.cache, "character_data", {}
         ).get(0)
-    if doctor_character is not None and hasattr(doctor_character, "work"):
-        doctor_character.work.medical_patient_id = 0
+    if doctor_character is not None:
+        chara_life.medical_patient_id.set(doctor_character.cid, 0)
 
 
 def commit_player_diagnose_session(

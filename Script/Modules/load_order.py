@@ -8,10 +8,12 @@ domains 的 medical、power、needs、pregnancy、abilities、facility、economy
 commission、location、visitor、recruit、official、diplomacy、dormitory、library、playthrough、country、modes、
 achievement、history、plan、entertainment、tallies、fridge、prison、education、maintenance、physical_exam、flags、
 action_info、player_ability、player_collection、roster、growth、status、inventory、wardrobe、body_manage、
-h_meters、h_state、dirty、hypnosis 与 first_record 排在最内，不挂钩子。
+h_meters、h_state、dirty、hypnosis、first_record、relations、chara_life 与 chara_profile 排在最内，不挂钩子。
 它们登记 working 的键：medical、power、facility、official、modes、history、plan、education 与 roster 各三个，
 needs、work、warehouse、commission、recruit、library、playthrough、entertainment、prison、inventory、
-h_meters 与 first_record 各两个，abilities 四个，economy 与 physical_exam 各七个，maintenance 五个，其余各一个。
+h_meters 与 first_record 各两个，abilities 与 chara_profile 各四个，economy 与 physical_exam 各七个，
+maintenance 五个，relations 十个，chara_life 十三个，其余各一个。
+relations、chara_life 与 chara_profile 的键是角色键（domains.chara_key），不登记规则。
 needs 与 h_meters 还分别登记它们的键 body.needs 与 h.meters 的规则。economy 还登记今日收入与今日买卖总量两个键的规则。
 warehouse 还登记库存的规则。tallies 与 fridge 还分别登记 base.tallies 与 base.fridge 的规则。
 abilities 还给它的四个键各登记一条规则。status 与 inventory 还分别登记 body.status 与 inventory.items 的规则。
@@ -40,7 +42,8 @@ from Script.Modules.domains import official, physical_exam, plan, player_ability
 from Script.Modules.domains import player_collection, playthrough, power
 from Script.Modules.domains import pregnancy, prison, production, recruit
 from Script.Modules.domains import roster, status, tallies, visitor, wardrobe
-from Script.Modules.domains import warehouse, work
+from Script.Modules.domains import warehouse, work, chara_life, chara_profile
+from Script.Modules.domains import relations
 from Script.Modules.gameplay_resolution import (
     actions,
     edits,
@@ -106,6 +109,9 @@ LOAD_ORDER: tuple[ModuleType, ...] = (
     dirty,
     hypnosis,
     first_record,
+    relations,
+    chara_life,
+    chara_profile,
     actions,
     starts,
     npc_starters,

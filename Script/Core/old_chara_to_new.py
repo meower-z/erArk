@@ -8,22 +8,21 @@ from Script.Core import cache_control, constant, game_path_config, game_type
 from Script.Core import get_text
 from Script.Config import game_config
 from Script.Design import attr_calculation, character_handle, child_stage_gate
-from typing import TYPE_CHECKING, TypedDict
+from typing import Any, TypedDict
 from Script.Design import game_time
 from Script.Modules.domains import abilities, action_info, body_manage
 from Script.Modules.domains import commission, diplomacy, dirty, economy
 from Script.Modules.domains import education, first_record, flags, fridge
 from Script.Modules.domains import growth, h_meters, h_state, hypnosis
-from Script.Modules.domains import inventory, library
-from Script.Modules.domains import maintenance, medical, modes, needs
-from Script.Modules.domains import physical_exam, player_ability
+from Script.Modules.domains import inventory, library, maintenance, medical
+from Script.Modules.domains import modes, needs, physical_exam, player_ability
 from Script.Modules.domains import player_collection, playthrough, power
 from Script.Modules.domains import pregnancy, prison, production, recruit
 from Script.Modules.domains import roster, status, visitor, wardrobe, work
+from Script.Modules.domains import chara_key, chara_life, chara_profile
+from Script.Modules.domains import relations
+from Script.Modules.domains.chara_key import CharaKey
 from Script.Modules.save_load import upgrade
-
-if TYPE_CHECKING:
-    from typing import Any
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -348,16 +347,6 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
         ).values():
             _remap_first_record_ids(history_record, old_to_new_id)
 
-        # collection_character (Set) - 收藏的角色列表
-        if (
-            hasattr(character, "collection_character")
-            and character.collection_character
-        ):
-            old_collection = character.collection_character.copy()
-            character.collection_character = {
-                old_to_new_id.get(oid, oid) for oid in old_collection
-            }
-
         # h_state.group_sex_body_template_dict 中的角色ID
         if hasattr(character, "h_state") and hasattr(
             character.h_state, "group_sex_body_template_dict"
@@ -524,6 +513,9 @@ def migrate_character_replacement(
     migrated_count = 0
     character_data = loaded_dict.get("character_data", {})
     npc_tem_data = loaded_dict.get("npc_tem_data", {})
+    # 下面的循环按旧属性名复制角色数据。版本 21 的存档对象上没有这些属性，lift 先把角色键的值写上去。
+    # 读档随后的 adopt_old_save 把它们写回角色键
+    chara_key.lift(loaded_dict)
 
     # 记录迁移信息用于日志
     migration_log = []
@@ -543,7 +535,9 @@ def migrate_character_replacement(
         new_name = new_tem.Name
 
         # ========== 1. 创建新角色基础数据 ==========
-        new_character = game_type.Character()
+        # 搬进 GameState 的属性（如 dormitory、nick_name）在这里按旧属性名写在新角色对象上。
+        # 读档随后的 adopt_old_save 把它们写进 GameState
+        new_character: Any = game_type.Character()
 
         # 从新模板设置基础属性（不迁移的属性）
         new_character.cid = new_id
@@ -630,17 +624,6 @@ def migrate_character_replacement(
             if hasattr(old_character, "assistant_character_id")
             else 0
         )
-
-        # 收藏角色列表（需要转换ID）
-        new_character.collection_character = set()
-        if (
-            hasattr(old_character, "collection_character")
-            and old_character.collection_character
-        ):
-            for coll_id in old_character.collection_character:
-                new_character.collection_character.add(
-                    old_to_new_id_map.get(coll_id, coll_id)
-                )
 
         # 其他字符串属性
         new_character.nick_name = (
@@ -853,18 +836,6 @@ def migrate_character_replacement(
                 character.assistant_character_id,
                 character.assistant_character_id,
             )
-
-        # collection_character
-        if (
-            hasattr(character, "collection_character")
-            and character.collection_character
-        ):
-            old_coll = character.collection_character.copy()
-            character.collection_character = set()
-            for coll_id in old_coll:
-                character.collection_character.add(
-                    old_to_new_id_map.get(coll_id, coll_id)
-                )
 
         # first_record中的角色ID（含first_part_sex_dict与历史周目快照）
         if hasattr(character, "first_record"):
@@ -1090,9 +1061,11 @@ def update_tem_character(loaded_dict: dict[str, Any]) -> int:
             tem_npc_data = character_handle.create_empty_character_tem()
             tem_npc_data.Name = value.name
             tem_npc_data.AdvNpc = value.adv
-            if hasattr(value, "relationship") and hasattr(
-                value.relationship, "mother_id"
-            ):
+            # 早于 adopt_old_save：版本 21 对象无 relationship 与 favorability，从角色键 social.mother_id 读母亲id。
+            # 有 relationship.mother_id 时从对象读；带 favorability 无 relationship 的旧存档键未导入（默认 -1），保持 0
+            if not {"relationship", "favorability"} & vars(value).keys():
+                tem_npc_data.Mother_id = relations.mother_id(value.cid)
+            elif hasattr(getattr(value, "relationship", None), "mother_id"):
                 tem_npc_data.Mother_id = value.relationship.mother_id
             loaded_dict["npc_tem_data"][value.adv] = tem_npc_data
             update_count += 1
@@ -1118,6 +1091,9 @@ def fix_wrong_character(loaded_dict: dict[str, Any]) -> int:
                 if value2.adv == 448:
                     # 将阿玛雅的角色数据复制过去
                     source_cid = value.cid
+                    # 版本 21 的存档对象上没有旧属性，lift 先把角色键的值写上去，随对象移到新槽位（旧存档不动）。
+                    # 原槽位重建会重置其键，读档随后的 adopt_old_save 再把这些值写到新槽位
+                    chara_key.lift(loaded_dict)
                     loaded_dict["character_data"][key2] = value
                     for domain in (
                         flags,
@@ -1150,11 +1126,12 @@ def fix_wrong_character(loaded_dict: dict[str, Any]) -> int:
     return update_count
 
 
-def update_character_config_data(value: game_type.Character) -> int:
+def update_character_config_data(value: game_type.Character, cid: int) -> int:
     """
-    更新角色属性数据
+    更新角色属性数据，返回更新的条数
     Keyword arguments:
     value -- 角色数据
+    cid -- 读写设置与助理服务角色键所用的角色id，即这个角色在 character_data 里的键
     """
     update_count = 0
     # 更新角色的各种属性
@@ -1212,11 +1189,13 @@ def update_character_config_data(value: game_type.Character) -> int:
             status.set(value.cid, key, 0)
             update_count += 1
     # 设置
-    if len(value.chara_setting) != len(game_config.config_chara_setting):
+    chara_setting = chara_profile.chara_setting(cid)
+    if len(chara_setting) != len(game_config.config_chara_setting):
         for key in game_config.config_chara_setting:
-            if key not in value.chara_setting:
-                value.chara_setting[key] = 0
+            if key not in chara_setting:
+                chara_setting[key] = 0
                 update_count += 1
+        chara_profile.chara_setting.set(cid, chara_setting)
     # 道具
     if len(inventory.items(value.cid)) != len(game_config.config_item):
         for key in game_config.config_item:
@@ -1235,13 +1214,13 @@ def update_character_config_data(value: game_type.Character) -> int:
                 body_manage.set(value.cid, key, 0)
                 update_count += 1
     # 助理服务
-    if len(value.assistant_services) != len(
-        game_config.config_assistant_services
-    ):
+    assistant_services = relations.assistant_services(cid)
+    if len(assistant_services) != len(game_config.config_assistant_services):
         for key in game_config.config_assistant_services:
-            if key not in value.assistant_services:
-                value.assistant_services[key] = 0
+            if key not in assistant_services:
+                assistant_services[key] = 0
                 update_count += 1
+        relations.assistant_services.set(cid, assistant_services)
     # 行为
     # 如果行为id是int的话
     if isinstance(value.behavior.behavior_id, int):
@@ -1450,7 +1429,7 @@ def _is_player_daughter(character: game_type.Character) -> bool:
     Return arguments:
     bool -- 是否为玩家的女儿
     """
-    return character.cid != 0 and character.relationship.father_id == 0
+    return character.cid != 0 and relations.father_id(character.cid) == 0
 
 
 def _migrate_static_talent(
@@ -1554,15 +1533,18 @@ def _clear_child_activity(character: game_type.Character) -> int:
     ):
         _reset_behavior_to_idle(character)
         count += 1
-    entertainment_list = character.entertainment.entertainment_type
+    entertainment_list = chara_life.entertainment_type(character.cid)
     if any(
         one not in game_config.config_entertainment
         for one in entertainment_list
     ):
-        character.entertainment.entertainment_type = [
-            one if one in game_config.config_entertainment else 0
-            for one in entertainment_list
-        ]
+        chara_life.entertainment_type.set(
+            character.cid,
+            [
+                one if one in game_config.config_entertainment else 0
+                for one in entertainment_list
+            ],
+        )
         count += 1
     with growth.editing(character.cid, create=False) as growth_data:
         if growth_data is None:
@@ -1615,6 +1597,22 @@ def _replace_if_changed(
     elif now_value == default_value:
         return 0
     setattr(owner, attr_name, default_value)
+    return 1
+
+
+def _reset_key[T](key: CharaKey[T], cid: int, default_value: T) -> int:
+    """
+    角色键的值与 default_value 不同时，把它换成 default_value
+    Keyword arguments:
+    key -- 角色键
+    cid -- 角色id
+    default_value -- 要换成的值
+    Return arguments:
+    int -- 换了为1，没换为0
+    """
+    if key(cid) == default_value:
+        return 0
+    key.set(cid, default_value)
     return 1
 
 
@@ -1789,7 +1787,6 @@ def _clear_young_child_reference(
             if changed_totals:
                 player_collection.put(field_name, total_dict, cid)
     for chara_id in young_child_id_set:
-        child = character_data[chara_id]
         for flag_name, default_val in (
             ("be_bagged", False),
             ("imprisonment", False),
@@ -1799,9 +1796,7 @@ def _clear_young_child_reference(
             if flags.get(chara_id, flag_name) != default_val:
                 flags.set(chara_id, **{flag_name: default_val})
                 count += 1
-        if child.entertainment.borrow_book_id_set:
-            child.entertainment.borrow_book_id_set = set()
-            count += 1
+        count += _reset_key(chara_life.borrow_book_id_set, chara_id, set())
     count += fridge.drop(young_child_id_set)
     count += prison.drop_prisoners(young_child_id_set)
     for commission_id, one in commission.ongoing().items():
@@ -1905,14 +1900,14 @@ def _take_young_child_off_line(
         count += _replace_if_changed(
             character, "target_character_id", character_id
         )
-        count += _replace_if_changed(character.work, "work_type", 0)
-        count += _replace_if_changed(
-            character,
-            "assistant_services",
+        count += _reset_key(chara_life.work_type, character_id, 0)
+        count += _reset_key(
+            relations.assistant_services,
+            character_id,
             attr_calculation.get_assistant_services_zero(),
         )
-        count += _replace_if_changed(character, "dormitory", "")
-        count += _replace_if_changed(character, "permanent_dormitory", "")
+        count += _reset_key(chara_life.dormitory, character_id, "")
+        count += _reset_key(chara_life.permanent_dormitory, character_id, "")
         count += int(hypnosis.reset(character_id))
         count += _replace_if_changed(
             character, "event", game_type.Chara_Event()
@@ -1941,8 +1936,11 @@ def _take_young_child_off_line(
                 _reset_behavior_to_idle(character)
             character.target_character_id = character.cid
             count += 1
-        if character.assistant_character_id in young_child_id_set:
-            character.assistant_character_id = 0
+        if (
+            relations.assistant_character_id(character.cid)
+            in young_child_id_set
+        ):
+            relations.assistant_character_id.set(character.cid, 0)
             count += 1
         if (
             action_info.get(character.cid, "carry_chara_id")

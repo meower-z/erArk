@@ -10,7 +10,8 @@ import random
 from Script.Design import game_time
 from Script.Modules.save_load import reset
 from Script.Modules.domains import abilities, country, diplomacy, facility
-from Script.Modules.domains import flags, location, medical, roster
+from Script.Modules.domains import flags, location, medical, roster, chara_life
+from Script.Modules.domains import relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -165,7 +166,6 @@ def judge_diplomatic_policy() -> None:
     # 绘制总结算信息
     info_text = "\n"
     info_text += _("本周全势力声望变化：{0}\n").format(all_reputation)
-    # info_text += _("本周全势力源石病感染率变化：{0}%\n").format(all_infection_rate)
     info_draw = draw.WaitDraw()
     info_draw.text = info_text
     info_draw.width = window_width
@@ -656,8 +656,8 @@ class Nation_Diplomacy_Panel:
                 ]
                 # 跳过出身地或势力不是当前势力的干员
                 if (
-                    character_data.relationship.birthplace != country_id
-                    and character_data.relationship.nation != nation_id
+                    relations.birthplace(character_data.cid) != country_id
+                    and relations.nation(character_data.cid) != nation_id
                 ):
                     continue
                 draw_style = "standard"
@@ -710,9 +710,8 @@ class Nation_Diplomacy_Panel:
         # 解除任命旧的外交官
         old_diplomat_id = diplomacy.of(country_id)["diplomat"]
         if old_diplomat_id != 0:
-            old_diplomat_chara_data = cache.character_data[old_diplomat_id]
             # 取消外交官的工作类型和负责区域数据
-            old_diplomat_chara_data.work.work_type = 0
+            chara_life.work_type.set(old_diplomat_id, 0)
             flags.set(old_diplomat_id, in_diplomatic_visit=0)
             diplomacy.set_post(country_id, diplomat=0)
             # 如果是离线状态，则上线
@@ -738,7 +737,7 @@ class Nation_Diplomacy_Panel:
         if character_id != 0 and character_id != old_diplomat_id:
             new_diplomat_chara_data = cache.character_data[character_id]
             # 设置外交官的工作类型和负责区域数据
-            new_diplomat_chara_data.work.work_type = 131
+            chara_life.work_type.set(character_id, 131)
             diplomacy.set_post(country_id, diplomat=character_id)
             flags.set(character_id, in_diplomatic_visit=country_id)
             # 根据是本地还是外派，赋予对应的二段行为结算

@@ -121,10 +121,11 @@ class ChildStageHGateTest(SlowTestCase):
 
     def test_npc_state_machine_does_not_target_child(self) -> None:
         """按摩师状态机在场景里找到102为对象时，行为换成发呆，对象改回自己"""
+        from Script.Modules.domains import chara_life
         from Script.Core import constant
 
         child_id = self.make_child(102, "杜宾")
-        self.cache.character_data[child_id].work.work_type = MASSAGE_THERAPIST
+        kernel_data.put(chara_life.work_type.set, child_id, MASSAGE_THERAPIST)
         npc_id = self.npc("阿米娅")
         npc = self.cache.character_data[npc_id]
         self.world.move(npc_id, self.cache.character_data[0].position)

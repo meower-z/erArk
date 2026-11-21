@@ -23,6 +23,7 @@ from Script.System.Official_Event_System import official_event_handle
 from Script.Design import game_time
 from Script.Modules.domains import official
 from tests import kernel_data
+from Script.Modules.domains import chara_life
 
 section("CHILD_GROWTH 字段级回填")
 mother = make_character(102, "母亲", 0)
@@ -125,13 +126,14 @@ check(
 )
 ga_live = child_growth(201)
 ga_live.schedule_override = {1: 176, 2: 152}
-student_a.entertainment.entertainment_type = [175, 58, 178]
+chara_life.entertainment_type.set(student_a.cid, [175, 58, 178])
 save_handle._normalize_loaded_save_paths(cache)
+kernel_data.put(save_handle._normalize_life, vars(cache))
 check(
     "角色侧：单孩覆盖与当天娱乐槽位换成表里有的新编号",
     ga_live.schedule_override == {1: 176, 2: 152}
-    and student_a.entertainment.entertainment_type == [152, 58, 155],
-    (ga_live.schedule_override, student_a.entertainment.entertainment_type),
+    and chara_life.entertainment_type(student_a.cid) == [152, 58, 155],
+    (ga_live.schedule_override, chara_life.entertainment_type(student_a.cid)),
 )
 education.clear_templates()
 

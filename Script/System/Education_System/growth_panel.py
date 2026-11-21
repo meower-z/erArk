@@ -20,7 +20,7 @@ from Script.System.Education_System import education_constant, semester_handle
 from Script.System.Education_System import growth_handle, student_select
 from Script.System.Education_System import class_ai
 from Script.UI.Moudle import draw
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -134,7 +134,6 @@ class Growth_Panel:
         )
 
         talent = abilities.talent(character_id)
-        character_data: game_type.Character = cache.character_data[character_id]
         stage_name = _("已成年")
         # STAGE_TALENT_NAME 取自 Talent.csv，载入时已翻译过，不再包 _()
         for talent_id in sorted(education_constant.STAGE_TALENT_NAME.keys()):
@@ -142,12 +141,8 @@ class Growth_Panel:
                 stage_name = education_constant.STAGE_TALENT_NAME[talent_id]
                 break
         # 母亲：血缘关系里的 mother_id，旧档或数据损坏时可能指向不存在的角色
-        mother_id = character_data.relationship.mother_id
-        mother_name = (
-            cache.character_data[mother_id].name
-            if mother_id != -1 and mother_id in cache.character_data
-            else _("未知")
-        )
+        mother = cache.character_data.get(relations.mother_id(character_id))
+        mother_name = mother.name if mother is not None else _("未知")
         text = _("\n  母亲：{0}｜当前阶段：{1}").format(mother_name, stage_name)
         # 下一阶段：阈值与成长天数都由妊娠系统统一计算（含成长加速药），这里只取用不重算
         stage_total_day = pregnancy_handle.get_child_growth_stage_total_day(

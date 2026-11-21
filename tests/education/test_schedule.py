@@ -10,7 +10,7 @@ from _bootstrap import scene_str, schedule_handle, schedule_template_handle
 from _bootstrap import section, set_time, sex_class_handle
 import inspect
 from tests import chara_abilities as ca, kernel_data
-from Script.Modules.domains import flags, library
+from Script.Modules.domains import flags, library, chara_life
 
 section("教室列表与开放判定")
 clear_schedules()
@@ -585,25 +585,26 @@ _easy_book = next(
     for b in game_config.config_book
     if game_config.config_book[b].difficulty <= 1
 )
-_reader.entertainment.borrow_book_id_set.add(_easy_book)
+chara_life.borrow_book_id_set.set(201, {_easy_book})
 check(
     "手上有借着的书：照常成立",
     schedule_handle.judge_personal_course_valid(201, read_course)
     and schedule_handle.get_now_course(201) is not None,
 )
-_reader.entertainment.borrow_book_id_set.discard(_easy_book)
+chara_life.borrow_book_id_set.set(201, set())
 kernel_data.put(library.set_holder, _easy_book, -1)
-_reader.entertainment.read_book_progress[_easy_book] = 100
+chara_life.read_book_progress.set_item(201, _easy_book, 100)
 check(
     "书库里只剩一本读完了的书：不成立",
     not schedule_handle.judge_personal_course_valid(201, read_course),
 )
-_reader.entertainment.read_book_progress[_easy_book] = 50
+chara_life.read_book_progress.set_item(201, _easy_book, 50)
 check(
     "那本没读完：成立",
     schedule_handle.judge_personal_course_valid(201, read_course),
 )
-del _reader.entertainment.read_book_progress[_easy_book]
+with chara_life.read_book_progress.editing(201) as progress:
+    del progress[_easy_book]
 kernel_data.put(library.set_holder, _easy_book, 999)
 _hard_book = next(
     (
@@ -640,7 +641,7 @@ if _hard_book is not None:
     ca.ability(201)[_hard_ability] = _hard_level
 check(
     "判定不写数据：没借书、书库借出状态没被改",
-    not _reader.entertainment.borrow_book_id_set
+    not chara_life.borrow_book_id_set(201)
     and all(v != 201 for v in library.holders().values()),
 )
 kernel_data.put(library.put_holders, _saved_borrow)
@@ -684,7 +685,7 @@ check(
     _upcoming is not None and _upcoming["period"] == 1,
     _upcoming,
 )
-student.work.work_type = 21
+chara_life.work_type.set(student.cid, 21)
 check(
     "L4 改了岗（岗位 21）：马上开始的下一节为 None",
     schedule_handle.get_upcoming_course(201) is None,
@@ -705,7 +706,7 @@ check(
     schedule_handle.get_selected_course(201, _wd, 0)
     == [education_constant.COURSE_TYPE_THEORY, ROOM1],
 )
-student.work.work_type = 152
+chara_life.work_type.set(student.cid, 152)
 check(
     "L4 改回学生岗：恢复",
     schedule_handle.get_now_course(201) is not None
@@ -723,7 +724,7 @@ check(
     _upcoming_teaching is not None and _upcoming_teaching["period"] == 1,
     _upcoming_teaching,
 )
-teacher.work.work_type = 152
+chara_life.work_type.set(teacher.cid, 152)
 check(
     "L6 前教师改当学生：get_upcoming_teaching 为 None",
     schedule_handle.get_upcoming_teaching(101) is None,
@@ -739,13 +740,13 @@ check(
     schedule_handle.get_teacher_cell(101, _wd, 0) == (ROOM1, 45)
     and schedule_handle.judge_teacher_conflict(101, _wd, 0, ROOM2) != "",
 )
-teacher.work.work_type = 151
+chara_life.work_type.set(teacher.cid, 151)
 check("L6 改回教师岗：恢复", schedule_handle.get_now_teaching(101) is not None)
 sex_class_handle.set_temp_class(_today, 0, ROOM_P, 70)
 move_to(0, schedule_handle.get_classroom_position(ROOM_P))
 check(
     "L6 玩家不看岗位（岗位为 0）：人在当天临时课的教室里照常取得到授课",
-    pl.work.work_type != education_constant.TEACHER_WORK_TYPE
+    chara_life.work_type(pl.cid) != education_constant.TEACHER_WORK_TYPE
     and schedule_handle.judge_schedule_teacher(0)
     and schedule_handle.get_now_teaching(0) is not None,
 )
@@ -798,5 +799,4 @@ check(
     sorted(schedule_handle.get_teacher_candidate_list()),
 )
 clear_schedules()
-
 finish()

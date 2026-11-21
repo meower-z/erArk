@@ -14,6 +14,7 @@ from Script.UI.Moudle import draw
 from Script.Config import normal_config, game_config
 from Script.Design import game_time
 from Script.Modules.domains import action_info, flags, inventory, wardrobe
+from Script.Modules.domains import chara_profile
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -765,7 +766,6 @@ def check_not_draw_talk(
     if character_id != 0 and now_behavior_id == constant.Behavior.MOVE:
         # 设置为屏蔽的不触发
         if normal_config.system_setting.draw_setting[8] == 0:
-            # print(f"debug {character_data.name}设置为屏蔽，不显示移动文本")
             return True
         # 跟随博士的移动不触发
         if flags.get(
@@ -773,7 +773,6 @@ def check_not_draw_talk(
         ) == 1 and handle_premise.handle_move_to_same_target_with_pl(
             character_id
         ):
-            # print(f"debug 智能跟随模式下，{character_data.name}在跟随博士，不显示移动文本")
             return True
         # 当前小时内已触发过的不触发
         if (
@@ -1123,38 +1122,41 @@ def code_text_to_draw_text(
 
     # 专属称呼处理
     # 他人对自己的称呼
-    nick_name = character_data.nick_name
+    nick_name = chara_profile.nick_name(character_data.cid)
     if nick_name == "":
         nick_name = character_data.name
     # 自己对玩家的称呼
-    if character_data.nick_name_to_pl != "":
-        nick_name_to_pl = character_data.nick_name_to_pl
-    elif player_data.nick_name != "":
-        nick_name_to_pl = player_data.nick_name
+    if chara_profile.nick_name_to_pl(character_data.cid) != "":
+        nick_name_to_pl = chara_profile.nick_name_to_pl(character_data.cid)
+    elif chara_profile.nick_name(0) != "":
+        nick_name_to_pl = chara_profile.nick_name(0)
     else:
         nick_name_to_pl = player_data.name
     # 玩家的称呼
-    if character_id != 0 and character_data.nick_name_to_pl != "":
-        pl_nick_name = character_data.nick_name_to_pl
+    if (
+        character_id != 0
+        and chara_profile.nick_name_to_pl(character_data.cid) != ""
+    ):
+        pl_nick_name = chara_profile.nick_name_to_pl(character_data.cid)
     elif (
         common_target_character_id
         if common_talk_flag
         else character_data.target_character_id
-    ) != 0 and target_data.nick_name_to_pl != "":
-        pl_nick_name = target_data.nick_name_to_pl
-    elif player_data.nick_name != "":
-        pl_nick_name = player_data.nick_name
+    ) != 0 and chara_profile.nick_name_to_pl(target_data.cid) != "":
+        pl_nick_name = chara_profile.nick_name_to_pl(target_data.cid)
+    elif chara_profile.nick_name(0) != "":
+        pl_nick_name = chara_profile.nick_name(0)
     else:
         pl_nick_name = player_data.name
     # 对交互对象的称呼
-    if target_data.nick_name != "":
-        target_nick_name = target_data.nick_name
+    if chara_profile.nick_name(target_data.cid) != "":
+        target_nick_name = chara_profile.nick_name(target_data.cid)
     else:
         target_nick_name = target_data.name
     # 交互对象对玩家的称呼
-    target_nick_name_to_pl = target_data.nick_name_to_pl
+    target_nick_name_to_pl = chara_profile.nick_name_to_pl(target_data.cid)
     if target_nick_name_to_pl == "":
-        target_nick_name_to_pl = player_data.nick_name
+        target_nick_name_to_pl = chara_profile.nick_name(0)
 
     # 玩家的交互对象
     pl_target_id = common_target_character_id
@@ -1327,7 +1329,7 @@ def code_text_to_draw_text(
         down_cloth_name = _("没有穿下衣的裸露身体")
 
     # 最后总结转化
-    now_talk_text = now_talk_text.format(
+    return now_talk_text.format(
         Name=character_data.name,
         NickName=nick_name,
         NickNameToPl=nick_name_to_pl,
@@ -1363,5 +1365,3 @@ def code_text_to_draw_text(
         PanName=pan_name,
         SocName=socks_name,
     )
-
-    return now_talk_text

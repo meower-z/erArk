@@ -39,6 +39,7 @@ from Script.Test.Static_Check.check_registry import get_all_checks
 from Script.UI.Panel import borrow_book_panel, recruit_panel
 from tests import kernel_data
 from tests.fast.base import FastTestCase
+from Script.Modules.domains import chara_life
 
 CIVIL = 7
 """ 文职部的设施id """
@@ -99,13 +100,13 @@ class BaseServicesStateTest(FastTestCase):
         """同一人任命到另一条线时从原线撤下。换了岗位的主招聘专员在刷新岗位时撤下"""
         recruit.open_lines([0, 1])
         hr = self.operator(5)
-        self.cache.character_data[hr].work.work_type = HR_WORK
+        kernel_data.put(chara_life.work_type.set, hr, HR_WORK)
         recruit.appoint(0, hr)
         recruit.appoint(1, hr)
         self.assertEqual([v["main"] for v in recruit.lines().values()], [0, hr])
         basement.update_work_people()
         self.assertEqual(recruit.lines()[1]["main"], hr)
-        self.cache.character_data[hr].work.work_type = 0
+        kernel_data.put(chara_life.work_type.set, hr, 0)
         basement.update_work_people()
         self.assertEqual(recruit.lines()[1]["main"], 0)
 
@@ -195,14 +196,13 @@ class BaseServicesStateTest(FastTestCase):
             dict.fromkeys(game_config.config_book, library.FREE),
         )
         reader = self.operator(5)
-        entertainment = self.cache.character_data[reader].entertainment
         self.assertEqual(borrow_book_panel.check_random_borrow_book(reader), 1)
-        (book,) = entertainment.borrow_book_id_set
+        (book,) = chara_life.borrow_book_id_set(reader)
         self.assertEqual(library.holders()[book], reader)
-        entertainment.book_return_possibility = 101
+        chara_life.book_return_possibility.set(reader, 101)
         self.assertEqual(borrow_book_panel.check_return_book(reader), 1)
         self.assertEqual(library.holders()[book], library.FREE)
-        self.assertEqual(entertainment.borrow_book_id_set, set())
+        self.assertEqual(chara_life.borrow_book_id_set(reader), set())
 
     def old_island(self) -> SimpleNamespace:
         """

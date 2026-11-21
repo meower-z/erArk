@@ -69,8 +69,6 @@ SKIPPED_CHARACTER_FIELDS = {
     "sp_flag.unnormal_flag": "只为旧存档保留，游戏不读写它",
     "token_text": "角色的信物文字（文本），只从模板读入",
     "text_color": "角色的文字颜色，只从模板读入",
-    "nick_name": "玩家起的昵称（文本）",
-    "nick_name_to_pl": "角色对玩家的称呼（文本）",
 }
 """ 不记的角色字段（名字里 chara.<id>. 之后的部分）: 理由 """
 
@@ -372,6 +370,7 @@ def capture(
         关着门的场景的关门状态，口上与事件的id。memo 只省时间：pickle 字节相同的对象状态相同，展开结果也相同。
     """
     from Script.Design import game_time
+    from tests import chara_key_projection
     from tests.kernel_data import project_state
 
     state: dict[str, object] = {"clock": f"{game_time.now():%Y-%m-%d %H:%M}"}
@@ -394,6 +393,7 @@ def capture(
         if memo is not None:
             memo[cid] = (pickled, names)
     project_state(cache, state)
+    chara_key_projection.project(cache, state)
     for field in sorted(vars(cache)):
         if field in SKIPPED_CACHE_FIELDS:
             continue

@@ -23,6 +23,8 @@ from Script.System.Official_Event_System import ri_value
 from Script.Test.Static_Check import repair
 from Script.Test.Static_Check.check_registry import get_all_checks
 from tests.fast.base import FastTestCase
+from Script.Modules.domains import chara_life
+from tests import kernel_data
 
 
 class PowerStateTest(FastTestCase):
@@ -167,7 +169,11 @@ class PowerStateTest(FastTestCase):
         self.assertFalse(self.flagged("ISLAND-27"))
         power.set_storage(self.caps[0] + 1)
         self.assertTrue(self.flagged("ISLAND-27"))
-        self.world.chara(1, "干员甲").work.work_type = power.OPERATOR_WORK
+        kernel_data.put(
+            chara_life.work_type.set,
+            self.world.chara(1, "干员甲").cid,
+            power.OPERATOR_WORK,
+        )
         power.set_plant(main_operators=(1, 0, 0, 0))
         self.assertFalse(self.flagged("ISLAND-28"))
         power.set_plant(main_operators=(1, 9999, 0, 0))

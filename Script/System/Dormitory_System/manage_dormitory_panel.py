@@ -17,6 +17,7 @@ from Script.System.Dormitory_System import common
 from Script.UI.Moudle import draw, view
 from Script.Config import normal_config
 from Script.Modules.domains import dormitory, facility, inventory, roster, work
+from Script.Modules.domains import chara_life
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -423,7 +424,7 @@ class Manage_Dormitory_Panel:
                 room_count = occupancy.get(room_path, 0)
                 room_capacity = self._get_room_capacity(room_path, occupancy)
                 if (
-                    room_path != character_data.dormitory
+                    room_path != chara_life.dormitory(character_id)
                     and room_count < room_capacity
                 ):
                     room_candidates.append((layer, room_name, room_path))
@@ -436,7 +437,7 @@ class Manage_Dormitory_Panel:
             title_draw.draw()
 
             now_dormitory_text = self._get_dormitory_name(
-                character_data.dormitory
+                chara_life.dormitory(character_id)
             )
             info_draw = draw.NormalDraw()
             info_draw.width = self.width
@@ -473,7 +474,7 @@ class Manage_Dormitory_Panel:
                     occupants = [
                         cache.character_data[cid].name
                         for cid in resident_id_set
-                        if cache.character_data[cid].dormitory == room_path
+                        if chara_life.dormitory(cid) == room_path
                     ]
                     room_text += " - " + "、".join(occupants)
                 room_draw = draw.LeftButton(
@@ -511,9 +512,9 @@ class Manage_Dormitory_Panel:
         功能: 更新角色 dormitory 字段，不修改 permanent_dormitory
         """
         character_data = cache.character_data[character_id]
-        old_text = self._get_dormitory_name(character_data.dormitory)
+        old_text = self._get_dormitory_name(chara_life.dormitory(character_id))
         new_text = self._get_dormitory_name(dormitory_path)
-        character_data.dormitory = dormitory_path
+        chara_life.dormitory.set(character_id, dormitory_path)
         self._remove_from_temp_blank(character_id)
 
         info_draw = draw.WaitDraw()
@@ -534,8 +535,8 @@ class Manage_Dormitory_Panel:
         temp_blank_list = self._get_temp_blank_character_ids()
         if character_id not in temp_blank_list:
             temp_blank_list.append(character_id)
-        old_text = self._get_dormitory_name(character_data.dormitory)
-        character_data.dormitory = ""
+        old_text = self._get_dormitory_name(chara_life.dormitory(character_id))
+        chara_life.dormitory.set(character_id, "")
 
         info_draw = draw.WaitDraw()
         info_draw.width = self.width
@@ -571,7 +572,7 @@ class Manage_Dormitory_Panel:
             character_id = temp_blank_list[0]
             target_room = free_slots.pop(0)
             if character_id in cache.character_data:
-                cache.character_data[character_id].dormitory = target_room
+                chara_life.dormitory.set(character_id, target_room)
                 assigned_count += 1
             temp_blank_list.pop(0)
 
@@ -627,7 +628,7 @@ class Manage_Dormitory_Panel:
             key=lambda x: cache.character_data[x].adv,
         )
         for character_id in sorted_character_ids:
-            dormitory_path = cache.character_data[character_id].dormitory
+            dormitory_path = chara_life.dormitory(character_id)
             if dormitory_path in room_character_ids:
                 room_character_ids[dormitory_path].append(character_id)
 
@@ -661,7 +662,7 @@ class Manage_Dormitory_Panel:
 
         for index, character_id in enumerate(need_redistribute_character_ids):
             target_room = free_slots[index]
-            cache.character_data[character_id].dormitory = target_room
+            chara_life.dormitory.set(character_id, target_room)
 
         info_draw.text = _("\n○已完成重新分配，共分配了{0}名角色。\n").format(
             len(need_redistribute_character_ids)
@@ -753,7 +754,7 @@ class Manage_Dormitory_Panel:
         # 替换当前层旧管理员：仅撤掉该层归属，不立即撤掉岗位，离开面板时统一清理未分配楼层者
 
         dormitory.set_manager(layer, character_id)
-        cache.character_data[character_id].work.work_type = 31
+        chara_life.work_type.set(character_id, 31)
         self._move_manager_to_layer_room(layer, character_id)
 
         if old_manager_id and old_manager_id != character_id:
@@ -822,11 +823,11 @@ class Manage_Dormitory_Panel:
             character_data = cache.character_data.get(character_id)
             if character_data is None:
                 continue
-            if character_data.work.work_type != 31:
+            if chara_life.work_type(character_data.cid) != 31:
                 continue
             if character_id in assigned_manager_ids:
                 continue
-            character_data.work.work_type = 0
+            chara_life.work_type.set(character_data.cid, 0)
             reset_count += 1
 
         if reset_count > 0:
@@ -909,7 +910,7 @@ class Manage_Dormitory_Panel:
         occupancy: dict[str, int] = {}
         # 统一使用通用函数获取需要纳入统计的角色id集合（拥有干员 + 异常7离岛角色）
         for character_id in common.get_dormitory_resident_id_set():
-            dormitory_path = cache.character_data[character_id].dormitory
+            dormitory_path = chara_life.dormitory(character_id)
             if dormitory_path:
                 occupancy[dormitory_path] = occupancy.get(dormitory_path, 0) + 1
         return dict(occupancy)
@@ -978,7 +979,7 @@ class Manage_Dormitory_Panel:
 
         character_data = cache.character_data[character_id]
         common.register_permanent_dormitory(character_id)
-        character_data.dormitory = manager_room_path
+        chara_life.dormitory.set(character_id, manager_room_path)
 
         character_position = character_data.position
         target_scene = map_handle.get_map_system_path_for_str(manager_room_path)
@@ -995,22 +996,13 @@ class Manage_Dormitory_Panel:
         功能: 若角色当前住在舍管房，则按恢复规则重新分配宿舍，并将其移动到落点房间
         """
         character_data = cache.character_data[character_id]
-        if not self._is_manager_room_path(character_data.dormitory):
+        if not self._is_manager_room_path(chara_life.dormitory(character_id)):
             return
         restore_path = common.restore_character_dormitory(character_id)
         target_scene = map_handle.get_map_system_path_for_str(restore_path)
         map_handle.character_move_scene(
             character_data.position, target_scene, character_id
         )
-
-    def _get_dormitory_max_open_layer(self) -> int:
-        """
-        根据宿舍区等级获取理论开放层上限
-        输入类型: 无
-        输出类型: int
-        功能: 从 Facility_effect.csv 对应等级说明中解析“开放至X区”，失败时使用保底映射
-        """
-        return common.get_dormitory_max_open_layer()
 
     def _get_dormitory_name(self, dormitory_path: str) -> str:
         """

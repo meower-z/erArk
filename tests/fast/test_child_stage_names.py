@@ -17,7 +17,8 @@ from Script.Config import game_config
 from Script.System.Education_System import growth_event_handle
 from Script.UI.Panel import gift_panel
 from tests.fast.base import FastTestCase
-from tests import chara_abilities as ca
+from tests import chara_abilities as ca, kernel_data
+from Script.Modules.domains import relations
 
 if TYPE_CHECKING:
     from Script.Core import game_type
@@ -110,7 +111,7 @@ class ChildStageNamesTest(FastTestCase):
         game_type.Character -- 女儿
         """
         daughter = self.world.chara(cid, f"女儿{cid}")
-        daughter.relationship.father_id = 0
+        kernel_data.put(relations.father_id.set, daughter.cid, 0)
         set_stage(daughter, talent_id)
         return daughter
 

@@ -13,7 +13,7 @@ from Script.Modules.tk_ui import player_pick
 from Script.Config import game_config, normal_config
 import random
 from Script.Design import game_time
-from Script.Modules.domains import abilities, facility, library
+from Script.Modules.domains import abilities, facility, library, chara_life
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -53,8 +53,7 @@ def settle_library_book() -> None:
         view.now_show_book_cid_of_type[book_type_cid] = now_choose_list
 
     # 获取玩家的借书情况
-    pl_character_data: game_type.Character = cache.character_data[0]
-    pl_borrow = pl_character_data.entertainment.borrow_book_id_set
+    pl_borrow = chara_life.borrow_book_id_set(0)
     # 遍历借的书籍，也加入到展示列表里
     for book_id in pl_borrow:
         book_type = game_config.config_book[book_id].type
@@ -66,18 +65,20 @@ def check_return_book(character_id: int) -> int:
     """
     检查并决定是否归还当前书籍
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     # 未借书则跳过
-    if len(character_data.entertainment.borrow_book_id_set) == 0:
+    if len(chara_life.borrow_book_id_set(character_id)) == 0:
         return 0
     # 已借书则d100和还书概率比大小
     else:
         return_d100 = random.randint(1, 100)
-        if return_d100 < character_data.entertainment.book_return_possibility:
-            for book_id in character_data.entertainment.borrow_book_id_set:
+        if return_d100 < chara_life.book_return_possibility(character_id):
+            for book_id in chara_life.borrow_book_id_set(character_id):
                 library.set_holder(book_id, library.FREE)
-                character_data.entertainment.borrow_book_id_set.discard(book_id)
+                with chara_life.borrow_book_id_set.editing(
+                    character_id
+                ) as borrow_book_id_set:
+                    borrow_book_id_set.discard(book_id)
                 # 更新还书历史记录
                 update_return_history_record(character_id, book_id)
                 # print(f"debug {character_data.name}还了书{book_id}")
@@ -91,10 +92,9 @@ def check_random_borrow_book(character_id: int) -> int:
     returns:
         int: 0表示未借书，1表示借了书
     """
-    character_data: game_type.Character = cache.character_data[character_id]
 
     # 已借书则跳过
-    if len(character_data.entertainment.borrow_book_id_set):
+    if len(chara_life.borrow_book_id_set(character_id)):
         return 1
     # 未借书则随机借书
     else:
@@ -110,11 +110,8 @@ def check_random_borrow_book(character_id: int) -> int:
             if not ability_pass:
                 continue
             # 如果这本书自己已经看过了，则跳过
-            if book_id in character_data.entertainment.read_book_progress:
-                if (
-                    character_data.entertainment.read_book_progress[book_id]
-                    >= 100
-                ):
+            if book_id in chara_life.read_book_progress(character_id):
+                if chara_life.read_book_progress(character_id)[book_id] >= 100:
                     continue
             # 加入book_id_set
             book_id_set.append(book_id)
@@ -129,7 +126,10 @@ def check_random_borrow_book(character_id: int) -> int:
         else:
             return 0
         library.set_holder(borrow_book_id, character_id)
-        character_data.entertainment.borrow_book_id_set.add(borrow_book_id)
+        with chara_life.borrow_book_id_set.editing(
+            character_id
+        ) as borrow_book_id_set:
+            borrow_book_id_set.add(borrow_book_id)
         # 添加借书历史记录
         add_borrow_history_record(character_id, borrow_book_id)
         # print(f"debug {character_data.name}借了书{borrow_book_id}")
@@ -149,9 +149,8 @@ def judge_can_get_read_book(character_id: int) -> bool:
     返回:
         bool: 是否借得到书
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     # 手上有书就直接读那本，不用再扫书库
-    if len(character_data.entertainment.borrow_book_id_set):
+    if len(chara_life.borrow_book_id_set(character_id)):
         return True
     for book_id, holder in library.holders().items():
         # 已借出则跳过
@@ -161,10 +160,7 @@ def judge_can_get_read_book(character_id: int) -> bool:
         if not can_read_book(character_id, book_id):
             continue
         # 已经看完的跳过
-        if (
-            character_data.entertainment.read_book_progress.get(book_id, 0)
-            >= 100
-        ):
+        if chara_life.read_book_progress(character_id).get(book_id, 0) >= 100:
             continue
         return True
     return False
@@ -186,7 +182,7 @@ def prepare_npc_read_book(character_id: int) -> bool:
     if not check_random_borrow_book(character_id):
         return False
     book_id = -1
-    for book_id_all in character_data.entertainment.borrow_book_id_set:
+    for book_id_all in chara_life.borrow_book_id_set(character_id):
         book_id = book_id_all
     if book_id not in game_config.config_book:
         return False
@@ -254,12 +250,6 @@ def add_borrow_history_record(character_id: int, book_id: int) -> None:
         character_id (int): 角色ID
         book_id (int): 书籍ID
     """
-    character_data = cache.character_data[character_id]
-
-    # 确保借阅历史记录列表存在
-    if not hasattr(character_data.entertainment, "borrow_book_history"):
-        character_data.entertainment.borrow_book_history = []
-
     # 获取书籍信息
     book_name = _("未知书籍")
     if book_id in game_config.config_book:
@@ -274,7 +264,10 @@ def add_borrow_history_record(character_id: int, book_id: int) -> None:
         "total_read_count": 0,
     }
 
-    character_data.entertainment.borrow_book_history.append(new_record)
+    with chara_life.borrow_book_history.editing(
+        character_id
+    ) as borrow_book_history:
+        borrow_book_history.append(new_record)
 
 
 def update_return_history_record(character_id: int, book_id: int) -> None:
@@ -285,26 +278,21 @@ def update_return_history_record(character_id: int, book_id: int) -> None:
         character_id (int): 角色ID
         book_id (int): 书籍ID
     """
-    character_data = cache.character_data[character_id]
-
-    # 确保借阅历史记录列表存在
-    if not hasattr(character_data.entertainment, "borrow_book_history"):
-        return
-
     # 找到最近的未还书记录并更新
-    for record in reversed(character_data.entertainment.borrow_book_history):
+    history = chara_life.borrow_book_history(character_id)
+    for record in reversed(history):
         if record["book_id"] == book_id and record["return_time"] is None:
             record["return_time"] = game_time.now()
             # 计算这本书的阅读次数（从角色的阅读进度记录中获取）
-            if book_id in character_data.entertainment.read_book_progress:
+            if book_id in chara_life.read_book_progress(character_id):
                 # 简单的估算：进度除以30作为阅读次数（假设每次阅读增加30%左右进度）
                 estimated_reads = max(
                     1,
-                    character_data.entertainment.read_book_progress[book_id]
-                    // 30,
+                    chara_life.read_book_progress(character_id)[book_id] // 30,
                 )
                 record["total_read_count"] = estimated_reads
             break
+    chara_life.borrow_book_history.set(character_id, history)
 
 
 def update_read_count_in_history(character_id: int, book_id: int) -> None:
@@ -315,17 +303,13 @@ def update_read_count_in_history(character_id: int, book_id: int) -> None:
         character_id (int): 角色ID
         book_id (int): 书籍ID
     """
-    character_data = cache.character_data[character_id]
-
-    # 确保借阅历史记录列表存在
-    if not hasattr(character_data.entertainment, "borrow_book_history"):
-        return
-
     # 找到当前借阅记录并更新阅读次数
-    for record in reversed(character_data.entertainment.borrow_book_history):
+    history = chara_life.borrow_book_history(character_id)
+    for record in reversed(history):
         if record["book_id"] == book_id and record["return_time"] is None:
             record["total_read_count"] += 1
             break
+    chara_life.borrow_book_history.set(character_id, history)
 
 
 class Borrow_Book_Panel:
@@ -432,15 +416,10 @@ class Borrow_Book_Panel:
                         else:
                             book_text += _("(未知)")
                         # 书籍阅读进度说明
-                        if (
-                            book_cid
-                            in cache.character_data[
-                                0
-                            ].entertainment.read_book_progress
-                        ):
-                            book_progress = cache.character_data[
-                                0
-                            ].entertainment.read_book_progress[book_cid]
+                        if book_cid in chara_life.read_book_progress(0):
+                            book_progress = chara_life.read_book_progress(0)[
+                                book_cid
+                            ]
                             book_text += _("(已阅读{0}%)").format(book_progress)
                         # 是否可借阅说明
                         button_flag = True
@@ -539,10 +518,8 @@ class Borrow_Book_Panel:
             bood_difficulty_text = _("（难度：困难，需要对应能力大于等于6级）")
         else:
             bood_difficulty_text = _("（难度：未知）")
-        if book_cid in cache.character_data[0].entertainment.read_book_progress:
-            book_progress = cache.character_data[
-                0
-            ].entertainment.read_book_progress[book_cid]
+        if book_cid in chara_life.read_book_progress(0):
+            book_progress = chara_life.read_book_progress(0)[book_cid]
             book_info += f"\n\n{_('阅读进度：')}{book_progress}%"
         # 判断是否能力足够阅读
         ability_pass = can_read_book(0, book_cid)
@@ -609,21 +586,21 @@ class Borrow_Book_Panel:
         book_cid -- 书籍编号
         """
 
-        character_data: game_type.Character = cache.character_data[0]
-
         # 当前借书数量限制信息
-        borrow_count = len(character_data.entertainment.borrow_book_id_set)
+        borrow_count = len(chara_life.borrow_book_id_set(0))
 
         # 如果已借该书，则还书
         if library.holders()[book_cid] == 0:
             library.set_holder(book_cid, library.FREE)
-            character_data.entertainment.borrow_book_id_set.discard(book_cid)
+            with chara_life.borrow_book_id_set.editing(0) as borrow_book_id_set:
+                borrow_book_id_set.discard(book_cid)
             # 更新还书历史记录
             update_return_history_record(0, book_cid)
         # 未借该书，且借书数量不到上限，则借书
         elif borrow_count < 3:
             library.set_holder(book_cid, 0)
-            character_data.entertainment.borrow_book_id_set.add(book_cid)
+            with chara_life.borrow_book_id_set.editing(0) as borrow_book_id_set:
+                borrow_book_id_set.add(book_cid)
             # 添加借书历史记录
             add_borrow_history_record(0, book_cid)
         # 未借该书，且借书数量已达上限，则输出错误信息

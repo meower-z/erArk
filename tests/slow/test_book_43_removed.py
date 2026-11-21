@@ -128,6 +128,7 @@ class Book43RemovedTest(SlowTestCase):
 
     def test_old_save_player_holds_book(self) -> None:
         """博士借着 43 号书、阅读推荐里有它的类型：读档后读书面板、借阅书籍面板与阅读推荐都照常显示，不算这本书"""
+        from Script.Modules.domains import chara_life
         from Script.Modules.domains import library
         from Script.UI.Panel import (
             borrow_book_panel,
@@ -135,10 +136,15 @@ class Book43RemovedTest(SlowTestCase):
             read_book_panel,
         )
 
-        player = self.cache.character_data[0]
-        player.entertainment.borrow_book_id_set.add(BOOK)
-        player.entertainment.read_book_progress[BOOK] = 40
-        borrow_book_panel.add_borrow_history_record(0, BOOK)
+        borrow_book_id_set = chara_life.borrow_book_id_set(0)
+        borrow_book_id_set.add(BOOK)
+        kernel_data.put(
+            chara_life.borrow_book_id_set.set, 0, borrow_book_id_set
+        )
+        kernel_data.put(chara_life.read_book_progress.set_item, 0, BOOK, 40)
+        kernel_data.written(
+            borrow_book_panel.add_borrow_history_record, 0, BOOK
+        )
         kernel_data.put(library.set_holder, BOOK, 0)
         recommended = library.recommended() | {BOOK_TYPE}
         kernel_data.put(library.set_recommended, recommended)
@@ -235,6 +241,7 @@ class Book43RemovedTest(SlowTestCase):
     def test_old_save_npc_reads_book(self) -> None:
         """干员借着 43 号书、存档时正读着它：读档后她手上没有 43 号书、正读着的书号归零，
         读完配置里所有书时判定借不到书；她读满这一段，再走娱乐读书时读的是书籍配置里的书，借书卡上 43 号书记为已还"""
+        from Script.Modules.domains import chara_life
         from Script.Design import game_time
 
         from Script.Config import game_config
@@ -246,7 +253,7 @@ class Book43RemovedTest(SlowTestCase):
         character_data = self.cache.character_data[character_id]
         self.assertNotIn(
             BOOK,
-            character_data.entertainment.borrow_book_id_set,
+            chara_life.borrow_book_id_set(character_id),
             "读档后她手上没有 43 号书",
         )
         self.assertEqual(
@@ -259,17 +266,23 @@ class Book43RemovedTest(SlowTestCase):
         )
 
         # 她把书籍配置里的书都读完了时，判定借不到书
-        read_book_progress = dict(
-            character_data.entertainment.read_book_progress
-        )
-        character_data.entertainment.read_book_progress.update(
+        read_book_progress = dict(chara_life.read_book_progress(character_id))
+        new_read_book_progress = chara_life.read_book_progress(character_id)
+        new_read_book_progress.update(
             {book_id: 100 for book_id in game_config.config_book}
+        )
+        kernel_data.put(
+            chara_life.read_book_progress.set,
+            character_id,
+            new_read_book_progress,
         )
         self.assertFalse(
             borrow_book_panel.judge_can_get_read_book(character_id),
             "读完了配置里的每本书：判定借不到书",
         )
-        character_data.entertainment.read_book_progress = read_book_progress
+        kernel_data.put(
+            chara_life.read_book_progress.set, character_id, read_book_progress
+        )
         self.assertTrue(
             borrow_book_panel.judge_can_get_read_book(character_id),
             "还有没读完的书：判定借得到书",
@@ -317,7 +330,7 @@ class Book43RemovedTest(SlowTestCase):
         on_loan_count = "".join(player_input.screen).count(ON_LOAN_TEXT)
         self.assertEqual(
             on_loan_count,
-            len(character_data.entertainment.borrow_book_id_set),
+            len(chara_life.borrow_book_id_set(character_id)),
             "她的借书卡上记为仍在借阅中的，只有她手上的书",
         )
 
@@ -329,6 +342,7 @@ class Book43RemovedTest(SlowTestCase):
         Return arguments:
         int -- 干员的角色id
         """
+        from Script.Modules.domains import chara_life
         from Script.Design import game_time
 
         from Script.Core import constant
@@ -339,9 +353,15 @@ class Book43RemovedTest(SlowTestCase):
             cid for cid in kernel_data.domain("roster").active() if cid != 0
         )
         character_data = self.cache.character_data[character_id]
-        character_data.entertainment.borrow_book_id_set.add(BOOK)
+        borrow_book_id_set = chara_life.borrow_book_id_set(character_id)
+        borrow_book_id_set.add(BOOK)
+        kernel_data.put(
+            chara_life.borrow_book_id_set.set, character_id, borrow_book_id_set
+        )
         kernel_data.put(library.set_holder, BOOK, character_id)
-        borrow_book_panel.add_borrow_history_record(character_id, BOOK)
+        kernel_data.written(
+            borrow_book_panel.add_borrow_history_record, character_id, BOOK
+        )
         character_data.behavior.behavior_id = constant.Behavior.READ_BOOK
         character_data.state = constant.CharacterStatus.STATUS_READ_BOOK
         character_data.behavior.book_id = BOOK
@@ -353,7 +373,7 @@ class Book43RemovedTest(SlowTestCase):
         """干员借着、正读着 43 号书，阅读推荐与图书馆展示列表里有它：打开游戏状态自检时读档，借书一致性自检 ISLAND-21
         随即通过，存档里没有对 43 号书与类型 43 的引用；再存再读一次，借阅表不变"""
         from Script.Config import normal_config
-        from Script.Modules.domains import library
+        from Script.Modules.domains import chara_life, library
         from Script.Test.Static_Check.checks import check_island
 
         normal_config.system_setting.base_setting[SELF_CHECK_SETTING] = 1
@@ -372,13 +392,12 @@ class Book43RemovedTest(SlowTestCase):
         if BOOK_TYPE in library.recommended():
             references.append("阅读推荐")
         for character_id, character_data in self.cache.character_data.items():
-            entertainment = character_data.entertainment
-            if BOOK in entertainment.borrow_book_id_set:
+            if BOOK in chara_life.borrow_book_id_set(character_id):
                 references.append(f"角色 {character_id} 的借书集合")
             if any(
                 record.get("book_id") == BOOK
                 and record.get("return_time") is None
-                for record in entertainment.borrow_book_history
+                for record in chara_life.borrow_book_history(character_id)
             ):
                 references.append(f"角色 {character_id} 借书卡上没还的记录")
             if character_data.behavior.book_id == BOOK:
@@ -395,6 +414,7 @@ class Book43RemovedTest(SlowTestCase):
     def test_user_save_99_drops_unknown_books(self) -> None:
         """用户存档 99：读档后借阅表里没有书籍配置里没有的书，其余每项仍在、借阅者不变或读档时还了书；
         再存再读一次，借阅表不变"""
+        from Script.Modules.domains import chara_life
         from Script.UI.Moudle import view
         from Script.Config import game_config
         from Script.Core import constant, save_handle
@@ -425,7 +445,7 @@ class Book43RemovedTest(SlowTestCase):
             holder_data = self.cache.character_data.get(holder)
             returned = now_holder == -1 and (
                 holder_data is None
-                or book_id not in holder_data.entertainment.borrow_book_id_set
+                or book_id not in chara_life.borrow_book_id_set(holder_data.cid)
             )
             if now_holder != holder and not returned:
                 changed.append((book_id, holder, now_holder))

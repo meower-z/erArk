@@ -8,7 +8,7 @@ from Script.Core import (
     game_type,
 )
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, relations
 
 panel_info_data: dict[str, object] = {}
 
@@ -80,7 +80,6 @@ class CharacterBodyText:
 
         from Script.Design import handle_talent
 
-        character_data = cache.character_data[character_id]
         type_data = _("肉体情况")
         type_line = draw.LittleTitleLineDraw(type_data, width, ":")
         self.draw_list.append(type_line)
@@ -245,10 +244,10 @@ class CharacterBodyText:
                 now_text += _("  未分娩过\n")
             else:
                 now_text += _("  为博士生下了  ")
-                for chara_id in character_data.relationship.child_id_list:
+                for chara_id in relations.child_id_list(character_id):
                     now_text += f"{cache.character_data[chara_id].name}  "
                 now_text += _("共{0}个孩子\n").format(
-                    len(character_data.relationship.child_id_list)
+                    len(relations.child_id_list(character_id))
                 )
             body_text_list.append(now_text)
             # 尿道信息#
@@ -267,11 +266,11 @@ class CharacterBodyText:
             # 其他信息
             now_text = _("\n 【其他】\n")
             # 母亲情况
-            if character_data.relationship.mother_id != -1:
+            if relations.mother_id(character_id) != -1:
                 mother_data: game_type.Character = cache.character_data[
-                    character_data.relationship.mother_id
+                    relations.mother_id(character_id)
                 ]
-                child_id_list = mother_data.relationship.child_id_list
+                child_id_list = relations.child_id_list(mother_data.cid)
                 if character_id in child_id_list:
                     child_index = child_id_list.index(character_id)
                     if child_index != -1:

@@ -14,7 +14,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import abilities
+from Script.Modules.domains import abilities, relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -82,11 +82,12 @@ class Character_talent_show_Text:
         # 检测共通基础前提
         judge = 1
         if not self._draw_condition(
-            _(" 好感度500以上"), self.character_data.favorability[0] >= 500
+            _(" 好感度500以上"),
+            relations.favorability(self.character_data.cid)[0] >= 500,
         ):
             judge = 0
         if not self._draw_condition(
-            _(" 信任度50%以上"), self.character_data.trust >= 50
+            _(" 信任度50%以上"), relations.trust(self.character_data.cid) >= 50
         ):
             judge = 0
         if not self._draw_condition(
@@ -251,12 +252,15 @@ class Character_talent_show_Text:
                 button_text = _("  需要好感至少为 {0}\n").format(
                     str(need_value)
                 )
-                is_met = self.character_data.favorability[0] >= need_value
+                is_met = (
+                    relations.favorability(self.character_data.cid)[0]
+                    >= need_value
+                )
             elif need_type == "X":
                 button_text = _("  需要信赖至少为 {0}\n").format(
                     str(need_value)
                 )
-                is_met = self.character_data.trust >= need_value
+                is_met = relations.trust(self.character_data.cid) >= need_value
 
             if not is_met:
                 judge = 0

@@ -17,7 +17,7 @@ from Script.Config import game_config, normal_config
 import random
 from Script.Modules.domains import abilities, body_manage, dirty, facility
 from Script.Modules.domains import flags, h_state, inventory, needs, prison
-from Script.Modules.domains import work
+from Script.Modules.domains import work, chara_life
 from Script.Modules.gameplay_resolution import plan_queue
 from Script.Modules.tk_ui import player_pick
 
@@ -229,8 +229,9 @@ def chara_become_prisoner(character_id: int) -> None:
     from Script.System.Dormitory_System import common as dormitory_common
 
     dormitory_common.register_permanent_dormitory(character_id)
-    character_data.dormitory = map_handle.get_map_system_path_str_for_list(
-        character_data.position
+    chara_life.dormitory.set(
+        character_id,
+        map_handle.get_map_system_path_str_for_list(character_data.position),
     )
     # 给予屈服2，恐怖1，反发3，但如果有隶属系陷落，则可以减轻该效果
     target_fall = attr_calculation.get_character_fall_level(
@@ -283,8 +284,7 @@ def get_unused_prison_dormitory() -> str:
     # 收集所有在用的牢狱名字
     occupied_dorms = set()
     for prisoner_id in prison.prisoner_ids():
-        character_data = cache.character_data[prisoner_id]
-        dorm = character_data.dormitory
+        dorm = chara_life.dormitory(prisoner_id)
         for d in all_dormitories:
             if d in dorm:
                 occupied_dorms.add(d)
@@ -534,46 +534,45 @@ def get_behavior_id_of_sex_assistant() -> str:
     behaviors = prison.assistant_behaviors()
     if handle_premise.handle_sex_assistant_3(0) and behaviors:
         return random.choice(behaviors)
-    else:
-        # 获取玩家当前的状态id
-        pl_character_data = cache.character_data[0]
-        behavior_id = pl_character_data.behavior.behavior_id
-        if behavior_id in game_config.config_behavior:
-            state_data = game_config.config_behavior[behavior_id]
-            # 遍历部位列表，获取存在与tag中的部位
-            part_str_list = ["U", "W", "V", "A", "C", "B", "N"]
-            now_part = ""
-            for part_str in part_str_list:
-                if part_str in state_data.tag:
-                    now_part = part_str
-                    break
-            # 如果没有部位，则返回0
-            if now_part == "":
-                return "0"
-            # 如果目标为玩家同部位
-            if handle_premise.handle_sex_assistant_1(0):
-                # 获取目标的行为id
-                new_behavior_id_list = (
-                    get_all_can_use_behavior_id_for_sex_assistant(
-                        select_part=now_part
-                    )
+    # 获取玩家当前的状态id
+    pl_character_data = cache.character_data[0]
+    behavior_id = pl_character_data.behavior.behavior_id
+    if behavior_id in game_config.config_behavior:
+        state_data = game_config.config_behavior[behavior_id]
+        # 遍历部位列表，获取存在与tag中的部位
+        part_str_list = ["U", "W", "V", "A", "C", "B", "N"]
+        now_part = ""
+        for part_str in part_str_list:
+            if part_str in state_data.tag:
+                now_part = part_str
+                break
+        # 如果没有部位，则返回0
+        if now_part == "":
+            return "0"
+        # 如果目标为玩家同部位
+        if handle_premise.handle_sex_assistant_1(0):
+            # 获取目标的行为id
+            new_behavior_id_list = (
+                get_all_can_use_behavior_id_for_sex_assistant(
+                    select_part=now_part
                 )
-                # 随机选择一个行为id。列表经集合去重，顺序随字符串哈希变化；排序后，同一随机状态总挑中同一个。
-                if len(new_behavior_id_list) > 0:
-                    behavior_id = random.choice(sorted(new_behavior_id_list))
-                    return behavior_id
-            # 如果为非玩家同部位
-            elif handle_premise.handle_sex_assistant_2(0):
-                # 获取目标的行为id
-                new_behavior_id_list = (
-                    get_all_can_use_behavior_id_for_sex_assistant(
-                        not_selet_part=now_part
-                    )
+            )
+            # 随机选择一个行为id。列表经集合去重，顺序随字符串哈希变化；排序后，同一随机状态总挑中同一个。
+            if len(new_behavior_id_list) > 0:
+                behavior_id = random.choice(sorted(new_behavior_id_list))
+                return behavior_id
+        # 如果为非玩家同部位
+        elif handle_premise.handle_sex_assistant_2(0):
+            # 获取目标的行为id
+            new_behavior_id_list = (
+                get_all_can_use_behavior_id_for_sex_assistant(
+                    not_selet_part=now_part
                 )
-                # 随机选择一个行为id。列表经集合去重，顺序随字符串哈希变化；排序后，同一随机状态总挑中同一个。
-                if len(new_behavior_id_list) > 0:
-                    behavior_id = random.choice(sorted(new_behavior_id_list))
-                    return behavior_id
+            )
+            # 随机选择一个行为id。列表经集合去重，顺序随字符串哈希变化；排序后，同一随机状态总挑中同一个。
+            if len(new_behavior_id_list) > 0:
+                behavior_id = random.choice(sorted(new_behavior_id_list))
+                return behavior_id
     return "0"
 
 
@@ -626,7 +625,7 @@ class Confinement_And_Training_Manage_Panel:
                     tem_character_data: game_type.Character = (
                         cache.character_data[chara_id]
                     )
-                    live_room = tem_character_data.dormitory.split(os.sep)[-1]
+                    live_room = chara_life.dormitory(chara_id).split(os.sep)[-1]
                     now_text += _(" [{0}]{1} - {2}  ").format(
                         str(tem_character_data.adv).rjust(4, "0"),
                         tem_character_data.name,

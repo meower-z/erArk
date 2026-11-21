@@ -30,6 +30,7 @@ from Script.Modules.gameplay_resolution import intent, player_starters
 from Script.Modules.tk_ui import player_pick
 from Script.Modules.domains import abilities, achievement, action_info, flags
 from Script.Modules.domains import h_state, needs, player_collection, roster
+from Script.Modules.domains import relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -1166,7 +1167,6 @@ def _start_follow(who: int, chosen: intent.Intent) -> None:
     who -- 角色id
     chosen -- 行动的意图
     """
-    character_data: game_type.Character = cache.character_data[who]
     target_data: game_type.Character = cache.character_data[chosen["target"]]
 
     # 提示信息
@@ -1179,7 +1179,7 @@ def _start_follow(who: int, chosen: intent.Intent) -> None:
             if npc_id not in {
                 0,
                 chosen["target"],
-                character_data.assistant_character_id,
+                relations.assistant_character_id(who),
             }:
                 other_character_data = cache.character_data[npc_id]
                 if flags.get(other_character_data.cid, "is_follow"):

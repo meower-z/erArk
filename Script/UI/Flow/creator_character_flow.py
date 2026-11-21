@@ -18,6 +18,7 @@ from Script.Modules.save_load import kernel_state
 from Script.UI.Moudle import panel, draw, view
 from Script.Config import normal_config, game_config
 from Script.Modules.domains.playthrough import FIRST_BONUS, WORLD
+from Script.Modules.domains import chara_key, chara_profile, relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -65,6 +66,7 @@ def creator_character_panel() -> None:
                     break
             cache.character_data[0] = game_type.Character()
             abilities.clear(0)
+            chara_key.reset(0)
         view.now_panel_id = constant.Panel.IN_SCENE
         effects = buffer.effects()
     kernel_state.new_game(clock, effects)
@@ -185,7 +187,7 @@ def input_name_panel() -> bool:
     character_data.name = character.input_name_func(
         _("你能回忆起自己的名字吗？（默认称呼为博士，此处仅输入姓名即可）")
     )
-    character_data.nick_name = _("博士")
+    chara_profile.nick_name.set(0, _("博士"))
     return True
 
 
@@ -1129,7 +1131,6 @@ class Character_Bonus:
         self.return_list: list[str] = []
         """ 监听的按钮列表 """
 
-        character_data: game_type.Character = cache.character_data[0]
         bonus_all = 0
         now_draw_list: list[draw.Drawable] = []
         now_draw_list.append(line_feed_draw)
@@ -1180,7 +1181,7 @@ class Character_Bonus:
                     button_text += _("(已选{0})").format(ability_name)
                 elif cid == 22:
                     target_data: game_type.Character = cache.character_data[
-                        character_data.assistant_character_id
+                        relations.assistant_character_id(0)
                     ]
                     button_text += _("(已选{0})").format(target_data.name)
             # 文本3
@@ -1199,7 +1200,6 @@ class Character_Bonus:
             now_draw_list.append(line_feed_draw)
 
         info_draw = draw.LeftDraw()
-        # info_draw.width = 1
         info_draw.text = _(" \n 当前为第 {0} 周目\n").format(
             str(playthrough.game_round())
         )
@@ -1228,7 +1228,6 @@ class Character_Bonus:
         """获得初期奖励"""
         from Script.UI.Panel import assistant_panel, normal_panel
 
-        pl_character_data: game_type.Character = cache.character_data[0]
         fail_flag = False
 
         # 获得素质
@@ -1288,12 +1287,12 @@ class Character_Bonus:
             elif first_bonus_id == 22:
 
                 # 旧助理的好感信赖清零
-                if pl_character_data.assistant_character_id:
+                if relations.assistant_character_id(0):
                     target_data: game_type.Character = cache.character_data[
-                        pl_character_data.assistant_character_id
+                        relations.assistant_character_id(0)
                     ]
-                    target_data.favorability[0] = 0
-                    target_data.trust = 0
+                    relations.favorability.set_item(target_data.cid, 0, 0)
+                    relations.trust.set(target_data.cid, 0)
                     playthrough.set_setting(FIRST_BONUS, first_bonus_id, False)
 
                 # 这里直接沿用的助理页面的代码
@@ -1301,18 +1300,20 @@ class Character_Bonus:
                     assistant_panel.chose_assistant()
 
                     # 在这里处理好感和信赖的增加
-                    if pl_character_data.assistant_character_id:
+                    if relations.assistant_character_id(0):
                         new_assistant_data: game_type.Character = (
                             cache.character_data[
-                                pl_character_data.assistant_character_id
+                                relations.assistant_character_id(0)
                             ]
                         )
-                        new_assistant_data.favorability[0] = 1000
-                        new_assistant_data.trust = 50
+                        relations.favorability.set_item(
+                            new_assistant_data.cid, 0, 1000
+                        )
+                        relations.trust.set(new_assistant_data.cid, 50)
                         playthrough.set_setting(
                             FIRST_BONUS,
                             first_bonus_id,
-                            pl_character_data.assistant_character_id,
+                            relations.assistant_character_id(0),
                         )
 
                 else:
@@ -1321,7 +1322,6 @@ class Character_Bonus:
         # 点数不足信息绘制
         if fail_flag:
             info_last_draw = draw.WaitDraw()
-            # info_last_draw.width = 1
             info_last_draw.text = _("\n 当前剩余奖励不足\n")
             info_last_draw.draw()
 

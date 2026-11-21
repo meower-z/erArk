@@ -21,6 +21,7 @@ from Script.Core import cache_control, game_type
 from Script.Kernel import core
 from Script.Modules.domains import roster, work
 from Script.Modules.gameplay_resolution import working
+from Script.Modules.domains import chara_life
 
 INCOME = "base.income_today"
 """ 今日总收入在全局数据里的键 """
@@ -378,7 +379,7 @@ def drop_invalid_traders() -> None:
         if (
             not isinstance(main_id, int)
             or main_id not in characters
-            or characters[main_id].work.work_type != TRADER_WORK
+            or chara_life.work_type(main_id) != TRADER_WORK
         ):
             table[res_type] = 0
     _put_traders(table)

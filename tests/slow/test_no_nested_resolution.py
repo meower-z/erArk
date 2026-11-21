@@ -198,12 +198,12 @@ class NoNestedResolutionTest(SlowTestCase):
         Return arguments:
         int -- 她的角色id
         """
+        from Script.Modules.domains import relations
         from Script.Core import constant
         from Script.Design import map_handle
 
         player = self.cache.character_data[0]
         partner_id = self.npc(PARTNER_NAME)
-        partner = self.cache.character_data[partner_id]
         room_key = next(
             key
             for key, scene in sorted(self.cache.scene_data.items())
@@ -212,8 +212,10 @@ class NoNestedResolutionTest(SlowTestCase):
         self.room = map_handle.get_map_system_path_for_str(room_key)
         self.world.move(0, self.room)
         self.world.move(partner_id, self.room)
-        partner.favorability[0] = FAVORABILITY
-        partner.trust = TRUST
+        kernel_data.put(
+            relations.favorability.set_item, partner_id, 0, FAVORABILITY
+        )
+        kernel_data.put(relations.trust.set, partner_id, TRUST)
         player.target_character_id = partner_id
         self.instruct(constant.Instruct.DO_H)
         self.assertTrue(kernel_data.domain("flags").get(0, "is_h"), "博士在H中")

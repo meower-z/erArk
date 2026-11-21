@@ -14,7 +14,7 @@ from Script.Modules.save_load import kernel_state
 import copy
 from Script.Modules.domains import abilities, facility, first_record, h_meters
 from Script.Modules.domains import hypnosis, needs, player_collection
-from Script.Modules.domains import playthrough, roster
+from Script.Modules.domains import playthrough, roster, chara_life, relations
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -659,25 +659,24 @@ class New_Round_Handle:
         talent = abilities.talent(0)
         if self.pl_originium_arts_count == 0:
             return 0
-        else:
-            all_cost = 0
-            # 初级源石技艺
-            for i in [304, 307, 310, 316, 331]:
-                if talent[i]:
-                    all_cost += 10
-            # 中级源石技艺
-            for i in [305, 308, 311, 317, 332]:
-                if talent[i]:
-                    all_cost += 30
-            # 高级源石技艺
-            for i in [306, 309, 312, 318, 333]:
-                if talent[i]:
-                    all_cost += 60
-            # 特级源石技艺
-            for i in [334]:
-                if talent[i]:
-                    all_cost += 120
-            return all_cost
+        all_cost = 0
+        # 初级源石技艺
+        for i in [304, 307, 310, 316, 331]:
+            if talent[i]:
+                all_cost += 10
+        # 中级源石技艺
+        for i in [305, 308, 311, 317, 332]:
+            if talent[i]:
+                all_cost += 30
+        # 高级源石技艺
+        for i in [306, 309, 312, 318, 333]:
+            if talent[i]:
+                all_cost += 60
+        # 特级源石技艺
+        for i in [334]:
+            if talent[i]:
+                all_cost += 120
+        return all_cost
 
     def calculate_pl_extra_growth_count(self) -> int:
         """
@@ -869,8 +868,9 @@ class New_Round_Handle:
         """
         面板上的继承选择
         Return arguments:
-        dict -- 各项继承的档位、陷落干员id列表、新周目的世界设定，
-        与博士此刻的体力、气力、理智上限（player_maxima），见 setup
+        dict -- 各项继承的档位、陷落干员id列表与新周目的世界设定，
+            还有选择时博士的体力、气力、理智上限（player_maxima），
+            以及选择时陷落干员的 trust 与对博士的 favorability（fallen_social），见 setup
         """
         st, n0 = core.state(), needs.of(0)
         chars = cache.character_data
@@ -896,6 +896,10 @@ class New_Round_Handle:
                 if (d := hypnosis.degree(c))
             },
             "first_records": first_record.carry_for_new_round(chars, st),
+            "fallen_social": {
+                str(cid): (relations.trust(cid), relations.favorability(cid)[0])
+                for cid in self.all_fall_chara_list
+            },
             "carried": playthrough.carry_for_new_round(st),
             "abilities": abilities.carry([0, *self.all_fall_chara_list], st),
             "carried_collection": player_collection.carry_for_new_round(st),
@@ -1102,7 +1106,8 @@ def _inherit_npc_data(
     inherit: Mapping[str, core.JSON], fallen_ids: set[int]
 ) -> None:
     """
-    继承干员数据：每名干员重建，陷落干员按继承选择带上好感、信任、能力、经验与催眠进度
+    继承干员数据。每名干员都重建，陷落干员再按继承选择的比例带上 trust、对博士的 favorability、能力、经验与催眠进度。
+    其中 trust 与 favorability 取自 fallen_social，因为重建会把角色键换回默认值
     Keyword arguments:
     inherit -- 继承选择
     fallen_ids -- 陷落干员id
@@ -1112,8 +1117,8 @@ def _inherit_npc_data(
     info_draw_text = "\n"
     info_draw_text += _("开始继承干员数据\n")
 
-    old_npc_data = copy.deepcopy(cache.character_data)
     old = cast(Mapping[str, core.JSON], inherit["abilities"])
+    social = cast(Mapping[str, tuple[Num, Num]], inherit["fallen_social"])
     roster.clear_active()
     for now_id, now_npc_data in cache.npc_tem_data.items():
         character_handle.init_character(
@@ -1122,7 +1127,6 @@ def _inherit_npc_data(
         if now_id in fallen_ids and child_stage_gate.restore_grown_stage(
             now_id, abilities.carried(old, now_id, "talent")
         ):
-            new_npc_data = cache.character_data[now_id]
             roster.add(now_id)
             if roster.count() > 0:
                 info_draw_text += _("共有{0}名陷落干员继承到下一周目\n").format(
@@ -1135,11 +1139,10 @@ def _inherit_npc_data(
             now_rate = _inherit_rate(
                 4, _count(inherit, "chara_fon_and_trust_count")
             )
-            new_npc_data.trust = int(
-                old_npc_data[now_id].trust * now_rate / 100
-            )
-            new_npc_data.favorability[0] = int(
-                old_npc_data[now_id].favorability[0] * now_rate / 100
+            trust, favorability = social[str(now_id)]
+            relations.trust.set(now_id, int(trust * now_rate / 100))
+            relations.favorability.set_item(
+                now_id, 0, int(favorability * now_rate / 100)
             )
             if now_rate > 0:
                 info_draw_text += _(
@@ -1239,8 +1242,7 @@ def _reset_game_data(world_setting: dict[int, int]) -> None:
     # 根据继承的角色，将有人住的宿舍设为开放
     for now_id in new_npc_id_got:
         # 获取地点数据
-        now_character_data = cache.character_data[now_id]
-        now_dormitory = now_character_data.dormitory
+        now_dormitory = chara_life.dormitory(now_id)
         now_scene_data = cache.scene_data[now_dormitory]
         # 如果该地点在设施开放列表中
         if (
@@ -1277,8 +1279,6 @@ class CharacterabiText:
         """ 继承比例 """
         self.type = type
         """ 当前绘制类型 """
-        # self.column = column
-        # """ 每行状态最大个数 """
         character_data = cache.character_data[self.character_id]
         """ 角色数据 """
         self.draw_list: list[draw.Drawable] = []

@@ -5,7 +5,7 @@ from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design import game_time
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import action_info, needs, physical_exam
+from Script.Modules.domains import action_info, needs, physical_exam, chara_life
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -155,7 +155,6 @@ def handle_eat_time(character_id: int) -> int:
     # return (now_time == 4) * 100
     # print(f"debug start_time = {character_data.behavior.start_time}，now_time = {now_time}")
     if character_data.behavior.start_time.hour in {7, 8, 12, 13, 18, 19}:
-        # print(f"debug 当前为饭点={character_data.behavior.start_time.hour}")
         return 1
     return 0
 
@@ -247,7 +246,6 @@ def handle_sleep_time(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     game_time.get_sun_time(character_data.behavior.start_time)
-    # return (now_time == 4) * 100
     if character_data.behavior.start_time.hour in {0, 1, 2, 3, 4, 5, 22, 23}:
         now_hour = (
             character_data.behavior.start_time.hour
@@ -271,7 +269,6 @@ def handle_not_sleep_time(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     game_time.get_sun_time(character_data.behavior.start_time)
-    # return (now_time == 4) * 100
     if character_data.behavior.start_time.hour in {0, 1, 2, 3, 4, 5, 22, 23}:
         return 0
     return 1
@@ -352,7 +349,6 @@ def handle_to_work_time(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     game_time.get_sun_time(character_data.behavior.start_time)
-    # return (now_time == 4) * 100
     # 首先需要是工作日
     if game_time.judge_work_today(0):
         if (
@@ -377,7 +373,6 @@ def handle_work_time(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     game_time.get_sun_time(character_data.behavior.start_time)
-    # return (now_time == 4) * 100
     # 首先需要是工作日
     if game_time.judge_work_today(0):
         if (
@@ -399,7 +394,6 @@ def handle_to_work_time_or_work_time(character_id: int) -> int:
     """
     character_data: game_type.Character = cache.character_data[character_id]
     game_time.get_sun_time(character_data.behavior.start_time)
-    # return (now_time == 4) * 100
     # 首先需要是工作日
     if game_time.judge_work_today(0):
         if (
@@ -430,12 +424,18 @@ def _judge_free_daytime(character_data: game_type.Character) -> bool:
              没课的节次要能走到娱乐链按日程 / 随机娱乐自由行动，所以白天对学生也算娱乐时间；
              原来只有周日算，周一~周六没课的节次会被工作链送进空教室
     """
-    if not game_time.judge_work_today(0) or character_data.work.work_type == 0:
+    if (
+        not game_time.judge_work_today(0)
+        or chara_life.work_type(character_data.cid) == 0
+    ):
         return True
     # 教育系统的常量从配置现算，在函数内延迟 import（与 handle_npc_ai 的写法一致）
     from Script.System.Education_System import education_constant
 
-    return character_data.work.work_type == education_constant.STUDENT_WORK_TYPE
+    return (
+        chara_life.work_type(character_data.cid)
+        == education_constant.STUDENT_WORK_TYPE
+    )
 
 
 @add_premise(constant_promise.Premise.ALL_ENTERTAINMENT_TIME)
