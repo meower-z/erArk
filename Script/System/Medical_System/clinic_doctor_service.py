@@ -414,10 +414,7 @@ def get_doctor_specialization_overview(
             character = character_table.get(doctor_id)
             if character is None:
                 continue
-            ability_level = int(
-                character.ability.get(medical_constant.MEDICAL_ABILITY_ID, 0)
-                or 0
-            )
+            ability_level = int(medical_core.medical_level(doctor_id) or 0)
             ability_adjust = float(
                 handle_ability.get_ability_adjust(ability_level)
             )
@@ -494,10 +491,7 @@ def _resolve_specialization_bonus(
         return (specialization_key, False, 1.0)
 
     # 按医生能力等级计算加成倍率。
-    ability_level = int(
-        doctor_character.ability.get(medical_constant.MEDICAL_ABILITY_ID, 0)
-        or 0
-    )
+    ability_level = int(medical_core.medical_level(doctor_character.cid) or 0)
     bonus_multiplier = (
         1.0
         + max(ability_level, 0)

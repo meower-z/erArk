@@ -23,8 +23,8 @@ from Script.Design import (
     game_time,
 )
 from Script.Kernel import core
-from Script.Modules.domains import country, playthrough, prison, visitor
-from Script.Modules.domains import physical_exam, warehouse, work
+from Script.Modules.domains import abilities, country, physical_exam, prison
+from Script.Modules.domains import playthrough, visitor, warehouse, work
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import kernel_state
 from Script.UI.Moudle import panel, draw, view
@@ -76,6 +76,7 @@ def creator_character_panel() -> None:
                     game_start()
                     break
             cache.character_data[0] = game_type.Character()
+            abilities.clear(0)
         view.now_panel_id = constant.Panel.IN_SCENE
         effects = buffer.effects()
     kernel_state.new_game(clock, effects)
@@ -813,7 +814,7 @@ class Character_FirstNPC:
 
             # 胸部过滤
             for cid in [121, 122, 123, 124, 125]:
-                if target_data.talent[cid]:
+                if abilities.talent(NPC_id)[cid]:
                     self.chest_filter_id_dict[
                         game_config.config_talent[cid].name
                     ].append(NPC_id)
@@ -821,7 +822,7 @@ class Character_FirstNPC:
 
             # 年龄过滤
             for cid in [102, 103, 104, 105, 106, 107]:
-                if target_data.talent[cid]:
+                if abilities.talent(NPC_id)[cid]:
                     self.age_filter_id_dict[
                         game_config.config_talent[cid].name
                     ].append(NPC_id)
@@ -1249,11 +1250,11 @@ class Character_Bonus:
             # 1~4 号奖励各对应一个素质
             talent_id = {1: 304, 2: 307, 3: 331, 4: 316}[first_bonus_id]
 
-            if pl_character_data.talent[talent_id]:
-                pl_character_data.talent[talent_id] = 0
+            if abilities.talent(0)[talent_id]:
+                abilities.talent(0)[talent_id] = 0
                 playthrough.set_setting(FIRST_BONUS, first_bonus_id, False)
             elif self.bonus_now >= 10:
-                pl_character_data.talent[talent_id] = 1
+                abilities.talent(0)[talent_id] = 1
                 playthrough.set_setting(FIRST_BONUS, first_bonus_id, True)
             else:
                 fail_flag = True
@@ -1283,7 +1284,7 @@ class Character_Bonus:
                 if ability_id := playthrough.setting(
                     FIRST_BONUS, first_bonus_id
                 ):
-                    pl_character_data.ability[ability_id] = 0
+                    abilities.ability(0)[ability_id] = 0
                     playthrough.set_setting(FIRST_BONUS, first_bonus_id, False)
                 elif self.bonus_now >= 5:
                     now_panel = normal_panel.Chose_First_bonus_ability_Panel(
@@ -1293,7 +1294,7 @@ class Character_Bonus:
                     if ability_id := playthrough.setting(
                         FIRST_BONUS, first_bonus_id
                     ):
-                        pl_character_data.ability[ability_id] = 5
+                        abilities.ability(0)[ability_id] = 5
                 else:
                     fail_flag = True
 
@@ -1368,7 +1369,6 @@ class World_Setting:
         now_draw_list.append(line)
 
         setting_info_draw = draw.LeftDraw()
-        # setting_info_draw.width = 1
         draw_text = _(" 当前世界设定为：\n")
         draw_text += _(
             "   ●基础世界设定：美好的黄油IF世界线，无具体时间线和剧情线，凡是有立绘的角色（包括敌我双方、路人、"

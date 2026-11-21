@@ -19,7 +19,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation, handle_ability
 from Script.UI.Moudle import draw, view
 from Script.System.Medical_System import medical_constant, medical_service
-from Script.Modules.domains import facility, medical
+from Script.Modules.domains import abilities, facility, medical
 
 cache: game_type.Cache = cache_control.cache
 """ 全局缓存对象 """
@@ -529,7 +529,7 @@ class DoctorManagementSubPanel(_BaseSubPanel):
             character = cache.character_data.get(doctor_id)
             if character is None:
                 continue
-            ability_level = character.ability.get(
+            ability_level = abilities.ability(character.cid).get(
                 medical_constant.MEDICAL_ABILITY_ID, 0
             )
             speed = max(

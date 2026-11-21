@@ -24,7 +24,7 @@ from Script.Modules.save_load import reset
 
 import random
 from typing import TYPE_CHECKING
-from Script.Modules.domains import facility
+from Script.Modules.domains import abilities, facility
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -254,32 +254,32 @@ def update_recruit() -> None:
                     wait_id_list.append(chara_id)
                 # 同外表年龄干员
                 elif recruitment_strategy == 6:
-                    character_data = cache.character_data[chara_id]
+                    talent = abilities.talent(chara_id)
                     line_main_chara_age_talent = handle_talent.have_age_talent(
                         line_main_chara_id
                     )
                     # 筛选出外表年龄相同的角色
-                    if character_data.talent[line_main_chara_age_talent] != 1:
+                    if talent[line_main_chara_age_talent] != 1:
                         continue
                     wait_id_list.append(chara_id)
                 # 同胸部大小干员
                 elif recruitment_strategy == 7:
-                    character_data = cache.character_data[chara_id]
+                    talent = abilities.talent(chara_id)
                     line_main_chara_bust_talent = (
                         handle_talent.have_chest_talent(line_main_chara_id)
                     )
                     # 筛选出胸部大小相同的角色
-                    if character_data.talent[line_main_chara_bust_talent] != 1:
+                    if talent[line_main_chara_bust_talent] != 1:
                         continue
                     wait_id_list.append(chara_id)
                 # 同臀部大小干员
                 elif recruitment_strategy == 8:
-                    character_data = cache.character_data[chara_id]
+                    talent = abilities.talent(chara_id)
                     line_main_chara_hip_talent = handle_talent.have_hip_talent(
                         line_main_chara_id
                     )
                     # 筛选出臀部大小相同的角色
-                    if character_data.talent[line_main_chara_hip_talent] != 1:
+                    if talent[line_main_chara_hip_talent] != 1:
                         continue
                     wait_id_list.append(chara_id)
             if len(wait_id_list):
@@ -352,15 +352,14 @@ def calculate_recruit_line_efficiency(line_id: int) -> tuple[str, float]:
         # 跳过玩家
         if chara_id == 0:
             continue
-        character_data: game_type.Character = cache.character_data[chara_id]
         base_effect = 2 * handle_ability.get_ability_adjust(
-            character_data.ability.get(40, 0)
+            abilities.ability(chara_id).get(40, 0)
         )
         if chara_id == line_main_id:
             total_bonus += base_effect
             hr_parts_str += _("主:{0}(话术lv{1}:{2}%)").format(
                 main_name,
-                character_data.ability.get(40, 0),
+                abilities.ability(chara_id).get(40, 0),
                 round(base_effect, 1),
             )
         elif chara_id not in main_ids:
@@ -505,6 +504,7 @@ class Recruit_Panel:
                     if recruitment_strategy_id == 11:
                         break
                     chara_data = cache.character_data[chara_id]
+                    talent = abilities.talent(chara_id)
                     if recruitment_strategy_id == 0:
                         if (
                             chara_data.relationship.birthplace
@@ -552,21 +552,21 @@ class Recruit_Panel:
                             age_talent_id = handle_talent.have_age_talent(
                                 line_main_chara_id
                             )
-                            if chara_data.talent.get(age_talent_id) == 1:
+                            if talent.get(age_talent_id) == 1:
                                 line_wait_id_list.append(chara_id)
                     elif recruitment_strategy_id == 7:
                         if line_main_chara_id:
                             chest_talent_id = handle_talent.have_chest_talent(
                                 line_main_chara_id
                             )
-                            if chara_data.talent.get(chest_talent_id) == 1:
+                            if talent.get(chest_talent_id) == 1:
                                 line_wait_id_list.append(chara_id)
                     elif recruitment_strategy_id == 8:
                         if line_main_chara_id:
                             hip_talent_id = handle_talent.have_hip_talent(
                                 line_main_chara_id
                             )
-                            if chara_data.talent.get(hip_talent_id) == 1:
+                            if talent.get(hip_talent_id) == 1:
                                 line_wait_id_list.append(chara_id)
 
                 # 绘制当前策略能招到的人数及详情按钮
@@ -825,11 +825,11 @@ class Recruit_Panel:
 
             chara = cache.character_data[chara_id]
             base_effect = 2 * handle_ability.get_ability_adjust(
-                chara.ability.get(40, 0)
+                abilities.ability(chara_id).get(40, 0)
             )
             bonus = base_effect if is_main else base_effect / 5
             bonus_text = f"{round(bonus,1)}%"
-            abi_lv = chara.ability.get(40, 0)
+            abi_lv = abilities.ability(chara_id).get(40, 0)
             abi_str = f"{attr_calculation.judge_grade(abi_lv)} {abi_lv}"
 
             def safe_get(
@@ -990,7 +990,7 @@ class Recruit_Panel:
             ]
             # 依话术等级从高到低排序
             other_ops.sort(
-                key=lambda x: cache.character_data[x].ability.get(40, 0),
+                key=lambda x: abilities.ability(x).get(40, 0),
                 reverse=True,
             )
 

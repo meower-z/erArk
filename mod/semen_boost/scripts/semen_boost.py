@@ -15,6 +15,7 @@ import csv
 import random
 from contextlib import suppress
 from typing import TYPE_CHECKING
+from Script.Modules.domains import abilities
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -233,7 +234,7 @@ def modded_common_ejaculation() -> tuple[str, int]:
     if character_data.target_character_id > 0:
         target_data = cache.character_data[character_data.target_character_id]
         squeeze_adjust = handle_ability.get_ability_adjust(
-            target_data.ability[77]
+            abilities.ability(target_data.cid)[77]
         )
         # 根据榨精能力等级调整射精量
         semen_count *= squeeze_adjust

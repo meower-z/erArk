@@ -7,7 +7,7 @@ from Script.Core.game_type import Recipes, Food
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.Design import handle_premise
-from Script.Modules.domains import achievement, economy, kitchen
+from Script.Modules.domains import abilities, achievement, economy, kitchen
 from Script.Modules.save_load import reset
 from Script.UI.Moudle import view
 
@@ -131,8 +131,7 @@ def get_base_food_quality(character_id: int = 0) -> int:
     Return arguments:
     int -- 基础品质值（不超过美味上限）
     """
-    character_data = cache.character_data[character_id]
-    return min(character_data.ability[43], get_good_quality_cap())
+    return min(abilities.ability(character_id)[43], get_good_quality_cap())
 
 
 def is_special_seasoning(seasoning_cid: int) -> bool:
@@ -314,7 +313,6 @@ def get_character_cookable_recipes(
     Return arguments:
     list -- 食谱id列表
     """
-    character_data = cache.character_data[character_id]
     cookable_recipes_list = []
     for recipe_id, recipe in cache.recipe_data.items():
         # 难度上无法制作的菜谱直接跳过
@@ -330,7 +328,7 @@ def get_character_cookable_recipes(
         if character_id != 0 and recipe.type in {8}:
             continue
         # 难度高于烹饪技能的菜谱直接跳过
-        if character_data.ability[43] < recipe.difficulty:
+        if abilities.ability(character_id)[43] < recipe.difficulty:
             continue
         # 如果所在位置是博士房间，则菜谱难度大于5的跳过
         if (
@@ -591,7 +589,7 @@ def judge_accept_special_seasoning_food(
     Return arguments:
     bool -- 接受或不接受
     """
-    pl_character_data: game_type.Character = cache.character_data[0]
+    talent = abilities.talent(character_id)
     target_data: game_type.Character = cache.character_data[character_id]
     return_d100 = random.randint(1, 100)
     # 食物的菜谱难度
@@ -601,9 +599,7 @@ def judge_accept_special_seasoning_food(
     food_quality = food.quality
     # 口才+菜谱难度+食物品质的双重加成判定
     accept_rate = (
-        pl_character_data.ability[40] * 10
-        + food_difficulty * 5
-        + food_quality * 5
+        abilities.ability(0)[40] * 10 + food_difficulty * 5 + food_quality * 5
     )
     accept_rate = max(accept_rate, 5)  # 保底5%几率
 
@@ -621,10 +617,10 @@ def judge_accept_special_seasoning_food(
         # 精液判定
         if food.special_seasoning in (11, 12):
             # 精爱味觉或淫乱可以通过
-            if target_data.talent[31] or target_data.talent[40]:
+            if talent[31] or talent[40]:
                 target_data.sp_flag.find_food_weird = True
                 # 精爱味觉触发一次绝顶
-                if target_data.talent[31]:
+                if talent[31]:
                     from Script.Settle.default import (
                         base_chara_climix_common_settle,
                     )
@@ -632,7 +628,7 @@ def judge_accept_special_seasoning_food(
                     base_chara_climix_common_settle(character_id, 0)
                 return 1
             # 性无知会直接接受精液食物
-            if target_data.talent[222]:
+            if talent[222]:
                 target_data.sp_flag.find_food_weird = False
                 return 1
 
@@ -640,7 +636,7 @@ def judge_accept_special_seasoning_food(
             if food.special_seasoning == 11:
                 # 3级爱情系或至少2级隶属系的话才接受
                 for talent_id in {203, 204, 212, 213, 214}:
-                    if target_data.talent[talent_id]:
+                    if talent[talent_id]:
                         target_data.sp_flag.find_food_weird = True
                         return 1
                 # 进行概率判定，难度*5，但不会高于50
@@ -654,7 +650,7 @@ def judge_accept_special_seasoning_food(
             elif food.special_seasoning == 12:
                 # 4级爱情系或至少3级隶属系的话才接受
                 for talent_id in {204, 213, 214}:
-                    if target_data.talent[talent_id]:
+                    if talent[talent_id]:
                         target_data.sp_flag.find_food_weird = True
                         return 1
                 # 进行概率判定，难度*10，但不会高于80

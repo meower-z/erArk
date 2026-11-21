@@ -15,7 +15,7 @@ from types import FunctionType
 from Script.Config import config_def, game_config
 from Script.Core import cache_control, game_type, get_text, value_handle
 from Script.Design import handle_ability
-from Script.Modules.domains import economy, medical, medical_patient
+from Script.Modules.domains import abilities, economy, medical, medical_patient
 from Script.System.Medical_System import medical_constant, medical_core
 from Script.Modules.domains import warehouse
 
@@ -584,7 +584,7 @@ def advance_diagnose(
         finalize_patient_after_diagnose(patient, target_base=rhodes_island)
 
     # 依据医生能力计算单次推进的进度值
-    ability_level = doctor_character.ability.get(
+    ability_level = abilities.ability(doctor_character.cid).get(
         medical_constant.MEDICAL_ABILITY_ID, 0
     )
     ability_adjust = float(handle_ability.get_ability_adjust(ability_level))

@@ -19,7 +19,7 @@ from Script.UI.Panel import achievement_panel
 from typing import TYPE_CHECKING
 from Script.Design import game_time
 from Script.Modules.domains import achievement, facility, production, warehouse
-from Script.Modules.domains import maintenance
+from Script.Modules.domains import abilities, maintenance
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -74,11 +74,11 @@ def calculate_agriculture_line_efficiency(
     if main_id in cache.character_data and main_id != 0:
         c = cache.character_data[main_id]
         base_effect = 10 * handle_ability.get_ability_adjust(
-            c.ability.get(47, 0)
+            abilities.ability(main_id).get(47, 0)
         )
         total_bonus += base_effect
         parts_str += _("主:{0}(农业lv{1}:{2}%)").format(
-            c.name, c.ability.get(47, 0), round(base_effect, 1)
+            c.name, abilities.ability(main_id).get(47, 0), round(base_effect, 1)
         )
     else:
         parts_str += _("主:空缺")
@@ -92,8 +92,9 @@ def calculate_agriculture_line_efficiency(
         if cid in main_ids:
             # 已在其他生产线担任主种植员，不计入副
             continue
-        c = cache.character_data[cid]
-        base = 10 * handle_ability.get_ability_adjust(c.ability.get(47, 0))
+        base = 10 * handle_ability.get_ability_adjust(
+            abilities.ability(cid).get(47, 0)
+        )
         sub_bonus += base / 5
     total_bonus += sub_bonus
     parts_str += _("，副:{0}%]").format(round(sub_bonus, 1))
@@ -436,7 +437,7 @@ class Agriculture_Production_Panel:
                     if main_id != 0 and main_id in cache.character_data
                     else _("(空缺)")
                 )
-                abi_lv = cache.character_data[main_id].ability.get(47, 0)
+                abi_lv = abilities.ability(main_id).get(47, 0)
                 abi_lv_text = (
                     _("(农业lv{0})").format(abi_lv) if main_id != 0 else ""
                 )
@@ -475,7 +476,7 @@ class Agriculture_Production_Panel:
                 other_names = []
                 for c in other_ops:
                     chara = cache.character_data[c]
-                    abi_lv = chara.ability.get(47, 0)
+                    abi_lv = abilities.ability(c).get(47, 0)
                     other_names.append(
                         _("{chara_name}(农业lv{abi_lv})").format(
                             chara_name=chara.name, abi_lv=abi_lv
@@ -499,7 +500,7 @@ class Agriculture_Production_Panel:
                         if main_id != 0 and main_id in cache.character_data
                         else _("(空缺)")
                     )
-                    abi_lv = cache.character_data[main_id].ability.get(47, 0)
+                    abi_lv = abilities.ability(main_id).get(47, 0)
                     abi_lv_text = (
                         _("(农业lv{0})").format(abi_lv) if main_id != 0 else ""
                     )
@@ -537,7 +538,7 @@ class Agriculture_Production_Panel:
                     other_names = []
                     for c in other_ops:
                         chara = cache.character_data[c]
-                        abi_lv = chara.ability.get(47, 0)
+                        abi_lv = abilities.ability(c).get(47, 0)
                         other_names.append(
                             _("{chara_name}(农业lv{abi_lv})").format(
                                 chara_name=chara.name, abi_lv=abi_lv
@@ -636,8 +637,6 @@ class Agriculture_Production_Panel:
 
                 # 判断当前配方是否可以生产，未解锁则跳过
                 flag_open = True
-                # if product_difficulty > now_level:
-                #     flag_open = False
 
                 if flag_open:
 

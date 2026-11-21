@@ -5,7 +5,7 @@ from Script.Core import cache_control, game_type, get_text
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Design import game_time, attr_calculation, talk, handle_premise
-from Script.Modules.domains import achievement, commission, country
+from Script.Modules.domains import abilities, achievement, commission, country
 from Script.Modules.domains import location, recruit, warehouse
 import random
 
@@ -181,21 +181,19 @@ def process_commission_text(
             item_type = item_name.replace(_("技能"), "")
         now_have_item_num = 0
         for character_id in send_npc_list:
-            now_have_item_num += cache.character_data[character_id].ability[
-                item_id
-            ]
+            now_have_item_num += abilities.ability(character_id)[item_id]
             # 如果装备完美维护，则能力值+1，但不超过8级
             if (
                 handle_premise.handle_self_equipment_maintenance_ge_2(
                     character_id
                 )
-                and cache.character_data[character_id].ability[item_id] < 8
+                and abilities.ability(character_id)[item_id] < 8
             ):
                 now_have_item_num += 1
             # 如果装备中度损坏，则能力值-1，但不低于0
             if (
                 handle_premise.handle_self_equipment_damaged_ge_2(character_id)
-                and cache.character_data[character_id].ability[item_id] > 0
+                and abilities.ability(character_id)[item_id] > 0
             ):
                 now_have_item_num -= 1
     # 经验
@@ -206,7 +204,7 @@ def process_commission_text(
         if demand_or_reward:
             item_type = _("经验")
         now_have_item_num = sum(
-            cache.character_data[character_id].experience[item_id]
+            abilities.experience(character_id)[item_id]
             for character_id in send_npc_list
         )
     # 宝珠
@@ -217,7 +215,7 @@ def process_commission_text(
         if demand_or_reward:
             item_type = _("宝珠")
         now_have_item_num = sum(
-            cache.character_data[character_id].juel[item_id]
+            abilities.juel(character_id)[item_id]
             for character_id in send_npc_list
         )
     # 素质
@@ -228,7 +226,7 @@ def process_commission_text(
         if demand_or_reward:
             item_type = _("素质")
         now_have_item_num = sum(
-            cache.character_data[character_id].talent[item_id]
+            abilities.talent(character_id)[item_id]
             for character_id in send_npc_list
         )
     # 委托
@@ -374,22 +372,18 @@ def process_commission_text(
             # 经验
             elif text_list[0] == "e":
                 for character_id in send_npc_list:
-                    cache.character_data[character_id].experience[
-                        item_id
-                    ] += int(item_num)
+                    abilities.experience(character_id)[item_id] += int(item_num)
             # 宝珠
             elif text_list[0] == "j":
                 for character_id in send_npc_list:
-                    cache.character_data[character_id].juel[item_id] += int(
-                        item_num
-                    )
+                    abilities.juel(character_id)[item_id] += int(item_num)
             # 素质
             elif text_list[0] == "t":
                 for character_id in send_npc_list:
                     if item_num > 0:
-                        cache.character_data[character_id].talent[item_id] = 1
+                        abilities.talent(character_id)[item_id] = 1
                     elif item_num < 0:
-                        cache.character_data[character_id].talent[item_id] = 0
+                        abilities.talent(character_id)[item_id] = 0
             # 角色
             elif text_list[0] == "c":
                 chara_id = character.get_character_id_from_adv(item_id)
@@ -627,7 +621,7 @@ def create_capture_fugitive_commission(fugitive_id: int) -> None:
     fugitive_id -- 逃跑囚犯干员编号
     """
     fugitive_character = cache.character_data[fugitive_id]
-    fugitive_combat = fugitive_character.ability[42] * 2
+    fugitive_combat = abilities.ability(fugitive_id)[42] * 2
     required_combat = fugitive_combat * 2
     # 需求为2倍战斗能力
     demand_text = f"a_42_{required_combat}"

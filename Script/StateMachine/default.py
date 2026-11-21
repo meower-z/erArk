@@ -17,7 +17,8 @@ from Script.Design import (
     basement,
 )
 from Script.Core import get_text, cache_control, game_type, constant
-from Script.Modules.domains import kitchen, maintenance, modes, production
+from Script.Modules.domains import abilities, kitchen, maintenance, modes
+from Script.Modules.domains import production
 from Script.UI.Moudle import draw
 from Script.Modules.domains import economy
 
@@ -2227,9 +2228,7 @@ def character_work_nursery_care(character_id: int) -> choice.Plan:
     )
     scene_data = cache.scene_data[scene_path_str]
     baby_id_list = [
-        i
-        for i in scene_data.character_list
-        if i and cache.character_data[i].talent[101]
+        i for i in scene_data.character_list if i and abilities.talent(i)[101]
     ]
     if len(baby_id_list):
         action_list.append("baby")
@@ -3726,7 +3725,7 @@ def character_work_maintenance_2(character_id: int) -> choice.Plan:
         elif damage[scene_path_str] == 2:
             need_time = 30
     # 根据制造能力等级减少维修时间
-    ability_level = character_data.ability[48]
+    ability_level = abilities.ability(character_id)[48]
     ability_adjust = 0.05 * ability_level
     ability_adjust = max(ability_adjust, 0.5)
     need_time = int(need_time * (1 - ability_adjust))

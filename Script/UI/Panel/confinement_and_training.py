@@ -23,7 +23,7 @@ import random
 from Script.Design import game_time
 from Script.Modules.gameplay_resolution import plan_queue
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import facility, needs, prison, work
+from Script.Modules.domains import abilities, facility, needs, prison, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -60,7 +60,7 @@ def calculate_escape_probability(character_id: int) -> float:
     """
     计算指定角色的逃脱概率。\n
     逃脱概率 = (战斗技能 + 学识技能) * ((生活水平设置 + 1) * 0.5)\n
-    战斗技能存储在 character_data.ability[42]，学识技能存储在 character_data.ability[45]。\n
+    战斗技能与学识技能分别是能力表 abilities.ability(character_id) 的 42 号与 45 号。\n
     计算得到的概率将写入内核状态的 base.prisoners。\n
     Keyword arguments:\n
     character_id -- 角色id\n
@@ -68,19 +68,18 @@ def calculate_escape_probability(character_id: int) -> float:
     float -- 逃脱概率\n
     """
 
-    character_data = cache.character_data[character_id]
-
     # 战斗和学识技能
-    combat_skill = character_data.ability[42]
-    knowledge_skill = character_data.ability[45]
+    ability = abilities.ability(character_id)
+    combat_skill = ability[42]
+    knowledge_skill = ability[45]
     total_skill = combat_skill + knowledge_skill
 
     # 基础系数基于生活水平
     coefficient = (prison.setting(4) + 1) * 0.5
     # 屈服刻印减少系数
-    coefficient -= character_data.ability[14] * 0.1
+    coefficient -= ability[14] * 0.1
     # 反发刻印增加系数
-    coefficient += character_data.ability[18] * 0.2
+    coefficient += ability[18] * 0.2
     # 陷落降低系数
     now_fall = attr_calculation.get_character_fall_level(character_id)
     coefficient -= now_fall * 0.2
@@ -137,19 +136,17 @@ def judge_can_escape(character_id: int) -> tuple[bool, float, float]:
         return False, 0, 0
 
     # 囚犯的逃脱概率
-    character_data = cache.character_data[character_id]
     escape_value = prob / 100
     # 乘以生活水平
     escape_value *= (prison.setting(4) + 1) * 0.4
     # 乘以战斗技能
-    escape_value *= character_data.ability[42]
+    escape_value *= abilities.ability(character_id)[42]
     # 乘以体力气力
     escape_value *= needs.of(character_id)["hit"] / 100
     escape_value *= needs.of(character_id)["mana"] / 100
 
     # 监狱长的对抗值
-    warden_data = cache.character_data[warden_id]
-    warden_value: float = warden_data.ability[42]
+    warden_value: float = abilities.ability(warden_id)[42]
     warden_value *= needs.of(warden_id)["hit"] / 100
     warden_value *= needs.of(warden_id)["mana"] / 100
 
@@ -220,6 +217,7 @@ def chara_become_prisoner(character_id: int) -> None:
     """
     from Script.Design import clothing, second_behavior
 
+    ability = abilities.ability(character_id)
     character_data = cache.character_data[character_id]
 
     # flag结算
@@ -243,33 +241,33 @@ def chara_become_prisoner(character_id: int) -> None:
     target_fall = attr_calculation.get_character_fall_level(
         character_id, minus_flag=True
     )
-    if character_data.ability[14] <= 0:
-        character_data.ability[14] = 1
+    if ability[14] <= 0:
+        ability[14] = 1
         second_behavior.character_get_second_behavior(
             character_id, "yield_mark_1"
         )
-    if character_data.ability[14] <= 1:
-        character_data.ability[14] = 2
+    if ability[14] <= 1:
+        ability[14] = 2
         second_behavior.character_get_second_behavior(
             character_id, "yield_mark_2"
         )
-    if character_data.ability[17] <= 0 and target_fall >= -2:
-        character_data.ability[17] = 1
+    if ability[17] <= 0 and target_fall >= -2:
+        ability[17] = 1
         second_behavior.character_get_second_behavior(
             character_id, "terror_mark_1"
         )
-    if character_data.ability[18] <= 0 and target_fall >= -2:
-        character_data.ability[18] = 1
+    if ability[18] <= 0 and target_fall >= -2:
+        ability[18] = 1
         second_behavior.character_get_second_behavior(
             character_id, "hate_mark_1"
         )
-    if character_data.ability[18] <= 1 and target_fall >= -1:
-        character_data.ability[18] = 2
+    if ability[18] <= 1 and target_fall >= -1:
+        ability[18] = 2
         second_behavior.character_get_second_behavior(
             character_id, "hate_mark_2"
         )
-    if character_data.ability[18] <= 2 and target_fall >= 0:
-        character_data.ability[18] = 3
+    if ability[18] <= 2 and target_fall >= 0:
+        ability[18] = 3
         second_behavior.character_get_second_behavior(
             character_id, "hate_mark_3"
         )
@@ -511,7 +509,8 @@ def get_all_can_use_behavior_id_for_sex_assistant(
                     ]
                     # 如果NPC为处，则跳过破处类
                     if virgin_break_gate.takes_kept_virginity(
-                        behavior_tag_list, target_character_data.talent
+                        behavior_tag_list,
+                        abilities.talent(target_character_data.cid),
                     ):
                         continue
 

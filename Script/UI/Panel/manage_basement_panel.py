@@ -25,13 +25,13 @@ from Script.Modules.domains import (
     warehouse,
     work,
 )
+from Script.Modules.domains import abilities
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
 _: FunctionType = get_text._
 """ 翻译api """
 line_feed = draw.NormalDraw()
-""" 换行绘制对象 """
 line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
@@ -740,6 +740,7 @@ class Manage_Basement_Panel:
                     def get_sort_val(
                         nid: int, key: str, columns=cat_columns
                     ) -> num.Num | float:
+                        nid_ability = abilities.ability(nid)
                         if key == _("无"):
                             return 0
                         c = cache.character_data[nid]
@@ -775,7 +776,7 @@ class Manage_Basement_Panel:
                         for _cname, _cols in columns.items():
                             for _col_name, _col_id in _cols:
                                 if _col_name == key:
-                                    return c.ability.get(_col_id, 0)
+                                    return nid_ability.get(_col_id, 0)
                         return 0
 
                     all_charas.sort(
@@ -843,8 +844,8 @@ class Manage_Basement_Panel:
                         return_list.append(name_draw.return_text)
 
                         # 绘制后面对应的数值数据
-                        abl = character_data.ability
-                        tlt = character_data.talent
+                        abl = abilities.ability(character_id)
+                        tlt = abilities.talent(character_id)
 
                         if current_category == _("【体力气力】"):
                             # HP 条绘制
@@ -1552,7 +1553,7 @@ class Change_Npc_Work_Panel:
                         button_text = f"[{adv_id}]{name}"
                         # 干员的该工作能力等级
                         if ability_type != 0:
-                            chara_ability_lv = character_data.ability[
+                            chara_ability_lv = abilities.ability(npc_id)[
                                 ability_type
                             ]
                             button_text += f"(lv{chara_ability_lv})"
@@ -1617,6 +1618,7 @@ class Change_Npc_Work_Panel:
 
     def button_0(self, character_id: int) -> None:
         """选项1"""
+        ability = abilities.ability(character_id)
         while 1:
 
             line = draw.LineDraw("-", window_width)
@@ -1648,9 +1650,7 @@ class Change_Npc_Work_Panel:
                 work_ability_name = game_config.config_ability[
                     work_ability_id
                 ].name[:2]
-                chara_ability_lv = cache.character_data[character_id].ability[
-                    work_ability_id
-                ]
+                chara_ability_lv = ability[work_ability_id]
                 # 如果当前工作为目标工作，则高亮显示
                 if work_cid in self.target_work_type_id_list:
                     draw_style = "gold_enrod"

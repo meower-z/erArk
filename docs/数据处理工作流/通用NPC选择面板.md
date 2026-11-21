@@ -60,7 +60,7 @@
 | 5 | 按名称筛选 | 根据名称关键词筛选 | 字符串包含匹配 |
 | 6 | 筛选同区块干员 | 显示同区域的角色 | 使用`handle_premise.handle_in_player_zone()` |
 | 7 | 筛选无意识干员 | 显示意识清醒的角色 | 使用`handle_premise.handle_unconscious_flag_0()` |
-| 8 | 按能力等级筛选 | 根据能力等级筛选 | 检查`character_data.ability[cid] >= threshold` |
+| 8 | 按能力等级筛选 | 根据能力等级筛选 | 检查`abilities.ability(npc_id)[ability_cid] >= threshold` |
 
 ### 3. 筛选状态管理
 
@@ -112,7 +112,7 @@ select_state = {
 # 检测已陷落：拥有任意情感依赖或支配关系天赋
 def handle_self_fall(character_id: int) -> int:
     for talent_id in {201, 202, 203, 204, 211, 212, 213, 214}:
-        if character_data.talent[talent_id]:
+        if abilities.talent(character_id)[talent_id]:
             return 1
     return 0
 ```

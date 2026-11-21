@@ -22,7 +22,7 @@ from Script.Design import (
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Design import game_time
-from Script.Modules.domains import achievement, history, needs
+from Script.Modules.domains import abilities, achievement, history, needs
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -578,8 +578,6 @@ def evaluate_npc_body_part_prefs(character_id: int) -> int:
     int -- 选择的部位
     """
 
-    character_data = cache.character_data[character_id]
-
     # 如果自己不是NPC，则返回
     if character_id == 0:
         return 0
@@ -606,7 +604,7 @@ def evaluate_npc_body_part_prefs(character_id: int) -> int:
             part_id = 6
         elif experience_id in {64, 68}:
             part_id = 7
-        now_exp = character_data.experience[experience_id]
+        now_exp = abilities.experience(character_id)[experience_id]
         part_weight[part_id] += now_exp
 
     # 能力等级权重为10
@@ -621,7 +619,7 @@ def evaluate_npc_body_part_prefs(character_id: int) -> int:
             part_id = ability_id - 5
         else:
             part_id = ability_id - 79
-        now_ability = character_data.ability[ability_id]
+        now_ability = abilities.ability(character_id)[ability_id]
         part_weight[part_id] += now_ability * 10
 
     # 在最后将阴茎的权重置为0
@@ -687,7 +685,7 @@ def npc_active_h() -> int:
             continue
         # 如果NPC为处，则跳过破处类
         if virgin_break_gate.takes_kept_virginity(
-            behavior_tag_list, target_character_data.talent
+            behavior_tag_list, abilities.talent(target_character_id)
         ):
             continue
 

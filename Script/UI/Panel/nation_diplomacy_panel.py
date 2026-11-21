@@ -21,6 +21,7 @@ from Script.Modules.domains import (
     location,
     medical,
 )
+from Script.Modules.domains import abilities
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -79,7 +80,6 @@ def judge_diplomatic_policy() -> None:
         diplomat_chara_id = diplomacy.of(country_id)["diplomat"]
         if diplomat_chara_id == 0:
             continue
-        diplomat_chara_data = cache.character_data[diplomat_chara_id]
         # 外交方针数据
         diplomatic_policy_id = diplomacy.of(country_id)["policy"]
         if diplomatic_policy_id == 0:
@@ -99,13 +99,13 @@ def judge_diplomatic_policy() -> None:
 
         # 能力修正
         ability_adjust = handle_ability.get_ability_adjust(
-            diplomat_chara_data.ability[40]
+            abilities.ability(diplomat_chara_id)[40]
         )
         # 随机6+能力等级的随机数
         random_just = (
             random.uniform(
-                -6 + diplomat_chara_data.ability[40],
-                6 + diplomat_chara_data.ability[40],
+                -6 + abilities.ability(diplomat_chara_id)[40],
+                6 + abilities.ability(diplomat_chara_id)[40],
             )
             / 10
         )
@@ -544,9 +544,9 @@ class Nation_Diplomacy_Panel:
                     ]
                     now_diplomat_name = now_diplomat_chara_data.name
                     now_diplomat_adv = now_diplomat_chara_data.adv
-                    now_diplomat_ability_lv = now_diplomat_chara_data.ability[
-                        40
-                    ]
+                    now_diplomat_ability_lv = abilities.ability(
+                        now_diplomat_chara_id
+                    )[40]
                     ability_name = game_config.config_ability[40].name
                     now_diplomat_ability_effect = (
                         5
@@ -678,7 +678,7 @@ class Nation_Diplomacy_Panel:
                 character_data = cache.character_data[character_id]
                 character_name = character_data.name
                 character_adv = character_data.adv
-                character_ability_lv = character_data.ability[40]
+                character_ability_lv = abilities.ability(character_id)[40]
                 draw_text = f"[{str(character_adv).rjust(4,'0')}]{character_name}:lv{character_ability_lv}"
 
                 # 绘制按钮
@@ -802,7 +802,6 @@ class Nation_Diplomacy_Panel:
         now_level = facility.level(13)
         # 外交官信息
         now_diplomat_chara_id = diplomacy.of(nation_data.country)["diplomat"]
-        now_diplomat_chara_data = cache.character_data[now_diplomat_chara_id]
 
         while 1:
             return_list = []
@@ -825,7 +824,7 @@ class Nation_Diplomacy_Panel:
                 if (
                     diplomatic_policy_data.difficulty > now_level
                     or diplomatic_policy_data.difficulty
-                    > now_diplomat_chara_data.ability[40]
+                    > abilities.ability(now_diplomat_chara_id)[40]
                 ):
                     continue
                 # TODO 实装声望和感染率的影响

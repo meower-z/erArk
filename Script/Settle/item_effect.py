@@ -13,16 +13,14 @@ from Script.Design import (
 from Script.Core import cache_control, constant_effect, game_type, get_text, num
 from Script.Config import normal_config
 from Script.UI.Moudle import draw
-from Script.Modules.domains import kitchen, needs
+from Script.Modules.domains import abilities, kitchen, needs
 
 _: FunctionType = get_text._
-""" 翻译api """
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
 width = normal_config.config_normal.text_width
-""" 屏幕宽度 """
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1354,7 +1352,7 @@ def handle_npc_make_food_to_shop(
     recipes_id = random.choice(cookable_recipes_list)
     # 获取角色数据
     character_data: game_type.Character = cache.character_data[character_id]
-    cook_ability_lv = character_data.ability[43]
+    cook_ability_lv = abilities.ability(character_id)[43]
     # NPC制作食物的品质上限为6
     food_quality_limit = min(6, cook_ability_lv)
     # 制作食物
@@ -1389,6 +1387,7 @@ def handle_npc_make_food_to_bag(
     """
     from Script.System.Cooking_System import cooking
 
+    character_id_ability = abilities.ability(character_id)
     if not add_time:
         return
     # 获取角色数据
@@ -1400,7 +1399,7 @@ def handle_npc_make_food_to_bag(
     recipes_id = random.choice(cookable_recipes_list)
     food_list: dict[str, game_type.Food] = {}
     new_food = cooking.cook(
-        food_list, recipes_id, character_data.ability[43], character_data.name
+        food_list, recipes_id, character_id_ability[43], character_data.name
     )
     character_data.food_bag[new_food.uid] = new_food
     character_data.behavior.target_food = new_food
@@ -1425,6 +1424,7 @@ def handle_assistant_make_food_to_bag(
     """
     from Script.System.Cooking_System import cooking
 
+    ability = abilities.ability(character_id)
     if not add_time:
         return
     # 获取角色数据
@@ -1453,7 +1453,7 @@ def handle_assistant_make_food_to_bag(
     new_food = cooking.cook(
         food_list,
         main_recipes_id,
-        character_data.ability[43],
+        ability[43],
         character_data.name,
     )
     character_data.food_bag[new_food.uid] = new_food
@@ -1468,7 +1468,7 @@ def handle_assistant_make_food_to_bag(
     new_food = cooking.cook(
         food_list,
         non_main_recipes_id,
-        character_data.ability[43],
+        ability[43],
         character_data.name,
     )
     character_data.food_bag[new_food.uid] = new_food
@@ -1675,7 +1675,7 @@ def handle_target_enema(
     target_change.status_data[8] += now_add_lust
 
     # 根据A扩张和当前灌肠液量来判定苦痛程度
-    ability_lv = target_data.ability[10]
+    ability_lv = abilities.ability(target_data.cid)[10]
     ability_adjust = handle_ability.get_ability_adjust(ability_lv)
     enema_capacity = target_data.dirty.enema_capacity
     enema_capacity_adjust = 2 ** (enema_capacity + 1)
@@ -1685,7 +1685,7 @@ def handle_target_enema(
         add_time,
         17,
         base_value=1000,
-        ability_level=target_data.ability[15],
+        ability_level=abilities.ability(target_data.cid)[15],
         extra_adjust=extra_adjust,
         change_data_to_target_change=change_data,
     )

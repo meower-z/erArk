@@ -11,10 +11,10 @@ from Script.Core import (
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.Design import handle_ability, handle_premise, basement
-from Script.Modules.domains import commission, maintenance, physical_exam
+from Script.Modules.domains import abilities, commission, maintenance
+from Script.Modules.domains import achievement, physical_exam
 import random
 from Script.UI.Panel import achievement_panel
-from Script.Modules.domains import achievement
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -249,7 +249,7 @@ def repair_equipment(
     """
     # 获取铁匠角色数据和维修能力
     smith_chara_data = cache.character_data[smith_chara_id]
-    ability_lv = smith_chara_data.ability[48]
+    ability_lv = abilities.ability(smith_chara_id)[48]
     maintain_value = handle_ability.get_ability_adjust(ability_lv) / 2
     # 根据随机数变成0.8~1.2倍
     maintain_value *= random.uniform(0.8, 1.2)
@@ -326,7 +326,7 @@ def maintain_equipment(
     """
     # 获取铁匠角色数据和维修能力
     smith_chara_data = cache.character_data[smith_chara_id]
-    ability_lv = smith_chara_data.ability[48]
+    ability_lv = abilities.ability(smith_chara_id)[48]
     maintain_value = handle_ability.get_ability_adjust(ability_lv) / 4
     # 根据随机数变成0.8~1.2倍
     maintain_value *= random.uniform(0.8, 1.2)

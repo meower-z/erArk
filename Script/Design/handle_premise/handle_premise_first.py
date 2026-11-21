@@ -4,6 +4,7 @@ from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design import game_time
 from Script.Design.handle_premise.premise_registry import add_premise
+from Script.Modules.domains import abilities
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -395,8 +396,7 @@ def handle_have_first_kiss(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[0]
-    if character_data.talent[4]:
+    if abilities.talent(0)[4]:
         return 1
     return 0
 
@@ -410,8 +410,7 @@ def handle_no_first_kiss(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[0]
-    if character_data.talent[4]:
+    if abilities.talent(0)[4]:
         return 0
     return 1
 
@@ -425,8 +424,7 @@ def handle_pl_have_virgin(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[0]
-    if character_data.talent[5]:
+    if abilities.talent(0)[5]:
         return 1
     return 0
 
@@ -440,8 +438,7 @@ def handle_pl_no_virgin(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[0]
-    if character_data.talent[5]:
+    if abilities.talent(0)[5]:
         return 0
     return 1
 
@@ -455,8 +452,7 @@ def handle_have_a_virgin(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[0]
-    if character_data.talent[1]:
+    if abilities.talent(0)[1]:
         return 1
     return 0
 
@@ -470,8 +466,7 @@ def handle_no_a_virgin(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[0]
-    if character_data.talent[1]:
+    if abilities.talent(0)[1]:
         return 0
     return 1
 
@@ -497,8 +492,7 @@ def handle_self_kiss_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[4] == 1
+    return abilities.talent(character_id)[4] == 1
 
 
 @add_premise(constant_promise.Premise.TARGET_NO_FIRST_KISS)
@@ -514,7 +508,7 @@ def handle_target_no_first_kiss(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[4] == 0
+    return abilities.talent(target_data.cid)[4] == 0
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_FIRST_KISS)
@@ -530,7 +524,7 @@ def handle_target_have_first_kiss(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[4] == 1
+    return abilities.talent(target_data.cid)[4] == 1
 
 
 @add_premise(constant_promise.Premise.NO_VIRGIN)
@@ -542,8 +536,7 @@ def handle_no_virgin(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[0] == 0
+    return abilities.talent(character_id)[0] == 0
 
 
 @add_premise(constant_promise.Premise.HAVE_VIRGIN)
@@ -583,7 +576,7 @@ def handle_target_have_virgin(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[0] == 1
+    return abilities.talent(target_data.cid)[0] == 1
 
 
 @add_premise(constant_promise.Premise.SELF_NO_A_VIRGIN)
@@ -607,8 +600,7 @@ def handle_self_a_virgin_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[1] == 1
+    return abilities.talent(character_id)[1] == 1
 
 
 @add_premise(constant_promise.Premise.TARGET_NO_A_VIRGIN)
@@ -636,7 +628,7 @@ def handle_target_have_a_virgin(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[1] == 1
+    return abilities.talent(target_data.cid)[1] == 1
 
 
 @add_premise(constant_promise.Premise.SELF_NO_U_VIRGIN)
@@ -660,8 +652,7 @@ def handle_self_u_virgin_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[2] == 1
+    return abilities.talent(character_id)[2] == 1
 
 
 @add_premise(constant_promise.Premise.SELF_NO_W_VIRGIN)
@@ -685,5 +676,4 @@ def handle_self_w_virgin_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[3] == 1
+    return abilities.talent(character_id)[3] == 1

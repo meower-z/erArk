@@ -16,7 +16,7 @@ from Script.Settle.common_default import (
     base_chara_state_common_settle,
 )
 from Script.Design import game_time
-from Script.Modules.domains import fridge, needs, pregnancy
+from Script.Modules.domains import abilities, fridge, needs, pregnancy
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -698,13 +698,12 @@ def handle_add_small_s_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         0,
         20,
-        ability_level=character_data.ability[0],
+        ability_level=abilities.ability(character_id)[0],
         tenths_add=False,
         change_data=change_data,
     )
@@ -726,13 +725,12 @@ def handle_add_small_b_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         1,
         20,
-        ability_level=character_data.ability[1],
+        ability_level=abilities.ability(character_id)[1],
         tenths_add=False,
         change_data=change_data,
     )
@@ -754,13 +752,12 @@ def handle_add_small_c_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         2,
         20,
-        ability_level=character_data.ability[2],
+        ability_level=abilities.ability(character_id)[2],
         tenths_add=False,
         change_data=change_data,
     )
@@ -808,13 +805,12 @@ def handle_add_small_v_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         4,
         20,
-        ability_level=character_data.ability[4],
+        ability_level=abilities.ability(character_id)[4],
         tenths_add=False,
         change_data=change_data,
     )
@@ -836,13 +832,12 @@ def handle_add_small_a_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         5,
         20,
-        ability_level=character_data.ability[5],
+        ability_level=abilities.ability(character_id)[5],
         tenths_add=False,
         change_data=change_data,
     )
@@ -864,13 +859,12 @@ def handle_add_small_u_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         6,
         20,
-        ability_level=character_data.ability[6],
+        ability_level=abilities.ability(character_id)[6],
         tenths_add=False,
         change_data=change_data,
     )
@@ -892,13 +886,12 @@ def handle_add_small_w_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         7,
         20,
-        ability_level=character_data.ability[7],
+        ability_level=abilities.ability(character_id)[7],
         tenths_add=False,
         change_data=change_data,
     )
@@ -920,13 +913,12 @@ def handle_add_small_m_feel(
         None
     功能描述：为角色增加少量口喉快感。
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         21,
         20,
-        ability_level=character_data.ability[100],
+        ability_level=abilities.ability(character_id)[100],
         tenths_add=False,
         change_data=change_data,
     )
@@ -948,13 +940,12 @@ def handle_add_middle_m_feel(
         None
     功能描述：为角色增加中量口喉快感。
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         21,
         100,
-        ability_level=character_data.ability[100],
+        ability_level=abilities.ability(character_id)[100],
         tenths_add=True,
         change_data=change_data,
     )
@@ -976,13 +967,12 @@ def handle_add_small_f_feel(
         None
     功能描述：为角色增加少量兽部快感。
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         22,
         20,
-        ability_level=character_data.ability[101],
+        ability_level=abilities.ability(character_id)[101],
         tenths_add=False,
         change_data=change_data,
     )
@@ -1004,13 +994,12 @@ def handle_add_middle_f_feel(
         None
     功能描述：为角色增加中量兽部快感。
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         22,
         100,
-        ability_level=character_data.ability[101],
+        ability_level=abilities.ability(character_id)[101],
         tenths_add=True,
         change_data=change_data,
     )
@@ -1032,13 +1021,12 @@ def handle_add_small_h_feel(
         None
     功能描述：为角色增加少量心理快感。
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         23,
         20,
-        ability_level=character_data.ability[102],
+        ability_level=abilities.ability(character_id)[102],
         tenths_add=False,
         change_data=change_data,
     )
@@ -1060,13 +1048,12 @@ def handle_add_middle_h_feel(
         None
     功能描述：为角色增加中量心理快感。
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         23,
         100,
-        ability_level=character_data.ability[102],
+        ability_level=abilities.ability(character_id)[102],
         tenths_add=True,
         change_data=change_data,
     )
@@ -1088,13 +1075,12 @@ def handle_add_small_lubrication_plus(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         8,
         20,
-        ability_level=character_data.ability[33],
+        ability_level=abilities.ability(character_id)[33],
         tenths_add=False,
         change_data=change_data,
     )
@@ -1116,13 +1102,12 @@ def handle_add_small_learn_plus(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         9,
         20,
-        ability_level=character_data.ability[30],
+        ability_level=abilities.ability(character_id)[30],
         tenths_add=False,
         change_data=change_data,
     )
@@ -1144,13 +1129,12 @@ def handle_add_small_respect_plus(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         10,
         20,
-        ability_level=character_data.ability[31],
+        ability_level=abilities.ability(character_id)[31],
         tenths_add=False,
         change_data=change_data,
     )
@@ -1172,13 +1156,12 @@ def handle_add_small_friendly(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         11,
         20,
-        ability_level=character_data.ability[32],
+        ability_level=abilities.ability(character_id)[32],
         tenths_add=False,
         change_data=change_data,
     )
@@ -1200,13 +1183,12 @@ def handle_add_small_desire(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         12,
         20,
-        ability_level=character_data.ability[33],
+        ability_level=abilities.ability(character_id)[33],
         tenths_add=False,
         change_data=change_data,
     )
@@ -1228,13 +1210,12 @@ def handle_add_small_happy(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         13,
         20,
-        ability_level=character_data.ability[13],
+        ability_level=abilities.ability(character_id)[13],
         tenths_add=False,
         change_data=change_data,
     )
@@ -1256,13 +1237,12 @@ def handle_add_small_lead(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         14,
         20,
-        ability_level=character_data.ability[35],
+        ability_level=abilities.ability(character_id)[35],
         tenths_add=False,
         change_data=change_data,
     )
@@ -1284,13 +1264,12 @@ def handle_add_small_submit(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         15,
         20,
-        ability_level=character_data.ability[14],
+        ability_level=abilities.ability(character_id)[14],
         tenths_add=False,
         change_data=change_data,
     )
@@ -1312,13 +1291,12 @@ def handle_add_small_shy(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         16,
         20,
-        ability_level=character_data.ability[34],
+        ability_level=abilities.ability(character_id)[34],
         tenths_add=False,
         change_data=change_data,
     )
@@ -1340,13 +1318,12 @@ def handle_add_small_pain(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         17,
         20,
-        ability_level=character_data.ability[15],
+        ability_level=abilities.ability(character_id)[15],
         tenths_add=False,
         change_data=change_data,
     )
@@ -1368,13 +1345,12 @@ def handle_add_small_terror(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         18,
         20,
-        ability_level=character_data.ability[17],
+        ability_level=abilities.ability(character_id)[17],
         tenths_add=False,
         change_data=change_data,
     )
@@ -1417,14 +1393,12 @@ def handle_add_small_disgust(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
-
     base_chara_state_common_settle(
         character_id,
         0,
         20,
         20,
-        ability_level=character_data.ability[18],
+        ability_level=abilities.ability(character_id)[18],
         change_data=change_data,
     )
 
@@ -1445,13 +1419,12 @@ def handle_add_middle_n_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         0,
         100,
-        ability_level=character_data.ability[0],
+        ability_level=abilities.ability(character_id)[0],
         change_data=change_data,
     )
 
@@ -1472,13 +1445,12 @@ def handle_add_middle_b_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         1,
         100,
-        ability_level=character_data.ability[1],
+        ability_level=abilities.ability(character_id)[1],
         change_data=change_data,
     )
 
@@ -1499,13 +1471,12 @@ def handle_add_middle_c_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         2,
         100,
-        ability_level=character_data.ability[2],
+        ability_level=abilities.ability(character_id)[2],
         change_data=change_data,
     )
 
@@ -1526,13 +1497,12 @@ def handle_add_middle_p_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         3,
         100,
-        ability_level=character_data.ability[3],
+        ability_level=abilities.ability(character_id)[3],
         change_data=change_data,
     )
 
@@ -1579,13 +1549,12 @@ def handle_add_middle_a_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         5,
         100,
-        ability_level=character_data.ability[5],
+        ability_level=abilities.ability(character_id)[5],
         change_data=change_data,
     )
 
@@ -1606,13 +1575,12 @@ def handle_add_middle_u_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         6,
         100,
-        ability_level=character_data.ability[6],
+        ability_level=abilities.ability(character_id)[6],
         change_data=change_data,
     )
 
@@ -1633,13 +1601,12 @@ def handle_add_middle_w_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         7,
         100,
-        ability_level=character_data.ability[7],
+        ability_level=abilities.ability(character_id)[7],
         change_data=change_data,
     )
 
@@ -1660,13 +1627,12 @@ def handle_add_middle_lubrication_plus(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         8,
         100,
-        ability_level=character_data.ability[33],
+        ability_level=abilities.ability(character_id)[33],
         change_data=change_data,
     )
 
@@ -1687,13 +1653,12 @@ def handle_add_middle_learn_plus(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         9,
         100,
-        ability_level=character_data.ability[30],
+        ability_level=abilities.ability(character_id)[30],
         change_data=change_data,
     )
 
@@ -1714,13 +1679,12 @@ def handle_add_middle_respect_plus(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         10,
         100,
-        ability_level=character_data.ability[31],
+        ability_level=abilities.ability(character_id)[31],
         change_data=change_data,
     )
 
@@ -1741,13 +1705,12 @@ def handle_add_middle_friendly(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         11,
         100,
-        ability_level=character_data.ability[32],
+        ability_level=abilities.ability(character_id)[32],
         change_data=change_data,
     )
 
@@ -1768,13 +1731,12 @@ def handle_add_middle_desire(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         12,
         100,
-        ability_level=character_data.ability[33],
+        ability_level=abilities.ability(character_id)[33],
         change_data=change_data,
     )
 
@@ -1795,13 +1757,12 @@ def handle_add_middle_happy(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         13,
         100,
-        ability_level=character_data.ability[13],
+        ability_level=abilities.ability(character_id)[13],
         change_data=change_data,
     )
 
@@ -1822,13 +1783,12 @@ def handle_add_middle_lead(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         14,
         100,
-        ability_level=character_data.ability[35],
+        ability_level=abilities.ability(character_id)[35],
         change_data=change_data,
     )
 
@@ -1849,13 +1809,12 @@ def handle_add_middle_submit(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         15,
         100,
-        ability_level=character_data.ability[14],
+        ability_level=abilities.ability(character_id)[14],
         change_data=change_data,
     )
 
@@ -1876,13 +1835,12 @@ def handle_add_middle_shy(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         16,
         100,
-        ability_level=character_data.ability[34],
+        ability_level=abilities.ability(character_id)[34],
         change_data=change_data,
     )
 
@@ -1903,13 +1861,12 @@ def handle_add_middle_pain(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         17,
         100,
-        ability_level=character_data.ability[15],
+        ability_level=abilities.ability(character_id)[15],
         tenths_add=True,
         change_data=change_data,
     )
@@ -1931,13 +1888,12 @@ def handle_add_middle_terror(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         18,
         100,
-        ability_level=character_data.ability[17],
+        ability_level=abilities.ability(character_id)[17],
         tenths_add=True,
         change_data=change_data,
     )
@@ -1980,14 +1936,12 @@ def handle_add_middle_disgust(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
-
     base_chara_state_common_settle(
         character_id,
         0,
         20,
         100,
-        ability_level=character_data.ability[18],
+        ability_level=abilities.ability(character_id)[18],
         change_data=change_data,
     )
 
@@ -2008,13 +1962,12 @@ def handle_add_large_n_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         0,
         200,
-        ability_level=character_data.ability[0],
+        ability_level=abilities.ability(character_id)[0],
         tenths_add=True,
         change_data=change_data,
     )
@@ -2036,13 +1989,12 @@ def handle_add_large_b_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         1,
         200,
-        ability_level=character_data.ability[1],
+        ability_level=abilities.ability(character_id)[1],
         tenths_add=True,
         change_data=change_data,
     )
@@ -2064,13 +2016,12 @@ def handle_add_large_c_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         2,
         200,
-        ability_level=character_data.ability[2],
+        ability_level=abilities.ability(character_id)[2],
         tenths_add=True,
         change_data=change_data,
     )
@@ -2118,13 +2069,12 @@ def handle_add_large_v_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         4,
         200,
-        ability_level=character_data.ability[4],
+        ability_level=abilities.ability(character_id)[4],
         tenths_add=True,
         change_data=change_data,
     )
@@ -2146,13 +2096,12 @@ def handle_add_large_a_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         5,
         200,
-        ability_level=character_data.ability[5],
+        ability_level=abilities.ability(character_id)[5],
         tenths_add=True,
         change_data=change_data,
     )
@@ -2174,13 +2123,12 @@ def handle_add_large_u_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         6,
         200,
-        ability_level=character_data.ability[6],
+        ability_level=abilities.ability(character_id)[6],
         tenths_add=True,
         change_data=change_data,
     )
@@ -2202,13 +2150,12 @@ def handle_add_large_w_feel(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         7,
         200,
-        ability_level=character_data.ability[7],
+        ability_level=abilities.ability(character_id)[7],
         tenths_add=True,
         change_data=change_data,
     )
@@ -2230,13 +2177,12 @@ def handle_add_large_m_feel(
         None
     功能描述：为角色增加大量口喉快感。
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         21,
         200,
-        ability_level=character_data.ability[100],
+        ability_level=abilities.ability(character_id)[100],
         tenths_add=True,
         change_data=change_data,
     )
@@ -2258,13 +2204,12 @@ def handle_add_large_f_feel(
         None
     功能描述：为角色增加大量兽部快感。
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         22,
         200,
-        ability_level=character_data.ability[101],
+        ability_level=abilities.ability(character_id)[101],
         tenths_add=True,
         change_data=change_data,
     )
@@ -2286,13 +2231,12 @@ def handle_add_large_h_feel(
         None
     功能描述：为角色增加大量心理快感。
     """
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         23,
         200,
-        ability_level=character_data.ability[102],
+        ability_level=abilities.ability(character_id)[102],
         tenths_add=True,
         change_data=change_data,
     )
@@ -2327,7 +2271,7 @@ def handle_add_b_feel_remote_toy(
         duration,
         1,
         20,
-        ability_level=character_data.ability[1],
+        ability_level=abilities.ability(character_id)[1],
         extra_adjust=toy_adjust,
         tenths_add=False,
         change_data=change_data,
@@ -2357,7 +2301,7 @@ def handle_add_c_feel_remote_toy(
         duration,
         2,
         20,
-        ability_level=character_data.ability[2],
+        ability_level=abilities.ability(character_id)[2],
         extra_adjust=toy_adjust,
         tenths_add=False,
         change_data=change_data,
@@ -2387,7 +2331,7 @@ def handle_add_v_feel_remote_toy(
         duration,
         4,
         20,
-        ability_level=character_data.ability[4],
+        ability_level=abilities.ability(character_id)[4],
         extra_adjust=toy_adjust,
         tenths_add=False,
         change_data=change_data,
@@ -2417,7 +2361,7 @@ def handle_add_a_feel_remote_toy(
         duration,
         5,
         20,
-        ability_level=character_data.ability[5],
+        ability_level=abilities.ability(character_id)[5],
         extra_adjust=toy_adjust,
         tenths_add=False,
         change_data=change_data,
@@ -2447,7 +2391,7 @@ def handle_add_u_feel_remote_toy(
         duration,
         6,
         20,
-        ability_level=character_data.ability[6],
+        ability_level=abilities.ability(character_id)[6],
         extra_adjust=toy_adjust,
         tenths_add=False,
         change_data=change_data,
@@ -2470,13 +2414,12 @@ def handle_add_large_lubrication_plus(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         8,
         1000,
-        ability_level=character_data.ability[33],
+        ability_level=abilities.ability(character_id)[33],
         tenths_add=False,
         change_data=change_data,
     )
@@ -2498,13 +2441,12 @@ def handle_add_large_learn_plus(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         9,
         1000,
-        ability_level=character_data.ability[30],
+        ability_level=abilities.ability(character_id)[30],
         tenths_add=False,
         change_data=change_data,
     )
@@ -2526,13 +2468,12 @@ def handle_add_large_respect_plus(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         10,
         1000,
-        ability_level=character_data.ability[31],
+        ability_level=abilities.ability(character_id)[31],
         tenths_add=False,
         change_data=change_data,
     )
@@ -2554,13 +2495,12 @@ def handle_add_large_friendly(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         11,
         1000,
-        ability_level=character_data.ability[32],
+        ability_level=abilities.ability(character_id)[32],
         tenths_add=False,
         change_data=change_data,
     )
@@ -2582,13 +2522,12 @@ def handle_add_large_desire(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         12,
         1000,
-        ability_level=character_data.ability[33],
+        ability_level=abilities.ability(character_id)[33],
         tenths_add=False,
         change_data=change_data,
     )
@@ -2610,13 +2549,12 @@ def handle_add_large_happy(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         13,
         1000,
-        ability_level=character_data.ability[13],
+        ability_level=abilities.ability(character_id)[13],
         tenths_add=False,
         change_data=change_data,
     )
@@ -2638,13 +2576,12 @@ def handle_add_large_lead(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         14,
         1000,
-        ability_level=character_data.ability[25],
+        ability_level=abilities.ability(character_id)[25],
         tenths_add=False,
         change_data=change_data,
     )
@@ -2666,13 +2603,12 @@ def handle_add_large_submit(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         15,
         1000,
-        ability_level=character_data.ability[14],
+        ability_level=abilities.ability(character_id)[14],
         tenths_add=False,
         change_data=change_data,
     )
@@ -2694,13 +2630,12 @@ def handle_add_large_shy(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         16,
         1000,
-        ability_level=character_data.ability[34],
+        ability_level=abilities.ability(character_id)[34],
         tenths_add=False,
         change_data=change_data,
     )
@@ -2722,13 +2657,12 @@ def handle_add_large_pain(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         17,
         1000,
-        ability_level=character_data.ability[15],
+        ability_level=abilities.ability(character_id)[15],
         tenths_add=True,
         change_data=change_data,
     )
@@ -2750,13 +2684,12 @@ def handle_add_large_terror(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         18,
         1000,
-        ability_level=character_data.ability[17],
+        ability_level=abilities.ability(character_id)[17],
         tenths_add=False,
         change_data=change_data,
     )
@@ -2799,13 +2732,12 @@ def handle_add_large_disgust(
     now_time -- 结算的时间
     """
 
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         0,
         20,
         1000,
-        ability_level=character_data.ability[18],
+        ability_level=abilities.ability(character_id)[18],
         tenths_add=False,
         change_data=change_data,
     )
@@ -2836,7 +2768,7 @@ def handle_down_small_pain(
         now_add_lust,
         17,
         base_value=0,
-        ability_level=character_data.ability[15],
+        ability_level=abilities.ability(character_id)[15],
         tenths_add=False,
         change_data=change_data,
     )
@@ -2867,7 +2799,7 @@ def handle_down_small_disgust(
         now_add_lust,
         20,
         base_value=0,
-        ability_level=character_data.ability[18],
+        ability_level=abilities.ability(character_id)[18],
         tenths_add=False,
         change_data=change_data,
     )
@@ -2897,7 +2829,7 @@ def handle_down_middle_pain(
         now_add_lust,
         17,
         base_value=0,
-        ability_level=character_data.ability[15],
+        ability_level=abilities.ability(character_id)[15],
         tenths_add=False,
         change_data=change_data,
     )
@@ -2927,7 +2859,7 @@ def handle_down_middle_disgust(
         now_add_lust,
         20,
         base_value=0,
-        ability_level=character_data.ability[18],
+        ability_level=abilities.ability(character_id)[18],
         tenths_add=False,
         change_data=change_data,
     )
@@ -2957,7 +2889,7 @@ def handle_down_large_pain(
         now_add_lust,
         17,
         base_value=0,
-        ability_level=character_data.ability[15],
+        ability_level=abilities.ability(character_id)[15],
         tenths_add=False,
         change_data=change_data,
     )
@@ -2987,7 +2919,7 @@ def handle_down_large_disgust(
         now_add_lust,
         20,
         base_value=0,
-        ability_level=character_data.ability[18],
+        ability_level=abilities.ability(character_id)[18],
         tenths_add=False,
         change_data=change_data,
     )
@@ -3007,6 +2939,7 @@ def handle_add_large_pain_first_sex(
     change_data -- 状态变更信息记录对象
     """
 
+    ability = abilities.ability(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
 
     now_add_lust: float = 4000
@@ -3024,7 +2957,7 @@ def handle_add_large_pain_first_sex(
     now_add_lust *= adjust
     # print("欲情修正", now_add_lust)
     # V扩张修正
-    adjust = handle_ability.get_ability_adjust(character_data.ability[9])
+    adjust = handle_ability.get_ability_adjust(ability[9])
     now_add_lust /= adjust * adjust
     # print("V扩张修正", now_add_lust)
     now_add_lust = int(now_add_lust)
@@ -3034,7 +2967,7 @@ def handle_add_large_pain_first_sex(
         now_add_lust,
         17,
         base_value=0,
-        ability_level=character_data.ability[15],
+        ability_level=ability[15],
         tenths_add=False,
         change_data=change_data,
     )
@@ -3055,6 +2988,7 @@ def handle_add_large_pain_first_a_sex(
     change_data -- 状态变更信息记录对象
     """
 
+    ability = abilities.ability(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
 
     now_add_lust: float = 2000
@@ -3070,7 +3004,7 @@ def handle_add_large_pain_first_a_sex(
     adjust = adjust / 3 if adjust >= 2 else adjust / 2
     now_add_lust *= adjust
     # A扩张修正
-    adjust = handle_ability.get_ability_adjust(character_data.ability[10])
+    adjust = handle_ability.get_ability_adjust(ability[10])
     now_add_lust /= adjust * adjust
     now_add_lust = int(now_add_lust)
 
@@ -3079,7 +3013,7 @@ def handle_add_large_pain_first_a_sex(
         now_add_lust,
         17,
         base_value=0,
-        ability_level=character_data.ability[15],
+        ability_level=ability[15],
         tenths_add=False,
         change_data=change_data,
     )
@@ -3099,6 +3033,7 @@ def handle_add_large_pain_first_u_sex(
     change_data -- 状态变更信息记录对象
     """
 
+    ability = abilities.ability(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
 
     now_add_lust: float = 4000
@@ -3114,7 +3049,7 @@ def handle_add_large_pain_first_u_sex(
     adjust = adjust / 3 if adjust >= 2 else adjust / 2
     now_add_lust *= adjust
     # U扩张修正
-    adjust = handle_ability.get_ability_adjust(character_data.ability[11])
+    adjust = handle_ability.get_ability_adjust(ability[11])
     now_add_lust /= adjust * adjust
     now_add_lust = int(now_add_lust)
 
@@ -3123,7 +3058,7 @@ def handle_add_large_pain_first_u_sex(
         now_add_lust,
         17,
         base_value=0,
-        ability_level=character_data.ability[15],
+        ability_level=ability[15],
         tenths_add=False,
         change_data=change_data,
     )
@@ -3143,6 +3078,7 @@ def handle_add_large_pain_first_w_sex(
     change_data -- 状态变更信息记录对象
     """
 
+    ability = abilities.ability(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
 
     now_add_lust: float = 3000
@@ -3158,7 +3094,7 @@ def handle_add_large_pain_first_w_sex(
     adjust = adjust / 3 if adjust >= 2 else adjust / 2
     now_add_lust *= adjust
     # W扩张修正
-    adjust = handle_ability.get_ability_adjust(character_data.ability[12])
+    adjust = handle_ability.get_ability_adjust(ability[12])
     now_add_lust /= adjust * adjust
     now_add_lust = int(now_add_lust)
 
@@ -3167,7 +3103,7 @@ def handle_add_large_pain_first_w_sex(
         now_add_lust,
         17,
         base_value=0,
-        ability_level=character_data.ability[15],
+        ability_level=ability[15],
         tenths_add=False,
         change_data=change_data,
     )
@@ -3438,6 +3374,7 @@ def handle_extra_orgasm(
     character_id -- 角色id
     change_data -- 状态变更信息记录对象
     """
+    ability = abilities.ability(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
@@ -3454,7 +3391,7 @@ def handle_extra_orgasm(
             0,
             17,
             extra_pain,
-            ability_level=character_data.ability[15],
+            ability_level=ability[15],
             tenths_add=False,
             change_data=change_data,
         )
@@ -3463,7 +3400,7 @@ def handle_extra_orgasm(
             0,
             18,
             extra_terror,
-            ability_level=character_data.ability[17],
+            ability_level=ability[17],
             tenths_add=False,
             change_data=change_data,
         )
@@ -4252,7 +4189,7 @@ def handle_show_off_study(
         30,
         True,
         0,
-        character_data.ability[32],
+        abilities.ability(character_id)[32],
         change_data,
         character_data.cid,
     )

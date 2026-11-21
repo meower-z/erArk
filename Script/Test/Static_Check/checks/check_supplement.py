@@ -223,60 +223,6 @@ def check_angry_point_lower_bound() -> list[CheckFailure]:
     return failures
 
 
-@register_check("SUPP-06", "模板对象别名")
-def check_no_template_object_aliasing() -> list[CheckFailure]:
-    """
-    参数: 无
-    返回值: List[CheckFailure]: 失败记录列表
-    功能:
-        来源: NO-03。校验任一角色实例的ability/experience/talent字典都不得与任一NPC模板
-        对应字典是同一个对象（用id()判等，不比较值）。角色新建时把模板的Ability/Experience/Talent直接赋给
-        实例，成长会原地修改并污染进程级模板、跨周目泄漏。先收集全部模板对象id集合做O(1)查找，
-        不做角色×模板的嵌套恒等比较。级别为warning：当前代码对按模板创建的角色会立即命中，属既存缺陷探测
-    """
-    cache = cache_control.cache
-    npc_tem_data = getattr(cache, "npc_tem_data", {}) or {}
-    character_data = getattr(cache, "character_data", {}) or {}
-    template_ability_ids = {
-        id(t.Ability) for t in npc_tem_data.values() if hasattr(t, "Ability")
-    }
-    template_experience_ids = {
-        id(t.Experience)
-        for t in npc_tem_data.values()
-        if hasattr(t, "Experience")
-    }
-    template_talent_ids = {
-        id(t.Talent) for t in npc_tem_data.values() if hasattr(t, "Talent")
-    }
-    failures = []
-    for cid, c in character_data.items():
-        hit_fields = []
-        if hasattr(c, "ability") and id(c.ability) in template_ability_ids:
-            hit_fields.append("ability")
-        if (
-            hasattr(c, "experience")
-            and id(c.experience) in template_experience_ids
-        ):
-            hit_fields.append("experience")
-        if hasattr(c, "talent") and id(c.talent) in template_talent_ids:
-            hit_fields.append("talent")
-        if hit_fields:
-            failures.append(
-                make_failure(
-                    "SUPP-06",
-                    "模板对象别名",
-                    (
-                        f"[warning] 角色id={cid} name={getattr(c, 'name', '')}的字段{hit_fields}与某个NPC模板的对应字典"
-                        f"共享对象identity，"
-                        f"adv={getattr(c, 'adv', None)}；该角色的成长会原地修改并污染进程级模板，"
-                        f"导致后续新角色/新周目继承脏数据"
-                    ),
-                    [cid],
-                )
-            )
-    return failures
-
-
 @register_check("SUPP-07", "仓储扩展模块使用数非负")
 def check_used_extra_warehouse_capacity_module_non_negative() -> (
     list[CheckFailure]

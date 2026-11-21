@@ -17,8 +17,8 @@
 | PLACE 位置与场景 | `check_place.py` | 31 |
 | ROSTER 名册 | `check_roster.py` | 33 |
 | BIRTH / COOK 设置记忆 | `check_setting.py` | 4 |
-| SUPP 补充盲点 | `check_supplement.py` | 7 |
-| 合计 | | 288 |
+| SUPP 补充盲点 | `check_supplement.py` | 6 |
+| 合计 | | 287 |
 
 ## CORE：核心
 
@@ -229,21 +229,21 @@ H 状态、群交模式、逆推、隐奸。
 
 ## NUM：数值范围
 
-角色六大数值字典（ability/experience/juel/status_data/talent/favorability）的键集与取值范围，以及基地资源等全局数值。
+角色对象上的数值字典（status_data/favorability）与 GameState 里的能力、经验、宝珠、素质表的键集与取值范围，以及基地资源等全局数值。
 
 | 编号 | 名称 | 说明 |
 |---|---|---|
-| NUM-01 | 数值容器字段存在且为dict | 六个数值字典字段(ability/experience/juel/status_data/talent/favorability)在每个角色对象上都存在且 类型为dict |
-| NUM-02 | 能力字典键集覆盖配表且键为纯int | config_ability的每个id都在chara.ability中存在（配表⊆角色，方向不可颠倒——补零与迁移只补不删， 角色⊆配表或键集相等的方向会在每份升级存档上每回合误报），且chara.ability的键类型均为精确int （避免Python集合里True==1、1.0==1造成的伪装键） |
-| NUM-03 | 能力值必须是Ability_Lv_Adjust的合法键 | chara.ability的每个值都是config_ability_lv_adjust中的合法键（配表键仅0-10） |
-| NUM-04 | 能力等级不超过8（事件白名单除外） | chara.ability的值不超过8（自动升级循环硬停在8） |
+| NUM-01 | 数值容器字段存在且为dict | 两个数值字典字段(status_data/favorability)在每个角色对象上都存在且 类型为dict |
+| NUM-02 | 能力字典键集覆盖配表且键为纯int | config_ability的每个id都在角色的能力表中存在（配表⊆角色，方向不可颠倒——补零与迁移只补不删， 角色⊆配表或键集相等的方向会在每份升级存档上每回合误报），且能力表的键类型均为精确int （避免Python集合里True==1、1.0==1造成的伪装键） |
+| NUM-03 | 能力值必须是Ability_Lv_Adjust的合法键 | 角色的能力表的每个值都是config_ability_lv_adjust中的合法键（配表键仅0-10） |
+| NUM-04 | 能力等级不超过8（事件白名单除外） | 角色的能力表的值不超过8（自动升级循环硬停在8） |
 | NUM-05 | 感度/扩张类能力与角色性别一致 | sex_need标注为0(男)/1(女)的能力，对性别不符的角色应恒为0（自动升级明确跳过不符项） |
 | NUM-06 | 角色性别取值域 | chara.sex只能是0或1 |
-| NUM-07 | 经验字典键集覆盖配表且键为纯int | config_experience的每个id都在chara.experience中存在（配表⊆角色），键类型均为精确int |
-| NUM-08 | 经验为非负整数 | chara.experience的每个值都是非负整数 |
-| NUM-09 | 宝珠字典键集覆盖配表且键为纯int | config_juel的每个id都在chara.juel中存在（配表⊆角色），键类型均为精确int |
-| NUM-10 | 宝珠为非负整数 | chara.juel的每个值都是非负整数 |
-| NUM-11 | 素质字典键集覆盖配表且值为int | config_talent的每个id都在chara.talent中存在（配表⊆角色），键与值类型均为精确int（排除bool） |
+| NUM-07 | 经验字典键集覆盖配表且键为纯int | config_experience的每个id都在角色的经验表中存在（配表⊆角色），键类型均为精确int |
+| NUM-08 | 经验为非负整数 | 角色的经验表的每个值都是非负整数 |
+| NUM-09 | 宝珠字典键集覆盖配表且键为纯int | config_juel的每个id都在角色的宝珠表中存在（配表⊆角色），键类型均为精确int |
+| NUM-10 | 宝珠为非负整数 | 角色的宝珠表的每个值都是非负整数 |
+| NUM-11 | 素质字典键集覆盖配表且值为int | config_talent的每个id都在角色的素质表中存在（配表⊆角色），键与值类型均为精确int（排除bool） |
 | NUM-12 | 状态值字典键集覆盖配表且键为纯int | config_character_state的每个id都在chara.status_data中存在（配表⊆角色），键类型均为精确int |
 | NUM-13 | 状态值为非负整数 | chara.status_data的每个值都是非负整数 |
 | NUM-14 | 状态值不超过99999 | chara.status_data的每个值不超过99999 |
@@ -391,6 +391,5 @@ H 状态、群交模式、逆推、隐奸。
 | SUPP-03 | 设施开放派生单调覆盖 | 对当前config_facility_open中每个待开放项，只要其zone_cid已被全设施 当前等级效果cid覆盖（相等，或同十位且个位数达标），对应facility_open[open_cid]就应为真 |
 | SUPP-04 | 时停无意识值跨名单残留 | 非时停时，character_data中任何角色都不应残留专属时停无意识值 unconscious_h==3 |
 | SUPP-05 | 愤怒值下界 | 每个角色的body.needs的angry类型为int且不小于0 |
-| SUPP-06 | 模板对象别名 | 任一角色实例的ability/experience/talent字典都不得与任一NPC模板 对应字典是同一个对象（用id()判等，不比较值） |
 | SUPP-07 | 仓储扩展模块使用数非负 | （只取独立于NUM-26的后半式） |
 | SUPP-08 | 办公室场景引用合法 | character_data中每个角色的officeroom（列表字段）只允许是空列表或 cache.scene_data的合法键 |

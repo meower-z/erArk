@@ -22,7 +22,7 @@ from Script.Modules.domains import (
     warehouse,
 )
 from Script.System.Medical_System import medical_constant
-from Script.Modules.domains import country
+from Script.Modules.domains import abilities, country
 
 
 def edits[**P, R](fn: Callable[P, R]) -> Callable[P, R]:
@@ -294,10 +294,19 @@ def _calculate_doctor_power(doctor_ids: list[int] | None) -> float:
         character = character_table.get(doctor_id)
         if character is None:
             continue
-        total_power += float(
-            character.ability.get(medical_constant.MEDICAL_ABILITY_ID, 0) or 0
-        )
+        total_power += float(medical_level(doctor_id) or 0)
     return total_power
+
+
+def medical_level(cid: int) -> int:
+    """
+    角色的医疗能力等级（能力编号 medical_constant.MEDICAL_ABILITY_ID）
+    Keyword arguments:
+    cid -- 角色id
+    Return arguments:
+    int -- 等级，能力表里没有这一项时为 0
+    """
+    return abilities.ability(cid).get(medical_constant.MEDICAL_ABILITY_ID, 0)
 
 
 def _ensure_runtime_dict(rhodes_island: game_type.Rhodes_Island) -> None:

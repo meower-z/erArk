@@ -8,7 +8,7 @@ from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel, ejaculation_panel
 from Script.Design import game_time
-from Script.Modules.domains import achievement
+from Script.Modules.domains import abilities, achievement
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -141,7 +141,7 @@ def orgasm_judge(
             extra_orgasm_dict[orgasm] = 0
             un_count_orgasm_dict[orgasm] = 0
             # 饮精绝顶
-            if orgasm == 21 and character_data.talent[31]:
+            if orgasm == 21 and abilities.talent(character_id)[31]:
                 if character_data.h_state.shoot_position_body in [2, 15]:
                     un_count_data += 1
                     # 仅登记标记，射精位置的重置延后到高潮结算之后，
@@ -202,6 +202,7 @@ def orgasm_settle_in_second_behavior(
     extra_orgasm_dict -- 额外高潮字典，None 视为空字典
     un_count_orgasm_dict -- 不计数高潮字典，None 视为空字典
     """
+    ability = abilities.ability(character_id)
     normal_orgasm_dict = normal_orgasm_dict or {}
     extra_orgasm_dict = extra_orgasm_dict or {}
     un_count_orgasm_dict = un_count_orgasm_dict or {}
@@ -377,7 +378,7 @@ def orgasm_settle_in_second_behavior(
                         ability_id = orgasm
                     else:
                         ability_id = orgasm + 79
-                    if character_data.ability[ability_id] < 3:
+                    if ability[ability_id] < 3:
                         now_degree = 1
                 # 赋予二次行为
                 second_behavior_id = (
@@ -395,7 +396,7 @@ def orgasm_settle_in_second_behavior(
                     ability_id = orgasm
                 else:
                     ability_id = orgasm + 79
-                if character_data.ability[ability_id] < 6:
+                if ability[ability_id] < 6:
                     now_degree = 2
                 second_behavior_id = (
                     f"{part_dict[orgasm]}_orgasm_{degree_dict[now_degree]}"
@@ -564,8 +565,7 @@ def judge_orgasm_edge_success(
     for __, value in orgasm_edge_count.items():
         all_orgasm_edge_count += value * value
     # 玩家的高潮寸止技巧
-    pl_character_data: game_type.Character = cache.character_data[0]
-    skill_ability_lv = pl_character_data.ability[30]
+    skill_ability_lv = abilities.ability(0)[30]
     info_draw_text = "\n"
     over_count = skill_ability_lv * 3 - all_orgasm_edge_count
     # 如果次数小于技巧等级*3，则成功

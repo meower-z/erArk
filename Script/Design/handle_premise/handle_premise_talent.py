@@ -3,6 +3,7 @@
 from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design.handle_premise.premise_registry import add_premise
+from Script.Modules.domains import abilities
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -21,7 +22,7 @@ def handle_t_love_sense_taste_0(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.talent[31] == 0:
+    if abilities.talent(target_data.cid)[31] == 0:
         return 1
     return 0
 
@@ -37,7 +38,7 @@ def handle_self_sexual_ignorance_0(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.talent[222] == 0:
+    if abilities.talent(target_data.cid)[222] == 0:
         return 1
     return 0
 
@@ -53,7 +54,7 @@ def handle_self_sexual_ignorance_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.talent[222] == 1:
+    if abilities.talent(target_data.cid)[222] == 1:
         return 1
     return 0
 
@@ -69,7 +70,7 @@ def handle_t_love_sense_taste_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.talent[31] == 1:
+    if abilities.talent(target_data.cid)[31] == 1:
         return 1
     return 0
 
@@ -85,7 +86,7 @@ def handle_t_sadism_0(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.talent[229] == 0:
+    if abilities.talent(target_data.cid)[229] == 0:
         return 1
     return 0
 
@@ -101,7 +102,7 @@ def handle_t_sadism_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.talent[229] == 1:
+    if abilities.talent(target_data.cid)[229] == 1:
         return 1
     return 0
 
@@ -117,7 +118,7 @@ def handle_t_masochism_0(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.talent[230] == 0:
+    if abilities.talent(target_data.cid)[230] == 0:
         return 1
     return 0
 
@@ -133,7 +134,7 @@ def handle_t_masochism_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.talent[230] == 1:
+    if abilities.talent(target_data.cid)[230] == 1:
         return 1
     return 0
 
@@ -149,7 +150,7 @@ def handle_t_oestrus_0(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.talent[62] == 0:
+    if abilities.talent(target_data.cid)[62] == 0:
         return 1
     return 0
 
@@ -165,7 +166,7 @@ def handle_t_oestrus_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.talent[62] == 1:
+    if abilities.talent(target_data.cid)[62] == 1:
         return 1
     return 0
 
@@ -179,8 +180,7 @@ def handle_self_is_child(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.talent[102] == 1:
+    if abilities.talent(character_id)[102] == 1:
         return 1
     return 0
 
@@ -194,8 +194,7 @@ def handle_self_is_baby(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.talent[101] == 1:
+    if abilities.talent(character_id)[101] == 1:
         return 1
     return 0
 
@@ -209,8 +208,7 @@ def handle_self_is_loli(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    if character_data.talent[103] == 1:
+    if abilities.talent(character_id)[103] == 1:
         return 1
     return 0
 
@@ -237,8 +235,7 @@ def handle_self_chest_is_cliff(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[121]
+    return abilities.talent(character_id)[121]
 
 
 @add_premise(constant_promise.Premise.TARGET_CHEST_IS_CLIFF)
@@ -265,8 +262,7 @@ def handle_self_chest_is_small(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[122]
+    return abilities.talent(character_id)[122]
 
 
 @add_premise(constant_promise.Premise.TARGET_CHEST_IS_SMALL)
@@ -293,8 +289,7 @@ def handle_self_chest_is_normal(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[123]
+    return abilities.talent(character_id)[123]
 
 
 @add_premise(constant_promise.Premise.TARGET_CHEST_IS_NORMAL)
@@ -321,8 +316,7 @@ def handle_self_chest_is_big(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[124]
+    return abilities.talent(character_id)[124]
 
 
 @add_premise(constant_promise.Premise.TARGET_CHEST_IS_BIG)
@@ -349,8 +343,7 @@ def handle_self_chest_is_super(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[125]
+    return abilities.talent(character_id)[125]
 
 
 @add_premise(constant_promise.Premise.TARGET_CHEST_IS_SUPER)
@@ -381,7 +374,7 @@ def handle_target_buttock_is_small(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[126]
+    return abilities.talent(target_data.cid)[126]
 
 
 @add_premise(constant_promise.Premise.TARGET_BUTTOCKS_IS_NORMAL)
@@ -397,7 +390,7 @@ def handle_target_buttock_is_normal(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[127]
+    return abilities.talent(target_data.cid)[127]
 
 
 @add_premise(constant_promise.Premise.TARGET_BUTTOCKS_IS_BIG)
@@ -413,7 +406,7 @@ def handle_target_buttock_is_big(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[128]
+    return abilities.talent(target_data.cid)[128]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_NO_EARS)
@@ -429,7 +422,7 @@ def handle_target_have_no_eras(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return not target_data.talent[111]
+    return not abilities.talent(target_data.cid)[111]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_EARS)
@@ -445,7 +438,7 @@ def handle_target_have_eras(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[111]
+    return abilities.talent(target_data.cid)[111]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_NO_HORN)
@@ -461,7 +454,7 @@ def handle_target_have_no_horn(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return not target_data.talent[112]
+    return not abilities.talent(target_data.cid)[112]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_HORN)
@@ -477,7 +470,7 @@ def handle_target_have_horn(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[112]
+    return abilities.talent(target_data.cid)[112]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_NO_TAIL)
@@ -493,7 +486,7 @@ def handle_target_have_no_tail(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return not target_data.talent[113]
+    return not abilities.talent(target_data.cid)[113]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_TAIL)
@@ -509,7 +502,7 @@ def handle_target_have_tail(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[113]
+    return abilities.talent(target_data.cid)[113]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_NO_RING)
@@ -525,7 +518,7 @@ def handle_target_have_no_ring(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return not target_data.talent[114]
+    return not abilities.talent(target_data.cid)[114]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_RING)
@@ -541,7 +534,7 @@ def handle_target_have_ring(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[114]
+    return abilities.talent(target_data.cid)[114]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_NO_WING)
@@ -557,7 +550,7 @@ def handle_target_have_no_wing(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return not target_data.talent[115]
+    return not abilities.talent(target_data.cid)[115]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_WING)
@@ -573,7 +566,7 @@ def handle_target_have_wing(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[115]
+    return abilities.talent(target_data.cid)[115]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_NO_TENTACLE)
@@ -589,7 +582,7 @@ def handle_target_have_no_tentacle(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return not target_data.talent[116]
+    return not abilities.talent(target_data.cid)[116]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_TENTACLE)
@@ -605,7 +598,7 @@ def handle_target_have_tentacle(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[116]
+    return abilities.talent(target_data.cid)[116]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_NO_CAR)
@@ -621,7 +614,7 @@ def handle_target_have_no_car(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return not target_data.talent[117]
+    return not abilities.talent(target_data.cid)[117]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_CAR)
@@ -637,7 +630,7 @@ def handle_target_have_car(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[117]
+    return abilities.talent(target_data.cid)[117]
 
 
 @add_premise(constant_promise.Premise.TARGET_NOT_PATIENT)
@@ -653,7 +646,7 @@ def handle_target_not_patient(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return not target_data.talent[150]
+    return not abilities.talent(target_data.cid)[150]
 
 
 @add_premise(constant_promise.Premise.TARGET_IS_PATIENT)
@@ -669,7 +662,7 @@ def handle_target_is_patient(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[150]
+    return abilities.talent(target_data.cid)[150]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_NO_CRYSTAL)
@@ -685,7 +678,7 @@ def handle_target_have_no_crystal(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return not target_data.talent[162]
+    return not abilities.talent(target_data.cid)[162]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_CRYSTAL)
@@ -701,7 +694,7 @@ def handle_target_have_crystal(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[162]
+    return abilities.talent(target_data.cid)[162]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_NO_DILIGENT)
@@ -717,7 +710,7 @@ def handle_target_have_no_diligent(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return not target_data.talent[271]
+    return not abilities.talent(target_data.cid)[271]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_DILIGENT)
@@ -733,7 +726,7 @@ def handle_target_have_diligent(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[271]
+    return abilities.talent(target_data.cid)[271]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_NO_LAZY)
@@ -749,7 +742,7 @@ def handle_target_have_no_lazy(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return not target_data.talent[272]
+    return not abilities.talent(target_data.cid)[272]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_LAZY)
@@ -765,7 +758,7 @@ def handle_target_have_lazy(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[272]
+    return abilities.talent(target_data.cid)[272]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_NO_FRAGILE)
@@ -781,7 +774,7 @@ def handle_target_have_no_fragile(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return not target_data.talent[273]
+    return not abilities.talent(target_data.cid)[273]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_FRAGILE)
@@ -797,7 +790,7 @@ def handle_target_have_fragile(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[273]
+    return abilities.talent(target_data.cid)[273]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_NO_FORCEFUL)
@@ -813,7 +806,7 @@ def handle_target_have_no_forceful(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return not target_data.talent[274]
+    return not abilities.talent(target_data.cid)[274]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_FORCEFUL)
@@ -829,7 +822,7 @@ def handle_target_have_forceful(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[274]
+    return abilities.talent(target_data.cid)[274]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_NO_ENTHUSIACTIC)
@@ -845,7 +838,7 @@ def handle_target_have_no_enthusiactic(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return not target_data.talent[275]
+    return not abilities.talent(target_data.cid)[275]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_ENTHUSIACTIC)
@@ -861,7 +854,7 @@ def handle_target_have_enthusiactic(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[275]
+    return abilities.talent(target_data.cid)[275]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_NO_ALONE)
@@ -877,7 +870,7 @@ def handle_target_have_no_alone(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return not target_data.talent[276]
+    return not abilities.talent(target_data.cid)[276]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_ALONE)
@@ -893,7 +886,7 @@ def handle_target_have_alone(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[276]
+    return abilities.talent(target_data.cid)[276]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_NO_SHAME)
@@ -909,7 +902,7 @@ def handle_target_have_no_shame(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return not target_data.talent[277]
+    return not abilities.talent(target_data.cid)[277]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_SHAME)
@@ -925,7 +918,7 @@ def handle_target_have_shame(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[277]
+    return abilities.talent(target_data.cid)[277]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_NO_OPEN)
@@ -941,7 +934,7 @@ def handle_target_have_no_open(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return not target_data.talent[278]
+    return not abilities.talent(target_data.cid)[278]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_OPEN)
@@ -957,7 +950,7 @@ def handle_target_have_open(character_id: int) -> int:
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
-    return target_data.talent[278]
+    return abilities.talent(target_data.cid)[278]
 
 
 @add_premise(constant_promise.Premise.SELF_HAVE_GOOD_ALCOHOL_TOLERANCE)
@@ -969,8 +962,7 @@ def handle_self_have_good_alcohol_tolerance(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[354]
+    return abilities.talent(character_id)[354]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_GOOD_ALCOHOL_TOLERANCE)
@@ -997,8 +989,7 @@ def handle_self_have_bad_alcohol_tolerance(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[353]
+    return abilities.talent(character_id)[353]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_BAD_ALCOHOL_TOLERANCE)
@@ -1025,8 +1016,7 @@ def handle_self_have_never_drunk(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[355]
+    return abilities.talent(character_id)[355]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_NEVER_DRUNK)
@@ -1051,8 +1041,7 @@ def handle_self_have_easily_drunk(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data: game_type.Character = cache.character_data[character_id]
-    return character_data.talent[360]
+    return abilities.talent(character_id)[360]
 
 
 @add_premise(constant_promise.Premise.TARGET_HAVE_EASILY_DRUNK)

@@ -1,13 +1,12 @@
 # -*- coding: UTF-8 -*-
 """
 静态检查系统 - 数值范围域检查
-覆盖 NUM-01…NUM-30，校验角色六大数值字典（ability/experience/juel/status_data/talent/favorability）的键集完整性、
-各类当前值/上限值的合法范围，以及基地资源、仓库容量等全局数值状态。所有检查均为一次快照内的纯读取，无历史依赖。
+覆盖 NUM-01…NUM-30，校验角色对象上的 status_data、favorability 与 GameState 里的能力、经验、宝珠、素质表
+的键集完整性、当前值/上限值的合法范围，以及基地资源、仓库容量等全局数值。检查均为一次快照内的纯读取，无历史依赖。
 
 执行顺序说明：NUM-01（字段存在且为dict）概念上必须先于其余检查，但框架按注册顺序、每个检查项独立try/except调用，
-不存在"NUM-01失败则跳过后续检查"的机制；因此本文件里每一条检查在访问六大字典/性别/上限等结构前，都会用
-getattr/.get加默认值的方式廉价地重新自检一遍，确保即便NUM-01已经报过错，本检查也绝不会因为AttributeError/
-TypeError而抛出未捕获异常，只会跟着报"结构不满足前置条件"或安静跳过。
+不存在"NUM-01失败则跳过后续检查"的机制。读角色对象上数值字典、性别、上限等结构的检查先用getattr/.get
+加默认值或_dict_field_ok复核，结构不满足前置条件时报出或跳过。能力、经验、宝珠与素质表经abilities读，没有时读到空表。
 
 配表访问一律走 Script.Config.game_config，检查函数只在真正执行时才引用配表字典（模块顶层不做config_xxx是否
 存在的强校验），一旦某个配表字段本身缺失，对应检查退化为跳过（返回空列表），不影响其余检查项。
@@ -22,6 +21,7 @@ from Script.Config import game_config
 from Script.Design import game_time
 from Script.Modules.domains import facility, needs, playthrough, warehouse
 from ..check_registry import CheckFailure, register_check, make_failure
+from Script.Modules.domains import abilities
 
 
 def _exact(value: object) -> TypeGuard[int | Fraction]:
@@ -35,15 +35,8 @@ def _exact(value: object) -> TypeGuard[int | Fraction]:
     return type(value) is int or type(value) is Fraction
 
 
-# 六个数值容器字段名，NUM-01及后续多条检查复用
-_NUMERIC_DICT_FIELDS = (
-    "ability",
-    "experience",
-    "juel",
-    "status_data",
-    "talent",
-    "favorability",
-)
+# NUM-01 检查的角色对象上的数值容器字段。能力、经验、宝珠与素质表在 GameState 里，不在此列
+_NUMERIC_DICT_FIELDS = ("status_data", "favorability")
 
 
 def _is_finite_number(v: object) -> bool:
@@ -94,11 +87,10 @@ def check_num_01_numeric_dict_fields_exist() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验六个数值字典字段(ability/experience/juel/status_data/talent/favorability)在每个角色对象上都存在且
-        类型为dict。存档走pickle反序列化，pickle不执行__init__，旧存档缺失的实例属性没有类属性兜底，
-        getattr(..., None)会返回None，本检查旨在捕获这类"旧存档字段缺失"而非单纯的类型损坏。
-        本检查须排在NUM-02…NUM-16之前跑（框架按注册顺序执行），否则那些检查会抛AttributeError/TypeError而不是
-        给出干净的失败报告。
+        校验两个数值字典字段(status_data/favorability)在每个角色对象上都存在且类型为dict。存档走pickle反序列化，
+        pickle不执行__init__，旧存档缺失的实例属性没有类属性兜底，getattr(..., None)会返回None，本检查旨在捕获
+        这类"旧存档字段缺失"而非单纯的类型损坏。NUM-12…NUM-16读这两个字段前用_dict_field_ok复核，跳过字段坏的角色。
+        能力、经验、宝珠与素质表在GameState里，不归本检查。
     """
     cache = cache_control.cache
     failures = []
@@ -129,8 +121,8 @@ def check_num_02_ability_dict_keys() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验config_ability的每个id都在chara.ability中存在（配表⊆角色，方向不可颠倒——补零与迁移只补不删，
-        角色⊆配表或键集相等的方向会在每份升级存档上每回合误报），且chara.ability的键类型均为精确int
+        校验config_ability的每个id都在角色的能力表中存在（配表⊆角色，方向不可颠倒——补零与迁移只补不删，
+        角色⊆配表或键集相等的方向会在每份升级存档上每回合误报），且能力表的键类型均为精确int
         （避免Python集合里True==1、1.0==1造成的伪装键）。多余键是合法的旧存档残留，仅记录不作为失败条件。
         若config_ability配表本身不存在（独立运行/未初始化），本检查退化为跳过。
     """
@@ -141,9 +133,7 @@ def check_num_02_ability_dict_keys() -> list[CheckFailure]:
     config_keys = set(config_ability)
     failures = []
     for cid, chara in cache.character_data.items():
-        if not _dict_field_ok(chara, "ability"):
-            continue
-        ability = chara.ability
+        ability = abilities.ability(chara.cid)
         missing = config_keys - set(ability)
         bad_key_type = not all(type(k) is int for k in ability)
         if missing or bad_key_type:
@@ -168,7 +158,7 @@ def check_num_03_ability_value_valid_lv() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验chara.ability的每个值都是config_ability_lv_adjust中的合法键（配表键仅0-10）。get_ability_adjust用能力值
+        校验角色的能力表的每个值都是config_ability_lv_adjust中的合法键（配表键仅0-10）。get_ability_adjust用能力值
         直接做字典下标且无.get兜底，越界值会在下一次进入该调用点时KeyError崩游戏。type(v) is int而非isinstance，
         避免False当键0、1.0当键1被放行。带cache.debug_mode守卫（debug面板可写任意整数）。
         若config_ability_lv_adjust配表不存在，本检查退化为跳过。
@@ -187,9 +177,7 @@ def check_num_03_ability_value_valid_lv() -> list[CheckFailure]:
     valid_keys = set(config_lv_adjust)
     failures = []
     for cid, chara in cache.character_data.items():
-        if not _dict_field_ok(chara, "ability"):
-            continue
-        for ability_id, value in chara.ability.items():
+        for ability_id, value in abilities.ability(chara.cid).items():
             if not (type(value) is int and value in valid_keys):
                 ability_name = (
                     config_ability[ability_id].name
@@ -221,7 +209,7 @@ def check_num_04_ability_level_upper_bound() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验chara.ability的值不超过8（自动升级循环硬停在8）。能力71（舌技）在白名单内被排除——全库唯一一条能力
+        校验角色的能力表的值不超过8（自动升级循环硬停在8）。能力71（舌技）在白名单内被排除——全库唯一一条能力
         事件效果CVE_A2_A|71_G_2可把已升到8的舌技推到10，不受此上限约束。超过8值得人工复核但不是硬失败，故为warning。
         带cache.debug_mode守卫。若config_ability配表不存在，取名字时退化为"?"，不影响主体判定。
     """
@@ -235,11 +223,9 @@ def check_num_04_ability_level_upper_bound() -> list[CheckFailure]:
     )
     failures = []
     for cid, chara in cache.character_data.items():
-        if not _dict_field_ok(chara, "ability"):
-            continue
         over = {
             k: v
-            for k, v in chara.ability.items()
+            for k, v in abilities.ability(chara.cid).items()
             if k not in _NUM04_UNCLAMPED_ABILITY and type(v) is int and v > 8
         }
         if over:
@@ -290,12 +276,10 @@ def check_num_05_ability_sex_consistency() -> list[CheckFailure]:
         sex = getattr(chara, "sex", None)
         if type(sex) is not int or sex not in (0, 1):
             continue  # 性别本身不合法，交由NUM-06报告，避免级联噪声
-        if not _dict_field_ok(chara, "ability"):
-            continue
         violations = {}
         for aid, d in config_ability.items():
             if d.sex_need in (0, 1) and d.sex_need != sex:
-                value = chara.ability.get(aid)
+                value = abilities.ability(chara.cid).get(aid)
                 if value != 0:
                     violations[aid] = value
         if violations:
@@ -350,8 +334,8 @@ def check_num_07_experience_dict_keys() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验config_experience的每个id都在chara.experience中存在（配表⊆角色），键类型均为精确int。能力升级需求
-        裸下标chara.experience[need_type_id]，缺键即崩。多余键是合法残留，仅记录。
+        校验config_experience的每个id都在角色的经验表中存在（配表⊆角色），键类型均为精确int。能力升级需求
+        以裸下标读经验表[need_type_id]，缺键即崩。多余键是合法残留，仅记录。
         若config_experience配表不存在，退化为跳过。
     """
     cache = cache_control.cache
@@ -361,9 +345,7 @@ def check_num_07_experience_dict_keys() -> list[CheckFailure]:
     config_keys = set(config_experience)
     failures = []
     for cid, chara in cache.character_data.items():
-        if not _dict_field_ok(chara, "experience"):
-            continue
-        experience = chara.experience
+        experience = abilities.experience(chara.cid)
         missing = config_keys - set(experience)
         bad_key_type = not all(type(k) is int for k in experience)
         if missing or bad_key_type:
@@ -388,7 +370,7 @@ def check_num_08_experience_non_negative() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验chara.experience的每个值都是非负整数。通用经验结算在任何增减后执行max(0, ...)，事件通道的经验操作
+        校验角色的经验表的每个值都是非负整数。通用经验结算在任何增减后执行max(0, ...)，事件通道的经验操作
         转发给同一函数，因此也走同一套下限钳制。带cache.debug_mode守卫（debug面板允许负数直写）。
     """
     cache = cache_control.cache
@@ -396,11 +378,9 @@ def check_num_08_experience_non_negative() -> list[CheckFailure]:
         return []
     failures = []
     for cid, chara in cache.character_data.items():
-        if not _dict_field_ok(chara, "experience"):
-            continue
         bad = {
             k: v
-            for k, v in chara.experience.items()
+            for k, v in abilities.experience(chara.cid).items()
             if type(v) is not int or v < 0
         }
         if bad:
@@ -423,8 +403,8 @@ def check_num_09_juel_dict_keys() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验config_juel的每个id都在chara.juel中存在（配表⊆角色），键类型均为精确int。升级需求解析出的
-        J<id>裸下标chara.juel[need_type_id]。多余键是合法残留，仅记录。若config_juel配表不存在，退化为跳过。
+        校验config_juel的每个id都在角色的宝珠表中存在（配表⊆角色），键类型均为精确int。升级需求解析出的
+        J<id>以裸下标读宝珠表[need_type_id]。多余键是合法残留，仅记录。若config_juel配表不存在，退化为跳过。
     """
     cache = cache_control.cache
     config_juel = getattr(game_config, "config_juel", None)
@@ -433,9 +413,7 @@ def check_num_09_juel_dict_keys() -> list[CheckFailure]:
     config_keys = set(config_juel)
     failures = []
     for cid, chara in cache.character_data.items():
-        if not _dict_field_ok(chara, "juel"):
-            continue
-        juel = chara.juel
+        juel = abilities.juel(chara.cid)
         missing = config_keys - set(juel)
         bad_key_type = not all(type(k) is int for k in juel)
         if missing or bad_key_type:
@@ -460,7 +438,7 @@ def check_num_10_juel_non_negative() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验chara.juel的每个值都是非负整数。全部扣除路径都有前置校验或数学下界（升级前先比较再扣、面板夹到
+        校验角色的宝珠表的每个值都是非负整数。全部扣除路径都有前置校验或数学下界（升级前先比较再扣、面板夹到
         持有量、睡眠反发珠双侧扣减不透支）。带cache.debug_mode守卫（debug面板可写负数）。
     """
     cache = cache_control.cache
@@ -468,10 +446,10 @@ def check_num_10_juel_non_negative() -> list[CheckFailure]:
         return []
     failures = []
     for cid, chara in cache.character_data.items():
-        if not _dict_field_ok(chara, "juel"):
-            continue
         bad = {
-            k: v for k, v in chara.juel.items() if type(v) is not int or v < 0
+            k: v
+            for k, v in abilities.juel(chara.cid).items()
+            if type(v) is not int or v < 0
         }
         if bad:
             failures.append(
@@ -493,10 +471,10 @@ def check_num_11_talent_dict_keys() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验config_talent的每个id都在chara.talent中存在（配表⊆角色），键与值类型均为精确int（排除bool）。
-        素质在能力升级需求T<n>中被裸下标chara.talent[need_value]。不需要对玩家(cid 0)放宽——玩家先经
-        get_talent_zero取得完整config_talent键集，再由get_Dr_talent_zero额外设置几项，只增不减。多余键是迁移
-        残留，仅记录。若config_talent配表不存在，退化为跳过。
+        校验config_talent的每个id都在角色的素质表中存在（配表⊆角色），键与值类型均为精确int（排除bool）。
+        素质升级面板的需求T<n>以裸下标读素质表[need_value]。不需要对玩家(cid 0)放宽。玩家先经get_talent_zero
+        取得完整config_talent键集，再由get_Dr_talent_zero额外设置几项，只增不减。多余键是迁移残留，仅记录。
+        若config_talent配表不存在，退化为跳过。
     """
     cache = cache_control.cache
     config_talent = getattr(game_config, "config_talent", None)
@@ -505,9 +483,7 @@ def check_num_11_talent_dict_keys() -> list[CheckFailure]:
     config_keys = set(config_talent)
     failures = []
     for cid, chara in cache.character_data.items():
-        if not _dict_field_ok(chara, "talent"):
-            continue
-        talent = chara.talent
+        talent = abilities.talent(chara.cid)
         missing = config_keys - set(talent)
         bad_key_type = not all(type(k) is int for k in talent)
         bad_value_type = not all(type(v) is int for v in talent.values())
@@ -1232,8 +1208,7 @@ def check_num_30_desire_point_non_negative() -> list[CheckFailure]:
     for cid, chara in cache.character_data.items():
         desire = needs.of(cid)["desire"]
         if not (type(desire) is int and desire >= 0):
-            ability = getattr(chara, "ability", None)
-            ability_33 = ability.get(33) if isinstance(ability, dict) else None
+            ability_33 = abilities.ability(cid).get(33)
             failures.append(
                 make_failure(
                     "NUM-30",

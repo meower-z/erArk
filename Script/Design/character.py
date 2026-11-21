@@ -17,7 +17,7 @@ from Script.Design import (
 )
 from Script.Config import normal_config
 from Script.UI.Moudle import panel, draw
-from Script.Modules.domains import needs
+from Script.Modules.domains import abilities, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -40,25 +40,26 @@ def init_attr(character_id: int) -> None:
     """
     # print("进入第二步的init_attr")
     # print("进入第二步的character_id :",character_id)
+    talent = abilities.talent(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
     # character_data.birthday = attr_calculation.get_rand_npc_birthday(character_data.age)
     # character_data.height = attr_calculation.get_height(character_data.sex, character_data.age)
     # character_data.weight = attr_calculation.get_weight(bmi, character_data.height.now_height)
 
     # 一系列归零函数
-    character_data.ability = attr_calculation.get_ability_zero(
-        character_data.ability
-    )
+    for table, zero in (
+        (abilities.ability(character_id), attr_calculation.get_ability_zero),
+        (talent, attr_calculation.get_talent_zero),
+        (
+            abilities.experience(character_id),
+            attr_calculation.get_experience_zero,
+        ),
+        (abilities.juel(character_id), attr_calculation.get_juel_zero),
+    ):
+        table.replace(zero(table.copy()))
     character_data.status_data = attr_calculation.get_status_zero(
         character_data.status_data
     )
-    character_data.talent = attr_calculation.get_talent_zero(
-        character_data.talent
-    )
-    character_data.experience = attr_calculation.get_experience_zero(
-        character_data.experience
-    )
-    character_data.juel = attr_calculation.get_juel_zero(character_data.juel)
     character_data.second_behavior = attr_calculation.get_second_behavior_zero(
         character_data.second_behavior
     )
@@ -85,9 +86,7 @@ def init_attr(character_id: int) -> None:
 
     # 主角的初始处理，HP和MP的最大值默认为1000，EP最大值默认为1000，初始化信物，困倦程度归零
     if character_id == 0:
-        character_data.talent = attr_calculation.get_Dr_talent_zero(
-            character_data.talent
-        )
+        attr_calculation.get_Dr_talent_zero(talent)
         needs.set(character_id, hit_max=1000, mana_max=1000)
         character_data.eja_point = 0
         character_data.eja_point_max = 1000

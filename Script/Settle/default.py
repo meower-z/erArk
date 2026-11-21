@@ -50,7 +50,8 @@ from Script.Settle.common_default import (
 from Script.Settle.item_effect import *
 from Script.Modules.domains import achievement, facility, fridge, history, modes
 from Script.Modules.domains import maintenance, medical, needs, official, prison
-from Script.Modules.domains import physical_exam, recruit, visitor, warehouse
+from Script.Modules.domains import abilities, physical_exam, recruit, visitor
+from Script.Modules.domains import warehouse
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -1031,8 +1032,8 @@ def handle_first_kiss(
     ]
     # target_data.social_contact_data.setdefault(character_id, 0)
 
-    if character_data.talent[4] == 1:
-        character_data.talent[4] = 0
+    if abilities.talent(character_id)[4] == 1:
+        abilities.talent(character_id)[4] = 0
         character_data.first_record.first_kiss_id = target_data.cid
         character_data.first_record.first_kiss_time = game_time.now()
         character_data.first_record.first_kiss_place = character_data.position
@@ -1040,8 +1041,8 @@ def handle_first_kiss(
         second_behavior.character_get_second_behavior(
             character_id, "first_kiss"
         )
-    if target_data.talent[4] == 1:
-        target_data.talent[4] = 0
+    if abilities.talent(target_data.cid)[4] == 1:
+        abilities.talent(target_data.cid)[4] = 0
         target_data.first_record.first_kiss_id = character_id
         target_data.first_record.first_kiss_time = game_time.now()
         target_data.first_record.first_kiss_place = target_data.position
@@ -1049,36 +1050,6 @@ def handle_first_kiss(
         second_behavior.character_get_second_behavior(
             target_data.cid, "first_kiss"
         )
-
-
-# @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.FIRST_HAND_IN_HAND)
-# def handle_first_hand_in_hand(
-#         character_id: int,
-#         add_time: int,
-#         change_data: game_type.CharacterStatusChange,
-#         now_time: datetime.datetime,
-# ):
-#     """
-#     记录初次牵手
-#     Keyword arguments:
-#     character_id -- 角色id
-#     add_time -- 结算时间
-#     change_data -- 状态变更信息记录对象
-#     now_time -- 结算的时间
-#     """
-#     if not add_time:
-#         return
-#     character_data: game_type.Character = cache.character_data[character_id]
-#     target_data: game_type.Character = cache.character_data[character_data.target_character_id]
-#     target_data.social_contact_data.setdefault(character_id, 0)
-#     social = 0
-#     if character_id in target_data.social_contact_data:
-#         social = target_data.social_contact_data[character_id]
-#     if social >= 2:
-#         if character_data.first_hand_in_hand == -1:
-#             character_data.first_kiss = target_data.cid
-#         if target_data.first_hand_in_hand == -1:
-#             target_data.first_kiss = character_id
 
 
 @settle_behavior.add_settle_behavior_effect(
@@ -1112,14 +1083,14 @@ def handle_first_sex(
     behavior_data = game_config.config_behavior[behavior_id]
     instruct_name = behavior_data.name
 
-    if character_data.talent[5] == 1 and (not item_flag):
-        character_data.talent[5] = 0
+    if abilities.talent(character_id)[5] == 1 and (not item_flag):
+        abilities.talent(character_id)[5] = 0
         character_data.first_record.first_sex_id = target_data.cid
         character_data.first_record.first_sex_time = game_time.now()
         character_data.first_record.first_sex_place = character_data.position
         character_data.first_record.first_sex_posture = instruct_name
-    if target_data.talent[0] == 1:
-        target_data.talent[0] = 0
+    if abilities.talent(target_data.cid)[0] == 1:
+        abilities.talent(target_data.cid)[0] = 0
         # NPC的V破处记录进部位交初体验dict（破处是权威事件，无条件覆盖通用挂钩先建的简版条目）
         target_data.first_record.first_part_sex_dict[6] = {
             "id": character_id,
@@ -1132,8 +1103,8 @@ def handle_first_sex(
             target_data.cid, "first_sex"
         )
         # 失去性无知
-        if target_data.talent[222] == 1:
-            target_data.talent[222] = 0
+        if abilities.talent(target_data.cid)[222] == 1:
+            abilities.talent(target_data.cid)[222] = 0
             now_draw = draw.NormalDraw()
             now_draw.text = _("\n{0}失去了【性无知】\n\n").format(
                 target_data.name
@@ -1210,14 +1181,14 @@ def handle_first_a_sex(
     behavior_data = game_config.config_behavior[behavior_id]
     instruct_name = behavior_data.name
 
-    if character_data.talent[5] == 1 and (not item_flag):
-        character_data.talent[5] = 0
+    if abilities.talent(character_id)[5] == 1 and (not item_flag):
+        abilities.talent(character_id)[5] = 0
         character_data.first_record.first_sex_id = target_data.cid
         character_data.first_record.first_sex_time = game_time.now()
         character_data.first_record.first_sex_place = character_data.position
         character_data.first_record.first_sex_posture = instruct_name
-    if target_data.talent[1] == 1:
-        target_data.talent[1] = 0
+    if abilities.talent(target_data.cid)[1] == 1:
+        abilities.talent(target_data.cid)[1] = 0
         # NPC的A破处记录进部位交初体验dict（破处是权威事件，无条件覆盖通用挂钩先建的简版条目）
         target_data.first_record.first_part_sex_dict[8] = {
             "id": character_id,
@@ -1267,14 +1238,14 @@ def handle_first_u_sex(
     behavior_data = game_config.config_behavior[behavior_id]
     instruct_name = behavior_data.name
 
-    if character_data.talent[5] == 1:
-        character_data.talent[5] = 0
+    if abilities.talent(character_id)[5] == 1:
+        abilities.talent(character_id)[5] = 0
         character_data.first_record.first_sex_id = target_data.cid
         character_data.first_record.first_sex_time = game_time.now()
         character_data.first_record.first_sex_place = character_data.position
         character_data.first_record.first_sex_posture = instruct_name
-    if target_data.talent[2] == 1:
-        target_data.talent[2] = 0
+    if abilities.talent(target_data.cid)[2] == 1:
+        abilities.talent(target_data.cid)[2] = 0
         # NPC的U破处记录进部位交初体验dict（若未来接入采尿器道具破处，item记2）
         target_data.first_record.first_part_sex_dict[9] = {
             "id": character_id,
@@ -1319,14 +1290,14 @@ def handle_first_w_sex(
     behavior_data = game_config.config_behavior[behavior_id]
     instruct_name = behavior_data.name
 
-    if character_data.talent[5] == 1:
-        character_data.talent[5] = 0
+    if abilities.talent(character_id)[5] == 1:
+        abilities.talent(character_id)[5] = 0
         character_data.first_record.first_sex_id = target_data.cid
         character_data.first_record.first_sex_time = game_time.now()
         character_data.first_record.first_sex_place = character_data.position
         character_data.first_record.first_sex_posture = instruct_name
-    if target_data.talent[3] == 1:
-        target_data.talent[3] = 0
+    if abilities.talent(target_data.cid)[3] == 1:
+        abilities.talent(target_data.cid)[3] = 0
         # NPC的W破处记录进部位交初体验dict（W破处无道具）
         target_data.first_record.first_part_sex_dict[7] = {
             "id": character_id,
@@ -1415,12 +1386,13 @@ def handle_first_kiss_to_penis(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
+    talent = abilities.talent(target_data.cid)
     # target_data.social_contact_data.setdefault(character_id, 0)
     if character_data.target_character_id == character_id:
         return
 
-    if target_data.talent[4] == 1:
-        target_data.talent[4] = 0
+    if talent[4] == 1:
+        talent[4] = 0
         target_data.first_record.first_kiss_id = character_id
         target_data.first_record.first_kiss_time = game_time.now()
         target_data.first_record.first_kiss_place = target_data.position
@@ -2761,7 +2733,7 @@ def handle_target_get_weeknesss_by_dr(
     ]
     if character_data.dead:
         return
-    target_character_data.talent[402] = 1
+    abilities.talent(target_character_data.cid)[402] = 1
     now_draw = draw.NormalDraw()
     now_draw.width = width
     now_draw.text = _("\n{0}获得了【被博士持有把柄】\n").format(
@@ -2792,7 +2764,7 @@ def handle_self_get_weeknesss_to_dr(
     character_data: game_type.Character = cache.character_data[character_id]
     if character_data.dead:
         return
-    character_data.talent[401] = 1
+    abilities.talent(character_id)[401] = 1
     now_draw = draw.NormalDraw()
     now_draw.width = width
     now_draw.text = _("\n{0}获得了【持有博士把柄】\n").format(
@@ -3779,13 +3751,11 @@ def handle_target_add_small_p_feel(
     target_data.status_data.setdefault(3, 0)
     now_lust_multiple = 30
     now_add_lust: float = add_time + now_lust_multiple
-    adjust = handle_ability.get_ability_adjust(target_data.ability[3])
+    adjust = handle_ability.get_ability_adjust(
+        abilities.ability(target_data.cid)[3]
+    )
     now_add_lust *= adjust
     target_data.eja_point += num.exact(now_add_lust)
-    # change_data.target_change.setdefault(target_data.cid, game_type.TargetChange())
-    # target_change: game_type.TargetChange = change_data.target_change[target_data.cid]
-    # target_change.eja_point.setdefault(3, 0)
-    # target_change.eja_point += now_add_lust
     target_data.action_info.last_eaj_add_time = now_time
 
 
@@ -3932,7 +3902,7 @@ def handle_target_add_small_lubrication(
         character_data.target_character_id,
         add_time,
         8,
-        ability_level=target_data.ability[33],
+        ability_level=abilities.ability(target_data.cid)[33],
         change_data_to_target_change=change_data,
     )
 
@@ -3964,7 +3934,7 @@ def handle_target_add_small_learn(
         character_data.target_character_id,
         add_time,
         9,
-        ability_level=target_data.ability[30],
+        ability_level=abilities.ability(target_data.cid)[30],
         change_data_to_target_change=change_data,
     )
 
@@ -3998,7 +3968,7 @@ def handle_target_add_small_repect(
         character_data.target_character_id,
         add_time,
         10,
-        ability_level=target_data.ability[31],
+        ability_level=abilities.ability(target_data.cid)[31],
         change_data_to_target_change=change_data,
     )
 
@@ -4032,7 +4002,7 @@ def handle_target_add_small_friendly(
         character_data.target_character_id,
         add_time,
         11,
-        ability_level=target_data.ability[32],
+        ability_level=abilities.ability(target_data.cid)[32],
         change_data_to_target_change=change_data,
     )
 
@@ -4066,7 +4036,7 @@ def handle_target_add_small_desire(
         character_data.target_character_id,
         add_time,
         12,
-        ability_level=target_data.ability[33],
+        ability_level=abilities.ability(target_data.cid)[33],
         change_data_to_target_change=change_data,
     )
 
@@ -4100,7 +4070,7 @@ def handle_target_add_small_happy(
         character_data.target_character_id,
         add_time,
         13,
-        ability_level=target_data.ability[13],
+        ability_level=abilities.ability(target_data.cid)[13],
         change_data_to_target_change=change_data,
     )
 
@@ -4134,7 +4104,7 @@ def handle_target_add_small_lead(
         character_data.target_character_id,
         add_time,
         14,
-        ability_level=target_data.ability[35],
+        ability_level=abilities.ability(target_data.cid)[35],
         change_data_to_target_change=change_data,
     )
 
@@ -4168,7 +4138,7 @@ def handle_target_add_small_submit(
         character_data.target_character_id,
         add_time,
         15,
-        ability_level=target_data.ability[14],
+        ability_level=abilities.ability(target_data.cid)[14],
         change_data_to_target_change=change_data,
     )
 
@@ -4202,7 +4172,7 @@ def handle_target_add_small_shy(
         character_data.target_character_id,
         add_time,
         16,
-        ability_level=target_data.ability[34],
+        ability_level=abilities.ability(target_data.cid)[34],
         change_data_to_target_change=change_data,
     )
 
@@ -4236,7 +4206,7 @@ def handle_target_add_small_pain(
         character_data.target_character_id,
         add_time,
         17,
-        ability_level=target_data.ability[15],
+        ability_level=abilities.ability(target_data.cid)[15],
         change_data_to_target_change=change_data,
     )
 
@@ -4271,7 +4241,7 @@ def handle_target_add_small_terror(
         add_time,
         18,
         10,
-        ability_level=target_data.ability[17],
+        ability_level=abilities.ability(target_data.cid)[17],
         change_data_to_target_change=change_data,
     )
 
@@ -4336,7 +4306,7 @@ def handle_target_add_small_disgust(
         add_time,
         20,
         5,
-        ability_level=target_data.ability[18],
+        ability_level=abilities.ability(target_data.cid)[18],
         change_data_to_target_change=change_data,
     )
 
@@ -4453,7 +4423,7 @@ def handle_add_small_lubrication(
         character_id,
         add_time,
         8,
-        ability_level=character_data.ability[33],
+        ability_level=abilities.ability(character_id)[33],
         change_data=change_data,
     )
 
@@ -4484,7 +4454,7 @@ def handle_add_small_learn(
         character_id,
         add_time,
         9,
-        ability_level=character_data.ability[30],
+        ability_level=abilities.ability(character_id)[30],
         change_data=change_data,
     )
 
@@ -4515,7 +4485,7 @@ def handle_add_small_respect(
         character_id,
         add_time,
         10,
-        ability_level=character_data.ability[31],
+        ability_level=abilities.ability(character_id)[31],
         change_data=change_data,
     )
 
@@ -4546,7 +4516,7 @@ def handle_add_small_friendly(
         character_id,
         add_time,
         11,
-        ability_level=character_data.ability[32],
+        ability_level=abilities.ability(character_id)[32],
         change_data=change_data,
     )
 
@@ -4577,7 +4547,7 @@ def handle_add_small_desire(
         character_id,
         add_time,
         12,
-        ability_level=character_data.ability[33],
+        ability_level=abilities.ability(character_id)[33],
         change_data=change_data,
     )
 
@@ -4608,7 +4578,7 @@ def handle_add_small_happy(
         character_id,
         add_time,
         13,
-        ability_level=character_data.ability[13],
+        ability_level=abilities.ability(character_id)[13],
         change_data=change_data,
     )
 
@@ -4639,7 +4609,7 @@ def handle_add_small_lead(
         character_id,
         add_time,
         14,
-        ability_level=character_data.ability[35],
+        ability_level=abilities.ability(character_id)[35],
         change_data=change_data,
     )
 
@@ -4670,7 +4640,7 @@ def handle_add_small_submit(
         character_id,
         add_time,
         15,
-        ability_level=character_data.ability[14],
+        ability_level=abilities.ability(character_id)[14],
         change_data=change_data,
     )
 
@@ -4701,7 +4671,7 @@ def handle_add_small_shy(
         character_id,
         add_time,
         16,
-        ability_level=character_data.ability[34],
+        ability_level=abilities.ability(character_id)[34],
         change_data=change_data,
     )
 
@@ -4725,13 +4695,12 @@ def handle_self_add_middle_disgust(
     """
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     base_chara_state_common_settle(
         character_id,
         add_time,
         20,
         100,
-        ability_level=character_data.ability[18],
+        ability_level=abilities.ability(character_id)[18],
         change_data=change_data,
     )
 
@@ -6890,6 +6859,7 @@ def handle_talk_add_adjust(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
+    ability = abilities.ability(character_id)
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
@@ -6905,8 +6875,8 @@ def handle_talk_add_adjust(
         if character_id != 0 and character_data.target_character_id != 0:
             return
         # 获取调整值#
-        character_data.ability.setdefault(40, 0)
-        adjust = handle_ability.get_ability_adjust(character_data.ability[40])
+        ability.setdefault(40, 0)
+        adjust = handle_ability.get_ability_adjust(ability[40])
         # 好感度变化#
         base_chara_favorability_and_trust_common_settle(
             character_id, add_time, True, 0, adjust, change_data
@@ -6916,7 +6886,7 @@ def handle_talk_add_adjust(
             character_data.target_character_id,
             add_time,
             11,
-            ability_level=character_data.ability[40],
+            ability_level=ability[40],
             change_data_to_target_change=change_data,
         )
         # 快乐变化#
@@ -6924,7 +6894,7 @@ def handle_talk_add_adjust(
             character_data.target_character_id,
             add_time,
             13,
-            ability_level=character_data.ability[40],
+            ability_level=ability[40],
             change_data_to_target_change=change_data,
         )
         # 记录谈话时间#
@@ -6949,6 +6919,7 @@ def handle_coffee_add_adjust(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
+    ability = abilities.ability(character_id)
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
@@ -6961,8 +6932,8 @@ def handle_coffee_add_adjust(
         if character_id != 0 and character_data.target_character_id != 0:
             return
         # 获取调整值#
-        character_data.ability.setdefault(43, 0)
-        adjust = handle_ability.get_ability_adjust(character_data.ability[43])
+        ability.setdefault(43, 0)
+        adjust = handle_ability.get_ability_adjust(ability[43])
         # 好感度变化#
         base_chara_favorability_and_trust_common_settle(
             character_id, add_time, True, 0, adjust, change_data
@@ -6976,7 +6947,7 @@ def handle_coffee_add_adjust(
             character_data.target_character_id,
             add_time,
             11,
-            ability_level=character_data.ability[43],
+            ability_level=ability[43],
             change_data_to_target_change=change_data,
         )
 
@@ -7004,6 +6975,7 @@ def handle_target_coffee_add_adjust(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
+    ability = abilities.ability(target_data.cid)
     if character_data.target_character_id != character_id and (
         not character_id or not character_data.target_character_id
     ):
@@ -7013,8 +6985,8 @@ def handle_target_coffee_add_adjust(
         if character_id != 0 and character_data.target_character_id != 0:
             return
         # 获取调整值#
-        target_data.ability.setdefault(43, 0)
-        adjust = handle_ability.get_ability_adjust(target_data.ability[43])
+        ability.setdefault(43, 0)
+        adjust = handle_ability.get_ability_adjust(ability[43])
         # 好感度变化#
         base_chara_favorability_and_trust_common_settle(
             character_id, add_time, True, 0, adjust, change_data
@@ -7028,7 +7000,7 @@ def handle_target_coffee_add_adjust(
             character_data.target_character_id,
             add_time,
             11,
-            ability_level=target_data.ability[43],
+            ability_level=ability[43],
             change_data_to_target_change=change_data,
         )
 
@@ -7051,6 +7023,7 @@ def handle_make_food_add_adjust(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
+    ability = abilities.ability(character_id)
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
@@ -7068,13 +7041,13 @@ def handle_make_food_add_adjust(
         character_id, 83, base_value=cook_difficulty, change_data=change_data
     )
     # 习得：随菜谱难度等级提升而增加（独立于制作数量与总耗时，仅按单份结算）
-    character_data.ability.setdefault(30, 0)
+    ability.setdefault(30, 0)
     base_chara_state_common_settle(
         character_id,
         cook_difficulty,
         9,
         base_value=cook_difficulty * 10,
-        ability_level=character_data.ability[30],
+        ability_level=ability[30],
         change_data=change_data,
     )
 
@@ -7150,7 +7123,9 @@ def handle_official_work_add_adjust(
         return
     now_draw_text = ""
     # 获取调整值#
-    adjust = handle_ability.get_ability_adjust(character_data.ability[45])
+    adjust = handle_ability.get_ability_adjust(
+        abilities.ability(character_id)[45]
+    )
     # 如果有交互对象，且对方不在无意识状态下，则算上对方的学识加成
     if (
         character_data.target_character_id != character_id
@@ -7159,7 +7134,7 @@ def handle_official_work_add_adjust(
         )
     ):
         adjust_target = handle_ability.get_ability_adjust(
-            target_data.ability[45]
+            abilities.ability(target_data.cid)[45]
         )
         adjust += adjust_target
         now_draw_text += _("在{0}的帮助下，").format(target_data.name)
@@ -7206,6 +7181,7 @@ def handle_cure_patient_add_just(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
+    ability = abilities.ability(character_id)
     if not add_time:
         return
     from Script.System.Medical_System import medical_constant, medical_service
@@ -7231,7 +7207,7 @@ def handle_cure_patient_add_just(
                 character_id,
                 add_time,
                 9,
-                ability_level=character_data.ability[46],
+                ability_level=ability[46],
                 extra_adjust=(severity_level + 1) / 2,
                 change_data=change_data,
             )
@@ -7281,7 +7257,7 @@ def handle_cure_patient_add_just(
         character_id,
         add_time,
         9,
-        ability_level=character_data.ability[46],
+        ability_level=ability[46],
         extra_adjust=(severity_level + 1) / 2,
         change_data=change_data,
     )
@@ -7349,7 +7325,7 @@ def handle_perform_surgery(
         character_id,
         add_time,
         9,
-        ability_level=doctor_data.ability[46],
+        ability_level=abilities.ability(character_id)[46],
         extra_adjust=3,
         change_data=change_data,
     )
@@ -7508,7 +7484,9 @@ def handle_recruit_add_just(
         return
 
     # 获取能力调整值
-    adjust = handle_ability.get_ability_adjust(character_data.ability[40])
+    adjust = handle_ability.get_ability_adjust(
+        abilities.ability(character_id)[40]
+    )
 
     # 确定使用哪个招募栏位
     select_index = -1
@@ -7619,7 +7597,9 @@ def handle_invite_visitor_add_adjust(
         return
 
     # 获取调整值#
-    adjust = handle_ability.get_ability_adjust(character_data.ability[40])
+    adjust = handle_ability.get_ability_adjust(
+        abilities.ability(character_id)[40]
+    )
     # 设施效率
     adjust *= basement.calc_facility_efficiency(13)
     # 获得加成 #
@@ -7765,6 +7745,7 @@ def handle_urethral_swab_add_adjust(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
+    ability = abilities.ability(target_data.cid)
     if character_data.target_character_id != character_id and (
         not character_id or not character_data.target_character_id
     ):
@@ -7780,7 +7761,7 @@ def handle_urethral_swab_add_adjust(
         )
 
         # 扩长等级相对于插入等级的调整，棉棒默认为无影响
-        dilate_level = target_data.ability[11]
+        dilate_level = ability[11]
         size_adjust = attr_calculation.get_pain_adjust(
             dilate_level, level_flag=True
         )
@@ -7793,7 +7774,7 @@ def handle_urethral_swab_add_adjust(
             add_time,
             17,
             base_value=100,
-            ability_level=target_data.ability[15],
+            ability_level=ability[15],
             extra_adjust=final_adjust,
             change_data_to_target_change=change_data,
         )
@@ -7822,6 +7803,7 @@ def handle_urethral_finger_insertion_add_adjust(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
+    ability = abilities.ability(target_data.cid)
     if character_data.target_character_id != character_id and (
         not character_id or not character_data.target_character_id
     ):
@@ -7837,7 +7819,7 @@ def handle_urethral_finger_insertion_add_adjust(
         )
 
         # 扩长等级相对于插入等级的调整，手指为-2级扩张
-        dilate_level = target_data.ability[11] - 2
+        dilate_level = ability[11] - 2
         size_adjust = attr_calculation.get_pain_adjust(
             dilate_level, level_flag=True
         )
@@ -7850,7 +7832,7 @@ def handle_urethral_finger_insertion_add_adjust(
             add_time,
             17,
             base_value=400,
-            ability_level=target_data.ability[15],
+            ability_level=ability[15],
             extra_adjust=final_adjust,
             change_data_to_target_change=change_data,
         )
@@ -7873,9 +7855,9 @@ def handle_masturebate_add_adjust(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
+    ability = abilities.ability(character_id)
     if not add_time:
         return
-    character_data: game_type.Character = cache.character_data[character_id]
     # 根据NPC的部位喜好，选择一个部位
     part_id = handle_npc_ai_in_h.evaluate_npc_body_part_prefs(character_id)
     # 增加快感
@@ -7884,7 +7866,7 @@ def handle_masturebate_add_adjust(
         add_time,
         part_id,
         50,
-        ability_level=character_data.ability[30],
+        ability_level=ability[30],
         change_data=change_data,
     )
     # 增加部位经验
@@ -7899,7 +7881,7 @@ def handle_masturebate_add_adjust(
             add_time,
             part_id,
             50,
-            ability_level=character_data.ability[30],
+            ability_level=ability[30],
             change_data=change_data,
         )
         # 增加1道具使用经验
@@ -8309,6 +8291,7 @@ def handle_board_game_win_add_adjust(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
+    ability = abilities.ability(character_id)
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
@@ -8344,7 +8327,7 @@ def handle_board_game_win_add_adjust(
         character_id,
         add_time,
         9,
-        ability_level=character_data.ability[45],
+        ability_level=ability[45],
         extra_adjust=ai_level,
         change_data=change_data,
     )
@@ -8352,7 +8335,7 @@ def handle_board_game_win_add_adjust(
         character_data.target_character_id,
         add_time,
         9,
-        ability_level=character_data.ability[45],
+        ability_level=ability[45],
         extra_adjust=ai_level,
         change_data=target_change,
     )
@@ -8388,6 +8371,7 @@ def handle_board_game_lose_add_adjust(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
+    ability = abilities.ability(character_id)
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
@@ -8414,7 +8398,7 @@ def handle_board_game_lose_add_adjust(
         character_id,
         add_time,
         9,
-        ability_level=character_data.ability[45],
+        ability_level=ability[45],
         extra_adjust=ai_level,
         change_data=change_data,
     )
@@ -8422,7 +8406,7 @@ def handle_board_game_lose_add_adjust(
         character_data.target_character_id,
         add_time,
         9,
-        ability_level=character_data.ability[45],
+        ability_level=ability[45],
         extra_adjust=ai_level,
         change_data=target_change,
     )
@@ -8455,7 +8439,7 @@ def handle_maintenance_add_adjust(
     # 检查是否在损坏设施数据中
     damage = maintenance.damage()
     if scene_path_str in damage:
-        repair_num = character_data.ability[48]
+        repair_num = abilities.ability(character_id)[48]
         # 修复后如果小于等于0则去掉
         maintenance.set_damage(
             scene_path_str, damage[scene_path_str] - repair_num
@@ -8481,6 +8465,7 @@ def handle_train_prisoners_add_adjust(
     """
     from Script.Core import value_handle
 
+    ability = abilities.ability(character_id)
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
@@ -8504,7 +8489,7 @@ def handle_train_prisoners_add_adjust(
                 ability_id = game_config.config_pleasure_relations[
                     state_id
                 ].ability_id
-                all_part_data[state_id] = character_data.ability[ability_id]
+                all_part_data[state_id] = ability[ability_id]
                 all_part_data[state_id] = max(all_part_data[state_id], 1)
         # 选择部位
         target_part_id = value_handle.get_random_for_weight(all_part_data)
@@ -8515,7 +8500,7 @@ def handle_train_prisoners_add_adjust(
                 add_time,
                 target_part_id,
                 0,
-                ability_level=character_data.ability[30],
+                ability_level=abilities.ability(character_data.cid)[30],
                 change_data_to_target_change=change_data,
             )
             exp_id = target_part_id
@@ -8530,7 +8515,7 @@ def handle_train_prisoners_add_adjust(
         # 根据部位扩张等级进行加权选择目标部位
         all_part_data = {}
         for part_id in [9, 10, 11, 12]:
-            all_part_data[part_id] = character_data.ability[part_id]
+            all_part_data[part_id] = ability[part_id]
             all_part_data[part_id] = max(all_part_data[part_id], 1)
         # 选择部位
         target_part_id = value_handle.get_random_for_weight(all_part_data)
@@ -8541,7 +8526,9 @@ def handle_train_prisoners_add_adjust(
                 add_time,
                 target_part_id - 5,
                 0,
-                ability_level=character_data.ability[target_part_id],
+                ability_level=abilities.ability(character_data.cid)[
+                    target_part_id
+                ],
                 change_data_to_target_change=change_data,
             )
             exp_id = target_part_id + 56
@@ -8560,7 +8547,7 @@ def handle_train_prisoners_add_adjust(
                 add_time,
                 0,
                 0,
-                ability_level=character_data.ability[36],
+                ability_level=abilities.ability(character_data.cid)[36],
                 change_data_to_target_change=change_data,
             )
             base_chara_state_common_settle(
@@ -8582,7 +8569,7 @@ def handle_train_prisoners_add_adjust(
         # 根据性爱技巧等级进行加权选择目标部位
         all_part_data = {}
         for part_id in [70, 71, 72, 73, 74, 75, 76]:
-            all_part_data[part_id] = character_data.ability[part_id]
+            all_part_data[part_id] = ability[part_id]
             all_part_data[part_id] = max(all_part_data[part_id], 1)
         # 选择部位
         target_part_id = value_handle.get_random_for_weight(all_part_data)
@@ -8593,7 +8580,9 @@ def handle_train_prisoners_add_adjust(
                 add_time,
                 9,
                 0,
-                ability_level=character_data.ability[target_part_id],
+                ability_level=abilities.ability(character_data.cid)[
+                    target_part_id
+                ],
                 change_data_to_target_change=change_data,
             )
             base_chara_state_common_settle(
@@ -8601,7 +8590,7 @@ def handle_train_prisoners_add_adjust(
                 add_time,
                 9,
                 0,
-                ability_level=character_data.ability[30],
+                ability_level=abilities.ability(character_data.cid)[30],
                 change_data_to_target_change=change_data,
             )
 
@@ -8622,7 +8611,7 @@ def handle_train_prisoners_add_adjust(
                 add_time,
                 11,
                 0,
-                ability_level=character_data.ability[32],
+                ability_level=abilities.ability(character_data.cid)[32],
                 change_data_to_target_change=change_data,
             )
             base_chara_state_common_settle(
@@ -8630,7 +8619,7 @@ def handle_train_prisoners_add_adjust(
                 add_time,
                 15,
                 0,
-                ability_level=character_data.ability[14],
+                ability_level=abilities.ability(character_data.cid)[14],
                 change_data_to_target_change=change_data,
             )
 
@@ -8736,7 +8725,7 @@ def handle_give_gift_add_adjust(
     if gift_data.type == 3:
         # 话术修正
         talk_adjust = handle_ability.get_ability_adjust(
-            character_data.ability[40]
+            abilities.ability(character_id)[40]
         )
         # 更新最后赠送时间
         target_data.action_info.last_gift_time = game_time.now()
@@ -8749,7 +8738,7 @@ def handle_give_gift_add_adjust(
                 character_data.target_character_id,
                 10,
                 11,
-                ability_level=target_data.ability[32],
+                ability_level=abilities.ability(target_data.cid)[32],
                 change_data_to_target_change=change_data,
             )
         # 好感礼物中
@@ -8766,7 +8755,7 @@ def handle_give_gift_add_adjust(
                 character_data.target_character_id,
                 30,
                 11,
-                ability_level=target_data.ability[32],
+                ability_level=abilities.ability(target_data.cid)[32],
                 change_data_to_target_change=change_data,
             )
         # 好感礼物大
@@ -8783,7 +8772,7 @@ def handle_give_gift_add_adjust(
                 character_data.target_character_id,
                 120,
                 11,
-                ability_level=target_data.ability[32],
+                ability_level=abilities.ability(target_data.cid)[32],
                 change_data_to_target_change=change_data,
             )
             base_chara_experience_common_settle(
@@ -8794,7 +8783,7 @@ def handle_give_gift_add_adjust(
     # 道歉礼物
     elif gift_data.type == 2:
         # 降低反发刻印
-        target_data.ability[18] = 0
+        abilities.ability(target_data.cid)[18] = 0
         # 其他数据结算
         base_chara_favorability_and_trust_common_settle(
             character_id, 10, True, 0, 0, change_data
@@ -8803,7 +8792,7 @@ def handle_give_gift_add_adjust(
             character_data.target_character_id,
             10,
             11,
-            ability_level=target_data.ability[32],
+            ability_level=abilities.ability(target_data.cid)[32],
             change_data_to_target_change=change_data,
         )
         handle_target_angry_with_player_flag_to_0(
@@ -8837,7 +8826,7 @@ def handle_give_gift_add_adjust(
             character_data.target_character_id,
             100,
             16,
-            ability_level=target_data.ability[34],
+            ability_level=abilities.ability(target_data.cid)[34],
             change_data_to_target_change=change_data,
         )
 
@@ -8893,6 +8882,7 @@ def handle_read_add_adjust(
     """
     from Script.UI.Panel import borrow_book_panel
 
+    ability = abilities.ability(character_id)
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
@@ -8955,8 +8945,7 @@ def handle_read_add_adjust(
     if character_data.entertainment.read_book_progress[book_id] < 100:
         base = 5
         adjust = (
-            handle_ability.get_ability_adjust(character_data.ability[45])
-            / book_difficulty_int
+            handle_ability.get_ability_adjust(ability[45]) / book_difficulty_int
         )
         # 如果当前位置是在图书馆，则根据图书馆等级提高阅读效率
         if handle_premise.handle_in_library(character_id):
@@ -9011,7 +9000,7 @@ def handle_read_add_adjust(
                 character_id,
                 add_time,
                 9,
-                ability_level=character_data.ability[45],
+                ability_level=ability[45],
                 extra_adjust=extra_adjust,
                 change_data=change_data,
             )
@@ -9117,7 +9106,7 @@ def _settle_class_student(
                 add_time,
                 favorability_flag,
                 0,
-                student_data.ability[32],
+                abilities.ability(student_id)[32],
                 change_data,
                 student_data.cid,
             )
@@ -9492,7 +9481,7 @@ def handle_check_report_card_add_just(
         add_time,
         True,
         0,
-        target_data.ability[32],
+        abilities.ability(target_id)[32],
         change_data,
         target_data.cid,
     )
@@ -9967,6 +9956,7 @@ def handle_sing_add_adjust(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
+    ability = abilities.ability(character_id)
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
@@ -9984,12 +9974,12 @@ def handle_sing_add_adjust(
         if character_id != 0 and character_data.target_character_id != 0:
             return
         # 获取调整值#
-        character_data.ability.setdefault(44, 0)
+        ability.setdefault(44, 0)
         # 如果水平在2级及以下则扣好感信赖，如果是NPC执行则跳过
         good_flag = True
-        if character_data.ability[44] <= 2 and character_id == 0:
+        if ability[44] <= 2 and character_id == 0:
             good_flag = False
-        adjust = handle_ability.get_ability_adjust(character_data.ability[44])
+        adjust = handle_ability.get_ability_adjust(ability[44])
 
         # print(f"debug 唱歌，adjust = {adjust}，add_favorability = {add_favorability}")
 
@@ -10117,6 +10107,7 @@ def handle_play_instrument_add_adjust(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
+    ability = abilities.ability(character_id)
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
@@ -10136,12 +10127,12 @@ def handle_play_instrument_add_adjust(
         if character_id != 0 and character_data.target_character_id != 0:
             return
         # 获取调整值#
-        character_data.ability.setdefault(44, 0)
+        ability.setdefault(44, 0)
         # 如果水平在2级及以下则扣好感信赖，如果是NPC执行则跳过
         good_flag = True
-        if character_data.ability[44] <= 2 and character_id == 0:
+        if ability[44] <= 2 and character_id == 0:
             good_flag = False
-        adjust = handle_ability.get_ability_adjust(character_data.ability[44])
+        adjust = handle_ability.get_ability_adjust(ability[44])
 
         # 对在场的全部角色起效
         for chara_id in cache.scene_data[
@@ -10288,7 +10279,7 @@ def handle_tech_add_s_adjust(
             add_time,
             0,
             50,
-            ability_level=character_data.ability[30],
+            ability_level=abilities.ability(character_id)[30],
             change_data_to_target_change=change_data,
         )
         # 欲情
@@ -10297,7 +10288,7 @@ def handle_tech_add_s_adjust(
             add_time,
             12,
             50,
-            ability_level=target_data.ability[0],
+            ability_level=abilities.ability(target_data.cid)[0],
             change_data_to_target_change=change_data,
         )
 
@@ -10339,7 +10330,7 @@ def handle_tech_add_b_adjust(
             add_time,
             1,
             50,
-            ability_level=character_data.ability[30],
+            ability_level=abilities.ability(character_id)[30],
             change_data_to_target_change=change_data,
         )
         # 欲情
@@ -10348,7 +10339,7 @@ def handle_tech_add_b_adjust(
             add_time,
             12,
             50,
-            ability_level=target_data.ability[1],
+            ability_level=abilities.ability(target_data.cid)[1],
             change_data_to_target_change=change_data,
         )
 
@@ -10390,7 +10381,7 @@ def handle_tech_add_c_adjust(
             add_time,
             2,
             50,
-            ability_level=character_data.ability[30],
+            ability_level=abilities.ability(character_id)[30],
             change_data_to_target_change=change_data,
         )
         # 欲情
@@ -10399,7 +10390,7 @@ def handle_tech_add_c_adjust(
             add_time,
             12,
             50,
-            ability_level=target_data.ability[2],
+            ability_level=abilities.ability(target_data.cid)[2],
             change_data_to_target_change=change_data,
         )
 
@@ -10421,6 +10412,7 @@ def handle_tech_add_p_adjust(
     change_data -- 状态变更信息记录对象
     now_time -- 结算的时间
     """
+    ability = abilities.ability(character_id)
     if not add_time:
         return
     character_data: game_type.Character = cache.character_data[character_id]
@@ -10436,13 +10428,9 @@ def handle_tech_add_p_adjust(
         if target_data.dead:
             return
         # 获取调整值#
-        character_data.ability.setdefault(19, 0)
-        abi_adjust = handle_ability.get_ability_adjust(
-            character_data.ability[30]
-        )
-        feel_adjust = handle_ability.get_ability_adjust(
-            character_data.ability[3]
-        )
+        ability.setdefault(19, 0)
+        abi_adjust = handle_ability.get_ability_adjust(ability[30])
+        feel_adjust = handle_ability.get_ability_adjust(ability[3])
         adjust = math.sqrt(abi_adjust * feel_adjust)
         # P快变化#
         target_data.status_data.setdefault(3, 0)
@@ -10515,7 +10503,7 @@ def handle_tech_add_v_adjust(
             add_time,
             4,
             50,
-            ability_level=character_data.ability[30],
+            ability_level=abilities.ability(character_id)[30],
             change_data_to_target_change=change_data,
         )
         # 欲情
@@ -10524,7 +10512,7 @@ def handle_tech_add_v_adjust(
             add_time,
             12,
             50,
-            ability_level=target_data.ability[4],
+            ability_level=abilities.ability(target_data.cid)[4],
             change_data_to_target_change=change_data,
         )
 
@@ -10566,7 +10554,7 @@ def handle_tech_add_a_adjust(
             add_time,
             5,
             50,
-            ability_level=character_data.ability[30],
+            ability_level=abilities.ability(character_id)[30],
             change_data_to_target_change=change_data,
         )
         # 欲情
@@ -10575,7 +10563,7 @@ def handle_tech_add_a_adjust(
             add_time,
             12,
             50,
-            ability_level=target_data.ability[5],
+            ability_level=abilities.ability(target_data.cid)[5],
             change_data_to_target_change=change_data,
         )
 
@@ -10617,7 +10605,7 @@ def handle_tech_add_u_adjust(
             add_time,
             6,
             50,
-            ability_level=character_data.ability[30],
+            ability_level=abilities.ability(character_id)[30],
             change_data_to_target_change=change_data,
         )
         # 欲情
@@ -10626,7 +10614,7 @@ def handle_tech_add_u_adjust(
             add_time,
             12,
             50,
-            ability_level=target_data.ability[6],
+            ability_level=abilities.ability(target_data.cid)[6],
             change_data_to_target_change=change_data,
         )
 
@@ -10668,7 +10656,7 @@ def handle_tech_add_w_adjust(
             add_time,
             7,
             50,
-            ability_level=character_data.ability[30],
+            ability_level=abilities.ability(character_id)[30],
             change_data_to_target_change=change_data,
         )
         # 欲情
@@ -10677,7 +10665,7 @@ def handle_tech_add_w_adjust(
             add_time,
             12,
             50,
-            ability_level=target_data.ability[7],
+            ability_level=abilities.ability(target_data.cid)[7],
             change_data_to_target_change=change_data,
         )
 
@@ -10719,7 +10707,7 @@ def handle_tech_add_m_adjust(
             add_time,
             21,
             50,
-            ability_level=character_data.ability[30],
+            ability_level=abilities.ability(character_id)[30],
             change_data_to_target_change=change_data,
         )
         # 欲情
@@ -10728,7 +10716,7 @@ def handle_tech_add_m_adjust(
             add_time,
             12,
             50,
-            ability_level=target_data.ability[7],
+            ability_level=abilities.ability(target_data.cid)[7],
             change_data_to_target_change=change_data,
         )
 
@@ -10770,7 +10758,7 @@ def handle_tech_add_f_adjust(
             add_time,
             22,
             50,
-            ability_level=character_data.ability[30],
+            ability_level=abilities.ability(character_id)[30],
             change_data_to_target_change=change_data,
         )
         # 欲情
@@ -10779,7 +10767,7 @@ def handle_tech_add_f_adjust(
             add_time,
             12,
             50,
-            ability_level=target_data.ability[7],
+            ability_level=abilities.ability(target_data.cid)[7],
             change_data_to_target_change=change_data,
         )
 
@@ -10807,6 +10795,7 @@ def handle_tech_add_pl_p_adjust(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
+    ability = abilities.ability(target_data.cid)
     if character_data.target_character_id != character_id and (
         not character_id or not character_data.target_character_id
     ):
@@ -10816,8 +10805,8 @@ def handle_tech_add_pl_p_adjust(
         if target_data.dead:
             return
         # 获取调整值#
-        target_data.ability.setdefault(19, 0)
-        adjust = handle_ability.get_ability_adjust(target_data.ability[30])
+        ability.setdefault(19, 0)
+        adjust = handle_ability.get_ability_adjust(ability[30])
         # P快变化#
         character_data.status_data.setdefault(3, 0)
         now_lust = character_data.status_data[3]
@@ -10871,7 +10860,7 @@ def handle_target_lubrication_adjust_add_pain(
             character_data.target_character_id,
             add_time,
             17,
-            ability_level=target_data.ability[15],
+            ability_level=abilities.ability(target_data.cid)[15],
             extra_adjust=pain_adjust,
             change_data_to_target_change=change_data,
         )
@@ -10914,12 +10903,12 @@ def handle_target_v_adjust_add_pain(
             num.whole(target_data.status_data[8])
         )
         # 腰技的调整
-        waist_tech = character_data.ability[76]
+        waist_tech = abilities.ability(character_id)[76]
         waist_adjust = handle_ability.get_ability_adjust(waist_tech) - 1
 
         # 扩长等级相对于阴茎等级的调整，因为阴茎等级默认为1，所以再加1
         jj_size = character_data.pl_ability.jj_size
-        dilate_level = target_data.ability[9]
+        dilate_level = abilities.ability(target_data.cid)[9]
         final_level = dilate_level - jj_size + 1
         size_adjust = attr_calculation.get_pain_adjust(
             final_level, level_flag=True
@@ -10932,7 +10921,7 @@ def handle_target_v_adjust_add_pain(
             character_data.target_character_id,
             add_time,
             17,
-            ability_level=target_data.ability[15],
+            ability_level=abilities.ability(target_data.cid)[15],
             extra_adjust=final_adjust,
             change_data_to_target_change=change_data,
         )
@@ -10975,12 +10964,12 @@ def handle_target_a_adjust_add_pain(
             num.whole(target_data.status_data[8])
         )
         # 腰技的调整
-        waist_tech = character_data.ability[76]
+        waist_tech = abilities.ability(character_id)[76]
         waist_adjust = handle_ability.get_ability_adjust(waist_tech) - 1
 
         # 扩长等级相对于阴茎等级的调整，因为阴茎等级默认为1，所以再加1
         jj_size = character_data.pl_ability.jj_size
-        dilate_level = target_data.ability[10]
+        dilate_level = abilities.ability(target_data.cid)[10]
         final_level = dilate_level - jj_size + 1
         size_adjust = attr_calculation.get_pain_adjust(
             final_level, level_flag=True
@@ -10993,7 +10982,7 @@ def handle_target_a_adjust_add_pain(
             character_data.target_character_id,
             add_time,
             17,
-            ability_level=target_data.ability[15],
+            ability_level=abilities.ability(target_data.cid)[15],
             extra_adjust=final_adjust,
             change_data_to_target_change=change_data,
         )
@@ -11036,12 +11025,12 @@ def handle_target_u_adjust_add_pain(
             num.whole(target_data.status_data[8])
         )
         # 腰技的调整
-        waist_tech = character_data.ability[76]
+        waist_tech = abilities.ability(character_id)[76]
         waist_adjust = handle_ability.get_ability_adjust(waist_tech) - 1
 
         # 扩长等级相对于阴茎等级的调整，因为尿道非常小，所以相对于V和A，初始+1-4 = -3
         jj_size = character_data.pl_ability.jj_size
-        dilate_level = target_data.ability[11]
+        dilate_level = abilities.ability(target_data.cid)[11]
         final_level = dilate_level - jj_size - 3
         size_adjust = attr_calculation.get_pain_adjust(
             final_level, level_flag=True
@@ -11055,7 +11044,7 @@ def handle_target_u_adjust_add_pain(
             add_time,
             17,
             base_value=1000,
-            ability_level=target_data.ability[15],
+            ability_level=abilities.ability(target_data.cid)[15],
             extra_adjust=final_adjust,
             change_data_to_target_change=change_data,
         )
@@ -11098,12 +11087,12 @@ def handle_target_w_adjust_add_pain(
             num.whole(target_data.status_data[8])
         )
         # 腰技的调整
-        waist_tech = character_data.ability[76]
+        waist_tech = abilities.ability(character_id)[76]
         waist_adjust = handle_ability.get_ability_adjust(waist_tech) - 1
 
         # 扩长等级相对于阴茎等级的调整，因为子宫较小，所以相对于V和A，初始+1-2=-1
         jj_size = character_data.pl_ability.jj_size
-        dilate_level = target_data.ability[12]
+        dilate_level = abilities.ability(target_data.cid)[12]
         final_level = dilate_level - jj_size - 1
         size_adjust = attr_calculation.get_pain_adjust(
             final_level, level_flag=True
@@ -11121,7 +11110,7 @@ def handle_target_w_adjust_add_pain(
             add_time,
             17,
             base_value=100,
-            ability_level=target_data.ability[15],
+            ability_level=abilities.ability(target_data.cid)[15],
             extra_adjust=final_adjust,
             change_data_to_target_change=change_data,
         )
@@ -11163,7 +11152,7 @@ def handle_target_v_adjust_add_by_sex(
         jj_size = character_data.pl_ability.jj_size
         size_adjust = handle_ability.get_ability_adjust(jj_size) / 2
         # 腰技的调整
-        waist_tech = character_data.ability[76]
+        waist_tech = abilities.ability(character_id)[76]
         waist_adjust = handle_ability.get_ability_adjust(waist_tech) / 2
         # 最终调整值
         extra_adjust = size_adjust + waist_adjust
@@ -11174,7 +11163,7 @@ def handle_target_v_adjust_add_by_sex(
             add_time,
             4,
             50,
-            ability_level=character_data.ability[30],
+            ability_level=abilities.ability(character_id)[30],
             extra_adjust=extra_adjust,
             change_data_to_target_change=change_data,
         )
@@ -11184,7 +11173,7 @@ def handle_target_v_adjust_add_by_sex(
             add_time,
             12,
             50,
-            ability_level=target_data.ability[4],
+            ability_level=abilities.ability(target_data.cid)[4],
             extra_adjust=extra_adjust,
             change_data_to_target_change=change_data,
         )
@@ -11226,7 +11215,7 @@ def handle_target_a_adjust_add_by_sex(
         jj_size = character_data.pl_ability.jj_size
         size_adjust = handle_ability.get_ability_adjust(jj_size) / 2
         # 腰技的调整
-        waist_tech = character_data.ability[76]
+        waist_tech = abilities.ability(character_id)[76]
         waist_adjust = handle_ability.get_ability_adjust(waist_tech) / 2
         # 最终调整值
         extra_adjust = size_adjust + waist_adjust
@@ -11237,7 +11226,7 @@ def handle_target_a_adjust_add_by_sex(
             add_time,
             5,
             50,
-            ability_level=character_data.ability[30],
+            ability_level=abilities.ability(character_id)[30],
             extra_adjust=extra_adjust,
             change_data_to_target_change=change_data,
         )
@@ -11247,7 +11236,7 @@ def handle_target_a_adjust_add_by_sex(
             add_time,
             12,
             50,
-            ability_level=target_data.ability[5],
+            ability_level=abilities.ability(target_data.cid)[5],
             extra_adjust=size_adjust,
             change_data_to_target_change=change_data,
         )
@@ -11289,7 +11278,7 @@ def handle_target_u_adjust_add_by_sex(
         jj_size = character_data.pl_ability.jj_size
         size_adjust = handle_ability.get_ability_adjust(jj_size) / 2
         # 腰技的调整
-        waist_tech = character_data.ability[76]
+        waist_tech = abilities.ability(character_id)[76]
         waist_adjust = handle_ability.get_ability_adjust(waist_tech) / 2
         # 最终调整值
         extra_adjust = size_adjust + waist_adjust
@@ -11300,7 +11289,7 @@ def handle_target_u_adjust_add_by_sex(
             add_time,
             6,
             50,
-            ability_level=character_data.ability[30],
+            ability_level=abilities.ability(character_id)[30],
             extra_adjust=extra_adjust,
             change_data_to_target_change=change_data,
         )
@@ -11310,7 +11299,7 @@ def handle_target_u_adjust_add_by_sex(
             add_time,
             12,
             50,
-            ability_level=target_data.ability[6],
+            ability_level=abilities.ability(target_data.cid)[6],
             extra_adjust=extra_adjust,
             change_data_to_target_change=change_data,
         )
@@ -11352,7 +11341,7 @@ def handle_target_w_adjust_add_by_sex(
         jj_size = character_data.pl_ability.jj_size
         size_adjust = handle_ability.get_ability_adjust(jj_size) / 2
         # 腰技的调整
-        waist_tech = character_data.ability[76]
+        waist_tech = abilities.ability(character_id)[76]
         waist_adjust = handle_ability.get_ability_adjust(waist_tech) / 2
         # 最终调整值
         extra_adjust = size_adjust + waist_adjust
@@ -11363,7 +11352,7 @@ def handle_target_w_adjust_add_by_sex(
             add_time,
             7,
             50,
-            ability_level=character_data.ability[30],
+            ability_level=abilities.ability(character_id)[30],
             extra_adjust=extra_adjust,
             change_data_to_target_change=change_data,
         )
@@ -11373,7 +11362,7 @@ def handle_target_w_adjust_add_by_sex(
             add_time,
             12,
             50,
-            ability_level=target_data.ability[7],
+            ability_level=abilities.ability(target_data.cid)[7],
             extra_adjust=extra_adjust,
             change_data_to_target_change=change_data,
         )
@@ -11412,10 +11401,10 @@ def handle_target_pain_to_h_adjust(
             return
 
         # 技巧大小的调整
-        tech_lv = character_data.ability[30]
+        tech_lv = abilities.ability(character_id)[30]
         tech_adjust = handle_ability.get_ability_adjust(tech_lv)
         # 受虐的调整
-        masochism_lv = target_data.ability[36]
+        masochism_lv = abilities.ability(target_data.cid)[36]
         masochism_adjust = handle_ability.get_ability_adjust(masochism_lv)
         # 最终调整值
         extra_adjust = tech_adjust + masochism_adjust
@@ -11426,7 +11415,7 @@ def handle_target_pain_to_h_adjust(
             add_time,
             23,
             50,
-            ability_level=character_data.ability[30],
+            ability_level=abilities.ability(character_id)[30],
             extra_adjust=masochism_adjust,
             change_data_to_target_change=change_data,
         )
@@ -11436,7 +11425,7 @@ def handle_target_pain_to_h_adjust(
             add_time,
             12,
             50,
-            ability_level=target_data.ability[33],
+            ability_level=abilities.ability(target_data.cid)[33],
             extra_adjust=extra_adjust,
             change_data_to_target_change=change_data,
         )
@@ -11446,7 +11435,7 @@ def handle_target_pain_to_h_adjust(
             add_time,
             17,
             50,
-            ability_level=target_data.ability[15],
+            ability_level=abilities.ability(target_data.cid)[15],
             extra_adjust=extra_adjust,
             change_data_to_target_change=change_data,
         )
@@ -11475,6 +11464,7 @@ def handle_finger_tech_add_pl_p_adjust(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
+    ability = abilities.ability(target_data.cid)
     if character_data.target_character_id != character_id and (
         not character_id or not character_data.target_character_id
     ):
@@ -11484,9 +11474,9 @@ def handle_finger_tech_add_pl_p_adjust(
         if target_data.dead:
             return
         # 获取调整值#
-        target_data.ability.setdefault(19, 0)
-        adjust_1 = handle_ability.get_ability_adjust(target_data.ability[30])
-        adjust_2 = handle_ability.get_ability_adjust(target_data.ability[70])
+        ability.setdefault(19, 0)
+        adjust_1 = handle_ability.get_ability_adjust(ability[30])
+        adjust_2 = handle_ability.get_ability_adjust(ability[70])
         adjust = adjust_1 / 2 + adjust_2
         # P快变化#
         character_data.status_data.setdefault(3, 0)
@@ -11524,6 +11514,7 @@ def handle_tongue_tech_add_pl_p_adjust(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
+    ability = abilities.ability(target_data.cid)
     if character_data.target_character_id != character_id and (
         not character_id or not character_data.target_character_id
     ):
@@ -11533,9 +11524,9 @@ def handle_tongue_tech_add_pl_p_adjust(
         if target_data.dead:
             return
         # 获取调整值#
-        target_data.ability.setdefault(19, 0)
-        adjust_1 = handle_ability.get_ability_adjust(target_data.ability[30])
-        adjust_2 = handle_ability.get_ability_adjust(target_data.ability[71])
+        ability.setdefault(19, 0)
+        adjust_1 = handle_ability.get_ability_adjust(ability[30])
+        adjust_2 = handle_ability.get_ability_adjust(ability[71])
         adjust = adjust_1 / 2 + adjust_2
         # P快变化#
         character_data.status_data.setdefault(3, 0)
@@ -11573,6 +11564,7 @@ def handle_feet_tech_add_pl_p_adjust(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
+    ability = abilities.ability(target_data.cid)
     if character_data.target_character_id != character_id and (
         not character_id or not character_data.target_character_id
     ):
@@ -11582,9 +11574,9 @@ def handle_feet_tech_add_pl_p_adjust(
         if target_data.dead:
             return
         # 获取调整值#
-        target_data.ability.setdefault(19, 0)
-        adjust_1 = handle_ability.get_ability_adjust(target_data.ability[30])
-        adjust_2 = handle_ability.get_ability_adjust(target_data.ability[72])
+        ability.setdefault(19, 0)
+        adjust_1 = handle_ability.get_ability_adjust(ability[30])
+        adjust_2 = handle_ability.get_ability_adjust(ability[72])
         adjust = adjust_1 / 2 + adjust_2
         # P快变化#
         character_data.status_data.setdefault(3, 0)
@@ -11622,6 +11614,7 @@ def handle_breast_tech_add_pl_p_adjust(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
+    ability = abilities.ability(target_data.cid)
     if character_data.target_character_id != character_id and (
         not character_id or not character_data.target_character_id
     ):
@@ -11631,9 +11624,9 @@ def handle_breast_tech_add_pl_p_adjust(
         if target_data.dead:
             return
         # 获取调整值#
-        target_data.ability.setdefault(19, 0)
-        adjust_1 = handle_ability.get_ability_adjust(target_data.ability[30])
-        adjust_2 = handle_ability.get_ability_adjust(target_data.ability[73])
+        ability.setdefault(19, 0)
+        adjust_1 = handle_ability.get_ability_adjust(ability[30])
+        adjust_2 = handle_ability.get_ability_adjust(ability[73])
         adjust = adjust_1 / 2 + adjust_2
         # P快变化#
         character_data.status_data.setdefault(3, 0)
@@ -11671,6 +11664,7 @@ def handle_vagina_tech_add_pl_p_adjust(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
+    ability = abilities.ability(target_data.cid)
     if character_data.target_character_id != character_id and (
         not character_id or not character_data.target_character_id
     ):
@@ -11680,9 +11674,9 @@ def handle_vagina_tech_add_pl_p_adjust(
         if target_data.dead:
             return
         # 获取调整值#
-        target_data.ability.setdefault(19, 0)
-        adjust_1 = handle_ability.get_ability_adjust(target_data.ability[30])
-        adjust_2 = handle_ability.get_ability_adjust(target_data.ability[74])
+        ability.setdefault(19, 0)
+        adjust_1 = handle_ability.get_ability_adjust(ability[30])
+        adjust_2 = handle_ability.get_ability_adjust(ability[74])
         adjust = adjust_1 / 2 + adjust_2
         # P快变化#
         character_data.status_data.setdefault(3, 0)
@@ -11720,6 +11714,7 @@ def handle_anus_tech_add_pl_p_adjust(
     target_data: game_type.Character = cache.character_data[
         character_data.target_character_id
     ]
+    ability = abilities.ability(target_data.cid)
     if character_data.target_character_id != character_id and (
         not character_id or not character_data.target_character_id
     ):
@@ -11729,9 +11724,9 @@ def handle_anus_tech_add_pl_p_adjust(
         if target_data.dead:
             return
         # 获取调整值#
-        target_data.ability.setdefault(19, 0)
-        adjust_1 = handle_ability.get_ability_adjust(target_data.ability[30])
-        adjust_2 = handle_ability.get_ability_adjust(target_data.ability[75])
+        ability.setdefault(19, 0)
+        adjust_1 = handle_ability.get_ability_adjust(ability[30])
+        adjust_2 = handle_ability.get_ability_adjust(ability[75])
         adjust = adjust_1 / 2 + adjust_2
         # P快变化#
         character_data.status_data.setdefault(3, 0)
@@ -11783,7 +11778,7 @@ def handle_low_obscenity_failed_adjust(
             add_time,
             20,
             200,
-            ability_level=target_data.ability[18],
+            ability_level=abilities.ability(target_data.cid)[18],
             change_data_to_target_change=change_data,
         )
         # 加愤怒
@@ -11832,7 +11827,9 @@ def handle_high_obscenity_failed_adjust(
         now_lust = target_data.status_data[20]
         now_lust_multiple: float = 10000
         now_add_lust: float = add_time + now_lust_multiple
-        adjust = handle_ability.get_ability_adjust(target_data.ability[18])
+        adjust = handle_ability.get_ability_adjust(
+            abilities.ability(target_data.cid)[18]
+        )
         now_add_lust *= adjust
         now_add_lust += now_lust / 2
         now_add_lust = int(now_add_lust)
@@ -11903,7 +11900,9 @@ def handle_do_h_failed_adjust(
         now_lust = target_data.status_data[20]
         now_lust_multiple: float = 20000
         now_add_lust: float = add_time + now_lust_multiple
-        adjust = handle_ability.get_ability_adjust(target_data.ability[18])
+        adjust = handle_ability.get_ability_adjust(
+            abilities.ability(target_data.cid)[18]
+        )
         now_add_lust *= adjust
         now_add_lust += now_lust / 2
         now_add_lust = int(now_add_lust)
@@ -13954,9 +13953,8 @@ def handle_nuirse_child_add_adjust(
     target_id = character_data.target_character_id
     if target_id == character_id or target_id not in cache.character_data:
         return
-    target_data: game_type.Character = cache.character_data[target_id]
     # 只对婴儿生效
-    if not target_data.talent.get(101, 0):
+    if not abilities.talent(target_id).get(101, 0):
         return
     needs.add(target_id, "hit_max", education_constant.NUIRSE_CHILD_HP_MAX_ADD)
     needs.add(target_id, "mana_max", education_constant.NUIRSE_CHILD_MP_MAX_ADD)
@@ -13974,6 +13972,6 @@ def handle_nuirse_child_add_adjust(
         add_time,
         11,
         base_value=education_constant.NUIRSE_CHILD_FRIENDLY_BASE,
-        ability_level=target_data.ability.get(32, 0),
+        ability_level=abilities.ability(target_id).get(32, 0),
         change_data_to_target_change=change_data,
     )

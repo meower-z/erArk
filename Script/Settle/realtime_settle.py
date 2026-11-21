@@ -25,7 +25,7 @@ from Script.UI.Moudle import draw
 from Script.UI.Panel import ejaculation_panel
 from Script.Config import game_config, normal_config
 from Script.Modules.domains import entertainment, facility, modes, needs
-from Script.Modules.domains import playthrough, pregnancy, prison
+from Script.Modules.domains import abilities, playthrough, pregnancy, prison
 
 if TYPE_CHECKING:
     from Script.Kernel import core
@@ -220,7 +220,7 @@ def character_aotu_change_value(
             semen_absorb(character_id, true_add_time, 15)
 
         # 结算乳汁量，仅结算有泌乳素质的
-        if now_character_data.talent[27]:
+        if abilities.talent(character_id)[27]:
             add_milk = num.jitter(true_add_time * MILK_PER_MINUTE, 80, 120)
             milk_max = pregnancy.milk_max(character_id)
             needs.add(character_id, "milk", add_milk, max=milk_max)
@@ -487,8 +487,8 @@ def settle_rest(character_id: int, true_add_time: int) -> None:
     返回:
         None
     """
-    now_char = cache.character_data[character_id]
     # 休息室对回复效果的影响
+    talent = abilities.talent(character_id)
     final_adjust: num.Num
     if handle_premise.handle_in_rest_room_or_dormitory(character_id):
         now_level = facility.level(31)
@@ -502,9 +502,9 @@ def settle_rest(character_id: int, true_add_time: int) -> None:
     else:
         final_adjust = Fraction(3, 10)
     # 素质对回复效果的影响
-    if now_char.talent[351]:
+    if talent[351]:
         final_adjust *= Fraction(7, 10)
-    elif now_char.talent[352]:
+    elif talent[352]:
         final_adjust *= Fraction(3, 2)
     # 监禁条件判定
     if handle_premise.handle_imprisonment_1(character_id):
@@ -534,6 +534,7 @@ def settle_sleep(character_id: int, true_add_time: int) -> None:
     """
     from Script.System.Dormitory_System import dormitory_manager_system
 
+    talent = abilities.talent(character_id)
     now_char = cache.character_data[character_id]
     # 疲劳值越高，熟睡值增加越快，最高为疲劳值满时的2倍；读疲劳的整数部分，免得熟睡值的分母逐段变大
     tired_adjust = 1 + Fraction(num.whole(needs.of(character_id)["tired"]), 160)
@@ -588,9 +589,9 @@ def settle_sleep(character_id: int, true_add_time: int) -> None:
         needs.set(character_id, sleep=min(max(raised, 0), 100))
     # 回复体力和气力
     final_adjust: num.Num = 1
-    if now_char.talent[351]:
+    if talent[351]:
         final_adjust *= Fraction(7, 10)
-    elif now_char.talent[352]:
+    elif talent[352]:
         final_adjust *= Fraction(3, 2)
     # 监禁条件判定
     if handle_premise.handle_imprisonment_1(character_id):
@@ -626,14 +627,11 @@ def settle_player_ability(character_id: int, true_add_time: int) -> None:
     返回:
         None
     """
+    talent = abilities.talent(character_id)
     character_data = cache.character_data[character_id]
     # 视觉系技艺消耗
     if character_data.pl_ability.visual:
-        multiple = (
-            character_data.talent[307]
-            + character_data.talent[308]
-            + character_data.talent[309]
-        )
+        multiple = talent[307] + talent[308] + talent[309]
         down_sp = min(
             Fraction(true_add_time, 12) * max(multiple, 1),
             needs.of(character_id)["sanity"],
@@ -853,7 +851,7 @@ def settle_conscious_continuous(character_id: int, true_add_time: int) -> None:
     )
     map_handle = _map_handle
     now_char = cache.character_data[character_id]
-    now_char_ability = now_char.ability
+    now_char_ability = abilities.ability(character_id)
     # 场景内的角色总数（只计算一次，后续判定复用）
     scene_chara_count = len(
         map_handle.get_chara_now_scene_all_chara_id_list(character_id)

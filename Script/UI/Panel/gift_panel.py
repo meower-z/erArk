@@ -12,6 +12,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.Design import game_time, handle_premise
 from Script.System.Pregnancy_System import pregnancy_constant
+from Script.Modules.domains import abilities
 
 panel_info_data: dict[str, object] = {}
 
@@ -21,11 +22,9 @@ _: FunctionType = get_text._
 """ 翻译api """
 
 line_feed = draw.NormalDraw()
-""" 换行绘制对象 """
 line_feed.text = "\n"
 line_feed.width = 1
 window_width = normal_config.config_normal.text_width
-""" 屏幕宽度 """
 
 
 def handle_drug_use_effect(character_id: int, drug_id: int) -> None:
@@ -74,10 +73,10 @@ def handle_drug_use_effect(character_id: int, drug_id: int) -> None:
             character_id, [131, 132], False, _("足部")
         )
     elif drug_id == 33:  # 泌乳药
-        character_data.talent[27] = 1
+        abilities.talent(character_id)[27] = 1
         now_draw.text += _("{0}获得了【泌乳】\n").format(character_data.name)
     elif drug_id == 34:  # 停乳药
-        character_data.talent[27] = 0
+        abilities.talent(character_id)[27] = 0
         now_draw.text += _("{0}失去了【泌乳】\n").format(character_data.name)
     elif drug_id == 35:  # 妊娠加速药
         from Script.System.Pregnancy_System import (
@@ -142,12 +141,12 @@ def handle_drug_use_effect(character_id: int, drug_id: int) -> None:
             else:
                 now_draw.text += _("这枚卵已经加速到极限，药物没有产生效果\n")
     elif drug_id == 37:  # 假孕药
-        character_data.talent[25] = 1
+        abilities.talent(character_id)[25] = 1
         now_draw.text += _(
             "{0}获得了【假孕孕肚】，肚子像真正的孕妇一样隆起来了\n"
         ).format(character_data.name)
     elif drug_id == 38:  # 假孕终止药
-        character_data.talent[25] = 0
+        abilities.talent(character_id)[25] = 0
         now_draw.text += _(
             "{0}失去了【假孕孕肚】，隆起的肚子恢复了原状\n"
         ).format(character_data.name)
@@ -214,12 +213,12 @@ def handle_drug_use_effect(character_id: int, drug_id: int) -> None:
                     "{0}已经快要成长为{1}了，药物没有产生效果\n"
                 ).format(child_character_data.name, next_stage_name)
     elif drug_id == 40:  # 成长停滞药
-        character_data.talent[28] = 1
+        abilities.talent(character_id)[28] = 1
         now_draw.text += _(
             "{0}获得了【成长停滞】，在使用成长继续药之前她会一直保持在当前的阶段\n"
         ).format(character_data.name)
     elif drug_id == 41:  # 成长继续药
-        character_data.talent[28] = 0
+        abilities.talent(character_id)[28] = 0
         now_draw.text += _("{0}失去了【成长停滞】，她会继续正常成长\n").format(
             character_data.name
         )
@@ -555,7 +554,7 @@ class Gift_Panel:
                     51, character_data.target_character_id
                 )
             )
-            if target_character_data.ability[18] >= 2:
+            if abilities.ability(target_character_data.cid)[18] >= 2:
                 now_draw = draw.WaitDraw()
                 draw_text = _(
                     "\n  {0}的反发刻印大于等于2级，道歉礼物无效，需要先降低到1级\n"
@@ -564,7 +563,7 @@ class Gift_Panel:
                 now_draw.draw()
                 return False
             elif (
-                target_character_data.ability[18] == 0
+                abilities.ability(target_character_data.cid)[18] == 0
                 and not target_character_data.sp_flag.angry_with_player
             ):
                 now_draw = draw.WaitDraw()
@@ -606,60 +605,61 @@ class Gift_Panel:
         drug_id -- 药物ID
         target_character_data -- 目标角色数据
         """
+        talent = abilities.talent(target_character_data.cid)
         effective_flag = True
         draw_text = ""
         # 丰胸药：如果目标已是爆乳则无效
         if drug_id == 21:
-            effective_flag = not target_character_data.talent[125]
+            effective_flag = not talent[125]
             if not effective_flag:
                 draw_text = _(
                     "\n  {0}已经是最大的【爆乳】了，无法使用丰胸药\n"
                 ).format(target_character_data.name)
         # 缩胸药：如果目标已是绝壁则无效
         elif drug_id == 22:
-            effective_flag = not target_character_data.talent[121]
+            effective_flag = not talent[121]
             if not effective_flag:
                 draw_text = _(
                     "\n  {0}已经是最小的【绝壁】了，无法使用缩胸药\n"
                 ).format(target_character_data.name)
         # 丰臀药：如果目标已是巨臀则无效
         elif drug_id == 23:
-            effective_flag = not target_character_data.talent[128]
+            effective_flag = not talent[128]
             if not effective_flag:
                 draw_text = _(
                     "\n  {0}已经是最大的【巨臀】了，无法使用丰臀药\n"
                 ).format(target_character_data.name)
         # 缩臀药：如果目标已是小臀则无效
         elif drug_id == 24:
-            effective_flag = not target_character_data.talent[126]
+            effective_flag = not talent[126]
             if not effective_flag:
                 draw_text = _(
                     "\n  {0}已经是最小的【小臀】了，无法使用缩臀药\n"
                 ).format(target_character_data.name)
         # 丰腿药：如果目标已是肉腿则无效
         elif drug_id == 25:
-            effective_flag = not target_character_data.talent[130]
+            effective_flag = not talent[130]
             if not effective_flag:
                 draw_text = _(
                     "\n  {0}已经是【肉腿】了，无法使用丰腿药\n"
                 ).format(target_character_data.name)
         # 瘦腿药：如果目标已是细腿则无效
         elif drug_id == 26:
-            effective_flag = not target_character_data.talent[129]
+            effective_flag = not talent[129]
             if not effective_flag:
                 draw_text = _(
                     "\n  {0}已经是【细腿】了，无法使用瘦腿药\n"
                 ).format(target_character_data.name)
         # 丰足药：如果目标已是长足则无效
         elif drug_id == 27:
-            effective_flag = not target_character_data.talent[132]
+            effective_flag = not talent[132]
             if not effective_flag:
                 draw_text = _(
                     "\n  {0}已经是【长足】了，无法使用丰足药\n"
                 ).format(target_character_data.name)
         # 瘦足药：如果目标已是小足则无效
         elif drug_id == 28:
-            effective_flag = not target_character_data.talent[131]
+            effective_flag = not talent[131]
             if not effective_flag:
                 draw_text = _(
                     "\n  {0}已经是【小足】了，无法使用瘦足药\n"

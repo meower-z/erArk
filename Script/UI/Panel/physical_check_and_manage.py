@@ -17,7 +17,7 @@ from Script.Modules.domains import physical_exam
 import random
 
 from Script.UI.Panel import achievement_panel
-from Script.Modules.domains import achievement
+from Script.Modules.domains import abilities, achievement
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -257,6 +257,7 @@ class Physical_Check_And_Manage_Panel:
 
     def check_target_physical(self, target_character_id: int) -> None:
         """查看目标角色的身体情况"""
+        talent = abilities.talent(target_character_id)
         target_character_data = cache.character_data[target_character_id]
 
         # 指令与前置指令的对应表
@@ -301,7 +302,7 @@ class Physical_Check_And_Manage_Panel:
             line.draw()
             py_cmd.clr_cmd()
             # 获取医术等级与可用次数，次数为(等级+1)*4-已使用次数
-            now_ability_lv = self.pl_character_data.ability[46]
+            now_ability_lv = abilities.ability(0)[46]
             done_times = len(self.done_check_behavior_id_set)
             total_ability_times = (now_ability_lv + 1) * 4
             now_ability_times = total_ability_times - done_times
@@ -341,26 +342,20 @@ class Physical_Check_And_Manage_Panel:
                 # 部分指令需要未破处则不可用
                 if (
                     behavior_id == "examine_sucking_and_swallowing"
-                    and target_character_data.talent[4]
+                    and talent[4]
                 ):
                     cant_flag = True
                     behavior_text += _("(未初吻)")
                 elif (
                     behavior_id == "examine_orifice"
                     or behavior_id == "examine_vagina_firmness"
-                ) and target_character_data.talent[0]:
+                ) and talent[0]:
                     cant_flag = True
                     behavior_text += _("(未破处)")
-                elif (
-                    behavior_id == "examine_intestine_firmness"
-                    and target_character_data.talent[1]
-                ):
+                elif behavior_id == "examine_intestine_firmness" and talent[1]:
                     cant_flag = True
                     behavior_text += _("(未破处)")
-                elif (
-                    behavior_id == "examine_urethra_firmness"
-                    and target_character_data.talent[2]
-                ):
+                elif behavior_id == "examine_urethra_firmness" and talent[2]:
                     cant_flag = True
                     behavior_text += _("(未破处)")
                 # 观察处女膜指令需要是处女或者今日破处才能使用
@@ -375,7 +370,7 @@ class Physical_Check_And_Manage_Panel:
                 # 部分指令需要有对应部位的器官才能使用
                 if behavior_id in body_talent_map:
                     talent_id = body_talent_map[behavior_id]
-                    if not target_character_data.talent[talent_id]:
+                    if not talent[talent_id]:
                         continue
                 # 如果使用次数已经用完，则不可用
                 if now_ability_times <= 0:
@@ -565,6 +560,9 @@ class Physical_Check_And_Manage_Panel:
         self, manage_cid: int, target_character_id: int
     ) -> tuple[bool, str]:
         """判断是否满足身体管理的要求"""
+        ability = abilities.ability(target_character_id)
+        experience = abilities.experience(target_character_id)
+        talent = abilities.talent(target_character_id)
         body_manage_data = game_config.config_body_manage_requirement[
             manage_cid
         ]
@@ -601,7 +599,7 @@ class Physical_Check_And_Manage_Panel:
                 judge_result = True
         elif body_manage_second_behavior_id == "ask_not_wear_corset":
             # 露出能力
-            now_value_1 = target_character_data.ability[34]
+            now_value_1 = ability[34]
             require_value_1 = body_manage_data.need_value_1
             require_text += _("露出能力等级{0}/{1}").format(
                 now_value_1, require_value_1
@@ -610,7 +608,7 @@ class Physical_Check_And_Manage_Panel:
                 judge_result = True
         elif body_manage_second_behavior_id == "ask_not_wear_cloth_in_sleep":
             # 被睡奸经验
-            now_value_1 = target_character_data.experience[121]
+            now_value_1 = experience[121]
             require_value_1 = body_manage_data.need_value_1
             require_text += _("被睡姦经验{0}/{1}").format(
                 now_value_1, require_value_1
@@ -639,7 +637,7 @@ class Physical_Check_And_Manage_Panel:
             == "ask_equip_nipple_clamp_in_sleep"
         ):
             # Ｂ感觉能力
-            now_value_1 = target_character_data.ability[1]
+            now_value_1 = ability[1]
             require_value_1 = body_manage_data.need_value_1
             require_text += _("Ｂ感觉等级{0}/{1}").format(
                 now_value_1, require_value_1
@@ -651,7 +649,7 @@ class Physical_Check_And_Manage_Panel:
             or body_manage_second_behavior_id == "ask_equip_clit_clamp_in_sleep"
         ):
             # Ｃ感觉能力
-            now_value_1 = target_character_data.ability[2]
+            now_value_1 = ability[2]
             require_value_1 = body_manage_data.need_value_1
             require_text += _("Ｃ感觉等级{0}/{1}").format(
                 now_value_1, require_value_1
@@ -663,7 +661,7 @@ class Physical_Check_And_Manage_Panel:
             or body_manage_second_behavior_id == "ask_equip_v_vibrator_in_sleep"
         ):
             # Ｖ感觉能力
-            now_value_1 = target_character_data.ability[4]
+            now_value_1 = ability[4]
             require_value_1 = body_manage_data.need_value_1
             require_text += _("Ｖ感觉等级{0}/{1}").format(
                 now_value_1, require_value_1
@@ -675,7 +673,7 @@ class Physical_Check_And_Manage_Panel:
             or body_manage_second_behavior_id == "ask_equip_a_vibrator_in_sleep"
         ):
             # Ａ感觉能力
-            now_value_1 = target_character_data.ability[5]
+            now_value_1 = ability[5]
             require_value_1 = body_manage_data.need_value_1
             require_text += _("Ａ感觉等级{0}/{1}").format(
                 now_value_1, require_value_1
@@ -699,7 +697,7 @@ class Physical_Check_And_Manage_Panel:
             or body_manage_second_behavior_id == "ask_not_masturbation"
         ):
             # 自慰经验
-            now_value_1 = target_character_data.experience[54]
+            now_value_1 = experience[54]
             require_value_1 = body_manage_data.need_value_1
             require_text += _("自慰经验{0}/{1}").format(
                 now_value_1, require_value_1
@@ -708,7 +706,7 @@ class Physical_Check_And_Manage_Panel:
                 judge_result = True
         elif body_manage_second_behavior_id == "ask_not_active_h_for_player":
             # 逆推经验
-            now_value_1 = target_character_data.experience[36]
+            now_value_1 = experience[36]
             require_value_1 = body_manage_data.need_value_1
             require_text += _("逆推经验{0}/{1}").format(
                 now_value_1, require_value_1
@@ -720,7 +718,7 @@ class Physical_Check_And_Manage_Panel:
             == "ask_not_lock_door_before_sleeping"
         ):
             # 被睡奸经验
-            now_value_1 = target_character_data.experience[121]
+            now_value_1 = experience[121]
             require_value_1 = body_manage_data.need_value_1
             require_text += _("被睡姦经验{0}/{1}").format(
                 now_value_1, require_value_1
@@ -732,7 +730,7 @@ class Physical_Check_And_Manage_Panel:
             "ask_not_wash_cloth",
         ):
             # 精液经验
-            now_value_1 = target_character_data.experience[24]
+            now_value_1 = experience[24]
             require_value_1 = body_manage_data.need_value_1
             require_text += _("精液经验{0}/{1}").format(
                 now_value_1, require_value_1
@@ -761,11 +759,11 @@ class Physical_Check_And_Manage_Panel:
         # 处女检查
         if manage_cid == 36:
             require_text += _(" 需要非处女")
-            if target_character_data.talent[0]:
+            if talent[0]:
                 judge_result = False
         elif manage_cid == 37:
             require_text += _(" 需要非A处女")
-            if target_character_data.talent[1]:
+            if talent[1]:
                 judge_result = False
 
         # 道具持有检查
@@ -1128,10 +1126,12 @@ class Physical_Check_And_Manage_Panel:
         # }
 
         target_character_id = self.pl_character_data.target_character_id
+        target_character_id_abi = abilities.ability(target_character_id)
+        target_character_id_exp = abilities.experience(target_character_id)
         target_character_data = cache.character_data[target_character_id]
         all_part_sex_exp = 0
         for exp_id in {61, 62, 63, 64}:
-            all_part_sex_exp += target_character_data.experience[exp_id]
+            all_part_sex_exp += target_character_id_exp[exp_id]
 
         report_text = "\n"
         report_text += _("基础档案：\n")
@@ -1144,7 +1144,7 @@ class Physical_Check_And_Manage_Panel:
         report_text += _(" 【性交经验】") + str(all_part_sex_exp) + _("次\n")
         report_text += (
             _(" 【无意识性交经验】")
-            + str(target_character_data.experience[79])
+            + str(target_character_id_exp[79])
             + _("次\n")
         )
         report_text += (
@@ -1167,18 +1167,18 @@ class Physical_Check_And_Manage_Panel:
         report_text += _("\n综合体检测试：\n")
 
         # 基础
-        N_feel = target_character_data.ability[1]
+        N_feel = target_character_id_abi[1]
         report_text += f" {base_ability_dict[0]}{level_text_dict[N_feel]}\n"
         # 扩张
         ave_resist = 0
         for ability_id in {9, 10, 11, 12}:
-            ave_resist += target_character_data.ability[ability_id]
+            ave_resist += target_character_id_abi[ability_id]
         ave_resist = int(ave_resist // 4)
         report_text += f" {base_ability_dict[1]}{level_text_dict[ave_resist]}\n"
         # SM
         max_sm = 0
         for ability_id in {35, 36}:
-            max_sm = max(max_sm, target_character_data.ability[ability_id])
+            max_sm = max(max_sm, target_character_id_abi[ability_id])
         report_text += f" {base_ability_dict[2]}{level_text_dict[max_sm]}\n"
         # 受孕
         report_text += " " + base_ability_dict[3]
@@ -1189,7 +1189,7 @@ class Physical_Check_And_Manage_Panel:
         all_pregnancy_flag, now_pregnancy_flag = False, False
         # 遍历怀孕相关的素质
         for talent_id in all_pregnancy_talent_id_list:
-            if target_character_data.talent[talent_id]:
+            if abilities.talent(target_character_id)[talent_id]:
                 all_pregnancy_flag = True
                 pregnancy_talent_text += (
                     game_config.config_talent[talent_id].name + " "
@@ -1221,7 +1221,7 @@ class Physical_Check_And_Manage_Panel:
         now_hypnosis_flag = False
         # 遍历催眠相关的素质，仅选择第一个找到的素质
         for talent_id in hypnosis_talent_id_list:
-            if target_character_data.talent[talent_id]:
+            if abilities.talent(target_character_id)[talent_id]:
                 now_hypnosis_flag = True
                 hypnosis_talent_text += (
                     game_config.config_talent[talent_id].name + " "
@@ -1244,15 +1244,15 @@ class Physical_Check_And_Manage_Panel:
                 continue
             ability_id = cmd_ablility_dict[cmd_id][0]
             now_name = cmd_ablility_dict[cmd_id][1]
-            ability_level = target_character_data.ability[ability_id]
+            ability_level = target_character_id_abi[ability_id]
             report_text += f" {now_name}{level_text_dict[ability_level]}\n"
         # 性器
         body_part_talent_id_list = list(range(111, 133))
         body_part_talent_text = " "
         for talent_id in body_part_talent_id_list:
             if (
-                talent_id in target_character_data.talent
-                and target_character_data.talent[talent_id]
+                talent_id in abilities.talent(target_character_id)
+                and abilities.talent(target_character_id)[talent_id]
             ):
                 body_part_talent_text += (
                     game_config.config_talent[talent_id].name + " "
@@ -1263,8 +1263,8 @@ class Physical_Check_And_Manage_Panel:
         special_talent_text = " "
         for talent_id in special_talent_id_list:
             if (
-                talent_id in target_character_data.talent
-                and target_character_data.talent[talent_id]
+                talent_id in abilities.talent(target_character_id)
+                and abilities.talent(target_character_id)[talent_id]
             ):
                 special_talent_text += (
                     game_config.config_talent[talent_id].name + " "
@@ -1278,7 +1278,7 @@ class Physical_Check_And_Manage_Panel:
 
         # 初吻
         now_text = ""
-        if target_character_data.talent[4]:
+        if abilities.talent(target_character_id)[4]:
             now_text += _("保有初吻")
         elif target_character_data.first_record.first_kiss_id != -1:
             kiss_id = target_character_data.first_record.first_kiss_id
@@ -1302,7 +1302,7 @@ class Physical_Check_And_Manage_Panel:
 
         # 处女（NPC的V破处记录在first_part_sex_dict[6]）
         now_text = ""
-        if target_character_data.talent[0]:
+        if abilities.talent(target_character_id)[0]:
             now_text += _("保有处女")
         else:
             record = target_character_data.first_record.first_part_sex_dict.get(
@@ -1321,7 +1321,7 @@ class Physical_Check_And_Manage_Panel:
 
         # A处女（NPC的A破处记录在first_part_sex_dict[8]）
         now_text = ""
-        if target_character_data.talent[1]:
+        if abilities.talent(target_character_id)[1]:
             now_text += _("保有后庭处女")
         else:
             record = target_character_data.first_record.first_part_sex_dict.get(

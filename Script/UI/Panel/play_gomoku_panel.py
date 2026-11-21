@@ -20,6 +20,7 @@ from Script.Config import normal_config, game_config
 from Script.Modules.tk_ui import player_pick
 
 from typing import TYPE_CHECKING, NoReturn
+from Script.Modules.domains import abilities
 
 if TYPE_CHECKING:
     from typing import Any
@@ -1602,7 +1603,9 @@ class GomokuPanel:
         line_draw = draw.LineDraw("-", self.width)
         line_draw.draw()
         line_feed.draw()
-        target_ability_lv = self.target_character_data.ability[45]
+        target_ability_lv = abilities.ability(self.target_character_data.cid)[
+            45
+        ]
 
         while 1:
             return_list = []
@@ -1974,9 +1977,6 @@ class GomokuPanel:
                 only_three or c_depth > only_three_threshold,
                 only_four,
             )
-            # if c_depth == 0:
-            #     print('points:', points)
-            # board.display(points)
             if not points:
                 # points = board.get_valid_moves(role)
                 return [board.evaluate(role), None, path[:]]

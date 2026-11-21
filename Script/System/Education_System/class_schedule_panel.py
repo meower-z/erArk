@@ -23,11 +23,11 @@ from Script.Config import game_config, normal_config
 from Script.Design import game_time, attr_calculation, basement
 from Script.System.Education_System import education_constant, schedule_handle
 from Script.UI.Moudle import draw, view
+from Script.Modules.domains import abilities
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
 _: FunctionType = get_text._
-""" 翻译api """
 line_feed = draw.NormalDraw()
 line_feed.text = "\n"
 line_feed.width = 1
@@ -1076,7 +1076,7 @@ class Class_Schedule_Panel:
             teacher_list = sorted(
                 schedule_handle.get_teacher_candidate_list(),
                 key=lambda cid: (
-                    int(cache.character_data[cid].ability.get(ability_id, 0)),
+                    int(abilities.ability(cid).get(ability_id, 0)),
                     -cid,
                 ),
                 reverse=sort_desc,
@@ -1089,7 +1089,7 @@ class Class_Schedule_Panel:
                 teacher_data: game_type.Character = cache.character_data[
                     teacher_id
                 ]
-                level = int(teacher_data.ability.get(ability_id, 0))
+                level = int(abilities.ability(teacher_id).get(ability_id, 0))
                 # 本周已排节数：反查全局课表数出来，让玩家一眼看出谁已经被排满了。
                 # 不能只看本节冲不冲——不冲突的老师里也有已经排了三十节的
                 week_load = sum(

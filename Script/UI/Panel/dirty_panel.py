@@ -6,7 +6,7 @@ from Script.Design import map_handle, clothing, attr_calculation
 from Script.Design import handle_premise, handle_talent
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import needs
+from Script.Modules.domains import abilities, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -127,10 +127,10 @@ class SeeCharacterBodyPanel:
         visual_flag = 0
         if character_data.pl_ability.visual:
             # 生理透视
-            if character_data.talent[309]:
+            if abilities.talent(0)[309]:
                 visual_flag = 3
             # 腔内透视
-            elif character_data.talent[308]:
+            elif abilities.talent(0)[308]:
                 visual_flag = 2
             # 服装透视
             else:
@@ -186,7 +186,7 @@ class SeeCharacterBodyPanel:
             # 处子血判定
             if i == 6 and visual_flag >= 2:
                 # 今日破处
-                if not target_character_data.talent[
+                if not abilities.talent(target_character_data.cid)[
                     0
                 ] and handle_premise.handle_first_sex_in_today(
                     character_data.target_character_id

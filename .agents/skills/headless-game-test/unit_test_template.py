@@ -91,6 +91,8 @@ from Script.Core import (
 from Script.UI.Moudle import draw  # noqa: E402
 
 from Script.Modules.save_load import kernel_state
+from Script.Modules.domains import abilities
+from tests import kernel_data
 
 character_handle.init_character_tem()
 kernel_state.reset_clock(kernel_state.first_clock())
@@ -157,6 +159,7 @@ def new_chara(
         不预填就会 KeyError。下面这份是实测跑通「结算器 + 前提 + talk.handle_talk」全链路的最小集合。
         置零函数的命名不规律，容易记错（见 SKILL.md「fixture 字段与置零函数对照表」）。
     """
+    talent = abilities.talent(cid)
     cd = game_type.Character()
     cd.cid = cid
     cd.name = name
@@ -173,15 +176,9 @@ def new_chara(
     cd.dirty = (
         attr_calculation.get_zero_dirty()
     )  # 注意是 get_zero_dirty，不是 get_dirty_zero
-    cd.talent = attr_calculation.get_talent_zero(
-        {}
-    )  # 这一组都要传一个 dict 进去
-    cd.ability = attr_calculation.get_ability_zero({})
     cd.status_data = attr_calculation.get_status_zero(
         {}
     )  # 字段叫 status_data，函数叫 get_status_zero
-    cd.juel = attr_calculation.get_juel_zero({})
-    cd.experience = attr_calculation.get_experience_zero({})
     cd.second_behavior = attr_calculation.get_second_behavior_zero({})
     cd.h_state = attr_calculation.get_h_state_reset(
         cd.h_state
@@ -190,10 +187,16 @@ def new_chara(
     cd.favorability = {0: 0}  # 好感/信赖类前提会直接取 [0]
     cd.position = list(SCENE)
     cd.race = race
-    cd.talent[121] = (
-        1  # 罩杯素质 121~125 至少一个为 1，否则胸部成长/乳汁上限处 UnboundLocalError
-    )
     cache.character_data[cid] = cd
+    # 能力、经验、宝珠与素质表在 GameState 里，一步之外的写入要放在 kernel_data.writing 里
+    with kernel_data.writing():
+        talent.replace(attr_calculation.get_talent_zero({}))
+        abilities.ability(cid).replace(attr_calculation.get_ability_zero({}))
+        abilities.juel(cid).replace(attr_calculation.get_juel_zero({}))
+        experience = attr_calculation.get_experience_zero({})
+        abilities.experience(cid).replace(experience)
+        # 罩杯素质 121~125 至少一个为 1，否则胸部成长/乳汁上限处 UnboundLocalError
+        talent[121] = 1
     return cd
 
 

@@ -416,7 +416,7 @@ Script/
 
 - 基本：`cid`, `name`, `nick_name*`, `sex`, `adv`, `dead`
 - 数值：`eja_point*`, `semen_point*`（体力、气力、理智与它们的上限，愤怒、熟睡、欲望、醉酒，以及疲劳、饥饿、尿意、乳汁都不在 Character 上，在 GameState 的角色键 `body.needs` 里，用 `needs.of(cid)` 读。乳汁上限在角色键 `body.pregnancy` 里，用 `pregnancy.milk_max(cid)` 读）
-- 成长/社交：`ability`, `experience`, `juel`, `talent`, `favorability`, `trust`, `status_data`
+- 成长/社交：`favorability`, `trust`, `status_data`（能力、经验、宝珠与素质表都不在 Character 上，在 GameState 的角色键 `abilities.ability`、`abilities.experience`、`abilities.juel`、`abilities.talent` 里，用 `abilities.ability(cid)` 等读写）
 - 行为：`behavior`（Behavior 对象）, `second_behavior`, `must_settle/must_show_second_behavior_id_list`, `last_behavior_id_list`
 - 位置/住宿：`position`, `officeroom`, `dormitory`, `pre_dormitory`
 - 子对象：`event`, `cloth`, `item`, `food_bag`, `target_character_id`, `body_manage`, `first_record`, `dirty`, `h_state`, `sp_flag`, `action_info`, `work`, `entertainment`, `pregnancy`, `relationship`, `hypnosis`, `author_flag`
@@ -667,8 +667,8 @@ init_character_behavior()
 
 | 系统 | 核心文件 | 说明 |
 | --- | --- | --- |
-| 能力升级 | `UI/Panel/ability_up_panel.py` | `AbilityUp.csv` |
-| 素质/天赋 | `Design/handle_talent.py`, `UI/Panel/talent_up_panel.py` | `Talent*.csv` |
+| 能力升级 | `UI/Panel/ability_up_panel.py`, `Modules/domains/abilities.py` | `AbilityUp.csv` |
+| 素质/天赋 | `Design/handle_talent.py`, `UI/Panel/talent_up_panel.py`, `Modules/domains/abilities.py` | `Talent*.csv` |
 | 属性查看 | `UI/Panel/see_character_info_panel.py` | 多页角色面板 |
 | 服装/脱衣/换装 | `Design/clothing.py`, `UI/Panel/cloth_panel.py` | `Clothing*.csv` |
 | 衣柜检查 | `UI/Panel/check_locker_panel.py` | 衣柜偷取等 |

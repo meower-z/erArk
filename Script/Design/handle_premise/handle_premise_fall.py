@@ -3,6 +3,7 @@
 from types import FunctionType
 from Script.Core import cache_control, constant_promise, game_type, get_text
 from Script.Design.handle_premise.premise_registry import add_premise
+from Script.Modules.domains import abilities
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -19,9 +20,8 @@ def handle_self_fall(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     for i in {201, 202, 203, 204, 211, 212, 213, 214}:
-        if character_data.talent[i]:
+        if abilities.talent(character_id)[i]:
             return 1
     return 0
 
@@ -49,9 +49,8 @@ def handle_self_fall_1(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     for i in {201, 211}:
-        if character_data.talent[i]:
+        if abilities.talent(character_id)[i]:
             return 1
     return 0
 
@@ -65,9 +64,8 @@ def handle_self_fall_2(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     for i in {202, 212}:
-        if character_data.talent[i]:
+        if abilities.talent(character_id)[i]:
             return 1
     return 0
 
@@ -81,9 +79,8 @@ def handle_self_fall_3(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     for i in {203, 213}:
-        if character_data.talent[i]:
+        if abilities.talent(character_id)[i]:
             return 1
     return 0
 
@@ -97,9 +94,8 @@ def handle_self_fall_4(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     for i in {204, 214}:
-        if character_data.talent[i]:
+        if abilities.talent(character_id)[i]:
             return 1
     return 0
 
@@ -140,9 +136,8 @@ def handle_self_fall_love(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     for i in {201, 202, 203, 204}:
-        if character_data.talent[i]:
+        if abilities.talent(character_id)[i]:
             return 1
     return 0
 
@@ -168,9 +163,8 @@ def handle_self_fall_obey(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
     for i in {211, 212, 213, 214}:
-        if character_data.talent[i]:
+        if abilities.talent(character_id)[i]:
             return 1
     return 0
 
@@ -254,7 +248,7 @@ def handle_target_love_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.talent[201]:
+    if abilities.talent(target_data.cid)[201]:
         return 1
     return 0
 
@@ -270,7 +264,7 @@ def handle_target_love_2(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.talent[202]:
+    if abilities.talent(target_data.cid)[202]:
         return 1
     return 0
 
@@ -286,7 +280,7 @@ def handle_target_love_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.talent[203]:
+    if abilities.talent(target_data.cid)[203]:
         return 1
     return 0
 
@@ -300,8 +294,7 @@ def handle_self_love_4(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return character_data.talent[204]
+    return abilities.talent(character_id)[204]
 
 
 @add_premise(constant_promise.Premise.TARGET_LOVE_4)
@@ -329,7 +322,7 @@ def handle_target_love_ge_1(character_id: int) -> int:
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
     for i in {201, 202, 203, 204}:
-        if target_data.talent[i]:
+        if abilities.talent(target_data.cid)[i]:
             return 1
     return 0
 
@@ -346,7 +339,7 @@ def handle_target_love_ge_2(character_id: int) -> int:
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
     for i in {202, 203, 204}:
-        if target_data.talent[i]:
+        if abilities.talent(target_data.cid)[i]:
             return 1
     return 0
 
@@ -363,7 +356,7 @@ def handle_target_love_ge_3(character_id: int) -> int:
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
     for i in {203, 204}:
-        if target_data.talent[i]:
+        if abilities.talent(target_data.cid)[i]:
             return 1
     return 0
 
@@ -380,7 +373,7 @@ def handle_target_love_le_2(character_id: int) -> int:
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
     for i in {201, 202}:
-        if target_data.talent[i]:
+        if abilities.talent(target_data.cid)[i]:
             return 1
     return 0
 
@@ -430,7 +423,7 @@ def handle_target_obey_1(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.talent[211]:
+    if abilities.talent(target_data.cid)[211]:
         return 1
     return 0
 
@@ -446,7 +439,7 @@ def handle_target_obey_2(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.talent[212]:
+    if abilities.talent(target_data.cid)[212]:
         return 1
     return 0
 
@@ -462,7 +455,7 @@ def handle_target_obey_3(character_id: int) -> int:
     """
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
-    if target_data.talent[213]:
+    if abilities.talent(target_data.cid)[213]:
         return 1
     return 0
 
@@ -476,8 +469,7 @@ def handle_self_obey_4(character_id: int) -> int:
     Return arguments:
     int -- 权重
     """
-    character_data = cache.character_data[character_id]
-    return character_data.talent[214]
+    return abilities.talent(character_id)[214]
 
 
 @add_premise(constant_promise.Premise.TARGET_OBEY_4)
@@ -505,7 +497,7 @@ def handle_target_obey_ge_1(character_id: int) -> int:
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
     for i in {211, 212, 213, 214}:
-        if target_data.talent[i]:
+        if abilities.talent(target_data.cid)[i]:
             return 1
     return 0
 
@@ -522,7 +514,7 @@ def handle_target_obey_ge_2(character_id: int) -> int:
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
     for i in {212, 213, 214}:
-        if target_data.talent[i]:
+        if abilities.talent(target_data.cid)[i]:
             return 1
     return 0
 
@@ -539,7 +531,7 @@ def handle_target_obey_ge_3(character_id: int) -> int:
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
     for i in {213, 214}:
-        if target_data.talent[i]:
+        if abilities.talent(target_data.cid)[i]:
             return 1
     return 0
 
@@ -556,7 +548,7 @@ def handle_target_obey_le_2(character_id: int) -> int:
     character_data = cache.character_data[character_id]
     target_data = cache.character_data[character_data.target_character_id]
     for i in {211, 212}:
-        if target_data.talent[i]:
+        if abilities.talent(target_data.cid)[i]:
             return 1
     return 0
 

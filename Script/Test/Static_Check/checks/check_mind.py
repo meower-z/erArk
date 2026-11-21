@@ -22,7 +22,7 @@ from typing import TypeGuard
 
 from Script.Core import cache_control, num
 from Script.Design import map_handle
-from Script.Modules.domains import achievement, modes, needs
+from Script.Modules.domains import abilities, achievement, modes, needs
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -98,7 +98,7 @@ def _iter_pl_and_npcs() -> Iterator[tuple[int, game_type.Character]]:
     yield from _iter_npcs()
 
 
-def _talent_get(chara: object, talent_id: int) -> int:
+def _talent_get(chara: game_type.Character, talent_id: int) -> int:
     """
     参数:
         chara: 角色对象
@@ -108,10 +108,7 @@ def _talent_get(chara: object, talent_id: int) -> int:
     功能:
         防御式读取素质值，避免素质表缺键或结构异常让检查器自身抛异常
     """
-    talent = getattr(chara, "talent", None)
-    if not isinstance(talent, dict):
-        return 0
-    value = talent.get(talent_id, 0)
+    value = abilities.talent(chara.cid).get(talent_id, 0)
     return (
         value if isinstance(value, int) and not isinstance(value, bool) else 0
     )

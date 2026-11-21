@@ -48,6 +48,7 @@ SUITE_DIR = os.path.join(ROOT, "tests", "education")
 sys.path.insert(0, SUITE_DIR)
 
 from _bootstrap import *  # noqa: F401,F403,E402  初始化游戏配置与缓存，并 chdir 到仓库根目录
+from tests import chara_abilities as ca
 
 CATEGORIES = ("问题命中", "前提对照", "数据事实", "随口径")
 """ 检查项的四种类别 """
@@ -149,7 +150,7 @@ R(
     "R0",
     0,
     "夹具：学生岗、萝莉期",
-    student.work.work_type == 152 and student.talent[103] == 1,
+    student.work.work_type == 152 and ca.talent(student)[103] == 1,
     "照旧",
     "前提对照",
 )

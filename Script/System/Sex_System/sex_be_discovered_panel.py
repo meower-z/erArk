@@ -17,6 +17,7 @@ from Script.UI.Panel import achievement_panel
 from Script.Modules.gameplay_resolution import starts
 from Script.Modules.gameplay_resolution.intent import Intent
 from Script.Design import game_time
+from Script.Modules.domains import abilities
 
 panel_info_data: dict[str, object] = {}
 
@@ -240,7 +241,7 @@ class Sex_Be_Discovered_Panel:
         """选择用花言巧语支开对方"""
         pass_flag = False
         now_draw_text = ""
-        if self.find_chara_data.talent[222]:
+        if abilities.talent(self.find_chara_data.cid)[222]:
             now_draw_text = _(
                 "{0}还不懂这是什么意义，被你随口糊弄走了\n"
             ).format(self.find_chara_data.name)

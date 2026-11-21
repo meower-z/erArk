@@ -11,6 +11,7 @@ from Script.Config import game_config, normal_config
 
 from typing import TYPE_CHECKING
 from Script.Design import game_time
+from Script.Modules.domains import abilities
 
 if TYPE_CHECKING:
     from types import ModuleType
@@ -607,7 +608,7 @@ def get_now_juel_all_value_and_text_from_mark_down_data(
     Return arguments:
     tuple -- 总值,提示文本
     """
-    character_data: game_type.Character = cache.character_data[character_id]
+    juel = abilities.juel(character_id)
     mark_down_data = game_config.config_mark_down_data[mark_down_id]
     mark_down_data_need_juel_list = []
     mark_down_data_need_juel_list.append(mark_down_data.need_juel_1)
@@ -630,12 +631,12 @@ def get_now_juel_all_value_and_text_from_mark_down_data(
             juel_id = int(need_juel.split("|")[0])
             adjust = float(need_juel.split("|")[1])
             # 计算当前宝珠值
-            now_juel_value = int(character_data.juel[juel_id] * adjust)
+            now_juel_value = int(juel[juel_id] * adjust)
             mark_down_data_all_value += now_juel_value
             mark_down_data_text += f" {game_config.config_juel[juel_id].name}*{adjust} = {now_juel_value} "
         else:
             juel_id = int(need_juel)
-            now_juel_value = int(character_data.juel[juel_id])
+            now_juel_value = int(juel[juel_id])
             mark_down_data_all_value += now_juel_value
             mark_down_data_text += (
                 f" {game_config.config_juel[juel_id].name} = {now_juel_value} "
@@ -656,6 +657,7 @@ def mark_effect(
 
     # print()
     # print("进入刻印结算")
+    ability = abilities.ability(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
     # print(f"name = {character_data.name},change_data.status_data = {change_data.status_data}")
     now_draw = draw.WaitDraw()
@@ -675,36 +677,30 @@ def mark_effect(
             ]
             all_happy_count += character_data.h_state.orgasm_count[state_id][1]
     # print(f"debug happy_count = {happy_count}")
-    if character_data.ability[13] <= 0 and (
-        single_happy_count >= 2 or all_happy_count >= 5
-    ):
-        character_data.ability[13] = 1
+    if ability[13] <= 0 and (single_happy_count >= 2 or all_happy_count >= 5):
+        ability[13] = 1
         character_get_second_behavior(character_id, "happy_mark_1")
         # 至少提升为欲望1
-        if character_data.ability[33] < 0:
-            character_data.ability[33] = 1
+        if ability[33] < 0:
+            ability[33] = 1
             now_draw_text += _(
                 "在快乐刻印的影响下，{0}的欲望提升至1级\n"
             ).format(character_data.name)
-    if character_data.ability[13] <= 1 and (
-        single_happy_count >= 8 or all_happy_count >= 20
-    ):
-        character_data.ability[13] = 2
+    if ability[13] <= 1 and (single_happy_count >= 8 or all_happy_count >= 20):
+        ability[13] = 2
         character_get_second_behavior(character_id, "happy_mark_2")
         # 至少提升为欲望3
-        if character_data.ability[33] < 3:
-            character_data.ability[33] = 3
+        if ability[33] < 3:
+            ability[33] = 3
             now_draw_text += _(
                 "在快乐刻印的影响下，{0}的欲望提升至3级\n"
             ).format(character_data.name)
-    if character_data.ability[13] <= 2 and (
-        single_happy_count >= 16 or all_happy_count >= 50
-    ):
-        character_data.ability[13] = 3
+    if ability[13] <= 2 and (single_happy_count >= 16 or all_happy_count >= 50):
+        ability[13] = 3
         character_get_second_behavior(character_id, "happy_mark_3")
         # 至少提升为欲望5
-        if character_data.ability[33] < 5:
-            character_data.ability[33] = 5
+        if ability[33] < 5:
+            ability[33] = 5
             now_draw_text += _(
                 "在快乐刻印的影响下，{0}的欲望提升至5级\n"
             ).format(character_data.name)
@@ -716,37 +712,37 @@ def mark_effect(
     # 进行判断
     if (
         yield_count >= game_config.config_mark_up_data[10].need_state_all_value
-        and character_data.ability[14] <= 0
+        and ability[14] <= 0
     ):
-        character_data.ability[14] = 1
+        ability[14] = 1
         character_get_second_behavior(character_id, "yield_mark_1")
         # 至少提升为顺从1
-        if character_data.ability[31] < 1:
-            character_data.ability[31] = 1
+        if ability[31] < 1:
+            ability[31] = 1
             now_draw_text += _(
                 "在屈服刻印的影响下，{0}的顺从提升至1级\n"
             ).format(character_data.name)
     if (
         yield_count >= game_config.config_mark_up_data[11].need_state_all_value
-        and character_data.ability[14] <= 1
+        and ability[14] <= 1
     ):
-        character_data.ability[14] = 2
+        ability[14] = 2
         character_get_second_behavior(character_id, "yield_mark_2")
         # 至少提升为顺从3
-        if character_data.ability[31] < 3:
-            character_data.ability[31] = 3
+        if ability[31] < 3:
+            ability[31] = 3
             now_draw_text += _(
                 "在屈服刻印的影响下，{0}的顺从提升至3级\n"
             ).format(character_data.name)
     if (
         yield_count >= game_config.config_mark_up_data[12].need_state_all_value
-        and character_data.ability[14] <= 2
+        and ability[14] <= 2
     ):
-        character_data.ability[14] = 3
+        ability[14] = 3
         character_get_second_behavior(character_id, "yield_mark_3")
         # 至少提升为顺从5
-        if character_data.ability[31] < 5:
-            character_data.ability[31] = 5
+        if ability[31] < 5:
+            ability[31] = 5
             now_draw_text += _(
                 "在屈服刻印的影响下，{0}的顺从提升至5级\n"
             ).format(character_data.name)
@@ -765,39 +761,39 @@ def mark_effect(
         if (
             pain_count
             >= game_config.config_mark_up_data[21].need_state_all_value
-            and character_data.ability[15] <= 0
+            and ability[15] <= 0
         ):
-            character_data.ability[15] = 1
+            ability[15] = 1
             character_get_second_behavior(character_id, "pain_mark_1")
             # 至少提升为受虐1
-            if character_data.ability[36] < 1:
-                character_data.ability[36] = 1
+            if ability[36] < 1:
+                ability[36] = 1
                 now_draw_text += _(
                     "在苦痛刻印的影响下，{0}的受虐提升至1级\n"
                 ).format(character_data.name)
         if (
             pain_count
             >= game_config.config_mark_up_data[22].need_state_all_value
-            and character_data.ability[15] <= 1
+            and ability[15] <= 1
         ):
-            character_data.ability[15] = 2
+            ability[15] = 2
             character_get_second_behavior(character_id, "pain_mark_2")
             # 至少提升为受虐3
-            if character_data.ability[36] < 3:
-                character_data.ability[36] = 3
+            if ability[36] < 3:
+                ability[36] = 3
                 now_draw_text += _(
                     "在苦痛刻印的影响下，{0}的受虐提升至3级\n"
                 ).format(character_data.name)
         if (
             pain_count
             >= game_config.config_mark_up_data[23].need_state_all_value
-            and character_data.ability[15] <= 2
+            and ability[15] <= 2
         ):
-            character_data.ability[15] = 3
+            ability[15] = 3
             character_get_second_behavior(character_id, "pain_mark_3")
             # 至少提升为受虐5
-            if character_data.ability[36] < 5:
-                character_data.ability[36] = 5
+            if ability[36] < 5:
+                ability[36] = 5
                 now_draw_text += _(
                     "在苦痛刻印的影响下，{0}的受虐提升至5级\n"
                 ).format(character_data.name)
@@ -810,47 +806,47 @@ def mark_effect(
                 single_happy_count += character_data.h_state.orgasm_count[
                     state_id
                 ][0]
-        all_happy_count = character_data.experience[78]
+        all_happy_count = abilities.experience(character_id)[78]
         # print(f"debug happy_count = {happy_count}")
-        if character_data.ability[19] <= 0 and (
+        if ability[19] <= 0 and (
             single_happy_count >= 2 or all_happy_count >= 5
         ):
-            character_data.ability[19] = 1
+            ability[19] = 1
             character_get_second_behavior(character_id, "unconscious_mark_1")
-        if character_data.ability[19] <= 1 and (
+        if ability[19] <= 1 and (
             single_happy_count >= 8 or all_happy_count >= 20
         ):
-            character_data.ability[19] = 2
+            ability[19] = 2
             character_get_second_behavior(character_id, "unconscious_mark_2")
-        if character_data.ability[19] <= 2 and (
+        if ability[19] <= 2 and (
             single_happy_count >= 16 or all_happy_count >= 50
         ):
-            character_data.ability[19] = 3
+            ability[19] = 3
             character_get_second_behavior(character_id, "unconscious_mark_3")
-        if character_data.ability[19] <= 3 and all_happy_count >= 100:
-            character_data.ability[19] = 4
+        if ability[19] <= 3 and all_happy_count >= 100:
+            ability[19] = 4
             character_get_second_behavior(character_id, "unconscious_mark_4")
             # 至少提升为欲望6
-            if character_data.ability[33] < 6:
-                character_data.ability[33] = 6
+            if ability[33] < 6:
+                ability[33] = 6
                 now_draw_text += _(
                     "在无觉刻印的影响下，{0}的欲望提升至6级\n"
                 ).format(character_data.name)
-        if character_data.ability[19] <= 4 and all_happy_count >= 200:
-            character_data.ability[19] = 5
+        if ability[19] <= 4 and all_happy_count >= 200:
+            ability[19] = 5
             character_get_second_behavior(character_id, "unconscious_mark_5")
             # 至少提升为欲望7
-            if character_data.ability[33] < 7:
-                character_data.ability[33] = 7
+            if ability[33] < 7:
+                ability[33] = 7
                 now_draw_text += _(
                     "在无觉刻印的影响下，{0}的欲望提升至7级\n"
                 ).format(character_data.name)
-        if character_data.ability[19] <= 5 and all_happy_count >= 500:
-            character_data.ability[19] = 6
+        if ability[19] <= 5 and all_happy_count >= 500:
+            ability[19] = 6
             character_get_second_behavior(character_id, "unconscious_mark_6")
             # 至少提升为欲望8
-            if character_data.ability[33] < 8:
-                character_data.ability[33] = 8
+            if ability[33] < 8:
+                ability[33] = 8
                 now_draw_text += _(
                     "在无觉刻印的影响下，{0}的欲望提升至8级\n"
                 ).format(character_data.name)
@@ -866,21 +862,21 @@ def mark_effect(
         terror_count += change_data.status_data[17]
     if (
         terror_count >= game_config.config_mark_up_data[41].need_state_all_value
-        and character_data.ability[17] <= 0
+        and ability[17] <= 0
     ):
-        character_data.ability[17] = 1
+        ability[17] = 1
         character_get_second_behavior(character_id, "terror_mark_1")
     if (
         terror_count >= game_config.config_mark_up_data[42].need_state_all_value
-        and character_data.ability[17] <= 1
+        and ability[17] <= 1
     ):
-        character_data.ability[17] = 2
+        ability[17] = 2
         character_get_second_behavior(character_id, "terror_mark_2")
     if (
         terror_count >= game_config.config_mark_up_data[43].need_state_all_value
-        and character_data.ability[17] <= 2
+        and ability[17] <= 2
     ):
-        character_data.ability[17] = 3
+        ability[17] = 3
         character_get_second_behavior(character_id, "terror_mark_3")
 
     # 反发刻印检测反感+抑郁+恐怖+苦痛，10000反发1，30000反发2，80000反发3
@@ -901,23 +897,23 @@ def mark_effect(
         if (
             hate_count
             >= game_config.config_mark_up_data[51].need_state_all_value
-            and character_data.ability[18] <= 0
+            and ability[18] <= 0
         ):
-            character_data.ability[18] = 1
+            ability[18] = 1
             character_get_second_behavior(character_id, "hate_mark_1")
         if (
             hate_count
             >= game_config.config_mark_up_data[52].need_state_all_value
-            and character_data.ability[18] <= 1
+            and ability[18] <= 1
         ):
-            character_data.ability[18] = 2
+            ability[18] = 2
             character_get_second_behavior(character_id, "hate_mark_2")
         if (
             hate_count
             >= game_config.config_mark_up_data[53].need_state_all_value
-            and character_data.ability[18] <= 2
+            and ability[18] <= 2
         ):
-            character_data.ability[18] = 3
+            ability[18] = 3
             character_get_second_behavior(character_id, "hate_mark_3")
 
     if len(now_draw_text) > 0:

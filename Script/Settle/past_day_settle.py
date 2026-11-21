@@ -17,7 +17,7 @@ from Script.Design import (
 )
 from Script.UI.Moudle import draw
 from Script.Config import normal_config
-from Script.Modules.domains import history, needs, tallies
+from Script.Modules.domains import abilities, history, needs, tallies
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -123,7 +123,8 @@ def update_new_day() -> None:
                 character_id,
                 "desire",
                 random.randint(
-                    character_data.ability[33], character_data.ability[33] * 2
+                    abilities.ability(character_id)[33],
+                    abilities.ability(character_id)[33] * 2,
                 ),
             )
             # 每周一次，如果已陷落则提供粉红凭证

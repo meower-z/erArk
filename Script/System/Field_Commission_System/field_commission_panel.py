@@ -16,7 +16,7 @@ from Script.System.Field_Commission_System.field_commission_function import (
     get_commission_demand_and_reward,
     process_commission_text,
 )
-from Script.Modules.domains import commission, facility, location
+from Script.Modules.domains import abilities, commission, facility, location
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -667,7 +667,7 @@ class CommissionDraw:
 
         # 辅助函数：根据开关获取最终能力值 (加入装备判定)
         def get_eff_ability(n_id: int, a_id: int) -> int:
-            val = cache.character_data[n_id].ability.get(a_id, 0)
+            val = abilities.ability(n_id).get(a_id, 0)
             if show_equip_modifier:
                 if (
                     handle_premise.handle_self_equipment_maintenance_ge_2(n_id)

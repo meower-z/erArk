@@ -21,7 +21,7 @@ from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import manage_basement_panel, recruit_panel
 import random
-from Script.Modules.domains import facility, location, visitor
+from Script.Modules.domains import abilities, facility, location, visitor
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -392,13 +392,13 @@ class Invite_Visitor_Panel:
                         character_effect = (
                             5
                             * handle_ability.get_ability_adjust(
-                                character_data.ability[40]
+                                abilities.ability(chara_id)[40]
                             )
                         )
                         now_text += f" {character_data.name}"
                         # 邀请效率
                         now_text += _("(话术lv{0}:+{1}%)").format(
-                            character_data.ability[40],
+                            abilities.ability(chara_id)[40],
                             round(character_effect, 1),
                         )
                         all_effect += character_effect

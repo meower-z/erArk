@@ -14,7 +14,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation
 from Script.UI.Panel import hypnosis_panel
 from Script.Design import game_time
-from Script.Modules.domains import needs
+from Script.Modules.domains import abilities, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -536,7 +536,7 @@ def get_character_status_list(
     orgasm_edge_text = ""
     orgasm_edge_draw = draw.LeftDraw()
     if handle_premise.handle_self_orgasm_edge(character_id):
-        skill_ability_lv = cache.character_data[0].ability[30]
+        skill_ability_lv = abilities.ability(0)[30]
         orgasm_edge_margin = skill_ability_lv * 3 - sum(
             value * value
             for value in character_data.h_state.orgasm_edge_count.values()

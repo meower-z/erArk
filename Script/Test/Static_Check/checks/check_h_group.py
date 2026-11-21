@@ -31,7 +31,7 @@ from __future__ import annotations
 
 from Script.Core import cache_control, num
 from Script.Design import game_time
-from Script.Modules.domains import history, modes, needs
+from Script.Modules.domains import abilities, history, modes, needs
 from ..check_registry import CheckFailure, register_check, make_failure
 
 from typing import TYPE_CHECKING
@@ -1217,8 +1217,7 @@ def check_hgroup_18() -> list[CheckFailure]:
             continue
         v = getattr(c.h_state, "hidden_sex_discovery_dregree", 0)
         if v != 0:
-            ability = getattr(c, "ability", None)
-            ability_90 = ability.get(90) if isinstance(ability, dict) else None
+            ability_90 = abilities.ability(cid).get(90)
             behavior = getattr(c, "behavior", None)
             failures.append(
                 make_failure(

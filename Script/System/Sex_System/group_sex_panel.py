@@ -12,7 +12,7 @@ from Script.Core import (
 )
 from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle, virgin_break_gate
-from Script.Modules.domains import modes
+from Script.Modules.domains import abilities, modes
 
 panel_info_data: dict[str, object] = {}
 
@@ -250,12 +250,10 @@ def get_status_id_list_from_group_sex_body_part(body_part: str) -> list[str]:
                 status_tag_list = status_data.tag.split("|")
                 pl_character_data = cache.character_data[0]
                 if pl_character_data.target_character_id != 0:
-                    target_character_data = cache.character_data[
-                        pl_character_data.target_character_id
-                    ]
+                    target_id = pl_character_data.target_character_id
                     # 如果NPC为处，则跳过破处类
                     if virgin_break_gate.takes_kept_virginity(
-                        status_tag_list, target_character_data.talent
+                        status_tag_list, abilities.talent(target_id)
                     ):
                         continue
 

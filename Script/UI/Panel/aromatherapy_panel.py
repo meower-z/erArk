@@ -11,7 +11,7 @@ from Script.Core import (
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import facility, tallies, warehouse
+from Script.Modules.domains import abilities, facility, tallies, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -202,7 +202,7 @@ class Aromatherapy_Panel:
                 flag_open = True
                 # 农业等级判定
                 need_lv = recipes_data.difficulty * 2
-                if pl_character_data.ability[47] < need_lv:
+                if abilities.ability(0)[47] < need_lv:
                     recipes_text += _("(需要[农业技能]等级>={0})").format(
                         need_lv
                     )

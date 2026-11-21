@@ -8,6 +8,7 @@ from Script.Core import (
 )
 from Script.Design import map_handle
 from Script.Config import game_config
+from Script.Modules.domains import abilities
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -90,8 +91,7 @@ def get_age_talent_text(character_id: int) -> str:
     Return arguments:
     str -- 年龄素质文本
     """
-    charactert_data = cache.character_data[character_id]
     for talent_id in range(101, 109):
-        if charactert_data.talent[talent_id]:
+        if abilities.talent(character_id)[talent_id]:
             return game_config.config_talent[talent_id].name
     return ""

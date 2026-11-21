@@ -16,7 +16,7 @@ from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
 from typing import TYPE_CHECKING
 from Script.Modules.domains import facility, medical, production, warehouse
-from Script.Modules.domains import achievement, maintenance
+from Script.Modules.domains import abilities, achievement, maintenance
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -51,6 +51,7 @@ def calculate_assembly_line_efficiency(line_id: int) -> tuple[str, float]:
     )
     base = facility_effect_ratio * 100
     line_main_id = lines[line_id]["main"]
+    ability = abilities.ability(line_main_id)
     # 收集全部主生产工人，防止副工人重复计入
     main_ids = {line["main"] for line in lines.values()}
     total = base
@@ -59,12 +60,10 @@ def calculate_assembly_line_efficiency(line_id: int) -> tuple[str, float]:
     worker_str = "["
     if line_main_id in cache.character_data and line_main_id != 0:
         char_data: game_type.Character = cache.character_data[line_main_id]
-        main_bonus = 10 * handle_ability.get_ability_adjust(
-            char_data.ability[48]
-        )
+        main_bonus = 10 * handle_ability.get_ability_adjust(ability[48])
         total += main_bonus
         worker_str = _("主:{0}(制造lv{1}:{2}%)").format(
-            char_data.name, char_data.ability[48], round(main_bonus, 1)
+            char_data.name, ability[48], round(main_bonus, 1)
         )
     else:
         worker_str += _("主:空缺")
@@ -74,9 +73,8 @@ def calculate_assembly_line_efficiency(line_id: int) -> tuple[str, float]:
             continue
         if cid in main_ids:
             continue
-        char_data = cache.character_data[cid]
         base_effect = 2 * handle_ability.get_ability_adjust(
-            char_data.ability.get(48, 0)
+            abilities.ability(cid).get(48, 0)
         )
         sub_bonus += base_effect
     total += sub_bonus
@@ -424,7 +422,7 @@ class Manage_Assembly_Line_Panel:
                 main_id = line["main"]
                 main_chara_data = cache.character_data[main_id]
                 name = main_chara_data.name if main_id != 0 else _("(空缺)")
-                abi_lv = main_chara_data.ability.get(48, 0)
+                abi_lv = abilities.ability(main_id).get(48, 0)
                 abi_lv_text = (
                     _("(制造lv{0})").format(abi_lv) if main_id != 0 else ""
                 )
@@ -463,7 +461,7 @@ class Manage_Assembly_Line_Panel:
                 other_names = []
                 for c in other_ops:
                     chara = cache.character_data[c]
-                    abi_lv = chara.ability.get(48, 0)
+                    abi_lv = abilities.ability(c).get(48, 0)
                     other_names.append(
                         _("{chara_name}(制造lv{abi_lv})").format(
                             chara_name=chara.name, abi_lv=abi_lv

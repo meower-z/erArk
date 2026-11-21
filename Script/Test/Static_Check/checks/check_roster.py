@@ -21,7 +21,7 @@ from Script.Config import game_config
 from Script.Core import cache_control
 from Script.Modules.domains import commission, diplomacy, facility, location
 from Script.Modules.domains import modes, playthrough, prison, recruit, visitor
-from Script.Modules.domains import work
+from Script.Modules.domains import abilities, work
 from ..check_registry import CheckFailure, register_check, make_failure
 from typing import TYPE_CHECKING
 from Script.Design import game_time
@@ -442,7 +442,7 @@ def check_prisoner_record_shape_and_roster_membership() -> list[CheckFailure]:
                     (
                         f"{warn}囚犯cid={cid} name={c.name!r} 存在问题: {'; '.join(problems)}；record={rec!r}，"
                         f"game_time={game_time.now()}，"
-                        f"ability[42]={c.ability.get(42)}，ability[45]={c.ability.get(45)}，"
+                        f"ability[42]={abilities.ability(c.cid).get(42)}，ability[45]={abilities.ability(c.cid).get(45)}，"
                         f"prison.setting(4)={prison.setting(4)}"
                     ),
                     [cid],

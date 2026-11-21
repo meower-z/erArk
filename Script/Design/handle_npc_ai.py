@@ -20,7 +20,7 @@ from Script.Design import (
 )
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import entertainment, facility, needs
+from Script.Modules.domains import abilities, entertainment, facility, needs
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -231,6 +231,7 @@ def judge_character_cant_move(character_id: int) -> int:
     Return arguments:
     bool -- 本次update时间切片内活动是否已完成
     """
+    talent = abilities.talent(character_id)
     character_data: game_type.Character = cache.character_data[character_id]
 
     cant_move_flag = False
@@ -252,7 +253,7 @@ def judge_character_cant_move(character_id: int) -> int:
             )
 
     # 临盆和产后
-    if character_data.talent[22] == 1 or character_data.talent[23] == 1:
+    if talent[22] == 1 or talent[23] == 1:
         cant_move_flag = True
         needs.set(character_id, desire=0)  # 欲望锁0
         # character.init_character_behavior_start_time(character_id, cache.game_time)
@@ -875,7 +876,6 @@ def judge_interrupt_character_behavior(character_id: int) -> int:
             )
         ):
             end_now(character_id)
-            # print(f"debug {character_data.name}疲劳归零，结束睡觉，当前时间={cache.game_time}")
             return 1
 
     # 工作或娱乐中的相关判断

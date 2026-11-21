@@ -16,7 +16,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation
 from Script.UI.Moudle import draw, panel, view
 from Script.Modules.domains import facility, power, power_supply, warehouse
-from Script.Modules.domains import location
+from Script.Modules.domains import abilities, location
 
 from typing import TYPE_CHECKING
 
@@ -328,8 +328,7 @@ class Manage_Power_System_Panel:
                 )
                 chara_name = name if name else _("(空缺)")
                 chara_name = attr_calculation.pad_display_width(chara_name, 12)
-                main_chara_data = cache.character_data[cid]
-                abi_lv = main_chara_data.ability.get(48, 0)
+                abi_lv = abilities.ability(cid).get(48, 0)
                 abi_lv_text = (
                     _("(制造lv{0})").format(abi_lv) if cid != 0 else ""
                 )
@@ -366,7 +365,7 @@ class Manage_Power_System_Panel:
                     name = self._get_chara_name(cid) or _("(未知)")
                     chara_data = cache.character_data.get(cid)
                     if chara_data:
-                        abi_lv = chara_data.ability.get(48, 0)
+                        abi_lv = abilities.ability(chara_data.cid).get(48, 0)
                         name += _("(制造lv{0})").format(abi_lv)
                     names.append(name)
                 other_text += "、".join(names)

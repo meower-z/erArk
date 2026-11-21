@@ -17,7 +17,7 @@ from Script.Design import handle_premise
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.System.Pregnancy_System import pregnancy_constant
-from Script.Modules.domains import entertainment, playthrough
+from Script.Modules.domains import abilities, entertainment, playthrough
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -471,7 +471,7 @@ def check_ovulation(character_id: int) -> None:
     if child_stage_gate.is_child_stage(character_id):
         return
     # 机械体且未安装生育模组不排卵
-    if character_data.race == 2 and character_data.talent[171] == 0:
+    if character_data.race == 2 and abilities.talent(character_id)[171] == 0:
         return
     # 安全兜底：处于胎生妊娠链中的角色（种族被中途修改等）不排卵
     if handle_premise.handle_pregnancy_1(
@@ -481,9 +481,9 @@ def check_ovulation(character_id: int) -> None:
     # 受精判定成功则排出受精卵并消费受精素质，否则排出无精卵
     fertilized = bool(handle_premise.handle_fertilization_1(character_id))
     if fertilized:
-        character_data.talent[20] = 0
+        abilities.talent(character_id)[20] = 0
         # 受精素质已被卵消费，无意识妊娠素质一并转移到卵的流程中
-        character_data.talent[35] = 0
+        abilities.talent(character_id)[35] = 0
     add_egg(character_id, fertilized)
     # 触发排出卵的二段行为
     second_behavior.character_get_second_behavior(character_id, "lay_egg")

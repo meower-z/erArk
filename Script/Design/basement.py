@@ -26,6 +26,7 @@ from Script.Modules.domains import (
     warehouse,
     work,
 )
+from Script.Modules.domains import abilities
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏内缓存数据 """
@@ -81,8 +82,6 @@ def get_base_updata() -> None:
                 >= game_config.config_facility_open[open_cid].zone_cid % 10
             ):
                 facility.set_open(open_cid, True)
-
-        # print(f"debug power_use = {base_data.power_use}")
 
         # 按等级开放招募线：1 级 1 条，3 到 5 级每级多 1 条
         if facility_name == _("文职部"):
@@ -380,7 +379,7 @@ def update_work_people() -> None:
         if work_type == clinic_work_id:
             clinic_doctors.append(chara_id)
             clinic_power_total += float(
-                character_data.ability.get(
+                abilities.ability(chara_id).get(
                     medical_constant.MEDICAL_ABILITY_ID, 0
                 )
                 or 0
@@ -388,7 +387,7 @@ def update_work_people() -> None:
         elif work_type == hospital_work_id:
             hospital_doctors.append(chara_id)
             hospital_power_total += float(
-                character_data.ability.get(
+                abilities.ability(chara_id).get(
                     medical_constant.MEDICAL_ABILITY_ID, 0
                 )
                 or 0
