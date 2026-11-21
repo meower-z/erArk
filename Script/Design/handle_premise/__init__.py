@@ -28,7 +28,7 @@ from Script.Design.handle_premise.handle_premise_body_manage import *
 from Script.Design.handle_premise.handle_premise_work import *
 from Script.Design.handle_premise.handle_premise_food import *
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import history, needs
+from Script.Modules.domains import history, needs, physical_exam
 
 cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -1207,7 +1207,7 @@ def handle_normal_3(character_id: int) -> int:
     # 今天没排体检、也不在等待名单上时，不可能在体检行动链中
     if (
         cache.character_data[character_id].action_info.health_check_today
-        or character_id in cache.rhodes_island.waiting_for_exam_operator_ids
+        or physical_exam.has(physical_exam.WAITING, character_id)
     ) and handle_self_in_health_check_action_chain(character_id):
         return 0
     return 1

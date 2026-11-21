@@ -38,10 +38,12 @@ from Script.Modules.domains import (
     kitchen,
     library,
     location,
+    maintenance,
     medical,
     modes,
     needs,
     official,
+    physical_exam,
     plan,
     playthrough,
     prison,
@@ -664,20 +666,6 @@ def _normalize_loaded_save_paths(loaded_cache: game_type.Cache) -> None:
             # 性行为履历旧存档兼容：平铺处女字段合并进first_part_sex_dict
             _migrate_first_record_flat_fields(character)
 
-    rhodes_island = getattr(loaded_cache, "rhodes_island", None)
-    if rhodes_island is not None:
-        facility_damage_data = getattr(
-            rhodes_island, "facility_damage_data", None
-        )
-        if isinstance(facility_damage_data, dict):
-            rhodes_island.facility_damage_data = _normalize_save_path_keys(
-                facility_damage_data
-            )
-        maintenance_place = getattr(rhodes_island, "maintenance_place", None)
-        if isinstance(maintenance_place, dict):
-            for character_id, place in maintenance_place.items():
-                maintenance_place[character_id] = _normalize_save_path(place)
-
 
 def _load_save_datetime(*args: Any) -> datetime.datetime:
     """
@@ -748,8 +736,8 @@ def input_load_save(save_id: str) -> None:
 def install_save(save_id: str, version: int) -> None:
     """
     读档的 Reset 步骤。把存档的缓存（文件 "1"）装进游戏缓存，按顺序修补旧存档，再结束有101/102阶段的孩子参与的会话。
-    版本 0 先补齐生理需求与供电策略属性。随后二十一个 adopt 函数搬走罗德岛对象的属性，
-    其中十六个交回的条数计入跨版本更新。重建角色后 adopt_pickled 搬走角色的数值属性。
+    版本 0 先补齐生理需求与供电策略属性。随后二十三个 adopt 函数搬走罗德岛对象的属性，
+    其中十八个交回的条数计入跨版本更新。重建角色后 adopt_pickled 搬走角色的数值属性。
     补全设置前后七个模块搬走周目等数据。它们交回的条数也计入跨版本更新。
     Keyword arguments:
     save_id -- 存档id
@@ -779,6 +767,8 @@ def install_save(save_id: str, version: int) -> None:
     for domain in (recruit, official, diplomacy, dormitory, library):
         update_count += domain.adopt_old_save(loaded_dict, version)
     for domain in (entertainment, tallies, fridge, prison, education):
+        update_count += domain.adopt_old_save(loaded_dict, version)
+    for domain in (maintenance, physical_exam):
         update_count += domain.adopt_old_save(loaded_dict, version)
 
     draw_text = _("\n开始检测存档的数据结构是否需要跨版本更新\n")
@@ -1307,18 +1297,13 @@ def update_settings(loaded_dict: dict[str, Any]) -> int:
     zero_physical_exam_setting = (
         attr_calculation.get_physical_exam_setting_zero()
     )
-    if len(loaded_dict["rhodes_island"].physical_examination_setting) != len(
-        zero_physical_exam_setting
-    ):
+    exam_setting = physical_exam.settings()
+    if len(exam_setting) != len(zero_physical_exam_setting):
         for key in zero_physical_exam_setting:
-            if (
-                key
-                not in loaded_dict["rhodes_island"].physical_examination_setting
-            ):
-                loaded_dict["rhodes_island"].physical_examination_setting[
-                    key
-                ] = zero_physical_exam_setting[key]
+            if key not in exam_setting:
+                exam_setting[key] = zero_physical_exam_setting[key]
                 update_count += 1
+        physical_exam.set_settings(exam_setting)
         now_draw = draw.NormalDraw()
         draw_text = _("\n体检设置已更新，如有需要请手动修改\n")
         now_draw.style = "gold_enrod"

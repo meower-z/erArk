@@ -187,7 +187,7 @@ H 状态、群交模式、逆推、隐奸。
 | ISLAND-27 | 储能与供能设施结构、绝对范围合法 | base.power_storage 在[0, 最大储能]内、clean 与 batteries 各有 3 项、副反应炉与各设施数量都是非负整数 |
 | ISLAND-28 | 主供能调控员槽位有效且不重复 | base.power 的 main_operators 是火/水/风/光 4 槽、每个非0值是 work.work_type==11 的现有角色、4 槽互不重复 |
 | ISLAND-29 | 监狱长引用与囚犯数据自洽 | 监狱长（work.warden）为0或指向一名存在的、work.work_type==191的角色；每个囚犯id必须存在，逃脱概率 落在0..100 |
-| ISLAND-30 | 设施损坏数据与检修分派自洽 | facility_damage_data的键必须是合法场景路径、值为正整数(<=0时代码会pop)；maintenance_place的键 必须是存在的、work.work_type==21的角色，值必须是合法场景路径 |
+| ISLAND-30 | 设施损坏数据与检修分派自洽 | 设施损坏表与检修地点表：损坏表的键是合法场景路径、值是正整数，检修地点表的键是存在的、work.work_type==21的 角色、值是合法场景路径 |
 | ISLAND-31 | 访客集合与待确认招募集合合法 | base.visitor里的访客都是存在的角色，访客数不超过按已开放客房数算出的访客上限(visitor.capacity())，待确认招募名单recruit.pending()不含0、成员均存在、与已招募名单不相交 |
 | ISLAND-32 | 贸易子设施列表与开放表一致、不超上限、无重复 | 已开放商店名(base.shops_open)无重名、长度不超过贸易区(cid 11)当前等级效果值，且其中每个名称都 对应一个贸易区可建设施且该设施已开放 |
 | ISLAND-33 | 外交官映射、岗位与外派标记三方一致 | diplomacy.table()[国家]["diplomat"]的非零角色必须存在、sp_flag.in_diplomatic_visit等于该国家、 work.work_type==131，且一人不得同时负责两国 |

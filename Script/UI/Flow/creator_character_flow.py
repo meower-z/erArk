@@ -24,7 +24,7 @@ from Script.Design import (
 )
 from Script.Kernel import core
 from Script.Modules.domains import country, playthrough, prison, visitor
-from Script.Modules.domains import warehouse, work
+from Script.Modules.domains import physical_exam, warehouse, work
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import kernel_state
 from Script.UI.Moudle import panel, draw, view
@@ -83,7 +83,6 @@ def creator_character_panel() -> None:
 
 def first_bonus_and_setting_updata() -> None:
     """刷新初始奖励和设定"""
-    cache = cache_control.cache
     for cid in game_config.config_first_bonus:
         playthrough.set_setting(FIRST_BONUS, cid, False)
     for cid in game_config.config_world_setting:
@@ -92,7 +91,7 @@ def first_bonus_and_setting_updata() -> None:
     # 初始资源
     warehouse.start({1: 20000, 11: 20, 15: 1000, 21: 10})
     # 体检设置
-    cache.rhodes_island.physical_examination_setting = (
+    physical_exam.set_settings(
         attr_calculation.get_physical_exam_setting_zero()
     )
     # 调教设置

@@ -16,7 +16,9 @@ from Script.Modules.domains import (
     economy,
     facility,
     fridge,
+    maintenance,
     official,
+    physical_exam,
     power,
     production,
     recruit,
@@ -244,12 +246,10 @@ def calc_facility_efficiency(facility_cid: int = -1) -> float:
             map_handle.get_map_system_path_str_for_list(["疗养庭院", "药田"])
         )
     # 设施损坏调整
+    damage = maintenance.damage() if room_full_str_list else {}
     for room_full_str in room_full_str_list:
-        if room_full_str in cache.rhodes_island.facility_damage_data:
-            damage_adjust = (
-                cache.rhodes_island.facility_damage_data[room_full_str] * 0.02
-            )
-            adjust -= damage_adjust
+        if room_full_str in damage:
+            adjust -= damage[room_full_str] * 0.02
     # 有特殊计算公式的区块
     # 宿舍区
     if facility_cid == 4:
@@ -396,13 +396,11 @@ def update_work_people() -> None:
 
         # 如果不是检修工程师，则清空该角色的检修目标
         if work_type != 21:
-            if chara_id in cache.rhodes_island.maintenance_place:
-                cache.rhodes_island.maintenance_place.pop(chara_id)
+            maintenance.drop_place(chara_id)
 
         # 如果不是铁匠，则清空该角色的维修装备
         if work_type != 22:
-            if chara_id in cache.rhodes_island.maintenance_equipment_chara_id:
-                cache.rhodes_island.maintenance_equipment_chara_id.pop(chara_id)
+            maintenance.drop_repair(chara_id)
 
         # 生产工人与种植员按遍历顺序排进对应生产线的工人名单
         for kind, kind_work in production.KINDS.items():
@@ -535,14 +533,9 @@ def settle_office_work() -> None:
         effectiveness_change *= 2
     # 计算设施损坏
     max_damage_down = 0
-    for facility_str in cache.rhodes_island.facility_damage_data:
-        if (
-            max_damage_down
-            < cache.rhodes_island.facility_damage_data[facility_str]
-        ):
-            max_damage_down = cache.rhodes_island.facility_damage_data[
-                facility_str
-            ]
+    for damage_count in maintenance.damage().values():
+        if max_damage_down < damage_count:
+            max_damage_down = damage_count
     # 如果没有设备出现严重损坏，则增加全局效率
     if max_damage_down < 5:
         effectiveness_change += 5
@@ -640,7 +633,7 @@ def draw_todo() -> None:
         draw_text += _("  当前有干员已招募，等待确认\n")
 
     # 是否有人正在等待体检
-    if len(cache.rhodes_island.waiting_for_exam_operator_ids):
+    if len(physical_exam.ids(physical_exam.WAITING)):
         draw_text += _("  当前有干员正在体检科等待体检\n")
 
     # 流水线生产是否正常
@@ -675,11 +668,11 @@ def find_facility_damage() -> str:
     """
     检查设施损坏
     """
-    tem_data = cache.rhodes_island.facility_damage_data.copy()
+    tem_data = maintenance.damage()
     # 去掉已经有人在修理的地点
-    for character_id in cache.rhodes_island.maintenance_place:
-        if cache.rhodes_island.maintenance_place[character_id] in tem_data:
-            tem_data.pop(cache.rhodes_island.maintenance_place[character_id])
+    for place in maintenance.places().values():
+        if place in tem_data:
+            tem_data.pop(place)
     target_scene_str = ""
     # 如果当前有损坏地点，则根据每个地点的数值大小作为权重选择一个
     if len(tem_data):

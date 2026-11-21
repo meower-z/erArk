@@ -29,7 +29,7 @@ import csv
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions
-from Script.Modules.domains import entertainment, facility, needs
+from Script.Modules.domains import entertainment, facility, needs, physical_exam
 from Script.Modules.domains import pregnancy, recruit, warehouse
 
 cache: game_type.Cache = cache_control.cache
@@ -2211,7 +2211,6 @@ class Debug_Panel:
                     change_value_panel = panel.AskForOneMessage()
                     change_value_panel.set(_("输入改变后的值"), 100)
                     new_value = int(change_value_panel.draw())
-                    # print(f"debug value_index = {value_index},new_value = {new_value}")
 
                     # 根据第几项更改对应值
                     if value_index == 0:
@@ -2442,7 +2441,7 @@ class Debug_Panel:
                 info_text += f"[027]:要找玩家逆推来自慰的状态：{target_data.sp_flag.npc_masturebate_for_player}\n"
                 info_text += (
                     f"[028]:正在等待体检状态（仅查看，无法修改）："
-                    f"{self.target_character_id in cache.rhodes_island.waiting_for_exam_operator_ids}\n"
+                    f"{physical_exam.has(physical_exam.WAITING, self.target_character_id)}\n"
                 )
                 info_text += (
                     f"[029]:今天体检时间，[0不需要，1上午，2下午，3新干员立刻体检]："

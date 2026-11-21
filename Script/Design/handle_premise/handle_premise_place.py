@@ -10,6 +10,7 @@ from Script.Core import (
 )
 from Script.Design import map_handle
 from Script.Config import game_config
+from Script.Modules.domains import maintenance
 from Script.Design.handle_premise.premise_registry import add_premise
 from Script.Modules.domains import entertainment, location
 
@@ -2866,7 +2867,7 @@ def handle_not_in_maintenance_department(character_id: int) -> int:
 @add_premise(constant_promise.Premise.IN_MAINTENANCE_PLACE)
 def handle_in_maintenance_place(character_id: int) -> int:
     """
-    校验角色是否在自己对应的检修地点(maintenance_place)中
+    校验角色是否在自己的检修地点（maintenance.place_of）中
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -2875,10 +2876,7 @@ def handle_in_maintenance_place(character_id: int) -> int:
     character_data = cache.character_data[character_id]
     now_position = character_data.position
     now_scene_str = map_handle.get_map_system_path_str_for_list(now_position)
-    if (
-        character_id in cache.rhodes_island.maintenance_place
-        and now_scene_str == cache.rhodes_island.maintenance_place[character_id]
-    ):
+    if now_scene_str == maintenance.place_of(character_id):
         return 1
     return 0
 
@@ -2886,7 +2884,7 @@ def handle_in_maintenance_place(character_id: int) -> int:
 @add_premise(constant_promise.Premise.NOT_IN_MAINTENANCE_PLACE)
 def handle_not_in_maintenance_place(character_id: int) -> int:
     """
-    校验角色是否不在自己对应的检修地点(maintenance_place)中
+    校验角色是否不在自己的检修地点（maintenance.place_of）中。没有检修地点的角色算作不在
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -2895,10 +2893,7 @@ def handle_not_in_maintenance_place(character_id: int) -> int:
     character_data = cache.character_data[character_id]
     now_position = character_data.position
     now_scene_str = map_handle.get_map_system_path_str_for_list(now_position)
-    if (
-        character_id in cache.rhodes_island.maintenance_place
-        and now_scene_str == cache.rhodes_island.maintenance_place[character_id]
-    ):
+    if now_scene_str == maintenance.place_of(character_id):
         return 0
     return 1
 
@@ -2906,7 +2901,7 @@ def handle_not_in_maintenance_place(character_id: int) -> int:
 @add_premise(constant_promise.Premise.IN_ANY_MAINTENANCE_PLACE)
 def handle_in_any_maintenance_place(character_id: int) -> int:
     """
-    校验角色是否在任意检修地点中
+    校验角色是否在任意检修地点中。代码拿场景路径与整张 maintenance.damage() 表比较，所以总是返回 0
     Keyword arguments:
     character_id -- 角色id
     Return arguments:
@@ -2915,7 +2910,7 @@ def handle_in_any_maintenance_place(character_id: int) -> int:
     character_data = cache.character_data[character_id]
     now_position = character_data.position
     now_scene_str = map_handle.get_map_system_path_str_for_list(now_position)
-    if now_scene_str == cache.rhodes_island.facility_damage_data:
+    if now_scene_str == maintenance.damage():
         return 1
     return 0
 

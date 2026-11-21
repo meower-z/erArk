@@ -22,9 +22,11 @@ from Script.Modules.domains import (
     education,
     fridge,
     library,
+    maintenance,
     medical,
     modes,
     needs,
+    physical_exam,
     playthrough,
     power,
     prison,
@@ -412,7 +414,6 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
 
     # 5.5 rhodes_island中的角色引用
     if "rhodes_island" in loaded_dict:
-        ri = loaded_dict["rhodes_island"]
 
         # 招募线的主招聘专员、待确认招募、借书人与外交官
         recruit.remap(old_to_new_id)
@@ -420,21 +421,9 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
         diplomacy.remap(old_to_new_id)
         power.remap_operators(old_to_new_id)
         production.remap(old_to_new_id)
-
-        # maintenance_place (Dict[int, str] - 角色id:地点)
-        if hasattr(ri, "maintenance_place"):
-            old_maint = ri.maintenance_place.copy()
-            ri.maintenance_place = {}
-            for old_id, place in old_maint.items():
-                new_id = old_to_new_id.get(old_id, old_id)
-                ri.maintenance_place[new_id] = place
-
-        # equipment_maintain_operator_ids (List[int] - 手动选择的装备维护对象干员id列表)
-        if hasattr(ri, "equipment_maintain_operator_ids"):
-            ri.equipment_maintain_operator_ids = [
-                old_to_new_id.get(oid, oid)
-                for oid in ri.equipment_maintain_operator_ids
-            ]
+        # 换工程部与体检数据里的角色id，正在进行的体检除外
+        maintenance.remap(old_to_new_id)
+        physical_exam.remap(old_to_new_id)
 
         # 冰箱两个表里的角色id
         fridge.remap(old_to_new_id)
@@ -449,43 +438,6 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
 
         # 关押区囚犯名册
         prison.remap(old_to_new_id)
-
-        # maintenance_equipment_chara_id (Dict[int, int])
-        if hasattr(ri, "maintenance_equipment_chara_id"):
-            old_maint_eq = ri.maintenance_equipment_chara_id.copy()
-            ri.maintenance_equipment_chara_id = {}
-            for old_id, old_target in old_maint_eq.items():
-                new_id = old_to_new_id.get(old_id, old_id)
-                new_target = old_to_new_id.get(old_target, old_target)
-                ri.maintenance_equipment_chara_id[new_id] = new_target
-
-        # today_physical_examination_chara_id_dict (Dict[int, set])
-        if hasattr(ri, "today_physical_examination_chara_id_dict"):
-            old_exam = ri.today_physical_examination_chara_id_dict.copy()
-            ri.today_physical_examination_chara_id_dict = {}
-            for old_id, value in old_exam.items():
-                new_id = old_to_new_id.get(old_id, old_id)
-                ri.today_physical_examination_chara_id_dict[new_id] = value
-
-        # examined_operator_ids (Set[int])
-        if hasattr(ri, "examined_operator_ids"):
-            ri.examined_operator_ids = {
-                old_to_new_id.get(oid, oid) for oid in ri.examined_operator_ids
-            }
-
-        # waiting_for_exam_operator_ids (Set[int])
-        if hasattr(ri, "waiting_for_exam_operator_ids"):
-            ri.waiting_for_exam_operator_ids = {
-                old_to_new_id.get(oid, oid)
-                for oid in ri.waiting_for_exam_operator_ids
-            }
-
-        # manually_selected_exam_operator_ids (Set[int])
-        if hasattr(ri, "manually_selected_exam_operator_ids"):
-            ri.manually_selected_exam_operator_ids = {
-                old_to_new_id.get(oid, oid)
-                for oid in ri.manually_selected_exam_operator_ids
-            }
 
         # 岗位名册与监狱长
         work.set_warden(normalize_single_character_id(work.warden(), 0))
@@ -1241,7 +1193,6 @@ def migrate_character_replacement(
 
     # ========== 8. 更新rhodes_island中的角色引用 ==========
     if "rhodes_island" in loaded_dict:
-        ri = loaded_dict["rhodes_island"]
 
         # 招募线的主招聘专员、待确认招募、借书人与外交官
         recruit.remap(old_to_new_id_map)
@@ -1251,20 +1202,8 @@ def migrate_character_replacement(
         work.set_warden(normalize_single_character_id(work.warden(), 0))
         work.remap(old_to_new_id_map)
         production.remap(old_to_new_id_map)
-
-        # maintenance_place
-        if hasattr(ri, "maintenance_place") and ri.maintenance_place:
-            old_maint = ri.maintenance_place.copy()
-            ri.maintenance_place = {}
-            for oid, place in old_maint.items():
-                ri.maintenance_place[old_to_new_id_map.get(oid, oid)] = place
-
-        # equipment_maintain_operator_ids
-        if hasattr(ri, "equipment_maintain_operator_ids"):
-            ri.equipment_maintain_operator_ids = [
-                old_to_new_id_map.get(oid, oid)
-                for oid in ri.equipment_maintain_operator_ids
-            ]
+        maintenance.remap(old_to_new_id_map)
+        physical_exam.remap(old_to_new_id_map)
 
         # 冰箱两个表里的角色id
         fridge.remap(old_to_new_id_map)
@@ -1279,61 +1218,6 @@ def migrate_character_replacement(
 
         # 关押区囚犯名册
         prison.remap(old_to_new_id_map)
-
-        # maintenance_equipment_chara_id
-        if (
-            hasattr(ri, "maintenance_equipment_chara_id")
-            and ri.maintenance_equipment_chara_id
-        ):
-            old_maint_eq = ri.maintenance_equipment_chara_id.copy()
-            ri.maintenance_equipment_chara_id = {}
-            for oid, old_target in old_maint_eq.items():
-                new_id = old_to_new_id_map.get(oid, oid)
-                new_target = old_to_new_id_map.get(old_target, old_target)
-                ri.maintenance_equipment_chara_id[new_id] = new_target
-
-        # today_physical_examination_chara_id_dict
-        if (
-            hasattr(ri, "today_physical_examination_chara_id_dict")
-            and ri.today_physical_examination_chara_id_dict
-        ):
-            old_exam = ri.today_physical_examination_chara_id_dict.copy()
-            ri.today_physical_examination_chara_id_dict = {}
-            for oid, value in old_exam.items():
-                ri.today_physical_examination_chara_id_dict[
-                    old_to_new_id_map.get(oid, oid)
-                ] = value
-
-        # examined_operator_ids
-        if hasattr(ri, "examined_operator_ids") and ri.examined_operator_ids:
-            old_examined = ri.examined_operator_ids.copy()
-            ri.examined_operator_ids = set()
-            for oid in old_examined:
-                ri.examined_operator_ids.add(old_to_new_id_map.get(oid, oid))
-
-        # waiting_for_exam_operator_ids
-        if (
-            hasattr(ri, "waiting_for_exam_operator_ids")
-            and ri.waiting_for_exam_operator_ids
-        ):
-            old_waiting = ri.waiting_for_exam_operator_ids.copy()
-            ri.waiting_for_exam_operator_ids = set()
-            for oid in old_waiting:
-                ri.waiting_for_exam_operator_ids.add(
-                    old_to_new_id_map.get(oid, oid)
-                )
-
-        # manually_selected_exam_operator_ids
-        if (
-            hasattr(ri, "manually_selected_exam_operator_ids")
-            and ri.manually_selected_exam_operator_ids
-        ):
-            old_manual = ri.manually_selected_exam_operator_ids.copy()
-            ri.manually_selected_exam_operator_ids = set()
-            for oid in old_manual:
-                ri.manually_selected_exam_operator_ids.add(
-                    old_to_new_id_map.get(oid, oid)
-                )
 
     # ========== 9. 更新场景数据中的角色列表 ==========
     if "scene_data" in loaded_dict:
@@ -2240,14 +2124,7 @@ def _clear_young_child_reference(
         if child.entertainment.borrow_book_id_set:
             child.entertainment.borrow_book_id_set = set()
             count += 1
-    rhodes_island = loaded_dict["rhodes_island"]
     count += fridge.drop(young_child_id_set)
-    for chara_key_dict in (
-        rhodes_island.today_physical_examination_chara_id_dict,
-    ):
-        for chara_id in young_child_id_set & set(chara_key_dict):
-            del chara_key_dict[chara_id]
-            count += 1
     count += prison.drop_prisoners(young_child_id_set)
     for commission_id, one in commission.ongoing().items():
         team = list(one.team)
@@ -2255,12 +2132,7 @@ def _clear_young_child_reference(
         commission.set_team(commission_id, team)
     count += _cancel_empty_field_commission()
     count += education.drop_must_attend(young_child_id_set)
-    for exam_set in (
-        rhodes_island.examined_operator_ids,
-        rhodes_island.waiting_for_exam_operator_ids,
-        rhodes_island.manually_selected_exam_operator_ids,
-    ):
-        count += _discard_id(exam_set, young_child_id_set)
+    count += physical_exam.drop(young_child_id_set)
     for book_id, borrower_id in library.holders().items():
         if borrower_id in young_child_id_set:
             library.set_holder(book_id, library.FREE)

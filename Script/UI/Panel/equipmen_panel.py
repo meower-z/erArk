@@ -11,7 +11,7 @@ from Script.Core import (
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
 from Script.Design import handle_ability, handle_premise, basement
-from Script.Modules.domains import commission
+from Script.Modules.domains import commission, maintenance, physical_exam
 import random
 from Script.UI.Panel import achievement_panel
 from Script.Modules.domains import achievement
@@ -180,19 +180,16 @@ def smith_maintain_equipment_once(
     bool 操作结果描述
     """
     # 是否优先维修
-    repair_equipment_first = (
-        cache.rhodes_island.equipment_maintain_setting.get(3, 0) == 0
-    )
+    repair_equipment_first = maintenance.settings().get(3, 0) == 0
 
     # 维修与保养的初始化
     repair_flag, maintain_flag = False, False
     repair_text, maintain_text = "", ""
     target_id = 0
     # 如果铁匠有在维修中的装备，则直接获取该角色id
-    if smith_chara_id in cache.rhodes_island.maintenance_equipment_chara_id:
-        target_id = cache.rhodes_island.maintenance_equipment_chara_id[
-            smith_chara_id
-        ]
+    repairing = maintenance.repairs()
+    if smith_chara_id in repairing:
+        target_id = repairing[smith_chara_id]
         npc_data = cache.character_data[target_id]
         # 如果该角色装备未损坏或在保养中，则跳过维修
         if npc_data.cloth.equipment_condition >= 0:
@@ -259,7 +256,7 @@ def repair_equipment(
     # 设施加成
     maintain_value *= basement.calc_facility_efficiency(2)
     # 获取维修优先度设置
-    maintain_priority = cache.rhodes_island.equipment_maintain_setting.get(0, 0)
+    maintain_priority = maintenance.settings().get(0, 0)
 
     # 是否进行装备维修
     repair_flag = False
@@ -289,9 +286,7 @@ def repair_equipment(
         npc_data = cache.character_data[target_chara_id]
         # 如果工作是铁匠，则记录维修角色
         if handle_premise.handle_work_is_blacksmith(smith_chara_id):
-            cache.rhodes_island.maintenance_equipment_chara_id[
-                smith_chara_id
-            ] = target_chara_id
+            maintenance.set_repair(smith_chara_id, target_chara_id)
         npc_data.cloth.equipment_condition = min(
             npc_data.cloth.equipment_condition + maintain_value, 0
         )
@@ -307,12 +302,10 @@ def repair_equipment(
         )
         # 如果维修后装备已无损坏，则清除维修记录
         if (
-            smith_chara_id in cache.rhodes_island.maintenance_equipment_chara_id
+            smith_chara_id in maintenance.repairs()
             and npc_data.cloth.equipment_condition >= 0
         ):
-            del cache.rhodes_island.maintenance_equipment_chara_id[
-                smith_chara_id
-            ]
+            maintenance.drop_repair(smith_chara_id)
             # 结算成就
             achievement.add("equipment_repair_count", 1)
             achievement_panel.achievement_flow(_("维修"))
@@ -340,15 +333,11 @@ def maintain_equipment(
     # 设施加成
     maintain_value *= basement.calc_facility_efficiency(2)
     # 是否进行装备保养
-    maintain_enable = cache.rhodes_island.equipment_maintain_setting.get(1, 0)
+    maintain_enable = maintenance.settings().get(1, 0)
     # 保养对象设置
-    maintain_target = cache.rhodes_island.equipment_maintain_setting.get(2, 0)
+    maintain_target = maintenance.settings().get(2, 0)
     # 保养目标名单
-    maintain_operator_ids = (
-        cache.rhodes_island.equipment_maintain_operator_ids
-        if hasattr(cache.rhodes_island, "equipment_maintain_operator_ids")
-        else []
-    )
+    maintain_operator_ids = maintenance.operators()
 
     # 是否进行装备保养
     maintain_flag = False
@@ -380,9 +369,7 @@ def maintain_equipment(
         npc_data = cache.character_data[target_chara_id]
         # 如果工作是铁匠，则记录维修角色
         if handle_premise.handle_work_is_blacksmith(smith_chara_id):
-            cache.rhodes_island.maintenance_equipment_chara_id[
-                smith_chara_id
-            ] = target_chara_id
+            maintenance.set_repair(smith_chara_id, target_chara_id)
         npc_data.cloth.equipment_condition = min(
             npc_data.cloth.equipment_condition + maintain_value, maintain_enable
         )
@@ -398,12 +385,10 @@ def maintain_equipment(
         )
         # 如果保养后装备已达到保养目标，则清除保养记录
         if (
-            smith_chara_id in cache.rhodes_island.maintenance_equipment_chara_id
+            smith_chara_id in maintenance.repairs()
             and npc_data.cloth.equipment_condition >= maintain_enable
         ):
-            del cache.rhodes_island.maintenance_equipment_chara_id[
-                smith_chara_id
-            ]
+            maintenance.drop_repair(smith_chara_id)
             # 结算成就
             achievement.add("equipment_maintenance_count", 1)
             achievement_panel.achievement_flow(_("保养"))
@@ -535,11 +520,9 @@ class Equipment_Maintain_Panel:
                 return_list.append(button_draw.return_text)
 
                 # 如果没有该键，则创建一个，并置为0
-                if cid not in cache.rhodes_island.equipment_maintain_setting:
-                    cache.rhodes_island.equipment_maintain_setting[cid] = 0
-                now_setting_flag = (
-                    cache.rhodes_island.equipment_maintain_setting[cid]
-                )  # 当前设置的值
+                if cid not in maintenance.settings():
+                    maintenance.set_setting(cid, 0)
+                now_setting_flag = maintenance.settings()[cid]  # 当前设置的值
                 option_len = len(
                     game_config.config_equipment_maintain_setting_option[cid]
                 )  # 选项的长度
@@ -560,13 +543,8 @@ class Equipment_Maintain_Panel:
                 return_list.append(button_draw.return_text)
 
                 # 部分选项有额外的手动选择按钮
-                if (
-                    cid == 2
-                    and cache.rhodes_island.equipment_maintain_setting[cid] == 1
-                ):
-                    now_len = len(
-                        cache.rhodes_island.manually_selected_exam_operator_ids
-                    )
+                if cid == 2 and maintenance.settings()[cid] == 1:
+                    now_len = len(physical_exam.ids(physical_exam.CHOSEN))
                     button_text = _("[调整干员名单]({0}人)").format(now_len)
                     button_len = max(len(button_text) * 2, 20)
                     button_draw = draw.CenterButton(
@@ -603,10 +581,10 @@ class Equipment_Maintain_Panel:
 
     def change_setting(self, cid: int, option_len: int) -> None:
         """修改设置"""
-        if cache.rhodes_island.equipment_maintain_setting[cid] < option_len - 1:
-            cache.rhodes_island.equipment_maintain_setting[cid] += 1
-        else:
-            cache.rhodes_island.equipment_maintain_setting[cid] = 0
+        now_value = maintenance.settings()[cid]
+        maintenance.set_setting(
+            cid, now_value + 1 if now_value < option_len - 1 else 0
+        )
 
     def adjust_target_list(self) -> None:
         """调整装备维护名单"""
@@ -626,9 +604,7 @@ class Equipment_Maintain_Panel:
         while 1:
             npc_id_got_list = sorted(cache.npc_id_got)
             # 已选择的角色id列表
-            selected_id_list = (
-                cache.rhodes_island.equipment_maintain_operator_ids
-            )
+            selected_id_list = maintenance.operators()
             final_list = []
             # 遍历角色id
             for npc_id in npc_id_got_list:
@@ -662,11 +638,4 @@ class Equipment_Maintain_Panel:
 
     def switch_chara_in_target_list(self, character_id: int) -> None:
         """切换对象名单中的角色"""
-        if character_id in cache.rhodes_island.equipment_maintain_operator_ids:
-            cache.rhodes_island.equipment_maintain_operator_ids.remove(
-                character_id
-            )
-        else:
-            cache.rhodes_island.equipment_maintain_operator_ids.append(
-                character_id
-            )
+        maintenance.toggle_operator(character_id)
