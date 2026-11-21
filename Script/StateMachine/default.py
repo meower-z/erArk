@@ -17,6 +17,7 @@ from Script.Design import (
     basement,
 )
 from Script.Core import get_text, cache_control, game_type, constant
+from Script.Modules.domains import kitchen, production
 from Script.UI.Moudle import draw
 from Script.Modules.domains import economy
 
@@ -1411,11 +1412,8 @@ def character_move_to_production_workshop(character_id: int) -> choice.Plan:
     # 如果已经属于某个车间，则直接选择该车间
     plan = handle_state_machine.new_plan(character_id)
     target_scene_str = ""
-    for assembly_line_id in cache.rhodes_island.assembly_line:
-        if (
-            character_id
-            == cache.rhodes_island.assembly_line[assembly_line_id][1]
-        ):
+    for assembly_line_id, line in production.lines("assembly").items():
+        if character_id == line["main"]:
             target_scene_name = f"assembly_line_{(str(assembly_line_id))}"
             target_scene_str = random.choice(
                 constant.place_data[target_scene_name]
@@ -3034,27 +3032,18 @@ def character_buy_rand_food_at_foodshop(character_id: int) -> choice.Plan:
     make_food_list = []
     # 在食堂购买
     if character_data.action_info.eat_food_restaurant == -1:
-        # 获取所有食物id
-        for recipes_id in cache.rhodes_island.dining_hall_data:
-            # 跳过空列表
-            if not len(cache.rhodes_island.dining_hall_data[recipes_id]):
+        # 收集还有食物的货架的食谱id
+        shelves = kitchen.shelves()
+        for recipes_id, foods in shelves.items():
+            # 跳过卖空的货架
+            if not len(foods):
                 continue
             # 获取食谱
             food_recipe = cache.recipe_data[int(recipes_id)]
-            # 判断是否是自制食物
-            made_food_flag = False
+            all_food_list.append(recipes_id)
+            # 菜谱类型不是预制食物（5）的算自制食物
             if food_recipe.type != 5:
-                made_food_flag = True
-            # 遍历食物
-            for food_uid in cache.rhodes_island.dining_hall_data[recipes_id]:
-                now_food: game_type.Food = cache.rhodes_island.dining_hall_data[
-                    recipes_id
-                ][food_uid]
-                all_food_list.append(recipes_id)
-                # 如果是自制食物则加入制作食物列表
-                if made_food_flag:
-                    make_food_list.append(recipes_id)
-                break
+                make_food_list.append(recipes_id)
         # 如果没有食物则开始时刷新食物，等待下次购买
         if not len(all_food_list):
             plan.kind("restock_shop")
@@ -3065,10 +3054,8 @@ def character_buy_rand_food_at_foodshop(character_id: int) -> choice.Plan:
             all_food_list = make_food_list
         # 随机选一个食物id
         now_food_id = random.choice(all_food_list)
-        now_food = cache.rhodes_island.dining_hall_data[now_food_id][
-            random.choice(
-                list(cache.rhodes_island.dining_hall_data[now_food_id].keys())
-            )
+        now_food = shelves[now_food_id][
+            random.choice(list(shelves[now_food_id].keys()))
         ]
         # 开始时从食堂拿进背包
         _buy_food(plan, -1, now_food_id, now_food.uid)

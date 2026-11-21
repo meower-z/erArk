@@ -13,7 +13,7 @@ from Script.Core import (
     py_cmd,
 )
 from Script.Design import map_handle, attr_calculation
-from Script.Modules.domains import economy
+from Script.Modules.domains import economy, kitchen
 from Script.Modules.tk_ui import player_pick
 from Script.System.Cooking_System import cooking
 from Script.UI.Moudle import draw, panel, view
@@ -63,11 +63,7 @@ def put_selfmade_food_in() -> None:
         food_data = character_data.food_bag[uid]
         recipes_id = str(food_data.recipe)
         food_name = food_data.name
-        cache.rhodes_island.dining_hall_data.setdefault(recipes_id, {})
-        cache.rhodes_island.dining_hall_data[recipes_id][uid] = (
-            cache.character_data[0].food_bag[uid]
-        )
-        del cache.character_data[0].food_bag[uid]
+        kitchen.stock(recipes_id, cache.character_data[0].food_bag.pop(uid))
         # 绘制提示信息
         info_draw = draw.NormalDraw()
         info_draw.text = _("{0}已放入食堂\n").format(food_name)
@@ -269,8 +265,7 @@ class SeeFoodListByFoodNameDraw:
         """ 这种食物的 (食谱id, 食物uid) 列表。食堂里的 uid 是 UUID，餐馆与地摊小贩的是字符串 """
         if self.now_restaurant_id is None:
             self.now_food_list = [
-                (self.cid, x)
-                for x in cache.rhodes_island.dining_hall_data[self.cid]
+                (self.cid, x) for x in kitchen.shelf(self.cid)
             ]
         else:
             self.now_food_list = [
@@ -353,7 +348,7 @@ class SeeFoodListByFoodNameDraw:
 
     def food_at(self, cid: str, uid: UUID | str) -> game_type.Food:
         """
-        当前商店里的一份食物。食堂交出货架上的那个对象，餐馆与地摊小贩由 economy.food 按货架记录新建一个
+        当前商店里的一份食物，按货架上的记录新建。食堂的由 kitchen.find 新建，餐馆与地摊小贩的由 economy.food 新建
         Keyword arguments:
         cid -- 食谱id的字符串
         uid -- 食物uid，食堂为 UUID，餐馆与地摊小贩为字符串
@@ -361,7 +356,9 @@ class SeeFoodListByFoodNameDraw:
         Food -- 食物
         """
         if self.now_restaurant_id is None:
-            return cache.rhodes_island.dining_hall_data[cid][UUID(str(uid))]
+            found = kitchen.find(cid, str(uid))
+            assert found is not None
+            return found
         shelf = economy.shelf(self.now_restaurant_id)
         return economy.food(cid, str(uid), shelf[cid][str(uid)])
 
@@ -430,7 +427,7 @@ class SeeFoodListByFoodNameDraw:
             if yrn in return_list:
                 view.now_panel_id = constant.Panel.IN_SCENE
                 break
-            cache.rhodes_island.dining_hall_data.setdefault(self.cid, {})
+            kitchen.keep_shelf(self.cid)
 
     def buy_food(
         self,

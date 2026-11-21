@@ -32,7 +32,7 @@ from Script.UI.Panel import (
     cloth_panel,
     confinement_and_training,
 )
-from Script.Modules.domains import needs, warehouse
+from Script.Modules.domains import kitchen, needs, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -87,8 +87,7 @@ def _still_there(args: dict[str, core.JSON]) -> bool:
     cid, uid = str(args["food_cid"]), str(args["food_uid"])
     restaurant = args.get("restaurant")
     if restaurant is None:
-        dining = cache.rhodes_island.dining_hall_data.get(cid, {})
-        return UUID(uid) in dining
+        return kitchen.find(cid, uid) is not None
     return uid in economy.shelf(cast(int | str, restaurant)).get(cid, {})
 
 
@@ -107,7 +106,7 @@ def start_buy_food(who: int, chosen: intent.Intent) -> None:
     cid, uid = str(args["food_cid"]), str(args["food_uid"])
     restaurant = args.get("restaurant")
     if restaurant is None:
-        food = cache.rhodes_island.dining_hall_data[cid].pop(UUID(uid))
+        food = kitchen.take(cid, uid)
     else:
         taken = economy.take(cast(int | str, restaurant), cid, uid)
         assert taken is not None

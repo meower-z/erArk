@@ -12,7 +12,14 @@ from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle
 from Script.UI.Moudle import draw
 from Script.Design import game_time
-from Script.Modules.domains import economy, facility, power, warehouse, work
+from Script.Modules.domains import (
+    economy,
+    facility,
+    power,
+    production,
+    warehouse,
+    work,
+)
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏内缓存数据 """
@@ -47,19 +54,11 @@ def get_base_zero() -> game_type.Rhodes_Island:
     # 访客来访时间初始化
     base_data.last_visitor_time = game_time.now()
 
-    # 初始化流水线(结构: [生产配方id, 主生产工人id, 当前总效率百分比, 待切换配方id, 上次结算小时])
-    base_data.assembly_line[0] = [1, 0, 0.0, 0, 0]
-
     # 初始化招募(结构:[进度, 策略id, 主招聘专员id, 线效率])
     base_data.recruit_line[0] = [0, 0, 0, 0]
 
     # 初始化邀请
     base_data.invite_visitor = [0, 0, 0]
-
-    # 初始化药田(结构: [生产类型id, 主药田种植员id(0为空缺), 线效率占位, 待切换配方id, 上次结算小时])
-    base_data.herb_garden_line[0] = [0, 0, 0, 0, 0]
-    # 初始化温室(结构: [生产类型id, 主花草种植员id(0为空缺), 线效率占位, 待切换配方id, 上次结算小时])
-    base_data.green_house_line[0] = [0, 0, 0, 0, 0]
 
     # 初始化公务工作
     base_data.office_work += 200
@@ -90,7 +89,7 @@ def get_base_updata() -> None:
     """
     遍历基地情况结构体，根据设施等级更新全部数值
     """
-    from Script.UI.Panel import recruit_panel, agriculture_production_panel
+    from Script.UI.Panel import recruit_panel
 
     cache = cache_control.cache
 
@@ -150,35 +149,13 @@ def get_base_updata() -> None:
                     total_bonus, 1
                 )
         elif facility_name == _("制造加工区"):
-            # 初始化流水线(按等级开放数量)
-            def _init_line(idx: int) -> None:
-                if idx not in cache.rhodes_island.assembly_line:
-                    cache.rhodes_island.assembly_line[idx] = [0, 0, 0.0, 0, 0]
-
-            _init_line(0)
-            if level >= 2:
-                _init_line(1)
-            if level >= 3:
-                _init_line(2)
-            if level >= 4:
-                _init_line(3)
-            if level >= 5:
-                _init_line(4)
-            # 暂不在此处直接计算效率，延迟到调用 calculate_assembly_line_efficiency
+            # 按等级开放流水线：1 级 1 条，2 到 5 级每级多 1 条
+            production.open_lines(
+                "assembly",
+                [i for i, need in enumerate((0, 2, 3, 4, 5)) if level >= need],
+            )
         elif facility_name == _("疗养庭院"):
-            # 温室生产线初始化
-            if 0 not in cache.rhodes_island.green_house_line:
-                cache.rhodes_island.green_house_line[0] = [0, 0, 0, 0, 0]
-            # 计算各线当前效率
-            for agriculture_line_id in cache.rhodes_island.green_house_line:
-                __, produce_effect = (
-                    agriculture_production_panel.calculate_agriculture_line_efficiency(
-                        agriculture_line_id, agriculture_type=1
-                    )
-                )
-                cache.rhodes_island.green_house_line[agriculture_line_id][
-                    2
-                ] = produce_effect
+            production.open_lines("green_house", [0])
             # 香薰治疗室
             # 刷新香薰疗愈次数
             if level >= 5:
@@ -188,25 +165,10 @@ def get_base_updata() -> None:
             elif level <= 3:
                 cache.rhodes_island.remaining_aromatherapy_sessions_today = 1
         elif facility_name == _("药田"):
-            # 药田生产线初始化
-            if 0 not in cache.rhodes_island.herb_garden_line:
-                cache.rhodes_island.herb_garden_line[0] = [0, 0, 0, 0, 0]
-            if level >= 3 and 1 not in cache.rhodes_island.herb_garden_line:
-                cache.rhodes_island.herb_garden_line[1] = [0, 0, 0, 0, 0]
-            if level >= 4 and 2 not in cache.rhodes_island.herb_garden_line:
-                cache.rhodes_island.herb_garden_line[2] = [0, 0, 0, 0, 0]
-            if level >= 5 and 3 not in cache.rhodes_island.herb_garden_line:
-                cache.rhodes_island.herb_garden_line[3] = [0, 0, 0, 0, 0]
-            # 计算各线当前效率
-            for agriculture_line_id in cache.rhodes_island.herb_garden_line:
-                __, produce_effect = (
-                    agriculture_production_panel.calculate_agriculture_line_efficiency(
-                        agriculture_line_id, agriculture_type=0
-                    )
-                )
-                cache.rhodes_island.herb_garden_line[agriculture_line_id][
-                    2
-                ] = produce_effect
+            production.open_lines(
+                "herb_garden",
+                [i for i, need in enumerate((0, 3, 4, 5)) if level >= need],
+            )
     update_facility_limits(cache.rhodes_island)
 
 
@@ -453,9 +415,7 @@ def update_work_people() -> None:
     rosters: dict[int, list[int]] = {}
     warden_id = work.warden()
     # 重置各岗位当前人员名单，后续按在编角色重建
-    cache.rhodes_island.production_worker_ids = []
-    cache.rhodes_island.herb_garden_operator_ids = []
-    cache.rhodes_island.green_house_operator_ids = []
+    line_workers: dict[str, list[int]] = {kind: [] for kind in production.KINDS}
 
     clinic_doctors = []
     hospital_doctors = []
@@ -482,42 +442,9 @@ def update_work_people() -> None:
             # 如果已经不是招聘专员，则撤销主招聘专员
             if character_data.work.work_type != 71:
                 cache.rhodes_island.recruit_line[recruit_line_id][2] = 0
-    # 校验各生产线主生产工人有效性
-    for assembly_line_id in cache.rhodes_island.assembly_line:
-        # 如果变量类型不是int，则改为0
-        if not isinstance(
-            cache.rhodes_island.assembly_line[assembly_line_id][1], int
-        ):
-            cache.rhodes_island.assembly_line[assembly_line_id][1] = 0
-        main_id = cache.rhodes_island.assembly_line[assembly_line_id][1]
-        if main_id and main_id in cache.character_data:
-            character_data = cache.character_data[main_id]
-            # 如果已经不是工人，则撤销主生产工人
-            if character_data.work.work_type != 121:
-                cache.rhodes_island.assembly_line[assembly_line_id][1] = 0
-
-    # 维护农业人员列表
-    # 校验各农业线主种植员有效性（药田161，温室162）
-    for herb_line_id in cache.rhodes_island.herb_garden_line:
-        if not isinstance(
-            cache.rhodes_island.herb_garden_line[herb_line_id][1], int
-        ):
-            cache.rhodes_island.herb_garden_line[herb_line_id][1] = 0
-        main_id = cache.rhodes_island.herb_garden_line[herb_line_id][1]
-        if main_id and main_id in cache.character_data:
-            c = cache.character_data[main_id]
-            if c.work.work_type != 161:
-                cache.rhodes_island.herb_garden_line[herb_line_id][1] = 0
-    for gh_line_id in cache.rhodes_island.green_house_line:
-        if not isinstance(
-            cache.rhodes_island.green_house_line[gh_line_id][1], int
-        ):
-            cache.rhodes_island.green_house_line[gh_line_id][1] = 0
-        main_id = cache.rhodes_island.green_house_line[gh_line_id][1]
-        if main_id and main_id in cache.character_data:
-            c = cache.character_data[main_id]
-            if c.work.work_type != 162:
-                cache.rhodes_island.green_house_line[gh_line_id][1] = 0
+    # 撤下职位与生产线不对应的主负责人
+    for kind in production.KINDS:
+        production.release_mains(kind)
 
     # 遍历在编干员，把每人加进所在岗位的名单（无岗位的进岗位 0）
     cache.npc_id_got.discard(0)
@@ -543,28 +470,6 @@ def update_work_people() -> None:
                 else:
                     # 名册上没有的，视为旧版本的外交官数据，改为新的邀请专员
                     character_data.work.work_type = 132
-
-            # 维护药材/花草种植员列表
-            if work_type == 161:
-                if chara_id not in cache.rhodes_island.herb_garden_operator_ids:
-                    cache.rhodes_island.herb_garden_operator_ids.append(
-                        chara_id
-                    )
-            else:
-                if chara_id in cache.rhodes_island.herb_garden_operator_ids:
-                    cache.rhodes_island.herb_garden_operator_ids.remove(
-                        chara_id
-                    )
-            if work_type == 162:
-                if chara_id not in cache.rhodes_island.green_house_operator_ids:
-                    cache.rhodes_island.green_house_operator_ids.append(
-                        chara_id
-                    )
-            else:
-                if chara_id in cache.rhodes_island.green_house_operator_ids:
-                    cache.rhodes_island.green_house_operator_ids.remove(
-                        chara_id
-                    )
 
         if work_type == clinic_work_id:
             clinic_doctors.append(chara_id)
@@ -593,14 +498,10 @@ def update_work_people() -> None:
             if chara_id in cache.rhodes_island.maintenance_equipment_chara_id:
                 cache.rhodes_island.maintenance_equipment_chara_id.pop(chara_id)
 
-        # 如果是工人，则加入工人列表
-        if work_type == 121:
-            if chara_id not in cache.rhodes_island.production_worker_ids:
-                cache.rhodes_island.production_worker_ids.append(chara_id)
-        # 如果不是工人，则从工人列表中移除
-        else:
-            if chara_id in cache.rhodes_island.production_worker_ids:
-                cache.rhodes_island.production_worker_ids.remove(chara_id)
+        # 生产工人与种植员按遍历顺序排进对应生产线的工人名单
+        for kind, kind_work in production.KINDS.items():
+            if work_type == kind_work:
+                line_workers[kind].append(chara_id)
 
         # 如果是监狱长，则更新监狱长id
         if work_type == 191:
@@ -608,6 +509,8 @@ def update_work_people() -> None:
 
     work.set_rosters(rosters)
     work.set_warden(warden_id)
+    for kind, cids in line_workers.items():
+        production.set_workers(kind, cids)
     clinic_doctors.sort()
     hospital_doctors.sort()
     medical_service.update_doctor_assignments(

@@ -1509,11 +1509,6 @@ class Rhodes_Island:
         # 生活娱乐区
         self.milk_in_fridge: dict[int, int] = {}
         """ 冰箱里每个干员的当日母乳存量，干员id:母乳ml存量 """
-        self.dining_hall_data: dict[str, dict[UUID, Food]] = {}
-        """
-        食堂内贩卖的食物数据
-        食谱id(str):食物唯一id:食物对象
-        """
 
         # 医疗部
         self.medical_patients_today: dict[int, Any] = {}
@@ -1606,13 +1601,6 @@ class Rhodes_Island:
         self.love_hotel_room_lv: int = 0
         """ 在爱情旅馆中的房间级别，0未入住，1标间，2情趣主题房，3顶级套房 """
 
-        # 制造加工区
-        self.assembly_line: dict[int, list] = {}
-        """ 流水线id: [0生产配方id(formula_id), 1主生产工人id(0为空缺), 2当前总效率百分比(浮点, 如 123.5),
-        3待切换配方id(次日生效, 0表示无), 4上次结算小时] """
-        self.production_worker_ids: list[int] = []
-        """ 生产工人id列表 """
-
         # 访客区
         self.visitor_max: int = 0
         """ 访客人数上限 """
@@ -1640,16 +1628,6 @@ class Rhodes_Island:
         # 教育区
 
         # 疗养庭院
-        self.herb_garden_line: dict[int, list] = {}
-        """ 药田生产情况 流水线id:[0生产类型id, 1主种植员id(0为空缺), 2总效率百分比(显示用, 如110),
-        3明日要变成的新生产类型, 4上次收菜的小时] """
-        self.herb_garden_operator_ids: list[int] = []
-        """ 药田种植员id列表 """
-        self.green_house_line: dict[int, list] = {}
-        """ 温室生产情况 流水线id:[0生产类型id, 1主种植员id(0为空缺), 2总效率百分比(显示用, 如110),
-        3明日要变成的新生产类型, 4上次收菜的小时] """
-        self.green_house_operator_ids: list[int] = []
-        """ 花草种植员id列表 """
         self.remaining_aromatherapy_sessions_today: int = 0
         """ 今日剩余调香次数 """
 

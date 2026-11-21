@@ -12,7 +12,7 @@ from uuid import UUID
 
 from Script.Core import cache_control, constant, game_type
 from Script.Kernel import core
-from Script.Modules.domains import economy
+from Script.Modules.domains import economy, kitchen
 from Script.Modules.gameplay_resolution import intent, starts
 
 cache: game_type.Cache = cache_control.cache
@@ -151,24 +151,13 @@ def _find(
     return None
 
 
-def _dining_foods(args: Mapping[str, core.JSON]) -> dict | None:
-    """
-    食堂里一种食谱的食物
-    Keyword arguments:
-    args -- buy_food 的参数，这里只用 recipe_id
-    Return arguments:
-    dict | None -- 食物uid到食物，食堂没有这种食谱时为 None
-    """
-    return cache.rhodes_island.dining_hall_data.get(str(args["recipe_id"]))
-
-
 @starts.check("buy_food")
 def food_still_there(who: int, data: intent.Intent) -> core.Action | None:
     """选中的食物已被买走时等1分钟"""
     args = _args(data)
     shop, uid = int(str(args["shop"])), str(args["food_uid"])
     if shop == -1:
-        there = _find(_dining_foods(args), uid) is not None
+        there = kitchen.find(str(args["recipe_id"]), uid) is not None
     else:
         there = uid in economy.shelf(shop).get(str(args["recipe_id"]), {})
     return None if there else _wait_one_minute(who)
@@ -180,11 +169,8 @@ def buy_food(who: int, data: intent.Intent) -> None:
     args = _args(data)
     shop, uid = int(str(args["shop"])), str(args["food_uid"])
     if shop == -1:
-        foods = _dining_foods(args)
-        found = _find(foods, uid)
-        assert foods is not None and found is not None
-        key, food = found
-        del foods[key]
+        food = kitchen.take(str(args["recipe_id"]), uid)
+        key = food.uid
     else:
         taken = economy.take(shop, str(args["recipe_id"]), uid)
         assert taken is not None

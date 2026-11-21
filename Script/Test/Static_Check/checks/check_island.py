@@ -22,7 +22,14 @@ from typing import Any
 
 from Script.Core import cache_control
 from Script.Config import game_config
-from Script.Modules.domains import economy, facility, power, warehouse, work
+from Script.Modules.domains import (
+    economy,
+    facility,
+    power,
+    production,
+    warehouse,
+    work,
+)
 from Script.System.Dormitory_System import common as dorm_common
 from ..check_registry import CheckFailure, register_check, make_failure
 
@@ -467,6 +474,11 @@ _WORK_LIST_FIELDS = (
 )
 
 
+def _work_list(field: str) -> list[int]:
+    """ISLAND-11/12 的岗位人员列表，即 production.PICKLED_WORKERS[field] 这一类生产线的工人名单"""
+    return production.workers(production.PICKLED_WORKERS[field])
+
+
 @register_check("ISLAND-11", "岗位人员列表引用合法、无重复、不漏在岗者")
 def check_island_11_work_lists_superset() -> list[CheckFailure]:
     """
@@ -479,14 +491,10 @@ def check_island_11_work_lists_superset() -> list[CheckFailure]:
         每个列表必须包含对应岗位名册的全部成员，漏人是真bug。三个列表都只断言超集，不报多出的成员。
         多出来的是离线残留，合法可达，交给ISLAND-12
     """
-    cache = cache_control.cache
-    ri = cache.rhodes_island
-    cd = cache.character_data
+    cd = cache_control.cache.character_data
     failures = []
     for field, wid in _WORK_LIST_FIELDS:
-        lst = getattr(ri, field, None)
-        if not isinstance(lst, list):
-            continue
+        lst = _work_list(field)
         dup = [cid for cid, cnt in Counter(lst).items() if cnt > 1]
         mismatched = [
             (
@@ -528,14 +536,10 @@ def check_island_12_work_lists_stale_members() -> list[CheckFailure]:
         滞后于成员实际状态。日结时update_work_people()会整体重置并按在编角色重建这些列表，本条覆盖的是
         两次重建之间可能出现的瞬态漂移
     """
-    cache = cache_control.cache
-    ri = cache.rhodes_island
-    cd = cache.character_data
+    cd = cache_control.cache.character_data
     failures = []
     for field, wid in _WORK_LIST_FIELDS:
-        lst = getattr(ri, field, None)
-        if not isinstance(lst, list):
-            continue
+        lst = _work_list(field)
         expected = set(work.roster(wid))
         stale = set(lst) - expected
         if not stale:
@@ -563,15 +567,12 @@ def check_island_13_assembly_line() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验制造加工区(cid 12)等级N恰好开放0..N-1号流水线；每条记录是长度5的list，当前配方与待切换配方都是
-        合法配方id，结算小时在0..23。结构检查必须先于内容检查——存档迁移不补普通dict内部的键，也不补list长度，
-        消费侧大量无保护下标
+        校验制造加工区(cid 12)等级N恰好开放0..N-1号流水线。流水线从 base.production 读。
+        每条线的生产配方id在配方表里，上次结算的小时是 0..23 的 int
     """
-    cache = cache_control.cache
-    ri = cache.rhodes_island
-    assembly_line = getattr(ri, "assembly_line", None)
+    assembly_line = production.lines("assembly")
     facility_level = facility.levels()
-    if not isinstance(assembly_line, dict) or 12 not in facility_level:
+    if 12 not in facility_level:
         return []
     failures = []
     expected_keys = set(range(facility_level[12]))
@@ -588,17 +589,11 @@ def check_island_13_assembly_line() -> list[CheckFailure]:
         )
     violations = []
     for line_id, v in assembly_line.items():
-        if not isinstance(v, list) or len(v) != 5:
-            violations.append((line_id, v))
+        if v["product"] not in game_config.config_productformula:
+            violations.append((line_id, dict(v)))
             continue
-        if (
-            v[0] not in game_config.config_productformula
-            or v[3] not in game_config.config_productformula
-        ):
-            violations.append((line_id, v))
-            continue
-        if type(v[4]) is not int or not (0 <= v[4] <= 23):
-            violations.append((line_id, v))
+        if type(v["hour"]) is not int or not (0 <= v["hour"] <= 23):
+            violations.append((line_id, dict(v)))
     if violations:
         failures.append(
             make_failure(
@@ -621,23 +616,18 @@ def check_island_14_agriculture_and_recruit_line_structure() -> (
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验药田线与温室线每条是长度5的list，种植类型只能是0(停种)或该线唯一允许的资源——药田11、温室16；
-        招募线每条至少4项。窄化到{0,11}/{0,16}已核实候选表硬编码；结算侧无保护下标[0]，结构守卫必须在前
+        校验药田线与温室线（从 base.production 读）的种植类型是0(停种)或该线允许的资源，药田为11，温室为16。
+        这两种资源取自种植面板 select_agriculture_line_produce 的候选。招募线每条是至少4项的list
     """
     cache = cache_control.cache
     ri = cache.rhodes_island
     failures = []
 
     def _check_line(field: str, allowed_types: tuple[int, ...]) -> None:
-        line = getattr(ri, field, None)
-        if not isinstance(line, dict):
-            return
         violations = [
-            (line_id, v)
-            for line_id, v in line.items()
-            if not (
-                isinstance(v, list) and len(v) == 5 and v[0] in allowed_types
-            )
+            (line_id, dict(v))
+            for line_id, v in production.lines(field).items()
+            if v["product"] not in allowed_types
         ]
         if violations:
             failures.append(
@@ -649,8 +639,8 @@ def check_island_14_agriculture_and_recruit_line_structure() -> (
                 )
             )
 
-    _check_line("herb_garden_line", (0, 11))
-    _check_line("green_house_line", (0, 16))
+    _check_line("herb_garden", (0, 11))
+    _check_line("green_house", (0, 16))
 
     recruit_line = getattr(ri, "recruit_line", None)
     if isinstance(recruit_line, dict):
@@ -682,34 +672,32 @@ def check_island_15_line_main_operator() -> list[CheckFailure]:
         List[CheckFailure]: 失败记录列表
     功能:
         校验流水线(岗位121)、药田(161)、温室(162)、招募线(71)的主负责人与各资源类型主交易员(111)有效。
-        四类线的主负责人槽位必须是0或一名存在的角色，岗位须与该线要求一致，且必须在对应岗位人员列表中。
-        同类线内一人不得同时主理两条。base.main_traders 里的主交易员必须是0或一名职位为111的存在角色。
-        不得要求主负责人在npc_id_got：主管/种植员/招聘专员都能被派外勤，岗位与槽位都保留
+        四类线的主负责人必须是0或一名岗位与该线一致的存在角色，且在对应岗位人员列表中。同类线内一人不得主理两条。
+        前三类的线与人员列表从 base.production 读。base.main_traders 里的主交易员必须是0或一名职位为111的存在角色。
+        不要求主负责人在npc_id_got：主管、种植员与招聘专员都能被派外勤，岗位与槽位都保留
     """
     cache = cache_control.cache
     ri = cache.rhodes_island
     cd = cache.character_data
     failures = []
     main_list = {
-        121: getattr(ri, "production_worker_ids", []),
-        161: getattr(ri, "herb_garden_operator_ids", []),
-        162: getattr(ri, "green_house_operator_ids", []),
+        **{wid: production.workers(k) for k, wid in production.KINDS.items()},
         71: work.roster(work.HR_WORK),
     }
-    line_defs = (
-        (getattr(ri, "assembly_line", None), 1, 121, "assembly_line"),
-        (getattr(ri, "herb_garden_line", None), 1, 161, "herb_garden_line"),
-        (getattr(ri, "green_house_line", None), 1, 162, "green_house_line"),
-        (getattr(ri, "recruit_line", None), 2, 71, "recruit_line"),
-    )
-    for lines, idx, wid, line_name in line_defs:
-        if not isinstance(lines, dict):
-            continue
-        mains = [
-            (line_id, v[idx])
-            for line_id, v in lines.items()
-            if isinstance(v, list) and len(v) > idx and v[idx]
+    slots = {
+        kind: (wid, [(i, v["main"]) for i, v in production.lines(kind).items()])
+        for kind, wid in production.KINDS.items()
+    }
+    recruit = getattr(ri, "recruit_line", None)
+    if isinstance(recruit, dict):
+        mains_at_2 = [
+            (i, v[2])
+            for i, v in recruit.items()
+            if isinstance(v, list) and len(v) > 2
         ]
+        slots["recruit_line"] = (71, mains_at_2)
+    for line_name, (wid, pairs) in slots.items():
+        mains = [(line_id, m) for line_id, m in pairs if m]
         occupant_count = Counter(m for _lid, m in mains)
         dup = {m for m, cnt in occupant_count.items() if cnt > 1}
         illegal = [

@@ -15,7 +15,7 @@ from Script.Config import game_config
 from Script.Design import attr_calculation, character_handle, child_stage_gate
 from typing import TYPE_CHECKING, TypedDict
 from Script.Design import game_time
-from Script.Modules.domains import economy, needs, power, work
+from Script.Modules.domains import economy, needs, power, production, work
 from Script.Modules.save_load import upgrade
 
 if TYPE_CHECKING:
@@ -435,6 +435,7 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
             }
 
         power.remap_operators(old_to_new_id)
+        production.remap(old_to_new_id)
 
         # maintenance_place (Dict[int, str] - 角色id:地点)
         if hasattr(ri, "maintenance_place"):
@@ -487,20 +488,6 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
 
         economy.remap_traders(old_to_new_id)
 
-        # assembly_line (Dict[int, List])
-        if hasattr(ri, "assembly_line"):
-            for line_id, raw_line_data in ri.assembly_line.items():
-                line_data = normalize_line_chara_id_data(raw_line_data, 1, 5)
-                ri.assembly_line[line_id] = line_data
-                if line_data[1] != 0:
-                    line_data[1] = old_to_new_id.get(line_data[1], line_data[1])
-
-        # production_worker_ids
-        if hasattr(ri, "production_worker_ids"):
-            ri.production_worker_ids = [
-                old_to_new_id.get(oid, oid) for oid in ri.production_worker_ids
-            ]
-
         # visitor_info (Dict[int, datetime])
         if hasattr(ri, "visitor_info"):
             old_visitors = ri.visitor_info.copy()
@@ -531,36 +518,6 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
             for _commission_id, data in ri.ongoing_field_commissions.items():
                 if len(data) > 0 and isinstance(data[0], list):
                     data[0] = [old_to_new_id.get(oid, oid) for oid in data[0]]
-
-        # herb_garden_line (Dict[int, List])
-        if hasattr(ri, "herb_garden_line"):
-            for line_id, raw_line_data in ri.herb_garden_line.items():
-                line_data = normalize_line_chara_id_data(raw_line_data, 1, 5)
-                ri.herb_garden_line[line_id] = line_data
-                if line_data[1] != 0:
-                    line_data[1] = old_to_new_id.get(line_data[1], line_data[1])
-
-        # herb_garden_operator_ids
-        if hasattr(ri, "herb_garden_operator_ids"):
-            ri.herb_garden_operator_ids = [
-                old_to_new_id.get(oid, oid)
-                for oid in ri.herb_garden_operator_ids
-            ]
-
-        # green_house_line (Dict[int, List])
-        if hasattr(ri, "green_house_line"):
-            for line_id, raw_line_data in ri.green_house_line.items():
-                line_data = normalize_line_chara_id_data(raw_line_data, 1, 5)
-                ri.green_house_line[line_id] = line_data
-                if line_data[1] != 0:
-                    line_data[1] = old_to_new_id.get(line_data[1], line_data[1])
-
-        # green_house_operator_ids
-        if hasattr(ri, "green_house_operator_ids"):
-            ri.green_house_operator_ids = [
-                old_to_new_id.get(oid, oid)
-                for oid in ri.green_house_operator_ids
-            ]
 
         # current_prisoners (Dict[int, List])
         if hasattr(ri, "current_prisoners"):
@@ -1400,6 +1357,7 @@ def migrate_character_replacement(
         power.remap_operators(old_to_new_id_map)
         work.set_warden(normalize_single_character_id(work.warden(), 0))
         work.remap(old_to_new_id_map)
+        production.remap(old_to_new_id_map)
 
         # maintenance_place
         if hasattr(ri, "maintenance_place") and ri.maintenance_place:
@@ -1450,23 +1408,6 @@ def migrate_character_replacement(
 
         economy.remap_traders(old_to_new_id_map)
 
-        # assembly_line
-        if hasattr(ri, "assembly_line") and ri.assembly_line:
-            for line_id, raw_line_data in ri.assembly_line.items():
-                line_data = normalize_line_chara_id_data(raw_line_data, 1, 5)
-                ri.assembly_line[line_id] = line_data
-                if line_data[1] != 0:
-                    line_data[1] = old_to_new_id_map.get(
-                        line_data[1], line_data[1]
-                    )
-
-        # production_worker_ids
-        if hasattr(ri, "production_worker_ids"):
-            ri.production_worker_ids = [
-                old_to_new_id_map.get(oid, oid)
-                for oid in ri.production_worker_ids
-            ]
-
         # visitor_info
         if hasattr(ri, "visitor_info") and ri.visitor_info:
             old_visitors = ri.visitor_info.copy()
@@ -1501,40 +1442,6 @@ def migrate_character_replacement(
                     data[0] = [
                         old_to_new_id_map.get(oid, oid) for oid in data[0]
                     ]
-
-        # herb_garden_line
-        if hasattr(ri, "herb_garden_line") and ri.herb_garden_line:
-            for line_id, raw_line_data in ri.herb_garden_line.items():
-                line_data = normalize_line_chara_id_data(raw_line_data, 1, 5)
-                ri.herb_garden_line[line_id] = line_data
-                if line_data[1] != 0:
-                    line_data[1] = old_to_new_id_map.get(
-                        line_data[1], line_data[1]
-                    )
-
-        # herb_garden_operator_ids
-        if hasattr(ri, "herb_garden_operator_ids"):
-            ri.herb_garden_operator_ids = [
-                old_to_new_id_map.get(oid, oid)
-                for oid in ri.herb_garden_operator_ids
-            ]
-
-        # green_house_line
-        if hasattr(ri, "green_house_line") and ri.green_house_line:
-            for line_id, raw_line_data in ri.green_house_line.items():
-                line_data = normalize_line_chara_id_data(raw_line_data, 1, 5)
-                ri.green_house_line[line_id] = line_data
-                if line_data[1] != 0:
-                    line_data[1] = old_to_new_id_map.get(
-                        line_data[1], line_data[1]
-                    )
-
-        # green_house_operator_ids
-        if hasattr(ri, "green_house_operator_ids"):
-            ri.green_house_operator_ids = [
-                old_to_new_id_map.get(oid, oid)
-                for oid in ri.green_house_operator_ids
-            ]
 
         # current_prisoners
         if hasattr(ri, "current_prisoners") and ri.current_prisoners:
