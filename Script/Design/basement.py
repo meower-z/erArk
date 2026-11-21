@@ -12,7 +12,7 @@ from Script.Config import game_config, normal_config
 from Script.Design import handle_premise, map_handle
 from Script.UI.Moudle import draw
 from Script.Design import game_time
-from Script.Modules.domains import economy, facility, power, work
+from Script.Modules.domains import economy, facility, power, warehouse, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏内缓存数据 """
@@ -31,11 +31,6 @@ def get_base_zero() -> game_type.Rhodes_Island:
     from Script.System.Medical_System import medical_service
 
     base_data = game_type.Rhodes_Island()
-
-    # 遍历全资源清单
-    for all_cid in game_config.config_resouce:
-        # 全资源数量设为0
-        base_data.materials_resouce[all_cid] = 0
 
     # 遍历全部书籍
     for book_id in game_config.config_book:
@@ -228,7 +223,7 @@ def update_facility_limits(base_data: game_type.Rhodes_Island) -> None:
         ][level]
         effect = game_config.config_facility_effect[effect_cid].effect
         if facility_data.name == _("仓储区"):
-            extra = base_data.used_extra_warehouse_capacity_module * 200
+            extra = warehouse.extra_modules() * 200
             base_data.warehouse_capacity = effect + extra
         elif facility_data.name == _("宿舍区"):
             base_data.people_max = effect
@@ -647,7 +642,7 @@ def settle_milk() -> None:
     # 结算冰箱中的母乳
     for character_id in cache.rhodes_island.milk_in_fridge:
         now_milk = cache.rhodes_island.milk_in_fridge[character_id]
-        cache.rhodes_island.materials_resouce[31] += now_milk
+        warehouse.add(31, now_milk)
         all_milk += now_milk
         # print(f"debug {cache.character_data[character_id].name}的母乳（{now_milk}ml）已转化为罗德岛的母乳")
     cache.rhodes_island.milk_in_fridge = {}
@@ -663,7 +658,7 @@ def settle_milk() -> None:
             food: game_type.Food = character_data.food_bag[food_id]
             # 如果是母乳，则转化，并删掉原物品
             if food.milk_ml > 0:
-                cache.rhodes_island.materials_resouce[31] += food.milk_ml
+                warehouse.add(31, food.milk_ml)
                 all_milk += food.milk_ml
                 # print(f"debug {character_data.name}携带的母乳（{food.ml}ml）已转化为罗德岛的母乳")
                 del character_data.food_bag[food.uid]
@@ -678,13 +673,8 @@ def settle_milk() -> None:
         now_draw.draw()
 
     # 检测是否超出仓库容量上限
-    if (
-        cache.rhodes_island.materials_resouce[31]
-        > cache.rhodes_island.warehouse_capacity
-    ):
-        cache.rhodes_island.materials_resouce[31] = (
-            cache.rhodes_island.warehouse_capacity
-        )
+    if warehouse.amount(31) > cache.rhodes_island.warehouse_capacity:
+        warehouse.set(31, cache.rhodes_island.warehouse_capacity)
         now_draw = draw.WaitDraw()
         now_draw.width = window_width
         now_draw.text = _(
@@ -699,7 +689,7 @@ def settle_semen() -> None:
     """
 
     today_semen = cache.rhodes_island.total_semen_count
-    cache.rhodes_island.materials_resouce[12] += today_semen
+    warehouse.add(12, today_semen)
     cache.rhodes_island.total_semen_count = 0
 
     # 输出提示信息
@@ -712,13 +702,8 @@ def settle_semen() -> None:
         now_draw.draw()
 
     # 检测是否超出仓库容量上限
-    if (
-        cache.rhodes_island.materials_resouce[12]
-        > cache.rhodes_island.warehouse_capacity
-    ):
-        cache.rhodes_island.materials_resouce[12] = (
-            cache.rhodes_island.warehouse_capacity
-        )
+    if warehouse.amount(12) > cache.rhodes_island.warehouse_capacity:
+        warehouse.set(12, cache.rhodes_island.warehouse_capacity)
         now_draw = draw.WaitDraw()
         now_draw.width = window_width
         now_draw.text = _(
@@ -804,11 +789,9 @@ def settle_pink_certificate() -> None:
         cache.rhodes_island.total_favorability_increased / 100
     )
     pink_certificate_add = max(pink_certificate_add, 0)
-    cache.rhodes_island.materials_resouce[4] += pink_certificate_add
+    warehouse.add(4, pink_certificate_add)
     # 结算陷落角色提供的的粉红凭证
-    cache.rhodes_island.materials_resouce[
-        4
-    ] += cache.rhodes_island.week_fall_chara_pink_certificate_add
+    warehouse.add(4, cache.rhodes_island.week_fall_chara_pink_certificate_add)
     # 输出提示信息
     now_draw = draw.WaitDraw()
     now_draw.width = window_width

@@ -10,6 +10,7 @@ from Script.Core import (
 )
 from Script.UI.Moudle import draw, panel, view
 from Script.Config import game_config, normal_config
+from Script.Modules.domains import warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -234,7 +235,6 @@ class Collection_Panel:
                     ):
                         bonus_draw = draw.NormalDraw()
                         bonus_draw.text = "  ●" + bonus_text
-                        # bonus_draw.style = "onbutton"
                         bonus_draw.width = self.width
                         bonus_draw.draw()
                     else:
@@ -402,7 +402,7 @@ class Collection_Panel:
 
         # 获得至纯源石
         if originium_prime_flag:
-            cache.rhodes_island.materials_resouce[3] += bonus_data.effect_1
+            warehouse.add(3, bonus_data.effect_1)
         # 解锁信物装备上限
         if token_flag:
             character_data.pl_collection.eqip_token[0] = max(

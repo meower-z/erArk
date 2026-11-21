@@ -12,7 +12,7 @@ from typing import TypedDict
 from Script.Config import game_config
 from Script.Core import cache_control, get_text
 from Script.Design import handle_ability
-from Script.Modules.domains import facility, power
+from Script.Modules.domains import facility, power, warehouse
 
 _: FunctionType = get_text._
 
@@ -327,12 +327,11 @@ def settle_day() -> Day:
     Return arguments:
     Day -- 这一天的各项数值
     """
-    island = cache_control.cache.rhodes_island
     detail = fire_detail()
     fuel_plan = detail["fuel_daily_plan"]
-    fuel_have = island.materials_resouce.get(15, 0)
+    fuel_have = warehouse.stock().get(15, 0)
     fuel_use = min(fuel_plan, float(fuel_have))
-    island.materials_resouce[15] = int(max(0, fuel_have - int(fuel_use)))
+    warehouse.set(15, int(max(0, fuel_have - int(fuel_use))))
     fire_power = round(
         (
             detail["theory_total"] * (fuel_use / fuel_plan)

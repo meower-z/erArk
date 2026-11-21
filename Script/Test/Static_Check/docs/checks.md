@@ -164,7 +164,7 @@ H 状态、群交模式、逆推、隐奸。
 | ISLAND-02 | 设施等级键完整且落在配置区间 | 当前配置的每个设施都在facility_level中有等级记录，且等级是int、落在该设施效果表的合法下标区间 |
 | ISLAND-03 | 非控制中枢设施等级不超过中枢等级+1 | 除控制中枢(cid 0)自身外，任一设施等级不得高于控制中枢等级+1 |
 | ISLAND-04 | 设施开放表键完整、值为0/1语义 | 当前配置的每个可开放设施都在facility_open中有开放记录，值必须是True/False或语义等价的1/0 |
-| ISLAND-05 | 资源表键完整且库存为非负整数 | 当前Resource.csv的每种资源都在materials_resouce中有库存记录，值必须是非负int |
+| ISLAND-05 | 资源表键完整且库存为非负整数 | 当前Resource.csv的每种资源都在base.stock中有库存记录，值必须是非负int |
 | ISLAND-06 | 仓库容量与干员上限是设施等级的派生值 | warehouse_capacity == 仓储区(cid 3)当前等级效果 + 已用仓储扩展模块数*200， people_max == 宿舍区(cid 4)当前等级效果 |
 | ISLAND-07 | 已招募干员的岗位id必须合法 | 每个在编非玩家干员的work.work_type存在于WorkType.csv |
 | ISLAND-08 | 岗位名册的岗位合法、成员合法且与所在岗位自洽 | 岗位名册（work.rosters）的每个岗位id都在岗位配置里；名册里的每个id必须是存在的角色，且其work.work_type 必须等于所在岗位 |
@@ -258,7 +258,7 @@ H 状态、群交模式、逆推、隐奸。
 | NUM-22 | 当前理智在[0,上限] | body.needs的sanity在[0, sanity_max]范围内 |
 | NUM-23 | 射精槽非负且不设上限 | chara.eja_point非负，不检查<=eja_point_max——槽满时"忍住射精"会直接return，合法保留 eja_point>=eja_point_max |
 | NUM-24 | 精液槽与临时精液槽范围 | chara.semen_point在[0, semen_point_max]，chara.tem_extra_semen_point在[0, semen_point_max*4] |
-| NUM-25 | 基地资源键集覆盖配表且为非负整数 | config_resouce的每个id都在cache.rhodes_island.materials_resouce中存在（配表⊆资源，方向同NUM-02—— 存档迁移只补不删已下线的资源id，多余键合法），且键为精确int、值为非负整数（各面板按固定id裸下标， 没有任何统一的max(0,...)兜底，负资源意味着某条支付路径漏判） |
+| NUM-25 | 基地资源键集覆盖配表且为非负整数 | config_resouce的每个id都在base.stock中存在（配表⊆资源，方向同NUM-02：读档只补缺的配置资源，不删已下线的资源id，多余键合法），且值为非负整数（各面板按固定id直接取库存，没有统一的max(0,...)兜底，负库存意味着某条支付路径漏判） |
 | NUM-26 | 仓库容量为非负整数 | cache.rhodes_island.warehouse_capacity为非负整数 |
 | NUM-27 | 疲劳/饥饿/熟睡/醉酒在各自量程内 | body.needs的tired∈[0,160]、hunger∈[0,240]、sleep∈[0,100]、drunk∈[0,100]，都须是int或Fraction |
 | NUM-28 | 尿意值非负且为整数 | body.needs的urine是非负的int或Fraction |

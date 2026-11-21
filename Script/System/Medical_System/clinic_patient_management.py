@@ -17,6 +17,7 @@ from Script.Core import cache_control, game_type, get_text, value_handle
 from Script.Design import handle_ability
 from Script.Modules.domains import economy
 from Script.System.Medical_System import medical_constant, medical_core
+from Script.Modules.domains import warehouse
 
 _: FunctionType = get_text._
 """ 翻译函数 """
@@ -665,9 +666,7 @@ def finalize_patient_after_diagnose(
         rhodes_island.medical_income_today += diagnose_income
         rhodes_island.medical_income_total += diagnose_income
         economy.add_income(diagnose_income)
-        rhodes_island.materials_resouce[1] = (
-            rhodes_island.materials_resouce.get(1, 0) + diagnose_income
-        )
+        warehouse.set(1, warehouse.stock().get(1, 0) + diagnose_income)
 
     # 判断是否需要住院
     hospitalized_success = False

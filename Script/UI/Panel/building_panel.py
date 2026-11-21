@@ -10,7 +10,7 @@ from Script.Core import (
 )
 from Script.Design import basement
 from Script.UI.Moudle import draw, view
-from Script.Modules.domains import economy, facility, power_supply
+from Script.Modules.domains import economy, facility, power_supply, warehouse
 from Script.Config import game_config, normal_config
 
 cache: game_type.Cache = cache_control.cache
@@ -84,7 +84,7 @@ class Building_Panel:
             resouce_text += _("  当前理论用电量: {0} / 理论供电量:{1}").format(
                 power_consumption, power_generation
             )
-            money = str(cache.rhodes_island.materials_resouce[1])
+            money = str(warehouse.amount(1))
             resouce_text += _("\n  当前龙门币数量    ：{0}\n").format(money)
             # 碳素建材的编号是15
             # building_materials = str(cache.base_resouce.materials_resouce[15])
@@ -227,7 +227,7 @@ class Building_Panel:
                 resouce_text += _(
                     "  当前理论用电量: {0} / 理论供电量:{1}"
                 ).format(power_consumption, power_generation)
-                money = str(cache.rhodes_island.materials_resouce[1])
+                money = str(warehouse.amount(1))
                 resouce_text += _("\n  当前龙门币数量    ：{0}\n").format(money)
                 # 碳素建材的编号是15
                 # building_materials = str(cache.base_resouce.materials_resouce[15])
@@ -242,10 +242,7 @@ class Building_Panel:
                 up_info_draw = draw.NormalDraw()
                 up_info_draw.text = _("当前无法升级：")
                 # 龙门币
-                if (
-                    cache.rhodes_island.materials_resouce[1]
-                    >= facility_data_next.money_use
-                ):
+                if warehouse.amount(1) >= facility_data_next.money_use:
                     pass
                 else:
                     up_info_draw.text += _("\n  升级所需龙门币不足")
@@ -353,9 +350,7 @@ class Building_Panel:
 
             # 寻找和当前设施名一样的
             if facility_data.name == facility_data_now.name:
-                cache.rhodes_island.materials_resouce[
-                    1
-                ] -= facility_data_next.money_use
+                warehouse.add(1, -facility_data_next.money_use)
                 facility.set_level(all_cid, facility.level(all_cid) + 1)
                 basement.get_base_updata()
 

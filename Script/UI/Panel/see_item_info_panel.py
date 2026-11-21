@@ -15,7 +15,7 @@ from Script.Core import (
 )
 from Script.UI.Moudle import panel, draw, view
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import needs
+from Script.Modules.domains import needs, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -245,7 +245,7 @@ class SeeCharacterItemBagPanel:
 
             # 绘制龙门币
             money_text = _("当前龙门币数量:{0}").format(
-                str(cache.rhodes_island.materials_resouce[1])
+                str(warehouse.amount(1))
             )
             money_draw = draw.NormalDraw()
             money_draw.text = money_text
@@ -253,7 +253,7 @@ class SeeCharacterItemBagPanel:
 
             # 绘制粉红凭证
             money_text = _("\n当前持有粉红凭证：{0}").format(
-                str(cache.rhodes_island.materials_resouce[4])
+                str(warehouse.amount(4))
             )
             now_draw = draw.NormalDraw()
             now_draw.text = money_text

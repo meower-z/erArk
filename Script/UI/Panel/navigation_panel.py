@@ -15,6 +15,7 @@ from Script.Core import (
 from Script.Design import map_handle, attr_text, game_time
 from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
+from Script.Modules.domains import warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -107,10 +108,9 @@ class Base_function_class:
         # 距离
         distance = scene_path[1]
         need_time = 7 + distance * 3
-        # print(f"debug scene_path = {scene_path}")
         if sp_flag == 0:
             # 当前燃料
-            now_fuel = cache.rhodes_island.materials_resouce[15]
+            now_fuel = warehouse.amount(15)
             need_fuel = 1000 * distance
             if now_fuel < need_fuel and not cache.debug_mode:
                 now_draw = draw.WaitDraw()
@@ -181,7 +181,7 @@ class Base_function_class:
                 if cache.debug_mode:
                     arrive_time = game_time.now()
                 cache.rhodes_island.move_target_and_time[2] = arrive_time
-                cache.rhodes_island.materials_resouce[15] -= need_fuel
+                warehouse.add(15, -need_fuel)
                 break
 
 

@@ -11,6 +11,7 @@ from Script.Core import (
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.save_load import reset
+from Script.Modules.domains import warehouse
 import random
 from Script.Modules.domains import facility
 
@@ -176,7 +177,7 @@ class Manage_Vehicle_Panel:
                 "○当前机库等级：{0}，载具数量：{1}/{2}\n"
             ).format(now_level, self.vehicle_count, vehicle_num_limit)
 
-            money = str(cache.rhodes_island.materials_resouce[1])
+            money = str(warehouse.amount(1))
             facility_info_text += _("○当前龙门币数量：{0}\n").format(money)
 
             facility_info_draw = draw.NormalDraw()
@@ -473,7 +474,7 @@ class Manage_Vehicle_Panel:
                 owned_count
             )
 
-            money = str(cache.rhodes_island.materials_resouce[1])
+            money = str(warehouse.amount(1))
             info_draw.text += _("\n 当前龙门币数量：{0}").format(money)
             info_draw.width = self.width
             info_draw.draw()
@@ -489,9 +490,7 @@ class Manage_Vehicle_Panel:
             ].effect
 
             money_left_draw = draw.NormalDraw()
-            money_left = (
-                cache.rhodes_island.materials_resouce[1] - vehicle_price
-            )
+            money_left = warehouse.amount(1) - vehicle_price
             money_left_draw.text = _(" 购买后剩余龙门币数量：{0}").format(
                 money_left
             )
@@ -596,8 +595,8 @@ class Manage_Vehicle_Panel:
         info_draw = draw.WaitDraw()
         info_draw.width = window_width
         # 购买载具
-        if cache.rhodes_island.materials_resouce[1] >= vehicle_price:
-            cache.rhodes_island.materials_resouce[1] -= vehicle_price
+        if warehouse.amount(1) >= vehicle_price:
+            warehouse.add(1, -vehicle_price)
             cache.rhodes_island.vehicles[vehicle_id][0] += 1
             self.vehicle_count += 1
             info_draw.text = _("\n花费 {0} 龙门币购买了一个 {1}\n").format(
@@ -620,7 +619,7 @@ class Manage_Vehicle_Panel:
         vehicle_data = game_config.config_vehicle[vehicle_id]
         vehicle_price = int(vehicle_data.price * 0.8)
         # 出售载具
-        cache.rhodes_island.materials_resouce[1] += vehicle_price
+        warehouse.add(1, vehicle_price)
         cache.rhodes_island.vehicles[vehicle_id][0] -= 1
         self.vehicle_count -= 1
         info_draw = draw.WaitDraw()

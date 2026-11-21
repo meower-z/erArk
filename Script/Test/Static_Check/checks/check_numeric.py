@@ -20,7 +20,7 @@ from typing import TypeGuard
 from Script.Core import cache_control, num
 from Script.Config import game_config
 from Script.Design import game_time
-from Script.Modules.domains import facility, needs
+from Script.Modules.domains import facility, needs, warehouse
 from ..check_registry import CheckFailure, register_check, make_failure
 
 
@@ -1032,22 +1032,18 @@ def check_num_25_base_resource() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验config_resouce的每个id都在cache.rhodes_island.materials_resouce中存在（配表⊆资源，方向同NUM-02——
-        存档迁移只补不删已下线的资源id，多余键合法），且键为精确int、值为非负整数（各面板按固定id裸下标，
-        没有任何统一的max(0,...)兜底，负资源意味着某条支付路径漏判）。不检查库存<=warehouse_capacity——裁剪只
-        在日结与产线两处发生，日内多条入库路径不钳制，检查器挂在场景面板输入前拿不到"刚完成日结"的阶段标记。
-        龙门币为资源id 1，键集条件独立于debug_mode（键集/容器类不加该守卫），但数值下界受debug_mode守卫
-        （debug模式购买跳过余额校验，资源可合法为负）。若config_resouce配表或rhodes_island结构不存在，
-        本检查对应部分退化为跳过。
+        校验config_resouce的每个id都在base.stock中有记录，且值为非负整数。键集方向同NUM-02（配表⊆资源）：读档只补缺的
+        配置资源，不删已下线的资源id，多余键合法。各面板按固定id直接取库存，没有统一的max(0,...)兜底，负库存意味着某条
+        支付路径漏判。键类型也查，但warehouse.stock()给出的键总是int。不检查库存<=warehouse_capacity：外勤委托的奖励
+        入库不按容量截断。debug_mode下不查数值（debug面板可以把资源1、2、4设成任意整数），键集照查。
+        config_resouce不是dict时跳过。
     """
     cache = cache_control.cache
     config_resouce = getattr(game_config, "config_resouce", None)
     if not isinstance(config_resouce, dict):
         return []
     rhodes_island = getattr(cache, "rhodes_island", None)
-    materials = getattr(rhodes_island, "materials_resouce", None)
-    if not isinstance(materials, dict):
-        return []
+    materials = warehouse.stock()
     config_keys = set(config_resouce)
     missing = config_keys - set(materials)
     key_type_ok = all(type(k) is int for k in materials)
@@ -1085,9 +1081,8 @@ def check_num_26_warehouse_capacity() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验cache.rhodes_island.warehouse_capacity为非负整数。该值被直接用作资源裁剪的上限值，负容量会在日结时
-        把母乳(资源31)与精液药材(资源12)写成负数，比NUM-25更靠近根因。下界取>=0而非>0——仓储区未建成时容量为0
-        是合法初态。带cache.debug_mode守卫。
+        校验cache.rhodes_island.warehouse_capacity为非负整数。日结按这个值截断资源31与资源12的库存，
+        负容量会把它们写成负数，比NUM-25更靠近根因。下界取>=0：罗德岛对象的容量初值就是0。debug_mode下不查。
     """
     cache = cache_control.cache
     if cache.debug_mode:
@@ -1096,8 +1091,7 @@ def check_num_26_warehouse_capacity() -> list[CheckFailure]:
     capacity = getattr(rhodes_island, "warehouse_capacity", None)
     if type(capacity) is int and capacity >= 0:
         return []
-    materials = getattr(rhodes_island, "materials_resouce", None)
-    materials = materials if isinstance(materials, dict) else {}
+    materials = warehouse.stock()
     warehouse_level = facility.levels().get(3)
     return [
         make_failure(
@@ -1105,9 +1099,8 @@ def check_num_26_warehouse_capacity() -> list[CheckFailure]:
             "仓库容量为非负整数",
             (
                 f"warehouse_capacity={capacity!r} facility_level[3]={warehouse_level} "
-                f"used_extra_warehouse_capacity_module="
-                f"{getattr(rhodes_island, 'used_extra_warehouse_capacity_module', '?')} "
-                f"materials_resouce[31]={materials.get(31)} materials_resouce[12]={materials.get(12)}"
+                f"base.warehouse_modules={warehouse.extra_modules()} "
+                f"base.stock[31]={materials.get(31)} base.stock[12]={materials.get(12)}"
             ),
         )
     ]

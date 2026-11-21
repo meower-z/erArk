@@ -13,7 +13,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import panel, draw, view
 from Script.UI.Panel import see_item_info_panel
-from Script.Modules.domains import facility
+from Script.Modules.domains import facility, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -145,7 +145,7 @@ class HItemShopPanel:
 
             # 绘制粉色凭证
             money_text = _("当前持有粉色凭证：{0}").format(
-                str(cache.rhodes_island.materials_resouce[4])
+                str(warehouse.amount(4))
             )
             now_draw = draw.NormalDraw()
             now_draw.text = money_text
@@ -371,15 +371,12 @@ class BuyItemByItemNameDraw:
         line.draw()
         item_config = game_config.config_item[self.text]
         now_price = item_config.price * number
-        if (
-            cache.rhodes_island.materials_resouce[4] >= now_price
-            or cache.debug_mode
-        ):
+        if warehouse.amount(4) >= now_price or cache.debug_mode:
             self.character_data.item[self.text] += number
             self.character_data.item[self.text] = min(
                 self.character_data.item[self.text], 99
             )
-            cache.rhodes_island.materials_resouce[4] -= now_price
+            warehouse.add(4, -now_price)
             now_text = _("{0}花费了{1}粉红凭证，购买了{2}个{3}").format(
                 self.character_data.nick_name,
                 now_price,

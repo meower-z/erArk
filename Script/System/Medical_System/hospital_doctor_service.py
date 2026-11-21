@@ -16,6 +16,7 @@ from Script.Core import game_type
 from Script.Design import handle_ability
 from Script.System.Medical_System import medical_constant, medical_core
 from Script.Design import game_time
+from Script.Modules.domains import warehouse
 
 
 @dataclass
@@ -176,7 +177,7 @@ def evaluate_surgery_preconditions(
     resource_plan = medical_service.resolve_surgery_requirements(
         severity_config
     )
-    inventory = getattr(rhodes_island, "materials_resouce", {}) or {}
+    inventory = warehouse.stock()
     resource_usage: dict[int, int] = {}
 
     for resource_id, amount in resource_plan.items():
@@ -239,12 +240,7 @@ def consume_surgery_resources(
         patient.surgery_blocked_resource = None
         return False
 
-    # 准备库存引用，避免后续写入报错。
-    inventory = getattr(rhodes_island, "materials_resouce", None)
-    if not isinstance(inventory, dict):
-        patient.surgery_blocked = True
-        patient.surgery_blocked_resource = None
-        return False
+    inventory = warehouse.stock()
 
     # 解析手术药品清单，并逐项确认库存是否充足。
     resource_plan = medical_service.resolve_surgery_requirements(
@@ -268,7 +264,7 @@ def consume_surgery_resources(
     consumed_total = 0
     for resource_id, units in resource_usage.items():
         current_stock = int(inventory.get(resource_id, 0) or 0)
-        inventory[resource_id] = current_stock - units
+        warehouse.set(resource_id, current_stock - units)
         consumed_total += units
         patient.medicine_consumed_units[resource_id] = (
             int(patient.medicine_consumed_units.get(resource_id, 0) or 0)

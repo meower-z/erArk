@@ -15,7 +15,7 @@ from Script.Core import (
 from Script.Config import game_config, normal_config
 from Script.Design import attr_calculation
 from Script.UI.Moudle import draw, panel, view
-from Script.Modules.domains import facility, power, power_supply
+from Script.Modules.domains import facility, power, power_supply, warehouse
 
 from typing import TYPE_CHECKING
 
@@ -463,7 +463,7 @@ class Manage_Power_System_Panel:
                 power_supply.power_generation(),
             )
             # 燃料库存
-            now_have = ri.materials_resouce.get(15, 0)
+            now_have = warehouse.stock().get(15, 0)
             daily_use = power_supply.fire_detail()["fuel_daily_plan"]
             support_days = (
                 int(now_have // daily_use) if daily_use > 1e-6 else 9999
@@ -490,14 +490,14 @@ class Manage_Power_System_Panel:
                 "  副源石反应炉扩展模块 ：已用 {0} / 总 {1} （含区块等级提供的{2}）\n"
             ).format(
                 power.plant()["aux_reactors"],
-                ri.materials_resouce[51] + base_power_facility_by_fac_lv,
+                warehouse.amount(51) + base_power_facility_by_fac_lv,
                 base_power_facility_by_fac_lv,
             )
             extra_module.text += _(
                 "  清洁能源通用扩展模块 ：已用 {0} / 总 {1} （含区块等级提供的{2}）\n"
             ).format(
                 sum(power.plant()["clean"]),
-                ri.materials_resouce[53] + base_power_facility_by_fac_lv,
+                warehouse.amount(53) + base_power_facility_by_fac_lv,
                 base_power_facility_by_fac_lv,
             )
             extra_module.draw()
@@ -707,7 +707,6 @@ class Manage_Power_System_Panel:
     # ---------- 蓄电池管理 ---------- #
     def _panel_battery(self) -> None:
         """蓄电池管理子界面"""
-        ri = cache.rhodes_island
         fac_lv = facility.level(1, 1)
         # 设施等级提供的基础上限
         base_battery_by_fac_lv = fac_lv * 2 + 8
@@ -734,7 +733,7 @@ class Manage_Power_System_Panel:
                 "  蓄电池通用扩展模块 ：已用 {0} / 总 {1} （含区块等级提供的{2}）\n"
             ).format(
                 total_batt,
-                ri.materials_resouce[52] + base_battery_by_fac_lv,
+                warehouse.amount(52) + base_battery_by_fac_lv,
                 base_battery_by_fac_lv,
             )
             summary.draw()

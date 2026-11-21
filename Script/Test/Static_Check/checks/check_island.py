@@ -22,7 +22,7 @@ from typing import Any
 
 from Script.Core import cache_control
 from Script.Config import game_config
-from Script.Modules.domains import economy, facility, power, work
+from Script.Modules.domains import economy, facility, power, warehouse, work
 from Script.System.Dormitory_System import common as dorm_common
 from ..check_registry import CheckFailure, register_check, make_failure
 
@@ -261,16 +261,12 @@ def check_island_05_resource_stock() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验当前Resource.csv的每种资源都在materials_resouce中有库存记录，值必须是非负int。负库存意味着某处
-        扣减漏了余额检查。同样用<=比较键集：读档只补新增资源键、不删历史键。已知合法误报源：debug面板允许
-        把龙门币/合成玉/粉红凭证输入成任意整数（含负数），失败上下文附带cache.debug_mode供排查时参考，
-        但不作硬豁免
+        校验当前Resource.csv的每种资源都在base.stock中有库存记录，值必须是非负int。负库存意味着某处扣减漏了余额检查。
+        同样用<=比较键集：读档只补缺的配置资源，不删已下线的资源id。已知合法误报源：debug面板可以把资源1、2、4
+        的库存设成任意整数（含负数）。失败上下文附带cache.debug_mode供排查时参考，但不作硬豁免
     """
     cache = cache_control.cache
-    ri = cache.rhodes_island
-    materials = getattr(ri, "materials_resouce", None)
-    if not isinstance(materials, dict):
-        return []
+    materials = warehouse.stock()
     missing = [
         rid for rid in game_config.config_resouce if rid not in materials
     ]
@@ -319,7 +315,7 @@ def check_island_06_warehouse_and_people_max() -> list[CheckFailure]:
         return []
     failures = []
     warehouse_capacity = getattr(ri, "warehouse_capacity", None)
-    used_extra = getattr(ri, "used_extra_warehouse_capacity_module", 0)
+    used_extra = warehouse.extra_modules()
     expected_warehouse = eff3 + used_extra * 200
     if warehouse_capacity != expected_warehouse:
         failures.append(
@@ -327,7 +323,7 @@ def check_island_06_warehouse_and_people_max() -> list[CheckFailure]:
                 "ISLAND-06",
                 "仓库容量与干员上限是设施等级的派生值",
                 f"ri.warehouse_capacity={warehouse_capacity}，期望值=_eff(3)({eff3})+"
-                f"used_extra_warehouse_capacity_module({used_extra})*200={expected_warehouse}，"
+                f"base.warehouse_modules({used_extra})*200={expected_warehouse}，"
                 f"facility_level[3]={facility.levels().get(3)}，"
                 f"本次读档后是否打开过基建/建造面板需人工排查",
                 [],

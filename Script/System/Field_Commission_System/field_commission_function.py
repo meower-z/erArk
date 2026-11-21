@@ -5,6 +5,7 @@ from Script.Core import cache_control, game_type, get_text
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Design import game_time, attr_calculation, talk, handle_premise
+from Script.Modules.domains import warehouse
 import random
 
 cache: game_type.Cache = cache_control.cache
@@ -169,7 +170,7 @@ def process_commission_text(
     if text_list[0] == "r":
         item_name = game_config.config_resouce[item_id].name
         item_type = game_config.config_resouce[item_id].type
-        now_have_item_num = cache.rhodes_island.materials_resouce[item_id]
+        now_have_item_num = warehouse.amount(item_id)
     # 能力
     elif text_list[0] == "a":
         item_name = game_config.config_ability[item_id].name
@@ -274,7 +275,7 @@ def process_commission_text(
         if len(nation_specialty_list):
             item_id = nation_specialty_list[0]
             item_name = game_config.config_resouce[item_id].name
-            now_have_item_num = cache.rhodes_island.materials_resouce[item_id]
+            now_have_item_num = warehouse.amount(item_id)
     # 声望
     elif text_list[0] == "声望":
         item_name = _("声望")
@@ -360,7 +361,7 @@ def process_commission_text(
         else:
             # 扣除资源
             if deduction_or_increase and text_list[0] == "r":
-                cache.rhodes_island.materials_resouce[item_id] -= int(item_num)
+                warehouse.add(item_id, -int(item_num))
             elif deduction_or_increase and text_list[0] == "声望":
                 # 将不再扣除声望
                 # cache.country.nation_reputation[item_id] -= item_num
@@ -371,7 +372,7 @@ def process_commission_text(
         if deduction_or_increase:
             # 资源
             if text_list[0] == "r":
-                cache.rhodes_island.materials_resouce[item_id] += int(item_num)
+                warehouse.add(item_id, int(item_num))
             # 经验
             elif text_list[0] == "e":
                 for character_id in send_npc_list:
@@ -404,7 +405,7 @@ def process_commission_text(
                 item_num_text = _("成为干员")
             # 特产
             elif text_list[0] == "特产":
-                cache.rhodes_island.materials_resouce[item_id] += int(item_num)
+                warehouse.add(item_id, int(item_num))
             # 委托部分，-1不可完成，0可以进行，1已完成
             elif text_list[0] == "m":
                 if item_num == -1:
@@ -433,7 +434,6 @@ def process_commission_text(
             # 声望
             elif text_list[0] == "声望":
                 # 在前面已经乘过了，不需要再乘一遍
-                # item_num *= 0.01
                 cache.country.nation_reputation[item_id] += item_num
             # 好感
             elif text_list[0] == "好感":

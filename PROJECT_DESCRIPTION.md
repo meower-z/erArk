@@ -652,7 +652,7 @@ init_character_behavior()
 | 动力/能源 | `Modules/domains/power.py`, `Modules/domains/power_supply.py`, `Settle/power_settle.py`, `UI/Panel/manage_power_system_panel.py` | `Power_Generation.csv`, `Power_Storage.csv` |
 | 农业生产 | `UI/Panel/agriculture_production_panel.py`, `Design/basement.py` | 农场设施 |
 | 工业生产/流水线 | `UI/Panel/manage_assembly_line_panel.py` | `ProductFormula.csv` |
-| 资源交易 | `UI/Panel/resource_exchange_panel.py`, `Modules/domains/economy.py` | `Resource.csv`, `Restaurant.csv` |
+| 资源交易 | `UI/Panel/resource_exchange_panel.py`, `Modules/domains/economy.py`, `Modules/domains/warehouse.py` | `Resource.csv`, `Restaurant.csv` |
 | 装备维护 | `UI/Panel/equipmen_panel.py` | `Equipment_*` 系列 |
 | 载具管理 | `UI/Panel/manage_vehicle_panel.py` | `Vehicle.csv` |
 | 宿舍管理 | `System/Dormitory_System/*` | 宿舍场景地图 |
