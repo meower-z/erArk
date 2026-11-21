@@ -188,18 +188,13 @@ def settle_assembly_line(
                     produce_num, game_config.config_resouce[product_id].name
                 )
                 # 不会超过仓库容量
-                if (
-                    warehouse.amount(product_id)
-                    > cache.rhodes_island.warehouse_capacity
-                ):
-                    warehouse.set(
-                        product_id, cache.rhodes_island.warehouse_capacity
-                    )
+                if warehouse.amount(product_id) > warehouse.capacity():
+                    warehouse.set(product_id, warehouse.capacity())
                     now_text += _(
                         "，由于仓库容量不足，{0}已达上限数量{1}"
                     ).format(
                         game_config.config_resouce[product_id].name,
-                        cache.rhodes_island.warehouse_capacity,
+                        warehouse.capacity(),
                     )
                     un_normal = True
                 now_text += "\n"
@@ -223,8 +218,8 @@ def settle_assembly_line(
         # 结算模块数量，重新计算床位上限
         with medical.editing() as m:
             m.bed_modules += hospital_bed_modules
-            cache.rhodes_island.medical_bed_limit = (
-                medical_core._calculate_medical_bed_limit(cache.rhodes_island)
+            m.bed_limit = medical_core._calculate_medical_bed_limit(
+                cache.rhodes_island
             )
         # 绘制信息
         hospital_bed_modules_text = _(
@@ -243,8 +238,6 @@ def settle_assembly_line(
         warehouse.set_extra_modules(
             warehouse.extra_modules() + extra_warehouse_modules
         )
-        # 增加仓库容量
-        cache.rhodes_island.warehouse_capacity += extra_warehouse_modules * 200
         # 绘制信息
         extra_warehouse_modules_text = _(
             "○由于生产了{0}个仓储空间扩展模块，罗德岛仓库容量提升了{1}！\n"
@@ -295,7 +288,7 @@ class Manage_Assembly_Line_Panel:
                 " 当前仓库等级：{0}，容量（单资源存放上限）：{1}\n"
             ).format(
                 facility.level(3),
-                cache.rhodes_island.warehouse_capacity,
+                warehouse.capacity(),
             )
 
             # 遍历全资源类型

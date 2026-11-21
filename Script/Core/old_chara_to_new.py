@@ -15,7 +15,8 @@ from Script.Config import game_config
 from Script.Design import attr_calculation, character_handle, child_stage_gate
 from typing import TYPE_CHECKING, TypedDict
 from Script.Design import game_time
-from Script.Modules.domains import commission, diplomacy, economy, library
+from Script.Modules.domains import commission, diplomacy, economy, fridge
+from Script.Modules.domains import library
 from Script.Modules.domains import medical, modes, needs, playthrough, power
 from Script.Modules.domains import production, recruit, visitor, work
 from Script.Modules.save_load import upgrade
@@ -421,13 +422,8 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
                 for oid in ri.equipment_maintain_operator_ids
             ]
 
-        # milk_in_fridge (Dict[int, int] - 干员id:母乳ml存量)
-        if hasattr(ri, "milk_in_fridge"):
-            old_milk = ri.milk_in_fridge.copy()
-            ri.milk_in_fridge = {}
-            for old_id, value in old_milk.items():
-                new_id = old_to_new_id.get(old_id, old_id)
-                ri.milk_in_fridge[new_id] = value
+        # 冰箱两个表里的角色id
+        fridge.remap(old_to_new_id)
 
         # 医疗部的门诊、住院医生名单与分科配置
         medical.remap_doctors(old_to_new_id)
@@ -453,14 +449,6 @@ def migrate_old_save_data(loaded_dict: dict[str, Any]) -> int:
                 new_id = old_to_new_id.get(old_id, old_id)
                 new_target = old_to_new_id.get(old_target, old_target)
                 ri.maintenance_equipment_chara_id[new_id] = new_target
-
-        # urine_in_fridge (Dict[int, int])
-        if hasattr(ri, "urine_in_fridge"):
-            old_urine = ri.urine_in_fridge.copy()
-            ri.urine_in_fridge = {}
-            for old_id, value in old_urine.items():
-                new_id = old_to_new_id.get(old_id, old_id)
-                ri.urine_in_fridge[new_id] = value
 
         # today_physical_examination_chara_id_dict (Dict[int, set])
         if hasattr(ri, "today_physical_examination_chara_id_dict"):
@@ -1269,12 +1257,8 @@ def migrate_character_replacement(
                 for oid in ri.equipment_maintain_operator_ids
             ]
 
-        # milk_in_fridge
-        if hasattr(ri, "milk_in_fridge") and ri.milk_in_fridge:
-            old_milk = ri.milk_in_fridge.copy()
-            ri.milk_in_fridge = {}
-            for oid, value in old_milk.items():
-                ri.milk_in_fridge[old_to_new_id_map.get(oid, oid)] = value
+        # 冰箱两个表里的角色id
+        fridge.remap(old_to_new_id_map)
 
         # 医疗部的门诊、住院医生名单与分科配置
         medical.remap_doctors(old_to_new_id_map)
@@ -1302,13 +1286,6 @@ def migrate_character_replacement(
                 new_id = old_to_new_id_map.get(oid, oid)
                 new_target = old_to_new_id_map.get(old_target, old_target)
                 ri.maintenance_equipment_chara_id[new_id] = new_target
-
-        # urine_in_fridge
-        if hasattr(ri, "urine_in_fridge") and ri.urine_in_fridge:
-            old_urine = ri.urine_in_fridge.copy()
-            ri.urine_in_fridge = {}
-            for oid, value in old_urine.items():
-                ri.urine_in_fridge[old_to_new_id_map.get(oid, oid)] = value
 
         # today_physical_examination_chara_id_dict
         if (
@@ -2259,9 +2236,8 @@ def _clear_young_child_reference(
             child.entertainment.borrow_book_id_set = set()
             count += 1
     rhodes_island = loaded_dict["rhodes_island"]
+    count += fridge.drop(young_child_id_set)
     for chara_key_dict in (
-        rhodes_island.milk_in_fridge,
-        rhodes_island.urine_in_fridge,
         rhodes_island.current_prisoners,
         rhodes_island.today_physical_examination_chara_id_dict,
     ):

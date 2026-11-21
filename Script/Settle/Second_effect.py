@@ -16,7 +16,7 @@ from Script.Settle.common_default import (
     base_chara_state_common_settle,
 )
 from Script.Design import game_time
-from Script.Modules.domains import needs, pregnancy
+from Script.Modules.domains import fridge, needs, pregnancy
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -3243,8 +3243,7 @@ def handle_milking_machine(
                 5 * character_data.behavior.duration,
             )
         )
-        cache.rhodes_island.milk_in_fridge.setdefault(character_id, 0)
-        cache.rhodes_island.milk_in_fridge[character_id] += now_milk
+        fridge.add(fridge.MILK, character_id, now_milk)
         pl_character_data.pl_collection.milk_total.setdefault(character_id, 0)
         pl_character_data.pl_collection.milk_total[character_id] += now_milk
         needs.add(character_id, "milk", -(now_milk))
@@ -3302,8 +3301,7 @@ def handle_urine_collector(
                 5 * character_data.behavior.duration,
             )
         )
-        cache.rhodes_island.urine_in_fridge.setdefault(character_id, 0)
-        cache.rhodes_island.urine_in_fridge[character_id] += now_urine
+        fridge.add(fridge.URINE, character_id, now_urine)
         pl_character_data.pl_collection.urine_total.setdefault(character_id, 0)
         pl_character_data.pl_collection.urine_total[character_id] += now_urine
         needs.add(character_id, "urine", -(now_urine))
@@ -3353,8 +3351,7 @@ def handle_b_orgasm_to_milk(
 
         # 如果已经装上搾乳机了，则收集至搾乳机中
         if character_data.h_state.body_item[4][1]:
-            cache.rhodes_island.milk_in_fridge.setdefault(character_id, 0)
-            cache.rhodes_island.milk_in_fridge[character_id] += eject_milk
+            fridge.add(fridge.MILK, character_id, eject_milk)
             pl_character_data.pl_collection.milk_total.setdefault(
                 character_id, 0
             )
@@ -3405,8 +3402,7 @@ def handle_u_orgasm_to_pee(
 
         # 如果已经装上采尿器了，则收集至采尿器中
         if character_data.h_state.body_item[5][1]:
-            cache.rhodes_island.urine_in_fridge.setdefault(character_id, 0)
-            cache.rhodes_island.urine_in_fridge[character_id] += eject_urine
+            fridge.add(fridge.URINE, character_id, eject_urine)
             pl_character_data.pl_collection.urine_total.setdefault(
                 character_id, 0
             )

@@ -155,7 +155,7 @@ class OverviewSubPanel(_BaseSubPanel):
         )
         patients_today = list(outpatient_table.values())
         hospitalized = list(hospital_table.values())
-        bed_limit = int(ri.medical_bed_limit)
+        bed_limit = int(medical.state().bed_limit)
         bed_occupied = len(hospital_table)
         price_ratio = medical_service.get_medical_price_ratio()
         priority_mode = medical_service.get_patient_priority_mode()
@@ -255,7 +255,7 @@ class DoctorManagementSubPanel(_BaseSubPanel):
         hospital_ids = medical_service.list_role_doctors(
             medical_constant.SPECIALIZATION_ROLE_HOSPITAL
         )
-        bed_limit = int(ri.medical_bed_limit)
+        bed_limit = int(medical.state().bed_limit)
         hospital_table = medical_service.get_patient_table(
             target_base=ri, hospitalized=True
         )

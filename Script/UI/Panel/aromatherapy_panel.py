@@ -11,7 +11,7 @@ from Script.Core import (
 from Script.UI.Moudle import draw, view
 from Script.Config import game_config, normal_config
 from Script.Modules.tk_ui import player_pick
-from Script.Modules.domains import facility, warehouse
+from Script.Modules.domains import facility, tallies, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -34,11 +34,11 @@ def settle_aromatherapy_sessions() -> None:
 
     # 刷新香薰疗愈次数
     if level >= 5:
-        cache.rhodes_island.remaining_aromatherapy_sessions_today = 3
+        tallies.set(tallies.AROMATHERAPY, 3)
     elif level == 4:
-        cache.rhodes_island.remaining_aromatherapy_sessions_today = 2
+        tallies.set(tallies.AROMATHERAPY, 2)
     elif level <= 3:
-        cache.rhodes_island.remaining_aromatherapy_sessions_today = 1
+        tallies.set(tallies.AROMATHERAPY, 1)
 
 
 class Aromatherapy_Panel:
@@ -80,7 +80,7 @@ class Aromatherapy_Panel:
             # 剩余调香次数
             now_text = ""
             now_text += _("\n  今日剩余调香次数    ：  {0}次").format(
-                cache.rhodes_island.remaining_aromatherapy_sessions_today
+                tallies.get(tallies.AROMATHERAPY)
             )
             all_info_draw.text = now_text
             all_info_draw.draw()
@@ -150,8 +150,7 @@ class Aromatherapy_Panel:
             yes_show_flag = False
             if (
                 self.now_choice_recipe_id != 0
-                and cache.rhodes_island.remaining_aromatherapy_sessions_today
-                > 0
+                and tallies.get(tallies.AROMATHERAPY) > 0
                 and target_character_data.sp_flag.aromatherapy == 0
             ):
                 yes_show_flag = True

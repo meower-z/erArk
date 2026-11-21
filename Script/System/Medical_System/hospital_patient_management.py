@@ -51,7 +51,7 @@ def try_hospitalize(
         return False
 
     # 检查床位是否已满。
-    bed_limit = int(rhodes_island.medical_bed_limit or 0)
+    bed_limit = int(medical.state().bed_limit or 0)
     if bed_limit > 0 and len(medical.state().hospitalized) >= bed_limit:
         return False
 

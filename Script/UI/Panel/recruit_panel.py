@@ -62,7 +62,7 @@ def can_recruit() -> bool:
     Return arguments:
     bool -- 可以招募时为 True
     """
-    if len(cache.npc_id_got) >= cache.rhodes_island.people_max:
+    if len(cache.npc_id_got) >= facility.people_max():
         now_draw = draw.WaitDraw()
         now_draw.width = window_width
         now_draw.style = "gold_enrod"
@@ -90,7 +90,7 @@ def recruit_new_chara() -> bool:
     now_draw.style = "gold_enrod"
     now_draw.text = ""
 
-    if len(cache.npc_id_got) >= cache.rhodes_island.people_max:
+    if len(cache.npc_id_got) >= facility.people_max():
         now_draw.text += _("\n\n   ※ 空余宿舍不足，无法招募 ※\n\n")
         now_draw.draw()
         return False

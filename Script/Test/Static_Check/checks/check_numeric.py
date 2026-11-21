@@ -1042,7 +1042,6 @@ def check_num_25_base_resource() -> list[CheckFailure]:
     config_resouce = getattr(game_config, "config_resouce", None)
     if not isinstance(config_resouce, dict):
         return []
-    rhodes_island = getattr(cache, "rhodes_island", None)
     materials = warehouse.stock()
     config_keys = set(config_resouce)
     missing = config_keys - set(materials)
@@ -1066,7 +1065,7 @@ def check_num_25_base_resource() -> list[CheckFailure]:
                 (
                     f"资源缺键={missing} 键类型合法={key_type_ok} 非法值={value_bad} 涉及资源名={detail_names} "
                     f"game_time={game_time.now()} "
-                    f"warehouse_capacity={getattr(rhodes_island, 'warehouse_capacity', '?')}"
+                    f"warehouse_capacity={warehouse.capacity()}"
                 ),
             )
         )
@@ -1081,14 +1080,13 @@ def check_num_26_warehouse_capacity() -> list[CheckFailure]:
     返回值:
         List[CheckFailure]: 失败记录列表
     功能:
-        校验cache.rhodes_island.warehouse_capacity为非负整数。日结按这个值截断资源31与资源12的库存，
-        负容量会把它们写成负数，比NUM-25更靠近根因。下界取>=0：罗德岛对象的容量初值就是0。debug_mode下不查。
+        校验warehouse.capacity()为非负整数。日结按这个值截断资源31与资源12的库存，
+        负容量会把它们写成负数，比NUM-25更靠近根因。debug_mode下不查。
     """
     cache = cache_control.cache
     if cache.debug_mode:
         return []
-    rhodes_island = getattr(cache, "rhodes_island", None)
-    capacity = getattr(rhodes_island, "warehouse_capacity", None)
+    capacity = warehouse.capacity()
     if type(capacity) is int and capacity >= 0:
         return []
     materials = warehouse.stock()

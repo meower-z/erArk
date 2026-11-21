@@ -165,7 +165,6 @@ H 状态、群交模式、逆推、隐奸。
 | ISLAND-03 | 非控制中枢设施等级不超过中枢等级+1 | 除控制中枢(cid 0)自身外，任一设施等级不得高于控制中枢等级+1 |
 | ISLAND-04 | 设施开放表键完整、值为0/1语义 | 当前配置的每个可开放设施都在facility_open中有开放记录，值必须是True/False或语义等价的1/0 |
 | ISLAND-05 | 资源表键完整且库存为非负整数 | 当前Resource.csv的每种资源都在base.stock中有库存记录，值必须是非负int |
-| ISLAND-06 | 仓库容量与干员上限是设施等级的派生值 | warehouse_capacity == 仓储区(cid 3)当前等级效果 + 已用仓储扩展模块数*200， people_max == 宿舍区(cid 4)当前等级效果 |
 | ISLAND-07 | 已招募干员的岗位id必须合法 | 每个在编非玩家干员的work.work_type存在于WorkType.csv |
 | ISLAND-08 | 岗位名册的岗位合法、成员合法且与所在岗位自洽 | 岗位名册（work.rosters）的每个岗位id都在岗位配置里；名册里的每个id必须是存在的角色，且其work.work_type 必须等于所在岗位 |
 | ISLAND-09 | 岗位集合与在编名单的逐人重算一致 | 按当前在编名单逐人重算的岗位集合应与岗位名册一致 |
@@ -180,7 +179,7 @@ H 状态、群交模式、逆推、隐奸。
 | ISLAND-19 | 已招募干员的宿舍路径必须是合法场景 | 每个在编非玩家干员的dormitory必须非空且是cache.scene_data的合法键，不得残留""或模板值"无" |
 | ISLAND-20 | 普通宿舍房间不超过2人 | 普通宿舍房设计容量2人；超员说明分配逻辑或特殊搬迁把人塞进了满房 |
 | ISLAND-21 | 借书记录双向一致且不超借阅上限 | library.holders()[book]=借阅者id(-1未借出，0为玩家)与角色的entertainment.borrow_book_id_set必须 互为反向索引；书籍id必须合法；单人持书不超过3本 |
-| ISLAND-22 | 一周派对排期键值合法且同一娱乐不占两天 | party_day_of_week必须是dict、键恰为0..6，值为合法娱乐id(0表示无活动)，且同一非零娱乐id不得同时 占据两天 |
+| ISLAND-22 | 一周派对排期键值合法且同一娱乐不占两天 | 一周派对排期（entertainment.party_days()）的键恰为0..6，值为合法娱乐id(0表示无活动)，且同一非零娱乐id不得同时 占据两天 |
 | ISLAND-23 | 干员娱乐安排固定三项且id合法 | 每个角色的entertainment.entertainment_type必须是长度恰为3的list，每项都是Entertainment.csv中的 合法cid(0=无) |
 | ISLAND-24 | 自动交易设置键与阈值合法 | base.auto_trade里的自动交易设置键与阈值合法 |
 | ISLAND-25 | 载具在外数量与进行中委托占用一致 | base.vehicles里每种载具的记录是两个int(拥有数,外勤中数)，满足0<=外勤中数<=拥有数，外勤中数等于所有进行中委托派出该型载具的台数之和，委托派出的载具型号必须同时存在于配置与载具表 |
@@ -259,7 +258,7 @@ H 状态、群交模式、逆推、隐奸。
 | NUM-23 | 射精槽非负且不设上限 | chara.eja_point非负，不检查<=eja_point_max——槽满时"忍住射精"会直接return，合法保留 eja_point>=eja_point_max |
 | NUM-24 | 精液槽与临时精液槽范围 | chara.semen_point在[0, semen_point_max]，chara.tem_extra_semen_point在[0, semen_point_max*4] |
 | NUM-25 | 基地资源键集覆盖配表且为非负整数 | config_resouce的每个id都在base.stock中存在（配表⊆资源，方向同NUM-02：读档只补缺的配置资源，不删已下线的资源id，多余键合法），且值为非负整数（各面板按固定id直接取库存，没有统一的max(0,...)兜底，负库存意味着某条支付路径漏判） |
-| NUM-26 | 仓库容量为非负整数 | cache.rhodes_island.warehouse_capacity为非负整数 |
+| NUM-26 | 仓库容量为非负整数 | warehouse.capacity()为非负整数 |
 | NUM-27 | 疲劳/饥饿/熟睡/醉酒在各自量程内 | body.needs的tired∈[0,160]、hunger∈[0,240]、sleep∈[0,100]、drunk∈[0,100]，都须是int或Fraction |
 | NUM-28 | 尿意值非负且为整数 | body.needs的urine是非负的int或Fraction |
 | NUM-29 | 角色尿意值不超过300 | 所有角色（含玩家cid=0）body.needs的urine不超过300（设计上界，realtime_settle、drunk_sex_common与default.py加尿意时都用它封顶），失败记录带[warning]前缀 |

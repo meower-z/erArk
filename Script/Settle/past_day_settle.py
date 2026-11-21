@@ -17,7 +17,7 @@ from Script.Design import (
 )
 from Script.UI.Moudle import draw
 from Script.Config import normal_config
-from Script.Modules.domains import history, needs
+from Script.Modules.domains import history, needs, tallies
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -183,8 +183,6 @@ def fall_chara_give_pink_voucher(character_id: int) -> None:
         character_id
     )
     if character_fall_level <= 3:
-        cache.rhodes_island.week_fall_chara_pink_certificate_add += (
-            character_fall_level * 20
-        )
+        tallies.add(tallies.FALLEN, character_fall_level * 20)
     else:
-        cache.rhodes_island.week_fall_chara_pink_certificate_add += 100
+        tallies.add(tallies.FALLEN, 100)

@@ -11,7 +11,7 @@ from Script.Core import (
 from Script.UI.Moudle import draw, panel, view
 from Script.UI.Panel import common_select_NPC
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import library
+from Script.Modules.domains import entertainment, library
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -267,7 +267,7 @@ class Manage_Library_Panel:
             for i in range(7):
                 week_date_data = game_config.config_week_day[i]
                 button_text = f"  [{i}]:{week_date_data.name}"
-                party_entertain_id = cache.rhodes_island.party_day_of_week[i]
+                party_entertain_id = entertainment.party_day(i)
                 if party_entertain_id:
                     button_text += f" ({game_config.config_entertainment[party_entertain_id].name})"
 
@@ -295,10 +295,10 @@ class Manage_Library_Panel:
     def choice_read_party(self, week_day: int) -> None:
         """选择读书会之日"""
 
-        party_entertain_id = cache.rhodes_island.party_day_of_week[week_day]
+        party_entertain_id = entertainment.party_day(week_day)
 
         if party_entertain_id == 101:
-            cache.rhodes_island.party_day_of_week[week_day] = 0
+            entertainment.set_party_day(week_day, 0)
         elif party_entertain_id:
             now_draw = draw.WaitDraw()
             now_draw.width = window_width
@@ -307,14 +307,11 @@ class Manage_Library_Panel:
         else:
             # 先取消掉其他日子可能有的读书会
             for i in range(7):
-                party_entertain_all_id = cache.rhodes_island.party_day_of_week[
-                    i
-                ]
-                if party_entertain_all_id == 101:
-                    cache.rhodes_island.party_day_of_week[i] = 0
+                if entertainment.party_day(i) == 101:
+                    entertainment.set_party_day(i, 0)
 
             # 再把指定日子变成读书会
-            cache.rhodes_island.party_day_of_week[week_day] = 101
+            entertainment.set_party_day(week_day, 101)
 
     def borrowing_history(self) -> None:
         """借阅历史记录查看"""

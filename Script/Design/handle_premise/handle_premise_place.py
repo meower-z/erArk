@@ -11,7 +11,7 @@ from Script.Core import (
 from Script.Design import map_handle
 from Script.Config import game_config
 from Script.Design.handle_premise.premise_registry import add_premise
-from Script.Modules.domains import location
+from Script.Modules.domains import entertainment, location
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -1644,9 +1644,7 @@ def handle_in_dormitory_or_hotel(character_id: int) -> int:
     """
     if handle_in_dormitory(character_id):
         return 1
-    elif cache.rhodes_island.love_hotel_room_lv > 0 and handle_in_love_hotel(
-        character_id
-    ):
+    elif entertainment.hotel_room() > 0 and handle_in_love_hotel(character_id):
         return 1
     return 0
 

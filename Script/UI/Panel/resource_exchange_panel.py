@@ -134,10 +134,7 @@ def perform_trade(
     result_quantity = quantity
     # 买入操作
     if buy_flag:
-        capacity_left = (
-            cache.rhodes_island.warehouse_capacity
-            - warehouse.amount(resouce_id)
-        )
+        capacity_left = warehouse.capacity() - warehouse.amount(resouce_id)
         # 仓库已满无法购买
         if capacity_left <= 0:
             return None
@@ -383,9 +380,7 @@ class Resource_Exchange_Line_Panel:
             now_resouce_stock = warehouse.amount(
                 self.now_select_resouce_id
             )  # 当前资源库存
-            warehouse_capacity = (
-                cache.rhodes_island.warehouse_capacity
-            )  # 仓库容量
+            warehouse_capacity = warehouse.capacity()  # 仓库容量
             cant_buy_flag = (
                 True if resouce_data.cant_buy == 1 else False
             )  # 检测该商品是否可以购买
@@ -864,7 +859,7 @@ class Resource_Exchange_Line_Panel:
             money_delta,
             game_config.config_resouce[self.now_select_resouce_id].name,
             warehouse.amount(self.now_select_resouce_id),
-            cache.rhodes_island.warehouse_capacity,
+            warehouse.capacity(),
             resource_delta,
         )
         if actual_quantity != actual_req_quantity:
@@ -1337,7 +1332,7 @@ class Resource_Exchange_Line_Panel:
         if is_percent:
             new_value = min(300, new_value)
         else:
-            max_capacity = cache.rhodes_island.warehouse_capacity
+            max_capacity = warehouse.capacity()
             if max_capacity > 0:
                 new_value = min(max_capacity, new_value)
         settings[key] = new_value
@@ -1416,7 +1411,7 @@ class Resource_Exchange_Line_Panel:
 
                         now_text = _("\n      当前存量：{0}/{1}").format(
                             warehouse.amount(resouce_id),
-                            cache.rhodes_island.warehouse_capacity,
+                            warehouse.capacity(),
                         )
                         # 判断是否可以买入卖出
                         if resouce_data.cant_buy == 0:
@@ -1466,9 +1461,8 @@ class Resource_Exchange_Line_Panel:
         add_num = int(button_text[2:-2])
         self.quantity_of_resouce += add_num
 
-        capacity_left = (
-            cache.rhodes_island.warehouse_capacity
-            - warehouse.amount(self.now_select_resouce_id)
+        capacity_left = warehouse.capacity() - warehouse.amount(
+            self.now_select_resouce_id
         )
         now_stock = warehouse.amount(self.now_select_resouce_id)
 
@@ -1491,9 +1485,8 @@ class Resource_Exchange_Line_Panel:
             return
 
         money = warehouse.amount(1)
-        capacity_left = (
-            cache.rhodes_island.warehouse_capacity
-            - warehouse.amount(self.now_select_resouce_id)
+        capacity_left = warehouse.capacity() - warehouse.amount(
+            self.now_select_resouce_id
         )
 
         affordable = money // buy_price

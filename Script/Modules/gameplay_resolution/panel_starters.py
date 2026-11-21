@@ -21,7 +21,7 @@ from Script.Design import (
     map_handle,
 )
 from Script.Kernel import core
-from Script.Modules.domains import achievement, economy
+from Script.Modules.domains import achievement, economy, tallies
 from Script.Modules.gameplay_resolution import intent, plan_queue, starts
 from Script.System.Cooking_System import cooking
 from Script.System.Sex_System import drunk_sex_common
@@ -226,12 +226,11 @@ def start_aromatherapy(who: int, chosen: intent.Intent) -> None:
     """
     recipe_id = int(cast(int, _args(chosen)["recipe_id"]))
     target_id = cache.character_data[who].target_character_id
-    island = cache.rhodes_island
     formula = game_config.config_aromatherapy_recipes[recipe_id].formula
     for need_text in formula.split("&"):
         need_type, need_value = (int(v) for v in need_text.split("|"))
         warehouse.add(need_type, -need_value)
-    island.remaining_aromatherapy_sessions_today -= 1
+    tallies.add(tallies.AROMATHERAPY, -1)
     cache.character_data[target_id].sp_flag.aromatherapy = recipe_id
     plan_queue.plan_next(
         target_id,

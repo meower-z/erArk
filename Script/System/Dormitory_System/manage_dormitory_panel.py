@@ -157,7 +157,7 @@ class Manage_Dormitory_Panel:
         info_draw.width = self.width
         info_draw.text = _("\n 当前宿舍区块等级：{0}\n").format(dormitory_level)
         info_draw.text += _(" 干员总数/宿舍容量：{0}/{1}\n").format(
-            npc_count, cache.rhodes_island.people_max
+            npc_count, facility.people_max()
         )
         info_draw.text += _(" 按等级已开放至：{0}层，").format(max_open_layer)
         info_draw.text += _("当前开放层数：{0} 层\n").format(len(open_layers))

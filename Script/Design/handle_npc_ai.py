@@ -20,7 +20,7 @@ from Script.Design import (
 )
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
-from Script.Modules.domains import facility, needs
+from Script.Modules.domains import entertainment, facility, needs
 
 game_path = game_path_config.game_path
 cache: game_type.Cache = cache_control.cache
@@ -977,13 +977,10 @@ def get_chara_entertainment(character_id: int) -> None:
         character_data.sp_flag.swim = 0
 
         # 如果当天有派对的话，则全员当天娱乐为该娱乐
-        if (
-            hasattr(cache.rhodes_island, "party_day_of_week")
-            and cache.rhodes_island.party_day_of_week[week_day]
-        ):
+        if entertainment.party_day(week_day):
             for i in range(3):
                 character_data.entertainment.entertainment_type[i] = (
-                    cache.rhodes_island.party_day_of_week[week_day]
+                    entertainment.party_day(week_day)
                 )
 
         # 否则随机当天的娱乐活动

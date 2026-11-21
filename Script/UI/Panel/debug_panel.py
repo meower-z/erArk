@@ -29,8 +29,8 @@ import csv
 from Script.Design import game_time
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import actions
-from Script.Modules.domains import facility, needs, pregnancy, recruit
-from Script.Modules.domains import warehouse
+from Script.Modules.domains import entertainment, facility, needs
+from Script.Modules.domains import pregnancy, recruit, warehouse
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -844,7 +844,7 @@ class Debug_Panel:
                 draw_text_list.append(f"[005]:粉红凭证：{warehouse.amount(4)}")
                 draw_text_list.append("[006]:基地当前所有待开放设施的开放情况")
                 draw_text_list.append(
-                    f"[007]:一周内的派对计划，周一0~周日6:娱乐id：{cache.rhodes_island.party_day_of_week}"
+                    f"[007]:一周内的派对计划，周一0~周日6:娱乐id：{entertainment.party_days()}"
                 )
                 draw_text_list.append(f"[008]:当前招募进度：{recruit.lines()}")
                 draw_text_list.append(
@@ -1201,7 +1201,7 @@ class Debug_Panel:
                     change_value_panel.set(_("输入改变后的值"), 100)
                     new_value = int(change_value_panel.draw())
                 elif key_index == 7:
-                    info_text = f"[007]:一周内的派对计划，周一0~周日6:娱乐id：{cache.rhodes_island.party_day_of_week}"
+                    info_text = f"[007]:一周内的派对计划，周一0~周日6:娱乐id：{entertainment.party_days()}"
                     info_draw.text = info_text
                     info_draw.draw()
                     line_feed.draw()
@@ -1216,9 +1216,7 @@ class Debug_Panel:
                     week_day, entertainment_id = map(
                         int, value_index_panel.draw().split(",")
                     )
-                    cache.rhodes_island.party_day_of_week[week_day] = (
-                        entertainment_id
-                    )
+                    entertainment.set_party_day(week_day, entertainment_id)
                 elif key_index == 8:
                     info_text = f"[008]:当前招募进度：{recruit.lines()}"
                     info_draw.text = info_text

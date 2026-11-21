@@ -161,18 +161,13 @@ def settle_agriculture_line(draw_flag: bool = True) -> tuple[bool, str]:
                         damage_down
                     )
                 # 不会超过仓库容量
-                if (
-                    warehouse.amount(resouce_id)
-                    > cache.rhodes_island.warehouse_capacity
-                ):
-                    warehouse.set(
-                        resouce_id, cache.rhodes_island.warehouse_capacity
-                    )
+                if warehouse.amount(resouce_id) > warehouse.capacity():
+                    warehouse.set(resouce_id, warehouse.capacity())
                     now_text += _(
                         "，由于仓库容量不足，{0}已达上限数量{1}"
                     ).format(
                         resouce_data.name,
-                        cache.rhodes_island.warehouse_capacity,
+                        warehouse.capacity(),
                     )
                     un_normal = True
                 now_text += "\n"
@@ -218,18 +213,13 @@ def settle_agriculture_line(draw_flag: bool = True) -> tuple[bool, str]:
                         damage_down
                     )
                 # 不会超过仓库容量
-                if (
-                    warehouse.amount(resouce_id)
-                    > cache.rhodes_island.warehouse_capacity
-                ):
-                    warehouse.set(
-                        resouce_id, cache.rhodes_island.warehouse_capacity
-                    )
+                if warehouse.amount(resouce_id) > warehouse.capacity():
+                    warehouse.set(resouce_id, warehouse.capacity())
                     now_text += _(
                         "，由于仓库容量不足，{0}已达上限数量{1}"
                     ).format(
                         resouce_data.name,
-                        cache.rhodes_island.warehouse_capacity,
+                        warehouse.capacity(),
                     )
                     un_normal = True
                 now_text += "\n"
@@ -284,7 +274,7 @@ class Agriculture_Production_Panel:
                 " 当前仓库等级：{0}，容量（单资源存放上限）：{1}\n"
             ).format(
                 facility.level(3),
-                cache.rhodes_island.warehouse_capacity,
+                warehouse.capacity(),
             )
 
             # 遍历该类型的资源

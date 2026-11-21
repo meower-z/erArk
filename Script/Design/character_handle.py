@@ -18,7 +18,8 @@ from Script.Design import (
     game_time,
 )
 from Script.Config import game_config, character_config, normal_config
-from Script.Modules.domains import facility, needs, playthrough, visitor
+from Script.Modules.domains import facility, needs, playthrough, tallies
+from Script.Modules.domains import visitor
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -411,7 +412,7 @@ def add_favorability(
 
     # 记录好感度增加
     if character_id == 0 or character_data.target_character_id == 0:
-        cache.rhodes_island.total_favorability_increased += now_add_favorability
+        tallies.add(tallies.FAVORABILITY, now_add_favorability)
 
 
 def handle_character_setting() -> None:

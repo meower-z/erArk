@@ -21,7 +21,7 @@ from Script.Design import (
 )
 from Script.Config import game_config, normal_config
 from Script.UI.Moudle import draw
-from Script.Modules.domains import needs
+from Script.Modules.domains import entertainment, needs
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -282,13 +282,13 @@ def calculation_instuct_judege(
             calculation_text += _("+性无知(+100)")
         # 爱情旅馆修正
         if target_data.h_state.h_in_love_hotel:
-            if cache.rhodes_island.love_hotel_room_lv == 1:
+            if entertainment.hotel_room() == 1:
                 judge += 25
                 calculation_text += _("+标间(+25)")
-            elif cache.rhodes_island.love_hotel_room_lv == 2:
+            elif entertainment.hotel_room() == 2:
                 judge += 50
                 calculation_text += _("+情趣主题房(+50)")
-            elif cache.rhodes_island.love_hotel_room_lv == 3:
+            elif entertainment.hotel_room() == 3:
                 judge += 100
                 calculation_text += _("+顶级套房(+100)")
         # 找博士逆推自慰修正

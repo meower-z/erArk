@@ -6,6 +6,7 @@ base.facility_open 是 {待开放设施id的字符串: 是否已开放}，待开
 base.effectiveness 是基地效率，单位为百分数。
 某个键不在全局数据里时，读到新基地的值：每个设施 1 级，每个待开放设施未开放，效率 100。
 写入整值替换一个键。对外的设施id 是 int，存进键里时换成字符串。
+干员人数上限不存，people_max 读时取宿舍区当前等级的效果值。
 基建面板里的升级先记进玩家选择的缓冲区，离开面板时随一个 0 分钟的 Edit 生效。
 """
 
@@ -13,6 +14,7 @@ from collections.abc import Mapping
 from typing import cast
 
 from Script.Config import game_config
+from Script.Core import get_text
 from Script.Kernel import core
 from Script.Modules.gameplay_resolution import working
 
@@ -146,3 +148,31 @@ def set_effectiveness(value: int | float) -> None:
     old = effectiveness()
     if old != value or type(old) is not type(value):
         working.put(None, EFFECTIVENESS, value)
+
+
+def effect(name: str, game: core.GameState | None = None) -> int:
+    """
+    设施在当前等级的效果值
+    Keyword arguments:
+    name -- 设施名，即 Facility.csv 里按当前语言的名字
+    game -- 给出时读这个状态，没有时读当前缓冲区
+    Return arguments:
+    int -- 效果值，没有叫这个名字的设施时为 0
+    """
+    for cid, data in game_config.config_facility.items():
+        if data.name == name:
+            levels = game_config.config_facility_effect_data[name]
+            effect_cid = levels[level(cid, game=game)]
+            return game_config.config_facility_effect[effect_cid].effect
+    return 0
+
+
+def people_max(game: core.GameState | None = None) -> int:
+    """
+    干员人数上限：宿舍区当前等级的效果值
+    Keyword arguments:
+    game -- 给出时读这个状态，没有时读当前缓冲区
+    Return arguments:
+    int -- 人数上限
+    """
+    return effect(get_text._("宿舍区"), game)

@@ -6,14 +6,16 @@ base.stock 是 {资源id的字符串: 库存}，按记下的先后排列，没�
 版本 7 之前的存档里的库存与扩展模块数由 adopt_old_save 写进这两个键。
 这个键归本模块的规则 apply 所有。代码不整值替换它，而是用 add 或 set 记一次操作，规则按顺序把操作套到当前值上。
 base.warehouse_modules 是已用的仓储空间扩展模块数，没有这一项时读 0，写入整值替换。
-仓库容量（Rhodes_Island.warehouse_capacity）由仓储区的设施等级与扩展模块数算出，留在罗德岛对象上，不进 GameState。
+仓库容量不存，capacity 读时取仓储区当前等级的效果值，再给每个已用的扩展模块加 200。
 """
 
 from collections.abc import Mapping
 from typing import Any, cast
 
 from Script.Config import game_config
+from Script.Core import get_text
 from Script.Kernel import core
+from Script.Modules.domains import facility
 from Script.Modules.gameplay_resolution import working
 
 KEY = "base.stock"
@@ -158,11 +160,24 @@ def extra_modules(game: core.GameState | None = None) -> int:
 
 def set_extra_modules(value: int) -> None:
     """
-    把已用的仓储空间扩展模块数整值换成 value，写进当前缓冲区。仓库容量不跟着变，由调用方更新
+    把已用的仓储空间扩展模块数整值换成 value，写进当前缓冲区
     Keyword arguments:
     value -- 模块数
     """
     working.put(None, MODULES, value)
+
+
+def capacity(game: core.GameState | None = None) -> int:
+    """
+    仓库容量：仓储区当前等级的效果值，再给每个已用的扩展模块加 200
+    Keyword arguments:
+    game -- 给出时只读这个状态，没有时读当前缓冲区，含还没套用的写入
+    Return arguments:
+    int -- 每种资源的库存上限
+    """
+    return (
+        facility.effect(get_text._("仓储区"), game) + extra_modules(game) * 200
+    )
 
 
 def adopt_old_save(loaded_dict: dict[str, Any]) -> None:

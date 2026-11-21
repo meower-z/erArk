@@ -40,7 +40,7 @@ from Script.Modules.domains import (
     recruit,
     visitor,
 )
-from Script.Modules.domains import warehouse
+from Script.Modules.domains import entertainment, fridge, tallies, warehouse
 from Script.Modules.save_load import index, unsaved, upgrade
 
 if TYPE_CHECKING:
@@ -741,10 +741,8 @@ def input_load_save(save_id: str) -> None:
 def install_save(save_id: str, version: int) -> None:
     """
     读档的 Reset 步骤。把存档的缓存（文件 "1"）装进游戏缓存，按顺序修补旧存档，再结束有101/102阶段的孩子参与的会话。
-    版本 0 先补齐生理需求与供电策略属性。随后 upgrade 的 adopt_power、adopt_facility、adopt_economy、adopt_work，
-    warehouse.adopt_old_save、medical.adopt_island 与 production 等十个模块的 adopt_old_save 依次搬走罗德岛对象的属性。
-    adopt_facility 与十个 adopt_old_save 交回的个数计入跨版本更新。重建角色后 upgrade.adopt_pickled 搬走角色数值属性。
-    补全设置前后，playthrough 等七个模块搬走设定、周目、国家、模式、吵醒名单、成就、记录与计划，并计入跨版本更新。
+    版本 0 先补齐生理需求与供电策略属性。随后十九个 adopt 函数搬走罗德岛对象的属性。其中十四个交回的条数计入跨版本更新。
+    重建角色后 adopt_pickled 搬走角色的数值属性。补全设置前后七个模块搬走周目等数据。它们交回的条数也计入跨版本更新。
     Keyword arguments:
     save_id -- 存档id
     version -- 存档的版本，旧存档为 0
@@ -771,6 +769,8 @@ def install_save(save_id: str, version: int) -> None:
     for domain in (production, kitchen, commission, visitor, location):
         update_count += domain.adopt_old_save(loaded_dict, version)
     for domain in (recruit, official, diplomacy, dormitory, library):
+        update_count += domain.adopt_old_save(loaded_dict, version)
+    for domain in (entertainment, tallies, fridge):
         update_count += domain.adopt_old_save(loaded_dict, version)
 
     draw_text = _("\n开始检测存档的数据结构是否需要跨版本更新\n")
@@ -1025,7 +1025,6 @@ def install_save(save_id: str, version: int) -> None:
                     ):
                         facility.set_open(all_cid)
                         break
-    basement.update_facility_limits(loaded_dict["rhodes_island"])
     # 读到的存档里没有菜谱与地图，这里换上按数据文件新建的菜谱和游戏启动时载入的地图
     loaded_dict["recipe_data"] = cooking.init_recipes()
     loaded_dict["map_data"] = cache.map_data
