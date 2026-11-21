@@ -13,7 +13,7 @@ from Script.Modules.tk_ui import player_pick
 from Script.Config import game_config, normal_config
 import random
 from Script.Design import game_time
-from Script.Modules.domains import facility
+from Script.Modules.domains import facility, library
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -76,7 +76,7 @@ def check_return_book(character_id: int) -> int:
         return_d100 = random.randint(1, 100)
         if return_d100 < character_data.entertainment.book_return_possibility:
             for book_id in character_data.entertainment.borrow_book_id_set:
-                cache.rhodes_island.book_borrow_dict[book_id] = -1
+                library.set_holder(book_id, library.FREE)
                 character_data.entertainment.borrow_book_id_set.discard(book_id)
                 # 更新还书历史记录
                 update_return_history_record(character_id, book_id)
@@ -100,9 +100,10 @@ def check_random_borrow_book(character_id: int) -> int:
     else:
         # 遍历获得所有没借的书id
         recommend_book_id_set, book_id_set = [], []
-        for book_id in cache.rhodes_island.book_borrow_dict:
+        recommended = library.recommended()
+        for book_id, holder in library.holders().items():
             # 已借出则跳过
-            if cache.rhodes_island.book_borrow_dict[book_id] != -1:
+            if holder != library.FREE:
                 continue
             # 能力不够则无法借出
             ability_pass = can_read_book(character_id, book_id)
@@ -118,10 +119,7 @@ def check_random_borrow_book(character_id: int) -> int:
             # 加入book_id_set
             book_id_set.append(book_id)
             # 如果类型在推荐列表里，则加入recommend_book_id_set
-            if (
-                game_config.config_book[book_id].type
-                in cache.rhodes_island.recommend_book_type_set
-            ):
+            if game_config.config_book[book_id].type in recommended:
                 recommend_book_id_set.append(book_id)
         # 如果推荐列表有书，则有一半的概率在推荐列表里借书，否则在全列表里借书
         if len(recommend_book_id_set) and random.randint(0, 1) == 1:
@@ -130,7 +128,7 @@ def check_random_borrow_book(character_id: int) -> int:
             borrow_book_id = random.choice(book_id_set)
         else:
             return 0
-        cache.rhodes_island.book_borrow_dict[borrow_book_id] = character_id
+        library.set_holder(borrow_book_id, character_id)
         character_data.entertainment.borrow_book_id_set.add(borrow_book_id)
         # 添加借书历史记录
         add_borrow_history_record(character_id, borrow_book_id)
@@ -155,9 +153,9 @@ def judge_can_get_read_book(character_id: int) -> bool:
     # 手上有书就直接读那本，不用再扫书库
     if len(character_data.entertainment.borrow_book_id_set):
         return True
-    for book_id in cache.rhodes_island.book_borrow_dict:
+    for book_id, holder in library.holders().items():
         # 已借出则跳过
-        if cache.rhodes_island.book_borrow_dict[book_id] != -1:
+        if holder != library.FREE:
             continue
         # 能力不够则无法借出
         if not can_read_book(character_id, book_id):
@@ -390,10 +388,8 @@ class Borrow_Book_Panel:
             line.draw()
 
             # 当前借书数量限制信息
-            borrow_count = 0
-            for book_id in cache.rhodes_island.book_borrow_dict:
-                if cache.rhodes_island.book_borrow_dict[book_id] == 0:
-                    borrow_count += 1
+            holders = library.holders()
+            borrow_count = list(holders.values()).count(0)
             borrow_limit_draw = draw.NormalDraw()
             borrow_limit_text = _("\n已借书量/最大借书量：{0}/3\n").format(
                 borrow_count
@@ -448,19 +444,15 @@ class Borrow_Book_Panel:
                             book_text += _("(已阅读{0}%)").format(book_progress)
                         # 是否可借阅说明
                         button_flag = True
-                        if cache.rhodes_island.book_borrow_dict[book_cid] == -1:
+                        if holders[book_cid] == library.FREE:
                             book_text += _("(可借阅)")
                             book_style = "standard"
                             book_can_borrow_count += 1
-                        elif (
-                            cache.rhodes_island.book_borrow_dict[book_cid] == 0
-                        ):
+                        elif holders[book_cid] == 0:
                             book_text += _("(已被博士借走)")
                             book_style = "gold_enrod"
                         else:
-                            borrow_npc_id = (
-                                cache.rhodes_island.book_borrow_dict[book_cid]
-                            )
+                            borrow_npc_id = holders[book_cid]
                             borrow_npc_name = cache.character_data[
                                 borrow_npc_id
                             ].name
@@ -571,7 +563,7 @@ class Borrow_Book_Panel:
 
             # 如果已借该书，则显示还书按钮
             button_draw_flag = True
-            if cache.rhodes_island.book_borrow_dict[book_cid] == 0:
+            if library.holders()[book_cid] == 0:
                 borrow_buttin_text = _("[归还]")
             # 未借该书，则显示借书按钮
             else:
@@ -623,14 +615,14 @@ class Borrow_Book_Panel:
         borrow_count = len(character_data.entertainment.borrow_book_id_set)
 
         # 如果已借该书，则还书
-        if cache.rhodes_island.book_borrow_dict[book_cid] == 0:
-            cache.rhodes_island.book_borrow_dict[book_cid] = -1
+        if library.holders()[book_cid] == 0:
+            library.set_holder(book_cid, library.FREE)
             character_data.entertainment.borrow_book_id_set.discard(book_cid)
             # 更新还书历史记录
             update_return_history_record(0, book_cid)
         # 未借该书，且借书数量不到上限，则借书
         elif borrow_count < 3:
-            cache.rhodes_island.book_borrow_dict[book_cid] = 0
+            library.set_holder(book_cid, 0)
             character_data.entertainment.borrow_book_id_set.add(book_cid)
             # 添加借书历史记录
             add_borrow_history_record(0, book_cid)

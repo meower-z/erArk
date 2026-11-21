@@ -1460,17 +1460,6 @@ class Rhodes_Island:
         self.child_schedule_template: dict[int, dict] = {}
         """ 孩子日程模板（Plan 22） 键int:模板编号 值dict:{"name": 模板名str, "slot": {时段int(0~2): 活动id int}}
             活动id 复用 Entertainment 配置 id。本期只建字段，写入方在二期 """
-        self.official_event_queue: list = []
-        """ 待玩家在处理公务中决断的公务事件队列（Plan 23）
-            元素dict:{"uid": 事件uid str, "department": 部门id int,
-                      "chara_id": 主体角色id int（无主体的部门事务为0）,
-                      "partner_id": 互动对象角色id int（无则0）, "add_time": datetime}
-            由 Plan 22 三期的 growth_event_queue 改名而来，旧档在 save_handle 里逐项搬运 """
-        self.official_event_history: dict = {}
-        """ 无主体（部门）公务事件的全局履历（Plan 23）
-            键str:事件uid（有主体但没有养成数据的角色为「uid@角色id」）
-            值dict:{"time": datetime, "choice": 玩家选项index int}
-            有主体且有养成数据的事件记在角色自己的 CHILD_GROWTH.event_history 里，两者语义一致 """
         self.total_favorability_increased: int = 0
         """ 每日总好感度提升 """
         self.total_semen_count: int = 0
@@ -1479,8 +1468,6 @@ class Rhodes_Island:
         """ 本周陷落干员提供的粉红凭证总数 """
 
         # 控制中枢
-        self.office_work: float = 0
-        """ 需要处理的公务 """
 
         # 工程部
         self.maintenance_place: dict[int, str] = {}
@@ -1497,10 +1484,6 @@ class Rhodes_Island:
         # 仓储区
         self.warehouse_capacity: int = 0
         """ 仓库容量 """
-
-        # 宿舍区
-        self.dormitory_managers: dict[int, int] = {}
-        """ 各层宿舍管理员，输入类型:无，输出类型:Dict[int,int]，功能:key=层号(1-9), value=角色id(0表示未任命) """
 
         # 生活娱乐区
         self.milk_in_fridge: dict[int, int] = {}
@@ -1528,27 +1511,13 @@ class Rhodes_Island:
         self.manually_selected_exam_week_day_list: list[int] = []
         """ 手动选择的每周的体检日列表 """
 
-        # 文职区
-        self.recruit_line: dict[int, list] = {}
-        """ 招募线数据: 招募线id:[0招募进度%, 1招募策略id, 2该线主招聘专员id(0为空缺), 3招募效率百分比(如20.5%)] """
-        self.recruited_id: set = set()
-        """ 已招募待确认的干员id """
-
         # 训练场
-
-        # 图书档案区
-        self.book_borrow_dict: dict[int, int] = {}
-        """ 书籍借出情况 书籍id:借出人id(-1为未借出) """
-        self.recommend_book_type_set: set = set()
-        """ 推荐的阅读类别 """
 
         # 贸易区
         self.love_hotel_room_lv: int = 0
         """ 在爱情旅馆中的房间级别，0未入住，1标间，2情趣主题房，3顶级套房 """
 
         # 访客区
-        self.diplomat_of_country: dict[int, list] = {}
-        """ 负责各的外交官 出身地国家id:[0外交官角色id, 1外交方针id] """
 
         # 教育区
 

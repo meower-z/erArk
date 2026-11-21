@@ -19,7 +19,8 @@ import os
 
 from Script.Config import game_config
 from Script.Core import cache_control
-from Script.Modules.domains import commission, location, visitor, work
+from Script.Modules.domains import commission, diplomacy, location, recruit
+from Script.Modules.domains import visitor, work
 from ..check_registry import CheckFailure, register_check, make_failure
 from typing import TYPE_CHECKING
 from Script.Design import game_time
@@ -1039,8 +1040,8 @@ def check_invite_target_still_valid_candidate() -> list[CheckFailure]:
         problems.append("已在npc_id_got在编名册中")
     if visitor.is_visitor(t):
         problems.append("已在访客名册中")
-    if t in ri.recruited_id:
-        problems.append("已在ri.recruited_id待确认招募名单中")
+    if t in recruit.pending():
+        problems.append("已在recruit.pending()待确认招募名单中")
     if t in ri.current_prisoners:
         problems.append("已在ri.current_prisoners囚犯名册中")
     if c.sp_flag.vistor == 1:
@@ -1073,7 +1074,8 @@ def check_recruited_id_pool_validity() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
-    功能: recruited_id是"已招募待玩家确认"的暂存池，里面不该有0、不存在的id，也不该有已在编或身份冲突的人。
+    功能: 待确认招募名单recruit.pending()是"已招募待玩家确认"的暂存池，
+    里面不该有0、不存在的id，也不该有已在编或身份冲突的人。
     同样用vistor != 1(两个写入点都取自find_recruitable_npc，vistor == 2可合法入池)
     """
     cache = cache_control.cache
@@ -1081,7 +1083,7 @@ def check_recruited_id_pool_validity() -> list[CheckFailure]:
     ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
-    for cid in ri.recruited_id:
+    for cid in recruit.pending():
         if cid == 0 or cid not in cd:
             failures.append(
                 make_failure(
@@ -1089,9 +1091,9 @@ def check_recruited_id_pool_validity() -> list[CheckFailure]:
                     "待确认招募名单合法",
                     (
                         f"{warn}recruited_id中的cid={cid}非法(0号玩家或不存在于character_data)，"
-                        f"全量recruited_id={sorted(x for x in ri.recruited_id if isinstance(x, int))}"
+                        f"全量recruited_id={sorted(recruit.pending())}"
                     ),
-                    [cid] if isinstance(cid, int) else [],
+                    [cid],
                 )
             )
             continue
@@ -1140,7 +1142,7 @@ def check_visitor_identity_mutual_exclusion() -> list[CheckFailure]:
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     V = set(visitor.visitors())
-    P = set(ri.recruited_id)
+    P = recruit.pending()
     t = _invite_target()
     invited = {t} if t else set()
     C: set[int] = set()
@@ -1177,30 +1179,21 @@ def check_recruit_line_shape_and_progress_range() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
-    功能: 每条recruit_line是[进度, 策略id, 主专员id, 效率]；进度与效率为非负有限数，策略与主专员为整数，
+    功能: 每条招募线（recruit.lines()）的进度为非负有限数，策略与主专员为整数，
     进度上界<100由增量写入与结算相邻两行保证，不存在"已加未结"窗口。
     策略id子句依赖game_config.config_recruitment_strategy，若为空(独立环境未加载配置)则降级跳过该子句
     """
     cache = cache_control.cache
-    ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     strategy_ids = set(game_config.config_recruitment_strategy)
-    for lid, rec in ri.recruit_line.items():
+    for lid, rec in recruit.lines().items():
         problems = []
-        if not isinstance(lid, int):
-            problems.append(f"招募线id={lid!r}不是int")
-        if not (isinstance(rec, list) and len(rec) == 4):
-            failures.append(
-                make_failure(
-                    "ROSTER-22",
-                    "招募线记录形状与进度范围",
-                    f"{warn}招募线lid={lid!r}记录形状异常，期望长度4的list，实得{rec!r}",
-                    [],
-                )
-            )
-            continue
-        progress, strategy, main_hr, eff = rec
+        progress, strategy, main_hr = (
+            rec["progress"],
+            rec["strategy"],
+            rec["main"],
+        )
         if (
             isinstance(progress, bool)
             or not isinstance(progress, (int, float))
@@ -1208,23 +1201,16 @@ def check_recruit_line_shape_and_progress_range() -> list[CheckFailure]:
             or not (0 <= progress < 100)
         ):
             problems.append(
-                f"进度rec[0]={progress!r}不在[0,100)内、非有限数或被bool污染"
+                f"进度progress={progress!r}不在[0,100)内、非有限数或被bool污染"
             )
         if type(strategy) is not int:
-            problems.append(f"策略id rec[1]={strategy!r}类型不是int")
+            problems.append(f"策略id strategy={strategy!r}类型不是int")
         elif strategy_ids and strategy not in strategy_ids:
             problems.append(
-                f"策略id rec[1]={strategy}不在game_config.config_recruitment_strategy中"
+                f"策略id strategy={strategy}不在game_config.config_recruitment_strategy中"
             )
         if type(main_hr) is not int:
-            problems.append(f"主专员id rec[2]={main_hr!r}类型不是int")
-        if (
-            isinstance(eff, bool)
-            or not isinstance(eff, (int, float))
-            or not math.isfinite(eff)
-            or eff < 0
-        ):
-            problems.append(f"效率rec[3]={eff!r}不是非负有限数")
+            problems.append(f"主专员id main={main_hr!r}类型不是int")
         if problems:
             failures.append(
                 make_failure(
@@ -1246,23 +1232,15 @@ def check_recruit_line_main_hr_validity_and_uniqueness() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
-    功能: 每条线第3位是主招聘专员：0(空缺)或一名工作类型71且在招聘专员名单work.roster(71)内的角色；
+    功能: 每条线的主招聘专员是0(空缺)或一名工作类型71且在招聘专员名单work.roster(71)内的角色；
     同一人不能同时主理两条线。不含cid in npc_id_got —— 派遣外勤不改work_type，把主专员派出去是常规操作，
     加在线子句必然长期误报
     """
     cache = cache_control.cache
     cd = cache.character_data
-    ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
-    mains = [
-        rec[2]
-        for rec in ri.recruit_line.values()
-        if isinstance(rec, list)
-        and len(rec) >= 3
-        and type(rec[2]) is int
-        and rec[2] != 0
-    ]
+    mains = [rec["main"] for rec in recruit.lines().values() if rec["main"]]
     dup = {cid for cid in mains if mains.count(cid) > 1}
     if dup:
         failures.append(
@@ -1271,7 +1249,7 @@ def check_recruit_line_main_hr_validity_and_uniqueness() -> list[CheckFailure]:
                 "招募线主专员真实可用且不重复",
                 (
                     f"{warn}以下角色同时是多条招募线的主专员(重复): {sorted(dup)}；"
-                    f"完整recruit_line={dict(ri.recruit_line)}"
+                    f"完整recruit_line={recruit.lines()}"
                 ),
                 sorted(dup),
             )
@@ -1490,7 +1468,7 @@ def check_field_commission_member_identity_exclusion() -> list[CheckFailure]:
     )
     forbidden = {
         "访客(base.visitor)": set(visitor.visitors()),
-        "待确认招募(recruited_id)": set(ri.recruited_id),
+        "待确认招募(recruited_id)": recruit.pending(),
         "囚犯(current_prisoners)": set(ri.current_prisoners),
         "邀请目标(invite_visitor)": {t} if t else set(),
         "监狱长(work.warden)": {work.warden()} if work.warden() else set(),
@@ -1651,38 +1629,18 @@ def check_diplomat_registry_and_flag_consistency() -> list[CheckFailure]:
     """
     参数: 无
     返回值: List[CheckFailure]: 失败记录列表
-    功能: 任命写diplomat_of_country[国家][0] = id与sp_flag.in_diplomatic_visit = 国家，解任同时清两者。
+    功能: 任命写diplomacy的[国家]["diplomat"] = id与sp_flag.in_diplomatic_visit = 国家，解任同时清两者。
     外派到非当前所在国的外交官处于离线态，罗德岛抵达该国时会让他上线。本条大概率会报出真实缺陷：
     handle_chara_on_line整体重建sp_flag会把in_diplomatic_visit抹成0
     """
     cache = cache_control.cache
     cd = cache.character_data
-    ri = cache.rhodes_island
     warn = _sev(cache, False)
     failures: list[CheckFailure] = []
     current_country = location.country()
-    for country, info in ri.diplomat_of_country.items():
-        if not (isinstance(info, list) and len(info) >= 1):
-            failures.append(
-                make_failure(
-                    "ROSTER-30",
-                    "外交官表与角色外派flag双向一致",
-                    f"{warn}diplomat_of_country[{country}]形状异常，期望非空list，实得{info!r}",
-                    [],
-                )
-            )
-            continue
-        did = info[0]
-        if type(did) is not int:
-            failures.append(
-                make_failure(
-                    "ROSTER-30",
-                    "外交官表与角色外派flag双向一致",
-                    f"{warn}diplomat_of_country[{country}][0]={did!r}类型不是int",
-                    [],
-                )
-            )
-            continue
+    posts = diplomacy.table()
+    for country, post in posts.items():
+        did = post["diplomat"]
         if not did:
             continue
         if did not in cd:
@@ -1725,14 +1683,14 @@ def check_diplomat_registry_and_flag_consistency() -> list[CheckFailure]:
     for cid, c in cd.items():
         if cid == 0 or not c.sp_flag.in_diplomatic_visit:
             continue
-        slot = ri.diplomat_of_country.get(c.sp_flag.in_diplomatic_visit, [0])
-        if not (isinstance(slot, list) and slot and slot[0] == cid):
+        slot = posts.get(c.sp_flag.in_diplomatic_visit, diplomacy.VACANT)
+        if slot["diplomat"] != cid:
             failures.append(
                 make_failure(
                     "ROSTER-30",
                     "外交官表与角色外派flag双向一致",
                     f"{warn}角色cid={cid} name={c.name!r} sp_flag.in_diplomatic_visit={c.sp_flag.in_diplomatic_visit}，"
-                    f"但diplomat_of_country[{c.sp_flag.in_diplomatic_visit}]={slot!r}的槽位[0]不指回该角色",
+                    f"但diplomacy[{c.sp_flag.in_diplomatic_visit}]={slot!r}的外交官不指回该角色",
                     [cid],
                 )
             )

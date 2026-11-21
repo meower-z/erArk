@@ -27,6 +27,7 @@ from Script.Core import cache_control, constant, game_type, get_text
 from Script.Config import game_config
 from Script.System.Official_Event_System import ri_value
 from Script.Design import game_time
+from Script.Modules.domains import official
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -170,17 +171,6 @@ def get_department_name(department: int) -> str:
     return _("公务")
 
 
-def get_queue() -> list:
-    """
-    取待处理的公务事件队列
-    Keyword arguments:
-    无
-    Return arguments:
-    list -- 队列本体（可原地修改）
-    """
-    return cache.rhodes_island.official_event_queue
-
-
 def get_queue_max() -> int:
     """
     取当前的队列长度硬上限
@@ -261,7 +251,7 @@ def judge_event_already_in_queue(uid: str, character_id: int) -> bool:
     Return arguments:
     bool -- 是否已在队列中
     """
-    for one in get_queue():
+    for one in official.queue():
         if one.get("uid") == uid and one.get("chara_id") == character_id:
             return True
     return False
@@ -297,10 +287,7 @@ def judge_event_done(uid: str, character_id: int) -> bool:
         growth_data = cache.character_data[character_id].child_growth
         if growth_data is not None:
             return uid in growth_data.event_history
-    return (
-        get_history_key(uid, character_id)
-        in cache.rhodes_island.official_event_history
-    )
+    return official.done(get_history_key(uid, character_id))
 
 
 def record_event_done(uid: str, character_id: int, option_index: int) -> None:
@@ -319,9 +306,7 @@ def record_event_done(uid: str, character_id: int, option_index: int) -> None:
         if growth_data is not None:
             growth_data.event_history[uid] = now_record
             return
-    cache.rhodes_island.official_event_history[
-        get_history_key(uid, character_id)
-    ] = now_record
+    official.record(get_history_key(uid, character_id), now_record)
 
 
 def judge_event_can_enqueue(uid: str, character_id: int = 0) -> bool:
@@ -381,7 +366,7 @@ def push_official_event(
     """
     if get_event_data(uid) is None:
         return False
-    queue = get_queue()
+    queue = official.queue()
     # 插队首的是一辈子只有一次的叙事节点（毕业典礼 / 成年纪念），队列满了也不能丢，不受容量上限约束；
     #    排在队尾、同样一辈子只有一次入口的节点（通用 59 / 60）由调用方传 ignore_capacity
     if not to_front and not ignore_capacity and len(queue) >= get_queue_max():
@@ -397,6 +382,7 @@ def push_official_event(
         queue.insert(0, queue_data)
     else:
         queue.append(queue_data)
+    official.set_queue(queue)
     return True
 
 
@@ -490,13 +476,10 @@ def clean_official_event_queue() -> None:
     Return arguments:
     无
     """
-    queue = get_queue()
+    queue = official.queue()
     valid = []
     changed = False
     for one in queue:
-        if not isinstance(one, dict):
-            changed = True
-            continue
         if one.get("chara_id", 0) not in cache.character_data:
             changed = True
             continue
@@ -511,7 +494,7 @@ def clean_official_event_queue() -> None:
             changed = True
         valid.append(one)
     if changed:
-        cache.rhodes_island.official_event_queue = valid
+        official.set_queue(valid)
 
 
 def get_official_event_queue_count(character_id: int = -1) -> int:
@@ -523,11 +506,10 @@ def get_official_event_queue_count(character_id: int = -1) -> int:
     int -- 待处理条数
     """
     clean_official_event_queue()
+    queue = official.queue()
     if character_id < 0:
-        return len(get_queue())
-    return len(
-        [one for one in get_queue() if one.get("chara_id") == character_id]
-    )
+        return len(queue)
+    return len([one for one in queue if one.get("chara_id") == character_id])
 
 
 def pop_official_event() -> dict | None:
@@ -539,10 +521,12 @@ def pop_official_event() -> dict | None:
     Optional[dict] -- 队列元素，队列为空则None
     """
     clean_official_event_queue()
-    queue = get_queue()
+    queue = official.queue()
     if not queue:
         return None
-    return queue.pop(0)
+    head = queue.pop(0)
+    official.set_queue(queue)
+    return head
 
 
 def get_option_list(

@@ -1262,7 +1262,7 @@ npc_tem_data\[i\]
 | 字段路径 | 类型 | 说明 |
 |---------|------|------|
 | `hr_operator_ids_list` | List[int] | 人事干员ID列表 |
-| `recruited_id` | Set[int] | 已招募待确认的干员id集合 |
+| `base.recruited` | List[int] | 已招募待确认的干员id，从小到大排列。存在 GameState 的全局数据里，换id时由 `recruit.remap` 映射 |
 | `power_operator_ids_list` | List[int] | 发电干员ID列表 |
 | `main_power_facility_operator_ids` | List[int] | 主力供能设施的调控员id列表，索引0~3分别为火水风光发电 |
 | `maintenance_place` | Dict[int, str] | 当前每个角色的待检修地点，角色id:地点 |
@@ -1271,14 +1271,14 @@ npc_tem_data\[i\]
 | `milk_in_fridge` | Dict[int, int] | 冰箱母乳-干员ID |
 | `medical_clinic_doctor_ids` | List[int] | 诊所医生ID列表 |
 | `medical_hospital_doctor_ids` | List[int] | 医院医生ID列表 |
-| `book_borrow_dict` | Dict[int, int] | 书籍借出人ID |
+| `base.book_holders[书籍id]` | int | 书籍借出人ID。存在 GameState 的全局数据里，换id时由 `library.remap` 映射 |
 | `trade_operator_ids_list` | List[int] | 贸易干员ID列表 |
 | `resource_type_main_trader` | Dict[str, int] | 资源主交易员ID |
 | `base.production["assembly"]["lines"][x]["main"]` | int | 流水线主工人ID。存在 GameState 的全局数据里，换id时由 `production.remap` 映射 |
 | `base.production["assembly"]["workers"]` | List[int] | 生产工人ID列表。存在 GameState 的全局数据里，换id时由 `production.remap` 映射 |
 | `base.visitor["visitors"]` 的键 | str | 访客ID。存在 GameState 的全局数据里，换id时由 `visitor.remap` 映射 |
 | `base.visitor["invite"]["target"]` | int | 邀请目标ID。存在 GameState 的全局数据里，换id时由 `visitor.remap` 映射 |
-| `diplomat_of_country[x][0]` | int | 外交官ID |
+| `base.diplomats[x]["diplomat"]` | int | 外交官ID。存在 GameState 的全局数据里，换id时由 `diplomacy.remap` 映射 |
 | `base.commission["ongoing"][x]["team"]` | List[int] | 外勤干员ID列表。存在 GameState 的全局数据里，换id时由 `commission.remap` 映射 |
 | `base.production["herb_garden"]["lines"][x]["main"]` | int | 药田主种植员ID。存在 GameState 的全局数据里，换id时由 `production.remap` 映射 |
 | `base.production["herb_garden"]["workers"]` | List[int] | 药田种植员ID列表。存在 GameState 的全局数据里，换id时由 `production.remap` 映射 |
@@ -1292,7 +1292,7 @@ npc_tem_data\[i\]
 | `waiting_for_exam_operator_ids` | Set[int] | 等待体检干员ID集合 |
 | `manually_selected_exam_operator_ids` | Set[int] | 手动选择体检干员ID |
 | `medical_doctor_specializations` | Dict | 医生分科ID列表 |
-| `recruit_line[x][2]` | int | 招募线主招聘专员ID |
+| `base.recruit_lines[x]["main"]` | int | 招募线主招聘专员ID。存在 GameState 的全局数据里，换id时由 `recruit.remap` 映射 |
 | `all_work_npc_set` | Dict[int, Set[int]] | 工作id:干员id集合 |
 
 ### A.3 Cache 类字段

@@ -16,7 +16,7 @@ from Script.Design import basement, handle_premise, map_handle
 from Script.System.Dormitory_System import common
 from Script.UI.Moudle import draw, view
 from Script.Config import normal_config
-from Script.Modules.domains import facility, work
+from Script.Modules.domains import dormitory, facility, work
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -176,7 +176,7 @@ class Manage_Dormitory_Panel:
         info_draw.text += _("\n\n 各层管理员状态：\n")
 
         for layer in open_layers:
-            manager_id = cache.rhodes_island.dormitory_managers.get(layer, 0)
+            manager_id = dormitory.managers().get(layer, 0)
             if manager_id and manager_id in cache.character_data:
                 manager_name = cache.character_data[manager_id].name
                 info_draw.text += _("  {0}层：{1}\n").format(
@@ -332,7 +332,7 @@ class Manage_Dormitory_Panel:
         unassigned_managers = []
         for chara_id in manager_pool:
             character_data = cache.character_data[chara_id]
-            if chara_id in cache.rhodes_island.dormitory_managers.values():
+            if chara_id in dormitory.managers().values():
                 continue
             unassigned_managers.append(character_data.name)
 
@@ -363,7 +363,7 @@ class Manage_Dormitory_Panel:
         info_draw.draw()
 
         for layer in open_layers:
-            manager_id = cache.rhodes_island.dormitory_managers.get(layer, 0)
+            manager_id = dormitory.managers().get(layer, 0)
             if manager_id and manager_id in cache.character_data:
                 manager_name = cache.character_data[manager_id].name
                 layer_text = _("[{0}层] 当前管理员：{1}").format(
@@ -673,7 +673,7 @@ class Manage_Dormitory_Panel:
         为指定层任命管理员
         输入类型: layer(int)
         输出类型: 无
-        功能: 选择干员并更新 dormitory_managers 与工作岗位
+        功能: 选择干员并更新各层管理员与工作岗位
         """
         while 1:
             return_list: list[str] = []
@@ -731,14 +731,12 @@ class Manage_Dormitory_Panel:
         输出类型: 无
         功能: 同步更新层管理员、角色 work_type 与工作缓存
         """
-        old_manager_id = cache.rhodes_island.dormitory_managers.get(layer, 0)
+        old_manager_id = dormitory.managers().get(layer, 0)
 
         # 先把该角色在其他层的任命清掉，保证一人只管理一层
-        for other_layer, other_character_id in list(
-            cache.rhodes_island.dormitory_managers.items()
-        ):
+        for other_layer, other_character_id in dormitory.managers().items():
             if other_layer != layer and other_character_id == character_id:
-                cache.rhodes_island.dormitory_managers[other_layer] = 0
+                dormitory.set_manager(other_layer, 0)
                 # 重置玩家的该楼层钥匙
                 key_item_id = 300 + other_layer
                 pl_character_data = cache.character_data[0]
@@ -755,15 +753,12 @@ class Manage_Dormitory_Panel:
 
         # 替换当前层旧管理员：仅撤掉该层归属，不立即撤掉岗位，离开面板时统一清理未分配楼层者
 
-        cache.rhodes_island.dormitory_managers[layer] = character_id
+        dormitory.set_manager(layer, character_id)
         cache.character_data[character_id].work.work_type = 31
         self._move_manager_to_layer_room(layer, character_id)
 
         if old_manager_id and old_manager_id != character_id:
-            if (
-                old_manager_id
-                not in cache.rhodes_island.dormitory_managers.values()
-            ):
+            if old_manager_id not in dormitory.managers().values():
                 self._restore_manager_dormitory(old_manager_id)
 
         basement.update_work_people()
@@ -782,7 +777,7 @@ class Manage_Dormitory_Panel:
         输出类型: 无
         功能: 清空层管理员并将原管理员岗位重置为无
         """
-        manager_id = cache.rhodes_island.dormitory_managers.get(layer, 0)
+        manager_id = dormitory.managers().get(layer, 0)
         info_draw: draw.WaitDraw | draw.NormalDraw
         if not manager_id:
             info_draw = draw.WaitDraw()
@@ -792,7 +787,7 @@ class Manage_Dormitory_Panel:
             return
 
         # 仅撤掉该层归属，不立即撤掉岗位，便于后续快速改派到其他楼层。
-        cache.rhodes_island.dormitory_managers[layer] = 0
+        dormitory.set_manager(layer, 0)
         self._restore_manager_dormitory(manager_id)
         basement.update_work_people()
         # 重置玩家的该楼层钥匙
@@ -819,9 +814,7 @@ class Manage_Dormitory_Panel:
         输出类型: int
         功能: 若干员工作岗位为宿舍管理员但未被分配到任何楼层，则将其岗位重置为无
         """
-        assigned_manager_ids = set(
-            cache.rhodes_island.dormitory_managers.values()
-        )
+        assigned_manager_ids = set(dormitory.managers().values())
         assigned_manager_ids.discard(0)
 
         reset_count = 0

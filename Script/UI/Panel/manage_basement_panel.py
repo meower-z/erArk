@@ -18,6 +18,7 @@ from Script.Modules.domains import (
     economy,
     facility,
     needs,
+    recruit,
     visitor,
     warehouse,
     work,
@@ -1312,18 +1313,17 @@ class Manage_Basement_Panel:
                 pass
 
             elif department == _("文职部"):
-                if len(cache.rhodes_island.recruited_id):
+                if recruit.pending():
                     now_text += _(
                         "\n  当前已招募未确认干员人数为：{0}人，请前往博士办公室确认"
-                    ).format(len(cache.rhodes_island.recruited_id))
+                    ).format(len(recruit.pending()))
                 else:
                     now_text += _("\n  当前没有已招募干员，请等待招募完成")
-                for i in {0, 1, 2, 3}:
-                    if i in cache.rhodes_island.recruit_line:
-                        now_text += _("\n  {0}号招募位进度：{1}%/100%").format(
-                            i + 1,
-                            round(cache.rhodes_island.recruit_line[i][0], 1),
-                        )
+                recruit_lines = recruit.lines()
+                for i in sorted(recruit_lines.keys() & {0, 1, 2, 3}):
+                    now_text += _("\n  {0}号招募位进度：{1}%/100%").format(
+                        i + 1, round(recruit_lines[i]["progress"], 1)
+                    )
 
             elif department == _("图书馆"):
                 reader_count = basement.library_reader_count()

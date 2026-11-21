@@ -5,7 +5,7 @@ from Script.Core import cache_control, game_type, get_text
 from Script.UI.Moudle import draw
 from Script.Config import game_config, normal_config
 from Script.Design import game_time, attr_calculation, talk, handle_premise
-from Script.Modules.domains import commission, location, warehouse
+from Script.Modules.domains import commission, location, recruit, warehouse
 import random
 
 cache: game_type.Cache = cache_control.cache
@@ -400,7 +400,7 @@ def process_commission_text(
                     chara_id not in cache.npc_id_got
                     and handle_premise.handle_normal_7(chara_id)
                 ):
-                    cache.rhodes_island.recruited_id.add(chara_id)
+                    recruit.set_pending(recruit.pending() | {chara_id})
                 item_name = cache.character_data[chara_id].name
                 item_num_text = _("成为干员")
             # 特产
@@ -552,7 +552,7 @@ def settle_recruit_new_chara(commision_id: int) -> str:
         # 如果有符合条件的干员，随机招募一个
         if len(wait_id_list):
             choice_id = random.choice(wait_id_list)
-            cache.rhodes_island.recruited_id.add(choice_id)
+            recruit.set_pending(recruit.pending() | {choice_id})
             # 绘制招募信息
             recruited_text = _(
                 "※ 在进行委托时队员们意外遇到了一个同行的路人{0}，在短暂的相处中，她对罗德岛产生了兴趣，"

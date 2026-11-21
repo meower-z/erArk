@@ -14,7 +14,7 @@ from Script.Design import attr_calculation, handle_ability
 import random
 from Script.Design import game_time
 from Script.Modules.save_load import reset
-from Script.Modules.domains import facility, location, medical
+from Script.Modules.domains import diplomacy, facility, location, medical
 
 cache: game_type.Cache = cache_control.cache
 """ 游戏缓存数据 """
@@ -26,17 +26,6 @@ line_feed.text = "\n"
 line_feed.width = 1
 window_width: int = normal_config.config_normal.text_width
 """ 窗体宽度 """
-
-
-def diplomat_of(country_id: int) -> list[int]:
-    """
-    势力的外交数据，没有登记时为默认值
-    Keyword arguments:
-    country_id -- 势力编号
-    Return arguments:
-    list -- [外交官角色id, 外交方针id]，没有登记时为 [0, 0]
-    """
-    return cache.rhodes_island.diplomat_of_country.get(country_id, [0, 0])
 
 
 @reset.repair
@@ -78,14 +67,14 @@ def judge_diplomatic_policy() -> None:
     all_infection_rate: float
     all_reputation, all_infection_rate = 0, 0
     # 遍历所有势力
-    for country_id in cache.rhodes_island.diplomat_of_country:
+    for country_id in diplomacy.table():
         # 外交官数据
-        diplomat_chara_id = diplomat_of(country_id)[0]
+        diplomat_chara_id = diplomacy.of(country_id)["diplomat"]
         if diplomat_chara_id == 0:
             continue
         diplomat_chara_data = cache.character_data[diplomat_chara_id]
         # 外交方针数据
-        diplomatic_policy_id = diplomat_of(country_id)[1]
+        diplomatic_policy_id = diplomacy.of(country_id)["policy"]
         if diplomatic_policy_id == 0:
             continue
         diplomatic_policy_data = game_config.config_diplomatic_policy[
@@ -439,7 +428,9 @@ class Nation_Diplomacy_Panel:
                     )
                 )
                 # 外交官
-                now_diplomat_chara_id = diplomat_of(nation_data.country)[0]
+                now_diplomat_chara_id = diplomacy.of(nation_data.country)[
+                    "diplomat"
+                ]
                 if now_diplomat_chara_id != 0:
                     now_diplomat_chara_data = cache.character_data[
                         now_diplomat_chara_id
@@ -563,7 +554,9 @@ class Nation_Diplomacy_Panel:
                     "○负责地区势力的外交官会长期离岛停留在对应国家，只有当罗德岛本身也在同一国家时才会在岛上办公\n"
                 )
                 info_text += _("当前势力的负责外交官为：")
-                now_diplomat_chara_id = diplomat_of(nation_data.country)[0]
+                now_diplomat_chara_id = diplomacy.of(nation_data.country)[
+                    "diplomat"
+                ]
                 if now_diplomat_chara_id != 0:
                     now_diplomat_chara_data = cache.character_data[
                         now_diplomat_chara_id
@@ -594,7 +587,9 @@ class Nation_Diplomacy_Panel:
                 line_feed.draw()
 
                 # 当前外交方针
-                now_diplomatic_policy_cid = diplomat_of(nation_data.country)[1]
+                now_diplomatic_policy_cid = diplomacy.of(nation_data.country)[
+                    "policy"
+                ]
                 now_diplomatic_policy_text = ""
                 if now_diplomat_chara_id == 0:
                     now_diplomatic_policy_text += _(
@@ -681,7 +676,7 @@ class Nation_Diplomacy_Panel:
             npc_draw_count = 0
             chara_list = set(cache.npc_id_got)
             # 将当前派遣的外交官加入到角色列表里（此处为副本，不能影响cache.npc_id_got）
-            now_diplomat_chara_id = diplomat_of(country_id)[0]
+            now_diplomat_chara_id = diplomacy.of(country_id)["diplomat"]
             if now_diplomat_chara_id != 0:
                 chara_list.add(now_diplomat_chara_id)
             # 遍历角色列表，绘制符合条件的角色为按钮
@@ -743,15 +738,13 @@ class Nation_Diplomacy_Panel:
         from Script.Settle import default
 
         # 解除任命旧的外交官
-        old_diplomat_id = diplomat_of(country_id)[0]
+        old_diplomat_id = diplomacy.of(country_id)["diplomat"]
         if old_diplomat_id != 0:
             old_diplomat_chara_data = cache.character_data[old_diplomat_id]
             # 取消外交官的工作类型和负责区域数据
             old_diplomat_chara_data.work.work_type = 0
             old_diplomat_chara_data.sp_flag.in_diplomatic_visit = 0
-            cache.rhodes_island.diplomat_of_country.setdefault(
-                country_id, [0, 0]
-            )[0] = 0
+            diplomacy.set_post(country_id, diplomat=0)
             # 如果是离线状态，则上线
             if not handle_premise.handle_normal_7(old_diplomat_id):
                 default.handle_chara_on_line(
@@ -776,9 +769,7 @@ class Nation_Diplomacy_Panel:
             new_diplomat_chara_data = cache.character_data[character_id]
             # 设置外交官的工作类型和负责区域数据
             new_diplomat_chara_data.work.work_type = 131
-            cache.rhodes_island.diplomat_of_country.setdefault(
-                country_id, [0, 0]
-            )[0] = character_id
+            diplomacy.set_post(country_id, diplomat=character_id)
             new_diplomat_chara_data.sp_flag.in_diplomatic_visit = country_id
             # 根据是本地还是外派，赋予对应的二段行为结算
             if location.country() == country_id:
@@ -829,7 +820,7 @@ class Nation_Diplomacy_Panel:
         # 设施信息
         now_level = facility.level(13)
         # 外交官信息
-        now_diplomat_chara_id = diplomat_of(nation_data.country)[0]
+        now_diplomat_chara_id = diplomacy.of(nation_data.country)["diplomat"]
         now_diplomat_chara_data = cache.character_data[now_diplomat_chara_id]
 
         while 1:
@@ -859,7 +850,7 @@ class Nation_Diplomacy_Panel:
                 # TODO 实装声望和感染率的影响
                 draw_style = "standard"
                 # 如果已经选择，则绘制为金色
-                if diplomatic_policy_id == diplomat_of(country_id)[1]:
+                if diplomatic_policy_id == diplomacy.of(country_id)["policy"]:
                     draw_style = "gold_enrod"
                 draw_text = (
                     f"[{diplomatic_policy_id}]{diplomatic_policy_data.name.ljust(15,'　')}："
@@ -898,6 +889,4 @@ class Nation_Diplomacy_Panel:
         country_id -- 势力编号
         """
 
-        cache.rhodes_island.diplomat_of_country.setdefault(country_id, [0, 0])[
-            1
-        ] = diplomatic_policy_id
+        diplomacy.set_post(country_id, policy=diplomatic_policy_id)
