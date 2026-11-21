@@ -313,6 +313,7 @@ def build_family_commission(world: FullWorld) -> None:
     无
     """
     from Script.Core import constant
+    from Script.Modules.domains import commission
     from Script.System.Pregnancy_System import (
         pregnancy_constant,
         pregnancy_handle,
@@ -411,10 +412,8 @@ def build_family_commission(world: FullWorld) -> None:
             "返回",
         ),
     )
-    if len(world.cache.rhodes_island.ongoing_field_commissions) != 2:
-        raise PlanError(
-            f"应有两项进行中的委托：{world.cache.rhodes_island.ongoing_field_commissions}"
-        )
+    if len(commission.ongoing()) != 2:
+        raise PlanError(f"应有两项进行中的委托：{commission.ongoing()}")
 
 
 def waits(count: int) -> list:

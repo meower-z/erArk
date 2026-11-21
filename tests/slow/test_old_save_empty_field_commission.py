@@ -14,6 +14,7 @@
 import datetime
 import importlib
 import shutil
+from typing import Any
 
 from tests.slow.base import SlowTestCase
 from tests import kernel_data, world
@@ -28,6 +29,15 @@ VEHICLE_ID = 1
 """ 派出的载具：温顺的武装大驮兽 """
 REWARD_RESOURCE = 15
 """ PARTIAL_COMMISSION 奖励的资源id """
+
+
+def commission() -> Any:
+    """
+    导入外勤委托与载具的模块 Script.Modules.domains.commission
+    Return arguments:
+    Any -- 模块
+    """
+    return importlib.import_module("Script.Modules.domains.commission")
 
 
 class TestOldSaveEmptyFieldCommission(SlowTestCase):
@@ -98,8 +108,8 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
         with kernel_data.writing():
             panel.buy_vehicle(VEHICLE_ID)
         self.assertEqual(
-            self.cache.rhodes_island.vehicles[VEHICLE_ID],
-            [1, 0],
+            commission().vehicles()[VEHICLE_ID],
+            (1, 0),
             "派遣前有一辆空闲的载具",
         )
 
@@ -129,14 +139,12 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
         with kernel_data.writing():
             panel.send_commision(commission_id)
         self.assertEqual(
-            self.cache.rhodes_island.ongoing_field_commissions[commission_id][
-                0
-            ],
+            list(commission().ongoing()[commission_id].team),
             member_id_list,
             f"委托{commission_id}已派出",
         )
         self.assertEqual(
-            self.cache.rhodes_island.vehicles[VEHICLE_ID], [1, 1], "载具已派出"
+            commission().vehicles()[VEHICLE_ID], (1, 1), "载具已派出"
         )
 
     def _save_and_load(self) -> None:
@@ -172,32 +180,33 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
             field_commission_function.judge_field_commission_finish()
 
     def test_all_child_commission_cancelled_on_load(self) -> None:
-        """成员全是101/102孩子的委托读档后取消：载具收回，不发奖励，不算完成；再读一次不变"""
-        island = self.cache.rhodes_island
+        """
+        成员全是101/102阶段孩子的委托读档后取消，载具收回。再写盘、读档一次，委托与载具不变。
+        过了返回时间结算后，资源与载具不变，委托不算完成，外勤成就计数不变
+        """
+        domain = commission()
         self._buy_vehicle()
         child_id_list = [
             self._daughter("测试女儿101", 101),
             self._daughter("测试女儿102", 102),
         ]
         self._send(ALL_CHILD_COMMISSION, child_id_list)
-        end_time = island.ongoing_field_commissions[ALL_CHILD_COMMISSION][1]
+        end_time = domain.ongoing()[ALL_CHILD_COMMISSION].end
         achievement_count = self.cache.achievement.field_commission_count
         self._save_and_load()
-        island = self.cache.rhodes_island
         self.assertNotIn(
             ALL_CHILD_COMMISSION,
-            island.ongoing_field_commissions,
+            domain.ongoing(),
             "全是孩子的委托读档后取消",
         )
         self.assertEqual(
-            island.vehicles[VEHICLE_ID], [1, 0], "取消的委托的载具收回"
+            domain.vehicles()[VEHICLE_ID], (1, 0), "取消的委托的载具收回"
         )
         # 再写盘、读档一次，委托与载具都不变
-        loaded_state = repr((island.ongoing_field_commissions, island.vehicles))
+        loaded_state = (domain.ongoing(), domain.vehicles())
         self._save_and_load()
-        island = self.cache.rhodes_island
         self.assertEqual(
-            repr((island.ongoing_field_commissions, island.vehicles)),
+            (domain.ongoing(), domain.vehicles()),
             loaded_state,
             "再读一次，委托与载具不变",
         )
@@ -210,7 +219,7 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
         )
         self.assertNotIn(
             ALL_CHILD_COMMISSION,
-            island.finished_field_commissions_set,
+            domain.finished(),
             "取消的委托不算完成",
         )
         self.assertEqual(
@@ -219,34 +228,36 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
             "取消的委托不计外勤成就",
         )
         self.assertEqual(
-            island.vehicles[VEHICLE_ID], [1, 0], "过了返回时间，载具不变"
+            domain.vehicles()[VEHICLE_ID], (1, 0), "过了返回时间，载具不变"
         )
 
     def test_partial_team_keeps_running_and_finishes(self) -> None:
-        """一名成年干员加一名孩子的委托读档后只剩成年干员、仍在进行，到返回时间照常完成"""
-        island = self.cache.rhodes_island
+        """
+        一名成年干员加一名孩子的委托读档后只剩成年干员，仍在进行。到返回时间后照常完成：发奖励、算完成、计成就、
+        成年干员的外勤标记清零、载具收回
+        """
+        domain = commission()
         self._buy_vehicle()
         adult_id = self._mother_id()
         child_id = self._daughter("测试女儿102", 102)
         self._send(PARTIAL_COMMISSION, [adult_id, child_id])
-        end_time = island.ongoing_field_commissions[PARTIAL_COMMISSION][1]
+        end_time = domain.ongoing()[PARTIAL_COMMISSION].end
         achievement_count = self.cache.achievement.field_commission_count
         self._save_and_load()
-        island = self.cache.rhodes_island
         self.assertEqual(
-            island.ongoing_field_commissions[PARTIAL_COMMISSION][0],
-            [adult_id],
+            domain.ongoing()[PARTIAL_COMMISSION].team,
+            (adult_id,),
             "有成年干员的委托仍在进行，只剩成年干员",
         )
         self.assertEqual(
-            island.vehicles[VEHICLE_ID], [1, 1], "进行中的委托的载具仍在外"
+            domain.vehicles()[VEHICLE_ID], (1, 1), "进行中的委托的载具仍在外"
         )
         warehouse = importlib.import_module("Script.Modules.domains.warehouse")
         resource_before = warehouse.amount(REWARD_RESOURCE)
         self._finish_after(end_time)
         self.assertNotIn(
             PARTIAL_COMMISSION,
-            island.ongoing_field_commissions,
+            domain.ongoing(),
             "到返回时间委托结束",
         )
         self.assertEqual(
@@ -256,7 +267,7 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
         )
         self.assertIn(
             PARTIAL_COMMISSION,
-            island.finished_field_commissions_set,
+            domain.finished(),
             "完成的委托算完成",
         )
         self.assertEqual(
@@ -270,5 +281,5 @@ class TestOldSaveEmptyFieldCommission(SlowTestCase):
             "成年干员回来了",
         )
         self.assertEqual(
-            island.vehicles[VEHICLE_ID][1], 0, "完成的委托的载具收回"
+            domain.vehicles()[VEHICLE_ID][1], 0, "完成的委托的载具收回"
         )
