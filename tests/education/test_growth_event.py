@@ -1148,7 +1148,6 @@ talk.must_show_talk_check = lambda character_id: None
 clear_schedules()
 set_time(period_time(0))
 cache.rhodes_island.party_day_of_week = {day: 0 for day in range(7)}
-cache.rhodes_island.all_work_npc_set.setdefault(E.TEACHER_WORK_TYPE, set())
 to_loli = make_character(
     216, "要长成萝莉的幼女", 152, daughter=True, stage=102, mother_id=103
 )

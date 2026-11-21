@@ -16,7 +16,7 @@
 
 from Script.Core import game_type
 from Script.Kernel import core
-from Script.Modules.domains import power, power_supply
+from Script.Modules.domains import power, power_supply, work
 from Script.Modules.gameplay_resolution import working
 from Script.Modules.save_load import upgrade
 from Script.System.Official_Event_System import ri_value
@@ -77,7 +77,7 @@ class PowerStateTest(FastTestCase):
         """不是调控员的不任命。同一人任命到另一类时从原来那类撤下。再任命同一类时撤下"""
         self.world.chara(1, "干员甲")
         self.world.chara(2, "干员乙")
-        self.cache.rhodes_island.all_work_npc_set[power.OPERATOR_WORK] = {1}
+        work.set_rosters({power.OPERATOR_WORK: [1]})
         power.appoint_main_operator(1, 2)
         self.assertEqual(power.plant()["main_operators"], (0, 0, 0, 0))
         power.appoint_main_operator(1, 1)

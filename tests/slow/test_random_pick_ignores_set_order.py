@@ -26,10 +26,12 @@
 """
 
 import functools
+import importlib
 import random
 from typing import TYPE_CHECKING
 from unittest import mock
 
+from tests import kernel_data
 from tests.slow.base import SlowTestCase
 
 if TYPE_CHECKING:
@@ -267,7 +269,8 @@ class RandomPickIgnoresSetOrderTest(SlowTestCase):
         # 12：调教助手与博士同部位；13：调教对象不限于囚犯
         setting[12] = 1
         setting[13] = 1
-        self.cache.rhodes_island.current_warden_id = self.npc("凯尔希")
+        work = importlib.import_module("Script.Modules.domains.work")
+        kernel_data.written(work.set_warden, self.npc("凯尔希"))
         self.cache.character_data[0].behavior.behavior_id = (
             constant.Behavior.BREAST_CARESS
         )

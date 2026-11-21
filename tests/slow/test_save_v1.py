@@ -5,7 +5,7 @@
 开新游戏（SlowTestCase.setUp），存档目录换成临时目录。
 - 等待 60 分钟。在动力系统管理面板里把一个区块的供电策略调高一档，再加一台 L1 蓄电池。
   在基建面板里把访客区升到 2 级，再存进新存档。
-  文件 "2" 里有 Fraction 的标签、base.power、base.facility_level 与 base.food_shelves。
+  文件 "2" 里有 Fraction 的标签、base.power、base.facility_level、base.food_shelves 与 base.work。
   读回这个存档，内核状态的 JSON 与存档前相同。
 - 存档之后接着玩 60 分钟，与读回存档后接着玩 60 分钟（随机数同样重设）比较。内核状态、花名册顺序、
   全部角色的生理需求、开始的行动序列与随机数状态都相同。
@@ -186,6 +186,8 @@ class SaveV1Test(SlowTestCase):
         self.assertIn(power.PLANT, first_file["data"], "文件 2 里有动力设施")
         self.assertIn(facility.LEVEL, first_file["data"], "文件 2 里有设施等级")
         self.assertIn(economy.SHELVES, first_file["data"], "文件 2 里有货架")
+        work = game("Script.Modules.domains.work")
+        self.assertIn(work.KEY, first_file["data"], "文件 2 里有岗位名册")
 
         random.seed(SEED)
         self.started.clear()

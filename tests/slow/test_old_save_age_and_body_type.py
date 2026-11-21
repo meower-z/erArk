@@ -11,6 +11,7 @@
 再两个测试在群交中读档：玩家、102的孩子与另一名干员同场景群交，玩家以孩子或那名干员为交互对象，读档后群交都按群交结束收尾。
 """
 
+import importlib
 import shutil
 from typing import TYPE_CHECKING
 
@@ -178,9 +179,9 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         # 学生岗在职业名单里，分到宿舍床位（旧规则下长成102时上线所做的）
         from Script.System.Dormitory_System import common as dormitory_common
 
-        cache.rhodes_island.all_work_npc_set.setdefault(152, set()).add(
-            id_dict["d102"]
-        )
+        work = importlib.import_module("Script.Modules.domains.work")
+        students = [*work.roster(152), id_dict["d102"]]
+        kernel_data.written(work.set_rosters, {**work.rosters(), 152: students})
         dormitory_common.new_character_get_dormitory(id_dict["d102"])
         self.assertIn(
             child.dormitory,
@@ -393,6 +394,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
            罗德岛里的冷库、囚犯、外勤、实操课、体检与借书数据，以及场景面板记着的角色
         """
         collection = self.cache.character_data[0].pl_collection
+        work = importlib.import_module("Script.Modules.domains.work")
         snapshot: dict[str | int, object] = {
             "world_setting": dict(self.cache.world_setting),
             "template": repr(self.cache.rhodes_island.child_schedule_template),
@@ -402,10 +404,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 path: sorted(scene.character_list)
                 for path, scene in self.cache.scene_data.items()
             },
-            "work": {
-                work_id: sorted(work_set)
-                for work_id, work_set in self.cache.rhodes_island.all_work_npc_set.items()
-            },
+            "work": work.rosters(),
             "island": repr(
                 [
                     getattr(self.cache.rhodes_island, name)
@@ -497,6 +496,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
         from Script.Config import game_config
 
         cache = self.cache
+        work = importlib.import_module("Script.Modules.domains.work")
         self.assertEqual(cache.world_setting.get(1, 0), 0, "世界设定1应已关闭")
         for cid, chara in cache.character_data.items():
             stage_list = [
@@ -715,11 +715,7 @@ class TestOldSaveAgeAndBodyType(SlowTestCase):
                 f"{stage}的孩子没有职业、没有宿舍",
             )
             self.assertEqual(
-                [
-                    work_id
-                    for work_id, work_set in cache.rhodes_island.all_work_npc_set.items()
-                    if child_id in work_set
-                ],
+                [w for w, ids in work.rosters().items() if child_id in ids],
                 [],
                 f"{stage}的孩子不在任何职业名单里",
             )
