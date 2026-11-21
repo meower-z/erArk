@@ -18,7 +18,7 @@ from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
 from typing import TYPE_CHECKING
 from Script.Design import game_time
-from Script.Modules.domains import facility, warehouse
+from Script.Modules.domains import facility, production, warehouse
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -49,7 +49,6 @@ def calculate_agriculture_line_efficiency(
     说明:\n
         主种植员提供100%个人加成，副种植员提供20%个人加成，总加成乘以设施效率\n
     """
-    ri = cache.rhodes_island
     # 设施效率（疗养庭院 facility 16）
     facility_effect = basement.calc_facility_efficiency(16)
     if agriculture_type == 0:
@@ -59,44 +58,19 @@ def calculate_agriculture_line_efficiency(
         round(facility_effect * 100, 1)
     )
 
-    # 获取主种植员与候选列表
-    if agriculture_type == 0:
-        # 药田
-        main_id = ri.herb_garden_line.get(line_id, [0, 0, 0, 0, 0])[1]
-        operator_ids = ri.herb_garden_operator_ids
-        # 全部主种植员集合（仅药田）
-        main_ids = {
-            (
-                ri.herb_garden_line[i][1]
-                if isinstance(ri.herb_garden_line[i][1], int)
-                else 0
-            )
-            for i in ri.herb_garden_line
-        }
-    else:
-        # 温室
-        main_id = ri.green_house_line.get(line_id, [0, 0, 0, 0, 0])[1]
-        operator_ids = ri.green_house_operator_ids
-        # 全部主种植员集合（仅温室）
-        main_ids = {
-            (
-                ri.green_house_line[i][1]
-                if isinstance(ri.green_house_line[i][1], int)
-                else 0
-            )
-            for i in ri.green_house_line
-        }
+    # 这条线的主种植员、这类的种植员名单与这类各线的主种植员
+    kind = ("herb_garden", "green_house")[agriculture_type]
+    lines = production.lines(kind)
+    main_id = lines.get(line_id, production.IDLE)["main"]
+    operator_ids = production.workers(kind)
+    main_ids = {line["main"] for line in lines.values()}
 
     # 计算主/副人员的加成
     total_bonus = 0.0
     sub_bonus = 0.0
     parts_str = "["
     # 主
-    if (
-        isinstance(main_id, int)
-        and main_id in cache.character_data
-        and main_id != 0
-    ):
+    if main_id in cache.character_data and main_id != 0:
         c = cache.character_data[main_id]
         base_effect = 10 * handle_ability.get_ability_adjust(
             c.ability.get(47, 0)
@@ -157,10 +131,8 @@ def settle_agriculture_line(draw_flag: bool = True) -> tuple[bool, str]:
             )
 
     # 遍历药田
-    for agriculture_line_id in cache.rhodes_island.herb_garden_line:
-        resouce_id = cache.rhodes_island.herb_garden_line[agriculture_line_id][
-            0
-        ]
+    for agriculture_line_id, line in production.lines("herb_garden").items():
+        resouce_id = line["product"]
         if resouce_id != 0:
             resouce_data = game_config.config_resouce[resouce_id]
 
@@ -211,20 +183,13 @@ def settle_agriculture_line(draw_flag: bool = True) -> tuple[bool, str]:
                     now_draw.text = now_text
                     now_draw.draw()
 
-        # 如果没有第4号元素，补齐为0
-        while (
-            len(cache.rhodes_island.herb_garden_line[agriculture_line_id]) < 5
-        ):
-            cache.rhodes_island.herb_garden_line[agriculture_line_id].append(0)
-        cache.rhodes_island.herb_garden_line[agriculture_line_id][
-            4
-        ] = game_time.now().hour
+        production.set_line(
+            "herb_garden", agriculture_line_id, hour=game_time.now().hour
+        )
 
     # 遍历温室
-    for agriculture_line_id in cache.rhodes_island.green_house_line:
-        resouce_id = cache.rhodes_island.green_house_line[agriculture_line_id][
-            0
-        ]
+    for agriculture_line_id, line in production.lines("green_house").items():
+        resouce_id = line["product"]
         if resouce_id != 0:
             resouce_data = game_config.config_resouce[resouce_id]
 
@@ -276,9 +241,9 @@ def settle_agriculture_line(draw_flag: bool = True) -> tuple[bool, str]:
                     now_draw.draw()
 
         # 重置收菜时间
-        cache.rhodes_island.green_house_line[agriculture_line_id][
-            4
-        ] = game_time.now().hour
+        production.set_line(
+            "green_house", agriculture_line_id, hour=game_time.now().hour
+        )
 
     # 结算成就
     achievement_panel.achievement_flow(_("种植"))
@@ -333,15 +298,15 @@ class Agriculture_Production_Panel:
             all_info_draw.text = now_text
             all_info_draw.draw()
 
-            for agriculture_line_id in cache.rhodes_island.herb_garden_line:
+            for agriculture_line_id, line in production.lines(
+                "herb_garden"
+            ).items():
                 now_text = _("\n 药田：")
                 all_info_draw.text = now_text
                 all_info_draw.draw()
 
                 # 基础数据
-                resouce_id = cache.rhodes_island.herb_garden_line[
-                    agriculture_line_id
-                ][0]
+                resouce_id = line["product"]
                 resouce_data = game_config.config_resouce[resouce_id]
                 # 生产效率
                 detail_str, produce_effect = (
@@ -375,15 +340,15 @@ class Agriculture_Production_Panel:
 
             # 已开放温室再显示温室的生产情况
             if facility.is_open(71):
-                for agriculture_line_id in cache.rhodes_island.green_house_line:
+                for agriculture_line_id, line in production.lines(
+                    "green_house"
+                ).items():
                     now_text = _("\n 温室：")
                     all_info_draw.text = now_text
                     all_info_draw.draw()
 
                     # 基础数据
-                    resouce_id = cache.rhodes_island.green_house_line[
-                        agriculture_line_id
-                    ][0]
+                    resouce_id = line["product"]
                     resouce_data = game_config.config_resouce[resouce_id]
                     # 生产效率
                     detail_str, produce_effect = (
@@ -442,7 +407,6 @@ class Agriculture_Production_Panel:
 
     def select_agri_position(self) -> None:
         """种植员管理(任命各线主种植员)"""
-        ri = cache.rhodes_island
         from Script.UI.Panel import manage_basement_panel
 
         while 1:
@@ -455,8 +419,8 @@ class Agriculture_Production_Panel:
             info.text = _(
                 "当前药田种植员数量：{0}，温室种植员数量：{1}"
             ).format(
-                len(ri.herb_garden_operator_ids),
-                len(ri.green_house_operator_ids),
+                len(production.workers("herb_garden")),
+                len(production.workers("green_house")),
             )
             info.text += "      "
             info.draw()
@@ -476,8 +440,8 @@ class Agriculture_Production_Panel:
             line_feed.draw()
 
             # 药田各线任命
-            for line_id in ri.herb_garden_line:
-                main_id = ri.herb_garden_line[line_id][1]
+            for line_id, line in production.lines("herb_garden").items():
+                main_id = line["main"]
                 name = (
                     cache.character_data[main_id].name
                     if main_id != 0 and main_id in cache.character_data
@@ -508,10 +472,13 @@ class Agriculture_Production_Panel:
             line_feed.draw()
 
             # 药田副种植员
-            main_ids = {ri.herb_garden_line[i][1] for i in ri.herb_garden_line}
+            main_ids = {
+                line["main"]
+                for line in production.lines("herb_garden").values()
+            }
             other_ops = [
                 cid
-                for cid in ri.herb_garden_operator_ids
+                for cid in production.workers("herb_garden")
                 if cid not in main_ids
             ]
             other_draw = draw.NormalDraw()
@@ -536,8 +503,8 @@ class Agriculture_Production_Panel:
 
             # 温室（仅开放后显示）
             if facility.is_open(71, False):
-                for line_id in ri.green_house_line:
-                    main_id = ri.green_house_line[line_id][1]
+                for line_id, line in production.lines("green_house").items():
+                    main_id = line["main"]
                     name = (
                         cache.character_data[main_id].name
                         if main_id != 0 and main_id in cache.character_data
@@ -568,11 +535,12 @@ class Agriculture_Production_Panel:
                 line_feed.draw()
 
                 main_ids = {
-                    ri.green_house_line[i][1] for i in ri.green_house_line
+                    line["main"]
+                    for line in production.lines("green_house").values()
                 }
                 other_ops = [
                     cid
-                    for cid in ri.green_house_operator_ids
+                    for cid in production.workers("green_house")
                     if cid not in main_ids
                 ]
                 other_draw = draw.NormalDraw()
@@ -607,7 +575,7 @@ class Agriculture_Production_Panel:
         """任命某条农业线主种植员(重复选择同一人可撤销)"""
         from Script.UI.Panel import common_select_NPC
 
-        ri = cache.rhodes_island
+        kind = ("herb_garden", "green_house")[agriculture_type]
         now_draw_panel: panel.PageHandlePanel = panel.PageHandlePanel(
             [],
             common_select_NPC.CommonSelectNPCButtonList,
@@ -621,17 +589,12 @@ class Agriculture_Production_Panel:
         select_state: dict[str, int | str] = {}
 
         def _make(chara_id: int) -> None:
-            self._do_appoint_main_agri(line_id, agriculture_type, chara_id)
+            production.appoint(kind, line_id, chara_id)
 
         while 1:
-            if agriculture_type == 0:
-                op_list = ri.herb_garden_operator_ids
-                now_main = ri.herb_garden_line[line_id][1]
-                type_name = _("药田")
-            else:
-                op_list = ri.green_house_operator_ids
-                now_main = ri.green_house_line[line_id][1]
-                type_name = _("温室")
+            op_list = production.workers(kind)
+            now_main = production.lines(kind)[line_id]["main"]
+            type_name = _("药田") if agriculture_type == 0 else _("温室")
             info_text = _("请选择一名种植员担任{0}{1}号线主种植员:\n").format(
                 type_name, line_id + 1
             )
@@ -650,49 +613,6 @@ class Agriculture_Production_Panel:
             if yrn == _("返回"):
                 break
 
-    def _do_appoint_main_agri(
-        self, line_id: int, agriculture_type: int, chara_id: int
-    ) -> None:
-        """
-        任命或撤销生产线的主种植员
-        角色已是该线主种植员时撤销；否则先撤销其在同类其他生产线的任命，再任命到该线
-        角色不在对应农业类型的种植员名单里时不做任何改动
-        Keyword arguments:
-        line_id -- 生产线id
-        agriculture_type -- 农业类型，0药田，1温室
-        chara_id -- 角色id
-        Return arguments:
-        None
-        """
-        ri = cache.rhodes_island
-        if agriculture_type == 0:
-            if chara_id not in ri.herb_garden_operator_ids:
-                return
-            # 撤销/任命
-            if ri.herb_garden_line[line_id][1] == chara_id:
-                ri.herb_garden_line[line_id][1] = 0
-            else:
-                for lid in ri.herb_garden_line:
-                    if (
-                        lid != line_id
-                        and ri.herb_garden_line[lid][1] == chara_id
-                    ):
-                        ri.herb_garden_line[lid][1] = 0
-                ri.herb_garden_line[line_id][1] = chara_id
-        else:
-            if chara_id not in ri.green_house_operator_ids:
-                return
-            if ri.green_house_line[line_id][1] == chara_id:
-                ri.green_house_line[line_id][1] = 0
-            else:
-                for lid in ri.green_house_line:
-                    if (
-                        lid != line_id
-                        and ri.green_house_line[lid][1] == chara_id
-                    ):
-                        ri.green_house_line[lid][1] = 0
-                ri.green_house_line[line_id][1] = chara_id
-
     def select_agriculture_line_produce(
         self, agriculture_line_id: int, agriculture_type: int
     ) -> None:
@@ -709,9 +629,9 @@ class Agriculture_Production_Panel:
             info_draw = draw.NormalDraw()
             return_list = []
 
-            resouce_id = cache.rhodes_island.herb_garden_line[
-                agriculture_line_id
-            ][0]
+            resouce_id = production.lines("herb_garden")[agriculture_line_id][
+                "product"
+            ]
             resouce_data = game_config.config_resouce[resouce_id]
 
             info_text = ""
@@ -757,27 +677,5 @@ class Agriculture_Production_Panel:
         self, agriculture_line_id: int, formula_cid: int, agriculture_type: int
     ) -> None:
         """更改农产品的种植"""
-        if agriculture_type == 0:
-            if (
-                cache.rhodes_island.herb_garden_line[agriculture_line_id][0]
-                != 0
-                and cache.rhodes_island.herb_garden_line[agriculture_line_id][4]
-                != game_time.now().hour
-            ):
-                pass
-            else:
-                cache.rhodes_island.herb_garden_line[agriculture_line_id][
-                    0
-                ] = formula_cid
-        elif agriculture_type == 1:
-            if (
-                cache.rhodes_island.green_house_line[agriculture_line_id][0]
-                != 0
-                and cache.rhodes_island.green_house_line[agriculture_line_id][4]
-                != game_time.now().hour
-            ):
-                pass
-            else:
-                cache.rhodes_island.green_house_line[agriculture_line_id][
-                    0
-                ] = formula_cid
+        kind = ("herb_garden", "green_house")[agriculture_type]
+        production.change_product(kind, agriculture_line_id, formula_cid)

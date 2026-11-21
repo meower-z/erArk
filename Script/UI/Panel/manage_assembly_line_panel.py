@@ -16,7 +16,7 @@ from Script.Config import game_config, normal_config
 from Script.UI.Panel import achievement_panel
 from typing import TYPE_CHECKING
 from Script.Design import game_time
-from Script.Modules.domains import facility, warehouse
+from Script.Modules.domains import facility, production, warehouse
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -41,8 +41,8 @@ def calculate_assembly_line_efficiency(line_id: int) -> tuple[str, float]:
     输出参数:
     流水线效率(百分比值, 例如 123.5)
     """
-    ri = cache.rhodes_island
-    if line_id not in ri.assembly_line:
+    lines = production.lines("assembly")
+    if line_id not in lines:
         return _("无此生产线"), 0.0
     # 设施效率(返回例如 1.15)
     facility_effect_ratio = basement.calc_facility_efficiency(12)
@@ -50,16 +50,9 @@ def calculate_assembly_line_efficiency(line_id: int) -> tuple[str, float]:
         round((facility_effect_ratio) * 100, 1)
     )
     base = facility_effect_ratio * 100
-    # 不是int时按0（空缺）算
-    line_main_id = ri.assembly_line[line_id][1]
-    if not isinstance(line_main_id, int):
-        line_main_id = 0
+    line_main_id = lines[line_id]["main"]
     # 收集全部主生产工人，防止副工人重复计入
-    main_ids = {
-        ri.assembly_line[lid][1]
-        for lid in ri.assembly_line
-        if isinstance(ri.assembly_line[lid][1], int)
-    }
+    main_ids = {line["main"] for line in lines.values()}
     total = base
     sub_bonus = 0.0
     # 主工人加成
@@ -76,7 +69,7 @@ def calculate_assembly_line_efficiency(line_id: int) -> tuple[str, float]:
     else:
         worker_str += _("主:空缺")
     # 副工人加成
-    for cid in ri.production_worker_ids:
+    for cid in production.workers("assembly"):
         if cid == 0 or cid not in cache.character_data:
             continue
         if cid in main_ids:
@@ -128,8 +121,8 @@ def settle_assembly_line(
     extra_warehouse_modules = 0
 
     # 遍历流水线
-    for assembly_line_id in cache.rhodes_island.assembly_line:
-        now_formula_id = cache.rhodes_island.assembly_line[assembly_line_id][0]
+    for assembly_line_id, line in production.lines("assembly").items():
+        now_formula_id = line["product"]
         if now_formula_id != 0:
             formula_data_now = game_config.config_productformula_data[
                 now_formula_id
@@ -138,16 +131,9 @@ def settle_assembly_line(
             product_id = formula_now.product_id
             # 最大生产时间
             if newdayflag:
-                max_time = (
-                    24
-                    + game_time.now().hour
-                    - cache.rhodes_island.assembly_line[assembly_line_id][4]
-                )
+                max_time = 24 + game_time.now().hour - line["hour"]
             else:
-                max_time = (
-                    game_time.now().hour
-                    - cache.rhodes_island.assembly_line[assembly_line_id][4]
-                )
+                max_time = game_time.now().hour - line["hour"]
             # 生产效率(动态计算)
             _detail_str, produce_effect = calculate_assembly_line_efficiency(
                 assembly_line_id
@@ -186,7 +172,7 @@ def settle_assembly_line(
 
                 now_text = _("\n 流水线{0}:").format(assembly_line_id)
                 now_text += _("上次结算是{0}时，到现在已过{1}小时，").format(
-                    cache.rhodes_island.assembly_line[assembly_line_id][4],
+                    line["hour"],
                     max_time,
                 )
                 # 如果有设备故障，则输出信息
@@ -226,9 +212,9 @@ def settle_assembly_line(
                     now_draw.draw()
 
         # 重置收菜时间
-        cache.rhodes_island.assembly_line[assembly_line_id][
-            4
-        ] = game_time.now().hour
+        production.set_line(
+            "assembly", assembly_line_id, hour=game_time.now().hour
+        )
     # 结算成就
     achievement_panel.achievement_flow(_("生产"))
     # 结算住院病房扩展模块
@@ -336,15 +322,13 @@ class Manage_Assembly_Line_Panel:
             line_feed.draw()
             line_feed.draw()
 
-            for assembly_line_id in cache.rhodes_island.assembly_line:
+            for assembly_line_id, line in production.lines("assembly").items():
                 now_text = _("\n {0}号流水线：").format(assembly_line_id + 1)
                 all_info_draw.text = now_text
                 all_info_draw.draw()
 
                 # 基础数据
-                formula_id = cache.rhodes_island.assembly_line[
-                    assembly_line_id
-                ][0]
+                formula_id = line["product"]
                 formula_data = game_config.config_productformula[formula_id]
                 product_id = formula_data.product_id
                 product_data = game_config.config_resouce[product_id]
@@ -414,7 +398,6 @@ class Manage_Assembly_Line_Panel:
 
     def select_npc_position(self) -> None:
         """生产工人管理(任命各线主生产工人 & 管理副工人列表)"""
-        ri = cache.rhodes_island
         from Script.UI.Panel import manage_basement_panel
 
         while 1:
@@ -427,7 +410,7 @@ class Manage_Assembly_Line_Panel:
             # 提示信息
             info = draw.NormalDraw()
             info.text = _("当前生产工人数量：{0}").format(
-                len(ri.production_worker_ids)
+                len(production.workers("assembly"))
             )
             info.text += "      "
             info.draw()
@@ -447,8 +430,8 @@ class Manage_Assembly_Line_Panel:
             line_feed.draw()
 
             # 各生产线主生产工人显示与任命按钮
-            for line_id in ri.assembly_line:
-                main_id = ri.assembly_line[line_id][1]
+            for line_id, line in production.lines("assembly").items():
+                main_id = line["main"]
                 main_chara_data = cache.character_data[main_id]
                 name = main_chara_data.name if main_id != 0 else _("(空缺)")
                 abi_lv = main_chara_data.ability.get(48, 0)
@@ -477,10 +460,12 @@ class Manage_Assembly_Line_Panel:
             line_feed.draw()
 
             # 显示所有副生产工人
-            main_ids = {ri.assembly_line[i][1] for i in ri.assembly_line}
+            main_ids = {
+                line["main"] for line in production.lines("assembly").values()
+            }
             other_ops = [
                 cid
-                for cid in ri.production_worker_ids
+                for cid in production.workers("assembly")
                 if cid not in main_ids and cid in cache.character_data
             ]
             other_draw = draw.NormalDraw()
@@ -514,7 +499,6 @@ class Manage_Assembly_Line_Panel:
 
     def _appoint_main_worker(self, line_id: int) -> None:
         """任命主生产工人(重复选择撤销)"""
-        ri = cache.rhodes_island
         from Script.UI.Panel import common_select_NPC
 
         now_panel = panel.PageHandlePanel(
@@ -530,17 +514,7 @@ class Manage_Assembly_Line_Panel:
         select_state: dict[str, int | str] = {}
 
         def _handler(chara_id: int) -> None:
-            if chara_id not in ri.production_worker_ids:
-                return
-            # 选择了当前主生产工人则撤销，否则任命
-            if ri.assembly_line[line_id][1] == chara_id:
-                ri.assembly_line[line_id][1] = 0
-            else:
-                # 如果该工人在其它线已是主生产工人则先撤销
-                for lid in ri.assembly_line:
-                    if lid != line_id and ri.assembly_line[lid][1] == chara_id:
-                        ri.assembly_line[lid][1] = 0
-                ri.assembly_line[line_id][1] = chara_id
+            production.appoint("assembly", line_id, chara_id)
 
         while 1:
             info_text = _(
@@ -548,12 +522,11 @@ class Manage_Assembly_Line_Panel:
             ).format(line_id + 1)
             final_list = []
             # 遍历生产工人列表
-            for npc_id in ri.production_worker_ids:
+            main = production.lines("assembly")[line_id]["main"]
+            for npc_id in production.workers("assembly"):
                 if npc_id == 0:
                     continue
-                final_list.append(
-                    [npc_id, _handler, [ri.assembly_line[line_id][1]]]
-                )
+                final_list.append([npc_id, _handler, [main]])
             now_panel.text_list = final_list
             return_list, _other_return_list, select_state = (
                 common_select_NPC.common_select_npc_button_list_func(
@@ -573,9 +546,9 @@ class Manage_Assembly_Line_Panel:
             info_draw = draw.NormalDraw()
             return_list = []
 
-            formula_now_id = cache.rhodes_island.assembly_line[
-                assembly_line_id
-            ][0]
+            formula_now_id = production.lines("assembly")[assembly_line_id][
+                "product"
+            ]
             formula_now_data = game_config.config_productformula[formula_now_id]
             product_now_id = formula_now_data.product_id
             product_now_data = game_config.config_resouce[product_now_id]
@@ -679,14 +652,7 @@ class Manage_Assembly_Line_Panel:
         self, assembly_line_id: int, formula_cid: int
     ) -> None:
         """更改流水线生产的产品"""
-        if (
-            cache.rhodes_island.assembly_line[assembly_line_id][0] != 0
-            and cache.rhodes_island.assembly_line[assembly_line_id][4]
-            != game_time.now().hour
-        ):
-            pass
-        else:
-            cache.rhodes_island.assembly_line[assembly_line_id][0] = formula_cid
+        production.change_product("assembly", assembly_line_id, formula_cid)
 
     def settle_npc_id(self, chara_id: int) -> None:
         """结算干员的id变更"""

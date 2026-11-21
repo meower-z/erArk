@@ -1274,16 +1274,16 @@ npc_tem_data\[i\]
 | `book_borrow_dict` | Dict[int, int] | 书籍借出人ID |
 | `trade_operator_ids_list` | List[int] | 贸易干员ID列表 |
 | `resource_type_main_trader` | Dict[str, int] | 资源主交易员ID |
-| `assembly_line[x][1]` | int | 流水线主工人ID |
-| `production_worker_ids` | List[int] | 生产工人ID列表 |
+| `base.production["assembly"]["lines"][x]["main"]` | int | 流水线主工人ID。存在 GameState 的全局数据里，换id时由 `production.remap` 映射 |
+| `base.production["assembly"]["workers"]` | List[int] | 生产工人ID列表。存在 GameState 的全局数据里，换id时由 `production.remap` 映射 |
 | `visitor_info` | Dict[int, datetime] | 访客ID信息 |
 | `invite_visitor[0]` | int | 邀请目标ID |
 | `diplomat_of_country[x][0]` | int | 外交官ID |
 | `ongoing_field_commissions[x][0]` | List[int] | 外勤干员ID列表 |
-| `herb_garden_line[x][1]` | int | 药田种植员ID |
-| `herb_garden_operator_ids` | List[int] | 药田干员ID列表 |
-| `green_house_line[x][1]` | int | 温室种植员ID |
-| `green_house_operator_ids` | List[int] | 温室干员ID列表 |
+| `base.production["herb_garden"]["lines"][x]["main"]` | int | 药田主种植员ID。存在 GameState 的全局数据里，换id时由 `production.remap` 映射 |
+| `base.production["herb_garden"]["workers"]` | List[int] | 药田种植员ID列表。存在 GameState 的全局数据里，换id时由 `production.remap` 映射 |
+| `base.production["green_house"]["lines"][x]["main"]` | int | 温室主种植员ID。存在 GameState 的全局数据里，换id时由 `production.remap` 映射 |
+| `base.production["green_house"]["workers"]` | List[int] | 温室种植员ID列表。存在 GameState 的全局数据里，换id时由 `production.remap` 映射 |
 | `current_warden_id` | int | 监狱长ID |
 | `current_prisoners` | Dict[int, List] | 囚犯ID字典 |
 | `urine_in_fridge` | Dict[int, int] | 圣水-干员ID |

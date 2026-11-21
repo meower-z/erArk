@@ -7,7 +7,7 @@ from Script.Core.game_type import Recipes, Food
 from Script.Core import cache_control, game_type, get_text
 from Script.Config import game_config
 from Script.Design import handle_premise
-from Script.Modules.domains import economy
+from Script.Modules.domains import economy, kitchen
 from Script.Modules.save_load import reset
 from Script.UI.Moudle import view
 
@@ -224,7 +224,7 @@ def init_food_shop_data(
     cache = cache_control.cache
     # 如果是新的一天则清空食物数据
     if new_day_flag:
-        cache.rhodes_island.dining_hall_data = {}
+        kitchen.clear()
     max_people = len(cache.npc_id_got)
     # 初始化食堂内的食物
     if update_restaurant_id in [-1, -2]:
@@ -240,10 +240,7 @@ def init_food_shop_data(
             # 随机1~5的烹饪技能等级
             cook_level = random.randint(1, 5)
             new_food = cook(food_list, recipes_id, cook_level, "")
-            cache.rhodes_island.dining_hall_data.setdefault(str(recipes_id), {})
-            cache.rhodes_island.dining_hall_data[str(recipes_id)][
-                new_food.uid
-            ] = new_food
+            kitchen.stock(str(recipes_id), new_food)
             cook_index += 1
             if cook_index >= max_people * 3:
                 break
@@ -451,15 +448,10 @@ def get_food_list_from_food_shop(
     food_list = {}
     # 食堂内的食物
     if restaurant_id == -1:
-        for food_id in cache.rhodes_island.dining_hall_data:
-            if not len(cache.rhodes_island.dining_hall_data[food_id]):
+        for food_id, shelf in kitchen.shelves().items():
+            if not len(shelf):
                 continue
-            now_food_uid = list(
-                cache.rhodes_island.dining_hall_data[food_id].keys()
-            )[0]
-            now_food: game_type.Food = cache.rhodes_island.dining_hall_data[
-                food_id
-            ][now_food_uid]
+            now_food: game_type.Food = next(iter(shelf.values()))
             if now_food.recipe != -1:
                 food_list[food_id] = cache.recipe_data[int(food_id)].name
     # 餐馆与地摊小贩的食物

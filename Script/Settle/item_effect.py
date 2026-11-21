@@ -13,7 +13,7 @@ from Script.Design import (
 from Script.Core import cache_control, constant_effect, game_type, get_text, num
 from Script.Config import normal_config
 from Script.UI.Moudle import draw
-from Script.Modules.domains import needs
+from Script.Modules.domains import kitchen, needs
 
 _: FunctionType = get_text._
 """ 翻译api """
@@ -1365,10 +1365,7 @@ def handle_npc_make_food_to_shop(
             food_list, recipes_id, food_quality_limit, character_data.name
         )
         # 将食物添加到当前所在食物商店中
-        cache.rhodes_island.dining_hall_data.setdefault(str(recipes_id), {})
-        cache.rhodes_island.dining_hall_data[str(recipes_id)][
-            new_food.uid
-        ] = new_food
+        kitchen.stock(str(recipes_id), new_food)
         # 记录最近制作的食物对象
         character_data.behavior.target_food = new_food
 

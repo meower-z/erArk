@@ -431,7 +431,7 @@ Script/
 - `NpcTem`：角色模板（能力/经验/素质/服装/基础属性）
 - `Map` / `MapDraw` / `MapDrawLine` / `MapDrawText`：AA 地图与绘制
 - `Scene`：场景路径、名字、室内外、家具、门、面积、标签、角色列表、图片
-- `Rhodes_Island`：宿舍、食堂、医疗、仓库、外交、囚犯、收入等（设施等级、待开放设施的开放情况与基地效率在 GameState 的全局键 `base.facility_level`、`base.facility_open` 与 `base.effectiveness` 里。读写它们用 `Modules/domains/facility.py`。各岗位的干员名册与监狱长在全局键 `base.work` 与 `base.warden` 里，用 `work.roster(岗位id)` 与 `work.warden()` 读）
+- `Rhodes_Island`：宿舍、医疗、仓库、外交、囚犯、收入等（设施等级、待开放设施的开放情况与基地效率在 GameState 的全局键 `base.facility_level`、`base.facility_open` 与 `base.effectiveness` 里。读写它们用 `Modules/domains/facility.py`。各岗位的干员名册与监狱长在全局键 `base.work` 与 `base.warden` 里，用 `work.roster(岗位id)` 与 `work.warden()` 读。生产线、工人名单与食堂货架在全局键 `base.production` 与 `base.dining_hall` 里，分别用 `Modules/domains/production.py` 与 `Modules/domains/kitchen.py` 读写）
 - `Country`：势力外交数据
 - `CharacterStatusChange` / `TargetChange`：结算数值变更累积器
 - `DIRTY`, `PREGNANCY`, `RELATIONSHIP`, `HYPNOSIS`, `CLOTH`, `BODY_H_STATE`, `FIRST_RECORD`, `ACTION_INFO`, `AUTHOR_FLAG` 等：角色各领域状态容器
@@ -650,8 +650,8 @@ init_character_behavior()
 | --- | --- | --- |
 | 基地/基建管理 | `Modules/domains/facility.py`, `Modules/domains/work.py`, `Design/basement.py`, `UI/Panel/building_panel.py`, `manage_basement_panel.py` | `Facility*.csv` |
 | 动力/能源 | `Modules/domains/power.py`, `Modules/domains/power_supply.py`, `Settle/power_settle.py`, `UI/Panel/manage_power_system_panel.py` | `Power_Generation.csv`, `Power_Storage.csv` |
-| 农业生产 | `UI/Panel/agriculture_production_panel.py`, `Design/basement.py` | 农场设施 |
-| 工业生产/流水线 | `UI/Panel/manage_assembly_line_panel.py` | `ProductFormula.csv` |
+| 农业生产 | `UI/Panel/agriculture_production_panel.py`, `Design/basement.py`, `Modules/domains/production.py` | 农场设施 |
+| 工业生产/流水线 | `UI/Panel/manage_assembly_line_panel.py`, `Modules/domains/production.py` | `ProductFormula.csv` |
 | 资源交易 | `UI/Panel/resource_exchange_panel.py`, `Modules/domains/economy.py`, `Modules/domains/warehouse.py` | `Resource.csv`, `Restaurant.csv` |
 | 装备维护 | `UI/Panel/equipmen_panel.py` | `Equipment_*` 系列 |
 | 载具管理 | `UI/Panel/manage_vehicle_panel.py` | `Vehicle.csv` |
@@ -688,7 +688,7 @@ init_character_behavior()
 | --- | --- | --- |
 | 烹饪/食谱 | `System/Cooking_System/cooking.py` | `Recipes.csv`, `Seasoning.csv` |
 | 制作食物 | `System/Cooking_System/make_food_panel.py` | 批量制作 |
-| 食物商店 | `UI/Panel/food_shop_panel.py` | `Restaurant.csv` |
+| 食物商店 | `UI/Panel/food_shop_panel.py`, `Modules/domains/kitchen.py` | `Restaurant.csv` |
 | 食物背包/进食 | `System/Cooking_System/food_bag_panel.py` | 饮用类独立、尿意结算 |
 | 烹饪题库 | `data/csv/cook_question/*.csv` | 140 张题目表 -> `Cook_Question.json` |
 | 道具背包 | `UI/Panel/see_item_info_panel.py` | `Item.csv` |
