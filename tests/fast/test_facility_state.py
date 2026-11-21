@@ -75,7 +75,7 @@ class FacilityStateTest(FastTestCase):
         basement.get_base_updata()
         self.assertTrue(all(facility.is_open(cid) for cid in rooms))
         self.assertEqual(
-            self.cache.rhodes_island.people_max,
+            facility.people_max(),
             game_config.config_facility_effect[effect_cid].effect,
         )
 

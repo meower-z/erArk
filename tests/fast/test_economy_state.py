@@ -74,7 +74,7 @@ class EconomyStateTest(FastTestCase):
         """
         rid = _tradable()
         warehouse.set(1, 10**9)
-        self.island.warehouse_capacity = 10**6
+        warehouse.set_extra_modules(5000)
         bought = trade.perform_trade(rid, 120, True)
         assert bought is not None
         self.assertEqual(bought["quantity"], 120)
@@ -89,7 +89,7 @@ class EconomyStateTest(FastTestCase):
         """买入 50 个后跑每天的供需波动：除龙门币外每种资源的今日买卖总量为 0，供需系数都不低于 0.1"""
         rid = _tradable()
         warehouse.set(1, 10**9)
-        self.island.warehouse_capacity = 10**6
+        warehouse.set_extra_modules(5000)
         trade.perform_trade(rid, 50, True)
         trade.daily_supply_demand_fluctuation()
         others = set(game_config.config_resouce) - {1}

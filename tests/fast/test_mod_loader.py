@@ -14,7 +14,9 @@ from unittest.mock import Mock, patch
 
 from Script.Config import game_config
 from Script.Core import mod_manager
+from Script.Modules.domains import tallies
 from Script.Design import handle_premise
+from tests import kernel_data
 from tests.fast.base import FastTestCase
 
 
@@ -100,7 +102,7 @@ class ModLoaderTest(FastTestCase):
         handle_aromatherapy_flag_7 被设为返回 1。handle_self_semen_energy_agent、
         handle_pl_semen_tmp_ge_max 和 handle_self_semen_thick_1 被设为返回 0。
         本测试断言射精量为 400。本测试断言返回的文本包含 game_config.config_aromatherapy_recipes[7].name。
-        本测试断言 total_semen_count 增加的量等于射精量。本测试断言角色 0 的 semen_point 从 50 降为 0。
+        本测试断言计数 semen（tallies.SEMEN）增加的量等于射精量。本测试断言角色 0 的 semen_point 从 50 降为 0。
         本测试断言角色 0 的 h_state.just_shoot 为 1。
 
         返回:
@@ -135,13 +137,12 @@ class ModLoaderTest(FastTestCase):
                 settle.__globals__["random"], "uniform", return_value=1.0
             )
         )
-        before = self.cache.rhodes_island.total_semen_count
-        text, amount = settle()
+        before = tallies.get(tallies.SEMEN)
+        with kernel_data.writing():
+            text, amount = settle()
         self.assertEqual(amount, 400)
         self.assertIn(game_config.config_aromatherapy_recipes[7].name, text)
-        self.assertEqual(
-            self.cache.rhodes_island.total_semen_count, before + amount
-        )
+        self.assertEqual(tallies.get(tallies.SEMEN), before + amount)
         self.assertEqual(player.semen_point, 0)
         self.assertEqual(player.h_state.just_shoot, 1)
 

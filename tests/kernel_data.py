@@ -13,7 +13,7 @@
 - set_book_holders 改借阅表里给出的书的借书人。
 - reprojected 从缓存重新投影各角色的行动，每个角色的数据跟着这个角色留在角色数据或 roster.offstage 里。
 - project_state 在快照里用这些数据在缓存里时的属性名记下 body.needs、乳汁上限、动力、设施、经济、岗位名册、监狱长、
-  仓库、生产线、食堂货架、医疗部、外勤委托、载具、访客、罗德岛位置、招募、公务、外交、宿舍管理员与图书馆的值，
+  仓库、生产线、食堂货架、医疗部、外勤委托、载具、访客、罗德岛位置、招募、公务、外交、宿舍管理员与图书馆等数据的值，
   快照因此能与按缓存属性录下的快照比较。
 """
 
@@ -416,6 +416,7 @@ def project_state(cache: game_type.Cache, state: dict[str, object]) -> None:
     _project_travel(state)
     base_projection.project(state)
     kernel_project.project_world_misc(state)
+    kernel_project.project_base_tallies(state)
 
 
 def _project_travel(state: dict[str, object]) -> None:

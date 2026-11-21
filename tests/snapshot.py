@@ -74,15 +74,8 @@ SKIPPED_CHARACTER_FIELDS = {
 }
 """ 不记的角色字段（名字里 chara.<id>. 之后的部分）: 理由 """
 
-WORLD_AREAS = {
-    "milk_in_fridge": "cooking",
-    "urine_in_fridge": "cooking",
-}
-""" 罗德岛（cache.rhodes_island）字段所属的区域；
-没列出的字段以 MEDICAL_PREFIXES 开头的归 world.medical，其余归 world.base """
-
-MEDICAL_PREFIXES = ("medical_",)
-""" 罗德岛对象上医疗部字段的名字开头：床位上限 """
+WORLD_AREAS: dict[str, str] = {}
+""" 罗德岛对象（cache.rhodes_island）上的字段到所属区域。没列出的字段归 world.base """
 
 CACHE_AREAS = {
     "game_round": "clock",
@@ -410,9 +403,7 @@ def capture(
             state,
         )
     for field in sorted(vars(cache.rhodes_island)):
-        area = WORLD_AREAS.get(
-            field, "medical" if field.startswith(MEDICAL_PREFIXES) else "base"
-        )
+        area = WORLD_AREAS.get(field, "base")
         flatten(
             f"world.{area}.{field}", getattr(cache.rhodes_island, field), state
         )

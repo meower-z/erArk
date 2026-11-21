@@ -13,8 +13,8 @@
 每个选择期间（定下行动之前）缓存与随机数状态的指纹不变，Edit 之后时钟不动。
 """
 
-from collections.abc import Callable, Mapping
 import importlib
+from collections.abc import Callable, Mapping
 from typing import cast
 
 from tests import kernel_data
@@ -304,13 +304,14 @@ class PickDraftWorldTest(SlowTestCase):
         """冰箱里带走干员的母乳：一个 0 分钟的 Edit，之后背包里有这份母乳，冰箱里没有了"""
         from Script.Core import constant
 
-        self.cache.rhodes_island.milk_in_fridge[self.chara_id] = 120
+        fridge = importlib.import_module("Script.Modules.domains.fridge")
+        kernel_data.written(fridge.add, fridge.MILK, self.chara_id, 120)
         self.world.player.press("[带走]", "返回")
         start, end, changed = self.run_pick(self.show(constant.Panel.FRIDGE))
         self.assert_one_edit(start, end, changed)
         bag = self.cache.character_data[0].food_bag.values()
         self.assertEqual([f.milk_ml for f in bag if f.milk_ml], [120])
-        self.assertNotIn(self.chara_id, self.cache.rhodes_island.milk_in_fridge)
+        self.assertNotIn(self.chara_id, fridge.table(fridge.MILK))
 
     def test_drug_rides_edit(self) -> None:
         """使用理智恢复剂：一个 0 分钟的 Edit，之后药少了一瓶，理智回升"""

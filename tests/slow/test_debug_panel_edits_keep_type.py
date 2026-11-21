@@ -10,6 +10,8 @@ NPC角色 [013] 本次H 输入「6,部位,第几项」与新值，只改这个�
 照新值判断。
 """
 
+import importlib
+
 from tests import kernel_data
 from tests.slow.base import SlowTestCase
 
@@ -72,14 +74,17 @@ class DebugPanelEditKeepTypeTest(SlowTestCase):
         from Script.Design import handle_npc_ai
 
         week_day = game_time.now().weekday()
-        before = dict(self.ri.party_day_of_week)
+        entertainment = importlib.import_module(
+            "Script.Modules.domains.entertainment"
+        )
+        before = entertainment.party_days()
         self.use_panel(
             ("press", "[全局变量]"),
             ("press", "[007]"),
             ("type", f"{week_day},{PARTY_ENTERTAINMENT}"),
         )
         self.assertEqual(
-            self.ri.party_day_of_week,
+            entertainment.party_days(),
             {**before, week_day: PARTY_ENTERTAINMENT},
             "派对计划只改输入的这一天",
         )
